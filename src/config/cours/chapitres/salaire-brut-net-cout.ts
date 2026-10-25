@@ -58,7 +58,10 @@ export const SALAIRE_BRUT_NET_COUT: Chapitre = {
   code: "salaire-brut-net-cout",
   parcours: "stmg-rh",
   palier: 1,
-  blocs: ["STMG Thème 1 · De l'individu à l'acteur"],
+  blocs: [
+    "STMG Thème 1 · De l'individu à l'acteur",
+    "STMG Thème 2 · Des facteurs de motivation et de satisfaction : qualité de vie au travail et rémunération",
+  ],
   titre: "Du salaire brut au coût pour l'entreprise",
   accroche:
     "Un même salaire, trois montants : le brut du contrat, le net que reçoit le salarié, le coût que paie l'entreprise. Et ce que coûte vraiment une augmentation de 100 € net.",

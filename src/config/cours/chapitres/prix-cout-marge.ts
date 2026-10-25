@@ -72,6 +72,7 @@ export const PRIX_COUT_MARGE: Chapitre = {
   palier: 1,
   blocs: [
     "STMG Thème 3 · Création de valeur et performance",
+    "STMG Thème 3 · Accompagner la prise de décision",
   ],
   titre: "Prix, coût et marge",
   accroche:

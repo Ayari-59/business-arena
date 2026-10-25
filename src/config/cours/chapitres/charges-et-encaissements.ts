@@ -68,6 +68,7 @@ export const CHARGES_ET_ENCAISSEMENTS: Chapitre = {
   blocs: [
     "STMG Thème 3 · Création de valeur et performance",
     "STMG Thème 4 · Temps et risque",
+    "STMG Thème 1 · Appliquer les règles comptables",
   ],
   titre: "Charges et produits, encaissements et décaissements",
   accroche:

@@ -52,6 +52,7 @@ export const LIRE_LE_COMPTE_DE_RESULTAT: Chapitre = {
   palier: 1,
   blocs: [
     "STMG Thème 3 · Création de valeur et performance",
+    "STMG Thème 2 · Analyser la situation de l'entreprise",
   ],
   titre: "Le compte de résultat : ce que l'année a rapporté",
   accroche:
