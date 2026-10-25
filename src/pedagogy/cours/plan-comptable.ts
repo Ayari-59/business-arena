@@ -119,6 +119,9 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "704", intitule: "Travaux", nature: "produit" },
   { numero: "706", intitule: "Prestations de services", nature: "produit" },
   { numero: "707", intitule: "Ventes de marchandises", nature: "produit" },
+  // Les réductions accordées après la facture (un avoir pour une remise oubliée, un rabais) :
+  // un compte de produits qui se débite, et vient en moins des ventes.
+  { numero: "709", intitule: "Rabais, remises et ristournes accordés par l'entreprise", nature: "produit" },
   { numero: "781", intitule: "Reprises sur amortissements, dépréciations et provisions", nature: "produit" },
   { numero: "7815", intitule: "Reprises sur provisions d'exploitation", nature: "produit" },
   { numero: "7817", intitule: "Reprises sur dépréciations des actifs circulants", nature: "produit" },

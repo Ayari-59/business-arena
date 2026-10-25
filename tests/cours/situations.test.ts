@@ -3,7 +3,12 @@ import { casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
 import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
 import { CHAPITRES, chapitreParCode } from "../../src/config/cours/registre";
 import { SITUATIONS } from "../../src/config/cours/situations";
+import { COMMERCES } from "../../src/config/cours/chapitres/taux-de-marque";
+import { commandePourLaPromotion } from "../../src/config/cours/situations/commander-pour-la-promotion";
+import { factureContestee } from "../../src/config/cours/situations/la-facture-contestee";
+import { dossierDeLaBanque } from "../../src/config/cours/situations/le-rendez-vous-a-la-banque";
 import { baisseDuConcurrent } from "../../src/config/cours/situations/suivre-la-baisse";
+import { auCentime } from "../../src/pedagogy/cours/etats";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
 import type { Etape } from "../../src/config/cours/types";
 
@@ -44,6 +49,12 @@ describe("les mises en situation", () => {
       expect(CHAPITRES.some((x) => x.code === s.code), `${s.code} porte le code d'un chapitre`).toBe(false);
       expect(chapitreParCode(s.code)).toBe(s);
       expect(s.commanditaire.length, s.code).toBeGreaterThan(3);
+      // Une situation remobilise ce qui est déjà appris : jamais un chapitre d'un palier
+      // plus avancé que le sien.
+      for (const c of s.reprend) {
+        const repris = CHAPITRES.find((x) => x.code === c)!;
+        expect(repris.palier, `${s.code} (palier ${s.palier}) reprend ${c}, de palier ${repris.palier}`).toBeLessThanOrEqual(s.palier);
+      }
     }
   });
 
@@ -95,5 +106,61 @@ describe("suivre la baisse du concurrent", () => {
       expect((m.quantiteNecessaire - 1) * m.margeBaissee, code).toBeLessThan(m.margeDuMois);
       expect(m.seuilApres!, code).toBeGreaterThan(Math.floor(m.chargesFixes / m.marge));
     }
+  });
+});
+
+describe("la facture contestée", () => {
+  it("l'avoir s'équilibre, et la facture envoyée moins l'avoir redonne la facture juste", () => {
+    for (const code of ENTREPRISES_DU_COURS) {
+      const { juste, envoyee, avoir } = factureContestee(casDeLEntreprise(code));
+      // L'écriture de l'avoir : 709 et 44571 au débit, 665 et 411 au crédit.
+      expect(auCentime(avoir.ventes + avoir.tva), code).toBe(auCentime(avoir.escompte + avoir.ttc));
+      expect(auCentime(envoyee.ttc - avoir.ttc), code).toBe(juste.ttc);
+      // La vente en moins est la remise oubliée, et l'avoir n'est pas de ce montant :
+      // l'erreur classique que la réponse propose reste une erreur.
+      expect(avoir.ventes, code).toBe(auCentime(juste.brut - juste.netCommercial));
+      expect(avoir.ttc, code).not.toBe(avoir.ventes);
+      expect(avoir.ttc, code).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe("le rendez-vous à la banque", () => {
+  it("les chiffres du dossier se recoupent, et les trois réponses se rencontrent dans le cours", () => {
+    const choix = new Set<string>();
+    for (const code of ENTREPRISES_DU_COURS) {
+      const { v, r, k, f } = dossierDeLaBanque(casDeLEntreprise(code));
+      // Un seul résultat net, un seul bilan : les chapitres repris parlent des mêmes chiffres.
+      expect(r.resultatNet, code).toBe(f.resultatNet);
+      expect(r.capitauxPropres, code).toBe(f.capitauxPropres);
+      expect(k.f.capitauxPropres, code).toBe(f.capitauxPropres);
+      expect(k.f.emprunts, code).toBe(f.emprunts);
+      // L'explication dit que fonds de roulement moins besoin donne la trésorerie.
+      expect(Math.abs(k.frng - k.bfr - k.tn), code).toBeLessThanOrEqual(0.02);
+      // L'explication dit que l'activité crée de la richesse.
+      expect(v.va, code).toBeGreaterThan(0);
+      choix.add(f.choix);
+    }
+    expect([...choix].sort()).toEqual(["apport", "autofinancement", "emprunt"]);
+  });
+});
+
+describe("commander pour la promotion", () => {
+  it("le volume garde la marge, la commande sert la demande, et la remise retire plus que son taux", () => {
+    for (const code of COMMERCES) {
+      const r = commandePourLaPromotion(casDeLEntreprise(code));
+      expect(r.baisseDeLaMarge, code).toBeGreaterThan(r.remise);
+      expect(r.volumeNecessaire * r.mcvPromo, code).toBeGreaterThanOrEqual(r.margeNormale - 0.5);
+      expect((r.volumeNecessaire - 1) * r.mcvPromo, code).toBeLessThan(r.margeNormale);
+      // La réponse « elle paiera » et la comparaison au volume nécessaire disent la même chose.
+      expect(r.paie, code).toBe(r.demande >= r.volumeNecessaire);
+      if (r.stock) {
+        expect(r.stock.enReserve + r.stock.aCommander, code).toBeGreaterThanOrEqual(r.demande);
+        // L'explication dit que le stock tient moins longtemps en promotion.
+        if (r.stock.aCommander > 0) expect(r.stock.couverture, code).toBeLessThan(r.stock.couvertureAvant);
+      }
+    }
+    // Le bistrot ne garde pas de stock : l'étape de la commande ne s'y joue pas.
+    expect(commandePourLaPromotion(casDeLEntreprise("bistrot")).stock).toBeNull();
   });
 });

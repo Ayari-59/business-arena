@@ -445,6 +445,12 @@ describe.each([
   // Les mises en situation s'ouvrent et se jouent comme un chapitre réservé.
   { code: "suivre-la-baisse-du-concurrent", entreprise: "nova" },
   { code: "suivre-la-baisse-du-concurrent", entreprise: "hotel", telephone: true },
+  { code: "la-facture-contestee", entreprise: "batiment" },
+  { code: "la-facture-contestee", entreprise: "conseil", telephone: true },
+  { code: "le-rendez-vous-a-la-banque", entreprise: "fitness" },
+  { code: "le-rendez-vous-a-la-banque", entreprise: "transport", telephone: true },
+  { code: "commander-pour-la-promotion", entreprise: "boutique" },
+  { code: "commander-pour-la-promotion", entreprise: "bistrot", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé ; sous licence, il se joue sans faute", async () => {
     const libre = await nouvellePage();
