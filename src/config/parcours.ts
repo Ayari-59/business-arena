@@ -23,6 +23,13 @@ export interface Parcours {
    * à écrire alors que les deux ont un atelier publié.
    */
   ateliers: readonly string[];
+  /**
+   * La formation dont c'est le parcours (config/formations.ts). Un atelier peut
+   * servir plusieurs diplômes, l'atelier STMG sert aussi la seconde option MG :
+   * déduire le parcours de l'atelier donnait les réglages et le pitch de la
+   * première à la seconde.
+   */
+  formation: string;
   recommended: {
     level: number;
     levelName: string;
@@ -38,6 +45,7 @@ export interface Parcours {
 export const PARCOURS: readonly Parcours[] = [
   {
     code: "stmg",
+    formation: "stmg",
     ateliers: ["stmg"],
     name: "STMG",
     fullName:
@@ -56,6 +64,7 @@ export const PARCOURS: readonly Parcours[] = [
   },
   {
     code: "mco",
+    formation: "bts-mco",
     ateliers: ["mco", "mco2"],
     name: "BTS MCO",
     fullName: "BTS Management Commercial Opérationnel",
@@ -73,6 +82,7 @@ export const PARCOURS: readonly Parcours[] = [
   },
   {
     code: "ndrc",
+    formation: "bts-ndrc",
     ateliers: ["ndrc", "fitness"],
     name: "BTS NDRC",
     fullName: "BTS Négociation et Digitalisation de la Relation Client",
@@ -92,6 +102,7 @@ export const PARCOURS: readonly Parcours[] = [
   },
   {
     code: "cg",
+    formation: "bts-cg",
     ateliers: ["cg1"],
     name: "BTS CG",
     fullName: "BTS Comptabilité et Gestion",

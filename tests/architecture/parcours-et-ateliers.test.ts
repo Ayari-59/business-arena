@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { PARCOURS } from "@/config/parcours";
 import { ATELIERS, atelierByCode } from "@/config/ateliers";
-import { FORMATIONS, publicDeLAtelier } from "@/config/formations";
+import { FORMATIONS, formationParCode, publicDeLAtelier } from "@/config/formations";
 
 /**
  * AUCUNE FILIÈRE SERVIE N'EST DITE ABSENTE.
@@ -40,6 +40,27 @@ const PAGE = SOURCE.replace(/\/\*[\s\S]*?\*\//g, " ").replace(
 );
 
 describe("les parcours et les ateliers", () => {
+  it("un parcours nomme sa formation, et ses ateliers la servent", () => {
+    // Le parcours se déduisait de l'atelier : l'atelier STMG servant aussi la
+    // seconde option MG, la seconde héritait des réglages et du pitch de la
+    // première. Il nomme maintenant sa formation.
+    for (const p of PARCOURS) {
+      expect(formationParCode(p.formation), `${p.code} : « ${p.formation} »`).toBeDefined();
+      for (const code of p.ateliers) {
+        const a = ATELIERS.find((x) => x.code === code);
+        // La formation d'origine d'un atelier s'écrit la première : c'est
+        // celle de son parcours, les suivantes sont celles qu'il sert aussi.
+        expect(a?.formations[0], `${p.code} / ${code}`).toBe(p.formation);
+      }
+    }
+    expect(new Set(PARCOURS.map((p) => p.formation)).size).toBe(PARCOURS.length);
+    for (const page of ["src/app/parcours/page.tsx", "src/app/parcours/[formation]/page.tsx"]) {
+      const source = readFileSync(join(process.cwd(), page), "utf8");
+      expect(source, `${page} déduit encore le parcours de l'atelier`).not.toMatch(/p\.ateliers\.includes/);
+      expect(source, page).toMatch(/p\.formation ===/);
+    }
+  });
+
   it("chaque parcours revendique des ateliers qui existent", () => {
     for (const p of PARCOURS) {
       expect(

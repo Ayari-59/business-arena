@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { DIFFICULTES } from "../../src/config/ateliers/types";
 import { ficheDeNotion } from "../../src/config/ateliers/notions";
 import { ATELIERS, dureeTotaleHeures } from "../../src/config/ateliers";
-import { THEMES_STMG } from "../../src/config/ateliers/stmg";
+import { THEMES_SECONDE_MG, THEMES_STMG } from "../../src/config/ateliers/stmg";
 import {
   REFERENTIELS,
   REFERENTIELS_NON_VERIFIES,
@@ -256,7 +256,15 @@ describe("ateliers professionnels", () => {
       expect(atelier, `${code} : référentiel déclaré sans atelier`).toBeDefined();
       expect(referentiel.source.length, `${code} : provenance non écrite`).toBeGreaterThan(40);
       const officiels = referentiel.entrees.flatMap(segments);
+      // Un atelier qui sert un second diplôme cite aussi les entrées de son
+      // texte, préfixées de son sigle : la garde des fiches multi-diplômes les
+      // confronte à ce texte-là, pas à celui-ci.
+      const autreTexte = (p: string) => {
+        const cite = referentielDeCitation(p);
+        return cite !== null && cite.referentiel !== referentiel;
+      };
       const inventees = [...new Set(atelier!.seances.flatMap((s) => s.processus))].filter((p) => {
+        if (autreTexte(p)) return false;
         const cites = segments(p);
         return !cites.some((c) => officiels.some((o) => o.includes(c) || c.includes(o)));
       });
@@ -287,8 +295,9 @@ describe("ateliers professionnels", () => {
         .filter((m) => m.length >= 10 && !/^[a-z]{0,7} ?\d+$/.test(m));
 
     for (const a of ATELIERS) {
-      // Les fiches qui ont leur propre référentiel sont déjà couvertes.
-      if (REFERENTIELS[a.code]) continue;
+      // Une fiche qui a son propre référentiel passe aussi : ses intitulés sans
+      // préfixe sont confrontés à son texte plus haut, et ceux qu'elle préfixe
+      // pour un second diplôme le sont ici.
       const inventees: string[] = [];
       let prefixees = 0;
       for (const cite of new Set(a.seances.flatMap((s) => s.processus))) {
@@ -320,7 +329,10 @@ describe("ateliers professionnels", () => {
     // Les intitulés vivent maintenant dans une liste fermée, que le
     // compilateur fait respecter. Cette garde ferme la porte restante : une
     // séance qui écrirait de nouveau un thème à la main serait rouge.
-    const officiels = new Set<string>(Object.values(THEMES_STMG));
+    const officiels = new Set<string>([
+      ...Object.values(THEMES_STMG),
+      ...Object.values(THEMES_SECONDE_MG),
+    ]);
     const stmg = ATELIERS.find((a) => a.code === "stmg")!;
     const inventes = [...new Set(stmg.seances.flatMap((s) => s.processus))].filter(
       (t) => !officiels.has(t),
@@ -857,7 +869,8 @@ describe("ateliers professionnels", () => {
     const attendu = (a: (typeof ATELIERS)[number]): number[] | null => {
       if (a.reglages.concours) return null;
       if (a.formations.length === 0) return /avancé/i.test(a.annee) ? [5] : null;
-      if (a.formations.includes("stmg") && a.formations.length === 1) return [1];
+      // Le lycée découvre, en seconde comme en STMG.
+      if (a.formations.every((f) => f === "stmg" || f.startsWith("seconde-"))) return [1];
       if (a.formations.includes("dcg")) return [4, 5];
       if (a.formations.some((f) => f.startsWith("but-"))) return [3, 4];
       if (/première/i.test(a.annee)) return [2, 3];

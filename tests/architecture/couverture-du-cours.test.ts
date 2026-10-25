@@ -190,6 +190,21 @@ describe("la couverture par le cours", () => {
     }
   });
 
+  it("un atelier qui sert deux diplômes compte chez chacun, sous le texte de chacun", () => {
+    // L'atelier STMG sert aussi la seconde option MG. Ses thèmes STMG, sans
+    // préfixe, restent chez STMG ; ceux de la seconde, préfixés, vont chez elle.
+    // Un calcul qui exigerait un préfixe partout viderait la ligne STMG.
+    const stmg = couvertureDeLaFormation("stmg");
+    const seconde = couvertureDeLaFormation("seconde-mg");
+    const atelierSur = (blocs: typeof stmg, entree: string) =>
+      blocs.find((b) => b.officiel === entree)?.presences.some((p) => p.code === "stmg") ?? false;
+    expect(atelierSur(stmg, "Thème 3 · Création de valeur et performance")).toBe(true);
+    expect(atelierSur(seconde, "Organiser et décider, des objectifs à la réalisation")).toBe(true);
+    // Et rien ne passe d'un texte à l'autre.
+    for (const b of seconde) expect(b.officiel, b.referentiel).not.toBeNull();
+    expect(stmg.some((b) => b.referentiel.startsWith("2de MG"))).toBe(false);
+  });
+
   it("la page d'un diplôme sans atelier le dit, et propose l'atelier sur mesure", () => {
     expect(PAGE).toContain("ateliers.length === 0");
     expect(PAGE).toContain("data-sans-atelier");

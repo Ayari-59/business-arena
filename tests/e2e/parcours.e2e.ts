@@ -740,6 +740,10 @@ describe("parcours enseignant et élève", () => {
     expect(await prof.locator("[data-sur-mesure-paragraphe]").isVisible()).toBe(true);
     await aller(prof, "/parcours/bts-mco");
     expect(await prof.locator("[data-sans-atelier]").count()).toBe(0);
+    // La seconde option MG est servie par l'atelier STMG : sa page le propose.
+    await aller(prof, "/parcours/seconde-mg");
+    expect(await prof.locator("[data-sans-atelier]").count()).toBe(0);
+    expect(await prof.locator('a[href="/animations/stmg"]').count()).toBeGreaterThan(0);
     await aller(prof, "/parcours");
     expect(
       await prof
