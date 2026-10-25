@@ -4,7 +4,12 @@ import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
 import { CHAPITRES, chapitreParCode } from "../../src/config/cours/registre";
 import { SITUATIONS } from "../../src/config/cours/situations";
 import { COMMERCES } from "../../src/config/cours/chapitres/taux-de-marque";
+import { NEGOCIATIONS } from "../../src/config/cours/chapitres/negocier-le-prix";
+import { prixRejoues } from "../../src/config/cours/decision";
 import { commandePourLaPromotion } from "../../src/config/cours/situations/commander-pour-la-promotion";
+import { embaucheDeSaison } from "../../src/config/cours/situations/embaucher-pour-la-saison";
+import { COMMANDES_PROMISES, remiseDuGrandCompte } from "../../src/config/cours/situations/la-remise-du-grand-compte";
+import { prixDeLaSaison } from "../../src/config/cours/situations/quel-prix-pour-la-saison";
 import { factureContestee } from "../../src/config/cours/situations/la-facture-contestee";
 import { dossierDeLaBanque } from "../../src/config/cours/situations/le-rendez-vous-a-la-banque";
 import { baisseDuConcurrent } from "../../src/config/cours/situations/suivre-la-baisse";
@@ -162,5 +167,59 @@ describe("commander pour la promotion", () => {
     }
     // Le bistrot ne garde pas de stock : l'étape de la commande ne s'y joue pas.
     expect(commandePourLaPromotion(casDeLEntreprise("bistrot")).stock).toBeNull();
+  });
+});
+
+describe("quel prix pour la saison", () => {
+  it("la marge, pas la demande ni le chiffre d'affaires, désigne le prix, et chacun des trois gagne quelque part", () => {
+    const gagnants = new Set<string>();
+    let caEtMargeDivergent = false;
+    for (const code of ENTREPRISES_DU_COURS) {
+      const r = prixDeLaSaison(casDeLEntreprise(code));
+      // La capacité est la même aux trois prix rejoués : une seule ligne au tableau.
+      expect(new Set(prixRejoues(code).map((v) => v.capacite)).size, code).toBe(1);
+      for (const p of r.prix) {
+        expect(p.ventes, code).toBeLessThanOrEqual(r.capacite);
+        expect(r.meilleur.marge, code).toBeGreaterThanOrEqual(p.marge);
+      }
+      // L'erreur « la demande ne dépend pas du prix » reste fausse partout.
+      expect(r.d.elasticite, code).toBeLessThan(0);
+      gagnants.add(r.meilleur.nom);
+      if (r.plusGrosCa.prix !== r.meilleur.prix) caEtMargeDivergent = true;
+    }
+    expect([...gagnants].sort()).toEqual(["le prix actuel", "le prix bas", "le prix haut"]);
+    expect(caEtMargeDivergent).toBe(true);
+  });
+});
+
+describe("la remise du grand compte", () => {
+  it("la remise se prend sur la marge, le délai sur le résultat, et le client vaut huit affaires", () => {
+    for (const code of NEGOCIATIONS) {
+      const { a, n, valeurDuClient, remiseSurLaDuree, verdict } = remiseDuGrandCompte(casDeLEntreprise(code));
+      expect(auCentime(a.margeSansRemise - a.marge), code).toBe(a.remise);
+      expect(auCentime(a.marge - a.coutDuCredit), code).toBe(a.resultatDeLAffaire);
+      expect(valeurDuClient, code).toBe(auCentime(a.resultatDeLAffaire * COMMANDES_PROMISES));
+      expect(remiseSurLaDuree, code).toBe(auCentime(a.remise * COMMANDES_PROMISES));
+      expect(verdict === "couvre", code).toBe(a.prixRemise >= n.coutComplet);
+      expect(n.coutVariable, code).toBeLessThan(n.coutComplet);
+    }
+  });
+});
+
+describe("embaucher pour la saison", () => {
+  it("les ventes trouvées paient le contrat, et les trois erreurs classiques donnent d'autres nombres", () => {
+    for (const code of ENTREPRISES_DU_COURS) {
+      const r = embaucheDeSaison(casDeLEntreprise(code));
+      expect(r.margeDUneUnite, code).toBeGreaterThan(0);
+      expect(r.ventesNecessaires * r.margeDUneUnite, code).toBeGreaterThanOrEqual(r.coutDeLaSaison);
+      expect((r.ventesNecessaires - 1) * r.margeDUneUnite, code).toBeLessThan(r.coutDeLaSaison);
+      expect(r.avecLeBrut, code).toBeLessThan(r.ventesNecessaires);
+      expect(r.avecLePrix, code).toBeLessThan(r.ventesNecessaires);
+      expect(r.surLAnnee, code).toBeGreaterThan(r.ventesNecessaires);
+      expect(new Set([r.ventesNecessaires, r.avecLeBrut, r.avecLePrix, r.surLAnnee]).size, code).toBe(4);
+      // La paie du cas et le coût que l'arène donne au personnel disent le même coût, à 1 % près.
+      expect(Math.abs(r.coutDeLaSaison - r.m.coutTrimestriel) / r.m.coutTrimestriel, code).toBeLessThan(0.01);
+      expect(r.tauxAvec, code).toBeGreaterThan(r.m.tauxDeFraisDePersonnel);
+    }
   });
 });

@@ -451,6 +451,12 @@ describe.each([
   { code: "le-rendez-vous-a-la-banque", entreprise: "transport", telephone: true },
   { code: "commander-pour-la-promotion", entreprise: "boutique" },
   { code: "commander-pour-la-promotion", entreprise: "bistrot", telephone: true },
+  { code: "quel-prix-pour-la-saison", entreprise: "hotel" },
+  { code: "quel-prix-pour-la-saison", entreprise: "fitness", telephone: true },
+  { code: "la-remise-du-grand-compte", entreprise: "transport" },
+  { code: "la-remise-du-grand-compte", entreprise: "batiment", telephone: true },
+  { code: "embaucher-pour-la-saison", entreprise: "boutique" },
+  { code: "embaucher-pour-la-saison", entreprise: "conseil", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé ; sous licence, il se joue sans faute", async () => {
     const libre = await nouvellePage();
