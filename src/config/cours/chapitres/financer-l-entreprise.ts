@@ -65,6 +65,7 @@ export const FINANCER_L_ENTREPRISE: Chapitre = {
   palier: 1,
   blocs: [
     "STMG Thème 4 · Temps et risque",
+    "STMG Thème 3 · Accompagner la prise de décision",
   ],
   titre: "Financer l'entreprise : autofinancement ou emprunt",
   accroche:

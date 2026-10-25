@@ -54,7 +54,10 @@ export const EFFECTIF_ET_MASSE_SALARIALE: Chapitre = {
   code: "effectif-et-masse-salariale",
   parcours: "stmg-rh",
   palier: 1,
-  blocs: ["STMG Thème 1 · De l'individu à l'acteur"],
+  blocs: [
+    "STMG Thème 1 · De l'individu à l'acteur",
+    "STMG Thème 2 · Des facteurs de motivation et de satisfaction : qualité de vie au travail et rémunération",
+  ],
   titre: "L'effectif et la masse salariale",
   accroche:
     "Ce que coûte le personnel sur une année, ce qu'il pèse dans les charges et dans les ventes, et ce qu'une embauche retire au résultat quand les ventes ne suivent pas.",

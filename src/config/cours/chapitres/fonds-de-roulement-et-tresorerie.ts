@@ -43,6 +43,8 @@ export const FONDS_DE_ROULEMENT: Chapitre = {
   palier: 1,
   blocs: [
     "STMG Thème 4 · Temps et risque",
+    "STMG Thème 2 · Analyser la situation de l'entreprise",
+    "STMG Thème 3 · Accompagner la prise de décision",
   ],
   titre: "Fonds de roulement, besoin en fonds de roulement et trésorerie",
   accroche:

@@ -186,9 +186,9 @@ export interface Chapitre {
    * (`referentielDeCitation`). La couverture de chaque formation les compte avec les séances
    * des ateliers (config/couverture.ts).
    *
-   * Vide quand le programme que le chapitre suit n'a pas été confronté à son texte : les
-   * enseignements spécifiques de terminale STMG ne sont pas au registre des référentiels, et
-   * un thème cité de mémoire serait justement l'erreur que ce registre a été fait pour éviter.
+   * Vide quand le programme que le chapitre suit n'a pas été confronté à son texte : un thème
+   * cité de mémoire serait justement l'erreur que le registre des référentiels a été fait pour
+   * éviter. Le chapitre paraît alors chez sa formation par son parcours, sans bloc.
    */
   blocs: readonly string[];
   titre: string;

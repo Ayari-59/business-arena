@@ -93,6 +93,7 @@ export const MARCHE_ET_PART_DE_MARCHE: Chapitre = {
   palier: 1,
   blocs: [
     "STMG Thème 3 · Création de valeur et performance",
+    "STMG Thème 1 · La définition de l'offre",
   ],
   titre: "Le marché et la part de marché",
   accroche:

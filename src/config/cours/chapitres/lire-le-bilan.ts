@@ -49,7 +49,9 @@ export const LIRE_LE_BILAN: Chapitre = {
   code: "lire-le-bilan",
   parcours: "stmg-gf",
   palier: 1,
-  blocs: [],
+  blocs: [
+    "STMG Thème 2 · Analyser la situation de l'entreprise",
+  ],
   titre: "Le bilan : ce que l'entreprise possède et ce qu'elle doit",
   accroche:
     "Une photographie au 31 décembre : d'un côté ce que l'entreprise possède, de l'autre d'où vient l'argent qui l'a payé. Les deux côtés sont toujours égaux, et c'est ce qui les rend parlants.",

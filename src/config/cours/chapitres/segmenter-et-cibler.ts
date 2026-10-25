@@ -103,7 +103,9 @@ export const SEGMENTER_ET_CIBLER: Chapitre = {
   code: "segmenter-et-cibler",
   parcours: "stmg",
   palier: 1,
-  blocs: [],
+  blocs: [
+    "STMG Thème 1 · La définition de l'offre",
+  ],
   titre: "Segmenter et cibler",
   accroche:
     "Un marché se découpe en clientèles qui n'attendent pas la même chose. Lesquelles pèsent le plus, où reste-t-il des clients à gagner, et laquelle viser selon l'offre ?",

@@ -47,6 +47,7 @@ export const RENTABILITE: Chapitre = {
   palier: 1,
   blocs: [
     "STMG Thème 3 · Création de valeur et performance",
+    "STMG Thème 2 · Analyser la situation de l'entreprise",
   ],
   titre: "La rentabilité",
   accroche:

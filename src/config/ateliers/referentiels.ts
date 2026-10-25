@@ -124,7 +124,7 @@ export const REFERENTIELS: Record<string, Referentiel> = {
     label: "Thèmes du programme",
     accord: "mobilisés",
     source:
-      "Les trois programmes du cycle terminal STMG, lus sur leurs annexes : sciences de gestion et numérique de première (annexe 3), management de première (annexe 2), management, sciences de gestion et numérique de terminale, enseignement commun (annexe 2).",
+      "Les programmes du cycle terminal STMG, lus sur leurs annexes : sciences de gestion et numérique de première (annexe 3), management de première (annexe 2), et management, sciences de gestion et numérique de terminale (annexe 2 de l'arrêté du 19 juillet 2019), enseignement commun et ses quatre enseignements spécifiques : gestion et finance, mercatique, ressources humaines et communication, systèmes d'information de gestion. Les enseignements spécifiques ont été lus le 25 octobre 2026 sur le document d'eduscol.",
     entrees: [
       // Première, sciences de gestion et numérique.
       "Thème 1 · De l'individu à l'acteur",
@@ -139,11 +139,32 @@ export const REFERENTIELS: Record<string, Referentiel> = {
       "Thème 1 · Les organisations et l'activité de production de biens et de services",
       "Thème 2 · Les organisations et les acteurs",
       "Thème 3 · Les organisations et la société",
+      // Terminale, enseignement spécifique de gestion et finance.
+      "Thème 1 · Appliquer les règles comptables",
+      "Thème 2 · Analyser la situation de l'entreprise",
+      "Thème 3 · Accompagner la prise de décision",
+      // Terminale, enseignement spécifique de mercatique (marketing).
+      "Thème 1 · La définition de l'offre",
+      "Thème 2 · La distribution de l'offre",
+      "Thème 3 · La communication de l'offre",
+      // Terminale, enseignement spécifique de ressources humaines et communication.
+      "Thème 1 · Les compétences au service de l'organisation et l'organisation au service du développement des compétences",
+      "Thème 2 · Des facteurs de motivation et de satisfaction : qualité de vie au travail et rémunération",
+      "Thème 3 · La recherche de cohésion, un levier d'amélioration des relations de travail et du climat social",
+      // Terminale, enseignement spécifique de systèmes d'information de gestion.
+      "Thème 1 · Organisation et numérisation",
+      "Thème 2 · Management du système d'information et performance",
+      "Thème 3 · Information, action et décision",
+      "Thème 4 · Système d'information et échange",
     ],
     parties: [
       { titre: "Première, sciences de gestion et numérique", entrees: 4 },
       { titre: "Première, management", entrees: 3 },
       { titre: "Terminale, enseignement commun", entrees: 3 },
+      { titre: "Terminale, gestion et finance", entrees: 3 },
+      { titre: "Terminale, mercatique", entrees: 3 },
+      { titre: "Terminale, ressources humaines et communication", entrees: 3 },
+      { titre: "Terminale, systèmes d'information de gestion", entrees: 4 },
     ],
   },
   gpme: {
