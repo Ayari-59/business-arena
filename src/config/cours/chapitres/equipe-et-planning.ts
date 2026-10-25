@@ -74,6 +74,7 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
     "Bac pro AGORA Bloc 3 · Administrer le personnel",
     "2de pro GATL 2 · Organiser et planifier l'activité",
     "BUT TC · Manager une équipe commerciale sur un espace de vente",
+    "BTS MHR Bloc 3 · Management de la production de services en hôtellerie restauration",
   ],
   titre: "L'équipe et son planning",
   accroche:

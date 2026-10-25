@@ -11,7 +11,7 @@ parcours.
 | | |
 | --- | --- |
 | formations | 9 |
-| liens déduits | 390 |
+| liens déduits | 385 |
 | liens écartés à la main | 0 |
 
 ## Par où élaguer
@@ -28,12 +28,12 @@ séances à deux blocs, donc à une chance sur deux.
 
 | blocs nommés par la meilleure séance témoin | liens | ce que ça vaut |
 | --- | --- | --- |
-| 1 | 15 | certain : la séance ne nommait que ce bloc |
-| 2 | 322 | une chance sur deux |
-| 3 | 25 | une chance sur trois |
+| 1 | 24 | certain : la séance ne nommait que ce bloc |
+| 2 | 295 | une chance sur deux |
+| 3 | 38 | une chance sur trois |
 | 4 | 28 | une chance sur quatre, à relire en premier |
 
-### Les 53 liens les plus douteux
+### Les 66 liens les plus douteux
 
 - **STMG** · `annoncer-l-effet-attendu` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:3, qui nommait 3 blocs)*
 - **STMG** · `annoncer-l-effet-attendu` → Temps et risque · Première, sciences de gestion et numérique *(séance stmg:3, qui nommait 3 blocs)*
@@ -81,6 +81,19 @@ séances à deux blocs, donc à une chance sur deux.
 - **STMG** · `presenter-l-entreprise` → De l'individu à l'acteur · Première, sciences de gestion et numérique *(séance stmg:1, qui nommait 4 blocs)*
 - **STMG** · `presenter-l-entreprise` → À la rencontre du management des organisations · Première, management *(séance stmg:1, qui nommait 4 blocs)*
 - **STMG** · `presenter-l-entreprise` → Les organisations et l'activité de production de biens et de services · Terminale, tronc commun *(séance stmg:1, qui nommait 4 blocs)*
+- **BTS MHR · B et C** · `effet-d-un-delai` → Bloc 2 · Mercatique des services en hôtellerie restauration *(séance bistrot:5, qui nommait 3 blocs)*
+- **BTS MHR · B et C** · `la-capacite-qui-bloque` → Bloc 1 · Conception et production de services en hôtellerie restauration *(séance bistrot:5, qui nommait 3 blocs)*
+- **BTS MHR · B et C** · `la-capacite-qui-bloque` → Bloc 4 · Pilotage de la production de services en hôtellerie restauration *(séance bistrot:5, qui nommait 3 blocs)*
+- **BTS MHR · B et C** · `la-capacite-qui-bloque` → Bloc 2 · Mercatique des services en hôtellerie restauration *(séance bistrot:5, qui nommait 3 blocs)*
+- **BTS MHR · B et C** · `marge-par-unite-rare` → Bloc 1 · Conception et production de services en hôtellerie restauration *(séance bistrot:5, qui nommait 3 blocs)*
+- **BTS MHR · B et C** · `marge-par-unite-rare` → Bloc 4 · Pilotage de la production de services en hôtellerie restauration *(séance bistrot:5, qui nommait 3 blocs)*
+- **BTS MHR · B et C** · `marge-par-unite-rare` → Bloc 2 · Mercatique des services en hôtellerie restauration *(séance bistrot:5, qui nommait 3 blocs)*
+- **BTS MHR · B et C** · `quand-recruter` → Bloc 2 · Mercatique des services en hôtellerie restauration *(séance bistrot:4, qui nommait 3 blocs)*
+- **BTS MHR · B et C** · `quand-recruter` → Bloc 4 · Pilotage de la production de services en hôtellerie restauration *(séance bistrot:4, qui nommait 3 blocs)*
+- **BTS MHR · B et C** · `quand-recruter` → Bloc 3 · Management de la production de services en hôtellerie restauration *(séance bistrot:4, qui nommait 3 blocs)*
+- **BTS MHR · B et C** · `repercuter-une-hausse` → Bloc 2 · Mercatique des services en hôtellerie restauration *(séance bistrot:4, qui nommait 3 blocs)*
+- **BTS MHR · B et C** · `repercuter-une-hausse` → Bloc 4 · Pilotage de la production de services en hôtellerie restauration *(séance bistrot:4, qui nommait 3 blocs)*
+- **BTS MHR · B et C** · `repercuter-une-hausse` → Bloc 3 · Management de la production de services en hôtellerie restauration *(séance bistrot:4, qui nommait 3 blocs)*
 - **DCG** · `assumer-une-erreur` → UE6 · Finance d'entreprise *(séance dcg:6, qui nommait 3 blocs)*
 - **DCG** · `assumer-une-erreur` → UE11 · Contrôle de gestion *(séance dcg:6, qui nommait 3 blocs)*
 - **DCG** · `assumer-une-erreur` → UE13 · Communication professionnelle *(séance dcg:6, qui nommait 3 blocs)*
@@ -98,22 +111,22 @@ COUVRIR : un bloc est atteint dès qu'un seul geste le touche, c'est un plancher
 
 | atelier | ses formations | ce qu'il atteindrait ailleurs |
 | --- | --- | --- |
-| Tenir la boutique Maille & Co, premiers pas en gestion | Toutes filières, en découverte | BTS NDRC 3/3 · DCG 4/4 · BTS MCO 3/4 · BTS GPME 3/4 · BTS MHR 3/4 · BUT GEA 3/4 · STMG 7/10 · BTS CG 4/6 · BTS MHR · B et C 2/4 |
-| Prendre les commandes de Nova en quatre séances | STMG | BTS NDRC 3/3 · BTS MHR 4/4 · BTS MHR · B et C 4/4 · DCG 4/4 · BTS MCO 3/4 · BUT GEA 3/4 · BTS CG 3/6 · BTS GPME 2/4 |
-| Six trimestres chez Nova, du bilan d'ouverture au débriefing | BTS CG | BTS MCO 4/4 · BTS NDRC 3/3 · BTS MHR 4/4 · BUT GEA 4/4 · DCG 4/4 · STMG 9/10 · BTS GPME 3/4 · BTS MHR · B et C 3/4 |
-| Tenir un point de vente pendant quatre trimestres | BTS MCO | STMG 10/10 · BTS NDRC 3/3 · BTS MHR 4/4 · BTS MHR · B et C 4/4 · BUT GEA 4/4 · BTS GPME 3/4 · DCG 3/4 · BTS CG 3/6 |
-| Piloter une unité de restauration au mois | BTS MCO | BTS CG 6/6 · BTS NDRC 3/3 · BTS MHR 4/4 · BTS MHR · B et C 4/4 · STMG 9/10 · BTS GPME 3/4 · BUT GEA 3/4 · DCG 3/4 |
-| Rentabiliser une clientèle sur cinq trimestres | BTS NDRC | STMG 10/10 · BTS MCO 4/4 · BTS MHR 4/4 · BTS MHR · B et C 4/4 · BUT GEA 4/4 · BTS GPME 3/4 · DCG 3/4 · BTS CG 3/6 |
-| Garder ses adhérents plutôt que les remplacer | BTS NDRC | STMG 10/10 · BTS MCO 4/4 · BTS MHR 4/4 · BTS MHR · B et C 4/4 · BUT GEA 4/4 · BTS CG 5/6 · BTS GPME 3/4 · DCG 3/4 |
-| Tenir les chantiers et la caisse d'une entreprise de rénovation | BTS GPME | BTS CG 6/6 · BTS MCO 4/4 · BTS NDRC 3/3 · BTS MHR 4/4 · BTS MHR · B et C 4/4 · BUT GEA 4/4 · STMG 9/10 · DCG 3/4 |
-| Assister le dirigeant d'une PME pendant cinq trimestres | BTS GPME | BTS CG 6/6 · BTS MCO 4/4 · BTS NDRC 3/3 · BTS MHR 4/4 · BTS MHR · B et C 4/4 · DCG 4/4 · BUT GEA 2/4 · STMG 4/10 |
-| Piloter un hôtel sur une année de saisons | BTS MHR | BTS CG 6/6 · BTS MCO 4/4 · BTS NDRC 3/3 · BTS MHR · B et C 4/4 · BUT GEA 4/4 · STMG 9/10 · BTS GPME 3/4 · DCG 3/4 |
-| Composer la carte et tenir le service | BTS MHR · B et C | STMG 10/10 · BTS MCO 4/4 · BTS NDRC 3/3 · BTS GPME 4/4 · BTS MHR 4/4 · BUT GEA 3/4 · DCG 3/4 · BTS CG 3/6 |
-| Analyser et piloter une entreprise industrielle | BUT GEA | BTS NDRC 3/3 · BTS MHR 4/4 · BTS MHR · B et C 4/4 · STMG 9/10 · BTS CG 5/6 · BTS MCO 3/4 · DCG 3/4 · BTS GPME 2/4 |
-| Quatre exercices chez Nova : budget, écarts, rapport de gestion | DCG | BUT GEA 4/4 · STMG 9/10 · BTS GPME 3/4 · BTS NDRC 2/3 · BTS CG 3/6 · BTS MCO 2/4 · BTS MHR 2/4 · BTS MHR · B et C 2/4 |
-| RSE et performance : un engagement qui se pilote | DCG | BTS NDRC 3/3 · BTS MCO 3/4 · BTS GPME 3/4 · BTS MHR · B et C 3/4 · BUT GEA 3/4 · BTS CG 3/6 · BTS MHR 2/4 · STMG 4/10 |
-| Piloter sous incertitude une entreprise de transport | Toutes filières, après un premier atelier | BTS NDRC 3/3 · BTS GPME 4/4 · BTS MHR 4/4 · BTS MHR · B et C 4/4 · BUT GEA 4/4 · DCG 4/4 · BTS CG 5/6 · BTS MCO 3/4 · STMG 7/10 |
-| Diriger une entreprise en équipe inter-filières | STMG, BTS CG, BTS MCO et BTS NDRC | BUT GEA 4/4 · DCG 4/4 · BTS MHR 3/4 · BTS MHR · B et C 3/4 · BTS GPME 2/4 |
+| Tenir la boutique Maille & Co, premiers pas en gestion | Toutes filières, en découverte | BTS NDRC 3/3 · BTS MHR 2/2 · DCG 4/4 · BTS MCO 3/4 · BTS GPME 3/4 · BTS MHR · B et C 3/4 · STMG 7/10 · BTS CG 4/6 · BUT GEA 3/5 |
+| Prendre les commandes de Nova en quatre séances | STMG | BTS NDRC 3/3 · BTS MHR 2/2 · DCG 4/4 · BUT GEA 4/5 · BTS MCO 3/4 · BTS MHR · B et C 3/4 · BTS CG 3/6 · BTS GPME 2/4 |
+| Six trimestres chez Nova, du bilan d'ouverture au débriefing | BTS CG | BTS MCO 4/4 · BTS NDRC 3/3 · BTS MHR 2/2 · DCG 4/4 · STMG 9/10 · BUT GEA 4/5 · BTS GPME 3/4 · BTS MHR · B et C 3/4 |
+| Tenir un point de vente pendant quatre trimestres | BTS MCO | STMG 10/10 · BTS NDRC 3/3 · BTS MHR 2/2 · BUT GEA 5/5 · BTS GPME 3/4 · BTS MHR · B et C 3/4 · DCG 3/4 · BTS CG 3/6 |
+| Piloter une unité de restauration au mois | BTS MCO | BTS CG 6/6 · BTS NDRC 3/3 · BTS MHR 2/2 · BTS MHR · B et C 4/4 · STMG 9/10 · BUT GEA 4/5 · BTS GPME 3/4 · DCG 3/4 |
+| Rentabiliser une clientèle sur cinq trimestres | BTS NDRC | STMG 10/10 · BTS MCO 4/4 · BTS MHR 2/2 · BUT GEA 4/5 · BTS GPME 3/4 · BTS MHR · B et C 3/4 · DCG 3/4 · BTS CG 3/6 |
+| Garder ses adhérents plutôt que les remplacer | BTS NDRC | STMG 10/10 · BTS MCO 4/4 · BTS MHR 2/2 · BUT GEA 5/5 · BTS CG 5/6 · BTS GPME 3/4 · BTS MHR · B et C 3/4 · DCG 3/4 |
+| Tenir les chantiers et la caisse d'une entreprise de rénovation | BTS GPME | BTS CG 6/6 · BTS MCO 4/4 · BTS NDRC 3/3 · BTS MHR 2/2 · BTS MHR · B et C 4/4 · BUT GEA 5/5 · STMG 9/10 · DCG 3/4 |
+| Assister le dirigeant d'une PME pendant cinq trimestres | BTS GPME | BTS CG 6/6 · BTS MCO 4/4 · BTS NDRC 3/3 · BTS MHR 2/2 · BTS MHR · B et C 4/4 · DCG 4/4 · STMG 4/10 · BUT GEA 2/5 |
+| Piloter un hôtel sur une année de saisons | BTS MHR | BTS CG 6/6 · BTS MCO 4/4 · BTS NDRC 3/3 · BTS MHR · B et C 4/4 · BUT GEA 5/5 · STMG 9/10 · BTS GPME 3/4 · DCG 3/4 |
+| Composer la carte et tenir le service | BTS MHR · B et C | STMG 10/10 · BTS MCO 4/4 · BTS NDRC 3/3 · BTS GPME 4/4 · BTS MHR 2/2 · BUT GEA 4/5 · DCG 3/4 · BTS CG 3/6 |
+| Analyser et piloter une entreprise industrielle | BUT GEA | BTS NDRC 3/3 · BTS MHR 2/2 · STMG 9/10 · BTS CG 5/6 · BTS MCO 3/4 · BTS MHR · B et C 3/4 · DCG 3/4 · BTS GPME 2/4 |
+| Quatre exercices chez Nova : budget, écarts, rapport de gestion | DCG | BTS MHR 2/2 · BUT GEA 5/5 · STMG 9/10 · BTS GPME 3/4 · BTS MHR · B et C 3/4 · BTS NDRC 2/3 · BTS CG 3/6 · BTS MCO 2/4 |
+| RSE et performance : un engagement qui se pilote | DCG | BTS NDRC 3/3 · BTS MHR 2/2 · BUT GEA 4/5 · BTS MCO 3/4 · BTS GPME 3/4 · BTS MHR · B et C 3/4 · BTS CG 3/6 · STMG 4/10 |
+| Piloter sous incertitude une entreprise de transport | Toutes filières, après un premier atelier | BTS NDRC 3/3 · BTS GPME 4/4 · BTS MHR 2/2 · BUT GEA 5/5 · DCG 4/4 · BTS CG 5/6 · BTS MCO 3/4 · BTS MHR · B et C 3/4 · STMG 7/10 |
+| Diriger une entreprise en équipe inter-filières | STMG, BTS CG, BTS MCO et BTS NDRC | BTS MHR 2/2 · BTS MHR · B et C 4/4 · DCG 4/4 · BUT GEA 4/5 · BTS GPME 2/4 |
 
 ## La table, diplôme par diplôme
 
@@ -490,172 +503,162 @@ COUVRIR : un bloc est atteint dès qu'un seul geste le touche, c'est un plancher
 
 ### BTS Management en hôtellerie-restauration
 
-#### Bloc 1 · Piloter l'activité opérationnelle de l'établissement
+#### Bloc 4 · Pilotage de la production de services en hôtellerie restauration
 
-15 gestes liés.
+18 gestes liés.
 
+- `choisir-ses-indicateurs` *(mhr:6 ; 1 blocs nommés)*
+- `financer-le-court-terme` *(mhr:5 ; 1 blocs nommés)*
+- `plan-de-tresorerie` *(mhr:5 ; 1 blocs nommés)*
+- `presenter-a-l-oral` *(mhr:6 ; 1 blocs nommés)*
+- `resultat-contre-caisse` *(mhr:5 ; 1 blocs nommés)*
+- `tableau-de-bord` *(mhr:6 ; 1 blocs nommés)*
 - `anticiper-un-volume` *(mhr:4 ; 2 blocs nommés)*
 - `ce-qui-erode-la-marge` *(mhr:3 ; 2 blocs nommés)*
 - `defendre-un-choix` *(mhr:3 ; 2 blocs nommés)*
 - `effet-d-un-delai` *(mhr:4 ; 2 blocs nommés)*
-- `financer-le-court-terme` *(mhr:5 ; 2 blocs nommés)*
 - `fixer-un-prix` *(mhr:4 ; 2 blocs nommés)*
 - `lire-l-ecran-de-decision` *(mhr:1 ; 2 blocs nommés)*
 - `lire-les-comptes` *(mhr:1 ; 2 blocs nommés)*
 - `marge-unitaire` *(mhr:2 ; 2 blocs nommés)*
-- `plan-de-tresorerie` *(mhr:5 ; 2 blocs nommés)*
 - `presenter-l-entreprise` *(mhr:1 ; 2 blocs nommés)*
 - `repercuter-une-hausse` *(mhr:3 ; 2 blocs nommés)*
-- `resultat-contre-caisse` *(mhr:5 ; 2 blocs nommés)*
 - `seuil-de-rentabilite` *(mhr:2 ; 2 blocs nommés)*
 - `situer-son-offre` *(mhr:2 ; 2 blocs nommés)*
 
-#### Bloc 2 · Analyser les coûts et la performance pour décider
+#### Bloc 2 · Mercatique des services en hôtellerie restauration
 
 12 gestes liés.
 
-- `choisir-ses-indicateurs` *(mhr:6 ; 2 blocs nommés)*
-- `financer-le-court-terme` *(mhr:5 ; 2 blocs nommés)*
-- `lire-l-ecran-de-decision` *(mhr:1 ; 2 blocs nommés)*
-- `lire-les-comptes` *(mhr:1 ; 2 blocs nommés)*
-- `marge-unitaire` *(mhr:2 ; 2 blocs nommés)*
-- `plan-de-tresorerie` *(mhr:5 ; 2 blocs nommés)*
-- `presenter-a-l-oral` *(mhr:6 ; 2 blocs nommés)*
-- `presenter-l-entreprise` *(mhr:1 ; 2 blocs nommés)*
-- `resultat-contre-caisse` *(mhr:5 ; 2 blocs nommés)*
-- `seuil-de-rentabilite` *(mhr:2 ; 2 blocs nommés)*
-- `situer-son-offre` *(mhr:2 ; 2 blocs nommés)*
-- `tableau-de-bord` *(mhr:6 ; 2 blocs nommés)*
-
-#### Bloc 3 · Gérer l'offre commerciale et la relation client
-
-6 gestes liés.
-
 - `anticiper-un-volume` *(mhr:4 ; 2 blocs nommés)*
 - `ce-qui-erode-la-marge` *(mhr:3 ; 2 blocs nommés)*
 - `defendre-un-choix` *(mhr:3 ; 2 blocs nommés)*
 - `effet-d-un-delai` *(mhr:4 ; 2 blocs nommés)*
 - `fixer-un-prix` *(mhr:4 ; 2 blocs nommés)*
+- `lire-l-ecran-de-decision` *(mhr:1 ; 2 blocs nommés)*
+- `lire-les-comptes` *(mhr:1 ; 2 blocs nommés)*
+- `marge-unitaire` *(mhr:2 ; 2 blocs nommés)*
+- `presenter-l-entreprise` *(mhr:1 ; 2 blocs nommés)*
 - `repercuter-une-hausse` *(mhr:3 ; 2 blocs nommés)*
-
-#### Bloc 4 · Rendre compte et manager l'équipe
-
-3 gestes liés.
-
-- `choisir-ses-indicateurs` *(mhr:6 ; 2 blocs nommés)*
-- `presenter-a-l-oral` *(mhr:6 ; 2 blocs nommés)*
-- `tableau-de-bord` *(mhr:6 ; 2 blocs nommés)*
+- `seuil-de-rentabilite` *(mhr:2 ; 2 blocs nommés)*
+- `situer-son-offre` *(mhr:2 ; 2 blocs nommés)*
 
 ### BTS Management en hôtellerie-restauration, options B et C
 
-#### Bloc 2 · Analyser les coûts et la performance pour décider
+#### Bloc 4 · Pilotage de la production de services en hôtellerie restauration
 
-11 gestes liés.
+16 gestes liés.
 
-- `choisir-ses-indicateurs` *(bistrot:6 ; 2 blocs nommés)*
-- `lire-l-ecran-de-decision` *(bistrot:1 ; 2 blocs nommés)*
-- `lire-les-comptes` *(bistrot:1 ; 2 blocs nommés)*
-- `marge-unitaire` *(bistrot:2 ; 2 blocs nommés)*
-- `presenter-a-l-oral` *(bistrot:6 ; 2 blocs nommés)*
-- `presenter-l-entreprise` *(bistrot:1 ; 2 blocs nommés)*
-- `quand-recruter` *(bistrot:4 ; 2 blocs nommés)*
-- `repercuter-une-hausse` *(bistrot:4 ; 2 blocs nommés)*
-- `rupture-ou-surstock` *(bistrot:2 ; 2 blocs nommés)*
-- `seuil-de-rentabilite` *(bistrot:2 ; 2 blocs nommés)*
-- `tableau-de-bord` *(bistrot:6 ; 2 blocs nommés)*
-
-#### Bloc 1 · Piloter l'activité opérationnelle de l'établissement
-
-11 gestes liés.
-
+- `choisir-ses-indicateurs` *(bistrot:6 ; 1 blocs nommés)*
+- `presenter-a-l-oral` *(bistrot:6 ; 1 blocs nommés)*
+- `tableau-de-bord` *(bistrot:6 ; 1 blocs nommés)*
 - `effet-d-un-delai` *(bistrot:3, bistrot:5 ; 2 blocs nommés)*
 - `comparer-des-fournisseurs` *(bistrot:3 ; 2 blocs nommés)*
-- `la-capacite-qui-bloque` *(bistrot:5 ; 2 blocs nommés)*
 - `lire-l-ecran-de-decision` *(bistrot:1 ; 2 blocs nommés)*
 - `lire-les-comptes` *(bistrot:1 ; 2 blocs nommés)*
-- `marge-par-unite-rare` *(bistrot:5 ; 2 blocs nommés)*
 - `marge-unitaire` *(bistrot:2 ; 2 blocs nommés)*
 - `presenter-l-entreprise` *(bistrot:1 ; 2 blocs nommés)*
 - `qualite-et-frequentation` *(bistrot:3 ; 2 blocs nommés)*
 - `rupture-ou-surstock` *(bistrot:2 ; 2 blocs nommés)*
 - `seuil-de-rentabilite` *(bistrot:2 ; 2 blocs nommés)*
+- `la-capacite-qui-bloque` *(bistrot:5 ; 3 blocs nommés)*
+- `marge-par-unite-rare` *(bistrot:5 ; 3 blocs nommés)*
+- `quand-recruter` *(bistrot:4 ; 3 blocs nommés)*
+- `repercuter-une-hausse` *(bistrot:4 ; 3 blocs nommés)*
 
-#### Bloc 3 · Gérer l'offre commerciale et la relation client
+#### Bloc 2 · Mercatique des services en hôtellerie restauration
 
-7 gestes liés.
+8 gestes liés.
+
+- `lire-l-ecran-de-decision` *(bistrot:1 ; 2 blocs nommés)*
+- `lire-les-comptes` *(bistrot:1 ; 2 blocs nommés)*
+- `presenter-l-entreprise` *(bistrot:1 ; 2 blocs nommés)*
+- `effet-d-un-delai` *(bistrot:5 ; 3 blocs nommés)*
+- `la-capacite-qui-bloque` *(bistrot:5 ; 3 blocs nommés)*
+- `marge-par-unite-rare` *(bistrot:5 ; 3 blocs nommés)*
+- `quand-recruter` *(bistrot:4 ; 3 blocs nommés)*
+- `repercuter-une-hausse` *(bistrot:4 ; 3 blocs nommés)*
+
+#### Bloc 1 · Conception et production de services en hôtellerie restauration
+
+8 gestes liés.
 
 - `effet-d-un-delai` *(bistrot:3, bistrot:5 ; 2 blocs nommés)*
 - `comparer-des-fournisseurs` *(bistrot:3 ; 2 blocs nommés)*
-- `la-capacite-qui-bloque` *(bistrot:5 ; 2 blocs nommés)*
-- `marge-par-unite-rare` *(bistrot:5 ; 2 blocs nommés)*
+- `marge-unitaire` *(bistrot:2 ; 2 blocs nommés)*
 - `qualite-et-frequentation` *(bistrot:3 ; 2 blocs nommés)*
-- `quand-recruter` *(bistrot:4 ; 2 blocs nommés)*
-- `repercuter-une-hausse` *(bistrot:4 ; 2 blocs nommés)*
+- `rupture-ou-surstock` *(bistrot:2 ; 2 blocs nommés)*
+- `seuil-de-rentabilite` *(bistrot:2 ; 2 blocs nommés)*
+- `la-capacite-qui-bloque` *(bistrot:5 ; 3 blocs nommés)*
+- `marge-par-unite-rare` *(bistrot:5 ; 3 blocs nommés)*
 
-#### Bloc 4 · Rendre compte et manager l'équipe
+#### Bloc 3 · Management de la production de services en hôtellerie restauration
 
-3 gestes liés.
+2 gestes liés.
 
-- `choisir-ses-indicateurs` *(bistrot:6 ; 2 blocs nommés)*
-- `presenter-a-l-oral` *(bistrot:6 ; 2 blocs nommés)*
-- `tableau-de-bord` *(bistrot:6 ; 2 blocs nommés)*
+- `quand-recruter` *(bistrot:4 ; 3 blocs nommés)*
+- `repercuter-une-hausse` *(bistrot:4 ; 3 blocs nommés)*
 
 ### BUT Gestion des entreprises et des administrations
 
-#### Bloc 1 · Analyser les coûts et la rentabilité
+#### Analyser les processus de l'organisation dans son environnement
 
-12 gestes liés.
+3 gestes liés.
 
+- `lire-l-ecran-de-decision` *(gea:1 ; 2 blocs nommés)*
+- `lire-les-comptes` *(gea:1 ; 2 blocs nommés)*
+- `presenter-l-entreprise` *(gea:1 ; 2 blocs nommés)*
+
+#### Évaluer l'activité de l'organisation
+
+10 gestes liés.
+
+- `besoin-en-fonds-de-roulement` *(gea:3, gea:5 ; 2 blocs nommés)*
+- `tenir-ensemble` *(gea:5, gea:6 ; 2 blocs nommés)*
 - `anticiper-un-volume` *(gea:5 ; 2 blocs nommés)*
-- `besoin-en-fonds-de-roulement` *(gea:5 ; 2 blocs nommés)*
+- `choisir-ses-indicateurs` *(gea:6 ; 2 blocs nommés)*
+- `lire-l-ecran-de-decision` *(gea:1 ; 2 blocs nommés)*
+- `lire-les-comptes` *(gea:1 ; 2 blocs nommés)*
+- `plan-de-tresorerie` *(gea:3 ; 2 blocs nommés)*
+- `presenter-a-l-oral` *(gea:6 ; 2 blocs nommés)*
+- `presenter-l-entreprise` *(gea:1 ; 2 blocs nommés)*
+- `resultat-contre-caisse` *(gea:3 ; 2 blocs nommés)*
+
+#### Concevoir des outils de contrôle de gestion
+
+6 gestes liés.
+
 - `cout-de-la-saturation` *(gea:4 ; 2 blocs nommés)*
 - `cout-de-revient` *(gea:2 ; 2 blocs nommés)*
 - `juger-un-investissement` *(gea:4 ; 2 blocs nommés)*
-- `lire-l-ecran-de-decision` *(gea:1 ; 2 blocs nommés)*
-- `lire-les-comptes` *(gea:1 ; 2 blocs nommés)*
 - `marge-par-unite-rare` *(gea:4 ; 2 blocs nommés)*
-- `presenter-l-entreprise` *(gea:1 ; 2 blocs nommés)*
 - `seuil-de-rentabilite` *(gea:2 ; 2 blocs nommés)*
-- `tenir-ensemble` *(gea:5 ; 2 blocs nommés)*
 - `variable-ou-fixe` *(gea:2 ; 2 blocs nommés)*
 
-#### Bloc 2 · Établir et lire les documents de synthèse
+#### Aider à la prise de décision
 
 12 gestes liés.
 
 - `besoin-en-fonds-de-roulement` *(gea:3 ; 2 blocs nommés)*
 - `choisir-ses-indicateurs` *(gea:6 ; 2 blocs nommés)*
+- `cout-de-la-saturation` *(gea:4 ; 2 blocs nommés)*
 - `cout-de-revient` *(gea:2 ; 2 blocs nommés)*
-- `lire-l-ecran-de-decision` *(gea:1 ; 2 blocs nommés)*
-- `lire-les-comptes` *(gea:1 ; 2 blocs nommés)*
+- `juger-un-investissement` *(gea:4 ; 2 blocs nommés)*
+- `marge-par-unite-rare` *(gea:4 ; 2 blocs nommés)*
 - `plan-de-tresorerie` *(gea:3 ; 2 blocs nommés)*
 - `presenter-a-l-oral` *(gea:6 ; 2 blocs nommés)*
-- `presenter-l-entreprise` *(gea:1 ; 2 blocs nommés)*
 - `resultat-contre-caisse` *(gea:3 ; 2 blocs nommés)*
 - `seuil-de-rentabilite` *(gea:2 ; 2 blocs nommés)*
 - `tenir-ensemble` *(gea:6 ; 2 blocs nommés)*
 - `variable-ou-fixe` *(gea:2 ; 2 blocs nommés)*
 
-#### Bloc 3 · Piloter la trésorerie et le financement
+#### Assurer la gestion et le développement de la chaîne de valeur
 
-5 gestes liés.
+3 gestes liés.
 
-- `besoin-en-fonds-de-roulement` *(gea:3, gea:5 ; 2 blocs nommés)*
 - `anticiper-un-volume` *(gea:5 ; 2 blocs nommés)*
-- `plan-de-tresorerie` *(gea:3 ; 2 blocs nommés)*
-- `resultat-contre-caisse` *(gea:3 ; 2 blocs nommés)*
+- `besoin-en-fonds-de-roulement` *(gea:5 ; 2 blocs nommés)*
 - `tenir-ensemble` *(gea:5 ; 2 blocs nommés)*
-
-#### Bloc 4 · Décider et rendre compte
-
-6 gestes liés.
-
-- `choisir-ses-indicateurs` *(gea:6 ; 2 blocs nommés)*
-- `cout-de-la-saturation` *(gea:4 ; 2 blocs nommés)*
-- `juger-un-investissement` *(gea:4 ; 2 blocs nommés)*
-- `marge-par-unite-rare` *(gea:4 ; 2 blocs nommés)*
-- `presenter-a-l-oral` *(gea:6 ; 2 blocs nommés)*
-- `tenir-ensemble` *(gea:6 ; 2 blocs nommés)*
 
 ### DCG
 

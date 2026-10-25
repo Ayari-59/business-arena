@@ -14,9 +14,10 @@ import type { AtelierDefinition } from "./types";
  * compte. Un atelier de professionnalisation se note sur ce qui est rendu, pas
  * sur le classement du jeu.
  *
- * Le référentiel du BTS MHR n'a pas encore été confronté à son texte : le code
- * figure donc dans REFERENTIELS_NON_VERIFIES, et les blocs cités ci-dessous
- * décrivent l'activité de management sans prétendre reprendre l'arrêté au mot.
+ * Les blocs cités sont ceux du référentiel du BTS MHR, lus sur le texte
+ * (REFERENTIELS.mhr). L'atelier travaille surtout le pilotage et la mercatique ;
+ * il ne fait pas produire de service, ne recrute pas et ne monte pas de projet
+ * d'entreprise, et le tableau de couverture le dit plutôt que de le taire.
  */
 export const ATELIER_MHR: AtelierDefinition = {
   code: "mhr",
@@ -61,8 +62,8 @@ export const ATELIER_MHR: AtelierDefinition = {
       tourJoue: null,
       essai: true,
       processus: [
-        "Bloc 1 · Piloter l'activité opérationnelle de l'établissement",
-        "Bloc 2 · Analyser les coûts et la performance pour décider",
+        "Bloc 4 · Pilotage de la production de services en hôtellerie restauration",
+        "Bloc 2 · Mercatique des services en hôtellerie restauration",
       ],
       objectif:
         "Apprendre le jeu avant que rien ne compte : lire le mandat de l'hôtel, ses trois clientèles et sa saisonnalité, jouer un trimestre d'essai de bout en bout, lire ses premiers résultats, puis lancer la vraie partie.",
@@ -133,8 +134,8 @@ export const ATELIER_MHR: AtelierDefinition = {
       dureeMinutes: 120,
       tourJoue: 1,
       processus: [
-        "Bloc 1 · Piloter l'activité opérationnelle de l'établissement",
-        "Bloc 2 · Analyser les coûts et la performance pour décider",
+        "Bloc 4 · Pilotage de la production de services en hôtellerie restauration",
+        "Bloc 2 · Mercatique des services en hôtellerie restauration",
       ],
       objectif:
         "Lire la situation d'un hôtel inconnu, en tirer son prix moyen, son taux d'occupation et son seuil, et décider d'un premier positionnement tarifaire.",
@@ -206,8 +207,8 @@ export const ATELIER_MHR: AtelierDefinition = {
       dureeMinutes: 120,
       tourJoue: 2,
       processus: [
-        "Bloc 3 · Gérer l'offre commerciale et la relation client",
-        "Bloc 1 · Piloter l'activité opérationnelle de l'établissement",
+        "Bloc 2 · Mercatique des services en hôtellerie restauration",
+        "Bloc 4 · Pilotage de la production de services en hôtellerie restauration",
       ],
       objectif:
         "Arbitrer entre baisser le tarif pour remplir et le tenir pour préserver la marge, selon la clientèle attendue au trimestre.",
@@ -279,8 +280,8 @@ export const ATELIER_MHR: AtelierDefinition = {
       dureeMinutes: 120,
       tourJoue: 3,
       processus: [
-        "Bloc 1 · Piloter l'activité opérationnelle de l'établissement",
-        "Bloc 3 · Gérer l'offre commerciale et la relation client",
+        "Bloc 2 · Mercatique des services en hôtellerie restauration",
+        "Bloc 4 · Pilotage de la production de services en hôtellerie restauration",
       ],
       objectif:
         "Tirer le meilleur d'une saison qui change la nature de la demande plus que son volume : les touristes de loisirs doublent, la clientèle affaires se retire à moitié et les groupes disparaissent. Fixer le tarif pour une clientèle qui n'a ni la même sensibilité au prix ni le même délai de règlement que celle des trimestres joués.",
@@ -352,8 +353,7 @@ export const ATELIER_MHR: AtelierDefinition = {
       dureeMinutes: 120,
       tourJoue: 4,
       processus: [
-        "Bloc 2 · Analyser les coûts et la performance pour décider",
-        "Bloc 1 · Piloter l'activité opérationnelle de l'établissement",
+        "Bloc 4 · Pilotage de la production de services en hôtellerie restauration",
       ],
       objectif:
         "Traverser un trimestre creux sans rompre la trésorerie : anticiper la baisse d'activité et couvrir le découvert saisonnier.",
@@ -425,8 +425,7 @@ export const ATELIER_MHR: AtelierDefinition = {
       dureeMinutes: 120,
       tourJoue: null,
       processus: [
-        "Bloc 2 · Analyser les coûts et la performance pour décider",
-        "Bloc 4 · Rendre compte et manager l'équipe",
+        "Bloc 4 · Pilotage de la production de services en hôtellerie restauration",
       ],
       objectif:
         "Construire le tableau de bord de direction des quatre trimestres et le présenter oralement, comme on rend compte à un propriétaire d'établissement.",
@@ -545,7 +544,7 @@ export const ATELIER_MHR: AtelierDefinition = {
     {
       question: "Quel lien avec les épreuves du BTS ?",
       reponse:
-        "Le référentiel du BTS MHR n'a pas encore été confronté à cette fiche, et les épreuves diffèrent selon l'option : rapprochez chaque livrable de l'épreuve de votre option avant de l'annoncer aux étudiants. Le tableau de bord de direction et sa soutenance sont, dans toutes les options, un entraînement à rendre compte d'une exploitation.",
+        "Les blocs cités sont ceux du référentiel, communs aux trois options, mais les épreuves diffèrent selon l'option : rapprochez chaque livrable de l'épreuve de votre option avant de l'annoncer aux étudiants. Le tableau de bord de direction et sa soutenance sont, dans toutes les options, un entraînement à rendre compte d'une exploitation.",
     },
   ],
 };

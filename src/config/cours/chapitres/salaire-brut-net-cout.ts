@@ -64,6 +64,7 @@ export const SALAIRE_BRUT_NET_COUT: Chapitre = {
     "Bac pro AGORA Bloc 3 · Administrer le personnel",
     "BTS SAM Bloc 3 · Collaboration à la gestion des ressources humaines",
     "BUT GACO · Participer au pilotage RH de l'organisation",
+    "BUT GEA · Gérer l'administration du personnel",
   ],
   titre: "Du salaire brut au coût pour l'entreprise",
   accroche:

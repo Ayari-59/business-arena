@@ -15,8 +15,8 @@ import type { AtelierDefinition } from "./types";
  * s'embauche, la cuisine s'équipe, le traiteur se lance, et c'est le mix des
  * offres qui décide de la contrainte qui bloque.
  *
- * Le référentiel du BTS MHR n'a pas encore été confronté à son texte : le code
- * figure dans REFERENTIELS_NON_VERIFIES, comme celui de l'atelier de l'hôtel.
+ * Les blocs cités sont ceux du référentiel du BTS MHR, lus sur le texte et
+ * communs aux trois options (REFERENTIELS.bistrot, le même que l'hôtel).
  */
 export const ATELIER_BISTROT: AtelierDefinition = {
   code: "bistrot",
@@ -61,8 +61,8 @@ export const ATELIER_BISTROT: AtelierDefinition = {
       tourJoue: null,
       essai: true,
       processus: [
-        "Bloc 2 · Analyser les coûts et la performance pour décider",
-        "Bloc 1 · Piloter l'activité opérationnelle de l'établissement",
+        "Bloc 4 · Pilotage de la production de services en hôtellerie restauration",
+        "Bloc 2 · Mercatique des services en hôtellerie restauration",
       ],
       objectif:
         "Apprendre le jeu avant que rien ne compte : lire le mandat du restaurant, ses offres et ses charges, jouer un trimestre d'essai de bout en bout, lire ses premiers résultats, puis lancer la vraie partie.",
@@ -133,8 +133,8 @@ export const ATELIER_BISTROT: AtelierDefinition = {
       dureeMinutes: 120,
       tourJoue: 1,
       processus: [
-        "Bloc 2 · Analyser les coûts et la performance pour décider",
-        "Bloc 1 · Piloter l'activité opérationnelle de l'établissement",
+        "Bloc 4 · Pilotage de la production de services en hôtellerie restauration",
+        "Bloc 1 · Conception et production de services en hôtellerie restauration",
       ],
       objectif:
         "Calculer le coût des denrées et la marge de chaque offre de la carte, en tirer le nombre de couverts qui couvre les charges de structure au mix prévu, et fixer les couverts à préparer en sachant que le surplus part à la poubelle.",
@@ -206,8 +206,8 @@ export const ATELIER_BISTROT: AtelierDefinition = {
       dureeMinutes: 120,
       tourJoue: 2,
       processus: [
-        "Bloc 1 · Piloter l'activité opérationnelle de l'établissement",
-        "Bloc 3 · Gérer l'offre commerciale et la relation client",
+        "Bloc 4 · Pilotage de la production de services en hôtellerie restauration",
+        "Bloc 1 · Conception et production de services en hôtellerie restauration",
       ],
       objectif:
         "Choisir un fournisseur de denrées en tenant ensemble son prix, la qualité perçue qu'il fait à la carte, son délai de règlement et son risque de rupture, et décider si l'activité traiteur se lance dès maintenant.",
@@ -279,8 +279,9 @@ export const ATELIER_BISTROT: AtelierDefinition = {
       dureeMinutes: 120,
       tourJoue: 3,
       processus: [
-        "Bloc 3 · Gérer l'offre commerciale et la relation client",
-        "Bloc 2 · Analyser les coûts et la performance pour décider",
+        "Bloc 2 · Mercatique des services en hôtellerie restauration",
+        "Bloc 4 · Pilotage de la production de services en hôtellerie restauration",
+        "Bloc 3 · Management de la production de services en hôtellerie restauration",
       ],
       objectif:
         "Répercuter une hausse des denrées offre par offre selon la sensibilité au prix de chaque clientèle, retravailler la carte plutôt que monter tous les prix, et préparer la saison des banquets en embauchant et en équipant maintenant ce qui ne servira qu'au trimestre suivant.",
@@ -352,8 +353,9 @@ export const ATELIER_BISTROT: AtelierDefinition = {
       dureeMinutes: 120,
       tourJoue: 4,
       processus: [
-        "Bloc 1 · Piloter l'activité opérationnelle de l'établissement",
-        "Bloc 3 · Gérer l'offre commerciale et la relation client",
+        "Bloc 1 · Conception et production de services en hôtellerie restauration",
+        "Bloc 4 · Pilotage de la production de services en hôtellerie restauration",
+        "Bloc 2 · Mercatique des services en hôtellerie restauration",
       ],
       objectif:
         "Servir le trimestre où les banquets font plus que doubler avec une cuisine et une brigade qui ne s'étirent pas : choisir le mix qui rapporte le plus par heure de brigade, préparer juste, et tenir une trésorerie que les banquets réglés à trente jours ne remplissent pas tout de suite.",
@@ -425,8 +427,7 @@ export const ATELIER_BISTROT: AtelierDefinition = {
       dureeMinutes: 120,
       tourJoue: null,
       processus: [
-        "Bloc 2 · Analyser les coûts et la performance pour décider",
-        "Bloc 4 · Rendre compte et manager l'équipe",
+        "Bloc 4 · Pilotage de la production de services en hôtellerie restauration",
       ],
       objectif:
         "Construire le tableau de bord d'exploitation des quatre trimestres et le présenter oralement, comme on rend compte à un propriétaire d'établissement.",
@@ -540,7 +541,7 @@ export const ATELIER_BISTROT: AtelierDefinition = {
     {
       question: "Quel lien avec les épreuves du BTS ?",
       reponse:
-        "Les épreuves diffèrent selon l'option, et le référentiel n'a pas encore été confronté à cette fiche : rapprochez chaque livrable de l'épreuve de votre option avant de l'annoncer aux étudiants. Le ratio matières offre par offre, le choix des fournisseurs et l'arbitrage de la brigade sont, en option B comme en option C, le cœur de ce que les épreuves de management d'unité demandent d'argumenter ; le tableau de bord et sa soutenance entraînent à rendre compte d'une exploitation.",
+        "Les blocs cités sont ceux du référentiel, communs aux options, mais les épreuves diffèrent selon l'option : rapprochez chaque livrable de l'épreuve de votre option avant de l'annoncer aux étudiants. Le ratio matières offre par offre, le choix des fournisseurs et l'arbitrage de la brigade sont, en option B comme en option C, le cœur de ce que les épreuves de management d'unité demandent d'argumenter ; le tableau de bord et sa soutenance entraînent à rendre compte d'une exploitation.",
     },
     {
       question: "Peut-on conduire cet atelier avec des équipes de deux ?",

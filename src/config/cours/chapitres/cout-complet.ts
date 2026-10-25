@@ -112,6 +112,7 @@ export const COUT_COMPLET: Chapitre = {
   blocs: [
     "BTS CG P5 · Analyse et prévision de l'activité",
     "DCG UE11 · Contrôle de gestion",
+    "BUT GEA · Concevoir des outils de contrôle de gestion",
   ],
   titre: "Coût complet et centres d'analyse",
   accroche:

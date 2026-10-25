@@ -33,6 +33,7 @@ export const ANALYSE_DES_ECARTS: Chapitre = {
     "BTS CG P5 · Analyse et prévision de l'activité",
     "DCG UE11 · Contrôle de gestion",
     "BUT GACO · Participer au pilotage interne de l'organisation",
+    "BUT GEA · Concevoir des outils de contrôle de gestion",
   ],
   titre: "L'analyse des écarts",
   accroche:

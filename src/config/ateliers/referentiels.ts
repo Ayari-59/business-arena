@@ -95,6 +95,47 @@ const REFERENTIEL_DCG: Referentiel = {
   ],
 };
 
+const REFERENTIEL_MHR: Referentiel = {
+  label: "Blocs de compétences",
+  accord: "mobilisés",
+  source:
+    "Référentiel du BTS Management en hôtellerie restauration, annexe I, tableau des blocs de compétences professionnelles (pôles P1 à P5), communs aux trois options. Lu sur le texte ; blocs professionnels seulement.",
+  entrees: [
+    "Bloc 1 · Conception et production de services en hôtellerie restauration",
+    "Bloc 2 · Mercatique des services en hôtellerie restauration",
+    "Bloc 3 · Management de la production de services en hôtellerie restauration",
+    "Bloc 4 · Pilotage de la production de services en hôtellerie restauration",
+    "Bloc 5 · Projet d'entrepreneuriat en hôtellerie restauration",
+  ],
+};
+
+const REFERENTIEL_BUT_GEA: Referentiel = {
+  label: "Compétences",
+  accord: "mobilisées",
+  source:
+    "BUT Gestion des entreprises et des administrations, programme national, annexe 12 de l'arrêté du 15 avril 2022 (BO spécial n° 4 du 26 mai 2022). Lu sur le texte.",
+  entrees: [
+    "Analyser les processus de l'organisation dans son environnement",
+    "Aider à la prise de décision",
+    "Piloter les relations avec les parties prenantes de l'organisation",
+    "Produire l'information comptable, fiscale et sociale de l'organisation",
+    "Évaluer l'activité de l'organisation",
+    "Concevoir des outils de contrôle de gestion",
+    "Mettre en œuvre des leviers d'amélioration continue des performances de l'organisation",
+    "Concevoir la stratégie de création de valeur",
+    "Assurer la gestion et le développement de la chaîne de valeur",
+    "Gérer l'administration du personnel",
+    "Gérer le développement des ressources humaines",
+  ],
+  parties: [
+    { titre: "Tronc commun", entrees: 3 },
+    { titre: "Parcours gestion comptable, fiscale et financière", entrees: 2 },
+    { titre: "Parcours contrôle de gestion et pilotage de la performance", entrees: 2 },
+    { titre: "Parcours gestion, entrepreneuriat et management d'activités", entrees: 2 },
+    { titre: "Parcours gestion et pilotage des ressources humaines", entrees: 2 },
+  ],
+};
+
 export const REFERENTIELS: Record<string, Referentiel> = {
   mco: REFERENTIEL_MCO,
   // Le même diplôme, une année plus tard : même texte, même garde.
@@ -102,6 +143,11 @@ export const REFERENTIELS: Record<string, Referentiel> = {
   ndrc: REFERENTIEL_NDRC,
   // L'atelier de deuxième année du même diplôme se confronte au même texte.
   fitness: REFERENTIEL_NDRC,
+  // Les deux ateliers du BTS MHR, l'hôtel et le bistrot, se confrontent au
+  // même texte : les blocs professionnels sont communs aux trois options.
+  mhr: REFERENTIEL_MHR,
+  bistrot: REFERENTIEL_MHR,
+  gea: REFERENTIEL_BUT_GEA,
   cg1: {
     label: "Processus",
     accord: "mobilisés",
@@ -398,7 +444,10 @@ export const REFERENTIELS_DES_FORMATIONS: Record<string, Referentiel> = {
   "bts-mco": REFERENTIEL_MCO,
   "bts-ndrc": REFERENTIEL_NDRC,
   "bts-gpme": REFERENTIELS.gpme!,
+  "bts-mhr": REFERENTIEL_MHR,
+  "bts-mhr-bc": REFERENTIEL_MHR,
   "bts-sam": REFERENTIEL_BTS_SAM,
+  "but-gea": REFERENTIEL_BUT_GEA,
   "but-tc": REFERENTIEL_BUT_TC,
   "but-gaco": REFERENTIEL_BUT_GACO,
   dcg: REFERENTIEL_DCG,
@@ -408,16 +457,14 @@ export const REFERENTIELS_DES_FORMATIONS: Record<string, Referentiel> = {
 /**
  * Les diplômes dont la liste n'a pas encore été confrontée à son texte.
  *
- * Le BTS MHR, sur ses deux ateliers, et le BUT GEA y figurent : leurs
- * animations sont publiées, mais leurs blocs n'ont pas encore été relus sur le
- * texte, et cela doit se voir
- * plutôt que de se confondre avec les diplômes dont le référentiel a été lu. Ce
- * n'est pas un état définitif : le jour où l'on ouvre le texte de l'un, il
- * rejoint REFERENTIELS et sort d'ici. C'est précisément à cela que sert cette
- * liste. (Les animations transversales, découverte et approfondissement, ne
+ * Un atelier publié avant que son texte soit lu y figure, pour que cela se
+ * voie plutôt que de se confondre avec les diplômes dont le référentiel a été
+ * lu. Le jour où l'on ouvre le texte, il rejoint REFERENTIELS et sort d'ici.
+ * Le BTS MHR, sur ses deux ateliers, et le BUT GEA en sont sortis : la liste
+ * est vide, et le mécanisme reste pour le prochain atelier. (Les animations transversales, découverte et approfondissement, ne
  * s'adossent à aucun diplôme : elles n'ont donc rien à faire ici.)
  */
-export const REFERENTIELS_NON_VERIFIES = ["mhr", "bistrot", "gea"] as const;
+export const REFERENTIELS_NON_VERIFIES: readonly string[] = [];
 
 /**
  * LES FICHES QUI CITENT PLUSIEURS DIPLÔMES.
@@ -445,7 +492,9 @@ const PREFIXES_DE_DIPLOME: readonly [string, string][] = [
   ["BTS MCO", "bts-mco"],
   ["BTS NDRC", "bts-ndrc"],
   ["BTS GPME", "bts-gpme"],
+  ["BTS MHR", "bts-mhr"],
   ["BTS SAM", "bts-sam"],
+  ["BUT GEA", "but-gea"],
   ["BUT TC", "but-tc"],
   ["BUT GACO", "but-gaco"],
   ["DCG", "dcg"],

@@ -80,6 +80,7 @@ export const L_EMPRUNT: Chapitre = {
   blocs: [
     "BTS CG P2 · Contrôle et production de l'information financière",
     "DCG UE9 · Comptabilité",
+    "BUT GEA · Produire l'information comptable, fiscale et sociale de l'organisation",
   ],
   titre: "L'emprunt et ses intérêts",
   accroche:
