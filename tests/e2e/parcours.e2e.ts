@@ -740,6 +740,16 @@ describe("parcours enseignant et élève", () => {
     expect(await prof.locator("[data-sur-mesure-paragraphe]").isVisible()).toBe(true);
     await aller(prof, "/parcours/bts-mco");
     expect(await prof.locator("[data-sans-atelier]").count()).toBe(0);
+    // UN ÉPISODE JOUÉ EN SITUATION couvre une entrée que rien d'autre ne
+    // touche : la ligne le cite, la section le liste, et le lien mène à l'épisode.
+    await aller(prof, "/parcours/seconde-pro-rc");
+    const ligne = prof.locator('tr[data-bloc*="omnicanal"]');
+    expect(await ligne.getAttribute("data-couvert")).toBe("oui");
+    expect(await ligne.locator('[data-situation="site-qui-ne-vend-pas"] a').getAttribute("href")).toBe(
+      "/entreprises/episode/site-qui-ne-vend-pas",
+    );
+    expect(await prof.locator('[data-situation-du-diplome="client-qui-s-en-va"]').count()).toBe(1);
+
     // La seconde option MG est servie par l'atelier STMG : sa page le propose.
     await aller(prof, "/parcours/seconde-mg");
     expect(await prof.locator("[data-sans-atelier]").count()).toBe(0);

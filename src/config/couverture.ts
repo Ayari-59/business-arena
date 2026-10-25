@@ -11,6 +11,8 @@ import {
   type Parcours as ParcoursDuCours,
 } from "./cours/registre";
 import type { Chapitre } from "./cours/types";
+import { BLOCS_DES_EPISODES } from "./episodes/blocs";
+import { episodeParCode } from "../pedagogy/episodes/registre";
 import { FORMATIONS, type Formation } from "./formations";
 
 /**
@@ -282,15 +284,24 @@ export interface ChapitreQuiCouvre {
   palier: Chapitre["palier"];
 }
 
+/** Un épisode manager qui fait travailler un bloc : la situation annexe à proposer. */
+export interface SituationQuiCouvre {
+  code: string;
+  titre: string;
+}
+
 /**
  * Un bloc vu depuis la formation : les séances des ateliers qui le mettent en
- * jeu, et les chapitres du cours qui le font travailler.
+ * jeu, les chapitres du cours qui le font travailler, et les épisodes qui le
+ * font jouer en situation.
  */
 export interface BlocDeLaFormation extends BlocDuDiplome {
   /** L'entrée du texte que le bloc désigne ; null si le texte n'a pas été lu. */
   officiel: string | null;
   /** Les chapitres du cours qui le travaillent, dans l'ordre du cours. */
   chapitres: ChapitreQuiCouvre[];
+  /** Les épisodes qui le travaillent (config/episodes/blocs.ts), dans l'ordre du registre. */
+  situations: SituationQuiCouvre[];
 }
 
 /** Le référentiel lu sur le texte auquel la formation s'adosse ; null s'il n'a pas été lu. */
@@ -320,6 +331,14 @@ export function blocsDuChapitre(
 }
 
 /**
+ * LES BLOCS QU'UN ÉPISODE FAIT TRAVAILLER À UNE FORMATION, sur la même règle
+ * que les chapitres : le préfixe trie, l'entrée officielle range.
+ */
+export function blocsDeLEpisode(code: string, formation: string): string[] {
+  return blocsDuChapitre({ blocs: BLOCS_DES_EPISODES[code] ?? [] }, formation);
+}
+
+/**
  * CE QUE LE COURS AJOUTE À L'ADÉQUATION.
  *
  * Un chapitre n'est pas une séance : il se fait seul, sur un trimestre de
@@ -328,6 +347,10 @@ export function blocsDuChapitre(
  * qui le travaillent, chiffres à l'appui, le couvrent ; un seul l'aborde, et
  * c'est un partiel, comme la séance unique. Le cours relève ainsi un bloc
  * qu'une seule séance effleurait, sans prétendre à ce que seul le jeu fait.
+ *
+ * UN ÉPISODE COMPTE COMME UN CHAPITRE. Il se joue seul, sur un trimestre, et
+ * ne rejoue pas le bloc dans la durée : deux situations, ou une situation et
+ * un chapitre, couvrent un bloc ; une seule l'aborde.
  */
 function adequationDuCours(chapitres: number): Adequation | null {
   if (chapitres >= 2) return "couvert";
@@ -432,6 +455,17 @@ export function couvertureDeLaFormation(
     }
   }
 
+  // Les épisodes, de la même façon : une situation annexe ouvre sa ligne.
+  const situationsParCle = new Map<string, SituationQuiCouvre[]>();
+  for (const code of Object.keys(BLOCS_DES_EPISODES)) {
+    const titre = episodeParCode(code)?.titre ?? code;
+    for (const k of blocsDeLEpisode(code, formation)) {
+      situationsParCle.set(k, [...(situationsParCle.get(k) ?? []), { code, titre }]);
+      if (!parBloc.has(k))
+        parBloc.set(k, { libelles: new Set(), officiel: k, presences: [] });
+    }
+  }
+
   const rang: Adequation[] = ["partiel", "couvert", "coeur"];
   const lignes: BlocDeLaFormation[] = [];
   for (const [k, vu] of parBloc) {
@@ -454,7 +488,8 @@ export function couvertureDeLaFormation(
       declaree = declaree || brut.declaree;
     }
     const chapitres = chapitresParCle.get(k) ?? [];
-    const parLeCours = adequationDuCours(chapitres.length);
+    const situations = situationsParCle.get(k) ?? [];
+    const parLeCours = adequationDuCours(chapitres.length + situations.length);
     if (parLeCours && rang.indexOf(parLeCours) > rang.indexOf(adequation))
       adequation = parLeCours;
     const premier = vu.presences[0];
@@ -470,6 +505,7 @@ export function couvertureDeLaFormation(
       officiel: vu.officiel,
       presences: vu.presences,
       chapitres,
+      situations,
       adequation,
       declaree,
       commentaire,
@@ -480,7 +516,9 @@ export function couvertureDeLaFormation(
   const part = (b: BlocDeLaFormation) =>
     Math.max(0, ...b.presences.map((p) => p.seances.length / p.seancesEnTout));
   return lignes.sort(
-    (a, b) => part(b) - part(a) || b.chapitres.length - a.chapitres.length,
+    (a, b) =>
+      part(b) - part(a) ||
+      b.chapitres.length + b.situations.length - (a.chapitres.length + a.situations.length),
   );
 }
 
@@ -490,7 +528,7 @@ export interface LigneDeCouverture {
   bloc: string;
   /** Le programme dont l'entrée relève, quand le texte en réunit plusieurs. */
   partie?: string;
-  /** Ce qui la travaille ; null si rien, ni séance ni chapitre. */
+  /** Ce qui la travaille ; null si rien, ni séance, ni chapitre, ni épisode. */
   couverture: BlocDeLaFormation | null;
 }
 
