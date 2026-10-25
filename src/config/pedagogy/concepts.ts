@@ -660,6 +660,56 @@ export const CONCEPTS: ConceptDef[] = [
       "Part cumulée d'un compte = somme des chiffres d'affaires jusqu'à lui / chiffre d'affaires total",
   },
   {
+    code: "payroll",
+    name: "Masse salariale et coût du travail",
+    domain: "costs",
+    axis: "finance",
+    definition:
+      "Ce que l'entreprise dépense pour son personnel sur une période : les salaires bruts et les cotisations patronales, salarié par salarié.",
+    intuition:
+      "Un salarié coûte bien plus que ce qu'il reçoit : à son salaire net s'ajoutent les cotisations qu'il paie et celles que l'entreprise paie pour lui. Et cette charge tombe chaque mois, que l'entreprise vende ou non : c'est une charge fixe.",
+    method:
+      "Multipliez le coût d'un salarié par l'effectif et par le nombre de périodes, puis rapportez la masse salariale au chiffre d'affaires et aux charges : c'est ce que le personnel pèse dans l'entreprise. Rapportez enfin le chiffre d'affaires à l'effectif pour voir ce que chaque salarié fait vendre.",
+    formula: "Masse salariale = effectif × coût d'un salarié ; taux de frais de personnel = masse salariale / chiffre d'affaires",
+  },
+  {
+    code: "pay_and_motivation",
+    name: "Rémunération et motivation",
+    domain: "production",
+    axis: "decision",
+    definition:
+      "Le lien entre ce que l'entreprise paie et ce que l'équipe donne : un salaire jugé juste soutient l'effort, un salaire trop bas le freine et pousse les meilleurs à partir.",
+    intuition:
+      "Baisser les salaires fait une économie certaine et immédiate. La perte vient ensuite, et se voit moins : une équipe moins motivée travaille moins bien, et ceux qui partent emportent leurs heures et leur savoir-faire.",
+    method:
+      "Mettez en face l'économie de masse salariale et ce qu'elle coûte : les heures perdues par la baisse de motivation, puis celles des salariés qui démissionnent, et ce qu'il faudrait dépenser pour les remplacer.",
+  },
+  {
+    code: "staff_turnover",
+    name: "Rotation du personnel",
+    domain: "production",
+    axis: "analysis",
+    definition:
+      "La part des salariés qui quittent l'entreprise sur une période, rapportée à l'effectif moyen.",
+    intuition:
+      "Chaque départ coûte : un poste vide, un recrutement, une formation, et du savoir-faire qui s'en va. Une rotation qui monte est souvent le premier signe d'un climat social qui se dégrade.",
+    method:
+      "Comptez les départs de la période et divisez-les par l'effectif moyen ; suivez le taux période après période, avec les autres indicateurs sociaux, et cherchez ce qui le fait monter : la rémunération, la charge de travail, les conditions de travail.",
+    formula: "Taux de rotation = départs de la période / effectif moyen de la période",
+  },
+  {
+    code: "training",
+    name: "Formation et compétences",
+    domain: "production",
+    axis: "decision",
+    definition:
+      "Ce que l'entreprise investit pour que ses salariés sachent mieux faire leur travail : la formation élève la productivité de l'équipe.",
+    intuition:
+      "Former coûte tout de suite et rapporte ensuite, période après période, tant que les salariés formés restent. Les premiers euros rapportent le plus : une formation de plus apporte de moins en moins.",
+    method:
+      "Calculez les heures de travail que la formation fait gagner, et ce qu'elles coûtent par heure ; comparez à ce que coûterait d'obtenir les mêmes heures en recrutant.",
+  },
+  {
     code: "payment_terms",
     name: "Délais de règlement et poste clients",
     domain: "finance",
@@ -1071,6 +1121,10 @@ export const CONCEPT_PREREQUISITES: Record<string, readonly string[]> = {
   customer_lifetime_value: ["churn_rate", "contribution_margin"],
   price_floor: ["variable_costs", "full_unit_cost"],
   customer_portfolio: ["revenue", "contribution_margin"],
+  payroll: ["fixed_costs"],
+  pay_and_motivation: ["payroll", "productivity"],
+  staff_turnover: ["payroll"],
+  training: ["productivity"],
   weighted_average_cost: ["stock", "variable_costs"],
   occupancy_revpar: ["capacity", "revenue"],
   payment_terms: ["bfr"],
@@ -1171,6 +1225,10 @@ export const CONCEPT_LEVEL: Record<string, ConceptLevel> = {
   customer_lifetime_value: 3,
   price_floor: 3,
   customer_portfolio: 4,
+  payroll: 2,
+  pay_and_motivation: 2,
+  staff_turnover: 2,
+  training: 2,
   weighted_average_cost: 3,
   occupancy_revpar: 3,
   payment_terms: 4,
