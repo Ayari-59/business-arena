@@ -9,6 +9,7 @@ import {
 } from "@/config/ateliers/referentiels";
 import { ATELIERS } from "@/config/ateliers";
 import { BLOCS_DES_EPISODES } from "@/config/episodes/blocs";
+import { HORS_DU_CHAMP } from "@/config/hors-du-champ";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
 import {
   blocsDeLEpisode,
@@ -243,6 +244,25 @@ describe("la couverture par le cours", () => {
     // Et rien ne passe d'un texte à l'autre.
     for (const b of seconde) expect(b.officiel, b.referentiel).not.toBeNull();
     expect(stmg.some((b) => b.referentiel.startsWith("2de MG"))).toBe(false);
+  });
+
+  it("une entrée hors du champ existe dans le texte, n'est pas travaillée, et dit pourquoi", () => {
+    // Déclarer hors du champ une entrée que l'arène travaille, ou une entrée
+    // qui n'existe pas, ferait mentir le tableau dans un sens ou dans l'autre.
+    const declarees = Object.entries(HORS_DU_CHAMP);
+    expect(declarees.length, "aucune entrée hors du champ : la règle ne garde rien").toBeGreaterThan(0);
+    for (const [formation, entrees] of declarees) {
+      const texte = referentielDeLaFormation(formation);
+      expect(texte, `${formation} : pas de texte lu`).not.toBeNull();
+      const { lignes } = tableauDeCouverture(formation);
+      for (const [entree, raison] of Object.entries(entrees)) {
+        expect(texte!.entrees, `${formation} : « ${entree} » n'est pas une entrée du texte`).toContain(entree);
+        const ligne = lignes.find((l) => l.bloc === entree)!;
+        expect(ligne.couverture, `${formation} / ${entree} : travaillée et déclarée hors du champ`).toBeNull();
+        expect(ligne.horsDuChamp).toBe(raison);
+        expect(raison.length, `${formation} / ${entree} : raison trop courte`).toBeGreaterThan(40);
+      }
+    }
   });
 
   it("la page d'un diplôme sans atelier le dit, et propose l'atelier sur mesure", () => {

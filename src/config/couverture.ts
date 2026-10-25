@@ -14,6 +14,7 @@ import type { Chapitre } from "./cours/types";
 import { BLOCS_DES_EPISODES } from "./episodes/blocs";
 import { episodeParCode } from "../pedagogy/episodes/registre";
 import { FORMATIONS, type Formation } from "./formations";
+import { raisonHorsDuChamp } from "./hors-du-champ";
 
 /**
  * LA COUVERTURE D'UN RÉFÉRENTIEL, LUE DANS LES ATELIERS.
@@ -530,6 +531,8 @@ export interface LigneDeCouverture {
   partie?: string;
   /** Ce qui la travaille ; null si rien, ni séance, ni chapitre, ni épisode. */
   couverture: BlocDeLaFormation | null;
+  /** Pourquoi l'arène ne la travaillera pas, quand elle sort de son champ (config/hors-du-champ.ts). */
+  horsDuChamp?: string;
 }
 
 /**
@@ -570,6 +573,7 @@ export function tableauDeCouverture(formation: string): {
     bloc: e,
     partie: partieDe(i),
     couverture: blocs.find((b) => b.officiel === e) ?? null,
+    horsDuChamp: raisonHorsDuChamp(formation, e),
   }));
   // Un bloc qui ne désigne aucune entrée : la garde des référentiels le
   // refuse, mais s'il passait, il resterait visible au lieu de disparaître.

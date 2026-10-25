@@ -714,7 +714,10 @@ describe("parcours enseignant et élève", () => {
         `${f.code} : une ligne par entrée du tableau`,
       ).toBe(lignes.length);
       expect(await prof.locator('tr[data-couvert="non"]').count(), f.code).toBe(
-        lignes.filter((l) => !l.couverture).length,
+        lignes.filter((l) => !l.couverture && !l.horsDuChamp).length,
+      );
+      expect(await prof.locator('tr[data-couvert="hors-champ"]').count(), f.code).toBe(
+        lignes.filter((l) => !l.couverture && l.horsDuChamp).length,
       );
       expect(await prof.locator("h1").innerText()).toBe(f.nom);
     }
@@ -749,6 +752,12 @@ describe("parcours enseignant et élève", () => {
       "/entreprises/episode/site-qui-ne-vend-pas",
     );
     expect(await prof.locator('[data-situation-du-diplome="client-qui-s-en-va"]').count()).toBe(1);
+
+    // CE QUI SORT DU CHAMP DE LA GESTION se dit, avec sa raison, au lieu de
+    // passer pour un manque : la sociologie et la science politique de la 2de SES.
+    await aller(prof, "/parcours/seconde-ses");
+    expect(await prof.locator('tr[data-couvert="hors-champ"]').count()).toBe(3);
+    expect(await prof.locator('tr[data-couvert="hors-champ"] [data-raison-hors-champ]').count()).toBe(3);
 
     // La seconde option MG est servie par l'atelier STMG : sa page le propose.
     await aller(prof, "/parcours/seconde-mg");
