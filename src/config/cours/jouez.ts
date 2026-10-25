@@ -564,6 +564,13 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Ajoutez au résultat du tour la dotation aux amortissements : c'est l'argent que l'activité a dégagé. Suffirait-il à payer un nouvel équipement ? Sinon, que pèsent les emprunts face aux capitaux propres ?",
   }),
+  "effectif-et-masse-salariale": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le compte de résultat.`,
+    lieux: ["compte-de-resultat"],
+    chercher:
+      "Retrouvez ce que le personnel a coûté dans le tour. Quelle part des ventes du tour lui a été consacrée, et ce chiffre bougerait-il si les ventes baissaient ?",
+  }),
   "tableau-de-bord-commercial": (c) => ({
     niveau: 2,
     faire: `${partie(c, 2)} Jouez quatre tours. À chaque tour, relevez la demande adressée, vos ventes, votre part de marché et votre marge.`,
