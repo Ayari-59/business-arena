@@ -76,6 +76,7 @@ export default async function PageDuDiplome({
   const cours = coursDeLaFormation(code);
   const entreprises = scenariosServant(code).map((s) => s.playerTeamName);
   const travailles = lignes.filter((l) => l.couverture).length;
+  const horsDuChamp = lignes.filter((l) => !l.couverture && l.horsDuChamp).length;
   // Les épisodes qui servent ce diplôme, une fois chacun, avec les entrées
   // qu'ils travaillent : la liste que l'enseignant distribue.
   const situations = [
@@ -119,7 +120,11 @@ export default async function PageDuDiplome({
                 {referentiel.label.toLowerCase()} {referentiel.accord} par
                 l&apos;arène, en séance d&apos;atelier, dans un chapitre du
                 cours ou dans un épisode joué en situation. Le tableau suit le texte, entrée par entrée, et dit aussi
-                ce que rien ne travaille.
+                ce que rien ne travaille
+                {horsDuChamp > 0
+                  ? `, et les ${horsDuChamp} entrées que l'arène laisse à d'autres outils parce qu'elles sortent du champ de la gestion`
+                  : ""}
+                .
               </>
             ) : (
               <>
@@ -196,7 +201,7 @@ export default async function PageDuDiplome({
                         ) : null}
                         <tr
                           data-bloc={l.bloc}
-                          data-couvert={c ? "oui" : "non"}
+                          data-couvert={c ? "oui" : l.horsDuChamp ? "hors-champ" : "non"}
                           className="grid gap-2 border-t border-white/5 px-4 py-4 align-top md:table-row md:p-0"
                         >
                           <th
@@ -207,6 +212,14 @@ export default async function PageDuDiplome({
                             {c?.commentaire ? (
                               <span className="mt-1 block text-sm font-normal leading-relaxed text-slate-400">
                                 {c.commentaire}
+                              </span>
+                            ) : null}
+                            {!c && l.horsDuChamp ? (
+                              <span
+                                data-raison-hors-champ=""
+                                className="mt-1 block text-sm font-normal leading-relaxed text-slate-400"
+                              >
+                                {l.horsDuChamp}
                               </span>
                             ) : null}
                           </th>
@@ -289,6 +302,10 @@ export default async function PageDuDiplome({
                                 className={`inline-block whitespace-nowrap rounded-full border px-2 py-0.5 text-xs uppercase tracking-wide ${PASTILLE_D_ADEQUATION[c.adequation].className}`}
                               >
                                 {PASTILLE_D_ADEQUATION[c.adequation].label}
+                              </span>
+                            ) : l.horsDuChamp ? (
+                              <span className="inline-block whitespace-nowrap rounded-full border border-slate-500/50 px-2 py-0.5 text-xs uppercase tracking-wide text-slate-400">
+                                hors du champ
                               </span>
                             ) : (
                               <span className="inline-block whitespace-nowrap rounded-full border border-dashed border-slate-500/50 px-2 py-0.5 text-xs uppercase tracking-wide text-slate-400">
