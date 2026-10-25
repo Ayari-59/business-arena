@@ -133,8 +133,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Dès l'ouverture de Tarval, sur tous les produits de base vendus au comptoir et à la palette, pour tous les clients qui enlèvent.",
       },
       {
-        t: "Ramener à 4 % de Tarval les références que les clients comparent, au comptoir et à la palette, dans les cinq agences proches des dépôts",
-        d: "Les 150 références du panier du comptoir et les produits à la palette ; le reste de la gamme ne bouge pas. Prêt pour l'ouverture.",
+        t: "Ramener à 4 % de Tarval les références que les clients comparent",
+        d: "Dans les cinq agences proches des dépôts, au comptoir et à la palette. Les 150 références du panier du comptoir et les produits à la palette ; le reste de la gamme ne bouge pas. Prêt pour l'ouverture.",
       },
       {
         t: "Ne pas toucher aux prix : nos clients achètent du service",
@@ -227,7 +227,7 @@ export const ETAPES: readonly Etape[] = [
         d: "100 k€ : radio, affichage et mailing pendant quatre semaines, à partir de la semaine 4.",
       },
       {
-        t: "La livraison du lendemain, tout de suite, dans les huit agences",
+        t: "La livraison du lendemain, tout de suite, dans les huit agences : c'est le service que Tarval ne sait pas faire",
         d: "Quatre camions-grue loués sur trois ans. En service en semaine 5.",
       },
       {

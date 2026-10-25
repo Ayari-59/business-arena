@@ -152,7 +152,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Un rendez-vous jeudi avec la présidente ; une offre chiffrée dans trois semaines.",
       },
       {
-        t: "Commander une évaluation à un expert indépendant, et ne rien répondre avant son rapport",
+        t: "Commander une évaluation à un expert indépendant, et ne rien répondre avant son rapport, pour fonder le prix sur un avis neutre",
         d: "35 k€ d'honoraires, six semaines de délai.",
       },
     ],

@@ -429,7 +429,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment staffez-vous l'extension ?",
     options: [
       {
-        t: "Avec deux freelances de plus, comme le reste",
+        t: "Avec deux freelances de plus, comme le reste : démarrage rapide et sans engagement",
         d: `Démarrage en semaine ${EXTENSION.semaine}, à ${euros(TJM_ACHAT)} la journée, sans engagement.`,
       },
       {
@@ -495,7 +495,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que répondez-vous à Aurélio Henaff ?",
     options: [
       {
-        t: "Les embaucher tous les quatre : disponibles en avril, sans frais de cabinet",
+        t: "Les embaucher tous les quatre : disponibles en avril, sans frais de cabinet, une occasion qui ne se représentera pas",
         d: `Quatre CDI à ${euros(KEROUAL.brut)} de brut, en poste le 1er avril.`,
       },
       {
@@ -572,7 +572,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Quel plan présentez-vous au comité ?",
     options: [
       {
-        t: "Un plan de croissance : cinq recrutements de plus dès avril, la demande le justifie",
+        t: "Un plan de croissance : cinq recrutements de plus dès avril, la demande le justifie et le marché ne nous attendra pas",
         d: `Cinq postes au cabinet, ${euros(RECRUTEMENT.honoraires)} chacun ; arrivées à partir de juin.`,
       },
       {

@@ -121,7 +121,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment répondez-vous à l'équipe cette semaine ?",
     options: [
       {
-        t: "Tenir la ligne : rappeler la règle à Patrick et Sylvie, devant l'équipe",
+        t: "Tenir la ligne : rappeler la règle à Patrick et Sylvie, devant l'équipe, pour que le projet ne s'enlise pas",
         d: "Un rappel à l'ordre clair à la réunion de lundi. Aucun coût.",
       },
       {
@@ -530,7 +530,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment finissez-vous le trimestre ?",
     options: [
       {
-        t: "Afficher chaque lundi le classement des saisies et du chiffre de chacun",
+        t: "Afficher chaque lundi le classement des saisies et du chiffre de chacun, pour stimuler l'équipe",
         d: "Un tableau au mur de chaque agence. Aucun coût.",
       },
       {

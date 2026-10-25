@@ -288,7 +288,7 @@ export const ETAPES: readonly Etape[] = [
         d: "3 500 € de vacations et d'heures, des semaines 4 à 7.",
       },
       {
-        t: "Faire rentrer chez eux, avec leur famille, les patients qui attendent une aide ou un aménagement",
+        t: "Faire rentrer chez eux, avec leur famille, les patients qui attendent une aide ou un aménagement, pour libérer des lits tout de suite",
         d: "Des lits libérés dès la semaine 4. Les familles s'organisent en attendant.",
       },
       {
@@ -402,7 +402,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Des places dès la semaine 8 si leurs directions acceptent. 1 600 € par semaine.",
       },
       {
-        t: "Demander à la directrice générale d'imposer la convention aux établissements de l'association",
+        t: "Demander à la directrice générale d'imposer la convention aux établissements de l'association, pour ne pas dépendre du bon vouloir de chaque directeur",
         d: "Passage au comité de direction : des places à partir de la semaine 9, que les directeurs le veuillent ou non.",
       },
       {
@@ -482,7 +482,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que faites-vous pour les patients qui attendent un aménagement ?",
     options: [
       {
-        t: "Les laisser rentrer chez eux maintenant : la famille s'organise en attendant les travaux",
+        t: "Les laisser rentrer chez eux maintenant : la famille s'organise en attendant les travaux, et les lits se libèrent tout de suite",
         d: "Les lits se libèrent tout de suite. Rien à payer.",
       },
       {
@@ -584,7 +584,7 @@ export const ETAPES: readonly Etape[] = [
         d: "5 000 € de préparation, 12 500 € par semaine d'intérim, des semaines 10 à 13.",
       },
       {
-        t: "Accepter les transferts plus précoces que le CHU demande",
+        t: "Accepter les transferts plus précoces que le CHU demande, pour rester un partenaire fiable du CHU pendant l'épidémie",
         d: "Rien à payer. Le CHU libère ses lits plus vite.",
       },
       {

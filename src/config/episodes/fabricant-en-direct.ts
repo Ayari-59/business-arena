@@ -183,8 +183,8 @@ export const ETAPES: readonly Etape[] = [
         d: "290 k€ de marge par an. Nos prix grands comptes rejoignent ceux de Mérindal.",
       },
       {
-        t: "Chiffrer ce que la plateforme peut prendre, défendre ce que le négoce apporte, et ouvrir la discussion avec Mérindal",
-        d: "15 k€ d'étude et de visites des quarante grands comptes ; un rendez-vous demandé à Mérindal.",
+        t: "Chiffrer ce que la plateforme peut prendre, et ouvrir la discussion avec Mérindal",
+        d: "Défendre ce que le négoce apporte. 15 k€ d'étude et de visites des quarante grands comptes ; un rendez-vous demandé à Mérindal.",
       },
     ],
     reactions: [
@@ -355,7 +355,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que faites-vous de l'offre de Solvane ?",
     options: [
       {
-        t: "Référencer toute la gamme Solvane dans les trente agences, dès maintenant",
+        t: "Référencer toute la gamme Solvane dans les trente agences, dès maintenant, pour ne plus dépendre de Mérindal",
         d: "125 k€ de déploiement : 45 k€ pour la série, 80 k€ pour le sur-mesure. En rayon en semaine 5.",
       },
       {
@@ -436,7 +436,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Lancez-vous une marque propre ?",
     options: [
       {
-        t: "Lancer une marque propre en plaques et en menuiseries",
+        t: "Lancer une marque propre en plaques et en menuiseries, pour garder la marge sur les deux familles à la fois",
         d: "180 k€ de lancement : 60 k€ pour les plaques, 120 k€ pour les menuiseries. En rayon en semaine 8.",
       },
       {

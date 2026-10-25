@@ -154,8 +154,8 @@ export const ETAPES: readonly Etape[] = [
         d: "158 € la chambre, journées d'étude et dîners. Signature cette semaine.",
       },
       {
-        t: "Proposer fin mai au même prix, du 26 au 28, ou les dates de juin à 228 €, un prix qui couvre les clients évincés même si le séminaire n'occupe que les trois quarts de son bloc",
-        d: "Orvandel choisira : fin mai, juin plus cher, ou le Palais Ombrelle.",
+        t: "Proposer fin mai au même prix, du 26 au 28, ou les dates de juin à 228 €",
+        d: "Un prix qui couvre les clients évincés même si le séminaire n'occupe que les trois quarts de son bloc. Orvandel choisira : fin mai, juin plus cher, ou le Palais Ombrelle.",
       },
       {
         t: "Garder juin au prix demandé, mais limiter le bloc à 30 chambres : les autres participants à l'hôtel partenaire de Thonon, salles et dîners chez nous",
@@ -422,7 +422,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que répondez-vous à Tavenne ?",
     options: [
       {
-        t: "Signer la série tout de suite : cinq cents nuitées garanties, c'est juillet assuré",
+        t: "Signer la série tout de suite : cinq cents nuitées garanties, c'est juillet assuré quelle que soit la demande",
         d: "175 € la chambre, demi-pension. Tavenne a sa réponse aujourd'hui.",
       },
       {
@@ -610,8 +610,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Cinq groupes signés en une semaine.",
       },
       {
-        t: "Coter chaque demande à son prix de déplacement : accepter au prix proposé quand il le couvre, proposer le plancher sinon",
-        d: "Certains groupes paieront plus, d'autres iront ailleurs.",
+        t: "Coter chaque demande à son prix de déplacement",
+        d: "Accepter au prix proposé quand il le couvre, proposer le plancher sinon. Certains groupes paieront plus, d'autres iront ailleurs.",
       },
       {
         t: "Fermer les groupes jusqu'à la fin de l'été",

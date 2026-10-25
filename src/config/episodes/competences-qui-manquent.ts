@@ -324,7 +324,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Trois jours en semaine 6, 5 700 € sur l'enveloppe. Ensuite, ils pilotent ce qu'ils peuvent.",
       },
       {
-        t: "Faire passer les douze opérateurs sur la machine, une demi-journée chacun par semaine",
+        t: "Faire passer les douze opérateurs sur la machine, une demi-journée chacun par semaine, pour que personne ne soit indispensable",
         d: "Tout le monde la connaîtra un peu. 900 € par semaine d'heures de réorganisation.",
       },
       {
@@ -482,11 +482,11 @@ export const ETAPES: readonly Etape[] = [
     question: "Que proposez-vous à René ?",
     options: [
       {
-        t: "Lui proposer un cumul emploi-retraite : deux jours par semaine pour transmettre et reprendre les pièces difficiles",
-        d: "De la semaine 9 à la fin du trimestre, 500 € par semaine sur l'enveloppe. Il dira oui, ou pas.",
+        t: "Lui proposer un cumul emploi-retraite : deux jours par semaine pour transmettre",
+        d: "Il reprend aussi les pièces difficiles. De la semaine 9 à la fin du trimestre, 500 € par semaine sur l'enveloppe. Il dira oui, ou pas.",
       },
       {
-        t: "Lui demander de reporter son départ de trois mois, à plein temps, avec une prime",
+        t: "Lui demander de reporter son départ de trois mois, à plein temps, avec une prime, le temps que la relève soit prête",
         d: "6 000 € de prime s'il accepte. Il dira oui, ou pas.",
       },
       {
@@ -563,8 +563,8 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment organisez-vous le départ de Joaquim ?",
     options: [
       {
-        t: "Organiser la passation : Joaquim valide chaque pilote, pièce par pièce, sur ce qu'il ne maîtrise pas encore",
-        d: "Sa dernière semaine, en partie hors production. Ce qui n'est pas validé part en sous-traitance.",
+        t: "Organiser la passation : Joaquim valide chaque pilote, pièce par pièce",
+        d: "Sur ce que chacun ne maîtrise pas encore. Sa dernière semaine, en partie hors production. Ce qui n'est pas validé part en sous-traitance.",
       },
       {
         t: "Faire venir un intérimaire spécialisé en commande numérique pour les semaines 12 et 13",

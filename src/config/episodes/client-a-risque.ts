@@ -167,7 +167,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que répondez-vous à la demande de Corvelle ?",
     options: [
       {
-        t: "Accorder les 500 k€ demandés, en compte ouvert",
+        t: "Accorder les 500 k€ demandés, en compte ouvert, pour ne pas perdre le chantier",
         d: "Tout le chantier livré, payé à 60 jours. Aucun coût, aucune garantie.",
       },
       {
@@ -260,7 +260,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que faites-vous pour Guénard ?",
     options: [
       {
-        t: "Laisser le blocage s'appliquer jusqu'au paiement de la traite",
+        t: "Laisser le blocage s'appliquer jusqu'au paiement de la traite, la règle vaut pour tous",
         d: "Plus aucune livraison tant que les 18 k€ ne sont pas réglés.",
       },
       {
@@ -445,7 +445,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Un retard de douze jours n'est pas un défaut.",
       },
       {
-        t: "Bloquer les livraisons jusqu'au paiement du retard",
+        t: "Bloquer les livraisons jusqu'au paiement du retard, pour ne pas creuser l'encours",
         d: "Plus rien ne part tant que les factures de mars ne sont pas soldées.",
       },
     ],
@@ -524,7 +524,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que faites-vous de la créance Brondel ?",
     options: [
       {
-        t: "Passer la créance en perte et clore le dossier",
+        t: "Passer la créance en perte et clore le dossier, pour ne plus y perdre de temps",
         d: `${kE(CREANCE_BRONDEL)} en charges ce mois-ci ; plus de temps passé sur Brondel.`,
       },
       {

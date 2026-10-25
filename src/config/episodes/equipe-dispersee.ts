@@ -519,15 +519,15 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment lancez-vous la gamme ?",
     options: [
       {
-        t: "Faire de la réunion un atelier entre pairs : les meilleurs montrent un chantier réel, puis chacun prépare un devis",
-        d: "Une journée entière à l'agence, en présentiel. 1 600 € de déplacements et de repas, et une journée sans visites.",
+        t: "Faire de la réunion un atelier entre pairs : les meilleurs montrent un chantier réel",
+        d: "Puis chacun prépare un devis. Une journée entière à l'agence, en présentiel. 1 600 € de déplacements et de repas, et une journée sans visites.",
       },
       {
         t: "Envoyer la documentation et les fiches de pose à chacun",
         d: "Gratuit. Chacun s'y met à son rythme.",
       },
       {
-        t: "Lancer un challenge : classement chaque lundi, une prime au premier",
+        t: "Lancer un challenge : classement chaque lundi, une prime au premier, pour que chacun pousse la nouvelle gamme",
         d: "2 000 € de prime en fin de trimestre. Les ventes de la gamme affichées chaque semaine.",
       },
       {
@@ -594,7 +594,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment finissez-vous le trimestre ?",
     options: [
       {
-        t: "Un point téléphonique chaque matin avec chacun, et l'état des devis chaque soir",
+        t: "Un point téléphonique chaque matin avec chacun, et l'état des devis chaque soir, pour ne rien laisser filer",
         d: "Jusqu'à la clôture. Vous saurez tout, chaque jour.",
       },
       {

@@ -184,7 +184,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que proposez-vous au comité de direction ?",
     options: [
       {
-        t: "Lancer l'offre dans les trente agences dès la semaine 3 : être les premiers",
+        t: "Lancer l'offre dans les trente agences dès la semaine 3 : être les premiers, et prendre le marché avant les autres",
         d: `Dix conseillers recrutés, ${kE(LANCEMENT[0]!.stock)} de stock, ${kE(LANCEMENT[0]!.campagne)} de campagne régionale, ${kE(30 * OUVERTURE)} d'ouvertures.`,
       },
       {
@@ -533,8 +533,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Ce que le comité a validé part en janvier, sans retouche.",
       },
       {
-        t: "Réviser l'ambition sur les chiffres du test : tout le réseau si chaque type d'agence passe le seuil, les grandes seules si elles sont les seules à le passer, l'arrêt sinon",
-        d: "Le plan de janvier suit ce que le test a mesuré, à la hausse comme à la baisse.",
+        t: "Réviser l'ambition selon les chiffres de chaque type d'agence",
+        d: "Tout le réseau si chaque type d'agence passe le seuil, les grandes seules si elles sont les seules à le passer, l'arrêt sinon. Le plan de janvier suit ce que le test a mesuré, à la hausse comme à la baisse.",
       },
       {
         t: "Prolonger le test six mois avant d'engager quoi que ce soit",
@@ -620,7 +620,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment vous préparez-vous à Solvéane ?",
     options: [
       {
-        t: "Baisser la commission d'un tiers dès janvier, pour dissuader Solvéane",
+        t: "Baisser la commission d'un tiers dès janvier, pour dissuader Solvéane de venir s'implanter",
         d: `${nombre(RIPOSTE.prix, 0)} € de marge en moins sur chaque bouquet de l'an prochain, dans toutes les agences.`,
       },
       {

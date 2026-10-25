@@ -270,8 +270,8 @@ export const ETAPES: readonly Etape[] = [
         d: "80 logements, 11 M€ empruntés sur vingt-cinq ans ; 100 k€ d'études engagés tout de suite.",
       },
       {
-        t: "Proposer à Orchidia une convention de parcours : notre SSIAD et notre SAAD chez ses résidents, l'hébergement temporaire, puis Montchapet quand la dépendance monte",
-        d: "Aucun investissement ; la réponse d'Orchidia est attendue dans trois semaines.",
+        t: "Proposer à Orchidia une convention de parcours entre sa résidence et nos services",
+        d: "Notre SSIAD et notre SAAD chez ses résidents, l'hébergement temporaire, puis Montchapet quand la dépendance monte. Aucun investissement ; la réponse d'Orchidia est attendue dans trois semaines.",
       },
       {
         t: "Laisser Orchidia à son marché : une résidence services ne vise pas notre public",
@@ -358,8 +358,8 @@ export const ETAPES: readonly Etape[] = [
     question: "Que faites-vous de l'appel à candidatures de l'ARS ?",
     options: [
       {
-        t: "Candidater avec ce que nous savons faire : Montchapet porteur, le SSIAD et le pilote pour le volet domicile, les partenaires du territoire",
-        d: "20 k€ de dossier ; trente personnes accompagnées, comme le prévoit le cahier des charges.",
+        t: "Candidater avec ce que nous savons faire : Montchapet porteur, le SSIAD et le pilote",
+        d: "Le SSIAD et le pilote pour le volet domicile, avec les partenaires du territoire. 20 k€ de dossier ; trente personnes accompagnées, comme le prévoit le cahier des charges.",
       },
       {
         t: "Candidater en promettant soixante personnes accompagnées à domicile dès janvier, pour être sûrs de gagner",
@@ -523,8 +523,8 @@ export const ETAPES: readonly Etape[] = [
         d: "60 k€ d'aménagement commandés lundi.",
       },
       {
-        t: "Interroger d'abord les aidants, puis dimensionner l'accueil et son transport au vu de l'enquête",
-        d: "12 k€, quatre semaines ; l'aménagement se commande en semaine 11.",
+        t: "Interroger d'abord les aidants, puis dimensionner l'accueil",
+        d: "L'accueil et son transport dimensionnés au vu de l'enquête. 12 k€, quatre semaines ; l'aménagement se commande en semaine 11.",
       },
       {
         t: "Ouvrir les 12 places avec un minibus et un chauffeur dès le départ",
@@ -604,7 +604,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Quel mandat de négociation recommandez-vous au conseil ?",
     options: [
       {
-        t: "Négocier un CPOM à l'identique : nos 480 places, sans objectif de transformation",
+        t: "Négocier un CPOM à l'identique : nos 480 places, sans objectif de transformation, pour ne rien engager tant que le financement n'est pas voté",
         d: "Aucun engagement ; le département garde la dotation complémentaire du SAAD.",
       },
       {

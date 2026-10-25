@@ -327,7 +327,7 @@ export const ETAPES: readonly Etape[] = [
         d: `Une liste chaque soir complet, un appel, la chambre chez un confrère et le taxi payés : ${CONFRERE} € par client.`,
       },
       {
-        t: "Déloger vers nos propres hôtels d'Aix-les-Bains, d'Évian et d'Albertville",
+        t: "Déloger vers nos propres hôtels d'Aix-les-Bains, d'Évian et d'Albertville, pour garder les clients dans le groupe",
         d: `La chambre ne coûte que son coût variable ; le taxi est plus long : ${DELOGEMENT.taxiNosHotels} €.`,
       },
       {
@@ -580,8 +580,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Rien à recalculer.",
       },
       {
-        t: "Mettre la politique à jour avec les défections constatées depuis septembre et le profil des salons de novembre",
-        d: "Le même calcul, avec les chiffres de cet automne. Une règle uniforme, ou l'absence de surréservation, n'ont rien à mettre à jour.",
+        t: "Mettre la politique à jour avec les défections de l'automne",
+        d: "Les défections constatées depuis septembre, et le profil des salons de novembre. Le même calcul, avec les chiffres de cet automne. Une règle uniforme, ou l'absence de surréservation, n'ont rien à mettre à jour.",
       },
       {
         t: "Ajouter deux chambres partout : en novembre, les entreprises annulent davantage",
@@ -665,7 +665,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Une réunion lundi, les chiffres hôtel par hôtel.",
       },
       {
-        t: "Plafonner la surréservation à deux chambres par hôtel et par soir",
+        t: "Plafonner la surréservation à deux chambres par hôtel et par soir, pour limiter les délogements sans tout arrêter",
         d: "Un compromis que les directeurs accepteront.",
       },
       {

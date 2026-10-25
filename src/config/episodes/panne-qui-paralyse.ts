@@ -126,7 +126,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Chaque agence reprend toute son activité à la main, tout de suite. 4 000 € d'heures par semaine de panne.",
       },
       {
-        t: "Réunir les six chefs d'agence chaque matin, et décider ensemble",
+        t: "Réunir les six chefs d'agence chaque matin, et décider ensemble au plus près du terrain",
         d: "Tout le monde autour de la table, chacun remonte ses urgences. 1 500 € de déplacements par semaine de panne.",
       },
       {
@@ -324,7 +324,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Le prestataire, 42 000 €. Les premières briques reviennent avant la fin du nettoyage.",
       },
       {
-        t: "Tout nettoyer, puis tout redémarrer d'un bloc",
+        t: "Tout nettoyer, puis tout redémarrer d'un bloc, pour repartir sur un système entièrement sain",
         d: "Le prestataire, 38 000 €. Rien ne revient avant que tout soit vérifié.",
       },
     ],
@@ -542,11 +542,11 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment sortez-vous de la crise ?",
     options: [
       {
-        t: "Rapprocher bons et livraisons client par client avec un renfort, et tenir un retour d'expérience",
-        d: "Un renfort de trois semaines, 2 500 € par semaine. Un retour d'expérience avec les chefs d'agence en semaine 10.",
+        t: "Rapprocher bons et livraisons, et tenir un retour d'expérience",
+        d: "Client par client. Un renfort de trois semaines, 2 500 € par semaine. Un retour d'expérience avec les chefs d'agence en semaine 10.",
       },
       {
-        t: "Faire tout ressaisir en deux samedis par les équipes",
+        t: "Faire tout ressaisir en deux samedis par les équipes, pour solder l'arriéré d'un coup",
         d: "Deux samedis majorés, 3 000 € chacun.",
       },
       {

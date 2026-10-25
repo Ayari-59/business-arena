@@ -373,7 +373,7 @@ export const ETAPES: readonly Etape[] = [
         d: `Ce qui ne se vend pas est détruit, ${euros(DESTRUCTION)} le millier de pots.`,
       },
       {
-        t: "Vendre les surplus de marque aux magasins de déstockage, au quart du prix",
+        t: "Vendre les surplus de marque aux magasins de déstockage, au quart du prix, pour en récupérer une partie",
         d: "Le soldeur enlève à l'usine. Les produits sous marque de distributeur restent détruits.",
       },
       {
@@ -457,11 +457,11 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment remontez-vous le taux de service ?",
     options: [
       {
-        t: "Constituer trois jours de stock de sécurité sur toutes les références",
+        t: "Constituer trois jours de stock de sécurité sur toutes les références, pour n'en laisser aucune en rupture",
         d: `${pots(SECURITE_PARTOUT * VOLUME_TOTAL)} de stock en plus, fabriqués en semaines 7 et 8.`,
       },
       {
-        t: "Un stock de sécurité ciblé sur les fortes rotations ; les faibles rotations sans stock de sécurité, au plus près des commandes",
+        t: "Un stock de sécurité ciblé sur les fortes rotations, aucun sur les faibles",
         d: `${nombre(SECURITE_CIBLEE * 7)} jour de sécurité sur les ${REFS.A.nombre} fortes rotations ; les faibles produites sur les commandes fermes quand l'enseigne en donne.`,
       },
       {
@@ -641,8 +641,8 @@ export const ETAPES: readonly Etape[] = [
     question: "Quelle règle proposez-vous pour l'automne ?",
     options: [
       {
-        t: "Un plan industriel et commercial mensuel : ventes, marketing, supply chain et production arrêtent ensemble volumes, promotions et séries",
-        d: "Une journée par mois pour les équipes, à partir d'octobre ; la préparation commence en semaine 12.",
+        t: "Un plan industriel et commercial mensuel, partagé entre les services",
+        d: "Ventes, marketing, supply chain et production arrêtent ensemble volumes, promotions et séries. Une journée par mois pour les équipes, à partir d'octobre ; la préparation commence en semaine 12.",
       },
       {
         t: "Un objectif de coût unitaire par ligne, avec une prime aux chefs d'équipe",

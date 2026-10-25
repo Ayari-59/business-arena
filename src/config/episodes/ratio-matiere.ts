@@ -147,7 +147,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Ce lundi, restaurant fermé, avec Philémon ; puis un bac pesé et noté à chaque service pendant deux semaines. Deux heures de second par semaine.",
       },
       {
-        t: "Attendre la clôture de septembre avant de toucher à quoi que ce soit",
+        t: "Attendre la clôture de septembre avant de toucher à quoi que ce soit : un mois ne fait pas une tendance",
         d: "Un mois ne fait pas une tendance. Rien ne change d'ici là.",
       },
     ],
@@ -317,7 +317,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Plus de dérive possible. Ce sont aussi les deux plats qu'on cite dans les avis.",
       },
       {
-        t: "Laisser le chef : la générosité fait la maison",
+        t: "Laisser le chef : la générosité fait la maison, et les clients reviennent pour ces assiettes",
         d: "Les clients reviennent pour ces assiettes. Rien ne change.",
       },
     ],
@@ -395,8 +395,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Tout le catalogue, à partir de la semaine 6. Trois semaines pour caler les livraisons et les références.",
       },
       {
-        t: "Garder les Halles et traiter les deux produits : beurre de laiterie en cuisson, veau chez un boucher",
-        d: "Le beurre AOP reste sur la table et dans le beurre blanc ; le quasi de veau vient de la Boucherie Pollet. Deux fiches techniques à refaire.",
+        t: "Garder les Halles et traiter à part les deux produits en hausse",
+        d: "Beurre de laiterie en cuisson, veau chez un boucher. Le beurre AOP reste sur la table et dans le beurre blanc ; le quasi de veau vient de la Boucherie Pollet. Deux fiches techniques à refaire.",
       },
       {
         t: "Répercuter la hausse : 2 € de plus sur les six plats au beurre et au veau",

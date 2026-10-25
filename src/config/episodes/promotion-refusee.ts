@@ -240,7 +240,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Des entretiens sans surprise.",
       },
       {
-        t: "Reporter les entretiens des trois candidats après le comité, pour ne rien préjuger",
+        t: "Reporter les entretiens des trois candidats après le comité, pour ne rien préjuger ni créer de faux espoirs",
         d: "Les entretiens glissent en décembre.",
       },
     ],
@@ -480,8 +480,8 @@ export const ETAPES: readonly Etape[] = [
         d: "7,2 k€ par an, charges comprises.",
       },
       {
-        t: "Appliquer la grille, et financer son plan de progression : la formation au pilotage de mission, un co-pilotage dès janvier, le réexamen en juin",
-        d: "2 800 € de formation ; l'augmentation de son grade, dans l'enveloppe.",
+        t: "Appliquer la grille, et financer son plan de progression",
+        d: "La formation au pilotage de mission, un co-pilotage dès janvier, le réexamen en juin. 2 800 € de formation ; l'augmentation de son grade, dans l'enveloppe.",
       },
       {
         t: "Lui verser discrètement une prime exceptionnelle de 5 000 €",
@@ -555,7 +555,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment organisez-vous la prise de poste du nouveau manager ?",
     options: [
       {
-        t: "Lui confier les deux missions de janvier et cinq consultants : c'est en pilotant qu'on apprend",
+        t: "Lui confier les deux missions de janvier et cinq consultants : c'est en pilotant qu'on apprend, et le staffing est bouclé",
         d: "Le staffing est bouclé. Rien à engager.",
       },
       {

@@ -328,7 +328,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment écrivez-vous les mémoires ?",
     options: [
       {
-        t: "Les consultants en intercontrat écrivent à partir de la bibliothèque, les seniors relisent la veille",
+        t: "Les consultants en intercontrat écrivent à partir de la bibliothèque, les seniors relisent la veille : l'intercontrat est déjà payé",
         d: `${JOURS.type.senior} jour de senior et ${JOURS.type.consultant} jours de consultant par réponse. L'intercontrat est déjà payé.`,
       },
       {
@@ -413,7 +413,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Quel prix remettez-vous à Kermelin ?",
     options: [
       {
-        t: "S'aligner sur Halden : 15 % sous notre prix",
+        t: "S'aligner sur Halden : 15 % sous notre prix, pour ne pas perdre Kermelin sur un écart de tarif",
         d: `Le TJM moyen passe à ${tjm(PRIX.aligne)}. Le mémoire part tel qu'il est.`,
       },
       {
@@ -507,7 +507,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Répondez-vous à la Métropole ?",
     options: [
       {
-        t: "Répondre avec un mémoire type : l'équipe n'a plus de seniors à y mettre",
+        t: "Répondre avec un mémoire type : l'équipe n'a plus de seniors à y mettre sans abîmer une mission en cours",
         d: `${JOURS.type.senior} jour de senior et ${JOURS.type.consultant} jours de consultant.`,
       },
       {

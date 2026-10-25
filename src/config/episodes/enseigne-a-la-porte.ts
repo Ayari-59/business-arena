@@ -171,7 +171,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Quelle ligne proposez-vous au conseil de famille ?",
     options: [
       {
-        t: "Accepter le principe des huit hôtels, pour obtenir les conditions de groupe",
+        t: "Accepter le principe des huit hôtels, pour obtenir les conditions de groupe et la participation aux travaux",
         d: "20 k€ de frais de dossier pour l'audit de pré-affiliation des huit hôtels. 3 % de redevance de marque au lieu de 4 %, 600 k€ de participation d'Orméa aux travaux.",
       },
       {
@@ -360,8 +360,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Trois points de commission de plus sur les réservations Bookalia ; plus de visibilité dès la semaine 5.",
       },
       {
-        t: "Lancer un programme de clientèle directe : moteur de réservation, fichier clients dans Hostéo, tarif membre « Cercle Escale »",
-        d: "90 k€ d'investissement, 20 k€ par an de fonctionnement ; un tarif membre à 5 % sous le prix public.",
+        t: "Lancer un programme de clientèle directe, avec un tarif membre",
+        d: "Moteur de réservation, fichier clients dans Hostéo, tarif membre « Cercle Escale ». 90 k€ d'investissement, 20 k€ par an de fonctionnement ; un tarif membre à 5 % sous le prix public.",
       },
       {
         t: "Baisser de 5 % les prix sur notre site, pour tous les clients",

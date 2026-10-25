@@ -141,8 +141,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Treize toilettes de plus chaque matin pour l'équipe de jour. Ne coûte rien.",
       },
       {
-        t: "Réunir les deux équipes : deux réunions jour-nuit de deux heures, les faits sur la table (plans de soins, heures de lever, charge du matin), une répartition à construire ensemble",
-        d: "Les veilleuses payées pour venir de jour : 1 600 € par réunion. Rien ne change avant la semaine 3.",
+        t: "Réunir les deux équipes, les faits sur la table, pour construire ensemble une répartition",
+        d: "Deux réunions jour-nuit de deux heures ; sur la table, les plans de soins, les heures de lever, la charge du matin. Les veilleuses payées pour venir de jour : 1 600 € par réunion. Rien ne change avant la semaine 3.",
       },
       {
         t: "Recevoir chaque équipe séparément pour apaiser, sans rien changer pour l'instant",
@@ -225,11 +225,11 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment organisez-vous les transmissions ?",
     options: [
       {
-        t: "Protéger un chevauchement de quinze minutes à 6 h 45 et à 21 h : transmissions ciblées, assises, en salle de soins, sur les résidents qui ont changé",
-        d: "Environ dix heures de veilleuses en plus par semaine, 290 €, et une demi-journée de formation aux transmissions ciblées pour les deux équipes, 1 200 €.",
+        t: "Protéger quinze minutes de chevauchement pour des transmissions ciblées",
+        d: "À 6 h 45 et à 21 h, assises, en salle de soins, sur les résidents qui ont changé. Environ dix heures de veilleuses en plus par semaine, 290 €, et une demi-journée de formation aux transmissions ciblées pour les deux équipes, 1 200 €.",
       },
       {
-        t: "Tout passer par écrit dans Carnéo : chacun lit le dossier à sa prise de poste",
+        t: "Tout passer par écrit dans Carnéo : chacun lit le dossier à sa prise de poste, et tout reste tracé",
         d: "Une heure de formation, 600 €. Plus de transmission orale.",
       },
       {
@@ -418,8 +418,8 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment répartissez-vous les soins du matin ?",
     options: [
       {
-        t: "Réviser les plans de soins avec les deux équipes : l'heure de lever de chacun selon ses habitudes, huit douches l'après-midi, six résidents préparés le soir",
-        d: "Deux semaines de travail, IDEC et médecin coordonnateur compris : 1 300 € par semaine. En place en semaine 9.",
+        t: "Réviser avec les deux équipes les plans de soins et les heures de lever",
+        d: "L'heure de lever de chacun selon ses habitudes, huit douches l'après-midi, six résidents préparés le soir. Deux semaines de travail, IDEC et médecin coordonnateur compris : 1 300 € par semaine. En place en semaine 9.",
       },
       {
         t: "Recruter une aide-soignante en renfort du matin, de 7 h à 12 h, et arrêter les levers de la liste",
@@ -596,11 +596,11 @@ export const ETAPES: readonly Etape[] = [
     question: "Que mettez-vous dans le roulement d'avril ?",
     options: [
       {
-        t: "Inscrire les temps communs dans le roulement : une réunion jour-nuit d'une heure par mois, le chevauchement, un binôme de transmission par étage, la revue des plans de soins chaque trimestre",
-        d: "500 € par réunion mensuelle, le reste à heures constantes.",
+        t: "Inscrire dans le roulement les temps communs entre jour et nuit",
+        d: "Une réunion jour-nuit d'une heure par mois, le chevauchement, un binôme de transmission par étage, la revue des plans de soins chaque trimestre. 500 € par réunion mensuelle, le reste à heures constantes.",
       },
       {
-        t: "Imposer une rotation jour-nuit à tous à partir d'avril",
+        t: "Imposer une rotation jour-nuit à tous à partir d'avril, pour que chacun connaisse le travail de l'autre",
         d: "Chacun quatre semaines de nuit par trimestre. Annoncée dès la semaine 11.",
       },
       {

@@ -360,7 +360,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Dès que quelqu'un peut les encadrer. Facturés à moitié pendant qu'ils apprennent.",
       },
       {
-        t: "Huit consultants en binôme d'un coup, pour aller plus vite",
+        t: "Huit consultants en binôme d'un coup, pour aller plus vite et ne laisser personne au bord du chemin",
         d: "Le double de binômes, avec le même encadrement. Moins de monde sur les audits.",
       },
       {
@@ -549,7 +549,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que répondez-vous aux Conserveries ?",
     options: [
       {
-        t: "Accepter, et rappeler les consultants en binôme sur les audits pendant quatre semaines",
+        t: "Accepter, et rappeler les consultants en binôme sur les audits pendant quatre semaines : l'audit paie tout de suite, les binômes reprendront en décembre",
         d: `L'audit paie tout de suite, ${euros(TJM.auditTardif)} par jour. Les binômes reprendront en décembre.`,
       },
       {
@@ -642,7 +642,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que présentez-vous au comité ?",
     options: [
       {
-        t: "Tout basculer en janvier : les dix-huit en décarbonation, formation en salle pour tous",
+        t: "Tout basculer en janvier : les dix-huit en décarbonation, formation en salle pour tous, pour repartir d'un même pas sur le nouveau métier de la practice",
         d: `Dix jours de formation chacun, ${euros(COUTS.certification)} par personne. L'AMO passe au second plan.`,
       },
       {

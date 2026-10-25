@@ -333,12 +333,12 @@ export const ETAPES: readonly Etape[] = [
     question: "Dans quel ordre fabriquez-vous ?",
     options: [
       {
-        t: "Passer en campagnes hebdomadaires : un parfum, une longue série",
+        t: "Passer en campagnes hebdomadaires : un parfum, une longue série, et bien moins de changements",
         d: "2 NEP et 3 changements de format par semaine. Plus de stock en chambre froide, et un entrepôt extérieur.",
       },
       {
-        t: "Une roue quotidienne : bio, nature, clairs, foncés, puis les recettes avec allergène avant le NEP du soir",
-        d: "Chaque parfum fabriqué chaque jour, dans un ordre fixe. Le planning se refait avec Ysée.",
+        t: "Fabriquer en roue quotidienne, toujours dans le même ordre",
+        d: "Bio, nature, clairs, foncés, puis les recettes avec allergène avant le NEP du soir. Chaque parfum fabriqué chaque jour, dans un ordre fixe. Le planning se refait avec Ysée.",
       },
       {
         t: "Regrouper les recettes avec allergène sur le vendredi",
@@ -432,7 +432,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment préparez-vous juin ?",
     options: [
       {
-        t: "Raccourcir les NEP entre recettes de 70 à 45 minutes",
+        t: "Raccourcir les NEP entre recettes de 70 à 45 minutes, pour regagner du temps de production",
         d: "Le rinçage acide supprimé, la désinfection écourtée. Vingt-cinq minutes de production en plus par NEP, dès la semaine 8.",
       },
       {

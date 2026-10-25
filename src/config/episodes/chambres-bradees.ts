@@ -294,7 +294,7 @@ export const ETAPES: readonly Etape[] = [
         d: `${BRENVAL.chambres * BRENVAL.nuits} nuitées sur le pont de l'Ascension, contrat signé lundi.`,
       },
       {
-        t: "Refuser : le pont se vendra seul",
+        t: "Refuser : le pont se vendra seul, et plus cher aux clients individuels",
         d: "Clodomir le dira à Brenval avec les formes.",
       },
       {
@@ -640,8 +640,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Trois semaines, week-ends compris. Le taux d'occupation montera.",
       },
       {
-        t: "Une offre de semaine réservée aux membres et aux anciens clients : deux nuits à −15 %, non remboursable",
-        d: "Envoyée par courriel, invisible sur les plateformes.",
+        t: "Une offre de semaine réservée aux membres et aux anciens clients",
+        d: "Deux nuits à −15 %, non remboursable. Envoyée par courriel, invisible sur les plateformes.",
       },
       {
         t: "Demander à Clodomir de vendre des journées d'étude aux entreprises",

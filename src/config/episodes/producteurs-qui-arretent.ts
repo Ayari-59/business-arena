@@ -222,7 +222,7 @@ export const ETAPES: readonly Etape[] = [
         d: `Les deux techniciens y passent six semaines, remplacés au suivi qualité par un CDD : ${euros(PLAN.coutSemaine * (PLAN.fin - PLAN.debut + 1))}.`,
       },
       {
-        t: "Envoyer un questionnaire à tous les producteurs sur leurs projets, et transmettre les réponses à la chambre d'agriculture",
+        t: "Envoyer un questionnaire à tous les producteurs sur leurs projets, et transmettre les réponses à la chambre d'agriculture, pour ne passer à côté d'aucune exploitation",
         d: `Courrier, relance et saisie : ${euros(QUESTIONNAIRE.cout)}. Les réponses arrivent en trois semaines.`,
       },
     ],
@@ -526,7 +526,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Ysée achète chaque semaine ce qui manque, au prix du marché.",
       },
       {
-        t: "Acheter dès maintenant à terme tout le manque prévu de décembre, à prix ferme",
+        t: "Acheter dès maintenant à terme tout le manque prévu de décembre, à prix ferme, pour être sûr d'avoir le lait et de connaître son prix avant le pic",
         d: `${euros(TERME.prix)} les 1 000 litres livrés ; le surplus éventuel revendu en lait de report.`,
       },
       {
@@ -613,7 +613,7 @@ export const ETAPES: readonly Etape[] = [
         d: `${nombre(AGRANDIR.volume * 1000, 0)} 000 litres de plus par an chacun ; ${euros(AGRANDIR.avance)} d'avance par projet. Ils répondent avant la fin de l'année.`,
       },
       {
-        t: "Ouvrir un volume supplémentaire à tous les producteurs qui le demandent, au prix de base",
+        t: "Ouvrir un volume supplémentaire à tous les producteurs qui le demandent, au prix de base, pour traiter tous les producteurs de la même façon",
         d: `${ml(OUVERT.volume, 0)} par an, à qui veut produire plus.`,
       },
       {

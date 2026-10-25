@@ -235,7 +235,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Rien ne change : environ 6,6 k€ d'acomptes par semaine.",
       },
       {
-        t: "Passer l'acompte à 50 % sur toutes les réservations",
+        t: "Passer l'acompte à 50 % sur toutes les réservations, pour remplir la trésorerie au plus vite",
         d: "Environ 16 k€ d'acomptes par semaine au lieu de 6,6, si les clients suivent.",
       },
       {
@@ -419,7 +419,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Les factures qui peuvent attendre attendront quelques semaines. Aucun frais annoncé.",
       },
       {
-        t: "Négocier un échéancier écrit avec les trois plus gros fournisseurs",
+        t: "Négocier un échéancier écrit avec les trois plus gros fournisseurs, pour garder de la trésorerie avant l'été",
         d: "La moitié à l'échéance, l'autre six semaines plus tard ; 750 € de frais.",
       },
       {
@@ -599,7 +599,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que répondez-vous à Alpine Horizons ?",
     options: [
       {
-        t: "Signer : six chambres toute la saison à 280 €",
+        t: "Signer : six chambres toute la saison à 280 €, un engagement ferme qui sécurise l'hiver",
         d: "Un engagement ferme sur 714 nuitées ; 60 k€ d'acompte en semaine 13.",
       },
       {

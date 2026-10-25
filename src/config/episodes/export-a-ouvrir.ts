@@ -142,8 +142,8 @@ export const ETAPES: readonly Etape[] = [
         d: "90 k€ de référencement et 110 k€ par an de soutien marketing ; premières livraisons en semaine 5.",
       },
       {
-        t: "Proposer d'abord un test de six semaines dans 60 magasins, et négocier le contrat sur ses chiffres",
-        d: "9 k€ de référencement et 20 k€ d'animation ; premières livraisons en semaine 3, contrat discuté en juin.",
+        t: "Proposer d'abord un test de six semaines dans 60 magasins",
+        d: "Le contrat se négocie sur ses chiffres. 9 k€ de référencement et 20 k€ d'animation ; premières livraisons en semaine 3, contrat discuté en juin.",
       },
       {
         t: "Créer une filiale commerciale à Madrid et vendre en direct aux centrales espagnoles",
@@ -321,7 +321,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment étiquetez-vous en espagnol ?",
     options: [
       {
-        t: "Laisser Nevaria sur-étiqueter en espagnol à sa plateforme",
+        t: "Laisser Nevaria sur-étiqueter en espagnol à sa plateforme, sans toucher à nos emballages",
         d: "15 k€ de mise en place, 4 centimes par pack ; les packs restent deux jours de plus sur la plateforme.",
       },
       {
@@ -570,8 +570,8 @@ export const ETAPES: readonly Etape[] = [
         d: "70 k€ la première année ; Nevaria a peu de raisons de dire non.",
       },
       {
-        t: "Deux ans d'exclusivité, reconduits si les objectifs de rotation fixés sur le test sont tenus",
-        d: "Rien de plus à payer ; Nevaria voulait cinq ans.",
+        t: "Deux ans d'exclusivité, reconduits si les objectifs du test sont tenus",
+        d: "Des objectifs de rotation fixés sur le test. Rien de plus à payer ; Nevaria voulait cinq ans.",
       },
       {
         t: "Les cinq ans d'exclusivité qu'il demande, sans objectifs, pour ne pas le perdre",

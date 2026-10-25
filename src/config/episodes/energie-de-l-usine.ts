@@ -172,7 +172,7 @@ export const ETAPES: readonly Etape[] = [
         d: `Des compteurs sur le froid, l'eau chaude des NEP, l'air comprimé et la vapeur, et une tournée aux ultrasons. ${euros(COUTS.campagne)}, premiers relevés en fin de semaine.`,
       },
       {
-        t: "Commander un audit énergétique complet à un bureau d'études",
+        t: "Commander un audit énergétique complet à un bureau d'études, pour avoir un plan d'action chiffré",
         d: `Un rapport complet, avec un plan d'action chiffré. ${euros(COUTS.audit)}, remis en semaine 5.`,
       },
       {

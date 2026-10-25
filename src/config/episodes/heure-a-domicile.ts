@@ -403,7 +403,7 @@ export const ETAPES: readonly Etape[] = [
         d: "1 500 € de paramétrage et de formation au module de transmissions.",
       },
       {
-        t: "Ne rien changer, et expliquer à la direction financière ce que ces temps protègent",
+        t: "Ne rien changer, et expliquer à la direction financière ce que ces temps protègent : la qualité des interventions et la fidélité des intervenantes",
         d: "Les réunions et les formations restent comme elles sont.",
       },
     ],
@@ -573,7 +573,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Un quart des remplacements, sans recrutement à faire.",
       },
       {
-        t: "Faire comme chaque été : recruter fin juin et compléter par des heures complémentaires",
+        t: "Faire comme chaque été : recruter fin juin et compléter par des heures complémentaires, avec des intervenantes qui connaissent déjà les bénéficiaires",
         d: "Rien ne change.",
       },
     ],

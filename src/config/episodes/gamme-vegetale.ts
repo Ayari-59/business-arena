@@ -268,7 +268,7 @@ export const ETAPES: readonly Etape[] = [
         d: `${kE(MESURE.carte)} pour les dix semaines ; le réachat se lit à partir de la semaine 9.`,
       },
       {
-        t: "Un test consommateurs en salle : deux cents personnes goûtent nos recettes et celles du Groupe Nordal",
+        t: "Un test consommateurs en salle : deux cents personnes goûtent nos recettes et celles du Groupe Nordal, pour juger directement sur le goût",
         d: `${kE(MESURE.degustation)} ; la note tombe en semaine 5.`,
       },
     ],

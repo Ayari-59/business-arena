@@ -132,8 +132,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Jusqu'aux fêtes. 32 heures supplémentaires de plus par semaine, environ 930 €.",
       },
       {
-        t: "Refaire le planning autour du samedi soir : publié trois semaines à l'avance, une coupure au plus par personne et par semaine, un cuisinier de plus au coup de feu",
-        d: "Les heures sont prises sur les midis creux du mardi et du mercredi. Une journée avec Lubin pour le bâtir.",
+        t: "Refaire le planning autour du samedi soir",
+        d: "Publié trois semaines à l'avance, une coupure au plus par personne et par semaine, un cuisinier de plus au coup de feu. Les heures sont prises sur les midis creux du mardi et du mercredi. Une journée avec Lubin pour le bâtir.",
       },
       {
         t: "Prendre un extra chaque samedi soir",
@@ -220,8 +220,8 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment organisez-vous la mise en place ?",
     options: [
       {
-        t: "Mutualiser la mise en place : une liste de production commune, fonds et garnitures faits une fois pour les deux services, fiches techniques à jour",
-        d: "Deux après-midi de travail avec Lubin et les chefs de partie. La liste devra être tenue chaque jour.",
+        t: "Mutualiser la mise en place : une liste de production commune",
+        d: "Fonds et garnitures faits une fois pour les deux services, fiches techniques à jour. Deux après-midi de travail avec Lubin et les chefs de partie. La liste devra être tenue chaque jour.",
       },
       {
         t: "Faire arriver les commis une heure plus tôt pour avancer la mise en place",
@@ -316,7 +316,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Trois semaines de doublure en novembre, six heures supplémentaires par semaine.",
       },
       {
-        t: "Réserver dès maintenant deux extras par semaine pour tout décembre",
+        t: "Réserver dès maintenant deux extras par semaine pour tout décembre, tant que les agences en ont encore",
         d: "Des extras d'agence, 460 € par semaine du 1er au 31 décembre.",
       },
       {
@@ -494,8 +494,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Trois euros de plus par couvert le soir, 2,5 points de ratio matière en plus.",
       },
       {
-        t: "Une carte courte pensée pour le coup de feu : cinq entrées, cinq plats, quatre desserts, dont deux plats de fêtes",
-        d: "Un euro cinquante de plus par couvert le soir. Dressage simple, mise en place poussée.",
+        t: "Une carte courte pensée pour le coup de feu, dont deux plats de fêtes",
+        d: "Cinq entrées, cinq plats, quatre desserts. Un euro cinquante de plus par couvert le soir. Dressage simple, mise en place poussée.",
       },
       {
         t: "Garder la carte actuelle",

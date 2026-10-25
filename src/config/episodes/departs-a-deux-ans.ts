@@ -220,7 +220,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Dans le budget, comme chaque année.",
       },
       {
-        t: "Verser une prime de fidélité de 3 000 € à chaque consultant qui atteint deux ans d'ancienneté",
+        t: "Verser une prime de fidélité de 3 000 € à chaque consultant qui atteint deux ans d'ancienneté, puisque c'est à deux ans que les consultants nous quittent",
         d: `Une trentaine de bénéficiaires par an : ${kE(COUT_PRIME_FIDELITE)} cette année, charges comprises.`,
       },
     ],
@@ -305,7 +305,7 @@ export const ETAPES: readonly Etape[] = [
         d: `Un chargé de staffing à mi-temps et des passations : ${kE(MESURES.bourse)} sur l'année.`,
       },
       {
-        t: "Former les juniors en intercontrat : certifications et ateliers, trois jours par mois",
+        t: "Former les juniors en intercontrat : certifications et ateliers, trois jours par mois, pour qu'ils progressent entre deux missions au lieu d'attendre sur le banc",
         d: `${kE(MESURES.formation)} sur l'année.`,
       },
       {
@@ -380,7 +380,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment donnez-vous une perspective aux seniors ?",
     options: [
       {
-        t: "Publier dès lundi la grille de carrière actuelle, avec les critères de passage manager",
+        t: "Publier dès lundi la grille de carrière actuelle, avec les critères de passage manager, pour que chaque senior sache tout de suite ce qui lui reste à faire pour évoluer",
         d: `Rapide : ${kE(MESURES.grille)} de communication.`,
       },
       {
@@ -657,7 +657,7 @@ export const ETAPES: readonly Etape[] = [
         d: `${kE(PYRAMIDE.promotion)} sur l'année. Ils apprendront en encadrant.`,
       },
       {
-        t: "Prendre six seniors indépendants sur Freelancia pour les missions à risque",
+        t: "Prendre six seniors indépendants sur Freelancia pour les missions à risque : des profils aguerris, qui sécurisent les missions sans engager l'avenir",
         d: `${kE(PYRAMIDE.freelancia)} d'ici décembre.`,
       },
       {

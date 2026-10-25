@@ -314,7 +314,7 @@ export const ETAPES: readonly Etape[] = [
         d: `Deux jours de formation pour six soignants, ${fr(COUT_FORMATION_REFERENTS)} €, puis ${fr(COUT_HEBDO_REFERENTS)} € par semaine de temps dégagé. Prêts en semaine 8.`,
       },
       {
-        t: "Faire venir le formateur de l'éditeur une journée dans chaque EHPAD, pour toutes les équipes",
+        t: "Faire venir le formateur de l'éditeur une journée dans chaque EHPAD, pour toutes les équipes : personne ne connaît mieux l'outil",
         d: `Trois journées à 1 400 € et deux heures de formation en salle pour 120 soignants : ${fr(COUTS.formateur)} €.`,
       },
       {

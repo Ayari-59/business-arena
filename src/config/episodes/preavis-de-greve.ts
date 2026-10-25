@@ -140,7 +140,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Toute l'enveloppe en augmentation générale, annoncée jeudi.",
       },
       {
-        t: "Demander le report de la négociation après la saison haute",
+        t: "Demander le report de la négociation après la saison haute, pour négocier au calme",
         d: "Il faut l'accord des élus. Le préavis court toujours.",
       },
     ],
@@ -406,15 +406,15 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment organisez-vous les samedis ?",
     options: [
       {
-        t: "Des samedis volontaires, planifiés quinze jours avant, majorés de 50 %, avec deux intérimaires en renfort",
-        d: "1 500 € par semaine de saison haute. L'agence d'intérim doit trouver deux caristes.",
+        t: "Des samedis volontaires, planifiés quinze jours avant",
+        d: "Majorés de 50 %, avec deux intérimaires en renfort. 1 500 € par semaine de saison haute. L'agence d'intérim doit trouver deux caristes.",
       },
       {
         t: "Laisser la logistique imposer les samedis, annoncés le jeudi",
         d: "Majoration habituelle, 1 000 € par semaine. Comme les autres années.",
       },
       {
-        t: "Des samedis obligatoires, mais planifiés quinze jours avant et payés double",
+        t: "Des samedis obligatoires, mais planifiés quinze jours avant et payés double, pour être sûr d'avoir du monde",
         d: "3 000 € par semaine. Personne n'a à se porter volontaire.",
       },
       {
@@ -500,7 +500,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Ce qu'ils demandent, en augmentation générale. Plus de grève possible.",
       },
       {
-        t: "Constater le désaccord et appliquer la proposition de la direction",
+        t: "Constater le désaccord et appliquer la proposition de la direction, pour sortir enfin de l'impasse",
         d: "Un procès-verbal de désaccord, et les mesures appliquées sans signature.",
       },
       {

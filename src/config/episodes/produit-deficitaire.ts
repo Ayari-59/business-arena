@@ -131,7 +131,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Un tableau refait avec Ninon : la marge de chaque gamme, ses coûts spécifiques, puis les charges communes, sans les répartir.",
       },
       {
-        t: "Garder la gamme, mais relever ses prix de 5 % pour qu'elle couvre sa part de frais",
+        t: "Garder la gamme, mais relever ses prix de 5 % pour qu'elle couvre sa part de frais, et rassurer la direction",
         d: "Nouveau tarif dès la semaine 2. Sur le papier, 25 k€ de marge en plus par trimestre.",
       },
       {

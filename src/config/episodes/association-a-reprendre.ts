@@ -245,8 +245,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Rien à payer ; le conseil de mars aura les comptes.",
       },
       {
-        t: "Lancer un audit complet : comptes, passif social, contentieux, bâtiments, qualité de l'accompagnement",
-        d: "48 k€ ; conclusions en semaines 5 et 6.",
+        t: "Lancer un audit complet, des comptes à la qualité de l'accompagnement",
+        d: "Comptes, passif social, contentieux, bâtiments, qualité de l'accompagnement. 48 k€ ; conclusions en semaines 5 et 6.",
       },
       {
         t: "Un audit financier et social seulement",
@@ -334,8 +334,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Un courrier qui rappelle votre engagement et votre confiance.",
       },
       {
-        t: "Chiffrer tout ce qu'elle peut financer : la transition, un avenant au CPOM qui laisse les économies dans les dotations, la reprise du passif social",
-        d: "Un dossier de vingt pages, un plan de retour à l'équilibre, les passifs ligne à ligne.",
+        t: "Chiffrer tout ce que l'ARS peut financer : transition, avenant au CPOM, passif social",
+        d: "La transition, un avenant au CPOM qui laisse les économies dans les dotations, la reprise du passif social. Un dossier de vingt pages, un plan de retour à l'équilibre, les passifs ligne à ligne.",
       },
       {
         t: "Tout demander, y compris la couverture du déficit commercial de l'ESAT, pour se garder de la marge",
@@ -502,8 +502,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Le vote a lieu en semaine 10 ; la fusion prend effet au 1er juillet.",
       },
       {
-        t: "Rouvrir la négociation : présenter à l'ARS ce que l'audit a révélé et ce qu'elle n'a pas accordé, et reporter le vote à sa réponse",
-        d: "Le vote attend la réponse de la semaine 11 ; deux mois de gestion transitoire de plus.",
+        t: "Rouvrir la négociation, et reporter le vote à la réponse de l'ARS",
+        d: "Présenter à l'ARS ce que l'audit a révélé et ce qu'elle n'a pas accordé. Le vote attend la réponse de la semaine 11 ; deux mois de gestion transitoire de plus.",
       },
       {
         t: "Se retirer du projet",

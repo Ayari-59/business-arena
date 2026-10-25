@@ -265,7 +265,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Un rôle nouveau, au même salaire : les 140 artisans qu'il suit et l'accueil des clients du négoce. Annoncé lundi.",
       },
       {
-        t: "Appliquer l'organigramme d'Arvel : Ariane cheffe de comptoir, Pierrick vendeur",
+        t: "Appliquer l'organigramme d'Arvel : Ariane cheffe de comptoir, Pierrick vendeur, pour que tout soit clair",
         d: "Clair, et conforme au siège. Pierrick garde son salaire, pas son titre.",
       },
       {
@@ -441,8 +441,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Un consultant de l'éditeur, 3 000 €. Un seul logiciel dès la semaine 10.",
       },
       {
-        t: "Basculer en deux temps : les fiches clients vérifiées par les vendeurs, puis le comptoir après une formation en binômes",
-        d: "3 500 €. Un seul logiciel en semaine 11.",
+        t: "Basculer en deux temps : les fiches clients, puis le comptoir",
+        d: "Les fiches clients vérifiées par les vendeurs, puis le comptoir après une formation en binômes. 3 500 €. Un seul logiciel en semaine 11.",
       },
       {
         t: "Garder les deux logiciels jusqu'à l'été",
@@ -609,8 +609,8 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment répondez-vous à l'offensive ?",
     options: [
       {
-        t: "Aller voir les trente artisans démarchés, chacun avec son vendeur habituel, et tenir le prix sur cinq produits phares",
-        d: "Deux semaines de visites. 3 000 € de remise ciblée.",
+        t: "Aller voir les trente artisans démarchés, et tenir le prix sur cinq produits phares",
+        d: "Chacun avec son vendeur habituel. Deux semaines de visites. 3 000 € de remise ciblée.",
       },
       {
         t: "Envoyer à tous les clients du négoce la grille d'Arvel et le contact de leur commercial de secteur",

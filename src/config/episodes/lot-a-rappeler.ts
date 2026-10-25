@@ -252,8 +252,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Ne coûte rien de plus. Le plan d'analyses habituel continue.",
       },
       {
-        t: "Redémarrer en libération positive, lancer 40 prélèvements environnementaux, et arrêter la ligne si la remplisseuse est positive",
-        d: "2 500 € par semaine de libération positive et 3 500 € de prélèvements. Des livraisons décalées de trois jours.",
+        t: "Redémarrer en libération positive, avec des prélèvements environnementaux",
+        d: "40 prélèvements environnementaux ; la ligne s'arrête si la remplisseuse est positive. 2 500 € par semaine de libération positive et 3 500 € de prélèvements. Des livraisons décalées de trois jours.",
       },
       {
         t: "Garder la ligne 3 à l'arrêt jusqu'à la fin de l'enquête, trois semaines, et servir ce qu'on peut depuis Loudéac",
@@ -438,8 +438,8 @@ export const ETAPES: readonly Etape[] = [
     question: "Que faites-vous de la zone de conditionnement ?",
     options: [
       {
-        t: "Rechercher la source : démonter la remplisseuse et ses vannes, écouvillonner chaque point, refaire le siphon",
-        d: "9 000 €, deux jours d'arrêt.",
+        t: "Rechercher la source : démonter la remplisseuse et ses vannes",
+        d: "Chaque point écouvillonné, le siphon refait. 9 000 €, deux jours d'arrêt.",
       },
       {
         t: "Refaire toute la zone de conditionnement : joints, vannes, sol et siphons",
@@ -531,8 +531,8 @@ export const ETAPES: readonly Etape[] = [
     question: "Que répondez-vous à Celtis ?",
     options: [
       {
-        t: "Recevoir l'audit de Celtis à Pontivy avec tout le dossier, et régler les frais de retrait justifiés",
-        d: "2 500 € de préparation, deux jours de l'équipe qualité.",
+        t: "Recevoir l'audit de Celtis à Pontivy, et régler les frais justifiés",
+        d: "Tout le dossier présenté, et les frais de retrait justifiés réglés. 2 500 € de préparation, deux jours de l'équipe qualité.",
       },
       {
         t: "Proposer à Celtis de financer une opération promotionnelle sur le fromage blanc en novembre",

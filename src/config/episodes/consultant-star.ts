@@ -325,7 +325,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Avec un plan de délégation écrit : qui produit quoi, qui relit quoi, qui présente quoi. Un jour de Maximilien par semaine.",
       },
       {
-        t: "Proposer à la banque une équipe menée par Peio, sans Maximilien",
+        t: "Proposer à la banque une équipe menée par Peio, sans Maximilien, pour ne plus tout faire reposer sur lui",
         d: "Peio, Ilham et Neven. Il faut l'accord d'Amaya Marsac.",
       },
     ],
@@ -459,7 +459,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que faites-vous après le comité ?",
     options: [
       {
-        t: "Laisser passer : un coup de stress avant un comité, il a fait des efforts",
+        t: "Laisser passer : un coup de stress avant un comité, il a fait des efforts et le comité s'est bien passé",
         d: "Vous ne revenez pas dessus. Le comité s'est bien passé, et le client est content.",
       },
       {

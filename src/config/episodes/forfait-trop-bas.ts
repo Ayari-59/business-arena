@@ -286,7 +286,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Le rythme habituel d'avant-vente.",
       },
       {
-        t: "Garder la règle, mais laisser les associés accorder 5 % sur les comptes qu'ils jugent stratégiques",
+        t: "Garder la règle, mais laisser les associés accorder 5 % sur les comptes qu'ils jugent stratégiques, pour ne pas les perdre",
         d: "Environ 3 % de moins sur le prix moyen.",
       },
     ],
@@ -418,7 +418,7 @@ export const ETAPES: readonly Etape[] = [
         d: `${joursDe(VALMORIN.associe)} jours, un tiers de managers. Une remise de ${pourcent(REMISE_VALMORIN)} sur le catalogue.`,
       },
       {
-        t: "Revoir la pyramide, en gardant un manager sur chaque comité",
+        t: "Revoir la pyramide, en gardant un manager sur chaque comité pour rassurer la coopérative",
         d: `${VALMORIN.prudente.analyste} jours d'analystes, ${VALMORIN.prudente.senior} de seniors, ${VALMORIN.prudente.manager} de manager, au budget de la coopérative.`,
       },
       {
@@ -502,7 +502,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Moins de points sur le prix ; tout se joue sur la valeur technique.",
       },
       {
-        t: "Ne pas répondre",
+        t: "Ne pas répondre, et garder l'avant-vente pour les consultations privées",
         d: "L'avant-vente se consacre aux consultations privées.",
       },
     ],

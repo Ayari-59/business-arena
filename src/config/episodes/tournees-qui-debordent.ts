@@ -121,7 +121,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Une demi-journée par défaut, l'heure précise seulement pour une vraie contrainte (grue, coulage, accès). 600 € d'analyse ; quelques clients à convaincre.",
       },
       {
-        t: "Confier tout le surplus au sous-traitant et arrêter les heures supplémentaires",
+        t: "Confier tout le surplus au sous-traitant et arrêter les heures supplémentaires, pour soulager les chauffeurs",
         d: "Les chauffeurs finissent à l'heure ; Transports Brunelière prend tout ce qui dépasse, à 95 € la livraison.",
       },
       {
@@ -219,8 +219,8 @@ export const ETAPES: readonly Etape[] = [
         d: "106 € la livraison à partir de la semaine 5, pour le même volume.",
       },
       {
-        t: "Lui proposer un contrat de pics : plus de volume quotidien, une capacité prioritaire dans les semaines chargées",
-        d: "Le quotidien repris par nos tournées. Brunelière accepte 99 € la livraison pour les pics et la fin de trimestre.",
+        t: "Lui proposer un contrat de pics, sans volume quotidien",
+        d: "Une capacité prioritaire dans les semaines chargées. Le quotidien repris par nos tournées. Brunelière accepte 99 € la livraison pour les pics et la fin de trimestre.",
       },
       {
         t: "Embaucher un neuvième chauffeur en CDD et louer un camion pour reprendre son volume",
@@ -313,7 +313,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que faites-vous des petites livraisons ?",
     options: [
       {
-        t: "Créer une tournée express l'après-midi pour les commandes urgentes",
+        t: "Créer une tournée express l'après-midi pour les commandes urgentes, pour garder les clients pressés",
         d: "Un chauffeur volontaire en heures supplémentaires, de 14 h à 18 h. Les commerciaux pourront promettre une livraison dans la journée.",
       },
       {
@@ -411,7 +411,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment préparez-vous le pic ?",
     options: [
       {
-        t: "Louer deux camions avec chauffeurs intérimaires pour trois semaines",
+        t: "Louer deux camions avec chauffeurs intérimaires pour trois semaines, pour ne dépendre de personne",
         d: "Semaines 8 à 10 : dix tournées de plus par semaine. 5 800 € par semaine.",
       },
       {
@@ -419,8 +419,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Semaines 8 à 10. 25 € par livraison réservée, dus même si elle ne sert pas, puis le tarif normal.",
       },
       {
-        t: "Proposer aux grands chantiers d'être livrés en avance, et sous-traiter le reste au coup par coup",
-        d: "Livrer en semaines 6 et 7 ce qui peut se stocker. 400 € d'organisation. Les chantiers décideront.",
+        t: "Proposer aux grands chantiers d'être livrés en avance, et sous-traiter le reste",
+        d: "Le reste sous-traité au coup par coup. Livrer en semaines 6 et 7 ce qui peut se stocker. 400 € d'organisation. Les chantiers décideront.",
       },
       {
         t: "Faire face avec les heures supplémentaires et une prime de pic",

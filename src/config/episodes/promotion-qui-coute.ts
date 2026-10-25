@@ -140,8 +140,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Celtis en semaines 3 et 4, Proxival en 5 et 6, Opaline en 7 et 8. Rien à renégocier.",
       },
       {
-        t: "Recentrer sur le Brassé : « le 2e à −40 % » à la place du « 2+1 » sur les fruits, aux mêmes dates",
-        d: "Une remise de 20 % sur la référence lancée en mars, que la plupart des clients n'ont pas encore goûtée. Celtis doit accepter de changer le prospectus de la semaine 3.",
+        t: "Recentrer sur le Brassé : « le 2e à −40 % », aux mêmes dates",
+        d: "À la place du « 2+1 » sur les fruits. Une remise de 20 % sur la référence lancée en mars, que la plupart des clients n'ont pas encore goûtée. Celtis doit accepter de changer le prospectus de la semaine 3.",
       },
       {
         t: "Garder les trois opérations sur les fruits, mais en « 2e à −40 % »",
@@ -316,8 +316,8 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment fixez-vous désormais les volumes des opérations ?",
     options: [
       {
-        t: "Confier la prévision à la supply chain, à partir des hausses mesurées, revue chaque lundi",
-        d: "Une heure par semaine et 2 500 € de données ; 4 % de marge de sécurité. Pour les opérations à partir de la semaine 7.",
+        t: "Confier la prévision à la supply chain, à partir des hausses mesurées",
+        d: "Une revue chaque lundi. Une heure par semaine et 2 500 € de données ; 4 % de marge de sécurité. Pour les opérations à partir de la semaine 7.",
       },
       {
         t: "Produire 20 % au-dessus des volumes annoncés par les commerciaux, pour ne jamais rompre",

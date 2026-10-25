@@ -284,7 +284,7 @@ export const ETAPES: readonly Etape[] = [
         d: "40 k€ et trois semaines ; Sérac reste dans la vente.",
       },
       {
-        t: "Prendre l'exclusivité au prix demandé, sans audit approfondi",
+        t: "Prendre l'exclusivité au prix demandé, sans audit approfondi, pour ne pas laisser filer Mourgue chez Sérac",
         d: "Au moins 7,8 M€ ; Sérac est écarté, le protocole se signe sur les comptes et la data room.",
       },
       {
@@ -371,7 +371,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Quelle offre ferme remettez-vous ?",
     options: [
       {
-        t: "Confirmer l'offre annoncée : revenir dessus nous décrédibiliserait face à Sérac",
+        t: "Confirmer l'offre annoncée : revenir dessus nous décrédibiliserait face à Sérac et devant la cédante",
         d: "L'offre indicative devient ferme, au même prix ; le plafond ne change pas.",
       },
       {
@@ -454,7 +454,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que répondez-vous à la cédante ?",
     options: [
       {
-        t: "Relever l'offre de 250 k€ au-dessus de la dernière enchère, ou du geste demandé : Mourgue ne doit pas nous échapper",
+        t: "Relever l'offre de 250 k€ au-dessus de la dernière enchère, ou du geste demandé : Mourgue ne doit pas nous échapper, l'occasion ne reviendra pas",
         d: "Le prix monte ; la signature est acquise.",
       },
       {
@@ -540,8 +540,8 @@ export const ETAPES: readonly Etape[] = [
         d: "5 % du prix, franchise 50 k€, un an ; rien sous séquestre.",
       },
       {
-        t: "Exiger une garantie de 15 % du prix sur trois ans, dont 10 % du prix sous séquestre pendant dix-huit mois",
-        d: "La cédante demandera une contrepartie sur le prix.",
+        t: "Exiger une garantie de 15 % du prix sur trois ans, en partie sous séquestre",
+        d: "Dont 10 % du prix sous séquestre pendant dix-huit mois. La cédante demandera une contrepartie sur le prix.",
       },
       {
         t: "Renoncer à toute garantie contre une baisse de prix de 50 k€",

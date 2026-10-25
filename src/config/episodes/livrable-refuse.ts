@@ -237,8 +237,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Huit jours de plus par semaine pendant un mois, et une semaine pour les mettre au courant du modèle de calcul.",
       },
       {
-        t: "Faire trois fiches types (une école, un gymnase, la piscine) et les valider en réunion technique avant de généraliser",
-        d: "Une réunion d'une heure et demie avec l'économe de flux ; les dix-neuf autres fiches attendent son retour.",
+        t: "Faire trois fiches types et les valider en réunion technique avant de généraliser",
+        d: "Une école, un gymnase, la piscine. Une réunion d'une heure et demie avec l'économe de flux ; les dix-neuf autres fiches attendent son retour.",
       },
       {
         t: "Envoyer la note d'hypothèses de la phase 2 par courriel pour validation, et lancer les fiches",
@@ -377,7 +377,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Un jour d'analyse, et 0,3 jour par fiche relancée.",
       },
       {
-        t: "Faire revérifier toutes les fiches déjà faites, une par une",
+        t: "Faire revérifier toutes les fiches déjà faites, une par une, pour qu'aucune autre erreur n'arrive chez la directrice",
         d: "0,45 jour par fiche faite.",
       },
       {
@@ -539,7 +539,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Une réunion de travail en semaine 12, deux jours de préparation. Rien ne sera une surprise en séance.",
       },
       {
-        t: "Une dernière nuit de relecture de toute l'équipe, et l'envoi la veille du comité",
+        t: "Une dernière nuit de relecture de toute l'équipe, et l'envoi la veille du comité : le rapport sera impeccable",
         d: "Trois jours, rachetés majorés. Le rapport sera impeccable.",
       },
       {

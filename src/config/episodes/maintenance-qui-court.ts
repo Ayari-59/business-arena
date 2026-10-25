@@ -236,7 +236,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Joints, vérins, sondes et cellules de la scelleuse : 14 000 € immobilisés, en magasin en semaine 4.",
       },
       {
-        t: "Stocker toute la liste de pièces recommandée par le constructeur",
+        t: "Stocker toute la liste de pièces recommandée par le constructeur, pour que plus rien ne manque",
         d: "120 000 € immobilisés, livrés en semaine 6. Plus rien ne manquera, sur aucun organe.",
       },
       {
@@ -339,7 +339,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Dès la semaine 5, sans formation. Rien à payer.",
       },
       {
-        t: "Faire faire les tournées de premier niveau par les techniciens",
+        t: "Faire faire les tournées de premier niveau par les techniciens, et laisser les conducteurs à la conduite",
         d: "À chaque poste, dès la semaine 5 : 1 100 € d'heures supplémentaires par semaine. Les conducteurs restent à la conduite.",
       },
       {
@@ -519,7 +519,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Rien ne change.",
       },
       {
-        t: "Suspendre les arrêts d'entretien jusqu'après le pic, pour produire d'avance",
+        t: "Suspendre les arrêts d'entretien jusqu'après le pic, pour produire d'avance un stock de desserts",
         d: "Gurvan récupère les heures d'entretien pour constituer un stock de desserts avant décembre.",
       },
       {

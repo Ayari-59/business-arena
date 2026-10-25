@@ -499,8 +499,8 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment répondez-vous à Dorval Bâtiment ?",
     options: [
       {
-        t: "Monter le devis avec Christophe et Thao, à prix normal, avec une livraison par étage",
-        d: "22 % de marge si l'agence l'emporte. Christophe mène, vous signez.",
+        t: "Monter le devis avec Christophe et Thao, à prix normal",
+        d: "Une livraison par étage. 22 % de marge si l'agence l'emporte. Christophe mène, vous signez.",
       },
       {
         t: "Le chiffrer vous-même ce week-end, comme vous le faisiez à Dijon",
@@ -579,8 +579,8 @@ export const ETAPES: readonly Etape[] = [
     question: "Qu'annoncez-vous au comité ?",
     options: [
       {
-        t: "Un plan partagé pour le trimestre suivant, présenté avec l'équipe, qui n'engage que ce qui est lancé",
-        d: "Deux membres de l'équipe présentent avec vous. Une demi-journée de préparation : 1 000 €.",
+        t: "Un plan partagé pour le trimestre suivant, présenté avec l'équipe",
+        d: "Il n'engage que ce qui est lancé. Deux membres de l'équipe présentent avec vous. Une demi-journée de préparation : 1 000 €.",
       },
       {
         t: "Votre plan de transformation complet pour l'automne, sur le modèle de Dijon",

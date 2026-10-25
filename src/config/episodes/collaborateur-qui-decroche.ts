@@ -117,8 +117,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Un courrier remis en main propre, les erreurs listées. Rapide, et le message est clair.",
       },
       {
-        t: "Le recevoir en entretien : les faits, leur effet sur l'équipe et les clients, et ce qu'il en dit",
-        d: "Une heure au calme, les erreurs datées sur la table, sans sanction à ce stade. Des objectifs posés ensemble.",
+        t: "Le recevoir en entretien : les faits, et ce qu'il en dit",
+        d: "Les faits, leur effet sur l'équipe et les clients. Une heure au calme, les erreurs datées sur la table, sans sanction à ce stade. Des objectifs posés ensemble.",
       },
       {
         t: "Lui en toucher un mot entre deux clients",
@@ -301,8 +301,8 @@ export const ETAPES: readonly Etape[] = [
     question: "Que répondez-vous à l'équipe ?",
     options: [
       {
-        t: "Réunir l'équipe : reconnaître l'effort, dire qu'un plan existe, répartir les reprises équitablement jusqu'à une date",
-        d: "Une demi-heure avant l'ouverture, un tableau des reprises. Rien sur ce que Didier vous a confié.",
+        t: "Réunir l'équipe : reconnaître l'effort et répartir les reprises",
+        d: "Dire qu'un plan existe, et répartir équitablement jusqu'à une date. Une demi-heure avant l'ouverture, un tableau des reprises. Rien sur ce que Didier vous a confié.",
       },
       {
         t: "Expliquer à l'équipe ce que Didier vous a confié, pour qu'ils comprennent",
@@ -566,7 +566,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Ce que la direction demande. Le courrier part lundi.",
       },
       {
-        t: "Le garder à la vente et prendre un intérimaire pour les commandes spéciales",
+        t: "Le garder à la vente et prendre un intérimaire pour les commandes spéciales, pour sécuriser le rush",
         d: "Trois semaines d'intérim, 3 900 €. Didier ne touche plus aux commandes spéciales.",
       },
       {

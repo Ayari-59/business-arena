@@ -232,8 +232,8 @@ export const ETAPES: readonly Etape[] = [
     question: "Que faites-vous des traitements du soir ?",
     options: [
       {
-        t: "Revoir les traitements des douze en commission avec le médecin coordonnateur, le pharmacien et les médecins traitants, et diminuer les hypnotiques par paliers",
-        d: "Une commission en semaine 3, puis un suivi palier par palier : 900 €. Rien ne bougera avant plusieurs semaines.",
+        t: "Revoir les traitements des douze en commission, et diminuer les hypnotiques par paliers",
+        d: "Avec le médecin coordonnateur, le pharmacien et les médecins traitants. Une commission en semaine 3, puis un suivi palier par palier : 900 €. Rien ne bougera avant plusieurs semaines.",
       },
       {
         t: "Demander au médecin coordonnateur un somnifère plus fort pour les résidents qui se lèvent la nuit",
@@ -516,8 +516,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Mise en service en semaine 10 : 2 500 €, puis 600 € par semaine d'abonnement.",
       },
       {
-        t: "Équiper de capteurs les douze qui se lèvent seuls, reliés au téléphone de l'aide-soignante de la tournée",
-        d: "Mise en service en semaine 10 : 700 €, puis 45 € par semaine.",
+        t: "Équiper de capteurs les douze qui se lèvent seuls",
+        d: "Reliés au téléphone de l'aide-soignante de la tournée. Mise en service en semaine 10 : 700 €, puis 45 € par semaine.",
       },
       {
         t: "Instaurer une ronde toutes les heures dans toutes les chambres",

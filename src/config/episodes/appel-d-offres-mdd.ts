@@ -569,7 +569,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment défendez-vous Kerbrélan chez Opaline ?",
     options: [
       {
-        t: "Doubler tout de suite le plan de Morwenna : on ne laisse rien à la MDD",
+        t: "Doubler tout de suite le plan de Morwenna : on ne laisse rien à la MDD, pas un seul client",
         d: `${kE(DEFENSES[0].cout)} par an de promotions et de mise en avant, dès la mise en rayon.`,
       },
       {

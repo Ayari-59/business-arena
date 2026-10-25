@@ -251,7 +251,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Un tableau hebdomadaire par agence, rempli au retour du matériel : 1 000 € de paramétrage.",
       },
       {
-        t: "Les demandes de devis : c'est ce que regarde la direction",
+        t: "Les demandes de devis : c'est ce que regarde la direction, et le meilleur signe de la demande",
         d: "Les agences relancent chaque devis ; le chiffre monte vite.",
       },
       {
@@ -445,7 +445,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que faites-vous du déploiement ?",
     options: [
       {
-        t: "Équiper les douze agences, comme la direction l'a promis",
+        t: "Équiper les douze agences, comme la direction l'a promis, pour profiter de la demande partout",
         d: "Le parc complet partout dès la semaine prochaine : 30 k€ de matériel et 2 500 € de lancement par agence ouverte.",
       },
       {

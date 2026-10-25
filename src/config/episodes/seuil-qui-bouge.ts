@@ -230,7 +230,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Un minimum garanti au bailleur ; le reste suit l'activité.",
       },
       {
-        t: "Le loyer variable : 4,8 % du chiffre d'affaires, sans minimum",
+        t: "Le loyer variable : 4,8 % du chiffre d'affaires, sans minimum, le plus prudent si le volume déçoit",
         d: "Le plus cher au volume du plan. Le bailleur partage le risque.",
       },
     ],
@@ -321,7 +321,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Ciment, plâtre, parpaings, plaques, isolant : 20 % du chiffre d'affaires à −5 %. Le reste au tarif.",
       },
       {
-        t: "Garder les prix, et garantir le chargement en dix minutes",
+        t: "Garder les prix, et garantir le chargement en dix minutes, pour se battre sur le service",
         d: "Sinon, la livraison du lendemain est offerte. Un intérimaire de renfort aux heures de pointe : 2 600 € par mois.",
       },
       {
@@ -573,8 +573,8 @@ export const ETAPES: readonly Etape[] = [
         d: "2 000 € de charges évitées. Les artisans sont prévenus et peuvent anticiper.",
       },
       {
-        t: "Ouvrir la semaine de Noël le matin seulement, et inviter les artisans à commander avant",
-        d: "De 6 h 30 à midi. 1 500 € de charges évitées, un SMS aux artisans en semaine 11.",
+        t: "Ouvrir la semaine de Noël le matin seulement",
+        d: "Les artisans invités à commander avant. De 6 h 30 à midi. 1 500 € de charges évitées, un SMS aux artisans en semaine 11.",
       },
       {
         t: "Ne rien changer",
