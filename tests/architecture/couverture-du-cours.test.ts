@@ -8,7 +8,10 @@ import {
   referentielDeCitation,
 } from "@/config/ateliers/referentiels";
 import { ATELIERS } from "@/config/ateliers";
+import { BLOCS_DES_EPISODES } from "@/config/episodes/blocs";
+import { episodeParCode } from "@/pedagogy/episodes/registre";
 import {
+  blocsDeLEpisode,
   blocsDuChapitre,
   couvertureDeLaFormation,
   coursDeLaFormation,
@@ -101,19 +104,56 @@ describe("la couverture par le cours", () => {
     }
   });
 
-  it("le cours seul ne fait jamais d'un bloc le cœur du jeu", () => {
-    // Seul le moteur rejoue un bloc à chaque tour ; un chapitre se fait une fois.
+  it("le cours et les épisodes seuls ne font jamais d'un bloc le cœur du jeu", () => {
+    // Seul le moteur rejoue un bloc à chaque tour ; un chapitre se fait une
+    // fois, un épisode se joue sur un trimestre.
     let seuls = 0;
+    let parUnEpisode = 0;
     for (const f of formationsAvecUnePage()) {
       for (const b of couvertureDeLaFormation(f.code)) {
         if (b.presences.length > 0) continue;
         seuls++;
-        expect(b.chapitres.length, `${f.code} / ${b.referentiel} : ligne vide`).toBeGreaterThan(0);
+        const n = b.chapitres.length + b.situations.length;
+        if (b.situations.length > 0) parUnEpisode++;
+        expect(n, `${f.code} / ${b.referentiel} : ligne vide`).toBeGreaterThan(0);
         expect(b.adequation, `${f.code} / ${b.referentiel}`).not.toBe("coeur");
-        expect(b.adequation).toBe(b.chapitres.length >= 2 ? "couvert" : "partiel");
+        expect(b.adequation, `${f.code} / ${b.referentiel}`).toBe(n >= 2 ? "couvert" : "partiel");
       }
     }
     expect(seuls, "aucun bloc travaillé par le seul cours : la règle ne garde rien").toBeGreaterThan(0);
+    expect(parUnEpisode, "aucun bloc travaillé par un épisode : la règle ne garde rien").toBeGreaterThan(0);
+  });
+
+  it("chaque épisode cité existe, et chaque bloc qu'il cite désigne une entrée du texte", () => {
+    const codes = Object.keys(BLOCS_DES_EPISODES);
+    expect(codes.length, "aucun épisode ne cite de bloc").toBeGreaterThan(10);
+    for (const code of codes) {
+      expect(episodeParCode(code), `« ${code} » n'est pas un épisode`).toBeDefined();
+      const blocs = BLOCS_DES_EPISODES[code]!;
+      expect(blocs.length, `${code} : aucun bloc`).toBeGreaterThan(0);
+      expect(new Set(blocs).size, `${code} : un bloc cité deux fois`).toBe(blocs.length);
+      for (const bloc of blocs) {
+        const cite = referentielDeCitation(bloc);
+        expect(cite, `${code} : « ${bloc} » ne porte le préfixe d'aucun diplôme`).not.toBeNull();
+        expect(
+          blocOfficiel(bloc, cite!.code),
+          `${code} : « ${bloc} » ne désigne aucune entrée du texte, ou en désigne deux`,
+        ).not.toBeNull();
+      }
+    }
+  });
+
+  it("chaque épisode paraît sur la ligne des blocs qu'il cite, et seulement là", () => {
+    for (const f of formationsAvecUnePage()) {
+      const blocs = couvertureDeLaFormation(f.code);
+      for (const code of Object.keys(BLOCS_DES_EPISODES)) {
+        const attendus = new Set(blocsDeLEpisode(code, f.code));
+        const lignes = new Set(
+          blocs.filter((b) => b.situations.some((s) => s.code === code)).map((b) => b.officiel),
+        );
+        expect(lignes, `${f.code} / ${code}`).toEqual(attendus);
+      }
+    }
   });
 
   it("le tableau d'un diplôme dont le texte a été lu reprend chaque entrée, une fois, dans l'ordre", () => {
