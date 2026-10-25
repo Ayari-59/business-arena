@@ -109,6 +109,7 @@ export const LA_CLOTURE: Chapitre = {
     "BTS CG P2 · Contrôle et production de l'information financière",
     "BTS CG P3 · Gestion des obligations fiscales",
     "DCG UE9 · Comptabilité",
+    "BUT GEA · Produire l'information comptable, fiscale et sociale de l'organisation",
   ],
   titre: "La clôture",
   accroche:

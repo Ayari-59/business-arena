@@ -14,9 +14,10 @@ import type { AtelierDefinition } from "./types";
  * montée en charge du quatrième, où un compte-clé fait basculer la demande. La
  * cinquième ne joue rien : elle établit le diagnostic financier et le présente.
  *
- * Le référentiel du BUT GEA n'a pas encore été confronté à son texte : le code
- * figure dans REFERENTIELS_NON_VERIFIES, et les blocs cités décrivent l'activité
- * de gestion sans prétendre reprendre le programme au mot.
+ * Les compétences citées sont celles du programme national du BUT GEA, lues
+ * sur le texte (REFERENTIELS.gea) : le tronc commun, et celles des parcours que
+ * les séances travaillent vraiment. Le tableau de couverture montre aussi les
+ * compétences qu'aucune séance ne travaille.
  */
 export const ATELIER_GEA: AtelierDefinition = {
   code: "gea",
@@ -61,8 +62,8 @@ export const ATELIER_GEA: AtelierDefinition = {
       tourJoue: null,
       essai: true,
       processus: [
-        "Bloc 1 · Analyser les coûts et la rentabilité",
-        "Bloc 2 · Établir et lire les documents de synthèse",
+        "Analyser les processus de l'organisation dans son environnement",
+        "Évaluer l'activité de l'organisation",
       ],
       objectif:
         "Apprendre le jeu avant que rien ne compte : lire le mandat de NOVA, ses trois références d'enceintes et son atelier, jouer un trimestre d'essai de bout en bout, lire ses premiers résultats, puis lancer la vraie partie.",
@@ -133,8 +134,8 @@ export const ATELIER_GEA: AtelierDefinition = {
       dureeMinutes: 120,
       tourJoue: 1,
       processus: [
-        "Bloc 1 · Analyser les coûts et la rentabilité",
-        "Bloc 2 · Établir et lire les documents de synthèse",
+        "Concevoir des outils de contrôle de gestion",
+        "Aider à la prise de décision",
       ],
       objectif:
         "Reconstituer le coût de revient de chaque enceinte de la gamme à partir des charges de l'entreprise, en distinguer les charges fixes des variables, et en tirer une marge par référence, puis un seuil de rentabilité qui dépend du mix vendu.",
@@ -206,8 +207,8 @@ export const ATELIER_GEA: AtelierDefinition = {
       dureeMinutes: 120,
       tourJoue: 2,
       processus: [
-        "Bloc 3 · Piloter la trésorerie et le financement",
-        "Bloc 2 · Établir et lire les documents de synthèse",
+        "Évaluer l'activité de l'organisation",
+        "Aider à la prise de décision",
       ],
       objectif:
         "Comprendre pourquoi un résultat bénéficiaire peut s'accompagner d'une trésorerie qui se tend, et mesurer le besoin en fonds de roulement du cycle.",
@@ -279,8 +280,8 @@ export const ATELIER_GEA: AtelierDefinition = {
       dureeMinutes: 120,
       tourJoue: 3,
       processus: [
-        "Bloc 1 · Analyser les coûts et la rentabilité",
-        "Bloc 4 · Décider et rendre compte",
+        "Aider à la prise de décision",
+        "Concevoir des outils de contrôle de gestion",
       ],
       objectif:
         "Quand les plans de production additionnés dépassent ce que l'atelier peut sortir, choisir la référence à produire en priorité par sa marge rapportée à la capacité qu'elle consomme, puis décider s'il faut investir dans une ligne, en sachant qu'elle ne produira qu'au trimestre suivant.",
@@ -352,8 +353,8 @@ export const ATELIER_GEA: AtelierDefinition = {
       dureeMinutes: 120,
       tourJoue: 4,
       processus: [
-        "Bloc 1 · Analyser les coûts et la rentabilité",
-        "Bloc 3 · Piloter la trésorerie et le financement",
+        "Assurer la gestion et le développement de la chaîne de valeur",
+        "Évaluer l'activité de l'organisation",
       ],
       objectif:
         "Absorber le trimestre où le compte-clé fait bondir la demande, en tenant à la fois la production, la marge et une trésorerie que la croissance met sous tension.",
@@ -425,8 +426,8 @@ export const ATELIER_GEA: AtelierDefinition = {
       dureeMinutes: 120,
       tourJoue: null,
       processus: [
-        "Bloc 2 · Établir et lire les documents de synthèse",
-        "Bloc 4 · Décider et rendre compte",
+        "Évaluer l'activité de l'organisation",
+        "Aider à la prise de décision",
       ],
       objectif:
         "Construire le diagnostic financier des quatre trimestres, de l'activité à la trésorerie, et le présenter oralement comme on rend compte à une direction.",
@@ -547,7 +548,7 @@ export const ATELIER_GEA: AtelierDefinition = {
     {
       question: "Quel lien avec l'évaluation du BUT ?",
       reponse:
-        "Le BUT s'évalue par des situations d'apprentissage et d'évaluation, les SAÉ, et par un portfolio : chaque séance fournit une trace datée à y verser, et le diagnostic final peut tenir lieu de livrable de SAÉ. Les intitulés exacts dépendent de votre parcours ; le référentiel n'a pas encore été confronté à cette fiche, vérifiez-les avant de l'annoncer.",
+        "Le BUT s'évalue par des situations d'apprentissage et d'évaluation, les SAÉ, et par un portfolio : chaque séance fournit une trace datée à y verser, et le diagnostic final peut tenir lieu de livrable de SAÉ. Les compétences citées sont celles du programme national ; celles de parcours ne valent que pour le parcours qui les porte, vérifiez lesquelles concernent le vôtre avant de l'annoncer.",
     },
   ],
 };

@@ -58,6 +58,7 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
     "BTS CG P3 · Gestion des obligations fiscales",
     "BTS CG P4 · Gestion des relations sociales",
     "DCG UE9 · Comptabilité",
+    "BUT GEA · Produire l'information comptable, fiscale et sociale de l'organisation",
   ],
   titre: "De la création au premier bilan",
   accroche:

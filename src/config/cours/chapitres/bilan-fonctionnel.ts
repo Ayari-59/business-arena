@@ -159,6 +159,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
   blocs: [
     "BTS CG P6 · Analyse de la situation financière",
     "DCG UE6 · Finance d'entreprise",
+    "BUT GEA · Évaluer l'activité de l'organisation",
   ],
   titre: "Bilan fonctionnel et BFR",
   accroche:

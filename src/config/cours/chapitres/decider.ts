@@ -83,6 +83,7 @@ export const DECIDER: Chapitre = {
   blocs: [
     "BTS CG P5 · Analyse et prévision de l'activité",
     "DCG UE11 · Contrôle de gestion",
+    "BUT GEA · Aider à la prise de décision",
   ],
   titre: "Décider : prix, fabriquer ou acheter",
   accroche:

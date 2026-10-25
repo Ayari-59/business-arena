@@ -40,6 +40,8 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
     "BTS CG P5 · Analyse et prévision de l'activité",
     "DCG UE11 · Contrôle de gestion",
     "BUT GACO · Participer au pilotage interne de l'organisation",
+    "BUT GEA · Concevoir des outils de contrôle de gestion",
+    "BTS MHR Bloc 4 · Pilotage de la production de services en hôtellerie restauration",
   ],
   titre: "Le budget de trésorerie",
   accroche:

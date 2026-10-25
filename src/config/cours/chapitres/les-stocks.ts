@@ -51,6 +51,7 @@ export const LES_STOCKS: Chapitre = {
   blocs: [
     "BTS CG P2 · Contrôle et production de l'information financière",
     "DCG UE9 · Comptabilité",
+    "BUT GEA · Produire l'information comptable, fiscale et sociale de l'organisation",
   ],
   titre: "Les stocks",
   accroche:

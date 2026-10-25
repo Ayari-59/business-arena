@@ -31,6 +31,7 @@ export const LA_PAIE: Chapitre = {
     "Bac pro AGORA Bloc 3 · Administrer le personnel",
     "BTS SAM Bloc 3 · Collaboration à la gestion des ressources humaines",
     "BUT GACO · Participer au pilotage RH de l'organisation",
+    "BUT GEA · Gérer l'administration du personnel",
   ],
   titre: "La paie",
   accroche:
