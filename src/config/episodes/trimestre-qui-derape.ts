@@ -386,7 +386,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que faites-vous des retards de paiement ?",
     options: [
       {
-        t: "Relancer les impayés de plus de 45 jours",
+        t: "Relancer les impayés de plus de 45 jours, client par client",
         d: "Les commerciaux s'en chargent : un peu moins de temps pour vendre.",
       },
       {

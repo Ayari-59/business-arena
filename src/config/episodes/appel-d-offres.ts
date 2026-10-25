@@ -112,7 +112,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment engagez-vous l'équipe ?",
     options: [
       {
-        t: "Répondre aux trois consultations : on ne laisse passer aucune affaire",
+        t: "Répondre aux trois consultations : on ne laisse passer aucune affaire, et l'équipe connaît nos produits",
         d: "Chacun prend un dossier en plus de ses clients. Ne coûte rien de plus.",
       },
       {
@@ -317,8 +317,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Trois jours. Le document a déjà servi onze fois.",
       },
       {
-        t: "Répondre critère par critère : plan de livraison en site occupé, stock dédié, délais de réassort, reprise des emballages",
-        d: "Neuf jours de l'équipe, avec le chef de dépôt et les chauffeurs.",
+        t: "Répondre critère par critère au cahier des charges de Balmes",
+        d: "Plan de livraison en site occupé, stock dédié, délais de réassort, reprise des emballages. Neuf jours de l'équipe, avec le chef de dépôt et les chauffeurs.",
       },
       {
         t: "Un dossier exhaustif : toutes nos références, le catalogue complet, cent vingt pages",
@@ -618,15 +618,15 @@ export const ETAPES: readonly Etape[] = [
         d: "Vauclair reste, à coup sûr. 35 000 € de marge en moins sur l'année.",
       },
       {
-        t: "Une revue d'affaires : rattraper les devis, un interlocuteur dédié, et 1,5 % sur les trente références qui comptent",
-        d: "Deux jours de Leïla en semaine 11, et un effort ciblé.",
+        t: "Une revue d'affaires, et 1,5 % sur les références clés",
+        d: "Rattraper les devis en retard, un interlocuteur dédié, et 1,5 % sur les trente références qui comptent. Deux jours de Leïla en semaine 11.",
       },
       {
         t: "Refuser : notre prix est juste, et notre service le vaut",
         d: "Une lettre ferme et courtoise.",
       },
       {
-        t: "Laisser Maxence, qui suit le compte, négocier au mieux",
+        t: "Laisser Maxence, qui suit le compte depuis le début, négocier au mieux",
         d: "Vous restez sur le démarrage des marchés du trimestre prochain.",
       },
     ],

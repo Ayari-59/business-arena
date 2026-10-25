@@ -109,12 +109,12 @@ export const ETAPES: readonly Etape[] = [
     question: "Que décidez-vous avant le point de vendredi ?",
     options: [
       {
-        t: "Doubler la publicité pour faire venir plus d'artisans",
+        t: "Doubler la publicité : plus d'artisans qui viennent, c'est plus de commandes en ligne",
         d: "4 000 € par semaine au lieu de 2 000, dès la semaine 2. Le prestataire promet presque deux fois plus de visites.",
       },
       {
-        t: "Corriger les deux blocages : compte ouvert en dix minutes avec le SIRET, prix pro affichés dès la connexion",
-        d: "6 000 € de développement, en ligne en semaine 2. Le compte ne passe plus par la validation de l'agence.",
+        t: "Corriger les deux blocages du site : l'ouverture du compte et les prix pro",
+        d: "Compte ouvert en dix minutes avec le SIRET, prix pro affichés dès la connexion. 6 000 € de développement, en ligne en semaine 2. Le compte ne passe plus par la validation de l'agence.",
       },
       {
         t: "Lancer une refonte complète du site",
@@ -214,8 +214,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Ne coûte rien. Bénédicte la signe lundi.",
       },
       {
-        t: "Contourner les agences : un e-mailing direct aux artisans, avec 5 % de remise en ligne",
-        d: "1 500 € d'envoi, et la remise sur leurs commandes en ligne. Des visites dès la semaine 4.",
+        t: "Contourner les agences qui freinent : un e-mailing direct aux artisans, avec 5 % de remise sur leurs commandes en ligne",
+        d: "1 500 € d'envoi, plus le coût de la remise. Des visites dès la semaine 4.",
       },
       {
         t: "Laisser les agences de côté : le site doit se vendre seul",
@@ -308,7 +308,7 @@ export const ETAPES: readonly Etape[] = [
         d: "4 000 €, outil de test compris. Verdict à la fin de la semaine 7.",
       },
       {
-        t: "Afficher seulement le stock de l'agence sur les fiches produits, sans toucher au tunnel",
+        t: "Afficher seulement le stock de l'agence sur les fiches produits, sans toucher au tunnel de commande",
         d: "2 500 €, en ligne en semaine 6. Une petite modification, que des artisans ont demandée.",
       },
       {
@@ -382,7 +382,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que répondez-vous au prestataire ?",
     options: [
       {
-        t: "Tripler la publicité pour le printemps",
+        t: "Tripler la publicité pour le printemps, quand les artisans reprennent leurs chantiers et cherchent des fournisseurs",
         d: "6 000 € par semaine dès la semaine 8. Le prestataire promet 5 000 visites de plus.",
       },
       {
