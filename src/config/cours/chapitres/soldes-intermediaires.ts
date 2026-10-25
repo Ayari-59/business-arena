@@ -93,6 +93,7 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
   blocs: [
     "BTS CG P6 · Analyse de la situation financière",
     "DCG UE6 · Finance d'entreprise",
+    "BUT GACO · Participer au pilotage interne de l'organisation",
   ],
   titre: "Soldes intermédiaires de gestion et CAF",
   accroche:

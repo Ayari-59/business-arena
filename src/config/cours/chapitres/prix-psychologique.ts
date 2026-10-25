@@ -73,6 +73,8 @@ export const PRIX_PSYCHOLOGIQUE: Chapitre = {
   palier: 1,
   blocs: [
     "STMG Thème 1 · La définition de l'offre",
+    "BUT TC · Conduire les actions marketing",
+    "BUT GACO · Concevoir la démarche marketing",
   ],
   titre: "Le prix psychologique",
   accroche:

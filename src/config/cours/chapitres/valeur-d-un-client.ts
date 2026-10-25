@@ -128,6 +128,10 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
   palier: 3,
   blocs: [
     "BTS NDRC Bloc 1 · Relation client et négociation-vente",
+    "Bac pro MCV Bloc 3 · Fidéliser la clientèle et développer la relation client",
+    "2de pro RC · Assurer le suivi de la relation client",
+    "BUT TC · Manager la relation client",
+    "BUT GACO · Assurer le développement des affaires, de la prospection à la fidélisation",
   ],
   titre: "La valeur d'un client : attrition et valeur vie",
   accroche:

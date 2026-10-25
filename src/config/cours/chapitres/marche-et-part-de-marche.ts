@@ -94,6 +94,8 @@ export const MARCHE_ET_PART_DE_MARCHE: Chapitre = {
   blocs: [
     "STMG Thème 3 · Création de valeur et performance",
     "STMG Thème 1 · La définition de l'offre",
+    "BUT TC · Conduire les actions marketing",
+    "BUT GACO · Concevoir la démarche marketing",
   ],
   titre: "Le marché et la part de marché",
   accroche:

@@ -53,6 +53,9 @@ export const LIRE_LE_COMPTE_DE_RESULTAT: Chapitre = {
   blocs: [
     "STMG Thème 3 · Création de valeur et performance",
     "STMG Thème 2 · Analyser la situation de l'entreprise",
+    "Bac pro AGORA Bloc 2 · Organiser et suivre l'activité de production (de biens ou de services)",
+    "2de MG · Évaluer et évoluer, du pilotage aux développements numériques",
+    "2de SES · Comment crée-t-on des richesses et comment les mesure-t-on ?",
   ],
   titre: "Le compte de résultat : ce que l'année a rapporté",
   accroche:

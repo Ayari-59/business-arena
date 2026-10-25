@@ -58,8 +58,8 @@ function ancre(texte: string): string {
     .replace(/^-|-$/g, "");
 }
 
-/** Les formations servies, dans l'ordre du registre, avec leur parcours s'il existe. */
-const FILIERES = (() => {
+/** Les formations, dans l'ordre du registre, avec leur parcours s'il existe. */
+const TOUTES_LES_FILIERES = (() => {
   // UN BLOC DE RÉFÉRENTIEL APPARTIENT À UNE FORMATION. La page portait douze
   // sections dont trois n'en étaient pas : une découverte ouverte à toutes les
   // filières, un approfondissement, un tournoi inter-filières. Elles
@@ -127,8 +127,21 @@ const FILIERES = (() => {
           ? `${ateliers[0]!.seances.length} séances, ${Math.round(dureeTotaleHeures(ateliers[0]!))} heures`
           : `${ateliers.length} chemins proposés`,
     };
-  }).filter((f) => f.ateliers.length > 0);
+  });
 })();
+
+/** Les formations servies par au moins un atelier. */
+const FILIERES = TOUTES_LES_FILIERES.filter((f) => f.ateliers.length > 0);
+
+/**
+ * LES DIPLÔMES QUE LE COURS SERT SANS ATELIER. Un bac pro, une seconde ou le
+ * DSCG ont leur texte au registre et une page de couverture, mais aucun
+ * déroulé de séances : leur tiroir n'aurait ni réglages ni mise en œuvre. Ils
+ * se listent à part, avec ce que leur page montre.
+ */
+const DIPLOMES_SANS_ATELIER = TOUTES_LES_FILIERES.filter(
+  (f) => f.ateliers.length === 0 && f.entrees !== null,
+);
 
 /**
  * PLUS D'EMOJI SUR CETTE PAGE. Quatre diplômes en portaient un — 🎓 🛍️ 🤝 🧮 —
@@ -425,6 +438,47 @@ export default async function ParcoursPage() {
             </details>
           ))}
         </div>
+
+        {DIPLOMES_SANS_ATELIER.length > 0 ? (
+          <section
+            aria-labelledby="sans-atelier"
+            className="mx-auto max-w-4xl space-y-4 px-6 pb-8"
+          >
+            <h2
+              id="sans-atelier"
+              className="text-2xl font-bold leading-tight text-slate-50"
+            >
+              Les diplômes servis par le cours
+            </h2>
+            <p className="max-w-2xl text-base leading-relaxed text-slate-400">
+              Pas encore d&apos;atelier écrit pour ces diplômes : leur
+              référentiel est lu, et le chiffre dit combien de ses entrées le
+              cours travaille. Un atelier se construit sur mesure : la bande
+              en bas de page dit ce que nous demandons et ce que nous livrons.
+            </p>
+            {/* DES PASTILLES, PAS DES CARTES : la page repliée doit rester un
+                index (la garde e2e en mesure la hauteur sur un téléphone). Le
+                détail, entrées travaillées et chapitres, est sur la page du
+                diplôme et dans l'infobulle. */}
+            <ul className="flex flex-wrap gap-2">
+              {DIPLOMES_SANS_ATELIER.map((f) => (
+                <li key={f.code} data-diplome-sans-atelier={f.sigle}>
+                  <Link
+                    href={`/parcours/${f.code}`}
+                    title={`${f.diplome} : ${f.blocs} sur ${f.entrees} entrées travaillées${f.chapitres > 0 ? `, ${f.chapitres} chapitre${f.chapitres > 1 ? "s" : ""} de cours` : ""}`}
+                    className="inline-block rounded-full border border-white/10 bg-slate-900 px-3.5 py-1.5 text-xs text-slate-300 transition hover:border-amber-400/40 hover:text-amber-300"
+                  >
+                    {f.sigle}
+                    <span className="text-slate-400">
+                      {" "}
+                      · {f.blocs}/{f.entrees}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
         {/* La bande sort de la colonne de lecture : une fin de page tient toute
             la largeur, sinon elle reste une carte de plus dans la pile. */}

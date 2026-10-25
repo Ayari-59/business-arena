@@ -733,6 +733,20 @@ describe("parcours enseignant et élève", () => {
     await prof.waitForURL(/\/cours\/stock-du-point-de-vente/);
     expect(await prof.locator("h1").innerText()).toContain("Le stock du point de vente");
 
+    // UN DIPLÔME SANS ATELIER : sa page le dit et propose l'atelier sur
+    // mesure, et la page des parcours le liste à part.
+    await aller(prof, "/parcours/bac-pro-mcv");
+    expect(await prof.locator("[data-sans-atelier]").isVisible()).toBe(true);
+    expect(await prof.locator("[data-sur-mesure-paragraphe]").isVisible()).toBe(true);
+    await aller(prof, "/parcours/bts-mco");
+    expect(await prof.locator("[data-sans-atelier]").count()).toBe(0);
+    await aller(prof, "/parcours");
+    expect(
+      await prof
+        .locator('[data-diplome-sans-atelier="Bac pro MCV"] a[href="/parcours/bac-pro-mcv"]')
+        .isVisible(),
+    ).toBe(true);
+
     // Et la page des parcours mène à celle du diplôme.
     await aller(prof, "/parcours");
     expect(

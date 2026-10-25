@@ -93,6 +93,7 @@ export const ASSORTIMENT: Chapitre = {
   palier: 4,
   blocs: [
     "BTS MCO Bloc 2 · Animer et dynamiser l'offre commerciale",
+    "Bac pro MCV Bloc 4A · Animer et gérer l'espace commercial",
   ],
   titre: "L'assortiment : marge et volume",
   accroche:

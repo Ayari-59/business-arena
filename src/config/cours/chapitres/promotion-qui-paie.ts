@@ -63,6 +63,7 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
   palier: 4,
   blocs: [
     "BTS MCO Bloc 2 · Animer et dynamiser l'offre commerciale",
+    "Bac pro MCV Bloc 4A · Animer et gérer l'espace commercial",
   ],
   titre: "La promotion qui paie",
   accroche:

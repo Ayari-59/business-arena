@@ -80,6 +80,9 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
   palier: 3,
   blocs: [
     "BTS MCO Bloc 3 · Assurer la gestion opérationnelle",
+    "Bac pro MCV Bloc 4A · Animer et gérer l'espace commercial",
+    "2de pro GATL 4 · Traiter les flux physiques en relation avec les données de gestion",
+    "BUT TC · Piloter un espace de vente",
   ],
   titre: "Le stock du point de vente",
   accroche:

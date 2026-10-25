@@ -68,6 +68,7 @@ export const SEUIL_DE_RENTABILITE: Chapitre = {
   blocs: [
     "BTS CG P5 · Analyse et prévision de l'activité",
     "DCG UE11 · Contrôle de gestion",
+    "BUT GACO · Participer au pilotage interne de l'organisation",
   ],
   titre: "Le seuil de rentabilité",
   accroche:

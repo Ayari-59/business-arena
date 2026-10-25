@@ -61,6 +61,9 @@ export const SALAIRE_BRUT_NET_COUT: Chapitre = {
   blocs: [
     "STMG Thème 1 · De l'individu à l'acteur",
     "STMG Thème 2 · Des facteurs de motivation et de satisfaction : qualité de vie au travail et rémunération",
+    "Bac pro AGORA Bloc 3 · Administrer le personnel",
+    "BTS SAM Bloc 3 · Collaboration à la gestion des ressources humaines",
+    "BUT GACO · Participer au pilotage RH de l'organisation",
   ],
   titre: "Du salaire brut au coût pour l'entreprise",
   accroche:

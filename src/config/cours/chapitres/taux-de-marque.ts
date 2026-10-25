@@ -93,6 +93,8 @@ export const TAUX_DE_MARQUE: Chapitre = {
   blocs: [
     "BTS MCO Bloc 2 · Animer et dynamiser l'offre commerciale",
     "BTS MCO Bloc 3 · Assurer la gestion opérationnelle",
+    "Bac pro MCV Bloc 1 · Conseiller et vendre",
+    "Bac pro MCV Bloc 4A · Animer et gérer l'espace commercial",
   ],
   titre: "Taux de marque, taux de marge, coefficient",
   accroche:

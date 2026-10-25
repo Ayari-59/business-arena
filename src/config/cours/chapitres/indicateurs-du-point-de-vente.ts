@@ -94,6 +94,8 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
   palier: 2,
   blocs: [
     "BTS MCO Bloc 3 · Assurer la gestion opérationnelle",
+    "BUT TC · Piloter un espace de vente",
+    "BUT GACO · Assurer le développement des affaires, de la prospection à la fidélisation",
   ],
   titre: "Les indicateurs du point de vente",
   accroche:

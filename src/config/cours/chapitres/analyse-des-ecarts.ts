@@ -32,6 +32,7 @@ export const ANALYSE_DES_ECARTS: Chapitre = {
   blocs: [
     "BTS CG P5 · Analyse et prévision de l'activité",
     "DCG UE11 · Contrôle de gestion",
+    "BUT GACO · Participer au pilotage interne de l'organisation",
   ],
   titre: "L'analyse des écarts",
   accroche:

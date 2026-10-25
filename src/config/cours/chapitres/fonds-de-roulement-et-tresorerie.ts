@@ -45,6 +45,7 @@ export const FONDS_DE_ROULEMENT: Chapitre = {
     "STMG Thème 4 · Temps et risque",
     "STMG Thème 2 · Analyser la situation de l'entreprise",
     "STMG Thème 3 · Accompagner la prise de décision",
+    "Bac pro AGORA Bloc 2 · Organiser et suivre l'activité de production (de biens ou de services)",
   ],
   titre: "Fonds de roulement, besoin en fonds de roulement et trésorerie",
   accroche:

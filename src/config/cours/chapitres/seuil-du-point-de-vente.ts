@@ -66,6 +66,7 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
   palier: 3,
   blocs: [
     "BTS MCO Bloc 3 · Assurer la gestion opérationnelle",
+    "BUT TC · Piloter un espace de vente",
   ],
   titre: "Le seuil de rentabilité du point de vente",
   accroche:

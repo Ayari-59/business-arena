@@ -68,6 +68,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
   blocs: [
     "BTS CG P1 · Contrôle et traitement comptable des opérations commerciales",
     "DCG UE9 · Comptabilité",
+    "Bac pro AGORA Bloc 2 · Organiser et suivre l'activité de production (de biens ou de services)",
   ],
   titre: "Remises et règlements",
   accroche:

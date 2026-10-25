@@ -64,6 +64,7 @@ export const LES_FLUX: Chapitre = {
   blocs: [
     "STMG Thème 3 · Création de valeur et performance",
     "STMG Thème 4 · Temps et risque",
+    "Bac pro AGORA Bloc 2 · Organiser et suivre l'activité de production (de biens ou de services)",
   ],
   titre: "Les flux de l'entreprise",
   accroche:

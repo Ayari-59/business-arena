@@ -4,8 +4,10 @@ import { describe, expect, it } from "vitest";
 import {
   blocOfficiel,
   REFERENTIELS,
+  REFERENTIELS_DES_FORMATIONS,
   referentielDeCitation,
 } from "@/config/ateliers/referentiels";
+import { ATELIERS } from "@/config/ateliers";
 import {
   blocsDuChapitre,
   couvertureDeLaFormation,
@@ -15,7 +17,7 @@ import {
   tableauDeCouverture,
 } from "@/config/couverture";
 import { CHAPITRES, PARCOURS } from "@/config/cours/registre";
-import { formationParCode } from "@/config/formations";
+import { FORMATIONS, formationParCode } from "@/config/formations";
 
 /**
  * LE COURS ENTRE DANS LA COUVERTURE, ET CE QU'IL CITE EXISTE.
@@ -156,6 +158,42 @@ describe("la couverture par le cours", () => {
     expect(blocOfficiel("DCG UE10 · Comptabilité approfondie", "dcg")).toBe(
       "UE10 · Comptabilité approfondie",
     );
+  });
+
+  it("le registre des référentiels est tenu par code de formation, et chaque texte lu donne sa page", () => {
+    // UN DIPLÔME SANS ATELIER A SON TEXTE AU REGISTRE. Une clé qui ne serait
+    // pas une formation ne paraîtrait nulle part ; une formation dont le texte
+    // est lu sans avoir de page serait lue pour rien.
+    const codes = new Set(FORMATIONS.map((f) => f.code));
+    const pages = new Set(formationsAvecUnePage().map((f) => f.code));
+    const cles = Object.keys(REFERENTIELS_DES_FORMATIONS);
+    expect(cles.length, "le registre par formation est vide").toBeGreaterThan(10);
+    for (const cle of cles) {
+      expect(codes, `« ${cle} » n'est le code d'aucune formation`).toContain(cle);
+      expect(pages, `${cle} a son texte au registre mais pas de page`).toContain(cle);
+      expect(referentielDeLaFormation(cle)).toBe(REFERENTIELS_DES_FORMATIONS[cle]);
+    }
+    // Des diplômes sans atelier sont bien au registre : sinon la règle ne garde rien.
+    const sansAtelier = cles.filter((cle) => !ATELIERS.some((a) => a.formations.includes(cle)));
+    expect(sansAtelier.length, "aucun diplôme sans atelier au registre").toBeGreaterThan(5);
+  });
+
+  it("le préfixe d'une citation désigne la formation dont il porte le sigle", () => {
+    // « Bac pro MCV Bloc 4A » doit ouvrir le texte du bac pro MCV, pas un autre :
+    // la citation se résout par son préfixe, et le préfixe nomme une formation.
+    for (const c of CHAPITRES) {
+      for (const bloc of c.blocs) {
+        const cite = referentielDeCitation(bloc)!;
+        expect(formationParCode(cite.code), `${c.code} : « ${bloc} »`).toBeDefined();
+        expect(cite.referentiel).toBe(REFERENTIELS_DES_FORMATIONS[cite.code]);
+      }
+    }
+  });
+
+  it("la page d'un diplôme sans atelier le dit, et propose l'atelier sur mesure", () => {
+    expect(PAGE).toContain("ateliers.length === 0");
+    expect(PAGE).toContain("data-sans-atelier");
+    expect(PAGE).toContain("<ParagrapheSurMesure");
   });
 
   it("la page d'un diplôme se rend pour chaque formation servie, et lit le tableau", () => {

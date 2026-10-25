@@ -80,6 +80,7 @@ export const REMISES_ET_CONDITIONS: Chapitre = {
   palier: 2,
   blocs: [
     "BTS NDRC Bloc 1 · Relation client et négociation-vente",
+    "BUT TC · Vendre une offre commerciale",
   ],
   titre: "Remises et conditions : la rentabilité d'une affaire",
   accroche:

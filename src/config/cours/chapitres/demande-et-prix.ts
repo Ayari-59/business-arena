@@ -52,6 +52,8 @@ export const DEMANDE_ET_PRIX: Chapitre = {
   palier: 1,
   blocs: [
     "STMG Thème 1 · La définition de l'offre",
+    "2de SES · Comment se forment les prix sur un marché ?",
+    "BUT TC · Conduire les actions marketing",
   ],
   titre: "La demande répond au prix",
   accroche:
