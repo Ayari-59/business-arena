@@ -106,7 +106,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Un message automatique qui donne un délai, et une file pour les urgences. 800 €, une semaine pour s'y faire.",
       },
       {
-        t: "Fixer un objectif de 110 demandes par conseiller",
+        t: "Fixer un objectif de 110 demandes par conseiller, pour que chacun sache ce qu'on attend de lui",
         d: "Un objectif individuel, suivi chaque semaine.",
       },
       {
@@ -198,7 +198,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Arrivée en semaine 9, le temps d'apprendre le métier. 4 000 € de cabinet.",
       },
       {
-        t: "Prendre un intérimaire dès la semaine 6",
+        t: "Prendre un intérimaire dès la semaine 6, pour ne pas laisser de trou dans l'équipe",
         d: "Jusqu'à la fin du trimestre, à 1 400 € par semaine. Un peu moins efficace qu'un conseiller formé.",
       },
       {
@@ -271,7 +271,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment traitez-vous le conflit ?",
     options: [
       {
-        t: "Les recevoir ensemble et redéfinir qui traite quoi",
+        t: "Les recevoir ensemble et redéfinir qui traite quoi, pour crever l'abcès une bonne fois",
         d: "Une heure à trois, une règle écrite, et un suivi dans quinze jours.",
       },
       {
@@ -357,7 +357,7 @@ export const ETAPES: readonly Etape[] = [
         d: "De trois semaines, quand Léa sera revenue et l'équipe au complet. Le marketing décidera.",
       },
       {
-        t: "Prévoir des heures supplémentaires volontaires, majorées",
+        t: "Prévoir des heures supplémentaires volontaires, majorées, pour absorber le surplus de demandes",
         d: "Pendant les trois semaines de la campagne. 2 000 € par semaine.",
       },
       {

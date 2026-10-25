@@ -148,7 +148,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Une note refaite avec Mihaela Vasilescu : chaque section, sa cause, son financeur. Les deux postes restent.",
       },
       {
-        t: "Ne plus remplacer les absences d'aides-soignants jusqu'à la fin de l'année",
+        t: "Ne plus remplacer les absences d'aides-soignants jusqu'à la fin de l'année, pour économiser sans supprimer de poste",
         d: "Ni CDD ni intérim sur les absences : quelques milliers d'euros économisés d'ici décembre, sans supprimer de poste.",
       },
       {
@@ -249,7 +249,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Rien ne change ; la paie sera corrigée l'an prochain.",
       },
       {
-        t: "Puisque le soins est en excédent, y imputer aussi une partie des agents de service",
+        t: "Puisque la section soins est en excédent, y imputer aussi une partie des agents de service, et soulager d'autant la section hébergement",
         d: "20 % des agents de service passés sur la section soins : 79 k€ de charges en moins à l'hébergement.",
       },
       {
@@ -353,7 +353,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Six semaines de travail, 7 k€ de temps médical et infirmier en renfort. Validation en semaine 10.",
       },
       {
-        t: "Demander la validation en semaine 10 avec les évaluations actuelles",
+        t: "Demander la validation en semaine 10 avec les évaluations actuelles, sans détourner le médecin et l'IDEC des résidents",
         d: "Aucun coût ; les dossiers restent en l'état.",
       },
       {
@@ -453,7 +453,7 @@ export const ETAPES: readonly Etape[] = [
         d: "3,20 € par journée au-delà du taux directeur, avec le coût de revient de la journée et le détail des charges de la section.",
       },
       {
-        t: "Demander au département une convention d'habilitation partielle à l'aide sociale",
+        t: "Demander au département une convention d'habilitation partielle à l'aide sociale, pour fixer librement le prix des nouveaux résidents",
         d: "Un prix libre pour les nouveaux résidents non bénéficiaires de l'aide sociale ; le prix des places habilitées ne bouge pas.",
       },
       {

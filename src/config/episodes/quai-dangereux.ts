@@ -299,7 +299,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Barrières, passages piétons, nouvel accueil. 7 000 €, des quais au ralenti pendant les travaux de la semaine 6.",
       },
       {
-        t: "Relancer une campagne de consignes : gilets, klaxon à chaque croisement",
+        t: "Relancer une campagne de consignes : gilets, klaxon à chaque croisement, pour ancrer les bons réflexes",
         d: "Affiches, rappel à chaque prise de poste, contrôles des chefs d'équipe. 1 200 €.",
       },
       {
@@ -385,7 +385,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment passez-vous le pic de la saison ?",
     options: [
       {
-        t: "Mettre une prime au rendement jusqu'à la fin de la saison",
+        t: "Mettre une prime au rendement jusqu'à la fin de la saison, pour tenir la cadence du pic",
         d: "Une prime par palette au-delà de 110 par heure, semaines 7 à 11. 1 800 € par semaine.",
       },
       {
@@ -557,7 +557,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Le retard ne baisse pas plus vite, mais les agences s'organisent.",
       },
       {
-        t: "Charger deux remorques par quai en même temps pour rattraper le retard",
+        t: "Charger deux remorques par quai en même temps pour rattraper le retard, sans faire attendre personne",
         d: "Des renforts intérimaires, deux équipes par quai. 4 500 € par semaine, la cadence monte vite.",
       },
       {

@@ -378,7 +378,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Quel plan séminaires inscrivez-vous au dossier ?",
     options: [
       {
-        t: "Transférer à Évian vingt séminaires d'Aix-les-Bains et de L'Escale Lac",
+        t: "Transférer à Évian vingt séminaires d'Aix-les-Bains et de L'Escale Lac, des clients déjà acquis au groupe",
         d: `Rien à recruter ; ${kE(PROJECTION_DIRECTEUR.seminaires)} de chiffre d'affaires de plus à Évian.`,
       },
       {

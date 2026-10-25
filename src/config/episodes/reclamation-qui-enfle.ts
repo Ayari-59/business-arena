@@ -302,7 +302,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Le relevé des retours et l'expertise d'un laboratoire indépendant sur dix appareils, 1 800 €. Réponse de Vantrel sous quinze jours.",
       },
       {
-        t: "Suspendre toutes les commandes Vantrel jusqu'à ce qu'il reconnaisse le défaut",
+        t: "Suspendre toutes les commandes Vantrel jusqu'à ce qu'il reconnaisse le défaut, pour peser vraiment",
         d: "Disqueuses et perforateurs en rupture dans les agences tant que ça dure : environ 700 € de ventes perdues par semaine.",
       },
       {
@@ -552,7 +552,7 @@ export const ETAPES: readonly Etape[] = [
         d: "1 800 € de référencement. Livré en semaine 13, rupture d'ici là.",
       },
       {
-        t: "Laisser le MX-160 en rupture jusqu'à la fin du trimestre",
+        t: "Laisser le MX-160 en rupture jusqu'à la fin du trimestre, pour ne prendre aucun risque",
         d: "Le temps de voir si Vantrel tient parole. Environ 2 500 € de ventes perdues par semaine.",
       },
     ],

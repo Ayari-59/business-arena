@@ -371,7 +371,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que proposez-vous aux délégués ?",
     options: [
       {
-        t: "Verser une prime exceptionnelle de 500 € aux trois experts de la ligne 5",
+        t: "Verser une prime exceptionnelle de 500 € aux trois experts de la ligne 5, pour leurs heures et leurs samedis",
         d: `Pour leurs heures et leurs samedis. ${euros(PRIME_EXPERTS.charge)} charges comprises, en février.`,
       },
       {
@@ -465,7 +465,7 @@ export const ETAPES: readonly Etape[] = [
         d: `Plus de changement de format l'après-midi : la ligne ralentit, elle ne s'arrête plus. Le transfert coûte ${euros(COUT_TRANSFERT_SEMAINE)} par semaine.`,
       },
       {
-        t: "Laisser tourner l'après-midi à mi-cadence avec un conducteur de la ligne 4",
+        t: "Laisser tourner l'après-midi à mi-cadence avec un conducteur de la ligne 4, comme d'habitude quand un expert manque",
         d: "Comme d'habitude quand un expert manque.",
       },
     ],

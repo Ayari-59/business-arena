@@ -184,7 +184,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Sur quoi bâtissez-vous la campagne de l'été ?",
     options: [
       {
-        t: "Relever de 150 € brut par mois le salaire d'embauche des saisonniers, et doubler les annonces",
+        t: "Relever de 150 € brut par mois le salaire d'embauche des saisonniers, et doubler les annonces, pour attirer plus de candidats",
         d: `Pour les nouveaux contrats de l'été. ${euros(MONTANTS.annoncesDoublees)} d'annonces, et ${euros(charge(MONTANTS.salaireEntree))} par mois et par recrue, charges comprises.`,
       },
       {
@@ -367,8 +367,8 @@ export const ETAPES: readonly Etape[] = [
     question: "Que faites-vous de la coupure ?",
     options: [
       {
-        t: "Supprimer la coupure dès cet été dans tous les hôtels : deux équipes décalées, et la semaine de quatre jours pour les cuisiniers volontaires",
-        d: "Écrit dans les offres dès la semaine 5. Environ 2 % de masse salariale d'été en chevauchements.",
+        t: "Supprimer la coupure dès cet été partout, avec deux équipes décalées",
+        d: "La semaine de quatre jours pour les cuisiniers volontaires. Écrit dans les offres dès la semaine 5. Environ 2 % de masse salariale d'été en chevauchements.",
       },
       {
         t: "Tester d'abord un mois à L'Escale Lac et à la Table d'Augustin d'Annecy, puis généraliser si ça tient",
@@ -472,7 +472,7 @@ export const ETAPES: readonly Etape[] = [
         d: `${euros(MONTANTS.forum)}. Premières candidatures en semaine 8.`,
       },
       {
-        t: "Multiplier les annonces : trois sites d'emploi de plus et des publicités sur les réseaux sociaux",
+        t: "Multiplier les annonces : trois sites d'emploi de plus et des publicités sur les réseaux sociaux, pour toucher plus large",
         d: `${euros(MONTANTS.annoncesMultipliees)}. Davantage de candidatures dès la semaine 7.`,
       },
       {
@@ -560,8 +560,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Chaque hôtel reçoit la part prévue ; les directeurs la connaissent depuis janvier.",
       },
       {
-        t: "Réaffecter les recrues selon le pick-up de chaque hôtel, et l'expliquer aux directeurs",
-        d: "Les recrues vont d'abord là où les réservations sont les plus fortes ; les postes vides, là où l'été s'annonce calme.",
+        t: "Réaffecter les recrues selon le pick-up de chaque hôtel",
+        d: "Un point avec les directeurs pour l'expliquer. Les recrues vont d'abord là où les réservations sont les plus fortes ; les postes vides, là où l'été s'annonce calme.",
       },
       {
         t: "Servir d'abord les restaurants, qui rapportent le plus par poste",

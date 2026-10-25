@@ -231,7 +231,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Quel premier pas faites-vous vers la santé ?",
     options: [
       {
-        t: "Repositionner tout de suite les quatre bureaux : campagne « Atlas, le conseil des établissements de santé », site, salons",
+        t: "Repositionner tout de suite les quatre bureaux : campagne « Atlas, le conseil des établissements de santé », site, salons, pour que tout le monde le sache",
         d: "90 k€ en septembre et en octobre. Tout le monde le saura dans un mois.",
       },
       {
@@ -322,7 +322,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que faites-vous pour les clients historiques ?",
     options: [
       {
-        t: "Leur accorder 10 % de remise sur les renouvellements",
+        t: "Leur accorder 10 % de remise sur les renouvellements, pour leur prouver qu'ils restent nos clients prioritaires",
         d: "Dès la semaine 5, sur les missions de la vingtaine de clients fidèles.",
       },
       {
@@ -404,7 +404,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Dès la semaine 7 ; 15 k€ de déplacements. Aucun chiffre d'affaires ce trimestre.",
       },
       {
-        t: "En placer en régie chez Kéroual Consulting, à prix coûtant, jusqu'à fin janvier",
+        t: "En placer en régie chez Kéroual Consulting, à prix coûtant, jusqu'à fin janvier, plutôt que de les laisser sans mission",
         d: "520 € par jour pour les consultants que Kéroual prendra ; il dira combien lundi.",
       },
       {
@@ -562,7 +562,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que répondez-vous au GHT ?",
     options: [
       {
-        t: "Accorder les 15 % pour décrocher la référence",
+        t: "Accorder les 15 % pour décrocher la référence, qui ouvrira les portes des autres établissements",
         d: "893 € par jour. Le GHT signera.",
       },
       {

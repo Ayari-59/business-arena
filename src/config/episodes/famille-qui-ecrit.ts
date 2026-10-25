@@ -442,7 +442,7 @@ export const ETAPES: readonly Etape[] = [
         d: `Un complément d'heures pour quatre volontaires, à tour de rôle : ${euros(RENFORT_WEEK_END)} par week-end.`,
       },
       {
-        t: "Faire venir une intérimaire de Soralis Intérim Santé le samedi et le dimanche matin",
+        t: "Faire venir une intérimaire de Soralis Intérim Santé le samedi et le dimanche matin, pour un renfort assuré tous les week-ends",
         d: `Quatre heures au moins par mission : ${euros(INTERIM_WEEK_END)} par week-end, assurés tous les week-ends.`,
       },
       {
@@ -535,7 +535,7 @@ export const ETAPES: readonly Etape[] = [
         d: `Une lingère en contrat à durée déterminée dès la semaine 9 : ${euros(COUTS.lingerie)} par semaine.`,
       },
       {
-        t: "Rembourser les familles au prix du neuf, sans discuter",
+        t: "Rembourser les familles au prix du neuf, sans discuter : elles n'auront plus à se battre pour chaque pièce perdue",
         d: `${euros(LINGE.prixDuNeuf)} la pièce au lieu de ${euros(LINGE.remboursement)}, sans justificatif. Les familles n'auront plus à se battre.`,
       },
       {

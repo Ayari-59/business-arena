@@ -330,7 +330,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Le geste qu'attend l'acheteuse. Le prix du lait payé aux producteurs ne change pas.",
       },
       {
-        t: "Envoyer à l'acheteuse la formule du contrat et les trois indicateurs, par courriel",
+        t: "Envoyer à l'acheteuse la formule du contrat et les trois indicateurs, par courriel, pour qu'elle les ait dans l'heure",
         d: "Gratuit, et parti dans l'heure.",
       },
       {
@@ -696,11 +696,11 @@ export const ETAPES: readonly Etape[] = [
     question: "Que préparez-vous pour le 1er mars ?",
     options: [
       {
-        t: "Prévenir Celtis que vous signerez son prix si rien n'est conclu le 28 février",
+        t: "Prévenir Celtis que vous signerez son prix si rien n'est conclu le 28 février, pour garder les douze références",
         d: "Plus de suspense : les douze références restent quoi qu'il arrive.",
       },
       {
-        t: "Préparer la suite : un dossier pour le médiateur, et une mise en avant chez Opaline à déclencher si Celtis retire des références",
+        t: "Préparer la suite : un dossier pour le médiateur, et une mise en avant chez Opaline",
         d: `Rien n'est dépensé si Celtis signe ; ${euros(COUTS.miseEnAvant)} de mise en avant si elle déréférence.`,
       },
       {

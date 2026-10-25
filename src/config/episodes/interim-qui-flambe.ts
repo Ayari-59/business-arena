@@ -379,7 +379,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Les remplaçants connaissent les résidents ; rien ne change.",
       },
       {
-        t: "Proposer aux remplaçants réguliers un CDD de huit mois, avec le même planning choisi",
+        t: "Proposer aux remplaçants réguliers un CDD de huit mois, avec le même planning choisi : ils gardent leur liberté, et nous les gardons",
         d: "Ils gardent leur liberté au bout de huit mois. Ils commenceraient en semaine 6, au coût d'un CDD.",
       },
     ],
@@ -459,7 +459,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Quelles consignes donnez-vous pour le pic ?",
     options: [
       {
-        t: "Pas d'intérim pour les absences pendant le pic : rappeler les agents sur leurs repos et regrouper les soins",
+        t: "Pas d'intérim pour les absences pendant le pic : rappeler les agents sur leurs repos et regrouper les soins, pour que le pic ne fasse pas exploser la facture d'intérim",
         d: "Les postes vacants restent tenus. L'intérim pour absences et congés est suspendu jusqu'à la fin du pic.",
       },
       {

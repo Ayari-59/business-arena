@@ -350,7 +350,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que font les cinq consultants en octobre ?",
     options: [
       {
-        t: "Accepter la sous-traitance de Halden Partners",
+        t: "Accepter la sous-traitance de Halden Partners, pour facturer dès octobre",
         d: "Quatre consultants à 450 € par jour jusqu'au 27 novembre : 9 000 € d'honoraires par semaine dès le 5 octobre.",
       },
       {

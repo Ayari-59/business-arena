@@ -270,7 +270,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Les deux Tables les plus proches, en basse saison, avec un relevé chaque jour : heure de livraison, température à réception, produits refaits. 100 € par semaine. Les trois autres suivront.",
       },
       {
-        t: "Commencer par Évian et Megève, les plus loin et les plus chargées",
+        t: "Commencer par Évian et Megève, les plus loin et les plus chargées, pour éprouver le laboratoire d'emblée",
         d: "« Si ça marche là, ça marchera partout. » Même relevé quotidien, 100 € par semaine.",
       },
       {
@@ -369,7 +369,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que faites-vous des livraisons ?",
     options: [
       {
-        t: "Interdire de refaire sur place : ce qui est livré doit être utilisé",
+        t: "Interdire de refaire sur place : ce qui est livré doit être utilisé, sinon le laboratoire ne sert à rien",
         d: "Une note aux cinq chefs : les commandes sont fixées par le laboratoire, et les produits livrés sont à utiliser.",
       },
       {
@@ -475,7 +475,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Un audit HACCP complet de Seynod par Hadrien Morlot et un laboratoire d'analyses : 2 500 €.",
       },
       {
-        t: "Laisser chaque chef retoucher les produits du laboratoire à sa façon",
+        t: "Laisser chaque chef retoucher les produits du laboratoire à sa façon : chacun connaît sa salle et sa clientèle",
         d: "Chacun finit les fonds et les pâtes à son goût. Des heures reviennent en cuisine.",
       },
     ],

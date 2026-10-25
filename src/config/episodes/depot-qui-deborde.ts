@@ -115,7 +115,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que décidez-vous avant le point de vendredi ?",
     options: [
       {
-        t: "Relever les stocks de sécurité de 25 % sur toutes les références",
+        t: "Relever les stocks de sécurité de 25 % sur toutes les références, pour ne plus jamais manquer",
         d: "Le système recommandera plus, partout, dès cette semaine.",
       },
       {
@@ -558,7 +558,7 @@ export const ETAPES: readonly Etape[] = [
         d: "140 références, aux quantités du planning. Rien de plus.",
       },
       {
-        t: "Faire livrer le chantier directement par les fournisseurs",
+        t: "Faire livrer le chantier directement par les fournisseurs, sans encombrer le dépôt",
         d: "Le dépôt ne voit pas passer la marchandise. 5 % de frais de livraison directe.",
       },
       {

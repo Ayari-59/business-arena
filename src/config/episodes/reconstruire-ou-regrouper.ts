@@ -336,7 +336,7 @@ export const ETAPES: readonly Etape[] = [
         d: "La hausse monte de 10 € à l'ouverture, puis de 1,50 € par an ; la réserve paie l'écart d'ici là.",
       },
       {
-        t: "Sortir 30 % des places de l'habilitation à l'aide sociale pour y fixer un prix libre",
+        t: "Sortir 30 % des places de l'habilitation à l'aide sociale pour y fixer un prix libre : ces places paient l'écart",
         d: "Ces places paient l'écart ; les autres restent à 10 € de hausse.",
       },
     ],
@@ -412,7 +412,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que faites-vous du programme avant le dépôt du dossier ?",
     options: [
       {
-        t: "Maintenir le programme voté par le conseil en septembre",
+        t: "Maintenir le programme voté par le conseil en septembre, pour ne pas retarder les plans",
         d: "Rien ne change ; l'architecte fige les plans lundi.",
       },
       {

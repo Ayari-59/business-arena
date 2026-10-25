@@ -374,7 +374,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment faites-vous venir les autres ?",
     options: [
       {
-        t: "Fixer à chaque practice un objectif de 15 % de jours gagnés, et rendre l'outil obligatoire pour les comptes rendus",
+        t: "Fixer à chaque practice un objectif de 15 % de jours gagnés, et rendre l'outil obligatoire pour les comptes rendus, pour que personne ne reste à l'écart",
         d: "Un suivi mensuel par practice dans Tempora. Aucun coût.",
       },
       {
@@ -462,7 +462,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que faites-vous des usages ?",
     options: [
       {
-        t: "Garder le cap : l'assistant sur toutes les tâches, c'est là qu'est le gain",
+        t: "Garder le cap : l'assistant sur toutes les tâches, c'est là qu'est le gain, et les relectures sont là pour rattraper les erreurs éventuelles",
         d: "Rien ne change. Les relectures continuent.",
       },
       {
@@ -631,7 +631,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que faites-vous valider au comité ?",
     options: [
       {
-        t: "La politique complète du juridique : une liste fermée d'usages, toute nouvelle utilisation validée par le comité",
+        t: "La politique complète du juridique : une liste fermée d'usages, toute nouvelle utilisation validée par le comité, pour que le cabinet soit couvert",
         d: `La relecture des avocats : ${ke(COUTS.avocats)}. Le cabinet est couvert.`,
       },
       {

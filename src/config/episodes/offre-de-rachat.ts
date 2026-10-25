@@ -152,8 +152,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Nordal est remercié. La laiterie poursuit son plan.",
       },
       {
-        t: "Ni oui ni non : établir la valeur de la laiterie indépendante et sonder discrètement un second acquéreur, sans exclusivité",
-        d: "Nordal est informé que le conseil étudie son offre dans le délai. Une approche confidentielle de la coopérative Kérouval.",
+        t: "Ni oui ni non : établir notre valeur, et sonder un second acquéreur",
+        d: "La valeur de la laiterie indépendante, sans exclusivité. Nordal est informé que le conseil étudie son offre dans le délai. Une approche confidentielle de la coopérative Kérouval.",
       },
       {
         t: "Confier à une banque d'affaires la mise aux enchères de la laiterie",
@@ -385,8 +385,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Une lettre d'intention signée cette semaine ; plus de second tour.",
       },
       {
-        t: "Organiser un second tour : offres améliorées de chaque acquéreur la semaine prochaine, en disant à Nordal qu'il n'est plus seul",
-        d: "Une lettre de procédure à chacun. Nordal peut relever son offre, la maintenir, ou se retirer.",
+        t: "Organiser un second tour, en disant à Nordal qu'il n'est plus seul",
+        d: "Offres améliorées de chaque acquéreur la semaine prochaine. Une lettre de procédure à chacun. Nordal peut relever son offre, la maintenir, ou se retirer.",
       },
       {
         t: "Demander à Nordal de prolonger son offre de six semaines, sans lui parler d'un autre acquéreur",
@@ -483,7 +483,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que répondez-vous à la baisse demandée ?",
     options: [
       {
-        t: "Accepter la baisse demandée, pour ne pas perdre l'acquéreur",
+        t: "Accepter la baisse demandée, pour ne pas perdre l'acquéreur et garder la signature en vue",
         d: "Le prix baisse du montant demandé ; la signature reste en vue.",
       },
       {
@@ -491,8 +491,8 @@ export const ETAPES: readonly Etape[] = [
         d: "L'acquéreur tient son prix, ou se retire.",
       },
       {
-        t: "Ne concéder que le coût chiffré des points trouvés, et contester le reste, chiffres à l'appui",
-        d: "Avec l'audit vendeur s'il a été fait ; sinon, une contre-expertise à 120 k€.",
+        t: "Ne concéder que le coût chiffré des points trouvés, et contester le reste",
+        d: "Le reste contesté chiffres à l'appui, avec l'audit vendeur s'il a été fait ; sinon, une contre-expertise à 120 k€.",
       },
     ],
     reactions: [

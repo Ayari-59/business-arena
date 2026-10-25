@@ -350,8 +350,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Aucune règle nouvelle : on remplit tous les étages ouverts, sans perdre une nuit.",
       },
       {
-        t: "Un plan d'occupation : les clients d'affaires loin du chantier, les chambres voisines vendues en dernier, le bruit entre 9 h 30 et 17 h",
-        d: "La réception attribue les chambres à la main ; l'entreprise perd environ deux jours sur le chantier.",
+        t: "Un plan d'occupation : les clients d'affaires loin du chantier",
+        d: "Les chambres voisines vendues en dernier, le bruit entre 9 h 30 et 17 h. La réception attribue les chambres à la main ; l'entreprise perd environ deux jours sur le chantier.",
       },
       {
         t: `Afficher un tarif « travaux » à −${taux(TARIF.remise, 0)} sur toutes les chambres voisines du chantier`,
@@ -450,7 +450,7 @@ export const ETAPES: readonly Etape[] = [
         d: `Baltazar Quénel, ${euros(SUIVI[1]!.cout)} jusqu'à la fin du chantier.`,
       },
       {
-        t: "Faire vous-même le tour du chantier chaque lundi avec Rosalba",
+        t: "Faire vous-même le tour du chantier chaque lundi avec Rosalba, pour tout voir de vos yeux",
         d: "Une heure par semaine, sans frais.",
       },
       {

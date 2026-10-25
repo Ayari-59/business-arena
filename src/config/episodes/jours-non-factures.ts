@@ -486,12 +486,12 @@ export const ETAPES: readonly Etape[] = [
     question: "Que répondez-vous à Talvenec ?",
     options: [
       {
-        t: "Accepter : même équipe, même prix",
+        t: "Accepter : même équipe, même prix, pour garder le client",
         d: "60 jours vendus, 48,6 k€. L'équipe enchaîne dès la semaine 10.",
       },
       {
-        t: "Rechiffrer sur le réalisé de la phase 1, avec des jalons de facturation",
-        d: "114 jours, 92,3 k€. Talvenec peut refuser.",
+        t: "Rechiffrer sur le réalisé de la phase 1",
+        d: "Avec des jalons de facturation. 114 jours, 92,3 k€. Talvenec peut refuser.",
       },
       {
         t: "Proposer le déploiement en régie",
@@ -575,8 +575,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Facturée au temps passé, au TJM catalogue.",
       },
       {
-        t: "Recouper le périmètre au budget : deux établissements en tranche ferme, chiffrés sur le réalisé, deux en tranche optionnelle",
-        d: "60 k€ pour 75 jours de travail. Le CHU doit l'accepter.",
+        t: "Recouper le périmètre au budget du CHU",
+        d: "Deux établissements en tranche ferme, chiffrés sur le réalisé, deux en tranche optionnelle. 60 k€ pour 75 jours de travail. Le CHU doit l'accepter.",
       },
       {
         t: "Décliner la phase 2",

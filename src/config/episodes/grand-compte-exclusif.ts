@@ -141,8 +141,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Signature en fin de semaine, aux conditions de Sarlève. Premières livraisons en semaine 3.",
       },
       {
-        t: "Accepter le principe, en négociant quatre clauses : exclusivité limitée à deux ans, indexation des prix, volume minimal garanti à 75 %, reprise du stock dédié",
-        d: "Sarlève demandera une contrepartie sur le prix. Il peut accepter, consulter Lestrade d'abord, ou signer avec lui.",
+        t: "Accepter le principe, en négociant quatre clauses qui protègent Arvel",
+        d: "Exclusivité limitée à deux ans, indexation des prix, volume minimal garanti à 75 %, reprise du stock dédié. Sarlève demandera une contrepartie sur le prix. Il peut accepter, consulter Lestrade d'abord, ou signer avec lui.",
       },
       {
         t: "Accepter le volume, mais sans exclusivité : Arvel garde Moulinier et Batival",
@@ -242,7 +242,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment constituez-vous le stock dédié ?",
     options: [
       {
-        t: "Constituer les 400 k€ de stock dédié tout de suite, comme le contrat le demande",
+        t: "Constituer les 400 k€ de stock dédié tout de suite, comme le contrat le demande, pour ne jamais faire attendre un chantier",
         d: "400 k€ à porter à 8 % par an ; Sarlève est servi sans attente.",
       },
       {
@@ -331,7 +331,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Une lettre du service juridique ; rien à dépenser.",
       },
       {
-        t: "Lancer une campagne de conquête d'autres entreprises générales pour compenser",
+        t: "Lancer une campagne de conquête d'autres entreprises générales pour compenser les volumes de Moulinier et Batival",
         d: "30 k€ de remises d'accueil et deux commerciaux pendant deux mois.",
       },
       {
@@ -622,7 +622,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que répondez-vous à la demande de baisse ?",
     options: [
       {
-        t: "Accorder le point de baisse pour garder le contrat",
+        t: "Accorder le point de baisse pour garder le contrat, qui pèse un quart de la région",
         d: "Un point de prix en moins sur les années 2 et 3 ; le contrat est sauf.",
       },
       {
@@ -630,8 +630,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Aucune baisse ; Sarlève peut résilier au terme de la première année.",
       },
       {
-        t: "Proposer un échange : 0,4 point contre un engagement de volume ferme à 85 % sur deux ans",
-        d: "Une baisse limitée contre un volume garanti ; Sarlève peut accepter ou résilier.",
+        t: "Proposer un échange : 0,4 point contre un volume ferme sur deux ans",
+        d: "Un volume ferme à 85 %. Une baisse limitée contre un volume garanti ; Sarlève peut accepter ou résilier.",
       },
     ],
     reactions: [

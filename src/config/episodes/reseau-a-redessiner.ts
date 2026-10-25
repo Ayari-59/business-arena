@@ -330,7 +330,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment répondez-vous à l'annonce de Talvère ?",
     options: [
       {
-        t: "Engager les vingt-cinq plus gros comptes de la zone par des contrats annuels",
+        t: "Engager les vingt-cinq plus gros comptes de la zone par des contrats annuels, avant que Talvère ne vienne les chercher",
         d: "2,5 % de remise de fin d'année ; ils s'engagent sur leurs volumes.",
       },
       {

@@ -151,12 +151,12 @@ export const ETAPES: readonly Etape[] = [
     question: "Que proposez-vous au directeur ?",
     options: [
       {
-        t: "Passer toute la clinique en 12 heures au 1er octobre",
+        t: "Passer toute la clinique en 12 heures au 1er octobre, pour que l'argument du recrutement porte tout de suite",
         d: "Les trois unités d'hospitalisation sur la trame de votre unité. L'argument du recrutement porte tout de suite ; le CSE recevra le projet.",
       },
       {
-        t: "Expérimenter trois mois sur un secteur de votre unité, avec les volontaires et des indicateurs relevés dès septembre",
-        d: "Un secteur de 20 lits en 12 heures, l'autre en 7 h 30. Erreurs heure par heure, absences, candidatures : un bilan chiffré en décembre.",
+        t: "Expérimenter trois mois sur un secteur de votre unité, avec les volontaires",
+        d: "Des indicateurs relevés dès septembre. Un secteur de 20 lits en 12 heures, l'autre en 7 h 30. Erreurs heure par heure, absences, candidatures : un bilan chiffré en décembre.",
       },
       {
         t: "Passer toute votre unité en 12 heures au 1er octobre",
@@ -335,7 +335,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Les plannings d'octobre sont prêts. Le CSE sera informé du démarrage.",
       },
       {
-        t: "Négocier d'abord un accord avec les syndicats, et démarrer en janvier",
+        t: "Négocier d'abord un accord avec les syndicats, et démarrer en janvier sans aucun risque de conflit",
         d: "Trois mois de discussion, aucun risque de conflit. Rien ne change d'ici là.",
       },
     ],
@@ -633,15 +633,15 @@ export const ETAPES: readonly Etape[] = [
         d: "Les trois unités, toutes les équipes, sur la trame actuelle. Un seul modèle pour recruter.",
       },
       {
-        t: "Présenter le bilan chiffré au CSE, garder ce qui a fait ses preuves, et proposer une expérimentation à la neurologie",
-        d: "Selon les chiffres : maintenir, corriger ou abandonner, avec l'avis du CSE. Hugolin Cottineau décidera avec son équipe.",
+        t: "Présenter le bilan chiffré au CSE, et garder ce qui a fait ses preuves",
+        d: "Une expérimentation proposée à la neurologie. Selon les chiffres : maintenir, corriger ou abandonner, avec l'avis du CSE. Hugolin Cottineau décidera avec son équipe.",
       },
       {
         t: "Revenir aux 7 h 30 partout en janvier",
         d: "On ferme le sujet pour de bon.",
       },
       {
-        t: "Prolonger l'organisation actuelle trois mois sans trancher",
+        t: "Prolonger l'organisation actuelle trois mois sans trancher, le temps d'avoir plus de recul",
         d: "On en reparlera au printemps.",
       },
     ],

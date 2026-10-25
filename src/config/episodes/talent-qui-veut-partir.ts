@@ -454,8 +454,8 @@ export const ETAPES: readonly Etape[] = [
     question: "Que faites-vous pour Mathilde ?",
     options: [
       {
-        t: "Reconnaître ses résultats devant les chefs d'agence, et lui confier le pilote du drive chantier, avec la latitude de décider",
-        d: "Un mot à la réunion régionale, et 2 500 € de budget pour le pilote à Tassin. C'est elle qui décide de l'organisation.",
+        t: "Reconnaître ses résultats, et lui confier le pilote du drive chantier",
+        d: "Devant les chefs d'agence, un mot à la réunion régionale, et 2 500 € de budget pour le pilote à Tassin. C'est elle qui décide de l'organisation.",
       },
       {
         t: "Lui accorder 5 % d'augmentation pour qu'elle ne parte pas elle aussi",
@@ -555,7 +555,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment préparez-vous la région au poste régional ?",
     options: [
       {
-        t: "Annoncer dès maintenant qui vous recommandez pour le poste",
+        t: "Annoncer dès maintenant qui vous recommandez pour le poste, pour que les choses soient claires",
         d: "Un nom, à la réunion des chefs d'agence. Le message est clair, et l'élu est rassuré.",
       },
       {
@@ -636,12 +636,12 @@ export const ETAPES: readonly Etape[] = [
     question: "Que répondez-vous à Kofi ?",
     options: [
       {
-        t: "S'aligner sur l'offre de Valdane",
+        t: "S'aligner sur l'offre de Valdane, pour ne pas perdre un adjoint solide",
         d: "8 % de plus, avec une dérogation d'Henri : 2 500 € sur le trimestre.",
       },
       {
-        t: "Lui confier une délégation réelle : chef d'agence délégué, avec un périmètre écrit",
-        d: "Un titre, des décisions qu'il prend seul, deux jours de formation. 1 000 €.",
+        t: "Le nommer chef d'agence délégué, avec un périmètre écrit",
+        d: "Une délégation réelle. Un titre, des décisions qu'il prend seul, deux jours de formation. 1 000 €.",
       },
       {
         t: "Le laisser partir : un adjoint, ça se remplace",

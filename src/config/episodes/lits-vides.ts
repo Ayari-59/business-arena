@@ -241,7 +241,7 @@ export const ETAPES: readonly Etape[] = [
         d: `L'IDEC et la secrétaire, cette semaine, remplacées pendant ce temps. ${euros(COUTS.appels)}.`,
       },
       {
-        t: "Garder la liste telle quelle et appeler dans l'ordre à chaque chambre libérée",
+        t: "Garder la liste telle quelle et appeler dans l'ordre à chaque chambre libérée, par équité envers les familles",
         d: "C'est la règle d'équité de l'établissement : premier inscrit, premier appelé.",
       },
       {
@@ -501,7 +501,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que faites-vous des admissions pendant l'épidémie ?",
     options: [
       {
-        t: "Suspendre toutes les admissions jusqu'à la levée des mesures",
+        t: "Suspendre toutes les admissions jusqu'à la levée des mesures, pour ne faire courir aucun risque aux nouveaux résidents",
         d: "Dans toutes les ailes, jusqu'à huit jours après le dernier cas. Aucun risque d'entrée à annuler.",
       },
       {

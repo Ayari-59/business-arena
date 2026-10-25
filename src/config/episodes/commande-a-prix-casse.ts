@@ -505,7 +505,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Deux jours d'arrêt. Pas de surcoût : l'équipe fait le nettoyage et l'inventaire.",
       },
       {
-        t: "Le week-end, en heures majorées",
+        t: "Le week-end, en heures majorées, pour ne jamais arrêter la production en semaine",
         d: `${euros(REVISION.weekend)} de majorations. La scie ne s'arrête pas en semaine.`,
       },
       {

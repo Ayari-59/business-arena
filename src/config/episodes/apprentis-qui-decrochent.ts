@@ -270,7 +270,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Ne coûte rien. Le CFA décidera.",
       },
       {
-        t: "Garder les apprentis au restaurant les semaines où la salle en a besoin ; ils rattraperont les cours",
+        t: "Garder les apprentis au restaurant les semaines où la salle en a besoin ; ils rattraperont les cours, et le service ne manquera pas de bras",
         d: "Ne coûte rien. Tout le monde au restaurant, dès la semaine 3.",
       },
       {
@@ -348,7 +348,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Qui tient le rang de Zénobie ?",
     options: [
       {
-        t: "Prendre un extra confirmé pour tenir son rang les deux semaines",
+        t: "Prendre un extra confirmé pour tenir son rang les deux semaines : les clients ne verront pas la différence",
         d: `${euros(2 * COUT_EXTRA_DERNIERE_MINUTE)} : au dernier moment, ${euros(COUT_EXTRA_DERNIERE_MINUTE / SERVICES_PAR_SEMAINE)} le service.`,
       },
       {
@@ -453,8 +453,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Un courrier remis en main propre. Le règlement le prévoit.",
       },
       {
-        t: "Organiser un entretien à trois avec sa formatrice et son tuteur : des horaires qui lui permettent de rentrer, et un parcours écrit pour les semaines qui viennent",
-        d: "Une heure à trois. Sanaa finit à 22 heures les soirs de semaine.",
+        t: "Organiser un entretien à trois avec sa formatrice et son tuteur",
+        d: "Des horaires qui lui permettent de rentrer, et un parcours écrit pour les semaines qui viennent. Une heure à trois. Sanaa finit à 22 heures les soirs de semaine.",
       },
       {
         t: "Laisser passer : beaucoup d'apprentis ont un coup de mou en octobre",
@@ -544,7 +544,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que répondez-vous à Théo ?",
     options: [
       {
-        t: "Signer les deux contrats, et mettre les nouveaux en renfort au rang des services du week-end dès leur arrivée",
+        t: "Signer les deux contrats, et mettre les nouveaux en renfort au rang des services du week-end dès leur arrivée, pour soulager la salle tout de suite",
         d: `${euros(2 * RECRUE.cout)} par semaine à eux deux, avant l'aide à l'embauche. Deux paires de bras pour les samedis.`,
       },
       {

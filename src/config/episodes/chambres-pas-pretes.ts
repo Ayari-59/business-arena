@@ -249,8 +249,8 @@ export const ETAPES: readonly Etape[] = [
     question: "Dans quel ordre faites-vous les chambres ?",
     options: [
       {
-        t: "Faire d'abord les chambres des clients attendus avant 15 h, d'après la liste d'arrivées",
-        d: "Chaque soir, Rosine et la réception leur donnent les chambres libérées les premières ; le reste par étage. Vingt minutes par jour pour Rosine.",
+        t: "Faire d'abord les chambres attendues avant 15 h",
+        d: "D'après la liste d'arrivées. Chaque soir, Rosine et la réception leur donnent les chambres libérées les premières ; le reste par étage. Vingt minutes par jour pour Rosine.",
       },
       {
         t: "Faire tous les départs d'abord, puis les recouches",
@@ -337,7 +337,7 @@ export const ETAPES: readonly Etape[] = [
         d: `Au comptoir et par une carte en chambre ; recouche d'office au-delà de trois nuits. ${centimes(RECOUCHE.boisson)} la boisson, ${centimes(LINGE.parRecouche)} de linge en moins par recouche déclinée.`,
       },
       {
-        t: "Passer à une recouche tous les trois jours, annoncée par une affichette",
+        t: "Passer à une recouche tous les trois jours, annoncée par une affichette, pour gagner le plus de temps",
         d: "« Un geste pour la planète » : plus de temps gagné, sans rien offrir.",
       },
       {
@@ -500,7 +500,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment faites-vous baisser les oublis ?",
     options: [
       {
-        t: "Faire contrôler toutes les chambres par Rosine avant de les libérer",
+        t: "Faire contrôler toutes les chambres par Rosine avant de les libérer, pour n'en laisser passer aucune",
         d: "Rien ne sort sans son passage. Elle ne fait plus de chambres.",
       },
       {

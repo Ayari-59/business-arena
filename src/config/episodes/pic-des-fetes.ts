@@ -355,15 +355,15 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment ouvrez-vous les lignes le week-end en décembre ?",
     options: [
       {
-        t: "Proposer au CSE une équipe de suppléance du week-end, au volontariat, en l'associant à ses règles",
-        d: "44 heures de ligne par week-end en décembre, 11 232 € chacun. Il faut l'avis du CSE : réponse à la réunion du 5 novembre.",
+        t: "Proposer au CSE une équipe de suppléance du week-end, au volontariat",
+        d: "Le CSE associé à ses règles. 44 heures de ligne par week-end en décembre, 11 232 € chacun. Il faut l'avis du CSE : réponse à la réunion du 5 novembre.",
       },
       {
         t: "Imposer par note de service un samedi sur deux à toutes les équipes",
         d: "22 heures de ligne par week-end en décembre, majorées de 25 % : 4 680 € par samedi. Pas besoin d'attendre le CSE.",
       },
       {
-        t: "Ouvrir seulement le samedi, avec des volontaires en heures supplémentaires",
+        t: "Ouvrir seulement le samedi, avec des volontaires en heures supplémentaires, sans attendre le CSE",
         d: "22 heures de ligne par week-end en décembre, 4 680 € par samedi. Pas d'avis du CSE à attendre.",
       },
       {
@@ -627,8 +627,8 @@ export const ETAPES: readonly Etape[] = [
         d: "28 heures de ligne de plus par semaine pendant deux semaines, majorées de 25 % : 5 460 € par semaine.",
       },
       {
-        t: "Regrouper les petites références en deux campagnes par semaine, et servir d'abord les commandes sous pénalité",
-        d: "Pas de coût direct. Ysée refait l'ordonnancement ; Naïm prévient Proxival des reports.",
+        t: "Regrouper les petites références, et servir d'abord les commandes sous pénalité",
+        d: "Deux campagnes par semaine. Pas de coût direct. Ysée refait l'ordonnancement ; Naïm prévient Proxival des reports.",
       },
       {
         t: "Ne rien changer : la supply chain gérera les ruptures",

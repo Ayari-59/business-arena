@@ -409,7 +409,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que répondez-vous ?",
     options: [
       {
-        t: "Signer la formule « avis récompensés » : 10 % sur le prochain séjour contre un avis",
+        t: "Signer la formule « avis récompensés » : 10 % sur le prochain séjour contre un avis, pour faire remonter la note plus vite",
         d: `${euros(COUTS.agence)} de mise en place, et les remises accordées. L'agence promet cinq dixièmes.`,
       },
       {

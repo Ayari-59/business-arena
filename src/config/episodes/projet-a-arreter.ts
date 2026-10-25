@@ -164,8 +164,8 @@ export const ETAPES: readonly Etape[] = [
         d: `${kE(RELANCE.campagne)} de campagne sur six semaines, et l'ouverture le dimanche : ${kE(RELANCE.dimanche)} de personnel par site et par an.`,
       },
       {
-        t: "Geler toute dépense nouvelle et faire valider par le président des critères chiffrés et datés, site par site",
-        d: "La campagne d'automne de l'équipe est suspendue. Les critères seront revus au comité de la semaine 10.",
+        t: "Geler toute dépense nouvelle et poser des critères chiffrés, site par site",
+        d: "Des critères datés, validés par le président. La campagne d'automne de l'équipe est suspendue. Les critères seront revus au comité de la semaine 10.",
       },
       {
         t: "Proposer l'arrêt des trois showrooms : le projet a déjà perdu trop d'argent",
@@ -498,8 +498,8 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment présentez-vous Arvel Maison au comité ?",
     options: [
       {
-        t: "Présenter chaque site face aux critères : ce qu'on garde, ce qu'on transforme, ce qu'on arrête, et la prochaine revue datée",
-        d: "Les chiffres de chaque site, flux à venir seulement ; la prochaine revue en juin.",
+        t: "Présenter chaque site face aux critères, et la prochaine revue datée",
+        d: "Ce qu'on garde, ce qu'on transforme, ce qu'on arrête. Les chiffres de chaque site, flux à venir seulement ; la prochaine revue en juin.",
       },
       {
         t: "Demander un an de plus pour les trois showrooms, avec une campagne de printemps",

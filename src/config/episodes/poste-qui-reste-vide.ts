@@ -127,7 +127,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que faites-vous de l'annonce ?",
     options: [
       {
-        t: "Rediffuser l'annonce sur trois sites d'emploi payants",
+        t: "Rediffuser l'annonce sur trois sites d'emploi payants, pour toucher beaucoup plus de candidats",
         d: "La même annonce, vue par beaucoup plus de monde. 1 800 €.",
       },
       {
@@ -507,7 +507,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Catalogue, logiciel de devis, techniques de vente. 1 800 €, puis le terrain.",
       },
       {
-        t: "L'accompagner vous-même sur toutes ses visites pendant un mois",
+        t: "L'accompagner vous-même sur toutes ses visites pendant un mois, pour qu'il démarre sur de bonnes bases",
         d: "Vous serez moins à l'agence pendant ce temps.",
       },
     ],

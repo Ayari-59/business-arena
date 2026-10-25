@@ -324,7 +324,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment faites-vous avancer le drive ?",
     options: [
       {
-        t: "Bloquer deux demi-journées par semaine dans votre agenda, téléphone coupé",
+        t: "Bloquer deux demi-journées par semaine dans votre agenda, téléphone coupé, pour garder la main sur le projet",
         d: "Huit heures par semaine sur le projet, que vous pilotez. Autant de moins pour les dossiers.",
       },
       {
@@ -411,7 +411,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment menez-vous les entretiens ?",
     options: [
       {
-        t: "Les mener tous vous-même, deux par semaine, préparés, en commençant par vos adjoints",
+        t: "Les mener tous vous-même, deux par semaine, préparés, en commençant par vos adjoints, pour connaître chacun",
         d: "Une heure et demie chacun, préparation comprise : trois heures par semaine jusqu'à la fin du trimestre.",
       },
       {
@@ -610,12 +610,12 @@ export const ETAPES: readonly Etape[] = [
     question: "Qui monte l'offre ?",
     options: [
       {
-        t: "La monter vous-même, le soir et le samedi",
+        t: "La monter vous-même, le soir et le samedi, pour qu'elle soit irréprochable",
         d: "Douze heures en deux semaines, en plus de vos journées.",
       },
       {
-        t: "La confier à Gwenaëlle, avec un cadre : vous fixez le prix plancher et relisez la stratégie",
-        d: "Deux heures avec elle. Une partie de ses devis vous revient pendant une semaine.",
+        t: "La confier à Gwenaëlle, avec un cadre",
+        d: "Vous fixez le prix plancher et relisez la stratégie. Deux heures avec elle. Une partie de ses devis vous revient pendant une semaine.",
       },
       {
         t: "La monter vous-même, sur vos heures de bureau",

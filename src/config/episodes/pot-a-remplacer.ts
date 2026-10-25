@@ -193,7 +193,7 @@ export const ETAPES: readonly Etape[] = [
         d: `Commander dès cette semaine les deux modules (${kE(2 * CONFORMAGE.carton)}) et les premiers pots carton, livrés en semaine ${1 + DELAI.carton}. Les deux lignes basculent avant le salon.`,
       },
       {
-        t: "Passer toute la gamme au PP monomatériau, sur la foi des fiches de Maëlpack",
+        t: "Passer toute la gamme au PP monomatériau, sur la foi des fiches de Maëlpack, la bascule la plus rapide avant le salon",
         d: `Commander dès cette semaine les deux kits de conversion (${kE(2 * CONFORMAGE.pp)}), livrés en semaine ${1 + DELAI.pp}. Les deux lignes basculent avant le salon.`,
       },
       {
@@ -287,11 +287,11 @@ export const ETAPES: readonly Etape[] = [
     question: "Que commandez-vous à Styrel ?",
     options: [
       {
-        t: "Commander au plus juste, ligne par ligne, selon le plan de bascule, avec deux semaines de marge",
-        d: "Deux semaines de plus pour chaque ligne qui tournera encore en PS au deuxième trimestre.",
+        t: "Commander au plus juste, ligne par ligne, selon le plan de bascule",
+        d: "Avec une marge : deux semaines de plus pour chaque ligne qui tournera encore en PS au deuxième trimestre.",
       },
       {
-        t: "Confirmer la commande habituelle : treize semaines sur les deux lignes",
+        t: "Confirmer la commande habituelle : treize semaines sur les deux lignes, comme chaque trimestre",
         d: `Comme chaque trimestre : ${kE(PRIX_COMMANDE_HABITUELLE)} de bobines.`,
       },
       {

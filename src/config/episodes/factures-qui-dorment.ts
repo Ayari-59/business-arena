@@ -199,8 +199,8 @@ export const ETAPES: readonly Etape[] = [
         d: `Courriels, appels et lettres sur les ${kE(EN_RETARD_0)} de la liste. Les trois chargées de facturation y passent le mois.`,
       },
       {
-        t: "Réunir chaque directeur de mission pour une revue des en-cours : déclencher les jalons franchis, faire valider les temps de régie, facturer",
-        d: "Deux semaines de revues, practice par practice. Les premières factures partent en semaine 2.",
+        t: "Réunir chaque directeur de mission pour une revue des en-cours",
+        d: "Déclencher les jalons franchis, faire valider les temps de régie, facturer. Deux semaines de revues, practice par practice. Les premières factures partent en semaine 2.",
       },
       {
         t: "Poursuivre les relances habituelles des factures échues depuis plus de 60 jours",
@@ -276,12 +276,12 @@ export const ETAPES: readonly Etape[] = [
     question: "Que faites-vous des factures publiques ?",
     options: [
       {
-        t: "Mettre en demeure les acheteurs publics de payer les factures en retard",
+        t: "Mettre en demeure les acheteurs publics de payer les factures en retard, intérêts moratoires à l'appui",
         d: "Lettres recommandées signées de la direction financière, avec rappel des intérêts moratoires.",
       },
       {
-        t: "Obtenir de chaque acheteur le numéro d'engagement manquant, corriger et redéposer, et rendre ce numéro obligatoire dans Tempora avant toute facture publique",
-        d: "Assita s'y consacre à plein temps ; le paramétrage de Tempora prend deux jours.",
+        t: "Obtenir les numéros d'engagement manquants, et les rendre obligatoires dans Tempora",
+        d: "Chaque acheteur fournit le numéro manquant, chaque facture est corrigée et redéposée ; plus aucune facture publique ne part sans ce numéro. Assita s'y consacre à plein temps ; le paramétrage de Tempora prend deux jours.",
       },
       {
         t: "Corriger et redéposer une à une les factures rejetées",
@@ -453,11 +453,11 @@ export const ETAPES: readonly Etape[] = [
     question: "Que faites-vous de la facture de Ollivro ?",
     options: [
       {
-        t: "Mettre Ollivro en demeure de payer sous huit jours, puis demander une injonction de payer",
+        t: "Mettre Ollivro en demeure de payer sous huit jours, puis demander une injonction de payer : le travail est fait, il doit être payé",
         d: `${euros(FRAIS_AVOCAT)} d'avocat. Le dossier part au tribunal de commerce.`,
       },
       {
-        t: "Réunir avec Paol un comité de pilotage : faire valider le livrable, régulariser l'extension par un avenant, refacturer",
+        t: "Réunir avec Paol un comité de pilotage : valider le livrable, régulariser l'extension par un avenant, refacturer",
         d: `Une demi-journée chez Ollivro. Si l'avenant est signé, les ${kE(OLLIVRO)} sont dus.`,
       },
       {
@@ -549,7 +549,7 @@ export const ETAPES: readonly Etape[] = [
         d: `Commission d'engagement de ${taux(COMMISSION_DECOUVERT)}, ${kE(COUT_DECOUVERT)}, si la banque accepte.`,
       },
       {
-        t: "Mettre en place l'affacturage du poste clients privé avec Erdre Affacturage",
+        t: "Mettre en place l'affacturage du poste clients privé avec Erdre Affacturage : un financement immédiat, sans dépendre du comité de crédit",
         d: `${kE(FRAIS_AFFACTURAGE)} de frais, ${taux(COMMISSION_AFFACTURAGE)} des créances cédées, un financement un point plus cher. Opérationnel en semaine 11.`,
       },
       {

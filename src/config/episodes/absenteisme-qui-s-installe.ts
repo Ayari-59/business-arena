@@ -143,7 +143,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Rails au plafond dans 12 chambres et deux verticalisateurs : 26 800 €, posés en semaine 7. Une journée de formation par aide-soignant : 8 040 €, remplacements compris. Un dossier d'aide déposé auprès de l'assurance maladie.",
       },
       {
-        t: "Faire contrôler chaque arrêt court par une contre-visite médicale",
+        t: "Faire contrôler chaque arrêt court par une contre-visite médicale, pour que le message soit clair",
         d: "Un médecin mandaté par l'établissement, 120 € la visite. Le message est clair.",
       },
       {
@@ -313,11 +313,11 @@ export const ETAPES: readonly Etape[] = [
         d: "120 € la visite. Le médecin dira si l'arrêt est justifié.",
       },
       {
-        t: "Ne plus les rappeler au-delà de deux fois par mois : répartir les rappels par roulement sur toute l'équipe",
-        d: "Une liste de rappel tenue par Zoubida. Quand personne d'autre n'est disponible, l'intérim.",
+        t: "Ne plus les rappeler au-delà de deux fois par mois",
+        d: "Les rappels répartis par roulement sur toute l'équipe. Une liste de rappel tenue par Zoubida. Quand personne d'autre n'est disponible, l'intérim.",
       },
       {
-        t: "Les recevoir chacun en entretien de retour d'absence",
+        t: "Les recevoir chacun en entretien de retour d'absence, pour comprendre",
         d: "Une demi-heure avec chacun, sans enjeu disciplinaire, pour comprendre.",
       },
       {
@@ -409,7 +409,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Après la visite de pré-reprise. Une journée et demie de renfort par semaine pendant quatre semaines, moins si le matériel est posé.",
       },
       {
-        t: "Accepter le temps partiel thérapeutique à 60 % que propose son médecin",
+        t: "Accepter le temps partiel thérapeutique à 60 % que propose son médecin, pour qu'elle reprenne à son rythme",
         d: "Cinq semaines, deux journées par semaine à remplacer. Elle reprend à plein temps en juin.",
       },
     ],

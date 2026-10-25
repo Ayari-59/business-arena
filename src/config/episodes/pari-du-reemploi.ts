@@ -521,7 +521,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que répondez-vous à Orréa ?",
     options: [
       {
-        t: "Signer l'offre clé en main : toute la reprise à Orréa, flux réemployables compris",
+        t: "Signer l'offre clé en main : toute la reprise à Orréa, flux réemployables compris, pour n'avoir qu'un seul prestataire à suivre",
         d: `${REPRISE.cleEnMain} €/t sur ${n0(REPRISE.dechets)} t, ${kE(REPRISE.cleEnMain * REPRISE.dechets)} par an si l'obligation s'applique.`,
       },
       {

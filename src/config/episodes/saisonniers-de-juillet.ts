@@ -137,8 +137,8 @@ export const ETAPES: readonly Etape[] = [
         d: "880 € de licences. Ils arrivent le 29 juin en ayant vu le logiciel, et prennent le comptoir le soir même.",
       },
       {
-        t: "Les faire venir le 22 juin : une journée d'accueil, deux jours de formation, trois jours à côté d'un permanent, puis deux semaines en binôme",
-        d: "Une semaine de salaires en plus et le formateur Hostéo du siège : 6 000 €. Puis 6 heures de permanent par saisonnier et par semaine pendant deux semaines, 1 320 € par semaine.",
+        t: "Les faire venir le 22 juin pour les former, puis les mettre deux semaines en binôme",
+        d: "Une journée d'accueil, deux jours de formation, trois jours à côté d'un permanent. Une semaine de salaires en plus et le formateur Hostéo du siège : 6 000 €. Puis 6 heures de permanent par saisonnier et par semaine pendant deux semaines, 1 320 € par semaine.",
       },
       {
         t: "Les faire arriver le 29 juin et les mettre en binôme deux semaines avec un permanent, en plein rush",
@@ -341,7 +341,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Un entretien et un courrier chacun. Le message passera à toute l'équipe.",
       },
       {
-        t: "Faire reprendre chaque soir les dossiers des saisonniers par les permanents, en heures supplémentaires",
+        t: "Faire reprendre chaque soir les dossiers des saisonniers par les permanents, en heures supplémentaires, pour qu'aucune erreur n'atteigne les clients",
         d: "Les erreurs sont corrigées avant le départ des clients. Plusieurs heures par soir, à 27,50 € de l'heure.",
       },
     ],
@@ -535,8 +535,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Aucun coût. Les permanents proposent à toutes les arrivées qu'ils font.",
       },
       {
-        t: "Un argumentaire écrit pour l'accueil, et une prime collective de 1 800 € si la note finit à 8,8 ou plus",
-        d: "1 800 € versés le 30 août si la note tient. Le même argumentaire pour tous.",
+        t: "Un argumentaire écrit pour l'accueil, et une prime collective de 1 800 €",
+        d: "Le seuil : une note finale de 8,8 ou plus. 1 800 € versés le 30 août si la note tient. Le même argumentaire pour tous.",
       },
       {
         t: "Ne rien changer : l'équipe a assez à faire en août",

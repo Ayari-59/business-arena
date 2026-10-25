@@ -104,7 +104,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que décidez-vous avant le comité de jeudi ?",
     options: [
       {
-        t: "Renforcer l'équipe : deux développeurs de plus chez le prestataire",
+        t: "Renforcer l'équipe : deux développeurs de plus chez le prestataire, pour rattraper le retard au plus vite",
         d: "Dès la semaine 2, jusqu'à la mise en service. 4 000 € par semaine.",
       },
       {
@@ -290,7 +290,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Il acceptera, ou il ira voir la direction générale.",
       },
       {
-        t: "L'accepter en sortant une fonctionnalité de taille comparable",
+        t: "L'accepter en sortant une fonctionnalité de taille comparable, pour garder la même charge",
         d: "Le compte multi-utilisateurs quitte le projet ; le devis entre dans le cœur de l'outil.",
       },
       {
@@ -454,7 +454,7 @@ export const ETAPES: readonly Etape[] = [
     question: "Que faites-vous de la recette ?",
     options: [
       {
-        t: "Réduire la recette aux parcours principaux pour tenir la date",
+        t: "Réduire la recette aux parcours principaux, ceux qui comptent pour les clients, pour tenir la date",
         d: "Les corrections passent après les fonctionnalités. Une semaine et demie de gagnée au planning.",
       },
       {
