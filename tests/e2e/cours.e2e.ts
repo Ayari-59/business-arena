@@ -4,7 +4,9 @@ import { aller, ouvrirNavigateur } from "./helpers/browser";
 import { enseignantSousLicence } from "./helpers/licence";
 import { casDeLEntreprise } from "../../src/config/cours/cas";
 import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
-import { CHAPITRES, PARCOURS, paliersDuParcours } from "../../src/config/cours/registre";
+import { CHAPITRES, PARCOURS, PROGRAMME } from "../../src/config/cours/registre";
+import { programmeDuDiplome } from "../../src/config/cours/programme";
+import { THEMES, themeDuChapitre } from "../../src/config/cours/themes";
 import { enSaisie } from "../../src/pedagogy/cours/correcteur";
 import { chapitreDuCas, etatAvant, indexDeLEtape } from "../../src/pedagogy/cours/deroule";
 
@@ -40,19 +42,57 @@ async function nouvellePage(largeur = 1280, hauteur = 900): Promise<Page> {
   return ctx.newPage();
 }
 
-describe("/cours : la carte du cours et le chapitre libre", () => {
-  it("propose le chapitre pilote dans chacune des entreprises du cours, n'annonce en préparation que ce qui vient, sans déborder sur téléphone", async () => {
+describe("/cours : le catalogue par thème et le chapitre libre", () => {
+  it("propose le chapitre pilote dans chacune des entreprises du cours, range chaque chapitre une fois sous son thème, n'annonce que ce qui vient, sans déborder sur téléphone", async () => {
     const page = await nouvellePage(390, 844);
     await aller(page, "/cours");
     for (const code of ENTREPRISES_DU_COURS) {
       expect(await page.locator(`a[href="${chemin(code)}"]`).count(), code).toBeGreaterThan(0);
     }
-    // Les parcours achevés ouvrent un chapitre à chaque palier ; seuls les paliers d'un parcours qui se construit annoncent ce qui vient.
-    const aVenir = PARCOURS.filter((p) => p.enPreparation).flatMap((p) =>
-      paliersDuParcours(p.code).filter((pa) => !CHAPITRES.some((c) => c.parcours === p.code && c.palier === pa.palier)),
-    );
-    expect(await page.getByText("En préparation").count()).toBe(aVenir.length);
+    // Un tiroir par thème, fermés à l'arrivée : la page est un index, pas une carte à dérouler.
+    expect(await page.locator("details[data-theme]").count()).toBe(THEMES.length);
+    expect(await page.locator("details[data-theme][open]").count()).toBe(0);
+    // Chaque chapitre une fois dans le catalogue, sous son thème.
+    for (const c of CHAPITRES) {
+      const lignes = page.locator(`details[data-theme] [data-chapitre="${c.code}"]`);
+      expect(await lignes.count(), c.code).toBe(1);
+      expect(
+        await page.locator(`details[data-theme="${themeDuChapitre(c.code)!.code}"] [data-chapitre="${c.code}"]`).count(),
+        c.code,
+      ).toBe(1);
+    }
+    // Ce qui vient se compte sur le programme d'un parcours qui se construit, jamais à la main.
+    const aVenir = PARCOURS.filter((p) => p.enPreparation).filter((p) => {
+      const prevus = Object.values(PROGRAMME[p.code]).reduce((n, titres) => n + (titres?.length ?? 0), 0);
+      return prevus > CHAPITRES.filter((c) => c.parcours === p.code).length;
+    });
+    expect(await page.locator("[data-a-venir]").count()).toBe(aVenir.length);
     expect(await debordement(page)).toBeLessThanOrEqual(0);
+    await page.context().close();
+  }, 60_000);
+
+  it("le diplôme choisi compile son programme : couverture, ateliers, chapitres et épisodes", async () => {
+    const page = await nouvellePage(390, 844);
+    await aller(page, "/cours");
+    // Le formulaire marche sans script : choisir, puis compiler.
+    await page.locator('[data-filtre-diplome] select[name="diplome"]').selectOption("bac-pro-mcv");
+    await page.locator("[data-filtre-diplome]").getByRole("button", { name: "Compiler le programme" }).click();
+    await page.waitForURL(/diplome=bac-pro-mcv/);
+    const programme = page.locator('[data-programme="bac-pro-mcv"]');
+    expect(await programme.count()).toBe(1);
+    const attendu = programmeDuDiplome("bac-pro-mcv")!;
+    expect(await programme.locator("[data-couverture-du-programme]").innerText()).toContain(
+      `${attendu.couverture.travaillees} entrées sur ${attendu.couverture.total}`,
+    );
+    expect(await programme.locator("[data-chapitre]").count()).toBe(
+      attendu.themes.reduce((n, t) => n + t.chapitres.length, 0),
+    );
+    expect(await programme.locator("[data-episode]").count()).toBe(attendu.episodes.length);
+    expect(await programme.locator('a[href="/parcours/bac-pro-mcv"]').count()).toBeGreaterThan(0);
+    expect(await debordement(page)).toBeLessThanOrEqual(0);
+    // Un diplôme qui a ses ateliers les propose.
+    await aller(page, "/cours?diplome=bts-mco");
+    expect(await page.locator('[data-programme="bts-mco"] a[href="/animations/mco"]').count()).toBe(1);
     await page.context().close();
   }, 60_000);
 });
