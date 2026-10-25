@@ -119,11 +119,11 @@ export const ETAPES: readonly Etape[] = [
     question: "Que décidez-vous avant le point de vendredi ?",
     options: [
       {
-        t: "Lancer le programme de points pour tous les artisans",
+        t: "Lancer le programme de points pour tous les artisans, et récompenser ceux qui restent",
         d: "Le programme du marketing, dès la semaine 3. 5 000 € de lancement, puis environ 2 000 € de points utilisés par semaine.",
       },
       {
-        t: "Faire interroger des artisans partis, et dresser la liste de ceux dont les commandes baissent",
+        t: "Faire interroger des artisans partis, et suivre ceux dont les commandes baissent",
         d: "Lina appelle vingt artisans partis et suit la fréquence de commande de chacun, mise à jour chaque lundi. 2 500 €, premiers résultats en semaine 2.",
       },
       {
@@ -223,11 +223,11 @@ export const ETAPES: readonly Etape[] = [
     question: "Que faites-vous ?",
     options: [
       {
-        t: "Ouvrir un retrait express : les commandes de la veille prêtes à 6 h 30, et un vendeur de plus à l'ouverture",
-        d: "Dans les quatre agences les plus chargées. 3 000 € de mise en place, puis 1 500 € par semaine ; une semaine de rodage.",
+        t: "Ouvrir un retrait express : commandes de la veille prêtes à 6 h 30",
+        d: "Un vendeur de plus à l'ouverture, dans les quatre agences les plus chargées. 3 000 € de mise en place, puis 1 500 € par semaine ; une semaine de rodage.",
       },
       {
-        t: "Faire contrôler les factures des comptes artisans avant envoi",
+        t: "Faire contrôler les factures des comptes artisans avant chaque envoi",
         d: "Une personne de l'administration des ventes vérifie les remises avant chaque envoi. 900 € par semaine.",
       },
       {
@@ -582,8 +582,8 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment finissez-vous le trimestre ?",
     options: [
       {
-        t: "Lancer une opération de fin de trimestre : 3 % sur tout pendant deux semaines",
-        d: "Pour faire passer les artisans au comptoir avant la revue. Environ 10 000 € par semaine.",
+        t: "Lancer une opération de fin de trimestre : 3 % sur tout pendant deux semaines, pour ramener les artisans au comptoir",
+        d: "Avant la revue du trimestre. Environ 10 000 € par semaine.",
       },
       {
         t: "Installer une alerte chaque lundi sur les artisans dont les commandes baissent, avec un appel sous 48 heures",

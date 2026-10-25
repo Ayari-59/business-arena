@@ -394,8 +394,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Sur toute la famille, jusqu'à la fin du trimestre. Effet immédiat, et Altinéo n'a plus d'argument.",
       },
       {
-        t: "Préparer une riposte ciblée : s'aligner sur les références d'appel, pendant l'opération seulement, pour les clients qui montrent l'offre",
-        d: "Une consigne et une liste prêtes ; les commerciaux s'alignent au cas par cas. Ne coûte que si Altinéo attaque.",
+        t: "Préparer une riposte ciblée, prête à servir si l'opération d'Altinéo démarre",
+        d: "S'aligner sur les références d'appel, pendant l'opération seulement, pour les clients qui montrent l'offre. Une consigne et une liste prêtes ; les commerciaux s'alignent au cas par cas. Ne coûte que si Altinéo attaque.",
       },
       {
         t: "Ne rien faire : ce n'est qu'une rumeur",

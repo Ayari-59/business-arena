@@ -215,8 +215,8 @@ export const ETAPES: readonly Etape[] = [
     question: "Que faites-vous du circuit de validation ?",
     options: [
       {
-        t: "Refondre le circuit : factures dématérialisées, validation suivie, délégations de signature",
-        d: "Bon pour accord sous sept jours avec relance automatique, chefs d'agence signataires jusqu'à 15 000 €. 10 000 €, mise en service prévue en semaine 6.",
+        t: "Refondre le circuit des factures, dématérialisé et suivi",
+        d: "Factures dématérialisées, bon pour accord sous sept jours avec relance automatique, chefs d'agence signataires jusqu'à 15 000 €. 10 000 €, mise en service prévue en semaine 6.",
       },
       {
         t: "Revoir les délégations de signature et suivre les bannettes chaque lundi",
@@ -419,7 +419,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Rien de plus que ce qui est demandé. 6 000 € d'honoraires.",
       },
       {
-        t: "Fournir les pièces au compte-gouttes, le temps que les corrections fassent effet",
+        t: "Fournir les pièces au compte-gouttes, le temps que les corrections en cours fassent effet",
         d: "Chaque demande prend une semaine. Le contrôleur finira sur des chiffres plus récents.",
       },
       {
@@ -573,8 +573,8 @@ export const ETAPES: readonly Etape[] = [
     question: "Comment finissez-vous le trimestre ?",
     options: [
       {
-        t: "Former les chefs d'agence et les comptables, et instaurer un contrôle interne mensuel",
-        d: "Une demi-journée par agence sur le circuit, les délais et les remises ; trente factures vérifiées chaque mois. 3 000 €.",
+        t: "Former les équipes, et instaurer un contrôle interne mensuel",
+        d: "Une demi-journée par agence pour les chefs d'agence et les comptables, sur le circuit, les délais et les remises ; trente factures vérifiées chaque mois. 3 000 €.",
       },
       {
         t: "Adresser un avertissement aux chefs d'agence les plus en retard",

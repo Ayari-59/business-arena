@@ -216,8 +216,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Un chiffre unique pour le trimestre. Placova proposera le sien.",
       },
       {
-        t: "Proposer une formule indexée : la part énergie suit l'indice du gaz, la part matières est ferme",
-        d: "Rien pour les points sans justification. Le prix bougera chaque semaine avec le gaz, dans un sens ou dans l'autre.",
+        t: "Proposer une formule indexée sur le gaz pour la seule part énergie",
+        d: "La part matières reste ferme, rien pour les points sans justification. Le prix bougera chaque semaine avec le gaz, dans un sens ou dans l'autre.",
       },
       {
         t: "Poser un ultimatum : l'ancien tarif, ou les volumes partent chez Brévent",
@@ -283,8 +283,8 @@ export const ETAPES: readonly Etape[] = [
         d: "Dès la semaine 5. La marge par plaque est rétablie.",
       },
       {
-        t: "Répercuter en partie : tenir le prix de la BA13, augmenter les références techniques et l'isolation",
-        d: "+3 % en moyenne sur la famille, dès la semaine 5.",
+        t: "Répercuter en partie, en tenant le prix de la BA13",
+        d: "La BA13 garde son prix ; les références techniques et l'isolation augmentent. +3 % en moyenne sur la famille, dès la semaine 5.",
       },
       {
         t: "Ne rien répercuter, comme le demandent les agences",

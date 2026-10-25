@@ -130,7 +130,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Balance âgée en main, appels personnels et dates de paiement écrites. Un intérimaire en renfort d'Aurore pendant une semaine : 1 800 €.",
       },
       {
-        t: "Lancer une relance générale de tous les clients en retard",
+        t: "Lancer une relance générale de tous les clients en retard, pour n'en oublier aucun",
         d: "Lettre et appel aux 1 400 comptes, avec un prestataire de recouvrement. 2 000 €.",
       },
       {
@@ -299,7 +299,7 @@ export const ETAPES: readonly Etape[] = [
         d: "L'argent arrive en semaine 6, moins une décote de 12 %.",
       },
       {
-        t: "Lancer une injonction de payer et suspendre ses livraisons",
+        t: "Lancer une injonction de payer et suspendre ses livraisons jusqu'au règlement",
         d: "3 000 € d'avocat ; la procédure prend six semaines. Cimier achètera ailleurs en attendant.",
       },
       {
@@ -380,7 +380,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Frais de retour : 9 000 €. Les références qui tournent restent commandées normalement.",
       },
       {
-        t: "Lancer une promotion de déstockage sur tout le catalogue",
+        t: "Lancer une promotion de déstockage sur tout le catalogue pour dégager vite de la trésorerie",
         d: "15 % de remise pendant trois semaines : environ 20 000 € de marge cédée.",
       },
       {

@@ -114,6 +114,8 @@ describe("chaque page reçoit ses liens", () => {
     expect(lire("src/components/episode/episode-joue.tsx")).toMatch(/cours=\{cours\}/);
     expect(lire("src/components/episode/bilan-de-l-episode.tsx")).toMatch(/<LeCoursDuTheme cours=\{cours\}/);
     expect(lire("src/app/notions/page.tsx")).toMatch(/<DansLeCours chapitres=\{chapitresDeLaNotion\(c\.code\)\}/);
+    // « et 1 autres » se lisait en production : la fin d'une liste raccourcie s'accorde.
+    expect(lire("src/app/notions/page.tsx")).not.toMatch(/\} autres`/);
     // `/cours#theme-…` ouvre le tiroir du thème.
     expect(lire("src/app/cours/page.tsx")).toContain("<OuvreLeTiroirVise />");
   });

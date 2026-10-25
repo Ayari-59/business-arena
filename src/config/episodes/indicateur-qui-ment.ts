@@ -110,11 +110,11 @@ export const ETAPES: readonly Etape[] = [
         d: "Un écran sur chaque plateau, un point des superviseurs toutes les heures. Ne coûte rien.",
       },
       {
-        t: "Écouter des appels avec l'équipe chaque semaine, et suivre aussi les commandes prises au premier appel",
+        t: "Écouter des appels avec l'équipe, et suivre les commandes prises au premier appel",
         d: "Une heure d'écoute par semaine et par plateau, un indicateur de plus à paramétrer dans l'outil téléphonique. 1 500 €.",
       },
       {
-        t: "Ajouter dix indicateurs au tableau de bord quotidien",
+        t: "Ajouter dix indicateurs au tableau de bord quotidien, pour ne plus piloter sur un seul chiffre",
         d: "Durée d'appel, transferts, ventes additionnelles, taux d'occupation… tout, tous les jours. 500 € par semaine de reporting.",
       },
       {
@@ -298,12 +298,12 @@ export const ETAPES: readonly Etape[] = [
     question: "Que faites-vous des écarts entre conseillers ?",
     options: [
       {
-        t: "Afficher au plateau le classement individuel du décroché",
+        t: "Afficher au plateau le classement individuel du décroché, pour que chacun se situe",
         d: "Un écran par plateau, mis à jour en continu. Ne coûte rien.",
       },
       {
-        t: "Former des binômes : ceux qui prennent le plus de commandes au premier appel accompagnent les autres",
-        d: "Deux demi-journées par semaine pendant un mois. Un peu de capacité en moins au début.",
+        t: "Former des binômes autour des meilleurs preneurs de commandes",
+        d: "Ceux qui prennent le plus de commandes au premier appel accompagnent les autres, deux demi-journées par semaine pendant un mois. Un peu de capacité en moins au début.",
       },
       {
         t: "Envoyer toute l'équipe en formation produit",
@@ -484,8 +484,8 @@ export const ETAPES: readonly Etape[] = [
         d: "7 800 €. Deux personnes de plus pour décrocher.",
       },
       {
-        t: "Ouvrir une ligne prioritaire pour les commandes de chantier, et laisser attendre un peu les questions de suivi",
-        d: "Un choix de plus dans le serveur vocal. Le décroché global va baisser.",
+        t: "Ouvrir une ligne prioritaire pour les commandes de chantier",
+        d: "Un choix de plus dans le serveur vocal ; les questions de suivi attendent un peu. Le décroché global va baisser.",
       },
       {
         t: "Ne rien prévoir",

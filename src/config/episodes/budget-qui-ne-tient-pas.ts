@@ -104,7 +104,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Chaque site réduit ses commandes, le nettoyage et les visites d'entretien. Environ 1 000 € d'économies visibles par semaine.",
       },
       {
-        t: "Geler toute dépense non contractuelle jusqu'à la fin du trimestre",
+        t: "Geler toute dépense non contractuelle jusqu'à la fin du trimestre : le plus sûr pour tenir",
         d: "Plus aucune commande ni réparation sans votre signature. Les petites dépenses s'arrêtent dès la semaine 2.",
       },
       {
@@ -390,7 +390,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Trois mois de préavis, 2 000 € d'accompagnement par les achats.",
       },
       {
-        t: "Négocier une remise globale de 5 %",
+        t: "Négocier une remise globale de 5 % pour solder le différend sans procédure",
         d: "Sans entrer dans le détail des factures. Tessier y est prêt.",
       },
       {

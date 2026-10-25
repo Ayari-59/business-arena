@@ -21,6 +21,9 @@ const METIERS_MONTRES = 3;
  */
 const CHAPITRES_MONTRES = METIERS_MONTRES;
 
+/** « et 1 autre », « et 2 autres » : la fin d'une liste raccourcie, accordée. */
+const etAutres = (n: number) => ` et ${n} autre${n > 1 ? "s" : ""}`;
+
 /**
  * OÙ CHAQUE NOTION SE RENCONTRE DANS LE JEU.
  *
@@ -158,7 +161,7 @@ export default async function ConceptsPage() {
                               </span>
                             ))}
                           {METIERS_PAR_NOTION.get(c.code)!.length > METIERS_MONTRES
-                            ? ` et ${METIERS_PAR_NOTION.get(c.code)!.length - METIERS_MONTRES} autres`
+                            ? etAutres(METIERS_PAR_NOTION.get(c.code)!.length - METIERS_MONTRES)
                             : ""}
                           .
                         </p>
@@ -216,7 +219,7 @@ function DansLeCours({ chapitres }: { chapitres: readonly Lien[] }) {
           </Link>
         </span>
       ))}
-      {chapitres.length > CHAPITRES_MONTRES ? ` et ${chapitres.length - CHAPITRES_MONTRES} autres` : ""}.
+      {chapitres.length > CHAPITRES_MONTRES ? etAutres(chapitres.length - CHAPITRES_MONTRES) : ""}.
     </p>
   );
 }
