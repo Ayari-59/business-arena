@@ -385,9 +385,14 @@ export function couvertureDeLaFormation(
     const libelleDe = new Map<string, string>();
     for (const seance of atelier.seances) {
       for (const bloc of seance.processus) {
+        // UN ATELIER QUI SERT PLUSIEURS DIPLÔMES range chaque citation sous le
+        // texte qui la porte. Une citation préfixée nomme son diplôme ; une
+        // citation sans préfixe appartient au texte où elle se retrouve, ce qui
+        // permet à l'atelier STMG de garder ses thèmes tels quels et d'ajouter
+        // ceux de la seconde, préfixés.
         if (multiple) {
           const cite = referentielDeCitation(bloc);
-          if (!cite || cite.code !== formation)
+          if (cite ? cite.code !== formation : !(texte && blocOfficielDans(bloc, texte)))
             continue;
         }
         const officiel = texte ? blocOfficielDans(bloc, texte) : null;

@@ -10,8 +10,8 @@ parcours.
 
 | | |
 | --- | --- |
-| formations | 9 |
-| liens déduits | 385 |
+| formations | 10 |
+| liens déduits | 457 |
 | liens écartés à la main | 0 |
 
 ## Par où élaguer
@@ -30,57 +30,130 @@ séances à deux blocs, donc à une chance sur deux.
 | --- | --- | --- |
 | 1 | 24 | certain : la séance ne nommait que ce bloc |
 | 2 | 295 | une chance sur deux |
-| 3 | 38 | une chance sur trois |
-| 4 | 28 | une chance sur quatre, à relire en premier |
+| 3 | 20 | une chance sur trois |
+| 4 | 48 | une chance sur quatre, à relire en premier |
+| 5 | 70 | à relire |
 
-### Les 66 liens les plus douteux
+### Les 138 liens les plus douteux
 
-- **STMG** · `annoncer-l-effet-attendu` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:3, qui nommait 3 blocs)*
-- **STMG** · `annoncer-l-effet-attendu` → Temps et risque · Première, sciences de gestion et numérique *(séance stmg:3, qui nommait 3 blocs)*
-- **STMG** · `annoncer-l-effet-attendu` → Les organisations et les acteurs · Terminale, tronc commun *(séance stmg:3, qui nommait 3 blocs)*
-- **STMG** · `la-capacite-qui-bloque` → Temps et risque · Première, sciences de gestion et numérique *(séance stmg:4, qui nommait 3 blocs)*
-- **STMG** · `la-capacite-qui-bloque` → Le management stratégique, du diagnostic à la fixation des objectifs · Première, management *(séance stmg:4, qui nommait 3 blocs)*
-- **STMG** · `la-capacite-qui-bloque` → Les organisations et les acteurs · Terminale, tronc commun *(séance stmg:4, qui nommait 3 blocs)*
-- **STMG** · `rupture-ou-surstock` → Temps et risque · Première, sciences de gestion et numérique *(séance stmg:4, qui nommait 3 blocs)*
-- **STMG** · `rupture-ou-surstock` → Le management stratégique, du diagnostic à la fixation des objectifs · Première, management *(séance stmg:4, qui nommait 3 blocs)*
-- **STMG** · `rupture-ou-surstock` → Les organisations et les acteurs · Terminale, tronc commun *(séance stmg:4, qui nommait 3 blocs)*
-- **STMG** · `seuil-de-rentabilite` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:3, qui nommait 3 blocs)*
-- **STMG** · `seuil-de-rentabilite` → Temps et risque · Première, sciences de gestion et numérique *(séance stmg:3, qui nommait 3 blocs)*
-- **STMG** · `seuil-de-rentabilite` → Les organisations et les acteurs · Terminale, tronc commun *(séance stmg:3, qui nommait 3 blocs)*
-- **STMG** · `un-marche-qui-change` → Temps et risque · Première, sciences de gestion et numérique *(séance stmg:4, qui nommait 3 blocs)*
-- **STMG** · `un-marche-qui-change` → Le management stratégique, du diagnostic à la fixation des objectifs · Première, management *(séance stmg:4, qui nommait 3 blocs)*
-- **STMG** · `un-marche-qui-change` → Les organisations et les acteurs · Terminale, tronc commun *(séance stmg:4, qui nommait 3 blocs)*
-- **STMG** · `variable-ou-fixe` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:3, qui nommait 3 blocs)*
-- **STMG** · `variable-ou-fixe` → Temps et risque · Première, sciences de gestion et numérique *(séance stmg:3, qui nommait 3 blocs)*
-- **STMG** · `variable-ou-fixe` → Les organisations et les acteurs · Terminale, tronc commun *(séance stmg:3, qui nommait 3 blocs)*
-- **STMG** · `lire-les-comptes` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:1, stmg:2, qui nommait 4 blocs)*
-- **STMG** · `lire-les-comptes` → De l'individu à l'acteur · Première, sciences de gestion et numérique *(séance stmg:1, stmg:2, qui nommait 4 blocs)*
-- **STMG** · `lire-les-comptes` → À la rencontre du management des organisations · Première, management *(séance stmg:1, stmg:2, qui nommait 4 blocs)*
-- **STMG** · `lire-les-comptes` → Les organisations et l'activité de production de biens et de services · Terminale, tronc commun *(séance stmg:1, stmg:2, qui nommait 4 blocs)*
-- **STMG** · `assumer-une-erreur` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:5, qui nommait 4 blocs)*
-- **STMG** · `assumer-une-erreur` → Numérique et intelligence collective · Première, sciences de gestion et numérique *(séance stmg:5, qui nommait 4 blocs)*
-- **STMG** · `assumer-une-erreur` → Les choix stratégiques des organisations · Première, management *(séance stmg:5, qui nommait 4 blocs)*
-- **STMG** · `assumer-une-erreur` → Les organisations et la société · Terminale, tronc commun *(séance stmg:5, qui nommait 4 blocs)*
-- **STMG** · `choisir-ses-indicateurs` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:5, qui nommait 4 blocs)*
-- **STMG** · `choisir-ses-indicateurs` → Numérique et intelligence collective · Première, sciences de gestion et numérique *(séance stmg:5, qui nommait 4 blocs)*
-- **STMG** · `choisir-ses-indicateurs` → Les choix stratégiques des organisations · Première, management *(séance stmg:5, qui nommait 4 blocs)*
-- **STMG** · `choisir-ses-indicateurs` → Les organisations et la société · Terminale, tronc commun *(séance stmg:5, qui nommait 4 blocs)*
-- **STMG** · `fixer-un-prix` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:2, qui nommait 4 blocs)*
-- **STMG** · `fixer-un-prix` → De l'individu à l'acteur · Première, sciences de gestion et numérique *(séance stmg:2, qui nommait 4 blocs)*
-- **STMG** · `fixer-un-prix` → À la rencontre du management des organisations · Première, management *(séance stmg:2, qui nommait 4 blocs)*
-- **STMG** · `fixer-un-prix` → Les organisations et l'activité de production de biens et de services · Terminale, tronc commun *(séance stmg:2, qui nommait 4 blocs)*
-- **STMG** · `lire-l-ecran-de-decision` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:1, qui nommait 4 blocs)*
-- **STMG** · `lire-l-ecran-de-decision` → De l'individu à l'acteur · Première, sciences de gestion et numérique *(séance stmg:1, qui nommait 4 blocs)*
-- **STMG** · `lire-l-ecran-de-decision` → À la rencontre du management des organisations · Première, management *(séance stmg:1, qui nommait 4 blocs)*
-- **STMG** · `lire-l-ecran-de-decision` → Les organisations et l'activité de production de biens et de services · Terminale, tronc commun *(séance stmg:1, qui nommait 4 blocs)*
-- **STMG** · `presenter-a-l-oral` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:5, qui nommait 4 blocs)*
-- **STMG** · `presenter-a-l-oral` → Numérique et intelligence collective · Première, sciences de gestion et numérique *(séance stmg:5, qui nommait 4 blocs)*
-- **STMG** · `presenter-a-l-oral` → Les choix stratégiques des organisations · Première, management *(séance stmg:5, qui nommait 4 blocs)*
-- **STMG** · `presenter-a-l-oral` → Les organisations et la société · Terminale, tronc commun *(séance stmg:5, qui nommait 4 blocs)*
-- **STMG** · `presenter-l-entreprise` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:1, qui nommait 4 blocs)*
-- **STMG** · `presenter-l-entreprise` → De l'individu à l'acteur · Première, sciences de gestion et numérique *(séance stmg:1, qui nommait 4 blocs)*
-- **STMG** · `presenter-l-entreprise` → À la rencontre du management des organisations · Première, management *(séance stmg:1, qui nommait 4 blocs)*
-- **STMG** · `presenter-l-entreprise` → Les organisations et l'activité de production de biens et de services · Terminale, tronc commun *(séance stmg:1, qui nommait 4 blocs)*
+- **2de option MG** · `annoncer-l-effet-attendu` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:3, qui nommait 4 blocs)*
+- **2de option MG** · `annoncer-l-effet-attendu` → Temps et risque · Première, sciences de gestion et numérique *(séance stmg:3, qui nommait 4 blocs)*
+- **2de option MG** · `annoncer-l-effet-attendu` → Les organisations et les acteurs · Terminale, tronc commun *(séance stmg:3, qui nommait 4 blocs)*
+- **2de option MG** · `annoncer-l-effet-attendu` → 2de MG Évaluer et évoluer, du pilotage aux développements numériques *(séance stmg:3, qui nommait 4 blocs)*
+- **2de option MG** · `la-capacite-qui-bloque` → Temps et risque · Première, sciences de gestion et numérique *(séance stmg:4, qui nommait 4 blocs)*
+- **2de option MG** · `la-capacite-qui-bloque` → Le management stratégique, du diagnostic à la fixation des objectifs · Première, management *(séance stmg:4, qui nommait 4 blocs)*
+- **2de option MG** · `la-capacite-qui-bloque` → Les organisations et les acteurs · Terminale, tronc commun *(séance stmg:4, qui nommait 4 blocs)*
+- **2de option MG** · `la-capacite-qui-bloque` → 2de MG Organiser et décider, des objectifs à la réalisation *(séance stmg:4, qui nommait 4 blocs)*
+- **2de option MG** · `rupture-ou-surstock` → Temps et risque · Première, sciences de gestion et numérique *(séance stmg:4, qui nommait 4 blocs)*
+- **2de option MG** · `rupture-ou-surstock` → Le management stratégique, du diagnostic à la fixation des objectifs · Première, management *(séance stmg:4, qui nommait 4 blocs)*
+- **2de option MG** · `rupture-ou-surstock` → Les organisations et les acteurs · Terminale, tronc commun *(séance stmg:4, qui nommait 4 blocs)*
+- **2de option MG** · `rupture-ou-surstock` → 2de MG Organiser et décider, des objectifs à la réalisation *(séance stmg:4, qui nommait 4 blocs)*
+- **2de option MG** · `seuil-de-rentabilite` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:3, qui nommait 4 blocs)*
+- **2de option MG** · `seuil-de-rentabilite` → Temps et risque · Première, sciences de gestion et numérique *(séance stmg:3, qui nommait 4 blocs)*
+- **2de option MG** · `seuil-de-rentabilite` → Les organisations et les acteurs · Terminale, tronc commun *(séance stmg:3, qui nommait 4 blocs)*
+- **2de option MG** · `seuil-de-rentabilite` → 2de MG Évaluer et évoluer, du pilotage aux développements numériques *(séance stmg:3, qui nommait 4 blocs)*
+- **2de option MG** · `un-marche-qui-change` → Temps et risque · Première, sciences de gestion et numérique *(séance stmg:4, qui nommait 4 blocs)*
+- **2de option MG** · `un-marche-qui-change` → Le management stratégique, du diagnostic à la fixation des objectifs · Première, management *(séance stmg:4, qui nommait 4 blocs)*
+- **2de option MG** · `un-marche-qui-change` → Les organisations et les acteurs · Terminale, tronc commun *(séance stmg:4, qui nommait 4 blocs)*
+- **2de option MG** · `un-marche-qui-change` → 2de MG Organiser et décider, des objectifs à la réalisation *(séance stmg:4, qui nommait 4 blocs)*
+- **2de option MG** · `variable-ou-fixe` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:3, qui nommait 4 blocs)*
+- **2de option MG** · `variable-ou-fixe` → Temps et risque · Première, sciences de gestion et numérique *(séance stmg:3, qui nommait 4 blocs)*
+- **2de option MG** · `variable-ou-fixe` → Les organisations et les acteurs · Terminale, tronc commun *(séance stmg:3, qui nommait 4 blocs)*
+- **2de option MG** · `variable-ou-fixe` → 2de MG Évaluer et évoluer, du pilotage aux développements numériques *(séance stmg:3, qui nommait 4 blocs)*
+- **2de option MG** · `lire-les-comptes` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:1, stmg:2, qui nommait 5 blocs)*
+- **2de option MG** · `lire-les-comptes` → De l'individu à l'acteur · Première, sciences de gestion et numérique *(séance stmg:1, stmg:2, qui nommait 5 blocs)*
+- **2de option MG** · `lire-les-comptes` → À la rencontre du management des organisations · Première, management *(séance stmg:1, stmg:2, qui nommait 5 blocs)*
+- **2de option MG** · `lire-les-comptes` → Les organisations et l'activité de production de biens et de services · Terminale, tronc commun *(séance stmg:1, stmg:2, qui nommait 5 blocs)*
+- **2de option MG** · `lire-les-comptes` → 2de MG Organiser et décider, des objectifs à la réalisation *(séance stmg:1, stmg:2, qui nommait 5 blocs)*
+- **2de option MG** · `assumer-une-erreur` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:5, qui nommait 5 blocs)*
+- **2de option MG** · `assumer-une-erreur` → Numérique et intelligence collective · Première, sciences de gestion et numérique *(séance stmg:5, qui nommait 5 blocs)*
+- **2de option MG** · `assumer-une-erreur` → Les choix stratégiques des organisations · Première, management *(séance stmg:5, qui nommait 5 blocs)*
+- **2de option MG** · `assumer-une-erreur` → Les organisations et la société · Terminale, tronc commun *(séance stmg:5, qui nommait 5 blocs)*
+- **2de option MG** · `assumer-une-erreur` → 2de MG Évaluer et évoluer, du pilotage aux développements numériques *(séance stmg:5, qui nommait 5 blocs)*
+- **2de option MG** · `choisir-ses-indicateurs` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:5, qui nommait 5 blocs)*
+- **2de option MG** · `choisir-ses-indicateurs` → Numérique et intelligence collective · Première, sciences de gestion et numérique *(séance stmg:5, qui nommait 5 blocs)*
+- **2de option MG** · `choisir-ses-indicateurs` → Les choix stratégiques des organisations · Première, management *(séance stmg:5, qui nommait 5 blocs)*
+- **2de option MG** · `choisir-ses-indicateurs` → Les organisations et la société · Terminale, tronc commun *(séance stmg:5, qui nommait 5 blocs)*
+- **2de option MG** · `choisir-ses-indicateurs` → 2de MG Évaluer et évoluer, du pilotage aux développements numériques *(séance stmg:5, qui nommait 5 blocs)*
+- **2de option MG** · `fixer-un-prix` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:2, qui nommait 5 blocs)*
+- **2de option MG** · `fixer-un-prix` → De l'individu à l'acteur · Première, sciences de gestion et numérique *(séance stmg:2, qui nommait 5 blocs)*
+- **2de option MG** · `fixer-un-prix` → À la rencontre du management des organisations · Première, management *(séance stmg:2, qui nommait 5 blocs)*
+- **2de option MG** · `fixer-un-prix` → Les organisations et l'activité de production de biens et de services · Terminale, tronc commun *(séance stmg:2, qui nommait 5 blocs)*
+- **2de option MG** · `fixer-un-prix` → 2de MG Organiser et décider, des objectifs à la réalisation *(séance stmg:2, qui nommait 5 blocs)*
+- **2de option MG** · `lire-l-ecran-de-decision` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:1, qui nommait 5 blocs)*
+- **2de option MG** · `lire-l-ecran-de-decision` → De l'individu à l'acteur · Première, sciences de gestion et numérique *(séance stmg:1, qui nommait 5 blocs)*
+- **2de option MG** · `lire-l-ecran-de-decision` → À la rencontre du management des organisations · Première, management *(séance stmg:1, qui nommait 5 blocs)*
+- **2de option MG** · `lire-l-ecran-de-decision` → Les organisations et l'activité de production de biens et de services · Terminale, tronc commun *(séance stmg:1, qui nommait 5 blocs)*
+- **2de option MG** · `lire-l-ecran-de-decision` → 2de MG Organiser et décider, des objectifs à la réalisation *(séance stmg:1, qui nommait 5 blocs)*
+- **2de option MG** · `presenter-a-l-oral` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:5, qui nommait 5 blocs)*
+- **2de option MG** · `presenter-a-l-oral` → Numérique et intelligence collective · Première, sciences de gestion et numérique *(séance stmg:5, qui nommait 5 blocs)*
+- **2de option MG** · `presenter-a-l-oral` → Les choix stratégiques des organisations · Première, management *(séance stmg:5, qui nommait 5 blocs)*
+- **2de option MG** · `presenter-a-l-oral` → Les organisations et la société · Terminale, tronc commun *(séance stmg:5, qui nommait 5 blocs)*
+- **2de option MG** · `presenter-a-l-oral` → 2de MG Évaluer et évoluer, du pilotage aux développements numériques *(séance stmg:5, qui nommait 5 blocs)*
+- **2de option MG** · `presenter-l-entreprise` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:1, qui nommait 5 blocs)*
+- **2de option MG** · `presenter-l-entreprise` → De l'individu à l'acteur · Première, sciences de gestion et numérique *(séance stmg:1, qui nommait 5 blocs)*
+- **2de option MG** · `presenter-l-entreprise` → À la rencontre du management des organisations · Première, management *(séance stmg:1, qui nommait 5 blocs)*
+- **2de option MG** · `presenter-l-entreprise` → Les organisations et l'activité de production de biens et de services · Terminale, tronc commun *(séance stmg:1, qui nommait 5 blocs)*
+- **2de option MG** · `presenter-l-entreprise` → 2de MG Organiser et décider, des objectifs à la réalisation *(séance stmg:1, qui nommait 5 blocs)*
+- **STMG** · `annoncer-l-effet-attendu` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:3, qui nommait 4 blocs)*
+- **STMG** · `annoncer-l-effet-attendu` → Temps et risque · Première, sciences de gestion et numérique *(séance stmg:3, qui nommait 4 blocs)*
+- **STMG** · `annoncer-l-effet-attendu` → Les organisations et les acteurs · Terminale, tronc commun *(séance stmg:3, qui nommait 4 blocs)*
+- **STMG** · `annoncer-l-effet-attendu` → 2de MG Évaluer et évoluer, du pilotage aux développements numériques *(séance stmg:3, qui nommait 4 blocs)*
+- **STMG** · `la-capacite-qui-bloque` → Temps et risque · Première, sciences de gestion et numérique *(séance stmg:4, qui nommait 4 blocs)*
+- **STMG** · `la-capacite-qui-bloque` → Le management stratégique, du diagnostic à la fixation des objectifs · Première, management *(séance stmg:4, qui nommait 4 blocs)*
+- **STMG** · `la-capacite-qui-bloque` → Les organisations et les acteurs · Terminale, tronc commun *(séance stmg:4, qui nommait 4 blocs)*
+- **STMG** · `la-capacite-qui-bloque` → 2de MG Organiser et décider, des objectifs à la réalisation *(séance stmg:4, qui nommait 4 blocs)*
+- **STMG** · `rupture-ou-surstock` → Temps et risque · Première, sciences de gestion et numérique *(séance stmg:4, qui nommait 4 blocs)*
+- **STMG** · `rupture-ou-surstock` → Le management stratégique, du diagnostic à la fixation des objectifs · Première, management *(séance stmg:4, qui nommait 4 blocs)*
+- **STMG** · `rupture-ou-surstock` → Les organisations et les acteurs · Terminale, tronc commun *(séance stmg:4, qui nommait 4 blocs)*
+- **STMG** · `rupture-ou-surstock` → 2de MG Organiser et décider, des objectifs à la réalisation *(séance stmg:4, qui nommait 4 blocs)*
+- **STMG** · `seuil-de-rentabilite` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:3, qui nommait 4 blocs)*
+- **STMG** · `seuil-de-rentabilite` → Temps et risque · Première, sciences de gestion et numérique *(séance stmg:3, qui nommait 4 blocs)*
+- **STMG** · `seuil-de-rentabilite` → Les organisations et les acteurs · Terminale, tronc commun *(séance stmg:3, qui nommait 4 blocs)*
+- **STMG** · `seuil-de-rentabilite` → 2de MG Évaluer et évoluer, du pilotage aux développements numériques *(séance stmg:3, qui nommait 4 blocs)*
+- **STMG** · `un-marche-qui-change` → Temps et risque · Première, sciences de gestion et numérique *(séance stmg:4, qui nommait 4 blocs)*
+- **STMG** · `un-marche-qui-change` → Le management stratégique, du diagnostic à la fixation des objectifs · Première, management *(séance stmg:4, qui nommait 4 blocs)*
+- **STMG** · `un-marche-qui-change` → Les organisations et les acteurs · Terminale, tronc commun *(séance stmg:4, qui nommait 4 blocs)*
+- **STMG** · `un-marche-qui-change` → 2de MG Organiser et décider, des objectifs à la réalisation *(séance stmg:4, qui nommait 4 blocs)*
+- **STMG** · `variable-ou-fixe` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:3, qui nommait 4 blocs)*
+- **STMG** · `variable-ou-fixe` → Temps et risque · Première, sciences de gestion et numérique *(séance stmg:3, qui nommait 4 blocs)*
+- **STMG** · `variable-ou-fixe` → Les organisations et les acteurs · Terminale, tronc commun *(séance stmg:3, qui nommait 4 blocs)*
+- **STMG** · `variable-ou-fixe` → 2de MG Évaluer et évoluer, du pilotage aux développements numériques *(séance stmg:3, qui nommait 4 blocs)*
+- **STMG** · `lire-les-comptes` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:1, stmg:2, qui nommait 5 blocs)*
+- **STMG** · `lire-les-comptes` → De l'individu à l'acteur · Première, sciences de gestion et numérique *(séance stmg:1, stmg:2, qui nommait 5 blocs)*
+- **STMG** · `lire-les-comptes` → À la rencontre du management des organisations · Première, management *(séance stmg:1, stmg:2, qui nommait 5 blocs)*
+- **STMG** · `lire-les-comptes` → Les organisations et l'activité de production de biens et de services · Terminale, tronc commun *(séance stmg:1, stmg:2, qui nommait 5 blocs)*
+- **STMG** · `lire-les-comptes` → 2de MG Organiser et décider, des objectifs à la réalisation *(séance stmg:1, stmg:2, qui nommait 5 blocs)*
+- **STMG** · `assumer-une-erreur` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:5, qui nommait 5 blocs)*
+- **STMG** · `assumer-une-erreur` → Numérique et intelligence collective · Première, sciences de gestion et numérique *(séance stmg:5, qui nommait 5 blocs)*
+- **STMG** · `assumer-une-erreur` → Les choix stratégiques des organisations · Première, management *(séance stmg:5, qui nommait 5 blocs)*
+- **STMG** · `assumer-une-erreur` → Les organisations et la société · Terminale, tronc commun *(séance stmg:5, qui nommait 5 blocs)*
+- **STMG** · `assumer-une-erreur` → 2de MG Évaluer et évoluer, du pilotage aux développements numériques *(séance stmg:5, qui nommait 5 blocs)*
+- **STMG** · `choisir-ses-indicateurs` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:5, qui nommait 5 blocs)*
+- **STMG** · `choisir-ses-indicateurs` → Numérique et intelligence collective · Première, sciences de gestion et numérique *(séance stmg:5, qui nommait 5 blocs)*
+- **STMG** · `choisir-ses-indicateurs` → Les choix stratégiques des organisations · Première, management *(séance stmg:5, qui nommait 5 blocs)*
+- **STMG** · `choisir-ses-indicateurs` → Les organisations et la société · Terminale, tronc commun *(séance stmg:5, qui nommait 5 blocs)*
+- **STMG** · `choisir-ses-indicateurs` → 2de MG Évaluer et évoluer, du pilotage aux développements numériques *(séance stmg:5, qui nommait 5 blocs)*
+- **STMG** · `fixer-un-prix` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:2, qui nommait 5 blocs)*
+- **STMG** · `fixer-un-prix` → De l'individu à l'acteur · Première, sciences de gestion et numérique *(séance stmg:2, qui nommait 5 blocs)*
+- **STMG** · `fixer-un-prix` → À la rencontre du management des organisations · Première, management *(séance stmg:2, qui nommait 5 blocs)*
+- **STMG** · `fixer-un-prix` → Les organisations et l'activité de production de biens et de services · Terminale, tronc commun *(séance stmg:2, qui nommait 5 blocs)*
+- **STMG** · `fixer-un-prix` → 2de MG Organiser et décider, des objectifs à la réalisation *(séance stmg:2, qui nommait 5 blocs)*
+- **STMG** · `lire-l-ecran-de-decision` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:1, qui nommait 5 blocs)*
+- **STMG** · `lire-l-ecran-de-decision` → De l'individu à l'acteur · Première, sciences de gestion et numérique *(séance stmg:1, qui nommait 5 blocs)*
+- **STMG** · `lire-l-ecran-de-decision` → À la rencontre du management des organisations · Première, management *(séance stmg:1, qui nommait 5 blocs)*
+- **STMG** · `lire-l-ecran-de-decision` → Les organisations et l'activité de production de biens et de services · Terminale, tronc commun *(séance stmg:1, qui nommait 5 blocs)*
+- **STMG** · `lire-l-ecran-de-decision` → 2de MG Organiser et décider, des objectifs à la réalisation *(séance stmg:1, qui nommait 5 blocs)*
+- **STMG** · `presenter-a-l-oral` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:5, qui nommait 5 blocs)*
+- **STMG** · `presenter-a-l-oral` → Numérique et intelligence collective · Première, sciences de gestion et numérique *(séance stmg:5, qui nommait 5 blocs)*
+- **STMG** · `presenter-a-l-oral` → Les choix stratégiques des organisations · Première, management *(séance stmg:5, qui nommait 5 blocs)*
+- **STMG** · `presenter-a-l-oral` → Les organisations et la société · Terminale, tronc commun *(séance stmg:5, qui nommait 5 blocs)*
+- **STMG** · `presenter-a-l-oral` → 2de MG Évaluer et évoluer, du pilotage aux développements numériques *(séance stmg:5, qui nommait 5 blocs)*
+- **STMG** · `presenter-l-entreprise` → Création de valeur et performance · Première, sciences de gestion et numérique *(séance stmg:1, qui nommait 5 blocs)*
+- **STMG** · `presenter-l-entreprise` → De l'individu à l'acteur · Première, sciences de gestion et numérique *(séance stmg:1, qui nommait 5 blocs)*
+- **STMG** · `presenter-l-entreprise` → À la rencontre du management des organisations · Première, management *(séance stmg:1, qui nommait 5 blocs)*
+- **STMG** · `presenter-l-entreprise` → Les organisations et l'activité de production de biens et de services · Terminale, tronc commun *(séance stmg:1, qui nommait 5 blocs)*
+- **STMG** · `presenter-l-entreprise` → 2de MG Organiser et décider, des objectifs à la réalisation *(séance stmg:1, qui nommait 5 blocs)*
 - **BTS MHR · B et C** · `effet-d-un-delai` → Bloc 2 · Mercatique des services en hôtellerie restauration *(séance bistrot:5, qui nommait 3 blocs)*
 - **BTS MHR · B et C** · `la-capacite-qui-bloque` → Bloc 1 · Conception et production de services en hôtellerie restauration *(séance bistrot:5, qui nommait 3 blocs)*
 - **BTS MHR · B et C** · `la-capacite-qui-bloque` → Bloc 4 · Pilotage de la production de services en hôtellerie restauration *(séance bistrot:5, qui nommait 3 blocs)*
@@ -111,24 +184,145 @@ COUVRIR : un bloc est atteint dès qu'un seul geste le touche, c'est un plancher
 
 | atelier | ses formations | ce qu'il atteindrait ailleurs |
 | --- | --- | --- |
-| Tenir la boutique Maille & Co, premiers pas en gestion | Toutes filières, en découverte | BTS NDRC 3/3 · BTS MHR 2/2 · DCG 4/4 · BTS MCO 3/4 · BTS GPME 3/4 · BTS MHR · B et C 3/4 · STMG 7/10 · BTS CG 4/6 · BUT GEA 3/5 |
-| Prendre les commandes de Nova en quatre séances | STMG | BTS NDRC 3/3 · BTS MHR 2/2 · DCG 4/4 · BUT GEA 4/5 · BTS MCO 3/4 · BTS MHR · B et C 3/4 · BTS CG 3/6 · BTS GPME 2/4 |
-| Six trimestres chez Nova, du bilan d'ouverture au débriefing | BTS CG | BTS MCO 4/4 · BTS NDRC 3/3 · BTS MHR 2/2 · DCG 4/4 · STMG 9/10 · BUT GEA 4/5 · BTS GPME 3/4 · BTS MHR · B et C 3/4 |
-| Tenir un point de vente pendant quatre trimestres | BTS MCO | STMG 10/10 · BTS NDRC 3/3 · BTS MHR 2/2 · BUT GEA 5/5 · BTS GPME 3/4 · BTS MHR · B et C 3/4 · DCG 3/4 · BTS CG 3/6 |
-| Piloter une unité de restauration au mois | BTS MCO | BTS CG 6/6 · BTS NDRC 3/3 · BTS MHR 2/2 · BTS MHR · B et C 4/4 · STMG 9/10 · BUT GEA 4/5 · BTS GPME 3/4 · DCG 3/4 |
-| Rentabiliser une clientèle sur cinq trimestres | BTS NDRC | STMG 10/10 · BTS MCO 4/4 · BTS MHR 2/2 · BUT GEA 4/5 · BTS GPME 3/4 · BTS MHR · B et C 3/4 · DCG 3/4 · BTS CG 3/6 |
-| Garder ses adhérents plutôt que les remplacer | BTS NDRC | STMG 10/10 · BTS MCO 4/4 · BTS MHR 2/2 · BUT GEA 5/5 · BTS CG 5/6 · BTS GPME 3/4 · BTS MHR · B et C 3/4 · DCG 3/4 |
-| Tenir les chantiers et la caisse d'une entreprise de rénovation | BTS GPME | BTS CG 6/6 · BTS MCO 4/4 · BTS NDRC 3/3 · BTS MHR 2/2 · BTS MHR · B et C 4/4 · BUT GEA 5/5 · STMG 9/10 · DCG 3/4 |
-| Assister le dirigeant d'une PME pendant cinq trimestres | BTS GPME | BTS CG 6/6 · BTS MCO 4/4 · BTS NDRC 3/3 · BTS MHR 2/2 · BTS MHR · B et C 4/4 · DCG 4/4 · STMG 4/10 · BUT GEA 2/5 |
-| Piloter un hôtel sur une année de saisons | BTS MHR | BTS CG 6/6 · BTS MCO 4/4 · BTS NDRC 3/3 · BTS MHR · B et C 4/4 · BUT GEA 5/5 · STMG 9/10 · BTS GPME 3/4 · DCG 3/4 |
-| Composer la carte et tenir le service | BTS MHR · B et C | STMG 10/10 · BTS MCO 4/4 · BTS NDRC 3/3 · BTS GPME 4/4 · BTS MHR 2/2 · BUT GEA 4/5 · DCG 3/4 · BTS CG 3/6 |
-| Analyser et piloter une entreprise industrielle | BUT GEA | BTS NDRC 3/3 · BTS MHR 2/2 · STMG 9/10 · BTS CG 5/6 · BTS MCO 3/4 · BTS MHR · B et C 3/4 · DCG 3/4 · BTS GPME 2/4 |
-| Quatre exercices chez Nova : budget, écarts, rapport de gestion | DCG | BTS MHR 2/2 · BUT GEA 5/5 · STMG 9/10 · BTS GPME 3/4 · BTS MHR · B et C 3/4 · BTS NDRC 2/3 · BTS CG 3/6 · BTS MCO 2/4 |
-| RSE et performance : un engagement qui se pilote | DCG | BTS NDRC 3/3 · BTS MHR 2/2 · BUT GEA 4/5 · BTS MCO 3/4 · BTS GPME 3/4 · BTS MHR · B et C 3/4 · BTS CG 3/6 · STMG 4/10 |
-| Piloter sous incertitude une entreprise de transport | Toutes filières, après un premier atelier | BTS NDRC 3/3 · BTS GPME 4/4 · BTS MHR 2/2 · BUT GEA 5/5 · DCG 4/4 · BTS CG 5/6 · BTS MCO 3/4 · BTS MHR · B et C 3/4 · STMG 7/10 |
-| Diriger une entreprise en équipe inter-filières | STMG, BTS CG, BTS MCO et BTS NDRC | BTS MHR 2/2 · BTS MHR · B et C 4/4 · DCG 4/4 · BUT GEA 4/5 · BTS GPME 2/4 |
+| Tenir la boutique Maille & Co, premiers pas en gestion | Toutes filières, en découverte | BTS NDRC 3/3 · BTS MHR 2/2 · DCG 4/4 · BTS MCO 3/4 · BTS GPME 3/4 · BTS MHR · B et C 3/4 · 2de option MG 8/12 · STMG 8/12 · BTS CG 4/6 · BUT GEA 3/5 |
+| Prendre les commandes de Nova en quatre séances | 2de option MG et STMG | BTS NDRC 3/3 · BTS MHR 2/2 · DCG 4/4 · BUT GEA 4/5 · BTS MCO 3/4 · BTS MHR · B et C 3/4 · BTS CG 3/6 · BTS GPME 2/4 |
+| Six trimestres chez Nova, du bilan d'ouverture au débriefing | BTS CG | BTS MCO 4/4 · BTS NDRC 3/3 · BTS MHR 2/2 · DCG 4/4 · 2de option MG 11/12 · STMG 11/12 · BUT GEA 4/5 · BTS GPME 3/4 · BTS MHR · B et C 3/4 |
+| Tenir un point de vente pendant quatre trimestres | BTS MCO | 2de option MG 12/12 · STMG 12/12 · BTS NDRC 3/3 · BTS MHR 2/2 · BUT GEA 5/5 · BTS GPME 3/4 · BTS MHR · B et C 3/4 · DCG 3/4 · BTS CG 3/6 |
+| Piloter une unité de restauration au mois | BTS MCO | BTS CG 6/6 · BTS NDRC 3/3 · BTS MHR 2/2 · BTS MHR · B et C 4/4 · 2de option MG 11/12 · STMG 11/12 · BUT GEA 4/5 · BTS GPME 3/4 · DCG 3/4 |
+| Rentabiliser une clientèle sur cinq trimestres | BTS NDRC | 2de option MG 12/12 · STMG 12/12 · BTS MCO 4/4 · BTS MHR 2/2 · BUT GEA 4/5 · BTS GPME 3/4 · BTS MHR · B et C 3/4 · DCG 3/4 · BTS CG 3/6 |
+| Garder ses adhérents plutôt que les remplacer | BTS NDRC | 2de option MG 12/12 · STMG 12/12 · BTS MCO 4/4 · BTS MHR 2/2 · BUT GEA 5/5 · BTS CG 5/6 · BTS GPME 3/4 · BTS MHR · B et C 3/4 · DCG 3/4 |
+| Tenir les chantiers et la caisse d'une entreprise de rénovation | BTS GPME | BTS CG 6/6 · BTS MCO 4/4 · BTS NDRC 3/3 · BTS MHR 2/2 · BTS MHR · B et C 4/4 · BUT GEA 5/5 · 2de option MG 11/12 · STMG 11/12 · DCG 3/4 |
+| Assister le dirigeant d'une PME pendant cinq trimestres | BTS GPME | BTS CG 6/6 · BTS MCO 4/4 · BTS NDRC 3/3 · BTS MHR 2/2 · BTS MHR · B et C 4/4 · DCG 4/4 · 2de option MG 5/12 · STMG 5/12 · BUT GEA 2/5 |
+| Piloter un hôtel sur une année de saisons | BTS MHR | BTS CG 6/6 · BTS MCO 4/4 · BTS NDRC 3/3 · BTS MHR · B et C 4/4 · BUT GEA 5/5 · 2de option MG 11/12 · STMG 11/12 · BTS GPME 3/4 · DCG 3/4 |
+| Composer la carte et tenir le service | BTS MHR · B et C | 2de option MG 12/12 · STMG 12/12 · BTS MCO 4/4 · BTS NDRC 3/3 · BTS GPME 4/4 · BTS MHR 2/2 · BUT GEA 4/5 · DCG 3/4 · BTS CG 3/6 |
+| Analyser et piloter une entreprise industrielle | BUT GEA | BTS NDRC 3/3 · BTS MHR 2/2 · 2de option MG 11/12 · STMG 11/12 · BTS CG 5/6 · BTS MCO 3/4 · BTS MHR · B et C 3/4 · DCG 3/4 · BTS GPME 2/4 |
+| Quatre exercices chez Nova : budget, écarts, rapport de gestion | DCG | BTS MHR 2/2 · BUT GEA 5/5 · 2de option MG 11/12 · STMG 11/12 · BTS GPME 3/4 · BTS MHR · B et C 3/4 · BTS NDRC 2/3 · BTS CG 3/6 · BTS MCO 2/4 |
+| RSE et performance : un engagement qui se pilote | DCG | BTS NDRC 3/3 · BTS MHR 2/2 · BUT GEA 4/5 · BTS MCO 3/4 · BTS GPME 3/4 · BTS MHR · B et C 3/4 · BTS CG 3/6 · 2de option MG 5/12 · STMG 5/12 |
+| Piloter sous incertitude une entreprise de transport | Toutes filières, après un premier atelier | BTS NDRC 3/3 · BTS GPME 4/4 · BTS MHR 2/2 · BUT GEA 5/5 · DCG 4/4 · BTS CG 5/6 · 2de option MG 9/12 · STMG 9/12 · BTS MCO 3/4 · BTS MHR · B et C 3/4 |
+| Diriger une entreprise en équipe inter-filières | STMG, BTS CG, BTS MCO et BTS NDRC | BTS MHR 2/2 · BTS MHR · B et C 4/4 · DCG 4/4 · BUT GEA 4/5 · 2de option MG 9/12 · BTS GPME 2/4 |
 
 ## La table, diplôme par diplôme
+
+### Seconde générale et technologique, enseignement optionnel de management et gestion
+
+#### Création de valeur et performance · Première, sciences de gestion et numérique
+
+10 gestes liés.
+
+- `annoncer-l-effet-attendu` *(stmg:3 ; 4 blocs nommés)*
+- `seuil-de-rentabilite` *(stmg:3 ; 4 blocs nommés)*
+- `variable-ou-fixe` *(stmg:3 ; 4 blocs nommés)*
+- `lire-les-comptes` *(stmg:1, stmg:2 ; 5 blocs nommés)*
+- `assumer-une-erreur` *(stmg:5 ; 5 blocs nommés)*
+- `choisir-ses-indicateurs` *(stmg:5 ; 5 blocs nommés)*
+- `fixer-un-prix` *(stmg:2 ; 5 blocs nommés)*
+- `lire-l-ecran-de-decision` *(stmg:1 ; 5 blocs nommés)*
+- `presenter-a-l-oral` *(stmg:5 ; 5 blocs nommés)*
+- `presenter-l-entreprise` *(stmg:1 ; 5 blocs nommés)*
+
+#### De l'individu à l'acteur · Première, sciences de gestion et numérique
+
+4 gestes liés.
+
+- `lire-les-comptes` *(stmg:1, stmg:2 ; 5 blocs nommés)*
+- `fixer-un-prix` *(stmg:2 ; 5 blocs nommés)*
+- `lire-l-ecran-de-decision` *(stmg:1 ; 5 blocs nommés)*
+- `presenter-l-entreprise` *(stmg:1 ; 5 blocs nommés)*
+
+#### À la rencontre du management des organisations · Première, management
+
+4 gestes liés.
+
+- `lire-les-comptes` *(stmg:1, stmg:2 ; 5 blocs nommés)*
+- `fixer-un-prix` *(stmg:2 ; 5 blocs nommés)*
+- `lire-l-ecran-de-decision` *(stmg:1 ; 5 blocs nommés)*
+- `presenter-l-entreprise` *(stmg:1 ; 5 blocs nommés)*
+
+#### Les organisations et l'activité de production de biens et de services · Terminale, tronc commun
+
+4 gestes liés.
+
+- `lire-les-comptes` *(stmg:1, stmg:2 ; 5 blocs nommés)*
+- `fixer-un-prix` *(stmg:2 ; 5 blocs nommés)*
+- `lire-l-ecran-de-decision` *(stmg:1 ; 5 blocs nommés)*
+- `presenter-l-entreprise` *(stmg:1 ; 5 blocs nommés)*
+
+#### 2de MG Organiser et décider, des objectifs à la réalisation
+
+7 gestes liés.
+
+- `la-capacite-qui-bloque` *(stmg:4 ; 4 blocs nommés)*
+- `rupture-ou-surstock` *(stmg:4 ; 4 blocs nommés)*
+- `un-marche-qui-change` *(stmg:4 ; 4 blocs nommés)*
+- `lire-les-comptes` *(stmg:1, stmg:2 ; 5 blocs nommés)*
+- `fixer-un-prix` *(stmg:2 ; 5 blocs nommés)*
+- `lire-l-ecran-de-decision` *(stmg:1 ; 5 blocs nommés)*
+- `presenter-l-entreprise` *(stmg:1 ; 5 blocs nommés)*
+
+#### Temps et risque · Première, sciences de gestion et numérique
+
+6 gestes liés.
+
+- `annoncer-l-effet-attendu` *(stmg:3 ; 4 blocs nommés)*
+- `la-capacite-qui-bloque` *(stmg:4 ; 4 blocs nommés)*
+- `rupture-ou-surstock` *(stmg:4 ; 4 blocs nommés)*
+- `seuil-de-rentabilite` *(stmg:3 ; 4 blocs nommés)*
+- `un-marche-qui-change` *(stmg:4 ; 4 blocs nommés)*
+- `variable-ou-fixe` *(stmg:3 ; 4 blocs nommés)*
+
+#### Les organisations et les acteurs · Terminale, tronc commun
+
+6 gestes liés.
+
+- `annoncer-l-effet-attendu` *(stmg:3 ; 4 blocs nommés)*
+- `la-capacite-qui-bloque` *(stmg:4 ; 4 blocs nommés)*
+- `rupture-ou-surstock` *(stmg:4 ; 4 blocs nommés)*
+- `seuil-de-rentabilite` *(stmg:3 ; 4 blocs nommés)*
+- `un-marche-qui-change` *(stmg:4 ; 4 blocs nommés)*
+- `variable-ou-fixe` *(stmg:3 ; 4 blocs nommés)*
+
+#### 2de MG Évaluer et évoluer, du pilotage aux développements numériques
+
+6 gestes liés.
+
+- `annoncer-l-effet-attendu` *(stmg:3 ; 4 blocs nommés)*
+- `seuil-de-rentabilite` *(stmg:3 ; 4 blocs nommés)*
+- `variable-ou-fixe` *(stmg:3 ; 4 blocs nommés)*
+- `assumer-une-erreur` *(stmg:5 ; 5 blocs nommés)*
+- `choisir-ses-indicateurs` *(stmg:5 ; 5 blocs nommés)*
+- `presenter-a-l-oral` *(stmg:5 ; 5 blocs nommés)*
+
+#### Le management stratégique, du diagnostic à la fixation des objectifs · Première, management
+
+3 gestes liés.
+
+- `la-capacite-qui-bloque` *(stmg:4 ; 4 blocs nommés)*
+- `rupture-ou-surstock` *(stmg:4 ; 4 blocs nommés)*
+- `un-marche-qui-change` *(stmg:4 ; 4 blocs nommés)*
+
+#### Numérique et intelligence collective · Première, sciences de gestion et numérique
+
+3 gestes liés.
+
+- `assumer-une-erreur` *(stmg:5 ; 5 blocs nommés)*
+- `choisir-ses-indicateurs` *(stmg:5 ; 5 blocs nommés)*
+- `presenter-a-l-oral` *(stmg:5 ; 5 blocs nommés)*
+
+#### Les choix stratégiques des organisations · Première, management
+
+3 gestes liés.
+
+- `assumer-une-erreur` *(stmg:5 ; 5 blocs nommés)*
+- `choisir-ses-indicateurs` *(stmg:5 ; 5 blocs nommés)*
+- `presenter-a-l-oral` *(stmg:5 ; 5 blocs nommés)*
+
+#### Les organisations et la société · Terminale, tronc commun
+
+3 gestes liés.
+
+- `assumer-une-erreur` *(stmg:5 ; 5 blocs nommés)*
+- `choisir-ses-indicateurs` *(stmg:5 ; 5 blocs nommés)*
+- `presenter-a-l-oral` *(stmg:5 ; 5 blocs nommés)*
 
 ### Baccalauréat STMG
 
@@ -136,97 +330,120 @@ COUVRIR : un bloc est atteint dès qu'un seul geste le touche, c'est un plancher
 
 10 gestes liés.
 
-- `annoncer-l-effet-attendu` *(stmg:3 ; 3 blocs nommés)*
-- `seuil-de-rentabilite` *(stmg:3 ; 3 blocs nommés)*
-- `variable-ou-fixe` *(stmg:3 ; 3 blocs nommés)*
-- `lire-les-comptes` *(stmg:1, stmg:2 ; 4 blocs nommés)*
-- `assumer-une-erreur` *(stmg:5 ; 4 blocs nommés)*
-- `choisir-ses-indicateurs` *(stmg:5 ; 4 blocs nommés)*
-- `fixer-un-prix` *(stmg:2 ; 4 blocs nommés)*
-- `lire-l-ecran-de-decision` *(stmg:1 ; 4 blocs nommés)*
-- `presenter-a-l-oral` *(stmg:5 ; 4 blocs nommés)*
-- `presenter-l-entreprise` *(stmg:1 ; 4 blocs nommés)*
+- `annoncer-l-effet-attendu` *(stmg:3 ; 4 blocs nommés)*
+- `seuil-de-rentabilite` *(stmg:3 ; 4 blocs nommés)*
+- `variable-ou-fixe` *(stmg:3 ; 4 blocs nommés)*
+- `lire-les-comptes` *(stmg:1, stmg:2 ; 5 blocs nommés)*
+- `assumer-une-erreur` *(stmg:5 ; 5 blocs nommés)*
+- `choisir-ses-indicateurs` *(stmg:5 ; 5 blocs nommés)*
+- `fixer-un-prix` *(stmg:2 ; 5 blocs nommés)*
+- `lire-l-ecran-de-decision` *(stmg:1 ; 5 blocs nommés)*
+- `presenter-a-l-oral` *(stmg:5 ; 5 blocs nommés)*
+- `presenter-l-entreprise` *(stmg:1 ; 5 blocs nommés)*
 
 #### De l'individu à l'acteur · Première, sciences de gestion et numérique
 
 4 gestes liés.
 
-- `lire-les-comptes` *(stmg:1, stmg:2 ; 4 blocs nommés)*
-- `fixer-un-prix` *(stmg:2 ; 4 blocs nommés)*
-- `lire-l-ecran-de-decision` *(stmg:1 ; 4 blocs nommés)*
-- `presenter-l-entreprise` *(stmg:1 ; 4 blocs nommés)*
+- `lire-les-comptes` *(stmg:1, stmg:2 ; 5 blocs nommés)*
+- `fixer-un-prix` *(stmg:2 ; 5 blocs nommés)*
+- `lire-l-ecran-de-decision` *(stmg:1 ; 5 blocs nommés)*
+- `presenter-l-entreprise` *(stmg:1 ; 5 blocs nommés)*
 
 #### À la rencontre du management des organisations · Première, management
 
 4 gestes liés.
 
-- `lire-les-comptes` *(stmg:1, stmg:2 ; 4 blocs nommés)*
-- `fixer-un-prix` *(stmg:2 ; 4 blocs nommés)*
-- `lire-l-ecran-de-decision` *(stmg:1 ; 4 blocs nommés)*
-- `presenter-l-entreprise` *(stmg:1 ; 4 blocs nommés)*
+- `lire-les-comptes` *(stmg:1, stmg:2 ; 5 blocs nommés)*
+- `fixer-un-prix` *(stmg:2 ; 5 blocs nommés)*
+- `lire-l-ecran-de-decision` *(stmg:1 ; 5 blocs nommés)*
+- `presenter-l-entreprise` *(stmg:1 ; 5 blocs nommés)*
 
 #### Les organisations et l'activité de production de biens et de services · Terminale, tronc commun
 
 4 gestes liés.
 
-- `lire-les-comptes` *(stmg:1, stmg:2 ; 4 blocs nommés)*
-- `fixer-un-prix` *(stmg:2 ; 4 blocs nommés)*
-- `lire-l-ecran-de-decision` *(stmg:1 ; 4 blocs nommés)*
-- `presenter-l-entreprise` *(stmg:1 ; 4 blocs nommés)*
+- `lire-les-comptes` *(stmg:1, stmg:2 ; 5 blocs nommés)*
+- `fixer-un-prix` *(stmg:2 ; 5 blocs nommés)*
+- `lire-l-ecran-de-decision` *(stmg:1 ; 5 blocs nommés)*
+- `presenter-l-entreprise` *(stmg:1 ; 5 blocs nommés)*
+
+#### 2de MG Organiser et décider, des objectifs à la réalisation
+
+7 gestes liés.
+
+- `la-capacite-qui-bloque` *(stmg:4 ; 4 blocs nommés)*
+- `rupture-ou-surstock` *(stmg:4 ; 4 blocs nommés)*
+- `un-marche-qui-change` *(stmg:4 ; 4 blocs nommés)*
+- `lire-les-comptes` *(stmg:1, stmg:2 ; 5 blocs nommés)*
+- `fixer-un-prix` *(stmg:2 ; 5 blocs nommés)*
+- `lire-l-ecran-de-decision` *(stmg:1 ; 5 blocs nommés)*
+- `presenter-l-entreprise` *(stmg:1 ; 5 blocs nommés)*
 
 #### Temps et risque · Première, sciences de gestion et numérique
 
 6 gestes liés.
 
-- `annoncer-l-effet-attendu` *(stmg:3 ; 3 blocs nommés)*
-- `la-capacite-qui-bloque` *(stmg:4 ; 3 blocs nommés)*
-- `rupture-ou-surstock` *(stmg:4 ; 3 blocs nommés)*
-- `seuil-de-rentabilite` *(stmg:3 ; 3 blocs nommés)*
-- `un-marche-qui-change` *(stmg:4 ; 3 blocs nommés)*
-- `variable-ou-fixe` *(stmg:3 ; 3 blocs nommés)*
+- `annoncer-l-effet-attendu` *(stmg:3 ; 4 blocs nommés)*
+- `la-capacite-qui-bloque` *(stmg:4 ; 4 blocs nommés)*
+- `rupture-ou-surstock` *(stmg:4 ; 4 blocs nommés)*
+- `seuil-de-rentabilite` *(stmg:3 ; 4 blocs nommés)*
+- `un-marche-qui-change` *(stmg:4 ; 4 blocs nommés)*
+- `variable-ou-fixe` *(stmg:3 ; 4 blocs nommés)*
 
 #### Les organisations et les acteurs · Terminale, tronc commun
 
 6 gestes liés.
 
-- `annoncer-l-effet-attendu` *(stmg:3 ; 3 blocs nommés)*
-- `la-capacite-qui-bloque` *(stmg:4 ; 3 blocs nommés)*
-- `rupture-ou-surstock` *(stmg:4 ; 3 blocs nommés)*
-- `seuil-de-rentabilite` *(stmg:3 ; 3 blocs nommés)*
-- `un-marche-qui-change` *(stmg:4 ; 3 blocs nommés)*
-- `variable-ou-fixe` *(stmg:3 ; 3 blocs nommés)*
+- `annoncer-l-effet-attendu` *(stmg:3 ; 4 blocs nommés)*
+- `la-capacite-qui-bloque` *(stmg:4 ; 4 blocs nommés)*
+- `rupture-ou-surstock` *(stmg:4 ; 4 blocs nommés)*
+- `seuil-de-rentabilite` *(stmg:3 ; 4 blocs nommés)*
+- `un-marche-qui-change` *(stmg:4 ; 4 blocs nommés)*
+- `variable-ou-fixe` *(stmg:3 ; 4 blocs nommés)*
+
+#### 2de MG Évaluer et évoluer, du pilotage aux développements numériques
+
+6 gestes liés.
+
+- `annoncer-l-effet-attendu` *(stmg:3 ; 4 blocs nommés)*
+- `seuil-de-rentabilite` *(stmg:3 ; 4 blocs nommés)*
+- `variable-ou-fixe` *(stmg:3 ; 4 blocs nommés)*
+- `assumer-une-erreur` *(stmg:5 ; 5 blocs nommés)*
+- `choisir-ses-indicateurs` *(stmg:5 ; 5 blocs nommés)*
+- `presenter-a-l-oral` *(stmg:5 ; 5 blocs nommés)*
 
 #### Le management stratégique, du diagnostic à la fixation des objectifs · Première, management
 
 3 gestes liés.
 
-- `la-capacite-qui-bloque` *(stmg:4 ; 3 blocs nommés)*
-- `rupture-ou-surstock` *(stmg:4 ; 3 blocs nommés)*
-- `un-marche-qui-change` *(stmg:4 ; 3 blocs nommés)*
+- `la-capacite-qui-bloque` *(stmg:4 ; 4 blocs nommés)*
+- `rupture-ou-surstock` *(stmg:4 ; 4 blocs nommés)*
+- `un-marche-qui-change` *(stmg:4 ; 4 blocs nommés)*
 
 #### Numérique et intelligence collective · Première, sciences de gestion et numérique
 
 3 gestes liés.
 
-- `assumer-une-erreur` *(stmg:5 ; 4 blocs nommés)*
-- `choisir-ses-indicateurs` *(stmg:5 ; 4 blocs nommés)*
-- `presenter-a-l-oral` *(stmg:5 ; 4 blocs nommés)*
+- `assumer-une-erreur` *(stmg:5 ; 5 blocs nommés)*
+- `choisir-ses-indicateurs` *(stmg:5 ; 5 blocs nommés)*
+- `presenter-a-l-oral` *(stmg:5 ; 5 blocs nommés)*
 
 #### Les choix stratégiques des organisations · Première, management
 
 3 gestes liés.
 
-- `assumer-une-erreur` *(stmg:5 ; 4 blocs nommés)*
-- `choisir-ses-indicateurs` *(stmg:5 ; 4 blocs nommés)*
-- `presenter-a-l-oral` *(stmg:5 ; 4 blocs nommés)*
+- `assumer-une-erreur` *(stmg:5 ; 5 blocs nommés)*
+- `choisir-ses-indicateurs` *(stmg:5 ; 5 blocs nommés)*
+- `presenter-a-l-oral` *(stmg:5 ; 5 blocs nommés)*
 
 #### Les organisations et la société · Terminale, tronc commun
 
 3 gestes liés.
 
-- `assumer-une-erreur` *(stmg:5 ; 4 blocs nommés)*
-- `choisir-ses-indicateurs` *(stmg:5 ; 4 blocs nommés)*
-- `presenter-a-l-oral` *(stmg:5 ; 4 blocs nommés)*
+- `assumer-une-erreur` *(stmg:5 ; 5 blocs nommés)*
+- `choisir-ses-indicateurs` *(stmg:5 ; 5 blocs nommés)*
+- `presenter-a-l-oral` *(stmg:5 ; 5 blocs nommés)*
 
 ### BTS Comptabilité et Gestion
 

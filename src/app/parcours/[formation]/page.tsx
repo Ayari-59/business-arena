@@ -72,9 +72,7 @@ export default async function PageDuDiplome({
   const code = formation.code;
   const { referentiel, lignes } = tableauDeCouverture(code);
   const ateliers = ATELIERS.filter((a) => a.formations.includes(code));
-  const parcours = PARCOURS.find((p) =>
-    ateliers.some((a) => p.ateliers.includes(a.code)),
-  );
+  const parcours = PARCOURS.find((p) => p.formation === code);
   const cours = coursDeLaFormation(code);
   const entreprises = scenariosServant(code).map((s) => s.playerTeamName);
   const travailles = lignes.filter((l) => l.couverture).length;

@@ -82,9 +82,7 @@ const TOUTES_LES_FILIERES = (() => {
     const ateliers = ATELIERS.filter((a) =>
       a.formations.includes(formation.code),
     );
-    const parcours = PARCOURS.find((p) =>
-      ateliers.some((a) => p.ateliers.includes(a.code)),
-    );
+    const parcours = PARCOURS.find((p) => p.formation === formation.code);
     return {
       // L'ancre d'un parcours ne bouge pas : elle est déjà liée ailleurs.
       // Pour les autres, elle se tire du SIGLE et non du nom entier : « BTS

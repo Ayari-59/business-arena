@@ -41,6 +41,8 @@ import type { AtelierDefinition } from "./types";
  *
  * La même trame sert en première et en terminale. Ce qui change n'est pas le
  * déroulé mais la question posée au débriefing, et chaque séance dit laquelle.
+ * Elle sert aussi en seconde, option management et gestion : le format qui
+ * lui est consacré dit comment y prendre le débriefing.
  */
 /**
  * LES THÈMES DU PROGRAMME, EN LISTE FERMÉE.
@@ -83,11 +85,27 @@ export const THEMES_STMG = {
   organisationsSociete: `Les organisations et la société · ${TERMINALE}`,
 } as const;
 
+/**
+ * LES THÈMES DE LA SECONDE, OPTION MANAGEMENT ET GESTION. L'atelier sert aussi
+ * cette classe : décider, mobiliser des ressources et évaluer une performance
+ * sont au cœur de deux de ses trois thèmes (programme de l'enseignement
+ * optionnel, lu sur le texte). Le premier thème, entreprendre et créer, n'est
+ * pas travaillé : l'entreprise existe déjà quand la partie commence. Le
+ * préfixe nomme le diplôme, pour que la couverture range chaque citation sous
+ * le texte qui la porte. Il n'est pas suivi d'un point médian : le résumé
+ * d'une fiche ne garde que ce qui précède, et les deux thèmes s'y liraient
+ * tous deux « 2de MG ».
+ */
+export const THEMES_SECONDE_MG = {
+  organiserDecider: "2de MG Organiser et décider, des objectifs à la réalisation",
+  evaluerEvoluer: "2de MG Évaluer et évoluer, du pilotage aux développements numériques",
+} as const;
+
 export const ATELIER_STMG: AtelierDefinition = {
   code: "stmg",
   titre: "Prendre les commandes de Nova en quatre séances",
-  formations: ["stmg"],
-  annee: "Première et terminale",
+  formations: ["stmg", "seconde-mg"],
+  annee: "Seconde option MG, première et terminale",
   nature: "Animation de découverte",
   traceLabel: "portfolio de compétences",
   referentielLabel: "Thèmes du programme",
@@ -130,6 +148,7 @@ export const ATELIER_STMG: AtelierDefinition = {
         THEMES_STMG.individuActeur,
         THEMES_STMG.rencontreManagement,
         THEMES_STMG.activiteProduction,
+        THEMES_SECONDE_MG.organiserDecider,
       ],
       objectif:
         "Apprendre le jeu avant que rien ne compte : lire le mandat de NOVA, ses trois décisions et son atelier, jouer un trimestre d'essai de bout en bout, lire ses premiers résultats, puis lancer la vraie partie.",
@@ -198,6 +217,7 @@ export const ATELIER_STMG: AtelierDefinition = {
         THEMES_STMG.individuActeur,
         THEMES_STMG.rencontreManagement,
         THEMES_STMG.activiteProduction,
+        THEMES_SECONDE_MG.organiserDecider,
       ],
       objectif:
         "Prendre une première décision de gestion sans cours préalable, puis découvrir ce qu'elle a produit, pour installer le besoin des notions plutôt que de les annoncer.",
@@ -272,6 +292,7 @@ export const ATELIER_STMG: AtelierDefinition = {
         THEMES_STMG.creationValeur,
         THEMES_STMG.tempsRisque,
         THEMES_STMG.organisationsActeurs,
+        THEMES_SECONDE_MG.evaluerEvoluer,
       ],
       objectif:
         "Relier chaque euro du résultat à une décision prise au tour précédent, et corriger une décision en sachant dire ce qu'on en attend.",
@@ -346,6 +367,7 @@ export const ATELIER_STMG: AtelierDefinition = {
         THEMES_STMG.tempsRisque,
         THEMES_STMG.managementStrategique,
         THEMES_STMG.organisationsActeurs,
+        THEMES_SECONDE_MG.organiserDecider,
       ],
       objectif:
         "Décider aujourd'hui pour un trimestre qui n'est pas encore là, en pesant ce que coûte de produire d'avance contre ce que coûte de ne pas pouvoir livrer.",
@@ -421,6 +443,7 @@ export const ATELIER_STMG: AtelierDefinition = {
         THEMES_STMG.numeriqueCollectif,
         THEMES_STMG.choixStrategiques,
         THEMES_STMG.organisationsSociete,
+        THEMES_SECONDE_MG.evaluerEvoluer,
       ],
       objectif:
         "Jouer le trimestre qui décide de l'exercice, puis rendre compte devant la classe de ce que l'équipe a décidé, de ce que cela a donné et de ce qu'elle ferait autrement.",
@@ -495,6 +518,13 @@ export const ATELIER_STMG: AtelierDefinition = {
         "Journée d'intégration, semaine de la spécialité, portes ouvertes.",
       comment:
         "Les quatre séances s'enchaînent avec une pause après la deuxième. Le rythme est plus tendu et le bilan collectif plus court, mais la mémoire des trimestres est meilleure et la classe voit l'année entière dans la même journée, pic compris.",
+    },
+    {
+      nom: "En seconde, option management et gestion",
+      quand:
+        "Au deuxième ou au troisième trimestre de seconde, quand la classe a vu ce qu'est une organisation et comment elle décide.",
+      comment:
+        "Le déroulé ne change pas. Au débriefing, gardez la question de première par son versant organisation : qui décide, avec quelles ressources, et comment on sait si la décision était bonne. La marge et le seuil se nomment sans se calculer : ils seront au programme de première.",
     },
     {
       nom: "Entrée en terminale",
