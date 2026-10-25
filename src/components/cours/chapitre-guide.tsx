@@ -24,6 +24,7 @@ import type {
 import { changerDeSigne, corriger, enSaisie, lireMontant, montantEcrit, type Correction } from "@/pedagogy/cours/correcteur";
 import { chapitreDuCas, etatAvant, indexDeLEtape, journalAvant } from "@/pedagogy/cours/deroule";
 import type { Ecriture } from "@/pedagogy/cours/etats";
+import { cleDeLaQuestion, dansLOrdreAffiche } from "@/pedagogy/cours/ordre-des-options";
 import { Journal, TableauDuCas, VueBilan, VueDEtape, VueResultat } from "./etats-du-cours";
 import { SaisieEcriture } from "./saisie-ecriture";
 import { enregistrerProgressionAction } from "@/app/cours/actions";
@@ -357,7 +358,8 @@ function Options({
 
 function EtapeDeChoix({ etape, cas, chapitre, index, suivi, classe, noter, suite }: PropsDEtape<EtapeChoix>) {
   const avant = etatAvant(chapitre, cas, index);
-  const options = etape.options(cas, avant);
+  // L'ordre écrit met souvent la bonne réponse en tête : la page la mélange, de façon stable.
+  const options = dansLOrdreAffiche(etape.options(cas, avant), cleDeLaQuestion(chapitre.code, etape.id, cas.code));
   const [choisie, setChoisie] = useState<number | null>(null);
   const fait = suivi?.reussi ?? false;
   return (
@@ -784,7 +786,10 @@ function EtapeDeComparaison({ etape, cas, chapitre, index, suivi, classe, noter,
   const k = indexDeLEtape(chapitre, etape.avantLEtape);
   const avant = etatAvant(chapitre, cas, k);
   const apres = etatAvant(chapitre, cas, index);
-  const options = etape.options(cas, avant, apres);
+  const options = dansLOrdreAffiche(
+    etape.options(cas, avant, apres),
+    cleDeLaQuestion(chapitre.code, etape.id, cas.code),
+  );
   const [choisie, setChoisie] = useState<number | null>(null);
   const fait = suivi?.reussi ?? false;
   return (
