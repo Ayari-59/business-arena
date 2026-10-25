@@ -7,7 +7,7 @@
       "inclus": [
         "L'arène en solo sur les 9 entreprises, niveaux 1 à 3 (Découverte, Gestion et Pilotage), en partie complète de 6 tours.",
         "Les fiches notions, le manuel et le guide.",
-        "Un épisode manager de démonstration par métier (5 sur 108), au niveau Découverte, avec son bilan."
+        "Un épisode manager de démonstration par métier (5 sur 110), au niveau Découverte, avec son bilan."
       ],
       "precisions": [
         "Les parties de classe et les concours commencent avec les offres Classe, Programme et Campus."
@@ -99,7 +99,7 @@
   "FORMULE_EN_CLASSE": {
     "nom": "En classe et en école de commerce",
     "inclus": [
-      "Les 108 épisodes, choisis par l'enseignant pour chaque groupe.",
+      "Les 110 épisodes, choisis par l'enseignant pour chaque groupe.",
       "Des cohortes créées depuis l'espace enseignant : les étudiants entrent par un code, sans compte.",
       "La vue de l'animateur, et une fiche de débrief pour les épisodes en classe."
     ]
@@ -112,7 +112,7 @@
     {
       "nom": "Parcours manager",
       "inclus": [
-        "Les 108 épisodes, en autonomie.",
+        "Les 110 épisodes, en autonomie.",
         "Le profil décisionnel, et la recommandation du prochain épisode.",
         "Sans compte à créer : un code de cohorte pour entrer, un code de reprise pour changer d'appareil."
       ]
@@ -129,7 +129,7 @@
       "nom": "Organisme de formation",
       "inclus": [
         "Des animateurs sans limite, des cohortes à volonté.",
-        "Le guide de débrief des 108 épisodes."
+        "Le guide de débrief des 110 épisodes."
       ]
     }
   ],

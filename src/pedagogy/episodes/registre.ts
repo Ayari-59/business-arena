@@ -53,6 +53,8 @@ import { EPISODE_ESCALADE } from "./projet-a-arreter";
 import { EPISODE_RESEAU } from "./reseau-a-redessiner";
 import { EPISODE_REEMPLOI } from "./pari-du-reemploi";
 import { EPISODE_EXCLUSIVITE } from "./grand-compte-exclusif";
+import { EPISODE_LIBRE_SERVICE } from "./libre-service-qui-perd";
+import { EPISODE_BUREAU } from "./bureau-qui-s-echauffe";
 import { EPISODE_YIELD } from "./chambres-bradees";
 import { EPISODE_SEMINAIRE } from "./seminaire-qui-evince";
 import { EPISODE_SURRESERVATION } from "./surreservation";
@@ -163,6 +165,8 @@ export const EPISODES: readonly Episode[] = [
   EPISODE_RESEAU,
   EPISODE_REEMPLOI,
   EPISODE_EXCLUSIVITE,
+  EPISODE_LIBRE_SERVICE,
+  EPISODE_BUREAU,
   EPISODE_YIELD,
   EPISODE_SEMINAIRE,
   EPISODE_SURRESERVATION,

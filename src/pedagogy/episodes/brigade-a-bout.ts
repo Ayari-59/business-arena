@@ -182,7 +182,7 @@ export function axe([information, diagnostic, reflexe, calibrage, pic]: readonly
 
 export const EPISODE_BRIGADE: Episode<Trimestre> = {
   code: "brigade-a-bout",
-  numero: 56,
+  numero: 58,
   domaine: "Management en cuisine",
   titre: "La brigade à bout",
   resume:

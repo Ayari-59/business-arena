@@ -207,7 +207,7 @@ const RH = THECLE;
 
 export const EPISODE_PIC_FETES: Episode<Trimestre> = {
   code: "pic-des-fetes",
-  numero: 105,
+  numero: 107,
   domaine: "Dimensionner les équipes pour un pic saisonnier",
   titre: "Le pic des fêtes",
   resume:

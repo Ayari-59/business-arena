@@ -61,6 +61,8 @@ import * as projetAArreter from "./projet-a-arreter";
 import * as reseauARedessiner from "./reseau-a-redessiner";
 import * as pariDuReemploi from "./pari-du-reemploi";
 import * as grandCompteExclusif from "./grand-compte-exclusif";
+import * as libreServiceQuiPerd from "./libre-service-qui-perd";
+import * as bureauQuiSEchauffe from "./bureau-qui-s-echauffe";
 import * as chambresBradees from "./chambres-bradees";
 import * as seminaireQuiEvince from "./seminaire-qui-evince";
 import * as surreservation from "./surreservation";
@@ -368,6 +370,16 @@ export const TRACES: Readonly<Record<string, TracesDeLEpisode>> = {
     diagnostic: { juste: "dependance", proche: "marge" },
     reflexes: [...grandCompteExclusif.REFLEXES],
     prevision: { juste: 5, proche: 15 },
+  },
+  "libre-service-qui-perd": {
+    diagnostic: { juste: "reception", proche: "dates" },
+    reflexes: [...libreServiceQuiPerd.REFLEXES],
+    prevision: { juste: 3, proche: 8 },
+  },
+  "bureau-qui-s-echauffe": {
+    diagnostic: { juste: "circuit", proche: "charge" },
+    reflexes: [...bureauQuiSEchauffe.REFLEXES],
+    prevision: { juste: 4, proche: 10 },
   },
   "chambres-bradees": {
     diagnostic: { juste: "segments", proche: "semaine" },

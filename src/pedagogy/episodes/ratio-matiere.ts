@@ -178,7 +178,7 @@ export function axe([information, diagnostic, reflexe, calibrage, domaine]: read
 
 export const EPISODE_RATIO_MATIERE: Episode<Trimestre> = {
   code: "ratio-matiere",
-  numero: 53,
+  numero: 55,
   domaine: "Gestion d'un restaurant",
   titre: "Le ratio matière qui dérape",
   resume:

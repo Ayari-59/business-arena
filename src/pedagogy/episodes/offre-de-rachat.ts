@@ -249,7 +249,7 @@ const valeurA = (t: Trimestre, w: number) => (w <= 0 ? TITRES_INDEPENDANTE : t.s
 
 export const EPISODE_OFFRE_RACHAT: Episode<Trimestre> = {
   code: "offre-de-rachat",
-  numero: 108,
+  numero: 110,
   domaine: "Évaluer une offre sur l'entreprise",
   titre: "L'offre de rachat",
   resume:

@@ -206,7 +206,7 @@ export function axe([information, diagnostic, reflexe, calibrage, methode]: read
 
 export const EPISODE_EMBALLAGE: Episode<Trimestre> = {
   code: "pot-a-remplacer",
-  numero: 101,
+  numero: 103,
   domaine: "Conduire un changement d'emballage",
   titre: "Le pot en plastique qu'il faut remplacer",
   resume:

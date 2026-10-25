@@ -192,7 +192,7 @@ export function axe([information, diagnostic, reflexe, calibrage, rester]: reado
 
 export const EPISODE_PENURIE: Episode<Trimestre> = {
   code: "postes-introuvables",
-  numero: 59,
+  numero: 61,
   domaine: "Recrutement en tension",
   titre: "Les postes qu'on ne pourvoit plus",
   resume:

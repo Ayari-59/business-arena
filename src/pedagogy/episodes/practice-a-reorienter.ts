@@ -206,7 +206,7 @@ const marcheDe = (graine: number) => hasard(graine).scenario.id;
 
 export const EPISODE_RECONVERSION: Episode<Trimestre> = {
   code: "practice-a-reorienter",
-  numero: 75,
+  numero: 77,
   domaine: "Reconvertir une équipe",
   titre: "La practice dont le marché s'éteint",
   resume:

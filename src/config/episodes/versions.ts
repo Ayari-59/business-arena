@@ -67,6 +67,8 @@ export const VERSIONS_DES_MODELES: Readonly<Record<string, VersionDuModele>> = {
   "reseau-a-redessiner": { version: 1, empreinte: [360039, -190698, -51721] },
   "pari-du-reemploi": { version: 1, empreinte: [187237, -568746, -25919] },
   "grand-compte-exclusif": { version: 1, empreinte: [277116, -17165, -84313] },
+  "libre-service-qui-perd": { version: 1, empreinte: [25406, -24357, -22505] },
+  "bureau-qui-s-echauffe": { version: 1, empreinte: [9549, -32765, -35590] },
   "chambres-bradees": { version: 1, empreinte: [2151384, 1911616, 2063691] },
   "seminaire-qui-evince": { version: 1, empreinte: [1154473, 1111879, 1121998] },
   surreservation: { version: 1, empreinte: [912726, 833834, 841410] },

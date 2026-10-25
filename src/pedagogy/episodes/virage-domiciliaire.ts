@@ -243,7 +243,7 @@ const valeurA = (t: Trimestre, w: number) => (w <= 0 ? 0 : t.semaines[w]!.valeur
 
 export const EPISODE_VIRAGE: Episode<Trimestre> = {
   code: "virage-domiciliaire",
-  numero: 93,
+  numero: 95,
   domaine: "Repositionner une offre médico-sociale",
   titre: "Le virage vers le domicile",
   resume:

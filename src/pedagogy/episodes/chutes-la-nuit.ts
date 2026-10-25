@@ -206,7 +206,7 @@ export function axe([information, diagnostic, reflexe, calibrage, causes]: reado
 
 export const EPISODE_CHUTES: Episode<Trimestre> = {
   code: "chutes-la-nuit",
-  numero: 85,
+  numero: 87,
   domaine: "Analyser des événements indésirables",
   titre: "Les chutes de la nuit",
   resume:

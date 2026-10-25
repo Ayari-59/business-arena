@@ -242,7 +242,7 @@ function messageDe(quoi: Evenement, t: Trimestre): Message | null {
 
 export const EPISODE_LIVRABLE: Episode<Trimestre> = {
   code: "livrable-refuse",
-  numero: 66,
+  numero: 68,
   domaine: "Qualité d'une mission",
   titre: "Le livrable que le client refuse",
   resume:

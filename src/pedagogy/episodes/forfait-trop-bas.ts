@@ -190,7 +190,7 @@ export function axe([information, diagnostic, reflexe, calibrage, domaine]: read
 
 export const EPISODE_COUT_DU_JOUR: Episode<Trimestre> = {
   code: "forfait-trop-bas",
-  numero: 68,
+  numero: 70,
   domaine: "Coût de revient d'une journée",
   titre: "Le forfait vendu sous son coût",
   resume:

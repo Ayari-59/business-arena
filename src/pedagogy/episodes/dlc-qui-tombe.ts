@@ -220,7 +220,7 @@ export function axe([
 
 export const EPISODE_DLC: Episode<Trimestre> = {
   code: "dlc-qui-tombe",
-  numero: 95,
+  numero: 97,
   domaine: "Arbitrer entre taille de lot et fraîcheur",
   titre: "Les palettes qui périment",
   resume:

@@ -227,7 +227,7 @@ const parSemaine = (t: Trimestre, de: number, a: number) =>
 
 export const EPISODE_SEMINAIRE: Episode<Trimestre> = {
   code: "seminaire-qui-evince",
-  numero: 50,
+  numero: 52,
   domaine: "Groupes et séminaires",
   titre: "Le séminaire qui chasse les clients",
   resume:

@@ -190,7 +190,7 @@ export function axe([information, diagnostic, reflexe, calibrage, flux]: readonl
 
 export const EPISODE_HEBERGEMENT: Episode<Trimestre> = {
   code: "chambres-pas-pretes",
-  numero: 55,
+  numero: 57,
   domaine: "Hébergement et étages",
   titre: "Les chambres pas prêtes à 15 h",
   resume:

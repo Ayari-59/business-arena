@@ -185,7 +185,7 @@ const demissionsA = (t: Trimestre, w: number) => (w <= 0 ? 0 : t.semaines[w]!.de
 
 export const EPISODE_TURNOVER: Episode<Trimestre> = {
   code: "departs-a-deux-ans",
-  numero: 73,
+  numero: 75,
   domaine: "Fidéliser dans un cabinet",
   titre: "Les consultants qui partent à deux ans",
   resume:
