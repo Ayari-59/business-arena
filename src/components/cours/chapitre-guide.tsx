@@ -6,6 +6,7 @@ import { bouton } from "@/components/bouton";
 import { sansMolette } from "@/components/sans-molette";
 import { CONCEPTS } from "@/config/pedagogy/concepts";
 import { PALIERS, PARCOURS, chapitreParCode } from "@/config/cours/registre";
+import { motsDuContenu } from "@/config/cours/situations";
 import type { Cas } from "@/config/cours/cas";
 import type { MissionAffichee } from "@/config/cours/jouez";
 import type {
@@ -210,11 +211,11 @@ interface PropsDEtape<E> {
   suite: () => void;
 }
 
-function BoutonSuite({ suite, dernier }: { suite: () => void; dernier: boolean }) {
+function BoutonSuite({ suite, dernier, code }: { suite: () => void; dernier: boolean; code: string }) {
   return (
     <div>
       <button type="button" className={bouton({ taille: "l" })} onClick={suite}>
-        {dernier ? "Terminer le chapitre" : "Étape suivante"}
+        {dernier ? motsDuContenu(code).terminer : "Étape suivante"}
       </button>
     </div>
   );
@@ -232,6 +233,7 @@ function Lecture({ etape, cas, noter, suite, chapitre, index }: PropsDEtape<Etap
           noter({ reussi: true });
           suite();
         }}
+        code={chapitre.code}
       />
     </>
   );
@@ -307,7 +309,7 @@ function EtapeDEcriture({ etape, cas, chapitre, index, suivi, classe, noter, sui
               <VueDEtape vue={etape.vue} journal={journal} soldes={apres.soldes} avant={avant.soldes} />
             </div>
           )}
-          <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} />
+          <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} code={chapitre.code} />
         </>
       )}
     </>
@@ -390,7 +392,7 @@ function EtapeDeChoix({ etape, cas, chapitre, index, suivi, classe, noter, suite
               <VueDEtape vue={etape.vue} journal={journalAvant(chapitre, cas, index)} soldes={avant.soldes} />
             </div>
           )}
-          <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} />
+          <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} code={chapitre.code} />
         </>
       )}
     </>
@@ -494,7 +496,7 @@ function EtapeDeMontants({ etape, cas, chapitre, index, suivi, classe, noter, su
               <VueDEtape vue={etape.vue} journal={journalAvant(chapitre, cas, index)} soldes={avant.soldes} />
             </div>
           )}
-          <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} />
+          <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} code={chapitre.code} />
         </>
       )}
     </>
@@ -580,7 +582,7 @@ function EtapeDeTri({ etape, cas, chapitre, index, suivi, classe, noter, suite }
       {fait && (
         <>
           <Paragraphes textes={etape.explication(cas)} />
-          <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} />
+          <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} code={chapitre.code} />
         </>
       )}
     </>
@@ -775,7 +777,7 @@ function EtapeDeCurseur({ etape, cas, chapitre, index, suivi, classe, noter, sui
       {fait && (
         <>
           <Paragraphes textes={etape.explication(cas)} />
-          <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} />
+          <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} code={chapitre.code} />
         </>
       )}
     </>
@@ -827,7 +829,7 @@ function EtapeDeComparaison({ etape, cas, chapitre, index, suivi, classe, noter,
               </div>
             ))}
           </div>
-          <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} />
+          <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} code={chapitre.code} />
         </>
       )}
     </>
@@ -846,7 +848,7 @@ function Sommaire({
   aller: (i: number) => void;
 }) {
   return (
-    <nav aria-label="Étapes du chapitre">
+    <nav aria-label={motsDuContenu(chapitre.code).etapes}>
       <ol className="grid gap-0.5 text-sm">
         {chapitre.etapes.map((e, i) => {
           const s = suivi.etapes[e.id];
@@ -936,7 +938,7 @@ function FinDuChapitre({
   return (
     <div className="grid gap-6">
       <div className="grid gap-2">
-        <p className="text-sm font-semibold uppercase tracking-etiquette text-amber-300">Chapitre terminé</p>
+        <p className="text-sm font-semibold uppercase tracking-etiquette text-amber-300">{motsDuContenu(chapitre.code).termine}</p>
         <h2 className="text-3xl font-bold leading-tight text-slate-50">{chapitre.titre}</h2>
         <p className="text-lg text-slate-200">
           {duPremierCoup} étape{duPremierCoup > 1 ? "s" : ""} réussie{duPremierCoup > 1 ? "s" : ""} du premier coup sur {notees.length}, chez {cas.entreprise}.
@@ -953,7 +955,7 @@ function FinDuChapitre({
       {mission && <EtMaintenantJouezLe mission={mission} cas={cas} />}
       <Notions codes={notions} />
       <details className="papier rounded-xl p-4">
-        <summary className="cursor-pointer font-semibold">Le journal complet du chapitre</summary>
+        <summary className="cursor-pointer font-semibold">{motsDuContenu(chapitre.code).journal}</summary>
         <div className="mt-3">
           <Journal journal={journal} />
         </div>
@@ -1119,7 +1121,7 @@ export function ChapitreGuide({
               <Sommaire chapitre={chapitre} courant={courant} suivi={suivi} aller={(i) => setVue(i)} />
             </div>
             <details className="carte p-3 lg:hidden">
-              <summary className="cursor-pointer text-sm font-semibold">Les étapes du chapitre</summary>
+              <summary className="cursor-pointer text-sm font-semibold">{motsDuContenu(chapitre.code).etapes}</summary>
               <div className="mt-2">
                 <Sommaire chapitre={chapitre} courant={courant} suivi={suivi} aller={(i) => setVue(i)} />
               </div>

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { bouton } from "@/components/bouton";
 import { SubmitButton } from "@/components/submit-button";
 import { PiedDePage } from "@/components/pied-de-page";
+import { ArticulationDuCours } from "@/components/articulation-du-cours";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { CHAPITRES, PALIERS, PARCOURS, PROGRAMME } from "@/config/cours/registre";
 import { dureeDuChapitre, dureeEnClair } from "@/config/cours/duree";
@@ -143,6 +144,8 @@ export default async function CoursPage({
               </ul>
             </details>
           </section>
+
+          <ArticulationDuCours />
 
           <section aria-labelledby="catalogue" className="grid gap-6">
             <div className="grid gap-2">
