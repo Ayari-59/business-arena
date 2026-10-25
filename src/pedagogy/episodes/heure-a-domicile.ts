@@ -180,7 +180,7 @@ export function axe([
 
 export const EPISODE_HEURE_DOMICILE: Episode<Trimestre> = {
   code: "heure-a-domicile",
-  numero: 86,
+  numero: 88,
   domaine: "Coût de revient d'une heure d'intervention",
   titre: "L'heure d'aide à domicile",
   resume:

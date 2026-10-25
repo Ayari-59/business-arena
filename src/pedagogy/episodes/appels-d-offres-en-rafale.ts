@@ -241,7 +241,7 @@ function notification(x: Trimestre["issues"][number]): Message {
 
 export const EPISODE_GO_NO_GO: Episode<Trimestre> = {
   code: "appels-d-offres-en-rafale",
-  numero: 66,
+  numero: 67,
   domaine: "Choisir où répondre",
   titre: "Les appels d'offres en rafale",
   resume:

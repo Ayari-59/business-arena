@@ -180,7 +180,7 @@ export function axe([information, diagnostic, reflexe, calibrage, facturer]: rea
 
 export const EPISODE_EN_COURS: Episode<Trimestre> = {
   code: "factures-qui-dorment",
-  numero: 71,
+  numero: 72,
   domaine: "Facturation et trésorerie d'un cabinet",
   titre: "Le travail fait qu'on n'a pas facturé",
   resume:

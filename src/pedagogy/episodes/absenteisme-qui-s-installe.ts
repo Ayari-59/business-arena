@@ -196,7 +196,7 @@ export function axe([information, diagnostic, reflexe, calibrage, causes]: reado
 
 export const EPISODE_ABSENTEISME: Episode<Trimestre> = {
   code: "absenteisme-qui-s-installe",
-  numero: 90,
+  numero: 92,
   domaine: "Comprendre et réduire l'absentéisme",
   titre: "L'absentéisme qui s'installe",
   resume:

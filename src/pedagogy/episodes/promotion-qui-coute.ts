@@ -204,7 +204,7 @@ function messageReduite(b: BilanOperation): string {
 
 export const EPISODE_PROMOTION: Episode<Trimestre> = {
   code: "promotion-qui-coute",
-  numero: 100,
+  numero: 102,
   domaine: "Mesurer le vrai gain d'une promotion",
   titre: "La promotion qui remplit les caddies",
   resume:

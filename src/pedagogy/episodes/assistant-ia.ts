@@ -213,7 +213,7 @@ function messageOrvanne(choix: number, graine: number): Message[] | null {
 
 export const EPISODE_IA: Episode<Trimestre> = {
   code: "assistant-ia",
-  numero: 78,
+  numero: 79,
   domaine: "Intégrer l'IA dans un cabinet",
   titre: "L'assistant d'IA qui change le métier",
   resume:

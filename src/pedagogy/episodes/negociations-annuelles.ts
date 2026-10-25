@@ -280,7 +280,7 @@ function reponseDuPremierMars(t: Trimestre, chemin: readonly number[]): Message[
 
 export const EPISODE_NEGOCIATIONS: Episode<Trimestre> = {
   code: "negociations-annuelles",
-  numero: 99,
+  numero: 101,
   domaine: "Négocier avec une centrale d'achat",
   titre: "Les négociations du 1er mars",
   resume:

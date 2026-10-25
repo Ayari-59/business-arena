@@ -189,7 +189,7 @@ export function axe([information, diagnostic, reflexe, calibrage, travail]: read
 
 export const EPISODE_DOSSIER_SOINS: Episode<Trimestre> = {
   code: "dossier-de-soins",
-  numero: 88,
+  numero: 90,
   domaine: "Faire adopter un outil par les soignants",
   titre: "Le dossier de soins que personne ne remplit",
   resume:

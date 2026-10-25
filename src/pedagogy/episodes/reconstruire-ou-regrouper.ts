@@ -272,7 +272,7 @@ const nomScenario = (s: number) => SCENARIOS[s]!.nom;
 
 export const EPISODE_RECONSTRUCTION: Episode<Trimestre> = {
   code: "reconstruire-ou-regrouper",
-  numero: 93,
+  numero: 95,
   domaine: "Décider d'un investissement immobilier",
   titre: "Reconstruire ou regrouper",
   resume:

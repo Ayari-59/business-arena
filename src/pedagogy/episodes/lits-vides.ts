@@ -198,7 +198,7 @@ const lectureVides = (v: number) => nombre(v, 1);
 
 export const EPISODE_ADMISSIONS: Episode<Trimestre> = {
   code: "lits-vides",
-  numero: 81,
+  numero: 82,
   domaine: "Piloter les admissions",
   titre: "Les lits qui restent vides",
   resume:

@@ -67,6 +67,7 @@ import { EPISODE_RENOVATION } from "./renovation-sans-fermer";
 import { EPISODE_SAISONNIERS } from "./saisonniers-de-juillet";
 import { EPISODE_PENURIE } from "./postes-introuvables";
 import { EPISODE_APPRENTIS } from "./apprentis-qui-decrochent";
+import { EPISODE_DIPLOME } from "./diplome-qui-compte";
 import { EPISODE_CUISINE_CENTRALE } from "./cuisine-centrale";
 import { EPISODE_SPA } from "./spa-a-financer";
 import { EPISODE_ENSEIGNE } from "./enseigne-a-la-porte";
@@ -88,6 +89,7 @@ import { EPISODE_POSITIONNEMENT } from "./generaliste-ou-specialiste";
 import { EPISODE_ADMISSIONS } from "./lits-vides";
 import { EPISODE_PARCOURS } from "./sorties-qui-bloquent";
 import { EPISODE_FAMILLES } from "./famille-qui-ecrit";
+import { EPISODE_REPIT } from "./repit-a-creer";
 import { EPISODE_INTERIM } from "./interim-qui-flambe";
 import { EPISODE_SECTIONS } from "./section-en-deficit";
 import { EPISODE_HEURE_DOMICILE } from "./heure-a-domicile";
@@ -106,6 +108,7 @@ import { EPISODE_RAPPEL } from "./lot-a-rappeler";
 import { EPISODE_NEGOCIATIONS } from "./negociations-annuelles";
 import { EPISODE_PROMOTION } from "./promotion-qui-coute";
 import { EPISODE_MDD } from "./appel-d-offres-mdd";
+import { EPISODE_EDI } from "./edi-qui-s-impose";
 import { EPISODE_COLLECTE } from "./producteurs-qui-arretent";
 import { EPISODE_EMBALLAGE } from "./pot-a-remplacer";
 import { EPISODE_ENERGIE_USINE } from "./energie-de-l-usine";
@@ -179,6 +182,7 @@ export const EPISODES: readonly Episode[] = [
   EPISODE_SAISONNIERS,
   EPISODE_PENURIE,
   EPISODE_APPRENTIS,
+  EPISODE_DIPLOME,
   EPISODE_CUISINE_CENTRALE,
   EPISODE_SPA,
   EPISODE_ENSEIGNE,
@@ -200,6 +204,7 @@ export const EPISODES: readonly Episode[] = [
   EPISODE_ADMISSIONS,
   EPISODE_PARCOURS,
   EPISODE_FAMILLES,
+  EPISODE_REPIT,
   EPISODE_INTERIM,
   EPISODE_SECTIONS,
   EPISODE_HEURE_DOMICILE,
@@ -218,6 +223,7 @@ export const EPISODES: readonly Episode[] = [
   EPISODE_NEGOCIATIONS,
   EPISODE_PROMOTION,
   EPISODE_MDD,
+  EPISODE_EDI,
   EPISODE_COLLECTE,
   EPISODE_EMBALLAGE,
   EPISODE_ENERGIE_USINE,

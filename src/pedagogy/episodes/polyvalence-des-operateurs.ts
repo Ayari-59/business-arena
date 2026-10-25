@@ -211,7 +211,7 @@ function binomes(l: Lecture) {
 
 export const EPISODE_POLYVALENCE: Episode<Trimestre> = {
   code: "polyvalence-des-operateurs",
-  numero: 105,
+  numero: 108,
   domaine: "Développer la polyvalence d'une équipe de production",
   titre: "La ligne qui s'arrête quand il manque quelqu'un",
   resume:

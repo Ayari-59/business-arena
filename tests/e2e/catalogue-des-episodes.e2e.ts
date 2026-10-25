@@ -77,7 +77,8 @@ describe("le catalogue des épisodes (/entreprises/episode)", () => {
     await page.locator("#secteur-sante > details > summary").click();
     const sante = page.locator("#secteur-sante");
     expect(await sante.getByRole("heading", { name: "Accueillir et orienter" }).isVisible()).toBe(true);
-    expect(await sante.getByRole("link", { name: /Jouer l'épisode/ }).count()).toBe(15);
+    // Seize épisodes depuis « Le répit à créer » (octobre 2026).
+    expect(await sante.getByRole("link", { name: /Jouer l'épisode/ }).count()).toBe(16);
     await page.close();
   });
 
@@ -147,7 +148,8 @@ describe("le catalogue des épisodes (/entreprises/episode)", () => {
       expect(r.hauteur, r.texte ?? "").toBeLessThanOrEqual(64);
     }
     await page.locator("#secteur-hotellerie > details > summary").click();
-    expect(await page.locator("#secteur-hotellerie").getByRole("link", { name: /Jouer l'épisode/ }).count()).toBe(15);
+    // Seize épisodes depuis « Le diplôme qui compte » (octobre 2026).
+    expect(await page.locator("#secteur-hotellerie").getByRole("link", { name: /Jouer l'épisode/ }).count()).toBe(16);
     expect(await debordement(page)).toBeLessThanOrEqual(0);
     await contexte.close();
   });

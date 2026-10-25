@@ -31,6 +31,11 @@
  * décisions sont des gestes d'équipier, deux par bloc du CAP ; dans « Le
  * bureau qui s'échauffe », un employé de bureau en seconde professionnelle,
  * dont cinq décisions sur six se jouent dans la relation avec les autres.
+ *
+ * Trois épisodes de lycée font de même sans changer de famille, parce qu'ils
+ * se rangent sous un titre de leur secteur : l'administration des ventes de
+ * la laiterie face à l'EDI, la personne qui porte un projet d'accueil de
+ * répit, l'assistance aux ressources humaines qui recrute les saisonniers.
  */
 
 // Les intitulés cités, une fois chacun : une faute de frappe se verrait
@@ -53,6 +58,9 @@ const RHC_COHESION =
 const SIG_NUMERISATION = "STMG Thème 1 · Organisation et numérisation";
 const SIG_PERFORMANCE = "STMG Thème 2 · Management du système d'information et performance";
 const SIG_DECISION = "STMG Thème 3 · Information, action et décision";
+const SIG_ECHANGE = "STMG Thème 4 · Système d'information et échange";
+const MG_ENTREPRENDRE = "2de MG S'engager et entreprendre, de l'intention à la création";
+const SES_DIPLOME = "2de SES · Quelles relations entre le diplôme, l'emploi et le salaire ?";
 const EPC_COMMANDES = "CAP EPC Bloc 1 · Recevoir et suivre les commandes";
 const EPC_RAYON = "CAP EPC Bloc 2 · Mettre en valeur et approvisionner";
 const EPC_CLIENT =
@@ -129,4 +137,26 @@ export const BLOCS_DES_EPISODES: Readonly<Record<string, readonly string[]>> = {
   // d'un double paiement (D4), contrôler une facture contre le bon signé
   // (D5), relire ses saisies et réclamer les avoirs avant la clôture (D6).
   "bureau-qui-s-echauffe": [GATL_RELATIONS, GATL_ADMINISTRATIF],
+  // L'élève tient l'administration des ventes, pas la direction. Échanger
+  // entre organisations : relier le logiciel de gestion aux messages EDI de
+  // l'enseigne (D1), mettre les fiches articles aux codes du standard commun
+  // (D2), adopter le canal sécurisé que les partenaires savent lire (D3),
+  // émettre des factures électroniques structurées par une plateforme agréée
+  // (D4), partager avec le transporteur l'avis d'expédition et l'étiquette
+  // normalisés (D5), choisir les partenaires à raccorder selon le coût d'un
+  // échange (D6).
+  "edi-qui-s-impose": [SIG_ECHANGE],
+  // L'élève porte le projet, de l'intention à la création : vérifier le
+  // besoin auprès des familles (D1), choisir la forme du projet (D2), réunir
+  // la mairie, les bénévoles et les financeurs (D3), bâtir le calendrier
+  // d'ouverture (D4), calculer un modèle économique et son seuil (D5),
+  // mesurer l'utilité sociale (D6).
+  "repit-a-creer": [MG_ENTREPRENDRE],
+  // L'élève assiste le service des ressources humaines. Lire le tableau de
+  // l'emploi et du salaire selon le diplôme pour chercher les titulaires du
+  // CAP (D1), placer chacun au poste qui demande sa qualification (D2), payer
+  // selon la grille du diplôme et de l'expérience (D3), constater ce que pèse
+  // le réseau (D4), comparer diplôme et expérience, et la VAE (D5), expliquer
+  // un écart de salaire par la grille (D6).
+  "diplome-qui-compte": [SES_DIPLOME],
 };

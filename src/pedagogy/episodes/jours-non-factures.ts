@@ -184,7 +184,7 @@ export function axe([information, diagnostic, reflexe, calibrage, domaine]: read
 
 export const EPISODE_REALISATION: Episode<Trimestre> = {
   code: "jours-non-factures",
-  numero: 69,
+  numero: 70,
   domaine: "Piloter la marge des missions",
   titre: "Les jours qu'on ne facture pas",
   resume:
