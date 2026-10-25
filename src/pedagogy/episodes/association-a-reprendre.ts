@@ -256,7 +256,7 @@ const capitale = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export const EPISODE_REPRISE: Episode<Trimestre> = {
   code: "association-a-reprendre",
-  numero: 92,
+  numero: 94,
   domaine: "Reprendre un établissement en difficulté",
   titre: "L'association qui demande à être reprise",
   resume:

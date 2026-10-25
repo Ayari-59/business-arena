@@ -192,7 +192,7 @@ export function axe([
 
 export const EPISODE_CUISINE_CENTRALE: Episode<Trimestre> = {
   code: "cuisine-centrale",
-  numero: 61,
+  numero: 63,
   domaine: "Mutualiser la production",
   titre: "La cuisine centrale qu'on n'attendait pas",
   resume:

@@ -203,7 +203,7 @@ const AOURELL = {
 
 export const EPISODE_PERIMETRE: Episode<Trimestre> = {
   code: "client-qui-en-demande-plus",
-  numero: 65,
+  numero: 67,
   domaine: "Tenir le périmètre d'une mission",
   titre: "Le client qui en demande toujours plus",
   resume:

@@ -184,7 +184,7 @@ export function axe([information, diagnostic, reflexe, calibrage, cycle]: readon
 
 export const EPISODE_INTERSAISON: Episode<Trimestre> = {
   code: "intersaison",
-  numero: 54,
+  numero: 56,
   domaine: "Trésorerie saisonnière",
   titre: "L'intersaison qui assèche la caisse",
   resume:

@@ -298,7 +298,7 @@ function suites(chemin: readonly number[], graine: number, de: number, a: number
 
 export const EPISODE_DOUZE_HEURES: Episode<Trimestre> = {
   code: "postes-de-douze-heures",
-  numero: 87,
+  numero: 89,
   domaine: "Réorganiser les temps de travail",
   titre: "Passer en douze heures",
   resume:

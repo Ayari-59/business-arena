@@ -247,7 +247,7 @@ const valeurA = (t: Trimestre, w: number) => (w <= 0 ? 0 : t.semaines[w]!.valeur
 
 export const EPISODE_SORTIE_ASSOCIE: Episode<Trimestre> = {
   code: "associe-qui-part",
-  numero: 77,
+  numero: 79,
   domaine: "Valoriser un cabinet",
   titre: "L'associé qui veut vendre ses parts",
   resume:

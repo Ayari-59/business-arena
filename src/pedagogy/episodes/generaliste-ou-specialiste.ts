@@ -235,7 +235,7 @@ const nomScenario = { porteur: "renforcé", moyen: "reconduit", gel: "gelé" } a
 
 export const EPISODE_POSITIONNEMENT: Episode<Trimestre> = {
   code: "generaliste-ou-specialiste",
-  numero: 78,
+  numero: 80,
   domaine: "Positionner un cabinet",
   titre: "Rester généraliste ou se spécialiser",
   resume:

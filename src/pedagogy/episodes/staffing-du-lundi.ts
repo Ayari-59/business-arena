@@ -188,7 +188,7 @@ export function axe([information, diagnostic, reflexe, calibrage, valeur]: reado
 
 export const EPISODE_STAFFING: Episode<Trimestre> = {
   code: "staffing-du-lundi",
-  numero: 70,
+  numero: 72,
   domaine: "Affecter les consultants",
   titre: "Le staffing du lundi",
   resume:

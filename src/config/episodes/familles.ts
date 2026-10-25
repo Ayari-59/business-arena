@@ -243,6 +243,20 @@ export const FAMILLES: readonly Famille[] = [
     ],
   },
   {
+    // LE POINT DE VUE DE L'EMPLOYÉ (octobre 2026). Tous les autres épisodes
+    // font jouer un responsable ; ceux-ci font jouer un équipier ou un employé,
+    // pour les entrées du CAP et de la seconde professionnelle qui décrivent
+    // des gestes d'employé (voir « LE POINT DE VUE » dans blocs.ts). La
+    // famille vient en dernier du négoce : les fiches enseignant gardent les
+    // numéros 31 à 48, et les décomptes du rapport les trente premiers.
+    code: "premier-poste",
+    titre: "Le premier poste",
+    secteur: "negoce",
+    texte:
+      "Recevoir, ranger, conseiller, accueillir, travailler avec les autres : ces épisodes se jouent depuis un poste d'employé ou d'équipier, pour le lycée professionnel et le CAP, et non depuis celui du responsable.",
+    episodes: ["libre-service-qui-perd", "bureau-qui-s-echauffe"],
+  },
+  {
     code: "hotel-remplir",
     titre: "Remplir l'hôtel",
     secteur: "hotellerie",

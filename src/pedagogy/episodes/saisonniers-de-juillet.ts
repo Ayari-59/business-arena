@@ -192,7 +192,7 @@ const raisons = [
 
 export const EPISODE_SAISONNIERS: Episode<Trimestre> = {
   code: "saisonniers-de-juillet",
-  numero: 58,
+  numero: 60,
   domaine: "Intégrer une équipe saisonnière",
   titre: "Les saisonniers de juillet",
   resume:

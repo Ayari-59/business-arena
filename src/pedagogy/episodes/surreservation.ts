@@ -185,7 +185,7 @@ export function axe([information, diagnostic, reflexe, calibrage, soir]: readonl
 
 export const EPISODE_SURRESERVATION: Episode<Trimestre> = {
   code: "surreservation",
-  numero: 51,
+  numero: 53,
   domaine: "Coût d'une chambre vide",
   titre: "Les chambres vendues deux fois",
   resume:

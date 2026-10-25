@@ -213,7 +213,7 @@ function texteEchantillons(graine: number): string {
 
 export const EPISODE_RAPPEL: Episode<Trimestre> = {
   code: "lot-a-rappeler",
-  numero: 96,
+  numero: 98,
   domaine: "Décider sous une alerte sanitaire",
   titre: "Le lot qu'il faut peut-être rappeler",
   resume:

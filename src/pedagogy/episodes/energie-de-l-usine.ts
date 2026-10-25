@@ -222,7 +222,7 @@ export function axe([information, diagnostic, reflexe, calibrage, methode]: read
 
 export const EPISODE_ENERGIE_USINE: Episode<Trimestre> = {
   code: "energie-de-l-usine",
-  numero: 102,
+  numero: 104,
   domaine: "Réduire la consommation d'énergie d'une usine",
   titre: "La facture d'énergie de l'usine",
   resume:

@@ -178,7 +178,7 @@ export function axe([information, diagnostic, reflexe, calibrage, chantier]: rea
 
 export const EPISODE_RENOVATION: Episode<Trimestre> = {
   code: "renovation-sans-fermer",
-  numero: 57,
+  numero: 59,
   domaine: "Travaux en exploitation",
   titre: "La rénovation sans fermer",
   resume:

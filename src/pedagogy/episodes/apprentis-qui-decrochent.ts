@@ -223,7 +223,7 @@ export function axe([information, diagnostic, reflexe, calibrage, former]: reado
 
 export const EPISODE_APPRENTIS: Episode<Trimestre> = {
   code: "apprentis-qui-decrochent",
-  numero: 60,
+  numero: 62,
   domaine: "Former en alternance",
   titre: "Les apprentis qui décrochent",
   resume:

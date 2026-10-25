@@ -189,7 +189,7 @@ const nomDeLEte = (s: number) => SCENARIOS[s]!.nom;
 
 export const EPISODE_YIELD: Episode<Trimestre> = {
   code: "chambres-bradees",
-  numero: 49,
+  numero: 51,
   domaine: "Revenue management",
   titre: "Les chambres qu'on brade",
   resume:

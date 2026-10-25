@@ -247,7 +247,7 @@ const NOMS_DES_ETATS: Record<(typeof ETATS)[number], string> = {
 
 export const EPISODE_VEGETAL: Episode<Trimestre> = {
   code: "gamme-vegetale",
-  numero: 107,
+  numero: 109,
   domaine: "Lancer une innovation sur un marché incertain",
   titre: "La gamme végétale",
   resume:

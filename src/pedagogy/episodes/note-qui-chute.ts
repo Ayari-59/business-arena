@@ -189,7 +189,7 @@ export function axe([information, diagnostic, reflexe, calibrage, prix]: readonl
 
 export const EPISODE_NOTE_EN_LIGNE: Episode<Trimestre> = {
   code: "note-qui-chute",
-  numero: 52,
+  numero: 54,
   domaine: "Qualité et expérience client",
   titre: "La note qui chute",
   resume:

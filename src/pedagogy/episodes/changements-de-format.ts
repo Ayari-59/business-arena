@@ -180,7 +180,7 @@ export function axe([
 
 export const EPISODE_CHANGEMENTS_FORMAT: Episode<Trimestre> = {
   code: "changements-de-format",
-  numero: 94,
+  numero: 96,
   domaine: "Décomposer le TRS d'une ligne",
   titre: "Les changements qui mangent la ligne",
   resume:

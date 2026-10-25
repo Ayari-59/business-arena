@@ -199,7 +199,7 @@ const nomOuRien = (i: number | null | undefined) => (i != null && i >= 0 ? NOMS_
 
 export const EPISODE_EVALUATION: Episode<Trimestre> = {
   code: "promotion-refusee",
-  numero: 72,
+  numero: 74,
   domaine: "Évaluer et dire les choses",
   titre: "La promotion qu'il faudra refuser",
   resume:

@@ -46,11 +46,12 @@ const debordement = (page: Page) =>
   page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
 
 describe("le catalogue des épisodes (/entreprises/episode)", () => {
-  it("à l'arrivée : neuf tiroirs de thème, quatre de métier, tous fermés ; toutes les cartes y sont", async () => {
+  it("à l'arrivée : dix tiroirs de thème, quatre de métier, tous fermés ; toutes les cartes y sont", async () => {
     const page = await navigateur.newPage({ viewport: { width: 1280, height: 800 }, locale: "fr-FR" });
     await enseignantSousLicence(page.context(), { episodes: true });
     await aller(page, "/entreprises/episode");
-    expect(await page.locator("[data-tiroir-de-theme] > details").count()).toBe(9);
+    // Dix thèmes depuis la famille « Le premier poste » (octobre 2026).
+    expect(await page.locator("[data-tiroir-de-theme] > details").count()).toBe(10);
     expect(await page.locator("[data-tiroir-de-metier] > details").count()).toBe(4);
     expect(await ouverts(page)).toBe(0);
     expect(
@@ -139,7 +140,8 @@ describe("le catalogue des épisodes (/entreprises/episode)", () => {
         return { largeur: r.width, hauteur: r.height, texte: s.textContent };
       }),
     );
-    expect(resumes).toHaveLength(13);
+    // Dix tiroirs de thème et quatre de métier.
+    expect(resumes).toHaveLength(14);
     for (const r of resumes) {
       expect(r.largeur, r.texte ?? "").toBeGreaterThan(340);
       expect(r.hauteur, r.texte ?? "").toBeLessThanOrEqual(64);

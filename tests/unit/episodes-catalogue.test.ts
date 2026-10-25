@@ -35,7 +35,9 @@ describe("le rangement du catalogue", () => {
     expect(arvel.familles.map((f) => f.famille.code)).toEqual(
       FAMILLES.filter((f) => f.secteur === "negoce").map((f) => f.code),
     );
-    expect(arvel.familles).toHaveLength(9);
+    // Dix thèmes depuis la famille « Le premier poste » (octobre 2026), où l'on
+    // joue un équipier ou un employé plutôt qu'un responsable.
+    expect(arvel.familles).toHaveLength(10);
   });
 
   it("les autres entreprises tiennent chacune dans un tiroir de métier, dans l'ordre des secteurs", () => {
@@ -74,17 +76,18 @@ function rendre(entreprises = catalogue): string {
 describe("le catalogue rendu", () => {
   const html = rendre();
 
-  it("chaque carte une fois ; neuf tiroirs de thème et quatre de métier, tous fermés à l'arrivée", () => {
+  it("chaque carte une fois ; dix tiroirs de thème et quatre de métier, tous fermés à l'arrivée", () => {
     for (const ep of EPISODES) {
       expect(html.split(`data-ep="${ep.code}"`).length - 1, ep.code).toBe(1);
     }
-    expect(html.match(/data-tiroir-de-theme="/g) ?? []).toHaveLength(9);
+    // Le négoce compte dix thèmes depuis la famille « Le premier poste ».
+    expect(html.match(/data-tiroir-de-theme="/g) ?? []).toHaveLength(10);
     expect(html.match(/data-tiroir-de-metier="/g) ?? []).toHaveLength(4);
     const tiroirs = html.match(/<details\b[^>]*>/g) ?? [];
-    expect(tiroirs).toHaveLength(13);
+    expect(tiroirs).toHaveLength(14);
     for (const t of tiroirs) expect(t).not.toMatch(/\bopen\b/);
     // Le chevron commun du site (lot P5), un par tiroir.
-    expect(html.match(/data-chevron=""/g) ?? []).toHaveLength(13);
+    expect(html.match(/data-chevron=""/g) ?? []).toHaveLength(14);
   });
 
   it("les ancres de la page d'avant existent toutes, une fois, et le sommaire ne vise que des ancres de la page", () => {
@@ -94,8 +97,9 @@ describe("le catalogue rendu", () => {
     for (const f of FAMILLES) expect(ids, f.code).toContain(ancreDeLaFamille(f.code));
     const sommaire = html.slice(html.indexOf("<nav"), html.indexOf("</nav>"));
     const cibles = [...sommaire.matchAll(/href="#([^"]+)"/g)].map((m) => m[1]!);
-    // Arvel et ses neuf thèmes, puis les quatre autres métiers.
-    expect(cibles).toHaveLength(1 + 9 + 4);
+    // Arvel et ses dix thèmes (le dixième, « Le premier poste », depuis octobre
+    // 2026), puis les quatre autres métiers.
+    expect(cibles).toHaveLength(1 + 10 + 4);
     for (const c of cibles) expect(ids, c).toContain(c);
   });
 

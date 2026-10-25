@@ -227,7 +227,7 @@ export function axe([information, diagnostic, reflexe, calibrage, amont]: readon
 
 export const EPISODE_COLLECTE: Episode<Trimestre> = {
   code: "producteurs-qui-arretent",
-  numero: 100,
+  numero: 102,
   domaine: "Sécuriser son approvisionnement agricole",
   titre: "Les producteurs qui arrêtent",
   resume:

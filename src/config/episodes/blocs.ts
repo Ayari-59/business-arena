@@ -21,11 +21,16 @@
  * économique, pas la création d'une entreprise, et il ne coche donc pas le
  * thème « S'engager et entreprendre » de la seconde.
  *
- * LE POINT DE VUE. L'élève joue un responsable dans tous les épisodes. Une
- * entrée qui décrit le geste d'un employé ou d'un équipier (le CAP Équipier
- * polyvalent du commerce, les relations interpersonnelles de la seconde GA-TL)
- * n'est donc pas cochée par un épisode qui la fait seulement décider d'en
- * haut : ces entrées attendent des situations écrites à hauteur d'employé.
+ * LE POINT DE VUE. L'élève joue un responsable dans tous les épisodes, sauf
+ * ceux de la famille « Le premier poste ». Une entrée qui décrit le geste d'un employé ou d'un équipier (le CAP
+ * Équipier polyvalent du commerce, les relations interpersonnelles de la
+ * seconde GA-TL) n'est donc pas cochée par un épisode qui la fait seulement
+ * décider d'en haut : ces entrées attendent des situations écrites à hauteur
+ * d'employé. La famille « Le premier poste » les réunit : dans « Le
+ * libre-service qui perd », l'élève joue un équipier en CAP, et ses six
+ * décisions sont des gestes d'équipier, deux par bloc du CAP ; dans « Le
+ * bureau qui s'échauffe », un employé de bureau en seconde professionnelle,
+ * dont cinq décisions sur six se jouent dans la relation avec les autres.
  */
 
 // Les intitulés cités, une fois chacun : une faute de frappe se verrait
@@ -33,6 +38,7 @@
 const RC_OMNICANAL = "2de pro RC Intégrer la relation client dans un cadre « omnicanal »";
 const RC_INFORMATION =
   "2de pro RC Collecter et exploiter l'information dans le cadre de la relation client";
+const GATL_RELATIONS = "2de pro GATL 1 · Gérer des relations interpersonnelles";
 const GATL_ADMINISTRATIF =
   "2de pro GATL 3 · Mettre en œuvre et contrôler les processus administratifs";
 const GATL_REGLEMENTATION =
@@ -47,6 +53,10 @@ const RHC_COHESION =
 const SIG_NUMERISATION = "STMG Thème 1 · Organisation et numérisation";
 const SIG_PERFORMANCE = "STMG Thème 2 · Management du système d'information et performance";
 const SIG_DECISION = "STMG Thème 3 · Information, action et décision";
+const EPC_COMMANDES = "CAP EPC Bloc 1 · Recevoir et suivre les commandes";
+const EPC_RAYON = "CAP EPC Bloc 2 · Mettre en valeur et approvisionner";
+const EPC_CLIENT =
+  "CAP EPC Bloc 3 · Conseiller et accompagner le client dans son parcours d'achat";
 
 export const BLOCS_DES_EPISODES: Readonly<Record<string, readonly string[]>> = {
   // Trier et dater les demandes à distance, préparer réponses types et FAQ,
@@ -102,4 +112,21 @@ export const BLOCS_DES_EPISODES: Readonly<Record<string, readonly string[]>> = {
   "panne-qui-paralyse": [SIG_PERFORMANCE],
   // Un projet de système d'information qui glisse : jalons, périmètre, coût.
   "projet-qui-glisse": [SIG_PERFORMANCE],
+  // L'élève joue l'équipier. Bloc 1 : pointer la livraison avec le bon de
+  // commande et écrire les réserves (D1), ranger ce qui périme le plus tôt
+  // devant et préparer les commandes clients la veille (D2). Bloc 2 :
+  // réassortir d'après les ventes de la veille et remettre en façade (D3),
+  // corriger les étiquettes, poser le balisage, déclarer la démarque et faire
+  // l'inventaire tournant (D4). Bloc 3 : accueillir le particulier, le
+  // questionner, le conseiller et proposer les produits utiles (D5), régler
+  // sur place le retrait incomplet d'une commande du site (D6).
+  "libre-service-qui-perd": [EPC_COMMANDES, EPC_RAYON, EPC_CLIENT],
+  // L'élève joue l'employé de bureau. Relations : accueillir le transporteur
+  // en colère (D2), régler en face le désaccord avec une collègue (D3), dire
+  // une erreur à sa responsable (D4), répondre au client agacé (D5), recevoir
+  // une remarque sur son travail (D6). Processus administratifs : rapprocher
+  // bon de commande, bon de livraison et facture (D1), faire établir l'avoir
+  // d'un double paiement (D4), contrôler une facture contre le bon signé
+  // (D5), relire ses saisies et réclamer les avoirs avant la clôture (D6).
+  "bureau-qui-s-echauffe": [GATL_RELATIONS, GATL_ADMINISTRATIF],
 };
