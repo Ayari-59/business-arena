@@ -571,6 +571,13 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Retrouvez ce que le personnel a coûté dans le tour. Quelle part des ventes du tour lui a été consacrée, et ce chiffre bougerait-il si les ventes baissaient ?",
   }),
+  "salaire-brut-net-cout": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le compte de résultat.`,
+    lieux: ["compte-de-resultat"],
+    chercher:
+      "Retrouvez ce que le personnel a coûté dans le tour, et divisez-le par l'effectif : c'est le coût d'un salarié, cotisations patronales comprises. Combien ce salarié reçoit-il en net, à peu près ?",
+  }),
   "tableau-de-bord-commercial": (c) => ({
     niveau: 2,
     faire: `${partie(c, 2)} Jouez quatre tours. À chaque tour, relevez la demande adressée, vos ventes, votre part de marché et votre marge.`,
