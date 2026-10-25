@@ -55,6 +55,7 @@ export const COMMUNICATION: Chapitre = {
   palier: 1,
   blocs: [
     "STMG Thème 3 · La communication de l'offre",
+    "BUT TC · Communiquer l'offre commerciale",
   ],
   titre: "Ce que rapporte la communication",
   accroche:

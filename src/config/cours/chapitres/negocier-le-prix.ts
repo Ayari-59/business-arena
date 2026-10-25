@@ -85,6 +85,7 @@ export const NEGOCIER_LE_PRIX: Chapitre = {
   palier: 2,
   blocs: [
     "BTS NDRC Bloc 1 · Relation client et négociation-vente",
+    "BUT TC · Vendre une offre commerciale",
   ],
   titre: "Négocier le prix : marge de manœuvre et prix plancher",
   accroche:

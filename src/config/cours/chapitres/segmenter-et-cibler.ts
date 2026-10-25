@@ -105,6 +105,8 @@ export const SEGMENTER_ET_CIBLER: Chapitre = {
   palier: 1,
   blocs: [
     "STMG Thème 1 · La définition de l'offre",
+    "BUT TC · Conduire les actions marketing",
+    "BUT GACO · Concevoir la démarche marketing",
   ],
   titre: "Segmenter et cibler",
   accroche:

@@ -71,6 +71,9 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
   palier: 4,
   blocs: [
     "BTS MCO Bloc 4 · Manager l'équipe commerciale",
+    "Bac pro AGORA Bloc 3 · Administrer le personnel",
+    "2de pro GATL 2 · Organiser et planifier l'activité",
+    "BUT TC · Manager une équipe commerciale sur un espace de vente",
   ],
   titre: "L'équipe et son planning",
   accroche:

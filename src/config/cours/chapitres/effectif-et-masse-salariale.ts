@@ -57,6 +57,8 @@ export const EFFECTIF_ET_MASSE_SALARIALE: Chapitre = {
   blocs: [
     "STMG Thème 1 · De l'individu à l'acteur",
     "STMG Thème 2 · Des facteurs de motivation et de satisfaction : qualité de vie au travail et rémunération",
+    "BTS SAM Bloc 3 · Collaboration à la gestion des ressources humaines",
+    "BUT GACO · Participer au pilotage RH de l'organisation",
   ],
   titre: "L'effectif et la masse salariale",
   accroche:

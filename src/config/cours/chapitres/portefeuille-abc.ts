@@ -76,6 +76,9 @@ export const PORTEFEUILLE_ABC: Chapitre = {
   palier: 4,
   blocs: [
     "BTS NDRC Bloc 1 · Relation client et négociation-vente",
+    "Bac pro MCV Bloc 4B · Prospecter et valoriser l'offre commerciale",
+    "BUT TC · Manager la relation client",
+    "BUT GACO · Assurer le développement des affaires, de la prospection à la fidélisation",
   ],
   titre: "Le portefeuille clients : la méthode ABC",
   accroche:

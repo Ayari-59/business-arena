@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ATELIERS, dureeTotaleHeures } from "@/config/ateliers";
+import { ParagrapheSurMesure } from "@/components/encart-sur-mesure";
 import { PARCOURS } from "@/config/parcours";
 import {
   AU_DELA_DES_SEANCES,
@@ -348,6 +349,20 @@ export default async function PageDuDiplome({
                   {parcours.recommended.notes}
                 </p>
               </div>
+            ) : null}
+            {ateliers.length === 0 ? (
+              <p
+                data-sans-atelier=""
+                className="rounded-lg border border-white/5 bg-slate-900 px-4 py-3 text-sm leading-relaxed text-slate-400"
+              >
+                Aucun atelier de l&apos;arène n&apos;est encore écrit pour ce
+                diplôme : ce qui le travaille aujourd&apos;hui, ce sont les
+                chapitres du cours, et le tableau dit lesquels. Un atelier se
+                construit sur mesure, sur les blocs de ce référentiel.
+              </p>
+            ) : null}
+            {ateliers.length === 0 ? (
+              <ParagrapheSurMesure className="text-sm leading-relaxed text-slate-400" />
             ) : null}
             <ul className="grid gap-2">
               {ateliers.map((a) => (

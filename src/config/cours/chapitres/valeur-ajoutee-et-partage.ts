@@ -53,6 +53,7 @@ export const VALEUR_AJOUTEE: Chapitre = {
   blocs: [
     "STMG Thème 3 · Création de valeur et performance",
     "STMG Thème 2 · Analyser la situation de l'entreprise",
+    "2de SES · Comment crée-t-on des richesses et comment les mesure-t-on ?",
   ],
   titre: "La valeur ajoutée et son partage",
   accroche:

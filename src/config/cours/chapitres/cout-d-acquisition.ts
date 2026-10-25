@@ -70,6 +70,8 @@ export const COUT_D_ACQUISITION: Chapitre = {
   palier: 3,
   blocs: [
     "BTS NDRC Bloc 2 · Relation client à distance et digitalisation",
+    "Bac pro MCV Bloc 4B · Prospecter et valoriser l'offre commerciale",
+    "BUT TC · Gérer une activité digitale",
   ],
   titre: "Le coût d'acquisition et la rentabilité d'une campagne",
   accroche:

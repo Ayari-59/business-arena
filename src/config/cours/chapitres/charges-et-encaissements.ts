@@ -69,6 +69,7 @@ export const CHARGES_ET_ENCAISSEMENTS: Chapitre = {
     "STMG Thème 3 · Création de valeur et performance",
     "STMG Thème 4 · Temps et risque",
     "STMG Thème 1 · Appliquer les règles comptables",
+    "Bac pro AGORA Bloc 2 · Organiser et suivre l'activité de production (de biens ou de services)",
   ],
   titre: "Charges et produits, encaissements et décaissements",
   accroche:

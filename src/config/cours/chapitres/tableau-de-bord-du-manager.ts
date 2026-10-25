@@ -114,6 +114,7 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
   palier: 4,
   blocs: [
     "BTS MCO Bloc 3 · Assurer la gestion opérationnelle",
+    "BUT TC · Piloter un espace de vente",
   ],
   titre: "Le tableau de bord du manager",
   accroche:

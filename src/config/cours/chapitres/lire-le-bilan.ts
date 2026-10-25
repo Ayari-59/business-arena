@@ -51,6 +51,8 @@ export const LIRE_LE_BILAN: Chapitre = {
   palier: 1,
   blocs: [
     "STMG Thème 2 · Analyser la situation de l'entreprise",
+    "Bac pro AGORA Bloc 2 · Organiser et suivre l'activité de production (de biens ou de services)",
+    "2de MG · Évaluer et évoluer, du pilotage aux développements numériques",
   ],
   titre: "Le bilan : ce que l'entreprise possède et ce qu'elle doit",
   accroche:

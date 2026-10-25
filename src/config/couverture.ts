@@ -1,8 +1,7 @@
 import { ATELIERS } from "./ateliers";
 import {
-  adosseAUnReferentiel,
-  blocOfficiel,
-  REFERENTIELS,
+  blocOfficielDans,
+  REFERENTIELS_DES_FORMATIONS,
   referentielDeCitation,
   type Referentiel,
 } from "./ateliers/referentiels";
@@ -294,28 +293,11 @@ export interface BlocDeLaFormation extends BlocDuDiplome {
   chapitres: ChapitreQuiCouvre[];
 }
 
-/** La formation dont relève un référentiel : celle de l'atelier qui porte sa clé. */
-function formationDuReferentiel(code: string): string | null {
-  return ATELIERS.find((a) => a.code === code)?.formations[0] ?? null;
-}
-
-/**
- * La clé du référentiel d'une formation. Elle est celle d'un atelier, puisque
- * c'est ainsi que le registre est rangé : n'importe lequel des ateliers
- * adossés de la formation la donne.
- */
-function cleDeLaFormation(formation: string): string | undefined {
-  return ATELIERS.find(
-    (a) => a.formations.includes(formation) && adosseAUnReferentiel(a.code),
-  )?.code;
-}
-
 /** Le référentiel lu sur le texte auquel la formation s'adosse ; null s'il n'a pas été lu. */
 export function referentielDeLaFormation(
   formation: string,
 ): Referentiel | null {
-  const cle = cleDeLaFormation(formation);
-  return (cle && REFERENTIELS[cle]) || null;
+  return REFERENTIELS_DES_FORMATIONS[formation] ?? null;
 }
 
 /**
@@ -330,8 +312,8 @@ export function blocsDuChapitre(
 ): string[] {
   const officiels = chapitre.blocs.flatMap((bloc) => {
     const cite = referentielDeCitation(bloc);
-    if (!cite || formationDuReferentiel(cite.code) !== formation) return [];
-    const officiel = blocOfficiel(bloc, cite.code);
+    if (!cite || cite.code !== formation) return [];
+    const officiel = blocOfficielDans(bloc, cite.referentiel);
     return officiel ? [officiel] : [];
   });
   return [...new Set(officiels)];
@@ -385,7 +367,7 @@ export function couvertureDeLaFormation(
   formation: string,
 ): BlocDeLaFormation[] {
   const siens = ATELIERS.filter((a) => a.formations.includes(formation));
-  const cle = cleDeLaFormation(formation);
+  const texte = referentielDeLaFormation(formation);
 
   const parBloc = new Map<
     string,
@@ -405,10 +387,10 @@ export function couvertureDeLaFormation(
       for (const bloc of seance.processus) {
         if (multiple) {
           const cite = referentielDeCitation(bloc);
-          if (!cite || formationDuReferentiel(cite.code) !== formation)
+          if (!cite || cite.code !== formation)
             continue;
         }
-        const officiel = cle ? blocOfficiel(bloc, cle) : null;
+        const officiel = texte ? blocOfficielDans(bloc, texte) : null;
         const k = officiel ?? bloc;
         parCle.set(k, [...(parCle.get(k) ?? []), seance.numero]);
         libelleDe.set(k, bloc);
@@ -417,7 +399,7 @@ export function couvertureDeLaFormation(
     for (const [k, numeros] of parCle) {
       const vu = parBloc.get(k) ?? {
         libelles: new Set<string>(),
-        officiel: cle ? blocOfficiel(libelleDe.get(k)!, cle) : null,
+        officiel: texte ? blocOfficielDans(libelleDe.get(k)!, texte) : null,
         presences: [],
       };
       vu.libelles.add(libelleDe.get(k)!);
@@ -457,8 +439,8 @@ export function couvertureDeLaFormation(
     for (const p of vu.presences) {
       const brut = couvertureDeLAtelier(p.code).find(
         (b) =>
-          (cle
-            ? (blocOfficiel(b.referentiel, cle) ?? b.referentiel)
+          (texte
+            ? (blocOfficielDans(b.referentiel, texte) ?? b.referentiel)
             : b.referentiel) === k,
       );
       if (!brut) continue;
@@ -573,11 +555,15 @@ export function coursDeLaFormation(
   })).filter((g) => g.chapitres.length > 0);
 }
 
-/** Les formations qui ont leur page : celles qu'un atelier ou le cours sert. */
+/**
+ * Les formations qui ont leur page : celles qu'un atelier ou le cours sert, et celles dont le
+ * référentiel est lu, même si rien ne les travaille encore : leur page dit alors ce qui manque.
+ */
 export function formationsAvecUnePage(): Formation[] {
   return FORMATIONS.filter(
     (f) =>
       ATELIERS.some((a) => a.formations.includes(f.code)) ||
-      coursDeLaFormation(f.code).length > 0,
+      coursDeLaFormation(f.code).length > 0 ||
+      referentielDeLaFormation(f.code) !== null,
   );
 }

@@ -47,6 +47,41 @@ export interface Formation {
 }
 
 export const FORMATIONS: readonly Formation[] = [
+  {
+    code: "seconde-mg",
+    nom: "Seconde générale et technologique, enseignement optionnel de management et gestion",
+    sigle: "2de option MG",
+  },
+  {
+    code: "seconde-ses",
+    nom: "Seconde générale et technologique, sciences économiques et sociales",
+    sigle: "2de SES",
+  },
+  {
+    code: "seconde-pro-rc",
+    nom: "Seconde professionnelle, famille des métiers de la relation client",
+    sigle: "2de pro RC",
+  },
+  {
+    code: "seconde-pro-gatl",
+    nom: "Seconde professionnelle, famille des métiers de la gestion administrative, du transport et de la logistique",
+    sigle: "2de pro GATL",
+  },
+  {
+    code: "cap-epc",
+    nom: "CAP Équipier polyvalent du commerce",
+    sigle: "CAP EPC",
+  },
+  {
+    code: "bac-pro-agora",
+    nom: "Baccalauréat professionnel Assistance à la gestion des organisations et de leurs activités",
+    sigle: "Bac pro AGORA",
+  },
+  {
+    code: "bac-pro-mcv",
+    nom: "Baccalauréat professionnel Métiers du commerce et de la vente",
+    sigle: "Bac pro MCV",
+  },
   { code: "stmg", nom: "Baccalauréat STMG", sigle: "STMG" },
   { code: "bts-cg", nom: "BTS Comptabilité et Gestion", sigle: "BTS CG" },
   {
@@ -60,6 +95,11 @@ export const FORMATIONS: readonly Formation[] = [
     sigle: "BTS NDRC",
   },
   { code: "bts-gpme", nom: "BTS Gestion de la PME", sigle: "BTS GPME" },
+  {
+    code: "bts-sam",
+    nom: "BTS Support à l'action managériale",
+    sigle: "BTS SAM",
+  },
   {
     code: "bts-mhr",
     nom: "BTS Management en hôtellerie-restauration",
@@ -76,7 +116,18 @@ export const FORMATIONS: readonly Formation[] = [
     nom: "BUT Gestion des entreprises et des administrations",
     sigle: "BUT GEA",
   },
+  {
+    code: "but-tc",
+    nom: "BUT Techniques de commercialisation",
+    sigle: "BUT TC",
+  },
+  {
+    code: "but-gaco",
+    nom: "BUT Gestion administrative et commerciale des organisations",
+    sigle: "BUT GACO",
+  },
   { code: "dcg", nom: "DCG", sigle: "DCG" },
+  { code: "dscg", nom: "DSCG", sigle: "DSCG" },
 ];
 
 const PAR_CODE = new Map(FORMATIONS.map((f) => [f.code, f]));

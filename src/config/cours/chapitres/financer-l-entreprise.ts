@@ -66,6 +66,7 @@ export const FINANCER_L_ENTREPRISE: Chapitre = {
   blocs: [
     "STMG Thème 4 · Temps et risque",
     "STMG Thème 3 · Accompagner la prise de décision",
+    "BUT GACO · Entreprendre dans un contexte de reprise ou de création d'organisation",
   ],
   titre: "Financer l'entreprise : autofinancement ou emprunt",
   accroche:
