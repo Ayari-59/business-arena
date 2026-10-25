@@ -35,6 +35,7 @@ export function motsDuContenu(code: string) {
         termine: "Mise en situation terminée",
         etapes: "Les étapes de la mise en situation",
         journal: "Le journal complet de la mise en situation",
+        recommencer: "Recommencer la mise en situation",
       }
     : {
         reserve: "Ce chapitre est réservé",
@@ -42,5 +43,6 @@ export function motsDuContenu(code: string) {
         termine: "Chapitre terminé",
         etapes: "Les étapes du chapitre",
         journal: "Le journal complet du chapitre",
+        recommencer: "Recommencer le chapitre",
       };
 }

@@ -16,6 +16,7 @@ import {
 import { getGuestUserId } from "@/lib/guest";
 import { getSession } from "@/lib/session";
 import { accesAuxEpisodes, niveauxDeLEpisode, suitUneCohorte } from "@/services/acces.service";
+import { coursDeLEpisode } from "@/pedagogy/cours/suites";
 
 /**
  * L'accès se lit à chaque ouverture (licence de la cohorte ou du compte) : la page se
@@ -92,7 +93,12 @@ export default async function EpisodePage({
           déclarée garde l'encre de la donnée. */}
       <main id="main" data-metier={teinteDuMetierDeLEpisode(code)} className="relative overflow-x-clip">
         {niveaux.length > 0 ? (
-          <EpisodeJoue code={code} niveaux={niveaux} offre={acces.licence ? null : offre} />
+          <EpisodeJoue
+            code={code}
+            niveaux={niveaux}
+            offre={acces.licence ? null : offre}
+            cours={coursDeLEpisode(code)}
+          />
         ) : (
           <EpisodeFerme code={code} eleve={eleve} demosReglees={acces.demos ?? EPISODES_DE_DEMO} />
         )}

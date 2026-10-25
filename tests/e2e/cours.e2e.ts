@@ -8,6 +8,8 @@ import { CHAPITRES, PARCOURS, PROGRAMME, chapitreParCode } from "../../src/confi
 import { SITUATIONS, motsDuContenu } from "../../src/config/cours/situations";
 import { programmeDuDiplome } from "../../src/config/cours/programme";
 import { THEMES, themeDuChapitre } from "../../src/config/cours/themes";
+import { CONCEPTS } from "../../src/config/pedagogy/concepts";
+import { chapitresDeLaNotion, suitesDuChapitre } from "../../src/pedagogy/cours/suites";
 import { enSaisie } from "../../src/pedagogy/cours/correcteur";
 import { chapitreDuCas, etatAvant, indexDeLEtape } from "../../src/pedagogy/cours/deroule";
 
@@ -520,9 +522,43 @@ describe.each([
     await expect
       .poll(() => page.locator("main").innerText(), { timeout: 15_000 })
       .toContain(`${notees} étapes réussies du premier coup sur ${notees}`);
+    // Et ensuite : les mises en situation qui reprennent le chapitre, ou les chapitres que la situation reprend.
+    const suites = suitesDuChapitre(chapitre.code);
+    const lus = (attribut: string) =>
+      page.locator(`[data-et-ensuite] [${attribut}]`).evaluateAll((xs, a) => xs.map((x) => x.getAttribute(a)), attribut);
+    expect(await lus("data-suite-situation")).toEqual(suites.situations.map((l) => l.code));
+    expect(await lus("data-chapitre-repris")).toEqual(suites.reprend.map((l) => l.code));
+    expect(await lus("data-suite-episode")).toEqual(suites.episodes.map((l) => l.code));
     if (telephone) expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await ctx.close();
   }, 240_000);
+});
+
+describe("les liens dans les deux sens", () => {
+  it("l'ancre d'un thème ouvre son tiroir dans le catalogue", async () => {
+    const page = await nouvellePage(390, 844);
+    await aller(page, "/cours#theme-vente");
+    await expect.poll(() => page.locator('details[data-theme="vente"]').evaluate((d) => (d as HTMLDetailsElement).open)).toBe(true);
+    expect(await page.locator('details[data-theme="marketing"]').evaluate((d) => (d as HTMLDetailsElement).open)).toBe(false);
+    await page.context().close();
+  }, 60_000);
+
+  it("une fiche notion nomme les chapitres qui la font vivre, et y mène", async () => {
+    const notion = CONCEPTS.find((c) => chapitresDeLaNotion(c.code).length > 0)!;
+    const premier = chapitresDeLaNotion(notion.code)[0]!;
+    const page = await nouvellePage(390, 844);
+    await aller(page, `/notions#${notion.code}`);
+    const fiche = page.locator(`details[id="${notion.code}"]`);
+    // L'ancre peut déjà avoir ouvert la fiche : on ne la referme pas.
+    if (!(await fiche.evaluate((d) => (d as HTMLDetailsElement).open))) await fiche.locator("summary").click();
+    const lien = fiche.locator(`[data-dans-le-cours] [data-chapitre-de-la-notion="${premier.code}"]`);
+    expect(await lien.innerText()).toBe(premier.titre);
+    await lien.click();
+    await page.waitForURL(new RegExp(`/cours/${premier.code}`));
+    expect(await page.locator("main").innerText()).toContain(premier.titre);
+    expect(await debordement(page)).toBeLessThanOrEqual(0);
+    await page.context().close();
+  }, 60_000);
 });
 
 describe("un chapitre qui ne vaut pas pour toutes les entreprises", () => {

@@ -7,7 +7,8 @@ import { useEffect } from "react";
  *
  * Les épisodes sont rangés dans des tiroirs fermés. Une adresse qui vise une
  * famille (`#vendre`, `#hotel-remplir`) ou un secteur (`#secteur-sante`) doit
- * montrer ce qu'elle vise, pas un tiroir fermé. Trois cas :
+ * montrer ce qu'elle vise, pas un tiroir fermé. Quatre cas :
+ *   · la cible EST un tiroir (un thème du cours, `#theme-vente`) : on l'ouvre ;
  *   · la cible PORTE un tiroir (`:scope > details`) : on l'ouvre ;
  *   · la cible est DANS un tiroir (une famille rangée dans le tiroir de son
  *     métier) : on ouvre chaque tiroir qui la contient ;
@@ -19,14 +20,14 @@ import { useEffect } from "react";
  *
  * Sans JavaScript, l'ancre mène au bon titre, et le tiroir s'ouvre d'un clic.
  */
-export function OuvreLeTiroirVise({ prefixeDeFamille }: { prefixeDeFamille: string }) {
+export function OuvreLeTiroirVise({ prefixeDeFamille = null }: { prefixeDeFamille?: string | null }) {
   useEffect(() => {
     const cibleDe = (hash: string): HTMLElement | null => {
       const id = decodeURIComponent(hash.replace(/^#/, ""));
       if (!id) return null;
       const directe = document.getElementById(id);
       if (directe) return directe;
-      return id.startsWith(prefixeDeFamille)
+      return prefixeDeFamille && id.startsWith(prefixeDeFamille)
         ? document.getElementById(id.slice(prefixeDeFamille.length))
         : null;
     };
@@ -34,6 +35,10 @@ export function OuvreLeTiroirVise({ prefixeDeFamille }: { prefixeDeFamille: stri
       const cible = cibleDe(hash);
       if (!cible) return;
       let change = false;
+      if (cible instanceof HTMLDetailsElement && !cible.open) {
+        cible.open = true;
+        change = true;
+      }
       const porte = cible.querySelector(":scope > details");
       if (porte instanceof HTMLDetailsElement && !porte.open) {
         porte.open = true;

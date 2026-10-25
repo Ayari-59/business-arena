@@ -3,6 +3,7 @@ import { devices, type Browser, type Page } from "playwright-core";
 import { BASE, ouvrirNavigateur } from "./helpers/browser";
 import { enseignantSousLicence } from "./helpers/licence";
 import { EPISODES } from "../../src/pedagogy/episodes/registre";
+import { coursDeLEpisode } from "../../src/pedagogy/cours/suites";
 
 /**
  * L'ÉPISODE MANAGER, JOUÉ DE BOUT EN BOUT DANS UN VRAI NAVIGATEUR.
@@ -155,6 +156,13 @@ describe("l'épisode « Le trimestre qui dérape »", () => {
     expect(await page.getByText("Vérifier la cause avant d'agir").count()).toBe(1);
     expect(await page.getByText("vous avez choisi la remise 3 fois sur 3").count()).toBe(1);
     expect(await debordement(page)).toBeLessThanOrEqual(0);
+    // Sous le bilan, le cours du thème : ses chapitres, dans leur ordre.
+    const cours = coursDeLEpisode("trimestre-qui-derape")!;
+    expect(
+      await page
+        .locator(`[data-cours-du-theme="${cours.theme.code}"] [data-chapitre-du-theme]`)
+        .evaluateAll((xs) => xs.map((x) => x.getAttribute("data-chapitre-du-theme"))),
+    ).toEqual(cours.chapitres.map((c) => c.code));
 
     // Recommencer avec les mêmes aléas ramène à la première décision…
     await bouton(page, "Recommencer avec les mêmes aléas").click();
