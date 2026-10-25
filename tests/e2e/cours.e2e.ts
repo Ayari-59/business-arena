@@ -4,7 +4,8 @@ import { aller, ouvrirNavigateur } from "./helpers/browser";
 import { enseignantSousLicence } from "./helpers/licence";
 import { casDeLEntreprise } from "../../src/config/cours/cas";
 import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
-import { CHAPITRES, PARCOURS, PROGRAMME } from "../../src/config/cours/registre";
+import { CHAPITRES, PARCOURS, PROGRAMME, chapitreParCode } from "../../src/config/cours/registre";
+import { SITUATIONS } from "../../src/config/cours/situations";
 import { programmeDuDiplome } from "../../src/config/cours/programme";
 import { THEMES, themeDuChapitre } from "../../src/config/cours/themes";
 import { enSaisie } from "../../src/pedagogy/cours/correcteur";
@@ -67,6 +68,13 @@ describe("/cours : le catalogue par thème et le chapitre libre", () => {
       return prevus > CHAPITRES.filter((c) => c.parcours === p.code).length;
     });
     expect(await page.locator("[data-a-venir]").count()).toBe(aVenir.length);
+    // Chaque mise en situation paraît une fois, sous le thème des chapitres qu'elle reprend.
+    for (const s of SITUATIONS) {
+      expect(
+        await page.locator(`details[data-theme="${themeDuChapitre(s.reprend[0]!)!.code}"] [data-situation-de-cours="${s.code}"]`).count(),
+        s.code,
+      ).toBe(1);
+    }
     expect(await debordement(page)).toBeLessThanOrEqual(0);
     await page.context().close();
   }, 60_000);
@@ -434,6 +442,9 @@ describe.each([
   { code: "effectif-et-masse-salariale", entreprise: "batiment", telephone: true },
   { code: "salaire-brut-net-cout", entreprise: "hotel" },
   { code: "salaire-brut-net-cout", entreprise: "fitness", telephone: true },
+  // Les mises en situation s'ouvrent et se jouent comme un chapitre réservé.
+  { code: "suivre-la-baisse-du-concurrent", entreprise: "nova" },
+  { code: "suivre-la-baisse-du-concurrent", entreprise: "hotel", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé ; sous licence, il se joue sans faute", async () => {
     const libre = await nouvellePage();
@@ -443,7 +454,7 @@ describe.each([
 
     const code = entreprise;
     const cas = casDeLEntreprise(code);
-    const chapitre = chapitreDuCas(CHAPITRES.find((c) => c.code === chapitreCode)!, cas);
+    const chapitre = chapitreDuCas(chapitreParCode(chapitreCode)!, cas);
     const ctx = await navigateur.newContext({
       viewport: telephone ? { width: 390, height: 844 } : { width: 1280, height: 900 },
       hasTouch: telephone ?? false,

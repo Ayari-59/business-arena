@@ -9,6 +9,7 @@ import {
   tableauDeCouverture,
 } from "../couverture";
 import type { Chapitre } from "./types";
+import { SITUATIONS, type Situation } from "./situations";
 import { THEMES, type Theme } from "./themes";
 
 /**
@@ -33,6 +34,8 @@ export interface ProgrammeDuDiplome {
   themes: readonly { theme: Theme; chapitres: readonly Chapitre[] }[];
   /** Les épisodes qui citent un bloc du diplôme, dans l'ordre des familles. */
   episodes: readonly string[];
+  /** Les mises en situation qui reprennent au moins un chapitre du programme. */
+  situations: readonly Situation[];
 }
 
 export function programmeDuDiplome(code: string): ProgrammeDuDiplome | null {
@@ -66,6 +69,7 @@ export function programmeDuDiplome(code: string): ProgrammeDuDiplome | null {
     })),
     themes,
     episodes: FAMILLES.flatMap((f) => f.episodes).filter((e) => avecBloc.has(e)),
+    situations: SITUATIONS.filter((s) => s.reprend.some((c) => siens.has(c))),
   };
 }
 
