@@ -807,7 +807,8 @@ export function tableauDeBord(
   if (semaine === 0) {
     return {
       trs: DEPART.trs,
-      heuresChangements: HEURES_CHANGEMENTS,
+      // Pas de valeur avant la première semaine : c'est la prévision demandée à l'élève.
+      heuresChangements: null,
       service: 0.99,
       pertesCumul: 0,
       cumul: 0,

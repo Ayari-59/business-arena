@@ -72,7 +72,7 @@ export const FICHE: FicheEnseignant = {
       "Même source : au passe, quatre cuisiniers envoient (Lubin, Sinan, Bleuenn et Yazid). Lou-Anne, du matin, est partie à 15 h, et Gabin, l'apprenti, aide à la plonge : ils ne comptent pas.",
       "Charge du coup de feu : 90 / 4 = 22,5 couverts par cuisinier. Le repère des Tables d'Augustin est de 18 : au-delà, les assiettes retournées montent en flèche.",
       "Pour revenir au repère, il faut 90 / 18 = 5 cuisiniers au passe, soit un de plus. Les midis du mardi et du mercredi en ont cinq pour 64 couverts étalés sur deux heures : c'est là qu'il se prend.",
-      "Le chiffre ne dépend pas du hasard : 22,5 pour toute la classe. L'épisode le juge juste à 1 couvert près, proche à 3. Le tableau de bord de la cuisine affiche ce même indicateur dès la semaine 1 : l'exercice est de savoir le refaire à partir des sources, et de dire ce qu'il implique.",
+      "Le chiffre ne dépend pas du hasard : 22,5 pour toute la classe. L'épisode le juge juste à 1 couvert près, proche à 3. Le tableau de bord de la cuisine ne montre cet indicateur qu'une fois la prévision faite : l'exercice est de le calculer à partir des sources, et de dire ce qu'il implique.",
     ],
     erreurs: [
       {
@@ -157,5 +157,5 @@ export const FICHE: FicheEnseignant = {
     "L'élève distingue, sur une de ses décisions, la qualité du choix lue sur les trente tirages et le résultat obtenu sous le tirage n° 12.",
   ],
   vigilance:
-    "Le tableau de bord de la cuisine affiche dès la semaine 1 l'indicateur que la prévision demande (22,5 couverts par cuisinier au coup de feu) : un élève attentif le recopie sans le calculer. Faites refaire le calcul sur papier, ou demandez de le justifier par les sources. Le modèle compte aussi les heures supplémentaires à un coût horaire moyen, sans distinguer les tranches de majoration.",
+    "Le modèle compte les heures supplémentaires à un coût horaire moyen, sans distinguer les tranches de majoration.",
 };

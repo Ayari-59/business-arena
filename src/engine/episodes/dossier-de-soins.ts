@@ -722,7 +722,8 @@ export function tableauDeBord(
   if (semaine === 0) {
     return {
       usage: USAGE_DEPART,
-      heuresDouble: HEURES_DOUBLE_DEPART,
+      // Pas de valeur avant la première semaine : c'est la prévision demandée à l'élève.
+      heuresDouble: null,
       erreurs: 0,
       absenteisme: absenteisme(TENSION_DEPART),
       solde: 0,

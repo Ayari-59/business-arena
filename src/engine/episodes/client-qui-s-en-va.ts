@@ -476,7 +476,7 @@ export function simuler(chemin: readonly number[], graine: number, jours = 0): T
     if (d2 === 2 && w >= 4) cout += COUTS.remiseMatin * ca;
     if (d3 === 1 && w === 6) listeEnvoyee = aLaListe ? enBaisse : 120;
     if (d3 === 1 && w >= 6) {
-      // Huit pour cent sur ce qu'achètent les destinataires ; sans liste, la moitié sont des fidèles.
+      // Six pour cent (COUTS.remiseCiblee) sur ce qu'achètent les destinataires ; sans liste, la moitié sont des fidèles.
       const caCible = aLaListe
         ? enBaisse * CA_ARTISAN * PART_EN_BAISSE
         : listeEnvoyee * CA_ARTISAN * (0.5 + 0.5 * PART_EN_BAISSE);

@@ -142,7 +142,7 @@ export const RENFORT_CONVENTION = 1.4;
 /** Quand la commission reste mensuelle, l'hôpital n'envoie qu'une part de ce qu'il promet. */
 export const PART_SANS_REPONSE_RAPIDE = 0.1;
 export const DEMANDES_RESEAU = 0.5;
-/** L'hôpital accepte la convention environ trois fois sur quatre. */
+/** L'hôpital accepte la convention environ quatre fois sur cinq. */
 export const CHANCE_CONVENTION = 0.8;
 /** Orchidia signe sa propre convention avec l'hôpital : plus souvent quand vous répondez lentement. */
 export const CHANCE_ORCHIDIA = { rapide: 0.3, lent: 0.55 } as const;
@@ -341,7 +341,7 @@ export function hasard(graine: number): Hasard {
 /** La commission se réunit chaque semaine : la réponse en 72 heures est tenable. */
 export const reponseRapide = (chemin: readonly number[]) => chemin[D.lits] === O.lits.circuit;
 
-/** L'hôpital accepte-t-il la convention ? Trois fois sur quatre, quel que soit le reste. */
+/** L'hôpital accepte-t-il la convention ? Quatre fois sur cinq, quel que soit le reste. */
 export const conventionAcceptee = (chemin: readonly number[], graine: number) =>
   chemin[D.prescripteurs] === O.prescripteurs.convention &&
   hasard(graine).uConvention < CHANCE_CONVENTION;

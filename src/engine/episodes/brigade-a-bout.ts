@@ -612,7 +612,8 @@ export function tableauDeBord(
   if (semaine === 0) {
     return {
       margeCumulee: 0,
-      chargePic: COUP_DE_FEU_DEPART,
+      // Pas de valeur avant la première semaine : c'est la prévision demandée à l'élève.
+      chargePic: null,
       heuresSup: HEURES_SUP_DEPART,
       absences: 2.75,
       retours: 0.022,
