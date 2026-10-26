@@ -1,6 +1,7 @@
 import type { Cas } from "./cas";
 import { fournisseursDe } from "./chapitres/taux-de-marque";
 import { ECART_DE_PRIX } from "./decision";
+import { BUDGET_DE_FORMATION_EN_ECHELLES, ECART_D_INDICE, EMBAUCHES } from "./ressources-humaines";
 import { SEUILS_ABC } from "./negociation";
 import { scenarioByCode, scenarioCodeForLevel } from "../scenarios/registry";
 import { LES_OFFRES_DE_L_ARENE } from "../tarifs";
@@ -119,6 +120,13 @@ export const LIEUX_DE_L_ARENE = {
     reperes: [
       { fichier: "src/components/dashboard-tabs.tsx", texte: 'label: "Synthèse"' },
       { fichier: "src/components/period-dashboard.tsx", texte: 'data-testid="portefeuille-tour"' },
+    ],
+  },
+  "rh-du-tour": {
+    chemin: "Résultats › Finance › la ligne « RH · effectif », sous les états financiers",
+    reperes: [
+      { fichier: "src/components/dashboard-tabs.tsx", texte: 'label: "Finance"' },
+      { fichier: "src/components/period-dashboard.tsx", texte: "RH · effectif {r.hr.headcount}" },
     ],
   },
   feuille: {
@@ -577,6 +585,36 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     lieux: ["compte-de-resultat"],
     chercher:
       "Retrouvez ce que le personnel a coûté dans le tour, et divisez-le par l'effectif : c'est le coût d'un salarié, cotisations patronales comprises. Combien ce salarié reçoit-il en net, à peu près ?",
+  }),
+  // Les décisions de l'équipe (embauches, budget de formation, salaires) s'ouvrent au niveau 3 :
+  // les missions des chapitres qui les font jouer s'y placent, comme l'année que l'arène rejoue.
+  recruter: (c) => ({
+    niveau: 3,
+    faire: `${partie(c, 3)} Au premier tour, mettez ${EMBAUCHES} dans « Embauches » de la feuille de décision, puis jouez deux tours.`,
+    lieux: ["feuille", "rh-du-tour"],
+    chercher:
+      "Suivez la ligne « RH · effectif » tour après tour : quand la personne embauchée arrive-t-elle, et de combien le coût RH du tour monte-t-il ? Les ventes ont-elles monté assez pour le payer ?",
+  }),
+  "remuneration-et-motivation": (c) => ({
+    niveau: 3,
+    faire: `${partie(c, 3)} Au premier tour, mettez ${Math.round((1 - ECART_D_INDICE) * 100)} dans « Salaires (marché = 100) », puis jouez deux tours sans y retoucher.`,
+    lieux: ["feuille", "rh-du-tour"],
+    chercher:
+      "La ligne « RH · effectif » annonce-t-elle une démission ? Comparez l'effectif et le coût RH du tour à ceux du premier tour : l'économie vaut-elle ce que l'équipe a perdu ?",
+  }),
+  former: (c) => ({
+    niveau: 3,
+    faire: `${partie(c, 3)} Au premier tour, mettez ${(scenarioByCode(c.code).scenario.hr!.trainingScale * BUDGET_DE_FORMATION_EN_ECHELLES).toLocaleString("fr-FR")} € dans « Budget formation », puis jouez deux tours.`,
+    lieux: ["feuille", "rh-du-tour"],
+    chercher:
+      "Retrouvez la formation dans la ligne « RH · effectif » du premier tour, et ce qu'elle a coûté. Au tour suivant, l'équipe a-t-elle produit davantage avec le même effectif ?",
+  }),
+  "indicateurs-sociaux": (c) => ({
+    niveau: 3,
+    faire: `${partie(c, 3)} Au premier tour, mettez ${Math.round((1 - ECART_D_INDICE) * 100)} dans « Salaires (marché = 100) », puis jouez trois tours.`,
+    lieux: ["feuille", "rh-du-tour"],
+    chercher:
+      "Notez à chaque tour l'effectif et les démissions de la ligne « RH · effectif » : calculez le taux de rotation de l'année jouée, départs divisés par l'effectif moyen.",
   }),
   "tableau-de-bord-commercial": (c) => ({
     niveau: 2,

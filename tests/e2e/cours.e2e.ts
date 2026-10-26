@@ -480,6 +480,14 @@ describe.each([
   { code: "effectif-et-masse-salariale", entreprise: "batiment", telephone: true },
   { code: "salaire-brut-net-cout", entreprise: "hotel" },
   { code: "salaire-brut-net-cout", entreprise: "fitness", telephone: true },
+  { code: "recruter", entreprise: "conseil" },
+  { code: "recruter", entreprise: "boutique", telephone: true },
+  { code: "remuneration-et-motivation", entreprise: "bistrot" },
+  { code: "remuneration-et-motivation", entreprise: "nova", telephone: true },
+  { code: "former", entreprise: "transport" },
+  { code: "former", entreprise: "ecommerce", telephone: true },
+  { code: "indicateurs-sociaux", entreprise: "batiment" },
+  { code: "indicateurs-sociaux", entreprise: "hotel", telephone: true },
   // Les cas pratiques s'ouvrent et se jouent comme un chapitre réservé.
   { code: "suivre-la-baisse-du-concurrent", entreprise: "nova" },
   { code: "suivre-la-baisse-du-concurrent", entreprise: "hotel", telephone: true },
@@ -548,6 +556,10 @@ describe.each([
   { code: "le-trimestre-face-a-l-objectif", entreprise: "ecommerce", telephone: true },
   { code: "l-augmentation-generale", entreprise: "hotel" },
   { code: "la-prime-de-fin-d-annee", entreprise: "fitness", telephone: true },
+  { code: "embaucher-un-trimestre-plus-tard", entreprise: "conseil" },
+  { code: "l-equipe-demande-une-augmentation", entreprise: "batiment", telephone: true },
+  { code: "doubler-le-budget-de-formation", entreprise: "nova" },
+  { code: "la-masse-salariale-qui-baisse", entreprise: "transport", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se
