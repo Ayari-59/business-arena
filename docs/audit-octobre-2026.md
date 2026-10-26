@@ -95,3 +95,18 @@ L'hypothèse « Apprendre, Appliquer, Piloter, Développer le jugement » colle 
 - **Décider en situation** : les épisodes manager, joués seul ou en classe.
 
 Chaque format se prend seul. Chacun a sa porte gratuite : le chapitre libre, la partie solo, les démonstrations. Les passages de l'un à l'autre (fin de chapitre, bilan d'épisode, fiches notions) existent déjà.
+
+## 6. Ce qui a été fait
+
+**Lot 1 (#308)**
+- Les 13 ateliers annoncent leur nombre réel de séances. Les titres, les accroches, les règles annoncées, les rythmes proposés et les rangs de séance cités dans le texte ont été corrigés. La garde `tests/pedagogy/ateliers-nombre-de-seances.test.ts` empêche l'erreur de revenir.
+- Les promesses d'accès suivent le code. Sur `/animations`, les fiches se lisent librement, mais le dossier et la partie demandent une licence de l'arène. Sur `/enseignants/episodes`, la cohorte demande l'offre épisodes, et la page renvoie aux démonstrations.
+- Un chapitre réservé mène au chapitre libre, aux offres et au devis.
+- L'accueil présente les quatre formats, chacun avec sa page et sa porte gratuite (`components/accueil-formats.tsx`). Le héros y renvoie.
+- Le concours s'appelle partout « Concours entre classes ». `/orientation` annonce bien quatre questions. Le nombre de concurrents est donné comme un maximum.
+
+**Lot 2**
+- Une seule porte pour les codes d'élève (`services/rejoindre.service.ts`). Un code de classe du cours, de cohorte d'épisodes, de concours ou d'examen tapé dans « Rejoindre une partie » mène à sa page, avec le code déjà saisi. Comme pour une partie, rien n'est créé tant que le code n'est pas reconnu.
+- Le formulaire d'inscription à un concours (`/compete`) est rangé chez les élèves, sous « Rejoindre un concours ». Côté enseignants, « Concours entre classes » mène à l'explication (`/guide#concours`).
+- La description du cours dans le menu dit ce qu'il est devenu : de la comptabilité au marketing, avec des cas pratiques.
+- `/parcours` porte le même nom au menu et sur l'accueil : « Référentiels par diplôme ».

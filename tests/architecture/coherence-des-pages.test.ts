@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { NAVIGATION } from "@/config/navigation";
 
 /**
  * CE QUE LES PAGES PROMETTENT, CONTRE CE QUE LE CODE FAIT (audit d'octobre 2026).
@@ -58,3 +59,13 @@ describe("un nom par chose, et les bons comptes", () => {
     expect(lire("src/app/orientation/page.tsx")).not.toContain("temps dont vous disposez");
   });
 });
+
+describe("le menu range chaque page chez son public", () => {
+  it("le formulaire d'inscription à un concours est chez les élèves, l'explication chez les enseignants", () => {
+    const groupe = (code: string) => NAVIGATION.find((g) => g.code === code)!.liens.map((l) => l.href);
+    expect(groupe("jouer")).toContain("/compete");
+    expect(groupe("enseignants")).not.toContain("/compete");
+    expect(groupe("enseignants")).toContain("/guide#concours");
+  });
+});
+

@@ -74,6 +74,14 @@ export default async function JoinPage({
         codeInitial={codeInitial}
         equipeInitiale={carton?.deplacera ? rang : null}
       />
+      {/* UNE PORTE POUR TOUS LES CODES (services/rejoindre.service) : la barre ne propose que
+          celle-ci, et l'élève y tape le code qu'on lui donne, quel qu'il soit. */}
+      {!carton ? (
+        <p className="max-w-md text-center text-sm text-slate-400" data-une-seule-porte="">
+          Un code de classe du cours, de cohorte d&apos;épisodes, de concours ou d&apos;examen se tape aussi ici : vous
+          serez conduit à la bonne page.
+        </p>
+      ) : null}
       {/* L'étudiant d'une université ou d'une école de la fédération RENATER peut se
           connecter avec son établissement : il revient ici, code compris, et son
           identité le suit sur tout appareil. Absent si la connexion n'est pas configurée. */}

@@ -165,8 +165,17 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
       {
         href: "/join",
         libelle: "Rejoindre une partie",
-        aide: "Votre enseignant vous a donné un code : c'est ici qu'il s'utilise.",
+        // Une seule porte (services/rejoindre.service) : un code de classe, de cohorte, de
+        // concours ou d'examen tapé ici mène à sa page.
+        aide: "Votre enseignant vous a donné un code, quel qu'il soit : c'est ici qu'il s'utilise.",
         acces: "eleve",
+      },
+      {
+        // Audit d'octobre 2026 : /compete est le formulaire de l'équipe qui s'inscrit, il
+        // était rangé chez les enseignants, qui organisent depuis leur espace.
+        href: "/compete",
+        libelle: "Rejoindre un concours",
+        aide: "Inscrire son équipe à un concours entre classes, avec le code donné par l'enseignant.",
       },
       {
         href: "/reprendre",
@@ -204,7 +213,7 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
       {
         href: "/cours",
         libelle: "Cours par la simulation",
-        aide: "La comptabilité et le contrôle de gestion sur un cas simulé, pas à pas : l'élève passe les écritures et construit lui-même son bilan.",
+        aide: "Une notion à la fois, de la comptabilité au marketing, sur une entreprise simulée : l'élève fait les calculs, guidé, puis les refait seul dans un cas pratique.",
       },
       {
         href: "/parcours",
@@ -217,9 +226,9 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
         aide: "Un coût marginal, une VAN ou un rachat joué comme une décision, en une séance de deux heures, avec la fiche de l'enseignant.",
       },
       {
-        href: "/compete",
+        href: "/guide#concours",
         libelle: "Concours entre classes",
-        aide: "Les concours entre classes, leurs épreuves et leurs classements : rejoindre celui de son établissement avec son code.",
+        aide: "Comment se déroule un concours entre classes, des inscriptions à la finale ; l'enseignant le crée depuis son espace.",
       },
       {
         href: "/teacher/login",
