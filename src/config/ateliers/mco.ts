@@ -3,17 +3,17 @@ import type { AtelierDefinition } from "./types";
 /**
  * ATELIER PROFESSIONNEL · BTS MCO.
  *
- * Cinq séances de deux heures sur MAILLE & CO, la marque de maille et sa
+ * Six séances de deux heures sur MAILLE & CO, la marque de maille et sa
  * boutique. Le choix du secteur n'est pas neutre : en MCO, la gestion
  * opérationnelle ne s'apprend pas sur une usine. On n'y fabrique rien, on fait
  * tricoter pour revendre, et tout se joue sur le coefficient, l'assortiment
  * (cinq références qui n'ont ni la même marge ni la même saison), la
  * saisonnalité et la rotation du stock.
  *
- * Les quatre premières séances jouent un trimestre chacune et s'arrêtent sur
- * celui de Noël, qui décide de l'exercice. La cinquième ne joue rien : elle
- * rend compte. Un atelier de professionnalisation se note sur ce qui est rendu,
- * pas sur le classement du jeu.
+ * La première séance joue un tour d'essai, les quatre suivantes un trimestre
+ * chacune, jusqu'à celui de Noël, qui décide de l'exercice. La sixième ne joue
+ * rien : elle rend compte. Un atelier de professionnalisation se note sur ce
+ * qui est rendu, pas sur le classement du jeu.
  */
 export const ATELIER_MCO: AtelierDefinition = {
   code: "mco",
@@ -25,7 +25,7 @@ export const ATELIER_MCO: AtelierDefinition = {
   referentielLabel: "Blocs de compétences",
   referentielAccord: "mobilisés",
   pitch:
-    "Cinq séances de deux heures. Chaque équipe tient le même magasin d'un trimestre à l'autre, choisit son assortiment, fixe ses prix, prépare Noël, et rend à chaque séance un document que l'on retrouve en magasin.",
+    "Six séances de deux heures. Chaque équipe tient le même magasin d'un trimestre à l'autre, choisit son assortiment, fixe ses prix, prépare Noël, et rend à chaque séance un document que l'on retrouve en magasin.",
   resume:
     "Quatre trimestres dans une boutique de maille à cinq références, du diagnostic du linéaire au tableau de bord commercial, avec Noël comme épreuve.",
   difficulte: 2,
@@ -81,7 +81,7 @@ export const ATELIER_MCO: AtelierDefinition = {
           minutes: 10,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle : cinq séances, un tour d'essai qui ne compte pas puis quatre trimestres, un seul magasin, un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code et nomment leur point de vente.",
+            "Vous annoncez la règle : six séances, un tour d'essai qui ne compte pas puis quatre trimestres, un seul magasin, un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code et nomment leur point de vente.",
         },
         {
           minutes: 25,
@@ -148,13 +148,13 @@ export const ATELIER_MCO: AtelierDefinition = {
         "seuil de rentabilité",
       ],
       preparation:
-        "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez les équipes de trois : une responsable de l'offre, une des prix, une du suivi. Imprimez la fiche de calcul de marge vierge, une par équipe. Prévoyez que la première séance se passe sans aucune correction de votre part.",
+        "Reprenez la partie créée à la séance d'essai et notez son code d'invitation. Constituez les équipes de trois : une responsable de l'offre, une des prix, une du suivi. Imprimez la fiche de calcul de marge vierge, une par équipe. Prévoyez que la deuxième séance se passe sans aucune correction de votre part.",
       deroule: [
         {
           minutes: 10,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle : cinq séances, quatre trimestres, un seul magasin, et un document rendu entre deux séances. Les équipes rejoignent la partie avec le code.",
+            "Vous annoncez la règle : six séances, quatre trimestres, un seul magasin, et un document rendu entre deux séances. Les équipes rejoignent la partie avec le code.",
         },
         {
           minutes: 20,
@@ -486,8 +486,8 @@ export const ATELIER_MCO: AtelierDefinition = {
   ],
   formats: [
     {
-      nom: "Cinq séances hebdomadaires",
-      quand: "Le format d'origine, sur cinq semaines consécutives.",
+      nom: "Six séances hebdomadaires",
+      quand: "Le format d'origine, sur six semaines consécutives.",
       comment:
         "Une séance par semaine, un trimestre par séance. La semaine qui sépare deux séances laisse aux équipes le temps de préparer leur livrable, et à vous celui de le lire.",
     },
@@ -495,7 +495,7 @@ export const ATELIER_MCO: AtelierDefinition = {
       nom: "Semaine bloquée",
       quand: "En semaine d'atelier de professionnalisation ou de projet.",
       comment:
-        "Une séance par jour du lundi au vendredi. Le rythme est plus tendu et le débriefing plus court, mais la mémoire des trimestres est meilleure, et la soutenance du vendredi gagne en tenue.",
+        "La séance d'essai la veille, puis une séance par jour du lundi au vendredi. Le rythme est plus tendu et le débriefing plus court, mais la mémoire des trimestres est meilleure, et la soutenance du vendredi gagne en tenue.",
     },
     {
       nom: "Fil rouge du semestre",
@@ -520,13 +520,13 @@ export const ATELIER_MCO: AtelierDefinition = {
       question:
         "Faut-il avoir traité le coefficient multiplicateur avant la première séance ?",
       reponse:
-        "Non, et c'est même préférable de ne pas l'avoir fait. La première séance amène les équipes à en avoir besoin avant de le nommer : elles calculent une marge parce qu'elles doivent fixer un prix, pas parce que le cours l'a demandé. Vous formalisez ensuite, sur leurs propres chiffres.",
+        "Non, et c'est même préférable de ne pas l'avoir fait. La deuxième séance amène les équipes à en avoir besoin avant de le nommer : elles calculent une marge parce qu'elles doivent fixer un prix, pas parce que le cours l'a demandé. Vous formalisez ensuite, sur leurs propres chiffres.",
     },
     {
       question:
         "Pourquoi arrêter à quatre trimestres alors que la partie en compte six ?",
       reponse:
-        "Parce que le trimestre des fêtes est le point culminant de ce secteur et que rien ne gagne à le dépasser dans un atelier de cinq séances. La partie est créée sur quatre tours et s'arrête là. Si votre progression le permet, créez-la sur six tours dès le départ et gardez les deux derniers pour deux séances de prolongement, avec le financement du développement comme fil.",
+        "Parce que le trimestre des fêtes est le point culminant de ce secteur et que rien ne gagne à le dépasser dans un atelier de six séances. La partie est créée sur quatre tours et s'arrête là. Si votre progression le permet, créez-la sur six tours dès le départ et gardez les deux derniers pour deux séances de prolongement, avec le financement du développement comme fil.",
     },
     {
       question:
@@ -537,7 +537,7 @@ export const ATELIER_MCO: AtelierDefinition = {
     {
       question: "Peut-on conduire cet atelier avec des équipes de deux ?",
       reponse:
-        "Oui, en fusionnant les rôles de l'offre et des prix. En dessous de trois élèves, le débat contradictoire de la deuxième séance perd de sa force, alors prévoyez d'y faire travailler deux équipes ensemble sur cette séance-là uniquement.",
+        "Oui, en fusionnant les rôles de l'offre et des prix. En dessous de trois élèves, le débat contradictoire de la troisième séance perd de sa force, alors prévoyez d'y faire travailler deux équipes ensemble sur cette séance-là uniquement.",
     },
     {
       question: "Comment noter une équipe qui a fait faillite ?",

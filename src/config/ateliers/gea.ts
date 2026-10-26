@@ -3,16 +3,17 @@ import type { AtelierDefinition } from "./types";
 /**
  * ATELIER PROFESSIONNEL · BUT / DUT GEA.
  *
- * Cinq séances de deux heures sur NOVA, l'industriel, choisi pour sa gestion
+ * Six séances de deux heures sur NOVA, l'industriel, choisi pour sa gestion
  * généraliste : on y fabrique un produit, donc on y calcule un coût de revient,
  * on y lit un compte de résultat, on y suit une trésorerie que le besoin en
  * fonds de roulement met sous tension, et on y arbitre un investissement de
  * capacité quand la demande monte. C'est le cœur du parcours de gestion des
  * entreprises et des administrations.
  *
- * Les quatre premières séances jouent un trimestre chacune et s'arrêtent sur la
- * montée en charge du quatrième, où un compte-clé fait basculer la demande. La
- * cinquième ne joue rien : elle établit le diagnostic financier et le présente.
+ * La première séance présente le jeu sur un tour d'essai qui ne compte pas.
+ * Les quatre suivantes jouent un trimestre chacune et s'arrêtent sur la montée
+ * en charge du quatrième, où un compte-clé fait basculer la demande. La
+ * sixième ne joue rien : elle établit le diagnostic financier et le présente.
  *
  * Les compétences citées sont celles du programme national du BUT GEA, lues
  * sur le texte (REFERENTIELS.gea) : le tronc commun, et celles des parcours que
@@ -29,7 +30,7 @@ export const ATELIER_GEA: AtelierDefinition = {
   referentielLabel: "Blocs de compétences",
   referentielAccord: "mobilisés",
   pitch:
-    "Cinq séances de deux heures. Chaque équipe gère le même industriel d'un trimestre à l'autre, calcule ses coûts de revient, lit ses documents de synthèse, tient sa trésorerie sous la tension du besoin en fonds de roulement, arbitre un investissement, et rend à chaque séance un document de gestion.",
+    "Six séances de deux heures. Chaque équipe gère le même industriel d'un trimestre à l'autre, calcule ses coûts de revient, lit ses documents de synthèse, tient sa trésorerie sous la tension du besoin en fonds de roulement, arbitre un investissement, et rend à chaque séance un document de gestion.",
   resume:
     "Quatre trimestres à la tête d'un industriel, du coût de revient au diagnostic financier complet, avec la montée en charge d'un compte-clé comme épreuve.",
   difficulte: 3,
@@ -85,7 +86,7 @@ export const ATELIER_GEA: AtelierDefinition = {
           minutes: 10,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle : cinq séances, un tour d'essai qui ne compte pas puis quatre trimestres, une seule entreprise, un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code et nomment leur entreprise.",
+            "Vous annoncez la règle : six séances, un tour d'essai qui ne compte pas puis quatre trimestres, une seule entreprise, un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code et nomment leur entreprise.",
         },
         {
           minutes: 25,
@@ -152,13 +153,13 @@ export const ATELIER_GEA: AtelierDefinition = {
         "compte de résultat",
       ],
       preparation:
-        "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez les équipes de trois : une responsable des coûts, une de la production, une du suivi. Imprimez la fiche de coût de revient vierge, une par équipe, avec une colonne par enceinte : la Go de poche, la One qui a fait la marque, et la Studio, la plus haut de gamme, livrée prête et vendable dès le premier trimestre. Les coûts variables vont du simple au plus du triple d'une référence à l'autre, et la marge unitaire de la Studio vaut près de quatre fois celle de la Go : c'est ce que la fiche doit faire apparaître. Prévoyez que cette première séance se passe sans aucune correction de votre part.",
+        "Rien à créer : la vraie partie a commencé en fin de séance d'essai ; reprenez-la depuis votre espace. Dans les équipes de trois constituées pour l'essai, répartissez les rôles : une responsable des coûts, une de la production, une du suivi. Imprimez la fiche de coût de revient vierge, une par équipe, avec une colonne par enceinte : la Go de poche, la One qui a fait la marque, et la Studio, la plus haut de gamme, livrée prête et vendable dès le premier trimestre. Les coûts variables vont du simple au plus du triple d'une référence à l'autre, et la marge unitaire de la Studio vaut près de quatre fois celle de la Go : c'est ce que la fiche doit faire apparaître. Prévoyez que cette deuxième séance se passe sans aucune correction de votre part.",
       deroule: [
         {
           minutes: 10,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle : cinq séances, quatre trimestres, une seule entreprise, et un document de gestion rendu entre deux séances. Les équipes rejoignent la partie avec le code.",
+            "Vous annoncez la règle : six séances, quatre trimestres, une seule entreprise, et un document de gestion rendu entre deux séances. Les équipes rejoignent la partie avec le code.",
         },
         {
           minutes: 20,
@@ -490,17 +491,17 @@ export const ATELIER_GEA: AtelierDefinition = {
   ],
   formats: [
     {
-      nom: "Cinq séances hebdomadaires",
-      quand: "Le format d'origine, sur cinq semaines consécutives.",
+      nom: "Six séances hebdomadaires",
+      quand: "Le format d'origine, sur six semaines consécutives.",
       comment:
-        "Une séance par semaine, un trimestre par séance. La semaine qui sépare deux séances laisse aux équipes le temps de préparer leur livrable, et à vous celui de le lire.",
+        "Une séance par semaine, un trimestre par séance après l'essai. La semaine qui sépare deux séances laisse aux équipes le temps de préparer leur livrable, et à vous celui de le lire.",
     },
     {
       nom: "Semaine de ressources ou de projet",
       quand:
         "En semaine banalisée de situation d'apprentissage et d'évaluation.",
       comment:
-        "Une séance par jour du lundi au vendredi. Le rythme est plus tendu et le débriefing plus court, mais la mémoire des trimestres est meilleure, et la présentation du vendredi gagne en tenue.",
+        "La séance d'essai la semaine précédente, puis une séance par jour du lundi au vendredi. Le rythme est plus tendu et le débriefing plus court, mais la mémoire des trimestres est meilleure, et la présentation du vendredi gagne en tenue.",
     },
     {
       nom: "Fil rouge du semestre",
@@ -526,13 +527,13 @@ export const ATELIER_GEA: AtelierDefinition = {
       question:
         "Faut-il avoir traité le coût de revient avant la première séance ?",
       reponse:
-        "Non, et il vaut même mieux ne pas l'avoir fait. La première séance amène les équipes à en avoir besoin avant de le nommer : elles calculent un coût parce qu'elles doivent fixer un prix et un volume, pas parce que le cours l'a demandé. Vous formalisez ensuite, sur leurs propres chiffres.",
+        "Non, et il vaut même mieux ne pas l'avoir fait. La deuxième séance amène les équipes à en avoir besoin avant de le nommer : elles calculent un coût parce qu'elles doivent fixer un prix et un volume, pas parce que le cours l'a demandé. Vous formalisez ensuite, sur leurs propres chiffres.",
     },
     {
       question:
         "Pourquoi arrêter à quatre trimestres alors que le secteur en compte six ?",
       reponse:
-        "Parce que la montée en charge du compte-clé est le point culminant de ce secteur et que rien ne gagne à la dépasser dans un atelier de cinq séances. La partie est créée sur quatre tours et s'arrête là. Si votre progression le permet, créez-la sur six tours dès le départ et gardez les deux derniers pour deux séances de prolongement.",
+        "Parce que la montée en charge du compte-clé est le point culminant de ce secteur et que rien ne gagne à la dépasser dans un atelier de six séances. La partie est créée sur quatre tours et s'arrête là. Si votre progression le permet, créez-la sur six tours dès le départ et gardez les deux derniers pour deux séances de prolongement.",
     },
     {
       question:
@@ -543,7 +544,7 @@ export const ATELIER_GEA: AtelierDefinition = {
     {
       question: "Peut-on conduire cet atelier avec des équipes de deux ?",
       reponse:
-        "Oui, en fusionnant les rôles des coûts et de la production. En dessous de trois élèves, le débat de la troisième séance sur l'investissement perd de sa force, alors prévoyez d'y faire travailler deux équipes ensemble sur cette séance-là uniquement.",
+        "Oui, en fusionnant les rôles des coûts et de la production. En dessous de trois élèves, le débat de la quatrième séance sur l'investissement perd de sa force, alors prévoyez d'y faire travailler deux équipes ensemble sur cette séance-là uniquement.",
     },
     {
       question: "Quel lien avec l'évaluation du BUT ?",

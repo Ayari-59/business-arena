@@ -3,7 +3,7 @@ import type { AtelierDefinition } from "./types";
 /**
  * ATELIER PROFESSIONNEL · DCG — RSE & PERFORMANCE.
  *
- * Six séances de deux heures sur NOVA, au niveau qui ouvre le financement,
+ * Sept séances de deux heures sur NOVA, au niveau qui ouvre le financement,
  * l'investissement et l'engagement RSE. L'atelier ne fait pas un cours de
  * morale : il met l'élève devant l'ARBITRAGE que la RSE impose vraiment, celui
  * qu'aucun sujet ne fait éprouver puisqu'il donne les conséquences. L'équipe
@@ -29,7 +29,7 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
   referentielLabel: "Unités d'enseignement",
   referentielAccord: "mobilisées",
   pitch:
-    "Six séances de deux heures. Chaque équipe dirige la même entreprise industrielle et y engage une politique RSE : elle dépense pour son image, choisit ses fournisseurs, investit dans un process plus propre, puis mesure tour après tour ce que cet engagement lui rapporte, ou lui coûte. La dernière séance produit une déclaration de performance extra-financière soutenue devant un jury.",
+    "Sept séances de deux heures. Chaque équipe dirige la même entreprise industrielle et y engage une politique RSE : elle dépense pour son image, choisit ses fournisseurs, investit dans un process plus propre, puis mesure tour après tour ce que cet engagement lui rapporte, ou lui coûte. La dernière séance produit une déclaration de performance extra-financière soutenue devant un jury.",
   resume:
     "Cinq trimestres pour transformer un engagement RSE en performance, du premier arbitrage budgétaire à la déclaration extra-financière soutenue.",
   difficulte: 4,
@@ -52,7 +52,7 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
     tourDEssai: 1,
     effectifParEquipe: "trois élèves",
     notes:
-      "NOVA se joue ici en trois références, chacune avec son catalogue de fournisseurs et son budget qualité : le choix responsable se fait ligne par ligne, et son coût se lit sur la marge de chaque enceinte. NOVA porte un cycle d'exploitation complet, des fournisseurs, de la non-qualité si vous l'activez à la création (taux de rebuts, 5 % conseillé) et une capacité qui s'investit : de quoi rendre la RSE tangible plutôt que déclarative. Le niveau Stratégie ouvre le financement, l'investissement et l'engagement RSE, c'est-à-dire les leviers de l'atelier. Le monde variable est activé : à ce niveau, distinguer une bonne décision d'un bon résultat fait partie de ce qui s'évalue, et la RSE en est l'illustration la plus nette, puisqu'un engagement juste peut ne pas payer sur cinq tours. La cinquième séance joue le dernier tour ; la sixième ne joue rien et sert à rendre compte.",
+      "NOVA se joue ici en trois références, chacune avec son catalogue de fournisseurs et son budget qualité : le choix responsable se fait ligne par ligne, et son coût se lit sur la marge de chaque enceinte. NOVA porte un cycle d'exploitation complet, des fournisseurs, de la non-qualité si vous l'activez à la création (taux de rebuts, 5 % conseillé) et une capacité qui s'investit : de quoi rendre la RSE tangible plutôt que déclarative. Le niveau Stratégie ouvre le financement, l'investissement et l'engagement RSE, c'est-à-dire les leviers de l'atelier. Le monde variable est activé : à ce niveau, distinguer une bonne décision d'un bon résultat fait partie de ce qui s'évalue, et la RSE en est l'illustration la plus nette, puisqu'un engagement juste peut ne pas payer sur cinq tours. La sixième séance joue le dernier tour ; la septième ne joue rien et sert à rendre compte.",
   },
   seances: [
     {
@@ -85,7 +85,7 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
           minutes: 10,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle : sept séances, un tour d'essai qui ne compte pas puis cinq trimestres, une sixième séance de restitution sans tour joué, une seule entreprise, un document rendu à chaque fin de séance, et un monde variable qui distingue bonne décision et bon résultat. Les équipes rejoignent la partie avec le code et nomment leur entreprise.",
+            "Vous annoncez la règle : sept séances, un tour d'essai qui ne compte pas puis cinq trimestres, une septième séance de restitution sans tour joué, une seule entreprise, un document rendu à chaque fin de séance, et un monde variable qui distingue bonne décision et bon résultat. Les équipes rejoignent la partie avec le code et nomment leur entreprise.",
         },
         {
           minutes: 25,
@@ -151,7 +151,7 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
         "arbitrage coût immédiat et bénéfice différé",
       ],
       preparation:
-        "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez des équipes de trois élèves. Activez le taux de rebuts (5 %) dans les paramètres économiques à la création : la troisième séance lit la non-qualité, qui n'existe pas sans ce réglage. Préparez une trame de note de diagnostic RSE en deux pages, et annoncez d'emblée que l'engagement se paie dans le trimestre alors que son retour, s'il vient, se lira plus tard. L'indice n'existe qu'à la clôture : le tour se joue d'abord, la lecture vient ensuite. Le pilier gouvernance part avec un retrait tant qu'aucun plan de trésorerie n'accompagne les décisions, ce que l'arène ne propose pas : dites-le, pour que les équipes n'y cherchent pas leur erreur.",
+        "Rien à créer : la vraie partie a commencé en fin de séance d'essai ; reprenez-la depuis votre espace, avec les équipes de trois élèves constituées pour l'essai. Vérifiez que le taux de rebuts (5 %) a bien été activé dans les paramètres économiques à la création : la quatrième séance lit la non-qualité, qui n'existe pas sans ce réglage. Préparez une trame de note de diagnostic RSE en deux pages, et annoncez d'emblée que l'engagement se paie dans le trimestre alors que son retour, s'il vient, se lira plus tard. L'indice n'existe qu'à la clôture : le tour se joue d'abord, la lecture vient ensuite. Le pilier gouvernance part avec un retrait tant qu'aucun plan de trésorerie n'accompagne les décisions, ce que l'arène ne propose pas : dites-le, pour que les équipes n'y cherchent pas leur erreur.",
       deroule: [
         {
           minutes: 15,
@@ -555,19 +555,19 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
   formats: [
     {
       nom: "Hebdomadaire",
-      quand: "Une séance par semaine sur six semaines",
+      quand: "Une séance par semaine sur sept semaines",
       comment:
-        "Le rythme naturel de l'atelier : un trimestre par séance, la reddition en dernière semaine. Chaque équipe garde la main sur sa partie entre deux séances si l'enseignant le décide.",
+        "Le rythme naturel de l'atelier : un trimestre par séance après l'essai, la reddition en dernière semaine. Chaque équipe garde la main sur sa partie entre deux séances si l'enseignant le décide.",
     },
     {
       nom: "Semaine bloquée",
-      quand: "Six séances de deux heures sur une semaine",
+      quand: "La séance d'essai la semaine précédente, puis six séances de deux heures sur une semaine",
       comment:
         "Les cinq trimestres s'enchaînent du lundi au vendredi, la soutenance en fin de semaine. La tension de l'arbitrage se ressent mieux resserrée, au prix d'un temps de recul plus court entre les tours.",
     },
     {
       nom: "Fil rouge annuel",
-      quand: "Une séance par mois d'octobre à mars",
+      quand: "La séance d'essai en septembre, puis une séance par mois d'octobre à mars",
       comment:
         "L'atelier accompagne le cours de finance et de contrôle de gestion sur un semestre : chaque séance illustre la notion vue en cours le mois même, la reddition clôt le semestre.",
     },
@@ -576,7 +576,7 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
     "Les fiches intermédiaires, une par séance jouée, pour un tiers de la note.",
     "La déclaration extra-financière, pour un tiers : elle consolide fidèlement les cinq trimestres, se lit sans le produit sous les yeux, et distingue partout la mesure de l'engagement qui l'a produite.",
     "La soutenance, pour le dernier tiers : elle assume les arbitrages, y compris ceux qui n'ont pas payé sur l'horizon de la partie.",
-    "Les traces de portfolio des six séances forment un parcours cohérent, du diagnostic à la reddition ; le classement du jeu n'entre pas dans la note.",
+    "Les traces de portfolio des sept séances forment un parcours cohérent, du diagnostic à la reddition ; le classement du jeu n'entre pas dans la note.",
   ],
   prolongements: [
     "Rejouer une partie avec un horizon plus long pour voir si des arbitrages RSE perdants sur cinq tours deviennent gagnants sur huit.",
@@ -587,7 +587,7 @@ export const ATELIER_DCG_RSE: AtelierDefinition = {
     {
       question: "Faut-il avoir traité la RSE en cours avant l'atelier ?",
       reponse:
-        "Non. L'atelier peut ouvrir le sujet : la première séance pose les trois piliers et l'indice, et le reste se découvre en jouant. Il gagne toutefois à venir après une première approche du reporting extra-financier, que la dernière séance vient alors incarner.",
+        "Non. L'atelier peut ouvrir le sujet : la deuxième séance pose les trois piliers et l'indice, et le reste se découvre en jouant. Il gagne toutefois à venir après une première approche du reporting extra-financier, que la dernière séance vient alors incarner.",
     },
     {
       question: "La synthèse extra-financière du jeu est-elle une vraie DPEF ?",

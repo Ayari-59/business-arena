@@ -3,7 +3,7 @@ import type { AtelierDefinition } from "./types";
 /**
  * ATELIER PROFESSIONNEL · BTS GPME.
  *
- * Six séances de deux heures sur ATLAS CONSEIL. Le cabinet a été retenu parce
+ * Sept séances de deux heures sur ATLAS CONSEIL. Le cabinet a été retenu parce
  * qu'il EST une PME au sens du diplôme : une douzaine de personnes, un dirigeant
  * qui décide de tout, presque aucun actif immobilisé et un poste clients qui
  * pèse plus lourd que tout le reste du bilan.
@@ -23,7 +23,7 @@ export const ATELIER_GPME: AtelierDefinition = {
   referentielLabel: "Blocs de compétences",
   referentielAccord: "mobilisés",
   pitch:
-    "Six séances de deux heures. Chaque équipe seconde la direction du même cabinet, relance ses clients, assure ses risques, recrute ou renonce, défend ses prix, et rend à chaque séance un document que le dirigeant pourrait signer.",
+    "Sept séances de deux heures. Chaque équipe seconde la direction du même cabinet, relance ses clients, assure ses risques, recrute ou renonce, défend ses prix, et rend à chaque séance un document que le dirigeant pourrait signer.",
   resume:
     "Cinq trimestres dans un cabinet de conseil de douze personnes, du diagnostic d'entrée au rapport d'activité présenté au dirigeant.",
   difficulte: 3,
@@ -46,7 +46,7 @@ export const ATELIER_GPME: AtelierDefinition = {
     tourDEssai: 1,
     effectifParEquipe: "trois élèves",
     notes:
-      "ATLAS CONSEIL vend du temps, qui ne se stocke pas : une journée non vendue est perdue. Sa capacité ne s'achète pas, elle se recrute, avec le délai et le coût que cela suppose. Son bilan est presque entièrement fait de créances clients, ce qui rend le poste clients concret plutôt que théorique. Le cabinet se joue ici en trois offres, l'audit, la stratégie et une pratique de cyber-sécurité à bâtir par la R&D avant de la vendre : le mix des journées vendues et l'investissement dans une offre neuve entrent dans les décisions. Le niveau retenu ouvre le personnel, le financement, l'assurance et la R&D, c'est-à-dire les leviers que le référentiel demande de savoir manier. Le monde variable est décoché : toutes vos classes jouent le même marché. Les aléas du niveau Arbitrage restent fréquents, et c'est voulu : la troisième séance en fait sa leçon.",
+      "ATLAS CONSEIL vend du temps, qui ne se stocke pas : une journée non vendue est perdue. Sa capacité ne s'achète pas, elle se recrute, avec le délai et le coût que cela suppose. Son bilan est presque entièrement fait de créances clients, ce qui rend le poste clients concret plutôt que théorique. Le cabinet se joue ici en trois offres, l'audit, la stratégie et une pratique de cyber-sécurité à bâtir par la R&D avant de la vendre : le mix des journées vendues et l'investissement dans une offre neuve entrent dans les décisions. Le niveau retenu ouvre le personnel, le financement, l'assurance et la R&D, c'est-à-dire les leviers que le référentiel demande de savoir manier. Le monde variable est décoché : toutes vos classes jouent le même marché. Les aléas du niveau Arbitrage restent fréquents, et c'est voulu : la quatrième séance en fait sa leçon.",
   },
   seances: [
     {
@@ -79,7 +79,7 @@ export const ATELIER_GPME: AtelierDefinition = {
           minutes: 10,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle : six séances, un tour d'essai qui ne compte pas puis cinq trimestres, un seul cabinet, un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code et nomment leur cabinet.",
+            "Vous annoncez la règle : sept séances, un tour d'essai qui ne compte pas puis cinq trimestres, un seul cabinet, un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code et nomment leur cabinet.",
         },
         {
           minutes: 25,
@@ -146,13 +146,13 @@ export const ATELIER_GPME: AtelierDefinition = {
         "taux d'occupation",
       ],
       preparation:
-        "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez les équipes de trois avec des rôles nommés : relation clients, ressources humaines, suivi financier. Imprimez la trame de note de diagnostic, une page maximum, contrainte comprise.",
+        "Reprenez la partie créée à la séance d'essai et notez son code d'invitation. Constituez les équipes de trois avec des rôles nommés : relation clients, ressources humaines, suivi financier. Imprimez la trame de note de diagnostic, une page maximum, contrainte comprise.",
       deroule: [
         {
           minutes: 10,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle : six séances, cinq trimestres, un seul cabinet, une note rendue entre deux séances et jamais plus d'une page.",
+            "Vous annoncez la règle : sept séances, cinq trimestres, un seul cabinet, une note rendue entre deux séances et jamais plus d'une page.",
         },
         {
           minutes: 20,
@@ -557,8 +557,8 @@ export const ATELIER_GPME: AtelierDefinition = {
   ],
   formats: [
     {
-      nom: "Six séances hebdomadaires",
-      quand: "Le format d'origine, sur six semaines consécutives.",
+      nom: "Sept séances hebdomadaires",
+      quand: "Le format d'origine, sur sept semaines consécutives.",
       comment:
         "Une séance par semaine, un trimestre par séance. L'intervalle laisse aux équipes le temps de rédiger leur note et à vous celui de la lire avant la séance suivante.",
     },
@@ -566,7 +566,7 @@ export const ATELIER_GPME: AtelierDefinition = {
       nom: "Trois demi-journées",
       quand: "Quand l'emploi du temps donne des blocs de quatre heures.",
       comment:
-        "Deux séances par demi-journée avec une pause franche entre les deux. Gardez la séance du recrutement en début de bloc : elle demande des calculs que la fatigue abîme.",
+        "La séance d'essai la veille, puis deux séances par demi-journée avec une pause franche entre les deux. Gardez la séance du recrutement en début de bloc : elle demande des calculs que la fatigue abîme.",
     },
     {
       nom: "Fil rouge sur l'année",
@@ -618,7 +618,7 @@ export const ATELIER_GPME: AtelierDefinition = {
     {
       question: "Quelles épreuves du BTS cet atelier prépare-t-il ?",
       reponse:
-        "E4, gérer la relation avec les clients et les fournisseurs de la PME, épreuve orale, pour le poste clients de la deuxième séance ; E5, épreuve écrite sur les risques et le personnel, pour la cartographie des risques et le recrutement ; E6, soutenir le fonctionnement et le développement de la PME, dossier et soutenance, pour le rapport de la dernière séance. Vérifiez les intitulés sur le référentiel en vigueur.",
+        "E4, gérer la relation avec les clients et les fournisseurs de la PME, épreuve orale, pour le poste clients de la troisième séance ; E5, épreuve écrite sur les risques et le personnel, pour la cartographie des risques et le recrutement ; E6, soutenir le fonctionnement et le développement de la PME, dossier et soutenance, pour le rapport de la dernière séance. Vérifiez les intitulés sur le référentiel en vigueur.",
     },
   ],
 };

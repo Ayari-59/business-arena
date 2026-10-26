@@ -123,8 +123,9 @@ export default function OrientationPage() {
             {/* Sur téléphone, le parcours en étapes pose ces questions une à une : les
               énumérer d'abord repousserait la première sous la ligne de flottaison. */}
             <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-400 max-sm:hidden">
-              Le diplôme, le moment de l&apos;année, ce que vous voulez faire travailler, et le
-              temps dont vous disposez. La recommandation s&apos;écrit à mesure.
+              Le diplôme, le moment de l&apos;année, ce que vous voulez faire travailler, et, si
+              vous le souhaitez, votre contexte : effectif, volume horaire, contraintes. La
+              recommandation s&apos;écrit à mesure.
             </p>
             <div className="mt-4 sm:mt-8">
               <OrientationForm />

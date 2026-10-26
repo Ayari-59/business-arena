@@ -96,6 +96,12 @@ export const BANDES: readonly BandeDef[] = [
     contrasteParDefaut: false,
   },
   {
+    id: "accueil.formats",
+    page: "/",
+    nom: "Les quatre formats : cours, cas pratiques, arène, épisodes",
+    contrasteParDefaut: false,
+  },
+  {
     id: "accueil.boucle",
     page: "/",
     nom: "La boucle d'un tour et ses trois écrans",

@@ -3,7 +3,7 @@ import type { AtelierDefinition } from "./types";
 /**
  * ATELIER PROFESSIONNEL · BTS NDRC.
  *
- * Six séances de deux heures sur PIXEL & CO, le pure player. Le secteur a été
+ * Sept séances de deux heures sur PIXEL & CO, le pure player. Le secteur a été
  * retenu parce que ses trois clientèles sont précisément les trois terrains du
  * diplôme : une acquisition payante qu'il faut rentabiliser, une base installée
  * qu'il faut garder, et des marketplaces tierces qui prennent leur commission.
@@ -24,7 +24,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
   referentielLabel: "Blocs de compétences",
   referentielAccord: "mobilisés",
   pitch:
-    "Six séances de deux heures. Chaque équipe pilote la même boutique en ligne, achète son trafic, garde ou perd ses clients, mesure ce que les marketplaces lui laissent, et découvre à chaque trimestre ce que sa clientèle lui a réellement rapporté.",
+    "Sept séances de deux heures. Chaque équipe pilote la même boutique en ligne, achète son trafic, garde ou perd ses clients, mesure ce que les marketplaces lui laissent, et découvre à chaque trimestre ce que sa clientèle lui a réellement rapporté.",
   resume:
     "Cinq trimestres dans un pure player, du premier euro d'acquisition au tableau de bord de la performance commerciale.",
   difficulte: 2,
@@ -80,7 +80,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
           minutes: 10,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle : six séances, un tour d'essai qui ne compte pas puis cinq trimestres, un seul pure player, un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code et nomment leur boutique en ligne.",
+            "Vous annoncez la règle : sept séances, un tour d'essai qui ne compte pas puis cinq trimestres, un seul pure player, un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code et nomment leur boutique en ligne.",
         },
         {
           minutes: 25,
@@ -147,13 +147,13 @@ export const ATELIER_NDRC: AtelierDefinition = {
         "panier moyen",
       ],
       preparation:
-        "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez les équipes de trois : une responsable de l'acquisition, une de la fidélisation, une des partenaires. Imprimez la fiche des trois canaux, une par équipe, à remplir en séance.",
+        "Reprenez la partie créée à la séance d'essai et notez son code d'invitation. Constituez les équipes de trois : une responsable de l'acquisition, une de la fidélisation, une des partenaires. Imprimez la fiche des trois canaux, une par équipe, à remplir en séance.",
       deroule: [
         {
           minutes: 10,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle : six séances de deux heures, cinq trimestres, une seule boutique, un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code.",
+            "Vous annoncez la règle : sept séances de deux heures, cinq trimestres, une seule boutique, un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code.",
         },
         {
           minutes: 25,
@@ -558,8 +558,8 @@ export const ATELIER_NDRC: AtelierDefinition = {
   ],
   formats: [
     {
-      nom: "Six séances hebdomadaires",
-      quand: "Le format d'origine, sur six semaines consécutives.",
+      nom: "Sept séances hebdomadaires",
+      quand: "Le format d'origine, sur sept semaines consécutives.",
       comment:
         "Une séance par semaine, un trimestre par séance. L'intervalle laisse aux équipes le temps de rédiger leur livrable et à vous celui de le lire avant la séance suivante.",
     },
@@ -567,7 +567,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
       nom: "Trois demi-journées",
       quand: "Quand l'emploi du temps donne des blocs de quatre heures.",
       comment:
-        "Deux séances par demi-journée, avec une pause franche entre les deux. Attention au trimestre du pic, qui perd de sa force s'il est enchaîné juste après une autre séance : placez-le en début de bloc.",
+        "La séance d'essai la veille, puis deux séances par demi-journée, avec une pause franche entre les deux. Attention au trimestre du pic, qui perd de sa force s'il est enchaîné juste après une autre séance : placez-le en début de bloc.",
     },
     {
       nom: "Fil rouge de l'année",
@@ -592,7 +592,7 @@ export const ATELIER_NDRC: AtelierDefinition = {
     {
       question: "La simulation joue-t-elle un entretien de vente ?",
       reponse:
-        "Non, et il faut le dire avant de se lancer. Elle joue ce qui se décide autour de l'entretien : ce qu'il coûte d'aller chercher un client, ce qu'il rapporte de le garder, ce que laisse une commande passée par un partenaire. Le face à face lui-même reste un jeu de rôle de classe, et la cinquième séance en prévoit un, adossé à des chiffres que les équipes ont produits.",
+        "Non, et il faut le dire avant de se lancer. Elle joue ce qui se décide autour de l'entretien : ce qu'il coûte d'aller chercher un client, ce qu'il rapporte de le garder, ce que laisse une commande passée par un partenaire. Le face à face lui-même reste un jeu de rôle de classe, et la sixième séance en prévoit un, adossé à des chiffres que les équipes ont produits.",
     },
     {
       question:
@@ -609,17 +609,17 @@ export const ATELIER_NDRC: AtelierDefinition = {
     {
       question: "Comment évaluer le bloc de négociation avec cet atelier ?",
       reponse:
-        "Par le jeu de rôle de la cinquième séance, qui est la seule partie négociée du déroulé, et par le dossier partenaire qui le prépare. Ce que l'atelier apporte à ce bloc n'est pas la technique d'entretien, c'est l'argumentaire chiffré : un élève qui sait ce que le partenaire lui prend et ce qu'il lui apporte négocie autrement.",
+        "Par le jeu de rôle de la sixième séance, qui est la seule partie négociée du déroulé, et par le dossier partenaire qui le prépare. Ce que l'atelier apporte à ce bloc n'est pas la technique d'entretien, c'est l'argumentaire chiffré : un élève qui sait ce que le partenaire lui prend et ce qu'il lui apporte négocie autrement.",
     },
     {
-      question: "Six séances de deux heures, est-ce compressible ?",
+      question: "Sept séances de deux heures, est-ce compressible ?",
       reponse:
-        "Oui, en retirant la cinquième séance et en créant la partie sur quatre tours : la soutenance devient la cinquième séance, et la commission des marketplaces se traite au débriefing de la quatrième. Ne compressez pas la séance du pic : c'est celle où les équipes découvrent qu'un trafic acheté sans capacité de préparation ne sert à rien, et elle a besoin de son temps de débriefing.",
+        "Oui, en retirant la sixième séance et en créant la partie sur quatre tours : la soutenance devient la sixième séance, et la commission des marketplaces se traite au débriefing de la cinquième. Ne compressez pas la séance du pic : c'est celle où les équipes découvrent qu'un trafic acheté sans capacité de préparation ne sert à rien, et elle a besoin de son temps de débriefing.",
     },
     {
       question: "Quelles épreuves du BTS cet atelier prépare-t-il ?",
       reponse:
-        "E4, relation client et négociation-vente, épreuve orale sur fiches descriptives, pour la négociation avec le partenaire de la cinquième séance ; E5, relation client à distance et digitalisation, épreuve écrite, pour le coût d'acquisition et la politique de service ; E6, relation client et animation de réseaux, pour le tableau de bord de la dernière séance. Vérifiez les intitulés sur le référentiel en vigueur.",
+        "E4, relation client et négociation-vente, épreuve orale sur fiches descriptives, pour la négociation avec le partenaire de la sixième séance ; E5, relation client à distance et digitalisation, épreuve écrite, pour le coût d'acquisition et la politique de service ; E6, relation client et animation de réseaux, pour le tableau de bord de la dernière séance. Vérifiez les intitulés sur le référentiel en vigueur.",
     },
   ],
 };

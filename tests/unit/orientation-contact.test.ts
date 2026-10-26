@@ -33,7 +33,7 @@ describe("orientation : le formulaire recueille la demande", () => {
     expect(html).toContain("Choisir un objectif…");
     expect(html).toContain('name="semestre" value=""');
     expect(html).not.toContain('aria-pressed="true"');
-    expect(html).toContain("Répondez aux trois questions");
+    expect(html).toContain("Répondez aux quatre questions");
     expect(html).not.toContain("La fiche de cette entreprise");
     expect(html).toMatch(/<button type="submit" disabled=""/);
   });
@@ -50,7 +50,7 @@ describe("orientation : le formulaire recueille la demande", () => {
     );
     expect(rejoue).toContain('aria-pressed="true"');
     expect(rejoue).toContain("La fiche de cette entreprise");
-    expect(rejoue).not.toContain("Répondez aux trois questions");
+    expect(rejoue).not.toContain("Répondez aux quatre questions");
   });
 
   it("recueille l'identité et le profil, sous des noms de champs lus par l'action", () => {

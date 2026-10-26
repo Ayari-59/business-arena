@@ -5,7 +5,7 @@ import { bouton } from "@/components/bouton";
 import { ChapitreGuide } from "@/components/cours/chapitre-guide";
 import { PiedDePage } from "@/components/pied-de-page";
 import { casDeLEntreprise } from "@/config/cours/cas";
-import { chapitreParCode } from "@/config/cours/registre";
+import { CHAPITRES, chapitreParCode } from "@/config/cours/registre";
 import { motsDuContenu } from "@/config/cours/situations";
 import { missionAffichee } from "@/config/cours/jouez";
 import { getSession } from "@/lib/session";
@@ -14,6 +14,11 @@ import { classeDeLEleve, classeSousLicence } from "@/services/cours.service";
 import { unCompteSousLicence } from "@/services/acces.service";
 import { ENTREPRISES } from "../entreprises";
 import { suitesDuChapitre } from "@/pedagogy/cours/suites";
+import { LIBELLE_DU_DEVIS, OFFRES, OFFRES_DE_L_ARENE } from "@/config/tarifs";
+import { LIEN_TARIFS } from "@/config/vitrine-solo";
+
+/** Le chapitre que tout le monde peut ouvrir (`libre: true`), lu dans le registre. */
+const CHAPITRE_LIBRE = CHAPITRES.find((c) => c.libre)!.code;
 
 export async function generateMetadata({ params }: { params: Promise<{ chapitre: string }> }): Promise<Metadata> {
   const { chapitre } = await params;
@@ -74,8 +79,24 @@ export default async function ChapitrePage({
               {motsDuContenu(chapitre.code).reserve} aux établissements sous licence : le contenu s&apos;ouvre aux enseignants de
               l&apos;établissement, et à leurs élèves par leur classe. Le premier chapitre du cours, lui, est libre.
             </p>
-            <p>
-              <Link href="/cours" className={bouton({ taille: "m" })}>
+            {/* SORTIR DE L'IMPASSE (audit d'octobre 2026) : la page ne proposait que « Voir le cours ».
+                Le cours et ses cas pratiques s'ouvrent avec toute licence de l'arène (cours.service,
+                unCompteSousLicence) : la page le dit, et mène aux offres et au devis. */}
+            <p className="text-base text-slate-300" data-acces-du-cours="">
+              Le cours et ses cas pratiques s&apos;ouvrent avec une licence de l&apos;arène : offre{" "}
+              {OFFRES_DE_L_ARENE.map((o) => OFFRES[o].nom).join(", ").replace(/, ([^,]*)$/, " ou $1")}.
+            </p>
+            <p className="flex flex-wrap gap-3">
+              <Link href={`/cours/${CHAPITRE_LIBRE}`} className={bouton({ taille: "m" })}>
+                Essayer le chapitre libre
+              </Link>
+              <Link href={LIEN_TARIFS} className={bouton({ variante: "secondaire", taille: "m" })}>
+                Voir les offres
+              </Link>
+              <Link href="/devis" className={bouton({ variante: "secondaire", taille: "m" })}>
+                {LIBELLE_DU_DEVIS}
+              </Link>
+              <Link href="/cours" className={bouton({ variante: "secondaire", taille: "m" })}>
                 Voir le cours
               </Link>
             </p>

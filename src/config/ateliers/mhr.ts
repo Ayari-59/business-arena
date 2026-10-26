@@ -3,15 +3,15 @@ import type { AtelierDefinition } from "./types";
 /**
  * ATELIER PROFESSIONNEL · BTS MHR.
  *
- * Cinq séances de deux heures sur un hôtel qui traverse une année de saisons.
+ * Six séances de deux heures sur un hôtel qui traverse une année de saisons.
  * Le choix du secteur va de soi pour le management en hôtellerie-restauration :
  * on n'y fabrique rien de stockable, la nuitée invendue est perdue à minuit, et
  * tout se joue sur le tarif, le taux d'occupation et la trésorerie qui doit
  * passer la basse saison sans se rompre.
  *
- * Les quatre premières séances jouent un trimestre chacune et s'arrêtent sur la
- * haute saison, qui décide de l'année. La cinquième ne joue rien : elle rend
- * compte. Un atelier de professionnalisation se note sur ce qui est rendu, pas
+ * La première séance présente le jeu sur un tour d'essai qui ne compte pas.
+ * Les quatre suivantes jouent un trimestre chacune et s'arrêtent sur la haute
+ * saison, qui décide de l'année. La sixième ne joue rien : elle rend compte. Un atelier de professionnalisation se note sur ce qui est rendu, pas
  * sur le classement du jeu.
  *
  * Les blocs cités sont ceux du référentiel du BTS MHR, lus sur le texte
@@ -29,7 +29,7 @@ export const ATELIER_MHR: AtelierDefinition = {
   referentielLabel: "Blocs de compétences",
   referentielAccord: "mobilisés",
   pitch:
-    "Cinq séances de deux heures. Chaque équipe dirige le même hôtel d'un trimestre à l'autre, fixe ses tarifs selon la demande, prépare la haute saison, tient sa trésorerie dans le creux, et rend à chaque séance un document que l'on retrouverait sur le bureau d'un directeur d'établissement.",
+    "Six séances de deux heures. Chaque équipe dirige le même hôtel d'un trimestre à l'autre, fixe ses tarifs selon la demande, prépare la haute saison, tient sa trésorerie dans le creux, et rend à chaque séance un document que l'on retrouverait sur le bureau d'un directeur d'établissement.",
   resume:
     "Quatre trimestres à la tête d'un hôtel, du calcul du prix moyen et du taux d'occupation au tableau de bord de direction, avec la haute saison comme épreuve.",
   difficulte: 3,
@@ -85,7 +85,7 @@ export const ATELIER_MHR: AtelierDefinition = {
           minutes: 10,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle : cinq séances, un tour d'essai qui ne compte pas puis quatre trimestres, un seul hôtel, un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code et nomment leur établissement.",
+            "Vous annoncez la règle : six séances, un tour d'essai qui ne compte pas puis quatre trimestres, un seul hôtel, un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code et nomment leur établissement.",
         },
         {
           minutes: 25,
@@ -152,13 +152,13 @@ export const ATELIER_MHR: AtelierDefinition = {
         "seuil de rentabilité",
       ],
       preparation:
-        "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez les équipes de trois : une responsable de la tarification, une du remplissage, une du suivi. Imprimez la fiche de calcul du prix moyen et du taux d'occupation, une par équipe. Prévoyez que cette première séance se passe sans aucune correction de votre part.",
+        "Rien à créer : la vraie partie a commencé en fin de séance d'essai ; reprenez-la depuis votre espace. Dans les équipes de trois constituées pour l'essai, répartissez les rôles : une responsable de la tarification, une du remplissage, une du suivi. Imprimez la fiche de calcul du prix moyen et du taux d'occupation, une par équipe. Prévoyez que cette deuxième séance se passe sans aucune correction de votre part.",
       deroule: [
         {
           minutes: 10,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle : cinq séances de deux heures, quatre trimestres, un seul hôtel, et un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code.",
+            "Vous annoncez la règle : six séances de deux heures, quatre trimestres, un seul hôtel, et un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code.",
         },
         {
           minutes: 20,
@@ -488,16 +488,16 @@ export const ATELIER_MHR: AtelierDefinition = {
   ],
   formats: [
     {
-      nom: "Cinq séances hebdomadaires",
-      quand: "Le format d'origine, sur cinq semaines consécutives.",
+      nom: "Six séances hebdomadaires",
+      quand: "Le format d'origine, sur six semaines consécutives.",
       comment:
-        "Une séance par semaine, un trimestre par séance. La semaine qui sépare deux séances laisse aux équipes le temps de préparer leur livrable, et à vous celui de le lire.",
+        "Une séance par semaine, un trimestre par séance après l'essai. La semaine qui sépare deux séances laisse aux équipes le temps de préparer leur livrable, et à vous celui de le lire.",
     },
     {
       nom: "Semaine bloquée",
       quand: "En semaine d'atelier de professionnalisation ou de projet.",
       comment:
-        "Une séance par jour du lundi au vendredi. Le rythme est plus tendu et le débriefing plus court, mais la mémoire des trimestres est meilleure, et la présentation du vendredi gagne en tenue.",
+        "La séance d'essai la semaine précédente, puis une séance par jour du lundi au vendredi. Le rythme est plus tendu et le débriefing plus court, mais la mémoire des trimestres est meilleure, et la présentation du vendredi gagne en tenue.",
     },
     {
       nom: "Fil rouge du semestre",
@@ -522,13 +522,13 @@ export const ATELIER_MHR: AtelierDefinition = {
       question:
         "Faut-il avoir traité le revenu par chambre disponible avant la première séance ?",
       reponse:
-        "Non, et il vaut même mieux ne pas l'avoir fait. La première séance amène les équipes à en avoir besoin avant de le nommer : elles calculent un prix moyen et un taux d'occupation parce qu'elles doivent fixer un tarif, pas parce que le cours l'a demandé. Vous formalisez ensuite, sur leurs propres chiffres.",
+        "Non, et il vaut même mieux ne pas l'avoir fait. La deuxième séance amène les équipes à en avoir besoin avant de le nommer : elles calculent un prix moyen et un taux d'occupation parce qu'elles doivent fixer un tarif, pas parce que le cours l'a demandé. Vous formalisez ensuite, sur leurs propres chiffres.",
     },
     {
       question:
         "Pourquoi arrêter à quatre trimestres alors que le secteur en compte six ?",
       reponse:
-        "Parce que la haute saison est le point culminant de ce secteur et que rien ne gagne à la dépasser dans un atelier de cinq séances. La partie est créée sur quatre tours et s'arrête là. Si votre progression le permet, créez-la sur six tours dès le départ et gardez les deux derniers pour deux séances de prolongement, avec le financement d'une rénovation comme fil.",
+        "Parce que la haute saison est le point culminant de ce secteur et que rien ne gagne à la dépasser dans un atelier de six séances. La partie est créée sur quatre tours et s'arrête là. Si votre progression le permet, créez-la sur six tours dès le départ et gardez les deux derniers pour deux séances de prolongement, avec le financement d'une rénovation comme fil.",
     },
     {
       question:
@@ -539,7 +539,7 @@ export const ATELIER_MHR: AtelierDefinition = {
     {
       question: "Peut-on conduire cet atelier avec des équipes de deux ?",
       reponse:
-        "Oui, en fusionnant les rôles de la tarification et du remplissage. En dessous de trois élèves, le débat contradictoire de la deuxième séance perd de sa force, alors prévoyez d'y faire travailler deux équipes ensemble sur cette séance-là uniquement.",
+        "Oui, en fusionnant les rôles de la tarification et du remplissage. En dessous de trois élèves, le débat contradictoire de la troisième séance perd de sa force, alors prévoyez d'y faire travailler deux équipes ensemble sur cette séance-là uniquement.",
     },
     {
       question: "Quel lien avec les épreuves du BTS ?",

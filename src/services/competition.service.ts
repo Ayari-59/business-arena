@@ -80,7 +80,7 @@ export async function createCompetition(args: {
     .insert(competitions)
     .values({
       organizationId: args.organizationId,
-      name: args.name.trim() || "Business Arena Championship",
+      name: args.name.trim() || "Concours entre classes",
       status: "registration",
       scenarioId,
       rules,

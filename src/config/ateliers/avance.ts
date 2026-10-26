@@ -3,7 +3,7 @@ import type { AtelierDefinition } from "./types";
 /**
  * ATELIER D'APPROFONDISSEMENT · NIVEAU AVANCÉ.
  *
- * Six séances de deux heures sur le transport, choisi pour la richesse de ses
+ * Sept séances de deux heures sur le transport, choisi pour la richesse de ses
  * arbitrages : deux clientèles qui s'opposent, des contrats industriels
  * réguliers mais exigeants et une bourse de fret qui remplit les retours, des
  * délais de règlement qui creusent le besoin en fonds de roulement, une flotte
@@ -12,8 +12,8 @@ import type { AtelierDefinition } from "./types";
  * monde variable est activé : ici une bonne décision peut mal finir, ce qui est
  * le vrai métier.
  *
- * Cinq trimestres joués, un pic au quatrième, puis une sixième séance qui bâtit
- * le diagnostic stratégique et le défend. Cet atelier suppose des équipes déjà
+ * Une séance d'essai, cinq trimestres joués, un pic au quatrième, puis une
+ * septième séance qui bâtit le diagnostic stratégique et le défend. Cet atelier suppose des équipes déjà
  * rodées à la gestion : il revient sur les notions en les tenant ensemble sous
  * incertitude, plutôt que de les apprendre une à une.
  */
@@ -28,7 +28,7 @@ export const ATELIER_AVANCE: AtelierDefinition = {
   referentielLabel: "Compétences de gestion",
   referentielAccord: "mobilisées",
   pitch:
-    "Six séances de deux heures. Chaque équipe dirige la même entreprise de transport sur cinq trimestres, arbitre entre contrats industriels et bourse de fret, finance un besoin en fonds de roulement qui s'emballe, agrandit ou renouvelle sa flotte, place ses excédents, et affronte un monde variable où l'aléa a le dernier mot. Un diagnostic stratégique clôt le tout.",
+    "Sept séances de deux heures. Chaque équipe dirige la même entreprise de transport sur cinq trimestres, arbitre entre contrats industriels et bourse de fret, finance un besoin en fonds de roulement qui s'emballe, agrandit ou renouvelle sa flotte, place ses excédents, et affronte un monde variable où l'aléa a le dernier mot. Un diagnostic stratégique clôt le tout.",
   resume:
     "Cinq trimestres à la tête d'un transporteur, du mix de clientèles au diagnostic stratégique, sous un monde variable où l'aléa fait partie du jeu.",
   difficulte: 4,
@@ -151,13 +151,13 @@ export const ATELIER_AVANCE: AtelierDefinition = {
         "charges fixes d'une flotte",
       ],
       preparation:
-        "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez des équipes de quatre, une par domaine : coûts, commercial, flotte, finance. Imprimez la fiche de coût à la palette vierge et distribuez-la une semaine avant, avec les charges d'un trimestre de la flotte et les prix moyens par clientèle tels que le scénario les donne. À préparer par les équipes avant la séance : un premier coût de revient à la palette, calculé à la maison sur cette fiche, retours à vide compris ; la séance part de ce calcul et le corrige, elle ne le refait pas. Prévenez que le monde variable est actif : une décision juste pourra mal tourner, et ce ne sera pas une erreur.",
+        "Rien à créer : la vraie partie a commencé en fin de séance d'essai ; reprenez-la depuis votre espace. Dans les équipes de quatre constituées pour l'essai, répartissez les rôles, un par domaine : coûts, commercial, flotte, finance. Imprimez la fiche de coût à la palette vierge et distribuez-la une semaine avant, avec les charges d'un trimestre de la flotte et les prix moyens par clientèle tels que le scénario les donne. À préparer par les équipes avant la séance : un premier coût de revient à la palette, calculé à la maison sur cette fiche, retours à vide compris ; la séance part de ce calcul et le corrige, elle ne le refait pas. Prévenez que le monde variable est actif : une décision juste pourra mal tourner, et ce ne sera pas une erreur.",
       deroule: [
         {
           minutes: 10,
           titre: "Le cadre et le contrat",
           detail:
-            "Vous annoncez la règle : six séances, cinq trimestres, un seul transporteur, un document rendu à chaque fois, et un monde qui réserve des surprises. Les équipes rejoignent la partie.",
+            "Vous annoncez la règle : sept séances, cinq trimestres, un seul transporteur, un document rendu à chaque fois, et un monde qui réserve des surprises. Les équipes rejoignent la partie.",
         },
         {
           minutes: 20,
@@ -562,16 +562,16 @@ export const ATELIER_AVANCE: AtelierDefinition = {
   ],
   formats: [
     {
-      nom: "Six séances hebdomadaires",
-      quand: "Le format d'origine, sur six semaines consécutives.",
+      nom: "Sept séances hebdomadaires",
+      quand: "Le format d'origine, sur sept semaines consécutives.",
       comment:
-        "Une séance par semaine, un trimestre par séance. La semaine entre deux séances laisse le temps de préparer un livrable exigeant, et à vous celui de le lire finement.",
+        "Une séance par semaine, un trimestre par séance après l'essai. La semaine entre deux séances laisse le temps de préparer un livrable exigeant, et à vous celui de le lire finement.",
     },
     {
       nom: "Deux semaines intensives",
       quand: "En module d'approfondissement ou de spécialité.",
       comment:
-        "Trois séances par semaine sur deux semaines. Le rythme soutenu sert la mémoire des arbitrages, mais réservez ce tempo à des équipes qui tiennent la charge cognitive.",
+        "La séance d'essai la veille, puis trois séances par semaine sur deux semaines. Le rythme soutenu sert la mémoire des arbitrages, mais réservez ce tempo à des équipes qui tiennent la charge cognitive.",
     },
     {
       nom: "Fil rouge de projet",
@@ -602,13 +602,13 @@ export const ATELIER_AVANCE: AtelierDefinition = {
       question:
         "Pourquoi activer le monde variable, qui introduit de la chance ?",
       reponse:
-        "Parce qu'à ce niveau, la chance est précisément l'objet. Une gestion qui ne réussit qu'en univers certain n'a rien appris du métier réel, où un aléa défait la meilleure prévision. Le monde variable oblige à décider en gardant des réserves, à préférer la robustesse à l'optimum, et à assumer qu'un bon choix puisse mal finir. C'est ce que la sixième séance demande de défendre.",
+        "Parce qu'à ce niveau, la chance est précisément l'objet. Une gestion qui ne réussit qu'en univers certain n'a rien appris du métier réel, où un aléa défait la meilleure prévision. Le monde variable oblige à décider en gardant des réserves, à préférer la robustesse à l'optimum, et à assumer qu'un bon choix puisse mal finir. C'est ce que la septième séance demande de défendre.",
     },
     {
       question:
-        "Cinq trimestres et six séances font un atelier long, peut-on le raccourcir ?",
+        "Cinq trimestres et sept séances font un atelier long, peut-on le raccourcir ?",
       reponse:
-        "Oui, en retirant la cinquième séance et en créant la partie sur quatre tours : le renouvellement de la flotte et le placement des excédents se traitent alors au début de la séance de diagnostic, devenue cinquième, sur l'énoncé plutôt que dans le jeu. Vous perdez la respiration entre engager et employer la trésorerie, mais l'atelier tient alors en cinq séances. Ne descendez pas en dessous : le pic de la quatrième a besoin de trois trimestres joués derrière lui.",
+        "Oui, en retirant la sixième séance et en créant la partie sur quatre tours : le renouvellement de la flotte et le placement des excédents se traitent alors au début de la séance de diagnostic, devenue sixième, sur l'énoncé plutôt que dans le jeu. Vous perdez la respiration entre engager et employer la trésorerie, mais l'atelier tient alors en six séances. Ne descendez pas en dessous : le pic de la cinquième a besoin de trois trimestres joués derrière lui.",
     },
     {
       question:

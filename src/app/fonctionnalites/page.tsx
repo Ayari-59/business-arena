@@ -55,7 +55,7 @@ const PILLARS = [
     text: "Une partie en 30 secondes, les équipes rejoignent par code, vous clôturez les tours. La vue pédagogique montre qui maîtrise chaque notion et qui bluffe.",
   },
   {
-    title: "Business Arena Championship",
+    title: "Concours entre classes",
     text: "Groupes tirés au sort, décisions verrouillées, indices limités, qualification au score composite : le concours de gestion, prêt à l'emploi.",
   },
 ];
