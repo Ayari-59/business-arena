@@ -102,6 +102,7 @@ export default async function ChapitrePage({
           classe={classe !== undefined}
           mission={missionAffichee(chapitre.code, cas)}
           suites={suitesDuChapitre(chapitre.code)}
+          calculatrice={classeDeLEleveLue?.calculatrice ?? true}
           enClasse={classeDeLEleveLue ? { classe: classeDeLEleveLue.classe, eleve: classeDeLEleveLue.eleve } : null}
         />
       </main>

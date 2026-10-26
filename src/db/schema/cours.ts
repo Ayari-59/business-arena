@@ -1,4 +1,4 @@
-import { index, integer, jsonb, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, index, integer, jsonb, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { id } from "./_shared";
 import { users } from "./identity";
 
@@ -26,6 +26,8 @@ export const coursClasses = pgTable(
     entreprise: text("entreprise"),
     /** Close : plus de nouvel élève. Les progressions déjà remontées restent lisibles. */
     closeLe: timestamp("close_le", { withTimezone: true }),
+    /** La calculatrice retirée à la classe (une évaluation de calcul mental) ; permise par défaut. */
+    sansCalculatrice: boolean("sans_calculatrice").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("cours_classes_cree_par_idx").on(t.creePar)],

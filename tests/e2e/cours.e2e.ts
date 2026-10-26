@@ -225,6 +225,8 @@ describe("le cours en classe : l'enseignant crée, l'élève rejoint, l'erreur r
     await prof.waitForURL(/\/teacher\/cours\/[0-9a-f-]{36}/, { timeout: 60_000 });
     const code = (await prof.locator("[data-code-de-classe]").innerText()).trim();
     expect(code).toMatch(/^BTSCG1-/);
+    const pageDeLaClasse = new URL(prof.url()).pathname;
+    expect(await prof.locator("[data-calculatrice-de-la-classe]").getAttribute("data-calculatrice-de-la-classe")).toBe("permise");
 
     const eleve = await nouvellePage();
     await aller(eleve, `/cours/rejoindre?code=${code}`);
@@ -240,7 +242,14 @@ describe("le cours en classe : l'enseignant crée, l'élève rejoint, l'erreur r
     await eleve.getByRole("button", { name: "Étape suivante" }).click();
     const cas = casDeLEntreprise("hotel");
     await eleve.getByLabel("Compte, ligne 1", { exact: true }).fill("101");
-    await eleve.getByLabel("Débit, ligne 1", { exact: true }).fill(String(cas.capital));
+    // La calculatrice : calculer, puis reporter le résultat dans la case où l'élève était.
+    await eleve.getByLabel("Débit, ligne 1", { exact: true }).focus();
+    await eleve.getByRole("button", { name: "Calculatrice" }).click();
+    await eleve.getByLabel("Calcul", { exact: true }).fill(`${cas.capital} ÷ 2 × 2`);
+    await eleve.getByLabel("Calcul", { exact: true }).press("Enter");
+    await eleve.getByRole("button", { name: `Reporter ${cas.capital} dans « Débit, ligne 1 »` }).click();
+    expect(await eleve.getByLabel("Débit, ligne 1", { exact: true }).inputValue()).toBe(String(cas.capital));
+    await eleve.getByRole("button", { name: "Fermer la calculatrice" }).click();
     await eleve.getByLabel("Compte, ligne 2", { exact: true }).fill("512");
     await eleve.getByLabel("Crédit, ligne 2", { exact: true }).fill(String(cas.capital));
     await eleve.getByRole("button", { name: "Valider l'écriture" }).click();
@@ -306,6 +315,19 @@ describe("le cours en classe : l'enseignant crée, l'élève rejoint, l'erreur r
     await expect.poll(() => reponse(juste).getAttribute("data-juste")).toBe("true");
     expect(await reponse(fausse).getAttribute("data-juste")).toBe("false");
     expect(await prof.locator("main").innerText()).not.toContain("Camille");
+
+    // L'enseignant retire la calculatrice : l'élève ne la voit plus ; il la rend, elle revient.
+    await aller(prof, pageDeLaClasse);
+    await prof.getByRole("button", { name: "Retirer la calculatrice (calcul mental)" }).click();
+    await prof.waitForURL(/fait=sans-calculatrice/, { timeout: 60_000 });
+    expect(await prof.locator("[data-calculatrice-de-la-classe]").getAttribute("data-calculatrice-de-la-classe")).toBe("retiree");
+    await eleve.reload();
+    await expect.poll(() => eleve.locator("h1").count()).toBe(1);
+    expect(await eleve.locator("[data-calculatrice]").count()).toBe(0);
+    await prof.getByRole("button", { name: "Rendre la calculatrice" }).click();
+    await prof.waitForURL(/fait=calculatrice/, { timeout: 60_000 });
+    await eleve.reload();
+    await expect.poll(() => eleve.locator("[data-calculatrice]").count()).toBe(1);
     await ctxProf.close();
     await eleve.context().close();
   }, 240_000);
