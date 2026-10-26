@@ -229,7 +229,12 @@ describe("le cours en classe : l'enseignant crée, l'élève rejoint, l'erreur r
     expect(await prof.locator("[data-calculatrice-de-la-classe]").getAttribute("data-calculatrice-de-la-classe")).toBe("permise");
 
     const eleve = await nouvellePage();
-    await aller(eleve, `/cours/rejoindre?code=${code}`);
+    // Une seule porte : le code de classe tapé dans « Rejoindre une partie » mène à la classe du cours.
+    await aller(eleve, "/join");
+    await eleve.locator('input[name="code"]').fill(code);
+    await eleve.locator('input[name="pseudo"]').fill("Camille");
+    await eleve.getByRole("button", { name: "Rejoindre la partie" }).click();
+    await eleve.waitForURL(/\/cours\/rejoindre\?code=/, { timeout: 60_000 });
     await eleve.getByLabel("Prénom ou pseudonyme").fill("Camille");
     await eleve.getByRole("button", { name: "Rejoindre la classe" }).click();
     await eleve.waitForURL(/\/cours\?classe=rejointe/, { timeout: 60_000 });

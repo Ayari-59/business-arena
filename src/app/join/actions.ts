@@ -2,7 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { clearGuestCookie, getOrCreateGuestUserId } from "@/lib/guest";
-import { joinGameByCode, refusDeRejoindre } from "@/services/game.service";
+import { CODE_DE_PARTIE_INCONNU, joinGameByCode, refusDeRejoindre } from "@/services/game.service";
+import { ouRejoindre } from "@/services/rejoindre.service";
 import { normaliserRangDEquipe } from "@/lib/code-de-partie";
 
 export interface JoinState {
@@ -20,6 +21,12 @@ export async function joinGameAction(_prev: JoinState, formData: FormData): Prom
   // `users` dès qu'aucun cookie valide n'est présent : le faire avant de
   // vérifier le code laissait une ligne par code faux, sans limite.
   const refus = await refusDeRejoindre(code);
+  // Pas une partie : peut-être un code de classe du cours, de cohorte, de concours ou
+  // d'examen, tapé dans la seule porte de la barre. On renvoie l'élève à la bonne page.
+  if (refus === CODE_DE_PARTIE_INCONNU) {
+    const ailleurs = await ouRejoindre(code);
+    if (ailleurs) redirect(ailleurs);
+  }
   if (refus) return { error: refus };
   const userId = await getOrCreateGuestUserId();
   const result = await joinGameByCode({ code, userId, pseudo, equipe });

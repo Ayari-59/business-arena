@@ -76,7 +76,7 @@ const RENVOIS: {
     aide: `Le moteur économique, les ${DECISION_MODELS.length} modèles d'analyse, les indices progressifs, le piège du tour 4.`,
   },
   {
-    title: "Votre référentiel, bloc par bloc",
+    title: "Référentiels par diplôme",
     href: "/parcours",
     aide: "Pour chaque diplôme servi : les blocs du programme que l'atelier met en jeu, la séance où chacun se travaille, et ce qui reste effleuré.",
   },

@@ -88,11 +88,14 @@ export type { GameView, StudyReports } from "@/services/game-view.service";
  * `joinGameByCode` refait le contrôle : deux appels séparés, l'état peut
  * changer entre les deux, et c'est lui qui fait autorité.
  */
+/** Le refus d'un code qui n'ouvre aucune partie : /join cherche alors si c'est un autre code d'élève. */
+export const CODE_DE_PARTIE_INCONNU = "Code de partie inconnu.";
+
 export async function refusDeRejoindre(code: string): Promise<string | null> {
   const game = (
     await db.select().from(games).where(eq(games.joinCode, code.trim().toUpperCase()))
   )[0];
-  if (!game) return "Code de partie inconnu.";
+  if (!game) return CODE_DE_PARTIE_INCONNU;
   if (estArchivee(game)) return PARTIE_ARCHIVEE;
   if (game.status === "finished") return "Cette partie est terminée.";
   return null;
