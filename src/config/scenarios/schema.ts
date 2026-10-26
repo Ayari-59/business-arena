@@ -188,10 +188,9 @@ export const engineScenarioConfigSchema = z.object({
         minOverdraftShare: z.number().min(0).max(1),
       })
       .optional(),
-    // Conditions court terme exposées aux équipes (information pédagogique).
-    /** Taux d'escompte annuel sur les créances clients (ex : 0.10 = 10 %). */
+    // Ignorés : l'escompte se règle dans `treasury` (discountAnnualRate, discountMaxShare).
+    // Acceptés encore pour les scénarios et les parties d'avant octobre 2026.
     discountRate: z.number().min(0).max(1).optional(),
-    /** Part des créances clients escomptables (ex : 0.80 = 80 %). */
     discountableRatio: z.number().min(0).max(1).optional(),
     /** Rémunération annuelle des placements de trésorerie (ex : 0.03 = 3 %). */
     placementRate: z.number().min(0).max(1).optional(),

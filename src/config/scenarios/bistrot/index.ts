@@ -226,8 +226,6 @@ const rawBistrot = {
     maxDebtToEquity: 2,
     depreciationPerRound: 6000,
     // Conditions court terme restauration (paiement comptant majoritaire)
-    discountRate: 0.085,      // 8,5 % annuel
-    discountableRatio: 0.50,  // 50 % (part des clients pros / événements)
     placementRate: 0.025,     // 2,5 % annuel sur les placements
   },
   treasury: {

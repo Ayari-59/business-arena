@@ -240,8 +240,6 @@ const rawEcommerce = {
     maxDebtToEquity: 2,
     depreciationPerRound: 5000,
     // Conditions court terme e-commerce (délais clients plus courts qu'en B2B)
-    discountRate: 0.09,       // 9 % annuel (entrepôt : actif nanti)
-    discountableRatio: 0.70,  // 70 % des créances (part B2B escomptable)
     placementRate: 0.025,     // 2,5 % annuel sur les placements
   },
   treasury: {

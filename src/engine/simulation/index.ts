@@ -2228,12 +2228,6 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       throw new Error(`Bilan déséquilibré (${gap.toFixed(4)} €) pour ${w.state.id}`);
     }
 
-    // Montant escomptable : information pédagogique exposée aux équipes.
-    const discountableReceivables =
-      scenario.finance.discountableRatio !== undefined
-        ? finance.closing.receivables * scenario.finance.discountableRatio
-        : undefined;
-
     // Jalon B : Enregistrement de la dépréciation (débit 681 / crédit 2185)
     // Niveau 7 : les frais de développement immobilisés (203 / 512), leur
     // amortissement et leur dépréciation (6811 / 2803), à part du parc.
@@ -2811,14 +2805,8 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
         finance.treasury.forcedFactored > 0 ||
         finance.treasury.placed > 0 ||
         finance.treasury.matured > 0 ||
-        finance.treasury.crisis ||
-        discountableReceivables !== undefined)
-        ? {
-            treasury: {
-              ...finance.treasury,
-              ...(discountableReceivables !== undefined ? { discountableReceivables } : {}),
-            },
-          }
+        finance.treasury.crisis)
+        ? { treasury: { ...finance.treasury } }
         : {}),
       ...(scenario.qualityCosts
         ? {
