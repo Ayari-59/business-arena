@@ -85,6 +85,10 @@ import { MONTER_LA_CARTE_OU_PREPARER_JUSTE } from "./par-chapitre/monter-la-cart
 import { S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT } from "./par-chapitre/s-aligner-sur-le-prix-du-concurrent";
 import { LE_COUT_DU_TRIMESTRE_CREUX } from "./par-chapitre/le-cout-du-trimestre-creux";
 import { PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON } from "./par-chapitre/plus-cher-au-plus-fort-de-la-saison";
+import { LA_TVA_DU_DERNIER_TRIMESTRE } from "./par-chapitre/la-tva-du-dernier-trimestre";
+import { LA_TVA_AVANCEE_POUR_LE_CLIENT } from "./par-chapitre/la-tva-avancee-pour-le-client";
+import { LA_DEPENSE_DE_FIN_D_ANNEE } from "./par-chapitre/la-depense-de-fin-d-annee";
+import { LA_DEPENSE_DE_L_ANNEE_EN_PERTE } from "./par-chapitre/la-depense-de-l-annee-en-perte";
 import type { Situation } from "./types";
 
 export type { Situation } from "./types";
@@ -190,6 +194,10 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT,
   LE_COUT_DU_TRIMESTRE_CREUX,
   PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON,
+  LA_TVA_DU_DERNIER_TRIMESTRE,
+  LA_TVA_AVANCEE_POUR_LE_CLIENT,
+  LA_DEPENSE_DE_FIN_D_ANNEE,
+  LA_DEPENSE_DE_L_ANNEE_EN_PERTE,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

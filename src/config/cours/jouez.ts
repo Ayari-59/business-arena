@@ -841,6 +841,37 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
         "Relevez à chaque tour le taux d'occupation, le PMC et le RevPAR. Au tour où vous avez monté le prix, restait-il des nuitées mises en vente invendues ? Au tour où vous l'avez baissé, des clients sont-ils repartis sans chambre ? Votre prix suivait-il la saison, ou le remplissage ?",
     };
   },
+  // Fiscalité de l'entreprise : la TVA de l'arène, là où le scénario la compte, au niveau 1.
+  "la-declaration-de-tva": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours sans rien changer à la feuille de décision proposée.`,
+    lieux: ["bilan", "budget-de-tresorerie", "compte-de-resultat"],
+    chercher:
+      "Au bilan du premier tour, relevez la TVA à décaisser, au passif. Retrouvez-la au deuxième tour, à la ligne TVA décaissée du budget de trésorerie : est-ce le même montant ? Est-elle passée par le compte de résultat ? Au bilan du deuxième tour, la nouvelle TVA à décaisser est-elle plus forte ou plus faible, et le chiffre d'affaires a-t-il suivi ?",
+  }),
+  "la-tva-et-la-tresorerie": (c) => {
+    const taux = Math.round((scenarioByCode(c.code).scenario.finance.vatRate ?? 0) * 100);
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Jouez trois tours sans rien changer à la feuille de décision proposée.`,
+      lieux: ["budget-de-tresorerie", "bilan"],
+      chercher: `Au troisième tour, dans le budget de trésorerie, multipliez les encaissements clients et les paiements fournisseurs par ${taux} ÷ ${100 + taux} : c'est la TVA qu'ils contiennent. TVA encaissée, moins TVA payée, moins TVA décaissée : la TVA a-t-elle soulagé votre trésorerie ce tour, ou pesé sur elle ? Au bilan, la TVA à décaisser et la TVA des dettes fournisseurs couvrent-elles la TVA des créances clients ?`,
+    };
+  },
+  "l-impot-sur-les-societes": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez quatre tours : l'exercice entier.`,
+    lieux: ["compte-de-resultat", "budget-de-tresorerie"],
+    chercher:
+      "À chaque tour, relevez la ligne « Impôt sur les sociétés » du compte de résultat, ou « Impôt rendu » après un tour de perte. Additionnez les quatre tours : retrouvez-vous le taux de l'impôt appliqué au résultat avant impôt de l'année ? Le budget de trésorerie fait-il sortir la même somme ?",
+  }),
+  "le-deficit-reporte": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez la partie au-delà du quatrième tour, dans le second exercice.`,
+    lieux: ["compte-de-resultat"],
+    chercher:
+      "Si les quatre premiers tours finissent en perte, regardez au cinquième la ligne « dont déficit antérieur imputé (report) » du compte de résultat : l'impôt du tour se calcule-t-il sur le résultat diminué de ce déficit ? Sinon, l'impôt du cinquième tour est-il le taux de l'impôt appliqué à son résultat avant impôt ?",
+  }),
   "tableau-de-bord-commercial": (c) => ({
     niveau: 2,
     faire: `${partie(c, 2)} Jouez quatre tours. À chaque tour, relevez la demande adressée, vos ventes, votre part de marché et votre marge.`,

@@ -634,6 +634,18 @@ describe.each([
   { code: "s-aligner-sur-le-prix-du-concurrent", entreprise: "hotel", telephone: true },
   { code: "le-cout-du-trimestre-creux", entreprise: "bistrot" },
   { code: "plus-cher-au-plus-fort-de-la-saison", entreprise: "hotel", telephone: true },
+  { code: "la-declaration-de-tva", entreprise: "batiment" },
+  { code: "la-declaration-de-tva", entreprise: "transport", telephone: true },
+  { code: "la-tva-et-la-tresorerie", entreprise: "transport" },
+  { code: "la-tva-et-la-tresorerie", entreprise: "batiment", telephone: true },
+  { code: "l-impot-sur-les-societes", entreprise: "hotel" },
+  { code: "l-impot-sur-les-societes", entreprise: "transport", telephone: true },
+  { code: "le-deficit-reporte", entreprise: "bistrot" },
+  { code: "le-deficit-reporte", entreprise: "conseil", telephone: true },
+  { code: "la-tva-du-dernier-trimestre", entreprise: "transport", telephone: true },
+  { code: "la-tva-avancee-pour-le-client", entreprise: "batiment" },
+  { code: "la-depense-de-fin-d-annee", entreprise: "batiment", telephone: true },
+  { code: "la-depense-de-l-annee-en-perte", entreprise: "bistrot" },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se
