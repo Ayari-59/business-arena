@@ -5,6 +5,10 @@ import { BUDGET_DE_FORMATION_EN_ECHELLES, ECART_D_INDICE, EMBAUCHES } from "./re
 import { formuleRetenue } from "./chapitres/s-assurer-contre-les-aleas";
 import { ECART_SOUS_LE_MARCHE, TRIMESTRE_DE_LA_BAISSE, TRIMESTRE_DU_RECRUTEMENT } from "./chapitres/le-depart-d-un-salarie";
 import { TRIMESTRE_SANS_ENTRETIEN } from "./chapitres/entretenir-l-outil";
+import { TAUX_DE_CAPACITE_VISE } from "./chapitres/se-fixer-des-objectifs";
+import { STRATEGIE_DE_COUTS, STRATEGIE_DE_DIFFERENCIATION } from "./chapitres/couts-ou-differenciation";
+import { TRIMESTRE_DE_L_ACHAT, machineDuChapitre } from "./chapitres/croitre-en-investissant";
+import { budgetRse } from "./chapitres/la-responsabilite-societale";
 import { SEUILS_ABC } from "./negociation";
 import { scenarioByCode, scenarioCodeForLevel } from "../scenarios/registry";
 import { DIFFICULTY_PRESETS } from "../difficulty";
@@ -144,8 +148,23 @@ export type LieuDeLArene = keyof typeof LIEUX_DE_L_ARENE;
 /** Le dernier niveau qu'un élève joue sans licence, tel que la vitrine l'ouvre par défaut. */
 export const NIVEAU_SANS_LICENCE = VITRINE_SOLO_PAR_DEFAUT.niveauMaxAutres;
 
-/** Le premier niveau où la feuille de décision propose l'assurance (config/difficulty.ts). */
-export const NIVEAU_DE_L_ASSURANCE = DIFFICULTY_PRESETS.find((p) => p.decisions.insurance)!.level as MissionDansLArene["niveau"];
+/** Le premier niveau où la feuille de décision propose une décision (config/difficulty.ts). */
+const niveauDeLaDecision = (d: keyof (typeof DIFFICULTY_PRESETS)[number]["decisions"]) =>
+  DIFFICULTY_PRESETS.find((p) => p.decisions[d])!.level as MissionDansLArene["niveau"];
+export const NIVEAU_DE_L_ASSURANCE = niveauDeLaDecision("insurance");
+export const NIVEAU_DE_L_INVESTISSEMENT = niveauDeLaDecision("investment");
+export const NIVEAU_DE_LA_RSE = niveauDeLaDecision("rse");
+
+/**
+ * LES MISSIONS QUI SE JOUENT AU-DELÀ DE CE QU'UN ÉLÈVE JOUE SANS LICENCE, parce que leur
+ * décision ne s'ouvre qu'au-delà : chacune au niveau qui l'ouvre, et la mission affichée le
+ * dit (`reservee`). La gamme, elle, a son propre niveau par entreprise (`niveauDeLaGamme`).
+ */
+export const MISSIONS_AU_NIVEAU_DE_LEUR_DECISION: Readonly<Record<string, MissionDansLArene["niveau"]>> = {
+  "s-assurer-contre-les-aleas": NIVEAU_DE_L_ASSURANCE,
+  "croitre-en-investissant": NIVEAU_DE_L_INVESTISSEMENT,
+  "la-responsabilite-societale": NIVEAU_DE_LA_RSE,
+};
 
 export interface MissionDansLArene {
   niveau: 1 | 2 | 3 | 4 | 5 | 6;
@@ -669,6 +688,87 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     lieux: ["feuille", "compte-de-resultat"],
     chercher:
       "Sur la feuille de décision des tours suivants, de combien la disponibilité de l'outil a-t-elle baissé, et quand revient-elle à 100 % ? Comparez la maintenance économisée au premier tour à la marge sur coût variable perdue ensuite.",
+  }),
+  // Stratégie et management. L'investissement et la RSE se jouent au niveau qui les ouvre.
+  "le-diagnostic-strategique": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours sans rien changer, puis dressez le diagnostic de votre entreprise : une force, une faiblesse, une opportunité, une menace.`,
+    lieux: ["synthese", "compte-de-resultat", "marche-du-tour"],
+    chercher:
+      "Votre résultat et votre trésorerie nette sont-ils des forces ou des faiblesses ? Avez-vous manqué des ventes ? La demande du marché a-t-elle monté, et vos concurrents vendent-ils moins cher que vous ? Lesquels de ces constats dépendent de vos décisions ?",
+  }),
+  "se-fixer-des-objectifs": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Avant le premier tour, notez votre objectif : vendre chaque trimestre ${Math.round(TAUX_DE_CAPACITE_VISE * 100)} % de ce que vous pouvez produire. Jouez deux tours en réglant « ${feuilleDe(c, 1).volume} » sur la demande que vous prévoyez.`,
+    lieux: ["plan-face-au-realise", "marche-du-tour"],
+    chercher:
+      "De combien vos ventes s'écartent-elles de votre objectif à chaque tour ? L'écart vient-il de la demande, ou de ventes manquées faute d'avoir produit assez ?",
+  }),
+  "couts-ou-differenciation": (c) => {
+    const { prix, volume } = feuilleDe(c, 2);
+    return {
+      niveau: 2,
+      faire: `${partie(c, 2)} Jouez un tour sans rien changer. Au tour suivant, choisissez une stratégie et tenez-la : pour les coûts, baissez « ${prix} » de ${Math.round((1 - STRATEGIE_DE_COUTS.prix) * 100)} %, divisez par deux « Budget qualité » et « Budget marketing », et montez « ${volume} » ; pour la différenciation, montez « ${prix} » de ${Math.round((STRATEGIE_DE_DIFFERENCIATION.prix - 1) * 100)} %, doublez « Budget qualité » et montez « Budget marketing » de moitié.`,
+      lieux: ["marche-du-tour", "compte-de-resultat"],
+      chercher:
+        "Votre part de marché a-t-elle monté ou baissé ? Et la marge sur coût variable par unité vendue, puis le résultat du tour ? Votre stratégie paie-t-elle face au concurrent qui tient déjà ce côté du marché ?",
+    };
+  },
+  "lire-la-strategie-des-concurrents": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours sans rien changer : le caractère de chaque concurrent ne paraît qu'après deux tours clos.`,
+    lieux: ["marche-du-tour"],
+    chercher:
+      "Sous le marché du tour écoulé, le benchmark concurrentiel donne le prix moyen et la part de marché de chaque entreprise, et le caractère de chaque concurrent. Calculez l'indice de prix de chacun (son prix ÷ la moyenne du marché × 100) : l'arène affiche l'inverse pour vous, son indice de compétitivité-prix. Le caractère lu dit-il la même stratégie que votre indice ?",
+  }),
+  "croitre-en-investissant": (c) => {
+    const m = machineDuChapitre(c.code);
+    return {
+      niveau: NIVEAU_DE_L_INVESTISSEMENT,
+      faire: `${partie(c, NIVEAU_DE_L_INVESTISSEMENT)} Au tour ${TRIMESTRE_DE_L_ACHAT}, dans « Parc machines · investir ou céder », achetez un équipement de plus, ${m.name}, et dans « Nouvel emprunt », empruntez ${m.costPerUnit.toLocaleString("fr-FR")} €. Puis jouez quatre tours.`,
+      lieux: ["feuille", "compte-de-resultat", "bilan"],
+      chercher:
+        "Au tour suivant, la capacité en service a-t-elle monté sur la feuille de décision ? Au compte de résultat, retrouvez les dotations aux amortissements et les charges financières en plus, et comparez-les à la marge sur coût variable gagnée : la croissance a-t-elle payé ?",
+    };
+  },
+  "la-responsabilite-societale": (c) => ({
+    niveau: NIVEAU_DE_LA_RSE,
+    faire: `${partie(c, NIVEAU_DE_LA_RSE)} À chaque tour, dans « Engagement RSE », mettez ${budgetRse(c.code).toLocaleString("fr-FR")} € dans « Budget RSE », puis jouez quatre tours.`,
+    lieux: ["feuille", "compte-de-resultat", "marche-du-tour"],
+    chercher:
+      "Au compte de résultat, retrouvez l'engagement RSE de chaque tour. Dans le marché du tour écoulé, la demande adressée monte-t-elle à partir du deuxième tour, et vos ventes avec elle ? Comparez la marge sur coût variable gagnée à ce que l'engagement a coûté.",
+  }),
+  // Seconde, management et gestion : tout se joue au niveau 1.
+  "le-projet-d-entreprise": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un premier tour sans toucher à la feuille de décision proposée.`,
+    lieux: ["bilan", "budget-de-tresorerie"],
+    chercher:
+      "Au bilan, quelle part des ressources vient des associés, quelle part de la banque ? Dans le budget de trésorerie, la trésorerie d'ouverture a-t-elle suffi à payer les charges de structure du tour, ou les encaissements des clients ont-ils pris le relais ?",
+  }),
+  "organiser-l-activite": (c) => {
+    const { volume } = feuilleDe(c, 1);
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Calculez d'abord la capacité de l'entreprise, la plus petite de celle des équipements et de celle de l'équipe, comme au chapitre. Mettez-la dans « ${volume} », puis jouez le tour.`,
+      lieux: ["feuille", "plan-face-au-realise", "marche-du-tour"],
+      chercher:
+        "Avez-vous produit tout ce que vous aviez prévu, et vendu tout ce que vous avez produit ? Des clients sont-ils repartis sans être servis ? Qu'est-ce qui a limité l'activité : l'outil, l'équipe ou les clients ?",
+    };
+  },
+  "decider-avec-des-chiffres": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Avant de jouer, calculez les ventes que votre publicité doit faire gagner pour se payer. Jouez un tour avec le budget proposé dans « Budget marketing », puis un second avec 0 €, sans rien changer d'autre.`,
+    lieux: ["compte-de-resultat", "marche-du-tour"],
+    chercher:
+      "Comparez les ventes et le résultat des deux tours : la publicité a-t-elle fait gagner les ventes qui la paient ? Votre prévision avait-elle vu juste ?",
+  }),
+  "evaluer-son-activite": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez quatre tours. À chaque tour, relevez le chiffre d'affaires, les ventes, le résultat et la trésorerie.`,
+    lieux: ["synthese", "compte-de-resultat"],
+    chercher:
+      "De combien le chiffre d'affaires a-t-il évolué, en pourcentage, du premier au dernier tour ? Le résultat et la trésorerie ont-ils suivi ? Quel a été votre meilleur tour ?",
   }),
   "tableau-de-bord-commercial": (c) => ({
     niveau: 2,

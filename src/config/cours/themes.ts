@@ -17,9 +17,10 @@ import { FAMILLES } from "../episodes/familles";
  * mal (l'équipier du libre-service, dans une famille d'employés de bureau)
  * se déplace seul.
  *
- * Un thème n'a pas encore de chapitre, la stratégie : il ne vit que par ses
- * épisodes, et la page le dit au lieu de le taire. L'organisation a reçu les siens
- * avec le parcours du BTS GPME (octobre 2026).
+ * Chaque thème a désormais ses chapitres : l'organisation les a reçus avec le parcours
+ * du BTS GPME, la stratégie avec le parcours « Stratégie et management » (octobre
+ * 2026). Un thème sans chapitre ne vivrait que par ses épisodes, et la page le dirait
+ * au lieu de le taire.
  */
 export interface Theme {
   code: string;
@@ -68,6 +69,7 @@ export const THEMES: readonly Theme[] = [
       "soldes-intermediaires-de-gestion",
       "bilan-fonctionnel-et-bfr",
       "le-client-qui-paie-tard",
+      "le-projet-d-entreprise",
     ],
     familles: ["finance"],
   },
@@ -78,6 +80,8 @@ export const THEMES: readonly Theme[] = [
       "Des coûts aux décisions : marges, seuil de rentabilité, coûts complets, budgets, écarts et tableaux de bord.",
     chapitres: [
       "prix-cout-et-marge",
+      "decider-avec-des-chiffres",
+      "evaluer-son-activite",
       "seuil-de-rentabilite",
       "cout-complet",
       "cout-par-produit",
@@ -168,7 +172,13 @@ export const THEMES: readonly Theme[] = [
     titre: "Organisation, production et systèmes d'information",
     description:
       "Faire tourner l'activité : les flux, la qualité, la sécurité, les processus administratifs et les systèmes d'information.",
-    chapitres: ["choisir-son-fournisseur", "s-assurer-contre-les-aleas", "le-cout-de-la-non-qualite", "entretenir-l-outil"],
+    chapitres: [
+      "organiser-l-activite",
+      "choisir-son-fournisseur",
+      "s-assurer-contre-les-aleas",
+      "le-cout-de-la-non-qualite",
+      "entretenir-l-outil",
+    ],
     familles: ["operations", "premier-poste", "hotel-service", "sante-soins", "agro-produire", "agro-amont"],
   },
   {
@@ -176,7 +186,14 @@ export const THEMES: readonly Theme[] = [
     titre: "Stratégie",
     description:
       "Les choix de direction : un marché à ouvrir, un concurrent à racheter, un investissement, une organisation à redessiner.",
-    chapitres: [],
+    chapitres: [
+      "le-diagnostic-strategique",
+      "se-fixer-des-objectifs",
+      "couts-ou-differenciation",
+      "lire-la-strategie-des-concurrents",
+      "croitre-en-investissant",
+      "la-responsabilite-societale",
+    ],
     familles: ["strategie", "hotel-strategie", "conseil-strategie", "sante-strategie", "agro-strategie"],
   },
 ];

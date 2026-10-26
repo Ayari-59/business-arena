@@ -67,6 +67,16 @@ import { L_ASSUREUR_AUGMENTE_LA_PRIME } from "./par-chapitre/l-assureur-augmente
 import { UNE_SEULE_DEMARCHE_QUALITE } from "./par-chapitre/une-seule-demarche-qualite";
 import { RECRUTER_DES_L_ANNONCE_DU_DEPART } from "./par-chapitre/recruter-des-l-annonce-du-depart";
 import { ENTRETENIR_AU_SEUIL } from "./par-chapitre/entretenir-au-seuil";
+import { DES_CLIENTS_REPARTIS_SANS_ETRE_SERVIS } from "./par-chapitre/des-clients-repartis-sans-etre-servis";
+import { UN_OBJECTIF_PLUS_AMBITIEUX } from "./par-chapitre/un-objectif-plus-ambitieux";
+import { BAISSER_LES_PRIX_SANS_RIEN_COUPER } from "./par-chapitre/baisser-les-prix-sans-rien-couper";
+import { ALLER_DANS_L_ESPACE_LIBRE } from "./par-chapitre/aller-dans-l-espace-libre";
+import { VOIR_PLUS_GRAND } from "./par-chapitre/voir-plus-grand";
+import { VISER_LE_LABEL } from "./par-chapitre/viser-le-label";
+import { UN_EQUIPEMENT_DE_PLUS_AU_DEPART } from "./par-chapitre/un-equipement-de-plus-au-depart";
+import { LA_COMMANDE_EXCEPTIONNELLE } from "./par-chapitre/la-commande-exceptionnelle";
+import { DOUBLER_LA_PUBLICITE } from "./par-chapitre/doubler-la-publicite";
+import { LE_SECOND_SEMESTRE } from "./par-chapitre/le-second-semestre";
 import type { Situation } from "./types";
 
 export type { Situation } from "./types";
@@ -154,6 +164,16 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   UNE_SEULE_DEMARCHE_QUALITE,
   RECRUTER_DES_L_ANNONCE_DU_DEPART,
   ENTRETENIR_AU_SEUIL,
+  DES_CLIENTS_REPARTIS_SANS_ETRE_SERVIS,
+  UN_OBJECTIF_PLUS_AMBITIEUX,
+  BAISSER_LES_PRIX_SANS_RIEN_COUPER,
+  ALLER_DANS_L_ESPACE_LIBRE,
+  VOIR_PLUS_GRAND,
+  VISER_LE_LABEL,
+  UN_EQUIPEMENT_DE_PLUS_AU_DEPART,
+  LA_COMMANDE_EXCEPTIONNELLE,
+  DOUBLER_LA_PUBLICITE,
+  LE_SECOND_SEMESTRE,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */
