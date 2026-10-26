@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
 import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
 import { CHAPITRES, chapitreParCode } from "../../src/config/cours/registre";
-import { SITUATIONS } from "../../src/config/cours/situations";
+import { CAS_DE_SYNTHESE, CAS_PAR_CHAPITRE, SITUATIONS, casDuChapitre } from "../../src/config/cours/situations";
 import { COMMERCES } from "../../src/config/cours/chapitres/taux-de-marque";
 import { NEGOCIATIONS } from "../../src/config/cours/chapitres/negocier-le-prix";
 import { prixRejoues } from "../../src/config/cours/decision";
@@ -46,6 +46,23 @@ function textesDe(e: Etape, cas: Cas): string[] {
 }
 
 describe("les cas pratiques", () => {
+  it("chaque chapitre a son cas dédié, et un seul, à son palier et dans son parcours", () => {
+    // Décision du propriétaire (octobre 2026) : au moins un cas pratique par chapitre.
+    for (const c of CHAPITRES) {
+      const dedies = CAS_PAR_CHAPITRE.filter((s) => s.reprend[0] === c.code);
+      expect(dedies.length, c.code).toBe(1);
+      expect(casDuChapitre(c.code), c.code).toBe(dedies[0]);
+      expect(dedies[0]!.palier, c.code).toBe(c.palier);
+      expect(dedies[0]!.parcours, c.code).toBe(c.parcours);
+      expect(dedies[0]!.entreprises?.codes, c.code).toEqual(c.entreprises?.codes);
+    }
+    expect(CAS_PAR_CHAPITRE.length).toBe(CHAPITRES.length);
+    for (const s of CAS_PAR_CHAPITRE) expect(s.reprend.length, s.code).toBe(1);
+    // Un cas de synthèse en enchaîne plusieurs : sinon c'est un cas dédié.
+    for (const s of CAS_DE_SYNTHESE) expect(s.reprend.length, s.code).toBeGreaterThan(1);
+    expect(new Set(SITUATIONS.map((s) => s.code)).size).toBe(SITUATIONS.length);
+  });
+
   it("chacune reprend des chapitres qui existent, et s'ouvre par son code comme un chapitre", () => {
     expect(SITUATIONS.length).toBeGreaterThan(0);
     for (const s of SITUATIONS) {
@@ -75,7 +92,8 @@ describe("les cas pratiques", () => {
 
   it("dans chaque entreprise, des chiffres finis, une seule bonne réponse, et une réponse qui ne se devine pas à sa longueur", () => {
     for (const s of SITUATIONS) {
-      for (const code of ENTREPRISES_DU_COURS) {
+      // Comme son chapitre, un cas réservé à certaines entreprises ne se joue que chez elles.
+      for (const code of ENTREPRISES_DU_COURS.filter((x) => !s.entreprises || s.entreprises.codes.includes(x))) {
         const cas = casDeLEntreprise(code);
         for (const e of s.etapes) {
           if (e.si && !e.si(cas)) continue;

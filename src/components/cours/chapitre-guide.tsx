@@ -12,6 +12,7 @@ import type { MissionAffichee } from "@/config/cours/jouez";
 import type { Lien, SuitesDuChapitre } from "@/pedagogy/cours/suites";
 import type {
   Chapitre,
+  Etape,
   EtapeChoix,
   EtapeComparaison,
   EtapeCurseur,
@@ -913,6 +914,30 @@ function EtMaintenantJouezLe({ mission, cas }: { mission: MissionAffichee; cas: 
 }
 
 /**
+ * LE RAPPEL DE L'ÉNONCÉ, PLIÉ (demande du propriétaire, octobre 2026). Au moment
+ * des calculs, l'élève remontait jusqu'à la première étape pour relire la demande
+ * et ses chiffres. Le rappel la redonne sur chaque étape notée, fermé pour ne
+ * pas allonger la page : un clic l'ouvre. Rien quand la première étape n'est pas
+ * un énoncé chiffré (une lecture avec son tableau).
+ */
+function RappelDeLEnonce({ enonce, cas }: { enonce: Etape; cas: Cas }) {
+  if (enonce.type !== "lecture" || !enonce.tableau) return null;
+  return (
+    <details className="papier rounded-xl p-3" data-rappel-enonce="">
+      <summary className="cursor-pointer text-sm font-semibold">Rappel de l&apos;énoncé : {enonce.titre}</summary>
+      <div className="mt-3 grid gap-3">
+        {enonce.texte(cas).map((t) => (
+          <p key={t} className="max-w-3xl text-sm leading-relaxed">
+            {t}
+          </p>
+        ))}
+        <TableauDuCas tableau={enonce.tableau(cas)} />
+      </div>
+    </details>
+  );
+}
+
+/**
  * ET ENSUITE : LES PASSAGES VERS LES AUTRES BRIQUES. Un chapitre mène aux cas
  * pratiques qui reprennent ses calculs, un cas pratique rappelle les
  * chapitres où ils s'apprennent, et les deux proposent quelques épisodes du
@@ -1181,6 +1206,7 @@ export function ChapitreGuide({
               </p>
               <h1 className="mt-1 text-3xl font-bold leading-tight tracking-tight text-slate-50">{etape.titre}</h1>
             </div>
+            {etape.type !== "lecture" && <RappelDeLEnonce enonce={chapitre.etapes[0]!} cas={cas} />}
             {etape.type === "lecture" && <Lecture etape={etape} {...props} />}
             {etape.type === "ecriture" && <EtapeDEcriture etape={etape} {...props} />}
             {etape.type === "choix" && <EtapeDeChoix etape={etape} {...props} />}

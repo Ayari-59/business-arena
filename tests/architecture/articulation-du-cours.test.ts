@@ -48,6 +48,14 @@ describe("l'articulation du cours", () => {
       "src/components/cours/chapitre-guide.tsx",
       "src/components/episode/bilan-de-l-episode.tsx",
     ])
-      expect(lire(f), f).not.toMatch(/mises? en situation/i);
+      // Aussi le pluriel composé, « mise${n > 1 ? "s" : ""} en situation », passé en production (#305).
+      expect(lire(f), f).not.toMatch(/mises? en situation|mise\$\{/i);
+  });
+
+  it("le rappel plié de l'énoncé accompagne chaque étape notée", () => {
+    // Demande du propriétaire (octobre 2026) : relire la demande et ses chiffres au moment des calculs.
+    const guide = lire("src/components/cours/chapitre-guide.tsx");
+    expect(guide).toContain('{etape.type !== "lecture" && <RappelDeLEnonce enonce={chapitre.etapes[0]!} cas={cas} />}');
+    expect(guide).toMatch(/<details[^>]*data-rappel-enonce=""/);
   });
 });

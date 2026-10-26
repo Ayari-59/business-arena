@@ -5,7 +5,7 @@ import { enseignantSousLicence } from "./helpers/licence";
 import { casDeLEntreprise } from "../../src/config/cours/cas";
 import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
 import { CHAPITRES, PARCOURS, PROGRAMME, chapitreParCode } from "../../src/config/cours/registre";
-import { SITUATIONS, motsDuContenu } from "../../src/config/cours/situations";
+import { CAS_DE_SYNTHESE, casDuChapitre, motsDuContenu } from "../../src/config/cours/situations";
 import { programmeDuDiplome } from "../../src/config/cours/programme";
 import { THEMES, themeDuChapitre } from "../../src/config/cours/themes";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
@@ -38,6 +38,9 @@ afterAll(async () => {
   await navigateur?.close();
 });
 
+/** Les tableaux de l'étape elle-même : celui du rappel de l'énoncé, replié, n'en est pas un. */
+const tableauxDeLEtape = (p: Page) =>
+  p.evaluate(() => [...document.querySelectorAll("[data-tableau-du-cas]")].filter((t) => !t.closest("[data-rappel-enonce]")).length);
 const debordement = (p: Page) => p.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
 
 async function nouvellePage(largeur = 1280, hauteur = 900): Promise<Page> {
@@ -72,8 +75,12 @@ describe("/cours : le catalogue par thème et le chapitre libre", () => {
       return prevus > CHAPITRES.filter((c) => c.parcours === p.code).length;
     });
     expect(await page.locator("[data-a-venir]").count()).toBe(aVenir.length);
-    // Chaque cas pratique paraît une fois, sous le thème des chapitres qu'il reprend.
-    for (const s of SITUATIONS) {
+    // Chaque cas de synthèse paraît une fois, sous le thème des chapitres qu'il reprend.
+    // Chaque chapitre porte son cas pratique dédié, sur sa ligne.
+    for (const c of CHAPITRES) {
+      expect(await page.locator(`details[data-theme] [data-chapitre="${c.code}"] [data-cas-du-chapitre="${casDuChapitre(c.code)!.code}"]`).count(), c.code).toBe(1);
+    }
+    for (const s of CAS_DE_SYNTHESE) {
       expect(
         await page.locator(`details[data-theme="${themeDuChapitre(s.reprend[0]!)!.code}"] [data-situation-de-cours="${s.code}"]`).count(),
         s.code,
@@ -118,7 +125,7 @@ describe("le chapitre pilote, joué sans faute", () => {
     await aller(page, chemin(code));
     for (const [i, etape] of chapitre.etapes.entries()) {
       await expect.poll(() => page.locator("h1").innerText(), { timeout: 15_000 }).toBe(etape.titre);
-      if (etape.tableau) expect(await page.locator("[data-tableau-du-cas]").count()).toBe(1);
+      if (etape.tableau) expect(await tableauxDeLEtape(page)).toBe(1);
       const avant = etatAvant(chapitre, cas, i);
       if (etape.type === "ecriture") {
         const lignes = enSaisie(etape.ecriture(cas));
@@ -461,6 +468,59 @@ describe.each([
   { code: "la-remise-du-grand-compte", entreprise: "batiment", telephone: true },
   { code: "embaucher-pour-la-saison", entreprise: "boutique" },
   { code: "embaucher-pour-la-saison", entreprise: "conseil", telephone: true },
+  // Le cas dédié de chaque chapitre, joué une fois, en alternant ordinateur et téléphone.
+  { code: "l-acompte-du-client", entreprise: "nova" },
+  { code: "rembourser-une-part-du-pret", entreprise: "conseil", telephone: true },
+  { code: "la-commande-du-31-janvier", entreprise: "transport" },
+  { code: "l-escompte-demande-par-le-client", entreprise: "bistrot", telephone: true },
+  { code: "la-prime-exceptionnelle", entreprise: "batiment" },
+  { code: "un-deuxieme-pret", entreprise: "hotel", telephone: true },
+  { code: "un-second-equipement", entreprise: "fitness" },
+  { code: "le-stock-qui-manque", entreprise: "boutique", telephone: true },
+  { code: "acheter-avant-la-cloture", entreprise: "ecommerce" },
+  { code: "la-creance-qui-se-degrade", entreprise: "nova", telephone: true },
+  { code: "l-assurance-sur-plusieurs-annees", entreprise: "conseil" },
+  { code: "la-hausse-des-salaires", entreprise: "transport", telephone: true },
+  { code: "l-investisseuse-au-capital", entreprise: "bistrot" },
+  { code: "un-technicien-plutot-qu-un-prestataire", entreprise: "batiment", telephone: true },
+  { code: "ce-qu-exige-le-fonds", entreprise: "hotel" },
+  { code: "le-fournisseur-raccourcit-ses-delais", entreprise: "fitness", telephone: true },
+  { code: "l-annuite-du-pret", entreprise: "boutique" },
+  { code: "quand-le-taux-monte", entreprise: "ecommerce", telephone: true },
+  { code: "vendre-plus-financer-plus", entreprise: "nova" },
+  { code: "le-fournisseur-augmente", entreprise: "conseil", telephone: true },
+  { code: "le-loyer-qui-augmente", entreprise: "transport" },
+  { code: "un-nouveau-client-regulier", entreprise: "bistrot", telephone: true },
+  { code: "la-cle-contestee", entreprise: "conseil" },
+  { code: "un-trimestre-de-croissance", entreprise: "hotel", telephone: true },
+  { code: "l-objectif-du-commercial", entreprise: "fitness" },
+  { code: "regler-le-voyant", entreprise: "boutique", telephone: true },
+  { code: "monter-son-prix", entreprise: "ecommerce" },
+  { code: "garder-sa-part-de-marche", entreprise: "conseil", telephone: true },
+  { code: "quel-segment-conquerir", entreprise: "nova" },
+  { code: "une-promotion-trop-forte", entreprise: "ecommerce", telephone: true },
+  { code: "repercuter-la-hausse-du-fournisseur", entreprise: "bistrot" },
+  { code: "une-rallonge-pour-la-campagne", entreprise: "fitness", telephone: true },
+  { code: "l-intermediaire-veut-payer-plus-tard", entreprise: "ecommerce" },
+  { code: "la-remise-autorisee", entreprise: "conseil", telephone: true },
+  { code: "la-remise-par-palier", entreprise: "transport" },
+  { code: "le-programme-de-fidelite", entreprise: "fitness", telephone: true },
+  { code: "couper-le-budget-de-campagne", entreprise: "ecommerce" },
+  { code: "la-mise-en-avant-payante", entreprise: "ecommerce", telephone: true },
+  { code: "abandonner-les-petits-comptes", entreprise: "ecommerce" },
+  { code: "l-objectif-de-taux-de-service", entreprise: "conseil", telephone: true },
+  { code: "l-etiquette-du-concurrent", entreprise: "ecommerce" },
+  { code: "moins-de-clients-le-mois-prochain", entreprise: "bistrot", telephone: true },
+  { code: "alleger-le-stock", entreprise: "boutique" },
+  { code: "prevoir-le-trimestre-creux", entreprise: "ecommerce", telephone: true },
+  { code: "reviser-le-budget", entreprise: "boutique" },
+  { code: "ferme-pour-travaux", entreprise: "boutique", telephone: true },
+  { code: "jusqu-ou-remiser", entreprise: "ecommerce" },
+  { code: "retirer-une-reference", entreprise: "bistrot", telephone: true },
+  { code: "l-accord-de-branche", entreprise: "boutique" },
+  { code: "le-trimestre-face-a-l-objectif", entreprise: "ecommerce", telephone: true },
+  { code: "l-augmentation-generale", entreprise: "hotel" },
+  { code: "la-prime-de-fin-d-annee", entreprise: "fitness", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé ; sous licence, il se joue sans faute", async () => {
     const libre = await nouvellePage();
@@ -481,7 +541,12 @@ describe.each([
     await aller(page, `/cours/${chapitre.code}?entreprise=${code}`);
     for (const [i, etape] of chapitre.etapes.entries()) {
       await expect.poll(() => page.locator("h1").innerText(), { timeout: 15_000 }).toBe(etape.titre);
-      if (etape.tableau) expect(await page.locator("[data-tableau-du-cas]").count()).toBe(1);
+      if (etape.tableau) expect(await tableauxDeLEtape(page)).toBe(1);
+      // Le rappel plié de l'énoncé, sur chaque étape notée d'un contenu qui s'ouvre sur un énoncé chiffré.
+      const enonce = chapitre.etapes[0]!;
+      expect(await page.locator("[data-rappel-enonce]").count(), etape.id).toBe(
+        etape.type !== "lecture" && enonce.type === "lecture" && enonce.tableau ? 1 : 0,
+      );
       const avant = etatAvant(chapitre, cas, i);
       if (etape.type === "ecriture") {
         for (const [k, l] of enSaisie(etape.ecriture(cas)).entries()) {

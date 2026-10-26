@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { CHAPITRES } from "@/config/cours/registre";
-import { SITUATIONS } from "@/config/cours/situations";
+import { CAS_DE_SYNTHESE, CAS_PAR_CHAPITRE, SITUATIONS } from "@/config/cours/situations";
 import { THEMES, episodesDuTheme, themeDeLEpisode, themeDuChapitre } from "@/config/cours/themes";
 import { CONCEPTS } from "@/config/pedagogy/concepts";
 import { FAMILLES } from "@/config/episodes/familles";
@@ -10,7 +10,7 @@ import {
   EPISODES_PROPOSES,
   chapitresDeLaNotion,
   coursDeLEpisode,
-  situationsDuTheme,
+  casDeSyntheseDuTheme,
   suitesDuChapitre,
 } from "@/pedagogy/cours/suites";
 
@@ -29,7 +29,8 @@ const codes = (liens: readonly { code: string }[]) => liens.map((l) => l.code);
 describe("la fin d'un chapitre", () => {
   it("nomme chaque cas pratique qui le reprend, et aucun autre", () => {
     for (const c of CHAPITRES) {
-      const attendues = SITUATIONS.filter((s) => s.reprend.includes(c.code)).map((s) => s.code);
+      // Le cas dédié d'abord, puis les cas de synthèse.
+      const attendues = [...CAS_PAR_CHAPITRE, ...CAS_DE_SYNTHESE].filter((s) => s.reprend.includes(c.code)).map((s) => s.code);
       expect(codes(suitesDuChapitre(c.code).situations), c.code).toEqual(attendues);
     }
     // Chaque cas pratique se trouve à la fin d'au moins un chapitre.
@@ -78,13 +79,14 @@ describe("le bilan d'un épisode", () => {
       }
       expect(cours?.theme.code, code).toBe(theme.code);
       expect(codes(cours!.chapitres), code).toEqual([...theme.chapitres]);
-      expect(codes(cours!.situations), code).toEqual(situationsDuTheme(theme).map((s) => s.code));
+      expect(codes(cours!.situations), code).toEqual(casDeSyntheseDuTheme(theme).map((s) => s.code));
       for (const l of [...cours!.chapitres, ...cours!.situations]) expect(l.titre, l.code).not.toBe(l.code);
     }
   });
 
-  it("chaque cas pratique est proposé par le bilan d'au moins un épisode, sauf si son thème n'en a pas", () => {
-    for (const s of SITUATIONS) {
+  it("chaque cas de synthèse est proposé par le bilan d'au moins un épisode, sauf si son thème n'en a pas", () => {
+    // Le bilan d'un épisode propose les cas de synthèse de son thème ; les cas dédiés se trouvent à côté de leur chapitre.
+    for (const s of CAS_DE_SYNTHESE) {
       const theme = THEMES.find((t) => t.code === themeDuChapitre(s.reprend[0]!)!.code)!;
       if (episodesDuTheme(theme).length === 0) continue;
       const proposee = episodesDuTheme(theme).some((e) => codes(coursDeLEpisode(e)?.situations ?? []).includes(s.code));
