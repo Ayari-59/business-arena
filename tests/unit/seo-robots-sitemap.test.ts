@@ -6,6 +6,8 @@ import sitemap, { PAGES_PUBLIQUES } from "@/app/sitemap";
 import { ATELIERS } from "@/config/ateliers";
 import { formationsAvecUnePage } from "@/config/couverture";
 import { SITE_URL } from "@/config/site";
+import { FICHES } from "@/config/episodes/fiches";
+import { EPISODES } from "@/pedagogy/episodes/registre";
 
 // Le plan du site lit désormais les concours publiés en base : on la remplace
 // par un objet vide. La lecture échoue alors et retombe (try/catch) sur les
@@ -90,6 +92,13 @@ describe("sitemap.xml", () => {
       expect(urls).toContain(`${SITE_URL}/animations/${a.code}/dossier`);
       expect(urls).toContain(`${SITE_URL}/animations/${a.code}/formulaires`);
     }
+  });
+
+  it("liste les épisodes manager et leurs fiches (décision d'octobre 2026 : « indexer »)", () => {
+    expect(urls).toContain(`${SITE_URL}/entreprises/episode`);
+    expect(urls).toContain(`${SITE_URL}/enseignants/episodes`);
+    for (const e of EPISODES) expect(urls, e.code).toContain(`${SITE_URL}/entreprises/episode/${e.code}`);
+    for (const f of FICHES) expect(urls, f.code).toContain(`${SITE_URL}/enseignants/episodes/${f.code}`);
   });
 
   it("liste la page de chaque diplôme servi, son tableau de couverture", () => {

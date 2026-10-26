@@ -182,6 +182,18 @@ export const TOURS_DE_LA_PARTIE_SOLO = 6;
 /** Les réseaux d'établissements passent sur devis à partir de ce nombre. */
 export const SEUIL_RESEAU_ETABLISSEMENTS = 10;
 
+/**
+ * L'EFFECTIF D'UNE CLASSE SOUS L'OFFRE CLASSE (décision du propriétaire, octobre 2026 :
+ * « une classe max 35 élèves »). L'offre couvre un enseignant et son groupe : une partie
+ * de classe, comme une classe du cours, accueille au plus ce nombre d'élèves. Programme et
+ * Campus n'ont pas de plafond. Le refus se lit dans services/acces.service.ts.
+ */
+export const ELEVES_PAR_CLASSE = 35;
+
+/** Le refus de l'élève de trop, sous l'offre Classe : il ne peut rien y faire, son enseignant le peut. */
+export const refusDeLEffectif = (lieu: "partie" | "classe") =>
+  `Cette ${lieu} compte déjà ${ELEVES_PAR_CLASSE} élèves, le plus que l'offre ${OFFRES.classe.nom} de votre établissement accueille. Prévenez votre enseignant.`;
+
 /** La cohorte animée des entreprises. */
 export const COHORTE = { managers: 15, episodesMin: 3, episodesMax: 6 } as const;
 
@@ -603,6 +615,9 @@ const LA_PARTIE_DE_CLASSE =
   "Les parties de classe : les étudiants rejoignent par un code, sans compte ni e-mail, en équipes, entreprises en concurrence.";
 const LE_SUIVI =
   "Le suivi : tableau de bord, observation, maîtrise des notions, révélation et projection en cours, relevé de notes exportable en tableur.";
+/** Le cours, inclus dans les trois offres de l'arène (décision du propriétaire, octobre 2026). */
+const LE_COURS =
+  "Le cours : tous les chapitres et leurs cas pratiques, suivis en classe chapitre par chapitre, calculatrice comprise.";
 
 /** L'intégration aux plateformes de cours (src/lti) : en ligne, décrite sur /integration. */
 export const INTEGRATION_LMS = {
@@ -638,6 +653,7 @@ export function variablesDuCatalogue(d: ReglageDeLaDecouverte = DECOUVERTE_PAR_D
     finAnneeScolaire: CONDITIONS.anneeScolaire.fin,
     seuilReseau: String(SEUIL_RESEAU_ETABLISSEMENTS),
     managers: String(COHORTE.managers),
+    elevesParClasse: String(ELEVES_PAR_CLASSE),
     episodesMin: String(COHORTE.episodesMin),
     episodesMax: String(COHORTE.episodesMax),
     lesOffresDeLArene: LES_OFFRES_DE_L_ARENE,
@@ -780,8 +796,10 @@ export const OFFRES_PAR_DEFAUT: readonly OffreDuCatalogue[] = [
     inclus: [
       "Une entreprise au choix parmi les {entreprises}, et un niveau au choix de {niveaux}, fixés pour l'année.",
       "Autant de parties que vous voulez dans l'année avec ce paramétrage, une à la fois.",
+      "Une classe de {elevesParClasse} élèves au plus, dans une partie comme dans le cours.",
       LA_PARTIE_DE_CLASSE,
       LE_SUIVI,
+      LE_COURS,
       "Les ateliers clés en main qui se jouent avec cette entreprise et ce niveau, avec déroulé, corrigés et dossier enseignant.",
       "Un concours à la place d'une partie, si l'entreprise choisie est {entrepriseDesConcours} : les concours se jouent avec elle.",
     ],
@@ -804,15 +822,16 @@ export const OFFRES_PAR_DEFAUT: readonly OffreDuCatalogue[] = [
     inclus: [
       "Une entreprise au choix parmi les {entreprises}, choisie à l'achat, à tous les niveaux, de {niveaux}.",
       "Toutes les promotions et tous les groupes du programme, plusieurs parties en même temps.",
-      "L'équipe pédagogique et les intervenants du programme, au nombre fixé au devis.",
+      "L'équipe pédagogique et les intervenants du programme, référent compris, au nombre fixé au devis.",
       LA_PARTIE_DE_CLASSE,
       LE_SUIVI,
+      LE_COURS,
       "Les ateliers clés en main de cette entreprise, avec déroulé, corrigés et dossier enseignant.",
       "Les concours et le classement à l'IPG, si l'entreprise choisie est {entrepriseDesConcours} : les concours se jouent avec elle.",
     ],
     precisions: [SANS_LES_EPISODES, "À l'année, pour l'équipe d'un programme."],
-    // L'examen individuel (migration 0042) : inclus dans Programme et Campus, pas dans Classe.
-    modules: [arene("programme"), { module: "examen" }],
+    // L'examen individuel est inclus dans Campus seulement (migration 0049).
+    modules: [arene("programme")],
     ordre: 30,
     miseEnAvant: true,
     bouton: devis("programme"),
@@ -830,8 +849,10 @@ export const OFFRES_PAR_DEFAUT: readonly OffreDuCatalogue[] = [
     inclus: [
       "Les {entreprises} entreprises, à tous les niveaux, dans tous les programmes.",
       "Des groupes, des enseignants et des intervenants sans limite.",
+      LE_COURS,
       "Les {ateliers} ateliers clés en main, avec déroulé, corrigés et dossier enseignant, dont {ateliersReferentiel} adossés au référentiel d'un diplôme ({diplomes}).",
       "Les concours et le classement à l'IPG.",
+      "L'examen individuel : une partie solo notée sur une grille fixe, la même pour tous les candidats.",
       "Un référent qui gère les accès.",
       "Une facture au nom de l'école.",
       "Une licence par année scolaire, du {debutAnneeScolaire} au {finAnneeScolaire}.",
@@ -840,7 +861,7 @@ export const OFFRES_PAR_DEFAUT: readonly OffreDuCatalogue[] = [
       SANS_LES_EPISODES,
       "Sur devis, puis bon de commande ou mandat administratif ; Chorus Pro pour les factures publiques.",
     ],
-    // L'examen individuel (migration 0042) : inclus dans Programme et Campus, pas dans Classe.
+    // L'examen individuel (migrations 0042 et 0049) : inclus dans Campus seulement.
     modules: [arene("campus"), { module: "examen" }],
     ordre: 40,
     bouton: devis("campus"),

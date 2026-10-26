@@ -110,7 +110,9 @@ export const LA_COMMANDE_DU_31_JANVIER: Situation = {
     "Dire ce qu'une vente change au résultat, à la TVA du mois et à la banque",
     "Rédiger une réponse chiffrée au gérant",
   ],
-  libre: false,
+  // Libre comme le chapitre qu'il reprend (décision du propriétaire, octobre 2026 :
+  // « cas pratique inclus ») : la démonstration va du chapitre à son cas pratique.
+  libre: true,
   ouverture: journalDeJanvier,
   etapes: [
     {

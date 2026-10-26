@@ -23,6 +23,7 @@ import { DEFAULT_SCENARIO_CODE, isBuiltInScenarioCode } from "@/config/scenarios
 import { NIVEAU_MAX, niveauReserve } from "@/config/vitrine-solo";
 import {
   CONDITIONS,
+  ELEVES_PAR_CLASSE,
   ENTREPRISE_DES_CONCOURS,
   entrepriseDuScenario,
   entrepriseDuSecteur,
@@ -153,6 +154,28 @@ export async function unCompteAvecEpisodes(
   comptes: readonly (string | null | undefined)[],
 ): Promise<boolean> {
   return uneOrganisationAvecEpisodes(await organisationsDes(comptes));
+}
+
+/**
+ * LE PLAFOND D'ÉLÈVES D'UNE CLASSE (décision du propriétaire, octobre 2026 : « une classe
+ * max 35 élèves »). Sous l'offre Classe seulement, une partie de classe comme une classe du
+ * cours accueille au plus `ELEVES_PAR_CLASSE` élèves. Une organisation sous Programme ou
+ * Campus lève le plafond ; sans licence de l'arène en cours, rien ne change : null.
+ */
+export async function plafondDEleves(organisations: readonly (string | null | undefined)[]): Promise<number | null> {
+  let sousClasse = false;
+  for (const org of distincts(organisations)) {
+    const statut = await getLicenceStatus(org, new Date(), "arene");
+    if (statut.state !== "active" && statut.state !== "bientot_expiree") continue;
+    if (statut.licence?.arene !== "classe") return null;
+    sousClasse = true;
+  }
+  return sousClasse ? ELEVES_PAR_CLASSE : null;
+}
+
+/** Le plafond d'élèves des établissements de ces comptes (l'enseignant d'une classe du cours). */
+export async function plafondDElevesDesComptes(comptes: readonly (string | null | undefined)[]): Promise<number | null> {
+  return plafondDEleves(await organisationsDes(comptes));
 }
 
 /**

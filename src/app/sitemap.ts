@@ -4,6 +4,8 @@ import { ROLES } from "@/config/ateliers/roles";
 import { formationsAvecUnePage } from "@/config/couverture";
 import { GUIDES, cheminDuGuide } from "@/config/guides";
 import { SITE_URL } from "@/config/site";
+import { FICHES } from "@/config/episodes/fiches";
+import { EPISODES } from "@/pedagogy/episodes/registre";
 import { getPublicCompetitionCodes } from "@/services/competition.service";
 
 /**
@@ -12,6 +14,7 @@ import { getPublicCompetitionCodes } from "@/services/competition.service";
  * Les fiches des entreprises et des notions sont des sections de leur page
  * (ancres), pas des routes : elles n'ont pas d'entrée propre. Les ateliers, si :
  * chacun a sa page, son dossier élève, un dossier par responsable et ses formulaires.
+ * Les épisodes manager aussi, et leurs fiches enseignant.
  */
 
 /** Pages publiques de premier niveau (hors ateliers, listés à part). */
@@ -27,6 +30,10 @@ export const PAGES_PUBLIQUES = [
   "/fonctionnalites",
   "/notions",
   "/cours",
+  // Les épisodes, indexés depuis la décision du propriétaire d'octobre 2026 (« indexer ») :
+  // le catalogue, la page des enseignants ; chaque épisode et chaque fiche, listés à part.
+  "/entreprises/episode",
+  "/enseignants/episodes",
   "/guide",
   "/guides",
   "/manuel",
@@ -110,5 +117,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  return [...pages, ...guides, ...diplomes, ...ateliers, ...(await concoursPublies())];
+  // Chaque épisode manager (/entreprises/episode/<code>) et chaque fiche enseignant.
+  const episodes: MetadataRoute.Sitemap = [
+    ...EPISODES.map((e) => ({
+      url: `${SITE_URL}/entreprises/episode/${e.code}`,
+      lastModified: DATE_DE_BUILD,
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
+    })),
+    ...FICHES.map((f) => ({
+      url: `${SITE_URL}/enseignants/episodes/${f.code}`,
+      lastModified: DATE_DE_BUILD,
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
+    })),
+  ];
+
+  return [...pages, ...guides, ...diplomes, ...ateliers, ...episodes, ...(await concoursPublies())];
 }

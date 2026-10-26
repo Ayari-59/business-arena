@@ -45,7 +45,8 @@ import {
   type DemandeAInstruire,
 } from "@/services/subvention.service";
 import { teamDisplayName } from "@/services/game-view.service";
-import { releveOuvert, verifierLaReprise } from "@/services/acces.service";
+import { plafondDEleves, releveOuvert, verifierLaReprise } from "@/services/acces.service";
+import { refusDeLEffectif } from "@/config/tarifs";
 
 // Re-exports depuis game-creation.service.ts pour compatibilité des consommateurs existants
 export {
@@ -260,6 +261,16 @@ export async function joinGameByCode(args: {
     // donne, sans qu'ils aient rien à demander.
     await attribuerCodeDeReprise(game.id, args.userId);
     return { gameId: game.id };
+  }
+
+  // L'EFFECTIF DE L'OFFRE CLASSE : au plafond, un élève de plus n'entre pas. Les élèves
+  // déjà inscrits reviennent toujours (plus haut). Hors concours, où plusieurs classes
+  // se retrouvent dans la même partie.
+  if (game.mode !== "competition" && !game.competitionStageId) {
+    const plafond = await plafondDEleves([game.organizationId]);
+    if (plafond !== null && new Set(memberships.map((m) => m.userId)).size >= plafond) {
+      return { error: refusDeLEffectif("partie") };
+    }
   }
 
   // LA TABLE D'ABORD, LE REMPLISSAGE ENSUITE. Quand l'élève a scanné le carton

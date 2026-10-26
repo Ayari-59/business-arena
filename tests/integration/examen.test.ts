@@ -141,8 +141,13 @@ describe("la création d'un examen, sous licence", () => {
     await expect(creerExamen(classe.userId, { ...SAISIE, modeGraine: "commune" })).rejects.toThrow(/examen individuel est inclus/);
   });
 
-  it("un Programme l'inclut, dans son entreprise seulement", async () => {
-    const programme = await etablissementSousLicence("Programme", { arene: "programme", entreprises: ["nova"] });
+  it("un Programme ne l'inclut plus (décision d'octobre 2026) : refus", async () => {
+    const programme = await etablissementSousLicence("Programme sans examen", { arene: "programme", entreprises: ["nova"] });
+    await expect(creerExamen(programme.userId, { ...SAISIE, modeGraine: "commune" })).rejects.toBeInstanceOf(ExamenReserveError);
+  });
+
+  it("un Programme vendu avec l'examen le garde, dans son entreprise seulement", async () => {
+    const programme = await etablissementSousLicence("Programme", { arene: "programme", entreprises: ["nova"], examen: true });
     const ok = await creerExamen(programme.userId, { ...SAISIE, modeGraine: "commune" });
     expect(ok.code).toMatch(/^EX-/);
     await expect(

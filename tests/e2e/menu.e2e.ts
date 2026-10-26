@@ -129,8 +129,9 @@ describe("le menu du site", () => {
     await page.setViewportSize(LARGEURS[1]!.taille);
     await aller(page, "/entreprises");
     await page.getByRole("button", { name: "Menu" }).click();
-    const groupes = page.locator('#plan-du-site button[aria-controls^="groupe-"]');
-    for (let i = 0; i < (await groupes.count()); i += 1) await groupes.nth(i).click();
+    // Seuls les groupes fermés : « Jouer », déplié à l'ouverture, se refermerait.
+    const groupes = page.locator('#plan-du-site button[aria-controls^="groupe-"][aria-expanded="false"]');
+    while ((await groupes.count()) > 0) await groupes.first().click();
     await expect
       .poll(() =>
         page.locator('#plan-du-site a[href="/entreprises"][aria-current="page"]').count(),

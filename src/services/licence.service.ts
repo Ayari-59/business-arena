@@ -157,9 +157,10 @@ export interface LicenceStatus {
 
 /**
  * Les offres de l'arène qui incluent l'examen individuel par défaut (la composition du
- * catalogue par défaut, config/tarifs.ts) : Programme et Campus, pas Classe.
+ * catalogue par défaut, config/tarifs.ts) : Campus seulement, depuis la décision du
+ * propriétaire d'octobre 2026 (« examen individuel inclus dans campus »).
  */
-export const EXAMEN_PAR_DEFAUT: readonly OffreDeLArene[] = ["programme", "campus"];
+export const EXAMEN_PAR_DEFAUT: readonly OffreDeLArene[] = ["campus"];
 
 /** Seuil d'alerte : de quoi lancer un renouvellement sans courir. */
 const ALERTE_JOURS = 30;
@@ -310,7 +311,7 @@ export async function setOrgLicence(args: {
   episodes?: boolean;
   /**
    * L'examen individuel (migration 0042). Absent : il suit la composition par défaut du
-   * catalogue, inclus dans Programme et Campus, pas dans Classe. Une vente depuis une
+   * catalogue, inclus dans Campus seulement (`EXAMEN_PAR_DEFAUT`). Une vente depuis une
    * offre (services/vente.service.ts) le pose d'après les modules de l'offre.
    */
   examen?: boolean;

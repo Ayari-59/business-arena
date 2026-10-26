@@ -4,6 +4,7 @@ import { PiedDePage } from "@/components/pied-de-page";
 import { CatalogueDesEpisodes } from "@/components/catalogue-des-episodes";
 import { catalogueDesEpisodes } from "@/config/episodes/catalogue";
 import { FICHES, type FicheEnseignant } from "@/config/episodes/fiches";
+import { dureeEnClair } from "@/config/cours/duree";
 import { formationParCode } from "@/config/formations";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
 import { OFFRES } from "@/config/tarifs";
@@ -12,8 +13,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/enseignants/episodes" },
   title: "Épisodes en classe",
   description:
-    "Des épisodes de contrôle de gestion, de finance et de stratégie à jouer en une séance : la notion du cours est le piège de la décision, et le calcul de la semaine 1 se corrige comme un exercice.",
-  robots: { index: false, follow: false },
+    "Des épisodes à jouer en une séance, démonstrations comprises : la notion du cours est le piège de la décision, et le calcul de la semaine 1 se corrige comme un exercice.",
 };
 
 /**
@@ -85,7 +85,7 @@ function CarteFiche({ fiche, niveau }: { fiche: FicheEnseignant; niveau: 3 | 4 }
         <p className="mt-2 text-base leading-relaxed text-slate-300">{ep.resume}</p>
       </div>
       <p className="text-sm text-slate-400">
-        {fiche.dureeMinutes / 60} h · {fiche.programme.join(" ; ")}
+        {dureeEnClair(fiche.dureeMinutes)} · {fiche.programme.join(" ; ")}
       </p>
       <Link
         href={`/enseignants/episodes/${fiche.code}`}

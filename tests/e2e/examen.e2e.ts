@@ -168,7 +168,7 @@ describe("sans le module de l'examen", () => {
     const p = await ctx.newPage();
     await aller(p, "/teacher/examens");
     const message = p.locator("[data-examens-sans-module]");
-    expect(await message.textContent()).toMatch(/L'examen individuel est inclus dans les offres Programme et Campus/);
+    expect(await message.textContent()).toMatch(/L'examen individuel est inclus dans l'offre Campus/);
     expect(await message.getByRole("link", { name: "Voir les offres" }).getAttribute("href")).toBe("/tarifs");
     await p.getByLabel("Nom de l'examen").fill("Sans module");
     await p.getByRole("button", { name: "Créer l'examen" }).click();

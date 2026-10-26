@@ -549,13 +549,20 @@ describe.each([
   { code: "l-augmentation-generale", entreprise: "hotel" },
   { code: "la-prime-de-fin-d-annee", entreprise: "fitness", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
-  it("sans licence, il dit qu'il est réservé ; sous licence, il se joue sans faute", async () => {
+  it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
+    // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se
+    // joue alors SANS licence, ce qui le prouve ouvert.
+    const libreDAcces = chapitreParCode(chapitreCode)!.libre;
     const libre = await nouvellePage();
     await aller(libre, `/cours/${chapitreCode}?entreprise=${entreprise}`);
-    expect(await libre.locator("main").innerText()).toContain(`${motsDuContenu(chapitreCode).reserve} aux établissements sous licence`);
-    // Une sortie : le chapitre libre, les offres, le devis (audit d'octobre 2026).
-    const sorties = await libre.locator("main a").evaluateAll((xs) => xs.map((x) => x.getAttribute("href")));
-    expect(sorties).toEqual(expect.arrayContaining(["/tarifs", "/devis", `/cours/${CHAPITRES.find((c) => c.libre)!.code}`]));
+    if (libreDAcces) {
+      expect(await libre.locator("main").innerText()).not.toContain("aux établissements sous licence");
+    } else {
+      expect(await libre.locator("main").innerText()).toContain(`${motsDuContenu(chapitreCode).reserve} aux établissements sous licence`);
+      // Une sortie : le chapitre libre, les offres, le devis (audit d'octobre 2026).
+      const sorties = await libre.locator("main a").evaluateAll((xs) => xs.map((x) => x.getAttribute("href")));
+      expect(sorties).toEqual(expect.arrayContaining(["/tarifs", "/devis", `/cours/${CHAPITRES.find((c) => c.libre)!.code}`]));
+    }
     await libre.context().close();
 
     const code = entreprise;
@@ -566,7 +573,7 @@ describe.each([
       hasTouch: telephone ?? false,
       locale: "fr-FR",
     });
-    await enseignantSousLicence(ctx);
+    if (!libreDAcces) await enseignantSousLicence(ctx);
     const page = await ctx.newPage();
     await aller(page, `/cours/${chapitre.code}?entreprise=${code}`);
     for (const [i, etape] of chapitre.etapes.entries()) {

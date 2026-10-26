@@ -105,8 +105,20 @@ Chaque format se prend seul. Chacun a sa porte gratuite : le chapitre libre, la 
 - L'accueil présente les quatre formats, chacun avec sa page et sa porte gratuite (`components/accueil-formats.tsx`). Le héros y renvoie.
 - Le concours s'appelle partout « Concours entre classes ». `/orientation` annonce bien quatre questions. Le nombre de concurrents est donné comme un maximum.
 
-**Lot 2**
+**Lot 2 (#309)**
 - Une seule porte pour les codes d'élève (`services/rejoindre.service.ts`). Un code de classe du cours, de cohorte d'épisodes, de concours ou d'examen tapé dans « Rejoindre une partie » mène à sa page, avec le code déjà saisi. Comme pour une partie, rien n'est créé tant que le code n'est pas reconnu.
 - Le formulaire d'inscription à un concours (`/compete`) est rangé chez les élèves, sous « Rejoindre un concours ». Côté enseignants, « Concours entre classes » mène à l'explication (`/guide#concours`).
 - La description du cours dans le menu dit ce qu'il est devenu : de la comptabilité au marketing, avec des cas pratiques.
 - `/parcours` porte le même nom au menu et sur l'accueil : « Référentiels par diplôme ».
+
+**Lot 3 : les décisions du propriétaire**
+- Niveaux gratuits en solo : 1 à 3, pour toutes les entreprises. La migration 0049 remet le réglage de la Découverte à la règle par défaut.
+- Prix : toujours sur devis, rien n'a changé.
+- Le cours et ses cas pratiques sont écrits sur les cartes Classe, Programme et Campus.
+- Le cas pratique dédié au chapitre libre (« La commande du 31 janvier ») est libre lui aussi.
+- Les cinq épisodes de démonstration ont leur fiche de séance.
+- Offre Classe : 35 élèves au plus par classe (`ELEVES_PAR_CLASSE`), dans une partie de classe comme dans une classe du cours. L'élève de trop reçoit un refus qui lui dit de prévenir son enseignant ; l'élève déjà inscrit revient toujours. Le référent compte parmi les enseignants : la carte Programme le dit.
+- L'examen individuel est inclus dans Campus seulement : le module quitte Programme. Les licences déjà vendues gardent ce qu'elles portent.
+- `/entreprises` est la page des entreprises jouables : elle se range dans « Jouer », sous « Les entreprises jouables ». Le groupe des entreprises clientes s'ouvre sur les épisodes manager.
+- Les épisodes sont indexés : le catalogue, la page des enseignants, chaque épisode et chaque fiche sont dans le sitemap, sans `noindex`.
+- Le catalogue se lit en base : la migration 0049 réécrit les cartes seulement si elles ont encore le texte d'origine. Une carte modifiée dans `/admin/offres` reste telle quelle.

@@ -158,8 +158,8 @@ export default async function CoursPage({
               </h2>
               <p className="max-w-3xl text-base text-slate-300">
                 {CHAPITRES.length} chapitres en {THEMES.length} thèmes, du lycée au DCG, et des épisodes à jouer en
-                situation. Chaque chapitre dit son palier, sa durée indicative et son accès : le premier est libre, la
-                suite est réservée aux établissements sous licence.
+                situation. Chaque chapitre dit son palier, sa durée indicative et son accès : le premier est libre, avec son
+                cas pratique, la suite est réservée aux établissements sous licence.
               </p>
             </div>
 

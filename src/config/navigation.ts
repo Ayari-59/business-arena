@@ -163,6 +163,14 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
       },
       ACTION_PRINCIPALE,
       {
+        // Décision du propriétaire (octobre 2026) : /entreprises est la page des entreprises
+        // jouables. Elle était la « Présentation » du groupe des entreprises clientes, qu'elle
+        // ne présente pas : elle se range avec ce qu'on joue.
+        href: "/entreprises",
+        libelle: "Les entreprises jouables",
+        aide: "Les fiches des entreprises de l'arène : leur marché, leurs contraintes, ce qu'on y apprend.",
+      },
+      {
         href: "/join",
         libelle: "Rejoindre une partie",
         // Une seule porte (services/rejoindre.service) : un code de classe, de cohorte, de
@@ -272,13 +280,8 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
     code: "entreprises",
     titre: "Entreprises",
     precision: "et managers",
-    entree: "/entreprises",
+    entree: "/entreprises/episode",
     liens: [
-      {
-        href: "/entreprises",
-        libelle: "Présentation",
-        aide: "Les fiches des entreprises jouables : leur marché, leurs contraintes, ce qu'on y apprend.",
-      },
       {
         href: "/entreprises/episode",
         libelle: "Épisodes manager",
