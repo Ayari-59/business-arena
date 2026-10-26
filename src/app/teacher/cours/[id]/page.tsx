@@ -15,7 +15,7 @@ import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { bouton } from "@/components/bouton";
 import { SubmitButton } from "@/components/submit-button";
 import { ENTREPRISES } from "@/app/cours/entreprises";
-import { cloreClasseAction } from "../actions";
+import { calculatriceAction, cloreClasseAction } from "../actions";
 
 export const metadata: Metadata = {
   title: "Une classe du cours",
@@ -23,6 +23,14 @@ export const metadata: Metadata = {
 };
 
 export const dynamic = "force-dynamic";
+
+/** Ce que dit la page après un geste de l'enseignant (`?fait=`). */
+const MESSAGES_DU_GESTE: Record<string, string> = {
+  close: "La classe est close : plus de nouvel élève.",
+  rouverte: "La classe est rouverte.",
+  calculatrice: "La calculatrice est rendue à vos élèves.",
+  "sans-calculatrice": "La calculatrice est retirée à vos élèves.",
+};
 
 /** Une case de la frise d'un élève : l'état d'une étape, en couleur et en mots. */
 const CASES: Record<LigneDEleve["cases"][number], { classe: string; libelle: string }> = {
@@ -86,7 +94,9 @@ export default async function ClasseDuCoursPage({
       <div className={`${COLONNE_DE_PAGE} space-y-8`}>
         {creee || fait ? (
           <p role="status" className="rounded-lg encadre-gain px-4 py-2.5 text-sm">
-            {creee ? "La classe est créée. Donnez son code à vos élèves." : fait === "close" ? "La classe est close : plus de nouvel élève." : "La classe est rouverte."}
+            {creee
+              ? "La classe est créée. Donnez son code à vos élèves."
+              : (MESSAGES_DU_GESTE[fait ?? ""] ?? "La classe est rouverte.")}
           </p>
         ) : null}
 
@@ -105,6 +115,17 @@ export default async function ClasseDuCoursPage({
           <form action={cloreClasseAction.bind(null, classe.id, !close)}>
             <SubmitButton pendingLabel="Enregistrement…" className={bouton({ variante: "secondaire", taille: "s" })}>
               {close ? "Rouvrir la classe" : "Clore la classe (plus de nouvel élève)"}
+            </SubmitButton>
+          </form>
+          {/* LA CALCULATRICE DU COURS, permise par défaut ; retirée, les élèves de la classe ne la voient plus. */}
+          <p className="text-sm text-slate-400" data-calculatrice-de-la-classe={classe.sansCalculatrice ? "retiree" : "permise"}>
+            {classe.sansCalculatrice
+              ? "La calculatrice est retirée : vos élèves calculent sans elle."
+              : "La calculatrice est permise : vos élèves l'ouvrent dans les chapitres et les cas pratiques."}
+          </p>
+          <form action={calculatriceAction.bind(null, classe.id, classe.sansCalculatrice)}>
+            <SubmitButton pendingLabel="Enregistrement…" className={bouton({ variante: "secondaire", taille: "s" })}>
+              {classe.sansCalculatrice ? "Rendre la calculatrice" : "Retirer la calculatrice (calcul mental)"}
             </SubmitButton>
           </form>
         </section>

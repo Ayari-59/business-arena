@@ -29,6 +29,7 @@ import { chapitreDuCas, etatAvant, indexDeLEtape, journalAvant } from "@/pedagog
 import type { Ecriture } from "@/pedagogy/cours/etats";
 import { cleDeLaQuestion, dansLOrdreAffiche } from "@/pedagogy/cours/ordre-des-options";
 import { Journal, TableauDuCas, VueBilan, VueDEtape, VueResultat } from "./etats-du-cours";
+import { Calculatrice } from "./calculatrice";
 import { SaisieEcriture } from "./saisie-ecriture";
 import { enregistrerProgressionAction } from "@/app/cours/actions";
 
@@ -1084,6 +1085,7 @@ export function ChapitreGuide({
   mission = null,
   enClasse = null,
   suites = null,
+  calculatrice = true,
 }: {
   code: string;
   cas: Cas;
@@ -1095,6 +1097,8 @@ export function ChapitreGuide({
   enClasse?: { classe: string; eleve: string } | null;
   /** Ce qui vient après : les cas pratiques, les chapitres repris, les épisodes du thème. */
   suites?: SuitesDuChapitre | null;
+  /** La calculatrice, permise sauf si l'enseignant l'a retirée à la classe de l'élève. */
+  calculatrice?: boolean;
 }) {
   // Le chapitre dans l'ordre de cette entreprise : ses règlements suivent leurs dates.
   const chapitre = useMemo(() => chapitreDuCas(chapitreParCode(code)!, cas), [code, cas]);
@@ -1167,7 +1171,8 @@ export function ChapitreGuide({
   };
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-16 pt-8 sm:px-6 sm:pt-10">
+    // Avec la calculatrice, un peu plus de place en bas : son bouton flotte au-dessus du dernier bouton de l'étape.
+    <div className={`mx-auto max-w-6xl px-4 pt-8 sm:px-6 sm:pt-10 ${calculatrice ? "pb-28" : "pb-16"}`}>
       <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-2">
         <p className="text-xs uppercase tracking-annonce text-slate-400">
           <Link href="/cours" className="hover:text-slate-300">
@@ -1186,6 +1191,7 @@ export function ChapitreGuide({
           {fini ? "Terminé" : `Étape ${courant + 1} sur ${n}`}
         </span>
       </div>
+      {calculatrice && lu && !(fini && vue === null) && <Calculatrice />}
       {!lu ? null : fini && vue === null ? (
         <FinDuChapitre
           chapitre={chapitre}

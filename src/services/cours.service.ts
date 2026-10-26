@@ -125,6 +125,16 @@ export async function cloreClasse(args: { enseignantId: string; classeId: string
   return fait.length > 0;
 }
 
+/** Permettre ou retirer la calculatrice aux élèves d'une classe, par son enseignant seulement. */
+export async function permettreLaCalculatrice(args: { enseignantId: string; classeId: string; permise: boolean }): Promise<boolean> {
+  const fait = await db
+    .update(coursClasses)
+    .set({ sansCalculatrice: !args.permise })
+    .where(and(eq(coursClasses.id, args.classeId), eq(coursClasses.creePar, args.enseignantId)))
+    .returning({ id: coursClasses.id });
+  return fait.length > 0;
+}
+
 export async function classeParCode(code: string) {
   const net = normaliserCodeDeClasse(code);
   if (!net) return null;
@@ -168,11 +178,12 @@ export async function classeDeLEleve(userId: string) {
       eleve: coursEleves.nom,
       entreprise: coursClasses.entreprise,
       closeLe: coursClasses.closeLe,
+      sansCalculatrice: coursClasses.sansCalculatrice,
     })
     .from(coursEleves)
     .innerJoin(coursClasses, eq(coursClasses.id, coursEleves.classeId))
     .where(eq(coursEleves.userId, userId));
-  return m ? { ...m, close: m.closeLe !== null } : null;
+  return m ? { ...m, close: m.closeLe !== null, calculatrice: !m.sansCalculatrice } : null;
 }
 
 export interface ProgressionEnvoyee {

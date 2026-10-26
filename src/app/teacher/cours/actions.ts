@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
-import { cloreClasse, creerClasse } from "@/services/cours.service";
+import { cloreClasse, creerClasse, permettreLaCalculatrice } from "@/services/cours.service";
 
 /**
  * LES GESTES DE L'ENSEIGNANT SUR SES CLASSES DU COURS. L'enseignant est celui de la
@@ -33,4 +33,11 @@ export async function cloreClasseAction(classeId: string, close: boolean): Promi
   if (!(await cloreClasse({ enseignantId, classeId, close }))) redirect("/teacher/cours?refus=introuvable");
   revalidatePath(`/teacher/cours/${classeId}`);
   redirect(`/teacher/cours/${classeId}?fait=${close ? "close" : "rouverte"}`);
+}
+
+export async function calculatriceAction(classeId: string, permise: boolean): Promise<void> {
+  const enseignantId = await enseignant();
+  if (!(await permettreLaCalculatrice({ enseignantId, classeId, permise }))) redirect("/teacher/cours?refus=introuvable");
+  revalidatePath(`/teacher/cours/${classeId}`);
+  redirect(`/teacher/cours/${classeId}?fait=${permise ? "calculatrice" : "sans-calculatrice"}`);
 }
