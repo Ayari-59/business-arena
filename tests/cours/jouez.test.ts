@@ -6,6 +6,7 @@ import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
 import { CHAPITRES } from "../../src/config/cours/registre";
 import {
   LIEUX_DE_L_ARENE,
+  NIVEAU_DE_L_ASSURANCE,
   NIVEAU_SANS_LICENCE,
   missionAffichee,
   missionDuChapitre,
@@ -64,14 +65,20 @@ describe("une mission par chapitre et par entreprise", () => {
 });
 
 describe("le niveau de la mission", () => {
-  it("reste dans ce qu'un élève joue sans licence, sauf la gamme qui n'existe qu'au-delà", () => {
+  it("reste dans ce qu'un élève joue sans licence, sauf une décision qui n'existe qu'au-delà (la gamme, l'assurance)", () => {
     for (const chapitre of CHAPITRES) {
       for (const code of jouables(chapitre.entreprises?.codes)) {
         const m = missionDuChapitre(chapitre.code, casDeLEntreprise(code))!;
         if (m.niveau <= NIVEAU_SANS_LICENCE) continue;
-        // Au-delà, seule une gamme le justifie : la mission se joue au niveau qui l'ouvre.
-        expect(["cout-par-produit", "assortiment", "portefeuille-abc"]).toContain(chapitre.code);
-        expect(m.niveau).toBe(niveauDeLaGamme(code));
+        // Au-delà, seule une décision qui n'existe qu'au-delà le justifie, et la mission se joue
+        // au niveau qui l'ouvre : la gamme, ou l'assurance (BTS GPME).
+        if (chapitre.code === "s-assurer-contre-les-aleas") {
+          expect(m.niveau).toBe(NIVEAU_DE_L_ASSURANCE);
+          expect(NIVEAU_DE_L_ASSURANCE).toBeGreaterThan(NIVEAU_SANS_LICENCE);
+        } else {
+          expect(["cout-par-produit", "assortiment", "portefeuille-abc"]).toContain(chapitre.code);
+          expect(m.niveau).toBe(niveauDeLaGamme(code));
+        }
         expect(missionAffichee(chapitre.code, casDeLEntreprise(code))!.reservee).toContain(`niveau ${m.niveau} est inclus`);
       }
     }

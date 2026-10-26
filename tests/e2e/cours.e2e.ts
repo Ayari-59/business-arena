@@ -488,6 +488,18 @@ describe.each([
   { code: "former", entreprise: "ecommerce", telephone: true },
   { code: "indicateurs-sociaux", entreprise: "batiment" },
   { code: "indicateurs-sociaux", entreprise: "hotel", telephone: true },
+  { code: "choisir-son-fournisseur", entreprise: "batiment" },
+  { code: "choisir-son-fournisseur", entreprise: "nova", telephone: true },
+  { code: "le-client-qui-paie-tard", entreprise: "conseil" },
+  { code: "le-client-qui-paie-tard", entreprise: "boutique", telephone: true },
+  { code: "s-assurer-contre-les-aleas", entreprise: "batiment" },
+  { code: "s-assurer-contre-les-aleas", entreprise: "hotel", telephone: true },
+  { code: "le-cout-de-la-non-qualite", entreprise: "bistrot" },
+  { code: "le-cout-de-la-non-qualite", entreprise: "ecommerce", telephone: true },
+  { code: "le-depart-d-un-salarie", entreprise: "nova" },
+  { code: "le-depart-d-un-salarie", entreprise: "bistrot", telephone: true },
+  { code: "entretenir-l-outil", entreprise: "fitness" },
+  { code: "entretenir-l-outil", entreprise: "bistrot", telephone: true },
   // Les cas pratiques s'ouvrent et se jouent comme un chapitre réservé.
   { code: "suivre-la-baisse-du-concurrent", entreprise: "nova" },
   { code: "suivre-la-baisse-du-concurrent", entreprise: "hotel", telephone: true },
@@ -560,6 +572,12 @@ describe.each([
   { code: "l-equipe-demande-une-augmentation", entreprise: "batiment", telephone: true },
   { code: "doubler-le-budget-de-formation", entreprise: "nova" },
   { code: "la-masse-salariale-qui-baisse", entreprise: "transport", telephone: true },
+  { code: "le-fournisseur-allonge-son-delai", entreprise: "transport" },
+  { code: "escompter-chaque-trimestre", entreprise: "bistrot", telephone: true },
+  { code: "l-assureur-augmente-la-prime", entreprise: "conseil" },
+  { code: "une-seule-demarche-qualite", entreprise: "ecommerce", telephone: true },
+  { code: "recruter-des-l-annonce-du-depart", entreprise: "transport" },
+  { code: "entretenir-au-seuil", entreprise: "bistrot", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se

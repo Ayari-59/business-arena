@@ -61,6 +61,12 @@ import { EMBAUCHER_UN_TRIMESTRE_PLUS_TARD } from "./par-chapitre/embaucher-un-tr
 import { L_EQUIPE_DEMANDE_UNE_AUGMENTATION } from "./par-chapitre/l-equipe-demande-une-augmentation";
 import { DOUBLER_LE_BUDGET_DE_FORMATION } from "./par-chapitre/doubler-le-budget-de-formation";
 import { LA_MASSE_SALARIALE_QUI_BAISSE } from "./par-chapitre/la-masse-salariale-qui-baisse";
+import { LE_FOURNISSEUR_ALLONGE_SON_DELAI } from "./par-chapitre/le-fournisseur-allonge-son-delai";
+import { ESCOMPTER_CHAQUE_TRIMESTRE } from "./par-chapitre/escompter-chaque-trimestre";
+import { L_ASSUREUR_AUGMENTE_LA_PRIME } from "./par-chapitre/l-assureur-augmente-la-prime";
+import { UNE_SEULE_DEMARCHE_QUALITE } from "./par-chapitre/une-seule-demarche-qualite";
+import { RECRUTER_DES_L_ANNONCE_DU_DEPART } from "./par-chapitre/recruter-des-l-annonce-du-depart";
+import { ENTRETENIR_AU_SEUIL } from "./par-chapitre/entretenir-au-seuil";
 import type { Situation } from "./types";
 
 export type { Situation } from "./types";
@@ -142,6 +148,12 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   L_EQUIPE_DEMANDE_UNE_AUGMENTATION,
   DOUBLER_LE_BUDGET_DE_FORMATION,
   LA_MASSE_SALARIALE_QUI_BAISSE,
+  LE_FOURNISSEUR_ALLONGE_SON_DELAI,
+  ESCOMPTER_CHAQUE_TRIMESTRE,
+  L_ASSUREUR_AUGMENTE_LA_PRIME,
+  UNE_SEULE_DEMARCHE_QUALITE,
+  RECRUTER_DES_L_ANNONCE_DU_DEPART,
+  ENTRETENIR_AU_SEUIL,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */
