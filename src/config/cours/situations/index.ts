@@ -57,6 +57,10 @@ import { L_ACCORD_DE_BRANCHE } from "./par-chapitre/l-accord-de-branche";
 import { LE_TRIMESTRE_FACE_A_L_OBJECTIF } from "./par-chapitre/le-trimestre-face-a-l-objectif";
 import { L_AUGMENTATION_GENERALE } from "./par-chapitre/l-augmentation-generale";
 import { LA_PRIME_DE_FIN_D_ANNEE } from "./par-chapitre/la-prime-de-fin-d-annee";
+import { EMBAUCHER_UN_TRIMESTRE_PLUS_TARD } from "./par-chapitre/embaucher-un-trimestre-plus-tard";
+import { L_EQUIPE_DEMANDE_UNE_AUGMENTATION } from "./par-chapitre/l-equipe-demande-une-augmentation";
+import { DOUBLER_LE_BUDGET_DE_FORMATION } from "./par-chapitre/doubler-le-budget-de-formation";
+import { LA_MASSE_SALARIALE_QUI_BAISSE } from "./par-chapitre/la-masse-salariale-qui-baisse";
 import type { Situation } from "./types";
 
 export type { Situation } from "./types";
@@ -134,6 +138,10 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LE_TRIMESTRE_FACE_A_L_OBJECTIF,
   L_AUGMENTATION_GENERALE,
   LA_PRIME_DE_FIN_D_ANNEE,
+  EMBAUCHER_UN_TRIMESTRE_PLUS_TARD,
+  L_EQUIPE_DEMANDE_UNE_AUGMENTATION,
+  DOUBLER_LE_BUDGET_DE_FORMATION,
+  LA_MASSE_SALARIALE_QUI_BAISSE,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

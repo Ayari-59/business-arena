@@ -141,7 +141,14 @@ export const THEMES: readonly Theme[] = [
     titre: "Ressources humaines et management",
     description:
       "L'effectif et ce qu'il coûte, le salaire, le recrutement, les compétences, la cohésion d'une équipe et le changement.",
-    chapitres: ["effectif-et-masse-salariale", "salaire-brut-net-cout"],
+    chapitres: [
+      "effectif-et-masse-salariale",
+      "salaire-brut-net-cout",
+      "recruter",
+      "remuneration-et-motivation",
+      "former",
+      "indicateurs-sociaux",
+    ],
     familles: [
       "equipe",
       "talents",
