@@ -121,6 +121,14 @@ describe("plan du site", () => {
     expect(doubles, `une page, plusieurs noms :\n${doubles.join("\n")}`).toEqual([]);
   });
 
+  it("les entreprises jouables se rangent avec ce qu'on joue, pas chez les entreprises clientes (octobre 2026)", () => {
+    const jouer = NAVIGATION.find((g) => g.code === "jouer")!;
+    expect(jouer.liens.find((l) => l.href === "/entreprises")?.libelle).toBe("Les entreprises jouables");
+    const clientes = NAVIGATION.find((g) => g.code === "entreprises")!;
+    expect(clientes.liens.map((l) => l.href)).not.toContain("/entreprises");
+    expect(clientes.entree).toBe("/entreprises/episode");
+  });
+
   it("chaque entrée dit ce qu'on y trouve", () => {
     // « Parcours », « Guide » et « Notions » ne se distinguent pas pour qui
     // découvre le site : sans la phrase d'aide, on ouvre les trois.

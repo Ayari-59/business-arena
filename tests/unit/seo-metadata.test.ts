@@ -114,6 +114,19 @@ describe("pages publiques : titre distinct, description, canonique", () => {
   });
 });
 
+describe("les épisodes, indexés (décision d'octobre 2026 : « indexer »)", () => {
+  it("le catalogue, la page des enseignants, un épisode et une fiche ne disent plus noindex", async () => {
+    for (const chemin of ["/entreprises/episode/page", "/enseignants/episodes/page"]) {
+      expect((await meta(chemin)).robots, chemin).toBeUndefined();
+    }
+    const params = { params: Promise.resolve({ code: "atelier-sature" }) };
+    for (const chemin of ["/entreprises/episode/[code]/page", "/enseignants/episodes/[code]/page"]) {
+      const page = (await import(`@/app${chemin}`)) as { generateMetadata: (p: typeof params) => Promise<Metadata> };
+      expect((await page.generateMetadata(params)).robots, chemin).toBeUndefined();
+    }
+  });
+});
+
 describe("espaces privés : titre pour l'onglet, rien pour les moteurs", () => {
   it("/join et /compete ont un titre et sont noindex", async () => {
     for (const [module, attendu] of [

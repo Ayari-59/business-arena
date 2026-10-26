@@ -241,3 +241,10 @@ describe("embaucher pour la saison", () => {
     }
   });
 });
+
+describe("l'accès aux cas pratiques", () => {
+  it("le cas dédié du chapitre libre est libre, et lui seul (décision d'octobre 2026 : « cas pratique inclus »)", () => {
+    const pilote = CHAPITRES.find((c) => c.libre)!;
+    expect(SITUATIONS.filter((s) => s.libre).map((s) => s.code)).toEqual([casDuChapitre(pilote.code)!.code]);
+  });
+});

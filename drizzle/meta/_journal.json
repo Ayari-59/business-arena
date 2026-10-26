@@ -351,6 +351,13 @@
       "when": 1791441357440,
       "tag": "0048_calculatrice_en_classe",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1791527757440,
+      "tag": "0049_offres_cours_et_examen",
+      "breakpoints": true
     }
   ]
 }

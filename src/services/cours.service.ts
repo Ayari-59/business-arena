@@ -1,12 +1,12 @@
 import { randomInt } from "node:crypto";
-import { and, asc, count, desc, eq } from "drizzle-orm";
+import { and, asc, count, desc, eq, ne } from "drizzle-orm";
 import { db } from "@/db";
 import { coursClasses, coursEleves, coursProgressions, type SuiviDEtapeEnregistre } from "@/db/schema";
 import { ALPHABET_REPRISE } from "@/config/reprise";
 import { chapitreParCode } from "@/config/cours/registre";
 import { ENTREPRISES_DU_COURS } from "@/config/cours/metiers";
 import type { ProgressionLue } from "@/pedagogy/cours/suivi";
-import { unCompteSousLicence } from "@/services/acces.service";
+import { plafondDElevesDesComptes, unCompteSousLicence } from "@/services/acces.service";
 
 /**
  * LES CLASSES DU COURS PAR LA SIMULATION.
@@ -139,10 +139,12 @@ export async function classeParCode(code: string) {
   const net = normaliserCodeDeClasse(code);
   if (!net) return null;
   const [c] = await db.select().from(coursClasses).where(eq(coursClasses.code, net));
-  return c ? { id: c.id, code: c.code, nom: c.nom, entreprise: c.entreprise, close: c.closeLe !== null } : null;
+  return c
+    ? { id: c.id, code: c.code, nom: c.nom, entreprise: c.entreprise, close: c.closeLe !== null, creePar: c.creePar }
+    : null;
 }
 
-export type RefusDAdhesion = "inconnu" | "close" | "nom";
+export type RefusDAdhesion = "inconnu" | "close" | "nom" | "pleine";
 
 /** Rejoindre une classe sous un prénom ; un élève n'en suit qu'une : en rejoindre une autre la remplace. */
 export async function rejoindreClasse(
@@ -157,6 +159,15 @@ export async function rejoindreClasse(
   if (classe.close) {
     const [deja] = await db.select({ classeId: coursEleves.classeId }).from(coursEleves).where(eq(coursEleves.userId, userId));
     if (deja?.classeId !== classe.id) return { ok: false, refus: "close" };
+  }
+  // L'EFFECTIF DE L'OFFRE CLASSE : au plafond, la classe n'accueille plus, sauf l'élève qui y est déjà.
+  const plafond = await plafondDElevesDesComptes([classe.creePar]);
+  if (plafond !== null) {
+    const autres = await db
+      .select({ n: count() })
+      .from(coursEleves)
+      .where(and(eq(coursEleves.classeId, classe.id), ne(coursEleves.userId, userId)));
+    if ((autres[0]?.n ?? 0) >= plafond) return { ok: false, refus: "pleine" };
   }
   await db
     .insert(coursEleves)

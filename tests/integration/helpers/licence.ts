@@ -15,6 +15,8 @@ export interface PerimetreDeTest {
   entreprises?: string[] | null;
   niveaux?: number[] | null;
   maxTeachers?: number | null;
+  /** L'examen individuel. Absent : la composition par défaut (Campus seulement). */
+  examen?: boolean;
 }
 
 const parametrage = (p: PerimetreDeTest) => ({
@@ -23,6 +25,7 @@ const parametrage = (p: PerimetreDeTest) => ({
   episodes: p.episodes ?? false,
   entreprises: p.entreprises ?? null,
   niveaux: p.niveaux ?? null,
+  examen: p.examen,
 });
 
 /**

@@ -24,7 +24,6 @@ export const metadata: Metadata = {
   title: "Épisodes manager",
   description:
     "Démonstration de la version pour les entreprises : un manager, un trimestre, six décisions, et un bilan qui sépare la qualité des décisions du hasard.",
-  robots: { index: false, follow: false },
 };
 
 /**

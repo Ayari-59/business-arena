@@ -36,9 +36,8 @@ export async function generateMetadata({
     alternates: { canonical: `/entreprises/episode/${ep.code}` },
     title: ep.titre,
     description: `Démonstration de la version pour les entreprises · ${ep.domaine}. ${ep.resume}`,
-    // Une démonstration dont le contenu attend d'être validé par des managers :
-    // on la montre par un lien, on ne la fait pas trouver par un moteur.
-    robots: { index: false, follow: false },
+    // Indexée (décision du propriétaire, octobre 2026 : « indexer ») : un épisode fermé
+    // montre son titre, son accroche et son métier, et ce qui l'ouvre.
   };
 }
 

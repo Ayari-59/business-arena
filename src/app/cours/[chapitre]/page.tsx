@@ -77,7 +77,7 @@ export default async function ChapitrePage({
             <h1 className="text-3xl font-bold text-slate-50">{chapitre.titre}</h1>
             <p className="text-base text-slate-300">
               {motsDuContenu(chapitre.code).reserve} aux établissements sous licence : le contenu s&apos;ouvre aux enseignants de
-              l&apos;établissement, et à leurs élèves par leur classe. Le premier chapitre du cours, lui, est libre.
+              l&apos;établissement, et à leurs élèves par leur classe. Le premier chapitre du cours et son cas pratique, eux, sont libres.
             </p>
             {/* SORTIR DE L'IMPASSE (audit d'octobre 2026) : la page ne proposait que « Voir le cours ».
                 Le cours et ses cas pratiques s'ouvrent avec toute licence de l'arène (cours.service,

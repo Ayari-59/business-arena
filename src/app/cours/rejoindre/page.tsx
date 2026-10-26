@@ -4,6 +4,7 @@ import { PiedDePage } from "@/components/pied-de-page";
 import { SubmitButton } from "@/components/submit-button";
 import { bouton } from "@/components/bouton";
 import { classeParCode, NOM_D_ELEVE_MAX } from "@/services/cours.service";
+import { refusDeLEffectif } from "@/config/tarifs";
 import { rejoindreClasseAction } from "../actions";
 
 export const metadata: Metadata = {
@@ -17,6 +18,7 @@ const REFUS: Record<string, string> = {
   inconnu: "Ce code ne mène à aucune classe. Vérifiez-le avec votre enseignant.",
   close: "Cette classe est close : elle n'accepte plus de nouvel élève.",
   nom: "Indiquez un prénom ou un pseudonyme : c'est ainsi que votre enseignant vous retrouvera.",
+  pleine: refusDeLEffectif("classe"),
 };
 
 /**

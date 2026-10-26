@@ -190,11 +190,12 @@ const serialiser = (e: EtatDuCatalogue): EtatSerialise => ({
 /**
  * La lecture en cache, créée au premier usage (un test peut remplacer `next/cache`). La clé
  * porte la VERSION de la forme lue : le cache de données de Next survit aux redémarrages
- * et aux déploiements, une forme nouvelle prend donc une clé nouvelle.
+ * et aux déploiements, une forme nouvelle prend donc une clé nouvelle. Une migration qui
+ * réécrit le catalogue aussi (v3 : migration 0049), sans quoi l'ancien resterait affiché.
  */
 let lectureEnCache: (() => Promise<EtatSerialise>) | null = null;
 function lireEnCache(): Promise<EtatSerialise> {
-  lectureEnCache ??= cacheDeNext.unstable_cache(async () => serialiser(await lireLEtatSansCache()), ["catalogue-v2"], {
+  lectureEnCache ??= cacheDeNext.unstable_cache(async () => serialiser(await lireLEtatSansCache()), ["catalogue-v3"], {
     tags: [ETIQUETTE_DU_CATALOGUE],
   });
   return lectureEnCache();

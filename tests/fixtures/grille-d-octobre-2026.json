@@ -25,8 +25,10 @@
       "inclus": [
         "Une entreprise au choix parmi les 9, et un niveau au choix de 1 à 6, fixés pour l'année.",
         "Autant de parties que vous voulez dans l'année avec ce paramétrage, une à la fois.",
+        "Une classe de 35 élèves au plus, dans une partie comme dans le cours.",
         "Les parties de classe : les étudiants rejoignent par un code, sans compte ni e-mail, en équipes, entreprises en concurrence.",
         "Le suivi : tableau de bord, observation, maîtrise des notions, révélation et projection en cours, relevé de notes exportable en tableur.",
+        "Le cours : tous les chapitres et leurs cas pratiques, suivis en classe chapitre par chapitre, calculatrice comprise.",
         "Les ateliers clés en main qui se jouent avec cette entreprise et ce niveau, avec déroulé, corrigés et dossier enseignant.",
         "Un concours à la place d'une partie, si l'entreprise choisie est NOVA : les concours se jouent avec elle."
       ],
@@ -48,9 +50,10 @@
       "inclus": [
         "Une entreprise au choix parmi les 9, choisie à l'achat, à tous les niveaux, de 1 à 6.",
         "Toutes les promotions et tous les groupes du programme, plusieurs parties en même temps.",
-        "L'équipe pédagogique et les intervenants du programme, au nombre fixé au devis.",
+        "L'équipe pédagogique et les intervenants du programme, référent compris, au nombre fixé au devis.",
         "Les parties de classe : les étudiants rejoignent par un code, sans compte ni e-mail, en équipes, entreprises en concurrence.",
         "Le suivi : tableau de bord, observation, maîtrise des notions, révélation et projection en cours, relevé de notes exportable en tableur.",
+        "Le cours : tous les chapitres et leurs cas pratiques, suivis en classe chapitre par chapitre, calculatrice comprise.",
         "Les ateliers clés en main de cette entreprise, avec déroulé, corrigés et dossier enseignant.",
         "Les concours et le classement à l'IPG, si l'entreprise choisie est NOVA : les concours se jouent avec elle."
       ],
@@ -73,8 +76,10 @@
       "inclus": [
         "Les 9 entreprises, à tous les niveaux, dans tous les programmes.",
         "Des groupes, des enseignants et des intervenants sans limite.",
+        "Le cours : tous les chapitres et leurs cas pratiques, suivis en classe chapitre par chapitre, calculatrice comprise.",
         "Les 16 ateliers clés en main, avec déroulé, corrigés et dossier enseignant, dont 14 adossés au référentiel d'un diplôme (2de option MG, STMG, BTS CG, BTS MCO, BTS NDRC, BTS GPME, BTS MHR, BUT GEA, DCG).",
         "Les concours et le classement à l'IPG.",
+        "L'examen individuel : une partie solo notée sur une grille fixe, la même pour tous les candidats.",
         "Un référent qui gère les accès.",
         "Une facture au nom de l'école.",
         "Une licence par année scolaire, du 1er septembre au 31 août."

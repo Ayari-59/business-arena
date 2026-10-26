@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PiedDePage } from "@/components/pied-de-page";
 import { ficheParCode, hasardDeLaClasse, lienDeLaClasse } from "@/config/episodes/fiches";
+import { dureeEnClair } from "@/config/cours/duree";
 import { formationParCode } from "@/config/formations";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
 import { MARQUE_DEMO } from "@/config/episodes/demos";
@@ -30,8 +31,7 @@ export async function generateMetadata({
   return {
     alternates: { canonical: `/enseignants/episodes/${code}` },
     title: `Fiche enseignant · ${ep.titre}`,
-    description: `Conduire l'épisode ${ep.numero} en classe : déroulé de deux heures, corrigé du calcul, réflexes attendus, questions de débrief.`,
-    robots: { index: false, follow: false },
+    description: `Conduire l'épisode ${ep.numero} en classe : déroulé minuté, corrigé du calcul, réflexes attendus, questions de débrief.`,
   };
 }
 
@@ -151,7 +151,7 @@ export default async function FichePage({ params }: { params: Promise<{ code: st
             </p>
           </Section>
 
-          <Section titre={`La séance, en ${fiche.dureeMinutes / 60} heures`}>
+          <Section titre={`La séance, en ${dureeEnClair(fiche.dureeMinutes)}`}>
             <ol className="space-y-4">
               {fiche.deroule.map((phase) => (
                 <li key={phase.titre} className="flex gap-4">

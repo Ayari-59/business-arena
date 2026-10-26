@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { FICHES, hasardDeLaClasse, lienDeLaClasse } from "../../src/config/episodes/fiches";
 import { formationParCode } from "../../src/config/formations";
 import { TRACES } from "../../src/config/episodes/traces";
+import { EPISODES_DE_DEMO } from "../../src/config/episodes/demos";
 import { episodeParCode } from "../../src/pedagogy/episodes/registre";
 
 /**
@@ -10,10 +11,16 @@ import { episodeParCode } from "../../src/pedagogy/episodes/registre";
  * tableau un chiffre que le bilan contredit.
  */
 describe("les fiches enseignant", () => {
-  it("couvrent les épisodes 31 à 48, une fois chacun, dans l'ordre", () => {
-    expect(FICHES.map((f) => episodeParCode(f.code)?.numero)).toEqual(
-      Array.from({ length: 18 }, (_, i) => 31 + i),
-    );
+  it("couvrent les épisodes 31 à 48 et les cinq démonstrations, une fois chacun, dans l'ordre des numéros", () => {
+    // Décision du propriétaire (octobre 2026) : « fiche séance sur la démo ».
+    const attendus = [
+      ...Array.from({ length: 18 }, (_, i) => 31 + i),
+      ...EPISODES_DE_DEMO.map((code) => episodeParCode(code)!.numero),
+    ].sort((a, b) => a - b);
+    expect(FICHES.map((f) => episodeParCode(f.code)?.numero)).toEqual(attendus);
+    const codes = FICHES.map((f) => f.code);
+    expect(new Set(codes).size).toBe(codes.length);
+    for (const code of EPISODES_DE_DEMO) expect(codes, code).toContain(code);
   });
 
   it("donnent à la classe le lien du hasard commun", () => {
