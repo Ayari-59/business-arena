@@ -381,7 +381,7 @@ export const ETAPES: readonly Etape[] = [
         heure: "09:00",
         alerte: true,
         texte:
-          "Arthur, plus de cent artisans sont partis en six mois. Je propose une offre de reconquête : 10 % pendant trois mois et un bon de 300 € à la première commande. Mes gars s'en chargent.",
+          "Arthur, près de cent artisans sont partis en six mois. Je propose une offre de reconquête : 10 % pendant trois mois et un bon de 300 € à la première commande. Mes gars s'en chargent.",
       },
       {
         de: "Tableau de bord clients",

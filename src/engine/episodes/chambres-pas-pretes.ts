@@ -1131,7 +1131,8 @@ export function tableauDeBord(
     return {
       nonPretes: DEPART.nonPretes,
       clientsAttente: DEPART.clientsAttente,
-      heuresPerdues: DEPART.heuresPerdues,
+      // Pas de valeur avant la première semaine : c'est la prévision demandée à l'élève.
+      heuresPerdues: null,
       note: NOTE.depart,
       coutCumule: 0,
       budgetADate: 0,

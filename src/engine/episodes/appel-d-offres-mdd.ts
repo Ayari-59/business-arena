@@ -838,7 +838,8 @@ export function tableauDeBord(
     return {
       valeur: e.total,
       chance: 0,
-      mcvKg: MCV_CIBLE * 100,
+      // Pas de valeur avant la première semaine : c'est la prévision demandée à l'élève.
+      mcvKg: null,
       manque: 0,
       kerbrelan: VENTES_SEMAINE,
       ...commun,

@@ -236,7 +236,7 @@ export const COUT_DEGUSTATION_CELTIS = 6000;
 /** La tête de gondole de la rentrée chez Celtis : trois semaines, +40 % sur les fruits sans remise. */
 export const VALEUR_GONDOLE = 0.4 * BASE.celtis.fruits * 3 * MCV.fruits;
 
-/** Une fois sur quatre, Celtis refuse de changer le prospectus de la semaine 3, déjà en maquette. */
+/** Une fois sur cinq, Celtis refuse de changer le prospectus de la semaine 3, déjà en maquette. */
 export const CHANCE_REFUS_PROSPECTUS = 0.2;
 /** Une fois sur deux, le Brassé recrute vraiment. */
 export const CHANCE_RECRUTE = 0.5;
@@ -244,7 +244,7 @@ export const CHANCE_RECRUTE = 0.5;
 /** L'attaque de Nordal : un « 2+1 » chez Celtis et Opaline, semaines 10 à 12. */
 export const SEMAINES_NORDAL = [10, 11, 12] as const;
 export const ENSEIGNES_NORDAL = ["celtis", "opaline"] as const;
-/** Ce que l'attaque prend aux ventes de Kerbrélan : entre 10 et 30 % selon le tirage. */
+/** Ce que l'attaque prend aux ventes de Kerbrélan : entre 8 et 24 % selon le tirage, comme le dit la source. */
 export const VOL_NORDAL = { min: 0.08, max: 0.24 } as const;
 /** La semaine qui suit, Nordal prend encore 40 % de cela : ses acheteurs ont stocké. */
 export const TRAINE_NORDAL = 0.4;
@@ -258,7 +258,7 @@ export const CHANCE_ESCALADE = [0.6, 0.1, 0.25, 0.1] as const;
 /** Quand une centrale réattribue les emplacements de juillet à Nordal. */
 export const VOL_EMPLACEMENT = 0.15;
 
-/** La revue de gamme de Celtis : le Brassé doit vendre 3 400 packs par semaine en moyenne, semaines 8 à 13. */
+/** La revue de gamme de Celtis : le Brassé doit vendre 4 500 packs par semaine en moyenne, semaines 8 à 13. */
 export const SEUIL_ROTATION = 4500;
 /** Faute de quoi il perd la moitié des magasins pendant six mois. */
 export const PERTE_DEREFERENCEMENT = 0.5 * BASE.celtis.brasse * 20 * MCV.brasse;
