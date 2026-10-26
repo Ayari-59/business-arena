@@ -547,9 +547,13 @@ export interface EngineScenarioConfig {
       /** Part du plafond de découvert consentie à confiance nulle (0..1). */
       minOverdraftShare: number;
     };
-    /** Taux d'escompte annuel exposé aux équipes (information pédagogique). */
+    /**
+     * IGNORÉS (octobre 2026) : un taux et une part escomptable « exposés aux équipes » que
+     * rien n'affichait, et qui contredisaient ceux que le moteur applique
+     * (`treasury.discountAnnualRate`, `treasury.discountMaxShare`). Gardés facultatifs pour
+     * relire les parties anciennes, dont l'instantané du scénario les porte.
+     */
     discountRate?: number;
-    /** Part des créances escomptables (0..1, exposée aux équipes). */
     discountableRatio?: number;
     /**
      * Rémunération annuelle des placements (exposée aux équipes). Si défini,
@@ -2117,9 +2121,10 @@ export interface CompanyRoundResult {
     /** Intérêts encaissés sur le placement arrivé à terme. */
     placementIncome: number;
     /**
-     * Montant escomptable calculé (= créances × discountableRatio).
-     * Information pédagogique : combien de créances est-il possible de
-     * mobiliser via l'escompte bancaire.
+     * Plus calculé depuis octobre 2026 : il reposait sur `finance.discountableRatio`, un autre
+     * plafond que celui que le moteur applique, et aucun écran ne le lisait. Le plafond réel se
+     * lit sur la feuille de décision (`treasury.discountMaxShare`). Gardé pour les parties
+     * anciennes, dont les résultats enregistrés le portent.
      */
     discountableReceivables?: number;
   };

@@ -133,7 +133,8 @@ describe("une équipe défaillante au niveau 2", () => {
     // La clôture encaisse la subvention : l'entreprise repart.
     const apres = await jouer(RUINEUSE);
     expect(apres.lastResult!.incomeStatement.rescueSubsidy).toBeCloseTo(propose!, 2);
-    expect(apres.lastResult!.treasury!.crisis).toBe(false);
+    // Sans crise ni mobilisation, le résultat ne porte plus de bloc de trésorerie.
+    expect(apres.lastResult!.treasury?.crisis ?? false).toBe(false);
     expect(apres.alerteTresorerie).toBeNull();
 
     // Et au tour suivant, ses décisions sont de nouveau simulées : elle produit

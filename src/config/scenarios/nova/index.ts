@@ -202,9 +202,7 @@ const rawNova = {
     // La banque ne prête pas au-delà de deux fois les capitaux propres.
     maxDebtToEquity: 2,
     depreciationPerRound: 5000,
-    // Conditions court terme exposées aux équipes
-    discountRate: 0.10,       // 10 % annuel sur les créances escomptées
-    discountableRatio: 0.80,  // 80 % des créances clients escomptables
+    // Le placement de trésorerie (l'escompte et l'affacturage se règlent dans `treasury`)
     placementRate: 0.03,      // 3 % annuel sur les placements
   },
   // structure totale ≈ 96 000 €/tour : 91 000 décaissés + 5 000 d'amortissements

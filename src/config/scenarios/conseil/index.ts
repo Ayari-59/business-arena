@@ -134,8 +134,6 @@ const rawConseil = {
     // cabinet asset-light : très peu d'amortissements
     depreciationPerRound: 6000,
     // Conditions court terme cabinet de conseil (encaissements à terme, peu de stocks)
-    discountRate: 0.08,
-    discountableRatio: 0.65,
     placementRate: 0.02,
   },
   treasury: {
