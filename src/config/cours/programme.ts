@@ -34,7 +34,7 @@ export interface ProgrammeDuDiplome {
   themes: readonly { theme: Theme; chapitres: readonly Chapitre[] }[];
   /** Les épisodes qui citent un bloc du diplôme, dans l'ordre des familles. */
   episodes: readonly string[];
-  /** Les mises en situation qui reprennent au moins un chapitre du programme. */
+  /** Les cas pratiques qui reprennent au moins un chapitre du programme. */
   situations: readonly Situation[];
 }
 

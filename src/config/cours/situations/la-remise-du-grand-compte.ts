@@ -7,7 +7,7 @@ import { affaire } from "../chapitres/remises-et-conditions";
 import type { Situation } from "./types";
 
 /**
- * MISE EN SITUATION : LA REMISE DU GRAND COMPTE (BTS NDRC, palier 3).
+ * CAS PRATIQUE : LA REMISE DU GRAND COMPTE (BTS NDRC, palier 3).
  *
  * Le client professionnel du cas met une grosse commande sur la table, à deux conditions :
  * une remise et un délai de paiement. Il promet de la renouveler s'il est satisfait.

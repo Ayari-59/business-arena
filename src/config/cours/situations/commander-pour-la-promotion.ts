@@ -7,7 +7,7 @@ import { COMMERCES } from "../chapitres/taux-de-marque";
 import type { Situation } from "./types";
 
 /**
- * MISE EN SITUATION : COMMANDER POUR LA PROMOTION (BTS MCO, palier 4).
+ * CAS PRATIQUE : COMMANDER POUR LA PROMOTION (BTS MCO, palier 4).
  *
  * La direction commerciale a décidé une remise sur tout le trimestre. Avant de passer
  * les commandes, elle veut savoir ce que la remise retire à chaque vente, combien il

@@ -34,7 +34,7 @@ export function ArticulationDuCours({ titreId = "articulation" }: { titreId?: st
     <section aria-labelledby={titreId} data-articulation="" className="grid gap-4">
       <div className="grid gap-1">
         <h2 id={titreId} className="text-2xl font-bold text-slate-50">
-          Cours, mises en situation, arène, épisodes : comment ils s&apos;enchaînent
+          Cours, cas pratiques, arène, épisodes : comment ils s&apos;enchaînent
         </h2>
         <p className="max-w-3xl text-base text-slate-300">{ENCHAINEMENT[0]}</p>
       </div>

@@ -7,7 +7,7 @@ import { salaire } from "../chapitres/salaire-brut-net-cout";
 import type { Situation } from "./types";
 
 /**
- * MISE EN SITUATION : EMBAUCHER POUR LA SAISON ? (Bac STMG, ressources humaines, palier 1).
+ * CAS PRATIQUE : EMBAUCHER POUR LA SAISON ? (Bac STMG, ressources humaines, palier 1).
  *
  * La direction veut un salarié de plus pour un trimestre chargé, payé comme ceux de
  * l'équipe. Avant de signer le contrat, elle demande ce qu'il coûtera, ce qu'il change à

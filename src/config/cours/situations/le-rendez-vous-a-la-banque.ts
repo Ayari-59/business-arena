@@ -8,7 +8,7 @@ import { valeurAjoutee } from "../chapitres/valeur-ajoutee-et-partage";
 import type { Situation } from "./types";
 
 /**
- * MISE EN SITUATION : LE RENDEZ-VOUS À LA BANQUE (Bac STMG, gestion et finance, palier 1).
+ * CAS PRATIQUE : LE RENDEZ-VOUS À LA BANQUE (Bac STMG, gestion et finance, palier 1).
  *
  * L'entreprise veut acheter un second équipement, du même modèle que le premier, et
  * demande un prêt. Avant le rendez-vous, le chargé d'affaires réclame quelques chiffres

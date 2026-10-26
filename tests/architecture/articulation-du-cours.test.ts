@@ -21,7 +21,7 @@ describe("l'articulation du cours", () => {
     const b = briques();
     expect(b.map((x) => x.code)).toEqual(["cours", "situations", "arene", "episodes"]);
     expect(b[0]!.compte).toBe(`${CHAPITRES.length} chapitres`);
-    expect(b[1]!.compte).toBe(`${SITUATIONS.length} mises en situation`);
+    expect(b[1]!.compte).toBe(`${SITUATIONS.length} cas pratiques`);
     expect(b[2]!.compte).toBe(`${ATELIERS.length} ateliers prêts à animer`);
     expect(b[3]!.compte).toBe(`${NOMBRE_D_EPISODES} épisodes`);
     for (const x of b) expect(x.texte, x.code).not.toMatch(/[\wÀ-ÿ] [—–] [\wÀ-ÿ]/);
@@ -32,11 +32,22 @@ describe("l'articulation du cours", () => {
     expect(lire("src/app/teacher/cours/page.tsx")).toContain("<ArticulationDuCours");
   });
 
-  it("une mise en situation ne se dit pas chapitre", () => {
+  it("un cas pratique ne se dit pas chapitre", () => {
     const s = SITUATIONS[0]!;
-    expect(motsDuContenu(s.code).terminer).toBe("Terminer la mise en situation");
+    expect(motsDuContenu(s.code).terminer).toBe("Terminer le cas pratique");
     expect(motsDuContenu(CHAPITRES[0]!.code).terminer).toBe("Terminer le chapitre");
     expect(lire("src/components/cours/chapitre-guide.tsx")).not.toMatch(/"Terminer le chapitre"|>Chapitre terminé</);
     expect(lire("src/app/cours/[chapitre]/page.tsx")).not.toContain("Ce chapitre est réservé");
+    // Décision du propriétaire (octobre 2026) : on dit « cas pratique », plus « mise en situation ».
+    for (const f of [
+      "src/app/cours/page.tsx",
+      "src/app/teacher/cours/page.tsx",
+      "src/config/articulation.ts",
+      "src/components/articulation-du-cours.tsx",
+      "src/config/cours/situations/index.ts",
+      "src/components/cours/chapitre-guide.tsx",
+      "src/components/episode/bilan-de-l-episode.tsx",
+    ])
+      expect(lire(f), f).not.toMatch(/mises? en situation/i);
   });
 });

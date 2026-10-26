@@ -1,21 +1,21 @@
 import type { Chapitre } from "../types";
 
 /**
- * UNE MISE EN SITUATION (demande du propriétaire, octobre 2026) : « des mises en
+ * UN CAS PRATIQUE (demande du propriétaire, octobre 2026) : « des mises en
  * situation qui reprennent des compétences calculatoires ».
  *
- * Elle a la forme d'un chapitre, pour tout en reprendre : les étapes de calcul et
+ * Il a la forme d'un chapitre, pour tout en reprendre : les étapes de calcul et
  * leur correction, le rendu, le contrôle de la licence, la progression remontée à
- * l'enseignant. Ce qui la distingue tient au contenu :
+ * l'enseignant. Ce qui le distingue tient au contenu :
  *
  *   · un commanditaire pose une question, et la première étape la lui fait lire
  *     avec ses documents ; il n'y a pas de cours, aucune étape n'enseigne ;
- *   · les calculs sont ceux de chapitres déjà vus, qu'elle déclare (`reprend`),
+ *   · les calculs sont ceux de chapitres déjà vus, qu'il déclare (`reprend`),
  *     enchaînés dans un ordre que l'élève doit trouver ;
  *   · la dernière étape est la réponse rendue au commanditaire, le livrable.
  *
- * Elle vit hors du registre des chapitres (config/cours/situations) : elle ne
- * compte ni dans le catalogue des chapitres ni dans la couverture, qu'elle ne
+ * Il vit hors du registre des chapitres (config/cours/situations) : il ne
+ * compte ni dans le catalogue des chapitres ni dans la couverture, qu'il ne
  * fait que remobiliser.
  */
 export interface Situation extends Chapitre {
