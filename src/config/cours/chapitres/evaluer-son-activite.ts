@@ -187,6 +187,9 @@ export const EVALUER_SON_ACTIVITE: Chapitre = {
     },
     {
       id: "le-prix-moyen",
+      // Chez VOLT FITNESS, le chiffre d'affaires compte aussi les abonnés gardés, que les
+      // ventes du trimestre ne comptent pas : son rapport aux ventes ne fait pas un prix.
+      si: (c) => c.code !== "fitness",
       type: "choix",
       titre: "Ce que disent les deux pourcentages",
       notions: ["revenue"],

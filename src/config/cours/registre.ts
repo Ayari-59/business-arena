@@ -71,6 +71,10 @@ import { LE_PROJET_D_ENTREPRISE } from "./chapitres/le-projet-d-entreprise";
 import { ORGANISER_L_ACTIVITE } from "./chapitres/organiser-l-activite";
 import { DECIDER_AVEC_DES_CHIFFRES } from "./chapitres/decider-avec-des-chiffres";
 import { EVALUER_SON_ACTIVITE } from "./chapitres/evaluer-son-activite";
+import { DES_DONNEES_A_L_INFORMATION } from "./chapitres/des-donnees-a-l-information";
+import { CONSTRUIRE_UN_INDICATEUR_JUSTE } from "./chapitres/construire-un-indicateur-juste";
+import { UNE_DONNEE_FAUSSE } from "./chapitres/une-donnee-fausse";
+import { CE_QUE_COUTE_UN_OUTIL_NUMERIQUE } from "./chapitres/ce-que-coute-un-outil-numerique";
 import type { Chapitre } from "./types";
 
 /**
@@ -189,6 +193,21 @@ export const PARCOURS: readonly Parcours[] = [
     resume:
       "Des données à la décision : trier et calculer, construire un indicateur juste, se méfier d'une donnée fausse, chiffrer un outil numérique, sur les chiffres de l'arène.",
     publics: { 1: "Terminale STMG, systèmes d'information de gestion" },
+  },
+  {
+    code: "mhr",
+    formation: "bts-mhr",
+    titre: "BTS MHR · Gérer un restaurant et un hôtel",
+    resume:
+      "Le coût matière et le prix d'un plat, le taux d'occupation et le revenu par chambre, la productivité du service, le prix selon la saison : les calculs du restaurant et de l'hôtel de l'arène.",
+    publics: { 2: "BTS MHR, 1re année", 3: "BTS MHR, 2e année" },
+    enPreparation: true,
+  },
+  {
+    code: "fiscalite",
+    titre: "Fiscalité de l'entreprise",
+    resume:
+      "La TVA collectée, déductible et à payer, ce qu'elle fait à la trésorerie, l'impôt sur les sociétés et le déficit reporté : ce que l'arène calcule et déclare, trimestre après trimestre.",
     enPreparation: true,
   },
 ];
@@ -285,12 +304,24 @@ export const PROGRAMME: Record<CodeParcours, Partial<Record<Chapitre["palier"], 
       "Ce que coûte et rapporte un outil numérique",
     ],
   },
+  mhr: {
+    2: ["Le coût matière et le prix d'un plat", "Le taux d'occupation, le prix moyen et le revenu par chambre"],
+    3: ["La productivité du service : couverts et chambres par salarié", "Remplir l'hôtel : le prix selon la saison"],
+  },
+  fiscalite: {
+    3: [
+      "La déclaration de TVA : collectée, déductible, à payer",
+      "La TVA et la trésorerie : qui fait crédit à qui",
+      "L'impôt sur les sociétés : du résultat à l'impôt",
+      "Le déficit reporté : quand l'impôt attend",
+    ],
+  },
 };
 
 /** Les paliers que la carte montre pour un parcours, dans l'ordre. */
 export const paliersDuParcours = (code: CodeParcours) => PALIERS.filter((pa) => PROGRAMME[code][pa.palier] !== undefined);
 
-export const CHAPITRES: readonly Chapitre[] = [CREATION_PREMIER_BILAN, LES_FLUX, CHARGES_ET_ENCAISSEMENTS, LA_PAIE, L_EMPRUNT, IMMOBILISATIONS, LES_STOCKS, LA_CLOTURE, REMISES_ET_REGLEMENTS, DEPRECIATIONS_ET_PROVISIONS, REGULARISATIONS, SOLDES_INTERMEDIAIRES, BILAN_FONCTIONNEL, PRIX_COUT_MARGE, SEUIL_DE_RENTABILITE, COUT_COMPLET, COUT_PAR_PRODUIT, BUDGET_DE_TRESORERIE, ANALYSE_DES_ECARTS, TABLEAU_DE_BORD, DECIDER, TAUX_DE_MARQUE, INDICATEURS_DU_POINT_DE_VENTE, STOCK_DU_POINT_DE_VENTE, PREVOIR_LES_VENTES, BUDGET_DU_POINT_DE_VENTE, SEUIL_DU_POINT_DE_VENTE, PROMOTION_QUI_PAIE, ASSORTIMENT, EQUIPE_ET_PLANNING, TABLEAU_DE_BORD_DU_MANAGER, NEGOCIER_LE_PRIX, REMISES_ET_CONDITIONS, VALEUR_D_UN_CLIENT, COUT_D_ACQUISITION, COMMISSIONS_DES_PARTENAIRES, PORTEFEUILLE_ABC, TABLEAU_DE_BORD_COMMERCIAL, MARCHE_ET_PART_DE_MARCHE, SEGMENTER_ET_CIBLER, PRIX_PSYCHOLOGIQUE, DEMANDE_ET_PRIX, COMMUNICATION, CANAUX_DE_DISTRIBUTION, LIRE_LE_COMPTE_DE_RESULTAT, LIRE_LE_BILAN, VALEUR_AJOUTEE, RENTABILITE, FONDS_DE_ROULEMENT, FINANCER_L_ENTREPRISE, EFFECTIF_ET_MASSE_SALARIALE, SALAIRE_BRUT_NET_COUT, RECRUTER, REMUNERATION_ET_MOTIVATION, FORMER, INDICATEURS_SOCIAUX, CHOISIR_SON_FOURNISSEUR, LE_CLIENT_QUI_PAIE_TARD, S_ASSURER_CONTRE_LES_ALEAS, LE_COUT_DE_LA_NON_QUALITE, LE_DEPART_D_UN_SALARIE, ENTRETENIR_L_OUTIL, LE_DIAGNOSTIC_STRATEGIQUE, SE_FIXER_DES_OBJECTIFS, COUTS_OU_DIFFERENCIATION, LIRE_LA_STRATEGIE_DES_CONCURRENTS, CROITRE_EN_INVESTISSANT, LA_RESPONSABILITE_SOCIETALE, LE_PROJET_D_ENTREPRISE, ORGANISER_L_ACTIVITE, DECIDER_AVEC_DES_CHIFFRES, EVALUER_SON_ACTIVITE];
+export const CHAPITRES: readonly Chapitre[] = [CREATION_PREMIER_BILAN, LES_FLUX, CHARGES_ET_ENCAISSEMENTS, LA_PAIE, L_EMPRUNT, IMMOBILISATIONS, LES_STOCKS, LA_CLOTURE, REMISES_ET_REGLEMENTS, DEPRECIATIONS_ET_PROVISIONS, REGULARISATIONS, SOLDES_INTERMEDIAIRES, BILAN_FONCTIONNEL, PRIX_COUT_MARGE, SEUIL_DE_RENTABILITE, COUT_COMPLET, COUT_PAR_PRODUIT, BUDGET_DE_TRESORERIE, ANALYSE_DES_ECARTS, TABLEAU_DE_BORD, DECIDER, TAUX_DE_MARQUE, INDICATEURS_DU_POINT_DE_VENTE, STOCK_DU_POINT_DE_VENTE, PREVOIR_LES_VENTES, BUDGET_DU_POINT_DE_VENTE, SEUIL_DU_POINT_DE_VENTE, PROMOTION_QUI_PAIE, ASSORTIMENT, EQUIPE_ET_PLANNING, TABLEAU_DE_BORD_DU_MANAGER, NEGOCIER_LE_PRIX, REMISES_ET_CONDITIONS, VALEUR_D_UN_CLIENT, COUT_D_ACQUISITION, COMMISSIONS_DES_PARTENAIRES, PORTEFEUILLE_ABC, TABLEAU_DE_BORD_COMMERCIAL, MARCHE_ET_PART_DE_MARCHE, SEGMENTER_ET_CIBLER, PRIX_PSYCHOLOGIQUE, DEMANDE_ET_PRIX, COMMUNICATION, CANAUX_DE_DISTRIBUTION, LIRE_LE_COMPTE_DE_RESULTAT, LIRE_LE_BILAN, VALEUR_AJOUTEE, RENTABILITE, FONDS_DE_ROULEMENT, FINANCER_L_ENTREPRISE, EFFECTIF_ET_MASSE_SALARIALE, SALAIRE_BRUT_NET_COUT, RECRUTER, REMUNERATION_ET_MOTIVATION, FORMER, INDICATEURS_SOCIAUX, CHOISIR_SON_FOURNISSEUR, LE_CLIENT_QUI_PAIE_TARD, S_ASSURER_CONTRE_LES_ALEAS, LE_COUT_DE_LA_NON_QUALITE, LE_DEPART_D_UN_SALARIE, ENTRETENIR_L_OUTIL, LE_DIAGNOSTIC_STRATEGIQUE, SE_FIXER_DES_OBJECTIFS, COUTS_OU_DIFFERENCIATION, LIRE_LA_STRATEGIE_DES_CONCURRENTS, CROITRE_EN_INVESTISSANT, LA_RESPONSABILITE_SOCIETALE, LE_PROJET_D_ENTREPRISE, ORGANISER_L_ACTIVITE, DECIDER_AVEC_DES_CHIFFRES, EVALUER_SON_ACTIVITE, DES_DONNEES_A_L_INFORMATION, CONSTRUIRE_UN_INDICATEUR_JUSTE, UNE_DONNEE_FAUSSE, CE_QUE_COUTE_UN_OUTIL_NUMERIQUE];
 
 /**
  * Un chapitre, ou un cas pratique, par son code : la page d'un chapitre et la

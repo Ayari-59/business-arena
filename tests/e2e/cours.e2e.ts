@@ -520,6 +520,14 @@ describe.each([
   { code: "decider-avec-des-chiffres", entreprise: "nova", telephone: true },
   { code: "evaluer-son-activite", entreprise: "boutique" },
   { code: "evaluer-son-activite", entreprise: "transport", telephone: true },
+  { code: "des-donnees-a-l-information", entreprise: "fitness" },
+  { code: "des-donnees-a-l-information", entreprise: "nova", telephone: true },
+  { code: "construire-un-indicateur-juste", entreprise: "hotel" },
+  { code: "construire-un-indicateur-juste", entreprise: "batiment", telephone: true },
+  { code: "une-donnee-fausse", entreprise: "hotel" },
+  { code: "une-donnee-fausse", entreprise: "batiment", telephone: true },
+  { code: "ce-que-coute-un-outil-numerique", entreprise: "boutique" },
+  { code: "ce-que-coute-un-outil-numerique", entreprise: "hotel", telephone: true },
   // Les cas pratiques s'ouvrent et se jouent comme un chapitre réservé.
   { code: "suivre-la-baisse-du-concurrent", entreprise: "nova" },
   { code: "suivre-la-baisse-du-concurrent", entreprise: "hotel", telephone: true },
@@ -608,6 +616,10 @@ describe.each([
   { code: "la-commande-exceptionnelle", entreprise: "bistrot", telephone: true },
   { code: "doubler-la-publicite", entreprise: "bistrot" },
   { code: "le-second-semestre-a-t-il-ete-meilleur", entreprise: "conseil", telephone: true },
+  { code: "le-trimestre-le-plus-fort", entreprise: "boutique" },
+  { code: "la-part-de-marche-annoncee", entreprise: "nova", telephone: true },
+  { code: "la-case-vide", entreprise: "conseil" },
+  { code: "une-seconde-journee-de-formation", entreprise: "bistrot", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se

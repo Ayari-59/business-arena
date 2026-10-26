@@ -77,6 +77,10 @@ import { UN_EQUIPEMENT_DE_PLUS_AU_DEPART } from "./par-chapitre/un-equipement-de
 import { LA_COMMANDE_EXCEPTIONNELLE } from "./par-chapitre/la-commande-exceptionnelle";
 import { DOUBLER_LA_PUBLICITE } from "./par-chapitre/doubler-la-publicite";
 import { LE_SECOND_SEMESTRE } from "./par-chapitre/le-second-semestre";
+import { LE_TRIMESTRE_LE_PLUS_FORT } from "./par-chapitre/le-trimestre-le-plus-fort";
+import { LA_PART_DE_MARCHE_ANNONCEE } from "./par-chapitre/la-part-de-marche-annoncee";
+import { LA_CASE_VIDE } from "./par-chapitre/la-case-vide";
+import { UNE_SECONDE_JOURNEE_DE_FORMATION } from "./par-chapitre/une-seconde-journee-de-formation";
 import type { Situation } from "./types";
 
 export type { Situation } from "./types";
@@ -174,6 +178,10 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LA_COMMANDE_EXCEPTIONNELLE,
   DOUBLER_LA_PUBLICITE,
   LE_SECOND_SEMESTRE,
+  LE_TRIMESTRE_LE_PLUS_FORT,
+  LA_PART_DE_MARCHE_ANNONCEE,
+  LA_CASE_VIDE,
+  UNE_SECONDE_JOURNEE_DE_FORMATION,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

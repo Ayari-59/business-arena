@@ -9,6 +9,8 @@ import { TAUX_DE_CAPACITE_VISE } from "./chapitres/se-fixer-des-objectifs";
 import { STRATEGIE_DE_COUTS, STRATEGIE_DE_DIFFERENCIATION } from "./chapitres/couts-ou-differenciation";
 import { TRIMESTRE_DE_L_ACHAT, machineDuChapitre } from "./chapitres/croitre-en-investissant";
 import { budgetRse } from "./chapitres/la-responsabilite-societale";
+import { FACTEUR_DE_LA_VIRGULE, TRIMESTRE_DECIDE, TRIMESTRES_DE_L_EXTRAIT } from "./chapitres/une-donnee-fausse";
+import { ABONNEMENT_PAR_UTILISATEUR_ET_PAR_MOIS, PART_DES_VENTES_RETROUVEES } from "./chapitres/ce-que-coute-un-outil-numerique";
 import { SEUILS_ABC } from "./negociation";
 import { scenarioByCode, scenarioCodeForLevel } from "../scenarios/registry";
 import { DIFFICULTY_PRESETS } from "../difficulty";
@@ -769,6 +771,36 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     lieux: ["synthese", "compte-de-resultat"],
     chercher:
       "De combien le chiffre d'affaires a-t-il évolué, en pourcentage, du premier au dernier tour ? Le résultat et la trésorerie ont-ils suivi ? Quel a été votre meilleur tour ?",
+  }),
+  // Bac STMG, systèmes d'information de gestion : des données de l'arène, au niveau 1.
+  "des-donnees-a-l-information": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez quatre tours sans rien changer. À chaque tour, notez une ligne par entreprise : le tour, son nom, son chiffre d'affaires.`,
+    lieux: ["marche-du-tour"],
+    chercher:
+      "Sous le marché du tour écoulé, le benchmark concurrentiel donne le chiffre d'affaires de chaque entreprise. Vos notes forment une table de données : regroupez-la par entreprise, puis filtrez les tours 3 et 4. Votre part du chiffre d'affaires des entreprises a-t-elle monté du premier semestre au second ? Un concurrent a-t-il cessé de vendre ?",
+  }),
+  "construire-un-indicateur-juste": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour sans rien changer.`,
+    lieux: ["marche-du-tour"],
+    chercher:
+      "Sous le marché du tour écoulé, le benchmark concurrentiel donne le prix moyen et le chiffre d'affaires de chaque entreprise, et une ligne « Moyenne du marché ». Vérifiez qu'elle est la moyenne simple des prix moyens. Calculez ensuite le prix pondéré : les ventes de chaque entreprise sont son chiffre d'affaires ÷ son prix moyen ; divisez le chiffre d'affaires total par les ventes totales. Lequel est le plus haut ? Votre indice de compétitivité-prix changerait-il de zone ?",
+  }),
+  "une-donnee-fausse": (c) => {
+    const { prix, volume } = feuilleDe(c, 1);
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Jouez ${TRIMESTRES_DE_L_EXTRAIT.length} tours sans rien changer. Après chacun, notez dans un tableur les ventes du tour, votre « ${prix} » et le chiffre d'affaires du compte de résultat, puis vérifiez que le chiffre d'affaires vaut les ventes multipliées par le prix. Au tour ${TRIMESTRE_DECIDE}, mettez dans « ${volume} » la moyenne des ventes des tours joués, puis jouez-le.`,
+      lieux: ["marche-du-tour", "compte-de-resultat", "plan-face-au-realise"],
+      chercher: `Chaque ligne de votre tableur retombe-t-elle ? Divisez par ${FACTEUR_DE_LA_VIRGULE} les ventes d'un tour, comme une virgule déplacée : de combien la moyenne baisse-t-elle ? Au tour ${TRIMESTRE_DECIDE}, la demande a-t-elle dépassé votre plan, et combien de ventes un plan calé sur la moyenne fausse aurait-il laissé partir ?`,
+    };
+  },
+  "ce-que-coute-un-outil-numerique": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez ${TRIMESTRES_DE_L_EXTRAIT.length} tours sans rien changer à la feuille de décision proposée.`,
+    lieux: ["marche-du-tour", "plan-face-au-realise", "compte-de-resultat"],
+    chercher: `À chaque tour, combien de clients sont repartis sans être servis alors que votre production n'atteignait pas votre capacité ? Si un outil numérique vous en faisait retrouver ${Math.round(PART_DES_VENTES_RETROUVEES * 100)} %, combien rapporteraient-ils, à la marge sur coût variable du compte de résultat divisée par vos ventes ? Cela paierait-il un abonnement de ${ABONNEMENT_PAR_UTILISATEUR_ET_PAR_MOIS} € par mois pour chacun de vos salariés ?`,
   }),
   "tableau-de-bord-commercial": (c) => ({
     niveau: 2,
