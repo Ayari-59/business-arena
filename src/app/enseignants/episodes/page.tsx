@@ -6,6 +6,7 @@ import { catalogueDesEpisodes } from "@/config/episodes/catalogue";
 import { FICHES, type FicheEnseignant } from "@/config/episodes/fiches";
 import { formationParCode } from "@/config/formations";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
+import { OFFRES } from "@/config/tarifs";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/enseignants/episodes" },
@@ -45,8 +46,13 @@ export default function EpisodesEnClassePage() {
             Chaque épisode met l&apos;élève à la place d&apos;un responsable qui doit décider, et la
             notion du cours y est le piège de la décision : on retient mieux le coût marginal après
             avoir refusé une commande rentable. Toute la classe joue le même trimestre, sous les
-            mêmes aléas ; la séance tient en deux heures, débrief compris. Les épisodes se jouent
-            sans compte, et aucun résultat n&apos;y est noté : le bilan juge les décisions.
+            mêmes aléas ; la séance tient en deux heures, débrief compris. Vos élèves les jouent
+            sans compte, dans une cohorte de votre établissement : la cohorte demande l&apos;offre{" "}
+            {OFFRES.episodes.nom}, et quelques épisodes de démonstration se jouent librement sur{" "}
+            <Link href="/entreprises/episode" className="text-slate-200 underline underline-offset-4 hover:text-slate-50">
+              la page des épisodes
+            </Link>
+            . Aucun résultat n&apos;y est noté : le bilan juge les décisions.
           </p>
           <CatalogueDesEpisodes
             entreprises={entreprises}

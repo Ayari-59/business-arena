@@ -548,6 +548,9 @@ describe.each([
     const libre = await nouvellePage();
     await aller(libre, `/cours/${chapitreCode}?entreprise=${entreprise}`);
     expect(await libre.locator("main").innerText()).toContain(`${motsDuContenu(chapitreCode).reserve} aux établissements sous licence`);
+    // Une sortie : le chapitre libre, les offres, le devis (audit d'octobre 2026).
+    const sorties = await libre.locator("main a").evaluateAll((xs) => xs.map((x) => x.getAttribute("href")));
+    expect(sorties).toEqual(expect.arrayContaining(["/tarifs", "/devis", `/cours/${CHAPITRES.find((c) => c.libre)!.code}`]));
     await libre.context().close();
 
     const code = entreprise;
@@ -619,6 +622,24 @@ describe.each([
     if (telephone) expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await ctx.close();
   }, 240_000);
+});
+
+describe("l'accueil présente les quatre formats", () => {
+  it("quatre formats, chacun avec sa page, et la porte gratuite de ceux qui en ont une, sans déborder sur téléphone", async () => {
+    const page = await nouvellePage(390, 844);
+    await aller(page, "/");
+    const formats = page.locator("[data-formats-de-l-accueil] [data-format]");
+    expect(await formats.evaluateAll((xs) => xs.map((x) => x.getAttribute("data-format")))).toEqual(["cours", "situations", "arene", "episodes"]);
+    // Le cours, absent de l'accueil avant l'audit, y a sa porte libre.
+    expect(await page.locator(`[data-format="cours"] a[href="/cours/${CHAPITRES.find((c) => c.libre)!.code}"]`).count()).toBe(1);
+    expect(await page.locator('[data-format="arene"] a[href="/jouer"]').count()).toBe(1);
+    expect(await page.locator('[data-format="episodes"] a[href="/entreprises/episode"]').count()).toBe(1);
+    // Le héros mène à la bande.
+    expect(await page.locator('a[href="#formats"]').count()).toBe(1);
+    expect(await page.locator("#formats").count()).toBe(1);
+    expect(await debordement(page)).toBeLessThanOrEqual(0);
+    await page.context().close();
+  }, 60_000);
 });
 
 describe("les liens dans les deux sens", () => {

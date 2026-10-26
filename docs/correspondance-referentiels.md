@@ -185,7 +185,7 @@ COUVRIR : un bloc est atteint dès qu'un seul geste le touche, c'est un plancher
 | atelier | ses formations | ce qu'il atteindrait ailleurs |
 | --- | --- | --- |
 | Tenir la boutique Maille & Co, premiers pas en gestion | Toutes filières, en découverte | BTS NDRC 3/3 · BTS MHR 2/2 · DCG 4/4 · BTS MCO 3/4 · BTS GPME 3/4 · BTS MHR · B et C 3/4 · 2de option MG 8/12 · STMG 8/12 · BTS CG 4/6 · BUT GEA 3/5 |
-| Prendre les commandes de Nova en quatre séances | 2de option MG et STMG | BTS NDRC 3/3 · BTS MHR 2/2 · DCG 4/4 · BUT GEA 4/5 · BTS MCO 3/4 · BTS MHR · B et C 3/4 · BTS CG 3/6 · BTS GPME 2/4 |
+| Prendre les commandes de Nova en cinq séances | 2de option MG et STMG | BTS NDRC 3/3 · BTS MHR 2/2 · DCG 4/4 · BUT GEA 4/5 · BTS MCO 3/4 · BTS MHR · B et C 3/4 · BTS CG 3/6 · BTS GPME 2/4 |
 | Six trimestres chez Nova, du bilan d'ouverture au débriefing | BTS CG | BTS MCO 4/4 · BTS NDRC 3/3 · BTS MHR 2/2 · DCG 4/4 · 2de option MG 11/12 · STMG 11/12 · BUT GEA 4/5 · BTS GPME 3/4 · BTS MHR · B et C 3/4 |
 | Tenir un point de vente pendant quatre trimestres | BTS MCO | 2de option MG 12/12 · STMG 12/12 · BTS NDRC 3/3 · BTS MHR 2/2 · BUT GEA 5/5 · BTS GPME 3/4 · BTS MHR · B et C 3/4 · DCG 3/4 · BTS CG 3/6 |
 | Piloter une unité de restauration au mois | BTS MCO | BTS CG 6/6 · BTS NDRC 3/3 · BTS MHR 2/2 · BTS MHR · B et C 4/4 · 2de option MG 11/12 · STMG 11/12 · BUT GEA 4/5 · BTS GPME 3/4 · DCG 3/4 |

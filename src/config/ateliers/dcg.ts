@@ -3,7 +3,7 @@ import type { AtelierDefinition } from "./types";
 /**
  * ATELIER PROFESSIONNEL · DCG.
  *
- * Cinq séances de deux heures sur NOVA, à un niveau de jeu qui ouvre le
+ * Six séances de deux heures sur NOVA, à un niveau de jeu qui ouvre le
  * financement, l'investissement et le placement des excédents. Le DCG n'est pas
  * un BTS avec plus d'heures : ce que l'atelier y apporte n'est pas la découverte
  * des documents de synthèse, que les candidats savent lire, mais la chaîne
@@ -25,7 +25,7 @@ export const ATELIER_DCG: AtelierDefinition = {
   referentielLabel: "Unités d'enseignement",
   referentielAccord: "mobilisées",
   pitch:
-    "Cinq séances de deux heures. Chaque équipe dirige la même entreprise industrielle, construit ses budgets, analyse ses écarts, décide d'investir et de se financer, et rend un rapport financier qu'elle soutient devant un jury.",
+    "Six séances de deux heures. Chaque équipe dirige la même entreprise industrielle, construit ses budgets, analyse ses écarts, décide d'investir et de se financer, et rend un rapport financier qu'elle soutient devant un jury.",
   resume:
     "Quatre trimestres dans une entreprise industrielle, du diagnostic financier d'ouverture au rapport de gestion soutenu, budgets et écarts compris.",
   difficulte: 4,
@@ -78,7 +78,7 @@ export const ATELIER_DCG: AtelierDefinition = {
           minutes: 10,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle : cinq séances, un tour d'essai qui ne compte pas puis quatre trimestres, une seule entreprise, un document rendu à chaque fin de séance, et un monde variable qui distingue bonne décision et bon résultat. Les équipes rejoignent la partie avec le code et nomment leur entreprise.",
+            "Vous annoncez la règle : six séances, un tour d'essai qui ne compte pas puis quatre trimestres, une seule entreprise, un document rendu à chaque fin de séance, et un monde variable qui distingue bonne décision et bon résultat. Les équipes rejoignent la partie avec le code et nomment leur entreprise.",
         },
         {
           minutes: 25,
@@ -142,13 +142,13 @@ export const ATELIER_DCG: AtelierDefinition = {
         "soldes intermédiaires de gestion",
       ],
       preparation:
-        "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez des équipes de trois. Préparez la trame de note de diagnostic en deux pages maximum, et annoncez dès la première séance que le monde variable est activé, ce qui change la façon dont les résultats se lisent.",
+        "Rien à créer : la vraie partie a commencé en fin de séance d'essai ; reprenez-la depuis votre espace, avec les équipes de trois constituées pour l'essai. Préparez la trame de note de diagnostic en deux pages maximum, et rappelez que le monde variable, annoncé dès la première séance, est activé, ce qui change la façon dont les résultats se lisent.",
       deroule: [
         {
           minutes: 10,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle : cinq séances, quatre trimestres, une entreprise, un livrable par séance, et un rapport soutenu à la fin. Les équipes rejoignent la partie.",
+            "Vous annoncez la règle : six séances, quatre trimestres, une entreprise, un livrable par séance, et un rapport soutenu à la fin. Les équipes rejoignent la partie.",
         },
         {
           minutes: 25,
@@ -472,8 +472,8 @@ export const ATELIER_DCG: AtelierDefinition = {
   ],
   formats: [
     {
-      nom: "Cinq séances hebdomadaires",
-      quand: "Le format d'origine, sur cinq semaines.",
+      nom: "Six séances hebdomadaires",
+      quand: "Le format d'origine, sur six semaines.",
       comment:
         "Une séance par semaine. L'intervalle est nécessaire ici : la décomposition des écarts et le dossier d'investissement demandent un travail personnel entre deux séances.",
     },
@@ -481,7 +481,7 @@ export const ATELIER_DCG: AtelierDefinition = {
       nom: "Séminaire de trois jours",
       quand: "En stage intensif de préparation, hors période d'examen.",
       comment:
-        "Deux séances les deux premiers jours, la soutenance le troisième. Le rythme convient à des candidats déjà à l'aise avec les documents de synthèse ; il est trop dur pour une première année.",
+        "La séance d'essai la veille, puis deux séances les deux premiers jours, la soutenance le troisième. Le rythme convient à des candidats déjà à l'aise avec les documents de synthèse ; il est trop dur pour une première année.",
     },
     {
       nom: "Fil rouge sur deux unités",

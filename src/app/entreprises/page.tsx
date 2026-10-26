@@ -281,7 +281,7 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
               Diriger {nomSeul(d)}
             </Link>
             <span className="text-xs text-slate-400">
-              Vous jouez {d.playerTeamName}, face à {d.bots.length} concurrents
+              Vous jouez {d.playerTeamName}, face à {d.bots.length} concurrents au plus
             </span>
           </div>
         </div>

@@ -3,11 +3,11 @@ import type { AtelierDefinition } from "./types";
 /**
  * ATELIER PROFESSIONNEL · BTS CG, première année.
  *
- * Six séances de deux heures, une partie de six tours, un tour par séance.
- * L'entreprise est la même du début à la fin : c'est ce qui distingue un
- * atelier d'une suite d'exercices. Les élèves ne calculent pas un seuil de
- * rentabilité, ils calculent LEUR seuil, celui de l'entreprise qu'ils ont mal
- * pilotée la semaine précédente.
+ * Sept séances de deux heures, un tour d'essai puis une partie de six tours, un
+ * tour par séance. L'entreprise est la même du début à la fin : c'est ce qui
+ * distingue un atelier d'une suite d'exercices. Les élèves ne calculent pas un
+ * seuil de rentabilité, ils calculent LEUR seuil, celui de l'entreprise qu'ils
+ * ont mal pilotée la semaine précédente.
  *
  * C'est un atelier de PREMIÈRE année, et il en a le périmètre : une seule
  * enceinte à produire et à vendre (la gamme attend la seconde année), un
@@ -31,9 +31,9 @@ export const ATELIER_CG1: AtelierDefinition = {
   referentielLabel: "Processus",
   referentielAccord: "mobilisés",
   pitch:
-    "Six séances de deux heures. Chaque équipe dirige la même entreprise du premier au dernier tour, décide, subit ses décisions, et produit à chaque séance un document professionnel qui s'évalue.",
+    "Sept séances de deux heures. Chaque équipe dirige la même entreprise du premier au dernier tour, décide, subit ses décisions, et produit à chaque séance un document professionnel qui s'évalue.",
   resume:
-    "Une partie de six trimestres étalée sur six séances, du diagnostic d'ouverture à la note de gestion, sur une seule enceinte et avec les seuls outils de première année.",
+    "Une partie de six trimestres étalée sur sept séances, du diagnostic d'ouverture à la note de gestion, sur une seule enceinte et avec les seuls outils de première année.",
   difficulte: 2,
   difficulteLabel: "Initiation",
   format: "7 séances de 2 h",
@@ -54,7 +54,7 @@ export const ATELIER_CG1: AtelierDefinition = {
     tourDEssai: 1,
     effectifParEquipe: "trois élèves",
     notes:
-      "NOVA se joue ici en une seule enceinte : un stock, un coût de production, un seuil de rentabilité qui ne dépend pas d'un mix. La gamme de trois références, et le seuil qui bouge avec le mix, attendent la seconde année. Le niveau Pilotage ouvre la mobilisation des créances, ce qu'il faut pour les séances 3 et 5, et les ressources humaines, que l'atelier laisse à l'effectif de départ ; l'emprunt et l'investissement, qui n'ont pas leur place en première année, n'y sont pas : un manque de trésorerie, la banque le couvre seule par le découvert, à son taux. La TVA est activée pour la séance 5. Le monde variable est décoché pour que toutes vos classes jouent la même économie et que vos corrigés restent valables d'une année sur l'autre. Deux concurrents pilotés par la machine suffisent à ce que le marché résiste.",
+      "NOVA se joue ici en une seule enceinte : un stock, un coût de production, un seuil de rentabilité qui ne dépend pas d'un mix. La gamme de trois références, et le seuil qui bouge avec le mix, attendent la seconde année. Le niveau Pilotage ouvre la mobilisation des créances, ce qu'il faut pour les séances 4 et 6, et les ressources humaines, que l'atelier laisse à l'effectif de départ ; l'emprunt et l'investissement, qui n'ont pas leur place en première année, n'y sont pas : un manque de trésorerie, la banque le couvre seule par le découvert, à son taux. La TVA est activée pour la séance 6. Le monde variable est décoché pour que toutes vos classes jouent la même économie et que vos corrigés restent valables d'une année sur l'autre. Deux concurrents pilotés par la machine suffisent à ce que le marché résiste.",
   },
   seances: [
     {
@@ -151,13 +151,13 @@ export const ATELIER_CG1: AtelierDefinition = {
         "charges fixes et charges variables",
       ],
       preparation:
-        "Créez la partie avec ces réglages : NOVA (une seule enceinte), un trimestre par tour, niveau 3 · Pilotage, six tours, six équipes, deux concurrents machine, TVA activée, monde variable décoché, questions de connaissances activées. Notez le code d'invitation. Constituez les équipes à l'avance : trois élèves par équipe, un rôle par élève (direction, production, finances), rôles tournants d'une séance à l'autre. Imprimez la fiche de diagnostic vierge, et distribuez une semaine avant le bilan d'ouverture et le compte de résultat de NOVA, tels que la partie les affiche. À préparer par les équipes avant la séance : chaque élève lit seul ces deux documents chez lui et apporte trois constats écrits ; la séance part de ces constats, elle ne commence pas par la découverte des documents.",
+        "Reprenez la partie créée à la séance d'essai et notez son code d'invitation. Constituez les équipes à l'avance : trois élèves par équipe, un rôle par élève (direction, production, finances), rôles tournants d'une séance à l'autre. Imprimez la fiche de diagnostic vierge, et distribuez une semaine avant le bilan d'ouverture et le compte de résultat de NOVA, tels que la partie les affiche. À préparer par les équipes avant la séance : chaque élève lit seul ces deux documents chez lui et apporte trois constats écrits ; la séance part de ces constats, elle ne commence pas par la découverte des documents.",
       deroule: [
         {
           minutes: 10,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle du jeu : six séances, six trimestres, une seule entreprise, et un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code.",
+            "Vous annoncez la règle du jeu : sept séances, six trimestres, une seule entreprise, et un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code.",
         },
         {
           minutes: 20,
@@ -446,7 +446,7 @@ export const ATELIER_CG1: AtelierDefinition = {
         "affacturage",
       ],
       preparation:
-        "Vérifiez que la TVA est bien activée dans les paramètres économiques de la partie. Au cinquième trimestre, le scénario fait bondir le coût des matières de 20 % pour deux trimestres : annoncez-le en ouverture, la lecture du financement se fera sur un compte de résultat que ce choc a déplacé. Reprenez le tableau « où est passé l'argent » de la séance 4 : sa troisième ligne est le sujet du jour. À préparer par les équipes avant la séance : retrouver dans leur bilan, depuis leur espace, la TVA à décaisser du tour 4, et calculer la TVA collectée et la TVA déductible qui la composent ; la séance part de ces trois montants. Préparez une créance chiffrée au tableau pour l'exercice de comparaison.",
+        "Vérifiez que la TVA est bien activée dans les paramètres économiques de la partie. Au cinquième trimestre, le scénario fait bondir le coût des matières de 20 % pour deux trimestres : annoncez-le en ouverture, la lecture du financement se fera sur un compte de résultat que ce choc a déplacé. Reprenez le tableau « où est passé l'argent » de la séance 5 : sa troisième ligne est le sujet du jour. À préparer par les équipes avant la séance : retrouver dans leur bilan, depuis leur espace, la TVA à décaisser du tour 4, et calculer la TVA collectée et la TVA déductible qui la composent ; la séance part de ces trois montants. Préparez une créance chiffrée au tableau pour l'exercice de comparaison.",
       deroule: [
         {
           minutes: 15,
@@ -458,7 +458,7 @@ export const ATELIER_CG1: AtelierDefinition = {
           minutes: 15,
           titre: "Son poids dans la caisse",
           detail:
-            "Ils reprennent la troisième ligne du tableau de la séance 4 et la refont pour le tour 5 : combien la TVA, neutre pour le résultat, a retenu dans la caisse ce trimestre. Une taxe qui ne coûte rien peut immobiliser beaucoup.",
+            "Ils reprennent la troisième ligne du tableau de la séance 5 et la refont pour le tour 5 : combien la TVA, neutre pour le résultat, a retenu dans la caisse ce trimestre. Une taxe qui ne coûte rien peut immobiliser beaucoup.",
         },
         {
           minutes: 25,
@@ -567,25 +567,25 @@ export const ATELIER_CG1: AtelierDefinition = {
   formats: [
     {
       nom: "Atelier hebdomadaire",
-      quand: "Six semaines consécutives, deux heures par semaine",
+      quand: "Sept semaines consécutives, deux heures par semaine",
       comment:
         "Le tempo pour lequel l'atelier est écrit. Une séance, un trimestre, un livrable. L'attente d'une semaine entre deux tours joue en votre faveur : les équipes reviennent avec leurs calculs faits et leurs regrets aussi.",
     },
     {
       nom: "Semaine bloquée",
-      quand: "Cinq jours, six séances de deux heures",
+      quand: "La veille et cinq jours, sept séances de deux heures",
       comment:
-        "Les six séances tiennent dans la semaine, à raison d'une le matin et une l'après-midi les trois premiers jours, puis les livrables et les présentations. Le travail à préparer avant chaque séance se fait alors entre la séance du matin et celle de l'après-midi. Prévoyez deux heures de plus pour la note : deux pages ne s'écrivent pas entre deux tours.",
+        "La séance d'essai la veille, puis une séance le matin et une l'après-midi les trois premiers jours de la semaine, puis les livrables et les présentations. Le travail à préparer avant chaque séance se fait alors entre la séance du matin et celle de l'après-midi. Prévoyez deux heures de plus pour la note : deux pages ne s'écrivent pas entre deux tours.",
     },
     {
       nom: "Fil rouge sur l'année",
-      quand: "Six séances réparties sur les deux premiers trimestres",
+      quand: "Sept séances réparties sur les deux premiers trimestres",
       comment:
-        "Une séance toutes les trois ou quatre semaines, placée juste après le cours qui donne l'outil. Le seuil de rentabilité vient d'être vu, la séance 2 le fait servir ; la TVA vient d'être vue, la séance 5 la fait peser. C'est le montage qui ancre le mieux, et celui qui demande le plus de discipline : la partie reste ouverte des mois.",
+        "Une séance toutes les trois ou quatre semaines, placée juste après le cours qui donne l'outil. Le seuil de rentabilité vient d'être vu, la séance 3 le fait servir ; la TVA vient d'être vue, la séance 6 la fait peser. C'est le montage qui ancre le mieux, et celui qui demande le plus de discipline : la partie reste ouverte des mois.",
     },
   ],
   evaluationFinale: [
-    "Six livrables d'équipe, un par séance, notés sur les critères annoncés au début de chaque séance.",
+    "Six livrables d'équipe, un par séance jouée, notés sur les critères annoncés au début de chaque séance.",
     "La note de gestion et sa présentation, qui pèsent le plus lourd parce qu'elles rassemblent tout.",
     "La note pédagogique que la plateforme calcule pour chaque équipe : diagnostics justes, modèles d'analyse bien choisis, questions de connaissances, indices consommés. Elle éclaire le travail de raisonnement, que les livrables ne montrent pas toujours.",
     "Le classement final ne compte pas dans la note. Une équipe peut bien raisonner et mal finir : c'est la vie des entreprises, ce ne doit pas être celle des élèves.",
@@ -605,7 +605,7 @@ export const ATELIER_CG1: AtelierDefinition = {
       question:
         "Que se passe-t-il si une équipe fait faillite en cours de route ?",
       reponse:
-        "Rien ne s'arrête. Une entreprise en découvert au-delà du plafond voit ses créances cédées d'office, elle continue de jouer, et elle a beaucoup à raconter en séance 4. Une équipe qui se plante donne souvent la meilleure note de gestion, à condition que vous le disiez dès la première séance.",
+        "Rien ne s'arrête. Une entreprise en découvert au-delà du plafond voit ses créances cédées d'office, elle continue de jouer, et elle a beaucoup à raconter en séance 5. Une équipe qui se plante donne souvent la meilleure note de gestion, à condition que vous le disiez dès la première séance.",
     },
     {
       question: "Combien d'élèves par équipe ?",
@@ -620,12 +620,12 @@ export const ATELIER_CG1: AtelierDefinition = {
     {
       question: "Faut-il des ordinateurs pour tout le monde ?",
       reponse:
-        "Un poste par équipe suffit pour jouer. Le cockpit de la séance 3 et la note de la séance 6 demandent en revanche de quoi travailler à plusieurs, en salle informatique ou sur les portables des élèves.",
+        "Un poste par équipe suffit pour jouer. Le cockpit de la séance 4 et la note de la séance 7 demandent en revanche de quoi travailler à plusieurs, en salle informatique ou sur les portables des élèves.",
     },
     {
       question: "Peut-on changer de secteur d'entreprise ?",
       reponse:
-        "Oui, tous les secteurs se jouent avec le même déroulé. NOVA est recommandé parce qu'il porte un stock, un coût de production et des délais de règlement, les trois matières de la première année. Un secteur sans stock, comme la restauration ou l'hôtellerie, retire à la séance 4 son objet.",
+        "Oui, tous les secteurs se jouent avec le même déroulé. NOVA est recommandé parce qu'il porte un stock, un coût de production et des délais de règlement, les trois matières de la première année. Un secteur sans stock, comme la restauration ou l'hôtellerie, retire à la séance 5 son objet.",
     },
     {
       question: "Quelles épreuves du BTS cet atelier prépare-t-il ?",
@@ -636,7 +636,7 @@ export const ATELIER_CG1: AtelierDefinition = {
   prolongements: [
     "Rejouer le même atelier sur LA TABLE D'AUGUSTIN, où rien ne se stocke : les élèves découvrent que la moitié de leurs réflexes venaient du stock et pas de la gestion.",
     "En seconde année, passer NOVA en gamme avec le niveau Arbitrage : trois références, un seuil qui dépend du mix, le bilan fonctionnel et le financement du poste clients par le calcul.",
-    "Prolonger la séance 5 vers le calcul et le décaissement de l'impôt sur les sociétés, modulable dans les paramètres économiques de la partie.",
+    "Prolonger la séance 6 vers le calcul et le décaissement de l'impôt sur les sociétés, modulable dans les paramètres économiques de la partie.",
     "Monter un concours entre classes à partir de la même partie, avec groupes tirés au sort et décisions verrouillées.",
   ],
 };

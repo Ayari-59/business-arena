@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { LES_OFFRES_DE_L_ARENE } from "@/config/tarifs";
 import Link from "next/link";
+import { LesQuatreFormats } from "@/components/accueil-formats";
 import { getPlatformConfig } from "@/services/admin.service";
 import { etendueDesDecisions } from "@/config/decisions";
 import { CONCEPTS } from "@/config/pedagogy/concepts";
@@ -85,7 +86,7 @@ const RENVOIS: {
     aide: "Créez une partie multi-équipes, pilotez les tours, suivez la maîtrise de chaque notion.",
   },
   {
-    title: "Business Arena Championship",
+    title: "Concours entre classes",
     href: "/compete",
     aide: "Groupes tirés au sort, décisions verrouillées, qualification à l'IPG, finale et podium.",
   },
@@ -461,6 +462,13 @@ export default async function Home() {
             </Link>
             , sur devis.
           </p>
+          {/* L'arène n'est qu'un des quatre formats : le héros le dit, et mène à la bande qui les présente. */}
+          <p className="mt-2 text-sm leading-relaxed text-slate-400">
+            Aussi : le cours par la simulation, ses cas pratiques et les épisodes manager.{" "}
+            <Link href="#formats" className={`${LIEN_A_L_ENCRE} whitespace-nowrap`}>
+              Les quatre formats
+            </Link>
+          </p>
           {/* Sous `lg`, les neuf lieux en grille de 3 × 3, sous les boutons. */}
           <GrilleDesLieux className="mt-7 lg:hidden" />
             </div>
@@ -478,6 +486,11 @@ export default async function Home() {
         */}
         <BandeauDeLaPartie contraste={c("accueil.partie")} />
         <EpisodeEtClassement contraste={c("accueil.episode")} />
+
+        {/* ---------- Les quatre formats ---------- */}
+        {/* Juste après la carte d'épisode et le classement de l'arène, posés côte à côte :
+            la bande dit qu'il s'agit de deux formats parmi quatre, et que chacun se prend seul. */}
+        <LesQuatreFormats contraste={c("accueil.formats")} />
 
         {/* ---------- La boucle, et ce qu'on en retire ---------- */}
         {/*

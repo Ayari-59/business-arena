@@ -3,7 +3,7 @@ import type { AtelierDefinition } from "./types";
 /**
  * ANIMATION DE DÉCOUVERTE · BACCALAURÉAT STMG.
  *
- * Quatre séances d'une heure et demie sur NOVA, l'atelier d'enceintes. C'est la
+ * Cinq séances d'une heure et demie sur NOVA, l'atelier d'enceintes. C'est la
  * première rencontre d'un élève de lycée avec la gestion d'une entreprise, et
  * elle ne se joue pas comme un atelier de BTS : on n'y prépare pas une épreuve
  * professionnelle, on y installe des notions que le programme reprendra pendant
@@ -103,7 +103,7 @@ export const THEMES_SECONDE_MG = {
 
 export const ATELIER_STMG: AtelierDefinition = {
   code: "stmg",
-  titre: "Prendre les commandes de Nova en quatre séances",
+  titre: "Prendre les commandes de Nova en cinq séances",
   formations: ["stmg", "seconde-mg"],
   annee: "Seconde option MG, première et terminale",
   nature: "Animation de découverte",
@@ -111,7 +111,7 @@ export const ATELIER_STMG: AtelierDefinition = {
   referentielLabel: "Thèmes du programme",
   referentielAccord: "mobilisés",
   pitch:
-    "Quatre séances d'une heure et demie, soit une année entière. Chaque équipe dirige le même atelier de fabrication, fixe son prix, décide combien produire et combien consacrer à se faire connaître, puis découvre au trimestre suivant ce que le marché a fait de ses choix. Aucun prérequis : la première décision se prend avant le premier cours.",
+    "Cinq séances d'une heure et demie, un trimestre d'essai puis une année entière. Chaque équipe dirige le même atelier de fabrication, fixe son prix, décide combien produire et combien consacrer à se faire connaître, puis découvre au trimestre suivant ce que le marché a fait de ses choix. Aucun prérequis : la première décision se prend avant le premier cours.",
   resume:
     "Une première rencontre avec la décision de gestion, du prix affiché au résultat de l'exercice, sur une année complète et sans prérequis.",
   difficulte: 1,
@@ -170,7 +170,7 @@ export const ATELIER_STMG: AtelierDefinition = {
           minutes: 10,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle : quatre séances d'une heure et demie, un tour d'essai qui ne compte pas puis quatre trimestres, une seule entreprise, une trace à produire à chaque séance. Les équipes rejoignent la partie avec le code et nomment leur entreprise.",
+            "Vous annoncez la règle : cinq séances d'une heure et demie, un tour d'essai qui ne compte pas puis quatre trimestres, une seule entreprise, une trace à produire à chaque séance. Les équipes rejoignent la partie avec le code et nomment leur entreprise.",
         },
         {
           minutes: 20,
@@ -234,13 +234,13 @@ export const ATELIER_STMG: AtelierDefinition = {
         "stock",
       ],
       preparation:
-        "Créez la partie avec les réglages ci-dessus et notez le code d'invitation au tableau. Constituez des équipes de trois ou quatre, sans les composer par niveau : la discussion vaut mieux qu'un classement. Imprimez la grille de décision vierge, une par équipe. Résistez à l'envie de faire un cours d'introduction : cette séance repose entièrement sur le fait que les élèves décident avant de savoir.",
+        "Reprenez la partie créée à la séance d'essai et notez son code d'invitation au tableau. Constituez des équipes de trois ou quatre, sans les composer par niveau : la discussion vaut mieux qu'un classement. Imprimez la grille de décision vierge, une par équipe. Résistez à l'envie de faire un cours d'introduction : cette séance repose entièrement sur le fait que les élèves décident avant de savoir.",
       deroule: [
         {
           minutes: 10,
           titre: "Consignes",
           detail:
-            "Vous annoncez la règle du jeu : quatre séances, quatre trimestres, une seule entreprise par équipe, et un document rendu à la fin de chaque séance. Aucune notion n'est donnée. Les équipes rejoignent la partie avec le code et choisissent le nom de leur entreprise.",
+            "Vous annoncez la règle du jeu : cinq séances, quatre trimestres, une seule entreprise par équipe, et un document rendu à la fin de chaque séance. Aucune notion n'est donnée. Les équipes rejoignent la partie avec le code et choisissent le nom de leur entreprise.",
         },
         {
           minutes: 20,
@@ -309,7 +309,7 @@ export const ATELIER_STMG: AtelierDefinition = {
         "invendus et stock",
       ],
       preparation:
-        "Relisez les grilles rendues à la première séance et repérez deux équipes aux stratégies opposées : une qui a vendu cher à peu de clients, une qui a vendu bas à beaucoup. Elles ouvriront le débriefing. Préparez au tableau un tableau vide à deux colonnes, charges qui suivent les ventes et charges qui ne les suivent pas, que la classe remplira elle-même.",
+        "Relisez les grilles rendues à la deuxième séance et repérez deux équipes aux stratégies opposées : une qui a vendu cher à peu de clients, une qui a vendu bas à beaucoup. Elles ouvriront le débriefing. Préparez au tableau un tableau vide à deux colonnes, charges qui suivent les ventes et charges qui ne les suivent pas, que la classe remplira elle-même.",
       deroule: [
         {
           minutes: 10,
@@ -506,18 +506,18 @@ export const ATELIER_STMG: AtelierDefinition = {
   ],
   formats: [
     {
-      nom: "Quatre semaines de suite",
+      nom: "Cinq semaines de suite",
       quand:
         "Le format d'origine, en début d'année ou après les conseils de classe.",
       comment:
-        "Une séance par semaine, un trimestre par séance, un mois en tout. La semaine qui sépare deux séances laisse le temps de traiter en cours la notion que la séance a fait apparaître, ce qui est tout l'intérêt de l'ordre retenu. Elle laisse aussi les équipes réfléchir au pari de la troisième séance avant de le jouer.",
+        "Une séance par semaine, le tour d'essai puis un trimestre par séance, cinq semaines en tout. La semaine qui sépare deux séances laisse le temps de traiter en cours la notion que la séance a fait apparaître, ce qui est tout l'intérêt de l'ordre retenu. Elle laisse aussi les équipes réfléchir au pari de la quatrième séance avant de le jouer.",
     },
     {
       nom: "Journée banalisée",
       quand:
         "Journée d'intégration, semaine de la spécialité, portes ouvertes.",
       comment:
-        "Les quatre séances s'enchaînent avec une pause après la deuxième. Le rythme est plus tendu et le bilan collectif plus court, mais la mémoire des trimestres est meilleure et la classe voit l'année entière dans la même journée, pic compris.",
+        "Les cinq séances s'enchaînent avec une pause après la troisième. Le rythme est plus tendu et le bilan collectif plus court, mais la mémoire des trimestres est meilleure et la classe voit l'année entière dans la même journée, pic compris.",
     },
     {
       nom: "En seconde, option management et gestion",
@@ -541,7 +541,7 @@ export const ATELIER_STMG: AtelierDefinition = {
     "Le classement du jeu n'entre pas dans la note. Une équipe peut finir dernière et rendre le meilleur bilan, et c'est un message qu'il vaut mieux faire passer dès la première séance.",
   ],
   prolongements: [
-    "Rejouer la même année avec le monde variable activé : la classe découvre qu'une bonne décision peut mal finir, ce qui ouvre la question du risque et donne tout son sens au pari de la troisième séance.",
+    "Rejouer la même année avec le monde variable activé : la classe découvre qu'une bonne décision peut mal finir, ce qui ouvre la question du risque et donne tout son sens au pari de la quatrième séance.",
     "Basculer sur la boutique de maille pour opposer, sur le même déroulé, une entreprise qui fabrique et une entreprise qui achète pour revendre.",
     "En terminale, prolonger jusqu'au sixième trimestre en montant au niveau Pilotage, deux crans plus haut, ce qui ouvre les décisions de trésorerie que le programme de la spécialité gestion et finance mobilise, et fait vivre l'après pic.",
   ],
@@ -550,13 +550,13 @@ export const ATELIER_STMG: AtelierDefinition = {
       question:
         "Pourquoi quatre trimestres, et des séances d'une heure et demie ?",
       reponse:
-        "Parce que quatre trimestres font une année, et qu'une découverte qui s'arrête en cours d'exercice ne montre pas de résultat annuel. Surtout, le quatrième trimestre est celui où une chaîne de magasins passe sa grosse commande : le marché y double, et c'est la séance qui donne son sens à tout ce qui précède. Une animation de trois séances se jouerait entièrement dans le creux. La séance d'une heure et demie est le créneau ordinaire d'un lycée, et le volume total ne bouge pas.",
+        "Parce que quatre trimestres font une année, et qu'une découverte qui s'arrête en cours d'exercice ne montre pas de résultat annuel. Surtout, le quatrième trimestre est celui où une chaîne de magasins passe sa grosse commande : le marché y double, et c'est la séance qui donne son sens à tout ce qui précède. Une animation de trois trimestres se jouerait entièrement dans le creux. La séance d'une heure et demie est le créneau ordinaire d'un lycée, et le volume total ne bouge pas.",
     },
     {
       question:
         "Mes élèves n'ont jamais fait de gestion, est ce jouable en début de première ?",
       reponse:
-        "Oui, et c'est le moment prévu. La première séance ne suppose aucune notion : elle demande de lire trois nombres dans une situation et de fixer un prix. Les notions arrivent ensuite, appelées par ce que les équipes ont vécu, ce qui est exactement l'ordre inverse d'un cours et exactement celui qui fait retenir.",
+        "Oui, et c'est le moment prévu. La séance d'essai et la deuxième séance ne supposent aucune notion : la deuxième demande de lire trois nombres dans une situation et de fixer un prix. Les notions arrivent ensuite, appelées par ce que les équipes ont vécu, ce qui est exactement l'ordre inverse d'un cours et exactement celui qui fait retenir.",
     },
     {
       question:
@@ -585,12 +585,12 @@ export const ATELIER_STMG: AtelierDefinition = {
       question:
         "Que faire si une équipe fait faillite dès le premier trimestre ?",
       reponse:
-        "Rien, et surtout pas la relancer. Sa situation est le meilleur support de la deuxième séance : elle a devant elle un compte de résultat qui explique très clairement pourquoi on ne vend pas à perte, et la classe entière comprend le seuil de rentabilité en le regardant. Prévenez simplement l'équipe qu'elle ne sera pas notée là-dessus.",
+        "Rien, et surtout pas la relancer. Sa situation est le meilleur support de la troisième séance : elle a devant elle un compte de résultat qui explique très clairement pourquoi on ne vend pas à perte, et la classe entière comprend le seuil de rentabilité en le regardant. Prévenez simplement l'équipe qu'elle ne sera pas notée là-dessus.",
     },
     {
       question: "Quel lien avec les épreuves du baccalauréat ?",
       reponse:
-        "L'épreuve écrite de spécialité, management, sciences de gestion et numérique, pose une étude de cas sur les documents d'une organisation : les quatre séances en produisent l'équivalent sur une entreprise que la classe a dirigée elle-même, ce qui rend les documents lisibles. La prise de parole de trois minutes de la dernière séance, avec sa question, est un entraînement direct au Grand oral.",
+        "L'épreuve écrite de spécialité, management, sciences de gestion et numérique, pose une étude de cas sur les documents d'une organisation : les cinq séances en produisent l'équivalent sur une entreprise que la classe a dirigée elle-même, ce qui rend les documents lisibles. La prise de parole de trois minutes de la dernière séance, avec sa question, est un entraînement direct au Grand oral.",
     },
   ],
 };

@@ -222,7 +222,7 @@ export async function seedDemoWorld(): Promise<DemoWorld> {
   const competition = await createCompetition({
     organizerId: teacherId,
     organizationId,
-    name: "Championship de démonstration",
+    name: "Concours de démonstration",
     periodicity: "quarter",
     groupSize: 2,
     advancePerGroup: 1,

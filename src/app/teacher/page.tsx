@@ -915,7 +915,7 @@ export default async function TeacherDashboard({
           </Tiroir>
         ) : null}
         <Tiroir
-          titre="Organiser un concours · Business Arena Championship"
+          titre="Organiser un concours entre classes"
           ouvert={competitions.length === 0 && games.length === 0}
         >
           {!licence ? (

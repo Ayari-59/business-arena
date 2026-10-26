@@ -34,6 +34,12 @@ export interface Brique {
   /** Ce que la brique compte, lu dans son registre. */
   compte: string;
   lien: { href: string; libelle: string };
+  /**
+   * La porte gratuite du format, s'il en a une : ce qu'un enseignant peut ouvrir
+   * sans compte ni licence (audit d'octobre 2026 : « montrer qu'on peut prendre
+   * un format seul »). Absente quand le format ne s'ouvre que sous licence.
+   */
+  essai?: { href: string; libelle: string };
 }
 
 export function briques(): readonly Brique[] {
@@ -47,6 +53,7 @@ export function briques(): readonly Brique[] {
       forme: `Seul, ${etendue(CHAPITRES.map(dureeDuChapitre))}`,
       compte: `${CHAPITRES.length} chapitres`,
       lien: { href: "/cours#catalogue", libelle: "Le catalogue par thème" },
+      essai: { href: `/cours/${CHAPITRES.find((c) => c.libre)!.code}`, libelle: "Le chapitre libre" },
     },
     {
       code: "situations",
@@ -67,6 +74,7 @@ export function briques(): readonly Brique[] {
       forme: "En équipe, sur plusieurs séances",
       compte: `${ATELIERS.length} ateliers prêts à animer`,
       lien: { href: "/animations", libelle: "Les ateliers" },
+      essai: { href: "/jouer", libelle: "Une partie solo" },
     },
     {
       code: "episodes",
@@ -76,7 +84,8 @@ export function briques(): readonly Brique[] {
         "Un rôle, un trimestre, six décisions : enquêter, juger, agir avec les autres, puis lire un bilan qui sépare la qualité de la décision de la part de chance.",
       forme: "Seul ou en binôme, un trimestre en six décisions",
       compte: `${NOMBRE_D_EPISODES} épisodes`,
-      lien: { href: "/entreprises/episode", libelle: "Les épisodes" },
+      lien: { href: "/enseignants/episodes", libelle: "Les épisodes en classe" },
+      essai: { href: "/entreprises/episode", libelle: "Les épisodes de démonstration" },
     },
   ];
 }

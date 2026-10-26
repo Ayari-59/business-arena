@@ -388,9 +388,9 @@ export function OrientationForm({
           </>
         ) : (
           <p className="text-base leading-relaxed text-slate-400">
-            Répondez aux trois questions : le diplôme, le moment de
-            l&apos;année, ce que vous voulez faire travailler. La recommandation
-            s&apos;écrit ici, avec ses raisons.
+            Répondez aux quatre questions : le diplôme, le moment de
+            l&apos;année, ce que vous voulez faire travailler, et votre contexte si
+            vous le souhaitez. La recommandation s&apos;écrit ici, avec ses raisons.
           </p>
         )}
 

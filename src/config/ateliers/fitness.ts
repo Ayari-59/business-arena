@@ -3,7 +3,7 @@ import type { AtelierDefinition } from "./types";
 /**
  * ATELIER PROFESSIONNEL · BTS NDRC, deuxième année.
  *
- * Six séances de deux heures sur VOLT FITNESS, la salle de sport par
+ * Sept séances de deux heures sur VOLT FITNESS, la salle de sport par
  * abonnement. Le secteur a été retenu parce qu'il porte ce que le pure player
  * de première année ne portait pas : un portefeuille d'adhérents qui paient à
  * chaque trimestre, et qu'on ne gagne donc pas une fois mais qu'on garde ou
@@ -25,7 +25,7 @@ export const ATELIER_FITNESS: AtelierDefinition = {
   referentielLabel: "Blocs de compétences",
   referentielAccord: "mobilisés",
   pitch:
-    "Six séances de deux heures. Chaque équipe dirige la même salle de sport sur cinq trimestres, mesure son attrition, calcule ce que vaut un adhérent qui reste, traverse l'été où la moitié des nouveaux ne viennent plus, encaisse des abonnements d'avance, refuse de sur-vendre une salle pleine, et rend à chaque séance un document de pilotage de la relation client.",
+    "Sept séances de deux heures. Chaque équipe dirige la même salle de sport sur cinq trimestres, mesure son attrition, calcule ce que vaut un adhérent qui reste, traverse l'été où la moitié des nouveaux ne viennent plus, encaisse des abonnements d'avance, refuse de sur-vendre une salle pleine, et rend à chaque séance un document de pilotage de la relation client.",
   resume:
     "Cinq trimestres dans une salle de sport par abonnement, de l'attrition à la valeur vie d'un adhérent, avec la saturation de janvier comme épreuve.",
   difficulte: 3,
@@ -81,7 +81,7 @@ export const ATELIER_FITNESS: AtelierDefinition = {
           minutes: 10,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle : six séances, un tour d'essai qui ne compte pas puis cinq trimestres, une seule salle de sport, un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code et nomment leur établissement.",
+            "Vous annoncez la règle : sept séances, un tour d'essai qui ne compte pas puis cinq trimestres, une seule salle de sport, un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code et nomment leur établissement.",
         },
         {
           minutes: 25,
@@ -148,13 +148,13 @@ export const ATELIER_FITNESS: AtelierDefinition = {
         "capacité d'accueil et d'encadrement",
       ],
       preparation:
-        "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez les équipes de trois : une responsable de l'offre et des prix, une de l'expérience adhérent, une du suivi financier. Imprimez la fiche d'ouverture vierge, une par équipe. Les chiffres que les équipes doivent retrouver seules : 105 € d'abonnement par trimestre et 15 € de coût variable par adhérent, soit 90 € de marge qui revient à chaque trimestre tant qu'il reste ; 105 000 € de charges fixes par trimestre, 56 000 € de salaires des huit coachs et de l'accueil et 49 000 € de loyer, d'énergie et d'assurances, plus 16 000 € d'amortissements ; un seuil autour de 1 170 adhérents, soit un peu plus de la moitié des 2 200 places. Le premier trimestre est celui des bonnes résolutions : la demande nouvelle est la plus forte de l'année, et ces inscrits sont les plus volatils. Prévoyez que cette première séance se passe sans aucune correction de votre part.",
+        "Reprenez la partie créée à la séance d'essai et notez son code d'invitation. Constituez les équipes de trois : une responsable de l'offre et des prix, une de l'expérience adhérent, une du suivi financier. Imprimez la fiche d'ouverture vierge, une par équipe. Les chiffres que les équipes doivent retrouver seules : 105 € d'abonnement par trimestre et 15 € de coût variable par adhérent, soit 90 € de marge qui revient à chaque trimestre tant qu'il reste ; 105 000 € de charges fixes par trimestre, 56 000 € de salaires des huit coachs et de l'accueil et 49 000 € de loyer, d'énergie et d'assurances, plus 16 000 € d'amortissements ; un seuil autour de 1 170 adhérents, soit un peu plus de la moitié des 2 200 places. Le premier trimestre est celui des bonnes résolutions : la demande nouvelle est la plus forte de l'année, et ces inscrits sont les plus volatils. Prévoyez que cette deuxième séance se passe sans aucune correction de votre part.",
       deroule: [
         {
           minutes: 10,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle : six séances, cinq trimestres, une seule salle, et un document de pilotage rendu à chaque séance, fini hors séance. Les équipes rejoignent la partie avec le code.",
+            "Vous annoncez la règle : sept séances, cinq trimestres, une seule salle, et un document de pilotage rendu à chaque séance, fini hors séance. Les équipes rejoignent la partie avec le code.",
         },
         {
           minutes: 20,
@@ -559,8 +559,8 @@ export const ATELIER_FITNESS: AtelierDefinition = {
   ],
   formats: [
     {
-      nom: "Six séances hebdomadaires",
-      quand: "Le format d'origine, sur six semaines consécutives.",
+      nom: "Sept séances hebdomadaires",
+      quand: "Le format d'origine, sur sept semaines consécutives.",
       comment:
         "Une séance par semaine, un trimestre par séance. La semaine qui sépare deux séances laisse aux équipes le temps de préparer leur livrable, et à vous celui de le lire.",
     },
@@ -568,7 +568,7 @@ export const ATELIER_FITNESS: AtelierDefinition = {
       nom: "Semaine bloquée",
       quand: "En semaine d'atelier de professionnalisation ou de projet.",
       comment:
-        "Deux séances les deux premiers jours, une le troisième, la présentation le quatrième. Le rythme est plus tendu et le débriefing plus court, mais la mémoire des trimestres est meilleure.",
+        "La séance d'essai la veille, puis deux séances les deux premiers jours, une le troisième, la présentation le quatrième. Le rythme est plus tendu et le débriefing plus court, mais la mémoire des trimestres est meilleure.",
     },
     {
       nom: "Fil rouge du semestre",
@@ -621,7 +621,7 @@ export const ATELIER_FITNESS: AtelierDefinition = {
     {
       question: "Peut-on conduire cet atelier avec des équipes de deux ?",
       reponse:
-        "Oui, en fusionnant les rôles de l'offre et de l'expérience adhérent. En dessous de trois élèves, le débat de la deuxième séance entre retenir et recruter perd de sa force, alors prévoyez d'y faire travailler deux équipes ensemble sur cette séance-là uniquement.",
+        "Oui, en fusionnant les rôles de l'offre et de l'expérience adhérent. En dessous de trois élèves, le débat de la troisième séance entre retenir et recruter perd de sa force, alors prévoyez d'y faire travailler deux équipes ensemble sur cette séance-là uniquement.",
     },
   ],
 };

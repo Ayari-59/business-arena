@@ -13,6 +13,8 @@ import { FORMATIONS, formationsDe } from "@/config/formations";
 import { PiedDePage } from "@/components/pied-de-page";
 import { RepliableSurTelephone } from "@/components/repliable-sur-telephone";
 import { EncartSurMesure } from "@/components/encart-sur-mesure";
+import { OFFRES, OFFRES_DE_L_ARENE } from "@/config/tarifs";
+import { LIEN_TARIFS } from "@/config/vitrine-solo";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/animations" },
@@ -372,9 +374,17 @@ export default function AteliersPage() {
               {MOTS_DES_REFERENTIELS.join(", ")}. Chaque fiche emploie les
               siens.
             </p>
-            <p>
-              Ces ateliers évoluent avec la plateforme. Ils sont librement
-              utilisables en classe.
+            {/* L'ACCÈS, TEL QUE LE CODE L'APPLIQUE (audit d'octobre 2026) : la page promettait
+                un usage libre en classe, alors que le dossier, les
+                corrigés et la création de la partie demandent une licence de l'arène
+                (services/acces.service.ts, createClassGame). */}
+            <p data-acces-des-ateliers="">
+              Les fiches se lisent librement. Le dossier de l&apos;enseignant, ses
+              corrigés et la partie de la classe s&apos;ouvrent avec une licence de
+              l&apos;arène : offre {OFFRES_DE_L_ARENE.map((o) => OFFRES[o].nom).join(", ").replace(/, ([^,]*)$/, " ou $1")}.{" "}
+              <Link href={LIEN_TARIFS} className="text-slate-200 underline underline-offset-4 hover:text-slate-50">
+                Voir les offres
+              </Link>
             </p>
           </div>
         </section>

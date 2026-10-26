@@ -3,7 +3,7 @@ import type { AtelierDefinition } from "./types";
 /**
  * ATELIER PROFESSIONNEL · BTS MHR, options B et C, deuxième année.
  *
- * Cinq séances de deux heures sur LA TABLE D'AUGUSTIN, le bistrot de
+ * Six séances de deux heures sur LA TABLE D'AUGUSTIN, le bistrot de
  * soixante-dix couverts, joué en gamme : la formule du midi, la carte du soir,
  * les banquets, et un traiteur à lancer. Le secteur a été retenu parce qu'il
  * fait ce qu'aucun autre ne fait : ce qui est préparé et non servi part à la
@@ -28,7 +28,7 @@ export const ATELIER_BISTROT: AtelierDefinition = {
   referentielLabel: "Blocs de compétences",
   referentielAccord: "mobilisés",
   pitch:
-    "Cinq séances de deux heures. Chaque équipe dirige le même bistrot d'un trimestre à l'autre, calcule son ratio matières offre par offre, choisit ses fournisseurs, répercute une hausse des denrées sans vider la salle, arbitre la saison des banquets avec une brigade qui ne s'étire pas, et rend à chaque séance un document d'exploitation.",
+    "Six séances de deux heures. Chaque équipe dirige le même bistrot d'un trimestre à l'autre, calcule son ratio matières offre par offre, choisit ses fournisseurs, répercute une hausse des denrées sans vider la salle, arbitre la saison des banquets avec une brigade qui ne s'étire pas, et rend à chaque séance un document d'exploitation.",
   resume:
     "Quatre trimestres à la tête d'un bistrot en quatre offres, du ratio matières par service au tableau de bord d'exploitation, avec la saison des banquets comme épreuve.",
   difficulte: 3,
@@ -84,7 +84,7 @@ export const ATELIER_BISTROT: AtelierDefinition = {
           minutes: 10,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle : cinq séances, un tour d'essai qui ne compte pas puis quatre trimestres, un seul restaurant, un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code et nomment leur établissement.",
+            "Vous annoncez la règle : six séances, un tour d'essai qui ne compte pas puis quatre trimestres, un seul restaurant, un document rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code et nomment leur établissement.",
         },
         {
           minutes: 25,
@@ -151,13 +151,13 @@ export const ATELIER_BISTROT: AtelierDefinition = {
         "denrées périssables et invendus",
       ],
       preparation:
-        "Créez la partie avec les réglages ci-dessus et notez le code d'invitation. Constituez les équipes de trois : une responsable de la carte et des prix, une de la cuisine et de la brigade, une du suivi financier. Imprimez la fiche de ratio matières vierge, une par équipe, avec une colonne par offre, et distribuez-la une semaine avant avec la carte et les prix du bistrot. Les denrées coûtent 7,50 € sur une formule du midi vendue autour de 27 €, 12 € sur une carte du soir autour de 38 €, 10 € sur un banquet autour de 33 € : la profession vise un ratio de 28 à 32 %, et les équipes doivent le retrouver elles-mêmes. À préparer par les équipes avant la séance : le coût des denrées et un premier ratio matières de chaque offre, relevés à la maison sur cette fiche ; la séance part de ces ratios. Les charges de structure font 90 000 € par trimestre, brigade comprise, plus 6 000 € d'amortissements ; le seuil se situe près de 4 400 couverts au mix habituel. Prévoyez que cette première séance se passe sans aucune correction de votre part.",
+        "Rien à créer : la vraie partie a commencé en fin de séance d'essai ; reprenez-la depuis votre espace. Dans les équipes de trois constituées pour l'essai, répartissez les rôles : une responsable de la carte et des prix, une de la cuisine et de la brigade, une du suivi financier. Imprimez la fiche de ratio matières vierge, une par équipe, avec une colonne par offre, et distribuez-la une semaine avant avec la carte et les prix du bistrot. Les denrées coûtent 7,50 € sur une formule du midi vendue autour de 27 €, 12 € sur une carte du soir autour de 38 €, 10 € sur un banquet autour de 33 € : la profession vise un ratio de 28 à 32 %, et les équipes doivent le retrouver elles-mêmes. À préparer par les équipes avant la séance : le coût des denrées et un premier ratio matières de chaque offre, relevés à la maison sur cette fiche ; la séance part de ces ratios. Les charges de structure font 90 000 € par trimestre, brigade comprise, plus 6 000 € d'amortissements ; le seuil se situe près de 4 400 couverts au mix habituel. Prévoyez que cette deuxième séance se passe sans aucune correction de votre part.",
       deroule: [
         {
           minutes: 10,
           titre: "Le cadre",
           detail:
-            "Vous annoncez la règle : cinq séances, quatre trimestres, un seul bistrot, et un document d'exploitation rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code.",
+            "Vous annoncez la règle : six séances, quatre trimestres, un seul bistrot, et un document d'exploitation rendu à chaque fin de séance. Les équipes rejoignent la partie avec le code.",
         },
         {
           minutes: 20,
@@ -490,16 +490,16 @@ export const ATELIER_BISTROT: AtelierDefinition = {
   ],
   formats: [
     {
-      nom: "Cinq séances hebdomadaires",
-      quand: "Le format d'origine, sur cinq semaines consécutives.",
+      nom: "Six séances hebdomadaires",
+      quand: "Le format d'origine, sur six semaines consécutives.",
       comment:
-        "Une séance par semaine, un trimestre par séance. La semaine qui sépare deux séances laisse aux équipes le temps de préparer leur livrable, et à vous celui de le lire.",
+        "Une séance par semaine, un trimestre par séance après l'essai. La semaine qui sépare deux séances laisse aux équipes le temps de préparer leur livrable, et à vous celui de le lire.",
     },
     {
       nom: "Semaine bloquée",
       quand: "En semaine d'atelier de professionnalisation ou de projet.",
       comment:
-        "Une séance par jour du lundi au vendredi. Le rythme est plus tendu et le débriefing plus court, mais la mémoire des trimestres est meilleure, et la présentation du vendredi gagne en tenue.",
+        "La séance d'essai la semaine précédente, puis une séance par jour du lundi au vendredi. Le rythme est plus tendu et le débriefing plus court, mais la mémoire des trimestres est meilleure, et la présentation du vendredi gagne en tenue.",
     },
     {
       nom: "Fil rouge du semestre",
@@ -531,7 +531,7 @@ export const ATELIER_BISTROT: AtelierDefinition = {
       question:
         "Pourquoi arrêter à quatre trimestres alors que le secteur en compte six ?",
       reponse:
-        "Parce que la saison des banquets est le point culminant de ce secteur et que rien ne gagne à la dépasser dans un atelier de cinq séances. La partie est créée sur quatre tours et s'arrête là. Si votre progression le permet, créez-la sur six tours dès le départ et gardez les deux derniers pour deux séances de prolongement, la terrasse et la rentabilité des capitaux comme fils.",
+        "Parce que la saison des banquets est le point culminant de ce secteur et que rien ne gagne à la dépasser dans un atelier de six séances. La partie est créée sur quatre tours et s'arrête là. Si votre progression le permet, créez-la sur six tours dès le départ et gardez les deux derniers pour deux séances de prolongement, la terrasse et la rentabilité des capitaux comme fils.",
     },
     {
       question: "Le traiteur est-il obligatoire ?",
@@ -546,7 +546,7 @@ export const ATELIER_BISTROT: AtelierDefinition = {
     {
       question: "Peut-on conduire cet atelier avec des équipes de deux ?",
       reponse:
-        "Oui, en fusionnant les rôles de la carte et de la cuisine. En dessous de trois élèves, la matrice fournisseur de la deuxième séance perd son débat contradictoire, alors prévoyez d'y faire travailler deux équipes ensemble sur cette séance-là uniquement.",
+        "Oui, en fusionnant les rôles de la carte et de la cuisine. En dessous de trois élèves, la matrice fournisseur de la troisième séance perd son débat contradictoire, alors prévoyez d'y faire travailler deux équipes ensemble sur cette séance-là uniquement.",
     },
   ],
 };

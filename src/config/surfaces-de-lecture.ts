@@ -524,7 +524,7 @@ export const INSTANCES_DE_REPLI: readonly InstanceDeRepli[] = [
       raison: `Un outil de gestion d'une cohorte de l'espace enseignant. ${PAGE_CLAIRE}`,
     }),
   ),
-  ...["Parties rangées", "Organiser un concours · Business Arena Championship"].map((t) => ({
+  ...["Parties rangées", "Organiser un concours entre classes"].map((t) => ({
     fichier: "app/teacher/page.tsx",
     composant: "Tiroir" as const,
     repere: `titre="${t}"`,

@@ -3,7 +3,7 @@ import type { AtelierDefinition } from "./types";
 /**
  * ATELIER PROFESSIONNEL · BTS MCO, deuxième année, AU MOIS.
  *
- * Six séances de deux heures sur LA TABLE D'AUGUSTIN, le bistrot, avec UN MOIS
+ * Sept séances de deux heures sur LA TABLE D'AUGUSTIN, le bistrot, avec UN MOIS
  * PAR TOUR. C'est le premier atelier du registre à quitter le trimestre, et
  * c'est le sujet même de la fiche : un responsable d'unité commerciale ne
  * pilote pas par trimestre, il pilote par mois. Le loyer tombe tous les mois,
@@ -47,7 +47,7 @@ export const ATELIER_MCO2: AtelierDefinition = {
   referentielLabel: "Blocs de compétences",
   referentielAccord: "mobilisés",
   pitch:
-    "Six séances de deux heures, un mois par séance. Chaque équipe dirige le même bistrot de juin à novembre, lit son compte de résultat mensuel, traverse le creux d'août avec des charges qui ne partent pas en vacances, encaisse en novembre ce qu'octobre a vendu, et rend à chaque séance un document de pilotage mensuel.",
+    "Sept séances de deux heures, un mois d'essai puis un mois par séance. Chaque équipe dirige le même bistrot de juin à novembre, lit son compte de résultat mensuel, traverse le creux d'août avec des charges qui ne partent pas en vacances, encaisse en novembre ce qu'octobre a vendu, et rend à chaque séance un document de pilotage mensuel.",
   resume:
     "Six mois à la tête d'un bistrot, au rythme réel d'une unité commerciale. Un tour par mois, des groupes réglés à trente jours, un tableau de bord pour finir.",
   difficulte: 3,
@@ -177,7 +177,7 @@ export const ATELIER_MCO2: AtelierDefinition = {
           minutes: 15,
           titre: "Le cadre et le rythme",
           detail:
-            "Vous annoncez la règle : six séances, six mois, de juin à novembre, un document de pilotage rendu à chaque fin de séance. Vous insistez sur le rythme : ici un tour est un mois, et tout ce qui se décide se relit trente jours plus tard. Vous prévenez aussi que l'arène ne pose pas une situation chaque mois : certains mois, c'est le compte seul qui parle.",
+            "Vous annoncez la règle : sept séances, six mois, de juin à novembre, un document de pilotage rendu à chaque fin de séance. Vous insistez sur le rythme : ici un tour est un mois, et tout ce qui se décide se relit trente jours plus tard. Vous prévenez aussi que l'arène ne pose pas une situation chaque mois : certains mois, c'est le compte seul qui parle.",
         },
         {
           minutes: 20,
@@ -593,8 +593,8 @@ export const ATELIER_MCO2: AtelierDefinition = {
   ],
   formats: [
     {
-      nom: "Six séances hebdomadaires",
-      quand: "Le format d'origine, sur six semaines consécutives.",
+      nom: "Sept séances hebdomadaires",
+      quand: "Le format d'origine, sur sept semaines consécutives.",
       comment:
         "Une séance par semaine, un mois par séance. La semaine qui sépare deux séances laisse aux équipes le temps de préparer leur document, et à vous celui de le lire.",
     },
@@ -608,7 +608,7 @@ export const ATELIER_MCO2: AtelierDefinition = {
       nom: "Semaine bloquée",
       quand: "En semaine d'atelier de professionnalisation.",
       comment:
-        "Trois séances par jour sur deux jours. La tension est forte et le débriefing court, mais le décalage entre la vente d'octobre et l'encaissement de novembre se vit alors dans la même journée, ce qui le grave mieux qu'un rappel.",
+        "La séance d'essai la veille, puis trois séances par jour sur deux jours. La tension est forte et le débriefing court, mais le décalage entre la vente d'octobre et l'encaissement de novembre se vit alors dans la même journée, ce qui le grave mieux qu'un rappel.",
     },
   ],
   evaluationFinale: [
