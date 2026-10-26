@@ -48,7 +48,7 @@ interface Base {
    * où il y a un stock) : `chapitreDuCas` retire les autres. Absent : partout.
    */
   si?: (c: Cas) => boolean;
-  /** Un tableau de chiffres du cas, montré avant la question (lecture, choix, montants). */
+  /** Un tableau de chiffres du cas, montré avant la question (lecture, choix, montants, tri). */
   tableau?: (c: Cas) => TableauDeDonnees;
 }
 

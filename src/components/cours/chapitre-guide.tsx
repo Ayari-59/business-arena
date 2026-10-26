@@ -516,6 +516,7 @@ function EtapeDeTri({ etape, cas, chapitre, index, suivi, classe, noter, suite }
   const libelleDe = (code: string) => etape.categories.find((k) => k.code === code)?.libelle ?? code;
   return (
     <>
+      {etape.tableau && <TableauDuCas tableau={etape.tableau(cas)} />}
       <p className="max-w-2xl text-base leading-relaxed">{etape.question(cas)}</p>
       <ul className="grid max-w-2xl gap-2" aria-label="Éléments à ranger">
         {elements.map((el, i) => {

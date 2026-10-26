@@ -69,10 +69,12 @@ describe("/cours : le catalogue par thème et le chapitre libre", () => {
         c.code,
       ).toBe(1);
     }
-    // Ce qui vient se compte sur le programme d'un parcours qui se construit, jamais à la main.
+    // Ce qui vient se compte sur le programme d'un parcours qui se construit, jamais à la main ;
+    // il s'annonce sous le thème de ses chapitres écrits : sans chapitre encore, il n'a pas de thème.
     const aVenir = PARCOURS.filter((p) => p.enPreparation).filter((p) => {
       const prevus = Object.values(PROGRAMME[p.code]).reduce((n, titres) => n + (titres?.length ?? 0), 0);
-      return prevus > CHAPITRES.filter((c) => c.parcours === p.code).length;
+      const ecrits = CHAPITRES.filter((c) => c.parcours === p.code).length;
+      return ecrits > 0 && prevus > ecrits;
     });
     expect(await page.locator("[data-a-venir]").count()).toBe(aVenir.length);
     // Chaque cas de synthèse paraît une fois, sous le thème des chapitres qu'il reprend.
