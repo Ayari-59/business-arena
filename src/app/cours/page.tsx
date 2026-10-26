@@ -266,7 +266,7 @@ export default async function CoursPage({
                 {programme.situations.length > 0 ? (
                   <div className="grid gap-2">
                     <h4 className="text-sm font-semibold uppercase tracking-etiquette text-slate-400">
-                      Mises en situation
+                      Cas pratiques
                     </h4>
                     <ListeDeSituations situations={programme.situations} imposee={imposee?.code} />
                   </div>
@@ -324,7 +324,7 @@ export default async function CoursPage({
                       {situations.length > 0 ? (
                         <div className="grid gap-2">
                           <p className="text-xs font-semibold uppercase tracking-etiquette text-slate-400">
-                            Mises en situation
+                            Cas pratiques
                           </p>
                           <ListeDeSituations situations={situations} imposee={imposee?.code} />
                         </div>
@@ -398,7 +398,7 @@ function ListeDeChapitres({ chapitres, imposee }: { chapitres: readonly Chapitre
 }
 
 /**
- * LES MISES EN SITUATION : la question d'un commanditaire, sans cours, sur les
+ * LES CAS PRATIQUES : la question d'un commanditaire, sans cours, sur les
  * calculs de chapitres déjà vus. La ligne dit lesquels, pour que l'enseignant la
  * place après eux.
  */

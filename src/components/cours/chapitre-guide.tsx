@@ -913,8 +913,8 @@ function EtMaintenantJouezLe({ mission, cas }: { mission: MissionAffichee; cas: 
 }
 
 /**
- * ET ENSUITE : LES PASSAGES VERS LES AUTRES BRIQUES. Un chapitre mène aux mises
- * en situation qui reprennent ses calculs, une mise en situation rappelle les
+ * ET ENSUITE : LES PASSAGES VERS LES AUTRES BRIQUES. Un chapitre mène aux cas
+ * pratiques qui reprennent ses calculs, un cas pratique rappelle les
  * chapitres où ils s'apprennent, et les deux proposent quelques épisodes du
  * thème. Tout est calculé par le serveur (pedagogy/cours/suites.ts) ; un bloc
  * vide ne s'affiche pas.
@@ -1068,7 +1068,7 @@ export function ChapitreGuide({
   mission?: MissionAffichee | null;
   /** La classe de l'élève, s'il en suit une : sa progression remonte à l'enseignant. */
   enClasse?: { classe: string; eleve: string } | null;
-  /** Ce qui vient après : les mises en situation, les chapitres repris, les épisodes du thème. */
+  /** Ce qui vient après : les cas pratiques, les chapitres repris, les épisodes du thème. */
   suites?: SuitesDuChapitre | null;
 }) {
   // Le chapitre dans l'ordre de cette entreprise : ses règlements suivent leurs dates.

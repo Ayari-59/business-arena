@@ -4,17 +4,17 @@ import { episodesDuTheme, themeDeLEpisode, themeDuChapitre, type Theme } from "@
 import { episodeParCode } from "@/pedagogy/episodes/registre";
 
 /**
- * LES PASSAGES ENTRE LE COURS, LES MISES EN SITUATION ET LES ÉPISODES.
+ * LES PASSAGES ENTRE LE COURS, LES CAS PRATIQUES ET LES ÉPISODES.
  *
  * Demande du propriétaire (octobre 2026) : des liens dans les deux sens. La
  * page du cours expliquait l'enchaînement, mais chaque brique restait une
- * impasse : un chapitre fini ne disait pas quelle mise en situation reprenait
- * ses calculs, une mise en situation ne rappelait pas les chapitres où ils
+ * impasse : un chapitre fini ne disait pas quel cas pratique reprenait
+ * ses calculs, un cas pratique ne rappelait pas les chapitres où ils
  * s'apprennent, et le bilan d'un épisode ne menait jamais au cours.
  *
- * Tout se lit dans les registres : `reprend` pour les mises en situation, le
+ * Tout se lit dans les registres : `reprend` pour les cas pratiques, le
  * thème pour les épisodes. Aucun lien ne s'écrit à la main, si bien qu'une
- * mise en situation de plus apparaît seule à la fin des chapitres qu'elle
+ * cas pratique de plus apparaît seul à la fin des chapitres qu'il
  * reprend. Les objets rendus sont courts et sérialisables : ils passent du
  * serveur aux composants du navigateur sans emporter le contenu des chapitres.
  */
@@ -24,11 +24,11 @@ export interface Lien {
 }
 
 export interface SuitesDuChapitre {
-  /** Le thème du chapitre ; pour une mise en situation, celui du premier chapitre repris. */
+  /** Le thème du chapitre ; pour un cas pratique, celui du premier chapitre repris. */
   theme: Lien | null;
-  /** Les mises en situation qui reprennent les calculs de ce chapitre. */
+  /** Les cas pratiques qui reprennent les calculs de ce chapitre. */
   situations: Lien[];
-  /** Pour une mise en situation : les chapitres dont elle reprend les calculs. */
+  /** Pour un cas pratique : les chapitres dont il reprend les calculs. */
   reprend: Lien[];
   /** Quelques épisodes du thème, et leur nombre total. */
   episodes: Lien[];
@@ -67,7 +67,7 @@ export interface CoursDeLEpisode {
   theme: Lien;
   /** Les chapitres du thème, dans l'ordre où ils s'enchaînent. */
   chapitres: Lien[];
-  /** Les mises en situation du thème. */
+  /** Les cas pratiques du thème. */
   situations: Lien[];
 }
 
@@ -86,7 +86,7 @@ export function coursDeLEpisode(code: string): CoursDeLEpisode | null {
   };
 }
 
-/** Les mises en situation d'un thème : celles dont le premier chapitre repris y est rangé. */
+/** Les cas pratiques d'un thème : ceux dont le premier chapitre repris y est rangé. */
 export function situationsDuTheme(theme: Theme): Situation[] {
   return SITUATIONS.filter((s) => themeDuChapitre(s.reprend[0]!)?.code === theme.code);
 }

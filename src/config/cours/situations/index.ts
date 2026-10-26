@@ -9,7 +9,7 @@ import type { Situation } from "./types";
 
 export type { Situation } from "./types";
 
-/** Les mises en situation, dans l'ordre où la page les propose. */
+/** Les cas pratiques, dans l'ordre où la page les propose. */
 export const SITUATIONS: readonly Situation[] = [
   SUIVRE_LA_BAISSE,
   LA_FACTURE_CONTESTEE,
@@ -23,19 +23,19 @@ export const SITUATIONS: readonly Situation[] = [
 export const situationParCode = (code: string) => SITUATIONS.find((s) => s.code === code);
 
 /**
- * LES MOTS DE LA PAGE, SELON CE QU'ELLE OUVRE. Une mise en situation s'ouvre
- * comme un chapitre, mais elle n'en est pas un : la page ne dit pas « Ce chapitre
+ * LES MOTS DE LA PAGE, SELON CE QU'ELLE OUVRE. Un cas pratique s'ouvre
+ * comme un chapitre, mais il n'en est pas un : la page ne dit pas « Ce chapitre
  * est réservé » ni « Terminer le chapitre » à l'élève qui répond à une demande.
  */
 export function motsDuContenu(code: string) {
   return situationParCode(code)
     ? {
-        reserve: "Cette mise en situation est réservée",
-        terminer: "Terminer la mise en situation",
-        termine: "Mise en situation terminée",
-        etapes: "Les étapes de la mise en situation",
-        journal: "Le journal complet de la mise en situation",
-        recommencer: "Recommencer la mise en situation",
+        reserve: "Ce cas pratique est réservé",
+        terminer: "Terminer le cas pratique",
+        termine: "Cas pratique terminé",
+        etapes: "Les étapes du cas pratique",
+        journal: "Le journal complet du cas pratique",
+        recommencer: "Recommencer le cas pratique",
       }
     : {
         reserve: "Ce chapitre est réservé",

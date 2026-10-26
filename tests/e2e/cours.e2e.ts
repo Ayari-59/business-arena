@@ -72,7 +72,7 @@ describe("/cours : le catalogue par thème et le chapitre libre", () => {
       return prevus > CHAPITRES.filter((c) => c.parcours === p.code).length;
     });
     expect(await page.locator("[data-a-venir]").count()).toBe(aVenir.length);
-    // Chaque mise en situation paraît une fois, sous le thème des chapitres qu'elle reprend.
+    // Chaque cas pratique paraît une fois, sous le thème des chapitres qu'il reprend.
     for (const s of SITUATIONS) {
       expect(
         await page.locator(`details[data-theme="${themeDuChapitre(s.reprend[0]!)!.code}"] [data-situation-de-cours="${s.code}"]`).count(),
@@ -446,7 +446,7 @@ describe.each([
   { code: "effectif-et-masse-salariale", entreprise: "batiment", telephone: true },
   { code: "salaire-brut-net-cout", entreprise: "hotel" },
   { code: "salaire-brut-net-cout", entreprise: "fitness", telephone: true },
-  // Les mises en situation s'ouvrent et se jouent comme un chapitre réservé.
+  // Les cas pratiques s'ouvrent et se jouent comme un chapitre réservé.
   { code: "suivre-la-baisse-du-concurrent", entreprise: "nova" },
   { code: "suivre-la-baisse-du-concurrent", entreprise: "hotel", telephone: true },
   { code: "la-facture-contestee", entreprise: "batiment" },
@@ -522,7 +522,7 @@ describe.each([
     await expect
       .poll(() => page.locator("main").innerText(), { timeout: 15_000 })
       .toContain(`${notees} étapes réussies du premier coup sur ${notees}`);
-    // Et ensuite : les mises en situation qui reprennent le chapitre, ou les chapitres que la situation reprend.
+    // Et ensuite : les cas pratiques qui reprennent le chapitre, ou les chapitres que le cas reprend.
     const suites = suitesDuChapitre(chapitre.code);
     const lus = (attribut: string) =>
       page.locator(`[data-et-ensuite] [${attribut}]`).evaluateAll((xs, a) => xs.map((x) => x.getAttribute(a)), attribut);

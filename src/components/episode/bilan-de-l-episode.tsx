@@ -223,7 +223,7 @@ export function BilanDeLEpisode({
   precedente: PartieJouee | null;
   onAutreHasard: () => void;
   onMemeHasard: () => void;
-  /** Les chapitres et mises en situation du thème de l'épisode, préparés par la page. */
+  /** Les chapitres et cas pratiques du thème de l'épisode, préparés par la page. */
   cours?: CoursDeLEpisode | null;
 }) {
   const a = useMemo(() => analyser(ep, partie), [ep, partie]);

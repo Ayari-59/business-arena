@@ -9,7 +9,7 @@ import { SEGMENTATIONS } from "../chapitres/segmenter-et-cibler";
 import type { Situation } from "./types";
 
 /**
- * MISE EN SITUATION : QUEL PRIX POUR LA SAISON ? (Bac STMG, mercatique, palier 1).
+ * CAS PRATIQUE : QUEL PRIX POUR LA SAISON ? (Bac STMG, mercatique, palier 1).
  *
  * La direction hésite entre trois prix pour lancer la saison : un prix plus bas, le prix
  * actuel, un prix plus haut. L'élève a les chiffres du marché et la demande attendue à

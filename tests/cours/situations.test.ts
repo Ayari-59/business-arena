@@ -18,9 +18,9 @@ import { CONCEPTS } from "../../src/config/pedagogy/concepts";
 import type { Etape } from "../../src/config/cours/types";
 
 /**
- * LES MISES EN SITUATION SONT DES SITUATIONS, ET LEURS CALCULS TIENNENT.
+ * LES CAS PRATIQUES SONT DES SITUATIONS, ET LEURS CALCULS TIENNENT.
  *
- * Une mise en situation reprend des calculs déjà vus, sans cours : sa première
+ * Un cas pratique reprend des calculs déjà vus, sans cours : sa première
  * étape pose la question du commanditaire, aucune autre n'enseigne, et la
  * dernière est la réponse qu'on lui rend. Ses chiffres se calculent dans les neuf
  * entreprises du cours sans « NaN » ni « undefined », et la bonne réponse ne se
@@ -45,7 +45,7 @@ function textesDe(e: Etape, cas: Cas): string[] {
   }
 }
 
-describe("les mises en situation", () => {
+describe("les cas pratiques", () => {
   it("chacune reprend des chapitres qui existent, et s'ouvre par son code comme un chapitre", () => {
     expect(SITUATIONS.length).toBeGreaterThan(0);
     for (const s of SITUATIONS) {

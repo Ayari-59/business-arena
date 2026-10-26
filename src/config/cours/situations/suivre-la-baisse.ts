@@ -6,7 +6,7 @@ import { BAISSE_DE_PRIX, prixCoutMarge } from "../chapitres/prix-cout-marge";
 import type { Situation } from "./types";
 
 /**
- * MISE EN SITUATION : SUIVRE LA BAISSE DU CONCURRENT ? (contrôle de gestion, palier 2).
+ * CAS PRATIQUE : SUIVRE LA BAISSE DU CONCURRENT ? (contrôle de gestion, palier 2).
  *
  * La direction demande, avant de décider, ce que coûterait une baisse de prix de
  * 10 % pour s'aligner sur un concurrent. L'élève a les documents du mois et rend

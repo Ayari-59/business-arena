@@ -7,7 +7,7 @@ import { JOURS_D_ESCOMPTE, TAUX_D_ESCOMPTE, TAUX_DE_REMISE } from "../remises";
 import type { Situation } from "./types";
 
 /**
- * MISE EN SITUATION : LA FACTURE CONTESTÉE (comptabilité générale, palier 3).
+ * CAS PRATIQUE : LA FACTURE CONTESTÉE (comptabilité générale, palier 3).
  *
  * Le client professionnel du cas écrit : la facture qu'il a reçue oublie la remise
  * prévue à ses conditions. Elle est déjà passée au journal. L'élève rend une facture

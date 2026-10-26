@@ -17,8 +17,8 @@ import {
 /**
  * LES LIENS DANS LES DEUX SENS (décision du propriétaire, octobre 2026).
  *
- * Chaque brique mène aux autres : un chapitre aux mises en situation qui le
- * reprennent, une mise en situation aux chapitres qu'elle reprend, le bilan
+ * Chaque brique mène aux autres : un chapitre aux cas pratiques qui le
+ * reprennent, un cas pratique aux chapitres qu'il reprend, le bilan
  * d'un épisode au cours de son thème, une fiche notion aux chapitres qui la
  * font vivre. Les liens se lisent dans les registres ; ces gardes vérifient
  * qu'aucun ne se perd en route, et que chaque page les reçoit.
@@ -27,12 +27,12 @@ const lire = (chemin: string) => readFileSync(join(process.cwd(), chemin), "utf8
 const codes = (liens: readonly { code: string }[]) => liens.map((l) => l.code);
 
 describe("la fin d'un chapitre", () => {
-  it("nomme chaque mise en situation qui le reprend, et aucune autre", () => {
+  it("nomme chaque cas pratique qui le reprend, et aucun autre", () => {
     for (const c of CHAPITRES) {
       const attendues = SITUATIONS.filter((s) => s.reprend.includes(c.code)).map((s) => s.code);
       expect(codes(suitesDuChapitre(c.code).situations), c.code).toEqual(attendues);
     }
-    // Chaque mise en situation se trouve à la fin d'au moins un chapitre.
+    // Chaque cas pratique se trouve à la fin d'au moins un chapitre.
     const proposees = new Set(CHAPITRES.flatMap((c) => codes(suitesDuChapitre(c.code).situations)));
     for (const s of SITUATIONS) expect(proposees.has(s.code), s.code).toBe(true);
   });
@@ -49,7 +49,7 @@ describe("la fin d'un chapitre", () => {
     }
   });
 
-  it("une mise en situation rappelle les chapitres qu'elle reprend, dans leur ordre", () => {
+  it("un cas pratique rappelle les chapitres qu'il reprend, dans leur ordre", () => {
     for (const sit of SITUATIONS) {
       const s = suitesDuChapitre(sit.code);
       expect(codes(s.reprend), sit.code).toEqual([...sit.reprend]);
@@ -68,7 +68,7 @@ describe("la fin d'un chapitre", () => {
 });
 
 describe("le bilan d'un épisode", () => {
-  it("mène aux chapitres et aux mises en situation de son thème, ou à rien si le thème n'a pas de chapitre", () => {
+  it("mène aux chapitres et aux cas pratiques de son thème, ou à rien si le thème n'a pas de chapitre", () => {
     for (const code of FAMILLES.flatMap((f) => f.episodes)) {
       const theme = themeDeLEpisode(code)!;
       const cours = coursDeLEpisode(code);
@@ -83,7 +83,7 @@ describe("le bilan d'un épisode", () => {
     }
   });
 
-  it("chaque mise en situation est proposée par le bilan d'au moins un épisode, sauf si son thème n'en a pas", () => {
+  it("chaque cas pratique est proposé par le bilan d'au moins un épisode, sauf si son thème n'en a pas", () => {
     for (const s of SITUATIONS) {
       const theme = THEMES.find((t) => t.code === themeDuChapitre(s.reprend[0]!)!.code)!;
       if (episodesDuTheme(theme).length === 0) continue;

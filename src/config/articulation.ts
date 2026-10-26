@@ -5,7 +5,7 @@ import { SITUATIONS } from "./cours/situations";
 import { NOMBRE_D_EPISODES } from "./episodes/familles";
 
 /**
- * COURS, MISES EN SITUATION, ARÈNE, ÉPISODES : COMMENT ILS S'ENCHAÎNENT.
+ * COURS, CAS PRATIQUES, ARÈNE, ÉPISODES : COMMENT ILS S'ENCHAÎNENT.
  *
  * Demande du propriétaire (octobre 2026) : « une clarification des articulations
  * entre cours, simulation d'entreprise et épisodes manager ». Quatre briques se
@@ -51,11 +51,11 @@ export function briques(): readonly Brique[] {
     {
       code: "situations",
       geste: "S'entraîner",
-      nom: "Les mises en situation",
+      nom: "Les cas pratiques",
       texte:
         "Une demande, des documents, aucun cours : l'élève enchaîne seul les calculs qu'il a appris, dans un cas neuf, et rend une réponse chiffrée.",
       forme: `Seul, ${etendue(SITUATIONS.map(dureeDuChapitre))}`,
-      compte: `${SITUATIONS.length} mises en situation`,
+      compte: `${SITUATIONS.length} cas pratiques`,
       lien: { href: "/cours#catalogue", libelle: "Dans chaque thème du catalogue" },
     },
     {
@@ -83,7 +83,7 @@ export function briques(): readonly Brique[] {
 
 /** L'enchaînement, en trois phrases : ce que chaque passage apporte au suivant. */
 export const ENCHAINEMENT: readonly string[] = [
-  "Le chapitre apprend la notion ; la mise en situation vérifie qu'elle tient sans guide ; l'arène la fait jouer dans la durée, où une erreur se paie au tour suivant.",
+  "Le chapitre apprend la notion ; le cas pratique vérifie qu'elle tient sans guide ; l'arène la fait jouer dans la durée, où une erreur se paie au tour suivant.",
   "L'épisode manager la confronte à une situation humaine, où le chiffre ne décide pas seul : il faut enquêter, peser et convaincre.",
-  "Les passages existent dans la page : un chapitre se termine par une mission dans l'arène, et chaque thème du catalogue propose ses mises en situation et ses épisodes.",
+  "Les passages existent dans la page : un chapitre se termine par une mission dans l'arène, et chaque thème du catalogue propose ses cas pratiques et ses épisodes.",
 ];
