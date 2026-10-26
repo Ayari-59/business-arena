@@ -9,7 +9,7 @@ import {
   tableauDeCouverture,
 } from "../couverture";
 import type { Chapitre } from "./types";
-import { SITUATIONS, type Situation } from "./situations";
+import { CAS_DE_SYNTHESE, type Situation } from "./situations";
 import { THEMES, type Theme } from "./themes";
 
 /**
@@ -69,7 +69,7 @@ export function programmeDuDiplome(code: string): ProgrammeDuDiplome | null {
     })),
     themes,
     episodes: FAMILLES.flatMap((f) => f.episodes).filter((e) => avecBloc.has(e)),
-    situations: SITUATIONS.filter((s) => s.reprend.some((c) => siens.has(c))),
+    situations: CAS_DE_SYNTHESE.filter((s) => s.reprend.some((c) => siens.has(c))),
   };
 }
 

@@ -1,5 +1,5 @@
 import { CHAPITRES } from "@/config/cours/registre";
-import { SITUATIONS, situationParCode, type Situation } from "@/config/cours/situations";
+import { CAS_DE_SYNTHESE, CAS_PAR_CHAPITRE, situationParCode, type Situation } from "@/config/cours/situations";
 import { episodesDuTheme, themeDeLEpisode, themeDuChapitre, type Theme } from "@/config/cours/themes";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
 
@@ -56,7 +56,8 @@ export function suitesDuChapitre(code: string): SuitesDuChapitre {
   const episodes = theme ? episodesDuTheme(theme) : [];
   return {
     theme: lienDuTheme(theme),
-    situations: SITUATIONS.filter((s) => s.reprend.includes(code)).map((s) => lienDuChapitre(s.code)),
+    // Le cas dédié au chapitre d'abord, puis les cas de synthèse qui le reprennent.
+    situations: [...CAS_PAR_CHAPITRE, ...CAS_DE_SYNTHESE].filter((s) => s.reprend.includes(code)).map((s) => lienDuChapitre(s.code)),
     reprend: situation ? situation.reprend.map(lienDuChapitre) : [],
     episodes: episodes.slice(0, EPISODES_PROPOSES).map(lienDeLEpisode),
     episodesDuTheme: episodes.length,
@@ -67,7 +68,7 @@ export interface CoursDeLEpisode {
   theme: Lien;
   /** Les chapitres du thème, dans l'ordre où ils s'enchaînent. */
   chapitres: Lien[];
-  /** Les cas pratiques du thème. */
+  /** Les cas de synthèse du thème. */
   situations: Lien[];
 }
 
@@ -82,13 +83,16 @@ export function coursDeLEpisode(code: string): CoursDeLEpisode | null {
   return {
     theme: { code: theme.code, titre: theme.titre },
     chapitres: theme.chapitres.map(lienDuChapitre),
-    situations: situationsDuTheme(theme).map((s) => lienDuChapitre(s.code)),
+    situations: casDeSyntheseDuTheme(theme).map((s) => lienDuChapitre(s.code)),
   };
 }
 
-/** Les cas pratiques d'un thème : ceux dont le premier chapitre repris y est rangé. */
-export function situationsDuTheme(theme: Theme): Situation[] {
-  return SITUATIONS.filter((s) => themeDuChapitre(s.reprend[0]!)?.code === theme.code);
+/**
+ * Les cas de synthèse d'un thème : ceux dont le premier chapitre repris y est
+ * rangé. Les cas dédiés, eux, se proposent à côté de leur chapitre.
+ */
+export function casDeSyntheseDuTheme(theme: Theme): Situation[] {
+  return CAS_DE_SYNTHESE.filter((s) => themeDuChapitre(s.reprend[0]!)?.code === theme.code);
 }
 
 /** Les chapitres dont une étape fait vivre la notion (`notions` de l'étape). */

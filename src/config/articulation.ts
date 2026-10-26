@@ -85,5 +85,5 @@ export function briques(): readonly Brique[] {
 export const ENCHAINEMENT: readonly string[] = [
   "Le chapitre apprend la notion ; le cas pratique vérifie qu'elle tient sans guide ; l'arène la fait jouer dans la durée, où une erreur se paie au tour suivant.",
   "L'épisode manager la confronte à une situation humaine, où le chiffre ne décide pas seul : il faut enquêter, peser et convaincre.",
-  "Les passages existent dans la page : un chapitre se termine par une mission dans l'arène, et chaque thème du catalogue propose ses cas pratiques et ses épisodes.",
+  "Les passages existent dans la page : un chapitre se termine par une mission dans l'arène, et chaque chapitre a son cas pratique, et chaque thème ses cas de synthèse et ses épisodes.",
 ];

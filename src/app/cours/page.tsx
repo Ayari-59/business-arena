@@ -11,9 +11,9 @@ import { dureeDuChapitre, dureeEnClair } from "@/config/cours/duree";
 import { diplomesParNiveau, programmeDuDiplome } from "@/config/cours/programme";
 import { THEMES, episodesDuTheme, themeDuChapitre, type Theme } from "@/config/cours/themes";
 import type { Chapitre } from "@/config/cours/types";
-import type { Situation } from "@/config/cours/situations";
+import { casDuChapitre, type Situation } from "@/config/cours/situations";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
-import { situationsDuTheme } from "@/pedagogy/cours/suites";
+import { casDeSyntheseDuTheme } from "@/pedagogy/cours/suites";
 import { getGuestUserId } from "@/lib/guest";
 import { classeDeLEleve } from "@/services/cours.service";
 import { ENTREPRISES } from "./entreprises";
@@ -266,7 +266,7 @@ export default async function CoursPage({
                 {programme.situations.length > 0 ? (
                   <div className="grid gap-2">
                     <h4 className="text-sm font-semibold uppercase tracking-etiquette text-slate-400">
-                      Cas pratiques
+                      Cas de synthèse
                     </h4>
                     <ListeDeSituations situations={programme.situations} imposee={imposee?.code} />
                   </div>
@@ -286,7 +286,9 @@ export default async function CoursPage({
                 const chapitres = theme.chapitres.map((code) => CHAPITRES.find((c) => c.code === code)!);
                 const episodes = episodesDuTheme(theme);
                 const aVenir = enPreparationDuTheme(theme);
-                const situations = situationsDuTheme(theme);
+                const situations = casDeSyntheseDuTheme(theme);
+                // Les cas pratiques du thème : le cas dédié de chaque chapitre, et les cas de synthèse.
+                const cas = chapitres.filter((c) => casDuChapitre(c.code)).length + situations.length;
                 return (
                   <details
                     key={theme.code}
@@ -306,9 +308,7 @@ export default async function CoursPage({
                         {chapitres.length > 0
                           ? `${chapitres.length} chapitre${chapitres.length > 1 ? "s" : ""}`
                           : "Pas encore de chapitre"}
-                        {situations.length > 0
-                          ? ` · ${situations.length} mise${situations.length > 1 ? "s" : ""} en situation`
-                          : ""}
+                        {cas > 0 ? ` · ${cas} cas pratique${cas > 1 ? "s" : ""}` : ""}
                         {episodes.length > 0 ? ` · ${episodes.length} épisode${episodes.length > 1 ? "s" : ""} en situation` : ""}
                       </span>
                     </summary>
@@ -324,7 +324,7 @@ export default async function CoursPage({
                       {situations.length > 0 ? (
                         <div className="grid gap-2">
                           <p className="text-xs font-semibold uppercase tracking-etiquette text-slate-400">
-                            Cas pratiques
+                            Cas de synthèse
                           </p>
                           <ListeDeSituations situations={situations} imposee={imposee?.code} />
                         </div>
@@ -385,6 +385,7 @@ function ListeDeChapitres({ chapitres, imposee }: { chapitres: readonly Chapitre
               {c.titre}
             </Link>
             <span className="text-xs text-slate-400">{publicDuChapitre(c)}</span>
+            <CasDuChapitre chapitre={c.code} imposee={imposee} />
           </span>
           <span className="whitespace-nowrap text-xs tabular-nums text-slate-400">
             {dureeEnClair(dureeDuChapitre(c))}
@@ -398,7 +399,25 @@ function ListeDeChapitres({ chapitres, imposee }: { chapitres: readonly Chapitre
 }
 
 /**
- * LES CAS PRATIQUES : la question d'un commanditaire, sans cours, sur les
+ * LE CAS PRATIQUE DU CHAPITRE, sous son titre : la même notion, sans guide, sur
+ * une question neuve. Chaque chapitre a le sien (garde du catalogue).
+ */
+function CasDuChapitre({ chapitre, imposee }: { chapitre: string; imposee?: string }) {
+  const cas = casDuChapitre(chapitre);
+  if (!cas) return null;
+  return (
+    <Link
+      href={lienDuChapitre(cas, imposee)}
+      data-cas-du-chapitre={cas.code}
+      className="text-xs text-amber-300/90 underline-offset-4 hover:text-amber-300 hover:underline"
+    >
+      Cas pratique : {cas.titre}
+    </Link>
+  );
+}
+
+/**
+ * LES CAS DE SYNTHÈSE : la question d'un commanditaire, sans cours, sur les
  * calculs de chapitres déjà vus. La ligne dit lesquels, pour que l'enseignant la
  * place après eux.
  */
