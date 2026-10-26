@@ -55,6 +55,12 @@ import { RECRUTER } from "./chapitres/recruter";
 import { REMUNERATION_ET_MOTIVATION } from "./chapitres/remuneration-et-motivation";
 import { FORMER } from "./chapitres/former";
 import { INDICATEURS_SOCIAUX } from "./chapitres/indicateurs-sociaux";
+import { CHOISIR_SON_FOURNISSEUR } from "./chapitres/choisir-son-fournisseur";
+import { LE_CLIENT_QUI_PAIE_TARD } from "./chapitres/le-client-qui-paie-tard";
+import { S_ASSURER_CONTRE_LES_ALEAS } from "./chapitres/s-assurer-contre-les-aleas";
+import { LE_COUT_DE_LA_NON_QUALITE } from "./chapitres/le-cout-de-la-non-qualite";
+import { LE_DEPART_D_UN_SALARIE } from "./chapitres/le-depart-d-un-salarie";
+import { ENTRETENIR_L_OUTIL } from "./chapitres/entretenir-l-outil";
 import type { Chapitre } from "./types";
 
 /**
@@ -144,6 +150,14 @@ export const PARCOURS: readonly Parcours[] = [
       "L'effectif et ce qu'il coûte, la paie, le recrutement, la rémunération et la motivation, la formation et les indicateurs sociaux : les questions du gestionnaire des ressources humaines, sur l'équipe de l'arène, au niveau du lycée.",
     publics: { 1: "Terminale STMG, ressources humaines et communication" },
   },
+  {
+    code: "gpme",
+    formation: "bts-gpme",
+    titre: "BTS GPME · Gérer la PME",
+    resume:
+      "Les fournisseurs et les clients, les risques, le personnel et l'outil : les décisions de gestion d'une PME, chiffrées dans l'arène qui les rejoue.",
+    publics: { 2: "BTS GPME, 1re année", 3: "BTS GPME, 2e année" },
+  },
 ];
 
 export const PALIERS: readonly { palier: Chapitre["palier"]; titre: string; public: string }[] = [
@@ -207,12 +221,21 @@ export const PROGRAMME: Record<CodeParcours, Partial<Record<Chapitre["palier"], 
       "Les indicateurs sociaux",
     ],
   },
+  gpme: {
+    2: ["Choisir son fournisseur : prix, qualité et délai de paiement", "Le client qui paie tard : délai, escompte et affacturage"],
+    3: [
+      "S'assurer contre les aléas : la prime et les sinistres",
+      "Le coût de la non-qualité",
+      "Le départ d'un salarié et son remplacement",
+      "Entretenir l'outil : maintenance et disponibilité",
+    ],
+  },
 };
 
 /** Les paliers que la carte montre pour un parcours, dans l'ordre. */
 export const paliersDuParcours = (code: CodeParcours) => PALIERS.filter((pa) => PROGRAMME[code][pa.palier] !== undefined);
 
-export const CHAPITRES: readonly Chapitre[] = [CREATION_PREMIER_BILAN, LES_FLUX, CHARGES_ET_ENCAISSEMENTS, LA_PAIE, L_EMPRUNT, IMMOBILISATIONS, LES_STOCKS, LA_CLOTURE, REMISES_ET_REGLEMENTS, DEPRECIATIONS_ET_PROVISIONS, REGULARISATIONS, SOLDES_INTERMEDIAIRES, BILAN_FONCTIONNEL, PRIX_COUT_MARGE, SEUIL_DE_RENTABILITE, COUT_COMPLET, COUT_PAR_PRODUIT, BUDGET_DE_TRESORERIE, ANALYSE_DES_ECARTS, TABLEAU_DE_BORD, DECIDER, TAUX_DE_MARQUE, INDICATEURS_DU_POINT_DE_VENTE, STOCK_DU_POINT_DE_VENTE, PREVOIR_LES_VENTES, BUDGET_DU_POINT_DE_VENTE, SEUIL_DU_POINT_DE_VENTE, PROMOTION_QUI_PAIE, ASSORTIMENT, EQUIPE_ET_PLANNING, TABLEAU_DE_BORD_DU_MANAGER, NEGOCIER_LE_PRIX, REMISES_ET_CONDITIONS, VALEUR_D_UN_CLIENT, COUT_D_ACQUISITION, COMMISSIONS_DES_PARTENAIRES, PORTEFEUILLE_ABC, TABLEAU_DE_BORD_COMMERCIAL, MARCHE_ET_PART_DE_MARCHE, SEGMENTER_ET_CIBLER, PRIX_PSYCHOLOGIQUE, DEMANDE_ET_PRIX, COMMUNICATION, CANAUX_DE_DISTRIBUTION, LIRE_LE_COMPTE_DE_RESULTAT, LIRE_LE_BILAN, VALEUR_AJOUTEE, RENTABILITE, FONDS_DE_ROULEMENT, FINANCER_L_ENTREPRISE, EFFECTIF_ET_MASSE_SALARIALE, SALAIRE_BRUT_NET_COUT, RECRUTER, REMUNERATION_ET_MOTIVATION, FORMER, INDICATEURS_SOCIAUX];
+export const CHAPITRES: readonly Chapitre[] = [CREATION_PREMIER_BILAN, LES_FLUX, CHARGES_ET_ENCAISSEMENTS, LA_PAIE, L_EMPRUNT, IMMOBILISATIONS, LES_STOCKS, LA_CLOTURE, REMISES_ET_REGLEMENTS, DEPRECIATIONS_ET_PROVISIONS, REGULARISATIONS, SOLDES_INTERMEDIAIRES, BILAN_FONCTIONNEL, PRIX_COUT_MARGE, SEUIL_DE_RENTABILITE, COUT_COMPLET, COUT_PAR_PRODUIT, BUDGET_DE_TRESORERIE, ANALYSE_DES_ECARTS, TABLEAU_DE_BORD, DECIDER, TAUX_DE_MARQUE, INDICATEURS_DU_POINT_DE_VENTE, STOCK_DU_POINT_DE_VENTE, PREVOIR_LES_VENTES, BUDGET_DU_POINT_DE_VENTE, SEUIL_DU_POINT_DE_VENTE, PROMOTION_QUI_PAIE, ASSORTIMENT, EQUIPE_ET_PLANNING, TABLEAU_DE_BORD_DU_MANAGER, NEGOCIER_LE_PRIX, REMISES_ET_CONDITIONS, VALEUR_D_UN_CLIENT, COUT_D_ACQUISITION, COMMISSIONS_DES_PARTENAIRES, PORTEFEUILLE_ABC, TABLEAU_DE_BORD_COMMERCIAL, MARCHE_ET_PART_DE_MARCHE, SEGMENTER_ET_CIBLER, PRIX_PSYCHOLOGIQUE, DEMANDE_ET_PRIX, COMMUNICATION, CANAUX_DE_DISTRIBUTION, LIRE_LE_COMPTE_DE_RESULTAT, LIRE_LE_BILAN, VALEUR_AJOUTEE, RENTABILITE, FONDS_DE_ROULEMENT, FINANCER_L_ENTREPRISE, EFFECTIF_ET_MASSE_SALARIALE, SALAIRE_BRUT_NET_COUT, RECRUTER, REMUNERATION_ET_MOTIVATION, FORMER, INDICATEURS_SOCIAUX, CHOISIR_SON_FOURNISSEUR, LE_CLIENT_QUI_PAIE_TARD, S_ASSURER_CONTRE_LES_ALEAS, LE_COUT_DE_LA_NON_QUALITE, LE_DEPART_D_UN_SALARIE, ENTRETENIR_L_OUTIL];
 
 /**
  * Un chapitre, ou un cas pratique, par son code : la page d'un chapitre et la

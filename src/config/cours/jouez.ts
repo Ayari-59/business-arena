@@ -2,8 +2,12 @@ import type { Cas } from "./cas";
 import { fournisseursDe } from "./chapitres/taux-de-marque";
 import { ECART_DE_PRIX } from "./decision";
 import { BUDGET_DE_FORMATION_EN_ECHELLES, ECART_D_INDICE, EMBAUCHES } from "./ressources-humaines";
+import { formuleRetenue } from "./chapitres/s-assurer-contre-les-aleas";
+import { ECART_SOUS_LE_MARCHE, TRIMESTRE_DE_LA_BAISSE, TRIMESTRE_DU_RECRUTEMENT } from "./chapitres/le-depart-d-un-salarie";
+import { TRIMESTRE_SANS_ENTRETIEN } from "./chapitres/entretenir-l-outil";
 import { SEUILS_ABC } from "./negociation";
 import { scenarioByCode, scenarioCodeForLevel } from "../scenarios/registry";
+import { DIFFICULTY_PRESETS } from "../difficulty";
 import { LES_OFFRES_DE_L_ARENE } from "../tarifs";
 import { VITRINE_SOLO_PAR_DEFAUT } from "../vitrine-solo";
 
@@ -139,6 +143,9 @@ export type LieuDeLArene = keyof typeof LIEUX_DE_L_ARENE;
 
 /** Le dernier niveau qu'un élève joue sans licence, tel que la vitrine l'ouvre par défaut. */
 export const NIVEAU_SANS_LICENCE = VITRINE_SOLO_PAR_DEFAUT.niveauMaxAutres;
+
+/** Le premier niveau où la feuille de décision propose l'assurance (config/difficulty.ts). */
+export const NIVEAU_DE_L_ASSURANCE = DIFFICULTY_PRESETS.find((p) => p.decisions.insurance)!.level as MissionDansLArene["niveau"];
 
 export interface MissionDansLArene {
   niveau: 1 | 2 | 3 | 4 | 5 | 6;
@@ -615,6 +622,53 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     lieux: ["feuille", "rh-du-tour"],
     chercher:
       "Notez à chaque tour l'effectif et les démissions de la ligne « RH · effectif » : calculez le taux de rotation de l'année jouée, départs divisés par l'effectif moyen.",
+  }),
+  // BTS GPME. Chaque mission se joue au niveau où sa décision s'ouvre (config/difficulty.ts) :
+  // l'assurance au niveau 4, au-delà de ce qu'un élève joue sans licence, comme la gamme.
+  "choisir-son-fournisseur": (c) => {
+    const f = fournisseursDe(scenarioCodeForLevel(c.code, 1));
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Jouez un tour avec « ${f.reference.name} », puis un second où, dans « S'approvisionner », vous choisissez « ${f.moinsCher.name} » sans rien changer d'autre.`,
+      lieux: ["analyse-des-couts", "bilan"],
+      chercher:
+        "Dans l'analyse des coûts, de combien le coût d'achat d'une unité a-t-il baissé ? Au bilan, les dettes fournisseurs ont-elles monté ou baissé, et pourquoi, au regard du délai de paiement de chaque offre ?",
+    };
+  },
+  "le-client-qui-paie-tard": (c) => ({
+    niveau: 3,
+    faire: `${partie(c, 3)} Jouez un premier tour sans mobiliser vos créances. Au tour suivant, dans « Trésorerie · mobiliser le poste clients », escomptez une partie de vos créances, sans dépasser le plafond indiqué, puis jouez le tour.`,
+    lieux: ["bilan", "budget-de-tresorerie"],
+    chercher:
+      "Au bilan, de combien les créances clients ont-elles baissé ? Dans le budget de trésorerie, combien l'escompte a-t-il fait entrer en caisse, et que vous a-t-il coûté en charges financières ?",
+  }),
+  "s-assurer-contre-les-aleas": (c) => ({
+    niveau: NIVEAU_DE_L_ASSURANCE,
+    faire: `${partie(c, NIVEAU_DE_L_ASSURANCE)} Au premier tour, souscrivez dans « Assurance » la formule ${formuleRetenue(c.code).formule.name}, puis jouez quatre tours.`,
+    lieux: ["feuille", "compte-de-resultat"],
+    chercher:
+      "Retrouvez la prime dans les charges fixes du compte de résultat, à chaque tour, et la ligne « Assurance souscrite » sous les états financiers : un aléa couvert est-il tombé ? Comparez la prime de l'année à ce qu'il aurait coûté.",
+  }),
+  "le-cout-de-la-non-qualite": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Au premier tour, mettez 0 € dans « Budget qualité », puis jouez deux tours.`,
+    lieux: ["feuille", "compte-de-resultat"],
+    chercher:
+      "Sous les états financiers, la ligne « Coûts de la non-qualité » donne les rebuts du tour et leur coût, face à la prévention : combien la prévention économisée a-t-elle coûté en rebuts ? Le résultat du tour a-t-il monté ?",
+  }),
+  "le-depart-d-un-salarie": (c) => ({
+    niveau: 3,
+    faire: `${partie(c, 3)} Au tour ${TRIMESTRE_DE_LA_BAISSE}, mettez ${Math.round((1 - ECART_SOUS_LE_MARCHE) * 100)} dans « Salaires (marché = 100) ». Au tour ${TRIMESTRE_DU_RECRUTEMENT}, remettez 100 et mettez 1 dans « Embauches », puis jouez un tour de plus.`,
+    lieux: ["feuille", "rh-du-tour", "compte-de-resultat"],
+    chercher:
+      "Au tour où le poste est vide, la ligne « RH · effectif » compte-t-elle un salarié de moins ? Comparez les ventes et la marge sur coût variable de ce tour à celles du tour précédent : que coûte le départ, recrutement compris et salaire non versé déduit ?",
+  }),
+  "entretenir-l-outil": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Au tour ${TRIMESTRE_SANS_ENTRETIEN}, mettez 0 dans « Budget maintenance », puis jouez trois tours avec le budget proposé.`,
+    lieux: ["feuille", "compte-de-resultat"],
+    chercher:
+      "Sur la feuille de décision des tours suivants, de combien la disponibilité de l'outil a-t-elle baissé, et quand revient-elle à 100 % ? Comparez la maintenance économisée au premier tour à la marge sur coût variable perdue ensuite.",
   }),
   "tableau-de-bord-commercial": (c) => ({
     niveau: 2,

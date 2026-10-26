@@ -17,8 +17,9 @@ import { FAMILLES } from "../episodes/familles";
  * mal (l'équipier du libre-service, dans une famille d'employés de bureau)
  * se déplace seul.
  *
- * Deux thèmes n'ont pas encore de chapitre, l'organisation et la stratégie :
- * ils ne vivent que par leurs épisodes, et la page le dit au lieu de les taire.
+ * Un thème n'a pas encore de chapitre, la stratégie : il ne vit que par ses
+ * épisodes, et la page le dit au lieu de le taire. L'organisation a reçu les siens
+ * avec le parcours du BTS GPME (octobre 2026).
  */
 export interface Theme {
   code: string;
@@ -66,6 +67,7 @@ export const THEMES: readonly Theme[] = [
       "financer-l-entreprise",
       "soldes-intermediaires-de-gestion",
       "bilan-fonctionnel-et-bfr",
+      "le-client-qui-paie-tard",
     ],
     familles: ["finance"],
   },
@@ -148,6 +150,7 @@ export const THEMES: readonly Theme[] = [
       "remuneration-et-motivation",
       "former",
       "indicateurs-sociaux",
+      "le-depart-d-un-salarie",
     ],
     familles: [
       "equipe",
@@ -165,7 +168,7 @@ export const THEMES: readonly Theme[] = [
     titre: "Organisation, production et systèmes d'information",
     description:
       "Faire tourner l'activité : les flux, la qualité, la sécurité, les processus administratifs et les systèmes d'information.",
-    chapitres: [],
+    chapitres: ["choisir-son-fournisseur", "s-assurer-contre-les-aleas", "le-cout-de-la-non-qualite", "entretenir-l-outil"],
     familles: ["operations", "premier-poste", "hotel-service", "sante-soins", "agro-produire", "agro-amont"],
   },
   {
