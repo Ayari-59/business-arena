@@ -146,7 +146,7 @@ describe("le chapitre pilote, joué sans faute", () => {
         await page.getByRole("radio", { name: options.find((o) => o.juste)!.texte }).click();
       } else if (etape.type === "montants") {
         for (const c of etape.champs(cas, avant)) await page.getByLabel(c.libelle, { exact: true }).fill(virgule(c.attendu));
-        await page.getByRole("button", { name: "Vérifier" }).click();
+        await page.getByRole("button", { name: "Vérifier", exact: true }).click();
       }
       const dernier = i === chapitre.etapes.length - 1;
       await page.getByRole("button", { name: dernier ? "Terminer le chapitre" : "Étape suivante" }).click();
@@ -362,10 +362,10 @@ describe("le seuil de rentabilité, chapitre réservé", () => {
           const libelle = etape.categories.find((k) => k.code === el.categorie)!.libelle;
           await page.locator(`[data-element="${el.libelle}"]`).getByRole("radio", { name: libelle, exact: true }).click();
         }
-        await page.getByRole("button", { name: "Vérifier" }).click();
+        await page.getByRole("button", { name: "Vérifier", exact: true }).click();
       } else if (etape.type === "montants") {
         for (const c of etape.champs(cas, etat)) await page.getByLabel(c.libelle, { exact: true }).fill(virgule(c.attendu));
-        await page.getByRole("button", { name: "Vérifier" }).click();
+        await page.getByRole("button", { name: "Vérifier", exact: true }).click();
       } else if (etape.type === "choix") {
         await page.getByRole("radio", { name: etape.options(cas, etat).find((o) => o.juste)!.texte }).click();
       } else if (etape.type === "curseur") {
@@ -685,7 +685,7 @@ describe.each([
           const libelle = etape.categories.find((k) => k.code === el.categorie)!.libelle;
           await page.locator(`[data-element="${el.libelle}"]`).getByRole("radio", { name: libelle, exact: true }).click();
         }
-        await page.getByRole("button", { name: "Vérifier" }).click();
+        await page.getByRole("button", { name: "Vérifier", exact: true }).click();
       } else if (etape.type === "montants") {
         for (const c of etape.champs(cas, avant)) {
           if (!telephone) {
@@ -695,7 +695,7 @@ describe.each([
           await page.getByLabel(c.libelle, { exact: true }).pressSequentially(virgule(Math.abs(c.attendu)));
           if (c.attendu < 0) await page.getByRole("button", { name: `Changer le signe : ${c.libelle}`, exact: true }).tap();
         }
-        await page.getByRole("button", { name: "Vérifier" }).click();
+        await page.getByRole("button", { name: "Vérifier", exact: true }).click();
       } else if (etape.type === "choix") {
         await page.getByRole("radio", { name: etape.options(cas, avant).find((o) => o.juste)!.texte }).click();
       } else if (etape.type === "curseur") {
