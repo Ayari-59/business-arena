@@ -81,6 +81,10 @@ import { LE_TRIMESTRE_LE_PLUS_FORT } from "./par-chapitre/le-trimestre-le-plus-f
 import { LA_PART_DE_MARCHE_ANNONCEE } from "./par-chapitre/la-part-de-marche-annoncee";
 import { LA_CASE_VIDE } from "./par-chapitre/la-case-vide";
 import { UNE_SECONDE_JOURNEE_DE_FORMATION } from "./par-chapitre/une-seconde-journee-de-formation";
+import { MONTER_LA_CARTE_OU_PREPARER_JUSTE } from "./par-chapitre/monter-la-carte-ou-preparer-juste";
+import { S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT } from "./par-chapitre/s-aligner-sur-le-prix-du-concurrent";
+import { LE_COUT_DU_TRIMESTRE_CREUX } from "./par-chapitre/le-cout-du-trimestre-creux";
+import { PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON } from "./par-chapitre/plus-cher-au-plus-fort-de-la-saison";
 import type { Situation } from "./types";
 
 export type { Situation } from "./types";
@@ -182,6 +186,10 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LA_PART_DE_MARCHE_ANNONCEE,
   LA_CASE_VIDE,
   UNE_SECONDE_JOURNEE_DE_FORMATION,
+  MONTER_LA_CARTE_OU_PREPARER_JUSTE,
+  S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT,
+  LE_COUT_DU_TRIMESTRE_CREUX,
+  PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

@@ -622,6 +622,18 @@ describe.each([
   { code: "la-part-de-marche-annoncee", entreprise: "nova", telephone: true },
   { code: "la-case-vide", entreprise: "conseil" },
   { code: "une-seconde-journee-de-formation", entreprise: "bistrot", telephone: true },
+  { code: "le-cout-matiere", entreprise: "bistrot" },
+  { code: "le-cout-matiere", entreprise: "bistrot", telephone: true },
+  { code: "occupation-et-revenu-par-chambre", entreprise: "hotel" },
+  { code: "occupation-et-revenu-par-chambre", entreprise: "hotel", telephone: true },
+  { code: "la-productivite-du-service", entreprise: "bistrot" },
+  { code: "la-productivite-du-service", entreprise: "hotel", telephone: true },
+  { code: "le-prix-selon-la-saison", entreprise: "hotel" },
+  { code: "le-prix-selon-la-saison", entreprise: "hotel", telephone: true },
+  { code: "monter-la-carte-ou-preparer-juste", entreprise: "bistrot" },
+  { code: "s-aligner-sur-le-prix-du-concurrent", entreprise: "hotel", telephone: true },
+  { code: "le-cout-du-trimestre-creux", entreprise: "bistrot" },
+  { code: "plus-cher-au-plus-fort-de-la-saison", entreprise: "hotel", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se

@@ -11,6 +11,7 @@ import { TRIMESTRE_DE_L_ACHAT, machineDuChapitre } from "./chapitres/croitre-en-
 import { budgetRse } from "./chapitres/la-responsabilite-societale";
 import { FACTEUR_DE_LA_VIRGULE, TRIMESTRE_DECIDE, TRIMESTRES_DE_L_EXTRAIT } from "./chapitres/une-donnee-fausse";
 import { ABONNEMENT_PAR_UTILISATEUR_ET_PAR_MOIS, PART_DES_VENTES_RETROUVEES } from "./chapitres/ce-que-coute-un-outil-numerique";
+import { BAISSE_EN_BASSE_SAISON, HAUSSE_EN_HAUTE_SAISON, saisonDuMarche } from "./chapitres/le-prix-selon-la-saison";
 import { SEUILS_ABC } from "./negociation";
 import { scenarioByCode, scenarioCodeForLevel } from "../scenarios/registry";
 import { DIFFICULTY_PRESETS } from "../difficulty";
@@ -802,6 +803,44 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     lieux: ["marche-du-tour", "plan-face-au-realise", "compte-de-resultat"],
     chercher: `À chaque tour, combien de clients sont repartis sans être servis alors que votre production n'atteignait pas votre capacité ? Si un outil numérique vous en faisait retrouver ${Math.round(PART_DES_VENTES_RETROUVEES * 100)} %, combien rapporteraient-ils, à la marge sur coût variable du compte de résultat divisée par vos ventes ? Cela paierait-il un abonnement de ${ABONNEMENT_PAR_UTILISATEUR_ET_PAR_MOIS} € par mois pour chacun de vos salariés ?`,
   }),
+  "le-cout-matiere": (c) => {
+    const { volume } = feuilleDe(c, 1);
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Jouez un tour, puis un second où vous mettez dans « ${volume} » nettement plus que les couverts servis au premier tour, sans changer votre prix.`,
+      lieux: ["indicateurs", "compte-de-resultat"],
+      chercher:
+        "Comparez le ratio matières des deux tours dans les indicateurs du métier : de combien de points a-t-il monté, au même ticket ? Au compte de résultat, le coût variable des ventes a-t-il suivi les couverts servis, ou les couverts préparés ?",
+    };
+  },
+  "occupation-et-revenu-par-chambre": (c) => {
+    const { prix, volume } = feuilleDe(c, 1);
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Jouez un tour, puis un second où vous baissez le « ${prix} » d'environ 10 %, en mettant plus de nuitées dans « ${volume} ».`,
+      lieux: ["indicateurs"],
+      chercher:
+        "Comparez le taux d'occupation, le PMC et le RevPAR des deux tours dans les indicateurs du métier : l'occupation a-t-elle monté ? Et le RevPAR ? Vérifiez que le RevPAR est égal au taux d'occupation multiplié par le PMC.",
+    };
+  },
+  "la-productivite-du-service": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez quatre tours, et relevez à chaque tour vos ventes dans le marché du tour écoulé.`,
+    lieux: ["marche-du-tour", "compte-de-resultat"],
+    chercher: `À quel tour chaque salarié a-t-il servi le plus de ${c.unites}, et le moins ? Avec le coût d'un salarié du chapitre, calculez le coût du personnel par ${c.unite} à ces deux tours : de combien a-t-il monté au tour le plus creux, si l'équipe n'a pas changé ?`,
+  }),
+  "le-prix-selon-la-saison": (c) => {
+    const { prix } = feuilleDe(c, 1);
+    const { haute, basse } = saisonDuMarche(c);
+    const aux = (ks: readonly number[]) => ks.map((k) => `au ${k === 1 ? "1er" : `${k}e`}`).join(" et ");
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Jouez quatre tours : ${aux(haute)} tour, la haute saison, montez le « ${prix} » de ${Math.round(HAUSSE_EN_HAUTE_SAISON * 100)} % ; ${aux(basse)}, la basse saison, baissez-le de ${Math.round(BAISSE_EN_BASSE_SAISON * 100)} %.`,
+      lieux: ["indicateurs", "plan-face-au-realise", "compte-de-resultat"],
+      chercher:
+        "Relevez à chaque tour le taux d'occupation, le PMC et le RevPAR. Au tour où vous avez monté le prix, restait-il des nuitées mises en vente invendues ? Au tour où vous l'avez baissé, des clients sont-ils repartis sans chambre ? Votre prix suivait-il la saison, ou le remplissage ?",
+    };
+  },
   "tableau-de-bord-commercial": (c) => ({
     niveau: 2,
     faire: `${partie(c, 2)} Jouez quatre tours. À chaque tour, relevez la demande adressée, vos ventes, votre part de marché et votre marge.`,
