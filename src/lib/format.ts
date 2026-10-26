@@ -50,6 +50,10 @@ export function formatDecimal(v: number, chiffres = 1): string {
   return avecMoins(f.format(v));
 }
 
+const jusquaDeux = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 });
+/** Un nombre à la française, deux décimales au plus, sans zéro inutile : « −27,12 », « 910 ». */
+export const formatNombre = (v: number) => avecMoins(jusquaDeux.format(v));
+
 /**
  * Le rang à la française : « 1er » ou « 1re » selon le genre du nom qu'il
  * qualifie (« 1re place », « 1er sur 3 »), puis « 2e », « 3e »…

@@ -156,7 +156,11 @@ export default async function EcolesPage() {
   );
   const c = (id: string) => contrasteDeLaBande(theme, id);
   // L'EXAMEN INDIVIDUEL : les offres qui l'incluent se lisent au catalogue (/admin/offres).
-  const offresDeLExamen = catalogue.offres.filter((o) => o.visible && ouvreLExamen(o)).map((o) => o.nom);
+  const cartesDeLExamen = catalogue.offres.filter((o) => o.visible && ouvreLExamen(o));
+  const offresDeLExamen = cartesDeLExamen.map((o) => o.nom);
+  // Le devis de la première d'entre elles, tel que sa carte le donne : le lien suit le
+  // catalogue (il menait au devis Programme quand l'examen a quitté Programme).
+  const devisDeLExamen = cartesDeLExamen.find((o) => o.bouton.cible)?.bouton.cible ?? "/devis";
   return (
     <>
       <main id="main" className="relative overflow-hidden">
@@ -405,7 +409,7 @@ export default async function EcolesPage() {
               <p className="mt-6 text-sm text-slate-400" data-offres-de-l-examen="">
                 Inclus dans {offresDeLExamen.length > 1 ? "les offres" : "l'offre"} {enumerer(offresDeLExamen)}, sur devis.{" "}
                 <Link
-                  href={lienDuDevis("programme")}
+                  href={devisDeLExamen}
                   className="font-semibold text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
                 >
                   {LIBELLE_DU_DEVIS} →

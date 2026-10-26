@@ -53,3 +53,12 @@ describe("le paragraphe sur mesure", () => {
     expect(await entreprises.innerText()).toContain("Les entreprises qui servent ce diplôme");
   });
 });
+
+describe("l'examen individuel sur /ecoles", () => {
+  it("nomme l'offre qui l'inclut, et son devis mène à cette offre (Campus depuis octobre 2026)", async () => {
+    await aller(page, "/ecoles");
+    const bloc = page.locator("[data-offres-de-l-examen]");
+    expect(await bloc.innerText()).toContain("Inclus dans l'offre Campus");
+    expect(await bloc.getByRole("link", { name: LIBELLE_DU_DEVIS }).getAttribute("href")).toBe("/devis?offre=campus");
+  });
+});

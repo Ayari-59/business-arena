@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { PiedDePage } from "@/components/pied-de-page";
 import { ficheParCode, hasardDeLaClasse, lienDeLaClasse } from "@/config/episodes/fiches";
 import { dureeEnClair } from "@/config/cours/duree";
+import { formatNombre } from "@/lib/format";
 import { formationParCode } from "@/config/formations";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
 import { MARQUE_DEMO } from "@/config/episodes/demos";
@@ -35,7 +36,6 @@ export async function generateMetadata({
   };
 }
 
-const nombre = (v: number) => v.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
 
 /**
  * LA FICHE ENSEIGNANT D'UN ÉPISODE.
@@ -173,7 +173,7 @@ export default async function FichePage({ params }: { params: Promise<{ code: st
               {ep.prevision.libelle}.
             </p>
             <p className="mt-3 text-2xl font-semibold tabular-nums text-slate-50">
-              {nombre(fiche.calcul.reponse)} {ep.prevision.unite}
+              {formatNombre(fiche.calcul.reponse)} {ep.prevision.unite}
             </p>
             <ol className="mt-4 list-decimal space-y-1 pl-6 text-base text-slate-300">
               {fiche.calcul.etapes.map((e) => (
@@ -187,7 +187,7 @@ export default async function FichePage({ params }: { params: Promise<{ code: st
               {fiche.calcul.erreurs.map((e) => (
                 <li key={e.cause} className="text-base text-slate-300">
                   <span className="tabular-nums font-semibold text-slate-100">
-                    {nombre(e.valeur)} {ep.prevision.unite}
+                    {formatNombre(e.valeur)} {ep.prevision.unite}
                   </span>{" "}
                   : {e.cause}
                 </li>
