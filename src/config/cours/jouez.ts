@@ -12,6 +12,10 @@ import { budgetRse } from "./chapitres/la-responsabilite-societale";
 import { FACTEUR_DE_LA_VIRGULE, TRIMESTRE_DECIDE, TRIMESTRES_DE_L_EXTRAIT } from "./chapitres/une-donnee-fausse";
 import { ABONNEMENT_PAR_UTILISATEUR_ET_PAR_MOIS, PART_DES_VENTES_RETROUVEES } from "./chapitres/ce-que-coute-un-outil-numerique";
 import { BAISSE_EN_BASSE_SAISON, HAUSSE_EN_HAUTE_SAISON, saisonDuMarche } from "./chapitres/le-prix-selon-la-saison";
+import { machineSuivante } from "./chapitres/le-tri-et-le-choix-entre-deux-projets";
+import { REMISE_DE_LA_PROMOTION } from "./chapitres/le-prix-affiche";
+import { FOND_DE_CAISSE, PART_EN_ESPECES } from "./chapitres/tenir-la-caisse";
+import { METIERS } from "./metiers";
 import { SEUILS_ABC } from "./negociation";
 import { scenarioByCode, scenarioCodeForLevel } from "../scenarios/registry";
 import { DIFFICULTY_PRESETS } from "../difficulty";
@@ -167,6 +171,8 @@ export const MISSIONS_AU_NIVEAU_DE_LEUR_DECISION: Readonly<Record<string, Missio
   "s-assurer-contre-les-aleas": NIVEAU_DE_L_ASSURANCE,
   "croitre-en-investissant": NIVEAU_DE_L_INVESTISSEMENT,
   "la-responsabilite-societale": NIVEAU_DE_LA_RSE,
+  "la-valeur-actuelle-nette": NIVEAU_DE_L_INVESTISSEMENT,
+  "le-tri-et-le-choix-entre-deux-projets": NIVEAU_DE_L_INVESTISSEMENT,
 };
 
 export interface MissionDansLArene {
@@ -907,6 +913,83 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
       lieux: ["plan-face-au-realise", "marche-du-tour"],
       chercher:
         "Au premier tour, combien de palettes chargées n'ont pas trouvé de client, et combien de clients ont été refusés ? Calculez votre taux de service : palettes livrées ÷ palettes demandées. Au second tour, la demande de vos clients a-t-elle baissé après une flotte chargée au-dessus de 95 % de sa capacité ?",
+    };
+  },
+  "la-valeur-actuelle-nette": (c) => {
+    const m = machineDuChapitre(c.code);
+    return {
+      niveau: NIVEAU_DE_L_INVESTISSEMENT,
+      faire: `${partie(c, NIVEAU_DE_L_INVESTISSEMENT)} Au tour ${TRIMESTRE_DE_L_ACHAT}, dans « Parc machines · investir ou céder », achetez un équipement de plus, ${m.name}, sans emprunter : la trésorerie le paie. Puis jouez la partie jusqu'au bout.`,
+      lieux: ["budget-de-tresorerie", "compte-de-resultat"],
+      chercher: `Au budget de trésorerie du tour ${TRIMESTRE_DE_L_ACHAT}, retrouvez l'investissement décaissé. Au compte de résultat, les dotations aux amortissements montent-elles de ${(m.costPerUnit / m.depreciationRounds).toLocaleString("fr-FR")} € par tour à partir du tour suivant ? Relevez à chaque tour l'excédent brut d'exploitation : rapprochez sa hausse des flux que le chapitre a actualisés.`,
+    };
+  },
+  "le-tri-et-le-choix-entre-deux-projets": (c) => {
+    const m = machineSuivante(c.code);
+    return {
+      niveau: NIVEAU_DE_L_INVESTISSEMENT,
+      faire: `${partie(c, NIVEAU_DE_L_INVESTISSEMENT)} Au tour ${TRIMESTRE_DE_L_ACHAT}, dans « Parc machines · investir ou céder », achetez un équipement de plus, ${m.name}, la machine du projet B, sans emprunter. Puis jouez la partie jusqu'au bout.`,
+      lieux: ["feuille", "compte-de-resultat", "budget-de-tresorerie"],
+      chercher:
+        "Au tour suivant, la capacité en service a-t-elle monté de ce que le catalogue promet ? Relevez à chaque tour l'excédent brut d'exploitation et le résultat d'exploitation : la machine rapporte-t-elle assez vite pour que son TRI dépasse le coût du capital du chapitre ?",
+    };
+  },
+  "l-effet-de-levier": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez quatre tours.`,
+    lieux: ["bilan", "compte-de-resultat", "ratios"],
+    chercher:
+      "Au dernier tour, relevez au bilan les capitaux propres, les dettes financières et les disponibilités, et additionnez au compte de résultat le résultat d'exploitation et les charges financières des quatre tours. Calculez Re et le coût de l'endettement net après impôt : la dette joue-t-elle pour les associés ? Comparez à l'effet de levier des ratios financiers, calculé sans retrancher la trésorerie.",
+  }),
+  "la-creation-de-valeur": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez quatre tours.`,
+    lieux: ["bilan", "compte-de-resultat"],
+    chercher:
+      "Au dernier tour, calculez l'actif économique (immobilisations, stocks et créances, moins dettes fournisseurs) et le résultat d'exploitation après impôt des quatre tours. Avec le CMPC du chapitre, l'outil rapporte-t-il plus que ne coûte le capital qui le finance ?",
+  }),
+  "recevoir-une-livraison": (c) => {
+    const niveau = niveauDeLaGamme(c.code)!;
+    const { volume } = feuilleDe(c, niveau);
+    return {
+      niveau,
+      faire: `${partie(c, niveau)} À ce niveau, ${c.entreprise} vend plusieurs références : notez ce que vous mettez dans « ${volume} » pour chaque référence, puis jouez le tour.`,
+      lieux: ["references"],
+      chercher:
+        "Dans le tableau des références, comparez la colonne « En rayon » à ce que vous aviez commandé, référence par référence. Y a-t-il un écart ? Ajoutez ce qui est entré au stock du tour d'avant : retrouvez-vous ce qui a été vendu et ce qui reste ?",
+    };
+  },
+  "remplir-le-rayon": (c) => {
+    const niveau = niveauDeLaGamme(c.code)!;
+    const { volume } = feuilleDe(c, niveau);
+    return {
+      niveau,
+      faire: `${partie(c, niveau)} À ce niveau, ${c.entreprise} vend plusieurs références : jouez un tour, puis un second où vous mettez 0 dans « ${volume} » pour une seule référence.`,
+      lieux: ["references"],
+      chercher:
+        "Au second tour, lisez la colonne « Manqué » de cette référence et multipliez-la par son prix : combien la rupture a-t-elle coûté ? À son rythme du premier tour, en combien de jours son stock était-il vide ?",
+    };
+  },
+  "le-prix-affiche": (c) => {
+    // La boutique vend plusieurs articles, chacun à son prix, au niveau où elle passe en gamme.
+    const niveau = niveauDeLaGamme(c.code) ?? 1;
+    const { prix } = feuilleDe(c, niveau);
+    const tva = (METIERS[c.code]!.vente.tauxTva * 100).toLocaleString("fr-FR");
+    return {
+      niveau,
+      faire: `${partie(c, niveau)} Jouez un tour sans rien changer, puis un second où le « ${prix} » d'une seule référence baisse de ${(REMISE_DE_LA_PROMOTION * 100).toLocaleString("fr-FR")} %.`,
+      lieux: ["references", "marche-du-tour"],
+      chercher: `La feuille de décision donne des prix hors taxes. Quel prix l'étiquette afficherait-elle, avec ${tva} % de TVA, avant et pendant la promotion ? Dans le tableau des références, la référence en promotion a-t-elle vendu plus ? Son chiffre d'affaires a-t-il monté ? Les ventes manquées ont-elles grimpé ?`,
+    };
+  },
+  "tenir-la-caisse": (c) => {
+    const jours = scenarioByCode(scenarioCodeForLevel(c.code, 1)).scenario.roundDays;
+    const tva = (METIERS[c.code]!.vente.tauxTva * 100).toLocaleString("fr-FR");
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Jouez un tour sans toucher à la feuille de décision proposée.`,
+      lieux: ["marche-du-tour", "compte-de-resultat"],
+      chercher: `Relevez le chiffre d'affaires du tour et divisez-le par les ${jours} jours du trimestre : quel chiffre d'affaires TTC, avec ${tva} % de TVA, un jour moyen ? Si ${(PART_EN_ESPECES * 100).toLocaleString("fr-FR")} % se paie en espèces, avec ${FOND_DE_CAISSE} € de fond de caisse, combien doit-il y avoir dans le tiroir le soir ?`,
     };
   },
   "tableau-de-bord-commercial": (c) => ({

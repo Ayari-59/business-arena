@@ -74,6 +74,10 @@ export const THEMES: readonly Theme[] = [
       "bilan-fonctionnel-et-bfr",
       "le-client-qui-paie-tard",
       "le-projet-d-entreprise",
+      "la-valeur-actuelle-nette",
+      "le-tri-et-le-choix-entre-deux-projets",
+      "l-effet-de-levier",
+      "la-creation-de-valeur",
     ],
     familles: ["finance"],
   },
@@ -136,6 +140,10 @@ export const THEMES: readonly Theme[] = [
     description:
       "La marge, le stock, l'assortiment, la promotion, le budget et l'équipe d'un magasin : la gestion opérationnelle d'une unité commerciale.",
     chapitres: [
+      "recevoir-une-livraison",
+      "remplir-le-rayon",
+      "le-prix-affiche",
+      "tenir-la-caisse",
       "taux-de-marque-et-coefficient",
       "indicateurs-du-point-de-vente",
       "stock-du-point-de-vente",
