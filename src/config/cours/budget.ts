@@ -1,6 +1,6 @@
 import type { CompanyRoundResult } from "../../engine/types";
 import { scenarioByCode } from "../scenarios/registry";
-import { anneeJouee } from "./cas";
+import { anneeDuCours as anneeJouee } from "./monde/annee-du-cours";
 
 /**
  * LE BUDGET DU DEUXIÈME TRIMESTRE : PRÉVU PAR RECONDUCTION, PUIS RÉALISÉ PAR L'ARÈNE.

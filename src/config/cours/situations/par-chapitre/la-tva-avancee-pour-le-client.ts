@@ -1,6 +1,7 @@
 import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
 import { scenarioByCode } from "../../../scenarios/registry";
-import { anneeJouee, type Cas } from "../../cas";
+import { type Cas } from "../../cas";
+import { anneeJouee } from "../../annee-de-l-arene";
 import { ENTREPRISES_OU_LA_TVA_JOUE, POURQUOI_LA_TVA } from "../../chapitres/la-declaration-de-tva";
 import { tvaEtTresorerie } from "../../chapitres/la-tva-et-la-tresorerie";
 import { rejouerAvec, surLAnnee } from "../../gestion-de-la-pme";

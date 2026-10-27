@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { anneeJouee, casDeLEntreprise } from "../../src/config/cours/cas";
+import { casDeLEntreprise } from "../../src/config/cours/cas";
+import { anneeJouee } from "../../src/config/cours/annee-de-l-arene";
 import { LIRE_LE_BILAN, bilanDeFinDAnnee } from "../../src/config/cours/chapitres/lire-le-bilan";
 import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";

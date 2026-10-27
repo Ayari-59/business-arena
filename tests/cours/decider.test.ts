@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { anneeJouee, casDeLEntreprise } from "../../src/config/cours/cas";
+import { casDeLEntreprise } from "../../src/config/cours/cas";
+import { anneeJouee } from "../../src/config/cours/annee-de-l-arene";
 import type { Cas } from "../../src/config/cours/cas";
 import { DECIDER, commandeDeNova, meilleurPrix, volumeNecessaire } from "../../src/config/cours/chapitres/decider";
 import { ECART_DE_PRIX, prixRejoues, sousTraitance } from "../../src/config/cours/decision";

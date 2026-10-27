@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { budgetDuTrimestre } from "../../src/config/cours/budget";
-import { anneeJouee, casDeLEntreprise } from "../../src/config/cours/cas";
+import { casDeLEntreprise } from "../../src/config/cours/cas";
+import { anneeJouee } from "../../src/config/cours/annee-de-l-arene";
 import type { Cas } from "../../src/config/cours/cas";
 import { BUDGET_DE_TRESORERIE, ecartsDuBudget } from "../../src/config/cours/chapitres/budget-de-tresorerie";
 import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";

@@ -2,7 +2,8 @@ import type { EngineScenarioConfig, EventDefinitionConfig, InsuranceFormulaDef }
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import { objetDuCourrier } from "../../courriers/de-la-partie";
 import { scenarioByCode } from "../../scenarios/registry";
-import { anneeJouee, type Cas } from "../cas";
+import { type Cas } from "../cas";
+import { anneeJouee } from "../annee-de-l-arene";
 import { anneeDeReference, rejouerAvec, surLAnnee } from "../gestion-de-la-pme";
 import type { Chapitre } from "../types";
 

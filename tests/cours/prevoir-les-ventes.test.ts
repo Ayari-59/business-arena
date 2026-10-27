@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { anneeJouee, casDeLEntreprise } from "../../src/config/cours/cas";
+import { casDeLEntreprise } from "../../src/config/cours/cas";
+import { anneeJouee } from "../../src/config/cours/annee-de-l-arene";
 import { PREVOIR_LES_VENTES, prevision } from "../../src/config/cours/chapitres/prevoir-les-ventes";
 import { COMMERCES } from "../../src/config/cours/chapitres/taux-de-marque";
 import { ANNEES, TRIMESTRES_PAR_AN, troisAnnees } from "../../src/config/cours/trois-annees";

@@ -1,7 +1,8 @@
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../pedagogy/cours/etats";
 import { scenarioByCode } from "../../scenarios/registry";
-import { anneeJouee, type Cas } from "../cas";
+import { type Cas } from "../cas";
+import { anneeJouee } from "../annee-de-l-arene";
 import { METIERS } from "../metiers";
 import type { Chapitre, TableauDeDonnees } from "../types";
 import { ENTREPRISES_DU_MAGASIN, etiquettesDuRayon } from "./le-prix-affiche";

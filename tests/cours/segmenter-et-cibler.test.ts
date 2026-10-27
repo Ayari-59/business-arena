@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { anneeJouee, casDeLEntreprise } from "../../src/config/cours/cas";
+import { casDeLEntreprise } from "../../src/config/cours/cas";
+import { anneeJouee } from "../../src/config/cours/annee-de-l-arene";
 import { SEGMENTATIONS, SEGMENTER_ET_CIBLER, segmentation } from "../../src/config/cours/chapitres/segmenter-et-cibler";
 import { scenarioByCode } from "../../src/config/scenarios/registry";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";

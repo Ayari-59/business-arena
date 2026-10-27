@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { referentielDeCitation } from "../../src/config/ateliers/referentiels";
 import { auCentime } from "../../src/pedagogy/cours/etats";
 import { UNITES_FEMININES } from "../../src/config/cours/accords";
-import { anneeJouee, casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
+import { casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
+import { anneeJouee } from "../../src/config/cours/annee-de-l-arene";
 import {
   COUTS_OU_DIFFERENCIATION,
   STRATEGIE_DE_COUTS,

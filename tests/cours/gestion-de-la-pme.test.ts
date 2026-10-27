@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { anneeJouee } from "../../src/config/cours/cas";
+import { anneeJouee } from "../../src/config/cours/annee-de-l-arene";
 import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
 import { anneeDeReference, rejouerAvec } from "../../src/config/cours/gestion-de-la-pme";
 import { rejouerLAnnee } from "../../src/config/cours/ressources-humaines";

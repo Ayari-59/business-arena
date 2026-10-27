@@ -1,7 +1,7 @@
 import { runGame } from "../../engine/simulation/runGame";
 import type { CompanyRoundResult, CompanyState, EngineScenarioConfig, RoundDecisions } from "../../engine/types";
 import { scenarioByCode } from "../scenarios/registry";
-import { GRAINE_DU_COURS } from "./cas";
+import { GRAINE_DU_COURS } from "./arene-du-cours";
 import { decisionsDuCours, scenarioDuCours } from "./arene-du-cours";
 
 /**

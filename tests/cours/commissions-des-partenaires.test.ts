@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { anneeJouee, casDeLEntreprise } from "../../src/config/cours/cas";
+import { casDeLEntreprise } from "../../src/config/cours/cas";
+import { anneeJouee } from "../../src/config/cours/annee-de-l-arene";
 import { campagne } from "../../src/config/cours/chapitres/cout-d-acquisition";
 import { COMMISSIONS_DES_PARTENAIRES, canalCommissionne, canaux } from "../../src/config/cours/chapitres/commissions-des-partenaires";
 import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";

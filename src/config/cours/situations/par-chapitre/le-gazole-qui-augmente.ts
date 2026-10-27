@@ -2,7 +2,8 @@ import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../../pedagogy/cours/etats";
 import { scenarioByCode } from "../../../scenarios/registry";
 import { accord } from "../../accords";
-import { anneeJouee, type Cas } from "../../cas";
+import { type Cas } from "../../cas";
+import { anneeJouee } from "../../annee-de-l-arene";
 import { CE_QUE_COUTE_UNE_LIVRAISON, coutDUneLivraison } from "../../chapitres/ce-que-coute-une-livraison";
 import type { Situation } from "../types";
 

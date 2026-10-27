@@ -1,5 +1,6 @@
 import { accordPluriel } from "../../accords";
-import { anneeJouee, type Cas } from "../../cas";
+import { type Cas } from "../../cas";
+import { anneeJouee } from "../../annee-de-l-arene";
 import { MARCHES } from "../../chapitres/marche-et-part-de-marche";
 import type { Situation } from "../types";
 

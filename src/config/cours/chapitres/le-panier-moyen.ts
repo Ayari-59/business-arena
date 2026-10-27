@@ -4,7 +4,8 @@ import { auCentime } from "../../../pedagogy/cours/etats";
 import { scenarioByCode } from "../../scenarios/registry";
 import { ARTICLES_PAR_TICKET } from "../../scenarios/sector-kpis";
 import { accord, accordPluriel } from "../accords";
-import { anneeJouee, type Cas } from "../cas";
+import { type Cas } from "../cas";
+import { anneeDuCours as anneeJouee } from "../monde/annee-du-cours";
 import { METIERS } from "../metiers";
 import type { Chapitre, TableauDeDonnees } from "../types";
 

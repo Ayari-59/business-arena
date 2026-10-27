@@ -1,6 +1,7 @@
 import type { CompanyRoundResult, EngineScenarioConfig } from "../../../engine/types";
 import { scenarioByCode } from "../../scenarios/registry";
-import { anneeJouee, type Cas } from "../cas";
+import { type Cas } from "../cas";
+import { anneeJouee } from "../annee-de-l-arene";
 import { rejouerAvec } from "../gestion-de-la-pme";
 import type { Chapitre } from "../types";
 import {

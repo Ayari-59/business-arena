@@ -1,6 +1,7 @@
 import { montantEcrit as eur } from "../../../pedagogy/cours/correcteur";
 import { scenarioByCode } from "../../scenarios/registry";
-import { anneeJouee, type Cas } from "../cas";
+import { type Cas } from "../cas";
+import { anneeJouee } from "../annee-de-l-arene";
 import { ECART_DE_PRIX } from "../decision";
 import { ENTREPRISES_DU_COURS } from "../metiers";
 import type { Chapitre } from "../types";

@@ -3,7 +3,7 @@ import { runGame } from "../../engine/simulation/runGame";
 import type { CompanyState } from "../../engine/types";
 import { auCentime } from "../../pedagogy/cours/etats";
 import { familyOf, scenarioByCode } from "../scenarios/registry";
-import { GRAINE_DU_COURS } from "./cas";
+import { GRAINE_DU_COURS } from "./arene-du-cours";
 import { decisionsDuCours, scenarioDuCours } from "./arene-du-cours";
 
 /**

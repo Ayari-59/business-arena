@@ -2,7 +2,8 @@ import { montantEcrit as eur } from "../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../pedagogy/cours/etats";
 import { scenarioByCode } from "../../scenarios/registry";
 import { accord, accordPluriel } from "../accords";
-import { anneeJouee, type Cas } from "../cas";
+import { type Cas } from "../cas";
+import { anneeDuCours as anneeJouee } from "../monde/annee-du-cours";
 import { JOURS_PAR_AN } from "../remises";
 import type { Chapitre } from "../types";
 

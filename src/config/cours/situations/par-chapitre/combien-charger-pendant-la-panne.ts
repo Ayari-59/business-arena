@@ -1,5 +1,6 @@
 import type { CompanyRoundResult } from "../../../../engine/types";
-import { anneeJouee, type Cas } from "../../cas";
+import { type Cas } from "../../cas";
+import { anneeJouee } from "../../annee-de-l-arene";
 import { auDixieme, demandeDuTrimestre, eur, jusquALaDefaillance, pct, prixEtCout, qte, retranche, transportees } from "../../chapitres/le-taux-de-remplissage";
 import { LIVRER_A_TEMPS, TRIMESTRE_DU_SERVICE, avecLaPanne, disponibiliteDeLaPanne, seuilDeSurchauffe } from "../../chapitres/livrer-a-temps";
 import { rejouerAvec } from "../../gestion-de-la-pme";

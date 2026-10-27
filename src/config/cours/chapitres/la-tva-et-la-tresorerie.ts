@@ -1,7 +1,8 @@
 import type { CompanyRoundResult } from "../../../engine/types";
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import { scenarioByCode } from "../../scenarios/registry";
-import { anneeJouee, type Cas } from "../cas";
+import { type Cas } from "../cas";
+import { anneeJouee } from "../annee-de-l-arene";
 import { rejouerAvec } from "../gestion-de-la-pme";
 import type { Chapitre } from "../types";
 import {

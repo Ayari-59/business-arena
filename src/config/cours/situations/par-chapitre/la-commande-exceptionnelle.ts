@@ -1,7 +1,8 @@
 import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
 import { scenarioByCode } from "../../../scenarios/registry";
 import { accord, accordPluriel } from "../../accords";
-import { anneeJouee, type Cas } from "../../cas";
+import { type Cas } from "../../cas";
+import { anneeJouee } from "../../annee-de-l-arene";
 import { ENTREPRISES_DE_L_ORGANISATION, activiteDuTrimestre } from "../../chapitres/organiser-l-activite";
 import { rejouerAvec } from "../../gestion-de-la-pme";
 import type { Situation } from "../types";

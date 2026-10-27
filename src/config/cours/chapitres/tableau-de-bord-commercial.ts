@@ -1,5 +1,6 @@
 import { montantEcrit as eur } from "../../../pedagogy/cours/correcteur";
-import { anneeJouee, type Cas } from "../cas";
+import { type Cas } from "../cas";
+import { anneeJouee } from "../annee-de-l-arene";
 import { BAISSE_DU_SERVICE_QUI_SIGNALE_L_OFFRE } from "../negociation";
 import type { Chapitre } from "../types";
 import { NEGOCIATIONS } from "./negocier-le-prix";

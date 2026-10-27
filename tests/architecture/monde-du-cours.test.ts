@@ -29,7 +29,7 @@ function fichiersDe(dossier: string): string[] {
 const INTERDITS = [
   join(SRC, "engine"),
   join(SRC, "config", "scenarios"),
-  ...["cas.ts", "arene-du-cours.ts", "gestion-de-la-pme.ts", "decision.ts", "trois-annees.ts", "ressources-humaines.ts", "gamme.ts"].map((f) => join(COURS, f)),
+  ...["annee-de-l-arene.ts", "arene-du-cours.ts", "gestion-de-la-pme.ts", "decision.ts", "trois-annees.ts", "ressources-humaines.ts", "gamme.ts"].map((f) => join(COURS, f)),
 ];
 
 /** Les imports qui chargent du code (pas les `import type`), résolus en fichiers. */
@@ -64,33 +64,73 @@ function cheminInterdit(depart: string): string[] | null {
 const DU_MONDE = readdirSync(join(COURS, "monde")).filter((f) => f.endsWith(".ts")).map((f) => `monde/${f}`);
 
 /**
- * Les chapitres et les cas passés sur le monde du cours : ceux qui importent un fichier du monde,
- * ou un chapitre ou un cas déjà passé sur lui (un cas lit souvent le monde par son chapitre).
+ * LE REGISTRE DES CHAPITRES ET DES CAS PASSÉS SUR LE MONDE DU COURS. Il ne fait que grandir : chaque
+ * fichier inscrit ne doit plus atteindre l'arène, et tout chapitre ou cas qui ne l'atteint plus doit
+ * y être inscrit (la garde le demande), pour qu'aucun ne revienne en arrière sans que cela se voie.
  */
-const PASSES_SUR_LE_MONDE = (() => {
-  // Les recueils (index.ts) rassemblent tous les cas : ils ne sont pas des cas.
-  const candidats = [...fichiersDe("chapitres"), ...fichiersDe("situations")].filter((f) => !f.endsWith("index.ts"));
-  const passes = new Set<string>(DU_MONDE.map((f) => join(COURS, f)));
-  for (let change = true; change; ) {
-    change = false;
-    for (const f of candidats) {
-      const chemin = join(COURS, f);
-      if (!passes.has(chemin) && importsDe(chemin).some((i) => passes.has(i))) {
-        passes.add(chemin);
-        change = true;
-      }
-    }
-  }
-  return candidats.filter((f) => passes.has(join(COURS, f)));
-})();
+const PASSES_SUR_LE_MONDE: readonly string[] = [
+  "chapitres/bilan-fonctionnel.ts",
+  "chapitres/cout-complet.ts",
+  "chapitres/creation-premier-bilan.ts",
+  "chapitres/financer-l-entreprise.ts",
+  "chapitres/fonds-de-roulement-et-tresorerie.ts",
+  "chapitres/immobilisations.ts",
+  "chapitres/l-emprunt.ts",
+  "chapitres/la-cloture.ts",
+  "chapitres/la-paie.ts",
+  "chapitres/la-productivite-du-service.ts",
+  "chapitres/le-cout-matiere.ts",
+  "chapitres/le-prix-selon-la-saison.ts",
+  "chapitres/les-stocks.ts",
+  "chapitres/lire-le-bilan.ts",
+  "chapitres/lire-le-compte-de-resultat.ts",
+  "chapitres/occupation-et-revenu-par-chambre.ts",
+  "chapitres/prix-cout-marge.ts",
+  "chapitres/remises-et-reglements.ts",
+  "chapitres/rentabilite.ts",
+  "chapitres/seuil-de-rentabilite.ts",
+  "chapitres/soldes-intermediaires.ts",
+  "chapitres/stock-du-point-de-vente.ts",
+  "chapitres/tableau-de-bord.ts",
+  "chapitres/valeur-ajoutee-et-partage.ts",
+  "situations/la-facture-contestee.ts",
+  "situations/le-rendez-vous-a-la-banque.ts",
+  "situations/par-chapitre/acheter-avant-la-cloture.ts",
+  "situations/par-chapitre/alleger-le-stock.ts",
+  "situations/par-chapitre/ce-qu-exige-le-fonds.ts",
+  "situations/par-chapitre/l-annuite-du-pret.ts",
+  "situations/par-chapitre/l-investisseuse-au-capital.ts",
+  "situations/par-chapitre/la-hausse-des-salaires.ts",
+  "situations/par-chapitre/la-prime-exceptionnelle.ts",
+  "situations/par-chapitre/le-cout-du-trimestre-creux.ts",
+  "situations/par-chapitre/le-fournisseur-augmente.ts",
+  "situations/par-chapitre/le-fournisseur-raccourcit-ses-delais.ts",
+  "situations/par-chapitre/le-loyer-qui-augmente.ts",
+  "situations/par-chapitre/le-stock-qui-manque.ts",
+  "situations/par-chapitre/monter-la-carte-ou-preparer-juste.ts",
+  "situations/par-chapitre/plus-cher-au-plus-fort-de-la-saison.ts",
+  "situations/par-chapitre/quand-le-taux-monte.ts",
+  "situations/par-chapitre/regler-le-voyant.ts",
+  "situations/par-chapitre/s-aligner-sur-le-prix-du-concurrent.ts",
+  "situations/par-chapitre/un-deuxieme-pret.ts",
+  "situations/par-chapitre/un-nouveau-client-regulier.ts",
+  "situations/par-chapitre/un-second-equipement.ts",
+  "situations/par-chapitre/un-technicien-plutot-qu-un-prestataire.ts",
+  "situations/par-chapitre/vendre-plus-financer-plus.ts",
+  "situations/suivre-la-baisse.ts",
+];
+
+/** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
+const CHAPITRES_ET_CAS = [...fichiersDe("chapitres"), ...fichiersDe("situations")].filter((f) => !f.endsWith("index.ts") && !f.endsWith("types.ts"));
 
 describe("le monde du cours ne lit pas l'arène", () => {
   it.each([...DU_MONDE, ...PASSES_SUR_LE_MONDE])("%s n'atteint ni le moteur, ni les scénarios, ni l'année jouée par l'arène", (f) => {
     expect(cheminInterdit(join(COURS, f))).toBeNull();
   });
 
-  it("le pilote est passé sur le monde du cours", () => {
-    expect(PASSES_SUR_LE_MONDE).toEqual(expect.arrayContaining(["chapitres/le-prix-selon-la-saison.ts", "situations/par-chapitre/plus-cher-au-plus-fort-de-la-saison.ts"]));
+  it("tout chapitre ou cas qui ne lit plus l'arène est inscrit au registre", () => {
+    const purs = CHAPITRES_ET_CAS.filter((f) => cheminInterdit(join(COURS, f)) === null);
+    expect(purs.filter((f) => !PASSES_SUR_LE_MONDE.includes(f))).toEqual([]);
   });
 
   it("la garde voit un import interdit, même de proche en proche", () => {
