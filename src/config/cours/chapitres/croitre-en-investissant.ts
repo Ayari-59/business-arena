@@ -34,9 +34,11 @@ const gagne = (x: number) => (x >= 0 ? `gagne ${eur(x)}` : `perd ${eur(-x)}`);
  * linéairement dès lors, sur la durée du catalogue d'équipements (`depreciationRounds`) ;
  * l'emprunt se rembourse par parts égales sur la durée du scénario (`loanDurationRounds`), et ses
  * intérêts courent sur le capital dû à l'ouverture de chaque trimestre, à partir du trimestre
- * suivant (src/engine/finance/statements.ts). La gestion équilibrée de l'arène décide de tout le
- * reste, comme dans l'année du cours : la production, le prix, l'entretien, qu'elle proportionne
- * au parc.
+ * suivant (src/engine/finance/statements.ts). Le bon gestionnaire de l'année du cours
+ * (arene-du-cours.ts) décide de tout le reste avec ses règles de toujours : la production, sur la
+ * demande qu'il a vue, le prix, l'entretien, qu'il reconduit sans le relever pour la machine de
+ * plus, et une embauche quand l'équipe ne suffit plus à faire tourner l'outil agrandi et que des
+ * ventes ont manqué. Les salaires de cette embauche entrent dans ce que la machine coûte.
  *
  * LE SCÉNARIO REJOUÉ. L'année du cours est jouée dans le scénario du niveau 1 ; l'investissement
  * ne s'ouvre qu'au niveau 4 (config/difficulty.ts), mais ce verrou est celui de la feuille de
@@ -47,11 +49,11 @@ const gagne = (x: number) => (x >= 0 ? `gagne ${eur(x)}` : `perd ${eur(-x)}`);
  * aujourd'hui porte ce drapeau ; le cours le pose pour jouer l'achat comme elle.
  *
  * Là où la capacité n'est pas ce qui limite les ventes, la machine ne vend rien de plus, et le
- * chapitre le dit : croître ne paie pas toujours. Sur l'année du cours, c'est le cas de huit
- * entreprises sur neuf : chez ATLAS CONSEIL, l'équipe plafonne bien avant l'outil ; ailleurs, la
- * gestion équilibrée produit d'après ses ventes du tour d'avant, sous la capacité de son outil.
- * Seule VOLT FITNESS, qui produit à pleine capacité, vend davantage avec la machine. La branche
- * « la demande ne suit pas » reste écrite pour une année où la machine ferait vendre sans payer.
+ * chapitre le dit : croître ne paie pas toujours. Sur l'année du cours, les trois réponses se
+ * rencontrent : la machine paie là où l'outil bridait des ventes que le bon gestionnaire voyait
+ * manquer ; elle fait vendre trop peu pour payer ses charges là où l'outil ne bridait qu'au
+ * dernier trimestre ; elle ne fait rien vendre là où l'équipe plafonne avant l'outil, ou là où
+ * l'outil ne manquait jamais.
  */
 
 /** Le trimestre de l'achat : le premier de l'année, pour que l'arène en montre toute la suite. */
@@ -154,6 +156,9 @@ export function investissement(c: Cas, machine: EquipmentTypeDef = machineDuChap
   const productionGagnee = b.production - a.production;
   const margeGagnee = b.marge - a.marge;
   const entretienEnPlus = b.entretien - a.entretien;
+  // Les charges fixes en plus : les salaires d'une embauche, quand l'équipe ne suffit plus à l'outil agrandi.
+  const chargesFixesEnPlus = somme(avec, (r) => r.incomeStatement.fixedCosts) - somme(sans, (r) => r.incomeStatement.fixedCosts);
+  const embauchesEnPlus = somme(avec, (r) => r.hr?.hired ?? 0) - somme(sans, (r) => r.hr?.hired ?? 0);
   const amortissementsEnPlus = b.amortissements - a.amortissements;
   const exploitationGagnee = b.resultatDExploitation - a.resultatDExploitation;
   const chargesFinancieresEnPlus = b.chargesFinancieres - a.chargesFinancieres;
@@ -203,6 +208,8 @@ export function investissement(c: Cas, machine: EquipmentTypeDef = machineDuChap
     productionGagnee,
     margeGagnee,
     entretienEnPlus,
+    chargesFixesEnPlus,
+    embauchesEnPlus,
     amortissementsEnPlus,
     exploitationGagnee,
     chargesFinancieresEnPlus,
@@ -223,6 +230,18 @@ export function investissement(c: Cas, machine: EquipmentTypeDef = machineDuChap
 }
 
 const T = TRIMESTRE_DE_L_ACHAT;
+
+/** « a, b et c ». */
+const enumere = (xs: readonly string[]) => (xs.length > 1 ? `${xs.slice(0, -1).join(", ")} et ${xs.at(-1)}` : xs.join(""));
+
+/** Ce que la machine a coûté dans l'année rejouée, en toutes lettres : seules les charges qu'elle a fait monter. */
+const chargesDeLaMachine = (r: ReturnType<typeof investissement>) =>
+  enumere([
+    "l'amortissement",
+    ...(r.entretienEnPlus > 0 ? ["l'entretien"] : []),
+    ...(r.chargesFixesEnPlus > 0 ? [r.embauchesEnPlus > 1 ? "les salaires des embauches" : "les salaires de l'embauche"] : []),
+    "les intérêts",
+  ]);
 
 export const CROITRE_EN_INVESTISSANT: Chapitre = {
   code: "croitre-en-investissant",
@@ -251,7 +270,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
         return [
           `La direction ${dE(c.entreprise)} veut croître. Elle envisage d'acheter au trimestre ${T} une machine de plus, « ${r.machine} », la même que le premier équipement de son parc, et de la payer par un emprunt du même montant.`,
           `Dans l'arène, une machine achetée entre en service au trimestre suivant : elle ajoute sa capacité aux trimestres ${T + 1} à ${T + r.trimestresEnService}, et s'amortit dès lors. L'emprunt se rembourse par parts égales chaque trimestre, et porte intérêt sur ce qui reste dû.`,
-          "Investir pour croître, c'est parier que la capacité manque, et que la demande suivra. Ce chapitre chiffre le pari, puis l'arène rejoue l'année avec la machine : mêmes concurrents, même marché, même gestion pour tout le reste.",
+          "Investir pour croître, c'est parier que la capacité manque, et que la demande suivra. Ce chapitre chiffre le pari, puis l'arène rejoue l'année avec la machine : mêmes concurrents, même marché, et le même bon gestionnaire pour tout le reste, qui produit selon la demande et embauche si l'équipe ne suit plus.",
         ];
       },
       tableau: (c) => {
@@ -346,7 +365,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
         const r = investissement(c);
         const total = auCentime(r.amortissement + r.interets);
         return [
-          `La machine pèse ${eur(total)} sur le résultat de l'année, avant d'avoir vendu quoi que ce soit : ${eur(r.amortissement)} d'amortissement, ${eur(r.interets)} d'intérêts. S'y ajoute l'entretien du parc agrandi. Pour que croître paie, la marge gagnée doit couvrir tout cela.`,
+          `La machine pèse ${eur(total)} sur le résultat de l'année, avant d'avoir vendu quoi que ce soit : ${eur(r.amortissement)} d'amortissement, ${eur(r.interets)} d'intérêts. S'y ajoute ce qu'il faut pour la faire tourner : l'entretien d'un parc agrandi, une embauche si l'équipe ne suit plus. Pour que croître paie, la marge gagnée doit couvrir tout cela.`,
           `Le remboursement du capital, ${eur(r.remboursement)} par trimestre, n'est pas une charge : il sort de la trésorerie, pas du résultat.`,
         ];
       },
@@ -399,7 +418,11 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
             : r.margeGagnee < 0 && r.productionGagnee > r.ventesGagnees
               ? `L'arène a produit ${qte(r.productionGagnee)} ${c.unites} de plus, mais n'en a vendu que ${qte(r.ventesGagnees)} de plus : ce qui a été produit sans trouver preneur a coûté sans rien rapporter, et la marge baisse de ${eur(-r.margeGagnee)}.`
               : `L'arène a vendu ${qte(r.ventesGagnees)} ${c.unites} de plus, loin des ${qte(r.capaciteGagnee)} que la machine permettait : la marge gagnée, ${eur(r.margeGagnee)}, reste sous les ${eur(r.margeSiLaDemandeSuit)} du calcul où toute la demande suivait.`,
-          `Le résultat d'exploitation ${gagne(r.exploitationGagnee)} : la marge gagnée, moins ${eur(r.entretienEnPlus)} d'entretien et ${eur(r.amortissementsEnPlus)} d'amortissement en plus. Après ${eur(r.chargesFinancieresEnPlus)} de charges financières en plus${impot}, le résultat net ${gagne(r.resultatNetGagne)}.`,
+          `Le résultat d'exploitation ${gagne(r.exploitationGagnee)} : la marge gagnée, moins ${enumere([
+            ...(r.entretienEnPlus !== 0 ? [`${eur(r.entretienEnPlus)} d'entretien`] : []),
+            ...(r.chargesFixesEnPlus !== 0 ? [`${eur(r.chargesFixesEnPlus)} de salaires pour ${r.embauchesEnPlus > 1 ? `les ${r.embauchesEnPlus} embauches qui font` : "l'embauche qui fait"} tourner l'outil agrandi`] : []),
+            `${eur(r.amortissementsEnPlus)} d'amortissement en plus`,
+          ])}. Après ${eur(r.chargesFinancieresEnPlus)} de charges financières en plus${impot}, le résultat net ${gagne(r.resultatNetGagne)}.`,
           ...(ecartDInterets
             ? [
                 `Les charges financières en plus (${eur(r.chargesFinancieresEnPlus)}) ne sont pas exactement les intérêts de l'emprunt (${eur(r.interets)}) : la trésorerie n'a pas suivi le même chemin, et le découvert de l'entreprise a changé avec elle.`,
@@ -527,7 +550,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
             juste: r.verdict === "croitre-paie",
             retour:
               r.verdict === "croitre-paie"
-                ? `Oui : la marge gagnée, ${eur(r.margeGagnee)}, couvre l'amortissement, l'entretien et les intérêts, et le résultat net gagne ${eur(r.resultatNetGagne)} dès la première année. La capacité manquait, et la demande a suivi, au moins en partie.`
+                ? `Oui : la marge gagnée, ${eur(r.margeGagnee)}, couvre ${chargesDeLaMachine(r)}, et le résultat net gagne ${eur(r.resultatNetGagne)} dès la première année. La capacité manquait, et la demande a suivi, au moins en partie.`
                 : `Non : le résultat net ${r.resultatNetGagne < 0 ? `baisse de ${eur(-r.resultatNetGagne)}` : "ne monte pas"}, charges de la machine comprises.`,
           },
           {
@@ -545,7 +568,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
             juste: r.verdict === "la-capacite-ne-manquait-pas",
             retour:
               r.verdict === "la-capacite-ne-manquait-pas"
-                ? `Oui : ${r.equipeLimite ? `l'équipe plafonne à ${qte(r.sans.capaciteEquipe)} ${c.unites} par trimestre, sous la capacité de l'outil` : "l'outil n'était pas ce qui limitait les ventes"}, et la machine n'a rien fait vendre de plus. Elle coûte son amortissement, son entretien et ses intérêts : le résultat net baisse de ${eur(-r.resultatNetGagne)}. Avant d'acheter de la capacité, il faut savoir ce qui manque.`
+                ? `Oui : ${r.equipeLimite ? `l'équipe plafonne à ${qte(r.sans.capaciteEquipe)} ${c.unites} par trimestre, sous la capacité de l'outil` : "l'outil n'était pas ce qui limitait les ventes"}, et la machine n'a rien fait vendre de plus. Elle coûte ${chargesDeLaMachine(r)} : le résultat net baisse de ${eur(-r.resultatNetGagne)}. Avant d'acheter de la capacité, il faut savoir ce qui manque.`
                 : `Non : la machine a fait vendre ${qte(r.ventesGagnees)} ${c.unites} de plus.`,
           },
         ];

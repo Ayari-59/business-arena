@@ -1,10 +1,10 @@
-import type { CompanyRoundResult, EngineScenarioConfig, RoundDecisions } from "../../../engine/types";
+import type { CompanyRoundResult, EngineScenarioConfig } from "../../../engine/types";
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../pedagogy/cours/etats";
 import { scenarioByCode } from "../../scenarios/registry";
 import { prolongerLaPartie } from "../../scenarios/rounds";
 import { anneeJouee, type Cas } from "../cas";
-import { rejouerAvec } from "../gestion-de-la-pme";
+import { rejouerAvec, type Changement } from "../gestion-de-la-pme";
 import type { Chapitre } from "../types";
 import { trimestresFiscaux } from "./l-impot-sur-les-societes";
 
@@ -45,8 +45,8 @@ const somme = (xs: readonly number[]) => xs.map((x, i) => (i === 0 ? eur(x) : `$
  * arrière, que le droit ouvre sur option, n'existe pas dans l'arène : le chapitre le dit aussi.
  *
  * POURQUOI UN GRAND ENTRETIEN. Il faut une année en perte, puis un exercice qui la rattrape. Telle
- * que l'arène la joue, l'année du cours ne finit en perte que chez LA TABLE D'AUGUSTIN, et son
- * second exercice perd encore : le déficit n'aurait rien à imputer (la garde le vérifie). Le
+ * que l'arène la joue, l'élève tenu par le bon gestionnaire, l'année du cours finit en bénéfice
+ * dans toutes les entreprises : le déficit n'aurait rien à imputer (la garde le vérifie). Le
  * chapitre rejoue donc les deux exercices avec une décision de plus au premier, un grand entretien
  * du parc : le budget de maintenance de chaque trimestre multiplié par `FACTEUR_DU_GRAND_ENTRETIEN`.
  * Au-dessus du budget de référence, la maintenance ne change ni l'usure du parc ni les rebuts
@@ -54,10 +54,8 @@ const somme = (xs: readonly number[]) => xs.map((x, i) => (i === 0 ? eur(x) : `$
  * ventes et perd la dépense, le second joue la même activité ; les gardes le vérifient.
  *
  * LES ENTREPRISES. Avec le grand entretien, le premier exercice doit finir en perte, le second la
- * rattraper, et le déficit peser au moins `PART_MINIMALE_DU_DEFICIT` du résultat du second : seule
- * MARTEL & FILS. PIXEL & CO perd aussi le premier exercice et le rattrape, mais de quelques dizaines
- * d'euros : l'impôt évité s'y compte en centimes, le chapitre n'aurait rien à montrer. Ailleurs, le
- * premier exercice reste en bénéfice, ou le second ne rattrape pas la perte.
+ * rattraper, et le déficit peser au moins `PART_MINIMALE_DU_DEFICIT` du résultat du second :
+ * PIXEL & CO et MARTEL & FILS. Ailleurs, le premier exercice reste en bénéfice.
  */
 
 /**
@@ -70,7 +68,7 @@ const somme = (xs: readonly number[]) => xs.map((x, i) => (i === 0 ? eur(x) : `$
 export const PART_MINIMALE_DU_DEFICIT = 0.1;
 
 /** Les entreprises où, avec le grand entretien, le déficit du premier exercice pèse sur le second, qui le rattrape. */
-export const ENTREPRISES_EN_DEFICIT = ["batiment"] as const;
+export const ENTREPRISES_EN_DEFICIT = ["ecommerce", "batiment"] as const;
 
 export const TRIMESTRES_PAR_EXERCICE = 4;
 export const EXERCICES_REJOUES = 2;
@@ -79,12 +77,34 @@ export const EXERCICES_REJOUES = 2;
  * LE GRAND ENTRETIEN, une hypothèse du cours : au premier exercice, le budget de maintenance de
  * chaque trimestre multiplié par ce facteur, une révision du parc payée comme une charge. Assez pour
  * faire perdre une année en bénéfice, sans rien changer d'autre à la gestion.
+ *
+ * POURQUOI 6. Le facteur était de 2 quand la gestion de l'élève était celle d'un concurrent simulé.
+ * Tenue par le bon gestionnaire, l'année du cours gagne bien plus : à 2, 3 ou 4, aucun premier
+ * exercice ne passe en perte ; à 5, seule PIXEL & CO perd, d'un déficit qui ne pèse pas
+ * `PART_MINIMALE_DU_DEFICIT` du résultat suivant. 6 est le plus petit facteur entier où une
+ * entreprise au moins tient le chapitre (la garde recompte les entreprises sur ce facteur).
  */
-export const FACTEUR_DU_GRAND_ENTRETIEN = 2;
+export const FACTEUR_DU_GRAND_ENTRETIEN = 6;
 
-/** La décision du chapitre : le grand entretien, aux trimestres du premier exercice. */
-export const grandEntretien = (t: number, d: RoundDecisions): RoundDecisions | undefined =>
-  t <= TRIMESTRES_PAR_EXERCICE ? { ...d, maintenanceBudget: d.maintenanceBudget * FACTEUR_DU_GRAND_ENTRETIEN } : undefined;
+/**
+ * Le budget de maintenance que le bon gestionnaire joue au trimestre `t` des deux exercices, sans
+ * le grand entretien : le moteur le passe en charge tel quel (`maintenanceCost`).
+ */
+const maintenanceSansLEntretien = (code: string, t: number) => deuxExercices(code)[t - 1]!.incomeStatement.maintenanceCost;
+
+/**
+ * La décision du chapitre : le grand entretien, aux trimestres du premier exercice. Le budget de
+ * chaque trimestre est posé, pas multiplié : le bon gestionnaire part de la décision jouée au tour
+ * d'avant, si bien qu'un budget multiplié le serait de nouveau au tour suivant, et resterait au
+ * second exercice. Le premier exercice joue donc le facteur fois le budget de l'année du cours, le
+ * second revient à ce budget.
+ */
+export const grandEntretien =
+  (code: string): Changement =>
+  (t, d) => ({
+    ...d,
+    maintenanceBudget: (t <= TRIMESTRES_PAR_EXERCICE ? FACTEUR_DU_GRAND_ENTRETIEN : 1) * maintenanceSansLEntretien(code, t),
+  });
 
 /**
  * Le plafond du report en avant, que le moteur omet (article 209, I du code général des impôts) :
@@ -105,7 +125,7 @@ export const deuxExercices = (code: string) => rejouerAvec(code, "le-deficit-rep
 
 /** Les deux exercices du chapitre : les mêmes, avec le grand entretien au premier. */
 export const deuxExercicesDuChapitre = (code: string) =>
-  rejouerAvec(code, "le-deficit-reporte:grand-entretien", grandEntretien, surDeuxExercices(code));
+  rejouerAvec(code, "le-deficit-reporte:grand-entretien", grandEntretien(code), surDeuxExercices(code));
 
 export type Verdict = "l-impot-a-attendu" | "le-deficit-attend-encore";
 
@@ -200,7 +220,7 @@ export const LE_DEFICIT_REPORTE: Chapitre = {
   libre: false,
   entreprises: {
     codes: ENTREPRISES_EN_DEFICIT,
-    pourquoi: `ce chapitre suit une année en perte puis un exercice qui la rattrape. L'année du cours ne perd que chez LA TABLE D'AUGUSTIN, que l'exercice suivant ne rattrape pas ; le chapitre la rejoue donc avec un grand entretien, la maintenance de chaque trimestre multipliée par ${FACTEUR_DU_GRAND_ENTRETIEN}, et seule MARTEL & FILS passe alors d'une perte à un exercice qui la rattrape, avec un déficit d'au moins ${(PART_MINIMALE_DU_DEFICIT * 100).toLocaleString("fr-FR")} % du résultat suivant : assez pour que le report se lise dans l'impôt.`,
+    pourquoi: `ce chapitre suit une année en perte puis un exercice qui la rattrape. L'année du cours finit en bénéfice dans toutes les entreprises ; le chapitre la rejoue donc avec un grand entretien, la maintenance de chaque trimestre multipliée par ${FACTEUR_DU_GRAND_ENTRETIEN}, et seules PIXEL & CO et MARTEL & FILS passent alors d'une perte à un exercice qui la rattrape, avec un déficit d'au moins ${(PART_MINIMALE_DU_DEFICIT * 100).toLocaleString("fr-FR")} % du résultat suivant : assez pour que le report se lise dans l'impôt.`,
   },
   etapes: [
     {
@@ -212,7 +232,7 @@ export const LE_DEFICIT_REPORTE: Chapitre = {
         const k = deficitReporte(c);
         return [
           `Dans l'arène, l'année du cours ${dE(c.entreprise)} ${gagne(k.sansLEntretien.avantImpot)} avant impôt. Le chapitre la rejoue avec une décision de plus, un grand entretien du parc : le budget de maintenance de chaque trimestre multiplié par ${FACTEUR_DU_GRAND_ENTRETIEN}, ${eur(k.entretien)} de charges de plus sur l'année, sans rien changer aux ventes. L'exercice finit en perte.`,
-          `Voici ses ${k.ex1.length} trimestres : le résultat avant impôt de chacun, et l'impôt que l'arène a inscrit, un acompte quand le cumul de l'exercice monte, un remboursement quand il baisse. L'arène a ensuite rejoué un second exercice, les ${k.ex2.length} trimestres suivants, avec la gestion de l'année du cours. Ce chapitre suit ce que la perte du premier fait à l'impôt du second.`,
+          `Voici ses ${k.ex1.length} trimestres : le résultat avant impôt de chacun, et l'impôt que l'arène a inscrit, un acompte quand le cumul de l'exercice monte, un remboursement quand il baisse. L'arène a ensuite rejoué un second exercice, les ${k.ex2.length} trimestres suivants, avec la gestion de l'année du cours et son budget de maintenance habituel. Ce chapitre suit ce que la perte du premier fait à l'impôt du second.`,
         ];
       },
       tableau: (c) => {

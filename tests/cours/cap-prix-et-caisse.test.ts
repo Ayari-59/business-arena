@@ -281,9 +281,11 @@ describe("le prix affiché, chez la boutique", () => {
     expect(k["Articles vendus en plus"]).toBe(vendusDe(avec[T - 1]!, ARTICLE_EN_PROMOTION) - vendusDe(reference[T - 1]!, ARTICLE_EN_PROMOTION));
     expect(k["Chiffre d'affaires en plus"]).toBe(chiffreDe(avec[T - 1]!, ARTICLE_EN_PROMOTION) - chiffreDe(reference[T - 1]!, ARTICLE_EN_PROMOTION));
     // Les chiffres de l'arène aujourd'hui, et le verdict qui en suit.
-    expect([p.sans.vendus, p.avec.vendus, p.sans.chiffreDAffaires, p.avec.chiffreDAffaires]).toEqual([1377, 1988, 75753, 87463]);
-    expect(p.bilan).toBe("plus-et-plus");
-    expect(justeDe(LE_PRIX_AFFICHE, "bilan", cas)).toBe("Elle fait vendre plus, et le chiffre d'affaires monte");
+    expect(T).toBe(1);
+    expect([p.sans.vendus, p.avec.vendus, p.sans.chiffreDAffaires, p.avec.chiffreDAffaires]).toEqual([1726, 1945, 94947, 85580]);
+    expect([p.sans.manques, p.avec.manques]).toEqual([0, 938]);
+    expect(p.bilan).toBe("plus-mais-moins");
+    expect(justeDe(LE_PRIX_AFFICHE, "bilan", cas)).toBe("Elle fait vendre plus, mais le chiffre d'affaires baisse");
   });
 
   it("une défaillance avant le trimestre compté vaut zéro vente", () => {
@@ -312,13 +314,15 @@ describe("la promotion de Noël, chez la boutique", () => {
     expect(k2["Chiffre d'affaires en plus"]).toBe(chiffreDe(avec[T]!, ARTICLE_EN_PROMOTION) - chiffreDe(reference[T]!, ARTICLE_EN_PROMOTION));
     expect(reference[T]!.products![ARTICLE_EN_PROMOTION]!.lost).toBeGreaterThan(0);
     expect(p.ventesEnPlus).toBe(0);
-    expect(p.chiffreEnPlus).toBe(-26875);
+    expect(p.chiffreEnPlus).toBe(-41415);
     expect(p.bilan).toBe("rien-de-plus");
     expect(justeDe(LA_PROMOTION_DE_NOEL, "reponse", cas)).toBe("Ne pas la faire : le rayon ne suit pas");
   });
 
-  it("le printemps et Noël ne donnent pas le même verdict", () => {
+  it("les soldes d'hiver et Noël ne donnent pas le même verdict", () => {
     expect(promotionDuChapitre(cas).bilan).not.toBe(promotionDeNoel(cas).bilan);
+    // Le cas le dit à la responsable : la promotion des soldes d'hiver a fait vendre plus.
+    expect(promotionDuChapitre(cas).ventesEnPlus).toBeGreaterThan(0);
   });
 
   it("textes propres, une seule bonne réponse qui ne se devine pas à sa longueur", () => {
@@ -376,8 +380,8 @@ describe("tenir la caisse, chez la boutique", () => {
     expect(es["Espèces encaissées dans la journée"]).toBe(auCentime(ttc * PART_EN_ESPECES));
     expect(champs(TENIR_LA_CAISSE, "le-fond-de-caisse", cas)["Espèces attendues le soir"]).toBe(auCentime(FOND_DE_CAISSE + auCentime(ttc * PART_EN_ESPECES)));
     // Les chiffres de l'arène aujourd'hui.
-    expect([e.ventes, e.chiffre, s.roundDays]).toEqual([3233, 181275, 90]);
-    expect(ttc).toBe(2417);
+    expect([e.ventes, e.chiffre, s.roundDays]).toEqual([3949, 218777, 90]);
+    expect(ttc).toBe(2917.03);
   });
 
   it("le tiroir compté fait l'erreur de la journée, et l'écart la retrouve", () => {
@@ -408,7 +412,7 @@ describe("la caisse du trimestre de Noël, chez la boutique", () => {
     expect(k2["Écart de caisse"]).toBe(ERREUR_DU_SOIR);
     expect(k2["Écart de caisse"]).toBe(auCentime(k2["Total compté dans le tiroir"]! - auCentime(FOND_DE_CAISSE + k1["Espèces encaissées dans la journée"]!)));
     expect(k2["Espèces à remettre au coffre"]).toBe(auCentime(k2["Total compté dans le tiroir"]! - FOND_DE_CAISSE));
-    expect([e.chiffre, ttc]).toEqual([173173, 2308.97]);
+    expect([e.chiffre, ttc]).toEqual([274274, 3656.99]);
     // L'écart du cas n'est pas celui du chapitre : un excédent, pas un manquant.
     expect(Math.sign(ERREUR_DU_SOIR)).not.toBe(Math.sign(ERREUR_DE_LA_JOURNEE));
   });

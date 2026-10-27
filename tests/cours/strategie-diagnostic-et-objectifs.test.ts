@@ -337,8 +337,16 @@ describe("le diagnostic stratégique, sur les huit entreprises", () => {
   it("les trois conclusions se rencontrent, et chaque sens de constat aussi", () => {
     const ds = ENTREPRISES_DU_DIAGNOSTIC.map((c) => diagnostic(casDeLEntreprise(c)));
     expect([...new Set(ds.map((d) => d.verdict))].sort()).toEqual(["corriger", "saisir", "se-proteger"]);
+    // Le bon gestionnaire (arene-du-cours.ts) finit l'année en bénéfice dans les huit entreprises :
+    // le résultat y est une force partout, et la branche de la perte n'est lue nulle part. Le sens
+    // négatif d'un constat interne de comptes se lit sur la trésorerie, positive ici, à découvert là.
     const resultats = new Set(ds.map((d) => d.constats.find((k) => k.code === "resultat")!.categorie));
-    expect([...resultats].sort()).toEqual(["faiblesse", "force"]);
+    expect([...resultats]).toEqual(["force"]);
+    const tresoreries = new Set(ds.map((d) => d.constats.find((k) => k.code === "tresorerie")!.categorie));
+    expect([...tresoreries].sort()).toEqual(["faiblesse", "force"]);
+    // La demande servie est une faiblesse chez les unes, une force chez les autres.
+    const servies = new Set(ds.map((d) => d.constats.find((k) => k.code === "demande-servie")!.categorie));
+    expect([...servies].sort()).toEqual(["faiblesse", "force"]);
     const marches = new Set(ds.map((d) => d.constats.find((k) => k.code === "demande-du-marche")!.categorie));
     expect([...marches].sort()).toEqual(["menace", "opportunite"]);
     // Sur l'année du cours (concurrents assainis, arene-du-cours.ts), aucun concurrent ne fait
@@ -353,8 +361,9 @@ describe("le diagnostic stratégique, sur les huit entreprises", () => {
 
   it("chez NOVA, les chiffres du diagnostic", () => {
     const d = diagnostic(casDeLEntreprise("nova"));
-    expect([d.entreprise.part, d.evolutionDuMarche, d.servie]).toEqual([20.2, 179.2, 62.3]);
-    expect([d.entreprise.resultat, d.tresorerie, d.verdict]).toEqual([29213, -22516, "corriger"]);
+    expect([d.entreprise.part, d.evolutionDuMarche, d.servie]).toEqual([21.4, 179.2, 70.1]);
+    // Un bénéfice, mais une trésorerie à découvert : les comptes ne sont pas sains.
+    expect([d.entreprise.resultat, d.tresorerie, d.verdict]).toEqual([74416, -6458, "corriger"]);
   });
 });
 
@@ -417,8 +426,8 @@ describe("se fixer des objectifs, sur les huit entreprises", () => {
 
   it("chez NOVA, les chiffres du suivi", () => {
     const o = suiviDesObjectifs(casDeLEntreprise("nova"));
-    expect([o.capacite, o.objectif, o.objectifDeLAnnee, o.ventesDeLAnnee, o.realisation, o.verdict]).toEqual([7000, 4900, 19600, 22924, 117, "tenu"]);
-    expect(o.trimestres.map((t) => t.ecart)).toEqual([143, 674, 1789, 718]);
+    expect([o.capacite, o.objectif, o.objectifDeLAnnee, o.ventesDeLAnnee, o.realisation, o.verdict]).toEqual([7000, 4900, 19600, 24286, 123.9, "tenu"]);
+    expect(o.trimestres.map((t) => t.ecart)).toEqual([-122, 1181, 1860, 1767]);
   });
 });
 
@@ -449,8 +458,12 @@ describe.each(ENTREPRISES_DU_DIAGNOSTIC)("des clients repartis sans être servis
     expect(Math.round(partie.rounds[k.t.numero - 1]!.companies.find((x) => x.id === "joueur")!.finishedGoods.quantity)).toBe(0);
     // « La capacité suffisait » vaut même en retirant les rebuts du trimestre.
     if (k.verdict === "production") expect(k.t.capacite - k.t.rebuts + k.t.stock).toBeGreaterThanOrEqual(k.t.demande);
-    // Elle n'a pas produit à plein : sinon, rien ne serait « à produire davantage ».
-    expect(k.t.production).toBeLessThan(k.t.capacite);
+    // Quand la capacité suffisait, elle n'a pas produit à plein : sinon, rien ne serait « à produire
+    // davantage ». Quand elle manquait, l'entreprise a pu déjà produire à plein : toute la demande
+    // manquée était alors hors de portée, et le texte le dit.
+    expect(k.aPleineCapacite).toBe(k.t.production >= k.t.capacite);
+    if (k.verdict === "production") expect(k.t.production).toBeLessThan(k.t.capacite);
+    if (k.aPleineCapacite) expect(k.horsDePortee).toBe(k.t.manquees);
   });
 
   it("les valeurs attendues des champs sont celles du trimestre", () => {
@@ -469,6 +482,9 @@ describe("des clients repartis sans être servis, sur les huit entreprises", () 
   it("la capacité manque chez les unes, la production chez les autres", () => {
     const verdicts = new Set(ENTREPRISES_DU_DIAGNOSTIC.map((c) => clientsRepartis(casDeLEntreprise(c)).verdict));
     expect([...verdicts].sort()).toEqual(["capacite", "production"]);
+    // Quand la capacité manque, l'entreprise a déjà produit à plein chez les unes, pas chez les autres.
+    const aPlein = new Set(ENTREPRISES_DU_DIAGNOSTIC.map((c) => clientsRepartis(casDeLEntreprise(c))).filter((k) => k.verdict === "capacite").map((k) => k.aPleineCapacite));
+    expect([...aPlein].sort()).toEqual([false, true]);
   });
 });
 

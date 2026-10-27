@@ -57,16 +57,23 @@ const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` 
  *
  * LES ENTREPRISES. Il faut une machine qui fait vendre, et trois exercices bénéficiaires avec
  * l'une ou l'autre des deux machines du chapitre et du suivant, sans quoi l'impôt sur les flux ne
- * serait pas celui que l'arène prélève. La gestion règle sa production sur les ventes du
- * trimestre d'avant : chez ATLAS CONSEIL, PIXEL & CO et ROUTE & CIE, la capacité en plus ne fait
- * rien vendre de plus. LA TABLE D'AUGUSTIN finit chaque exercice en perte, et MARTEL & FILS finit
- * son premier exercice en perte avec la machine suivante du catalogue. Restent NOVA, MAILLE & CO,
- * L'ESCALE et VOLT FITNESS. Chez MAILLE & CO, la machine fait vendre, mais peu : les deux VAN y
- * sont négatives, et le verdict y est de renoncer.
+ * serait pas celui que l'arène prélève ; il faut aussi que les flux de chacune aient un taux de
+ * rentabilité interne, que le chapitre suivant cherche. L'entreprise de l'élève joue le bon
+ * gestionnaire, qui produit pour la demande reçue : la machine fait vendre partout, sauf chez
+ * ATLAS CONSEIL, où la capacité en plus ne fait rien vendre de plus. Chez NOVA, elle fait vendre,
+ * mais moins cher : le bon gestionnaire ne relève son prix que quand la demande déborde nettement
+ * de son atelier, et la machine agrandit l'atelier. Elle y retire de l'EBE sur le projet, et
+ * aucun taux n'annule sa VAN. Chez MARTEL & FILS, les deux machines du chapitre suivant, achetées
+ * ensemble, valent plus que la somme de leurs VAN seules : chacune y fait embaucher, et leurs
+ * embauches additionnées coûtent plus que celles de l'ensemble ; le cas « Acheter les deux
+ * machines », qui mesure ce que l'ensemble perd à se partager la demande, n'y aurait pas d'objet.
+ * Restent MAILLE & CO, L'ESCALE, LA TABLE D'AUGUSTIN, PIXEL & CO, VOLT FITNESS et ROUTE & CIE.
+ * Chez L'ESCALE, la machine fait vendre, mais pas assez : les deux VAN y sont négatives, et le
+ * verdict y est de renoncer.
  */
 
 /** Les entreprises où l'investissement a un objet, et où l'impôt sur les flux est celui que l'arène prélève. */
-export const ENTREPRISES_DE_L_ACTUALISATION = ["nova", "boutique", "hotel", "fitness"] as const;
+export const ENTREPRISES_DE_L_ACTUALISATION = ["boutique", "hotel", "bistrot", "ecommerce", "fitness", "transport"] as const;
 
 /** La durée du projet : la plus longue partie que l'arène joue au trimestre, trois exercices. */
 export const DUREE_DU_PROJET = TOURS_MAX_AU_TRIMESTRE;
@@ -296,7 +303,7 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
   libre: false,
   entreprises: {
     codes: ENTREPRISES_DE_L_ACTUALISATION,
-    pourquoi: `ce chapitre suit une machine qui fait vendre, sur ${DUREE_DU_PROJET / TRIMESTRES_PAR_AN} exercices tous bénéficiaires, pour que l'impôt sur ses flux soit celui que l'arène prélève : c'est le cas chez NOVA, MAILLE & CO, L'ESCALE et VOLT FITNESS. Ailleurs, LA TABLE D'AUGUSTIN finit chaque exercice en perte, MARTEL & FILS finit son premier exercice en perte avec la machine suivante du catalogue, celle que compare le chapitre sur le TRI, et chez ATLAS CONSEIL, PIXEL & CO et ROUTE & CIE la machine ne fait rien vendre de plus.`,
+    pourquoi: `ce chapitre suit une machine qui fait vendre, sur ${DUREE_DU_PROJET / TRIMESTRES_PAR_AN} exercices tous bénéficiaires, pour que l'impôt sur ses flux soit celui que l'arène prélève, et dont les flux ont un taux de rentabilité interne : c'est le cas chez MAILLE & CO, L'ESCALE, LA TABLE D'AUGUSTIN, PIXEL & CO, VOLT FITNESS et ROUTE & CIE. Chez ATLAS CONSEIL, la machine ne fait rien vendre de plus. Chez NOVA, elle fait vendre, mais moins cher : elle y retire de l'EBE, et aucun taux n'annule sa VAN. Chez MARTEL & FILS, les deux machines que compare le chapitre sur le TRI, achetées ensemble, valent plus que la somme de leurs VAN seules : leurs embauches additionnées y coûtent plus que celles de l'ensemble.`,
   },
   etapes: [
     {
@@ -308,7 +315,7 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
         const p = projetDuChapitre(c);
         return [
           `${c.entreprise} envisage d'acheter au trimestre ${T} une machine de plus, « ${p.machine} », la même que le premier équipement de son parc, pour ${eur(p.cout)}. Elle la paierait sur sa trésorerie : on juge un investissement sans son financement, dont le coût est porté par le taux d'actualisation.`,
-          `L'arène a rejoué ${p.duree} trimestres, ${p.duree / TRIMESTRES_PAR_AN} exercices, avec et sans la machine : mêmes concurrents, même marché, même gestion pour tout le reste. La machine entre en service au trimestre ${T + 1} ; au bout du trimestre ${p.duree}, le projet s'arrête et la machine se revend.`,
+          `L'arène a rejoué ${p.duree} trimestres, ${p.duree / TRIMESTRES_PAR_AN} exercices, avec et sans la machine : mêmes concurrents, même marché, et le même bon gestionnaire pour toutes les autres décisions, qui les règle sur ce qu'il voit, machine comprise. La machine entre en service au trimestre ${T + 1} ; au bout du trimestre ${p.duree}, le projet s'arrête et la machine se revend.`,
           `La question n'est plus de savoir si la machine rapporte, mais si elle rapporte plus que ce que coûtent les capitaux qu'elle immobilise. Un euro reçu dans ${p.duree} trimestres vaut moins qu'un euro aujourd'hui : il faut actualiser.`,
         ];
       },
@@ -524,7 +531,10 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
           {
             texte: "Investir, parce que les flux cumulés dépassent le prix de la machine",
             juste: false,
-            retour: `Non : ce raisonnement oublie le temps. Les flux cumulés, ${eur(p.fluxTotal)}, ne disent rien du coût du capital : c'est leur valeur actuelle qu'on compare au prix.`,
+            retour:
+              p.fluxTotal > p.cout
+                ? `Non : ce raisonnement oublie le temps. Les flux cumulés, ${eur(p.fluxTotal)}, ne disent rien du coût du capital : c'est leur valeur actuelle qu'on compare au prix.`
+                : `Non : les flux cumulés, ${eur(p.fluxTotal)}, ne dépassent même pas le prix de la machine, ${eur(p.cout)}. Et même s'ils le dépassaient, c'est leur valeur actuelle qu'on compare au prix.`,
           },
           {
             texte: "Renoncer : la machine ne sera pas amortie à la fin du projet",
@@ -543,7 +553,7 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
         const p = projetDuChapitre(c);
         return [
           `Chez ${c.entreprise}, la machine coûte ${eur(p.cout)}. En ${p.duree} trimestres, elle ajoute ${eur(p.fluxTotal)} de flux de trésorerie d'exploitation après impôt, et se revend ${eur(p.vr.nette)}, impôt compris. Au coût du capital de ${pct(COUT_PCT)} par an, sa VAN est de ${eur(p.van)} : ${p.verdict === "investir" ? "elle crée de la valeur" : "elle en détruit"}.`,
-          `Ce que l'arène simplifie : un seul taux d'impôt, sans taux réduit, prélevé chaque trimestre ; une revente à une part fixe de la valeur nette comptable, sans marché de l'occasion ; toutes les autres décisions prises par la même gestion équilibrée, avec et sans la machine ; un projet arrêté au bout de ${p.duree} trimestres, la plus longue partie que l'arène joue au trimestre. Et le cours ajoute ses hypothèses : un coût du capital de ${pct(COUT_PCT)} par an, des flux reçus en fin de trimestre, et une variation du besoin en fonds de roulement laissée de côté.`,
+          `Ce que l'arène simplifie : un seul taux d'impôt, sans taux réduit, prélevé chaque trimestre ; une revente à une part fixe de la valeur nette comptable, sans marché de l'occasion ; les autres décisions prises par le même bon gestionnaire, avec et sans la machine, qui peut régler autrement ses prix, sa production ou son équipe quand la machine est là ; un projet arrêté au bout de ${p.duree} trimestres, la plus longue partie que l'arène joue au trimestre. Et le cours ajoute ses hypothèses : un coût du capital de ${pct(COUT_PCT)} par an, des flux reçus en fin de trimestre, et une variation du besoin en fonds de roulement laissée de côté.`,
         ];
       },
       repere: () =>

@@ -249,16 +249,23 @@ describe("décider avec des chiffres, sur les huit entreprises", () => {
   it("les deux verdicts se rencontrent, et la prévision voit juste partout, dans les deux sens", () => {
     const verdicts = new Set(ENTREPRISES_DU_CHOIX.map((c) => deuxChoix(casDeLEntreprise(c)).verdict));
     expect([...verdicts].sort()).toEqual(["garder", "s-en-passer"]);
-    // Sur l'année du cours, la prévision ne se trompe nulle part : la branche « la prévision disait
-    // le contraire » de la synthèse n'est lue dans aucune entreprise. Elle voit juste dans les deux
-    // sens : assez de ventes gagnées chez les unes, trop peu chez les autres.
+    // La prévision voit juste dans les deux sens (assez de ventes gagnées chez les unes, trop peu
+    // chez les autres), sauf chez VOLT FITNESS : la publicité y fait gagner moins de ventes que la
+    // prévision n'en demande, mais des ventes plus rentables que la moyenne, et elle se paie. La
+    // branche « la prévision disait de s'en passer » de la synthèse y est lue, et dit vrai.
     const k = ENTREPRISES_DU_CHOIX.map((c) => deuxChoix(casDeLEntreprise(c)));
-    expect(k.every((x) => x.previsionJuste)).toBe(true);
-    expect([...new Set(k.map((x) => x.ventesGagnees >= x.ventesAGagner))].sort()).toEqual([false, true]);
-    // Chez NOVA et ROUTE & CIE, la publicité ne fait gagner aucune vente : sans elle déjà, des
-    // clients repartent chaque trimestre sans être servis, et le chapitre le dit.
-    expect(ENTREPRISES_DU_CHOIX.filter((_, i) => k[i]!.ventesGagnees === 0)).toEqual(["nova", "transport"]);
-    for (const x of k.filter((y) => y.ventesGagnees === 0)) expect([x.margeGagnee, x.sansPubliciteDejaEnManque]).toEqual([0, true]);
+    expect([...new Set(k.filter((x) => x.previsionJuste).map((x) => x.ventesGagnees >= x.ventesAGagner))].sort()).toEqual([false, true]);
+    expect(ENTREPRISES_DU_CHOIX.filter((_, i) => !k[i]!.previsionJuste)).toEqual(["fitness"]);
+    for (const x of k.filter((y) => !y.previsionJuste)) {
+      expect(x.ventesGagnees < x.ventesAGagner).toBe(x.ecartDeResultat > 0);
+      expect(x.ecartDeResultat > 0 ? x.margeParVenteGagnee! > x.margeParVente : x.margeParVenteGagnee! < x.margeParVente).toBe(true);
+    }
+    // Sur l'année du bon gestionnaire, qui produit pour la demande, la publicité fait gagner des
+    // ventes partout : la branche « aucune vente gagnée » du constat n'est plus lue nulle part.
+    // Chez NOVA, des clients repartent encore sans être servis à chaque trimestre sans publicité ;
+    // la publicité y fait pourtant vendre, et le texte ne dit pas le contraire.
+    expect(ENTREPRISES_DU_CHOIX.filter((_, i) => k[i]!.ventesGagnees <= 0)).toEqual([]);
+    expect(ENTREPRISES_DU_CHOIX.filter((_, i) => k[i]!.sansPubliciteDejaEnManque)).toEqual(["nova", "boutique"]);
   });
 
   it("doubler la publicité ne se paie pas partout : les deux réponses se rencontrent", () => {
@@ -268,12 +275,12 @@ describe("décider avec des chiffres, sur les huit entreprises", () => {
   it("chez NOVA, les chiffres du chapitre", () => {
     const k = deuxChoix(casDeLEntreprise("nova"));
     expect(k.budget).toBe(24000);
-    expect(k.margeParVente).toBe(21);
-    expect(k.ventesAGagner).toBe(1143);
-    expect(k.ventesGagnees).toBe(0);
-    expect(k.margeGagnee).toBe(0);
-    expect(k.ecartDeResultat).toBe(-24000);
-    expect(k.verdict).toBe("s-en-passer");
+    expect(k.margeParVente).toBe(21.81);
+    expect(k.ventesAGagner).toBe(1101);
+    expect(k.ventesGagnees).toBe(1150);
+    expect(k.margeGagnee).toBe(24150);
+    expect(k.ecartDeResultat).toBe(150);
+    expect(k.verdict).toBe("garder");
   });
 });
 
@@ -356,23 +363,30 @@ describe.each(ENTREPRISES_DU_COURS)("évaluer son activité chez %s", (code) => 
 describe("évaluer son activité, sur les neuf entreprises", () => {
   it("les lectures changent d'une entreprise à l'autre", () => {
     const annee = new Set(ENTREPRISES_DU_COURS.map((c) => activiteDeLAnnee(casDeLEntreprise(c)).lecture));
-    expect([...annee].sort()).toEqual(["en-baisse", "en-hausse", "resultat-en-hausse"]);
-    // L'escale vend un peu moins au 4e trimestre qu'au 1er, mais gagne davantage.
-    expect(ENTREPRISES_DU_COURS.filter((c) => activiteDeLAnnee(casDeLEntreprise(c)).lecture === "resultat-en-hausse")).toEqual(["hotel"]);
+    // Sur l'année du bon gestionnaire, le 4e trimestre fait mieux que le 1er partout, sauf chez
+    // VOLT FITNESS, dont l'année se creuse : les branches « en partie » de la lecture de l'année ne
+    // sont plus lues dans aucune entreprise (le cas des deux semestres lit encore l'une d'elles).
+    expect([...annee].sort()).toEqual(["en-baisse", "en-hausse"]);
+    expect(ENTREPRISES_DU_COURS.filter((c) => activiteDeLAnnee(casDeLEntreprise(c)).lecture === "en-baisse")).toEqual(["fitness"]);
     const semestres = new Set(ENTREPRISES_DU_COURS.map((c) => deuxSemestres(casDeLEntreprise(c)).lecture));
     expect([...semestres].sort()).toEqual(["chiffre-en-hausse", "en-baisse", "en-hausse"]);
-    // Le prix moyen ne bouge qu'à la boutique, dont la gamme mêle des prix très différents.
-    expect(ENTREPRISES_DU_COURS.filter((c) => activiteDeLAnnee(casDeLEntreprise(c)).prix !== "stable")).toEqual(["boutique"]);
+    // Le prix moyen bouge à la boutique, dont la gamme mêle des prix très différents, et chez NOVA,
+    // dont la gestion relève son prix au 4e trimestre. Les trois réponses de l'étape se rencontrent
+    // (VOLT FITNESS n'a pas l'étape : son chiffre d'affaires compte aussi les abonnés gardés).
+    const prix = ENTREPRISES_DU_COURS.filter((c) => c !== "fitness").map((c) => activiteDeLAnnee(casDeLEntreprise(c)).prix);
+    expect(ENTREPRISES_DU_COURS.filter((c) => c !== "fitness" && activiteDeLAnnee(casDeLEntreprise(c)).prix !== "stable")).toEqual(["nova", "boutique"]);
+    expect([...new Set(prix)].sort()).toEqual(["baisse", "hausse", "stable"]);
   });
 
   it("chez NOVA, les chiffres du chapitre", () => {
     const k = activiteDeLAnnee(casDeLEntreprise("nova"));
-    expect(k.trimestres.map((x) => x.chiffreDAffaires)).toEqual([297532, 328851, 394622, 331482]);
-    expect(k.evolutionDuChiffre).toBe(11.4);
-    expect(k.evolutionDesVentes).toBe(11.4);
-    expect(k.meilleur).toBe(2);
-    expect(k.ecartDeResultat).toBe(12083);
-    expect(k.ecartDeTresorerie).toBe(-70851);
+    expect(k.trimestres.map((x) => x.chiffreDAffaires)).toEqual([281902, 358779, 398840, 413000]);
+    expect(k.evolutionDuChiffre).toBe(46.5);
+    expect(k.evolutionDesVentes).toBe(39.5);
+    expect(k.prix).toBe("hausse");
+    expect(k.meilleur).toBe(3);
+    expect(k.ecartDeResultat).toBe(59329);
+    expect(k.ecartDeTresorerie).toBe(-50805);
     expect(k.lecture).toBe("en-hausse");
   });
 });

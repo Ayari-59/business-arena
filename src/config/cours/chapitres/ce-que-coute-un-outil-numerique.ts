@@ -49,12 +49,17 @@ export const MISE_EN_PLACE = 2_500;
 export const FORMATION_PAR_UTILISATEUR = 300;
 
 /**
- * LE GAIN DE L'OUTIL, hypothèse du cas : quand toute l'équipe s'en sert, il fait retrouver 5 % des
+ * LE GAIN DE L'OUTIL, hypothèse du cas : quand toute l'équipe s'en sert, il fait retrouver 30 % des
  * ventes manquées alors que l'entreprise avait de quoi produire, parce que la demande se voit à
- * temps pour ajuster la production. Une hypothèse prudente : le reste de ces ventes manquées tient
- * à ce qu'aucun outil ne prévoit.
+ * temps pour ajuster la production. Dans l'année du cours, l'entreprise produit déjà pour la
+ * demande du trimestre passé : ce qui lui échappe encore, avec de quoi produire, c'est la demande
+ * qui change dans le trimestre même, celle que des commandes suivies au jour le jour font voir. Le
+ * reste de ces ventes manquées tient à ce qu'aucun outil ne prévoit.
+ *
+ * (Le cours en comptait 5 % quand la gestion de l'élève laissait partir bien plus de clients : sur
+ * l'année d'un bon gestionnaire, qui en manque peu, 5 % ne couvraient l'abonnement nulle part.)
  */
-export const PART_DES_VENTES_RETROUVEES = 0.05;
+export const PART_DES_VENTES_RETROUVEES = 0.3;
 
 /**
  * L'ADOPTION DE LA PREMIÈRE ANNÉE, hypothèse du cas : 60 % de l'équipe se sert vraiment de l'outil,

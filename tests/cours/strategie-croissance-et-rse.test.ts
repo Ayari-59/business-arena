@@ -142,24 +142,31 @@ describe("croissance et RSE : la place dans le parcours", () => {
 
   it("les verdicts varient d'une entreprise à l'autre : la réponse se lit dans les chiffres", () => {
     const verdicts = (f: (c: Cas) => string) => [...new Set(ENTREPRISES_DU_COURS.map((c) => f(casDeLEntreprise(c))))].sort();
-    // Sur l'année du cours, la gestion équilibrée produit d'après ses ventes du tour d'avant, sous la
-    // capacité de son outil : la machine ne fait vendre de plus que chez VOLT FITNESS, où elle paie.
-    // La branche « la demande ne suit pas » du chapitre, et « la grande » du cas, ne sont lues dans
-    // aucune entreprise ; restent les deux raisons pour lesquelles la capacité ne manquait pas.
-    expect(verdicts((c) => investissement(c).verdict)).toEqual(["croitre-paie", "la-capacite-ne-manquait-pas"]);
-    expect(ENTREPRISES_DU_COURS.filter((c) => investissement(casDeLEntreprise(c)).verdict === "croitre-paie")).toEqual(["fitness"]);
+    // Sur l'année du cours, le bon gestionnaire produit la demande qu'il a vue : la machine paie là
+    // où l'outil bridait des ventes manquées ; elle fait vendre trop peu pour payer là où l'outil ne
+    // bridait qu'à peine ; elle ne fait rien vendre là où l'équipe plafonne avant l'outil, ou là où
+    // l'outil ne manquait pas. Les trois réponses du chapitre se rencontrent, et les trois du cas.
+    expect(verdicts((c) => investissement(c).verdict)).toEqual(["croitre-paie", "la-capacite-ne-manquait-pas", "la-demande-ne-suit-pas"]);
+    expect(ENTREPRISES_DU_COURS.filter((c) => investissement(casDeLEntreprise(c)).verdict === "croitre-paie")).toEqual(["nova", "boutique", "fitness", "transport"]);
+    expect(ENTREPRISES_DU_COURS.filter((c) => investissement(casDeLEntreprise(c)).verdict === "la-demande-ne-suit-pas")).toEqual(["bistrot", "batiment"]);
     const sansVenteEnPlus = ENTREPRISES_DU_COURS.map((c) => investissement(casDeLEntreprise(c))).filter((r) => r.verdict === "la-capacite-ne-manquait-pas");
     expect([...new Set(sansVenteEnPlus.map((r) => r.equipeLimite))].sort()).toEqual([false, true]);
-    expect(verdicts((c) => voirPlusGrand(c).verdict)).toEqual(["aucune", "la-petite"]);
-    expect(verdicts((c) => engagementRse(c).verdict)).toEqual(["la-demande-ne-se-vend-pas", "paie-deja", "pas-encore"]);
+    // L'outil agrandi fait embaucher le bon gestionnaire chez les unes, pas chez les autres.
+    expect([...new Set(ENTREPRISES_DU_COURS.map((c) => investissement(casDeLEntreprise(c)).embauchesEnPlus > 0))].sort()).toEqual([false, true]);
+    expect(verdicts((c) => voirPlusGrand(c).verdict)).toEqual(["aucune", "la-grande", "la-petite"]);
+    // Le bon gestionnaire produit aussi la demande que l'engagement RSE amène : elle se vend
+    // partout. La branche « la demande gagnée ne se vend pas » du chapitre n'est lue dans aucune
+    // entreprise ; restent les deux autres, selon que la marge gagnée paie ou non l'engagement.
+    expect(verdicts((c) => engagementRse(c).verdict)).toEqual(["paie-deja", "pas-encore"]);
+    for (const c of ENTREPRISES_DU_COURS) expect(engagementRse(casDeLEntreprise(c)).ventesGagnees, c).toBeGreaterThan(0);
     expect(verdicts((c) => engagementRse(c).label)).toEqual(["jamais", "plus-tard"]);
-    // Le label n'arrive qu'au trimestre 4, et la gestion équilibrée ne produit pas pour la demande
-    // qu'il apporte : nulle part l'année ne finit mieux qu'au budget de départ (la branche « visons
-    // le label » du cas n'est lue dans aucune entreprise). Les deux raisons du cas se rencontrent :
-    // la demande en plus n'est pas servie, ou elle l'est, mais trop tard pour payer le budget.
+    // Le label n'arrive qu'au trimestre 4 : nulle part l'année ne finit mieux qu'au budget de départ
+    // (la branche « visons le label » du cas n'est lue dans aucune entreprise). La demande en plus
+    // est servie partout, mais trop tard pour payer le budget : la branche « la demande en plus
+    // n'est pas servie » n'est plus lue non plus.
     expect(verdicts((c) => viserLeLabel(c).verdict)).toEqual(["pas-cette-annee"]);
     const servie = (c: Cas) => viserLeLabel(c).label.ventes > viserLeLabel(c).chapitre.ventes;
-    expect(ENTREPRISES_DU_COURS.filter((c) => servie(casDeLEntreprise(c)))).toEqual(["boutique", "ecommerce", "fitness"]);
+    expect(ENTREPRISES_DU_COURS.filter((c) => servie(casDeLEntreprise(c)))).toEqual(ENTREPRISES_DU_COURS);
     // Seuls le bistrot et le marchand en ligne comptent des rebuts : l'étape du process propre ne vit que là.
     expect(ENTREPRISES_DU_COURS.filter((c) => engagementRse(casDeLEntreprise(c)).aDesRebuts)).toEqual(["bistrot", "ecommerce"]);
   });
@@ -179,6 +186,11 @@ describe.each(ENTREPRISES_DU_COURS)("croître en investissant chez %s", (code) =
     expect((avec[0]!.debt?.newLoan ?? 0) - (sans[0]!.debt?.newLoan ?? 0)).toBe(m.costPerUnit);
     for (const r of avec) expect(r.debt?.loanRefused ?? 0).toBe(0);
     expect(avec[0]!.investment?.outlay).toBe(m.costPerUnit);
+    // L'achat et son emprunt ne se jouent qu'au trimestre de l'achat : le formulaire ne les reconduit pas.
+    for (let t = TRIMESTRE_DE_L_ACHAT; t < avec.length; t++) {
+      expect(avec[t]!.investment?.outlay ?? 0, `T${t + 1}`).toBe(0);
+      expect((avec[t]!.debt?.newLoan ?? 0) - (sans[t]!.debt?.newLoan ?? 0), `T${t + 1}`).toBe(0);
+    }
     expect(avec[0]!.production.machineCapacity).toBe(sans[0]!.production.machineCapacity);
     // La machine compte une fois, à chaque trimestre où elle sert : le parc sans doublon.
     for (let t = k; t < avec.length; t++) pres(avec[t]!.production.machineCapacity - sans[t]!.production.machineCapacity, m.capacityPerUnit, 1e-6);
@@ -197,9 +209,15 @@ describe.each(ENTREPRISES_DU_COURS)("croître en investissant chez %s", (code) =
       pres(l.interets, (l.du * s.finance.loanAnnualRate) / 4, 0.01);
     });
     pres(r.interets, r.lignes.reduce((t, l) => t + l.interets, 0), 0.01);
-    // Rien d'autre n'a changé que la marge, l'entretien, l'amortissement, les charges financières et l'impôt.
-    for (const f of [(x: CompanyRoundResult) => is(x).marketingCost, (x: CompanyRoundResult) => is(x).qualityCost, (x: CompanyRoundResult) => is(x).fixedCosts])
-      pres(somme(avec, f), somme(sans, f), 0.01);
+    // Rien d'autre n'a changé que la marge, l'entretien, les salaires d'une embauche, l'amortissement,
+    // les charges financières et l'impôt.
+    for (const f of [(x: CompanyRoundResult) => is(x).marketingCost, (x: CompanyRoundResult) => is(x).qualityCost]) pres(somme(avec, f), somme(sans, f), 0.01);
+    pres(r.chargesFixesEnPlus, somme(avec, (x) => is(x).fixedCosts) - somme(sans, (x) => is(x).fixedCosts), 1);
+    // Des charges fixes en plus, ce sont des embauches que le bon gestionnaire n'aurait pas faites sans la machine.
+    const embauches = (a: readonly CompanyRoundResult[]) => somme(a, (x) => x.hr?.hired ?? 0);
+    expect(r.embauchesEnPlus).toBe(embauches(avec) - embauches(sans));
+    expect(r.chargesFixesEnPlus > 0, code).toBe(r.embauchesEnPlus > 0);
+    expect(r.chargesFixesEnPlus).toBeGreaterThanOrEqual(0);
   });
 
   it("l'année rejouée se recompose : marge, charges de la machine, résultat net, délai et rentabilité", () => {
@@ -207,10 +225,12 @@ describe.each(ENTREPRISES_DU_COURS)("croître en investissant chez %s", (code) =
     expect(r.margeUnitaire).toBe(Math.round((r.margeSans / r.venduesSans) * 100) / 100);
     expect(r.margeSiLaDemandeSuit).toBeGreaterThanOrEqual(r.margeGagnee);
     expect(r.capaciteGagnee).toBe(r.capacite * r.trimestresEnService);
-    pres(r.exploitationGagnee, r.margeGagnee - r.entretienEnPlus - r.amortissementsEnPlus, 2);
+    pres(r.exploitationGagnee, r.margeGagnee - r.entretienEnPlus - r.chargesFixesEnPlus - r.amortissementsEnPlus, 2);
     pres(r.resultatNetGagne, r.exploitationGagnee - r.chargesFinancieresEnPlus - r.impotEnPlus, 2);
     pres(r.amortissementsEnPlus, r.amortissement, 1);
-    expect(r.entretienEnPlus).toBeGreaterThan(0);
+    // Le bon gestionnaire reconduit son entretien sans le relever pour la machine de plus : le
+    // texte « d'entretien en plus » n'est lu dans aucune entreprise.
+    expect(r.entretienEnPlus).toBe(0);
     expect(r.caf).toBe(r.resultatNetGagne + Math.round(r.amortissement));
     if (r.caf > 0) pres(r.delai!, (r.cout * r.trimestresEnService) / r.caf, 0.05);
     else expect(r.delai).toBeNull();
@@ -261,7 +281,7 @@ describe.each(ENTREPRISES_DU_COURS)("la responsabilité sociétale chez %s", (co
     expect(g).toEqual(s.rse ?? DEFAULT_RSE_CONFIG);
     const r = engagementRse(cas);
     expect(r.parDefaut).toBe(s.rse === undefined);
-    // La gestion équilibrée dépense en publicité la moitié de l'échelle au premier trimestre : ce que le commentaire du chapitre dit.
+    // Le bon gestionnaire dépense en publicité la moitié de l'échelle au premier trimestre : ce que le commentaire du chapitre dit.
     expect(r.publiciteT1).toBe(Math.round(s.marketing.scale / 2));
   });
 
@@ -303,6 +323,8 @@ describe.each(ENTREPRISES_DU_COURS)("la responsabilité sociétale chez %s", (co
     const ref = anneeDeReference(code);
     const e = anneeEngagee(code);
     expect(r.cout).toBe(r.budget * e.length);
+    // Le budget joué chaque trimestre est celui du cours, ni reconduit ni multiplié d'un trimestre à l'autre.
+    for (const x of e) pres(is(x).engagementRse ?? 0, r.budget, 0.01);
     pres(r.cout, somme(e, (x) => is(x).engagementRse ?? 0), 0.01);
     pres(r.ecart, r.margeGagnee - r.cout, 2);
     for (const f of [
@@ -327,6 +349,7 @@ describe.each(ENTREPRISES_DU_COURS)("la responsabilité sociétale chez %s", (co
     const r = engagementRse(cas);
     const p = anneeProcessPropre(code);
     pres(r.coutPropre, r.budget * p.length, 0.01);
+    for (const x of p) pres(is(x).engagementRse ?? 0, r.budget, 0.01);
     pres(r.ecartPropre, r.margeGagneePropre - r.coutPropre, 2);
     // La réduction des rebuts se lit sur le capital d'ouverture : nulle au trimestre 1.
     expect(p[0]!.rse!.defectReduction).toBe(0);
@@ -367,6 +390,7 @@ describe.each(ENTREPRISES_DU_COURS)("la responsabilité sociétale chez %s", (co
     ).toEqual([RSE_CARD_CODES.label]);
     expect(g.cards.labelDuration).toBeGreaterThanOrEqual(2);
     expect(v.cout).toBe(b * vers.length);
+    for (const x of vers) pres(is(x).engagementRse ?? 0, b, 0.01);
     pres(v.cout, somme(vers, (x) => is(x).engagementRse ?? 0), 0.01);
     expect(v.ecartAuChapitre).toBe(v.label.resultatDExploitation - v.chapitre.resultatDExploitation);
     expect(v.verdict).toBe(v.ecartAuChapitre > 0 ? "viser-le-label" : "pas-cette-annee");

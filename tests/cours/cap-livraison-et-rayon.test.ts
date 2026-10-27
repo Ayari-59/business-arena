@@ -265,12 +265,12 @@ describe.each(MAGASINS)("recevoir une livraison chez %s", (code) => {
 
   it("chez MAILLE & CO, les chiffres de l'année du cours", () => {
     const l = livraison(cas);
-    expect(l.lignes.map((x) => x.commandee)).toEqual([1022, 553, 234, 457, 399]);
-    expect(l.totalCommande).toBe(2665);
+    expect(l.lignes.map((x) => x.commandee)).toEqual([1545, 693, 366, 1038, 922]);
+    expect(l.totalCommande).toBe(4564);
     expect(l.ecart.code).toBe("pull-col-rond");
-    expect(l.totalRecu).toBe(2655);
-    expect(l.apresDeLEcart).toBe(1412);
-    expect(l.totalApres).toBe(3765);
+    expect(l.totalRecu).toBe(4554);
+    expect(l.apresDeLEcart).toBe(1935);
+    expect(l.totalApres).toBe(5664);
     expect(l.fournisseur).toBe("Façonnier de référence");
   });
 
@@ -345,16 +345,17 @@ describe.each(MAGASINS)("remplir le rayon chez %s", (code) => {
 
   it("chez MAILLE & CO, les chiffres de l'année du cours", () => {
     const r = rayon(cas);
-    expect([r.x.trimestre, r.x.code]).toEqual([4, "pull-col-rond"]);
-    expect(r.x.stock).toBe(517);
-    expect(r.x.commandeeDansLAnnee).toBe(1112);
-    expect(r.x.demande).toBe(3608);
-    expect(r.parJour).toBe(40);
-    expect(r.joursAvant).toBe(12);
-    expect(r.joursSans).toBe(30);
-    expect(r.x.perdues).toBe(3091);
-    expect(r.ventesPerdues).toBe(170005);
-    expect(r.x.demandeAvant).toBe(1958);
+    expect([r.x.trimestre, r.x.code]).toEqual([1, "pull-col-rond"]);
+    expect(r.x.stock).toBe(400);
+    expect(r.x.commandeeDansLAnnee).toBe(1545);
+    expect(r.x.demande).toBe(1726);
+    expect(r.parJour).toBe(19);
+    expect(r.joursAvant).toBe(21);
+    expect(r.joursSans).toBe(21);
+    expect(r.x.perdues).toBe(1326);
+    expect(r.ventesPerdues).toBe(72930);
+    // Le premier trimestre n'a pas de trimestre d'avant : la synthèse ne compare pas la demande.
+    expect(r.x.demandeAvant).toBe(null);
   });
 
   it("textes propres, une seule bonne réponse, notions existantes", () => verifierLesTextes(REMPLIR_LE_RAYON, code));
@@ -383,8 +384,8 @@ describe.each(MAGASINS)("les deux écarts chez %s", (code) => {
 
   it("chez MAILLE & CO, les chiffres de l'année du cours", () => {
     const s = deuxEcarts(cas);
-    expect(s.totalSurLeBon).toBe(6038);
-    expect([s.manque.code, s.enTrop.code]).toEqual(["pull-col-rond", "pull-merinos"]);
+    expect(s.totalSurLeBon).toBe(2182);
+    expect([s.manque.code, s.enTrop.code]).toEqual(["pull-col-rond", "bonnet"]);
     expect(s.prixDAchat).toBe(25);
     expect(s.payesSansEtreRecus).toBe(250);
   });
@@ -427,14 +428,14 @@ describe.each(MAGASINS)("tenir jusqu'au réassort chez %s", (code) => {
 
   it("chez MAILLE & CO, les chiffres de l'année du cours", () => {
     const s = reassortAttendu(cas);
-    expect(s.x.code).toBe("pull-col-rond");
-    expect(s.stockApres).toBe(1629);
-    expect(s.parJour).toBe(40);
-    expect(s.joursAvant).toBe(40);
-    expect(s.joursSans).toBe(2);
-    expect(s.x.perdues).toBe(1979);
-    expect(s.ventesPerdues).toBe(108845);
-    expect(s.aTemps).toBe(false);
+    expect(s.x.code).toBe("cardigan");
+    expect(s.stockApres).toBe(843);
+    expect(s.parJour).toBe(10);
+    expect(s.joursAvant).toBe(84);
+    expect(s.joursSans).toBe(0);
+    expect(s.x.perdues).toBe(70);
+    expect(s.ventesPerdues).toBe(5180);
+    expect(s.aTemps).toBe(true);
   });
 
   it("textes propres, une seule bonne réponse qui ne se devine pas à sa longueur", () => {

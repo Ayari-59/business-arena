@@ -30,6 +30,7 @@ import type { Situation } from "../../src/config/cours/situations/types";
 import type { Chapitre, Etape, EtatDuCours } from "../../src/config/cours/types";
 import type { CompanyRoundResult } from "../../src/engine/types";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
+import { PART_DE_QUALITE_NEUTRE } from "../../src/engine/bots";
 import { scenarioByCode } from "../../src/config/scenarios/registry";
 import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
 
@@ -140,6 +141,15 @@ const vendus = (r: CompanyRoundResult) => Object.values(r.market.bySegment).redu
 const potentiel = (r: CompanyRoundResult) => Object.values(r.market.bySegment).reduce((t, v) => t + v.potential, 0);
 const auDixieme = (x: number) => Math.round(x * 10) / 10;
 
+/**
+ * Le budget qualité de l'année du cours sur ces trimestres ; nul, celui de la gestion neutre du
+ * secteur (la moitié de l'échelle de qualité du scénario), d'où part la stratégie qui le monte.
+ */
+const budgetDeQualite = (code: string, annee: readonly CompanyRoundResult[]) => {
+  const q = somme(annee, (r) => r.incomeStatement.qualityCost);
+  return q > 0 ? q : PART_DE_QUALITE_NEUTRE * scenarioByCode(code).scenario.production.qualityScale * annee.length;
+};
+
 const PAIRES: [Situation, Chapitre][] = [
   [BAISSER_LES_PRIX_SANS_RIEN_COUPER, COUTS_OU_DIFFERENCIATION],
   [ALLER_DANS_L_ESPACE_LIBRE, LIRE_LA_STRATEGIE_DES_CONCURRENTS],
@@ -208,12 +218,13 @@ describe.each(MARCHES)("domination par les coûts ou différenciation chez %s", 
   it("chaque levier agit, seul, dans l'entreprise", () => {
     const ref = anneeDeReference(code);
     const seul = (cle: string, l: Partial<typeof STRATEGIE_DE_COUTS>) =>
-      rejouerAvec(code, `couts-ou-differenciation-test-${cle}`, strategie({ prix: 1, qualite: 1, marketing: 1, production: 1, ...l }));
+      rejouerAvec(code, `couts-ou-differenciation-test-${cle}`, strategie(code, { prix: 1, qualite: 1, marketing: 1, production: 1, ...l }));
     const prix = seul("prix", { prix: STRATEGIE_DE_COUTS.prix });
     expect(somme(prix, (r) => r.incomeStatement.revenue) / somme(prix, vendus)).toBeLessThan(somme(ref, (r) => r.incomeStatement.revenue) / somme(ref, vendus));
     const qualite = seul("qualite", { qualite: STRATEGIE_DE_DIFFERENCIATION.qualite });
     expect(qualite[0]!.production.producedQuality).toBeGreaterThan(ref[0]!.production.producedQuality);
-    expect(somme(qualite, (r) => r.incomeStatement.qualityCost)).toBeCloseTo(somme(ref, (r) => r.incomeStatement.qualityCost) * STRATEGIE_DE_DIFFERENCIATION.qualite, 0);
+    // Un budget qualité nul ne se double pas : la différenciation part alors du budget usuel du secteur.
+    expect(somme(qualite, (r) => r.incomeStatement.qualityCost)).toBeCloseTo(budgetDeQualite(code, ref) * STRATEGIE_DE_DIFFERENCIATION.qualite, 0);
     const marketing = seul("marketing", { marketing: STRATEGIE_DE_DIFFERENCIATION.marketing });
     expect(somme(marketing, (r) => r.incomeStatement.marketingCost)).toBeCloseTo(somme(ref, (r) => r.incomeStatement.marketingCost) * STRATEGIE_DE_DIFFERENCIATION.marketing, 0);
     // Le marketing fait vendre : la demande adressée monte (au trimestre même, ou au suivant par la marque).
@@ -225,11 +236,17 @@ describe.each(MARCHES)("domination par les coûts ou différenciation chez %s", 
 
   it("chaque stratégie est jouée à chaque trimestre, et personne ne fait défaillance", () => {
     const ref = anneeDeReference(code);
-    const couts = rejouerAvec(code, "couts-ou-differenciation-couts", strategie(STRATEGIE_DE_COUTS));
-    const diff = rejouerAvec(code, "couts-ou-differenciation-differenciation", strategie(STRATEGIE_DE_DIFFERENCIATION));
+    const couts = rejouerAvec(code, "couts-ou-differenciation-couts", strategie(code, STRATEGIE_DE_COUTS));
+    const diff = rejouerAvec(code, "couts-ou-differenciation-differenciation", strategie(code, STRATEGIE_DE_DIFFERENCIATION));
     ref.forEach((r, i) => {
       expect(couts[i]!.incomeStatement.qualityCost, `T${i + 1}`).toBeCloseTo(r.incomeStatement.qualityCost * STRATEGIE_DE_COUTS.qualite, 6);
       expect(diff[i]!.incomeStatement.marketingCost, `T${i + 1}`).toBeCloseTo(r.incomeStatement.marketingCost * STRATEGIE_DE_DIFFERENCIATION.marketing, 6);
+      expect(diff[i]!.incomeStatement.qualityCost, `T${i + 1}`).toBeCloseTo(budgetDeQualite(code, [r]) * STRATEGIE_DE_DIFFERENCIATION.qualite, 6);
+      // Les leviers se posent sur l'année du cours au même trimestre : aucun ne se compose d'un trimestre à l'autre.
+      expect(couts[i]!.incomeStatement.marketingCost, `T${i + 1}`).toBeCloseTo(r.incomeStatement.marketingCost * STRATEGIE_DE_COUTS.marketing, 6);
+      if (!gamme) {
+        expect(diff[i]!.incomeStatement.revenue / vendus(diff[i]!), `T${i + 1}`).toBeCloseTo((r.incomeStatement.revenue / vendus(r)) * STRATEGIE_DE_DIFFERENCIATION.prix, 6);
+      }
       if (!gamme) {
         // Un seul prix : le prix moyen du trimestre est celui de la décision.
         expect(couts[i]!.incomeStatement.revenue / vendus(couts[i]!), `T${i + 1}`).toBeCloseTo((r.incomeStatement.revenue / vendus(r)) * STRATEGIE_DE_COUTS.prix, 6);
@@ -241,9 +258,9 @@ describe.each(MARCHES)("domination par les coûts ou différenciation chez %s", 
   it("les chiffres se recomposent avec le moteur, et les champs attendent ces chiffres", () => {
     const k = coutsOuDifferenciation(cas);
     const annees = {
-      couts: rejouerAvec(code, "couts-ou-differenciation-couts", strategie(STRATEGIE_DE_COUTS)),
+      couts: rejouerAvec(code, "couts-ou-differenciation-couts", strategie(code, STRATEGIE_DE_COUTS)),
       milieu: anneeDeReference(code),
-      differenciation: rejouerAvec(code, "couts-ou-differenciation-differenciation", strategie(STRATEGIE_DE_DIFFERENCIATION)),
+      differenciation: rejouerAvec(code, "couts-ou-differenciation-differenciation", strategie(code, STRATEGIE_DE_DIFFERENCIATION)),
     };
     for (const x of k.trois) {
       const a = annees[x.code];
@@ -282,8 +299,13 @@ describe.each(MARCHES)("domination par les coûts ou différenciation chez %s", 
 describe("domination par les coûts ou différenciation, sur les entreprises du chapitre", () => {
   it("la bonne stratégie dépend de l'entreprise, et le milieu n'est pas partout le pire", () => {
     const k = MARCHES.map((c) => coutsOuDifferenciation(casDeLEntreprise(c)));
-    expect([...new Set(k.map((x) => x.meilleure.code))].sort()).toEqual(["couts", "differenciation"]);
-    expect([...new Set(k.map((x) => x.rangDuMilieu))].sort()).toEqual(["dernier", "entre"]);
+    // Le bon gestionnaire, au milieu, tient son marché : les trois choix sont le meilleur quelque
+    // part, et le milieu se classe premier ici, entre les deux là, dernier ailleurs.
+    expect([...new Set(k.map((x) => x.meilleure.code))].sort()).toEqual(["couts", "differenciation", "milieu"]);
+    expect([...new Set(k.map((x) => x.rangDuMilieu))].sort()).toEqual(["dernier", "entre", "premier"]);
+    // Le budget qualité de l'année du cours est nul chez les unes (la différenciation part alors
+    // du budget usuel du secteur), positif chez les autres.
+    expect([...new Set(k.map((x) => x.milieu.qualite > 0))].sort()).toEqual([false, true]);
   });
 });
 
@@ -343,11 +365,13 @@ describe.each(MARCHES)("lire la stratégie de ses concurrents chez %s", (code) =
       expect(b.profile in attendue, b.profile).toBe(true);
       expect(k.concurrents[i]!.strategie, b.name).toBe(attendue[b.profile as keyof typeof attendue]);
     }
-    // La gestion équilibrée se place entre ses deux concurrents, en prix comme en qualité.
+    // Le bon gestionnaire se place entre ses deux concurrents en prix. En qualité, il reste sous le
+    // haut de gamme et ne tombe pas sous le concurrent qui casse les prix : sans budget qualité,
+    // comme lui, il peut finir à sa hauteur (voir plus bas).
     const [a, b] = k.concurrents;
     expect(k.entreprise.indicePrix).toBeGreaterThan(Math.min(a!.indicePrix, b!.indicePrix));
     expect(k.entreprise.indicePrix).toBeLessThan(Math.max(a!.indicePrix, b!.indicePrix));
-    expect(k.entreprise.indiceQualite).toBeGreaterThan(Math.min(a!.indiceQualite, b!.indiceQualite));
+    expect(k.entreprise.indiceQualite).toBeGreaterThanOrEqual(Math.min(a!.indiceQualite, b!.indiceQualite));
     expect(k.entreprise.indiceQualite).toBeLessThan(Math.max(a!.indiceQualite, b!.indiceQualite));
   });
 
@@ -371,13 +395,17 @@ describe("lire la stratégie de ses concurrents, sur les entreprises du chapitre
     expect(k.map((x) => x.partie)).toEqual(MARCHES.map(() => null));
     const cote = (x: (typeof k)[number]) => (x.plusGrand.bas === x.entreprise ? "au-dessus" : x.plusGrand.haut === x.entreprise ? "en dessous" : "ailleurs");
     expect([...new Set(k.map(cote))].sort()).toEqual(["au-dessus", "en dessous"]);
-    // La gestion équilibrée, au milieu, n'a nulle part le meilleur résultat : un concurrent la bat.
-    expect([...new Set(k.map((x) => x.meilleure.strategie))].sort()).toEqual(["couts", "differenciation"]);
-    expect(k.every((x) => x.meilleure !== x.entreprise)).toBe(true);
-    // La règle de lecture place l'entreprise au milieu partout, sauf chez MAILLE & CO, dont le
-    // prix (indice 107) et la qualité (101) passent les seuils de la différenciation.
-    expect(MARCHES.filter((_, i) => k[i]!.entreprise.strategie !== "intermediaire")).toEqual(["boutique"]);
-    expect(strategiesDesConcurrents(casDeLEntreprise("boutique")).entreprise.strategie).toBe("differenciation");
+    // Le meilleur résultat de l'année revient tantôt à un concurrent (coûts ou différenciation),
+    // tantôt à l'entreprise elle-même, au milieu avec le bon gestionnaire.
+    expect([...new Set(k.map((x) => x.meilleure.strategie))].sort()).toEqual(["couts", "differenciation", "intermediaire"]);
+    expect([...new Set(k.map((x) => x.meilleure === x.entreprise))].sort()).toEqual([false, true]);
+    // La règle de lecture place l'entreprise en position intermédiaire partout : le bon
+    // gestionnaire part du prix que le formulaire propose et l'y ramène, sans budget de
+    // différenciation. Sa qualité finit à la hauteur de celle du concurrent qui casse les prix
+    // chez les unes, au-dessus chez les autres.
+    expect(k.every((x) => x.entreprise.strategie === "intermediaire")).toBe(true);
+    const aLaHauteur = k.map((x) => x.entreprise.indiceQualite === Math.min(...x.concurrents.map((y) => y.indiceQualite)));
+    expect([...new Set(aLaHauteur)].sort()).toEqual([false, true]);
   });
 
   it("le marché d'un seul trimestre se lit comme celui de l'année", () => {
@@ -395,8 +423,8 @@ describe.each(MARCHES)("baisser les prix sans rien couper chez %s", (code) => {
   it("la demi-mesure garde les budgets et prend le prix et la production de la stratégie de coûts", () => {
     const k = prixBasSansRienCouper(cas);
     const ref = anneeDeReference(code);
-    const demi = rejouerAvec(code, "couts-ou-differenciation-demi-mesure", strategie(DEMI_MESURE));
-    const couts = rejouerAvec(code, "couts-ou-differenciation-couts", strategie(STRATEGIE_DE_COUTS));
+    const demi = rejouerAvec(code, "couts-ou-differenciation-demi-mesure", strategie(code, DEMI_MESURE));
+    const couts = rejouerAvec(code, "couts-ou-differenciation-couts", strategie(code, STRATEGIE_DE_COUTS));
     ref.forEach((r, i) => {
       expect(demi[i]!.incomeStatement.qualityCost, `T${i + 1}`).toBeCloseTo(r.incomeStatement.qualityCost, 6);
       expect(demi[i]!.incomeStatement.marketingCost, `T${i + 1}`).toBeCloseTo(r.incomeStatement.marketingCost, 6);

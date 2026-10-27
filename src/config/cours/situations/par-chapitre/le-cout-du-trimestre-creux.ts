@@ -184,12 +184,13 @@ export const LE_COUT_DU_TRIMESTRE_CREUX: Situation = {
       titre: "Votre réponse à la direction",
       notions: ["productivity", "capacity"],
       question: () => "Quelle réponse rendez-vous à la direction ?",
+      // Les trois réponses ont la même longueur : la bonne ne se devine pas, quelle qu'elle soit.
       options: (c) => {
         const k = coutDuTrimestreCreux(c);
         const chiffres = `Il fallait servir ${qte(k.aServir)} ${c.unites} au ${rang(k.p.creux.numero)} trimestre ; ${qte(k.p.creux.demande)} ont été ${accord(c, "demandé")}s, et la capacité de service était de ${qte(k.p.capacite)}.`;
         return [
           {
-            texte: "Oui, c'était possible : la demande et la capacité de service le permettaient",
+            texte: "Oui, c'était possible : la demande et la capacité le permettaient",
             juste: k.verdict === "possible",
             retour:
               k.verdict === "possible"
@@ -197,12 +198,12 @@ export const LE_COUT_DU_TRIMESTRE_CREUX: Situation = {
                 : `Non. ${chiffres}`,
           },
           {
-            texte: "Non : il fallait plus de clients que le trimestre creux n'en a demandé à l'établissement",
+            texte: "Non : il fallait plus de clients que le trimestre creux n'en a eu",
             juste: k.verdict === "demande",
             retour: k.verdict === "demande" ? `Oui. ${chiffres} Il fallait d'abord attirer des clients.` : `Non. ${chiffres}`,
           },
           {
-            texte: "Non : il fallait servir plus que la capacité de service",
+            texte: "Non : il fallait servir plus que la capacité de service ne permet",
             juste: k.verdict === "capacite",
             retour: k.verdict === "capacite" ? `Oui. ${chiffres} Même pleine, la capacité ne suffisait pas.` : `Non. ${chiffres}`,
           },

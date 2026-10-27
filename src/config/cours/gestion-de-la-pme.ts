@@ -1,9 +1,8 @@
-import type { BotProfile } from "../../engine/bots";
-import { runGame, type DecisionProviderContext } from "../../engine/simulation/runGame";
+import { runGame } from "../../engine/simulation/runGame";
 import type { CompanyRoundResult, CompanyState, EngineScenarioConfig, RoundDecisions } from "../../engine/types";
 import { scenarioByCode } from "../scenarios/registry";
 import { GRAINE_DU_COURS } from "./cas";
-import { decisionDuCours, scenarioDuCours } from "./arene-du-cours";
+import { decisionsDuCours, scenarioDuCours } from "./arene-du-cours";
 
 /**
  * L'ANNÉE DE LA PME REJOUÉE AVEC UNE DÉCISION DE GESTION (parcours BTS GPME).
@@ -49,16 +48,7 @@ export function rejouerAvec(
     scenario: joue,
     initialCompanies: entreprises,
     seed: GRAINE_DU_COURS,
-    providers: Object.fromEntries(
-      entreprises.map((e) => [
-        e.id,
-        (ctx: DecisionProviderContext) => {
-          const d = decisionDuCours(e.botProfile as BotProfile, joue, ctx);
-          if (e.id !== "joueur") return d;
-          return change(ctx.roundIndex, d) ?? d;
-        },
-      ]),
-    ),
+    providers: decisionsDuCours(entreprises, joue, change),
   });
   const resultats = partie.rounds.map((t) => t.results["joueur"]!);
   annees.set(k, resultats);

@@ -52,7 +52,14 @@ describe.each(COMMERCES_A_STOCK)("le stock chez %s", (code) => {
 
   it("le coût des vendues, le stock moyen, la rotation et la durée se répondent", () => {
     expect(st.camv).toBeCloseTo(s.initial.valeur + s.achats.ht - s.final.valeur, 2);
-    expect(st.camv).toBeCloseTo(s.vendues * s.cump, -1);
+    // Au coût moyen, ce qui est vendu vaut ses unités au coût moyen, à l'arrondi du coût moyen
+    // près : arrondi au centime, il pèse au plus un demi-centime sur chaque unité entrée.
+    const entrees = s.initial.quantite + s.achats.quantite;
+    expect(s.cump).toBe(Math.round(((s.initial.valeur + s.achats.ht) / entrees) * 100) / 100);
+    expect(s.vendues).toBe(entrees - s.final.quantite);
+    const arrondiDuCoutMoyen = s.initial.valeur + s.achats.ht - entrees * s.cump;
+    expect(Math.abs(arrondiDuCoutMoyen)).toBeLessThanOrEqual(entrees * 0.005 + 1e-6);
+    expect(st.camv).toBeCloseTo(s.vendues * s.cump + arrondiDuCoutMoyen, 2);
     expect(st.stockMoyen).toBeCloseTo((s.initial.valeur + s.final.valeur) / 2, 2);
     expect(st.rotation).toBeCloseTo(st.camv / st.stockMoyen, 2);
     expect(Math.abs(st.duree - st.jours / (st.camv / st.stockMoyen))).toBeLessThanOrEqual(1);

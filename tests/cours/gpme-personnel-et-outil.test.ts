@@ -5,13 +5,16 @@ import {
   ENTREPRISES_OU_LE_POSTE_COMPTE,
   ECART_SOUS_LE_MARCHE,
   LE_DEPART_D_UN_SALARIE,
+  SALAIRE_DU_MARCHE,
   TRIMESTRE_DU_RECRUTEMENT,
   anneeDuDepart,
   departDUnSalarie,
+  embauchesPrevues,
 } from "../../src/config/cours/chapitres/le-depart-d-un-salarie";
 import {
   ENTRETENIR_L_OUTIL,
   anneeSansEntretien,
+  entretienDeLAnnee,
   entretienDeLOutil,
   sensibiliteDesRebuts,
 } from "../../src/config/cours/chapitres/entretenir-l-outil";
@@ -110,15 +113,24 @@ describe("le personnel et l'outil : la place dans le parcours", () => {
   });
 
   it("les verdicts varient d'une entreprise à l'autre : la réponse se lit dans les chiffres", () => {
-    // Le départ ne se joue plus que chez NOVA : un seul verdict s'y lit. L'autre se calcule encore là où le
-    // poste vide ne coûte aucune vente, hors du chapitre : la réponse vient des chiffres, pas d'une constante.
-    expect(ENTREPRISES_OU_LE_POSTE_COMPTE.map((c) => departDUnSalarie(casDeLEntreprise(c)).verdict)).toEqual(["le-depart-coute-plus"]);
-    expect(ENTREPRISES_OU_LE_POSTE_COMPTE.map((c) => remplacementAnticipe(casDeLEntreprise(c)).verdict)).toEqual(["recruter-tot"]);
+    // Le départ se joue chez NOVA, au cabinet de conseil et au bâtiment : les deux verdicts du chapitre s'y lisent.
+    // Recruter dès l'annonce gagne dans les trois ; « attendre » se calcule encore là où le poste vide ne coûte
+    // aucune vente, hors du chapitre : la réponse vient des chiffres, pas d'une constante.
+    expect(ENTREPRISES_OU_LE_POSTE_COMPTE.map((c) => departDUnSalarie(casDeLEntreprise(c)).verdict)).toEqual([
+      "le-depart-coute-plus",
+      "le-depart-coute-plus",
+      "l-economie-couvre",
+    ]);
+    expect(ENTREPRISES_OU_LE_POSTE_COMPTE.map((c) => remplacementAnticipe(casDeLEntreprise(c)).verdict)).toEqual(["recruter-tot", "recruter-tot", "recruter-tot"]);
     expect(new Set(ENTREPRISES_DU_COURS.map((c) => departDUnSalarie(casDeLEntreprise(c)).verdict)).size).toBe(2);
     expect(new Set(ENTREPRISES_DU_COURS.map((c) => remplacementAnticipe(casDeLEntreprise(c)).verdict)).size).toBe(2);
-    // L'entretien : rien ne se perd là où l'outil ne limite pas l'activité, l'économie se perd ailleurs. Aucune
-    // entreprise, cette année, ne perd des ventes en gardant l'économie : « l'économie tient » ne se lit pas.
-    expect([...new Set(ENTREPRISES_DU_COURS.map((c) => entretienDeLOutil(casDeLEntreprise(c)).verdict))].sort()).toEqual(["l-economie-se-perd", "rien-ne-se-perd"]);
+    // L'entretien : rien ne se perd là où l'outil ne limite pas l'activité ; ailleurs, l'économie tient ou se perd,
+    // selon que la marge perdue reste sous l'économie ou la dépasse. Les trois lectures se rencontrent cette année.
+    expect([...new Set(ENTREPRISES_DU_COURS.map((c) => entretienDeLOutil(casDeLEntreprise(c)).verdict))].sort()).toEqual([
+      "l-economie-se-perd",
+      "l-economie-tient",
+      "rien-ne-se-perd",
+    ]);
     // Seul le bistrot fait jouer l'entretien sur les rebuts : l'étape des rebuts et la réponse qui les nomme ne vivent que là.
     expect(ENTREPRISES_DU_COURS.filter((c) => sensibiliteDesRebuts(c) > 0)).toEqual(["bistrot"]);
   });
@@ -134,7 +146,14 @@ describe.each(ENTREPRISES_OU_LE_POSTE_COMPTE)("le départ d'un salarié chez %s"
     expect(1 - ECART_SOUS_LE_MARCHE).toBeLessThan(hr.attritionThreshold);
     expect(r.departs).toBe(1);
     expect(r.effectifVide).toBe(r.effectif - 1);
-    expect(depart[TRIMESTRE_DU_RECRUTEMENT - 1]!.hr!.hired).toBe(1);
+    // Le remplaçant s'ajoute aux embauches que la gestion fait ce trimestre-là dans l'année sans départ.
+    expect(embauchesPrevues(code, TRIMESTRE_DU_RECRUTEMENT)).toBe(anneeDeReference(code)[TRIMESTRE_DU_RECRUTEMENT - 1]!.hr?.hired ?? 0);
+    expect(depart[TRIMESTRE_DU_RECRUTEMENT - 1]!.hr!.hired).toBe(embauchesPrevues(code, TRIMESTRE_DU_RECRUTEMENT) + 1);
+    // Dès le trimestre du recrutement, le salaire est revenu à celui du marché : personne d'autre ne part.
+    for (let k = TRIMESTRE_DU_RECRUTEMENT - 1; k < depart.length; k++) {
+      expect(depart[k]!.hr!.salaryIndex).toBe(SALAIRE_DU_MARCHE);
+      expect(depart[k]!.hr!.departed).toBe(0);
+    }
     // Au trimestre d'après, l'équipe est revenue à son effectif : sa capacité est celle de l'année de référence.
     expect(depart[TRIMESTRE_DU_RECRUTEMENT]!.production.laborCapacity).toBeCloseTo(
       anneeDeReference(code)[TRIMESTRE_DU_RECRUTEMENT]!.production.laborCapacity,
@@ -170,19 +189,22 @@ describe.each(ENTREPRISES_OU_LE_POSTE_COMPTE)("le départ d'un salarié chez %s"
     pres(ecart(0), r.economie);
     pres(-ecart(TRIMESTRE_DU_RECRUTEMENT - 1), r.margePerdue + r.recrutement - r.salaireNonVerse);
     // Ensuite, l'équipe et ses charges sont revenues : l'écart de résultat n'est plus que de la marge. La gestion
-    // prépare d'après ses ventes du trimestre d'avant : moins vendu, elle prépare moins, et vend moins.
+    // prépare d'après la demande du trimestre d'avant, ventes manquées comprises : le client que le poste vide
+    // n'a pas servi compte encore, et elle ne prépare jamais moins que dans l'année sans départ.
     let suite = 0;
     for (let k = TRIMESTRE_DU_RECRUTEMENT; k < reference.length; k++) {
+      expect(depart[k]!.hr!.headcount).toBe(reference[k]!.hr!.headcount);
+      expect(r.effectifEnsuite).toBe(reference[TRIMESTRE_DU_RECRUTEMENT]!.hr!.headcount);
       pres(depart[k]!.incomeStatement.fixedCosts, reference[k]!.incomeStatement.fixedCosts, 0.01);
       pres(ecart(k), depart[k]!.incomeStatement.grossMargin - reference[k]!.incomeStatement.grossMargin, 0.01);
-      expect(soldUnits(depart[k - 1]!)).toBeLessThan(soldUnits(reference[k - 1]!) - 0.5);
-      expect(depart[k]!.production.planned).toBeLessThan(reference[k]!.production.planned - 0.5);
+      expect(depart[k]!.production.planned).toBeGreaterThanOrEqual(reference[k]!.production.planned - 0.5);
       suite += ecart(k);
     }
     pres(-suite, r.margePerdueEnsuite, 2);
     expect(r.ventesPerduesEnsuite).toBe(Math.round(surLAnnee(reference.slice(TRIMESTRE_DU_RECRUTEMENT), soldUnits)) - Math.round(surLAnnee(depart.slice(TRIMESTRE_DU_RECRUTEMENT), soldUnits)));
-    expect(r.ventesPerduesEnsuite).toBeGreaterThan(0);
-    expect(r.margePerdueEnsuite).toBeGreaterThan(0);
+    // Le texte de l'étape « ensuite » dit le sens des écarts : la gestion ne prépare pas moins, et la marge suit les ventes.
+    expect(r.plansEnsuiteApres).toBeGreaterThanOrEqual(r.plansEnsuiteAvant);
+    expect(Math.sign(r.margePerdueEnsuite)).toBe(Math.sign(r.ventesPerduesEnsuite));
     expect(r.ecartDeResultat).toBe(r.resultatApres - r.resultatAvant);
     pres(r.ecartDeResultat, r.economie - r.coutDuDepart, 2);
     expect(r.verdict).toBe(r.ecartDeResultat < 0 ? "le-depart-coute-plus" : "l-economie-couvre");
@@ -215,7 +237,9 @@ describe.each(ENTREPRISES_DU_COURS)("l'entretien de l'outil chez %s", (code) => 
     const e = entretienDeLOutil(cas);
     const etat = scenarioByCode(code).company("joueur", "x", "bot", "balanced");
     const s = { ...scenario, roundsCount: 4 };
-    pres(e.budget, referenceDEntretien(s, parcActifDuTour(s, etat, 1), etat), 0.01);
+    // La gestion engage la référence du parc arrondie à l'euro, comme le formulaire la propose.
+    pres(e.budget, Math.round(referenceDEntretien(s, parcActifDuTour(s, etat, 1), etat)), 0.01);
+    for (let t = 1; t <= 4; t++) pres(entretienDeLAnnee(code, t), e.budget, 0.01);
     pres(e.seuil, seuilDEntretien(e.budget), 0.01);
     // Au seuil, la disponibilité ne bouge plus ; un peu en dessous, elle baisse.
     const au = (budget: number) =>
@@ -236,10 +260,13 @@ describe.each(ENTREPRISES_DU_COURS)("l'entretien de l'outil chez %s", (code) => 
     pres(e.capaciteReelleApres, e.capaciteApres);
     pres(e.capaciteReelleEnsuite, e.capaciteEnsuite);
     expect(e.capaciteAvecEnsuite).toBe(e.capacite);
-    // Après ses trimestres d'entretien complet, et pas avant, l'outil a retrouvé sa capacité.
-    const manquants = sans.filter((x, k) => x.production.machineCapacity < reference[k]!.production.machineCapacity - 0.01).length;
+    // Après ses trimestres d'entretien complet, et pas avant, l'outil a retrouvé sa capacité, à l'unité où le
+    // chapitre la compte : le budget de la gestion, arrondi à l'euro, peut laisser l'outil un rien sous 100 %.
+    const manquants = sans.filter((x, k) => Math.round(x.production.machineCapacity) < Math.round(reference[k]!.production.machineCapacity)).length;
     expect(manquants).toBe(e.trimestresDeRetour);
-    pres(sans[1 + e.trimestresDeRetour]!.production.machineCapacity, reference[1 + e.trimestresDeRetour]!.production.machineCapacity, 0.01);
+    expect(Math.round(sans[1 + e.trimestresDeRetour]!.production.machineCapacity)).toBe(Math.round(reference[1 + e.trimestresDeRetour]!.production.machineCapacity));
+    // L'entretien est repris ensuite au budget de la gestion : l'année rejouée ne coupe que le trimestre 1.
+    for (let k = 1; k < sans.length; k++) pres(sans[k]!.incomeStatement.maintenanceCost, e.budget, 0.01);
     expect(sans[0]!.incomeStatement.maintenanceCost).toBe(0);
   });
 
@@ -256,6 +283,10 @@ describe.each(ENTREPRISES_DU_COURS)("l'entretien de l'outil chez %s", (code) => 
       expect(e.ecartDeResultat).toBeGreaterThan(0);
       expect(e.ventesPerdues).toBeGreaterThan(0);
     }
+    // Les ventes perdues se partagent entre le trimestre sans entretien (les rebuts) et la suite (l'outil) ;
+    // sans rebuts qui jouent, aucune ne se perd au trimestre 1, l'outil n'y manquant pas encore.
+    expect(e.ventesPerduesT1 + e.ventesPerduesEnsuite).toBe(e.ventesPerdues);
+    if (sensibiliteDesRebuts(code) === 0) expect(e.ventesPerduesT1).toBe(0);
     if (e.verdict === "l-economie-se-perd") expect(e.ecartDeResultat).toBeLessThanOrEqual(0);
     if (sensibiliteDesRebuts(code) > 0) {
       expect(e.rebutsEnPlus).toBeGreaterThan(0);

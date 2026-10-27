@@ -17,7 +17,13 @@ import type { Etape, EtatDuCours } from "../../src/config/cours/types";
  *
  * Chaque axe du tableau a ses indicateurs ; les deux trimestres sont les deux premiers de
  * l'année de l'arène ; le voyant se lit d'abord sur l'offre (la demande est-elle servie ?),
- * puis sur la demande ; les trois commerces n'allument pas le même voyant.
+ * puis sur la demande ; les commerces n'allument pas tous le même voyant.
+ *
+ * Dans l'année du bon gestionnaire, aucun commerce n'allume « croissance » : la demande des
+ * deux premiers trimestres recule (la boutique, qui la sert presque toute) ou n'est pas toute
+ * servie (le site marchand, le bistrot). La bonne réponse « croissance » ne se lit plus ; ses textes
+ * restent, comme options fausses. Si un commerce l'allume de nouveau, la garde rougit : il
+ * faudra revenir à trois voyants différents.
  */
 
 function textesDe(e: Etape, cas: Cas, etat: EtatDuCours): string[] {
@@ -36,9 +42,9 @@ function textesDe(e: Etape, cas: Cas, etat: EtatDuCours): string[] {
   }
 }
 
-it("les trois commerces n'allument pas le même voyant", () => {
+it("les commerces n'allument pas tous le même voyant : l'un lit un repli, les autres des ventes bloquées", () => {
   const voyants = new Set(COMMERCES.map((code) => deuxTrimestres(casDeLEntreprise(code)).voyant));
-  expect(voyants.size).toBe(3);
+  expect([...voyants].sort()).toEqual(["repli", "ventes-bloquees"]);
 });
 
 describe.each(COMMERCES)("le tableau de bord chez %s", (code) => {

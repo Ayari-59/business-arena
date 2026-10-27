@@ -260,8 +260,10 @@ describe.each(ENTREPRISES_DU_STOCK_DE_SECURITE)("le stock de sécurité chez %s"
   it("la demande par jour, le délai, la sécurité et le point de commande se recomposent", () => {
     const k = stockEtPointDeCommande(cas);
     const a = stockDeLAnnee(cas);
-    // Le pic : le trimestre qui perd le plus ; la base, celui d'avant, qui sert toute sa demande.
-    const pic = a.reduce((x, t) => (t.perdues > x.perdues ? t : x));
+    // Le pic : le premier trimestre qui perd des ventes ; la base, celui d'avant, qui sert toute sa demande.
+    const pic = a.find((t) => t.perdues > 0)!;
+    expect(a.slice(0, pic.trimestre - 1).every((t) => t.perdues === 0)).toBe(true);
+    expect(pic.demande).toBeGreaterThan(k.base.demande);
     expect(k.pic).toEqual(pic);
     expect(k.base).toEqual(a[pic.trimestre - 2]);
     expect(k.base.perdues).toBe(0);

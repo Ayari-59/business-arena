@@ -1,7 +1,10 @@
 import { botDecisions, soldByProduct, type BotProfile } from "../../engine/bots";
-import { soldUnits, type DecisionProviderContext } from "../../engine/simulation/runGame";
-import type { EngineScenarioConfig, RoundDecisions } from "../../engine/types";
+import { soldUnits, type DecisionProvider, type DecisionProviderContext } from "../../engine/simulation/runGame";
+import type { CompanyState, EngineScenarioConfig, RoundDecisions } from "../../engine/types";
+import { decisionDeReference } from "../../pedagogy/merite/reference";
+import { presetByLevel, type DifficultyPreset } from "../difficulty";
 import { composerLeScenarioJoue, CORRECTIFS_DES_PARTIES_NOUVELLES } from "../scenarios/scenario-joue";
+import { VITRINE_SOLO_PAR_DEFAUT } from "../vitrine-solo";
 
 /**
  * L'ARÈNE DU COURS, TELLE QU'UNE PARTIE CRÉÉE AUJOURD'HUI LA JOUE.
@@ -18,9 +21,22 @@ import { composerLeScenarioJoue, CORRECTIFS_DES_PARTIES_NOUVELLES } from "../sce
  * (`composerLeScenarioJoue`, avec `CORRECTIFS_DES_PARTIES_NOUVELLES`) : un correctif
  * ajouté aux parties nouvelles vaut aussi pour le cours. Trois entreprises au trimestre,
  * sans niveau ni monde variable : le scénario du registre, ses seuls correctifs en plus.
- * Les décisions sont celles de la gestion de chaque entreprise, qui lit ses ventes du tour
- * d'avant comme dans une partie (`lastSoldUnits`, `lastSoldByProduct`), à la manière du
- * lot de l'examen (pedagogy/examen/lot.ts).
+ * Les concurrents décident comme les concurrents pilotés d'une partie : leur gestion lit
+ * ses ventes du tour d'avant (`lastSoldUnits`, `lastSoldByProduct`), à la manière du lot
+ * de l'examen (pedagogy/examen/lot.ts).
+ *
+ * L'ENTREPRISE DE L'ÉLÈVE, elle, joue le bon gestionnaire (`decisionDeReference`,
+ * pedagogy/merite/reference.ts) : celui qui tient le formulaire d'une partie à la demande
+ * et ne s'en écarte que sur un signal net. La gestion d'un concurrent produisait d'après
+ * ses ventes passées, plafonnées par sa propre production : elle ne voyait pas les clients
+ * qu'elle n'avait pas servis, NOVA n'en servait que 62 %, et aucune décision qui fait
+ * monter la demande n'y faisait vendre davantage. Le formulaire, lui, propose de produire
+ * la demande reçue, ventes manquées comprises (décision du propriétaire, octobre 2026).
+ * Chaque tour, le bon gestionnaire part de la décision qu'il a jouée au tour d'avant,
+ * celle qu'un rejeu a changée comprise, comme le formulaire d'une partie. Il ne décide
+ * qu'avec les leviers d'un élève sans licence (`LEVIERS_DE_L_ELEVE`) : la qualité,
+ * l'entretien, l'équipe et les créances, sans investissement ni recherche ; un chapitre
+ * qui achète une machine part ainsi d'une année qui n'en a pas acheté.
  */
 
 /** La graine du trimestre simulé : le même cas pour tous. */
@@ -55,4 +71,55 @@ export function decisionDuCours(
     lastSoldUnits: avant ? soldUnits(avant) : undefined,
     lastSoldByProduct: avant ? soldByProduct(scenario, avant.market.bySegment) : undefined,
   });
+}
+
+/**
+ * Les leviers de l'élève : ceux du plus haut niveau qu'il joue sans licence
+ * (`niveauMaxAutres` de la vitrine, le `NIVEAU_SANS_LICENCE` des missions).
+ */
+export const NIVEAU_DE_L_ELEVE = VITRINE_SOLO_PAR_DEFAUT.niveauMaxAutres;
+export const LEVIERS_DE_L_ELEVE: DifficultyPreset["decisions"] =
+  presetByLevel.get(NIVEAU_DE_L_ELEVE as DifficultyPreset["level"])!.decisions;
+
+/** Le code de l'entreprise de l'élève dans les parties du cours. */
+export const JOUEUR = "joueur";
+
+/** Ce qu'un rejeu change à la décision de l'élève d'un trimestre ; absent ou rien : elle reste. */
+export type ChangementDuJoueur = (tour: number, decision: RoundDecisions) => RoundDecisions | undefined;
+
+/**
+ * Les décisions d'une partie du cours : l'élève joue le bon gestionnaire, que `change`
+ * peut modifier, et chaque concurrent sa gestion. Chaque appel donne une partie neuve :
+ * le bon gestionnaire se souvient de sa décision du tour d'avant.
+ */
+export function decisionsDuCours(
+  entreprises: readonly CompanyState[],
+  scenario: EngineScenarioConfig,
+  change: ChangementDuJoueur = () => undefined,
+): Record<string, DecisionProvider> {
+  let precedente: RoundDecisions | undefined;
+  const joueur: DecisionProvider = (ctx) => {
+    const avant = ctx.lastResult;
+    const base = decisionDeReference(
+      {
+        scenario,
+        state: ctx.state,
+        roundIndex: ctx.roundIndex,
+        lastSoldUnits: avant ? soldUnits(avant) : undefined,
+        lastSoldByProduct: avant ? soldByProduct(scenario, avant.market.bySegment) : undefined,
+        resultatPrecedent: avant,
+        decisionPrecedente: precedente,
+      },
+      LEVIERS_DE_L_ELEVE,
+    );
+    const jouee = change(ctx.roundIndex, base) ?? base;
+    precedente = jouee;
+    return jouee;
+  };
+  return Object.fromEntries(
+    entreprises.map((e) => [
+      e.id,
+      e.id === JOUEUR ? joueur : (ctx: DecisionProviderContext) => decisionDuCours(e.botProfile as BotProfile, scenario, ctx),
+    ]),
+  );
 }

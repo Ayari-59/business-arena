@@ -191,13 +191,11 @@ describe("les deux chapitres et leur place au programme", () => {
   it("l'impôt se calcule là où l'année du cours finit en bénéfice, et là seulement", () => {
     const imposables = ENTREPRISES_DU_COURS.filter((code) => somme(anneeDuCours(code), avantImpot) > 0);
     expect([...ENTREPRISES_IMPOSABLES]).toEqual(imposables);
-    expect(L_IMPOT_SUR_LES_SOCIETES.entreprises!.codes).toEqual(ENTREPRISES_IMPOSABLES);
-    // Ailleurs, l'arène ne prélève aucun impôt sur l'année : il n'y aurait rien à calculer.
-    for (const code of ENTREPRISES_DU_COURS.filter((x) => !imposables.includes(x))) pres(somme(anneeDuCours(code), (r) => r.incomeStatement.tax), 0);
-    // Le texte nomme les entreprises dont l'année finit en perte, et elles seules.
-    for (const code of ENTREPRISES_DU_COURS) {
-      expect(L_IMPOT_SUR_LES_SOCIETES.entreprises!.pourquoi.includes(casDeLEntreprise(code).entreprise), code).toBe(!imposables.includes(code));
-    }
+    // Tenue par le bon gestionnaire, l'année du cours finit en bénéfice partout : le chapitre ne
+    // restreint pas ses entreprises, et n'a aucune année en perte à nommer.
+    expect(imposables).toEqual([...ENTREPRISES_DU_COURS]);
+    expect(L_IMPOT_SUR_LES_SOCIETES.entreprises).toBeUndefined();
+    for (const code of imposables) expect(somme(anneeDuCours(code), (r) => r.incomeStatement.tax), code).toBeGreaterThan(0);
   });
 
   it("le déficit reporté se joue là où le premier exercice perd et le suivant le rattrape, et là seulement", () => {
@@ -215,9 +213,11 @@ describe("les deux chapitres et leur place au programme", () => {
     expect([...ENTREPRISES_EN_DEFICIT]).toEqual(rattrapees(deuxExercicesDuChapitre, PART_MINIMALE_DU_DEFICIT));
     expect(LE_DEFICIT_REPORTE.entreprises!.pourquoi).toContain(`au moins ${(PART_MINIMALE_DU_DEFICIT * 100).toLocaleString("fr-FR")} % du résultat suivant`);
     expect(LE_DEFICIT_REPORTE.entreprises!.codes).toEqual(ENTREPRISES_EN_DEFICIT);
-    // Le texte nomme les entreprises du chapitre, et celles dont l'année du cours perd sans le grand entretien.
+    // Le texte nomme les entreprises du chapitre, et celles dont l'année du cours perd sans le grand
+    // entretien : aucune, l'année du cours finit en bénéfice partout, et le texte le dit.
     const perdantes = ENTREPRISES_DU_COURS.filter((x) => !(ENTREPRISES_IMPOSABLES as readonly string[]).includes(x));
-    expect(perdantes.length).toBeGreaterThan(0);
+    expect(perdantes).toEqual([]);
+    expect(LE_DEFICIT_REPORTE.entreprises!.pourquoi).toContain("L'année du cours finit en bénéfice dans toutes les entreprises");
     for (const code of ENTREPRISES_DU_COURS) {
       const nomme = (ENTREPRISES_EN_DEFICIT as readonly string[]).includes(code) || perdantes.includes(code);
       expect(LE_DEFICIT_REPORTE.entreprises!.pourquoi.includes(casDeLEntreprise(code).entreprise), code).toBe(nomme);
@@ -240,7 +240,10 @@ describe("les deux chapitres et leur place au programme", () => {
       const premier = (t: CompanyRoundResult[]) => t.slice(0, TRIMESTRES_PAR_EXERCICE);
       const second = (t: CompanyRoundResult[]) => t.slice(TRIMESTRES_PAR_EXERCICE);
       expect(avec.map((r) => r.incomeStatement.revenue), code).toEqual(sans.map((r) => r.incomeStatement.revenue));
+      // Le budget joué à chaque trimestre : le facteur fois celui de l'année du cours au premier exercice
+      // (pas un facteur qui se compose d'un trimestre à l'autre), celui de l'année du cours au second.
       for (const [i, r] of premier(avec).entries()) pres(r.incomeStatement.maintenanceCost, FACTEUR_DU_GRAND_ENTRETIEN * sans[i]!.incomeStatement.maintenanceCost, 1e-6);
+      for (const [i, r] of second(avec).entries()) pres(r.incomeStatement.maintenanceCost, sans[TRIMESTRES_PAR_EXERCICE + i]!.incomeStatement.maintenanceCost, 1e-6);
       const maintenance = somme(premier(avec), (r) => r.incomeStatement.maintenanceCost) - somme(premier(sans), (r) => r.incomeStatement.maintenanceCost);
       pres(k.entretien, maintenance);
       pres(somme(premier(avec), (r) => r.incomeStatement.operatingIncome), somme(premier(sans), (r) => r.incomeStatement.operatingIncome) - maintenance);
@@ -344,6 +347,8 @@ describe.each([...ENTREPRISES_IMPOSABLES])("l'impôt sur les sociétés chez %s"
     expect(d.depense).toBeGreaterThan(0);
     pres(d.maintenanceEnPlus, d.depense);
     pres(somme(avec, avantImpot), somme(tours, avantImpot) - d.depense);
+    // Le budget joué à chaque trimestre : celui de l'année du cours, doublé au seul trimestre de la dépense.
+    for (const [k, r] of avec.entries()) pres(r.incomeStatement.maintenanceCost, (k === i ? 2 : 1) * tours[k]!.incomeStatement.maintenanceCost, 1e-6);
     expect(avec.slice(0, i).map(avantImpot)).toEqual(tours.slice(0, i).map(avantImpot));
     pres(somme(avec, (r) => r.incomeStatement.revenue), somme(tours, (r) => r.incomeStatement.revenue));
     const r = somme(tours, avantImpot);
@@ -425,7 +430,7 @@ describe.each([...ENTREPRISES_EN_DEFICIT])("le déficit reporté chez %s", (code
     expect(juste(LE_DEFICIT_REPORTE, "imputation", cas)).toMatch(/^Sur le bénéfice/);
   });
 
-  it("le cas : la maintenance doublée l'année de la perte grossit le déficit, et l'impôt suivant baisse du taux de la dépense", () => {
+  it("le cas : une révision de plus l'année de la perte grossit le déficit, et l'impôt suivant baisse du taux de la dépense", () => {
     const d = depenseDeLAnneeEnPerte(cas);
     const avec = deuxExercicesAvecLaDepense(code);
     const k = deficitReporte(cas);
@@ -434,6 +439,8 @@ describe.each([...ENTREPRISES_EN_DEFICIT])("le déficit reporté chez %s", (code
     // Le premier exercice perd la dépense de plus, et elle seule.
     pres(-somme(avec.slice(0, TRIMESTRES_PAR_EXERCICE), avantImpot), k.deficit + d.depense);
     pres(d.arene.deficit, d.deficitAvec);
+    // Le budget joué à chaque trimestre : celui du chapitre, plus la révision au seul trimestre de la dépense.
+    for (const [k, r] of avec.entries()) pres(r.incomeStatement.maintenanceCost, tours[k]!.incomeStatement.maintenanceCost + (k === TRIMESTRES_PAR_EXERCICE - 1 ? d.depense : 0), 1e-6);
     // Le second exercice : l'activité ne change pas ; seules les charges financières peuvent bouger.
     const deuxieme = avec.slice(TRIMESTRES_PAR_EXERCICE);
     pres(somme(deuxieme, (r) => r.incomeStatement.operatingIncome), somme(second, (r) => r.incomeStatement.operatingIncome));
@@ -459,20 +466,21 @@ describe.each([...ENTREPRISES_EN_DEFICIT])("le déficit reporté chez %s", (code
 });
 
 describe("les verdicts varient avec l'entreprise", () => {
-  it("l'acompte, le trimestre de perte et le cas de fin d'année ne disent pas la même chose partout", () => {
+  it("le trimestre de perte ne se lit pas partout ; l'acompte, le cas de fin d'année et le taux réduit disent la même chose partout", () => {
     const cas = ENTREPRISES_IMPOSABLES.map((c) => casDeLEntreprise(c));
-    // Le dernier acompte vaut le taux du résultat du trimestre quelque part, et pas ailleurs, où un
-    // cumul en perte avant le dernier trimestre en absorbe une part. (Dans l'année du cours corrigée,
-    // aucun dernier acompte n'est rendu : la branche « l'arène rend » de l'explication ne se lit plus.)
-    const auTaux = (c: Cas) => Math.abs(impotDeLAnnee(c).acompte.acompte - impotDeLAnnee(c).acompte.avantImpot * impotDeLAnnee(c).taux) < 1;
-    expect(cas.some((c) => impotDeLAnnee(c).acompte.acompte >= 0 && auTaux(c))).toBe(true);
-    expect(cas.some((c) => impotDeLAnnee(c).acompte.acompte >= 0 && !auTaux(c))).toBe(true);
-    expect(cas.some((c) => impotDeLAnnee(c).avant.cumul < 0)).toBe(true);
+    // Un trimestre de perte qui fait rendre une part des acomptes : quelque part, et pas ailleurs.
     expect(cas.some((c) => impotDeLAnnee(c).rendu === null)).toBe(true);
     expect(cas.some((c) => impotDeLAnnee(c).rendu !== null)).toBe(true);
-    expect(new Set(cas.map((c) => depenseDeFinDAnnee(c).verdict))).toEqual(new Set(["le-taux-seulement", "jusqu-a-l-impot"]));
-    // Sous le plafond du taux réduit quelque part, au-dessus ailleurs.
-    expect(new Set(cas.map((c) => impotDeLAnnee(c).reduit.normale > 0))).toEqual(new Set([true, false]));
+    // Tenue par le bon gestionnaire, l'année du cours a partout un cumul en bénéfice à la fin du
+    // trimestre 3 : le dernier acompte vaut partout le taux du résultat du trimestre. Les branches
+    // « l'arène rend » et « le cumul partait d'une perte » de l'explication ne se lisent plus.
+    const auTaux = (c: Cas) => Math.abs(impotDeLAnnee(c).acompte.acompte - impotDeLAnnee(c).acompte.avantImpot * impotDeLAnnee(c).taux) < 1;
+    expect(cas.every((c) => impotDeLAnnee(c).avant.cumul > 0 && impotDeLAnnee(c).acompte.acompte >= 0 && auTaux(c))).toBe(true);
+    // Partout, l'année gagne plus que la dépense de fin d'année, et plus que le plafond du taux
+    // réduit : le verdict « jusqu'à l'impôt » du cas et la branche « tout le bénéfice sous le
+    // plafond » du chapitre ne se lisent plus.
+    expect(new Set(cas.map((c) => depenseDeFinDAnnee(c).verdict))).toEqual(new Set(["le-taux-seulement"]));
+    expect(new Set(cas.map((c) => impotDeLAnnee(c).reduit.normale > 0))).toEqual(new Set([true]));
   });
 
   it("les deux cas tiennent ce qu'un cas dédié doit tenir", () => {

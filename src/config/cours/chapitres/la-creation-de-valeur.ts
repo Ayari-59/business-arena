@@ -47,11 +47,13 @@ import {
  *
  * LES ENTREPRISES. Celles de « L'effet de levier » (`ENTREPRISES_DU_LEVIER`), pour la même raison :
  * le coût de la dette après impôt suppose un impôt, donc un bénéfice, et la pondération suppose un
- * endettement net positif. L'équipement rejoué ne fait défaillir aucune des trois ; le test le
- * vérifie, comme il vérifie que l'année sans équipement est celle du cours. Mais avec lui,
- * MARTEL & FILS finit l'année en perte : l'impôt ne suit plus le taux, la rentabilité après
- * impôt et le coût de la dette après impôt ne se lisent plus, et les deux étapes de l'équipement
- * n'y sont pas jouées (`lEquipementSeLit`) ; la synthèse le dit.
+ * endettement net positif. L'équipement rejoué n'en fait défaillir aucune ; le test le vérifie,
+ * comme il vérifie que l'année sans équipement est celle du cours. Là où l'année avec lui finirait
+ * en perte, l'impôt ne suivrait plus le taux, la rentabilité après impôt et le coût de la dette
+ * après impôt ne se liraient plus : les deux étapes de l'équipement n'y seraient pas jouées
+ * (`lEquipementSeLit`), et la synthèse le dirait. Dans l'année que joue le bon gestionnaire,
+ * l'équipement laisse un bénéfice partout, et ces deux étapes se jouent partout ; l'année crée
+ * aussi de la valeur partout, et le texte de la valeur détruite ne s'y lit pas.
  *
  * L'ÉCART ADMIS SUR UNE VALEUR CRÉÉE. L'élève tape ses taux au centième de point, et le bêta à
  * deux décimales : un demi-centième de bêta déplace kcp de 0,005 × la prime de risque, sur les
@@ -71,7 +73,8 @@ export const PRIME_DE_RISQUE_DU_MARCHE = 0.06;
 /**
  * LE BÊTA DE L'ACTIF ÉCONOMIQUE : 1, l'hypothèse que l'exploitation de l'entreprise est aussi
  * risquée que le marché dans son ensemble, faute de société cotée comparable dans l'arène. Le
- * même pour les trois entreprises : c'est le levier, et lui seul, qui différencie leur exigence.
+ * même pour toutes les entreprises du chapitre : c'est le levier, et lui seul, qui différencie
+ * leur exigence.
  */
 export const BETA_DE_L_ACTIF = 1;
 
@@ -202,7 +205,7 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
   entreprises: {
     codes: ENTREPRISES_DU_LEVIER,
     pourquoi:
-      "Le coût du capital se pondère là où l'année finit en bénéfice, sans découvert, et où l'entreprise doit plus aux banques qu'elle n'a en caisse, comme pour l'effet de levier : L'ESCALE, VOLT FITNESS et MARTEL & FILS. LA TABLE D'AUGUSTIN finit l'année en perte ; NOVA la finit en bénéfice, mais à découvert ; MAILLE & CO, ATLAS CONSEIL, PIXEL & CO et ROUTE & CIE ont plus de disponibilités que d'emprunts.",
+      "Le coût du capital se pondère là où l'année finit en bénéfice, sans découvert, et où l'entreprise doit plus aux banques qu'elle n'a en caisse, comme pour l'effet de levier : L'ESCALE et VOLT FITNESS. Toutes les entreprises finissent l'année en bénéfice, mais NOVA la finit à découvert ; MAILLE & CO, LA TABLE D'AUGUSTIN, ATLAS CONSEIL, PIXEL & CO, MARTEL & FILS et ROUTE & CIE ont plus de disponibilités que d'emprunts.",
   },
   etapes: [
     {

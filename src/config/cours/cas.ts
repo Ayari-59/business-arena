@@ -1,11 +1,10 @@
-import type { BotProfile } from "../../engine/bots";
-import { runGame, type DecisionProviderContext } from "../../engine/simulation/runGame";
+import { runGame } from "../../engine/simulation/runGame";
 import type { CompanyRoundResult, CompanyState } from "../../engine/types";
 import { scenarioByCode } from "../scenarios/registry";
 import { nomEntreprise } from "../scenarios/presentation";
 import { auCentime } from "../../pedagogy/cours/etats";
 import { METIERS, type CompteDuMetier } from "./metiers";
-import { decisionDuCours, GRAINE_DU_COURS, scenarioDuCours } from "./arene-du-cours";
+import { GRAINE_DU_COURS, decisionsDuCours, scenarioDuCours } from "./arene-du-cours";
 
 /**
  * LE CAS D'UNE ENTREPRISE : LES MONTANTS DU COURS, TIRÉS DE LA SIMULATION.
@@ -213,13 +212,8 @@ function premierTrimestre(code: string): { joueur: CompanyRoundResult; depart: C
     scenario,
     initialCompanies: entreprises,
     seed: GRAINE_DU_COURS,
-    providers: Object.fromEntries(
-      entreprises.map((e) => [
-        e.id,
-        // Un seul tour : pas de tour précédent à lire.
-        (ctx: DecisionProviderContext) => decisionDuCours(e.botProfile as BotProfile, scenario, ctx),
-      ]),
-    ),
+    // Un seul tour : pas de tour précédent à lire.
+    providers: decisionsDuCours(entreprises, scenario),
   });
   const joueur = partie.rounds[0]!.results["joueur"]!;
   return { joueur, depart: entreprises[0]! };
@@ -245,12 +239,7 @@ export function anneeJouee(code: string) {
     scenario,
     initialCompanies: entreprises,
     seed: GRAINE_DU_COURS,
-    providers: Object.fromEntries(
-      entreprises.map((e) => [
-        e.id,
-        (ctx: DecisionProviderContext) => decisionDuCours(e.botProfile as BotProfile, scenario, ctx),
-      ]),
-    ),
+    providers: decisionsDuCours(entreprises, scenario),
   });
   const jouee = { partie, depart: entreprises[0]! };
   annees.set(code, jouee);

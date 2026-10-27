@@ -1,3 +1,4 @@
+import { PART_DE_QUALITE_NEUTRE } from "../../../engine/bots";
 import type { CompanyRoundResult, RoundDecisions } from "../../../engine/types";
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../pedagogy/cours/etats";
@@ -14,14 +15,16 @@ import { MARCHES } from "./marche-et-part-de-marche";
  * plus bas, ou vendre plus cher parce que les clients reconnaissent à l'offre quelque chose de
  * plus. L'arène rejoue l'année du cours (gestion-de-la-pme.ts : même graine, mêmes concurrents)
  * avec chacune, décidée dès le premier trimestre et tenue jusqu'à la clôture, et la compare à
- * l'année du cours elle-même, celle de la gestion équilibrée, qui reste au milieu : le prix
- * usuel du marché et des budgets moyens.
+ * l'année du cours elle-même, celle du bon gestionnaire (arene-du-cours.ts), qui reste au
+ * milieu : le prix que le formulaire propose, entre ceux des deux concurrents, et ses budgets.
  *
- * Chaque stratégie se pose sur la décision de la gestion équilibrée de chaque trimestre : son
- * prix, ses budgets de qualité et de marketing, sa production planifiée, multipliés par les
- * constantes ci-dessous. Le reste (maintenance, personnel, financement) ne change pas. Les
- * concurrents jouent comme dans l'année du cours : dans le réglage du cours, ils ne lisent pas
- * le prix de l'entreprise (`reactToHumanPrice` ne joue que face à des équipes humaines).
+ * Chaque stratégie se pose sur la décision de l'année du cours au même trimestre : son prix,
+ * ses budgets de qualité et de marketing, multipliés par les constantes ci-dessous
+ * (`strategie`). La production planifiée est celle que le bon gestionnaire règle dans l'année
+ * rejouée, sur la demande qu'il y voit, multipliée elle aussi. Le reste (entretien, équipe,
+ * créances), il le décide dans l'année rejouée avec ses règles de toujours. Les concurrents
+ * jouent comme dans l'année du cours : dans le réglage du cours, ils ne lisent pas le prix de
+ * l'entreprise (`reactToHumanPrice` ne joue que face à des équipes humaines).
  *
  * Ce que le moteur fait des leviers, et que le chapitre lit : le prix fait l'attraction de
  * l'offre (élasticité de chaque clientèle), le budget qualité fait la qualité produite, que la
@@ -38,7 +41,7 @@ import { MARCHES } from "./marche-et-part-de-marche";
  * ni sa part de marché ni une marge par unité vendue.
  */
 
-/** Ce qu'une stratégie change à la décision de la gestion équilibrée, chaque trimestre : des multiplicateurs. */
+/** Ce qu'une stratégie change à la décision de l'année du cours, chaque trimestre : des multiplicateurs. */
 export interface Leviers {
   prix: number;
   qualite: number;
@@ -50,48 +53,98 @@ export interface Leviers {
  * LA DOMINATION PAR LES COÛTS, telle que le cours la pose : le prix baisse de 10 %, assez pour
  * se rapprocher du concurrent qui casse les prix (12 % sous le prix usuel dans l'arène) sans
  * s'aligner sur lui ; les budgets de qualité et de marketing sont coupés de moitié, ce sont les
- * coûts que l'entreprise choisit ; la production planifiée monte de 40 %, parce qu'une stratégie
- * de coûts vise le volume, et qu'au plan de la gestion équilibrée (le cours ne lui donne pas
- * ses ventes passées) la demande gagnée par le prix bas serait perdue faute de produits.
+ * coûts que l'entreprise choisit (là où l'année du cours ne met rien en qualité, il n'y a rien
+ * à couper) ; la production planifiée monte de 40 %, parce qu'une stratégie de coûts vise le
+ * volume, et que le bon gestionnaire produit la demande qu'il a vue au trimestre d'avant : sans
+ * production en plus, la demande que le prix bas fait venir serait perdue le trimestre même.
  */
 export const STRATEGIE_DE_COUTS: Leviers = { prix: 0.9, qualite: 0.5, marketing: 0.5, production: 1.4 };
 
 /**
  * LA DIFFÉRENCIATION, telle que le cours la pose : le prix monte de 15 %, moins que le
  * concurrent haut de gamme (30 % au-dessus du prix usuel, moins là où le scénario le dit) ; le
- * budget qualité double et le budget marketing monte de moitié, pour que les clients voient la
- * différence qu'ils paient ; la production planifiée reste celle de la gestion équilibrée,
- * puisqu'un prix plus haut ne cherche pas plus de clients.
+ * budget qualité double (celui du secteur, là où l'année du cours n'en met pas :
+ * `budgetQualiteDuSecteur`) et le budget marketing monte de moitié, pour que les clients voient
+ * la différence qu'ils paient ; la production planifiée reste celle que le bon gestionnaire
+ * règle sur la demande, puisqu'un prix plus haut ne cherche pas plus de clients.
  */
 export const STRATEGIE_DE_DIFFERENCIATION: Leviers = { prix: 1.15, qualite: 2, marketing: 1.5, production: 1 };
 
-/** Les leviers d'une stratégie, appliqués à la décision de la gestion équilibrée de chaque trimestre. */
-export function strategie(l: Leviers): Changement {
-  return (_tour: number, d: RoundDecisions): RoundDecisions => ({
-    ...d,
-    price: d.price * l.prix,
-    qualityBudget: d.qualityBudget * l.qualite,
-    marketingBudget: d.marketingBudget * l.marketing,
-    productionPlan: d.productionPlan * l.production,
-    // En gamme, chaque référence porte son prix, ses budgets et son plan ; la marque, son budget.
-    ...(d.products
-      ? {
-          products: Object.fromEntries(
-            Object.entries(d.products).map(([code, p]) => [
-              code,
-              {
-                ...p,
-                price: p.price * l.prix,
-                productionPlan: p.productionPlan * l.production,
-                ...(p.marketingBudget !== undefined ? { marketingBudget: p.marketingBudget * l.marketing } : {}),
-                ...(p.qualityBudget !== undefined ? { qualityBudget: p.qualityBudget * l.qualite } : {}),
-              },
-            ]),
-          ),
-        }
-      : {}),
-    ...(d.brandMarketingBudget !== undefined ? { brandMarketingBudget: d.brandMarketingBudget * l.marketing } : {}),
+/**
+ * LES DÉCISIONS DE L'ANNÉE DU COURS, trimestre par trimestre : celles que le bon gestionnaire a
+ * jouées (arene-du-cours.ts), relevées pendant qu'il rejoue l'année sans rien changer. Une
+ * stratégie se pose sur elles, et non sur la décision qu'il prendrait dans l'année rejouée :
+ * il part chaque trimestre de la décision jouée au trimestre d'avant, et un levier multiplié
+ * chaque trimestre sur cette base se multiplierait encore au suivant (une qualité coupée de
+ * moitié deux fois, puis trois). Posée sur l'année du cours, la stratégie est tenue telle quelle.
+ */
+const decisionsRelevees = new Map<string, readonly RoundDecisions[]>();
+export function decisionsDeLAnneeDuCours(code: string): readonly RoundDecisions[] {
+  const deja = decisionsRelevees.get(code);
+  if (deja) return deja;
+  const vues: RoundDecisions[] = [];
+  rejouerAvec(code, "couts-ou-differenciation-decisions-de-l-annee", (tour, d) => {
+    vues[tour - 1] = structuredClone(d);
+    return undefined;
   });
+  decisionsRelevees.set(code, vues);
+  return vues;
+}
+
+/**
+ * LE BUDGET QUALITÉ USUEL DU SECTEUR, par trimestre : celui de la gestion neutre
+ * (`PART_DE_QUALITE_NEUTRE` de l'échelle de qualité du scénario). Le bon gestionnaire tient le
+ * budget que le formulaire propose, nul là où la qualité ne paie pas au prix proposé
+ * (`qualiteProposee`) : doubler zéro ne différencie rien. La stratégie qui monte la qualité
+ * part alors de ce budget usuel ; celle qui la coupe n'a rien à couper.
+ */
+export const budgetQualiteDuSecteur = (code: string) => PART_DE_QUALITE_NEUTRE * scenarioByCode(code).scenario.production.qualityScale;
+
+/**
+ * Les leviers d'une stratégie, chaque trimestre : le prix et les budgets de qualité et de
+ * marketing de l'année du cours au même trimestre, multipliés ; la production planifiée, celle
+ * que le bon gestionnaire règle dans l'année rejouée sur la demande qu'il y voit, multipliée.
+ * Le reste (entretien, équipe, créances) reste ce qu'il décide dans l'année rejouée.
+ */
+export function strategie(code: string, l: Leviers): Changement {
+  const annee = decisionsDeLAnneeDuCours(code);
+  const usuel = budgetQualiteDuSecteur(code);
+  return (tour: number, d: RoundDecisions): RoundDecisions => {
+    const ref = annee[tour - 1]!;
+    // Un budget qualité nul ne se multiplie pas : qui le monte part du budget usuel du secteur.
+    const qualite = (q: number, part: number) => (q > 0 || l.qualite <= 1 ? q : usuel * part) * l.qualite;
+    const plans = d.products ? Object.values(d.products).reduce((t, p) => t + Math.max(0, p.productionPlan), 0) : 0;
+    return {
+      ...d,
+      price: ref.price * l.prix,
+      qualityBudget: qualite(ref.qualityBudget, 1),
+      marketingBudget: ref.marketingBudget * l.marketing,
+      productionPlan: d.productionPlan * l.production,
+      // En gamme, chaque référence porte son prix, ses budgets et son plan ; la marque, son budget.
+      ...(d.products
+        ? {
+            products: Object.fromEntries(
+              Object.entries(d.products).map(([cle, p]) => {
+                const r = ref.products?.[cle] ?? p;
+                return [
+                  cle,
+                  {
+                    ...p,
+                    price: r.price * l.prix,
+                    productionPlan: p.productionPlan * l.production,
+                    ...(r.marketingBudget !== undefined ? { marketingBudget: r.marketingBudget * l.marketing } : {}),
+                    ...(r.qualityBudget !== undefined
+                      ? { qualityBudget: qualite(r.qualityBudget, plans > 0 ? Math.max(0, p.productionPlan) / plans : 0) }
+                      : {}),
+                  },
+                ];
+              }),
+            ),
+          }
+        : {}),
+      ...(ref.brandMarketingBudget !== undefined ? { brandMarketingBudget: ref.brandMarketingBudget * l.marketing } : {}),
+    };
+  };
 }
 
 /** Un montant à la française, avec le signe moins typographique ; retranché, un négatif va entre parenthèses. */
@@ -171,11 +224,11 @@ export const NOMS_DES_STRATEGIES: Record<CodeDeStrategie, string> = {
 
 /** Les trois années, et ce qu'elles disent. */
 export function coutsOuDifferenciation(c: Cas) {
-  const couts = bilanDeLAnnee("couts", rejouerAvec(c.code, "couts-ou-differenciation-couts", strategie(STRATEGIE_DE_COUTS)));
+  const couts = bilanDeLAnnee("couts", rejouerAvec(c.code, "couts-ou-differenciation-couts", strategie(c.code, STRATEGIE_DE_COUTS)));
   const milieu = bilanDeLAnnee("milieu", anneeDeReference(c.code));
   const differenciation = bilanDeLAnnee(
     "differenciation",
-    rejouerAvec(c.code, "couts-ou-differenciation-differenciation", strategie(STRATEGIE_DE_DIFFERENCIATION)),
+    rejouerAvec(c.code, "couts-ou-differenciation-differenciation", strategie(c.code, STRATEGIE_DE_DIFFERENCIATION)),
   );
   const trois = [couts, milieu, differenciation];
   const parResultat = [...trois].sort((a, b) => b.resultat - a.resultat);
@@ -234,16 +287,29 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
         const { bas, haut } = k.concurrents;
         return [
           "Face à ses concurrents, une entreprise peut chercher à vendre moins cher que les autres, parce que ses coûts sont les plus bas : c'est la domination par les coûts. Elle peut aussi vendre plus cher, parce que ses clients lui reconnaissent quelque chose de plus, ici la qualité et l'image : c'est la différenciation.",
-          `Sur le marché ${dE(c.entreprise)}, ${bas.nom} vend en moyenne à ${eur(bas.prix)}, ${haut.nom} à ${eur(haut.prix)}. ${c.entreprise} reste au milieu : son année du cours, jouée par une gestion équilibrée, vend à ${eur(k.milieu.prixMoyen)} en moyenne, avec des budgets de qualité et de marketing moyens.`,
-          "L'arène a rejoué cette année deux fois, avec chaque stratégie décidée dès le premier trimestre et tenue jusqu'à la clôture. Le tableau dit ce que chacune change, chaque trimestre, à la décision de la gestion équilibrée. Les concurrents jouent comme dans l'année du cours.",
+          `Sur le marché ${dE(c.entreprise)}, ${bas.nom} vend en moyenne à ${eur(bas.prix)}, ${haut.nom} à ${eur(haut.prix)}. ${c.entreprise} reste au milieu : son année du cours, jouée par un bon gestionnaire qui tient le formulaire de la partie, vend à ${eur(k.milieu.prixMoyen)} en moyenne, ${
+            k.milieu.qualite > 0 ? `avec ${eur(k.milieu.qualite)} de budget qualité sur l'année` : "sans budget qualité, comme le formulaire le propose dans ce secteur"
+          }.`,
+          "L'arène a rejoué cette année deux fois, avec chaque stratégie décidée dès le premier trimestre et tenue jusqu'à la clôture. Le tableau dit ce que chacune change, chaque trimestre, au prix et aux budgets de l'année du cours, et à la production que le bon gestionnaire règle sur la demande qu'il voit. Le reste, il le décide avec ses règles de toujours, et les concurrents jouent comme dans l'année du cours.",
         ];
       },
-      tableau: () => ({
+      tableau: (c) => ({
         titre: "Ce que chaque stratégie change, chaque trimestre",
         colonnes: COLONNES,
         lignes: [
           { libelle: "Prix de vente", valeurs: [variation(STRATEGIE_DE_COUTS.prix), variation(1), variation(STRATEGIE_DE_DIFFERENCIATION.prix)] },
-          { libelle: "Budget qualité", valeurs: [variation(STRATEGIE_DE_COUTS.qualite), variation(1), variation(STRATEGIE_DE_DIFFERENCIATION.qualite)] },
+          {
+            libelle: "Budget qualité",
+            // Un budget nul ne se coupe pas, et la différenciation part du budget usuel du secteur.
+            valeurs:
+              coutsOuDifferenciation(c).milieu.qualite > 0
+                ? [variation(STRATEGIE_DE_COUTS.qualite), variation(1), variation(STRATEGIE_DE_DIFFERENCIATION.qualite)]
+                : [
+                    "aucun, rien à couper",
+                    "aucun",
+                    `${eur(budgetQualiteDuSecteur(c.code) * STRATEGIE_DE_DIFFERENCIATION.qualite)} : le budget usuel du secteur, ${variation(STRATEGIE_DE_DIFFERENCIATION.qualite)}`,
+                  ],
+          },
           { libelle: "Budget marketing", valeurs: [variation(STRATEGIE_DE_COUTS.marketing), variation(1), variation(STRATEGIE_DE_DIFFERENCIATION.marketing)] },
           {
             libelle: "Production planifiée",

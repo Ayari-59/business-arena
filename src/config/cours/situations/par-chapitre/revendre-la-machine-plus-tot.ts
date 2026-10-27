@@ -25,8 +25,10 @@ const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` 
  * sur ce projet raccourci : la valeur résiduelle au bout du huitième trimestre, la valeur actuelle
  * des flux, la VAN, et la compare à celle du chapitre.
  *
- * Là où la machine détruit déjà de la valeur gardée jusqu'au bout (MAILLE & CO), la revendre tôt
- * en détruit encore : les textes ne disent pas « encore de la valeur » là où il n'y en avait pas.
+ * Là où la machine détruit de la valeur gardée jusqu'au bout (L'ESCALE), la revendre tôt peut en
+ * créer : moins amortie, elle se reprend plus cher, et les trimestres abandonnés rapportaient peu.
+ * Là où elle en crée gardée, la revendre tôt peut en détruire (LA TABLE D'AUGUSTIN), ou en créer
+ * moins (ailleurs). Les textes ne disent pas « encore de la valeur » là où il n'y en avait pas.
  *
  * Les flux sont ceux du chapitre, trimestre pour trimestre : l'arène ne décide rien en fonction
  * de la durée de la partie (seule la boucle de `runGame` lit `roundsCount`), si bien que les huit
@@ -156,7 +158,9 @@ export const REVENDRE_LA_MACHINE_PLUS_TOT: Situation = {
           `Gardée ${long.duree} trimestres, la machine avait une VAN de ${eur(long.van)} ; revendue au bout de ${court.duree}, ${eur(court.van)}, soit ${eur(Math.abs(ecart))} ${ecart <= 0 ? "de moins" : "de plus"}. ${
             ecart <= 0
               ? `Les ${long.duree - court.duree} trimestres abandonnés rapportaient ${eur(abandonnes)} en valeur actuelle ; la revente avancée n'en rend que ${eur(revente)} de plus.`
-              : `La revente avancée rend ${eur(revente)} de plus en valeur actuelle, plus que les ${eur(abandonnes)} que rapportaient les ${long.duree - court.duree} trimestres abandonnés.`
+              : abandonnes >= 0
+                ? `La revente avancée rend ${eur(revente)} de plus en valeur actuelle, plus que les ${eur(abandonnes)} que rapportaient les ${long.duree - court.duree} trimestres abandonnés.`
+                : `La revente avancée rend ${eur(revente)} de plus en valeur actuelle, et les ${long.duree - court.duree} trimestres abandonnés, loin de rapporter, retiraient ${eur(-abandonnes)} en valeur actuelle.`
           }`,
         ];
       },

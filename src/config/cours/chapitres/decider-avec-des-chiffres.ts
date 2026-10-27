@@ -15,7 +15,10 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * passer. Le chapitre suit le raisonnement en trois temps que le programme de seconde demande :
  * PRÉVOIR (ce que chaque choix coûte, et ce que la publicité doit faire gagner pour se payer),
  * CHOISIR (une règle fixée avant de connaître la réponse), CONSTATER (l'arène rejoue l'année avec
- * chaque choix, tout le reste identique, et l'élève lit ce qui s'est passé).
+ * chaque choix, les mêmes concurrents et la même façon de gérer, et l'élève lit ce qui s'est
+ * passé). La gestion de l'élève (le bon gestionnaire, arene-du-cours.ts) suit ensuite ce qui se
+ * vend : sa production, et parfois son prix, changent avec la publicité. C'est la conséquence du
+ * choix, que l'écart de résultat mesure.
  *
  * Il ne double pas « Décider : prix, fabriquer ou acheter » (palier 4), qui raisonne sur le prix
  * en marge différentielle, volume par volume ; ni « Ce que rapporte la communication » (bac
@@ -23,8 +26,8 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * l'année entière, et la méthode avant le calcul.
  *
  * Les chiffres sont ceux de l'arène : l'année du cours (même réglage, même graine, mêmes
- * concurrents), rejouée par `rejouerAvec` avec le budget de publicité de chaque trimestre
- * multiplié par le facteur du choix. À la boutique, qui vend une gamme, la publicité se décide
+ * concurrents), rejouée par `rejouerAvec` avec le budget de publicité multiplié par le facteur du
+ * choix au premier trimestre, puis reconduit par le formulaire à chaque trimestre. À la boutique, qui vend une gamme, la publicité se décide
  * référence par référence, plus un budget de marque : chacun est multiplié de même.
  *
  * La règle de décision (étape « choisir ») est la même dans toutes les entreprises : garder la
@@ -33,8 +36,8 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  */
 
 /**
- * LES DEUX CHOIX DU DIRIGEANT, en part du budget de publicité que la gestion équilibrée de
- * l'arène engage chaque trimestre : le garder tel quel, ou ne rien dépenser.
+ * LES DEUX CHOIX DU DIRIGEANT, en part du budget de publicité que l'élève engage chaque
+ * trimestre dans l'année du cours : le garder tel quel, ou ne rien dépenser.
  */
 export const AVEC_LA_PUBLICITE = 1;
 export const SANS_PUBLICITE = 0;
@@ -54,10 +57,18 @@ const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const ventesEcrites = (n: number) => (Math.abs(n) === 1 ? `${qte(n)} vente` : `${qte(n)} ventes`);
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
-/** Le budget de publicité de chaque trimestre multiplié par `facteur`, marque et références comprises. */
+/**
+ * LE TRIMESTRE DU CHOIX : le dirigeant décide de sa publicité au premier trimestre. Le formulaire
+ * de l'élève reconduit ensuite le budget du trimestre d'avant ; le multiplier encore à chaque
+ * trimestre le composerait (deux fois deux fois deux…). La garde vérifie que chaque trimestre
+ * rejoué engage bien le budget de l'année du cours multiplié par le facteur.
+ */
+const TRIMESTRE_DU_CHOIX = 1;
+
+/** Le budget de publicité du premier trimestre multiplié par `facteur`, marque et références comprises ; les suivants le reconduisent. */
 const publiciteFois =
   (facteur: number): Changement =>
-  (_tour, d) => ({
+  (tour, d) => tour !== TRIMESTRE_DU_CHOIX ? undefined : ({
     ...d,
     marketingBudget: d.marketingBudget * facteur,
     ...(d.brandMarketingBudget !== undefined ? { brandMarketingBudget: d.brandMarketingBudget * facteur } : {}),
@@ -204,7 +215,7 @@ export const DECIDER_AVEC_DES_CHIFFRES: Chapitre = {
         const k = deuxChoix(c);
         return [
           `Sur l'année, ${c.entreprise} dépense ${eur(k.budget)} en publicité. Le dirigeant se demande s'il a raison : sans publicité, il garderait cet argent ; avec, il espère vendre davantage. Deux choix, et il faut en prendre un.`,
-          "Pour décider avec des chiffres, on avance en trois temps. Prévoir : ce que chaque choix coûte, et ce qu'il doit rapporter. Choisir : avec une règle fixée avant de connaître la réponse. Constater : ici, l'arène rejouera l'année sans publicité, tout le reste identique.",
+          "Pour décider avec des chiffres, on avance en trois temps. Prévoir : ce que chaque choix coûte, et ce qu'il doit rapporter. Choisir : avec une règle fixée avant de connaître la réponse. Constater : ici, l'arène rejouera l'année sans publicité, avec les mêmes concurrents et la même façon de gérer.",
         ];
       },
       repere: () => "Prévoir, choisir, constater : on chiffre chaque choix avant de décider, puis on vérifie ce que la décision a donné.",
@@ -277,7 +288,7 @@ export const DECIDER_AVEC_DES_CHIFFRES: Chapitre = {
       notions: ["contribution_margin", "income_statement"],
       tableau: tableauDesDeuxChoix,
       question: (c) =>
-        `L'arène a rejoué l'année ${dE(c.entreprise)} sans publicité, tout le reste identique : mêmes prix, mêmes concurrents. Calculez les ventes gagnées grâce à la publicité, la marge qu'elle a fait gagner, puis l'écart de résultat de l'activité (avec moins sans).`,
+        `L'arène a rejoué l'année ${dE(c.entreprise)} sans publicité, avec les mêmes concurrents et la même façon de gérer : la production suit ce qui se vend. Calculez les ventes gagnées grâce à la publicité, la marge qu'elle a fait gagner, puis l'écart de résultat de l'activité (avec moins sans).`,
       champs: (c) => {
         const k = deuxChoix(c);
         return [
@@ -353,7 +364,7 @@ export const DECIDER_AVEC_DES_CHIFFRES: Chapitre = {
             texte: "On ne peut pas savoir : les concurrents ont pu jouer autrement dans l'année rejouée",
             juste: false,
             retour:
-              "Non : l'arène a rejoué l'année avec les mêmes concurrents, les mêmes prix et la même façon de gérer ; seule la publicité a changé au départ. L'écart de résultat en est la conséquence.",
+              "Non : l'arène a rejoué l'année avec les mêmes concurrents et la même façon de gérer ; seule la publicité a changé au départ. L'écart de résultat en est la conséquence.",
           },
         ];
       },

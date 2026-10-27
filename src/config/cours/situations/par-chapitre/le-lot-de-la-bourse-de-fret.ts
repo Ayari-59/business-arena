@@ -87,12 +87,16 @@ function calculer(c: Cas) {
   const avec = rejouerAvec(c.code, "le-lot-de-la-bourse-de-fret:les-clients-et-le-lot", (tour, d) =>
     tour === T ? { ...d, productionPlan: planAvec, acceptOrder: true } : undefined,
   );
+  const venduesEnsuite = (a: readonly CompanyRoundResult[]) =>
+    Math.round(jusquALaDefaillance(a).slice(T).reduce((t, x) => t + Object.values(x.market.bySegment).reduce((u, v) => u + v.sold, 0), 0));
   const lire = (a: readonly CompanyRoundResult[]) => ({
     plan: Math.round(a[T - 1]!.production.produced),
     part: Math.round(a[T - 1]!.production.utilizationRate * 1000) / 10,
     lotLivre: Math.round(a[T - 1]!.orderOffer?.delivered ?? 0),
     resultatT: Math.round(a[T - 1]!.incomeStatement.operatingIncome),
     demandeSuivante: a[T] ? Math.round(demandeDuTrimestre(a[T]!)) : null,
+    /** Les palettes vendues aux clients après le trimestre du lot. */
+    venduesEnsuite: venduesEnsuite(a),
     resultatAnnee: resultatDeLAnnee(a),
   });
   const clientsSeuls = lire(sans);
@@ -296,11 +300,16 @@ export const LE_LOT_DE_LA_BOURSE_DE_FRET: Situation = {
         const a = k.clientsSeuls;
         const b = k.clientsEtLot;
         const baisse = a.demandeSuivante !== null && b.demandeSuivante !== null && b.demandeSuivante < a.demandeSuivante;
+        const moinsDeDemande = baisse
+          ? `chargée à ${pct(b.part)} de sa capacité, la flotte a roulé sans marge, la qualité de service a baissé, et les clients ont demandé ${qte(a.demandeSuivante! - b.demandeSuivante!)} ${c.unites} de moins au trimestre ${T + 1}`
+          : "";
         return [
           `Au trimestre ${T}, le lot rapporte ${eur(k.gainT)}, la marge calculée à l'arrondi près.`,
-          baisse
-            ? `Sur l'année, il n'en reste que ${eur(k.gainAnnee)} : chargée à ${pct(b.part)} de sa capacité, la flotte a roulé sans marge, la qualité de service a baissé, et les clients ont demandé ${qte(a.demandeSuivante! - b.demandeSuivante!)} ${c.unites} de moins au trimestre ${T + 1}.`
-            : `Sur l'année, l'écart est de ${eur(k.gainAnnee)}.`,
+          baisse && k.gainAnnee < k.gainT
+            ? `Sur l'année, il n'en reste que ${eur(k.gainAnnee)} : ${moinsDeDemande}.`
+            : baisse && a.venduesEnsuite === b.venduesEnsuite
+              ? `Sur l'année, l'écart est de ${eur(k.gainAnnee)} : ${moinsDeDemande}. Mais ${c.entreprise} n'en a pas vendu une ${c.unite} de moins ensuite : elle chargeait déjà moins que ses clients ne demandaient, et cette demande-là ne serait pas partie.`
+              : `Sur l'année, l'écart est de ${eur(k.gainAnnee)}.`,
         ];
       },
     },

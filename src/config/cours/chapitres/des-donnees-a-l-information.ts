@@ -10,8 +10,8 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *
  * Une table de la base de données des ventes : une ligne par trimestre et par enseigne, avec les
  * ventes et le chiffre d'affaires. Ce sont les chiffres de l'année du cours (`anneeJouee` :
- * l'entreprise, jouée par une gestion équilibrée, et ses deux concurrents, joués par les robots du
- * scénario), arrondis à l'unité et à l'euro. Une enseigne qui ne vend plus n'a plus de ligne ;
+ * l'entreprise, jouée par le bon gestionnaire de l'élève, et ses deux concurrents, joués par les
+ * robots du scénario), arrondis à l'unité et à l'euro. Une enseigne qui ne vend plus n'a plus de ligne ;
  * sur l'année du cours, dont les concurrents sont assainis (arene-du-cours.ts), aucune ne cesse
  * de vendre, et la lecture « un concurrent a cessé de vendre » reste écrite pour une partie où le
  * moteur en déclarerait une.

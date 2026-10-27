@@ -24,7 +24,7 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * rayon, avec son prix : le commerce en ligne vend des commandes (un panier moyen, pas une
  * étiquette), le restaurant des couverts.
  *
- * D'où viennent les chiffres. Les prix hors taxes sont ceux que la gestion équilibrée pratique
+ * D'où viennent les chiffres. Les prix hors taxes sont ceux que le bon gestionnaire pratique
  * dans l'année du cours (`anneeJouee`, détail par article). L'arène joue hors taxes : la TVA est
  * celle que le cours applique au métier (`METIERS`, 20 % sur les vêtements). La promotion est
  * jouée par le moteur (`rejouerAvec`, clé « le-prix-affiche:… ») : même année, même graine,
@@ -45,10 +45,13 @@ export const ARTICLE_A_ETIQUETER = "echarpe";
 export const REMISE_DE_LA_PROMOTION = 0.2;
 
 /**
- * Le trimestre de la promotion : le printemps, la fin de la saison des pulls (hypothèse du
- * cours). Les trimestres se comptent comme le moteur les compte, à partir de 1.
+ * Le trimestre de la promotion : l'hiver, celui des soldes (hypothèse du cours). Les trimestres
+ * se comptent comme le moteur les compte, à partir de 1. Tenue par le bon gestionnaire, la
+ * boutique commande à la demande : au printemps, le pull finit le trimestre sans réserve, et une
+ * promotion n'y ferait rien vendre de plus (comme à Noël, dans le cas). Le premier trimestre est
+ * le seul où il reste des pulls en réserve à la fin : c'est là qu'une promotion peut faire vendre.
  */
-export const TRIMESTRE_DE_LA_PROMOTION = 2;
+export const TRIMESTRE_DE_LA_PROMOTION = 1;
 
 /**
  * L'ARRONDI DE L'ÉTIQUETTE (hypothèse du cours) : un prix affiché se termine par un multiple de
@@ -147,7 +150,7 @@ export function promotionDuRayon(c: Cas, remise: number, trimestre: number, cle:
   };
 }
 
-/** Ce que la promotion a fait, en une phrase : « 611 articles vendus en plus, et un chiffre d'affaires qui monte de 11 710 € ». */
+/** Ce que la promotion a fait, en une phrase : « 219 articles vendus en plus, et un chiffre d'affaires qui baisse de 9 367 € ». */
 export function faitsDeLaPromotion(p: { ventesEnPlus: number; chiffreEnPlus: number }): string {
   const ventes =
     p.ventesEnPlus > 0
@@ -164,8 +167,8 @@ export function faitsDeLaPromotion(p: { ventesEnPlus: number; chiffreEnPlus: num
   return `${ventes}, et ${chiffre}`;
 }
 
-/** La promotion du chapitre : 20 % sur le pull le plus vendu, au printemps. */
-export const promotionDuChapitre = (c: Cas) => promotionDuRayon(c, REMISE_DE_LA_PROMOTION, TRIMESTRE_DE_LA_PROMOTION, "promotion-de-printemps");
+/** La promotion du chapitre : 20 % sur le pull le plus vendu, aux soldes d'hiver. */
+export const promotionDuChapitre = (c: Cas) => promotionDuRayon(c, REMISE_DE_LA_PROMOTION, TRIMESTRE_DE_LA_PROMOTION, "promotion-des-soldes-d-hiver");
 
 export function tableauDesEtiquettes(c: Cas): TableauDeDonnees {
   return {

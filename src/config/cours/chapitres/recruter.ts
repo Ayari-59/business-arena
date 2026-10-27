@@ -35,7 +35,9 @@ export type Verdict = "rien-de-plus" | "pas-assez" | "se-paie";
 export function recrutement(c: Cas) {
   const hr = scenarioByCode(c.code).scenario.hr!;
   const base = rejouerLAnnee(c.code, "base", () => undefined);
-  const avec = rejouerLAnnee(c.code, "embauche", (t) => (t === 1 ? { hire: EMBAUCHES } : undefined));
+  // Le salarié du chapitre s'ajoute aux embauches que le bon gestionnaire fait au premier trimestre
+  // de l'année jouée (aucune, à ce jour) : la décision rejouée remplace toute celle du trimestre.
+  const avec = rejouerLAnnee(c.code, "embauche:en-plus", (t) => (t === 1 ? { hire: EMBAUCHES + (base[0]!.hr?.hired ?? 0) } : undefined));
   const trimestresAvecLui = avec.length - 1;
   const coutDuRecrutement = hr.hiringCost * EMBAUCHES;
   const salaires = hr.salaryPerEmployeePerRound * EMBAUCHES * trimestresAvecLui;
@@ -159,7 +161,7 @@ export const RECRUTER: Chapitre = {
           ],
         };
       },
-      question: (c) => `L'arène a rejoué l'année avec l'embauche, tout le reste identique. Calculez la capacité gagnée par trimestre, les ventes en plus sur l'année (en ${c.unites}), et l'écart de résultat de l'activité.`,
+      question: (c) => `L'arène a rejoué l'année avec l'embauche ; le reste, la gestion le décide comme dans l'année du cours, sur ce que chaque trimestre lui a appris. Calculez la capacité gagnée par trimestre, les ventes en plus sur l'année (en ${c.unites}), et l'écart de résultat de l'activité.`,
       champs: (c) => {
         const r = recrutement(c);
         return [

@@ -67,7 +67,7 @@ export const LES_STOCKS: Chapitre = {
   entreprises: {
     codes: ["boutique", "ecommerce"],
     pourquoi:
-      "dans l'arène, elle ne garde pas de marchandises en stock d'un trimestre à l'autre (un service ne se stocke pas, et une entreprise qui produit à la demande n'a pas de stock).",
+      "dans l'arène, elle ne garde pas de marchandises en stock d'un trimestre à l'autre : un service ne se stocke pas, un produit frais non plus, et ce qu'une entreprise fabrique ou construit n'est pas une marchandise achetée pour être revendue.",
   },
   etapes: [
     {

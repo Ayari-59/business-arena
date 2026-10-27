@@ -205,7 +205,7 @@ export const VOIR_PLUS_GRAND: Situation = {
             juste: verdict === "la-petite",
             retour:
               verdict === "la-petite"
-                ? `Oui : la petite ${faitGagner(p.resultatNetGagne)} de résultat net, la grande ${faitGagner(g.resultatNetGagne)}. La capacité en plus de la grande ne se vend pas assez pour payer son amortissement, son entretien et ses intérêts.`
+                ? `Oui : la petite ${faitGagner(p.resultatNetGagne)} de résultat net, la grande ${faitGagner(g.resultatNetGagne)}. La capacité en plus de la grande ne se vend pas assez pour payer ce qu'elle coûte de plus : l'amortissement et les intérêts d'une machine plus chère.`
                 : verdict === "la-grande"
                   ? `Non : la grande fait gagner ${eur(ecart)} de plus que la petite.`
                   : `Non : la petite ne paie pas non plus, elle ${faitGagner(p.resultatNetGagne)} de résultat net.`,

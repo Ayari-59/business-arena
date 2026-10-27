@@ -17,18 +17,19 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * la basse saison. Puis il compare trois façons de fixer le prix de la nuitée sur l'année du
  * cours, rejouée par l'arène (gestion-de-la-pme.ts : même graine, mêmes concurrents, seule la
  * décision de prix change ; les autres décisions, chaque gestion les prend comme dans l'année du
- * cours, sur ses ventes du trimestre d'avant) :
+ * cours, sur ce que le trimestre d'avant lui a appris) :
  *
- *   · le prix unique de l'année du cours, celui de la gestion équilibrée ;
+ *   · le prix unique de l'année du cours, celui que le bon gestionnaire y a tenu les quatre
+ *     trimestres (`prixUnique`) ;
  *   · le prix de la saison : plus haut en haute saison, plus bas en basse saison ;
  *   · le prix du remplissage : plus haut aux trimestres où, au prix unique, des clients sont
  *     repartis faute de nuitées en vente ; plus bas là où des nuitées en vente sont restées vides,
  *     assez nombreuses pour payer la baisse. Une baisse de prix paie en chiffre d'affaires si elle
  *     fait vendre au moins baisse ÷ (1 − baisse) de nuitées en plus (15 % ÷ 85 %, 17,6 %) ; là où il
  *     restait moins de nuitées vides, elle ne pouvait que vendre les mêmes nuitées moins cher.
- *     Les nuitées mises en vente restent la décision de la gestion équilibrée, qui les règle sur
- *     ce qu'elle a vendu le trimestre d'avant : un prix changé change donc aussi les nuitées mises
- *     en vente des trimestres suivants. Dans l'arène, leur coût variable se paie qu'elles soient
+ *     Les nuitées mises en vente restent la décision du bon gestionnaire, qui les règle sur la
+ *     demande reçue le trimestre d'avant : un prix changé change donc aussi les nuitées mises en
+ *     vente des trimestres suivants. Dans l'arène, leur coût variable se paie qu'elles soient
  *     vendues ou non.
  *
  * Pour chacune : le taux d'occupation, le prix moyen par nuitée vendue, le revenu par chambre
@@ -40,6 +41,12 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * (`price` de la feuille de décision, sans références) ; le moteur l'applique tel quel à toutes
  * les clientèles, et le test vérifie que le prix moyen de chaque trimestre rejoué est bien celui
  * que la variante a décidé.
+ *
+ * LE PRIX DE CHAQUE TRIMESTRE REJOUÉ EST POSÉ, PAS MULTIPLIÉ. Le bon gestionnaire part chaque
+ * trimestre du prix qu'il a joué au trimestre d'avant : multiplier sa décision ferait s'empiler
+ * les écarts (une baisse au 1er trimestre, puis une hausse appliquée au prix déjà baissé). Chaque
+ * variante pose donc son prix à partir du prix unique (`prixDuTrimestre`), y compris aux
+ * trimestres où il ne bouge pas.
  *
  * LA DÉFAILLANCE SE TRANCHE AVANT LA SOMME. Une entreprise défaillante ne vend plus rien les
  * trimestres suivants : une année qui finit en défaillance ne se compare pas par son résultat
@@ -164,13 +171,23 @@ export function lireLAnnee(annee: readonly CompanyRoundResult[]) {
 export type AnneeDeLHotel = ReturnType<typeof lireLAnnee>;
 export type CodeDuPrix = "unique" | "saison" | "remplissage";
 
-/** L'année du cours rejouée avec un prix multiplié, trimestre par trimestre. */
+/**
+ * LE PRIX UNIQUE : celui que l'hôtel a fait payer la nuitée au 1er trimestre de l'année du cours,
+ * au prix exact du moteur (chiffre d'affaires ÷ nuitées vendues). Le bon gestionnaire l'a tenu
+ * toute l'année ; le test le vérifie, trimestre par trimestre.
+ */
+export function prixUnique(code: string): number {
+  const r = anneeDeReference(code)[0]!;
+  return r.incomeStatement.revenue / soldUnits(r);
+}
+
+/** L'année du cours rejouée avec, à chaque trimestre, le prix unique multiplié par son facteur. */
 export function anneeAuPrix(c: Cas, cle: string, facteur: (numero: number) => number) {
-  return rejouerAvec(c.code, `le-prix-selon-la-saison:${cle}`, (tour, d) => {
-    const f = facteur(tour);
-    // L'hôtel du cours vend une nuitée à un prix moyen : une décision unique, sans références.
-    return f === 1 ? undefined : { ...d, price: d.price * f };
-  });
+  const prix = prixUnique(c.code);
+  // L'hôtel du cours vend une nuitée à un prix moyen : une décision unique, sans références.
+  // Le prix est posé à chaque trimestre, même au facteur 1 : sinon le bon gestionnaire repartirait
+  // du prix rejoué au trimestre d'avant.
+  return rejouerAvec(c.code, `le-prix-selon-la-saison:${cle}`, (tour, d) => ({ ...d, price: prix * facteur(tour) }));
 }
 
 /** Les trois prix de l'année, et ce que chacun donne. */
@@ -194,6 +211,18 @@ export function prixSelonLaSaison(c: Cas) {
   const enLice = (Object.keys(annees) as CodeDuPrix[]).filter((k) => annees[k].defaillance === null);
   const meilleur = enLice.reduce((a, b) => (annees[b].resultat > annees[a].resultat ? b : a));
   const chambres = Math.round(unique.trimestres[0]!.offertes / s.roundDays);
+  // Le premier trimestre où le prix du remplissage monte : la demande qu'il a perdue, face aux
+  // clients que le prix unique y refusait.
+  const k = refus[0];
+  const hausseMesuree =
+    k === undefined
+      ? null
+      : {
+          k,
+          avant: unique.trimestres[k - 1]!.demande,
+          apres: remplissage.trimestres[k - 1]!.demande,
+          refuses: unique.trimestres[k - 1]!.demande - unique.trimestres[k - 1]!.enVente,
+        };
   return {
     m,
     jours: s.roundDays,
@@ -220,7 +249,18 @@ export function prixSelonLaSaison(c: Cas) {
     /** Les trimestres où le calendrier et le remplissage se contredisent. */
     hausseMalPlacee: m.haute.filter((k) => vides.includes(k)),
     baisseMalPlacee: m.basse.filter((k) => refus.includes(k)),
+    /** Ce que la première hausse du prix du remplissage a fait à la demande, ou rien s'il ne monte jamais. */
+    hausseMesuree,
   };
+}
+
+/**
+ * Ce que la première hausse du remplissage a coûté en demande, quand elle en a fait partir plus que
+ * le prix unique n'y refusait de clients ; rien sinon.
+ */
+function laHausseMesuree(c: Cas, h: { k: number; avant: number; apres: number; refuses: number } | null) {
+  if (!h || h.avant - h.apres <= h.refuses) return "";
+  return ` Au ${rang(h.k)} trimestre, ${EN_POURCENT(HAUSSE_EN_HAUTE_SAISON)} de plus sur le prix ont fait passer la demande adressée à ${c.entreprise} de ${qte(h.avant)} à ${qte(h.apres)} nuitées, quand le prix unique n'y refusait que ${qte(h.refuses)} clients. Une hausse ne paie que si les clients refusés sont assez nombreux pour remplacer ceux que le prix fait partir.`;
 }
 
 const EN_POURCENT = (x: number) => pct(Math.round(x * 100));
@@ -406,7 +446,7 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
         const lesDeux = p.refus.length > 0 && p.vides.length > 0;
         const tropHaut = p.refus.length === 0 && p.vides.length > 0;
         const yield_ =
-          "C'est l'idée du yield management : faire varier le prix selon ce qui reste à vendre. Quand les clients se pressent, monter le prix rapporte sans vider l'hôtel ; quand des chambres restent vides, le baisser peut les remplir.";
+          "C'est l'idée du yield management : faire varier le prix selon ce qui reste à vendre, le monter quand les clients se pressent, le baisser quand des chambres restent vides. Reste à savoir ce que chaque prix rapporte : l'arène va rejouer l'année.";
         return [
           {
             texte: "Trop bas quand des clients repartaient, trop haut quand des nuitées restaient vides",
@@ -449,7 +489,7 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
       },
       question: (c) => {
         const p = prixSelonLaSaison(c);
-        return `L'arène a rejoué l'année avec un prix ${EN_POURCENT(HAUSSE_EN_HAUTE_SAISON)} plus haut en haute saison (${eur(p.prixHaut)}) et ${EN_POURCENT(BAISSE_EN_BASSE_SAISON)} plus bas en basse saison (${eur(p.prixBas)}). Le reste, chaque gestion le décide comme dans l'année du cours, concurrents compris : ses nuitées en vente suivent ce qu'elle a vendu le trimestre d'avant. Au prix unique, le résultat net de l'année était de ${eur(p.unique.resultat)}. Calculez, au prix de la saison, le taux d'occupation de l'année, le prix moyen et le revenu par chambre disponible, puis l'écart de résultat net (prix de la saison moins prix unique).`;
+        return `L'arène a rejoué l'année avec un prix ${EN_POURCENT(HAUSSE_EN_HAUTE_SAISON)} plus haut en haute saison (${eur(p.prixHaut)}) et ${EN_POURCENT(BAISSE_EN_BASSE_SAISON)} plus bas en basse saison (${eur(p.prixBas)}). Le reste, chaque gestion le décide comme dans l'année du cours, concurrents compris : les nuitées que l'hôtel met en vente suivent la demande qu'il a reçue le trimestre d'avant. Au prix unique, le résultat net de l'année était de ${eur(p.unique.resultat)}. Calculez, au prix de la saison, le taux d'occupation de l'année, le prix moyen et le revenu par chambre disponible, puis l'écart de résultat net (prix de la saison moins prix unique).`;
       },
       champs: (c) => {
         const p = prixSelonLaSaison(c);
@@ -501,9 +541,11 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
           }),
           ...p.baisseMalPlacee.map((k) => {
             const v = vendues(k);
-            return v.saison <= v.unique
-              ? `au ${rang(k)}, la basse saison refusait des clients, et la baisse n'a vendu aucune nuitée de plus (${qte(v.saison)} contre ${qte(v.unique)}), seulement moins cher`
-              : `au ${rang(k)}, la basse saison refusait des clients, et la baisse n'a vendu que ${qte(v.saison - v.unique)} nuitées de plus, toutes moins cher`;
+            return v.saison < v.unique
+              ? `au ${rang(k)}, la basse saison refusait des clients, et la baisse a vendu moins de nuitées (${qte(v.saison)} contre ${qte(v.unique)}), toutes moins cher`
+              : v.saison === v.unique
+                ? `au ${rang(k)}, la basse saison refusait des clients, et la baisse n'a vendu aucune nuitée de plus (${qte(v.saison)} contre ${qte(v.unique)}), seulement moins cher`
+                : `au ${rang(k)}, la basse saison refusait des clients, et la baisse n'a vendu que ${qte(v.saison - v.unique)} nuitées de plus, toutes moins cher`;
           }),
         ];
         const pourquoi = contre.length
@@ -578,7 +620,9 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
         const regles = [
           p.refus.length ? `monte de ${EN_POURCENT(HAUSSE_EN_HAUTE_SAISON)} ${auxTrimestres(p.refus)}, où des clients repartaient au prix unique` : "",
           p.baisses.length ? `baisse de ${EN_POURCENT(BAISSE_EN_BASSE_SAISON)} ${auxTrimestres(p.baisses)}, où les nuitées vides pouvaient payer la baisse` : "",
-          p.tropPeuDeVides.length ? `ne bouge pas ${auxTrimestres(p.tropPeuDeVides)}, où elles ne le pouvaient pas` : "",
+          p.tropPeuDeVides.length
+            ? `ne bouge pas ${auxTrimestres(p.tropPeuDeVides)}, où ${p.baisses.length ? "elles ne le pouvaient pas" : "les nuitées vides étaient trop peu nombreuses pour payer une baisse"}`
+            : "",
         ].filter(Boolean);
         return `L'arène rejoue l'année une dernière fois. Le prix ${regles.join(" ; il ")}. Calculez le taux d'occupation de l'année, le revenu par chambre disponible, puis l'écart de résultat net avec le prix unique (prix du remplissage moins prix unique).`;
       },
@@ -605,7 +649,7 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
         return [
           `Le chiffre d'affaires a changé de ${trimestreParTrimestre(p, p.remplissage, (k) => remplissageDe(p, k))}.${
             sansChangerDePrix.length
-              ? ` ${majuscule(auxTrimestres(sansChangerDePrix))}, il a changé sans que le prix bouge : chaque trimestre part des parts de marché du précédent, et les clients gagnés plus tôt en partie restent.`
+              ? ` ${majuscule(auxTrimestres(sansChangerDePrix))}, il a changé sans que le prix bouge : chaque trimestre part des parts de marché du précédent, et les nuitées mises en vente suivent la demande du trimestre d'avant.`
               : ""
           }`,
           p.remplissage.defaillance !== null
@@ -643,7 +687,7 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
           {
             texte: "Garder un prix unique toute l'année : c'est lui qui protège le mieux le résultat",
             juste: p.meilleur === "unique",
-            retour: p.meilleur === "unique" ? `Oui. ${resultats}` : `Non. ${resultats}`,
+            retour: p.meilleur === "unique" ? `Oui. ${resultats}${laHausseMesuree(c, p.hausseMesuree)}` : `Non. ${resultats}`,
           },
         ];
       },

@@ -21,9 +21,9 @@ import type { Chapitre } from "../types";
 
 /**
  * Les entreprises dont les ventes répondent au budget de communication rejoué par l'arène. NOVA
- * n'en est plus sur l'année du cours (arene-du-cours.ts) : sa production du trimestre, réglée sur
- * ses ventes du tour d'avant, laisse déjà des clients sans être servis, et la campagne n'y fait
- * rien vendre de plus.
+ * n'en est plus sur l'année du cours (arene-du-cours.ts) : sa production du premier trimestre,
+ * celle que propose le formulaire, laisse déjà des clients sans être servis, et la campagne n'y
+ * fait rien vendre de plus. La garde recompte la liste sur le moteur.
  */
 export const COMMUNICATIONS = ["hotel", "bistrot", "ecommerce", "fitness"] as const;
 

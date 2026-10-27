@@ -23,18 +23,21 @@ const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
  * (src/engine/production) : elle perd `availabilityDecay` × (1 − budget ÷ référence) et regagne
  * `RETABLISSEMENT_PAR_ENTRETIEN` × `availabilityDecay` × (budget ÷ référence), jusqu'à 100 % ; la
  * référence est celle du métier multipliée par l'exigence d'entretien du parc
- * (`referenceDEntretien`), et c'est le budget que la gestion équilibrée engage. Le budget où la
+ * (`referenceDEntretien`) ; arrondie à l'euro, c'est le budget que la gestion de l'arène engage
+ * chaque trimestre, celui que le chapitre appelle la référence. Le budget où la
  * disponibilité cesse de baisser est `seuilDEntretien`. Là où le scénario l'active
  * (`qualityCosts.maintenanceDefectSensitivity`, au bistrot), un entretien sous la référence du métier
  * fait aussi monter les rebuts du trimestre même : une étape de plus, qui ne se joue que là.
  *
  * L'entretien sauté vaut pour toutes les entreprises du cours : la disponibilité de l'outil y
  * baisse partout (la garde le vérifie). Là où l'outil n'est pas ce qui limite l'activité, rien ne
- * se perd, et le chapitre le dit : dans l'année du cours, c'est partout sauf chez VOLT FITNESS, où
- * la gestion prépare tout ce que l'outil porte (ailleurs, elle prépare moins, ou l'équipe plafonne
- * avant l'outil, comme chez ATLAS CONSEIL). La troisième lecture, des ventes perdues qui coûtent
- * moins que l'économie (« l'économie tient »), reste calculée, mais aucune entreprise ne la
- * rencontre cette année : la garde dit lesquelles se lisent.
+ * se perd, et le chapitre le dit. Ailleurs, des ventes se perdent : la marge perdue reste sous
+ * l'économie (« l'économie tient »), ou la dépasse (« l'économie se perd »). Les trois lectures
+ * se rencontrent dans l'année du cours ; la garde dit lesquelles, entreprise par entreprise.
+ *
+ * La gestion de l'arène reconduit sa décision du trimestre d'avant : l'année rejouée coupe
+ * l'entretien au trimestre 1 et le reprend ensuite au budget que la gestion engage dans l'année
+ * du cours (`entretienDeLAnnee`).
  */
 
 /** Le trimestre sans entretien : le premier de l'année, pour que l'arène en montre toute la suite. */
@@ -50,10 +53,17 @@ const auDixieme = (x: number) => Math.round(x * 10) / 10;
 
 export type Verdict = "rien-ne-se-perd" | "l-economie-tient" | "l-economie-se-perd";
 
+/**
+ * Le budget d'entretien que la gestion engage au trimestre `t` de l'année du cours. La gestion de
+ * l'arène reconduit sa décision du trimestre d'avant : un rejeu qui coupe l'entretien un trimestre
+ * doit le reprendre ensuite, sinon l'outil resterait sans entretien toute l'année.
+ */
+export const entretienDeLAnnee = (code: string, t: number) => anneeDeReference(code)[rang(t)]!.incomeStatement.maintenanceCost;
+
 /** L'année du cours rejouée sans entretien au trimestre 1, l'entretien repris ensuite au budget de référence. */
 export function anneeSansEntretien(code: string) {
   return rejouerAvec(code, "entretenir-l-outil:sans-entretien-au-trimestre-1", (t, d) =>
-    t === TRIMESTRE_SANS_ENTRETIEN ? { ...d, maintenanceBudget: 0 } : undefined,
+    t === TRIMESTRE_SANS_ENTRETIEN ? { ...d, maintenanceBudget: 0 } : { ...d, maintenanceBudget: entretienDeLAnnee(code, t) },
   );
 }
 
@@ -66,8 +76,8 @@ export function entretienDeLOutil(c: Cas) {
   const reference = anneeDeReference(c.code);
   const sans = anneeSansEntretien(c.code);
   const t1 = rang(TRIMESTRE_SANS_ENTRETIEN);
-  // Le budget de référence est celui que la gestion équilibrée engage, et que l'arène facture.
-  const budget = auCentime(reference[t1]!.incomeStatement.maintenanceCost);
+  // Le budget de référence est celui que la gestion engage, et que l'arène facture.
+  const budget = auCentime(entretienDeLAnnee(c.code, TRIMESTRE_SANS_ENTRETIEN));
   const perte = scenario.production.availabilityDecay;
   const regain = RETABLISSEMENT_PAR_ENTRETIEN * perte;
   // La capacité de l'outil à 100 % : celle de l'année jouée avec l'entretien, au trimestre qui suit.
@@ -91,6 +101,8 @@ export function entretienDeLOutil(c: Cas) {
   // L'année sans entretien au trimestre 1 dépense le budget de référence de moins (la garde le vérifie
   // sur ce que l'arène facture) : écrit ainsi, l'écart du tableau tombe au centime sur le budget lu plus haut.
   const entretienApres = auCentime(entretienAvant - budget);
+  // Les ventes perdues au trimestre sans entretien (les rebuts, là où ils jouent) et ensuite (l'outil moins disponible).
+  const ventesPerduesT1 = Math.round(soldUnits(avecT1)) - Math.round(soldUnits(sansT1));
   const venduesAvant = Math.round(surLAnnee(reference, soldUnits));
   const venduesApres = Math.round(surLAnnee(sans, soldUnits));
   const margeAvant = Math.round(surLAnnee(reference, (r) => r.incomeStatement.grossMargin));
@@ -141,6 +153,8 @@ export function entretienDeLOutil(c: Cas) {
     venduesAvant,
     venduesApres,
     ventesPerdues: venduesAvant - venduesApres,
+    ventesPerduesT1,
+    ventesPerduesEnsuite: venduesAvant - venduesApres - ventesPerduesT1,
     margeAvant,
     margeApres,
     margePerdue,
@@ -177,7 +191,7 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
       texte: (c) => {
         const r = entretienDeLOutil(c);
         return [
-          `Chaque trimestre, ${c.entreprise} dépense ${eur(r.budget)} pour entretenir son outil : c'est le budget de référence de son parc. Le gérant envisage de ne rien y consacrer au trimestre ${T}, pour faire une économie.`,
+          `Chaque trimestre, ${c.entreprise} dépense ${eur(r.budget)} pour entretenir son outil : c'est le budget de référence de son parc, arrondi à l'euro. Le gérant envisage de ne rien y consacrer au trimestre ${T}, pour faire une économie.`,
           `Dans l'arène, l'outil s'use chaque trimestre. Sans entretien, il perd ${pct(r.perte)} de disponibilité ; l'entretien le répare, et un euro dépensé rétablit ${r.retablissement} % de ce qu'un euro manquant laisse s'user. Au budget de référence, l'outil regagne donc ${pct(r.regain)} par trimestre, jusqu'à 100 %. La disponibilité se joue au trimestre suivant : un outil moins disponible produit moins.`,
           r.sensibilite > 0
             ? `Chez ${c.entreprise}, un entretien trop bas fait aussi monter les rebuts du trimestre même : jusqu'à ${pct(auDixieme(r.sensibilite * 100))} de rebuts en plus, sans entretien du tout.`
@@ -314,7 +328,7 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
         };
       },
       question: () =>
-        `L'arène a rejoué l'année sans entretien au trimestre ${T} ; les autres décisions sont celles de la même gestion, qui prévoit chaque trimestre sa production d'après ses ventes du trimestre d'avant. Calculez l'entretien économisé, la marge sur coût variable perdue sur l'année, et l'écart de résultat de l'activité.`,
+        `L'arène a rejoué l'année sans entretien au trimestre ${T}, l'entretien repris ensuite au budget de référence ; les autres décisions sont celles de la même gestion, qui prévoit chaque trimestre sa production d'après la demande du trimestre d'avant, ventes manquées comprises. Calculez l'entretien économisé, la marge sur coût variable perdue sur l'année, et l'écart de résultat de l'activité.`,
       champs: (c) => {
         const r = entretienDeLOutil(c);
         return [
@@ -328,7 +342,9 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
         return [
           r.verdict === "rien-ne-se-perd"
             ? `L'outil a perdu de la capacité, mais les ventes ${dE(c.entreprise)} n'ont pas bougé : ce n'est pas l'outil qui limitait son activité. L'économie de ${eur(r.economie)} passe entière au résultat.`
-            : `L'outil moins disponible fait vendre ${qte(r.ventesPerdues)} ${c.unites} de moins sur l'année, et la marge perdue atteint ${eur(r.margePerdue)}, pour ${eur(r.economie)} d'entretien économisé. La perte ne se lit pas qu'au trimestre où l'outil manque : c'est l'année entière qui fait le compte.`,
+            : r.ventesPerduesEnsuite > 0
+              ? `L'outil moins disponible fait vendre ${qte(r.ventesPerduesEnsuite)} ${c.unites} de moins après le trimestre ${T}${r.ventesPerduesT1 > 0 ? `, et les rebuts du trimestre ${T} ${qte(r.ventesPerduesT1)} de moins` : ""} : la marge perdue sur l'année atteint ${eur(r.margePerdue)}, pour ${eur(r.economie)} d'entretien économisé. La perte ne se lit pas qu'au trimestre où l'outil manque : c'est l'année entière qui fait le compte.`
+              : `L'outil a perdu de la capacité sans coûter de vente ensuite : ce sont les rebuts du trimestre ${T} qui font vendre ${qte(r.ventesPerdues)} ${c.unites} de moins sur l'année, et la marge perdue atteint ${eur(r.margePerdue)}, pour ${eur(r.economie)} d'entretien économisé.`,
           `L'écart de résultat, ${eur(r.ecartDeResultat)}, est l'entretien économisé moins la marge perdue : dans l'arène, rien d'autre n'a changé.`,
         ];
       },
@@ -358,7 +374,7 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
             juste: r.verdict === "l-economie-tient",
             retour:
               r.verdict === "l-economie-tient"
-                ? `Oui : le résultat monte de ${eur(r.ecartDeResultat)}, parce que la marge perdue (${eur(r.margePerdue)}) reste sous l'entretien économisé. Mais l'outil a manqué de capacité ${r.trimestresDeRetour} trimestres, et ${c.entreprise} a vendu ${qte(r.ventesPerdues)} ${c.unites} de moins. Répétée chaque trimestre, l'économie userait l'outil un peu plus à chaque fois.`
+                ? `Oui : le résultat monte de ${eur(r.ecartDeResultat)}, parce que la marge perdue (${eur(r.margePerdue)}) reste sous l'entretien économisé. Mais l'outil a été moins disponible ${r.trimestresDeRetour} trimestres, et ${c.entreprise} a vendu ${qte(r.ventesPerdues)} ${c.unites} de moins. Répétée chaque trimestre, l'économie userait l'outil un peu plus à chaque fois.`
                 : r.verdict === "rien-ne-se-perd"
                   ? "Non : l'outil a été moins disponible, mais les ventes n'en ont pas souffert : rien ne s'est perdu."
                   : `Non : le résultat baisse de ${eur(-r.ecartDeResultat)} : la marge perdue dépasse l'entretien économisé.`,

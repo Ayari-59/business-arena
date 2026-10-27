@@ -42,10 +42,12 @@ import {
  * c'est la vente perdue. L'arène le montre en rejouant l'année (`rejouerAvec`) : toute la demande
  * servie au premier trimestre, puis toute la flotte chargée, puis la panne.
  *
- * Ce que la panne coûte se lit dans l'année rejouée, pas dans une règle : la demande perdue avec la
- * qualité de service ne coûte une vente que si la flotte l'aurait chargée. Dans l'année du cours,
- * ROUTE & CIE refuse des clients chaque trimestre, et la panne ne change ni ses livraisons ni son
- * résultat : le chapitre le dit (`refuseEnsuite`), et la réponse se calcule.
+ * Ce que la panne coûte se lit dans l'année rejouée, pas dans une règle : des palettes qui ne
+ * tiennent plus dans la flotte, une qualité de service qui baisse si le chargement dépasse le seuil
+ * de la flotte en panne, une demande perdue qui ne coûte une vente que si la flotte l'aurait
+ * chargée (`refuseEnsuite`). Dans l'année du cours, le chargement du trimestre 1 tient sous le
+ * seuil même pendant la panne : elle n'y change ni les livraisons ni le résultat. Le chapitre le
+ * dit, et la réponse se calcule ; le cas pratique pose un chargement plus haut.
  *
  * Il ne double pas « Entretenir l'outil » (BTS GPME), qui suit la disponibilité que l'entretien
  * protège : ici, la panne est un aléa, et ce qu'elle coûte passe par la qualité de service.
@@ -153,7 +155,7 @@ function calculer(c: Cas) {
   };
   const ecartDeLaFlottePleine = ecartDe(demandeSuivante(reference), flottePleine.demandeSuivante);
 
-  // La panne au premier trimestre, tout le reste identique.
+  // La panne au premier trimestre, le chargement prévu inchangé.
   const disponibilite = disponibiliteDeLaPanne(c.code);
   const enPanne = rejouerAvec(c.code, `livrer-a-temps:panne-au-trimestre-${T}`, () => undefined, avecLaPanne(T));
   const pT = enPanne[T - 1]!;
@@ -472,7 +474,7 @@ export const LIVRER_A_TEMPS: Chapitre = {
       },
       question: (c) => {
         const k = service(c);
-        return `L'arène a rejoué l'année avec la panne au trimestre ${k.T}, tout le reste identique. Qu'a-t-elle coûté à ${c.entreprise} ?`;
+        return `L'arène a rejoué l'année avec la panne au trimestre ${k.T}, le chargement prévu inchangé. Qu'a-t-elle coûté à ${c.entreprise} ?`;
       },
       options: (c) => {
         const k = service(c);
@@ -523,7 +525,10 @@ export const LIVRER_A_TEMPS: Chapitre = {
         const k = service(c);
         return [
           `Sur l'année, ${c.entreprise} a livré ${pct(k.tauxDeService)} des ${c.unites} demandées. Chaque ${c.unite} refusée est une marge perdue : ${eur(k.margePerdue)} au trimestre ${k.T}. Dans l'arène, le client refusé revient, mais la vente du trimestre ne se rattrape pas.`,
-          `La qualité de service, c'est la ponctualité : elle baisse quand la flotte roule à plus de ${k.seuil} % de sa capacité, et les clients demandent moins ensuite. Une panne la fait baisser même quand toutes les ${c.unites} partent, parce qu'elle laisse moins de place pour les mêmes livraisons.`,
+          `La qualité de service, c'est la ponctualité : elle baisse quand la flotte roule à plus de ${k.seuil} % de sa capacité, et les clients demandent moins ensuite. Une panne peut la faire baisser même quand toutes les ${c.unites} partent : elle laisse moins de place pour les mêmes livraisons.`,
+          k.partPendantLaPanne <= k.seuil && k.nePartPas === 0
+            ? `Cette année, le chargement prévu occupait ${pct(k.partPendantLaPanne)} de la flotte en panne, sous ${k.seuil} % : la panne n'a rien coûté. Un chargement plus haut l'aurait fait dépasser.`
+            : "",
           k.coutDeLaPanne === "rien" && k.panne.refuseEnsuite && k.panne.demandeEnsuiteApres < k.panne.demandeEnsuiteAvant
             ? `Cette année, ${c.entreprise} refusait déjà des clients chaque trimestre : la demande perdue après la panne ne lui a rien coûté. Une flotte qui sert toute sa demande perdrait ces ventes.`
             : "",

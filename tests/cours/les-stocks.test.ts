@@ -14,7 +14,8 @@ import type { Etape, EtatDuCours } from "../../src/config/cours/types";
  * LES STOCKS SE JOUENT DANS LES ENTREPRISES QUI EN ONT UN.
  *
  * Le chapitre ne s'ouvre que là où l'arène garde un stock de marchandises au début et à la
- * fin d'un trimestre, et partout où elle en garde un ; le stock final suit les quantités du
+ * fin d'un trimestre, et partout où elle en garde un (le stock du bâtiment n'en est pas un :
+ * ce sont des chantiers en cours) ; le stock final suit les quantités du
  * moteur ; le coût des ventes boucle ; après les deux écritures d'inventaire, le résultat
  * du chapitre est exactement la marge commerciale ; aucun texte ne sort un « undefined ».
  */
@@ -38,7 +39,11 @@ function textesDe(e: Etape, cas: Cas, etat: EtatDuCours): string[] {
 
 it("le chapitre s'ouvre exactement dans les entreprises qui ont un stock de marchandises dans l'arène", () => {
   for (const code of ENTREPRISES_DU_COURS) {
-    expect(casDeLEntreprise(code).stock !== null, code).toBe(CODES.includes(code));
+    const cas = casDeLEntreprise(code);
+    // Des marchandises : achetées au compte 607 pour être revendues. Le stock du bâtiment,
+    // acheté au compte 601, est un chantier en cours, qui se compte autrement (« La clôture »).
+    const marchandises = cas.stock !== null && cas.achat.compte.startsWith("607");
+    expect(marchandises, code).toBe(CODES.includes(code));
   }
   expect(CODES.length).toBeGreaterThan(0);
 });

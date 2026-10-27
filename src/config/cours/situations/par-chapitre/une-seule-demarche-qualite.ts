@@ -80,7 +80,8 @@ export const UNE_SEULE_DEMARCHE_QUALITE: Situation = {
   libre: false,
   entreprises: {
     codes: QUALITES,
-    pourquoi: "ce cas mesure des rebuts et des retours, et seules ces entreprises de l'arène les comptent ; ailleurs, le moteur ne chiffre pas la non-qualité.",
+    pourquoi:
+      "ce cas reprend le chapitre sur le coût de la non-qualité, qui compare des budgets de prévention autour de celui de l'année. Ailleurs, le moteur ne chiffre pas la non-qualité ; chez PIXEL & CO, il la chiffre, mais l'année du cours n'engage aucun budget de prévention.",
   },
   etapes: [
     {

@@ -23,7 +23,8 @@ import type { Chapitre } from "../types";
  * l'offre), la dette fournisseurs de fin de trimestre (achats du trimestre × délai ÷ durée du
  * trimestre, TTC quand la TVA joue ; le délai de l'offre remplace celui du scénario), la qualité
  * perçue (le bonus, qui fait la demande), la rupture tirée au hasard (la capacité du trimestre
- * baisse). Le taux de rebuts ne dépend pas du fournisseur (il suit le budget qualité) ; un rebut
+ * baisse). Le taux de rebuts ne dépend pas du fournisseur : il suit la qualité produite, celle du
+ * budget qualité, qui baisse quand l'outil tourne au-dessus de son seuil de charge ; un rebut
  * coûte ce qu'il a coûté à produire, donc moins avec une offre moins chère.
  *
  * LA BOUTIQUE N'EN EST PAS : chaque référence de sa gamme a son propre catalogue de
@@ -321,7 +322,7 @@ export const CHOISIR_SON_FOURNISSEUR: Chapitre = {
             : `La qualité de l'offre ${nomDe(p)} ne fait pas vendre davantage cette année (ventes de l'année : ${qte(p.ventes)} ${c.unites}, contre ${qte(r.ventes)}) : ${p.resultat >= r.resultat ? "son prix est pourtant couvert" : "son prix n'est couvert par rien"}.`,
           ...(f.avecRebuts
             ? [
-                `Le taux de rebuts ne dépend pas du fournisseur, mais du budget qualité ; chaque rebut coûte en revanche ce qu'il a coûté à produire, d'où des rebuts ${f.moinsChere.rebuts <= r.rebuts ? "moins chers" : "plus chers"} avec ${nomDe(f.moinsChere)} (${eur(f.moinsChere.rebuts)} contre ${eur(r.rebuts)}).`,
+                `Le taux de rebuts ne dépend pas du fournisseur, mais de la qualité produite (le budget qualité, et un outil qui ne tourne pas trop chargé) ; chaque rebut coûte en revanche ce qu'il a coûté à produire, d'où des rebuts ${f.moinsChere.rebuts <= r.rebuts ? "moins chers" : "plus chers"} avec ${nomDe(f.moinsChere)} (${eur(f.moinsChere.rebuts)} contre ${eur(r.rebuts)}).`,
               ]
             : []),
         ];

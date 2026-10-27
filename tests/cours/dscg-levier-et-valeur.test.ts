@@ -238,14 +238,15 @@ describe("les deux chapitres et leur place au programme", () => {
     for (const ch of [L_EFFET_DE_LEVIER, LA_CREATION_DE_VALEUR]) {
       for (const code of ENTREPRISES_DU_COURS) expect(ch.entreprises!.pourquoi, code).toContain(casDeLEntreprise(code).entreprise);
     }
-    expect(somme(anneeDuCours("bistrot"), net)).toBeLessThan(0);
+    // Toutes les entreprises finissent l'année en bénéfice.
+    for (const code of ENTREPRISES_DU_COURS) expect(somme(anneeDuCours(code), net), code).toBeGreaterThan(0);
     // NOVA finit l'année en bénéfice, mais à découvert : un découvert ouvert au dernier trimestre, qui n'a encore porté aucun agio.
     const nova = anneeDuCours("nova");
     expect(somme(nova, net)).toBeGreaterThan(0);
     expect(nova.at(-1)!.balanceSheet.overdraft).toBeGreaterThan(0);
     expect(nova.slice(0, -1).every((r) => r.balanceSheet.overdraft === 0)).toBe(true);
     expect(anneeJouee("nova").depart.finance.overdraft ?? 0).toBe(0);
-    for (const code of ["boutique", "conseil", "ecommerce", "transport"]) {
+    for (const code of ["boutique", "bistrot", "conseil", "ecommerce", "batiment", "transport"]) {
       expect(somme(anneeDuCours(code), net), code).toBeGreaterThan(0);
       expect(relu(anneeDuCours(code).at(-1)!.balanceSheet).dette, code).toBeLessThan(0);
     }
@@ -340,6 +341,9 @@ describe.each([...ENTREPRISES_DU_LEVIER])("l'effet de levier chez %s", (code) =>
     const k = TRIMESTRE_DE_L_APPORT - 1;
     expect(avec[k]!.capital?.applied).toBe(APPORT_QUI_DESENDETTE);
     expect(avec[k]!.debt?.earlyRepayment).toBe(APPORT_QUI_DESENDETTE);
+    // Au trimestre de l'apport seulement : le bon gestionnaire, qui part de la décision jouée au tour d'avant, ne le reconduit pas.
+    expect(avec.map((r) => r.capital?.applied ?? 0)).toEqual(avec.map((_, j) => (j === k ? APPORT_QUI_DESENDETTE : 0)));
+    expect(avec.map((r) => r.debt?.earlyRepayment ?? 0)).toEqual(avec.map((_, j) => (j === k ? APPORT_QUI_DESENDETTE : 0)));
     expect(avec.map(exploitation)).toEqual(tours.map(exploitation));
     const y = rentabilitesExactes(code, avec);
     pres(y.actif, x.actif, 0.02);
@@ -410,6 +414,9 @@ describe.each([...ENTREPRISES_DU_LEVIER])("l'effet de levier chez %s", (code) =>
     expect(avec.map(net)).toEqual(anneeAvecLaMachine(code, m, "emprunt").map(net));
     expect(anneeSansInvestir(code).map(net)).toEqual(tours.map(net));
     expect(avec[TRIMESTRE_DE_L_ACHAT - 1]!.debt?.newLoan).toBe(m.costPerUnit);
+    // L'achat et son emprunt ne se jouent qu'au trimestre de l'achat.
+    expect(avec.map((r) => r.debt?.newLoan ?? 0)).toEqual(avec.map((_, j) => (j === TRIMESTRE_DE_L_ACHAT - 1 ? m.costPerUnit : 0)));
+    pres(avec[TRIMESTRE_DE_L_ACHAT]!.balanceSheet.fixedAssetsNet - tours[TRIMESTRE_DE_L_ACHAT]!.balanceSheet.fixedAssetsNet, m.costPerUnit - (m.costPerUnit / m.depreciationRounds) * (TRIMESTRE_DE_L_ACHAT), 0.01);
     const v = creationDeValeur(cas);
     const etapes = chapitreDuCas(LA_CREATION_DE_VALEUR, cas).etapes.map((e) => e.id);
     // L'équipement ne se lit que si l'année qu'il fait jouer finit en bénéfice ; sinon le chapitre ne joue pas ses étapes.
@@ -494,16 +501,30 @@ describe.each([...ENTREPRISES_DU_LEVIER])("l'effet de levier chez %s", (code) =>
 });
 
 describe("les verdicts varient avec l'entreprise", () => {
-  it("levier et massue, valeur créée et détruite, l'équipement qui en crée et celui qui en détruit", () => {
+  it("l'année d'un bon élève : le levier et la valeur partout, la massue au seuil, l'équipement qui en crée et celui qui en détruit", () => {
     const cas = ENTREPRISES_DU_LEVIER.map((c) => casDeLEntreprise(c));
-    expect(new Set(cas.map((c) => effetDeLevier(c).verdict))).toEqual(new Set(["levier", "massue"]));
-    expect(new Set(cas.map((c) => effetDeLevier(c).rcpBaisse))).toEqual(new Set([true, false]));
-    expect(new Set(cas.map((c) => creationDeValeur(c).verdict))).toEqual(new Set(["cree", "detruit"]));
+    // L'année que joue le bon gestionnaire finit partout en levier, crée de la valeur partout, tient au taux relevé et couvre
+    // l'exigence du fonds : les textes de la massue, de la valeur détruite, du levier inversé et de l'exploitation qui manque
+    // ne s'y lisent dans aucune entreprise. Ces gardes passeront au rouge le jour où l'une d'elles se lira : il faudra alors
+    // revenir à des verdicts qui varient.
+    expect(new Set(cas.map((c) => effetDeLevier(c).verdict))).toEqual(new Set(["levier"]));
+    expect(new Set(cas.map((c) => effetDeLevier(c).rcpBaisse))).toEqual(new Set([true]));
+    expect(new Set(cas.map((c) => creationDeValeur(c).verdict))).toEqual(new Set(["cree"]));
+    expect(new Set(cas.map((c) => levierFaceALaHausse(c).verdict))).toEqual(new Set(["tient"]));
+    expect(new Set(cas.map((c) => ceQueDoitRapporterLExploitation(c).verdict))).toEqual(new Set(["couvre"]));
+    // L'équipement de plus, lui, crée de la valeur ici et en détruit là.
     expect(new Set(cas.filter((c) => creationDeValeur(c).lEquipementSeLit).map((c) => creationDeValeur(c).lEquipementCree))).toEqual(new Set([true, false]));
-    expect(new Set(cas.map((c) => levierFaceALaHausse(c).verdict))).toEqual(new Set(["tient", "deja"]));
-    expect(new Set(cas.map((c) => ceQueDoitRapporterLExploitation(c).verdict))).toEqual(new Set(["couvre", "manque"]));
-    // Une entreprise peut être en levier positif et détruire de la valeur : le levier ne suffit pas.
-    expect(cas.some((c) => effetDeLevier(c).verdict === "levier" && creationDeValeur(c).verdict === "detruit")).toBe(true);
+    for (const c of cas) {
+      const l = effetDeLevier(c);
+      const v = creationDeValeur(c);
+      // La massue reste à la portée de l'année : son seuil est un résultat d'exploitation qui laisse encore un bénéfice, sous celui de l'année.
+      expect(l.exploitationAuSeuil, c.code).toBeGreaterThan(l.s.chargesFinancieres);
+      expect(l.margeAvantLaMassue, c.code).toBeGreaterThan(0);
+      expect(l.margeAvantLaMassue, c.code).toBeLessThan(l.s.resultatDExploitation);
+      // Le levier ne suffit pas à créer de la valeur : le capital coûte plus que la dette, et une rentabilité économique entre
+      // les deux jouerait en levier tout en détruisant de la valeur.
+      expect(v.k.exact.cmpc, c.code).toBeGreaterThan(l.r.exact.i);
+    }
   });
 
   it("les deux cas tiennent ce qu'un cas dédié doit tenir", () => {

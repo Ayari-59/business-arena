@@ -85,12 +85,12 @@ describe.each(ENTREPRISES_DU_COURS)("la valeur ajoutée chez %s", (code) => {
 
 describe("les cas que le chapitre distingue se rencontrent dans le cours", () => {
   const toutes = ENTREPRISES_DU_COURS.map((c) => valeurAjoutee(casDeLEntreprise(c)));
-  it("une production qui n'est pas les ventes, et une perte qui entame la part de l'entreprise", () => {
+  it("une production qui n'est pas les ventes, et aucune perte qui entame la part de l'entreprise", () => {
     expect(toutes.some((v) => v.k.produits !== v.k.s.ventes)).toBe(true);
-    // Une perte que l'usure de l'équipement couvre encore : la part de l'entreprise reste positive.
-    expect(toutes.some((v) => v.k.resultat < 0 && v.entreprise >= 0)).toBe(true);
-    // Dans l'année corrigée, aucune perte ne dépasse plus l'usure de l'équipement : la branche
-    // « part négative » n'est plus lue. Si une part négative revient, cette garde le dira.
+    // Dans l'année du bon gestionnaire, les neuf entreprises finissent l'année en bénéfice : les
+    // branches « une perte entame ce qu'elle met de côté » et « part négative » ne sont plus lues.
+    // Si une perte revient, ces gardes le diront.
+    expect(toutes.filter((v) => v.k.resultat < 0)).toHaveLength(0);
     expect(toutes.filter((v) => v.entreprise < 0)).toHaveLength(0);
   });
 });

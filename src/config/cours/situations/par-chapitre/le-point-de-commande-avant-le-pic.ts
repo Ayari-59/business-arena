@@ -56,7 +56,7 @@ export const LE_POINT_DE_COMMANDE_AVANT_LE_PIC: Situation = {
   commanditaire: "Le responsable de l'entrepôt",
   titre: "Le point de commande avant le pic",
   accroche:
-    "La demande va monter fort au trimestre suivant. Le responsable de l'entrepôt veut garder son point de commande : recalculer celui du pic, chiffrer ce que l'ancien laisserait sans réponse, et lui répondre.",
+    "La demande va monter au trimestre suivant. Le responsable de l'entrepôt veut garder son point de commande : recalculer celui du pic, chiffrer ce que l'ancien laisserait sans réponse, et lui répondre.",
   objectifs: [
     "Recalculer une demande par jour et un point de commande",
     "Calculer ce qui manque quand le point de commande est trop bas",

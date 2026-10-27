@@ -6,6 +6,7 @@ import {
   LE_COUT_DE_LA_NON_QUALITE,
   NIVEAUX_DE_PREVENTION,
   QUALITES,
+  preventionDeLAnnee,
   demarchesContreLesDefauts,
   nonQualite,
 } from "../../src/config/cours/chapitres/le-cout-de-la-non-qualite";
@@ -148,13 +149,17 @@ describe("les deux chapitres et leur place au programme", () => {
     expect(S_ASSURER_CONTRE_LES_ALEAS.entreprises).toBeUndefined();
   });
 
-  it("le coût de la non-qualité se joue là où le moteur chiffre la non-qualité, et là seulement", () => {
+  it("le coût de la non-qualité se joue là où le moteur chiffre la non-qualité et où l'année engage une prévention, et là seulement", () => {
     for (const code of ENTREPRISES_DU_COURS) {
       const chiffree = scenarioByCode(code).scenario.qualityCosts !== undefined;
-      expect((QUALITES as readonly string[]).includes(code), code).toBe(chiffree);
+      const prevention = anneeDeReference(code).every((r) => (r.qualityCosts?.prevention ?? 0) > 0);
+      expect((QUALITES as readonly string[]).includes(code), code).toBe(chiffree && prevention);
       // Ailleurs, le moteur ne rend aucun coût de la qualité : le chapitre n'aurait rien à lire.
       if (!chiffree) expect(anneeDeReference(code).every((r) => r.qualityCosts === undefined), code).toBe(true);
+      // Là où il les rend sans prévention (PIXEL & CO), la moitié et le double du budget seraient encore zéro.
+      if (chiffree && !prevention) expect(anneeDeReference(code).every((r) => (r.qualityCosts?.prevention ?? 0) === 0), code).toBe(true);
     }
+    expect(ENTREPRISES_DU_COURS.filter((c) => scenarioByCode(c).scenario.qualityCosts !== undefined && !(QUALITES as readonly string[]).includes(c))).toEqual(["ecommerce"]);
     expect(LE_COUT_DE_LA_NON_QUALITE.entreprises!.codes).toEqual(QUALITES);
   });
 });
@@ -302,7 +307,9 @@ describe.each([...QUALITES])("le coût de la non-qualité chez %s", (code) => {
     const q = nonQualite(cas);
     expect(q.niveaux.map((n) => n.part)).toEqual(NIVEAUX_DE_PREVENTION.map((n) => n.part));
     for (const n of q.niveaux) {
-      const a = rejouerAvec(code, `garde-prevention-${n.part}`, (_t, d) => ({ ...d, qualityBudget: (d.qualityBudget ?? 0) * n.part }));
+      const a = rejouerAvec(code, `garde-prevention-${n.part}`, (t, d) => ({ ...d, qualityBudget: preventionDeLAnnee(code, t) * n.part }));
+      // Chaque trimestre joue la part du budget de l'année, sans se composer d'un trimestre à l'autre.
+      a.forEach((r, k) => expect(r.qualityCosts!.prevention, `T${k + 1}`).toBeCloseTo(anneeDeReference(code)[k]!.qualityCosts!.prevention * n.part, 6));
       expect(n.prevention).toBe(Math.round(q.annee.prevention * n.part));
       expect(n.interne).toBe(Math.round(surLAnnee(a, (r) => r.qualityCosts!.internalFailure)));
       expect(n.externe).toBe(Math.round(surLAnnee(a, (r) => r.qualityCosts!.externalFailure)));
