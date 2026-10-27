@@ -1,99 +1,102 @@
 import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
-import { soldUnits } from "../../../../engine/simulation/runGame";
-import type { CompanyRoundResult } from "../../../../engine/types";
-import { scenarioByCode } from "../../../scenarios/registry";
-import { anneeJouee, type Cas } from "../../cas";
-import { HOTELS, duNom, indicateursDuTrimestre, occupation, trimestre } from "../../chapitres/occupation-et-revenu-par-chambre";
-import { rejouerAvec } from "../../gestion-de-la-pme";
+import type { Cas } from "../../cas";
+import { HOTELS, duNom, occupation, trimestre } from "../../chapitres/occupation-et-revenu-par-chambre";
+import { anneeAuPrixUnique, anneeAuTarif, concurrentsDe, lHotelEnIndicateurs, type IndicateursDHotel } from "../../monde/concurrence-hoteliere";
+import type { TableauDeDonnees } from "../../types";
 import type { Situation } from "../types";
 
 /**
  * CAS PRATIQUE DU CHAPITRE « LE TAUX D'OCCUPATION, LE PRIX MOYEN ET LE REVENU PAR CHAMBRE » :
  * S'ALIGNER SUR LE PRIX DU CONCURRENT ? (BTS MHR, palier 2).
  *
- * Au trimestre le moins rempli de ceux où l'hôtel a refusé des clients (des nuitées demandées et non
- * servies, faute d'en avoir mis assez en vente), un concurrent a rempli mieux que lui à un prix plus
- * bas, et la directrice veut mettre en vente toutes les chambres. Le trimestre le moins rempli de
- * l'année ne convient pas toujours : quand l'hôtel y a servi toute sa demande, tout mettre en vente
- * à son tarif n'y vendrait rien de plus. Reste le prix : son tarif, ou celui du concurrent. L'arène rejoue le
- * trimestre des deux façons (gestion-de-la-pme.ts : `rejouerAvec`, sous des clés préfixées du code
- * du chapitre) ; l'élève calcule l'occupation et le RevPAR de chacune, l'écart de chiffre
- * d'affaires, et rend sa réponse. Le meilleur prix est celui du RevPAR le plus haut, tel que le
- * moteur le rejoue : le cas ne le décide pas d'avance.
+ * Un concurrent de la ville remplit mieux que l'hôtel, à un prix plus bas : la directrice veut
+ * s'aligner sur son prix toute l'année, et dit son critère, celui du chapitre : le revenu par
+ * chambre disponible (RevPAR) de l'année. La simulation du cours rejoue l'année de l'hôtel au prix
+ * du concurrent (monde/hotel.ts, monde/concurrence-hoteliere.ts) ; l'élève calcule l'occupation et
+ * le RevPAR de l'année aux deux prix, ce que le prix plus bas change en chambres vendues et en
+ * chiffre d'affaires, et rend sa réponse.
  *
- * Le cas est neuf par sa question : le chapitre juge deux hôtels déjà joués, face à un concurrent
- * plus cher ; le cas demande à l'hôtel de choisir son prix face au concurrent moins cher, et le
- * moteur dit ce que chaque prix aurait rempli. Aucune hypothèse : toutes les chambres disponibles
- * mises en vente, au prix que l'hôtel a joué (sa décision du trimestre, inchangée), ou au prix moyen
- * que le concurrent a fait ce trimestre-là.
+ * LE CRITÈRE EST UN SEUL, DIT DANS LE TEXTE : le RevPAR de l'année. Le résultat de l'année est
+ * donné en appui, et le cas vérifie qu'il dit la même chose (sinon il s'arrête) : la question et la
+ * réponse ne se contredisent pas. Avec la fiche de L'ESCALE, le prix du Comptoir remplit l'hôtel
+ * davantage mais fait baisser le RevPAR et le résultat : la bonne réponse est de garder le tarif.
+ *
+ * Ce que la simulation suppose (dit à l'élève) : les mêmes clientèles en face, qui demandent plus de
+ * nuitées quand le prix baisse ; pas plus de nuitées vendues que de chambres ; le concurrent ne
+ * bouge pas.
  */
 
-/** Un montant à la française, avec le signe moins typographique. */
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const ecart = (x: number) => (x > 0 ? `+${eur(x)}` : eur(x));
 const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
+const auCentime = (x: number) => Math.round(x * 100) / 100;
+const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
+const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+/** « a », « a et b », « a, b et c ». */
+const enListe = (t: readonly string[]) => (t.length < 2 ? t.join("") : `${t.slice(0, -1).join(", ")} et ${t.at(-1)}`);
+/** « au 1er et au 4e trimestre » (k compté à partir de 0). */
+const auxTrimestres = (ks: readonly number[]) => enListe(ks.map((k, i) => (i === ks.length - 1 ? `au ${trimestre(k)}` : `au ${trimestre(k).replace(" trimestre", "")}`)));
+const TRIMESTRES = ["1er trim.", "2e trim.", "3e trim.", "4e trim."] as const;
 
-export type Prix = "joue" | "tarif" | "concurrent";
+export type Verdict = "garder" | "aligner";
 
-/** Les nuitées demandées à l'hôtel et non servies, sur un trimestre de l'année du cours. */
-const perduesAu = (r: CompanyRoundResult) => Math.round(Object.values(r.market.bySegment).reduce((s, x) => s + x.lost, 0));
-
-/**
- * Le trimestre du cas, rejoué toutes chambres en vente, au tarif puis au prix du concurrent : le
- * moins rempli de ceux où l'hôtel a refusé des clients et où un concurrent a rempli mieux que lui à
- * un prix moyen plus bas.
- */
-export function alignement(c: Cas) {
+/** L'année de l'hôtel à son tarif, puis au prix du concurrent qui remplit mieux que lui, moins cher. */
+export function alignement(c: Pick<Cas, "code">) {
   const o = occupation(c);
-  const { partie } = anneeJouee(c.code);
-  const bots = scenarioByCode(c.code).bots.slice(0, 2);
-  // Le concurrent qui, au trimestre `k`, a rempli mieux que l'hôtel à un prix moyen plus bas.
-  const rivalAu = (k: number) =>
-    bots.find((b) => {
-      const x = indicateursDuTrimestre(partie.rounds[k]!.results[b.id]!);
-      return x.occupation > o.trimestres[k]!.occupation && x.prixMoyen < o.trimestres[k]!.prixMoyen;
-    });
-  // Mettre toutes les chambres en vente ne change rien là où l'hôtel a servi toute sa demande.
-  const candidats = o.trimestres
-    .map((x, k) => ({ k, occupation: x.occupation }))
-    .filter(({ k }) => perduesAu(partie.rounds[k]!.results["joueur"]!) > 0 && rivalAu(k) !== undefined);
-  if (candidats.length === 0) throw new Error(`${c.entreprise} n'a refusé de clients à aucun trimestre où un concurrent remplissait mieux, moins cher`);
-  const k = candidats.reduce((a, b) => (b.occupation < a.occupation ? b : a)).k;
-  const tour = k + 1;
-  const rivalBot = rivalAu(k)!;
-  const rivalR = partie.rounds[k]!.results[rivalBot.id]!;
-  // Le prix moyen exact du concurrent ce trimestre, sur ses nuitées et son chiffre d'affaires.
-  const prixDuConcurrent = auCentime(rivalR.incomeStatement.revenue / soldUnits(rivalR));
-  const joueR = partie.rounds[k]!.results["joueur"]!;
-  const disponibles = Math.round(joueR.production.machineCapacity);
-  const tarifR = rejouerAvec(c.code, `occupation-et-revenu-par-chambre:toutes-${disponibles}`, (t, d) =>
-    t === tour ? { ...d, productionPlan: disponibles } : undefined,
-  )[k]!;
-  const concurrentR = rejouerAvec(c.code, `occupation-et-revenu-par-chambre:toutes-${disponibles}-a-${prixDuConcurrent}`, (t, d) =>
-    t === tour ? { ...d, productionPlan: disponibles, price: prixDuConcurrent } : undefined,
-  )[k]!;
-  const facon = (r: CompanyRoundResult) => ({ ...indicateursDuTrimestre(r), resultat: Math.round(r.incomeStatement.operatingIncome) });
-  const f = { joue: facon(joueR), tarif: facon(tarifR), concurrent: facon(concurrentR) };
-  const ordre: Prix[] = ["joue", "tarif", "concurrent"];
-  const meilleur = ordre.reduce((a, b) => (f[b].revpar > f[a].revpar ? b : a));
+  const f = o.f;
+  // Le concurrent qui, sur l'année, a rempli mieux que l'hôtel à un prix moyen plus bas.
+  const rival = concurrentsDe(f).find((x) => x.annee.occupation > o.annee.occupation && x.annee.prixMoyen < o.annee.prixMoyen);
+  if (!rival) throw new Error(`Aucun concurrent ${dE(f.entreprise)} ne remplit mieux que lui, moins cher`);
+  const prixDuConcurrent = rival.annee.prixMoyen;
+  const auTarif = anneeAuTarif(f);
+  const auPrixBas = anneeAuPrixUnique(f, prixDuConcurrent);
+  const tarif = lHotelEnIndicateurs(f, auTarif);
+  const aligne = lHotelEnIndicateurs(f, auPrixBas);
+  const verdict: Verdict = aligne.annee.revpar > tarif.annee.revpar ? "aligner" : "garder";
+  // Le critère du cas est le RevPAR ; le résultat de l'année, donné en appui, doit dire la même chose.
+  const parLeResultat: Verdict = auPrixBas.resultat > auTarif.resultat ? "aligner" : "garder";
+  if (parLeResultat !== verdict) throw new Error(`${f.entreprise} : le RevPAR et le résultat de l'année ne disent pas la même chose`);
+  const ecartsDeChiffre = aligne.trimestres.map((x, k) => auCentime(x.chiffreDAffaires - tarif.trimestres[k]!.chiffreDAffaires));
+  const quarts = [0, 1, 2, 3].slice(0, ecartsDeChiffre.length);
   return {
     o,
-    trimestre: k,
-    /** Les nuitées demandées et non servies, ce trimestre-là. */
-    perdues: perduesAu(joueR),
-    rival: rivalBot.name,
-    /** Les trois indicateurs du concurrent, ce trimestre-là. */
-    leRival: indicateursDuTrimestre(rivalR),
+    f,
+    rival: rival.nom,
+    leRival: rival.annee,
+    prixAuTarif: f.prixDeLAnnee,
     prixDuConcurrent,
-    prixAuTarif: auCentime(joueR.incomeStatement.revenue / soldUnits(joueR)),
-    misesEnVente: Math.round(joueR.production.produced),
-    ...f,
-    vendueEnPlus: f.concurrent.vendues - f.tarif.vendues,
-    ecartDeChiffre: f.tarif.chiffreDAffaires - f.concurrent.chiffreDAffaires,
-    ecartDeResultat: f.tarif.resultat - f.concurrent.resultat,
-    meilleur,
+    tarif,
+    aligne,
+    resultatAuTarif: auTarif.resultat,
+    resultatAligne: auPrixBas.resultat,
+    vendueEnPlus: aligne.annee.vendues - tarif.annee.vendues,
+    /** Tarif moins prix du concurrent : positif si le tarif rapporte plus. */
+    ecartDeChiffre: auCentime(tarif.annee.chiffreDAffaires - aligne.annee.chiffreDAffaires),
+    ecartDeResultat: auCentime(auTarif.resultat - auPrixBas.resultat),
+    ecartsDeChiffre,
+    /** Les trimestres où le prix plus bas fait monter le chiffre d'affaires, et ceux où il le fait baisser. */
+    hausse: quarts.filter((k) => ecartsDeChiffre[k]! > 0),
+    baisse: quarts.filter((k) => ecartsDeChiffre[k]! < 0),
+    /** Les nuitées que l'hôtel refuse encore, complet, au prix du concurrent, trimestre par trimestre. */
+    refuseesAuPrixBas: auPrixBas.trimestres.map((t) => t.refusees),
+    verdict,
+  };
+}
+
+function tableauDeLAnnee(c: Cas): TableauDeDonnees {
+  const a = alignement(c);
+  const valeurs = (x: { trimestres: IndicateursDHotel[]; annee: IndicateursDHotel }, g: (y: IndicateursDHotel) => string) => [...x.trimestres.map(g), g(x.annee)];
+  return {
+    titre: `L'année ${dE(a.f.entreprise)}, rejouée au prix ${duNom(a.rival)}`,
+    colonnes: [...TRIMESTRES.slice(0, a.tarif.trimestres.length), "Année"],
+    lignes: [
+      { libelle: "Chambres disponibles", valeurs: valeurs(a.tarif, (y) => qte(y.disponibles)) },
+      { libelle: `Chambres vendues à ${eur(a.prixAuTarif)}`, valeurs: valeurs(a.tarif, (y) => qte(y.vendues)) },
+      { libelle: `Chiffre d'affaires à ${eur(a.prixAuTarif)}`, valeurs: valeurs(a.tarif, (y) => eur(y.chiffreDAffaires)) },
+      { libelle: `Chambres vendues à ${eur(a.prixDuConcurrent)}`, valeurs: valeurs(a.aligne, (y) => qte(y.vendues)) },
+      { libelle: `Chiffre d'affaires à ${eur(a.prixDuConcurrent)}`, valeurs: valeurs(a.aligne, (y) => eur(y.chiffreDAffaires)) },
+    ],
   };
 }
 
@@ -106,9 +109,9 @@ export const S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT: Situation = {
   commanditaire: "La directrice de l'hôtel",
   titre: "S'aligner sur le prix du concurrent ?",
   accroche:
-    "Un concurrent a rempli mieux que l'hôtel, à un prix plus bas. La directrice veut mettre en vente toutes les chambres : à son tarif, ou au prix du concurrent ? L'arène rejoue le trimestre des deux façons.",
+    "Un concurrent remplit mieux que l'hôtel, à un prix plus bas. La directrice veut s'aligner sur son prix toute l'année, et jugera au revenu par chambre disponible. La simulation du cours rejoue l'année à ce prix.",
   objectifs: [
-    "Calculer le taux d'occupation et le RevPAR d'un trimestre rejoué",
+    "Calculer le taux d'occupation et le RevPAR d'une année rejouée",
     "Chiffrer ce qu'un prix plus bas change en chambres vendues et en chiffre d'affaires",
     "Choisir un prix au RevPAR, et pas à l'occupation seule",
   ],
@@ -125,25 +128,12 @@ export const S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT: Situation = {
       texte: (c) => {
         const a = alignement(c);
         return [
-          `« Au ${trimestre(a.trimestre)}, nous n'avons occupé que ${pct(a.joue.occupation)} de nos chambres, quand ${a.rival} en occupait ${pct(a.leRival.occupation)} à ${eur(a.prixDuConcurrent)} la nuit. Nous n'en avions mis en vente que ${qte(a.misesEnVente)} sur ${qte(a.joue.disponibles)}, et nous avons refusé ${qte(a.perdues)} nuitées. Cette fois, je veux toutes les mettre en vente. Mais à quel prix : notre tarif de ${eur(a.prixAuTarif)}, ou celui ${duNom(a.rival)} ? »`,
-          "L'arène a rejoué le trimestre des deux façons, toutes les chambres en vente, les mêmes clientèles en face.",
+          `« ${a.rival} loue ${eur(a.prixDuConcurrent)} la nuitée, et sur l'année il a rempli ${pct(a.leRival.occupation)} de ses chambres ; nous, ${pct(a.tarif.annee.occupation)} à ${eur(a.prixAuTarif)}. Je veux nous aligner sur son prix, toute l'année. Jugez-en au revenu par chambre disponible de l'année : c'est le chiffre que je suis. »`,
+          `Pas de cours cette fois : les calculs sont ceux du chapitre. La simulation du cours a rejoué l'année ${dE(a.f.entreprise)} à ${eur(a.prixDuConcurrent)} la nuitée, avec les mêmes clientèles en face : elles demandent plus de nuitées quand le prix baisse, et l'hôtel n'en vend pas plus qu'il n'a de chambres. ${a.rival}, lui, ne bouge pas.`,
         ];
       },
-      tableau: (c) => {
-        const a = alignement(c);
-        const ligne = (libelle: string, f: (x: typeof a.joue) => string) => ({ libelle, valeurs: [a.joue, a.tarif, a.concurrent].map(f) });
-        return {
-          titre: `Le ${trimestre(a.trimestre)} ${duNom(c.entreprise)}, rejoué`,
-          colonnes: ["Trimestre joué", "Toutes au tarif", `Toutes au prix ${duNom(a.rival)}`],
-          lignes: [
-            ligne("Chambres disponibles", (x) => qte(x.disponibles)),
-            ligne("Chambres vendues", (x) => qte(x.vendues)),
-            ligne("Chiffre d'affaires hébergement HT", (x) => eur(x.chiffreDAffaires)),
-            ligne("Résultat de l'activité", (x) => eur(x.resultat)),
-          ],
-        };
-      },
-      repere: () => "À rendre : le taux d'occupation et le RevPAR de chaque prix, l'écart de chiffre d'affaires, et votre réponse à la directrice.",
+      tableau: tableauDeLAnnee,
+      repere: () => "À rendre : le taux d'occupation et le RevPAR de l'année à chaque prix, ce que le prix plus bas change en chambres vendues et en chiffre d'affaires, et votre réponse à la directrice.",
     },
     {
       id: "les-deux-prix",
@@ -151,26 +141,27 @@ export const S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT: Situation = {
       titre: "Occupation et RevPAR de chaque prix",
       notions: ["occupancy_revpar"],
       question: () =>
-        "Calculez, pour chaque prix rejoué, le taux d'occupation (au dixième) et le RevPAR (au centime) : chambres vendues, puis chiffre d'affaires, divisés par les chambres disponibles.",
+        "Calculez, pour chaque prix, le taux d'occupation de l'année (au dixième) et son RevPAR (au centime) : les chambres vendues, puis le chiffre d'affaires, divisés par les chambres disponibles de l'année.",
       champs: (c) => {
         const a = alignement(c);
+        const t = a.tarif.annee;
+        const p = a.aligne.annee;
         const auPrix = `au prix ${duNom(a.rival)}`;
         return [
-          { libelle: "Taux d'occupation, au tarif (%)", attendu: a.tarif.occupation, calcul: `${qte(a.tarif.vendues)} ÷ ${qte(a.tarif.disponibles)} × 100 = ${pct(a.tarif.occupation)}`, tolerance: 0.1 },
-          { libelle: "RevPAR, au tarif", attendu: a.tarif.revpar, calcul: `${eur(a.tarif.chiffreDAffaires)} ÷ ${qte(a.tarif.disponibles)} = ${eur(a.tarif.revpar)}` },
-          {
-            libelle: `Taux d'occupation, ${auPrix} (%)`,
-            attendu: a.concurrent.occupation,
-            calcul: `${qte(a.concurrent.vendues)} ÷ ${qte(a.concurrent.disponibles)} × 100 = ${pct(a.concurrent.occupation)}`,
-            tolerance: 0.1,
-          },
-          { libelle: `RevPAR, ${auPrix}`, attendu: a.concurrent.revpar, calcul: `${eur(a.concurrent.chiffreDAffaires)} ÷ ${qte(a.concurrent.disponibles)} = ${eur(a.concurrent.revpar)}` },
+          { libelle: "Taux d'occupation, au tarif (%)", attendu: t.occupation, calcul: `${qte(t.vendues)} ÷ ${qte(t.disponibles)} × 100 = ${pct(t.occupation)}`, tolerance: 0.1 },
+          { libelle: "RevPAR, au tarif", attendu: t.revpar, calcul: `${eur(t.chiffreDAffaires)} ÷ ${qte(t.disponibles)} = ${eur(t.revpar)}` },
+          { libelle: `Taux d'occupation, ${auPrix} (%)`, attendu: p.occupation, calcul: `${qte(p.vendues)} ÷ ${qte(p.disponibles)} × 100 = ${pct(p.occupation)}`, tolerance: 0.1 },
+          { libelle: `RevPAR, ${auPrix}`, attendu: p.revpar, calcul: `${eur(p.chiffreDAffaires)} ÷ ${qte(p.disponibles)} = ${eur(p.revpar)}` },
         ];
       },
       explication: (c) => {
         const a = alignement(c);
+        const t = a.tarif.annee;
+        const p = a.aligne.annee;
         return [
-          `Au prix ${duNom(a.rival)}, l'hôtel occupe ${pct(a.concurrent.occupation)} de ses chambres, contre ${pct(a.tarif.occupation)} à son tarif. Le RevPAR, lui, fait ${eur(a.concurrent.revpar)} contre ${eur(a.tarif.revpar)}.`,
+          `Au prix ${duNom(a.rival)}, l'hôtel occupe ${pct(p.occupation)} de ses chambres, contre ${pct(t.occupation)} à son tarif. Le RevPAR, lui, fait ${eur(p.revpar)} contre ${eur(t.revpar)} : ${
+            p.revpar < t.revpar ? "plus rempli, l'hôtel rapporte moins par chambre disponible" : "l'hôtel est plus rempli, et chaque chambre disponible rapporte plus"
+          }.`,
         ];
       },
     },
@@ -181,25 +172,38 @@ export const S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT: Situation = {
       notions: ["occupancy_revpar", "price_elasticity"],
       question: (c) => {
         const a = alignement(c);
-        return `Calculez les chambres vendues en plus au prix ${duNom(a.rival)}, puis l'écart de chiffre d'affaires hébergement entre le tarif et le prix ${duNom(a.rival)} (positif si le tarif rapporte plus).`;
+        return `Calculez les chambres vendues en plus sur l'année au prix ${duNom(a.rival)}, puis l'écart de chiffre d'affaires de l'année entre le tarif et le prix ${duNom(a.rival)} (positif si le tarif rapporte plus).`;
       },
       champs: (c) => {
         const a = alignement(c);
         return [
-          { libelle: "Chambres vendues en plus", attendu: a.vendueEnPlus, calcul: `${qte(a.concurrent.vendues)} − ${qte(a.tarif.vendues)} = ${qte(a.vendueEnPlus)}` },
+          { libelle: "Chambres vendues en plus", attendu: a.vendueEnPlus, calcul: `${qte(a.aligne.annee.vendues)} − ${qte(a.tarif.annee.vendues)} = ${qte(a.vendueEnPlus)}` },
           {
             libelle: "Écart de chiffre d'affaires",
             attendu: a.ecartDeChiffre,
-            calcul: `${eur(a.tarif.chiffreDAffaires)} − ${eur(a.concurrent.chiffreDAffaires)} = ${ecart(a.ecartDeChiffre)}`,
+            calcul: `${eur(a.tarif.annee.chiffreDAffaires)} − ${eur(a.aligne.annee.chiffreDAffaires)} = ${ecart(a.ecartDeChiffre)}`,
           },
         ];
       },
       explication: (c) => {
         const a = alignement(c);
-        const baisse = auCentime(a.prixAuTarif - a.prixDuConcurrent);
-        return [
-          `${qte(a.vendueEnPlus)} chambres de plus, mais ${eur(baisse)} de moins sur chacune des ${qte(a.concurrent.vendues)} chambres vendues. L'écart de résultat de l'activité est de ${ecart(a.ecartDeResultat)} : les chambres mises en vente sont les mêmes, leurs charges aussi.`,
+        const de = (ks: readonly number[]) => ks.map((k) => ecart(a.ecartsDeChiffre[k]!)).join(", ");
+        const refusees = a.baisse.reduce((s, k) => s + a.refuseesAuPrixBas[k]!, 0);
+        const complets = a.baisse.length > 0 && a.baisse.every((k) => a.refuseesAuPrixBas[k]! > 0);
+        const morceaux = [
+          a.hausse.length
+            ? `${majuscule(auxTrimestres(a.hausse))}, il restait des chambres vides : le prix plus bas en remplit, et le chiffre d'affaires monte (${de(a.hausse)}).`
+            : "",
+          a.baisse.length
+            ? `${majuscule(auxTrimestres(a.baisse))}, ${
+                complets
+                  ? `l'hôtel est complet à ce prix, et refuse encore ${qte(refusees)} nuitées : chaque chambre y part ${eur(auCentime(a.prixAuTarif - a.prixDuConcurrent))} moins cher, sans assez de chambres remplies en plus pour compenser`
+                  : "les chambres remplies en plus ne paient pas la baisse du prix"
+              }. Le chiffre d'affaires baisse (${de(a.baisse)}).`
+            : "",
+          `Le résultat de l'année, lui, ${a.ecartDeResultat > 0 ? `baisse de ${eur(a.ecartDeResultat)}` : `monte de ${eur(-a.ecartDeResultat)}`} au prix ${duNom(a.rival)} : chaque chambre louée en plus coûte aussi ${eur(a.f.coutVariableParNuitee)} (ménage, linge, petit-déjeuner).`,
         ];
+        return morceaux.filter(Boolean);
       },
     },
     {
@@ -207,34 +211,35 @@ export const S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT: Situation = {
       type: "choix",
       titre: "Votre réponse à la directrice",
       notions: ["occupancy_revpar"],
-      question: () => "Quelle réponse rendez-vous à la directrice ?",
+      question: () => "La directrice juge au revenu par chambre disponible de l'année. Quelle réponse lui rendez-vous ?",
       options: (c) => {
         const a = alignement(c);
-        const dit = (x: Prix) =>
-          x === a.meilleur
-            ? `Oui : c'est le RevPAR le plus haut, ${eur(a[x].revpar)} par chambre disponible.`
-            : `Non : ${eur(a[x].revpar)} par chambre disponible, contre ${eur(a[a.meilleur].revpar)} pour le meilleur choix.`;
+        const t = a.tarif.annee;
+        const p = a.aligne.annee;
+        const revpar = `le RevPAR de l'année passerait de ${eur(t.revpar)} à ${eur(p.revpar)}`;
+        const resultat =
+          a.ecartDeResultat > 0 ? `le résultat de l'année baisserait de ${eur(a.ecartDeResultat)}` : `le résultat de l'année monterait de ${eur(-a.ecartDeResultat)}`;
         return [
           {
-            texte: `Tout mettre en vente, au tarif de ${eur(a.prixAuTarif)}`,
-            juste: a.meilleur === "tarif",
+            texte: `Garder ${eur(a.prixAuTarif)} : le RevPAR de l'année baisserait`,
+            juste: a.verdict === "garder",
             retour:
-              a.meilleur === "tarif"
-                ? `${dit("tarif")} L'hôtel est moins plein qu'au prix ${duNom(a.rival)}, mais chaque chambre louée paie davantage.`
-                : `${dit("tarif")} Chaque chambre louée paie davantage, mais il en reste ${qte(a.tarif.disponibles - a.tarif.vendues)} vides.`,
+              a.verdict === "garder"
+                ? `Oui. Au prix ${duNom(a.rival)}, l'hôtel serait plus rempli (${pct(p.occupation)} contre ${pct(t.occupation)}), mais ${revpar}, et ${resultat}. Le prix plus bas ne paie qu'aux trimestres où il reste des chambres vides ; ailleurs, l'hôtel se remplissait déjà, ou presque, et il vendrait ses chambres moins cher.`
+                : `Non : ${revpar}, et ${resultat}.`,
           },
           {
-            texte: `Tout mettre en vente, au prix ${duNom(a.rival)}`,
-            juste: a.meilleur === "concurrent",
-            retour:
-              a.meilleur === "concurrent"
-                ? `${dit("concurrent")} Les ${qte(a.vendueEnPlus)} chambres louées en plus rapportent davantage que la baisse du prix ne coûte sur les autres.`
-                : `${dit("concurrent")} L'hôtel est le plus plein à ce prix (${pct(a.concurrent.occupation)}), mais le taux d'occupation ne dit pas à quel prix les chambres sont parties.`,
+            texte: "S'aligner : l'hôtel serait plus rempli",
+            juste: false,
+            retour: `Le taux d'occupation monterait bien, de ${pct(t.occupation)} à ${pct(p.occupation)}, mais il ne dit pas à quel prix les chambres partent. Or la directrice juge au RevPAR : ${revpar}.`,
           },
           {
-            texte: "Ne rien changer, et garder le trimestre tel qu'il a été joué",
-            juste: a.meilleur === "joue",
-            retour: `${dit("joue")} Le trimestre joué a laissé ${qte(a.joue.disponibles - a.joue.vendues)} chambres vides.`,
+            texte: `S'aligner sur ${eur(a.prixDuConcurrent)} : le RevPAR de l'année monterait`,
+            juste: a.verdict === "aligner",
+            retour:
+              a.verdict === "aligner"
+                ? `Oui : ${revpar}, et ${resultat}. Les chambres louées en plus rapportent davantage que la baisse du prix ne coûte sur les autres.`
+                : `Non : ${revpar}. Ce qui remplit ${a.rival} ne remplit pas forcément ${a.f.entreprise} : ses clientèles ne sont pas les mêmes.`,
           },
         ];
       },

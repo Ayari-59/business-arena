@@ -39,6 +39,14 @@ export interface FicheDeLHotel {
    */
   elasticite: number;
   clienteles: readonly ClienteleDeLHotel[];
+  /** L'équipe : le même effectif toute l'année, payé pareil chaque trimestre (sa paie est dans les charges fixes). */
+  equipe: { effectif: number; coutParSalarieParTrimestre: number };
+  /**
+   * Les hôtels de la ville qui servent de comparaison. Leur année est posée telle quelle (prix et
+   * nuitées vendues par trimestre), relevée une fois sur les concurrents de l'arène : le cours ne
+   * les fait pas réagir.
+   */
+  concurrents: readonly { nom: string; chambres: number; prix: readonly [number, number, number, number]; vendues: readonly [number, number, number, number] }[];
 }
 
 export const L_ESCALE: FicheDeLHotel = {
@@ -54,6 +62,11 @@ export const L_ESCALE: FicheDeLHotel = {
     { code: "affaires", nom: "Clientèle d'affaires", demande: [1300, 1400, 700, 1350] },
     { code: "loisirs", nom: "Tourisme de loisirs", demande: [1000, 2200, 5300, 1300] },
     { code: "groupes", nom: "Groupes et séminaires", demande: [1100, 1400, 400, 1250] },
+  ],
+  equipe: { effectif: 14, coutParSalarieParTrimestre: 8600 },
+  concurrents: [
+    { nom: "Le Comptoir", chambres: 60, prix: [77.44, 77.44, 77.44, 77.44], vendues: [4716, 5400, 5400, 5400] },
+    { nom: "Le Grand Hôtel Terminus", chambres: 60, prix: [114.26, 114.4, 114.4, 114.4], vendues: [1925, 2300, 2069, 2175] },
   ],
 };
 

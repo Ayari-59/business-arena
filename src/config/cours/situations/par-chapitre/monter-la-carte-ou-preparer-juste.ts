@@ -1,32 +1,30 @@
 import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
-import { soldUnits } from "../../../../engine/simulation/runGame";
-import type { CompanyRoundResult } from "../../../../engine/types";
-import { scenarioByCode } from "../../../scenarios/registry";
-import { anneeJouee, type Cas } from "../../cas";
-import { CUISINES, coutMatiere, cuisineDuTrimestre } from "../../chapitres/le-cout-matiere";
-import { rejouerAvec } from "../../gestion-de-la-pme";
+import type { Cas } from "../../cas";
+import { CUISINES, coutMatiere } from "../../chapitres/le-cout-matiere";
+import { MARGE_DE_PREPARATION, trimestreDeCuisine, type TrimestreDeCuisine } from "../../monde/cuisine";
 import type { Situation } from "../types";
 
 /**
  * CAS PRATIQUE DU CHAPITRE « LE COÛT MATIÈRE ET LE PRIX D'UN PLAT » : MONTER LA CARTE, OU
  * PRÉPARER JUSTE ? (BTS MHR, palier 2).
  *
- * Au trimestre où le ratio coût matière de l'année jouée est le plus haut, le chef propose de monter
- * le ticket au prix qui garde le coefficient de la carte ; la salle pense qu'il suffit de préparer
- * juste. L'arène rejoue le trimestre des deux façons (gestion-de-la-pme.ts : `rejouerAvec`, sous
- * des clés préfixées du code du chapitre) ; l'élève calcule le ratio de chacune, ce que chacune
- * rapporte de plus que le trimestre joué, et rend sa réponse.
+ * Au trimestre où le ratio coût matière de l'année est le plus haut, le chef propose de monter le
+ * ticket au prix qui garde le coefficient de la carte ; la salle pense qu'il suffit de préparer
+ * juste. La simulation du cours rejoue le trimestre des deux façons ; l'élève calcule le ratio de
+ * chacune, ce que chacune rapporte de plus que le trimestre joué, et rend sa réponse.
  *
  * Le cas est neuf par sa question : le chapitre lit le ratio et le prix qui le garde ; le cas
- * demande si garder le ratio est le bon objectif. Le moteur répond : le prix plus haut fait partir
- * des clients (l'élasticité du scénario), préparer juste supprime les denrées jetées.
+ * demande si garder le ratio est le bon objectif, et le juge à la marge que chaque façon laisse.
  *
- * LA SEULE RÈGLE DU CAS : dans les deux façons, la cuisine prépare de quoi servir chaque client,
- * plats ratés compris, au taux de rebut de base du scénario (`qualityCosts.baseDefectRate`) :
- * couverts à préparer = couverts servis ÷ (1 − taux de rebut), arrondi au-dessus. Au prix monté,
- * les couverts servis sont ceux que l'arène sert à ce prix, rejoué d'abord sans rien changer
- * d'autre.
+ * Comme son chapitre, le cas se joue dans le monde du cours (monde/cuisine.ts), pas dans l'arène.
+ * Chaque façon change une seule chose au trimestre joué :
+ *   · la carte montée : le ticket passe au prix qui garde le coefficient, la demande y répond avec
+ *     l'élasticité de la fiche, et la cuisine prépare comme d'habitude (la demande plus la marge
+ *     de préparation) ;
+ *   · préparer juste : le ticket reste celui de l'année, et la cuisine prépare la demande, sans
+ *     marge.
+ * Les charges fixes du trimestre ne changent pas d'une façon à l'autre : l'écart de marge sur coûts
+ * variables est l'écart de résultat.
  */
 
 /** Un montant à la française, avec le signe moins typographique. */
@@ -38,43 +36,37 @@ const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
 const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
 const coef = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const rang = (k: number) => (k === 0 ? "1er" : `${k + 1}e`);
+const auCentime = (x: number) => Math.round(x * 100) / 100;
+const rang = (n: number) => (n === 1 ? "1er" : `${n}e`);
+const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 export type Facon = "joue" | "carte" | "juste";
 
-/** Ce que la cuisine prépare pour servir tant de couverts, plats ratés compris. */
-export const aPreparer = (servis: number, rebut: number) => Math.ceil(servis / (1 - rebut) - 1e-9);
-
-/** Les trois façons de jouer le trimestre le plus cher en denrées, telles que l'arène les rejoue. */
-export function carteOuCuisine(c: Cas) {
+/** Les trois façons de jouer le trimestre au ratio le plus haut, telles que la simulation du cours les rejoue. */
+export function carteOuCuisine(c: Pick<Cas, "code">) {
   const m = coutMatiere(c);
-  const k = m.pire;
-  const tour = k + 1;
-  const rebut = scenarioByCode(c.code).scenario.qualityCosts?.baseDefectRate ?? 0;
-  const joueR = anneeJouee(c.code).partie.rounds[k]!.results["joueur"]!;
-  const joue = cuisineDuTrimestre(c, joueR);
+  const f = m.f;
+  const n = m.pire;
+  const joue = trimestreDeCuisine(f, n);
   const prixMonte = auCentime(joue.coutDuCouvert * m.coefficient);
-  // Le prix monté, d'abord seul : les couverts que l'arène sert à ce prix.
-  const auPrixMonte = rejouerAvec(c.code, `le-cout-matiere:prix-${prixMonte}`, (t, d) => (t === tour ? { ...d, price: prixMonte } : undefined))[k]!;
-  const prepCarte = aPreparer(Math.round(soldUnits(auPrixMonte)), rebut);
-  const carteR = rejouerAvec(c.code, `le-cout-matiere:carte-${prixMonte}-${prepCarte}`, (t, d) =>
-    t === tour ? { ...d, price: prixMonte, productionPlan: prepCarte } : undefined,
-  )[k]!;
-  const prepJuste = aPreparer(joue.servis, rebut);
-  const justeR = rejouerAvec(c.code, `le-cout-matiere:juste-${prepJuste}`, (t, d) => (t === tour ? { ...d, productionPlan: prepJuste } : undefined))[k]!;
-  const facon = (r: CompanyRoundResult) => ({ ...cuisineDuTrimestre(c, r), prix: auCentime(r.incomeStatement.revenue / soldUnits(r)), resultat: Math.round(r.incomeStatement.operatingIncome) });
-  const f = { joue: facon(joueR), carte: facon(carteR), juste: facon(justeR) };
+  const facons: Record<Facon, TrimestreDeCuisine> = {
+    joue,
+    carte: trimestreDeCuisine(f, n, prixMonte),
+    juste: trimestreDeCuisine(f, n, f.prixDeLAnnee, 0),
+  };
   const ordre: Facon[] = ["joue", "carte", "juste"];
-  const meilleure = ordre.reduce((a, b) => (f[b].resultat > f[a].resultat ? b : a));
+  const meilleure = ordre.reduce((a, b) => (facons[b].margeSurCoutsVariables > facons[a].margeSurCoutsVariables ? b : a));
   return {
     m,
-    trimestre: k,
-    rebut,
+    f,
+    trimestre: n,
     prixMonte,
-    ...f,
-    couvertsPerdus: f.joue.servis - f.carte.servis,
-    ecartCarte: f.carte.resultat - f.joue.resultat,
-    ecartJuste: f.juste.resultat - f.joue.resultat,
+    ...facons,
+    /** Ce que la hausse du ticket rapporte de plus sur chaque couvert servi. */
+    gainParCouvert: auCentime(prixMonte - joue.prix),
+    clientsPerdus: joue.servis - facons.carte.servis,
+    ecartCarte: auCentime(facons.carte.margeSurCoutsVariables - joue.margeSurCoutsVariables),
+    ecartJuste: auCentime(facons.juste.margeSurCoutsVariables - joue.margeSurCoutsVariables),
     meilleure,
   };
 }
@@ -88,7 +80,7 @@ export const MONTER_LA_CARTE_OU_PREPARER_JUSTE: Situation = {
   commanditaire: "Le chef de cuisine",
   titre: "Monter la carte, ou préparer juste ?",
   accroche:
-    "Les denrées ont augmenté et le ratio coût matière s'envole. Le chef veut monter la carte pour garder son coefficient ; la salle pense qu'il suffit de préparer juste. L'arène rejoue le trimestre des deux façons.",
+    "Les denrées ont augmenté et le ratio coût matière s'envole. Le chef veut monter la carte pour garder son coefficient ; la salle pense qu'il suffit de préparer juste. La simulation du cours rejoue le trimestre des deux façons.",
   objectifs: [
     "Calculer le ratio coût matière d'un trimestre rejoué",
     "Comparer deux façons de corriger un ratio qui dérive",
@@ -108,15 +100,16 @@ export const MONTER_LA_CARTE_OU_PREPARER_JUSTE: Situation = {
         const k = carteOuCuisine(c);
         const h = k.m.hausse;
         return [
-          `« Au ${rang(k.trimestre)} trimestre, notre ratio coût matière est monté à ${pct(k.joue.ratio)}${h.premier >= 0 && h.premier <= k.trimestre ? `, les denrées ayant augmenté de ${pct(h.taux)}` : ""}. Je propose de monter la carte au prix qui garde notre coefficient de ${coef(k.m.coefficient)} : ${eur(k.prixMonte)} HT le couvert. En salle, on me dit qu'il suffirait de préparer juste, au ticket de ${eur(k.joue.prix)}. Que retenons-nous ? »`,
-          `L'arène a rejoué le trimestre des deux façons. Chaque fois, la cuisine prépare de quoi servir chaque client, plats ratés compris : ${pct(k.rebut * 100)} des couverts préparés, le taux de rebut du scénario.`,
+          `« Au ${rang(k.trimestre)} trimestre, notre ratio coût matière est monté à ${pct(k.joue.ratio)}${h.premier > 0 && h.premier <= k.trimestre ? `, les denrées ayant augmenté de ${pct(h.taux)}` : ""}. Je propose de monter la carte au prix qui garde notre coefficient de ${coef(k.m.coefficient)} : ${eur(k.prixMonte)} HT le couvert. En salle, on me dit qu'il suffirait de préparer juste, au ticket de ${eur(k.joue.prix)}. Que retenons-nous ? »`,
+          `La simulation du cours rejoue le trimestre des deux façons. Carte montée : le ticket passe à ${eur(k.prixMonte)} HT, la demande y répond (un prix plus haut de 1 % en fait perdre environ ${qte(-k.f.elasticite)} %), et la cuisine prépare comme d'habitude, la demande plus ${pct(MARGE_DE_PREPARATION * 100)}. Préparer juste : le ticket reste à ${eur(k.joue.prix)}, et la cuisine prépare exactement la demande.`,
+          "Les charges fixes du trimestre ne changent pas d'une façon à l'autre : ce que chaque façon change au résultat, c'est sa marge sur coûts variables, le chiffre d'affaires moins les denrées et les autres coûts variables.",
         ];
       },
       tableau: (c) => {
         const k = carteOuCuisine(c);
-        const ligne = (libelle: string, f: (x: typeof k.joue) => string) => ({ libelle, valeurs: [k.joue, k.carte, k.juste].map(f) });
+        const ligne = (libelle: string, f: (x: TrimestreDeCuisine) => string) => ({ libelle, valeurs: [k.joue, k.carte, k.juste].map(f) });
         return {
-          titre: `Le ${rang(k.trimestre)} trimestre de ${c.entreprise}, rejoué`,
+          titre: `Le ${rang(k.trimestre)} trimestre ${dE(k.f.entreprise)}, rejoué`,
           colonnes: ["Trimestre joué", "Carte montée", "Préparer juste"],
           lignes: [
             ligne("Ticket moyen HT", (x) => eur(x.prix)),
@@ -124,7 +117,8 @@ export const MONTER_LA_CARTE_OU_PREPARER_JUSTE: Situation = {
             ligne("Couverts servis", (x) => qte(x.servis)),
             ligne("Coût matière consommé", (x) => eur(x.denrees)),
             ligne("Chiffre d'affaires HT", (x) => eur(x.chiffreDAffaires)),
-            ligne("Résultat de l'activité", (x) => eur(x.resultat)),
+            ligne("Autres coûts variables", (x) => eur(x.autresCouts)),
+            ligne("Marge sur coûts variables", (x) => eur(x.margeSurCoutsVariables)),
           ],
         };
       },
@@ -145,8 +139,9 @@ export const MONTER_LA_CARTE_OU_PREPARER_JUSTE: Situation = {
       },
       explication: (c) => {
         const k = carteOuCuisine(c);
+        const plusBas = k.carte.ratio < k.juste.ratio ? "la carte montée" : "préparer juste";
         return [
-          `La carte montée ramène le ratio à ${pct(k.carte.ratio)}, préparer juste à ${pct(k.juste.ratio)} : les deux font mieux que les ${pct(k.joue.ratio)} du trimestre joué. Le ratio seul désignerait la carte montée.`,
+          `La carte montée ramène le ratio à ${pct(k.carte.ratio)}, préparer juste à ${pct(k.juste.ratio)} : les deux font mieux que les ${pct(k.joue.ratio)} du trimestre joué. Le ratio seul désignerait ${plusBas} ; reste à voir ce que chacune rapporte.`,
         ];
       },
     },
@@ -156,19 +151,30 @@ export const MONTER_LA_CARTE_OU_PREPARER_JUSTE: Situation = {
       titre: "Ce que chaque façon rapporte",
       notions: ["margin_rates", "price_elasticity"],
       question: () =>
-        "Calculez les couverts que la carte montée fait perdre, puis l'écart de résultat de chaque façon avec le trimestre joué (positif si elle rapporte plus).",
+        "Calculez les clients que la carte montée fait perdre, puis l'écart de marge sur coûts variables de chaque façon avec le trimestre joué (positif si elle rapporte plus).",
       champs: (c) => {
         const k = carteOuCuisine(c);
         return [
-          { libelle: "Couverts perdus en montant la carte", attendu: k.couvertsPerdus, calcul: `${qte(k.joue.servis)} − ${qte(k.carte.servis)} = ${qte(k.couvertsPerdus)}` },
-          { libelle: "Écart de résultat, carte montée", attendu: k.ecartCarte, calcul: `${eur(k.carte.resultat)} − ${retranche(k.joue.resultat)} = ${ecart(k.ecartCarte)}` },
-          { libelle: "Écart de résultat, préparer juste", attendu: k.ecartJuste, calcul: `${eur(k.juste.resultat)} − ${retranche(k.joue.resultat)} = ${ecart(k.ecartJuste)}` },
+          { libelle: "Clients perdus en montant la carte", attendu: k.clientsPerdus, calcul: `${qte(k.joue.servis)} − ${qte(k.carte.servis)} = ${qte(k.clientsPerdus)}` },
+          {
+            libelle: "Écart de marge, carte montée",
+            attendu: k.ecartCarte,
+            calcul: `${eur(k.carte.margeSurCoutsVariables)} − ${retranche(k.joue.margeSurCoutsVariables)} = ${ecart(k.ecartCarte)}`,
+            tolerance: 1,
+          },
+          {
+            libelle: "Écart de marge, préparer juste",
+            attendu: k.ecartJuste,
+            calcul: `${eur(k.juste.margeSurCoutsVariables)} − ${retranche(k.joue.margeSurCoutsVariables)} = ${ecart(k.ecartJuste)}`,
+            tolerance: 1,
+          },
         ];
       },
       explication: (c) => {
         const k = carteOuCuisine(c);
         return [
-          `À ${eur(k.prixMonte)} HT, ${qte(k.couvertsPerdus)} clients ne viennent plus : chacun emporte sa marge avec lui. Préparer juste garde tous les clients au même ticket, et ne jette plus les denrées : le coût matière tombe de ${eur(k.joue.denrees)} à ${eur(k.juste.denrees)}.`,
+          `À ${eur(k.prixMonte)} HT, ${qte(k.clientsPerdus)} clients ne viennent plus, et chacun emporte sa marge ; chaque couvert servi rapporte ${eur(k.gainParCouvert)} de plus, et la cuisine en prépare moins. ${k.ecartCarte > 0 ? "Au total, la hausse rapporte plus qu'elle ne coûte." : "Au total, les clients perdus coûtent plus que la hausse ne rapporte."}`,
+          `Préparer juste garde tous les clients au même ticket, et les ${qte(k.joue.perdus)} couverts que la cuisine jetait ne sont plus préparés : le coût matière tombe de ${eur(k.joue.denrees)} à ${eur(k.juste.denrees)}.`,
         ];
       },
     },
@@ -182,23 +188,27 @@ export const MONTER_LA_CARTE_OU_PREPARER_JUSTE: Situation = {
         const k = carteOuCuisine(c);
         const dit = (x: Facon) =>
           x === k.meilleure
-            ? `Oui : c'est la façon qui rapporte le plus, ${eur(k[x].resultat)} de résultat sur le trimestre.`
-            : `Non : ${eur(k[x].resultat)} de résultat, contre ${eur(k[k.meilleure].resultat)} pour la meilleure façon.`;
+            ? `Oui : c'est la façon qui rapporte le plus, ${eur(k[x].margeSurCoutsVariables)} de marge sur coûts variables sur le trimestre.`
+            : `Non : ${eur(k[x].margeSurCoutsVariables)} de marge sur coûts variables, contre ${eur(k[k.meilleure].margeSurCoutsVariables)} pour la meilleure façon.`;
+        const encore = k.meilleure === "carte" && k.carte.perdus > 0 ? ` Rien n'empêche, en plus, de préparer juste : la cuisine jette encore ${qte(k.carte.perdus)} couverts.` : "";
         return [
           {
-            texte: `Monter la carte à ${eur(k.prixMonte)} HT, comme le propose le chef`,
+            texte: `Monter la carte à ${eur(k.prixMonte)} HT`,
             juste: k.meilleure === "carte",
-            retour: `${dit("carte")} Le ratio revient à ${pct(k.carte.ratio)}, mais ${qte(k.couvertsPerdus)} couverts de moins sont servis. Un ratio bas n'est pas un but : c'est un repère.`,
+            retour: `${dit("carte")} Le ratio revient à ${pct(k.carte.ratio)}, et les ${eur(k.gainParCouvert)} de plus sur chaque couvert servi ${k.ecartCarte > 0 ? "paient" : "ne paient pas"} les ${qte(k.clientsPerdus)} clients perdus.${encore}${k.meilleure === "carte" ? "" : " Un ratio bas n'est pas un but : c'est un repère."}`,
           },
           {
-            texte: `Garder ${eur(k.joue.prix)} HT, et préparer juste`,
+            texte: `Garder ${eur(k.joue.prix)} HT et préparer juste`,
             juste: k.meilleure === "juste",
-            retour: `${dit("juste")} Le ratio reste à ${pct(k.juste.ratio)}, au-dessus de la fiche, parce que les denrées coûtent plus cher ; mais aucun client ne part, et la cuisine ne jette plus que les plats ratés.`,
+            retour:
+              k.meilleure === "juste"
+                ? `${dit("juste")} Le ratio reste à ${pct(k.juste.ratio)}, au-dessus de la fiche, parce que les denrées coûtent plus cher ; mais aucun client ne part, et la cuisine ne jette plus rien.`
+                : `${dit("juste")} Aucun client ne part et la cuisine ne jette plus rien ; mais le ratio reste à ${pct(k.juste.ratio)}, au-dessus de la fiche : préparer juste ne rattrape pas le prix des denrées, que le ticket n'a pas suivi.`,
           },
           {
             texte: "Ne rien changer : préparer comme au trimestre joué",
             juste: k.meilleure === "joue",
-            retour: `${dit("joue")} Le trimestre joué a jeté ${qte(k.joue.prepares - k.joue.servis)} couverts préparés et non servis.`,
+            retour: `${dit("joue")} Le trimestre joué a jeté ${qte(k.joue.perdus)} couverts préparés et non servis, et son ticket n'a pas suivi les denrées.`,
           },
         ];
       },
