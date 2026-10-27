@@ -12,11 +12,10 @@ import {
   ENTREPRISES_DE_LA_SAISON,
   HAUSSE_EN_HAUTE_SAISON,
   LE_PRIX_SELON_LA_SAISON,
-  lireLAnnee,
   prixSelonLaSaison,
   saisonDuMarche,
 } from "../../src/config/cours/chapitres/le-prix-selon-la-saison";
-import { anneeDeReference, rejouerAvec } from "../../src/config/cours/gestion-de-la-pme";
+import { L_ESCALE } from "../../src/config/cours/monde/l-escale";
 import { CHAPITRES, PARCOURS, PROGRAMME } from "../../src/config/cours/registre";
 import { SITUATIONS } from "../../src/config/cours/situations";
 import { LE_COUT_DU_TRIMESTRE_CREUX, coutDuTrimestreCreux } from "../../src/config/cours/situations/par-chapitre/le-cout-du-trimestre-creux";
@@ -28,7 +27,6 @@ import type { Situation } from "../../src/config/cours/situations/types";
 import type { Chapitre, Etape, EtapeChoix, EtapeMontants, EtatDuCours } from "../../src/config/cours/types";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
 import { scenarioByCode } from "../../src/config/scenarios/registry";
-import { computePotentialDemand } from "../../src/engine/market/demand";
 import { soldUnits } from "../../src/engine/simulation/runGame";
 import type { CompanyRoundResult } from "../../src/engine/types";
 import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
@@ -141,7 +139,6 @@ const centime = (x: number) => Math.round(x * 100) / 100;
 const dixieme = (x: number) => Math.round(x * 10) / 10;
 const ventes = (r: CompanyRoundResult) => Object.values(r.market.bySegment).reduce((t, v) => t + v.sold, 0);
 const demande = (r: CompanyRoundResult) => Object.values(r.market.bySegment).reduce((t, v) => t + v.demandForCompany, 0);
-const somme = (a: readonly CompanyRoundResult[], f: (r: CompanyRoundResult) => number) => a.reduce((t, r) => t + f(r), 0);
 
 const BLOC_3 = "BTS MHR Bloc 3 · Management de la production de services en hôtellerie restauration";
 const BLOC_2 = "BTS MHR Bloc 2 · Mercatique des services en hôtellerie restauration";
@@ -290,44 +287,48 @@ describe.each(ENTREPRISES_DU_SERVICE)("la productivité du service chez %s", (co
   it("textes propres, une seule bonne réponse, notions existantes : le cas", () => verifierLesTextes(LE_COUT_DU_TRIMESTRE_CREUX, code));
 });
 
-describe("le prix selon la saison, à l'hôtel", () => {
+describe("le prix selon la saison, à l'hôtel du monde du cours", () => {
   const code = "hotel";
   const cas = casDeLEntreprise(code);
-  const s = scenarioByCode(code).scenario;
-  const reference = anneeDeReference(code);
-  const prixDeLAnnee = (a: readonly CompanyRoundResult[]) => a.map((r) => r.incomeStatement.revenue / soldUnits(r));
-  /** Le prix unique de l'année du cours, au prix exact du moteur : celui du 1er trimestre. */
-  const prix = reference[0]!.incomeStatement.revenue / soldUnits(reference[0]!);
+  const f = L_ESCALE;
   /**
-   * L'année au prix de la saison, rejouée à part, avec une clé du test : haute saison au 2e et au
-   * 3e trimestre. Le prix est posé à partir du prix unique : multiplier la décision du bon
-   * gestionnaire, qui part du prix joué au trimestre d'avant, empilerait les écarts.
+   * L'année de l'hôtel, refaite à la main sur la fiche : toutes les chambres en vente, la demande
+   * de chaque clientèle au prix p vaut sa demande au prix de l'année × (p ÷ 88) ^ −1,5, à l'unité,
+   * l'hôtel vend le plus petit de la demande et des nuitées offertes.
    */
-  const haute = [2, 3];
-  const anneeDeSaison = () =>
-    rejouerAvec(code, "test-mhr:prix-de-la-saison", (t, d) => ({
-      ...d,
-      price: prix * (haute.includes(t) ? 1 + HAUSSE_EN_HAUTE_SAISON : 1 - BAISSE_EN_BASSE_SAISON),
-    }));
+  const offertes = f.chambres * f.joursParTrimestre;
+  const trimestre = (k: number, prix: number) => {
+    const p = centime(prix);
+    const demande = f.clienteles.reduce((s, g) => s + Math.round(g.demande[k - 1]! * (p / f.prixDeLAnnee) ** f.elasticite), 0);
+    const vendues = Math.min(demande, offertes);
+    const ca = centime(vendues * p);
+    return { p, demande, vendues, ca, resultat: centime(ca - vendues * f.coutVariableParNuitee - f.chargesFixesParTrimestre) };
+  };
+  const annee = (facteurs: readonly number[]) => {
+    const ts = facteurs.map((x, i) => trimestre(i + 1, f.prixDeLAnnee * x));
+    const v = ts.reduce((s, t) => s + t.vendues, 0);
+    const o = offertes * ts.length;
+    const ca = centime(ts.reduce((s, t) => s + t.ca, 0));
+    return { ts, v, o, ca, occupation: dixieme((v / o) * 100), prixMoyen: centime(ca / v), revpar: centime(ca / o), resultat: centime(ts.reduce((s, t) => s + t.resultat, 0)) };
+  };
+  const haut = 1 + HAUSSE_EN_HAUTE_SAISON;
+  const bas = 1 - BAISSE_EN_BASSE_SAISON;
+  const u = annee([1, 1, 1, 1]);
 
-  it("le prix de l'hôtel est une décision unique, que le moteur honore tel quel", () => {
+  it("la fiche est celle de L'ESCALE, et la simulation ne dépend pas de l'arène", () => {
     expect(ENTREPRISES_DE_LA_SAISON).toEqual(["hotel"]);
-    // Une seule nuitée à prix moyen : pas de références, le prix scalaire est le seul prix.
-    expect(s.products === undefined || s.products.length <= 1).toBe(true);
-    expect(reference.map((r) => r.incomeStatement.netIncome)).toEqual(anneeJouee(code).partie.rounds.map((t) => t.results["joueur"]!.incomeStatement.netIncome));
-    const unique = prixDeLAnnee(reference);
-    for (const x of unique) expect(x).toBeCloseTo(unique[0]!, 6);
-    // Rejouée à part, avec une clé du test, l'année au prix de la saison donne les mêmes prix.
-    const rejouee = anneeDeSaison();
-    prixDeLAnnee(rejouee).forEach((x, i) => expect(x).toBeCloseTo(unique[0]! * (haute.includes(i + 1) ? 1 + HAUSSE_EN_HAUTE_SAISON : 1 - BAISSE_EN_BASSE_SAISON), 6));
+    expect(f.entreprise).toBe(cas.entreprise);
+    expect([f.chambres, f.joursParTrimestre, f.prixDeLAnnee, f.coutVariableParNuitee, f.chargesFixesParTrimestre, f.elasticite]).toEqual([60, 90, 88, 21, 210_000, -1.5]);
     const p = prixSelonLaSaison(cas);
-    expect(p.saison.trimestres.map((t) => t.resultat)).toEqual(rejouee.map((r) => Math.round(r.incomeStatement.netIncome)));
-    expect(p.saison.trimestres.map((t) => t.prix)).toEqual(prixDeLAnnee(rejouee).map(centime));
+    expect(p.unique.trimestres.map((t) => [t.prix, t.demande, t.vendues, t.resultat])).toEqual(u.ts.map((t) => [t.p, t.demande, t.vendues, t.resultat]));
+    // L'année au prix unique : l'été refuse des clients, le reste de l'année laisse des chambres vides.
+    expect(u.ts.map((t) => t.demande)).toEqual([3400, 5000, 6400, 3900]);
+    expect(u.resultat).toBe(345_900);
   });
 
-  it("la saisonnalité est celle du scénario : haute saison au 2e et au 3e trimestre, basse au 1er et au 4e", () => {
-    const totaux = [1, 2, 3, 4].map((k) => s.market.segments.reduce((t, g) => t + Math.round(computePotentialDemand(g, k, s.market.seasonality, 1)), 0));
-    const moyenne = centime(totaux.reduce((t, x) => t + x, 0) / 4);
+  it("la saisonnalité est celle de la fiche : haute saison au 2e et au 3e trimestre, basse au 1er et au 4e", () => {
+    const totaux = [0, 1, 2, 3].map((i) => f.clienteles.reduce((s, g) => s + g.demande[i]!, 0));
+    const moyenne = centime(totaux.reduce((s, x) => s + x, 0) / 4);
     const m = saisonDuMarche(cas);
     expect(m.totaux).toEqual(totaux);
     expect(m.haute).toEqual([2, 3]);
@@ -339,130 +340,82 @@ describe("le prix selon la saison, à l'hôtel", () => {
     });
   });
 
-  it("les champs attendent ce que le moteur donne, recomposé à la main", () => {
-    const p = prixSelonLaSaison(cas);
-    const indicateurs = (a: readonly CompanyRoundResult[]) => {
-      const v = somme(a, (r) => Math.round(soldUnits(r)));
-      const o = somme(a, (r) => Math.round(r.production.machineCapacity));
-      const ca = somme(a, (r) => Math.round(r.incomeStatement.revenue));
-      return { v, o, ca, occupation: dixieme((v / o) * 100), prixMoyen: centime(ca / v), revpar: centime(ca / o), resultat: somme(a, (r) => Math.round(r.incomeStatement.netIncome)) };
-    };
-    const u = indicateurs(reference);
-    // Au prix unique : des clients refusés au 2e et au 4e trimestre, des nuitées vides au 1er et au 3e.
-    const rang = (i: number) => (i === 0 ? "1er" : `${i + 1}e`);
-    const refuses = reference.flatMap((r, i) => {
-      const n = Math.round(demande(r)) - Math.round(r.production.produced);
-      return n > 0 ? [[`Nuitées refusées au ${rang(i)} trimestre`, n] as const] : [];
+  it("les champs attendent ce que la fiche donne, recomposé à la main", () => {
+    expect(attendus(LE_PRIX_SELON_LA_SAISON, "prix-unique", cas)).toEqual({
+      "Nuitées refusées au 3e trimestre": 6400 - offertes,
+      "Nuitées vides au 1er trimestre": offertes - 3400,
+      "Nuitées vides au 2e trimestre": offertes - 5000,
+      "Nuitées vides au 4e trimestre": offertes - 3900,
     });
-    const videes = reference.flatMap((r, i) => {
-      const n = Math.round(r.production.produced) - Math.round(soldUnits(r));
-      return n > 0 ? [[`Nuitées vides au ${rang(i)} trimestre`, n] as const] : [];
-    });
-    expect(attendus(LE_PRIX_SELON_LA_SAISON, "prix-unique", cas)).toEqual(Object.fromEntries([...refuses, ...videes]));
-    expect(refuses.map(([l]) => l)).toEqual(["Nuitées refusées au 2e trimestre", "Nuitées refusées au 4e trimestre"]);
-    expect(videes.map(([l]) => l)).toEqual(["Nuitées vides au 1er trimestre", "Nuitées vides au 3e trimestre"]);
-    expect([p.unique.occupation, p.unique.prixMoyen, p.unique.revpar]).toEqual([u.occupation, u.prixMoyen, u.revpar]);
     // Le revenu par chambre disponible est bien le prix moyen fois le taux d'occupation.
     expect(Math.abs(u.revpar - (u.prixMoyen * u.v) / u.o)).toBeLessThanOrEqual(0.01);
-    const saison = anneeDeSaison();
-    const k = indicateurs(saison);
+    const s = annee([bas, haut, haut, bas]);
     expect(attendus(LE_PRIX_SELON_LA_SAISON, "prix-de-la-saison", cas)).toEqual({
-      "Taux d'occupation au prix de la saison (%)": k.occupation,
-      "Prix moyen au prix de la saison": k.prixMoyen,
-      "Revenu par chambre disponible au prix de la saison": k.revpar,
-      "Écart de résultat net, saison moins prix unique": k.resultat - u.resultat,
+      "Taux d'occupation au prix de la saison (%)": s.occupation,
+      "Prix moyen au prix de la saison": s.prixMoyen,
+      "Revenu par chambre disponible au prix de la saison": s.revpar,
+      "Écart de résultat, saison moins prix unique": centime(s.resultat - u.resultat),
     });
-    // Ce qu'une baisse doit faire vendre, aux trimestres où des nuitées en vente sont restées vides.
-    const vides = reference.map((r, i) => ({ i, vides: Math.round(r.production.produced) - Math.round(soldUnits(r)), vendues: Math.round(soldUnits(r)) })).filter((x) => x.vides > 0);
-    expect(vides.map((x) => x.i + 1)).toEqual([1, 3]);
-    const aGagner = (n: number) => Math.ceil((n * BAISSE_EN_BASSE_SAISON) / (1 - BAISSE_EN_BASSE_SAISON) - 1e-9);
-    expect(attendus(LE_PRIX_SELON_LA_SAISON, "ce-qu-une-baisse-doit-vendre", cas)).toEqual(
-      Object.fromEntries(vides.map((x) => [`Nuitées à gagner au ${x.i === 0 ? "1er" : `${x.i + 1}e`} trimestre`, aGagner(x.vendues)])),
-    );
-    // La baisse ne se joue qu'où les nuitées vides pouvaient la payer. Dans l'année du bon
-    // gestionnaire, qui met en vente la demande du trimestre d'avant, il en reste trop peu au 1er
-    // comme au 3e trimestre : le prix du remplissage ne baisse nulle part, il ne fait que monter.
-    expect(p.baisses).toEqual(vides.filter((x) => x.vides >= aGagner(x.vendues)).map((x) => x.i + 1));
-    expect(p.baisses).toEqual([]);
-    expect(p.tropPeuDeVides).toEqual([1, 3]);
-    expect(p.refus).toEqual(refuses.map(([l]) => Number(/au (\d+)/.exec(l)![1])));
-    expect(p.refus).toEqual([2, 4]);
-    const facteurs = [1, 1 + HAUSSE_EN_HAUTE_SAISON, 1, 1 + HAUSSE_EN_HAUTE_SAISON];
-    const remplissage = rejouerAvec(code, "test-mhr:prix-du-remplissage", (t, d) => ({ ...d, price: prix * facteurs[t - 1]! }));
-    const r = indicateurs(remplissage);
+    // Ce qu'une baisse doit faire vendre pour garder la marge : vendues × 15 % × 88 € ÷ (74,80 € − 21 €).
+    const aGagner = (n: number) => Math.ceil((n * 0.15 * 88) / (74.8 - 21) - 1e-9);
+    expect(attendus(LE_PRIX_SELON_LA_SAISON, "ce-qu-une-baisse-doit-vendre", cas)).toEqual({
+      "Nuitées à gagner au 1er trimestre": aGagner(3400),
+      "Nuitées à gagner au 2e trimestre": aGagner(5000),
+      "Nuitées à gagner au 4e trimestre": aGagner(3900),
+    });
+    // Au 1er et au 4e, assez de chambres vides pour payer la baisse ; au 2e, trop peu.
+    const p = prixSelonLaSaison(cas);
+    expect(p.baisses).toEqual([1, 4]);
+    expect(p.tropPeuDeVides).toEqual([2]);
+    expect(p.refus).toEqual([3]);
+    const r = annee([bas, 1, haut, bas]);
     expect(attendus(LE_PRIX_SELON_LA_SAISON, "prix-du-remplissage", cas)).toEqual({
       "Taux d'occupation au prix du remplissage (%)": r.occupation,
       "Revenu par chambre disponible au prix du remplissage": r.revpar,
-      "Écart de résultat net, remplissage moins prix unique": r.resultat - u.resultat,
+      "Écart de résultat, remplissage moins prix unique": centime(r.resultat - u.resultat),
     });
   });
 
-  it("la défaillance se tranche avant la somme, et les verdicts se calculent", () => {
+  it("les verdicts se calculent : le prix du remplissage gagne, le calendrier se trompe au 2e trimestre", () => {
     const p = prixSelonLaSaison(cas);
-    // Aucune des trois années ne finit en défaillance : leurs résultats additionnés se comparent.
-    for (const a of [p.unique, p.saison, p.remplissage]) expect(a.defaillance).toBeNull();
-    // Une année marquée défaillante au 3e trimestre est lue comme telle.
-    const marquee = reference.map((r, i) => (i === 2 ? { ...r, defaillant: true } : r));
-    expect(lireLAnnee(marquee).defaillance).toBe(3);
-    // Le prix de la saison fait moins bien que le prix unique, et celui du remplissage aussi : la
-    // demande de l'hôtel répond fort au prix, et les clients refusés au prix unique sont trop peu
-    // nombreux pour remplacer ceux qu'une hausse fait partir.
-    expect(p.ecartSaison).toBeLessThan(0);
-    expect(p.ecartRemplissage).toBeLessThan(0);
-    expect(p.meilleur).toBe("unique");
-    expect(juste(LE_PRIX_SELON_LA_SAISON, "verdict-de-la-saison", cas)).toBe(p.ecartSaison > 0 ? "Oui : le résultat net de l'année monte" : "Non : le résultat net de l'année baisse");
-    expect(juste(LE_PRIX_SELON_LA_SAISON, "la-regle", cas)).toBe("Garder un prix unique toute l'année : c'est lui qui protège le mieux le résultat");
-    expect(juste(LE_PRIX_SELON_LA_SAISON, "lire-l-annee", cas)).toBe("Trop bas quand des clients repartaient, trop haut quand des nuitées restaient vides");
-    // Le calendrier et le remplissage se contredisent au 3e trimestre (haute saison, nuitées vides)
-    // et au 4e (basse saison, clients refusés).
-    expect(p.hausseMalPlacee).toEqual([3]);
-    expect(p.baisseMalPlacee).toEqual([4]);
-    // Au 3e, la hausse a fait partir des clients ; au 4e, la baisse a vendu moins de nuitées que le
-    // prix unique (le bon gestionnaire en a mis moins en vente, sur la demande du 3e) : le verdict le dit.
-    const saison = anneeDeSaison();
-    const n = (r: CompanyRoundResult) => Math.round(soldUnits(r)).toLocaleString("fr-FR");
-    expect(Math.round(soldUnits(saison[2]!))).toBeLessThan(Math.round(soldUnits(reference[2]!)));
-    expect(Math.round(soldUnits(saison[3]!))).toBeLessThan(Math.round(soldUnits(reference[3]!)));
+    const s = annee([bas, haut, haut, bas]);
+    const r = annee([bas, 1, haut, bas]);
+    expect(s.resultat).toBeGreaterThan(u.resultat);
+    expect(r.resultat).toBeGreaterThan(s.resultat);
+    expect(p.meilleur).toBe("remplissage");
+    expect(juste(LE_PRIX_SELON_LA_SAISON, "verdict-de-la-saison", cas)).toBe("Oui : le résultat de l'année monte");
+    expect(juste(LE_PRIX_SELON_LA_SAISON, "la-regle", cas)).toBe("Regarder s'il reste des chambres à vendre ou des clients refusés, pas seulement le calendrier");
+    expect(juste(LE_PRIX_SELON_LA_SAISON, "lire-l-annee", cas)).toBe("Trop bas quand des clients repartaient, trop haut quand des chambres restaient vides");
+    // Au 2e trimestre, haute saison sans clients refusés : la hausse fait perdre des ventes et du résultat.
+    expect(p.hausseMalPlacee).toEqual([2]);
+    expect(p.baisseMalPlacee).toEqual([]);
+    expect(s.ts[1]!.vendues).toBeLessThan(u.ts[1]!.vendues);
+    expect(s.ts[1]!.resultat).toBeLessThan(u.ts[1]!.resultat);
     const retour = LE_PRIX_SELON_LA_SAISON.etapes.find((e) => e.id === "verdict-de-la-saison");
     if (retour?.type !== "choix") throw new Error("verdict-de-la-saison n'est pas un choix");
-    const dit = retour.options(cas, { soldes: {} }).find((o) => o.juste)!.retour;
-    expect(dit).toContain(`la hausse a fait partir des clients (${n(saison[2]!)} nuitées vendues contre ${n(reference[2]!)})`);
-    expect(dit).toContain(`la baisse a vendu moins de nuitées (${n(saison[3]!)} contre ${n(reference[3]!)})`);
-    // La règle dit pourquoi le prix unique l'emporte : au 2e trimestre, la hausse du remplissage a
-    // fait partir plus de demande que le prix unique n'y refusait de clients.
-    const facteurs = [1, 1 + HAUSSE_EN_HAUTE_SAISON, 1, 1 + HAUSSE_EN_HAUTE_SAISON];
-    const remplissage = rejouerAvec(code, "test-mhr:prix-du-remplissage", (t, d) => ({ ...d, price: prix * facteurs[t - 1]! }));
-    const avant = Math.round(demande(reference[1]!));
-    const apres = Math.round(demande(remplissage[1]!));
-    const refuses = avant - Math.round(reference[1]!.production.produced);
-    expect(avant - apres).toBeGreaterThan(refuses);
-    const regle = LE_PRIX_SELON_LA_SAISON.etapes.find((e) => e.id === "la-regle");
-    if (regle?.type !== "choix") throw new Error("la-regle n'est pas un choix");
-    expect(regle.options(cas, { soldes: {} }).find((o) => o.juste)!.retour).toContain(
-      `Au 2e trimestre, 15 % de plus sur le prix ont fait passer la demande adressée à ${cas.entreprise} de ${avant.toLocaleString("fr-FR")} à ${apres.toLocaleString("fr-FR")} nuitées, quand le prix unique n'y refusait que ${refuses.toLocaleString("fr-FR")} clients.`,
+    const n = (x: number) => x.toLocaleString("fr-FR");
+    expect(retour.options(cas, { soldes: {} }).find((o) => o.juste)!.retour).toContain(
+      `la hausse a fait partir des clients (${n(s.ts[1]!.vendues)} nuitées vendues contre ${n(u.ts[1]!.vendues)})`,
     );
   });
 
   it("le cas : le seul trimestre le plus fort, plus cher, et ce que l'année y gagne", () => {
     const x = plusCherAuPlusFort(cas);
     expect(x.k).toBe(3);
-    // Le 3e trimestre plus cher, les autres au prix unique : le 4e n'hérite pas du prix relevé.
-    const releve = rejouerAvec(code, "test-mhr:plus-cher-au-plus-fort", (t, d) => ({ ...d, price: prix * (t === 3 ? 1 + HAUSSE_EN_HAUTE_SAISON : 1) }));
-    for (const r of releve) expect(r.defaillant ?? false).toBe(false);
-    const avant = reference[2]!;
-    const apres = releve[2]!;
-    expect(apres.incomeStatement.revenue / soldUnits(apres)).toBeCloseTo((avant.incomeStatement.revenue / soldUnits(avant)) * (1 + HAUSSE_EN_HAUTE_SAISON), 6);
-    const o = Math.round(avant.production.machineCapacity);
+    const releve = annee([1, 1, haut, 1]);
+    const avant = u.ts[2]!;
+    const apres = releve.ts[2]!;
     expect(attendus(PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON, "le-trimestre", cas)).toEqual({
-      "Taux d'occupation au prix unique (%)": dixieme((Math.round(soldUnits(avant)) / o) * 100),
-      "Taux d'occupation au prix relevé (%)": dixieme((Math.round(soldUnits(apres)) / Math.round(apres.production.machineCapacity)) * 100),
-      "Revenu par chambre disponible au prix unique": centime(Math.round(avant.incomeStatement.revenue) / o),
-      "Revenu par chambre disponible au prix relevé": centime(Math.round(apres.incomeStatement.revenue) / Math.round(apres.production.machineCapacity)),
+      "Taux d'occupation au prix unique (%)": dixieme((avant.vendues / offertes) * 100),
+      "Taux d'occupation au prix relevé (%)": dixieme((apres.vendues / offertes) * 100),
+      "Revenu par chambre disponible au prix unique": centime(avant.ca / offertes),
+      "Revenu par chambre disponible au prix relevé": centime(apres.ca / offertes),
     });
-    const ecart = somme(releve, (r) => Math.round(r.incomeStatement.netIncome)) - somme(reference, (r) => Math.round(r.incomeStatement.netIncome));
-    expect(attendus(PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON, "l-annee", cas)).toEqual({ "Écart de résultat net de l'année, prix relevé moins prix unique": ecart });
-    expect(x.verdict).toBe(ecart > 0 ? "monter" : "garder");
-    expect(juste(PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON, "reponse", cas)).toBe(ecart > 0 ? "Montez-la au 3e trimestre : la hausse rapporte plus qu'elle ne coûte" : "Gardez le prix unique : la hausse coûterait plus qu'elle ne rapporte");
+    const ecart = centime(releve.resultat - u.resultat);
+    expect(attendus(PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON, "l-annee", cas)).toEqual({ "Écart de résultat de l'année, prix relevé moins prix unique": ecart });
+    expect(ecart).toBeGreaterThan(0);
+    expect(x.verdict).toBe("monter");
+    expect(juste(PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON, "reponse", cas)).toBe("Montez-la au 3e trimestre : la hausse rapporte plus qu'elle ne coûte");
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(LE_PRIX_SELON_LA_SAISON, code));
