@@ -17,8 +17,13 @@ import { describe, expect, it } from "vitest";
 const SRC = join(process.cwd(), "src");
 const COURS = join(SRC, "config", "cours");
 
-/** Les chapitres et les cas passés sur le monde du cours. */
-const PASSES_SUR_LE_MONDE = ["chapitres/le-prix-selon-la-saison.ts", "situations/par-chapitre/plus-cher-au-plus-fort-de-la-saison.ts"];
+/** Les fichiers du cours, hors du monde lui-même, sous un dossier donné. */
+function fichiersDe(dossier: string): string[] {
+  return readdirSync(join(COURS, dossier), { withFileTypes: true }).flatMap((e) =>
+    e.isDirectory() ? fichiersDe(join(dossier, e.name)) : e.name.endsWith(".ts") ? [join(dossier, e.name)] : [],
+  );
+}
+
 
 /** Ce que le monde du cours ne doit pas atteindre. */
 const INTERDITS = [
@@ -58,9 +63,34 @@ function cheminInterdit(depart: string): string[] | null {
 
 const DU_MONDE = readdirSync(join(COURS, "monde")).filter((f) => f.endsWith(".ts")).map((f) => `monde/${f}`);
 
+/**
+ * Les chapitres et les cas passés sur le monde du cours : ceux qui importent un fichier du monde,
+ * ou un chapitre ou un cas déjà passé sur lui (un cas lit souvent le monde par son chapitre).
+ */
+const PASSES_SUR_LE_MONDE = (() => {
+  // Les recueils (index.ts) rassemblent tous les cas : ils ne sont pas des cas.
+  const candidats = [...fichiersDe("chapitres"), ...fichiersDe("situations")].filter((f) => !f.endsWith("index.ts"));
+  const passes = new Set<string>(DU_MONDE.map((f) => join(COURS, f)));
+  for (let change = true; change; ) {
+    change = false;
+    for (const f of candidats) {
+      const chemin = join(COURS, f);
+      if (!passes.has(chemin) && importsDe(chemin).some((i) => passes.has(i))) {
+        passes.add(chemin);
+        change = true;
+      }
+    }
+  }
+  return candidats.filter((f) => passes.has(join(COURS, f)));
+})();
+
 describe("le monde du cours ne lit pas l'arène", () => {
   it.each([...DU_MONDE, ...PASSES_SUR_LE_MONDE])("%s n'atteint ni le moteur, ni les scénarios, ni l'année jouée par l'arène", (f) => {
     expect(cheminInterdit(join(COURS, f))).toBeNull();
+  });
+
+  it("le pilote est passé sur le monde du cours", () => {
+    expect(PASSES_SUR_LE_MONDE).toEqual(expect.arrayContaining(["chapitres/le-prix-selon-la-saison.ts", "situations/par-chapitre/plus-cher-au-plus-fort-de-la-saison.ts"]));
   });
 
   it("la garde voit un import interdit, même de proche en proche", () => {
