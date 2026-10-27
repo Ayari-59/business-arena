@@ -2,7 +2,7 @@ import { runGame, soldUnits } from "../../engine/simulation/runGame";
 import type { CompanyRoundResult, CompanyState, RoundDecisions } from "../../engine/types";
 import { auCentime } from "../../pedagogy/cours/etats";
 import { scenarioByCode } from "../scenarios/registry";
-import { GRAINE_DU_COURS } from "./cas";
+import { GRAINE_DU_COURS } from "./arene-du-cours";
 import { decisionsDuCours, scenarioDuCours } from "./arene-du-cours";
 
 /**

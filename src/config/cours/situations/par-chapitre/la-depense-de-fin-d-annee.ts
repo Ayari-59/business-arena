@@ -1,6 +1,7 @@
 import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../../pedagogy/cours/etats";
-import { anneeJouee, type Cas } from "../../cas";
+import { type Cas } from "../../cas";
+import { anneeJouee } from "../../annee-de-l-arene";
 import { L_IMPOT_SUR_LES_SOCIETES, impotDeLAnnee } from "../../chapitres/l-impot-sur-les-societes";
 import { rejouerAvec } from "../../gestion-de-la-pme";
 import type { Situation } from "../types";

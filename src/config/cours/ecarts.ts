@@ -1,7 +1,7 @@
 import { soldUnits } from "../../engine/simulation/runGame";
 import type { CompanyRoundResult } from "../../engine/types";
 import { auCentime } from "../../pedagogy/cours/etats";
-import { anneeJouee } from "./cas";
+import { anneeJouee } from "./annee-de-l-arene";
 
 /**
  * LES ÉCARTS DU DEUXIÈME TRIMESTRE : LE RÉALISÉ DE L'ARÈNE FACE AU PRÉVU.

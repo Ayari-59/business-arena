@@ -1,7 +1,8 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { anneeJouee, GRAINE_DU_COURS } from "../../src/config/cours/cas";
+import { anneeJouee } from "../../src/config/cours/annee-de-l-arene";
+import { GRAINE_DU_COURS } from "../../src/config/cours/arene-du-cours";
 import { auBruitPres, decisionsDuCours, JOUEUR, LEVIERS_DE_L_ELEVE, NIVEAU_DE_L_ELEVE, scenarioDuCours } from "../../src/config/cours/arene-du-cours";
 import { NIVEAU_SANS_LICENCE } from "../../src/config/cours/jouez";
 import { soldByProduct } from "../../src/engine/bots";

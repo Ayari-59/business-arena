@@ -1,6 +1,7 @@
 import { montantEcrit as eur } from "../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../pedagogy/cours/etats";
-import { anneeJouee, type Cas } from "../cas";
+import { type Cas } from "../cas";
+import { anneeDuCours as anneeJouee } from "../monde/annee-du-cours";
 import { dateDuCours as date } from "../dates";
 import { nomDuClient } from "../provisions";
 import type { Chapitre, TableauDeDonnees } from "../types";

@@ -1,4 +1,4 @@
-import { anneeJouee } from "./cas";
+import { anneeDuCours as anneeJouee } from "./monde/annee-du-cours";
 
 /**
  * LE TABLEAU DE BORD DE L'ANNÉE : SIX INDICATEURS, QUATRE TRIMESTRES DE L'ARÈNE.

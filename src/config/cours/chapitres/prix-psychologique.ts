@@ -1,7 +1,8 @@
 import { montantEcrit as eur } from "../../../pedagogy/cours/correcteur";
 import { priceEffect } from "../../../engine/market/attraction";
 import { scenarioByCode } from "../../scenarios/registry";
-import { anneeJouee, type Cas } from "../cas";
+import { type Cas } from "../cas";
+import { anneeJouee } from "../annee-de-l-arene";
 import type { Chapitre } from "../types";
 import { SEGMENTATIONS } from "./segmenter-et-cibler";
 

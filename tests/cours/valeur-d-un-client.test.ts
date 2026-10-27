@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { anneeJouee, casDeLEntreprise } from "../../src/config/cours/cas";
+import { casDeLEntreprise } from "../../src/config/cours/cas";
+import { anneeJouee } from "../../src/config/cours/annee-de-l-arene";
 import { VALEUR_D_UN_CLIENT, portefeuille } from "../../src/config/cours/chapitres/valeur-d-un-client";
 import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
 import { scenarioByCode } from "../../src/config/scenarios/registry";

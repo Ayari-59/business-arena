@@ -1,26 +1,22 @@
-import { runGame } from "../../engine/simulation/runGame";
-import type { CompanyRoundResult, CompanyState } from "../../engine/types";
-import { scenarioByCode } from "../scenarios/registry";
-import { nomEntreprise } from "../scenarios/presentation";
-import { auCentime } from "../../pedagogy/cours/etats";
-import { METIERS, type CompteDuMetier } from "./metiers";
-import { GRAINE_DU_COURS, decisionsDuCours, scenarioDuCours } from "./arene-du-cours";
+import { CAS_DES_ENTREPRISES } from "./monde/cas-des-entreprises";
+import type { CompteDuMetier } from "./metiers";
 
 /**
- * LE CAS D'UNE ENTREPRISE : LES MONTANTS DU COURS, TIRÉS DE LA SIMULATION.
+ * LE CAS D'UNE ENTREPRISE : LES MONTANTS DU COURS, DANS LE MONDE DU COURS.
  *
- * Aucun chiffre du cours ne s'écrit à la main. Les apports et l'emprunt sont ceux
- * du bilan d'ouverture de l'entreprise dans l'arène ; l'équipement acheté est le
- * premier de son parc, au prix du catalogue d'équipements ; le loyer et le
- * personnel viennent de ses coûts fixes et de ses salaires ; les quantités vendues
- * et leurs prix, du PREMIER TRIMESTRE SIMULÉ par le moteur (une gestion équilibrée
- * face aux concurrents du scénario, graine fixe), ramené à un mois.
+ * Aucun chiffre du cours ne s'écrit à la main. Les apports et l'emprunt, l'équipement acheté à la
+ * création, le loyer et le personnel, les ventes du mois et leurs façons de payer, le stock d'un
+ * trimestre et l'année en grandes masses ont été relevés une fois sur l'arène (une gestion
+ * équilibrée face aux concurrents du scénario, graine fixe), puis figés dans le monde du cours
+ * (monde/cas-des-entreprises.ts) : le cas ne lit plus le moteur, et une évolution de l'arène ne
+ * change plus les montants du cours (décision du propriétaire).
  *
- * Les ventes se partagent comme dans la simulation : les clients qui paient sur-le-
- * champ (segments sans délai de paiement) et les clients professionnels qui paient
- * à échéance (le délai de leur segment). Le fournisseur est payé au délai du
- * scénario. Le cas est donc déterministe : même entreprise, mêmes montants, pour
- * tous les élèves et pour la correction.
+ * Les ventes se partagent comme dans la simulation : les clients qui paient sur-le-champ et les
+ * clients professionnels qui paient à échéance. Le fournisseur est payé à son délai. Le cas est
+ * donc déterministe : même entreprise, mêmes montants, pour tous les élèves et pour la correction.
+ *
+ * L'année que l'arène joue encore pour les chapitres qui ne sont pas passés sur le monde du cours
+ * est dans annee-de-l-arene.ts.
  */
 
 export interface Facture {
@@ -154,14 +150,6 @@ export interface AnneeDeLArene {
   arene: { resultatAvantImpot: number; impot: number; resultatNet: number };
 }
 
-export { GRAINE_DU_COURS };
-
-/** La part des ventes gardée pour la façon de payer que le premier trimestre n'a pas connue. */
-const PART_DE_REPLI = 0.2;
-
-const auCent = (x: number) => Math.round(x / 100) * 100;
-const parDix = (x: number) => Math.max(10, Math.round(x / 10) * 10);
-
 /**
  * LES TAUX DE COTISATIONS DE LA PAIE : des ordres de grandeur d'un salarié non cadre du
  * secteur privé, avant les allègements de charges. La part salariale se retient sur le
@@ -169,305 +157,10 @@ const parDix = (x: number) => Math.max(10, Math.round(x / 10) * 10);
  */
 export const TAUX_SALARIAL = 0.22;
 export const TAUX_PATRONAL = 0.42;
-/** Les cotisations du mois se paient à l'URSSAF le 15 du mois suivant (moins de 50 salariés). */
-const JOUR_URSSAF = 31 + 15;
 
-/**
- * La paie du mois, du coût que la simulation donne pour le personnel : ce coût est
- * le brut plus les cotisations patronales ; le brut s'en déduit, arrondi à la centaine.
- */
-function paie(effectif: number, coutDuMois: number): Cas["personnel"] {
-  const brut = auCent(coutDuMois / (1 + TAUX_PATRONAL));
-  const cotisationsSalariales = Math.round(brut * TAUX_SALARIAL);
-  const cotisationsPatronales = Math.round(brut * TAUX_PATRONAL);
-  return {
-    effectif,
-    brut,
-    tauxSalarial: TAUX_SALARIAL,
-    cotisationsSalariales,
-    net: brut - cotisationsSalariales,
-    tauxPatronal: TAUX_PATRONAL,
-    cotisationsPatronales,
-    cout: brut + cotisationsPatronales,
-    date: 28,
-    dateUrssaf: JOUR_URSSAF,
-  };
-}
-
-function facture(quantite: number, prixUnitaire: number, tauxTva: number): Facture {
-  const ht = auCentime(quantite * prixUnitaire);
-  const tva = auCentime(ht * tauxTva);
-  return { quantite, prixUnitaire, ht, tauxTva, tva, ttc: auCentime(ht + tva) };
-}
-
-/** Le premier trimestre de l'entreprise, joué par le moteur. */
-function premierTrimestre(code: string): { joueur: CompanyRoundResult; depart: CompanyState } {
-  const def = scenarioByCode(code);
-  const scenario = scenarioDuCours(def.scenario, 1);
-  const entreprises: CompanyState[] = [
-    def.company("joueur", def.playerTeamName, "bot", "balanced"),
-    ...def.bots.slice(0, 2).map((b) => def.company(b.id, b.name, "bot", b.profile)),
-  ];
-  const partie = runGame({
-    scenario,
-    initialCompanies: entreprises,
-    seed: GRAINE_DU_COURS,
-    // Un seul tour : pas de tour précédent à lire.
-    providers: decisionsDuCours(entreprises, scenario),
-  });
-  const joueur = partie.rounds[0]!.results["joueur"]!;
-  return { joueur, depart: entreprises[0]! };
-}
-
-/** Les débuts et fins de trimestre, en jours du cours. */
-const DEBUTS_DES_TRIMESTRES = [1, 91, 182, 274];
-const FINS_DES_TRIMESTRES = [90, 181, 273, 365];
-
-/** Les quatre trimestres de l'arène, joués une fois par entreprise, dans le réglage du cours. */
-const annees = new Map<string, { partie: ReturnType<typeof runGame>; depart: CompanyState }>();
-export function anneeJouee(code: string) {
-  const deja = annees.get(code);
-  if (deja) return deja;
-  const def = scenarioByCode(code);
-  // L'année de l'arène telle qu'une partie créée aujourd'hui la joue (arene-du-cours.ts).
-  const scenario = scenarioDuCours(def.scenario, FINS_DES_TRIMESTRES.length);
-  const entreprises: CompanyState[] = [
-    def.company("joueur", def.playerTeamName, "bot", "balanced"),
-    ...def.bots.slice(0, 2).map((b) => def.company(b.id, b.name, "bot", b.profile)),
-  ];
-  const partie = runGame({
-    scenario,
-    initialCompanies: entreprises,
-    seed: GRAINE_DU_COURS,
-    providers: decisionsDuCours(entreprises, scenario),
-  });
-  const jouee = { partie, depart: entreprises[0]! };
-  annees.set(code, jouee);
-  return jouee;
-}
-
-function anneeDeLArene(code: string, achat: string): AnneeDeLArene {
-  const def = scenarioByCode(code);
-  const s = def.scenario;
-  const { partie, depart } = anneeJouee(code);
-  const somme = (f: (r: CompanyRoundResult) => number) =>
-    auCentime(partie.rounds.reduce((t, tour) => t + f(tour.results["joueur"]!), 0));
-  const is = (r: CompanyRoundResult) => r.incomeStatement;
-  const variable = somme((r) => is(r).variableProductionCost);
-  const m = s.product.materialCostPerUnit;
-  const o = s.product.otherVariableCostPerUnit;
-  const achats = auCentime((variable * m) / (m + o));
-  const hr = s.hr!;
-  const personnel = auCentime(hr.includedHeadcount * hr.salaryPerEmployeePerRound * partie.rounds.length);
-  const fixes = somme((r) => is(r).fixedCosts);
-  const variation = somme((r) => is(r).productionStocked);
-  const initial = auCentime(depart.finishedGoods.quantity * depart.finishedGoods.unitCost);
-  return {
-    ventes: somme((r) => is(r).revenue),
-    achats,
-    autresCoutsVariables: auCentime(variable - achats),
-    commissions: somme((r) => is(r).commissionCost ?? 0),
-    publicite: somme((r) => is(r).marketingCost),
-    qualite: somme((r) => is(r).qualityCost),
-    entretien: somme((r) => is(r).maintenanceCost),
-    personnel,
-    loyerEtFrais: auCentime(fixes - personnel),
-    interets: somme((r) => is(r).interest),
-    dotation: somme((r) => is(r).depreciation),
-    stock:
-      initial > 0 || variation !== 0
-        ? { nature: achat.startsWith("607") ? "marchandises" : "en-cours", initial, final: Math.max(0, auCentime(initial + variation)) }
-        : null,
-    tauxIS: s.finance.taxRate,
-    arene: {
-      resultatAvantImpot: somme((r) => is(r).pretaxIncome),
-      impot: somme((r) => is(r).tax),
-      resultatNet: somme((r) => is(r).netIncome),
-    },
-  };
-}
-
-/**
- * L'ANNÉE DE L'ARÈNE, POUR LE STOCK : les quatre trimestres joués par le moteur. Les
- * quantités (stock d'ouverture, unités achetées, unités vendues) sont celles du moteur ; la
- * valeur est celle de la comptabilité, au prix d'achat des marchandises et au coût moyen
- * pondéré.
- */
-function stockDuTrimestre(code: string, tauxAchat: number, tauxVente: number): StockDuTrimestre | null {
-  const def = scenarioByCode(code);
-  if (def.scenario.perishable) return null;
-  const { partie, depart: departDeLAnnee } = anneeJouee(code);
-  const prix = def.scenario.product.materialCostPerUnit;
-  const depart = departDeLAnnee.finishedGoods;
-  let initial = { quantite: Math.round(depart.quantity), valeur: auCentime(depart.quantity * depart.unitCost) };
-  for (const [k, tour] of partie.rounds.entries()) {
-    const r = tour.results["joueur"]!;
-    const achetees = Math.round(r.production.produced);
-    const segments = Object.values(r.market.bySegment);
-    const vendues = Math.round(segments.reduce((t, v) => t + v.sold, 0));
-    const achats = facture(achetees, prix, tauxAchat);
-    const quantiteFinale = Math.max(0, initial.quantite + achetees - vendues);
-    const cump = auCentime((initial.valeur + achats.ht) / (initial.quantite + achetees || 1));
-    const final = { quantite: quantiteFinale, valeur: auCentime(quantiteFinale * cump) };
-    if (initial.quantite > 0 && final.quantite > 0) {
-      const chiffre = segments.reduce((t, v) => t + v.revenue, 0);
-      return {
-        trimestre: k + 1,
-        debut: DEBUTS_DES_TRIMESTRES[k]!,
-        fin: FINS_DES_TRIMESTRES[k]!,
-        initial,
-        achats,
-        vendues,
-        cump,
-        final,
-        coutDAchatDesVendues: auCentime(initial.valeur + achats.ht - final.valeur),
-        ventes: facture(vendues, auCentime(chiffre / vendues), tauxVente),
-      };
-    }
-    initial = final;
-  }
-  return null;
-}
-
-const caches = new Map<string, Cas>();
-
+/** Le cas d'une entreprise du cours, tel que le monde du cours l'a figé. */
 export function casDeLEntreprise(code: string): Cas {
-  const deja = caches.get(code);
-  if (deja) return deja;
-  const metier = METIERS[code];
-  if (!metier) throw new Error(`Pas de cas de cours pour l'entreprise ${code}`);
-  const def = scenarioByCode(code);
-  const s = def.scenario;
-  const { joueur, depart } = premierTrimestre(code);
-
-  // Les ventes du trimestre, par façon de payer, ramenées à un mois.
-  const delais = new Map(s.market.segments.map((g) => [g.code, g.paymentDelayDays ?? 0]));
-  let comptant = { u: 0, ca: 0 };
-  let credit = { u: 0, ca: 0 };
-  for (const [seg, v] of Object.entries(joueur.market.bySegment)) {
-    if ((delais.get(seg) ?? 0) === 0) comptant = { u: comptant.u + v.sold, ca: comptant.ca + v.revenue };
-    else credit = { u: credit.u + v.sold, ca: credit.ca + v.revenue };
-  }
-  // Le délai du client professionnel : le plus long des segments qui paient à échéance.
-  const delaiClient = Math.max(...s.market.segments.map((g) => g.paymentDelayDays ?? 0));
-  // UN CHAPITRE A TOUJOURS SES DEUX VENTES. Une entreprise dont le premier trimestre
-  // n'a vendu que d'une seule façon (NOVA ne vend à CampusTech qu'à partir du
-  // troisième tour ; un cabinet de conseil n'a pas de client au comptant) en garde
-  // une part pour l'autre, au même prix moyen : le total du mois reste celui de la
-  // simulation.
-  const total = { u: comptant.u + credit.u, ca: comptant.ca + credit.ca };
-  if (comptant.u === 0 || credit.u === 0) {
-    const part = { u: total.u * PART_DE_REPLI, ca: total.ca * PART_DE_REPLI };
-    const reste = { u: total.u - part.u, ca: total.ca - part.ca };
-    [comptant, credit] = comptant.u === 0 ? [part, reste] : [reste, part];
-  }
-  const prix = (g: { u: number; ca: number }) => Math.round(g.ca / g.u);
-  const qComptant = parDix(comptant.u / 3);
-  const qCredit = parDix(credit.u / 3);
-  const quantite = qComptant + qCredit;
-
-  const flotte = depart.fleet?.[0];
-  const type = s.equipment?.types.find((t) => t.code === flotte?.typeCode);
-  if (!flotte || !type) throw new Error(`L'entreprise ${code} n'a pas de parc d'équipement`);
-
-  const hr = s.hr!;
-  const pret = depart.loans?.[0];
-  if (!pret || depart.loans!.length !== 1 || pret.remaining !== depart.finance.financialDebt) {
-    throw new Error(`L'entreprise ${code} n'a pas un emprunt unique à échéancier`);
-  }
-  const delaiFournisseur = s.finance.supplierPaymentDelayDays;
-  // Le fournisseur se paie au mois suivant : l'achat se date pour que son échéance y tombe.
-  const dateAchat = Math.max(10, 32 - delaiFournisseur);
-  // Le client paie après le fournisseur : le chapitre règle la dette, puis encaisse la créance.
-  const dateVente = Math.max(20, dateAchat + delaiFournisseur - delaiClient + 1);
-
-  // En gamme, chaque référence a ses clientèles, sous son propre marché.
-  const nomDe = new Map([...s.market.segments, ...(s.products ?? []).flatMap((p) => p.market?.segments ?? [])].map((g) => [g.code, g.name]));
-  const auMois = (x: number) => Math.round(x / 3);
-  const marche: Cas["marche"] = {
-    clienteles: Object.entries(joueur.market.bySegment)
-      .filter(([, v]) => v.demandForCompany > 0)
-      .map(([seg, v]) => ({
-        code: seg,
-        nom: nomDe.get(seg) ?? seg,
-        demande: auMois(v.demandForCompany),
-        vendu: auMois(v.sold),
-        manque: auMois(v.lost),
-        chiffreDAffaires: auMois(v.revenue),
-      })),
-    capacite: auMois(joueur.production.machineCapacity),
-    marketing: auMois(joueur.incomeStatement.marketingCost),
-  };
-
-  const cas: Omit<Cas, "gestion"> & Partial<Pick<Cas, "gestion">> = {
-    code,
-    marche,
-    entreprise: nomEntreprise(def),
-    unite: def.vocabulary.unit,
-    unites: def.vocabulary.units,
-    capital: depart.finance.equity,
-    emprunt: depart.finance.financialDebt,
-    dates: { capital: 2, emprunt: 3 },
-    stock: stockDuTrimestre(code, metier.achat.tauxTva, metier.vente.tauxTva),
-    annee: anneeDeLArene(code, metier.achat.compte),
-    pret: {
-      tauxAnnuel: s.finance.loanAnnualRate,
-      nombreEcheances: Math.round(depart.finance.financialDebt / pret.perRound),
-      capitalParEcheance: pret.perRound,
-    },
-    loyer: { montant: auCent((s.fixedCostsPerRound - hr.includedHeadcount * hr.salaryPerEmployeePerRound) / 3), date: 5 },
-    immobilisation: {
-      ...facture(flotte.count, type.costPerUnit, 0.2),
-      ...metier.immobilisation,
-      designation: type.name,
-      date: 6,
-      // Le même repli que le moteur quand le catalogue ne dit rien.
-      ratioDeRevente: type.resaleRatio ?? 0.5,
-    },
-    achat: {
-      ...facture(quantite, s.product.materialCostPerUnit, metier.achat.tauxTva),
-      compte: metier.achat.compte,
-      acceptes: metier.achat.acceptes,
-      designation: metier.achat.designation(quantite.toLocaleString("fr-FR")),
-      fournisseur: metier.achat.fournisseur,
-      date: dateAchat,
-      delai: delaiFournisseur,
-      echeance: dateAchat + delaiFournisseur,
-    },
-    venteCredit: {
-      ...facture(qCredit, prix(credit), metier.vente.tauxTva),
-      compte: metier.vente.compte,
-      acceptes: metier.vente.acceptes,
-      client: metier.vente.client,
-      date: dateVente,
-      delai: delaiClient,
-      echeance: dateVente + delaiClient,
-    },
-    personnel: paie(depart.headcount, (depart.headcount * hr.salaryPerEmployeePerRound) / 3),
-    venteComptant: {
-      ...facture(qComptant, prix(comptant), metier.vente.tauxTva),
-      compte: metier.vente.compte,
-      acceptes: metier.vente.acceptes,
-      qui: metier.vente.comptant,
-      date: 31,
-    },
-  };
-  const quantiteVendue = cas.venteComptant.quantite + cas.venteCredit.quantite;
-  const chiffreDAffaires = auCentime(cas.venteComptant.ht + cas.venteCredit.ht);
-  const dureeAmortissementMois = type.depreciationRounds * 3;
-  const amortissement = Math.round(cas.immobilisation.ht / dureeAmortissementMois);
-  cas.gestion = {
-    quantite: quantiteVendue,
-    chiffreDAffaires,
-    prixMoyen: auCentime(chiffreDAffaires / quantiteVendue),
-    matiereParUnite: s.product.materialCostPerUnit,
-    autresParUnite: s.product.otherVariableCostPerUnit,
-    autresCoutsVariables: metier.autresCoutsVariables,
-    coutVariableUnitaire: auCentime(s.product.materialCostPerUnit + s.product.otherVariableCostPerUnit),
-    amortissement,
-    dureeAmortissementMois,
-    chargesFixes: cas.loyer.montant + cas.personnel.cout + amortissement,
-  };
-  caches.set(code, cas as Cas);
-  return cas as Cas;
+  const cas = CAS_DES_ENTREPRISES[code];
+  if (!cas) throw new Error(`Pas de cas de cours pour l'entreprise ${code}`);
+  return cas;
 }

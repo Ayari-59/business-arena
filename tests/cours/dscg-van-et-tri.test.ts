@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { anneeJouee, casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
+import { casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
+import { anneeJouee } from "../../src/config/cours/annee-de-l-arene";
 import { UNITES_FEMININES } from "../../src/config/cours/accords";
 import { machineDuChapitre } from "../../src/config/cours/chapitres/croitre-en-investissant";
 import {

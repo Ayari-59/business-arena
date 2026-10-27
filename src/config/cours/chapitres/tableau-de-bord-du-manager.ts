@@ -1,6 +1,7 @@
 import { montantEcrit as eur } from "../../../pedagogy/cours/correcteur";
 import { accordPluriel } from "../accords";
-import { anneeJouee, type Cas } from "../cas";
+import { type Cas } from "../cas";
+import { anneeDuCours as anneeJouee } from "../monde/annee-du-cours";
 import type { Chapitre, TableauDeDonnees } from "../types";
 import { equipe } from "./equipe-et-planning";
 import { indicateurs } from "./indicateurs-du-point-de-vente";

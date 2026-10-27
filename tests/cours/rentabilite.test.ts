@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { anneeJouee, casDeLEntreprise } from "../../src/config/cours/cas";
+import { casDeLEntreprise } from "../../src/config/cours/cas";
+import { anneeJouee } from "../../src/config/cours/annee-de-l-arene";
 import { RENTABILITE, rentabilite } from "../../src/config/cours/chapitres/rentabilite";
 import { bilanFonctionnel } from "../../src/config/cours/chapitres/bilan-fonctionnel";
 import { soldesDeGestion } from "../../src/config/cours/chapitres/soldes-intermediaires";

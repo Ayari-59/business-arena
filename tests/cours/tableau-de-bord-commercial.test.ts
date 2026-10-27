@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { anneeJouee, casDeLEntreprise } from "../../src/config/cours/cas";
+import { casDeLEntreprise } from "../../src/config/cours/cas";
+import { anneeJouee } from "../../src/config/cours/annee-de-l-arene";
 import { NEGOCIATIONS } from "../../src/config/cours/chapitres/negocier-le-prix";
 import { TABLEAU_DE_BORD_COMMERCIAL, causeDeLaChute, tableauCommercial } from "../../src/config/cours/chapitres/tableau-de-bord-commercial";
 import { BAISSE_DU_SERVICE_QUI_SIGNALE_L_OFFRE } from "../../src/config/cours/negociation";

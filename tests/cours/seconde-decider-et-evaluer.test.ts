@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { UNITES_FEMININES } from "../../src/config/cours/accords";
 import { blocOfficiel, referentielDeCitation } from "../../src/config/ateliers/referentiels";
-import { anneeJouee, casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
+import { casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
+import { anneeJouee } from "../../src/config/cours/annee-de-l-arene";
 import {
   AVEC_LA_PUBLICITE,
   DECIDER_AVEC_DES_CHIFFRES,

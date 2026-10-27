@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { anneeJouee, casDeLEntreprise } from "../../src/config/cours/cas";
+import { casDeLEntreprise } from "../../src/config/cours/cas";
+import { anneeJouee } from "../../src/config/cours/annee-de-l-arene";
 import { CANAUX_DE_DISTRIBUTION, CANAUX_INDIRECTS, DISTRIBUTIONS, canauxDeDistribution } from "../../src/config/cours/chapitres/canaux-de-distribution";
 import { scenarioByCode } from "../../src/config/scenarios/registry";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";

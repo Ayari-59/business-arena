@@ -1,7 +1,8 @@
 import type { CompanyRoundResult } from "../../../../engine/types";
 import { auCentime } from "../../../../pedagogy/cours/etats";
 import { scenarioByCode } from "../../../scenarios/registry";
-import { anneeJouee, type Cas } from "../../cas";
+import { type Cas } from "../../cas";
+import { anneeJouee } from "../../annee-de-l-arene";
 import {
   LE_TAUX_DE_REMPLISSAGE,
   demandeDuTrimestre,
