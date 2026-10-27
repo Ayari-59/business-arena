@@ -17,6 +17,15 @@ import { REMISE_DE_LA_PROMOTION } from "./chapitres/le-prix-affiche";
 import { FOND_DE_CAISSE, PART_EN_ESPECES } from "./chapitres/tenir-la-caisse";
 import { METIERS } from "./metiers";
 import { FACTEUR_DU_GRAND_ENTRETIEN } from "./chapitres/le-deficit-reporte";
+import { venteDuMetier } from "./chapitres/le-panier-moyen";
+import { PROGRESSION_EN_POURCENT } from "./chapitres/suivre-ses-ventes";
+import { PRIX_BAS } from "./chapitres/l-offre-et-la-demande";
+import { PAS_DU_TATONNEMENT } from "./chapitres/le-prix-d-equilibre";
+import { HAUSSE_DU_PRIX } from "./chapitres/la-concurrence";
+import { budgetDuSecteur } from "./chapitres/produire-bien";
+import { INDICE_DE_LA_HAUSSE } from "./chapitres/les-acteurs-et-la-valeur";
+import { BAISSE_DE_PRIX_DU_COMMERCIAL, COUPE_DU_FINANCIER, HAUSSE_DE_PUBLICITE_DU_COMMERCIAL } from "./chapitres/decider-ensemble";
+import { RETARD } from "./chapitres/une-information-a-temps";
 import { SEUILS_ABC } from "./negociation";
 import { scenarioByCode, scenarioCodeForLevel } from "../scenarios/registry";
 import { DIFFICULTY_PRESETS } from "../difficulty";
@@ -992,6 +1001,116 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
       faire: `${partie(c, 1)} Jouez un tour sans toucher à la feuille de décision proposée.`,
       lieux: ["marche-du-tour", "compte-de-resultat"],
       chercher: `Relevez le chiffre d'affaires du tour et divisez-le par les ${jours} jours du trimestre : quel chiffre d'affaires TTC, avec ${tva} % de TVA, un jour moyen ? Si ${(PART_EN_ESPECES * 100).toLocaleString("fr-FR")} % se paie en espèces, avec ${FOND_DE_CAISSE} € de fond de caisse, combien doit-il y avoir dans le tiroir le soir ?`,
+    };
+  },
+  "le-panier-moyen": (c) => {
+    const { unitesParVente } = venteDuMetier(c);
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Jouez un tour sans toucher à la feuille de décision proposée.`,
+      lieux: ["indicateurs", "compte-de-resultat"],
+      chercher: `Dans les indicateurs du métier, relevez le panier que l'arène affiche. Divisez le chiffre d'affaires du compte de résultat par vos ventes du tour${unitesParVente > 1 ? `, comptées en passages en caisse (${unitesParVente.toLocaleString("fr-FR")} article par passage)` : ""} : retrouvez-vous le même chiffre ? Divisez ensuite la marge sur coût variable par ces ventes : combien rapporte une vente de plus ?`,
+    };
+  },
+  "suivre-ses-ventes": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour sans rien changer. Au second, inscrivez dans « Ventes estimées » votre objectif : les ventes du premier tour, plus ${PROGRESSION_EN_POURCENT} %, puis jouez-le.`,
+    lieux: ["plan-face-au-realise", "marche-du-tour"],
+    chercher:
+      "Votre plan face au réalisé donne l'écart entre votre objectif et vos ventes : calculez votre taux de réalisation. Dans le marché du tour écoulé, la demande adressée dépassait-elle votre objectif ? L'écart vient-il des clients venus, ou des clients repartis sans être servis ?",
+  }),
+  "le-client-qui-revient": (c) => {
+    const { volume } = feuilleDe(c, 2);
+    return {
+      niveau: 2,
+      faire: `${partie(c, 2)} Jouez un premier tour sans rien changer, puis un deuxième où vous baissez « ${volume} » d'un tiers, puis un troisième où vous le remettez comme au premier.`,
+      lieux: ["portefeuille", "compte-de-resultat"],
+      chercher:
+        "Au deuxième tour, combien d'adhérents sont restés sans place ? Au troisième, la salle les a-t-elle retrouvés ? Relevez la marge des trois tours : un adhérent refusé coûte-t-il plus qu'un trimestre d'abonnement ?",
+    };
+  },
+  "un-nouveau-client": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Jouez un tour sans rien changer, puis un deuxième où vous doublez « Budget marketing », puis un troisième où vous le remettez comme au premier.`,
+    lieux: ["marche-du-tour", "compte-de-resultat"],
+    chercher:
+      "Combien de ventes de plus au deuxième tour, et encore au troisième ? Divisez le budget ajouté par les ventes gagnées : combien a coûté chaque client gagné ? La marge gagnée a-t-elle payé la campagne ?",
+  }),
+  "l-offre-et-la-demande": (c) => {
+    const { prix } = feuilleDe(c, 1);
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Jouez un tour sans rien changer, puis un second en baissant « ${prix} » de ${Math.round((1 - PRIX_BAS) * 100)} %.`,
+      lieux: ["marche-du-tour"],
+      chercher:
+        "Au marché du tour écoulé, comparez à chaque tour les colonnes « Demande » et « Vendu » : quelle quantité s'est échangée, et combien de ventes ont « Manqué » ? Le prix plus bas a-t-il fait monter la demande, et les ventes autant ?",
+    };
+  },
+  "le-prix-d-equilibre": (c) => {
+    const { prix, volume } = feuilleDe(c, 1);
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Jouez un tour sans rien changer. Au tour suivant, gardez « ${volume} » et montez « ${prix} » de ${Math.round(PAS_DU_TATONNEMENT * 100)} % si des ventes ont manqué, baissez-le de ${Math.round(PAS_DU_TATONNEMENT * 100)} % sinon.`,
+      lieux: ["marche-du-tour"],
+      chercher:
+        "Au marché du tour écoulé, la colonne « Manqué » a-t-elle fondu, ou votre offre est-elle restée sans acheteur ? Entre vos deux prix, où se trouve celui qui équilibre votre marché ?",
+    };
+  },
+  "la-concurrence": (c) => {
+    const { prix } = feuilleDe(c, 1);
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Jouez un tour sans rien changer, puis un second en montant « ${prix} » de ${Math.round(HAUSSE_DU_PRIX * 100)} %.`,
+      lieux: ["marche-du-tour", "compte-de-resultat"],
+      chercher:
+        "Sous le marché du tour écoulé, le benchmark concurrentiel donne la part de marché de chaque entreprise : la vôtre a-t-elle baissé, celle de vos concurrents monté ? Vos clients partis ont-ils été servis ailleurs ? Au compte de résultat, la hausse a-t-elle fait monter ou baisser votre résultat ?",
+    };
+  },
+  "creer-des-richesses": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le compte de résultat.`,
+    lieux: ["compte-de-resultat"],
+    chercher:
+      "Additionnez ce que l'entreprise a acheté à d'autres entreprises pour produire (achats, publicité, entretien, loyer et frais) : ce sont ses consommations intermédiaires. Retirez-les du chiffre d'affaires : quelle richesse a-t-elle créée ce tour, et que reste-t-il une fois payés les salaires, les intérêts et l'impôt ?",
+  }),
+  produire: (c) => ({
+    niveau: 3,
+    faire: `${partie(c, 3)} Jouez un tour sans rien changer, puis mettez 1 dans « Embauches » et jouez deux tours de plus.`,
+    lieux: ["feuille", "rh-du-tour", "plan-face-au-realise"],
+    chercher:
+      "Au tour où le salarié est arrivé, la ligne « RH · effectif » compte-t-elle un salarié de plus ? Avez-vous produit davantage qu'avant, ou les équipements bridaient-ils déjà la production ? Divisez la production du tour par l'effectif : la production par salarié a-t-elle monté ou baissé ?",
+  }),
+  "produire-bien": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} À chaque tour, mettez ${budgetDuSecteur(c.code).toLocaleString("fr-FR")} € dans « Budget qualité », puis jouez trois tours.`,
+    lieux: ["feuille", "compte-de-resultat", "marche-du-tour"],
+    chercher:
+      "Vos ventes ont-elles monté dès le premier tour, ou seulement ensuite, quand les clients ont vu la qualité ? Au compte de résultat, la marge des ventes gagnées paie-t-elle le budget qualité ? Si la feuille proposait déjà ce budget, rejouez trois tours à 0 € et comparez le résultat.",
+  }),
+  "les-acteurs-et-la-valeur": (c) => ({
+    niveau: 3,
+    faire: `${partie(c, 3)} Au premier tour, mettez ${Math.round(INDICE_DE_LA_HAUSSE * 100)} dans « Salaires (marché = 100) », sans rien changer d'autre, puis jouez le tour.`,
+    lieux: ["feuille", "compte-de-resultat"],
+    chercher:
+      "Dans le compte de résultat du tour, retrouvez ce qu'ont reçu les salariés, l'État et les associés. Calculez ce que la hausse a coûté (le coût du personnel moins ce qu'il aurait été au salaire du marché) : de combien l'impôt et le résultat net auraient-ils été plus hauts sans elle ?",
+  }),
+  "decider-ensemble": (c) => {
+    const { prix } = feuilleDe(c, 2);
+    return {
+      niveau: 2,
+      faire: `${partie(c, 2)} Jouez trois tours, à deux si vous le pouvez. Au premier, décidez comme le commercial seul : « ${prix} » ${Math.round(BAISSE_DE_PRIX_DU_COMMERCIAL * 100)} % plus bas, « Budget marketing » monté de ${Math.round(HAUSSE_DE_PUBLICITE_DU_COMMERCIAL * 100)} %. Au deuxième, comme le financier seul : le prix proposé, et « Budget marketing », « Budget qualité » et « Budget maintenance » divisés par ${Math.round(1 / COUPE_DU_FINANCIER)}. Au troisième, décidez ensemble, après avoir lu le marché et la trésorerie.`,
+      lieux: ["marche-du-tour", "budget-de-tresorerie", "compte-de-resultat"],
+      chercher:
+        "Après chaque tour, relevez les ventes, les ventes manquées, le résultat et la trésorerie. Quel tour a fait le meilleur résultat ? Lequel a laissé partir le plus de clients ? Le tour décidé ensemble a-t-il été le dernier sur l'un de ces critères ?",
+    };
+  },
+  "une-information-a-temps": (c) => {
+    const { prix, volume } = feuilleDe(c, 1);
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Jouez quatre tours. À chaque tour, notez ce que la feuille de décision propose dans « ${volume} » et « ${prix} », mais jouez ce qu'elle proposait au tour d'avant (au premier tour, gardez la proposition). Puis relancez une partie et jouez quatre tours en gardant chaque fois la proposition du tour.`,
+      lieux: ["plan-face-au-realise", "marche-du-tour", "compte-de-resultat"],
+      chercher: `Avec ${RETARD} tour de retard, votre plan a-t-il été trop bas ou trop haut, et à quels tours ? Combien de ventes ont manqué en plus ? De combien le résultat des quatre tours est-il plus bas que celui de la partie jouée à jour ?`,
     };
   },
   "tableau-de-bord-commercial": (c) => ({
