@@ -95,6 +95,19 @@ import { RECEVOIR_UNE_LIVRAISON } from "./chapitres/recevoir-une-livraison";
 import { REMPLIR_LE_RAYON } from "./chapitres/remplir-le-rayon";
 import { LE_PRIX_AFFICHE } from "./chapitres/le-prix-affiche";
 import { TENIR_LA_CAISSE } from "./chapitres/tenir-la-caisse";
+import { UNE_INFORMATION_A_TEMPS } from "./chapitres/une-information-a-temps";
+import { LA_CONCURRENCE } from "./chapitres/la-concurrence";
+import { CREER_DES_RICHESSES } from "./chapitres/creer-des-richesses";
+import { LES_ACTEURS_ET_LA_VALEUR } from "./chapitres/les-acteurs-et-la-valeur";
+import { DECIDER_ENSEMBLE } from "./chapitres/decider-ensemble";
+import { L_OFFRE_ET_LA_DEMANDE } from "./chapitres/l-offre-et-la-demande";
+import { LE_PRIX_D_EQUILIBRE } from "./chapitres/le-prix-d-equilibre";
+import { LE_PANIER_MOYEN } from "./chapitres/le-panier-moyen";
+import { SUIVRE_SES_VENTES } from "./chapitres/suivre-ses-ventes";
+import { LE_CLIENT_QUI_REVIENT } from "./chapitres/le-client-qui-revient";
+import { UN_NOUVEAU_CLIENT } from "./chapitres/un-nouveau-client";
+import { PRODUIRE } from "./chapitres/produire";
+import { PRODUIRE_BIEN } from "./chapitres/produire-bien";
 import type { Chapitre } from "./types";
 
 /**
@@ -252,6 +265,30 @@ export const PARCOURS: readonly Parcours[] = [
       "Recevoir une livraison et la contrôler, remplir le rayon avant la rupture, afficher le bon prix, tenir la caisse : les gestes du magasin, comptés sur les chiffres de l'arène.",
     publics: { 1: "CAP Équipier polyvalent du commerce" },
   },
+  {
+    code: "vente",
+    formation: "bac-pro-mcv",
+    titre: "Bac pro MCV · Vendre et suivre ses ventes",
+    resume:
+      "Le panier moyen et la marge d'une vente, l'objectif et le réalisé, le client qui revient ou qui part, ce que rapporte un nouveau client : la vente au comptoir de l'arène, chiffrée.",
+    publics: { 1: "Seconde professionnelle relation client, première bac pro MCV", 2: "Terminale bac pro MCV" },
+  },
+  {
+    code: "seconde-ses",
+    formation: "seconde-ses",
+    titre: "Seconde SES · Le marché et les prix",
+    resume:
+      "L'offre et la demande, le prix qui vide le stock ou qui laisse partir les clients, la concurrence entre vendeurs, la richesse créée : le marché de l'arène, rejoué au prix qu'on choisit.",
+    publics: { 1: "Seconde générale et technologique, sciences économiques et sociales" },
+  },
+  {
+    code: "stmg-management",
+    formation: "stmg",
+    titre: "Bac STMG · Management",
+    resume:
+      "Produire avec une capacité et une équipe, produire bien, partager la valeur créée, décider ensemble et sur une information à jour : l'organisation de l'arène, lue dans ses comptes.",
+    publics: { 1: "Première et terminale STMG, management" },
+  },
 ];
 
 export const PALIERS: readonly { palier: Chapitre["palier"]; titre: string; public: string }[] = [
@@ -382,12 +419,39 @@ export const PROGRAMME: Record<CodeParcours, Partial<Record<Chapitre["palier"], 
       "Tenir la caisse : le ticket, la monnaie et le fond de caisse",
     ],
   },
+  vente: {
+    1: [
+      "Le panier moyen et la marge d'une vente",
+      "Suivre ses ventes : l'objectif, le réalisé, l'écart",
+    ],
+    2: [
+      "Le client qui revient et le client qui part",
+      "Ce que rapporte un nouveau client",
+    ],
+  },
+  "seconde-ses": {
+    1: [
+      "L'offre et la demande sur un marché",
+      "Le prix qui équilibre le marché",
+      "La concurrence : plusieurs vendeurs pour les mêmes clients",
+      "Créer des richesses et les mesurer",
+    ],
+  },
+  "stmg-management": {
+    1: [
+      "Produire : capacité, équipe et productivité",
+      "Produire bien : la qualité et ce qu'elle coûte",
+      "Les acteurs de l'organisation et le partage de la valeur",
+      "Décider ensemble : chacun son écran, une seule décision",
+      "Une information qui circule à temps",
+    ],
+  },
 };
 
 /** Les paliers que la carte montre pour un parcours, dans l'ordre. */
 export const paliersDuParcours = (code: CodeParcours) => PALIERS.filter((pa) => PROGRAMME[code][pa.palier] !== undefined);
 
-export const CHAPITRES: readonly Chapitre[] = [CREATION_PREMIER_BILAN, LES_FLUX, CHARGES_ET_ENCAISSEMENTS, LA_PAIE, L_EMPRUNT, IMMOBILISATIONS, LES_STOCKS, LA_CLOTURE, REMISES_ET_REGLEMENTS, DEPRECIATIONS_ET_PROVISIONS, REGULARISATIONS, SOLDES_INTERMEDIAIRES, BILAN_FONCTIONNEL, PRIX_COUT_MARGE, SEUIL_DE_RENTABILITE, COUT_COMPLET, COUT_PAR_PRODUIT, BUDGET_DE_TRESORERIE, ANALYSE_DES_ECARTS, TABLEAU_DE_BORD, DECIDER, TAUX_DE_MARQUE, INDICATEURS_DU_POINT_DE_VENTE, STOCK_DU_POINT_DE_VENTE, PREVOIR_LES_VENTES, BUDGET_DU_POINT_DE_VENTE, SEUIL_DU_POINT_DE_VENTE, PROMOTION_QUI_PAIE, ASSORTIMENT, EQUIPE_ET_PLANNING, TABLEAU_DE_BORD_DU_MANAGER, NEGOCIER_LE_PRIX, REMISES_ET_CONDITIONS, VALEUR_D_UN_CLIENT, COUT_D_ACQUISITION, COMMISSIONS_DES_PARTENAIRES, PORTEFEUILLE_ABC, TABLEAU_DE_BORD_COMMERCIAL, MARCHE_ET_PART_DE_MARCHE, SEGMENTER_ET_CIBLER, PRIX_PSYCHOLOGIQUE, DEMANDE_ET_PRIX, COMMUNICATION, CANAUX_DE_DISTRIBUTION, LIRE_LE_COMPTE_DE_RESULTAT, LIRE_LE_BILAN, VALEUR_AJOUTEE, RENTABILITE, FONDS_DE_ROULEMENT, FINANCER_L_ENTREPRISE, EFFECTIF_ET_MASSE_SALARIALE, SALAIRE_BRUT_NET_COUT, RECRUTER, REMUNERATION_ET_MOTIVATION, FORMER, INDICATEURS_SOCIAUX, CHOISIR_SON_FOURNISSEUR, LE_CLIENT_QUI_PAIE_TARD, S_ASSURER_CONTRE_LES_ALEAS, LE_COUT_DE_LA_NON_QUALITE, LE_DEPART_D_UN_SALARIE, ENTRETENIR_L_OUTIL, LE_DIAGNOSTIC_STRATEGIQUE, SE_FIXER_DES_OBJECTIFS, COUTS_OU_DIFFERENCIATION, LIRE_LA_STRATEGIE_DES_CONCURRENTS, CROITRE_EN_INVESTISSANT, LA_RESPONSABILITE_SOCIETALE, LE_PROJET_D_ENTREPRISE, ORGANISER_L_ACTIVITE, DECIDER_AVEC_DES_CHIFFRES, EVALUER_SON_ACTIVITE, DES_DONNEES_A_L_INFORMATION, CONSTRUIRE_UN_INDICATEUR_JUSTE, UNE_DONNEE_FAUSSE, CE_QUE_COUTE_UN_OUTIL_NUMERIQUE, LE_COUT_MATIERE, OCCUPATION_ET_REVENU_PAR_CHAMBRE, LA_PRODUCTIVITE_DU_SERVICE, LE_PRIX_SELON_LA_SAISON, LA_DECLARATION_DE_TVA, LA_TVA_ET_LA_TRESORERIE, L_IMPOT_SUR_LES_SOCIETES, LE_DEFICIT_REPORTE, LE_STOCK_DE_SECURITE, CE_QUE_COUTE_UNE_LIVRAISON, LE_TAUX_DE_REMPLISSAGE, LIVRER_A_TEMPS, LA_VALEUR_ACTUELLE_NETTE, LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS, L_EFFET_DE_LEVIER, LA_CREATION_DE_VALEUR, RECEVOIR_UNE_LIVRAISON, REMPLIR_LE_RAYON, LE_PRIX_AFFICHE, TENIR_LA_CAISSE];
+export const CHAPITRES: readonly Chapitre[] = [CREATION_PREMIER_BILAN, LES_FLUX, CHARGES_ET_ENCAISSEMENTS, LA_PAIE, L_EMPRUNT, IMMOBILISATIONS, LES_STOCKS, LA_CLOTURE, REMISES_ET_REGLEMENTS, DEPRECIATIONS_ET_PROVISIONS, REGULARISATIONS, SOLDES_INTERMEDIAIRES, BILAN_FONCTIONNEL, PRIX_COUT_MARGE, SEUIL_DE_RENTABILITE, COUT_COMPLET, COUT_PAR_PRODUIT, BUDGET_DE_TRESORERIE, ANALYSE_DES_ECARTS, TABLEAU_DE_BORD, DECIDER, TAUX_DE_MARQUE, INDICATEURS_DU_POINT_DE_VENTE, STOCK_DU_POINT_DE_VENTE, PREVOIR_LES_VENTES, BUDGET_DU_POINT_DE_VENTE, SEUIL_DU_POINT_DE_VENTE, PROMOTION_QUI_PAIE, ASSORTIMENT, EQUIPE_ET_PLANNING, TABLEAU_DE_BORD_DU_MANAGER, NEGOCIER_LE_PRIX, REMISES_ET_CONDITIONS, VALEUR_D_UN_CLIENT, COUT_D_ACQUISITION, COMMISSIONS_DES_PARTENAIRES, PORTEFEUILLE_ABC, TABLEAU_DE_BORD_COMMERCIAL, MARCHE_ET_PART_DE_MARCHE, SEGMENTER_ET_CIBLER, PRIX_PSYCHOLOGIQUE, DEMANDE_ET_PRIX, COMMUNICATION, CANAUX_DE_DISTRIBUTION, LIRE_LE_COMPTE_DE_RESULTAT, LIRE_LE_BILAN, VALEUR_AJOUTEE, RENTABILITE, FONDS_DE_ROULEMENT, FINANCER_L_ENTREPRISE, EFFECTIF_ET_MASSE_SALARIALE, SALAIRE_BRUT_NET_COUT, RECRUTER, REMUNERATION_ET_MOTIVATION, FORMER, INDICATEURS_SOCIAUX, CHOISIR_SON_FOURNISSEUR, LE_CLIENT_QUI_PAIE_TARD, S_ASSURER_CONTRE_LES_ALEAS, LE_COUT_DE_LA_NON_QUALITE, LE_DEPART_D_UN_SALARIE, ENTRETENIR_L_OUTIL, LE_DIAGNOSTIC_STRATEGIQUE, SE_FIXER_DES_OBJECTIFS, COUTS_OU_DIFFERENCIATION, LIRE_LA_STRATEGIE_DES_CONCURRENTS, CROITRE_EN_INVESTISSANT, LA_RESPONSABILITE_SOCIETALE, LE_PROJET_D_ENTREPRISE, ORGANISER_L_ACTIVITE, DECIDER_AVEC_DES_CHIFFRES, EVALUER_SON_ACTIVITE, DES_DONNEES_A_L_INFORMATION, CONSTRUIRE_UN_INDICATEUR_JUSTE, UNE_DONNEE_FAUSSE, CE_QUE_COUTE_UN_OUTIL_NUMERIQUE, LE_COUT_MATIERE, OCCUPATION_ET_REVENU_PAR_CHAMBRE, LA_PRODUCTIVITE_DU_SERVICE, LE_PRIX_SELON_LA_SAISON, LA_DECLARATION_DE_TVA, LA_TVA_ET_LA_TRESORERIE, L_IMPOT_SUR_LES_SOCIETES, LE_DEFICIT_REPORTE, LE_STOCK_DE_SECURITE, CE_QUE_COUTE_UNE_LIVRAISON, LE_TAUX_DE_REMPLISSAGE, LIVRER_A_TEMPS, LA_VALEUR_ACTUELLE_NETTE, LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS, L_EFFET_DE_LEVIER, LA_CREATION_DE_VALEUR, RECEVOIR_UNE_LIVRAISON, REMPLIR_LE_RAYON, LE_PRIX_AFFICHE, TENIR_LA_CAISSE, LE_PANIER_MOYEN, SUIVRE_SES_VENTES, LE_CLIENT_QUI_REVIENT, UN_NOUVEAU_CLIENT, L_OFFRE_ET_LA_DEMANDE, LE_PRIX_D_EQUILIBRE, LA_CONCURRENCE, CREER_DES_RICHESSES, PRODUIRE, PRODUIRE_BIEN, LES_ACTEURS_ET_LA_VALEUR, DECIDER_ENSEMBLE, UNE_INFORMATION_A_TEMPS];
 
 /**
  * Un chapitre, ou un cas pratique, par son code : la page d'un chapitre et la

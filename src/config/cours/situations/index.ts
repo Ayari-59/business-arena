@@ -101,6 +101,19 @@ import { LES_DEUX_ECARTS } from "./par-chapitre/les-deux-ecarts";
 import { TENIR_JUSQU_AU_REASSORT } from "./par-chapitre/tenir-jusqu-au-reassort";
 import { LA_PROMOTION_DE_NOEL } from "./par-chapitre/la-promotion-de-noel";
 import { LA_CAISSE_DU_TRIMESTRE_DE_NOEL } from "./par-chapitre/la-caisse-du-trimestre-de-noel";
+import { LE_COMPTE_RENDU_EN_RETARD } from "./par-chapitre/le-compte-rendu-en-retard";
+import { DE_COMBIEN_MONTER_LE_PRIX } from "./par-chapitre/de-combien-monter-le-prix";
+import { LE_MARCHE_A_T_IL_GRANDI } from "./par-chapitre/le-marche-a-t-il-grandi";
+import { LES_CLIENTS_DEMANDENT_UNE_BAISSE } from "./par-chapitre/les-clients-demandent-une-baisse";
+import { CHACUN_SON_LEVIER } from "./par-chapitre/chacun-son-levier";
+import { METTRE_PLUS_EN_VENTE } from "./par-chapitre/mettre-plus-en-vente";
+import { LE_PRIX_DE_FIN_D_ANNEE } from "./par-chapitre/le-prix-de-fin-d-annee";
+import { LE_PANIER_DE_FIN_D_ANNEE } from "./par-chapitre/le-panier-de-fin-d-annee";
+import { L_OBJECTIF_DE_L_ETE } from "./par-chapitre/l-objectif-de-l-ete";
+import { LES_TRAVAUX_DE_L_ETE } from "./par-chapitre/les-travaux-de-l-ete";
+import { UNE_CAMPAGNE_PLUS_FORTE } from "./par-chapitre/une-campagne-plus-forte";
+import { DEUX_EMBAUCHES_POUR_PRODUIRE_PLUS } from "./par-chapitre/deux-embauches-pour-produire-plus";
+import { LA_MOITIE_DU_BUDGET_QUALITE } from "./par-chapitre/la-moitie-du-budget-qualite";
 import type { Situation } from "./types";
 
 export type { Situation } from "./types";
@@ -222,6 +235,19 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   TENIR_JUSQU_AU_REASSORT,
   LA_PROMOTION_DE_NOEL,
   LA_CAISSE_DU_TRIMESTRE_DE_NOEL,
+  LE_PANIER_DE_FIN_D_ANNEE,
+  L_OBJECTIF_DE_L_ETE,
+  LES_TRAVAUX_DE_L_ETE,
+  UNE_CAMPAGNE_PLUS_FORTE,
+  METTRE_PLUS_EN_VENTE,
+  LE_PRIX_DE_FIN_D_ANNEE,
+  DE_COMBIEN_MONTER_LE_PRIX,
+  LE_MARCHE_A_T_IL_GRANDI,
+  LES_CLIENTS_DEMANDENT_UNE_BAISSE,
+  DEUX_EMBAUCHES_POUR_PRODUIRE_PLUS,
+  LA_MOITIE_DU_BUDGET_QUALITE,
+  CHACUN_SON_LEVIER,
+  LE_COMPTE_RENDU_EN_RETARD,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */
