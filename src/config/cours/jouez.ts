@@ -357,12 +357,46 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     lieux: ["feuille", "budget-de-tresorerie"],
     chercher: "Comparez votre estimation au budget de trésorerie du tour, ligne à ligne. Laquelle vous a le plus trompé, et pourquoi ?",
   }),
+  "le-cout-preetabli-et-les-budgets": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Remplissez les ventes estimées de la feuille de décision, puis jouez le tour.`,
+    lieux: ["plan-face-au-realise", "analyse-des-couts"],
+    chercher:
+      "Votre plan est un budget. Multipliez les unités réellement vendues par le coût variable d'une unité, dans l'analyse des coûts : c'est le budget flexible. L'écart entre votre plan et ce budget vient du volume ; celui entre ce budget et le réalisé, de la façon de produire.",
+  }),
+  "les-ecarts-sur-charges-directes": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours.`,
+    lieux: ["analyse-des-couts"],
+    chercher:
+      "Le coût variable d'une unité est-il le même aux deux tours ? S'il a bougé, demandez-vous si c'est le prix payé ou la quantité consommée par unité : c'est la question des deux écarts sur charges directes.",
+  }),
+  "les-ecarts-sur-charges-indirectes": (c) => {
+    const { volume } = feuilleDe(c, 1);
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Jouez un tour, puis un second avec nettement plus de « ${volume} ».`,
+      lieux: ["analyse-des-couts"],
+      chercher:
+        "Les charges de structure ont-elles suivi la production ? Divisez-les par les unités de chaque tour : la part fixe d'une unité baisse quand l'usine tourne plus. C'est l'écart sur activité d'un centre d'analyse.",
+    };
+  },
+  "les-ecarts-sur-ventes-et-marge": (c) => {
+    const { prix } = feuilleDe(c, 1);
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Remplissez les ventes estimées de la feuille de décision, puis jouez un tour avec un « ${prix} » plus bas.`,
+      lieux: ["plan-face-au-realise", "analyse-des-couts"],
+      chercher:
+        "Face à votre plan, séparez l'écart sur chiffre d'affaires en un écart sur prix et un écart sur quantités. Jugez ensuite les quantités à la marge sur coût variable d'une unité, et non à son prix : que reste-t-il du gain de volume ?",
+    };
+  },
   "analyse-des-ecarts": (c) => ({
     niveau: 1,
     faire: `${partie(c, 1)} Remplissez les ventes estimées de la feuille de décision, puis jouez le tour.`,
     lieux: ["plan-face-au-realise"],
     chercher:
-      "Votre plan face au réalisé donne, poste par poste, le prévu, le réalisé et l'écart. Pour l'écart sur le chiffre d'affaires, séparez ce qui vient du prix et ce qui vient des quantités vendues.",
+      "Votre plan face au réalisé donne, poste par poste, le prévu, le réalisé et l'écart. Rangez ces écarts selon ce qu'ils font au résultat : lequel pèse le plus, et qui dans l'entreprise peut agir dessus ?",
   }),
   "tableau-de-bord": (c) => ({
     niveau: 2,

@@ -30,6 +30,10 @@ import { UN_NOUVEAU_CLIENT_REGULIER } from "./par-chapitre/un-nouveau-client-reg
 import { LA_CLE_CONTESTEE } from "./par-chapitre/la-cle-contestee";
 import { UN_TRIMESTRE_DE_CROISSANCE } from "./par-chapitre/un-trimestre-de-croissance";
 import { L_OBJECTIF_DU_COMMERCIAL } from "./par-chapitre/l-objectif-du-commercial";
+import { LE_BUDGET_DEPASSE } from "./par-chapitre/le-budget-depasse";
+import { LE_FOURNISSEUR_OU_L_ATELIER } from "./par-chapitre/le-fournisseur-ou-l-atelier";
+import { LE_CENTRE_QUI_A_TROP_TOURNE } from "./par-chapitre/le-centre-qui-a-trop-tourne";
+import { LE_RESULTAT_QUI_MANQUE } from "./par-chapitre/le-resultat-qui-manque";
 import { REGLER_LE_VOYANT } from "./par-chapitre/regler-le-voyant";
 import { MONTER_SON_PRIX } from "./par-chapitre/monter-son-prix";
 import { GARDER_SA_PART_DE_MARCHE } from "./par-chapitre/garder-sa-part-de-marche";
@@ -163,7 +167,11 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   UN_NOUVEAU_CLIENT_REGULIER,
   LA_CLE_CONTESTEE,
   UN_TRIMESTRE_DE_CROISSANCE,
+  LE_BUDGET_DEPASSE,
+  LE_FOURNISSEUR_OU_L_ATELIER,
+  LE_CENTRE_QUI_A_TROP_TOURNE,
   L_OBJECTIF_DU_COMMERCIAL,
+  LE_RESULTAT_QUI_MANQUE,
   REGLER_LE_VOYANT,
   MONTER_SON_PRIX,
   GARDER_SA_PART_DE_MARCHE,

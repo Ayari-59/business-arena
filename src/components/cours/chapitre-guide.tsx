@@ -19,6 +19,7 @@ import type {
   EtapeEcriture,
   EtapeLecture,
   EtapeMontants,
+  EtapeSimulation,
   EtapeTri,
   EtatDuCours,
   OptionDeChoix,
@@ -92,6 +93,13 @@ function useSuivi(cle: string): [Suivi, (f: (s: Suivi) => Suivi) => void, boolea
   return [suivi, changer, lu];
 }
 
+/** Un montant affiché : le signe moins typographique, comme dans les textes du cours. */
+const montantAffiche = (x: number) => montantEcrit(x).replace(/^-/, "−");
+
+/** Une ligne du laboratoire : en euros, ou dans son unité quand elle en a une (kilos, heures). */
+const valeurDeLigne = (x: number, unite?: string) =>
+  unite ? `${x.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} ${unite}` : montantAffiche(x);
+
 /** « 0 écriture », « 1 écriture », « 2 écritures » : zéro s'accorde au singulier. */
 const ecritures = (n: number) => `${n} écriture${n > 1 ? "s" : ""}`;
 
@@ -155,11 +163,11 @@ function PieceComptable({ p }: { p: Piece }) {
                 {l.libelle}
                 {l.quantite && l.prixUnitaire !== undefined && (
                   <span className="block text-xs text-slate-400">
-                    {l.quantite} × {montantEcrit(l.prixUnitaire)} HT
+                    {l.quantite} × {montantAffiche(l.prixUnitaire)} HT
                   </span>
                 )}
               </td>
-              <td className="py-1 text-right tabular-nums">{montantEcrit(l.montant)}</td>
+              <td className="py-1 text-right tabular-nums">{montantAffiche(l.montant)}</td>
             </tr>
           ))}
         </tbody>
@@ -167,7 +175,7 @@ function PieceComptable({ p }: { p: Piece }) {
           {p.totaux.map((t) => (
             <tr key={t.libelle} className={t.fort ? "border-t border-slate-300 font-semibold" : ""}>
               <td className="py-1 pr-2">{t.libelle}</td>
-              <td className="py-1 text-right tabular-nums">{montantEcrit(t.montant)}</td>
+              <td className="py-1 text-right tabular-nums">{montantAffiche(t.montant)}</td>
             </tr>
           ))}
         </tfoot>
@@ -525,7 +533,7 @@ function EtapeDeTri({ etape, cas, chapitre, index, suivi, classe, noter, suite }
             <li key={el.libelle} className="grid gap-1.5 rounded-lg border border-slate-600 px-3 py-2.5" data-element={el.libelle}>
               <p className="flex flex-wrap items-baseline justify-between gap-x-3">
                 <span>{el.libelle}</span>
-                <span className="whitespace-nowrap tabular-nums text-slate-300">{montantEcrit(el.montant)}</span>
+                <span className="whitespace-nowrap tabular-nums text-slate-300">{montantAffiche(el.montant)}</span>
               </p>
               <div className="flex flex-wrap items-center gap-2" role="radiogroup" aria-label={el.libelle}>
                 {etape.categories.map((k) => (
@@ -746,7 +754,7 @@ function EtapeDeCurseur({ etape, cas, chapitre, index, suivi, classe, noter, sui
               <tr key={l.libelle} className={l.fort ? "border-t border-slate-300 font-semibold" : ""}>
                 <td className="py-1 pr-2">{l.libelle}</td>
                 <td className="whitespace-nowrap py-1 text-right tabular-nums" data-lecture={l.libelle}>
-                  {montantEcrit(l.montant)}
+                  {montantAffiche(l.montant)}
                 </td>
               </tr>
             ))}
@@ -781,6 +789,206 @@ function EtapeDeCurseur({ etape, cas, chapitre, index, suivi, classe, noter, sui
       {fait && (
         <>
           <Paragraphes textes={etape.explication(cas)} />
+          <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} code={chapitre.code} />
+        </>
+      )}
+    </>
+  );
+}
+
+/** Une position des leviers, lue au clavier : la virgule française vaut le point. */
+const lireLevier = (texte: string) => Number(texte.replace(/\s/g, "").replace(",", "."));
+const ecrireLevier = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2, useGrouping: false });
+
+/** La position ramenée dans les bornes du levier, sur son pas. */
+function surLePas(l: { min: number; max: number; pas: number }, n: number) {
+  const k = Math.round((Math.min(l.max, Math.max(l.min, n)) - l.min) / l.pas);
+  return Math.round((l.min + k * l.pas) * 100) / 100;
+}
+
+/**
+ * LE LABORATOIRE : chaque levier a son curseur, ses boutons d'un pas et sa saisie au clavier ;
+ * le tableau suit en direct, avec la valeur de départ à côté et, sur les lignes d'effet, une
+ * barre verte ou rouge à l'échelle des effets que les leviers peuvent produire. L'élève valide
+ * quand il pense avoir relevé le défi ; ses essais restent écrits, pour qu'il compare.
+ */
+function EtapeDeSimulation({ etape, cas, chapitre, index, suivi, classe, noter, suite }: PropsDEtape<EtapeSimulation>) {
+  const leviers = etape.leviers(cas);
+  const defi = etape.defi(cas);
+  const depart = useMemo(() => Object.fromEntries(leviers.map((l) => [l.code, l.depart])), [leviers]);
+  const fait = suivi?.reussi ?? false;
+  const essais = suivi?.essais ?? 0;
+  const [position, setPosition] = useState<Record<string, number>>(depart);
+  const [saisies, setSaisies] = useState<Record<string, string>>(() => Object.fromEntries(leviers.map((l) => [l.code, ecrireLevier(l.depart)])));
+  const [indice, setIndice] = useState<string | null>(null);
+  const [traces, setTraces] = useState<{ position: Record<string, number>; atteint: boolean }[]>([]);
+  const [reussie, setReussie] = useState<Record<string, number> | null>(null);
+  const affichee = fait ? (reussie ?? defi.solution) : position;
+  const lecture = etape.lecture(cas, affichee);
+  const peutMontrer = classe || essais >= ESSAIS_AVANT_LA_CORRECTION;
+  // L'échelle des barres : le plus grand effet au départ, à la solution ou à la position du moment.
+  // Elle suit l'élève : une barre se compare toujours à ce qu'il a sous les yeux.
+  const echelle = Math.max(
+    1,
+    ...[depart, defi.solution, affichee].flatMap((p) => etape.lecture(cas, p).filter((x) => x.effet).map((x) => Math.abs(x.montant))),
+  );
+  const placer = (code: string, n: number) => {
+    const l = leviers.find((x) => x.code === code)!;
+    const v = surLePas(l, n);
+    setPosition((p) => ({ ...p, [code]: v }));
+    setSaisies((s) => ({ ...s, [code]: ecrireLevier(v) }));
+    setIndice(null);
+  };
+  return (
+    <>
+      <p className="max-w-2xl text-base leading-relaxed">{etape.question(cas)}</p>
+      <p className="encadre-distinction max-w-2xl rounded-lg px-4 py-2.5 text-sm font-semibold" data-defi="">
+        {defi.consigne}
+      </p>
+      <div className="papier grid gap-5 rounded-xl p-4 sm:p-5" data-laboratoire="">
+        <div className="grid gap-4 sm:grid-cols-2">
+          {leviers.map((l) => (
+            <label key={l.code} className="grid min-w-0 gap-2">
+              <span className="text-sm">
+                {l.libelle} : <strong className="text-lg tabular-nums">{affichee[l.code]!.toLocaleString("fr-FR")}</strong> {l.unite}
+              </span>
+              <input
+                type="range"
+                onWheel={sansMolette}
+                min={l.min}
+                max={l.max}
+                step={l.pas}
+                value={affichee[l.code]}
+                disabled={fait}
+                aria-label={l.libelle}
+                onChange={(e) => placer(l.code, Number(e.target.value))}
+                className="w-full accent-amber-400"
+              />
+              {!fait && (
+                <span className="flex flex-wrap items-center gap-2 text-sm">
+                  <button type="button" className={bouton({ variante: "secondaire", taille: "s" })} onClick={() => placer(l.code, affichee[l.code]! - l.pas)} aria-label={`${l.libelle} : un pas de moins`}>
+                    −
+                  </button>
+                  <button type="button" className={bouton({ variante: "secondaire", taille: "s" })} onClick={() => placer(l.code, affichee[l.code]! + l.pas)} aria-label={`${l.libelle} : un pas de plus`}>
+                    +
+                  </button>
+                  <input
+                    className="champ w-28 px-2 py-1 text-right tabular-nums"
+                    inputMode="decimal"
+                    aria-label={`${l.libelle}, au clavier`}
+                    value={saisies[l.code]}
+                    onChange={(e) => {
+                      const texte = e.target.value;
+                      setSaisies((s) => ({ ...s, [l.code]: texte }));
+                      const n = lireLevier(texte);
+                      if (texte.trim() !== "" && Number.isFinite(n) && n >= l.min && n <= l.max) {
+                        setPosition((p) => ({ ...p, [l.code]: surLePas(l, n) }));
+                        setIndice(null);
+                      }
+                    }}
+                  />
+                </span>
+              )}
+            </label>
+          ))}
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[22rem] text-sm">
+            <thead>
+              <tr className="text-left text-xs uppercase tracking-etiquette">
+                <th className="py-1 pr-2 font-semibold">Ce que montre la simulation</th>
+                <th className="py-1 pr-2 text-right font-semibold">Au départ</th>
+                <th className="py-1 pr-2 text-right font-semibold">Maintenant</th>
+                <th className="w-[30%] py-1" aria-hidden />
+              </tr>
+            </thead>
+            <tbody>
+              {lecture.map((x) => {
+                const largeur = x.effet ? Math.min(50, (Math.abs(x.montant) / echelle) * 50) : 0;
+                return (
+                  <tr key={x.libelle} className={x.fort ? "border-t border-slate-300 font-semibold" : ""}>
+                    <td className="py-1 pr-2">{x.libelle}</td>
+                    <td className="whitespace-nowrap py-1 pr-2 text-right tabular-nums opacity-70">{x.reference === undefined ? "" : valeurDeLigne(x.reference, x.unite)}</td>
+                    <td className="whitespace-nowrap py-1 pr-2 text-right tabular-nums" data-lecture={x.libelle}>
+                      {valeurDeLigne(x.montant, x.unite)}
+                    </td>
+                    <td className="py-1" aria-hidden>
+                      {x.effet && (
+                        <span className="relative block h-3">
+                          <span className="absolute left-1/2 top-0 h-3 w-px bg-current opacity-40" />
+                          <span
+                            className="absolute top-0.5 h-2 rounded-md"
+                            style={{
+                              width: `${largeur}%`,
+                              left: x.montant >= 0 ? "50%" : `${50 - largeur}%`,
+                              background: x.montant >= 0 ? "var(--color-emerald-400)" : "var(--color-red-400)",
+                            }}
+                          />
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        {lecture.some((x) => x.effet) && <p className="text-xs opacity-80">Barre verte : favorable au résultat ; rouge : défavorable.</p>}
+      </div>
+      {!fait && (
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            className={bouton({ taille: "m" })}
+            onClick={() => {
+              const juste = defi.atteint(position);
+              setTraces((t) => [...t, { position, atteint: juste }].slice(-5));
+              setIndice(juste ? null : defi.indice(position));
+              if (juste) setReussie(position);
+              const ou = leviers.map((l) => `${l.libelle} ${position[l.code]!.toLocaleString("fr-FR")} ${l.unite}`).join(", ");
+              noter({ essai: true, ...(juste ? { reussi: true } : { remarques: [`A essayé : ${ou}`] }) });
+            }}
+          >
+            Valider cette position
+          </button>
+          <button
+            type="button"
+            className={bouton({ variante: "secondaire", taille: "m" })}
+            onClick={() => {
+              setPosition(depart);
+              setSaisies(Object.fromEntries(leviers.map((l) => [l.code, ecrireLevier(l.depart)])));
+              setIndice(null);
+            }}
+          >
+            Revenir au départ
+          </button>
+          {peutMontrer && (
+            <button type="button" className={bouton({ variante: "secondaire", taille: "m" })} onClick={() => noter({ aide: true, reussi: true })}>
+              {etape.montrer ?? "Montrer une solution"}
+            </button>
+          )}
+        </div>
+      )}
+      {indice && (
+        <p className="encadre-perte max-w-2xl rounded-lg px-4 py-2.5 text-sm" role="alert">
+          {indice}
+        </p>
+      )}
+      {traces.length > 0 && !fait && (
+        <details className="max-w-2xl text-sm" open>
+          <summary className="cursor-pointer font-semibold">Vos essais</summary>
+          <ol className="mt-2 grid gap-1">
+            {traces.map((t, i) => (
+              <li key={i} className="tabular-nums">
+                {leviers.map((l) => `${l.libelle} ${t.position[l.code]!.toLocaleString("fr-FR")} ${l.unite}`).join(" · ")} : {t.atteint ? "défi relevé" : "pas encore"}
+              </li>
+            ))}
+          </ol>
+        </details>
+      )}
+      {fait && (
+        <>
+          <Paragraphes textes={etape.explication(cas, affichee)} />
           <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} code={chapitre.code} />
         </>
       )}
@@ -1221,6 +1429,7 @@ export function ChapitreGuide({
             {etape.type === "comparaison" && <EtapeDeComparaison etape={etape} {...props} />}
             {etape.type === "tri" && <EtapeDeTri etape={etape} {...props} />}
             {etape.type === "curseur" && <EtapeDeCurseur etape={etape} {...props} />}
+            {etape.type === "simulation" && <EtapeDeSimulation etape={etape} {...props} />}
             <Notions codes={etape.notions} />
           </section>
           <aside className="grid gap-5 lg:sticky lg:top-24">
