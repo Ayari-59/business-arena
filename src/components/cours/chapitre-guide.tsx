@@ -826,15 +826,12 @@ function EtapeDeSimulation({ etape, cas, chapitre, index, suivi, classe, noter, 
   const affichee = fait ? (reussie ?? defi.solution) : position;
   const lecture = etape.lecture(cas, affichee);
   const peutMontrer = classe || essais >= ESSAIS_AVANT_LA_CORRECTION;
-  // L'échelle des barres : le plus grand effet que les leviers produisent à leurs bornes, au départ ou à la solution.
-  const echelle = useMemo(() => {
-    const coins = leviers.reduce<Record<string, number>[]>(
-      (acc, l) => acc.flatMap((p) => [l.min, l.max].map((v) => ({ ...p, [l.code]: v }))),
-      [{}],
-    );
-    const effets = [...coins, depart, defi.solution].flatMap((p) => etape.lecture(cas, p).filter((x) => x.effet).map((x) => Math.abs(x.montant)));
-    return Math.max(1, ...effets);
-  }, [leviers, depart, defi.solution, etape, cas]);
+  // L'échelle des barres : le plus grand effet au départ, à la solution ou à la position du moment.
+  // Elle suit l'élève : une barre se compare toujours à ce qu'il a sous les yeux.
+  const echelle = Math.max(
+    1,
+    ...[depart, defi.solution, affichee].flatMap((p) => etape.lecture(cas, p).filter((x) => x.effet).map((x) => Math.abs(x.montant))),
+  );
   const placer = (code: string, n: number) => {
     const l = leviers.find((x) => x.code === code)!;
     const v = surLePas(l, n);
