@@ -9,6 +9,13 @@ import { chapitreDuCas, etatAvant, indexDeLEtape } from "../../src/pedagogy/cour
 import { cleDeLaQuestion, dansLOrdreAffiche } from "../../src/pedagogy/cours/ordre-des-options";
 
 /**
+ * Ce test parcourt tout le catalogue, dans chaque entreprise : sa durée croît avec chaque
+ * chapitre et chaque cas pratique. Les cinq secondes par défaut de vitest ne suffisent plus
+ * quand la suite entière tourne en parallèle.
+ */
+const PARCOURT_TOUT_LE_CATALOGUE = 30_000;
+
+/**
  * LA BONNE RÉPONSE NE SE DEVINE PAS À SA PLACE.
  *
  * Écrites, les options mettaient la bonne réponse en tête dans 71 % des questions.
@@ -57,7 +64,7 @@ describe("l'ordre des options", () => {
     expect(enTete / questions, `${enTete} sur ${questions} en tête`).toBeLessThan(0.42);
     // Et pour trois options, la bonne réponse se trouve à chacune des trois places.
     expect([...(places.get(3) ?? [])].sort()).toEqual([0, 1, 2]);
-  });
+  }, PARCOURT_TOUT_LE_CATALOGUE);
 
   it("la page et la projection affichent les options mélangées", () => {
     const guide = lire("src/components/cours/chapitre-guide.tsx");
