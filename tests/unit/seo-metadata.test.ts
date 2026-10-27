@@ -19,6 +19,14 @@ vi.mock("@/db", () => ({ db: {} }));
 
 const APP = join(process.cwd(), "src", "app");
 
+/**
+ * Importer une page charge tout ce qu'elle importe : seuls, l'accueil et /jouer
+ * dépassent les cinq secondes par défaut de vitest (mesuré en octobre 2026, avant comme
+ * après le lot de l'année du cours). Le temps est celui de l'import, pas celui de
+ * l'assertion.
+ */
+const IMPORT_D_UNE_PAGE = 30_000;
+
 async function meta(chemin: string): Promise<Metadata> {
   const mod = (await import(`@/app${chemin}`)) as {
     metadata?: Metadata;
@@ -87,7 +95,7 @@ describe("pages publiques : titre distinct, description, canonique", () => {
       if (canonique !== "/") expect(titre(m)).not.toMatch(/business arena/i);
       expect(m.description, `${canonique} sans description`).toBeTruthy();
       expect(m.alternates?.canonical).toBe(canonique);
-    });
+    }, IMPORT_D_UNE_PAGE);
   }
 
   it("la home met le titre entier, hors gabarit, avec la description enrichie", async () => {
