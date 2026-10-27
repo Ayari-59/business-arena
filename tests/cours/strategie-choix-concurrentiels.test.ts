@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { referentielDeCitation } from "../../src/config/ateliers/referentiels";
+import { auCentime } from "../../src/pedagogy/cours/etats";
 import { UNITES_FEMININES } from "../../src/config/cours/accords";
 import { anneeJouee, casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
 import {
@@ -342,7 +343,12 @@ describe.each(MARCHES)("lire la stratégie de ses concurrents chez %s", (code) =
       expect(b.profile in attendue, b.profile).toBe(true);
       expect(k.concurrents[i]!.strategie, b.name).toBe(attendue[b.profile as keyof typeof attendue]);
     }
-    expect(k.entreprise.strategie).toBe("intermediaire");
+    // La gestion équilibrée se place entre ses deux concurrents, en prix comme en qualité.
+    const [a, b] = k.concurrents;
+    expect(k.entreprise.indicePrix).toBeGreaterThan(Math.min(a!.indicePrix, b!.indicePrix));
+    expect(k.entreprise.indicePrix).toBeLessThan(Math.max(a!.indicePrix, b!.indicePrix));
+    expect(k.entreprise.indiceQualite).toBeGreaterThan(Math.min(a!.indiceQualite, b!.indiceQualite));
+    expect(k.entreprise.indiceQualite).toBeLessThan(Math.max(a!.indiceQualite, b!.indiceQualite));
   });
 
   it("l'espace libre et la meilleure année se calculent", () => {
@@ -358,10 +364,20 @@ describe.each(MARCHES)("lire la stratégie de ses concurrents chez %s", (code) =
 });
 
 describe("lire la stratégie de ses concurrents, sur les entreprises du chapitre", () => {
-  it("l'espace libre est tantôt une place laissée, tantôt un écart ; et chaque stratégie réussit quelque part", () => {
+  it("l'espace libre est un écart, tantôt sous le prix de l'entreprise, tantôt au-dessus ; et les deux stratégies réussissent quelque part", () => {
     const k = MARCHES.map((c) => strategiesDesConcurrents(casDeLEntreprise(c)));
-    expect(new Set(k.map((x) => x.partie !== null))).toEqual(new Set([true, false]));
-    expect([...new Set(k.map((x) => x.meilleure.strategie))].sort()).toEqual(["couts", "differenciation", "intermediaire"]);
+    // Sur l'année du cours (concurrents assainis), aucune enseigne ne quitte le marché : la place
+    // laissée par une défaillante n'est lue nulle part, l'espace libre est toujours un écart.
+    expect(k.map((x) => x.partie)).toEqual(MARCHES.map(() => null));
+    const cote = (x: (typeof k)[number]) => (x.plusGrand.bas === x.entreprise ? "au-dessus" : x.plusGrand.haut === x.entreprise ? "en dessous" : "ailleurs");
+    expect([...new Set(k.map(cote))].sort()).toEqual(["au-dessus", "en dessous"]);
+    // La gestion équilibrée, au milieu, n'a nulle part le meilleur résultat : un concurrent la bat.
+    expect([...new Set(k.map((x) => x.meilleure.strategie))].sort()).toEqual(["couts", "differenciation"]);
+    expect(k.every((x) => x.meilleure !== x.entreprise)).toBe(true);
+    // La règle de lecture place l'entreprise au milieu partout, sauf chez MAILLE & CO, dont le
+    // prix (indice 107) et la qualité (101) passent les seuils de la différenciation.
+    expect(MARCHES.filter((_, i) => k[i]!.entreprise.strategie !== "intermediaire")).toEqual(["boutique"]);
+    expect(strategiesDesConcurrents(casDeLEntreprise("boutique")).entreprise.strategie).toBe("differenciation");
   });
 
   it("le marché d'un seul trimestre se lit comme celui de l'année", () => {
@@ -420,7 +436,8 @@ describe.each(MARCHES)("aller dans l'espace libre chez %s", (code) => {
   it("le prix de la place suit la règle du cours, et l'arène le joue", () => {
     const x = espaceLibre(cas);
     const k = strategiesDesConcurrents(cas);
-    expect(x.prixVise).toBeCloseTo(k.partie ? k.partie.prix : (k.plusGrand.bas.prix + k.plusGrand.haut.prix) / 2, 2);
+    // Le prix de la place se donne au centime, comme l'élève l'écrit.
+    expect(x.prixVise).toBe(k.partie ? k.partie.prix : auCentime((k.plusGrand.bas.prix + k.plusGrand.haut.prix) / 2));
     expect(x.indiceVise).toBe(Math.round((x.prixVise / k.prixDuMarche) * 100));
     expect(x.variation).toBe(auDixieme((x.prixVise / k.entreprise.prix - 1) * 100));
     const rejouee = rejouerAvec(code, "lire-la-strategie-des-concurrents-espace-libre", () => undefined);
@@ -442,9 +459,15 @@ describe.each(MARCHES)("aller dans l'espace libre chez %s", (code) => {
 });
 
 describe("aller dans l'espace libre, sur les entreprises du cas", () => {
-  it("la place paie chez les unes, pas chez les autres, et elle mène parfois à la défaillance", () => {
+  it("la place paie chez les unes, pas chez les autres, et c'est le résultat qui tranche", () => {
     const x = MARCHES.map((c) => espaceLibre(casDeLEntreprise(c)));
     expect([...new Set(x.map((y) => y.verdict))].sort()).toEqual(["rester", "y-aller"]);
-    expect(x.some((y) => y.defaillance !== null)).toBe(true);
+    // Sur l'année du cours, le prix de la place ne mène nulle part à la défaillance : la branche
+    // « l'entreprise tombe en défaillance » du cas n'est lue dans aucune entreprise, et le verdict
+    // suit le signe de l'écart de résultat.
+    expect(x.map((y) => y.defaillance)).toEqual(MARCHES.map(() => null));
+    for (const y of x) expect(y.verdict).toBe(y.ecartDeResultat > 0 ? "y-aller" : "rester");
+    // La place se trouve tantôt au-dessus du prix de l'entreprise, tantôt en dessous.
+    expect([...new Set(x.map((y) => Math.sign(y.variation)))].sort()).toEqual([-1, 1]);
   });
 });

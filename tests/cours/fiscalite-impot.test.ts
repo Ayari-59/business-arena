@@ -12,11 +12,14 @@ import {
 } from "../../src/config/cours/chapitres/l-impot-sur-les-societes";
 import {
   ENTREPRISES_EN_DEFICIT,
+  FACTEUR_DU_GRAND_ENTRETIEN,
   LE_DEFICIT_REPORTE,
+  PART_MINIMALE_DU_DEFICIT,
   PLAFOND_DU_REPORT_EN_AVANT,
   TRIMESTRES_PAR_EXERCICE,
   deficitReporte,
   deuxExercices,
+  deuxExercicesDuChapitre,
 } from "../../src/config/cours/chapitres/le-deficit-reporte";
 import {
   LA_DEPENSE_DE_FIN_D_ANNEE,
@@ -44,7 +47,7 @@ import type { Chapitre, Etape, EtatDuCours } from "../../src/config/cours/types"
  * LA FISCALITÉ DE L'ENTREPRISE : L'IMPÔT SUR LES SOCIÉTÉS ET LE DÉFICIT REPORTÉ, ET LEURS CAS.
  *
  * « L'impôt sur les sociétés » lit l'année du cours (`anneeJouee`), « Le déficit reporté » la
- * rejoue sur deux exercices ; leurs cas rejouent l'une et l'autre avec la maintenance du dernier
+ * rejoue sur deux exercices, avec un grand entretien au premier ; leurs cas rejouent l'une et l'autre avec la maintenance du dernier
  * trimestre doublée. Ces gardes refont les calculs à partir du moteur, par un autre chemin (les
  * montants exacts de chaque trimestre), vérifient que le moteur fait bien ce que les textes disent
  * qu'il fait (un seul taux, l'impôt du cumul de l'exercice, le déficit imputé avant l'impôt), que
@@ -191,21 +194,60 @@ describe("les deux chapitres et leur place au programme", () => {
     expect(L_IMPOT_SUR_LES_SOCIETES.entreprises!.codes).toEqual(ENTREPRISES_IMPOSABLES);
     // Ailleurs, l'arène ne prélève aucun impôt sur l'année : il n'y aurait rien à calculer.
     for (const code of ENTREPRISES_DU_COURS.filter((x) => !imposables.includes(x))) pres(somme(anneeDuCours(code), (r) => r.incomeStatement.tax), 0);
-    for (const nom of ["NOVA", "LA TABLE D'AUGUSTIN", "ATLAS CONSEIL"]) expect(L_IMPOT_SUR_LES_SOCIETES.entreprises!.pourquoi).toContain(nom);
+    // Le texte nomme les entreprises dont l'année finit en perte, et elles seules.
+    for (const code of ENTREPRISES_DU_COURS) {
+      expect(L_IMPOT_SUR_LES_SOCIETES.entreprises!.pourquoi.includes(casDeLEntreprise(code).entreprise), code).toBe(!imposables.includes(code));
+    }
   });
 
-  it("le déficit reporté se joue là où l'année du cours perd et l'exercice suivant la rattrape, et là seulement", () => {
-    const rattrapees = ENTREPRISES_DU_COURS.filter((code) => {
-      const tours = deuxExercices(code);
-      const premier = somme(tours.slice(0, TRIMESTRES_PAR_EXERCICE), avantImpot);
-      const second = somme(tours.slice(TRIMESTRES_PAR_EXERCICE), avantImpot);
-      return premier < 0 && second >= -premier;
-    });
-    expect([...ENTREPRISES_EN_DEFICIT]).toEqual(rattrapees);
+  it("le déficit reporté se joue là où le premier exercice perd et le suivant le rattrape, et là seulement", () => {
+    const rattrapees = (rejeu: (code: string) => CompanyRoundResult[], part = 0) =>
+      ENTREPRISES_DU_COURS.filter((code) => {
+        const tours = rejeu(code);
+        const premier = somme(tours.slice(0, TRIMESTRES_PAR_EXERCICE), avantImpot);
+        const second = somme(tours.slice(TRIMESTRES_PAR_EXERCICE), avantImpot);
+        return premier < 0 && second >= -premier && -premier >= part * second;
+      });
+    // Sans décision de plus, aucune année du cours ne perd pour être rattrapée, même d'un euro : d'où le grand entretien.
+    expect(rattrapees(deuxExercices)).toEqual([]);
+    // Le chapitre garde les déficits qui pèsent au moins la part nommée du résultat suivant.
+    expect(PART_MINIMALE_DU_DEFICIT).toBe(0.1);
+    expect([...ENTREPRISES_EN_DEFICIT]).toEqual(rattrapees(deuxExercicesDuChapitre, PART_MINIMALE_DU_DEFICIT));
+    expect(LE_DEFICIT_REPORTE.entreprises!.pourquoi).toContain(`au moins ${(PART_MINIMALE_DU_DEFICIT * 100).toLocaleString("fr-FR")} % du résultat suivant`);
     expect(LE_DEFICIT_REPORTE.entreprises!.codes).toEqual(ENTREPRISES_EN_DEFICIT);
-    for (const code of ENTREPRISES_EN_DEFICIT) expect(LE_DEFICIT_REPORTE.entreprises!.pourquoi).toContain(casDeLEntreprise(code).entreprise);
-    // Les deux chapitres se partagent les entreprises : une année en perte n'a pas d'impôt à calculer.
-    for (const code of ENTREPRISES_EN_DEFICIT) expect((ENTREPRISES_IMPOSABLES as readonly string[]).includes(code)).toBe(false);
+    // Le texte nomme les entreprises du chapitre, et celles dont l'année du cours perd sans le grand entretien.
+    const perdantes = ENTREPRISES_DU_COURS.filter((x) => !(ENTREPRISES_IMPOSABLES as readonly string[]).includes(x));
+    expect(perdantes.length).toBeGreaterThan(0);
+    for (const code of ENTREPRISES_DU_COURS) {
+      const nomme = (ENTREPRISES_EN_DEFICIT as readonly string[]).includes(code) || perdantes.includes(code);
+      expect(LE_DEFICIT_REPORTE.entreprises!.pourquoi.includes(casDeLEntreprise(code).entreprise), code).toBe(nomme);
+    }
+    expect(LE_DEFICIT_REPORTE.entreprises!.pourquoi).toContain(`multipliée par ${FACTEUR_DU_GRAND_ENTRETIEN}`);
+    // Les deux chapitres ne lisent pas la même année : l'année du cours paie l'impôt, c'est le grand
+    // entretien qui la fait perdre, et l'année perdue ne paie rien.
+    for (const code of ENTREPRISES_EN_DEFICIT) {
+      expect((ENTREPRISES_IMPOSABLES as readonly string[]).includes(code), code).toBe(true);
+      expect(somme(anneeDuCours(code), (r) => r.incomeStatement.tax), code).toBeGreaterThan(0);
+      pres(somme(deuxExercicesDuChapitre(code).slice(0, TRIMESTRES_PAR_EXERCICE), (r) => r.incomeStatement.tax), 0);
+    }
+  });
+
+  it("le grand entretien ne change que la maintenance du premier exercice : mêmes ventes, et le second exercice joue la même activité", () => {
+    for (const code of ENTREPRISES_EN_DEFICIT) {
+      const sans = deuxExercices(code);
+      const avec = deuxExercicesDuChapitre(code);
+      const k = deficitReporte(casDeLEntreprise(code));
+      const premier = (t: CompanyRoundResult[]) => t.slice(0, TRIMESTRES_PAR_EXERCICE);
+      const second = (t: CompanyRoundResult[]) => t.slice(TRIMESTRES_PAR_EXERCICE);
+      expect(avec.map((r) => r.incomeStatement.revenue), code).toEqual(sans.map((r) => r.incomeStatement.revenue));
+      for (const [i, r] of premier(avec).entries()) pres(r.incomeStatement.maintenanceCost, FACTEUR_DU_GRAND_ENTRETIEN * sans[i]!.incomeStatement.maintenanceCost, 1e-6);
+      const maintenance = somme(premier(avec), (r) => r.incomeStatement.maintenanceCost) - somme(premier(sans), (r) => r.incomeStatement.maintenanceCost);
+      pres(k.entretien, maintenance);
+      pres(somme(premier(avec), (r) => r.incomeStatement.operatingIncome), somme(premier(sans), (r) => r.incomeStatement.operatingIncome) - maintenance);
+      pres(somme(second(avec), (r) => r.incomeStatement.operatingIncome), somme(second(sans), (r) => r.incomeStatement.operatingIncome));
+      pres(k.sansLEntretien.avantImpot, somme(anneeDuCours(code), avantImpot));
+      pres(k.sansLEntretien.impot, somme(anneeDuCours(code), (r) => r.incomeStatement.tax));
+    }
   });
 
   it("le cours lit l'année du cours : la même que celle du rejeu sans changement", () => {
@@ -325,7 +367,7 @@ describe.each([...ENTREPRISES_IMPOSABLES])("l'impôt sur les sociétés chez %s"
 describe.each([...ENTREPRISES_EN_DEFICIT])("le déficit reporté chez %s", (code) => {
   const cas = casDeLEntreprise(code);
   const taux = tauxDe(code);
-  const tours = deuxExercices(code);
+  const tours = deuxExercicesDuChapitre(code);
   const premier = tours.slice(0, TRIMESTRES_PAR_EXERCICE);
   const second = tours.slice(TRIMESTRES_PAR_EXERCICE);
 
@@ -370,6 +412,8 @@ describe.each([...ENTREPRISES_EN_DEFICIT])("le déficit reporté chez %s", (code
     pres(evite!, taux * deficit);
     pres(effectif!, ((taux * (r2 - deficit)) / r2) * 100, 0.01);
     expect(effectif!).toBeLessThan(taux * 100);
+    // Le déficit pèse : l'impôt évité fait au moins la part nommée de l'impôt sans report.
+    expect(evite! / sans!).toBeGreaterThanOrEqual(PART_MINIMALE_DU_DEFICIT);
   });
 
   it("sur les deux exercices, l'impôt vaut le taux du résultat cumulé : la bonne réponse le dit", () => {
@@ -417,8 +461,12 @@ describe.each([...ENTREPRISES_EN_DEFICIT])("le déficit reporté chez %s", (code
 describe("les verdicts varient avec l'entreprise", () => {
   it("l'acompte, le trimestre de perte et le cas de fin d'année ne disent pas la même chose partout", () => {
     const cas = ENTREPRISES_IMPOSABLES.map((c) => casDeLEntreprise(c));
-    // Un dernier acompte rendu quelque part, un cumul en perte avant le dernier trimestre ailleurs.
-    expect(cas.some((c) => impotDeLAnnee(c).acompte.acompte < 0)).toBe(true);
+    // Le dernier acompte vaut le taux du résultat du trimestre quelque part, et pas ailleurs, où un
+    // cumul en perte avant le dernier trimestre en absorbe une part. (Dans l'année du cours corrigée,
+    // aucun dernier acompte n'est rendu : la branche « l'arène rend » de l'explication ne se lit plus.)
+    const auTaux = (c: Cas) => Math.abs(impotDeLAnnee(c).acompte.acompte - impotDeLAnnee(c).acompte.avantImpot * impotDeLAnnee(c).taux) < 1;
+    expect(cas.some((c) => impotDeLAnnee(c).acompte.acompte >= 0 && auTaux(c))).toBe(true);
+    expect(cas.some((c) => impotDeLAnnee(c).acompte.acompte >= 0 && !auTaux(c))).toBe(true);
     expect(cas.some((c) => impotDeLAnnee(c).avant.cumul < 0)).toBe(true);
     expect(cas.some((c) => impotDeLAnnee(c).rendu === null)).toBe(true);
     expect(cas.some((c) => impotDeLAnnee(c).rendu !== null)).toBe(true);

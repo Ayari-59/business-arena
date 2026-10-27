@@ -9,9 +9,9 @@ import type { Situation } from "../types";
  * CAS PRATIQUE DU CHAPITRE « LIVRER À TEMPS : LES DÉLAIS ET LE SERVICE » : COMBIEN CHARGER PENDANT
  * LA PANNE (2de pro GATL, le transport et la logistique, palier 1).
  *
- * Le chapitre a montré qu'une panne coûte même quand toutes les palettes partent : la flotte roule
- * au-dessus de son seuil de surchauffe, la qualité de service baisse, et les clients demandent moins
- * ensuite. Ici, la panne est annoncée avant le trimestre, et le chef d'exploitation hésite. Garder
+ * Le chapitre a montré qu'une panne fait baisser la qualité de service même quand toutes les
+ * palettes partent : la flotte roule au-dessus de son seuil de surchauffe, et les clients demandent
+ * moins ensuite. Ici, la panne est annoncée avant le trimestre, et le chef d'exploitation hésite. Garder
  * le chargement prévu ? Le baisser pour rester au seuil, et refuser des clients de plus ? Ou remplir
  * toutes les places qui restent ? L'élève calcule la capacité pendant la panne, le chargement qui
  * tient au seuil, ce qu'il coûte tout de suite en marge, et lit dans l'arène ce que chaque choix
@@ -23,6 +23,11 @@ import type { Situation } from "../types";
  * trois fois avec la panne, une par chargement ; le chargement prévu reprend l'année du chapitre
  * (même clé, même année). Chaque année s'additionne jusqu'à une éventuelle défaillance, et la
  * meilleure désigne la réponse : elle se calcule, elle ne s'écrit pas.
+ *
+ * Les trimestres suivants sont joués par la gestion du cours, qui prévoit chaque trimestre son
+ * chargement d'après ses ventes du trimestre d'avant (arene-du-cours.ts). Charger moins pendant la
+ * panne, c'est donc aussi charger moins ensuite ; et une demande en plus ne compte que si la flotte
+ * l'aurait chargée. L'explication le dit quand l'année rejouée le montre, et seulement alors.
  */
 
 export type ChoixPendantLaPanne = "garder" | "baisser" | "remplir";
@@ -32,6 +37,12 @@ const T = TRIMESTRE_DU_SERVICE;
 const resultat = (a: readonly CompanyRoundResult[], depuis = 0) =>
   Math.round(jusquALaDefaillance(a).slice(depuis).reduce((t, r) => t + r.incomeStatement.operatingIncome, 0));
 const demandeEnsuite = (a: readonly CompanyRoundResult[]) => Math.round(jusquALaDefaillance(a).slice(T).reduce((t, r) => t + demandeDuTrimestre(r), 0));
+const chargeesEnsuite = (a: readonly CompanyRoundResult[]) => Math.round(jusquALaDefaillance(a).slice(T).reduce((t, r) => t + r.production.produced, 0));
+/** Chaque trimestre après la panne, des clients restent refusés : une demande en plus n'y serait pas chargée. */
+const refuseEnsuite = (a: readonly CompanyRoundResult[]) =>
+  jusquALaDefaillance(a)
+    .slice(T)
+    .every((r) => demandeDuTrimestre(r) - Object.values(r.market.bySegment).reduce((t, v) => t + v.sold, 0) >= 1);
 
 const calculs = new Map<string, ReturnType<typeof calculer>>();
 
@@ -77,6 +88,8 @@ function calculer(c: Cas) {
       livrees: Math.round(transportees(x)),
       resultatT: Math.round(x.incomeStatement.operatingIncome),
       demandeEnsuite: demandeEnsuite(a),
+      chargeesEnsuite: chargeesEnsuite(a),
+      refuseEnsuite: refuseEnsuite(a),
       resultatEnsuite: resultat(a, T),
       resultatAnnee: resultat(a),
     };
@@ -230,19 +243,20 @@ export const COMBIEN_CHARGER_PENDANT_LA_PANNE: Situation = {
             { libelle: "Part de la capacité chargée", valeurs: ordre.map((x) => pct(k.annees[x].part)) },
             { libelle: `Résultat d'exploitation du trimestre ${T}`, valeurs: ordre.map((x) => eur(k.annees[x].resultatT)) },
             { libelle: "Demande des clients sur les trimestres suivants", valeurs: ordre.map((x) => qte(k.annees[x].demandeEnsuite)) },
+            { libelle: `${c.unites.charAt(0).toUpperCase()}${c.unites.slice(1)} chargées les trimestres suivants`, valeurs: ordre.map((x) => qte(k.annees[x].chargeesEnsuite)) },
             { libelle: "Résultat d'exploitation des trimestres suivants", valeurs: ordre.map((x) => eur(k.annees[x].resultatEnsuite)) },
             { libelle: "Résultat d'exploitation de l'année", valeurs: ordre.map((x) => eur(k.annees[x].resultatAnnee)) },
           ],
         };
       },
       question: () =>
-        "D'après le tableau, calculez ce que le chargement au seuil fait gagner sur les trimestres suivants par rapport au chargement prévu, puis l'écart de résultat de toute l'année entre les deux.",
+        "D'après le tableau, calculez l'écart de résultat des trimestres suivants entre le chargement au seuil et le chargement prévu, puis l'écart de résultat de toute l'année entre les deux.",
       champs: (c) => {
         const k = chargementPendantLaPanne(c);
         const a = k.annees;
         return [
           {
-            libelle: "Gain des trimestres suivants, au seuil",
+            libelle: "Écart des trimestres suivants, au seuil",
             attendu: k.ponctualiteGardee,
             calcul: `${eur(a.baisser.resultatEnsuite)} − ${retranche(a.garder.resultatEnsuite)} = ${eur(k.ponctualiteGardee)}`,
             tolerance: 1,
@@ -257,11 +271,26 @@ export const COMBIEN_CHARGER_PENDANT_LA_PANNE: Situation = {
       },
       explication: (c) => {
         const k = chargementPendantLaPanne(c);
+        const a = k.annees;
+        if (k.ponctualiteGardee >= 0)
+          return [
+            k.ecartDeLAnnee < 0
+              ? `Au seuil, la ponctualité gardée rapporte ${eur(k.ponctualiteGardee)} ensuite, mais les clients refusés au trimestre ${T} coûtent plus : l'année perd ${eur(-k.ecartDeLAnnee)}.`
+              : `Au seuil, la ponctualité gardée rapporte ${eur(k.ponctualiteGardee)} ensuite, plus que les clients refusés au trimestre ${T} : l'année gagne ${eur(k.ecartDeLAnnee)}.`,
+          ];
+        const demandeEnPlus = a.baisser.demandeEnsuite - a.garder.demandeEnsuite;
+        const chargeesEnMoins = a.garder.chargeesEnsuite - a.baisser.chargeesEnsuite;
         return [
+          demandeEnPlus > 0
+            ? `Au seuil, la qualité de service tient : les clients demandent ${qte(demandeEnPlus)} ${c.unites} de plus les trimestres suivants.${a.baisser.refuseEnsuite ? ` Mais ${c.entreprise} y refuse déjà des clients : cette demande en plus ne se charge pas.` : ""}`
+            : "",
+          chargeesEnMoins > 0
+            ? `La gestion prévoit chaque trimestre son chargement d'après ses ventes du trimestre d'avant : avec ${qte(a.garder.livrees - a.baisser.livrees)} ${c.unites} de moins livrées au trimestre ${T}, elle en charge ${qte(chargeesEnMoins)} de moins ensuite.`
+            : "",
           k.ecartDeLAnnee < 0
-            ? `Au seuil, la ponctualité gardée rapporte ${eur(k.ponctualiteGardee)} ensuite, mais les clients refusés au trimestre ${T} coûtent plus : l'année perd ${eur(-k.ecartDeLAnnee)}.`
-            : `Au seuil, la ponctualité gardée rapporte ${eur(k.ponctualiteGardee)} ensuite, plus que les clients refusés au trimestre ${T} : l'année gagne ${eur(k.ecartDeLAnnee)}.`,
-        ];
+            ? `Au seuil, les trimestres suivants perdent ${eur(-k.ponctualiteGardee)}, et l'année ${eur(-k.ecartDeLAnnee)}.`
+            : `Au seuil, les trimestres suivants perdent ${eur(-k.ponctualiteGardee)}, mais l'année gagne ${eur(k.ecartDeLAnnee)}.`,
+        ].filter((x) => x !== "");
       },
     },
     {
@@ -277,7 +306,10 @@ export const COMBIEN_CHARGER_PENDANT_LA_PANNE: Situation = {
         const pourquoi: Record<ChoixPendantLaPanne, string> = {
           garder: "Le chargement prévu fait le meilleur compte : la ponctualité perdue coûte moins que des clients refusés, et remplir les dernières places la dégrade un peu plus.",
           baisser: "Le chargement au seuil fait le meilleur compte : la ponctualité gardée rapporte plus, ensuite, que les clients refusés tout de suite.",
-          remplir: `Remplir toutes les places fait le meilleur compte : chaque ${c.unite} de plus rapporte sa marge tout de suite, et la ponctualité perdue coûte moins ensuite. Protéger la ponctualité a un prix : ici, des clients refusés qui valent plus qu'elle.`,
+          remplir:
+            a.remplir.resultatEnsuite >= a.garder.resultatEnsuite && a.remplir.refuseEnsuite
+              ? `Remplir toutes les places fait le meilleur compte : chaque ${c.unite} de plus rapporte sa marge tout de suite, et les trimestres suivants n'y perdent rien, ${eur(a.remplir.resultatEnsuite)} contre ${eur(a.garder.resultatEnsuite)} : la flotte y refuse déjà des clients, et la demande perdue avec la ponctualité ne se serait pas chargée.`
+              : `Remplir toutes les places fait le meilleur compte : chaque ${c.unite} de plus rapporte sa marge tout de suite, et la ponctualité perdue coûte moins ensuite. Protéger la ponctualité a un prix : ici, des clients refusés qui valent plus qu'elle.`,
         };
         return [
           {

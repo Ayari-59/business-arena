@@ -26,8 +26,14 @@ const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
  * recruté au trimestre suivant et n'arrive qu'au trimestre d'après, comme le moteur le joue
  * (src/engine/hr). Le coût d'un recrutement et le salaire sont ceux du scénario.
  *
+ * Les autres décisions de l'année sont celles de la même gestion, qui prévoit chaque trimestre sa
+ * production d'après ses ventes du trimestre d'avant (arene-du-cours.ts). Le trimestre vide a
+ * vendu moins : elle prépare moins ensuite, et ces ventes-là se perdent aussi, alors que l'équipe
+ * est revenue à son effectif. Le coût complet du départ compte cette marge des trimestres
+ * suivants ; l'étape qui la calcule ne se montre que là où l'année rejouée la rencontre.
+ *
  * Le chapitre ne se joue que là où un poste vide coûte des ventes : ailleurs, l'équipe a plus de
- * bras que les clients n'en demandent, et un départ n'y fait perdre aucune vente (la garde le
+ * bras que son activité n'en demande, et un départ n'y fait perdre aucune vente (la garde le
  * vérifie dans les deux sens). Défaut de l'arène, que le chapitre dit : elle ne fait payer ni le
  * temps que le remplaçant met à connaître son poste, ni le savoir-faire de celui qui part.
  */
@@ -49,11 +55,12 @@ export const TRIMESTRE_DE_LA_BAISSE = 1;
 export const TRIMESTRE_DU_RECRUTEMENT = 2;
 
 /**
- * Les entreprises où le poste vide coûte des ventes. Dans les autres (MAILLE & CO, L'ESCALE,
- * PIXEL & CO, VOLT FITNESS), l'équipe a de la marge : l'arène n'y perd aucune vente pendant la
- * vacance, et le départ ne fait qu'économiser un salaire.
+ * Les entreprises où le poste vide coûte des ventes : NOVA seule, dont la gestion prépare plus que
+ * ce qu'une équipe d'un salarié de moins peut produire. Dans les autres, la gestion produit moins
+ * que l'équipe ne le peut, même avec un salarié de moins : l'arène n'y perd aucune vente pendant
+ * la vacance, et le départ ne fait qu'économiser un salaire (la garde le vérifie).
  */
-export const ENTREPRISES_OU_LE_POSTE_COMPTE = ["nova", "bistrot", "conseil", "batiment", "transport"] as const;
+export const ENTREPRISES_OU_LE_POSTE_COMPTE = ["nova"] as const;
 
 const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
@@ -93,10 +100,18 @@ export function departDUnSalarie(c: Cas) {
   const margeVide = Math.round(vide.incomeStatement.grossMargin);
   const ventesPerdues = venduesAvant - venduesVide;
   const margePerdue = margeAvant - margeVide;
+  // Les trimestres d'après le poste vide : la gestion y prépare d'après ses ventes du trimestre d'avant.
+  const ensuite = (a: typeof reference) => a.slice(rang(trimestreVide) + 1);
+  const venduesEnsuiteAvant = Math.round(surLAnnee(ensuite(reference), soldUnits));
+  const venduesEnsuiteApres = Math.round(surLAnnee(ensuite(depart), soldUnits));
+  const margeEnsuiteAvant = Math.round(surLAnnee(ensuite(reference), (r) => r.incomeStatement.grossMargin));
+  const margeEnsuiteApres = Math.round(surLAnnee(ensuite(depart), (r) => r.incomeStatement.grossMargin));
+  const ventesPerduesEnsuite = venduesEnsuiteAvant - venduesEnsuiteApres;
+  const margePerdueEnsuite = margeEnsuiteAvant - margeEnsuiteApres;
   const recrutement = hr.hiringCost;
   // Le poste reste vide un trimestre : c'est un salaire que l'entreprise ne verse pas.
   const salaireNonVerse = salaire;
-  const coutDuDepart = margePerdue + recrutement - salaireNonVerse;
+  const coutDuDepart = margePerdue + margePerdueEnsuite + recrutement - salaireNonVerse;
   const resultatAvant = Math.round(surLAnnee(reference, (r) => r.incomeStatement.operatingIncome));
   const resultatApres = Math.round(surLAnnee(depart, (r) => r.incomeStatement.operatingIncome));
   const ecartDeResultat = resultatApres - resultatAvant;
@@ -122,6 +137,20 @@ export function departDUnSalarie(c: Cas) {
     margeVide,
     margePerdue,
     margeParVentePerdue: ventesPerdues > 0 ? auCentime(margePerdue / ventesPerdues) : 0,
+    plansEnsuiteAvant: Math.round(surLAnnee(ensuite(reference), (r) => r.production.planned)),
+    plansEnsuiteApres: Math.round(surLAnnee(ensuite(depart), (r) => r.production.planned)),
+    venduesEnsuiteAvant,
+    venduesEnsuiteApres,
+    ventesPerduesEnsuite,
+    margeEnsuiteAvant,
+    margeEnsuiteApres,
+    margePerdueEnsuite,
+    /** La marge que le départ fait perdre sur l'année : pendant la vacance, puis les trimestres suivants. */
+    margePerdueTotale: margePerdue + margePerdueEnsuite,
+    trimestresEnsuite:
+      reference.length === trimestreVide + 1
+        ? `le trimestre ${reference.length}`
+        : `les trimestres ${trimestreVide + 1} ${reference.length === trimestreVide + 2 ? "et" : "à"} ${reference.length}`,
     recrutement,
     salaireNonVerse,
     coutDuDepart,
@@ -152,7 +181,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
   entreprises: {
     codes: ENTREPRISES_OU_LE_POSTE_COMPTE,
     pourquoi:
-      "dans l'arène, son équipe a plus de bras que ses clients n'en demandent, et un poste vide n'y coûte aucune vente ; ce chapitre mesure ce qu'un départ fait perdre.",
+      "dans l'arène, son équipe a plus de bras que son activité n'en demande, et un poste vide n'y coûte aucune vente ; ce chapitre mesure ce qu'un départ fait perdre.",
   },
   etapes: [
     {
@@ -164,7 +193,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
         const r = departDUnSalarie(c);
         return [
           `Au trimestre ${TRIMESTRE_DE_LA_BAISSE}, ${c.entreprise} a payé ses ${r.effectif} salariés ${r.ecart} % sous le salaire du marché, pour faire une économie. Dans l'arène, sous ${r.seuil} % du salaire du marché, un salarié démissionne : il part à la fin du trimestre.`,
-          `Le gérant recrute un remplaçant au trimestre ${TRIMESTRE_DU_RECRUTEMENT}, une fois le départ constaté. Le recrutement coûte ${eur(r.recrutement)} tout de suite, et le remplaçant n'arrive qu'au trimestre suivant : pendant tout le trimestre ${r.trimestreVide}, le poste reste vide. L'arène a rejoué l'année ainsi, tout le reste identique.`,
+          `Le gérant recrute un remplaçant au trimestre ${TRIMESTRE_DU_RECRUTEMENT}, une fois le départ constaté. Le recrutement coûte ${eur(r.recrutement)} tout de suite, et le remplaçant n'arrive qu'au trimestre suivant : pendant tout le trimestre ${r.trimestreVide}, le poste reste vide. L'arène a rejoué l'année ainsi ; le reste est décidé par la même gestion, qui prévoit chaque trimestre sa production d'après ses ventes du trimestre d'avant.`,
         ];
       },
       tableau: (c) => {
@@ -182,7 +211,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
         };
       },
       repere: () =>
-        "Coût d'un départ = marge perdue pendant que le poste est vide + coût du recrutement − salaires que le poste vide n'a pas coûtés.",
+        "Coût d'un départ = marge perdue à cause du poste vide (pendant la vacance, puis les trimestres qui suivent) + coût du recrutement − salaires que le poste vide n'a pas coûtés.",
     },
     {
       id: "vacance",
@@ -222,6 +251,58 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
       },
     },
     {
+      id: "ensuite",
+      type: "montants",
+      titre: "Après le retour du remplaçant",
+      notions: ["contribution_margin"],
+      si: (c) => {
+        const r = departDUnSalarie(c);
+        return r.ventesPerduesEnsuite !== 0 || r.margePerdueEnsuite !== 0;
+      },
+      tableau: (c) => {
+        const r = departDUnSalarie(c);
+        return {
+          titre: `${r.trimestresEnsuite.charAt(0).toUpperCase()}${r.trimestresEnsuite.slice(1)}, sans départ et après le départ`,
+          colonnes: ["Sans départ", "Après le départ"],
+          lignes: [
+            { libelle: `Production préparée par la gestion (${c.unites})`, valeurs: [qte(r.plansEnsuiteAvant), qte(r.plansEnsuiteApres)] },
+            { libelle: `Ventes (${c.unites})`, valeurs: [qte(r.venduesEnsuiteAvant), qte(r.venduesEnsuiteApres)] },
+            { libelle: "Marge sur coût variable", valeurs: [eur(r.margeEnsuiteAvant), eur(r.margeEnsuiteApres)] },
+          ],
+        };
+      },
+      question: (c) => {
+        const r = departDUnSalarie(c);
+        return `Le remplaçant arrive au trimestre ${r.trimestreVide + 1} : l'équipe retrouve ses ${r.effectif} salariés. Mais la gestion prévoit chaque trimestre sa production d'après ses ventes du trimestre d'avant. D'après le tableau, calculez les ventes perdues sur ${r.trimestresEnsuite} (en ${c.unites}), puis la marge sur coût variable perdue.`;
+      },
+      champs: (c) => {
+        const r = departDUnSalarie(c);
+        return [
+          {
+            libelle: `Ventes perdues ensuite (${c.unites})`,
+            attendu: r.ventesPerduesEnsuite,
+            calcul: `${qte(r.venduesEnsuiteAvant)} − ${qte(r.venduesEnsuiteApres)} = ${qte(r.ventesPerduesEnsuite)}`,
+            tolerance: 1,
+          },
+          {
+            libelle: "Marge perdue ensuite",
+            attendu: r.margePerdueEnsuite,
+            calcul: `${eur(r.margeEnsuiteAvant)} − ${retranche(r.margeEnsuiteApres)} = ${eur(r.margePerdueEnsuite)}`,
+            tolerance: 1,
+          },
+        ];
+      },
+      explication: (c) => {
+        const r = departDUnSalarie(c);
+        return [
+          `Le trimestre ${r.trimestreVide} a vendu ${qte(r.ventesPerdues)} ${c.unites} de moins : la gestion prépare ${qte(r.plansEnsuiteAvant - r.plansEnsuiteApres)} ${c.unites} de moins sur ${r.trimestresEnsuite}, et ${c.entreprise} en vend ${qte(r.ventesPerduesEnsuite)} de moins, alors que son équipe est complète.`,
+          r.margePerdueEnsuite > 0
+            ? `Le départ coûte encore ${eur(r.margePerdueEnsuite)} de marge après l'arrivée du remplaçant : une vente perdue fait prévoir moins ensuite.`
+            : `Ensuite, la marge ne baisse pas : elle monte de ${eur(-r.margePerdueEnsuite)}.`,
+        ];
+      },
+    },
+    {
       id: "cout",
       type: "montants",
       titre: "Le coût complet du départ",
@@ -236,7 +317,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
       },
       question: (c) => {
         const r = departDUnSalarie(c);
-        return `Calculez le coût complet du départ : la marge perdue, plus le recrutement, moins le salaire que le poste vide n'a pas coûté au trimestre ${r.trimestreVide}. Calculez ensuite l'économie de salaire du trimestre ${TRIMESTRE_DE_LA_BAISSE} (${r.effectif} salariés × ${eur(r.salaire)} × ${r.ecart} %), puis, d'après le tableau, l'écart de résultat de l'activité sur l'année.`;
+        return `Calculez le coût complet du départ : la marge perdue${r.margePerdueEnsuite !== 0 ? ` pendant la vacance et ensuite` : ""}, plus le recrutement, moins le salaire que le poste vide n'a pas coûté au trimestre ${r.trimestreVide}. Calculez ensuite l'économie de salaire du trimestre ${TRIMESTRE_DE_LA_BAISSE} (${r.effectif} salariés × ${eur(r.salaire)} × ${r.ecart} %), puis, d'après le tableau, l'écart de résultat de l'activité sur l'année.`;
       },
       champs: (c) => {
         const r = departDUnSalarie(c);
@@ -244,7 +325,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
           {
             libelle: "Coût complet du départ",
             attendu: r.coutDuDepart,
-            calcul: `${eur(r.margePerdue)} + ${eur(r.recrutement)} − ${eur(r.salaireNonVerse)} = ${eur(r.coutDuDepart)}`,
+            calcul: `${eur(r.margePerdue)}${r.margePerdueEnsuite !== 0 ? ` + ${retranche(r.margePerdueEnsuite)}` : ""} + ${eur(r.recrutement)} − ${eur(r.salaireNonVerse)} = ${eur(r.coutDuDepart)}`,
             tolerance: 1,
           },
           {
@@ -265,8 +346,8 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
         const r = departDUnSalarie(c);
         return [
           r.coutDuDepart >= 0
-            ? `Le départ coûte ${eur(r.coutDuDepart)} : le salaire que le poste vide n'a pas coûté ne compense pas la marge perdue et le recrutement.`
-            : `Ici, le poste vide coûte moins que le salaire qu'il fait économiser : la marge perdue (${eur(r.margePerdue)}) et le recrutement (${eur(r.recrutement)}) restent sous le salaire non versé (${eur(r.salaireNonVerse)}). Le coût du départ est négatif : le trimestre vide rapporte ${eur(-r.coutDuDepart)}.`,
+            ? `Le départ coûte ${eur(r.coutDuDepart)} : le salaire que le poste vide n'a pas coûté ne compense pas la marge perdue et le recrutement.${r.margePerdueEnsuite > 0 && r.margePerdue + r.recrutement < r.salaireNonVerse ? ` Le trimestre vide, seul, aurait rapporté ${eur(r.salaireNonVerse - r.margePerdue - r.recrutement)} ; ce sont les ventes perdues ensuite qui font le coût.` : ""}`
+            : `Ici, le poste vide coûte moins que le salaire qu'il fait économiser : la marge perdue (${eur(r.margePerdueTotale)}) et le recrutement (${eur(r.recrutement)}) restent sous le salaire non versé (${eur(r.salaireNonVerse)}). Le coût du départ est négatif : le départ rapporte ${eur(-r.coutDuDepart)}.`,
           `La baisse de salaire avait fait économiser ${eur(r.economie)} au trimestre ${TRIMESTRE_DE_LA_BAISSE}. L'écart de résultat de l'année, ${eur(r.ecartDeResultat)}, est l'économie moins le coût du départ : dans l'arène, rien d'autre n'a changé.`,
         ];
       },
@@ -288,7 +369,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
             texte: "Le départ coûte plus que l'économie : il fallait garder le salaire du marché",
             juste: coute,
             retour: coute
-              ? `Oui : le départ a coûté ${eur(r.coutDuDepart)}, plus que les ${eur(r.economie)} économisés, et le résultat de l'année baisse de ${eur(-r.ecartDeResultat)}. L'économie portait sur un trimestre de salaires ; le départ se paie en ventes que l'équipe ne peut plus servir.`
+              ? `Oui : le départ a coûté ${eur(r.coutDuDepart)}, plus que les ${eur(r.economie)} économisés, et le résultat de l'année baisse de ${eur(-r.ecartDeResultat)}. L'économie portait sur un trimestre de salaires ; le départ se paie en ventes que l'équipe ne peut plus servir${r.margePerdueEnsuite > 0 ? ", puis en ventes que la gestion ne prépare plus" : ""}.`
               : `Non : cette année, l'économie (${eur(r.economie)}) dépasse le coût du départ (${eur(r.coutDuDepart)}), et le résultat monte de ${eur(r.ecartDeResultat)}.`,
           },
           {
@@ -329,7 +410,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
           {
             texte: "Peu importe la date : un poste vide ne fait qu'économiser un salaire",
             juste: false,
-            retour: `Non : un poste vide fait aussi perdre des ventes quand l'équipe est le facteur qui limite l'activité. Ici, ${eur(r.margePerdue)} de marge en un trimestre.`,
+            retour: `Non : un poste vide fait aussi perdre des ventes quand l'équipe est le facteur qui limite l'activité. Ici, ${r.margePerdueEnsuite !== 0 ? `${eur(r.margePerdueTotale)} de marge sur l'année` : `${eur(r.margePerdue)} de marge en un trimestre`}.`,
           },
         ];
       },
@@ -342,11 +423,11 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
       texte: (c) => {
         const r = departDUnSalarie(c);
         return [
-          `Chez ${c.entreprise}, le départ remplacé au trimestre ${TRIMESTRE_DU_RECRUTEMENT} coûte ${eur(r.coutDuDepart)} : ${eur(r.margePerdue)} de marge perdue pendant que le poste est vide, plus ${eur(r.recrutement)} de recrutement, moins ${eur(r.salaireNonVerse)} de salaire non versé. La baisse de salaire qui l'a provoqué avait fait économiser ${eur(r.economie)}.`,
+          `Chez ${c.entreprise}, le départ remplacé au trimestre ${TRIMESTRE_DU_RECRUTEMENT} coûte ${eur(r.coutDuDepart)} : ${eur(r.margePerdue)} de marge perdue pendant que le poste est vide${r.margePerdueEnsuite !== 0 ? `, ${eur(r.margePerdueEnsuite)} ensuite` : ""}, plus ${eur(r.recrutement)} de recrutement, moins ${eur(r.salaireNonVerse)} de salaire non versé. La baisse de salaire qui l'a provoqué avait fait économiser ${eur(r.economie)}.`,
           "Le coût d'un départ se compte en entier : le recrutement, mais aussi ce que l'équipe ne peut plus faire pendant que le poste est vide, parce qu'un remplaçant met du temps à arriver. Il se compare à ce qu'aurait coûté le salaire du marché. Et l'arène ne compte pas tout : l'intégration du remplaçant, le savoir-faire qui part avec le salarié.",
         ];
       },
-      repere: () => "Coût d'un départ = marge perdue pendant la vacance + coût du recrutement − salaires non versés.",
+      repere: () => "Coût d'un départ = marge perdue pendant la vacance et ensuite + coût du recrutement − salaires non versés.",
     },
   ],
 };

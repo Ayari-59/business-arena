@@ -8,7 +8,7 @@ import {
   achatsDuTrimestre,
   choixDuFournisseur,
 } from "../../src/config/cours/chapitres/choisir-son-fournisseur";
-import { LE_CLIENT_QUI_PAIE_TARD, TRIMESTRE_DE_LA_MOBILISATION, clientQuiPaieTard } from "../../src/config/cours/chapitres/le-client-qui-paie-tard";
+import { LE_CLIENT_QUI_PAIE_TARD, TRIMESTRE_DE_LA_MOBILISATION, clientQuiPaieTard, clientelesDe } from "../../src/config/cours/chapitres/le-client-qui-paie-tard";
 import { anneeDeReference, rejouerAvec } from "../../src/config/cours/gestion-de-la-pme";
 import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
 import { PROGRAMME } from "../../src/config/cours/registre";
@@ -217,6 +217,9 @@ describe.each(ENTREPRISES_DU_COURS)("le client qui paie tard chez %s", (code) =>
     for (const x of k.clienteles) expect(x.creance).toBeCloseTo(x.caDuTrimestre * (1 + k.tva) * Math.min(1, x.delai / k.duree), 1);
     expect(k.delaiMoyen).toBeCloseTo((nees / (fin.incomeStatement.revenue * (1 + k.tva))) * k.duree, 1);
     expect(k.caComptant).toBeGreaterThanOrEqual(0);
+    // Là où toutes les clientèles paient à crédit, rien ne se vend comptant : pas même un euro d'arrondi.
+    if (clientelesDe(code).every((g) => g.paymentDelayDays > 0)) expect(k.caComptant).toBe(0);
+    else expect(k.caComptant).toBeGreaterThan(0);
     expect(k.sans.creances).toBe(Math.round(nees - (tr?.forcedFactored ?? 0)));
   });
 
@@ -246,6 +249,9 @@ describe.each(ENTREPRISES_DU_COURS)("le client qui paie tard chez %s", (code) =>
       expect(Math.abs(gain - (k.sans.creances - x.creances - perdu))).toBeLessThanOrEqual(2);
       expect(perdu).toBeLessThanOrEqual(k.coutAffacturage + 0.5);
     }
+    // L'année du cours ne cède rien d'office, ici ni ailleurs : les phrases de la cession d'office ne se lisent pas.
+    expect(k.cedeesDOffice).toBe(0);
+    expect(k.sans.cedeesDOffice + k.escompte.cedeesDOffice + k.affacturage.cedeesDOffice).toBe(0);
     // Mobiliser n'améliore le résultat nulle part : le coût ne se rattrape qu'en évitant une cession d'office.
     expect(k.resultatPerduEscompte).toBeGreaterThan(0);
     expect(k.coutEscompte).toBeLessThan(k.coutAffacturage);

@@ -27,6 +27,8 @@ const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits:
 const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const dixieme = (x: number) => x.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−");
 const auCentieme = (x: number) => Math.round(x * 100) / 100;
+/** « 1 + t » d'un taux composé ; négatif, le taux se retranche : « 1 − 7,43 % », jamais « 1 + −7,43 % ». */
+const unPlus = (t: number) => (t < 0 ? `1 − ${pct(-t)}` : `1 + ${pct(t)}`);
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /**
@@ -52,7 +54,9 @@ const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` 
  * comparent sur leurs flux actualisés, et par trois critères qui peuvent se contredire.
  *
  * LES ENTREPRISES sont celles du chapitre précédent, pour les mêmes raisons ; la machine suivante
- * n'y fait défaillir aucun rejeu (la garde le vérifie).
+ * n'y fait défaillir aucun rejeu (la garde le vérifie). Chez MAILLE & CO, aucun des deux projets
+ * n'est acceptable : leurs TRI sont négatifs, et le classement des deux critères, qui diverge, ne
+ * décide rien. Le chapitre ne cherche alors pas le taux de Fisher, et le dit.
  */
 
 /** Le projet B : la machine du catalogue qui suit celle du chapitre, la plus petite de celles qui ajoutent plus de capacité. */
@@ -181,6 +185,13 @@ function calculer(code: string) {
   };
 }
 
+/**
+ * Le taux de Fisher se lit quand les deux critères divergent sur des projets dont l'un au moins
+ * est acceptable. Quand les deux VAN sont négatives, le classement ne décide rien : on rejette
+ * les deux, et le chapitre ne cherche pas où leurs courbes se croisent.
+ */
+export const fisherSeLit = (k: ReturnType<typeof deuxProjets>) => k.conflit && k.retenu !== "aucun" && k.fisher !== null;
+
 const T = TRIMESTRE_DE_L_ACHAT;
 const TAUX_PCT = auCentieme(TAUX_TRIMESTRIEL * 100);
 const COUT_PCT = auCentieme(COUT_DU_CAPITAL_ANNUEL * 100);
@@ -204,7 +215,7 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
   libre: false,
   entreprises: {
     codes: ENTREPRISES_DE_L_ACTUALISATION,
-    pourquoi: `ce chapitre compare deux machines sur ${DUREE_DU_PROJET} trimestres rejoués, comme le chapitre sur la valeur actuelle nette, et dans les mêmes entreprises : MAILLE & CO, L'ESCALE, PIXEL & CO, VOLT FITNESS et ROUTE & CIE, où les machines font vendre et où chaque exercice finit en bénéfice.`,
+    pourquoi: `ce chapitre compare deux machines sur ${DUREE_DU_PROJET} trimestres rejoués, comme le chapitre sur la valeur actuelle nette, et dans les mêmes entreprises : NOVA, MAILLE & CO, L'ESCALE et VOLT FITNESS, où les machines font vendre et où chaque exercice finit en bénéfice.`,
   },
   etapes: [
     {
@@ -336,13 +347,13 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
           {
             libelle: "TRI annuel équivalent du projet A (%)",
             attendu: ra.triAnnuelPct,
-            calcul: `(1 + ${pct(ra.triPct)})^4 − 1 = ${pct(ra.triAnnuelPct)}`,
+            calcul: `(${unPlus(ra.triPct)})^4 − 1 = ${pct(ra.triAnnuelPct)}`,
             tolerance: ra.toleranceAnnuelle,
           },
           {
             libelle: "TRI annuel équivalent du projet B (%)",
             attendu: rb.triAnnuelPct,
-            calcul: `(1 + ${pct(rb.triPct)})^4 − 1 = ${pct(rb.triAnnuelPct)}`,
+            calcul: `(${unPlus(rb.triPct)})^4 − 1 = ${pct(rb.triAnnuelPct)}`,
             tolerance: rb.toleranceAnnuelle,
           },
         ];
@@ -350,11 +361,18 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
       explication: (c) => {
         const { ra, rb, triPrefere } = deuxProjets(c);
         const accepte = (t: number) => t > COUT_PCT;
+        const acceptes = [accepte(ra.triAnnuelPct), accepte(rb.triAnnuelPct)];
+        const fort = pct(triPrefere === "A" ? ra.triAnnuelPct : rb.triAnnuelPct);
+        const faible = pct(triPrefere === "A" ? rb.triAnnuelPct : ra.triAnnuelPct);
         return [
-          accepte(ra.triAnnuelPct) && accepte(rb.triAnnuelPct)
+          acceptes.every(Boolean)
             ? `Les deux TRI dépassent le coût du capital, ${pct(COUT_PCT)} par an : chacun des deux projets, seul, serait acceptable, comme leurs VAN positives le disaient.`
-            : `Le TRI du projet ${accepte(ra.triAnnuelPct) ? "B" : "A"} reste sous le coût du capital, ${pct(COUT_PCT)} par an : seul, ce projet serait à rejeter, comme sa VAN négative le disait.`,
-          `Au TRI, ${nomDu(triPrefere)} l'emporte : ${pct(triPrefere === "A" ? ra.triAnnuelPct : rb.triAnnuelPct)} par an, contre ${pct(triPrefere === "A" ? rb.triAnnuelPct : ra.triAnnuelPct)}.`,
+            : acceptes.some(Boolean)
+              ? `Le TRI du projet ${acceptes[0] ? "B" : "A"} reste sous le coût du capital, ${pct(COUT_PCT)} par an : seul, ce projet serait à rejeter, comme sa VAN négative le disait.`
+              : `Les deux TRI restent sous le coût du capital, ${pct(COUT_PCT)} par an : aucun des deux projets, seul, ne serait acceptable, comme leurs VAN négatives le disaient.`,
+          acceptes.some(Boolean)
+            ? `Au TRI, ${nomDu(triPrefere)} l'emporte : ${fort} par an, contre ${faible}.`
+            : `Au TRI, ${nomDu(triPrefere)} est le moins mauvais : ${fort} par an, contre ${faible}.${ra.triPct < 0 && rb.triPct < 0 ? " Un TRI négatif dit que les flux et la revente, même sans actualiser, ne rendent pas le prix de la machine." : ""}`,
         ];
       },
     },
@@ -366,7 +384,8 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
       question: (c) => {
         const { a, b } = deuxProjets(c);
         const delais = a.delai !== null && b.delai !== null;
-        return `Calculez l'indice de profitabilité de chaque projet : ce que rendent ses flux et sa revente, actualisés, pour un euro investi.${delais ? " Puis son délai de récupération actualisé : le nombre de trimestres au bout duquel ses flux actualisés cumulés rejoignent son prix, en interpolant dans le trimestre où ils le rejoignent." : a.delai !== null ? " Puis le délai de récupération actualisé du projet A, le seul que ses flux récupèrent avant la fin du projet : le nombre de trimestres au bout duquel ses flux actualisés cumulés rejoignent son prix, en interpolant dans le trimestre où ils le rejoignent." : ""}`;
+        const seul = a.delai !== null ? "A" : b.delai !== null ? "B" : null;
+        return `Calculez l'indice de profitabilité de chaque projet : ce que rendent ses flux et sa revente, actualisés, pour un euro investi.${delais ? " Puis son délai de récupération actualisé : le nombre de trimestres au bout duquel ses flux actualisés cumulés rejoignent son prix, en interpolant dans le trimestre où ils le rejoignent." : seul !== null ? ` Puis le délai de récupération actualisé du projet ${seul}, le seul que ses flux récupèrent avant la fin du projet : le nombre de trimestres au bout duquel ses flux actualisés cumulés rejoignent son prix, en interpolant dans le trimestre où ils le rejoignent.` : ""}`;
       },
       champs: (c) => {
         const { a, b } = deuxProjets(c);
@@ -395,7 +414,13 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
           `Chaque euro investi dans ${nomDu(ipPrefere)} en rend ${qte(ipFort)} en valeur actuelle, contre ${qte(ipPrefere === "A" ? b.ip : a.ip)} pour l'autre. L'indice rapporte la valeur créée à la mise : il départage des projets quand les capitaux manquent pour les financer tous, pas quand ils s'excluent.`,
           a.delai !== null && b.delai !== null
             ? `Le projet A rend son prix, actualisé, en ${dixieme(a.delai)} trimestres, le projet B en ${dixieme(b.delai)}. Le délai dit le risque d'attendre, pas la valeur : il ignore tout ce qui vient après.`
-            : `${a.delai === null ? "Le projet A" : "Le projet B"} ne rend pas son prix, actualisé, avant la fin du projet : sans sa revente, ses flux n'y suffisent pas. Le délai dit le risque d'attendre, pas la valeur.`,
+            : a.delai === null && b.delai === null && a.van <= 0 && b.van <= 0
+              ? "Aucun des deux projets ne rend son prix, actualisé, avant la fin du projet : même revente comprise, leurs VAN restent négatives. Le délai dit le risque d'attendre, pas la valeur."
+              : `${[a, b]
+                  .map((p, i) => ({ p, x: i === 0 ? "A" : "B" }))
+                  .filter(({ p }) => p.delai === null)
+                  .map(({ p, x }) => `Le projet ${x} ne rend pas son prix, actualisé, avant la fin du projet : ${p.van > 0 ? "sans sa revente, ses flux n'y suffisent pas" : "même revente comprise, sa VAN reste négative"}.`)
+                  .join(" ")} Le délai dit le risque d'attendre, pas la valeur.`,
         ];
       },
     },
@@ -416,26 +441,30 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
             ? `Même sans actualiser, les flux en plus du projet B (${eur(dSansActualiser)}, revente comprise) ${dSansActualiser < dCout ? "ne remboursent pas" : "remboursent tout juste"} ses ${eur(dCout)} d'investissement en plus : les deux courbes de VAN ne se croisent à aucun taux positif, et le projet A l'emporte quel que soit le taux.`
             : `Les deux courbes de VAN se croisent à ${pct(fisher.triPct)} par trimestre, sous le coût du capital : à ce taux, les deux critères désignent le même projet.`;
         const conflit = `le projet A rend plus par euro investi, le projet B rapporte plus d'euros : il investit ${eur(dCout)} de plus, et ce supplément rapporte encore plus que le coût du capital.`;
+        const non = `Non : la VAN préfère ${nomDu(v)}, le TRI ${nomDu(t)}.`;
+        // Deux VAN négatives : le classement se lit, mais il ne décide rien.
+        const rienARetenir = `Oui : la VAN préfère ${nomDu(v)}, qui détruit le moins de valeur, et le TRI ${nomDu(t)}, le moins mauvais. Mais les deux VAN sont négatives : aucun projet n'est acceptable, et le classement ne décide rien.`;
+        const oui = (x: string) => (k.retenu === "aucun" ? rienARetenir : x);
         return [
           {
             texte: "La VAN préfère le projet B, le TRI préfère le projet A",
             juste: v === "B" && t === "A",
-            retour: v === "B" && t === "A" ? `Oui : ${conflit}` : `Non : la VAN préfère ${nomDu(v)}, le TRI ${nomDu(t)}.`,
+            retour: v === "B" && t === "A" ? oui(`Oui : ${conflit}`) : non,
           },
           {
             texte: "La VAN préfère le projet A, le TRI préfère le projet B",
             juste: v === "A" && t === "B",
-            retour: v === "A" && t === "B" ? "Oui : le projet B rend plus par euro investi, mais le projet A crée plus de valeur au coût du capital." : `Non : la VAN préfère ${nomDu(v)}, le TRI ${nomDu(t)}.`,
+            retour: v === "A" && t === "B" ? oui("Oui : le projet B rend plus par euro investi, mais le projet A crée plus de valeur au coût du capital.") : non,
           },
           {
             texte: "Les deux critères préfèrent le projet A",
             juste: v === "A" && t === "A",
-            retour: v === "A" && t === "A" ? `Oui : le projet A a la plus forte VAN et le plus fort TRI. ${pourquoiPareil}` : `Non : la VAN préfère ${nomDu(v)}, le TRI ${nomDu(t)}.`,
+            retour: v === "A" && t === "A" ? oui(`Oui : le projet A a la plus forte VAN et le plus fort TRI. ${pourquoiPareil}`) : non,
           },
           {
             texte: "Les deux critères préfèrent le projet B",
             juste: v === "B" && t === "B",
-            retour: v === "B" && t === "B" ? "Oui : le projet B a la plus forte VAN et le plus fort TRI : il rapporte plus d'euros, et plus par euro investi." : `Non : la VAN préfère ${nomDu(v)}, le TRI ${nomDu(t)}.`,
+            retour: v === "B" && t === "B" ? oui("Oui : le projet B a la plus forte VAN et le plus fort TRI : il rapporte plus d'euros, et plus par euro investi.") : non,
           },
         ];
       },
@@ -445,7 +474,7 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
       type: "montants",
       titre: "Le taux d'intersection de Fisher",
       notions: ["irr_payback", "discounting"],
-      si: (c) => deuxProjets(c).conflit && deuxProjets(c).fisher !== null,
+      si: (c) => fisherSeLit(deuxProjets(c)),
       tableau: (c) => {
         const k = deuxProjets(c);
         return {
@@ -472,7 +501,7 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
           {
             libelle: "Taux de Fisher, équivalent annuel (%)",
             attendu: f.triAnnuelPct,
-            calcul: `(1 + ${pct(f.triPct)})^4 − 1 = ${pct(f.triAnnuelPct)}`,
+            calcul: `(${unPlus(f.triPct)})^4 − 1 = ${pct(f.triAnnuelPct)}`,
             tolerance: f.toleranceAnnuelle,
           },
         ];
@@ -527,7 +556,9 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
             retour:
               triPrefere === retenu
                 ? `Non : ici, le meilleur TRI désigne le même projet que la VAN, mais par la rencontre des chiffres. Entre deux projets qui s'excluent, c'est la VAN qui tranche : le TRI ne dit pas combien de valeur un projet crée.`
-                : `Non : le meilleur TRI désigne ${nomDu(triPrefere)}, qui crée moins de valeur. Entre deux projets qui s'excluent, c'est la VAN qui tranche.`,
+                : retenu === "aucun"
+                  ? `Non : le meilleur TRI désigne ${nomDu(triPrefere)}, dont la VAN est négative, ${eur(triPrefere === "A" ? a.van : b.van)}. C'est la VAN qui tranche, et elle écarte les deux projets.`
+                  : `Non : le meilleur TRI désigne ${nomDu(triPrefere)}, qui crée moins de valeur. Entre deux projets qui s'excluent, c'est la VAN qui tranche.`,
           },
         ];
       },
@@ -539,9 +570,16 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
       notions: ["irr_payback", "discounting"],
       texte: (c) => {
         const k = deuxProjets(c);
-        const retenu = k.retenu === "aucun" ? "aucun des deux projets" : nomDu(k.retenu);
+        const tete = k.retenu === "aucun" ? "aucun des deux projets ne crée de valeur" : `${nomDu(k.retenu)} l'emporte`;
+        const criteres = !k.conflit
+          ? "La VAN et le TRI désignaient le même projet."
+          : k.retenu === "aucun"
+            ? `Le TRI préférait ${nomDu(k.triPrefere)}, la VAN ${nomDu(k.vanPrefere)} ; mais quand aucune VAN n'est positive, le classement ne décide rien.`
+            : fisherSeLit(k)
+              ? `Le TRI préférait ${nomDu(k.triPrefere)}, mais au-dessous du taux de Fisher, ${pct(k.fisher!.triPct)} par trimestre, la VAN choisit l'autre.`
+              : `Le TRI préférait ${nomDu(k.triPrefere)}, mais entre deux projets qui s'excluent, la VAN tranche.`;
         return [
-          `Chez ${c.entreprise}, ${retenu === "aucun des deux projets" ? retenu : `${retenu} l'emporte`} au coût du capital : VAN de ${eur(k.a.van)} pour le projet A, de ${eur(k.b.van)} pour le projet B. ${k.conflit ? `Le TRI préférait ${nomDu(k.triPrefere)}, mais au-dessous du taux de Fisher, ${pct(k.fisher!.triPct)} par trimestre, la VAN choisit l'autre.` : "La VAN et le TRI désignaient le même projet."}`,
+          `Chez ${c.entreprise}, ${tete} au coût du capital : VAN de ${eur(k.a.van)} pour le projet A, de ${eur(k.b.van)} pour le projet B. ${criteres}`,
           `L'arène simplifie comme au chapitre précédent : un seul taux d'impôt, une revente à une part fixe de la valeur nette comptable, un projet arrêté au bout de ${k.a.duree} trimestres. Et les deux projets ne s'excluent que parce que la direction le décide : l'arène accepterait les deux machines, et leurs ventes se partageraient la même demande.`,
         ];
       },

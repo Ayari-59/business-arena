@@ -29,8 +29,12 @@ const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
  * fait aussi monter les rebuts du trimestre même : une étape de plus, qui ne se joue que là.
  *
  * L'entretien sauté vaut pour toutes les entreprises du cours : la disponibilité de l'outil y
- * baisse partout (la garde le vérifie). Là où l'outil n'est pas ce qui limite l'activité (ATLAS
- * CONSEIL, où l'équipe plafonne avant l'outil), rien ne se perd, et le chapitre le dit.
+ * baisse partout (la garde le vérifie). Là où l'outil n'est pas ce qui limite l'activité, rien ne
+ * se perd, et le chapitre le dit : dans l'année du cours, c'est partout sauf chez VOLT FITNESS, où
+ * la gestion prépare tout ce que l'outil porte (ailleurs, elle prépare moins, ou l'équipe plafonne
+ * avant l'outil, comme chez ATLAS CONSEIL). La troisième lecture, des ventes perdues qui coûtent
+ * moins que l'économie (« l'économie tient »), reste calculée, mais aucune entreprise ne la
+ * rencontre cette année : la garde dit lesquelles se lisent.
  */
 
 /** Le trimestre sans entretien : le premier de l'année, pour que l'arène en montre toute la suite. */
@@ -310,7 +314,7 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
         };
       },
       question: () =>
-        `L'arène a rejoué l'année sans entretien au trimestre ${T}, tout le reste identique. Calculez l'entretien économisé, la marge sur coût variable perdue sur l'année, et l'écart de résultat de l'activité.`,
+        `L'arène a rejoué l'année sans entretien au trimestre ${T} ; les autres décisions sont celles de la même gestion, qui prévoit chaque trimestre sa production d'après ses ventes du trimestre d'avant. Calculez l'entretien économisé, la marge sur coût variable perdue sur l'année, et l'écart de résultat de l'activité.`,
       champs: (c) => {
         const r = entretienDeLOutil(c);
         return [

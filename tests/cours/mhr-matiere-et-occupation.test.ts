@@ -356,7 +356,7 @@ describe("le taux d'occupation, le prix moyen et le revenu par chambre, chez l'h
     expect(o.perdues).toBeGreaterThan(0);
   });
 
-  it("le concurrent du trimestre comparé remplit mieux et rapporte moins par chambre disponible", () => {
+  it("le concurrent du trimestre comparé loue plus cher, remplit moins et rapporte moins par chambre disponible", () => {
     const k = o.comparaison;
     const rival = def.bots.find((b) => b.name === k.rival.nom)!;
     expect(def.bots.slice(0, 2)).toContainEqual(rival);
@@ -364,11 +364,23 @@ describe("le taux d'occupation, le prix moyen et le revenu par chambre, chez l'h
     expect(k.rival.vendues).toBe(Math.round(vendues(r)));
     expect(k.rival.chiffreDAffaires).toBe(Math.round(r.incomeStatement.revenue));
     expect(k.rival.disponibles).toBe(k.hotel.disponibles);
-    expect(k.rival.occupation).toBeGreaterThan(k.hotel.occupation);
+    expect(k.rival.prixMoyen).toBe(r2(Math.round(r.incomeStatement.revenue) / Math.round(vendues(r))));
+    expect(k.rival.prixMoyen).toBeGreaterThan(k.hotel.prixMoyen);
+    expect(k.rival.occupation).toBeLessThan(k.hotel.occupation);
     expect(k.rival.revpar).toBeLessThan(k.hotel.revpar);
     expect(k.rival.chiffreDAffaires).toBeLessThan(k.hotel.chiffreDAffaires);
-    // Aucun trimestre plus tôt ne montrait un concurrent plus rempli et moins rentable.
+    // Aucun trimestre plus tôt ne montrait un concurrent plus cher et moins rentable.
     for (let q = 0; q < k.trimestre; q++) {
+      for (const b of def.bots.slice(0, 2)) {
+        const x = rounds[q]!.results[b.id]!;
+        const pm = r2(Math.round(x.incomeStatement.revenue) / Math.round(vendues(x)));
+        const rp = r2(Math.round(x.incomeStatement.revenue) / o.trimestres[q]!.disponibles);
+        expect(pm > o.trimestres[q]!.prixMoyen && rp < o.trimestres[q]!.revpar, `${b.name}, trimestre ${q + 1}`).toBe(false);
+      }
+    }
+    // Dans l'année corrigée, aucun concurrent ne remplit mieux sans mieux vendre : celui qui remplit
+    // le plus (Le Comptoir) a aussi le RevPAR le plus haut, à chaque trimestre.
+    for (let q = 0; q < rounds.length; q++) {
       for (const b of def.bots.slice(0, 2)) {
         const x = rounds[q]!.results[b.id]!;
         const occ = r1((Math.round(vendues(x)) / o.trimestres[q]!.disponibles) * 100);
@@ -376,34 +388,43 @@ describe("le taux d'occupation, le prix moyen et le revenu par chambre, chez l'h
         expect(occ > o.trimestres[q]!.occupation && rp < o.trimestres[q]!.revpar, `${b.name}, trimestre ${q + 1}`).toBe(false);
       }
     }
-    expect(k.rival.nom).toBe("Le Comptoir");
-    expect(k.trimestre).toBe(2);
+    expect(k.rival.nom).toBe("Grand Hôtel Terminus");
+    expect(k.autre.nom).toBe("Le Comptoir");
+    expect(k.trimestre).toBe(0);
   });
 
   it("les champs du chapitre demandent ces chiffres-là", () => {
     const t = o.trimestres;
     expect(attendus(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "occupation", cas)).toEqual(t.map((x) => r1((x.vendues / x.disponibles) * 100)));
-    expect(attendus(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "occupation", cas)).toEqual([63.5, 83, 54.6, 64.2]);
+    expect(attendus(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "occupation", cas)).toEqual([63.4, 76.1, 63.9, 63.2]);
     expect(o.meilleur).toBe(1);
-    expect(o.plusFaible).toBe(2);
-    expect(attendus(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "prix-moyen", cas)).toEqual([1, 2].map((k) => r2(t[k]!.chiffreDAffaires / t[k]!.vendues)));
+    expect(o.plusFaible).toBe(3);
+    expect(attendus(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "prix-moyen", cas)).toEqual([1, 3].map((k) => r2(t[k]!.chiffreDAffaires / t[k]!.vendues)));
     expect(attendus(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "revpar", cas)).toEqual(t.map((x) => r2(x.chiffreDAffaires / x.disponibles)));
     const dispo = t.reduce((a, x) => a + x.disponibles, 0);
     const vend = t.reduce((a, x) => a + x.vendues, 0);
     const ca = t.reduce((a, x) => a + x.chiffreDAffaires, 0);
     expect(attendus(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "l-annee", cas)).toEqual([r1((vend / dispo) * 100), r2(ca / vend), r2(ca / dispo)]);
     const r = o.comparaison.rival;
-    expect(attendus(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "face-au-concurrent", cas)).toEqual([r1((r.vendues / r.disponibles) * 100), r2(r.chiffreDAffaires / r.disponibles)]);
+    expect(attendus(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "face-au-concurrent", cas)).toEqual([r2(r.chiffreDAffaires / r.vendues), r2(r.chiffreDAffaires / r.disponibles)]);
   });
 
   it("le cas : toutes les chambres en vente, au tarif puis au prix du concurrent, rejouées sous une autre clé", () => {
     const a = alignement(cas);
     const k = a.trimestre;
     const tour = k + 1;
-    expect(k).toBe(o.comparaison.trimestre);
+    // Le trimestre le plus faible, où des nuitées demandées n'ont pas été servies.
+    expect(k).toBe(o.plusFaible);
+    expect(perdues(rounds[k]!.results["joueur"]!)).toBeGreaterThan(0);
     const rival = def.bots.find((b) => b.name === a.rival)!;
+    expect(def.bots.slice(0, 2)).toContainEqual(rival);
     const x = rounds[k]!.results[rival.id]!;
     expect(a.prixDuConcurrent).toBe(r2(x.incomeStatement.revenue / soldUnits(x)));
+    // Ce concurrent a rempli mieux que l'hôtel, à un prix moyen plus bas.
+    expect(a.leRival.occupation).toBe(r1((Math.round(vendues(x)) / o.trimestres[k]!.disponibles) * 100));
+    expect(a.leRival.occupation).toBeGreaterThan(o.trimestres[k]!.occupation);
+    expect(a.leRival.prixMoyen).toBeLessThan(o.trimestres[k]!.prixMoyen);
+    expect(a.rival).toBe("Le Comptoir");
     const dispo = o.trimestres[k]!.disponibles;
     const tarif = rejouerAvec("hotel", "garde-mhr-tarif", (t, d) => (t === tour ? { ...d, productionPlan: dispo } : undefined))[k]!;
     const prixBas = rejouerAvec("hotel", "garde-mhr-prix-bas", (t, d) => (t === tour ? { ...d, productionPlan: dispo, price: a.prixDuConcurrent } : undefined))[k]!;
@@ -418,10 +439,16 @@ describe("le taux d'occupation, le prix moyen et le revenu par chambre, chez l'h
     expect(r2(prixBas.incomeStatement.revenue / soldUnits(prixBas))).toBe(a.prixDuConcurrent);
     expect(a.misesEnVente).toBe(Math.round(rounds[k]!.results["joueur"]!.production.produced));
     expect(a.misesEnVente).toBeLessThan(dispo);
-    // Le prix bas remplit plus, et rapporte moins par chambre disponible.
+    // Le prix bas remplit plus. Le meilleur choix est le RevPAR le plus haut, seul de son rang :
+    // dans l'année corrigée, c'est le prix du concurrent, qui rapporte plus par chambre disponible.
     expect(a.concurrent.occupation).toBeGreaterThan(a.tarif.occupation);
-    expect(a.concurrent.revpar).toBeLessThan(a.tarif.revpar);
-    expect(a.meilleur).toBe("tarif");
+    const revpars = { joue: r2(Math.round(rounds[k]!.results["joueur"]!.incomeStatement.revenue) / dispo), tarif: a.tarif.revpar, concurrent: a.concurrent.revpar };
+    expect(a.joue.revpar).toBe(revpars.joue);
+    const max = Math.max(...Object.values(revpars));
+    expect(Object.entries(revpars).filter(([, v]) => v === max).map(([n]) => n)).toEqual([a.meilleur]);
+    expect(a.concurrent.revpar).toBeGreaterThan(a.tarif.revpar);
+    expect(a.meilleur).toBe("concurrent");
+    expect(a.ecartDeChiffre).toBeLessThan(0);
     // Les mêmes chambres en vente, les mêmes charges : l'écart de résultat est celui du chiffre d'affaires.
     expect(a.ecartDeResultat).toBe(a.ecartDeChiffre);
     expect(attendus(S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT, "les-deux-prix", cas)).toEqual([

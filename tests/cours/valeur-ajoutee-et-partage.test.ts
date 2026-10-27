@@ -59,6 +59,11 @@ describe.each(ENTREPRISES_DU_COURS)("la valeur ajoutée chez %s", (code) => {
     const fin = synthese.texte(cas).join(" ");
     expect(fin.includes("en garde -"), "« garder » une part négative").toBe(false);
     expect(fin.includes("est négative")).toBe(v.entreprise < 0);
+    const partage = chapitre.etapes.find((e) => e.id === "partage");
+    if (partage?.type !== "montants") throw new Error("Pas d'étape partage");
+    const dit = partage.explication(cas, { soldes: {} }).join(" ");
+    expect(dit.includes("financer sa croissance"), "une perte ne finance pas la croissance").toBe(v.entreprise >= 0);
+    expect(dit.includes("Elle n'a rien pour financer sa croissance")).toBe(v.entreprise >= 0 && v.k.resultat < 0);
   });
 
   it("aucun texte ne sort undefined ni « de le » ; une seule bonne réponse ; les notions existent", () => {
@@ -80,8 +85,12 @@ describe.each(ENTREPRISES_DU_COURS)("la valeur ajoutée chez %s", (code) => {
 
 describe("les cas que le chapitre distingue se rencontrent dans le cours", () => {
   const toutes = ENTREPRISES_DU_COURS.map((c) => valeurAjoutee(casDeLEntreprise(c)));
-  it("une production qui n'est pas les ventes, et une part de l'entreprise négative", () => {
+  it("une production qui n'est pas les ventes, et une perte qui entame la part de l'entreprise", () => {
     expect(toutes.some((v) => v.k.produits !== v.k.s.ventes)).toBe(true);
-    expect(toutes.some((v) => v.entreprise < 0)).toBe(true);
+    // Une perte que l'usure de l'équipement couvre encore : la part de l'entreprise reste positive.
+    expect(toutes.some((v) => v.k.resultat < 0 && v.entreprise >= 0)).toBe(true);
+    // Dans l'année corrigée, aucune perte ne dépasse plus l'usure de l'équipement : la branche
+    // « part négative » n'est plus lue. Si une part négative revient, cette garde le dira.
+    expect(toutes.filter((v) => v.entreprise < 0)).toHaveLength(0);
   });
 });

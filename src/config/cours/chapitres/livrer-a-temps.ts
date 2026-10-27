@@ -42,6 +42,11 @@ import {
  * c'est la vente perdue. L'arène le montre en rejouant l'année (`rejouerAvec`) : toute la demande
  * servie au premier trimestre, puis toute la flotte chargée, puis la panne.
  *
+ * Ce que la panne coûte se lit dans l'année rejouée, pas dans une règle : la demande perdue avec la
+ * qualité de service ne coûte une vente que si la flotte l'aurait chargée. Dans l'année du cours,
+ * ROUTE & CIE refuse des clients chaque trimestre, et la panne ne change ni ses livraisons ni son
+ * résultat : le chapitre le dit (`refuseEnsuite`), et la réponse se calcule.
+ *
  * Il ne double pas « Entretenir l'outil » (BTS GPME), qui suit la disponibilité que l'entretien
  * protège : ici, la panne est un aléa, et ce qu'elle coûte passe par la qualité de service.
  */
@@ -164,6 +169,10 @@ function calculer(c: Cas) {
     livreesApres: Math.round(surLAnnee(enPanne, transportees)),
     resultatAvant: Math.round(surLAnnee(reference, (x) => x.incomeStatement.operatingIncome)),
     resultatApres: Math.round(surLAnnee(enPanne, (x) => x.incomeStatement.operatingIncome)),
+    // Après la panne, la flotte refuse encore des clients chaque trimestre : la demande perdue ne se serait pas chargée.
+    refuseEnsuite: jusquALaDefaillance(enPanne)
+      .slice(T)
+      .every((x) => demandeDuTrimestre(x) - Object.values(x.market.bySegment).reduce((t, v) => t + v.sold, 0) >= 1),
   };
   const livreesT = Math.round(transportees(r));
   const coutDeLaPanne: CoutDeLaPanne =
@@ -468,18 +477,31 @@ export const LIVRER_A_TEMPS: Chapitre = {
       options: (c) => {
         const k = service(c);
         const p = k.panne;
-        const annee = `Sur l'année, ${qte(p.livreesAvant - p.livreesApres)} ${c.unites} de moins ont été livrées, et le résultat d'exploitation passe de ${eur(p.resultatAvant)} à ${eur(p.resultatApres)}.`;
-        const tard = `Au trimestre ${k.T}, ${qte(p.livreesT)} ${c.unites} livrées, comme sans la panne. Mais la flotte a roulé à ${pct(k.partPendantLaPanne)} de sa capacité : la qualité de service a baissé, et les clients ont demandé ${qte(p.demandeEnsuiteAvant - p.demandeEnsuiteApres)} ${c.unites} de moins les trimestres suivants. ${annee}`;
+        const annee =
+          p.livreesApres === p.livreesAvant
+            ? `Sur l'année, les ${c.unites} livrées n'ont pas bougé (${qte(p.livreesAvant)}), et le résultat d'exploitation ${p.resultatApres === p.resultatAvant ? `reste à ${eur(p.resultatAvant)}` : `passe de ${eur(p.resultatAvant)} à ${eur(p.resultatApres)}`}.`
+            : `Sur l'année, ${qte(p.livreesAvant - p.livreesApres)} ${c.unites} de moins ont été livrées, et le résultat d'exploitation passe de ${eur(p.resultatAvant)} à ${eur(p.resultatApres)}.`;
+        const qualite = `Au trimestre ${k.T}, ${qte(p.livreesT)} ${c.unites} livrées, comme sans la panne. Mais la flotte a roulé à ${pct(k.partPendantLaPanne)} de sa capacité : la qualité de service a baissé, et les clients ont demandé ${qte(p.demandeEnsuiteAvant - p.demandeEnsuiteApres)} ${c.unites} de moins les trimestres suivants.`;
+        const tard = `${qualite} ${annee}`;
+        // La demande a baissé après la panne, mais la flotte refusait déjà des clients : elle n'aurait pas chargé ces palettes.
+        const dejaRefusees = k.coutDeLaPanne === "rien" && p.demandeEnsuiteApres < p.demandeEnsuiteAvant && p.refuseEnsuite;
+        const sansCout = dejaRefusees
+          ? `${qualite} Or ${c.entreprise} refusait déjà des clients chaque trimestre : ces ${c.unites} n'auraient pas été chargées. ${annee}`
+          : annee;
+        const lecture = k.coutDeLaPanne === "plus-tard" ? tard : sansCout;
         return [
           {
-            texte: "Rien : toutes les palettes prévues sont parties",
+            texte: dejaRefusees ? "Rien : les clients perdus ensuite auraient été refusés" : "Rien : toutes les palettes prévues sont parties",
             juste: k.coutDeLaPanne === "rien",
-            retour: k.coutDeLaPanne === "rien" ? `Oui. ${annee}` : `Non. ${k.coutDeLaPanne === "plus-tard" ? tard : annee}`,
+            retour:
+              k.coutDeLaPanne === "rien"
+                ? `Oui. ${sansCout}${dejaRefusees ? ` Une panne coûte des clients même quand toutes les ${c.unites} partent ; cette année, ce sont des clients que la flotte n'aurait pas servis.` : ""}`
+                : `Non. ${lecture}`,
           },
           {
             texte: "Des clients plus tard : la qualité de service a baissé",
             juste: k.coutDeLaPanne === "plus-tard",
-            retour: k.coutDeLaPanne === "plus-tard" ? `Oui. ${tard} Une panne coûte même quand toutes les ${c.unites} partent.` : `Non. ${annee}`,
+            retour: k.coutDeLaPanne === "plus-tard" ? `Oui. ${tard} Une panne coûte même quand toutes les ${c.unites} partent.` : `Non. ${lecture}`,
           },
           {
             texte: "Des palettes tout de suite : la flotte ne pouvait pas tout charger",
@@ -487,7 +509,7 @@ export const LIVRER_A_TEMPS: Chapitre = {
             retour:
               k.coutDeLaPanne === "tout-de-suite"
                 ? `Oui : ${qte(k.livreesT - p.livreesT)} ${c.unites} prévues n'ont pas pu partir au trimestre ${k.T}. ${annee}`
-                : `Non : les ${qte(k.charge)} ${c.unites} prévues tenaient dans les ${qte(k.capacitePendantLaPanne)} places qui restaient. ${k.coutDeLaPanne === "plus-tard" ? tard : annee}`,
+                : `Non : les ${qte(k.charge)} ${c.unites} prévues tenaient dans les ${qte(k.capacitePendantLaPanne)} places qui restaient. ${lecture}`,
           },
         ];
       },
@@ -502,8 +524,11 @@ export const LIVRER_A_TEMPS: Chapitre = {
         return [
           `Sur l'année, ${c.entreprise} a livré ${pct(k.tauxDeService)} des ${c.unites} demandées. Chaque ${c.unite} refusée est une marge perdue : ${eur(k.margePerdue)} au trimestre ${k.T}. Dans l'arène, le client refusé revient, mais la vente du trimestre ne se rattrape pas.`,
           `La qualité de service, c'est la ponctualité : elle baisse quand la flotte roule à plus de ${k.seuil} % de sa capacité, et les clients demandent moins ensuite. Une panne la fait baisser même quand toutes les ${c.unites} partent, parce qu'elle laisse moins de place pour les mêmes livraisons.`,
+          k.coutDeLaPanne === "rien" && k.panne.refuseEnsuite && k.panne.demandeEnsuiteApres < k.panne.demandeEnsuiteAvant
+            ? `Cette année, ${c.entreprise} refusait déjà des clients chaque trimestre : la demande perdue après la panne ne lui a rien coûté. Une flotte qui sert toute sa demande perdrait ces ventes.`
+            : "",
           "Livrer à temps, c'est charger ce que les clients demandent, ni plus ni moins, et savoir ce que coûte une flotte qui roule sans marge.",
-        ];
+        ].filter((x) => x !== "");
       },
       repere: (c) => `Taux de service = palettes livrées ÷ palettes demandées × 100. Au-delà de ${service(c).seuil} % de la capacité de la flotte, la qualité de service baisse.`,
     },

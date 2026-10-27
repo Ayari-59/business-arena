@@ -147,7 +147,7 @@ export function promotionDuRayon(c: Cas, remise: number, trimestre: number, cle:
   };
 }
 
-/** Ce que la promotion a fait, en une phrase : « 582 articles vendus en plus, et un chiffre d'affaires qui monte de 8 059 € ». */
+/** Ce que la promotion a fait, en une phrase : « 611 articles vendus en plus, et un chiffre d'affaires qui monte de 11 710 € ». */
 export function faitsDeLaPromotion(p: { ventesEnPlus: number; chiffreEnPlus: number }): string {
   const ventes =
     p.ventesEnPlus > 0

@@ -1,9 +1,9 @@
-import { botDecisions, type BotProfile } from "../../engine/bots";
-import { runGame } from "../../engine/simulation/runGame";
+import type { BotProfile } from "../../engine/bots";
+import { runGame, type DecisionProviderContext } from "../../engine/simulation/runGame";
 import type { CompanyState } from "../../engine/types";
 import { scenarioByCode } from "../scenarios/registry";
-import { prolongerLaPartie } from "../scenarios/rounds";
 import { GRAINE_DU_COURS } from "./cas";
+import { decisionDuCours, scenarioDuCours } from "./arene-du-cours";
 
 /**
  * TROIS ANNÉES DE L'ARÈNE, TRIMESTRE PAR TRIMESTRE : LA MATIÈRE D'UNE PRÉVISION.
@@ -36,7 +36,7 @@ export function troisAnnees(code: string): readonly TrimestreJoue[] {
   if (deja) return deja;
   const def = scenarioByCode(code);
   const tours = ANNEES * TRIMESTRES_PAR_AN;
-  const scenario = { ...prolongerLaPartie(def.scenario, tours), roundsCount: tours, impotSurLExercice: true };
+  const scenario = scenarioDuCours(def.scenario, tours);
   const entreprises: CompanyState[] = [
     def.company("joueur", def.playerTeamName, "bot", "balanced"),
     ...def.bots.slice(0, 2).map((b) => def.company(b.id, b.name, "bot", b.profile)),
@@ -48,8 +48,8 @@ export function troisAnnees(code: string): readonly TrimestreJoue[] {
     providers: Object.fromEntries(
       entreprises.map((e) => [
         e.id,
-        (ctx: { state: CompanyState; roundIndex: number }) =>
-          botDecisions(e.botProfile as BotProfile, { scenario, state: ctx.state, roundIndex: ctx.roundIndex }),
+        (ctx: DecisionProviderContext) =>
+          decisionDuCours(e.botProfile as BotProfile, scenario, ctx),
       ]),
     ),
   });

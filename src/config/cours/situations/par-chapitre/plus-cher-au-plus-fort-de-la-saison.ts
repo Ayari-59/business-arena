@@ -143,7 +143,7 @@ export const PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON: Situation = {
             : "nous avons vendu ce que nous avions mis en vente";
         return [
           `« Au ${rang(x.k)} trimestre, ${constat}. Je veux y monter la nuitée de ${pct(Math.round(HAUSSE_EN_HAUTE_SAISON * 100))}, de ${eur(x.avant.prix)} à ${eur(x.apres.prix)}, et seulement à ce trimestre. Dites-moi si c'est bien notre plus forte saison, ce que deviennent le taux d'occupation et le revenu par chambre de ce trimestre, et si l'année y gagne. »`,
-          "Pas de cours cette fois : les calculs sont ceux du chapitre. L'arène a rejoué l'année avec ce seul trimestre plus cher, tout le reste identique, concurrents compris.",
+          "Pas de cours cette fois : les calculs sont ceux du chapitre. L'arène a rejoué l'année avec ce seul trimestre plus cher. Le reste, chaque gestion le décide comme dans l'année du cours, concurrents compris, sur ses ventes du trimestre d'avant.",
         ];
       },
       repere: () => "À rendre : le coefficient saisonnier du trimestre, son taux d'occupation et son revenu par chambre aux deux prix, l'écart de résultat de l'année, et votre réponse.",

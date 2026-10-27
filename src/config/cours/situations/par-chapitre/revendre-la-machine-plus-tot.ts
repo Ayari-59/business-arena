@@ -25,6 +25,9 @@ const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` 
  * sur ce projet raccourci : la valeur résiduelle au bout du huitième trimestre, la valeur actuelle
  * des flux, la VAN, et la compare à celle du chapitre.
  *
+ * Là où la machine détruit déjà de la valeur gardée jusqu'au bout (MAILLE & CO), la revendre tôt
+ * en détruit encore : les textes ne disent pas « encore de la valeur » là où il n'y en avait pas.
+ *
  * Les flux sont ceux du chapitre, trimestre pour trimestre : l'arène ne décide rien en fonction
  * de la durée de la partie (seule la boucle de `runGame` lit `roundsCount`), si bien que les huit
  * premiers trimestres du projet de douze sont ceux d'un projet de huit. La revente suit la règle
@@ -57,7 +60,7 @@ export const REVENDRE_LA_MACHINE_PLUS_TOT: Situation = {
   reprend: [LA_VALEUR_ACTUELLE_NETTE.code],
   commanditaire: "Le directeur financier",
   titre: "Revendre la machine plus tôt",
-  accroche: `Le directeur financier voudrait revendre la machine au bout de ${DUREE_AVANT_LA_REVENTE} trimestres : moins de flux, mais une revente plus forte. L'investissement crée-t-il encore de la valeur, et autant ?`,
+  accroche: `Le directeur financier voudrait revendre la machine au bout de ${DUREE_AVANT_LA_REVENTE} trimestres : moins de flux, mais une revente plus forte. L'investissement crée-t-il de la valeur, et autant qu'en gardant la machine ?`,
   objectifs: [
     "Calculer la valeur résiduelle d'un équipement revendu avant la fin de son amortissement",
     "Actualiser les flux d'un projet raccourci et calculer sa VAN",
@@ -74,7 +77,7 @@ export const REVENDRE_LA_MACHINE_PLUS_TOT: Situation = {
       texte: (c) => {
         const { court, long } = revendrePlusTot(c);
         return [
-          `« Nous aurons peut-être besoin de la place dans ${DUREE_AVANT_LA_REVENTE} trimestres. Si nous achetons la machine « ${court.machine} » au trimestre ${T} et la revendons à la fin du trimestre ${DUREE_AVANT_LA_REVENTE}, au lieu de la garder ${long.duree} trimestres, l'investissement crée-t-il encore de la valeur ? Et autant ? »`,
+          `« Nous aurons peut-être besoin de la place dans ${DUREE_AVANT_LA_REVENTE} trimestres. Si nous achetons la machine « ${court.machine} » au trimestre ${T} et la revendons à la fin du trimestre ${DUREE_AVANT_LA_REVENTE}, au lieu de la garder ${long.duree} trimestres, ${long.van > 0 ? "l'investissement crée-t-il encore de la valeur ? Et autant ?" : "reprise plus cher, la machine crée-t-elle alors de la valeur ?"} »`,
           `Pas de cours cette fois : vous avez les flux de la machine, trimestre par trimestre, ceux que l'arène a rejoués au chapitre, et les conditions de la revente. Au chapitre, gardée ${long.duree} trimestres, la machine avait une VAN de ${eur(long.van)}.`,
         ];
       },
@@ -147,8 +150,14 @@ export const REVENDRE_LA_MACHINE_PLUS_TOT: Situation = {
       },
       explication: (c) => {
         const { court, long, ecart } = revendrePlusTot(c);
+        const abandonnes = centime(long.va - court.va);
+        const revente = centime(court.vaResiduelle - long.vaResiduelle);
         return [
-          `Gardée ${long.duree} trimestres, la machine avait une VAN de ${eur(long.van)} ; revendue au bout de ${court.duree}, ${eur(court.van)}, soit ${eur(Math.abs(ecart))} ${ecart <= 0 ? "de moins" : "de plus"}. Les ${long.duree - court.duree} trimestres abandonnés rapportaient ${eur(centime(long.va - court.va))} en valeur actuelle ; la revente avancée n'en rend que ${eur(centime(court.vaResiduelle - long.vaResiduelle))} de plus.`,
+          `Gardée ${long.duree} trimestres, la machine avait une VAN de ${eur(long.van)} ; revendue au bout de ${court.duree}, ${eur(court.van)}, soit ${eur(Math.abs(ecart))} ${ecart <= 0 ? "de moins" : "de plus"}. ${
+            ecart <= 0
+              ? `Les ${long.duree - court.duree} trimestres abandonnés rapportaient ${eur(abandonnes)} en valeur actuelle ; la revente avancée n'en rend que ${eur(revente)} de plus.`
+              : `La revente avancée rend ${eur(revente)} de plus en valeur actuelle, plus que les ${eur(abandonnes)} que rapportaient les ${long.duree - court.duree} trimestres abandonnés.`
+          }`,
         ];
       },
     },
@@ -173,11 +182,15 @@ export const REVENDRE_LA_MACHINE_PLUS_TOT: Situation = {
                   : `Non : revendue tôt, elle crée plus de valeur, ${eur(court.van)} contre ${eur(long.van)}.`,
           },
           {
-            texte: "Revendre tôt détruit de la valeur : sa VAN devient négative",
+            texte: "Revendre tôt détruit de la valeur : sa VAN est négative",
             juste: verdict === "revendre-detruit",
             retour:
               verdict === "revendre-detruit"
-                ? `Oui : sur ${court.duree} trimestres, ses flux et sa revente, actualisés à ${cout} par an, ne rendent pas son prix : la VAN tombe à ${eur(court.van)}. Gardée ${long.duree} trimestres, elle en créait ${eur(long.van)}. Mieux vaut ne pas l'acheter si elle doit partir si tôt.`
+                ? `Oui : sur ${court.duree} trimestres, ses flux et sa revente, actualisés à ${cout} par an, ne rendent pas son prix : la VAN est de ${eur(court.van)}. ${
+                    long.van > 0
+                      ? `Gardée ${long.duree} trimestres, elle en créait ${eur(long.van)}. Mieux vaut ne pas l'acheter si elle doit partir si tôt.`
+                      : `Gardée ${long.duree} trimestres, elle n'en créait pas non plus : sa VAN était de ${eur(long.van)}. Mieux vaut ne pas l'acheter du tout.`
+                  }`
                 : `Non : la VAN du projet raccourci reste positive, ${eur(court.van)}.`,
           },
           {
@@ -186,7 +199,9 @@ export const REVENDRE_LA_MACHINE_PLUS_TOT: Situation = {
             retour:
               verdict === "revendre-cree-plus"
                 ? `Oui : la VAN du projet raccourci, ${eur(court.van)}, dépasse celle du projet entier, ${eur(long.van)}.`
-                : `Non : la VAN du projet raccourci, ${eur(court.van)}, est sous celle du projet entier, ${eur(long.van)}.`,
+                : verdict === "revendre-detruit"
+                  ? `Non : revendue tôt, la machine ne crée pas de valeur : la VAN du projet raccourci est négative, ${eur(court.van)}.`
+                  : `Non : la VAN du projet raccourci, ${eur(court.van)}, est sous celle du projet entier, ${eur(long.van)}.`,
           },
           {
             texte: "Rien ne change : la revente rend à l'entreprise tout ce que la machine n'a pas encore amorti",

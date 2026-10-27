@@ -3,7 +3,6 @@ import { auCentime } from "../../../../pedagogy/cours/etats";
 import type { Cas } from "../../cas";
 import {
   AVEC_LA_PUBLICITE,
-  ENTREPRISES_DU_CHOIX,
   anneeAvecLaPublicite,
   anneeDuChoix,
   type AnneeDuChoix,
@@ -109,11 +108,6 @@ export const DOUBLER_LA_PUBLICITE: Situation = {
     "Répondre au responsable commercial, chiffres à l'appui",
   ],
   libre: false,
-  entreprises: {
-    codes: ENTREPRISES_DU_CHOIX,
-    pourquoi:
-      "ce cas reprend le chapitre « Décider avec des chiffres », qui ne se joue pas à la boutique en ligne : sans publicité, elle cesserait son activité avant la fin de l'année.",
-  },
   etapes: [
     {
       id: "demande",

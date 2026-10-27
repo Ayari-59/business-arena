@@ -1,10 +1,11 @@
-import { botDecisions, type BotProfile } from "../../engine/bots";
+import type { BotProfile } from "../../engine/bots";
 import { withoutRd } from "../../engine/gamme";
-import { runGame } from "../../engine/simulation/runGame";
+import { runGame, type DecisionProviderContext } from "../../engine/simulation/runGame";
 import type { CompanyState } from "../../engine/types";
 import { auCentime } from "../../pedagogy/cours/etats";
 import { familyOf, scenarioByCode } from "../scenarios/registry";
 import { GRAINE_DU_COURS } from "./cas";
+import { decisionDuCours, scenarioDuCours } from "./arene-du-cours";
 
 /**
  * LA GAMME DU MOIS : CE QUE LE MOTEUR VEND, RÉFÉRENCE PAR RÉFÉRENCE.
@@ -74,7 +75,7 @@ export function gammeDuMois(code: string): GammeDuMois | null {
     return null;
   }
   const def = scenarioByCode(famille.gamme);
-  const scenario = { ...withoutRd(def.scenario), roundsCount: 1 };
+  const scenario = scenarioDuCours(withoutRd(def.scenario), 1);
   const entreprises: CompanyState[] = [
     def.company("joueur", def.playerTeamName, "bot", "balanced"),
     ...def.bots.slice(0, 2).map((b) => def.company(b.id, b.name, "bot", b.profile)),
@@ -86,8 +87,8 @@ export function gammeDuMois(code: string): GammeDuMois | null {
     providers: Object.fromEntries(
       entreprises.map((e) => [
         e.id,
-        (ctx: { state: CompanyState; roundIndex: number }) =>
-          botDecisions(e.botProfile as BotProfile, { scenario, state: ctx.state, roundIndex: ctx.roundIndex }),
+        (ctx: DecisionProviderContext) =>
+          decisionDuCours(e.botProfile as BotProfile, scenario, ctx),
       ]),
     ),
   });

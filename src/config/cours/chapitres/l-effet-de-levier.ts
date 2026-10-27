@@ -42,11 +42,13 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * pas l'actif économique du chapitre, et le chapitre le dit.
  *
  * LES ENTREPRISES. Le levier ne se lit que là où l'année finit en bénéfice (sinon l'impôt ne
- * suit pas le taux, et la relation après impôt ne tient plus) et où l'entreprise doit plus aux
- * banques qu'elle n'a en caisse (sinon l'endettement net est négatif, et son coût n'a plus de
- * sens). NOVA, LA TABLE D'AUGUSTIN et ATLAS CONSEIL finissent l'année en perte ; MAILLE & CO,
- * PIXEL & CO et ROUTE & CIE ont plus de disponibilités que d'emprunts. Restent L'ESCALE, VOLT
- * FITNESS et MARTEL & FILS ; le test recompte la liste.
+ * suit pas le taux, et la relation après impôt ne tient plus), sans découvert (les agios courent
+ * à un autre taux que l'emprunt, et le découvert du 31 décembre n'est pas la dette sur laquelle
+ * les intérêts de l'année ont couru), et où l'entreprise doit plus aux banques qu'elle n'a en
+ * caisse (sinon l'endettement net est négatif, et son coût n'a plus de sens). LA TABLE
+ * D'AUGUSTIN finit l'année en perte ; NOVA la finit en bénéfice, mais à découvert ; MAILLE & CO,
+ * ATLAS CONSEIL, PIXEL & CO et ROUTE & CIE ont plus de disponibilités que d'emprunts. Restent
+ * L'ESCALE, VOLT FITNESS et MARTEL & FILS ; le test recompte la liste.
  */
 
 /** Les entreprises où l'année du cours finit en bénéfice, avec un endettement net positif. */
@@ -270,7 +272,7 @@ export const L_EFFET_DE_LEVIER: Chapitre = {
   entreprises: {
     codes: ENTREPRISES_DU_LEVIER,
     pourquoi:
-      "Le levier se lit là où l'année finit en bénéfice et où l'entreprise doit plus aux banques qu'elle n'a en caisse : L'ESCALE, VOLT FITNESS et MARTEL & FILS. NOVA, LA TABLE D'AUGUSTIN et ATLAS CONSEIL finissent l'année en perte ; MAILLE & CO, PIXEL & CO et ROUTE & CIE ont plus de disponibilités que d'emprunts.",
+      "Le levier se lit là où l'année finit en bénéfice, sans découvert, et où l'entreprise doit plus aux banques qu'elle n'a en caisse : L'ESCALE, VOLT FITNESS et MARTEL & FILS. LA TABLE D'AUGUSTIN finit l'année en perte ; NOVA la finit en bénéfice, mais à découvert, et ce découvert n'est pas la dette sur laquelle ses intérêts de l'année ont couru ; MAILLE & CO, ATLAS CONSEIL, PIXEL & CO et ROUTE & CIE ont plus de disponibilités que d'emprunts.",
   },
   etapes: [
     {

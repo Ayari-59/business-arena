@@ -48,7 +48,14 @@ import {
  * LES ENTREPRISES. Celles de « L'effet de levier » (`ENTREPRISES_DU_LEVIER`), pour la même raison :
  * le coût de la dette après impôt suppose un impôt, donc un bénéfice, et la pondération suppose un
  * endettement net positif. L'équipement rejoué ne fait défaillir aucune des trois ; le test le
- * vérifie, comme il vérifie que l'année sans équipement est celle du cours.
+ * vérifie, comme il vérifie que l'année sans équipement est celle du cours. Mais avec lui,
+ * MARTEL & FILS finit l'année en perte : l'impôt ne suit plus le taux, la rentabilité après
+ * impôt et le coût de la dette après impôt ne se lisent plus, et les deux étapes de l'équipement
+ * n'y sont pas jouées (`lEquipementSeLit`) ; la synthèse le dit.
+ *
+ * L'ÉCART ADMIS SUR UNE VALEUR CRÉÉE. L'élève tape ses taux au centième de point, et le bêta à
+ * deux décimales : un demi-centième de bêta déplace kcp de 0,005 × la prime de risque, sur les
+ * capitaux propres. La tolérance d'une EVA compte ces deux arrondis.
  */
 
 /**
@@ -92,8 +99,8 @@ export function coutDuCapital(s: StructureFinanciere, tauxIS: number) {
     eva,
     exigence,
     residuel: auCentime(s.resultatNet - exigence),
-    /** L'écart admis sur une valeur créée : celui des taux arrondis au centième, sur l'actif économique. */
-    toleranceEva: Math.max(1, Math.ceil(s.actifEconomique * 0.0002)),
+    /** L'écart admis sur une valeur créée : celui des taux arrondis au centième, sur l'actif économique, et celui du bêta arrondi, sur les capitaux propres. */
+    toleranceEva: Math.max(1, Math.ceil(s.actifEconomique * 0.0002 + s.capitauxPropres * 0.005 * PRIME_DE_RISQUE_DU_MARCHE)),
     exact: {
       kcp: kcpExact * 100,
       cmpc: ((kcpExact * s.capitauxPropres + s.chargesFinancieres * (1 - tauxIS)) / s.actifEconomique) * 100,
@@ -150,6 +157,8 @@ function calculer(c: Cas) {
     verdict: (k.exact.eva > 0 ? "cree" : "detruit") as Verdict,
     verdictAvec: (k2.exact.eva > 0 ? "cree" : "detruit") as Verdict,
     lEquipementCree: k2.exact.eva > k.exact.eva,
+    /** L'année avec l'équipement finit en bénéfice : l'impôt suit le taux, et ses rentabilités après impôt se lisent. */
+    lEquipementSeLit: auCentime(avec.resultatNet + avec.impot) > 0,
   };
 }
 
@@ -193,7 +202,7 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
   entreprises: {
     codes: ENTREPRISES_DU_LEVIER,
     pourquoi:
-      "Le coût du capital se pondère là où l'année finit en bénéfice et où l'entreprise doit plus aux banques qu'elle n'a en caisse, comme pour l'effet de levier : L'ESCALE, VOLT FITNESS et MARTEL & FILS. NOVA, LA TABLE D'AUGUSTIN et ATLAS CONSEIL finissent l'année en perte ; MAILLE & CO, PIXEL & CO et ROUTE & CIE ont plus de disponibilités que d'emprunts.",
+      "Le coût du capital se pondère là où l'année finit en bénéfice, sans découvert, et où l'entreprise doit plus aux banques qu'elle n'a en caisse, comme pour l'effet de levier : L'ESCALE, VOLT FITNESS et MARTEL & FILS. LA TABLE D'AUGUSTIN finit l'année en perte ; NOVA la finit en bénéfice, mais à découvert ; MAILLE & CO, ATLAS CONSEIL, PIXEL & CO et ROUTE & CIE ont plus de disponibilités que d'emprunts.",
   },
   etapes: [
     {
@@ -240,10 +249,12 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
         ];
       },
       explication: (c) => {
-        const { k } = creationDeValeur(c);
+        const { s, k, tauxApresImpot } = creationDeValeur(c);
         return [
           `Les associés ${dE(c.entreprise)} exigent ${pct(k.kcp)} par an : ${pct(TAUX_SANS_RISQUE * 100)} pour le temps, et ${points(auCentieme(k.kcp - TAUX_SANS_RISQUE * 100))} pour le risque. Le bêta de l'activité est le même pour toutes les entreprises du chapitre ; c'est la dette qui fait monter celui des associés à ${nombre(k.beta)}, parce qu'ils sont payés après la banque.`,
-          `C'est plus que les ${pct(k.r.i)} que coûte l'endettement net : le prêteur passe en premier, il prend moins de risque, et ses intérêts se déduisent de l'impôt.`,
+          k.kcp > k.r.i
+            ? `C'est plus que les ${pct(k.r.i)} que coûte l'endettement net : le prêteur passe en premier, il prend moins de risque, et ses intérêts se déduisent de l'impôt.`
+            : `C'est moins que les ${pct(k.r.i)} que coûte l'endettement net. Le contrat d'emprunt ne coûte pourtant que ${pct(tauxApresImpot)} après impôt : ce sont surtout les ${eur(s.disponibilites)} de disponibilités oisives, déduites de la dette, qui renchérissent son coût net, au-dessus de l'exigence des associés.`,
         ];
       },
     },
@@ -386,6 +397,7 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
       type: "montants",
       titre: "L'arène rejoue l'année avec un équipement de plus",
       notions: ["enterprise_value", "capacity"],
+      si: (c) => creationDeValeur(c).lEquipementSeLit,
       tableau: (c) => {
         const { s, k, avec, k2 } = creationDeValeur(c);
         return {
@@ -440,6 +452,7 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
       type: "choix",
       titre: "L'équipement crée-t-il de la valeur ?",
       notions: ["enterprise_value"],
+      si: (c) => creationDeValeur(c).lEquipementSeLit,
       question: (c) => {
         const { s, avec } = creationDeValeur(c);
         const net = auCentime(avec.resultatNet - s.resultatNet);
@@ -477,9 +490,14 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
       titre: "Ce qu'il faut retenir",
       notions: ["enterprise_value", "profitability_vs_return"],
       texte: (c) => {
-        const { k, verdict } = creationDeValeur(c);
+        const { s, k, verdict, avec, machine, lEquipementSeLit } = creationDeValeur(c);
         return [
           `Chez ${c.entreprise}, l'outil rapporte ${pct(k.r.re)} après impôt et le capital coûte ${pct(k.cmpc)} : l'année ${verdict === "cree" ? `crée ${eur(k.eva)}` : `détruit ${eur(-k.eva)}`} de valeur.`,
+          ...(lEquipementSeLit
+            ? []
+            : [
+                `L'arène a aussi rejoué l'année avec un équipement de plus, « ${machine} », payé par un emprunt : le résultat net passerait de ${eur(s.resultatNet)} à ${eur(avec.resultatNet)}, une perte. Sans bénéfice, l'arène ne prélève pas d'impôt, et les rentabilités après impôt du chapitre ne se lisent plus : il ne mesure pas la valeur que créerait cet équipement.`,
+              ]),
           "Être rentable ne suffit pas : il faut l'être plus que ce qu'exigent ceux qui financent l'outil. Le CMPC est le taux de référence de toute décision : un investissement, un rachat, un changement de structure créent de la valeur quand ils rapportent plus que lui sur le capital qu'ils mobilisent. L'endettement abaisse le CMPC tant que la dette coûte moins que les capitaux propres, mais il fait monter l'exigence des associés avec le risque qu'il leur fait porter.",
         ];
       },

@@ -1,8 +1,9 @@
-import { botDecisions, type BotProfile } from "../../engine/bots";
-import { runGame } from "../../engine/simulation/runGame";
+import type { BotProfile } from "../../engine/bots";
+import { runGame, type DecisionProviderContext } from "../../engine/simulation/runGame";
 import type { CompanyRoundResult, CompanyState, EngineScenarioConfig, RoundDecisions } from "../../engine/types";
 import { scenarioByCode } from "../scenarios/registry";
 import { GRAINE_DU_COURS } from "./cas";
+import { decisionDuCours, scenarioDuCours } from "./arene-du-cours";
 
 /**
  * L'ANNÉE DE LA PME REJOUÉE AVEC UNE DÉCISION DE GESTION (parcours BTS GPME).
@@ -39,7 +40,7 @@ export function rejouerAvec(
   const deja = annees.get(k);
   if (deja) return deja;
   const def = scenarioByCode(code);
-  const joue = scenario({ ...def.scenario, roundsCount: 4, impotSurLExercice: true });
+  const joue = scenario(scenarioDuCours(def.scenario, 4));
   const entreprises: CompanyState[] = [
     def.company("joueur", def.playerTeamName, "bot", "balanced"),
     ...def.bots.slice(0, 2).map((b) => def.company(b.id, b.name, "bot", b.profile)),
@@ -51,8 +52,8 @@ export function rejouerAvec(
     providers: Object.fromEntries(
       entreprises.map((e) => [
         e.id,
-        (ctx: { state: CompanyState; roundIndex: number }) => {
-          const d = botDecisions(e.botProfile as BotProfile, { scenario: joue, state: ctx.state, roundIndex: ctx.roundIndex });
+        (ctx: DecisionProviderContext) => {
+          const d = decisionDuCours(e.botProfile as BotProfile, joue, ctx);
           if (e.id !== "joueur") return d;
           return change(ctx.roundIndex, d) ?? d;
         },

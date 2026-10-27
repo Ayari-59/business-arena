@@ -28,6 +28,9 @@ import { MARCHES } from "./marche-et-part-de-marche";
  *     du concurrent le moins cher ; la défaillance d'un concurrent, quand le moteur en déclare
  *     une ; l'événement de l'année que le scénario déclenche, et ce qu'il a fait au résultat ou
  *     à la demande, mesuré en rejouant l'année sans lui (gestion-de-la-pme.ts).
+ *   Sur l'année du cours, dont les concurrents sont assainis (arene-du-cours.ts), aucun ne fait
+ *   défaut : le constat de défaillance reste écrit pour une partie où le moteur en déclarerait
+ *   une, mais aucune entreprise du chapitre ne le lit.
  *
  * Le sens de chaque constat suit une règle écrite ici, jamais une liste propre à une entreprise :
  * un bénéfice est une force, une perte une faiblesse, et ainsi de suite.

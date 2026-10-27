@@ -240,7 +240,10 @@ describe.each(ENTREPRISES_DU_DIAGNOSTIC)("le diagnostic stratégique chez %s", (
     const o = suiviDesObjectifs(cas);
     expect([d.entreprise.ventes, d.demande]).toEqual([o.ventesDeLAnnee, o.demandeDeLAnnee]);
     expect(d.demande).toBe(d.entreprise.ventes + d.manquees);
-    expect(Math.abs(d.demande - somme(joueur.map(demandees)))).toBeLessThanOrEqual(1);
+    // Ventes et ventes manquées s'arrondissent à l'unité trimestre par trimestre : la demande
+    // recomposée ne s'écarte de celle du moteur que de ces arrondis, pas d'une unité de plus.
+    const arrondis = somme(joueur.map((r) => Math.abs(Math.round(vendues(r)) - vendues(r)) + Math.abs(Math.round(manquees(r)) - manquees(r))));
+    expect(Math.abs(d.demande - somme(joueur.map(demandees)))).toBeLessThanOrEqual(arrondis + 1e-6);
     expect(d.servie).toBe(auDixieme((d.entreprise.ventes / d.demande) * 100));
     expect(d.caManque).toBe(Math.round(d.manquees * d.entreprise.prix));
     expect(d.evolutionDuMarche).toBe(auDixieme((Math.round(potentiel(joueur.at(-1)!)) / Math.round(potentiel(joueur[0]!)) - 1) * 100));
@@ -338,16 +341,20 @@ describe("le diagnostic stratégique, sur les huit entreprises", () => {
     expect([...resultats].sort()).toEqual(["faiblesse", "force"]);
     const marches = new Set(ds.map((d) => d.constats.find((k) => k.code === "demande-du-marche")!.categorie));
     expect([...marches].sort()).toEqual(["menace", "opportunite"]);
-    // Un concurrent fait défaut dans certaines entreprises, pas dans toutes.
+    // Sur l'année du cours (concurrents assainis, arene-du-cours.ts), aucun concurrent ne fait
+    // défaut : le constat de défaillance n'est lu dans aucune entreprise. Les opportunités
+    // viennent alors du marché lui-même : la demande qui monte, et un événement de l'année.
     const defauts = ds.map((d) => d.concurrents.some((x) => x.defaillance));
-    expect(defauts).toContain(true);
-    expect(defauts).toContain(false);
+    expect(defauts.every((x) => !x)).toBe(true);
+    expect(ds.flatMap((d) => d.constats.map((k) => k.code)).filter((k) => k.startsWith("defaillance-"))).toEqual([]);
+    const sources = new Set(ds.flatMap((d) => d.constats.filter((k) => k.categorie === "opportunite").map((k) => (k.code.startsWith("evenement-") ? "evenement" : k.code))));
+    expect([...sources].sort()).toEqual(["demande-du-marche", "evenement"]);
   });
 
   it("chez NOVA, les chiffres du diagnostic", () => {
     const d = diagnostic(casDeLEntreprise("nova"));
-    expect([d.entreprise.part, d.evolutionDuMarche, d.servie]).toEqual([17.9, 179.2, 52.2]);
-    expect([d.entreprise.resultat, d.tresorerie, d.verdict]).toEqual([-15881, -30000, "corriger"]);
+    expect([d.entreprise.part, d.evolutionDuMarche, d.servie]).toEqual([20.2, 179.2, 62.3]);
+    expect([d.entreprise.resultat, d.tresorerie, d.verdict]).toEqual([29213, -22516, "corriger"]);
   });
 });
 
@@ -410,8 +417,8 @@ describe("se fixer des objectifs, sur les huit entreprises", () => {
 
   it("chez NOVA, les chiffres du suivi", () => {
     const o = suiviDesObjectifs(casDeLEntreprise("nova"));
-    expect([o.capacite, o.objectif, o.objectifDeLAnnee, o.ventesDeLAnnee, o.realisation, o.verdict]).toEqual([7000, 4900, 19600, 20344, 103.8, "tenu"]);
-    expect(o.trimestres.map((t) => t.ecart)).toEqual([143, 129, 1550, -1078]);
+    expect([o.capacite, o.objectif, o.objectifDeLAnnee, o.ventesDeLAnnee, o.realisation, o.verdict]).toEqual([7000, 4900, 19600, 22924, 117, "tenu"]);
+    expect(o.trimestres.map((t) => t.ecart)).toEqual([143, 674, 1789, 718]);
   });
 });
 

@@ -17,6 +17,7 @@ import {
 import {
   LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS,
   deuxProjets,
+  fisherSeLit,
   machineSuivante,
   tauxQuiAnnule,
 } from "../../src/config/cours/chapitres/le-tri-et-le-choix-entre-deux-projets";
@@ -55,7 +56,6 @@ import type { Chapitre, Etape, EtatDuCours } from "../../src/config/cours/types"
 const pres = (a: number, b: number, ecart = 0.02) => expect(Math.abs(a - b), `${a} et ${b}`).toBeLessThanOrEqual(ecart);
 const is = (r: CompanyRoundResult) => r.incomeStatement;
 const somme = (tours: readonly CompanyRoundResult[], f: (r: CompanyRoundResult) => number) => tours.reduce((t, r) => t + f(r), 0);
-const tn = (r: CompanyRoundResult) => r.balanceSheet.cash - r.balanceSheet.overdraft;
 const exercices = (tours: readonly CompanyRoundResult[]) => [0, 1, 2].map((e) => tours.slice(4 * e, 4 * e + 4));
 const permises = (ch: Chapitre) => ENTREPRISES_DU_COURS.filter((x) => !ch.entreprises || ch.entreprises.codes.includes(x));
 
@@ -219,17 +219,22 @@ describe("les deux chapitres et leur place au programme", () => {
 
   it("les entreprises écartées le sont pour la raison que le chapitre leur donne", () => {
     const ecartees = ENTREPRISES_DU_COURS.filter((x) => !(ENTREPRISES_DE_L_ACTUALISATION as readonly string[]).includes(x));
-    expect(ecartees).toEqual(["nova", "bistrot", "conseil", "batiment"]);
-    // NOVA touche le plafond de son découvert : l'écart de trésorerie n'y dit plus rien.
-    const plafond = scenarioByCode("nova").scenario.finance.overdraftLimit;
-    expect(projetSansInvestir("nova").filter((r) => tn(r) <= -plafond + 1).length).toBeGreaterThan(0);
-    // LA TABLE D'AUGUSTIN et MARTEL & FILS finissent un exercice en perte.
-    for (const code of ["bistrot", "batiment"]) {
-      expect(exercices(projetSansInvestir(code)).some((ex) => somme(ex, (r) => is(r).pretaxIncome) < 0), code).toBe(true);
+    expect(ecartees).toEqual(["bistrot", "conseil", "ecommerce", "batiment", "transport"]);
+    // LA TABLE D'AUGUSTIN finit chaque exercice en perte.
+    expect(exercices(projetSansInvestir("bistrot")).every((ex) => somme(ex, (r) => is(r).pretaxIncome) < 0)).toBe(true);
+    // MARTEL & FILS finit son premier exercice en perte avec la machine suivante du catalogue.
+    const premier = exercices(projetAvec("batiment", [machineSuivante("batiment")]))[0]!;
+    expect(somme(premier, (r) => is(r).pretaxIncome)).toBeLessThan(0);
+    // Chez ATLAS CONSEIL, PIXEL & CO et ROUTE & CIE, la machine ne fait rien vendre de plus.
+    for (const code of ["conseil", "ecommerce", "transport"]) {
+      pres(somme(projetAvec(code, [machineDuChapitre(code)]), soldUnits), somme(projetSansInvestir(code), soldUnits), 0.5);
     }
-    // Chez ATLAS CONSEIL, la machine ne fait rien vendre de plus.
-    const m = machineDuChapitre("conseil");
-    pres(somme(projetAvec("conseil", [m]), soldUnits), somme(projetSansInvestir("conseil"), soldUnits), 0.5);
+    // Ailleurs, chacune des deux machines fait vendre.
+    for (const code of ENTREPRISES_DE_L_ACTUALISATION) {
+      for (const m of [machineDuChapitre(code), machineSuivante(code)]) {
+        expect(somme(projetAvec(code, [m]), soldUnits) - somme(projetSansInvestir(code), soldUnits), `${code} : ${m.code}`).toBeGreaterThan(0.5);
+      }
+    }
   });
 
   it("une défaillance se tranche avant d'additionner : le rejeu qui défaille est refusé", () => {
@@ -371,20 +376,28 @@ describe.each([...ENTREPRISES_DE_L_ACTUALISATION])("la valeur actuelle nette che
       pres(fa, fb, 0.01);
       expect(k.fisherAuDessus).toBe(k.vanPrefere === "B");
     } else expect(k.dSansActualiser).toBeLessThanOrEqual(k.dCout);
-    if (k.conflit) {
+    if (k.conflit && k.retenu !== "aucun") {
       // Le cas du cours : le petit projet a le meilleur TRI, le grand la meilleure VAN, sous le taux de Fisher.
       expect(k.triPrefere).toBe("A");
       expect(k.fisher).not.toBeNull();
       expect(k.fisher!.taux).toBeGreaterThan(TAUX_TRIMESTRIEL);
       expect(k.fisher!.taux).toBeLessThan(Math.min(k.ra.taux, k.rb.taux));
     }
+    if (k.retenu === "aucun") {
+      // Aucun projet acceptable : les deux VAN et les deux TRI sont sous le coût du capital, et le classement ne décide rien.
+      expect(Math.max(k.a.van, k.b.van)).toBeLessThanOrEqual(0);
+      expect(Math.max(k.ra.taux, k.rb.taux)).toBeLessThan(TAUX_TRIMESTRIEL);
+      expect(fisherSeLit(k)).toBe(false);
+      if (k.conflit) expect(juste(LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS, "classement", cas)).toBe(`La VAN préfère le projet ${k.vanPrefere}, le TRI préfère le projet ${k.triPrefere}`);
+    }
+    expect(fisherSeLit(k)).toBe(k.conflit && k.retenu !== "aucun");
     const ch = chapitreDuCas(LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS, cas);
-    expect(ch.etapes.some((e) => e.id === "fisher")).toBe(k.conflit);
+    expect(ch.etapes.some((e) => e.id === "fisher")).toBe(fisherSeLit(k));
     expect(attendus(LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS, "van", cas)).toEqual([k.a.van, k.b.van]);
     expect(attendus(LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS, "encadrer", cas)).toEqual([k.ra.vanLo, k.ra.vanHi, k.ra.interpolation]);
     expect(attendus(LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS, "tri", cas)).toEqual([k.rb.triPct, k.ra.triAnnuelPct, k.rb.triAnnuelPct]);
     expect(attendus(LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS, "indices", cas)).toEqual([k.a.ip, k.b.ip, ...(k.a.delai !== null ? [k.a.delai] : []), ...(k.b.delai !== null ? [k.b.delai] : [])]);
-    if (k.conflit) expect(attendus(LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS, "fisher", cas)).toEqual([k.fisher!.triPct, k.fisher!.triAnnuelPct]);
+    if (fisherSeLit(k)) expect(attendus(LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS, "fisher", cas)).toEqual([k.fisher!.triPct, k.fisher!.triAnnuelPct]);
     expect(juste(LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS, "choix", cas)).toBe(
       k.retenu === "aucun" ? "Aucun des deux : aucun ne crée de valeur au coût du capital" : `Le projet ${k.retenu}, « ${k.retenu === "A" ? a.name : b.name} »`,
     );
@@ -424,9 +437,9 @@ describe("les verdicts varient avec l'entreprise", () => {
   const cas = ENTREPRISES_DE_L_ACTUALISATION.map((c) => casDeLEntreprise(c));
   it("le classement, le cas de la revente et celui des deux machines ne disent pas la même chose partout", () => {
     expect(new Set(cas.map((c) => deuxProjets(c).conflit))).toEqual(new Set([true, false]));
-    expect(new Set(cas.map((c) => deuxProjets(c).retenu))).toEqual(new Set(["A", "B"]));
+    expect(new Set(cas.map((c) => deuxProjets(c).retenu))).toEqual(new Set(["A", "B", "aucun"]));
     expect(new Set(cas.map((c) => revendrePlusTot(c).verdict))).toEqual(new Set(["garder-cree-plus", "revendre-detruit"]));
-    expect(new Set(cas.map((c) => acheterLesDeux(c).verdict))).toEqual(new Set(["les-deux", "le-meilleur-seul"]));
+    expect(new Set(cas.map((c) => acheterLesDeux(c).verdict))).toEqual(new Set(["les-deux", "le-meilleur-seul", "aucune"]));
     // Le délai actualisé d'un projet manque quelque part : l'étape le dit sans le demander.
     expect(cas.some((c) => deuxProjets(c).b.delai === null)).toBe(true);
   });

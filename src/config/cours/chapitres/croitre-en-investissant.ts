@@ -46,9 +46,12 @@ const gagne = (x: number) => (x >= 0 ? `gagne ${eur(x)}` : `perd ${eur(-x)}`);
  * d'avant le correctif recompte la machine achetée à chaque trimestre suivant. Une partie créée
  * aujourd'hui porte ce drapeau ; le cours le pose pour jouer l'achat comme elle.
  *
- * Là où la capacité n'est pas ce qui limite les ventes (ATLAS CONSEIL, où l'équipe plafonne bien
- * avant l'outil), la machine ne vend rien de plus, et le chapitre le dit : croître ne paie pas
- * toujours.
+ * Là où la capacité n'est pas ce qui limite les ventes, la machine ne vend rien de plus, et le
+ * chapitre le dit : croître ne paie pas toujours. Sur l'année du cours, c'est le cas de huit
+ * entreprises sur neuf : chez ATLAS CONSEIL, l'équipe plafonne bien avant l'outil ; ailleurs, la
+ * gestion équilibrée produit d'après ses ventes du tour d'avant, sous la capacité de son outil.
+ * Seule VOLT FITNESS, qui produit à pleine capacité, vend davantage avec la machine. La branche
+ * « la demande ne suit pas » reste écrite pour une année où la machine ferait vendre sans payer.
  */
 
 /** Le trimestre de l'achat : le premier de l'année, pour que l'arène en montre toute la suite. */

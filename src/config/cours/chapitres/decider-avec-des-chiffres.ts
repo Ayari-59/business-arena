@@ -40,17 +40,18 @@ export const AVEC_LA_PUBLICITE = 1;
 export const SANS_PUBLICITE = 0;
 
 /**
- * Les entreprises où le chapitre se joue : toutes sauf la boutique en ligne. Sans publicité,
- * elle perd l'essentiel de ses clients et cesse son activité avant la fin de l'année (la garde
- * le vérifie) : il n'y aurait plus deux années complètes à comparer.
+ * Les entreprises où le chapitre se joue : toutes. Sur l'année du cours (concurrents assainis,
+ * arene-du-cours.ts), chacune vend encore à chaque trimestre sans publicité (la garde le
+ * vérifie) : il y a partout deux années complètes à comparer. La boutique en ligne, qui cessait
+ * son activité sans publicité avant ce correctif, en est désormais.
  */
-export const ENTREPRISES_DU_CHOIX = ENTREPRISES_DU_COURS.filter((c) => c !== "ecommerce");
+export const ENTREPRISES_DU_CHOIX = ENTREPRISES_DU_COURS;
 
 /** Un montant à la française, avec le signe moins typographique ; retranché, un négatif va entre parenthèses. */
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
 const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const ventesEcrites = (n: number) => (n === 0 ? "aucune vente" : Math.abs(n) === 1 ? `${qte(n)} vente` : `${qte(n)} ventes`);
+const ventesEcrites = (n: number) => (Math.abs(n) === 1 ? `${qte(n)} vente` : `${qte(n)} ventes`);
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /** Le budget de publicité de chaque trimestre multiplié par `facteur`, marque et références comprises. */
@@ -111,9 +112,14 @@ export function deuxChoix(c: Cas) {
   const margeGagnee = avec.marge - sans.marge;
   const ecartDeResultat = avec.resultat - sans.resultat;
   const verdict: Verdict = ecartDeResultat > 0 ? "garder" : "s-en-passer";
+  // Sans publicité déjà, des clients repartent sans être servis à chaque trimestre : la demande
+  // que la publicité ajoute ne trouve rien de plus à acheter.
+  const manquees = (r: CompanyRoundResult) => Object.values(r.market.bySegment).reduce((t, v) => t + v.lost, 0);
+  const sansPubliciteDejaEnManque = anneeAvecLaPublicite(c.code, SANS_PUBLICITE).every((r) => manquees(r) >= 0.5);
   return {
     avec,
     sans,
+    sansPubliciteDejaEnManque,
     budget,
     margeParVente,
     ventesAGagner,
@@ -164,7 +170,7 @@ function previsionEtConstat(k: ReturnType<typeof deuxChoix>) {
   if (k.previsionJuste) {
     return k.ventesGagnees >= k.ventesAGagner
       ? `La prévision avait vu juste : il fallait ${qte(k.ventesAGagner)} ventes de plus pour payer la publicité, elle en a fait gagner ${qte(k.ventesGagnees)}.`
-      : `La prévision avait vu juste : il fallait ${qte(k.ventesAGagner)} ventes de plus pour payer la publicité, elle n'en a fait gagner que ${qte(k.ventesGagnees)}.`;
+      : `La prévision avait vu juste : il fallait ${qte(k.ventesAGagner)} ventes de plus pour payer la publicité, elle ${k.ventesGagnees > 0 ? `n'en a fait gagner que ${qte(k.ventesGagnees)}` : "n'en a fait gagner aucune"}.`;
   }
   const parVente = k.margeParVenteGagnee ?? 0;
   return k.ventesGagnees < k.ventesAGagner
@@ -187,11 +193,6 @@ export const DECIDER_AVEC_DES_CHIFFRES: Chapitre = {
     "Comparer la prévision à ce qui s'est vraiment passé",
   ],
   libre: false,
-  entreprises: {
-    codes: ENTREPRISES_DU_CHOIX,
-    pourquoi:
-      "sans publicité, la boutique en ligne perd la plupart de ses clients et cesse son activité avant la fin de l'année : il n'y aurait plus deux années complètes à comparer.",
-  },
   etapes: [
     {
       id: "intro",
@@ -303,7 +304,15 @@ export const DECIDER_AVEC_DES_CHIFFRES: Chapitre = {
       explication: (c) => {
         const k = deuxChoix(c);
         return [
-          `La publicité a fait gagner ${ventesEcrites(k.ventesGagnees)} et ${eur(k.margeGagnee)} de marge, pour ${eur(k.budget)} de dépense. ${
+          `${
+            k.ventesGagnees === 0
+              ? `La publicité n'a fait gagner ${k.margeGagnee === 0 ? "ni vente ni marge" : `aucune vente, et ${eur(k.margeGagnee)} de marge`}, pour ${eur(k.budget)} de dépense.${
+                  k.sansPubliciteDejaEnManque
+                    ? " Même sans elle, des clients repartaient chaque trimestre sans être servis, faute d'une production suffisante : la demande qu'elle ajoute ne trouve rien de plus à acheter."
+                    : ""
+                }`
+              : `La publicité a fait gagner ${ventesEcrites(k.ventesGagnees)} et ${eur(k.margeGagnee)} de marge, pour ${eur(k.budget)} de dépense.`
+          } ${
             k.ecartDeResultat > 0
               ? `Sa marge dépasse son coût : avec elle, le résultat de l'activité est plus haut de ${eur(k.ecartDeResultat)}.`
               : `Sa marge ne couvre pas son coût : sans elle, le résultat de l'activité aurait été plus haut de ${eur(-k.ecartDeResultat)}.`

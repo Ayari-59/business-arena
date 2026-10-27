@@ -16,6 +16,7 @@ import { machineSuivante } from "./chapitres/le-tri-et-le-choix-entre-deux-proje
 import { REMISE_DE_LA_PROMOTION } from "./chapitres/le-prix-affiche";
 import { FOND_DE_CAISSE, PART_EN_ESPECES } from "./chapitres/tenir-la-caisse";
 import { METIERS } from "./metiers";
+import { FACTEUR_DU_GRAND_ENTRETIEN } from "./chapitres/le-deficit-reporte";
 import { SEUILS_ABC } from "./negociation";
 import { scenarioByCode, scenarioCodeForLevel } from "../scenarios/registry";
 import { DIFFICULTY_PRESETS } from "../difficulty";
@@ -872,8 +873,9 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
       "À chaque tour, relevez la ligne « Impôt sur les sociétés » du compte de résultat, ou « Impôt rendu » après un tour de perte. Additionnez les quatre tours : retrouvez-vous le taux de l'impôt appliqué au résultat avant impôt de l'année ? Le budget de trésorerie fait-il sortir la même somme ?",
   }),
   "le-deficit-reporte": (c) => ({
-    niveau: 1,
-    faire: `${partie(c, 1)} Jouez la partie au-delà du quatrième tour, dans le second exercice.`,
+    // Le grand entretien du chapitre : le budget de maintenance se règle au niveau 2.
+    niveau: 2,
+    faire: `${partie(c, 2)} Aux quatre premiers tours, mettez dans « Budget maintenance » ${FACTEUR_DU_GRAND_ENTRETIEN} fois le budget proposé, puis jouez la partie au-delà du quatrième tour avec le budget proposé.`,
     lieux: ["compte-de-resultat"],
     chercher:
       "Si les quatre premiers tours finissent en perte, regardez au cinquième la ligne « dont déficit antérieur imputé (report) » du compte de résultat : l'impôt du tour se calcule-t-il sur le résultat diminué de ce déficit ? Sinon, l'impôt du cinquième tour est-il le taux de l'impôt appliqué à son résultat avant impôt ?",

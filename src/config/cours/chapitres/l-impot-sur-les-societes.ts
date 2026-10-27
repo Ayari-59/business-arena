@@ -44,13 +44,14 @@ const aLArrondiPres = (arene: number, cours: number) =>
  * Ce n'est pas « La clôture », qui calcule l'impôt depuis la balance et le passe au journal (695
  * et 444) : ici, l'impôt se calcule depuis les trimestres, et le chapitre suit son paiement.
  *
- * LES ENTREPRISES. L'année du cours finit en perte chez NOVA, LA TABLE D'AUGUSTIN et ATLAS
- * CONSEIL : pas d'impôt à calculer. Le chapitre se joue dans les six autres ; « Le déficit
- * reporté » reprend les années en perte.
+ * LES ENTREPRISES. L'année du cours finit en perte chez LA TABLE D'AUGUSTIN seule : pas d'impôt
+ * à calculer. Le chapitre se joue dans les huit autres. « Le déficit reporté » ne reprend pas
+ * cette année en perte, que l'exercice suivant ne rattrape pas : il fait perdre une année en
+ * bénéfice par une décision du chapitre (`FACTEUR_DU_GRAND_ENTRETIEN`).
  */
 
 /** Les entreprises où l'année du cours finit en bénéfice : celles où l'impôt se calcule. */
-export const ENTREPRISES_IMPOSABLES = ["boutique", "hotel", "ecommerce", "fitness", "batiment", "transport"] as const;
+export const ENTREPRISES_IMPOSABLES = ["nova", "boutique", "hotel", "conseil", "ecommerce", "fitness", "batiment", "transport"] as const;
 
 /** Le trimestre dont le chapitre fait calculer l'acompte : le dernier de l'exercice. */
 export const TRIMESTRE_DE_L_ACOMPTE = 4;
@@ -178,7 +179,7 @@ export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
   entreprises: {
     codes: ENTREPRISES_IMPOSABLES,
     pourquoi:
-      "ce chapitre calcule l'impôt d'une année en bénéfice, et l'année du cours finit en perte chez NOVA, LA TABLE D'AUGUSTIN et ATLAS CONSEIL ; leur cas est celui du chapitre « Le déficit reporté ».",
+      "ce chapitre calcule l'impôt d'une année en bénéfice, et l'année du cours finit en perte chez LA TABLE D'AUGUSTIN : il n'y a pas d'impôt à calculer.",
   },
   etapes: [
     {
@@ -189,7 +190,7 @@ export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
       texte: (c) => {
         const k = impotDeLAnnee(c);
         return [
-          `L'impôt sur les sociétés se calcule sur le bénéfice d'un exercice, l'année entière, pas sur un trimestre. Voici les ${k.trimestres.length} trimestres de ${c.entreprise} dans l'arène : le résultat avant impôt de chacun, ce que l'activité a laissé une fois toutes les charges payées, intérêts compris.`,
+          `L'impôt sur les sociétés se calcule sur le bénéfice d'un exercice, l'année entière, pas sur un trimestre. Voici les ${k.trimestres.length} trimestres ${dE(c.entreprise)} dans l'arène : le résultat avant impôt de chacun, ce que l'activité a laissé une fois toutes les charges payées, intérêts compris.`,
           `L'arène applique un seul taux, celui du scénario, ${pct(k.tauxPct)}, à tout le bénéfice de l'exercice, et prend pour bénéfice imposable le résultat avant impôt, tel quel. En droit, le résultat fiscal part du résultat comptable, puis réintègre les charges que la loi ne déduit pas et retire certains produits ; l'arène n'en fait rien. Elle simplifie, et ce chapitre dit où.`,
         ];
       },

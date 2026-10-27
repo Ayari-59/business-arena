@@ -110,9 +110,15 @@ describe("le personnel et l'outil : la place dans le parcours", () => {
   });
 
   it("les verdicts varient d'une entreprise à l'autre : la réponse se lit dans les chiffres", () => {
-    expect(new Set(ENTREPRISES_OU_LE_POSTE_COMPTE.map((c) => departDUnSalarie(casDeLEntreprise(c)).verdict)).size).toBe(2);
-    expect(new Set(ENTREPRISES_OU_LE_POSTE_COMPTE.map((c) => remplacementAnticipe(casDeLEntreprise(c)).verdict)).size).toBe(2);
-    expect(new Set(ENTREPRISES_DU_COURS.map((c) => entretienDeLOutil(casDeLEntreprise(c)).verdict)).size).toBe(3);
+    // Le départ ne se joue plus que chez NOVA : un seul verdict s'y lit. L'autre se calcule encore là où le
+    // poste vide ne coûte aucune vente, hors du chapitre : la réponse vient des chiffres, pas d'une constante.
+    expect(ENTREPRISES_OU_LE_POSTE_COMPTE.map((c) => departDUnSalarie(casDeLEntreprise(c)).verdict)).toEqual(["le-depart-coute-plus"]);
+    expect(ENTREPRISES_OU_LE_POSTE_COMPTE.map((c) => remplacementAnticipe(casDeLEntreprise(c)).verdict)).toEqual(["recruter-tot"]);
+    expect(new Set(ENTREPRISES_DU_COURS.map((c) => departDUnSalarie(casDeLEntreprise(c)).verdict)).size).toBe(2);
+    expect(new Set(ENTREPRISES_DU_COURS.map((c) => remplacementAnticipe(casDeLEntreprise(c)).verdict)).size).toBe(2);
+    // L'entretien : rien ne se perd là où l'outil ne limite pas l'activité, l'économie se perd ailleurs. Aucune
+    // entreprise, cette année, ne perd des ventes en gardant l'économie : « l'économie tient » ne se lit pas.
+    expect([...new Set(ENTREPRISES_DU_COURS.map((c) => entretienDeLOutil(casDeLEntreprise(c)).verdict))].sort()).toEqual(["l-economie-se-perd", "rien-ne-se-perd"]);
     // Seul le bistrot fait jouer l'entretien sur les rebuts : l'étape des rebuts et la réponse qui les nomme ne vivent que là.
     expect(ENTREPRISES_DU_COURS.filter((c) => sensibiliteDesRebuts(c) > 0)).toEqual(["bistrot"]);
   });
@@ -157,12 +163,26 @@ describe.each(ENTREPRISES_OU_LE_POSTE_COMPTE)("le départ d'un salarié chez %s"
     expect(r.margePerdue).toBeGreaterThan(0);
     expect(r.capacitePerdue).toBe(r.capaciteAvant - r.capaciteVide);
     expect(r.margePerdue).toBe(r.margeAvant - r.margeVide);
-    expect(r.coutDuDepart).toBe(r.margePerdue + r.recrutement - r.salaireNonVerse);
-    // Le trimestre vide, et lui seul, porte le départ : avant et après, le résultat est celui de l'économie, ou le même.
+    expect(r.margePerdueTotale).toBe(r.margePerdue + r.margePerdueEnsuite);
+    expect(r.coutDuDepart).toBe(r.margePerdueTotale + r.recrutement - r.salaireNonVerse);
+    // Le trimestre 1 porte l'économie, le trimestre vide la vacance : sa marge, le recrutement, le salaire non versé.
     const ecart = (k: number) => resultat(depart[k]!) - resultat(reference[k]!);
     pres(ecart(0), r.economie);
-    pres(-ecart(TRIMESTRE_DU_RECRUTEMENT - 1), r.coutDuDepart);
-    for (let k = TRIMESTRE_DU_RECRUTEMENT; k < reference.length; k++) pres(ecart(k), 0, 0.01);
+    pres(-ecart(TRIMESTRE_DU_RECRUTEMENT - 1), r.margePerdue + r.recrutement - r.salaireNonVerse);
+    // Ensuite, l'équipe et ses charges sont revenues : l'écart de résultat n'est plus que de la marge. La gestion
+    // prépare d'après ses ventes du trimestre d'avant : moins vendu, elle prépare moins, et vend moins.
+    let suite = 0;
+    for (let k = TRIMESTRE_DU_RECRUTEMENT; k < reference.length; k++) {
+      pres(depart[k]!.incomeStatement.fixedCosts, reference[k]!.incomeStatement.fixedCosts, 0.01);
+      pres(ecart(k), depart[k]!.incomeStatement.grossMargin - reference[k]!.incomeStatement.grossMargin, 0.01);
+      expect(soldUnits(depart[k - 1]!)).toBeLessThan(soldUnits(reference[k - 1]!) - 0.5);
+      expect(depart[k]!.production.planned).toBeLessThan(reference[k]!.production.planned - 0.5);
+      suite += ecart(k);
+    }
+    pres(-suite, r.margePerdueEnsuite, 2);
+    expect(r.ventesPerduesEnsuite).toBe(Math.round(surLAnnee(reference.slice(TRIMESTRE_DU_RECRUTEMENT), soldUnits)) - Math.round(surLAnnee(depart.slice(TRIMESTRE_DU_RECRUTEMENT), soldUnits)));
+    expect(r.ventesPerduesEnsuite).toBeGreaterThan(0);
+    expect(r.margePerdueEnsuite).toBeGreaterThan(0);
     expect(r.ecartDeResultat).toBe(r.resultatApres - r.resultatAvant);
     pres(r.ecartDeResultat, r.economie - r.coutDuDepart, 2);
     expect(r.verdict).toBe(r.ecartDeResultat < 0 ? "le-depart-coute-plus" : "l-economie-couvre");

@@ -27,7 +27,10 @@ const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
  * recrutement pour le même départ. Le départ remplacé au trimestre 2 est celui du chapitre
  * (`departDUnSalarie`) ; le recrutement dès l'annonce est la même année rejouée
  * (`rejouerAvec`), le remplaçant recruté au trimestre de la démission. Dans l'arène, il arrive
- * au trimestre suivant, celui où le salarié part : le poste n'est jamais vide.
+ * au trimestre suivant, celui où le salarié part : le poste n'est jamais vide. La marge que le
+ * poste vide fait perdre est celle du chapitre : pendant la vacance, puis les trimestres suivants,
+ * où la gestion prépare d'après ses ventes du trimestre d'avant. Recruté dès l'annonce, aucune ne
+ * se perd : l'année est celle du salaire baissé, le recrutement payé en plus.
  */
 
 /** Le trimestre où la gérante propose de recruter : celui de l'annonce du départ. */
@@ -49,7 +52,8 @@ export function anneeRemplaceeTot(code: string) {
 export function remplacementAnticipe(c: Cas) {
   const r = departDUnSalarie(c);
   const tot = anneeRemplaceeTot(c.code);
-  // Recruté dès l'annonce, le remplaçant arrive quand le salarié part : ni marge perdue, ni salaire non versé.
+  // Recruté dès l'annonce, le remplaçant arrive quand le salarié part : ni marge perdue, ni salaire non versé,
+  // ni ventes que la gestion ne prépare plus ensuite.
   const coutTot = r.recrutement;
   const gainDuRecrutementTot = r.coutDuDepart - coutTot;
   const venduesTot = Math.round(surLAnnee(tot, soldUnits));
@@ -108,6 +112,9 @@ export const RECRUTER_DES_L_ANNONCE_DU_DEPART: Situation = {
             { libelle: "Coût du recrutement", valeurs: [eur(e.r.recrutement), eur(e.r.recrutement)] },
             { libelle: "Trimestres où le poste est vide", valeurs: ["0", String(TRIMESTRE_DU_RECRUTEMENT + 1 - e.r.trimestreVide)] },
             { libelle: "Marge perdue pendant que le poste est vide", valeurs: [eur(0), eur(e.r.margePerdue)] },
+            ...(e.r.margePerdueEnsuite !== 0
+              ? [{ libelle: `Marge perdue sur ${e.r.trimestresEnsuite}, la gestion préparant moins`, valeurs: [eur(0), eur(e.r.margePerdueEnsuite)] }]
+              : []),
             { libelle: "Salaire non versé pendant que le poste est vide", valeurs: [eur(0), eur(e.r.salaireNonVerse)] },
           ],
         };
@@ -128,7 +135,7 @@ export const RECRUTER_DES_L_ANNONCE_DU_DEPART: Situation = {
             libelle: `Coût du départ, recruté au trimestre ${TRIMESTRE_DU_RECRUTEMENT}`,
             attendu: e.r.coutDuDepart,
             tolerance: 1,
-            calcul: `${eur(e.r.margePerdue)} + ${eur(e.r.recrutement)} − ${eur(e.r.salaireNonVerse)} = ${eur(e.r.coutDuDepart)}`,
+            calcul: `${eur(e.r.margePerdue)}${e.r.margePerdueEnsuite !== 0 ? ` + ${retranche(e.r.margePerdueEnsuite)}` : ""} + ${eur(e.r.recrutement)} − ${eur(e.r.salaireNonVerse)} = ${eur(e.r.coutDuDepart)}`,
           },
           {
             libelle: `Coût du départ, recruté au trimestre ${TRIMESTRE_DE_L_ANNONCE}`,
@@ -148,8 +155,8 @@ export const RECRUTER_DES_L_ANNONCE_DU_DEPART: Situation = {
         const e = remplacementAnticipe(c);
         return [
           e.gainDuRecrutementTot > 0
-            ? `Recruter dès l'annonce coûte le même recrutement, et le salaire du trimestre ${e.r.trimestreVide} est versé ; mais aucune vente ne se perd. La marge sauvée (${eur(e.r.margePerdue)}) vaut plus que le salaire versé (${eur(e.r.salaireNonVerse)}) : le départ coûte ${eur(e.gainDuRecrutementTot)} de moins.`
-            : `Recruter dès l'annonce sauve ${eur(e.r.margePerdue)} de marge, mais le salaire du trimestre ${e.r.trimestreVide} (${eur(e.r.salaireNonVerse)}) est alors versé, et il pèse plus : le départ coûte ${eur(-e.gainDuRecrutementTot)} de plus.`,
+            ? `Recruter dès l'annonce coûte le même recrutement, et le salaire du trimestre ${e.r.trimestreVide} est versé ; mais aucune vente ne se perd. La marge sauvée (${eur(e.r.margePerdueTotale)}) vaut plus que le salaire versé (${eur(e.r.salaireNonVerse)}) : le départ coûte ${eur(e.gainDuRecrutementTot)} de moins.`
+            : `Recruter dès l'annonce sauve ${eur(e.r.margePerdueTotale)} de marge, mais le salaire du trimestre ${e.r.trimestreVide} (${eur(e.r.salaireNonVerse)}) est alors versé, et il pèse plus : le départ coûte ${eur(-e.gainDuRecrutementTot)} de plus.`,
         ];
       },
     },
@@ -210,14 +217,14 @@ export const RECRUTER_DES_L_ANNONCE_DU_DEPART: Situation = {
             juste: tot,
             retour: tot
               ? `Oui : recruté dès l'annonce, le remplaçant arrive quand le salarié part. Le résultat de l'année est meilleur de ${eur(e.ecartEntreLesDates)} : la marge des ventes servies paie largement le salaire versé.`
-              : `Non : le poste ne resterait pas vide, mais le salaire versé (${eur(e.r.salaireNonVerse)}) coûte plus que la marge sauvée (${eur(e.r.margePerdue)}). Le résultat de l'année serait moins bon de ${eur(-e.ecartEntreLesDates)}.`,
+              : `Non : le poste ne resterait pas vide, mais le salaire versé (${eur(e.r.salaireNonVerse)}) coûte plus que la marge sauvée (${eur(e.r.margePerdueTotale)}). Le résultat de l'année serait moins bon de ${eur(-e.ecartEntreLesDates)}.`,
           },
           {
             texte: "Attendons son départ : le salaire économisé vaut plus que la marge",
             juste: !tot,
             retour: !tot
-              ? `Oui, cette année : le salaire non versé (${eur(e.r.salaireNonVerse)}) pèse plus que la marge perdue (${eur(e.r.margePerdue)}), et le résultat est meilleur de ${eur(-e.ecartEntreLesDates)} en attendant. Mais ${c.entreprise} vend ${qte(e.r.ventesPerdues)} ${c.unites} de moins pendant le trimestre vide : des clients qui ne sont pas servis.`
-              : `Non : en attendant, ${c.entreprise} perd ${eur(e.r.margePerdue)} de marge, plus que le salaire économisé (${eur(e.r.salaireNonVerse)}). Le résultat de l'année serait moins bon de ${eur(e.ecartEntreLesDates)}.`,
+              ? `Oui, cette année : le salaire non versé (${eur(e.r.salaireNonVerse)}) pèse plus que la marge perdue (${eur(e.r.margePerdueTotale)}), et le résultat est meilleur de ${eur(-e.ecartEntreLesDates)} en attendant. Mais ${c.entreprise} vend ${qte(e.r.ventesPerdues)} ${c.unites} de moins pendant le trimestre vide : des clients qui ne sont pas servis.`
+              : `Non : en attendant, ${c.entreprise} perd ${eur(e.r.margePerdueTotale)} de marge, plus que le salaire économisé (${eur(e.r.salaireNonVerse)}). Le résultat de l'année serait moins bon de ${eur(e.ecartEntreLesDates)}.`,
           },
           {
             texte: "La date ne change rien : le remplaçant arrive le jour où on le recrute",

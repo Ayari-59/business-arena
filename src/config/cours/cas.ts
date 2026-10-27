@@ -1,10 +1,11 @@
-import { botDecisions, type BotProfile } from "../../engine/bots";
-import { runGame } from "../../engine/simulation/runGame";
+import type { BotProfile } from "../../engine/bots";
+import { runGame, type DecisionProviderContext } from "../../engine/simulation/runGame";
 import type { CompanyRoundResult, CompanyState } from "../../engine/types";
 import { scenarioByCode } from "../scenarios/registry";
 import { nomEntreprise } from "../scenarios/presentation";
 import { auCentime } from "../../pedagogy/cours/etats";
 import { METIERS, type CompteDuMetier } from "./metiers";
+import { decisionDuCours, GRAINE_DU_COURS, scenarioDuCours } from "./arene-du-cours";
 
 /**
  * LE CAS D'UNE ENTREPRISE : LES MONTANTS DU COURS, TIRÉS DE LA SIMULATION.
@@ -154,8 +155,7 @@ export interface AnneeDeLArene {
   arene: { resultatAvantImpot: number; impot: number; resultatNet: number };
 }
 
-/** La graine du trimestre simulé : le même cas pour tous. */
-export const GRAINE_DU_COURS = 20260101;
+export { GRAINE_DU_COURS };
 
 /** La part des ventes gardée pour la façon de payer que le premier trimestre n'a pas connue. */
 const PART_DE_REPLI = 0.2;
@@ -204,7 +204,7 @@ function facture(quantite: number, prixUnitaire: number, tauxTva: number): Factu
 /** Le premier trimestre de l'entreprise, joué par le moteur. */
 function premierTrimestre(code: string): { joueur: CompanyRoundResult; depart: CompanyState } {
   const def = scenarioByCode(code);
-  const scenario = { ...def.scenario, roundsCount: 1 };
+  const scenario = scenarioDuCours(def.scenario, 1);
   const entreprises: CompanyState[] = [
     def.company("joueur", def.playerTeamName, "bot", "balanced"),
     ...def.bots.slice(0, 2).map((b) => def.company(b.id, b.name, "bot", b.profile)),
@@ -217,8 +217,7 @@ function premierTrimestre(code: string): { joueur: CompanyRoundResult; depart: C
       entreprises.map((e) => [
         e.id,
         // Un seul tour : pas de tour précédent à lire.
-        (ctx: { state: CompanyState; roundIndex: number }) =>
-          botDecisions(e.botProfile as BotProfile, { scenario, state: ctx.state, roundIndex: ctx.roundIndex }),
+        (ctx: DecisionProviderContext) => decisionDuCours(e.botProfile as BotProfile, scenario, ctx),
       ]),
     ),
   });
@@ -236,8 +235,8 @@ export function anneeJouee(code: string) {
   const deja = annees.get(code);
   if (deja) return deja;
   const def = scenarioByCode(code);
-  // L'année de l'arène telle qu'une partie créée aujourd'hui la joue : l'impôt sur l'exercice.
-  const scenario = { ...def.scenario, roundsCount: FINS_DES_TRIMESTRES.length, impotSurLExercice: true };
+  // L'année de l'arène telle qu'une partie créée aujourd'hui la joue (arene-du-cours.ts).
+  const scenario = scenarioDuCours(def.scenario, FINS_DES_TRIMESTRES.length);
   const entreprises: CompanyState[] = [
     def.company("joueur", def.playerTeamName, "bot", "balanced"),
     ...def.bots.slice(0, 2).map((b) => def.company(b.id, b.name, "bot", b.profile)),
@@ -249,8 +248,7 @@ export function anneeJouee(code: string) {
     providers: Object.fromEntries(
       entreprises.map((e) => [
         e.id,
-        (ctx: { state: CompanyState; roundIndex: number }) =>
-          botDecisions(e.botProfile as BotProfile, { scenario, state: ctx.state, roundIndex: ctx.roundIndex }),
+        (ctx: DecisionProviderContext) => decisionDuCours(e.botProfile as BotProfile, scenario, ctx),
       ]),
     ),
   });

@@ -36,7 +36,7 @@ import type { Situation } from "../types";
 /**
  * LA HAUSSE DU TAUX : 3 points, une hypothèse du cours. C'est l'ordre de grandeur de la remontée
  * des taux des crédits aux entreprises en 2022 et 2023, ce qu'un emprunt à taux variable a payé
- * en plus en deux ans. À 3,5 points, MARTEL & FILS finirait l'année en perte : l'impôt ne
+ * en plus en deux ans. À 4 points, MARTEL & FILS finirait l'année en perte : l'impôt ne
  * suivrait plus le taux, et la relation du levier après impôt ne tiendrait plus.
  */
 export const HAUSSE_DU_TAUX_VARIABLE = 0.03;

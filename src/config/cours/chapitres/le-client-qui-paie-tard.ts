@@ -25,7 +25,10 @@ import type { Chapitre } from "../types";
  * L'arène rejoue l'année avec la même somme mobilisée au dernier trimestre, par l'un puis par
  * l'autre (gestion-de-la-pme.ts). Au-delà du plafond de découvert, la banque cède d'elle-même
  * des créances à un taux plus fort (l'affacturage forcé, src/engine/finance/statements.ts) :
- * le chapitre le montre là où l'année du cours le rencontre.
+ * le chapitre le montre là où l'année du cours le rencontre. L'année du cours, jouée comme une
+ * partie d'aujourd'hui (arene-du-cours.ts), ne le rencontre dans aucune entreprise : la cession
+ * d'office reste calculée, et ses phrases ne se lisent que si une année la fait revenir (la garde
+ * vérifie qu'aucune ne la rencontre).
  */
 
 /**
@@ -69,7 +72,10 @@ export function clientQuiPaieTard(c: Cas) {
     };
   });
   const caDeLAnnee = Math.round(surLAnnee(ref, (r) => r.incomeStatement.revenue));
-  const caComptant = caDeLAnnee - clienteles.reduce((t, x) => t + x.caDeLAnnee, 0);
+  // Le chiffre d'affaires comptant se calcule sur les montants exacts, puis s'arrondit : deux arrondis
+  // retranchés l'un de l'autre feraient naître un euro comptant là où toutes les clientèles paient à crédit.
+  const caComptant =
+    Math.round(surLAnnee(ref, (r) => r.incomeStatement.revenue) - clienteles.reduce((t, x) => t + surLAnnee(ref, (r) => r.market.bySegment[x.code]?.revenue ?? 0), 0)) || 0;
   const caDuTrimestre = auCentime(fin.incomeStatement.revenue);
   const caDuTrimestreTtc = auCentime(caDuTrimestre * (1 + tva));
   const creancesNees = auCentime(clienteles.reduce((t, x) => t + x.creance, 0));

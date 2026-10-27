@@ -1,9 +1,11 @@
+import type { CompanyRoundResult } from "../../../engine/types";
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../pedagogy/cours/etats";
 import { scenarioByCode } from "../../scenarios/registry";
-import type { Cas } from "../cas";
+import { anneeJouee, type Cas } from "../cas";
+import { rejouerAvec } from "../gestion-de-la-pme";
 import type { Chapitre } from "../types";
-import { MAGASINS, accordeA, de, qte, referencesDuMagasin, stockAuDebut, trimestreDuCours } from "./recevoir-une-livraison";
+import { MAGASINS, accordeA, de, qte, referencesDuMagasin, stockAuDebut } from "./recevoir-une-livraison";
 
 /**
  * CHAPITRE : REMPLIR LE RAYON AVANT LA RUPTURE (CAP Équipier polyvalent du commerce, palier 1).
@@ -15,10 +17,13 @@ import { MAGASINS, accordeA, de, qte, referencesDuMagasin, stockAuDebut, trimest
  * par son prix. Un calcul simple par étape : une division, une soustraction, une multiplication.
  *
  * CE QUI VIENT DE L'ARÈNE. L'année du cours (`anneeJouee`) chez MAILLE & CO, référence par
- * référence. L'article étudié est celui d'un trimestre où la boutique n'en a rien commandé
- * (`planned` nul), qui commence avec du stock et finit en rupture (`lost` > 0) ; parmi eux, celui
- * dont la rupture a coûté le plus (`lost` × `price`). Le stock du début est celui de la fin du
- * trimestre d'avant (`stock.quantity`), la demande est ce que les clients ont acheté (`sold`)
+ * référence. La gestion du cours commande chaque article à chaque trimestre : l'année du cours n'a
+ * aucun article sans commande (la garde le vérifie). Le chapitre rejoue donc l'année avec une
+ * commande oubliée (`sansLaCommande`) : au trimestre étudié, la commande d'un seul article mise à
+ * zéro, la seule décision changée. L'article étudié est celui qui commence le trimestre avec du
+ * stock et le finit en rupture (`lost` > 0) ; parmi tous les trimestres et tous les articles,
+ * celui dont la rupture a coûté le plus (`lost` × `price`). Le stock du début est celui de la fin
+ * du trimestre d'avant (`stock.quantity`), la demande est ce que les clients ont acheté (`sold`)
  * plus ce qu'ils n'ont pas trouvé (`lost`), le trimestre dure `roundDays` jours.
  *
  * CE QUE L'ARÈNE NE FAIT PAS. Le moteur compte par trimestre, pas par jour : les ventes d'une
@@ -41,20 +46,34 @@ export const DELAI_DE_REASSORT = { jours: 42, annonce: "réassort en six semaine
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-/** Un article d'un trimestre de l'année du cours, vu du rayon. */
-export function articleDuTrimestre(code: string, trimestre: number, article: string) {
+/** Les trimestres de l'année du cours, ceux du joueur. */
+const anneeDuCours = (code: string) => anneeJouee(code).partie.rounds.map((t) => t.results["joueur"]!);
+
+/**
+ * L'année du cours rejouée avec une commande oubliée : au trimestre donné, rien de commandé pour
+ * l'article donné, la seule décision changée.
+ */
+export const sansLaCommande = (code: string, trimestre: number, article: string) =>
+  rejouerAvec(code, `remplir-le-rayon:sans-commande:${trimestre}:${article}`, (t, d) =>
+    t === trimestre && d.products?.[article] ? { ...d, products: { ...d.products, [article]: { ...d.products[article]!, productionPlan: 0 } } } : undefined,
+  );
+
+/** Un article d'un trimestre, vu du rayon : dans l'année du cours, ou dans les trimestres donnés. */
+export function articleDuTrimestre(code: string, trimestre: number, article: string, tours: readonly CompanyRoundResult[] = anneeDuCours(code)) {
   const s = scenarioByCode(code).scenario;
-  const r = trimestreDuCours(code, trimestre).products![article]!;
+  const r = tours[trimestre - 1]!.products![article]!;
   const a = referencesDuMagasin(code).find((x) => x.code === article)!;
-  const avant = trimestre > 1 ? trimestreDuCours(code, trimestre - 1).products![article]! : null;
+  const avant = trimestre > 1 ? tours[trimestre - 2]!.products![article]! : null;
   const vendues = Math.round(r.sold);
   const perdues = Math.round(r.lost);
   return {
     ...a,
     trimestre,
     jours: s.roundDays,
-    stock: stockAuDebut(code, trimestre)[article] ?? 0,
+    stock: avant ? Math.round(avant.stock.quantity) : (stockAuDebut(code, 1)[article] ?? 0),
     commandee: Math.round(r.planned),
+    /** Ce que la gestion du cours a commandé ce trimestre-là, dans l'année du cours. */
+    commandeeDansLAnnee: Math.round(anneeDuCours(code)[trimestre - 1]!.products![article]!.planned),
     vendues,
     perdues,
     demande: vendues + perdues,
@@ -64,15 +83,26 @@ export function articleDuTrimestre(code: string, trimestre: number, article: str
   };
 }
 
-/** L'article du chapitre : sans commande au trimestre, parti avec du stock, fini en rupture. */
+const enRupture = new Map<string, ReturnType<typeof articleDuTrimestre>>();
+
+/**
+ * L'article du chapitre : sa commande oubliée au trimestre, parti avec du stock, fini en rupture.
+ * Chaque trimestre et chaque article qui commence avec du stock se rejouent sans leur commande ;
+ * le chapitre retient la rupture qui a coûté le plus.
+ */
 export function articleEnRupture(code: string) {
+  const deja = enRupture.get(code);
+  if (deja) return deja;
   const candidats = [1, 2, 3, 4].flatMap((t) =>
     referencesDuMagasin(code)
-      .map((a) => articleDuTrimestre(code, t, a.code))
+      .filter((a) => (stockAuDebut(code, t)[a.code] ?? 0) > 0)
+      .map((a) => articleDuTrimestre(code, t, a.code, sansLaCommande(code, t, a.code)))
       .filter((x) => x.commandee === 0 && x.stock > 0 && x.perdues > 0),
   );
   if (candidats.length === 0) throw new Error(`Aucun article en rupture sans commande chez ${code}`);
-  return candidats.reduce((a, b) => (b.perdues * b.prix > a.perdues * a.prix ? b : a));
+  const x = candidats.reduce((a, b) => (b.perdues * b.prix > a.perdues * a.prix ? b : a));
+  enRupture.set(code, x);
+  return x;
 }
 
 /** Les chiffres du rayon : le rythme, les jours qui restent, le réassort, la rupture. */
@@ -138,7 +168,7 @@ export const REMPLIR_LE_RAYON: Chapitre = {
       texte: (c) => {
         const { x } = rayon(c);
         return [
-          `Au début du trimestre ${x.trimestre}, ${c.entreprise} a ${qte(x.stock)} ${x.pluriel} en stock, en réserve et en rayon. Pendant ce trimestre, elle n'en commande aucun${x.feminin ? "e" : ""}. Le tableau donne les chiffres de l'arène.`,
+          `Au début du trimestre ${x.trimestre}, ${c.entreprise} a ${qte(x.stock)} ${x.pluriel} en stock, en réserve et en rayon. Dans l'année du cours, elle en commande ${qte(x.commandeeDansLAnnee)} pendant ce trimestre. L'arène rejoue l'année avec cette commande oubliée : au trimestre ${x.trimestre}, elle n'en commande aucun${x.feminin ? "e" : ""}, et rien d'autre ne change. Le tableau donne les chiffres de l'arène rejouée.`,
           "Chaque matin, l'équipier remplit le rayon avec la réserve. Mais la réserve aussi se vide. S'il voit trop tard qu'il n'en reste presque plus, le rayon reste vide, et les clients repartent sans rien.",
           `L'arène compte par trimestre, pas par jour. Le cours suppose donc que les clients achètent au même rythme tous les jours du trimestre.`,
         ];
@@ -263,7 +293,7 @@ export const REMPLIR_LE_RAYON: Chapitre = {
       notions: ["stock", "revenue"],
       question: (c) => {
         const r = rayon(c);
-        return `Dans l'arène, la boutique a vendu ${qte(r.x.vendues)} ${r.x.pluriel} au trimestre ${r.x.trimestre}, pour ${qte(r.x.demande)} ${accordeA(r.x.feminin, "demandé")}. Le prix de vente : ${eur(r.x.prix)} pièce. Calculez les ${r.x.pluriel} que les clients n'ont pas ${accordeA(r.x.feminin, "trouvé")}, puis les ventes perdues en euros.`;
+        return `Dans l'arène rejouée, la boutique a vendu ${qte(r.x.vendues)} ${r.x.pluriel} au trimestre ${r.x.trimestre}, pour ${qte(r.x.demande)} ${accordeA(r.x.feminin, "demandé")}. Le prix de vente : ${eur(r.x.prix)} pièce. Calculez les ${r.x.pluriel} que les clients n'ont pas ${accordeA(r.x.feminin, "trouvé")}, puis les ventes perdues en euros.`;
       },
       champs: (c) => {
         const r = rayon(c);

@@ -8,8 +8,9 @@ import type { Situation } from "../types";
  * CAS PRATIQUE DU CHAPITRE « REMPLIR LE RAYON AVANT LA RUPTURE » : TENIR JUSQU'AU RÉASSORT (CAP
  * Équipier polyvalent du commerce, palier 1).
  *
- * Le chapitre suivait un article que la boutique n'avait pas commandé. Ici, une livraison arrive
- * pendant le même trimestre, et le responsable croit qu'elle suffira jusqu'au prochain réassort.
+ * Le chapitre rejouait un trimestre où la boutique oubliait la commande d'un article. Ici, l'année
+ * du cours telle qu'elle est jouée : une livraison arrive pendant le même trimestre, et le
+ * responsable croit qu'elle suffira jusqu'au prochain réassort.
  * L'élève ajoute la livraison au stock, refait le rythme et les jours avant la rupture, compare
  * au délai du fournisseur, lit ce que l'arène a compté de ventes perdues, et répond.
  *

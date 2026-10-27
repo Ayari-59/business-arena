@@ -1,8 +1,9 @@
-import { botDecisions, type BotProfile } from "../../engine/bots";
-import { runGame, soldUnits } from "../../engine/simulation/runGame";
+import type { BotProfile } from "../../engine/bots";
+import { runGame, soldUnits, type DecisionProviderContext } from "../../engine/simulation/runGame";
 import type { CompanyRoundResult, CompanyState, RoundDecisions } from "../../engine/types";
 import { scenarioByCode } from "../scenarios/registry";
 import { GRAINE_DU_COURS } from "./cas";
+import { decisionDuCours, scenarioDuCours } from "./arene-du-cours";
 
 /**
  * LES CONDITIONS DES RESSOURCES HUMAINES : CE QUE LE COURS SUPPOSE, ET POURQUOI.
@@ -57,7 +58,7 @@ export function rejouerLAnnee(code: string, cle: string, rh: (tour: number) => D
   const deja = annees.get(k);
   if (deja) return deja;
   const def = scenarioByCode(code);
-  const scenario = { ...def.scenario, roundsCount: 4, impotSurLExercice: true };
+  const scenario = scenarioDuCours(def.scenario, 4);
   const entreprises: CompanyState[] = [
     def.company("joueur", def.playerTeamName, "bot", "balanced"),
     ...def.bots.slice(0, 2).map((b) => def.company(b.id, b.name, "bot", b.profile)),
@@ -69,8 +70,8 @@ export function rejouerLAnnee(code: string, cle: string, rh: (tour: number) => D
     providers: Object.fromEntries(
       entreprises.map((e) => [
         e.id,
-        (ctx: { state: CompanyState; roundIndex: number }) => {
-          const d = botDecisions(e.botProfile as BotProfile, { scenario, state: ctx.state, roundIndex: ctx.roundIndex });
+        (ctx: DecisionProviderContext) => {
+          const d = decisionDuCours(e.botProfile as BotProfile, scenario, ctx);
           if (e.id !== "joueur") return d;
           const changee = rh(ctx.roundIndex);
           return changee ? { ...d, hr: changee } : d;
