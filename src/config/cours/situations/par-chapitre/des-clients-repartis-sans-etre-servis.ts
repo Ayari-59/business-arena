@@ -10,8 +10,9 @@ import type { Situation } from "../types";
  * CAS PRATIQUE DU CHAPITRE « LE DIAGNOSTIC STRATÉGIQUE » : DES CLIENTS REPARTIS SANS ÊTRE
  * SERVIS (Stratégie et management, palier 1).
  *
- * Le diagnostic de l'année range une faiblesse partout : des clients venus acheter sont
- * repartis sans rien, faute d'une production suffisante. La directrice générale veut
+ * Le diagnostic de l'année le relève partout : des clients venus acheter sont repartis sans
+ * rien, faute d'une production suffisante (une faiblesse, là où la demande servie reste sous le
+ * taux attendu). La directrice générale veut
  * comprendre cette faiblesse avant de décider : au trimestre où l'entreprise a perdu le plus de
  * ventes, combien cela a coûté, et ce qu'il aurait fallu, produire davantage avec ce qu'elle a,
  * ou augmenter sa capacité.
@@ -21,6 +22,9 @@ import type { Situation } from "../types";
  * les ventes manquées sont les plus nombreuses : la demande adressée à l'entreprise, ses ventes,
  * son chiffre d'affaires, sa capacité de production (la plus petite de celle de l'équipement et
  * de celle de l'équipe) et le stock qu'elle avait au début du trimestre.
+ *
+ * Une entreprise peut avoir déjà produit à pleine capacité ce trimestre-là : toute la demande
+ * manquée était alors hors de portée, et le texte le dit (`aPleineCapacite`).
  */
 
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
@@ -56,7 +60,8 @@ export function clientsRepartis(c: Cas) {
   const offreMaximale = t.capacite + t.stock;
   const horsDePortee = Math.max(0, t.demande - offreMaximale);
   const verdict: Verdict = horsDePortee > 0 ? "capacite" : "production";
-  return { trimestres, t, prix, caManque, offreMaximale, horsDePortee, servisEnPlus: t.manquees - horsDePortee, verdict };
+  const aPleineCapacite = t.production >= t.capacite;
+  return { trimestres, t, prix, caManque, offreMaximale, horsDePortee, servisEnPlus: t.manquees - horsDePortee, aPleineCapacite, verdict };
 }
 
 export const DES_CLIENTS_REPARTIS_SANS_ETRE_SERVIS: Situation = {
@@ -68,9 +73,9 @@ export const DES_CLIENTS_REPARTIS_SANS_ETRE_SERVIS: Situation = {
   commanditaire: "La directrice générale",
   titre: "Des clients repartis sans être servis",
   accroche:
-    "Le diagnostic range une faiblesse : des clients venus acheter sont repartis sans rien. Au trimestre où l'entreprise en a perdu le plus, ce que cela a coûté, et ce qu'il aurait fallu.",
+    "Le diagnostic le relève : des clients venus acheter sont repartis sans rien. Au trimestre où l'entreprise en a perdu le plus, ce que cela a coûté, et ce qu'il aurait fallu.",
   objectifs: [
-    "Mesurer une faiblesse : les ventes manquées et le chiffre d'affaires perdu",
+    "Mesurer les ventes manquées et le chiffre d'affaires perdu",
     "Comparer la demande à ce que l'entreprise pouvait offrir",
     "Distinguer un manque de production et un manque de capacité",
     "Répondre à la directrice, chiffre à l'appui",
@@ -162,9 +167,11 @@ export const DES_CLIENTS_REPARTIS_SANS_ETRE_SERVIS: Situation = {
       explication: (c) => {
         const k = clientsRepartis(c);
         return [
-          k.horsDePortee > 0
-            ? `En produisant à pleine capacité, l'entreprise aurait servi ${qte(k.servisEnPlus)} ${c.unites} de plus ; il en restait ${qte(k.horsDePortee)} hors de portée, que seule une capacité plus grande aurait servis.`
-            : `En produisant à pleine capacité, l'entreprise aurait servi toute la demande : elle a produit ${qte(k.t.production)} ${c.unites}, pour une capacité de ${qte(k.t.capacite)}.`,
+          k.aPleineCapacite
+            ? `L'entreprise a déjà produit à pleine capacité, ${qte(k.t.production)} ${c.unites} : toute la demande manquée, ${qte(k.horsDePortee)} ${c.unites}, était hors de portée, et seule une capacité plus grande l'aurait servie.`
+            : k.horsDePortee > 0
+              ? `En produisant à pleine capacité, l'entreprise aurait servi ${qte(k.servisEnPlus)} ${c.unites} de plus ; il en restait ${qte(k.horsDePortee)} hors de portée, que seule une capacité plus grande aurait servis.`
+              : `En produisant à pleine capacité, l'entreprise aurait servi toute la demande : elle a produit ${qte(k.t.production)} ${c.unites}, pour une capacité de ${qte(k.t.capacite)}.`,
         ];
       },
     },
@@ -191,7 +198,9 @@ export const DES_CLIENTS_REPARTIS_SANS_ETRE_SERVIS: Situation = {
             juste: k.verdict === "capacite",
             retour:
               k.verdict === "capacite"
-                ? `Oui : ${chiffres}. Produire à plein aurait déjà servi ${qte(k.servisEnPlus)} ${c.unites} de plus ; pour le reste, ${qte(k.horsDePortee)}, il faut une capacité plus grande : de l'équipement ou du personnel en plus.`
+                ? k.aPleineCapacite
+                  ? `Oui : ${chiffres}. L'entreprise produisait déjà à pleine capacité ; pour servir les ${qte(k.horsDePortee)} ${c.unites} qui manquaient, il faut une capacité plus grande : de l'équipement ou du personnel en plus.`
+                  : `Oui : ${chiffres}. Produire à plein aurait déjà servi ${qte(k.servisEnPlus)} ${c.unites} de plus ; pour le reste, ${qte(k.horsDePortee)}, il faut une capacité plus grande : de l'équipement ou du personnel en plus.`
                 : `Non : ${chiffres}. La capacité suffisait : augmenter la capacité coûterait sans servir un client de plus.`,
           },
           {

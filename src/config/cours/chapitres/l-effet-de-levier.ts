@@ -45,20 +45,25 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * suit pas le taux, et la relation après impôt ne tient plus), sans découvert (les agios courent
  * à un autre taux que l'emprunt, et le découvert du 31 décembre n'est pas la dette sur laquelle
  * les intérêts de l'année ont couru), et où l'entreprise doit plus aux banques qu'elle n'a en
- * caisse (sinon l'endettement net est négatif, et son coût n'a plus de sens). LA TABLE
- * D'AUGUSTIN finit l'année en perte ; NOVA la finit en bénéfice, mais à découvert ; MAILLE & CO,
- * ATLAS CONSEIL, PIXEL & CO et ROUTE & CIE ont plus de disponibilités que d'emprunts. Restent
- * L'ESCALE, VOLT FITNESS et MARTEL & FILS ; le test recompte la liste.
+ * caisse (sinon l'endettement net est négatif, et son coût n'a plus de sens). L'année que joue
+ * le bon gestionnaire finit en bénéfice partout ; NOVA la finit à découvert ; MAILLE & CO,
+ * LA TABLE D'AUGUSTIN, ATLAS CONSEIL, PIXEL & CO, MARTEL & FILS et ROUTE & CIE ont plus de
+ * disponibilités que d'emprunts. Restent L'ESCALE et VOLT FITNESS ; le test recompte la liste.
+ *
+ * Dans les deux, l'outil rapporte nettement plus que la dette ne coûte : l'année finit en levier,
+ * et les textes de la massue (le verdict, le seuil déjà franchi, la Rcp qui remonte avec l'apport)
+ * ne s'y lisent pas. Le seuil de massue, lui, se calcule partout : il dit de combien le résultat
+ * d'exploitation devrait baisser pour que la dette se retourne contre les associés.
  */
 
 /** Les entreprises où l'année du cours finit en bénéfice, avec un endettement net positif. */
-export const ENTREPRISES_DU_LEVIER = ["hotel", "fitness", "batiment"] as const;
+export const ENTREPRISES_DU_LEVIER = ["hotel", "fitness"] as const;
 
 /**
  * LA STRUCTURE REJOUÉE : un apport des associés au premier trimestre, qui rembourse autant
  * d'emprunt par anticipation (`finance.capitalIncrease` et `finance.loanRepayment`). La caisse
  * ne bouge pas, l'exploitation non plus : seule change la part de la dette dans le financement.
- * 50 000 € tiennent sous l'enveloppe d'apports des trois scénarios et sous l'emprunt restant dû,
+ * 50 000 € tiennent sous l'enveloppe d'apports des scénarios du chapitre et sous l'emprunt restant dû,
  * et laissent un endettement net positif partout. Le moteur honore ces deux décisions à tout
  * niveau ; la feuille de décision ne les ouvre qu'au niveau 4.
  */
@@ -272,7 +277,7 @@ export const L_EFFET_DE_LEVIER: Chapitre = {
   entreprises: {
     codes: ENTREPRISES_DU_LEVIER,
     pourquoi:
-      "Le levier se lit là où l'année finit en bénéfice, sans découvert, et où l'entreprise doit plus aux banques qu'elle n'a en caisse : L'ESCALE, VOLT FITNESS et MARTEL & FILS. LA TABLE D'AUGUSTIN finit l'année en perte ; NOVA la finit en bénéfice, mais à découvert, et ce découvert n'est pas la dette sur laquelle ses intérêts de l'année ont couru ; MAILLE & CO, ATLAS CONSEIL, PIXEL & CO et ROUTE & CIE ont plus de disponibilités que d'emprunts.",
+      "Le levier se lit là où l'année finit en bénéfice, sans découvert, et où l'entreprise doit plus aux banques qu'elle n'a en caisse : L'ESCALE et VOLT FITNESS. Toutes les entreprises finissent l'année en bénéfice, mais NOVA la finit à découvert, et ce découvert n'est pas la dette sur laquelle ses intérêts de l'année ont couru ; MAILLE & CO, LA TABLE D'AUGUSTIN, ATLAS CONSEIL, PIXEL & CO, MARTEL & FILS et ROUTE & CIE ont plus de disponibilités que d'emprunts.",
   },
   etapes: [
     {

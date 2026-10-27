@@ -18,8 +18,8 @@ import { MARCHES } from "./marche-et-part-de-marche";
  * concurrents et son environnement lui apportent ou lui imposent (le diagnostic externe :
  * opportunités et menaces). L'élève range les constats de l'année, puis en tire une conclusion.
  *
- * Les constats se calculent sur l'année de l'arène (`anneeJouee`), l'entreprise jouée par la
- * gestion équilibrée face aux deux concurrents du scénario :
+ * Les constats se calculent sur l'année de l'arène (`anneeJouee`), l'entreprise jouée par le
+ * bon gestionnaire (arene-du-cours.ts) face aux deux concurrents du scénario :
  *   · internes : le résultat de l'exercice, la trésorerie nette de fin d'année, la part de la
  *     demande servie (les ventes manquées faute d'avoir produit assez), la qualité perçue et le
  *     taux de marge face au concurrent le moins cher, la part de marché face au premier
@@ -215,6 +215,8 @@ function calculer(c: Cas) {
       libelle: `Résultat de l'exercice ${dE(c.entreprise)}`,
       montant: e.resultat,
       categorie: e.resultat > 0 ? "force" : "faiblesse",
+      // Sur l'année du cours, le bon gestionnaire finit en bénéfice dans les huit entreprises :
+      // la perte reste écrite pour une partie qui en ferait une, aucune entreprise ne la lit.
       pourquoi:
         e.resultat > 0
           ? "Un bénéfice : l'activité de l'année paie toutes ses charges. Il tient aux choix de l'entreprise, prix, production, dépenses : c'est une force, interne."
@@ -493,7 +495,7 @@ export const LE_DIAGNOSTIC_STRATEGIQUE: Chapitre = {
         const d = diagnostic(c);
         return [
           `${c.entreprise} tient ${pct(d.entreprise.part)} du marché de l'année. La demande du marché ${d.evolutionDuMarche >= 0 ? "monte" : "baisse"} de ${pct(Math.abs(d.evolutionDuMarche))} du premier au dernier trimestre : c'est un fait du marché, externe.`,
-          `L'entreprise n'a servi que ${pct(d.servie)} des clients venus acheter : ${qte(d.manquees)} ${c.unites} ${accordPluriel(c, "demandé")} ne l'ont pas été, faute d'une production suffisante. Ce chiffre-là dépend d'elle : il est interne.`,
+          `${d.servie >= TAUX_DE_SERVICE_ATTENDU * 100 ? `L'entreprise a servi ${pct(d.servie)} des clients venus acheter : ${accordPluriel(c, "seul")}` : `L'entreprise n'a servi que ${pct(d.servie)} des clients venus acheter :`} ${qte(d.manquees)} ${c.unites} ${accordPluriel(c, "demandé")} ne l'ont pas été, faute d'une production suffisante. Ce chiffre-là dépend d'elle : il est interne.`,
         ];
       },
     },
@@ -527,16 +529,18 @@ export const LE_DIAGNOSTIC_STRATEGIQUE: Chapitre = {
       options: (c) => {
         const d = diagnostic(c);
         const comptes = `résultat de ${eur(d.entreprise.resultat)}, trésorerie de ${eur(d.tresorerie)}`;
+        // Des comptes qui ne sont pas sains : une perte, ou un bénéfice avec une trésorerie à découvert.
+        const aCorriger = d.entreprise.resultat > 0 ? "ce qui pèse sur sa trésorerie" : "ce qui lui fait perdre de l'argent";
         const retours: Record<Verdict, string> = {
           saisir:
             d.verdict === "saisir"
               ? `Oui : les comptes sont sains (${comptes}) et le marché offre des opportunités. L'entreprise peut s'appuyer sur ses forces pour les saisir, sans oublier ses faiblesses.`
               : d.verdict === "corriger"
-                ? `Non : les opportunités sont là, mais les comptes ne sont pas sains (${comptes}). Courir après la demande sans corriger ce qui fait perdre de l'argent creuserait les difficultés.`
+                ? `Non : les opportunités sont là, mais les comptes ne sont pas sains (${comptes}). Courir après la demande sans corriger ${aCorriger} creuserait les difficultés.`
                 : "Non : le diagnostic ne montre aucune opportunité à saisir.",
           corriger:
             d.verdict === "corriger"
-              ? `Oui : le marché offre des opportunités, mais les comptes ne sont pas sains (${comptes}). L'entreprise corrige d'abord ce qui la fait perdre de l'argent, puis elle pourra saisir la demande.`
+              ? `Oui : le marché offre des opportunités, mais les comptes ne sont pas sains (${comptes}). L'entreprise corrige d'abord ${aCorriger}, puis elle pourra saisir la demande.`
               : d.verdict === "saisir"
                 ? `Non : les comptes sont sains (${comptes}). L'entreprise a les moyens de saisir les opportunités, en s'appuyant sur ses forces.`
                 : "Non : le diagnostic ne montre aucune opportunité ; la priorité est de se protéger des menaces.",

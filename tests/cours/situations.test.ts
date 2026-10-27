@@ -171,7 +171,10 @@ describe("le rendez-vous à la banque", () => {
       expect(v.va, code).toBeGreaterThan(0);
       choix.add(f.choix);
     }
-    expect([...choix].sort()).toEqual(["apport", "autofinancement", "emprunt"]);
+    // Dans l'année du bon gestionnaire, la capacité d'autofinancement couvre l'équipement partout
+    // sauf à l'hôtel, dont l'emprunt dépasserait les capitaux propres : la réponse « emprunt » ne se
+    // rencontre plus (financer-l-entreprise.ts). Si elle revient, cette garde le dira.
+    expect([...choix].sort()).toEqual(["apport", "autofinancement"]);
   });
 });
 

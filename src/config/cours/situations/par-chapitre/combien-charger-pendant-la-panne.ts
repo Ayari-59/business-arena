@@ -9,9 +9,11 @@ import type { Situation } from "../types";
  * CAS PRATIQUE DU CHAPITRE « LIVRER À TEMPS : LES DÉLAIS ET LE SERVICE » : COMBIEN CHARGER PENDANT
  * LA PANNE (2de pro GATL, le transport et la logistique, palier 1).
  *
- * Le chapitre a montré qu'une panne fait baisser la qualité de service même quand toutes les
- * palettes partent : la flotte roule au-dessus de son seuil de surchauffe, et les clients demandent
- * moins ensuite. Ici, la panne est annoncée avant le trimestre, et le chef d'exploitation hésite. Garder
+ * Le chapitre a montré qu'une panne retire de la place à la flotte, et qu'une flotte chargée
+ * au-dessus de son seuil de surchauffe livre moins bien : les clients demandent moins ensuite. Ici,
+ * le chef d'exploitation a prévu de charger plus que la gestion de l'année, pour servir une partie
+ * des clients refusés (`PART_PREVUE_PAR_LE_CHEF`) ; la panne est annoncée avant le trimestre, et ce
+ * chargement passerait au-dessus du seuil de la flotte en panne. Il hésite. Garder
  * le chargement prévu ? Le baisser pour rester au seuil, et refuser des clients de plus ? Ou remplir
  * toutes les places qui restent ? L'élève calcule la capacité pendant la panne, le chargement qui
  * tient au seuil, ce qu'il coûte tout de suite en marge, et lit dans l'arène ce que chaque choix
@@ -19,16 +21,26 @@ import type { Situation } from "../types";
  *
  * Tout vient de l'arène : la panne (`transport_panne_flotte`, posée au trimestre du chapitre), le
  * seuil de surchauffe du moteur (`seuilDeSurchauffe`), le chargement prévu (les « Palettes à
- * charger » de l'année du cours), le prix et le coût variable d'une palette. L'année est rejouée
- * trois fois avec la panne, une par chargement ; le chargement prévu reprend l'année du chapitre
- * (même clé, même année). Chaque année s'additionne jusqu'à une éventuelle défaillance, et la
- * meilleure désigne la réponse : elle se calcule, elle ne s'écrit pas.
+ * charger » prévues par le chef, une part de la flotte au complet), le prix et le coût variable
+ * d'une palette. L'année est rejouée trois fois avec la panne, une par chargement. Chaque année
+ * s'additionne jusqu'à une éventuelle défaillance, et la meilleure désigne la réponse : elle se
+ * calcule, elle ne s'écrit pas.
  *
  * Les trimestres suivants sont joués par la gestion du cours, qui prévoit chaque trimestre son
- * chargement d'après ses ventes du trimestre d'avant (arene-du-cours.ts). Charger moins pendant la
- * panne, c'est donc aussi charger moins ensuite ; et une demande en plus ne compte que si la flotte
- * l'aurait chargée. L'explication le dit quand l'année rejouée le montre, et seulement alors.
+ * chargement d'après la demande du trimestre d'avant, ventes manquées comprises (arene-du-cours.ts) ;
+ * une demande en plus ne compte que si la flotte l'aurait chargée. L'explication le dit quand
+ * l'année rejouée le montre, et seulement alors.
  */
+
+/**
+ * Le chargement que le chef d'exploitation a prévu pour le trimestre de la panne, avant de
+ * l'apprendre : 70 % de la flotte au complet. C'est plus que la gestion de l'année du cours, qui
+ * refuse des clients ce trimestre-là ; pendant la panne, ce chargement passe au-dessus du seuil de
+ * surchauffe sans dépasser la capacité qui reste (la garde le vérifie). L'hypothèse est celle du
+ * cas : dans l'année du chapitre, le chargement du trimestre tient sous le seuil, et la question
+ * ne s'y pose pas.
+ */
+export const PART_PREVUE_PAR_LE_CHEF = 0.7;
 
 export type ChoixPendantLaPanne = "garder" | "baisser" | "remplir";
 
@@ -63,22 +75,19 @@ function calculer(c: Cas) {
   const capacite = Math.round(r.production.machineCapacity);
   const capaciteExacte = r.production.machineCapacity * disponibilite;
   const capacitePendantLaPanne = Math.round(capaciteExacte);
-  const prevu = r.production.planned;
+  const prevu = Math.round(PART_PREVUE_PAR_LE_CHEF * r.production.machineCapacity);
   // Le chargement le plus haut qui reste au seuil : le moteur ne fait baisser la qualité qu'au-dessus.
   const auSeuil = Math.floor(seuil * capaciteExacte + 1e-6);
   const { marge } = prixEtCout(r);
 
   const plans: Record<ChoixPendantLaPanne, number> = { garder: prevu, baisser: auSeuil, remplir: capaciteExacte };
   const jouer = (choix: ChoixPendantLaPanne) =>
-    choix === "garder"
-      ? // L'année du chapitre : la panne, le chargement prévu.
-        rejouerAvec(c.code, `livrer-a-temps:panne-au-trimestre-${T}`, () => undefined, avecLaPanne(T))
-      : rejouerAvec(
-          c.code,
-          `combien-charger-pendant-la-panne:${choix}`,
-          (tour, d) => (tour === T ? { ...d, productionPlan: plans[choix] } : undefined),
-          avecLaPanne(T),
-        );
+    rejouerAvec(
+      c.code,
+      `combien-charger-pendant-la-panne:${choix}`,
+      (tour, d) => (tour === T ? { ...d, productionPlan: plans[choix] } : undefined),
+      avecLaPanne(T),
+    );
   const lire = (choix: ChoixPendantLaPanne) => {
     const a = jouer(choix);
     const x = a[T - 1]!;
@@ -107,6 +116,8 @@ function calculer(c: Cas) {
     capacitePendantLaPanne,
     seuil: Math.round(seuil * 100),
     prevu: prevuArrondi,
+    /** Le chargement de la gestion dans l'année du cours, sans la panne. */
+    chargementDeLAnnee: Math.round(r.production.planned),
     demande: Math.round(demandeDuTrimestre(r)),
     partPrevue: auDixieme((prevu / capaciteExacte) * 100),
     auSeuil,
@@ -280,13 +291,16 @@ export const COMBIEN_CHARGER_PENDANT_LA_PANNE: Situation = {
           ];
         const demandeEnPlus = a.baisser.demandeEnsuite - a.garder.demandeEnsuite;
         const chargeesEnMoins = a.garder.chargeesEnsuite - a.baisser.chargeesEnsuite;
+        const chargeesEnPlus = -chargeesEnMoins;
         return [
           demandeEnPlus > 0
             ? `Au seuil, la qualité de service tient : les clients demandent ${qte(demandeEnPlus)} ${c.unites} de plus les trimestres suivants.${a.baisser.refuseEnsuite ? ` Mais ${c.entreprise} y refuse déjà des clients : cette demande en plus ne se charge pas.` : ""}`
             : "",
           chargeesEnMoins > 0
-            ? `La gestion prévoit chaque trimestre son chargement d'après ses ventes du trimestre d'avant : avec ${qte(a.garder.livrees - a.baisser.livrees)} ${c.unites} de moins livrées au trimestre ${T}, elle en charge ${qte(chargeesEnMoins)} de moins ensuite.`
-            : "",
+            ? `Les trimestres suivants, la gestion en charge ${qte(chargeesEnMoins)} de moins qu'avec le chargement prévu.`
+            : chargeesEnPlus > 0
+              ? `Les trimestres suivants, la gestion en charge ${qte(chargeesEnPlus)} de plus qu'avec le chargement prévu.`
+              : "",
           k.ecartDeLAnnee < 0
             ? `Au seuil, les trimestres suivants perdent ${eur(-k.ponctualiteGardee)}, et l'année ${eur(-k.ecartDeLAnnee)}.`
             : `Au seuil, les trimestres suivants perdent ${eur(-k.ponctualiteGardee)}, mais l'année gagne ${eur(k.ecartDeLAnnee)}.`,

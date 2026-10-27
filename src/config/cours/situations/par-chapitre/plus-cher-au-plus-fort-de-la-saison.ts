@@ -137,13 +137,16 @@ export const PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON: Situation = {
       tableau: tableauDuMarche,
       texte: (c) => {
         const x = plusCherAuPlusFort(c);
+        const vides = x.avant.enVente - x.avant.vendues;
         const constat =
           x.refuses > 0
             ? `nous avons dû refuser ${qte(x.refuses)} nuitées faute de chambres en vente`
-            : "nous avons vendu ce que nous avions mis en vente";
+            : vides > 0
+              ? `il nous est resté ${qte(vides)} nuitées vides sur les ${qte(x.avant.enVente)} mises en vente, mais c'est notre plus forte saison`
+              : "nous avons vendu tout ce que nous avions mis en vente";
         return [
           `« Au ${rang(x.k)} trimestre, ${constat}. Je veux y monter la nuitée de ${pct(Math.round(HAUSSE_EN_HAUTE_SAISON * 100))}, de ${eur(x.avant.prix)} à ${eur(x.apres.prix)}, et seulement à ce trimestre. Dites-moi si c'est bien notre plus forte saison, ce que deviennent le taux d'occupation et le revenu par chambre de ce trimestre, et si l'année y gagne. »`,
-          "Pas de cours cette fois : les calculs sont ceux du chapitre. L'arène a rejoué l'année avec ce seul trimestre plus cher. Le reste, chaque gestion le décide comme dans l'année du cours, concurrents compris, sur ses ventes du trimestre d'avant.",
+          "Pas de cours cette fois : les calculs sont ceux du chapitre. L'arène a rejoué l'année avec ce seul trimestre plus cher. Les autres trimestres gardent le prix unique ; le reste, chaque gestion le décide comme dans l'année du cours, concurrents compris, sur ce que le trimestre d'avant lui a appris.",
         ];
       },
       repere: () => "À rendre : le coefficient saisonnier du trimestre, son taux d'occupation et son revenu par chambre aux deux prix, l'écart de résultat de l'année, et votre réponse.",
@@ -261,12 +264,13 @@ export const PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON: Situation = {
       titre: "Votre réponse au propriétaire",
       notions: ["occupancy_revpar"],
       question: () => "Quelle réponse rendez-vous au propriétaire ?",
+      // Monter et garder ont la même longueur : la bonne réponse ne se devine pas.
       options: (c) => {
         const x = plusCherAuPlusFort(c);
         const chiffres = `Au ${rang(x.k)} trimestre, le revenu par chambre disponible passe de ${eur(x.revparAvant)} à ${eur(x.revparApres)} ; sur l'année, le résultat net ${x.ecart >= 0 ? `monte de ${eur(x.ecart)}` : `baisse de ${eur(-x.ecart)}`}.`;
         return [
           {
-            texte: `Montez-la au ${rang(x.k)} trimestre : l'année y gagne`,
+            texte: `Montez-la au ${rang(x.k)} trimestre : la hausse rapporte plus qu'elle ne coûte`,
             juste: x.verdict === "monter",
             retour:
               x.verdict === "monter"
@@ -278,7 +282,7 @@ export const PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON: Situation = {
                 : `Non. ${chiffres}`,
           },
           {
-            texte: "Gardez le prix unique : la hausse fait perdre plus de clients qu'elle ne rapporte",
+            texte: "Gardez le prix unique : la hausse coûterait plus qu'elle ne rapporte",
             juste: x.verdict === "garder",
             retour: x.verdict === "garder" ? `Oui. ${chiffres}` : `Non. ${chiffres}`,
           },

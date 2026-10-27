@@ -219,15 +219,33 @@ describe("les deux chapitres et leur place au programme", () => {
 
   it("les entreprises écartées le sont pour la raison que le chapitre leur donne", () => {
     const ecartees = ENTREPRISES_DU_COURS.filter((x) => !(ENTREPRISES_DE_L_ACTUALISATION as readonly string[]).includes(x));
-    expect(ecartees).toEqual(["bistrot", "conseil", "ecommerce", "batiment", "transport"]);
-    // LA TABLE D'AUGUSTIN finit chaque exercice en perte.
-    expect(exercices(projetSansInvestir("bistrot")).every((ex) => somme(ex, (r) => is(r).pretaxIncome) < 0)).toBe(true);
-    // MARTEL & FILS finit son premier exercice en perte avec la machine suivante du catalogue.
-    const premier = exercices(projetAvec("batiment", [machineSuivante("batiment")]))[0]!;
-    expect(somme(premier, (r) => is(r).pretaxIncome)).toBeLessThan(0);
-    // Chez ATLAS CONSEIL, PIXEL & CO et ROUTE & CIE, la machine ne fait rien vendre de plus.
-    for (const code of ["conseil", "ecommerce", "transport"]) {
-      pres(somme(projetAvec(code, [machineDuChapitre(code)]), soldUnits), somme(projetSansInvestir(code), soldUnits), 0.5);
+    expect(ecartees).toEqual(["nova", "conseil", "batiment"]);
+    // Chez ATLAS CONSEIL, la machine ne fait rien vendre de plus.
+    pres(somme(projetAvec("conseil", [machineDuChapitre("conseil")]), soldUnits), somme(projetSansInvestir("conseil"), soldUnits), 0.5);
+    // Chez NOVA, elle fait vendre, mais moins cher : elle retire de l'EBE sur le projet, et aucun taux n'annule sa VAN.
+    const sansNova = projetSansInvestir("nova");
+    const avecNova = projetAvec("nova", [machineDuChapitre("nova")]);
+    const prixMoyen = (tours: readonly CompanyRoundResult[]) => somme(tours, (r) => is(r).revenue) / somme(tours, soldUnits);
+    expect(somme(avecNova, soldUnits)).toBeGreaterThan(somme(sansNova, soldUnits) + 0.5);
+    expect(prixMoyen(avecNova)).toBeLessThan(prixMoyen(sansNova));
+    const nova = projet("nova");
+    expect(nova.ebeTotal).toBeLessThan(0);
+    expect(tauxQuiAnnule(nova.cout, nova.flux, nova.vr.nette)).toBeNull();
+    // Chez MARTEL & FILS, les deux machines achetées ensemble valent plus que la somme de leurs VAN seules :
+    // leurs embauches additionnées coûtent plus que celles de l'ensemble.
+    expect(acheterLesDeux(casDeLEntreprise("batiment")).perdu).toBeLessThan(0);
+    const sansBat = projetSansInvestir("batiment");
+    const embauches = (ms: readonly EquipmentTypeDef[], p: "tresorerie" | "emprunt" = "tresorerie") =>
+      somme(projetAvec("batiment", ms, p), (r) => r.hr?.cost ?? 0) - somme(sansBat, (r) => r.hr?.cost ?? 0);
+    const [ma, mb] = [machineDuChapitre("batiment"), machineSuivante("batiment")];
+    expect(embauches([ma])).toBeGreaterThan(0);
+    expect(embauches([mb])).toBeGreaterThan(0);
+    expect(embauches([ma, mb], "emprunt")).toBeLessThan(embauches([ma]) + embauches([mb]));
+    // Partout ailleurs, les trois exercices finissent en bénéfice, avec et sans chacune des deux machines.
+    for (const code of ENTREPRISES_DE_L_ACTUALISATION) {
+      for (const tours of [projetSansInvestir(code), projetAvec(code, [machineDuChapitre(code)]), projetAvec(code, [machineSuivante(code)])]) {
+        expect(exercices(tours).every((ex) => somme(ex, (r) => is(r).pretaxIncome) > 0), code).toBe(true);
+      }
     }
     // Ailleurs, chacune des deux machines fait vendre.
     for (const code of ENTREPRISES_DE_L_ACTUALISATION) {
@@ -259,6 +277,11 @@ describe.each([...ENTREPRISES_DE_L_ACTUALISATION])("la valeur actuelle nette che
     expect(sans.slice(0, 4).map((r) => is(r).netIncome)).toEqual(anneeJouee(code).partie.rounds.map((x) => is(x.results["joueur"]!).netIncome));
     for (const ms of [[a], [b]]) for (const p of ["tresorerie", "emprunt"] as const) expect(projetAvec(code, ms, p).some((r) => r.defaillant)).toBe(false);
     expect(projetAvec(code, [a, b], "emprunt").some((r) => r.defaillant)).toBe(false);
+    // L'emprunt du même montant ne se contracte qu'au trimestre 1, et l'achat ne s'y reconduit pas ensuite.
+    for (const ms of [[a], [b], [a, b]]) {
+      const tours = projetAvec(code, ms, "emprunt");
+      expect(tours.map((r) => r.debt?.newLoan ?? 0)).toEqual(tours.map((_, k) => (k === 0 ? ms.reduce((x, m) => x + m.costPerUnit, 0) : 0)));
+    }
   });
 
   it("le moteur fait ce que dit le chapitre : décaissement au trimestre 1, service au trimestre 2, amortissement linéaire, valeur nette comptable", () => {
@@ -267,6 +290,8 @@ describe.each([...ENTREPRISES_DE_L_ACTUALISATION])("la valeur actuelle nette che
       const avec = projetAvec(code, [m]);
       const investi = (r: CompanyRoundResult) => r.cashFlow.items.filter((i) => i.label === "investissement").reduce((x, i) => x + i.amount, 0);
       pres(investi(avec[0]!) - investi(sans[0]!), -m.costPerUnit);
+      // L'achat ne se joue qu'au trimestre 1 : le bon gestionnaire, qui part de la décision jouée au tour d'avant, ne le reconduit pas.
+      for (let k = 1; k < DUREE_DU_PROJET; k++) expect(investi(avec[k]!), `${m.code} au trimestre ${k + 1}`).toBe(investi(sans[k]!));
       expect(is(avec[0]!).ebitda).toBe(is(sans[0]!).ebitda);
       for (let k = 1; k < DUREE_DU_PROJET; k++) pres(is(avec[k]!).depreciation - is(sans[k]!).depreciation, m.costPerUnit / m.depreciationRounds, 1e-6);
       const p = projet(code, [m]);
@@ -438,7 +463,7 @@ describe("les verdicts varient avec l'entreprise", () => {
   it("le classement, le cas de la revente et celui des deux machines ne disent pas la même chose partout", () => {
     expect(new Set(cas.map((c) => deuxProjets(c).conflit))).toEqual(new Set([true, false]));
     expect(new Set(cas.map((c) => deuxProjets(c).retenu))).toEqual(new Set(["A", "B", "aucun"]));
-    expect(new Set(cas.map((c) => revendrePlusTot(c).verdict))).toEqual(new Set(["garder-cree-plus", "revendre-detruit"]));
+    expect(new Set(cas.map((c) => revendrePlusTot(c).verdict))).toEqual(new Set(["garder-cree-plus", "revendre-detruit", "revendre-cree-plus"]));
     expect(new Set(cas.map((c) => acheterLesDeux(c).verdict))).toEqual(new Set(["les-deux", "le-meilleur-seul", "aucune"]));
     // Le délai actualisé d'un projet manque quelque part : l'étape le dit sans le demander.
     expect(cas.some((c) => deuxProjets(c).b.delai === null)).toBe(true);

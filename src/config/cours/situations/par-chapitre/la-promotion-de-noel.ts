@@ -8,8 +8,8 @@ import type { Situation } from "../types";
  * CAS PRATIQUE DU CHAPITRE « LE PRIX AFFICHÉ » : LA PROMOTION DE NOËL (CAP Équipier
  * polyvalent du commerce, palier 1).
  *
- * Au printemps, la promotion sur le pull le plus vendu a fait vendre plus. La responsable veut
- * la refaire à Noël, plus forte. L'élève calcule la nouvelle étiquette, lit le trimestre rejoué
+ * Aux soldes d'hiver, la promotion sur le pull le plus vendu a fait vendre plus (la garde le
+ * vérifie). La responsable veut la refaire à Noël, plus forte. L'élève calcule la nouvelle étiquette, lit le trimestre rejoué
  * par l'arène, et répond.
  *
  * Les chiffres sont ceux du chapitre (`promotionDuRayon` : le prix hors taxes de l'arène, la TVA
@@ -54,7 +54,7 @@ export const LA_PROMOTION_DE_NOEL: Situation = {
   commanditaire: "La responsable de la boutique",
   titre: "La promotion de Noël",
   accroche:
-    "La promotion du printemps a bien marché. La responsable veut la refaire à Noël, plus forte. Poser la nouvelle étiquette, lire ce que l'arène a vendu, et lui répondre.",
+    "La promotion des soldes d'hiver a fait vendre plus. La responsable veut la refaire à Noël, plus forte. Poser la nouvelle étiquette, lire ce que l'arène a vendu, et lui répondre.",
   objectifs: [
     "Calculer une remise et le nouveau prix affiché",
     "Comparer les ventes avec et sans la promotion",
@@ -70,7 +70,7 @@ export const LA_PROMOTION_DE_NOEL: Situation = {
       texte: (c) => {
         const p = promotionDeNoel(c);
         return [
-          `« Au printemps, la promotion sur l'article ${p.article.nom.toLowerCase()} a fait vendre plus. Pour Noël, je veux faire ${pct(p.remise)} sur cet article, affiché ${eur(p.article.affiche)}. Préparez l'étiquette, et dites-moi si ça vaut le coup. »`,
+          `« Aux soldes d'hiver, la promotion sur l'article ${p.article.nom.toLowerCase()} a fait vendre plus. Pour Noël, je veux faire ${pct(p.remise)} sur cet article, affiché ${eur(p.article.affiche)}. Préparez l'étiquette, et dites-moi si ça vaut le coup. »`,
           `Pas de cours cette fois. L'arène a rejoué le trimestre ${p.trimestre} avec la promotion : seul ce prix change.`,
         ];
       },

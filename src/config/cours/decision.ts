@@ -1,10 +1,9 @@
-import type { BotProfile } from "../../engine/bots";
-import { runGame, soldUnits, type DecisionProviderContext } from "../../engine/simulation/runGame";
+import { runGame, soldUnits } from "../../engine/simulation/runGame";
 import type { CompanyRoundResult, CompanyState, RoundDecisions } from "../../engine/types";
 import { auCentime } from "../../pedagogy/cours/etats";
 import { scenarioByCode } from "../scenarios/registry";
 import { GRAINE_DU_COURS } from "./cas";
-import { decisionDuCours, scenarioDuCours } from "./arene-du-cours";
+import { decisionsDuCours, scenarioDuCours } from "./arene-du-cours";
 
 /**
  * DÉCIDER : L'ARÈNE REJOUE LE TRIMESTRE À UN AUTRE PRIX.
@@ -67,15 +66,7 @@ export function rejouerLePremierTrimestre(code: string, changer: (d: RoundDecisi
     scenario,
     initialCompanies: entreprises,
     seed: GRAINE_DU_COURS,
-    providers: Object.fromEntries(
-      entreprises.map((e) => [
-        e.id,
-        (ctx: DecisionProviderContext) => {
-          const d = decisionDuCours(e.botProfile as BotProfile, scenario, ctx);
-          return e.id === "joueur" ? changer(d) : d;
-        },
-      ]),
-    ),
+    providers: decisionsDuCours(entreprises, scenario, (_tour, d) => changer(d)),
   });
   return partie.rounds[0]!.results["joueur"]!;
 }

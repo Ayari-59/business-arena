@@ -98,10 +98,13 @@ describe("la clôture, quelle que soit l'entreprise", () => {
     expect(k.icne).toBeCloseTo((echeance(cas, 4).interets * 87) / 90, 2);
   });
 
-  it("les deux cas de l'impôt existent : des entreprises imposées, d'autres en perte ; et l'arène paie partout l'impôt de l'année", () => {
+  // L'année du bon gestionnaire finit en bénéfice dans les neuf entreprises : l'étape « la-perte »
+  // (une perte ne paie pas d'impôt, elle se reporte) ne se lit plus nulle part. La garde le
+  // constate ; si une entreprise retrouve une perte, elle rougit, et il faudra revenir aux deux
+  // cas de l'impôt.
+  it("toutes les entreprises sont imposées dans l'année du bon gestionnaire ; et l'arène paie partout l'impôt de l'année", () => {
     const k = ENTREPRISES_DU_COURS.map((c) => cloture(casDeLEntreprise(c)));
-    expect(k.some((x) => x.impot > 0)).toBe(true);
-    expect(k.some((x) => x.impot === 0)).toBe(true);
+    expect(ENTREPRISES_DU_COURS.filter((_, i) => !(k[i]!.resultatAvantImpot > 0 && k[i]!.impot > 0))).toEqual([]);
     for (const x of k) expect(Math.abs(x.arene.impot - x.impot)).toBeLessThan(1);
   });
 });

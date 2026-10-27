@@ -21,8 +21,9 @@ const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` 
  * que la dépense ne coûtera presque rien. L'élève refait le calcul du chapitre sur le résultat
  * diminué de la dépense : l'impôt de l'exercice, l'impôt économisé, ce que la dépense coûte après
  * impôt. Une charge déductible ne fait économiser que le taux de l'impôt, et rien au-delà de
- * l'impôt de l'exercice : chez MARTEL & FILS, la dépense dépasse le bénéfice, et l'exercice passe en
- * perte.
+ * l'impôt de l'exercice. Tenue par le bon gestionnaire, l'année du cours gagne partout bien plus que
+ * la dépense : le verdict « jusqu'à l'impôt » (la dépense dépasse le bénéfice, l'exercice passe en
+ * perte) ne se lit plus dans aucune entreprise ; ses textes restent, justes, pour une autre année.
  *
  * L'arène rejoue l'année du cours avec le budget de maintenance du trimestre 4 doublé, la seule
  * décision changée (`rejouerAvec`). La maintenance ne change ni les ventes ni rien d'autre de ce
@@ -110,7 +111,7 @@ export const LA_DEPENSE_DE_FIN_D_ANNEE: Situation = {
     "Répondre au gérant, chiffre à l'appui",
   ],
   libre: false,
-  entreprises: L_IMPOT_SUR_LES_SOCIETES.entreprises!,
+  entreprises: L_IMPOT_SUR_LES_SOCIETES.entreprises,
   etapes: [
     {
       id: "demande",

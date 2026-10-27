@@ -15,8 +15,9 @@ import type { Situation } from "../types";
  *
  * Le cas est neuf par sa question : le chapitre déclare le deuxième trimestre, dont la TVA se
  * paie dans l'année ; celle du quatrième reste due au bilan du 31 décembre et se paie dans
- * l'exercice suivant. La réponse dépend de l'entreprise : chez l'une, la TVA de fin d'année est
- * plus lourde que celle d'avant, chez l'autre plus légère.
+ * l'exercice suivant. La réponse se calcule : dans l'année du cours tenue par le bon gestionnaire,
+ * la TVA de fin d'année est plus lourde que celle d'avant chez les deux entreprises (la garde le
+ * vérifie) ; la réponse « plus légère » reste juste pour une autre année, mais ne se lit plus.
  */
 
 /** Un montant à la française, avec le signe moins typographique. */

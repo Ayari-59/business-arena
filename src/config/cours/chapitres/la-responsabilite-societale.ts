@@ -42,14 +42,17 @@ const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
  * (celles dont le scénario n'a pas de réglages RSE prennent ceux de l'arène par défaut,
  * `DEFAULT_RSE_CONFIG`, comme le moteur). Les réglages RSE des scénarios des niveaux 5 sont les
  * mêmes que ceux de l'année du cours (la garde le vérifie). Le chapitre rejoue donc l'année du
- * cours telle quelle (`rejouerAvec`), avec le seul budget RSE en plus.
+ * cours (`rejouerAvec`), avec le budget RSE en plus ; le bon gestionnaire y décide du reste avec
+ * ses règles de toujours, et produit donc aussi la demande que l'engagement amène. Sur l'année du
+ * cours, cette demande se vend dans les neuf entreprises : la réponse « la demande gagnée ne se
+ * vend pas » reste écrite pour une année où l'entreprise ne la servirait pas.
  */
 
 /**
  * Le budget RSE du cours, en multiples de l'échelle de dépense du scénario : un, chaque
  * trimestre. Hypothèse du cours : l'effort du moteur vaut alors ln 2 dans tous les secteurs, et
- * la gestion équilibrée de l'arène dépense la moitié de cette échelle en publicité au premier
- * trimestre (le tableau du chapitre le montre).
+ * le bon gestionnaire de l'année du cours dépense la moitié de cette échelle en publicité au
+ * premier trimestre (le tableau du chapitre le montre).
  */
 export const BUDGET_RSE_EN_ECHELLES = 1;
 
@@ -380,7 +383,7 @@ export const LA_RESPONSABILITE_SOCIETALE: Chapitre = {
         };
       },
       question: () =>
-        "L'arène a rejoué l'année avec l'engagement, tout le reste identique. Calculez ce que l'engagement a coûté sur l'année, la marge sur coût variable gagnée, et l'écart de résultat d'exploitation.",
+        "L'arène a rejoué l'année avec l'engagement ; le reste, le bon gestionnaire le décide avec ses règles de toujours, et produit selon la demande qu'il voit. Calculez ce que l'engagement a coûté sur l'année, la marge sur coût variable gagnée, et l'écart de résultat d'exploitation.",
       champs: (c) => {
         const r = engagementRse(c);
         return [

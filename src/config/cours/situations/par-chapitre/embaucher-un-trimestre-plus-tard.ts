@@ -37,8 +37,12 @@ export type Verdict = "aucune" | "perte" | "maintenant" | "attendre";
 /** Les deux embauches, celle du chapitre et la décalée, calculées une fois du cas. */
 export function embaucheDecalee(c: Cas) {
   const r = recrutement(c);
-  const decalee = rejouerLAnnee(c.code, "embauche-decalee", (t) =>
-    t === TRIMESTRE_DE_L_EMBAUCHE_DECALEE ? { hire: EMBAUCHES } : undefined,
+  // Le salarié du cas s'ajoute aux embauches que le bon gestionnaire fait ce trimestre-là dans
+  // l'année jouée (au conseil, une au trimestre 2) : la décision rejouée remplace toute celle du
+  // trimestre, et sans elles, l'embauche décalée ne ferait que reprendre la sienne.
+  const base = rejouerLAnnee(c.code, "base", () => undefined);
+  const decalee = rejouerLAnnee(c.code, "embauche-decalee:en-plus", (t) =>
+    t === TRIMESTRE_DE_L_EMBAUCHE_DECALEE ? { hire: EMBAUCHES + (base[t - 1]!.hr?.hired ?? 0) } : undefined,
   );
   const trimestresAvecLui = decalee.length - TRIMESTRE_DE_L_EMBAUCHE_DECALEE;
   const salaires = r.salaireTrimestriel * EMBAUCHES * trimestresAvecLui;

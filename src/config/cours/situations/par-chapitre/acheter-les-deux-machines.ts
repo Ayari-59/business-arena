@@ -26,8 +26,10 @@ const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` 
  * l'ensemble n'est pas la somme des deux VAN, et la question devient de savoir si la seconde
  * machine ajoute encore de la valeur à la première.
  *
- * Chez MAILLE & CO, aucune des deux machines ne crée de valeur seule : la bonne réponse y est de
+ * Chez L'ESCALE, aucune des deux machines ne crée de valeur seule : la bonne réponse y est de
  * n'acheter rien, et les textes ne disent pas les machines rentables là où elles ne le sont pas.
+ * Partout où le cas se joue, l'ensemble vaut moins que la somme des deux VAN (la garde le
+ * vérifie) : c'est pourquoi MARTEL & FILS, où il vaut plus, n'est pas au chapitre.
  *
  * LE FINANCEMENT. Payées ensemble sur la trésorerie, les deux machines font défaillir L'ESCALE
  * (le découvert ne couvre pas leur prix) : le rejeu de l'ensemble les paie donc par un emprunt du

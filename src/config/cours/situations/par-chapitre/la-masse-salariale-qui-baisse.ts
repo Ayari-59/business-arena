@@ -1,6 +1,7 @@
 import { montantEcrit as eur } from "../../../../pedagogy/cours/correcteur";
 import type { Cas } from "../../cas";
 import { indicateursSociaux } from "../../chapitres/indicateurs-sociaux";
+import { remuneration } from "../../chapitres/remuneration-et-motivation";
 import type { Situation } from "../types";
 
 /**
@@ -40,6 +41,10 @@ export function masseQuiBaisse(c: Cas) {
     evolutionDesVentes: evolution(premier.ventes, dernier.ventes),
     coutParSalarieDebut,
     coutParSalarieFin,
+    /** La masse salariale baisse d'un trimestre à l'autre, chaque fois. */
+    baisseChaqueTrimestre: s.trimestres.every((t, i) => i === 0 || t.masse < s.trimestres[i - 1]!.masse),
+    /** Les embauches de l'année jouée, gardées aux salaires baissés : elles compensent une part des départs. */
+    embauches: remuneration(c).embauches,
   };
 }
 
@@ -65,10 +70,13 @@ export const LA_MASSE_SALARIALE_QUI_BAISSE: Situation = {
       id: "demande",
       type: "lecture",
       titre: "La demande du directeur financier",
-      texte: (c) => [
-        `« Regardez notre tableau de bord social : la masse salariale ${dE(c.entreprise)} baisse à chaque trimestre. Je veux présenter cette baisse au conseil comme une réussite de gestion. Vérifiez-la, dites-moi d'où elle vient, et ce que je peux en dire. »`,
-        "Pas de cours cette fois : vous avez le tableau de bord de l'année, celle où les salaires ont été baissés au premier trimestre, et les calculs sont ceux du chapitre.",
-      ],
+      texte: (c) => {
+        const m = masseQuiBaisse(c);
+        return [
+          `« Regardez notre tableau de bord social : la masse salariale ${dE(c.entreprise)} ${m.baisseChaqueTrimestre ? "baisse à chaque trimestre" : "a baissé sur l'année"}. Je veux présenter cette baisse au conseil comme une réussite de gestion. Vérifiez-la, dites-moi d'où elle vient, et ce que je peux en dire. »`,
+          "Pas de cours cette fois : vous avez le tableau de bord de l'année, celle où les salaires ont été baissés au premier trimestre, et les calculs sont ceux du chapitre.",
+        ];
+      },
       tableau: (c) => {
         const m = masseQuiBaisse(c);
         return {
@@ -145,9 +153,10 @@ export const LA_MASSE_SALARIALE_QUI_BAISSE: Situation = {
         ];
       },
       explication: (c) => {
-        const { s } = masseQuiBaisse(c);
+        const m = masseQuiBaisse(c);
+        const s = m.s;
         return [
-          `En une année, ${s.departs} salariés sont partis, ${pct(s.rotation)} de l'effectif moyen. C'est d'eux que vient la baisse de la masse salariale : chaque départ est un salaire de moins à payer, et un poste de moins pour servir les clients.`,
+          `En une année, ${s.departs} salariés sont partis, ${pct(s.rotation)} de l'effectif moyen. C'est d'eux que vient la baisse de la masse salariale${m.embauches > 0 ? `, les ${m.embauches} embauches de l'année n'en compensant qu'une part` : ""} : chaque départ est un salaire de moins à payer, et un poste de moins pour servir les clients.`,
         ];
       },
     },

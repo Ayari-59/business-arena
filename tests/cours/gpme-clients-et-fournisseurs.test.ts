@@ -166,13 +166,26 @@ describe.each(ENTREPRISES_A_UN_CATALOGUE)("choisir son fournisseur chez %s", (co
     expect(f.economieAProductionEgale).toBe(Math.round(f.reference.achats * (1 - f.moinsChere.multiplicateur)));
   });
 
-  it("le taux de rebuts ne dépend pas du fournisseur (il suit le budget qualité)", () => {
+  it("le taux de rebuts ne dépend pas du fournisseur : il suit la qualité produite (le budget qualité, la charge de l'outil)", () => {
     const f = choixDuFournisseur(cas);
-    const taux = (c: string) =>
-      rejouerAvec(code, `fournisseur-${c}`, (_t, d) => ({ ...d, supplierChoice: c })).map((r) =>
-        r.production.produced > 0 ? (r.qualityCosts?.defectUnits ?? 0) / r.production.produced : 0,
-      );
-    for (const o of [f.moinsChere, f.plusChere]) taux(o.code).forEach((t, i) => expect(t, `${o.code} T${i + 1}`).toBeCloseTo(taux(f.reference.code)[i]!, 9));
+    const annee = (c: string) => rejouerAvec(code, `fournisseur-${c}`, (_t, d) => ({ ...d, supplierChoice: c }));
+    const taux = (r: { production: { produced: number }; qualityCosts?: { defectUnits: number } }) =>
+      r.production.produced > 0 ? (r.qualityCosts?.defectUnits ?? 0) / r.production.produced : 0;
+    const reference = annee(f.reference.code);
+    let egales = 0;
+    for (const o of [f.moinsChere, f.plusChere])
+      annee(o.code).forEach((r, i) => {
+        const q = r.production.producedQuality - reference[i]!.production.producedQuality;
+        // À qualité produite égale, le même taux, quel que soit le fournisseur.
+        if (Math.abs(q) < 1e-12) {
+          egales++;
+          expect(taux(r), `${o.code} T${i + 1}`).toBeCloseTo(taux(reference[i]!), 9);
+        } else if (s.qualityCosts) {
+          // Une qualité produite plus basse (l'outil chargé au-dessus de son seuil) donne plus de rebuts, et l'inverse.
+          expect(Math.sign(taux(r) - taux(reference[i]!)), `${o.code} T${i + 1}`).toBe(-Math.sign(q));
+        }
+      });
+    expect(egales).toBeGreaterThan(0);
   });
 
   it("l'écart de trésorerie se recompose : résultat, plus dettes et TVA à payer, moins créances et stocks", () => {
@@ -284,9 +297,9 @@ describe.each(ENTREPRISES_A_UN_CATALOGUE)("le fournisseur allonge son délai che
 });
 
 describe("le fournisseur allonge son délai, sur les huit entreprises", () => {
-  it("le prix gagne partout en résultat, mais pas partout en trésorerie", () => {
+  it("les trois lectures se rencontrent : le prix ne gagne ni partout en résultat, ni partout en trésorerie", () => {
     const verdicts = new Set(ENTREPRISES_A_UN_CATALOGUE.map((c) => delaiAllonge(casDeLEntreprise(c)).verdict));
-    expect([...verdicts].sort()).toEqual(["chacun-son-avantage", "le-prix"]);
+    expect([...verdicts].sort()).toEqual(["chacun-son-avantage", "le-delai", "le-prix"]);
   });
 });
 

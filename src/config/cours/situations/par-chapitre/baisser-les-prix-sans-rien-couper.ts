@@ -28,7 +28,7 @@ import type { Situation } from "../types";
  * la stratégie entière ou l'année du cours donne le meilleur résultat.
  */
 
-/** La demi-mesure : le prix et la production de la stratégie de coûts, les budgets de la gestion équilibrée. */
+/** La demi-mesure : le prix et la production de la stratégie de coûts, les budgets de l'année du cours. */
 export const DEMI_MESURE: Leviers = { prix: STRATEGIE_DE_COUTS.prix, qualite: 1, marketing: 1, production: STRATEGIE_DE_COUTS.production };
 
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
@@ -45,7 +45,7 @@ export type VerdictDeLaDemiMesure = "demi-mesure" | "couts" | "annee-du-cours";
 /** La demi-mesure rejouée, à côté de la stratégie de coûts du chapitre et de l'année du cours. */
 export function prixBasSansRienCouper(c: Cas) {
   const k = coutsOuDifferenciation(c);
-  const demi = bilanDeLAnnee("demi-mesure", rejouerAvec(c.code, "couts-ou-differenciation-demi-mesure", strategie(DEMI_MESURE)));
+  const demi = bilanDeLAnnee("demi-mesure", rejouerAvec(c.code, "couts-ou-differenciation-demi-mesure", strategie(c.code, DEMI_MESURE)));
   const couts = k.couts;
   const annee = k.milieu;
   const trois = [annee, couts, demi];
@@ -93,7 +93,7 @@ export const BAISSER_LES_PRIX_SANS_RIEN_COUPER: Situation = {
       titre: "La proposition du directeur commercial",
       texte: (c) => [
         `« Pour prendre des parts de marché, baissons nos prix de ${Math.round((1 - DEMI_MESURE.prix) * 100)} % et produisons ${Math.round((DEMI_MESURE.production - 1) * 100)} % de plus, comme dans la stratégie de coûts. Mais sans toucher à la qualité ni au marketing : nos clients ne doivent rien perdre. Dites-moi si c'est mieux que la stratégie de coûts entière, et que notre année telle qu'elle a été, pour ${c.entreprise}. »`,
-        "Pas de cours cette fois : les calculs sont ceux du chapitre. L'arène a rejoué l'année avec la proposition, décidée dès le premier trimestre, tout le reste identique.",
+        "Pas de cours cette fois : les calculs sont ceux du chapitre. L'arène a rejoué l'année avec la proposition, décidée dès le premier trimestre et tenue jusqu'à la clôture ; le reste, le bon gestionnaire le décide avec ses règles de toujours.",
       ],
       tableau: () => ({
         titre: "Ce que chaque solution change, chaque trimestre",

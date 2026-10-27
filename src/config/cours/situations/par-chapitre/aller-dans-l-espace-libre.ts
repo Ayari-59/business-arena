@@ -3,7 +3,7 @@ import { auCentime } from "../../../../pedagogy/cours/etats";
 import type { Cas } from "../../cas";
 import { bilanDeLAnnee, strategie } from "../../chapitres/couts-ou-differenciation";
 import { LIRE_LA_STRATEGIE_DES_CONCURRENTS, dE, strategiesDesConcurrents } from "../../chapitres/lire-la-strategie-des-concurrents";
-import { anneeDeReference, rejouerAvec } from "../../gestion-de-la-pme";
+import { anneeDeReference, rejouerAvec, type Changement } from "../../gestion-de-la-pme";
 import type { Situation } from "../types";
 
 /**
@@ -18,10 +18,14 @@ import type { Situation } from "../types";
  * LE PRIX DE LA PLACE, selon la règle du cours : celui de l'enseigne qui a laissé sa place en
  * quittant le marché, ou, s'il n'y en a pas, le milieu du plus grand écart de prix entre deux
  * enseignes voisines (la moyenne de leurs deux prix). L'arène rejoue l'année du cours avec ce
- * prix dès le premier trimestre, et rien d'autre de changé : la directrice veut savoir ce que
- * vaut la place elle-même, avant d'y engager des budgets. Le prix de chaque trimestre est celui
- * de la gestion équilibrée, multiplié par le rapport entre le prix de la place et le prix moyen
- * de l'entreprise (en gamme, celui de chaque référence).
+ * prix dès le premier trimestre, et les budgets de qualité et de marketing de l'année du cours :
+ * la directrice veut savoir ce que vaut la place elle-même, avant d'y engager des budgets. En
+ * mono-produit, le prix de chaque trimestre est celui de la place ; en gamme, chaque référence
+ * prend son prix de l'année du cours au même trimestre, multiplié par le rapport entre le prix
+ * de la place et le prix moyen de l'entreprise (`strategie`, couts-ou-differenciation.ts). La
+ * production, le bon gestionnaire la règle sur la demande qu'il voit dans l'année rejouée, et
+ * il décide du reste avec ses règles de toujours : un prix qui change la demande change aussi
+ * ce qu'il produit, trimestre après trimestre.
  */
 
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
@@ -30,6 +34,10 @@ const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
 const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const signe = (x: number) => (x > 0 ? `+${pct(x)}` : pct(x));
+
+/** Ce que l'arène a rejoué, dans le texte de la demande. */
+const REJEU =
+  "L'arène a rejoué l'année avec ce prix et les budgets de l'année du cours ; la production, le bon gestionnaire l'a réglée sur la demande que ce prix lui amenait.";
 
 export type VerdictDeLEspaceLibre = "y-aller" | "rester";
 
@@ -44,11 +52,14 @@ export function espaceLibre(c: Cas) {
   const variation = auDixieme((facteur - 1) * 100);
   const indiceVise = Math.round((prixVise / k.prixDuMarche) * 100);
   const avant = bilanDeLAnnee("annee-du-cours", anneeDeReference(c.code));
-  const rejouee = rejouerAvec(
-    c.code,
-    "lire-la-strategie-des-concurrents-espace-libre",
-    strategie({ prix: facteur, qualite: 1, marketing: 1, production: 1 }),
-  );
+  // Les budgets de l'année du cours, et le prix de la place tenu toute l'année : en
+  // mono-produit, ce prix même ; en gamme, chaque référence déplacée du même rapport.
+  const tenue = strategie(c.code, { prix: facteur, qualite: 1, marketing: 1, production: 1 });
+  const auPrixDeLaPlace: Changement = (tour, d) => {
+    const x = tenue(tour, d)!;
+    return x.products ? x : { ...x, price: prixVise };
+  };
+  const rejouee = rejouerAvec(c.code, "lire-la-strategie-des-concurrents-espace-libre", auPrixDeLaPlace);
   const apres = bilanDeLAnnee("espace-libre", rejouee);
   // UNE ENTREPRISE DÉFAILLANTE NE VEND PLUS : ses trimestres manquants ne pèsent plus sur le
   // résultat de l'année, qui peut alors sembler meilleur. La défaillance tranche avant lui.
@@ -93,10 +104,10 @@ export const ALLER_DANS_L_ESPACE_LIBRE: Situation = {
       texte: (c) => {
         const x = espaceLibre(c);
         return [
-          `« Votre carte du marché montre un espace libre : ${laPlace(x)}. Si ${c.entreprise} y avait placé son prix dès le premier trimestre, sans rien changer d'autre, l'année aurait-elle été meilleure ? Je veux le savoir avant d'y engager des budgets. »`,
+          `« Votre carte du marché montre un espace libre : ${laPlace(x)}. Si ${c.entreprise} y avait placé son prix dès le premier trimestre, sans toucher à ses budgets, l'année aurait-elle été meilleure ? Je veux le savoir avant d'y engager des budgets. »`,
           x.p
-            ? `Pas de cours cette fois : les calculs sont ceux du chapitre. Le prix de la place est le prix moyen ${dE(x.p.nom)}. L'arène a rejoué l'année avec ce prix, tout le reste identique.`
-            : "Pas de cours cette fois : les calculs sont ceux du chapitre. Le prix de la place est le milieu de l'écart : la moyenne des prix des deux enseignes voisines. L'arène a rejoué l'année avec ce prix, tout le reste identique.",
+            ? `Pas de cours cette fois : les calculs sont ceux du chapitre. Le prix de la place est le prix moyen ${dE(x.p.nom)}. ${REJEU}`
+            : `Pas de cours cette fois : les calculs sont ceux du chapitre. Le prix de la place est le milieu de l'écart : la moyenne des prix des deux enseignes voisines. ${REJEU}`,
         ];
       },
       tableau: (c) => {

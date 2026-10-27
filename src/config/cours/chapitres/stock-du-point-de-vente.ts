@@ -274,8 +274,11 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
       montrer: "Montrer le stock financé",
       explication: (c) => {
         const st = stockDuPointDeVente(c);
+        // Le stock du trimestre dépasse ce que le fournisseur finance, ou il en reste en deçà.
         return [
-          `Avec ${qte(st.stockFinalFinance)} unités en fin de trimestre au lieu de ${qte(st.s.final.quantite)}, la durée de stockage retombe à ${qte(st.delai)} jours : chaque unité serait vendue avant d'être payée. Moins de stock, c'est aussi plus de risque de rupture : tout l'art du commerçant est entre les deux.`,
+          st.stockFinalFinance < st.s.final.quantite
+            ? `Avec ${qte(st.stockFinalFinance)} unités en fin de trimestre au lieu de ${qte(st.s.final.quantite)}, la durée de stockage retombe à ${qte(st.delai)} jours : chaque unité serait vendue avant d'être payée. Moins de stock, c'est aussi plus de risque de rupture : tout l'art du commerçant est entre les deux.`
+            : `Le fournisseur finance déjà tout le stock du trimestre : ${c.entreprise} pourrait finir avec ${qte(st.stockFinalFinance)} unités au lieu de ${qte(st.s.final.quantite)}, et la durée de stockage ne monterait qu'à ${qte(st.delai)} jours. Plus de stock, c'est moins de risque de rupture ; au-delà, c'est la trésorerie du magasin qui le porterait.`,
         ];
       },
     },

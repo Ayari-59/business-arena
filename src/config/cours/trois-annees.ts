@@ -1,9 +1,8 @@
-import type { BotProfile } from "../../engine/bots";
-import { runGame, type DecisionProviderContext } from "../../engine/simulation/runGame";
+import { runGame } from "../../engine/simulation/runGame";
 import type { CompanyState } from "../../engine/types";
 import { scenarioByCode } from "../scenarios/registry";
 import { GRAINE_DU_COURS } from "./cas";
-import { decisionDuCours, scenarioDuCours } from "./arene-du-cours";
+import { decisionsDuCours, scenarioDuCours } from "./arene-du-cours";
 
 /**
  * TROIS ANNÉES DE L'ARÈNE, TRIMESTRE PAR TRIMESTRE : LA MATIÈRE D'UNE PRÉVISION.
@@ -45,13 +44,7 @@ export function troisAnnees(code: string): readonly TrimestreJoue[] {
     scenario,
     initialCompanies: entreprises,
     seed: GRAINE_DU_COURS,
-    providers: Object.fromEntries(
-      entreprises.map((e) => [
-        e.id,
-        (ctx: DecisionProviderContext) =>
-          decisionDuCours(e.botProfile as BotProfile, scenario, ctx),
-      ]),
-    ),
+    providers: decisionsDuCours(entreprises, scenario),
   });
   const serie = partie.rounds.map((tour, k) => {
     const segments = Object.values(tour.results["joueur"]!.market.bySegment);

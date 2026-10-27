@@ -875,7 +875,7 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
   "le-deficit-reporte": (c) => ({
     // Le grand entretien du chapitre : le budget de maintenance se règle au niveau 2.
     niveau: 2,
-    faire: `${partie(c, 2)} Aux quatre premiers tours, mettez dans « Budget maintenance » ${FACTEUR_DU_GRAND_ENTRETIEN} fois le budget proposé, puis jouez la partie au-delà du quatrième tour avec le budget proposé.`,
+    faire: `${partie(c, 2)} Au premier tour, mettez dans « Budget maintenance » ${FACTEUR_DU_GRAND_ENTRETIEN} fois le budget proposé, et gardez ce budget jusqu'au quatrième tour ; au cinquième, remettez le budget proposé au premier tour, et jouez la partie au-delà avec lui.`,
     lieux: ["compte-de-resultat"],
     chercher:
       "Si les quatre premiers tours finissent en perte, regardez au cinquième la ligne « dont déficit antérieur imputé (report) » du compte de résultat : l'impôt du tour se calcule-t-il sur le résultat diminué de ce déficit ? Sinon, l'impôt du cinquième tour est-il le taux de l'impôt appliqué à son résultat avant impôt ?",

@@ -54,9 +54,10 @@ const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` 
  * comparent sur leurs flux actualisés, et par trois critères qui peuvent se contredire.
  *
  * LES ENTREPRISES sont celles du chapitre précédent, pour les mêmes raisons ; la machine suivante
- * n'y fait défaillir aucun rejeu (la garde le vérifie). Chez MAILLE & CO, aucun des deux projets
- * n'est acceptable : leurs TRI sont négatifs, et le classement des deux critères, qui diverge, ne
- * décide rien. Le chapitre ne cherche alors pas le taux de Fisher, et le dit.
+ * n'y fait défaillir aucun rejeu (la garde le vérifie). Chez L'ESCALE, aucun des deux projets
+ * n'est acceptable : leurs TRI restent sous le coût du capital, et le classement ne décide rien.
+ * Le chapitre ne cherche le taux de Fisher que là où les deux critères divergent sur des projets
+ * dont l'un au moins est acceptable, et dit pourquoi ailleurs.
  */
 
 /** Le projet B : la machine du catalogue qui suit celle du chapitre, la plus petite de celles qui ajoutent plus de capacité. */
@@ -215,7 +216,7 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
   libre: false,
   entreprises: {
     codes: ENTREPRISES_DE_L_ACTUALISATION,
-    pourquoi: `ce chapitre compare deux machines sur ${DUREE_DU_PROJET} trimestres rejoués, comme le chapitre sur la valeur actuelle nette, et dans les mêmes entreprises : NOVA, MAILLE & CO, L'ESCALE et VOLT FITNESS, où les machines font vendre et où chaque exercice finit en bénéfice.`,
+    pourquoi: `ce chapitre compare deux machines sur ${DUREE_DU_PROJET} trimestres rejoués, comme le chapitre sur la valeur actuelle nette, et dans les mêmes entreprises : MAILLE & CO, L'ESCALE, LA TABLE D'AUGUSTIN, PIXEL & CO, VOLT FITNESS et ROUTE & CIE, où les machines font vendre, où chaque exercice finit en bénéfice, et où les flux de chacune ont un taux de rentabilité interne.`,
   },
   etapes: [
     {
@@ -443,7 +444,7 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
         const conflit = `le projet A rend plus par euro investi, le projet B rapporte plus d'euros : il investit ${eur(dCout)} de plus, et ce supplément rapporte encore plus que le coût du capital.`;
         const non = `Non : la VAN préfère ${nomDu(v)}, le TRI ${nomDu(t)}.`;
         // Deux VAN négatives : le classement se lit, mais il ne décide rien.
-        const rienARetenir = `Oui : la VAN préfère ${nomDu(v)}, qui détruit le moins de valeur, et le TRI ${nomDu(t)}, le moins mauvais. Mais les deux VAN sont négatives : aucun projet n'est acceptable, et le classement ne décide rien.`;
+        const rienARetenir = `Oui : ${v === t ? `les deux critères préfèrent ${nomDu(v)}, qui détruit le moins de valeur et dont le TRI est le moins mauvais` : `la VAN préfère ${nomDu(v)}, qui détruit le moins de valeur, et le TRI ${nomDu(t)}, le moins mauvais`}. Mais les deux VAN sont négatives : aucun projet n'est acceptable, et le classement ne décide rien.`;
         const oui = (x: string) => (k.retenu === "aucun" ? rienARetenir : x);
         return [
           {

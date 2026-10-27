@@ -220,14 +220,14 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
                 ? `Oui. Le chiffre d'affaires progresse de ${pct(d.evolutionCa)} et la demande est servie : le voyant à surveiller, c'est la capacité à suivre au trimestre prochain.`
                 : d.voyant === "ventes-bloquees"
                   ? "Le chiffre d'affaires ne dit pas tout : une partie de la demande n'a pas été servie."
-                  : `La demande ne progresse pas : elle recule de ${pct(Math.abs(d.evolutionDemande))}, même si le chiffre d'affaires évolue de ${pct(d.evolutionCa)}.`,
+                  : `La demande ne progresse pas : elle recule de ${pct(Math.abs(d.evolutionDemande))}, et le chiffre d'affaires évolue de ${pct(d.evolutionCa)}.`,
           },
           {
             texte: "La demande baisse : il faut attirer des clients, ou préparer la saison creuse.",
             juste: d.voyant === "repli",
             retour:
               d.voyant === "repli"
-                ? `Oui. La demande reçue recule de ${pct(Math.abs(d.evolutionDemande))} : saison creuse, concurrence ou prix. Toute la demande est servie, le voyant est donc sur l'attractivité : la communication, l'offre, et des achats ajustés pour ne pas garder de stock.`
+                ? `Oui. La demande reçue recule de ${pct(Math.abs(d.evolutionDemande))} : saison creuse, concurrence ou prix. La demande est servie à ${pct(d.transformation2)}, le voyant est donc sur l'attractivité : la communication, l'offre, et des achats ajustés pour ne pas garder de stock.`
                 : `La demande ne baisse pas : elle évolue de ${pct(d.evolutionDemande)}.`,
           },
         ];

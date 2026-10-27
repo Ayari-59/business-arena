@@ -44,14 +44,20 @@ const aLArrondiPres = (arene: number, cours: number) =>
  * Ce n'est pas « La clôture », qui calcule l'impôt depuis la balance et le passe au journal (695
  * et 444) : ici, l'impôt se calcule depuis les trimestres, et le chapitre suit son paiement.
  *
- * LES ENTREPRISES. L'année du cours finit en perte chez LA TABLE D'AUGUSTIN seule : pas d'impôt
- * à calculer. Le chapitre se joue dans les huit autres. « Le déficit reporté » ne reprend pas
- * cette année en perte, que l'exercice suivant ne rattrape pas : il fait perdre une année en
- * bénéfice par une décision du chapitre (`FACTEUR_DU_GRAND_ENTRETIEN`).
+ * LES ENTREPRISES. Tenue par le bon gestionnaire, l'année du cours finit en bénéfice dans toutes
+ * les entreprises : le chapitre se joue partout, et ne restreint pas ses entreprises (la garde
+ * recompte). « Le déficit reporté » fait perdre une année en bénéfice par une décision du chapitre
+ * (`FACTEUR_DU_GRAND_ENTRETIEN`).
+ *
+ * CE QUI NE SE LIT PLUS. Dans cette année, aucun cumul n'est en perte à la fin du trimestre 3 et
+ * aucun dernier acompte n'est rendu : l'explication des acomptes ne lit plus que sa branche « le
+ * cumul était déjà en bénéfice ». Et toutes les entreprises gagnent plus que le plafond du taux
+ * réduit : la branche « tout son bénéfice reste sous le plafond » ne se lit plus. Les branches
+ * restent, justes, pour une autre année.
  */
 
-/** Les entreprises où l'année du cours finit en bénéfice : celles où l'impôt se calcule. */
-export const ENTREPRISES_IMPOSABLES = ["nova", "boutique", "hotel", "conseil", "ecommerce", "fitness", "batiment", "transport"] as const;
+/** Les entreprises où l'année du cours finit en bénéfice, celles où l'impôt se calcule : toutes. */
+export const ENTREPRISES_IMPOSABLES = ["nova", "boutique", "hotel", "bistrot", "conseil", "ecommerce", "fitness", "batiment", "transport"] as const;
 
 /** Le trimestre dont le chapitre fait calculer l'acompte : le dernier de l'exercice. */
 export const TRIMESTRE_DE_L_ACOMPTE = 4;
@@ -176,11 +182,6 @@ export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
     "Mesurer ce que changerait le taux réduit d'une PME",
   ],
   libre: false,
-  entreprises: {
-    codes: ENTREPRISES_IMPOSABLES,
-    pourquoi:
-      "ce chapitre calcule l'impôt d'une année en bénéfice, et l'année du cours finit en perte chez LA TABLE D'AUGUSTIN : il n'y a pas d'impôt à calculer.",
-  },
   etapes: [
     {
       id: "intro",

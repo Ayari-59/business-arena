@@ -168,7 +168,7 @@ export const REMPLIR_LE_RAYON: Chapitre = {
       texte: (c) => {
         const { x } = rayon(c);
         return [
-          `Au début du trimestre ${x.trimestre}, ${c.entreprise} a ${qte(x.stock)} ${x.pluriel} en stock, en réserve et en rayon. Dans l'année du cours, elle en commande ${qte(x.commandeeDansLAnnee)} pendant ce trimestre. L'arène rejoue l'année avec cette commande oubliée : au trimestre ${x.trimestre}, elle n'en commande aucun${x.feminin ? "e" : ""}, et rien d'autre ne change. Le tableau donne les chiffres de l'arène rejouée.`,
+          `Au début du trimestre ${x.trimestre}, ${c.entreprise} a ${qte(x.stock)} ${x.pluriel} en stock, en réserve et en rayon. Dans l'année du cours, elle en commande ${qte(x.commandeeDansLAnnee)} pendant ce trimestre. L'arène rejoue l'année avec cette commande oubliée : au trimestre ${x.trimestre}, elle n'en commande aucun${x.feminin ? "e" : ""}, et rien d'autre ne change à ce trimestre. Le tableau donne les chiffres de l'arène rejouée.`,
           "Chaque matin, l'équipier remplit le rayon avec la réserve. Mais la réserve aussi se vide. S'il voit trop tard qu'il n'en reste presque plus, le rayon reste vide, et les clients repartent sans rien.",
           `L'arène compte par trimestre, pas par jour. Le cours suppose donc que les clients achètent au même rythme tous les jours du trimestre.`,
         ];

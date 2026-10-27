@@ -308,8 +308,19 @@ describe("la TVA et la trésorerie, sur les deux entreprises", () => {
   });
 
   it("la TVA soulage la trésorerie à un trimestre et pèse à un autre", () => {
+    // Au troisième trimestre, celui que le chapitre lit, la TVA pèse chez les deux entreprises : dans
+    // l'année du cours tenue par le bon gestionnaire, la branche « la TVA a soulagé la trésorerie »
+    // de l'explication ne se lit plus.
     const soldes = ENTREPRISES_OU_LA_TVA_JOUE.map((c) => Math.sign(tvaEtTresorerie(casDeLEntreprise(c)).troisieme.solde));
-    expect([...new Set(soldes)].sort()).toEqual([-1, 1]);
+    expect([...new Set(soldes)].sort()).toEqual([-1]);
+    // Mais l'explication le dit : d'un trimestre à l'autre, elle soulage ou elle pèse. Le solde de TVA
+    // de chaque trimestre, recalculé sur le budget de trésorerie de l'arène, change de signe dans l'année.
+    for (const code of ENTREPRISES_OU_LA_TVA_JOUE) {
+      const part = scenarioByCode(code).scenario.finance.vatRate! / (1 + scenarioByCode(code).scenario.finance.vatRate!);
+      const flux = (r: CompanyRoundResult, label: string) => r.cashFlow.items.find((i) => i.label === label)?.amount ?? 0;
+      const signes = annee(code).map((r) => Math.sign((flux(r, "encaissements_clients") + flux(r, "paiements_fournisseurs")) * part + flux(r, "tva_decaissee")));
+      expect([...new Set(signes)].sort(), code).toEqual([-1, 1]);
+    }
   });
 });
 
@@ -369,8 +380,11 @@ describe.each(ENTREPRISES_OU_LA_TVA_JOUE)("la TVA avancée pour le client chez %
 });
 
 describe("la TVA du dernier trimestre, sur les deux entreprises", () => {
-  it("le versement suivant est plus lourd chez l'une, plus léger chez l'autre", () => {
+  it("le versement suivant est plus lourd chez les deux", () => {
+    // Dans l'année du cours tenue par le bon gestionnaire, la TVA du quatrième trimestre dépasse
+    // partout celle du troisième : la réponse « plus léger » ne se lit plus, elle reste juste pour une
+    // autre année.
     const verdicts = new Set(ENTREPRISES_OU_LA_TVA_JOUE.map((c) => tvaDuDernierTrimestre(casDeLEntreprise(c)).verdict));
-    expect([...verdicts].sort()).toEqual(["plus-legere", "plus-lourde"]);
+    expect([...verdicts].sort()).toEqual(["plus-lourde"]);
   });
 });

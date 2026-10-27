@@ -84,7 +84,9 @@ describe("les cas que le chapitre distingue se rencontrent dans le cours", () =>
   const toutes = ENTREPRISES_DU_COURS.map((c) => fondsDeRoulement(casDeLEntreprise(c)));
   it("un besoin négatif, un fonds de roulement négatif, une trésorerie négative, un centime d'arrondi", () => {
     expect(toutes.some((k) => k.bfr < 0)).toBe(true);
-    expect(toutes.some((k) => k.frng < 0)).toBe(true);
+    // Dans l'année du bon gestionnaire, les ressources durables paient l'équipement partout : la
+    // phrase du fonds de roulement négatif n'est plus lue. S'il revient, cette garde le dira.
+    expect(toutes.filter((k) => k.frng < 0)).toHaveLength(0);
     expect(toutes.some((k) => k.tn < 0)).toBe(true);
     expect(toutes.some((k) => Math.round((k.frng - k.bfr) * 100) !== Math.round(k.tn * 100))).toBe(true);
   });

@@ -22,15 +22,19 @@ const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
  *
  * L'année est celle du cours, rejouée par l'arène (gestion-de-la-pme.ts) : au trimestre 1, les
  * salaires sont payés sous le marché, assez pour franchir le seuil de démission du scénario
- * (`hr.attritionThreshold`), et un salarié part à la fin du trimestre ; le remplaçant est
- * recruté au trimestre suivant et n'arrive qu'au trimestre d'après, comme le moteur le joue
- * (src/engine/hr). Le coût d'un recrutement et le salaire sont ceux du scénario.
+ * (`hr.attritionThreshold`), et un salarié part à la fin du trimestre ; dès le trimestre 2, le
+ * salaire revient à celui du marché, et le remplaçant est recruté, en plus des embauches que la
+ * gestion fait ce trimestre-là dans l'année sans départ ; il n'arrive qu'au trimestre d'après,
+ * comme le moteur le joue (src/engine/hr). Le coût d'un recrutement et le salaire sont ceux du
+ * scénario.
  *
- * Les autres décisions de l'année sont celles de la même gestion, qui prévoit chaque trimestre sa
- * production d'après ses ventes du trimestre d'avant (arene-du-cours.ts). Le trimestre vide a
- * vendu moins : elle prépare moins ensuite, et ces ventes-là se perdent aussi, alors que l'équipe
- * est revenue à son effectif. Le coût complet du départ compte cette marge des trimestres
- * suivants ; l'étape qui la calcule ne se montre que là où l'année rejouée la rencontre.
+ * Les autres décisions de l'année sont celles du bon gestionnaire de l'arène (arene-du-cours.ts),
+ * qui prévoit chaque trimestre sa production d'après la demande du trimestre d'avant, ventes
+ * manquées comprises. Un client que le poste vide n'a pas servi compte donc encore dans la demande
+ * qu'il lit : il ne prépare pas moins ensuite, et les trimestres suivants restent ceux de
+ * l'année sans départ, ou s'en écartent un peu (la garde le vérifie). Le coût complet du départ
+ * compte cet écart de marge des trimestres suivants ; l'étape qui le calcule ne se montre que là
+ * où l'année rejouée le rencontre.
  *
  * Le chapitre ne se joue que là où un poste vide coûte des ventes : ailleurs, l'équipe a plus de
  * bras que son activité n'en demande, et un départ n'y fait perdre aucune vente (la garde le
@@ -49,18 +53,26 @@ export const ECART_SOUS_LE_MARCHE = 0.1;
 export const TRIMESTRE_DE_LA_BAISSE = 1;
 
 /**
+ * Le salaire des autres trimestres : celui du marché (indice 1), comme dans l'année du cours. La
+ * gestion de l'arène reconduit sa décision du trimestre d'avant : sans ce retour, la baisse du
+ * trimestre 1 durerait toute l'année, et un salarié partirait chaque trimestre.
+ */
+export const SALAIRE_DU_MARCHE = 1;
+
+/**
  * Le trimestre où le gérant recrute le remplaçant : le suivant, une fois le départ constaté.
  * Recruté, le remplaçant n'arrive qu'au trimestre d'après : ce trimestre-ci, le poste est vide.
  */
 export const TRIMESTRE_DU_RECRUTEMENT = 2;
 
 /**
- * Les entreprises où le poste vide coûte des ventes : NOVA seule, dont la gestion prépare plus que
- * ce qu'une équipe d'un salarié de moins peut produire. Dans les autres, la gestion produit moins
- * que l'équipe ne le peut, même avec un salarié de moins : l'arène n'y perd aucune vente pendant
- * la vacance, et le départ ne fait qu'économiser un salaire (la garde le vérifie).
+ * Les entreprises où le poste vide coûte des ventes : NOVA, le cabinet de conseil et le bâtiment,
+ * dont la gestion prépare au trimestre vide plus que ce qu'une équipe d'un salarié de moins peut
+ * produire. Dans les autres, la gestion produit moins que l'équipe ne le peut, même avec un
+ * salarié de moins : l'arène n'y perd aucune vente pendant la vacance, et le départ ne fait
+ * qu'économiser un salaire (la garde le vérifie).
  */
-export const ENTREPRISES_OU_LE_POSTE_COMPTE = ["nova"] as const;
+export const ENTREPRISES_OU_LE_POSTE_COMPTE = ["nova", "conseil", "batiment"] as const;
 
 const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
@@ -69,14 +81,21 @@ const rang = (trimestre: number) => trimestre - 1;
 
 export type Verdict = "le-depart-coute-plus" | "l-economie-couvre";
 
+/**
+ * Les embauches que la gestion fait au trimestre `t` de l'année sans départ : le remplaçant s'y
+ * ajoute. Recruter « un de plus que prévu », et non « un seul », garde l'équipe des trimestres
+ * suivants égale à celle de l'année sans départ, là où la gestion embauche aussi pour son activité.
+ */
+export const embauchesPrevues = (code: string, t: number) => anneeDeReference(code)[rang(t)]!.hr?.hired ?? 0;
+
 /** L'année du départ, rejouée : le salaire baissé au trimestre 1, le remplaçant recruté au trimestre 2. */
 export function anneeDuDepart(code: string) {
   return rejouerAvec(code, "le-depart-d-un-salarie:remplace-au-trimestre-2", (t, d) =>
     t === TRIMESTRE_DE_LA_BAISSE
       ? { ...d, hr: { ...d.hr, salaryIndex: 1 - ECART_SOUS_LE_MARCHE } }
       : t === TRIMESTRE_DU_RECRUTEMENT
-        ? { ...d, hr: { ...d.hr, hire: 1 } }
-        : undefined,
+        ? { ...d, hr: { ...d.hr, salaryIndex: SALAIRE_DU_MARCHE, hire: embauchesPrevues(code, t) + 1 } }
+        : { ...d, hr: { ...d.hr, salaryIndex: SALAIRE_DU_MARCHE } },
   );
 }
 
@@ -137,6 +156,8 @@ export function departDUnSalarie(c: Cas) {
     margeVide,
     margePerdue,
     margeParVentePerdue: ventesPerdues > 0 ? auCentime(margePerdue / ventesPerdues) : 0,
+    /** L'effectif au trimestre où le remplaçant est arrivé : celui de l'année sans départ. */
+    effectifEnsuite: depart[rang(trimestreVide) + 1]?.hr?.headcount ?? effectif,
     plansEnsuiteAvant: Math.round(surLAnnee(ensuite(reference), (r) => r.production.planned)),
     plansEnsuiteApres: Math.round(surLAnnee(ensuite(depart), (r) => r.production.planned)),
     venduesEnsuiteAvant,
@@ -193,7 +214,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
         const r = departDUnSalarie(c);
         return [
           `Au trimestre ${TRIMESTRE_DE_LA_BAISSE}, ${c.entreprise} a payé ses ${r.effectif} salariés ${r.ecart} % sous le salaire du marché, pour faire une économie. Dans l'arène, sous ${r.seuil} % du salaire du marché, un salarié démissionne : il part à la fin du trimestre.`,
-          `Le gérant recrute un remplaçant au trimestre ${TRIMESTRE_DU_RECRUTEMENT}, une fois le départ constaté. Le recrutement coûte ${eur(r.recrutement)} tout de suite, et le remplaçant n'arrive qu'au trimestre suivant : pendant tout le trimestre ${r.trimestreVide}, le poste reste vide. L'arène a rejoué l'année ainsi ; le reste est décidé par la même gestion, qui prévoit chaque trimestre sa production d'après ses ventes du trimestre d'avant.`,
+          `Le gérant recrute un remplaçant au trimestre ${TRIMESTRE_DU_RECRUTEMENT}, une fois le départ constaté. Le recrutement coûte ${eur(r.recrutement)} tout de suite, et le remplaçant n'arrive qu'au trimestre suivant : pendant tout le trimestre ${r.trimestreVide}, le poste reste vide. Dès ce trimestre, le salaire revient à celui du marché. L'arène a rejoué l'année ainsi ; le reste est décidé par la même gestion, qui prévoit chaque trimestre sa production d'après la demande du trimestre d'avant, ventes manquées comprises.`,
         ];
       },
       tableau: (c) => {
@@ -273,7 +294,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
       },
       question: (c) => {
         const r = departDUnSalarie(c);
-        return `Le remplaçant arrive au trimestre ${r.trimestreVide + 1} : l'équipe retrouve ses ${r.effectif} salariés. Mais la gestion prévoit chaque trimestre sa production d'après ses ventes du trimestre d'avant. D'après le tableau, calculez les ventes perdues sur ${r.trimestresEnsuite} (en ${c.unites}), puis la marge sur coût variable perdue.`;
+        return `Le remplaçant arrive au trimestre ${r.trimestreVide + 1} : l'équipe retrouve l'effectif de l'année sans départ, ${r.effectifEnsuite} salariés. Mais la gestion prévoit chaque trimestre sa production d'après la demande du trimestre d'avant, ventes manquées comprises : l'année ne reprend pas forcément à l'identique. D'après le tableau, calculez les ventes perdues sur ${r.trimestresEnsuite} (en ${c.unites}), puis la marge sur coût variable perdue (une vente ou une marge gagnée se compte en négatif).`;
       },
       champs: (c) => {
         const r = departDUnSalarie(c);
@@ -294,11 +315,16 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
       },
       explication: (c) => {
         const r = departDUnSalarie(c);
+        const plans = r.plansEnsuiteApres - r.plansEnsuiteAvant;
+        const ventes = -r.ventesPerduesEnsuite;
+        const sens = (x: number) => (x > 0 ? "de plus" : "de moins");
         return [
-          `Le trimestre ${r.trimestreVide} a vendu ${qte(r.ventesPerdues)} ${c.unites} de moins : la gestion prépare ${qte(r.plansEnsuiteAvant - r.plansEnsuiteApres)} ${c.unites} de moins sur ${r.trimestresEnsuite}, et ${c.entreprise} en vend ${qte(r.ventesPerduesEnsuite)} de moins, alors que son équipe est complète.`,
+          `Le trimestre ${r.trimestreVide} a manqué ${qte(r.ventesPerdues)} ${c.unites} de ventes, que la gestion lit encore comme de la demande. Sur ${r.trimestresEnsuite}, elle prépare ${plans === 0 ? `autant que sans départ` : `${qte(Math.abs(plans))} ${c.unites} ${sens(plans)}`}, et ${c.entreprise} ${ventes === 0 ? "vend autant" : `en vend ${qte(Math.abs(ventes))} ${sens(ventes)}`}, son équipe complète.`,
           r.margePerdueEnsuite > 0
-            ? `Le départ coûte encore ${eur(r.margePerdueEnsuite)} de marge après l'arrivée du remplaçant : une vente perdue fait prévoir moins ensuite.`
-            : `Ensuite, la marge ne baisse pas : elle monte de ${eur(-r.margePerdueEnsuite)}.`,
+            ? `Le départ coûte encore ${eur(r.margePerdueEnsuite)} de marge après l'arrivée du remplaçant.`
+            : r.margePerdueEnsuite < 0
+              ? `Ensuite, la marge ne baisse pas : elle monte de ${eur(-r.margePerdueEnsuite)}, qui viennent en déduction du coût du départ.`
+              : "Ensuite, la marge est celle de l'année sans départ.",
         ];
       },
     },

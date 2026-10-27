@@ -10,7 +10,7 @@ import { MARCHES } from "./marche-et-part-de-marche";
  * CHAPITRE : LIRE LA STRATÉGIE DE SES CONCURRENTS (Stratégie et management, palier 2).
  *
  * Ce que chaque enseigne du marché a fait dans l'année du cours (`anneeJouee` : l'entreprise,
- * jouée par une gestion équilibrée, et ses deux concurrents, joués par les robots du scénario)
+ * jouée par le bon gestionnaire, et ses deux concurrents, joués par les robots du scénario)
  * dit la stratégie qu'elle suit : son prix moyen, la qualité que les clients lui reconnaissent,
  * ses budgets de qualité et de marketing, la part du marché qu'elle prend et ce qu'elle gagne.
  * L'élève place les trois enseignes sur une carte prix / qualité (deux indices, base 100 la

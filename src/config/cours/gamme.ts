@@ -1,11 +1,10 @@
-import type { BotProfile } from "../../engine/bots";
 import { withoutRd } from "../../engine/gamme";
-import { runGame, type DecisionProviderContext } from "../../engine/simulation/runGame";
+import { runGame } from "../../engine/simulation/runGame";
 import type { CompanyState } from "../../engine/types";
 import { auCentime } from "../../pedagogy/cours/etats";
 import { familyOf, scenarioByCode } from "../scenarios/registry";
 import { GRAINE_DU_COURS } from "./cas";
-import { decisionDuCours, scenarioDuCours } from "./arene-du-cours";
+import { decisionsDuCours, scenarioDuCours } from "./arene-du-cours";
 
 /**
  * LA GAMME DU MOIS : CE QUE LE MOTEUR VEND, RÉFÉRENCE PAR RÉFÉRENCE.
@@ -84,13 +83,7 @@ export function gammeDuMois(code: string): GammeDuMois | null {
     scenario,
     initialCompanies: entreprises,
     seed: GRAINE_DU_COURS,
-    providers: Object.fromEntries(
-      entreprises.map((e) => [
-        e.id,
-        (ctx: DecisionProviderContext) =>
-          decisionDuCours(e.botProfile as BotProfile, scenario, ctx),
-      ]),
-    ),
+    providers: decisionsDuCours(entreprises, scenario),
   });
   const joueur = partie.rounds[0]!.results["joueur"]!;
   const references = (scenario.products ?? []).flatMap((d): ReferenceDuMois[] => {

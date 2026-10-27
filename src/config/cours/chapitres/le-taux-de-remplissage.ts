@@ -474,7 +474,7 @@ export const LE_TAUX_DE_REMPLISSAGE: Chapitre = {
       },
       question: (c) => {
         const k = remplissage(c);
-        return `L'arène a rejoué le trimestre ${k.t} avec ${qte(k.planRejoue)} « ${k.vocabulaire.productionPlanLabel} », tout le reste identique. Que devient le résultat d'exploitation du trimestre ?`;
+        return `L'arène a rejoué le trimestre ${k.t} avec ${qte(k.planRejoue)} « ${k.vocabulaire.productionPlanLabel} », les autres décisions du trimestre identiques. Que devient le résultat d'exploitation du trimestre ?`;
       },
       options: (c) => {
         const k = remplissage(c);

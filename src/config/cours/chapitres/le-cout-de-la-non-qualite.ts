@@ -21,13 +21,30 @@ const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
  * qualité attire, peut en désigner un autre. Le chapitre finit sur une démarche qualité du
  * catalogue du scénario (`qualityActions`), payée une fois, et son délai de récupération.
  *
- * Il ne se joue que dans les entreprises dont le scénario chiffre la non-qualité
- * (`QUALITES`) : ailleurs, le moteur ne compte ni rebut ni retour, et le budget qualité n'a rien
- * à prévenir.
+ * Il ne se joue que dans les entreprises dont le scénario chiffre la non-qualité et dont l'année du
+ * cours engage un budget de prévention (`QUALITES`) : ailleurs, le moteur ne compte ni rebut ni
+ * retour, et le budget qualité n'a rien à prévenir ; chez PIXEL & CO, qui chiffre la non-qualité,
+ * la gestion de l'arène n'engage aucun budget de prévention (le formulaire n'en propose pas), et
+ * la moitié ou le double de rien ne se comparent pas (la garde le vérifie).
  */
 
-/** Les entreprises du cours dont le scénario chiffre la non-qualité (`qualityCosts`), et où le budget qualité se décide pour toute l'entreprise. */
-export const QUALITES = ["bistrot", "ecommerce"] as const;
+/**
+ * Les entreprises du cours dont le scénario chiffre la non-qualité (`qualityCosts`), où le budget
+ * qualité se décide pour toute l'entreprise, et où l'année du cours en engage un.
+ */
+export const QUALITES = ["bistrot"] as const;
+
+/** Le budget de prévention que la gestion engage au trimestre `t` de l'année du cours. */
+export const preventionDeLAnnee = (code: string, t: number) => anneeDeReference(code)[t - 1]!.qualityCosts?.prevention ?? 0;
+
+/**
+ * L'année rejouée à une part du budget de prévention de l'année du cours, trimestre par
+ * trimestre. Le budget se pose en valeur, celle de l'année du cours multipliée par la part : la
+ * gestion de l'arène reconduit sa décision du trimestre d'avant, et une part appliquée à la
+ * décision reçue se composerait d'un trimestre à l'autre.
+ */
+export const anneeALaPrevention = (code: string, part: number) =>
+  part === 1 ? anneeDeReference(code) : rejouerAvec(code, `prevention-${part}`, (t, d) => ({ ...d, qualityBudget: preventionDeLAnnee(code, t) * part }));
 
 /**
  * Les budgets de prévention rejoués, en part du budget de la gestion équilibrée (le budget de
@@ -134,11 +151,7 @@ function calculer(code: string) {
   const annee = coutsDeLaQualite(reference);
   const niveaux = NIVEAUX_DE_PREVENTION.map((n) => ({
     ...n,
-    ...coutsDeLaQualite(
-      n.part === 1
-        ? reference
-        : rejouerAvec(code, `prevention-${n.part}`, (_t, d) => ({ ...d, qualityBudget: (d.qualityBudget ?? 0) * n.part })),
-    ),
+    ...coutsDeLaQualite(anneeALaPrevention(code, n.part)),
   }));
   const actuel = niveaux.findIndex((n) => n.part === 1);
   const double = niveaux.findIndex((n) => n.part === 2);
@@ -194,7 +207,8 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
   libre: false,
   entreprises: {
     codes: QUALITES,
-    pourquoi: "ce chapitre mesure des rebuts et des retours, et seules ces entreprises de l'arène les comptent ; ailleurs, le moteur ne chiffre pas la non-qualité.",
+    pourquoi:
+      "ce chapitre compare des budgets de prévention autour de celui de l'année. Ailleurs, le moteur ne chiffre pas la non-qualité ; chez PIXEL & CO, il la chiffre, mais l'année du cours n'engage aucun budget de prévention.",
   },
   etapes: [
     {

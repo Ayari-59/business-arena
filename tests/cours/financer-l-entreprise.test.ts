@@ -87,8 +87,13 @@ describe.each(ENTREPRISES_DU_COURS)("le financement chez %s", (code) => {
 
 describe("les cas que le chapitre distingue se rencontrent dans le cours", () => {
   const toutes = ENTREPRISES_DU_COURS.map((c) => financer(casDeLEntreprise(c)));
-  it("autofinancement, emprunt et apport ; un emprunt conseillé sur une activité qui ne couvre pas son taux", () => {
-    for (const choix of ["autofinancement", "emprunt", "apport"]) expect(toutes.some((k) => k.choix === choix), choix).toBe(true);
-    expect(toutes.some((k) => k.choix === "emprunt" && k.economique <= k.tauxDeLEmprunt)).toBe(true);
+  it("autofinancement et apport ; l'emprunt ne se conseille plus nulle part", () => {
+    for (const choix of ["autofinancement", "apport"]) expect(toutes.some((k) => k.choix === choix), choix).toBe(true);
+    // Dans l'année du bon gestionnaire, la capacité d'autofinancement couvre l'équipement partout
+    // sauf à l'hôtel, dont l'emprunt dépasserait les capitaux propres : la réponse « Par un
+    // emprunt » (et sa réserve sur une activité qui ne couvre pas son taux) n'est plus lue. Si elle
+    // revient, ces gardes le diront.
+    expect(toutes.filter((k) => k.choix === "emprunt")).toHaveLength(0);
+    expect(ENTREPRISES_DU_COURS.filter((_, i) => toutes[i]!.choix === "apport")).toEqual(["hotel"]);
   });
 });

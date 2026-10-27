@@ -21,8 +21,9 @@ import type { Situation } from "../types";
  *
  * Le cas est neuf par sa question : le chapitre comparait « avec » et « sans » publicité ; ici,
  * on compare le budget d'aujourd'hui et le double, et c'est le budget EN PLUS qui doit se payer.
- * Les chiffres sont l'année du cours rejouée avec le budget de chaque trimestre doublé
- * (`anneeAvecLaPublicite`), face à l'année jouée avec le budget actuel.
+ * Les chiffres sont l'année du cours rejouée avec le budget doublé dès le premier trimestre, que
+ * le formulaire reconduit ensuite (`anneeAvecLaPublicite`), face à l'année jouée avec le budget
+ * actuel.
  */
 
 /** Le budget proposé, en multiple du budget de publicité de chaque trimestre : le double. */
@@ -118,7 +119,7 @@ export const DOUBLER_LA_PUBLICITE: Situation = {
         const k = publiciteDoublee(c);
         return [
           `« Cette année, nous avons dépensé ${eur(k.actuel.publicite)} en publicité. Si nous mettons le double, nous vendrons beaucoup plus, j'en suis sûr. Dites-moi ce que le budget en plus doit faire gagner pour se payer, ce qu'il a vraiment donné, et si je dois le demander à la direction. »`,
-          "Pas de cours cette fois : les calculs sont ceux du chapitre. L'arène a rejoué l'année avec le budget doublé, tout le reste identique.",
+          "Pas de cours cette fois : les calculs sont ceux du chapitre. L'arène a rejoué l'année avec le budget doublé, les mêmes concurrents et la même façon de gérer.",
         ];
       },
       repere: () => "À rendre : les ventes que le budget en plus doit faire gagner, ce qu'il a donné dans l'arène, et votre réponse.",

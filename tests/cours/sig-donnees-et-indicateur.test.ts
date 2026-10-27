@@ -309,9 +309,9 @@ describe("des données à l'information, sur les entreprises du cours", () => {
   it("chez NOVA, les chiffres de l'année du cours", () => {
     const k = donneesALInformation(casDeLEntreprise("nova"));
     expect(k.lignes).toHaveLength(12);
-    expect(k.premier.part).toBe(34.3);
-    expect(k.second.part).toBe(31.8);
-    expect(k.lecture).toBe("baisse");
+    expect(k.premier.part).toBe(34.8);
+    expect(k.second.part).toBe(34.2);
+    expect(k.lecture).toBe("stable");
     expect(k.partis).toEqual([]);
   });
 });
@@ -378,18 +378,23 @@ describe("construire un indicateur juste, sur les entreprises du chapitre", () =
 
   it("l'erreur fait monter le prix à tort chez les unes, le fait garder à tort ailleurs, ne change rien chez les autres", () => {
     const erreurs = new Set(MARCHES.map((c) => indicateurDuPrix(casDeLEntreprise(c)).erreur));
-    expect([...erreurs].sort()).toEqual(["aucune", "monter", "rester"]);
-    // MAILLE & CO se croirait au prix du marché (indice 104 sur la moyenne simple), quand le prix
-    // pondéré la place au-dessus (107).
-    expect(MARCHES.filter((c) => indicateurDuPrix(casDeLEntreprise(c)).erreur === "rester")).toEqual(["boutique"]);
+    expect([...erreurs].sort()).toEqual(["aucune", "monter"]);
+    // Sur l'année du bon gestionnaire, l'erreur fait monter le prix à tort chez NOVA, L'ESCALE et
+    // ATLAS CONSEIL (moins chères que le marché sur la moyenne simple, alignées sur le prix pondéré).
+    // MAILLE & CO, qui se croyait au prix du marché quand le prix pondéré la plaçait au-dessus,
+    // reste alignée sur les deux (indices 103 et 105) : les branches « garder son prix à tort » et
+    // « baisser son prix à tort » ne sont lues dans aucune entreprise.
+    expect(MARCHES.filter((c) => indicateurDuPrix(casDeLEntreprise(c)).erreur === "monter")).toEqual(["nova", "hotel", "conseil"]);
+    const boutique = indicateurDuPrix(casDeLEntreprise("boutique"));
+    expect([boutique.indiceSimple, boutique.indicePondere, boutique.erreur]).toEqual([103, 105, "aucune"]);
   });
 
   it("chez NOVA, les chiffres de l'année du cours", () => {
     const k = indicateurDuPrix(casDeLEntreprise("nova"));
-    expect(k.moyenneSimple).toBe(63.44);
-    expect(k.prixPondere).toBe(61.4);
-    expect(k.indiceSimple).toBe(93);
-    expect(k.indicePondere).toBe(96);
+    expect(k.moyenneSimple).toBe(63.71);
+    expect(k.prixPondere).toBe(61.65);
+    expect(k.indiceSimple).toBe(94);
+    expect(k.indicePondere).toBe(97);
     expect(k.erreur).toBe("monter");
   });
 });
@@ -478,8 +483,8 @@ describe("la part de marché annoncée, sur les entreprises du cas", () => {
 
   it("chez NOVA, les chiffres de l'année du cours", () => {
     const k = partAnnoncee(casDeLEntreprise("nova"));
-    expect(k.moyenne).toBe(23.4);
-    expect(k.partDeLAnnee).toBe(20.2);
+    expect(k.moyenne).toBe(24.3);
+    expect(k.partDeLAnnee).toBe(21.4);
     expect(k.verdict).toBe("plus-basse");
   });
 });

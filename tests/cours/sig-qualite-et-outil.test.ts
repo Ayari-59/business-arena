@@ -7,6 +7,7 @@ import {
   FACTEUR_DE_LA_VIRGULE,
   TRIMESTRE_DECIDE,
   TRIMESTRE_DE_L_ERREUR,
+  TRIMESTRES_DE_L_EXTRAIT,
   UNE_DONNEE_FAUSSE,
   donneeFausse,
 } from "../../src/config/cours/chapitres/une-donnee-fausse";
@@ -210,8 +211,11 @@ describe("la qualité des données et l'outil numérique : la place dans le parc
     expect(prixDeLaBoutique.size).toBeGreaterThan(1);
     for (const code of ENTREPRISES_A_PRIX_UNIQUE) {
       const annee = anneeDuCours(code);
+      // Chaque trimestre, un seul prix au centime pour toutes les unités vendues.
+      for (const r of annee) pres(r.incomeStatement.revenue, soldUnits(r) * auCentime(r.incomeStatement.revenue / soldUnits(r)), 0.01);
+      // Le bon gestionnaire peut changer son prix au trimestre 4 ; sur les trimestres de l'extrait, le prix est le même.
       const prix = auCentime(annee[0]!.incomeStatement.revenue / soldUnits(annee[0]!));
-      for (const r of annee) pres(r.incomeStatement.revenue, soldUnits(r) * prix, 0.01);
+      for (const t of TRIMESTRES_DE_L_EXTRAIT) pres(annee[t - 1]!.incomeStatement.revenue, soldUnits(annee[t - 1]!) * prix, 0.01);
     }
   });
 

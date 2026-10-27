@@ -14,7 +14,7 @@ import { scenarioByCode } from "../../src/config/scenarios/registry";
  * Les formules que l'élève applique (encaissements, paiements au fournisseur, intérêts,
  * acompte d'impôt) sont celles du moteur : appliquées au deuxième trimestre réellement
  * joué, elles retrouvent ses flux. Le budget boucle, le réalisé aussi ; les deux cas de
- * l'écart existent (côté ventes, côté sorties), et les deux budgets (découvert ou non).
+ * l'écart existent (côté ventes, côté sorties). Aucun budget n'annonce plus de découvert.
  */
 
 const chapitre = BUDGET_DE_TRESORERIE;
@@ -101,10 +101,12 @@ describe.each(ENTREPRISES_DU_COURS)("le budget de trésorerie chez %s", (code) =
 });
 
 describe("le budget de trésorerie, quelle que soit l'entreprise", () => {
-  it("les deux budgets existent (avec et sans découvert), et les deux causes d'écart (ventes, sorties)", () => {
+  // Dans l'année du bon gestionnaire, aucun budget n'annonce de découvert : la branche « découvert »
+  // de l'étape « a-quoi-sert » ne se lit plus nulle part. La garde le constate ; si un découvert
+  // revient, elle rougit, et il faudra revenir aux deux budgets.
+  it("aucun budget n'annonce de découvert dans l'année du bon gestionnaire, et les deux causes d'écart (ventes, sorties) existent", () => {
     const budgets = ENTREPRISES_DU_COURS.map((c) => budgetDuTrimestre(c).prevu.tresorerieFin);
-    expect(budgets.some((t) => t < 0)).toBe(true);
-    expect(budgets.some((t) => t >= 0)).toBe(true);
+    expect(ENTREPRISES_DU_COURS.filter((_, i) => budgets[i]! < 0)).toEqual([]);
     const causes = new Set(ENTREPRISES_DU_COURS.map((c) => ecartsDuBudget(casDeLEntreprise(c)).principal));
     expect([...causes].sort()).toEqual(["decaissements", "encaissements"]);
   });

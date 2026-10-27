@@ -1,7 +1,8 @@
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import { scenarioByCode } from "../../scenarios/registry";
 import type { Cas } from "../cas";
-import { ECART_D_INDICE, rejouerLAnnee } from "../ressources-humaines";
+import { ECART_D_INDICE } from "../ressources-humaines";
+import { anneeAuxSalaires } from "./remuneration-et-motivation";
 import type { Chapitre } from "../types";
 
 
@@ -33,7 +34,8 @@ const somme = (xs: number[]) => xs.reduce((t, x) => t + x, 0);
 export function indicateursSociaux(c: Cas) {
   const hr = scenarioByCode(c.code).scenario.hr!;
   const indice = 1 - ECART_D_INDICE;
-  const annee = rejouerLAnnee(c.code, "salaires-baisses", () => ({ salaryIndex: indice }));
+  // L'année du chapitre « Rémunération et motivation » : les salaires baissés, les embauches de l'année jouée gardées.
+  const annee = anneeAuxSalaires(c.code, "salaires-baisses", indice);
   const trimestres = annee.map((r, i) => {
     const ventes = Math.round(r.incomeStatement.revenue);
     return {
@@ -62,6 +64,14 @@ export function indicateursSociaux(c: Cas) {
     evolution: auDixieme(((dernier.caParSalarie - premier.caParSalarie) / premier.caParSalarie) * 100),
     ventesDebut: premier.ventes,
     ventesFin: dernier.ventes,
+    /**
+     * Le chiffre d'affaires par salarié monte surtout parce que l'équipe fond : l'effectif s'est plus
+     * réduit, en proportion, que les ventes n'ont monté. Sinon, ce sont surtout les ventes du dernier
+     * trimestre qui le font monter (au conseil, dont les embauches de l'année jouée sont gardées).
+     */
+    parLEquipe: premier.effectif / dernier.effectif >= dernier.ventes / premier.ventes,
+    evolutionDesVentes: auDixieme((dernier.ventes / premier.ventes - 1) * 100),
+    evolutionDeLEffectif: auDixieme((dernier.effectif / premier.effectif - 1) * 100),
   };
 }
 
@@ -172,20 +182,36 @@ export const INDICATEURS_SOCIAUX: Chapitre = {
       options: (c) => {
         const s = indicateursSociaux(c);
         const monte = s.caParSalarieFin > s.caParSalarieDebut;
+        const parLEquipe = monte && s.parLEquipe;
+        const parLesVentes = monte && !s.parLEquipe;
+        const chiffres = `Les ventes du trimestre évoluent de ${pct(s.evolutionDesVentes)}, l'effectif de ${pct(s.evolutionDeLEffectif)}.`;
         return [
           {
             texte: "C'est une bonne nouvelle : chaque salarié vend davantage, l'équipe est plus efficace",
             juste: false,
-            retour: monte
+            retour: parLEquipe
               ? `Non : l'indicateur monte parce que l'effectif fond (${s.departs} départs dans l'année), pas parce que l'équipe vend mieux. Lu seul, il prend une crise sociale pour un succès.`
-              : "Non : il baisse, et ce n'est pas une question d'efficacité : les ventes chutent plus vite que l'effectif.",
+              : parLesVentes
+                ? `Non : ce sont les ventes du trimestre qui montent, pas l'efficacité de l'équipe, qui a perdu ${s.departs} salariés dans l'année. ${chiffres}`
+                : "Non : il baisse, et ce n'est pas une question d'efficacité : les ventes chutent plus vite que l'effectif.",
           },
           {
             texte: "Il monte parce que l'équipe fond, pas parce qu'elle vend mieux",
-            juste: monte,
-            retour: monte
+            juste: parLEquipe,
+            retour: parLEquipe
               ? `Oui : le chiffre d'affaires se partage entre moins de salariés. Le taux de rotation (${pct(s.rotation)}) dit ce qui se passe vraiment : l'entreprise perd son équipe.`
-              : "Non : ici, l'indicateur baisse.",
+              : parLesVentes
+                ? `Non : l'équipe fond moins que les ventes ne montent. ${chiffres}`
+                : "Non : ici, l'indicateur baisse.",
+          },
+          {
+            texte: "Il monte surtout avec les ventes du trimestre, pendant que l'équipe perd des salariés",
+            juste: parLesVentes,
+            retour: parLesVentes
+              ? `Oui. ${chiffres} Le taux de rotation (${pct(s.rotation)}) dit ce que l'indicateur cache : ${s.departs} salariés sont partis dans l'année.`
+              : monte
+                ? `Non : l'effectif s'est plus réduit que les ventes n'ont monté. ${chiffres}`
+                : "Non : ici, l'indicateur baisse.",
           },
           {
             texte: "Il baisse : les ventes chutent plus vite que l'effectif",

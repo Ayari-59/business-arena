@@ -91,12 +91,16 @@ describe("les cas que le chapitre distingue se rencontrent dans le cours", () =>
   const toutes = ENTREPRISES_DU_COURS.map((c) => rentabilite(casDeLEntreprise(c)));
   it("un besoin négatif, un emprunt qui réduit un bénéfice ou creuse une perte, et plus d'activité qui rapporte plus qu'elle ne mobilise", () => {
     expect(toutes.some((r) => r.bfr < 0)).toBe(true);
-    // Dans l'année corrigée, aucune activité ne rapporte plus en un an que tout ce qu'elle mobilise
-    // (la plus forte, la boutique, en tire 86,9 %) : la phrase de l'étape « calcul » sur ce cas
-    // n'est plus lue. Si le cas revient, cette garde le dira.
-    expect(toutes.filter((r) => r.resultatExploitation > r.capitauxInvestis)).toHaveLength(0);
-    expect(Math.max(...toutes.map((r) => r.economique))).toBe(86.9);
-    expect(toutes.some((r) => r.economique <= r.tauxDeLEmprunt && r.economique > 0)).toBe(true);
-    expect(toutes.some((r) => r.economique <= 0)).toBe(true);
+    // Dans l'année du bon gestionnaire, deux activités rapportent en un an plus que tout ce qu'elles
+    // mobilisent (la boutique et le commerce en ligne, au besoin en fonds de roulement négatif) : la
+    // phrase de l'étape « calcul » sur ce cas est lue.
+    expect(toutes.filter((r) => r.resultatExploitation > r.capitauxInvestis)).toHaveLength(2);
+    expect(Math.max(...toutes.map((r) => r.economique))).toBe(638);
+    // Et toutes rapportent plus que leur emprunt ne coûte (la plus faible, l'hôtel, 20,2 % pour un
+    // emprunt à 4,2 %) : la réponse « Non : chaque euro emprunté coûterait plus qu'il ne rapporte »
+    // n'est plus la bonne nulle part, et ses deux retours (bénéfice réduit, perte creusée) ne sont
+    // plus lus. Si le cas revient, ces gardes le diront.
+    expect(toutes.filter((r) => r.economique <= r.tauxDeLEmprunt)).toHaveLength(0);
+    expect(Math.min(...toutes.map((r) => r.economique))).toBe(20.2);
   });
 });

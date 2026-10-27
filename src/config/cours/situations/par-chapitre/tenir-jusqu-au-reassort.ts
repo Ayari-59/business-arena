@@ -20,7 +20,10 @@ import type { Situation } from "../types";
  * trimestre, et le réassort suivant prend le délai du chapitre (`DELAI_DE_REASSORT`).
  *
  * LA RÉPONSE SE CALCULE : la livraison tient jusqu'au réassort si les jours avant la rupture
- * atteignent le délai. Dans l'année du cours, elle ne tient pas.
+ * atteignent le délai. Dans l'année du cours tenue par le bon gestionnaire, elle tient : l'article
+ * est la seule rupture du premier trimestre, une petite rupture de fin de trimestre, qu'un réassort
+ * commandé à temps aurait évitée (le texte le dit). La branche « ça ne tient pas » reste juste pour
+ * une autre année, mais ne se lit plus.
  */
 
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
@@ -151,7 +154,11 @@ export const TENIR_JUSQU_AU_REASSORT: Situation = {
       },
       explication: (c) => {
         const s = reassortAttendu(c);
-        return [`Malgré la livraison, ${qte(s.x.perdues)} ${s.x.pluriel} ${accordeA(s.x.feminin, "demandé")} n'étaient plus là : ${eur(s.ventesPerdues)} de ventes perdues.`];
+        return [
+          s.aTemps
+            ? `Dans l'arène, aucun réassort n'est arrivé pendant le trimestre : ${qte(s.x.perdues)} ${s.x.pluriel} ${accordeA(s.x.feminin, "demandé")} n'étaient plus là, ${eur(s.ventesPerdues)} de ventes perdues. Commandé à temps, le réassort serait arrivé avant la rupture.`
+            : `Malgré la livraison, ${qte(s.x.perdues)} ${s.x.pluriel} ${accordeA(s.x.feminin, "demandé")} n'étaient plus là : ${eur(s.ventesPerdues)} de ventes perdues.`,
+        ];
       },
     },
     {

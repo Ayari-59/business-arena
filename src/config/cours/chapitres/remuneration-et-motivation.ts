@@ -28,12 +28,24 @@ const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits:
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 const somme = (xs: number[]) => xs.reduce((t, x) => t + x, 0);
 
+/**
+ * L'ANNÉE AUX SALAIRES CHANGÉS : l'indice de salaire posé à chaque trimestre, les embauches de
+ * l'année du cours gardées telles quelles. Une décision de ressources humaines rejouée remplace
+ * toute celle du trimestre (`rejouerLAnnee`) : sans cela, les embauches que le bon gestionnaire a
+ * faites dans l'année jouée (au conseil, faute de bras) disparaîtraient avec le changement de
+ * salaire, et la comparaison mêlerait deux décisions. Seule la rémunération change.
+ */
+export function anneeAuxSalaires(code: string, cle: string, indice: number) {
+  const base = rejouerLAnnee(code, "base", () => undefined);
+  return rejouerLAnnee(code, `${cle}:embauches-de-l-annee`, (t) => ({ salaryIndex: indice, hire: base[t - 1]?.hr?.hired ?? 0 }));
+}
+
 /** Les salaires baissés toute l'année : l'économie, la motivation, les départs, le résultat. */
 export function remuneration(c: Cas) {
   const hr = scenarioByCode(c.code).scenario.hr!;
   const indice = 1 - ECART_D_INDICE;
   const base = rejouerLAnnee(c.code, "base", () => undefined);
-  const baisse = rejouerLAnnee(c.code, "salaires-baisses", () => ({ salaryIndex: indice }));
+  const baisse = anneeAuxSalaires(c.code, "salaires-baisses", indice);
   const effectif = c.personnel.effectif;
   const economieDuTrimestre = Math.round(effectif * hr.salaryPerEmployeePerRound * ECART_D_INDICE);
   const capaciteAvant = Math.round(base[0]!.production.laborCapacity);
@@ -43,7 +55,9 @@ export function remuneration(c: Cas) {
   // Sans décision RH, le moteur ne rend pas de compte RH : l'effectif reste celui de départ.
   const effectifsHabituels = base.map((r) => r.hr?.headcount ?? effectif);
   const departs = somme(baisse.map((r) => r.hr!.departed));
-  const masseAvant = Math.round(effectif * hr.salaryPerEmployeePerRound * base.length);
+  // Les embauches de l'année jouée, gardées aux salaires baissés.
+  const embauches = somme(baisse.map((r) => r.hr!.hired));
+  const masseAvant = Math.round(somme(effectifsHabituels.map((n) => n * hr.salaryPerEmployeePerRound)));
   const masseApres = Math.round(somme(effectifs.map((n) => n * hr.salaryPerEmployeePerRound * indice)));
   const venduesAvant = Math.round(somme(base.map(vendues)));
   const venduesApres = Math.round(somme(baisse.map(vendues)));
@@ -61,7 +75,9 @@ export function remuneration(c: Cas) {
     effectifs,
     effectifsHabituels,
     effectifFinal: baisse.at(-1)!.hr!.nextHeadcount,
+    effectifFinalHabituel: base.at(-1)!.hr?.nextHeadcount ?? effectif,
     departs,
+    embauches,
     masseAvant,
     masseApres,
     economieDeLAnnee: masseAvant - masseApres,
@@ -160,7 +176,7 @@ export const REMUNERATION_ET_MOTIVATION: Chapitre = {
       explication: (c) => {
         const r = remuneration(c);
         return [
-          `En un an, ${r.departs} salariés sont partis : l'équipe ${dE(c.entreprise)} commence l'année suivante à ${r.effectifFinal}, contre ${r.effectif} au départ. Chaque départ fait une économie de plus, mais retire aussi des heures de travail : ${r.venduesPerdues > 0 ? `${qte(r.venduesPerdues)} ${c.unites} n'ont pas pu être vendues, faute de bras.` : "ici, l'équipe avait assez de marge pour que les ventes n'en souffrent pas encore."}`,
+          `En un an, ${r.departs} salariés sont partis${r.embauches > 0 ? `, malgré les ${r.embauches} embauches de l'année jouée, gardées aux salaires baissés` : ""} : l'équipe ${dE(c.entreprise)} commence l'année suivante à ${r.effectifFinal}, contre ${r.effectifFinalHabituel} aux salaires habituels. Chaque départ fait une économie de plus, mais retire aussi des heures de travail : ${r.venduesPerdues > 0 ? `${qte(r.venduesPerdues)} ${c.unites} n'ont pas pu être vendues, faute de bras.` : "ici, l'équipe avait assez de marge pour que les ventes n'en souffrent pas encore."}`,
         ];
       },
     },

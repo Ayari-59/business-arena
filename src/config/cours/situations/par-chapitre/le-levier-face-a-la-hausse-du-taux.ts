@@ -29,15 +29,18 @@ import type { Situation } from "../types";
  * Le cas est neuf par sa question : le chapitre faisait varier la structure à taux donné, le cas
  * fait varier le taux à structure donnée. Les chiffres de l'année sont ceux du chapitre
  * (`effetDeLevier`) ; ceux du taux relevé, la même lecture du bilan (`structureDe`) sur l'année
- * rejouée. Au taux relevé, l'année finit encore en bénéfice dans les trois entreprises : l'impôt
- * suit le taux, et la relation du levier tient ; le test le vérifie.
+ * rejouée. Au taux relevé, l'année finit encore en bénéfice dans les entreprises du chapitre :
+ * l'impôt suit le taux, et la relation du levier tient ; le test le vérifie.
+ *
+ * Dans l'année que joue le bon gestionnaire, le levier tient partout au taux relevé : le taux où
+ * il s'inverserait est loin au-dessus. Les textes du levier qui s'inverse, ou qui jouait déjà
+ * contre les associés, ne s'y lisent pas ; ils restent justes pour une année qui les ferait lire.
  */
 
 /**
  * LA HAUSSE DU TAUX : 3 points, une hypothèse du cours. C'est l'ordre de grandeur de la remontée
  * des taux des crédits aux entreprises en 2022 et 2023, ce qu'un emprunt à taux variable a payé
- * en plus en deux ans. À 4 points, MARTEL & FILS finirait l'année en perte : l'impôt ne
- * suivrait plus le taux, et la relation du levier après impôt ne tiendrait plus.
+ * en plus en deux ans.
  */
 export const HAUSSE_DU_TAUX_VARIABLE = 0.03;
 
@@ -218,7 +221,7 @@ export const LE_LEVIER_FACE_A_LA_HAUSSE_DU_TAUX: Situation = {
                   : `Non : au taux relevé, l'endettement net coûte ${pct(r2.i)}, plus que les ${pct(r2.re)} de l'outil.`,
           },
           {
-            texte: "Le levier s'inverse : au nouveau taux, la dette coûtera plus que l'outil ne rapportera",
+            texte: "Le levier s'inverse : la dette coûtera plus que l'outil ne rapportera",
             juste: verdict === "s-inverse",
             retour:
               verdict === "s-inverse"
@@ -228,7 +231,7 @@ export const LE_LEVIER_FACE_A_LA_HAUSSE_DU_TAUX: Situation = {
                   : `Non : le levier ne s'inverserait qu'à ${pct(tauxLimite)}, au-dessus des ${pct(tauxReleve)} annoncés.`,
           },
           {
-            texte: "Le levier jouait déjà contre les associés : la hausse aggrave la massue",
+            texte: "Le levier jouait déjà contre les associés : la hausse alourdit la massue",
             juste: verdict === "deja",
             retour:
               verdict === "deja"

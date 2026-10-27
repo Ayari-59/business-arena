@@ -28,8 +28,11 @@ import type { Chapitre } from "../types";
  * est dans les charges de structure, le même montant plein ou vide. Ce que coûte un stock en trop,
  * dans l'arène, c'est l'argent payé au fournisseur et bloqué dans le stock.
  *
- * Les trimestres étudiés se lisent dans l'année du cours (`anneeJouee`) : celui où la demande
- * non servie est la plus forte (le pic), et celui qui le précède (la base des calculs).
+ * Les trimestres étudiés se lisent dans l'année du cours (`anneeJouee`) : le premier où le stock
+ * manque (le pic, où la demande monte), et celui qui le précède, qui sert toute sa demande (la base
+ * des calculs). Le premier, et non celui qui perd le plus : la gestion de l'arène commande d'après
+ * la demande, et une fois le stock de départ écoulé, les trimestres suivants commencent à vide ;
+ * seul le trimestre d'avant le premier manque garde un stock à comparer au point de commande.
  *
  * « Le stock du point de vente » (BTS MCO) mesure la rotation et le crédit fournisseur ; « Les
  * stocks » (comptabilité) passe les écritures d'inventaire. Ce chapitre-ci dit quand recommander.
@@ -128,10 +131,11 @@ export function stockEtPointDeCommande(c: Cas) {
   const annee = stockDeLAnnee(c);
   const delai = DELAI_DE_REAPPROVISIONNEMENT[c.code];
   if (!delai) throw new Error(`Pas de délai de réapprovisionnement pour ${c.entreprise}`);
-  // Le pic : le trimestre où la demande non servie est la plus forte ; la base, celui d'avant.
-  const pic = annee.reduce((a, t) => (t.perdues > a.perdues ? t : a));
+  // Le pic : le premier trimestre où le stock manque ; la base, celui d'avant, qui sert toute sa demande.
+  const pic = annee.find((t) => t.perdues > 0);
+  if (!pic) throw new Error(`${c.entreprise} ne manque jamais de stock dans l'année du cours`);
   const base = annee[pic.trimestre - 2];
-  if (!base) throw new Error(`${c.entreprise} perd le plus de ventes dès le premier trimestre`);
+  if (!base) throw new Error(`${c.entreprise} manque de stock dès le premier trimestre`);
   const jours = s.roundDays;
   const parJour = Math.ceil(base.demande / jours);
   const pendantLeDelai = parJour * delai.jours;

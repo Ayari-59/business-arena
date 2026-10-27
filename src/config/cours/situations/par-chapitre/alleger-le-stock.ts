@@ -167,7 +167,9 @@ export const ALLEGER_LE_STOCK: Situation = {
       explication: (c) => {
         const r = allegerLeStock(c);
         return [
-          r.financeParLeFournisseur
+          r.financeParLeFournisseur && r.joursNonFinances === 0
+            ? `Aujourd'hui déjà, un article est vendu ${qte(r.delai - r.duree)} jours avant que le fournisseur ne soit payé : c'est lui qui finance le stock de ${c.entreprise}. Avec le stock visé, l'écart passerait à ${qte(r.delai - r.dureeVisee)} jours.`
+            : r.financeParLeFournisseur
             ? `Avec le stock visé, un article serait vendu avant que le fournisseur ne soit payé : c'est lui qui financerait le stock de ${c.entreprise}.`
             : `Avec le stock visé, ${c.entreprise} porterait encore chaque article ${qte(r.joursNonFinancesApres)} jours avant de le vendre, au lieu de ${qte(r.joursNonFinances)} : l'écart se resserre, sans se fermer.`,
         ];

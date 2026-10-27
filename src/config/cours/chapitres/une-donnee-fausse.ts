@@ -24,8 +24,9 @@ import type { Chapitre } from "../types";
  * Le chapitre finit sur le contrôle à la saisie qui l'aurait arrêtée.
  *
  * CE QUI VIENT DE L'ARÈNE : les ventes et le chiffre d'affaires des trimestres 1 à 3 de l'année du
- * cours (`anneeJouee`), le prix (chiffre d'affaires ÷ ventes, le même à chaque trimestre : la garde
- * le vérifie), et les deux trimestres 4 rejoués (`rejouerAvec`), où seule la décision de production
+ * cours (`anneeJouee`), le prix (chiffre d'affaires ÷ ventes, le même aux trois trimestres de
+ * l'extrait : la garde le vérifie ; le bon gestionnaire de l'année peut le changer au trimestre
+ * 4), et les deux trimestres 4 rejoués (`rejouerAvec`), où seule la décision de production
  * change. Les ventes de l'extrait sont arrondies à l'unité, et son chiffre d'affaires est celui de
  * ces ventes au prix de l'arène, comme sur une facture : il s'écarte de celui de l'arène de moins
  * d'un demi-prix par trimestre (la garde le vérifie).

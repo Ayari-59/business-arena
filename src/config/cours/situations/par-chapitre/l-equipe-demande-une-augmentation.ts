@@ -1,6 +1,6 @@
 import { montantEcrit as eur } from "../../../../pedagogy/cours/correcteur";
 import type { Cas } from "../../cas";
-import { remuneration } from "../../chapitres/remuneration-et-motivation";
+import { anneeAuxSalaires, remuneration } from "../../chapitres/remuneration-et-motivation";
 import { ECART_D_INDICE, rejouerLAnnee, vendues } from "../../ressources-humaines";
 import type { Situation } from "../types";
 
@@ -40,7 +40,8 @@ export type Verdict = "rien-de-plus" | "pas-assez" | "se-paie";
 export function hausseDemandee(c: Cas) {
   const m = remuneration(c);
   const base = rejouerLAnnee(c.code, "base", () => undefined);
-  const hausse = rejouerLAnnee(c.code, "salaires-montes", () => ({ salaryIndex: INDICE_DEMANDE }));
+  // Les salaires montés, les embauches de l'année jouée gardées : seule la rémunération change.
+  const hausse = anneeAuxSalaires(c.code, "salaires-montes", INDICE_DEMANDE);
   const surcoutDuTrimestre = Math.round(m.effectif * m.salaireTrimestriel * ECART_D_INDICE);
   const surcoutDeLAnnee = Math.round(somme(hausse.map((r) => r.hr!.headcount * m.salaireTrimestriel * ECART_D_INDICE)));
   const capaciteApres = Math.round(hausse[0]!.production.laborCapacity);
@@ -57,6 +58,8 @@ export function hausseDemandee(c: Cas) {
     trimestres: hausse.length,
     surcoutDuTrimestre,
     surcoutDeLAnnee,
+    /** L'effectif n'a bougé d'aucun trimestre : ni départ, ni embauche. */
+    effectifFixe: hausse.every((r) => r.hr!.headcount === m.effectif),
     capaciteApres,
     gainDeProductivite,
     departsAvant,
@@ -125,7 +128,7 @@ export const L_EQUIPE_DEMANDE_UNE_AUGMENTATION: Situation = {
         return [
           { libelle: "Surcoût du premier trimestre", attendu: h.surcoutDuTrimestre, tolerance: 1, calcul: `${qte(h.m.effectif)} × ${eur(h.m.salaireTrimestriel)} × ${ecart} % = ${eur(h.surcoutDuTrimestre)}` },
           { libelle: "Surcoût de l'année", attendu: h.surcoutDeLAnnee, tolerance: 1, calcul:
-              h.departsApres === 0
+              h.effectifFixe
                 ? `${eur(h.surcoutDuTrimestre)} × ${h.trimestres} = ${eur(h.surcoutDeLAnnee)} (personne ne part : l'effectif ne bouge pas)`
                 : `la somme, trimestre par trimestre, de l'effectif × ${eur(h.m.salaireTrimestriel)} × ${ecart} % = ${eur(h.surcoutDeLAnnee)}` },
           { libelle: "Gain de productivité (%)", attendu: h.gainDeProductivite, tolerance: 0.1, calcul: `(${qte(h.capaciteApres)} − ${qte(h.m.capaciteAvant)}) ÷ ${qte(h.m.capaciteAvant)} × 100 = ${pct(h.gainDeProductivite)}` },

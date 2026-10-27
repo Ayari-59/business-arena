@@ -4,9 +4,11 @@ import type { Cas } from "../../cas";
 import {
   ECART_SOUS_LE_MARCHE,
   LE_DEPART_D_UN_SALARIE,
+  SALAIRE_DU_MARCHE,
   TRIMESTRE_DE_LA_BAISSE,
   TRIMESTRE_DU_RECRUTEMENT,
   departDUnSalarie,
+  embauchesPrevues,
 } from "../../chapitres/le-depart-d-un-salarie";
 import { rejouerAvec, surLAnnee } from "../../gestion-de-la-pme";
 import type { Situation } from "../types";
@@ -44,7 +46,9 @@ export type Verdict = "recruter-tot" | "attendre";
 /** L'année rejouée, le remplaçant recruté dès l'annonce. */
 export function anneeRemplaceeTot(code: string) {
   return rejouerAvec(code, "le-depart-d-un-salarie:remplace-des-l-annonce", (t, d) =>
-    t === TRIMESTRE_DE_L_ANNONCE ? { ...d, hr: { ...d.hr, salaryIndex: 1 - ECART_SOUS_LE_MARCHE, hire: 1 } } : undefined,
+    t === TRIMESTRE_DE_L_ANNONCE
+      ? { ...d, hr: { ...d.hr, salaryIndex: 1 - ECART_SOUS_LE_MARCHE, hire: embauchesPrevues(code, t) + 1 } }
+      : { ...d, hr: { ...d.hr, salaryIndex: SALAIRE_DU_MARCHE } },
   );
 }
 

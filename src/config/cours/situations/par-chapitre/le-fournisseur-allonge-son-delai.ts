@@ -236,11 +236,11 @@ export const LE_FOURNISSEUR_ALLONGE_SON_DELAI: Situation = {
                   : `Non : ${chiffres}. La contre-offre fait mieux en résultat.`,
           },
           {
-            texte: "La contre-offre : son délai rapporte davantage au résultat que la baisse de prix",
+            texte: "La contre-offre : la baisse de prix fait perdre plus qu'elle ne fait gagner",
             juste: k.verdict === "le-delai",
             retour:
               k.verdict === "le-delai"
-                ? `Oui : ${chiffres}.`
+                ? `Oui : ${chiffres}. Chez ${c.entreprise}, ${m} fait moins bien en résultat que les prix habituels : ce qu'elle économise sur les achats ne paie pas ce qu'elle coûte ailleurs. La contre-offre garde les prix habituels, et le délai allongé en plus${k.ecartDeTresorerie < 0 ? " : elle fait mieux aussi en trésorerie" : ""}.`
                 : `Non : ${chiffres}. Un délai de paiement ne baisse pas le coût des achats : il ne change que la date où on les paie.`,
           },
         ];
