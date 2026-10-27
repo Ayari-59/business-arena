@@ -130,7 +130,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Garage Poirier Poids Lourds · Atelier",
     objet: "Immobilisation de trois porteurs — délai sur les pièces",
     corps:
-      "Trois de vos porteurs sont entrés à l'atelier la même semaine, deux pour la transmission et un pour le circuit de freinage. Les pièces sont annoncées à quinze jours par le constructeur.",
+      "Trois de vos porteurs sont entrés à l'atelier la même semaine, deux pour la transmission et un pour le circuit de freinage. Les pièces sont annoncées à six semaines par le constructeur.",
     signataire: "Le chef d'atelier",
     effet: "Disponibilité de la flotte −28 % ce tour (une entreprise tirée au sort)",
     enJeu: "L'entretien différé coûte moins cher aujourd'hui et beaucoup plus cher le jour de la panne.",

@@ -77,6 +77,20 @@ const CORRECTIONS: { code: string; avant: string; apres: string }[] = [
       "Notre autocar est immobilisé sur l'autoroute à la suite d'une avarie. Quarante passagers doivent être logés ce soir. Nous réglons comptant à l'arrivée, dans la limite des chambres que vous pourrez libérer.",
     apres:
       "L'hôtel qui accueillait nos circuits ferme ses portes après un dégât des eaux. Nos groupes doivent être relogés sans attendre : quatre cents nuitées ce trimestre, que nous réglons comptant à l'arrivée, dans la limite des chambres que vous pourrez libérer.",
+  },  // Le moteur applique la hausse de 24 % à toutes les denrées du bistrot
+  // (`bistrot_matieres_premieres`) : la moitié des commandes n'en aurait fait que 12 %.
+  {
+    code: "bistrot_matieres_premieres",
+    avant: "une révision de vingt-quatre pour cent sur ces familles, qui représentent la moitié de vos commandes habituelles.",
+    apres: "une révision de vingt-quatre pour cent sur l'ensemble de notre barème, ces familles en tête.",
+  },
+  // La panne retire 28 % de la flotte au trimestre (`transport_panne_flotte`) : trois
+  // porteurs sur dix mille palettes de capacité, quinze jours, n'en retiraient que 10 %.
+  // Six semaines en font 28 % : 3 × 2 000 palettes × 42 jours ÷ 90.
+  {
+    code: "transport_panne_flotte",
+    avant: "Les pièces sont annoncées à quinze jours par le constructeur.",
+    apres: "Les pièces sont annoncées à six semaines par le constructeur.",
   },
 ];
 

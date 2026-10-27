@@ -6,6 +6,7 @@ import { rdDuNiveau } from "../scenarios/scenario-joue";
 import { applyPeriodicityToCompany, periodicityFromRoundDays } from "../scenarios/periodicity";
 import { nomDuMois } from "../scenarios/calendrier-mensuel";
 import { heuresParPersonne } from "./services";
+import { amortissementsDuDepart } from "../scenarios/amortissements-du-depart";
 
 /**
  * LE COCKPIT : un classeur d'aide à la décision, référence par référence.
@@ -289,8 +290,8 @@ export function cockpitSpec(source: CockpitSource): ClasseurSpec {
   );
   poser(
     "amortissements",
-    "Amortissements par tour",
-    config.finance.depreciationPerRound,
+    "Amortissements par tour, au départ",
+    amortissementsDuDepart(config),
     "euro",
   );
   poser(

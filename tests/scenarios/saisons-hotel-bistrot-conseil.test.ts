@@ -191,6 +191,12 @@ const CORRECTIONS: { cles: string[]; avant: string; apres: string; garde: string
     apres:
       "L'hôtel qui accueillait nos circuits ferme ses portes après un dégât des eaux. Nos groupes doivent être relogés sans attendre : quatre cents nuitées ce trimestre, que nous réglons comptant à l'arrivée, dans la limite des chambres que vous pourrez libérer.",
   },
+  {
+    garde: "textes-a-la-duree-courriers.test.ts",
+    cles: ["bistrot_matieres_premieres"],
+    avant: "une révision de vingt-quatre pour cent sur ces familles, qui représentent la moitié de vos commandes habituelles.",
+    apres: "une révision de vingt-quatre pour cent sur l'ensemble de notre barème, ces familles en tête.",
+  },
 ];
 
 const corrige = (cle: string, textes: string[]) =>

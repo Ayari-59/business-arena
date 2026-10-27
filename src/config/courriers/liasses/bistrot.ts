@@ -88,7 +88,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Grossiste Vandamme · Direction commerciale",
     objet: "Révision de nos tarifs — beurre, crème et viande",
     corps:
-      "La collecte laitière et les cours de la viande nous imposent une révision de vingt-quatre pour cent sur ces familles, qui représentent la moitié de vos commandes habituelles. Le nouveau barème court sur deux {{trimestres}}.",
+      "La collecte laitière et les cours de la viande nous imposent une révision de vingt-quatre pour cent sur l'ensemble de notre barème, ces familles en tête. Le nouveau barème court sur deux {{trimestres}}.",
     signataire: "Le directeur commercial",
     effet: "Coût matières +24 % pendant 2 tours",
     enJeu:

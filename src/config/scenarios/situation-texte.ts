@@ -17,6 +17,7 @@ import { isProductAvailable } from "../../engine/gamme";
 import { NOVA_HOME } from "../groupe/nova";
 import { applyRoundsCount } from "./rounds";
 import { auCalendrierMensuel, enTempsReel, MOIS_MAX, tourDeLaSituation, trimestresDeLaPartie } from "./calendrier-mensuel";
+import { amortissementsDuDepart } from "./amortissements-du-depart";
 
 /**
  * LE TEXTE D'UNE SITUATION SE REND À LA DURÉE DU TOUR DE SA PARTIE.
@@ -640,8 +641,8 @@ const GRANDEURS: Record<string, Grandeur> = {
       return total + f.count * capacite;
     }, 0);
   },
-  /** Les amortissements d'un tour (`finance.depreciationPerRound`). */
-  amortissements: (s) => s.finance.depreciationPerRound,
+  /** Les amortissements d'un tour au départ, ceux que le moteur compte (`amortissementsDuDepart`). */
+  amortissements: (s) => amortissementsDuDepart(s),
   /**
    * La durée d'amortissement d'un investissement de capacité, en tours. Une durée réelle :
    * elle se compte en tours de la nouvelle durée (12 trimestres, 36 mois, 3 exercices).

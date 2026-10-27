@@ -42,9 +42,10 @@ import { evenementsDInvestissement } from "../../investissement-par-niveau";
  *
  * Calibration mesurée (base trimestrielle, trois transporteurs, quatre
  * graines) : ~7 400 palettes vendues à 68 €, 33 € de coût variable → 35 € de
- * marge ; 195 000 € de structure décaissée, 26 000 € d'amortissements, environ
- * 37 000 € de budgets et 13 000 € d'intérêts → seuil ≈ 7 700 palettes, soit
- * 77 % d'une capacité de 10 000. Une équipe qui remplit ses camions gagne, une
+ * marge ; 195 000 € de structure décaissée, 20 000 € d'amortissements (ceux du
+ * parc typé, que le moteur compte véhicule par véhicule), environ 37 000 € de
+ * budgets et 13 000 € d'intérêts → seuil ≈ 7 600 palettes, soit 76 % d'une
+ * capacité de 10 000. Une équipe qui remplit ses camions gagne, une
  * équipe qui les laisse à moitié vides perd, et c'est le seul secteur où
  * l'écart entre les deux se compte en dizaines de milliers d'euros par
  * trimestre.
@@ -158,7 +159,9 @@ const rawTransport = {
     maxCapitalIncreaseTotal: 250000,
     // La banque ne prête pas au-delà de deux fois les capitaux propres.
     maxDebtToEquity: 2,
-    // la flotte s'amortit vite, et cela se voit
+    // Sans effet ici : le scénario a un parc typé (`equipment`), et le moteur amortit
+    // alors chaque véhicule sur sa propre durée (engine/simulation, `equipDepreciation`),
+    // soit environ 20 000 € par tour pour le parc de départ.
     depreciationPerRound: 26000,
   },
   treasury: {
@@ -168,9 +171,9 @@ const rawTransport = {
     forcedFactoringFeeRate: 0.07,
     placementAnnualRate: 0.02,
   },
-  // structure ≈ 212 000 €/tour : 186 000 décaissés (124 000 de conduite pour les
+  // structure ≈ 206 000 €/tour : 186 000 décaissés (124 000 de conduite pour les
   // dix chauffeurs, puis 62 000 d'exploitation, de loyers, d'assurances et de
-  // taxe à l'essieu) + 26 000 d'amortissements de la flotte.
+  // taxe à l'essieu) + environ 20 000 d'amortissements du parc typé.
   //
   // La conduite pèse trente pour cent du chiffre d'affaires et le carburant
   // vingt-six : c'est la répartition réelle du métier, et c'est celle que la

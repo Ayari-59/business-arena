@@ -173,6 +173,15 @@ const CORRECTIONS: Record<string, [string, string][]> = {
     ["dépasser les 810 m²", "dépasser les 990 m²"],
   ],
   transport_t1_revient: [["Vous reprenez ROUTE & CIE : sept porteurs,", "Vous reprenez ROUTE & CIE : cinq véhicules,"]],
+  // Les amortissements du parc typé, corrigés et justifiés dans
+  // textes-a-la-duree-transport-bistrot.test.ts.
+  transport_t2_retour_vide: [
+    ["sous votre coût de revient complet, qui approche 54 €.", "sous votre coût de revient complet, qui approche 53 €."],
+    ["À 52 €, on vend sous le coût de revient complet de 54 € : chaque palette chargée creuse la perte", "À 52 €, on vend sous le coût de revient complet de 53 € : chaque palette chargée creuse la perte"],
+    ["quand la structure et la flotte en réclament 212 000 :", "quand la structure et la flotte en réclament 206 018 :"],
+  ],
+  // Le courrier de la panne, corrigé et justifié dans textes-a-la-duree-courriers.test.ts.
+  transport_panne_flotte: [["Les pièces sont annoncées à quinze jours par le constructeur.", "Les pièces sont annoncées à six semaines par le constructeur."]],
   transport_t6_contrat_refuse: [
     ["deux mille huit cents palettes", "quatre mille palettes"],
     ["mille quatre cents palettes", "deux mille palettes"],
@@ -213,8 +222,8 @@ describe("au trimestre, le texte du groupe est octet pour octet celui des relev�
   for (const l of CODES_DES_LIASSES) {
     it(`la liasse ${l}`, () => {
       for (const c of liasse(l)) {
-        expect(textesDuCourrier(courrierALaDuree(c, 90)), c.code).toEqual(corrigerLesDates(c.code, AVANT_COURRIERS[c.code]!));
-        expect(textesDuCourrier(c), c.code).toEqual(corrigerLesDates(c.code, AVANT_COURRIERS[c.code]!));
+        expect(textesDuCourrier(courrierALaDuree(c, 90)), c.code).toEqual(corrige(c.code, AVANT_COURRIERS[c.code]!));
+        expect(textesDuCourrier(c), c.code).toEqual(corrige(c.code, AVANT_COURRIERS[c.code]!));
         if (VARIANTES_SANS_ASSURANCE[c.code]) {
           const cle = `${c.code} (sans assurance)`;
           expect(textesDuCourrier(courrierDeLaPartie(c.code, { jours: 90, assurance: false })!), cle).toEqual(
