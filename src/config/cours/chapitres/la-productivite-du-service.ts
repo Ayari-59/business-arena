@@ -1,9 +1,8 @@
-import { soldUnits } from "../../../engine/simulation/runGame";
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../pedagogy/cours/etats";
-import { scenarioByCode } from "../../scenarios/registry";
 import { accord } from "../accords";
-import { anneeJouee, type Cas } from "../cas";
+import type { Cas } from "../cas";
+import { serviceDuCours, type ServiceDeLAnnee } from "../monde/service";
 import type { Chapitre, TableauDeDonnees } from "../types";
 
 /**
@@ -18,11 +17,12 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * à l'envers. Puis la productivité la plus haute que la capacité de service permet, et ce qui
  * remplit le trimestre creux.
  *
- * Tout vient de l'arène : l'année du cours (`anneeJouee`), trimestre par trimestre (les ventes, la
- * demande adressée, ce que l'établissement a mis en vente, ses deux capacités) ; l'effectif au
- * début de chaque trimestre ; le coût d'un salarié par trimestre (`hr.salaryPerEmployeePerRound`),
- * que l'arène compte dans les charges de structure, comme l'année de la clôture
- * (`anneeDeLArene`, cas.ts) ; les jours du trimestre (`roundDays`). Aucune hypothèse n'est ajoutée.
+ * LE CHAPITRE JOUE DANS LE MONDE DU COURS (src/config/cours/monde), pas dans l'arène : le bistrot
+ * (LA TABLE D'AUGUSTIN) et l'hôtel (L'ESCALE) ont une fiche figée, et le modèle du service
+ * (monde/service.ts) en tire l'année au prix de l'année : chaque trimestre, l'établissement sert
+ * la demande de ses clientèles, dans la limite de ce que la salle ou les chambres permettent.
+ * L'équipe est celle de la fiche : le même effectif, payé pareil chaque trimestre. Une évolution
+ * du moteur de l'arène ne change rien ici.
  *
  * Ce que le chapitre ne double pas : « L'équipe et son planning » (BTS MCO) compte le coût d'une
  * heure, le chiffre d'affaires par salarié et la part du personnel sur le mois du cas ;
@@ -34,11 +34,45 @@ import type { Chapitre, TableauDeDonnees } from "../types";
 export const ENTREPRISES_DU_SERVICE: readonly string[] = ["bistrot", "hotel"];
 
 /** Les mots du service, dans chaque établissement. */
-const MOTS: Record<string, { servies: string; etablissement: string; servir: string }> = {
-  bistrot: { servies: "couverts servis", etablissement: "le bistrot", servir: "servi" },
-  hotel: { servies: "nuitées vendues", etablissement: "l'hôtel", servir: "vendu" },
+interface Mots {
+  servies: string;
+  etablissement: string;
+  /** Le participe de ce que l'équipe fait d'une unité : « servi », « vendu ». */
+  servir: string;
+  /** Le même verbe, à l'infinitif puis à l'imparfait. */
+  infinitif: string;
+  imparfait: string;
+  /** Ce qui borne l'activité d'un trimestre, en libellé de tableau puis dans une phrase. */
+  capacite: (s: ServiceDeLAnnee) => string;
+  plafond: string;
+  /** Le prix d'une unité, tel qu'on le dit dans le métier. */
+  prix: string;
+  votre: string;
+}
+const MOTS: Record<string, Mots> = {
+  bistrot: {
+    servies: "couverts servis",
+    etablissement: "le bistrot",
+    servir: "servi",
+    infinitif: "servir",
+    imparfait: "servait",
+    capacite: (s) => `Couverts servables (${s.parJour.toLocaleString("fr-FR")} par jour)`,
+    plafond: "ce que la salle et la cuisine peuvent servir",
+    prix: "ticket moyen",
+    votre: "votre bistrot",
+  },
+  hotel: {
+    servies: "nuitées vendues",
+    etablissement: "l'hôtel",
+    servir: "vendu",
+    infinitif: "vendre",
+    imparfait: "vendait",
+    capacite: (s) => `Nuitées offertes (${s.parJour.toLocaleString("fr-FR")} chambres chaque nuit)`,
+    plafond: "ce que les chambres peuvent accueillir",
+    prix: "prix de la nuitée",
+    votre: "votre hôtel",
+  },
 };
-const mots = (c: Cas) => MOTS[c.code] ?? { servies: `${c.unites} vendues`, etablissement: "l'entreprise", servir: "vendu" };
 
 /** Un montant à la française, avec le signe moins typographique. */
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
@@ -49,6 +83,7 @@ const auCentieme = (x: number) => Math.round(x * 100) / 100;
 const majuscule = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 /** « 1er », « 2e » : le rang d'un trimestre, compté à partir de 1. */
 const rang = (n: number) => (n === 1 ? "1er" : `${n}e`);
+const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /** Un trimestre de l'année du cours, vu par le personnel. */
 export interface TrimestreDuService {
@@ -57,85 +92,75 @@ export interface TrimestreDuService {
   effectif: number;
   /** Le coût du personnel du trimestre : l'effectif, au coût d'un salarié. */
   personnel: number;
+  /** Ce que l'équipe a servi : les couverts servis, ou les nuitées vendues. */
   vendues: number;
   demande: number;
-  /** Ce que l'établissement a mis en vente : le volume de sa feuille de décision. */
-  enVente: number;
-  /** Le plafond physique (les chambres, la salle et la cuisine) et celui de l'équipe. */
-  capaciteDAccueil: number;
-  capaciteDeLEquipe: number;
-  prixMoyen: number;
+  /** Ce que l'établissement peut servir : couverts servables ou nuitées offertes. */
+  capacite: number;
+  /** Les clients repartis sans être servis, faute de place. */
+  refuses: number;
   parSalarie: number;
   parSalarieEtParJour: number;
   coutParUnite: number;
 }
 
 /** L'année du cours, trimestre par trimestre, et ce que le chapitre en tire. */
-export function productiviteDuService(c: Cas) {
-  const def = scenarioByCode(c.code);
-  const s = def.scenario;
-  const hr = s.hr!;
-  const { partie, depart } = anneeJouee(c.code);
-  const jours = s.roundDays;
-  const trimestres: TrimestreDuService[] = partie.rounds.map((t, k) => {
-    const r = t.results["joueur"]!;
-    // L'effectif du trimestre : celui de l'entreprise quand il commence.
-    const etat = k === 0 ? depart : partie.rounds[k - 1]!.companies.find((x) => x.id === "joueur")!;
-    const effectif = etat.headcount;
-    const personnel = auCentime(effectif * hr.salaryPerEmployeePerRound);
-    const vendues = Math.round(soldUnits(r));
-    return {
-      numero: k + 1,
-      effectif,
-      personnel,
-      vendues,
-      demande: Math.round(Object.values(r.market.bySegment).reduce((x, v) => x + v.demandForCompany, 0)),
-      enVente: Math.round(r.production.produced),
-      capaciteDAccueil: Math.round(r.production.machineCapacity),
-      capaciteDeLEquipe: Math.floor(r.production.laborCapacity + 1e-9),
-      prixMoyen: auCentime(r.incomeStatement.revenue / soldUnits(r)),
-      parSalarie: auDixieme(vendues / effectif),
-      parSalarieEtParJour: auCentieme(vendues / (effectif * jours)),
-      coutParUnite: auCentime(personnel / vendues),
-    };
-  });
+export function productiviteDuService(c: Pick<Cas, "code">) {
+  const s = serviceDuCours(c.code);
+  const jours = s.joursParTrimestre;
+  const { effectif, coutParSalarieParTrimestre } = s.equipe;
+  // La même équipe, payée pareil chaque trimestre : le même coût du personnel toute l'année.
+  const personnel = auCentime(effectif * coutParSalarieParTrimestre);
+  const trimestres: TrimestreDuService[] = s.trimestres.map((t) => ({
+    numero: t.numero,
+    effectif,
+    personnel,
+    vendues: t.servis,
+    demande: t.demande,
+    capacite: t.capacite,
+    refuses: t.refuses,
+    parSalarie: auDixieme(t.servis / effectif),
+    parSalarieEtParJour: auCentieme(t.servis / (effectif * jours)),
+    coutParUnite: auCentime(personnel / t.servis),
+  }));
   const plein = trimestres.reduce((a, b) => (b.vendues > a.vendues ? b : a));
   const creux = trimestres.reduce((a, b) => (b.vendues < a.vendues ? b : a));
-  // Ce que l'établissement peut servir au trimestre creux : le plus petit de ses deux plafonds.
-  const capacite = Math.min(creux.capaciteDAccueil, creux.capaciteDeLEquipe);
-  const refuses = Math.max(0, creux.demande - creux.vendues);
+  const capacite = creux.capacite;
   return {
-    vocabulaire: def.vocabulary,
+    s,
+    entreprise: s.entreprise,
+    /** L'unité, que `accord` accorde : « couvert » ou « nuitée ». */
+    unite: s.unite,
+    unites: s.unites,
+    mots: MOTS[c.code]!,
     jours,
-    coutDUnSalarie: hr.salaryPerEmployeePerRound,
-    embauche: hr.hiringCost,
-    depart: hr.firingCost,
+    coutDUnSalarie: coutParSalarieParTrimestre,
+    prix: s.prixDeLAnnee,
     trimestres,
     plein,
     creux,
-    memeEquipe: plein.effectif === creux.effectif && plein.personnel === creux.personnel,
     variationDeLaProductivite: auDixieme((creux.parSalarie / plein.parSalarie - 1) * 100),
     variationDuCout: auDixieme((creux.coutParUnite / plein.coutParUnite - 1) * 100),
     capacite,
     productiviteMaximale: auDixieme(capacite / creux.effectif),
     coutPlancher: auCentime(creux.personnel / capacite),
-    remplissageDuPlein: auDixieme((plein.vendues / capacite) * 100),
+    remplissageDuPlein: auDixieme((plein.vendues / plein.capacite) * 100),
     remplissageDuCreux: auDixieme((creux.vendues / capacite) * 100),
-    /** Les clients que le trimestre creux a laissé repartir : demandés, et pas servis. */
-    refuses,
-    /** Ceux d'entre eux que la capacité de service pouvait encore accueillir, avec la même équipe. */
-    servables: Math.min(refuses, Math.max(0, capacite - creux.vendues)),
-    partDuPersonnelAuCreux: auDixieme((creux.coutParUnite / creux.prixMoyen) * 100),
+    /** La place qui restait au trimestre creux, avec la même équipe. */
+    placeAuCreux: capacite - creux.vendues,
+    partDuPersonnelAuCreux: auDixieme((creux.coutParUnite / s.prixDeLAnnee) * 100),
   };
 }
+
+export type ProductiviteDuService = ReturnType<typeof productiviteDuService>;
 
 function tableauDeLAnnee(c: Cas): TableauDeDonnees {
   const p = productiviteDuService(c);
   return {
-    titre: `L'année ${/^[aeiouyéèêAEIOUYÉÈ]/.test(c.entreprise) ? `d'${c.entreprise}` : `de ${c.entreprise}`} dans l'arène`,
+    titre: `L'année ${dE(p.entreprise)} dans la simulation du cours`,
     colonnes: p.trimestres.map((t) => `${rang(t.numero)} trimestre`),
     lignes: [
-      { libelle: majuscule(mots(c).servies), valeurs: p.trimestres.map((t) => qte(t.vendues)) },
+      { libelle: majuscule(p.mots.servies), valeurs: p.trimestres.map((t) => qte(t.vendues)) },
       { libelle: "Effectif", valeurs: p.trimestres.map((t) => `${qte(t.effectif)} salariés`) },
       { libelle: "Coût du personnel du trimestre", valeurs: p.trimestres.map((t) => eur(t.personnel)) },
     ],
@@ -143,8 +168,8 @@ function tableauDeLAnnee(c: Cas): TableauDeDonnees {
 }
 
 /** Les trois champs d'un trimestre : par salarié, par salarié et par jour, et le coût par unité. */
-function champsDuTrimestre(c: Cas, t: TrimestreDuService, jours: number) {
-  const u = c.unites;
+function champsDuTrimestre(p: ProductiviteDuService, t: TrimestreDuService) {
+  const u = p.unites;
   return [
     {
       libelle: `${majuscule(u)} par salarié sur le trimestre`,
@@ -155,11 +180,11 @@ function champsDuTrimestre(c: Cas, t: TrimestreDuService, jours: number) {
     {
       libelle: `${majuscule(u)} par salarié et par jour`,
       attendu: t.parSalarieEtParJour,
-      calcul: `${qte(t.vendues)} ÷ (${qte(t.effectif)} × ${qte(jours)}) = ${qte(t.parSalarieEtParJour)}`,
+      calcul: `${qte(t.vendues)} ÷ (${qte(t.effectif)} × ${qte(p.jours)}) = ${qte(t.parSalarieEtParJour)}`,
       tolerance: 0.01,
     },
     {
-      libelle: `Coût du personnel par ${c.unite}`,
+      libelle: `Coût du personnel par ${p.unite}`,
       attendu: t.coutParUnite,
       calcul: `${eur(t.personnel)} ÷ ${qte(t.vendues)} = ${eur(t.coutParUnite)}`,
     },
@@ -196,17 +221,21 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
       tableau: tableauDeLAnnee,
       texte: (c) => {
         const p = productiviteDuService(c);
-        const m = mots(c);
         return [
-          `${c.entreprise} emploie ${qte(p.creux.effectif)} salariés. Chacun lui coûte ${eur(p.coutDUnSalarie)} par trimestre, salaire et cotisations patronales : ${eur(p.creux.personnel)} pour toute l'équipe, que ${m.etablissement} soit plein ou non. Dans l'arène, ce coût est compris dans les charges de structure.`,
           c.code === "hotel"
-            ? "À l'hôtel, ce que l'équipe sert se compte en nuitées : une nuitée, c'est une chambre louée pour une nuit. Le tableau donne les nuitées vendues de chaque trimestre de l'année du cours."
-            : "Au restaurant, ce que l'équipe sert se compte en couverts : un couvert, c'est un client servi à table. Le tableau donne les couverts servis de chaque trimestre de l'année du cours.",
-          `La productivité du personnel rapporte ce qui a été servi à ceux qui l'ont servi. Le coût du personnel par ${c.unite} dit ce que l'équipe pèse sur chaque client.`,
+            ? `Ce chapitre se joue dans la simulation du cours. ${p.entreprise} a ${qte(p.s.parJour)} chambres, toutes en vente chaque nuit : ${qte(p.capacite)} nuitées offertes par trimestre de ${qte(p.jours)} jours. Chaque trimestre, l'hôtel vend les nuitées que ses clients lui demandent au prix de ${eur(p.prix)}, dans cette limite : au-delà, les clients repartent sans chambre.`
+            : `Ce chapitre se joue dans la simulation du cours. La salle et la cuisine ${dE(p.entreprise)} peuvent servir ${qte(p.s.parJour)} couverts par jour : ${qte(p.capacite)} par trimestre de ${qte(p.jours)} jours. Chaque trimestre, le bistrot sert les couverts que ses clients lui demandent au ticket moyen de ${eur(p.prix)}, dans cette limite : au-delà, les clients repartent sans être servis.`,
+          `L'équipe est la même toute l'année : ${qte(p.creux.effectif)} salariés, qui coûtent chacun ${eur(p.coutDUnSalarie)} par trimestre, salaire et cotisations patronales. Cela fait ${eur(p.creux.personnel)} pour toute l'équipe, que ${p.mots.etablissement} soit plein ou non : dans la simulation, cette paie fait partie des ${eur(p.s.chargesFixesParTrimestre)} de charges fixes du trimestre.`,
+          c.code === "hotel"
+            ? "À l'hôtel, ce que l'équipe sert se compte en nuitées : une nuitée, c'est une chambre louée pour une nuit. Le tableau donne les nuitées vendues de chaque trimestre de l'année."
+            : "Au restaurant, ce que l'équipe sert se compte en couverts : un couvert, c'est un client servi à table. Le tableau donne les couverts servis de chaque trimestre de l'année.",
+          `La productivité du personnel rapporte ce qui a été servi à ceux qui l'ont servi. Le coût du personnel par ${p.unite} dit ce que l'équipe pèse sur chaque client.`,
         ];
       },
-      repere: (c) =>
-        `Productivité du personnel = ${c.unites} du trimestre ÷ effectif. Coût du personnel par ${c.unite} = coût du personnel du trimestre ÷ ${c.unites} du trimestre.`,
+      repere: (c) => {
+        const p = productiviteDuService(c);
+        return `Productivité du personnel = ${p.unites} du trimestre ÷ effectif. Coût du personnel par ${p.unite} = coût du personnel du trimestre ÷ ${p.unites} du trimestre.`;
+      },
     },
     {
       id: "plein",
@@ -216,17 +245,17 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
       question: (c) => {
         const p = productiviteDuService(c);
         const t = p.plein;
-        return `Au ${rang(t.numero)} trimestre, le plus chargé de l'année, ${c.entreprise} a ${mots(c).servir} ${qte(t.vendues)} ${c.unites} avec ${qte(t.effectif)} salariés, pour ${eur(t.personnel)} de personnel. Calculez les ${c.unites} par salarié sur le trimestre (au dixième), par salarié et par jour (sur les ${qte(p.jours)} jours du trimestre, au centième), puis le coût du personnel par ${c.unite} (au centime).`;
+        return `Au ${rang(t.numero)} trimestre, le plus chargé de l'année, ${p.entreprise} a ${p.mots.servir} ${qte(t.vendues)} ${p.unites} avec ${qte(t.effectif)} salariés, pour ${eur(t.personnel)} de personnel. Calculez les ${p.unites} par salarié sur le trimestre (au dixième), par salarié et par jour (sur les ${qte(p.jours)} jours du trimestre, au centième), puis le coût du personnel par ${p.unite} (au centime).`;
       },
       champs: (c) => {
         const p = productiviteDuService(c);
-        return champsDuTrimestre(c, p.plein, p.jours);
+        return champsDuTrimestre(p, p.plein);
       },
       explication: (c) => {
         const p = productiviteDuService(c);
         const t = p.plein;
         return [
-          `Au plus fort de l'année, chaque salarié correspond à ${qte(t.parSalarie)} ${c.unites} sur le trimestre, soit ${qte(t.parSalarieEtParJour)} par jour, et le personnel coûte ${eur(t.coutParUnite)} par ${c.unite}, sur un prix moyen de ${eur(t.prixMoyen)}.`,
+          `Au plus fort de l'année, chaque salarié correspond à ${qte(t.parSalarie)} ${p.unites} sur le trimestre, soit ${qte(t.parSalarieEtParJour)} par jour, et le personnel coûte ${eur(t.coutParUnite)} par ${p.unite}, pour un ${p.mots.prix} de ${eur(p.prix)}.`,
         ];
       },
     },
@@ -238,17 +267,17 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
       question: (c) => {
         const p = productiviteDuService(c);
         const t = p.creux;
-        return `Au ${rang(t.numero)} trimestre, le plus creux de l'année, ${c.entreprise} n'a ${mots(c).servir} que ${qte(t.vendues)} ${c.unites}, avec ${qte(t.effectif)} salariés et ${eur(t.personnel)} de personnel. Faites les mêmes calculs : par salarié sur le trimestre, par salarié et par jour, puis le coût du personnel par ${c.unite}.`;
+        return `Au ${rang(t.numero)} trimestre, le plus creux de l'année, ${p.entreprise} n'a ${p.mots.servir} que ${qte(t.vendues)} ${p.unites}, avec ${qte(t.effectif)} salariés et ${eur(t.personnel)} de personnel. Faites les mêmes calculs : par salarié sur le trimestre, par salarié et par jour, puis le coût du personnel par ${p.unite}.`;
       },
       champs: (c) => {
         const p = productiviteDuService(c);
-        return champsDuTrimestre(c, p.creux, p.jours);
+        return champsDuTrimestre(p, p.creux);
       },
       explication: (c) => {
         const p = productiviteDuService(c);
         const t = p.creux;
         return [
-          `Au trimestre creux, chaque salarié ne correspond plus qu'à ${qte(t.parSalarieEtParJour)} ${c.unites} par jour, et le personnel coûte ${eur(t.coutParUnite)} par ${c.unite} : ${pct(p.partDuPersonnelAuCreux)} du prix moyen de ${eur(t.prixMoyen)}.`,
+          `Au trimestre creux, chaque salarié ne correspond plus qu'à ${qte(t.parSalarieEtParJour)} ${p.unites} par jour, et le personnel coûte ${eur(t.coutParUnite)} par ${p.unite} : ${pct(p.partDuPersonnelAuCreux)} du ${p.mots.prix}, ${eur(p.prix)}.`,
         ];
       },
     },
@@ -259,7 +288,7 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
       notions: ["productivity", "fixed_costs"],
       question: (c) => {
         const p = productiviteDuService(c);
-        return `Du ${rang(p.plein.numero)} trimestre au ${rang(p.creux.numero)}, calculez la variation de la productivité (${c.unites} par salarié sur le trimestre), puis celle du coût du personnel par ${c.unite}, en pourcentage au dixième.`;
+        return `Du ${rang(p.plein.numero)} trimestre au ${rang(p.creux.numero)}, calculez la variation de la productivité (${p.unites} par salarié sur le trimestre), puis celle du coût du personnel par ${p.unite}, en pourcentage au dixième.`;
       },
       champs: (c) => {
         const p = productiviteDuService(c);
@@ -271,7 +300,7 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
             tolerance: 0.1,
           },
           {
-            libelle: `Variation du coût du personnel par ${c.unite} (%)`,
+            libelle: `Variation du coût du personnel par ${p.unite} (%)`,
             attendu: p.variationDuCout,
             calcul: `(${eur(p.creux.coutParUnite)} ÷ ${eur(p.plein.coutParUnite)} − 1) × 100 = ${pct(p.variationDuCout)}`,
             tolerance: 0.1,
@@ -281,7 +310,7 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
       explication: (c) => {
         const p = productiviteDuService(c);
         return [
-          `La productivité baisse de ${pct(Math.abs(p.variationDeLaProductivite))}, et le coût du personnel par ${c.unite} monte de ${pct(p.variationDuCout)} : il monte plus que la productivité ne baisse, parce que le même coût se partage entre moins de clients.`,
+          `La productivité baisse de ${pct(Math.abs(p.variationDeLaProductivite))}, et le coût du personnel par ${p.unite} monte de ${pct(p.variationDuCout)} : il monte plus que la productivité ne baisse, parce que le même coût se partage entre moins de clients.`,
         ];
       },
     },
@@ -292,31 +321,27 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
       notions: ["productivity", "fixed_costs"],
       question: (c) => {
         const p = productiviteDuService(c);
-        return `Au ${rang(p.creux.numero)} trimestre, le personnel coûte ${eur(p.creux.coutParUnite)} par ${c.unite}, contre ${eur(p.plein.coutParUnite)} au ${rang(p.plein.numero)}. D'où vient l'écart ?`;
+        return `Au ${rang(p.creux.numero)} trimestre, le personnel coûte ${eur(p.creux.coutParUnite)} par ${p.unite}, contre ${eur(p.plein.coutParUnite)} au ${rang(p.plein.numero)}. D'où vient l'écart ?`;
       },
+      // Dans la simulation, l'équipe est celle de la fiche toute l'année : la même, payée pareil.
       options: (c) => {
         const p = productiviteDuService(c);
-        const equipe = p.memeEquipe
-          ? `L'équipe compte ${qte(p.plein.effectif)} salariés au ${rang(p.plein.numero)} comme au ${rang(p.creux.numero)} trimestre, pour ${eur(p.plein.personnel)} de personnel chaque fois`
-          : `L'équipe compte ${qte(p.plein.effectif)} salariés au ${rang(p.plein.numero)} trimestre et ${qte(p.creux.effectif)} au ${rang(p.creux.numero)}, pour ${eur(p.plein.personnel)} et ${eur(p.creux.personnel)} de personnel`;
-        const faits = `${equipe} ; ${mots(c).etablissement} a ${mots(c).servir} ${qte(p.plein.vendues)} ${c.unites}, puis ${qte(p.creux.vendues)}.`;
+        const faits = `L'équipe compte ${qte(p.plein.effectif)} salariés au ${rang(p.plein.numero)} comme au ${rang(p.creux.numero)} trimestre, pour ${eur(p.plein.personnel)} de personnel chaque fois ; ${p.mots.etablissement} a ${p.mots.servir} ${qte(p.plein.vendues)} ${p.unites}, puis ${qte(p.creux.vendues)}.`;
         return [
           {
             texte: "La même équipe, payée pareil, pour moins de clients",
-            juste: p.memeEquipe,
-            retour: p.memeEquipe
-              ? `Oui. ${faits} Le coût du personnel est une charge fixe : il tombe chaque trimestre, et réparti sur moins de clients, il pèse plus sur chacun.`
-              : `Non. ${faits}`,
+            juste: true,
+            retour: `Oui. ${faits} Le coût du personnel est une charge fixe : il tombe chaque trimestre, et réparti sur moins de clients, il pèse plus sur chacun.`,
           },
           {
             texte: "Une équipe plus nombreuse au trimestre creux, pour autant de clients",
-            juste: !p.memeEquipe,
-            retour: !p.memeEquipe ? `Oui. ${faits}` : `Non : l'équipe n'a pas changé. ${faits}`,
+            juste: false,
+            retour: `Non : l'équipe n'a pas changé. ${faits}`,
           },
           {
             texte: "Des salaires plus élevés au trimestre creux",
             juste: false,
-            retour: `Non : dans l'arène, un salarié coûte ${eur(p.coutDUnSalarie)} chaque trimestre, quelle que soit la saison. ${faits}`,
+            retour: `Non : dans la simulation, un salarié coûte ${eur(p.coutDUnSalarie)} chaque trimestre, quelle que soit la saison. ${faits}`,
           },
         ];
       },
@@ -328,20 +353,19 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
       notions: ["productivity", "capacity"],
       tableau: (c) => {
         const p = productiviteDuService(c);
-        const v = p.vocabulaire;
         return {
-          titre: `Ce que ${c.entreprise} peut servir au ${rang(p.creux.numero)} trimestre`,
-          colonnes: [majuscule(c.unites)],
+          titre: `Ce que ${p.entreprise} peut ${p.mots.infinitif} au ${rang(p.creux.numero)} trimestre`,
+          colonnes: [majuscule(p.unites)],
           lignes: [
-            { libelle: v.capacityLabel, valeurs: [qte(p.creux.capaciteDAccueil)] },
-            { libelle: v.laborLabel, valeurs: [qte(p.creux.capaciteDeLEquipe)] },
-            { libelle: `${majuscule(mots(c).servies)} au ${rang(p.creux.numero)} trimestre`, valeurs: [qte(p.creux.vendues)] },
+            { libelle: p.mots.capacite(p.s), valeurs: [qte(p.capacite)] },
+            { libelle: `${majuscule(p.unites)} ${accord(p, "demandé")}s au ${rang(p.creux.numero)} trimestre`, valeurs: [qte(p.creux.demande)] },
+            { libelle: `${majuscule(p.mots.servies)} au ${rang(p.creux.numero)} trimestre`, valeurs: [qte(p.creux.vendues)] },
           ],
         };
       },
       question: (c) => {
         const p = productiviteDuService(c);
-        return `L'activité d'un trimestre ne peut pas dépasser le plus petit des deux plafonds du tableau : ${qte(p.capacite)} ${c.unites}. Si ${c.entreprise} servait autant au ${rang(p.creux.numero)} trimestre, avec la même équipe, quelle serait la productivité par salarié sur le trimestre (au dixième), et le coût du personnel par ${c.unite} (au centime) ?`;
+        return `L'activité d'un trimestre ne peut pas dépasser ${p.mots.plafond} : ${qte(p.capacite)} ${p.unites}. Si ${p.entreprise} ${p.mots.imparfait} autant au ${rang(p.creux.numero)} trimestre, avec la même équipe, quelle serait la productivité par salarié sur le trimestre (au dixième), et le coût du personnel par ${p.unite} (au centime) ?`;
       },
       champs: (c) => {
         const p = productiviteDuService(c);
@@ -353,7 +377,7 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
             tolerance: 0.1,
           },
           {
-            libelle: `Coût du personnel par ${c.unite} à pleine capacité`,
+            libelle: `Coût du personnel par ${p.unite} à pleine capacité`,
             attendu: p.coutPlancher,
             calcul: `${eur(p.creux.personnel)} ÷ ${qte(p.capacite)} = ${eur(p.coutPlancher)}`,
           },
@@ -361,8 +385,14 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
       },
       explication: (c) => {
         const p = productiviteDuService(c);
+        const plein = p.plein;
         return [
-          `À pleine capacité, le personnel ne coûterait que ${eur(p.coutPlancher)} par ${c.unite} : c'est le plus bas que l'équipe puisse atteindre. Le trimestre le plus chargé a servi ${pct(p.remplissageDuPlein)} de cette capacité, le plus creux ${pct(p.remplissageDuCreux)}.`,
+          `À pleine capacité, le personnel ne coûterait que ${eur(p.coutPlancher)} par ${p.unite} : c'est le plus bas que l'équipe puisse atteindre. Le trimestre le plus chargé a servi ${pct(p.remplissageDuPlein)} de cette capacité, le plus creux ${pct(p.remplissageDuCreux)}.`,
+          ...(plein.refuses > 0
+            ? [
+                `Au ${rang(plein.numero)} trimestre, ${p.mots.etablissement} était plein et a refusé ${qte(plein.refuses)} ${p.unites} : sa productivité était déjà la plus haute. C'est au trimestre creux qu'il reste de la place.`,
+              ]
+            : []),
           c.code === "hotel"
             ? "À l'hôtel, ce rapport des nuitées vendues aux nuitées offertes porte un nom : le taux d'occupation. Avec une équipe fixe, la productivité du personnel monte et descend avec lui."
             : "Au restaurant, c'est le remplissage de la salle : avec une brigade fixe, la productivité du personnel monte et descend avec lui.",
@@ -376,27 +406,23 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
       notions: ["productivity", "capacity"],
       question: (c) => {
         const p = productiviteDuService(c);
-        return `Au ${rang(p.creux.numero)} trimestre, ${p.creux.demande > p.creux.vendues ? `${qte(p.creux.demande)} ${c.unites} ont été ${accord(c, "demandé")}s à ${c.entreprise}, qui en avait prévu ${qte(p.creux.enVente)} dans « ${p.vocabulaire.productionPlanLabel} »` : `la demande adressée à ${c.entreprise} était de ${qte(p.creux.demande)} ${c.unites}`}. Que faire pour que le personnel coûte moins par ${c.unite} au trimestre creux ?`;
+        return `Au ${rang(p.creux.numero)} trimestre, ${p.entreprise} a reçu une demande de ${qte(p.creux.demande)} ${p.unites}, et pouvait en ${p.mots.infinitif} ${qte(p.capacite)}. Que faire pour que le personnel coûte moins par ${p.unite} au trimestre creux ?`;
       },
+      // Le trimestre creux sert moins que le plus chargé, qui ne dépasse pas la capacité : il reste
+      // toujours de la place au creux, et la réponse juste est d'y attirer des clients.
       options: (c) => {
         const p = productiviteDuService(c);
-        const v = p.vocabulaire;
-        const desRefuses = p.refuses > 0;
-        const chiffres = `${majuscule(mots(c).etablissement)} pouvait servir ${qte(p.capacite)} ${c.unites} ; il en a ${mots(c).servir} ${qte(p.creux.vendues)}, pour ${qte(p.creux.demande)} ${accord(c, "demandé")}s.`;
+        const chiffres = `${majuscule(p.mots.etablissement)} pouvait ${p.mots.infinitif} ${qte(p.capacite)} ${p.unites} ; il en a ${p.mots.servir} ${qte(p.creux.vendues)}, pour ${qte(p.creux.demande)} ${accord(p, "demandé")}s.`;
         return [
           {
-            texte: `Servir les clients refusés : la demande était là, mais « ${v.productionPlanLabel} » était trop bas`,
-            juste: desRefuses,
-            retour: desRefuses
-              ? `Oui. ${chiffres} ${qte(p.refuses)} ${c.unites} ${accord(c, "demandé")}s n'ont pas été ${accord(c, "servi")}s, ${p.servables === p.refuses ? `alors que la capacité de service pouvait ${accord(c, "un") === "une" ? "toutes" : "tous"} les accueillir` : `dont ${qte(p.servables)} que la capacité de service pouvait encore accueillir`}, avec une équipe déjà payée : ${accord(c, "chacun")} aurait fait baisser le coût du personnel par ${c.unite}.`
-              : `Non : tous les clients qui sont venus ont été servis. ${chiffres}`,
+            texte: "Attirer plus de clients au trimestre creux : il reste de la place",
+            juste: p.placeAuCreux > 0,
+            retour: `Oui. ${chiffres} Il reste de la place pour ${qte(p.placeAuCreux)} ${p.unites}, avec une équipe déjà payée : chaque client de plus fait baisser le coût du personnel par ${p.unite}.`,
           },
           {
-            texte: "Attirer plus de clients au trimestre creux : tous ceux qui sont venus ont été servis",
-            juste: !desRefuses,
-            retour: !desRefuses
-              ? `Oui. ${chiffres} Il reste de la place, avec une équipe déjà payée : chaque client de plus fait baisser le coût du personnel par ${c.unite}.`
-              : `Non : des clients sont venus et n'ont pas été servis. ${chiffres}`,
+            texte: "Embaucher des extras au trimestre creux, pour servir plus de clients",
+            juste: false,
+            retour: `Non : un salarié de plus monte le coût du personnel, sans faire venir un client. Les extras renforcent l'équipe quand l'activité monte, pas au creux. ${chiffres}`,
           },
           {
             texte: "Augmenter les salaires, pour que l'équipe serve plus vite les clients du trimestre creux",
@@ -414,11 +440,15 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
       texte: (c) => {
         const p = productiviteDuService(c);
         return [
-          `Chez ${c.entreprise}, la même équipe de ${qte(p.creux.effectif)} salariés a ${mots(c).servir} ${qte(p.plein.parSalarieEtParJour)} ${c.unites} par salarié et par jour au trimestre le plus chargé, ${qte(p.creux.parSalarieEtParJour)} au plus creux : le personnel y a coûté ${eur(p.plein.coutParUnite)}, puis ${eur(p.creux.coutParUnite)} par ${c.unite}.`,
-          `Avec une équipe fixe, la productivité suit l'activité : c'est le remplissage qui la fait. La profession adapte donc une partie de son équipe à la saison (des extras, des saisonniers, les congés pris en basse saison). L'arène, elle, ne change l'effectif qu'en embauchant (${eur(p.embauche)} de recrutement) ou en se séparant d'un salarié (${eur(p.depart)}), au trimestre suivant : son équipe reste fixe d'un trimestre à l'autre.`,
+          `Chez ${p.entreprise}, la même équipe de ${qte(p.creux.effectif)} salariés a ${p.mots.servir} ${qte(p.plein.parSalarieEtParJour)} ${p.unites} par salarié et par jour au trimestre le plus chargé, ${qte(p.creux.parSalarieEtParJour)} au plus creux : le personnel y a coûté ${eur(p.plein.coutParUnite)}, puis ${eur(p.creux.coutParUnite)} par ${p.unite}.`,
+          "Avec une équipe fixe, la productivité suit l'activité : c'est le remplissage qui la fait. La profession adapte donc une partie de son équipe à la saison (des extras, des saisonniers, les congés pris en basse saison). La simulation du cours, elle, garde la même équipe toute l'année : c'est ce qui laisse voir l'écart.",
+          `Dans l'arène, les chiffres de ${p.mots.votre} seront différents : la notion, elle, est la même.`,
         ];
       },
-      repere: (c) => `Plus il y a de ${c.unites} pour la même équipe, plus la productivité monte, et plus le coût du personnel par ${c.unite} baisse.`,
+      repere: (c) => {
+        const p = productiviteDuService(c);
+        return `Plus il y a de ${p.unites} pour la même équipe, plus la productivité monte, et plus le coût du personnel par ${p.unite} baisse.`;
+      },
     },
   ],
 };

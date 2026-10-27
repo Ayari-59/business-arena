@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { blocOfficiel, referentielDeCitation } from "../../src/config/ateliers/referentiels";
 import { UNITES_FEMININES } from "../../src/config/cours/accords";
-import { anneeJouee, casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
+import { casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
 import {
   ENTREPRISES_DU_SERVICE,
   LA_PRODUCTIVITE_DU_SERVICE,
@@ -15,7 +15,9 @@ import {
   prixSelonLaSaison,
   saisonDuMarche,
 } from "../../src/config/cours/chapitres/le-prix-selon-la-saison";
+import { anneeDeLHotel } from "../../src/config/cours/monde/hotel";
 import { L_ESCALE } from "../../src/config/cours/monde/l-escale";
+import { LA_TABLE_D_AUGUSTIN } from "../../src/config/cours/monde/la-table-d-augustin";
 import { CHAPITRES, PARCOURS, PROGRAMME } from "../../src/config/cours/registre";
 import { SITUATIONS } from "../../src/config/cours/situations";
 import { LE_COUT_DU_TRIMESTRE_CREUX, coutDuTrimestreCreux } from "../../src/config/cours/situations/par-chapitre/le-cout-du-trimestre-creux";
@@ -26,17 +28,14 @@ import {
 import type { Situation } from "../../src/config/cours/situations/types";
 import type { Chapitre, Etape, EtapeChoix, EtapeMontants, EtatDuCours } from "../../src/config/cours/types";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
-import { scenarioByCode } from "../../src/config/scenarios/registry";
-import { soldUnits } from "../../src/engine/simulation/runGame";
-import type { CompanyRoundResult } from "../../src/engine/types";
 import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
 
 /**
  * LES DEUX CHAPITRES DU BTS MHR AU PALIER 3, ET LEURS CAS : LA PRODUCTIVITÉ DU SERVICE, LE PRIX
  * SELON LA SAISON.
  *
- * La productivité : l'année du cours (`anneeJouee`), trimestre par trimestre, au bistrot et à
- * l'hôtel. Le prix selon la saison : la saisonnalité du scénario de l'hôtel, puis l'année rejouée
+ * La productivité : l'année du service dans le monde du cours (monde/service.ts), trimestre par
+ * trimestre, au bistrot et à l'hôtel, refaite à la main sur leurs fiches. Le prix selon la saison : la saisonnalité du scénario de l'hôtel, puis l'année rejouée
  * au prix de la saison et au prix du remplissage (gestion-de-la-pme.ts). Ces gardes recomposent
  * les chiffres avec le moteur, sans passer par les fonctions des chapitres ; elles vérifient que
  * chaque valeur attendue d'un champ est bien ce calcul, que le prix de l'hôtel est une décision
@@ -137,8 +136,6 @@ const juste = (ch: Chapitre, id: string, cas: Cas) => (ch.etapes.find((x) => x.i
 
 const centime = (x: number) => Math.round(x * 100) / 100;
 const dixieme = (x: number) => Math.round(x * 10) / 10;
-const ventes = (r: CompanyRoundResult) => Object.values(r.market.bySegment).reduce((t, v) => t + v.sold, 0);
-const demande = (r: CompanyRoundResult) => Object.values(r.market.bySegment).reduce((t, v) => t + v.demandForCompany, 0);
 
 const BLOC_3 = "BTS MHR Bloc 3 · Management de la production de services en hôtellerie restauration";
 const BLOC_2 = "BTS MHR Bloc 2 · Mercatique des services en hôtellerie restauration";
@@ -193,94 +190,110 @@ describe("les deux chapitres et leurs cas, dans le parcours du BTS MHR", () => {
   });
 });
 
-describe.each(ENTREPRISES_DU_SERVICE)("la productivité du service chez %s", (code) => {
+describe.each(ENTREPRISES_DU_SERVICE)("la productivité du service chez %s, dans le monde du cours", (code) => {
   const cas = casDeLEntreprise(code);
-  const s = scenarioByCode(code).scenario;
-  const hr = s.hr!;
-  const { partie, depart } = anneeJouee(code);
-  const annee = partie.rounds.map((t) => t.results["joueur"]!);
-  const vendues = annee.map((r) => Math.round(soldUnits(r)));
+  const bistrot = code === "bistrot";
+  const f = bistrot ? LA_TABLE_D_AUGUSTIN : L_ESCALE;
+  /**
+   * L'année du service, refaite à la main sur la fiche, au prix de l'année : la demande d'un
+   * trimestre est la somme de celles des clientèles ; l'établissement en sert au plus ses couverts
+   * par jour (le bistrot) ou ses chambres (l'hôtel) × 90 jours. L'équipe est celle de la fiche,
+   * payée pareil chaque trimestre.
+   */
+  const jours = f.joursParTrimestre;
+  const capacite = (bistrot ? LA_TABLE_D_AUGUSTIN.couvertsParJour : L_ESCALE.chambres) * jours;
+  const demandes = [0, 1, 2, 3].map((i) => f.clienteles.reduce((t, g) => t + g.demande[i]!, 0));
+  const vendues = demandes.map((d) => Math.min(d, capacite));
+  const { effectif } = f.equipe;
+  const personnel = effectif * f.equipe.coutParSalarieParTrimestre;
+  const unite = bistrot ? "couvert" : "nuitée";
+  const U = bistrot ? "Couverts" : "Nuitées";
+  const iPlein = vendues.indexOf(Math.max(...vendues));
+  const iCreux = vendues.indexOf(Math.min(...vendues));
 
-  it("l'équipe est fixe toute l'année, et sa paie est dans les charges de structure de l'arène", () => {
-    for (const t of partie.rounds) expect(t.companies.find((x) => x.id === "joueur")!.headcount).toBe(depart.headcount);
-    expect(depart.headcount).toBe(hr.includedHeadcount);
-    for (const r of annee) expect(r.incomeStatement.fixedCosts).toBe(s.fixedCostsPerRound);
-    // Aucune commande en plus : les ventes du trimestre sont celles des clientèles.
-    for (const r of annee) expect(soldUnits(r)).toBeCloseTo(ventes(r), 6);
+  it("la fiche donne l'année : une équipe fixe, payée dans les charges fixes, et une activité qui change", () => {
+    expect(f.entreprise).toBe(cas.entreprise);
+    expect(f.entreprise).toBe(bistrot ? "LA TABLE D'AUGUSTIN" : "L'ESCALE");
+    expect([effectif, f.equipe.coutParSalarieParTrimestre, jours]).toEqual(bistrot ? [10, 7200, 90] : [14, 8600, 90]);
+    expect(personnel).toBeLessThan(f.chargesFixesParTrimestre);
+    // Le bistrot refuse des couverts au 4e trimestre (les banquets), l'hôtel des nuitées l'été.
+    expect(capacite).toBe(bistrot ? 9000 : 5400);
+    expect(demandes).toEqual(bistrot ? [6400, 8500, 5480, 11_900] : [3400, 5000, 6400, 3900]);
+    expect(vendues).toEqual(bistrot ? [6400, 8500, 5480, 9000] : [3400, 5000, 5400, 3900]);
+    // L'hôtel du service est celui du modèle de l'hôtel, au prix de l'année les quatre trimestres.
+    if (!bistrot) expect(anneeDeLHotel(L_ESCALE, [88, 88, 88, 88]).trimestres.map((t) => [t.demande, t.vendues])).toEqual(demandes.map((d, i) => [d, vendues[i]]));
+    const p = productiviteDuService(cas);
+    expect(p.entreprise).toBe(f.entreprise);
+    expect(p.trimestres.map((t) => [t.effectif, t.personnel, t.demande, t.vendues, t.capacite])).toEqual(
+      demandes.map((d, i) => [effectif, personnel, d, vendues[i], capacite]),
+    );
   });
 
-  it("les champs attendent ce que le moteur donne, recomposé à la main", () => {
+  it("les champs attendent ce que la fiche donne, recomposé à la main", () => {
     const p = productiviteDuService(cas);
-    const effectif = depart.headcount;
-    const personnel = effectif * hr.salaryPerEmployeePerRound;
-    const iPlein = vendues.indexOf(Math.max(...vendues));
-    const iCreux = vendues.indexOf(Math.min(...vendues));
+    expect([iPlein + 1, iCreux + 1]).toEqual(bistrot ? [4, 3] : [3, 1]);
     expect(p.plein.numero).toBe(iPlein + 1);
     expect(p.creux.numero).toBe(iCreux + 1);
     const champs = (i: number) => ({
-      [`${cas.unites.charAt(0).toUpperCase()}${cas.unites.slice(1)} par salarié sur le trimestre`]: dixieme(vendues[i]! / effectif),
-      [`${cas.unites.charAt(0).toUpperCase()}${cas.unites.slice(1)} par salarié et par jour`]: centime(vendues[i]! / (effectif * s.roundDays)),
-      [`Coût du personnel par ${cas.unite}`]: centime(personnel / vendues[i]!),
+      [`${U} par salarié sur le trimestre`]: dixieme(vendues[i]! / effectif),
+      [`${U} par salarié et par jour`]: centime(vendues[i]! / (effectif * jours)),
+      [`Coût du personnel par ${unite}`]: centime(personnel / vendues[i]!),
     });
     expect(attendus(LA_PRODUCTIVITE_DU_SERVICE, "plein", cas)).toEqual(champs(iPlein));
     expect(attendus(LA_PRODUCTIVITE_DU_SERVICE, "creux", cas)).toEqual(champs(iCreux));
+    // Les chiffres clés, épinglés : le coût du personnel par client au plein et au creux.
+    expect([centime(personnel / vendues[iPlein]!), centime(personnel / vendues[iCreux]!)]).toEqual(bistrot ? [8, 13.14] : [22.3, 35.41]);
     const prodPlein = dixieme(vendues[iPlein]! / effectif);
     const prodCreux = dixieme(vendues[iCreux]! / effectif);
     const coutPlein = centime(personnel / vendues[iPlein]!);
     const coutCreux = centime(personnel / vendues[iCreux]!);
     expect(attendus(LA_PRODUCTIVITE_DU_SERVICE, "ecart", cas)).toEqual({
       "Variation de la productivité (%)": dixieme((prodCreux / prodPlein - 1) * 100),
-      [`Variation du coût du personnel par ${cas.unite} (%)`]: dixieme((coutCreux / coutPlein - 1) * 100),
+      [`Variation du coût du personnel par ${unite} (%)`]: dixieme((coutCreux / coutPlein - 1) * 100),
     });
     // Le coût par client monte plus que la productivité ne baisse : le même coût, moins de clients.
     expect(p.variationDuCout).toBeGreaterThan(-p.variationDeLaProductivite);
-    const rc = annee[iCreux]!;
-    const capacite = Math.min(Math.round(rc.production.machineCapacity), Math.floor(rc.production.laborCapacity + 1e-9));
     expect(attendus(LA_PRODUCTIVITE_DU_SERVICE, "plafond", cas)).toEqual({
       "Productivité à pleine capacité": dixieme(capacite / effectif),
-      [`Coût du personnel par ${cas.unite} à pleine capacité`]: centime(personnel / capacite),
+      [`Coût du personnel par ${unite} à pleine capacité`]: centime(personnel / capacite),
     });
   });
 
-  it("les verdicts se calculent : la même équipe, et un trimestre creux qui a servi tous ses clients", () => {
-    const p = productiviteDuService(cas);
+  it("les verdicts se calculent : la même équipe, un trimestre plein qui refuse des clients, un creux qui a de la place", () => {
     expect(juste(LA_PRODUCTIVITE_DU_SERVICE, "pourquoi", cas)).toBe("La même équipe, payée pareil, pour moins de clients");
-    const rc = annee[p.creux.numero - 1]!;
-    const refuses = Math.round(demande(rc)) > Math.round(soldUnits(rc));
-    expect(juste(LA_PRODUCTIVITE_DU_SERVICE, "remplir-le-creux", cas).startsWith(refuses ? "Servir les clients refusés" : "Attirer plus de clients")).toBe(true);
-    // Dans l'année du bon gestionnaire, qui prépare la demande du trimestre d'avant, le trimestre
-    // creux a servi tous ses clients, au bistrot comme à l'hôtel : c'est la demande qui l'a laissé
-    // creux, et la réponse juste est d'attirer des clients. La branche « Servir les clients
-    // refusés » n'est plus lue ; si un trimestre creux refuse de nouveau des clients, cette garde
-    // le dira.
-    expect(refuses).toBe(false);
-    expect(productiviteDuService(cas).refuses).toBe(0);
+    // Le trimestre le plus chargé est plein : il refuse des clients, sa productivité est déjà la plus haute.
+    expect(vendues[iPlein]).toBe(capacite);
+    expect(demandes[iPlein]! - vendues[iPlein]!).toBe(bistrot ? 2900 : 1000);
+    expect(productiviteDuService(cas).remplissageDuPlein).toBe(100);
+    // Le trimestre creux a servi tous ses clients, et il lui reste de la place : il faut en attirer.
+    expect(demandes[iCreux]).toBe(vendues[iCreux]);
+    expect(capacite - vendues[iCreux]!).toBe(bistrot ? 3520 : 2000);
+    expect(juste(LA_PRODUCTIVITE_DU_SERVICE, "remplir-le-creux", cas)).toBe("Attirer plus de clients au trimestre creux : il reste de la place");
   });
 
   it("le cas : le coût moyen de l'année, ce qu'il fallait servir au trimestre creux, et si c'était possible", () => {
-    const effectif = depart.headcount;
-    const personnel = effectif * hr.salaryPerEmployeePerRound;
     const total = vendues.reduce((t, x) => t + x, 0);
-    const coutAnnee = centime((personnel * annee.length) / total);
-    const iCreux = vendues.indexOf(Math.min(...vendues));
+    const coutAnnee = centime((personnel * 4) / total);
     const aServir = Math.ceil(personnel / coutAnnee - 1e-9);
     expect(aServir * coutAnnee).toBeGreaterThanOrEqual(personnel);
     expect((aServir - 1) * coutAnnee).toBeLessThan(personnel);
-    const U = `${cas.unites.charAt(0).toUpperCase()}${cas.unites.slice(1)}`;
+    expect([total, coutAnnee, aServir]).toEqual(bistrot ? [29_380, 9.8, 7347] : [17_700, 27.21, 4425]);
     expect(attendus(LE_COUT_DU_TRIMESTRE_CREUX, "l-annee", cas)).toEqual({
-      "Coût du personnel de l'année": personnel * annee.length,
+      "Coût du personnel de l'année": personnel * 4,
       [`${U} de l'année`]: total,
-      [`Coût du personnel par ${cas.unite} sur l'année`]: coutAnnee,
+      [`Coût du personnel par ${unite} sur l'année`]: coutAnnee,
     });
     expect(attendus(LE_COUT_DU_TRIMESTRE_CREUX, "le-creux", cas)).toEqual({
       [`${U} à servir au ${iCreux === 0 ? "1er" : `${iCreux + 1}e`} trimestre`]: aServir,
       [`${U} en plus`]: aServir - vendues[iCreux]!,
       "Productivité par salarié visée": dixieme(aServir / effectif),
     });
-    const rc = annee[iCreux]!;
-    const capacite = Math.min(Math.round(rc.production.machineCapacity), Math.floor(rc.production.laborCapacity + 1e-9));
-    const verdict = aServir > capacite ? "capacite" : aServir > Math.round(demande(rc)) ? "demande" : "possible";
-    expect(coutDuTrimestreCreux(cas).verdict).toBe(verdict);
+    // Il fallait plus que la demande du trimestre creux, et moins que la capacité : il manquait des clients.
+    expect(aServir).toBeGreaterThan(demandes[iCreux]!);
+    expect(aServir).toBeLessThanOrEqual(capacite);
+    expect(coutDuTrimestreCreux(cas).verdict).toBe("demande");
+    const reponse = LE_COUT_DU_TRIMESTRE_CREUX.etapes.find((e) => e.id === "reponse") as EtapeChoix;
+    expect(reponse.options(cas, etatVide).find((o) => o.juste)!.texte).toBe("Non : il fallait plus de clients que le trimestre creux n'en a eu");
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(LA_PRODUCTIVITE_DU_SERVICE, code));

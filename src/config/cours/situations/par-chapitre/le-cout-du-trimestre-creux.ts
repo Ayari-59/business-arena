@@ -2,7 +2,7 @@ import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../../pedagogy/cours/etats";
 import { accord } from "../../accords";
 import type { Cas } from "../../cas";
-import { ENTREPRISES_DU_SERVICE, productiviteDuService } from "../../chapitres/la-productivite-du-service";
+import { ENTREPRISES_DU_SERVICE, productiviteDuService, type ProductiviteDuService } from "../../chapitres/la-productivite-du-service";
 import type { TableauDeDonnees } from "../../types";
 import type { Situation } from "../types";
 
@@ -18,8 +18,11 @@ import type { Situation } from "../types";
  * trimestre a reçue et à la capacité de service.
  *
  * Le cas est neuf par sa question : le chapitre comparait le trimestre plein et le trimestre
- * creux ; ici, l'élève part d'un objectif de coût et remonte au volume qu'il exige. Les chiffres
- * sont ceux de l'année du cours (`productiviteDuService`).
+ * creux ; ici, l'élève part d'un objectif de coût et remonte au volume qu'il exige.
+ *
+ * Comme son chapitre, le cas se joue dans la simulation du cours (src/config/cours/monde), pas dans
+ * l'arène : les chiffres sont ceux de l'année du service au prix de l'année
+ * (`productiviteDuService`, monde/service.ts).
  */
 
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
@@ -27,18 +30,21 @@ const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 
 const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const majuscule = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 const rang = (n: number) => (n === 1 ? "1er" : `${n}e`);
+const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 /** Le pronom qui reprend les unités : « ceux » (les couverts), « celles » (les nuitées). */
-const ceux = (c: Cas) => (accord(c, "un") === "une" ? "celles" : "ceux");
+const ceux = (p: ProductiviteDuService) => (accord(p, "un") === "une" ? "celles" : "ceux");
 
 export type Verdict = "possible" | "demande" | "capacite";
 
 /** L'objectif de la direction, et ce qu'il demandait au trimestre creux. */
-export function coutDuTrimestreCreux(c: Cas) {
+export function coutDuTrimestreCreux(c: Pick<Cas, "code">) {
   const p = productiviteDuService(c);
   const personnelDeLAnnee = auCentime(p.trimestres.reduce((t, x) => t + x.personnel, 0));
   const venduesDeLAnnee = p.trimestres.reduce((t, x) => t + x.vendues, 0);
   const coutDeLAnnee = auCentime(personnelDeLAnnee / venduesDeLAnnee);
   const aServir = Math.ceil(p.creux.personnel / coutDeLAnnee - 1e-9);
+  // « possible » ne sort pas de la simulation : le trimestre creux sert déjà toute sa demande, et
+  // il lui faudrait plus pour revenir au coût de l'année. La réponse reste offerte à l'élève.
   const verdict: Verdict = aServir > p.capacite ? "capacite" : aServir > p.creux.demande ? "demande" : "possible";
   return {
     p,
@@ -55,11 +61,11 @@ export function coutDuTrimestreCreux(c: Cas) {
 function tableauDeLAnnee(c: Cas): TableauDeDonnees {
   const { p } = coutDuTrimestreCreux(c);
   return {
-    titre: `L'année ${/^[aeiouyéèêAEIOUYÉÈ]/.test(c.entreprise) ? `d'${c.entreprise}` : `de ${c.entreprise}`} dans l'arène`,
+    titre: `L'année ${dE(p.entreprise)} dans la simulation du cours`,
     colonnes: p.trimestres.map((t) => `${rang(t.numero)} trimestre`),
     lignes: [
-      { libelle: `${majuscule(c.unites)} ${accord(c, "demandé")}s`, valeurs: p.trimestres.map((t) => qte(t.demande)) },
-      { libelle: `${majuscule(c.unites)} ${c.code === "hotel" ? "vendues" : `${accord(c, "servi")}s`}`, valeurs: p.trimestres.map((t) => qte(t.vendues)) },
+      { libelle: `${majuscule(p.unites)} ${accord(p, "demandé")}s`, valeurs: p.trimestres.map((t) => qte(t.demande)) },
+      { libelle: majuscule(p.mots.servies), valeurs: p.trimestres.map((t) => qte(t.vendues)) },
       { libelle: "Effectif", valeurs: p.trimestres.map((t) => `${qte(t.effectif)} salariés`) },
       { libelle: "Coût du personnel du trimestre", valeurs: p.trimestres.map((t) => eur(t.personnel)) },
     ],
@@ -97,8 +103,8 @@ export const LE_COUT_DU_TRIMESTRE_CREUX: Situation = {
       texte: (c) => {
         const k = coutDuTrimestreCreux(c);
         return [
-          `« Au ${rang(k.p.creux.numero)} trimestre, notre personnel nous a coûté ${eur(k.p.creux.coutParUnite)} par ${c.unite}. Sur toute l'année, nous voudrions ne pas dépasser le coût moyen. Dites-moi ce coût moyen, combien de ${c.unites} il aurait fallu servir au ${rang(k.p.creux.numero)} trimestre, avec la même équipe, pour y revenir, et si c'était possible. »`,
-          `Pas de cours cette fois : les calculs sont ceux du chapitre. ${majuscule(k.p.vocabulaire.capacityLabel)} : ${qte(k.p.creux.capaciteDAccueil)} ${c.unites} par trimestre ; ${k.p.vocabulaire.laborLabel.charAt(0).toLowerCase()}${k.p.vocabulaire.laborLabel.slice(1)} : ${qte(k.p.creux.capaciteDeLEquipe)}.`,
+          `« Au ${rang(k.p.creux.numero)} trimestre, notre personnel nous a coûté ${eur(k.p.creux.coutParUnite)} par ${k.p.unite}. Sur toute l'année, nous voudrions ne pas dépasser le coût moyen. Dites-moi ce coût moyen, combien de ${k.p.unites} il aurait fallu servir au ${rang(k.p.creux.numero)} trimestre, avec la même équipe, pour y revenir, et si c'était possible. »`,
+          `Pas de cours cette fois : les calculs sont ceux du chapitre, dans la simulation du cours. ${majuscule(k.p.mots.etablissement)} peut ${k.p.mots.infinitif} au plus ${qte(k.p.capacite)} ${k.p.unites} par trimestre, et garde la même équipe toute l'année.`,
         ];
       },
       repere: () => "À rendre : le coût du personnel par client sur l'année, ce qu'il fallait servir au trimestre creux pour y revenir, et votre réponse.",
@@ -108,8 +114,10 @@ export const LE_COUT_DU_TRIMESTRE_CREUX: Situation = {
       type: "montants",
       titre: "Le coût moyen de l'année",
       notions: ["productivity", "payroll"],
-      question: (c) =>
-        `Calculez le coût du personnel de l'année, les ${c.unites} de l'année, puis le coût du personnel par ${c.unite} sur l'année, au centime.`,
+      question: (c) => {
+        const k = coutDuTrimestreCreux(c);
+        return `Calculez le coût du personnel de l'année, les ${k.p.unites} de l'année, puis le coût du personnel par ${k.p.unite} sur l'année, au centime.`;
+      },
       champs: (c) => {
         const k = coutDuTrimestreCreux(c);
         return [
@@ -120,13 +128,13 @@ export const LE_COUT_DU_TRIMESTRE_CREUX: Situation = {
             tolerance: 1,
           },
           {
-            libelle: `${majuscule(c.unites)} de l'année`,
+            libelle: `${majuscule(k.p.unites)} de l'année`,
             attendu: k.venduesDeLAnnee,
             calcul: `${k.p.trimestres.map((t) => qte(t.vendues)).join(" + ")} = ${qte(k.venduesDeLAnnee)}`,
             tolerance: 0,
           },
           {
-            libelle: `Coût du personnel par ${c.unite} sur l'année`,
+            libelle: `Coût du personnel par ${k.p.unite} sur l'année`,
             attendu: k.coutDeLAnnee,
             calcul: `${eur(k.personnelDeLAnnee)} ÷ ${qte(k.venduesDeLAnnee)} = ${eur(k.coutDeLAnnee)}`,
           },
@@ -135,7 +143,7 @@ export const LE_COUT_DU_TRIMESTRE_CREUX: Situation = {
       explication: (c) => {
         const k = coutDuTrimestreCreux(c);
         return [
-          `Sur l'année, le personnel coûte ${eur(k.coutDeLAnnee)} par ${c.unite} ; au ${rang(k.p.creux.numero)} trimestre, ${eur(k.p.creux.coutParUnite)}.`,
+          `Sur l'année, le personnel coûte ${eur(k.coutDeLAnnee)} par ${k.p.unite} ; au ${rang(k.p.creux.numero)} trimestre, ${eur(k.p.creux.coutParUnite)}.`,
         ];
       },
     },
@@ -146,19 +154,19 @@ export const LE_COUT_DU_TRIMESTRE_CREUX: Situation = {
       notions: ["productivity", "fixed_costs"],
       question: (c) => {
         const k = coutDuTrimestreCreux(c);
-        return `Avec la même équipe, le personnel du ${rang(k.p.creux.numero)} trimestre coûte ${eur(k.p.creux.personnel)}. Calculez les ${c.unites} qu'il fallait servir pour que ${accord(c, "chacun")} ne coûte pas plus de ${eur(k.coutDeLAnnee)} (arrondi à l'unité supérieure), les ${c.unites} en plus de ${ceux(c)} du trimestre, puis la productivité par salarié sur le trimestre que cela demandait, au dixième.`;
+        return `Avec la même équipe, le personnel du ${rang(k.p.creux.numero)} trimestre coûte ${eur(k.p.creux.personnel)}. Calculez les ${k.p.unites} qu'il fallait servir pour que ${accord(k.p, "chacun")} ne coûte pas plus de ${eur(k.coutDeLAnnee)} (arrondi à l'unité supérieure), les ${k.p.unites} en plus de ${ceux(k.p)} du trimestre, puis la productivité par salarié sur le trimestre que cela demandait, au dixième.`;
       },
       champs: (c) => {
         const k = coutDuTrimestreCreux(c);
         return [
           {
-            libelle: `${majuscule(c.unites)} à servir au ${rang(k.p.creux.numero)} trimestre`,
+            libelle: `${majuscule(k.p.unites)} à servir au ${rang(k.p.creux.numero)} trimestre`,
             attendu: k.aServir,
             calcul: `${eur(k.p.creux.personnel)} ÷ ${eur(k.coutDeLAnnee)} = ${qte(k.aServir)}`,
             tolerance: 1,
           },
           {
-            libelle: `${majuscule(c.unites)} en plus`,
+            libelle: `${majuscule(k.p.unites)} en plus`,
             attendu: k.enPlus,
             calcul: `${qte(k.aServir)} − ${qte(k.p.creux.vendues)} = ${qte(k.enPlus)}`,
             tolerance: 1,
@@ -174,7 +182,7 @@ export const LE_COUT_DU_TRIMESTRE_CREUX: Situation = {
       explication: (c) => {
         const k = coutDuTrimestreCreux(c);
         return [
-          `Il fallait ${qte(k.enPlus)} ${c.unites} de plus au ${rang(k.p.creux.numero)} trimestre, soit ${qte(k.productiviteVisee)} par salarié au lieu de ${qte(k.p.creux.parSalarie)}. Ce trimestre, ${qte(k.p.creux.demande)} ${c.unites} ont été ${accord(c, "demandé")}s, pour une capacité de service de ${qte(k.p.capacite)}.`,
+          `Il fallait ${qte(k.enPlus)} ${k.p.unites} de plus au ${rang(k.p.creux.numero)} trimestre, soit ${qte(k.productiviteVisee)} par salarié au lieu de ${qte(k.p.creux.parSalarie)}. Ce trimestre, ${qte(k.p.creux.demande)} ${k.p.unites} ont été ${accord(k.p, "demandé")}s, pour une capacité de service de ${qte(k.p.capacite)}.`,
         ];
       },
     },
@@ -187,14 +195,14 @@ export const LE_COUT_DU_TRIMESTRE_CREUX: Situation = {
       // Les trois réponses ont la même longueur : la bonne ne se devine pas, quelle qu'elle soit.
       options: (c) => {
         const k = coutDuTrimestreCreux(c);
-        const chiffres = `Il fallait servir ${qte(k.aServir)} ${c.unites} au ${rang(k.p.creux.numero)} trimestre ; ${qte(k.p.creux.demande)} ont été ${accord(c, "demandé")}s, et la capacité de service était de ${qte(k.p.capacite)}.`;
+        const chiffres = `Il fallait servir ${qte(k.aServir)} ${k.p.unites} au ${rang(k.p.creux.numero)} trimestre ; ${qte(k.p.creux.demande)} ont été ${accord(k.p, "demandé")}s, et la capacité de service était de ${qte(k.p.capacite)}.`;
         return [
           {
             texte: "Oui, c'était possible : la demande et la capacité le permettaient",
             juste: k.verdict === "possible",
             retour:
               k.verdict === "possible"
-                ? `Oui. ${chiffres} Il suffisait de prévoir ce que les clients demandaient : « ${k.p.vocabulaire.productionPlanLabel} » était de ${qte(k.p.creux.enVente)}.`
+                ? `Oui. ${chiffres}`
                 : `Non. ${chiffres}`,
           },
           {

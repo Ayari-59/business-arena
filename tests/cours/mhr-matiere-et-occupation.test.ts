@@ -1,7 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { anneeJouee, casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
-import { rejouerAvec } from "../../src/config/cours/gestion-de-la-pme";
-import { METIERS } from "../../src/config/cours/metiers";
+import { casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
 import { PROGRAMME } from "../../src/config/cours/registre";
 import {
   CUISINES,
@@ -15,15 +13,16 @@ import {
   occupation,
 } from "../../src/config/cours/chapitres/occupation-et-revenu-par-chambre";
 import { MONTER_LA_CARTE_OU_PREPARER_JUSTE, carteOuCuisine } from "../../src/config/cours/situations/par-chapitre/monter-la-carte-ou-preparer-juste";
+import { MARGE_DE_PREPARATION } from "../../src/config/cours/monde/cuisine";
+import { LA_TABLE_D_AUGUSTIN } from "../../src/config/cours/monde/la-table-d-augustin";
 import { S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT, alignement } from "../../src/config/cours/situations/par-chapitre/s-aligner-sur-le-prix-du-concurrent";
+import { L_ESCALE } from "../../src/config/cours/monde/l-escale";
 import type { Situation } from "../../src/config/cours/situations/types";
 import type { Chapitre, Etape, EtatDuCours } from "../../src/config/cours/types";
 import { UNITES_FEMININES } from "../../src/config/cours/accords";
 import { blocOfficiel, referentielDeCitation } from "../../src/config/ateliers/referentiels";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
 import { scenarioByCode } from "../../src/config/scenarios/registry";
-import { soldUnits } from "../../src/engine/simulation/runGame";
-import type { CompanyRoundResult } from "../../src/engine/types";
 import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
 
 /**
@@ -139,9 +138,6 @@ function casDedie(s: Situation, ch: Chapitre) {
   }
 }
 
-const vendues = (r: CompanyRoundResult) => Object.values(r.market.bySegment).reduce((t, s) => t + s.sold, 0);
-const perdues = (r: CompanyRoundResult) => Object.values(r.market.bySegment).reduce((t, s) => t + s.lost, 0);
-
 describe("les deux chapitres et leur place au programme", () => {
   it("leurs titres sont ceux du programme du BTS MHR, au palier 2, chacun chez son entreprise", () => {
     for (const ch of [LE_COUT_MATIERE, OCCUPATION_ET_REVENU_PAR_CHAMBRE]) {
@@ -175,307 +171,277 @@ describe("les deux chapitres et leur place au programme", () => {
   });
 });
 
-describe("le coût matière et le prix d'un plat, chez le bistrot", () => {
-  const cas = casDeLEntreprise("bistrot");
-  const def = scenarioByCode("bistrot");
-  const s = def.scenario;
+describe("le coût matière et le prix d'un plat, au bistrot du monde du cours", () => {
+  const code = "bistrot";
+  const cas = casDeLEntreprise(code);
+  const f = LA_TABLE_D_AUGUSTIN;
   const m = coutMatiere(cas);
+  /**
+   * La cuisine, refaite à la main sur la fiche : 100 couverts servables par jour, 90 jours par
+   * trimestre ; la demande de chaque clientèle au ticket p vaut sa demande à 34 € × (p ÷ 34) ^ −1,8,
+   * à l'unité ; le bistrot sert le plus petit de la demande et des couverts servables ; la cuisine
+   * prépare la demande plus 5 %, à l'unité, dans la limite des couverts servables ; le couvert
+   * coûte 10 € de denrées, 14 % de plus à partir du 3e trimestre ; 3 € d'autres coûts par couvert servi.
+   */
+  const servables = 100 * 90;
+  const cout = (n: number) => (n >= 3 ? r2(10 * 1.14) : 10);
+  const trimestre = (n: number, prix = 34, marge = 0.05) => {
+    const p = r2(prix);
+    const demande = f.clienteles.reduce((s, g) => s + Math.round(g.demande[n - 1]! * (p / 34) ** -1.8), 0);
+    const servis = Math.min(demande, servables);
+    const prepares = Math.min(Math.round(demande * (1 + marge)), servables);
+    const denrees = r2(prepares * cout(n));
+    const ca = r2(servis * p);
+    return { demande, servis, prepares, denrees, ca, ratio: r1((denrees / ca) * 100), marge: r2(ca - denrees - servis * 3) };
+  };
+  const annee = [1, 2, 3, 4].map((n) => trimestre(n));
+  const bonne = (ch: Chapitre, id: string) => {
+    const e = ch.etapes.find((x) => x.id === id)!;
+    if (e.type !== "choix") throw new Error(`${ch.code} / ${id} n'est pas un choix`);
+    return e.options(cas, { soldes: {} }).find((o) => o.juste)!.texte;
+  };
 
-  it("le couvert est celui du scénario, et son ticket celui que l'arène joue toute l'année", () => {
-    expect(m.matiere).toBe(s.product.materialCostPerUnit);
-    expect(m.autres).toBe(s.product.otherVariableCostPerUnit);
-    expect(m.coutVariable).toBe(m.matiere + m.autres);
-    expect(s.suppliers!.find((x) => x.name === m.fournisseur)!.costMultiplier).toBe(1);
-    // Le ticket du cas est celui de chaque trimestre de l'année jouée, au centime.
-    for (const tour of anneeJouee("bistrot").partie.rounds) {
-      const r = tour.results["joueur"]!;
-      expect(r2(r.incomeStatement.revenue / soldUnits(r))).toBe(m.prix);
-    }
-    // La TVA des repas est celle que le cours pose au bistrot ; le scénario n'en pose aucune.
-    expect(m.tauxTva).toBe(METIERS.bistrot!.vente.tauxTva);
-    expect(m.tauxTva).toBe(0.1);
-    expect(m.tauxTvaAchat).toBe(METIERS.bistrot!.achat.tauxTva);
-    expect(m.prixTtc).toBe(r2(m.prix * 1.1));
-    expect(m.ratio).toBe(r1((m.matiere / m.prix) * 100));
-    expect(m.coefficient).toBe(r2(100 / m.ratio));
-    expect(Math.abs(m.coefficient - m.prix / m.matiere)).toBeLessThanOrEqual(0.01);
+  it("la fiche est celle de LA TABLE D'AUGUSTIN, et la cuisine du cours ne lit pas l'arène", () => {
+    expect(f.entreprise).toBe(cas.entreprise);
+    expect([f.couvertsParJour, f.joursParTrimestre, f.prixDeLAnnee, f.tauxTva, f.coutMatiereParCouvert, f.autresCoutsParCouvert, f.elasticite]).toEqual([100, 90, 34, 0.1, 10, 3, -1.8]);
+    expect(f.hausseDesDenrees).toEqual({ trimestre: 3, taux: 0.14 });
+    expect(MARGE_DE_PREPARATION).toBe(0.05);
+    // La fiche technique du menu du jour additionne bien le coût matière du couvert.
+    expect(r2(f.cuisine.ficheTechnique.reduce((s, d) => s + d.cout, 0))).toBe(f.coutMatiereParCouvert);
+    expect(FOURCHETTE_DE_LA_PROFESSION).toEqual({ min: 28, max: 32 });
+    // La demande au ticket de l'année : le 4e trimestre dépasse ce que la salle peut servir.
+    expect(annee.map((t) => t.demande)).toEqual([6400, 8500, 5480, 11_900]);
+    expect(m.trimestres.map((t) => [t.demande, t.servis, t.prepares, t.coutDuCouvert, t.denrees, t.chiffreDAffaires, t.ratio])).toEqual(
+      annee.map((t, i) => [t.demande, t.servis, t.prepares, cout(i + 1), t.denrees, t.ca, t.ratio]),
+    );
+    expect(annee.map((t) => t.prepares)).toEqual([6720, 8925, 5754, 9000]);
+    expect(annee.map((t) => t.servis)).toEqual([6400, 8500, 5480, 9000]);
   });
 
-  it("la fourchette de la profession est celle que l'arène écrit sous son ratio matières", () => {
-    const kpi = def.kpis.find((k) => k.key === "ratio_matieres")!;
-    expect(kpi.hint).toContain(`${FOURCHETTE_DE_LA_PROFESSION.min} à ${FOURCHETTE_DE_LA_PROFESSION.max} %`);
+  it("le couvert, la hausse et le prix qui garde le ratio : les champs attendent ce que la fiche donne", () => {
+    const ratio = r1((10 / 34) * 100);
+    const coefficient = r2(100 / ratio);
+    expect([ratio, coefficient]).toEqual([29.4, 3.4]);
+    expect(attendus(LE_COUT_MATIERE, "le-ratio-du-couvert", cas)).toEqual([ratio, coefficient]);
     expect(m.dansLaFourchette).toBe(true);
-  });
-
-  it("le coût matière de chaque trimestre se recompose : couverts préparés × denrées du scénario × la hausse de l'année", () => {
-    const hausse = s.scriptedEvents!.map((x) => ({ ...x, def: s.events.find((e) => e.code === x.eventCode)! })).find((x) =>
-      x.def.modifiers.some((mod) => mod.target === "material_cost"),
-    )!;
-    const facteur = hausse.def.modifiers.find((mod) => mod.target === "material_cost")!.value;
-    const touche = (k: number) => k + 1 >= hausse.round && k + 1 < hausse.round + hausse.def.duration;
-    const rounds = anneeJouee("bistrot").partie.rounds;
-    expect(rounds).toHaveLength(4);
-    m.trimestres.forEach((x, k) => {
-      const r = rounds[k]!.results["joueur"]!;
-      const cout = s.product.materialCostPerUnit * (touche(k) ? facteur : 1);
-      expect(x.coutDuCouvert, `trimestre ${k + 1}`).toBeCloseTo(cout, 6);
-      expect(Math.abs(x.denrees - r.production.produced * cout), `trimestre ${k + 1}`).toBeLessThanOrEqual(0.5);
-      expect(x.prepares).toBe(Math.round(r.production.produced));
-      expect(x.servis).toBe(Math.round(vendues(r)));
-      expect(x.chiffreDAffaires).toBe(Math.round(r.incomeStatement.revenue));
-      expect(x.ratio).toBe(r1((x.denrees / x.chiffreDAffaires) * 100));
-      // Le bistrot ne stocke rien : tout ce qui est préparé passe en coût des ventes.
-      expect(r.incomeStatement.cogs).toBeCloseTo(r.incomeStatement.variableProductionCost, 6);
-      if (!touche(k)) {
-        // Sans hausse, le ratio est celui que l'arène affiche dans ses indicateurs du métier.
-        const kpi = def.kpis.find((q) => q.key === "ratio_matieres")!;
-        const affiche = kpi.compute({ result: r, previousSegments: null, segmentUnits: soldUnits(r), totalUnits: soldUnits(r), roundDays: s.roundDays, scenario: s })!;
-        expect(Math.abs(x.ratio - affiche * 100), `trimestre ${k + 1}`).toBeLessThanOrEqual(0.1);
-      }
-    });
-    expect(m.hausse.trimestres).toEqual([0, 1, 2, 3].filter(touche));
-    expect(m.hausse.taux).toBe(r1((facteur - 1) * 100));
-    expect(m.hausse.cout).toBe(r2(s.product.materialCostPerUnit * facteur));
-    expect(m.hausse.motif).toBe("la hausse des prix du beurre, de la crème et de la viande");
-  });
-
-  it("les champs du chapitre demandent ces chiffres-là", () => {
-    expect(attendus(LE_COUT_MATIERE, "le-ratio-du-couvert", cas)).toEqual([r1((10 / 34) * 100), r2(100 / r1((10 / 34) * 100))]);
-    expect(attendus(LE_COUT_MATIERE, "le-ratio-du-couvert", cas)).toEqual([29.4, 3.4]);
-    expect(attendus(LE_COUT_MATIERE, "la-hausse", cas)).toEqual([12.4, r1((12.4 / 34) * 100)]);
-    const ht = r2(12.4 * 3.4);
+    expect(bonne(LE_COUT_MATIERE, "ce-qui-entre")).toBe("Les denrées seules, hors taxes : 10 €");
+    expect(m.matiereTtc).toBe(r2(10 * 1.055));
+    const nouveau = r2(10 * 1.14);
+    expect(attendus(LE_COUT_MATIERE, "la-hausse", cas)).toEqual([nouveau, r1((nouveau / 34) * 100)]);
+    expect(attendus(LE_COUT_MATIERE, "la-hausse", cas)).toEqual([11.4, 33.5]);
+    expect(m.hausse.trimestres).toEqual([3, 4]);
+    const ht = r2(nouveau * coefficient);
     expect(attendus(LE_COUT_MATIERE, "le-prix-du-plat", cas)).toEqual([ht, r2(ht * 1.1)]);
-    expect(attendus(LE_COUT_MATIERE, "le-prix-du-plat", cas)).toEqual([42.16, 46.38]);
-    const t = m.trimestres;
-    const denrees = t.reduce((a, x) => a + x.denrees, 0);
-    const ca = t.reduce((a, x) => a + x.chiffreDAffaires, 0);
-    const ratios = t.map((x) => x.ratio);
-    const pire = ratios.indexOf(Math.max(...ratios));
-    expect(pire).toBe(2);
-    expect(attendus(LE_COUT_MATIERE, "l-annee", cas)).toEqual([denrees, r1((denrees / ca) * 100), t[pire]!.ratio]);
-    const p = t[pire]!;
-    const perdus = p.prepares - p.servis;
-    const cout = r2(perdus * p.coutDuCouvert);
-    expect(attendus(LE_COUT_MATIERE, "les-denrees-perdues", cas)).toEqual([perdus, cout, r1(((p.denrees - cout) / p.chiffreDAffaires) * 100)]);
-    expect(perdus).toBeGreaterThan(0);
+    expect(attendus(LE_COUT_MATIERE, "le-prix-du-plat", cas)).toEqual([38.76, 42.64]);
   });
 
-  it("le ratio du pire trimestre se lit en trois morceaux : la carte, le prix des denrées, les plats jetés", () => {
-    const p = m.trimestres[m.pire]!;
+  it("le ratio de l'année et les plats préparés et non servis, refaits à la main", () => {
+    const denrees = r2(annee.reduce((s, t) => s + t.denrees, 0));
+    const ca = r2(annee.reduce((s, t) => s + t.ca, 0));
+    expect(annee.map((t) => t.ratio)).toEqual([30.9, 30.9, 35.2, 33.5]);
+    expect(m.pire).toBe(3);
+    expect(attendus(LE_COUT_MATIERE, "l-annee", cas)).toEqual([denrees, r1((denrees / ca) * 100), annee[2]!.ratio]);
+    expect(attendus(LE_COUT_MATIERE, "l-annee", cas)).toEqual([324_645.6, 32.5, 35.2]);
+    const t3 = annee[2]!;
+    const jetes = t3.prepares - t3.servis;
+    const perdu = r2(jetes * 11.4);
+    expect(attendus(LE_COUT_MATIERE, "les-denrees-perdues", cas)).toEqual([jetes, perdu, r1(((t3.denrees - perdu) / t3.ca) * 100)]);
+    expect(attendus(LE_COUT_MATIERE, "les-denrees-perdues", cas)).toEqual([274, 3123.6, 33.5]);
+    // Au 4e trimestre, la salle est pleine : la cuisine prépare juste les couverts servables.
+    expect(annee[3]!.prepares - annee[3]!.servis).toBe(0);
+  });
+
+  it("les verdicts se calculent : le ratio du 3e trimestre se lit en trois morceaux, et l'année dépasse la fourchette", () => {
     // Sans les pertes, le ratio est celui d'un couvert servi au prix des denrées du trimestre.
-    expect(Math.abs(m.ratioSansPerte - r1((p.coutDuCouvert / m.prix) * 100))).toBeLessThanOrEqual(0.2);
-    const morceaux = m.ratio + (m.ratioSansPerte - m.ratio) + (p.ratio - m.ratioSansPerte);
-    expect(r1(morceaux)).toBe(p.ratio);
-    expect(m.ratioDeLAnnee).toBeGreaterThan(m.ratio);
+    expect(m.ratioSansPerte).toBe(r1((11.4 / 34) * 100));
+    const morceaux = [m.ratio, r1(m.ratioSansPerte - m.ratio), r1(m.trimestres[2]!.ratio - m.ratioSansPerte)];
+    expect(morceaux).toEqual([29.4, 4.1, 1.7]);
+    expect(r1(morceaux[0]! + morceaux[1]! + morceaux[2]!)).toBe(m.trimestres[2]!.ratio);
     expect(m.ratioDeLAnnee).toBeGreaterThan(FOURCHETTE_DE_LA_PROFESSION.max);
+    expect(bonne(LE_COUT_MATIERE, "ce-que-dit-le-ratio")).toBe("Le prix n'a pas suivi les denrées, et la cuisine a trop préparé.");
+    const e = LE_COUT_MATIERE.etapes.find((x) => x.id === "les-denrees-perdues");
+    if (e?.type !== "montants") throw new Error("les-denrees-perdues n'est pas une étape de montants");
+    expect(e.explication(cas, { soldes: {} })[0]).toContain("29,4 % pour la carte telle qu'elle est calculée, 4,1 points de plus pour le prix des denrées, et 1,7 point de plus");
+    const synthese = LE_COUT_MATIERE.etapes.at(-1)!;
+    if (synthese.type !== "lecture") throw new Error("la synthèse n'est pas une lecture");
+    expect(synthese.texte(cas).at(-1)).toBe("Dans l'arène, les chiffres de votre restaurant seront différents : la notion, elle, est la même.");
   });
 
-  it("le cas : la carte montée et la cuisine juste, rejouées sous une autre clé, et la meilleure façon", () => {
+  it("le cas : la carte montée et la cuisine juste, rejouées à la main, et la meilleure façon", () => {
     const k = carteOuCuisine(cas);
-    const tour = k.trimestre + 1;
-    const rebut = s.qualityCosts!.baseDefectRate;
-    expect(k.rebut).toBe(rebut);
-    expect(k.prixMonte).toBe(r2(m.trimestres[k.trimestre]!.coutDuCouvert * m.coefficient));
+    expect(k.trimestre).toBe(3);
+    const prixMonte = r2(11.4 * 3.4);
+    expect(k.prixMonte).toBe(prixMonte);
     expect(k.prixMonte).toBe(m.hausse.prixHt);
-    // Le prix monté seul, puis avec la cuisine préparant pour ce qu'il sert.
-    const seul = rejouerAvec("bistrot", "garde-mhr-prix-seul", (t, d) => (t === tour ? { ...d, price: k.prixMonte } : undefined))[k.trimestre]!;
-    const planCarte = Math.ceil(Math.round(vendues(seul)) / (1 - rebut));
-    const carte = rejouerAvec("bistrot", "garde-mhr-carte", (t, d) => (t === tour ? { ...d, price: k.prixMonte, productionPlan: planCarte } : undefined))[k.trimestre]!;
-    const planJuste = Math.ceil(m.trimestres[k.trimestre]!.servis / (1 - rebut));
-    const juste = rejouerAvec("bistrot", "garde-mhr-juste", (t, d) => (t === tour ? { ...d, productionPlan: planJuste } : undefined))[k.trimestre]!;
-    for (const [nom, r, x] of [["carte", carte, k.carte], ["juste", juste, k.juste]] as const) {
-      expect(x.prepares, nom).toBe(Math.round(r.production.produced));
-      expect(x.servis, nom).toBe(Math.round(vendues(r)));
-      expect(x.resultat, nom).toBe(Math.round(r.incomeStatement.operatingIncome));
-      expect(x.denrees, nom).toBe(Math.round(r.incomeStatement.variableProductionCost - r.production.produced * s.product.otherVariableCostPerUnit));
-      // La cuisine prépare de quoi servir chaque client : personne ne repart.
-      expect(perdues(r), nom).toBeLessThan(0.5);
+    const joue = trimestre(3);
+    const carte = trimestre(3, prixMonte);
+    const juste = trimestre(3, 34, 0);
+    for (const [nom, x, y] of [["joué", joue, k.joue], ["carte", carte, k.carte], ["juste", juste, k.juste]] as const) {
+      expect([y.servis, y.prepares, y.denrees, y.chiffreDAffaires, y.ratio, y.margeSurCoutsVariables], nom).toEqual([x.servis, x.prepares, x.denrees, x.ca, x.ratio, x.marge]);
     }
-    expect(k.carte.prepares).toBe(planCarte);
-    expect(k.juste.prepares).toBe(planJuste);
-    expect(k.carte.prix).toBe(k.prixMonte);
-    expect(k.juste.prix).toBe(m.prix);
-    expect(k.juste.servis).toBe(k.joue.servis);
-    // Le prix monté garde le ratio ; il fait partir des clients.
-    expect(Math.abs(k.carte.ratio - r1((k.carte.denrees / k.carte.chiffreDAffaires) * 100))).toBe(0);
-    expect(k.carte.servis).toBeLessThan(k.joue.servis);
-    expect(k.carte.ratio).toBeLessThan(k.juste.ratio);
+    // Au ticket monté, la demande baisse de (38,76 ÷ 34) ^ −1,8 ; préparer juste ne jette plus rien.
+    expect([carte.servis, carte.prepares]).toEqual([4329, 4545]);
+    expect(juste.prepares).toBe(juste.servis);
+    expect(attendus(MONTER_LA_CARTE_OU_PREPARER_JUSTE, "les-ratios", cas)).toEqual([carte.ratio, juste.ratio]);
+    expect(attendus(MONTER_LA_CARTE_OU_PREPARER_JUSTE, "les-ratios", cas)).toEqual([30.9, 33.5]);
+    const attendu = [joue.servis - carte.servis, r2(carte.marge - joue.marge), r2(juste.marge - joue.marge)];
+    expect(attendus(MONTER_LA_CARTE_OU_PREPARER_JUSTE, "ce-que-ca-rapporte", cas)).toEqual(attendu);
+    expect(attendu).toEqual([1151, -1292.36, 3123.6]);
+    // La carte montée a le meilleur ratio, mais rapporte moins que le trimestre joué ; préparer juste rapporte le plus.
+    expect(carte.ratio).toBeLessThan(juste.ratio);
+    expect(joue.marge).toBeGreaterThan(carte.marge);
+    expect(juste.marge).toBeGreaterThan(joue.marge);
     expect(k.meilleure).toBe("juste");
-    expect(k.juste.resultat).toBeGreaterThan(k.carte.resultat);
-    expect(attendus(MONTER_LA_CARTE_OU_PREPARER_JUSTE, "les-ratios", cas)).toEqual([k.carte.ratio, k.juste.ratio]);
-    expect(attendus(MONTER_LA_CARTE_OU_PREPARER_JUSTE, "ce-que-ca-rapporte", cas)).toEqual([
-      k.joue.servis - Math.round(vendues(carte)),
-      Math.round(carte.incomeStatement.operatingIncome) - k.joue.resultat,
-      Math.round(juste.incomeStatement.operatingIncome) - k.joue.resultat,
-    ]);
-    expect(k.joue.resultat).toBe(Math.round(anneeJouee("bistrot").partie.rounds[k.trimestre]!.results["joueur"]!.incomeStatement.operatingIncome));
+    expect(bonne(MONTER_LA_CARTE_OU_PREPARER_JUSTE, "reponse")).toBe("Garder 34 € HT et préparer juste");
+    const reponse = MONTER_LA_CARTE_OU_PREPARER_JUSTE.etapes.find((e) => e.id === "reponse");
+    if (reponse?.type !== "choix") throw new Error("reponse n'est pas un choix");
+    const carteRetour = reponse.options(cas, { soldes: {} }).find((o) => o.texte.startsWith("Monter"))!.retour;
+    expect(carteRetour).toContain(`ne paient pas les ${(1151).toLocaleString("fr-FR")} clients perdus`);
+    expect(carteRetour).not.toContain("Rien n'empêche");
   });
 
   it("chapitre et cas : des textes propres, et un cas qui tient ce qu'un cas dédié doit tenir", () => {
-    textesPropres(LE_COUT_MATIERE, "bistrot");
-    textesPropres(MONTER_LA_CARTE_OU_PREPARER_JUSTE, "bistrot");
+    textesPropres(LE_COUT_MATIERE, code);
+    textesPropres(MONTER_LA_CARTE_OU_PREPARER_JUSTE, code);
     casDedie(MONTER_LA_CARTE_OU_PREPARER_JUSTE, LE_COUT_MATIERE);
   });
 });
 
-describe("le taux d'occupation, le prix moyen et le revenu par chambre, chez l'hôtel", () => {
+describe("le taux d'occupation, le prix moyen et le revenu par chambre, à l'hôtel du monde du cours", () => {
   const cas = casDeLEntreprise("hotel");
-  const def = scenarioByCode("hotel");
-  const s = def.scenario;
+  const f = L_ESCALE;
   const o = occupation(cas);
-  const rounds = anneeJouee("hotel").partie.rounds;
+  /**
+   * L'année de l'hôtel, refaite à la main sur la fiche, comme la garde du pilote : toutes les
+   * chambres en vente, la demande de chaque clientèle au prix p vaut sa demande au prix de l'année
+   * × (p ÷ 88) ^ −1,5, à l'unité ; l'hôtel vend le plus petit de la demande et des chambres
+   * disponibles (60 chambres × 90 nuits).
+   */
+  const dispo = f.chambres * f.joursParTrimestre;
+  const trimestreAu = (k: number, prix: number) => {
+    const demande = f.clienteles.reduce((s, g) => s + Math.round(g.demande[k]! * (prix / f.prixDeLAnnee) ** f.elasticite), 0);
+    const v = Math.min(demande, dispo);
+    const ca = r2(v * prix);
+    return { demande, v, ca, refus: demande - v, resultat: r2(ca - v * f.coutVariableParNuitee - f.chargesFixesParTrimestre) };
+  };
+  const anneeAu = (prix: number) => {
+    const ts = [0, 1, 2, 3].map((k) => trimestreAu(k, prix));
+    const v = ts.reduce((s, t) => s + t.v, 0);
+    const ca = r2(ts.reduce((s, t) => s + t.ca, 0));
+    return { ts, v, ca, occupation: r1((v / (4 * dispo)) * 100), prixMoyen: r2(ca / v), revpar: r2(ca / (4 * dispo)), resultat: r2(ts.reduce((s, t) => s + t.resultat, 0)) };
+  };
+  const tarif = anneeAu(88);
+  const juste = (ch: Chapitre, id: string) => {
+    const e = ch.etapes.find((x) => x.id === id);
+    if (e?.type !== "choix") throw new Error(`${ch.code} / ${id} n'est pas un choix`);
+    return e.options(cas, { soldes: {} }).find((x) => x.juste)!;
+  };
+  const texteDe = (ch: Chapitre, id: string) => {
+    const e = ch.etapes.find((x) => x.id === id);
+    if (e?.type !== "lecture") throw new Error(`${ch.code} / ${id} n'est pas une lecture`);
+    return e.texte(cas).join(" ");
+  };
 
-  it("les chambres disponibles sont la capacité du scénario : ses chambres, une fois par nuit du trimestre", () => {
-    const parc = s.equipment!.initialFleet.reduce((t, f) => t + f.count * s.equipment!.types.find((x) => x.code === f.typeCode)!.capacityPerUnit, 0);
-    expect(o.nuits).toBe(s.roundDays);
-    expect(o.chambres * o.nuits).toBe(parc);
-    expect(o.chambres).toBe(60);
-    for (const x of o.trimestres) expect(x.disponibles).toBe(parc);
+  it("la fiche est celle de L'ESCALE, et son année au prix de l'année est celle du pilote", () => {
+    expect(HOTELS).toEqual(["hotel"]);
+    expect(f.entreprise).toBe(cas.entreprise);
+    expect([f.chambres, f.joursParTrimestre, f.prixDeLAnnee, f.coutVariableParNuitee, f.chargesFixesParTrimestre, f.elasticite]).toEqual([60, 90, 88, 21, 210_000, -1.5]);
+    expect([o.chambres, o.nuits, o.prix]).toEqual([60, 90, 88]);
+    expect(dispo).toBe(5400);
+    for (const x of o.trimestres) expect(x.disponibles).toBe(dispo);
+    // L'année du chapitre « le prix selon la saison » au prix unique : même demande, même résultat.
+    expect(tarif.ts.map((t) => t.demande)).toEqual([3400, 5000, 6400, 3900]);
+    expect(tarif.resultat).toBe(345_900);
+    expect(o.trimestres.map((x) => [x.vendues, x.chiffreDAffaires])).toEqual(tarif.ts.map((t) => [t.v, t.ca]));
+    expect(o.trimestres.map((x) => x.vendues)).toEqual([3400, 5000, 5400, 3900]);
+    // Au 3e trimestre, l'hôtel est complet et refuse des clients : le taux d'occupation ne le voit pas.
+    expect(o.refus).toEqual({ trimestre: 2, nuitees: 6400 - dispo });
+    expect(o.refus.nuitees).toBe(1000);
   });
 
-  it("les trois indicateurs de chaque trimestre sont ceux que l'arène affiche", () => {
-    const kpi = (key: string, r: CompanyRoundResult) =>
-      def.kpis.find((k) => k.key === key)!.compute({ result: r, previousSegments: null, segmentUnits: soldUnits(r), totalUnits: soldUnits(r), roundDays: s.roundDays, scenario: s })!;
-    expect(rounds).toHaveLength(4);
-    o.trimestres.forEach((x, k) => {
-      const r = rounds[k]!.results["joueur"]!;
-      expect(x.vendues).toBe(Math.round(vendues(r)));
-      expect(x.chiffreDAffaires).toBe(Math.round(r.incomeStatement.revenue));
-      expect(x.occupation).toBe(r1((x.vendues / x.disponibles) * 100));
-      expect(x.prixMoyen).toBe(r2(x.chiffreDAffaires / x.vendues));
-      expect(x.revpar).toBe(r2(x.chiffreDAffaires / x.disponibles));
-      expect(Math.abs(x.occupation - kpi("taux_occupation", r) * 100), `trimestre ${k + 1}`).toBeLessThanOrEqual(0.1);
-      expect(Math.abs(x.prixMoyen - kpi("pmc", r)), `trimestre ${k + 1}`).toBeLessThanOrEqual(0.02);
-      expect(Math.abs(x.revpar - kpi("revpar", r)), `trimestre ${k + 1}`).toBeLessThanOrEqual(0.01);
-      // RevPAR = occupation × prix moyen, à l'arrondi du taux près.
-      expect(Math.abs(x.revpar - (x.occupation / 100) * x.prixMoyen), `trimestre ${k + 1}`).toBeLessThanOrEqual(0.05 * x.prixMoyen / 100 + 0.01);
-    });
-    expect(o.tarifTenu).toBe(true);
-    expect(o.prixExacts).toEqual(rounds.map((t) => r2(t.results["joueur"]!.incomeStatement.revenue / soldUnits(t.results["joueur"]!))));
-    expect(o.perdues).toBe(Math.round(perdues(rounds[o.plusFaible]!.results["joueur"]!)));
-    // Dans l'année du bon gestionnaire, le trimestre le moins rempli a servi toute sa demande : la
-    // phrase des nuitées demandées et non servies n'y est plus lue. Si elle revient, cette garde le dira.
-    expect(o.perdues).toBe(0);
+  it("les champs du chapitre attendent ce que la fiche donne, recomposé à la main", () => {
+    const t = tarif.ts;
+    expect(attendus(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "occupation", cas)).toEqual(t.map((x) => r1((x.v / dispo) * 100)));
+    expect(attendus(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "occupation", cas)).toEqual([63, 92.6, 100, 72.2]);
+    expect(o.meilleur).toBe(2);
+    expect(o.plusFaible).toBe(0);
+    // Le prix est le même toute l'année : le prix moyen de chaque trimestre est le prix de la fiche.
+    expect(attendus(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "prix-moyen", cas)).toEqual([2, 0].map((k) => r2(t[k]!.ca / t[k]!.v)));
+    expect(attendus(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "prix-moyen", cas)).toEqual([88, 88]);
+    expect(attendus(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "revpar", cas)).toEqual(t.map((x) => r2(x.ca / dispo)));
+    expect(attendus(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "revpar", cas)).toEqual([55.41, 81.48, 88, 63.56]);
+    // RevPAR = occupation × prix moyen, à l'arrondi du taux près.
+    for (const x of o.trimestres) expect(Math.abs(x.revpar - (x.occupation / 100) * x.prixMoyen)).toBeLessThanOrEqual(0.05);
+    expect(attendus(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "l-annee", cas)).toEqual([tarif.occupation, tarif.prixMoyen, tarif.revpar]);
+    expect(attendus(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "l-annee", cas)).toEqual([81.9, 88, 72.11]);
   });
 
   it("le concurrent du trimestre comparé loue plus cher, remplit moins et rapporte moins par chambre disponible", () => {
     const k = o.comparaison;
-    const rival = def.bots.find((b) => b.name === k.rival.nom)!;
-    expect(def.bots.slice(0, 2)).toContainEqual(rival);
-    const r = rounds[k.trimestre]!.results[rival.id]!;
-    expect(k.rival.vendues).toBe(Math.round(vendues(r)));
-    expect(k.rival.chiffreDAffaires).toBe(Math.round(r.incomeStatement.revenue));
-    expect(k.rival.disponibles).toBe(k.hotel.disponibles);
-    expect(k.rival.prixMoyen).toBe(r2(Math.round(r.incomeStatement.revenue) / Math.round(vendues(r))));
-    expect(k.rival.prixMoyen).toBeGreaterThan(k.hotel.prixMoyen);
-    expect(k.rival.occupation).toBeLessThan(k.hotel.occupation);
-    expect(k.rival.revpar).toBeLessThan(k.hotel.revpar);
-    expect(k.rival.chiffreDAffaires).toBeLessThan(k.hotel.chiffreDAffaires);
-    // Aucun trimestre plus tôt ne montrait un concurrent plus cher et moins rentable.
-    for (let q = 0; q < k.trimestre; q++) {
-      for (const b of def.bots.slice(0, 2)) {
-        const x = rounds[q]!.results[b.id]!;
-        const pm = r2(Math.round(x.incomeStatement.revenue) / Math.round(vendues(x)));
-        const rp = r2(Math.round(x.incomeStatement.revenue) / o.trimestres[q]!.disponibles);
-        expect(pm > o.trimestres[q]!.prixMoyen && rp < o.trimestres[q]!.revpar, `${b.name}, trimestre ${q + 1}`).toBe(false);
-      }
-    }
-    // Dans l'année corrigée, aucun concurrent ne remplit mieux sans mieux vendre : celui qui remplit
-    // le plus (Le Comptoir) a aussi le RevPAR le plus haut, à chaque trimestre.
-    for (let q = 0; q < rounds.length; q++) {
-      for (const b of def.bots.slice(0, 2)) {
-        const x = rounds[q]!.results[b.id]!;
-        const occ = r1((Math.round(vendues(x)) / o.trimestres[q]!.disponibles) * 100);
-        const rp = r2(Math.round(x.incomeStatement.revenue) / o.trimestres[q]!.disponibles);
-        expect(occ > o.trimestres[q]!.occupation && rp < o.trimestres[q]!.revpar, `${b.name}, trimestre ${q + 1}`).toBe(false);
-      }
-    }
-    expect(k.rival.nom).toBe("Grand Hôtel Terminus");
-    expect(k.autre.nom).toBe("Le Comptoir");
     expect(k.trimestre).toBe(0);
+    expect(k.rival.nom).toBe("Le Grand Hôtel Terminus");
+    expect(k.autre.nom).toBe("Le Comptoir");
+    const terminus = f.concurrents.find((x) => x.nom === "Le Grand Hôtel Terminus")!;
+    const comptoir = f.concurrents.find((x) => x.nom === "Le Comptoir")!;
+    // Ses chiffres, refaits à la main : chambres vendues × prix, sur 60 chambres × 90 nuits.
+    const ca = r2(terminus.vendues[0] * terminus.prix[0]);
+    expect(terminus.chambres * f.joursParTrimestre).toBe(dispo);
+    expect(ca).toBe(219_950.5);
+    expect([k.rival.disponibles, k.rival.vendues, k.rival.chiffreDAffaires]).toEqual([dispo, 1925, ca]);
+    expect(attendus(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "face-au-concurrent", cas)).toEqual([r2(ca / 1925), r2(ca / dispo)]);
+    expect(attendus(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "face-au-concurrent", cas)).toEqual([114.26, 40.73]);
+    expect(k.rival.occupation).toBe(r1((1925 / dispo) * 100));
+    expect(k.rival.prixMoyen).toBeGreaterThan(88);
+    expect(k.rival.occupation).toBeLessThan(r1((3400 / dispo) * 100));
+    expect(k.rival.revpar).toBeLessThan(r2(tarif.ts[0]!.ca / dispo));
+    expect([k.autre.vendues, k.autre.chiffreDAffaires]).toEqual([comptoir.vendues[0], r2(comptoir.vendues[0] * comptoir.prix[0])]);
+    expect(juste(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "qui-vend-le-mieux").texte).toBe("L'ESCALE : chaque chambre disponible lui a rapporté plus.");
+    expect(juste(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "pourquoi-le-revpar").texte).toBe("Il compte les chambres remplies et le prix de chacune.");
+    // Le texte dit à l'élève ce que la simulation suppose, et la synthèse finit sur l'arène.
+    expect(texteDe(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "intro")).toContain("simulation du cours");
+    expect(texteDe(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "synthese")).toMatch(/Dans l'arène, les chiffres de votre hôtel seront différents : la notion, elle, est la même\.$/);
   });
 
-  it("les champs du chapitre demandent ces chiffres-là", () => {
-    const t = o.trimestres;
-    expect(attendus(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "occupation", cas)).toEqual(t.map((x) => r1((x.vendues / x.disponibles) * 100)));
-    expect(attendus(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "occupation", cas)).toEqual([63.4, 79.1, 87.2, 69]);
-    expect(o.meilleur).toBe(2);
-    expect(o.plusFaible).toBe(0);
-    expect(attendus(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "prix-moyen", cas)).toEqual([2, 0].map((k) => r2(t[k]!.chiffreDAffaires / t[k]!.vendues)));
-    expect(attendus(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "revpar", cas)).toEqual(t.map((x) => r2(x.chiffreDAffaires / x.disponibles)));
-    const dispo = t.reduce((a, x) => a + x.disponibles, 0);
-    const vend = t.reduce((a, x) => a + x.vendues, 0);
-    const ca = t.reduce((a, x) => a + x.chiffreDAffaires, 0);
-    expect(attendus(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "l-annee", cas)).toEqual([r1((vend / dispo) * 100), r2(ca / vend), r2(ca / dispo)]);
-    const r = o.comparaison.rival;
-    expect(attendus(OCCUPATION_ET_REVENU_PAR_CHAMBRE, "face-au-concurrent", cas)).toEqual([r2(r.chiffreDAffaires / r.vendues), r2(r.chiffreDAffaires / r.disponibles)]);
-  });
-
-  it("le cas : toutes les chambres en vente, au tarif puis au prix du concurrent, rejouées sous une autre clé", () => {
+  it("le cas : l'année rejouée au prix du Comptoir remplit plus mais rapporte moins par chambre, et le résultat dit pareil", () => {
     const a = alignement(cas);
-    const k = a.trimestre;
-    const tour = k + 1;
-    // Le trimestre le plus faible, où des nuitées demandées n'ont pas été servies.
-    // Le moins rempli des trimestres où l'hôtel a refusé des clients, et où un concurrent a rempli
-    // mieux que lui à un prix plus bas : tout mettre en vente au tarif y change quelque chose.
-    const candidats = o.trimestres
-      .map((x, q) => ({ q, occupation: x.occupation }))
-      .filter(({ q }) => {
-        if (perdues(rounds[q]!.results["joueur"]!) < 0.5) return false;
-        return def.bots.slice(0, 2).some((b) => {
-          const y = rounds[q]!.results[b.id]!;
-          return r1((Math.round(vendues(y)) / o.trimestres[q]!.disponibles) * 100) > o.trimestres[q]!.occupation && r2(Math.round(y.incomeStatement.revenue) / Math.round(vendues(y))) < o.trimestres[q]!.prixMoyen;
-        });
-      });
-    expect(k).toBe(candidats.reduce((m, x) => (x.occupation < m.occupation ? x : m)).q);
-    expect(k).toBe(3);
-    expect(a.perdues).toBe(Math.round(perdues(rounds[k]!.results["joueur"]!)));
-    expect(a.perdues).toBeGreaterThan(0);
-    const rival = def.bots.find((b) => b.name === a.rival)!;
-    expect(def.bots.slice(0, 2)).toContainEqual(rival);
-    const x = rounds[k]!.results[rival.id]!;
-    expect(a.prixDuConcurrent).toBe(r2(x.incomeStatement.revenue / soldUnits(x)));
-    // Ce concurrent a rempli mieux que l'hôtel, à un prix moyen plus bas.
-    expect(a.leRival.occupation).toBe(r1((Math.round(vendues(x)) / o.trimestres[k]!.disponibles) * 100));
-    expect(a.leRival.occupation).toBeGreaterThan(o.trimestres[k]!.occupation);
-    expect(a.leRival.prixMoyen).toBeLessThan(o.trimestres[k]!.prixMoyen);
+    const comptoir = f.concurrents.find((x) => x.nom === "Le Comptoir")!;
+    // Le concurrent qui remplit mieux que L'ESCALE sur l'année, moins cher.
     expect(a.rival).toBe("Le Comptoir");
-    const dispo = o.trimestres[k]!.disponibles;
-    const tarif = rejouerAvec("hotel", "garde-mhr-tarif", (t, d) => (t === tour ? { ...d, productionPlan: dispo } : undefined))[k]!;
-    const prixBas = rejouerAvec("hotel", "garde-mhr-prix-bas", (t, d) => (t === tour ? { ...d, productionPlan: dispo, price: a.prixDuConcurrent } : undefined))[k]!;
-    for (const [nom, r, y] of [["tarif", tarif, a.tarif], ["concurrent", prixBas, a.concurrent]] as const) {
-      expect(y.vendues, nom).toBe(Math.round(vendues(r)));
-      expect(y.chiffreDAffaires, nom).toBe(Math.round(r.incomeStatement.revenue));
-      expect(y.resultat, nom).toBe(Math.round(r.incomeStatement.operatingIncome));
-      expect(Math.round(r.production.produced), nom).toBe(dispo);
-    }
-    // Au tarif, le prix ne change pas ; au prix du concurrent, c'est son prix que l'hôtel fait.
-    expect(r2(tarif.incomeStatement.revenue / soldUnits(tarif))).toBe(a.prixAuTarif);
-    expect(r2(prixBas.incomeStatement.revenue / soldUnits(prixBas))).toBe(a.prixDuConcurrent);
-    expect(a.misesEnVente).toBe(Math.round(rounds[k]!.results["joueur"]!.production.produced));
-    expect(a.misesEnVente).toBeLessThan(dispo);
-    // Le prix bas remplit plus. Le meilleur choix est le RevPAR le plus haut, seul de son rang :
-    // dans l'année corrigée, c'est le prix du concurrent, qui rapporte plus par chambre disponible.
-    expect(a.concurrent.occupation).toBeGreaterThan(a.tarif.occupation);
-    const revpars = { joue: r2(Math.round(rounds[k]!.results["joueur"]!.incomeStatement.revenue) / dispo), tarif: a.tarif.revpar, concurrent: a.concurrent.revpar };
-    expect(a.joue.revpar).toBe(revpars.joue);
-    const max = Math.max(...Object.values(revpars));
-    expect(Object.entries(revpars).filter(([, v]) => v === max).map(([n]) => n)).toEqual([a.meilleur]);
-    expect(a.concurrent.revpar).toBeGreaterThan(a.tarif.revpar);
-    expect(a.meilleur).toBe("concurrent");
-    expect(a.ecartDeChiffre).toBeLessThan(0);
-    // Les mêmes chambres en vente, les mêmes charges : l'écart de résultat est celui du chiffre d'affaires.
-    expect(a.ecartDeResultat).toBe(a.ecartDeChiffre);
-    expect(attendus(S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT, "les-deux-prix", cas)).toEqual([
-      r1((Math.round(vendues(tarif)) / dispo) * 100),
-      r2(Math.round(tarif.incomeStatement.revenue) / dispo),
-      r1((Math.round(vendues(prixBas)) / dispo) * 100),
-      r2(Math.round(prixBas.incomeStatement.revenue) / dispo),
-    ]);
-    expect(attendus(S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT, "l-ecart", cas)).toEqual([
-      Math.round(vendues(prixBas)) - Math.round(vendues(tarif)),
-      Math.round(tarif.incomeStatement.revenue) - Math.round(prixBas.incomeStatement.revenue),
-    ]);
+    const vComptoir = comptoir.vendues.reduce((s, x) => s + x, 0);
+    expect(a.leRival.occupation).toBe(r1((vComptoir / (4 * dispo)) * 100));
+    expect(a.leRival.occupation).toBe(96.8);
+    expect(a.prixDuConcurrent).toBe(77.44);
+    expect(comptoir.prix).toEqual([77.44, 77.44, 77.44, 77.44]);
+    const bas = anneeAu(77.44);
+    expect(bas.ts.map((t) => t.v)).toEqual([4119, 5400, 5400, 4724]);
+    expect(a.aligne.annee.vendues).toBe(bas.v);
+    expect(a.aligne.annee.chiffreDAffaires).toBe(bas.ca);
+    expect(attendus(S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT, "les-deux-prix", cas)).toEqual([tarif.occupation, tarif.revpar, bas.occupation, bas.revpar]);
+    expect(attendus(S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT, "les-deux-prix", cas)).toEqual([81.9, 72.11, 90.9, 70.42]);
+    expect(attendus(S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT, "l-ecart", cas)).toEqual([bas.v - tarif.v, r2(tarif.ca - bas.ca)]);
+    expect(attendus(S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT, "l-ecart", cas)).toEqual([1943, 36_446.08]);
+    // Le prix plus bas paie au 1er et au 4e trimestre, où il restait des chambres vides ; au 2e et au
+    // 3e, l'hôtel est complet à ce prix et refuse encore des clients.
+    expect(a.hausse).toEqual([0, 3]);
+    expect(a.baisse).toEqual([1, 2]);
+    expect(a.refuseesAuPrixBas).toEqual(bas.ts.map((t) => t.refus));
+    expect(a.refuseesAuPrixBas).toEqual([0, 657, 2353, 0]);
+    // LE CRITÈRE EST UN SEUL : le RevPAR de l'année baisse, et le résultat de l'année aussi.
+    expect(bas.occupation).toBeGreaterThan(tarif.occupation);
+    expect(bas.revpar).toBeLessThan(tarif.revpar);
+    expect(bas.resultat).toBeLessThan(tarif.resultat);
+    expect(a.ecartDeResultat).toBe(r2(tarif.resultat - bas.resultat));
+    expect(a.ecartDeResultat).toBe(77_249.08);
+    expect(a.verdict).toBe("garder");
+    const reponse = juste(S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT, "reponse");
+    expect(reponse.texte).toBe("Garder 88 € : le RevPAR de l'année baisserait");
+    // La question et la réponse disent le même critère, et le résultat le confirme.
+    expect(texteDe(S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT, "la-question")).toContain("Jugez-en au revenu par chambre disponible de l'année");
+    const etape = S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT.etapes.find((e) => e.id === "reponse");
+    if (etape?.type !== "choix") throw new Error("reponse n'est pas un choix");
+    expect(etape.question(cas, { soldes: {} })).toContain("revenu par chambre disponible de l'année");
+    expect(reponse.retour).toContain("le RevPAR de l'année passerait de 72,11 € à 70,42 €");
+    expect(reponse.retour).toContain(`le résultat de l'année baisserait de ${(77_249.08).toLocaleString("fr-FR")} €`);
   });
 
   it("chapitre et cas : des textes propres, et un cas qui tient ce qu'un cas dédié doit tenir", () => {

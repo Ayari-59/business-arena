@@ -35,6 +35,9 @@ export interface FicheDuBistrot {
   /**
    * LA SENSIBILITÉ DE LA DEMANDE AU PRIX, toutes clientèles réunies (hypothèse du cours) : la
    * demande au prix p vaut la demande au prix de l'année × (p ÷ prix de l'année) ^ élasticité.
+   * Un bistrot de quartier, face à deux brasseries de la même rue, perd vite ses clients quand
+   * sa carte monte : −1,8. À −1,3, une carte montée de 14 % paierait toujours, et le cas « Monter
+   * la carte ou préparer juste » ne montrerait plus qu'un meilleur ratio peut coûter de l'argent.
    */
   elasticite: number;
   clienteles: readonly ClienteleDuBistrot[];
@@ -45,6 +48,20 @@ export interface FicheDuBistrot {
    * partir du trimestre dit, les denrées coûtent ce taux de plus, sur tout le barème.
    */
   hausseDesDenrees: { trimestre: number; taux: number };
+  /**
+   * LA CUISINE DU BISTROT (ajoutée pour le chapitre « Le coût matière et le prix d'un plat »).
+   * Le fournisseur habituel et la TVA de ses denrées, ce que couvrent les autres coûts variables,
+   * la fiche technique du couvert (le menu du jour : les denrées d'une portion, hors taxes, chez le
+   * fournisseur habituel, dont la somme est le coût matière du couvert) et ce qui fait monter les
+   * denrées dans l'année.
+   */
+  cuisine: {
+    fournisseur: string;
+    tauxTvaDesDenrees: number;
+    autresCouts: string;
+    ficheTechnique: readonly { libelle: string; cout: number }[];
+    motifDeLaHausse: string;
+  };
 }
 
 export const LA_TABLE_D_AUGUSTIN: FicheDuBistrot = {
@@ -57,7 +74,7 @@ export const LA_TABLE_D_AUGUSTIN: FicheDuBistrot = {
   coutMatiereParCouvert: 10,
   autresCoutsParCouvert: 3,
   chargesFixesParTrimestre: 162_000,
-  elasticite: -1.3,
+  elasticite: -1.8,
   clienteles: [
     { code: "midi", nom: "Déjeuners d'affaires", demande: [2200, 2300, 1250, 2200] },
     { code: "soir", nom: "Dîners de la clientèle locale", demande: [2900, 3800, 3600, 3700] },
@@ -65,6 +82,18 @@ export const LA_TABLE_D_AUGUSTIN: FicheDuBistrot = {
   ],
   equipe: { effectif: 10, coutParSalarieParTrimestre: 7200 },
   hausseDesDenrees: { trimestre: 3, taux: 0.14 },
+  cuisine: {
+    fournisseur: "Grossiste alimentaire",
+    tauxTvaDesDenrees: 0.055,
+    autresCouts: "énergie de cuisine, boissons offertes et frais de carte",
+    ficheTechnique: [
+      { libelle: "Entrée : poireaux vinaigrette", cout: 1.45 },
+      { libelle: "Plat : blanquette de veau et riz", cout: 6.35 },
+      { libelle: "Dessert : tarte aux pommes", cout: 1.4 },
+      { libelle: "Pain et beurre", cout: 0.8 },
+    ],
+    motifDeLaHausse: "la hausse des prix du beurre, de la crème et de la viande",
+  },
 };
 
 /** Les restaurants du monde du cours, par code d'entreprise. */

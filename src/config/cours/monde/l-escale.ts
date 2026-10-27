@@ -66,7 +66,7 @@ export const L_ESCALE: FicheDeLHotel = {
   equipe: { effectif: 14, coutParSalarieParTrimestre: 8600 },
   concurrents: [
     { nom: "Le Comptoir", chambres: 60, prix: [77.44, 77.44, 77.44, 77.44], vendues: [4716, 5400, 5400, 5400] },
-    { nom: "Grand Hôtel Terminus", chambres: 60, prix: [114.26, 114.4, 114.4, 114.4], vendues: [1925, 2300, 2069, 2175] },
+    { nom: "Le Grand Hôtel Terminus", chambres: 60, prix: [114.26, 114.4, 114.4, 114.4], vendues: [1925, 2300, 2069, 2175] },
   ],
 };
 
