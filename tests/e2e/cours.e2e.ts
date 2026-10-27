@@ -69,10 +69,12 @@ describe("/cours : le catalogue par thème et le chapitre libre", () => {
         c.code,
       ).toBe(1);
     }
-    // Ce qui vient se compte sur le programme d'un parcours qui se construit, jamais à la main.
+    // Ce qui vient se compte sur le programme d'un parcours qui se construit, jamais à la main ;
+    // il s'annonce sous le thème de ses chapitres écrits : sans chapitre encore, il n'a pas de thème.
     const aVenir = PARCOURS.filter((p) => p.enPreparation).filter((p) => {
       const prevus = Object.values(PROGRAMME[p.code]).reduce((n, titres) => n + (titres?.length ?? 0), 0);
-      return prevus > CHAPITRES.filter((c) => c.parcours === p.code).length;
+      const ecrits = CHAPITRES.filter((c) => c.parcours === p.code).length;
+      return ecrits > 0 && prevus > ecrits;
     });
     expect(await page.locator("[data-a-venir]").count()).toBe(aVenir.length);
     // Chaque cas de synthèse paraît une fois, sous le thème des chapitres qu'il reprend.
@@ -144,7 +146,7 @@ describe("le chapitre pilote, joué sans faute", () => {
         await page.getByRole("radio", { name: options.find((o) => o.juste)!.texte }).click();
       } else if (etape.type === "montants") {
         for (const c of etape.champs(cas, avant)) await page.getByLabel(c.libelle, { exact: true }).fill(virgule(c.attendu));
-        await page.getByRole("button", { name: "Vérifier" }).click();
+        await page.getByRole("button", { name: "Vérifier", exact: true }).click();
       }
       const dernier = i === chapitre.etapes.length - 1;
       await page.getByRole("button", { name: dernier ? "Terminer le chapitre" : "Étape suivante" }).click();
@@ -360,10 +362,10 @@ describe("le seuil de rentabilité, chapitre réservé", () => {
           const libelle = etape.categories.find((k) => k.code === el.categorie)!.libelle;
           await page.locator(`[data-element="${el.libelle}"]`).getByRole("radio", { name: libelle, exact: true }).click();
         }
-        await page.getByRole("button", { name: "Vérifier" }).click();
+        await page.getByRole("button", { name: "Vérifier", exact: true }).click();
       } else if (etape.type === "montants") {
         for (const c of etape.champs(cas, etat)) await page.getByLabel(c.libelle, { exact: true }).fill(virgule(c.attendu));
-        await page.getByRole("button", { name: "Vérifier" }).click();
+        await page.getByRole("button", { name: "Vérifier", exact: true }).click();
       } else if (etape.type === "choix") {
         await page.getByRole("radio", { name: etape.options(cas, etat).find((o) => o.juste)!.texte }).click();
       } else if (etape.type === "curseur") {
@@ -500,6 +502,34 @@ describe.each([
   { code: "le-depart-d-un-salarie", entreprise: "bistrot", telephone: true },
   { code: "entretenir-l-outil", entreprise: "fitness" },
   { code: "entretenir-l-outil", entreprise: "bistrot", telephone: true },
+  { code: "le-diagnostic-strategique", entreprise: "hotel" },
+  { code: "le-diagnostic-strategique", entreprise: "batiment", telephone: true },
+  { code: "se-fixer-des-objectifs", entreprise: "conseil" },
+  { code: "se-fixer-des-objectifs", entreprise: "ecommerce", telephone: true },
+  { code: "couts-ou-differenciation", entreprise: "hotel" },
+  { code: "couts-ou-differenciation", entreprise: "boutique", telephone: true },
+  { code: "lire-la-strategie-des-concurrents", entreprise: "conseil" },
+  { code: "lire-la-strategie-des-concurrents", entreprise: "nova", telephone: true },
+  { code: "croitre-en-investissant", entreprise: "hotel" },
+  { code: "croitre-en-investissant", entreprise: "conseil", telephone: true },
+  { code: "la-responsabilite-societale", entreprise: "bistrot" },
+  { code: "la-responsabilite-societale", entreprise: "nova", telephone: true },
+  { code: "le-projet-d-entreprise", entreprise: "batiment" },
+  { code: "le-projet-d-entreprise", entreprise: "fitness", telephone: true },
+  { code: "organiser-l-activite", entreprise: "conseil" },
+  { code: "organiser-l-activite", entreprise: "ecommerce", telephone: true },
+  { code: "decider-avec-des-chiffres", entreprise: "hotel" },
+  { code: "decider-avec-des-chiffres", entreprise: "nova", telephone: true },
+  { code: "evaluer-son-activite", entreprise: "boutique" },
+  { code: "evaluer-son-activite", entreprise: "transport", telephone: true },
+  { code: "des-donnees-a-l-information", entreprise: "fitness" },
+  { code: "des-donnees-a-l-information", entreprise: "nova", telephone: true },
+  { code: "construire-un-indicateur-juste", entreprise: "hotel" },
+  { code: "construire-un-indicateur-juste", entreprise: "batiment", telephone: true },
+  { code: "une-donnee-fausse", entreprise: "hotel" },
+  { code: "une-donnee-fausse", entreprise: "batiment", telephone: true },
+  { code: "ce-que-coute-un-outil-numerique", entreprise: "boutique" },
+  { code: "ce-que-coute-un-outil-numerique", entreprise: "hotel", telephone: true },
   // Les cas pratiques s'ouvrent et se jouent comme un chapitre réservé.
   { code: "suivre-la-baisse-du-concurrent", entreprise: "nova" },
   { code: "suivre-la-baisse-du-concurrent", entreprise: "hotel", telephone: true },
@@ -578,6 +608,32 @@ describe.each([
   { code: "une-seule-demarche-qualite", entreprise: "ecommerce", telephone: true },
   { code: "recruter-des-l-annonce-du-depart", entreprise: "transport" },
   { code: "entretenir-au-seuil", entreprise: "bistrot", telephone: true },
+  { code: "des-clients-repartis-sans-etre-servis", entreprise: "boutique" },
+  { code: "un-objectif-plus-ambitieux", entreprise: "nova", telephone: true },
+  { code: "baisser-les-prix-sans-rien-couper", entreprise: "bistrot" },
+  { code: "aller-dans-l-espace-libre", entreprise: "transport", telephone: true },
+  { code: "voir-plus-grand", entreprise: "boutique" },
+  { code: "viser-le-label", entreprise: "transport", telephone: true },
+  { code: "un-equipement-de-plus-au-depart", entreprise: "hotel" },
+  { code: "la-commande-exceptionnelle", entreprise: "bistrot", telephone: true },
+  { code: "doubler-la-publicite", entreprise: "bistrot" },
+  { code: "le-second-semestre-a-t-il-ete-meilleur", entreprise: "conseil", telephone: true },
+  { code: "le-trimestre-le-plus-fort", entreprise: "boutique" },
+  { code: "la-part-de-marche-annoncee", entreprise: "nova", telephone: true },
+  { code: "la-case-vide", entreprise: "conseil" },
+  { code: "une-seconde-journee-de-formation", entreprise: "bistrot", telephone: true },
+  { code: "le-cout-matiere", entreprise: "bistrot" },
+  { code: "le-cout-matiere", entreprise: "bistrot", telephone: true },
+  { code: "occupation-et-revenu-par-chambre", entreprise: "hotel" },
+  { code: "occupation-et-revenu-par-chambre", entreprise: "hotel", telephone: true },
+  { code: "la-productivite-du-service", entreprise: "bistrot" },
+  { code: "la-productivite-du-service", entreprise: "hotel", telephone: true },
+  { code: "le-prix-selon-la-saison", entreprise: "hotel" },
+  { code: "le-prix-selon-la-saison", entreprise: "hotel", telephone: true },
+  { code: "monter-la-carte-ou-preparer-juste", entreprise: "bistrot" },
+  { code: "s-aligner-sur-le-prix-du-concurrent", entreprise: "hotel", telephone: true },
+  { code: "le-cout-du-trimestre-creux", entreprise: "bistrot" },
+  { code: "plus-cher-au-plus-fort-de-la-saison", entreprise: "hotel", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se
@@ -629,7 +685,7 @@ describe.each([
           const libelle = etape.categories.find((k) => k.code === el.categorie)!.libelle;
           await page.locator(`[data-element="${el.libelle}"]`).getByRole("radio", { name: libelle, exact: true }).click();
         }
-        await page.getByRole("button", { name: "Vérifier" }).click();
+        await page.getByRole("button", { name: "Vérifier", exact: true }).click();
       } else if (etape.type === "montants") {
         for (const c of etape.champs(cas, avant)) {
           if (!telephone) {
@@ -639,7 +695,7 @@ describe.each([
           await page.getByLabel(c.libelle, { exact: true }).pressSequentially(virgule(Math.abs(c.attendu)));
           if (c.attendu < 0) await page.getByRole("button", { name: `Changer le signe : ${c.libelle}`, exact: true }).tap();
         }
-        await page.getByRole("button", { name: "Vérifier" }).click();
+        await page.getByRole("button", { name: "Vérifier", exact: true }).click();
       } else if (etape.type === "choix") {
         await page.getByRole("radio", { name: etape.options(cas, avant).find((o) => o.juste)!.texte }).click();
       } else if (etape.type === "curseur") {

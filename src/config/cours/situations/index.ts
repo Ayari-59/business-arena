@@ -67,6 +67,24 @@ import { L_ASSUREUR_AUGMENTE_LA_PRIME } from "./par-chapitre/l-assureur-augmente
 import { UNE_SEULE_DEMARCHE_QUALITE } from "./par-chapitre/une-seule-demarche-qualite";
 import { RECRUTER_DES_L_ANNONCE_DU_DEPART } from "./par-chapitre/recruter-des-l-annonce-du-depart";
 import { ENTRETENIR_AU_SEUIL } from "./par-chapitre/entretenir-au-seuil";
+import { DES_CLIENTS_REPARTIS_SANS_ETRE_SERVIS } from "./par-chapitre/des-clients-repartis-sans-etre-servis";
+import { UN_OBJECTIF_PLUS_AMBITIEUX } from "./par-chapitre/un-objectif-plus-ambitieux";
+import { BAISSER_LES_PRIX_SANS_RIEN_COUPER } from "./par-chapitre/baisser-les-prix-sans-rien-couper";
+import { ALLER_DANS_L_ESPACE_LIBRE } from "./par-chapitre/aller-dans-l-espace-libre";
+import { VOIR_PLUS_GRAND } from "./par-chapitre/voir-plus-grand";
+import { VISER_LE_LABEL } from "./par-chapitre/viser-le-label";
+import { UN_EQUIPEMENT_DE_PLUS_AU_DEPART } from "./par-chapitre/un-equipement-de-plus-au-depart";
+import { LA_COMMANDE_EXCEPTIONNELLE } from "./par-chapitre/la-commande-exceptionnelle";
+import { DOUBLER_LA_PUBLICITE } from "./par-chapitre/doubler-la-publicite";
+import { LE_SECOND_SEMESTRE } from "./par-chapitre/le-second-semestre";
+import { LE_TRIMESTRE_LE_PLUS_FORT } from "./par-chapitre/le-trimestre-le-plus-fort";
+import { LA_PART_DE_MARCHE_ANNONCEE } from "./par-chapitre/la-part-de-marche-annoncee";
+import { LA_CASE_VIDE } from "./par-chapitre/la-case-vide";
+import { UNE_SECONDE_JOURNEE_DE_FORMATION } from "./par-chapitre/une-seconde-journee-de-formation";
+import { MONTER_LA_CARTE_OU_PREPARER_JUSTE } from "./par-chapitre/monter-la-carte-ou-preparer-juste";
+import { S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT } from "./par-chapitre/s-aligner-sur-le-prix-du-concurrent";
+import { LE_COUT_DU_TRIMESTRE_CREUX } from "./par-chapitre/le-cout-du-trimestre-creux";
+import { PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON } from "./par-chapitre/plus-cher-au-plus-fort-de-la-saison";
 import type { Situation } from "./types";
 
 export type { Situation } from "./types";
@@ -154,6 +172,24 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   UNE_SEULE_DEMARCHE_QUALITE,
   RECRUTER_DES_L_ANNONCE_DU_DEPART,
   ENTRETENIR_AU_SEUIL,
+  DES_CLIENTS_REPARTIS_SANS_ETRE_SERVIS,
+  UN_OBJECTIF_PLUS_AMBITIEUX,
+  BAISSER_LES_PRIX_SANS_RIEN_COUPER,
+  ALLER_DANS_L_ESPACE_LIBRE,
+  VOIR_PLUS_GRAND,
+  VISER_LE_LABEL,
+  UN_EQUIPEMENT_DE_PLUS_AU_DEPART,
+  LA_COMMANDE_EXCEPTIONNELLE,
+  DOUBLER_LA_PUBLICITE,
+  LE_SECOND_SEMESTRE,
+  LE_TRIMESTRE_LE_PLUS_FORT,
+  LA_PART_DE_MARCHE_ANNONCEE,
+  LA_CASE_VIDE,
+  UNE_SECONDE_JOURNEE_DE_FORMATION,
+  MONTER_LA_CARTE_OU_PREPARER_JUSTE,
+  S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT,
+  LE_COUT_DU_TRIMESTRE_CREUX,
+  PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

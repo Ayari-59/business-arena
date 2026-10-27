@@ -6,7 +6,7 @@ import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
 import { CHAPITRES } from "../../src/config/cours/registre";
 import {
   LIEUX_DE_L_ARENE,
-  NIVEAU_DE_L_ASSURANCE,
+  MISSIONS_AU_NIVEAU_DE_LEUR_DECISION,
   NIVEAU_SANS_LICENCE,
   missionAffichee,
   missionDuChapitre,
@@ -72,9 +72,10 @@ describe("le niveau de la mission", () => {
         if (m.niveau <= NIVEAU_SANS_LICENCE) continue;
         // Au-delà, seule une décision qui n'existe qu'au-delà le justifie, et la mission se joue
         // au niveau qui l'ouvre : la gamme, ou l'assurance (BTS GPME).
-        if (chapitre.code === "s-assurer-contre-les-aleas") {
-          expect(m.niveau).toBe(NIVEAU_DE_L_ASSURANCE);
-          expect(NIVEAU_DE_L_ASSURANCE).toBeGreaterThan(NIVEAU_SANS_LICENCE);
+        const auNiveauDeLaDecision = MISSIONS_AU_NIVEAU_DE_LEUR_DECISION[chapitre.code];
+        if (auNiveauDeLaDecision !== undefined) {
+          expect(m.niveau).toBe(auNiveauDeLaDecision);
+          expect(auNiveauDeLaDecision).toBeGreaterThan(NIVEAU_SANS_LICENCE);
         } else {
           expect(["cout-par-produit", "assortiment", "portefeuille-abc"]).toContain(chapitre.code);
           expect(m.niveau).toBe(niveauDeLaGamme(code));

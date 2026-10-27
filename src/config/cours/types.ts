@@ -48,7 +48,7 @@ interface Base {
    * où il y a un stock) : `chapitreDuCas` retire les autres. Absent : partout.
    */
   si?: (c: Cas) => boolean;
-  /** Un tableau de chiffres du cas, montré avant la question (lecture, choix, montants). */
+  /** Un tableau de chiffres du cas, montré avant la question (lecture, choix, montants, tri). */
   tableau?: (c: Cas) => TableauDeDonnees;
 }
 
@@ -176,7 +176,7 @@ export type Etape =
 
 export interface Chapitre {
   code: string;
-  parcours: "comptabilite-generale" | "controle-de-gestion" | "mco" | "ndrc" | "stmg" | "stmg-gf" | "stmg-rh" | "gpme";
+  parcours: "comptabilite-generale" | "controle-de-gestion" | "mco" | "ndrc" | "stmg" | "stmg-gf" | "stmg-rh" | "gpme" | "strategie" | "seconde-mg" | "stmg-sig" | "mhr" | "fiscalite";
   palier: 1 | 2 | 3 | 4;
   /**
    * Les blocs de référentiel que le chapitre fait travailler, préfixés du diplôme dont ils
