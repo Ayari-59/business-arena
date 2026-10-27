@@ -24,6 +24,13 @@ import { CHAPITRES, PARCOURS } from "@/config/cours/registre";
 import { FORMATIONS, formationParCode } from "@/config/formations";
 
 /**
+ * Ce test parcourt tout le catalogue, dans chaque entreprise : sa durée croît avec chaque
+ * chapitre et chaque cas pratique. Les cinq secondes par défaut de vitest ne suffisent plus
+ * quand la suite entière tourne en parallèle.
+ */
+const PARCOURT_TOUT_LE_CATALOGUE = 30_000;
+
+/**
  * LE COURS ENTRE DANS LA COUVERTURE, ET CE QU'IL CITE EXISTE.
  *
  * Les chapitres déclarent les blocs qu'ils font travailler, préfixés du
@@ -80,7 +87,7 @@ describe("la couverture par le cours", () => {
       );
       expect(chez.length, `${c.code} ne paraît chez aucun diplôme`).toBeGreaterThan(0);
     }
-  });
+  }, PARCOURT_TOUT_LE_CATALOGUE);
 
   it("la formation qu'un parcours du cours suit existe, et a sa page", () => {
     const suivies = PARCOURS.filter((p) => p.formation);

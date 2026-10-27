@@ -18,6 +18,13 @@ import { CONCEPTS } from "../../src/config/pedagogy/concepts";
 import type { Etape } from "../../src/config/cours/types";
 
 /**
+ * Ce test parcourt tout le catalogue, dans chaque entreprise : sa durée croît avec chaque
+ * chapitre et chaque cas pratique. Les cinq secondes par défaut de vitest ne suffisent plus
+ * quand la suite entière tourne en parallèle.
+ */
+const PARCOURT_TOUT_LE_CATALOGUE = 30_000;
+
+/**
  * LES CAS PRATIQUES SONT DES SITUATIONS, ET LEURS CALCULS TIENNENT.
  *
  * Un cas pratique reprend des calculs déjà vus, sans cours : sa première
@@ -113,7 +120,7 @@ describe("les cas pratiques", () => {
         }
       }
     }
-  });
+  }, PARCOURT_TOUT_LE_CATALOGUE);
 });
 
 describe("suivre la baisse du concurrent", () => {

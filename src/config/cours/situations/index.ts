@@ -85,6 +85,22 @@ import { MONTER_LA_CARTE_OU_PREPARER_JUSTE } from "./par-chapitre/monter-la-cart
 import { S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT } from "./par-chapitre/s-aligner-sur-le-prix-du-concurrent";
 import { LE_COUT_DU_TRIMESTRE_CREUX } from "./par-chapitre/le-cout-du-trimestre-creux";
 import { PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON } from "./par-chapitre/plus-cher-au-plus-fort-de-la-saison";
+import { LA_TVA_DU_DERNIER_TRIMESTRE } from "./par-chapitre/la-tva-du-dernier-trimestre";
+import { LA_TVA_AVANCEE_POUR_LE_CLIENT } from "./par-chapitre/la-tva-avancee-pour-le-client";
+import { LA_DEPENSE_DE_FIN_D_ANNEE } from "./par-chapitre/la-depense-de-fin-d-annee";
+import { LA_DEPENSE_DE_L_ANNEE_EN_PERTE } from "./par-chapitre/la-depense-de-l-annee-en-perte";
+import { LE_POINT_DE_COMMANDE_AVANT_LE_PIC } from "./par-chapitre/le-point-de-commande-avant-le-pic";
+import { LE_GAZOLE_QUI_AUGMENTE } from "./par-chapitre/le-gazole-qui-augmente";
+import { LE_LOT_DE_LA_BOURSE_DE_FRET } from "./par-chapitre/le-lot-de-la-bourse-de-fret";
+import { COMBIEN_CHARGER_PENDANT_LA_PANNE } from "./par-chapitre/combien-charger-pendant-la-panne";
+import { REVENDRE_LA_MACHINE_PLUS_TOT } from "./par-chapitre/revendre-la-machine-plus-tot";
+import { ACHETER_LES_DEUX_MACHINES } from "./par-chapitre/acheter-les-deux-machines";
+import { LE_LEVIER_FACE_A_LA_HAUSSE_DU_TAUX } from "./par-chapitre/le-levier-face-a-la-hausse-du-taux";
+import { CE_QUE_DOIT_RAPPORTER_L_EXPLOITATION } from "./par-chapitre/ce-que-doit-rapporter-l-exploitation";
+import { LES_DEUX_ECARTS } from "./par-chapitre/les-deux-ecarts";
+import { TENIR_JUSQU_AU_REASSORT } from "./par-chapitre/tenir-jusqu-au-reassort";
+import { LA_PROMOTION_DE_NOEL } from "./par-chapitre/la-promotion-de-noel";
+import { LA_CAISSE_DU_TRIMESTRE_DE_NOEL } from "./par-chapitre/la-caisse-du-trimestre-de-noel";
 import type { Situation } from "./types";
 
 export type { Situation } from "./types";
@@ -190,6 +206,22 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT,
   LE_COUT_DU_TRIMESTRE_CREUX,
   PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON,
+  LA_TVA_DU_DERNIER_TRIMESTRE,
+  LA_TVA_AVANCEE_POUR_LE_CLIENT,
+  LA_DEPENSE_DE_FIN_D_ANNEE,
+  LA_DEPENSE_DE_L_ANNEE_EN_PERTE,
+  LE_POINT_DE_COMMANDE_AVANT_LE_PIC,
+  LE_GAZOLE_QUI_AUGMENTE,
+  LE_LOT_DE_LA_BOURSE_DE_FRET,
+  COMBIEN_CHARGER_PENDANT_LA_PANNE,
+  REVENDRE_LA_MACHINE_PLUS_TOT,
+  ACHETER_LES_DEUX_MACHINES,
+  LE_LEVIER_FACE_A_LA_HAUSSE_DU_TAUX,
+  CE_QUE_DOIT_RAPPORTER_L_EXPLOITATION,
+  LES_DEUX_ECARTS,
+  TENIR_JUSQU_AU_REASSORT,
+  LA_PROMOTION_DE_NOEL,
+  LA_CAISSE_DU_TRIMESTRE_DE_NOEL,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */
