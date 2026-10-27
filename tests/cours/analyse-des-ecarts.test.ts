@@ -77,9 +77,18 @@ describe.each(ENTREPRISES_DU_COURS)("l'analyse des écarts chez %s", (code) => {
 });
 
 describe("l'analyse des écarts, quelle que soit l'entreprise", () => {
-  it("les deux causes existent (quantités, prix), et les deux sens (écarts favorables, défavorables)", () => {
+  it("les deux écarts existent (quantités, prix), dans les deux sens (favorables, défavorables)", () => {
     const causes = new Set(ENTREPRISES_DU_COURS.map((c) => causeDuChiffreDAffaires(casDeLEntreprise(c))));
-    expect([...causes].sort()).toEqual(["prix", "volume"]);
+    // Dans l'année corrigée, les quantités pèsent le plus partout : la réponse « des prix » n'est
+    // plus juste nulle part, et son retour « Oui » n'est plus lu. Si le prix l'emporte de nouveau
+    // quelque part, cette garde le dira.
+    expect([...causes]).toEqual(["volume"]);
+    // L'écart sur prix existe encore, favorable ici, défavorable là ; et il va parfois contre le
+    // volume (la boutique vend moins, plus cher) : la décomposition dit ce qui compense quoi.
+    const ca = ENTREPRISES_DU_COURS.map((c) => ecartsDuTrimestre(c).chiffreDAffaires);
+    expect(ca.some((e) => e.prix > 0)).toBe(true);
+    expect(ca.some((e) => e.prix < 0)).toBe(true);
+    expect(ca.some((e) => e.prix !== 0 && Math.sign(e.prix) !== Math.sign(e.volume))).toBe(true);
     const resultats = ENTREPRISES_DU_COURS.map((c) => ecartsDuTrimestre(c).resultat);
     expect(resultats.some((r) => r > 0)).toBe(true);
     expect(resultats.some((r) => r < 0)).toBe(true);

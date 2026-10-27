@@ -11,6 +11,7 @@ import { applyPeriodicityToCompany } from "../../src/config/scenarios/periodicit
 import { nomDuMois } from "../../src/config/scenarios/calendrier-mensuel";
 import { tourDOuverture } from "../../src/config/scenarios/situation-kit";
 import { toGamme } from "../../src/engine/gamme";
+import { amortissementsDuDepart } from "../../src/config/scenarios/amortissements-du-depart";
 
 /**
  * LE DOSSIER D'UN ATELIER QUI NE SE JOUE PAS AU TRIMESTRE DIT LA PARTIE QU'IL CRÉERA.
@@ -78,8 +79,9 @@ describe("les dossiers d'un atelier au mois", () => {
         expect(nombre(ligne("financier", "Charges de structure décaissées par tour"))).toBe(
           auCentime(scenario.fixedCostsPerRound),
         );
-        expect(nombre(ligne("financier", "Amortissements par tour"))).toBe(
-          auCentime(scenario.finance.depreciationPerRound),
+        // Ceux que le moteur compte : le parc typé, non `depreciationPerRound`, qu'il ignore.
+        expect(nombre(ligne("financier", "Amortissements par tour, au départ"))).toBe(
+          auCentime(amortissementsDuDepart(scenario)),
         );
         expect(nombre(ligne("commercial", "Budget marketing de référence par tour"))).toBe(
           auCentime(0.5 * scenario.marketing.scale),

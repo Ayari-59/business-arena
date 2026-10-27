@@ -5,7 +5,8 @@ import {
   LE_DEFICIT_REPORTE,
   TRIMESTRES_PAR_EXERCICE,
   deficitReporte,
-  deuxExercices,
+  deuxExercicesDuChapitre,
+  grandEntretien,
   lireDeuxExercices,
   surDeuxExercices,
 } from "../../chapitres/le-deficit-reporte";
@@ -24,15 +25,16 @@ const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` 
  * CAS PRATIQUE DU CHAPITRE « LE DÉFICIT REPORTÉ » : LA DÉPENSE DE L'ANNÉE EN PERTE (fiscalité de
  * l'entreprise, palier 3).
  *
- * L'année du cours finit en perte. Le gérant renonce à doubler la maintenance au dernier trimestre :
+ * L'année du grand entretien finit en perte. Le gérant renonce à doubler encore la maintenance au
+ * dernier trimestre :
  * « nous ne payons pas d'impôt cette année, la dépense ne nous ferait rien économiser ; attendons
  * l'an prochain ». L'élève refait le calcul du chapitre avec la dépense : elle grossit le déficit,
  * et le déficit imputé sur l'exercice suivant fait baisser son impôt du taux de la dépense.
  * L'économie n'est pas perdue : elle attend l'exercice suivant, comme elle l'aurait attendu si la
  * dépense y avait été faite.
  *
- * L'arène rejoue les deux exercices du chapitre (`surDeuxExercices`), le budget de maintenance du
- * trimestre 4 doublé, la seule décision changée. Le second exercice peut en sortir un peu changé
+ * L'arène rejoue les deux exercices du chapitre (`surDeuxExercices`, le grand entretien au premier),
+ * le budget de maintenance du trimestre 4 doublé, la seule décision changée. Le second exercice peut en sortir un peu changé
  * (la trésorerie suit un autre chemin, les charges financières avec elle) : le cas le dit, chiffres
  * de l'arène à l'appui.
  */
@@ -45,7 +47,10 @@ export const deuxExercicesAvecLaDepense = (code: string) =>
   rejouerAvec(
     code,
     "la-depense-de-l-annee-en-perte:maintenance-doublee",
-    (t, d) => (t === TRIMESTRE_DE_LA_DEPENSE ? { ...d, maintenanceBudget: d.maintenanceBudget * 2 } : undefined),
+    (t, d) => {
+      const g = grandEntretien(t, d);
+      return t === TRIMESTRE_DE_LA_DEPENSE ? { ...(g ?? d), maintenanceBudget: (g ?? d).maintenanceBudget * 2 } : g;
+    },
     surDeuxExercices(code),
   );
 
@@ -64,7 +69,7 @@ export function depenseDeLAnneeEnPerte(c: Cas) {
 
 function calculer(c: Cas) {
   const k = deficitReporte(c);
-  const sans = deuxExercices(c.code);
+  const sans = deuxExercicesDuChapitre(c.code);
   const avec = deuxExercicesAvecLaDepense(c.code);
   const i = TRIMESTRE_DE_LA_DEPENSE - 1;
   // Doubler le budget, c'est dépenser une seconde fois la maintenance du trimestre.
@@ -109,7 +114,7 @@ export const LA_DEPENSE_DE_L_ANNEE_EN_PERTE: Situation = {
   commanditaire: "Le gérant",
   titre: "La dépense de l'année en perte",
   accroche:
-    "L'année finit en perte, et le gérant renonce à une dépense de maintenance : sans impôt à payer, elle ne ferait rien économiser. Ce que la dépense ajoute au déficit, et l'impôt qu'elle fait économiser l'exercice suivant.",
+    "L'année du grand entretien finit en perte, et le gérant renonce à une dépense de maintenance de plus : sans impôt à payer, elle ne ferait rien économiser. Ce que la dépense ajoute au déficit, et l'impôt qu'elle fait économiser l'exercice suivant.",
   objectifs: [
     "Calculer le déficit reportable après une charge de plus",
     "Calculer l'impôt de l'exercice suivant avec ce déficit, et l'impôt économisé",
@@ -126,8 +131,8 @@ export const LA_DEPENSE_DE_L_ANNEE_EN_PERTE: Situation = {
       texte: (c) => {
         const r = depenseDeLAnneeEnPerte(c);
         return [
-          `« Nous voulions doubler le budget de maintenance au trimestre ${T}, ${eur(r.depense)} de plus. Mais cette année, nous sommes en perte : nous ne payons pas d'impôt, et la dépense ne nous ferait rien économiser. Attendons l'an prochain, où elle fera baisser l'impôt. »`,
-          `Pas de cours cette fois : vous avez les deux exercices ${dE(c.entreprise)}, tels que l'arène les a joués, et les calculs sont ceux du chapitre. L'arène a rejoué les deux exercices avec le budget de maintenance du trimestre ${T} doublé.`,
+          `« Nous voulions doubler encore le budget de maintenance au trimestre ${T}, le dernier du grand entretien, ${eur(r.depense)} de plus. Mais cette année, nous sommes en perte : nous ne payons pas d'impôt, et la dépense ne nous ferait rien économiser. Attendons l'an prochain, où elle fera baisser l'impôt. »`,
+          `Pas de cours cette fois : vous avez les deux exercices ${dE(c.entreprise)} du chapitre, grand entretien compris, tels que l'arène les a joués, et les calculs sont ceux du chapitre. L'arène a rejoué les deux exercices avec, en plus, le budget de maintenance du trimestre ${T} doublé.`,
         ];
       },
       tableau: (c) => {

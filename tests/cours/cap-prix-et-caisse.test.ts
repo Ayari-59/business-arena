@@ -281,7 +281,7 @@ describe("le prix affiché, chez la boutique", () => {
     expect(k["Articles vendus en plus"]).toBe(vendusDe(avec[T - 1]!, ARTICLE_EN_PROMOTION) - vendusDe(reference[T - 1]!, ARTICLE_EN_PROMOTION));
     expect(k["Chiffre d'affaires en plus"]).toBe(chiffreDe(avec[T - 1]!, ARTICLE_EN_PROMOTION) - chiffreDe(reference[T - 1]!, ARTICLE_EN_PROMOTION));
     // Les chiffres de l'arène aujourd'hui, et le verdict qui en suit.
-    expect([p.sans.vendus, p.avec.vendus, p.sans.chiffreDAffaires, p.avec.chiffreDAffaires]).toEqual([1593, 2175, 87636, 95695]);
+    expect([p.sans.vendus, p.avec.vendus, p.sans.chiffreDAffaires, p.avec.chiffreDAffaires]).toEqual([1377, 1988, 75753, 87463]);
     expect(p.bilan).toBe("plus-et-plus");
     expect(justeDe(LE_PRIX_AFFICHE, "bilan", cas)).toBe("Elle fait vendre plus, et le chiffre d'affaires monte");
   });
@@ -312,7 +312,7 @@ describe("la promotion de Noël, chez la boutique", () => {
     expect(k2["Chiffre d'affaires en plus"]).toBe(chiffreDe(avec[T]!, ARTICLE_EN_PROMOTION) - chiffreDe(reference[T]!, ARTICLE_EN_PROMOTION));
     expect(reference[T]!.products![ARTICLE_EN_PROMOTION]!.lost).toBeGreaterThan(0);
     expect(p.ventesEnPlus).toBe(0);
-    expect(p.chiffreEnPlus).toBe(-24522);
+    expect(p.chiffreEnPlus).toBe(-26875);
     expect(p.bilan).toBe("rien-de-plus");
     expect(justeDe(LA_PROMOTION_DE_NOEL, "reponse", cas)).toBe("Ne pas la faire : le rayon ne suit pas");
   });
@@ -376,8 +376,8 @@ describe("tenir la caisse, chez la boutique", () => {
     expect(es["Espèces encaissées dans la journée"]).toBe(auCentime(ttc * PART_EN_ESPECES));
     expect(champs(TENIR_LA_CAISSE, "le-fond-de-caisse", cas)["Espèces attendues le soir"]).toBe(auCentime(FOND_DE_CAISSE + auCentime(ttc * PART_EN_ESPECES)));
     // Les chiffres de l'arène aujourd'hui.
-    expect([e.ventes, e.chiffre, s.roundDays]).toEqual([3242, 181400, 90]);
-    expect(ttc).toBe(2418.67);
+    expect([e.ventes, e.chiffre, s.roundDays]).toEqual([3233, 181275, 90]);
+    expect(ttc).toBe(2417);
   });
 
   it("le tiroir compté fait l'erreur de la journée, et l'écart la retrouve", () => {
@@ -408,7 +408,7 @@ describe("la caisse du trimestre de Noël, chez la boutique", () => {
     expect(k2["Écart de caisse"]).toBe(ERREUR_DU_SOIR);
     expect(k2["Écart de caisse"]).toBe(auCentime(k2["Total compté dans le tiroir"]! - auCentime(FOND_DE_CAISSE + k1["Espèces encaissées dans la journée"]!)));
     expect(k2["Espèces à remettre au coffre"]).toBe(auCentime(k2["Total compté dans le tiroir"]! - FOND_DE_CAISSE));
-    expect([e.chiffre, ttc]).toEqual([203000, 2706.67]);
+    expect([e.chiffre, ttc]).toEqual([173173, 2308.97]);
     // L'écart du cas n'est pas celui du chapitre : un excédent, pas un manquant.
     expect(Math.sign(ERREUR_DU_SOIR)).not.toBe(Math.sign(ERREUR_DE_LA_JOURNEE));
   });

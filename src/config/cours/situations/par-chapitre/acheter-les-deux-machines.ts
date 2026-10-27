@@ -26,6 +26,9 @@ const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` 
  * l'ensemble n'est pas la somme des deux VAN, et la question devient de savoir si la seconde
  * machine ajoute encore de la valeur à la première.
  *
+ * Chez MAILLE & CO, aucune des deux machines ne crée de valeur seule : la bonne réponse y est de
+ * n'acheter rien, et les textes ne disent pas les machines rentables là où elles ne le sont pas.
+ *
  * LE FINANCEMENT. Payées ensemble sur la trésorerie, les deux machines font défaillir L'ESCALE
  * (le découvert ne couvre pas leur prix) : le rejeu de l'ensemble les paie donc par un emprunt du
  * même montant, partout. Les flux d'exploitation n'en dépendent pas (l'EBE et le résultat
@@ -185,7 +188,10 @@ export const ACHETER_LES_DEUX_MACHINES: Situation = {
           {
             texte: "Achetons les deux : leurs VAN s'additionnent, puisque chacune des deux machines est rentable de son côté",
             juste: false,
-            retour: `Non : les VAN des projets seuls, ${eur(a.van)} et ${eur(b.van)}, supposent chacune toute la demande pour une seule machine. Ensemble, elles se la partagent : l'ensemble perd ${eur(perdu)} face à leur somme.`,
+            retour:
+              a.van > 0 && b.van > 0
+                ? `Non : les VAN des projets seuls, ${eur(a.van)} et ${eur(b.van)}, supposent chacune toute la demande pour une seule machine. Ensemble, elles se la partagent : l'ensemble perd ${eur(perdu)} face à leur somme.`
+                : `Non : ${a.van <= 0 && b.van <= 0 ? "aucune des deux n'est rentable de son côté" : "une seule des deux est rentable de son côté"}, leurs VAN seules sont de ${eur(a.van)} et ${eur(b.van)}. Et ensemble, elles se partagent la même demande : l'ensemble perd ${eur(perdu)} face à leur somme.`,
           },
         ];
       },

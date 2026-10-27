@@ -115,7 +115,7 @@ const SOURCES: SituationDef[] = [
     category: "contexte_marche",
     title: "Le camion qui rentre à vide",
     narrative:
-      "Vos porteurs partent chargés vers la métropole et reviennent vides trois fois sur quatre. Le chauffeur est payé et le camion s'amortit, que vous chargiez ou non. La bourse de fret propose des lots à 52 € la palette pour ces retours : sous votre prix moyen de 74 €, et même sous votre coût de revient complet, qui approche 54 €.",
+      "Vos porteurs partent chargés vers la métropole et reviennent vides trois fois sur quatre. Le chauffeur est payé et le camion s'amortit, que vous chargiez ou non. La bourse de fret propose des lots à 52 € la palette pour ces retours : sous votre prix moyen de 74 €, et même sous votre coût de revient complet, qui approche 53 €.",
     problem:
       "Faut-il charger ces lots mal payés, ou tenir son prix et rentrer à vide ?",
     diagnosticOptions: [
@@ -140,7 +140,7 @@ const SOURCES: SituationDef[] = [
       {
         id: "jamais_sous_le_prix",
         label:
-          "À 52 €, on vend sous le coût de revient complet de 54 € : chaque palette chargée creuse la perte",
+          "À 52 €, on vend sous le coût de revient complet de 53 € : chaque palette chargée creuse la perte",
         correct: false,
       },
       {

@@ -226,10 +226,10 @@ describe("les deux chapitres et leur place au programme", () => {
     }
   });
 
-  it("le levier se lit là où l'année finit en bénéfice avec un endettement net positif, et là seulement", () => {
+  it("le levier se lit là où l'année finit en bénéfice, sans découvert, avec un endettement net positif, et là seulement", () => {
     const retenues = ENTREPRISES_DU_COURS.filter((code) => {
       const tours = anneeDuCours(code);
-      return somme(tours, (r) => r.incomeStatement.pretaxIncome) > 0 && relu(tours.at(-1)!.balanceSheet).dette > 0;
+      return somme(tours, (r) => r.incomeStatement.pretaxIncome) > 0 && tours.every((r) => r.balanceSheet.overdraft === 0) && relu(tours.at(-1)!.balanceSheet).dette > 0;
     });
     expect([...ENTREPRISES_DU_LEVIER]).toEqual(retenues);
     expect(L_EFFET_DE_LEVIER.entreprises!.codes).toEqual(ENTREPRISES_DU_LEVIER);
@@ -238,8 +238,14 @@ describe("les deux chapitres et leur place au programme", () => {
     for (const ch of [L_EFFET_DE_LEVIER, LA_CREATION_DE_VALEUR]) {
       for (const code of ENTREPRISES_DU_COURS) expect(ch.entreprises!.pourquoi, code).toContain(casDeLEntreprise(code).entreprise);
     }
-    for (const code of ["nova", "bistrot", "conseil"]) expect(somme(anneeDuCours(code), net), code).toBeLessThan(0);
-    for (const code of ["boutique", "ecommerce", "transport"]) {
+    expect(somme(anneeDuCours("bistrot"), net)).toBeLessThan(0);
+    // NOVA finit l'année en bénéfice, mais à découvert : un découvert ouvert au dernier trimestre, qui n'a encore porté aucun agio.
+    const nova = anneeDuCours("nova");
+    expect(somme(nova, net)).toBeGreaterThan(0);
+    expect(nova.at(-1)!.balanceSheet.overdraft).toBeGreaterThan(0);
+    expect(nova.slice(0, -1).every((r) => r.balanceSheet.overdraft === 0)).toBe(true);
+    expect(anneeJouee("nova").depart.finance.overdraft ?? 0).toBe(0);
+    for (const code of ["boutique", "conseil", "ecommerce", "transport"]) {
       expect(somme(anneeDuCours(code), net), code).toBeGreaterThan(0);
       expect(relu(anneeDuCours(code).at(-1)!.balanceSheet).dette, code).toBeLessThan(0);
     }
@@ -362,8 +368,15 @@ describe.each([...ENTREPRISES_DU_LEVIER])("l'effet de levier chez %s", (code) =>
     pres(beta!, betaExact, 0.005);
     pres(kcp!, (TAUX_SANS_RISQUE + beta! * PRIME_DE_RISQUE_DU_MARCHE) * 100, 0.005);
     pres(kcp!, kcpExact * 100, 0.04);
-    // Le texte dit que les associés exigent plus que le coût de la dette.
-    expect(kcpExact * 100).toBeGreaterThan(x.i);
+    // Le texte dit si les associés exigent plus ou moins que le coût de l'endettement net ; moins, c'est la trésorerie oisive qui le renchérit, au-dessus du contrat.
+    const explication = (LA_CREATION_DE_VALEUR.etapes.find((e) => e.id === "cout-des-capitaux-propres") as Extract<Etape, { type: "montants" }>).explication(cas, { soldes: {} });
+    expect(explication[1]).toMatch(kcpExact * 100 > x.i ? /^C'est plus que/ : /^C'est moins que/);
+    if (kcpExact * 100 <= x.i) {
+      expect(taux * (1 - t) * 100).toBeLessThan(kcpExact * 100);
+      // Sans les disponibilités déduites, les mêmes charges après impôt coûteraient moins que les associés n'exigent.
+      const b = tours.at(-1)!.balanceSheet;
+      expect((somme(tours, interets) * (1 - t) * 100) / (x.dette + b.cash + (b.shortTermInvestment ?? 0))).toBeLessThan(kcpExact * 100);
+    }
     const [poidsCP, poidsD, cmpc] = attendus(LA_CREATION_DE_VALEUR, "cmpc", cas);
     pres(poidsCP!, (x.cp / x.actif) * 100, 0.005);
     pres(poidsD!, (x.dette / x.actif) * 100, 0.005);
@@ -397,6 +410,18 @@ describe.each([...ENTREPRISES_DU_LEVIER])("l'effet de levier chez %s", (code) =>
     expect(avec.map(net)).toEqual(anneeAvecLaMachine(code, m, "emprunt").map(net));
     expect(anneeSansInvestir(code).map(net)).toEqual(tours.map(net));
     expect(avec[TRIMESTRE_DE_L_ACHAT - 1]!.debt?.newLoan).toBe(m.costPerUnit);
+    const v = creationDeValeur(cas);
+    const etapes = chapitreDuCas(LA_CREATION_DE_VALEUR, cas).etapes.map((e) => e.id);
+    // L'équipement ne se lit que si l'année qu'il fait jouer finit en bénéfice ; sinon le chapitre ne joue pas ses étapes.
+    expect(v.lEquipementSeLit).toBe(somme(avec, (r) => r.incomeStatement.pretaxIncome) > 0);
+    expect(etapes.includes("l-equipement")).toBe(v.lEquipementSeLit);
+    expect(etapes.includes("l-equipement-cree-t-il")).toBe(v.lEquipementSeLit);
+    if (!v.lEquipementSeLit) {
+      // Une perte : l'arène ne prélève pas d'impôt, et le résultat net ne suit plus le taux.
+      expect(somme(avec, net)).toBeLessThan(0);
+      expect(somme(avec, (r) => r.incomeStatement.tax)).toBe(0);
+      return;
+    }
     pres(somme(avec, net), (somme(avec, exploitation) - somme(avec, interets)) * (1 - t), 1e-6);
     const y = rentabilitesExactes(code, avec);
     expect(y.dette).toBeGreaterThan(0);
@@ -404,7 +429,6 @@ describe.each([...ENTREPRISES_DU_LEVIER])("l'effet de levier chez %s", (code) =>
     const eva2 = somme(avec, net) - kcp2 * y.cp;
     const kcp1 = TAUX_SANS_RISQUE + BETA_DE_L_ACTIF * (1 + ((1 - t) * x.dette) / x.cp) * PRIME_DE_RISQUE_DU_MARCHE;
     const eva1 = somme(tours, net) - kcp1 * x.cp;
-    const v = creationDeValeur(cas);
     pres(v.k2.exact.eva, eva2, 0.01);
     const [evaAvec, variation] = attendus(LA_CREATION_DE_VALEUR, "l-equipement", cas);
     pres(evaAvec!, eva2, v.k2.toleranceEva);
@@ -475,7 +499,7 @@ describe("les verdicts varient avec l'entreprise", () => {
     expect(new Set(cas.map((c) => effetDeLevier(c).verdict))).toEqual(new Set(["levier", "massue"]));
     expect(new Set(cas.map((c) => effetDeLevier(c).rcpBaisse))).toEqual(new Set([true, false]));
     expect(new Set(cas.map((c) => creationDeValeur(c).verdict))).toEqual(new Set(["cree", "detruit"]));
-    expect(new Set(cas.map((c) => creationDeValeur(c).lEquipementCree))).toEqual(new Set([true, false]));
+    expect(new Set(cas.filter((c) => creationDeValeur(c).lEquipementSeLit).map((c) => creationDeValeur(c).lEquipementCree))).toEqual(new Set([true, false]));
     expect(new Set(cas.map((c) => levierFaceALaHausse(c).verdict))).toEqual(new Set(["tient", "deja"]));
     expect(new Set(cas.map((c) => ceQueDoitRapporterLExploitation(c).verdict))).toEqual(new Set(["couvre", "manque"]));
     // Une entreprise peut être en levier positif et détruire de la valeur : le levier ne suffit pas.

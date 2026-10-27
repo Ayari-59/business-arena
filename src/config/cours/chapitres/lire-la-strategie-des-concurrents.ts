@@ -144,7 +144,9 @@ const ANNEE = [1, 2, 3, 4] as const;
 /**
  * L'ESPACE LIBRE DE LA CARTE, selon la règle du cours : la place qu'une enseigne défaillante
  * a laissée vide, ou, s'il n'y en a pas, le plus grand écart de prix entre deux enseignes
- * voisines qui vendent encore.
+ * voisines qui vendent encore. Sur l'année du cours, dont les concurrents sont assainis
+ * (arene-du-cours.ts), aucune enseigne ne fait défaut : l'espace libre y est toujours un écart,
+ * et la place laissée reste écrite pour une partie où le moteur déclarerait une défaillance.
  */
 export function strategiesDesConcurrents(c: Cas) {
   const m = lireLeMarche(c, ANNEE);

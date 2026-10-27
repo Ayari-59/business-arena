@@ -14,8 +14,8 @@ import { TRIMESTRES } from "./evaluer-son-activite";
  * d'occupation (chambres vendues ÷ chambres disponibles), le prix moyen par chambre louée (chiffre
  * d'affaires hébergement ÷ chambres vendues) et le revenu par chambre disponible, le RevPAR
  * (chiffre d'affaires hébergement ÷ chambres disponibles, soit l'occupation multipliée par le prix
- * moyen). Puis, face à un concurrent du même trimestre qui remplit mieux à un prix plus bas,
- * pourquoi le RevPAR juge mieux un trimestre que l'occupation seule.
+ * moyen). Puis, face à un concurrent du même trimestre qui loue ses chambres plus cher et en
+ * remplit moins, pourquoi le RevPAR juge mieux un trimestre que le prix moyen seul.
  *
  * IL NE DOUBLE PAS « Les indicateurs du point de vente » (BTS MCO), qui lit un mois de ventes
  * clientèle par clientèle, le panier et le remplissage d'une salle : ici, les trois chiffres que
@@ -74,7 +74,7 @@ export function indicateursDuTrimestre(r: CompanyRoundResult): TrimestreDHotel {
   };
 }
 
-/** L'année de l'hôtel, ses trois indicateurs, et le concurrent qui remplit mieux sans mieux vendre. */
+/** L'année de l'hôtel, ses trois indicateurs, et le concurrent qui loue plus cher sans mieux vendre. */
 export function occupation(c: Cas) {
   const def = scenarioByCode(c.code);
   const { partie } = anneeJouee(c.code);
@@ -97,13 +97,14 @@ export function occupation(c: Cas) {
     nom: b.name,
     trimestres: partie.rounds.map((tour) => indicateursDuTrimestre(tour.results[b.id]!)),
   }));
-  // Le premier trimestre où un concurrent remplit mieux ses chambres et en tire moins par chambre disponible.
+  // Le premier trimestre où un concurrent loue ses chambres plus cher et en tire moins par chambre
+  // disponible : avec autant de chambres, il en a forcément rempli moins.
   let comparaison: { trimestre: number; concurrent: number } | null = null;
   for (let k = 0; k < t.length && !comparaison; k++) {
-    const i = concurrents.findIndex((x) => x.trimestres[k]!.occupation > t[k]!.occupation && x.trimestres[k]!.revpar < t[k]!.revpar);
+    const i = concurrents.findIndex((x) => x.trimestres[k]!.prixMoyen > t[k]!.prixMoyen && x.trimestres[k]!.revpar < t[k]!.revpar);
     if (i >= 0) comparaison = { trimestre: k, concurrent: i };
   }
-  if (!comparaison) throw new Error(`Aucun concurrent ${dE(c.entreprise)} ne remplit mieux sans mieux vendre`);
+  if (!comparaison) throw new Error(`Aucun concurrent ${dE(c.entreprise)} ne loue plus cher sans mieux vendre`);
   const k = comparaison.trimestre;
   const rival = concurrents[comparaison.concurrent]!;
   const autre = concurrents[1 - comparaison.concurrent]!;
@@ -174,13 +175,13 @@ export const OCCUPATION_ET_REVENU_PAR_CHAMBRE: Chapitre = {
   blocs: ["BTS MHR Bloc 4 · Pilotage de la production de services en hôtellerie restauration"],
   titre: "Le taux d'occupation, le prix moyen et le revenu par chambre",
   accroche:
-    "Les trois chiffres que l'hôtelier lit ensemble : la part des chambres vendues, le prix moyen d'une chambre louée, et le revenu par chambre disponible qui les combine. Et pourquoi un hôtel plein n'est pas toujours celui qui vend le mieux.",
+    "Les trois chiffres que l'hôtelier lit ensemble : la part des chambres vendues, le prix moyen d'une chambre louée, et le revenu par chambre disponible qui les combine. Et pourquoi l'hôtel qui loue le plus cher n'est pas toujours celui qui vend le mieux.",
   objectifs: [
     "Compter les chambres disponibles d'un trimestre",
     "Calculer le taux d'occupation, trimestre par trimestre",
     "Calculer le prix moyen par chambre louée",
     "Calculer le RevPAR, et le retrouver par l'occupation et le prix moyen",
-    "Juger un trimestre au RevPAR plutôt qu'à l'occupation seule",
+    "Juger un trimestre au RevPAR plutôt qu'au prix moyen seul",
   ],
   libre: false,
   entreprises: {
@@ -304,24 +305,24 @@ export const OCCUPATION_ET_REVENU_PAR_CHAMBRE: Chapitre = {
     {
       id: "face-au-concurrent",
       type: "montants",
-      titre: "Le concurrent plus rempli",
+      titre: "Le concurrent plus cher",
       notions: ["occupancy_revpar", "price_elasticity"],
       tableau: tableauDesTroisHotels,
       question: (c) => {
         const k = occupation(c).comparaison;
-        return `Au ${trimestre(k.trimestre)}, deux concurrents jouent la même année que ${c.entreprise}, avec autant de chambres. Calculez le taux d'occupation ${duNom(k.rival.nom)} (au dixième), puis son RevPAR (au centime).`;
+        return `Au ${trimestre(k.trimestre)}, deux concurrents jouent la même année que ${c.entreprise}, avec autant de chambres. Calculez le prix moyen ${duNom(k.rival.nom)}, puis son RevPAR, au centime.`;
       },
       champs: (c) => {
         const r = occupation(c).comparaison.rival;
         return [
-          { libelle: `Taux d'occupation ${duNom(r.nom)} (%)`, attendu: r.occupation, calcul: `${qte(r.vendues)} ÷ ${qte(r.disponibles)} × 100 = ${pct(r.occupation)}`, tolerance: 0.1 },
+          { libelle: `Prix moyen ${duNom(r.nom)}`, attendu: r.prixMoyen, calcul: `${eur(r.chiffreDAffaires)} ÷ ${qte(r.vendues)} = ${eur(r.prixMoyen)}` },
           { libelle: `RevPAR ${duNom(r.nom)}`, attendu: r.revpar, calcul: `${eur(r.chiffreDAffaires)} ÷ ${qte(r.disponibles)} = ${eur(r.revpar)}` },
         ];
       },
       explication: (c) => {
         const k = occupation(c).comparaison;
         return [
-          `${k.rival.nom} remplit mieux : ${pct(k.rival.occupation)} de ses chambres, contre ${pct(k.hotel.occupation)} ${auNom(c.entreprise)}. Mais il loue ses chambres ${eur(k.rival.prixMoyen)} en moyenne, contre ${eur(k.hotel.prixMoyen)}. Chaque chambre disponible lui rapporte ${eur(k.rival.revpar)}, contre ${eur(k.hotel.revpar)} ${auNom(c.entreprise)}.`,
+          `${k.rival.nom} loue plus cher : ${eur(k.rival.prixMoyen)} la chambre en moyenne, contre ${eur(k.hotel.prixMoyen)} ${auNom(c.entreprise)}. Mais il n'a rempli que ${pct(k.rival.occupation)} de ses chambres, contre ${pct(k.hotel.occupation)}. Chaque chambre disponible lui rapporte ${eur(k.rival.revpar)}, contre ${eur(k.hotel.revpar)} ${auNom(c.entreprise)}.`,
         ];
       },
     },
@@ -343,14 +344,14 @@ export const OCCUPATION_ET_REVENU_PAR_CHAMBRE: Chapitre = {
             retour: `Oui. Les deux hôtels ont ${qte(k.hotel.disponibles)} chambres disponibles, et leurs charges tombent que les chambres soient louées ou non. Avec autant de chambres, le RevPAR le plus haut est le plus gros chiffre d'affaires : ${eur(k.hotel.chiffreDAffaires)} contre ${eur(k.rival.chiffreDAffaires)}.`,
           },
           {
-            texte: `${k.rival.nom} : son taux d'occupation est le plus élevé des deux.`,
+            texte: `${k.rival.nom} : son prix moyen est le plus élevé des deux.`,
             juste: false,
-            retour: `Il a rempli plus de chambres, mais à ${eur(k.rival.prixMoyen)} au lieu de ${eur(k.hotel.prixMoyen)}. Le prix de chaque chambre a plus baissé que l'occupation n'a monté : il a fait moins de chiffre d'affaires avec le même hôtel.`,
+            retour: `Il a loué chaque chambre ${eur(k.rival.prixMoyen)} au lieu de ${eur(k.hotel.prixMoyen)}, mais il n'en a rempli que ${pct(k.rival.occupation)}, contre ${pct(k.hotel.occupation)}. L'occupation a plus baissé que le prix n'a monté : il a fait moins de chiffre d'affaires avec le même hôtel.`,
           },
           {
-            texte: `${k.autre.nom} : il loue ses chambres au prix moyen le plus haut.`,
+            texte: "Les deux se valent : l'un loue plus cher, l'autre remplit plus.",
             juste: false,
-            retour: `Son prix moyen est le plus haut (${eur(k.autre.prixMoyen)}), mais il n'a rempli que ${pct(k.autre.occupation)} de ses chambres : son RevPAR, ${eur(k.autre.revpar)}, est le plus bas des trois. Et la question compare deux hôtels.`,
+            retour: `Le RevPAR les départage, parce qu'il multiplie l'occupation par le prix moyen : ${eur(k.hotel.revpar)} par chambre disponible ${auNom(c.entreprise)}, ${eur(k.rival.revpar)} pour ${k.rival.nom}.`,
           },
         ];
       },
@@ -360,19 +361,19 @@ export const OCCUPATION_ET_REVENU_PAR_CHAMBRE: Chapitre = {
       type: "choix",
       titre: "Pourquoi le RevPAR",
       notions: ["occupancy_revpar", "price_elasticity"],
-      question: () => "Pourquoi l'hôtelier juge-t-il un trimestre au RevPAR plutôt qu'au taux d'occupation seul ?",
+      question: () => "Pourquoi l'hôtelier juge-t-il un trimestre au RevPAR plutôt qu'au prix moyen seul ?",
       options: (c) => {
         const k = occupation(c).comparaison;
         return [
           {
             texte: "Il compte les chambres remplies et le prix de chacune.",
             juste: true,
-            retour: `Oui. Remplir en bradant fait monter l'occupation et baisser le prix moyen : le RevPAR dit lequel des deux l'emporte. C'est ce qui est arrivé ${auNom(k.rival.nom)} au ${trimestre(k.trimestre)}.`,
+            retour: `Oui. Louer plus cher fait monter le prix moyen et baisser l'occupation : le RevPAR dit lequel des deux l'emporte. Au ${trimestre(k.trimestre)}, c'est la baisse de l'occupation qui l'a emporté pour ${k.rival.nom}.`,
           },
           {
-            texte: "Il ne dépend que du prix : l'occupation ne change rien au revenu.",
+            texte: "Il ne dépend que de l'occupation : le prix ne change rien au revenu.",
             juste: false,
-            retour: "Le RevPAR, c'est l'occupation multipliée par le prix moyen : une chambre vide de plus le fait baisser autant qu'un prix plus bas.",
+            retour: "Le RevPAR, c'est l'occupation multipliée par le prix moyen : un prix plus bas le fait baisser autant qu'une chambre vide de plus.",
           },
           {
             texte: "Il se calcule sur les chambres vendues, et oublie donc les chambres vides.",

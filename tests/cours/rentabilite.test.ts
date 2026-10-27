@@ -89,9 +89,13 @@ describe.each(ENTREPRISES_DU_COURS)("la rentabilité chez %s", (code) => {
 
 describe("les cas que le chapitre distingue se rencontrent dans le cours", () => {
   const toutes = ENTREPRISES_DU_COURS.map((c) => rentabilite(casDeLEntreprise(c)));
-  it("un besoin négatif, une activité qui rapporte plus qu'elle ne mobilise, un emprunt qui réduit un bénéfice ou creuse une perte", () => {
+  it("un besoin négatif, un emprunt qui réduit un bénéfice ou creuse une perte, et plus d'activité qui rapporte plus qu'elle ne mobilise", () => {
     expect(toutes.some((r) => r.bfr < 0)).toBe(true);
-    expect(toutes.some((r) => r.resultatExploitation > r.capitauxInvestis)).toBe(true);
+    // Dans l'année corrigée, aucune activité ne rapporte plus en un an que tout ce qu'elle mobilise
+    // (la plus forte, la boutique, en tire 86,9 %) : la phrase de l'étape « calcul » sur ce cas
+    // n'est plus lue. Si le cas revient, cette garde le dira.
+    expect(toutes.filter((r) => r.resultatExploitation > r.capitauxInvestis)).toHaveLength(0);
+    expect(Math.max(...toutes.map((r) => r.economique))).toBe(86.9);
     expect(toutes.some((r) => r.economique <= r.tauxDeLEmprunt && r.economique > 0)).toBe(true);
     expect(toutes.some((r) => r.economique <= 0)).toBe(true);
   });

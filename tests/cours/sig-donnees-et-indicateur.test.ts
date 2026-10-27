@@ -298,18 +298,21 @@ describe.each(ENTREPRISES_DU_COURS)("des données à l'information chez %s", (co
 });
 
 describe("des données à l'information, sur les entreprises du cours", () => {
-  it("la lecture des semestres dépend de l'entreprise : départ d'un concurrent, gain, ou place gardée", () => {
-    const lectures = new Set(ENTREPRISES_DU_COURS.map((c) => donneesALInformation(casDeLEntreprise(c)).lecture));
-    expect([...lectures].sort()).toEqual(["monte", "monte-depart", "stable"]);
+  it("la lecture des semestres dépend de l'entreprise : gain, place gardée ou terrain perdu", () => {
+    const k = ENTREPRISES_DU_COURS.map((c) => donneesALInformation(casDeLEntreprise(c)));
+    expect([...new Set(k.map((x) => x.lecture))].sort()).toEqual(["baisse", "monte", "stable"]);
+    // Sur l'année du cours (concurrents assainis), aucune enseigne ne cesse de vendre : chaque table
+    // compte ses douze lignes, et la lecture « un concurrent a cessé de vendre » n'est lue nulle part.
+    for (const x of k) expect([x.lignes.length, x.partis]).toEqual([12, []]);
   });
 
   it("chez NOVA, les chiffres de l'année du cours", () => {
     const k = donneesALInformation(casDeLEntreprise("nova"));
-    expect(k.lignes).toHaveLength(10);
-    expect(k.premier.part).toBe(37.5);
-    expect(k.second.part).toBe(51.1);
-    expect(k.lecture).toBe("monte-depart");
-    expect(k.partis.map((e) => e.nom)).toEqual(["Auris"]);
+    expect(k.lignes).toHaveLength(12);
+    expect(k.premier.part).toBe(34.3);
+    expect(k.second.part).toBe(31.8);
+    expect(k.lecture).toBe("baisse");
+    expect(k.partis).toEqual([]);
   });
 });
 
@@ -373,17 +376,20 @@ describe("construire un indicateur juste, sur les entreprises du chapitre", () =
     }
   });
 
-  it("l'erreur fait monter le prix à tort chez les unes, ne change rien chez les autres", () => {
+  it("l'erreur fait monter le prix à tort chez les unes, le fait garder à tort ailleurs, ne change rien chez les autres", () => {
     const erreurs = new Set(MARCHES.map((c) => indicateurDuPrix(casDeLEntreprise(c)).erreur));
-    expect([...erreurs].sort()).toEqual(["aucune", "monter"]);
+    expect([...erreurs].sort()).toEqual(["aucune", "monter", "rester"]);
+    // MAILLE & CO se croirait au prix du marché (indice 104 sur la moyenne simple), quand le prix
+    // pondéré la place au-dessus (107).
+    expect(MARCHES.filter((c) => indicateurDuPrix(casDeLEntreprise(c)).erreur === "rester")).toEqual(["boutique"]);
   });
 
   it("chez NOVA, les chiffres de l'année du cours", () => {
     const k = indicateurDuPrix(casDeLEntreprise("nova"));
-    expect(k.moyenneSimple).toBe(62.54);
-    expect(k.prixPondere).toBe(57.74);
-    expect(k.indiceSimple).toBe(94);
-    expect(k.indicePondere).toBe(102);
+    expect(k.moyenneSimple).toBe(63.44);
+    expect(k.prixPondere).toBe(61.4);
+    expect(k.indiceSimple).toBe(93);
+    expect(k.indicePondere).toBe(96);
     expect(k.erreur).toBe("monter");
   });
 });
@@ -472,8 +478,8 @@ describe("la part de marché annoncée, sur les entreprises du cas", () => {
 
   it("chez NOVA, les chiffres de l'année du cours", () => {
     const k = partAnnoncee(casDeLEntreprise("nova"));
-    expect(k.moyenne).toBe(21.6);
-    expect(k.partDeLAnnee).toBe(17.9);
+    expect(k.moyenne).toBe(23.4);
+    expect(k.partDeLAnnee).toBe(20.2);
     expect(k.verdict).toBe("plus-basse");
   });
 });

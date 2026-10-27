@@ -221,10 +221,18 @@ export const DECIDER: Chapitre = {
       notions: ["price_elasticity"],
       tableau: tableauDesPrix,
       texte: (c) => {
-        const [bas, , haut] = prixRejoues(c.code);
+        const [bas, b, haut] = prixRejoues(c.code);
         const v = volumeNecessaire(c);
+        // En gamme, le prix moyen suit aussi ce qui se vend de chaque référence : il peut bouger
+        // de plus ou de moins que l'écart que chacune a pris.
+        const melange = (x: Variante) => Math.abs(x.prix / b!.prix - x.facteur) >= 0.005;
         return [
           `L'arène a rejoué le trimestre de ${c.entreprise} aux trois prix. À −${pct(ECART_DE_PRIX)}, elle vend ${qte(bas!.quantite)} ${c.unites} (il en aurait fallu ${qte(v.quantite)} pour garder la marge) ; à +${pct(ECART_DE_PRIX)}, ${qte(haut!.quantite)}.`,
+          ...(b!.prixDesReferences && (melange(bas!) || melange(haut!))
+            ? [
+                `Chaque référence a pris ${pct(ECART_DE_PRIX)} de prix en moins, puis en plus. Le prix moyen, lui, fait ${eur(bas!.prix)} à −${pct(ECART_DE_PRIX)} et ${eur(haut!.prix)} à +${pct(ECART_DE_PRIX)}, pour ${eur(b!.prix)} au prix du trimestre : à chaque prix, les références ne se vendent pas dans les mêmes proportions.`,
+              ]
+            : []),
           "La demande non servie, ce sont les clients venus acheter que le plan de production n'a pas pu servir : quand elle grossit, c'est le plan, pas le prix, qui borne les ventes.",
         ];
       },

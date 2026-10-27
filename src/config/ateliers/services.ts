@@ -4,6 +4,7 @@ import {
   offerProductIndex,
 } from "../../engine/gamme";
 import { rdDuNiveau } from "../scenarios/scenario-joue";
+import { amortissementsDuDepart } from "../scenarios/amortissements-du-depart";
 import {
   axisAffinity,
   COMMUNICATION_AXES,
@@ -441,8 +442,8 @@ export function dossiersDeService(
         valeur: euro(config.fixedCostsPerRound),
       },
       {
-        libelle: "Amortissements par tour",
-        valeur: euro(config.finance.depreciationPerRound),
+        libelle: "Amortissements par tour, au départ",
+        valeur: euro(amortissementsDuDepart(config)),
       },
       {
         libelle: "Taux d'emprunt · taux de découvert",

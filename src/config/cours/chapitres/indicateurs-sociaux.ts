@@ -34,14 +34,19 @@ export function indicateursSociaux(c: Cas) {
   const hr = scenarioByCode(c.code).scenario.hr!;
   const indice = 1 - ECART_D_INDICE;
   const annee = rejouerLAnnee(c.code, "salaires-baisses", () => ({ salaryIndex: indice }));
-  const trimestres = annee.map((r, i) => ({
-    trimestre: i + 1,
-    effectif: r.hr!.headcount,
-    departs: r.hr!.departed,
-    masse: Math.round(r.hr!.headcount * hr.salaryPerEmployeePerRound * indice),
-    ventes: Math.round(r.incomeStatement.revenue),
-    caParSalarie: Math.round(r.incomeStatement.revenue / r.hr!.headcount),
-  }));
+  const trimestres = annee.map((r, i) => {
+    const ventes = Math.round(r.incomeStatement.revenue);
+    return {
+      trimestre: i + 1,
+      effectif: r.hr!.headcount,
+      departs: r.hr!.departed,
+      masse: Math.round(r.hr!.headcount * hr.salaryPerEmployeePerRound * indice),
+      ventes,
+      // Sur le chiffre d'affaires arrondi à l'euro, celui que le tableau donne à l'élève : divisé
+      // à partir du chiffre exact, l'arrondi pouvait tomber à l'euro d'à côté.
+      caParSalarie: Math.round(ventes / r.hr!.headcount),
+    };
+  });
   const departs = somme(trimestres.map((t) => t.departs));
   const effectifMoyen = auDixieme(somme(trimestres.map((t) => t.effectif)) / trimestres.length);
   const premier = trimestres[0]!;

@@ -42,8 +42,22 @@ describe.each(ENTREPRISES_DU_COURS)("décider chez %s", (code) => {
     const r1 = anneeJouee(code).partie.rounds[0]!.results["joueur"]!;
     expect(base!.resultat).toBe(Math.round(r1.incomeStatement.operatingIncome));
     expect(base!.chiffreDAffaires).toBe(Math.round(r1.incomeStatement.revenue));
-    expect(bas!.prix / base!.prix).toBeCloseTo(1 - ECART_DE_PRIX, 2);
-    expect(haut!.prix / base!.prix).toBeCloseTo(1 + ECART_DE_PRIX, 2);
+    if (base!.prixDesReferences) {
+      // En gamme, chaque référence prend l'écart de prix, au centime de la décision près.
+      for (const [ref, p] of Object.entries(base!.prixDesReferences)) {
+        expect(bas!.prixDesReferences![ref]! / p, ref).toBeCloseTo(1 - ECART_DE_PRIX, 6);
+        expect(haut!.prixDesReferences![ref]! / p, ref).toBeCloseTo(1 + ECART_DE_PRIX, 6);
+      }
+      // Le prix moyen suit aussi ce qui se vend de chaque référence : s'il ne bouge pas de 10 %,
+      // le chapitre le dit.
+      const melange = [bas!, haut!].some((x) => Math.abs(x.prix / base!.prix - x.facteur) >= 0.005);
+      const arene = chapitreDuCas(chapitre, cas).etapes.find((e) => e.id === "l-arene-joue")!;
+      if (arene.type !== "lecture") throw new Error("lecture attendue");
+      expect(arene.texte(cas).join(" ").includes("ne se vendent pas dans les mêmes proportions")).toBe(melange);
+    } else {
+      expect(bas!.prix / base!.prix).toBeCloseTo(1 - ECART_DE_PRIX, 2);
+      expect(haut!.prix / base!.prix).toBeCloseTo(1 + ECART_DE_PRIX, 2);
+    }
   });
 
   it("le volume nécessaire est le plus petit qui garde la marge ; le meilleur prix est celui du meilleur résultat", () => {
@@ -60,6 +74,13 @@ describe.each(ENTREPRISES_DU_COURS)("décider chez %s", (code) => {
     expect(ids.includes("fabriquer-ou-acheter")).toBe(avec);
     expect(ids.includes("la-commande")).toBe(avec);
   });
+
+  if (code === "boutique") {
+    it("en gamme, le prix moyen ne bouge pas de 10 % : à +10 %, il monte davantage, les références se vendant autrement", () => {
+      expect(base!.prixDesReferences).not.toBeNull();
+      expect(haut!.prix / base!.prix).toBeGreaterThan(1 + ECART_DE_PRIX + 0.005);
+    });
+  }
 
   it("aucun texte ne sort undefined ou NaN ; une seule bonne réponse par question ; des options distinctes", () => {
     for (const e of chapitreDuCas(chapitre, cas).etapes) {

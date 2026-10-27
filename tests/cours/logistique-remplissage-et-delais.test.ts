@@ -286,12 +286,12 @@ describe("le taux de remplissage chez ROUTE & CIE", () => {
     const taux = annee.map(tauxDeLEcran);
     const t = taux.indexOf(Math.min(...taux)) + 1;
     expect(k.t).toBe(t);
-    expect(k.t).toBe(4);
+    expect(k.t).toBe(2);
     const m = champs(LE_TAUX_DE_REMPLISSAGE, "remplissage", cas);
     expect(m[`Taux de remplissage du trimestre ${t} (%)`]).toBe(auDixieme(taux[t - 1]!));
-    expect(m[`Taux de remplissage du trimestre ${t} (%)`]).toBe(54.6);
+    expect(m[`Taux de remplissage du trimestre ${t} (%)`]).toBe(60.9);
     expect(m[`Places vides au trimestre ${t} (palettes)`]).toBe(Math.round(r.production.machineCapacity - transportees(r)));
-    expect(m[`Places vides au trimestre ${t} (palettes)`]).toBe(4540);
+    expect(m[`Places vides au trimestre ${t} (palettes)`]).toBe(3909);
     k.trimestres.forEach((x, i) => expect(x.taux).toBe(auDixieme(taux[i]!)));
   });
 
@@ -330,7 +330,7 @@ describe("le taux de remplissage chez ROUTE & CIE", () => {
     expect(m[`Charges fixes du trimestre ${k.t}`]).toBe(fixes);
     expect(m[`Charges fixes du trimestre ${k.t}`]).toBe(206018);
     expect(m["Charges fixes par palette transportée"]).toBe(auCentime(fixes / Math.round(transportees(r))));
-    expect(m["Charges fixes par palette transportée"]).toBe(37.73);
+    expect(m["Charges fixes par palette transportée"]).toBe(33.82);
     expect(m["Charges fixes par palette, flotte pleine"]).toBe(auCentime(fixes / Math.round(r.production.machineCapacity)));
     expect(m["Charges fixes par palette, flotte pleine"]).toBe(20.6);
   });
@@ -339,9 +339,11 @@ describe("le taux de remplissage chez ROUTE & CIE", () => {
     const m = champs(LE_TAUX_DE_REMPLISSAGE, "refusees", cas);
     const perdues = Object.values(r.market.bySegment).reduce((t, v) => t + v.lost, 0);
     expect(Math.abs(m[`Palettes refusées au trimestre ${k.t}`]! - perdues)).toBeLessThanOrEqual(1);
-    expect(m[`Palettes refusées au trimestre ${k.t}`]).toBe(6398);
+    expect(m[`Palettes refusées au trimestre ${k.t}`]).toBe(3302);
     expect(m["Palettes en plus que la flotte pouvait charger"]).toBe(Math.min(m[`Palettes refusées au trimestre ${k.t}`]!, k.placesVides));
-    expect(m["Palettes en plus que la flotte pouvait charger"]).toBe(4540);
+    expect(m["Palettes en plus que la flotte pouvait charger"]).toBe(3302);
+    // Toutes les palettes refusées tiennent dans les places vides : c'est cette explication que l'élève lit.
+    expect(k.refusees).toBeLessThanOrEqual(k.placesVides);
     // Les trois clientèles du scénario, et la bourse de fret au prix du jour parmi elles.
     expect(k.clienteles.map((x) => x.code)).toEqual(s.market.segments.map((g) => g.code));
     expect(k.clienteles.map((x) => x.nom)).toContain("Bourse de fret (comptant, prix du jour)");
@@ -351,16 +353,19 @@ describe("le taux de remplissage chez ROUTE & CIE", () => {
     const m = champs(LE_TAUX_DE_REMPLISSAGE, "marge", cas);
     const segments = Object.values(r.market.bySegment);
     const prix = segments.reduce((t, v) => t + v.revenue, 0) / segments.reduce((t, v) => t + v.sold, 0);
-    // Le gazole du trimestre 4 porte encore la hausse du gazole scriptée au trimestre 3 (deux trimestres).
+    // Le trimestre 2 précède la hausse du gazole scriptée au trimestre 3 : son gazole est celui du scénario.
     const gazole = s.events.find((e) => e.code === "transport_gazole")!;
     expect(s.scriptedEvents).toContainEqual({ round: 3, eventCode: "transport_gazole" });
-    const cv = s.product.materialCostPerUnit * gazole.modifiers[0]!.value + s.product.otherVariableCostPerUnit;
+    expect(k.t).toBeLessThan(3);
+    const cv = s.product.materialCostPerUnit + s.product.otherVariableCostPerUnit;
     expect(r.breakeven.unitVariableCost).toBeCloseTo(cv, 6);
+    // La hausse, elle, se lit au trimestre 3 : le chapitre ne la compte pas.
+    expect(annee[2]!.breakeven.unitVariableCost).toBeCloseTo(s.product.materialCostPerUnit * gazole.modifiers[0]!.value + s.product.otherVariableCostPerUnit, 6);
     expect(m["Marge par palette"]).toBe(auCentime(prix - cv));
-    expect(m["Marge par palette"]).toBe(39.76);
+    expect(m["Marge par palette"]).toBe(43);
     const enPlus = champs(LE_TAUX_DE_REMPLISSAGE, "refusees", cas)["Palettes en plus que la flotte pouvait charger"]!;
     expect(m["Marge en plus, flotte remplie"]).toBe(auCentime(enPlus * m["Marge par palette"]!));
-    expect(m["Marge en plus, flotte remplie"]).toBeCloseTo(180510.4, 2);
+    expect(m["Marge en plus, flotte remplie"]).toBeCloseTo(141986, 2);
   });
 
   it("l'arène rejoue le trimestre, la flotte remplie : le résultat gagne toute la marge en plus", () => {
@@ -412,9 +417,9 @@ describe("livrer à temps chez ROUTE & CIE", () => {
     const demandees = annee.reduce((t, x) => t + demandeDe(x), 0);
     const livrees = annee.reduce((t, x) => t + soldUnits(x), 0);
     expect(Math.abs(m["Palettes refusées sur l'année"]! - (demandees - livrees))).toBeLessThanOrEqual(2);
-    expect(m["Palettes refusées sur l'année"]).toBe(11853);
+    expect(m["Palettes refusées sur l'année"]).toBe(11515);
     expect(Math.abs(m["Taux de service de l'année (%)"]! - (livrees / demandees) * 100)).toBeLessThanOrEqual(0.1);
-    expect(m["Taux de service de l'année (%)"]).toBe(68.7);
+    expect(m["Taux de service de l'année (%)"]).toBe(69.9);
   });
 
   it("ce que coûte un client refusé : la marge perdue, que l'arène retrouve en servant toute la demande", () => {
@@ -455,7 +460,7 @@ describe("livrer à temps chez ROUTE & CIE", () => {
     expect(pleine[T - 1]!.production.utilizationRate).toBeCloseTo(1, 9);
     expect(pleine[T - 1]!.production.producedQuality).toBeLessThan(r.production.producedQuality);
     expect(demandeDe(pleine[T]!)).toBeLessThan(demandeDe(annee[T]!) - 1);
-    expect(k.flottePleine.demandeSuivante).toBe(9211);
+    expect(k.flottePleine.demandeSuivante).toBe(9281);
     expect(k.ecartDeLaFlottePleine).toBe("moins");
     expect(justeDe(LIVRER_A_TEMPS, "flotte-pleine", cas)).toBe("La demande baisse : la flotte trop chargée a moins bien livré");
     // Les palettes chargées sans client : leur coût variable est perdu, à l'euro près.
@@ -471,7 +476,7 @@ describe("livrer à temps chez ROUTE & CIE", () => {
     expect(s.production.qualityInertia).toBeGreaterThan(0.5);
   });
 
-  it("la panne : la capacité que le moteur offre, le seuil dépassé, et ce qu'elle coûte plus tard", () => {
+  it("la panne : la capacité que le moteur offre, le seuil dépassé, et ce qu'elle laisse sur l'année", () => {
     const carte = s.events.find((e) => e.code === CARTE_DE_LA_PANNE)!;
     expect(carte.scope).toBe("company");
     expect(carte.probability).toBe(0);
@@ -493,11 +498,21 @@ describe("livrer à temps chez ROUTE & CIE", () => {
     expect(transportees(p)).toBeCloseTo(transportees(r), 6);
     expect(p.production.producedQuality).toBeLessThan(r.production.producedQuality);
     for (const x of enPanne) expect(x.defaillant ?? false).toBe(false);
-    expect(sommeOp(enPanne)).toBeLessThan(sommeOp(annee) - 1);
+    // La qualité perdue fait baisser la demande des trimestres suivants. Mais la flotte y refuse encore des
+    // clients : ce qu'elle charge, et donc ce qu'elle livre et gagne, ne bouge pas.
+    const demandeEnsuite = (a: readonly CompanyRoundResult[]) => a.slice(T).reduce((t, x) => t + demandeDe(x), 0);
+    expect(demandeEnsuite(enPanne)).toBeLessThan(demandeEnsuite(annee) - 1);
+    expect(k.panne.demandeEnsuiteAvant - k.panne.demandeEnsuiteApres).toBe(Math.round(demandeEnsuite(annee)) - Math.round(demandeEnsuite(enPanne)));
+    for (let i = T; i < enPanne.length; i++) {
+      expect(soldUnits(enPanne[i]!)).toBeCloseTo(soldUnits(annee[i]!), 6);
+      expect(demandeDe(enPanne[i]!) - soldUnits(enPanne[i]!)).toBeGreaterThanOrEqual(1);
+    }
+    expect(k.panne.refuseEnsuite).toBe(true);
+    expect(sommeOp(enPanne)).toBeCloseTo(sommeOp(annee), 6);
     expect(k.panne.resultatAvant).toBe(Math.round(sommeOp(annee)));
     expect(k.panne.resultatApres).toBe(Math.round(sommeOp(enPanne)));
-    expect(k.coutDeLaPanne).toBe("plus-tard");
-    expect(justeDe(LIVRER_A_TEMPS, "cout-de-la-panne", cas)).toBe("Des clients plus tard : la qualité de service a baissé");
+    expect(k.coutDeLaPanne).toBe("rien");
+    expect(justeDe(LIVRER_A_TEMPS, "cout-de-la-panne", cas)).toBe("Rien : les clients perdus ensuite auraient été refusés");
   });
 });
 
@@ -523,15 +538,15 @@ describe("le lot de la bourse de fret chez ROUTE & CIE", () => {
   it("les places, la marge et les charges fixes se recomposent", () => {
     const places = champs(LE_LOT_DE_LA_BOURSE_DE_FRET, "places", cas);
     expect(places["Places libres après les clients (palettes)"]).toBe(Math.round(r.production.machineCapacity) - Math.round(demandeDe(r)));
-    expect(places["Places libres après les clients (palettes)"]).toBe(677);
-    expect(places["Palettes du lot chargées"]).toBe(Math.min(k.unitesDuLot, 677));
+    expect(places["Places libres après les clients (palettes)"]).toBe(607);
+    expect(places["Palettes du lot chargées"]).toBe(Math.min(k.unitesDuLot, 607));
     const marge = champs(LE_LOT_DE_LA_BOURSE_DE_FRET, "marge", cas);
     expect(marge["Marge par palette du lot"]).toBe(auCentime(k.prixDuLot - r.breakeven.unitVariableCost));
     expect(marge["Marge par palette du lot"]).toBe(27);
-    expect(marge["Marge du lot"]).toBe(18279);
+    expect(marge["Marge du lot"]).toBe(16389);
     const fixes = champs(LE_LOT_DE_LA_BOURSE_DE_FRET, "charges-fixes", cas);
     const charges = Math.round(r.incomeStatement.fixedCosts + r.incomeStatement.depreciation);
-    expect(fixes["Charges fixes par palette, sans le lot"]).toBe(auCentime(charges / 9323));
+    expect(fixes["Charges fixes par palette, sans le lot"]).toBe(auCentime(charges / 9393));
     expect(fixes["Charges fixes par palette, avec le lot"]).toBe(auCentime(charges / 10000));
   });
 
@@ -552,7 +567,7 @@ describe("le lot de la bourse de fret chez ROUTE & CIE", () => {
     const m = champs(LE_LOT_DE_LA_BOURSE_DE_FRET, "arene", cas);
     expect(m["Écart de résultat au trimestre 2"]).toBe(Math.round(avec[T - 1]!.incomeStatement.operatingIncome) - Math.round(sans[T - 1]!.incomeStatement.operatingIncome));
     expect(m["Écart de résultat sur l'année"]).toBe(Math.round(sommeOp(avec)) - Math.round(sommeOp(sans)));
-    expect(m["Écart de résultat sur l'année"]).toBe(12489);
+    expect(m["Écart de résultat sur l'année"]).toBe(7652);
     expect(m["Écart de résultat sur l'année"]!).toBeLessThan(m["Écart de résultat au trimestre 2"]!);
     // Chargée à 100 %, la flotte a dépassé le seuil : la demande du trimestre suivant baisse.
     expect(demandeDe(avec[T]!)).toBeLessThan(demandeDe(sans[T]!));
@@ -596,8 +611,20 @@ describe("combien charger pendant la panne chez ROUTE & CIE", () => {
     const ecartT = enPanne[T - 1]!.incomeStatement.operatingIncome - auSeuil[T - 1]!.incomeStatement.operatingIncome;
     expect(Math.abs(ecartT - k.margePerdue)).toBeLessThanOrEqual(k.marge);
     const m = champs(COMBIEN_CHARGER_PENDANT_LA_PANNE, "arene", cas);
-    expect(m["Gain des trimestres suivants, au seuil"]).toBe(5467);
-    expect(m["Écart de résultat de l'année, au seuil"]).toBe(-8562);
+    expect(m["Écart des trimestres suivants, au seuil"]).toBe(k.annees.baisser.resultatEnsuite - k.annees.garder.resultatEnsuite);
+    expect(m["Écart des trimestres suivants, au seuil"]).toBe(-36270);
+    expect(m["Écart de résultat de l'année, au seuil"]).toBe(-50299);
+    // Au seuil, la demande des trimestres suivants monte, mais la flotte y refuse encore des clients ; et la
+    // gestion, qui charge d'après ses ventes du trimestre d'avant, charge moins ensuite : c'est ce que l'explication lit.
+    const ensuite = (a: readonly CompanyRoundResult[]) => a.slice(T).reduce((t, x) => t + x.production.produced, 0);
+    expect(k.annees.baisser.chargeesEnsuite).toBe(Math.round(ensuite(auSeuil)));
+    expect(k.annees.garder.chargeesEnsuite).toBe(Math.round(ensuite(enPanne)));
+    expect(k.annees.baisser.demandeEnsuite).toBeGreaterThan(k.annees.garder.demandeEnsuite);
+    expect(k.annees.baisser.chargeesEnsuite).toBeLessThan(k.annees.garder.chargeesEnsuite);
+    for (const x of auSeuil.slice(T)) expect(demandeDe(x) - soldUnits(x)).toBeGreaterThanOrEqual(1);
+    expect(k.annees.baisser.refuseEnsuite).toBe(true);
+    expect(k.annees.remplir.refuseEnsuite).toBe(true);
+    expect(k.annees.remplir.resultatEnsuite).toBeGreaterThanOrEqual(k.annees.garder.resultatEnsuite);
     // La réponse est l'année la meilleure, et elle se calcule.
     const meilleur = (["garder", "baisser", "remplir"] as const).reduce((x, y) => (k.annees[y].resultatAnnee > k.annees[x].resultatAnnee ? y : x));
     expect(k.meilleur).toBe(meilleur);

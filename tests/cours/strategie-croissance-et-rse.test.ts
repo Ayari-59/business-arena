@@ -142,11 +142,24 @@ describe("croissance et RSE : la place dans le parcours", () => {
 
   it("les verdicts varient d'une entreprise à l'autre : la réponse se lit dans les chiffres", () => {
     const verdicts = (f: (c: Cas) => string) => [...new Set(ENTREPRISES_DU_COURS.map((c) => f(casDeLEntreprise(c))))].sort();
-    expect(verdicts((c) => investissement(c).verdict)).toEqual(["croitre-paie", "la-capacite-ne-manquait-pas", "la-demande-ne-suit-pas"]);
-    expect(verdicts((c) => voirPlusGrand(c).verdict)).toEqual(["aucune", "la-grande", "la-petite"]);
+    // Sur l'année du cours, la gestion équilibrée produit d'après ses ventes du tour d'avant, sous la
+    // capacité de son outil : la machine ne fait vendre de plus que chez VOLT FITNESS, où elle paie.
+    // La branche « la demande ne suit pas » du chapitre, et « la grande » du cas, ne sont lues dans
+    // aucune entreprise ; restent les deux raisons pour lesquelles la capacité ne manquait pas.
+    expect(verdicts((c) => investissement(c).verdict)).toEqual(["croitre-paie", "la-capacite-ne-manquait-pas"]);
+    expect(ENTREPRISES_DU_COURS.filter((c) => investissement(casDeLEntreprise(c)).verdict === "croitre-paie")).toEqual(["fitness"]);
+    const sansVenteEnPlus = ENTREPRISES_DU_COURS.map((c) => investissement(casDeLEntreprise(c))).filter((r) => r.verdict === "la-capacite-ne-manquait-pas");
+    expect([...new Set(sansVenteEnPlus.map((r) => r.equipeLimite))].sort()).toEqual([false, true]);
+    expect(verdicts((c) => voirPlusGrand(c).verdict)).toEqual(["aucune", "la-petite"]);
     expect(verdicts((c) => engagementRse(c).verdict)).toEqual(["la-demande-ne-se-vend-pas", "paie-deja", "pas-encore"]);
     expect(verdicts((c) => engagementRse(c).label)).toEqual(["jamais", "plus-tard"]);
-    expect(verdicts((c) => viserLeLabel(c).verdict)).toEqual(["pas-cette-annee", "viser-le-label"]);
+    // Le label n'arrive qu'au trimestre 4, et la gestion équilibrée ne produit pas pour la demande
+    // qu'il apporte : nulle part l'année ne finit mieux qu'au budget de départ (la branche « visons
+    // le label » du cas n'est lue dans aucune entreprise). Les deux raisons du cas se rencontrent :
+    // la demande en plus n'est pas servie, ou elle l'est, mais trop tard pour payer le budget.
+    expect(verdicts((c) => viserLeLabel(c).verdict)).toEqual(["pas-cette-annee"]);
+    const servie = (c: Cas) => viserLeLabel(c).label.ventes > viserLeLabel(c).chapitre.ventes;
+    expect(ENTREPRISES_DU_COURS.filter((c) => servie(casDeLEntreprise(c)))).toEqual(["boutique", "ecommerce", "fitness"]);
     // Seuls le bistrot et le marchand en ligne comptent des rebuts : l'étape du process propre ne vit que là.
     expect(ENTREPRISES_DU_COURS.filter((c) => engagementRse(casDeLEntreprise(c)).aDesRebuts)).toEqual(["bistrot", "ecommerce"]);
   });
@@ -201,7 +214,7 @@ describe.each(ENTREPRISES_DU_COURS)("croître en investissant chez %s", (code) =
     expect(r.caf).toBe(r.resultatNetGagne + Math.round(r.amortissement));
     if (r.caf > 0) pres(r.delai!, (r.cout * r.trimestresEnService) / r.caf, 0.05);
     else expect(r.delai).toBeNull();
-    pres(r.rentabilite, (r.resultatNetGagne / r.cout) * 100, 0.05);
+    expect(r.rentabilite).toBe(Math.round((r.resultatNetGagne / r.cout) * 1000) / 10);
     const ventes = surLAnnee(anneeAvecLaMachine(code, machineDuChapitre(code), "emprunt"), soldUnits) - surLAnnee(anneeSansInvestir(code), soldUnits);
     if (r.verdict === "la-capacite-ne-manquait-pas") expect(Math.abs(ventes)).toBeLessThan(0.5);
     else expect(ventes).toBeGreaterThan(0.5);

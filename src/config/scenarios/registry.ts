@@ -1251,7 +1251,9 @@ export function economicDefaults(d: ScenarioDefinition): Record<string, string |
     fixedCostsPerRound: num(s.fixedCostsPerRound),
     materialCostPerUnit: num(s.product.materialCostPerUnit),
     otherVariableCostPerUnit: num(s.product.otherVariableCostPerUnit),
-    depreciationPerRound: num(s.finance.depreciationPerRound),
+    // Avec un parc typé, le moteur amortit chaque équipement et ignore ce réglage
+    // (amortissements-du-depart.ts) : le panneau le dit « non proposé ».
+    depreciationPerRound: s.equipment ? null : num(s.finance.depreciationPerRound),
     baseDefectRate: pct(s.qualityCosts?.baseDefectRate ?? 0),
   };
 }

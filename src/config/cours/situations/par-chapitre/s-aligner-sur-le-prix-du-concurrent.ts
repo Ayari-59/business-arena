@@ -12,16 +12,19 @@ import type { Situation } from "../types";
  * CAS PRATIQUE DU CHAPITRE « LE TAUX D'OCCUPATION, LE PRIX MOYEN ET LE REVENU PAR CHAMBRE » :
  * S'ALIGNER SUR LE PRIX DU CONCURRENT ? (BTS MHR, palier 2).
  *
- * Au trimestre où un concurrent a rempli mieux que l'hôtel à un prix plus bas (celui que le
- * chapitre compare), la directrice veut mettre en vente toutes les chambres. Reste le prix : son
- * tarif, ou celui du concurrent. L'arène rejoue le trimestre des deux façons (gestion-de-la-pme.ts :
- * `rejouerAvec`, sous des clés préfixées du code du chapitre) ; l'élève calcule l'occupation et le
- * RevPAR de chacune, l'écart de chiffre d'affaires, et rend sa réponse.
+ * Au trimestre le plus faible de l'hôtel (celui où le chapitre compte les nuitées demandées et non
+ * servies), un concurrent a rempli mieux que lui à un prix plus bas, et la directrice veut mettre en
+ * vente toutes les chambres. Reste le prix : son tarif, ou celui du concurrent. L'arène rejoue le
+ * trimestre des deux façons (gestion-de-la-pme.ts : `rejouerAvec`, sous des clés préfixées du code
+ * du chapitre) ; l'élève calcule l'occupation et le RevPAR de chacune, l'écart de chiffre
+ * d'affaires, et rend sa réponse. Le meilleur prix est celui du RevPAR le plus haut, tel que le
+ * moteur le rejoue : le cas ne le décide pas d'avance.
  *
- * Le cas est neuf par sa question : le chapitre juge deux hôtels déjà joués ; le cas demande à
- * l'hôtel de choisir son prix, et le moteur dit ce que chaque prix aurait rempli. Aucune hypothèse :
- * toutes les chambres disponibles mises en vente, au prix que l'hôtel a joué (sa décision du
- * trimestre, inchangée), ou au prix moyen que le concurrent a fait ce trimestre-là.
+ * Le cas est neuf par sa question : le chapitre juge deux hôtels déjà joués, face à un concurrent
+ * plus cher ; le cas demande à l'hôtel de choisir son prix face au concurrent moins cher, et le
+ * moteur dit ce que chaque prix aurait rempli. Aucune hypothèse : toutes les chambres disponibles
+ * mises en vente, au prix que l'hôtel a joué (sa décision du trimestre, inchangée), ou au prix moyen
+ * que le concurrent a fait ce trimestre-là.
  */
 
 /** Un montant à la française, avec le signe moins typographique. */
@@ -32,14 +35,24 @@ const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits:
 
 export type Prix = "joue" | "tarif" | "concurrent";
 
-/** Le trimestre de la comparaison, rejoué toutes chambres en vente, au tarif puis au prix du concurrent. */
+/** Le trimestre le plus faible de l'hôtel, rejoué toutes chambres en vente, au tarif puis au prix du concurrent. */
 export function alignement(c: Cas) {
   const o = occupation(c);
-  const k = o.comparaison.trimestre;
+  const k = o.plusFaible;
+  // Mettre toutes les chambres en vente ne change rien si l'hôtel a servi toute sa demande.
+  if (o.perdues <= 0) throw new Error(`${c.entreprise} a servi toutes ses nuitées demandées au ${trimestre(k)}`);
   const tour = k + 1;
   const { partie } = anneeJouee(c.code);
-  const rivalId = scenarioByCode(c.code).bots.find((b) => b.name === o.comparaison.rival.nom)!.id;
-  const rivalR = partie.rounds[k]!.results[rivalId]!;
+  const hotel = o.trimestres[k]!;
+  // Le concurrent qui, ce trimestre-là, a rempli mieux que l'hôtel à un prix moyen plus bas.
+  const rivalBot = scenarioByCode(c.code)
+    .bots.slice(0, 2)
+    .find((b) => {
+      const x = indicateursDuTrimestre(partie.rounds[k]!.results[b.id]!);
+      return x.occupation > hotel.occupation && x.prixMoyen < hotel.prixMoyen;
+    });
+  if (!rivalBot) throw new Error(`Aucun concurrent ${duNom(c.entreprise)} ne remplit mieux à un prix plus bas au ${trimestre(k)}`);
+  const rivalR = partie.rounds[k]!.results[rivalBot.id]!;
   // Le prix moyen exact du concurrent ce trimestre, sur ses nuitées et son chiffre d'affaires.
   const prixDuConcurrent = auCentime(rivalR.incomeStatement.revenue / soldUnits(rivalR));
   const joueR = partie.rounds[k]!.results["joueur"]!;
@@ -57,7 +70,9 @@ export function alignement(c: Cas) {
   return {
     o,
     trimestre: k,
-    rival: o.comparaison.rival.nom,
+    rival: rivalBot.name,
+    /** Les trois indicateurs du concurrent, ce trimestre-là. */
+    leRival: indicateursDuTrimestre(rivalR),
     prixDuConcurrent,
     prixAuTarif: auCentime(joueR.incomeStatement.revenue / soldUnits(joueR)),
     misesEnVente: Math.round(joueR.production.produced),
@@ -81,7 +96,7 @@ export const S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT: Situation = {
     "Un concurrent a rempli mieux que l'hôtel, à un prix plus bas. La directrice veut mettre en vente toutes les chambres : à son tarif, ou au prix du concurrent ? L'arène rejoue le trimestre des deux façons.",
   objectifs: [
     "Calculer le taux d'occupation et le RevPAR d'un trimestre rejoué",
-    "Chiffrer ce qu'un prix plus bas fait gagner en chambres et perdre en chiffre d'affaires",
+    "Chiffrer ce qu'un prix plus bas change en chambres vendues et en chiffre d'affaires",
     "Choisir un prix au RevPAR, et pas à l'occupation seule",
   ],
   libre: false,
@@ -96,9 +111,8 @@ export const S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT: Situation = {
       titre: "La question de la directrice",
       texte: (c) => {
         const a = alignement(c);
-        const r = a.o.comparaison.rival;
         return [
-          `« Au ${trimestre(a.trimestre)}, nous n'avons occupé que ${pct(a.joue.occupation)} de nos chambres, quand ${r.nom} en occupait ${pct(r.occupation)} à ${eur(a.prixDuConcurrent)} la nuit. Nous n'en avions mis en vente que ${qte(a.misesEnVente)} sur ${qte(a.joue.disponibles)}. Cette fois, je veux toutes les mettre en vente. Mais à quel prix : notre tarif de ${eur(a.prixAuTarif)}, ou celui ${duNom(r.nom)} ? »`,
+          `« Au ${trimestre(a.trimestre)}, nous n'avons occupé que ${pct(a.joue.occupation)} de nos chambres, quand ${a.rival} en occupait ${pct(a.leRival.occupation)} à ${eur(a.prixDuConcurrent)} la nuit. Nous n'en avions mis en vente que ${qte(a.misesEnVente)} sur ${qte(a.joue.disponibles)}. Cette fois, je veux toutes les mettre en vente. Mais à quel prix : notre tarif de ${eur(a.prixAuTarif)}, ou celui ${duNom(a.rival)} ? »`,
           "L'arène a rejoué le trimestre des deux façons, toutes les chambres en vente, les mêmes clientèles en face.",
         ];
       },
@@ -191,15 +205,21 @@ export const S_ALIGNER_SUR_LE_PRIX_DU_CONCURRENT: Situation = {
           {
             texte: `Tout mettre en vente, au tarif de ${eur(a.prixAuTarif)}`,
             juste: a.meilleur === "tarif",
-            retour: `${dit("tarif")} L'hôtel est moins plein qu'au prix ${duNom(a.rival)}, mais chaque chambre louée paie davantage.`,
+            retour:
+              a.meilleur === "tarif"
+                ? `${dit("tarif")} L'hôtel est moins plein qu'au prix ${duNom(a.rival)}, mais chaque chambre louée paie davantage.`
+                : `${dit("tarif")} Chaque chambre louée paie davantage, mais il en reste ${qte(a.tarif.disponibles - a.tarif.vendues)} vides.`,
           },
           {
             texte: `Tout mettre en vente, au prix ${duNom(a.rival)}`,
             juste: a.meilleur === "concurrent",
-            retour: `${dit("concurrent")} L'hôtel est le plus plein à ce prix (${pct(a.concurrent.occupation)}), mais le taux d'occupation ne dit pas à quel prix les chambres sont parties.`,
+            retour:
+              a.meilleur === "concurrent"
+                ? `${dit("concurrent")} Les ${qte(a.vendueEnPlus)} chambres louées en plus rapportent davantage que la baisse du prix ne coûte sur les autres.`
+                : `${dit("concurrent")} L'hôtel est le plus plein à ce prix (${pct(a.concurrent.occupation)}), mais le taux d'occupation ne dit pas à quel prix les chambres sont parties.`,
           },
           {
-            texte: "Garder le trimestre tel qu'il a été joué",
+            texte: "Ne rien changer, et garder le trimestre tel qu'il a été joué",
             juste: a.meilleur === "joue",
             retour: `${dit("joue")} Le trimestre joué a laissé ${qte(a.joue.disponibles - a.joue.vendues)} chambres vides.`,
           },

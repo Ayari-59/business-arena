@@ -55,16 +55,18 @@ const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` 
  * zéro les trimestres suivants : ses flux ne diraient plus rien de la machine. `sansDefaillance`
  * refuse un tel rejeu au lieu d'en additionner les trimestres.
  *
- * LES ENTREPRISES. Il faut une machine qui fait vendre (chez ATLAS CONSEIL, l'équipe plafonne
- * avant l'outil), une trésorerie qui ne vit pas au plafond du découvert (NOVA y passe la moitié de
- * la partie, et l'écart de trésorerie n'y dit plus rien), et trois exercices bénéficiaires, sans
- * quoi l'impôt sur les flux ne serait pas celui que l'arène prélève (LA TABLE D'AUGUSTIN et
- * MARTEL & FILS finissent un exercice en perte). Restent MAILLE & CO, L'ESCALE, PIXEL & CO,
- * VOLT FITNESS et ROUTE & CIE.
+ * LES ENTREPRISES. Il faut une machine qui fait vendre, et trois exercices bénéficiaires avec
+ * l'une ou l'autre des deux machines du chapitre et du suivant, sans quoi l'impôt sur les flux ne
+ * serait pas celui que l'arène prélève. La gestion règle sa production sur les ventes du
+ * trimestre d'avant : chez ATLAS CONSEIL, PIXEL & CO et ROUTE & CIE, la capacité en plus ne fait
+ * rien vendre de plus. LA TABLE D'AUGUSTIN finit chaque exercice en perte, et MARTEL & FILS finit
+ * son premier exercice en perte avec la machine suivante du catalogue. Restent NOVA, MAILLE & CO,
+ * L'ESCALE et VOLT FITNESS. Chez MAILLE & CO, la machine fait vendre, mais peu : les deux VAN y
+ * sont négatives, et le verdict y est de renoncer.
  */
 
 /** Les entreprises où l'investissement a un objet, et où l'impôt sur les flux est celui que l'arène prélève. */
-export const ENTREPRISES_DE_L_ACTUALISATION = ["boutique", "hotel", "ecommerce", "fitness", "transport"] as const;
+export const ENTREPRISES_DE_L_ACTUALISATION = ["nova", "boutique", "hotel", "fitness"] as const;
 
 /** La durée du projet : la plus longue partie que l'arène joue au trimestre, trois exercices. */
 export const DUREE_DU_PROJET = TOURS_MAX_AU_TRIMESTRE;
@@ -294,7 +296,7 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
   libre: false,
   entreprises: {
     codes: ENTREPRISES_DE_L_ACTUALISATION,
-    pourquoi: `ce chapitre suit une machine qui fait vendre, sur ${DUREE_DU_PROJET / TRIMESTRES_PAR_AN} exercices tous bénéficiaires, pour que l'impôt sur ses flux soit celui que l'arène prélève : c'est le cas chez MAILLE & CO, L'ESCALE, PIXEL & CO, VOLT FITNESS et ROUTE & CIE. Ailleurs, NOVA vit au plafond de son découvert, LA TABLE D'AUGUSTIN et MARTEL & FILS finissent un exercice en perte, et chez ATLAS CONSEIL la machine ne fait rien vendre de plus.`,
+    pourquoi: `ce chapitre suit une machine qui fait vendre, sur ${DUREE_DU_PROJET / TRIMESTRES_PAR_AN} exercices tous bénéficiaires, pour que l'impôt sur ses flux soit celui que l'arène prélève : c'est le cas chez NOVA, MAILLE & CO, L'ESCALE et VOLT FITNESS. Ailleurs, LA TABLE D'AUGUSTIN finit chaque exercice en perte, MARTEL & FILS finit son premier exercice en perte avec la machine suivante du catalogue, celle que compare le chapitre sur le TRI, et chez ATLAS CONSEIL, PIXEL & CO et ROUTE & CIE la machine ne fait rien vendre de plus.`,
   },
   etapes: [
     {
@@ -392,12 +394,15 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
         const p = projetDuChapitre(c);
         const x = p.exemple;
         const ecartDImpot = centime(p.impotTotal - p.impotDeLArene);
+        // La machine peut faire baisser l'impôt (sa dotation dépasse l'EBE qu'elle ajoute) et la trésorerie : le texte le dit dans le bon sens.
+        const prelevement = p.impotDeLArene >= 0 ? `${eur(p.impotDeLArene)} d'impôt en plus` : `${eur(-p.impotDeLArene)} d'impôt en moins`;
+        const tresorerie = p.tresorerieGagnee >= 0 ? `plus haute de ${eur(p.tresorerieGagnee)}` : `plus basse de ${eur(-p.tresorerieGagnee)}`;
         return [
           `Le flux d'un trimestre est l'EBE gagné moins l'impôt de son résultat d'exploitation gagné : au trimestre ${x.trimestre}, ${eur(x.ebe)} − ${pct(p.tauxPct)} × ${retranche(x.rex)} = ${eur(x.flux)}. C'est aussi le résultat d'exploitation gagné après impôt, plus la dotation de la machine, ${eur(p.dotation)} par trimestre, qui ne sort pas d'argent.`,
           Math.abs(ecartDImpot) < 1
-            ? `L'arène a prélevé ${eur(p.impotDeLArene)} d'impôt en plus sur les ${p.duree / TRIMESTRES_PAR_AN} exercices : le même montant. Un seul taux, sur le résultat de chaque exercice, tous bénéficiaires.`
-            : `L'arène a prélevé ${eur(p.impotDeLArene)} d'impôt en plus sur les ${p.duree / TRIMESTRES_PAR_AN} exercices, ${eur(Math.abs(ecartDImpot))} ${ecartDImpot > 0 ? "de moins" : "de plus"} : l'achat a fait varier de ${eur(Math.abs(p.interetsEnPlus))} les agios du découvert, déductibles. C'est un effet du financement, que la VAN laisse au taux d'actualisation.`,
-          `Au bout du projet, la trésorerie nette est plus haute de ${eur(p.tresorerieGagnee)} avec la machine, alors que les flux moins le prix donnent ${eur(centime(p.fluxTotal - p.cout))}. L'écart tient au besoin en fonds de roulement que l'activité en plus immobilise, stocks, créances et TVA (${eur(p.bfr)})${p.agiosApresImpot !== 0 ? `, et aux agios après impôt (${eur(p.agiosApresImpot)})` : ""}. Le chapitre ne compte pas cette variation du BFR, que l'entreprise récupérerait en arrêtant l'activité.`,
+            ? `L'arène a prélevé ${prelevement} sur les ${p.duree / TRIMESTRES_PAR_AN} exercices : le même montant. Un seul taux, sur le résultat de chaque exercice, tous bénéficiaires.`
+            : `L'arène a prélevé ${prelevement} sur les ${p.duree / TRIMESTRES_PAR_AN} exercices, ${eur(Math.abs(ecartDImpot))} ${ecartDImpot > 0 ? "de moins" : "de plus"} que le calcul du chapitre : l'achat a fait varier de ${eur(Math.abs(p.interetsEnPlus))} les agios du découvert, déductibles. C'est un effet du financement, que la VAN laisse au taux d'actualisation.`,
+          `Au bout du projet, la trésorerie nette est ${tresorerie} avec la machine, alors que les flux moins le prix donnent ${eur(centime(p.fluxTotal - p.cout))}. L'écart tient au besoin en fonds de roulement que l'activité en plus immobilise, stocks, créances et TVA (${eur(p.bfr)})${p.agiosApresImpot !== 0 ? `, et aux agios après impôt (${eur(p.agiosApresImpot)})` : ""}. Le chapitre ne compte pas cette variation du BFR, que l'entreprise récupérerait en arrêtant l'activité.`,
         ];
       },
     },

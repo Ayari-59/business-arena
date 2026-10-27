@@ -11,7 +11,7 @@ import {
   TRIMESTRE_DE_LA_LIVRAISON,
   livraison,
 } from "../../src/config/cours/chapitres/recevoir-une-livraison";
-import { DELAI_DE_REASSORT, REMPLIR_LE_RAYON, articleEnRupture, rayon } from "../../src/config/cours/chapitres/remplir-le-rayon";
+import { DELAI_DE_REASSORT, REMPLIR_LE_RAYON, articleEnRupture, rayon, sansLaCommande } from "../../src/config/cours/chapitres/remplir-le-rayon";
 import { CHAPITRES, PROGRAMME } from "../../src/config/cours/registre";
 import { CARTONS_DE_CHAQUE_ECART, LES_DEUX_ECARTS, TRIMESTRE_DU_CAS, deuxEcarts } from "../../src/config/cours/situations/par-chapitre/les-deux-ecarts";
 import { TENIR_JUSQU_AU_REASSORT, reassortAttendu } from "../../src/config/cours/situations/par-chapitre/tenir-jusqu-au-reassort";
@@ -28,7 +28,8 @@ import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
  *
  * Recevoir une livraison : la commande de l'arène au premier trimestre, référence par référence,
  * le bon de livraison, le carton manquant (hypothèse du cours), la réserve, le stock après la
- * réception. Remplir le rayon : l'article qui part en rupture sans commande, ses ventes par jour,
+ * réception. Remplir le rayon : l'article qui part en rupture sans commande (l'année rejouée, la
+ * commande d'un article oubliée un trimestre), ses ventes par jour,
  * les jours avant la rupture, le délai du réassort (hypothèse prise dans la fiche du fournisseur),
  * les ventes perdues comptées par le moteur. Ces gardes recomposent les chiffres avec le moteur,
  * vérifient que les champs les attendent et que les verdicts se calculent, et que les textes se
@@ -279,26 +280,40 @@ describe.each(MAGASINS)("recevoir une livraison chez %s", (code) => {
 describe.each(MAGASINS)("remplir le rayon chez %s", (code) => {
   const cas = casDeLEntreprise(code);
 
-  it("l'article est, dans l'année du cours, la rupture sans commande qui a coûté le plus", () => {
+  it("l'article est la rupture sans commande qui a coûté le plus, dans l'année rejouée sans sa commande", () => {
     const { x } = rayon(cas);
     const rs = tours(code);
     const ouverture = anneeJouee(code).depart.finishedGoodsByProduct!;
+    const stockAuDebut = (annee: typeof rs, k: number, article: string) =>
+      Math.round(k === 0 ? ouverture[article]!.quantity : annee[k - 1]!.products![article]!.stock.quantity);
+    const lire = (annee: typeof rs, k: number, article: string) => {
+      const p = annee[k]!.products![article]!;
+      return { trimestre: k + 1, article, stock: stockAuDebut(annee, k, article), commandee: Math.round(p.planned), perdues: Math.round(p.lost), perte: Math.round(p.lost) * p.price };
+    };
+    const sansCommande = (y: ReturnType<typeof lire>) => y.commandee === 0 && y.stock > 0 && y.perdues > 0;
+    // L'année du cours commande chaque article à chaque trimestre : d'où le rejeu de la commande oubliée.
+    expect(rs.flatMap((r, k) => Object.keys(r.products!).map((a) => lire(rs, k, a))).filter(sansCommande)).toEqual([]);
     const candidats = rs.flatMap((r, k) =>
-      Object.entries(r.products!).map(([article, p]) => ({
-        trimestre: k + 1,
-        article,
-        stock: Math.round(k === 0 ? ouverture[article]!.quantity : rs[k - 1]!.products![article]!.stock.quantity),
-        commandee: Math.round(p.planned),
-        perdues: Math.round(p.lost),
-        perte: Math.round(p.lost) * p.price,
-      })),
+      Object.keys(r.products!)
+        .filter((article) => stockAuDebut(rs, k, article) > 0)
+        .map((article) => {
+          const rejeu = sansLaCommande(code, k + 1, article);
+          // La seule décision changée : la commande de cet article, ce trimestre-là.
+          expect(rejeu.slice(0, k).map((t) => t.incomeStatement.revenue), `${k + 1} ${article}`).toEqual(rs.slice(0, k).map((t) => t.incomeStatement.revenue));
+          for (const autre of Object.keys(r.products!)) {
+            if (autre !== article) expect(rejeu[k]!.products![autre]!.planned, `${k + 1} ${article} ${autre}`).toBe(r.products![autre]!.planned);
+          }
+          return lire(rejeu, k, article);
+        }),
     );
-    const retenus = candidats.filter((y) => y.commandee === 0 && y.stock > 0 && y.perdues > 0).sort((a, b) => b.perte - a.perte);
+    const retenus = candidats.filter(sansCommande).sort((a, b) => b.perte - a.perte);
     expect(retenus.length).toBeGreaterThan(0);
     // Pas d'égalité en tête : le choix ne dépend pas de l'ordre.
     if (retenus.length > 1) expect(retenus[0]!.perte).toBeGreaterThan(retenus[1]!.perte);
     expect([x.trimestre, x.code]).toEqual([retenus[0]!.trimestre, retenus[0]!.article]);
-    const p = rs[x.trimestre - 1]!.products![x.code]!;
+    expect(x.commandeeDansLAnnee).toBe(Math.round(rs[x.trimestre - 1]!.products![x.code]!.planned));
+    expect(x.commandeeDansLAnnee).toBeGreaterThan(0);
+    const p = sansLaCommande(code, x.trimestre, x.code)[x.trimestre - 1]!.products![x.code]!;
     expect(x.stock).toBe(retenus[0]!.stock);
     expect(x.vendues).toBe(Math.round(p.sold));
     expect(x.perdues).toBe(Math.round(p.lost));
@@ -330,15 +345,16 @@ describe.each(MAGASINS)("remplir le rayon chez %s", (code) => {
 
   it("chez MAILLE & CO, les chiffres de l'année du cours", () => {
     const r = rayon(cas);
-    expect([r.x.trimestre, r.x.code]).toEqual([4, "echarpe"]);
-    expect(r.x.stock).toBe(1745);
-    expect(r.x.demande).toBe(4225);
-    expect(r.parJour).toBe(47);
-    expect(r.joursAvant).toBe(37);
-    expect(r.joursSans).toBe(5);
-    expect(r.x.perdues).toBe(2480);
-    expect(r.ventesPerdues).toBe(89280);
-    expect(r.x.demandeAvant).toBe(1370);
+    expect([r.x.trimestre, r.x.code]).toEqual([4, "pull-col-rond"]);
+    expect(r.x.stock).toBe(517);
+    expect(r.x.commandeeDansLAnnee).toBe(1112);
+    expect(r.x.demande).toBe(3608);
+    expect(r.parJour).toBe(40);
+    expect(r.joursAvant).toBe(12);
+    expect(r.joursSans).toBe(30);
+    expect(r.x.perdues).toBe(3091);
+    expect(r.ventesPerdues).toBe(170005);
+    expect(r.x.demandeAvant).toBe(1958);
   });
 
   it("textes propres, une seule bonne réponse, notions existantes", () => verifierLesTextes(REMPLIR_LE_RAYON, code));
@@ -367,7 +383,7 @@ describe.each(MAGASINS)("les deux écarts chez %s", (code) => {
 
   it("chez MAILLE & CO, les chiffres de l'année du cours", () => {
     const s = deuxEcarts(cas);
-    expect(s.totalSurLeBon).toBe(7500);
+    expect(s.totalSurLeBon).toBe(6038);
     expect([s.manque.code, s.enTrop.code]).toEqual(["pull-col-rond", "pull-merinos"]);
     expect(s.prixDAchat).toBe(25);
     expect(s.payesSansEtreRecus).toBe(250);
@@ -412,12 +428,12 @@ describe.each(MAGASINS)("tenir jusqu'au réassort chez %s", (code) => {
   it("chez MAILLE & CO, les chiffres de l'année du cours", () => {
     const s = reassortAttendu(cas);
     expect(s.x.code).toBe("pull-col-rond");
-    expect(s.stockApres).toBe(1487);
-    expect(s.parJour).toBe(50);
-    expect(s.joursAvant).toBe(29);
-    expect(s.joursSans).toBe(13);
-    expect(s.x.perdues).toBe(2991);
-    expect(s.ventesPerdues).toBe(164505);
+    expect(s.stockApres).toBe(1629);
+    expect(s.parJour).toBe(40);
+    expect(s.joursAvant).toBe(40);
+    expect(s.joursSans).toBe(2);
+    expect(s.x.perdues).toBe(1979);
+    expect(s.ventesPerdues).toBe(108845);
     expect(s.aTemps).toBe(false);
   });
 

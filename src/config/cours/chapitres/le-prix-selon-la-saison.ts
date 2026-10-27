@@ -15,8 +15,9 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * chapitre la lit dans le scénario de l'arène (la taille, la croissance et la saisonnalité de
  * chaque clientèle, `computePotentialDemand`), en tire les coefficients saisonniers, la haute et
  * la basse saison. Puis il compare trois façons de fixer le prix de la nuitée sur l'année du
- * cours, rejouée par l'arène (gestion-de-la-pme.ts : même graine, mêmes concurrents, seul le prix
- * change) :
+ * cours, rejouée par l'arène (gestion-de-la-pme.ts : même graine, mêmes concurrents, seule la
+ * décision de prix change ; les autres décisions, chaque gestion les prend comme dans l'année du
+ * cours, sur ses ventes du trimestre d'avant) :
  *
  *   · le prix unique de l'année du cours, celui de la gestion équilibrée ;
  *   · le prix de la saison : plus haut en haute saison, plus bas en basse saison ;
@@ -25,9 +26,10 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     assez nombreuses pour payer la baisse. Une baisse de prix paie en chiffre d'affaires si elle
  *     fait vendre au moins baisse ÷ (1 − baisse) de nuitées en plus (15 % ÷ 85 %, 17,6 %) ; là où il
  *     restait moins de nuitées vides, elle ne pouvait que vendre les mêmes nuitées moins cher.
- *     Les nuitées mises en vente restent celles de la gestion équilibrée : dans l'arène, leur coût
- *     variable se paie qu'elles soient vendues ou non, si bien que le chiffre d'affaires en plus
- *     est aussi du résultat en plus.
+ *     Les nuitées mises en vente restent la décision de la gestion équilibrée, qui les règle sur
+ *     ce qu'elle a vendu le trimestre d'avant : un prix changé change donc aussi les nuitées mises
+ *     en vente des trimestres suivants. Dans l'arène, leur coût variable se paie qu'elles soient
+ *     vendues ou non.
  *
  * Pour chacune : le taux d'occupation, le prix moyen par nuitée vendue, le revenu par chambre
  * disponible (le RevPAR des indicateurs du métier, config/scenarios/sector-kpis.ts) et le résultat
@@ -417,7 +419,7 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
             retour: tropHaut
               ? `Oui : aucun client n'est reparti, et des nuitées sont restées vides. ${yield_}`
               : p.refus.length
-                ? `Non : ${auxTrimestres(p.refus)}, des clients sont repartis sans chambre. Baisser le prix y aurait vendu les mêmes nuitées moins cher.`
+                ? `Non : ${auxTrimestres(p.refus)}, des clients sont repartis sans chambre. Baisser le prix n'y aurait pas vendu une nuitée de plus : toutes celles en vente étaient parties.`
                 : "Non : aucune nuitée en vente n'est restée vide.",
           },
           {
@@ -447,7 +449,7 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
       },
       question: (c) => {
         const p = prixSelonLaSaison(c);
-        return `L'arène a rejoué l'année avec un prix ${EN_POURCENT(HAUSSE_EN_HAUTE_SAISON)} plus haut en haute saison (${eur(p.prixHaut)}) et ${EN_POURCENT(BAISSE_EN_BASSE_SAISON)} plus bas en basse saison (${eur(p.prixBas)}), tout le reste identique, concurrents compris. Au prix unique, le résultat net de l'année était de ${eur(p.unique.resultat)}. Calculez, au prix de la saison, le taux d'occupation de l'année, le prix moyen et le revenu par chambre disponible, puis l'écart de résultat net (prix de la saison moins prix unique).`;
+        return `L'arène a rejoué l'année avec un prix ${EN_POURCENT(HAUSSE_EN_HAUTE_SAISON)} plus haut en haute saison (${eur(p.prixHaut)}) et ${EN_POURCENT(BAISSE_EN_BASSE_SAISON)} plus bas en basse saison (${eur(p.prixBas)}). Le reste, chaque gestion le décide comme dans l'année du cours, concurrents compris : ses nuitées en vente suivent ce qu'elle a vendu le trimestre d'avant. Au prix unique, le résultat net de l'année était de ${eur(p.unique.resultat)}. Calculez, au prix de la saison, le taux d'occupation de l'année, le prix moyen et le revenu par chambre disponible, puis l'écart de résultat net (prix de la saison moins prix unique).`;
       },
       champs: (c) => {
         const p = prixSelonLaSaison(c);
@@ -488,9 +490,21 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
         const p = prixSelonLaSaison(c);
         const defaillante = p.saison.defaillance !== null;
         const detail = `Le chiffre d'affaires a changé de ${trimestreParTrimestre(p, p.saison, (k) => saisonDe(p, k))}.`;
+        // Ce que le trimestre rejoué a vendu, face au prix unique : la phrase dit ce que le moteur a donné.
+        const vendues = (k: number) => ({ saison: p.saison.trimestres[k - 1]!.vendues, unique: p.unique.trimestres[k - 1]!.vendues });
         const contre = [
-          ...p.hausseMalPlacee.map((k) => `au ${rang(k)} trimestre, la haute saison laissait des nuitées vides, et la hausse a fait partir des clients`),
-          ...p.baisseMalPlacee.map((k) => `au ${rang(k)}, la basse saison refusait des clients, et la baisse a vendu les mêmes nuitées moins cher`),
+          ...p.hausseMalPlacee.map((k) => {
+            const v = vendues(k);
+            return v.saison < v.unique
+              ? `au ${rang(k)} trimestre, la haute saison laissait des nuitées vides, et la hausse a fait partir des clients (${qte(v.saison)} nuitées vendues contre ${qte(v.unique)})`
+              : `au ${rang(k)} trimestre, la haute saison laissait des nuitées vides, et la hausse ne les a pas remplies`;
+          }),
+          ...p.baisseMalPlacee.map((k) => {
+            const v = vendues(k);
+            return v.saison <= v.unique
+              ? `au ${rang(k)}, la basse saison refusait des clients, et la baisse n'a vendu aucune nuitée de plus (${qte(v.saison)} contre ${qte(v.unique)}), seulement moins cher`
+              : `au ${rang(k)}, la basse saison refusait des clients, et la baisse n'a vendu que ${qte(v.saison - v.unique)} nuitées de plus, toutes moins cher`;
+          }),
         ];
         const pourquoi = contre.length
           ? ` Le calendrier dit quand les clients viennent, pas s'il reste des chambres à leur vendre : ${contre.join(" ; ")}.`

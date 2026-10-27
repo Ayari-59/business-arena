@@ -19,8 +19,13 @@ import type { Chapitre } from "../types";
  * vendre davantage (`COMMUNICATIONS`). Aucune hypothèse n'est ajoutée.
  */
 
-/** Les entreprises dont les ventes répondent au budget de communication rejoué par l'arène. */
-export const COMMUNICATIONS = ["nova", "hotel", "bistrot", "ecommerce", "fitness"] as const;
+/**
+ * Les entreprises dont les ventes répondent au budget de communication rejoué par l'arène. NOVA
+ * n'en est plus sur l'année du cours (arene-du-cours.ts) : sa production du trimestre, réglée sur
+ * ses ventes du tour d'avant, laisse déjà des clients sans être servis, et la campagne n'y fait
+ * rien vendre de plus.
+ */
+export const COMMUNICATIONS = ["hotel", "bistrot", "ecommerce", "fitness"] as const;
 
 const qte = (n: number) => n.toLocaleString("fr-FR");
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
@@ -31,6 +36,9 @@ export function communication(c: Cas) {
   const sans = v[0]!;
   const jouee = v.find((x) => x.facteur === 1)!;
   const ventesEnPlus = jouee.commandes - sans.commandes;
+  // Le coût d'une vente gagnée divise le budget par les ventes en plus : sans vente en plus, il
+  // n'existe pas, et l'entreprise n'est pas de celles où le chapitre se joue.
+  if (ventesEnPlus <= 0) throw new Error(`La campagne ne fait rien vendre de plus chez ${c.entreprise} : le chapitre ne s'y joue pas.`);
   const margeEnPlus = jouee.marge - sans.marge;
   const meilleur = v.reduce((a, b) => (b.resultat > a.resultat ? b : a));
   const derniers = v.slice(-2);

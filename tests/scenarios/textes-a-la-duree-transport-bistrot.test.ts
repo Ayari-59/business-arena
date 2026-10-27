@@ -10,6 +10,7 @@ import {
 import { situationDeLaPartie, textesDe } from "../../src/config/scenarios/situation-texte";
 import type { CompanyState, EngineScenarioConfig } from "../../src/engine/types";
 import { corrigerLesDates } from "./corrections-des-dates";
+import { amortissementsDuDepart } from "../../src/config/scenarios/amortissements-du-depart";
 
 /**
  * ROUTE & CIE ET LA TABLE D'AUGUSTIN SE LISENT À LA DURÉE DU TOUR DE LEUR PARTIE.
@@ -84,6 +85,14 @@ const CORRECTIONS: { codes: string[]; avant: string; apres: string }[] = [
       ["emmène 845 palettes", "emmène 1 208 palettes"],
     ] as const
   ).map(([avant, apres]) => ({ codes: ["transport_t6_contrat_refuse"], avant, apres })),
+  // Le parc typé de ROUTE & CIE s'amortit véhicule par véhicule : environ 20 000 € par
+  // tour, et non les 26 000 € de `depreciationPerRound`, que le moteur ignore alors
+  // (amortissements-du-depart.ts). La structure et la flotte réclament 206 018 € au
+  // trimestre, et le coût de revient complet d'une palette du récit approche 53 €
+  // (25 + 206 018 ÷ 7 400 = 52,84), non 54.
+  { codes: ["transport_t2_retour_vide"], avant: "sous votre coût de revient complet, qui approche 54 €.", apres: "sous votre coût de revient complet, qui approche 53 €." },
+  { codes: ["transport_t2_retour_vide"], avant: "À 52 €, on vend sous le coût de revient complet de 54 € : chaque palette chargée creuse la perte", apres: "À 52 €, on vend sous le coût de revient complet de 53 € : chaque palette chargée creuse la perte" },
+  { codes: ["transport_t2_retour_vide"], avant: "quand la structure et la flotte en réclament 212 000 :", apres: "quand la structure et la flotte en réclament 206 018 :" },
 ];
 
 /** Le texte au trimestre attendu : la fixture, corrections nommées appliquées (chaque occurrence). */
@@ -162,7 +171,7 @@ function nombresAttendus(code: Code, periodicity: Periodicity): Set<string> {
     const quatreCinquiemes = Math.round(net((plein * 4) / 5));
     ajoute(charges, seuil, dix(seuil), cinquante(seuilApres), seuilApres);
     ajoute(cent(charges / (prix - gazole)), cent(charges / prix), capacite, trafic, dix(flux(4900)));
-    ajoute((52 - route) * trafic, charges + s.finance.depreciationPerRound);
+    ajoute((52 - route) * trafic, charges + amortissementsDuDepart(s));
     ajoute(flux(21000), flux(5500), flux(21000) - flux(5500));
     ajoute((57 - route) * plein, (78 - route) * quatreCinquiemes);
     ajoute((78 - route) * quatreCinquiemes - (57 - route) * plein, ((57 - route) * plein) / (78 - route));
@@ -303,7 +312,7 @@ describe("ce que les énoncés disent au mois et à l'année, phrase par phrase"
     expect(t1.hints[4]!.text).toContain("Rapporté à 3 333 palettes de capacité");
     const t2 = rendue("transport", "transport_t2_retour_vide", "month");
     expect(t2.quiz[1]!.explain).toContain(
-      "les deux mille quatre cent soixante-dix palettes du mois donnent 66 690 €, quand la structure et la flotte en réclament 70 667",
+      "les deux mille quatre cent soixante-dix palettes du mois donnent 66 690 €, quand la structure et la flotte en réclament 68 673",
     );
   });
 
@@ -407,9 +416,9 @@ describe("ce que les énoncés disent au mois et à l'année, phrase par phrase"
       // Le coût de revient complet d'une palette du récit : structure et flotte sur le trafic.
       const k = t.roundDays / 90;
       expect(
-        Math.round(25 + (t.fixedCostsPerRound + t.finance.depreciationPerRound) / (7400 * k)),
+        Math.round(25 + (t.fixedCostsPerRound + amortissementsDuDepart(t)) / (7400 * k)),
         periodicity,
-      ).toBe(54);
+      ).toBe(53);
       // La capacité du parc : celle des équipements de départ, celle de l'entreprise.
       for (const code of GROUPE) {
         const s = joue(code, periodicity);

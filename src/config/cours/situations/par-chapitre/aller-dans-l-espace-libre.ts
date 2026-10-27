@@ -52,6 +52,7 @@ export function espaceLibre(c: Cas) {
   const apres = bilanDeLAnnee("espace-libre", rejouee);
   // UNE ENTREPRISE DÉFAILLANTE NE VEND PLUS : ses trimestres manquants ne pèsent plus sur le
   // résultat de l'année, qui peut alors sembler meilleur. La défaillance tranche avant lui.
+  // (Sur l'année du cours, le prix de la place ne mène à la défaillance dans aucune entreprise.)
   const k1 = rejouee.findIndex((r) => r.defaillant === true);
   const defaillance = k1 < 0 ? null : k1 + 1;
   const ecartDeResultat = apres.resultat - avant.resultat;
