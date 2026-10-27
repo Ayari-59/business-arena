@@ -872,6 +872,43 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Si les quatre premiers tours finissent en perte, regardez au cinquième la ligne « dont déficit antérieur imputé (report) » du compte de résultat : l'impôt du tour se calcule-t-il sur le résultat diminué de ce déficit ? Sinon, l'impôt du cinquième tour est-il le taux de l'impôt appliqué à son résultat avant impôt ?",
   }),
+  "le-stock-de-securite": (c) => {
+    const { volume } = feuilleDe(c, 1);
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Jouez un tour et notez la demande des clients. Au tour suivant, mettez dans « ${volume} » la demande du tour, plus le stock de sécurité du chapitre, moins le stock qui reste, puis jouez le tour.`,
+      lieux: ["marche-du-tour", "plan-face-au-realise", "bilan"],
+      chercher:
+        "Des clients sont-ils repartis sans être servis ? Combien reste-t-il en stock à la fin du tour, et combien d'argent ce stock immobilise-t-il au bilan ?",
+    };
+  },
+  "ce-que-coute-une-livraison": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour sans toucher à la feuille de décision proposée.`,
+    lieux: ["analyse-des-couts", "compte-de-resultat"],
+    chercher:
+      "Dans l'analyse des coûts, retrouvez le coût variable d'une palette : est-ce la route du chapitre ? Au compte de résultat, divisez les dotations aux amortissements par les palettes livrées : combien chaque palette porte-t-elle d'usure des camions ?",
+  }),
+  "le-taux-de-remplissage": (c) => {
+    const { volume } = feuilleDe(c, 1);
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Jouez un tour avec la feuille proposée, puis un second où vous mettez environ 20 % de plus dans « ${volume} ».`,
+      lieux: ["indicateurs", "compte-de-resultat"],
+      chercher:
+        "Comparez le taux de remplissage des deux tours dans les indicateurs du métier. Les charges de structure et les dotations aux amortissements ont-elles bougé au compte de résultat ? Divisez-les par les palettes transportées : de combien la charge fixe d'une palette a-t-elle baissé, et toutes les palettes chargées ont-elles trouvé un client ?",
+    };
+  },
+  "livrer-a-temps": (c) => {
+    const { volume } = feuilleDe(c, 1);
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Au premier tour, mettez toute la capacité de votre flotte dans « ${volume} » ; au second tour, gardez le chargement proposé.`,
+      lieux: ["plan-face-au-realise", "marche-du-tour"],
+      chercher:
+        "Au premier tour, combien de palettes chargées n'ont pas trouvé de client, et combien de clients ont été refusés ? Calculez votre taux de service : palettes livrées ÷ palettes demandées. Au second tour, la demande de vos clients a-t-elle baissé après une flotte chargée au-dessus de 95 % de sa capacité ?",
+    };
+  },
   "tableau-de-bord-commercial": (c) => ({
     niveau: 2,
     faire: `${partie(c, 2)} Jouez quatre tours. À chaque tour, relevez la demande adressée, vos ventes, votre part de marché et votre marge.`,

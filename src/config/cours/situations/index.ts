@@ -89,6 +89,10 @@ import { LA_TVA_DU_DERNIER_TRIMESTRE } from "./par-chapitre/la-tva-du-dernier-tr
 import { LA_TVA_AVANCEE_POUR_LE_CLIENT } from "./par-chapitre/la-tva-avancee-pour-le-client";
 import { LA_DEPENSE_DE_FIN_D_ANNEE } from "./par-chapitre/la-depense-de-fin-d-annee";
 import { LA_DEPENSE_DE_L_ANNEE_EN_PERTE } from "./par-chapitre/la-depense-de-l-annee-en-perte";
+import { LE_POINT_DE_COMMANDE_AVANT_LE_PIC } from "./par-chapitre/le-point-de-commande-avant-le-pic";
+import { LE_GAZOLE_QUI_AUGMENTE } from "./par-chapitre/le-gazole-qui-augmente";
+import { LE_LOT_DE_LA_BOURSE_DE_FRET } from "./par-chapitre/le-lot-de-la-bourse-de-fret";
+import { COMBIEN_CHARGER_PENDANT_LA_PANNE } from "./par-chapitre/combien-charger-pendant-la-panne";
 import type { Situation } from "./types";
 
 export type { Situation } from "./types";
@@ -198,6 +202,10 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LA_TVA_AVANCEE_POUR_LE_CLIENT,
   LA_DEPENSE_DE_FIN_D_ANNEE,
   LA_DEPENSE_DE_L_ANNEE_EN_PERTE,
+  LE_POINT_DE_COMMANDE_AVANT_LE_PIC,
+  LE_GAZOLE_QUI_AUGMENTE,
+  LE_LOT_DE_LA_BOURSE_DE_FRET,
+  COMBIEN_CHARGER_PENDANT_LA_PANNE,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

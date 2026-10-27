@@ -83,6 +83,10 @@ import { LA_DECLARATION_DE_TVA } from "./chapitres/la-declaration-de-tva";
 import { LA_TVA_ET_LA_TRESORERIE } from "./chapitres/la-tva-et-la-tresorerie";
 import { L_IMPOT_SUR_LES_SOCIETES } from "./chapitres/l-impot-sur-les-societes";
 import { LE_DEFICIT_REPORTE } from "./chapitres/le-deficit-reporte";
+import { LE_STOCK_DE_SECURITE } from "./chapitres/le-stock-de-securite";
+import { CE_QUE_COUTE_UNE_LIVRAISON } from "./chapitres/ce-que-coute-une-livraison";
+import { LE_TAUX_DE_REMPLISSAGE } from "./chapitres/le-taux-de-remplissage";
+import { LIVRER_A_TEMPS } from "./chapitres/livrer-a-temps";
 import type { Chapitre } from "./types";
 
 /**
@@ -223,6 +227,23 @@ export const PARCOURS: readonly Parcours[] = [
     resume:
       "Le stock de sécurité et le point de commande, ce que coûte une livraison, le remplissage des véhicules, les délais tenus : les flux physiques de l'arène, chiffrés.",
     publics: { 1: "Seconde professionnelle, gestion administrative, transport et logistique" },
+  },
+  {
+    code: "dscg-finance",
+    formation: "dscg",
+    titre: "DSCG · Finance",
+    resume:
+      "Actualiser les flux d'un investissement, choisir entre deux projets, lire l'effet de levier de la dette, mesurer la valeur créée : la finance d'entreprise sur les investissements et les comptes de l'arène.",
+    publics: { 4: "DSCG, UE2 Finance" },
+    enPreparation: true,
+  },
+  {
+    code: "cap-epc",
+    formation: "cap-epc",
+    titre: "CAP EPC · Équipier polyvalent du commerce",
+    resume:
+      "Recevoir une livraison et la contrôler, remplir le rayon avant la rupture, afficher le bon prix, tenir la caisse : les gestes du magasin, comptés sur les chiffres de l'arène.",
+    publics: { 1: "CAP Équipier polyvalent du commerce" },
     enPreparation: true,
   },
 ];
@@ -339,12 +360,28 @@ export const PROGRAMME: Record<CodeParcours, Partial<Record<Chapitre["palier"], 
       "Livrer à temps : les délais et le service",
     ],
   },
+  "dscg-finance": {
+    4: [
+      "La valeur actuelle nette d'un investissement",
+      "Le taux de rentabilité interne et le choix entre deux projets",
+      "L'effet de levier : la dette et la rentabilité des capitaux propres",
+      "La création de valeur : rentabilité économique et coût du capital",
+    ],
+  },
+  "cap-epc": {
+    1: [
+      "Recevoir une livraison : le bon de livraison et la commande",
+      "Remplir le rayon avant la rupture",
+      "Le prix affiché : hors taxes, toutes taxes et la promotion",
+      "Tenir la caisse : le ticket, la monnaie et le fond de caisse",
+    ],
+  },
 };
 
 /** Les paliers que la carte montre pour un parcours, dans l'ordre. */
 export const paliersDuParcours = (code: CodeParcours) => PALIERS.filter((pa) => PROGRAMME[code][pa.palier] !== undefined);
 
-export const CHAPITRES: readonly Chapitre[] = [CREATION_PREMIER_BILAN, LES_FLUX, CHARGES_ET_ENCAISSEMENTS, LA_PAIE, L_EMPRUNT, IMMOBILISATIONS, LES_STOCKS, LA_CLOTURE, REMISES_ET_REGLEMENTS, DEPRECIATIONS_ET_PROVISIONS, REGULARISATIONS, SOLDES_INTERMEDIAIRES, BILAN_FONCTIONNEL, PRIX_COUT_MARGE, SEUIL_DE_RENTABILITE, COUT_COMPLET, COUT_PAR_PRODUIT, BUDGET_DE_TRESORERIE, ANALYSE_DES_ECARTS, TABLEAU_DE_BORD, DECIDER, TAUX_DE_MARQUE, INDICATEURS_DU_POINT_DE_VENTE, STOCK_DU_POINT_DE_VENTE, PREVOIR_LES_VENTES, BUDGET_DU_POINT_DE_VENTE, SEUIL_DU_POINT_DE_VENTE, PROMOTION_QUI_PAIE, ASSORTIMENT, EQUIPE_ET_PLANNING, TABLEAU_DE_BORD_DU_MANAGER, NEGOCIER_LE_PRIX, REMISES_ET_CONDITIONS, VALEUR_D_UN_CLIENT, COUT_D_ACQUISITION, COMMISSIONS_DES_PARTENAIRES, PORTEFEUILLE_ABC, TABLEAU_DE_BORD_COMMERCIAL, MARCHE_ET_PART_DE_MARCHE, SEGMENTER_ET_CIBLER, PRIX_PSYCHOLOGIQUE, DEMANDE_ET_PRIX, COMMUNICATION, CANAUX_DE_DISTRIBUTION, LIRE_LE_COMPTE_DE_RESULTAT, LIRE_LE_BILAN, VALEUR_AJOUTEE, RENTABILITE, FONDS_DE_ROULEMENT, FINANCER_L_ENTREPRISE, EFFECTIF_ET_MASSE_SALARIALE, SALAIRE_BRUT_NET_COUT, RECRUTER, REMUNERATION_ET_MOTIVATION, FORMER, INDICATEURS_SOCIAUX, CHOISIR_SON_FOURNISSEUR, LE_CLIENT_QUI_PAIE_TARD, S_ASSURER_CONTRE_LES_ALEAS, LE_COUT_DE_LA_NON_QUALITE, LE_DEPART_D_UN_SALARIE, ENTRETENIR_L_OUTIL, LE_DIAGNOSTIC_STRATEGIQUE, SE_FIXER_DES_OBJECTIFS, COUTS_OU_DIFFERENCIATION, LIRE_LA_STRATEGIE_DES_CONCURRENTS, CROITRE_EN_INVESTISSANT, LA_RESPONSABILITE_SOCIETALE, LE_PROJET_D_ENTREPRISE, ORGANISER_L_ACTIVITE, DECIDER_AVEC_DES_CHIFFRES, EVALUER_SON_ACTIVITE, DES_DONNEES_A_L_INFORMATION, CONSTRUIRE_UN_INDICATEUR_JUSTE, UNE_DONNEE_FAUSSE, CE_QUE_COUTE_UN_OUTIL_NUMERIQUE, LE_COUT_MATIERE, OCCUPATION_ET_REVENU_PAR_CHAMBRE, LA_PRODUCTIVITE_DU_SERVICE, LE_PRIX_SELON_LA_SAISON, LA_DECLARATION_DE_TVA, LA_TVA_ET_LA_TRESORERIE, L_IMPOT_SUR_LES_SOCIETES, LE_DEFICIT_REPORTE];
+export const CHAPITRES: readonly Chapitre[] = [CREATION_PREMIER_BILAN, LES_FLUX, CHARGES_ET_ENCAISSEMENTS, LA_PAIE, L_EMPRUNT, IMMOBILISATIONS, LES_STOCKS, LA_CLOTURE, REMISES_ET_REGLEMENTS, DEPRECIATIONS_ET_PROVISIONS, REGULARISATIONS, SOLDES_INTERMEDIAIRES, BILAN_FONCTIONNEL, PRIX_COUT_MARGE, SEUIL_DE_RENTABILITE, COUT_COMPLET, COUT_PAR_PRODUIT, BUDGET_DE_TRESORERIE, ANALYSE_DES_ECARTS, TABLEAU_DE_BORD, DECIDER, TAUX_DE_MARQUE, INDICATEURS_DU_POINT_DE_VENTE, STOCK_DU_POINT_DE_VENTE, PREVOIR_LES_VENTES, BUDGET_DU_POINT_DE_VENTE, SEUIL_DU_POINT_DE_VENTE, PROMOTION_QUI_PAIE, ASSORTIMENT, EQUIPE_ET_PLANNING, TABLEAU_DE_BORD_DU_MANAGER, NEGOCIER_LE_PRIX, REMISES_ET_CONDITIONS, VALEUR_D_UN_CLIENT, COUT_D_ACQUISITION, COMMISSIONS_DES_PARTENAIRES, PORTEFEUILLE_ABC, TABLEAU_DE_BORD_COMMERCIAL, MARCHE_ET_PART_DE_MARCHE, SEGMENTER_ET_CIBLER, PRIX_PSYCHOLOGIQUE, DEMANDE_ET_PRIX, COMMUNICATION, CANAUX_DE_DISTRIBUTION, LIRE_LE_COMPTE_DE_RESULTAT, LIRE_LE_BILAN, VALEUR_AJOUTEE, RENTABILITE, FONDS_DE_ROULEMENT, FINANCER_L_ENTREPRISE, EFFECTIF_ET_MASSE_SALARIALE, SALAIRE_BRUT_NET_COUT, RECRUTER, REMUNERATION_ET_MOTIVATION, FORMER, INDICATEURS_SOCIAUX, CHOISIR_SON_FOURNISSEUR, LE_CLIENT_QUI_PAIE_TARD, S_ASSURER_CONTRE_LES_ALEAS, LE_COUT_DE_LA_NON_QUALITE, LE_DEPART_D_UN_SALARIE, ENTRETENIR_L_OUTIL, LE_DIAGNOSTIC_STRATEGIQUE, SE_FIXER_DES_OBJECTIFS, COUTS_OU_DIFFERENCIATION, LIRE_LA_STRATEGIE_DES_CONCURRENTS, CROITRE_EN_INVESTISSANT, LA_RESPONSABILITE_SOCIETALE, LE_PROJET_D_ENTREPRISE, ORGANISER_L_ACTIVITE, DECIDER_AVEC_DES_CHIFFRES, EVALUER_SON_ACTIVITE, DES_DONNEES_A_L_INFORMATION, CONSTRUIRE_UN_INDICATEUR_JUSTE, UNE_DONNEE_FAUSSE, CE_QUE_COUTE_UN_OUTIL_NUMERIQUE, LE_COUT_MATIERE, OCCUPATION_ET_REVENU_PAR_CHAMBRE, LA_PRODUCTIVITE_DU_SERVICE, LE_PRIX_SELON_LA_SAISON, LA_DECLARATION_DE_TVA, LA_TVA_ET_LA_TRESORERIE, L_IMPOT_SUR_LES_SOCIETES, LE_DEFICIT_REPORTE, LE_STOCK_DE_SECURITE, CE_QUE_COUTE_UNE_LIVRAISON, LE_TAUX_DE_REMPLISSAGE, LIVRER_A_TEMPS];
 
 /**
  * Un chapitre, ou un cas pratique, par son code : la page d'un chapitre et la

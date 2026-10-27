@@ -176,7 +176,7 @@ export type Etape =
 
 export interface Chapitre {
   code: string;
-  parcours: "comptabilite-generale" | "controle-de-gestion" | "mco" | "ndrc" | "stmg" | "stmg-gf" | "stmg-rh" | "gpme" | "strategie" | "seconde-mg" | "stmg-sig" | "mhr" | "fiscalite" | "logistique";
+  parcours: "comptabilite-generale" | "controle-de-gestion" | "mco" | "ndrc" | "stmg" | "stmg-gf" | "stmg-rh" | "gpme" | "strategie" | "seconde-mg" | "stmg-sig" | "mhr" | "fiscalite" | "logistique" | "dscg-finance" | "cap-epc";
   palier: 1 | 2 | 3 | 4;
   /**
    * Les blocs de référentiel que le chapitre fait travailler, préfixés du diplôme dont ils

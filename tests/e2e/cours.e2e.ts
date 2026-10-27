@@ -646,6 +646,18 @@ describe.each([
   { code: "la-tva-avancee-pour-le-client", entreprise: "batiment" },
   { code: "la-depense-de-fin-d-annee", entreprise: "batiment", telephone: true },
   { code: "la-depense-de-l-annee-en-perte", entreprise: "bistrot" },
+  { code: "le-stock-de-securite", entreprise: "ecommerce" },
+  { code: "le-stock-de-securite", entreprise: "ecommerce", telephone: true },
+  { code: "ce-que-coute-une-livraison", entreprise: "transport" },
+  { code: "ce-que-coute-une-livraison", entreprise: "transport", telephone: true },
+  { code: "le-taux-de-remplissage", entreprise: "transport" },
+  { code: "le-taux-de-remplissage", entreprise: "transport", telephone: true },
+  { code: "livrer-a-temps", entreprise: "transport" },
+  { code: "livrer-a-temps", entreprise: "transport", telephone: true },
+  { code: "le-point-de-commande-avant-le-pic", entreprise: "ecommerce" },
+  { code: "le-gazole-qui-augmente", entreprise: "transport", telephone: true },
+  { code: "le-lot-de-la-bourse-de-fret", entreprise: "transport" },
+  { code: "combien-charger-pendant-la-panne", entreprise: "transport", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se
