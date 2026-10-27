@@ -389,3 +389,25 @@ describe("la TVA du dernier trimestre, sur les deux entreprises", () => {
     expect([...verdicts].sort()).toEqual(["plus-lourde"]);
   });
 });
+
+describe("l'exigibilité de la TVA est dite juste (travaux et services)", () => {
+  // MARTEL & FILS (travaux) et ROUTE & CIE (transport) vendent des services : leur TVA n'est due
+  // par défaut qu'à l'encaissement. L'arène la fait verser sur les factures : c'est l'option pour
+  // les débits, et chaque texte qui s'en sert doit la nommer (audit d'octobre 2026, défaut 2).
+  it.each(ENTREPRISES_OU_LA_TVA_JOUE)("chez %s, les deux chapitres et le cas disent l'option pour les débits", (code) => {
+    const cas = casDeLEntreprise(code);
+    const intro = (c: Chapitre) => {
+      const e = c.etapes[0]!;
+      return e.type === "lecture" ? e.texte(cas).join(" ") : "";
+    };
+    expect(intro(LA_DECLARATION_DE_TVA)).toMatch(/opté pour la TVA « d'après les débits »/);
+    expect(intro(LA_DECLARATION_DE_TVA)).toMatch(/à l'encaissement du prix, sauf si l'entreprise opte pour les débits/);
+    expect(intro(LA_TVA_ET_LA_TRESORERIE)).toMatch(/opté pour la TVA d'après les débits/);
+    expect(intro(LA_TVA_AVANCEE_POUR_LE_CLIENT)).toMatch(/a opté pour la TVA d'après les débits/);
+    const reponse = LA_TVA_AVANCEE_POUR_LE_CLIENT.etapes.at(-1)!;
+    if (reponse.type !== "choix") throw new Error("La réponse du cas est un choix");
+    const piege = reponse.options(cas, { soldes: {} }).find((o) => /qu'une fois payée par le client/.test(o.texte))!;
+    expect(piege.juste).toBe(false);
+    expect(piege.retour).toMatch(/ce serait vrai sans l'option/);
+  });
+});

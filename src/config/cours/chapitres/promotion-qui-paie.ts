@@ -177,12 +177,27 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
       },
       options: (c) => {
         const p = promotion(c);
+        // Trois issues : la promotion a payé (les ventes ont suivi au-delà du volume nécessaire), les
+        // ventes ont suivi sans l'atteindre (la remise coûte plus qu'elle ne rapporte), ou l'offre bloquait.
+        const paye = p.aSuivi && p.quantitePromo >= p.volumeNecessaire;
+        const pasAssez = p.aSuivi && !paye;
         const suivi = {
           texte: "Les clients ont répondu à la remise, et l'entreprise a pu les servir.",
-          juste: p.aSuivi,
-          retour: p.aSuivi
-            ? `Oui. La remise a attiré assez de clients, et ${c.entreprise} avait de quoi les servir : les ventes ont dépassé le volume nécessaire.`
-            : `Les clients ont bien répondu (les ventes manquées ont grimpé à ${qte(p.perduesPromo)}), mais ${c.entreprise} n'a pas pu les servir.`,
+          juste: paye,
+          retour: paye
+            ? `Oui. La remise a attiré assez de clients, et ${c.entreprise} avait de quoi les servir : ${qte(p.quantitePromo)} ventes pour ${qte(p.volumeNecessaire)} nécessaires.`
+            : pasAssez
+              ? `Ils ont répondu, et ${c.entreprise} les a servis, mais pas en nombre suffisant : ${qte(p.quantitePromo)} ventes pour ${qte(p.volumeNecessaire)} nécessaires. Cela n'explique pas le résultat.`
+              : `Les clients ont bien répondu (les ventes manquées ont grimpé à ${qte(p.perduesPromo)}), mais ${c.entreprise} n'a pas pu les servir.`,
+        };
+        const insuffisant = {
+          texte: "Les clients ont suivi, mais pas assez pour payer la remise donnée sur chaque vente.",
+          juste: pasAssez,
+          retour: pasAssez
+            ? `Oui. ${c.entreprise} a vendu ${qte(p.quantitePromo - p.quantite)} ${c.unites} de plus, mais il en fallait ${qte(p.volumeNecessaire - p.quantite)} pour garder sa marge : la remise, payée sur chaque vente, coûte plus que le volume ne rapporte.`
+            : paye
+              ? `Au contraire : ${qte(p.quantitePromo)} ventes, c'est au moins les ${qte(p.volumeNecessaire)} qu'il fallait pour garder la marge.`
+              : `Les ventes n'ont presque pas bougé : ce n'est pas l'élan des clients qui a manqué, c'est l'offre.`,
         };
         const bloque = {
           texte: "L'entreprise ne pouvait pas vendre plus : son stock ou sa capacité étaient déjà au maximum.",
@@ -193,6 +208,7 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
         };
         return [
           suivi,
+          insuffisant,
           bloque,
           {
             texte: "La remise était trop faible pour être vue.",

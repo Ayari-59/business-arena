@@ -66,7 +66,11 @@ describe.each(COMMERCES)("la promotion chez %s", (code) => {
     // L'arène a-t-elle vendu plus en promotion ? Lu sur ses chiffres, pas sur l'indicateur du chapitre.
     const aVenduPlus = baisse!.quantite > normal!.quantite * 1.01;
     expect(p.aSuivi).toBe(aVenduPlus);
-    expect(juste.texte).toMatch(aVenduPlus ? /ont répondu/ : /ne pouvait pas vendre plus/);
+    // Trois issues : vendre plus ET atteindre le volume nécessaire (la promotion paie), vendre plus
+    // sans l'atteindre (la remise coûte plus qu'elle ne rapporte), ou ne pas pouvoir vendre plus.
+    const paye = aVenduPlus && baisse!.quantite >= p.volumeNecessaire;
+    expect(juste.texte).toMatch(paye ? /ont répondu/ : aVenduPlus ? /pas assez pour payer la remise/ : /ne pouvait pas vendre plus/);
+    if (aVenduPlus && !paye) expect(p.gain).toBeLessThan(0);
     if (!aVenduPlus) expect(baisse!.perdues).toBeGreaterThan(normal!.perdues);
   });
 
