@@ -1,66 +1,39 @@
-import { montantEcrit as eur } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
-import { accord } from "../../accords";
+import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
 import type { Cas } from "../../cas";
-import { ecartsDuTrimestre } from "../../ecarts";
+import { ENTREPRISES_DES_VENTES, PRIX_DU_CURSEUR, tableauDesVentes, ventesEtMarge } from "../../chapitres/les-ecarts-sur-ventes-et-marge";
 import type { Situation } from "../types";
 
 /**
- * CAS PRATIQUE DU CHAPITRE « L'ANALYSE DES ÉCARTS » : L'OBJECTIF DU COMMERCIAL
- * (contrôle de gestion, palier 4).
+ * CAS PRATIQUE DU CHAPITRE « LES ÉCARTS SUR CHIFFRE D'AFFAIRES ET SUR MARGE » : L'OBJECTIF DU
+ * COMMERCIAL (contrôle de gestion, palier 4).
  *
- * La direction avait fixé au commercial un objectif pour le deuxième trimestre : vendre
- * plus qu'au premier, au même prix et à la même marge par unité. Avant son entretien
- * annuel, elle veut savoir ce que l'écart avec cet objectif a fait au résultat, et la part
- * qui revient aux quantités. L'élève refait seul le chemin du chapitre face à l'objectif :
- * l'écart sur chiffre d'affaires et sa décomposition, l'écart sur marge et ses deux
- * effets, l'écart sur résultat, puis la phrase qu'il rend.
+ * La direction avait fixé au commercial un objectif de chiffre d'affaires : celui du budget. Il
+ * annonce l'avoir tenu, à 400 € près. Avant son entretien, elle veut savoir ce que ses ventes ont
+ * fait à la marge. L'élève refait seul le chemin du chapitre : l'écart sur chiffre d'affaires et
+ * ses deux parts, l'écart sur prix modèle par modèle, l'écart sur marge à la marge préétablie, puis
+ * l'écart sur volume croisé en quantité globale et composition. La réponse demande un jugement :
+ * l'objectif est tenu, mais c'était le mauvais objectif. Un curseur sur le prix de la Nomade montre,
+ * avant la réponse, qu'un prix pouvait tenir l'objectif de chiffre d'affaires sans tenir la marge.
  *
- * Le cas est neuf par sa question : le prévu n'est plus le premier trimestre reconduit,
- * c'est l'objectif, plus haut. Le réalisé est celui du chapitre, le deuxième trimestre
- * joué par l'arène (`ecartsDuTrimestre`). Convention du chapitre : un écart est le
- * réalisé moins le prévu.
+ * Comme son chapitre, le cas se joue dans la simulation du cours (src/config/cours/monde) : ses
+ * chiffres sont ceux de `ventesEtMarge`, sur l'usine de NOVA. Convention : un écart est le réel
+ * moins le prévu ; sur un chiffre d'affaires ou une marge, positif est favorable.
  */
 
-/**
- * L'objectif de ventes donné au commercial : 5 % d'unités de plus qu'au premier
- * trimestre, l'ordre de grandeur d'un objectif de croissance annuel d'une petite
- * entreprise sur son marché.
- */
-export const OBJECTIF_DE_CROISSANCE = 0.05;
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
+const entre = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
+const auCentime = (x: number) => Math.round(x * 100) / 100;
+const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
 
-const qte = (n: number) => n.toLocaleString("fr-FR");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const entreParentheses = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-const signe = (x: number) => (x > 0 ? "favorable" : x < 0 ? "défavorable" : "nul");
+export type Verdict = "tenu-sans-la-marge" | "tenu";
 
-/** Les chiffres de la réponse, calculés une fois du cas. */
-export function objectifDuCommercial(c: Cas) {
-  const e = ecartsDuTrimestre(c.code);
-  const t1 = e.prevu;
-  const r = e.realise;
-  const quantite = Math.round(t1.quantite * (1 + OBJECTIF_DE_CROISSANCE));
-  const objectif = {
-    quantite,
-    prix: t1.prix,
-    margeUnitaire: t1.margeUnitaire,
-    chiffreDAffaires: auCentime(quantite * t1.prix),
-    marge: auCentime(quantite * t1.margeUnitaire),
-    chargesFixes: t1.chargesFixes,
-  };
-  const dq = r.quantite - objectif.quantite;
-  const chiffreDAffaires = {
-    total: auCentime(r.chiffreDAffaires - objectif.chiffreDAffaires),
-    volume: auCentime(dq * objectif.prix),
-    prix: auCentime((r.prix - objectif.prix) * r.quantite),
-  };
-  const marge = {
-    total: auCentime(r.marge - objectif.marge),
-    volume: auCentime(dq * objectif.margeUnitaire),
-    unitaire: auCentime((r.margeUnitaire - objectif.margeUnitaire) * r.quantite),
-  };
-  const chargesFixes = r.chargesFixes - objectif.chargesFixes;
-  return { t1, objectif, realise: r, dq, chiffreDAffaires, marge, chargesFixes, resultat: auCentime(marge.total - chargesFixes) };
+/** Les chiffres du cas, et le verdict : l'objectif de chiffre d'affaires a-t-il tenu la marge ? */
+export function objectifDuCommercial(c: Pick<Cas, "code">) {
+  const x = ventesEtMarge(c);
+  // Le modèle dont l'écart sur prix pèse le plus, en valeur absolue.
+  const prixLePlusLourd = x.parModele.reduce((a, b) => (Math.abs(b.prix) > Math.abs(a.prix) ? b : a));
+  const verdict: Verdict = x.ecartSurMarge < 0 ? "tenu-sans-la-marge" : "tenu";
+  return { x, prixLePlusLourd, verdict };
 }
 
 export const L_OBJECTIF_DU_COMMERCIAL: Situation = {
@@ -68,122 +41,178 @@ export const L_OBJECTIF_DU_COMMERCIAL: Situation = {
   parcours: "controle-de-gestion",
   palier: 4,
   blocs: [],
-  reprend: ["analyse-des-ecarts"],
+  reprend: ["les-ecarts-sur-ventes-et-marge"],
   commanditaire: "La direction",
   titre: "L'objectif du commercial",
   accroche:
-    "Le commercial avait un objectif de ventes pour le printemps. Avant son entretien, la direction veut savoir ce que l'écart avec l'objectif a fait au résultat, et ce qui revient aux quantités.",
+    "Le commercial avait un objectif de chiffre d'affaires, et il annonce l'avoir tenu. Avant son entretien, la direction veut savoir ce que ses ventes ont fait à la marge.",
   objectifs: [
-    "Bâtir le prévu d'un objectif de ventes et calculer l'écart sur chiffre d'affaires",
-    "Décomposer l'écart en écart sur quantités et écart sur prix",
-    "Décomposer l'écart sur marge en effet volume et effet de marge unitaire",
-    "Rédiger une réponse chiffrée à la direction",
+    "Décomposer l'écart sur chiffre d'affaires en écart sur prix, modèle par modèle, et écart sur quantités",
+    "Calculer l'écart sur marge à la marge préétablie",
+    "Croiser l'écart sur volume, la quantité globale et la composition des ventes",
+    "Juger un objectif de chiffre d'affaires, chiffres à l'appui",
   ],
   libre: false,
+  entreprises: {
+    codes: ENTREPRISES_DES_VENTES,
+    pourquoi: "ce cas reprend le chapitre « Les écarts sur chiffre d'affaires et sur marge », qui se calcule à la marge préétablie de l'usine du cours.",
+  },
   etapes: [
     {
       id: "demande",
       type: "lecture",
       titre: "La demande de la direction",
-      texte: (c) => [
-        `« Pour le deuxième trimestre, nous avions donné un objectif au commercial de ${c.entreprise} : vendre ${pct(OBJECTIF_DE_CROISSANCE)} d'unités de plus qu'au premier trimestre, au même prix moyen et à la même marge par unité. Je le reçois pour son entretien annuel. Que nous a fait l'écart avec cet objectif sur le résultat, et quelle part en revient aux quantités ? »`,
-        "Pas de cours cette fois : vous avez les chiffres des deux trimestres, et la méthode est celle du chapitre. À vous de l'enchaîner.",
-      ],
-      tableau: (c) => {
-        const o = objectifDuCommercial(c);
-        return {
-          titre: `Les deux trimestres · ${c.entreprise}`,
-          colonnes: ["Premier trimestre", "Deuxième trimestre"],
-          lignes: [
-            { libelle: `Unités vendues (${c.unites})`, valeurs: [qte(o.t1.quantite), qte(o.realise.quantite)] },
-            { libelle: "Prix moyen, hors taxes", valeurs: [eur(o.t1.prix), eur(o.realise.prix)] },
-            { libelle: "Marge sur coût variable par unité", valeurs: [eur(o.t1.margeUnitaire), eur(o.realise.margeUnitaire)] },
-            { libelle: "Charges fixes", valeurs: [eur(o.t1.chargesFixes), eur(o.realise.chargesFixes)] },
-            { libelle: "Objectif du deuxième trimestre : unités en plus", valeurs: ["", pct(OBJECTIF_DE_CROISSANCE)] },
-          ],
-        };
+      tableau: tableauDesVentes,
+      texte: (c) => {
+        const { x } = objectifDuCommercial(c);
+        return [
+          `« Nous avions fixé à notre commercial un objectif de chiffre d'affaires pour le trimestre : celui du budget, ${eur(x.caPrevu)}. Il a fait ${eur(x.caReel)}, et il annonce l'avoir tenu, à ${eur(Math.abs(x.ecartDeCa))} près. Je le reçois pour son entretien. Avant, je veux savoir ce que ses ventes ont fait à notre marge, et si l'objectif que nous lui avions donné était le bon. »`,
+          "Pas de cours cette fois : vous avez les ventes prévues et réelles, et la fiche de coût préétabli. La méthode est celle du chapitre, à vous de l'enchaîner.",
+        ];
       },
       repere: () =>
-        "À rendre : l'écart sur chiffre d'affaires et ses deux parts, l'écart sur marge et ses deux effets, l'écart sur résultat, et votre réponse. Un écart, c'est le réalisé moins le prévu.",
+        "À rendre : l'écart sur chiffre d'affaires et ses parts, l'écart sur marge à la marge préétablie, l'écart sur volume et ses deux parts, et votre réponse. Un écart, c'est le réel moins le prévu ; sur une vente ou une marge, positif est favorable.",
     },
     {
       id: "chiffre-d-affaires",
       type: "montants",
       titre: "L'écart sur chiffre d'affaires",
-      notions: ["volume_price_variance"],
-      question: () =>
-        "Le prévu, c'est l'objectif. Calculez la quantité de l'objectif (à l'unité), l'écart sur chiffre d'affaires, puis ses deux parts : l'écart sur quantités (au prix prévu) et l'écart sur prix (sur les quantités réelles). Négatif pour un écart défavorable.",
+      notions: ["volume_price_variance", "revenue"],
+      question: (c) => {
+        const { x } = objectifDuCommercial(c);
+        const [a, b] = x.parModele;
+        return `Calculez l'écart sur prix de la ${a!.nom}, celui de la ${b!.nom}, puis l'écart sur quantités, et vérifiez qu'ils font l'écart sur chiffre d'affaires. Négatif pour un écart défavorable.`;
+      },
       champs: (c) => {
-        const o = objectifDuCommercial(c);
-        const p = o.objectif;
-        const r = o.realise;
+        const { x } = objectifDuCommercial(c);
         return [
-          { libelle: "Quantité de l'objectif", attendu: p.quantite, tolerance: 1, calcul: `${qte(o.t1.quantite)} × (1 + ${pct(OBJECTIF_DE_CROISSANCE)}) ≈ ${qte(p.quantite)}` },
-          {
-            libelle: "Écart sur chiffre d'affaires",
-            attendu: o.chiffreDAffaires.total,
-            tolerance: Math.max(0.05, p.prix + 0.01),
-            calcul: `${qte(r.quantite)} × ${eur(r.prix)} − ${qte(p.quantite)} × ${eur(p.prix)} = ${eur(r.chiffreDAffaires)} − ${eur(p.chiffreDAffaires)} = ${eur(o.chiffreDAffaires.total)}`,
-          },
+          ...x.parModele.map((m) => ({
+            libelle: `Écart sur prix de la ${m.nom}`,
+            attendu: m.prix,
+            calcul: `(${eur(m.pr)} − ${eur(m.pp)}) × ${qte(m.qr)} = ${eur(m.prix)}`,
+          })),
           {
             libelle: "Écart sur quantités",
-            attendu: o.chiffreDAffaires.volume,
-            tolerance: Math.max(0.05, p.prix + 0.01),
-            calcul: `(${qte(r.quantite)} − ${qte(p.quantite)}) × ${eur(p.prix)} = ${eur(o.chiffreDAffaires.volume)}`,
-          },
-          {
-            libelle: "Écart sur prix",
-            attendu: o.chiffreDAffaires.prix,
-            tolerance: 0.05,
-            calcul: `(${eur(r.prix)} − ${eur(p.prix)}) × ${qte(r.quantite)} = ${eur(o.chiffreDAffaires.prix)}`,
+            attendu: x.quantitesSurCa,
+            calcul: `${x.parModele.map((m) => `(${qte(m.qr)} − ${qte(m.qp)}) × ${eur(m.pp)}`).join(" + ")} = ${eur(x.quantitesSurCa)}`,
           },
         ];
       },
       explication: (c) => {
-        const o = objectifDuCommercial(c);
+        const { x } = objectifDuCommercial(c);
         return [
-          `${o.dq >= 0 ? `Le commercial a dépassé l'objectif de ${qte(o.dq)} ${c.unites}` : `Le commercial a manqué l'objectif de ${qte(-o.dq)} ${c.unites}`} : écart sur quantités ${signe(o.chiffreDAffaires.volume)}, écart sur prix ${signe(o.chiffreDAffaires.prix)}. À eux deux, ils font l'écart sur chiffre d'affaires, ${eur(o.chiffreDAffaires.total)}.`,
+          `${x.parModele.map((m) => entre(m.prix)).join(" + ")} + ${entre(x.quantitesSurCa)} = ${eur(x.ecartDeCa)} : l'écart sur chiffre d'affaires. Le commercial a vendu plus de ${x.parModele[1]!.nom} et moins de ${x.parModele[0]!.nom}, et pas aux prix du budget.`,
         ];
       },
     },
     {
-      id: "marge-et-resultat",
+      id: "la-marge",
       type: "montants",
-      titre: "L'écart sur marge et sur résultat",
-      notions: ["contribution_margin", "volume_price_variance"],
+      titre: "L'écart sur marge",
+      notions: ["contribution_margin", "standard_costing"],
       question: () =>
-        "Faites de même avec la marge sur coût variable : l'effet du volume (à la marge unitaire prévue), l'effet de la marge unitaire (sur les quantités réelles). Puis l'écart sur le résultat d'exploitation, une fois comparées les charges fixes.",
+        "Les coûts de production ne sont pas l'affaire du commercial : jugez ses ventes à la marge préétablie. Calculez la marge préétablie prévue, la marge réelle au coût préétabli, puis l'écart sur marge. Négatif pour un écart défavorable.",
       champs: (c) => {
-        const o = objectifDuCommercial(c);
-        const p = o.objectif;
-        const r = o.realise;
+        const { x } = objectifDuCommercial(c);
         return [
           {
-            libelle: "Effet du volume sur la marge",
-            attendu: o.marge.volume,
-            tolerance: Math.max(0.05, p.margeUnitaire + 0.01),
-            calcul: `(${qte(r.quantite)} − ${qte(p.quantite)}) × ${eur(p.margeUnitaire)} = ${eur(o.marge.volume)}`,
+            libelle: "Marge préétablie prévue",
+            attendu: x.margePrevue,
+            calcul: `${x.parModele.map((m) => `${qte(m.qp)} × (${eur(m.pp)} − ${eur(m.coutPreetabli)})`).join(" + ")} = ${eur(x.margePrevue)}`,
           },
           {
-            libelle: "Effet de la marge unitaire",
-            attendu: o.marge.unitaire,
-            tolerance: 0.05,
-            calcul: `(${eur(r.margeUnitaire)} − ${eur(p.margeUnitaire)}) × ${qte(r.quantite)} = ${eur(o.marge.unitaire)}`,
+            libelle: "Marge réelle au coût préétabli",
+            attendu: x.margeReelle,
+            calcul: `${x.parModele.map((m) => `${qte(m.qr)} × (${eur(m.pr)} − ${eur(m.coutPreetabli)})`).join(" + ")} = ${eur(x.margeReelle)}`,
+          },
+          { libelle: "Écart sur marge", attendu: x.ecartSurMarge, calcul: `${eur(x.margeReelle)} − ${eur(x.margePrevue)} = ${eur(x.ecartSurMarge)}` },
+        ];
+      },
+      explication: (c) => {
+        const { x } = objectifDuCommercial(c);
+        return [
+          `Le chiffre d'affaires est à ${eur(x.ecartDeCa)} du budget, la marge à ${eur(x.ecartSurMarge)}. L'écart sur prix, ${eur(x.prix)}, passe tout entier dans la marge ; les quantités n'y ajoutent que ${eur(x.volume)}.`,
+        ];
+      },
+    },
+    {
+      id: "le-volume",
+      type: "montants",
+      titre: "Ce que cache le volume",
+      notions: ["contribution_margin", "volume_price_variance"],
+      question: () =>
+        "Calculez l'écart sur volume à la marge préétablie, puis partagez-le en écart sur quantité globale et écart sur composition des ventes. Négatif pour un écart défavorable.",
+      champs: (c) => {
+        const { x } = objectifDuCommercial(c);
+        return [
+          {
+            libelle: "Écart sur volume",
+            attendu: x.volume,
+            calcul: `${x.parModele.map((m) => `(${qte(m.qr)} − ${qte(m.qp)}) × ${eur(m.margePreetablie)}`).join(" + ")} = ${eur(x.volume)}`,
           },
           {
-            libelle: "Écart sur résultat d'exploitation",
-            attendu: o.resultat,
-            tolerance: Math.max(0.05, p.margeUnitaire + 0.01),
-            calcul: `${eur(o.marge.volume)} + ${entreParentheses(o.marge.unitaire)} − ${entreParentheses(o.chargesFixes)} d'écart sur charges fixes = ${eur(o.resultat)}`,
+            libelle: "Écart sur quantité globale",
+            attendu: x.quantiteGlobale,
+            calcul: `(${qte(x.qTotaleReelle)} − ${qte(x.qTotalePrevue)}) × (${eur(x.margePrevue)} ÷ ${qte(x.qTotalePrevue)}) = (${qte(x.qTotaleReelle)} − ${qte(x.qTotalePrevue)}) × ${eur(x.margeMoyennePrevue)} = ${eur(x.quantiteGlobale)}`,
+          },
+          {
+            libelle: "Écart sur composition des ventes",
+            attendu: x.composition,
+            calcul: `${x.parModele.map((m) => `(${qte(m.qr)} − ${qte(m.auMixPrevu)}) × ${eur(m.margePreetablie)}`).join(" + ")} = ${eur(x.composition)}`,
           },
         ];
       },
       explication: (c) => {
-        const o = objectifDuCommercial(c);
+        const { x } = objectifDuCommercial(c);
         return [
-          `Le volume pèse ${eur(o.chiffreDAffaires.volume)} sur le chiffre d'affaires, mais ${eur(o.marge.volume)} sur la marge : une unité vendue ou manquée emporte son coût variable avec elle. ${
-            o.chargesFixes === 0 ? "Les charges fixes sont celles prévues : l'écart sur résultat est l'écart sur marge." : `Les charges fixes s'écartent de ${eur(o.chargesFixes)}.`
-          }`,
+          `${eur(x.quantiteGlobale)} + ${entre(x.composition)} = ${eur(x.volume)} : les deux lectures du volume concordent. L'usine a vendu ${qte(Math.abs(x.ecartDeQuantiteTotale))} enceintes de moins que prévu ; le glissement vers la ${x.parModele[1]!.nom}, plus margée, a presque tout compensé.`,
+        ];
+      },
+    },
+    {
+      id: "le-prix-qui-tenait",
+      type: "curseur",
+      titre: "Le prix qui tenait la marge",
+      notions: ["contribution_margin", "volume_price_variance"],
+      question: (c) => {
+        const { x } = objectifDuCommercial(c);
+        const [a] = x.parModele;
+        return `Les quantités vendues restent celles du trimestre. Faites varier le prix réel de la ${a!.nom} et regardez le chiffre d'affaires et la marge réagir. Placez le curseur sur le plus petit prix qui tient la marge prévue, puis validez.`;
+      },
+      grandeur: (c) => ({ libelle: `Prix de la ${objectifDuCommercial(c).x.parModele[0]!.nom}`, unite: "€" }),
+      cible: (c) => {
+        const { x } = objectifDuCommercial(c);
+        return { attendu: x.prixQuiTientLaMarge, min: PRIX_DU_CURSEUR.min, max: PRIX_DU_CURSEUR.max };
+      },
+      zones: ["Marge prévue tenue", "Marge prévue manquée"],
+      rates: () => ({
+        dessous: "À ce prix, la marge du trimestre reste sous la marge prévue.",
+        dessus: "Un prix plus bas tient encore la marge prévue : cherchez le plus petit.",
+      }),
+      montrer: "Montrer le prix",
+      lecture: (c, p) => {
+        const { x } = objectifDuCommercial(c);
+        const [a, b] = x.parModele;
+        const marge = auCentime(a!.qr * (p - a!.coutPreetabli) + b!.margeReelle);
+        return [
+          { libelle: "Écart sur chiffre d'affaires", montant: auCentime(a!.qr * p + b!.caReel - x.caPrevu) },
+          { libelle: "Écart sur marge", montant: auCentime(marge - x.margePrevue), fort: true },
+        ];
+      },
+      droites: (c) => {
+        const { x } = objectifDuCommercial(c);
+        const [a, b] = x.parModele;
+        return {
+          produit: (p) => a!.qr * (p - a!.coutPreetabli) + b!.margeReelle,
+          cout: () => x.margePrevue,
+          libelles: ["Marge du trimestre, au coût préétabli", "Marge prévue"],
+        };
+      },
+      explication: (c) => {
+        const { x } = objectifDuCommercial(c);
+        const [a] = x.parModele;
+        return [
+          `L'objectif de chiffre d'affaires était tenu dès ${eur(x.prixQuiTientLeChiffre)} la ${a!.nom} ; la marge prévue demandait ${eur(x.prixQuiTientLaMarge)}. Entre les deux, le commercial dépasse son objectif tout en faisant perdre de la marge : l'objectif mesurait autre chose que ce qu'il fallait tenir.`,
         ];
       },
     },
@@ -191,27 +220,37 @@ export const L_OBJECTIF_DU_COMMERCIAL: Situation = {
       id: "reponse",
       type: "choix",
       titre: "Votre réponse à la direction",
-      question: () => "Quelle phrase envoyez-vous à la direction ?",
+      notions: ["contribution_margin", "volume_price_variance"],
+      question: () => "Quelle réponse rendez-vous à la direction avant l'entretien ?",
       options: (c) => {
-        const o = objectifDuCommercial(c);
-        const gagne = o.marge.volume >= 0;
-        const verbe = gagne ? "rapporté" : "coûté";
-        const contraire = gagne ? "coûté" : "rapporté";
+        const { x, prixLePlusLourd: p, verdict } = objectifDuCommercial(c);
+        const chiffres = `Écart sur marge ${eur(x.ecartSurMarge)} : prix ${eur(x.prix)} (dont ${eur(p.prix)} sur la ${p.nom}), quantité globale ${eur(x.quantiteGlobale)}, composition ${eur(x.composition)}.`;
         return [
           {
-            texte: `Face à l'objectif, les quantités ont ${verbe} ${eur(Math.abs(o.marge.volume))} au résultat`,
-            juste: true,
-            retour: `Oui : ${qte(Math.abs(o.dq))} ${c.unites} ${gagne ? "de plus" : "de moins"} que l'objectif, à ${eur(o.objectif.margeUnitaire)} de marge ${accord(c, "chacun")}, font ${eur(o.marge.volume)}. ${o.resultat === o.marge.volume ? "C'est tout l'écart sur résultat : la marge unitaire et les charges fixes sont celles prévues." : `Sur l'écart total de ${eur(o.resultat)}, le reste vient de la marge unitaire${o.chargesFixes ? " et des charges fixes" : ""}.`}`,
+            texte: `Objectif tenu, mais il coûte ${eur(Math.abs(x.ecartSurMarge))} de marge : il faut le fixer en marge`,
+            juste: verdict === "tenu-sans-la-marge",
+            retour:
+              verdict === "tenu-sans-la-marge"
+                ? `Oui. ${chiffres} Un objectif de chiffre d'affaires peut se tenir en cédant sur les prix : il ne protège pas la marge. Le commercial répond des prix et de la composition ; la quantité globale tient aussi au marché. Les causes, l'entretien les dira : les écarts disent où chercher.`
+                : `Non. ${chiffres}`,
           },
           {
-            texte: `Face à l'objectif, les quantités ont ${verbe} ${eur(Math.abs(o.chiffreDAffaires.volume))} au résultat : c'est l'écart sur quantités`,
-            juste: false,
-            retour: `Non : ${eur(o.chiffreDAffaires.volume)}, c'est l'effet sur le chiffre d'affaires. Une unité de ${gagne ? "plus" : "moins"} change le résultat de sa marge, ${eur(o.objectif.margeUnitaire)}, pas de son prix, ${eur(o.objectif.prix)} : son coût variable part avec elle.`,
+            texte: `Objectif tenu : ${eur(Math.abs(x.ecartDeCa))} sur ${eur(x.caPrevu)}, c'est négligeable, et les quantités ont rapporté ${eur(x.quantitesSurCa)}`,
+            juste: verdict === "tenu",
+            retour:
+              verdict === "tenu"
+                ? `Oui. ${chiffres}`
+                : `Non : un écart global faible cache deux écarts forts, et les quantités se jugent à la marge, pas au prix : elles font ${eur(x.volume)}, pas ${eur(x.quantitesSurCa)}. ${chiffres}`,
           },
           {
-            texte: `Face à l'objectif, les quantités ont ${contraire} ${eur(Math.abs(o.marge.volume))} au résultat`,
+            texte: `Ses ventes ont amélioré la marge : le mix lui fait gagner ${eur(Math.abs(x.composition))}, la prime est méritée`,
             juste: false,
-            retour: `Non : c'est lire l'écart à l'envers. Un écart est le réalisé moins le prévu ; sur une marge, ${gagne ? "positif, il est favorable" : "négatif, il est défavorable"}. Ici, ${eur(o.marge.volume)}.`,
+            retour: `Non : le mix ne se lit pas seul. Il compense ${eur(x.quantiteGlobale)} de quantité globale, et l'écart sur prix (${eur(x.prix)}) emporte le reste. ${chiffres}`,
+          },
+          {
+            texte: `La marge ne perd que ${eur(Math.abs(x.volume))} sur le volume : ses ventes n'y sont presque pour rien`,
+            juste: false,
+            retour: `Non : c'est oublier que l'écart sur prix de vente est un écart sur marge, et qu'il revient au commercial. ${chiffres}`,
           },
         ];
       },

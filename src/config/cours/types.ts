@@ -165,6 +165,57 @@ export interface EtapeCurseur extends Base {
   explication: (c: Cas) => string[];
 }
 
+/** Un levier du laboratoire : une grandeur que l'élève fait varier, de `min` à `max` par `pas`. */
+export interface LevierDeSimulation {
+  code: string;
+  libelle: string;
+  unite: string;
+  min: number;
+  max: number;
+  pas: number;
+  /** La position au départ : celle du cas, que l'élève déplace. */
+  depart: number;
+}
+
+/** Une ligne de ce que le laboratoire montre pour une position des leviers. */
+export interface LigneDeSimulation {
+  libelle: string;
+  montant: number;
+  /** L'unité de la ligne quand ce n'est pas l'euro (« kg », « heures-machine »). */
+  unite?: string;
+  /** Ce que vaut la ligne au départ, montré à côté : l'élève voit ce qu'il a changé. */
+  reference?: number;
+  /** Une ligne d'effet sur le résultat : une barre verte (favorable) ou rouge (défavorable). */
+  effet?: boolean;
+  fort?: boolean;
+}
+
+/**
+ * LE LABORATOIRE : plusieurs leviers à la fois, et leur impact en direct (demande du propriétaire,
+ * octobre 2026 : « toujours plus de simulation et de jeu pour montrer l'impact, une explication
+ * expérientielle »). L'élève déplace les leviers, voit chaque écart réagir, et relève un défi :
+ * une position qui atteint ce que le défi demande. Plusieurs positions peuvent le réussir ;
+ * `solution` en est une, celle que montre la correction.
+ */
+export interface EtapeSimulation extends Base {
+  type: "simulation";
+  question: (c: Cas) => string;
+  leviers: (c: Cas) => readonly LevierDeSimulation[];
+  lecture: (c: Cas, position: Readonly<Record<string, number>>) => readonly LigneDeSimulation[];
+  defi: (c: Cas) => {
+    /** Ce qu'il faut obtenir, en une phrase. */
+    consigne: string;
+    atteint: (position: Readonly<Record<string, number>>) => boolean;
+    /** Ce que l'élève lit quand sa position ne réussit pas encore le défi. */
+    indice: (position: Readonly<Record<string, number>>) => string;
+    solution: Readonly<Record<string, number>>;
+  };
+  /** Le bouton qui montre une solution. Absent : « Montrer une solution ». */
+  montrer?: string;
+  /** Ce que l'élève a vu, une fois le défi réussi, à la position où il l'a réussi. */
+  explication: (c: Cas, position: Readonly<Record<string, number>>) => string[];
+}
+
 export type Etape =
   | EtapeLecture
   | EtapeEcriture
@@ -172,7 +223,8 @@ export type Etape =
   | EtapeMontants
   | EtapeComparaison
   | EtapeTri
-  | EtapeCurseur;
+  | EtapeCurseur
+  | EtapeSimulation;
 
 export interface Chapitre {
   code: string;

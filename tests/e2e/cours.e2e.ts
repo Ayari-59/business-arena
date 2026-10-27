@@ -399,8 +399,11 @@ describe.each([
   { code: "cout-par-produit", entreprise: "boutique", telephone: true },
   { code: "budget-de-tresorerie", entreprise: "ecommerce", telephone: true },
   { code: "budget-de-tresorerie", entreprise: "transport" },
-  { code: "analyse-des-ecarts", entreprise: "boutique", telephone: true },
-  { code: "analyse-des-ecarts", entreprise: "hotel" },
+  { code: "le-cout-preetabli-et-les-budgets", entreprise: "nova" },
+  { code: "les-ecarts-sur-charges-directes", entreprise: "nova", telephone: true },
+  { code: "les-ecarts-sur-charges-indirectes", entreprise: "nova" },
+  { code: "les-ecarts-sur-ventes-et-marge", entreprise: "nova", telephone: true },
+  { code: "analyse-des-ecarts", entreprise: "nova", telephone: true },
   { code: "tableau-de-bord", entreprise: "nova", telephone: true },
   { code: "tableau-de-bord", entreprise: "conseil" },
   { code: "decider-prix-fabriquer-acheter", entreprise: "nova", telephone: true },
@@ -570,7 +573,11 @@ describe.each([
   { code: "un-nouveau-client-regulier", entreprise: "bistrot", telephone: true },
   { code: "la-cle-contestee", entreprise: "conseil" },
   { code: "un-trimestre-de-croissance", entreprise: "hotel", telephone: true },
-  { code: "l-objectif-du-commercial", entreprise: "fitness" },
+  { code: "le-budget-depasse", entreprise: "nova" },
+  { code: "le-fournisseur-ou-l-atelier", entreprise: "nova", telephone: true },
+  { code: "le-centre-qui-a-trop-tourne", entreprise: "nova", telephone: true },
+  { code: "l-objectif-du-commercial", entreprise: "nova" },
+  { code: "le-resultat-qui-manque", entreprise: "nova", telephone: true },
   { code: "regler-le-voyant", entreprise: "boutique", telephone: true },
   { code: "monter-son-prix", entreprise: "ecommerce" },
   { code: "garder-sa-part-de-marche", entreprise: "conseil", telephone: true },
@@ -788,6 +795,11 @@ describe.each([
       } else if (etape.type === "curseur") {
         const libelle = etape.grandeur?.(cas).libelle ?? "Ventes du mois";
         await page.getByLabel(`${libelle}, au clavier`, { exact: true }).fill(String(etape.cible(cas).attendu));
+        await page.getByRole("button", { name: "Valider cette position" }).click();      } else if (etape.type === "simulation") {
+        const solution = etape.defi(cas).solution;
+        for (const l of etape.leviers(cas)) {
+          await page.getByLabel(`${l.libelle}, au clavier`, { exact: true }).fill(virgule(solution[l.code]!));
+        }
         await page.getByRole("button", { name: "Valider cette position" }).click();
       }
       const dernier = i === chapitre.etapes.length - 1;
