@@ -798,7 +798,9 @@ describe.each([
         await page.getByRole("button", { name: "Valider cette position" }).click();      } else if (etape.type === "simulation") {
         const solution = etape.defi(cas).solution;
         for (const l of etape.leviers(cas)) {
-          await page.getByLabel(`${l.libelle}, au clavier`, { exact: true }).fill(virgule(solution[l.code]!));
+          const choix = l.choix?.find((x) => x.valeur === solution[l.code]);
+          if (choix) await page.locator(`[data-levier-a-choix="${l.code}"]`).getByRole("radio", { name: choix.libelle, exact: true }).check();
+          else await page.getByLabel(`${l.libelle}, au clavier`, { exact: true }).fill(virgule(solution[l.code]!));
         }
         await page.getByRole("button", { name: "Valider cette position" }).click();
       }

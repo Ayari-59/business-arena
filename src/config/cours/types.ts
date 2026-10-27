@@ -175,6 +175,25 @@ export interface LevierDeSimulation {
   pas: number;
   /** La position au départ : celle du cas, que l'élève déplace. */
   depart: number;
+  /**
+   * Un levier à choix : deux méthodes ou plus, nommées (« linéaire » ou « dégressif », « débits » ou
+   * « encaissements »), chacune codée par une valeur. L'élève choisit d'un geste au lieu de glisser ;
+   * `min` et `max` sont la plus petite et la plus grande valeur, `pas` sans effet.
+   */
+  choix?: readonly { valeur: number; libelle: string }[];
+}
+
+/**
+ * Le graphique du laboratoire : une à trois courbes tracées point par point en faisant varier un
+ * levier (les autres à leur position du moment), pour ce qu'un curseur ne sait pas tracer, une
+ * courbe qui n'est pas une droite (la VAN selon le taux, la demande selon le prix).
+ */
+export interface GraphiqueDeSimulation {
+  /** Le levier en abscisse : un levier qui glisse, pas un levier à choix. */
+  levier: string;
+  courbes: readonly { libelle: string; valeur: (position: Readonly<Record<string, number>>) => number }[];
+  /** L'unité de l'axe des montants. Absent : l'euro. */
+  unite?: string;
 }
 
 /** Une ligne de ce que le laboratoire montre pour une position des leviers. */
@@ -210,6 +229,8 @@ export interface EtapeSimulation extends Base {
     indice: (position: Readonly<Record<string, number>>) => string;
     solution: Readonly<Record<string, number>>;
   };
+  /** Un graphique, montré sous les leviers. Absent : le tableau seul. */
+  graphique?: (c: Cas) => GraphiqueDeSimulation;
   /** Le bouton qui montre une solution. Absent : « Montrer une solution ». */
   montrer?: string;
   /** Ce que l'élève a vu, une fois le défi réussi, à la position où il l'a réussi. */
