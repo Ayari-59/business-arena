@@ -1,6 +1,6 @@
 import { botDecisions, soldByProduct, type BotProfile } from "../../engine/bots";
 import { soldUnits, type DecisionProvider, type DecisionProviderContext } from "../../engine/simulation/runGame";
-import type { CompanyState, EngineScenarioConfig, RoundDecisions } from "../../engine/types";
+import type { CompanyRoundResult, CompanyState, EngineScenarioConfig, RoundDecisions } from "../../engine/types";
 import { decisionDeReference } from "../../pedagogy/merite/reference";
 import { presetByLevel, type DifficultyPreset } from "../difficulty";
 import { composerLeScenarioJoue, CORRECTIFS_DES_PARTIES_NOUVELLES } from "../scenarios/scenario-joue";
@@ -45,6 +45,36 @@ export const GRAINE_DU_COURS = 20260101;
 /** Le joueur et les deux premiers concurrents du scénario. */
 const ENTREPRISES_DE_L_ANNEE = 3;
 
+/**
+ * LES CHIFFRES QU'UNE GESTION LIT, ARRONDIS AU BRUIT DES MOTEURS PRÈS.
+ *
+ * Le cours se calcule dans le navigateur de l'élève, et sur le serveur pour la projection
+ * de l'enseignant. Les moteurs JavaScript n'arrondissent pas tous au même dernier chiffre
+ * `Math.pow`, `Math.exp` ou `Math.log` (mesuré en octobre 2026 : Node 22 et Chromium
+ * diffèrent sur un tiers des valeurs, vers 10⁻¹³). Les ventes de l'arène en héritent, et
+ * une gestion qui compare ce qu'elle lit à un seuil peut basculer d'un côté dans un
+ * navigateur et de l'autre sur le serveur : chez NOVA, le plan du bon gestionnaire au
+ * quatrième trimestre valait 6 666,67 ici et 6 665,71 là. Chaque gestion du cours décide
+ * donc sur l'état et le tour passé arrondis à `CHIFFRES_LUS` chiffres significatifs, qui
+ * effacent ce bruit ; le moteur, lui, joue les décisions telles quelles.
+ */
+export const CHIFFRES_LUS = 12;
+
+/** Une copie où chaque nombre est arrondi à `CHIFFRES_LUS` chiffres significatifs. */
+export function auBruitPres<T>(x: T): T {
+  if (typeof x === "number") return (Number.isFinite(x) && x !== 0 ? Number(x.toPrecision(CHIFFRES_LUS)) : x) as T;
+  if (Array.isArray(x)) return x.map(auBruitPres) as T;
+  if (x !== null && typeof x === "object") {
+    return Object.fromEntries(Object.entries(x as Record<string, unknown>).map(([k, v]) => [k, auBruitPres(v)])) as T;
+  }
+  return x;
+}
+
+/** Ce qu'une gestion lit pour décider : l'état et le tour passé, au bruit des moteurs près. */
+function contexteLu(ctx: DecisionProviderContext): { state: CompanyState; avant: CompanyRoundResult | undefined } {
+  return { state: auBruitPres(ctx.state), avant: ctx.lastResult ? auBruitPres(ctx.lastResult) : undefined };
+}
+
 /** Le scénario du registre, joué sur `tours` trimestres avec les correctifs des parties nouvelles. */
 export function scenarioDuCours(scenario: EngineScenarioConfig, tours: number): EngineScenarioConfig {
   return composerLeScenarioJoue({
@@ -63,10 +93,10 @@ export function decisionDuCours(
   scenario: EngineScenarioConfig,
   ctx: DecisionProviderContext,
 ): RoundDecisions {
-  const avant = ctx.lastResult;
+  const { state, avant } = contexteLu(ctx);
   return botDecisions(profil, {
     scenario,
-    state: ctx.state,
+    state,
     roundIndex: ctx.roundIndex,
     lastSoldUnits: avant ? soldUnits(avant) : undefined,
     lastSoldByProduct: avant ? soldByProduct(scenario, avant.market.bySegment) : undefined,
@@ -99,11 +129,11 @@ export function decisionsDuCours(
 ): Record<string, DecisionProvider> {
   let precedente: RoundDecisions | undefined;
   const joueur: DecisionProvider = (ctx) => {
-    const avant = ctx.lastResult;
+    const { state, avant } = contexteLu(ctx);
     const base = decisionDeReference(
       {
         scenario,
-        state: ctx.state,
+        state,
         roundIndex: ctx.roundIndex,
         lastSoldUnits: avant ? soldUnits(avant) : undefined,
         lastSoldByProduct: avant ? soldByProduct(scenario, avant.market.bySegment) : undefined,

@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { anneeJouee, GRAINE_DU_COURS } from "../../src/config/cours/cas";
-import { decisionsDuCours, JOUEUR, LEVIERS_DE_L_ELEVE, NIVEAU_DE_L_ELEVE, scenarioDuCours } from "../../src/config/cours/arene-du-cours";
+import { auBruitPres, decisionsDuCours, JOUEUR, LEVIERS_DE_L_ELEVE, NIVEAU_DE_L_ELEVE, scenarioDuCours } from "../../src/config/cours/arene-du-cours";
 import { NIVEAU_SANS_LICENCE } from "../../src/config/cours/jouez";
 import { soldByProduct } from "../../src/engine/bots";
 import { runGame, soldUnits, type DecisionProviderContext } from "../../src/engine/simulation/runGame";
@@ -76,11 +76,11 @@ describe("l'arène du cours", () => {
     });
     expect(vus).toHaveLength(4);
     for (const [k, { ctx, d }] of vus.entries()) {
-      const avant = ctx.lastResult;
+      const avant = ctx.lastResult ? auBruitPres(ctx.lastResult) : undefined;
       const attendue = decisionDeReference(
         {
           scenario,
-          state: ctx.state,
+          state: auBruitPres(ctx.state),
           roundIndex: ctx.roundIndex,
           lastSoldUnits: avant ? soldUnits(avant) : undefined,
           lastSoldByProduct: avant ? soldByProduct(scenario, avant.market.bySegment) : undefined,
@@ -96,6 +96,21 @@ describe("l'arène du cours", () => {
     // Et c'est bien cette année-là que le cours lit, au centime.
     const resultats = (p: typeof partie) => p.rounds.map((t) => t.results[JOUEUR]!.incomeStatement.netIncome);
     expect(resultats(anneeJouee(code).partie)).toEqual(resultats(partie));
+  });
+
+  it("une gestion lit les chiffres au bruit des moteurs près : deux moteurs qui diffèrent au dernier chiffre lisent la même chose", () => {
+    // Node et Chromium diffèrent vers 10⁻¹³ sur Math.pow, Math.exp, Math.log (arene-du-cours.ts).
+    for (const x of [1439.4447212466566, 3000.8335573603763, -11524.354683295227, 0.123456789012345, 5245.086614691196]) {
+      const voisin = x * (1 + 4 * Number.EPSILON);
+      expect(voisin).not.toBe(x);
+      expect(auBruitPres(voisin)).toBe(auBruitPres(x));
+    }
+    expect(auBruitPres({ a: [1 / 3, { b: 2 / 3 }], c: "texte", d: null, e: Infinity })).toEqual({
+      a: [0.333333333333, { b: 0.666666666667 }],
+      c: "texte",
+      d: null,
+      e: Infinity,
+    });
   });
 
   it("l'élève décide avec les leviers du niveau qu'il joue sans licence", () => {
