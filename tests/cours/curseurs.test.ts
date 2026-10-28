@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { casDeLEntreprise } from "../../src/config/cours/cas";
 import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
 import { CHAPITRES } from "../../src/config/cours/registre";
+import { SITUATIONS } from "../../src/config/cours/situations";
 import { chapitreDuCas } from "../../src/pedagogy/cours/deroule";
 import type { EtapeCurseur } from "../../src/config/cours/types";
 
@@ -14,7 +15,8 @@ import type { EtapeCurseur } from "../../src/config/cours/types";
  * disent donc la même chose. La lecture ne sort ni NaN ni « undefined ».
  */
 
-const curseurs = CHAPITRES.flatMap((chapitre) =>
+// Les chapitres et les cas pratiques : un curseur de cas obéit aux mêmes règles.
+const curseurs = [...CHAPITRES, ...SITUATIONS].flatMap((chapitre) =>
   ENTREPRISES_DU_COURS.filter((code) => !chapitre.entreprises || chapitre.entreprises.codes.includes(code)).flatMap((code) => {
     const cas = casDeLEntreprise(code);
     return chapitreDuCas(chapitre, cas)

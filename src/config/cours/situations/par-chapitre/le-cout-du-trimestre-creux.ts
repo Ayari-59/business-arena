@@ -23,6 +23,12 @@ import type { Situation } from "../types";
  * Comme son chapitre, le cas se joue dans la simulation du cours (src/config/cours/monde), pas dans
  * l'arène : les chiffres sont ceux de l'année du service au prix de l'année
  * (`productiviteDuService`, monde/service.ts).
+ *
+ * LE CURSEUR ET LE CROISEMENT (demande du propriétaire, octobre 2026 : un cas aussi exigeant que son
+ * chapitre) : au curseur, les clients du trimestre creux face au coût moyen de l'année ; puis l'autre
+ * levier, à rebours : l'équipe la plus grande qui tenait ce coût sans un client de plus, et ce que
+ * chacun de ses salariés aurait servi par jour, face au trimestre le plus chargé. La réponse croise
+ * les deux : la même équipe ne le pouvait pas, une équipe à la mesure du creux le pouvait-elle ?
  */
 
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
@@ -34,7 +40,7 @@ const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` 
 /** Le pronom qui reprend les unités : « ceux » (les couverts), « celles » (les nuitées). */
 const ceux = (p: ProductiviteDuService) => (accord(p, "un") === "une" ? "celles" : "ceux");
 
-export type Verdict = "possible" | "demande" | "capacite";
+export type Verdict = "possible" | "equipe" | "demande" | "capacite";
 
 /** L'objectif de la direction, et ce qu'il demandait au trimestre creux. */
 export function coutDuTrimestreCreux(c: Pick<Cas, "code">) {
@@ -43,9 +49,16 @@ export function coutDuTrimestreCreux(c: Pick<Cas, "code">) {
   const venduesDeLAnnee = p.trimestres.reduce((t, x) => t + x.vendues, 0);
   const coutDeLAnnee = auCentime(personnelDeLAnnee / venduesDeLAnnee);
   const aServir = Math.ceil(p.creux.personnel / coutDeLAnnee - 1e-9);
+  // L'autre levier : l'équipe la plus grande qui tenait le coût de l'année sans un client de plus, et
+  // ce que chacun de ses salariés aurait servi par jour, face au trimestre le plus chargé.
+  const equipeMax = Math.floor((coutDeLAnnee * p.creux.vendues) / p.coutDUnSalarie + 1e-9);
+  const personnelReduit = auCentime(equipeMax * p.coutDUnSalarie);
+  const parJourReduit = Math.round((p.creux.vendues / (equipeMax * p.jours)) * 100) / 100;
+  const equipePossible = equipeMax > 0 && p.creux.vendues * p.plein.effectif <= p.plein.vendues * equipeMax;
   // « possible » ne sort pas de la simulation : le trimestre creux sert déjà toute sa demande, et
   // il lui faudrait plus pour revenir au coût de l'année. La réponse reste offerte à l'élève.
-  const verdict: Verdict = aServir > p.capacite ? "capacite" : aServir > p.creux.demande ? "demande" : "possible";
+  const verdict: Verdict =
+    aServir <= p.creux.demande ? "possible" : aServir > p.capacite && !equipePossible ? "capacite" : equipePossible ? "equipe" : "demande";
   return {
     p,
     personnelDeLAnnee,
@@ -54,6 +67,13 @@ export function coutDuTrimestreCreux(c: Pick<Cas, "code">) {
     aServir,
     enPlus: aServir - p.creux.vendues,
     productiviteVisee: auDixieme(aServir / p.creux.effectif),
+    equipeMax,
+    personnelReduit,
+    coutReduit: auCentime(personnelReduit / p.creux.vendues),
+    parJourReduit,
+    equipePossible,
+    /** Les bornes du curseur : des clients du trimestre creux, au millier inférieur, à la capacité. */
+    curseur: { min: Math.floor(p.creux.vendues / 1000) * 1000, max: p.capacite },
     verdict,
   };
 }
@@ -87,6 +107,7 @@ export const LE_COUT_DU_TRIMESTRE_CREUX: Situation = {
     "Remonter d'un objectif de coût au volume qu'il exige",
     "Calculer la productivité que cet objectif demande",
     "Confronter l'objectif à la demande et à la capacité de service",
+    "Croiser le coût du personnel et la productivité d'une équipe réduite",
   ],
   libre: false,
   entreprises: {
@@ -107,7 +128,8 @@ export const LE_COUT_DU_TRIMESTRE_CREUX: Situation = {
           `Pas de cours cette fois : les calculs sont ceux du chapitre, dans la simulation du cours. ${majuscule(k.p.mots.etablissement)} peut ${k.p.mots.infinitif} au plus ${qte(k.p.capacite)} ${k.p.unites} par trimestre, et garde la même équipe toute l'année.`,
         ];
       },
-      repere: () => "À rendre : le coût du personnel par client sur l'année, ce qu'il fallait servir au trimestre creux pour y revenir, et votre réponse.",
+      repere: () =>
+        "À rendre : le coût du personnel par client sur l'année, ce qu'il fallait servir au trimestre creux pour y revenir, l'équipe qui y revenait sans un client de plus, et votre réponse.",
     },
     {
       id: "l-annee",
@@ -144,6 +166,54 @@ export const LE_COUT_DU_TRIMESTRE_CREUX: Situation = {
         const k = coutDuTrimestreCreux(c);
         return [
           `Sur l'année, le personnel coûte ${eur(k.coutDeLAnnee)} par ${k.p.unite} ; au ${rang(k.p.creux.numero)} trimestre, ${eur(k.p.creux.coutParUnite)}.`,
+        ];
+      },
+    },
+    {
+      id: "le-cout-moyen-au-curseur",
+      type: "curseur",
+      titre: "Le trimestre creux au coût moyen",
+      notions: ["productivity", "fixed_costs"],
+      question: (c) => {
+        const k = coutDuTrimestreCreux(c);
+        return `Faites varier les ${k.p.mots.servies} au ${rang(k.p.creux.numero)} trimestre, avec la même équipe. Une droite donne ce que le personnel peut coûter à ${eur(k.coutDeLAnnee)} par ${k.p.unite}, le coût moyen de l'année ; l'autre, ce qu'il coûte, ${eur(k.p.creux.personnel)}. Placez le curseur sur le moins de ${k.p.unites} qui revient au coût moyen, puis validez.`;
+      },
+      grandeur: (c) => {
+        const k = coutDuTrimestreCreux(c);
+        return { libelle: `${majuscule(k.p.mots.servies)} au trimestre creux`, unite: k.p.unites };
+      },
+      cible: (c) => {
+        const k = coutDuTrimestreCreux(c);
+        return { attendu: k.aServir, min: k.curseur.min, max: k.curseur.max };
+      },
+      zones: ["Au coût moyen ou moins", "Au-dessus du coût moyen"],
+      rates: () => ({
+        dessous: "Avec si peu de clients, chacun coûte plus que le coût moyen de l'année.",
+        dessus: "Moins de clients suffiraient encore : cherchez le plus petit nombre.",
+      }),
+      montrer: "Montrer le nombre de clients",
+      lecture: (c, n) => {
+        const k = coutDuTrimestreCreux(c);
+        const permis = auCentime(k.coutDeLAnnee * n);
+        return [
+          { libelle: "Ce que le coût moyen laisse au personnel", montant: permis },
+          { libelle: "Coût du personnel du trimestre", montant: k.p.creux.personnel },
+          { libelle: `Coût du personnel par ${k.p.unite}`, montant: auCentime(k.p.creux.personnel / n) },
+          { libelle: "Écart avec le coût du personnel", montant: auCentime(permis - k.p.creux.personnel), fort: true },
+        ];
+      },
+      droites: (c) => {
+        const k = coutDuTrimestreCreux(c);
+        return {
+          produit: (n) => k.coutDeLAnnee * n,
+          cout: () => k.p.creux.personnel,
+          libelles: ["Ce que le coût moyen laisse au personnel", "Coût du personnel du trimestre"],
+        };
+      },
+      explication: (c) => {
+        const k = coutDuTrimestreCreux(c);
+        return [
+          `Avec la même équipe, il fallait ${qte(k.aServir)} ${k.p.unites} au ${rang(k.p.creux.numero)} trimestre pour revenir au coût moyen ; ${qte(k.p.creux.demande)} ont été ${accord(k.p, "demandé")}s, et la capacité était de ${qte(k.p.capacite)}.`,
         ];
       },
     },
@@ -187,33 +257,71 @@ export const LE_COUT_DU_TRIMESTRE_CREUX: Situation = {
       },
     },
     {
+      id: "l-autre-levier",
+      type: "montants",
+      titre: "L'autre levier : l'équipe du creux",
+      notions: ["productivity", "payroll", "capacity"],
+      question: (c) => {
+        const k = coutDuTrimestreCreux(c);
+        return `Et sans un client de plus ? Remontez du coût moyen de l'année à l'équipe la plus grande qui le tenait au ${rang(k.p.creux.numero)} trimestre, puis calculez le coût du personnel par ${k.p.unite} avec cette équipe, et les ${k.p.unites} que chacun de ses salariés aurait ${accord(k.p, "servi")}s par jour.`;
+      },
+      champs: (c) => {
+        const k = coutDuTrimestreCreux(c);
+        return [
+          {
+            libelle: "Salariés au plus, sans client de plus",
+            attendu: k.equipeMax,
+            calcul: `${eur(k.coutDeLAnnee)} × ${qte(k.p.creux.vendues)} ÷ ${eur(k.p.coutDUnSalarie)} = ${qte(Math.round(((k.coutDeLAnnee * k.p.creux.vendues) / k.p.coutDUnSalarie) * 100) / 100)}, soit ${qte(k.equipeMax)} salariés`,
+            tolerance: 0,
+          },
+          {
+            libelle: `Coût du personnel par ${k.p.unite}, équipe réduite`,
+            attendu: k.coutReduit,
+            calcul: `${qte(k.equipeMax)} × ${eur(k.p.coutDUnSalarie)} ÷ ${qte(k.p.creux.vendues)} = ${eur(k.coutReduit)}`,
+          },
+          {
+            libelle: `${majuscule(k.p.unites)} par salarié et par jour, équipe réduite`,
+            attendu: k.parJourReduit,
+            calcul: `${qte(k.p.creux.vendues)} ÷ (${qte(k.equipeMax)} × ${qte(k.p.jours)}) = ${qte(k.parJourReduit)}`,
+            tolerance: 0.01,
+          },
+        ];
+      },
+      explication: (c) => {
+        const k = coutDuTrimestreCreux(c);
+        return [
+          `Au trimestre le plus chargé, chaque salarié a servi ${qte(k.p.plein.parSalarieEtParJour)} ${k.p.unites} par jour. ${
+            k.equipePossible
+              ? `Une équipe de ${qte(k.equipeMax)} en aurait servi ${qte(k.parJourReduit)} : elle pouvait tenir le creux, au coût de ${eur(k.coutReduit)} par ${k.p.unite}.`
+              : `Une équipe de ${qte(k.equipeMax)} en aurait servi ${qte(k.parJourReduit)} : plus qu'au plus fort de l'année, elle ne pouvait pas tenir le creux.`
+          }`,
+        ];
+      },
+    },
+    {
       id: "reponse",
       type: "choix",
       titre: "Votre réponse à la direction",
       notions: ["productivity", "capacity"],
       question: () => "Quelle réponse rendez-vous à la direction ?",
-      // Les trois réponses ont la même longueur : la bonne ne se devine pas, quelle qu'elle soit.
+      // La bonne réponse n'est jamais la plus longue : elle ne se devine pas, quelle qu'elle soit.
       options: (c) => {
         const k = coutDuTrimestreCreux(c);
-        const chiffres = `Il fallait servir ${qte(k.aServir)} ${k.p.unites} au ${rang(k.p.creux.numero)} trimestre ; ${qte(k.p.creux.demande)} ont été ${accord(k.p, "demandé")}s, et la capacité de service était de ${qte(k.p.capacite)}.`;
+        const chiffres = `Avec la même équipe, il fallait servir ${qte(k.aServir)} ${k.p.unites} au ${rang(k.p.creux.numero)} trimestre ; ${qte(k.p.creux.demande)} ont été ${accord(k.p, "demandé")}s, et la capacité de service était de ${qte(k.p.capacite)}.`;
+        const equipe = `Sans un client de plus, une équipe de ${qte(k.equipeMax)} salariés tenait le coût moyen (${eur(k.coutReduit)} par ${k.p.unite}), avec ${qte(k.parJourReduit)} ${k.p.unites} par salarié et par jour, contre ${qte(k.p.plein.parSalarieEtParJour)} au trimestre le plus chargé.`;
+        const dit = (v: Verdict, oui: string) => (k.verdict === v ? `Oui. ${chiffres} ${oui}`.trim() : `Non. ${chiffres} ${equipe}`);
         return [
+          { texte: "Oui : la demande et la capacité permettaient de servir assez", juste: k.verdict === "possible", retour: dit("possible", "") },
           {
-            texte: "Oui, c'était possible : la demande et la capacité le permettaient",
-            juste: k.verdict === "possible",
-            retour:
-              k.verdict === "possible"
-                ? `Oui. ${chiffres}`
-                : `Non. ${chiffres}`,
+            texte: "Pas avec la même équipe ; une équipe réduite y arrivait",
+            juste: k.verdict === "equipe",
+            retour: dit("equipe", `Il fallait d'abord attirer des clients, ou ajuster l'équipe au creux. ${equipe}`),
           },
+          { texte: "Non : il fallait servir plus que la capacité ne le permet", juste: k.verdict === "capacite", retour: dit("capacite", "Même pleine, la capacité ne suffisait pas.") },
           {
-            texte: "Non : il fallait plus de clients que le trimestre creux n'en a eu",
+            texte: "Non : il manquait des clients, et l'équipe ne pouvait pas baisser",
             juste: k.verdict === "demande",
-            retour: k.verdict === "demande" ? `Oui. ${chiffres} Il fallait d'abord attirer des clients.` : `Non. ${chiffres}`,
-          },
-          {
-            texte: "Non : il fallait servir plus que la capacité de service ne permet",
-            juste: k.verdict === "capacite",
-            retour: k.verdict === "capacite" ? `Oui. ${chiffres} Même pleine, la capacité ne suffisait pas.` : `Non. ${chiffres}`,
+            retour: dit("demande", "Une équipe réduite aurait dû servir plus par salarié qu'au trimestre le plus chargé."),
           },
         ];
       },

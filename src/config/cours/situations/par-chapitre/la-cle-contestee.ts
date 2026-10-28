@@ -1,66 +1,58 @@
-import { montantEcrit as eur } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
+import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
 import type { Cas } from "../../cas";
-import { COUT_PAR_PRODUIT, coutsParProduit } from "../../chapitres/cout-par-produit";
+import { ENTREPRISES_DE_LA_GAMME, PART_DU_CURSEUR, coutsParProduit, tableauDeLaGamme } from "../../chapitres/cout-par-produit";
+import { coutsDeLaGamme } from "../../monde/couts-et-budgets";
 import type { Situation } from "../types";
 
 /**
- * CAS PRATIQUE DU CHAPITRE « COÛT PAR PRODUIT » : LA CLÉ CONTESTÉE (contrôle de gestion,
- * palier 3).
+ * CAS PRATIQUE DU CHAPITRE « COÛT PAR PRODUIT » : LA CLÉ CONTESTÉE (contrôle de gestion, palier 3).
  *
- * Le responsable d'une référence trouve qu'elle porte trop de charges communes avec la
- * répartition aux heures de travail. Il demande qu'on les répartisse au chiffre
- * d'affaires : sa référence, dit-il, deviendrait plus rentable, et la gamme avec elle. Le
- * dirigeant veut les chiffres avant de trancher. L'élève refait seul le chemin du
- * chapitre pour cette référence (coût direct, coût de l'heure, charges imputées,
- * résultat), puis le refait avec l'autre clé, et rend sa réponse.
+ * Le responsable de NOVA One trouve qu'elle porte trop de charges communes avec la répartition aux
+ * heures-machine. Il demande qu'on les répartisse au chiffre d'affaires, ou au moins en partie : sa
+ * référence, dit-il, deviendrait rentable, et NOVA avec elle. Le dirigeant veut les chiffres avant
+ * de trancher. L'élève refait seul le chemin du chapitre pour cette référence avec les deux clés,
+ * puis croise les deux répartitions : qui porterait les charges que NOVA One ne porte plus ? Un
+ * curseur cherche à rebours la plus grande part aux heures qui la laisse bénéficiaire. La réponse
+ * demande un jugement : la clé déplace des charges sans rien créer, et le sort de NOVA One se joue
+ * sur sa marge sur coûts spécifiques, pas sur la clé.
  *
- * Le cas est neuf par sa question : la clé n'est plus celle du chapitre, et le calcul se
- * fait. La référence contestée est celle que la répartition aux heures charge le plus
- * par rapport à son chiffre d'affaires. Les chiffres sont ceux du mois en gamme
- * (`coutsParProduit`).
+ * Comme son chapitre, le cas se joue dans la simulation du cours (src/config/cours/monde) : ses
+ * chiffres sont ceux de `coutsParProduit`. Le résultat de la gamme vaut 4 511 € avec les deux clés
+ * (l'ancien cas écrivait 4 527 € ici et 4 527,47 € au chapitre). L'argument du responsable est une
+ * hypothèse de l'histoire.
  */
 
-/**
- * L'unité d'œuvre de la clé proposée : cent euros de chiffre d'affaires, celle que le
- * chapitre « Coût complet » donne déjà au centre distribution.
- */
-export const ASSIETTE_DU_CHIFFRE_D_AFFAIRES = 100;
-
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
-/** Un résultat dit en mots, après « de » ou après « à » : « d'une perte de 882,01 € », « à un bénéfice de 589,48 € ». */
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
+const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+/** Un résultat dit en mots, après « de » ou après « à » : « d'une perte de 642,62 € », « à un bénéfice de 829,20 € ». */
 const deResultat = (x: number) => (x >= 0 ? `d'un bénéfice de ${eur(x)}` : `d'une perte de ${eur(-x)}`);
 const aResultat = (x: number) => (x >= 0 ? `à un bénéfice de ${eur(x)}` : `à une perte de ${eur(-x)}`);
 
+export type Verdict = "la-cle-ne-cree-rien";
+
 /** Les chiffres de la réponse, calculés une fois du cas. */
-export function cleContestee(c: Cas) {
+export function cleContestee(c: Pick<Cas, "code">) {
   const k = coutsParProduit(c);
-  const chiffreDAffaires = auCentime(k.parReference.reduce((s, l) => s + l.chiffreDAffaires, 0));
-  const directes = auCentime(k.parReference.reduce((s, l) => s + l.direct, 0));
-  const centaines = chiffreDAffaires / ASSIETTE_DU_CHIFFRE_D_AFFAIRES;
-  // Le coût de cent euros de chiffre d'affaires, arrondi au centime : celui que l'élève calcule, puis emploie.
-  const coutDesCent = auCentime(k.communes / centaines);
-  const lignes = k.parReference.map((l) => {
-    const imputeesAuChiffre = auCentime((l.chiffreDAffaires / ASSIETTE_DU_CHIFFRE_D_AFFAIRES) * coutDesCent);
-    return { ...l, imputeesAuChiffre, resultatAuChiffre: auCentime(l.chiffreDAffaires - l.direct - imputeesAuChiffre) };
-  });
-  // La référence contestée : celle que les heures chargent le plus, par rapport au chiffre d'affaires.
-  const x = [...lignes].sort((a, b) => b.imputees - b.imputeesAuChiffre - (a.imputees - a.imputeesAuChiffre))[0]!;
+  const x = k.x;
+  // Le croisement des deux clés : ce que chaque référence porte de plus au chiffre d'affaires qu'aux heures.
+  const deplacement = k.refs.map((l, i) => ({ ...l, auChiffre: k.v.parReference[i]!.imputees, resultatAuChiffre: k.v.parReference[i]!.resultat, enPlus: auCentime(k.v.parReference[i]!.imputees - l.imputees) }));
+  const autres = deplacement.filter((l) => l.code !== x.code);
+  const quiPaie = [...autres].sort((a, b) => b.enPlus - a.enPlus)[0]!;
+  const autre = autres.find((l) => l.code !== quiPaie.code)!;
+  const gain = auCentime(k.xv.resultat - x.resultat);
+  // Le verdict : la clé ne fait que déplacer des charges, le résultat de la gamme ne bouge pas, et la référence se garde par sa marge.
+  const verdict: Verdict | null = k.v.resultat === k.h.resultat && x.margeSpecifique > 0 ? "la-cle-ne-cree-rien" : null;
   return {
-    ...k,
-    chiffreDAffaires,
-    directes,
-    centaines,
-    coutDesCent,
-    lignes,
+    k,
     x,
-    gain: auCentime(x.resultatAuChiffre - x.resultat),
-    // Le résultat de la gamme ne dépend pas de la clé : le chiffre d'affaires, moins les charges propres, moins les charges communes.
-    resultatDeLaGamme: auCentime(chiffreDAffaires - directes - k.communes),
-    // Le coût de l'heure et celui des cent euros sont arrondis : quelques centimes d'écart sont admis.
-    // Le résultat de la gamme, refait en additionnant les résultats des références, porte les arrondis des deux coûts unitaires.
-    toleranceDeLaGamme: Math.max(1, auCentime((centaines + k.heures) * 0.005) + 0.01),
-    toleranceAuChiffre: Math.max(0.05, auCentime((x.chiffreDAffaires / ASSIETTE_DU_CHIFFRE_D_AFFAIRES) * 0.005) + 0.01),
+    deplacement,
+    quiPaie,
+    autre,
+    gain,
+    verdict,
+    toleranceQuiPaie: auCentime(k.toleranceAuxHeures(quiPaie.heures) + k.toleranceAuChiffre(quiPaie.chiffreDAffaires)),
+    toleranceAutre: auCentime(k.toleranceAuxHeures(autre.heures) + k.toleranceAuChiffre(autre.chiffreDAffaires)),
   };
 }
 
@@ -70,16 +62,19 @@ export const LA_CLE_CONTESTEE: Situation = {
   palier: 3,
   blocs: [],
   reprend: ["cout-par-produit"],
-  entreprises: COUT_PAR_PRODUIT.entreprises,
+  entreprises: {
+    codes: ENTREPRISES_DE_LA_GAMME,
+    pourquoi: "ce cas reprend le chapitre « Coût par produit », qui se calcule sur la gamme Go, One et Studio de NOVA dans la simulation du cours.",
+  },
   commanditaire: "Le dirigeant",
   titre: "La clé de répartition contestée",
   accroche:
-    "Un responsable de produit veut qu'on répartisse les charges communes au chiffre d'affaires plutôt qu'aux heures. Sa référence y gagnerait-elle, et la gamme avec elle ?",
+    "Un responsable de produit veut qu'on répartisse les charges communes au chiffre d'affaires plutôt qu'aux heures-machine. Sa référence y gagnerait-elle, qui paierait, et la gamme y gagnerait-elle ?",
   objectifs: [
-    "Calculer le coût direct d'une référence et le coût d'une unité d'œuvre",
     "Calculer les charges communes imputées et le résultat d'une référence avec deux clés",
-    "Montrer ce qu'une clé de répartition change, et ce qu'elle ne change pas",
-    "Rédiger une réponse chiffrée au dirigeant",
+    "Croiser les deux répartitions : qui porte les charges qu'une référence ne porte plus",
+    "Retrouver à rebours la part de la clé qui laisse une référence bénéficiaire",
+    "Rendre au dirigeant une réponse qui tranche, chiffres à l'appui",
   ],
   libre: false,
   etapes: [
@@ -87,68 +82,45 @@ export const LA_CLE_CONTESTEE: Situation = {
       id: "demande",
       type: "lecture",
       titre: "La demande du dirigeant",
+      tableau: tableauDeLaGamme,
       texte: (c) => {
         const r = cleContestee(c);
         return [
-          `« Le responsable de la référence ${r.x.nom} trouve qu'elle porte trop de charges communes : on les répartit aux heures de travail, et elle en demande beaucoup. Il veut qu'on les répartisse au chiffre d'affaires. ${r.x.nom} deviendrait plus rentable, dit-il, et ${c.entreprise} avec elle. Avant de trancher, je veux les chiffres des deux façons de faire. »`,
-          "Pas de cours cette fois : vous avez les chiffres du mois, et la méthode est celle du chapitre. À vous de l'enchaîner.",
+          `« Le responsable de ${r.x.nom} trouve qu'elle porte trop de charges communes : on les répartit aux heures-machine, et elle en demande beaucoup. Il veut qu'on les répartisse au chiffre d'affaires, ou au moins en partie. ${r.x.nom} deviendrait rentable, dit-il, et ${r.k.f.entreprise} avec elle. Avant de trancher, je veux les chiffres des deux façons de faire, et savoir qui paierait la différence. »`,
+          "Pas de cours cette fois : vous avez les chiffres du mois, et la méthode est celle du chapitre. À vous de l'enchaîner. Comme au chapitre, les charges communes se répartissent au prorata exact de la clé ; un coût d'unité d'œuvre arrondi au centime est admis.",
         ];
       },
-      tableau: (c) => {
-        const r = cleContestee(c);
-        const ligne = (libelle: string, f: (l: (typeof r.lignes)[number]) => string, total = "") => ({
-          libelle,
-          valeurs: [...r.lignes.map(f), total],
-        });
-        return {
-          titre: `La gamme du mois · ${c.entreprise}`,
-          colonnes: [...r.lignes.map((l) => l.nom), "Toute la gamme"],
-          lignes: [
-            ligne("Unités vendues", (l) => qte(l.quantite)),
-            ligne("Prix de vente, hors taxes", (l) => eur(l.prix)),
-            ligne("Chiffre d'affaires", (l) => eur(l.chiffreDAffaires), eur(r.chiffreDAffaires)),
-            ligne("Coût variable d'une unité", (l) => eur(l.coutVariableUnitaire)),
-            ligne("Publicité", (l) => eur(l.publicite)),
-            ligne("Qualité", (l) => eur(l.qualite)),
-            ligne("Heures de travail par unité", (l) => `${qte(l.heuresParUnite)} h`),
-            ligne("Charges communes (structure, entretien, usure)", () => "", eur(r.communes)),
-          ],
-        };
-      },
       repere: (c) =>
-        `À rendre : le résultat de la référence ${cleContestee(c).x.nom} avec les heures, puis avec le chiffre d'affaires, celui de la gamme, et votre réponse.`,
+        `À rendre : le résultat de ${cleContestee(c).x.nom} avec les deux clés, celui de la gamme, ce que la clé déplace d'une référence à l'autre, la part aux heures qui la laisse bénéficiaire, et votre réponse.`,
     },
     {
       id: "aux-heures",
       type: "montants",
-      titre: "Aux heures, comme aujourd'hui",
+      titre: "Aux heures-machine, comme aujourd'hui",
       notions: ["full_unit_cost"],
       question: (c) => {
         const x = cleContestee(c).x;
-        return `Commencez par la répartition d'aujourd'hui. Le coût direct de la référence ${x.nom} (coût variable, publicité et qualité), le coût d'une heure de travail pour toute la gamme, les charges communes imputées à ${x.nom}, puis son résultat (négatif pour une perte).`;
+        return `Commencez par la répartition d'aujourd'hui : le coût direct de ${x.nom}, le coût d'une heure-machine pour toute la gamme, les charges communes portées par ${x.nom}, puis son résultat (négatif pour une perte).`;
       },
       champs: (c) => {
-        const r = cleContestee(c);
-        const x = r.x;
+        const { k, x } = cleContestee(c);
         return [
-          { libelle: `Coût direct : ${x.nom}`, attendu: x.direct, tolerance: 0.05, calcul: `${qte(x.quantite)} × ${eur(x.coutVariableUnitaire)} + ${eur(x.publicite)} + ${eur(x.qualite)} = ${eur(x.direct)}` },
+          { libelle: `Coût direct : ${x.nom}`, attendu: x.direct, calcul: `${qte(x.quantite)} × ${eur(x.coutVariableUnitaire)} + ${eur(x.publicite)} = ${eur(x.direct)}` },
           {
-            libelle: "Coût d'une heure",
-            attendu: r.coutDeLHeure,
-            tolerance: 0.01,
-            calcul: `${eur(r.communes)} ÷ (${r.parReference.map((l) => `${qte(l.quantite)} × ${qte(l.heuresParUnite)} h`).join(" + ")}) = ${eur(r.communes)} ÷ ${qte(r.heures)} h = ${eur(r.coutDeLHeure)}`,
+            libelle: "Coût d'une heure-machine",
+            attendu: k.coutDeLHeure,
+            calcul: `${eur(k.communes)} ÷ (${k.refs.map((l) => `${qte(l.quantite)} × ${qte(l.heuresMachineParUnite)} h`).join(" + ")}) = ${eur(k.communes)} ÷ ${qte(auCentime(k.heures))} h ≈ ${eur(k.coutDeLHeure)}`,
           },
-          { libelle: `Charges communes imputées : ${x.nom}`, attendu: x.imputees, tolerance: 0.05, calcul: `${qte(x.heures)} h × ${eur(r.coutDeLHeure)} = ${eur(x.imputees)}` },
-          { libelle: `Résultat : ${x.nom}`, attendu: x.resultat, tolerance: 0.05, calcul: `${eur(x.chiffreDAffaires)} − ${eur(x.direct)} − ${eur(x.imputees)} = ${eur(x.resultat)}` },
+          { libelle: `Charges communes : ${x.nom}, aux heures`, attendu: x.imputees, tolerance: k.toleranceAuxHeures(x.heures), calcul: `${qte(auCentime(x.heures))} h × ${eur(k.coutDeLHeure)} ≈ ${eur(x.imputees)}` },
+          { libelle: `Résultat : ${x.nom}, aux heures`, attendu: x.resultat, tolerance: k.toleranceAuxHeures(x.heures), calcul: `${eur(x.chiffreDAffaires)} − ${eur(x.direct)} − ${eur(x.imputees)} = ${eur(x.resultat)}` },
         ];
       },
       explication: (c) => {
-        const r = cleContestee(c);
-        const x = r.x;
-        const partDesHeures = Math.round((x.heures / r.heures) * 100);
-        const partDuChiffre = Math.round((x.chiffreDAffaires / r.chiffreDAffaires) * 100);
+        const { k, x } = cleContestee(c);
+        const partDesHeures = Math.round((x.heures / k.heures) * 100);
+        const partDuChiffre = Math.round((x.chiffreDAffaires / k.h.chiffreDAffaires) * 100);
         return [
-          `${x.nom} demande ${partDesHeures} % des heures de la gamme pour ${partDuChiffre} % du chiffre d'affaires : aux heures, elle porte une grosse part des charges communes, ${eur(x.imputees)}.`,
+          `${x.nom} demande ${partDesHeures} % des heures-machine de la gamme pour ${partDuChiffre} % du chiffre d'affaires : aux heures, elle porte une grosse part des charges communes, ${eur(x.imputees)}, et fait ${x.resultat >= 0 ? "un bénéfice" : "une perte"} de ${eur(Math.abs(x.resultat))}.`,
         ];
       },
     },
@@ -159,43 +131,107 @@ export const LA_CLE_CONTESTEE: Situation = {
       notions: ["full_unit_cost", "fixed_costs"],
       question: (c) => {
         const x = cleContestee(c).x;
-        return `Refaites le calcul avec la clé proposée : le coût des charges communes pour ${eur(ASSIETTE_DU_CHIFFRE_D_AFFAIRES)} de chiffre d'affaires, les charges imputées à ${x.nom}, son résultat, puis le résultat de toute la gamme.`;
+        return `Refaites le calcul avec la clé proposée, 100 € de chiffre d'affaires pour unité d'œuvre : le coût de cette unité d'œuvre, les charges communes portées par ${x.nom}, son résultat, puis le résultat de toute la gamme.`;
       },
       champs: (c) => {
-        const r = cleContestee(c);
-        const x = r.x;
+        const { k, x } = cleContestee(c);
         return [
+          { libelle: "Coût de 100 € de chiffre d'affaires", attendu: k.coutDesCent, calcul: `${eur(k.communes)} ÷ (${eur(k.h.chiffreDAffaires)} ÷ 100) ≈ ${eur(k.coutDesCent)}` },
           {
-            libelle: `Coût pour ${ASSIETTE_DU_CHIFFRE_D_AFFAIRES} € de chiffre d'affaires`,
-            attendu: r.coutDesCent,
-            tolerance: 0.01,
-            calcul: `${eur(r.communes)} ÷ (${eur(r.chiffreDAffaires)} ÷ ${ASSIETTE_DU_CHIFFRE_D_AFFAIRES}) = ${eur(r.coutDesCent)}`,
+            libelle: `Charges communes : ${x.nom}, au chiffre d'affaires`,
+            attendu: k.xv.imputees,
+            tolerance: k.toleranceAuChiffre(x.chiffreDAffaires),
+            calcul: `${eur(x.chiffreDAffaires)} ÷ 100 × ${eur(k.coutDesCent)} ≈ ${eur(k.xv.imputees)}`,
           },
           {
-            libelle: `Charges communes imputées : ${x.nom}`,
-            attendu: x.imputeesAuChiffre,
-            tolerance: r.toleranceAuChiffre,
-            calcul: `${eur(x.chiffreDAffaires)} ÷ ${ASSIETTE_DU_CHIFFRE_D_AFFAIRES} × ${eur(r.coutDesCent)} = ${eur(x.imputeesAuChiffre)}`,
-          },
-          {
-            libelle: `Résultat : ${x.nom}`,
-            attendu: x.resultatAuChiffre,
-            tolerance: r.toleranceAuChiffre,
-            calcul: `${eur(x.chiffreDAffaires)} − ${eur(x.direct)} − ${eur(x.imputeesAuChiffre)} = ${eur(x.resultatAuChiffre)}`,
+            libelle: `Résultat : ${x.nom}, au chiffre d'affaires`,
+            attendu: k.xv.resultat,
+            tolerance: k.toleranceAuChiffre(x.chiffreDAffaires),
+            calcul: `${eur(x.chiffreDAffaires)} − ${eur(x.direct)} − ${eur(k.xv.imputees)} = ${eur(k.xv.resultat)}`,
           },
           {
             libelle: "Résultat de la gamme",
-            attendu: r.resultatDeLaGamme,
-            tolerance: r.toleranceDeLaGamme,
-            calcul: `${eur(r.chiffreDAffaires)} − ${eur(r.directes)} de coûts directs − ${eur(r.communes)} de charges communes = ${eur(r.resultatDeLaGamme)}`,
+            attendu: k.v.resultat,
+            tolerance: k.toleranceAuChiffre(k.h.chiffreDAffaires),
+            calcul: `${eur(k.h.chiffreDAffaires)} − ${eur(k.h.directs)} de coûts directs − ${eur(k.communes)} de charges communes = ${eur(k.v.resultat)}`,
           },
         ];
       },
       explication: (c) => {
-        const r = cleContestee(c);
-        const x = r.x;
+        const { k, x } = cleContestee(c);
         return [
-          `Au chiffre d'affaires, ${x.nom} ne porte plus que ${eur(x.imputeesAuChiffre)} de charges communes : son résultat passe ${deResultat(x.resultat)} ${aResultat(x.resultatAuChiffre)}. Mais les ${eur(r.communes)} restent à payer, en entier : les charges que la référence ${x.nom} ne porte plus, les autres les portent.`,
+          `Au chiffre d'affaires, ${x.nom} ne porte plus que ${eur(k.xv.imputees)} de charges communes : son résultat passe ${deResultat(x.resultat)} ${aResultat(k.xv.resultat)}. Mais les ${eur(k.communes)} restent à payer, en entier, et la gamme fait ${eur(k.v.resultat)} comme aux heures.`,
+        ];
+      },
+    },
+    {
+      id: "qui-paie",
+      type: "montants",
+      titre: "Qui paierait la différence",
+      notions: ["full_unit_cost", "fixed_costs"],
+      question: (c) => {
+        const r = cleContestee(c);
+        return `Croisez les deux répartitions. Combien de charges communes ${r.quiPaie.nom} porterait-elle en plus au chiffre d'affaires qu'aux heures, et ${r.autre.nom} (négatif si elle en porte moins) ? Quel serait alors le résultat de ${r.quiPaie.nom} ?`;
+      },
+      champs: (c) => {
+        const r = cleContestee(c);
+        const q = r.quiPaie;
+        const a = r.autre;
+        return [
+          { libelle: `Charges en plus : ${q.nom}`, attendu: q.enPlus, tolerance: r.toleranceQuiPaie, calcul: `${eur(q.auChiffre)} − ${eur(q.imputees)} = ${eur(q.enPlus)}` },
+          { libelle: `Charges en plus : ${a.nom}`, attendu: a.enPlus, tolerance: r.toleranceAutre, calcul: `${eur(a.auChiffre)} − ${eur(a.imputees)} = ${eur(a.enPlus)}` },
+          { libelle: `Résultat : ${q.nom}, au chiffre d'affaires`, attendu: q.resultatAuChiffre, tolerance: r.k.toleranceAuChiffre(q.chiffreDAffaires), calcul: `${eur(q.chiffreDAffaires)} − ${eur(q.direct)} − ${eur(q.auChiffre)} = ${eur(q.resultatAuChiffre)}` },
+        ];
+      },
+      explication: (c) => {
+        const r = cleContestee(c);
+        const q = r.quiPaie;
+        const a = r.autre;
+        return [
+          `${eur(q.enPlus)} pour ${q.nom}, ${eur(a.enPlus)} pour ${a.nom} : ensemble, ${eur(auCentime(q.enPlus + a.enPlus))}, exactement ce que ${r.x.nom} ne porterait plus. ${q.nom} paierait même plus que le tout, ${a.nom} en portant moins : elle fait ${Math.round((q.chiffreDAffaires / r.k.h.chiffreDAffaires) * 100)} % du chiffre d'affaires pour ${Math.round((q.heures / r.k.heures) * 100)} % des heures-machine. Son résultat passerait de ${eur(q.resultat)} à ${eur(q.resultatAuChiffre)}, sans qu'elle ait rien fait.`,
+        ];
+      },
+    },
+    {
+      id: "la-part-tenable",
+      type: "curseur",
+      titre: "Le compromis, au curseur",
+      notions: ["full_unit_cost", "contribution_margin"],
+      question: (c) => {
+        const x = cleContestee(c).x;
+        return `Le responsable propose un compromis : une part des charges communes aux heures-machine, le reste au chiffre d'affaires. Faites glisser cette part. Quelle est la plus grande part aux heures qui laisse ${x.nom} bénéficiaire ? Placez le curseur dessus, puis validez.`;
+      },
+      grandeur: () => ({ libelle: "Part des charges communes réparties aux heures-machine", unite: "%" }),
+      sens: "plus-grande",
+      cible: (c) => ({ attendu: cleContestee(c).k.partLimite, min: PART_DU_CURSEUR.min, max: PART_DU_CURSEUR.max }),
+      zones: ["Référence bénéficiaire", "Référence en perte"],
+      rates: () => ({
+        dessous: "La référence reste bénéficiaire avec plus de charges aux heures : cherchez la plus grande part.",
+        dessus: "À cette part, la référence porte plus de charges communes qu'elle ne laisse de marge : elle perd.",
+      }),
+      montrer: "Montrer la limite",
+      lecture: (c, s) => {
+        const { k, x } = cleContestee(c);
+        const a = coutsDeLaGamme(k.f, { partAuxHeures: s / 100 });
+        const ref = a.parReference.find((l) => l.code === x.code)!;
+        return [
+          { libelle: `Charges communes portées par ${x.nom}`, montant: ref.imputees },
+          { libelle: `Résultat de ${x.nom}`, montant: ref.resultat, fort: true },
+          { libelle: "Résultat de la gamme", montant: a.resultat },
+        ];
+      },
+      droites: (c) => {
+        const { k, x } = cleContestee(c);
+        return {
+          produit: () => x.margeSpecifique,
+          cout: (s) => k.xv.imputees + (s / 100) * k.pente,
+          libelles: [`Marge sur coûts spécifiques de ${x.nom}`, `Charges communes portées par ${x.nom}`],
+        };
+      },
+      explication: (c) => {
+        const { k, x } = cleContestee(c);
+        return [
+          `Jusqu'à ${k.partLimite} % aux heures, ${x.nom} reste bénéficiaire : sa marge sur coûts spécifiques, ${eur(x.margeSpecifique)}, couvre les charges qu'elle porte. À toutes les positions, la gamme fait ${eur(k.h.resultat)}. Le compromis choisit qui affiche la perte ; il ne la supprime pas.`,
         ];
       },
     },
@@ -203,25 +239,32 @@ export const LA_CLE_CONTESTEE: Situation = {
       id: "reponse",
       type: "choix",
       titre: "Votre réponse au dirigeant",
-      question: () => "Quelle phrase envoyez-vous au dirigeant ?",
+      notions: ["full_unit_cost", "contribution_margin"],
+      question: () => "Quelle réponse rendez-vous au dirigeant ?",
       options: (c) => {
         const r = cleContestee(c);
-        const x = r.x;
+        const { k, x } = r;
+        const chiffres = `${x.nom} passerait ${deResultat(x.resultat)} ${aResultat(k.xv.resultat)}, ${r.quiPaie.nom} porterait ${eur(r.quiPaie.enPlus)} de plus, et la gamme resterait à ${eur(k.h.resultat)}.`;
         return [
           {
-            texte: `${x.nom} gagnerait ${eur(r.gain)}, pris aux autres : la gamme reste à ${eur(r.resultatDeLaGamme)}`,
-            juste: true,
-            retour: `Oui : ${x.nom} passerait ${deResultat(x.resultat)} ${aResultat(x.resultatAuChiffre)}, mais les charges communes, ${eur(r.communes)}, ne changent pas. La clé déplace les charges d'une référence à l'autre ; le résultat de la gamme, ${eur(r.resultatDeLaGamme)}, ne bouge pas.`,
+            texte: `Garder les heures, qui suivent l'usage des lignes : la clé déplacerait ${eur(r.gain)}, surtout vers ${r.quiPaie.nom}, sans rien rapporter à la gamme`,
+            juste: r.verdict === "la-cle-ne-cree-rien",
+            retour: `Oui. ${chiffres} Les charges communes (le loyer, le personnel, l'entretien et l'usure des lignes) suivent l'occupation des lignes : les heures-machine en rendent mieux compte que le chiffre d'affaires. Et le sort de ${x.nom} ne dépend pas de la clé : elle laisse ${eur(x.margeSpecifique)} par mois, elle se garde.`,
           },
           {
-            texte: `La gamme gagnerait ${eur(r.gain)} de plus, puisque la référence ${x.nom} porterait moins de charges communes`,
+            texte: `Passer au chiffre d'affaires : la gamme y gagnerait ${eur(r.gain)}, ce que ${x.nom} ne porterait plus`,
             juste: false,
-            retour: `Non : les ${eur(r.gain)} que la référence ${x.nom} ne porterait plus retombent sur les autres. Les charges communes restent de ${eur(r.communes)}, et le résultat de la gamme de ${eur(r.resultatDeLaGamme)}.`,
+            retour: `Non : les ${eur(r.gain)} que ${x.nom} ne porterait plus retombent sur les autres références, surtout ${r.quiPaie.nom}. Les charges communes restent de ${eur(k.communes)}, et le résultat de la gamme de ${eur(k.h.resultat)}.`,
           },
           {
-            texte: `Rien ne changerait pour ${x.nom} : ses charges propres et son chiffre d'affaires restent les mêmes`,
+            texte: `Passer à ${k.partLimite} % aux heures : ${x.nom} redevient bénéficiaire, et le responsable obtient ce qu'il demande sans que ${r.quiPaie.nom} porte toute la charge`,
             juste: false,
-            retour: `Non : ses charges propres restent de ${eur(x.direct)}, mais sa part des charges communes passerait de ${eur(x.imputees)} à ${eur(x.imputeesAuChiffre)}. Son résultat en coût complet dépend de la clé.`,
+            retour: `Non : le compromis ne fait que choisir où la perte s'affiche. À ${k.partLimite} %, la gamme fait toujours ${eur(k.h.resultat)} ; une clé se choisit sur ce qui cause les charges, pas sur le résultat qu'elle donne à une référence.`,
+          },
+          {
+            texte: `Garder les heures et arrêter ${x.nom}, qui perd ${eur(Math.abs(x.resultat))} en coût complet et le restera tant qu'elle demandera autant d'heures-machine`,
+            juste: false,
+            retour: `Non : sans ${x.nom}, la gamme perdrait ${eur(-k.sansX)}. Elle laisse ${eur(x.margeSpecifique)} de marge sur coûts spécifiques, que les autres références ne remplaceraient pas.`,
           },
         ];
       },
