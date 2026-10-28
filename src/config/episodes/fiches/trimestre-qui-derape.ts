@@ -32,7 +32,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 10,
       titre: "Lancement",
       detail:
-        "Vous envoyez le lien /entreprises/episode/trimestre-qui-derape?hasard=19 : toute la classe joue le même trimestre, sous les mêmes aléas. Les élèves jouent seuls ou en binôme. Vous demandez de noter sur papier, avant de valider la semaine 1, la transformation des devis prévue pour la semaine 4, le raisonnement qui y mène, et le choix fait à chacune des six décisions.",
+        "Vous envoyez le lien /entreprises/episode/trimestre-qui-derape?hasard=28 : toute la classe joue le même trimestre, sous les mêmes aléas. Les élèves jouent seuls ou en binôme. Vous demandez de noter sur papier, avant de valider la semaine 1, la transformation des devis prévue pour la semaine 4, le raisonnement qui y mène, et le choix fait à chacune des six décisions.",
     },
     {
       minutes: 40,
@@ -44,7 +44,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 15,
       titre: "Correction de la prévision de la semaine 1",
       detail:
-        "Vous inscrivez au tableau les prévisions relevées, de la plus basse à la plus haute. Vous reconstruisez le raisonnement : 33,6 % au départ, ce que la réaffectation des comptes de Karim rend, ce que le délai de livraison retient jusqu'à la semaine 5 ; puis vous montrez ce que le hasard de la classe a fait de la semaine 4 (intempéries, grands comptes qui signent peu) : 31,4 %. Vous faites expliquer d'où viennent les valeurs éloignées : 38 %, 33,6 %, 27,7 %.",
+        "Vous inscrivez au tableau les prévisions relevées, de la plus basse à la plus haute. Vous reconstruisez le raisonnement : 33,6 % au départ, ce que la réaffectation des comptes de Karim rend, ce que le délai de livraison retient jusqu'à la semaine 5 ; puis vous montrez que, sous le tirage de la classe, la semaine 4 n'a pas d'imprévu : 35,5 %. Vous faites expliquer d'où viennent les valeurs éloignées : 38 %, 33,6 %, 27,7 %.",
     },
     {
       minutes: 25,
@@ -56,7 +56,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 15,
       titre: "Le bilan des trente tirages",
       detail:
-        "Vous projetez le bilan d'un élève qui accepte de le montrer, et vous lisez avec la classe le rejeu de chaque décision sous trente tirages. Sous le tirage n° 19, « Diagnostic d'abord » finit à 364,9 k€ de marge, pénalités déduites, l'attentiste à 311,4 k€ et le réflexe remise à 301,9 k€. Vous montrez ensuite la décision où le hasard a récompensé un mauvais choix : sous ce tirage, Julie a tenu même chez ceux qui lui ont demandé de tenir. C'est le moment de séparer la qualité d'une décision de son résultat.",
+        "Vous projetez le bilan d'un élève qui accepte de le montrer, et vous lisez avec la classe le rejeu de chaque décision sous trente tirages. Sous le tirage de la classe, « Diagnostic d'abord » finit à 365,4 k€ de marge, pénalités déduites, l'attentiste à 316,2 k€ et le réflexe remise à 301,9 k€. Vous montrez ensuite la décision où le hasard a récompensé un mauvais choix : sous ce tirage, Julie a tenu même chez ceux qui lui ont demandé de tenir. C'est le moment de séparer la qualité d'une décision de son résultat.",
     },
     {
       minutes: 15,
@@ -66,13 +66,13 @@ export const FICHE: FicheEnseignant = {
     },
   ],
   calcul: {
-    reponse: 31.4,
+    reponse: 35.5,
     etapes: [
       "Point de départ (alerte du tableau de bord) : 33,6 % de transformation la semaine dernière, contre 38 % il y a un mois. Le détail par commercial situe la perte : moins 11 points sur le portefeuille de Karim, que personne ne suit, moins 4 points sur celui de Julie, rien ailleurs.",
       "Ce que la bonne décision rend : réaffecter les 38 comptes de Karim à Julie et Thomas dès la semaine 2 fait de nouveau suivre ses devis. Ce qu'elle ne rend pas : la livraison reste à trois jours (source de l'administration des ventes, préparation en 48 heures au lieu de 24) jusqu'à la réponse de la semaine 4, qui n'agit qu'à partir de la semaine 5.",
       "Sans aléa, le modèle donne environ 35,8 % en semaine 4 avec les comptes de Karim réaffectés, contre 33,6 % s'ils ne le sont pas : la réaffectation rend un peu plus de 2 points, le délai de livraison en retient le reste, et l'on ne revient pas à 38 %.",
-      "Sous le tirage n° 19, la semaine 4 est mauvaise pour tout le monde : une semaine d'intempéries retire un cinquième des devis des artisans, et les grands comptes signent environ 17 % de moins que d'ordinaire. Le modèle donne 31,4 % (31,43) sur le chemin de la meilleure méthode.",
-      "Le chiffre dépend du hasard et des décisions : de 31,4 % à 38,8 % selon les trente tirages pour la meilleure méthode, 35,3 % en moyenne ; sous le tirage de la classe, 29,4 % pour qui attend et 28,7 % pour qui lance la prospection. L'épisode juge juste à 1 point près, proche à 2,5.",
+      "Sous le tirage de la classe, la semaine 4 n'a pas d'imprévu : la rupture de plaques de plâtre tombe en semaine 5, les intempéries en semaine 7. Le modèle donne 35,5 % (35,53) sur le chemin de la meilleure méthode, tout près du calcul sans aléa.",
+      "Le chiffre dépend du hasard et des décisions : de 31,4 % à 38,8 % selon les trente tirages pour la meilleure méthode, 35,3 % en moyenne ; sous le tirage de la classe, 33,3 % pour qui attend et 32,2 % pour qui lance la prospection. L'épisode juge juste à 1 point près, proche à 2,5.",
     ],
     erreurs: [
       {
@@ -88,7 +88,7 @@ export const FICHE: FicheEnseignant = {
       {
         valeur: 27.7,
         cause:
-          "La baisse prolongée au même rythme : 4,4 points en trois semaines, environ 1,5 point par semaine, quatre semaines de plus (33,6 − 4 × 1,47). C'est la prévision de qui ne fait rien, et même l'attentiste tombe à 29,4 %.",
+          "La baisse prolongée au même rythme : 4,4 points en trois semaines, environ 1,5 point par semaine, quatre semaines de plus (33,6 − 4 × 1,47). C'est la prévision de qui ne fait rien, et même l'attentiste tombe à 33,3 %.",
       },
     ],
   },
@@ -122,7 +122,7 @@ export const FICHE: FicheEnseignant = {
     "En semaine 1, la transformation de l'agence perdait 4,4 points. Qu'est-ce que le détail par commercial a changé à votre lecture ? Qu'aurait-on décidé en ne regardant que la moyenne ?",
     "Ceux qui ont retenu le prix comme cause principale : quelle source le montrait ? Que disaient la comparaison des prix et l'appel à M. Ferreira ?",
     "Garantir la livraison le lendemain coûte 1 point de marge ; faire connaître le retrait en agence sous 2 heures ne coûte rien. Sur les trente tirages, les deux finissent à 0,4 k€ l'un de l'autre. Pourquoi deux réponses si différentes donnent-elles presque le même résultat ?",
-    "Julie a tenu jusqu'au bout sous le tirage n° 19, même chez ceux qui lui ont demandé de tenir, et ceux-là finissent 0,9 k€ au-dessus de ceux qui lui ont retiré six comptes. Pourtant, avec les comptes de Karim en plus, elle avait 45 % de risque de s'arrêter, contre environ 11 % si on lui retirait des comptes. Leur choix était-il bon ? Qu'est-ce qui distingue la qualité d'une décision de son résultat ?",
+    "Julie a tenu jusqu'au bout sous le tirage de la classe, même chez ceux qui lui ont demandé de tenir, et ceux-là finissent 0,8 k€ au-dessus de ceux qui lui ont retiré six comptes. Pourtant, avec les comptes de Karim en plus, elle avait 45 % de risque de s'arrêter, contre environ 11 % si on lui retirait des comptes. Leur choix était-il bon ? Qu'est-ce qui distingue la qualité d'une décision de son résultat ?",
     "Delta demande 8 % pour 40 000 € de commande. Combien rapportent les 40 000 € à 18 % de marge ? Combien coûtent 8 % sur ses 6 500 € de commandes habituelles par semaine, pendant quatre semaines ? Que change la contre-proposition à 4 %, que Delta accepte un peu plus d'une fois sur deux ?",
     "Le réflexe remise finit le trimestre avec 59,8 k€ de remises pour un budget de 40 k€ et 25,9 % de marge pour un mandat de 30 %. Combien de chiffre d'affaires en plus aurait-il fallu pour compenser ?",
     "Quelle règle gardez-vous avant d'accorder une remise ? Formulez-la en une phrase, avec un chiffre dedans.",
@@ -135,11 +135,11 @@ export const FICHE: FicheEnseignant = {
   },
   evaluation: [
     "Le diagnostic de la semaine 1 s'appuie sur le détail par commercial et sur l'appel au client perdu, et l'élève dit pourquoi la comparaison des prix écarte la piste du prix.",
-    "La prévision de la transformation en semaine 4 est construite par un raisonnement écrit (point de départ, ce que la réaffectation rend, ce que le délai retient), et l'écart avec 31,4 % est expliqué.",
+    "La prévision de la transformation en semaine 4 est construite par un raisonnement écrit (point de départ, ce que la réaffectation rend, ce que le délai retient), et l'écart avec 35,5 % est expliqué.",
     "Chaque remise envisagée est chiffrée sur toutes les ventes qu'elle touche, et comparée à une réponse qui traite la cause (le suivi des devis, le délai de livraison, les devis en attente).",
     "La réponse à la surcharge de Julie est justifiée par ce qu'elle retire de sa charge, pas par la reconnaissance de son effort.",
-    "L'élève distingue, sur une de ses décisions, la qualité du choix lue sur les trente tirages et le résultat obtenu sous le tirage n° 19.",
+    "L'élève distingue, sur une de ses décisions, la qualité du choix lue sur les trente tirages et le résultat obtenu sous le tirage de la classe.",
   ],
   vigilance:
-    "Le corrigé de 31,4 % est celui du modèle sous le tirage n° 19, qui est le plus défavorable des trente pour la semaine 4 : les sources de la semaine 1 permettent de raisonner (une remontée partielle depuis 33,6 %), pas de trouver ce chiffre. C'est la méthode qu'il faut corriger. Le modèle traite une remise comme des points de marge retirés au chiffre d'affaires, et refacture le délai de paiement au-delà de 55 jours à 1 500 € par jour : une convention interne de l'épisode, pas une règle de droit.",
+    "Le corrigé de 35,5 % est celui du modèle sous le tirage de la classe, choisi pour que la semaine 4 y soit ordinaire : un raisonnement juste depuis les sources (une remontée partielle depuis 33,6 %, environ 35,8 % sans aléa) tombe dans la marge du « juste ». Un groupe qui joue un autre tirage peut trouver de 31,4 % à 38,8 %. Le modèle traite une remise comme des points de marge retirés au chiffre d'affaires, et refacture le délai de paiement au-delà de 55 jours à 1 500 € par jour : une convention interne de l'épisode, pas une règle de droit.",
 };

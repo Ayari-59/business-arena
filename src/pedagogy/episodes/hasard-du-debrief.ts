@@ -55,12 +55,25 @@ export function jugerLeHasard(ep: Episode, graine: number): JugementDuHasard {
   return { graine, place, defauts };
 }
 
+/** La prévision de la bonne méthode sous ce hasard est-elle à « juste » près de sa médiane ? */
+export function previsionRepresentative(ep: Episode, graine: number): boolean {
+  const jours = ep.enquete.joursSansPerte;
+  const methode = ep.references[0]!.chemin;
+  const valeurs = GRAINES_DU_BILAN.map((g) => ep.prevision.reel(ep.simuler(methode, g, jours)));
+  const mediane = quantile(valeurs, 0.5);
+  return Math.abs(ep.prevision.reel(ep.simuler(methode, graine, jours)) - mediane) <= TRACES[ep.code]!.prevision.juste;
+}
+
 /** Le hasard que la règle choisit pour le débrief d'un épisode. */
 export function choisirLeHasard(ep: Episode): number {
   if (jugerLeHasard(ep, HASARD_HABITUEL).defauts.length === 0) return HASARD_HABITUEL;
-  const conviennent = GRAINES_DU_BILAN.map((g) => jugerLeHasard(ep, g)).filter(
+  const tous = GRAINES_DU_BILAN.map((g) => jugerLeHasard(ep, g)).filter(
     (j) => j.defauts.length === 0,
   );
+  // Parmi eux, ceux où le corrigé de la prévision reste représentatif : à la marge du « juste »
+  // près de sa médiane, pour qu'un calcul fait avec les sources le retrouve.
+  const representatifs = tous.filter((j) => previsionRepresentative(ep, j.graine));
+  const conviennent = representatifs.length ? representatifs : tous;
   const milieu = (GRAINES_DU_BILAN.length + 1) / 2;
   const [choisi] = conviennent.sort(
     (a, b) => Math.abs(a.place - milieu) - Math.abs(b.place - milieu) || a.graine - b.graine,

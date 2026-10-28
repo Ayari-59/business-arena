@@ -207,7 +207,7 @@ export const BUDGET = 70000;
 export const OBJECTIF_ERREURS = 0.02;
 export const OBJECTIF_REJETS = 10;
 /** Les palettes refusées visées, par semaine. */
-export const OBJECTIF_PALETTES = 5;
+export const OBJECTIF_PALETTES = 10;
 /** L'évolution des commandes de Celtis sur un an, que la source « bruit » donne. */
 export const HAUSSE_DES_COMMANDES = 0.03;
 export const JOURS_SANS_PERTE = 2;

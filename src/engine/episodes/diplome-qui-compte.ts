@@ -184,7 +184,7 @@ export const EXPLICATION = [
  * ------------------------------------------------------------------------- */
 /** Le budget de la saison pour les saisonniers, fixé par la direction des ressources humaines. */
 export const BUDGET = 360000;
-export const OBJECTIF_VIDES = 1;
+export const OBJECTIF_VIDES = 2;
 /** Au plus un poste de cuisine tenu par quelqu'un sans CAP, en moyenne. */
 export const OBJECTIF_SANS_CAP = 1;
 /** Les départs de la saison visés, au plus. */

@@ -152,17 +152,11 @@ describe("la prévision ne se lit ni dans le mandat ni dans l'exemple de saisie"
 
 /**
  * Un objectif annoncé au bilan (« objectif », « plafond », « au plus », « au moins ») est tenu
- * au moins une fois par l'une des trois manières de décider, sous les trente tirages. Ces
- * épisodes-ci annoncent encore un objectif que rien ne tient : à arbitrer (baisser l'objectif ou
- * le présenter comme hors d'atteinte), listés pour qu'on les voie.
+ * au moins une fois par l'une des trois manières de décider, sous les trente tirages. La liste
+ * des exceptions est vide : les objectifs des épisodes 10, 18, 49, 63 et 104 ont été ramenés à ce
+ * que la meilleure méthode tient (décision du propriétaire, octobre 2026).
  */
-const OBJECTIFS_A_ARBITRER: Readonly<Record<string, readonly string[]>> = {
-  "indicateur-qui-ment": ["Clients qui rappellent"],
-  "equipe-qui-s-epuise": ["Absentéisme"],
-  "libre-service-qui-perd": ["Références vides"],
-  "diplome-qui-compte": ["Postes vides en cuisine"],
-  "edi-qui-s-impose": ["Palettes refusées"],
-};
+const OBJECTIFS_A_ARBITRER: Readonly<Record<string, readonly string[]>> = {};
 
 describe("un objectif annoncé est atteignable", () => {
   for (const ep of EPISODES) {
@@ -189,12 +183,10 @@ describe("un objectif annoncé est atteignable", () => {
 /**
  * Le corrigé de la prévision se calcule avec les sources : il tombe, à la marge du « juste »
  * près, sur la valeur médiane des trente tirages pour la meilleure méthode. Un corrigé tiré d'un
- * tirage extrême ne se retrouve pas, et l'élève qui calcule bien est jugé « proche ».
+ * tirage extrême ne se retrouve pas, et l'élève qui calcule bien est jugé « proche ». L'épisode 1
+ * a changé de tirage de la classe pour cela (n° 28 au lieu du n° 19) : plus d'exception.
  */
-const PREVISIONS_A_ARBITRER: Readonly<Record<string, string>> = {
-  "trimestre-qui-derape":
-    "le tirage n° 19 met une semaine d'intempéries en semaine 4 (31,4 % pour une médiane de 35,2 %) ; élargir le « juste » rendrait juste l'erreur du chiffre reporté (33,6 %)",
-};
+const PREVISIONS_A_ARBITRER: Readonly<Record<string, string>> = {};
 
 describe("le corrigé de la prévision se calcule avec les sources", () => {
   for (const ep of EPISODES) {

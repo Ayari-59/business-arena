@@ -178,7 +178,7 @@ export const EPISODE_EQUIPE: Episode<Trimestre> = {
     { fort: `${OBJECTIF_DELAI} jours`, texte: "de délai de réponse, au plus" },
     { fort: "85 %", texte: "de clients satisfaits au moins" },
     { fort: kE(BUDGET), texte: "de budget variable (heures, intérim, recrutement)" },
-    { fort: "6 %", texte: "d'absentéisme, au plus" },
+    { fort: "10,5 %", texte: "d'absentéisme, au plus" },
   ],
   jugement:
     "Votre direction juge le trimestre sur l'écart au budget du service, en comptant ce que coûtent les clients perdus, les gestes commerciaux et les départs.",
@@ -380,7 +380,7 @@ export const EPISODE_EQUIPE: Episode<Trimestre> = {
         {
           nom: "Absentéisme",
           valeur: taux(t.absenteismeMoyen),
-          aide: "en moyenne ; plafond 6 %",
+          aide: "en moyenne ; plafond 10,5 %",
           tenu: t.absenteismeMoyen <= SEUIL_ABSENTEISME,
         },
         {

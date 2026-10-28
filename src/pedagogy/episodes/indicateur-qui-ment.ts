@@ -390,7 +390,7 @@ export const EPISODE_INDICATEURS: Episode<Trimestre> = {
         {
           nom: "Clients qui rappellent",
           valeur: pourcent(t.rappelMoyen),
-          aide: "en moyenne ; plafond 15 %",
+          aide: "en moyenne ; plafond 19 %",
           tenu: t.rappelMoyen <= SEUIL_RAPPEL,
         },
         {
