@@ -1,61 +1,61 @@
-import { montantEcrit as eur } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
-import { accord, accordPluriel } from "../../accords";
+import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
 import type { Cas } from "../../cas";
-import { deuxTrimestres } from "../../chapitres/tableau-de-bord-du-manager";
-import { COMMERCES } from "../../chapitres/taux-de-marque";
+import { ENTREPRISES_DU_TABLEAU_DE_BORD, tableauDeBordDuMois, tableauDesDeuxJanviers } from "../../chapitres/tableau-de-bord-du-manager";
 import type { Situation } from "../types";
 
 /**
- * CAS PRATIQUE DU CHAPITRE « LE TABLEAU DE BORD DU MANAGER » : LE TRIMESTRE FACE À
- * L'OBJECTIF (BTS MCO, palier 4).
+ * CAS PRATIQUE DU CHAPITRE « LE TABLEAU DE BORD DU MANAGER » : JANVIER FACE À L'OBJECTIF (BTS MCO,
+ * palier 4). Le code reste celui de l'ancien cas, « le trimestre face à l'objectif » ; le titre suit
+ * ce que le cas compare désormais, janvier et l'objectif du trimestre.
  *
- * La direction régionale avait fixé au point de vente un objectif de chiffre d'affaires pour
- * le deuxième trimestre. Elle demande au manager la ligne de son tableau de bord : l'écart
- * à l'objectif, le taux de réalisation, et ce qui l'explique, le volume ou le prix moyen.
- * L'élève refait seul les évolutions du chapitre, et les compare à un objectif.
+ * Janvier est clos : MAILLE & CO a manqué son objectif du mois. Le responsable de la boutique assure
+ * que février et mars rattraperont le trimestre « en vendant mieux » : la transformation suffira. La
+ * direction régionale veut la ligne du tableau de bord et un avis sur ce plan. L'élève calcule l'écart
+ * et le taux de réalisation, croise les trois effets (trafic, transformation, panier) pour trouver la
+ * cause, puis remonte à rebours du reste du budget au taux de transformation qu'il faudrait. Un curseur
+ * sur les entrées montre le trafic qui rattraperait à lui seul. La réponse demande un jugement : le plan
+ * du responsable demande une transformation que la boutique n'a jamais eue.
  *
- * Le cas est neuf par sa question : le chapitre compare le trimestre 2 au trimestre 1 pour
- * trouver le voyant rouge ; ici, il le compare à un objectif, et l'on sépare l'effet du
- * volume de celui du prix moyen. Le piège : rapporter le réalisé au trimestre précédent, ou
- * l'objectif au réalisé. Les deux trimestres sont ceux du chapitre (`deuxTrimestres`).
+ * Comme son chapitre, le cas se joue dans la simulation du cours (src/config/cours/monde) : ses
+ * chiffres sont ceux de `tableauDeBordDuMois`, sur la fiche de la boutique.
  */
 
-/**
- * L'objectif de progression fixé pour le trimestre 2 : 5 % de chiffre d'affaires de plus
- * qu'au trimestre 1. C'est l'ordre de grandeur d'un objectif trimestriel de progression
- * dans le commerce de détail : atteignable, sans être acquis.
- */
-export const OBJECTIF_DU_TRIMESTRE = 0.05;
+/** Les bornes du curseur des entrées d'un mois de rattrapage. */
+export const ENTREES_DU_RATTRAPAGE = { min: 3_800, max: 4_800 } as const;
 
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const qte = (n: number) => n.toLocaleString("fr-FR");
-// « + 0 » : un arrondi à zéro ne s'écrit pas « -0 ».
+/** Les mois qui restent au trimestre après janvier. */
+export const MOIS_RESTANTS = 2;
+
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
+const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const pct = (t: number) => `${qte(t)} %`;
+const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
 const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const plafond = (x: number) => Math.ceil(x - 1e-9);
+
+export type Verdict = "le-trafic-doit-revenir" | "la-transformation-suffit";
 
 /** Les chiffres de la réponse, calculés une fois du cas. */
-export function trimestreFaceALObjectif(c: Cas) {
-  const d = deuxTrimestres(c);
-  const objectif = Math.round(d.t1.ca * (1 + OBJECTIF_DU_TRIMESTRE));
-  const realisation = auDixieme((d.t2.ca / objectif) * 100);
-  const prix1 = auCentime(d.t1.ca / d.t1.ventes);
-  const prix2 = auCentime(d.t2.ca / d.t2.ventes);
+export function janvierFaceALObjectif(c: Pick<Cas, "code">) {
+  const x = tableauDeBordDuMois(c);
+  const reste = auCentime(x.budgetDuTrimestre - x.ca);
+  const parMois = auCentime(reste / MOIS_RESTANTS);
+  const transformationDuRattrapage = auDixieme((parMois / (x.m.entrees * x.m.panierMoyen)) * 100);
+  const entreesDuRattrapage = plafond(parMois / x.caParEntree);
+  // La plus haute transformation connue : celle de janvier N ou de janvier N − 1.
+  const meilleureTransformation = Math.max(x.transformationN, x.transformationN1);
   return {
-    ...d,
-    objectif,
-    ecart: d.t2.ca - objectif,
-    realisation,
-    atteint: d.t2.ca >= objectif,
-    prix1,
-    prix2,
-    evolutionPrix: auDixieme((prix2 / prix1 - 1) * 100),
-    // Les erreurs classiques : rapporter le réalisé au trimestre 1, ou l'objectif au réalisé.
-    surLeTrimestre1: auDixieme((d.t2.ca / d.t1.ca) * 100),
-    inverse: auDixieme((objectif / d.t2.ca) * 100),
+    x,
+    reste,
+    parMois,
+    transformationDuRattrapage,
+    entreesDuRattrapage,
+    hausseDuTraficSurN1: auDixieme((entreesDuRattrapage / x.n1.trafic - 1) * 100),
+    verdict: (transformationDuRattrapage > meilleureTransformation + 1 ? "le-trafic-doit-revenir" : "la-transformation-suffit") as Verdict,
+    // L'erreur classique : rapporter janvier N à janvier N − 1 au lieu de l'objectif.
+    surN1: auDixieme((x.ca / x.n1.chiffreDAffaires) * 100),
   };
 }
-
-const statut = (taux: number) => (taux >= 100 ? "dépassé" : "manqué");
 
 export const LE_TRIMESTRE_FACE_A_L_OBJECTIF: Situation = {
   code: "le-trimestre-face-a-l-objectif",
@@ -64,119 +64,185 @@ export const LE_TRIMESTRE_FACE_A_L_OBJECTIF: Situation = {
   blocs: [],
   reprend: ["tableau-de-bord-du-manager"],
   commanditaire: "La direction régionale",
-  titre: "Le trimestre face à l'objectif",
+  titre: "Janvier face à l'objectif",
   accroche:
-    "La direction régionale avait fixé un objectif de chiffre d'affaires au deuxième trimestre. Elle attend la ligne du tableau de bord : l'écart, le taux de réalisation, et ce qui l'explique.",
+    "Janvier a manqué son objectif. Le responsable promet de rattraper le trimestre en vendant mieux. La direction régionale attend la ligne du tableau de bord, ce qui l'explique, et un avis sur ce plan.",
   objectifs: [
-    "Calculer un objectif de chiffre d'affaires à partir d'un taux de progression",
-    "Calculer l'écart à l'objectif et le taux de réalisation",
-    "Séparer l'évolution des ventes de celle du prix moyen",
-    "Répondre à la direction avec le bon indicateur",
+    "Calculer l'objectif du mois, l'écart et le taux de réalisation",
+    "Décomposer l'écart sur l'an passé en effet trafic, transformation et panier",
+    "Remonter du reste du budget au taux de transformation et au trafic qu'il demande",
+    "Répondre à la direction régionale avec un jugement sur le plan proposé",
   ],
   libre: false,
   entreprises: {
-    codes: COMMERCES,
-    pourquoi: "ce cas suit le tableau de bord d'un point de vente, qui accueille ou livre ses clients un par un.",
+    codes: ENTREPRISES_DU_TABLEAU_DE_BORD,
+    pourquoi: "ce cas reprend le chapitre « Le tableau de bord du manager », qui se joue à la boutique du cours, MAILLE & CO, sur son mois de janvier.",
   },
   etapes: [
     {
       id: "demande",
       type: "lecture",
       titre: "La demande de la direction régionale",
-      texte: (c) => [
-        `« Pour le trimestre 2, nous avions demandé à ${c.entreprise} ${pct(OBJECTIF_DU_TRIMESTRE * 100)} de chiffre d'affaires de plus qu'au trimestre 1. Envoyez-moi la ligne de votre tableau de bord : l'objectif, l'écart, le taux de réalisation, et ce qui l'explique, le nombre de ventes ou le prix moyen. »`,
-        "Pas de cours cette fois : vous avez les deux trimestres de l'arène, ramenés à un mois, et la méthode est celle du chapitre. À vous de l'enchaîner.",
-      ],
-      tableau: (c) => {
-        const r = trimestreFaceALObjectif(c);
-        return {
-          titre: `${c.entreprise} · deux trimestres de l'arène, ramenés à un mois`,
-          colonnes: ["Trimestre 1", "Trimestre 2"],
-          lignes: [
-            { libelle: "Chiffre d'affaires HT", valeurs: [eur(r.t1.ca), eur(r.t2.ca)] },
-            { libelle: `${c.unites.charAt(0).toUpperCase()}${c.unites.slice(1)} ${accordPluriel(c, "vendu")} ou ${accordPluriel(c, "servi")}`, valeurs: [qte(r.t1.ventes), qte(r.t2.ventes)] },
-          ],
-        };
+      tableau: tableauDesDeuxJanviers,
+      texte: (c) => {
+        const { x } = janvierFaceALObjectif(c);
+        return [
+          `« Le budget du trimestre de ${x.f.entreprise} est de ${eur(x.budgetDuTrimestre)}, soit un objectif d'un tiers par mois. Janvier est clos, et l'objectif est manqué. Votre responsable m'écrit que février et mars rattraperont le trimestre en vendant mieux : la transformation suffira. Envoyez-moi la ligne de janvier, ce qui explique l'écart, et votre avis sur ce plan. »`,
+          "Pas de cours cette fois : vous avez janvier N et janvier N − 1, et la méthode est celle du chapitre. À vous d'en trouver l'ordre.",
+        ];
       },
-      repere: () =>
-        "À rendre : l'objectif du trimestre 2, l'écart et le taux de réalisation, l'évolution des ventes et du prix moyen, et votre réponse.",
+      repere: () => "À rendre : l'objectif de janvier, l'écart et le taux de réalisation, les trois effets de l'écart sur N − 1, ce que février et mars doivent faire, et votre réponse.",
     },
     {
       id: "l-objectif",
       type: "montants",
-      titre: "L'objectif et le réalisé",
+      titre: "Janvier face à l'objectif",
       notions: ["dashboard", "revenue"],
-      question: () =>
-        `Calculez l'objectif de chiffre d'affaires du trimestre 2, ramené à un mois (à l'euro), l'écart entre le réalisé et l'objectif (négatif s'il est manqué), puis le taux de réalisation de l'objectif, en pourcentage, au dixième.`,
+      question: () => "Calculez l'objectif de janvier (au centime), l'écart entre le réalisé et l'objectif, puis le taux de réalisation de l'objectif, en pourcentage, au dixième. Négatif pour un écart défavorable.",
       champs: (c) => {
-        const r = trimestreFaceALObjectif(c);
+        const { x } = janvierFaceALObjectif(c);
         return [
-          { libelle: "Objectif du trimestre 2", attendu: r.objectif, tolerance: 1, calcul: `${eur(r.t1.ca)} × ${(1 + OBJECTIF_DU_TRIMESTRE).toLocaleString("fr-FR")} = ${eur(r.objectif)}` },
-          { libelle: "Écart à l'objectif", attendu: r.ecart, tolerance: 1, calcul: `${eur(r.t2.ca)} − ${eur(r.objectif)} = ${eur(r.ecart)}` },
-          { libelle: "Taux de réalisation (%)", attendu: r.realisation, tolerance: 0.1, calcul: `${eur(r.t2.ca)} ÷ ${eur(r.objectif)} × 100 = ${pct(r.realisation)}` },
+          { libelle: "Objectif de janvier", attendu: x.objectif, calcul: `${eur(x.budgetDuTrimestre)} ÷ 3 = ${eur(x.objectif)}` },
+          { libelle: "Écart à l'objectif", attendu: x.ecartALObjectif, calcul: `${eur(x.ca)} − ${eur(x.objectif)} = ${eur(x.ecartALObjectif)}` },
+          { libelle: "Taux de réalisation (%)", attendu: x.realisation, tolerance: 0.1, calcul: `${eur(x.ca)} ÷ ${eur(x.objectif)} × 100 = ${pct(x.realisation)}` },
         ];
       },
       explication: (c) => {
-        const r = trimestreFaceALObjectif(c);
+        const { x } = janvierFaceALObjectif(c);
+        return [`${x.f.entreprise} n'a réalisé que ${pct(x.realisation)} de son objectif de janvier : il lui manque ${eur(-x.ecartALObjectif)}.`];
+      },
+    },
+    {
+      id: "ce-qui-explique",
+      type: "montants",
+      titre: "Le trafic, la transformation ou le panier ?",
+      notions: ["dashboard", "conversion_rate", "average_basket"],
+      question: (c) => {
+        const { x } = janvierFaceALObjectif(c);
+        return `Sur janvier N − 1, le chiffre d'affaires perd ${eur(-(x.ca - x.n1.chiffreDAffaires))}. Décomposez cet écart en effet du trafic, effet de la transformation, puis effet du panier, dans cet ordre, comme au chapitre. Négatif pour un effet défavorable.`;
+      },
+      champs: (c) => {
+        const { x } = janvierFaceALObjectif(c);
+        const n1 = x.n1;
         return [
-          r.atteint
-            ? `${c.entreprise} a réalisé ${pct(r.realisation)} de son objectif : ${eur(r.ecart)} de plus que demandé, chaque mois du trimestre.`
-            : `${c.entreprise} n'a réalisé que ${pct(r.realisation)} de son objectif : il lui a manqué ${eur(-r.ecart)} chaque mois du trimestre.`,
+          { libelle: "Effet du trafic", attendu: x.effetDuTrafic, tolerance: 0.5, calcul: `(${qte(x.m.entrees)} − ${qte(n1.trafic)}) × (${eur(n1.chiffreDAffaires)} ÷ ${qte(n1.trafic)}) = ${eur(x.effetDuTrafic)}` },
+          {
+            libelle: "Effet de la transformation",
+            attendu: x.effetDeLaTransformation,
+            tolerance: 0.5,
+            calcul: `(${qte(x.m.tickets)} − ${qte(x.m.entrees)} × ${qte(n1.tickets)} ÷ ${qte(n1.trafic)}) × ${eur(x.panierN1)} = (${qte(x.m.tickets)} − ${qte(x.passagesAuTauxN1)}) × ${eur(x.panierN1)} = ${eur(x.effetDeLaTransformation)}`,
+          },
+          { libelle: "Effet du panier", attendu: x.effetDuPanier, tolerance: 0.5, calcul: `${eur(x.ca)} − ${qte(x.m.tickets)} × ${eur(x.panierN1)} = ${eur(x.effetDuPanier)}` },
+        ];
+      },
+      explication: (c) => {
+        const { x } = janvierFaceALObjectif(c);
+        return [
+          `Le trafic coûte ${eur(-x.effetDuTrafic)} ; la transformation et le panier en rendent ${eur(auCentime(x.effetDeLaTransformation + x.effetDuPanier))}. Les vendeurs ont déjà mieux vendu qu'en N − 1 : ce qui manque, ce sont des clients.`,
         ];
       },
     },
     {
-      id: "volume-ou-prix",
+      id: "ce-qui-reste-a-faire",
       type: "montants",
-      titre: "Le volume ou le prix ?",
-      notions: ["dashboard", "average_basket"],
-      question: (c) =>
-        `Le chiffre d'affaires, c'est des ventes multipliées par un prix moyen. Calculez le prix moyen d'${accord(c, "un")} ${c.unite} à chaque trimestre (au centime), puis l'évolution des ventes et celle du prix moyen du trimestre 1 au trimestre 2, en pourcentage, au dixième.`,
+      titre: "Ce que février et mars doivent faire",
+      notions: ["dashboard", "conversion_rate"],
+      question: () =>
+        "Pour tenir le budget du trimestre, combien de chiffre d'affaires reste-t-il à faire après janvier ? Combien par mois, en février et en mars ? Quel taux de transformation faudrait-il chaque mois pour y arriver aux entrées et au panier de janvier (au dixième) ?",
       champs: (c) => {
-        const r = trimestreFaceALObjectif(c);
+        const r = janvierFaceALObjectif(c);
+        const x = r.x;
         return [
-          { libelle: "Prix moyen du trimestre 1", attendu: r.prix1, calcul: `${eur(r.t1.ca)} ÷ ${qte(r.t1.ventes)} = ${eur(r.prix1)}` },
-          { libelle: "Prix moyen du trimestre 2", attendu: r.prix2, calcul: `${eur(r.t2.ca)} ÷ ${qte(r.t2.ventes)} = ${eur(r.prix2)}` },
-          { libelle: "Évolution des ventes (%)", attendu: r.evolutionVentes, tolerance: 0.1, calcul: `(${qte(r.t2.ventes)} ÷ ${qte(r.t1.ventes)} − 1) × 100 = ${pct(r.evolutionVentes)}` },
-          { libelle: "Évolution du prix moyen (%)", attendu: r.evolutionPrix, tolerance: 0.1, calcul: `(${eur(r.prix2)} ÷ ${eur(r.prix1)} − 1) × 100 = ${pct(r.evolutionPrix)}` },
+          { libelle: "Reste à faire sur le trimestre", attendu: r.reste, calcul: `${eur(x.budgetDuTrimestre)} − ${eur(x.ca)} = ${eur(r.reste)}` },
+          { libelle: "Chiffre d'affaires par mois", attendu: r.parMois, calcul: `${eur(r.reste)} ÷ ${qte(MOIS_RESTANTS)} = ${eur(r.parMois)}` },
+          {
+            libelle: "Taux de transformation nécessaire (%)",
+            attendu: r.transformationDuRattrapage,
+            tolerance: 0.1,
+            calcul: `${eur(r.parMois)} ÷ (${qte(x.m.entrees)} entrées × ${eur(x.panierN)}) × 100 = ${pct(r.transformationDuRattrapage)}`,
+          },
         ];
       },
       explication: (c) => {
-        const r = trimestreFaceALObjectif(c);
-        const deux = `Chez ${c.entreprise}, les ventes évoluent de ${pct(r.evolutionVentes)} et le prix moyen de ${pct(r.evolutionPrix)}.`;
-        const volume = "Le manager regardera la demande, le stock et la capacité.";
-        const prix = "Le manager regardera ce qui se vend, et les remises accordées.";
-        if (r.atteint) {
-          return [`${deux} ${r.evolutionVentes >= r.evolutionPrix ? "C'est le nombre de ventes qui porte la progression." : "C'est le prix moyen qui porte la progression."}`];
-        }
-        if (r.evolutionVentes < 0 && r.evolutionPrix < 0) return [`${deux} Les deux reculent : il manque des ventes, et chacune rapporte moins. ${volume}`];
-        if (r.evolutionVentes < 0) return [`${deux} C'est le nombre de ventes qui manque à l'objectif. ${volume}`];
-        if (r.evolutionPrix < 0) return [`${deux} C'est le prix moyen qui manque à l'objectif. ${prix}`];
-        return [`${deux} Les deux progressent, mais ensemble moins que les ${pct(OBJECTIF_DU_TRIMESTRE * 100)} demandés.`];
+        const r = janvierFaceALObjectif(c);
+        const x = r.x;
+        return [
+          `Il faudrait ${pct(r.transformationDuRattrapage)} de transformation deux mois de suite, quand la boutique a fait ${pct(x.transformationN)} en janvier N et ${pct(x.transformationN1)} en N − 1. Le plan du responsable demande à l'équipe de faire d'un coup ce qu'elle n'a jamais fait.`,
+        ];
+      },
+    },
+    {
+      id: "le-trafic-du-rattrapage",
+      type: "curseur",
+      titre: "Le trafic qui rattraperait",
+      notions: ["dashboard", "conversion_rate"],
+      question: (c) => {
+        const r = janvierFaceALObjectif(c);
+        return `Gardez la transformation et le panier de janvier : chaque entrée rapporte ${eur(auCentime(r.x.caParEntree))}. Faites varier les entrées d'un mois de rattrapage : à partir de combien le mois fait-il ${eur(r.parMois)} ? Placez le curseur sur le plus petit nombre, puis validez.`;
+      },
+      grandeur: () => ({ libelle: "Entrées du mois", unite: "entrées" }),
+      cible: (c) => ({ attendu: janvierFaceALObjectif(c).entreesDuRattrapage, min: ENTREES_DU_RATTRAPAGE.min, max: ENTREES_DU_RATTRAPAGE.max }),
+      zones: ["Le trimestre est rattrapé", "Le trimestre reste en retard"],
+      rates: () => ({
+        dessous: "À ce trafic, le mois ne fait pas encore sa part du reste du budget.",
+        dessus: "Plus bas, le mois fait encore sa part : cherchez le plus petit nombre d'entrées.",
+      }),
+      montrer: "Montrer le croisement",
+      lecture: (c, n) => {
+        const r = janvierFaceALObjectif(c);
+        const ca = auCentime(n * r.x.caParEntree);
+        return [
+          { libelle: "Chiffre d'affaires du mois", montant: ca },
+          { libelle: "Part du reste du budget", montant: r.parMois },
+          { libelle: "Chiffre d'affaires de janvier N − 1", montant: r.x.n1.chiffreDAffaires },
+          { libelle: "Avance sur la part du budget", montant: auCentime(ca - r.parMois), fort: true },
+        ];
+      },
+      droites: (c) => {
+        const r = janvierFaceALObjectif(c);
+        return { produit: (n) => n * r.x.caParEntree, cout: () => r.parMois, libelles: ["Chiffre d'affaires des entrées", "Part du reste du budget"] };
+      },
+      explication: (c) => {
+        const r = janvierFaceALObjectif(c);
+        return [
+          `Il faudrait ${qte(r.entreesDuRattrapage)} entrées chaque mois, ${pct(r.hausseDuTraficSurN1)} de plus que janvier N − 1 (${qte(r.x.n1.trafic)}). Ni le trafic seul, ni la transformation seule ne rattrapent sans effort : il faut faire revenir les clients, et garder ce que l'équipe a gagné.`,
+        ];
       },
     },
     {
       id: "reponse",
       type: "choix",
       titre: "Votre réponse à la direction régionale",
+      notions: ["dashboard"],
       question: () => "Quelle ligne envoyez-vous à la direction régionale ?",
       options: (c) => {
-        const r = trimestreFaceALObjectif(c);
+        const r = janvierFaceALObjectif(c);
+        const x = r.x;
+        const trafic = r.verdict === "le-trafic-doit-revenir";
         return [
           {
-            texte: `Objectif ${statut(r.realisation)} : ${pct(r.realisation)} de réalisation`,
-            juste: true,
-            retour: `Oui : ${eur(r.t2.ca)} réalisés pour ${eur(r.objectif)} demandés, soit un écart de ${eur(r.ecart)} par mois. Le taux de réalisation rapporte toujours le réalisé à l'objectif.`,
+            texte: `Manqué à ${pct(x.realisation)} par le trafic : il faut faire revenir des clients`,
+            juste: trafic,
+            retour: trafic
+              ? `Oui : ${eur(x.ca)} pour ${eur(x.objectif)}, et le trafic coûte ${eur(-x.effetDuTrafic)} quand la transformation et le panier progressent. Rattraper par la seule transformation demanderait ${pct(r.transformationDuRattrapage)}, jamais atteint : le plan du responsable ne tient pas sans les clients.`
+              : "Non : la transformation demandée reste à portée de l'équipe.",
           },
           {
-            texte: `Objectif ${statut(r.surLeTrimestre1)} : ${pct(r.surLeTrimestre1)} de réalisation, rapporté au trimestre 1`,
-            juste: false,
-            retour: `Non : ${pct(r.surLeTrimestre1)} compare le trimestre 2 au trimestre 1, pas à l'objectif. L'objectif était de ${eur(r.objectif)}, ${pct(OBJECTIF_DU_TRIMESTRE * 100)} au-dessus du trimestre 1 : le taux de réalisation est de ${pct(r.realisation)}.`,
+            texte: `Manqué à ${pct(x.realisation)} : ${pct(r.transformationDuRattrapage)} de transformation rattraperont le trimestre`,
+            juste: !trafic,
+            retour: trafic
+              ? `Non : c'est valider le plan sans le comparer à l'historique. ${pct(r.transformationDuRattrapage)} deux mois de suite, quand la boutique fait ${pct(x.transformationN)} ; et le voyant rouge est le trafic.`
+              : "Oui : cette transformation est à la portée de l'équipe.",
           },
           {
-            texte: `Objectif ${statut(r.inverse)} : ${pct(r.inverse)} de réalisation, l'objectif divisé par le réalisé`,
+            texte: `Presque tenu : ${pct(r.surN1)} de réalisation, rapporté à janvier N − 1`,
             juste: false,
-            retour: `Non : le rapport est inversé. On divise ce qui a été fait par ce qui était demandé : ${eur(r.t2.ca)} ÷ ${eur(r.objectif)} = ${pct(r.realisation)}.`,
+            retour: `Non : ${pct(r.surN1)} compare janvier N à janvier N − 1, pas à l'objectif. Le taux de réalisation rapporte le réalisé à l'objectif : ${eur(x.ca)} ÷ ${eur(x.objectif)} = ${pct(x.realisation)}.`,
+          },
+          {
+            texte: `Manqué à ${pct(x.realisation)} : l'équipe vend moins bien, il faut la former`,
+            juste: false,
+            retour: `Non : la transformation monte de ${pct(x.transformationN1)} à ${pct(x.transformationN)}, et l'effet de la transformation est favorable, ${eur(x.effetDeLaTransformation)}. L'équipe vend mieux ; ce sont les entrées qui manquent.`,
           },
         ];
       },

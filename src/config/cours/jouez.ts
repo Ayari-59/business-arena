@@ -1,5 +1,4 @@
 import type { Cas } from "./cas";
-import { fournisseursDe } from "./chapitres/taux-de-marque";
 import { ECART_DE_PRIX } from "./decision";
 import { BUDGET_DE_FORMATION_EN_ECHELLES, ECART_D_INDICE, EMBAUCHES } from "./ressources-humaines";
 import { formuleRetenue } from "./chapitres/s-assurer-contre-les-aleas";
@@ -193,6 +192,19 @@ export interface MissionDansLArene {
   lieux: readonly LieuDeLArene[];
   /** Ce que l'élève y cherche, la question qu'il rapporte au cours. */
   chercher: string;
+}
+
+/**
+ * Les trois fournisseurs du scénario de l'arène qu'une mission fait jouer : celui de référence, le
+ * moins cher et le plus cher. La mission cite leurs vrais noms ; le chapitre du taux de marque, lui,
+ * joue dans le monde du cours et ne lit plus l'arène.
+ */
+function fournisseursDe(codeDuScenario: string) {
+  const tous = scenarioByCode(codeDuScenario).scenario.suppliers ?? [];
+  const parPrix = [...tous].sort((a, b) => a.costMultiplier - b.costMultiplier);
+  const reference = tous.find((s) => s.costMultiplier === 1);
+  if (!reference || parPrix.length < 3) throw new Error(`Pas de trois fournisseurs pour ${codeDuScenario}`);
+  return { reference, moinsCher: parPrix[0]!, plusCher: parPrix[parPrix.length - 1]! };
 }
 
 /** Les mots de la feuille de décision de l'entreprise, au niveau où elle se joue. */

@@ -816,7 +816,8 @@ function GraphiqueDuLaboratoire({ graphique, levier, position }: { graphique: Gr
   const L = 560;
   const H = 240;
   const marge = { g: 8, d: 8, h: 12, b: 26 };
-  const n = 60;
+  // Un point par pas du levier, entre 60 et 200 : des dents de scie sur 90 jours restent nettes.
+  const n = Math.min(200, Math.max(60, Math.round((levier.max - levier.min) / levier.pas)));
   const xs = Array.from({ length: n + 1 }, (_, i) => levier.min + ((levier.max - levier.min) * i) / n);
   const series = graphique.courbes.map((c) => xs.map((v) => c.valeur({ ...position, [levier.code]: v })));
   const toutes = series.flat().filter(Number.isFinite);
