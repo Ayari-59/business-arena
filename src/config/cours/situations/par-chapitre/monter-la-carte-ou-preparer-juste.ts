@@ -25,6 +25,12 @@ import type { Situation } from "../types";
  *     marge.
  * Les charges fixes du trimestre ne changent pas d'une façon à l'autre : l'écart de marge sur coûts
  * variables est l'écart de résultat.
+ *
+ * LE CROISEMENT ET LE CURSEUR (demande du propriétaire, octobre 2026 : un cas aussi exigeant que son
+ * chapitre) : avant de lire ce que la carte montée rapporte, l'élève fait varier au curseur les
+ * couverts qu'elle sert, puis remonte à rebours de la marge du trimestre joué aux clients qu'elle peut
+ * perdre (la marge qu'un couvert servi y laisse, couverts préparés en plus compris). Il les compare
+ * ensuite aux clients que la simulation lui fait perdre : le jugement porte sur cet écart.
  */
 
 /** Un montant à la française, avec le signe moins typographique. */
@@ -56,6 +62,12 @@ export function carteOuCuisine(c: Pick<Cas, "code">) {
   };
   const ordre: Facon[] = ["joue", "carte", "juste"];
   const meilleure = ordre.reduce((a, b) => (facons[b].margeSurCoutsVariables > facons[a].margeSurCoutsVariables ? b : a));
+  // À rebours : la marge qu'un couvert servi laisse au ticket monté (la cuisine préparant comme
+  // d'habitude), les couverts qu'il faut servir pour garder la marge du trimestre joué, et les clients
+  // que la carte montée peut donc perdre.
+  const denreesParCouvertServi = auCentime(joue.coutDuCouvert * (1 + MARGE_DE_PREPARATION));
+  const margeParCouvertServi = auCentime(prixMonte - f.autresCoutsParCouvert - denreesParCouvertServi);
+  const couvertsAGarder = Math.ceil(joue.margeSurCoutsVariables / margeParCouvertServi - 1e-9);
   return {
     m,
     f,
@@ -68,6 +80,12 @@ export function carteOuCuisine(c: Pick<Cas, "code">) {
     ecartCarte: auCentime(facons.carte.margeSurCoutsVariables - joue.margeSurCoutsVariables),
     ecartJuste: auCentime(facons.juste.margeSurCoutsVariables - joue.margeSurCoutsVariables),
     meilleure,
+    denreesParCouvertServi,
+    margeParCouvertServi,
+    couvertsAGarder,
+    clientsQueLaCartePeutPerdre: joue.servis - couvertsAGarder,
+    /** Les bornes du curseur : de 60 % des couverts du trimestre joué, à la centaine, jusqu'à eux tous. */
+    curseur: { min: Math.floor((joue.servis * 0.6) / 100) * 100, max: joue.servis },
   };
 }
 
@@ -84,6 +102,7 @@ export const MONTER_LA_CARTE_OU_PREPARER_JUSTE: Situation = {
   objectifs: [
     "Calculer le ratio coût matière d'un trimestre rejoué",
     "Comparer deux façons de corriger un ratio qui dérive",
+    "Remonter à rebours de la marge à garder aux clients qu'une hausse peut perdre",
     "Juger une décision à ce qu'elle rapporte, et pas au seul ratio",
   ],
   libre: false,
@@ -122,7 +141,8 @@ export const MONTER_LA_CARTE_OU_PREPARER_JUSTE: Situation = {
           ],
         };
       },
-      repere: () => "À rendre : le ratio coût matière de chaque façon, ce que chacune rapporte de plus que le trimestre joué, et votre réponse au chef.",
+      repere: () =>
+        "À rendre : le ratio coût matière de chaque façon, les clients que la carte montée peut perdre et ceux qu'elle perd, ce que chaque façon rapporte de plus que le trimestre joué, et votre réponse au chef.",
     },
     {
       id: "les-ratios",
@@ -142,6 +162,86 @@ export const MONTER_LA_CARTE_OU_PREPARER_JUSTE: Situation = {
         const plusBas = k.carte.ratio < k.juste.ratio ? "la carte montée" : "préparer juste";
         return [
           `La carte montée ramène le ratio à ${pct(k.carte.ratio)}, préparer juste à ${pct(k.juste.ratio)} : les deux font mieux que les ${pct(k.joue.ratio)} du trimestre joué. Le ratio seul désignerait ${plusBas} ; reste à voir ce que chacune rapporte.`,
+        ];
+      },
+    },
+    {
+      id: "la-carte-au-curseur",
+      type: "curseur",
+      titre: "Les clients que la carte peut perdre",
+      notions: ["contribution_margin", "price_elasticity"],
+      question: (c) => {
+        const k = carteOuCuisine(c);
+        return `À ${eur(k.prixMonte)} HT, chaque couvert servi rapporte plus, mais des clients partent. Faites varier les couverts que la carte montée sert au ${rang(k.trimestre)} trimestre, la cuisine préparant comme d'habitude. Une droite donne la marge sur coûts variables de la carte montée, l'autre celle du trimestre joué. Placez le curseur sur le moins de couverts qui garde la marge du trimestre joué, puis validez.`;
+      },
+      grandeur: () => ({ libelle: "Couverts servis, carte montée", unite: "couverts" }),
+      cible: (c) => {
+        const k = carteOuCuisine(c);
+        return { attendu: k.couvertsAGarder, min: k.curseur.min, max: k.curseur.max };
+      },
+      zones: ["La carte montée paie", "La carte montée coûte"],
+      rates: () => ({
+        dessous: "Avec si peu de couverts, la carte montée rapporte moins que le trimestre joué.",
+        dessus: "Moins de couverts garderaient encore la marge : cherchez le plus petit nombre.",
+      }),
+      montrer: "Montrer le seuil",
+      lecture: (c, n) => {
+        const k = carteOuCuisine(c);
+        const marge = auCentime(n * k.margeParCouvertServi);
+        return [
+          { libelle: "Marge sur coûts variables, carte montée", montant: marge },
+          { libelle: "Marge sur coûts variables, trimestre joué", montant: k.joue.margeSurCoutsVariables },
+          { libelle: "Écart de marge", montant: auCentime(marge - k.joue.margeSurCoutsVariables), fort: true },
+        ];
+      },
+      droites: (c) => {
+        const k = carteOuCuisine(c);
+        return {
+          produit: (n) => n * k.margeParCouvertServi,
+          cout: () => k.joue.margeSurCoutsVariables,
+          libelles: ["Marge de la carte montée", "Marge du trimestre joué"],
+        };
+      },
+      explication: (c) => {
+        const k = carteOuCuisine(c);
+        return [
+          `La carte montée garde la marge du trimestre joué tant qu'elle sert au moins ${qte(k.couvertsAGarder)} couverts : sur ${qte(k.joue.servis)}, elle peut perdre ${qte(k.clientsQueLaCartePeutPerdre)} clients. Reste à savoir combien elle en perd.`,
+        ];
+      },
+    },
+    {
+      id: "ce-que-la-carte-peut-perdre",
+      type: "montants",
+      titre: "À rebours, les clients que la carte peut perdre",
+      notions: ["contribution_margin", "margin_rates"],
+      question: () =>
+        "Remontez de la marge du trimestre joué aux clients que la carte montée peut perdre : la marge sur coûts variables qu'y laisse un couvert servi (la cuisine préparant comme d'habitude), les couverts qu'il faut servir pour garder la marge du trimestre joué (arrondi à l'unité supérieure), puis les clients que la carte peut perdre.",
+      champs: (c) => {
+        const k = carteOuCuisine(c);
+        return [
+          {
+            libelle: "Marge d'un couvert servi, carte montée",
+            attendu: k.margeParCouvertServi,
+            calcul: `${eur(k.prixMonte)} − ${eur(k.f.autresCoutsParCouvert)} − ${eur(k.joue.coutDuCouvert)} × ${coef(1 + MARGE_DE_PREPARATION)} = ${eur(k.margeParCouvertServi)}`,
+          },
+          {
+            libelle: "Couverts à servir pour garder la marge",
+            attendu: k.couvertsAGarder,
+            calcul: `${eur(k.joue.margeSurCoutsVariables)} ÷ ${eur(k.margeParCouvertServi)} = ${qte(k.couvertsAGarder)}`,
+            tolerance: 1,
+          },
+          {
+            libelle: "Clients que la carte peut perdre",
+            attendu: k.clientsQueLaCartePeutPerdre,
+            calcul: `${qte(k.joue.servis)} − ${qte(k.couvertsAGarder)} = ${qte(k.clientsQueLaCartePeutPerdre)}`,
+            tolerance: 1,
+          },
+        ];
+      },
+      explication: (c) => {
+        const k = carteOuCuisine(c);
+        return [
+          `Un couvert servi au ticket monté laisse ${eur(k.margeParCouvertServi)} : le ticket, moins les autres coûts variables, moins les denrées de ${coef(1 + MARGE_DE_PREPARATION)} couvert préparé (${eur(k.denreesParCouvertServi)}). Il en faut ${qte(k.couvertsAGarder)} pour refaire la marge du trimestre joué, ${eur(k.joue.margeSurCoutsVariables)} : la carte peut perdre ${qte(k.clientsQueLaCartePeutPerdre)} clients, pas un de plus.`,
         ];
       },
     },
@@ -173,7 +273,7 @@ export const MONTER_LA_CARTE_OU_PREPARER_JUSTE: Situation = {
       explication: (c) => {
         const k = carteOuCuisine(c);
         return [
-          `À ${eur(k.prixMonte)} HT, ${qte(k.clientsPerdus)} clients ne viennent plus, et chacun emporte sa marge ; chaque couvert servi rapporte ${eur(k.gainParCouvert)} de plus, et la cuisine en prépare moins. ${k.ecartCarte > 0 ? "Au total, la hausse rapporte plus qu'elle ne coûte." : "Au total, les clients perdus coûtent plus que la hausse ne rapporte."}`,
+          `À ${eur(k.prixMonte)} HT, ${qte(k.clientsPerdus)} clients ne viennent plus, quand la carte pouvait en perdre ${qte(k.clientsQueLaCartePeutPerdre)} ; chaque couvert servi rapporte ${eur(k.gainParCouvert)} de plus, et la cuisine en prépare moins. ${k.ecartCarte > 0 ? "Au total, la hausse rapporte plus qu'elle ne coûte." : "Au total, les clients perdus coûtent plus que la hausse ne rapporte."}`,
           `Préparer juste garde tous les clients au même ticket, et les ${qte(k.joue.perdus)} couverts que la cuisine jetait ne sont plus préparés : le coût matière tombe de ${eur(k.joue.denrees)} à ${eur(k.juste.denrees)}.`,
         ];
       },
@@ -195,7 +295,7 @@ export const MONTER_LA_CARTE_OU_PREPARER_JUSTE: Situation = {
           {
             texte: `Monter la carte à ${eur(k.prixMonte)} HT`,
             juste: k.meilleure === "carte",
-            retour: `${dit("carte")} Le ratio revient à ${pct(k.carte.ratio)}, et les ${eur(k.gainParCouvert)} de plus sur chaque couvert servi ${k.ecartCarte > 0 ? "paient" : "ne paient pas"} les ${qte(k.clientsPerdus)} clients perdus.${encore}${k.meilleure === "carte" ? "" : " Un ratio bas n'est pas un but : c'est un repère."}`,
+            retour: `${dit("carte")} Le ratio revient à ${pct(k.carte.ratio)}, et les ${eur(k.gainParCouvert)} de plus sur chaque couvert servi ${k.ecartCarte > 0 ? "paient" : "ne paient pas"} les ${qte(k.clientsPerdus)} clients perdus : la carte pouvait en perdre ${qte(k.clientsQueLaCartePeutPerdre)}.${encore}${k.meilleure === "carte" ? "" : " Un ratio bas n'est pas un but : c'est un repère."}`,
           },
           {
             texte: `Garder ${eur(k.joue.prix)} HT et préparer juste`,

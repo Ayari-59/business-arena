@@ -5,6 +5,8 @@ import { casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
 import {
   ENTREPRISES_DU_SERVICE,
   LA_PRODUCTIVITE_DU_SERVICE,
+  PART_DU_PRIX_POUR_LE_PERSONNEL,
+  SALARIES_EN_PLUS,
   productiviteDuService,
 } from "../../src/config/cours/chapitres/la-productivite-du-service";
 import {
@@ -12,6 +14,8 @@ import {
   ENTREPRISES_DE_LA_SAISON,
   HAUSSE_EN_HAUTE_SAISON,
   LE_PRIX_SELON_LA_SAISON,
+  PETITE_BAISSE,
+  PRIX_DU_LABORATOIRE,
   prixSelonLaSaison,
   saisonDuMarche,
 } from "../../src/config/cours/chapitres/le-prix-selon-la-saison";
@@ -26,23 +30,25 @@ import {
   plusCherAuPlusFort,
 } from "../../src/config/cours/situations/par-chapitre/plus-cher-au-plus-fort-de-la-saison";
 import type { Situation } from "../../src/config/cours/situations/types";
-import type { Chapitre, Etape, EtapeChoix, EtapeMontants, EtatDuCours } from "../../src/config/cours/types";
+import type { Chapitre, Etape, EtapeChoix, EtapeCurseur, EtapeMontants, EtapeSimulation, EtatDuCours } from "../../src/config/cours/types";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
 import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
 
 /**
  * LES DEUX CHAPITRES DU BTS MHR AU PALIER 3, ET LEURS CAS : LA PRODUCTIVITÉ DU SERVICE, LE PRIX
- * SELON LA SAISON.
+ * SELON LA SAISON, DANS LE MONDE DU COURS.
  *
- * La productivité : l'année du service dans le monde du cours (monde/service.ts), trimestre par
- * trimestre, au bistrot et à l'hôtel, refaite à la main sur leurs fiches. Le prix selon la saison : la saisonnalité du scénario de l'hôtel, puis l'année rejouée
- * au prix de la saison et au prix du remplissage (gestion-de-la-pme.ts). Ces gardes recomposent
- * les chiffres avec le moteur, sans passer par les fonctions des chapitres ; elles vérifient que
- * chaque valeur attendue d'un champ est bien ce calcul, que le prix de l'hôtel est une décision
- * unique que le moteur honore, que la défaillance se tranche avant la somme, que les verdicts se
- * calculent, et que les textes se lisent : rien d'indéfini, pas de « de le », pas de tiret au
- * milieu d'une phrase, des élisions faites, une seule bonne réponse, aucune option qui en contient
- * une autre, des libellés uniques, des notions qui existent, des accords avec les unités féminines.
+ * La productivité : l'année du service (monde/service.ts), trimestre par trimestre, au bistrot et à
+ * l'hôtel, refaite à la main sur leurs fiches. Le prix selon la saison : la saisonnalité de la fiche de
+ * l'hôtel, puis l'année rejouée au prix de la saison, au prix du remplissage et aux quatre prix du
+ * laboratoire, refaite à la main par le modèle de demande de la fiche (élasticité, capacité). Ces
+ * gardes ne passent jamais par les fonctions des chapitres pour obtenir un attendu : chaque champ,
+ * chaque curseur (l'attendu, ses droites aux deux bornes, sa lecture à l'attendu), chaque laboratoire
+ * (sa lecture au départ et à la solution, son défi, ses courbes en quelques points), les variantes et
+ * les calculs à rebours sont refaits ici ; les verdicts sont épinglés ; et les textes se lisent : rien
+ * d'indéfini, pas de « de le », pas de tiret au milieu d'une phrase, des élisions faites, une seule
+ * bonne réponse, aucune option qui en contient une autre, des libellés uniques, des notions qui
+ * existent, des accords avec les unités féminines.
  */
 
 const etatVide: EtatDuCours = { soldes: {} };
@@ -52,13 +58,35 @@ function textesDe(e: Etape, cas: Cas, etat: EtatDuCours): string[] {
   const tableau = t ? [t.titre, ...t.colonnes, ...t.lignes.flatMap((l) => [l.libelle, ...l.valeurs])] : [];
   switch (e.type) {
     case "lecture":
-      return [...e.texte(cas), e.repere?.(cas) ?? "", ...tableau];
+      return [e.titre, ...e.texte(cas), e.repere?.(cas) ?? "", ...tableau];
     case "choix":
-      return [e.question(cas, etat), ...e.options(cas, etat).flatMap((o) => [o.texte, o.retour]), ...tableau];
+      return [e.titre, e.question(cas, etat), ...e.options(cas, etat).flatMap((o) => [o.texte, o.retour]), ...tableau];
     case "montants":
-      return [e.question(cas, etat), ...e.champs(cas, etat).flatMap((c) => [c.libelle, c.calcul, String(c.attendu)]), ...e.explication(cas, etat), ...tableau];
+      return [e.titre, e.question(cas, etat), ...e.champs(cas, etat).flatMap((c) => [c.libelle, c.calcul, String(c.attendu)]), ...e.explication(cas, etat), ...tableau];
+    case "curseur": {
+      const k = e.cible(cas);
+      const g = e.grandeur?.(cas);
+      const r = e.rates?.(cas);
+      return [e.titre, e.question(cas), ...e.explication(cas), ...e.lecture(cas, k.attendu).map((l) => l.libelle), ...e.droites(cas).libelles, ...(e.zones ?? []), g?.libelle ?? "", g?.unite ?? "", r?.dessous ?? "", r?.dessus ?? "", e.montrer ?? ""];
+    }
+    case "simulation": {
+      const d = e.defi(cas);
+      const depart = Object.fromEntries(e.leviers(cas).map((l) => [l.code, l.depart]));
+      const g = e.graphique?.(cas);
+      return [
+        e.titre,
+        e.question(cas),
+        d.consigne,
+        d.indice(depart),
+        ...e.explication(cas, d.solution),
+        ...e.lecture(cas, d.solution).map((l) => l.libelle),
+        ...e.leviers(cas).flatMap((l) => [l.libelle, l.unite]),
+        ...(g?.courbes.map((c) => c.libelle) ?? []),
+        e.montrer ?? "",
+      ];
+    }
     default:
-      return [];
+      return [e.titre];
   }
 }
 
@@ -82,7 +110,8 @@ function verifierLesTextes(ch: Chapitre, code: string) {
       expect(x, `${e.id} : ${x}`).not.toMatch(/mises? en situation/i);
       // Un négatif prend le signe moins (la valeur attendue brute, que l'élève ne lit pas, garde son trait d'union).
       if (!/^-?\d+(\.\d+)?$/.test(x)) expect(x, `${e.id} : ${x}`).not.toMatch(/(^|[\s(])-\d/);
-      expect(x, `${e.id} : ${x}`).not.toMatch(/− −|\s{2,}|\+−|\+-/);
+      expect(x, `${e.id} : ${x}`).not.toMatch(/− −|\s{2,}|\+−|\+-|\s$/);
+      expect(x, `${e.id} : ${x}`).not.toMatch(/\bà Le |\bde Le |\bce que ce que\b/);
       // Pas de capitales espacées, pas de nombre en toutes lettres devant ce qui se compte.
       expect(x, `${e.id} : ${x}`).not.toMatch(/\b[A-Z] [A-Z] [A-Z]\b/);
       expect(x, `${e.id} : ${x}`).not.toMatch(/\b(deux|trois|quatre|cinq|six|sept|huit|neuf|dix) (clientèles?|trimestres?|salariés?|chambres?|nuitées?|couverts?)\b/i);
@@ -131,6 +160,50 @@ function attendus(ch: Chapitre, id: string, cas: Cas): Record<string, number> {
   return Object.fromEntries(e.champs(cas, etatVide).map((c) => [c.libelle, c.attendu]));
 }
 
+/** Un curseur : son attendu, ses bornes, ses droites aux deux bornes, et sa lecture à l'attendu, par libellé. */
+function curseur(ch: Chapitre, id: string, cas: Cas) {
+  const e = ch.etapes.find((x) => x.id === id) as EtapeCurseur;
+  expect(e.type, id).toBe("curseur");
+  const k = e.cible(cas);
+  const d = e.droites(cas);
+  const min = k.min ?? 0;
+  // L'attendu est bien la position que le sens désigne : la plus petite qui couvre, ou la plus grande.
+  const couvre = (q: number) => d.produit(q) - d.cout(q) >= -1e-9;
+  expect(couvre(k.attendu), `${id} : l'attendu couvre`).toBe(true);
+  if (e.sens === "plus-grande") expect(couvre(k.attendu + 1), `${id} : la position suivante couvre encore`).toBe(false);
+  else expect(couvre(k.attendu - 1), `${id} : la position d'avant couvre déjà`).toBe(false);
+  return {
+    attendu: k.attendu,
+    bornes: [min, k.max],
+    droites: [d.produit(min), d.cout(min), d.produit(k.max), d.cout(k.max)].map(centime),
+    lecture: Object.fromEntries(e.lecture(cas, k.attendu).map((l) => [l.libelle, l.montant])),
+  };
+}
+
+/** Un laboratoire : sa lecture au départ et à la solution, par libellé, et si chacun relève le défi. */
+function laboratoire(ch: Chapitre, id: string, cas: Cas) {
+  const e = ch.etapes.find((x) => x.id === id) as EtapeSimulation;
+  expect(e.type, id).toBe("simulation");
+  const d = e.defi(cas);
+  const depart = Object.fromEntries(e.leviers(cas).map((l) => [l.code, l.depart]));
+  const lire = (p: Record<string, number>) => Object.fromEntries(e.lecture(cas, p).map((l) => [l.libelle, l.montant]));
+  return { e, d, leviers: e.leviers(cas), depart, solution: { ...d.solution }, auDepart: lire(depart), aLaSolution: lire({ ...d.solution }), reussi: [d.atteint(depart), d.atteint(d.solution)] };
+}
+
+/** L'expérience avant la formule : chaque pari juste avant son curseur, un laboratoire, au moins deux étapes d'expert. */
+function lesTroisTemps(ch: Chapitre, paris: string[], curseurs: string[], labo: string, experts: string[]) {
+  const ids = ch.etapes.map((e) => e.id);
+  for (const [p, k] of paris.map((p, i) => [p, curseurs[i]!] as const)) {
+    expect(ch.etapes.find((e) => e.id === p)?.type, p).toBe("choix");
+    expect(ch.etapes.find((e) => e.id === k)?.type, k).toBe("curseur");
+    expect(ids.indexOf(k), `${p} puis ${k}`).toBe(ids.indexOf(p) + 1);
+  }
+  expect(ch.etapes.filter((e) => e.type === "curseur").map((e) => e.id)).toEqual(curseurs);
+  expect(ch.etapes.filter((e) => e.type === "simulation").map((e) => e.id)).toEqual([labo]);
+  for (const x of experts) expect(ids, x).toContain(x);
+  expect(experts.length).toBeGreaterThanOrEqual(2);
+}
+
 /** L'option juste d'une étape de choix. */
 const juste = (ch: Chapitre, id: string, cas: Cas) => (ch.etapes.find((x) => x.id === id) as EtapeChoix).options(cas, etatVide).find((o) => o.juste)!.texte;
 
@@ -164,6 +237,29 @@ describe("les deux chapitres et leurs cas, dans le parcours du BTS MHR", () => {
     expect(PARCOURS.find((p) => p.code === "mhr")!.formation).toBe("bts-mhr");
     expect(LA_PRODUCTIVITE_DU_SERVICE.entreprises!.codes).toEqual(["bistrot", "hotel"]);
     expect(LE_PRIX_SELON_LA_SAISON.entreprises!.codes).toEqual(["hotel"]);
+  });
+
+  it("les trois temps : deux cycles pari puis curseur, un laboratoire, au moins deux étapes d'expert", () => {
+    lesTroisTemps(
+      LA_PRODUCTIVITE_DU_SERVICE,
+      ["predire-le-cout", "predire-l-equipe"],
+      ["remplir-le-creux-au-curseur", "l-equipe-au-curseur"],
+      "le-laboratoire-de-l-equipe",
+      ["l-equipe-du-creux", "une-equipe-de-plus", "juger-l-equipe"],
+    );
+    lesTroisTemps(
+      LE_PRIX_SELON_LA_SAISON,
+      ["predire-la-baisse", "predire-la-hausse"],
+      ["la-baisse-au-curseur", "la-hausse-au-curseur"],
+      "le-laboratoire-des-quatre-prix",
+      ["le-prix-qui-remplit-juste", "une-petite-baisse", "la-regle-des-15-pour-cent"],
+    );
+    // La formule vient après l'expérience : chaque curseur précède l'étape de montants qui la fait calculer.
+    const avant = (ch: Chapitre, a: string, b: string) => expect(ch.etapes.findIndex((e) => e.id === a), `${a} avant ${b}`).toBeLessThan(ch.etapes.findIndex((e) => e.id === b));
+    avant(LA_PRODUCTIVITE_DU_SERVICE, "remplir-le-creux-au-curseur", "ecart");
+    avant(LA_PRODUCTIVITE_DU_SERVICE, "l-equipe-au-curseur", "l-equipe-du-creux");
+    avant(LE_PRIX_SELON_LA_SAISON, "la-baisse-au-curseur", "ce-qu-une-baisse-doit-vendre");
+    avant(LE_PRIX_SELON_LA_SAISON, "la-hausse-au-curseur", "ce-qu-une-hausse-peut-perdre");
   });
 
   it("chaque cas est dédié à son chapitre : même palier, même parcours, mêmes entreprises, sans cours", () => {
@@ -291,9 +387,144 @@ describe.each(ENTREPRISES_DU_SERVICE)("la productivité du service chez %s, dans
     // Il fallait plus que la demande du trimestre creux, et moins que la capacité : il manquait des clients.
     expect(aServir).toBeGreaterThan(demandes[iCreux]!);
     expect(aServir).toBeLessThanOrEqual(capacite);
-    expect(coutDuTrimestreCreux(cas).verdict).toBe("demande");
+    // Le curseur du cas : le coût moyen de l'année × n face au personnel du trimestre creux.
+    const min = Math.floor(vendues[iCreux]! / 1000) * 1000;
+    expect(curseur(LE_COUT_DU_TRIMESTRE_CREUX, "le-cout-moyen-au-curseur", cas)).toEqual({
+      attendu: aServir,
+      bornes: [min, capacite],
+      droites: [centime(coutAnnee * min), personnel, centime(coutAnnee * capacite), personnel],
+      lecture: {
+        "Ce que le coût moyen laisse au personnel": centime(coutAnnee * aServir),
+        "Coût du personnel du trimestre": personnel,
+        [`Coût du personnel par ${unite}`]: centime(personnel / aServir),
+        "Écart avec le coût du personnel": centime(centime(coutAnnee * aServir) - personnel),
+      },
+    });
+    // L'autre levier, à rebours : l'équipe la plus grande qui tenait le coût moyen sans un client de plus.
+    const equipe = Math.floor((coutAnnee * vendues[iCreux]!) / f.equipe.coutParSalarieParTrimestre);
+    const parJour = centime(vendues[iCreux]! / (equipe * jours));
+    expect([equipe, parJour]).toEqual(bistrot ? [7, 8.7] : [10, 3.78]);
+    expect(attendus(LE_COUT_DU_TRIMESTRE_CREUX, "l-autre-levier", cas)).toEqual({
+      "Salariés au plus, sans client de plus": equipe,
+      [`Coût du personnel par ${unite}, équipe réduite`]: centime((equipe * f.equipe.coutParSalarieParTrimestre) / vendues[iCreux]!),
+      [`${U} par salarié et par jour, équipe réduite`]: parJour,
+    });
+    // Le croisement : cette équipe sert moins par salarié et par jour qu'au trimestre le plus chargé.
+    expect(parJour).toBeLessThanOrEqual(centime(vendues[iPlein]! / (effectif * jours)));
+    expect(coutDuTrimestreCreux(cas).verdict).toBe("equipe");
     const reponse = LE_COUT_DU_TRIMESTRE_CREUX.etapes.find((e) => e.id === "reponse") as EtapeChoix;
-    expect(reponse.options(cas, etatVide).find((o) => o.juste)!.texte).toBe("Non : il fallait plus de clients que le trimestre creux n'en a eu");
+    expect(reponse.options(cas, etatVide).find((o) => o.juste)!.texte).toBe("Pas avec la même équipe ; une équipe réduite y arrivait");
+  });
+
+  it("les deux cycles, refaits à la main : les clients qu'il fallait au creux, puis l'équipe qu'il pouvait payer, à 30 % du prix", () => {
+    expect(PART_DU_PRIX_POUR_LE_PERSONNEL).toBe(0.3);
+    const prix = f.prixDeLAnnee;
+    const vise = centime(0.3 * prix);
+    expect(vise).toBe(bistrot ? 10.2 : 26.4);
+    expect(juste(LA_PRODUCTIVITE_DU_SERVICE, "predire-le-cout", cas)).toBe(bistrot ? "De plus de 39,1 %" : "De plus de 37 %");
+    const clients = Math.ceil(personnel / vise);
+    const min = Math.floor(vendues[iCreux]! / 1000) * 1000;
+    expect(clients).toBe(bistrot ? 7059 : 4561);
+    expect(curseur(LA_PRODUCTIVITE_DU_SERVICE, "remplir-le-creux-au-curseur", cas)).toEqual({
+      attendu: clients,
+      bornes: [min, capacite],
+      droites: [centime(vise * min), personnel, centime(vise * capacite), personnel],
+      lecture: {
+        "Chiffre d'affaires du trimestre": centime(prix * clients),
+        "Ce que 30 % du prix laissent au personnel": centime(vise * clients),
+        "Coût du personnel du trimestre": personnel,
+        [`Coût du personnel par ${unite}`]: centime(personnel / clients),
+        "Ce que le repère laisse de plus que le personnel": centime(centime(vise * clients) - personnel),
+      },
+    });
+    // Sans un client de plus : 30 % du chiffre d'affaires du creux, divisés par le coût d'un salarié.
+    const permis = centime(vise * vendues[iCreux]!);
+    const cs = f.equipe.coutParSalarieParTrimestre;
+    const equipe = Math.floor(permis / cs);
+    expect([permis, equipe]).toEqual(bistrot ? [55_896, 7] : [89_760, 10]);
+    expect(juste(LA_PRODUCTIVITE_DU_SERVICE, "predire-l-equipe", cas)).toBe(bistrot ? "Environ 7, au lieu de 10" : "Environ 10, au lieu de 14");
+    expect(curseur(LA_PRODUCTIVITE_DU_SERVICE, "l-equipe-au-curseur", cas)).toEqual({
+      attendu: equipe,
+      bornes: [1, 2 * effectif],
+      droites: [permis, cs, permis, 2 * effectif * cs],
+      lecture: {
+        "Ce que 30 % du chiffre d'affaires laissent au personnel": permis,
+        "Coût du personnel de cette équipe": equipe * cs,
+        [`Coût du personnel par ${unite}`]: centime((equipe * cs) / vendues[iCreux]!),
+        "Ce que le repère laisse de plus que l'équipe": centime(permis - equipe * cs),
+      },
+    });
+    const parJour = centime(vendues[iCreux]! / (equipe * jours));
+    expect(attendus(LA_PRODUCTIVITE_DU_SERVICE, "l-equipe-du-creux", cas)).toEqual({
+      "Salariés au plus": equipe,
+      [`Coût du personnel par ${unite}, équipe réduite`]: centime((equipe * cs) / vendues[iCreux]!),
+      [`${U} par salarié et par jour, équipe réduite`]: parJour,
+    });
+    expect(attendus(LA_PRODUCTIVITE_DU_SERVICE, "l-equipe-du-creux", cas)).toEqual(
+      bistrot
+        ? { "Salariés au plus": 7, "Coût du personnel par couvert, équipe réduite": 9.2, "Couverts par salarié et par jour, équipe réduite": 8.7 }
+        : { "Salariés au plus": 10, "Coût du personnel par nuitée, équipe réduite": 25.29, "Nuitées par salarié et par jour, équipe réduite": 3.78 },
+    );
+    // Le croisement : l'équipe réduite sert moins par jour qu'au trimestre le plus chargé ; elle pouvait tenir le creux.
+    expect(parJour).toBeLessThanOrEqual(centime(vendues[iPlein]! / (effectif * jours)));
+  });
+
+  it("le laboratoire de l'équipe, refait à la main : le coût du plein ne revient qu'à la productivité du plein", () => {
+    const l = laboratoire(LA_PRODUCTIVITE_DU_SERVICE, "le-laboratoire-de-l-equipe", cas);
+    const cs = f.equipe.coutParSalarieParTrimestre;
+    expect(l.leviers.map((x) => [x.code, x.min, x.max, x.pas])).toEqual([
+      ["effectif", 1, 2 * effectif, 1],
+      ["servis", demandes[iCreux], capacite, 10],
+    ]);
+    expect(l.depart).toEqual({ effectif, servis: vendues[iCreux] });
+    // Le défi, en nombres entiers : e × coût d'un salarié × ventes du plein ≤ personnel × n, et n × effectif ≤ ventes du plein × e.
+    const atteint = (e: number, n: number) => e * cs * vendues[iPlein]! <= personnel * n && n * effectif <= vendues[iPlein]! * e;
+    let solution: { effectif: number; servis: number } | undefined;
+    for (let n = demandes[iCreux]!; n <= capacite && !solution; n += 10) for (let e = 1; e <= 2 * effectif && !solution; e++) if (atteint(e, n)) solution = { effectif: e, servis: n };
+    expect(solution).toEqual(bistrot ? { effectif: 7, servis: 6300 } : { effectif: 14, servis: 5400 });
+    expect(l.solution).toEqual(solution);
+    expect(l.reussi).toEqual([false, true]);
+    const lire = (e: number, n: number) => ({
+      "Coût du personnel du trimestre": e * cs,
+      [`${U} par salarié et par jour`]: centime(n / (e * jours)),
+      [`${U} par salarié et par jour, au trimestre le plus chargé`]: centime(vendues[iPlein]! / (effectif * jours)),
+      "Part du personnel dans le chiffre d'affaires": dixieme(((e * cs) / (n * f.prixDeLAnnee)) * 100),
+      [`Coût du personnel par ${unite}`]: centime((e * cs) / n),
+      [`Coût du personnel par ${unite}, au trimestre le plus chargé`]: centime(personnel / vendues[iPlein]!),
+      "Économie sur le coût du personnel": personnel - e * cs,
+    });
+    expect(l.auDepart).toEqual(lire(effectif, vendues[iCreux]!));
+    expect(l.aLaSolution).toEqual(lire(solution!.effectif, solution!.servis));
+    expect(l.aLaSolution[`Coût du personnel par ${unite}`]).toBe(bistrot ? 8 : 22.3);
+    // Une équipe plus petite, à ces clients, demanderait plus que le plein à chaque salarié.
+    expect(atteint(solution!.effectif - 1, solution!.servis)).toBe(false);
+    // Le graphique, en quelques points : le coût par client se divise par les clients servis.
+    const g = l.e.graphique!(cas);
+    expect(g.levier).toBe("servis");
+    const [parClient, auPlein] = g.courbes;
+    for (const n of [demandes[iCreux]!, 5000, capacite]) {
+      expect(parClient!.valeur({ effectif, servis: n }), `${n}`).toBe(centime(personnel / n));
+      expect(auPlein!.valeur({ effectif, servis: n }), `${n}`).toBe(centime(personnel / vendues[iPlein]!));
+    }
+  });
+
+  it("les étapes d'expert, refaites à la main : un salarié de plus sur l'année, et ce que la productivité ne mesure pas", () => {
+    expect(SALARIES_EN_PLUS).toBe(1);
+    const cs = f.equipe.coutParSalarieParTrimestre;
+    const annee = (effectif + 1) * cs * 4;
+    const clients = Math.ceil(annee / centime(0.3 * f.prixDeLAnnee));
+    const total = vendues.reduce((t, x) => t + x, 0);
+    expect([annee, clients, clients - total]).toEqual(bistrot ? [316_800, 31_059, 1679] : [516_000, 19_546, 1846]);
+    expect(attendus(LA_PRODUCTIVITE_DU_SERVICE, "une-equipe-de-plus", cas)).toEqual({
+      "Coût du personnel de l'année, équipe renforcée": annee,
+      [`${U} à servir sur l'année`]: clients,
+      [`${U} de plus que l'année jouée`]: clients - total,
+    });
+    expect(juste(LA_PRODUCTIVITE_DU_SERVICE, "juger-l-equipe", cas)).toBe("Elle mesure surtout le remplissage, que l'équipe ne décide pas");
+    const synthese = LA_PRODUCTIVITE_DU_SERVICE.etapes.at(-1)!;
+    if (synthese.type !== "lecture") throw new Error("la synthèse n'est pas une lecture");
+    expect(synthese.texte(cas).join(" ")).toContain("Au niveau de l'examen");
+    expect(synthese.texte(cas).at(-1)).toMatch(/^Dans l'arène, les chiffres de votre (bistrot|hôtel) seront différents : la notion, elle, est la même\.$/);
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(LA_PRODUCTIVITE_DU_SERVICE, code));
@@ -428,7 +659,147 @@ describe("le prix selon la saison, à l'hôtel du monde du cours", () => {
     expect(attendus(PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON, "l-annee", cas)).toEqual({ "Écart de résultat de l'année, prix relevé moins prix unique": ecart });
     expect(ecart).toBeGreaterThan(0);
     expect(x.verdict).toBe("monter");
+    // Le curseur du cas : le revenu par chambre à 101,20 € face à celui du prix unique, 88 €.
+    const pourLeRevpar = Math.ceil(avant.ca / 101.2);
+    expect(pourLeRevpar).toBe(4696);
+    expect(curseur(PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON, "le-revpar-au-curseur", cas)).toEqual({
+      attendu: pourLeRevpar,
+      bornes: [4000, offertes],
+      droites: [centime((101.2 * 4000) / offertes), 88, 101.2, 88],
+      lecture: {
+        "Revenu par chambre disponible à 101,20 €": centime((101.2 * pourLeRevpar) / offertes),
+        "Revenu par chambre disponible à 88 €": 88,
+        "Marge sur coûts variables à 101,20 €": centime(80.2 * pourLeRevpar),
+        "Marge sur coûts variables à 88 €": 361_800,
+        "Écart de revenu par chambre disponible": centime(centime((101.2 * pourLeRevpar) / offertes) - 88),
+      },
+    });
+    // Le croisement, à rebours : la hausse peut perdre 704 nuitées pour le revenu par chambre, 888 pour la marge ; elle en perd 210.
+    const pourLaMarge = Math.ceil(361_800 / 80.2);
+    expect(attendus(PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON, "deux-seuils", cas)).toEqual({
+      "Nuitées que la hausse peut perdre, revenu par chambre gardé": offertes - pourLeRevpar,
+      "Nuitées que la hausse peut perdre, marge gardée": offertes - pourLaMarge,
+      "Nuitées que la hausse fait perdre": avant.vendues - apres.vendues,
+    });
+    expect([offertes - pourLeRevpar, offertes - pourLaMarge, avant.vendues - apres.vendues]).toEqual([704, 888, 210]);
     expect(juste(PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON, "reponse", cas)).toBe("Montez-la au 3e trimestre : la hausse rapporte plus qu'elle ne coûte");
+  });
+
+  it("les deux cycles, refaits à la main : ce qu'une baisse de 15 % doit vendre au 2e trimestre, ce qu'une hausse de 15 % peut perdre au 3e", () => {
+    expect(juste(LE_PRIX_SELON_LA_SAISON, "predire-la-baisse", cas)).toBe("Non : il faudrait plus de nuitées que l'hôtel n'en offre");
+    // Au 2e trimestre : (88 − 21) × 5 000 de marge à garder, 74,80 − 21 par nuitée vendue en baisse.
+    const margeT2 = (88 - 21) * 5000;
+    const baisse = Math.ceil(margeT2 / centime(74.8 - 21));
+    expect([margeT2, baisse]).toEqual([335_000, 6227]);
+    expect(baisse).toBeGreaterThan(offertes);
+    expect(curseur(LE_PRIX_SELON_LA_SAISON, "la-baisse-au-curseur", cas)).toEqual({
+      attendu: baisse,
+      bornes: [5000, 7000],
+      droites: [centime(53.8 * 5000), margeT2, centime(53.8 * 7000), margeT2],
+      lecture: { "Marge sur coûts variables à 74,80 €": centime(53.8 * baisse), "Marge sur coûts variables à 88 €": margeT2, "Écart de marge": centime(centime(53.8 * baisse) - margeT2) },
+    });
+    expect(juste(LE_PRIX_SELON_LA_SAISON, "predire-la-hausse", cas)).toBe("Plus de 800 : chaque nuitée gardée rapporte plus");
+    // Au 3e trimestre : (88 − 21) × 5 400 de marge à garder, 101,20 − 21 par nuitée vendue en hausse.
+    const margeT3 = (88 - 21) * offertes;
+    const hausse = Math.ceil(margeT3 / centime(101.2 - 21));
+    expect([margeT3, hausse, offertes - hausse]).toEqual([361_800, 4512, 888]);
+    expect(curseur(LE_PRIX_SELON_LA_SAISON, "la-hausse-au-curseur", cas)).toEqual({
+      attendu: hausse,
+      bornes: [4000, offertes],
+      droites: [centime(80.2 * 4000), margeT3, centime(80.2 * offertes), margeT3],
+      lecture: { "Marge sur coûts variables à 101,20 €": centime(80.2 * hausse), "Marge sur coûts variables à 88 €": margeT3, "Écart de marge": centime(centime(80.2 * hausse) - margeT3) },
+    });
+    const gain = centime(offertes * (101.2 - 88));
+    expect(attendus(LE_PRIX_SELON_LA_SAISON, "ce-qu-une-hausse-peut-perdre", cas)).toEqual({
+      "Gain de la hausse, sans nuitée perdue": gain,
+      "Marge d'une nuitée perdue": 80.2,
+      "Nuitées que la hausse peut perdre": Math.floor(gain / 80.2),
+    });
+    expect([gain, Math.floor(gain / 80.2)]).toEqual([71_280, 888]);
+    // La simulation en fait perdre 210 : la hausse paie.
+    expect(offertes - trimestre(3, 101.2).vendues).toBe(210);
+  });
+
+  it("le laboratoire des quatre prix, refait à la main : la hausse de 15 % dépasse le prix qui remplit juste l'hôtel", () => {
+    const l = laboratoire(LE_PRIX_SELON_LA_SAISON, "le-laboratoire-des-quatre-prix", cas);
+    expect(PRIX_DU_LABORATOIRE).toEqual({ min: 60, max: 110, pas: 0.1 });
+    expect(l.leviers.map((x) => [x.code, x.min, x.max, x.pas])).toEqual(["t1", "t2", "t3", "t4"].map((k) => [k, 60, 110, 0.1]));
+    const r = annee([bas, 1, haut, bas]);
+    expect(l.depart).toEqual({ t1: 74.8, t2: 88, t3: 101.2, t4: 74.8 });
+    // Les prix du laboratoire, du plus haut au plus bas : le premier où la demande remplit encore les 5 400 nuitées.
+    const grille = Array.from({ length: 501 }, (_, i) => centime(110 - i * 0.1));
+    const remplit = (k: number) => grille.find((p) => trimestre(k, p).demande >= offertes)!;
+    expect([1, 2, 3, 4].map(remplit)).toEqual([64.6, 83.6, 98.5, 70.8]);
+    expect(l.solution).toEqual({ t1: 74.8, t2: 88, t3: 98.5, t4: 74.8 });
+    const auxPrix = (p: readonly number[]) => {
+      const ts = p.map((x, i) => trimestre(i + 1, x));
+      const v = ts.reduce((s, t) => s + t.vendues, 0);
+      const ca = centime(ts.reduce((s, t) => s + t.ca, 0));
+      return { ts, v, ca, resultat: centime(ts.reduce((s, t) => s + t.resultat, 0)) };
+    };
+    const lire = (p: readonly number[]) => {
+      const a = auxPrix(p);
+      const d = auxPrix([74.8, 88, 101.2, 74.8]);
+      return {
+        "Nuitées vendues au 1er trimestre": a.ts[0]!.vendues,
+        "Nuitées vendues au 2e trimestre": a.ts[1]!.vendues,
+        "Nuitées vendues au 3e trimestre": a.ts[2]!.vendues,
+        "Nuitées vendues au 4e trimestre": a.ts[3]!.vendues,
+        "Taux d'occupation de l'année": dixieme((a.v / (4 * offertes)) * 100),
+        "Revenu par chambre disponible de l'année": centime(a.ca / (4 * offertes)),
+        "Résultat de l'année": a.resultat,
+        "Écart avec le prix du remplissage": centime(a.resultat - d.resultat),
+      };
+    };
+    expect(l.auDepart).toEqual(lire([74.8, 88, 101.2, 74.8]));
+    expect(l.aLaSolution).toEqual(lire([74.8, 88, 98.5, 74.8]));
+    expect(auxPrix([74.8, 88, 101.2, 74.8]).resultat).toBe(r.resultat);
+    expect([r.resultat, auxPrix([74.8, 88, 98.5, 74.8]).resultat]).toEqual([412_438.8, 414_700.8]);
+    // Au 3e trimestre, 98,50 € remplissent l'hôtel (5 405 demandées) et rapportent 2 262 € de plus que 101,20 €.
+    expect([trimestre(3, 98.5).demande, centime(trimestre(3, 98.5).resultat - trimestre(3, 101.2).resultat)]).toEqual([5405, 2262]);
+    expect(l.reussi).toEqual([false, true]);
+    // Aux quatre prix qui remplissent juste l'hôtel, l'année ferait mieux encore.
+    expect(auxPrix([64.6, 83.6, 98.5, 70.8]).resultat).toBe(420_900);
+    // Le graphique, en quelques points : la demande du 3e trimestre selon son prix, face aux nuitées offertes.
+    const g = l.e.graphique!(cas);
+    expect([g.levier, g.unite]).toEqual(["t3", "nuitées"]);
+    const [demande, offre] = g.courbes;
+    for (const p of [60, 88, 98.5, 110]) {
+      expect(demande!.valeur({ ...l.depart, t3: p }), `${p}`).toBe(trimestre(3, p).demande);
+      expect(offre!.valeur({ ...l.depart, t3: p }), `${p}`).toBe(offertes);
+    }
+    expect([60, 88, 110].map((p) => trimestre(3, p).demande)).toEqual([11_367, 6400, 4579]);
+  });
+
+  it("les étapes d'expert, refaites à la main : le prix qui remplit juste l'hôtel, à rebours ; la petite baisse ; la règle des 15 %", () => {
+    // 6 400 × (p ÷ 88) ^ −1,5 = 5 400 : p = 88 × (6 400 ÷ 5 400) ^ (1 ÷ 1,5).
+    const p = centime(88 * (6400 / 5400) ** (1 / 1.5));
+    const resultat = centime((p - 21) * offertes - 210_000);
+    expect([p, resultat, centime(resultat - trimestre(3, 101.2).resultat)]).toEqual([98.55, 208_770, 2532]);
+    // La simulation vend bien toutes les nuitées offertes à ce prix.
+    expect(trimestre(3, p).demande).toBeGreaterThanOrEqual(offertes);
+    expect(trimestre(3, p).resultat).toBe(resultat);
+    expect(attendus(LE_PRIX_SELON_LA_SAISON, "le-prix-qui-remplit-juste", cas)).toEqual({
+      "Prix qui remplit juste l'hôtel": p,
+      "Résultat du trimestre à ce prix": resultat,
+      "Ce qu'il rapporte de plus que la hausse": centime(resultat - trimestre(3, 101.2).resultat),
+    });
+    // La petite baisse de 5 % au 2e trimestre : 4,40 € perdus par nuitée vendue, 62,60 € gagnés par nuitée en plus.
+    expect(PETITE_BAISSE).toBe(0.05);
+    const petit = centime(88 * 0.95);
+    const aGagner = Math.ceil((5000 * centime(88 - petit)) / centime(petit - 21));
+    const t2 = trimestre(2, petit);
+    expect([petit, aGagner, t2.demande, t2.vendues - 5000, centime(t2.resultat - 125_000)]).toEqual([83.6, 352, 5400, 400, 3040]);
+    expect(attendus(LE_PRIX_SELON_LA_SAISON, "une-petite-baisse", cas)).toEqual({
+      "Nuitées à gagner, petite baisse": aGagner,
+      "Nuitées gagnées, petite baisse": t2.vendues - 5000,
+      "Écart de résultat du trimestre, petite baisse": centime(t2.resultat - 125_000),
+    });
+    expect(juste(LE_PRIX_SELON_LA_SAISON, "la-regle-des-15-pour-cent", cas)).toBe("Un écart fixe rate le prix qui remplit juste l'hôtel");
+    const synthese = LE_PRIX_SELON_LA_SAISON.etapes.at(-1)!;
+    if (synthese.type !== "lecture") throw new Error("la synthèse n'est pas une lecture");
+    expect(synthese.texte(cas).join(" ")).toContain("Au niveau de l'examen");
+    expect(synthese.texte(cas).at(-1)).toBe("Dans l'arène, les chiffres de votre hôtel seront différents : la notion, elle, est la même.");
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(LE_PRIX_SELON_LA_SAISON, code));

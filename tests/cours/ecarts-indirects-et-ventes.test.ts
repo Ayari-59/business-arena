@@ -630,3 +630,24 @@ describe("les écarts sur chiffre d'affaires et sur marge", () => {
   it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(ch));
   it("textes propres, une seule bonne réponse, notions existantes : le cas", () => verifierLesTextes(L_OBJECTIF_DU_COMMERCIAL));
 });
+
+describe("le graphique du laboratoire du centre : deux écarts qui ne s'annulent pas aux mêmes heures", () => {
+  it("l'écart sur activité s'annule à l'activité normale, l'écart sur rendement à l'activité préétablie, et leurs pentes se refont à la main", () => {
+    const cas = casDeLEntreprise("nova");
+    const labo = LES_ECARTS_SUR_CHARGES_INDIRECTES.etapes.find((e) => e.type === "simulation");
+    if (labo?.type !== "simulation") throw new Error("Pas de laboratoire");
+    const g = labo.graphique!(cas);
+    expect(g.levier).toBe("heures");
+    const [activite, rendement] = g.courbes;
+    const a = (h: number) => activite!.valeur({ heures: h, cout: 213_000 });
+    const r = (h: number) => rendement!.valeur({ heures: h, cout: 213_000 });
+    // Effet sur le résultat (positif favorable) : activité = (h − 5 000) × 24 € de fixe par heure ;
+    // rendement = −(h − 5 050) × 40 €, le coût standard de l'heure.
+    expect(a(5_000)).toBe(0);
+    expect(a(5_200)).toBe(4_800);
+    expect(a(4_600)).toBe(-9_600);
+    expect(r(5_050)).toBe(0);
+    expect(r(5_200)).toBe(-6_000);
+    expect(r(4_600)).toBe(18_000);
+  });
+});

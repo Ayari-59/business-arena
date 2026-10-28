@@ -716,6 +716,18 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
           { libelle: "Écart global du centre", montant: -l.global, reference: -d.global, effet: true, fort: true },
         ].map((y) => ({ ...y, montant: y.montant + 0, reference: y.reference + 0 }));
       },
+      // Les deux écarts que l'élève ne peut pas annuler ensemble, selon les heures tournées : l'un
+      // s'annule à l'activité normale, l'autre à l'activité préétablie de la production réelle.
+      graphique: (c) => {
+        const x = centreDeMontage(c);
+        return {
+          levier: "heures",
+          courbes: [
+            { libelle: "Écart sur activité", valeur: (p) => -laboratoireDuCentre(x, p.heures!, p.cout!).activite + 0 },
+            { libelle: "Écart sur rendement", valeur: (p) => -laboratoireDuCentre(x, p.heures!, p.cout!).rendement + 0 },
+          ],
+        };
+      },
       defi: (c) => {
         const x = centreDeMontage(c);
         const solution = { heures: x.heuresPreetablies, cout: auCentime(x.k.chargesFixes + x.k.coutVariableParHeure * x.heuresPreetablies) };

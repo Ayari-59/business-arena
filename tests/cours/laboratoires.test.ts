@@ -42,7 +42,17 @@ describe.each(laboratoires)("$nom", ({ cas, etape }) => {
   it("des leviers aux bornes et au pas cohérents, un départ et une solution sur le pas", () => {
     expect(leviers.length).toBeGreaterThan(0);
     expect(new Set(leviers.map((l) => l.code)).size).toBe(leviers.length);
-    for (const l of leviers) {
+    for (const l of leviers.filter((x) => x.choix)) {
+      // Un levier à choix : au moins deux méthodes, des valeurs distinctes, bornées par min et max.
+      const valeurs = l.choix!.map((x) => x.valeur);
+      expect(valeurs.length, l.code).toBeGreaterThanOrEqual(2);
+      expect(new Set(valeurs).size, l.code).toBe(valeurs.length);
+      expect(Math.min(...valeurs), l.code).toBe(l.min);
+      expect(Math.max(...valeurs), l.code).toBe(l.max);
+      for (const v of [l.depart, defi.solution[l.code]!]) expect(valeurs, `${l.code} : ${v} est l'un des choix`).toContain(v);
+      for (const x of l.choix!) propre(x.libelle);
+    }
+    for (const l of leviers.filter((x) => !x.choix)) {
       expect(l.pas, l.code).toBeGreaterThan(0);
       expect(l.max, l.code).toBeGreaterThan(l.min);
       expect(surLePas(l, l.max), `${l.code} : le maximum est sur le pas`).toBe(true);
@@ -58,6 +68,23 @@ describe.each(laboratoires)("$nom", ({ cas, etape }) => {
   it("la solution relève le défi, le départ ne le relève pas", () => {
     expect(defi.atteint(defi.solution)).toBe(true);
     expect(defi.atteint(depart)).toBe(false);
+  });
+
+  it("le graphique, s'il y en a un, suit un levier qui glisse, et ses courbes sont des nombres sur toute sa course", () => {
+    const g = etape.graphique?.(cas);
+    if (!g) return;
+    const l = leviers.find((x) => x.code === g.levier);
+    expect(l, g.levier).toBeDefined();
+    expect(l!.choix, g.levier).toBeUndefined();
+    expect(g.courbes.length).toBeGreaterThanOrEqual(1);
+    expect(g.courbes.length).toBeLessThanOrEqual(3);
+    for (const p of [depart, defi.solution]) {
+      for (let i = 0; i <= 10; i++) {
+        const v = l!.min + ((l!.max - l!.min) * i) / 10;
+        for (const c of g.courbes) expect(Number.isFinite(c.valeur({ ...p, [l!.code]: v })), `${c.libelle} à ${v}`).toBe(true);
+      }
+    }
+    for (const c of g.courbes) propre(c.libelle);
   });
 
   it("la lecture ne sort que des nombres, et les textes sont propres", () => {

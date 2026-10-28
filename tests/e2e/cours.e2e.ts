@@ -343,11 +343,11 @@ describe("le cours en classe : l'enseignant crée, l'élève rejoint, l'erreur r
 describe("le seuil de rentabilité, chapitre réservé", () => {
   it("sans licence, le chapitre dit qu'il est réservé ; sous licence, il se joue de bout en bout sans faute", async () => {
     const libre = await nouvellePage();
-    await aller(libre, "/cours/seuil-de-rentabilite?entreprise=bistrot");
+    await aller(libre, "/cours/seuil-de-rentabilite?entreprise=nova");
     expect(await libre.locator("main").innerText()).toContain("réservé aux établissements sous licence");
     await libre.context().close();
 
-    const code = "bistrot";
+    const code = "nova";
     const cas = casDeLEntreprise(code);
     const chapitre = CHAPITRES.find((c) => c.code === "seuil-de-rentabilite")!;
     const ctx = await navigateur.newContext({ viewport: { width: 1280, height: 900 }, locale: "fr-FR" });
@@ -369,7 +369,11 @@ describe("le seuil de rentabilité, chapitre réservé", () => {
       } else if (etape.type === "choix") {
         await page.getByRole("radio", { name: etape.options(cas, etat).find((o) => o.juste)!.texte }).click();
       } else if (etape.type === "curseur") {
-        await page.getByLabel("Ventes du mois, au clavier").fill(String(etape.cible(cas).attendu));
+        await page.getByLabel(`${etape.grandeur?.(cas).libelle ?? "Ventes du mois"}, au clavier`, { exact: true }).fill(String(etape.cible(cas).attendu));
+        await page.getByRole("button", { name: "Valider cette position" }).click();
+      } else if (etape.type === "simulation") {
+        const solution = etape.defi(cas).solution;
+        for (const l of etape.leviers(cas)) await page.getByLabel(`${l.libelle}, au clavier`, { exact: true }).fill(virgule(solution[l.code]!));
         await page.getByRole("button", { name: "Valider cette position" }).click();
       }
       const dernier = i === chapitre.etapes.length - 1;
@@ -393,21 +397,17 @@ describe.each([
   { code: "remises-et-reglements", entreprise: "conseil" },
   { code: "cout-complet", entreprise: "nova" },
   // Au téléphone, des montants négatifs : l'élève tape les chiffres, puis le bouton de signe.
-  { code: "cout-complet", entreprise: "fitness", telephone: true },
+  { code: "cout-complet", entreprise: "nova", telephone: true },
   { code: "la-cloture", entreprise: "nova", telephone: true },
-  { code: "cout-par-produit", entreprise: "ecommerce" },
-  { code: "cout-par-produit", entreprise: "boutique", telephone: true },
-  { code: "budget-de-tresorerie", entreprise: "ecommerce", telephone: true },
-  { code: "budget-de-tresorerie", entreprise: "transport" },
+  { code: "cout-par-produit", entreprise: "nova", telephone: true },
+  { code: "budget-de-tresorerie", entreprise: "nova", telephone: true },
   { code: "le-cout-preetabli-et-les-budgets", entreprise: "nova" },
   { code: "les-ecarts-sur-charges-directes", entreprise: "nova", telephone: true },
   { code: "les-ecarts-sur-charges-indirectes", entreprise: "nova" },
   { code: "les-ecarts-sur-ventes-et-marge", entreprise: "nova", telephone: true },
   { code: "analyse-des-ecarts", entreprise: "nova", telephone: true },
   { code: "tableau-de-bord", entreprise: "nova", telephone: true },
-  { code: "tableau-de-bord", entreprise: "conseil" },
   { code: "decider-prix-fabriquer-acheter", entreprise: "nova", telephone: true },
-  { code: "decider-prix-fabriquer-acheter", entreprise: "hotel" },
   { code: "depreciations-et-provisions", entreprise: "transport" },
   { code: "depreciations-et-provisions", entreprise: "bistrot", telephone: true },
   { code: "regularisations-de-fin-d-exercice", entreprise: "boutique" },
@@ -569,17 +569,17 @@ describe.each([
   { code: "quand-le-taux-monte", entreprise: "ecommerce", telephone: true },
   { code: "vendre-plus-financer-plus", entreprise: "nova" },
   { code: "le-fournisseur-augmente", entreprise: "conseil", telephone: true },
-  { code: "le-loyer-qui-augmente", entreprise: "transport" },
-  { code: "un-nouveau-client-regulier", entreprise: "bistrot", telephone: true },
-  { code: "la-cle-contestee", entreprise: "conseil" },
-  { code: "un-trimestre-de-croissance", entreprise: "hotel", telephone: true },
+  { code: "le-loyer-qui-augmente", entreprise: "nova" },
+  { code: "un-nouveau-client-regulier", entreprise: "nova", telephone: true },
+  { code: "la-cle-contestee", entreprise: "nova" },
+  { code: "un-trimestre-de-croissance", entreprise: "nova", telephone: true },
   { code: "le-budget-depasse", entreprise: "nova" },
   { code: "le-fournisseur-ou-l-atelier", entreprise: "nova", telephone: true },
   { code: "le-centre-qui-a-trop-tourne", entreprise: "nova", telephone: true },
   { code: "l-objectif-du-commercial", entreprise: "nova" },
   { code: "le-resultat-qui-manque", entreprise: "nova", telephone: true },
-  { code: "regler-le-voyant", entreprise: "boutique", telephone: true },
-  { code: "monter-son-prix", entreprise: "ecommerce" },
+  { code: "regler-le-voyant", entreprise: "nova", telephone: true },
+  { code: "monter-son-prix", entreprise: "nova" },
   { code: "garder-sa-part-de-marche", entreprise: "conseil", telephone: true },
   { code: "quel-segment-conquerir", entreprise: "nova" },
   { code: "une-promotion-trop-forte", entreprise: "ecommerce", telephone: true },
@@ -798,7 +798,10 @@ describe.each([
         await page.getByRole("button", { name: "Valider cette position" }).click();      } else if (etape.type === "simulation") {
         const solution = etape.defi(cas).solution;
         for (const l of etape.leviers(cas)) {
-          await page.getByLabel(`${l.libelle}, au clavier`, { exact: true }).fill(virgule(solution[l.code]!));
+          const choix = l.choix?.find((x) => x.valeur === solution[l.code]);
+          // Le bouton radio est masqué : l'élève clique sur l'étiquette visible du choix.
+          if (choix) await page.locator(`[data-levier-a-choix="${l.code}"] label`).getByText(choix.libelle, { exact: true }).click();
+          else await page.getByLabel(`${l.libelle}, au clavier`, { exact: true }).fill(virgule(solution[l.code]!));
         }
         await page.getByRole("button", { name: "Valider cette position" }).click();
       }

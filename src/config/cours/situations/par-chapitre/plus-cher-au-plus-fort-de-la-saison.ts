@@ -21,6 +21,12 @@ import type { Situation } from "../types";
  *
  * Comme son chapitre, le cas se joue dans la simulation du cours (src/config/cours/monde), pas dans
  * l'arène. L'écart de prix est celui du chapitre (`HAUSSE_EN_HAUTE_SAISON`).
+ *
+ * LE CURSEUR ET LE CROISEMENT (demande du propriétaire, octobre 2026 : un cas aussi exigeant que son
+ * chapitre) : au curseur, les nuitées que le trimestre relevé doit vendre pour garder son revenu par
+ * chambre disponible ; puis, à rebours, ce que la hausse peut perdre en gardant ce revenu, ce qu'elle
+ * peut perdre en gardant le résultat, et ce qu'elle perd. Pour une hausse, le résultat tolère plus de
+ * nuitées perdues que le revenu par chambre : chaque nuitée perdue n'emporte que sa marge.
  */
 
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
@@ -44,8 +50,15 @@ export function plusCherAuPlusFort(c: Pick<Cas, "code">) {
   const apres = releve.trimestres[k - 1]!;
   const ecart = auCentime(releve.resultat - unique.resultat);
   const verdict: Verdict = ecart > 0 ? "monter" : "garder";
+  // À rebours : les nuitées que le trimestre relevé doit vendre pour garder son revenu par chambre
+  // disponible, puis sa marge sur coûts variables, et ce que la hausse peut donc perdre de l'un et de l'autre.
+  const f = ficheDe(c);
+  const pourLeRevpar = Math.ceil(avant.chiffreDAffaires / apres.prix - 1e-9);
+  const margeAvant = auCentime((avant.prix - f.coutVariableParNuitee) * avant.vendues);
+  const margeParNuitee = auCentime(apres.prix - f.coutVariableParNuitee);
+  const pourLaMarge = Math.ceil(margeAvant / margeParNuitee - 1e-9);
   return {
-    f: ficheDe(c),
+    f,
     m,
     k,
     unique,
@@ -59,6 +72,15 @@ export function plusCherAuPlusFort(c: Pick<Cas, "code">) {
     refuses: avant.refusees,
     ecart,
     verdict,
+    pourLeRevpar,
+    margeAvant,
+    margeParNuitee,
+    pourLaMarge,
+    perdablesPourLeRevpar: avant.vendues - pourLeRevpar,
+    perdablesPourLaMarge: avant.vendues - pourLaMarge,
+    perdues: avant.vendues - apres.vendues,
+    /** Les bornes du curseur : du millier sous le seuil de la marge aux nuitées offertes. */
+    curseur: { min: Math.floor(pourLaMarge / 1000) * 1000, max: avant.offertes },
   };
 }
 
@@ -116,6 +138,7 @@ export const PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON: Situation = {
   objectifs: [
     "Calculer un coefficient saisonnier",
     "Calculer le taux d'occupation et le revenu par chambre disponible d'un trimestre, à deux prix",
+    "Remonter aux nuitées qu'une hausse peut perdre, en gardant le revenu par chambre ou la marge",
     "Comparer le résultat de deux années rejouées",
     "Répondre au propriétaire, chiffres à l'appui",
   ],
@@ -142,7 +165,8 @@ export const PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON: Situation = {
           "Pas de cours cette fois : les calculs sont ceux du chapitre. La simulation du cours a rejoué l'année avec ce seul trimestre plus cher ; les autres trimestres gardent le prix unique.",
         ];
       },
-      repere: () => "À rendre : le coefficient saisonnier du trimestre, son taux d'occupation et son revenu par chambre aux deux prix, l'écart de résultat de l'année, et votre réponse.",
+      repere: () =>
+        "À rendre : le coefficient saisonnier du trimestre, son taux d'occupation et son revenu par chambre aux deux prix, les nuitées que la hausse peut perdre et celles qu'elle perd, l'écart de résultat de l'année, et votre réponse.",
     },
     {
       id: "la-saison",
@@ -222,6 +246,93 @@ export const PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON: Situation = {
       },
     },
     {
+      id: "le-revpar-au-curseur",
+      type: "curseur",
+      titre: "Ce que la hausse peut perdre",
+      notions: ["occupancy_revpar", "price_elasticity"],
+      question: (c) => {
+        const x = plusCherAuPlusFort(c);
+        return `Faites varier les nuitées vendues au ${rang(x.k)} trimestre, au prix relevé de ${eur(x.apres.prix)}. Une droite donne le revenu par chambre disponible du trimestre à ce prix, l'autre celui du prix unique, ${eur(x.revparAvant)}. Placez le curseur sur le moins de nuitées qui garde ce revenu, puis validez.`;
+      },
+      grandeur: (c) => {
+        const x = plusCherAuPlusFort(c);
+        return { libelle: `Nuitées vendues à ${eur(x.apres.prix)}`, unite: "nuitées" };
+      },
+      cible: (c) => {
+        const x = plusCherAuPlusFort(c);
+        return { attendu: x.pourLeRevpar, min: x.curseur.min, max: x.curseur.max };
+      },
+      zones: ["Le revenu par chambre monte", "Le revenu par chambre baisse"],
+      rates: () => ({
+        dessous: "Avec si peu de nuitées, le revenu par chambre disponible baisse au prix relevé.",
+        dessus: "Moins de nuitées garderaient encore ce revenu : cherchez le plus petit nombre.",
+      }),
+      montrer: "Montrer le nombre de nuitées",
+      lecture: (c, n) => {
+        const x = plusCherAuPlusFort(c);
+        const revpar = auCentime((x.apres.prix * n) / x.apres.offertes);
+        return [
+          { libelle: `Revenu par chambre disponible à ${eur(x.apres.prix)}`, montant: revpar },
+          { libelle: `Revenu par chambre disponible à ${eur(x.avant.prix)}`, montant: x.revparAvant },
+          { libelle: `Marge sur coûts variables à ${eur(x.apres.prix)}`, montant: auCentime(x.margeParNuitee * n) },
+          { libelle: `Marge sur coûts variables à ${eur(x.avant.prix)}`, montant: x.margeAvant },
+          { libelle: "Écart de revenu par chambre disponible", montant: auCentime(revpar - x.revparAvant), fort: true },
+        ];
+      },
+      droites: (c) => {
+        const x = plusCherAuPlusFort(c);
+        return {
+          produit: (n) => (x.apres.prix * n) / x.apres.offertes,
+          cout: () => x.avant.chiffreDAffaires / x.avant.offertes,
+          libelles: [`Revenu par chambre à ${eur(x.apres.prix)}`, "Revenu par chambre au prix unique"],
+        };
+      },
+      explication: (c) => {
+        const x = plusCherAuPlusFort(c);
+        return [
+          `Il faut vendre ${qte(x.pourLeRevpar)} nuitées à ${eur(x.apres.prix)} pour garder le revenu par chambre du prix unique. Regardez la marge dans le tableau : elle se garde avec moins de nuitées encore.`,
+        ];
+      },
+    },
+    {
+      id: "deux-seuils",
+      type: "montants",
+      titre: "Deux seuils, à rebours",
+      notions: ["occupancy_revpar", "contribution_margin"],
+      question: (c) => {
+        const x = plusCherAuPlusFort(c);
+        return `Au ${rang(x.k)} trimestre, au prix relevé, combien de nuitées la hausse peut-elle perdre en gardant le revenu par chambre disponible du prix unique ? Et en gardant sa marge sur coûts variables (chaque nuitée occupée coûte ${eur(x.f.coutVariableParNuitee)}) ? Puis combien en perd-elle dans la simulation ?`;
+      },
+      champs: (c) => {
+        const x = plusCherAuPlusFort(c);
+        return [
+          {
+            libelle: "Nuitées que la hausse peut perdre, revenu par chambre gardé",
+            attendu: x.perdablesPourLeRevpar,
+            calcul: `${qte(x.avant.vendues)} − ${eur(x.avant.chiffreDAffaires)} ÷ ${eur(x.apres.prix)} = ${qte(x.avant.vendues)} − ${qte(x.pourLeRevpar)} = ${qte(x.perdablesPourLeRevpar)}`,
+            tolerance: 1,
+          },
+          {
+            libelle: "Nuitées que la hausse peut perdre, marge gardée",
+            attendu: x.perdablesPourLaMarge,
+            calcul: `${qte(x.avant.vendues)} − ${eur(x.margeAvant)} ÷ (${eur(x.apres.prix)} − ${eur(x.f.coutVariableParNuitee)}) = ${qte(x.avant.vendues)} − ${qte(x.pourLaMarge)} = ${qte(x.perdablesPourLaMarge)}`,
+            tolerance: 1,
+          },
+          {
+            libelle: "Nuitées que la hausse fait perdre",
+            attendu: x.perdues,
+            calcul: `${qte(x.avant.vendues)} − ${qte(x.apres.vendues)} = ${qte(x.perdues)}`,
+          },
+        ];
+      },
+      explication: (c) => {
+        const x = plusCherAuPlusFort(c);
+        return [
+          `La hausse pouvait perdre ${qte(x.perdablesPourLeRevpar)} nuitées en gardant le revenu par chambre, ${qte(x.perdablesPourLaMarge)} en gardant la marge : une nuitée perdue n'emporte que sa marge, puisque son coût de ${eur(x.f.coutVariableParNuitee)} part avec elle. Elle en perd ${qte(x.perdues)} : ${x.perdues <= x.perdablesPourLeRevpar ? "les deux seuils tiennent" : x.perdues <= x.perdablesPourLaMarge ? "le revenu par chambre baisse, mais la marge tient" : "aucun des deux seuils ne tient"}.`,
+        ];
+      },
+    },
+    {
       id: "l-annee",
       type: "montants",
       titre: "Ce que l'année y gagne",
@@ -266,7 +377,7 @@ export const PLUS_CHER_AU_PLUS_FORT_DE_LA_SAISON: Situation = {
                 ? `Oui. ${chiffres} ${
                     x.apres.vendues >= x.avant.vendues
                       ? `L'hôtel était complet : au prix relevé, la demande reste au-dessus des nuitées offertes, si bien qu'il vend autant, et chaque nuitée rapporte ${eur(auCentime(x.apres.prix - x.avant.prix))} de plus.`
-                      : `L'hôtel refusait ${qte(x.refuses)} nuitées : la hausse fait partir des clients, mais il vend encore ${qte(x.apres.vendues)} nuitées sur ${qte(x.apres.offertes)}, et chacune rapporte ${eur(auCentime(x.apres.prix - x.avant.prix))} de plus.`
+                      : `L'hôtel refusait ${qte(x.refuses)} nuitées : la hausse fait partir ${qte(x.perdues)} clients quand elle pouvait en perdre ${qte(x.perdablesPourLaMarge)}, et chaque nuitée gardée rapporte ${eur(auCentime(x.apres.prix - x.avant.prix))} de plus.`
                   }`
                 : `Non. ${chiffres}`,
           },

@@ -20,6 +20,8 @@ import type {
   EtapeLecture,
   EtapeMontants,
   EtapeSimulation,
+  GraphiqueDeSimulation,
+  LevierDeSimulation,
   EtapeTri,
   EtatDuCours,
   OptionDeChoix,
@@ -806,6 +808,64 @@ function surLePas(l: { min: number; max: number; pas: number }, n: number) {
   return Math.round((l.min + k * l.pas) * 100) / 100;
 }
 
+/** Les couleurs des courbes du laboratoire, dans l'ordre : celles des deux droites du curseur, puis une troisième. */
+const COULEURS_DES_COURBES = ["#0e7490", "#b45309", "#7c3aed"] as const;
+
+/**
+ * Le graphique du laboratoire : chaque courbe calculée point par point sur toute la course d'un
+ * levier, les autres leviers à leur position du moment ; un trait marque la position de l'élève.
+ */
+function GraphiqueDuLaboratoire({ graphique, levier, position }: { graphique: GraphiqueDeSimulation; levier: LevierDeSimulation; position: Readonly<Record<string, number>> }) {
+  const L = 560;
+  const H = 240;
+  const marge = { g: 8, d: 8, h: 12, b: 26 };
+  const n = 60;
+  const xs = Array.from({ length: n + 1 }, (_, i) => levier.min + ((levier.max - levier.min) * i) / n);
+  const series = graphique.courbes.map((c) => xs.map((v) => c.valeur({ ...position, [levier.code]: v })));
+  const toutes = series.flat().filter(Number.isFinite);
+  const haut = Math.max(...toutes, 0);
+  const bas = Math.min(...toutes, 0);
+  const ecart = haut - bas || 1;
+  const x = (v: number) => marge.g + ((v - levier.min) / (levier.max - levier.min || 1)) * (L - marge.g - marge.d);
+  const y = (v: number) => H - marge.b - ((v - bas) / ecart) * (H - marge.h - marge.b);
+  const ici = position[levier.code]!;
+  const unite = graphique.unite ?? "€";
+  return (
+    <figure className="grid gap-2" data-graphique-du-laboratoire="">
+      <svg viewBox={`0 0 ${L} ${H}`} className="h-auto w-full max-w-2xl" role="img" aria-label={`${graphique.courbes.map((c) => c.libelle).join(", ")} selon ${levier.libelle.toLowerCase()}`}>
+        <line x1={x(levier.min)} y1={y(0)} x2={x(levier.max)} y2={y(0)} stroke="currentColor" strokeOpacity="0.4" />
+        {series.map((pts, k) => (
+          <polyline
+            key={graphique.courbes[k]!.libelle}
+            points={pts.map((v, i) => `${x(xs[i]!)},${y(v)}`).join(" ")}
+            fill="none"
+            stroke={COULEURS_DES_COURBES[k % COULEURS_DES_COURBES.length]}
+            strokeWidth="2.5"
+          />
+        ))}
+        <line x1={x(ici)} y1={H - marge.b} x2={x(ici)} y2={marge.h} stroke="currentColor" strokeDasharray="4 4" strokeOpacity="0.6" />
+        {graphique.courbes.map((c, k) => (
+          <circle key={c.libelle} cx={x(ici)} cy={y(c.valeur(position))} r="5" fill={COULEURS_DES_COURBES[k % COULEURS_DES_COURBES.length]} />
+        ))}
+        <text x={x(levier.min)} y={H - 6} fontSize="12" fill="currentColor">
+          {levier.min.toLocaleString("fr-FR")} {levier.unite}
+        </text>
+        <text x={x(levier.max)} y={H - 6} fontSize="12" fill="currentColor" textAnchor="end">
+          {levier.max.toLocaleString("fr-FR")} {levier.unite}
+        </text>
+      </svg>
+      <figcaption className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
+        {graphique.courbes.map((c, k) => (
+          <span key={c.libelle} className="flex items-center gap-1.5">
+            <span aria-hidden className="inline-block h-1 w-5" style={{ background: COULEURS_DES_COURBES[k % COULEURS_DES_COURBES.length] }} /> {c.libelle} :{" "}
+            <strong className="tabular-nums">{valeurDeLigne(c.valeur(position), unite === "€" ? undefined : unite)}</strong>
+          </span>
+        ))}
+      </figcaption>
+    </figure>
+  );
+}
+
 /**
  * LE LABORATOIRE : chaque levier a son curseur, ses boutons d'un pas et sa saisie au clavier ;
  * le tableau suit en direct, avec la valeur de départ à côté et, sur les lignes d'effet, une
@@ -825,6 +885,7 @@ function EtapeDeSimulation({ etape, cas, chapitre, index, suivi, classe, noter, 
   const [reussie, setReussie] = useState<Record<string, number> | null>(null);
   const affichee = fait ? (reussie ?? defi.solution) : position;
   const lecture = etape.lecture(cas, affichee);
+  const graphique = etape.graphique?.(cas);
   const peutMontrer = classe || essais >= ESSAIS_AVANT_LA_CORRECTION;
   // L'échelle des barres : le plus grand effet au départ, à la solution ou à la position du moment.
   // Elle suit l'élève : une barre se compare toujours à ce qu'il a sous les yeux.
@@ -847,51 +908,78 @@ function EtapeDeSimulation({ etape, cas, chapitre, index, suivi, classe, noter, 
       </p>
       <div className="papier grid gap-5 rounded-xl p-4 sm:p-5" data-laboratoire="">
         <div className="grid gap-4 sm:grid-cols-2">
-          {leviers.map((l) => (
-            <label key={l.code} className="grid min-w-0 gap-2">
-              <span className="text-sm">
-                {l.libelle} : <strong className="text-lg tabular-nums">{affichee[l.code]!.toLocaleString("fr-FR")}</strong> {l.unite}
-              </span>
-              <input
-                type="range"
-                onWheel={sansMolette}
-                min={l.min}
-                max={l.max}
-                step={l.pas}
-                value={affichee[l.code]}
-                disabled={fait}
-                aria-label={l.libelle}
-                onChange={(e) => placer(l.code, Number(e.target.value))}
-                className="w-full accent-amber-400"
-              />
-              {!fait && (
-                <span className="flex flex-wrap items-center gap-2 text-sm">
-                  <button type="button" className={bouton({ variante: "secondaire", taille: "s" })} onClick={() => placer(l.code, affichee[l.code]! - l.pas)} aria-label={`${l.libelle} : un pas de moins`}>
-                    −
-                  </button>
-                  <button type="button" className={bouton({ variante: "secondaire", taille: "s" })} onClick={() => placer(l.code, affichee[l.code]! + l.pas)} aria-label={`${l.libelle} : un pas de plus`}>
-                    +
-                  </button>
-                  <input
-                    className="champ w-28 px-2 py-1 text-right tabular-nums"
-                    inputMode="decimal"
-                    aria-label={`${l.libelle}, au clavier`}
-                    value={saisies[l.code]}
-                    onChange={(e) => {
-                      const texte = e.target.value;
-                      setSaisies((s) => ({ ...s, [l.code]: texte }));
-                      const n = lireLevier(texte);
-                      if (texte.trim() !== "" && Number.isFinite(n) && n >= l.min && n <= l.max) {
-                        setPosition((p) => ({ ...p, [l.code]: surLePas(l, n) }));
-                        setIndice(null);
-                      }
-                    }}
-                  />
+          {leviers.map((l) =>
+            l.choix ? (
+              <fieldset key={l.code} className="grid min-w-0 gap-2" data-levier-a-choix={l.code}>
+                <legend className="text-sm">
+                  {l.libelle} : <strong className="text-lg">{l.choix.find((x) => x.valeur === affichee[l.code])?.libelle}</strong>
+                </legend>
+                <span className="flex flex-wrap gap-2">
+                  {l.choix.map((x) => (
+                    <label key={x.valeur} className={`${bouton({ variante: affichee[l.code] === x.valeur ? "principal" : "secondaire", taille: "s" })} cursor-pointer`}>
+                      <input
+                        type="radio"
+                        className="sr-only"
+                        name={`${etape.id}-${l.code}`}
+                        checked={affichee[l.code] === x.valeur}
+                        disabled={fait}
+                        onChange={() => {
+                          setPosition((p) => ({ ...p, [l.code]: x.valeur }));
+                          setIndice(null);
+                        }}
+                      />
+                      {x.libelle}
+                    </label>
+                  ))}
                 </span>
-              )}
-            </label>
-          ))}
+              </fieldset>
+            ) : (
+              <label key={l.code} className="grid min-w-0 gap-2">
+                <span className="text-sm">
+                  {l.libelle} : <strong className="text-lg tabular-nums">{affichee[l.code]!.toLocaleString("fr-FR")}</strong> {l.unite}
+                </span>
+                <input
+                  type="range"
+                  onWheel={sansMolette}
+                  min={l.min}
+                  max={l.max}
+                  step={l.pas}
+                  value={affichee[l.code]}
+                  disabled={fait}
+                  aria-label={l.libelle}
+                  onChange={(e) => placer(l.code, Number(e.target.value))}
+                  className="w-full accent-amber-400"
+                />
+                {!fait && (
+                  <span className="flex flex-wrap items-center gap-2 text-sm">
+                    <button type="button" className={bouton({ variante: "secondaire", taille: "s" })} onClick={() => placer(l.code, affichee[l.code]! - l.pas)} aria-label={`${l.libelle} : un pas de moins`}>
+                      −
+                    </button>
+                    <button type="button" className={bouton({ variante: "secondaire", taille: "s" })} onClick={() => placer(l.code, affichee[l.code]! + l.pas)} aria-label={`${l.libelle} : un pas de plus`}>
+                      +
+                    </button>
+                    <input
+                      className="champ w-28 px-2 py-1 text-right tabular-nums"
+                      inputMode="decimal"
+                      aria-label={`${l.libelle}, au clavier`}
+                      value={saisies[l.code]}
+                      onChange={(e) => {
+                        const texte = e.target.value;
+                        setSaisies((s) => ({ ...s, [l.code]: texte }));
+                        const n = lireLevier(texte);
+                        if (texte.trim() !== "" && Number.isFinite(n) && n >= l.min && n <= l.max) {
+                          setPosition((p) => ({ ...p, [l.code]: surLePas(l, n) }));
+                          setIndice(null);
+                        }
+                      }}
+                    />
+                  </span>
+                )}
+              </label>
+            ),
+          )}
         </div>
+        {graphique && <GraphiqueDuLaboratoire graphique={graphique} levier={leviers.find((l) => l.code === graphique.levier)!} position={affichee} />}
         <div className="overflow-x-auto">
           <table className="w-full min-w-[22rem] text-sm">
             <thead>
