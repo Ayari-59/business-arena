@@ -1,106 +1,383 @@
 import { describe, expect, it } from "vitest";
-import { casDeLEntreprise } from "../../src/config/cours/cas";
-import { INDICATEURS_DU_POINT_DE_VENTE, indicateurs } from "../../src/config/cours/chapitres/indicateurs-du-point-de-vente";
-import { COMMERCES } from "../../src/config/cours/chapitres/taux-de-marque";
-import { OBJECTIF_DE_HAUSSE } from "../../src/config/cours/point-de-vente";
-import { scenarioByCode } from "../../src/config/scenarios/registry";
-import { ARTICLES_PAR_TICKET } from "../../src/config/scenarios/sector-kpis";
+import { blocOfficiel, referentielDeCitation } from "../../src/config/ateliers/referentiels";
+import { casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
+import { HAUSSE_DU_PRIX_MOYEN, HAUSSE_VISEE, INDICATEURS_DU_POINT_DE_VENTE, indicateursDuPointDeVente } from "../../src/config/cours/chapitres/indicateurs-du-point-de-vente";
+import { MAILLE_ET_CO } from "../../src/config/cours/monde/maille-et-co";
+import { CHAPITRES } from "../../src/config/cours/registre";
+import { SITUATIONS, casDuChapitre } from "../../src/config/cours/situations";
+import { BAISSE_DES_ENTREES, MOINS_DE_CLIENTS_LE_MOIS_PROCHAIN, moinsDeClients } from "../../src/config/cours/situations/par-chapitre/moins-de-clients-le-mois-prochain";
+import type { Situation } from "../../src/config/cours/situations/types";
+import type { Chapitre, Etape, EtapeChoix, EtapeCurseur, EtapeMontants, EtapeSimulation, EtatDuCours } from "../../src/config/cours/types";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
 import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
-import type { Cas } from "../../src/config/cours/cas";
-import type { Etape, EtatDuCours } from "../../src/config/cours/types";
 
 /**
- * LES INDICATEURS DU POINT DE VENTE SONT CEUX DE L'ARÈNE.
+ * LES INDICATEURS DU POINT DE VENTE, À LA BOUTIQUE DU MONDE DU COURS, ET SON CAS : MOINS DE CLIENTS
+ * LE MOIS PROCHAIN.
  *
- * Le mois de chaque clientèle est le premier trimestre de l'arène ramené à un mois ; le
- * panier, le taux de transformation, le coût d'acquisition et le remplissage se calculent
- * comme les indicateurs du métier de l'arène ; chaque commerce a l'indicateur de son métier,
- * et lui seul ; les deux leviers atteignent bien l'objectif.
+ * Chaque chiffre attendu est refait ici à la main sur la fiche de la boutique (monde/maille-et-co.ts),
+ * clientèle par clientèle, sans les fonctions du chapitre ni le modèle (monde/boutique.ts). Le taux de
+ * transformation est celui du BTS MCO (passages ÷ entrées), et il n'est pas le taux de service (ventes
+ * ÷ demande). Les valeurs absolues sont épinglées, comme les verdicts, chaque curseur (son attendu, la
+ * position voisine, ses droites aux bornes, sa lecture) et le laboratoire (sa lecture au départ et à
+ * la solution). Puis les gardes de texte de l'étalon (tests/cours/ecarts-indirects-et-ventes.test.ts).
  */
 
-function textesDe(e: Etape, cas: Cas, etat: EtatDuCours): string[] {
-  const tableau = e.tableau ? [e.tableau(cas).titre, ...e.tableau(cas).lignes.flatMap((l) => [l.libelle, ...l.valeurs])] : [];
+const etatVide: EtatDuCours = { soldes: {} };
+const code = "boutique";
+const cas = casDeLEntreprise(code);
+const f = MAILLE_ET_CO;
+const centime = (x: number) => Math.round(x * 100) / 100;
+const dixieme = (x: number) => Math.round(x * 10) / 10;
+
+// Le mois de janvier, refait à la main sur la fiche, clientèle par clientèle.
+const CA = 600 * 55 + 360 * 75 + 90 * 135 + 330 * 35 + 150 * 25;
+const ENTREES = 680 + 3_160 + 8;
+const PASSAGES = 340 + 600 + 8;
+const ARTICLES = 600 + 360 + 90 + 330 + 150;
+const PANIER = CA / PASSAGES;
+const PRIX_MOYEN = CA / ARTICLES;
+const VISE = centime(CA * 1.1);
+
+function textesDe(e: Etape, c: Cas, etat: EtatDuCours): string[] {
+  const t = e.tableau?.(c);
+  const tableau = t ? [t.titre, ...t.colonnes, ...t.lignes.flatMap((l) => [l.libelle, ...l.valeurs])] : [];
   switch (e.type) {
     case "lecture":
-      return [...e.texte(cas), e.repere?.(cas) ?? "", ...tableau];
+      return [e.titre, ...e.texte(c), e.repere?.(c) ?? "", ...tableau];
     case "choix":
-      return [e.question(cas, etat), ...e.options(cas, etat).flatMap((o) => [o.texte, o.retour]), ...tableau];
+      return [e.titre, e.question(c, etat), ...e.options(c, etat).flatMap((o) => [o.texte, o.retour]), ...tableau];
     case "montants":
-      return [e.question(cas, etat), ...e.champs(cas, etat).flatMap((c) => [c.libelle, c.calcul, String(c.attendu)]), ...e.explication(cas, etat), ...tableau];
+      return [e.titre, e.question(c, etat), ...e.champs(c, etat).flatMap((x) => [x.libelle, x.calcul, String(x.attendu)]), ...e.explication(c, etat), ...tableau];
+    case "tri":
+      return [e.titre, e.question(c), ...e.categories.map((k) => k.libelle), ...e.elements(c).flatMap((x) => [x.libelle, x.pourquoi]), ...e.explication(c), ...tableau];
+    case "curseur": {
+      const k = e.cible(c);
+      const g = e.grandeur?.(c);
+      const r = e.rates?.(c);
+      return [e.titre, e.question(c), ...e.explication(c), ...e.lecture(c, k.attendu).map((l) => l.libelle), ...e.droites(c).libelles, ...(e.zones ?? []), g?.libelle ?? "", g?.unite ?? "", r?.dessous ?? "", r?.dessus ?? "", e.montrer ?? ""];
+    }
+    case "simulation": {
+      const d = e.defi(c);
+      const depart = Object.fromEntries(e.leviers(c).map((l) => [l.code, l.depart]));
+      return [
+        e.titre,
+        e.question(c),
+        d.consigne,
+        d.indice(depart),
+        ...e.explication(c, d.solution),
+        ...e.lecture(c, d.solution).map((l) => l.libelle),
+        ...e.leviers(c).flatMap((l) => [l.libelle, l.unite, ...(l.choix ?? []).map((x) => x.libelle)]),
+        ...(e.graphique?.(c).courbes.map((x) => x.libelle) ?? []),
+      ];
+    }
     default:
-      return [];
+      return [e.titre];
   }
 }
 
-const ids = (code: string) => chapitreDuCas(INDICATEURS_DU_POINT_DE_VENTE, casDeLEntreprise(code)).etapes.map((e) => e.id);
+/** Les gardes de texte et de forme, communes aux chapitres et aux cas (celles de l'étalon). */
+function verifierLesTextes(ch: Chapitre) {
+  const chapitre = chapitreDuCas(ch, cas);
+  expect(chapitre.etapes.length, `${ch.code} : une étape a disparu`).toBe(ch.etapes.length);
+  const notions = new Set(CONCEPTS.map((x) => x.code));
+  for (const [i, e] of chapitre.etapes.entries()) {
+    const etat = etatAvant(chapitre, cas, i);
+    for (const x of textesDe(e, cas, etat)) {
+      expect(x, `${e.id} : ${x}`).not.toMatch(/undefined|NaN|Infinity|\[object|\bnull\b/);
+      expect(x, `${e.id} : ${x}`).not.toMatch(/(^|\s)(de|à) [Ll]es? /);
+      expect(x, `${e.id} : ${x}`).not.toMatch(/ [-–—] /);
+      expect(x, `${e.id} : ${x}`).not.toMatch(/(^|[\s'(«])de [aeiouyéèêAEIOUYÉ]/);
+      expect(x, `${e.id} : ${x}`).not.toMatch(/(^|[\s'(])que [aeiouyéèêAEIOUYÉ]/);
+      expect(x, `${e.id} : ${x}`).not.toMatch(/mises? en situation/i);
+      if (!/^-?\d+(\.\d+)?$/.test(x)) expect(x, `${e.id} : ${x}`).not.toMatch(/(^|[\s(])-\d/);
+      expect(x, `${e.id} : ${x}`).not.toMatch(/− −|\s{2,}|\+−|\+-|\+ −/);
+      expect(x, `${e.id} : ${x}`).not.toMatch(/\b[A-Z] [A-Z] [A-Z]\b/);
+      expect(x, `${e.id} : ${x}`).not.toMatch(/\b(deux|trois|quatre|cinq|six|sept|huit|neuf|dix|trente|cent) (articles?|pulls?|références?|passages?|jours?|fournisseurs?)\b/i);
+      expect(x, `${e.id} : ${x}`).not.toMatch(/\bl'arène (rejoue|joue)\b/i);
+    }
+    if (e.tableau) {
+      expect(["lecture", "choix", "montants", "tri"], e.id).toContain(e.type);
+      const t = e.tableau(cas);
+      for (const l of t.lignes) expect(l.valeurs.length, `${e.id} : ${l.libelle}`).toBe(t.colonnes.length);
+      expect(new Set(t.lignes.map((l) => l.libelle)).size, e.id).toBe(t.lignes.length);
+    }
+    if (e.type === "choix") {
+      const options = e.options(cas, etat);
+      expect(options.filter((o) => o.juste), e.id).toHaveLength(1);
+      expect(new Set(options.map((o) => o.texte)).size, e.id).toBe(options.length);
+      for (const a of options) for (const b of options) if (a !== b) expect(a.texte.toLowerCase().includes(b.texte.toLowerCase()), `${e.id} : ${b.texte}`).toBe(false);
+    }
+    if (e.type === "montants") {
+      const champs = e.champs(cas, etat);
+      expect(new Set(champs.map((x) => x.libelle)).size, e.id).toBe(champs.length);
+      for (const x of champs) {
+        expect(Number.isFinite(x.attendu), `${e.id} : ${x.libelle}`).toBe(true);
+        expect(Math.round(x.attendu * 100) / 100, `${e.id} : ${x.libelle}`).toBe(x.attendu);
+      }
+    }
+    for (const n of e.notions ?? []) expect(notions.has(n), `${e.id} : ${n}`).toBe(true);
+  }
+  expect(new Set(chapitre.etapes.map((e) => e.titre)).size, ch.code).toBe(chapitre.etapes.length);
+}
 
-it("chaque commerce a l'indicateur de son métier, et lui seul", () => {
-  expect(ids("boutique")).toEqual(expect.arrayContaining(["transformation", "pourquoi-manquees"]));
-  expect(ids("boutique")).not.toEqual(expect.arrayContaining(["acquisition"]));
-  expect(ids("ecommerce")).toContain("acquisition");
-  expect(ids("ecommerce")).not.toContain("transformation");
-  expect(ids("ecommerce")).not.toContain("remplissage");
-  expect(ids("bistrot")).toContain("remplissage");
-  expect(ids("bistrot")).not.toContain("acquisition");
-  for (const code of COMMERCES) expect(ids(code)).toEqual(expect.arrayContaining(["intro", "le-mois", "le-panier", "deux-leviers", "quel-levier"]));
+/** Ce qu'un cas dédié doit tenir (tests/cours/situations.test.ts), et sa réponse qui ne se devine pas. */
+function casDedie(s: Situation, ch: Chapitre) {
+  expect(s.reprend).toEqual([ch.code]);
+  expect(casDuChapitre(ch.code)).toBe(s);
+  expect(s.palier).toBe(ch.palier);
+  expect(s.parcours).toBe(ch.parcours);
+  expect(s.entreprises?.codes).toEqual(ch.entreprises?.codes);
+  expect(s.libre).toBe(false);
+  expect(s.blocs).toEqual([]);
+  expect(s.etapes[0]!.type).toBe("lecture");
+  expect(s.etapes[0]!.tableau).toBeDefined();
+  expect(s.etapes.slice(1).filter((e) => e.type === "lecture")).toHaveLength(0);
+  expect(s.etapes.at(-1)!.type).toBe("choix");
+  for (const e of s.etapes) {
+    if (e.type !== "choix") continue;
+    const options = e.options(cas, etatVide);
+    const juste = options.find((o) => o.juste)!;
+    expect(juste.texte.length, `${s.code} / ${e.id} : la bonne réponse est la plus longue`).toBeLessThanOrEqual(Math.max(...options.filter((o) => !o.juste).map((o) => o.texte.length)));
+  }
+}
+
+/** Les valeurs attendues des champs d'une étape de montants, par libellé. */
+function attendus(ch: Chapitre, id: string): Record<string, number> {
+  const e = ch.etapes.find((x) => x.id === id) as EtapeMontants;
+  expect(e?.type, id).toBe("montants");
+  return Object.fromEntries(e.champs(cas, etatVide).map((x) => [x.libelle, x.attendu]));
+}
+
+/** Un curseur : son attendu, la position voisine, ses droites aux deux bornes, et sa lecture à l'attendu, par libellé. */
+function curseur(ch: Chapitre, id: string) {
+  const e = ch.etapes.find((x) => x.id === id) as EtapeCurseur;
+  expect(e.type, id).toBe("curseur");
+  const k = e.cible(cas);
+  const d = e.droites(cas);
+  const min = k.min ?? 0;
+  const couvre = (q: number) => d.produit(q) >= d.cout(q);
+  expect(couvre(k.attendu), `${id} : l'attendu couvre`).toBe(true);
+  if (e.sens === "plus-grande") expect(couvre(k.attendu + 1), `${id} : la position suivante couvre encore`).toBe(false);
+  else expect(couvre(k.attendu - 1), `${id} : la position d'avant couvre déjà`).toBe(false);
+  return {
+    attendu: k.attendu,
+    bornes: [min, k.max],
+    droites: [d.produit(min), d.cout(min), d.produit(k.max), d.cout(k.max)].map(centime),
+    lecture: Object.fromEntries(e.lecture(cas, k.attendu).map((l) => [l.libelle, l.montant])),
+  };
+}
+
+/** Un laboratoire : sa lecture au départ et à la solution, par libellé. */
+function laboratoire(ch: Chapitre, id: string) {
+  const e = ch.etapes.find((x) => x.id === id) as EtapeSimulation;
+  expect(e.type, id).toBe("simulation");
+  const d = e.defi(cas);
+  const depart = Object.fromEntries(e.leviers(cas).map((l) => [l.code, l.depart]));
+  const lire = (p: Record<string, number>) => Object.fromEntries(e.lecture(cas, p).map((l) => [l.libelle, l.montant]));
+  return { e, d, depart, solution: d.solution, auDepart: lire(depart), aLaSolution: lire({ ...d.solution }), reussi: [d.atteint(depart), d.atteint(d.solution)] };
+}
+
+/** L'option juste d'une étape de choix. */
+const juste = (ch: Chapitre, id: string) => (ch.etapes.find((x) => x.id === id) as EtapeChoix).options(cas, etatVide).find((o) => o.juste)!.texte;
+
+describe("le chapitre et son cas, à la boutique du monde du cours", () => {
+  it("se jouent chez MAILLE & CO seule, au palier 2 du parcours MCO", () => {
+    const ch = INDICATEURS_DU_POINT_DE_VENTE;
+    expect(CHAPITRES).toContain(ch);
+    expect(SITUATIONS).toContain(MOINS_DE_CLIENTS_LE_MOIS_PROCHAIN);
+    expect(ch.parcours).toBe("mco");
+    expect(ch.palier).toBe(2);
+    expect(ch.entreprises?.codes).toEqual(["boutique"]);
+    expect(ch.entreprises!.pourquoi).toMatch(/^[a-zé].*\.$/);
+    for (const b of ch.blocs) {
+      const ref = referentielDeCitation(b);
+      expect(ref, b).not.toBeNull();
+      expect(blocOfficiel(b, ref!.code), b).not.toBeNull();
+    }
+    expect(ch.etapes[0]!.type).toBe("lecture");
+    expect(ch.etapes.at(-1)!.id).toBe("synthese");
+    expect(f.entreprise).toBe(cas.entreprise);
+  });
+
+  it("au moins deux cycles pari, puis curseur ou laboratoire, puis formalisation ; la synthèse finit par l'arène", () => {
+    const ids = INDICATEURS_DU_POINT_DE_VENTE.etapes.map((e) => e.id);
+    const avant = (a: string, b: string) => expect(ids.indexOf(a), `${a} avant ${b}`).toBeLessThan(ids.indexOf(b));
+    avant("predire-les-passages", "les-passages-au-curseur");
+    avant("les-passages-au-curseur", "deux-leviers");
+    avant("predire-les-leviers", "le-laboratoire-des-indicateurs");
+    avant("le-laboratoire-des-indicateurs", "la-decomposition");
+    const s = INDICATEURS_DU_POINT_DE_VENTE.etapes.at(-1)!;
+    if (s.type !== "lecture") throw new Error("La synthèse est une lecture");
+    expect(s.texte(cas).at(-1)).toBe("Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.");
+    const intro = INDICATEURS_DU_POINT_DE_VENTE.etapes[0]!;
+    if (intro.type !== "lecture") throw new Error("L'intro est une lecture");
+    expect(intro.texte(cas).join(" ")).toMatch(/simulation du cours/);
+  });
 });
 
-describe.each(COMMERCES)("les indicateurs chez %s", (code) => {
-  const cas = casDeLEntreprise(code);
-  const k = indicateurs(cas);
-  const chapitre = chapitreDuCas(INDICATEURS_DU_POINT_DE_VENTE, cas);
+describe("les indicateurs du point de vente : le mois de janvier", () => {
+  const ch = INDICATEURS_DU_POINT_DE_VENTE;
 
-  it("le mois est celui de l'arène : les ventes du marché retrouvent celles du cas", () => {
-    expect(k.ventes).toBeGreaterThan(0);
-    expect(k.ventes).toBeLessThanOrEqual(k.demande);
-    expect(k.demande - k.ventes - k.manque).toBeLessThanOrEqual(cas.marche.clienteles.length);
-    // Les deux lectures du même trimestre, arrondies chacune : à quelques unités près.
-    expect(Math.abs(k.ventes - cas.gestion.quantite) / cas.gestion.quantite).toBeLessThan(0.01);
-    expect(Math.abs(k.chiffreDAffaires - cas.gestion.chiffreDAffaires) / cas.gestion.chiffreDAffaires).toBeLessThan(0.01);
-    expect(k.ventes).toBeLessThanOrEqual(k.capacite);
+  it("la fiche donne les chiffres de la consigne", () => {
+    expect([CA, ENTREES, PASSAGES, ARTICLES]).toEqual([87_450, 3_848, 948, 1_530]);
+    expect([centime(PANIER), centime(ARTICLES / PASSAGES), centime(PRIX_MOYEN), dixieme((PASSAGES / ENTREES) * 100)]).toEqual([92.25, 1.61, 57.16, 24.6]);
+    expect([CA / 120, dixieme((1_530 / 1_554) * 100)]).toEqual([728.75, 98.5]);
   });
 
-  it("le panier se calcule comme dans l'arène, sous le nom qu'elle lui donne", () => {
-    const parTicket = code === "boutique" ? ARTICLES_PAR_TICKET : 1;
-    expect(k.client.unitesParClient).toBe(parTicket);
-    expect(k.panier).toBeCloseTo(k.chiffreDAffaires / (k.ventes / parTicket), 0);
-    expect(scenarioByCode(code).kpis.map((x) => x.label)).toContain(k.nomDuPanier);
+  it("les étapes guidées : le mois en quatre chiffres, le panier, l'indice de vente, le prix moyen", () => {
+    expect(attendus(ch, "le-mois")).toEqual({ "Chiffre d'affaires du mois": CA, "Passages en caisse": PASSAGES, "Articles vendus": ARTICLES, "Chiffre d'affaires au m²": CA / 120 });
+    expect(attendus(ch, "le-panier")).toEqual({ "Panier moyen": centime(PANIER), "Indice de vente": centime(ARTICLES / PASSAGES), "Prix moyen d'un article": centime(PRIX_MOYEN) });
   });
 
-  it("l'indicateur du métier se calcule comme dans l'arène", () => {
-    expect(k.transformation).toBeCloseTo((k.ventes / k.demande) * 100, 0);
-    expect(k.caManque).toBeCloseTo(k.manque * k.prixMoyen, -1);
-    expect(k.remplissage).toBeCloseTo((k.ventes / k.capacite) * 100, 0);
-    if (code === "ecommerce") {
-      const nouveaux = cas.marche.clienteles.find((x) => x.code === "acquisition")!.vendu;
-      expect(k.cac).toBeCloseTo(cas.marche.marketing / nouveaux, 2);
-      expect(k.margeParCommande).toBeCloseTo(cas.gestion.prixMoyen - cas.gestion.coutVariableUnitaire, 2);
-    }
+  it("les étapes autonomes : la transformation (passages ÷ entrées), le taux de service, le rayon vide", () => {
+    expect(attendus(ch, "la-transformation")).toEqual({
+      "Taux de transformation de la boutique (%)": dixieme((PASSAGES / ENTREES) * 100),
+      "Taux de transformation des passants (%)": dixieme((600 / 3_160) * 100),
+      "Taux de transformation des clientes fidèles (%)": (340 / 680) * 100,
+    });
+    expect(dixieme((600 / 3_160) * 100)).toBe(19);
+    const demande = 600 + 384 + 90 + 330 + 150;
+    expect(attendus(ch, "le-taux-de-service")).toEqual({
+      "Articles demandés": demande,
+      "Taux de service (%)": dixieme((ARTICLES / demande) * 100),
+      "Ventes manquées": 384 - 360,
+      "Chiffre d'affaires manqué": 24 * 75,
+    });
+    expect(juste(ch, "deux-taux")).toBe("98,5 % est le taux de service ; la transformation vaut 24,6 %");
+    expect(juste(ch, "pourquoi-manquees")).toBe("Commander plus de cardigans : le rayon en a eu moins que la demande");
   });
 
-  it("chacun des deux leviers atteint l'objectif, et il faut plus de l'un comme de l'autre", () => {
-    expect(k.caVise).toBeCloseTo(k.chiffreDAffaires * (1 + OBJECTIF_DE_HAUSSE), -1);
-    expect(k.panierVise * k.clients).toBeGreaterThanOrEqual(k.caVise - k.clients * 0.01);
-    expect(k.clientsVises * k.panier).toBeGreaterThanOrEqual(k.caVise - 0.01);
-    expect((k.clientsVises - 1) * k.panier).toBeLessThan(k.caVise);
-    expect(k.panierVise).toBeGreaterThan(k.panier);
-    expect(k.clientsVises).toBeGreaterThan(k.clients);
+  it("le premier cycle : les passages pariés, cherchés au curseur, puis les deux leviers formalisés", () => {
+    expect(HAUSSE_VISEE).toBe(0.1);
+    expect(VISE).toBe(96_195);
+    expect(juste(ch, "predire-les-passages")).toBe("Environ 10 % de passages en caisse en plus");
+    // PANIER × n ≥ 96 195 : n ≥ 1 042,8, soit 1 043 passages.
+    expect(Math.ceil(VISE / PANIER)).toBe(1_043);
+    const ca = centime(1_043 * PANIER);
+    expect(curseur(ch, "les-passages-au-curseur")).toEqual({
+      attendu: 1_043,
+      bornes: [900, 1_200],
+      droites: [centime(900 * PANIER), VISE, centime(1_200 * PANIER), VISE],
+      lecture: { "Chiffre d'affaires de ces passages": ca, "Objectif de la direction": VISE, "Écart à l'objectif": centime(ca - VISE), "Chiffre d'affaires gagné sur janvier": centime(ca - CA) },
+    });
+    expect(attendus(ch, "deux-leviers")).toEqual({
+      "Chiffre d'affaires visé": VISE,
+      "Passages nécessaires, au même panier": 1_043,
+      "Panier nécessaire, aux mêmes passages": centime(VISE / PASSAGES),
+      "Entrées nécessaires, à la même transformation": Math.ceil((1_043 * ENTREES) / PASSAGES),
+    });
+    expect([centime(VISE / PASSAGES), Math.ceil((1_043 * ENTREES) / PASSAGES)]).toEqual([101.47, 4_234]);
+    expect(juste(ch, "quel-levier")).toBe("Remplir le panier : le client est déjà là");
   });
 
-  it("aucun texte ne sort undefined ni « de le » ; une seule bonne réponse ; les notions existent", () => {
-    const codes = new Set(CONCEPTS.map((x) => x.code));
-    for (const [i, e] of chapitre.etapes.entries()) {
-      const etat = etatAvant(chapitre, cas, i);
-      for (const x of textesDe(e, cas, etat)) {
-        expect(x, `${e.id} : ${x}`).not.toMatch(/undefined|NaN|Infinity|\[object/);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/\b(de|à) les? /);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/ [-–—] /);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/_[a-z]/);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/\bde [aeiouyéèê]/i);
-      }
-      if (e.type === "choix") expect(e.options(cas, etat).filter((o) => o.juste), e.id).toHaveLength(1);
-      for (const n of e.notions ?? []) expect(codes.has(n), `${e.id} : ${n}`).toBe(true);
-    }
+  it("le second cycle : deux leviers pariés, le laboratoire, puis l'indice de vente à rebours", () => {
+    expect(juste(ch, "predire-les-leviers")).toBe("Un peu plus de 10 % : les hausses se multiplient");
+    const l = laboratoire(ch, "le-laboratoire-des-indicateurs");
+    expect(l.depart).toEqual({ entrees: 0, transformation: 0, indice: 0, prix: 0 });
+    expect(l.solution).toEqual({ entrees: 0, transformation: 0, indice: 10, prix: 0 });
+    expect(l.reussi).toEqual([false, true]);
+    expect(l.auDepart).toEqual({
+      Entrées: ENTREES,
+      "Taux de transformation": 24.6,
+      "Passages en caisse": PASSAGES,
+      "Indice de vente": 1.61,
+      "Prix moyen d'un article": 57.16,
+      "Panier moyen": 92.25,
+      "Chiffre d'affaires": CA,
+      "Chiffre d'affaires gagné sur janvier": 0,
+    });
+    expect(l.aLaSolution).toEqual({
+      Entrées: ENTREES,
+      "Taux de transformation": 24.6,
+      "Passages en caisse": PASSAGES,
+      "Indice de vente": centime((ARTICLES / PASSAGES) * 1.1),
+      "Prix moyen d'un article": 57.16,
+      "Panier moyen": centime(PANIER * 1.1),
+      "Chiffre d'affaires": VISE,
+      "Chiffre d'affaires gagné sur janvier": centime(VISE - CA),
+    });
+    expect([centime((ARTICLES / PASSAGES) * 1.1), centime(PANIER * 1.1), centime(VISE - CA)]).toEqual([1.78, 101.47, 8_745]);
+    // Des clients en plus ne relèvent pas le défi ; deux fois 5 % sur le panier, si (1,05² = 1,1025).
+    expect(l.d.atteint({ entrees: 10, transformation: 0, indice: 0, prix: 0 })).toBe(false);
+    expect(l.d.atteint({ entrees: 0, transformation: 0, indice: 5, prix: 5 })).toBe(true);
+    expect(l.d.atteint({ entrees: 0, transformation: 0, indice: 5, prix: 4 })).toBe(false);
+    // 10 % de visiteurs en plus, transformés 10 % moins : 0,99 fois les passages ; le panier doit faire le reste.
+    expect(l.d.atteint({ entrees: 10, transformation: -10, indice: 10, prix: 1 })).toBe(false);
+    expect(l.d.atteint({ entrees: 10, transformation: -10, indice: 10, prix: 2 })).toBe(true);
+    expect(HAUSSE_DU_PRIX_MOYEN).toBe(0.04);
+    expect(attendus(ch, "la-decomposition")).toEqual({
+      "Hausse de l'indice de vente (%)": dixieme((1.1 / 1.04 - 1) * 100),
+      "Indice de vente visé": centime((ARTICLES / PASSAGES) * (1.1 / 1.04)),
+      "Articles à vendre dans le mois": Math.ceil(VISE / (PRIX_MOYEN * 1.04)),
+    });
+    expect([dixieme((1.1 / 1.04 - 1) * 100), centime((ARTICLES / PASSAGES) * (1.1 / 1.04)), Math.ceil(VISE / (PRIX_MOYEN * 1.04))]).toEqual([5.8, 1.71, 1_619]);
   });
+
+  it("l'expert : le panier sans les comités, et le panier que l'on vise", () => {
+    const comites = 80 * 55 + 20 * 135 + 60 * 35 + 40 * 25;
+    expect(comites).toBe(10_200);
+    expect(attendus(ch, "le-panier-sans-les-comites")).toEqual({
+      "Panier moyen des comités": comites / 8,
+      "Chiffre d'affaires sans les comités": CA - comites,
+      "Passages sans les comités": PASSAGES - 8,
+      "Panier moyen sans les comités": centime((CA - comites) / (PASSAGES - 8)),
+    });
+    expect([comites / 8, centime((CA - comites) / (PASSAGES - 8))]).toEqual([1_275, 82.18]);
+    expect(juste(ch, "quel-panier-viser")).toBe("82,18 €, celui des clients du comptoir");
+    expect(indicateursDuPointDeVente(cas).deuxFoisCinq).toBe(10.3);
+  });
+
+  it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(ch));
+});
+
+describe("le cas : moins de clients le mois prochain", () => {
+  const s = MOINS_DE_CLIENTS_LE_MOIS_PROCHAIN;
+  const ch = INDICATEURS_DU_POINT_DE_VENTE;
+  const entrees = Math.round(ENTREES * 0.85);
+  const passages = Math.round((entrees * PASSAGES) / ENTREES);
+
+  it("a la forme d'un cas dédié", () => {
+    casDedie(s, ch);
+    expect(s.commanditaire).toBe("Le gérant");
+    expect(BAISSE_DES_ENTREES).toBe(0.15);
+  });
+
+  it("chaque chiffre, refait à la main", () => {
+    expect([entrees, passages]).toEqual([3_271, 806]);
+    expect(attendus(s, "le-mois")).toEqual({ "Taux de transformation (%)": 24.6, "Panier moyen": 92.25, "Prix moyen d'un article": 57.16 });
+    const ca = centime(passages * PANIER);
+    expect(attendus(s, "moins-de-clients")).toEqual({
+      "Entrées pendant les travaux": entrees,
+      "Passages en caisse pendant les travaux": passages,
+      "Chiffre d'affaires au même panier": ca,
+      "Chiffre d'affaires perdu": centime(CA - ca),
+    });
+    expect([ca, centime(CA - ca)]).toEqual([74_350.95, 13_099.05]);
+    expect(attendus(s, "le-panier-qui-compense")).toEqual({
+      "Panier moyen nécessaire": centime(CA / passages),
+      "Hausse du panier (%)": dixieme((PASSAGES / passages - 1) * 100),
+      "Indice de vente nécessaire": centime(ARTICLES / passages),
+    });
+    expect([centime(CA / passages), dixieme((PASSAGES / passages - 1) * 100), centime(ARTICLES / passages)]).toEqual([108.5, 17.6, 1.9]);
+    // 3 271 × t ÷ 1 000 × PANIER ≥ 87 450 : t ≥ 948 ÷ 3 271 × 1 000 = 289,8, soit 290 passages pour 1 000 entrées.
+    expect(Math.ceil((PASSAGES / entrees) * 1_000)).toBe(290);
+    const au = (t: number) => centime(((entrees * t) / 1_000) * PANIER);
+    expect(curseur(s, "la-transformation-au-curseur")).toEqual({
+      attendu: 290,
+      bornes: [240, 320],
+      droites: [au(240), CA, au(320), CA],
+      lecture: { "Chiffre d'affaires du mois des travaux": au(290), "Chiffre d'affaires de janvier": CA, "Écart sur janvier": centime(au(290) - CA) },
+    });
+  });
+
+  it("le verdict : il faut plus que la baisse, sur n'importe quel levier", () => {
+    const x = moinsDeClients(cas);
+    expect(x.verdict).toBe("il-faut-plus-que-la-baisse");
+    expect([x.panierFaux, x.transformationFausse]).toEqual([centime(PANIER * 1.15), dixieme((PASSAGES / ENTREES) * 1.15 * 100)]);
+    expect([centime(PANIER * 1.15), dixieme((PASSAGES / ENTREES) * 1.15 * 100)]).toEqual([106.08, 28.3]);
+    expect(juste(s, "reponse")).toBe("17,6 % de panier en plus, pas 15 % : 108,50 €");
+  });
+
+  it("textes propres, une seule bonne réponse, notions existantes : le cas", () => verifierLesTextes(s));
 });

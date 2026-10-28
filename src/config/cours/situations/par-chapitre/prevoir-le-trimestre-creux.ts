@@ -1,78 +1,69 @@
 import type { Cas } from "../../cas";
-import { COMMERCES } from "../../chapitres/taux-de-marque";
-import { ANNEES, TRIMESTRES_PAR_AN, troisAnnees } from "../../trois-annees";
+import { ENTREPRISES_DE_LA_PREVISION, previsionDesVentes, trimestreDuRang } from "../../chapitres/prevoir-les-ventes";
 import type { Situation } from "../types";
 
 /**
- * CAS PRATIQUE DU CHAPITRE « PRÉVOIR LES VENTES » : PRÉVOIR LE TRIMESTRE CREUX (BTS MCO,
- * palier 3).
+ * CAS PRATIQUE DU CHAPITRE « PRÉVOIR LES VENTES » : PRÉVOIR LE TRIMESTRE CREUX (BTS MCO, palier 3).
  *
- * La direction prépare les commandes et les plannings du trimestre le plus calme de
- * l'année. Elle ne veut plus prolonger la tendance des deux années passées : elle retient
- * une croissance prudente. L'élève refait seul la méthode du chapitre (les totaux annuels,
- * le coefficient saisonnier moyen, la prévision du trimestre) sur un autre trimestre, avec
- * l'hypothèse de croissance de la direction.
+ * LE CAS JOUE DANS LE MONDE DU COURS, comme son chapitre : la boutique MAILLE & CO, ses trois années
+ * de demande (monde/maille-et-co.ts) et la tendance du chapitre (`previsionDesVentes`).
  *
- * Le cas est neuf par sa question : le chapitre prévoit le trimestre fort en prolongeant la
- * tendance observée, puis constate qu'elle ne s'est pas répétée ; ici, la croissance est
- * fixée par la direction, et c'est le trimestre creux qu'on prévoit, dont le coefficient
- * est sous 1. Les deux années sont celles du chapitre (`troisAnnees`).
+ * La direction prépare le trimestre le plus calme de l'année, le trimestre 2 : les commandes, et le
+ * renfort du printemps, qu'elle ne garde que si la demande prévue atteint un seuil. L'élève refait
+ * seul le coefficient saisonnier de ce trimestre (les rapports à la tendance, puis la correction), sa
+ * prévision pour N, puis un calcul à rebours : l'année où le trimestre 2 franchit le seuil. La réponse
+ * demande un jugement : la bonne prévision, et la bonne décision sur le renfort.
+ *
+ * Le cas est neuf par sa question : le chapitre prévoit les trimestres 1 et 4 et remonte la tendance
+ * vers un seuil ; ici, on prévoit le trimestre 2, au coefficient sous 0,5, et le seuil porte sur un
+ * trimestre saisonnier, pas sur la tendance. Les pièges sont ceux de l'épreuve : prolonger le même
+ * trimestre de la croissance annuelle, oublier la saison, diviser par le coefficient au lieu de
+ * multiplier, tracer la droite sur les trimestres bruts.
+ *
+ * Pas de curseur : sa lecture s'affiche en euros, et la question porte sur des articles.
  */
 
 /**
- * La croissance de la demande que la direction retient pour l'année qui vient : 5 %. Le
- * chapitre a montré qu'une croissance de plus de 20 % ne se prolonge pas quand le marché
- * mûrit ; 5 % est l'ordre de grandeur d'un commerce installé sur un marché qui grandit
- * encore un peu.
+ * LE RENFORT DU PRINTEMPS, hypothèse du cours : la direction ne garde l'étudiante du mercredi et du
+ * samedi au trimestre 2 que si la demande prévue de ce trimestre atteint 3 500 articles.
  */
-export const CROISSANCE_RETENUE = 0.05;
+export const SEUIL_DU_RENFORT = 3_500;
 
-const qte = (n: number) => Math.round(n).toLocaleString("fr-FR");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const deux = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
-const auCentieme = (x: number) => Math.round(x * 100) / 100;
+const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const art = (n: number) => qte(Math.round(n));
+const dec = (x: number, d = 2) => x.toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).replace(/^-/, "−");
+const pct = (x: number) => `${x.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
+const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
 
 /** Les chiffres de la réponse, calculés une fois du cas. */
-export function trimestreCreux(c: Cas) {
-  const serie = troisAnnees(c.code).filter((q) => q.annee < ANNEES);
-  const an2 = serie.filter((q) => q.annee === 2);
-  // Le trimestre creux : celui où la demande de la deuxième année est la plus basse.
-  const creux = an2.reduce((a, b) => (b.demande < a.demande ? b : a)).trimestre;
-  const total = (annee: number) => serie.filter((q) => q.annee === annee).reduce((t, q) => t + q.demande, 0);
-  const du = (annee: number) => serie.find((q) => q.annee === annee && q.trimestre === creux)!.demande;
-  const total1 = total(1);
-  const total2 = total(2);
-  const d1 = du(1);
-  const d2 = du(2);
-  // Aux arrondis du chapitre : les coefficients au centième, les demandes à l'unité.
-  const coef1 = auCentieme(d1 / (total1 / TRIMESTRES_PAR_AN));
-  const coef2 = auCentieme(d2 / (total2 / TRIMESTRES_PAR_AN));
-  const coef = auCentieme((coef1 + coef2) / 2);
-  const total3 = Math.round(total2 * (1 + CROISSANCE_RETENUE));
-  const prevu = Math.round((total3 / TRIMESTRES_PAR_AN) * coef);
-  // La tendance des deux années, que la direction ne veut plus prolonger.
-  const croissanceObservee = auDixieme((total2 / total1 - 1) * 100);
-  const total3Prolonge = Math.round(total2 * (1 + croissanceObservee / 100));
+export function trimestreCreux(c: Pick<Cas, "code">) {
+  const x = previsionDesVentes(c);
+  const creux = x.p.serie.filter((s) => s.trimestre === 2);
+  const n1 = creux.at(-1)!;
+  const k = x.p.coefficients[1]!;
+  const t2 = x.p.previsions[1]!;
+  // Le seuil du renfort, à rebours : la tendance qu'il faut, son rang, puis le premier trimestre 2 au-delà.
+  const tendanceQuIlFaut = SEUIL_DU_RENFORT / k;
+  const rangDuSeuil = (tendanceQuIlFaut - x.b) / x.a;
+  const premierCreux = creux.length * 4 + 2 + 4 * Math.max(0, Math.ceil((rangDuSeuil - 14) / 4 - 1e-9));
+  const previsionAuSeuil = x.tendance(premierCreux) * k;
   return {
-    serie,
+    x,
     creux,
-    total1,
-    total2,
-    d1,
-    d2,
-    coef1,
-    coef2,
-    coef,
-    total3,
-    prevu,
-    evolution: auDixieme((prevu / d2 - 1) * 100),
-    croissanceObservee,
-    // Les erreurs classiques : oublier la saison, diviser par le coefficient au lieu de
-    // multiplier, prolonger la tendance observée.
-    sansSaison: Math.round(total3 / TRIMESTRES_PAR_AN),
-    diviseParLeCoef: Math.round(total3 / TRIMESTRES_PAR_AN / coef),
-    prolonge: Math.round((total3Prolonge / TRIMESTRES_PAR_AN) * coef),
+    n1,
+    k,
+    t2,
+    tendanceQuIlFaut,
+    rangDuSeuil,
+    premierCreux,
+    previsionAuSeuil,
+    evolution: t2.prevision / n1.demande - 1,
+    renfortDesN: t2.prevision >= SEUIL_DU_RENFORT,
+    // Les erreurs de l'épreuve : le même trimestre prolongé de la croissance de l'année, la saison
+    // oubliée, la droite des trimestres bruts.
+    prolonge: n1.demande * (x.annuelle.totaux[2]! / x.annuelle.totaux[1]!),
+    sansSaison: t2.tendance,
+    brute: x.brute.previsions[1]!.prevision,
   };
 }
 
@@ -85,17 +76,18 @@ export const PREVOIR_LE_TRIMESTRE_CREUX: Situation = {
   commanditaire: "La direction",
   titre: "Prévoir le trimestre creux",
   accroche:
-    "La direction prépare les commandes et les plannings du trimestre le plus calme. Elle retient une croissance prudente et vous demande la demande à prévoir.",
+    "La direction prépare le trimestre le plus calme de l'année : les commandes, et le renfort du printemps, qu'elle ne garde qu'au-delà d'un seuil. Elle vous demande la prévision, et l'année où le seuil sera franchi.",
   objectifs: [
-    "Calculer la demande de chaque année et la demande prévue avec une croissance donnée",
-    "Calculer le coefficient saisonnier moyen d'un trimestre creux",
-    "Prévoir la demande de ce trimestre l'année suivante",
+    "Calculer et corriger le coefficient saisonnier d'un trimestre creux par le rapport à la tendance",
+    "Prévoir ce trimestre pour l'année N et son évolution sur N − 1",
+    "Retrouver à rebours l'année où le trimestre franchit un seuil",
     "Répondre à la direction en évitant les erreurs de saisonnalité",
   ],
   libre: false,
   entreprises: {
-    codes: COMMERCES,
-    pourquoi: "ce cas prévoit la demande d'un point de vente, qui accueille ou livre ses clients un par un.",
+    codes: ENTREPRISES_DE_LA_PREVISION,
+    pourquoi:
+      "ce cas prévoit la demande de la boutique du cours, MAILLE & CO, la seule dont la simulation tient trois années de demande trimestre par trimestre ; le point de vente reste le même d'un chapitre à l'autre.",
   },
   etapes: [
     {
@@ -105,86 +97,103 @@ export const PREVOIR_LE_TRIMESTRE_CREUX: Situation = {
       texte: (c) => {
         const r = trimestreCreux(c);
         return [
-          `« Le trimestre ${r.creux} est le plus calme de l'année. Pour préparer nos commandes et nos plannings, je veux la demande à prévoir pour ce trimestre l'an prochain. Je ne prolonge plus la croissance des deux dernières années : je retiens ${pct(CROISSANCE_RETENUE * 100)} de demande en plus sur l'année. »`,
-          `Pas de cours cette fois : vous avez deux années de ${c.entreprise}, trimestre par trimestre, et la méthode est celle du chapitre. À vous de choisir la bonne série et d'enchaîner les calculs.`,
+          `« Le trimestre 2 est le plus calme de l'année. Pour préparer nos commandes, je veux la demande à prévoir pour le trimestre 2 de N. Et je ne garderai l'étudiante du mercredi et du samedi ce trimestre-là que si la demande prévue atteint ${art(SEUIL_DU_RENFORT)} articles : si ce n'est pas le cas en N, dites-moi en quelle année ce le sera. »`,
+          `Pas de cours cette fois : vous avez la demande des trois années de ${r.x.f.entreprise} et la tendance du chapitre, y = ${dec(r.x.a)} x + ${dec(r.x.b)} (x, le rang du trimestre : 1 pour le trimestre 1 de N − 3). Les 4 coefficients bruts du chapitre font ${dec(r.x.p.sommeBrute, 4)}. À vous d'enchaîner les calculs.`,
         ];
       },
-      tableau: (c) => ({
-        titre: `${c.entreprise} · deux années de l'arène, trimestre par trimestre`,
-        colonnes: ["Demande", "Vendu"],
-        lignes: trimestreCreux(c).serie.map((q) => ({ libelle: `Année ${q.annee}, trimestre ${q.trimestre}`, valeurs: [qte(q.demande), qte(q.vendu)] })),
-      }),
-      repere: (c) =>
-        `À rendre : la demande de chaque année et celle prévue pour l'année 3, le coefficient saisonnier du trimestre ${trimestreCreux(c).creux}, la prévision de ce trimestre, et votre réponse.`,
+      tableau: (c) => {
+        const r = trimestreCreux(c);
+        return {
+          titre: `${r.x.f.entreprise} · la demande et sa tendance, trimestre par trimestre`,
+          colonnes: ["Rang", "Demande", "Tendance"],
+          lignes: r.x.p.serie.map((s) => ({ libelle: trimestreDuRang(s.rang).libelle, valeurs: [String(s.rang), qte(s.demande), dec(s.tendance)] })),
+        };
+      },
+      repere: () =>
+        "À rendre : le coefficient saisonnier du trimestre 2, sa prévision pour N, l'année où il atteint le seuil du renfort, et votre réponse.",
     },
     {
-      id: "l-annee-qui-vient",
-      type: "montants",
-      titre: "L'année qui vient",
-      notions: ["seasonality"],
-      question: () =>
-        `Sur la série qui dit ce que le marché a voulu, additionnez les quatre trimestres de chaque année. Puis calculez la demande prévue pour l'année 3 avec la croissance retenue par la direction, ${pct(CROISSANCE_RETENUE * 100)} (à l'unité).`,
-      champs: (c) => {
-        const r = trimestreCreux(c);
-        const an = (y: number) => r.serie.filter((q) => q.annee === y).map((q) => qte(q.demande)).join(" + ");
-        return [
-          { libelle: "Demande de l'année 1", attendu: r.total1, calcul: `${an(1)} = ${qte(r.total1)}` },
-          { libelle: "Demande de l'année 2", attendu: r.total2, calcul: `${an(2)} = ${qte(r.total2)}` },
-          { libelle: "Demande prévue pour l'année 3", attendu: r.total3, tolerance: 1, calcul: `${qte(r.total2)} × ${(1 + CROISSANCE_RETENUE).toLocaleString("fr-FR")} = ${qte(r.total3)}` },
-        ];
-      },
-      explication: (c) => {
-        const r = trimestreCreux(c);
-        return [
-          `On prévoit sur la demande, pas sur les ventes : les ventes ont pu être plafonnées par le stock ou la salle, et les reconduire reconduirait les ventes manquées. D'une année à l'autre, la demande adressée à ${c.entreprise} a grandi de ${pct(r.croissanceObservee)} ; la direction n'en retient que ${pct(CROISSANCE_RETENUE * 100)}.`,
-        ];
-      },
-    },
-    {
-      id: "la-saison",
+      id: "la-saison-du-creux",
       type: "montants",
       titre: "La saison du trimestre creux",
       notions: ["seasonality"],
-      question: (c) =>
-        `Pour chaque année, rapportez la demande du trimestre ${trimestreCreux(c).creux} à la moyenne trimestrielle de l'année, au centième. Puis faites la moyenne des deux coefficients.`,
+      question: () =>
+        "Rapportez la demande de chaque trimestre 2 à sa tendance, en pourcentage de la tendance, au centième. Puis le coefficient saisonnier corrigé du trimestre 2, en pourcentage aussi.",
       champs: (c) => {
         const r = trimestreCreux(c);
+        const brut = r.x.p.coefficientsBruts[1]!;
         return [
-          { libelle: "Coefficient de l'année 1", attendu: r.coef1, tolerance: 0.01, calcul: `${qte(r.d1)} ÷ (${qte(r.total1)} ÷ 4) = ${deux(r.coef1)}` },
-          { libelle: "Coefficient de l'année 2", attendu: r.coef2, tolerance: 0.01, calcul: `${qte(r.d2)} ÷ (${qte(r.total2)} ÷ 4) = ${deux(r.coef2)}` },
-          { libelle: "Coefficient saisonnier moyen", attendu: r.coef, tolerance: 0.01, calcul: `(${deux(r.coef1)} + ${deux(r.coef2)}) ÷ 2 = ${deux(r.coef)}` },
+          ...r.creux.map((s) => ({
+            libelle: `Trimestre 2 de ${trimestreDuRang(s.rang).annee} (% de la tendance)`,
+            attendu: auCentime(s.rapport * 100),
+            tolerance: 0.05,
+            calcul: `${qte(s.demande)} ÷ ${dec(s.tendance)} × 100 = ${dec(s.rapport * 100)}`,
+          })),
+          {
+            libelle: "Coefficient corrigé du trimestre 2 (%)",
+            attendu: auCentime(r.k * 100),
+            tolerance: 0.05,
+            calcul: `(${r.creux.map((s) => dec(s.rapport * 100)).join(" + ")}) ÷ 3 = ${dec(brut * 100)}, × 4 ÷ ${dec(r.x.p.sommeBrute, 4)} = ${dec(r.k * 100)}`,
+          },
         ];
       },
       explication: (c) => {
         const r = trimestreCreux(c);
         return [
-          `Au trimestre ${r.creux}, la demande ne vaut que ${deux(r.coef)} fois un trimestre moyen : ${pct(auDixieme((1 - r.coef) * 100))} de moins. Un coefficient sous 1, c'est un trimestre où ${c.entreprise} a besoin de moins de marchandises et de moins d'heures.`,
+          `Au trimestre 2, la demande ne vaut que ${pct(auCentime(r.k * 100))} de sa tendance : un coefficient de ${dec(r.k, 4)}. C'est un trimestre où ${r.x.f.entreprise} a besoin de moins de marchandises et de moins d'heures.`,
         ];
       },
     },
     {
       id: "la-prevision",
       type: "montants",
-      titre: "La prévision",
+      titre: "La prévision du trimestre 2 de N",
       notions: ["seasonality"],
-      question: (c) => {
-        const r = trimestreCreux(c);
-        return `Prévoyez la demande du trimestre ${r.creux} de l'année 3 (à l'unité), puis son évolution par rapport au même trimestre de l'année 2, en pourcentage, au dixième.`;
-      },
+      question: () => "Prévoyez la demande du trimestre 2 de N, à l'article près, puis son évolution sur le trimestre 2 de N − 1, en pourcentage, au centième.",
       champs: (c) => {
         const r = trimestreCreux(c);
         return [
-          { libelle: `Prévision du trimestre ${r.creux}`, attendu: r.prevu, tolerance: 2, calcul: `${qte(r.total3)} ÷ 4 × ${deux(r.coef)} = ${qte(r.prevu)}` },
-          { libelle: "Évolution sur l'année 2 (%)", attendu: r.evolution, tolerance: 0.2, calcul: `(${qte(r.prevu)} ÷ ${qte(r.d2)} − 1) × 100 = ${pct(r.evolution)}` },
+          { libelle: "Tendance du trimestre 2 de N", attendu: auCentime(r.t2.tendance), tolerance: 0.05, calcul: `${dec(r.x.a)} × ${r.t2.rang} + ${dec(r.x.b)} = ${dec(r.t2.tendance)}` },
+          { libelle: "Prévision du trimestre 2 de N", attendu: Math.round(r.t2.prevision), tolerance: 2, calcul: `${dec(r.t2.tendance)} × ${dec(r.k, 4)} = ${art(r.t2.prevision)}` },
+          {
+            libelle: "Évolution sur le trimestre 2 de N − 1 (%)",
+            attendu: auCentime(r.evolution * 100),
+            tolerance: 0.1,
+            calcul: `(${art(r.t2.prevision)} ÷ ${qte(r.n1.demande)} − 1) × 100 = ${pct(auCentime(r.evolution * 100))}`,
+          },
         ];
       },
       explication: (c) => {
         const r = trimestreCreux(c);
         return [
-          `${c.entreprise} peut s'organiser pour une demande de ${qte(r.prevu)} ${c.unites} au trimestre ${r.creux} de l'année 3, contre ${qte(r.d2)} l'année 2 (${pct(r.evolution)}).`,
-          r.coef === r.coef2
-            ? `Le coefficient moyen est celui de l'année 2 : le trimestre suit la croissance retenue, à l'arrondi près.`
-            : `L'écart avec les ${pct(CROISSANCE_RETENUE * 100)} retenus vient de la saison : le coefficient moyen, ${deux(r.coef)}, est ${r.coef < r.coef2 ? "plus bas" : "plus haut"} que celui de l'année 2, ${deux(r.coef2)}, parce qu'il compte aussi l'année 1. Le trimestre ${r.creux} pèse ${r.coef < r.coef2 ? "moins" : "plus"} dans l'année prévue que dans l'année 2.`,
+          `${r.x.f.entreprise} peut s'organiser pour ${art(r.t2.prevision)} articles au trimestre 2 de N, contre ${qte(r.n1.demande)} en N − 1. C'est ${art(SEUIL_DU_RENFORT - r.t2.prevision)} articles sous le seuil du renfort.`,
+        ];
+      },
+    },
+    {
+      id: "a-rebours",
+      type: "montants",
+      titre: "L'année du renfort",
+      notions: ["seasonality"],
+      question: () =>
+        `À rebours : quelle tendance faut-il pour qu'un trimestre 2 atteigne ${art(SEUIL_DU_RENFORT)} articles (avec le coefficient à 4 décimales) ? À quel rang la tendance l'atteint-elle, au centième ? Puis prévoyez le premier trimestre 2 qui vient après ce rang.`,
+      champs: (c) => {
+        const r = trimestreCreux(c);
+        return [
+          { libelle: "Tendance qu'il faut au trimestre 2", attendu: auCentime(r.tendanceQuIlFaut), tolerance: 1, calcul: `${art(SEUIL_DU_RENFORT)} ÷ ${dec(r.k, 4)} = ${dec(r.tendanceQuIlFaut)}` },
+          { libelle: "Rang où la tendance l'atteint", attendu: auCentime(r.rangDuSeuil), tolerance: 0.02, calcul: `(${dec(r.tendanceQuIlFaut)} − ${dec(r.x.b)}) ÷ ${dec(r.x.a)} = ${dec(r.rangDuSeuil)}` },
+          {
+            libelle: `Prévision du ${trimestreDuRang(r.premierCreux).libelle}`,
+            attendu: Math.round(r.previsionAuSeuil),
+            tolerance: 2,
+            calcul: `le premier trimestre 2 après le rang ${dec(r.rangDuSeuil)} est le rang ${r.premierCreux} : (${dec(r.x.a)} × ${r.premierCreux} + ${dec(r.x.b)}) × ${dec(r.k, 4)} = ${art(r.previsionAuSeuil)}`,
+          },
+        ];
+      },
+      explication: (c) => {
+        const r = trimestreCreux(c);
+        return [
+          `La tendance franchit ${art(r.tendanceQuIlFaut)} articles au rang ${dec(r.rangDuSeuil)}, en fin de N ; le premier trimestre 2 qui suit est celui de ${trimestreDuRang(r.premierCreux).annee}, avec ${art(r.previsionAuSeuil)} articles. Un seuil sur un trimestre saisonnier se remonte par sa tendance : le seuil ÷ le coefficient, puis la droite à l'envers.`,
         ];
       },
     },
@@ -195,26 +204,27 @@ export const PREVOIR_LE_TRIMESTRE_CREUX: Situation = {
       question: () => "Quelle phrase envoyez-vous à la direction ?",
       options: (c) => {
         const r = trimestreCreux(c);
+        const an = trimestreDuRang(r.premierCreux).annee;
         return [
           {
-            texte: `Prévoyons ${qte(r.prevu)} ${c.unites} au trimestre ${r.creux}`,
+            texte: `Prévoir ${art(r.t2.prevision)} articles, et le renfort pour ${an}`,
             juste: true,
-            retour: `Oui : ${qte(r.total2)} × ${(1 + CROISSANCE_RETENUE).toLocaleString("fr-FR")} = ${qte(r.total3)} sur l'année, dont un quart vaut ${qte(r.sansSaison)} ; le trimestre ${r.creux} en vaut ${deux(r.coef)} fois, soit ${qte(r.prevu)}.`,
+            retour: `Oui : la tendance du trimestre 2 de N, ${dec(r.t2.tendance)}, × ${dec(r.k, 4)} donne ${art(r.t2.prevision)} articles, sous les ${art(SEUIL_DU_RENFORT)} du renfort. Le seuil est franchi au trimestre 2 de ${an}, avec ${art(r.previsionAuSeuil)} articles.`,
           },
           {
-            texte: `Prévoyons ${qte(r.sansSaison)} ${c.unites} : le quart de la demande prévue pour l'année`,
+            texte: `Prévoir ${art(r.prolonge)} articles, le trimestre 2 de N − 1 augmenté de la croissance de l'année, et le renfort pour ${an}`,
             juste: false,
-            retour: `Non : c'est un trimestre moyen. Le trimestre ${r.creux} est plus calme, son coefficient est de ${deux(r.coef)} : il faut multiplier ${qte(r.sansSaison)} par ${deux(r.coef)}, ce qui donne ${qte(r.prevu)}.`,
+            retour: `Non : prolonger un seul trimestre de la croissance annuelle, c'est oublier que la tendance se lit trimestre par trimestre et que la saison se mesure sur trois années. La méthode donne ${art(r.t2.prevision)}.`,
           },
           {
-            texte: `Prévoyons ${qte(r.diviseParLeCoef)} ${c.unites} : le quart de l'année divisé par ${deux(r.coef)}`,
+            texte: `Prévoir ${art(r.brute)} articles par la droite des trimestres bruts, et garder le renfort dès N`,
             juste: false,
-            retour: `Non : diviser par le coefficient enlève la saison d'un chiffre qui l'a ; pour la remettre dans un trimestre moyen, on multiplie. Un trimestre creux ne peut pas valoir plus qu'un trimestre moyen : ${qte(r.prevu)}.`,
+            retour: `Non : la droite des trimestres bruts prend Noël pour de la croissance, et sa pente gonfle. Elle ferait garder un renfort pour ${art(r.brute - r.t2.prevision)} articles qui ne viendront pas : ${art(r.t2.prevision)}.`,
           },
           {
-            texte: `Prévoyons ${qte(r.prolonge)} ${c.unites}, en gardant la croissance de ${pct(r.croissanceObservee)} des deux années`,
+            texte: `Prévoir ${art(r.sansSaison)} articles, la tendance du trimestre, et garder le renfort dès N`,
             juste: false,
-            retour: `Non : la direction retient ${pct(CROISSANCE_RETENUE * 100)}, pas les ${pct(r.croissanceObservee)} observés. Prolonger une tendance qui ralentit, c'est commander et planifier pour des clients qui ne viendront pas : ${qte(r.prevu)}.`,
+            retour: `Non : la tendance est un trimestre moyen. Le trimestre 2 n'en vaut que ${pct(auCentime(r.k * 100))} : il faut la multiplier par ${dec(r.k, 4)}, ce qui donne ${art(r.t2.prevision)}.`,
           },
         ];
       },

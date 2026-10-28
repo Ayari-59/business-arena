@@ -1,66 +1,65 @@
-import { montantEcrit as eur } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
+import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
 import type { Cas } from "../../cas";
-import { budgetDuPointDeVente } from "../../chapitres/budget-du-point-de-vente";
-import { COMMERCES_A_STOCK } from "../../chapitres/stock-du-point-de-vente";
+import { ENTREPRISES_DU_BUDGET, budgetDuPointDeVente } from "../../chapitres/budget-du-point-de-vente";
+import { budgetDuTrimestre } from "../../monde/boutique";
+import type { CodeDeReference } from "../../monde/maille-et-co";
 import type { Situation } from "../types";
 
 /**
- * CAS PRATIQUE DU CHAPITRE « LE BUDGET DU POINT DE VENTE » : RÉVISER LE BUDGET (BTS MCO,
- * palier 3).
+ * CAS PRATIQUE DU CHAPITRE « LE BUDGET DU POINT DE VENTE » : RÉVISER LE BUDGET (BTS MCO, palier 3).
  *
- * La direction relève la prévision de ventes du trimestre, sans toucher au stock voulu en
- * fin de trimestre. Elle demande le budget révisé : les ventes, ce qu'il faut acheter, la
- * marge commerciale attendue, et ce que les achats feront sortir de la caisse. L'élève
- * refait seul les lignes du budget du chapitre, avec la nouvelle prévision.
+ * LE CAS JOUE DANS LE MONDE DU COURS, comme son chapitre : la boutique MAILLE & CO, son budget du
+ * trimestre 1 de N (monde/maille-et-co.ts) et le modèle du cours (monde/boutique.ts,
+ * `budgetDuTrimestre`).
  *
- * Le cas est neuf par sa question : le chapitre bâtit le budget sur les ventes que l'arène a
- * jouées ; ici, la prévision monte, et l'on cherche ce qui monte avec elle. Le piège : les
- * achats ne montent pas du même pourcentage que les ventes, parce que les stocks de début
- * et de fin ne bougent pas. Le trimestre et les règles de paiement sont ceux du chapitre
- * (`budgetDuPointDeVente`).
+ * Janvier est passé, sous l'objectif. La direction n'y croit plus : elle révise les ventes du trimestre
+ * au rythme de janvier, sans toucher au stock voulu au 31 mars, et demande le budget révisé : les
+ * ventes, les achats, la marge, ce que la caisse paiera, et de combien baisser les commandes. L'élève
+ * refait seul les lignes du chapitre, cherche au curseur la baisse des commandes qui garde le stock
+ * voulu, puis croise le budget révisé avec celui qu'on n'aurait pas révisé : le stock en trop et
+ * l'argent qui dort.
+ *
+ * Le cas est neuf par sa question : le chapitre bâtit le budget sur la prévision ; ici, la prévision
+ * baisse, et l'on cherche ce qui baisse avec elle. Le piège : la baisse des commandes se chiffre au prix
+ * d'achat, pas au prix de vente, et elle ne touche que les articles vendus en moins.
  */
 
 /**
- * La hausse de la prévision de ventes : 10 %. C'est ce qu'une direction ajoute à un budget
- * quand une opération commerciale est décidée pour le trimestre, ou quand le trimestre
- * précédent a dépassé la prévision : une révision franche, sans changer d'échelle.
+ * LA RÉVISION DE LA DIRECTION, hypothèse du cours : les ventes du trimestre au rythme de janvier,
+ * référence par référence, les 3 mois d'un trimestre pesant autant (convention du cours).
  */
-export const HAUSSE_DES_VENTES_PREVUES = 0.1;
+export const MOIS_DANS_LE_TRIMESTRE = 3;
 
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const qte = (n: number) => n.toLocaleString("fr-FR");
+/** Les bornes du curseur des commandes : les achats retirés du budget, hors taxes, en euros. */
+export const COMMANDES_DU_CURSEUR = { min: 0, max: 30_000 } as const;
+
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
+const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const pct = (x: number) => `${x.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
+const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
 
 /** Les chiffres de la réponse, calculés une fois du cas. */
-export function budgetRevise(c: Cas) {
-  const b = budgetDuPointDeVente(c);
-  const s = b.s;
-  const unitesPrevues = Math.round(s.vendues * (1 + HAUSSE_DES_VENTES_PREVUES));
-  const ventesHt = auCentime(unitesPrevues * s.ventes.prixUnitaire);
-  const aAcheter = unitesPrevues + s.final.quantite - s.initial.quantite;
-  const achatsHt = auCentime(aAcheter * s.achats.prixUnitaire);
-  const achatsTtc = auCentime(achatsHt * (1 + s.achats.tauxTva));
-  // Le coût d'achat des vendues, comme au chapitre : stock initial, plus achats, moins stock
-  // final, les deux stocks restant ceux du trimestre.
-  const coutDesVendues = auCentime(s.initial.valeur + achatsHt - s.final.valeur);
-  const partDue = Math.min(1, b.delai / b.joursDuTour);
-  const decaisse = auCentime(achatsTtc * (1 - partDue));
+export function budgetRevise(c: Pick<Cas, "code">) {
+  const x = budgetDuPointDeVente(c);
+  const f = x.f;
+  const auRythme = Object.fromEntries(f.gamme.map((r) => [r.code, MOIS_DANS_LE_TRIMESTRE * r.ventesDuMois])) as Record<CodeDeReference, number>;
+  const r = budgetDuTrimestre(f, { ventesPrevues: auRythme });
+  // Sans réviser : les ventes au rythme de janvier, mais les achats du budget de départ.
+  const stockSansReviser = x.stockInitial + x.b.achats - r.ventes;
+  const valeurSansReviser = auCentime(x.valeurInitiale + x.b.achatsHt - r.coutDAchatDesVendues);
+  const enTrop = auCentime(valeurSansReviser - x.valeurFinale);
   return {
-    ...b,
-    unitesPrevues,
-    ventesHt,
-    ventesTtc: auCentime(ventesHt * (1 + s.ventes.tauxTva)),
-    aAcheter,
-    achatsHt,
-    achatsTtc,
-    coutDesVendues,
-    margeBudgetee: auCentime(ventesHt - coutDesVendues),
-    decaisse,
-    detteFinale: auCentime(achatsTtc - decaisse),
-    // Les erreurs classiques : monter les achats du même pourcentage que les ventes, ou
-    // acheter ce qu'on prévoit de vendre en oubliant les stocks.
-    achatsPlusDix: Math.round(b.aAcheter * (1 + HAUSSE_DES_VENTES_PREVUES)),
-    ancienAAcheter: b.aAcheter,
+    x,
+    r,
+    auRythme,
+    ecartDesVentes: auCentime(r.ventesHt - x.b.ventesHt),
+    stockSansReviser,
+    valeurSansReviser,
+    /** Les achats hors taxes à retirer du budget pour garder le stock voulu : la réponse du curseur. */
+    enTrop,
+    articlesEnTrop: stockSansReviser - x.stockFinal,
+    decaisseEnTrop: auCentime(x.b.decaisse - r.decaisse),
+    partPayee: x.b.partPayee,
   };
 }
 
@@ -73,17 +72,18 @@ export const REVISER_LE_BUDGET: Situation = {
   commanditaire: "La direction",
   titre: "Réviser le budget du trimestre",
   accroche:
-    "La direction relève la prévision de ventes du trimestre. Elle veut le budget révisé : ce qu'il faut acheter, la marge attendue, et ce que la caisse paiera.",
+    "Janvier est passé, sous l'objectif. La direction révise les ventes du trimestre au rythme de janvier, et veut le budget révisé : ce qu'il faut acheter, la marge attendue, ce que la caisse paiera, et de combien baisser les commandes.",
   objectifs: [
-    "Établir le budget des ventes révisé, hors taxes et toutes taxes comprises",
-    "Calculer les quantités à acheter quand les ventes prévues changent",
-    "Calculer la marge commerciale budgétée",
-    "Calculer les achats décaissés dans le trimestre et ce qui reste dû, et répondre à la direction",
+    "Établir le budget des ventes révisé",
+    "Recalculer les quantités à acheter quand les ventes prévues baissent, à stock voulu inchangé",
+    "Calculer la marge commerciale budgétée et ce que les achats font sortir de la caisse",
+    "Chiffrer le stock en trop si l'on ne révise pas, et répondre à la direction",
   ],
   libre: false,
   entreprises: {
-    codes: COMMERCES_A_STOCK,
-    pourquoi: "ce cas budgète des achats de marchandises et un stock, et elle n'en garde pas.",
+    codes: ENTREPRISES_DU_BUDGET,
+    pourquoi:
+      "ce cas révise le budget de la boutique du cours, MAILLE & CO, dont la simulation tient le stock, les fournisseurs et la prévision des ventes ; le point de vente reste le même d'un chapitre à l'autre.",
   },
   etapes: [
     {
@@ -91,96 +91,151 @@ export const REVISER_LE_BUDGET: Situation = {
       type: "lecture",
       titre: "La demande de la direction",
       texte: (c) => {
-        const r = budgetRevise(c);
+        const { x } = budgetRevise(c);
         return [
-          `« Nous relevons de ${pct(HAUSSE_DES_VENTES_PREVUES * 100)} la prévision de ventes du trimestre ${r.s.trimestre}, au même prix moyen. Le stock voulu en fin de trimestre ne change pas. Je veux le budget révisé de ${c.entreprise} : les ventes, les quantités à acheter, la marge commerciale attendue, et ce que les achats feront sortir de la caisse dans le trimestre. »`,
-          `Pas de cours cette fois : vous avez le budget de départ, et la méthode est celle du chapitre. Dans l'arène, sur un trimestre de ${qte(r.joursDuTour)} jours d'achats réguliers, la part des achats encore due au fournisseur en fin de trimestre est de ${qte(r.delai)} ÷ ${qte(r.joursDuTour)}, pour un paiement à ${qte(r.delai)} jours.`,
+          `« Janvier a fait ${eur(x.janvier)} pour un objectif de ${eur(x.b.objectifDuMois)}. Je n'attends pas le rattrapage : je révise les ventes du trimestre au rythme de janvier, référence par référence. Le stock voulu au 31 mars ne change pas. Je veux le budget révisé de ${x.f.entreprise} : les ventes, les achats, la marge, ce que la caisse paiera, et de combien je baisse mes commandes au façonnier. »`,
+          `Pas de cours cette fois : vous avez le budget de départ et les ventes de janvier, et la méthode est celle du chapitre. Le façonnier est payé à ${x.faconnier.delaiDePaiement} jours, sur un trimestre de ${x.f.budget.jours} jours d'achats réguliers ; la TVA est de ${pct(x.tva * 100)}. Les 3 mois d'un trimestre pèsent autant.`,
         ];
       },
       tableau: (c) => {
-        const r = budgetRevise(c);
+        const { x } = budgetRevise(c);
         return {
-          titre: `${c.entreprise} · le budget de départ du trimestre ${r.s.trimestre}`,
-          colonnes: ["Valeur"],
-          lignes: [
-            { libelle: "Unités vendues prévues au départ", valeurs: [qte(r.s.vendues)] },
-            { libelle: "Prix de vente moyen, hors taxes", valeurs: [eur(r.s.ventes.prixUnitaire)] },
-            { libelle: "Taux de TVA sur les ventes", valeurs: [pct(r.s.ventes.tauxTva * 100)] },
-            { libelle: "Stock au début du trimestre (unités)", valeurs: [qte(r.s.initial.quantite)] },
-            { libelle: "Stock voulu en fin de trimestre (unités)", valeurs: [qte(r.s.final.quantite)] },
-            { libelle: "Prix d'achat d'une unité, hors taxes", valeurs: [eur(r.s.achats.prixUnitaire)] },
-            { libelle: "Taux de TVA sur les achats", valeurs: [pct(r.s.achats.tauxTva * 100)] },
-            { libelle: "Valeur du stock au début, puis voulu en fin", valeurs: [`${eur(r.s.initial.valeur)} puis ${eur(r.s.final.valeur)}`] },
-            { libelle: "Délai de paiement du fournisseur (jours)", valeurs: [qte(r.delai)] },
-          ],
+          titre: `${x.f.entreprise} · le budget de départ et janvier`,
+          colonnes: ["Ventes prévues au budget", "Ventes de janvier", "Stock au 1er janvier", "Stock voulu au 31 mars", "Prix de vente HT", "Prix d'achat HT"],
+          lignes: x.b.references.map((r) => {
+            const g = x.f.gamme.find((y) => y.code === r.code)!;
+            return { libelle: r.nom, valeurs: [qte(r.ventes), qte(g.ventesDuMois), qte(r.stockInitial), qte(r.stockFinal), eur(r.prixHt), eur(r.coutDAchat)] };
+          }),
         };
       },
       repere: () =>
-        "À rendre : les ventes révisées, les unités et les achats à prévoir, la marge commerciale budgétée, ce que la caisse paiera dans le trimestre, et votre réponse.",
+        "À rendre : les ventes et les achats révisés, la marge, ce que la caisse paiera dans le trimestre, la baisse des commandes, ce que coûterait de ne pas réviser, et votre réponse.",
     },
     {
-      id: "les-ventes",
+      id: "les-ventes-revisees",
       type: "montants",
       titre: "Les ventes révisées",
-      notions: ["revenue", "vat_payable"],
+      notions: ["revenue"],
       question: () =>
-        `Calculez les unités à vendre avec la prévision relevée de ${pct(HAUSSE_DES_VENTES_PREVUES * 100)} (à l'unité), puis le budget des ventes hors taxes et toutes taxes comprises.`,
+        "Calculez les articles à vendre au rythme de janvier, les ventes hors taxes révisées, puis leur écart au budget de départ. Négatif pour un écart défavorable.",
       champs: (c) => {
-        const r = budgetRevise(c);
+        const { x, r, ecartDesVentes } = budgetRevise(c);
         return [
-          { libelle: "Unités à vendre", attendu: r.unitesPrevues, tolerance: 1, calcul: `${qte(r.s.vendues)} × ${(1 + HAUSSE_DES_VENTES_PREVUES).toLocaleString("fr-FR")} = ${qte(r.unitesPrevues)}` },
-          { libelle: "Ventes hors taxes", attendu: r.ventesHt, tolerance: 0.5, calcul: `${qte(r.unitesPrevues)} × ${eur(r.s.ventes.prixUnitaire)} = ${eur(r.ventesHt)}` },
-          { libelle: "Ventes toutes taxes comprises", attendu: r.ventesTtc, tolerance: 0.5, calcul: `${eur(r.ventesHt)} × ${(1 + r.s.ventes.tauxTva).toLocaleString("fr-FR")} = ${eur(r.ventesTtc)}` },
+          { libelle: "Articles à vendre au rythme de janvier", attendu: r.ventes, calcul: `${MOIS_DANS_LE_TRIMESTRE} × (${x.f.gamme.map((g) => qte(g.ventesDuMois)).join(" + ")}) = ${qte(r.ventes)}` },
+          { libelle: "Ventes hors taxes révisées", attendu: r.ventesHt, calcul: `${MOIS_DANS_LE_TRIMESTRE} × ${eur(x.janvier)} = ${eur(r.ventesHt)}` },
+          { libelle: "Écart sur le budget des ventes", attendu: ecartDesVentes, calcul: `${eur(r.ventesHt)} − ${eur(x.b.ventesHt)} = ${eur(ecartDesVentes)}` },
         ];
       },
       explication: (c) => {
-        const r = budgetRevise(c);
-        return [`Le chiffre d'affaires budgété de ${c.entreprise} passe à ${eur(r.ventesHt)} hors taxes, ${pct(HAUSSE_DES_VENTES_PREVUES * 100)} de plus que le budget de départ (${eur(r.s.ventes.ht)}).`];
+        const { x, r, ecartDesVentes } = budgetRevise(c);
+        return [`Le trimestre révisé fait ${qte(r.ventes)} articles et ${eur(r.ventesHt)}, ${eur(-ecartDesVentes)} sous le budget de départ, ${qte(x.b.ventes - r.ventes)} articles de moins.`];
       },
     },
     {
-      id: "les-achats",
+      id: "les-achats-revises",
       type: "montants",
       titre: "Les achats révisés",
       notions: ["stock", "margin_rates"],
       question: () =>
-        "Combien d'unités faut-il acheter pour servir ces ventes et finir avec le stock voulu ? Chiffrez ces achats hors taxes, puis la marge commerciale budgétée : les ventes hors taxes moins le coût d'achat des marchandises vendues (stock initial, plus achats, moins stock final, en valeur).",
+        "Combien d'articles faut-il acheter pour servir ces ventes et finir avec le stock voulu ? Chiffrez ces achats hors taxes, puis la marge commerciale budgétée du trimestre révisé.",
       champs: (c) => {
-        const r = budgetRevise(c);
+        const { x, r } = budgetRevise(c);
         return [
-          { libelle: "Unités à acheter", attendu: r.aAcheter, tolerance: 1, calcul: `${qte(r.unitesPrevues)} + ${qte(r.s.final.quantite)} − ${qte(r.s.initial.quantite)} = ${qte(r.aAcheter)}` },
-          { libelle: "Achats hors taxes", attendu: r.achatsHt, tolerance: 0.5, calcul: `${qte(r.aAcheter)} × ${eur(r.s.achats.prixUnitaire)} = ${eur(r.achatsHt)}` },
-          { libelle: "Marge commerciale budgétée", attendu: r.margeBudgetee, tolerance: 1, calcul: `${eur(r.ventesHt)} − (${eur(r.s.initial.valeur)} + ${eur(r.achatsHt)} − ${eur(r.s.final.valeur)}) = ${eur(r.margeBudgetee)}` },
+          { libelle: "Articles à acheter", attendu: r.achats, calcul: `${qte(r.ventes)} + ${qte(x.stockFinal)} − ${qte(x.stockInitial)} = ${qte(r.achats)}` },
+          { libelle: "Achats hors taxes", attendu: r.achatsHt, calcul: `${r.references.map((y) => `${qte(y.achats)} × ${qte(y.coutDAchat)}`).join(" + ")} = ${eur(r.achatsHt)}` },
+          {
+            libelle: "Marge commerciale budgétée",
+            attendu: r.margeCommerciale,
+            calcul: `${eur(r.ventesHt)} − (${eur(x.valeurInitiale)} + ${eur(r.achatsHt)} − ${eur(x.valeurFinale)}) = ${eur(r.margeCommerciale)}`,
+          },
         ];
       },
       explication: (c) => {
-        const r = budgetRevise(c);
+        const { x, r } = budgetRevise(c);
         return [
-          `Les ventes prennent ${qte(r.unitesPrevues - r.s.vendues)} unités de plus, et les achats exactement autant : ${qte(r.aAcheter)} au lieu de ${qte(r.ancienAAcheter)}. Les stocks de début et de fin ne bougent pas, ils ne demandent rien de plus.`,
+          `Les ventes perdent ${qte(x.b.ventes - r.ventes)} articles, et les achats exactement autant : ${qte(r.achats)} au lieu de ${qte(x.b.achats)}. Les stocks de début et de fin ne bougent pas. La marge tombe à ${eur(r.margeCommerciale)}.`,
         ];
       },
     },
     {
-      id: "la-caisse",
+      id: "ce-que-paiera-la-caisse",
       type: "montants",
       titre: "Ce que la caisse paiera",
       notions: ["payment_terms", "cash_budget"],
-      question: (c) => {
-        const r = budgetRevise(c);
-        return `Calculez les achats toutes taxes comprises, la part décaissée dans le trimestre (le fournisseur est payé à ${qte(r.delai)} jours, sur ${qte(r.joursDuTour)} jours), et ce qui restera dû au fournisseur en fin de trimestre.`;
-      },
+      question: () => "Calculez les achats révisés toutes taxes comprises, ce que la caisse en paie dans le trimestre, et ce qui restera dû au façonnier au 31 mars.",
       champs: (c) => {
-        const r = budgetRevise(c);
+        const { x, r } = budgetRevise(c);
         return [
-          { libelle: "Achats toutes taxes comprises", attendu: r.achatsTtc, tolerance: 0.5, calcul: `${eur(r.achatsHt)} × ${(1 + r.s.achats.tauxTva).toLocaleString("fr-FR")} = ${eur(r.achatsTtc)}` },
-          { libelle: "Décaissé dans le trimestre", attendu: r.decaisse, tolerance: 0.5, calcul: `${eur(r.achatsTtc)} × (1 − ${qte(r.delai)} ÷ ${qte(r.joursDuTour)}) = ${eur(r.decaisse)}` },
-          { libelle: "Dû au fournisseur en fin de trimestre", attendu: r.detteFinale, tolerance: 0.5, calcul: `${eur(r.achatsTtc)} − ${eur(r.decaisse)} = ${eur(r.detteFinale)}` },
+          { libelle: "Achats toutes taxes comprises", attendu: r.achatsTtc, calcul: `${eur(r.achatsHt)} × ${qte(1 + x.tva)} = ${eur(r.achatsTtc)}` },
+          { libelle: "Décaissé dans le trimestre", attendu: r.decaisse, calcul: `${eur(r.achatsTtc)} × (1 − ${x.faconnier.delaiDePaiement} ÷ ${x.f.budget.jours}) = ${eur(r.decaisse)}` },
+          { libelle: "Dû au façonnier au 31 mars", attendu: r.detteFournisseur, calcul: `${eur(r.achatsTtc)} − ${eur(r.decaisse)} = ${eur(r.detteFournisseur)}` },
         ];
       },
       explication: (c) => {
-        const r = budgetRevise(c);
+        const { r } = budgetRevise(c);
+        return [`Sur ${eur(r.achatsTtc)} d'achats, ${eur(r.decaisse)} sortiront de la caisse ce trimestre, et ${eur(r.detteFournisseur)} au trimestre suivant : le budget de trésorerie doit porter les deux.`];
+      },
+    },
+    {
+      id: "les-commandes-au-curseur",
+      type: "curseur",
+      titre: "Baissez les commandes",
+      notions: ["stock", "cash_budget"],
+      question: (c) => {
+        const { x, valeurSansReviser } = budgetRevise(c);
+        return `Si la boutique gardait les commandes du budget de départ (${eur(x.b.achatsHt)} hors taxes) et vendait au rythme de janvier, sa réserve vaudrait ${eur(valeurSansReviser)} au 31 mars. Faites baisser les commandes, en euros hors taxes, de 0 à ${eur(COMMANDES_DU_CURSEUR.max)} : une droite donne la valeur du stock au 31 mars, l'autre celle du stock voulu, ${eur(x.valeurFinale)}. Placez le curseur sur la plus grande baisse qui garde le stock voulu, puis validez.`;
+      },
+      grandeur: () => ({ libelle: "Commandes en moins, hors taxes", unite: "€" }),
+      sens: "plus-grande",
+      cible: (c) => ({ attendu: Math.floor(budgetRevise(c).enTrop + 1e-9), min: COMMANDES_DU_CURSEUR.min, max: COMMANDES_DU_CURSEUR.max }),
+      zones: ["Le stock voulu est tenu", "Sous le stock voulu"],
+      rates: () => ({
+        dessous: "La réserve dépasse encore le stock voulu : vous pouvez baisser plus.",
+        dessus: "À cette baisse, la réserve passe sous le stock voulu au 31 mars.",
+      }),
+      montrer: "Montrer la baisse",
+      lecture: (c, k) => {
+        const { x, valeurSansReviser, partPayee } = budgetRevise(c);
+        const achats = auCentime(x.b.achatsHt - k);
         return [
-          `Sur ${eur(r.achatsTtc)} d'achats, ${eur(r.decaisse)} sortiront de la caisse de ${c.entreprise} ce trimestre, et ${eur(r.detteFinale)} au trimestre suivant : le budget de trésorerie doit les porter tous les deux.`,
+          { libelle: "Achats du trimestre, hors taxes", montant: achats },
+          { libelle: "Valeur du stock au 31 mars", montant: auCentime(valeurSansReviser - k) },
+          { libelle: "Valeur du stock voulu", montant: x.valeurFinale },
+          { libelle: "Décaissé dans le trimestre", montant: auCentime(achats * (1 + x.tva) * partPayee) },
+          { libelle: "Stock en trop au 31 mars", montant: auCentime(valeurSansReviser - k - x.valeurFinale), fort: true },
+        ];
+      },
+      droites: (c) => {
+        const { x, valeurSansReviser } = budgetRevise(c);
+        return { produit: (k) => valeurSansReviser - k, cout: () => x.valeurFinale, libelles: ["Valeur du stock au 31 mars", "Valeur du stock voulu"] };
+      },
+      explication: (c) => {
+        const { x, enTrop, ecartDesVentes } = budgetRevise(c);
+        return [
+          `La boutique peut baisser ses commandes de ${eur(enTrop)} hors taxes, pas plus : c'est le prix d'achat des articles qu'elle ne vendra pas. Les ventes, elles, baissent de ${eur(-ecartDesVentes)} : une commande se réduit au prix d'achat, pas au prix de vente.`,
+          `Au-delà, la réserve du 31 mars passerait sous les ${eur(x.valeurFinale)} voulus, et avril commencerait en manque.`,
+        ];
+      },
+    },
+    {
+      id: "sans-reviser",
+      type: "montants",
+      titre: "Et sans réviser ?",
+      notions: ["stock", "cash_budget"],
+      question: () =>
+        "Croisez les deux budgets. Si la direction gardait les commandes de départ et vendait au rythme de janvier : combien d'articles resteraient en réserve au 31 mars, combien de plus que le stock voulu, et combien la caisse aurait-elle payé de plus dans le trimestre ?",
+      champs: (c) => {
+        const { x, r, stockSansReviser, articlesEnTrop, decaisseEnTrop } = budgetRevise(c);
+        return [
+          { libelle: "Stock au 31 mars sans réviser", attendu: stockSansReviser, calcul: `${qte(x.stockInitial)} + ${qte(x.b.achats)} − ${qte(r.ventes)} = ${qte(stockSansReviser)}` },
+          { libelle: "Articles en trop sur le stock voulu", attendu: articlesEnTrop, calcul: `${qte(stockSansReviser)} − ${qte(x.stockFinal)} = ${qte(articlesEnTrop)}` },
+          { libelle: "Décaissé en trop dans le trimestre", attendu: decaisseEnTrop, calcul: `${eur(x.b.decaisse)} − ${eur(r.decaisse)} = ${eur(decaisseEnTrop)}` },
+        ];
+      },
+      explication: (c) => {
+        const { articlesEnTrop, enTrop, decaisseEnTrop } = budgetRevise(c);
+        return [
+          `Ne pas réviser, c'est garder ${qte(articlesEnTrop)} articles en trop, ${eur(enTrop)} au prix d'achat, dont ${eur(decaisseEnTrop)} payés dès le trimestre : de l'argent qui dort en réserve, et une dette fournisseur plus lourde au 31 mars.`,
         ];
       },
     },
@@ -190,22 +245,27 @@ export const REVISER_LE_BUDGET: Situation = {
       titre: "Votre réponse à la direction",
       question: () => "Quelle phrase envoyez-vous à la direction ?",
       options: (c) => {
-        const r = budgetRevise(c);
+        const { x, r, enTrop, ecartDesVentes } = budgetRevise(c);
         return [
           {
-            texte: `Il faut acheter ${qte(r.aAcheter)} unités, soit ${eur(r.achatsHt)} hors taxes`,
+            texte: `Commandons ${qte(r.achats)} articles : ${eur(enTrop)} hors taxes de moins`,
             juste: true,
-            retour: `Oui : ${qte(r.unitesPrevues)} à vendre, plus ${qte(r.s.final.quantite)} à garder, moins ${qte(r.s.initial.quantite)} déjà en réserve. La marge budgétée passe à ${eur(r.margeBudgetee)}, et ${eur(r.decaisse)} sortiront de la caisse dans le trimestre.`,
+            retour: `Oui : ${qte(r.ventes)} à vendre, plus ${qte(x.stockFinal)} à garder, moins ${qte(x.stockInitial)} déjà en réserve. La marge budgétée passe à ${eur(r.margeCommerciale)}, et la caisse paiera ${eur(r.decaisse)} dans le trimestre.`,
           },
           {
-            texte: `Il faut acheter ${qte(r.achatsPlusDix)} unités : ${pct(HAUSSE_DES_VENTES_PREVUES * 100)} de plus que le budget de départ, comme les ventes`,
+            texte: `Commandons ${eur(-ecartDesVentes)} hors taxes de moins, la baisse du chiffre d'affaires`,
             juste: false,
-            retour: `Non : les achats de départ, ${qte(r.ancienAAcheter)} unités, servaient aussi à faire passer le stock de ${qte(r.s.initial.quantite)} à ${qte(r.s.final.quantite)}. Cette part ne grandit pas avec les ventes : seules les ${qte(r.unitesPrevues - r.s.vendues)} unités vendues en plus s'ajoutent, soit ${qte(r.aAcheter)}.`,
+            retour: `Non : c'est réduire les commandes au prix de vente. Les ${qte(x.b.ventes - r.ventes)} articles vendus en moins s'achetaient ${eur(enTrop)} : baisser de ${eur(-ecartDesVentes)}, ce serait finir mars sous le stock voulu.`,
           },
           {
-            texte: `Il faut acheter ${qte(r.unitesPrevues)} unités, autant que nous prévoyons d'en vendre`,
+            texte: `Commandons ${qte(r.ventes)} articles, ce que nous vendrons au rythme de janvier`,
             juste: false,
-            retour: `Non : on part avec ${qte(r.s.initial.quantite)} unités et l'on veut en garder ${qte(r.s.final.quantite)}. Unités à acheter = ventes prévues + stock final voulu − stock initial = ${qte(r.aAcheter)}.`,
+            retour: `Non : on part avec ${qte(x.stockInitial)} articles et l'on veut en garder ${qte(x.stockFinal)}. Articles à acheter = ventes prévues + stock voulu − stock initial = ${qte(r.achats)}.`,
+          },
+          {
+            texte: "Gardons nos commandes : le stock en trop servira en avril, sans rien coûter",
+            juste: false,
+            retour: `Non : le stock en trop est acheté et en partie payé dès le trimestre. Il immobilise ${eur(enTrop)} au prix d'achat, sans rien rapporter tant qu'il n'est pas vendu.`,
           },
         ];
       },
