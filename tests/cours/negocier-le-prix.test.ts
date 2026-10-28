@@ -230,7 +230,7 @@ describe("négocier le prix, chez le cabinet du monde du cours", () => {
     expect(ch.etapes.at(-1)!.id).toBe("synthese");
     expect(f.entreprise).toBe(cas.entreprise);
     expect(SITUATIONS).toContain(LA_REMISE_AUTORISEE);
-    // Les exports gardés pour remises-et-conditions, le tableau de bord commercial et leurs cas.
+    // Les exports gardés pour le cas qui les lit encore, la-remise-du-grand-compte.
     expect([...NEGOCIATIONS]).toEqual(["conseil", "transport", "batiment"]);
     for (const c of NEGOCIATIONS) {
       const g = casDeLEntreprise(c).gestion;

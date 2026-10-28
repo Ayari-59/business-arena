@@ -1,91 +1,85 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
-import { scenarioByCode } from "../../../scenarios/registry";
-import { type Cas } from "../../cas";
-import { anneeJouee } from "../../annee-de-l-arene";
-import { ENTREPRISES_OU_LA_TVA_JOUE, POURQUOI_LA_TVA } from "../../chapitres/la-declaration-de-tva";
-import { tvaEtTresorerie } from "../../chapitres/la-tva-et-la-tresorerie";
-import { rejouerAvec, surLAnnee } from "../../gestion-de-la-pme";
+import type { Cas } from "../../cas";
+import { ENTREPRISES_DE_LA_TVA, POURQUOI_LA_TVA, eur, ficheDe, jours, pct } from "../../chapitres/la-declaration-de-tva";
+import { DELAI_DE_LA_COMMANDE_PUBLIQUE, DELAI_MAXIMAL_CONVENU, type CodeDeClienteleDuBatiment } from "../../monde/delais-et-tva";
+import { declarationDuTrimestre, delaiEnPlus, delaiLegalDe, ventesDuTrimestre } from "../../monde/delais";
 import type { Situation } from "../types";
 
 /**
- * CAS PRATIQUE DU CHAPITRE « LA TVA ET LA TRÉSORERIE » : LA TVA AVANCÉE POUR LE CLIENT
- * (fiscalité, palier 3).
+ * CAS PRATIQUE DU CHAPITRE « LA TVA ET LA TRÉSORERIE » : LA TVA AVANCÉE POUR LE CLIENT (fiscalité,
+ * palier 3).
  *
- * Une clientèle qui paie à crédit demande un délai plus long. La gérante veut savoir ce que cela
- * aurait coûté en trésorerie au 31 décembre, accordé dès janvier, et quelle part de cette somme
- * est de la TVA que l'entreprise avance à l'État pour ses clients : dans l'arène, l'entreprise a
- * opté pour la TVA d'après les débits, et la TVA d'une vente se verse au trimestre qui suit, que le
- * client ait payé ou non (sans l'option, la TVA de travaux ou de services n'est due qu'à
- * l'encaissement, et le délai n'en avancerait aucune). L'élève refait les calculs
- * du chapitre (la TVA contenue dans une créance TTC, ce que la TVA laisse en trésorerie), l'arène
- * rejoue l'année avec le délai allongé (le `paymentDelayDays` de la clientèle dans le scénario,
- * tout le reste identique), puis il rend sa réponse.
+ * Les trois clientèles de MARTEL & FILS demandent chacune un mois de plus pour payer. La gérante veut
+ * savoir laquelle elle peut accepter sans sortir de la loi, ce que ce délai coûterait à sa trésorerie
+ * au 31 décembre, accordé dès janvier, et quelle part de cette somme serait de la TVA avancée à l'État
+ * pour ses clients. L'élève écarte les deux clientèles dont le délai deviendrait illégal (90 jours
+ * entre professionnels, 60 jours pour une collectivité), chiffre la créance en plus, HT et TTC, puis
+ * croise les deux régimes : au régime réel (les encaissements), MARTEL & FILS ne finance que le hors
+ * taxes et n'avance aucune TVA ; avec l'option pour les débits, elle avancerait la TVA de la créance.
+ * Il recalcule enfin ce que la TVA laisse en trésorerie au 31 décembre, aux deux régimes.
  *
- * Le cas est neuf par sa question : le chapitre lit la TVA dans l'année telle qu'elle est ; le
- * cas chiffre une décision commerciale, et ce qu'elle coûte en TVA avancée.
+ * Le jugement : la bonne réponse change avec la correction du défaut 2 de l'audit. « Dont 7 000 € de
+ * TVA avancée » n'est vrai qu'avec l'option pour les débits ; « ce délai ne coûte rien » reste faux,
+ * car le hors taxes est financé.
+ *
+ * Comme son chapitre, le cas se joue dans la simulation du cours (src/config/cours/monde) : ses
+ * chiffres sont ceux de `delaiEnPlus` sur la fiche de MARTEL & FILS. Le délai s'applique à tous les
+ * trimestres de la fiche, comme un flux régulier.
+ *
+ * CE QUI A DISPARU, AVEC L'ARÈNE : l'année rejouée avec le délai allongé, sa « trésorerie perdue »
+ * (où se mêlaient la créance et des intérêts du moteur), le choix de « la clientèle qui pèse le plus »,
+ * et la prémisse fausse « l'entreprise a opté pour les débits » ; le transport.
  */
 
-/** Les jours de délai que la clientèle demande en plus : 30, un mois de plus pour payer. */
+/** Les jours de délai que les clientèles demandent en plus : 30, un mois de plus pour payer. */
 export const JOURS_DEMANDES = 30;
 
-/** Un montant à la française, avec le signe moins typographique. */
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
+/** La clientèle qui peut payer plus tard sans sortir de la loi : la seule qui paie aujourd'hui comptant. */
+export const CLIENTELE_DU_CAS: CodeDeClienteleDuBatiment = "commerces";
 
-const calculs = new Map<string, ReturnType<typeof calculer>>();
+const auCentime = (x: number) => Math.round(x * 100) / 100;
 
-function calculer(c: Cas) {
-  const s = scenarioByCode(c.code).scenario;
-  const taux = s.finance.vatRate ?? 0;
-  const jours = s.roundDays;
-  const ref = anneeJouee(c.code).partie.rounds.map((t) => t.results["joueur"]!);
-  const fin = ref.at(-1)!;
-  // La clientèle à crédit qui pèse le plus au dernier trimestre, parmi celles dont le délai allongé reste dans le trimestre.
-  const candidates = s.market.segments.filter((g) => g.paymentDelayDays > 0 && g.paymentDelayDays + JOURS_DEMANDES <= jours);
-  const clientele = candidates.reduce((m, g) => ((fin.market.bySegment[g.code]?.revenue ?? 0) > (fin.market.bySegment[m.code]?.revenue ?? 0) ? g : m));
-  const delai = clientele.paymentDelayDays + JOURS_DEMANDES;
-  const annee = rejouerAvec(
-    c.code,
-    `la-tva-et-la-tresorerie-delai-${clientele.code}`,
-    () => undefined,
-    (sc) => ({ ...sc, market: { ...sc.market, segments: sc.market.segments.map((g) => (g.code === clientele.code ? { ...g, paymentDelayDays: delai } : g)) } }),
-  );
-  const ventes = Math.round(fin.market.bySegment[clientele.code]?.revenue ?? 0);
-  const creanceEnPlus = Math.round((ventes * (1 + taux) * JOURS_DEMANDES) / jours);
-  const tvaEnPlus = Math.round((ventes * taux * JOURS_DEMANDES) / jours);
-  const tresorerie = Math.round(fin.cashFlow.closing);
-  const tresorerieAvecLeDelai = Math.round(annee.at(-1)!.cashFlow.closing);
-  const effetAujourdhui = tvaEtTresorerie(c).clotures.at(-1)!.effet;
+/** Le délai en plus, aux deux régimes, et ce que chaque clientèle deviendrait au regard de la loi. */
+export function tvaAvanceePourLeClient(c: Pick<Cas, "code">) {
+  const f = ficheDe(c);
+  const t = f.tauxDeTva;
+  const enc = delaiEnPlus(f, CLIENTELE_DU_CAS, JOURS_DEMANDES);
+  const deb = delaiEnPlus(f, CLIENTELE_DU_CAS, JOURS_DEMANDES, { regime: "debits" });
+  const clienteles = f.clienteles.map((g) => {
+    const x = delaiEnPlus(f, g.code, JOURS_DEMANDES);
+    return {
+      code: g.code,
+      nom: g.nom,
+      delai: g.delai,
+      nouveauDelai: x.nouveauDelai,
+      delaiLegal: delaiLegalDe(g.code),
+      illegal: x.depasseLeDelaiLegal,
+      ventesDeLEteHT: g.ventesHT[3 + 1]!,
+      ventesT4HT: x.ventesT4HT,
+      ventesDeLAnneeHT: x.ventesDeLAnneeHT,
+    };
+  });
+  const permises = clienteles.filter((g) => !g.illegal);
+  const avec = { delais: { [CLIENTELE_DU_CAS]: enc.nouveauDelai } };
+  const automne = declarationDuTrimestre(f, 4);
+  const automneAvecLeDelai = declarationDuTrimestre(f, 4, avec);
   return {
-    taux,
-    jours,
-    clientele: { code: clientele.code, nom: clientele.name, court: clientele.name.split(" (")[0]!, delai: clientele.paymentDelayDays },
-    delai,
-    ventes,
-    creanceEnPlus,
-    tvaEnPlus,
-    tresorerie,
-    tresorerieAvecLeDelai,
-    perte: tresorerie - tresorerieAvecLeDelai,
-    resultatPerdu: Math.round(surLAnnee(ref, (r) => r.incomeStatement.netIncome) - surLAnnee(annee, (r) => r.incomeStatement.netIncome)),
-    effetAujourdhui,
-    effetAvecLeDelai: effetAujourdhui - tvaEnPlus,
-    /** L'année rejouée passe-t-elle à découvert, quand l'année du cours n'y passait pas ? */
-    decouvert: annee.some((r) => r.balanceSheet.overdraft > 0) && !ref.some((r) => r.balanceSheet.overdraft > 0),
-    annee,
+    f,
+    t,
+    enc,
+    deb,
+    clienteles,
+    permises,
+    clientele: clienteles.find((g) => g.code === CLIENTELE_DU_CAS)!,
+    automne,
+    automneAvecLeDelai,
+    encaisseDeLaClienteleAvecLeDelai: ventesDuTrimestre(f, 4, avec).clienteles.find((g) => g.code === CLIENTELE_DU_CAS)!.encaisseHT!,
+    /** Ce que la TVA laissée au 31 décembre perd, aux deux régimes. */
+    baisseAuxEncaissements: auCentime(enc.effetSans - enc.effetAvec),
+    baisseAuxDebits: auCentime(deb.effetSans - deb.effetAvec),
   };
 }
 
-/** Le délai allongé d'une clientèle, l'année rejouée, et la TVA que l'entreprise avance pour elle. */
-export function tvaAvanceePourLeClient(c: Cas) {
-  const deja = calculs.get(c.code);
-  if (deja) return deja;
-  const k = calculer(c);
-  calculs.set(c.code, k);
-  return k;
-}
-
-const facteur = (k: ReturnType<typeof tvaAvanceePourLeClient>) => `× ${JOURS_DEMANDES} ÷ ${k.jours}`;
+export type TvaAvanceePourLeClient = ReturnType<typeof tvaAvanceePourLeClient>;
 
 export const LA_TVA_AVANCEE_POUR_LE_CLIENT: Situation = {
   code: "la-tva-avancee-pour-le-client",
@@ -96,109 +90,151 @@ export const LA_TVA_AVANCEE_POUR_LE_CLIENT: Situation = {
   commanditaire: "La gérante",
   titre: "La TVA avancée pour le client",
   accroche:
-    "Une clientèle veut payer plus tard. Ce que le délai aurait coûté à la trésorerie de fin d'année, et la part de TVA que l'entreprise aurait avancée à l'État à la place de ses clients.",
+    "Les clients de MARTEL & FILS veulent payer un mois plus tard. Lequel peut l'obtenir sans sortir de la loi, ce que le délai coûterait à la trésorerie de fin d'année, et la part de TVA que l'entreprise avancerait, ou non, à la place de ses clients.",
   objectifs: [
-    "Calculer la créance TTC que crée un délai plus long, et la TVA qu'elle contient",
-    "Lire l'effet du délai sur la trésorerie dans l'année rejouée",
-    "Calculer ce que la TVA laisse encore en trésorerie",
-    "Répondre à la gérante, chiffre à l'appui",
+    "Dire quel délai de paiement la loi permet, entre professionnels et avec une collectivité",
+    "Calculer la créance que crée un délai plus long, hors taxes et toutes taxes comprises, et la TVA qu'elle contient",
+    "Dire ce que l'entreprise finance, et ce qu'elle avance de TVA, selon le régime d'exigibilité",
+    "Recalculer ce que la TVA laisse en trésorerie, et répondre à la gérante, chiffres à l'appui",
   ],
   libre: false,
-  entreprises: { codes: ENTREPRISES_OU_LA_TVA_JOUE, pourquoi: POURQUOI_LA_TVA },
+  entreprises: { codes: ENTREPRISES_DE_LA_TVA, pourquoi: POURQUOI_LA_TVA },
   etapes: [
     {
       id: "demande",
       type: "lecture",
-      titre: "Un délai plus long",
+      titre: "Un mois de plus pour payer",
+      tableau: (c) => {
+        const k = tvaAvanceePourLeClient(c);
+        return {
+          titre: `Les clientèles de ${k.f.entreprise}`,
+          colonnes: ["Délai aujourd'hui", "Délai demandé", "Travaux du 4e trimestre (HT)", "Travaux de l'année N (HT)"],
+          lignes: k.clienteles.map((g) => ({ libelle: g.nom, valeurs: [jours(g.delai), jours(g.nouveauDelai), eur(g.ventesT4HT), eur(g.ventesDeLAnneeHT)] })),
+        };
+      },
       texte: (c) => {
         const k = tvaAvanceePourLeClient(c);
         return [
-          `« La clientèle ${k.clientele.court} nous demande de payer à ${k.delai} jours au lieu de ${k.clientele.delai}. Si nous l'avions accepté dès janvier, combien aurions-nous de moins en trésorerie au 31 décembre ? Et dans cette somme, combien de TVA aurions-nous versée à l'État sans l'avoir encore reçue de ces clients ? »`,
-          `${c.entreprise} a opté pour la TVA d'après les débits : la TVA de chaque facture est due au trimestre qui suit, que le client ait payé ou non.`,
-          "Pas de cours cette fois : les calculs sont ceux du chapitre. L'arène a rejoué l'année avec le délai demandé, tout le reste identique.",
+          `« Nos trois clientèles nous demandent chacune ${JOURS_DEMANDES} jours de plus pour payer. Laquelle pouvons-nous suivre sans sortir de la loi ? Si nous l'avions acceptée dès janvier, combien de trésorerie ce délai nous ferait-il financer au 31 décembre, une fois la TVA réglée à l'État ? Et dans cette somme, combien de TVA aurions-nous versée à l'État sans l'avoir encore reçue de ces clients ? »`,
+          `Pas de cours cette fois : les calculs sont ceux du chapitre, à vous d'en trouver l'ordre. ${k.f.entreprise} fait des travaux, au régime des encaissements ; le gérant parle d'opter pour les débits. Le découvert coûte ${pct(k.f.tauxDuDecouvert)} l'an ; les intérêts se comptent sur 360 jours. La loi : entre professionnels, au plus ${DELAI_MAXIMAL_CONVENU.joursDeLaFacture} jours de la facture ; avec une collectivité, ${DELAI_DE_LA_COMMANDE_PUBLIQUE} jours.`,
         ];
       },
-      tableau: (c) => {
-        const k = tvaAvanceePourLeClient(c);
-        return {
-          titre: `La clientèle « ${k.clientele.nom} »`,
-          colonnes: ["Valeur"],
-          lignes: [
-            { libelle: "Délai de paiement aujourd'hui", valeurs: [`${k.clientele.delai} jours`] },
-            { libelle: "Délai demandé", valeurs: [`${k.delai} jours`] },
-            { libelle: "Ventes du quatrième trimestre (hors taxes)", valeurs: [eur(k.ventes)] },
-            { libelle: "Taux de TVA du scénario", valeurs: [pct(k.taux)] },
-          ],
-        };
-      },
-      repere: () => "À rendre : la créance en plus au 31 décembre et la TVA qu'elle contient, la trésorerie perdue, et votre réponse.",
+      repere: () =>
+        "À rendre : la clientèle que la loi permet de suivre, la créance en plus au 31 décembre et la TVA qu'elle contient, ce que l'entreprise financerait et ce que cela coûterait aux deux régimes, ce que la TVA laisserait en trésorerie, et votre réponse.",
     },
     {
-      id: "creance",
-      type: "montants",
-      titre: "La créance en plus",
-      notions: ["payment_terms", "vat_payable"],
-      question: (c) => {
+      id: "la-clientele",
+      type: "choix",
+      titre: "Le délai que la loi permet",
+      notions: ["payment_terms"],
+      question: () => `Laquelle des trois clientèles peut obtenir ${JOURS_DEMANDES} jours de plus sans sortir du délai que la loi permet ?`,
+      options: (c) => {
         const k = tvaAvanceePourLeClient(c);
-        return `Avec ${JOURS_DEMANDES} jours de plus, les ventes du quatrième trimestre à cette clientèle restent dues plus longtemps : calculez la créance en plus au 31 décembre (ventes TTC ${facteur(k)}), puis la TVA qu'elle contient.`;
-      },
-      champs: (c) => {
-        const k = tvaAvanceePourLeClient(c);
-        const ttc = (1 + k.taux).toLocaleString("fr-FR");
+        const [commerces, collectivites, entreprises] = k.clienteles;
         return [
-          { libelle: "Créance en plus au 31 décembre (TTC)", attendu: k.creanceEnPlus, calcul: `${eur(k.ventes)} × ${ttc} ${facteur(k)} = ${eur(k.creanceEnPlus)}`, tolerance: 2 },
-          { libelle: "TVA contenue dans cette créance", attendu: k.tvaEnPlus, calcul: `${eur(k.ventes)} × ${pct(k.taux)} ${facteur(k)} = ${eur(k.tvaEnPlus)}`, tolerance: 2 },
-        ];
-      },
-      explication: (c) => {
-        const k = tvaAvanceePourLeClient(c);
-        return [
-          `Ces ${eur(k.tvaEnPlus)} de TVA, l'option pour les débits les fait verser à l'État au trimestre qui suit la vente, que le client ait payé ou non : l'entreprise les avance pour ses clients.`,
-        ];
-      },
-    },
-    {
-      id: "arene",
-      type: "montants",
-      titre: "L'arène rejoue l'année",
-      notions: ["net_treasury", "vat_payable"],
-      tableau: (c) => {
-        const k = tvaAvanceePourLeClient(c);
-        return {
-          titre: "Au 31 décembre",
-          colonnes: ["Aujourd'hui", `À ${k.delai} jours`],
-          lignes: [
-            { libelle: "Trésorerie", valeurs: [eur(k.tresorerie), eur(k.tresorerieAvecLeDelai)] },
-            { libelle: "Ce que la TVA laisse en trésorerie", valeurs: [eur(k.effetAujourdhui), "à calculer"] },
-          ],
-        };
-      },
-      question: () =>
-        "Calculez la trésorerie perdue au 31 décembre, puis ce que la TVA laisserait encore en trésorerie avec le délai demandé (aujourd'hui, moins la TVA contenue dans la créance en plus).",
-      champs: (c) => {
-        const k = tvaAvanceePourLeClient(c);
-        return [
-          { libelle: "Trésorerie perdue au 31 décembre", attendu: k.perte, calcul: `${eur(k.tresorerie)} − ${eur(k.tresorerieAvecLeDelai)} = ${eur(k.perte)}`, tolerance: 1 },
           {
-            libelle: "Ce que la TVA laisserait en trésorerie",
-            attendu: k.effetAvecLeDelai,
-            calcul: `${eur(k.effetAujourdhui)} − ${eur(k.tvaEnPlus)} = ${eur(k.effetAvecLeDelai)}`,
-            tolerance: 3,
+            texte: `${commerces!.nom}, qui passeraient de comptant à ${commerces!.nouveauDelai} jours`,
+            juste: !commerces!.illegal && collectivites!.illegal && entreprises!.illegal,
+            retour: `Oui : ${commerces!.nouveauDelai} jours restent sous le plafond de ${commerces!.delaiLegal} jours entre professionnels. Les deux autres demandes sortiraient de la loi.`,
+          },
+          {
+            texte: `${entreprises!.nom}, qui pèsent le plus au quatrième trimestre`,
+            juste: false,
+            retour: `Non : elles paient déjà à ${entreprises!.delai} jours, le maximum entre professionnels. ${entreprises!.nouveauDelai} jours ne peuvent pas se convenir.`,
+          },
+          {
+            texte: `${collectivites!.nom}, qui passeraient à ${collectivites!.nouveauDelai} jours comme les entreprises`,
+            juste: false,
+            retour: `Non : le délai de paiement d'une collectivité est de ${collectivites!.delaiLegal} jours. Le porter à ${collectivites!.nouveauDelai} jours ne se négocie pas.`,
           },
         ];
       },
+    },
+    {
+      id: "la-creance-en-plus",
+      type: "montants",
+      titre: "La créance en plus au 31 décembre",
+      notions: ["payment_terms", "vat_payable"],
+      question: (c) =>
+        `Les ${tvaAvanceePourLeClient(c).clientele.nom.toLowerCase()} paient à ${JOURS_DEMANDES} jours dès janvier. Au 31 décembre, de combien les créances clients grossiraient-elles, hors taxes puis toutes taxes comprises, et quelle TVA cette créance en plus contient-elle ?`,
+      champs: (c) => {
+        const k = tvaAvanceePourLeClient(c);
+        const e = k.enc;
+        return [
+          { libelle: "Créance en plus au 31 décembre (HT)", attendu: e.creanceEnPlusHT, calcul: `${eur(e.ventesT4HT)} × ${JOURS_DEMANDES} ÷ 90 = ${eur(e.creanceEnPlusHT)}` },
+          { libelle: "Créance en plus au 31 décembre (TTC)", attendu: e.creanceEnPlusTTC, calcul: `${eur(e.creanceEnPlusHT)} × ${(1 + k.t).toLocaleString("fr-FR")} = ${eur(e.creanceEnPlusTTC)}` },
+          { libelle: "TVA contenue dans cette créance", attendu: e.tvaEnPlus, calcul: `${eur(e.creanceEnPlusHT)} × ${pct(k.t)} = ${eur(e.tvaEnPlus)}` },
+        ];
+      },
       explication: (c) => {
         const k = tvaAvanceePourLeClient(c);
-        const reste = k.perte - k.creanceEnPlus;
         return [
-          Math.abs(reste) <= 2
-            ? `La trésorerie perd ce que la créance gagne : ${eur(k.creanceEnPlus)}, dont ${eur(k.tvaEnPlus)} de TVA.`
-            : k.decouvert
-              ? `La trésorerie perd la créance en plus, ${eur(k.creanceEnPlus)}, et ${eur(reste)} de plus : avec moins d'argent en caisse, l'entreprise passe à découvert et paie des intérêts, qui baissent le résultat.`
-              : `La trésorerie perd la créance en plus, ${eur(k.creanceEnPlus)}, et ${eur(reste)} de plus : l'année rejouée n'a pas exactement le même résultat.`,
-          k.effetAvecLeDelai >= 0
-            ? `La TVA laisserait encore ${eur(k.effetAvecLeDelai)} en trésorerie au 31 décembre : l'État et le fournisseur font toujours crédit à l'entreprise, mais moins.`
-            : `La TVA retirerait alors ${eur(-k.effetAvecLeDelai)} de la trésorerie au 31 décembre : l'entreprise avancerait plus de TVA qu'on ne lui en laisse.`,
+          `Au 31 décembre, les ${k.clientele.nom.toLowerCase()} devraient encore le dernier mois de leurs travaux de l'automne : ${eur(k.enc.creanceEnPlusTTC)} TTC, dont ${eur(k.enc.tvaEnPlus)} de TVA. Reste à savoir si cette TVA est déjà due à l'État.`,
+        ];
+      },
+    },
+    {
+      id: "ce-qu-elle-finance",
+      type: "montants",
+      titre: "Ce que le délai fait financer",
+      notions: ["payment_terms", "receivables_financing", "vat_payable"],
+      question: () =>
+        "Une fois la TVA réglée à l'État, que l'entreprise finance-t-elle en plus au 31 décembre, et que coûte ce délai sur l'année, au découvert ? Répondez au régime réel, les encaissements, puis avec l'option pour les débits.",
+      champs: (c) => {
+        const k = tvaAvanceePourLeClient(c);
+        const e = k.enc;
+        const d = k.deb;
+        const ttc = auCentime(e.ventesDeLAnneeHT * (1 + k.t));
+        return [
+          { libelle: "Financé en plus, au régime réel", attendu: e.financeEnPlus, calcul: `la créance hors taxes : la TVA de ces factures n'est pas encore due, ${eur(e.financeEnPlus)}` },
+          {
+            libelle: "Coût du délai sur l'année, au régime réel",
+            attendu: e.coutDeLAnnee,
+            calcul: `${eur(e.ventesDeLAnneeHT)} de travaux de l'année (HT) × ${pct(k.f.tauxDuDecouvert)} × ${JOURS_DEMANDES} ÷ 360 = ${eur(e.coutDeLAnnee)}`,
+          },
+          { libelle: "Financé en plus, avec l'option", attendu: d.financeEnPlus, calcul: `la créance toutes taxes comprises : sa TVA est déjà déclarée, ${eur(d.financeEnPlus)}` },
+          { libelle: "Coût du délai sur l'année, avec l'option", attendu: d.coutDeLAnnee, calcul: `${eur(ttc)} (TTC) × ${pct(k.f.tauxDuDecouvert)} × ${JOURS_DEMANDES} ÷ 360 = ${eur(d.coutDeLAnnee)}` },
+        ];
+      },
+      explication: (c) => {
+        const k = tvaAvanceePourLeClient(c);
+        return [
+          `Au régime réel, ${k.f.entreprise} n'avance aucune TVA : elle attend ${eur(k.enc.financeEnPlus)} hors taxes, et la TVA attend avec. Avec l'option, elle avancerait en plus ${eur(k.deb.tvaAvanceeEnPlus)} de TVA déjà déclarée : ${eur(k.deb.financeEnPlus)} à financer, et ${eur(auCentime(k.deb.coutDeLAnnee - k.enc.coutDeLAnnee))} d'intérêts de plus sur l'année.`,
+        ];
+      },
+    },
+    {
+      id: "la-tva-laissee",
+      type: "montants",
+      titre: "Ce que la TVA laisse au 31 décembre",
+      notions: ["vat_payable", "net_treasury"],
+      question: (c) => {
+        const k = tvaAvanceePourLeClient(c);
+        return `Sans le délai, la TVA laisse ${eur(k.enc.effetSans)} dans la trésorerie de ${k.f.entreprise} au 31 décembre au régime réel, et en laisserait ${eur(k.deb.effetSans)} avec l'option. Avec le délai, recalculez la TVA collectée du quatrième trimestre au régime réel, puis ce que la TVA laisserait en trésorerie au 31 décembre, aux deux régimes.`;
+      },
+      champs: (c) => {
+        const k = tvaAvanceePourLeClient(c);
+        const a = k.automneAvecLeDelai;
+        const e = k.enc;
+        const d = k.deb;
+        return [
+          {
+            libelle: "TVA collectée du quatrième trimestre, avec le délai",
+            attendu: a.collectee,
+            calcul: `les ${k.clientele.nom.toLowerCase()} paient ${eur(e.ventesT4HT)} × ${90 - e.nouveauDelai} ÷ 90 + ${eur(k.clientele.ventesDeLEteHT)} × ${e.nouveauDelai} ÷ 90 = ${eur(k.encaisseDeLaClienteleAvecLeDelai)} au lieu de ${eur(e.ventesT4HT)} ; ${eur(a.encaissementsHT!)} encaissés au total × ${pct(k.t)} = ${eur(a.collectee)}, au lieu de ${eur(k.automne.collectee)}`,
+          },
+          {
+            libelle: "Ce que la TVA laisse au 31 décembre, au régime réel",
+            attendu: e.effetAvec,
+            calcul: `${eur(e.effetSans)} − (${eur(k.automne.collectee)} − ${eur(a.collectee)}) = ${eur(e.effetAvec)}`,
+          },
+          { libelle: "Ce que la TVA laisse au 31 décembre, avec l'option", attendu: d.effetAvec, calcul: `${eur(d.effetSans)} − ${eur(d.tvaAvanceeEnPlus)} de TVA avancée en plus = ${eur(d.effetAvec)}` },
+        ];
+      },
+      explication: (c) => {
+        const k = tvaAvanceePourLeClient(c);
+        return [
+          `Au régime réel, la TVA laissée ne baisse que de ${eur(k.baisseAuxEncaissements)} : la TVA de la créance en plus n'est pas due. Seule baisse la TVA collectée de l'automne, parce que les ${k.clientele.nom.toLowerCase()} y paient ${eur(auCentime(k.enc.ventesT4HT - k.encaisseDeLaClienteleAvecLeDelai))} HT de moins (une part de leurs travaux de l'été, moins gros, au lieu de ceux de l'automne). Avec l'option, elle baisserait de toute la TVA de la créance, ${eur(k.baisseAuxDebits)} : ${k.f.entreprise} la verserait à l'État sans l'avoir reçue.`,
         ];
       },
     },
@@ -210,21 +246,28 @@ export const LA_TVA_AVANCEE_POUR_LE_CLIENT: Situation = {
       question: () => "Quelle phrase envoyez-vous à la gérante ?",
       options: (c) => {
         const k = tvaAvanceePourLeClient(c);
+        const e = k.enc;
+        const d = k.deb;
         return [
           {
-            texte: `Ce délai coûte ${eur(k.perte)} de trésorerie, dont ${eur(k.tvaEnPlus)} de TVA avancée pour les clients`,
+            texte: `Ce délai coûte ${eur(e.financeEnPlus)} de trésorerie, hors taxes : la TVA de ces factures n'est due qu'à leur encaissement`,
             juste: true,
-            retour: `Oui : au 31 décembre, la trésorerie aurait ${eur(k.perte)} de moins. Sur la créance en plus, ${eur(k.tvaEnPlus)} sont de la TVA que l'entreprise a déjà versée à l'État, ou versera au trimestre suivant, sans l'avoir reçue de ses clients.`,
+            retour: `Oui : au régime des encaissements, ${k.f.entreprise} n'avance aucune TVA pour ses clients. Elle finance ${eur(e.financeEnPlus)} hors taxes au 31 décembre, ${eur(e.coutDeLAnnee)} d'intérêts sur l'année au découvert. Avec l'option pour les débits, ce serait ${eur(d.financeEnPlus)}, dont ${eur(d.tvaAvanceeEnPlus)} de TVA avancée : un argument contre l'option.`,
           },
           {
-            texte: "Ce délai ne coûte que la TVA avancée : le montant hors taxes, lui, reste dans l'entreprise",
+            texte: `Ce délai coûte ${eur(d.financeEnPlus)} de trésorerie, dont ${eur(d.tvaAvanceeEnPlus)} de TVA avancée pour les clients`,
             juste: false,
-            retour: `Non : c'est tout le montant TTC que le client paie plus tard, ${eur(k.creanceEnPlus)}. La TVA n'en est qu'une part, ${eur(k.tvaEnPlus)}.`,
+            retour: `Non : ce serait vrai avec l'option pour les débits. Au régime réel de ${k.f.entreprise}, la TVA de ces factures n'est due qu'à leur encaissement : elle ne finance que ${eur(e.financeEnPlus)} hors taxes.`,
           },
           {
-            texte: "Ce délai ne coûte rien : l'entreprise ne reverse la TVA à l'État qu'une fois payée par le client",
+            texte: "Ce délai ne coûte rien : la TVA n'est due qu'une fois le client payé, et le client finit par payer",
             juste: false,
-            retour: `Non : ce serait vrai sans l'option, car la TVA de travaux ou de services n'est due par défaut qu'à l'encaissement. Mais ${c.entreprise} a opté pour les débits : la TVA de chaque facture se verse au trimestre suivant, que le client ait payé ou non. Et la trésorerie perd ${eur(k.perte)} au 31 décembre.`,
+            retour: `Non : la TVA attend, mais le hors taxes aussi. ${k.f.entreprise} finance ${eur(e.financeEnPlus)} de plus au 31 décembre, ${eur(e.coutDeLAnnee)} d'intérêts sur l'année.`,
+          },
+          {
+            texte: `Accordons plutôt ${JOURS_DEMANDES} jours de plus aux entreprises, qui pèsent le plus : le délai rapporterait plus de chantiers`,
+            juste: false,
+            retour: `Non : les entreprises paient déjà à ${DELAI_MAXIMAL_CONVENU.joursDeLaFacture} jours, le plafond entre professionnels. ${k.clienteles.find((g) => g.code === "entreprises")!.nouveauDelai} jours sortiraient de la loi.`,
           },
         ];
       },

@@ -1,67 +1,96 @@
-import { montantEcrit as eur } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
+import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
 import type { Cas } from "../../cas";
 import { dateDuCours as date } from "../../dates";
-import { ASSIETTE_CSG, CSG_CRDS_NON_DEDUCTIBLES, TAUX_DE_LA_PAIE, TAUX_PAS } from "../../paie";
+import { TAUX_DE_LA_PAIE } from "../../monde/exercice-de-nova";
+import { brutPourUnNetAPayer, bulletinDePaie, coefficientDuBrutAuNet } from "../../monde/paie";
 import type { Situation } from "../types";
 
 /**
- * CAS PRATIQUE DU CHAPITRE « LA PAIE » : LA PRIME EXCEPTIONNELLE
- * (comptabilité générale, palier 3).
+ * CAS PRATIQUE DU CHAPITRE « LA PAIE » : LA PRIME EXCEPTIONNELLE (comptabilité générale, palier 3).
  *
- * Le gérant veut verser une prime à chaque salarié avec la paie de février. Avant de
- * l'annoncer, il veut savoir ce qu'elle coûtera à l'entreprise et ce que les salariés en
- * toucheront. L'élève fait le bulletin de la prime (cotisations salariales organisme par
- * organisme, prélèvement à la source, net), passe ses deux écritures, puis répond.
+ * LE CAS JOUE DANS LE MONDE DU COURS : l'effectif est celui du cas figé de l'entreprise
+ * (`c.personnel`), les taux ceux du cours (monde/exercice-de-nova.ts), et le bulletin se calcule par
+ * le modèle du cours (monde/paie.ts).
  *
- * Le cas est neuf par sa question : ce n'est plus le salaire de janvier, c'est une
- * somme de plus, décidée par le gérant. Les taux sont ceux du chapitre (`paie.ts`),
- * l'effectif celui du cas (`cas.ts`).
+ * Le gérant a annoncé à l'équipe une prime de 400 € NETS par salarié, versée avec la paie de
+ * février ; il avait mis de côté 740 € par salarié. L'élève remonte du net au brut et au coût
+ * employeur (le calcul à rebours), passe les deux écritures de la prime, cherche au curseur le net
+ * le plus haut que le budget aurait permis, puis répond : le budget n'est pas tenu, et la prochaine
+ * prime devra s'annoncer plus bas. Le piège : oublier le prélèvement à la source en remontant au
+ * brut (728,21 € par salarié) fait croire que le budget tient.
+ *
+ * Ce qui a disparu : la prime donnée en brut (500 €), qui faisait refaire le bulletin du chapitre.
  */
 
+/** Le net promis à chaque salarié, prélèvement à la source retenu : ce que le gérant a annoncé. */
+export const PRIME_NETTE_PROMISE = 400;
+
 /**
- * La prime brute par salarié : 500 €, l'ordre de grandeur d'une prime exceptionnelle de
- * fin de saison dans une petite entreprise. Elle est soumise aux cotisations et à
- * l'impôt comme le salaire.
+ * Le budget que le gérant avait mis de côté, par salarié, en coût employeur (la prime brute et ses
+ * cotisations patronales). Il est juste en dessous de ce que coûtent 400 € nets : c'est ce qui fait
+ * la question.
  */
-export const PRIME_PAR_SALARIE = 500;
+export const BUDGET_PAR_SALARIE = 740;
+
+/** Les bornes du curseur du net promis, en euros par salarié. */
+export const BORNES_DU_NET = { min: 300, max: 450 } as const;
 
 /** La prime part avec la paie de février, arrêtée le dernier jour du mois. */
 const JOUR_DE_LA_PAIE = 59;
 /** Ses cotisations et son prélèvement se règlent avec ceux de février, le 15 mars. */
 const JOUR_DES_ORGANISMES = 74;
 
-const qte = (n: number) => n.toLocaleString("fr-FR");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
 const T = TAUX_DE_LA_PAIE;
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
+const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 3 })} %`;
+const auCentime = (x: number) => Math.round((x + Number.EPSILON * Math.sign(x)) * 100) / 100 + 0;
+const tauxPropre = (t: number) => Math.round(t * 1e6) / 1e6;
 
-/** Le bulletin de la prime, pour toute l'équipe, arrondi comme celui du chapitre. */
-export function primeExceptionnelle(c: Cas) {
+/** La prime : du net promis au brut et au coût, par salarié puis pour l'équipe, et le net que le budget permet. */
+export function primeExceptionnelle(c: Pick<Cas, "personnel">) {
   const effectif = c.personnel.effectif;
-  const brut = PRIME_PAR_SALARIE * effectif;
-  const urssafSalariale = Math.round(brut * T.salarial.urssaf);
-  const retraiteSalariale = Math.round(brut * T.salarial.retraite);
-  const urssafPatronale = Math.round(brut * T.patronal.urssaf);
-  const retraitePatronale = Math.round(brut * T.patronal.retraite);
-  const netAvantImpot = brut - urssafSalariale - retraiteSalariale;
-  const netImposable = auCentime(netAvantImpot + brut * ASSIETTE_CSG * CSG_CRDS_NON_DEDUCTIBLES);
-  const pas = auCentime(netImposable * TAUX_PAS);
-  const net = auCentime(netAvantImpot - pas);
-  const patronales = urssafPatronale + retraitePatronale;
+  const tauxSalarial = tauxPropre(T.salarialUrssaf + T.salarialRetraite);
+  const tauxPatronal = tauxPropre(T.patronalUrssaf + T.patronalRetraite);
+  const k = coefficientDuBrutAuNet(T);
+  const netPour100 = auCentime(100 * k);
+  // Le net pour 100 € bruts, pas à pas : ce que la correction montre.
+  const pour100 = bulletinDePaie(100, T);
+  // Par salarié : le plus petit brut dont le bulletin verse le net promis, et ce qu'il coûte.
+  const brutParSalarie = brutPourUnNetAPayer(PRIME_NETTE_PROMISE, T);
+  const parSalarie = bulletinDePaie(brutParSalarie, T);
+  const coutParSalarie = parSalarie.coutEmployeur;
+  const depassement = auCentime(coutParSalarie - BUDGET_PAR_SALARIE);
+  // Pour l'équipe : le journal de paie des primes.
+  const equipe = bulletinDePaie(auCentime(brutParSalarie * effectif), T);
+  // Le curseur : le net le plus haut, à l'euro, dont le coût tient dans le budget.
+  const netQueTientLeBudget = Math.floor((BUDGET_PAR_SALARIE * k) / (1 + tauxPatronal) + 1e-9);
+  const brutDuNetTenu = brutPourUnNetAPayer(netQueTientLeBudget, T);
+  // Les erreurs des étudiants : le prélèvement oublié, les taux appliqués au net, le coefficient appliqué au budget.
+  const brutSansLePrelevement = auCentime(PRIME_NETTE_PROMISE / (1 - tauxSalarial));
+  const coutSansLePrelevement = auCentime(brutSansLePrelevement * (1 + tauxPatronal));
+  const coutAvecLesTauxSurLeNet = auCentime(PRIME_NETTE_PROMISE * (1 + tauxSalarial + tauxPatronal));
+  const netDuBudgetSansLesPatronales = auCentime(BUDGET_PAR_SALARIE * (netPour100 / 100));
   return {
     effectif,
-    brut,
-    urssafSalariale,
-    retraiteSalariale,
-    urssafPatronale,
-    retraitePatronale,
-    netAvantImpot,
-    netImposable,
-    pas,
-    net,
-    patronales,
-    cout: brut + patronales,
-    netParSalarie: auCentime(net / effectif),
+    tauxSalarial,
+    tauxPatronal,
+    k,
+    netPour100,
+    pour100: { cotisations: pour100.cotisationsSalariales.total, netAvantImpot: pour100.netAvantImpot, netImposable: pour100.netImposable },
+    brutParSalarie,
+    parSalarie,
+    coutParSalarie,
+    depassement,
+    depassementDeLEquipe: auCentime(equipe.coutEmployeur - BUDGET_PAR_SALARIE * effectif),
+    equipe,
+    netQueTientLeBudget,
+    brutDuNetTenu,
+    coutDuNetTenu: bulletinDePaie(brutDuNetTenu, T).coutEmployeur,
+    brutSansLePrelevement,
+    coutSansLePrelevement,
+    coutAvecLesTauxSurLeNet,
+    netDuBudgetSansLesPatronales,
   };
 }
 
@@ -74,12 +103,12 @@ export const LA_PRIME_EXCEPTIONNELLE: Situation = {
   commanditaire: "Le gérant",
   titre: "La prime exceptionnelle",
   accroche:
-    "Le gérant veut verser une prime à toute l'équipe avec la paie de février. Avant de l'annoncer, il veut savoir ce qu'elle coûtera et ce que les salariés toucheront vraiment.",
+    "Le gérant a promis à l'équipe une prime en net, avec la paie de février, sur un budget mis de côté en coût. Passez-la au journal, et dites-lui si son budget tenait.",
   objectifs: [
-    "Calculer les cotisations salariales d'une prime, organisme par organisme",
-    "Calculer le prélèvement à la source et le net versé aux salariés",
+    "Remonter d'un net promis au brut, puis au coût employeur",
     "Enregistrer la prime et ses cotisations patronales",
-    "Distinguer ce que la prime coûte à l'entreprise de ce que les salariés en reçoivent",
+    "Retrouver le net le plus haut qu'un budget de coût employeur permet",
+    "Juger une promesse faite en net face à un budget tenu en coût",
   ],
   libre: false,
   etapes: [
@@ -90,8 +119,8 @@ export const LA_PRIME_EXCEPTIONNELLE: Situation = {
       texte: (c) => {
         const k = primeExceptionnelle(c);
         return [
-          `« Le début d'année a été bon. Je veux verser à chacun de nos ${qte(k.effectif)} salariés une prime exceptionnelle de ${eur(PRIME_PAR_SALARIE)} bruts, avec la paie de février. Avant de l'annoncer, dites-moi ce qu'elle coûtera à ${c.entreprise}, et ce que les salariés en toucheront vraiment. »`,
-          "Pas de cours cette fois : la prime suit les règles du salaire, et la méthode est celle du chapitre. À vous de l'enchaîner.",
+          `« J'ai annoncé à nos ${qte(k.effectif)} salariés une prime exceptionnelle de ${eur(PRIME_NETTE_PROMISE)} nets chacun, après leur prélèvement à la source, avec la paie de février. J'avais mis de côté ${eur(BUDGET_PAR_SALARIE)} par salarié, cotisations comprises. Préparez le journal de paie des primes, et dites-moi si mon budget tient ; sinon, ce que j'aurais pu promettre avec lui. »`,
+          "Pas de cours cette fois : la méthode est celle du chapitre. À vous de l'enchaîner.",
         ];
       },
       tableau: (c) => {
@@ -101,42 +130,52 @@ export const LA_PRIME_EXCEPTIONNELLE: Situation = {
           colonnes: ["Valeur"],
           lignes: [
             { libelle: "Salariés", valeurs: [qte(k.effectif)] },
-            { libelle: "Prime brute par salarié", valeurs: [eur(PRIME_PAR_SALARIE)] },
-            { libelle: "Cotisations salariales URSSAF, en % du brut", valeurs: [pct(T.salarial.urssaf)] },
-            { libelle: "Cotisations salariales de retraite complémentaire", valeurs: [pct(T.salarial.retraite)] },
-            { libelle: "Cotisations patronales URSSAF", valeurs: [pct(T.patronal.urssaf)] },
-            { libelle: "Cotisations patronales de retraite complémentaire", valeurs: [pct(T.patronal.retraite)] },
-            { libelle: "Net imposable des primes, calculé par le logiciel de paie", valeurs: [eur(k.netImposable)] },
-            { libelle: "Taux moyen de prélèvement à la source", valeurs: [pct(TAUX_PAS)] },
+            { libelle: "Prime nette promise par salarié", valeurs: [eur(PRIME_NETTE_PROMISE)] },
+            { libelle: "Budget par salarié, en coût employeur", valeurs: [eur(BUDGET_PAR_SALARIE)] },
+            { libelle: "Cotisations salariales URSSAF, en % du brut", valeurs: [pct(T.salarialUrssaf)] },
+            { libelle: "Cotisations salariales de retraite complémentaire", valeurs: [pct(T.salarialRetraite)] },
+            { libelle: "Cotisations patronales URSSAF", valeurs: [pct(T.patronalUrssaf)] },
+            { libelle: "Cotisations patronales de retraite complémentaire", valeurs: [pct(T.patronalRetraite)] },
+            { libelle: `CSG et CRDS non déductibles, sur ${pct(T.assietteDeLaCsg)} du brut`, valeurs: [pct(T.csgCrdsNonDeductible)] },
+            { libelle: "Taux moyen de prélèvement à la source", valeurs: [pct(T.prelevementALaSource)] },
           ],
         };
       },
-      repere: () =>
-        "À rendre : le bulletin des primes jusqu'au net, ses deux écritures au journal, et votre réponse.",
+      repere: () => "À rendre : le brut et le coût de la prime, ses deux écritures au journal, le net que le budget permettait, et votre réponse.",
     },
     {
-      id: "bulletin",
+      id: "la-prime-a-rebours",
       type: "montants",
-      titre: "Le bulletin des primes",
-      notions: ["fixed_costs"],
-      question: (c) =>
-        `Pour les ${qte(primeExceptionnelle(c).effectif)} salariés réunis : le total des primes brutes, les cotisations salariales URSSAF et de retraite complémentaire, le net avant impôt, le prélèvement à la source, puis le net à verser.`,
+      titre: "Du net promis au coût",
+      notions: ["payroll", "fixed_costs"],
+      question: () =>
+        `Pour un salarié : ce qu'il touche net pour ${eur(100)} bruts, la prime brute qui lui verse les ${eur(PRIME_NETTE_PROMISE)} promis, puis ce qu'elle coûte à l'entreprise.`,
       champs: (c) => {
         const k = primeExceptionnelle(c);
         return [
-          { libelle: "Primes brutes", attendu: k.brut, calcul: `${qte(k.effectif)} × ${eur(PRIME_PAR_SALARIE)} = ${eur(k.brut)}` },
-          { libelle: "Cotisations salariales URSSAF", attendu: k.urssafSalariale, calcul: `${eur(k.brut)} × ${pct(T.salarial.urssaf)} = ${eur(k.urssafSalariale)}` },
-          { libelle: "Cotisations salariales de retraite complémentaire", attendu: k.retraiteSalariale, calcul: `${eur(k.brut)} × ${pct(T.salarial.retraite)} = ${eur(k.retraiteSalariale)}` },
-          { libelle: "Net avant impôt", attendu: k.netAvantImpot, calcul: `${eur(k.brut)} − ${eur(k.urssafSalariale)} − ${eur(k.retraiteSalariale)} = ${eur(k.netAvantImpot)}` },
-          { libelle: "Prélèvement à la source", attendu: k.pas, calcul: `${eur(k.netImposable)} × ${pct(TAUX_PAS)} = ${eur(k.pas)}` },
-          { libelle: "Net à verser aux salariés", attendu: k.net, calcul: `${eur(k.netAvantImpot)} − ${eur(k.pas)} = ${eur(k.net)}` },
+          {
+            libelle: `Net touché pour ${eur(100)} bruts`,
+            attendu: k.netPour100,
+            calcul: `${eur(100)} − ${eur(k.pour100.cotisations)} de cotisations salariales = ${eur(k.pour100.netAvantImpot)} ; net imposable ${eur(k.pour100.netAvantImpot)} + ${eur(100)} × ${pct(T.assietteDeLaCsg)} × ${pct(T.csgCrdsNonDeductible)} = ${eur(k.pour100.netImposable)} ; ${eur(k.pour100.netAvantImpot)} − ${eur(k.pour100.netImposable)} × ${pct(T.prelevementALaSource)} = ${eur(k.netPour100)}`,
+          },
+          {
+            libelle: "Prime brute par salarié",
+            attendu: k.brutParSalarie,
+            tolerance: 0.05,
+            calcul: `${eur(PRIME_NETTE_PROMISE)} ÷ ${qte(k.netPour100)} % = ${eur(auCentime(PRIME_NETTE_PROMISE / (k.netPour100 / 100)))} ; au centime près, le bulletin de ${eur(k.brutParSalarie)} verse ${eur(k.parSalarie.netAPayer)}`,
+          },
+          {
+            libelle: "Coût employeur par salarié",
+            attendu: k.coutParSalarie,
+            tolerance: 0.1,
+            calcul: `${eur(k.brutParSalarie)} × (1 + ${pct(k.tauxPatronal)}) = ${eur(k.coutParSalarie)}`,
+          },
         ];
       },
       explication: (c) => {
         const k = primeExceptionnelle(c);
         return [
-          `Sur ${eur(PRIME_PAR_SALARIE)} annoncés, chaque salarié touchera environ ${eur(k.netParSalarie)}. Le reste n'est pas perdu pour lui : ses cotisations financent sa protection sociale et sa retraite, et le prélèvement règle une part de son impôt.`,
-          "Le prélèvement se calcule sur le net imposable, un peu plus haut que le net avant impôt : une part de la CSG et la CRDS ne se déduisent pas de l'impôt.",
+          `Pour ${eur(PRIME_NETTE_PROMISE)} nets, il faut ${eur(k.brutParSalarie)} bruts, qui coûtent ${eur(k.coutParSalarie)} à ${c.entreprise}. Le prélèvement à la source se prend aussi sur le brut : diviser le net par ${pct(1 - k.tauxSalarial)} ne suffit pas.`,
         ];
       },
     },
@@ -144,41 +183,42 @@ export const LA_PRIME_EXCEPTIONNELLE: Situation = {
       id: "ecriture-prime",
       type: "ecriture",
       titre: "La prime, au journal",
-      notions: ["fixed_costs"],
+      notions: ["payroll", "fixed_costs"],
       evenement: (c) => {
         const k = primeExceptionnelle(c);
-        return `Le ${date(JOUR_DE_LA_PAIE)}, le journal de paie de février porte les primes : ${eur(k.brut)} bruts. Passez l'écriture des primes seules ; le salaire de février s'écrit comme celui de janvier.`;
+        return `Le ${date(JOUR_DE_LA_PAIE)}, le journal de paie de février porte les primes de l'équipe, ${qte(k.effectif)} fois la prime brute. Passez l'écriture des primes seules ; le salaire de février s'écrit comme celui de janvier.`;
       },
       piece: (c) => {
         const k = primeExceptionnelle(c);
+        const e = k.equipe;
         return {
           nature: "Journal de paie de février : les primes",
           de: c.entreprise,
           a: `Ses ${qte(k.effectif)} salariés`,
           date: date(JOUR_DE_LA_PAIE),
           lignes: [
-            { libelle: "Primes exceptionnelles brutes", quantite: qte(k.effectif), prixUnitaire: PRIME_PAR_SALARIE, montant: k.brut },
-            { libelle: `Cotisations salariales URSSAF (${pct(T.salarial.urssaf)})`, montant: k.urssafSalariale },
-            { libelle: `Cotisations salariales de retraite complémentaire (${pct(T.salarial.retraite)})`, montant: k.retraiteSalariale },
-            { libelle: `Prélèvement à la source (${pct(TAUX_PAS)} du net imposable)`, montant: k.pas },
+            { libelle: "Primes exceptionnelles brutes", quantite: qte(k.effectif), prixUnitaire: k.brutParSalarie, montant: e.brut },
+            { libelle: `Cotisations salariales URSSAF (${pct(T.salarialUrssaf)})`, montant: e.cotisationsSalariales.urssaf },
+            { libelle: `Cotisations salariales de retraite complémentaire (${pct(T.salarialRetraite)})`, montant: e.cotisationsSalariales.retraite },
+            { libelle: `Prélèvement à la source (${pct(T.prelevementALaSource)} du net imposable)`, montant: e.prelevementALaSource },
           ],
           totaux: [
-            { libelle: "Net avant impôt", montant: k.netAvantImpot },
-            { libelle: "Net à payer", montant: k.net, fort: true },
+            { libelle: "Net avant impôt", montant: e.netAvantImpot },
+            { libelle: "Net à payer", montant: e.netAPayer, fort: true },
           ],
         };
       },
       ecriture: (c) => {
-        const k = primeExceptionnelle(c);
+        const e = primeExceptionnelle(c).equipe;
         return {
           date: date(JOUR_DE_LA_PAIE),
           libelle: "Primes exceptionnelles de février",
           lignes: [
-            { role: "les primes brutes", compte: "641", sens: "debit", montant: k.brut, indice: "le total des primes brutes" },
-            { role: "les cotisations salariales dues à l'URSSAF", compte: "431", sens: "credit", montant: k.urssafSalariale, indice: "la part URSSAF retenue sur les primes" },
-            { role: "les cotisations salariales dues à la caisse de retraite", compte: "437", sens: "credit", montant: k.retraiteSalariale, indice: "la part de retraite complémentaire retenue sur les primes" },
-            { role: "l'impôt prélevé à la source, dû à l'État", compte: "442", sens: "credit", montant: k.pas, indice: "le prélèvement à la source sur les primes" },
-            { role: "le net à verser aux salariés", compte: "421", sens: "credit", montant: k.net, indice: "le net à payer des primes" },
+            { role: "les primes brutes", compte: "641", sens: "debit", montant: e.brut, indice: "le total des primes brutes" },
+            { role: "les cotisations salariales dues à l'URSSAF", compte: "431", sens: "credit", montant: e.cotisationsSalariales.urssaf, indice: "la part URSSAF retenue sur les primes" },
+            { role: "les cotisations salariales dues à la caisse de retraite", compte: "437", sens: "credit", montant: e.cotisationsSalariales.retraite, indice: "la part de retraite complémentaire retenue sur les primes" },
+            { role: "l'impôt prélevé à la source, dû à l'État", compte: "442", sens: "credit", montant: e.prelevementALaSource, indice: "le prélèvement à la source sur les primes" },
+            { role: "le net à verser aux salariés", compte: "421", sens: "credit", montant: e.netAPayer, indice: "le net à payer des primes" },
           ],
         };
       },
@@ -189,7 +229,7 @@ export const LA_PRIME_EXCEPTIONNELLE: Situation = {
       explication: (c) => {
         const k = primeExceptionnelle(c);
         return [
-          `La charge est le brut, ${eur(k.brut)}, au débit du 641. Les salariés recevront ${eur(k.net)} avec leur salaire de février ; le reste attendra le ${date(JOUR_DES_ORGANISMES)}, avec les cotisations de février.`,
+          `La charge est le brut, ${eur(k.equipe.brut)}, au débit du 641. Les salariés recevront ${eur(k.equipe.netAPayer)} avec leur salaire de février, les ${eur(PRIME_NETTE_PROMISE)} promis à chacun ; le reste attendra le ${date(JOUR_DES_ORGANISMES)}, avec les cotisations de février.`,
         ];
       },
       vue: "paie",
@@ -198,20 +238,17 @@ export const LA_PRIME_EXCEPTIONNELLE: Situation = {
       id: "ecriture-patronales",
       type: "ecriture",
       titre: "Les cotisations patronales de la prime",
-      notions: ["fixed_costs"],
-      evenement: (c) => {
-        const k = primeExceptionnelle(c);
-        return `Le même jour, ${c.entreprise} enregistre ses propres cotisations sur les primes : URSSAF ${pct(T.patronal.urssaf)} du brut, retraite complémentaire ${pct(T.patronal.retraite)}. Calculez-les et passez l'écriture, sur ${eur(k.brut)} de primes brutes.`;
-      },
+      notions: ["payroll", "fixed_costs"],
+      evenement: (c) => `Le même jour, ${c.entreprise} enregistre ses propres cotisations sur les primes, organisme par organisme. Calculez-les et passez l'écriture.`,
       ecriture: (c) => {
-        const k = primeExceptionnelle(c);
+        const e = primeExceptionnelle(c).equipe;
         return {
           date: date(JOUR_DE_LA_PAIE),
           libelle: "Cotisations patronales sur les primes de février",
           lignes: [
-            { role: "les cotisations patronales", compte: "645", sens: "debit", montant: k.patronales, indice: "les deux parts patronales réunies" },
-            { role: "la part due à l'URSSAF", compte: "431", sens: "credit", montant: k.urssafPatronale, indice: `les primes brutes × ${pct(T.patronal.urssaf)}` },
-            { role: "la part due à la caisse de retraite", compte: "437", sens: "credit", montant: k.retraitePatronale, indice: `les primes brutes × ${pct(T.patronal.retraite)}` },
+            { role: "les cotisations patronales", compte: "645", sens: "debit", montant: e.cotisationsPatronales.total, indice: "les deux parts patronales réunies" },
+            { role: "la part due à l'URSSAF", compte: "431", sens: "credit", montant: e.cotisationsPatronales.urssaf, indice: `les primes brutes × ${pct(T.patronalUrssaf)}` },
+            { role: "la part due à la caisse de retraite", compte: "437", sens: "credit", montant: e.cotisationsPatronales.retraite, indice: `les primes brutes × ${pct(T.patronalRetraite)}` },
           ],
         };
       },
@@ -221,40 +258,81 @@ export const LA_PRIME_EXCEPTIONNELLE: Situation = {
       ],
       explication: (c) => {
         const k = primeExceptionnelle(c);
+        const e = k.equipe;
         return [
-          `${eur(k.patronales)} de charges en plus des primes, au débit du 645 : ${eur(k.urssafPatronale)} pour l'URSSAF, ${eur(k.retraitePatronale)} pour la caisse de retraite. Les primes coûtent donc ${eur(k.cout)} à ${c.entreprise}.`,
+          `${eur(e.cotisationsPatronales.total)} de charges en plus des primes, au débit du 645 : ${eur(e.cotisationsPatronales.urssaf)} pour l'URSSAF, ${eur(e.cotisationsPatronales.retraite)} pour la caisse de retraite. Les primes coûtent donc ${eur(e.coutEmployeur)} à ${c.entreprise}, pour ${eur(auCentime(BUDGET_PAR_SALARIE * k.effectif))} mis de côté.`,
         ];
       },
       vue: "paie",
     },
     {
+      id: "le-net-que-tient-le-budget",
+      type: "curseur",
+      titre: "Le net que le budget tenait",
+      notions: ["payroll", "fixed_costs"],
+      question: () =>
+        `Faites varier le net promis à un salarié, de ${eur(BORNES_DU_NET.min)} à ${eur(BORNES_DU_NET.max)}. Une droite donne le budget, ${eur(BUDGET_PAR_SALARIE)} ; l'autre, ce que coûte la prime qui verse ce net. Placez le curseur sur le net le plus haut que le budget permet, puis validez.`,
+      grandeur: () => ({ libelle: "Net promis par salarié", unite: "€" }),
+      sens: "plus-grande",
+      cible: (c) => ({ attendu: primeExceptionnelle(c).netQueTientLeBudget, min: BORNES_DU_NET.min, max: BORNES_DU_NET.max }),
+      zones: ["Dans le budget", "Au-delà du budget"],
+      rates: () => ({
+        dessous: "Le budget permet encore un net plus haut : cherchez le plus haut.",
+        dessus: "À cette position, la prime coûte déjà plus que le budget.",
+      }),
+      montrer: "Montrer le net",
+      lecture: (_c, n) => {
+        const brut = brutPourUnNetAPayer(n, T);
+        const cout = bulletinDePaie(brut, T).coutEmployeur;
+        return [
+          { libelle: "Prime brute nécessaire", montant: brut },
+          { libelle: "Coût employeur par salarié", montant: cout, fort: true },
+          { libelle: "Reste du budget par salarié", montant: auCentime(BUDGET_PAR_SALARIE - cout) },
+        ];
+      },
+      droites: (c) => {
+        const k = primeExceptionnelle(c);
+        return {
+          produit: () => BUDGET_PAR_SALARIE,
+          cout: (n) => (n / k.k) * (1 + k.tauxPatronal),
+          libelles: ["Budget par salarié", "Coût de la prime qui verse ce net"],
+        };
+      },
+      explication: (c) => {
+        const k = primeExceptionnelle(c);
+        return [
+          `Avec ${eur(BUDGET_PAR_SALARIE)} par salarié, le gérant pouvait promettre ${eur(k.netQueTientLeBudget)} nets : ${eur(k.brutDuNetTenu)} bruts, qui coûtent ${eur(k.coutDuNetTenu)}. Les ${eur(PRIME_NETTE_PROMISE)} promis coûtent ${eur(k.coutParSalarie)}, ${eur(k.depassement)} de plus par salarié.`,
+        ];
+      },
+    },
+    {
       id: "reponse",
       type: "choix",
       titre: "Votre réponse au gérant",
-      notions: ["fixed_costs", "income_statement"],
+      notions: ["payroll", "fixed_costs", "income_statement"],
       question: () => "Quelle phrase envoyez-vous au gérant ?",
       options: (c) => {
         const k = primeExceptionnelle(c);
         return [
           {
-            texte: `Les primes coûteront ${eur(k.cout)} ; les salariés en toucheront ${eur(k.net)}`,
+            texte: `Non : ${eur(k.coutParSalarie)} par salarié ; votre budget tenait ${eur(k.netQueTientLeBudget)} nets au plus`,
             juste: true,
-            retour: `Oui : le brut et les cotisations patronales, ${eur(k.brut)} + ${eur(k.patronales)}, sont la charge de l'entreprise. Les salariés reçoivent le net, environ ${eur(k.netParSalarie)} chacun : les cotisations salariales et l'impôt sont retenus sur le brut.`,
+            retour: `Oui : ${eur(PRIME_NETTE_PROMISE)} nets demandent ${eur(k.brutParSalarie)} bruts, qui coûtent ${eur(k.coutParSalarie)} par salarié : l'équipe dépasse le budget de ${eur(k.depassementDeLEquipe)}. La promesse faite en net se tient tout de même ; la prochaine s'annoncera à ${eur(k.netQueTientLeBudget)} nets, ou en brut.`,
           },
           {
-            texte: `Les primes coûteront ${eur(k.brut)}, le brut annoncé, et les salariés en toucheront ${eur(k.net)}`,
+            texte: `Oui : ${eur(PRIME_NETTE_PROMISE)} ÷ ${pct(1 - k.tauxSalarial)} font ${eur(k.brutSansLePrelevement)} bruts, soit ${eur(k.coutSansLePrelevement)} avec les cotisations patronales`,
             juste: false,
-            retour: `Non : c'est oublier les cotisations patronales, ${eur(k.patronales)}, que l'entreprise paie en plus du brut. Les primes coûtent ${eur(k.cout)}.`,
+            retour: `Non : c'est oublier le prélèvement à la source, qui se retient aussi sur le brut. Il faut ${eur(k.brutParSalarie)} bruts, et la prime coûte ${eur(k.coutParSalarie)}, au-delà des ${eur(BUDGET_PAR_SALARIE)}.`,
           },
           {
-            texte: `Les primes coûteront ${eur(k.cout)}, et les salariés toucheront les ${eur(k.brut)} annoncés`,
+            texte: `Oui : ${eur(PRIME_NETTE_PROMISE)} plus ${pct(k.tauxSalarial + k.tauxPatronal)} de cotisations font ${eur(k.coutAvecLesTauxSurLeNet)}, sous les ${eur(BUDGET_PAR_SALARIE)}`,
             juste: false,
-            retour: `Non : les salariés ne touchent pas le brut. Leurs cotisations et le prélèvement à la source en sont retenus : il leur reste ${eur(k.net)}.`,
+            retour: `Non : les taux de cotisations s'appliquent au brut, pas au net. En remontant au brut (${eur(k.brutParSalarie)}), la prime coûte ${eur(k.coutParSalarie)}.`,
           },
           {
-            texte: `Les primes coûteront ${eur(k.cout + k.pas)}, le prélèvement compris, pour ${eur(k.net)} versés aux salariés`,
+            texte: `Non : ${eur(k.coutParSalarie)} par salarié ; votre budget tenait ${eur(k.netDuBudgetSansLesPatronales)} nets, ${pct(k.netPour100 / 100)} de ${eur(BUDGET_PAR_SALARIE)}`,
             juste: false,
-            retour: `Non : le prélèvement à la source, ${eur(k.pas)}, est l'impôt des salariés, retenu sur le brut. Le compter en plus le compterait deux fois : les primes coûtent ${eur(k.cout)}.`,
+            retour: `Le dépassement est juste, pas le net que le budget tenait : ${eur(BUDGET_PAR_SALARIE)} est un coût employeur, il faut d'abord en retirer les cotisations patronales (diviser par ${qte(auCentime(1 + k.tauxPatronal))}) avant d'appliquer ${qte(k.netPour100)} %. Le budget tenait ${eur(k.netQueTientLeBudget)} nets.`,
           },
         ];
       },

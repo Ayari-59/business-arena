@@ -42,7 +42,12 @@ export interface DateDuCours {
   exercice?: number;
 }
 
-export const auCentime = (x: number) => Math.round((x + Number.EPSILON * Math.sign(x)) * 100) / 100 + 0;
+/**
+ * Au centime le plus proche, la moitié s'arrondissant en s'éloignant de zéro. Le produit est
+ * d'abord ramené à 15 chiffres significatifs : un demi-centime calculé (11 930,625 € qui sort à
+ * 11 930,62499999…) monte bien au centime supérieur.
+ */
+export const auCentime = (x: number) => (Math.sign(x) * Math.round(Number((Math.abs(x) * 100).toPrecision(15)))) / 100 + 0;
 
 /** Le rang d'un jour sur le calendrier commercial (le 1er janvier de l'exercice 0 est le jour 1). */
 export function rangDuJour(d: DateDuCours) {

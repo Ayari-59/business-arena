@@ -1,84 +1,69 @@
 import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
-import { scenarioByCode } from "../../../scenarios/registry";
 import type { Cas } from "../../cas";
-import { anneeDeReference, rejouerAvec, surLAnnee } from "../../gestion-de-la-pme";
+import { ENTREPRISES_DU_CLIENT_QUI_PAIE_TARD, clientQuiPaieTard } from "../../chapitres/le-client-qui-paie-tard";
+import { auCentime } from "../../monde/amortissement";
+import { JOURS_DE_L_ANNEE_BANCAIRE, JOURS_DU_TRIMESTRE } from "../../monde/delais-et-tva";
+import { coutDuDecouvert, escompterChaqueTrimestre } from "../../monde/delais";
 import type { Situation } from "../types";
 
 /**
  * CAS PRATIQUE DU CHAPITRE « LE CLIENT QUI PAIE TARD » : ESCOMPTER CHAQUE TRIMESTRE (BTS GPME,
  * palier 2).
  *
- * La banque propose au dirigeant d'escompter ses créances clients à chaque trimestre, autant
- * qu'elle l'accepte : « vous aurez toujours de la trésorerie ». Il demande ce que cela coûterait
- * sur l'année, ce que cela changerait à la trésorerie, et s'il faut signer. L'élève refait les
- * calculs du chapitre (le montant escomptable, le coût de l'escompte) sur les quatre trimestres,
- * puis lit ce que l'arène en fait et rend sa réponse.
+ * La banque propose au dirigeant de NOVA d'escompter toutes les factures de CampusTech, chaque mois,
+ * jusqu'à leur échéance convenue : « vous n'aurez plus de découvert ». Il demande ce que cela
+ * coûterait sur l'année, ce que cela éviterait, et s'il faut signer.
  *
- * Le cas est neuf par sa question : le chapitre mobilise les créances une fois, à la clôture ;
- * le cas les mobilise tout au long de l'année, et pose la question de l'habitude plutôt que du
- * coup de pouce. L'année rejouée l'est avec l'escompte demandé à chaque trimestre
- * (`treasury.discount`), le moteur l'arrêtant au plafond du scénario
- * (`treasury.discountMaxShare` des créances du trimestre).
+ * L'élève chiffre l'escompte de l'année (12 factures, dans le plafond de la banque), le découvert
+ * qu'il éviterait (les besoins de trésorerie de N + 1, posés par la fiche), puis croise les deux
+ * trimestre par trimestre : un curseur montre au quatrième trimestre jusqu'où le découvert coûte
+ * moins que l'escompte des factures qui couvrent le besoin, et le calcul à rebours donne ce seuil
+ * au deuxième. La réponse demande un jugement : ni tout, ni rien, mais l'escompte là où le
+ * découvert dure.
+ *
+ * Comme son chapitre, le cas se joue dans la simulation du cours (src/config/cours/monde) : ses
+ * chiffres sont ceux de monde/delais.ts (`escompterChaqueTrimestre`). Les besoins de trésorerie de
+ * N + 1 sont une hypothèse de la fiche, pas un budget calculé.
  */
 
-/**
- * Ce que le dirigeant demande à la banque d'escompter chaque trimestre : tout ce qu'elle accepte.
- * La demande n'a pas de limite ; c'est la banque qui plafonne, à sa part du poste clients.
- */
-export const ESCOMPTE_DEMANDE = Number.MAX_SAFE_INTEGER;
-
-/** Un montant à la française, avec le signe moins typographique ; retranché, un négatif va entre parenthèses. */
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
-const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
+const eur = (x: number) => montantEcrit(auCentime(x)).replace(/^-/, "−");
+const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
 const ordinal = (n: number) => (n === 1 ? "1er" : `${n}e`);
+const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
-export type Verdict = "evite-le-decouvert" | "inutile";
+/** Ce que le dirigeant doit faire : signer pour chaque trimestre, escompter au cas par cas, ou ne rien escompter. */
+export type Verdict = "chaque-trimestre" | "au-cas-par-cas" | "jamais";
 
-/** L'année escomptée trimestre après trimestre, à côté de l'année du cours. */
-export function escompteChaqueTrimestre(c: Cas) {
-  const s = scenarioByCode(c.code).scenario;
-  const outils = s.treasury!;
-  const duree = s.roundDays;
-  const ref = anneeDeReference(c.code);
-  const annee = rejouerAvec(c.code, "escompte-chaque-trimestre", (_t, d) => ({ ...d, treasury: { ...d.treasury, discount: ESCOMPTE_DEMANDE } }));
-  const trimestres = annee.map((r, i) => {
-    const t = r.treasury;
-    const nees = auCentime(r.balanceSheet.receivables + (t?.discounted ?? 0) + (t?.factored ?? 0) + (t?.forcedFactored ?? 0));
-    return {
-      numero: i + 1,
-      creancesNees: nees,
-      escompte: auCentime(outils.discountMaxShare * nees),
-      escompteDuMoteur: t?.discounted ?? 0,
-      tresorerieSans: Math.round(ref[i]!.functionalBalance.netTreasury),
-      tresorerieAvec: Math.round(r.functionalBalance.netTreasury),
-    };
-  });
-  const escompteDeLAnnee = auCentime(trimestres.reduce((t, x) => t + x.escompte, 0));
-  const coutDeLAnnee = auCentime(escompteDeLAnnee * outils.discountAnnualRate * (duree / 360));
-  const lire = (a: typeof ref) => ({
-    chargesFinancieres: Math.round(surLAnnee(a, (r) => r.incomeStatement.interest)),
-    cedeesDOffice: Math.round(surLAnnee(a, (r) => r.treasury?.forcedFactored ?? 0)),
-    resultat: Math.round(surLAnnee(a, (r) => r.incomeStatement.netIncome)),
-    tresorerie: Math.round(a.at(-1)!.functionalBalance.netTreasury),
-    plusBasse: Math.round(Math.min(...a.map((r) => r.functionalBalance.netTreasury))),
-  });
-  const sans = lire(ref);
-  const avec = lire(annee);
-  const verdict: Verdict = sans.plusBasse < 0 ? "evite-le-decouvert" : "inutile";
+/** Le trimestre où le découvert dure le plus longtemps : celui du curseur. */
+export const TRIMESTRE_DU_CURSEUR = 4;
+
+/** Le trimestre du calcul à rebours : un découvert plus court. */
+export const TRIMESTRE_A_REBOURS = 2;
+
+/** L'escompte de chaque trimestre face au découvert qu'il évite, et l'escompte au cas par cas. */
+export function escompteChaqueTrimestre(c: Pick<Cas, "code">) {
+  const k = clientQuiPaieTard(c);
+  const f = k.f;
+  const x = escompterChaqueTrimestre(f);
+  const taux = f.banque.tauxDuDecouvert;
+  const t = (n: number) => x.trimestres[n - 1]!;
+  const curseur = t(TRIMESTRE_DU_CURSEUR);
+  const parJour = (n: number) => (t(n).besoin * taux) / JOURS_DE_L_ANNEE_BANCAIRE;
+  // Les jours de découvert d'un trimestre qui coûtent autant que l'escompte des factures qui couvrent son besoin.
+  const joursQuiValentLEscompte = (n: number) => (parJour(n) > 0 ? t(n).escompteDuBesoin / parJour(n) : 0);
+  const joursOuLeDecouvertCouteMoins = Math.floor(joursQuiValentLEscompte(TRIMESTRE_DU_CURSEUR) + 1e-9);
+  const verdict: Verdict = x.escompteDeLAnnee <= x.decouvertEvite ? "chaque-trimestre" : x.auMieux < x.decouvertEvite ? "au-cas-par-cas" : "jamais";
   return {
-    outils,
-    duree,
-    trimestres,
-    escompteDeLAnnee,
-    coutDeLAnnee,
-    sans,
-    avec,
-    resultatPerdu: sans.resultat - avec.resultat,
-    tresorerieGagnee: avec.tresorerie - sans.tresorerie,
-    plusBasseRemontee: avec.plusBasse - sans.plusBasse,
+    k,
+    f,
+    x,
+    taux,
+    t,
+    curseur,
+    joursOuLeDecouvertCouteMoins,
+    joursARebours: auCentime(joursQuiValentLEscompte(TRIMESTRE_A_REBOURS)),
+    economie: auCentime(x.escompteDeLAnnee - x.auMieux),
     verdict,
   };
 }
@@ -92,112 +77,195 @@ export const ESCOMPTER_CHAQUE_TRIMESTRE: Situation = {
   commanditaire: "Le dirigeant",
   titre: "Escompter chaque trimestre",
   accroche:
-    "La banque propose d'escompter les créances clients à chaque trimestre, autant qu'elle l'accepte. Ce que cela coûte sur l'année, ce que cela change à la trésorerie, et s'il faut signer.",
+    "La banque propose d'escompter toutes les factures du client professionnel, chaque mois : plus de découvert, promet-elle. Ce que cela coûte sur l'année, ce que cela évite, et s'il faut signer.",
   objectifs: [
-    "Calculer le montant escomptable de chaque trimestre",
-    "Calculer le coût de l'escompte sur l'année",
-    "Lire ce que l'escompte change au résultat et à la trésorerie",
-    "Répondre au dirigeant, chiffre à l'appui",
+    "Calculer le coût d'un escompte sur l'année, dans le plafond de la banque",
+    "Calculer le découvert qu'un escompte évite, trimestre par trimestre",
+    "Croiser l'escompte et le découvert selon la durée du besoin",
+    "Répondre au dirigeant, chiffres à l'appui",
   ],
   libre: false,
+  entreprises: {
+    codes: ENTREPRISES_DU_CLIENT_QUI_PAIE_TARD,
+    pourquoi: "ce cas reprend le chapitre « Le client qui paie tard », qui se joue chez NOVA, dans la simulation du cours, avec son client CampusTech et sa banque.",
+  },
   etapes: [
     {
       id: "demande",
       type: "lecture",
       titre: "La proposition de la banque",
       texte: (c) => {
-        const k = escompteChaqueTrimestre(c);
+        const e = escompteChaqueTrimestre(c);
+        const k = e.k;
         return [
-          `« La banque nous propose d'escompter nos créances clients chaque trimestre, autant qu'elle l'accepte : ${pct(k.outils.discountMaxShare * 100)} des créances au plus, à ${pct(k.outils.discountAnnualRate * 100)} par an. Elle dit que nous aurons toujours de la trésorerie. Combien cela coûterait-il sur l'année, qu'est-ce que cela changerait, et faut-il signer ? »`,
-          "Pas de cours cette fois : les calculs sont ceux du chapitre. L'arène a rejoué l'année avec l'escompte à chaque trimestre, tout le reste identique.",
+          `« La banque nous propose d'escompter chaque facture de ${k.ct.nom}, dès qu'elle part, jusqu'à son échéance convenue de ${k.ct.delaiConvenu} jours, à ${pct(k.b.escompte.taux)} l'an, sauf bonne fin. Elle accepte ${eur(k.b.escompte.plafondTTC)} d'effets escomptés à la fois. Elle dit que nous n'aurons plus de découvert. Combien cela coûterait-il sur l'année, qu'est-ce que cela nous éviterait, et faut-il signer ? »`,
+          `Pas de cours cette fois : les calculs sont ceux du chapitre, à vous d'en trouver l'ordre. Les besoins de trésorerie de l'année sont ceux du tableau, avant toute mobilisation : la simulation les pose, sans détailler le budget qui les donne. Le découvert coûte ${pct(e.taux)} l'an.`,
         ];
       },
       tableau: (c) => {
-        const k = escompteChaqueTrimestre(c);
+        const e = escompteChaqueTrimestre(c);
+        const k = e.k;
         return {
-          titre: `Les créances ${dE(c.entreprise)}, trimestre par trimestre`,
-          colonnes: k.trimestres.map((t) => `${ordinal(t.numero)} trimestre`),
+          titre: `La trésorerie ${dE(k.f.entreprise)} en N + 1, trimestre par trimestre`,
+          colonnes: e.x.trimestres.map((t) => `${ordinal(t.trimestre)} trimestre`),
           lignes: [
-            { libelle: "Créances clients nées du trimestre", valeurs: k.trimestres.map((t) => eur(t.creancesNees)) },
-            { libelle: "Trésorerie nette en fin de trimestre, sans escompte", valeurs: k.trimestres.map((t) => eur(t.tresorerieSans)) },
+            { libelle: "Découvert moyen, les jours où le compte est débiteur", valeurs: e.x.trimestres.map((t) => eur(t.besoin)) },
+            { libelle: "Jours où le compte est débiteur", valeurs: e.x.trimestres.map((t) => qte(t.joursDeDecouvert)) },
+            { libelle: `Factures de ${k.ct.nom} émises (TTC)`, valeurs: e.x.trimestres.map(() => `${qte(JOURS_DU_TRIMESTRE / 30)} × ${eur(k.fct.ttc)}`) },
           ],
         };
       },
-      repere: () => "À rendre : ce que la banque escompterait sur l'année et ce que cela coûterait, ce que l'arène en fait, et votre réponse.",
+      repere: () => "À rendre : le coût de l'escompte sur l'année, le découvert qu'il éviterait, ce qu'il vaut trimestre par trimestre, et votre réponse.",
     },
     {
-      id: "cout",
+      id: "ce-que-coute-l-escompte",
       type: "montants",
-      titre: "Ce que coûterait l'escompte sur l'année",
+      titre: "Ce que coûterait l'escompte",
       notions: ["receivables_financing"],
       question: (c) => {
-        const k = escompteChaqueTrimestre(c);
-        return `Calculez le total escompté sur l'année (à chaque trimestre, ${pct(k.outils.discountMaxShare * 100)} des créances nées du trimestre), puis ce que cet escompte coûterait (total × ${pct(k.outils.discountAnnualRate * 100)} × ${k.duree} ÷ 360 : chaque avance dure un trimestre).`;
+        const k = escompteChaqueTrimestre(c).k;
+        return `Combien coûte l'escompte d'une facture de ${k.ct.nom}, jusqu'à son échéance ? Combien la banque aurait-elle d'effets escomptés au plus fort, toutes taxes comprises, et cela tient-il dans son plafond ? Combien coûterait l'escompte de toutes les factures de l'année ?`;
       },
       champs: (c) => {
-        const k = escompteChaqueTrimestre(c);
+        const e = escompteChaqueTrimestre(c);
+        const k = e.k;
+        const parAn = e.x.trimestres.length * (JOURS_DU_TRIMESTRE / 30);
         return [
+          { libelle: "Escompte d'une facture", attendu: e.x.parFacture, calcul: `${eur(k.fct.ttc)} × ${pct(k.b.escompte.taux)} × ${k.ct.delaiConvenu} ÷ ${JOURS_DE_L_ANNEE_BANCAIRE} = ${eur(e.x.parFacture)}` },
           {
-            libelle: "Total escompté sur l'année",
-            attendu: k.escompteDeLAnnee,
-            calcul: `${pct(k.outils.discountMaxShare * 100)} × (${k.trimestres.map((t) => eur(t.creancesNees)).join(" + ")}) = ${eur(k.escompteDeLAnnee)}`,
-            tolerance: 2,
+            libelle: "Effets escomptés au plus fort (TTC)",
+            attendu: e.x.encoursEscompte,
+            calcul: `à ${k.ct.delaiConvenu} jours, ${qte(e.x.encoursEscompte / k.fct.ttc)} factures attendent leur échéance à la fois : ${qte(e.x.encoursEscompte / k.fct.ttc)} × ${eur(k.fct.ttc)} = ${eur(e.x.encoursEscompte)}, ${e.x.dansLePlafond ? "sous" : "au-delà de"} ${eur(k.b.escompte.plafondTTC)}`,
           },
-          {
-            libelle: "Coût de l'escompte sur l'année",
-            attendu: k.coutDeLAnnee,
-            calcul: `${eur(k.escompteDeLAnnee)} × ${pct(k.outils.discountAnnualRate * 100)} × ${k.duree} ÷ 360 = ${eur(k.coutDeLAnnee)}`,
-            tolerance: 1,
-          },
+          { libelle: "Escompte de l'année", attendu: e.x.escompteDeLAnnee, calcul: `${qte(parAn)} × ${eur(e.x.parFacture)} = ${eur(e.x.escompteDeLAnnee)}` },
         ];
       },
       explication: (c) => {
-        const k = escompteChaqueTrimestre(c);
+        const e = escompteChaqueTrimestre(c);
         return [
-          `Chaque trimestre, la banque avance une part des créances du trimestre, et les clients la remboursent au trimestre suivant. Sur l'année, elle avancerait ${eur(k.escompteDeLAnnee)}, pour un coût de ${eur(k.coutDeLAnnee)}.`,
+          `La banque escompterait ${eur(e.x.escompteDeLAnnee)} d'intérêts sur l'année, dans son plafond : ${eur(e.x.encoursEscompte)} d'effets escomptés au plus fort. Chaque facture paie ses ${e.k.ct.delaiConvenu} jours d'escompte, que le compte de ${e.f.entreprise} en ait besoin ou non.`,
         ];
       },
     },
     {
-      id: "arene",
+      id: "le-decouvert-evite",
       type: "montants",
-      titre: "L'arène rejoue l'année escomptée",
+      titre: "Le découvert que l'escompte éviterait",
       notions: ["receivables_financing", "net_treasury"],
-      tableau: (c) => {
-        const k = escompteChaqueTrimestre(c);
-        const avecCessions = k.sans.cedeesDOffice + k.avec.cedeesDOffice > 0;
-        return {
-          titre: "L'année jouée, sans escompte et avec l'escompte à chaque trimestre",
-          colonnes: ["Sans escompte", "Escompte à chaque trimestre"],
-          lignes: [
-            { libelle: "Charges financières de l'année", valeurs: [eur(k.sans.chargesFinancieres), eur(k.avec.chargesFinancieres)] },
-            ...(avecCessions ? [{ libelle: "Créances cédées d'office par la banque", valeurs: [eur(k.sans.cedeesDOffice), eur(k.avec.cedeesDOffice)] }] : []),
-            { libelle: "Résultat de l'exercice", valeurs: [eur(k.sans.resultat), eur(k.avec.resultat)] },
-            { libelle: "Trésorerie nette de fin d'année", valeurs: [eur(k.sans.tresorerie), eur(k.avec.tresorerie)] },
-            { libelle: "Trésorerie nette la plus basse, en fin de trimestre", valeurs: [eur(k.sans.plusBasse), eur(k.avec.plusBasse)] },
-          ],
-        };
+      question: () => {
+        return `Combien coûterait le découvert de l'année sans escompte, au ${ordinal(TRIMESTRE_A_REBOURS)} trimestre puis au ${ordinal(TRIMESTRE_DU_CURSEUR)} ? De combien l'escompte de chaque facture coûterait-il plus, ou moins, que le découvert qu'il évite ? Positif s'il coûte plus.`;
       },
-      question: () =>
-        "Par rapport à l'année sans escompte, calculez le résultat perdu, la trésorerie de fin d'année gagnée, et de combien remonte la trésorerie la plus basse de l'année.",
       champs: (c) => {
-        const k = escompteChaqueTrimestre(c);
+        const e = escompteChaqueTrimestre(c);
+        const ligne = (n: number) => {
+          const t = e.t(n);
+          return {
+            libelle: `Découvert du ${ordinal(n)} trimestre`,
+            attendu: t.decouvert,
+            calcul: `${eur(t.besoin)} × ${pct(e.taux)} × ${t.joursDeDecouvert} ÷ ${JOURS_DE_L_ANNEE_BANCAIRE} = ${eur(t.decouvert)}`,
+          };
+        };
         return [
-          { libelle: "Résultat perdu", attendu: k.resultatPerdu, calcul: `${eur(k.sans.resultat)} − ${retranche(k.avec.resultat)} = ${eur(k.resultatPerdu)}`, tolerance: 1 },
-          { libelle: "Trésorerie de fin d'année gagnée", attendu: k.tresorerieGagnee, calcul: `${eur(k.avec.tresorerie)} − ${retranche(k.sans.tresorerie)} = ${eur(k.tresorerieGagnee)}`, tolerance: 1 },
-          { libelle: "Remontée de la trésorerie la plus basse", attendu: k.plusBasseRemontee, calcul: `${eur(k.avec.plusBasse)} − ${retranche(k.sans.plusBasse)} = ${eur(k.plusBasseRemontee)}`, tolerance: 1 },
+          ligne(TRIMESTRE_A_REBOURS),
+          ligne(TRIMESTRE_DU_CURSEUR),
+          {
+            libelle: "Surcoût de l'escompte de chaque facture",
+            attendu: e.x.surcout,
+            calcul: `${eur(e.x.escompteDeLAnnee)} − ${eur(e.x.decouvertEvite)} = ${eur(e.x.surcout)}`,
+          },
         ];
       },
       explication: (c) => {
-        const k = escompteChaqueTrimestre(c);
-        const dernier = k.trimestres.at(-1)!;
+        const e = escompteChaqueTrimestre(c);
         return [
-          `La trésorerie de fin d'année monte surtout de ce que la banque a avancé au dernier trimestre (${eur(dernier.escompte)}) : les avances des trimestres d'avant ont été remboursées par les clients, et il n'en reste que le coût. Le résultat, lui, baisse de ${eur(k.resultatPerdu)}.`,
-          ...(k.sans.cedeesDOffice > k.avec.cedeesDOffice
-            ? [
-                `Sans escompte, la banque cédait d'office ${eur(k.sans.cedeesDOffice - k.avec.cedeesDOffice)} de créances, faute de trésorerie : cet argent rentrait déjà, plus cher. C'est pourquoi la trésorerie de fin d'année gagne moins que la dernière avance.`,
-              ]
-            : []),
+          `Le découvert de toute l'année ne coûte que ${eur(e.x.decouvertEvite)}. Escompter chaque facture coûterait ${eur(e.x.surcout)} de plus : on paierait l'escompte aux trimestres où le compte est créditeur, pour un argent dont ${e.f.entreprise} n'a pas besoin.`,
+        ];
+      },
+    },
+    {
+      id: "le-quatrieme-trimestre",
+      type: "curseur",
+      titre: "Le trimestre où le découvert dure",
+      notions: ["receivables_financing"],
+      question: (c) => {
+        const e = escompteChaqueTrimestre(c);
+        const t = e.curseur;
+        return `Au ${ordinal(TRIMESTRE_DU_CURSEUR)} trimestre, le compte est à découvert de ${eur(t.besoin)} en moyenne. Pour le couvrir, il faut escompter ${qte(t.facturesNecessaires)} factures (${eur(t.escompteDuBesoin)}). Faites varier les jours où le compte est débiteur, de 0 à ${JOURS_DU_TRIMESTRE} : une droite donne le coût de cet escompte, l'autre celui du découvert. Placez le curseur sur le plus grand nombre de jours où le découvert coûte encore moins, puis validez.`;
+      },
+      grandeur: () => ({ libelle: "Jours où le compte est débiteur", unite: "jours" }),
+      sens: "plus-grande",
+      cible: (c) => ({ attendu: escompteChaqueTrimestre(c).joursOuLeDecouvertCouteMoins, min: 0, max: JOURS_DU_TRIMESTRE }),
+      zones: ["Le découvert coûte moins", "L'escompte coûte moins"],
+      rates: () => ({
+        dessous: "Le découvert coûte encore moins un peu plus loin : cherchez le plus grand nombre de jours.",
+        dessus: "À ce nombre de jours, le découvert coûte déjà plus que l'escompte.",
+      }),
+      montrer: "Montrer la limite",
+      lecture: (c, j) => {
+        const e = escompteChaqueTrimestre(c);
+        const decouvert = coutDuDecouvert(e.curseur.besoin, e.taux, j);
+        return [
+          { libelle: "Escompte des factures qui couvrent le besoin", montant: e.curseur.escompteDuBesoin },
+          { libelle: "Découvert de ces jours", montant: decouvert },
+          { libelle: "Ce que l'escompte coûte de plus", montant: auCentime(e.curseur.escompteDuBesoin - decouvert), fort: true },
+        ];
+      },
+      droites: (c) => {
+        const e = escompteChaqueTrimestre(c);
+        return {
+          produit: () => e.curseur.escompteDuBesoin,
+          cout: (j) => (e.curseur.besoin * e.taux * j) / JOURS_DE_L_ANNEE_BANCAIRE,
+          libelles: ["Escompte des factures qui couvrent le besoin", "Découvert de ces jours"],
+        };
+      },
+      explication: (c) => {
+        const e = escompteChaqueTrimestre(c);
+        const t = e.curseur;
+        return [
+          `Jusqu'à ${e.joursOuLeDecouvertCouteMoins} jours, le découvert coûte moins que l'escompte de ${qte(t.facturesNecessaires)} factures ; le ${ordinal(TRIMESTRE_DU_CURSEUR)} trimestre en compte ${t.joursDeDecouvert} : l'escompte gagne, ${eur(t.escompteDuBesoin)} contre ${eur(t.decouvert)}.`,
+          `Le seuil n'est pas les ${e.k.joursQuiValentLEscompte} jours du chapitre : on escompte des factures entières, ${eur(t.facturesNecessaires * e.k.fct.ttc)} pour un besoin de ${eur(t.besoin)}, et l'escompte de ce qui dépasse le besoin se paie aussi.`,
+        ];
+      },
+    },
+    {
+      id: "au-mieux",
+      type: "montants",
+      titre: "L'escompte là où il vaut",
+      notions: ["receivables_financing", "net_treasury"],
+      question: (c) => {
+        const e = escompteChaqueTrimestre(c);
+        return `Au ${ordinal(TRIMESTRE_A_REBOURS)} trimestre, il faudrait aussi ${qte(e.t(TRIMESTRE_A_REBOURS).facturesNecessaires)} factures pour couvrir le besoin. Combien de jours de découvert ce trimestre-là coûteraient-ils autant que leur escompte (au dixième) ? Dites alors ce que coûte ce trimestre au mieux, puis l'année au mieux, en choisissant pour chaque trimestre le moins cher de l'escompte et du découvert.`;
+      },
+      champs: (c) => {
+        const e = escompteChaqueTrimestre(c);
+        const t = e.t(TRIMESTRE_A_REBOURS);
+        const auMieux = (n: number) => (e.t(n).mieux === "escompte" ? e.t(n).escompteDuBesoin : e.t(n).decouvert);
+        return [
+          {
+            libelle: `Jours de découvert qui valent l'escompte, au ${ordinal(TRIMESTRE_A_REBOURS)} trimestre`,
+            attendu: e.joursARebours,
+            calcul: `${eur(t.escompteDuBesoin)} ÷ (${eur(t.besoin)} × ${pct(e.taux)} ÷ ${JOURS_DE_L_ANNEE_BANCAIRE}) = ${qte(e.joursARebours)} jours`,
+            tolerance: 0.1,
+          },
+          {
+            libelle: `Coût du ${ordinal(TRIMESTRE_A_REBOURS)} trimestre, au mieux`,
+            attendu: auMieux(TRIMESTRE_A_REBOURS),
+            calcul: `${t.joursDeDecouvert} jours, sous les ${qte(e.joursARebours)} : ${t.mieux === "escompte" ? "l'escompte" : "le découvert"}, ${eur(auMieux(TRIMESTRE_A_REBOURS))}`,
+          },
+          {
+            libelle: "Coût de l'année, au mieux",
+            attendu: e.x.auMieux,
+            calcul: `${e.x.trimestres
+              .filter((x) => x.mieux !== "rien")
+              .map((x) => eur(x.mieux === "escompte" ? x.escompteDuBesoin : x.decouvert))
+              .join(" + ")} = ${eur(e.x.auMieux)}`,
+          },
+        ];
+      },
+      explication: (c) => {
+        const e = escompteChaqueTrimestre(c);
+        return [
+          `Au mieux, l'année coûte ${eur(e.x.auMieux)} : le découvert au ${ordinal(TRIMESTRE_A_REBOURS)} trimestre, court, et l'escompte au ${ordinal(TRIMESTRE_DU_CURSEUR)}, où le découvert dure. C'est ${eur(e.economie)} de moins que l'escompte de chaque facture, et ${eur(auCentime(e.x.decouvertEvite - e.x.auMieux))} de moins que le découvert seul.`,
         ];
       },
     },
@@ -206,31 +274,34 @@ export const ESCOMPTER_CHAQUE_TRIMESTRE: Situation = {
       type: "choix",
       titre: "Votre réponse au dirigeant",
       notions: ["receivables_financing"],
-      question: () => "Quelle phrase envoyez-vous au dirigeant ?",
+      question: () => "Quelle réponse rendez-vous au dirigeant ?",
       options: (c) => {
-        const k = escompteChaqueTrimestre(c);
-        const perte = eur(k.resultatPerdu);
+        const e = escompteChaqueTrimestre(c);
+        const x = e.x;
+        const chiffres = `Escompter chaque facture coûte ${eur(x.escompteDeLAnnee)} ; le découvert de l'année, ${eur(x.decouvertEvite)} ; au mieux, ${eur(x.auMieux)}.`;
         return [
           {
-            texte: "Signons, pour éviter le découvert, en sachant ce que cela coûte",
-            juste: k.verdict === "evite-le-decouvert",
+            texte: `Escompter au ${ordinal(TRIMESTRE_DU_CURSEUR)} trimestre seulement, pas chaque trimestre`,
+            juste: e.verdict === "au-cas-par-cas",
             retour:
-              k.verdict === "evite-le-decouvert"
-                ? `Oui : sans escompte, la trésorerie descend à ${eur(k.sans.plusBasse)} ; avec, la plus basse est de ${eur(k.avec.plusBasse)}. Le prix est de ${perte} de résultat sur l'année : c'est une assurance contre le découvert, pas un gain.`
-                : `Non : la trésorerie n'a jamais été à découvert cette année (la plus basse : ${eur(k.sans.plusBasse)}). Il n'y avait rien à éviter.`,
+              e.verdict === "au-cas-par-cas"
+                ? `Oui. ${chiffres} L'escompte ne vaut que là où le découvert dure : au-delà de ${e.joursOuLeDecouvertCouteMoins} jours au ${ordinal(TRIMESTRE_DU_CURSEUR)} trimestre. Signer pour toute l'année, c'est payer ${eur(e.economie)} de plus pour de l'argent dont ${e.f.entreprise} n'a pas toujours besoin.`
+                : `Non. ${chiffres}`,
           },
           {
-            texte: "Ne signons pas : notre trésorerie n'en a pas besoin",
-            juste: k.verdict === "inutile",
-            retour:
-              k.verdict === "inutile"
-                ? `Oui : la trésorerie n'a jamais été à découvert cette année (la plus basse : ${eur(k.sans.plusBasse)}). L'escompte coûterait ${perte} de résultat pour avancer de l'argent dont l'entreprise n'a pas besoin.`
-                : `Non : sans escompte, la trésorerie descend à ${eur(k.sans.plusBasse)}. L'escompte l'évite, pour ${perte} de résultat.`,
-          },
-          {
-            texte: "Signons : la trésorerie de fin d'année monte, et c'est de l'argent gagné pour nous",
+            texte: `Signer : l'escompte à ${pct(e.k.b.escompte.taux)} coûte moins que le découvert à ${pct(e.taux)}`,
             juste: false,
-            retour: `Non : la trésorerie monte de ${eur(k.tresorerieGagnee)}, mais le résultat baisse de ${perte}. L'escompte avance l'argent des clients, il ne le crée pas.`,
+            retour: `Non : c'est comparer des taux sans leurs jours. L'escompte paie ses ${e.k.ct.delaiConvenu} jours sur chaque facture, le découvert seulement les jours où le compte est débiteur. ${chiffres}`,
+          },
+          {
+            texte: `Ne rien escompter : le découvert de l'année ne coûte que ${eur(x.decouvertEvite)}`,
+            juste: e.verdict === "jamais",
+            retour: e.verdict === "jamais" ? `Oui. ${chiffres}` : `Non : c'est oublier le ${ordinal(TRIMESTRE_DU_CURSEUR)} trimestre, où le découvert dure ${e.curseur.joursDeDecouvert} jours et coûte plus que l'escompte. ${chiffres}`,
+          },
+          {
+            texte: "Signer : plus de découvert, et l'argent des clients rentre plus tôt",
+            juste: e.verdict === "chaque-trimestre",
+            retour: e.verdict === "chaque-trimestre" ? `Oui. ${chiffres}` : `Non : l'escompte ne crée pas d'argent, il l'avance contre un coût. ${chiffres}`,
           },
         ];
       },
