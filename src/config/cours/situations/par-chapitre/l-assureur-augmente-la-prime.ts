@@ -1,68 +1,70 @@
 import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
 import type { Cas } from "../../cas";
-import { assurance, resultatDeLActivite } from "../../chapitres/s-assurer-contre-les-aleas";
-import { rejouerAvec, surLAnnee } from "../../gestion-de-la-pme";
+import { ENTREPRISES_DE_L_ASSURANCE, assuranceDeNova } from "../../chapitres/s-assurer-contre-les-aleas";
+import { choisirUneAssurance, primePlafond } from "../../monde/capacite";
 import type { Situation } from "../types";
 
 /**
- * CAS PRATIQUE DU CHAPITRE « S'ASSURER CONTRE LES ALÉAS » : L'ASSUREUR AUGMENTE LA PRIME
- * (BTS GPME, gestion des risques, palier 3).
+ * CAS PRATIQUE DU CHAPITRE « S'ASSURER CONTRE LES ALÉAS » : L'ASSUREUR AUGMENTE LA PRIME (BTS GPME,
+ * gestion des risques, palier 3).
  *
- * L'assureur annonce une hausse de la prime au renouvellement. La gérante demande s'il faut
- * renouveler à ce prix, ou garder le risque. L'élève refait les calculs du chapitre sur la prime
- * augmentée (la prime de l'année, ce que l'arène en fait au résultat), cherche la prime au-delà de
- * laquelle une année de prime coûterait plus que le pire sinistre couvert, et rend sa réponse.
+ * Au renouvellement du 1er octobre, l'assureur augmente de 20 % la prime de la Basique, la formule de
+ * NOVA. La gérante demande s'il faut renouveler à ce prix. L'élève refait la règle du chapitre sur la
+ * prime augmentée (le pire reste à charge s'encaisse-t-il toujours ? la Basique reste-t-elle la moins
+ * chère en moyenne des options qui s'encaissent ?), cherche À REBOURS la prime au-delà de laquelle
+ * l'Étendue passerait devant, et rend une réponse qui demande un jugement : la hausse dépasse
+ * l'espérance, comme la prime d'avant, et ce n'est pas ce qui décide. Un curseur sur la prime d'un
+ * trimestre montre, avant le calcul, où le coût moyen de la Basique rattrape celui de l'Étendue.
  *
- * Le cas est neuf par sa question : le chapitre juge une prime donnée, le cas cherche jusqu'où
- * elle peut monter. La formule, l'espérance des sinistres et le pire sinistre sont ceux du
- * chapitre (`assurance`) ; l'année à la prime augmentée est la même année rejouée, la prime de la
- * formule changée dans le scénario (`rejouerAvec`).
+ * Comme son chapitre, le cas se joue dans la simulation du cours (src/config/cours/monde) : ses
+ * chiffres sont ceux d'`assuranceDeNova` et de `primePlafond`, sur la fiche de NOVA. La hausse est une
+ * hypothèse de l'histoire. L'ancienne règle (« une année de prime sous le pire sinistre ») a disparu :
+ * elle disait oui à toutes les formules.
  */
 
 /** La hausse annoncée au renouvellement : un cinquième de la prime. Une hypothèse du cours. */
 export const HAUSSE_DE_LA_PRIME = 0.2;
 
-/** Un montant à la française, avec le signe moins typographique ; retranché, un négatif va entre parenthèses. */
+/** Les bornes du curseur de la prime d'un trimestre, en euros. */
+export const PRIME_DU_CURSEUR = { min: 1_500, max: 3_000 } as const;
+
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
+const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const pct = (t: number) => `${qte(Math.round(t * 10_000) / 100)} %`;
+const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
-export type Verdict = "renouveler" | "garder";
+export type Verdict = "renouveler" | "changer" | "ne-plus-s-assurer";
 
-/** La prime augmentée, l'année rejouée à ce prix, et la prime au-delà de laquelle le pire coûte moins. */
-export function primeAugmentee(c: Cas) {
-  const a = assurance(c);
-  const nouvellePrime = auCentime(a.formule.prime * (1 + HAUSSE_DE_LA_PRIME));
-  const nouvellePrimeDeLAnnee = auCentime(nouvellePrime * a.trimestres);
-  const rejouee = rejouerAvec(
-    c.code,
-    `assurance-${a.formule.code}-prime-augmentee`,
-    (_t, d) => ({ ...d, insurance: a.formule.code }),
-    (s) => ({
-      ...s,
-      insurance: s.insurance && {
-        ...s.insurance,
-        ...(s.insurance.formulas
-          ? { formulas: s.insurance.formulas.map((f) => (f.code === a.formule.code ? { ...f, premiumPerRound: nouvellePrime } : f)) }
-          : { premiumPerRound: nouvellePrime }),
-      },
-    }),
-  );
-  const resultatAugmente = resultatDeLActivite(rejouee);
-  const primeMaximale = auCentime(a.pire.cout / a.trimestres);
-  const verdict: Verdict = a.pire.cout > nouvellePrimeDeLAnnee ? "renouveler" : "garder";
+/** La prime augmentée, la règle refaite à ce prix, la prime plafond et la réponse. */
+export function primeAugmentee(c: Pick<Cas, "code">) {
+  const a = assuranceDeNova(c);
+  const b = a.basique;
+  const nouvellePrime = auCentime(b.primeParTrimestre * (1 + HAUSSE_DE_LA_PRIME));
+  const nouvellePrimeDeLAnnee = auCentime(nouvellePrime * 4);
+  const choix = choisirUneAssurance(a.f, { primes: { basique: nouvellePrime } });
+  const renouvelee = choix.options.find((o) => o.choix === "basique")!;
+  const plafond = primePlafond(a.f, "basique");
+  const rivale = choix.options.find((o) => o.choix === plafond.rivale)!;
+  const verdict: Verdict = choix.retenue === "basique" ? "renouveler" : choix.retenue === "sans-assurance" ? "ne-plus-s-assurer" : "changer";
+  // Le curseur : la plus grande prime d'un trimestre (à l'euro) où la Basique coûte en moyenne au plus autant que sa rivale.
+  const primeAuCurseur = Math.floor((rivale.coutMoyen - b.resteEspere) / 4 + 1e-9);
   return {
     a,
     nouvellePrime,
     nouvellePrimeDeLAnnee,
-    hausseDeLAnnee: auCentime(nouvellePrimeDeLAnnee - a.primeDeLAnnee),
-    primePayee: surLAnnee(rejouee, (r) => r.insurance?.premium ?? 0),
-    resultatAugmente,
-    ecartAvecLaHausse: resultatAugmente - a.resultatSans,
-    coutDeLaHausse: resultatAugmente - a.resultatAssure,
-    primeMaximale,
+    hausseDeLAnnee: auCentime(nouvellePrimeDeLAnnee - b.prime),
+    coutMoyenRenouvele: renouvelee.coutMoyen,
+    chargementRenouvele: renouvelee.chargement,
+    seEncaisseToujours: renouvelee.seEncaisse,
+    resteApresLePire: auCentime(a.absorption.capacite - renouvelee.pireResteACharge),
+    rivale,
+    primeDeLAnneePlafond: plafond.primeDeLAnnee!,
+    primeParTrimestrePlafond: plafond.primeParTrimestre!,
+    /** La hausse de la prime d'un trimestre que la Basique supporte encore, en % de la prime actuelle. */
+    hausseSupportable: auCentime((plafond.primeParTrimestre! / b.primeParTrimestre - 1) * 100),
+    primeAuCurseur,
+    retenue: choix.retenue,
     verdict,
   };
 }
@@ -76,118 +78,176 @@ export const L_ASSUREUR_AUGMENTE_LA_PRIME: Situation = {
   commanditaire: "La gérante",
   titre: "L'assureur augmente la prime",
   accroche:
-    "Au renouvellement, l'assureur augmente la prime. La gérante veut savoir s'il faut renouveler à ce prix : ce que la hausse coûte, jusqu'où la prime peut monter, et la réponse à lui rendre.",
+    "Au renouvellement, l'assureur augmente la prime de la Basique. La gérante veut savoir s'il faut renouveler à ce prix : ce que la hausse coûte, jusqu'où la prime peut monter avant qu'une autre formule passe devant, et la réponse à lui rendre.",
   objectifs: [
-    "Calculer une prime augmentée, sur le trimestre et sur l'année",
-    "Lire ce qu'une hausse de prime coûte au résultat",
-    "Calculer la prime au-delà de laquelle mieux vaut garder le risque",
-    "Répondre à la gérante, chiffre à l'appui",
+    "Calculer une prime augmentée et le coût moyen de l'année qu'elle donne",
+    "Vérifier que le pire reste à charge s'encaisse toujours",
+    "Retrouver à rebours la prime au-delà de laquelle une autre formule devient la meilleure",
+    "Répondre à la gérante, chiffres à l'appui, sans juger sur la moyenne seule",
   ],
   libre: false,
+  entreprises: {
+    codes: ENTREPRISES_DE_L_ASSURANCE,
+    pourquoi: "ce cas reprend le chapitre « S'assurer contre les aléas », qui se joue dans la simulation du cours chez NOVA.",
+  },
   etapes: [
     {
       id: "demande",
       type: "lecture",
       titre: "La demande de la gérante",
-      texte: (c) => {
-        const p = primeAugmentee(c);
-        return [
-          `« L'assureur nous écrit : au renouvellement, la prime de la formule « ${p.a.formule.nom} » augmente de ${pct(HAUSSE_DE_LA_PRIME * 100)}. Avant de signer, dites-moi ce que cette hausse coûte à ${c.entreprise} sur l'année, jusqu'où la prime peut monter avant que l'assurance ne vaille plus la peine, et s'il faut renouveler. »`,
-          "Pas de cours cette fois : vous avez le contrat, et les chiffres des sinistres que le chapitre a calculés. L'arène a rejoué l'année avec la prime augmentée.",
-        ];
-      },
       tableau: (c) => {
         const p = primeAugmentee(c);
+        const a = p.a;
         return {
-          titre: `Le contrat ${dE(c.entreprise)}, au renouvellement`,
+          titre: `L'assurance ${dE(a.f.entreprise)}, au renouvellement du 1er octobre`,
           colonnes: ["Montant"],
           lignes: [
-            { libelle: `Prime actuelle d'un trimestre, formule « ${p.a.formule.nom} »`, valeurs: [eur(p.a.formule.prime)] },
-            { libelle: "Hausse annoncée", valeurs: [pct(HAUSSE_DE_LA_PRIME * 100)] },
-            { libelle: "Trimestres dans l'année", valeurs: [String(p.a.trimestres)] },
-            { libelle: "Espérance des sinistres couverts, sur l'année", valeurs: [eur(p.a.esperance)] },
-            { libelle: `Sinistre couvert le plus lourd : « ${p.a.pire.nom} »`, valeurs: [eur(p.a.pire.cout)] },
+            { libelle: `Prime actuelle d'un trimestre, ${a.basique.nom}`, valeurs: [eur(a.basique.primeParTrimestre)] },
+            { libelle: "Hausse annoncée", valeurs: [pct(HAUSSE_DE_LA_PRIME)] },
+            { libelle: "Espérance des sinistres de l'année", valeurs: [eur(a.esperance)] },
+            { libelle: `Remboursé en moyenne par la ${a.basique.nom} : sa prime pure`, valeurs: [eur(a.basique.primePure)] },
+            { libelle: `Pire reste à charge avec la ${a.basique.nom}`, valeurs: [eur(a.basique.pireResteACharge)] },
+            { libelle: `Coût moyen de l'année avec l'${a.etendue.nom}`, valeurs: [eur(a.etendue.coutMoyen)] },
+            { libelle: `Coût moyen de l'année sans assurance (pire : ${eur(a.sans.pireResteACharge)})`, valeurs: [eur(a.sans.coutMoyen)] },
+            { libelle: "Capacité d'absorption", valeurs: [eur(a.absorption.capacite)] },
           ],
         };
       },
+      texte: (c) => {
+        const p = primeAugmentee(c);
+        const a = p.a;
+        return [
+          `« L'assureur nous écrit : au renouvellement, la prime de la ${a.basique.nom} augmente de ${pct(HAUSSE_DE_LA_PRIME)}. Avant de signer, dites-moi ce que cette hausse change pour ${a.f.entreprise}, jusqu'où la prime pourrait monter avant qu'une autre formule devienne la meilleure, et s'il faut renouveler. »`,
+          "Pas de cours cette fois : vous avez le contrat et les chiffres que le chapitre a calculés, à vous d'en trouver l'ordre. La hausse ne change ni les aléas, ni les franchises, ni ce que l'entreprise peut encaisser.",
+        ];
+      },
       repere: () =>
-        "À rendre : la prime renouvelée et ce qu'elle coûte de plus, ce que l'arène en fait au résultat, la prime au-delà de laquelle mieux vaut garder le risque, et votre réponse.",
+        "À rendre : la prime renouvelée et le coût moyen qu'elle donne, ce que la hausse change au pire reste à charge, la prime au-delà de laquelle une autre formule passe devant, et votre réponse.",
     },
     {
       id: "prime",
       type: "montants",
       titre: "La prime renouvelée",
       notions: ["fixed_costs"],
-      question: () =>
-        "Calculez la prime d'un trimestre après la hausse, la prime de l'année à ce prix, puis ce que l'année de prime coûte de plus qu'aujourd'hui.",
+      question: () => "Calculez la prime d'un trimestre après la hausse, la prime de l'année à ce prix, puis le coût moyen de l'année avec la formule renouvelée.",
       champs: (c) => {
         const p = primeAugmentee(c);
+        const b = p.a.basique;
         return [
-          { libelle: "Prime d'un trimestre après la hausse", attendu: p.nouvellePrime, calcul: `${eur(p.a.formule.prime)} × (1 + ${pct(HAUSSE_DE_LA_PRIME * 100)}) = ${eur(p.nouvellePrime)}`, tolerance: 1 },
-          { libelle: "Prime de l'année après la hausse", attendu: p.nouvellePrimeDeLAnnee, calcul: `${eur(p.nouvellePrime)} × ${p.a.trimestres} = ${eur(p.nouvellePrimeDeLAnnee)}`, tolerance: 1 },
-          { libelle: "Hausse de la prime sur l'année", attendu: p.hausseDeLAnnee, calcul: `${eur(p.nouvellePrimeDeLAnnee)} − ${eur(p.a.primeDeLAnnee)} = ${eur(p.hausseDeLAnnee)}`, tolerance: 1 },
+          { libelle: "Prime d'un trimestre après la hausse", attendu: p.nouvellePrime, calcul: `${eur(b.primeParTrimestre)} × (1 + ${pct(HAUSSE_DE_LA_PRIME)}) = ${eur(p.nouvellePrime)}` },
+          { libelle: "Prime de l'année après la hausse", attendu: p.nouvellePrimeDeLAnnee, calcul: `${eur(p.nouvellePrime)} × 4 = ${eur(p.nouvellePrimeDeLAnnee)}` },
+          {
+            libelle: "Coût moyen de l'année, prime augmentée",
+            attendu: p.coutMoyenRenouvele,
+            calcul: `${eur(p.nouvellePrimeDeLAnnee)} + (${eur(p.a.esperance)} − ${eur(b.primePure)}) = ${eur(p.nouvellePrimeDeLAnnee)} + ${eur(b.resteEspere)} = ${eur(p.coutMoyenRenouvele)}`,
+          },
         ];
       },
       explication: (c) => {
         const p = primeAugmentee(c);
-        return [`Renouvelée, la formule coûterait ${eur(p.nouvellePrimeDeLAnnee)} par an, ${eur(p.hausseDeLAnnee)} de plus. L'espérance des sinistres, elle, ne bouge pas : ${eur(p.a.esperance)} par an.`];
+        return [
+          `Renouvelée, la formule coûterait ${eur(p.nouvellePrimeDeLAnnee)} de prime par an, ${eur(p.hausseDeLAnnee)} de plus, et ${eur(p.coutMoyenRenouvele)} en moyenne. La hausse ne passe que dans le chargement : la formule rembourse toujours ${eur(p.a.basique.primePure)} en moyenne, et l'espérance des sinistres ne bouge pas.`,
+        ];
       },
     },
     {
-      id: "arene",
+      id: "le-pire-ne-bouge-pas",
       type: "montants",
-      titre: "L'arène rejoue l'année",
-      notions: ["fixed_costs", "income_statement"],
-      tableau: (c) => {
+      titre: "Ce que la hausse ne change pas",
+      notions: ["net_treasury"],
+      question: (c) => {
         const p = primeAugmentee(c);
-        return {
-          titre: "L'année du cours, selon la prime",
-          colonnes: ["Sans assurance", "Prime actuelle", "Prime augmentée"],
-          lignes: [
-            { libelle: "Prime payée sur l'année", valeurs: [eur(0), eur(p.a.primeDeLAnnee), eur(p.primePayee)] },
-            { libelle: "Résultat de l'activité sur l'année", valeurs: [eur(p.a.resultatSans), eur(p.a.resultatAssure), eur(p.resultatAugmente)] },
-          ],
-        };
+        return `La hausse change-t-elle le pire que la formule laisse à ${p.a.f.entreprise} ? Donnez le pire reste à charge avec la formule renouvelée, puis la capacité d'absorption qui resterait après ce sinistre.`;
       },
-      question: () =>
-        "L'arène a rejoué l'année avec la prime augmentée, tout le reste identique. Calculez l'écart de résultat de l'activité par rapport à l'année sans assurance, puis ce que la hausse coûte au résultat par rapport à la prime actuelle.",
       champs: (c) => {
         const p = primeAugmentee(c);
+        const a = p.a;
         return [
-          { libelle: "Écart de résultat, prime augmentée", attendu: p.ecartAvecLaHausse, calcul: `${eur(p.resultatAugmente)} − ${retranche(p.a.resultatSans)} = ${eur(p.ecartAvecLaHausse)}`, tolerance: 1 },
-          { libelle: "Ce que la hausse coûte au résultat", attendu: p.coutDeLaHausse, calcul: `${eur(p.resultatAugmente)} − ${retranche(p.a.resultatAssure)} = ${eur(p.coutDeLaHausse)}`, tolerance: 1 },
+          { libelle: "Pire reste à charge, formule renouvelée", attendu: a.basique.pireResteACharge, calcul: `la ${a.pireDeLaBasique}, que la formule ne couvre pas : ${eur(a.basique.pireResteACharge)}, comme avant la hausse` },
+          { libelle: "Capacité qui reste après ce sinistre", attendu: p.resteApresLePire, calcul: `${eur(a.absorption.capacite)} − ${eur(a.basique.pireResteACharge)} = ${eur(p.resteApresLePire)}` },
         ];
       },
       explication: (c) => {
         const p = primeAugmentee(c);
         return [
-          -p.coutDeLaHausse === p.hausseDeLAnnee && p.a.trimestresNeutralises === 0
-            ? `La hausse retire au résultat exactement ce qu'elle ajoute à la prime, ${eur(p.hausseDeLAnnee)} : la prime est une charge fixe, et aucun aléa couvert n'est tombé dans l'année.`
-            : `La hausse retire ${eur(-p.coutDeLaHausse)} au résultat, pour ${eur(p.hausseDeLAnnee)} de prime en plus.`,
+          `Une prime plus chère ne protège ni plus ni moins : le pire reste ${eur(p.a.basique.pireResteACharge)}, et il s'encaisse encore, avec ${eur(p.resteApresLePire)} de marge. Le premier test de la règle tient ; reste le second, le coût moyen face aux autres options qui s'encaissent.`,
+        ];
+      },
+    },
+    {
+      id: "le-plafond-au-curseur",
+      type: "curseur",
+      titre: "Jusqu'où la prime peut monter",
+      notions: ["fixed_costs"],
+      question: (c) => {
+        const p = primeAugmentee(c);
+        return `Faites monter la prime d'un trimestre de la ${p.a.basique.nom} de ${eur(PRIME_DU_CURSEUR.min)} à ${eur(PRIME_DU_CURSEUR.max)}. Une droite donne son coût moyen de l'année, l'autre celui de l'${p.rivale.nom}, la moins chère des autres options qui s'encaissent. Placez le curseur sur la plus haute prime où la ${p.a.basique.nom} ne coûte pas plus en moyenne, puis validez.`;
+      },
+      grandeur: () => ({ libelle: "Prime d'un trimestre", unite: "€" }),
+      sens: "plus-grande",
+      cible: (c) => ({ attendu: primeAugmentee(c).primeAuCurseur, min: PRIME_DU_CURSEUR.min, max: PRIME_DU_CURSEUR.max }),
+      zones: ["La Basique reste la meilleure", "L'Étendue passe devant"],
+      rates: () => ({
+        dessous: "La prime peut encore monter sans que la formule cesse d'être la meilleure : cherchez la plus haute.",
+        dessus: "À cette prime, la formule coûte en moyenne plus que sa rivale.",
+      }),
+      montrer: "Montrer le plafond",
+      lecture: (c, q) => {
+        const p = primeAugmentee(c);
+        const cout = auCentime(q * 4 + p.a.basique.resteEspere);
+        return [
+          { libelle: "Prime de l'année", montant: q * 4 },
+          { libelle: "Coût moyen de l'année avec la Basique", montant: cout },
+          { libelle: "Coût moyen de l'année avec l'Étendue", montant: p.rivale.coutMoyen },
+          { libelle: "Avance de la Basique sur l'Étendue", montant: auCentime(p.rivale.coutMoyen - cout), fort: true },
+        ];
+      },
+      droites: (c) => {
+        const p = primeAugmentee(c);
+        return {
+          produit: () => p.rivale.coutMoyen,
+          cout: (q) => q * 4 + p.a.basique.resteEspere,
+          libelles: ["Coût moyen avec l'Étendue", "Coût moyen avec la Basique"],
+        };
+      },
+      explication: (c) => {
+        const p = primeAugmentee(c);
+        return [
+          `Jusqu'à ${eur(p.primeAuCurseur)} par trimestre, la ${p.a.basique.nom} reste la moins chère des options qui s'encaissent. La prime augmentée, ${eur(p.nouvellePrime)}, en est loin. L'étape suivante retrouve ce plafond au centime, par le calcul.`,
         ];
       },
     },
     {
       id: "plafond",
       type: "montants",
-      titre: "Jusqu'où la prime peut monter",
+      titre: "La prime plafond, à rebours",
       notions: ["fixed_costs"],
       question: (c) => {
         const p = primeAugmentee(c);
-        return `Au-delà de quelle prime d'un trimestre une année de prime coûterait-elle plus que le sinistre couvert le plus lourd (${eur(p.a.pire.cout)}) ? Calculez-la, au centime.`;
+        return `Retrouvez à rebours la prime de l'année au-delà de laquelle l'${p.rivale.nom} deviendrait la meilleure option, puis la prime d'un trimestre correspondante, et la hausse que la ${p.a.basique.nom} pourrait encore supporter, en % de sa prime actuelle, à 0,1 point près.`;
       },
       champs: (c) => {
         const p = primeAugmentee(c);
-        return [{ libelle: "Prime maximale d'un trimestre", attendu: p.primeMaximale, calcul: `${eur(p.a.pire.cout)} ÷ ${p.a.trimestres} = ${eur(p.primeMaximale)}`, tolerance: 1 }];
+        const b = p.a.basique;
+        return [
+          {
+            libelle: "Prime plafond de l'année",
+            attendu: p.primeDeLAnneePlafond,
+            calcul: `coût moyen de l'${p.rivale.nom} − reste à charge espéré de la ${b.nom} = ${eur(p.rivale.coutMoyen)} − ${eur(b.resteEspere)} = ${eur(p.primeDeLAnneePlafond)}`,
+          },
+          { libelle: "Prime plafond d'un trimestre", attendu: p.primeParTrimestrePlafond, calcul: `${eur(p.primeDeLAnneePlafond)} ÷ 4 = ${eur(p.primeParTrimestrePlafond)}` },
+          {
+            libelle: "Hausse que la formule supporte encore, en %",
+            attendu: p.hausseSupportable,
+            calcul: `(${eur(p.primeParTrimestrePlafond)} ÷ ${eur(b.primeParTrimestre)} − 1) × 100 = ${qte(p.hausseSupportable)} %`,
+            tolerance: 0.1,
+          },
+        ];
       },
       explication: (c) => {
         const p = primeAugmentee(c);
         return [
-          p.nouvellePrime < p.primeMaximale
-            ? `La prime augmentée (${eur(p.nouvellePrime)}) reste sous ce plafond : une année de prime coûte encore moins que le pire sinistre.`
-            : p.a.formule.prime < p.primeMaximale
-              ? `La prime actuelle (${eur(p.a.formule.prime)}) était sous ce plafond ; la prime augmentée (${eur(p.nouvellePrime)}) le dépasse.`
-              : `Même la prime actuelle (${eur(p.a.formule.prime)}) dépassait ce plafond : une année de prime coûtait déjà plus que le pire sinistre.`,
+          `Tant que la prime de l'année reste sous ${eur(p.primeDeLAnneePlafond)}, soit ${eur(p.primeParTrimestrePlafond)} par trimestre (${qte(p.hausseSupportable)} % de hausse), la ${p.a.basique.nom} reste la meilleure option ; un euro au-dessus, l'${p.rivale.nom} passe devant. La hausse annoncée, ${pct(HAUSSE_DE_LA_PRIME)}, laisse de la marge.`,
         ];
       },
     },
@@ -198,27 +258,34 @@ export const L_ASSUREUR_AUGMENTE_LA_PRIME: Situation = {
       question: () => "Quelle phrase envoyez-vous à la gérante ?",
       options: (c) => {
         const p = primeAugmentee(c);
+        const a = p.a;
+        const b = a.basique;
         return [
           {
-            texte: "Renouveler : même augmentée, une année de prime coûte moins que le pire sinistre",
+            texte: `Renouveler : même augmentée, la ${b.nom} reste la meilleure option qui s'encaisse`,
             juste: p.verdict === "renouveler",
             retour:
               p.verdict === "renouveler"
-                ? `Oui : ${eur(p.nouvellePrimeDeLAnnee)} de prime par an, contre ${eur(p.a.pire.cout)} pour le pire sinistre couvert. La hausse coûte ${eur(p.hausseDeLAnnee)}, mais l'assurance protège encore d'un coup plus lourd qu'elle.`
-                : `Non : à ${eur(p.nouvellePrimeDeLAnnee)} par an, une année de prime coûte plus que le pire sinistre couvert (${eur(p.a.pire.cout)}).`,
+                ? `Oui : son pire reste à charge (${eur(b.pireResteACharge)}) s'encaisse toujours, et elle coûte ${eur(p.coutMoyenRenouvele)} en moyenne, contre ${eur(p.rivale.coutMoyen)} pour l'${p.rivale.nom}. La hausse coûte ${eur(p.hausseDeLAnnee)} par an ; la prime pourrait monter jusqu'à ${eur(p.primeParTrimestrePlafond)} par trimestre avant que l'${p.rivale.nom} passe devant.`
+                : `Non : à ce prix, la ${b.nom} coûte en moyenne ${eur(p.coutMoyenRenouvele)}, plus que l'${p.rivale.nom} (${eur(p.rivale.coutMoyen)}).`,
           },
           {
-            texte: "Ne pas renouveler : augmentée, une année de prime dépasse le pire sinistre",
-            juste: p.verdict === "garder",
+            texte: `Passer à l'${a.etendue.nom} : la ${b.nom} augmente, l'${a.etendue.nom} non`,
+            juste: p.verdict === "changer",
             retour:
-              p.verdict === "garder"
-                ? `Oui : ${eur(p.nouvellePrimeDeLAnnee)} de prime par an, quand le pire sinistre couvert coûterait ${eur(p.a.pire.cout)}. ${c.entreprise} peut garder ce risque, pour moins cher, et le prévenir.`
-                : `Non : le pire sinistre couvert (${eur(p.a.pire.cout)}) coûte encore plus qu'une année de prime augmentée (${eur(p.nouvellePrimeDeLAnnee)}).`,
+              p.verdict === "changer"
+                ? `Oui : à ce prix, l'${a.etendue.nom} coûte moins en moyenne.`
+                : `Non : l'${a.etendue.nom} coûte en moyenne ${eur(a.etendue.coutMoyen)}, toujours plus que la ${b.nom} augmentée (${eur(p.coutMoyenRenouvele)}). Une hausse ne se juge pas seule : elle se compare aux autres options.`,
           },
           {
-            texte: "Ne pas renouveler : la prime augmentée dépasse de loin l'espérance des sinistres attendus",
+            texte: "Ne plus s'assurer : garder tous les risques coûte le moins en moyenne",
+            juste: p.verdict === "ne-plus-s-assurer",
+            retour: `Non : garder les risques coûte en moyenne ${eur(a.sans.coutMoyen)}, mais un incendie coûterait ${eur(a.sans.pireResteACharge)} d'un coup, plus que les ${eur(a.absorption.capacite)} que ${a.f.entreprise} peut encaisser.`,
+          },
+          {
+            texte: "Ne pas renouveler : la prime augmentée dépasse de loin ce que la formule rembourse en moyenne",
             juste: false,
-            retour: `Non : ${p.a.esperance < p.a.primeDeLAnnee ? `c'était déjà vrai avant la hausse (${eur(p.a.esperance)} d'espérance pour ${eur(p.a.primeDeLAnnee)} de prime)` : `l'espérance (${eur(p.a.esperance)}) n'est pas ce qui décide`}. Une assurance ne se juge pas sur la moyenne : on la prend contre un sinistre qu'on ne pourrait pas encaisser.`,
+            retour: `Non : c'était déjà vrai avant la hausse (${eur(b.primePure)} remboursés en moyenne pour ${eur(b.prime)} de prime). Une assurance coûte presque toujours plus qu'elle ne rembourse : on la prend contre un sinistre qu'on ne pourrait pas encaisser, pas pour gagner en moyenne.`,
           },
         ];
       },

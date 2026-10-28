@@ -1,78 +1,64 @@
 import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
-import { RETABLISSEMENT_PAR_ENTRETIEN } from "../../../../engine/production";
-import { soldUnits } from "../../../../engine/simulation/runGame";
-import { scenarioByCode } from "../../../scenarios/registry";
 import type { Cas } from "../../cas";
-import { ENTRETENIR_L_OUTIL, entretienDeLOutil, sensibiliteDesRebuts } from "../../chapitres/entretenir-l-outil";
-import { anneeDeReference, rejouerAvec, surLAnnee } from "../../gestion-de-la-pme";
+import { ENTRETENIR_L_OUTIL, entretienDeLOutil } from "../../chapitres/entretenir-l-outil";
+import { defautsEnPlusDeLEntretien, entretienAuSeuil as entretienAuSeuilDuModele } from "../../monde/capacite";
 import type { Situation } from "../types";
 
-/** Un montant à la française, avec le signe moins typographique ; retranché, un négatif va entre parenthèses. */
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
 /**
  * CAS PRATIQUE DU CHAPITRE « ENTRETENIR L'OUTIL » : ENTRETENIR AU SEUIL (BTS GPME, palier 3).
  *
- * Le chapitre a montré qu'un trimestre sans entretien se paie ensuite, et qu'il existe un budget
- * sous lequel l'outil s'use. Le gérant en tire une idée : entretenir juste à ce seuil, toute
- * l'année, au lieu du budget de référence. L'élève calcule le budget au seuil et ce qu'il fait
- * économiser, puis lit ce que l'arène en fait.
+ * LE CAS JOUE DANS LE MONDE DU COURS, comme son chapitre : la ligne de montage de NOVA en N + 1
+ * (monde/nova-capacite.ts, monde/capacite.ts, `entretienAuSeuil`). Le gérant a retenu du chapitre
+ * que la ligne ne s'use que sous 3 000 € : il propose d'entretenir au seuil chaque trimestre. La
+ * ligne tient, aucune vente ne se perd par l'outil, 6 000 € s'économisent ; mais une ligne
+ * entretenue sous la référence monte plus de défauts, et ils coûtent plus que toute l'économie.
+ * L'élève chiffre l'économie, puis les défauts, cherche au curseur le budget où l'économie paierait
+ * les défauts, et retrouve à rebours combien de défauts l'économie pourrait payer.
  *
- * Le cas est neuf par sa question : le chapitre saute l'entretien d'un trimestre, le cas le réduit
- * chaque trimestre sans descendre sous le seuil. Le seuil est celui du chapitre
- * (`entretienDeLOutil`, `seuilDEntretien` du moteur) ; l'année au seuil est l'année du cours
- * rejouée (`rejouerAvec`), le budget d'entretien au seuil à chaque trimestre.
+ * Ce qui a changé depuis l'arène : l'année rejouée par le moteur ne faisait jouer les rebuts qu'au
+ * bistrot ; chez NOVA, le cas validait « l'économie passe entière » (la capacité perdue valait 0).
+ * Sur la simulation du cours, les défauts jouent chez NOVA, et « l'économie passe entière » devient
+ * le distracteur : c'est ce qu'on trouve en oubliant les défauts.
  */
 
-/**
- * Le budget au seuil se pose à l'euro supérieur : juste au seuil, la disponibilité ne bouge
- * plus ; un euro au-dessus, elle ne peut que remonter, et l'outil déjà à 100 % y reste.
- */
-export const budgetAuSeuil = (c: Cas) => Math.ceil(entretienDeLOutil(c).seuil);
+const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
+const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const pct = (t: number) => `${qte(Math.round(t * 1000) / 10)} %`;
 
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
+export type Verdict = "l-economie-passe-entiere" | "les-defauts-en-reprennent" | "les-defauts-coutent-plus" | "la-ligne-s-use";
 
-export type Verdict = "l-economie-passe-entiere" | "les-rebuts-en-reprennent" | "l-outil-s-use";
-
-/** L'année au seuil : le budget, l'économie, et ce que l'arène en fait. */
-export function entretienAuSeuil(c: Cas) {
+/** L'année au seuil : l'économie, les défauts, et le budget où l'économie paierait les défauts. */
+export function entretienAuSeuil(c: Pick<Cas, "code">) {
   const e = entretienDeLOutil(c);
-  const budget = budgetAuSeuil(c);
-  const reference = anneeDeReference(c.code);
-  const auSeuil = rejouerAvec(c.code, "entretenir-l-outil:au-seuil-toute-l-annee", (_t, d) => ({ ...d, maintenanceBudget: budget }));
-  const trimestres = auSeuil.length;
-  const economieParTrimestre = auCentime(e.budget - budget);
-  const economieDeLAnnee = auCentime(economieParTrimestre * trimestres);
-  const capacites = auSeuil.map((r) => Math.round(r.production.machineCapacity));
-  const capacitesAvec = reference.map((r) => Math.round(r.production.machineCapacity));
-  const capacitePerdue = Math.max(...capacitesAvec.map((x, i) => x - capacites[i]!));
-  const venduesAvant = Math.round(surLAnnee(reference, soldUnits));
-  const venduesApres = Math.round(surLAnnee(auSeuil, soldUnits));
-  const resultatAvant = Math.round(surLAnnee(reference, (r) => r.incomeStatement.operatingIncome));
-  const resultatApres = Math.round(surLAnnee(auSeuil, (r) => r.incomeStatement.operatingIncome));
-  const ecartDeResultat = resultatApres - resultatAvant;
+  const f = e.f;
+  const s = entretienAuSeuilDuModele(f);
+  const budget = s.budgets[0]!;
+  const trimestres = s.budgets.length;
+  const economieParTrimestre = auCentime(e.reference - budget);
+  const volume = e.plan.production;
+  // Un défaut en plus coûte sa retouche ou son retour, et la marge des ventes que la qualité perçue fait perdre.
+  const coutDUnDefautVentesComprises = auCentime(e.coutMoyen + (1 - e.detection) * e.ventesParDefautLivre * e.marge);
+  const coutDesDefauts = auCentime(s.coutDesDefautsEnPlus + s.margePerdueParLaQualite);
+  const defautsQueLEconomiePaie = auCentime(s.economie / coutDUnDefautVentesComprises);
+  const parEuroCoupe = auCentime(coutDesDefauts / s.economie);
   const verdict: Verdict =
-    ecartDeResultat <= 0 ? "l-outil-s-use" : Math.abs(ecartDeResultat - economieDeLAnnee) <= 1 ? "l-economie-passe-entiere" : "les-rebuts-en-reprennent";
+    s.ventesPerdues > 0 ? "la-ligne-s-use" : s.ecartDeResultat >= s.economie - 0.5 ? "l-economie-passe-entiere" : s.ecartDeResultat > 0 ? "les-defauts-en-reprennent" : "les-defauts-coutent-plus";
   return {
     e,
+    f,
+    s,
     budget,
     trimestres,
     economieParTrimestre,
-    economieDeLAnnee,
-    capacitePlusBasse: Math.min(...capacites),
-    capacitePlusBasseAvec: Math.min(...capacitesAvec),
-    capacitePerdue,
-    venduesAvant,
-    venduesApres,
-    resultatAvant,
-    resultatApres,
-    ecartDeResultat,
-    reprisParLesRebuts: auCentime(economieDeLAnnee - ecartDeResultat),
-    sensibilite: sensibiliteDesRebuts(c.code),
-    // Les rebuts se comptent sur la référence du métier, sans l'exigence du parc (src/engine/production).
-    referenceDesRebuts: scenarioByCode(c.code).scenario.production.maintenanceReference,
+    volume,
+    pointsEnPlus: defautsEnPlusDeLEntretien(f, budget),
+    defautsEnPlus: auCentime(s.defautsEnPlus),
+    ventesPerduesParLaQualite: auCentime(s.ventesPerduesParLaQualite),
+    coutDUnDefautVentesComprises,
+    coutDesDefauts,
+    defautsQueLEconomiePaie,
+    parEuroCoupe,
     verdict,
   };
 }
@@ -86,104 +72,192 @@ export const ENTRETENIR_AU_SEUIL: Situation = {
   commanditaire: "Le gérant",
   titre: "Entretenir au seuil",
   accroche:
-    "Le gérant veut entretenir l'outil juste au seuil sous lequel il s'use, toute l'année, au lieu du budget de référence. Le budget au seuil, ce qu'il fait économiser, et ce que l'arène en fait.",
+    "Le gérant veut entretenir la ligne juste au seuil sous lequel elle s'use, toute l'année, au lieu du budget de référence. La ligne tient ; reste à savoir ce que cette économie coûte en défauts.",
   objectifs: [
-    "Calculer le budget d'entretien sous lequel l'outil s'use",
-    "Calculer l'économie d'un entretien au seuil sur l'année",
-    "Vérifier dans l'année rejouée ce que l'outil et le résultat deviennent",
+    "Calculer le seuil d'entretien et l'économie d'une année au seuil",
+    "Chiffrer les défauts qu'un entretien sous la référence ajoute, ventes perdues comprises",
+    "Retrouver à rebours combien de défauts une économie peut payer",
     "Répondre au gérant, chiffre à l'appui",
   ],
   libre: false,
+  entreprises: ENTRETENIR_L_OUTIL.entreprises,
   etapes: [
     {
       id: "demande",
       type: "lecture",
       titre: "La proposition du gérant",
-      texte: (c) => [
-        `« Nous dépensons le budget de référence chaque trimestre pour entretenir l'outil. Mais si j'ai bien compris, l'outil ne s'use que sous un certain budget. Pourquoi ${c.entreprise} paierait-elle davantage ? Je propose d'entretenir juste à ce seuil, arrondi à l'euro supérieur, toute l'année. Dites-moi ce que nous économiserions, et si l'outil le supporte. »`,
-        "Pas de cours cette fois : vous avez les chiffres de l'outil, et le calcul du seuil est celui du chapitre. L'arène a rejoué l'année avec l'entretien au seuil, chaque trimestre.",
-      ],
+      texte: (c) => {
+        const r = entretienAuSeuil(c);
+        return [
+          `« Le chapitre l'a montré : sous ${eur(r.e.seuil)} par trimestre, la ligne s'use ; à ce budget, elle tient. Pourquoi payer ${eur(r.e.reference)} ? Je propose d'entretenir au seuil chaque trimestre de N + 1 : la ligne reste à 100 %, nous ne perdons aucune vente, et nous économisons. Dites-moi combien, et si vous êtes d'accord. »`,
+          `Pas de cours cette fois : la ligne de ${r.f.entreprise} est celle du chapitre, sur l'année N + 1 prévue, ${qte(r.volume)} ${r.f.unites} au plan. Les défauts qu'un entretien bas ajoute sont des défauts attendus, en moyenne.`,
+        ];
+      },
       tableau: (c) => {
-        const s = entretienAuSeuil(c);
+        const r = entretienAuSeuil(c);
+        const f = r.f;
         return {
-          titre: `L'outil ${dE(c.entreprise)}`,
+          titre: `L'entretien et la qualité de ${f.entreprise} en N + 1`,
           colonnes: ["Valeur"],
           lignes: [
-            { libelle: "Budget d'entretien d'un trimestre (référence du parc)", valeurs: [eur(s.e.budget)] },
-            { libelle: "Disponibilité perdue en un trimestre sans entretien", valeurs: [`${s.e.perte.toLocaleString("fr-FR")} %`] },
-            { libelle: "Disponibilité regagnée en un trimestre au budget de référence", valeurs: [`${s.e.regain.toLocaleString("fr-FR")} %`] },
-            { libelle: "Trimestres de l'année", valeurs: [String(s.trimestres)] },
+            { libelle: "Budget de référence, par trimestre", valeurs: [eur(r.e.reference)] },
+            { libelle: "Usure d'un trimestre sans entretien", valeurs: [`${qte(r.e.usure * 100)} points de disponibilité`] },
+            { libelle: "Réparation au budget de référence", valeurs: [`${qte(r.e.reparation * 100)} points de disponibilité`] },
+            { libelle: "Défauts en plus d'un trimestre sans entretien", valeurs: [`${qte(f.entretien.defautsEnPlusSansEntretien * 100)} points de taux de défaut`] },
+            { libelle: "Enceintes au plan de N + 1", valeurs: [qte(r.volume)] },
+            { libelle: "Part des défauts trouvés au contrôle", valeurs: [pct(r.e.detection)] },
+            { libelle: "Coût d'un défaut retouché", valeurs: [eur(f.qualite.coutDUnDefautDetecte)] },
+            { libelle: "Coût d'un défaut revenu du client", valeurs: [eur(f.qualite.coutDUnDefautLivre)] },
+            { libelle: "Ventes perdues par défaut livré", valeurs: [qte(r.e.ventesParDefautLivre)] },
+            { libelle: "Marge sur coût variable d'une enceinte", valeurs: [eur(r.e.marge)] },
           ],
         };
       },
-      repere: () => "À rendre : le budget au seuil, l'économie de l'année, ce que l'arène en fait, et votre réponse.",
+      repere: () => "À rendre : l'économie de l'année, les défauts qu'elle coûte, le budget où l'économie les paierait, et votre réponse.",
     },
     {
       id: "economie",
       type: "montants",
       titre: "Ce que le seuil fait économiser",
       notions: ["capacity", "fixed_costs"],
-      question: () =>
-        "Calculez le budget d'entretien au seuil (le budget où ce que l'entretien répare égale ce que l'outil perd, arrondi à l'euro supérieur), puis ce qu'il économise par trimestre par rapport à la référence, et sur l'année.",
+      question: () => "Calculez le seuil d'entretien (le budget où la réparation égale l'usure), puis ce qu'il économise par trimestre face à la référence, et sur l'année.",
       champs: (c) => {
-        const s = entretienAuSeuil(c);
+        const r = entretienAuSeuil(c);
         return [
-          { libelle: "Budget au seuil, à l'euro supérieur", attendu: s.budget, tolerance: 1, calcul: `${eur(s.e.budget)} ÷ ${(1 + RETABLISSEMENT_PAR_ENTRETIEN).toLocaleString("fr-FR")} = ${eur(s.e.seuil)}, soit ${eur(s.budget)}` },
-          { libelle: "Économie par trimestre", attendu: s.economieParTrimestre, tolerance: 1, calcul: `${eur(s.e.budget)} − ${eur(s.budget)} = ${eur(s.economieParTrimestre)}` },
-          { libelle: "Économie sur l'année", attendu: s.economieDeLAnnee, tolerance: 1, calcul: `${eur(s.economieParTrimestre)} × ${s.trimestres} = ${eur(s.economieDeLAnnee)}` },
+          { libelle: "Seuil d'entretien", attendu: r.budget, calcul: `${eur(r.e.reference)} × ${qte(r.e.usure * 100)} ÷ ${qte(r.e.reparation * 100)} = ${eur(r.budget)}` },
+          { libelle: "Économie par trimestre", attendu: r.economieParTrimestre, calcul: `${eur(r.e.reference)} − ${eur(r.budget)} = ${eur(r.economieParTrimestre)}` },
+          { libelle: "Économie sur l'année", attendu: r.s.economie, calcul: `${eur(r.economieParTrimestre)} × ${qte(r.trimestres)} = ${eur(r.s.economie)}` },
         ];
       },
       explication: (c) => {
-        const s = entretienAuSeuil(c);
+        const r = entretienAuSeuil(c);
         return [
-          `Au seuil, ${c.entreprise} économiserait ${eur(s.economieDeLAnnee)} sur l'année. À ce budget, l'entretien répare exactement ce que l'outil perd : sa disponibilité ne baisse pas.`,
+          `Au seuil, la ligne ne s'use plus : partie à 100 %, elle y reste toute l'année, et aucune vente ne se perd par l'outil, pas même aux trimestres où il est le goulot. ${r.f.entreprise} économiserait ${eur(r.s.economie)}. Le gérant a raison sur la ligne. Reste la qualité.`,
         ];
       },
     },
     {
-      id: "arene",
+      id: "les-defauts-au-seuil",
       type: "montants",
-      titre: "L'arène rejoue l'année au seuil",
-      notions: ["capacity", "contribution_margin"],
-      tableau: (c) => {
-        const s = entretienAuSeuil(c);
-        return {
-          titre: "L'année jouée, entretien à la référence et entretien au seuil",
-          colonnes: ["À la référence", "Au seuil"],
-          lignes: [
-            { libelle: `Capacité de l'outil au plus bas de l'année (${c.unites})`, valeurs: [qte(s.capacitePlusBasseAvec), qte(s.capacitePlusBasse)] },
-            { libelle: `Ventes de l'année (${c.unites})`, valeurs: [qte(s.venduesAvant), qte(s.venduesApres)] },
-            { libelle: "Résultat de l'activité sur l'année", valeurs: [eur(s.resultatAvant), eur(s.resultatApres)] },
-          ],
-        };
+      titre: "Les défauts au seuil",
+      notions: ["variable_costs", "contribution_margin"],
+      question: (c) => {
+        const r = entretienAuSeuil(c);
+        return `Sous la référence, la ligne monte plus de défauts, en proportion de ce qui manque au budget. Calculez les points de taux de défaut en plus à chaque trimestre au seuil, les défauts en plus sur les ${qte(r.volume)} ${r.f.unites} de l'année, ce qu'ils coûtent au coût moyen d'un défaut, puis les ventes que les défauts livrés font perdre.`;
       },
-      question: (c) =>
-        `D'après le tableau, calculez la capacité de l'outil perdue au plus bas de l'année (en ${c.unites}), puis l'écart de résultat de l'activité entre l'entretien au seuil et l'entretien à la référence.`,
       champs: (c) => {
-        const s = entretienAuSeuil(c);
+        const r = entretienAuSeuil(c);
+        const e = r.e;
+        const sans = r.f.entretien.defautsEnPlusSansEntretien;
         return [
           {
-            libelle: `Capacité perdue au plus bas (${c.unites})`,
-            attendu: s.capacitePlusBasseAvec - s.capacitePlusBasse,
-            tolerance: 1,
-            calcul: `${qte(s.capacitePlusBasseAvec)} − ${qte(s.capacitePlusBasse)} = ${qte(s.capacitePlusBasseAvec - s.capacitePlusBasse)}`,
+            libelle: "Points de taux de défaut en plus",
+            attendu: auCentime(r.pointsEnPlus * 100),
+            calcul: `${qte(sans * 100)} × (1 − ${eur(r.budget)} ÷ ${eur(e.reference)}) = ${qte(auCentime(r.pointsEnPlus * 100))}`,
+            tolerance: 0.01,
+          },
+          { libelle: "Défauts en plus sur l'année", attendu: r.defautsEnPlus, calcul: `${qte(r.volume)} × ${pct(r.pointsEnPlus)} = ${qte(r.defautsEnPlus)}`, tolerance: 0.1 },
+          {
+            libelle: "Coût des défauts en plus",
+            attendu: r.s.coutDesDefautsEnPlus,
+            calcul: `${qte(r.defautsEnPlus)} × ${eur(e.coutMoyen)} (${pct(e.detection)} × ${eur(r.f.qualite.coutDUnDefautDetecte)} + ${pct(1 - e.detection)} × ${eur(r.f.qualite.coutDUnDefautLivre)}) = ${eur(r.s.coutDesDefautsEnPlus)}`,
           },
           {
-            libelle: "Écart de résultat sur l'année",
-            attendu: s.ecartDeResultat,
-            tolerance: 1,
-            calcul: `${eur(s.resultatApres)} − ${retranche(s.resultatAvant)} = ${eur(s.ecartDeResultat)}`,
+            libelle: "Ventes perdues par la qualité",
+            attendu: r.ventesPerduesParLaQualite,
+            calcul: `${qte(r.defautsEnPlus)} × ${pct(1 - e.detection)} livrés × ${qte(e.ventesParDefautLivre)} = ${qte(r.ventesPerduesParLaQualite)}`,
+            tolerance: 0.1,
           },
         ];
       },
       explication: (c) => {
-        const s = entretienAuSeuil(c);
+        const r = entretienAuSeuil(c);
         return [
-          s.verdict === "l-economie-passe-entiere"
-            ? `L'outil garde toute sa capacité, les ventes ne bougent pas, et le résultat monte de ${eur(s.ecartDeResultat)} : l'économie de l'entretien passe entière au résultat.`
-            : s.verdict === "les-rebuts-en-reprennent"
-              ? `L'outil garde toute sa capacité, mais le résultat ne monte que de ${eur(s.ecartDeResultat)}, pour ${eur(s.economieDeLAnnee)} économisés : chez ${c.entreprise}, un entretien sous ${eur(s.referenceDesRebuts)}, la référence du métier, fait monter les rebuts, et ils reprennent ${eur(s.reprisParLesRebuts)} de l'économie.`
-              : `Le résultat baisse de ${eur(-s.ecartDeResultat)} : au seuil, l'économie ne tient pas.`,
+          `Au seuil, ${qte(r.defautsEnPlus)} défauts de plus coûtent ${eur(r.s.coutDesDefautsEnPlus)} de retouches et de retours, et ${qte(r.ventesPerduesParLaQualite)} ventes perdues emportent ${eur(r.s.margePerdueParLaQualite)} de marge : ${eur(r.coutDesDefauts)} en tout, pour ${eur(r.s.economie)} économisés.`,
+        ];
+      },
+    },
+    {
+      id: "le-budget-qui-paie",
+      type: "curseur",
+      titre: "Le budget où l'économie paie les défauts",
+      notions: ["variable_costs", "fixed_costs"],
+      question: (c) => {
+        const r = entretienAuSeuil(c);
+        return `Faites varier le budget d'entretien de chaque trimestre, du seuil (${eur(r.budget)}) à la référence (${eur(r.e.reference)}). Une droite donne l'entretien économisé sur l'année, l'autre ce que coûtent les défauts en plus, ventes perdues comprises. Placez le curseur sur le plus petit budget où l'économie paie les défauts, puis validez.`;
+      },
+      grandeur: () => ({ libelle: "Budget d'entretien de chaque trimestre", unite: "€" }),
+      cible: (c) => {
+        const r = entretienAuSeuil(c);
+        const economie = (b: number) => (r.e.reference - b) * r.trimestres;
+        const defauts = (b: number) => r.volume * defautsEnPlusDeLEntretien(r.f, b) * r.coutDUnDefautVentesComprises;
+        let attendu = r.budget;
+        while (attendu < r.e.reference && economie(attendu) < defauts(attendu) - 1e-9) attendu++;
+        return { attendu, min: r.budget, max: r.e.reference };
+      },
+      zones: ["L'économie paie les défauts", "Les défauts coûtent plus que l'économie"],
+      rates: () => ({
+        dessous: "À ce budget, les défauts en plus coûtent encore plus que l'économie.",
+        dessus: "Plus bas, l'économie paie encore les défauts : cherchez le plus petit budget.",
+      }),
+      montrer: "Montrer le budget",
+      lecture: (c, b) => {
+        const r = entretienAuSeuil(c);
+        const defauts = r.volume * defautsEnPlusDeLEntretien(r.f, b);
+        const economie = auCentime((r.e.reference - b) * r.trimestres);
+        const coutDesDefauts = auCentime(defauts * r.e.coutMoyen);
+        const ventes = auCentime(defauts * (1 - r.e.detection) * r.e.ventesParDefautLivre * r.e.marge);
+        return [
+          { libelle: "Entretien économisé sur l'année", montant: economie },
+          { libelle: "Coût des défauts en plus", montant: coutDesDefauts },
+          { libelle: "Marge des ventes perdues par la qualité", montant: ventes },
+          { libelle: "Effet sur le résultat de l'année", montant: auCentime(economie - coutDesDefauts - ventes), fort: true },
+        ];
+      },
+      droites: (c) => {
+        const r = entretienAuSeuil(c);
+        return {
+          produit: (b) => (r.e.reference - b) * r.trimestres,
+          cout: (b) => r.volume * defautsEnPlusDeLEntretien(r.f, b) * r.coutDUnDefautVentesComprises,
+          libelles: ["Entretien économisé sur l'année", "Coût des défauts en plus, ventes comprises"],
+        };
+      },
+      explication: (c) => {
+        const r = entretienAuSeuil(c);
+        return [
+          `Les deux droites ne se rejoignent qu'à la référence, où l'économie et les défauts en plus tombent à 0 €. Partout ailleurs, chaque euro coupé sous ${eur(r.e.reference)} fait perdre ${eur(r.parEuroCoupe)} en défauts : il n'existe pas de budget sous la référence où l'économie paie les défauts.`,
+        ];
+      },
+    },
+    {
+      id: "a-rebours",
+      type: "montants",
+      titre: "Ce que l'économie pourrait payer",
+      notions: ["variable_costs", "contribution_margin"],
+      question: () =>
+        "À rebours : calculez ce que coûte un défaut en plus, ventes perdues comprises, combien de défauts l'économie de l'année pourrait payer, l'effet de l'entretien au seuil sur le résultat de l'année, puis ce que coûte, en défauts, chaque euro coupé sous la référence.",
+      champs: (c) => {
+        const r = entretienAuSeuil(c);
+        const e = r.e;
+        return [
+          {
+            libelle: "Coût d'un défaut en plus, ventes perdues comprises",
+            attendu: r.coutDUnDefautVentesComprises,
+            calcul: `${eur(e.coutMoyen)} + ${pct(1 - e.detection)} × ${qte(e.ventesParDefautLivre)} × ${eur(e.marge)} = ${eur(r.coutDUnDefautVentesComprises)}`,
+          },
+          { libelle: "Défauts que l'économie pourrait payer", attendu: r.defautsQueLEconomiePaie, calcul: `${eur(r.s.economie)} ÷ ${eur(r.coutDUnDefautVentesComprises)} = ${qte(r.defautsQueLEconomiePaie)}`, tolerance: 0.1 },
+          {
+            libelle: "Effet de l'entretien au seuil sur le résultat",
+            attendu: r.s.ecartDeResultat,
+            calcul: `${eur(r.s.economie)} − ${qte(r.defautsEnPlus)} × ${eur(r.coutDUnDefautVentesComprises)} = ${eur(r.s.ecartDeResultat)}`,
+          },
+          { libelle: "Défauts coûtés par euro coupé", attendu: r.parEuroCoupe, calcul: `${eur(r.coutDesDefauts)} ÷ ${eur(r.s.economie)} = ${eur(r.parEuroCoupe)}`, tolerance: 0.01 },
+        ];
+      },
+      explication: (c) => {
+        const r = entretienAuSeuil(c);
+        return [
+          `L'économie paierait ${qte(r.defautsQueLEconomiePaie)} défauts ; le seuil en ajoute ${qte(r.defautsEnPlus)}, plus du double. L'entretien au seuil fait baisser le résultat de ${eur(-r.s.ecartDeResultat)}. Sans compter les défauts, on trouverait ${eur(r.s.ecartParLaDisponibilite)} : c'est le calcul du gérant, juste sur la ligne, faux sur l'année.`,
         ];
       },
     },
@@ -193,35 +267,40 @@ export const ENTRETENIR_AU_SEUIL: Situation = {
       titre: "Votre réponse au gérant",
       question: () => "Quelle phrase envoyez-vous au gérant ?",
       options: (c) => {
-        const s = entretienAuSeuil(c);
+        const r = entretienAuSeuil(c);
+        const v = r.verdict;
         return [
           {
-            texte: "D'accord : au seuil, l'outil tient, et l'économie passe au résultat",
-            juste: s.verdict === "l-economie-passe-entiere",
+            texte: "Refusons : au seuil, les défauts coûtent plus que l'économie",
+            juste: v === "les-defauts-coutent-plus",
             retour:
-              s.verdict === "l-economie-passe-entiere"
-                ? `Oui : dans l'arène, l'outil reste à 100 % toute l'année, et le résultat monte de ${eur(s.ecartDeResultat)}. Le seuil laisse peu de marge : un trimestre en dessous, et l'outil recommence à s'user.`
-                : s.verdict === "les-rebuts-en-reprennent"
-                  ? `Pas tout à fait : l'outil tient, mais les rebuts montent sous ${eur(s.referenceDesRebuts)}, la référence du métier, et ils reprennent ${eur(s.reprisParLesRebuts)} des ${eur(s.economieDeLAnnee)} économisés.`
-                  : `Non : le résultat baisse de ${eur(-s.ecartDeResultat)}.`,
+              v === "les-defauts-coutent-plus"
+                ? `Oui : la ligne tient, mais ${qte(r.defautsEnPlus)} défauts de plus coûtent ${eur(r.coutDesDefauts)}, ventes perdues comprises, pour ${eur(r.s.economie)} économisés : ${eur(r.s.ecartDeResultat)} sur l'année. Le seuil garde la capacité, pas la qualité ; la référence reste le meilleur budget.`
+                : `Non : ici, les défauts coûtent moins que l'économie.`,
           },
           {
-            texte: "D'accord, mais les rebuts reprendront une part de l'économie",
-            juste: s.verdict === "les-rebuts-en-reprennent",
+            texte: "D'accord : au seuil, la ligne tient, et l'économie passe au résultat",
+            juste: v === "l-economie-passe-entiere",
             retour:
-              s.verdict === "les-rebuts-en-reprennent"
-                ? `Oui : l'outil reste à 100 %, et le résultat monte de ${eur(s.ecartDeResultat)}. Mais chez ${c.entreprise}, les rebuts montent dès que l'entretien passe sous ${eur(s.referenceDesRebuts)}, la référence du métier, bien au-dessus du seuil : ils reprennent ${eur(s.reprisParLesRebuts)} de l'économie.`
-                : s.sensibilite > 0
-                  ? `Non : ici, l'économie passe au résultat, à ${eur(s.economieDeLAnnee - s.ecartDeResultat)} près.`
-                  : `Non : chez ${c.entreprise}, l'arène ne fait pas jouer l'entretien sur les rebuts, et l'économie passe entière au résultat.`,
+              v === "l-economie-passe-entiere"
+                ? "Oui : l'économie passe entière au résultat."
+                : `Non : c'est vrai de la ligne, qui reste à 100 %, mais pas du résultat. L'économie de ${eur(r.s.economie)} ne passe entière que si l'on oublie les défauts : ils font baisser le résultat de ${eur(-r.s.ecartDeResultat)}.`,
           },
           {
-            texte: "Refusons : sous la référence, l'outil s'use dès le trimestre suivant",
-            juste: s.verdict === "l-outil-s-use",
+            texte: "D'accord, mais les défauts reprendront une part de l'économie",
+            juste: v === "les-defauts-en-reprennent",
             retour:
-              s.verdict === "l-outil-s-use"
-                ? `Oui : le résultat baisse de ${eur(-s.ecartDeResultat)}.`
-                : `Non : l'outil ne s'use que sous le seuil, pas sous la référence. Au seuil, sa capacité au plus bas reste de ${qte(s.capacitePlusBasse)} ${c.unites}, comme à la référence.`,
+              v === "les-defauts-en-reprennent"
+                ? "Oui : les défauts reprennent une part de l'économie, sans l'effacer."
+                : `Non : ils n'en reprennent pas une part, ils la dépassent : ${eur(r.coutDesDefauts)} de défauts pour ${eur(r.s.economie)} d'économie.`,
+          },
+          {
+            texte: "Refusons : sous la référence, la ligne s'use dès le trimestre suivant",
+            juste: v === "la-ligne-s-use",
+            retour:
+              v === "la-ligne-s-use"
+                ? "Oui : au seuil, la ligne perd déjà des ventes."
+                : `Non : la ligne ne s'use que sous le seuil, pas sous la référence. Au seuil, elle reste à 100 % toute l'année, et aucune vente ne se perd par l'outil : c'est par la qualité que le seuil coûte.`,
           },
         ];
       },
