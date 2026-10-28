@@ -1,99 +1,62 @@
 import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
-import { type Cas } from "../../cas";
-import { anneeJouee } from "../../annee-de-l-arene";
-import { L_IMPOT_SUR_LES_SOCIETES, impotDeLAnnee } from "../../chapitres/l-impot-sur-les-societes";
-import { rejouerAvec } from "../../gestion-de-la-pme";
+import type { Cas } from "../../cas";
+import { ENTREPRISES_DE_L_IMPOT, L_IMPOT_SUR_LES_SOCIETES, impotAuDelaDuPlafond, impotDeNova } from "../../chapitres/l-impot-sur-les-societes";
+import { impotDuBenefice } from "../../monde/finance";
+import { ACOMPTES, DEPENSE_DE_FIN_D_ANNEE, PLAFOND_DU_TAUX_REDUIT, TAUX_NORMAL, TAUX_REDUIT } from "../../monde/projets-et-financement";
 import type { Situation } from "../types";
-
-/** Un montant à la française, avec le signe moins typographique ; retranché, un négatif va entre parenthèses. */
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-/** Un taux déjà en pour cent : 25 donne « 25 % ». */
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
-const centime = (x: number) => auCentime(x) || 0;
-const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /**
  * CAS PRATIQUE DU CHAPITRE « L'IMPÔT SUR LES SOCIÉTÉS » : LA DÉPENSE DE FIN D'ANNÉE (fiscalité de
  * l'entreprise, palier 3).
  *
- * Le gérant veut doubler la maintenance au dernier trimestre, « pour payer moins d'impôt », et croit
- * que la dépense ne coûtera presque rien. L'élève refait le calcul du chapitre sur le résultat
- * diminué de la dépense : l'impôt de l'exercice, l'impôt économisé, ce que la dépense coûte après
- * impôt. Une charge déductible ne fait économiser que le taux de l'impôt, et rien au-delà de
- * l'impôt de l'exercice. Tenue par le bon gestionnaire, l'année du cours gagne partout bien plus que
- * la dépense : le verdict « jusqu'à l'impôt » (la dépense dépasse le bénéfice, l'exercice passe en
- * perte) ne se lit plus dans aucune entreprise ; ses textes restent, justes, pour une autre année.
+ * LE CAS JOUE DANS LE MONDE DU COURS, sur l'exercice N+1 de NOVA (monde/projets-et-financement.ts) :
+ * le gérant veut doubler un entretien en décembre (DEPENSE_DE_FIN_D_ANNEE, 4 800 €) « pour payer
+ * moins d'impôt », et compte sur le taux réduit. L'élève refait le calcul : la dépense ne fait
+ * économiser que le taux marginal, 25 %. Puis il remonte le calcul (au curseur, puis à rebours) : pour
+ * ne plus avoir de solde à payer en mai, il faudrait dépenser 22 512 €, qui coûteraient 16 884 € de
+ * résultat net pour 5 628 € d'impôt évité. La réponse demande un jugement : une dépense se décide sur
+ * son utilité, pas sur l'impôt.
  *
- * L'arène rejoue l'année du cours avec le budget de maintenance du trimestre 4 doublé, la seule
- * décision changée (`rejouerAvec`). La maintenance ne change ni les ventes ni rien d'autre de ce
- * trimestre dans l'arène : le résultat avant impôt baisse exactement de la dépense, la garde le
- * vérifie, et l'impôt de l'arène suit le calcul.
+ * CE QUI A DISPARU, AVEC L'ARÈNE : le rejeu de l'année avec la maintenance du trimestre 4 doublée, et la
+ * branche « la dépense dépasse le bénéfice », qui ne se lisait dans aucune entreprise.
  */
 
-/** Le trimestre de la dépense : le dernier de l'exercice. */
-export const TRIMESTRE_DE_LA_DEPENSE = 4;
+/** Les bornes du curseur de la dépense, en euros. */
+export const DEPENSE_DU_CURSEUR = { min: 0, max: 40_000 } as const;
 
-/** L'année du cours, le budget de maintenance du trimestre de la dépense doublé. */
-export const anneeAvecLaDepense = (code: string) =>
-  rejouerAvec(code, "la-depense-de-fin-d-annee:maintenance-doublee", (t, d) =>
-    t === TRIMESTRE_DE_LA_DEPENSE ? { ...d, maintenanceBudget: d.maintenanceBudget * 2 } : undefined,
-  );
+export type Verdict = "le-taux-marginal" | "le-taux-reduit";
 
-export type Verdict = "le-taux-seulement" | "jusqu-a-l-impot";
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
+const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
+const auCentime = (x: number) => Math.round(x * 100) / 100;
+const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
-const calculs = new Map<string, ReturnType<typeof calculer>>();
-
-/** La dépense, l'impôt qu'elle fait économiser, et ce que l'arène en fait. */
-export function depenseDeFinDAnnee(c: Cas) {
-  const deja = calculs.get(c.code);
-  if (deja) return deja;
-  const r = calculer(c);
-  calculs.set(c.code, r);
-  return r;
-}
-
-function calculer(c: Cas) {
-  const k = impotDeLAnnee(c);
-  const sans = anneeJouee(c.code).partie.rounds.map((t) => t.results["joueur"]!);
-  const avec = anneeAvecLaDepense(c.code);
-  const i = TRIMESTRE_DE_LA_DEPENSE - 1;
-  // Doubler le budget, c'est dépenser une seconde fois la maintenance du trimestre.
-  const depense = centime(sans[i]!.incomeStatement.maintenanceCost);
-  const avantImpotAvec = centime(k.avantImpot - depense);
-  const impotAvec = centime(k.taux * Math.max(0, avantImpotAvec));
-  const economie = centime(k.impot - impotAvec);
-  const cout = centime(depense - economie);
-  const deficitCree = centime(Math.max(0, -avantImpotAvec));
-  const lire = (annee: typeof sans) => ({
-    maintenance: centime(annee.reduce((t, r) => t + r.incomeStatement.maintenanceCost, 0)),
-    avantImpot: centime(annee.reduce((t, r) => t + r.incomeStatement.pretaxIncome, 0)),
-    impot: centime(annee.reduce((t, r) => t + r.incomeStatement.tax, 0)),
-    resultatNet: centime(annee.reduce((t, r) => t + r.incomeStatement.netIncome, 0)),
-  });
-  const a = lire(sans);
-  const b = lire(avec);
-  const verdict: Verdict = avantImpotAvec >= 0 ? "le-taux-seulement" : "jusqu-a-l-impot";
+/** La dépense, l'impôt qu'elle fait économiser, et la dépense qui annulerait le solde. */
+export function depenseDeFinDAnnee(c: Pick<Cas, "code">) {
+  const x = impotDeNova(c);
+  const depense = DEPENSE_DE_FIN_D_ANNEE;
+  const beneficeAvec = auCentime(x.benefice - depense);
+  const impotAvec = impotDuBenefice(beneficeAvec, x.eligible).impot;
+  const economie = auCentime(x.impot - impotAvec);
+  // Le calcul à rebours : la dépense qui ramène l'impôt aux acomptes, au taux marginal.
+  const pourAnnulerLeSolde = Math.ceil(x.solde / TAUX_NORMAL - 1e-6);
+  const impotPourAnnuler = impotDuBenefice(auCentime(x.benefice - pourAnnulerLeSolde), x.eligible).impot;
+  const impotEvitePourAnnuler = auCentime(x.impot - impotPourAnnuler);
+  const verdict: Verdict = economie === auCentime(depense * TAUX_NORMAL) ? "le-taux-marginal" : "le-taux-reduit";
   return {
-    k,
+    x,
     depense,
-    avantImpotAvec,
+    beneficeAvec,
     impotAvec,
     economie,
-    cout,
-    deficitCree,
-    sans: a,
-    avec: b,
-    impotEnMoins: centime(a.impot - b.impot),
-    netEnMoins: centime(a.resultatNet - b.resultatNet),
-    // La maintenance de plus, telle que l'arène l'a passée au trimestre de la dépense.
-    maintenanceEnPlus: centime(avec[i]!.incomeStatement.maintenanceCost - sans[i]!.incomeStatement.maintenanceCost),
+    cout: auCentime(depense - economie),
+    soldeAvec: auCentime(impotAvec - x.totalVerse),
+    pourAnnulerLeSolde,
+    impotEvitePourAnnuler,
+    netPerduPourAnnuler: auCentime(pourAnnulerLeSolde - impotEvitePourAnnuler),
     verdict,
   };
 }
-
-const T = TRIMESTRE_DE_LA_DEPENSE;
 
 export const LA_DEPENSE_DE_FIN_D_ANNEE: Situation = {
   code: "la-depense-de-fin-d-annee",
@@ -104,15 +67,15 @@ export const LA_DEPENSE_DE_FIN_D_ANNEE: Situation = {
   commanditaire: "Le gérant",
   titre: "La dépense de fin d'année",
   accroche:
-    "Le gérant veut doubler la maintenance au dernier trimestre, pour payer moins d'impôt : la dépense ne coûterait presque rien. Ce qu'elle fait vraiment économiser, ce qu'elle coûte après impôt, et ce que l'arène en fait.",
+    "Le gérant veut doubler un entretien en décembre, pour payer moins d'impôt, et compte sur le taux réduit. Ce que la dépense fait vraiment économiser, ce qu'il faudrait dépenser pour ne plus avoir de solde en mai, et ce que cela coûterait.",
   objectifs: [
-    "Calculer l'impôt d'un exercice après une charge de plus",
-    "Calculer l'impôt économisé par une charge déductible, et ce qu'elle coûte après impôt",
-    "Dire pourquoi l'économie ne dépasse pas l'impôt de l'exercice",
+    "Calculer l'impôt d'un exercice après une charge de plus, au taux marginal",
+    "Calculer ce qu'une charge déductible coûte après impôt",
+    "Remonter du solde à la dépense qui l'annulerait, et en chiffrer le coût",
     "Répondre au gérant, chiffre à l'appui",
   ],
   libre: false,
-  entreprises: L_IMPOT_SUR_LES_SOCIETES.entreprises,
+  entreprises: { codes: ENTREPRISES_DE_L_IMPOT, pourquoi: L_IMPOT_SUR_LES_SOCIETES.entreprises!.pourquoi },
   etapes: [
     {
       id: "demande",
@@ -121,89 +84,114 @@ export const LA_DEPENSE_DE_FIN_D_ANNEE: Situation = {
       texte: (c) => {
         const r = depenseDeFinDAnnee(c);
         return [
-          `« Au trimestre ${T}, doublons le budget de maintenance : ${eur(r.depense)} de plus. C'est ${eur(r.depense)} de bénéfice en moins, donc autant d'impôt en moins. La dépense ne nous coûtera presque rien. »`,
-          `Pas de cours cette fois : vous avez le résultat de l'exercice ${dE(c.entreprise)} sans la dépense, son impôt et le taux, et les calculs sont ceux du chapitre. L'arène a rejoué l'année avec le budget de maintenance du trimestre ${T} doublé.`,
+          `« Doublons l'entretien de décembre : ${eur(r.depense)} de charges en plus, autant de bénéfice en moins, et presque autant d'impôt en moins. Avec notre taux réduit de ${pct(TAUX_REDUIT * 100)}, elle ne nous coûtera presque rien. Et si nous dépensons assez, nous n'aurons plus de solde à payer en mai. »`,
+          `Pas de cours cette fois : vous avez l'exercice ${dE(r.x.entreprise)} sans la dépense, et les calculs sont ceux du chapitre. L'entretien doublé ne changerait ni les ventes ni rien d'autre.`,
         ];
       },
       tableau: (c) => {
         const r = depenseDeFinDAnnee(c);
         return {
-          titre: `L'exercice ${dE(c.entreprise)}, sans la dépense`,
+          titre: `L'exercice ${r.x.e.exercice} ${dE(r.x.entreprise)}, sans la dépense`,
           colonnes: ["Valeur"],
           lignes: [
-            { libelle: "Résultat avant impôt de l'exercice", valeurs: [eur(r.k.avantImpot)] },
-            { libelle: "Impôt sur les sociétés de l'exercice", valeurs: [eur(r.k.impot)] },
-            { libelle: `Budget de maintenance du trimestre ${T}`, valeurs: [eur(r.depense)] },
-            { libelle: "Taux de l'impôt sur les sociétés", valeurs: [pct(r.k.tauxPct)] },
+            { libelle: "Résultat comptable avant impôt", valeurs: [eur(r.x.e.resultatComptable)] },
+            { libelle: "Résultat fiscal", valeurs: [eur(r.x.benefice)] },
+            { libelle: "Impôt sur les sociétés", valeurs: [eur(r.x.impot)] },
+            { libelle: "Acomptes versés, sur l'impôt de N", valeurs: [eur(r.x.totalVerse)] },
+            { libelle: `Taux réduit, jusqu'à ${eur(PLAFOND_DU_TAUX_REDUIT)}`, valeurs: [pct(TAUX_REDUIT * 100)] },
+            { libelle: "Taux normal", valeurs: [pct(TAUX_NORMAL * 100)] },
+            { libelle: "L'entretien de décembre en plus", valeurs: [eur(r.depense)] },
           ],
         };
       },
-      repere: () => "À rendre : l'impôt que la dépense fait économiser, ce qu'elle coûte après impôt, ce que l'arène en fait, et votre réponse.",
+      repere: () => "À rendre : ce que la dépense fait économiser et ce qu'elle coûte, ce qu'il faudrait dépenser pour ne plus avoir de solde, et votre réponse.",
     },
     {
       id: "economie",
       type: "montants",
       titre: "L'impôt économisé",
       notions: ["income_statement"],
-      question: () =>
-        "Si la dépense ne change rien d'autre, calculez le résultat avant impôt de l'exercice avec la dépense, l'impôt de l'exercice avec la dépense (rien sur un exercice en perte), l'impôt économisé, puis ce que la dépense coûte après impôt.",
+      question: () => "Calculez le résultat fiscal avec la dépense, l'impôt avec la dépense, l'impôt économisé, puis ce que la dépense coûte après impôt.",
       champs: (c) => {
         const r = depenseDeFinDAnnee(c);
         return [
+          { libelle: "Résultat fiscal avec la dépense", attendu: r.beneficeAvec, calcul: `${eur(r.x.benefice)} − ${eur(r.depense)} = ${eur(r.beneficeAvec)}` },
           {
-            libelle: "Résultat avant impôt avec la dépense",
-            attendu: r.avantImpotAvec,
-            calcul: `${eur(r.k.avantImpot)} − ${eur(r.depense)} = ${eur(r.avantImpotAvec)}`,
-          },
-          {
-            libelle: "Impôt de l'exercice avec la dépense",
+            libelle: "Impôt avec la dépense",
             attendu: r.impotAvec,
-            calcul: r.avantImpotAvec > 0 ? `${eur(r.avantImpotAvec)} × ${pct(r.k.tauxPct)} = ${eur(r.impotAvec)}` : `un exercice en perte : pas d'impôt, ${eur(0)}`,
-            tolerance: 1,
+            calcul: `${eur(PLAFOND_DU_TAUX_REDUIT)} × ${pct(TAUX_REDUIT * 100)} + (${eur(r.beneficeAvec)} − ${eur(PLAFOND_DU_TAUX_REDUIT)}) × ${pct(TAUX_NORMAL * 100)} = ${eur(r.impotAvec)}`,
           },
-          { libelle: "Impôt économisé", attendu: r.economie, calcul: `${eur(r.k.impot)} − ${eur(r.impotAvec)} = ${eur(r.economie)}`, tolerance: 1 },
-          { libelle: "Coût de la dépense après impôt", attendu: r.cout, calcul: `${eur(r.depense)} − ${eur(r.economie)} = ${eur(r.cout)}`, tolerance: 1 },
+          { libelle: "Impôt économisé", attendu: r.economie, calcul: `${eur(r.x.impot)} − ${eur(r.impotAvec)} = ${eur(r.economie)}` },
+          { libelle: "Coût de la dépense après impôt", attendu: r.cout, calcul: `${eur(r.depense)} − ${eur(r.economie)} = ${eur(r.cout)}` },
         ];
       },
       explication: (c) => {
         const r = depenseDeFinDAnnee(c);
         return [
-          r.verdict === "le-taux-seulement"
-            ? `L'impôt ne paie que ${pct(r.k.tauxPct)} de la dépense, ${eur(r.economie)} ; ${c.entreprise} paie le reste, ${eur(r.cout)}, sur son résultat net.`
-            : `La dépense dépasse le bénéfice de l'exercice : l'impôt tombe à zéro, et l'économie s'arrête là, à ${eur(r.economie)}. L'exercice passe en perte de ${eur(r.deficitCree)}, un déficit qui n'économisera de l'impôt que sur un exercice suivant en bénéfice.`,
+          `L'impôt ne paie que ${pct(TAUX_NORMAL * 100)} de la dépense, ${eur(r.economie)}, et pas ${pct(TAUX_REDUIT * 100)} : la dépense retire les derniers euros du bénéfice, ceux qui paient le taux normal. ${r.x.entreprise} paie le reste, ${eur(r.cout)}, sur son résultat net. Le solde de mai passe de ${eur(r.x.solde)} à ${eur(r.soldeAvec)}.`,
         ];
       },
     },
     {
-      id: "arene",
-      type: "montants",
-      titre: "L'arène rejoue l'année",
-      notions: ["income_statement"],
-      tableau: (c) => {
+      id: "le-solde-au-curseur",
+      type: "curseur",
+      titre: "Dépenser pour ne plus avoir de solde",
+      notions: ["income_statement", "cash_budget"],
+      question: (c) => {
         const r = depenseDeFinDAnnee(c);
-        return {
-          titre: "L'exercice joué, sans et avec la dépense",
-          colonnes: ["Sans la dépense", "Avec la dépense"],
-          lignes: [
-            { libelle: "Maintenance de l'exercice", valeurs: [eur(r.sans.maintenance), eur(r.avec.maintenance)] },
-            { libelle: "Résultat avant impôt", valeurs: [eur(r.sans.avantImpot), eur(r.avec.avantImpot)] },
-            { libelle: "Impôt sur les sociétés", valeurs: [eur(r.sans.impot), eur(r.avec.impot)] },
-            { libelle: "Résultat net", valeurs: [eur(r.sans.resultatNet), eur(r.avec.resultatNet)] },
-          ],
-        };
+        return `Le gérant veut ne plus rien devoir le ${ACOMPTES.dateDuSolde}. Faites varier la dépense de décembre, de ${eur(DEPENSE_DU_CURSEUR.min)} à ${eur(DEPENSE_DU_CURSEUR.max)}. Une droite donne les acomptes déjà versés (${eur(r.x.totalVerse)}), l'autre l'impôt avec la dépense. Placez le curseur sur la plus petite dépense où les acomptes couvrent l'impôt, puis validez.`;
       },
-      question: () => "D'après le tableau, calculez l'impôt que l'arène a prélevé en moins sur l'exercice, puis la baisse du résultat net.",
+      grandeur: () => ({ libelle: "Dépense de décembre", unite: "€" }),
+      cible: (c) => ({ attendu: depenseDeFinDAnnee(c).pourAnnulerLeSolde, min: DEPENSE_DU_CURSEUR.min, max: DEPENSE_DU_CURSEUR.max }),
+      zones: ["Plus de solde à payer", "Un solde à payer en mai"],
+      rates: () => ({
+        dessous: "À cette position, il reste un solde à payer en mai.",
+        dessus: "Une dépense plus petite suffit déjà : cherchez la plus petite.",
+      }),
+      montrer: "Montrer la dépense",
+      lecture: (c, d) => {
+        const r = depenseDeFinDAnnee(c);
+        const impot = impotDuBenefice(auCentime(r.x.benefice - d), r.x.eligible).impot;
+        return [
+          { libelle: "Impôt avec la dépense", montant: impot },
+          { libelle: `Solde du ${ACOMPTES.dateDuSolde}`, montant: auCentime(impot - r.x.totalVerse) },
+          { libelle: "Impôt économisé", montant: auCentime(r.x.impot - impot) },
+          { libelle: "Résultat net en moins", montant: auCentime(d - (r.x.impot - impot)), fort: true },
+        ];
+      },
+      droites: (c) => {
+        const r = depenseDeFinDAnnee(c);
+        return { produit: () => r.x.totalVerse, cout: (d) => impotAuDelaDuPlafond(r.x.benefice - d), libelles: ["Acomptes déjà versés", "Impôt avec la dépense"] };
+      },
+      explication: (c) => {
+        const r = depenseDeFinDAnnee(c);
+        return [
+          `Il faudrait dépenser ${eur(r.pourAnnulerLeSolde)} en décembre pour ne plus rien devoir en mai : chaque euro de dépense n'efface que ${pct(TAUX_NORMAL * 100)} d'un euro de solde. Le résultat net baisserait de ${eur(r.netPerduPourAnnuler)} pour éviter ${eur(r.impotEvitePourAnnuler)} d'impôt.`,
+        ];
+      },
+    },
+    {
+      id: "a-rebours",
+      type: "montants",
+      titre: "Le prix d'un solde nul",
+      notions: ["income_statement", "cash_budget"],
+      question: () => "Retrouvez par le calcul la dépense de décembre qui annulerait le solde de mai, l'impôt qu'elle ferait économiser, puis la baisse du résultat net qu'elle coûterait.",
       champs: (c) => {
         const r = depenseDeFinDAnnee(c);
         return [
-          { libelle: "Impôt en moins sur l'exercice", attendu: r.impotEnMoins, calcul: `${eur(r.sans.impot)} − ${eur(r.avec.impot)} = ${eur(r.impotEnMoins)}`, tolerance: 1 },
-          { libelle: "Baisse du résultat net", attendu: r.netEnMoins, calcul: `${eur(r.sans.resultatNet)} − ${retranche(r.avec.resultatNet)} = ${eur(r.netEnMoins)}`, tolerance: 1 },
+          {
+            libelle: "Dépense qui annule le solde",
+            attendu: r.pourAnnulerLeSolde,
+            calcul: `le solde divisé par le taux marginal : ${eur(r.x.solde)} ÷ ${pct(TAUX_NORMAL * 100)} = ${eur(r.pourAnnulerLeSolde)}`,
+          },
+          { libelle: "Impôt économisé par cette dépense", attendu: r.impotEvitePourAnnuler, calcul: `${eur(r.pourAnnulerLeSolde)} × ${pct(TAUX_NORMAL * 100)} = ${eur(r.impotEvitePourAnnuler)}, le solde entier` },
+          { libelle: "Baisse du résultat net", attendu: r.netPerduPourAnnuler, calcul: `${eur(r.pourAnnulerLeSolde)} − ${eur(r.impotEvitePourAnnuler)} = ${eur(r.netPerduPourAnnuler)}` },
         ];
       },
       explication: (c) => {
         const r = depenseDeFinDAnnee(c);
         return [
-          `L'arène retrouve votre calcul : ${eur(r.impotEnMoins)} d'impôt en moins, et un résultat net qui baisse de ${eur(r.netEnMoins)}, ce que la dépense coûte après impôt. La maintenance du trimestre ${T} n'a rien fait vendre de plus.`,
+          `Le solde n'est pas un impôt de plus : c'est la part de l'impôt de ${r.x.e.exercice} que les acomptes, calculés sur N, n'ont pas payée. Le faire disparaître par une dépense revient à payer ${eur(r.pourAnnulerLeSolde)} pour ne pas payer ${eur(r.impotEvitePourAnnuler)}. Le résultat fiscal restant au-dessus de ${eur(PLAFOND_DU_TAUX_REDUIT)}, tout le calcul se fait au taux marginal.`,
         ];
       },
     },
@@ -216,25 +204,27 @@ export const LA_DEPENSE_DE_FIN_D_ANNEE: Situation = {
         const r = depenseDeFinDAnnee(c);
         return [
           {
-            texte: `La dépense coûte ${eur(r.cout)} après impôt : l'impôt n'en paie que ${pct(r.k.tauxPct)}`,
-            juste: r.verdict === "le-taux-seulement",
+            texte: `Seulement si l'entretien sert : il coûte ${eur(r.cout)} après impôt`,
+            juste: r.verdict === "le-taux-marginal",
             retour:
-              r.verdict === "le-taux-seulement"
-                ? `Oui : ${eur(r.depense)} de maintenance en plus font ${eur(r.economie)} d'impôt en moins, et ${eur(r.cout)} de résultat net en moins. Une charge déductible ne coûte pas rien : elle coûte son montant, moins ${pct(r.k.tauxPct)}.`
-                : `Non : la dépense dépasse le bénéfice, et l'impôt économisé, ${eur(r.economie)}, est moins de ${pct(r.k.tauxPct)} de la dépense.`,
+              r.verdict === "le-taux-marginal"
+                ? `Oui : ${eur(r.depense)} d'entretien font ${eur(r.economie)} d'impôt en moins, ${pct(TAUX_NORMAL * 100)} au taux marginal, et ${eur(r.cout)} de résultat net en moins. Une dépense se décide sur ce qu'elle apporte ; l'impôt n'en paie qu'un quart.`
+                : `Non : au taux réduit, la dépense coûterait ${eur(r.cout)} après impôt.`,
           },
           {
-            texte: "La dépense ne coûte presque rien : chaque euro de maintenance en plus fait un euro d'impôt en moins, jusqu'au dernier",
+            texte: `Faites-la : ${eur(r.depense)} de charges, ce sont ${eur(r.depense)} d'impôt en moins`,
             juste: false,
-            retour: `Non : un euro de charge en plus retire un euro au bénéfice, et seulement ${pct(r.k.tauxPct)} à l'impôt. Ici, ${eur(r.depense)} de dépense font ${eur(r.economie)} d'impôt en moins.`,
+            retour: `Non : un euro de charge retire un euro au bénéfice, et seulement ${pct(TAUX_NORMAL * 100)} à l'impôt : ${eur(r.economie)} ici.`,
           },
           {
-            texte: `L'impôt n'en paie que ${eur(r.economie)} : l'exercice passe en perte, le reste devient un déficit à reporter`,
-            juste: r.verdict === "jusqu-a-l-impot",
-            retour:
-              r.verdict === "jusqu-a-l-impot"
-                ? `Oui : la dépense, ${eur(r.depense)}, dépasse le bénéfice de l'exercice, ${eur(r.k.avantImpot)}. L'impôt tombe à zéro, l'économie s'arrête à l'impôt de l'exercice, et ${eur(r.deficitCree)} de perte se reportent : ils n'économiseront de l'impôt que sur un exercice suivant en bénéfice.`
-                : `Non : l'exercice reste en bénéfice avec la dépense, ${eur(r.avantImpotAvec)}, et rien ne se reporte.`,
+            texte: `Elle est utile, mais au taux réduit elle ne fait économiser que ${eur(auCentime(r.depense * TAUX_REDUIT))}`,
+            juste: r.verdict === "le-taux-reduit",
+            retour: `Non : le bénéfice ${dE(r.x.entreprise)}, ${eur(r.x.benefice)}, dépasse de loin ${eur(PLAFOND_DU_TAUX_REDUIT)}. La dépense retire des euros taxés à ${pct(TAUX_NORMAL * 100)}, et fait économiser ${eur(r.economie)}.`,
+          },
+          {
+            texte: `Dépensez plutôt ${eur(r.pourAnnulerLeSolde)} : nous n'aurons plus de solde à payer en mai`,
+            juste: false,
+            retour: `Non : ${eur(r.pourAnnulerLeSolde)} de dépense pour ${eur(r.impotEvitePourAnnuler)} d'impôt évité, c'est ${eur(r.netPerduPourAnnuler)} de résultat net en moins. Le solde n'est que l'impôt de l'année que les acomptes n'ont pas encore payé.`,
           },
         ];
       },

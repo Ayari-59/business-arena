@@ -1,202 +1,303 @@
-import type { EquipmentTypeDef } from "../../../engine/types";
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../pedagogy/cours/etats";
-import { scenarioByCode } from "../../scenarios/registry";
 import type { Cas } from "../cas";
-import type { Chapitre } from "../types";
-import { TRIMESTRE_DE_L_ACHAT, machineDuChapitre } from "./croitre-en-investissant";
-import {
-  COUT_DU_CAPITAL_ANNUEL,
-  DUREE_DU_PROJET,
-  ENTREPRISES_DE_L_ACTUALISATION,
-  TAUX_TRIMESTRIEL,
-  projet,
-  tauxAnnuelEquivalent,
-  toleranceDActualisation,
-  vanAuTaux,
-  vanExacte,
-} from "./la-valeur-actuelle-nette";
-
-/** Au centime, sans zéro négatif. */
-const centime = (x: number) => auCentime(x) || 0;
-/** Un montant à la française, avec le signe moins typographique ; retranché, un négatif va entre parenthèses. */
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-/** Un taux déjà en pour cent : 25 donne « 25 % ». */
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const dixieme = (x: number) => x.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−");
-const auCentieme = (x: number) => Math.round(x * 100) / 100;
-/** « 1 + t » d'un taux composé ; négatif, le taux se retranche : « 1 − 7,43 % », jamais « 1 + −7,43 % ». */
-const unPlus = (t: number) => (t < 0 ? `1 − ${pct(-t)}` : `1 + ${pct(t)}`);
-const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
+import { auCentime } from "../monde/amortissement";
+import { coefficientDActualisation, delaiDeRecuperationActualise, fluxDifferentiels, fluxDuProjet, indiceDeProfitabilite, tauxDeFisher, tri, van } from "../monde/finance";
+import type { ProjetDInvestissement } from "../monde/projets-et-financement";
+import type { Chapitre, TableauDeDonnees } from "../types";
+import { ENTREPRISES_DES_PROJETS, dernierPositif, nomDeLaDate, projetsDe, toleranceDActualisation } from "./la-valeur-actuelle-nette";
 
 /**
  * CHAPITRE : LE TAUX DE RENTABILITÉ INTERNE ET LE CHOIX ENTRE DEUX PROJETS (DSCG, UE2 Finance,
  * palier 4).
  *
- * Deux projets qui s'excluent, que l'arène sait jouer : le projet A est la machine du chapitre
- * précédent (« La valeur actuelle nette d'un investissement »), le premier équipement du parc ; le
- * projet B est la machine suivante du catalogue, celle qui ajoute un peu plus de capacité pour un
- * prix plus élevé (`machineSuivante`). Chacune est achetée au trimestre 1, payée sur la
- * trésorerie, et l'arène rejoue les douze trimestres du projet avec elle : les flux, l'impôt et la
- * valeur résiduelle se calculent comme au chapitre précédent (`projet`).
+ * LE CHAPITRE JOUE DANS LE MONDE DU COURS (src/config/cours/monde), pas dans l'arène : les projets
+ * de NOVA ont une fiche figée (monde/projets-et-financement.ts), leurs flux et leurs critères se
+ * calculent par le modèle du cours (monde/finance.ts : `fluxDuProjet`, `van`, `tri`, `tauxDeFisher`,
+ * `indiceDeProfitabilite`, `delaiDeRecuperationActualise`). Une évolution du moteur ne change rien
+ * ici.
  *
- * Le chapitre calcule la VAN de chacun, son TRI par dichotomie (l'élève l'encadre entre deux taux
- * entiers et interpole, puis vérifie qu'au TRI la VAN s'annule), son indice de profitabilité et
- * son délai de récupération actualisé. Quand la VAN et le TRI ne classent pas les deux projets
- * dans le même ordre, il calcule le taux d'intersection de Fisher, celui qui annule la VAN des
- * flux différentiels ; quand ils les classent pareil, il dit pourquoi. Le choix final se fait à
- * la VAN, au coût du capital du cours (`COUT_DU_CAPITAL_ANNUEL`).
+ * L'objet : deux façons de lancer la gamme Go et Studio, qui s'excluent (l'atelier n'a la place que
+ * d'une ligne). Le projet A, celui du chapitre précédent, sur une seconde ligne manuelle ; le projet
+ * B, sur une ligne semi-automatique, plus chère (150 000 €), avec un seul opérateur, plus
+ * d'entretien et une meilleure revente. À 9 %, la VAN préfère B et le TRI préfère A : le taux de
+ * Fisher (12,73 %) dit pourquoi, et la VAN tranche. Puis un troisième projet, indépendant, le banc
+ * de mesure (C), pour l'indice de profitabilité et le rationnement du capital, et une critique du
+ * TRI : son hypothèse de réinvestissement, que le TRI global corrige sans corriger la taille.
  *
- * Ce n'est pas « Voir plus grand », le cas pratique de « Croître en investissant », qui compare la
- * plus grande machine à la petite sur le résultat net d'une année : ici, les deux projets se
- * comparent sur leurs flux actualisés, et par trois critères qui peuvent se contredire.
+ * LES TROIS TEMPS (demande du propriétaire, octobre 2026 : le niveau d'arrivée est celui du DSCG) :
+ *   · guidé : intro, les-deux-van, encadrer-le-tri (la formule est au repère ou dans la question,
+ *     qui nomme les chiffres) ;
+ *   · l'expérience avant la formule (prédire, manipuler, constater, formaliser) :
+ *     predire-le-croisement puis le-laboratoire-des-deux-lignes (le taux au pas de 0,1 point, les
+ *     deux VAN en graphique, le réinvestissement au TRI ou au taux d'actualisation ; égaler les deux
+ *     VAN) avant encadrer-le-tri et le-taux-de-fisher ; predire-l-entretien puis
+ *     l-entretien-au-curseur (l'entretien de B qui égale les deux VAN) avant l-entretien-qui-egalise ;
+ *   · autonome : le-tri-de-b, le-classement, les-indices (ni formule ni chiffres à prendre ; le
+ *     calcul de la correction montre le chemin) ;
+ *   · expert : le-taux-de-fisher (le conflit de la VAN et du TRI), l-entretien-qui-egalise (un calcul
+ *     à rebours), le-rationnement et le-programme (l'indice de profitabilité sous un budget, et
+ *     pourquoi son classement trompe avec des projets indivisibles), la-critique-du-tri (le TRI
+ *     global de chaque projet et du différentiel) ; puis le-choix et la synthèse.
  *
- * LES ENTREPRISES sont celles du chapitre précédent, pour les mêmes raisons ; la machine suivante
- * n'y fait défaillir aucun rejeu (la garde le vérifie). Chez L'ESCALE, aucun des deux projets
- * n'est acceptable : leurs TRI restent sous le coût du capital, et le classement ne décide rien.
- * Le chapitre ne cherche le taux de Fisher que là où les deux critères divergent sur des projets
- * dont l'un au moins est acceptable, et dit pourquoi ailleurs.
+ * CE QUI A DISPARU, AVEC L'ARÈNE : les deux machines du catalogue rejouées douze trimestres, les
+ * taux trimestriels et leurs TRI de plus de 100 % par an, les entreprises où le classement ne
+ * décidait rien.
  */
 
-/** Le projet B : la machine du catalogue qui suit celle du chapitre, la plus petite de celles qui ajoutent plus de capacité. */
-export function machineSuivante(code: string): EquipmentTypeDef {
-  const a = machineDuChapitre(code);
-  return [...scenarioByCode(code).scenario.equipment!.types]
-    .filter((t) => t.capacityPerUnit > a.capacityPerUnit)
-    .sort((x, y) => x.capacityPerUnit - y.capacityPerUnit)[0]!;
-}
+/** LE BUDGET DU RATIONNEMENT (hypothèse du cours) : ce que NOVA peut engager à la date 0, sa réserve et ce que la banque accepte de prêter. */
+export const BUDGET_DU_RATIONNEMENT = 240_000;
 
-/** Les bornes où la dichotomie cherche un taux trimestriel : de −50 % à +500 % par trimestre. */
-export const BORNES_DE_LA_DICHOTOMIE = [-0.5, 5] as const;
-/** La dichotomie s'arrête quand l'intervalle est plus étroit qu'un millionième de point. */
-const PRECISION = 1e-8;
+/** L'écart admis entre les deux VAN au défi du laboratoire : les égaler à 100 € près, au pas de 0,1 point de taux. */
+export const ECART_ADMIS_AU_DEFI = 100;
+
+/** Le levier du taux du laboratoire, en pour cent : de 0 % à 25 %, au pas de 0,1 point. */
+export const TAUX_DU_LABORATOIRE = { min: 0, max: 25, pas: 0.1 } as const;
+
+/** Le levier à choix du laboratoire : où se replacent les flux intermédiaires. */
+export const AU_TRI = 1;
+export const AU_TAUX_D_ACTUALISATION = 2;
+
+/** Les bornes du curseur de l'entretien de B, en euros par an. */
+export const ENTRETIEN_DU_CURSEUR = { min: 10_000, max: 20_000 } as const;
 
 /**
- * Le taux qui annule la VAN, cherché par dichotomie : on coupe l'intervalle en deux, et on garde
- * la moitié où la VAN change de signe. Absent quand la VAN ne change pas de signe entre les bornes.
+ * LE TRI GLOBAL (ou TRI intégré, ou TRI modifié) : les flux positifs se replacent au taux donné
+ * jusqu'à la fin du projet ; un flux négatif après la date 0 s'ajoute à la mise, actualisé au même
+ * taux. TRI global = (valeur acquise ÷ mise)^(1 ÷ durée) − 1. Il corrige l'hypothèse du TRI, qui
+ * replace chaque flux à son propre taux. À proposer à monde/finance.ts si un autre chapitre en a
+ * besoin.
  */
-export function tauxQuiAnnule(cout: number, flux: readonly number[], residuelle: number, bas: number = BORNES_DE_LA_DICHOTOMIE[0]) {
-  let lo = bas;
-  let hi: number = BORNES_DE_LA_DICHOTOMIE[1];
-  const van = (r: number) => vanExacte(cout, flux, residuelle, r);
-  if (!(van(lo) > 0 && van(hi) < 0)) return null;
-  let pas = 0;
-  while (hi - lo > PRECISION) {
-    const m = (lo + hi) / 2;
-    if (van(m) > 0) lo = m;
-    else hi = m;
-    pas++;
-  }
-  return { taux: (lo + hi) / 2, pas };
+export function triGlobal(flux: readonly number[], taux: number) {
+  const n = flux.length - 1;
+  let mise = -flux[0]!;
+  let valeurAcquise = 0;
+  flux.forEach((f, k) => {
+    if (k === 0) return;
+    if (f < 0) mise += -f * coefficientDActualisation(taux, k);
+    else valeurAcquise += f * (1 + taux) ** (n - k);
+  });
+  return { mise: auCentime(mise), valeurAcquise: auCentime(valeurAcquise), taux: (valeurAcquise / mise) ** (1 / n) - 1 };
 }
 
-/** Le TRI d'un projet, et son encadrement entre deux taux trimestriels entiers, comme l'élève le cherche. */
-function rendement(cout: number, flux: readonly number[], residuelle: number, bas?: number) {
-  const trouve = tauxQuiAnnule(cout, flux, residuelle, bas);
-  if (!trouve) return null;
-  const pctExact = trouve.taux * 100;
-  const triPct = auCentieme(pctExact);
-  const lo = Math.floor(pctExact);
+/** Le projet avec un autre entretien annuel de sa ligne (le levier du curseur). */
+export function avecLEntretien(p: ProjetDInvestissement, entretien: number): ProjetDInvestissement {
+  return { ...p, charges: p.charges.map((ch) => (/entretien/.test(ch.libelle) ? { ...ch, montants: ch.montants.map(() => entretien) } : ch)) };
+}
+
+/**
+ * COMPATIBILITÉ avec la mission « jouez » (jouez.ts, qu'il ne faut pas modifier) : elle nomme
+ * l'équipement du projet B à acheter dans l'arène. Le chapitre ne lit plus le catalogue de l'arène :
+ * il rend l'équipement du projet B de la fiche, la ligne semi-automatique, qui porte le nom de la
+ * machine du catalogue de NOVA dans l'arène (« Ligne semi-automatique »).
+ */
+export function machineSuivante(code: string): { code: string; name: string } {
+  const ligne = projetsDe({ code }).b.actifs[0]!;
+  const nom = ligne.libelle.replace(/^(la|le|l')\s?/, "");
+  return { code: projetsDe({ code }).b.code, name: nom.charAt(0).toUpperCase() + nom.slice(1) };
+}
+
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
+const entre = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
+const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const pct = (x: number, d = 2) => `${x.toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−")} %`;
+const auCentieme = (x: number) => Math.round(x * 100) / 100;
+/** « de NOVA », « d'Escale » : l'élision devant une voyelle. */
+const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
+
+/** L'encadrement d'un taux qui annule une VAN entre deux taux entiers, et son interpolation linéaire. */
+function encadrement(flux: readonly number[], taux: number) {
+  const lo = Math.floor(taux * 100);
   const hi = lo + 1;
-  const vanLo = vanAuTaux(cout, flux, residuelle, lo / 100).van;
-  const vanHi = vanAuTaux(cout, flux, residuelle, hi / 100).van;
-  const interpolation = auCentieme(lo + vanLo / (vanLo - vanHi));
-  const toleranceVan = toleranceDActualisation(flux, residuelle) + 1;
-  const ecart = Math.abs(interpolation - triPct);
-  // L'élève qui interpole sur ses propres VAN s'écarte d'autant que ses VAN s'écartent.
-  const toleranceInterpolation = auCentieme(Math.max(0.02, (2 * toleranceVan) / (vanLo - vanHi) + 0.01));
-  // Celui qui cherche le TRI par une autre voie (interpolation ou tableur) : l'écart de l'interpolation, et un peu plus.
-  const toleranceTri = auCentieme(Math.max(0.05, ecart + 0.02));
-  const annuel = (p: number) => tauxAnnuelEquivalent(p / 100) * 100;
-  return {
-    taux: trouve.taux,
-    pas: trouve.pas,
-    triPct,
-    triAnnuelPct: auCentieme(annuel(pctExact)),
-    lo,
-    hi,
-    vanLo,
-    vanHi,
-    interpolation,
-    toleranceVan,
-    toleranceInterpolation,
-    toleranceTri,
-    toleranceAnnuelle: auCentieme(annuel(pctExact + toleranceTri) - annuel(pctExact) + 0.02),
-    // La VAN au TRI arrondi au centième de point : zéro, à l'arrondi du taux près.
-    vanAuTri: vanAuTaux(cout, flux, residuelle, triPct / 100).van,
-  };
+  const vanLo = van(flux, lo / 100);
+  const vanHi = van(flux, hi / 100);
+  return { exact: taux, pct: auCentieme(taux * 100), lo, hi, vanLo, vanHi, interpolation: auCentieme(lo + vanLo / (vanLo - vanHi)), tolerance: toleranceDActualisation(flux) };
 }
 
-export type Prefere = "A" | "B";
-export type Retenu = Prefere | "aucun";
+export type Lettre = "A" | "B" | "C";
 
 const calculs = new Map<string, ReturnType<typeof calculer>>();
 
-/** Les deux projets, leurs critères, et ce qui les départage. */
-export function deuxProjets(c: Cas) {
+/** Les deux lignes, le banc, leurs critères, et ce qui les départage (calculés une fois par entreprise). */
+export function deuxLignes(c: Pick<Cas, "code">) {
   const deja = calculs.get(c.code);
   if (deja) return deja;
-  const r = calculer(c.code);
+  const r = calculer(c);
   calculs.set(c.code, r);
   return r;
 }
 
-function calculer(code: string) {
-  const a = projet(code, [machineDuChapitre(code)]);
-  const b = projet(code, [machineSuivante(code)]);
-  const ra = rendement(a.cout, a.flux, a.vr.nette)!;
-  const rb = rendement(b.cout, b.flux, b.vr.nette)!;
-
-  // Les flux différentiels, B moins A : leur VAN est l'écart des deux VAN, à chaque taux. Sans actualiser, ce que
-  // le projet B rend de plus, revente comprise, face à ce qu'il coûte de plus.
-  const dCout = b.cout - a.cout;
-  const dFlux = b.flux.map((f, k) => centime(f - a.flux[k]!));
-  const dResiduelle = centime(b.vr.nette - a.vr.nette);
-  const dSansActualiser = centime(dFlux.reduce((t, f) => t + f, 0) + dResiduelle);
-  // Le taux de Fisher se cherche à des taux positifs : c'est là que se place un coût du capital.
-  const fisher = rendement(dCout, dFlux, dResiduelle, 0);
-
-  const vanPrefere: Prefere = a.van >= b.van ? "A" : "B";
-  const triPrefere: Prefere = ra.triPct >= rb.triPct ? "A" : "B";
-  const ipPrefere: Prefere = a.ip >= b.ip ? "A" : "B";
-  const retenu: Retenu = Math.max(a.van, b.van) > 0 ? vanPrefere : "aucun";
-  const fisherAuDessus = fisher !== null && fisher.taux > TAUX_TRIMESTRIEL;
+function calculer(c: Pick<Cas, "code">) {
+  const k = projetsDe(c);
+  const t = k.taux;
+  const tauxPct = auCentieme(t * 100);
+  const fl = (p: ProjetDInvestissement) => fluxDuProjet(p, { tauxDeLImpot: k.impot });
+  const A = fl(k.a);
+  const B = fl(k.b);
+  const C = fl(k.c);
+  const vanA = van(A.flux, t);
+  const vanB = van(B.flux, t);
+  const vanC = van(C.flux, t);
+  const ecart = auCentime(vanB - vanA);
+  const triA = tri(A.flux)!;
+  const triB = tri(B.flux)!;
+  const encA = encadrement(A.flux, triA);
+  const encB = encadrement(B.flux, triB);
+  const diff = fluxDifferentiels(A.flux, B.flux);
+  const fisher = tauxDeFisher(A.flux, B.flux)!;
+  const encF = encadrement(diff, fisher);
+  const fisherPct = encF.pct;
+  const vanAAuFisher = van(A.flux, fisherPct / 100);
+  const vanBAuFisher = van(B.flux, fisherPct / 100);
+  const ip = { A: indiceDeProfitabilite(A.flux, t), B: indiceDeProfitabilite(B.flux, t), C: indiceDeProfitabilite(C.flux, t) };
+  const delaiA = delaiDeRecuperationActualise(A.flux, t)!;
+  const delaiB = delaiDeRecuperationActualise(B.flux, t)!;
+  // L'entretien de B : la VAN de B est affine dans l'entretien, (1 − t) × l'annuité par euro et par an.
+  const entretienDeB = k.b.charges.find((ch) => /entretien/.test(ch.libelle))!.montants[0]!;
+  const entretienDeA = k.a.charges.find((ch) => /entretien/.test(ch.libelle))!.montants[0]!;
+  const annuite = Array.from({ length: B.duree }, (_, i) => coefficientDActualisation(t, i + 1)).reduce((s, x) => s + x, 0);
+  const vanParMille = auCentime(1_000 * (1 - k.impot) * annuite);
+  const entretienMax = auCentime(entretienDeB + ecart / ((1 - k.impot) * annuite));
+  const vanDeBAvec = (e: number) => van(fl(avecLEntretien(k.b, e)).flux, t);
+  const entretienEntier = dernierPositif((e) => vanDeBAvec(e) - vanA, ENTRETIEN_DU_CURSEUR.min, ENTRETIEN_DU_CURSEUR.max, entretienMax);
+  // Le rationnement : les programmes qui tiennent dans le budget, A et B ne pouvant aller ensemble.
+  const projets = { A: { f: A, van: vanA, mise: -A.flux[0]! }, B: { f: B, van: vanB, mise: -B.flux[0]! }, C: { f: C, van: vanC, mise: -C.flux[0]! } };
+  const programmes = (["A", "B", "C", "AC", "BC"] as const).map((nom) => {
+    const lettres = nom.split("") as Lettre[];
+    return { nom, lettres, mise: auCentime(lettres.reduce((s, l) => s + projets[l].mise, 0)), van: auCentime(lettres.reduce((s, l) => s + projets[l].van, 0)) };
+  });
+  const possibles = programmes.filter((p) => p.mise <= BUDGET_DU_RATIONNEMENT);
+  const meilleur = possibles.reduce((m, p) => (p.van > m.van ? p : m));
+  // Le classement par l'indice : on prend les projets dans l'ordre de leur indice, tant que le budget et l'exclusion le permettent.
+  const parIndice = (["A", "B", "C"] as const).slice().sort((x, y) => ip[y] - ip[x]);
+  const retenusParIndice: Lettre[] = [];
+  let engage = 0;
+  for (const l of parIndice) {
+    const exclu = (l === "A" && retenusParIndice.includes("B")) || (l === "B" && retenusParIndice.includes("A"));
+    if (!exclu && engage + projets[l].mise <= BUDGET_DU_RATIONNEMENT) {
+      retenusParIndice.push(l);
+      engage += projets[l].mise;
+    }
+  }
+  const nomParIndice = (["A", "B", "C"] as const).filter((l) => retenusParIndice.includes(l)).join("");
+  const programmeParIndice = programmes.find((p) => p.nom === nomParIndice)!;
+  // La critique du TRI : le TRI global, les flux replacés au taux d'actualisation.
+  const globalA = triGlobal(A.flux, t);
+  const globalB = triGlobal(B.flux, t);
+  const globalDiff = triGlobal(diff, t);
+  // Le défi du laboratoire : la position du taux, sur le pas, où les deux VAN sont les plus proches.
+  const pas = TAUX_DU_LABORATOIRE.pas;
+  const positions = Array.from({ length: Math.round((TAUX_DU_LABORATOIRE.max - TAUX_DU_LABORATOIRE.min) / pas) + 1 }, (_, i) => auCentieme(TAUX_DU_LABORATOIRE.min + i * pas));
+  const ecartAuTaux = (x: number) => auCentime(van(B.flux, x / 100) - van(A.flux, x / 100));
+  const tauxDuDefi = positions.reduce((m, x) => (Math.abs(ecartAuTaux(x)) < Math.abs(ecartAuTaux(m)) ? x : m));
+  const vanPrefere: Lettre = vanB > vanA ? "B" : "A";
+  const triPrefere: Lettre = triB > triA ? "B" : "A";
   return {
-    a,
-    b,
-    ra,
-    rb,
-    dCout,
-    dFlux,
-    dResiduelle,
-    dSansActualiser,
+    k,
+    entreprise: k.entreprise,
+    t,
+    tauxPct,
+    A,
+    B,
+    C,
+    vanA,
+    vanB,
+    vanC,
+    ecart,
+    triA,
+    triB,
+    triAPct: encA.pct,
+    triBPct: encB.pct,
+    encA,
+    encB,
+    diff,
     fisher,
-    // Les deux VAN au taux de Fisher, arrondi au centième de point : égales, à l'arrondi près.
-    vanAuFisher: fisher
-      ? { a: vanAuTaux(a.cout, a.flux, a.vr.nette, fisher.triPct / 100).van, b: vanAuTaux(b.cout, b.flux, b.vr.nette, fisher.triPct / 100).van }
-      : null,
+    encF,
+    fisherPct,
+    vanAAuFisher,
+    vanBAuFisher,
+    ip,
+    ipPct: { A: auCentieme(ip.A), B: auCentieme(ip.B), C: auCentieme(ip.C) },
+    delaiA: auCentieme(delaiA),
+    delaiB: auCentieme(delaiB),
+    entretienDeA,
+    entretienDeB,
+    annuite,
+    vanParMille,
+    entretienMax,
+    vanDeBAvec,
+    entretienEntier,
+    programmes,
+    possibles,
+    meilleur,
+    parIndice,
+    programmeParIndice,
+    laisseParIndice: auCentime(BUDGET_DU_RATIONNEMENT - programmeParIndice.mise),
+    globalA,
+    globalB,
+    globalDiff,
+    globalAPct: auCentieme(globalA.taux * 100),
+    globalBPct: auCentieme(globalB.taux * 100),
+    globalDiffPct: auCentieme(globalDiff.taux * 100),
+    ecartAuTaux,
+    tauxDuDefi,
     vanPrefere,
     triPrefere,
-    ipPrefere,
     conflit: vanPrefere !== triPrefere,
-    fisherAuDessus,
-    retenu,
+    retenu: (Math.max(vanA, vanB) > 0 ? vanPrefere : null) as Lettre | null,
   };
 }
 
-/**
- * Le taux de Fisher se lit quand les deux critères divergent sur des projets dont l'un au moins
- * est acceptable. Quand les deux VAN sont négatives, le classement ne décide rien : on rejette
- * les deux, et le chapitre ne cherche pas où leurs courbes se croisent.
- */
-export const fisherSeLit = (k: ReturnType<typeof deuxProjets>) => k.conflit && k.retenu !== "aucun" && k.fisher !== null;
+export type DeuxLignes = ReturnType<typeof deuxLignes>;
 
-const T = TRIMESTRE_DE_L_ACHAT;
-const TAUX_PCT = auCentieme(TAUX_TRIMESTRIEL * 100);
-const COUT_PCT = auCentieme(COUT_DU_CAPITAL_ANNUEL * 100);
-const nomDu = (x: Prefere) => `le projet ${x}`;
+/** La lecture du laboratoire : les deux VAN au taux choisi, et le rendement de chaque projet selon le réinvestissement. */
+export function laboratoireDesDeuxLignes(x: DeuxLignes, pos: Readonly<Record<string, number>>) {
+  const t = pos.taux! / 100;
+  const vanA = van(x.A.flux, t);
+  const vanB = van(x.B.flux, t);
+  const auTri = pos.reinvestissement === AU_TRI;
+  return {
+    vanA,
+    vanB,
+    ecart: auCentime(vanB - vanA),
+    rendementA: auCentieme((auTri ? x.triA : triGlobal(x.A.flux, t).taux) * 100),
+    rendementB: auCentieme((auTri ? x.triB : triGlobal(x.B.flux, t).taux) * 100),
+  };
+}
+
+/** Les flux de trésorerie disponibles des deux lignes, date par date : le document de départ. */
+export function tableauDesDeuxLignes(c: Pick<Cas, "code">): TableauDeDonnees {
+  const x = deuxLignes(c);
+  return {
+    titre: `Les flux de trésorerie disponibles des deux lignes ${dE(x.entreprise)}`,
+    colonnes: ["Projet A, ligne manuelle", "Projet B, ligne semi-automatique"],
+    lignes: x.A.flux.map((f, d) => ({ libelle: nomDeLaDate(d), valeurs: [eur(f), eur(x.B.flux[d]!)] })),
+  };
+}
+
+/** Les trois projets de NOVA, leur mise et leur VAN : le document du rationnement. */
+export function tableauDesTroisProjets(c: Pick<Cas, "code">): TableauDeDonnees {
+  const x = deuxLignes(c);
+  const ligne = (l: Lettre, nom: string) => {
+    const p = l === "A" ? x.A : l === "B" ? x.B : x.C;
+    const v = l === "A" ? x.vanA : l === "B" ? x.vanB : x.vanC;
+    return { libelle: `Projet ${l}, ${nom}`, valeurs: [eur(-p.flux[0]!), eur(v)] };
+  };
+  return {
+    titre: `Les trois projets de ${x.entreprise}`,
+    colonnes: ["Mise de la date 0", `VAN à ${pct(x.tauxPct)}`],
+    lignes: [ligne("A", "ligne manuelle"), ligne("B", "ligne semi-automatique"), ligne("C", x.k.c.nom)],
+  };
+}
+
+const NOMS_DES_PROGRAMMES: Readonly<Record<string, string>> = {
+  A: "la ligne manuelle seule",
+  B: "la ligne semi-automatique seule",
+  C: "le banc seul",
+  AC: "la ligne manuelle et le banc",
+  BC: "la ligne semi-automatique et le banc",
+};
+export const nomDuProgramme = (nom: string) => NOMS_DES_PROGRAMMES[nom] ?? nom;
+const duProjet = (l: Lettre) => `du projet ${l}`;
 
 export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
   code: "le-tri-et-le-choix-entre-deux-projets",
@@ -205,387 +306,563 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
   blocs: ["DSCG UE2 · Finance"],
   titre: "Le taux de rentabilité interne et le choix entre deux projets",
   accroche:
-    "Deux machines, une seule place : la VAN de chacune, son taux de rentabilité interne cherché par dichotomie, son indice de profitabilité et son délai de récupération actualisé. Quand la VAN et le TRI ne désignent pas la même, le taux de Fisher dit pourquoi, et la VAN tranche.",
+    "Deux lignes pour une seule place : la manuelle a le meilleur TRI, la semi-automatique la meilleure VAN. Le laboratoire fait monter le taux jusqu'à ce qu'elles s'égalent, le taux de Fisher dit pourquoi elles divergent, puis un budget limité et un troisième projet mettent l'indice de profitabilité et le TRI à l'épreuve.",
   objectifs: [
-    "Calculer la VAN de deux projets au même coût du capital",
-    "Encadrer le TRI d'un projet entre deux taux, l'interpoler, et vérifier qu'il annule la VAN",
-    "Calculer l'indice de profitabilité et le délai de récupération actualisé",
-    "Dire si la VAN et le TRI classent deux projets pareil, et calculer le taux d'intersection de Fisher quand ils divergent",
-    "Choisir entre deux projets qui s'excluent",
+    "Encadrer le TRI d'un projet entre deux taux et l'interpoler",
+    "Expliquer le conflit entre la VAN et le TRI par le taux d'intersection de Fisher",
+    "Retrouver à rebours la charge qui égale les VAN de deux projets",
+    "Calculer l'indice de profitabilité et le délai de récupération actualisé, et choisir un programme sous un budget",
+    "Critiquer le TRI par le TRI global, et choisir entre deux projets qui s'excluent",
   ],
   libre: false,
   entreprises: {
-    codes: ENTREPRISES_DE_L_ACTUALISATION,
-    pourquoi: `ce chapitre compare deux machines sur ${DUREE_DU_PROJET} trimestres rejoués, comme le chapitre sur la valeur actuelle nette, et dans les mêmes entreprises : MAILLE & CO, L'ESCALE, LA TABLE D'AUGUSTIN, PIXEL & CO, VOLT FITNESS et ROUTE & CIE, où les machines font vendre, où chaque exercice finit en bénéfice, et où les flux de chacune ont un taux de rentabilité interne.`,
+    codes: ENTREPRISES_DES_PROJETS,
+    pourquoi:
+      "ce chapitre compare les deux lignes sur lesquelles NOVA, le fabricant d'enceintes du cours, peut lancer sa gamme Go et Studio : ses projets sont les seuls que la simulation du cours chiffre en entier, flux, impôt et BFR compris.",
   },
   etapes: [
     {
       id: "intro",
       type: "lecture",
-      titre: "Deux machines, une seule place",
-      notions: ["discounting", "irr_payback"],
+      titre: "Deux lignes, une seule place",
+      notions: ["irr_payback", "discounting"],
+      tableau: tableauDesDeuxLignes,
       texte: (c) => {
-        const { a, b } = deuxProjets(c);
+        const x = deuxLignes(c);
+        const la = x.k.a.actifs[0]!;
+        const lb = x.k.b.actifs[0]!;
         return [
-          `${c.entreprise} hésite entre deux machines, à acheter au trimestre ${T} et à payer sur sa trésorerie. Le projet A est celui du chapitre précédent : « ${a.machine} », ${eur(a.cout)}. Le projet B est la machine suivante du catalogue, « ${b.machine} », ${eur(b.cout)}, qui ajoute plus de capacité. La direction n'en financera qu'un : les deux projets s'excluent.`,
-          `L'arène a rejoué les ${a.duree} trimestres avec chacune. Le tableau donne leurs flux de trésorerie d'exploitation après impôt, calculés comme au chapitre précédent, et leur valeur résiduelle nette d'impôt à la fin du projet.`,
-          `Deux critères vont les juger : la VAN, en euros, au coût du capital de ${pct(COUT_PCT)} par an, soit ${pct(TAUX_PCT)} par trimestre ; et le taux de rentabilité interne, le taux qui annule la VAN.`,
+          `Ce chapitre se joue dans la simulation du cours, chez ${x.entreprise}, qui lance en N+1 sa gamme Go et Studio. Le projet A est celui du chapitre précédent : ${la.libelle}, ${eur(la.montant)}, 2 opérateurs de plus, ${eur(x.entretienDeA)} d'entretien par an, revendue ${pct(la.tauxDeReprise * 100)} de sa valeur nette comptable. Le projet B vend la même gamme sur ${lb.libelle} : ${eur(lb.montant)}, un seul opérateur, ${eur(x.entretienDeB)} d'entretien par an, revendue ${pct(lb.tauxDeReprise * 100)} de sa valeur nette comptable.`,
+          `L'atelier n'a la place que d'une ligne : les deux projets s'excluent. Le tableau donne leurs flux de trésorerie disponibles, calculés comme au chapitre précédent : impôt de ${pct(x.k.impot * 100)} sur le résultat d'exploitation, BFR de ${pct(x.k.a.partDuBfr * 100)} du chiffre d'affaires, valeur résiduelle nette d'impôt à la fin. Le taux d'actualisation est de ${pct(x.tauxPct)}.`,
+          "Deux critères vont les juger : la VAN, en euros d'aujourd'hui, et le taux de rentabilité interne, le taux qui annule la VAN. Quand ils ne désignent pas le même projet, il faut savoir pourquoi, et lequel croire.",
         ];
       },
-      tableau: (c) => {
-        const { a, b } = deuxProjets(c);
-        return {
-          titre: `Les deux projets ${dE(c.entreprise)}`,
-          colonnes: ["Projet A", "Projet B"],
-          lignes: [
-            { libelle: "Machine", valeurs: [a.machine, b.machine] },
-            { libelle: `Prix, décaissé au trimestre ${T}`, valeurs: [eur(a.cout), eur(b.cout)] },
-            { libelle: `Capacité ajoutée par trimestre (${c.unites})`, valeurs: [qte(a.capacite), qte(b.capacite)] },
-            ...a.lignes.map((l, k) => ({ libelle: `Flux du trimestre ${l.trimestre}`, valeurs: [eur(l.flux), eur(b.lignes[k]!.flux)] })),
-            { libelle: `Valeur résiduelle nette, fin du trimestre ${a.duree}`, valeurs: [eur(a.vr.nette), eur(b.vr.nette)] },
-          ],
-        };
-      },
-      repere: () => "Le TRI est le taux d'actualisation qui annule la VAN. Un projet est acceptable si son TRI dépasse le coût du capital.",
+      repere: () =>
+        "Le TRI est le taux d'actualisation qui annule la VAN. Un projet seul est acceptable si sa VAN est positive, c'est-à-dire si son TRI dépasse le taux d'actualisation.",
     },
     {
-      id: "van",
+      id: "les-deux-van",
       type: "montants",
-      titre: "La VAN de chaque projet",
+      titre: "La VAN de chaque ligne",
       notions: ["discounting"],
-      question: () =>
-        `Au taux de ${pct(TAUX_PCT)} par trimestre, calculez la VAN de chacun des deux projets : flux et valeur résiduelle actualisés, moins le prix de la machine.`,
+      question: (c) => {
+        const x = deuxLignes(c);
+        return `Actualisez à ${pct(x.tauxPct)} les flux de chaque projet : VAN = somme des flux de la date k × (1 + ${pct(x.tauxPct)})^(−k). Calculez la VAN du projet A, celle du projet B, puis ce que B crée de plus que le projet A.`;
+      },
       champs: (c) => {
-        const { a, b } = deuxProjets(c);
+        const x = deuxLignes(c);
+        const somme = (f: readonly number[]) => `${f.map((y, d) => `${entre(y)} × ${coefficientDActualisation(x.t, d).toLocaleString("fr-FR", { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`).join(" + ")}`;
         return [
+          { libelle: "VAN du projet A", attendu: x.vanA, calcul: `${somme(x.A.flux)} = ${eur(x.vanA)}`, tolerance: toleranceDActualisation(x.A.flux) },
+          { libelle: "VAN du projet B", attendu: x.vanB, calcul: `${somme(x.B.flux)} = ${eur(x.vanB)}`, tolerance: toleranceDActualisation(x.B.flux) },
           {
-            libelle: "VAN du projet A",
-            attendu: a.van,
-            calcul: `${eur(a.va)} + ${eur(a.vaResiduelle)} − ${eur(a.cout)} = ${eur(a.van)}`,
-            tolerance: a.tolerance + 1,
-          },
-          {
-            libelle: "VAN du projet B",
-            attendu: b.van,
-            calcul: `${eur(b.va)} + ${eur(b.vaResiduelle)} − ${eur(b.cout)} = ${eur(b.van)}`,
-            tolerance: b.tolerance + 1,
+            libelle: "Ce que B crée de plus que le projet A",
+            attendu: x.ecart,
+            calcul: `${eur(x.vanB)} − ${eur(x.vanA)} = ${eur(x.ecart)}`,
+            tolerance: toleranceDActualisation(x.A.flux) + toleranceDActualisation(x.B.flux),
           },
         ];
       },
       explication: (c) => {
-        const { a, b } = deuxProjets(c);
-        const positives = [a.van > 0, b.van > 0];
+        const x = deuxLignes(c);
         return [
-          positives.every(Boolean)
-            ? "Les deux VAN sont positives : chacun des deux projets, seul, créerait de la valeur."
-            : positives.some(Boolean)
-              ? `Seule la VAN du projet ${a.van > 0 ? "A" : "B"} est positive : l'autre machine rapporte moins que le coût du capital.`
-              : "Aucune des deux VAN n'est positive : aucun des deux projets ne crée de valeur.",
-          `La VAN du projet B est ${b.van >= a.van ? "plus forte" : "plus faible"} de ${eur(Math.abs(centime(b.van - a.van)))} : le projet B investit ${eur(b.cout - a.cout)} de plus, et ce supplément ${b.van >= a.van ? "rapporte plus qu'il ne coûte" : "ne rapporte pas ce qu'il coûte"}, au coût du capital.`,
+          `Les deux VAN sont positives : chaque ligne, seule, créerait de la valeur. B crée ${eur(x.ecart)} de plus : la ligne semi-automatique coûte ${eur(-x.diff[0]!)} de plus à la date 0, mais elle économise un opérateur chaque année et se revend mieux.`,
         ];
       },
     },
     {
-      id: "encadrer",
+      id: "predire-le-croisement",
+      type: "choix",
+      titre: "Pariez sur le taux",
+      notions: ["discounting", "irr_payback"],
+      question: (c) => {
+        const x = deuxLignes(c);
+        return `Avant de calculer, pariez. B coûte ${eur(-x.diff[0]!)} de plus à la date 0 et rend ${eur(x.diff[1]!)} de plus chaque année. À ${pct(x.tauxPct)}, il crée ${eur(x.ecart)} de plus. Si le taux d'actualisation monte, cette avance…`;
+      },
+      options: (c) => {
+        const x = deuxLignes(c);
+        const voir = "Le laboratoire de l'étape suivante fait monter le taux : regardez les deux courbes.";
+        const croise = x.fisher > x.t && x.fisher * 100 <= TAUX_DU_LABORATOIRE.max;
+        const pari = (texte: string, juste: boolean) => ({ texte, juste, retour: `${juste ? "Bon pari" : "Pari à vérifier"}. ${voir}` });
+        return [
+          pari("Fond, puis s'inverse : B attend plus longtemps le retour d'une mise plus lourde", croise),
+          pari("Grandit : B a les plus gros flux, et ils pèsent plus quand le taux monte", false),
+          pari("Ne bouge pas : les deux lignes vendent la même gamme", !croise),
+        ];
+      },
+    },
+    {
+      id: "le-laboratoire-des-deux-lignes",
+      type: "simulation",
+      titre: "Le laboratoire des deux lignes",
+      notions: ["irr_payback", "discounting"],
+      question: () =>
+        "Faites monter et descendre le taux d'actualisation, au dixième de point. Le tableau suit les deux VAN, et le rendement de chaque projet : son TRI, ou, si vous replacez ses flux au taux d'actualisation, son TRI global. Le graphique trace les deux VAN selon le taux. Relevez le défi.",
+      leviers: (c) => {
+        const x = deuxLignes(c);
+        return [
+          { code: "taux", libelle: "Taux d'actualisation", unite: "%", ...TAUX_DU_LABORATOIRE, depart: x.tauxPct },
+          {
+            code: "reinvestissement",
+            libelle: "Les flux de chaque projet se replacent",
+            unite: "",
+            min: AU_TRI,
+            max: AU_TAUX_D_ACTUALISATION,
+            pas: 1,
+            depart: AU_TRI,
+            choix: [
+              { valeur: AU_TRI, libelle: "au TRI du projet" },
+              { valeur: AU_TAUX_D_ACTUALISATION, libelle: "au taux d'actualisation" },
+            ],
+          },
+        ];
+      },
+      lecture: (c, pos) => {
+        const x = deuxLignes(c);
+        const l = laboratoireDesDeuxLignes(x, pos);
+        const d = laboratoireDesDeuxLignes(x, { taux: x.tauxPct, reinvestissement: AU_TRI });
+        return [
+          { libelle: "VAN du projet A", montant: l.vanA, reference: d.vanA },
+          { libelle: "VAN du projet B", montant: l.vanB, reference: d.vanB },
+          { libelle: "Ce que B crée de plus que le projet A", montant: l.ecart, reference: d.ecart, effet: true, fort: true },
+          { libelle: "Rendement du projet A", montant: l.rendementA, reference: d.rendementA, unite: "%" },
+          { libelle: "Rendement du projet B", montant: l.rendementB, reference: d.rendementB, unite: "%" },
+        ];
+      },
+      graphique: (c) => {
+        const x = deuxLignes(c);
+        return {
+          levier: "taux",
+          courbes: [
+            { libelle: "VAN du projet A", valeur: (pos) => van(x.A.flux, pos.taux! / 100) },
+            { libelle: "VAN du projet B", valeur: (pos) => van(x.B.flux, pos.taux! / 100) },
+          ],
+        };
+      },
+      defi: (c) => {
+        const x = deuxLignes(c);
+        return {
+          consigne: `Trouvez le taux où les deux VAN s'égalent, à ${eur(ECART_ADMIS_AU_DEFI)} près.`,
+          atteint: (pos) => Math.abs(x.ecartAuTaux(pos.taux!)) <= ECART_ADMIS_AU_DEFI,
+          indice: (pos) => {
+            const e = x.ecartAuTaux(pos.taux!);
+            return e > 0
+              ? `À ${pct(pos.taux!, 1)}, B crée encore ${eur(e)} de plus : montez le taux.`
+              : `À ${pct(pos.taux!, 1)}, le projet A crée ${eur(-e)} de plus : vous êtes allé trop loin, baissez le taux.`;
+          },
+          solution: { taux: x.tauxDuDefi, reinvestissement: AU_TRI },
+        };
+      },
+      explication: (c, pos) => {
+        const x = deuxLignes(c);
+        const l = laboratoireDesDeuxLignes(x, pos);
+        const g = laboratoireDesDeuxLignes(x, { taux: pos.taux!, reinvestissement: AU_TAUX_D_ACTUALISATION });
+        return [
+          `À ${pct(pos.taux!, 1)}, les deux VAN se rejoignent : ${eur(l.vanA)} pour le projet A, ${eur(l.vanB)} pour B. C'est le taux d'intersection de Fisher. Sous lui, B crée le plus de valeur ; au-dessus, le projet A. Le taux d'actualisation de ${x.entreprise}, ${pct(x.tauxPct)}, est dessous : la VAN choisit B.`,
+          `Le TRI, lui, ne bouge pas avec le taux : ${pct(x.triAPct)} pour le projet A, ${pct(x.triBPct)} pour B. Il préfère le projet A à tout taux, parce qu'il suppose chaque flux replacé au TRI du projet. Replacez-les au taux d'actualisation : à ${pct(pos.taux!, 1)}, le TRI global vaut ${pct(g.rendementA)} pour le projet A et ${pct(g.rendementB)} pour B. Le projet A garde l'avantage : un taux mesure un rendement par euro, pas les euros créés.`,
+        ];
+      },
+    },
+    {
+      id: "encadrer-le-tri",
       type: "montants",
       titre: "Encadrer le TRI du projet A",
       notions: ["irr_payback"],
       question: (c) => {
-        const { ra } = deuxProjets(c);
-        return `Le TRI du projet A est le taux trimestriel qui annule sa VAN. Encadrez-le : calculez la VAN du projet A à ${pct(ra.lo)} et à ${pct(ra.hi)} par trimestre, puis interpolez linéairement entre ces deux taux.`;
+        const x = deuxLignes(c);
+        const e = x.encA;
+        return `Le TRI du projet A est le taux qui annule sa VAN. Encadrez-le : calculez la VAN du projet A à ${pct(e.lo)} et à ${pct(e.hi)}, puis interpolez linéairement, TRI ≈ ${pct(e.lo)} + VAN à ${pct(e.lo)} ÷ (VAN à ${pct(e.lo)} − VAN à ${pct(e.hi)}).`;
       },
       champs: (c) => {
-        const { a, ra } = deuxProjets(c);
+        const x = deuxLignes(c);
+        const e = x.encA;
         return [
+          { libelle: `VAN du projet A à ${pct(e.lo)}`, attendu: e.vanLo, calcul: `les flux du projet A actualisés à ${pct(e.lo)} : ${eur(e.vanLo)}`, tolerance: e.tolerance },
+          { libelle: `VAN du projet A à ${pct(e.hi)}`, attendu: e.vanHi, calcul: `au même calcul, à ${pct(e.hi)} : ${eur(e.vanHi)}`, tolerance: e.tolerance },
           {
-            libelle: `VAN du projet A à ${pct(ra.lo)} par trimestre`,
-            attendu: ra.vanLo,
-            calcul: `les flux actualisés à ${pct(ra.lo)}, plus la valeur résiduelle actualisée, moins ${eur(a.cout)} : ${eur(ra.vanLo)}`,
-            tolerance: ra.toleranceVan,
-          },
-          {
-            libelle: `VAN du projet A à ${pct(ra.hi)} par trimestre`,
-            attendu: ra.vanHi,
-            calcul: `au même calcul, à ${pct(ra.hi)} : ${eur(ra.vanHi)}`,
-            tolerance: ra.toleranceVan,
-          },
-          {
-            libelle: "TRI trimestriel du projet A, par interpolation (%)",
-            attendu: ra.interpolation,
-            calcul: `${qte(ra.lo)} + ${eur(ra.vanLo)} ÷ (${eur(ra.vanLo)} − ${retranche(ra.vanHi)}) = ${pct(ra.interpolation)}`,
-            tolerance: ra.toleranceInterpolation,
+            libelle: "TRI du projet A, par interpolation (%)",
+            attendu: e.interpolation,
+            calcul: `${qte(e.lo)} + ${eur(e.vanLo)} ÷ (${eur(e.vanLo)} − ${entre(e.vanHi)}) = ${pct(e.interpolation)}`,
+            tolerance: 0.02,
           },
         ];
       },
       explication: (c) => {
-        const { ra } = deuxProjets(c);
-        const ecart = auCentieme(Math.abs(ra.interpolation - ra.triPct));
+        const x = deuxLignes(c);
+        const e = x.encA;
         return [
-          `La VAN change de signe entre ${pct(ra.lo)} et ${pct(ra.hi)} : le TRI est entre les deux. Le chapitre l'a cherché par dichotomie, en coupant l'intervalle en deux et en gardant la moitié où la VAN change de signe, ${qte(ra.pas)} fois : ${pct(ra.triPct)} par trimestre, soit ${pct(ra.triAnnuelPct)} par an.`,
-          ecart === 0
-            ? "L'interpolation tombe sur le même taux, au centième de point près."
-            : `L'interpolation linéaire le donne à ${ecart.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} point près : entre deux taux, la VAN n'est pas une droite.`,
-          `Vérification : au taux de ${pct(ra.triPct)}, la VAN du projet A vaut ${eur(ra.vanAuTri)}, zéro à l'arrondi du taux près.`,
+          `La VAN change de signe entre ${pct(e.lo)} et ${pct(e.hi)} : le TRI est entre les deux. La simulation le cherche par dichotomie, en coupant l'intervalle en deux et en gardant la moitié où la VAN change de signe : ${pct(e.pct)}. L'interpolation le donne à ${e.interpolation === e.pct ? "l'arrondi près" : `${pct(auCentieme(Math.abs(e.interpolation - e.pct)))} près`} : entre deux taux si proches, la VAN est presque une droite.`,
+          `Le TRI du projet A, ${pct(e.pct)}, dépasse le taux d'actualisation, ${pct(x.tauxPct)} : la ligne manuelle, seule, est acceptable, comme sa VAN positive le disait.`,
         ];
       },
     },
     {
-      id: "tri",
+      id: "le-tri-de-b",
       type: "montants",
-      titre: "Le TRI des deux projets",
+      titre: "Le TRI du projet B",
       notions: ["irr_payback"],
-      question: () =>
-        "Cherchez de même le TRI trimestriel du projet B, puis exprimez les TRI des deux projets en taux annuels équivalents, pour les comparer au coût du capital.",
+      question: () => "Sans formule cette fois. Encadrez le TRI de B entre deux taux entiers, puis interpolez.",
       champs: (c) => {
-        const { ra, rb } = deuxProjets(c);
+        const x = deuxLignes(c);
+        const e = x.encB;
         return [
+          { libelle: "Taux entier juste sous le TRI de B (%)", attendu: e.lo, calcul: `la VAN de B est positive à ${pct(e.lo)} (${eur(e.vanLo)}) et négative à ${pct(e.hi)} (${eur(e.vanHi)}) : ${pct(e.lo)}`, tolerance: 0.01 },
+          { libelle: "VAN de B à ce taux", attendu: e.vanLo, calcul: `les flux de B actualisés à ${pct(e.lo)} : ${eur(e.vanLo)}`, tolerance: e.tolerance },
           {
-            libelle: "TRI trimestriel du projet B (%)",
-            attendu: rb.triPct,
-            calcul: `la VAN du projet B vaut ${eur(rb.vanLo)} à ${pct(rb.lo)} et ${eur(rb.vanHi)} à ${pct(rb.hi)} ; la dichotomie converge sur ${pct(rb.triPct)}`,
-            tolerance: rb.toleranceTri,
-          },
-          {
-            libelle: "TRI annuel équivalent du projet A (%)",
-            attendu: ra.triAnnuelPct,
-            calcul: `(${unPlus(ra.triPct)})^4 − 1 = ${pct(ra.triAnnuelPct)}`,
-            tolerance: ra.toleranceAnnuelle,
-          },
-          {
-            libelle: "TRI annuel équivalent du projet B (%)",
-            attendu: rb.triAnnuelPct,
-            calcul: `(${unPlus(rb.triPct)})^4 − 1 = ${pct(rb.triAnnuelPct)}`,
-            tolerance: rb.toleranceAnnuelle,
+            libelle: "TRI de B, par interpolation (%)",
+            attendu: e.interpolation,
+            calcul: `${qte(e.lo)} + ${eur(e.vanLo)} ÷ (${eur(e.vanLo)} − ${entre(e.vanHi)}) = ${pct(e.interpolation)}`,
+            tolerance: 0.02,
           },
         ];
       },
       explication: (c) => {
-        const { ra, rb, triPrefere } = deuxProjets(c);
-        const accepte = (t: number) => t > COUT_PCT;
-        const acceptes = [accepte(ra.triAnnuelPct), accepte(rb.triAnnuelPct)];
-        const fort = pct(triPrefere === "A" ? ra.triAnnuelPct : rb.triAnnuelPct);
-        const faible = pct(triPrefere === "A" ? rb.triAnnuelPct : ra.triAnnuelPct);
+        const x = deuxLignes(c);
         return [
-          acceptes.every(Boolean)
-            ? `Les deux TRI dépassent le coût du capital, ${pct(COUT_PCT)} par an : chacun des deux projets, seul, serait acceptable, comme leurs VAN positives le disaient.`
-            : acceptes.some(Boolean)
-              ? `Le TRI du projet ${acceptes[0] ? "B" : "A"} reste sous le coût du capital, ${pct(COUT_PCT)} par an : seul, ce projet serait à rejeter, comme sa VAN négative le disait.`
-              : `Les deux TRI restent sous le coût du capital, ${pct(COUT_PCT)} par an : aucun des deux projets, seul, ne serait acceptable, comme leurs VAN négatives le disaient.`,
-          acceptes.some(Boolean)
-            ? `Au TRI, ${nomDu(triPrefere)} l'emporte : ${fort} par an, contre ${faible}.`
-            : `Au TRI, ${nomDu(triPrefere)} est le moins mauvais : ${fort} par an, contre ${faible}.${ra.triPct < 0 && rb.triPct < 0 ? " Un TRI négatif dit que les flux et la revente, même sans actualiser, ne rendent pas le prix de la machine." : ""}`,
+          `Le TRI de B, ${pct(x.triBPct)}, dépasse lui aussi ${pct(x.tauxPct)} : B, seul, serait acceptable. Mais il est sous celui du projet A, ${pct(x.triAPct)}, alors que sa VAN est la plus forte.`,
         ];
       },
     },
     {
-      id: "indices",
-      type: "montants",
-      titre: "Indice de profitabilité et délai actualisé",
-      notions: ["irr_payback", "discounting"],
-      question: (c) => {
-        const { a, b } = deuxProjets(c);
-        const delais = a.delai !== null && b.delai !== null;
-        const seul = a.delai !== null ? "A" : b.delai !== null ? "B" : null;
-        return `Calculez l'indice de profitabilité de chaque projet : ce que rendent ses flux et sa revente, actualisés, pour un euro investi.${delais ? " Puis son délai de récupération actualisé : le nombre de trimestres au bout duquel ses flux actualisés cumulés rejoignent son prix, en interpolant dans le trimestre où ils le rejoignent." : seul !== null ? ` Puis le délai de récupération actualisé du projet ${seul}, le seul que ses flux récupèrent avant la fin du projet : le nombre de trimestres au bout duquel ses flux actualisés cumulés rejoignent son prix, en interpolant dans le trimestre où ils le rejoignent.` : ""}`;
-      },
-      champs: (c) => {
-        const { a, b } = deuxProjets(c);
-        const delai = (p: typeof a, x: Prefere) =>
-          p.delai === null
-            ? []
-            : [
-                {
-                  libelle: `Délai de récupération actualisé du projet ${x} (trimestres)`,
-                  attendu: p.delai,
-                  calcul: `les flux actualisés cumulés rejoignent ${eur(p.cout)} au cours du trimestre ${Math.ceil(p.delai)} : ${dixieme(p.delai)} trimestres`,
-                  tolerance: 0.1,
-                },
-              ];
-        return [
-          { libelle: "Indice de profitabilité du projet A", attendu: a.ip, calcul: `(${eur(a.va)} + ${eur(a.vaResiduelle)}) ÷ ${eur(a.cout)} = ${qte(a.ip)}`, tolerance: 0.01 },
-          { libelle: "Indice de profitabilité du projet B", attendu: b.ip, calcul: `(${eur(b.va)} + ${eur(b.vaResiduelle)}) ÷ ${eur(b.cout)} = ${qte(b.ip)}`, tolerance: 0.01 },
-          ...delai(a, "A"),
-          ...delai(b, "B"),
-        ];
-      },
-      explication: (c) => {
-        const { a, b, ipPrefere } = deuxProjets(c);
-        const ipFort = ipPrefere === "A" ? a.ip : b.ip;
-        return [
-          `Chaque euro investi dans ${nomDu(ipPrefere)} en rend ${qte(ipFort)} en valeur actuelle, contre ${qte(ipPrefere === "A" ? b.ip : a.ip)} pour l'autre. L'indice rapporte la valeur créée à la mise : il départage des projets quand les capitaux manquent pour les financer tous, pas quand ils s'excluent.`,
-          a.delai !== null && b.delai !== null
-            ? `Le projet A rend son prix, actualisé, en ${dixieme(a.delai)} trimestres, le projet B en ${dixieme(b.delai)}. Le délai dit le risque d'attendre, pas la valeur : il ignore tout ce qui vient après.`
-            : a.delai === null && b.delai === null && a.van <= 0 && b.van <= 0
-              ? "Aucun des deux projets ne rend son prix, actualisé, avant la fin du projet : même revente comprise, leurs VAN restent négatives. Le délai dit le risque d'attendre, pas la valeur."
-              : `${[a, b]
-                  .map((p, i) => ({ p, x: i === 0 ? "A" : "B" }))
-                  .filter(({ p }) => p.delai === null)
-                  .map(({ p, x }) => `Le projet ${x} ne rend pas son prix, actualisé, avant la fin du projet : ${p.van > 0 ? "sans sa revente, ses flux n'y suffisent pas" : "même revente comprise, sa VAN reste négative"}.`)
-                  .join(" ")} Le délai dit le risque d'attendre, pas la valeur.`,
-        ];
-      },
-    },
-    {
-      id: "classement",
+      id: "le-classement",
       type: "choix",
       titre: "Les deux critères classent-ils pareil ?",
       notions: ["irr_payback", "discounting"],
       question: (c) => {
-        const { a, b, ra, rb } = deuxProjets(c);
-        return `Projet A : VAN de ${eur(a.van)}, TRI de ${pct(ra.triPct)} par trimestre. Projet B : VAN de ${eur(b.van)}, TRI de ${pct(rb.triPct)}. Au coût du capital, que disent les deux critères ?`;
+        const x = deuxLignes(c);
+        return `Projet A : VAN de ${eur(x.vanA)}, TRI de ${pct(x.triAPct)}. Projet B : VAN de ${eur(x.vanB)}, TRI de ${pct(x.triBPct)}. À ${pct(x.tauxPct)}, que disent les deux critères ?`;
       },
       options: (c) => {
-        const k = deuxProjets(c);
-        const { vanPrefere: v, triPrefere: t, fisher, dCout, dSansActualiser } = k;
-        const pourquoiPareil =
-          fisher === null
-            ? `Même sans actualiser, les flux en plus du projet B (${eur(dSansActualiser)}, revente comprise) ${dSansActualiser < dCout ? "ne remboursent pas" : "remboursent tout juste"} ses ${eur(dCout)} d'investissement en plus : les deux courbes de VAN ne se croisent à aucun taux positif, et le projet A l'emporte quel que soit le taux.`
-            : `Les deux courbes de VAN se croisent à ${pct(fisher.triPct)} par trimestre, sous le coût du capital : à ce taux, les deux critères désignent le même projet.`;
-        const conflit = `le projet A rend plus par euro investi, le projet B rapporte plus d'euros : il investit ${eur(dCout)} de plus, et ce supplément rapporte encore plus que le coût du capital.`;
-        const non = `Non : la VAN préfère ${nomDu(v)}, le TRI ${nomDu(t)}.`;
-        // Deux VAN négatives : le classement se lit, mais il ne décide rien.
-        const rienARetenir = `Oui : ${v === t ? `les deux critères préfèrent ${nomDu(v)}, qui détruit le moins de valeur et dont le TRI est le moins mauvais` : `la VAN préfère ${nomDu(v)}, qui détruit le moins de valeur, et le TRI ${nomDu(t)}, le moins mauvais`}. Mais les deux VAN sont négatives : aucun projet n'est acceptable, et le classement ne décide rien.`;
-        const oui = (x: string) => (k.retenu === "aucun" ? rienARetenir : x);
+        const x = deuxLignes(c);
+        const v = x.vanPrefere;
+        const t = x.triPrefere;
+        const non = `Non : la VAN préfère le projet ${v}, le TRI le projet ${t}.`;
+        const option = (texte: string, vv: Lettre, tt: Lettre, oui: string) => ({ texte, juste: v === vv && t === tt, retour: v === vv && t === tt ? oui : non });
         return [
-          {
-            texte: "La VAN préfère le projet B, le TRI préfère le projet A",
-            juste: v === "B" && t === "A",
-            retour: v === "B" && t === "A" ? oui(`Oui : ${conflit}`) : non,
-          },
-          {
-            texte: "La VAN préfère le projet A, le TRI préfère le projet B",
-            juste: v === "A" && t === "B",
-            retour: v === "A" && t === "B" ? oui("Oui : le projet B rend plus par euro investi, mais le projet A crée plus de valeur au coût du capital.") : non,
-          },
-          {
-            texte: "Les deux critères préfèrent le projet A",
-            juste: v === "A" && t === "A",
-            retour: v === "A" && t === "A" ? oui(`Oui : le projet A a la plus forte VAN et le plus fort TRI. ${pourquoiPareil}`) : non,
-          },
-          {
-            texte: "Les deux critères préfèrent le projet B",
-            juste: v === "B" && t === "B",
-            retour: v === "B" && t === "B" ? oui("Oui : le projet B a la plus forte VAN et le plus fort TRI : il rapporte plus d'euros, et plus par euro investi.") : non,
-          },
+          option("La VAN préfère B, le TRI préfère le projet A", "B", "A", `Oui : le projet A rend plus par euro investi, B rapporte plus d'euros. Il investit ${eur(-x.diff[0]!)} de plus, et ce supplément rapporte encore plus que ${pct(x.tauxPct)}.`),
+          option("La VAN préfère le projet A, le TRI préfère B", "A", "B", "Oui : B rend plus par euro investi, mais le projet A crée plus de valeur."),
+          option("Les deux critères préfèrent le projet A", "A", "A", "Oui : le projet A a la plus forte VAN et le plus fort TRI."),
+          option("Les deux critères préfèrent B", "B", "B", "Oui : B a la plus forte VAN et le plus fort TRI."),
         ];
       },
     },
     {
-      id: "fisher",
+      id: "le-taux-de-fisher",
       type: "montants",
       titre: "Le taux d'intersection de Fisher",
       notions: ["irr_payback", "discounting"],
-      si: (c) => fisherSeLit(deuxProjets(c)),
-      tableau: (c) => {
-        const k = deuxProjets(c);
-        return {
-          titre: "Les flux différentiels, projet B moins projet A",
-          colonnes: ["Projet B moins projet A"],
-          lignes: [
-            { libelle: `Investissement en plus, trimestre ${T}`, valeurs: [eur(-k.dCout)] },
-            ...k.dFlux.map((f, i) => ({ libelle: `Flux du trimestre ${i + 1}`, valeurs: [eur(f)] })),
-            { libelle: `Valeur résiduelle nette, fin du trimestre ${k.a.duree}`, valeurs: [eur(k.dResiduelle)] },
-          ],
-        };
+      question: (c) => {
+        const x = deuxLignes(c);
+        return `Le laboratoire a situé le croisement vers ${pct(x.tauxDuDefi, 1)}. Calculez-le : c'est le TRI des flux différentiels, B moins le projet A. Donnez le flux différentiel des dates 1 à 4, celui de la date ${x.B.duree}, le taux de Fisher, puis la VAN du projet A à ce taux arrondi au centième de point.`;
       },
-      question: () =>
-        "Le taux d'intersection de Fisher est le taux auquel les deux projets ont la même VAN : celui qui annule la VAN des flux différentiels, B moins A. Calculez-le par trimestre, puis son équivalent annuel.",
       champs: (c) => {
-        const f = deuxProjets(c).fisher!;
+        const x = deuxLignes(c);
+        const n = x.B.duree;
+        const e = x.encF;
         return [
+          { libelle: "Flux différentiel des dates 1 à 4", attendu: x.diff[1]!, calcul: `${eur(x.B.flux[1]!)} − ${entre(x.A.flux[1]!)} = ${eur(x.diff[1]!)}, le même chaque année : B économise un opérateur, paie plus d'entretien et amortit plus` },
+          { libelle: `Flux différentiel de la date ${n}`, attendu: x.diff[n]!, calcul: `${eur(x.B.flux[n]!)} − ${eur(x.A.flux[n]!)} = ${eur(x.diff[n]!)}, la meilleure revente de B comprise` },
           {
-            libelle: "Taux de Fisher, par trimestre (%)",
-            attendu: f.triPct,
-            calcul: `la VAN des flux différentiels vaut ${eur(f.vanLo)} à ${pct(f.lo)} et ${eur(f.vanHi)} à ${pct(f.hi)} ; la dichotomie converge sur ${pct(f.triPct)}`,
-            tolerance: f.toleranceTri,
+            libelle: "Taux de Fisher (%)",
+            attendu: x.fisherPct,
+            calcul: `la VAN des flux différentiels vaut ${eur(e.vanLo)} à ${pct(e.lo)} et ${eur(e.vanHi)} à ${pct(e.hi)} : ${qte(e.lo)} + ${eur(e.vanLo)} ÷ (${eur(e.vanLo)} − ${entre(e.vanHi)}) = ${pct(e.interpolation)} ; la dichotomie donne ${pct(x.fisherPct)}`,
+            tolerance: 0.02,
           },
           {
-            libelle: "Taux de Fisher, équivalent annuel (%)",
-            attendu: f.triAnnuelPct,
-            calcul: `(${unPlus(f.triPct)})^4 − 1 = ${pct(f.triAnnuelPct)}`,
-            tolerance: f.toleranceAnnuelle,
+            libelle: `VAN du projet A à ${pct(x.fisherPct)}`,
+            attendu: x.vanAAuFisher,
+            calcul: `les flux du projet A actualisés à ${pct(x.fisherPct)} : ${eur(x.vanAAuFisher)} ; ceux de B y valent ${eur(x.vanBAuFisher)}`,
+            tolerance: toleranceDActualisation(x.A.flux),
           },
         ];
       },
       explication: (c) => {
-        const k = deuxProjets(c);
-        const f = k.fisher!;
+        const x = deuxLignes(c);
         return [
-          `Au taux de ${pct(f.triPct)} par trimestre, les deux projets valent autant : ${eur(k.vanAuFisher!.a)} pour le projet A, ${eur(k.vanAuFisher!.b)} pour le projet B, à l'arrondi du taux près. Au-dessous, le projet B a la plus forte VAN ; au-dessus, le projet A. Le coût du capital, ${pct(TAUX_PCT)} par trimestre, est au-dessous : à ce taux, la VAN choisit le projet B, quoi que dise le TRI.`,
-          `Le TRI suppose que chaque euro rendu par un projet se replace à son propre TRI, ${pct(k.ra.triPct)} par trimestre pour le projet A ; la VAN suppose qu'il se replace au coût du capital, ce qui est plus réaliste.`,
+          `Au taux de Fisher, ${pct(x.fisherPct)}, les deux projets valent autant, à l'arrondi du taux près. Investir dans B plutôt que dans le projet A, c'est investir ${eur(-x.diff[0]!)} de plus pour ${eur(x.diff[1]!)} de plus par an : ce supplément rapporte ${pct(x.fisherPct)}. Tant que les capitaux coûtent moins, ici ${pct(x.tauxPct)}, il vaut la peine : la VAN choisit B.`,
+          "Le conflit vient de deux différences : la taille (B immobilise plus) et le profil (ses flux en plus arrivent plus tard, avec la revente). Le TRI les ignore, la VAN au taux d'actualisation les pèse.",
         ];
       },
     },
     {
-      id: "choix",
+      id: "predire-l-entretien",
       type: "choix",
-      titre: "Quel projet retenir ?",
-      notions: ["discounting", "profitability_vs_return"],
-      question: () => `Les deux projets s'excluent. Au coût du capital de ${pct(COUT_PCT)} par an, lequel retenir ?`,
+      titre: "Pariez sur l'entretien",
+      notions: ["discounting"],
+      question: (c) => {
+        const x = deuxLignes(c);
+        return `Le fournisseur de la ligne semi-automatique propose un contrat d'entretien plus complet, plus cher que les ${eur(x.entretienDeB)} par an de la fiche. Pariez : jusqu'où l'entretien de B peut-il monter avant que B ne vaille plus que le projet A ?`;
+      },
       options: (c) => {
-        const { a, b, ra, rb, retenu, triPrefere } = deuxProjets(c);
-        const meilleur = retenu === "A" ? a : b;
+        const x = deuxLignes(c);
+        const m = x.entretienMax;
+        const voir = "Le curseur de l'étape suivante fait monter l'entretien : regardez où les deux VAN se croisent.";
+        const pari = (texte: string, juste: boolean) => ({ texte, juste, retour: `${juste ? "Bon pari" : "Pari à vérifier"}. ${voir}` });
         return [
+          pari("Jusqu'à 11 000 € environ : l'avance de B est mince", m < 12_000),
+          pari("Jusqu'à 13 000 € ou 14 000 €", m >= 12_000 && m < 15_000),
+          pari("Jusqu'à 20 000 € et plus : l'avance de B est large", m >= 15_000),
+        ];
+      },
+    },
+    {
+      id: "l-entretien-au-curseur",
+      type: "curseur",
+      titre: "Faites monter l'entretien de B",
+      notions: ["discounting"],
+      question: (c) => {
+        const x = deuxLignes(c);
+        return `Faites monter l'entretien annuel de la ligne semi-automatique, de ${eur(ENTRETIEN_DU_CURSEUR.min)} à ${eur(ENTRETIEN_DU_CURSEUR.max)}. Une droite donne la VAN de B, l'autre celle du projet A, ${eur(x.vanA)}, qui ne bouge pas. Placez le curseur sur l'entretien le plus élevé où B vaut encore au moins autant, puis validez.`;
+      },
+      grandeur: () => ({ libelle: "Entretien annuel de la ligne semi-automatique", unite: "€ par an" }),
+      sens: "plus-grande",
+      cible: (c) => ({ attendu: deuxLignes(c).entretienEntier, min: ENTRETIEN_DU_CURSEUR.min, max: ENTRETIEN_DU_CURSEUR.max }),
+      zones: ["B vaut plus que le projet A", "Le projet A vaut plus que B"],
+      rates: () => ({
+        dessous: "B vaut encore plus : l'entretien peut monter davantage.",
+        dessus: "À cet entretien, B vaut déjà moins que le projet A.",
+      }),
+      montrer: "Montrer le croisement",
+      lecture: (c, e) => {
+        const x = deuxLignes(c);
+        const v = x.vanDeBAvec(e);
+        return [
+          { libelle: "VAN du projet B", montant: v },
+          { libelle: "VAN du projet A", montant: x.vanA },
+          { libelle: "Ce que B crée de plus que le projet A", montant: auCentime(v - x.vanA), fort: true },
+        ];
+      },
+      droites: (c) => {
+        const x = deuxLignes(c);
+        return { produit: (e) => x.vanDeBAvec(e), cout: () => x.vanA, libelles: ["VAN du projet B", "VAN du projet A"] };
+      },
+      explication: (c) => {
+        const x = deuxLignes(c);
+        return [
+          `Les deux droites se croisent vers ${eur(x.entretienEntier)} par an : l'entretien de B peut monter d'environ ${pct(Math.round((x.entretienMax / x.entretienDeB - 1) * 100))} avant que son avance ne disparaisse. Chaque euro d'entretien annuel en plus coûte ${eur(auCentime(1 - x.k.impot))} après impôt, ${qte(x.B.duree)} ans de suite : la VAN de B est une droite de l'entretien.`,
+          "C'est ce que l'étape suivante fait calculer à rebours, au centime.",
+        ];
+      },
+    },
+    {
+      id: "l-entretien-qui-egalise",
+      type: "montants",
+      titre: "L'entretien qui égale les deux VAN",
+      notions: ["discounting"],
+      question: (c) => {
+        const x = deuxLignes(c);
+        return `Retrouvez à rebours le croisement du curseur. Un entretien en plus se déduit de l'impôt, et se paie chaque année pendant ${qte(x.B.duree)} ans. Calculez le flux après impôt que coûtent 1 000 € d'entretien de plus par an, la VAN qu'ils retirent à B, puis l'entretien annuel de B qui égale les deux VAN.`;
+      },
+      champs: (c) => {
+        const x = deuxLignes(c);
+        const coefs = Array.from({ length: x.B.duree }, (_, i) => coefficientDActualisation(x.t, i + 1));
+        const annuite = coefs.reduce((s, y) => s + y, 0);
+        return [
+          { libelle: "Flux après impôt que coûtent 1 000 € d'entretien par an", attendu: auCentime(1_000 * (1 - x.k.impot)), calcul: `1 000 € × (1 − ${pct(x.k.impot * 100)}) = ${eur(auCentime(1_000 * (1 - x.k.impot)))}` },
           {
-            texte: `Le projet A, « ${a.machine} »`,
-            juste: retenu === "A",
-            retour:
-              retenu === "A"
-                ? `Oui : sa VAN, ${eur(a.van)}, est la plus forte, et positive. C'est la valeur qu'il crée, en euros d'aujourd'hui.`
-                : retenu === "B"
-                  ? `Non : sa VAN, ${eur(a.van)}, est plus faible que celle du projet B, ${eur(b.van)}.${triPrefere === "A" ? ` Son TRI plus fort, ${pct(ra.triPct)} par trimestre, mesure un rendement par euro, pas la valeur créée.` : ""}`
-                  : `Non : sa VAN est négative, ${eur(a.van)}.`,
+            libelle: "VAN retirée par 1 000 € d'entretien par an",
+            attendu: x.vanParMille,
+            calcul: `${eur(auCentime(1_000 * (1 - x.k.impot)))} × (1 − (1 + ${pct(x.tauxPct)})^(−${x.B.duree})) ÷ ${pct(x.tauxPct)} = ${eur(auCentime(1_000 * (1 - x.k.impot)))} × ${annuite.toLocaleString("fr-FR", { minimumFractionDigits: 4, maximumFractionDigits: 4 })} = ${eur(x.vanParMille)}`,
+            tolerance: 1,
           },
           {
-            texte: `Le projet B, « ${b.machine} »`,
-            juste: retenu === "B",
-            retour:
-              retenu === "B"
-                ? `Oui : sa VAN, ${eur(b.van)}, est la plus forte, et positive. Son TRI, ${pct(rb.triPct)} par trimestre, est ${triPrefere === "B" ? "aussi le plus fort" : "plus faible, mais il ne mesure qu'un rendement par euro, pas la valeur créée"}.`
-                : retenu === "A"
-                  ? `Non : sa VAN, ${eur(b.van)}, est plus faible que celle du projet A, ${eur(a.van)}.`
-                  : `Non : sa VAN est négative, ${eur(b.van)}.`,
+            libelle: "Entretien annuel de B qui égale les deux VAN",
+            attendu: x.entretienMax,
+            calcul: `${eur(x.entretienDeB)} + ${eur(x.ecart)} ÷ ${eur(x.vanParMille)} × 1 000 = ${eur(x.entretienMax)}`,
+            tolerance: 1,
           },
+        ];
+      },
+      explication: (c) => {
+        const x = deuxLignes(c);
+        return [
+          `À ${eur(x.entretienMax)} d'entretien par an, B ne crée plus rien de plus que le projet A : les ${eur(x.ecart)} d'avance de sa VAN sont mangés par ${eur(auCentime(x.entretienMax - x.entretienDeB))} d'entretien en plus chaque année. C'est la marge de négociation de ${x.entreprise} face au fournisseur de B.`,
+          "Une charge annuelle constante se compte par l'annuité : sa valeur actuelle est le flux après impôt × (1 − (1 + t)^(−n)) ÷ t.",
+        ];
+      },
+    },
+    {
+      id: "les-indices",
+      type: "montants",
+      titre: "Indice de profitabilité et délai actualisé",
+      notions: ["irr_payback", "discounting"],
+      question: () =>
+        "L'indice de profitabilité rapporte à la mise de la date 0, BFR de départ compris, ce que rendent les flux qui suivent, actualisés. Calculez-le pour chaque ligne, puis son délai de récupération actualisé, en années, en interpolant dans l'année où les flux actualisés cumulés repassent à zéro.",
+      champs: (c) => {
+        const x = deuxLignes(c);
+        const ipCalc = (v: number, f: readonly number[], ipp: number) => `(${eur(v)} + ${eur(-f[0]!)}) ÷ ${eur(-f[0]!)} = ${qte(ipp)}`;
+        return [
+          { libelle: "Indice de profitabilité du projet A", attendu: x.ipPct.A, calcul: ipCalc(x.vanA, x.A.flux, x.ipPct.A), tolerance: 0.01 },
+          { libelle: "Indice de profitabilité de B", attendu: x.ipPct.B, calcul: ipCalc(x.vanB, x.B.flux, x.ipPct.B), tolerance: 0.01 },
+          { libelle: "Délai de récupération actualisé du projet A (années)", attendu: x.delaiA, calcul: `les flux actualisés cumulés repassent à zéro au cours de l'année ${Math.ceil(x.delaiA)} : ${qte(x.delaiA)} ans`, tolerance: 0.02 },
+          { libelle: "Délai de récupération actualisé de B (années)", attendu: x.delaiB, calcul: `les flux actualisés cumulés repassent à zéro au cours de l'année ${Math.ceil(x.delaiB)} : ${qte(x.delaiB)} ans`, tolerance: 0.02 },
+        ];
+      },
+      explication: (c) => {
+        const x = deuxLignes(c);
+        return [
+          `Chaque euro engagé dans le projet A en rend ${qte(x.ipPct.A)} en valeur actuelle, contre ${qte(x.ipPct.B)} pour B ; le projet A récupère sa mise en ${qte(x.delaiA)} ans, B en ${qte(x.delaiB)}. Comme le TRI, l'indice et le délai mesurent un rendement ou une vitesse, pas les euros créés : ils préfèrent le projet A.`,
+          "Le délai dit le risque d'attendre, il ignore tout ce qui vient après. L'indice, lui, a un vrai usage : quand le capital manque pour tout financer.",
+        ];
+      },
+    },
+    {
+      id: "le-rationnement",
+      type: "montants",
+      titre: "Un budget limité, un troisième projet",
+      notions: ["irr_payback", "discounting"],
+      tableau: tableauDesTroisProjets,
+      question: (c) => {
+        const x = deuxLignes(c);
+        return `${x.entreprise} reprend aussi le projet C, ${x.k.c.nom}, indépendant des deux lignes. Hypothèse du cours : elle ne peut engager que ${eur(BUDGET_DU_RATIONNEMENT)} à la date 0, et chaque projet se fait en entier ou pas du tout. Calculez l'indice de profitabilité du projet C, puis la VAN des deux programmes qui associent une ligne et le banc.`;
+      },
+      champs: (c) => {
+        const x = deuxLignes(c);
+        const ac = x.programmes.find((p) => p.nom === "AC")!;
+        const bc = x.programmes.find((p) => p.nom === "BC")!;
+        return [
+          { libelle: "Indice de profitabilité du projet C", attendu: x.ipPct.C, calcul: `(${eur(x.vanC)} + ${eur(-x.C.flux[0]!)}) ÷ ${eur(-x.C.flux[0]!)} = ${qte(x.ipPct.C)}`, tolerance: 0.01 },
+          { libelle: "VAN de la ligne manuelle et du banc", attendu: ac.van, calcul: `${eur(x.vanA)} + ${eur(x.vanC)} = ${eur(ac.van)}, pour ${eur(ac.mise)} engagés`, tolerance: 1 },
+          { libelle: "VAN de la ligne semi-automatique et du banc", attendu: bc.van, calcul: `${eur(x.vanB)} + ${eur(x.vanC)} = ${eur(bc.van)}, pour ${eur(bc.mise)} engagés`, tolerance: 1 },
+        ];
+      },
+      explication: (c) => {
+        const x = deuxLignes(c);
+        const ordre = x.parIndice.map((l) => `le projet ${l} (${qte(x.ipPct[l])})`).join(", puis ");
+        return [
+          `Les VAN de projets indépendants s'additionnent : le banc ajoute ${eur(x.vanC)} à la ligne qu'il accompagne. Classés par leur indice, on trouve ${ordre}.`,
+          `Le banc et une ligne tiennent-ils dans ${eur(BUDGET_DU_RATIONNEMENT)} ? C'est la question de l'étape suivante.`,
+        ];
+      },
+    },
+    {
+      id: "le-programme",
+      type: "choix",
+      titre: "Le programme sous le budget",
+      notions: ["irr_payback", "discounting"],
+      question: (c) => {
+        const x = deuxLignes(c);
+        return `Avec ${eur(BUDGET_DU_RATIONNEMENT)} à engager à la date 0, des projets indivisibles et les deux lignes qui s'excluent, quel programme ${x.entreprise} doit-elle retenir ?`;
+      },
+      options: (c) => {
+        const x = deuxLignes(c);
+        const m = x.meilleur;
+        const pi = x.programmeParIndice;
+        const b = x.programmes.find((p) => p.nom === "B")!;
+        const opt = (nom: string, texte: string, retourFaux: string) => ({
+          texte,
+          juste: m.nom === nom,
+          retour: m.nom === nom ? `Oui : ${eur(m.van)} de VAN pour ${eur(m.mise)} engagés, le programme qui crée le plus de valeur parmi ceux qui tiennent dans le budget.` : retourFaux,
+        });
+        return [
+          opt("BC", "La ligne semi-automatique et le banc : la plus forte VAN qui tient dans le budget", `Non : ${nomDuProgramme("BC")} engagent ${eur(x.programmes.find((p) => p.nom === "BC")!.mise)}, et créent ${eur(x.programmes.find((p) => p.nom === "BC")!.van)}.`),
+          opt(
+            pi.nom,
+            `${nomDuProgramme(pi.nom).charAt(0).toUpperCase()}${nomDuProgramme(pi.nom).slice(1)} : les meilleurs indices de profitabilité`,
+            `Non : c'est suivre l'indice jusqu'au bout. ${nomDuProgramme(pi.nom).charAt(0).toUpperCase()}${nomDuProgramme(pi.nom).slice(1)} n'engagent que ${eur(pi.mise)} pour ${eur(pi.van)} de VAN, et laissent ${eur(x.laisseParIndice)} sans emploi. Avec des projets indivisibles, l'indice classe, mais c'est la VAN du programme qui décide.`,
+          ),
+          opt("B", "La ligne semi-automatique seule : la plus forte VAN des deux lignes", `Non : c'est oublier le banc, indépendant, dont la VAN est positive. Seule, la ligne semi-automatique crée ${eur(b.van)}.`),
           {
-            texte: "Aucun des deux : aucun ne crée de valeur au coût du capital",
-            juste: retenu === "aucun",
-            retour: retenu === "aucun" ? "Oui : les deux VAN sont négatives." : `Non : ${nomDu(retenu as Prefere)} a une VAN positive, ${eur(meilleur.van)}.`,
-          },
-          {
-            texte: "Celui qui a le meilleur TRI, quelle que soit sa VAN",
+            texte: "Les trois projets, puisque leurs VAN sont toutes positives",
             juste: false,
-            retour:
-              triPrefere === retenu
-                ? `Non : ici, le meilleur TRI désigne le même projet que la VAN, mais par la rencontre des chiffres. Entre deux projets qui s'excluent, c'est la VAN qui tranche : le TRI ne dit pas combien de valeur un projet crée.`
-                : retenu === "aucun"
-                  ? `Non : le meilleur TRI désigne ${nomDu(triPrefere)}, dont la VAN est négative, ${eur(triPrefere === "A" ? a.van : b.van)}. C'est la VAN qui tranche, et elle écarte les deux projets.`
-                  : `Non : le meilleur TRI désigne ${nomDu(triPrefere)}, qui crée moins de valeur. Entre deux projets qui s'excluent, c'est la VAN qui tranche.`,
+            retour: `Non : les deux lignes s'excluent, et les trois projets demanderaient ${eur(auCentime(-x.A.flux[0]! - x.B.flux[0]! - x.C.flux[0]!))}, bien au-delà du budget.`,
           },
         ];
       },
     },
     {
-      id: "fin",
-      type: "lecture",
-      titre: "Ce que vous savez faire",
+      id: "la-critique-du-tri",
+      type: "montants",
+      titre: "Une critique du TRI",
       notions: ["irr_payback", "discounting"],
-      texte: (c) => {
-        const k = deuxProjets(c);
-        const tete = k.retenu === "aucun" ? "aucun des deux projets ne crée de valeur" : `${nomDu(k.retenu)} l'emporte`;
-        const criteres = !k.conflit
-          ? "La VAN et le TRI désignaient le même projet."
-          : k.retenu === "aucun"
-            ? `Le TRI préférait ${nomDu(k.triPrefere)}, la VAN ${nomDu(k.vanPrefere)} ; mais quand aucune VAN n'est positive, le classement ne décide rien.`
-            : fisherSeLit(k)
-              ? `Le TRI préférait ${nomDu(k.triPrefere)}, mais au-dessous du taux de Fisher, ${pct(k.fisher!.triPct)} par trimestre, la VAN choisit l'autre.`
-              : `Le TRI préférait ${nomDu(k.triPrefere)}, mais entre deux projets qui s'excluent, la VAN tranche.`;
+      question: (c) => {
+        const x = deuxLignes(c);
+        return `Le TRI suppose que chaque flux d'un projet se replace à son propre TRI, ${pct(x.triAPct)} pour le projet A : c'est peu réaliste. Le TRI global corrige cette hypothèse : les flux positifs se replacent à ${pct(x.tauxPct)} jusqu'à la date ${x.A.duree} ; un flux négatif après la date 0 s'ajoute à la mise, actualisé à ${pct(x.tauxPct)} ; TRI global = (valeur acquise ÷ mise)^(1/${x.A.duree}) − 1. Calculez le TRI global du projet A, celui de B, puis celui des flux différentiels.`;
+      },
+      champs: (c) => {
+        const x = deuxLignes(c);
+        const n = x.A.duree;
+        const calc = (g: ReturnType<typeof triGlobal>, p: number) => `valeur acquise ${eur(g.valeurAcquise)}, mise ${eur(g.mise)} : (${eur(g.valeurAcquise)} ÷ ${eur(g.mise)})^(1/${n}) − 1 = ${pct(p)}`;
         return [
-          `Chez ${c.entreprise}, ${tete} au coût du capital : VAN de ${eur(k.a.van)} pour le projet A, de ${eur(k.b.van)} pour le projet B. ${criteres}`,
-          `L'arène simplifie comme au chapitre précédent : un seul taux d'impôt, une revente à une part fixe de la valeur nette comptable, un projet arrêté au bout de ${k.a.duree} trimestres. Et les deux projets ne s'excluent que parce que la direction le décide : l'arène accepterait les deux machines, et leurs ventes se partageraient la même demande.`,
+          { libelle: "TRI global du projet A (%)", attendu: x.globalAPct, calcul: `${calc(x.globalA, x.globalAPct)}, le flux négatif de la date 1 ajouté à la mise`, tolerance: 0.02 },
+          { libelle: "TRI global de B (%)", attendu: x.globalBPct, calcul: calc(x.globalB, x.globalBPct), tolerance: 0.02 },
+          { libelle: "TRI global des flux différentiels (%)", attendu: x.globalDiffPct, calcul: calc(x.globalDiff, x.globalDiffPct), tolerance: 0.02 },
+        ];
+      },
+      explication: (c) => {
+        const x = deuxLignes(c);
+        return [
+          `Replacés à ${pct(x.tauxPct)}, les flux rendent moins : ${pct(x.globalAPct)} pour le projet A au lieu de ${pct(x.triAPct)}, ${pct(x.globalBPct)} pour B au lieu de ${pct(x.triBPct)}. Mais le TRI global préfère encore le projet A : corriger le réinvestissement ne corrige pas la taille. Un taux reste un rendement par euro.`,
+          `Le bon usage d'un taux entre deux projets qui s'excluent, c'est le projet différentiel : investir ${eur(-x.diff[0]!)} de plus dans B rend ${pct(x.globalDiffPct)} en TRI global, ${pct(x.fisherPct)} en TRI, plus que ${pct(x.tauxPct)}. Le supplément vaut la peine : la conclusion de la VAN.`,
+        ];
+      },
+    },
+    {
+      id: "le-choix",
+      type: "choix",
+      titre: "Quelle ligne retenir ?",
+      notions: ["discounting", "profitability_vs_return"],
+      question: (c) => {
+        const x = deuxLignes(c);
+        return `Les deux lignes s'excluent, et le budget les permet toutes les deux. À ${pct(x.tauxPct)}, laquelle ${x.entreprise} doit-elle retenir ?`;
+      },
+      options: (c) => {
+        const x = deuxLignes(c);
+        const r = x.retenu;
+        return [
+          {
+            texte: "La ligne semi-automatique : sa VAN est la plus forte",
+            juste: r === "B",
+            retour: r === "B" ? `Oui : ${eur(x.vanB)}, ${eur(x.ecart)} de plus que la ligne manuelle. Entre deux projets qui s'excluent, la plus forte VAN positive l'emporte.` : `Non : sa VAN, ${eur(x.vanB)}, n'est pas la plus forte.`,
+          },
+          {
+            texte: "La ligne manuelle : son TRI est le plus fort",
+            juste: false,
+            retour: `Non : ${pct(x.triAPct)} contre ${pct(x.triBPct)}, mais le TRI mesure un rendement par euro. Le supplément investi dans B rend ${pct(x.fisherPct)}, plus que ${pct(x.tauxPct)} : il crée de la valeur.`,
+          },
+          {
+            texte: "La ligne manuelle : même son TRI global est le plus fort",
+            juste: false,
+            retour: `Non : le TRI global corrige le réinvestissement, pas la taille. Celui ${duProjet("A")} (${pct(x.globalAPct)}) dépasse celui de B (${pct(x.globalBPct)}), mais B crée ${eur(x.ecart)} de plus.`,
+          },
+          {
+            texte: "La ligne manuelle : elle récupère sa mise plus vite",
+            juste: false,
+            retour: `Non : ${qte(x.delaiA)} ans contre ${qte(x.delaiB)}, mais le délai ignore ce qui vient après. C'est la VAN qui tranche.`,
+          },
+        ];
+      },
+    },
+    {
+      id: "synthese",
+      type: "lecture",
+      titre: "Ce qu'il faut retenir",
+      notions: ["irr_payback", "discounting"],
+      tableau: (c) => {
+        const x = deuxLignes(c);
+        return {
+          titre: `Les critères des deux lignes, à ${pct(x.tauxPct)}`,
+          colonnes: ["Projet A, ligne manuelle", "Projet B, ligne semi-automatique"],
+          lignes: [
+            { libelle: "VAN", valeurs: [eur(x.vanA), eur(x.vanB)] },
+            { libelle: "TRI", valeurs: [pct(x.triAPct), pct(x.triBPct)] },
+            { libelle: "TRI global", valeurs: [pct(x.globalAPct), pct(x.globalBPct)] },
+            { libelle: "Indice de profitabilité", valeurs: [qte(x.ipPct.A), qte(x.ipPct.B)] },
+            { libelle: "Délai de récupération actualisé", valeurs: [`${qte(x.delaiA)} ans`, `${qte(x.delaiB)} ans`] },
+          ],
+        };
+      },
+      texte: (c) => {
+        const x = deuxLignes(c);
+        return [
+          `Chez ${x.entreprise}, la ligne semi-automatique l'emporte : sa VAN, ${eur(x.vanB)}, dépasse celle de la ligne manuelle de ${eur(x.ecart)}. Le TRI, le TRI global, l'indice et le délai préfèrent la ligne manuelle : ils mesurent un rendement par euro ou une vitesse. Le taux de Fisher, ${pct(x.fisherPct)}, est le rendement du supplément investi dans B : au-dessus de ${pct(x.tauxPct)}, il vaut la peine.`,
+          `Sous un budget, l'indice de profitabilité classe les projets, mais avec des projets indivisibles c'est la VAN du programme qui décide : avec ${eur(BUDGET_DU_RATIONNEMENT)}, ${nomDuProgramme(x.meilleur.nom)} créent ${eur(x.meilleur.van)}.`,
+          "Au niveau de l'examen, vous savez encadrer et interpoler un TRI, expliquer le conflit entre la VAN et le TRI par le taux de Fisher, retrouver à rebours la charge qui égale deux VAN, choisir un programme sous un budget, et critiquer le TRI par son hypothèse de réinvestissement.",
+          "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
         ];
       },
       repere: () =>
-        "Entre deux projets qui s'excluent, on retient la plus forte VAN positive. Le TRI et l'indice de profitabilité éclairent le choix, ils ne le tranchent pas quand ils divergent.",
+        "Entre deux projets qui s'excluent, on retient la plus forte VAN positive. Le taux de Fisher annule la VAN des flux différentiels : sous lui, le plus gros projet l'emporte. Sous un budget, on retient le programme de plus forte VAN qui tient dans le budget.",
     },
   ],
 };

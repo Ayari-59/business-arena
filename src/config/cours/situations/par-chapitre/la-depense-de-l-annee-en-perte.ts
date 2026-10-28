@@ -1,113 +1,68 @@
 import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
 import type { Cas } from "../../cas";
-import {
-  LE_DEFICIT_REPORTE,
-  TRIMESTRES_PAR_EXERCICE,
-  deficitReporte,
-  deuxExercices,
-  deuxExercicesDuChapitre,
-  grandEntretien,
-  lireDeuxExercices,
-  surDeuxExercices,
-} from "../../chapitres/le-deficit-reporte";
-import { rejouerAvec } from "../../gestion-de-la-pme";
+import { ENTREPRISES_EN_DEFICIT, LE_DEFICIT_REPORTE, deficitDePixel, exercicesChanges, suiteDe } from "../../chapitres/le-deficit-reporte";
+import { DEPENSE_DE_L_ANNEE_EN_PERTE, RANG_DE_L_EXERCICE_EN_PERTE, TAUX_NORMAL } from "../../monde/projets-et-financement";
 import type { Situation } from "../types";
-
-/** Un montant à la française, avec le signe moins typographique ; retranché, un négatif va entre parenthèses. */
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-/** Un taux déjà en pour cent : 25 donne « 25 % ». */
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
-const centime = (x: number) => auCentime(x) || 0;
-const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /**
  * CAS PRATIQUE DU CHAPITRE « LE DÉFICIT REPORTÉ » : LA DÉPENSE DE L'ANNÉE EN PERTE (fiscalité de
  * l'entreprise, palier 3).
  *
- * L'année du grand entretien finit en perte. Le gérant renonce à une révision de plus au dernier
- * trimestre, le budget de maintenance habituel du trimestre une fois de plus :
- * « nous ne payons pas d'impôt cette année, la dépense ne nous ferait rien économiser ; attendons
- * l'an prochain ». L'élève refait le calcul du chapitre avec la dépense : elle grossit le déficit,
- * et le déficit imputé sur l'exercice suivant fait baisser son impôt du taux de la dépense.
- * L'économie n'est pas perdue : elle attend l'exercice suivant, comme elle l'aurait attendu si la
- * dépense y avait été faite.
+ * LE CAS JOUE DANS LE MONDE DU COURS, sur les exercices de PIXEL & CO (monde/projets-et-financement.ts).
+ * L'année N finit en perte. Le gérant veut repousser à N+1 une révision de l'entrepôt
+ * (DEPENSE_DE_L_ANNEE_EN_PERTE, 5 000 €) : « cette année, nous ne payons pas d'impôt, la dépense ne
+ * nous ferait rien économiser ». L'élève croise les deux calendriers : faite en N, la dépense grossit
+ * le déficit, qui fait baisser l'impôt de N+2 de 25 % de son montant ; faite en N+1, elle fait baisser
+ * le bénéfice de N+1, déjà effacé par le déficit, et l'économie arrive aussi en N+2. Le report en
+ * arrière n'y change rien : la créance est bornée par le bénéfice de N−1. Le curseur montre jusqu'où
+ * une dépense de N reste absorbée d'ici N+2 (15 000 €). La réponse demande un jugement : attendre ne
+ * fait rien gagner.
  *
- * L'arène rejoue les deux exercices du chapitre (`surDeuxExercices`, le grand entretien au premier),
- * la révision ajoutée au budget de maintenance du trimestre 4, la seule décision changée. Le second exercice peut en sortir un peu changé
- * (la trésorerie suit un autre chemin, les charges financières avec elle) : le cas le dit, chiffres
- * de l'arène à l'appui.
+ * CE QUI A DISPARU, AVEC L'ARÈNE : le grand entretien et les deux exercices rejoués, la révision ajoutée
+ * au trimestre 4, et le verdict « l'économie attend plus loin », qui ne se lisait dans aucune
+ * entreprise.
  */
 
-/** Le trimestre de la dépense : le dernier de l'exercice en perte. */
-export const TRIMESTRE_DE_LA_DEPENSE = TRIMESTRES_PAR_EXERCICE;
+/** Les bornes du curseur de la dépense de N, en euros. */
+export const DEPENSE_DU_CURSEUR = { min: 0, max: 30_000 } as const;
 
-/** Le budget de maintenance habituel du trimestre de la dépense, celui de l'année du cours, sans le grand entretien. */
-const maintenanceHabituelle = (code: string) => deuxExercices(code)[TRIMESTRE_DE_LA_DEPENSE - 1]!.incomeStatement.maintenanceCost;
+export type Verdict = "attendre-ne-gagne-rien" | "attendre-gagne";
 
-/** Les deux exercices du chapitre, avec une révision de plus au dernier trimestre du premier : le budget habituel, une fois de plus. */
-export const deuxExercicesAvecLaDepense = (code: string) =>
-  rejouerAvec(
-    code,
-    "la-depense-de-l-annee-en-perte:revision-de-plus",
-    (t, d) => {
-      const g = grandEntretien(code)(t, d) ?? d;
-      return t === TRIMESTRE_DE_LA_DEPENSE ? { ...g, maintenanceBudget: g.maintenanceBudget + maintenanceHabituelle(code) } : g;
-    },
-    surDeuxExercices(code),
-  );
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
+const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
+const auCentime = (x: number) => Math.round(x * 100) / 100;
+const T = pct(TAUX_NORMAL * 100);
+const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
+const N = RANG_DE_L_EXERCICE_EN_PERTE;
 
-export type Verdict = "l-economie-attend" | "l-economie-attend-plus-loin";
-
-const calculs = new Map<string, ReturnType<typeof calculer>>();
-
-/** La dépense de l'année en perte : le déficit qu'elle ajoute, l'impôt qu'elle fait économiser au second exercice. */
-export function depenseDeLAnneeEnPerte(c: Cas) {
-  const deja = calculs.get(c.code);
-  if (deja) return deja;
-  const r = calculer(c);
-  calculs.set(c.code, r);
-  return r;
-}
-
-function calculer(c: Cas) {
-  const k = deficitReporte(c);
-  const sans = deuxExercicesDuChapitre(c.code);
-  const avec = deuxExercicesAvecLaDepense(c.code);
-  const i = TRIMESTRE_DE_LA_DEPENSE - 1;
-  // La révision de plus : le budget de maintenance habituel du trimestre, dépensé une fois de plus.
-  const depense = centime(maintenanceHabituelle(c.code));
-  const deficitAvec = centime(k.deficit + depense);
-  // Sur le même résultat du second exercice : le calcul du chapitre, avec le déficit grossi.
-  const impot2Avec = centime(k.taux * Math.max(0, k.avantImpot2 - deficitAvec));
-  const economie = centime(k.impot2 - impot2Avec);
-  const a = lireDeuxExercices(avec, k.taux);
-  const maintenance = (tours: typeof sans) => centime(tours.slice(0, TRIMESTRES_PAR_EXERCICE).reduce((t, r) => t + r.incomeStatement.maintenanceCost, 0));
-  const verdict: Verdict = deficitAvec <= k.avantImpot2 ? "l-economie-attend" : "l-economie-attend-plus-loin";
+/** La dépense faite en N ou en N+1 : le déficit, l'impôt de N+2, la créance. */
+export function depenseDeLAnneeEnPerte(c: Pick<Cas, "code">) {
+  const x = deficitDePixel(c);
+  const depense = DEPENSE_DE_L_ANNEE_EN_PERTE;
+  const enN = suiteDe(exercicesChanges(x.ex, { chargeEnN: depense }), false);
+  const enN1 = suiteDe(exercicesChanges(x.ex, { chargeEnN1: depense }), false);
+  const enNAvecLArriere = suiteDe(exercicesChanges(x.ex, { chargeEnN: depense }), true);
+  const impotN2 = (s: typeof enN) => s.exercices[N + 2]!.impot;
+  const economieEnN = auCentime(x.impotN2 - impotN2(enN));
+  const economieEnN1 = auCentime(x.impotN2 - impotN2(enN1));
+  const verdict: Verdict = economieEnN >= economieEnN1 ? "attendre-ne-gagne-rien" : "attendre-gagne";
   return {
-    k,
+    x,
     depense,
-    deficitAvec,
-    impot2Avec,
-    economie,
-    arene: {
-      maintenanceSans: maintenance(sans),
-      maintenanceAvec: maintenance(avec),
-      avantImpot1: a.avantImpot1,
-      deficit: a.deficit,
-      avantImpot2: a.avantImpot2,
-      impot2: a.impot2,
-    },
-    impot2EnMoins: centime(k.impot2 - a.impot2),
-    ecartDuSecondExercice: centime(a.avantImpot2 - k.avantImpot2),
-    // La maintenance de plus, telle que l'arène l'a passée au trimestre de la dépense.
-    maintenanceEnPlus: centime(avec[i]!.incomeStatement.maintenanceCost - sans[i]!.incomeStatement.maintenanceCost),
+    deficitAvec: auCentime(x.deficit + depense),
+    restantApresN1: enN.exercices[N + 1]!.deficitRestant,
+    impotN2EnN: impotN2(enN),
+    economieEnN,
+    resultatFiscalN1EnN1: enN1.exercices[N + 1]!.resultatFiscal,
+    impotN1EnN1: enN1.exercices[N + 1]!.impot,
+    impotN2EnN1: impotN2(enN1),
+    economieEnN1,
+    creanceAvec: enNAvecLArriere.exercices[N]!.creanceNee,
+    /** La plus grande dépense de N que N+1 et N+2 absorbent encore : leurs bénéfices moins le déficit. */
+    depenseAbsorbable: auCentime(x.absorbable - x.deficit),
     verdict,
   };
 }
-
-const T = TRIMESTRE_DE_LA_DEPENSE;
 
 export const LA_DEPENSE_DE_L_ANNEE_EN_PERTE: Situation = {
   code: "la-depense-de-l-annee-en-perte",
@@ -118,15 +73,15 @@ export const LA_DEPENSE_DE_L_ANNEE_EN_PERTE: Situation = {
   commanditaire: "Le gérant",
   titre: "La dépense de l'année en perte",
   accroche:
-    "L'année du grand entretien finit en perte, et le gérant renonce à une dépense de maintenance de plus : sans impôt à payer, elle ne ferait rien économiser. Ce que la dépense ajoute au déficit, et l'impôt qu'elle fait économiser l'exercice suivant.",
+    "L'année finit en perte, et le gérant veut repousser une révision de l'entrepôt à l'an prochain, où elle ferait baisser l'impôt. Faite cette année ou l'an prochain : ce qu'elle fait économiser, et quand.",
   objectifs: [
-    "Calculer le déficit reportable après une charge de plus",
-    "Calculer l'impôt de l'exercice suivant avec ce déficit, et l'impôt économisé",
-    "Lire dans l'arène rejouée ce que la dépense change aux deux exercices",
+    "Calculer le déficit après une charge de plus, et l'impôt des exercices qui l'absorbent",
+    "Comparer l'économie d'une charge passée l'année de la perte ou l'année suivante",
+    "Dire ce que le report en arrière change, ou ne change pas",
     "Répondre au gérant, chiffre à l'appui",
   ],
   libre: false,
-  entreprises: LE_DEFICIT_REPORTE.entreprises!,
+  entreprises: { codes: ENTREPRISES_EN_DEFICIT, pourquoi: LE_DEFICIT_REPORTE.entreprises!.pourquoi },
   etapes: [
     {
       id: "demande",
@@ -135,98 +90,119 @@ export const LA_DEPENSE_DE_L_ANNEE_EN_PERTE: Situation = {
       texte: (c) => {
         const r = depenseDeLAnneeEnPerte(c);
         return [
-          `« Nous voulions ajouter une révision au trimestre ${T}, le dernier du grand entretien : le budget de maintenance habituel du trimestre, ${eur(r.depense)} de plus. Mais cette année, nous sommes en perte : nous ne payons pas d'impôt, et la dépense ne nous ferait rien économiser. Attendons l'an prochain, où elle fera baisser l'impôt. »`,
-          `Pas de cours cette fois : vous avez les deux exercices ${dE(c.entreprise)} du chapitre, grand entretien compris, tels que l'arène les a joués, et les calculs sont ceux du chapitre. L'arène a rejoué les deux exercices avec, en plus, cette révision au trimestre ${T}.`,
+          `« La révision de l'entrepôt coûte ${eur(r.depense)}. Cette année, nous sommes en perte : nous ne payons pas d'impôt, la dépense ne nous ferait rien économiser. Repoussons-la en janvier : l'an prochain, nous serons en bénéfice, et elle fera baisser notre impôt. »`,
+          `Pas de cours cette fois : vous avez les exercices ${dE(r.x.entreprise)} du chapitre, et les calculs sont ceux du chapitre. La révision ne change ni les ventes ni rien d'autre, quelle que soit l'année où elle est faite.`,
         ];
       },
       tableau: (c) => {
         const r = depenseDeLAnneeEnPerte(c);
+        const x = r.x;
         return {
-          titre: `Les deux exercices ${dE(c.entreprise)}, sans la dépense`,
+          titre: `Les exercices ${dE(x.entreprise)}, sans la révision`,
           colonnes: ["Valeur"],
           lignes: [
-            { libelle: "Résultat avant impôt du premier exercice", valeurs: [eur(r.k.avantImpot1)] },
-            { libelle: "Déficit reportable à la clôture", valeurs: [eur(r.k.deficit)] },
-            { libelle: `Budget de maintenance habituel du trimestre ${T}`, valeurs: [eur(r.depense)] },
-            { libelle: "Résultat avant impôt du second exercice", valeurs: [eur(r.k.avantImpot2)] },
-            { libelle: "Impôt sur les sociétés du second exercice", valeurs: [eur(r.k.impot2)] },
-            { libelle: "Taux de l'impôt sur les sociétés", valeurs: [pct(r.k.tauxPct)] },
+            { libelle: "Bénéfice fiscal de N−1, mis en réserve", valeurs: [eur(x.rf[N - 1]!)] },
+            { libelle: "Déficit fiscal de N", valeurs: [eur(x.deficit)] },
+            { libelle: "Bénéfice fiscal de N+1", valeurs: [eur(x.rf[N + 1]!)] },
+            { libelle: "Bénéfice fiscal de N+2", valeurs: [eur(x.rf[N + 2]!)] },
+            { libelle: "Impôt de N+2, déficit reporté en avant", valeurs: [eur(x.impotN2)] },
+            { libelle: "Taux de l'impôt", valeurs: [T] },
+            { libelle: "La révision de l'entrepôt", valeurs: [eur(r.depense)] },
           ],
         };
       },
-      repere: () => "À rendre : ce que la dépense ajoute au déficit, l'impôt qu'elle fait économiser, ce que l'arène en fait, et votre réponse.",
+      repere: () => "À rendre : ce que la révision fait économiser faite cette année, et faite l'an prochain, ce que change le report en arrière, et votre réponse.",
     },
     {
-      id: "deficit",
+      id: "faite-en-n",
       type: "montants",
-      titre: "Le déficit et l'impôt suivant",
+      titre: "La révision faite cette année",
       notions: ["income_statement"],
+      question: () => "Si la révision est faite en N et ne change rien d'autre, calculez le déficit de N, le déficit qui reste après N+1, l'impôt de N+2, puis l'impôt que la révision fait économiser.",
+      champs: (c) => {
+        const r = depenseDeLAnneeEnPerte(c);
+        const x = r.x;
+        return [
+          { libelle: "Déficit de N avec la révision", attendu: r.deficitAvec, calcul: `${eur(x.deficit)} + ${eur(r.depense)} = ${eur(r.deficitAvec)}` },
+          { libelle: "Déficit qui reste après N+1", attendu: r.restantApresN1, calcul: `${eur(r.deficitAvec)} − ${eur(x.rf[N + 1]!)} = ${eur(r.restantApresN1)}` },
+          { libelle: "Impôt de N+2", attendu: r.impotN2EnN, calcul: `(${eur(x.rf[N + 2]!)} − ${eur(r.restantApresN1)}) × ${T} = ${eur(r.impotN2EnN)}` },
+          { libelle: "Impôt économisé", attendu: r.economieEnN, calcul: `${eur(x.impotN2)} − ${eur(r.impotN2EnN)} = ${eur(r.economieEnN)}` },
+        ];
+      },
+      explication: (c) => {
+        const r = depenseDeLAnneeEnPerte(c);
+        return [`La révision ne fait rien économiser en N, mais elle grossit le déficit de ${eur(r.depense)}, et le déficit fait baisser l'impôt de N+2 de ${T} de ce montant, ${eur(r.economieEnN)}. L'économie n'est pas perdue : elle attend.`];
+      },
+    },
+    {
+      id: "faite-en-n1",
+      type: "montants",
+      titre: "La révision repoussée",
+      notions: ["income_statement", "balance_sheet"],
       question: () =>
-        `Si la dépense est faite au trimestre ${T} et ne change rien d'autre, calculez le déficit reportable à la clôture du premier exercice, l'impôt du second exercice sur le même résultat avec ce déficit, puis l'impôt que la dépense fait économiser.`,
+        "Croisez avec le calendrier du gérant : la révision faite en N+1, le déficit de N inchangé. Calculez le bénéfice fiscal de N+1, l'impôt de N+1, l'impôt de N+2, puis la créance qu'aurait donnée le report en arrière, la révision faite en N.",
       champs: (c) => {
         const r = depenseDeLAnneeEnPerte(c);
+        const x = r.x;
         return [
-          { libelle: "Déficit reportable avec la dépense", attendu: r.deficitAvec, calcul: `${eur(r.k.deficit)} + ${eur(r.depense)} = ${eur(r.deficitAvec)}` },
+          { libelle: "Bénéfice fiscal de N+1 avec la révision", attendu: r.resultatFiscalN1EnN1, calcul: `${eur(x.rf[N + 1]!)} − ${eur(r.depense)} = ${eur(r.resultatFiscalN1EnN1)}` },
+          { libelle: "Impôt de N+1", attendu: r.impotN1EnN1, calcul: `${eur(r.resultatFiscalN1EnN1)}, moins que le déficit de ${eur(x.deficit)} : rien d'imposable, ${eur(r.impotN1EnN1)}` },
           {
-            libelle: "Impôt du second exercice avec ce déficit",
-            attendu: r.impot2Avec,
-            calcul:
-              r.k.avantImpot2 > r.deficitAvec
-                ? `(${eur(r.k.avantImpot2)} − ${eur(r.deficitAvec)}) × ${pct(r.k.tauxPct)} = ${eur(r.impot2Avec)}`
-                : `le déficit dépasse le bénéfice : pas d'impôt, ${eur(0)}`,
-            tolerance: 1,
+            libelle: "Impôt de N+2 avec la révision en N+1",
+            attendu: r.impotN2EnN1,
+            calcul: `(${eur(x.rf[N + 2]!)} − (${eur(x.deficit)} − ${eur(r.resultatFiscalN1EnN1)})) × ${T} = ${eur(r.impotN2EnN1)}`,
           },
-          { libelle: "Impôt économisé par la dépense", attendu: r.economie, calcul: `${eur(r.k.impot2)} − ${eur(r.impot2Avec)} = ${eur(r.economie)}`, tolerance: 1 },
+          {
+            libelle: "Créance de report en arrière, la révision faite en N",
+            attendu: r.creanceAvec,
+            calcul: `${T} du plus petit du déficit (${eur(r.deficitAvec)}) et du bénéfice de N−1 (${eur(x.rf[N - 1]!)}) = ${eur(r.creanceAvec)}`,
+          },
         ];
       },
       explication: (c) => {
         const r = depenseDeLAnneeEnPerte(c);
         return [
-          r.verdict === "l-economie-attend"
-            ? `La dépense ne fait rien économiser cette année, mais elle grossit le déficit de ${eur(r.depense)}, et le déficit fait baisser l'impôt du second exercice de ${pct(r.k.tauxPct)} de ce montant, ${eur(r.economie)}. Faite l'an prochain, la même dépense aurait fait économiser autant.`
-            : `Le déficit grossi dépasse le bénéfice du second exercice : l'économie n'est que de ${eur(r.economie)} cette fois, le reste attend un exercice suivant en bénéfice.`,
+          `Repoussée en N+1, la révision fait baisser un bénéfice que le déficit efface déjà : N+1 ne paie rien de toute façon. Le déficit restant, plus grand de ${eur(r.depense)}, fait baisser l'impôt de N+2 : ${eur(r.impotN2EnN1)}, comme la révision faite en N. Les deux calendriers économisent ${eur(r.economieEnN)}, la même année.`,
+          `Le report en arrière ne départage pas non plus : la créance reste de ${eur(r.creanceAvec)}, bornée par le bénéfice de N−1, et la révision s'ajoute au déficit reporté en avant.`,
         ];
       },
     },
     {
-      id: "arene",
-      type: "montants",
-      titre: "L'arène rejoue les deux exercices",
+      id: "le-deficit-au-curseur",
+      type: "curseur",
+      titre: "Jusqu'où le déficit est absorbé",
       notions: ["income_statement"],
-      tableau: (c) => {
+      question: (c) => {
         const r = depenseDeLAnneeEnPerte(c);
-        return {
-          titre: "Les deux exercices joués, sans et avec la dépense",
-          colonnes: ["Sans la dépense", "Avec la dépense"],
-          lignes: [
-            { libelle: "Maintenance du premier exercice", valeurs: [eur(r.arene.maintenanceSans), eur(r.arene.maintenanceAvec)] },
-            { libelle: "Résultat avant impôt du premier exercice", valeurs: [eur(r.k.avantImpot1), eur(r.arene.avantImpot1)] },
-            { libelle: "Déficit reportable à la clôture", valeurs: [eur(r.k.deficit), eur(r.arene.deficit)] },
-            { libelle: "Résultat avant impôt du second exercice", valeurs: [eur(r.k.avantImpot2), eur(r.arene.avantImpot2)] },
-            { libelle: "Impôt sur les sociétés du second exercice", valeurs: [eur(r.k.impot2), eur(r.arene.impot2)] },
-          ],
-        };
+        return `Et si la dépense de N était plus grosse ? Faites-la varier de ${eur(DEPENSE_DU_CURSEUR.min)} à ${eur(DEPENSE_DU_CURSEUR.max)}. Une droite donne les bénéfices fiscaux de N+1 et N+2 (${eur(r.x.absorbable)}), l'autre le déficit de N avec la dépense. Placez le curseur sur la plus grande dépense que N+1 et N+2 absorbent encore en entier, puis validez.`;
       },
-      question: () => "D'après le tableau, calculez l'impôt du second exercice que la dépense a fait économiser dans l'arène, puis l'écart de résultat avant impôt du second exercice (avec la dépense, moins sans).",
-      champs: (c) => {
+      grandeur: () => ({ libelle: "Dépense de N", unite: "€" }),
+      sens: "plus-grande",
+      cible: (c) => ({ attendu: depenseDeLAnneeEnPerte(c).depenseAbsorbable, min: DEPENSE_DU_CURSEUR.min, max: DEPENSE_DU_CURSEUR.max }),
+      zones: ["Économisée d'ici N+2", "Une part attend après N+2"],
+      rates: () => ({
+        dessous: "N+1 et N+2 absorbent encore une dépense plus grande : cherchez la plus grande.",
+        dessus: "À cette position, une part du déficit attend encore après N+2.",
+      }),
+      montrer: "Montrer la limite",
+      lecture: (c, d) => {
         const r = depenseDeLAnneeEnPerte(c);
+        const s = suiteDe(exercicesChanges(r.x.ex, { chargeEnN: d }), false);
         return [
-          { libelle: "Impôt du second exercice en moins", attendu: r.impot2EnMoins, calcul: `${eur(r.k.impot2)} − ${eur(r.arene.impot2)} = ${eur(r.impot2EnMoins)}`, tolerance: 1 },
-          {
-            libelle: "Écart de résultat du second exercice",
-            attendu: r.ecartDuSecondExercice,
-            calcul: `${eur(r.arene.avantImpot2)} − ${retranche(r.k.avantImpot2)} = ${eur(r.ecartDuSecondExercice)}`,
-            tolerance: 1,
-          },
+          { libelle: "Déficit de N", montant: auCentime(r.x.deficit + d) },
+          { libelle: "Déficit qui attend encore après N+2", montant: s.deficitRestant },
+          { libelle: "Impôt de N+2", montant: s.exercices[N + 2]!.impot },
+          { libelle: "Impôt économisé d'ici N+2", montant: auCentime(r.x.impotN2 - s.exercices[N + 2]!.impot), fort: true },
         ];
+      },
+      droites: (c) => {
+        const r = depenseDeLAnneeEnPerte(c);
+        return { produit: () => r.x.absorbable, cout: (d) => r.x.deficit + d, libelles: ["Bénéfices fiscaux de N+1 et N+2", "Déficit de N avec la dépense"] };
       },
       explication: (c) => {
         const r = depenseDeLAnneeEnPerte(c);
-        const ecart = Math.abs(r.ecartDuSecondExercice) >= 1;
         return [
-          ecart
-            ? `L'arène fait économiser ${eur(r.impot2EnMoins)} d'impôt sur le second exercice, pour ${eur(r.economie)} dans votre calcul : le second exercice n'a pas fini tout à fait pareil (${eur(r.ecartDuSecondExercice)} de résultat avant impôt), parce que la trésorerie a suivi un autre chemin, et les charges financières avec elle. L'essentiel de l'économie vient bien du déficit grossi.`
-            : `L'arène retrouve votre calcul : ${eur(r.impot2EnMoins)} d'impôt en moins sur le second exercice. Le second exercice finit au même résultat avant impôt : seul le déficit a changé.`,
+          `Jusqu'à ${eur(r.depenseAbsorbable)}, chaque euro dépensé en N fait économiser ${T} d'impôt en N+2. Au-delà, l'impôt de N+2 est déjà nul : le reste attend les exercices suivants, sans être perdu. La révision, ${eur(r.depense)}, est loin de cette limite.`,
         ];
       },
     },
@@ -239,25 +215,27 @@ export const LA_DEPENSE_DE_L_ANNEE_EN_PERTE: Situation = {
         const r = depenseDeLAnneeEnPerte(c);
         return [
           {
-            texte: `Attendre ne fait rien gagner : la dépense grossit le déficit, et l'impôt suivant baisse de ${eur(r.economie)}`,
-            juste: r.verdict === "l-economie-attend",
+            texte: `Attendre ne fait rien gagner : ${eur(r.economieEnN)} d'impôt en moins en N+2 dans les deux cas`,
+            juste: r.verdict === "attendre-ne-gagne-rien",
             retour:
-              r.verdict === "l-economie-attend"
-                ? `Oui : faite cette année, la dépense ajoute ${eur(r.depense)} au déficit, qui retire autant au bénéfice taxé du second exercice ; l'impôt baisse de ${pct(r.k.tauxPct)} de la dépense, comme si elle avait été faite l'an prochain. L'économie d'impôt d'une charge n'est pas perdue l'année d'une perte : elle attend.`
-                : `Non : le déficit grossi dépasse le bénéfice du second exercice, et une part de l'économie attend un exercice plus lointain.`,
+              r.verdict === "attendre-ne-gagne-rien"
+                ? `Oui : faite en N, la révision grossit le déficit ; faite en N+1, elle baisse un bénéfice que le déficit efface déjà. Dans les deux cas, l'impôt de N+2 baisse de ${eur(r.economieEnN)}. Si la révision est utile maintenant, rien ne justifie de la repousser.`
+                : `Non : repoussée, la révision ferait économiser ${eur(r.economieEnN1)}.`,
           },
           {
-            texte: "Vous avez raison : une charge passée l'année d'une perte n'économise aucun impôt, ni cette année ni les suivantes",
+            texte: "Vous avez raison : une charge de l'année en perte n'économise aucun impôt, ni cette année ni plus tard",
             juste: false,
-            retour: `Non : la charge grossit le déficit, et le déficit fait baisser l'impôt de l'exercice suivant, ici de ${eur(r.economie)}.`,
+            retour: `Non : la charge grossit le déficit, et le déficit fait baisser l'impôt de N+2 de ${eur(r.economieEnN)}.`,
           },
           {
-            texte: "L'économie attendra plus loin : le second exercice ne suffit pas à absorber le déficit grossi",
-            juste: r.verdict === "l-economie-attend-plus-loin",
-            retour:
-              r.verdict === "l-economie-attend-plus-loin"
-                ? `Oui : le déficit grossi, ${eur(r.deficitAvec)}, dépasse le bénéfice du second exercice, ${eur(r.k.avantImpot2)}.`
-                : `Non : le second exercice gagne ${eur(r.k.avantImpot2)}, plus que le déficit grossi, ${eur(r.deficitAvec)}, qui s'y impute en entier.`,
+            texte: `Repoussez-la : en N+1, elle fera économiser ${eur(r.economieEnN)} dès N+1`,
+            juste: r.verdict === "attendre-gagne",
+            retour: `Non : N+1 ne paie déjà rien, son bénéfice est effacé par le déficit. L'économie arrive en N+2, comme si la révision était faite en N.`,
+          },
+          {
+            texte: `Faites-la en N : le report en arrière vous rendra ${eur(r.economieEnN)} de plus dès la clôture`,
+            juste: false,
+            retour: `Non : la créance reste de ${eur(r.creanceAvec)}, bornée par le bénéfice de N−1. Le déficit en plus se reporte en avant.`,
           },
         ];
       },
