@@ -1,127 +1,228 @@
-import { montantEcrit as eur } from "../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../pedagogy/cours/etats";
-import { scenarioByCode } from "../../scenarios/registry";
-import { type Cas } from "../cas";
-import { anneeDuCours as anneeJouee } from "../monde/annee-du-cours";
-import type { Chapitre } from "../types";
+import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import type { Cas } from "../cas";
+import { CABINETS_DU_COURS, type FicheDuCabinet } from "../monde/atlas-conseil";
+import {
+  anneeDuCabinet,
+  capaciteDuTrimestre,
+  compteMoyen,
+  coutDAcquisition,
+  coutJournalierDUnConsultant,
+  coutVariableDUneJournee,
+  margesAnneeParAnnee,
+  portefeuilleDeLAnnee,
+  valeurVieClient,
+} from "../monde/relation-client";
+import type { Chapitre, TableauDeDonnees } from "../types";
 
 /**
- * CHAPITRE : LA VALEUR D'UN CLIENT (BTS NDRC, palier 3).
+ * CHAPITRE : LA VALEUR D'UN CLIENT : ATTRITION, VALEUR VIE ET PORTEFEUILLE D'ÉQUILIBRE (BTS NDRC,
+ * palier 3).
  *
- * Le client qui revient : un portefeuille d'abonnés, ce qui en sort (l'attrition), ce qui y
- * entre (les nouveaux), et ce qu'un client rapporte sur toute sa durée de vie (la valeur vie
- * client), face à ce qu'il a coûté à gagner (le coût d'acquisition). Puis l'année : pourquoi
- * l'attrition monte, ce que vaut alors un client, et le portefeuille vers lequel la salle tend
- * quand recrues et départs s'équilibrent.
+ * LE CHAPITRE JOUE DANS LE MONDE DU COURS (src/config/cours/monde), pas dans l'arène : le cabinet
+ * ATLAS CONSEIL a une fiche figée (monde/atlas-conseil.ts) et la valeur d'un client se calcule par le
+ * modèle du cours (monde/relation-client.ts, partie 3). Une évolution du moteur ne change rien ici.
  *
- * Seule VOLT FITNESS vend à l'abonnement dans l'arène : les chiffres sont ceux de son
- * portefeuille, trimestre par trimestre, tel que le moteur le joue (`anneeJouee`) ; le seuil de
- * saturation et la saison de l'attrition sont ceux du scénario. Aucune hypothèse n'est ajoutée.
+ * L'objet : les comptes d'entreprise d'un cabinet qui vend des journées de conseil. Ce qui sort du
+ * portefeuille chaque année (l'attrition, qui monte de N − 2 à N), ce qu'un compte laisse par an (la
+ * marge sur coûts directs, le temps des consultants compris), ce qu'il vaut sur toute sa vie de client
+ * (la valeur vie, simple puis actualisée au taux du cabinet), face à ce qu'il a coûté à gagner (le coût
+ * d'acquisition de N, 15 000 €) ; puis le portefeuille vers lequel le cabinet tend quand départs et
+ * recrues s'équilibrent, face à la capacité de ses consultants, et le choix entre recruter et
+ * fidéliser.
+ *
+ * Le piège central : la valeur vie simple compte un euro lointain comme un euro d'aujourd'hui. Elle
+ * double quand l'attrition est divisée par deux ; actualisée, elle monte bien moins. Un rapport valeur
+ * vie ÷ coût d'acquisition de 5,6 n'est plus que de 4 une fois actualisé, et un portefeuille qui
+ * remplit les consultants avec des comptes qui partent vite ne vaut pas ce qu'il paraît.
+ *
+ * LES TROIS TEMPS (demande du propriétaire, octobre 2026 : le niveau d'arrivée est celui de l'examen) :
+ *   · guidé : intro, l-attrition, la-marge-d-un-compte, la-valeur-vie, quelle-marge,
+ *     le-cout-d-acquisition (la formule est au repère ou dans la question, qui nomme les chiffres) ;
+ *   · l'expérience avant la formule (prédire, manipuler, constater, formaliser) :
+ *     predire-l-equilibre puis le-portefeuille-au-curseur (le portefeuille au rythme de N − 2, la marge
+ *     des recrues face à celle des départs) avant l-equilibre ; predire-recruter-ou-fideliser puis
+ *     l-attrition-au-curseur (l'attrition qui remplit les consultants) avant recruter-ou-fideliser ;
+ *     predire-l-actualisation puis le-laboratoire-de-la-valeur (recrues, attrition, et la méthode à
+ *     choisir : valeur vie simple ou actualisée, avec le graphique des deux valeurs selon l'attrition)
+ *     avant la-valeur-actualisee ;
+ *   · autonome : l-equilibre (ni formule ni chiffres donnés ; le calcul de la correction montre le
+ *     chemin) ;
+ *   · expert : recruter-ou-fideliser (une variante chiffrée, face à la capacité), la-capacite (le
+ *     jugement), la-valeur-actualisee (année par année, puis la somme), a-rebours (l'attrition la plus
+ *     haute qui tient l'objectif de la direction, actualisée et simple) ; puis la synthèse.
  */
 
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const qte = (n: number) => n.toLocaleString("fr-FR");
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
+/**
+ * L'EFFORT DE RECRUTER OU FIDÉLISER, hypothèse du cours : à effort égal, 25 % de recrues en plus
+ * chaque année, ou une attrition plus faible de 25 % de son taux. Le cours ne chiffre pas ce que coûte
+ * chacun des deux efforts : il compare ce qu'ils font au portefeuille.
+ */
+export const EFFORT_DE_FIDELISATION = 0.25;
 
-/** Un trimestre du portefeuille, en adhérents entiers : les départs et les nouveaux se recomposent. */
-export interface TrimestreDuPortefeuille {
-  trimestre: number;
-  ouverture: number;
-  departs: number;
-  gardes: number;
-  nouveaux: number;
-  cloture: number;
-  /** Les départs rapportés au portefeuille d'ouverture, en %, au dixième. */
-  attrition: number;
-  /** Le portefeuille d'ouverture rapporté aux places du trimestre, en %, au dixième. */
-  occupation: number;
-  /** Le prix de l'abonnement trimestriel : le chiffre d'affaires rapporté aux adhérents servis. */
-  prix: number;
-  /** Le coefficient de saison de l'attrition (1 = neutre). */
-  saison: number;
+/**
+ * L'OBJECTIF DE LA DIRECTION, hypothèse du cours : qu'un compte vaille, sur sa vie, au moins 5 fois ce
+ * qu'il a coûté à gagner. Les commerciaux retiennent souvent 3 comme plancher ; le cabinet, qui
+ * actualise et veut une marge de sécurité, vise plus haut.
+ */
+export const RAPPORT_VISE = 5;
+
+/** Les bornes du curseur du portefeuille, en comptes au 1er janvier. */
+export const PORTEFEUILLE_DU_CURSEUR = { min: 20, max: 60 } as const;
+
+/** Les bornes du curseur de l'attrition, en pourcentage du portefeuille. */
+export const ATTRITION_DU_CURSEUR = { min: 10, max: 30 } as const;
+
+/** Les leviers du laboratoire : les recrues de l'année (comptes) et l'attrition (en %). */
+export const LEVIERS_DE_LA_VALEUR = {
+  recrues: { min: 4, max: 12, pas: 1 },
+  attrition: { min: 10, max: 30, pas: 0.5 },
+} as const;
+
+/** Le levier à choix du laboratoire : la méthode de la valeur vie. */
+export const METHODE = { simple: 0, actualisee: 1 } as const;
+
+/**
+ * Une solution du défi du laboratoire, hypothèse du cours : 7 recrues par an et 17,5 % d'attrition.
+ * Le portefeuille tend vers 40 comptes, et un compte vaut 76 363,64 € actualisé.
+ */
+export const SOLUTION_DU_LABORATOIRE = { recrues: 7, attrition: 17.5, methode: METHODE.actualisee } as const;
+
+/** La valeur d'un client se lit sur des comptes d'entreprise : le cabinet du cours, ATLAS CONSEIL. */
+export const ENTREPRISES_DE_LA_VALEUR: readonly string[] = ["conseil"];
+
+export const POURQUOI_LE_CABINET =
+  "ce chapitre suit les comptes d'un cabinet qui vend ses journées à des entreprises : il se joue chez ATLAS CONSEIL, dont la simulation du cours fige le portefeuille, les canaux de conquête et les consultants, les mêmes d'un chapitre à l'autre du parcours.";
+
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
+const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+/** Une part (0,25) écrite en pourcentage (25 %), au dixième par défaut. */
+const pct = (x: number, d = 1) => `${(Math.round(x * 100 * 10 ** d) / 10 ** d + 0).toLocaleString("fr-FR", { maximumFractionDigits: d })} %`;
+const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+/** « d'ATLAS CONSEIL », « de NOVA » : l'élision devant une voyelle. */
+const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
+const ANNEES = ["N-2", "N-1", "N"] as const;
+const anneeDite = (a: (typeof ANNEES)[number]) => a.replace("-", " − ");
+
+/** La fiche du cabinet du cours. */
+export function ficheDe(c: Pick<Cas, "code">): FicheDuCabinet {
+  const f = CABINETS_DU_COURS[c.code];
+  if (!f) throw new Error(`Pas de cabinet du cours pour ${c.code}`);
+  return f;
 }
 
-/**
- * Le portefeuille de l'année, et le premier trimestre lu en détail. Les adhérents gardés et le
- * portefeuille de clôture sont ceux du moteur, arrondis ; les départs et les nouveaux s'en
- * déduisent, pour que chaque ligne se recompose à l'adhérent près.
- */
-export function portefeuille(c: Cas) {
-  const def = scenarioByCode(c.code);
-  const abonnement = def.scenario.subscription!;
-  const tours = anneeJouee(c.code).partie.rounds.map((t) => t.results["joueur"]!);
-  const trimestres: TrimestreDuPortefeuille[] = tours.map((r, i) => {
-    const s = r.subscription!;
-    const ouverture = Math.round(s.opening);
-    const gardes = Math.round(s.retained);
-    const cloture = Math.round(s.closing);
-    const departs = ouverture - gardes;
-    return {
-      trimestre: i + 1,
-      ouverture,
-      departs,
-      gardes,
-      nouveaux: cloture - gardes,
-      cloture,
-      attrition: auDixieme((departs / ouverture) * 100),
-      occupation: auDixieme(s.occupancy * 100),
-      prix: auCentime(r.incomeStatement.revenue / s.closing),
-      saison: abonnement.churnSeasonality?.[i] ?? 1,
-    };
-  });
-  const t1 = trimestres[0]!;
-  const r1 = tours[0]!;
-  const chiffreDAffaires = auCentime(r1.incomeStatement.revenue);
-  const coutsVariables = auCentime(r1.incomeStatement.cogs);
-  const marketing = auCentime(r1.incomeStatement.marketingCost);
-  const revenuParAdherent = auCentime(chiffreDAffaires / t1.cloture);
-  const coutParAdherent = auCentime(coutsVariables / t1.cloture);
-  const marge = auCentime(revenuParAdherent - coutParAdherent);
-  const valeurVie = (attrition: number) => Math.round(marge / (attrition / 100));
-  const cac = auCentime(marketing / t1.nouveaux);
-  const vvc = valeurVie(t1.attrition);
-  // L'année : la pire attrition, et le portefeuille vers lequel tendent recrues et départs.
-  const pire = trimestres.reduce((a, b) => (b.attrition > a.attrition ? b : a));
-  const recrues = trimestres.reduce((t, x) => t + x.nouveaux, 0);
-  const departs = trimestres.reduce((t, x) => t + x.departs, 0);
-  const ouvertures = trimestres.reduce((t, x) => t + x.ouverture, 0);
-  const recruesParTrimestre = Math.round(recrues / trimestres.length);
-  const attritionMoyenne = auDixieme((departs / ouvertures) * 100);
-  const equilibre = Math.round(recruesParTrimestre / (attritionMoyenne / 100));
+/** La valeur des comptes du cabinet : tout ce que le chapitre et son cas demandent. */
+export function valeurDesComptes(c: Pick<Cas, "code">) {
+  const f = ficheDe(c);
+  const annees = ANNEES.map((a) => portefeuilleDeLAnnee(f, a));
+  const n = annees[2]!;
+  const n2 = annees[0]!;
+  const a = anneeDuCabinet(f);
+  const m = compteMoyen(f);
+  const acq = coutDAcquisition(f);
+  const taux = f.tauxDActualisation;
+  const v = valeurVieClient({ marge: m.marge, attrition: n.attrition, taux });
+  const coutJournalier = coutJournalierDUnConsultant(f);
+  const coutDesConsultants = auCentime(a.journees * coutJournalier);
+  const journeesParCompte = a.journees / a.comptes;
+  const capacite = capaciteDuTrimestre(f) * 4;
+  const comptesALaCapacite = capacite / journeesParCompte;
+  // Le portefeuille d'équilibre : recrues ÷ attrition, au rythme de N et de N − 2.
+  const equilibre = n.nouveaux / n.attrition;
+  const equilibreN2 = auCentime((n.nouveaux * n2.auPremierJanvier) / n2.perdus);
+  // Ce que les départs emportent par compte présent, au rythme de N − 2 : la marge × l'attrition.
+  const departsParCompteN2 = (n2.perdus * m.marge) / n2.auPremierJanvier;
+  const margeDesRecrues = n.nouveaux * m.marge;
+  // L'attrition la plus haute qui garde un portefeuille de la capacité avec les recrues de N.
+  const attritionALaCapacite = Math.floor((n.nouveaux / comptesALaCapacite) * 100 + 1e-9);
+  // Recruter ou fidéliser, à effort égal.
+  const recruesEnPlus = n.nouveaux * (1 + EFFORT_DE_FIDELISATION);
+  const attritionReduite = n.attrition * (1 - EFFORT_DE_FIDELISATION);
+  const equilibreEnRecrutant = recruesEnPlus / n.attrition;
+  const equilibreEnFidelisant = n.nouveaux / attritionReduite;
+  // La valeur actualisée, année par année.
+  const annee = margesAnneeParAnnee({ marge: m.marge, attrition: n.attrition, taux }, 3);
+  // À rebours : l'attrition la plus haute qui tient l'objectif de la direction.
+  const valeurVisee = RAPPORT_VISE * acq.cac;
+  const attritionMaxActualisee = auCentime((m.marge / valeurVisee - taux) * 100);
+  const attritionMaxSimple = auCentime((m.marge / valeurVisee) * 100);
   return {
-    trimestres,
-    t1,
-    t2: trimestres[1]!,
-    seuilDeSaturation: auDixieme(abonnement.crowdingThreshold * 100),
-    places: Math.round(r1.subscription!.opening / r1.subscription!.occupancy),
-    chiffreDAffaires,
-    coutsVariables,
-    marketing,
-    revenuParAdherent,
-    coutParAdherent,
-    marge,
-    fidelisation: auDixieme(100 - t1.attrition),
-    dureeDeVie: auDixieme(100 / t1.attrition),
-    vvc,
-    cac,
-    vvcSurCac: auDixieme(vvc / cac),
-    pire,
-    vvcDuPire: valeurVie(pire.attrition),
-    recrues,
-    departs,
-    ouvertures,
-    recruesParTrimestre,
-    attritionMoyenne,
+    f,
+    annees,
+    n,
+    n2,
+    a,
+    m,
+    acq,
+    taux,
+    coutVariable: coutVariableDUneJournee(f),
+    coutJournalier,
+    coutDesConsultants,
+    margeSurCoutVariableParCompte: auCentime(a.margeSurCoutVariable / a.comptes),
+    dureeDeVie: v.dureeDeVie,
+    simple: v.simple,
+    actualisee: v.actualisee,
+    rapportSimple: auCentime(v.simple / acq.cac),
+    rapportActualise: auCentime(v.actualisee / acq.cac),
+    journeesParCompte,
+    capacite,
+    comptesALaCapacite,
     equilibre,
-    /** Les deux leviers, à effort égal : un quart de recrues en plus, ou un quart d'attrition en moins. */
-    equilibrePlusDeRecrues: Math.round((recruesParTrimestre * 1.25) / (attritionMoyenne / 100)),
-    attritionReduite: auDixieme(attritionMoyenne * 0.75),
-    equilibreMoinsDAttrition: Math.round(recruesParTrimestre / ((attritionMoyenne * 0.75) / 100)),
+    equilibreN2,
+    comptesPerdusALEquilibre: auCentime(equilibreN2 - equilibre),
+    departsParCompteN2,
+    margeDesRecrues,
+    portefeuilleQuiTientN2: Math.floor((n.nouveaux * n2.auPremierJanvier) / n2.perdus + 1e-9),
+    attritionALaCapacite,
+    recruesEnPlus,
+    attritionReduite,
+    equilibreEnRecrutant: auCentime(equilibreEnRecrutant),
+    equilibreEnFidelisant: auCentime(equilibreEnFidelisant),
+    journeesEnFidelisant: auCentime(equilibreEnFidelisant * journeesParCompte),
+    journeesEnRecrutant: auCentime(equilibreEnRecrutant * journeesParCompte),
+    annee,
+    valeurVisee,
+    attritionMaxActualisee,
+    attritionMaxSimple,
+    /** Le plafond de la valeur vie actualisée, quand l'attrition tend vers zéro : marge ÷ taux. */
+    plafondActualise: auCentime(m.marge / taux),
   };
 }
 
-const T = (n: number) => `T${n}`;
-const ordinal = (n: number) => (n === 1 ? "premier" : `${n}e`);
+export type ValeurDesComptes = ReturnType<typeof valeurDesComptes>;
+
+/** Le portefeuille d'équilibre et la valeur d'un compte pour des recrues, une attrition (en %) et une méthode quelconques. */
+export function laboratoireDeLaValeur(x: ValeurDesComptes, recrues: number, attritionEnPct: number, methode: number) {
+  const equilibre = (recrues * 100) / attritionEnPct;
+  const simple = auCentime((x.m.marge * 100) / attritionEnPct);
+  const actualisee = auCentime((x.m.marge * 100) / (attritionEnPct + x.taux * 100));
+  const valeur = methode === METHODE.actualisee ? actualisee : simple;
+  return {
+    equilibre: auCentime(equilibre),
+    journees: auCentime(equilibre * x.journeesParCompte),
+    simple,
+    actualisee,
+    valeur,
+    rapport: auCentime(valeur / x.acq.cac),
+    rapportActualise: actualisee / x.acq.cac,
+    rapportSimple: simple / x.acq.cac,
+    margeDuPortefeuille: auCentime(equilibre * x.m.marge),
+  };
+}
+
+/** Le portefeuille du cabinet, année par année : le document de l'attrition. */
+function tableauDesAnnees(x: ValeurDesComptes): TableauDeDonnees {
+  return {
+    titre: `Le portefeuille ${dE(x.f.entreprise)}, année par année`,
+    colonnes: ANNEES.map(anneeDite),
+    lignes: [
+      { libelle: "Comptes au 1er janvier", valeurs: x.annees.map((p) => qte(p.auPremierJanvier)) },
+      { libelle: "Comptes perdus dans l'année", valeurs: x.annees.map((p) => qte(p.perdus)) },
+      { libelle: "Comptes gardés", valeurs: x.annees.map((p) => qte(p.gardes)) },
+      { libelle: "Comptes gagnés dans l'année", valeurs: x.annees.map((p) => qte(p.nouveaux)) },
+      { libelle: "Comptes en fin d'année", valeurs: x.annees.map((p) => qte(p.actifs)) },
+    ],
+  };
+}
 
 export const VALEUR_D_UN_CLIENT: Chapitre = {
   code: "valeur-d-un-client",
@@ -136,312 +237,579 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
   ],
   titre: "La valeur d'un client : attrition et valeur vie",
   accroche:
-    "Un abonné ne s'achète pas une fois : il se garde ou il part. Combien rapporte-t-il avant de partir, combien a-t-il coûté à gagner, et que vaut un point de fidélité ?",
+    "Un compte d'entreprise ne s'achète pas une fois : il se garde ou il part. Ce qu'il laisse chaque année, ce qu'il vaut sur sa vie, simple puis actualisée, face à ce qu'il a coûté à gagner, et vers quel portefeuille le cabinet tend quand recrues et départs s'équilibrent.",
   objectifs: [
-    "Lire un portefeuille clients : ce qui en sort, ce qui y entre",
-    "Calculer le taux d'attrition et le taux de fidélisation",
-    "Calculer la marge par client sur la période",
-    "Calculer la durée de vie moyenne et la valeur vie client",
-    "Comparer la valeur vie client au coût d'acquisition",
-    "Expliquer une hausse de l'attrition, et comparer recruter et fidéliser",
+    "Calculer le taux d'attrition et le taux de fidélisation, et lire leur évolution",
+    "Calculer la marge annuelle d'un compte, temps des consultants compris",
+    "Calculer la durée de vie moyenne et la valeur vie client, simple puis actualisée",
+    "Comparer la valeur vie client au coût d'acquisition, et retrouver à rebours l'attrition qui tient un objectif",
+    "Calculer le portefeuille d'équilibre face à la capacité, et comparer recruter et fidéliser",
   ],
   libre: false,
-  entreprises: {
-    codes: ["fitness"],
-    pourquoi: "ce chapitre suit un portefeuille d'abonnés, et VOLT FITNESS est l'entreprise de l'arène qui vend à l'abonnement.",
-  },
+  entreprises: { codes: ENTREPRISES_DE_LA_VALEUR, pourquoi: POURQUOI_LE_CABINET },
   etapes: [
     {
       id: "intro",
       type: "lecture",
-      titre: "Un client qui revient chaque trimestre",
-      notions: ["churn_rate", "customer_lifetime_value"],
-      texte: (c) => {
-        const p = portefeuille(c);
-        return [
-          `Les adhérents de ${c.entreprise} paient un abonnement de ${eur(p.t1.prix)} chaque trimestre. Le commercial ne vend pas une fois : il garde, ou il perd, un client qui paierait encore les trimestres suivants.`,
-          `Au premier trimestre de l'arène, la salle ouvre avec ${qte(p.t1.ouverture)} adhérents. ${qte(p.t1.departs)} ne renouvellent pas, ${qte(p.t1.nouveaux)} s'inscrivent : le portefeuille finit à ${qte(p.t1.cloture)}.`,
-        ];
-      },
+      titre: "Des comptes qui reviennent chaque année",
+      notions: ["churn_rate", "customer_lifetime_value", "customer_portfolio"],
       tableau: (c) => {
-        const p = portefeuille(c);
+        const x = valeurDesComptes(c);
         return {
-          titre: `Le portefeuille d'adhérents, premier trimestre`,
-          colonnes: ["Adhérents"],
+          titre: `L'année N ${dE(x.f.entreprise)}`,
+          colonnes: ["Valeur"],
           lignes: [
-            { libelle: "En début de trimestre", valeurs: [qte(p.t1.ouverture)] },
-            { libelle: "Partis (non renouvelés)", valeurs: [`− ${qte(p.t1.departs)}`] },
-            { libelle: "Gardés", valeurs: [qte(p.t1.gardes)] },
-            { libelle: "Nouveaux inscrits", valeurs: [`+ ${qte(p.t1.nouveaux)}`] },
-            { libelle: "En fin de trimestre", valeurs: [qte(p.t1.cloture)] },
+            { libelle: "Comptes servis dans l'année", valeurs: [qte(x.a.comptes)] },
+            { libelle: "Journées vendues", valeurs: [qte(x.a.journees)] },
+            { libelle: "Chiffre d'affaires", valeurs: [eur(x.a.chiffreDAffaires)] },
+            { libelle: "Frais de mission et supports", valeurs: [eur(x.a.frais)] },
+            { libelle: "Coût journalier d'un consultant", valeurs: [eur(x.coutJournalier)] },
+            { libelle: "Taux d'actualisation du cabinet", valeurs: [pct(x.taux)] },
           ],
         };
       },
-      repere: () => "Taux d'attrition = départs ÷ portefeuille de début de période. Taux de fidélisation = 100 % − taux d'attrition.",
+      texte: (c) => {
+        const x = valeurDesComptes(c);
+        return [
+          `Ce chapitre se joue dans la simulation du cours, chez ${x.f.entreprise}, un cabinet de conseil et de formation qui vend des journées d'intervention à des entreprises et à des collectivités. Un client n'y achète pas une fois : c'est un compte, qui revient d'année en année, ou qui part. Le commercial qui le perd ne perd pas une mission : il perd toutes celles qui auraient suivi.`,
+          `La simulation suppose quatre choses, dites une fois pour tout le chapitre. Un compte est perdu quand il n'achète plus rien de l'année. Ce qu'il laisse chaque année est sa marge sur coûts directs : son chiffre d'affaires, moins ses frais de mission et ses supports, moins ses journées au coût journalier d'un consultant (${eur(x.coutJournalier)}, leur coût de l'année divisé par les jours qu'ils peuvent facturer). L'attrition de N vaut pour toute la vie du compte. Et un euro qui viendra dans un an vaut 1 ÷ 1,1 euro aujourd'hui : le cabinet actualise à ${pct(x.taux)}.`,
+          `En N, ${x.f.entreprise} a servi ${qte(x.a.comptes)} comptes, pour ${qte(x.a.journees)} journées vendues et ${eur(x.a.chiffreDAffaires)} de chiffre d'affaires hors taxes.`,
+        ];
+      },
+      repere: () => "Taux d'attrition = comptes perdus dans l'année ÷ comptes au 1er janvier. Taux de fidélisation = 100 % − taux d'attrition.",
     },
     {
-      id: "attrition",
+      id: "l-attrition",
       type: "montants",
-      titre: "Le taux d'attrition",
+      titre: "Le taux d'attrition, année par année",
       notions: ["churn_rate"],
+      tableau: (c) => tableauDesAnnees(valeurDesComptes(c)),
       question: (c) => {
-        const p = portefeuille(c);
-        return `Calculez le taux d'attrition du premier trimestre (${qte(p.t1.departs)} départs sur ${qte(p.t1.ouverture)} adhérents), puis le taux de fidélisation, en pourcentage, au dixième.`;
+        const x = valeurDesComptes(c);
+        const [a2, a1, an] = x.annees;
+        return `Calculez le taux d'attrition de chaque année, au dixième : ${qte(a2!.perdus)} comptes perdus sur ${qte(a2!.auPremierJanvier)} en N − 2, ${qte(a1!.perdus)} sur ${qte(a1!.auPremierJanvier)} en N − 1, ${qte(an!.perdus)} sur ${qte(an!.auPremierJanvier)} en N. Puis le taux de fidélisation de N.`;
       },
       champs: (c) => {
-        const p = portefeuille(c);
+        const x = valeurDesComptes(c);
         return [
-          { libelle: "Taux d'attrition (%)", attendu: p.t1.attrition, calcul: `${qte(p.t1.departs)} ÷ ${qte(p.t1.ouverture)} × 100 = ${pct(p.t1.attrition)}`, tolerance: 0.1 },
-          { libelle: "Taux de fidélisation (%)", attendu: p.fidelisation, calcul: `100 % − ${pct(p.t1.attrition)} = ${pct(p.fidelisation)}`, tolerance: 0.1 },
+          ...x.annees.map((p) => ({
+            libelle: `Taux d'attrition de ${anneeDite(p.annee)} (%)`,
+            attendu: Math.round(p.attrition * 1_000) / 10,
+            calcul: `${qte(p.perdus)} ÷ ${qte(p.auPremierJanvier)} × 100 = ${pct(p.attrition)}`,
+            tolerance: 0.1,
+          })),
+          { libelle: "Taux de fidélisation de N (%)", attendu: auCentime(x.n.fidelisation * 100), calcul: `100 % − ${pct(x.n.attrition)} = ${pct(x.n.fidelisation)}`, tolerance: 0.1 },
         ];
       },
       explication: (c) => {
-        const p = portefeuille(c);
+        const x = valeurDesComptes(c);
         return [
-          `Sur 100 adhérents présents en début de trimestre, ${qte(p.fidelisation)} renouvellent et ${qte(p.t1.attrition)} partent. Le taux se calcule sur le portefeuille de début de période : les nouveaux inscrits n'ont pas encore eu l'occasion de partir.`,
+          `Le cabinet gagne ${qte(x.n.nouveaux)} comptes par an, mais il en perd de plus en plus : ${pct(x.n2.attrition)}, puis ${pct(x.annees[1]!.attrition)}, puis ${pct(x.n.attrition)}. En N, il en perd autant qu'il en gagne : le portefeuille ne grossit plus. Cette année-là, le départ du commercial de la conquête, en décembre N − 1, a laissé ses comptes moins suivis.`,
+          "Le taux se calcule sur les comptes du 1er janvier : les comptes gagnés dans l'année n'ont pas encore eu l'occasion de partir.",
         ];
       },
     },
     {
-      id: "marge",
+      id: "la-marge-d-un-compte",
       type: "montants",
-      titre: "Ce que rapporte un adhérent",
-      notions: ["contribution_margin"],
+      titre: "Ce que laisse un compte chaque année",
+      notions: ["contribution_margin", "customer_lifetime_value"],
       question: (c) => {
-        const p = portefeuille(c);
-        return `Au premier trimestre, ${c.entreprise} encaisse ${eur(p.chiffreDAffaires)} de chiffre d'affaires et paie ${eur(p.coutsVariables)} de coûts variables (énergie, consommables), pour ${qte(p.t1.cloture)} adhérents servis. Calculez le revenu par adhérent, le coût variable par adhérent, puis la marge par adhérent du trimestre.`;
+        const x = valeurDesComptes(c);
+        return `Calculez la marge sur coûts directs des ${qte(x.a.comptes)} comptes de N : ${eur(x.a.chiffreDAffaires)} de chiffre d'affaires, moins ${eur(x.a.frais)} de frais, moins ${qte(x.a.journees)} journées à ${eur(x.coutJournalier)}. Puis le chiffre d'affaires et la marge d'un compte moyen.`;
       },
       champs: (c) => {
-        const p = portefeuille(c);
+        const x = valeurDesComptes(c);
         return [
-          { libelle: "Revenu par adhérent", attendu: p.revenuParAdherent, calcul: `${eur(p.chiffreDAffaires)} ÷ ${qte(p.t1.cloture)} = ${eur(p.revenuParAdherent)}` },
-          { libelle: "Coût variable par adhérent", attendu: p.coutParAdherent, calcul: `${eur(p.coutsVariables)} ÷ ${qte(p.t1.cloture)} = ${eur(p.coutParAdherent)}` },
-          { libelle: "Marge par adhérent", attendu: p.marge, calcul: `${eur(p.revenuParAdherent)} − ${eur(p.coutParAdherent)} = ${eur(p.marge)}` },
+          {
+            libelle: "Marge sur coûts directs des comptes",
+            attendu: x.a.marge,
+            calcul: `${eur(x.a.chiffreDAffaires)} − ${eur(x.a.frais)} − ${qte(x.a.journees)} × ${eur(x.coutJournalier)} = ${eur(x.a.chiffreDAffaires)} − ${eur(x.a.frais)} − ${eur(x.coutDesConsultants)} = ${eur(x.a.marge)}`,
+          },
+          { libelle: "Chiffre d'affaires d'un compte moyen", attendu: x.m.chiffreDAffaires, calcul: `${eur(x.a.chiffreDAffaires)} ÷ ${qte(x.a.comptes)} = ${eur(x.m.chiffreDAffaires)}` },
+          { libelle: "Marge d'un compte moyen", attendu: x.m.marge, calcul: `${eur(x.a.marge)} ÷ ${qte(x.a.comptes)} = ${eur(x.m.marge)}` },
         ];
       },
       explication: (c) => {
-        const p = portefeuille(c);
-        return [`Chaque trimestre où il reste, un adhérent laisse ${eur(p.marge)} pour payer le loyer, les coachs et le reste des charges fixes. Tout l'enjeu est le nombre de trimestres où il reste.`];
+        const x = valeurDesComptes(c);
+        return [
+          `Chaque année où il reste, un compte moyen laisse ${eur(x.m.marge)}, une fois payés ses frais et le temps des consultants qui le servent. C'est elle qui paie les commerciaux, les bureaux et la direction. Tout l'enjeu est le nombre d'années où il reste.`,
+        ];
       },
     },
     {
-      id: "valeur-vie",
+      id: "la-valeur-vie",
       type: "montants",
       titre: "La valeur vie client",
       notions: ["customer_lifetime_value", "churn_rate"],
       question: (c) => {
-        const p = portefeuille(c);
-        return `Avec ${pct(p.t1.attrition)} d'attrition par trimestre, combien de trimestres un adhérent reste-t-il en moyenne (100 ÷ taux d'attrition, au dixième) ? Avec ${eur(p.marge)} de marge par trimestre, quelle est sa valeur vie client (marge ÷ taux d'attrition, à l'euro) ?`;
+        const x = valeurDesComptes(c);
+        return `Avec ${pct(x.n.attrition)} d'attrition par an, combien d'années un compte reste-t-il en moyenne (1 ÷ taux d'attrition) ? Avec ${eur(x.m.marge)} de marge par an, que vaut-il sur toute sa vie de client (marge ÷ taux d'attrition) ?`;
       },
       champs: (c) => {
-        const p = portefeuille(c);
+        const x = valeurDesComptes(c);
         return [
-          { libelle: "Durée de vie moyenne (trimestres)", attendu: p.dureeDeVie, calcul: `100 ÷ ${qte(p.t1.attrition)} = ${qte(p.dureeDeVie)} trimestres`, tolerance: 0.1 },
-          {
-            libelle: "Valeur vie client",
-            attendu: p.vvc,
-            calcul: `${eur(p.marge)} ÷ ${pct(p.t1.attrition)} = ${eur(p.vvc)}`,
-            tolerance: Math.max(2, Math.round(p.vvc * 0.01)),
-          },
+          { libelle: "Durée de vie moyenne (années)", attendu: x.dureeDeVie, calcul: `1 ÷ ${pct(x.n.attrition)} = ${qte(x.dureeDeVie)} ans`, tolerance: 0.1 },
+          { libelle: "Valeur vie client", attendu: x.simple, calcul: `${eur(x.m.marge)} ÷ ${pct(x.n.attrition)} = ${eur(x.m.marge)} × ${qte(x.dureeDeVie)} = ${eur(x.simple)}` },
         ];
       },
       explication: (c) => {
-        const p = portefeuille(c);
+        const x = valeurDesComptes(c);
         return [
-          `Un adhérent reste en moyenne ${qte(p.dureeDeVie)} trimestres, et rapporte ${eur(p.marge)} à chacun : il vaut ${eur(p.vvc)} de marge sur toute sa vie de client. C'est ce que la salle perd, en réalité, quand un adhérent part au bout d'un trimestre.`,
-          "L'arène affiche cette valeur dans les indicateurs du métier : elle suppose que la marge et l'attrition restent celles du trimestre.",
+          `Un compte reste en moyenne ${qte(x.dureeDeVie)} ans, et laisse ${eur(x.m.marge)} chaque année : il vaut ${eur(x.simple)} sur toute sa vie de client. C'est ce que le cabinet perd, en réalité, quand un compte part au bout d'un an.`,
+          `Cette valeur vie est dite simple : elle additionne les marges des années à venir comme si un euro dans ${qte(x.dureeDeVie)} ans valait un euro aujourd'hui. Le chapitre la corrige plus loin.`,
         ];
       },
     },
     {
-      id: "acquisition",
-      type: "montants",
-      titre: "Ce qu'a coûté un nouvel adhérent",
-      notions: ["customer_acquisition_cost", "customer_lifetime_value"],
-      question: (c) => {
-        const p = portefeuille(c);
-        return `Au premier trimestre, ${c.entreprise} a dépensé ${eur(p.marketing)} de publicité et gagné ${qte(p.t1.nouveaux)} nouveaux adhérents. Calculez le coût d'acquisition d'un adhérent, puis le rapport valeur vie client ÷ coût d'acquisition, au dixième.`;
-      },
-      champs: (c) => {
-        const p = portefeuille(c);
-        return [
-          { libelle: "Coût d'acquisition par adhérent", attendu: p.cac, calcul: `${eur(p.marketing)} ÷ ${qte(p.t1.nouveaux)} = ${eur(p.cac)}` },
-          {
-            libelle: "Valeur vie ÷ coût d'acquisition",
-            attendu: p.vvcSurCac,
-            calcul: `${eur(p.vvc)} ÷ ${eur(p.cac)} = ${qte(p.vvcSurCac)}`,
-            tolerance: Math.max(0.1, auDixieme(p.vvcSurCac * 0.01)),
-          },
-        ];
-      },
-      explication: (c) => {
-        const p = portefeuille(c);
-        return [
-          `Chaque euro dépensé pour gagner un adhérent en rapporte ${qte(p.vvcSurCac)} de marge sur sa vie de client. Les commerciaux retiennent souvent qu'en dessous de 3, la conquête coûte plus qu'elle ne rapporte.`,
-          "Dans l'arène, seule la publicité compte dans le coût d'acquisition. Dans une vraie salle, l'offre de bienvenue, les frais d'inscription offerts et le temps passé par les commerciaux s'y ajoutent, et le rapport baisse d'autant.",
-        ];
-      },
-    },
-    {
-      id: "annee",
-      type: "lecture",
-      titre: "Une année de portefeuille",
-      notions: ["churn_rate", "seasonality"],
-      texte: (c) => {
-        const p = portefeuille(c);
-        return [
-          `Sur l'année, l'attrition de ${c.entreprise} ne reste pas à ${pct(p.t1.attrition)}. Elle monte jusqu'à ${pct(p.pire.attrition)} au ${ordinal(p.pire.trimestre)} trimestre.`,
-          `En plus du prix et de la qualité du service, deux choses font partir des adhérents dans l'arène : la saison (l'été fait partir plus que le reste de l'année), et la saturation. Au-delà de ${pct(p.seuilDeSaturation)} d'occupation, la salle est bondée, les machines sont prises, et des adhérents ne renouvellent pas.`,
-        ];
-      },
-      tableau: (c) => {
-        const p = portefeuille(c);
-        return {
-          titre: "Le portefeuille d'adhérents, trimestre par trimestre",
-          colonnes: p.trimestres.map((t) => T(t.trimestre)),
-          lignes: [
-            { libelle: "En début de trimestre", valeurs: p.trimestres.map((t) => qte(t.ouverture)) },
-            { libelle: "Partis", valeurs: p.trimestres.map((t) => `− ${qte(t.departs)}`) },
-            { libelle: "Taux d'attrition", valeurs: p.trimestres.map((t) => pct(t.attrition)) },
-            { libelle: "Nouveaux inscrits", valeurs: p.trimestres.map((t) => `+ ${qte(t.nouveaux)}`) },
-            { libelle: "En fin de trimestre", valeurs: p.trimestres.map((t) => qte(t.cloture)) },
-            { libelle: "Occupation de la salle", valeurs: p.trimestres.map((t) => pct(t.occupation)) },
-            { libelle: "Abonnement trimestriel", valeurs: p.trimestres.map((t) => eur(t.prix)) },
-          ],
-        };
-      },
-    },
-    {
-      id: "pourquoi",
+      id: "quelle-marge",
       type: "choix",
-      titre: "Pourquoi l'attrition monte",
-      notions: ["churn_rate", "capacity"],
-      tableau: (c) => {
-        const p = portefeuille(c);
-        return {
-          titre: "Les deux premiers trimestres",
-          colonnes: [T(1), T(2)],
-          lignes: [
-            { libelle: "Taux d'attrition", valeurs: [pct(p.t1.attrition), pct(p.t2.attrition)] },
-            { libelle: "Occupation de la salle", valeurs: [pct(p.t1.occupation), pct(p.t2.occupation)] },
-            { libelle: "Abonnement trimestriel", valeurs: [eur(p.t1.prix), eur(p.t2.prix)] },
-          ],
-        };
-      },
+      titre: "Quelle marge diviser par l'attrition",
+      notions: ["customer_lifetime_value", "contribution_margin"],
       question: (c) => {
-        const p = portefeuille(c);
-        return `L'attrition passe de ${pct(p.t1.attrition)} au premier trimestre à ${pct(p.t2.attrition)} au deuxième. Qu'est-ce qui a fait partir les adhérents ?`;
+        const x = valeurDesComptes(c);
+        return `Un stagiaire calcule la valeur vie d'un compte sur sa marge sur coût variable, ${eur(x.margeSurCoutVariableParCompte)} par an (son chiffre d'affaires moins ses frais) : « les consultants sont payés de toute façon ». Quelle marge faut-il diviser par l'attrition ?`;
       },
       options: (c) => {
-        const p = portefeuille(c);
-        const sature = p.t2.occupation > p.seuilDeSaturation;
-        const plusCher = p.t2.prix > p.t1.prix + 0.5;
-        const saison = p.t2.saison > 1;
+        const x = valeurDesComptes(c);
+        const avecLaMcv = auCentime(x.margeSurCoutVariableParCompte / x.n.attrition);
+        const avecLeCa = auCentime(x.m.chiffreDAffaires / x.n.attrition);
         return [
           {
-            texte: "La salle était trop pleine",
-            juste: sature && !plusCher && !saison,
-            retour: sature
-              ? `Oui : la salle ouvrait le trimestre occupée à ${pct(p.t2.occupation)}, au-delà des ${pct(p.seuilDeSaturation)} où l'attente aux machines fait partir. Les inscriptions du premier trimestre ont rempli la salle, et ce remplissage s'est payé en départs.`
-              : `Non : la salle était occupée à ${pct(p.t2.occupation)}, sous les ${pct(p.seuilDeSaturation)} où la saturation fait partir.`,
+            texte: `La marge sur coûts directs, ${eur(x.m.marge)} : le temps des consultants compris`,
+            juste: true,
+            retour: `Oui. Sur une affaire en plus placée sur des jours libres, seule la marge sur coût variable compte : les consultants sont payés de toute façon. Mais un compte gardé des années occupe des consultants des années durant, qu'il faut payer et qu'il faudrait embaucher pour servir d'autres comptes : sa valeur vie se lit sur ce qu'il laisse une fois leur temps payé, ${eur(x.simple)}.`,
           },
           {
-            texte: "L'abonnement a augmenté",
-            juste: plusCher && !sature && !saison,
-            retour: plusCher
-              ? `Oui : l'abonnement est passé de ${eur(p.t1.prix)} à ${eur(p.t2.prix)}, et une partie des adhérents ne suit pas.`
-              : `Non : l'abonnement est resté à ${eur(p.t2.prix)}. Le prix n'explique pas ces départs.`,
+            texte: `La marge sur coût variable, ${eur(x.margeSurCoutVariableParCompte)} : les consultants sont déjà payés`,
+            juste: false,
+            retour: `Non : c'est vrai d'une affaire en plus sur des jours libres, pas d'un compte qui revient chaque année. À ce compte, la valeur vie vaudrait ${eur(avecLaMcv)} : elle oublierait les ${qte(x.journeesParCompte)} journées de consultant que le compte prend chaque année.`,
           },
           {
-            texte: "C'est la saison des départs",
-            juste: saison && !sature && !plusCher,
-            retour: saison
-              ? "Oui : ce trimestre est celui où, dans l'arène, les adhérents partent le plus, quelle que soit la salle."
-              : "Non : dans l'arène, la saison des départs est l'été, au troisième trimestre. Le deuxième est un trimestre ordinaire.",
+            texte: `Le chiffre d'affaires, ${eur(x.m.chiffreDAffaires)} : c'est ce que le compte paie chaque année`,
+            juste: false,
+            retour: `Non : un compte qui paie ${eur(x.m.chiffreDAffaires)} coûte aussi ses frais et le temps de ceux qui le servent. Diviser le chiffre d'affaires par l'attrition donnerait ${eur(avecLeCa)}, une valeur que le cabinet ne gagnera jamais.`,
           },
         ];
       },
     },
     {
-      id: "ete",
+      id: "le-cout-d-acquisition",
       type: "montants",
-      titre: "Ce que vaut un client qui part plus vite",
-      notions: ["customer_lifetime_value"],
+      titre: "Ce qu'a coûté un compte gagné",
+      notions: ["customer_acquisition_cost", "customer_lifetime_value"],
+      tableau: (c) => {
+        const x = valeurDesComptes(c);
+        return {
+          titre: `Les canaux de conquête ${dE(x.f.entreprise)}, année N`,
+          colonnes: ["Coût de l'année", "Comptes gagnés"],
+          lignes: x.f.canaux.map((k) => ({ libelle: k.nom, valeurs: [eur(k.cout), qte(k.contrats)] })),
+        };
+      },
       question: (c) => {
-        const p = portefeuille(c);
-        return `Au ${ordinal(p.pire.trimestre)} trimestre, l'attrition atteint ${pct(p.pire.attrition)}. À marge inchangée (${eur(p.marge)} par trimestre), que vaudrait un adhérent sur sa vie de client à ce rythme ? Et combien de moins qu'au premier trimestre ?`;
+        const x = valeurDesComptes(c);
+        return `Pour gagner ses ${qte(x.n.nouveaux)} comptes neufs, le cabinet a payé ${qte(x.f.canaux.length)} canaux de conquête, temps des commerciaux compris. Calculez ce qu'ils ont coûté ensemble, le coût d'acquisition d'un compte (coût des canaux ÷ comptes gagnés), puis le rapport valeur vie client ÷ coût d'acquisition, au dixième.`;
       },
       champs: (c) => {
-        const p = portefeuille(c);
+        const x = valeurDesComptes(c);
         return [
-          { libelle: "Valeur vie client à ce rythme", attendu: p.vvcDuPire, calcul: `${eur(p.marge)} ÷ ${pct(p.pire.attrition)} = ${eur(p.vvcDuPire)}`, tolerance: Math.max(2, Math.round(p.vvcDuPire * 0.01)) },
-          { libelle: "Valeur perdue par adhérent", attendu: p.vvc - p.vvcDuPire, calcul: `${eur(p.vvc)} − ${eur(p.vvcDuPire)} = ${eur(p.vvc - p.vvcDuPire)}`, tolerance: Math.max(3, Math.round(p.vvc * 0.01)) },
+          { libelle: "Coût des canaux de conquête", attendu: x.acq.cout, calcul: `${x.f.canaux.map((k) => eur(k.cout)).join(" + ")} = ${eur(x.acq.cout)}` },
+          { libelle: "Coût d'acquisition d'un compte", attendu: x.acq.cac, calcul: `${eur(x.acq.cout)} ÷ ${qte(x.acq.comptes)} = ${eur(x.acq.cac)}` },
+          { libelle: "Valeur vie ÷ coût d'acquisition", attendu: x.rapportSimple, calcul: `${eur(x.simple)} ÷ ${eur(x.acq.cac)} = ${qte(x.rapportSimple)}`, tolerance: 0.05 },
         ];
       },
       explication: (c) => {
-        const p = portefeuille(c);
+        const x = valeurDesComptes(c);
         return [
-          `Le même adhérent, au même prix, ne vaut plus que ${eur(p.vvcDuPire)} au lieu de ${eur(p.vvc)}. La valeur vie client se divise quand l'attrition se multiplie : c'est pourquoi le commercial d'une entreprise d'abonnement suit son attrition avant ses inscriptions.`,
+          `Un compte rapporte, sur sa vie de client, ${qte(x.rapportSimple)} fois ce qu'il a coûté à gagner. Les commerciaux retiennent souvent qu'en dessous de 3, la conquête coûte presque ce qu'elle rapporte ; la direction ${dE(x.f.entreprise)} vise ${qte(RAPPORT_VISE)}.`,
+          `Ce rapport est bon, mais il repose sur la valeur vie simple. Il faudra le refaire une fois les marges à venir ramenées à aujourd'hui.`,
         ];
       },
     },
     {
-      id: "equilibre",
+      id: "predire-l-equilibre",
+      type: "choix",
+      titre: "Pariez sur le portefeuille",
+      notions: ["churn_rate", "customer_portfolio"],
+      question: (c) => {
+        const x = valeurDesComptes(c);
+        return `Avant de calculer, pariez. En N − 2, le cabinet ne perdait que ${pct(x.n2.attrition)} de ses comptes, et en gagnait déjà ${qte(x.n.nouveaux)} par an. S'il avait gardé ce rythme, son portefeuille aurait…`;
+      },
+      options: (c) => {
+        const x = valeurDesComptes(c);
+        const voir = "Faites vivre le portefeuille à l'étape suivante : le curseur montre jusqu'où il grossit, et pourquoi.";
+        return [
+          { texte: "Grossi de moins en moins vite, jusqu'à un plafond", juste: true, retour: `Bon pari. ${voir}` },
+          { texte: `Grossi de ${qte(x.n.nouveaux - x.n2.perdus)} comptes par an, sans fin`, juste: false, retour: `Pari à vérifier. ${voir}` },
+          { texte: "Cessé de grossir tout de suite", juste: false, retour: `Pari à vérifier. ${voir}` },
+        ];
+      },
+    },
+    {
+      id: "le-portefeuille-au-curseur",
+      type: "curseur",
+      titre: "Faites vivre le portefeuille",
+      notions: ["churn_rate", "customer_portfolio"],
+      question: (c) => {
+        const x = valeurDesComptes(c);
+        return `Au rythme de N − 2 (${pct(x.n2.attrition)} d'attrition) et avec ${qte(x.n.nouveaux)} recrues par an, faites varier le portefeuille du 1er janvier, de ${qte(PORTEFEUILLE_DU_CURSEUR.min)} à ${qte(PORTEFEUILLE_DU_CURSEUR.max)} comptes. Une droite donne la marge que les recrues apportent dans l'année, l'autre celle que les départs emportent. Placez le curseur sur le plus grand portefeuille qui grossit encore, ou qui tient, puis validez.`;
+      },
+      grandeur: () => ({ libelle: "Comptes au 1er janvier", unite: "comptes" }),
+      sens: "plus-grande",
+      cible: (c) => ({ attendu: valeurDesComptes(c).portefeuilleQuiTientN2, min: PORTEFEUILLE_DU_CURSEUR.min, max: PORTEFEUILLE_DU_CURSEUR.max }),
+      zones: ["Le portefeuille grossit", "Le portefeuille fond"],
+      rates: () => ({
+        dessous: "Le portefeuille grossit encore à cette position : cherchez le plus grand qui tient.",
+        dessus: "À cette position, les départs emportent plus de marge que les recrues n'en apportent : le portefeuille fond.",
+      }),
+      montrer: "Montrer l'équilibre",
+      lecture: (c, p) => {
+        const x = valeurDesComptes(c);
+        const departs = auCentime(x.departsParCompteN2 * p);
+        return [
+          { libelle: "Marge apportée par les recrues", montant: x.margeDesRecrues },
+          { libelle: "Marge emportée par les départs", montant: departs },
+          { libelle: "Marge gagnée ou perdue par le portefeuille", montant: auCentime(x.margeDesRecrues - departs), fort: true },
+        ];
+      },
+      droites: (c) => {
+        const x = valeurDesComptes(c);
+        return {
+          produit: () => x.margeDesRecrues,
+          cout: (p) => x.departsParCompteN2 * p,
+          libelles: ["Marge apportée par les recrues", "Marge emportée par les départs"],
+        };
+      },
+      explication: (c) => {
+        const x = valeurDesComptes(c);
+        return [
+          `Les recrues apportent toujours ${eur(x.margeDesRecrues)} par an ; les départs emportent ${eur(x.departsParCompteN2)} par compte présent, et donc d'autant plus que le portefeuille est grand. À ${qte(x.portefeuilleQuiTientN2)} comptes, il grossit encore ; à ${qte(x.portefeuilleQuiTientN2 + 1)}, il fond. Il tend vers ${qte(x.equilibreN2)} comptes, un nombre attendu, une moyenne : c'est son portefeuille d'équilibre, recrues ÷ attrition.`,
+          `Le portefeuille ne grossit donc pas sans fin : plus il est grand, plus il perd de comptes chaque année, jusqu'à ce que les départs égalent les recrues. L'étape suivante le calcule au rythme de N.`,
+        ];
+      },
+    },
+    {
+      id: "l-equilibre",
       type: "montants",
       titre: "Le portefeuille d'équilibre",
-      notions: ["churn_rate"],
-      question: (c) => {
-        const p = portefeuille(c);
-        return `Sur l'année, ${c.entreprise} a gagné ${qte(p.recrues)} adhérents et en a perdu ${qte(p.departs)}, sur ${qte(p.ouvertures)} adhérents présents en début de trimestre, les quatre trimestres additionnés. Calculez les recrues par trimestre (à l'unité), l'attrition moyenne de l'année (au dixième), puis le portefeuille d'équilibre : celui où les départs égalent les recrues (recrues par trimestre ÷ attrition).`;
-      },
+      notions: ["churn_rate", "customer_portfolio"],
+      question: () =>
+        "Sans formule cette fois. Calculez le portefeuille d'équilibre au rythme de N, celui au rythme de N − 2, puis les comptes d'équilibre que la hausse de l'attrition a fait perdre au cabinet. Au centième : ce sont des comptes attendus.",
       champs: (c) => {
-        const p = portefeuille(c);
+        const x = valeurDesComptes(c);
         return [
-          { libelle: "Recrues par trimestre", attendu: p.recruesParTrimestre, calcul: `${qte(p.recrues)} ÷ 4 = ${qte(p.recruesParTrimestre)}`, tolerance: 1 },
-          { libelle: "Attrition moyenne (%)", attendu: p.attritionMoyenne, calcul: `${qte(p.departs)} ÷ ${qte(p.ouvertures)} × 100 = ${pct(p.attritionMoyenne)}`, tolerance: 0.1 },
-          { libelle: "Portefeuille d'équilibre", attendu: p.equilibre, calcul: `${qte(p.recruesParTrimestre)} ÷ ${pct(p.attritionMoyenne)} = ${qte(p.equilibre)}`, tolerance: Math.max(5, Math.round(p.equilibre * 0.01)) },
+          { libelle: "Portefeuille d'équilibre au rythme de N", attendu: x.equilibre, calcul: `${qte(x.n.nouveaux)} ÷ ${pct(x.n.attrition)} = ${qte(x.equilibre)} comptes`, tolerance: 0.1 },
+          { libelle: "Portefeuille d'équilibre au rythme de N − 2", attendu: x.equilibreN2, calcul: `${qte(x.n.nouveaux)} ÷ (${qte(x.n2.perdus)} ÷ ${qte(x.n2.auPremierJanvier)}) = ${qte(x.equilibreN2)} comptes`, tolerance: 0.1 },
+          { libelle: "Comptes d'équilibre perdus", attendu: x.comptesPerdusALEquilibre, calcul: `${qte(x.equilibreN2)} − ${qte(x.equilibre)} = ${qte(x.comptesPerdusALEquilibre)} comptes`, tolerance: 0.1 },
         ];
       },
       explication: (c) => {
-        const p = portefeuille(c);
-        const auDela = p.equilibre > p.places;
+        const x = valeurDesComptes(c);
         return [
-          `À ce rythme, le portefeuille tend vers ${qte(p.equilibre)} adhérents : plus il grossit, plus il perd d'adhérents chaque trimestre, jusqu'à ce que les départs égalent les recrues.`,
-          auDela
-            ? `Or la salle n'a que ${qte(p.places)} places. Avant d'atteindre cet équilibre, elle dépasserait ${pct(p.seuilDeSaturation)} d'occupation, et la saturation ferait monter l'attrition : recruter plus ne ferait que remplir une salle qui se vide par l'autre bout.`
-            : `La salle a ${qte(p.places)} places : cet équilibre y tient, mais au-delà de ${pct(p.seuilDeSaturation)} d'occupation, la saturation ferait monter l'attrition.`,
+          `Au rythme de N, l'équilibre tombe sur le portefeuille d'aujourd'hui, ${qte(x.equilibre)} comptes : ce n'est pas un hasard, le cabinet en a perdu autant qu'il en a gagné. Il ne grossira plus sans changer l'un des deux.`,
+          `Au rythme de N − 2, il aurait tendu vers ${qte(x.equilibreN2)} comptes. La hausse de l'attrition lui coûte ${qte(x.comptesPerdusALEquilibre)} comptes d'équilibre, soit ${eur(auCentime(x.comptesPerdusALEquilibre * x.m.marge))} de marge par an. Le commercial d'un portefeuille suit son attrition avant ses signatures.`,
         ];
       },
     },
     {
-      id: "leviers",
+      id: "predire-recruter-ou-fideliser",
       type: "choix",
-      titre: "Recruter ou fidéliser",
-      notions: ["churn_rate", "customer_acquisition_cost"],
+      titre: "Pariez : recruter ou fidéliser",
+      notions: ["churn_rate", "customer_portfolio"],
+      question: () =>
+        `Avant de calculer, pariez. À effort égal, le cabinet peut recruter ${pct(EFFORT_DE_FIDELISATION, 0)} de comptes de plus chaque année, ou perdre ${pct(EFFORT_DE_FIDELISATION, 0)} de comptes de moins. Lequel grossit le plus le portefeuille d'équilibre ?`,
+      options: () => {
+        const voir = "Cherchez au curseur suivant l'attrition qui remplit les consultants : elle départage les deux.";
+        return [
+          { texte: "Perdre moins de comptes", juste: true, retour: `Bon pari. ${voir}` },
+          { texte: "Recruter plus de comptes", juste: false, retour: `Pari à vérifier. ${voir}` },
+          { texte: "Les deux autant : l'effort est le même", juste: false, retour: `Pari à vérifier. ${voir}` },
+        ];
+      },
+    },
+    {
+      id: "l-attrition-au-curseur",
+      type: "curseur",
+      titre: "L'attrition qui remplit les consultants",
+      notions: ["churn_rate", "capacity", "customer_portfolio"],
       question: (c) => {
-        const p = portefeuille(c);
-        return `Pour grossir son portefeuille d'équilibre (${qte(p.equilibre)} adhérents), ${c.entreprise} hésite : recruter un quart d'adhérents de plus chaque trimestre, ou faire baisser l'attrition d'un quart, de ${pct(p.attritionMoyenne)} à ${pct(p.attritionReduite)}. Lequel des deux grossit le plus le portefeuille ?`;
+        const x = valeurDesComptes(c);
+        return `Les ${qte(x.f.consultants.nombre)} consultants peuvent faire ${qte(x.capacite)} journées par an ; un compte en prend ${qte(x.journeesParCompte)} : ils peuvent servir ${qte(x.comptesALaCapacite)} comptes. Avec ${qte(x.n.nouveaux)} recrues par an, faites varier l'attrition de ${qte(ATTRITION_DU_CURSEUR.min)} % à ${qte(ATTRITION_DU_CURSEUR.max)} %. Placez le curseur sur l'attrition la plus haute où un portefeuille de ${qte(x.comptesALaCapacite)} comptes tient, puis validez.`;
+      },
+      grandeur: () => ({ libelle: "Attrition de l'année", unite: "%" }),
+      sens: "plus-grande",
+      cible: (c) => ({ attendu: valeurDesComptes(c).attritionALaCapacite, min: ATTRITION_DU_CURSEUR.min, max: ATTRITION_DU_CURSEUR.max }),
+      zones: ["Les consultants restent pleins", "Le portefeuille se vide"],
+      rates: () => ({
+        dessous: "À cette attrition, le portefeuille tient encore : cherchez la plus haute.",
+        dessus: "À cette attrition, les départs emportent plus que les recrues n'apportent : le portefeuille descend sous la capacité.",
+      }),
+      montrer: "Montrer l'attrition",
+      lecture: (c, a) => {
+        const x = valeurDesComptes(c);
+        const departs = auCentime((x.comptesALaCapacite * a * x.m.marge) / 100);
+        return [
+          { libelle: "Marge apportée par les recrues", montant: x.margeDesRecrues },
+          { libelle: "Marge emportée par les départs", montant: departs },
+          { libelle: "Valeur vie d'un compte à cette attrition", montant: auCentime((x.m.marge * 100) / a) },
+          { libelle: "Marge gagnée ou perdue par le portefeuille", montant: auCentime(x.margeDesRecrues - departs), fort: true },
+        ];
+      },
+      droites: (c) => {
+        const x = valeurDesComptes(c);
+        return {
+          produit: () => x.margeDesRecrues,
+          cout: (a) => (x.comptesALaCapacite * a * x.m.marge) / 100,
+          libelles: ["Marge apportée par les recrues", `Marge emportée par les départs, sur ${qte(x.comptesALaCapacite)} comptes`],
+        };
+      },
+      explication: (c) => {
+        const x = valeurDesComptes(c);
+        return [
+          `Avec ${qte(x.n.nouveaux)} recrues, un portefeuille de ${qte(x.comptesALaCapacite)} comptes ne tient que sous ${qte(x.attritionALaCapacite)} % d'attrition : ${qte(x.n.nouveaux)} ÷ ${qte(x.comptesALaCapacite)}. Le cabinet en est à ${pct(x.n.attrition)}.`,
+          `Perdre ${pct(EFFORT_DE_FIDELISATION, 0)} de comptes de moins mène l'attrition à ${pct(x.attritionReduite, 2)}, sous ces ${qte(x.attritionALaCapacite)} % : le portefeuille irait au-delà de ce que les consultants peuvent servir. Recruter ${pct(EFFORT_DE_FIDELISATION, 0)} de plus mène à ${qte(x.recruesEnPlus)} recrues pour ${pct(x.n.attrition)} d'attrition, soit ${qte(x.equilibreEnRecrutant)} comptes, la capacité pile. L'étape suivante le chiffre.`,
+        ];
+      },
+    },
+    {
+      id: "recruter-ou-fideliser",
+      type: "montants",
+      titre: "Recruter ou fidéliser, face à la capacité",
+      notions: ["churn_rate", "customer_portfolio", "capacity"],
+      question: (c) => {
+        const x = valeurDesComptes(c);
+        return `Le cabinet hésite : ${qte(x.recruesEnPlus)} recrues par an à ${pct(x.n.attrition)} d'attrition, ou ${qte(x.n.nouveaux)} recrues à ${pct(x.attritionReduite, 2)}. Calculez le portefeuille d'équilibre de chacun, puis les journées que demanderait le plus grand des deux.`;
+      },
+      champs: (c) => {
+        const x = valeurDesComptes(c);
+        return [
+          { libelle: "Portefeuille d'équilibre en recrutant", attendu: x.equilibreEnRecrutant, calcul: `${qte(x.recruesEnPlus)} ÷ ${pct(x.n.attrition)} = ${qte(x.equilibreEnRecrutant)} comptes`, tolerance: 0.1 },
+          { libelle: "Portefeuille d'équilibre en fidélisant", attendu: x.equilibreEnFidelisant, calcul: `${qte(x.n.nouveaux)} ÷ ${pct(x.attritionReduite, 2)} = ${qte(x.equilibreEnFidelisant)} comptes`, tolerance: 0.1 },
+          {
+            libelle: "Journées demandées par le plus grand portefeuille",
+            attendu: x.journeesEnFidelisant,
+            calcul: `${qte(x.equilibreEnFidelisant)} × ${qte(x.journeesParCompte)} = ${qte(x.journeesEnFidelisant)} journées, pour ${qte(x.capacite)} de capacité`,
+            tolerance: 6,
+          },
+        ];
+      },
+      explication: (c) => {
+        const x = valeurDesComptes(c);
+        return [
+          `Recruter ${pct(EFFORT_DE_FIDELISATION, 0)} de plus multiplie le portefeuille d'équilibre par ${qte(1 + EFFORT_DE_FIDELISATION)} ; perdre ${pct(EFFORT_DE_FIDELISATION, 0)} de moins le multiplie par 1 ÷ ${qte(1 - EFFORT_DE_FIDELISATION)}, soit ${pct(1 / (1 - EFFORT_DE_FIDELISATION) - 1)} de plus. Le portefeuille d'équilibre est un quotient : une baisse du dénominateur pèse plus qu'une hausse égale du numérateur.`,
+          `Mais ${qte(x.equilibreEnFidelisant)} comptes demandent ${qte(x.journeesEnFidelisant)} journées, ${qte(auCentime(x.journeesEnFidelisant - x.capacite))} de plus que les ${qte(x.capacite)} que les consultants peuvent faire.`,
+        ];
+      },
+    },
+    {
+      id: "la-capacite",
+      type: "choix",
+      titre: "Ce que vous dites au directeur",
+      notions: ["customer_portfolio", "capacity", "churn_rate"],
+      question: (c) => {
+        const x = valeurDesComptes(c);
+        return `Le directeur ${dE(x.f.entreprise)} veut grossir le portefeuille, et demande lequel des deux efforts choisir. Que lui répondez-vous ?`;
       },
       options: (c) => {
-        const p = portefeuille(c);
-        const fideliser = p.equilibreMoinsDAttrition > p.equilibrePlusDeRecrues;
-        const calcul = `Avec un quart de recrues en plus : ${qte(Math.round(p.recruesParTrimestre * 1.25))} ÷ ${pct(p.attritionMoyenne)} = ${qte(p.equilibrePlusDeRecrues)} adhérents. Avec un quart d'attrition en moins : ${qte(p.recruesParTrimestre)} ÷ ${pct(p.attritionReduite)} = ${qte(p.equilibreMoinsDAttrition)} adhérents.`;
+        const x = valeurDesComptes(c);
         return [
           {
-            texte: "Faire baisser l'attrition d'un quart",
-            juste: fideliser,
-            retour: `${fideliser ? "Oui" : "Non"}. ${calcul} L'attrition divise : la baisser d'un quart grossit le portefeuille d'un tiers, quand un quart de recrues en plus ne le grossit que d'un quart.`,
+            texte: "Fidéliser, en prévoyant un consultant de plus",
+            juste: true,
+            retour: `Oui : ${qte(x.equilibreEnFidelisant)} comptes au lieu de ${qte(x.equilibreEnRecrutant)}, mais ${qte(x.journeesEnFidelisant)} journées pour ${qte(x.capacite)}. Sans consultant de plus, le cabinet refuserait des journées, et des comptes mal servis partiraient : l'attrition remonterait.`,
           },
           {
-            texte: "Recruter un quart d'adhérents de plus",
-            juste: !fideliser,
-            retour: `${fideliser ? "Non" : "Oui"}. ${calcul} Les recrues multiplient le portefeuille par 1,25 ; une attrition réduite d'un quart le multiplie par 1 ÷ 0,75, soit un tiers de plus.`,
-          },
-          {
-            texte: "Les deux se valent",
+            texte: "Fidéliser : les consultants actuels suffiront",
             juste: false,
-            retour: `Non. ${calcul} Le portefeuille d'équilibre est un quotient : un quart de moins au dénominateur pèse plus qu'un quart de plus au numérateur.`,
+            retour: `Non : ${qte(x.equilibreEnFidelisant)} comptes à ${qte(x.journeesParCompte)} journées en demandent ${qte(x.journeesEnFidelisant)}, plus que les ${qte(x.capacite)} des ${qte(x.f.consultants.nombre)} consultants.`,
           },
+          {
+            texte: `Recruter : il grossit le portefeuille de ${pct(EFFORT_DE_FIDELISATION, 0)}, l'autre moins`,
+            juste: false,
+            retour: `Non : recruter mène à ${qte(x.equilibreEnRecrutant)} comptes, fidéliser à ${qte(x.equilibreEnFidelisant)}. Le portefeuille d'équilibre divise les recrues par l'attrition : la baisser pèse plus.`,
+          },
+          {
+            texte: "Les deux se valent : l'effort est le même de chaque côté",
+            juste: false,
+            retour: `Non : à effort égal, ils ne donnent pas le même portefeuille, ${qte(x.equilibreEnRecrutant)} comptes contre ${qte(x.equilibreEnFidelisant)}.`,
+          },
+        ];
+      },
+    },
+    {
+      id: "predire-l-actualisation",
+      type: "choix",
+      titre: "Pariez sur la valeur actualisée",
+      notions: ["customer_lifetime_value", "discounting"],
+      question: (c) => {
+        const x = valeurDesComptes(c);
+        return `Avant de calculer, pariez. Si le cabinet divisait son attrition par deux, la valeur vie simple d'un compte doublerait, comme sa durée de vie. Et sa valeur vie actualisée à ${pct(x.taux)} ?`;
+      },
+      options: () => {
+        const voir = "Le laboratoire suivant trace les deux valeurs selon l'attrition : regardez-les s'écarter.";
+        return [
+          { texte: "Elle monterait, mais bien moins que du double", juste: true, retour: `Bon pari. ${voir}` },
+          { texte: "Elle doublerait aussi, comme la durée de vie", juste: false, retour: `Pari à vérifier. ${voir}` },
+          { texte: "Elle ne bougerait presque pas", juste: false, retour: `Pari à vérifier. ${voir}` },
+        ];
+      },
+    },
+    {
+      id: "le-laboratoire-de-la-valeur",
+      type: "simulation",
+      titre: "Le laboratoire de la valeur",
+      notions: ["customer_lifetime_value", "discounting", "customer_portfolio", "customer_acquisition_cost"],
+      question: (c) => {
+        const x = valeurDesComptes(c);
+        return `Faites varier les recrues de l'année et l'attrition, et choisissez la méthode : la valeur vie simple, ou actualisée à ${pct(x.taux)}. Le tableau suit le portefeuille d'équilibre, les journées qu'il demande et ce que vaut un compte face à son coût d'acquisition, ${eur(x.acq.cac)}. Relevez le défi, puis regardez ce que la méthode change.`;
+      },
+      leviers: (c) => {
+        const x = valeurDesComptes(c);
+        const l = LEVIERS_DE_LA_VALEUR;
+        return [
+          { code: "recrues", libelle: "Comptes gagnés par an", unite: "comptes", min: l.recrues.min, max: l.recrues.max, pas: l.recrues.pas, depart: x.n.nouveaux },
+          { code: "attrition", libelle: "Attrition de l'année", unite: "%", min: l.attrition.min, max: l.attrition.max, pas: l.attrition.pas, depart: auCentime(x.n.attrition * 100) },
+          {
+            code: "methode",
+            libelle: "Méthode",
+            unite: "",
+            min: METHODE.simple,
+            max: METHODE.actualisee,
+            pas: 1,
+            depart: METHODE.simple,
+            choix: [
+              { valeur: METHODE.simple, libelle: "Valeur vie simple" },
+              { valeur: METHODE.actualisee, libelle: `Valeur vie actualisée à ${pct(x.taux)}` },
+            ],
+          },
+        ];
+      },
+      lecture: (c, p) => {
+        const x = valeurDesComptes(c);
+        const l = laboratoireDeLaValeur(x, p.recrues!, p.attrition!, p.methode!);
+        const d = laboratoireDeLaValeur(x, x.n.nouveaux, x.n.attrition * 100, METHODE.simple);
+        return [
+          { libelle: "Portefeuille d'équilibre", montant: l.equilibre, reference: d.equilibre, unite: "comptes" },
+          { libelle: "Journées demandées à l'équilibre", montant: l.journees, reference: d.journees, unite: "journées" },
+          { libelle: "Journées que les consultants peuvent faire", montant: x.capacite, reference: x.capacite, unite: "journées" },
+          { libelle: "Valeur vie d'un compte, à la méthode choisie", montant: l.valeur, reference: d.valeur },
+          { libelle: "Valeur vie ÷ coût d'acquisition", montant: l.rapport, reference: d.rapport, unite: "fois" },
+          { libelle: "Marge annuelle du portefeuille d'équilibre", montant: l.margeDuPortefeuille, reference: d.margeDuPortefeuille, effet: true, fort: true },
+        ];
+      },
+      graphique: (c) => {
+        const x = valeurDesComptes(c);
+        return {
+          levier: "attrition",
+          courbes: [
+            { libelle: "Valeur vie simple", valeur: (p) => laboratoireDeLaValeur(x, p.recrues!, p.attrition!, METHODE.simple).simple },
+            { libelle: "Valeur vie actualisée", valeur: (p) => laboratoireDeLaValeur(x, p.recrues!, p.attrition!, METHODE.actualisee).actualisee },
+            { libelle: `${qte(RAPPORT_VISE)} fois le coût d'acquisition`, valeur: () => x.valeurVisee },
+          ],
+        };
+      },
+      defi: (c) => {
+        const x = valeurDesComptes(c);
+        const remplit = (l: ReturnType<typeof laboratoireDeLaValeur>) => l.equilibre >= x.comptesALaCapacite - 1e-9 && l.journees <= x.capacite + 1e-9;
+        return {
+          consigne: `Remplissez à l'équilibre les ${qte(x.capacite)} journées des consultants (${qte(x.comptesALaCapacite)} comptes), avec des comptes qui valent, actualisés, au moins ${qte(RAPPORT_VISE)} fois leur coût d'acquisition.`,
+          atteint: (p) => {
+            const l = laboratoireDeLaValeur(x, p.recrues!, p.attrition!, p.methode!);
+            return remplit(l) && l.rapportActualise >= RAPPORT_VISE - 1e-9;
+          },
+          indice: (p) => {
+            const l = laboratoireDeLaValeur(x, p.recrues!, p.attrition!, p.methode!);
+            if (l.journees > x.capacite + 1e-9) return `À l'équilibre, ${qte(l.equilibre)} comptes demanderaient ${qte(l.journees)} journées, plus que les ${qte(x.capacite)} des consultants : moins de recrues, ou plus d'attrition.`;
+            if (!remplit(l)) return `Le portefeuille tend vers ${qte(l.equilibre)} comptes : il en faut ${qte(x.comptesALaCapacite)}, soit des recrues égales à ${qte(x.comptesALaCapacite)} × l'attrition.`;
+            if (p.methode === METHODE.simple && l.rapportSimple >= RAPPORT_VISE)
+              return `En valeur vie simple, le rapport vaut ${qte(l.rapport)} : passez à la valeur actualisée, c'est elle que le défi compte. Actualisé, un compte ne vaut que ${eur(l.actualisee)}.`;
+            return `Actualisé, un compte vaut ${eur(l.actualisee)}, moins que ${eur(x.valeurVisee)} : il faut perdre moins de comptes, et donc en recruter moins pour rester à ${qte(x.comptesALaCapacite)}.`;
+          },
+          solution: SOLUTION_DU_LABORATOIRE,
+        };
+      },
+      explication: (c, p) => {
+        const x = valeurDesComptes(c);
+        const l = laboratoireDeLaValeur(x, p.recrues!, p.attrition!, p.methode!);
+        const piege = laboratoireDeLaValeur(x, x.n.nouveaux, x.attritionALaCapacite, METHODE.simple);
+        return [
+          `À ${qte(p.recrues!)} recrues par an et ${qte(p.attrition!)} % d'attrition, le portefeuille tend vers ${qte(l.equilibre)} comptes, qui remplissent les consultants, et un compte vaut ${eur(l.actualisee)} actualisé, ${qte(auCentime(l.rapportActualise))} fois son coût d'acquisition. Le cabinet remplit ses consultants avec moins de recrues, gardées plus longtemps.`,
+          `Avec ${qte(x.n.nouveaux)} recrues à ${qte(x.attritionALaCapacite)} %, les consultants seraient pleins aussi, et la valeur vie simple dirait ${eur(piege.simple)}, ${qte(auCentime(piege.rapportSimple))} fois le coût d'acquisition. Actualisé, un compte n'y vaut que ${eur(piege.actualisee)}, ${qte(auCentime(piege.rapportActualise))} fois : l'objectif n'est pas tenu.`,
+          `Le graphique le montre : la valeur vie simple grossit sans limite quand l'attrition baisse, car elle compte un euro lointain comme un euro d'aujourd'hui. L'actualisée monte moins vite, et ne dépasse jamais marge ÷ taux, ${eur(x.plafondActualise)}.`,
+        ];
+      },
+    },
+    {
+      id: "la-valeur-actualisee",
+      type: "montants",
+      titre: "La valeur vie actualisée",
+      notions: ["customer_lifetime_value", "discounting"],
+      tableau: (c) => {
+        const x = valeurDesComptes(c);
+        return {
+          titre: "Un compte de N, année par année",
+          colonnes: x.annee.map((y) => `Année ${y.annee}`),
+          lignes: [
+            { libelle: "Chance d'être encore client", valeurs: x.annee.map((y) => pct(y.encoreClient, 2)) },
+            { libelle: "Facteur d'actualisation", valeurs: x.annee.map((y) => (Math.round(10_000 / Math.pow(1 + x.taux, y.annee)) / 10_000).toLocaleString("fr-FR", { minimumFractionDigits: 4 })) },
+          ],
+        };
+      },
+      question: (c) => {
+        const x = valeurDesComptes(c);
+        return `La marge d'une année à venir n'est qu'attendue : elle ne vient que si le compte est encore client. Et elle vaut moins aujourd'hui, au taux de ${pct(x.taux)}. Calculez la marge attendue de la deuxième année, sa valeur actuelle, puis la valeur vie actualisée, la somme de toutes les années, qui vaut marge ÷ (attrition + taux). Enfin, le rapport de cette valeur au coût d'acquisition.`;
+      },
+      champs: (c) => {
+        const x = valeurDesComptes(c);
+        const deux = x.annee[1]!;
+        return [
+          { libelle: "Marge attendue de la deuxième année", attendu: deux.attendue, calcul: `${eur(x.m.marge)} × ${pct(x.n.fidelisation)} = ${eur(deux.attendue)}` },
+          { libelle: "Valeur actuelle de la deuxième année", attendu: deux.actualisee, calcul: `${eur(deux.attendue)} ÷ 1,1² = ${eur(deux.actualisee)}`, tolerance: 1 },
+          { libelle: "Valeur vie actualisée", attendu: x.actualisee, calcul: `${eur(x.m.marge)} ÷ (${pct(x.n.attrition)} + ${pct(x.taux)}) = ${eur(x.actualisee)}` },
+          { libelle: "Valeur vie actualisée ÷ coût d'acquisition", attendu: x.rapportActualise, calcul: `${eur(x.actualisee)} ÷ ${eur(x.acq.cac)} = ${qte(x.rapportActualise)}`, tolerance: 0.05 },
+        ];
+      },
+      explication: (c) => {
+        const x = valeurDesComptes(c);
+        const [un, deux, trois] = x.annee;
+        return [
+          `Année par année, un compte laisse ${eur(un!.actualisee)}, puis ${eur(deux!.actualisee)}, puis ${eur(trois!.actualisee)} en valeur d'aujourd'hui : chaque marge s'érode deux fois, par le risque de départ et par l'actualisation. La somme de toutes les années tend vers ${eur(x.actualisee)}, et non ${eur(x.simple)}.`,
+          `Le rapport au coût d'acquisition tombe de ${qte(x.rapportSimple)} à ${qte(x.rapportActualise)}. C'est encore une conquête qui paie, mais sous l'objectif de ${qte(RAPPORT_VISE)} que la valeur simple faisait croire tenu. Le coût d'acquisition se paie aujourd'hui ; c'est à une valeur d'aujourd'hui qu'il se compare.`,
+        ];
+      },
+    },
+    {
+      id: "a-rebours",
+      type: "montants",
+      titre: "L'attrition qui tient l'objectif, à rebours",
+      notions: ["customer_lifetime_value", "discounting", "churn_rate"],
+      question: (c) => {
+        const x = valeurDesComptes(c);
+        return `La direction veut qu'un compte vaille au moins ${qte(RAPPORT_VISE)} fois son coût d'acquisition. À marge inchangée, retrouvez la valeur vie qu'il faut, puis l'attrition la plus haute qui la donne, en valeur actualisée à ${pct(x.taux)}, puis en valeur simple. En pourcentage, au centième.`;
+      },
+      champs: (c) => {
+        const x = valeurDesComptes(c);
+        return [
+          { libelle: "Valeur vie visée", attendu: x.valeurVisee, calcul: `${qte(RAPPORT_VISE)} × ${eur(x.acq.cac)} = ${eur(x.valeurVisee)}` },
+          {
+            libelle: "Attrition la plus haute, en valeur actualisée (%)",
+            attendu: x.attritionMaxActualisee,
+            calcul: `${eur(x.m.marge)} ÷ (attrition + ${pct(x.taux)}) = ${eur(x.valeurVisee)}, d'où attrition = ${eur(x.m.marge)} ÷ ${eur(x.valeurVisee)} − ${pct(x.taux)} = ${qte(x.attritionMaxActualisee)} %`,
+            tolerance: 0.1,
+          },
+          {
+            libelle: "Attrition la plus haute, en valeur simple (%)",
+            attendu: x.attritionMaxSimple,
+            calcul: `${eur(x.m.marge)} ÷ ${eur(x.valeurVisee)} = ${qte(x.attritionMaxSimple)} %`,
+            tolerance: 0.1,
+          },
+        ];
+      },
+      explication: (c) => {
+        const x = valeurDesComptes(c);
+        return [
+          `En valeur simple, l'objectif tient jusqu'à ${qte(x.attritionMaxSimple)} % d'attrition : le cabinet, à ${pct(x.n.attrition)}, croirait l'avoir. Actualisé, il faut descendre à ${qte(x.attritionMaxActualisee)} % : perdre ${qte(auCentime(x.n.attrition * 100 - x.attritionMaxActualisee))} points de moins, soit ${pct(1 - x.attritionMaxActualisee / (x.n.attrition * 100), 0)} des départs d'aujourd'hui.`,
+          "La méthode change la décision, pas seulement le chiffre : un objectif fixé sur la valeur simple serait atteint sans effort, et la fidélisation paraîtrait inutile.",
         ];
       },
     },
@@ -449,15 +817,31 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
       id: "synthese",
       type: "lecture",
       titre: "Ce qu'il faut retenir",
-      notions: ["customer_lifetime_value", "churn_rate", "customer_acquisition_cost"],
+      notions: ["customer_lifetime_value", "churn_rate", "customer_acquisition_cost", "customer_portfolio", "discounting"],
+      tableau: (c) => {
+        const x = valeurDesComptes(c);
+        return {
+          titre: `Un compte ${dE(x.f.entreprise)}, année N`,
+          colonnes: ["Valeur vie simple", "Valeur vie actualisée"],
+          lignes: [
+            { libelle: "Marge annuelle d'un compte", valeurs: [eur(x.m.marge), eur(x.m.marge)] },
+            { libelle: "Diviseur", valeurs: [pct(x.n.attrition), `${pct(x.n.attrition)} + ${pct(x.taux)}`] },
+            { libelle: "Valeur vie", valeurs: [eur(x.simple), eur(x.actualisee)] },
+            { libelle: "Valeur vie ÷ coût d'acquisition", valeurs: [qte(x.rapportSimple), qte(x.rapportActualise)] },
+          ],
+        };
+      },
       texte: (c) => {
-        const p = portefeuille(c);
+        const x = valeurDesComptes(c);
         return [
-          `Un adhérent de ${c.entreprise} rapporte ${eur(p.marge)} de marge par trimestre, et reste ${qte(p.dureeDeVie)} trimestres en moyenne : il vaut ${eur(p.vvc)}, pour ${eur(p.cac)} de publicité dépensée pour le gagner.`,
-          `Quand l'attrition monte à ${pct(p.pire.attrition)}, la valeur du même adhérent tombe à ${eur(p.vvcDuPire)}. Garder un client, c'est garder toute la suite de ses abonnements ; et dans une salle pleine, garder passe aussi par ne pas trop remplir.`,
+          `Un compte ${dE(x.f.entreprise)} laisse ${eur(x.m.marge)} par an, temps des consultants compris, et reste ${qte(x.dureeDeVie)} ans en moyenne : il vaut ${eur(x.simple)} en valeur simple, ${eur(x.actualisee)} actualisé, pour ${eur(x.acq.cac)} de conquête. Le rapport se lit actualisé, ${qte(x.rapportActualise)}, parce que le coût d'acquisition se paie aujourd'hui.`,
+          `L'attrition monte de ${pct(x.n2.attrition)} en N − 2 à ${pct(x.n.attrition)} en N, et le portefeuille d'équilibre tombe de ${qte(x.equilibreN2)} à ${qte(x.equilibre)} comptes : le cabinet ne grossit plus. Fidéliser pèse plus que recruter autant, parce que l'attrition divise ; mais un portefeuille se borne aussi à ce que les consultants peuvent servir.`,
+          "Au niveau de l'examen, vous savez calculer une attrition et une valeur vie, simple et actualisée, la comparer au coût d'acquisition, retrouver à rebours l'attrition qui tient un objectif, calculer un portefeuille d'équilibre face à la capacité, et dire pourquoi la méthode change la décision.",
+          "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
         ];
       },
-      repere: () => "Valeur vie client = marge par période ÷ taux d'attrition par période. Portefeuille d'équilibre = recrues par période ÷ taux d'attrition.",
+      repere: () =>
+        "Valeur vie simple = marge annuelle ÷ attrition. Valeur vie actualisée = marge annuelle ÷ (attrition + taux d'actualisation). Portefeuille d'équilibre = recrues de l'année ÷ attrition.",
     },
   ],
 };
