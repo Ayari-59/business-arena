@@ -48,9 +48,7 @@ import type { FicheDeLaCapacite } from "./nova-capacite";
  *      les ruptures), face à l'offre habituelle, en résultat et en trésorerie ; le délai que le
  *      fournisseur allonge ; l'escompte qu'il offre, ramené à un taux annuel.
  *   5. LE CRÉDIT CLIENT ET LE RETARD : la facture de CampusTech, les créances et le délai moyen d'un
- *      trimestre (au délai réel, 60 jours), le coût du crédit accordé, et le retard SUPPOSÉ (si
- *      CampusTech payait 20 jours après l'échéance, l'hypothèse du chapitre) face aux pénalités qu'il
- *      ouvrirait.
+ *      trimestre, le coût du crédit accordé, le retard face aux pénalités qu'il ouvre.
  *   6. L'ESCOMPTE, L'AFFACTURAGE ET LE DÉCOUVERT : leur coût, les jours de découvert qui valent un
  *      escompte, une facture mobilisée de trois façons, l'escompte à chaque trimestre face au
  *      découvert qu'il évite.
@@ -85,8 +83,8 @@ export const delaiMoyen = (encours: number, flux: number, jours: number = JOURS_
 
 /**
  * Les factures mensuelles encore dues au jour de la clôture : celles émises le `jourDeFacturation` de
- * chaque mois (en mois de 30 jours) dont l'échéance tombe après la clôture. À 80 jours, une facture
- * du 20 est encore due 80 jours ; au 90e jour du trimestre, les factures des jours 20, 50 et 80.
+ * chaque mois (en mois de 30 jours) dont le paiement tombe après la clôture. Payée 80 jours après sa
+ * date, une facture du 20 reste due 80 jours ; au 90e jour du trimestre, les factures des jours 20, 50 et 80.
  */
 export function facturesMensuellesEnCours(jourDeFacturation: number, delai: number, jourDeCloture: number = JOURS_DU_TRIMESTRE, joursDuMois = 30) {
   let n = 0;
@@ -592,7 +590,7 @@ export function factureDeCampusTech(f: FicheDesDelaisDeNova) {
 /**
  * Les créances à la clôture d'un trimestre de N + 1. Les particuliers paient comptant ; CampusTech est
  * facturée le 20 de chaque mois : ses factures encore dues à la clôture (au délai choisi, par défaut le
- * délai réel, 60 jours : CampusTech paie à l'échéance) font la créance, toutes taxes comprises. Le délai moyen des clients = créances ÷ chiffre
+ * délai réel) font la créance, toutes taxes comprises. Le délai moyen des clients = créances ÷ chiffre
  * d'affaires TTC du trimestre × 90.
  */
 export function creancesDuTrimestre(f: FicheDesDelaisDeNova, trimestre: 1 | 2 | 3 | 4, leviers: Partial<{ delai: number }> = {}) {
@@ -633,10 +631,7 @@ export interface LeviersDuRetard {
 }
 
 /**
- * Le crédit que NOVA fait à CampusTech, et le retard qu'elle prendrait. Par défaut, le paiement est
- * celui de l'hypothèse du chapitre, 20 jours après l'échéance (f.campustech.delaiSiRetard) : dans le
- * monde du cours, CampusTech paie à l'heure, et `{ delaiReel: f.campustech.delaiReel }` le montre sans
- * retard. NOVA vend des biens : la TVA est déjà due, elle
+ * Le crédit que NOVA fait à CampusTech, et son retard. NOVA vend des biens : la TVA est déjà due, elle
  * finance chaque facture TOUTES TAXES COMPRISES.
  *   - Par facture : le crédit convenu coûte TTC × taux × délai convenu ÷ 360 ; le retard, TTC × taux ×
  *     jours de retard ÷ 360. Les pénalités qu'il ouvre = TTC × taux des pénalités × jours de retard ÷
@@ -646,7 +641,7 @@ export interface LeviersDuRetard {
  */
 export function retardDeCampusTech(f: FicheDesDelaisDeNova, leviers: Partial<LeviersDuRetard> = {}) {
   const delaiConvenu = leviers.delaiConvenu ?? f.campustech.delaiConvenu;
-  const delaiReel = leviers.delaiReel ?? f.campustech.delaiSiRetard;
+  const delaiReel = leviers.delaiReel ?? f.campustech.delaiReel;
   const taux = leviers.tauxDeFinancement ?? f.banque.tauxDuDecouvert;
   const base = leviers.base ?? f.penalites.base;
   const fct = factureDeCampusTech(f);
@@ -704,8 +699,7 @@ export const coutDeLAffacturage = (montant: number, commission: number, taux: nu
 export const joursDeDecouvertQuiValentLEscompte = (joursDEscompte: number, tauxDeLEscompte: number, tauxDuDecouvert: number) => (joursDEscompte * tauxDeLEscompte) / tauxDuDecouvert;
 
 /**
- * Une facture de CampusTech mobilisée de trois façons, de sa date à son paiement réel (par défaut,
- * celui de l'hypothèse du retard, f.campustech.delaiSiRetard).
+ * Une facture de CampusTech mobilisée de trois façons, de sa date à son paiement réel.
  *   - L'escompte, sauf bonne fin : la banque l'avance jusqu'à l'échéance convenue ; CampusTech ne paie
  *     pas à l'échéance, la banque reprend la somme, et NOVA finance les jours de retard sur son
  *     découvert.
@@ -717,7 +711,7 @@ export function mobiliserUneFacture(f: FicheDesDelaisDeNova, leviers: Partial<Pi
   const fct = factureDeCampusTech(f);
   const b = f.banque;
   const convenu = leviers.delaiConvenu ?? f.campustech.delaiConvenu;
-  const reel = leviers.delaiReel ?? f.campustech.delaiSiRetard;
+  const reel = leviers.delaiReel ?? f.campustech.delaiReel;
   const retard = Math.max(0, reel - convenu);
   const escompte = coutDeLEscompte(fct.ttc, b.escompte.taux, convenu);
   const retardAuDecouvert = coutDuDecouvert(fct.ttc, b.tauxDuDecouvert, retard);

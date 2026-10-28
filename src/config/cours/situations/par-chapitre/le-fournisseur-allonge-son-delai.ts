@@ -108,7 +108,7 @@ export const LE_FOURNISSEUR_ALLONGE_SON_DELAI: Situation = {
       texte: (c) => {
         const d = delaiAllonge(c);
         return [
-          `« Nous avons dit à ${d.k.habituelle.nom} que nous pensions passer chez ${d.a.o.nom}. Il ne baisse pas ses prix, mais il nous laisse ${JOURS_DE_DELAI_EN_PLUS} jours de plus pour le payer : ${d.nouveauDelai} jours au lieu de ${d.k.habituelle.delaiDePaiement}. Dites-moi ce que chaque solution ferait au résultat de l'année et à la trésorerie du 31 décembre, et laquelle signer. Je vous rappelle qu'au 1er janvier, notre compte courant porte ${eur(d.absorption.compteCourant)}, que je garde ${eur(d.absorption.matelas)} de matelas, et que la réserve, ${eur(d.absorption.reserve)} sur deux comptes à terme, est celle de la gamme à venir : on n'y touche pas. »`,
+          `« Nous avons dit à ${d.k.habituelle.nom} que nous pensions passer chez ${d.a.o.nom}. Il ne baisse pas ses prix, mais il nous laisse ${JOURS_DE_DELAI_EN_PLUS} jours de plus pour le payer : ${d.nouveauDelai} jours au lieu de ${d.k.habituelle.delaiDePaiement}. Dites-moi ce que chaque solution ferait au résultat de l'année et à la trésorerie du 31 décembre, et laquelle signer. Je vous rappelle qu'au 1er janvier, notre compte courant porte ${eur(d.absorption.compteCourant)}, que je garde ${eur(d.absorption.matelas)} de matelas, et que le placement de ${eur(d.absorption.reserve)} est la réserve de la gamme à venir : on n'y touche pas. »`,
           `Pas de cours cette fois : les calculs sont ceux du chapitre, à vous d'en trouver l'ordre. La simulation compare les offres hors taxes, sur l'année N + 1, et finance un besoin de trésorerie au découvert, à ${pct(d.f.banque.tauxDuDecouvert)} l'an.`,
         ];
       },

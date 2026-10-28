@@ -21,7 +21,7 @@ import type { Situation } from "../types";
  * chiffre une condition que l'intermédiaire veut changer. Et il fait vérifier la loi : entre
  * professionnels, le délai convenu ne peut pas dépasser 60 jours après la facture (code de commerce,
  * article L. 441-10). Chez PIXEL & CO, la place de marché passe de 30 à 60 jours : c'est permis, et la
- * réponse pèse le coût. Chez NOVA, CampusTech paie déjà à 60 jours : 90 jours ne se signent pas, quoi
+ * réponse pèse le coût. Chez NOVA, CampusTech a déjà 60 jours convenus : 90 jours ne se signent pas, quoi
  * que dise le calcul, et la réponse le rappelle. Le trimestre, la commission, le
  * délai et le taux de financement sont ceux du chapitre (`canauxDeDistribution`) ; le coût
  * variable d'une unité, celui du mois du cas (`cas.ts`).

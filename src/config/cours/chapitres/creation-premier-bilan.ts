@@ -54,9 +54,9 @@ import type { Chapitre, EtatDuCours, Piece, TableauDeDonnees } from "../types";
 /**
  * LE PLAFOND LÉGAL DES DÉLAIS DE PAIEMENT ENTRE PROFESSIONNELS : 60 jours à compter de la facture
  * (code de commerce, art. L441-10). DÉCISION DU PROPRIÉTAIRE : chez NOVA, le délai convenu avec
- * CampusTech est ce plafond, et CampusTech le tient : elle paie à 60 jours, à l'échéance. Tout client
- * dont le cas dépasse le plafond (le cabinet médical de MARTEL & FILS, à 90 jours) se lit comme un
- * retard : la facture porte le délai convenu, le règlement arrive au délai du cas.
+ * CampusTech est ce plafond, et CampusTech paie à 80 jours, 20 jours en retard ; les montants ne
+ * changent pas. Le chapitre applique la même lecture à tout client dont le cas dépasse le plafond :
+ * la facture porte le délai convenu, le règlement arrive au délai du cas.
  */
 export const PLAFOND_DES_DELAIS_ENTRE_PROFESSIONNELS = 60;
 
@@ -115,7 +115,7 @@ export function delaiDuClient(c: Pick<Cas, "venteCredit">) {
   return { reel, convenu, retard: reel - convenu, echeanceConvenue: c.venteCredit.date + convenu };
 }
 
-/** « paie à 90 jours, 30 jours au-delà des 60 jours convenus », ou « paie à 60 jours ». */
+/** « paie à 80 jours, 20 jours au-delà des 60 jours convenus », ou « paie à 45 jours ». */
 export function paiementDuClient(c: Pick<Cas, "venteCredit">) {
   const d = delaiDuClient(c);
   return d.retard > 0 ? `paie à ${qte(d.reel)} jours, ${qte(d.retard)} jours au-delà des ${qte(d.convenu)} jours convenus` : `paie à ${qte(d.reel)} jours`;

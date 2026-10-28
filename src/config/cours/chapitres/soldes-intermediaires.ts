@@ -730,10 +730,7 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
       notions: ["net_treasury", "bfr"],
       question: (c) => {
         const x = soldesDeNova(c);
-        // CampusTech payée à 60 jours, les dettes encore dues au 31 décembre (fournisseur, TVA, impôt)
-        // dépassent ce que retiennent les clients et le stock : la trésorerie gagne alors plus que la CAF.
-        const gagne = x.variationDeTresorerie < x.caf.additive ? `n'a gagné que ${eur(x.variationDeTresorerie)}` : `a gagné ${eur(x.variationDeTresorerie)}, plus que la CAF`;
-        return `La CAF ${dE(x.entreprise)} est de ${eur(x.caf.additive)}. Pourtant, entre le 6 janvier, la ligne payée (${eur(x.tresorerieDeDepart)} en banque et sur le compte à terme), et le 31 décembre (${eur(x.tresorerieDeFin)}), la trésorerie ${gagne}. Pourquoi les deux chiffres diffèrent-ils ?`;
+        return `La CAF ${dE(x.entreprise)} est de ${eur(x.caf.additive)}. Pourtant, entre le 6 janvier, la ligne payée (${eur(x.tresorerieDeDepart)} en banque et sur le compte à terme), et le 31 décembre (${eur(x.tresorerieDeFin)}), la trésorerie n'a gagné que ${eur(x.variationDeTresorerie)}. Pourquoi les deux chiffres diffèrent-ils ?`;
       },
       options: (c) => {
         const x = soldesDeNova(c);
@@ -741,7 +738,7 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
           {
             texte: `Parce que la CAF compte l'encaissable, pas l'encaissé, et ignore les ${eur(x.capitalRembourse)} d'emprunt remboursés et les écarts de délais`,
             juste: true,
-            retour: `C'est cela. La CAF est une capacité : ce que l'activité permet de financer. La trésorerie suit l'encaissé : les ${eur(x.capitalRembourse)} de capital remboursé la creusent, les intérêts du placement ne sont pas encore reçus, et les écarts de délais (clients, stock, fournisseurs, TVA, impôt dû) la creusent ou la gonflent. ${x.variationDeTresorerie < x.caf.additive ? "Ici, ils la creusent." : "Ici, ce qui reste à payer au 31 décembre dépasse ce qui reste à encaisser : ils la gonflent."} Le bilan fonctionnel, au chapitre suivant, met ces flux en face.`,
+            retour: `C'est cela. La CAF est une capacité : ce que l'activité permet de financer. La trésorerie, ce qui reste une fois payés les écarts de délais (clients, fournisseurs, stock, TVA, impôt dû), les ${eur(x.capitalRembourse)} de capital remboursé et les intérêts du placement encore à recevoir. Le bilan fonctionnel, au chapitre suivant, met ces flux en face.`,
           },
           {
             texte: "Parce que la CAF comprend la dotation aux amortissements, qui sort de la banque",

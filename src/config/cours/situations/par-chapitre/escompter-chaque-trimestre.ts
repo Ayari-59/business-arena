@@ -23,9 +23,7 @@ import type { Situation } from "../types";
  *
  * Comme son chapitre, le cas se joue dans la simulation du cours (src/config/cours/monde) : ses
  * chiffres sont ceux de monde/delais.ts (`escompterChaqueTrimestre`). Les besoins de trésorerie de
- * N + 1 sont une hypothèse de la fiche, pas un budget calculé. Le cas se joue au réel : CampusTech paie
- * à l'échéance, à 60 jours (le retard de 20 jours n'est que l'hypothèse de son chapitre), et l'escompte
- * jusqu'à l'échéance couvre toute l'attente.
+ * N + 1 sont une hypothèse de la fiche, pas un budget calculé.
  */
 
 const eur = (x: number) => montantEcrit(auCentime(x)).replace(/^-/, "−");
@@ -101,7 +99,7 @@ export const ESCOMPTER_CHAQUE_TRIMESTRE: Situation = {
         const k = e.k;
         return [
           `« La banque nous propose d'escompter chaque facture de ${k.ct.nom}, dès qu'elle part, jusqu'à son échéance convenue de ${k.ct.delaiConvenu} jours, à ${pct(k.b.escompte.taux)} l'an, sauf bonne fin. Elle accepte ${eur(k.b.escompte.plafondTTC)} d'effets escomptés à la fois. Elle dit que nous n'aurons plus de découvert. Combien cela coûterait-il sur l'année, qu'est-ce que cela nous éviterait, et faut-il signer ? »`,
-          `Pas de cours cette fois : les calculs sont ceux du chapitre, à vous d'en trouver l'ordre. Les besoins de trésorerie de l'année sont ceux du tableau, avant toute mobilisation : la simulation les pose, sans détailler le budget qui les donne. Le découvert coûte ${pct(e.taux)} l'an. ${k.ct.nom} paie à l'échéance, à ${k.ct.delaiReel} jours : l'escompte couvre toute l'attente de chaque facture, sans retard à financer.`,
+          `Pas de cours cette fois : les calculs sont ceux du chapitre, à vous d'en trouver l'ordre. Les besoins de trésorerie de l'année sont ceux du tableau, avant toute mobilisation : la simulation les pose, sans détailler le budget qui les donne. Le découvert coûte ${pct(e.taux)} l'an.`,
         ];
       },
       tableau: (c) => {

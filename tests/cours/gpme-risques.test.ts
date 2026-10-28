@@ -8,7 +8,7 @@ import {
   qualiteDeNova,
 } from "../../src/config/cours/chapitres/le-cout-de-la-non-qualite";
 import { S_ASSURER_CONTRE_LES_ALEAS, assuranceDeNova, formuleRetenue } from "../../src/config/cours/chapitres/s-assurer-contre-les-aleas";
-import { NOVA_CAPACITE, VERSEMENT_A_LA_RESERVE } from "../../src/config/cours/monde/nova-capacite";
+import { NOVA_CAPACITE } from "../../src/config/cours/monde/nova-capacite";
 import { CHAPITRES, PROGRAMME } from "../../src/config/cours/registre";
 import { SITUATIONS, casDuChapitre } from "../../src/config/cours/situations";
 import { HAUSSE_DE_LA_PRIME, L_ASSUREUR_AUGMENTE_LA_PRIME, primeAugmentee } from "../../src/config/cours/situations/par-chapitre/l-assureur-augmente-la-prime";
@@ -361,15 +361,7 @@ describe("s'assurer contre les aléas, chez NOVA", () => {
       "Capitaux propres après l'incendie": centime(k.capitauxPropres - 220_000),
       "Capacité par la trésorerie, réserve comptée": centime(avecReserve),
     });
-    // La réserve : le placement de 133 000 € et les 22 656 € versés le 1er janvier N + 1 (la facture de CampusTech payée le 20 décembre).
-    expect([k.compteCourant, k.reserve, VERSEMENT_A_LA_RESERVE.montant]).toEqual([115_734.87, 133_000 + 22_656, 320 * 59 * 1.2]);
-    expect([centime(k.compteCourant - 220_000), centime(k.capitauxPropres - 220_000), centime(avecReserve)]).toEqual([-104_265.13, 9_225.96, 261_390.87]);
-    // Même réserve comptée, la trésorerie passerait, mais pas les capitaux propres (le pari, plus bas, reste « Non »).
-    expect(avecReserve).toBeGreaterThan(220_000);
-    // Le tableau de la capacité d'absorption est celui du 1er janvier N + 1, après le versement.
-    const etape = ch.etapes.find((e) => e.id === "ce-que-nova-peut-encaisser")!;
-    expect(etape.tableau!(cas).titre).toBe("Les comptes de NOVA au 1er janvier N + 1, après le versement à la réserve");
-    expect(etape.type === "montants" && etape.question(cas, etatVide)).toMatch(new RegExp(`^Le 1er janvier, le dirigeant a versé 22\\s656 € du compte courant à la réserve`));
+    expect([centime(k.compteCourant - 220_000), centime(k.capitauxPropres - 220_000), centime(avecReserve)]).toEqual([-104_265.13, 9_225.96, 238_734.87]);
     expect(k.capitauxPropres - 220_000).toBeLessThan(k.capitalSocial / 2);
     // La ligne automatisée payée comptant : la Basique ne s'encaisse plus, l'Étendue est retenue.
     const prix = f.machines.find((x) => x.code === "ligne-automatisee")!.prix;

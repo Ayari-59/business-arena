@@ -35,14 +35,14 @@ import type { FicheDeStock, MethodeDeStock } from "./stock";
  *   2. LE PREMIER EXERCICE, du 1er janvier au 31 décembre N (la société est immatriculée au
  *      1er janvier : l'exercice et l'année civile coïncident). Son premier semestre EST le semestre du
  *      contrôle de gestion (nova-gestion.ts, importé ici) : les mêmes ventes mois par mois, le même
- *      prix, les mêmes composants, le même loyer, la même paie, CampusTech à 60 jours. Le second
+ *      prix, les mêmes composants, le même loyer, la même paie, CampusTech qui paie en retard. Le second
  *      semestre prolonge le premier ; un nouveau client professionnel, Sonora, arrive en septembre.
  *   3. LA CLÔTURE AU 31 DÉCEMBRE N : la balance avant inventaire, les travaux d'inventaire,
  *      l'impôt, le compte de résultat et le bilan, puis leur analyse. Les suites de la clôture (le
  *      sort de la créance de Sonora, le jugement du litige, les extournes) tombent en N+1.
  *   4. ENSUITE seulement, en N+1, la gamme Go, One, Studio et sa seconde ligne (nova-gestion.ts) :
  *      l'exercice N n'a qu'un équipement. Le banc de mesure que le contrôle de gestion envisage
- *      en février n'est pas acheté.
+ *      en avril n'est pas acheté.
  *
  * LA TRÉSORERIE DE DÉPART DU BUDGET DE GESTION, RÉCONCILIÉE PAR LE PLACEMENT. Le 6 janvier, la ligne
  * payée, la banque porte 158 000 € (230 000 − 72 000). NOVA en place 133 000 € sur un compte à terme
@@ -52,14 +52,6 @@ import type { FicheDeStock, MethodeDeStock } from "./stock";
  * le 15 février avec les cotisations et non le 28 janvier avec le net. Ensuite s'ajoute la TVA de la
  * ligne, que le budget ignore (6 678 € en février, puis 12 000 € dès mars, une fois le crédit de
  * janvier imputé), et l'échéance de l'emprunt les mois où le budget la range à la fin du trimestre.
- *
- * LE DÉLAI DE CAMPUSTECH, 60 JOURS (décision du propriétaire du cours ; la fiche disait 80 jours,
- * plus que la loi ne permet de convenir). Le résultat de N n'en dépend pas ; la facture d'octobre
- * rentre le 20 décembre au lieu du 10 janvier : au 31 décembre, 22 656 € de créance en moins, autant
- * de banque en plus (138 390,87 €). Le besoin d'exploitation tombe à 9 544,73 € ; avec le besoin
- * hors exploitation (l'impôt dû et les intérêts courus, −21 573,11 €), le besoin en fonds de
- * roulement devient négatif : −12 028,38 €. Le 1er janvier N+1, le dirigeant verse ces 22 656 € sur la réserve (nova-capacite.ts) : le
- * compte courant de l'ouverture de N+1 reste celui que les chapitres de N+1 lisent, 115 734,87 €.
  *
  * CE QUI NE SE RÉCONCILIE PAS AVEC nova-gestion.ts (qui n'est pas modifié ici, voir le rapport) :
  *   · les échéances de l'emprunt : le budget les place le dernier jour de mars et de juin ; la fiche
@@ -148,10 +140,11 @@ export const VENTES_AUX_PARTICULIERS: readonly number[] = [...VENTES_DES_PARTICU
 
 /**
  * CAMPUSTECH, le client professionnel de nova-gestion.ts : 320 enceintes par mois, facturées le 20
- * au prix de 59 € hors taxes, payées à 60 jours, le délai maximal convenu entre professionnels (le 20
- * du deuxième mois suivant, en mois de 30 jours). CampusTech paie à l'échéance : la facture
- * d'octobre est payée le 20 décembre ; celles de novembre et de décembre sont encore dues au
- * 31 décembre.
+ * au prix de 59 € hors taxes, dues à 60 jours et payées en retard, à 80 jours (le 10 du troisième
+ * mois suivant, en mois de 30 jours ; RETARD_DE_CAMPUSTECH, nova-gestion.ts). La facture d'octobre,
+ * échue le 20 décembre, n'est pas encore payée : les factures d'octobre, de novembre et de décembre
+ * sont encore dues au 31 décembre. Un retard n'est pas un risque de perte : CampusTech est solvable,
+ * sa créance reste au compte 411, sans dépréciation.
  */
 export const CAMPUSTECH = { nom: "CampusTech", enceintesParFacture: VENTES_A_CAMPUSTECH[0]!, jourDeFacturation: 20, delai: DELAI_DE_CAMPUSTECH };
 
@@ -370,13 +363,14 @@ export interface CreanceClient {
 }
 
 /**
- * LES CRÉANCES CLIENTS AU 31 DÉCEMBRE, avant inventaire (compte 411) : les deux dernières factures
- * de CampusTech (45 312 € TTC, 37 760 € HT) et la facture d'octobre de Sonora (33 630 € TTC,
+ * LES CRÉANCES CLIENTS AU 31 DÉCEMBRE, avant inventaire (compte 411) : les trois dernières factures
+ * de CampusTech (67 968 € TTC, 56 640 € HT) et la facture d'octobre de Sonora (33 630 € TTC,
  * 28 025 € HT), échue le 15 décembre et impayée. Les particuliers ont payé à la commande.
  */
 export const CREANCES_AU_31_DECEMBRE: readonly CreanceClient[] = [
-  { client: "CampusTech", date: { jour: 20, mois: 11 }, echeance: { jour: 20, mois: 1, exercice: 1 }, enceintes: 320, ht: 18_880, tva: 3_776, ttc: 22_656, litigieuse: false },
-  { client: "CampusTech", date: { jour: 20, mois: 12 }, echeance: { jour: 20, mois: 2, exercice: 1 }, enceintes: 320, ht: 18_880, tva: 3_776, ttc: 22_656, litigieuse: false },
+  { client: "CampusTech", date: { jour: 20, mois: 10 }, echeance: { jour: 10, mois: 1, exercice: 1 }, enceintes: 320, ht: 18_880, tva: 3_776, ttc: 22_656, litigieuse: false },
+  { client: "CampusTech", date: { jour: 20, mois: 11 }, echeance: { jour: 10, mois: 2, exercice: 1 }, enceintes: 320, ht: 18_880, tva: 3_776, ttc: 22_656, litigieuse: false },
+  { client: "CampusTech", date: { jour: 20, mois: 12 }, echeance: { jour: 10, mois: 3, exercice: 1 }, enceintes: 320, ht: 18_880, tva: 3_776, ttc: 22_656, litigieuse: false },
   { client: "Sonora", date: SONORA.secondeCommande.date, echeance: SONORA.secondeCommande.echeance, enceintes: 500, ht: 28_025, tva: 5_605, ttc: 33_630, litigieuse: true },
 ];
 
@@ -399,13 +393,13 @@ export const BALANCE_AVANT_INVENTAIRE: readonly LigneDeBalance[] = [
   { compte: "164", intitule: "Emprunts auprès des établissements de crédit", debit: 0, credit: 68_000 },
   { compte: "2154", intitule: "Matériel industriel (la ligne de montage)", debit: 60_000, credit: 0 },
   { compte: "401", intitule: "Fournisseurs (Électro-Composants, facture du 10 décembre)", debit: 0, credit: 39_600 },
-  { compte: "411", intitule: "Clients (CampusTech et Sonora)", debit: 78_942, credit: 0 },
+  { compte: "411", intitule: "Clients (CampusTech et Sonora)", debit: 101_598, credit: 0 },
   { compte: "431", intitule: "Sécurité sociale (URSSAF, paie de décembre)", debit: 0, credit: 4_050 },
   { compte: "437", intitule: "Autres organismes sociaux (retraite complémentaire)", debit: 0, credit: 750 },
   { compte: "442", intitule: "État, impôts retenus à la source", debit: 0, credit: 121.27 },
   { compte: "4455", intitule: "État, TVA à décaisser (décembre)", debit: 0, credit: TVA_DE_DECEMBRE_A_PAYER },
   { compte: "508", intitule: "Compte à terme (le placement du 6 janvier)", debit: PLACEMENT.montant, credit: 0 },
-  { compte: "512", intitule: "Banque (le compte courant)", debit: 138_390.87, credit: 0 },
+  { compte: "512", intitule: "Banque (le compte courant)", debit: 115_734.87, credit: 0 },
   { compte: "601", intitule: "Achats de matières premières (composants)", debit: 499_598, credit: 0 },
   { compte: "606", intitule: "Achats non stockés (emballage, transport et énergie)", debit: 377_744, credit: 0 },
   { compte: "6132", intitule: "Locations immobilières (le loyer du local)", debit: 236_400, credit: 0 },
@@ -472,10 +466,10 @@ export const CLOTURE_DE_LA_FICHE = {
     emploisStables: 60_000,
     ressourcesStables: 323_297.07,
     fondsDeRoulement: 263_297.07,
-    besoinDExploitation: 9_544.73,
+    besoinDExploitation: 32_200.73,
     besoinHorsExploitation: -21_573.11,
-    besoinEnFondsDeRoulement: -12_028.38,
-    tresorerieNette: 275_325.45,
+    besoinEnFondsDeRoulement: 10_627.62,
+    tresorerieNette: 252_669.45,
   },
 };
 

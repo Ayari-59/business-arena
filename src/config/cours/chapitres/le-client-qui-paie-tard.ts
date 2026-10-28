@@ -36,13 +36,9 @@ import type { Chapitre } from "../types";
  * `mobiliserUneFacture`, `joursDeDecouvertQuiValentLEscompte`). Une évolution du moteur ne change rien.
  *
  * L'objet : CampusTech, une chaîne de magasins, facturée le 20 de chaque mois. DÉCISION DU
- * PROPRIÉTAIRE : son délai CONVENU est de 60 jours, le maximum que la loi permet entre professionnels,
- * et dans le monde du cours elle PAIE À L'ÉCHÉANCE. Le chapitre pose une HYPOTHÈSE (la fiche,
- * `RETARD_SUPPOSE_DE_CAMPUSTECH`) : SI elle payait 20 jours en retard, à 80 jours (`delaiSiRetard`) ;
- * ce serait un retard, qui ouvrirait droit à des pénalités de retard et à l'indemnité forfaitaire de
- * 40 € par facture. Tout ce qui chiffre le retard (les créances en retard, le délai moyen qu'il
- * donnerait, son coût, ce qui se réclame, la facture mobilisée, le laboratoire) se lit dans cette
- * hypothèse ; l'étape a-l-echeance revient au réel. NOVA vend des biens : la TVA est due à la livraison,
+ * PROPRIÉTAIRE : son délai CONVENU est de 60 jours, le maximum que la loi permet entre professionnels ;
+ * elle paie à 80 jours, c'est un RETARD de 20 jours, qui ouvre droit à des pénalités de retard et à
+ * l'indemnité forfaitaire de 40 € par facture. NOVA vend des biens : la TVA est due à la livraison,
  * NOVA finance chaque facture toutes taxes comprises. Le chapitre chiffre les créances (facture par
  * facture, pas au prorata des jours), le délai moyen et ce qu'il cache, le coût du crédit et du
  * retard, ce que la loi permet de réclamer, puis les trois façons de financer l'attente : le
@@ -146,8 +142,7 @@ export function clientQuiPaieTard(c: Pick<Cas, "code">) {
   const ct = f.campustech;
   const b = f.banque;
   const fct = factureDeCampusTech(f);
-  // L'hypothèse du chapitre : CampusTech paierait 20 jours en retard. Le réel : elle paie à l'échéance.
-  const siRetard = creancesDuTrimestre(f, 4, { delai: ct.delaiSiRetard });
+  const reel = creancesDuTrimestre(f, 4);
   const aLEcheance = creancesDuTrimestre(f, 4, { delai: ct.delaiConvenu });
   const r = retardDeCampusTech(f);
   const m = mobiliserUneFacture(f);
@@ -178,13 +173,13 @@ export function clientQuiPaieTard(c: Pick<Cas, "code">) {
     ct,
     b,
     fct,
-    siRetard,
+    reel,
     aLEcheance,
     r,
     m,
     taux,
-    partDeCampusTech: auCentime((siRetard.campustechHT / siRetard.caHT) * 100),
-    delaiMoyen: auDixieme(siRetard.delaiMoyen),
+    partDeCampusTech: auCentime((reel.campustechHT / reel.caHT) * 100),
+    delaiMoyen: auDixieme(reel.delaiMoyen),
     delaiMoyenALEcheance: auDixieme(aLEcheance.delaiMoyen),
     creditDeLaTva,
     creditHorsTaxes: auCentime(r.coutDuCreditConvenuParFacture - creditDeLaTva),
@@ -222,7 +217,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
   blocs: ["BTS GPME Bloc 1 · Gérer la relation avec les clients et les fournisseurs de la PME"],
   titre: "Le client qui paie tard : délai, escompte et affacturage",
   accroche:
-    "Et si un client professionnel payait 20 jours après l'échéance convenue ? Ce serait un retard, et la loi le sanctionne. Les créances facture par facture, le coût du crédit et du retard, ce que l'entreprise peut réclamer, puis le découvert, l'escompte et l'affacturage : ce qu'ils coûtent, et quand chacun vaut mieux.",
+    "Un client professionnel paie 20 jours après l'échéance convenue : c'est un retard, et la loi le sanctionne. Les créances facture par facture, le coût du crédit et du retard, ce que l'entreprise peut réclamer, puis le découvert, l'escompte et l'affacturage : ce qu'ils coûtent, et quand chacun vaut mieux.",
   objectifs: [
     "Compter les créances clients facture par facture, toutes taxes comprises, et lire un délai moyen",
     "Distinguer le délai convenu, plafonné par la loi, et le retard",
@@ -234,13 +229,13 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
   entreprises: {
     codes: ENTREPRISES_DU_CLIENT_QUI_PAIE_TARD,
     pourquoi:
-      "ce chapitre se joue chez NOVA, dans la simulation du cours : son client CampusTech y paie à l'échéance, le chapitre suppose qu'il paie en retard, et sa banque y propose le découvert, l'escompte et l'affacturage.",
+      "ce chapitre se joue chez NOVA, dans la simulation du cours : son client CampusTech y paie en retard sur un délai convenu, et sa banque y propose le découvert, l'escompte et l'affacturage.",
   },
   etapes: [
     {
       id: "intro",
       type: "lecture",
-      titre: "Et si le client payait en retard ?",
+      titre: "Un client qui paie en retard",
       notions: ["payment_terms", "balance_sheet"],
       tableau: (c) => {
         const k = clientQuiPaieTard(c);
@@ -252,9 +247,8 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
             { libelle: "Prix d'une enceinte (HT)", valeurs: [eur(k.f.prixHT)] },
             { libelle: "Jour de facturation", valeurs: [`le ${k.ct.jourDeFacturation} de chaque mois`] },
             { libelle: "Délai de paiement convenu", valeurs: [`${jours(k.ct.delaiConvenu)} après la facture`] },
-            { libelle: "Paiement réel", valeurs: [`à l'échéance, ${jours(k.ct.delaiReel)} après la facture`] },
-            { libelle: "Hypothèse du chapitre : un paiement en retard", valeurs: [`${jours(k.ct.delaiSiRetard)} après la facture, ${jours(k.r.joursDeRetard)} de retard`] },
-            { libelle: "Enceintes vendues au dernier trimestre, tous clients", valeurs: [qte(k.siRetard.enceintes)] },
+            { libelle: "Paiement réel", valeurs: [`${jours(k.ct.delaiReel)} après la facture`] },
+            { libelle: "Enceintes vendues au dernier trimestre, tous clients", valeurs: [qte(k.reel.enceintes)] },
           ],
         };
       },
@@ -262,14 +256,14 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
         const k = clientQuiPaieTard(c);
         return [
           `Ce chapitre se joue dans la simulation du cours, chez ${k.f.entreprise}, sur l'année N + 1. Les particuliers paient en ligne, par carte, à la commande. ${k.ct.nom}, une chaîne de magasins, achète ${qte(k.ct.enceintesParFacture)} enceintes chaque mois, facturées le ${k.ct.jourDeFacturation}, à ${eur(k.f.prixHT)} HT l'enceinte.`,
-          `Le délai convenu est de ${jours(k.ct.delaiConvenu)} après la facture, le maximum que la loi permet entre professionnels (code de commerce, article L. 441-10), et ${k.ct.nom} paie à l'échéance. Ce chapitre pose une hypothèse : si ${k.ct.nom} payait ${jours(k.r.joursDeRetard)} en retard, à ${jours(k.ct.delaiSiRetard)} ? Ce ne serait pas un autre délai, ce serait un retard. La loi le sanctionne de plein droit : des pénalités de retard, au taux de refinancement de la BCE majoré de ${qte(MAJORATION_DU_TAUX_BCE * 100)} points quand les conditions de vente n'en fixent pas d'autre, et une indemnité forfaitaire de ${eur(k.f.penalites.indemnite)} par facture pour les frais de recouvrement.`,
+          `Le délai convenu est de ${jours(k.ct.delaiConvenu)} après la facture, le maximum que la loi permet entre professionnels (code de commerce, article L. 441-10). ${k.ct.nom} paie à ${jours(k.ct.delaiReel)} : ce n'est pas son délai, c'est un retard de ${jours(k.r.joursDeRetard)}. La loi le sanctionne de plein droit : des pénalités de retard, au taux de refinancement de la BCE majoré de ${qte(MAJORATION_DU_TAUX_BCE * 100)} points quand les conditions de vente n'en fixent pas d'autre, et une indemnité forfaitaire de ${eur(k.f.penalites.indemnite)} par facture pour les frais de recouvrement.`,
           `${k.f.entreprise} vend des biens : la TVA d'une facture est due à la livraison, que le client ait payé ou non. En attendant d'être payée, ${k.f.entreprise} finance donc chaque facture toutes taxes comprises.`,
           `La simulation suppose des mois de 30 jours et des trimestres de ${JOURS_DU_TRIMESTRE} ; des intérêts (découvert, escompte, affacturage) comptés sur ${JOURS_DE_L_ANNEE_BANCAIRE} jours, des pénalités sur ${JOURS_DE_L_ANNEE_CIVILE} jours et sur le montant TTC ; un découvert à ${pct(k.taux)} l'an ; un taux de la BCE de ${pct(TAUX_DE_REFINANCEMENT_BCE.taux)}, valeur de référence du cours (celle du ${TAUX_DE_REFINANCEMENT_BCE.dateDeReference} : il change chaque semestre).`,
         ];
       },
       repere: (c) => {
         const k = clientQuiPaieTard(c);
-        return `Délai convenu entre professionnels : ${DELAI_MAXIMAL_CONVENU.joursDeLaFacture} jours de la facture au plus. Hypothèse du chapitre : ${k.ct.nom} paierait ${jours(k.r.joursDeRetard)} après l'échéance. Payée après l'échéance, une facture est en retard : pénalités de retard et ${eur(k.f.penalites.indemnite)} d'indemnité par facture, de plein droit.`;
+        return `Délai convenu entre professionnels : ${DELAI_MAXIMAL_CONVENU.joursDeLaFacture} jours de la facture au plus. Payée après l'échéance, une facture est en retard : pénalités de retard et ${eur(k.f.penalites.indemnite)} d'indemnité par facture, de plein droit.`;
       },
     },
     {
@@ -279,7 +273,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
       notions: ["payment_terms", "balance_sheet"],
       question: (c) => {
         const k = clientQuiPaieTard(c);
-        return `Calculez le montant d'une facture de ${k.ct.nom}, toutes taxes comprises (${qte(k.ct.enceintesParFacture)} × ${eur(k.f.prixHT)} HT, plus ${pct(k.f.tauxDeTva)} de TVA). Puis, dans l'hypothèse du chapitre, ${k.ct.nom} payant ${jours(k.ct.delaiSiRetard)} après la facture, comptez ses factures encore dues au 31 décembre : celles des 20 octobre, novembre et décembre le seraient-elles déjà ? Enfin, les créances clients du bilan dans cette hypothèse, toutes taxes comprises.`;
+        return `Calculez le montant d'une facture de ${k.ct.nom}, toutes taxes comprises (${qte(k.ct.enceintesParFacture)} × ${eur(k.f.prixHT)} HT, plus ${pct(k.f.tauxDeTva)} de TVA). Puis comptez ses factures encore dues au 31 décembre : celles des 20 octobre, novembre et décembre, payées ${jours(k.ct.delaiReel)} plus tard, le sont-elles déjà ? Enfin, les créances clients du bilan, toutes taxes comprises.`;
       },
       champs: (c) => {
         const k = clientQuiPaieTard(c);
@@ -290,18 +284,18 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
             calcul: `${qte(k.ct.enceintesParFacture)} × ${eur(k.f.prixHT)} = ${eur(k.fct.ht)} HT, plus ${eur(k.fct.tva)} de TVA = ${eur(k.fct.ttc)}`,
           },
           {
-            libelle: "Factures encore dues au 31 décembre, en retard",
-            attendu: k.siRetard.factures,
-            calcul: `payées ${jours(k.ct.delaiSiRetard)} après leur 20 du mois, les factures d'octobre, de novembre et de décembre le seraient en janvier, février et mars : ${qte(k.siRetard.factures)}`,
+            libelle: "Factures encore dues au 31 décembre",
+            attendu: k.reel.factures,
+            calcul: `payées ${jours(k.ct.delaiReel)} après leur 20 du mois, les factures d'octobre, de novembre et de décembre le seront en janvier, février et mars : ${qte(k.reel.factures)}`,
           },
-          { libelle: "Créances clients au 31 décembre, en retard (TTC)", attendu: k.siRetard.creancesTTC, calcul: `${qte(k.siRetard.factures)} × ${eur(k.fct.ttc)} = ${eur(k.siRetard.creancesTTC)}` },
+          { libelle: "Créances clients au 31 décembre (TTC)", attendu: k.reel.creancesTTC, calcul: `${qte(k.reel.factures)} × ${eur(k.fct.ttc)} = ${eur(k.reel.creancesTTC)}` },
         ];
       },
       explication: (c) => {
         const k = clientQuiPaieTard(c);
         return [
-          `Les particuliers ont tout payé : en retard, les créances du bilan seraient les ${qte(k.siRetard.factures)} dernières factures de ${k.ct.nom}, ${eur(k.siRetard.creancesTTC)} toutes taxes comprises, ce que le client paierait. Elles se comptent facture par facture : ${k.ct.nom} est facturée une fois par mois, pas au fil des jours.`,
-          `À l'échéance convenue, comme ${k.ct.nom} paie dans la simulation, la facture d'octobre est déjà payée : il n'en reste que ${qte(k.aLEcheance.factures)}. Le retard supposé laisserait une facture de plus au bilan, ${eur(k.r.creanceEnPlusTTC)}.`,
+          `Les particuliers ont tout payé : les créances du bilan sont les ${qte(k.reel.factures)} dernières factures de ${k.ct.nom}, ${eur(k.reel.creancesTTC)} toutes taxes comprises, ce que le client paiera. Elles se comptent facture par facture : ${k.ct.nom} est facturée une fois par mois, pas au fil des jours.`,
+          `À l'échéance convenue, la facture d'octobre serait déjà payée : il n'en resterait que ${qte(k.aLEcheance.factures)}. Le retard laisse une facture de plus au bilan, ${eur(k.r.creanceEnPlusTTC)}.`,
         ];
       },
     },
@@ -312,22 +306,22 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
       notions: ["payment_terms", "bfr"],
       question: (c) => {
         const k = clientQuiPaieTard(c);
-        return `Le délai moyen de paiement des clients rapporte les créances au chiffre d'affaires du trimestre, toutes taxes comprises : créances (TTC) ÷ chiffre d'affaires du trimestre (TTC) × ${JOURS_DU_TRIMESTRE}. Au dernier trimestre, ${k.f.entreprise} a vendu ${qte(k.siRetard.enceintes)} enceintes à ${eur(k.f.prixHT)} HT. Calculez le chiffre d'affaires du trimestre (TTC), le délai moyen de paiement des clients si ${k.ct.nom} payait en retard (les créances de l'étape précédente), au dixième de jour, puis la part de ${k.ct.nom} dans le chiffre d'affaires hors taxes du trimestre (%).`;
+        return `Le délai moyen de paiement des clients rapporte les créances au chiffre d'affaires du trimestre, toutes taxes comprises : créances (TTC) ÷ chiffre d'affaires du trimestre (TTC) × ${JOURS_DU_TRIMESTRE}. Au dernier trimestre, ${k.f.entreprise} a vendu ${qte(k.reel.enceintes)} enceintes à ${eur(k.f.prixHT)} HT. Calculez le chiffre d'affaires du trimestre (TTC), le délai moyen de paiement des clients, au dixième de jour, puis la part de ${k.ct.nom} dans le chiffre d'affaires hors taxes du trimestre (%).`;
       },
       champs: (c) => {
         const k = clientQuiPaieTard(c);
         return [
-          { libelle: "Chiffre d'affaires du dernier trimestre (TTC)", attendu: k.siRetard.caTTC, calcul: `${qte(k.siRetard.enceintes)} × ${eur(k.f.prixHT)} = ${eur(k.siRetard.caHT)} HT × ${qte(1 + k.f.tauxDeTva)} = ${eur(k.siRetard.caTTC)}` },
+          { libelle: "Chiffre d'affaires du dernier trimestre (TTC)", attendu: k.reel.caTTC, calcul: `${qte(k.reel.enceintes)} × ${eur(k.f.prixHT)} = ${eur(k.reel.caHT)} HT × ${qte(1 + k.f.tauxDeTva)} = ${eur(k.reel.caTTC)}` },
           {
-            libelle: "Délai moyen de paiement des clients, en retard (jours)",
+            libelle: "Délai moyen de paiement des clients (jours)",
             attendu: k.delaiMoyen,
-            calcul: `${eur(k.siRetard.creancesTTC)} ÷ ${eur(k.siRetard.caTTC)} × ${JOURS_DU_TRIMESTRE} = ${jours(k.delaiMoyen)}`,
+            calcul: `${eur(k.reel.creancesTTC)} ÷ ${eur(k.reel.caTTC)} × ${JOURS_DU_TRIMESTRE} = ${jours(k.delaiMoyen)}`,
             tolerance: 0.1,
           },
           {
             libelle: `Part de ${k.ct.nom} dans le chiffre d'affaires (%)`,
             attendu: k.partDeCampusTech,
-            calcul: `${qte(k.siRetard.campustechHT / k.fct.ht)} × ${eur(k.fct.ht)} = ${eur(k.siRetard.campustechHT)} ÷ ${eur(k.siRetard.caHT)} = ${qte(k.partDeCampusTech)} %`,
+            calcul: `${qte(k.reel.campustechHT / k.fct.ht)} × ${eur(k.fct.ht)} = ${eur(k.reel.campustechHT)} ÷ ${eur(k.reel.caHT)} = ${qte(k.partDeCampusTech)} %`,
             tolerance: 0.01,
           },
         ];
@@ -335,7 +329,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
       explication: (c) => {
         const k = clientQuiPaieTard(c);
         return [
-          `Si ${k.ct.nom} payait en retard, les clients de ${k.f.entreprise} paieraient en moyenne à ${jours(k.delaiMoyen)}. Ce chiffre mêlerait des particuliers qui paient comptant et un client professionnel qui pèse ${qte(k.partDeCampusTech)} % des ventes et paierait à ${jours(k.ct.delaiSiRetard)} : une moyenne se lit avec ce qu'elle mélange.`,
+          `En moyenne, les clients de ${k.f.entreprise} paient à ${jours(k.delaiMoyen)}. Ce chiffre mêle des particuliers qui paient comptant et un client professionnel qui pèse ${qte(k.partDeCampusTech)} % des ventes et paie en retard, ${jours(k.ct.delaiReel)} après sa facture : une moyenne se lit avec ce qu'elle mélange.`,
         ];
       },
     },
@@ -429,7 +423,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
         const k = clientQuiPaieTard(c);
         return [
           `Au plancher, les pénalités ne paient pas le découvert : ${eur(k.parJourDuPlancher)} par jour de retard, contre ${eur(k.parJourDuDecouvert)}. L'indemnité de ${eur(k.f.penalites.indemnite)} comble l'écart jusqu'à ${jours(k.joursQueCouvreLePlancher)} de retard ; au-delà, le retard coûte plus que ce que la loi garantit.`,
-          `Au taux des conditions de ${k.f.entreprise}, ${pct(k.r.tauxDesPenalites)}, les pénalités seules rapportent ${eur(k.parJourDeLaLoi)} par jour : elles couvrent le retard dès le premier jour. L'étape suivante chiffre l'hypothèse du chapitre, ${jours(k.r.joursDeRetard)} de retard.`,
+          `Au taux des conditions de ${k.f.entreprise}, ${pct(k.r.tauxDesPenalites)}, les pénalités seules rapportent ${eur(k.parJourDeLaLoi)} par jour : elles couvrent le retard dès le premier jour. L'étape suivante chiffre les ${jours(k.r.joursDeRetard)} de retard ${dE(k.ct.nom)}.`,
         ];
       },
     },
@@ -440,7 +434,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
       notions: ["payment_terms"],
       question: (c) => {
         const k = clientQuiPaieTard(c);
-        return `Sans formule cette fois. Dans l'hypothèse du chapitre, une facture ${dE(k.ct.nom)} est payée avec ${jours(k.r.joursDeRetard)} de retard : calculez ce que le retard coûterait à ${k.f.entreprise} sur son découvert, puis les pénalités de retard au taux de ses conditions de vente. Sur l'année, chiffrez le coût du retard et tout ce que ${k.f.entreprise} pourrait réclamer, indemnités comprises.`;
+        return `Sans formule cette fois. Pour une facture ${dE(k.ct.nom)} payée avec ${jours(k.r.joursDeRetard)} de retard, calculez ce que le retard coûte à ${k.f.entreprise} sur son découvert, puis les pénalités de retard au taux de ses conditions de vente. Sur l'année, chiffrez le coût du retard et tout ce que ${k.f.entreprise} peut réclamer, indemnités comprises.`;
       },
       champs: (c) => {
         const k = clientQuiPaieTard(c);
@@ -468,7 +462,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
         const k = clientQuiPaieTard(c);
         const r = k.r;
         return [
-          `Le retard supposé ${dE(k.ct.nom)} coûterait ${eur(r.coutDuRetardParAn)} par an à ${k.f.entreprise} ; la loi lui permettrait d'en réclamer ${eur(r.reclamableParAn)}. Les pénalités se comptent sur ${JOURS_DE_L_ANNEE_CIVILE} jours, comme tout taux du code de commerce, et sur le montant toutes taxes comprises ; l'indemnité de ${eur(r.indemniteParFacture)} est due par facture, quelle que soit la durée du retard.`,
+          `Le retard ${dE(k.ct.nom)} coûte ${eur(r.coutDuRetardParAn)} par an à ${k.f.entreprise} ; la loi lui permet d'en réclamer ${eur(r.reclamableParAn)}. Les pénalités se comptent sur ${JOURS_DE_L_ANNEE_CIVILE} jours, comme tout taux du code de commerce, et sur le montant toutes taxes comprises ; l'indemnité de ${eur(r.indemniteParFacture)} est due par facture, quelle que soit la durée du retard.`,
         ];
       },
     },
@@ -479,7 +473,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
       notions: ["payment_terms"],
       question: (c) => {
         const k = clientQuiPaieTard(c);
-        return `${k.ct.nom} est un bon client : ${qte(k.partDeCampusTech)} % du chiffre d'affaires du trimestre. Supposez qu'elle se mette à payer chaque facture ${jours(k.r.joursDeRetard)} après l'échéance. Que ferait ${k.f.entreprise} ?`;
+        return `${k.ct.nom} est un bon client : ${qte(k.partDeCampusTech)} % du chiffre d'affaires du trimestre. Elle paie chaque facture ${jours(k.r.joursDeRetard)} après l'échéance. Que fait ${k.f.entreprise} ?`;
       },
       options: (c) => {
         const k = clientQuiPaieTard(c);
@@ -510,20 +504,20 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
       notions: ["payment_terms", "bfr"],
       question: (c) => {
         const k = clientQuiPaieTard(c);
-        return `Si ${k.ct.nom} payait ${jours(k.r.joursDeRetard)} en retard, le délai moyen de paiement des clients de ${k.f.entreprise} serait de ${jours(k.delaiMoyen)}. Le directeur financier en conclurait que les clients paient bien. Qu'en dites-vous ?`;
+        return `Le délai moyen de paiement des clients de ${k.f.entreprise} est de ${jours(k.delaiMoyen)}. Le directeur financier en conclut que les clients paient bien. Qu'en dites-vous ?`;
       },
       options: (c) => {
         const k = clientQuiPaieTard(c);
         return [
           {
-            texte: `La moyenne cache le retard : les particuliers paient comptant, ${k.ct.nom} paierait en retard`,
+            texte: `La moyenne cache le retard : les particuliers paient comptant, ${k.ct.nom} paie en retard`,
             juste: true,
-            retour: `Oui : ${k.ct.nom} ne pèse que ${qte(k.partDeCampusTech)} % des ventes, mais paierait à ${jours(k.ct.delaiSiRetard)}. À l'échéance, comme elle paie dans la simulation, le délai moyen est de ${jours(k.delaiMoyenALEcheance)} : un délai moyen se lit client par client, et un retard se mesure à l'échéance convenue.`,
+            retour: `Oui : ${k.ct.nom} ne pèse que ${qte(k.partDeCampusTech)} % des ventes, mais paie à ${jours(k.ct.delaiReel)}. À l'échéance, le délai moyen serait de ${jours(k.delaiMoyenALEcheance)} : un délai moyen se lit client par client, et un retard se mesure à l'échéance convenue.`,
           },
           {
             texte: `Il a raison : ${jours(k.delaiMoyen)}, c'est bien sous les ${jours(DELAI_MAXIMAL_CONVENU.joursDeLaFacture)} de la loi`,
             juste: false,
-            retour: `Non : la loi plafonne le délai de chaque facture, pas une moyenne. ${k.ct.nom} paierait à ${jours(k.ct.delaiSiRetard)}, en retard sur ${jours(k.ct.delaiConvenu)} convenus.`,
+            retour: `Non : la loi plafonne le délai de chaque facture, pas une moyenne. ${k.ct.nom} paie à ${jours(k.ct.delaiReel)}, en retard sur ${jours(k.ct.delaiConvenu)} convenus.`,
           },
           {
             texte: "La moyenne est fausse : il faudrait la calculer hors taxes",
@@ -592,7 +586,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
         const k = clientQuiPaieTard(c);
         return [
           `Un escompte de ${jours(k.ct.delaiConvenu)} à ${pct(k.b.escompte.taux)} coûte autant que ${jours(k.joursQuiValentLEscompte)} de découvert à ${pct(k.taux)} (${k.ct.delaiConvenu} × ${pct(k.b.escompte.taux)} ÷ ${pct(k.taux)}). Si le compte n'est débiteur que quelques jours pendant l'attente, le découvert coûte moins : l'escompte paie tous ses jours, le découvert seulement ceux où l'on en a besoin.`,
-          `Un taux plus bas ne suffit pas : il faut le multiplier par les jours qu'il dure. Pour une facture qui attendrait ${jours(k.ct.delaiSiRetard)}, retard compris, sur un compte débiteur, l'escompte gagne ; l'étape suivante le chiffre.`,
+          `Un taux plus bas ne suffit pas : il faut le multiplier par les jours qu'il dure. Pour une facture qui attend ${jours(k.ct.delaiReel)} sur un compte débiteur, l'escompte gagne ; l'étape suivante le chiffre.`,
         ];
       },
     },
@@ -603,7 +597,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
       notions: ["receivables_financing"],
       question: (c) => {
         const k = clientQuiPaieTard(c);
-        return `Sans formule cette fois. Dans l'hypothèse du chapitre, ${k.ct.nom} paierait une facture à ${jours(k.ct.delaiSiRetard)}, ${jours(k.m.retard)} après l'échéance, et le compte de ${k.f.entreprise} est débiteur toute l'attente. Chiffrez l'escompte jusqu'à l'échéance convenue ; l'escompte complet, la banque reprenant la facture impayée à l'échéance (sauf bonne fin) ; le découvert seul jusqu'au paiement ; puis l'affacturage (${pct(k.b.affacturage.commission)} de commission, et ${pct(k.b.affacturage.tauxDeFinancement)} l'an de financement jusqu'au paiement réel).`;
+        return `Sans formule cette fois. Une facture de ${k.ct.nom} attend ${jours(k.ct.delaiReel)}, et le compte de ${k.f.entreprise} est débiteur toute l'attente. Chiffrez l'escompte jusqu'à l'échéance convenue ; l'escompte complet, la banque reprenant la facture impayée à l'échéance (sauf bonne fin) ; le découvert seul jusqu'au paiement ; puis l'affacturage (${pct(k.b.affacturage.commission)} de commission, et ${pct(k.b.affacturage.tauxDeFinancement)} l'an de financement jusqu'au paiement réel).`;
       },
       champs: (c) => {
         const k = clientQuiPaieTard(c);
@@ -666,11 +660,11 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
     {
       id: "a-l-echeance",
       type: "montants",
-      titre: "Retour au réel : le client paie à l'échéance",
+      titre: "Variante : le client paie à l'échéance",
       notions: ["payment_terms", "bfr"],
       question: (c) => {
         const k = clientQuiPaieTard(c);
-        return `Dans la simulation, ${k.ct.nom} tient son délai convenu et paie à ${jours(k.ct.delaiReel)}. Refaites les créances clients du 31 décembre (TTC), le délai moyen de paiement des clients, au dixième de jour, puis ce que le retard supposé laisserait en plus au bilan, toutes taxes comprises.`;
+        return `Variante : ${k.ct.nom} tient son délai convenu et paie à ${jours(k.ct.delaiConvenu)}. Refaites les créances clients du 31 décembre (TTC), le délai moyen de paiement des clients, au dixième de jour, puis ce que le retard laisse en plus au bilan, toutes taxes comprises.`;
       },
       champs: (c) => {
         const k = clientQuiPaieTard(c);
@@ -688,16 +682,16 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
             tolerance: 0.1,
           },
           {
-            libelle: "Ce que le retard laisserait en plus au bilan (TTC)",
+            libelle: "Ce que le retard laisse en plus au bilan (TTC)",
             attendu: k.r.creanceEnPlusTTC,
-            calcul: `${eur(k.siRetard.creancesTTC)} − ${eur(e.creancesTTC)} = ${eur(k.r.creanceEnPlusTTC)}`,
+            calcul: `${eur(k.reel.creancesTTC)} − ${eur(e.creancesTTC)} = ${eur(k.r.creanceEnPlusTTC)}`,
           },
         ];
       },
       explication: (c) => {
         const k = clientQuiPaieTard(c);
         return [
-          `Un retard de ${jours(k.r.joursDeRetard)} laisserait une facture entière de plus au bilan, ${eur(k.r.creanceEnPlusTTC)} : la créance ne grandit pas au prorata des jours, elle grandit par factures. Sur un trimestre de ${JOURS_DU_TRIMESTRE} jours, ${jours(k.r.joursDeRetard)} de retard feraient passer la facture d'octobre après le 31 décembre.`,
+          `Le retard de ${jours(k.r.joursDeRetard)} laisse une facture entière de plus au bilan, ${eur(k.r.creanceEnPlusTTC)} : la créance ne grandit pas au prorata des jours, elle grandit par factures. Sur un trimestre de ${JOURS_DU_TRIMESTRE} jours, ${jours(k.r.joursDeRetard)} de retard font passer la facture d'octobre après le 31 décembre.`,
         ];
       },
     },
@@ -708,7 +702,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
       notions: ["receivables_financing", "payment_terms"],
       question: (c) => {
         const k = clientQuiPaieTard(c);
-        return `Autre hypothèse : au trimestre suivant, ${k.ct.nom} paie une facture escomptée en retard, et le relevé de la banque montre que cette facture (${eur(k.fct.ttc)}) a coûté ${eur(COUT_RELEVE_A_REBOURS)} à ${k.f.entreprise} en tout : l'escompte jusqu'à l'échéance, puis le retard sur son découvert. Retrouvez les jours de retard, le jour du paiement après la facture, puis ce que ${k.f.entreprise} peut réclamer pour cette facture.`;
+        return `Au trimestre suivant, le relevé de la banque montre qu'une facture escomptée de ${k.ct.nom} (${eur(k.fct.ttc)}) a coûté ${eur(COUT_RELEVE_A_REBOURS)} à ${k.f.entreprise} en tout : l'escompte jusqu'à l'échéance, puis le retard sur son découvert. Retrouvez les jours de retard, le jour du paiement après la facture, puis ce que ${k.f.entreprise} peut réclamer pour cette facture.`;
       },
       champs: (c) => {
         const k = clientQuiPaieTard(c);
@@ -741,14 +735,14 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
       notions: ["receivables_financing", "payment_terms"],
       question: (c) => {
         const k = clientQuiPaieTard(c);
-        return `Une facture de ${k.ct.nom}, ${eur(k.fct.ttc)} TTC, échue à ${jours(k.ct.delaiConvenu)}. Le laboratoire part de l'hypothèse du chapitre, un paiement à ${jours(k.ct.delaiSiRetard)}. Faites varier le jour où elle est payée, l'état du compte de ${k.f.entreprise} pendant l'attente et la base des pénalités, et choisissez comment la financer : le tableau suit le coût de chaque façon, en effet sur le résultat. Relevez le défi.`;
+        return `Une facture de ${k.ct.nom}, ${eur(k.fct.ttc)} TTC, échue à ${jours(k.ct.delaiConvenu)}. Faites varier le jour où elle est payée, l'état du compte de ${k.f.entreprise} pendant l'attente et la base des pénalités, et choisissez comment la financer : le tableau suit le coût de chaque façon, en effet sur le résultat. Relevez le défi.`;
       },
       leviers: (c) => {
         const k = clientQuiPaieTard(c);
         const placement = Math.round(k.b.tauxDuPlacement * 100);
         const decouvert = Math.round(k.taux * 100);
         return [
-          { code: "delai", libelle: "Jour du paiement, après la facture", unite: "jours", min: DELAI_DU_LABORATOIRE.min, max: DELAI_DU_LABORATOIRE.max, pas: DELAI_DU_LABORATOIRE.pas, depart: k.ct.delaiSiRetard },
+          { code: "delai", libelle: "Jour du paiement, après la facture", unite: "jours", min: DELAI_DU_LABORATOIRE.min, max: DELAI_DU_LABORATOIRE.max, pas: DELAI_DU_LABORATOIRE.pas, depart: k.ct.delaiReel },
           {
             code: "compte",
             libelle: "Le compte pendant l'attente",
@@ -790,7 +784,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
       lecture: (c, p) => {
         const k = clientQuiPaieTard(c);
         const x = laboratoire(k, p);
-        const d = laboratoire(k, { delai: k.ct.delaiSiRetard, compte: Math.round(k.taux * 100), base: 1, outil: 0 });
+        const d = laboratoire(k, { delai: k.ct.delaiReel, compte: Math.round(k.taux * 100), base: 1, outil: 0 });
         return [
           { libelle: "Jours de retard", montant: x.retard, reference: d.retard, unite: "jours" },
           { libelle: "Coût en attendant sur le compte", montant: -x.couts.attendre, reference: -d.couts.attendre, effet: true },
@@ -824,7 +818,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
             const x = laboratoire(k, p);
             return `Ici, ${NOMS_DES_OUTILS[x.outil]} coûte ${eur(x.choisi)} ; ${NOMS_DES_OUTILS[x.leMoinsCher]} ne coûte que ${eur(x.couts[x.leMoinsCher])}.`;
           },
-          solution: { delai: k.ct.delaiSiRetard, compte: Math.round(k.taux * 100), base: 1, outil: OUTILS.indexOf("escompte") },
+          solution: { delai: k.ct.delaiReel, compte: Math.round(k.taux * 100), base: 1, outil: OUTILS.indexOf("escompte") },
         };
       },
       explication: (c, p) => {
@@ -847,7 +841,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
       tableau: (c) => {
         const k = clientQuiPaieTard(c);
         return {
-          titre: `Une facture de ${k.ct.nom}, ${eur(k.fct.ttc)} TTC, dans l'hypothèse d'un paiement à ${jours(k.ct.delaiSiRetard)}`,
+          titre: `Une facture de ${k.ct.nom}, ${eur(k.fct.ttc)} TTC, payée en retard, ${jours(k.ct.delaiReel)} après sa date`,
           colonnes: ["Montant"],
           lignes: [
             { libelle: `Coût du crédit convenu (${jours(k.ct.delaiConvenu)}, au découvert)`, valeurs: [eur(k.r.coutDuCreditConvenuParFacture)] },
@@ -862,7 +856,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
       texte: (c) => {
         const k = clientQuiPaieTard(c);
         return [
-          `Chez ${k.f.entreprise}, ${k.ct.nom} paie à l'échéance et doit ${eur(k.aLEcheance.creancesTTC)} au 31 décembre, ${qte(k.aLEcheance.factures)} factures. Si elle payait ${jours(k.r.joursDeRetard)} en retard, elle en devrait ${eur(k.siRetard.creancesTTC)}, ${qte(k.siRetard.factures)} factures ; ce retard coûterait ${eur(k.r.coutDuRetardParAn)} par an, et la loi permettrait d'en réclamer ${eur(k.r.reclamableParAn)}. Pour financer l'attente, l'escompte (${eur(k.m.escompteEtRetard)} par facture) battrait le découvert (${eur(k.m.decouvert)}) et l'affacturage (${eur(k.m.affacturage)}), tant que le compte est débiteur.`,
+          `Chez ${k.f.entreprise}, ${k.ct.nom} doit ${eur(k.reel.creancesTTC)} au 31 décembre : ${qte(k.reel.factures)} factures, dont une que le retard de ${jours(k.r.joursDeRetard)} ajoute. Ce retard coûte ${eur(k.r.coutDuRetardParAn)} par an, et la loi permet d'en réclamer ${eur(k.r.reclamableParAn)}. Pour financer l'attente, l'escompte (${eur(k.m.escompteEtRetard)} par facture) bat le découvert (${eur(k.m.decouvert)}) et l'affacturage (${eur(k.m.affacturage)}), tant que le compte est débiteur.`,
           `Un délai convenu ne dépasse pas ${jours(DELAI_MAXIMAL_CONVENU.joursDeLaFacture)} entre professionnels ; au-delà de l'échéance, c'est un retard, que sanctionnent des pénalités et une indemnité forfaitaire. Une entreprise qui vend des biens finance ses créances toutes taxes comprises. L'escompte se paie sur tous ses jours, le découvert sur ceux où il sert : ${jours(k.joursQuiValentLEscompte)} de découvert valent un escompte de ${jours(k.ct.delaiConvenu)}. L'affacturage coûte plus, parce qu'il achète aussi le risque.`,
           "Au niveau de l'examen, vous savez compter des créances facture par facture, lire un délai moyen et ce qu'il cache, distinguer délai convenu et retard, chiffrer les pénalités et l'indemnité, comparer l'escompte, le découvert et l'affacturage, et remonter d'un coût à sa cause.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",

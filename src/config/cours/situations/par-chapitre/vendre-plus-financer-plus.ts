@@ -2,7 +2,6 @@ import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
 import type { Cas } from "../../cas";
 import { CROISSANCE_DES_VENTES, ENTREPRISES_DU_BILAN_FONCTIONNEL, PLACE_DE_MARCHE, bilanDeLExercice } from "../../chapitres/bilan-fonctionnel";
 import { auCentime } from "../../monde/amortissement";
-import { VERSEMENT_A_LA_RESERVE } from "../../monde/nova-capacite";
 import type { TableauDeDonnees } from "../../types";
 import type { Situation } from "../types";
 
@@ -13,14 +12,13 @@ import type { Situation } from "../types";
  * Le directeur commercial vise 20 % de chiffre d'affaires en plus l'an prochain, en vendant aux
  * particuliers par une place de marché qui reverse les ventes à 30 jours. Le directeur financier
  * veut savoir, avant de valider le plan, de combien la croissance ferait grossir le besoin en fonds
- * de roulement, et si NOVA peut la financer sans toucher à la réserve de la seconde ligne (le compte
- * à terme, et le versement du 1er janvier). L'élève refait seul le bilan fonctionnel du chapitre, fait grandir le besoin à
+ * de roulement, et si NOVA peut la financer sans toucher au compte à terme, qui garde la réserve de
+ * la seconde ligne. L'élève refait seul le bilan fonctionnel du chapitre, fait grandir le besoin à
  * structure constante (le besoin normatif en jours), puis ajoute ce que la place de marché change à
  * la structure : les particuliers, qui payaient à la commande, deviennent une créance.
  *
  * LE CROISEMENT : la trésorerie nette reste positive, mais le compte courant passe à découvert, parce
- * que la trésorerie nette compte la réserve (le compte à terme, bloqué jusqu'au 6 janvier, et le
- * versement du 1er janvier). LE CALCUL À REBOURS :
+ * que la trésorerie nette compte le compte à terme, bloqué jusqu'au 6 janvier. LE CALCUL À REBOURS :
  * un curseur cherche le délai de reversement le plus long que le compte courant supporte. La réponse
  * demande un jugement : le plan se finance si la place de marché reverse plus vite, pas tel quel.
  *
@@ -32,16 +30,6 @@ import type { Situation } from "../types";
  * particuliers grandissent comme le reste, de 20 %, et passent toutes par la place de marché
  * (reversées toutes taxes comprises, sans commission, étalées également sur 360 jours) ; le reste du
  * besoin d'exploitation suit le chiffre d'affaires ; le besoin hors exploitation ne bouge pas.
- *
- * LE COMPTE COURANT DE L'AN PROCHAIN (recalibré quand CampusTech est passée à 60 jours, décision du
- * propriétaire). La facture d'octobre de CampusTech rentre le 20 décembre : la banque du 31 décembre
- * porte 22 656 € de plus (138 390,87 €), et lue seule, elle financerait le plan à 30 jours (il
- * resterait 3 455,80 €) ; le croisement disparaissait. Mais le 1er janvier, le dirigeant verse ces
- * 22 656 € à la réserve (monde/nova-capacite.ts, `VERSEMENT_A_LA_RESERVE`), à côté du compte à
- * terme : le compte courant dont le plan dispose est celui de l'ouverture de l'an prochain,
- * 115 734,87 €. Le cas le dit à l'élève, et la réserve (le compte à terme et ses intérêts, et le
- * versement) est ce que le plan ne doit pas toucher. Le verdict tient : pas à 30 jours, un
- * reversement à 25 jours au plus.
  */
 
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
@@ -72,20 +60,13 @@ export function vendrePlus(c: Pick<Cas, "code">) {
   const creance = creanceA(PLACE_DE_MARCHE.delai);
   const besoinApres = auCentime(besoinDExploitationApres + x.besoinHorsExploitation + creance);
   const tresorerieNetteApres = auCentime(x.fondsDeRoulement - besoinApres);
-  // La réserve, que le plan ne touche pas : le compte à terme et ses intérêts, et le versement du
-  // 1er janvier. Le compte courant de l'an prochain part de la banque du 31 décembre, moins ce versement.
-  const versement = VERSEMENT_A_LA_RESERVE.montant;
-  const reserve = auCentime(x.placement + versement);
-  const compteCourantDOuverture = auCentime(x.postes.banque - versement);
-  const compteCourantSansPlace = auCentime(compteCourantDOuverture - supplement);
-  const compteCourantApres = auCentime(tresorerieNetteApres - reserve);
+  // Le compte courant : la trésorerie nette sans le compte à terme, que le plan ne touche pas.
+  const compteCourantSansPlace = auCentime(x.postes.banque - supplement);
+  const compteCourantApres = auCentime(tresorerieNetteApres - x.placement);
   const delaiSupportable = Math.floor((compteCourantSansPlace * 360) / particuliersApres + 1e-9);
   const verdict: Verdict = compteCourantApres >= 0 ? "financable" : "reverser-plus-vite";
   return {
     x,
-    versement,
-    reserve,
-    compteCourantDOuverture,
     besoinDExploitationApres,
     supplement,
     particuliersApres,
@@ -104,8 +85,7 @@ export function vendrePlus(c: Pick<Cas, "code">) {
 
 /** Le bilan du 31 décembre, en masses, et le projet : ce que l'élève a sous les yeux. */
 function documents(c: Pick<Cas, "code">): TableauDeDonnees {
-  const r = vendrePlus(c);
-  const x = r.x;
+  const { x } = vendrePlus(c);
   const p = x.postes;
   const ligne = (libelle: string, valeur: string) => ({ libelle, valeurs: [valeur] });
   return {
@@ -123,7 +103,6 @@ function documents(c: Pick<Cas, "code">): TableauDeDonnees {
       ligne("Impôt dû et intérêts courus de l'emprunt", eur(auCentime(p.impot + p.interetsCourus))),
       ligne("Compte à terme et ses intérêts, bloqué jusqu'au 6 janvier", eur(x.placement)),
       ligne("Banque (le compte courant)", eur(p.banque)),
-      ligne("Versé à la réserve le 1er janvier, depuis le compte courant", eur(r.versement)),
       ligne("Hausse du chiffre d'affaires visée", pct(CROISSANCE_DES_VENTES)),
       ligne("Délai de reversement de la place de marché", `${PLACE_DE_MARCHE.delai} jours`),
     ],
@@ -159,10 +138,9 @@ export const VENDRE_PLUS_FINANCER_PLUS: Situation = {
       titre: "La demande du directeur financier",
       tableau: documents,
       texte: (c) => {
-        const r = vendrePlus(c);
-        const x = r.x;
+        const { x } = vendrePlus(c);
         return [
-          `« Le directeur commercial vise ${pct(CROISSANCE_DES_VENTES)} de chiffre d'affaires en plus l'an prochain. Pour y arriver, il veut vendre aux particuliers par une place de marché : elle leur ouvre un public bien plus large, mais ne nous reverse les ventes qu'à ${PLACE_DE_MARCHE.delai} jours, alors qu'ils paient aujourd'hui à la commande. Avant de valider son plan, je veux savoir de combien la croissance ferait grossir notre besoin en fonds de roulement, et si nous pouvons la financer sans toucher à la réserve de la seconde ligne : le compte à terme, et les ${eur(r.versement)} que j'y ajoute le 1er janvier, depuis le compte courant. »`,
+          `« Le directeur commercial vise ${pct(CROISSANCE_DES_VENTES)} de chiffre d'affaires en plus l'an prochain. Pour y arriver, il veut vendre aux particuliers par une place de marché : elle leur ouvre un public bien plus large, mais ne nous reverse les ventes qu'à ${PLACE_DE_MARCHE.delai} jours, alors qu'ils paient aujourd'hui à la commande. Avant de valider son plan, je veux savoir de combien la croissance ferait grossir notre besoin en fonds de roulement, et si nous pouvons la financer sans toucher au compte à terme : il garde la réserve de la seconde ligne. »`,
           `« Raisonnez sur le bilan du 31 décembre, comme si la croissance y était déjà, à fonds de roulement inchangé. Les ventes aux particuliers grandissent comme le reste et passent toutes par la place de marché, qui les reverse toutes taxes comprises, sans commission ; comptez-les étalées également sur 360 jours. Le reste du besoin d'exploitation suit le chiffre d'affaires ; le hors exploitation ne bouge pas. »`,
           `Pas de cours cette fois : vous avez le bilan ${dE(x.entreprise)}, et la méthode est celle du chapitre. À vous de l'enchaîner.`,
         ];
@@ -176,7 +154,7 @@ export const VENDRE_PLUS_FINANCER_PLUS: Situation = {
       titre: "Le bilan fonctionnel du 31 décembre",
       notions: ["frng", "bfr", "net_treasury"],
       tableau: documents,
-      question: () => "Commencez par le bilan fonctionnel du 31 décembre : le fonds de roulement net global, le besoin en fonds de roulement (négatif quand c'est une ressource), puis la trésorerie nette.",
+      question: () => "Commencez par le bilan fonctionnel du 31 décembre : le fonds de roulement net global, le besoin en fonds de roulement, puis la trésorerie nette.",
       champs: (c) => {
         const { x } = vendrePlus(c);
         const p = x.postes;
@@ -195,10 +173,9 @@ export const VENDRE_PLUS_FINANCER_PLUS: Situation = {
         ];
       },
       explication: (c) => {
-        const r = vendrePlus(c);
-        const x = r.x;
+        const { x } = vendrePlus(c);
         return [
-          `Au 31 décembre, le fonds de roulement couvre largement le besoin${x.besoin < 0 ? ", qui est même une ressource" : ""} : il reste ${eur(x.tresorerieNette)} de trésorerie nette. Mais ${eur(x.placement)} en sont sur le compte à terme, et le 1er janvier, ${eur(r.versement)} du compte courant rejoignent la réserve : le plan ne doit pas la toucher. Le compte courant de l'an prochain n'a que ${eur(r.compteCourantDOuverture)}.`,
+          `Au 31 décembre, le fonds de roulement couvre largement le besoin : il reste ${eur(x.tresorerieNette)} de trésorerie nette. Mais ${eur(x.placement)} en sont sur le compte à terme, que le plan ne doit pas toucher : le compte courant n'a que ${eur(x.postes.banque)}.`,
         ];
       },
     },
@@ -262,7 +239,7 @@ export const VENDRE_PLUS_FINANCER_PLUS: Situation = {
       titre: "Ce que la place de marché ajoute",
       notions: ["bfr", "payment_terms", "net_treasury", "receivables_financing"],
       question: () =>
-        "Ajoutez la place de marché : ses reversements en attente au 31 décembre, sur les ventes aux particuliers de l'an prochain. Calculez sa créance, le besoin en fonds de roulement après la croissance (hors exploitation compris), la trésorerie nette, puis ce qui resterait sur le compte courant, la réserve mise à part (le compte à terme et le versement du 1er janvier).",
+        "Ajoutez la place de marché : ses reversements en attente au 31 décembre, sur les ventes aux particuliers de l'an prochain. Calculez sa créance, le besoin en fonds de roulement après la croissance (hors exploitation compris), la trésorerie nette, puis ce qui resterait sur le compte courant, le compte à terme mis à part.",
       champs: (c) => {
         const r = vendrePlus(c);
         const x = r.x;
@@ -280,7 +257,7 @@ export const VENDRE_PLUS_FINANCER_PLUS: Situation = {
             tolerance: 1,
           },
           { libelle: "Trésorerie nette après la croissance", attendu: r.tresorerieNetteApres, calcul: `${eur(x.fondsDeRoulement)} ${moins(r.besoinApres)} = ${eur(r.tresorerieNetteApres)}`, tolerance: 1 },
-          { libelle: "Compte courant après la croissance", attendu: r.compteCourantApres, calcul: `${eur(r.tresorerieNetteApres)} − ${eur(x.placement)} de compte à terme − ${eur(r.versement)} versés à la réserve = ${eur(r.compteCourantApres)}`, tolerance: 1 },
+          { libelle: "Compte courant après la croissance", attendu: r.compteCourantApres, calcul: `${eur(r.tresorerieNetteApres)} − ${eur(x.placement)} de compte à terme = ${eur(r.compteCourantApres)}`, tolerance: 1 },
         ];
       },
       explication: (c) => {
@@ -288,8 +265,8 @@ export const VENDRE_PLUS_FINANCER_PLUS: Situation = {
         return [
           `La place de marché ajoute ${eur(r.creance)} au besoin, bien plus que la croissance elle-même (${eur(r.supplement)}) : des ventes encaissées à la commande deviennent une créance de ${PLACE_DE_MARCHE.delai} jours. Le besoin en jours ne vaut que si la structure des ventes reste la même.`,
           r.compteCourantApres < 0
-            ? `La trésorerie nette resterait positive, ${eur(r.tresorerieNetteApres)}, et pourtant le compte courant serait à découvert de ${eur(-r.compteCourantApres)} : la trésorerie nette compte la réserve, ${eur(r.reserve)}, que le plan ne doit pas toucher.`
-            : `Le compte courant resterait positif, à ${eur(r.compteCourantApres)} : le plan se finance sans toucher à la réserve.`,
+            ? `La trésorerie nette resterait positive, ${eur(r.tresorerieNetteApres)}, et pourtant le compte courant serait à découvert de ${eur(-r.compteCourantApres)} : la trésorerie nette compte le compte à terme, que le plan ne doit pas toucher.`
+            : `Le compte courant resterait positif, à ${eur(r.compteCourantApres)} : le plan se finance sans toucher au compte à terme.`,
         ];
       },
     },
@@ -300,7 +277,7 @@ export const VENDRE_PLUS_FINANCER_PLUS: Situation = {
       notions: ["payment_terms", "net_treasury", "receivables_financing"],
       question: (c) => {
         const r = vendrePlus(c);
-        return `Le compte courant de l'an prochain part de ${eur(r.compteCourantDOuverture)}, une fois la réserve versée ; la croissance à structure constante y laisse ${eur(r.compteCourantSansPlace)}. Faites varier le délai de reversement de la place de marché, de ${DELAI_DU_CURSEUR.min} à ${DELAI_DU_CURSEUR.max} jours : quel est le délai le plus long que le compte courant supporte sans passer à découvert ? Placez le curseur au jour près, puis validez.`;
+        return `La croissance à structure constante laisse ${eur(r.compteCourantSansPlace)} sur le compte courant. Faites varier le délai de reversement de la place de marché, de ${DELAI_DU_CURSEUR.min} à ${DELAI_DU_CURSEUR.max} jours : quel est le délai le plus long que le compte courant supporte sans passer à découvert ? Placez le curseur au jour près, puis validez.`;
       },
       grandeur: () => ({ libelle: "Délai de reversement de la place de marché", unite: "jours" }),
       sens: "plus-grande",
@@ -345,12 +322,12 @@ export const VENDRE_PLUS_FINANCER_PLUS: Situation = {
           {
             texte: `Pas à ${PLACE_DE_MARCHE.delai} jours : le compte courant passerait à ${eur(r.compteCourantApres)} ; il faut un reversement à ${jours(r.delaiSupportable)} au plus`,
             juste: r.verdict === "reverser-plus-vite",
-            retour: `Oui : à structure constante, la croissance ne demande que ${eur(r.supplement)}, mais la place de marché transforme des ventes au comptant en une créance de ${eur(r.creance)}. La trésorerie nette resterait positive, à ${eur(r.tresorerieNetteApres)}, grâce à la seule réserve, gardée pour la seconde ligne. À ${jours(r.delaiSupportable)} au plus, le compte courant tient ; sinon, il faut un financement du besoin (un découvert autorisé, l'affacturage) ou toucher à la réserve.`,
+            retour: `Oui : à structure constante, la croissance ne demande que ${eur(r.supplement)}, mais la place de marché transforme des ventes au comptant en une créance de ${eur(r.creance)}. La trésorerie nette resterait positive, à ${eur(r.tresorerieNetteApres)}, grâce au seul compte à terme, réservé à la seconde ligne. À ${jours(r.delaiSupportable)} au plus, le compte courant tient ; sinon, il faut un financement du besoin (un découvert autorisé, l'affacturage) ou toucher à la réserve.`,
           },
           {
             texte: `Oui : la trésorerie nette resterait positive, à ${eur(r.tresorerieNetteApres)}, la croissance se finance seule`,
             juste: r.verdict === "financable",
-            retour: `Non : cette trésorerie nette compte la réserve de la seconde ligne, les ${eur(x.placement)} du compte à terme, bloqués jusqu'au 6 janvier, et les ${eur(r.versement)} versés le 1er janvier. Sans elle, le compte courant serait à ${eur(r.compteCourantApres)}.`,
+            retour: `Non : cette trésorerie nette compte les ${eur(x.placement)} du compte à terme, bloqués jusqu'au 6 janvier et réservés à la seconde ligne. Sans eux, le compte courant serait à ${eur(r.compteCourantApres)}.`,
           },
           {
             texte: `Oui : le besoin ne grossit que de ${eur(r.supplement)}, puisque ses ${qte(x.besoinEnJours)} jours de chiffre d'affaires suivent les ventes à structure constante`,
@@ -358,10 +335,7 @@ export const VENDRE_PLUS_FINANCER_PLUS: Situation = {
             retour: `Non : c'est oublier que le plan change la structure. Les ${qte(x.besoinEnJours)} jours valent pour des particuliers qui paient à la commande ; par la place de marché, ils paient à ${PLACE_DE_MARCHE.delai} jours, et la créance ajoute ${eur(r.creance)}.`,
           },
           {
-            texte:
-              r.compteCourantHorsTaxes < 0
-                ? `De peu : le compte courant passerait à ${eur(r.compteCourantHorsTaxes)}, quelques jours de découvert sans enjeu`
-                : `Oui, de justesse : le compte courant resterait à ${eur(r.compteCourantHorsTaxes)}, sans découvert`,
+            texte: `De peu : le compte courant passerait à ${eur(r.compteCourantHorsTaxes)}, quelques jours de découvert sans enjeu`,
             juste: false,
             retour: `Non : c'est compter la créance sur les ventes hors taxes. La place de marché encaisse et reverse les ventes toutes taxes comprises : sa créance est de ${eur(r.creance)}, et le compte courant passerait à ${eur(r.compteCourantApres)}.`,
           },

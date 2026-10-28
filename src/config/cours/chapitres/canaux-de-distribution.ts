@@ -26,9 +26,10 @@ import type { Chapitre } from "../types";
 
 /**
  * LE DÉLAI DU CANAL INDIRECT. Entre professionnels, le délai convenu ne peut pas dépasser 60 jours après
- * la facture (code de commerce, article L. 441-10). DÉCISION DU PROPRIÉTAIRE : CampusTech paie NOVA à
- * 60 jours, le délai convenu, et à l'heure ; le délai relevé sur l'arène (80 jours) est ramené à ce
- * plafond. Celui de la place de marché de PIXEL & CO, 30 jours, reste tel quel.
+ * la facture (code de commerce, article L. 441-10). DÉCISION DU PROPRIÉTAIRE : le délai convenu entre
+ * CampusTech et NOVA est de 60 jours ; le délai relevé sur l'arène (80 jours) est ramené à ce plafond.
+ * Le chapitre chiffre le canal à ses conditions ; dans le monde du cours, CampusTech paie en plus
+ * 20 jours en retard, et ce retard se chiffre au chapitre « Le client qui paie tard ». Celui de la place de marché de PIXEL & CO, 30 jours, reste tel quel.
  */
 export const delaiDuCanal = (delaiDuScenario: number) => Math.min(delaiDuScenario, DELAI_MAXIMAL_CONVENU.joursDeLaFacture);
 

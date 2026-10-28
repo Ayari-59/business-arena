@@ -1,8 +1,7 @@
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import type { Cas } from "../cas";
-import { donneesDuMois, investissementDeLaFiche, leviersDeBase, moisDeDecalage, tableauDeBord, type LeviersDuSemestre } from "../monde/couts-et-budgets";
-import { DELAI_MAXIMAL_CONVENU, RETARD_SUPPOSE_DE_CAMPUSTECH } from "../monde/delais-et-tva";
-import { GESTION_DU_COURS, type CodeDIndicateur, type FicheDeGestion } from "../monde/nova-gestion";
+import { donneesDuMois, investissementDeLaFiche, leviersDeBase, tableauDeBord, type LeviersDuSemestre } from "../monde/couts-et-budgets";
+import { DELAI_CONVENU_DE_CAMPUSTECH, GESTION_DU_COURS, type CodeDIndicateur, type FicheDeGestion } from "../monde/nova-gestion";
 import type { Chapitre, TableauDeDonnees } from "../types";
 
 /**
@@ -16,9 +15,8 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * L'objet : le tableau de bord mensuel de NOVA, de janvier à juin, et ses quatre voyants (l'indice
  * de sécurité, le résultat, la trésorerie de fin de mois, la part de marché), chacun avec son seuil
  * d'alerte. L'élève calcule les indicateurs d'un mois, lit le semestre, voit les indicateurs
- * diverger (si CampusTech payait 20 jours en retard, le résultat monterait de février à mars quand
- * la trésorerie baisse : voir DELAI_SI_RETARD), puis construit lui-même un indicateur : sa cible et
- * son seuil d'alerte, à rebours, en enceintes.
+ * diverger (le résultat monte de février à mars quand la trésorerie baisse), puis construit lui-même
+ * un indicateur : sa cible et son seuil d'alerte, à rebours, en enceintes.
  *
  * Le piège central : un voyant éteint ne dit pas que tout va bien. Le résultat peut rester au vert
  * pendant que la trésorerie passe au rouge ; un tableau de bord suit plusieurs faces, et il constate
@@ -54,21 +52,8 @@ export const CIBLE_DE_L_INDICE = 0.2;
 /** Les bornes du curseur des ventes du mois, en enceintes. */
 export const VENTES_DU_CURSEUR = { min: 1_400, max: 1_700 } as const;
 
-/**
- * Le délai de CampusTech que le pari suppose : 140 jours au lieu des 60 convenus. Une hypothèse
- * d'école, bien au-delà du plafond légal (DELAI_MAXIMAL_CONVENU) : les textes le rappellent.
- */
+/** Le paiement de CampusTech que suppose le pari : 140 jours après la facture au lieu de 80, un retard bien plus long. */
 export const DELAI_DU_PARI = 140;
-
-/**
- * L'HYPOTHÈSE DE LA DIVERGENCE (hypothèse du cours). Dans le monde du cours, CampusTech paie à
- * l'échéance, à 60 jours : sa facture de janvier rentre en mars, et aucun mois du semestre ne voit
- * le résultat et la trésorerie aller en sens contraires. Le chapitre suppose donc, pour les étapes
- * « resultat-et-tresorerie » et « du-resultat-a-la-tresorerie », que CampusTech paierait 20 jours en
- * retard (RETARD_SUPPOSE_DE_CAMPUSTECH, monde/delais-et-tva.ts), à 80 jours : la facture de janvier
- * ne rentre plus qu'en avril, et de février à mars le résultat monte quand la trésorerie baisse.
- */
-export const DELAI_SI_RETARD = DELAI_MAXIMAL_CONVENU.joursDeLaFacture + RETARD_SUPPOSE_DE_CAMPUSTECH;
 
 /** Les leviers du laboratoire : bornes et pas du prix (€), de la publicité (€ par mois) et du délai de CampusTech (jours). */
 export const LEVIERS_DES_VOYANTS = {
@@ -154,34 +139,24 @@ function calculerLeChapitre(c: Pick<Cas, "code">) {
   const ventesDeLaCible = plafond(seuil / (1 - CIBLE_DE_L_INDICE) / d.prix);
   const allumes = (k: number) => (Object.keys(mois[k]!.voyants) as CodeDIndicateur[]).filter((v) => mois[k]!.voyants[v]);
   const premierEnGagnant = mois.findIndex((m, k) => allumes(k).length > 0 && m.resultat >= 0);
-  // Le premier passage d'un mois au suivant où le résultat et la trésorerie vont en sens contraires :
-  // si CampusTech payait en retard (DELAI_SI_RETARD), le délai de la fiche n'en montre aucun.
-  const delaiConvenu = f.semestre.clienteles.find((x) => x.code === "campustech")!.delai;
-  const enRetard = tableauDeBord(f, { delais: { ...leviersDeBase(f).delais, campustech: DELAI_SI_RETARD } });
-  const moisEnRetard = enRetard.mois;
-  const desaccord = moisEnRetard.findIndex((m, k) => k > 0 && (m.resultat - moisEnRetard[k - 1]!.resultat) * (m.tresorerie - moisEnRetard[k - 1]!.tresorerie) < 0);
-  if (desaccord < 1) throw new Error(`tableau-de-bord : à ${DELAI_SI_RETARD} jours, le résultat et la trésorerie ne divergent plus`);
-  const b = enRetard.budget.mois;
+  // Le premier passage d'un mois au suivant où le résultat et la trésorerie vont en sens contraires.
+  const desaccord = mois.findIndex((m, k) => k > 0 && (m.resultat - mois[k - 1]!.resultat) * (m.tresorerie - mois[k - 1]!.tresorerie) < 0);
+  const b = t.budget.mois;
   const k = desaccord;
   // Le passage du résultat à la variation de trésorerie du mois k.
   const usure = f.moisDeReference.chargesFixes.amortissement;
   const passage = {
-    resultat: moisEnRetard[k]!.resultat,
-    avantLesDelais: auCentime(moisEnRetard[k]!.resultat + usure),
+    resultat: mois[k]!.resultat,
+    avantLesDelais: auCentime(mois[k]!.resultat + usure),
     creances: auCentime(b[k]!.ventesTtc - b[k]!.encaissements.total),
     fournisseur: auCentime(b[k]!.achatsTtc - b[k]!.decaissements.fournisseur),
     tva: auCentime(b[k]!.tva.solde - b[k]!.decaissements.tva),
     sociales: auCentime(f.semestre.paie.cotisations - b[k]!.decaissements.cotisations),
     emprunt: b[k]!.decaissements.emprunt,
     variation: auCentime(b[k]!.tresorerieFin - b[k]!.tresorerieDebut),
-    /** Ce que CampusTech paierait ce mois-là au délai convenu : la facture qui compenserait la sienne. */
-    encaissementAuDelaiConvenu: t.budget.mois[k]!.encaissements.campustech,
-    /** Le mois de la facture que CampusTech paie ce mois-là, au délai convenu. */
-    factureAuDelaiConvenu: k - moisDeDecalage(f.semestre.clienteles.find((x) => x.code === "campustech")!.jourDeFacturation, delaiConvenu, f.semestre.joursDuMoisCommercial),
-    tresorerieAuDelaiConvenu: mois[k]!.tresorerie,
   };
   // Le laboratoire : le départ, et ce qui allume le voyant de trésorerie sans celui du résultat.
-  const depart = { prix: d.prix, publicite: 0, campustech: delaiConvenu, banc: 0 };
+  const depart = { prix: d.prix, publicite: 0, campustech: f.semestre.clienteles.find((x) => x.code === "campustech")!.delai, banc: 0 };
   const inv = investissementDeLaFiche(f);
   const L = LEVIERS_DES_VOYANTS;
   const grille = (g: { min: number; max: number; pas: number }) => Array.from({ length: Math.round((g.max - g.min) / g.pas) + 1 }, (_, i) => auCentime(g.min + i * g.pas));
@@ -190,9 +165,7 @@ function calculerLeChapitre(c: Pick<Cas, "code">) {
     return s.voyants.tresorerie && !s.voyants.resultat;
   };
   const delaiQuiAllume = Math.min(...grille(L.campustech).filter((v) => allumeSansLeResultat({ ...depart, campustech: v })));
-  // Une publicité retire au résultat presque tout ce qu'elle retire à la banque : il se peut qu'aucune ne suffise.
-  const publicites = grille(L.publicite).filter((v) => allumeSansLeResultat({ ...depart, publicite: v }));
-  const publiciteQuiAllume = publicites.length > 0 ? Math.min(...publicites) : null;
+  const publiciteQuiAllume = Math.min(...grille(L.publicite).filter((v) => allumeSansLeResultat({ ...depart, publicite: v })));
   const avecLeBanc = semestreDuLaboratoire(f, { ...depart, banc: inv.mois });
   const auPari = tableauDeBord(f, { delais: { ...leviersDeBase(f).delais, campustech: DELAI_DU_PARI } }).semestre;
   return {
@@ -211,8 +184,6 @@ function calculerLeChapitre(c: Pick<Cas, "code">) {
     ventesDeLaCible,
     allumes,
     premierEnGagnant,
-    delaiConvenu,
-    moisEnRetard,
     desaccord,
     passage,
     depart,
@@ -261,20 +232,6 @@ export function tableauDeBordDuSemestre(c: Pick<Cas, "code">, avecLesVoyants = f
       ligne("Trésorerie de fin de mois", (m) => eur(m.tresorerie)),
       ligne("Part de marché", (m) => pct(m.partDeMarche)),
       ...(avecLesVoyants ? [{ libelle: "Voyants allumés", valeurs: x.mois.map((_, k) => x.allumes(k).map((v) => NOMS_DES_VOYANTS[v]).join(", ") || "aucun") }] : []),
-    ],
-  };
-}
-
-/** Le résultat et la trésorerie de chaque mois, au délai convenu et si CampusTech payait en retard. */
-export function tableauSiRetard(c: Pick<Cas, "code">): TableauDeDonnees {
-  const x = tableauDuChapitre(c);
-  return {
-    titre: `Le résultat et la trésorerie ${dE(x.f.entreprise)}, si CampusTech payait en retard`,
-    colonnes: x.mois.map((m) => majuscule(m.nom)),
-    lignes: [
-      { libelle: "Résultat du mois", valeurs: x.mois.map((m) => eur(m.resultat)) },
-      { libelle: `Trésorerie de fin de mois, CampusTech à ${x.delaiConvenu} jours`, valeurs: x.mois.map((m) => eur(m.tresorerie)) },
-      { libelle: `Trésorerie de fin de mois, si CampusTech payait à ${DELAI_SI_RETARD} jours`, valeurs: x.moisEnRetard.map((m) => eur(m.tresorerie)) },
     ],
   };
 }
@@ -587,7 +544,7 @@ export const TABLEAU_DE_BORD: Chapitre = {
       notions: ["payment_terms", "net_treasury"],
       question: (c) => {
         const x = tableauDuChapitre(c);
-        return `Avant le laboratoire, pariez. Supposons que CampusTech paie à ${DELAI_DU_PARI} jours au lieu des ${x.depart.campustech} convenus, bien au-delà du plafond légal de ${DELAI_MAXIMAL_CONVENU.joursDeLaFacture} jours. Sur le semestre, le résultat de ${x.f.entreprise}…`;
+        return `Avant le laboratoire, pariez. Supposez que CampusTech, déjà en retard, paie ${DELAI_DU_PARI} jours après sa facture au lieu de ${x.depart.campustech}, très au-delà des ${DELAI_CONVENU_DE_CAMPUSTECH} jours convenus. Sur le semestre, le résultat de ${x.f.entreprise}…`;
       },
       options: (c) => {
         const x = tableauDuChapitre(c);
@@ -595,11 +552,7 @@ export const TABLEAU_DE_BORD: Chapitre = {
         const p = x.auPari;
         const voir = "Faites payer CampusTech plus tard au laboratoire de l'étape suivante, et regardez chaque voyant.";
         return [
-          {
-            texte: "Ne bouge pas, mais la trésorerie baisse",
-            juste: p.resultat === s.resultat && p.tresoreriePlusBasse < s.tresoreriePlusBasse,
-            retour: `Bon pari. ${voir} Un tel délai ne se convient pas : la loi plafonne le délai entre professionnels à ${DELAI_MAXIMAL_CONVENU.joursDeLaFacture} jours.`,
-          },
+          { texte: "Ne bouge pas, mais la trésorerie baisse", juste: p.resultat === s.resultat && p.tresoreriePlusBasse < s.tresoreriePlusBasse, retour: `Bon pari. ${voir}` },
           { texte: "Baisse, avec la trésorerie", juste: p.resultat < s.resultat, retour: `Pari à vérifier. ${voir}` },
           { texte: "Monte : les mêmes ventes, payées plus tard", juste: p.resultat > s.resultat, retour: `Pari à vérifier. ${voir}` },
         ];
@@ -612,7 +565,7 @@ export const TABLEAU_DE_BORD: Chapitre = {
       notions: ["dashboard", "net_treasury", "payment_terms"],
       question: (c) => {
         const x = tableauDuChapitre(c);
-        return `Faites varier le prix de l'enceinte, une publicité payée chaque mois, le délai de CampusTech (${x.depart.campustech} jours convenus ; au-delà, c'est un retard que la loi ne permet pas de convenir), et l'achat du banc de mesure (${eur(x.inv.montantHt)} HT, amorti sur ${qte(x.f.semestre.investissement.dureeDAmortissementMois)} mois). Le tableau suit le semestre et ses voyants ; les deux lignes en couleur sont vertes tant que leur voyant est éteint, rouges quand il s'allume. Relevez le défi.`;
+        return `Faites varier le prix de l'enceinte, une publicité payée chaque mois, le délai de CampusTech, et l'achat du banc de mesure (${eur(x.inv.montantHt)} HT, amorti sur ${qte(x.f.semestre.investissement.dureeDAmortissementMois)} mois). Le tableau suit le semestre et ses voyants ; les deux lignes en couleur sont vertes tant que leur voyant est éteint, rouges quand il s'allume. Relevez le défi.`;
       },
       leviers: (c) => {
         const x = tableauDuChapitre(c);
@@ -691,11 +644,7 @@ export const TABLEAU_DE_BORD: Chapitre = {
         const usure = auCentime(x.inv.montantHt / x.f.semestre.investissement.dureeDAmortissementMois);
         return [
           `Défi relevé : la trésorerie la plus basse est de ${eur(s.tresoreriePlusBasse)}, et le résultat du semestre de ${eur(s.resultat)}. Le voyant de trésorerie s'allume, celui du résultat reste éteint.`,
-          `Le banc ne coûte au résultat que son usure, ${eur(usure)} par mois dès ${x.nom(x.inv.mois)} ; il coûte ${eur(auCentime(x.inv.montantHt * (1 + x.f.semestre.tauxDeTva)))} TTC à la trésorerie, d'un coup. Si CampusTech payait à ${x.delaiQuiAllume} jours, au-delà du plafond légal, le même voyant s'allumerait sans toucher au résultat. ${
-            x.publiciteQuiAllume === null
-              ? `Une publicité, elle, retire au résultat presque tout ce qu'elle retire à la banque : même à ${eur(LEVIERS_DES_VOYANTS.publicite.max)} par mois, le voyant de trésorerie reste éteint.`
-              : `Même une publicité de ${eur(x.publiciteQuiAllume)} par mois l'allume avant celui du résultat.`
-          } Le résultat et la trésorerie ne mesurent pas la même chose : un tableau de bord suit les deux.`,
+          `Le banc ne coûte au résultat que son usure, ${eur(usure)} par mois dès ${x.nom(x.inv.mois)} ; il coûte ${eur(auCentime(x.inv.montantHt * (1 + x.f.semestre.tauxDeTva)))} TTC à la trésorerie, d'un coup. CampusTech payant ${x.delaiQuiAllume} jours après sa facture, très en retard, allume le même voyant sans toucher au résultat ; même une publicité de ${eur(x.publiciteQuiAllume)} par mois l'allume avant celui du résultat. Le résultat et la trésorerie ne mesurent pas la même chose : un tableau de bord suit les deux.`,
         ];
       },
     },
@@ -704,34 +653,31 @@ export const TABLEAU_DE_BORD: Chapitre = {
       type: "choix",
       titre: "Le résultat et la trésorerie",
       notions: ["net_treasury", "bfr"],
-      tableau: tableauSiRetard,
+      tableau: (c) => tableauDeBordDuSemestre(c),
       question: (c) => {
         const x = tableauDuChapitre(c);
         const k = x.desaccord;
-        const [a, b] = [x.moisEnRetard[k - 1]!, x.moisEnRetard[k]!];
-        return `Supposons que CampusTech paie ${RETARD_SUPPOSE_DE_CAMPUSTECH} jours en retard, à ${DELAI_SI_RETARD} jours. ${majuscule(dE(a.nom))} à ${b.nom}, le résultat du mois passe de ${eur(a.resultat)} à ${eur(b.resultat)}, la trésorerie de fin de mois de ${eur(a.tresorerie)} à ${eur(b.tresorerie)} : l'un monte quand l'autre baisse. Comment est-ce possible ?`;
+        const [a, b] = [x.mois[k - 1]!, x.mois[k]!];
+        return `${majuscule(dE(a.nom))} à ${b.nom}, le résultat du mois passe de ${eur(a.resultat)} à ${eur(b.resultat)}, la trésorerie de fin de mois de ${eur(a.tresorerie)} à ${eur(b.tresorerie)} : l'un monte quand l'autre baisse. Comment est-ce possible ?`;
       },
-      options: (c) => {
-        const x = tableauDuChapitre(c);
-        const n = x.nom(x.desaccord);
-        return [
-          {
-            texte: "Le résultat compte les ventes et les charges quand elles naissent, la trésorerie quand elles se paient : délais, TVA et emprunt les séparent.",
-            juste: true,
-            retour: `C'est cela. À ${x.delaiConvenu} jours, la facture de CampusTech qui rentre en ${n} compense celle ${dE(n)}, et la trésorerie monte avec le résultat, à ${eur(x.passage.tresorerieAuDelaiConvenu)} ; payée en retard, elle manque. C'est pourquoi un tableau de bord suit les deux : un mois bénéficiaire peut vider la banque (un client qui paie tard, une échéance d'emprunt), un mois de perte peut la remplir (des créances anciennes qui rentrent).`,
-          },
-          {
-            texte: "C'est impossible : le tableau de bord contient une erreur.",
-            juste: false,
-            retour: "Ce n'est pas une erreur : le résultat et la trésorerie ne mesurent pas la même chose, ni au même moment.",
-          },
-          {
-            texte: "La trésorerie suit le résultat avec exactement un mois de retard.",
-            juste: false,
-            retour: "Il n'y a pas de règle aussi simple : chaque délai, la TVA et l'emprunt ont leur rythme.",
-          },
-        ];
-      },
+      options: () => [
+        {
+          texte: "Le résultat compte les ventes et les charges quand elles naissent, la trésorerie quand elles se paient : délais, TVA et emprunt les séparent.",
+          juste: true,
+          retour:
+            "C'est cela. C'est pourquoi un tableau de bord suit les deux : un mois bénéficiaire peut vider la banque (un client qui paie tard, une échéance d'emprunt), un mois de perte peut la remplir (des créances anciennes qui rentrent).",
+        },
+        {
+          texte: "C'est impossible : le tableau de bord contient une erreur.",
+          juste: false,
+          retour: "Ce n'est pas une erreur : le résultat et la trésorerie ne mesurent pas la même chose, ni au même moment.",
+        },
+        {
+          texte: "La trésorerie suit le résultat avec exactement un mois de retard.",
+          juste: false,
+          retour: "Il n'y a pas de règle aussi simple : chaque délai, la TVA et l'emprunt ont leur rythme.",
+        },
+      ],
     },
     {
       id: "du-resultat-a-la-tresorerie",
@@ -742,7 +688,7 @@ export const TABLEAU_DE_BORD: Chapitre = {
         const x = tableauDuChapitre(c);
         const p = x.passage;
         const n = x.nom(x.desaccord);
-        return `Toujours si CampusTech payait à ${DELAI_SI_RETARD} jours, retracez le passage ${dE(n)}, du résultat à la variation de la trésorerie. En ${n}, la dette fournisseur grandit de ${eur(p.fournisseur)} (les composants ${dE(n)}, payés le mois suivant, face à ceux du mois d'avant, payés ce mois-ci) et la TVA due de ${eur(p.tva)}. Sans formule : calculez ce que l'exploitation ${dE(n)} dégage avant les délais (le résultat, plus l'usure de la ligne, qui ne se paie pas), ce que la facture ${dE(n)} de CampusTech retient, l'échéance de l'emprunt, puis la variation de la trésorerie ${dE(n)} (négative pour une baisse).`;
+        return `Retracez le passage ${dE(n)}, du résultat à la variation de la trésorerie. En ${n}, la dette fournisseur grandit de ${eur(p.fournisseur)} (les composants ${dE(n)}, payés le mois suivant, face à ceux du mois d'avant, payés ce mois-ci) et la TVA due de ${eur(p.tva)}. Sans formule : calculez ce que l'exploitation ${dE(n)} dégage avant les délais (le résultat, plus l'usure de la ligne, qui ne se paie pas), ce que la facture ${dE(n)} de CampusTech retient, l'échéance de l'emprunt, puis la variation de la trésorerie ${dE(n)} (négative pour une baisse).`;
       },
       champs: (c) => {
         const x = tableauDuChapitre(c);
@@ -765,8 +711,7 @@ export const TABLEAU_DE_BORD: Chapitre = {
         const p = x.passage;
         const k = x.desaccord;
         return [
-          `Le passage retombe sur le budget : ${eur(x.moisEnRetard[k - 1]!.tresorerie)} ${p.variation < 0 ? `− ${eur(-p.variation)}` : `+ ${eur(p.variation)}`} = ${eur(x.moisEnRetard[k]!.tresorerie)}. Le résultat ${dE(x.nom(k))} est bien là, ${eur(p.resultat)} ; c'est la facture de CampusTech, qui ne rentrera que dans quelques mois, et l'échéance de l'emprunt qui le dépassent.`,
-          `Au délai convenu, ${x.delaiConvenu} jours, la facture ${dE(x.nom(p.factureAuDelaiConvenu))} de CampusTech rentrerait en ${x.nom(k)}, ${eur(p.encaissementAuDelaiConvenu)}, et compenserait celle ${dE(x.nom(k))} : c'est le retard qui creuse la banque, pas la vente.`,
+          `Le passage retombe sur le budget : ${eur(x.mois[k - 1]!.tresorerie)} ${p.variation < 0 ? `− ${eur(-p.variation)}` : `+ ${eur(p.variation)}`} = ${eur(x.mois[k]!.tresorerie)}. Le résultat ${dE(x.nom(k))} est bien là, ${eur(p.resultat)} ; c'est la facture de CampusTech, qui ne rentrera que dans quelques mois, et l'échéance de l'emprunt qui le dépassent.`,
           "C'est la logique du tableau des flux : partir du résultat, retirer ce qui ne se paie pas, puis corriger des créances qui grandissent et des dettes qui grandissent. Les créances et les dettes qui grandissent, c'est la variation du besoin en fonds de roulement, mois par mois.",
         ];
       },
@@ -812,7 +757,7 @@ export const TABLEAU_DE_BORD: Chapitre = {
           {
             texte: `Ses voyants constatent le mois écoulé : le budget voyait le découvert ${dE(n)} dès janvier`,
             juste: true,
-            retour: `Oui. Un tableau de bord constate vite, il ne prévoit pas : le voyant de trésorerie s'allumerait fin ${dE(n)}, quand le budget de trésorerie annonçait le découvert dès janvier. Et un indicateur seul se manipule : payé sur le chiffre d'affaires, un commercial laisserait CampusTech payer à ${DELAI_DU_PARI} jours, au-delà du plafond légal, sans qu'aucun voyant du résultat ne bouge. On le lit avec les budgets, et plusieurs faces à la fois.`,
+            retour: `Oui. Un tableau de bord constate vite, il ne prévoit pas : le voyant de trésorerie s'allumerait fin ${dE(n)}, quand le budget de trésorerie annonçait le découvert dès janvier. Et un indicateur seul se manipule : payé sur le chiffre d'affaires, un commercial laisserait CampusTech payer ${DELAI_DU_PARI} jours après sa facture, sans la relancer, sans qu'aucun voyant du résultat ne bouge. On le lit avec les budgets, et plusieurs faces à la fois.`,
           },
           {
             texte: "Il garde trop peu d'indicateurs : il faudrait toutes les lignes du compte de résultat",
@@ -841,7 +786,7 @@ export const TABLEAU_DE_BORD: Chapitre = {
       texte: (c) => {
         const x = tableauDuChapitre(c);
         return [
-          `Vous avez calculé les indicateurs d'un mois et lu le tableau de bord du semestre de ${x.f.entreprise} : le résultat et l'indice qui s'allument en ${x.fev.nom}, la part de marché qui faiblit au printemps quand les ventes montent, et, si CampusTech payait en retard, la trésorerie qui baisse quand le résultat monte.`,
+          `Vous avez calculé les indicateurs d'un mois et lu le tableau de bord du semestre de ${x.f.entreprise} : le résultat et l'indice qui s'allument en ${x.fev.nom}, la part de marché qui faiblit au printemps quand les ventes montent, la trésorerie qui baisse quand le résultat monte.`,
           `Vous avez construit un indicateur : une cible (${qte(x.ventesDeLaCible)} enceintes par mois pour un indice de ${niveau(CIBLE_DE_L_INDICE)}) et un seuil d'alerte (${qte(x.ventesDAlerte)} enceintes, l'indice de ${niveau(x.alerte.indiceDeSecurite)}), placé avant la perte pour laisser le temps d'agir.`,
           "Au niveau de l'examen, vous savez calculer et lire les indicateurs d'un tableau de bord, régler à rebours la cible et le seuil d'alerte d'un indicateur, expliquer et chiffrer le passage du résultat à la trésorerie, et dire ce que le tableau de bord ne voit pas : il constate plus qu'il ne prévoit, et un indicateur seul se manipule.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",

@@ -80,7 +80,7 @@ export function reglerLeVoyant(c: Pick<Cas, "code">) {
     // Le taux de marge au dixième que l'élève emploie déplace le seuil d'environ un millième.
     toleranceDuSeuil: Math.max(2, Math.round(s.seuil * 0.003)),
     toleranceDeLaCible: Math.max(2, Math.round(cible * 0.003)),
-    // Le banc de mesure, au mois de la fiche (février) : l'indice du semestre, et la trésorerie la plus basse.
+    // Le banc de mesure en avril : l'indice du semestre, et la trésorerie la plus basse.
     inv,
     usureDuBanc: auCentime(avecLeBanc.chargesFixes - s.chargesFixes),
     indiceAvecLeBanc: auDixieme(avecLeBanc.indiceDeSecurite * 100),
