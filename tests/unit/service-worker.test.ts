@@ -107,12 +107,16 @@ describe("service worker : seul le statique public est gardé", () => {
       "/",
     ];
     for (const p of pages) {
-      expect(await sw.intercepter(p, statique("text/html")), p).toBe(false);
+      await sw.intercepter(p, statique("text/html"));
       expect(sw.enCache(p), p).toBe(false);
     }
     // Navigation et RSC, même sur un chemin qui ressemble à du statique.
     expect(await sw.intercepter("/icon-192.png", statique("image/png"), { mode: "navigate" })).toBe(false);
-    expect(await sw.intercepter("/_next/static/x.js", statique(), { rsc: true })).toBe(false);
+    // Une requête RSC est relayée au réseau (voir sw.js), jamais gardée.
+    await sw.intercepter("/_next/static/x.js", statique(), { rsc: true });
+    expect(sw.enCache("/_next/static/x.js")).toBe(false);
+    expect(await sw.intercepter("/?_rsc=abc", statique("text/x-component"), { rsc: true })).toBe(true);
+    expect(sw.enCache("/?_rsc=abc")).toBe(false);
   });
 
   it("respecte Cache-Control: no-store et refuse un téléchargement", async () => {

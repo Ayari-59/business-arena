@@ -45,6 +45,13 @@ function requeteCachable(request, origine) {
   return estUnCheminStatique(url.pathname);
 }
 
+/** Requête relayée par le worker sans copie : GET de même origine, hors navigation. */
+function relayable(request, origine) {
+  return (
+    request.method === "GET" && new URL(request.url).origin === origine && request.mode !== "navigate"
+  );
+}
+
 /** La réponse peut-elle être gardée ? Elle doit dire elle-même qu'elle est publique. */
 function reponseCachable(response) {
   if (!response || !response.ok || response.type !== "basic") return false;
@@ -85,8 +92,15 @@ self.addEventListener("message", (e) => {
 });
 
 self.addEventListener("fetch", (e) => {
-  // Hors statique : on ne s'en mêle pas, le navigateur va au réseau sans copie.
-  if (!requeteCachable(e.request, self.location.origin)) return;
+  if (!requeteCachable(e.request, self.location.origin)) {
+    // Hors statique : aucune copie. Les navigations passent sans le worker. Les
+    // autres requêtes de même origine (RSC, préchargements du routeur, API) sont
+    // relayées telles quelles : les laisser filer hors du worker faisait doubler
+    // un préchargement RSC dans Chromium, dont la seconde requête ne se terminait
+    // jamais (tests/e2e/parcours.e2e.ts bloqué sur `networkidle`).
+    if (relayable(e.request, self.location.origin)) e.respondWith(fetch(e.request));
+    return;
+  }
 
   e.respondWith(
     fetch(e.request)
