@@ -249,6 +249,7 @@ describe("plan du site", () => {
       "src/app/admin/lti/page.tsx",
       "src/app/admin/renater/page.tsx",
       "src/app/admin/theme/page.tsx",
+      "src/app/admin/effacements/page.tsx",
     ]) {
       expect(lire(fichier), `${fichier} n'a pas l'en-tête de l'administration`).toContain("<EnTeteAdmin");
       expect(lire(fichier), `${fichier} garde un « ← Plateforme »`).not.toContain("← Plateforme");
@@ -274,6 +275,7 @@ describe("plan du site", () => {
       "Moodle",
       "RENATER",
       "Thème",
+      "Effacements",
     ]);
     // Un code par pastille, dans chaque rangée : c'est lui que `aria-current` compare.
     for (const [nom, p] of PASTILLES) {

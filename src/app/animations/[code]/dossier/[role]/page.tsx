@@ -45,7 +45,10 @@ export async function generateMetadata({
   if (!atelier || !poste) return {};
   return {
     title: `${poste.titreDuDossier} · ${atelier.titre}`,
-    description: `Ce que ${poste.code === "direction" ? "la direction générale" : "ce responsable"} décide, lit et prépare à chaque tour de l'atelier ${atelier.titre}.`,
+    // Le poste est nommé, avec son domaine : sans lui, les quatre dossiers de
+    // responsable d'un même atelier portaient la même description.
+    description: `${poste.titre}, atelier ${atelier.titre} : ${poste.domaine.charAt(0).toLowerCase()}${poste.domaine.slice(1)}. Ce que ce poste décide, lit et prépare à chaque tour.`,
+    alternates: { canonical: `/animations/${atelier.code}/dossier/${poste.code}` },
   };
 }
 

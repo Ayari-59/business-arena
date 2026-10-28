@@ -9,6 +9,7 @@ import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 /** Page d'entrée par code : un titre pour l'onglet, rien pour les moteurs. */
 export const metadata: Metadata = {
   title: "Rejoindre un concours",
+  description: "Entrez le code du concours donné par votre enseignant pour inscrire votre équipe.",
   robots: { index: false, follow: false },
 };
 

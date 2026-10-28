@@ -817,6 +817,9 @@ export const REMISES_ET_CONDITIONS: Chapitre = {
  */
 export function affaire(c: Cas) {
   const v = c.venteCredit;
+  // Le client exige le délai de son cas, au plus le délai maximal convenu entre professionnels (code de
+  // commerce, article L. 441-10) : le cabinet médical de MARTEL & FILS, qui paie à 90 jours, en demande 60.
+  const delai = Math.min(v.delai, DELAI_MAXIMAL_CONVENU.joursDeLaFacture);
   const coutVariable = c.gestion.coutVariableUnitaire;
   const arrondi = auCentimeDeLArene;
   const auDixieme = (x: number) => Math.round(x * 10) / 10;
@@ -828,14 +831,14 @@ export function affaire(c: Cas) {
   const coutsVariables = arrondi(v.quantite * coutVariable);
   const marge = arrondi(netCommercial - coutsVariables);
   const margeSansRemise = arrondi(brut - coutsVariables);
-  const coutDuCredit = arrondi((netCommercial * c.pret.tauxAnnuel * v.delai) / JOURS_PAR_AN);
+  const coutDuCredit = arrondi((netCommercial * c.pret.tauxAnnuel * delai) / JOURS_PAR_AN);
   const prixRemise = arrondi(v.prixUnitaire * (1 - TAUX_DE_REMISE));
   const quantitePourLaMemeMarge = Math.ceil(margeSansRemise / (prixRemise - coutVariable) - 1e-9);
   return {
     client: v.client,
     quantite: v.quantite,
     prix: v.prixUnitaire,
-    delai: v.delai,
+    delai,
     brut,
     tauxDeRemise: TAUX_DE_REMISE * 100,
     remise,
@@ -853,7 +856,7 @@ export function affaire(c: Cas) {
     tauxDeLEmprunt: auDixieme(c.pret.tauxAnnuel * 100),
     coutDuCredit,
     resultatDeLAffaire: arrondi(marge - coutDuCredit),
-    tauxAnnuelDeLEscompte: auDixieme((TAUX_D_ESCOMPTE / (1 - TAUX_D_ESCOMPTE)) * (JOURS_PAR_AN / (v.delai - JOURS_D_ESCOMPTE)) * 100),
+    tauxAnnuelDeLEscompte: auDixieme((TAUX_D_ESCOMPTE / (1 - TAUX_D_ESCOMPTE)) * (JOURS_PAR_AN / (delai - JOURS_D_ESCOMPTE)) * 100),
     prixRemise,
     quantitePourLaMemeMarge,
     enPlus: quantitePourLaMemeMarge - v.quantite,

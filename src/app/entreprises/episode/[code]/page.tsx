@@ -5,7 +5,7 @@ import { EpisodeJoue } from "@/components/episode/episode-joue";
 import { PiedDePage } from "@/components/pied-de-page";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
 import { FAMILLES, SECTEURS, teinteDuMetierDeLEpisode } from "@/config/episodes/familles";
-import { EPISODES_DE_DEMO, MARQUE_DEMO } from "@/config/episodes/demos";
+import { EPISODES_DE_DEMO, licencePourLEpisode, MARQUE_DEMO } from "@/config/episodes/demos";
 import {
   EPISODE_FERME_POUR_L_ELEVE,
   lienDuDevis,
@@ -96,6 +96,7 @@ export default async function EpisodePage({
             code={code}
             niveaux={niveaux}
             offre={acces.licence ? null : offre}
+            licence={licencePourLEpisode(acces, code)}
             cours={coursDeLEpisode(code)}
           />
         ) : (

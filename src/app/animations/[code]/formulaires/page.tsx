@@ -44,6 +44,7 @@ export async function generateMetadata({
   return {
     title: `Formulaires des livrables · ${atelier.titre}`,
     description: `Une feuille à remplir par séance, à imprimer et à distribuer, pour ${formationsEnToutesLettres(atelier)}.`,
+    alternates: { canonical: `/animations/${atelier.code}/formulaires` },
   };
 }
 

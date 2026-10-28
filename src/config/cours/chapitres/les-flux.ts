@@ -3,7 +3,7 @@ import { auCentime } from "../../../pedagogy/cours/etats";
 import { accordPluriel } from "../accords";
 import { type Cas } from "../cas";
 import { anneeDuCours as anneeJouee } from "../monde/annee-du-cours";
-import { nomDuClient } from "../provisions";
+import { aNom, de, delaiDuClientPro, nomDuClient } from "../provisions";
 import type { Chapitre, TableauDeDonnees } from "../types";
 
 /**
@@ -20,6 +20,15 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  */
 
 const qte = (n: number) => n.toLocaleString("fr-FR");
+
+/**
+ * « à 60 jours », ou, quand le client du cas dépasse le plafond légal des délais entre professionnels,
+ * « à 90 jours, en retard de 30 jours sur les 60 jours convenus » : un délai plus long n'est jamais convenu.
+ */
+const aSonDelai = (c: Cas) => {
+  const d = delaiDuClientPro(c);
+  return d.retard > 0 ? `à ${qte(d.reel)} jours, en retard de ${qte(d.retard)} jours sur les ${qte(d.convenu)} jours convenus` : `à ${qte(d.reel)} jours`;
+};
 
 /** Ce que les lignes du tableau de trésorerie de l'arène veulent dire, pour un lycéen. */
 export const FLUX_DE_L_ARENE: Record<string, string> = {
@@ -49,7 +58,7 @@ export function premierTrimestre(c: Cas) {
 function tableauDuTrimestre(c: Cas): TableauDeDonnees {
   const t = premierTrimestre(c);
   return {
-    titre: `Le premier trimestre de ${c.entreprise} dans l'arène, vu de la banque`,
+    titre: `Le premier trimestre ${de(c.entreprise)} dans l'arène, vu de la banque`,
     colonnes: ["Entrée", "Sortie"],
     lignes: t.lignes.map((l) => ({
       libelle: FLUX_DE_L_ARENE[l.label] ?? l.label,
@@ -95,7 +104,7 @@ export const LES_FLUX: Chapitre = {
       type: "tri",
       titre: "Qui est concerné ?",
       notions: ["revenue"],
-      question: (c) => `Voici le premier mois de ${c.entreprise}. Pour chaque opération, quel partenaire est concerné ?`,
+      question: (c) => `Voici le premier mois ${de(c.entreprise)}. Pour chaque opération, quel partenaire est concerné ?`,
       categories: [
         { code: "associes", libelle: "Associés" },
         { code: "banque", libelle: "Banque" },
@@ -126,7 +135,7 @@ export const LES_FLUX: Chapitre = {
           pourquoi: "Le propriétaire du local vend un service : l'usage du local. C'est un fournisseur.",
         },
         {
-          libelle: `Vente à ${nomDuClient(c.venteCredit.client)}`,
+          libelle: `Vente ${aNom(nomDuClient(c.venteCredit.client))}`,
           montant: c.venteCredit.ttc,
           categorie: "clients",
           pourquoi: "Un client professionnel, qui paiera plus tard.",
@@ -150,7 +159,7 @@ export const LES_FLUX: Chapitre = {
       titre: "Une vente, deux flux",
       notions: ["payment_terms"],
       question: (c) =>
-        `${c.entreprise} vend ${qte(c.venteCredit.quantite)} ${c.unites} à ${nomDuClient(c.venteCredit.client)}, qui paiera à ${qte(c.venteCredit.delai)} jours. Quels flux cette vente crée-t-elle ?`,
+        `${c.entreprise} vend ${qte(c.venteCredit.quantite)} ${c.unites} ${aNom(nomDuClient(c.venteCredit.client))}, qui paiera ${aSonDelai(c)}. Quels flux cette vente crée-t-elle ?`,
       options: (c) => [
         {
           texte: `Un flux réel vers le client, les ${c.unites}, et un flux financier en sens inverse, le paiement, ${qte(c.venteCredit.delai)} jours plus tard.`,
@@ -166,7 +175,7 @@ export const LES_FLUX: Chapitre = {
         {
           texte: "Deux flux le même jour, puisque la vente est faite.",
           juste: false,
-          retour: `Le client paie à ${qte(c.venteCredit.delai)} jours : le flux financier arrive après. C'est ce décalage qui fait naître une créance.`,
+          retour: `Le client paie ${aSonDelai(c)} : le flux financier arrive après. C'est ce décalage qui fait naître une créance.`,
         },
       ],
     },
@@ -203,7 +212,7 @@ export const LES_FLUX: Chapitre = {
       tableau: tableauDuTrimestre,
       question: (c) => {
         const t = premierTrimestre(c);
-        return `Voici les flux financiers du premier trimestre de ${c.entreprise} dans l'arène : tout ce qui est entré à la banque et tout ce qui en est sorti. Au 1er janvier, la banque portait ${eur(t.debut)}. Faites les totaux, puis la variation de la banque.`;
+        return `Voici les flux financiers du premier trimestre ${de(c.entreprise)} dans l'arène : tout ce qui est entré à la banque et tout ce qui en est sorti. Au 1er janvier, la banque portait ${eur(t.debut)}. Faites les totaux, puis la variation de la banque.`;
       },
       champs: (c) => {
         const t = premierTrimestre(c);
@@ -230,7 +239,7 @@ export const LES_FLUX: Chapitre = {
         `Les encaissements des clients du trimestre, ${eur(premierTrimestre(c).entrees)}, sont-ils les ventes du trimestre ?`,
       options: (c) => [
         {
-          texte: `Pas exactement : les clients professionnels paient à ${qte(c.venteCredit.delai)} jours, une partie des ventes de fin de trimestre sera encaissée au trimestre suivant.`,
+          texte: `Pas exactement : les clients professionnels paient ${aSonDelai(c)}, une partie des ventes de fin de trimestre sera encaissée au trimestre suivant.`,
           juste: true,
           retour:
             "C'est cela. Vendre, c'est livrer ; encaisser, c'est recevoir l'argent. Les deux ne tombent pas toujours dans la même période. Le chapitre suivant les sépare : charges et produits d'un côté, encaissements et décaissements de l'autre.",
@@ -253,7 +262,7 @@ export const LES_FLUX: Chapitre = {
       titre: "Ce que vous savez faire",
       notions: ["revenue"],
       texte: (c) => [
-        `Vous savez nommer les partenaires de ${c.entreprise}, ranger chaque opération selon le partenaire qu'elle concerne, et voir ses deux sens : ce qui part, ce qui revient.`,
+        `Vous savez nommer les partenaires ${de(c.entreprise)}, ranger chaque opération selon le partenaire qu'elle concerne, et voir ses deux sens : ce qui part, ce qui revient.`,
         "Jouez une partie dans l'arène : chaque décision que vous prenez crée des flux, et le tableau de trésorerie de fin de tour les montre tous.",
       ],
       repere: () => "Associés, banque, fournisseurs, clients, salariés, État : six partenaires, et pour chaque opération, un flux réel et un flux financier.",

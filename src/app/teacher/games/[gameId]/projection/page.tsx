@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/session";
 import { getTeacherGameView } from "@/services/game.service";
@@ -59,7 +60,7 @@ export default async function ProjectionPage({
   params: Promise<{ gameId: string }>;
 }) {
   const session = await getSession();
-  if (!session) redirect("/teacher/login");
+  if (!session) redirect(await connexionPourLaPageDemandee());
   const { gameId } = await params;
   const view = await getTeacherGameView(gameId, session.userId);
   if (!view) notFound();

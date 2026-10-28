@@ -2,6 +2,25 @@ import type { BotProfile } from "../../engine/bots";
 import type { CompanyState, EngineScenarioConfig } from "../../engine/types";
 import { scoringWeightsV2 } from "../../scoring/bpi";
 import type { SituationDef } from "./situation-kit";
+// Les situations, par l'import conditionnel du package : complètes au serveur, vides
+// au navigateur (situations-des-secteurs.ts).
+import {
+  NOVA_SITUATIONS,
+  NOVA_GAMME_SITUATIONS,
+  BOUTIQUE_SITUATIONS,
+  BOUTIQUE_MONO_SITUATIONS,
+  HOTEL_SITUATIONS,
+  HOTEL_GAMME_SITUATIONS,
+  BISTROT_SITUATIONS,
+  BISTROT_GAMME_SITUATIONS,
+  CONSEIL_SITUATIONS,
+  CONSEIL_GAMME_SITUATIONS,
+  ECOMMERCE_SITUATIONS,
+  ECOMMERCE_GAMME_SITUATIONS,
+  FITNESS_SITUATIONS,
+  BATIMENT_SITUATIONS,
+  TRANSPORT_SITUATIONS,
+} from "#situations-des-secteurs";
 import {
   ABONNEMENT_KPIS,
   COMMERCE_KPIS,
@@ -16,35 +35,20 @@ import {
   type SectorKpiDef,
 } from "./sector-kpis";
 import { novaBots, novaCompany, novaScenario } from "./nova";
-import { NOVA_SITUATIONS } from "./nova/situations";
 import { novaGammeBots, novaGammeCompany, novaGammeScenario } from "./nova-gamme";
-import { NOVA_GAMME_SITUATIONS } from "./nova-gamme/situations";
 import { boutiqueBots, boutiqueCompany, boutiqueScenario } from "./boutique";
-import { BOUTIQUE_SITUATIONS } from "./boutique/situations";
 import { boutiqueMonoBots, boutiqueMonoCompany, boutiqueMonoScenario } from "./boutique-mono";
-import { BOUTIQUE_MONO_SITUATIONS } from "./boutique-mono/situations";
 import { hotelBots, hotelCompany, hotelScenario } from "./hotel";
-import { HOTEL_SITUATIONS } from "./hotel/situations";
 import { hotelGammeBots, hotelGammeCompany, hotelGammeScenario } from "./hotel-gamme";
-import { HOTEL_GAMME_SITUATIONS } from "./hotel-gamme/situations";
 import { bistrotBots, bistrotCompany, bistrotScenario } from "./bistrot";
-import { BISTROT_SITUATIONS } from "./bistrot/situations";
 import { bistrotGammeBots, bistrotGammeCompany, bistrotGammeScenario } from "./bistrot-gamme";
-import { BISTROT_GAMME_SITUATIONS } from "./bistrot-gamme/situations";
 import { conseilBots, conseilCompany, conseilScenario } from "./conseil";
-import { CONSEIL_SITUATIONS } from "./conseil/situations";
 import { conseilGammeBots, conseilGammeCompany, conseilGammeScenario } from "./conseil-gamme";
-import { CONSEIL_GAMME_SITUATIONS } from "./conseil-gamme/situations";
 import { ecommerceBots, ecommerceCompany, ecommerceScenario } from "./ecommerce";
-import { ECOMMERCE_SITUATIONS } from "./ecommerce/situations";
 import { ecommerceGammeBots, ecommerceGammeCompany, ecommerceGammeScenario } from "./ecommerce-gamme";
-import { ECOMMERCE_GAMME_SITUATIONS } from "./ecommerce-gamme/situations";
 import { fitnessBots, fitnessCompany, fitnessScenario } from "./fitness";
-import { FITNESS_SITUATIONS } from "./fitness/situations";
 import { batimentBots, batimentCompany, batimentScenario } from "./batiment";
-import { BATIMENT_SITUATIONS } from "./batiment/situations";
 import { transportBots, transportCompany, transportScenario } from "./transport";
-import { TRANSPORT_SITUATIONS } from "./transport/situations";
 
 /**
  * Registre des scénarios (doc 01 §4) : un scénario n'est pas du code, c'est

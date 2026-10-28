@@ -186,11 +186,13 @@ Les parties publiques jouées en solo ne dépendent d'aucune licence.
 
 Depuis `/admin` (admin général), le bouton **« Générer le monde démo »** crée un
 établissement complet : `direction@demo.business-arena.fr` (admin d'établissement) et
-`prof@demo.business-arena.fr` (enseignant), mot de passe `Demo2026!`, avec une partie de
+`prof@demo.business-arena.fr` (enseignant), avec une partie de
 classe jouée sur 3 tours (le tour 4 — la crise de trésorerie — est le prochain), des vues
-pédagogiques alimentées et un concours prêt à lancer. Les identifiants s'affichent sur
-`/teacher/login`. En local : `npm run seed:demo`. L'admin général n'a pas de compte démo
-(rôle sensible : réservé aux e-mails d'`ADMIN_EMAILS`).
+pédagogiques alimentées et un concours prêt à lancer. Le mot de passe est tiré au hasard
+et montré une seule fois, à la création ; `/admin` le renouvelle ou ferme les comptes. En
+production, la création est refusée sauf si `AUTORISER_DEMO_EN_PRODUCTION=1`. La licence de
+démo couvre deux personnels. En local : `npm run seed:demo`. L'admin général n'a pas de
+compte démo (rôle sensible : réservé aux e-mails d'`ADMIN_EMAILS`).
 
 ## Cohortes d'épisodes manager
 

@@ -8,6 +8,7 @@ import {
 } from "./scenarios/registry";
 import { tourDuPic } from "./scenarios/rounds";
 import type { Periodicity } from "./scenarios/periodicity";
+import { cleDeRecommandation } from "@/lib/orientation-vue";
 
 /**
  * Choisir la bonne simulation.
@@ -275,5 +276,50 @@ export function recommander(demande: Demande): Recommandation {
     periodicite,
     atelierCode: atelier?.code ?? null,
     pourquoi,
+  };
+}
+
+/**
+ * CE QUE LE FORMULAIRE D'ORIENTATION REÇOIT DU SERVEUR (audit, P1-2).
+ *
+ * Le formulaire est un composant client. Il importait ce module, qui tire les
+ * ateliers et le registre des scénarios : les corrigés des situations, les
+ * dossiers enseignant et les grilles partaient dans un fichier JavaScript public
+ * de la page /orientation. Les réponses possibles sont en nombre fini (diplôme,
+ * semestre, objectif) : le serveur calcule toutes les recommandations ici, et le
+ * client ne reçoit que leur texte. Les phrases communes ne sont écrites qu'une
+ * fois (`phrases`), chaque recommandation n'en garde que les numéros.
+ */
+export interface VueDOrientation {
+  diplomes: { code: string; libelle: string }[];
+  objectifs: { code: string; libelle: string }[];
+  phrases: string[];
+  recommandations: Record<string, Omit<Recommandation, "pourquoi"> & { pourquoi: number[] }>;
+}
+
+export function vueDOrientation(): VueDOrientation {
+  const diplomes = diplomesProposes();
+  const phrases: string[] = [];
+  const numero = new Map<string, number>();
+  const recommandations: VueDOrientation["recommandations"] = {};
+  for (const d of diplomes) {
+    for (const semestre of ["s1", "s2"] as const) {
+      for (const o of OBJECTIFS) {
+        const { pourquoi, ...reglage } = recommander({ diplome: d.code, semestre, objectif: o.code });
+        recommandations[cleDeRecommandation({ diplome: d.code, semestre, objectif: o.code })] = {
+          ...reglage,
+          pourquoi: pourquoi.map((p) => {
+            if (!numero.has(p)) numero.set(p, phrases.push(p) - 1);
+            return numero.get(p)!;
+          }),
+        };
+      }
+    }
+  }
+  return {
+    diplomes,
+    objectifs: OBJECTIFS.map(({ code, libelle }) => ({ code, libelle })),
+    phrases,
+    recommandations,
   };
 }

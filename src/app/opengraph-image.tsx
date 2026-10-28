@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { TITRE_ACCUEIL } from "@/config/seo";
-import { DECISION_MODELS } from "@/config/pedagogy/models";
-import { ALL_SITUATIONS, SCENARIO_CHOICES } from "@/config/scenarios/registry";
+import { NOMBRE_D_EPISODES } from "@/config/episodes/familles";
+import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
 
 /**
  * L'image d'un lien partagé : le tableau de bord de NOVA, celui de la page
@@ -78,8 +78,9 @@ export default function Image() {
             Apprenez à décider.
           </span>
           <span style={{ fontSize: 24, color: "#c2bcb2", marginTop: 28, lineHeight: 1.4 }}>
-            {SCENARIO_CHOICES.length} secteurs, {ALL_SITUATIONS.length} situations, {DECISION_MODELS.length} modèles
-            d&apos;analyse. Découverte gratuite en solo, sans compte.
+            {/* Les nombres de l'accueil, comptés dans les registres (voir config/seo.ts). */}
+            {SCENARIO_CHOICES.length} entreprises à piloter, {NOMBRE_D_EPISODES} épisodes manager.
+            Découverte gratuite en solo, sans compte.
           </span>
           <span style={{ fontSize: 26, fontWeight: 700, marginTop: "auto", color: "#f1ede4" }}>
             business-arena.fr

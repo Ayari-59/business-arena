@@ -15,6 +15,7 @@ import { LE_TRIMESTRE_FACE_A_L_OBJECTIF, MOIS_RESTANTS, janvierFaceALObjectif } 
 import type { Situation } from "../../src/config/cours/situations/types";
 import type { Chapitre, Etape, EtapeChoix, EtapeCurseur, EtapeLecture, EtapeMontants, EtapeSimulation, EtapeTri, EtatDuCours } from "../../src/config/cours/types";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
+import { champJuste } from "../../src/pedagogy/cours/correcteur";
 import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
 
 /**
@@ -334,6 +335,14 @@ describe("le tableau de bord du manager, à la boutique du monde du cours", () =
     expect(attendus(ch, "decomposer-l-ecart")).toEqual({ "Effet du trafic": effetTrafic, "Effet de la transformation": effetTransformation, "Effet du panier": effetPanier });
     expect([effetTrafic, effetTransformation, effetPanier]).toEqual([-6_720, 2_060.8, 2_509.2]);
     expect(centime(effetTrafic + effetTransformation + effetPanier)).toBe(ca - n1.chiffreDAffaires);
+    // Le panier de N s'affiche arrondi, 92,25 € (87 450 ÷ 948 = 92,247…) : 948 × (92,25 − 89,60) = 2 512,20 €.
+    // La réponse est juste aussi ; une vraie erreur (le panier de N − 1 oublié, l'écart total) reste refusée.
+    const panier = (ch.etapes.find((x) => x.id === "decomposer-l-ecart") as EtapeMontants).champs(cas, etatVide).find((x) => x.libelle === "Effet du panier")!;
+    expect(centime(948 * (centime(ca / 948) - 89.6))).toBe(2_512.2);
+    expect(champJuste("2 512,20", panier)).toBe(true);
+    expect(champJuste("2 509,20", panier)).toBe(true);
+    expect(champJuste("2 150", panier)).toBe(false);
+    expect(champJuste("2 520", panier)).toBe(false);
 
     expect(FEVRIER_A_REBOURS).toEqual({ realisation: 0.97, entrees: 3_700, transformation: 0.25 });
     const caFevrier = centime(objectif * 0.97);

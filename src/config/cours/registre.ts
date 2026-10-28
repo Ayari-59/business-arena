@@ -166,7 +166,7 @@ export const PARCOURS: readonly Parcours[] = [
     formation: "bts-mco",
     titre: "BTS MCO · Gérer un point de vente",
     resume:
-      "La gestion opérationnelle d'une unité commerciale, puis l'animation de l'offre et le management de l'équipe : les calculs du magasin, sur les chiffres de l'arène.",
+      "La gestion opérationnelle d'une unité commerciale, puis l'animation de l'offre et le management de l'équipe : les calculs du magasin, sur les chiffres de la simulation du cours.",
     publics: { 2: "BTS MCO, 1re année", 3: "BTS MCO", 4: "BTS MCO, 2e année" },
   },
   {
@@ -174,7 +174,7 @@ export const PARCOURS: readonly Parcours[] = [
     formation: "bts-ndrc",
     titre: "BTS NDRC · Négocier et développer la relation client",
     resume:
-      "La négociation, la valeur d'un client et le pilotage de l'activité commerciale : ce qu'une affaire, un client, une campagne ou un canal rapporte, sur les chiffres de l'arène.",
+      "La négociation, la valeur d'un client et le pilotage de l'activité commerciale : ce qu'une affaire, un client, une campagne ou un canal rapporte, sur les chiffres de la simulation du cours.",
     publics: { 2: "BTS NDRC, 1re année", 3: "BTS NDRC", 4: "BTS NDRC, 2e année" },
   },
   {
@@ -190,7 +190,7 @@ export const PARCOURS: readonly Parcours[] = [
     formation: "stmg",
     titre: "Bac STMG · Gestion et finance",
     resume:
-      "Le compte de résultat, le bilan, la valeur créée, la rentabilité, la trésorerie et le financement : lire les comptes d'une entreprise, sur son année dans l'arène, au niveau du lycée.",
+      "Le compte de résultat, le bilan, la valeur créée, la rentabilité, la trésorerie et le financement : lire les comptes d'une entreprise, sur son année dans la simulation du cours, au niveau du lycée.",
     publics: { 1: "Terminale STMG, gestion et finance" },
   },
   {
@@ -206,14 +206,14 @@ export const PARCOURS: readonly Parcours[] = [
     formation: "bts-gpme",
     titre: "BTS GPME · Gérer la PME",
     resume:
-      "Les fournisseurs et les clients, les risques, le personnel et l'outil : les décisions de gestion d'une PME, chiffrées dans l'arène qui les rejoue.",
+      "Les fournisseurs et les clients, les risques, le personnel et l'outil : les décisions de gestion d'une PME, chiffrées dans la simulation du cours.",
     publics: { 2: "BTS GPME, 1re année", 3: "BTS GPME, 2e année" },
   },
   {
     code: "strategie",
     titre: "Stratégie et management",
     resume:
-      "Le diagnostic, les objectifs, les choix face aux concurrents, la croissance et la responsabilité sociétale : les décisions de direction, chiffrées dans l'arène qui les rejoue.",
+      "Le diagnostic, les objectifs, les choix face aux concurrents, la croissance et la responsabilité sociétale : les décisions de direction, chiffrées dans la simulation du cours.",
   },
   {
     code: "seconde-mg",
@@ -236,14 +236,14 @@ export const PARCOURS: readonly Parcours[] = [
     formation: "bts-mhr",
     titre: "BTS MHR · Gérer un restaurant et un hôtel",
     resume:
-      "Le coût matière et le prix d'un plat, le taux d'occupation et le revenu par chambre, la productivité du service, le prix selon la saison : les calculs du restaurant et de l'hôtel de l'arène.",
+      "Le coût matière et le prix d'un plat, le taux d'occupation et le revenu par chambre, la productivité du service, le prix selon la saison : les calculs du restaurant et de l'hôtel de la simulation du cours.",
     publics: { 2: "BTS MHR, 1re année", 3: "BTS MHR, 2e année" },
   },
   {
     code: "fiscalite",
     titre: "Fiscalité de l'entreprise",
     resume:
-      "La TVA collectée, déductible et à payer, ce qu'elle fait à la trésorerie, l'impôt sur les sociétés et le déficit reporté : ce que l'arène calcule et déclare, trimestre après trimestre.",
+      "La TVA collectée, déductible et à payer, ce qu'elle fait à la trésorerie, l'impôt sur les sociétés et le déficit reporté : ce que l'entreprise calcule et déclare, trimestre après trimestre, dans la simulation du cours.",
   },
   {
     code: "logistique",
@@ -258,7 +258,7 @@ export const PARCOURS: readonly Parcours[] = [
     formation: "dscg",
     titre: "DSCG · Finance",
     resume:
-      "Actualiser les flux d'un investissement, choisir entre deux projets, lire l'effet de levier de la dette, mesurer la valeur créée : la finance d'entreprise sur les investissements et les comptes de l'arène.",
+      "Actualiser les flux d'un investissement, choisir entre deux projets, lire l'effet de levier de la dette, mesurer la valeur créée : la finance d'entreprise sur les investissements et les comptes de la simulation du cours.",
     publics: { 4: "DSCG, UE2 Finance" },
   },
   {

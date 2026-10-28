@@ -3,6 +3,7 @@ import { auCentime } from "../../../../pedagogy/cours/etats";
 import { accord } from "../../accords";
 import type { Cas } from "../../cas";
 import { DISTRIBUTIONS, canauxDeDistribution } from "../../chapitres/canaux-de-distribution";
+import { DELAI_MAXIMAL_CONVENU } from "../../monde/delais-et-tva";
 import { JOURS_PAR_AN } from "../../remises";
 import type { Situation } from "../types";
 
@@ -17,7 +18,11 @@ import type { Situation } from "../types";
  * délai demandé, le coût de l'intermédiaire par unité, puis la marge qui reste.
  *
  * Le cas est neuf par sa question : le chapitre chiffre le canal tel qu'il est, le cas
- * chiffre une condition que l'intermédiaire veut changer. Le trimestre, la commission, le
+ * chiffre une condition que l'intermédiaire veut changer. Et il fait vérifier la loi : entre
+ * professionnels, le délai convenu ne peut pas dépasser 60 jours après la facture (code de commerce,
+ * article L. 441-10). Chez PIXEL & CO, la place de marché passe de 30 à 60 jours : c'est permis, et la
+ * réponse pèse le coût. Chez NOVA, CampusTech paie déjà à 60 jours : 90 jours ne se signent pas, quoi
+ * que dise le calcul, et la réponse le rappelle. Le trimestre, la commission, le
  * délai et le taux de financement sont ceux du chapitre (`canauxDeDistribution`) ; le coût
  * variable d'une unité, celui du mois du cas (`cas.ts`).
  */
@@ -39,6 +44,7 @@ export function intermediairePaiePlusTard(c: Cas) {
   const du = k.intermediaire.chiffreDAffaires - k.intermediaire.commission;
   const ttc = auCentime(du * (1 + k.tva));
   const delaiDemande = k.delai + JOURS_DEMANDES_EN_PLUS;
+  const plafond = DELAI_MAXIMAL_CONVENU.joursDeLaFacture;
   // Même calcul que le chapitre : l'attente se finance, taxes comprises, au taux de l'emprunt.
   const coutDuDelaiDemande = auCentime((du * (1 + k.tva) * c.pret.tauxAnnuel * delaiDemande) / JOURS_PAR_AN);
   const coutParUniteApres = auCentime((k.intermediaire.commission + coutDuDelaiDemande) / k.intermediaire.ventes);
@@ -49,6 +55,9 @@ export function intermediairePaiePlusTard(c: Cas) {
     du,
     ttc,
     delaiDemande,
+    plafond,
+    /** Le délai demandé reste-t-il dans ce que la loi permet de convenir entre professionnels ? */
+    permis: delaiDemande <= plafond,
     coutDuDelaiDemande,
     surcout: auCentime(coutDuDelaiDemande - k.coutDuDelai),
     coutParUniteApres,
@@ -69,12 +78,13 @@ export const L_INTERMEDIAIRE_VEUT_PAYER_PLUS_TARD: Situation = {
   commanditaire: "Le responsable commercial",
   titre: "L'intermédiaire veut payer plus tard",
   accroche:
-    "À la renégociation, l'intermédiaire demande un mois de délai en plus. Ce que ces jours coûteraient, et ce qui resterait d'une vente passée par lui.",
+    "À la renégociation, l'intermédiaire demande un mois de délai en plus. Ce que ces jours coûteraient, ce qui resterait d'une vente passée par lui, et si la loi le permet.",
   objectifs: [
     "Calculer le montant qu'un intermédiaire doit à l'entreprise",
     "Chiffrer le coût d'un délai de paiement, et d'un délai plus long",
     "Calculer le coût d'un intermédiaire par unité vendue",
     "Mesurer la marge qui reste sur une vente passée par un intermédiaire",
+    "Vérifier qu'un délai de paiement respecte le plafond légal entre professionnels",
     "Rédiger une réponse chiffrée au responsable commercial",
   ],
   libre: false,
@@ -90,8 +100,8 @@ export const L_INTERMEDIAIRE_VEUT_PAYER_PLUS_TARD: Situation = {
       texte: (c) => {
         const r = intermediairePaiePlusTard(c);
         return [
-          `« Notre intermédiaire renégocie son contrat : il veut nous payer à ${qte(r.delaiDemande)} jours au lieu de ${qte(r.k.delai)}. Avant de répondre, je veux savoir ce que ces ${qte(JOURS_DEMANDES_EN_PLUS)} jours coûteraient à ${c.entreprise} sur un trimestre comme celui de son record de ventes, et ce qu'il nous resterait d'une vente passée par lui. »`,
-          "Pas de cours cette fois : vous avez les chiffres du canal, et les calculs sont ceux du chapitre. L'année se compte sur 360 jours.",
+          `« Notre intermédiaire renégocie son contrat : il veut nous payer à ${qte(r.delaiDemande)} jours au lieu de ${qte(r.k.delai)}. Avant de répondre, je veux savoir si la loi le permet, ce que ces ${qte(JOURS_DEMANDES_EN_PLUS)} jours coûteraient à ${c.entreprise} sur un trimestre comme celui de son record de ventes, et ce qu'il nous resterait d'une vente passée par lui. »`,
+          `Pas de cours cette fois : vous avez les chiffres du canal, et les calculs sont ceux du chapitre. L'année se compte sur 360 jours. Un repère de droit : entre professionnels, le délai de paiement convenu ne peut pas dépasser ${qte(r.plafond)} jours après la facture (code de commerce, article L. 441-10).`,
         ];
       },
       tableau: (c) => {
@@ -186,12 +196,22 @@ export const L_INTERMEDIAIRE_VEUT_PAYER_PLUS_TARD: Situation = {
       question: () => "Quelle phrase envoyez-vous au responsable commercial ?",
       options: (c) => {
         const r = intermediairePaiePlusTard(c);
+        const parLaLoi = {
+          texte: `Refusons : la loi plafonne le délai convenu à ${qte(r.plafond)} jours`,
+          juste: !r.permis,
+          retour: r.permis
+            ? `Non : ${qte(r.delaiDemande)} jours restent dans le plafond de ${qte(r.plafond)} jours après la facture (code de commerce, article L. 441-10). La loi le permet ; reste à peser le coût : ${eur(r.surcout)} de plus sur le trimestre, et ${eur(r.margeQuiReste)} de marge par vente.`
+            : `Oui : entre professionnels, le délai convenu ne peut pas dépasser ${qte(r.plafond)} jours après la facture (code de commerce, article L. 441-10). ${qte(r.delaiDemande)} jours ne se signent pas, même si chaque vente garderait ${eur(r.margeQuiReste)} de marge et que les ${qte(JOURS_DEMANDES_EN_PLUS)} jours ne coûteraient que ${eur(r.surcout)} de plus sur le trimestre.`,
+        };
         return [
           {
             texte: `Acceptable : chaque vente garderait ${eur(r.margeQuiReste)} de marge`,
-            juste: true,
-            retour: `Oui : les ${qte(JOURS_DEMANDES_EN_PLUS)} jours coûtent ${eur(r.surcout)} de plus sur le trimestre, et l'intermédiaire passe à ${eur(r.coutParUniteApres)} par ${c.unite}. Sur ${eur(r.margeUnitaire)} de marge, il en reste ${eur(r.margeQuiReste)} : le canal reste rentable.`,
+            juste: r.permis,
+            retour: r.permis
+              ? `Oui : ${qte(r.delaiDemande)} jours restent dans le plafond légal de ${qte(r.plafond)} jours. Les ${qte(JOURS_DEMANDES_EN_PLUS)} jours coûtent ${eur(r.surcout)} de plus sur le trimestre, et l'intermédiaire passe à ${eur(r.coutParUniteApres)} par ${c.unite}. Sur ${eur(r.margeUnitaire)} de marge, il en reste ${eur(r.margeQuiReste)} : le canal reste rentable.`
+              : `Non : le canal resterait rentable, mais la loi plafonne le délai convenu entre professionnels à ${qte(r.plafond)} jours après la facture (code de commerce, article L. 441-10). Un contrat à ${qte(r.delaiDemande)} jours n'est pas permis, quelle que soit la marge.`,
           },
+          parLaLoi,
           {
             texte: `Refusons : ${qte(JOURS_DEMANDES_EN_PLUS)} jours de plus coûteraient ${eur(r.surcoutSurUnAn)} par trimestre`,
             juste: false,

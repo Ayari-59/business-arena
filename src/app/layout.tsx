@@ -70,7 +70,7 @@ import { paletteDuSite } from "@/config/theme-du-site";
 import { feuilleDePalette } from "@/config/palettes";
 import { getPlatformConfig } from "@/services/admin.service";
 import { SITE_URL } from "@/config/site";
-import { DESCRIPTION_ACCUEIL, GABARIT_DE_TITRE, NOM_DU_SITE, TITRE_ACCUEIL } from "@/config/seo";
+import { DESCRIPTION_ACCUEIL, GABARIT_DE_TITRE, OPEN_GRAPH_DU_SITE, TITRE_ACCUEIL } from "@/config/seo";
 
 /**
  * Les métadonnées communes. Chaque page donne son titre propre, que le
@@ -81,7 +81,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: TITRE_ACCUEIL, template: GABARIT_DE_TITRE },
   description: DESCRIPTION_ACCUEIL,
-  openGraph: { siteName: NOM_DU_SITE, locale: "fr_FR", type: "website", url: SITE_URL },
+  openGraph: OPEN_GRAPH_DU_SITE,
   twitter: { card: "summary_large_image" },
   appleWebApp: {
     capable: true,

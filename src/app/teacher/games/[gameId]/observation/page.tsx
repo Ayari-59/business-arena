@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import { getSession } from "@/lib/session";
 import { getObservationSeance, type ObservationTour } from "@/services/observation.service";
 import { Tiroir } from "@/components/tiroir";
@@ -111,7 +112,7 @@ export default async function ObservationPage({
   params: Promise<{ gameId: string }>;
 }) {
   const session = await getSession();
-  if (!session) redirect("/teacher/login");
+  if (!session) redirect(await connexionPourLaPageDemandee());
   const { gameId } = await params;
   const seance = await getObservationSeance(gameId, session.userId);
   if (!seance) notFound();

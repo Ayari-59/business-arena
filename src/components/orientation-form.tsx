@@ -3,12 +3,8 @@
 import { bouton } from "@/components/bouton";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import {
-  diplomesProposes,
-  OBJECTIFS,
-  recommander,
-  type Semestre,
-} from "@/config/orientation";
+import type { Semestre, VueDOrientation } from "@/config/orientation";
+import { lireLaRecommandation } from "@/lib/orientation-vue";
 import { PERIODICITY_LABELS } from "@/config/scenarios/periodicity";
 import {
   envoyerDemandeOrientationAction,
@@ -36,11 +32,18 @@ const ETAT_INITIAL: OrientationFormState = {
 };
 
 export function OrientationForm({
+  vue,
   initial = ETAT_INITIAL,
 }: {
+  /**
+   * Les diplômes, les objectifs et toutes les recommandations, calculés par le
+   * serveur (`vueDOrientation`) : le client n'importe pas les ateliers ni les
+   * scénarios, qui portent les corrigés.
+   */
+  vue: VueDOrientation;
   initial?: OrientationFormState;
 }) {
-  const diplomes = diplomesProposes();
+  const diplomes = vue.diplomes;
   const { state, formAction, pending, formRef, guardError } = useGuardedAction(
     envoyerDemandeOrientationAction,
     initial,
@@ -92,8 +95,8 @@ export function OrientationForm({
 
   const reco = useMemo(
     () =>
-      complet ? recommander({ diplome, semestre: semestre!, objectif }) : null,
-    [complet, diplome, semestre, objectif],
+      complet ? lireLaRecommandation(vue, { diplome, semestre: semestre!, objectif }) : null,
+    [complet, vue, diplome, semestre, objectif],
   );
   const periodiciteLabel = reco
     ? PERIODICITY_LABELS[reco.periodicite].singular.toLowerCase()
@@ -211,7 +214,7 @@ export function OrientationForm({
             <option value="" disabled>
               Choisir un objectif…
             </option>
-            {OBJECTIFS.map((o) => (
+            {vue.objectifs.map((o) => (
               <option key={o.code} value={o.code}>
                 {o.libelle}
               </option>

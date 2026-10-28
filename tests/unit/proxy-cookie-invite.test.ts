@@ -32,10 +32,19 @@ describe("proxy du cookie invité", () => {
   });
 
   it("ne tourne que sur les pages de jeu, et seulement avec le cookie", () => {
-    const sources = config.matcher.map((m) => m.source);
-    expect(sources).toEqual(["/", "/jouer", "/profile", "/reprendre", "/arena/:path*"]);
-    for (const m of config.matcher) {
-      expect(m.has).toEqual([{ type: "cookie", key: COOKIE_INVITE }]);
+    // Le proxy sert aussi l'espace enseignant (retour après connexion) et les
+    // adresses à barre oblique inverse : ces entrées-là ne renouvellent rien.
+    const jeu = config.matcher.filter((m) => "has" in m);
+    expect(jeu.map((m) => m.source)).toEqual(["/", "/jouer", "/profile", "/reprendre", "/arena/:path*"]);
+    for (const m of jeu) {
+      expect((m as { has: unknown }).has).toEqual([{ type: "cookie", key: COOKIE_INVITE }]);
     }
+  });
+
+  it("ne renouvelle pas le cookie sous /teacher", () => {
+    const r = proxy(
+      new NextRequest("https://exemple.test/teacher", { headers: { cookie: `${COOKIE_INVITE}=abc.def` } }),
+    );
+    expect(r.headers.get("set-cookie")).toBeNull();
   });
 });

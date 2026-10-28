@@ -495,6 +495,7 @@ export const INSTANCES_DE_REPLI: readonly InstanceDeRepli[] = [
     "Composition des équipes",
     "Questions posées dans les situations",
     "Situations manquées",
+    "Tuteur IA des élèves",
     "Planning de la partie",
     "Planning des tours",
     "Nommer cette partie",

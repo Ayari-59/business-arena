@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import { getSession } from "@/lib/session";
 import { getTeacherGames } from "@/services/game.service";
 import { getOrganizerCompetitions } from "@/services/competition.service";
@@ -58,6 +59,7 @@ import { listScenariosByAuthor } from "@/services/scenario-editor.service";
 import { resolveScenarioDefinition } from "@/services/scenario-source.service";
 import { CompetitionCreateForm } from "@/components/competition-create-form";
 import { GuardedForm } from "@/components/guarded-action";
+import { FormulaireDeDeconnexion } from "@/components/formulaire-de-deconnexion";
 import { EconomicParams } from "@/components/economic-params";
 import { SubmitButton } from "@/components/submit-button";
 import { FormPendingProgress } from "@/components/long-action-progress";
@@ -93,7 +95,7 @@ export default async function TeacherDashboard({
 }) {
   const { echec, offre, geste } = await searchParams;
   const session = await getSession();
-  if (!session) redirect("/teacher/login");
+  if (!session) redirect(await connexionPourLaPageDemandee());
   // LES NIVEAUX FERMÉS SANS LICENCE (config/vitrine-solo.ts) : visibles dans le choix du
   // niveau, marqués du nom de l'offre, et refusés par le serveur à la création.
   // L'ÉTAT DE L'OFFRE (PAR-13) : la ligne d'en-tête, et la règle de la classe (pas de
@@ -174,19 +176,19 @@ export default async function TeacherDashboard({
               >
                 Mon compte
               </Link>
-              <form action={logoutAction}>
+              <FormulaireDeDeconnexion action={logoutAction}>
                 <button className="text-sm text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline">
                   Se déconnecter
                 </button>
-              </form>
-              <form action={logoutEverywhereAction}>
+              </FormulaireDeDeconnexion>
+              <FormulaireDeDeconnexion action={logoutEverywhereAction}>
                 <button
                   className="text-sm text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline"
                   title="Ferme aussi les sessions ouvertes sur d'autres appareils"
                 >
                   Se déconnecter partout
                 </button>
-              </form>
+              </FormulaireDeDeconnexion>
             </>
           }
         />

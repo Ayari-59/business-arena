@@ -4,6 +4,9 @@ import type { Cas } from "../../cas";
 import { salaire } from "../../chapitres/salaire-brut-net-cout";
 import type { Situation } from "../types";
 
+/** « que » devant un nom, élidé devant une voyelle : qu'ATLAS CONSEIL. */
+const que = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈÊ]/.test(nom) ? `qu'${nom}` : `que ${nom}`);
+
 /**
  * CAS PRATIQUE DU CHAPITRE « DU SALAIRE BRUT AU COÛT POUR L'ENTREPRISE » : LA PRIME DE FIN
  * D'ANNÉE (Bac STMG, ressources humaines, palier 1).
@@ -84,7 +87,7 @@ export const LA_PRIME_DE_FIN_D_ANNEE: Situation = {
       type: "lecture",
       titre: "La demande de la direction",
       texte: (c) => [
-        `« Pour remercier l'équipe de son année, je veux consacrer ${pct(PART_DES_VENTES_EN_PRIME)} de nos ventes à une prime de fin d'année, la même pour chacun. C'est tout ce que ${c.entreprise} dépensera, cotisations comprises. Avant de l'annoncer, dites-moi ce que chaque salarié touchera vraiment sur son compte. »`,
+        `« Pour remercier l'équipe de son année, je veux consacrer ${pct(PART_DES_VENTES_EN_PRIME)} de nos ventes à une prime de fin d'année, la même pour chacun. C'est tout ce ${que(c.entreprise)} dépensera, cotisations comprises. Avant de l'annoncer, dites-moi ce que chaque salarié touchera vraiment sur son compte. »`,
         "Pas de cours cette fois : vous avez les chiffres, et les taux sont ceux du chapitre. Le chemin, lui, se fait dans l'autre sens : vous partez du coût.",
       ],
       tableau: (c) => {

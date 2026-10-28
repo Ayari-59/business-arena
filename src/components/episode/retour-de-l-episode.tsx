@@ -7,6 +7,8 @@ import { LIEN_TARIFS } from "@/config/vitrine-solo";
 import type { Episode, PartieJouee } from "@/config/episodes/types";
 import { observer } from "@/pedagogy/profil/observations";
 import { competencesObservees, phrasesDeRobustesse } from "@/pedagogy/profil/retour";
+import { apercuDuProfil, MENTION_DE_L_APERCU } from "@/pedagogy/profil/apercu";
+import { SEUILS_DE_CONFIANCE } from "@/pedagogy/profil/profil";
 import { enregistrerPartieAction, type SuiteDeLaPartie } from "@/app/entreprises/episode/actions";
 
 /**
@@ -17,6 +19,11 @@ import { enregistrerPartieAction, type SuiteDeLaPartie } from "@/app/entreprises
  * troisième demande le profil : la partie est envoyée une fois au serveur,
  * qui la garde et répond par le prochain épisode à jouer. Si le serveur ne
  * répond pas, le bilan reste entier ; seule la suite manque.
+ *
+ * L'APERÇU DU PROFIL (audit P0-2, décision du propriétaire) : une démonstration jouée
+ * sans licence, en Découverte, ne compte pas dans le profil. Un quatrième bloc montre
+ * alors les axes du profil calculés sur cette partie seule (`pedagogy/profil/apercu.ts`),
+ * dans le navigateur : rien n'est enregistré pour lui.
  */
 
 type Envoi = { etat: "attente" } | { etat: "fait"; suite: SuiteDeLaPartie };
@@ -36,14 +43,22 @@ export function RetourDeLEpisode({
   ep,
   partie,
   cle,
+  sansLicence = false,
 }: {
   ep: Episode;
   partie: PartieJouee;
   cle: string | null;
+  /** Aucune licence ne couvre cet épisode : une partie en Découverte reçoit l'aperçu du profil. */
+  sansLicence?: boolean;
 }) {
   const { mesures, observations } = useMemo(() => observer(ep, partie), [ep, partie]);
   const robustesse = useMemo(() => phrasesDeRobustesse(ep, mesures), [ep, mesures]);
   const observees = useMemo(() => competencesObservees(observations), [observations]);
+  const avecApercu = sansLicence && partie.niveau === "decouverte";
+  const apercu = useMemo(
+    () => (avecApercu ? apercuDuProfil(ep, partie) : null),
+    [avecApercu, ep, partie],
+  );
 
   const [envoi, setEnvoi] = useState<Envoi>({ etat: "attente" });
   const envoyee = useRef<string | null>(null);
@@ -101,6 +116,51 @@ export function RetourDeLEpisode({
           : ni une note de la personne, ni une mesure de son potentiel.
         </p>
       </section>
+
+      {apercu && (
+        <section
+          aria-labelledby="apercu-titre"
+          className="carte grid scroll-mt-24 gap-3 p-5"
+          data-apercu-du-profil=""
+        >
+          <h2 id="apercu-titre" className="text-lg font-bold text-slate-50">
+            Aperçu de votre profil décisionnel
+          </h2>
+          <p className="max-w-3xl text-sm leading-relaxed text-slate-300">
+            Les axes du profil, calculés sur cet épisode seul. Une démonstration jouée en
+            Découverte ne compte pas dans le profil : cet aperçu n&apos;est gardé nulle part.
+          </p>
+          <ul className="grid max-w-3xl gap-2 text-sm leading-relaxed text-slate-300">
+            {apercu.competences.map((l) => (
+              <li key={l.competence.code}>
+                <span className="font-semibold text-slate-100">
+                  {l.competence.nom}
+                  {l.score != null ? ` : ${l.score}/100` : ""}.
+                </span>{" "}
+                {l.preuve}
+              </li>
+            ))}
+          </ul>
+          <ul className="grid max-w-3xl gap-2 text-sm leading-relaxed text-slate-300">
+            <li>
+              <span className="font-semibold text-slate-100">Robustesse.</span>{" "}
+              {apercu.robustesse.phrase}
+            </li>
+            <li>
+              <span className="font-semibold text-slate-100">Prise de risque.</span>{" "}
+              {apercu.risque.phrase}
+            </li>
+          </ul>
+          <p className="max-w-3xl text-sm text-slate-400">
+            Sur un seul épisode, un score n&apos;a pas encore de marge : le profil n&apos;en donne
+            qu&apos;à partir de {SEUILS_DE_CONFIANCE.indicatif.episodes} épisodes, et ne mesure une
+            progression qu&apos;en comparant les premiers épisodes joués aux plus récents.
+          </p>
+          <p className="max-w-3xl text-sm font-semibold text-amber-200" data-mention-de-l-apercu="">
+            {MENTION_DE_L_APERCU}
+          </p>
+        </section>
+      )}
 
       <section aria-labelledby="ensuite-titre" className="carte grid scroll-mt-24 gap-3 p-5">
         <h2 id="ensuite-titre" className="text-lg font-bold text-slate-50">
@@ -182,7 +242,7 @@ export function RetourDeLEpisode({
                   · {suite.episodesComptes} épisodes y comptent
                 </span>
               </p>
-            ) : (
+            ) : avecApercu ? null : (
               <p className="text-sm text-slate-400">
                 Votre profil décisionnel s&apos;ouvre après deux épisodes joués en Standard ou en
                 Expert.

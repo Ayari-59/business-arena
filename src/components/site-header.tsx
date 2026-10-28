@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+// Le chemin normalisé : `/index` (régénération de l'accueil sur Vercel) vaut `/`.
+import { useCheminDeLaPage } from "@/lib/chemin-de-la-page";
 import { useEffect, useRef, useState } from "react";
 import { InstallButton } from "@/components/install-button";
 import { bouton } from "@/components/bouton";
@@ -55,7 +56,7 @@ import {
  * le menu.
  */
 export function SiteHeader() {
-  const chemin = usePathname();
+  const chemin = useCheminDeLaPage();
   const [ouvert, setOuvert] = useState(false);
   // Les groupes du plan sont repliés, sauf le premier, orientation et contact,
   // qui porte l'action principale : à l'ouverture, le menu tient sur ses deux

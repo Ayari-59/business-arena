@@ -64,6 +64,7 @@ export async function generateMetadata({
   return {
     title: `${a.titre} · ${publicDeLAtelier(a)}`,
     description: a.resume,
+    alternates: { canonical: `/animations/${a.code}` },
   };
 }
 

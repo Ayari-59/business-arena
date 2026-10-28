@@ -358,6 +358,20 @@
       "when": 1791527757440,
       "tag": "0049_offres_cours_et_examen",
       "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1793198762176,
+      "tag": "0050_rgpd_et_tuteur",
+      "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1793285162176,
+      "tag": "0051_prestations_sur_devis",
+      "breakpoints": true
     }
   ]
 }

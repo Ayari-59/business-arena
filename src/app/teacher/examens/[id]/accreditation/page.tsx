@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import { getSession } from "@/lib/session";
 import { grilleDeLExamen, suiviDeLExamen } from "@/services/examen.service";
 import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
@@ -77,7 +78,7 @@ const date = (d: Date) => d.toLocaleDateString("fr-FR", { day: "numeric", month:
 export default async function RapportDAccreditationPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await getSession();
-  if (!session) redirect("/teacher/login");
+  if (!session) redirect(await connexionPourLaPageDemandee());
   const suivi = await suiviDeLExamen(session.userId, id);
   if (!suivi) notFound();
   const { examen, notees } = suivi;

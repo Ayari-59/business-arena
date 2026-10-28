@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { usePathname } from "next/navigation";
+// Le chemin normalisé : `/index` (régénération de l'accueil sur Vercel) vaut `/`.
+import { useCheminDeLaPage } from "@/lib/chemin-de-la-page";
 import { ACTION_PRINCIPALE, NAVIGATION } from "@/config/navigation";
 import { bouton } from "@/components/bouton";
 
@@ -61,7 +62,7 @@ function variante(chemin: string | null): "general" | "enseignant" | null {
 }
 
 export function BarreDActionMobile() {
-  const chemin = usePathname();
+  const chemin = useCheminDeLaPage();
   const quoi = variante(chemin);
   // Côté serveur et à l'hydratation, la barre est « ouverte » : on lit le
   // stockage ensuite, sans désaccord de rendu.

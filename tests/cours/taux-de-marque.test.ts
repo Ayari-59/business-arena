@@ -16,6 +16,7 @@ import { L_ETIQUETTE_DU_CONCURRENT, PRIX_PROPOSE_PAR_LE_FACONNIER, etiquetteDuCo
 import type { Situation } from "../../src/config/cours/situations/types";
 import type { Chapitre, Etape, EtapeChoix, EtapeCurseur, EtapeMontants, EtapeSimulation, EtatDuCours } from "../../src/config/cours/types";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
+import { champJuste } from "../../src/pedagogy/cours/correcteur";
 import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
 
 /**
@@ -293,6 +294,16 @@ describe("taux de marque, taux de marge, coefficient : le pull col rond", () => 
       "Coefficient TTC de l'atelier local": centime((prix * 1.2) / 30.5),
     });
     expect([prix, centime(prix * 1.2), centime((prix * 1.2) / 30.5)]).toEqual([67.1, 80.52, 2.64]);
+    // La question donne le taux arrondi, 54,5 % : l'élève qui le garde trouve 30,50 ÷ 0,455 = 67,03 € HT et
+    // 80,44 € TTC. Sa réponse est juste ; une vraie erreur (le taux de marge, ou 60 %) reste refusée.
+    const champs = (ch.etapes.find((x) => x.id === "le-prix-du-plus-cher") as EtapeMontants).champs(cas, etatVide);
+    const champ = (libelle: string) => champs.find((x) => x.libelle === libelle)!;
+    expect([centime(30.5 / (1 - 0.545)), centime(centime(30.5 / (1 - 0.545)) * 1.2)]).toEqual([67.03, 80.44]);
+    expect(champJuste("67,03", champ("Prix de vente HT qui garde le taux de marque"))).toBe(true);
+    expect(champJuste("80,44", champ("Étiquette TTC"))).toBe(true);
+    expect(champJuste("67,10", champ("Prix de vente HT qui garde le taux de marque"))).toBe(true);
+    expect(champJuste("66,98", champ("Prix de vente HT qui garde le taux de marque"))).toBe(false);
+    expect(champJuste("76,25", champ("Prix de vente HT qui garde le taux de marque"))).toBe(false);
     // L'étiquette monte exactement comme le prix d'achat.
     expect(centime(80.52 / 66)).toBe(1.22);
   });

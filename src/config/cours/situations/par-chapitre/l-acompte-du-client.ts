@@ -2,7 +2,7 @@ import { montantEcrit as eur } from "../../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../../pedagogy/cours/etats";
 import type { Cas } from "../../cas";
 import { dateDuCours as date } from "../../dates";
-import { de, nomDuClient } from "../../provisions";
+import { de, delaiDuClientPro, nomDuClient } from "../../provisions";
 import type { Situation } from "../types";
 
 /**
@@ -34,6 +34,15 @@ const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractio
 const qte = (n: number) => n.toLocaleString("fr-FR");
 /** « à » devant un nom, contracté : au groupe, à la société, à l'agence. */
 const a = (nom: string) => (nom.startsWith("le ") ? `au ${nom.slice(3)}` : nom.startsWith("les ") ? `aux ${nom.slice(4)}` : `à ${nom}`);
+
+/**
+ * L'échéance du reste : « payable le 21 mars », ou, quand le client paie au-delà du délai convenu
+ * (plafonné à 60 jours entre professionnels), « payable le 20 mars, réglé en fait le 20 avril, en retard ».
+ */
+function echeanceDuReste(c: Cas) {
+  const d = delaiDuClientPro(c);
+  return d.retard > 0 ? `payable le ${date(d.echeanceConvenue)}, réglé en fait le ${date(d.paiement)}, en retard` : `payable le ${date(d.paiement)}`;
+}
 
 /** Les chiffres de la réponse, calculés une fois du cas. */
 export function acompteDuClient(c: Cas) {
@@ -99,7 +108,7 @@ export const L_ACOMPTE_DU_CLIENT: Situation = {
             { libelle: `Équipement « ${c.immobilisation.designation} », livré et payé à réception`, valeurs: [date(c.immobilisation.date), eur(c.immobilisation.ttc)] },
             { libelle: `Achat chez ${c.achat.fournisseur}, livré, payable le ${date(c.achat.echeance)}`, valeurs: [date(c.achat.date), eur(c.achat.ttc)] },
             { libelle: `Commande ${de(r.client)} : acompte de ${pct(ACOMPTE_A_LA_COMMANDE)}, versé à la commande`, valeurs: [date(r.commande), eur(r.acompte)] },
-            { libelle: `Livraison et facture ${a(r.client)}, le reste payable le ${date(c.venteCredit.echeance)}`, valeurs: [date(c.venteCredit.date), eur(c.venteCredit.ttc)] },
+            { libelle: `Livraison et facture ${a(r.client)}, le reste ${echeanceDuReste(c)}`, valeurs: [date(c.venteCredit.date), eur(c.venteCredit.ttc)] },
             { libelle: "Salaires nets, versés aux salariés", valeurs: [date(c.personnel.date), eur(c.personnel.net)] },
             { libelle: `Cotisations sociales de janvier, à verser à l'URSSAF le ${date(c.personnel.dateUrssaf)}`, valeurs: [date(c.personnel.date), eur(r.cotisations)] },
             { libelle: "Ventes au comptant du mois, encaissées", valeurs: [date(c.venteComptant.date), eur(c.venteComptant.ttc)] },
@@ -149,7 +158,10 @@ export const L_ACOMPTE_DU_CLIENT: Situation = {
             libelle: `Reste de la facture ${de(r.client)}`,
             montant: r.solde,
             categorie: "apres",
-            pourquoi: `Livré le ${date(c.venteCredit.date)}, le client paie le reste le ${date(c.venteCredit.echeance)} : l'argent suit le flux réel.`,
+            pourquoi:
+              delaiDuClientPro(c).retard > 0
+                ? `Livré le ${date(c.venteCredit.date)}, le client devait payer le reste le ${date(delaiDuClientPro(c).echeanceConvenue)} ; il le paie en fait le ${date(c.venteCredit.echeance)}, en retard : l'argent suit le flux réel.`
+                : `Livré le ${date(c.venteCredit.date)}, le client paie le reste le ${date(c.venteCredit.echeance)} : l'argent suit le flux réel.`,
           },
           { libelle: "Ventes au comptant", montant: c.venteComptant.ttc, categorie: "ensemble", pourquoi: "Les clients paient sur-le-champ : le flux réel et le flux financier tombent ensemble." },
         ];

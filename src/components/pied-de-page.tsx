@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+// Le chemin normalisé : `/index` (régénération de l'accueil sur Vercel) vaut `/`.
+import { useCheminDeLaPage } from "@/lib/chemin-de-la-page";
 import { BrandMark } from "@/components/brand-mark";
 import {
   ACTION_PRINCIPALE,
@@ -49,7 +50,7 @@ import { VENDEUR } from "@/config/editeur";
  * désignent des paliers d'une échelle que le thème clair renverse.
  */
 export function PiedDePage() {
-  const chemin = usePathname();
+  const chemin = useCheminDeLaPage();
 
   // L'année est lue au rendu, donc à la compilation pour la page servie et à
   // l'hydratation pour celle du navigateur. Les deux disent la même chose sauf

@@ -7,6 +7,8 @@ import { generate, resolveAiSurface, type AiTurn } from "@/services/ai.service";
 import { COACH_SYSTEM, TUTOR_SYSTEM } from "@/config/ai";
 import { formatEuro } from "@/lib/format";
 import type { GameView } from "@/services/game.service";
+import { rendreUneQuestion, reserverUneQuestion } from "@/services/tuteur.service";
+import { lireLEntreeDuTuteur } from "@/lib/entree-du-tuteur";
 
 export type AiResult = { ok: true; text: string } | { ok: false; reason: string };
 
@@ -72,17 +74,27 @@ export async function tutorChatAction(
   history: AiTurn[],
   question: string,
 ): Promise<AiResult> {
-  const q = question.trim();
-  if (!q) return { ok: false, reason: "Posez une question." };
+  // Bornes et rôles vérifiés avant tout (audit, P2-5) : une action serveur reçoit
+  // ce que le navigateur veut bien envoyer, pas ce que son type annonce.
+  const lu = lireLEntreeDuTuteur(history, question);
+  if (!lu.ok) return { ok: false, reason: lu.reason };
+  const q = lu.entree.question;
   const g = await guard(gameId, "tutor");
   if ("error" in g) return { ok: false, reason: g.error };
+  // RGPD ET IA (services/tuteur.service.ts) : l'interrupteur de la partie, posé par
+  // l'enseignant, et le quota de l'élève, vérifiés ici avant tout envoi à Anthropic.
+  const eleve = await getGuestUserId();
+  if (!eleve) return { ok: false, reason: INDISPO };
+  const reserve = await reserverUneQuestion(gameId, eleve);
+  if (!reserve.ok) return { ok: false, reason: reserve.reason };
   // Historique borné (6 derniers échanges) pour maîtriser le coût.
-  const passe = history.slice(-6).filter((m) => m.content.trim().length > 0);
+  const passe = lu.entree.history.slice(-6).filter((m) => m.content.trim().length > 0);
   const text = await generate({
     system: `${TUTOR_SYSTEM}\n\nÉtat de la partie de l'élève :\n${buildContext(g.view)}`,
     model: g.model,
     maxTokens: 600,
     messages: [...passe, { role: "user", content: q }],
   });
+  if (!text) await rendreUneQuestion(gameId, eleve);
   return text ? { ok: true, text } : { ok: false, reason: "L'IA n'a pas répondu, réessayez." };
 }

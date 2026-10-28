@@ -224,6 +224,8 @@ describe("la remise du grand compte", () => {
   it("la remise se prend sur la marge, le délai sur le résultat, et le client vaut huit affaires", () => {
     for (const code of NEGOCIATIONS) {
       const { a, n, valeurDuClient, remiseSurLaDuree, verdict } = remiseDuGrandCompte(casDeLEntreprise(code));
+      // Le délai que le client exige ne dépasse jamais le délai maximal convenu entre professionnels.
+      expect(a.delai, code).toBe(Math.min(casDeLEntreprise(code).venteCredit.delai, 60));
       expect(auCentime(a.margeSansRemise - a.marge), code).toBe(a.remise);
       expect(auCentime(a.marge - a.coutDuCredit), code).toBe(a.resultatDeLAffaire);
       expect(valeurDuClient, code).toBe(auCentime(a.resultatDeLAffaire * COMMANDES_PROMISES));

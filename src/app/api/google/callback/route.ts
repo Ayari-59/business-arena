@@ -34,6 +34,7 @@ export async function GET(request: Request) {
     console.error(`[agenda] connexion échouée : ${r.error}`);
     return retour(r.error === "jeton_absent" ? "jeton_absent" : "echec");
   }
-  console.info(`[agenda] agenda Google connecté (${r.compte})`);
+  // Le compte relié est une adresse e-mail : elle n'a rien à faire dans les journaux (audit, P2-10).
+  console.info("[agenda] agenda Google connecté");
   return retour("connecte");
 }

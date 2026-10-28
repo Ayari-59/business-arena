@@ -5,8 +5,10 @@ import {
   diplomesProposes,
   OBJECTIFS,
   recommander,
+  vueDOrientation,
   type Semestre,
 } from "../../src/config/orientation";
+import { lireLaRecommandation } from "../../src/lib/orientation-vue";
 import { ATELIERS } from "../../src/config/ateliers";
 import { DIFFICULTY_PRESETS, LEGACY_PRESET } from "../../src/config/difficulty";
 import { SCENARIOS, scenarioByCode } from "../../src/config/scenarios/registry";
@@ -217,14 +219,27 @@ describe("orientation", () => {
 
   it("la page ne recopie ni les diplômes ni les objectifs", () => {
     const page = readFileSync("src/components/orientation-form.tsx", "utf-8");
-    expect(page).toContain("diplomesProposes()");
-    expect(page).toContain("OBJECTIFS");
+    // Les diplômes et les objectifs viennent de la vue préparée par le serveur
+    // (`vueDOrientation`, qui lit `diplomesProposes()` et `OBJECTIFS`) : le
+    // formulaire client n'importe plus ce module (audit, P1-2).
+    expect(page).toContain("vue.diplomes");
+    expect(page).toContain("vue.objectifs");
+    expect(readFileSync("src/config/orientation.ts", "utf-8")).toMatch(
+      /export function vueDOrientation[\s\S]*diplomesProposes\(\)[\s\S]*OBJECTIFS/,
+    );
     for (const a of ATELIERS) {
       const vise = publicDeLAtelier(a);
       expect(
         page,
         `« ${vise} » est écrit en dur dans le formulaire`,
       ).not.toContain(vise);
+    }
+  });
+
+  it("la vue envoyée au navigateur rend exactement ce que rend `recommander`", () => {
+    const vue = vueDOrientation();
+    for (const demande of COMBINAISONS) {
+      expect(lireLaRecommandation(vue, demande), JSON.stringify(demande)).toEqual(recommander(demande));
     }
   });
 });

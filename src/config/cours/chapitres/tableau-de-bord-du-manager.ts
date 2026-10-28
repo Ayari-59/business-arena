@@ -566,6 +566,7 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
       champs: (c) => {
         const x = tableauDeBordDuMois(c);
         const n1 = x.n1;
+        const effetAuPanierAffiche = auCentime(x.m.tickets * (x.panierN - x.panierN1));
         return [
           {
             libelle: "Effet du trafic",
@@ -582,8 +583,10 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
           {
             libelle: "Effet du panier",
             attendu: x.effetDuPanier,
-            tolerance: 0.5,
-            calcul: `${qte(x.m.tickets)} × (${eur(x.panierN)} − ${eur(x.panierN1)}) = ${eur(x.ca)} − ${qte(x.m.tickets)} × ${eur(x.panierN1)} = ${eur(x.effetDuPanier)}`,
+            // Le panier de N s'affiche au centime (87 450 € ÷ 948 = 92,247… €) : l'élève qui le multiplie par
+            // les passages trouve quelques euros de plus. Sa réponse est juste aussi : la tolérance couvre l'écart.
+            tolerance: auCentime(Math.max(0.5, Math.abs(effetAuPanierAffiche - x.effetDuPanier) + 0.01)),
+            calcul: `${eur(x.ca)} − ${qte(x.m.tickets)} × ${eur(x.panierN1)} = ${eur(x.effetDuPanier)} ; avec le panier arrondi, ${qte(x.m.tickets)} × (${eur(x.panierN)} − ${eur(x.panierN1)}) = ${eur(effetAuPanierAffiche)}, juste aussi`,
           },
         ];
       },

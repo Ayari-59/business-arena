@@ -154,7 +154,7 @@ export const L_AUGMENTATION_GENERALE: Situation = {
       champs: (c) => {
         const r = augmentationGenerale(c);
         return [
-          { libelle: "Ventes nécessaires", attendu: r.ventesNecessaires, tolerance: r.toleranceVentes, calcul: `${eur(r.masseApres)} ÷ ${pct(r.m.tauxDeFraisDePersonnel)} ≈ ${eur(r.m.ventes)} × (1 + ${pct(AUGMENTATION_GENERALE * 100)}) = ${eur(r.ventesNecessaires)}` },
+          { libelle: "Ventes nécessaires", attendu: r.ventesNecessaires, tolerance: r.toleranceVentes, calcul: `${eur(r.m.ventes)} × (1 + ${pct(AUGMENTATION_GENERALE * 100)}) = ${eur(r.ventesNecessaires)} ; avec le taux arrondi, ${eur(r.masseApres)} ÷ ${pct(r.m.tauxDeFraisDePersonnel)} = ${eur(Math.round((r.masseApres / (r.m.tauxDeFraisDePersonnel / 100)) * 100) / 100)}, juste aussi` },
           { libelle: "Ventes en plus", attendu: r.ventesEnPlus, tolerance: r.toleranceVentes, calcul: `${eur(r.ventesNecessaires)} − ${eur(r.m.ventes)} = ${eur(r.ventesEnPlus)}` },
         ];
       },

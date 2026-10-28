@@ -4,6 +4,7 @@ import { scenarioByCode } from "../../scenarios/registry";
 import { accord, accordPluriel } from "../accords";
 import { type Cas } from "../cas";
 import { anneeDuCours as anneeJouee } from "../monde/annee-du-cours";
+import { DELAI_MAXIMAL_CONVENU } from "../monde/delais-et-tva";
 import { JOURS_PAR_AN } from "../remises";
 import type { Chapitre } from "../types";
 
@@ -16,11 +17,20 @@ import type { Chapitre } from "../types";
  * canaux de l'entreprise, chiffre ce que coûte l'intermédiaire par unité, et pèse ce qu'il apporte.
  *
  * Deux entreprises de l'arène vendent par un intermédiaire : PIXEL & CO, par une place de marché
- * qui prélève une commission et reverse à trente jours ; NOVA, par une chaîne de magasins qui
- * paie à quatre-vingts jours et n'achète qu'à partir de la rentrée. Chacune est lue au trimestre
- * où son canal indirect vend le plus. La commission et le délai sont ceux du scénario, le taux
- * de financement celui de l'emprunt de l'entreprise. Aucune hypothèse n'est ajoutée.
+ * qui prélève une commission et reverse à trente jours ; NOVA, par une chaîne de magasins,
+ * CampusTech, qui n'achète qu'à partir de la rentrée. Chacune est lue au trimestre où son canal
+ * indirect vend le plus. La commission et le délai sont ceux du scénario, plafonnés au délai
+ * maximal convenu entre professionnels (`delaiDuCanal`), le taux de financement celui de
+ * l'emprunt de l'entreprise.
  */
+
+/**
+ * LE DÉLAI DU CANAL INDIRECT. Entre professionnels, le délai convenu ne peut pas dépasser 60 jours après
+ * la facture (code de commerce, article L. 441-10). DÉCISION DU PROPRIÉTAIRE : CampusTech paie NOVA à
+ * 60 jours, le délai convenu, et à l'heure ; le délai relevé sur l'arène (80 jours) est ramené à ce
+ * plafond. Celui de la place de marché de PIXEL & CO, 30 jours, reste tel quel.
+ */
+export const delaiDuCanal = (delaiDuScenario: number) => Math.min(delaiDuScenario, DELAI_MAXIMAL_CONVENU.joursDeLaFacture);
 
 /** Les entreprises qui vendent par un intermédiaire, et la clientèle qui passe par lui. */
 export const CANAUX_INDIRECTS = { ecommerce: "marketplace", nova: "campustech" } as const;
@@ -49,7 +59,7 @@ export function canauxDeDistribution(c: Cas) {
   };
   const direct = lire(segments.filter((s) => s.code !== indirect && (r.market.bySegment[s.code]?.sold ?? 0) >= 0.5).map((s) => s.code));
   const intermediaire = lire([indirect]);
-  const delai = seg.paymentDelayDays;
+  const delai = delaiDuCanal(seg.paymentDelayDays);
   const taux = c.pret.tauxAnnuel;
   const tva = c.venteCredit.tauxTva;
   // Le délai se finance sur ce que l'intermédiaire doit, taxes comprises : une vente de marchandises doit sa TVA dès la livraison.

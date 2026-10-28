@@ -7,6 +7,7 @@ import { codeDeReprisePlausible, normaliserCodeDeReprise } from "@/config/repris
 
 export const metadata: Metadata = {
   title: "Reprendre ma partie",
+  description: "Retrouvez vos parties en cours et reprenez là où vous vous étiez arrêté.",
   robots: { index: false, follow: false },
 };
 

@@ -96,9 +96,18 @@ export default async function EpisodesPage() {
               .join(", ")}
             . Six décisions, une vingtaine de minutes, trois niveaux de difficulté. À la fin, le
             bilan rejoue chacune de vos décisions sous les mêmes trente tirages au hasard, pour
-            séparer ce qui relevait du choix de ce qui relevait de la chance. Démonstration :
-            données fictives ; vos choix sont gardés sur cet appareil pour construire votre profil
-            décisionnel.
+            séparer ce qui relevait du choix de ce qui relevait de la chance. Données fictives.{" "}
+            {/* AUDIT P0-2 : sans licence, une démonstration en Découverte ne compte pas dans le
+                profil (pedagogy/profil/profil.ts) ; son bilan en montre un aperçu. */}
+            {acces.licence || (acces.niveauDesDemos ?? NIVEAU_DES_DEMOS) !== "decouverte" ? (
+              <>Vos choix sont gardés sur cet appareil pour construire votre profil décisionnel.</>
+            ) : (
+              <>
+                Sans licence, les démonstrations se jouent en {niveauDesDemos} et ne comptent pas
+                dans le profil décisionnel : leur bilan en montre un aperçu, calculé sur
+                l&apos;épisode joué. Avec une licence, chaque épisode enrichit votre profil.
+              </>
+            )}
           </p>
           <p className="mt-4">
             <Link

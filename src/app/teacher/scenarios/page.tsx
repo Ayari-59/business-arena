@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import { getSession } from "@/lib/session";
 import { listScenariosByAuthor, listSharedScenarios } from "@/services/scenario-editor.service";
 import { SCENARIOS, SECTOR_COLORS, SECTOR_LABELS } from "@/config/scenarios/registry";
@@ -48,7 +49,7 @@ export default async function TeacherScenariosPage({
 }) {
   const { echec } = await searchParams;
   const session = await getSession();
-  if (!session) redirect("/teacher/login");
+  if (!session) redirect(await connexionPourLaPageDemandee());
   const mine = await listScenariosByAuthor(session.userId);
   const shared = await listSharedScenarios(session.userId);
 

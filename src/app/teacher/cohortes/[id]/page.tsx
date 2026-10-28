@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import { getSession } from "@/lib/session";
 import { lienDInvitation, origineDeLaRequete } from "@/lib/origine";
 import { compter } from "@/lib/format";
@@ -69,7 +70,7 @@ export default async function MaCohortePage({
   searchParams: Promise<{ creee?: string; fait?: string }>;
 }) {
   const session = await getSession();
-  if (!session) redirect("/teacher/login");
+  if (!session) redirect(await connexionPourLaPageDemandee());
   const { id } = await params;
   const { creee, fait } = await searchParams;
   const [cohorte, staff, origine] = await Promise.all([

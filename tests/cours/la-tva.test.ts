@@ -427,8 +427,9 @@ describe("la déclaration de TVA", () => {
     expect(curseur(ch, "le-delai-qui-fait-le-credit")).toEqual({
       attendu: 18,
       sens: "plus-grande",
-      bornes: [0, 90],
-      droites: [collectee(0), 85_200, collectee(90), 85_200],
+      // Le curseur s'arrête au délai maximal convenu entre professionnels, 60 jours (art. L. 441-10).
+      bornes: [0, 60],
+      droites: [collectee(0), 85_200, collectee(60), 85_200],
       lecture: {
         "Encaissé des entreprises au printemps (HT)": (210_000 * 72) / 90 + (90_000 * 18) / 90,
         "TVA collectée du printemps": 85_200,
@@ -436,7 +437,7 @@ describe("la déclaration de TVA", () => {
         "TVA nette du printemps": 0,
       },
     });
-    expect([collectee(0), collectee(90)]).toEqual([90_000, 66_000]);
+    expect([collectee(0), collectee(60)]).toEqual([90_000, 74_000]);
   });
 
   it("le laboratoire de la déclaration : le printemps sans crédit, investissement gardé, par l'option pour les débits", () => {

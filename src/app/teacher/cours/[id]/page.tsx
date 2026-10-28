@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import { getSession } from "@/lib/session";
 import { getStaffContext } from "@/services/admin.service";
 import { classeDeLEnseignant } from "@/services/cours.service";
@@ -58,7 +59,7 @@ export default async function ClasseDuCoursPage({
 }) {
   const [{ id }, { chapitre: demande, creee, fait }] = await Promise.all([params, searchParams]);
   const session = await getSession();
-  if (!session) redirect("/teacher/login");
+  if (!session) redirect(await connexionPourLaPageDemandee());
   const choisi = chapitreParCode(demande ?? "") ?? CHAPITRES[0]!;
   const [lu, staff] = await Promise.all([
     /^[0-9a-f-]{36}$/.test(id) ? classeDeLEnseignant(session.userId, id, choisi.code) : null,

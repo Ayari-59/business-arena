@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import { getSession } from "@/lib/session";
 import { getScenarioById } from "@/services/scenario-editor.service";
 import { MODEL_QUESTION_ID } from "@/config/scenarios/situation-kit";
@@ -24,7 +25,7 @@ export default async function SituationEditorPage({
   const decoded = decodeURIComponent(code);
   const { ok, echec } = await searchParams;
   const session = await getSession();
-  if (!session) redirect("/teacher/login");
+  if (!session) redirect(await connexionPourLaPageDemandee());
   const loaded = await getScenarioById(id, session.userId);
   if (!loaded) notFound();
   const situation = loaded.definition.situations.find((s) => s.code === decoded);

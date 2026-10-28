@@ -2,6 +2,7 @@ import { auCentime } from "../../pedagogy/cours/etats";
 import { scenarioByCode } from "../scenarios/registry";
 import { type Cas } from "./cas";
 import { anneeDuCours as anneeJouee } from "./monde/annee-du-cours";
+import { DELAI_MAXIMAL_CONVENU } from "./monde/delais-et-tva";
 import { METIERS } from "./metiers";
 
 /**
@@ -51,8 +52,25 @@ export function nomDuClient(client: string): string {
   return m ? `le ${m[1]}` : court;
 }
 
-/** « de » devant un nom, contracté comme en français : du groupe, de la société, de l'agence. */
-export const de = (nom: string) => (nom.startsWith("le ") ? `du ${nom.slice(3)}` : nom.startsWith("les ") ? `des ${nom.slice(4)}` : `de ${nom}`);
+/** « de » devant un nom, contracté et élidé comme en français : du groupe, de la société, de l'agence, d'ATLAS CONSEIL. */
+export const de = (nom: string) =>
+  nom.startsWith("le ") ? `du ${nom.slice(3)}` : nom.startsWith("les ") ? `des ${nom.slice(4)}` : /^[aeiouyéèêAEIOUYÉÈÊ]/.test(nom) ? `d'${nom}` : `de ${nom}`;
+
+/** « à » devant un nom, contracté comme en français : au comité, aux laboratoires, à la société. */
+export const aNom = (nom: string) => (nom.startsWith("le ") ? `au ${nom.slice(3)}` : nom.startsWith("les ") ? `aux ${nom.slice(4)}` : `à ${nom}`);
+
+/**
+ * LE DÉLAI DU CLIENT PROFESSIONNEL, DIT HONNÊTEMENT. Entre professionnels, le délai convenu ne peut pas
+ * dépasser 60 jours après la facture (code de commerce, article L. 441-10). Le cas porte le jour où le
+ * client paie vraiment (`venteCredit.delai` et `venteCredit.echeance`) : quand il dépasse le plafond (le
+ * cabinet médical de MARTEL & FILS, à 90 jours), la facture porte le délai convenu, le plafond, et le
+ * client paie en retard. Jamais un délai plus long ne se dit convenu.
+ */
+export function delaiDuClientPro(c: Pick<Cas, "venteCredit">) {
+  const reel = c.venteCredit.delai;
+  const convenu = Math.min(reel, DELAI_MAXIMAL_CONVENU.joursDeLaFacture);
+  return { reel, convenu, retard: reel - convenu, echeanceConvenue: c.venteCredit.date + convenu, paiement: c.venteCredit.echeance };
+}
 
 /** La créance douteuse : sa dépréciation au 31 décembre, puis son dénouement l'année suivante. */
 export function creanceDouteuse(c: Cas) {

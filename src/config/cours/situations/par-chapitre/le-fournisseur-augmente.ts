@@ -5,6 +5,9 @@ import type { Cas } from "../../cas";
 import { prixCoutMarge } from "../../chapitres/prix-cout-marge";
 import type { Situation } from "../types";
 
+/** « que » devant un nom, élidé devant une voyelle : qu'ATLAS CONSEIL. */
+const que = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈÊ]/.test(nom) ? `qu'${nom}` : `que ${nom}`);
+
 /**
  * CAS PRATIQUE DU CHAPITRE « PRIX, COÛT ET MARGE » : LE FOURNISSEUR AUGMENTE SES PRIX
  * (contrôle de gestion, palier 1).
@@ -88,7 +91,7 @@ export const LE_FOURNISSEUR_AUGMENTE: Situation = {
       type: "lecture",
       titre: "La demande du gérant",
       texte: (c) => [
-        `« Notre fournisseur augmente ses prix de ${pct(HAUSSE_DES_ACHATS * 100)} le mois prochain. Je ne veux pas que ${c.entreprise} y perde : je veux garder le même taux de marque qu'aujourd'hui. À quel prix de vente moyen, hors taxes, faudra-t-il passer ? »`,
+        `« Notre fournisseur augmente ses prix de ${pct(HAUSSE_DES_ACHATS * 100)} le mois prochain. Je ne veux pas ${que(c.entreprise)} y perde : je veux garder le même taux de marque qu'aujourd'hui. À quel prix de vente moyen, hors taxes, faudra-t-il passer ? »`,
         "Pas de cours cette fois : vous avez les chiffres du mois, et la méthode est celle du chapitre. À vous de l'enchaîner.",
       ],
       tableau: (c) => {

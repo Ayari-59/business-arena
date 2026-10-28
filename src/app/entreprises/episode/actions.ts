@@ -4,9 +4,10 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getGuestUserId, getOrCreateGuestUserId, setGuestCookie } from "@/lib/guest";
-import { construireProfil } from "@/pedagogy/profil/profil";
+import { construireProfil, estUnObjectif } from "@/pedagogy/profil/profil";
 import {
   codeDeRepriseDuProfil,
+  cohorteParCode,
   quitterCohorte,
   rejoindreCohorte,
   reprendreProfil,
@@ -17,6 +18,7 @@ import type { CodeNiveau } from "@/config/episodes/niveaux";
 import { CONSEIL_SANS_LICENCE, ceQuOuvrentLesEpisodes } from "@/config/tarifs";
 import { EPISODES } from "@/pedagogy/episodes/registre";
 import { getSession } from "@/lib/session";
+import { gardeDesCodes } from "@/lib/garde-des-codes";
 import { accesAuxEpisodes, episodeOuvert, suitUneCohorte } from "@/services/acces.service";
 
 export interface SuiteDeLaPartie {
@@ -114,6 +116,13 @@ export async function effacerMesPartiesAction(): Promise<void> {
 
 /** Rejoindre la cohorte du lien d'invitation ; le code de reprise est attribué au passage. */
 export async function rejoindreCohorteAction(code: string): Promise<void> {
+  // LE CODE D'ABORD, L'INVITÉ ENSUITE (audit, P2-3) : un code inconnu ne crée plus de
+  // compte invité, et compte un échec pour l'adresse (lib/garde-des-codes.ts).
+  const garde = await gardeDesCodes();
+  if (garde.refus || !(await cohorteParCode(code))) {
+    if (!garde.refus) await garde.echec();
+    redirect(`/entreprises/episode/rejoindre?code=${encodeURIComponent(code)}&inconnu=1`);
+  }
   const userId = await getOrCreateGuestUserId();
   const r = await rejoindreCohorte(userId, code);
   // Une cohorte close refuse les nouveaux participants : la page le dit.
@@ -136,7 +145,10 @@ export async function quitterCohorteAction(): Promise<void> {
 
 /** Afficher son code de reprise, en le créant au premier appel. */
 export async function obtenirCodeDeRepriseAction(): Promise<void> {
-  const userId = await getOrCreateGuestUserId();
+  // Sans identité sur l'appareil, il n'y a pas de profil à reprendre : on ne crée
+  // pas un compte invité vide pour lui donner un code (audit, P2-3).
+  const userId = await getGuestUserId();
+  if (!userId) redirect("/entreprises/episode/profil");
   await codeDeRepriseDuProfil(userId, true);
   revalidatePath("/entreprises/episode/profil");
   redirect("/entreprises/episode/profil#reprise");
@@ -162,8 +174,11 @@ export async function reprendreProfilAction(
 
 /** Choisir la compétence à travailler ; « laisser le profil choisir » efface le choix. */
 export async function choisirObjectifAction(formData: FormData): Promise<void> {
-  const userId = await getOrCreateGuestUserId();
-  await choisirObjectif(userId, String(formData.get("objectif") ?? "") || null);
+  const objectif = String(formData.get("objectif") ?? "") || null;
+  // Une valeur inconnue ou « laisser le profil choisir » ne fait qu'effacer : sans
+  // identité sur l'appareil, il n'y a rien à effacer, et aucun compte invité à créer.
+  const userId = estUnObjectif(objectif) ? await getOrCreateGuestUserId() : await getGuestUserId();
+  if (userId) await choisirObjectif(userId, objectif);
   revalidatePath("/entreprises/episode/profil");
   redirect("/entreprises/episode/profil?objectif=1#suite");
 }

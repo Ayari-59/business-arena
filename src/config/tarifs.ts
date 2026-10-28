@@ -1,6 +1,7 @@
 import { ATELIERS } from "@/config/ateliers";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 import { NOMBRE_D_EPISODES } from "@/config/episodes/familles";
+import { FICHES as FICHES_DES_EPISODES } from "@/config/episodes/fiches";
 import { EPISODES_DE_DEMO, NIVEAU_DES_DEMOS } from "@/config/episodes/demos";
 import type { CodeNiveau } from "@/config/episodes/niveaux";
 import { QUI_FACTURE } from "@/config/editeur";
@@ -645,6 +646,8 @@ export function variablesDuCatalogue(d: ReglageDeLaDecouverte = DECOUVERTE_PAR_D
     demos: String(d.demos.length),
     niveauDesDemos: NIVEAUX_DES_EPISODES.find((n) => n.code === d.niveauDesDemos)?.nom ?? d.niveauDesDemos,
     episodes: String(NOMBRE_D_EPISODES),
+    /** Les fiches de débrief des épisodes : le registre (config/episodes/fiches), jamais un nombre écrit. */
+    fiches: String(FICHES_DES_EPISODES.length),
     ateliers: String(ATELIERS.length),
     ateliersReferentiel: String(ATELIERS_A_REFERENTIEL.length),
     diplomes: DIPLOMES_DES_ATELIERS.map((x) => x.sigle).join(", "),
@@ -921,15 +924,18 @@ export const OFFRES_PAR_DEFAUT: readonly OffreDuCatalogue[] = [
       },
       {
         nom: "Cohorte animée",
+        // AUDIT P1-11, décision du propriétaire (octobre 2026) : les prestations humaines
+        // (lancement, débrief animé, taille de la cohorte) se chiffrent au devis ; aucune
+        // n'est incluse d'office.
         inclus: [
-          "{managers} managers, {episodesMin} à {episodesMax} épisodes choisis, un code de cohorte.",
+          "Les épisodes choisis pour la cohorte, et un code de cohorte.",
           "La vue de l'animateur.",
-          "Une demi-journée de lancement, et un débrief animé à distance.",
+          "Sur devis : une cohorte de {managers} managers et de {episodesMin} à {episodesMax} épisodes, une demi-journée de lancement, un débrief animé à distance.",
         ],
       },
       {
         nom: "Organisme de formation",
-        inclus: ["Des animateurs sans limite, des cohortes à volonté.", "Le guide de débrief des {episodes} épisodes."],
+        inclus: ["Des animateurs sans limite, des cohortes à volonté.", "Le guide de débrief des {fiches} épisodes."],
       },
     ],
     modules: [{ module: "episodes" }],

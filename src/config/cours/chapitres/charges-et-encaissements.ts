@@ -3,7 +3,7 @@ import { auCentime } from "../../../pedagogy/cours/etats";
 import { type Cas } from "../cas";
 import { anneeDuCours as anneeJouee } from "../monde/annee-du-cours";
 import { dateDuCours as date } from "../dates";
-import { nomDuClient } from "../provisions";
+import { aNom, de, nomDuClient } from "../provisions";
 import type { Chapitre, TableauDeDonnees } from "../types";
 import { premierTrimestre } from "./les-flux";
 
@@ -56,7 +56,7 @@ export function resultatDuTrimestre(c: Cas) {
 function tableauDuResultat(c: Cas): TableauDeDonnees {
   const t = resultatDuTrimestre(c);
   return {
-    titre: `Le compte de résultat du premier trimestre de ${c.entreprise} dans l'arène`,
+    titre: `Le compte de résultat du premier trimestre ${de(c.entreprise)} dans l'arène`,
     colonnes: ["Produit", "Charge"],
     lignes: [{ libelle: "Ventes", valeurs: [eur(t.produits), ""] }, ...t.charges.map((l) => ({ libelle: l.libelle, valeurs: ["", eur(l.montant)] }))],
   };
@@ -89,7 +89,7 @@ export const CHARGES_ET_ENCAISSEMENTS: Chapitre = {
       titre: "Deux questions",
       notions: ["income_statement"],
       texte: (c) => [
-        `Chaque opération de ${c.entreprise} se regarde de deux façons.`,
+        `Chaque opération ${de(c.entreprise)} se regarde de deux façons.`,
         "D'abord : enrichit-elle ou appauvrit-elle l'entreprise ? Une vente l'enrichit : c'est un produit. Le loyer, les salaires, les achats consommés l'appauvrissent : ce sont des charges. Le résultat, c'est les produits moins les charges.",
         "Ensuite : fait-elle entrer ou sortir de l'argent, et quand ? Un encaissement, c'est de l'argent qui entre ; un décaissement, de l'argent qui sort. La trésorerie, c'est l'argent disponible.",
         "Les deux questions n'ont pas toujours la même réponse. C'est tout l'objet de ce chapitre.",
@@ -102,7 +102,7 @@ export const CHARGES_ET_ENCAISSEMENTS: Chapitre = {
       type: "tri",
       titre: "Charge, produit, ou ni l'un ni l'autre ?",
       notions: ["income_statement"],
-      question: (c) => `Voici le premier mois de ${c.entreprise}, hors taxes. Chaque opération est-elle une charge, un produit, ou ni l'un ni l'autre ?`,
+      question: (c) => `Voici le premier mois ${de(c.entreprise)}, hors taxes. Chaque opération est-elle une charge, un produit, ou ni l'un ni l'autre ?`,
       categories: [
         { code: "charge", libelle: "Charge" },
         { code: "produit", libelle: "Produit" },
@@ -120,7 +120,7 @@ export const CHARGES_ET_ENCAISSEMENTS: Chapitre = {
         { libelle: `Achat chez ${c.achat.fournisseur}`, montant: c.achat.ht, categorie: "charge", pourquoi: "Ce qui est acheté pour produire ou vendre se consomme : c'est une charge." },
         { libelle: "Loyer du mois", montant: c.loyer.montant, categorie: "charge", pourquoi: "Un mois d'occupation du local, consommé." },
         { libelle: "Salaires et cotisations patronales", montant: c.personnel.cout, categorie: "charge", pourquoi: "Le travail du mois : brut et cotisations patronales." },
-        { libelle: `Vente à ${nomDuClient(c.venteCredit.client)}`, montant: c.venteCredit.ht, categorie: "produit", pourquoi: "Une vente enrichit l'entreprise, même si le client paie plus tard." },
+        { libelle: `Vente ${aNom(nomDuClient(c.venteCredit.client))}`, montant: c.venteCredit.ht, categorie: "produit", pourquoi: "Une vente enrichit l'entreprise, même si le client paie plus tard." },
         { libelle: "Ventes au comptant", montant: c.venteComptant.ht, categorie: "produit", pourquoi: "Des ventes : un produit." },
       ],
       explication: () => [
@@ -132,7 +132,7 @@ export const CHARGES_ET_ENCAISSEMENTS: Chapitre = {
       type: "tri",
       titre: "De l'argent, ce mois-ci ?",
       notions: ["payment_terms"],
-      question: (c) => `Les mêmes opérations, taxes comprises cette fois : font-elles entrer de l'argent à la banque de ${c.entreprise} en janvier, en sortir, ou rien du tout ce mois-ci ?`,
+      question: (c) => `Les mêmes opérations, taxes comprises cette fois : font-elles entrer de l'argent à la banque ${de(c.entreprise)} en janvier, en sortir, ou rien du tout ce mois-ci ?`,
       categories: [
         { code: "encaissement", libelle: "Encaissement" },
         { code: "decaissement", libelle: "Décaissement" },
@@ -143,7 +143,7 @@ export const CHARGES_ET_ENCAISSEMENTS: Chapitre = {
         { libelle: "Prêt versé par la banque", montant: c.emprunt, categorie: "encaissement", pourquoi: "La banque verse les fonds : de l'argent entre, sans être un produit." },
         { libelle: "Équipement payé", montant: c.immobilisation.ttc, categorie: "decaissement", pourquoi: "Payé à l'achat : l'argent sort, sans être une charge." },
         {
-          libelle: `Facture de ${c.achat.fournisseur}`,
+          libelle: `Facture ${de(c.achat.fournisseur)}`,
           montant: c.achat.ttc,
           categorie: "rien",
           pourquoi: `Payée le ${date(c.achat.echeance)} : la charge est en janvier, le décaissement plus tard.`,
@@ -157,7 +157,7 @@ export const CHARGES_ET_ENCAISSEMENTS: Chapitre = {
           pourquoi: `Versées à l'URSSAF le ${date(c.personnel.dateUrssaf)} : le mois suivant.`,
         },
         {
-          libelle: `Facture à ${nomDuClient(c.venteCredit.client)}`,
+          libelle: `Facture ${aNom(nomDuClient(c.venteCredit.client))}`,
           montant: c.venteCredit.ttc,
           categorie: "rien",
           pourquoi: `Payée le ${date(c.venteCredit.echeance)} : le produit est en janvier, l'encaissement plus tard.`,
@@ -175,7 +175,7 @@ export const CHARGES_ET_ENCAISSEMENTS: Chapitre = {
       notions: ["income_statement"],
       tableau: tableauDuResultat,
       question: (c) =>
-        `Voici le compte de résultat du premier trimestre de ${c.entreprise} dans l'arène. Calculez le total des charges, puis le résultat.`,
+        `Voici le compte de résultat du premier trimestre ${de(c.entreprise)} dans l'arène. Calculez le total des charges, puis le résultat.`,
       champs: (c) => {
         const t = resultatDuTrimestre(c);
         return [
@@ -200,7 +200,7 @@ export const CHARGES_ET_ENCAISSEMENTS: Chapitre = {
       question: (c) => {
         const t = resultatDuTrimestre(c);
         const f = premierTrimestre(c);
-        return `Sur le même trimestre, la banque de ${c.entreprise} est passée de ${eur(f.debut)} à ${eur(f.fin)}. Quelle est la variation de la banque ? De combien s'écarte-t-elle du résultat, ${eur(t.resultat)} ?`;
+        return `Sur le même trimestre, la banque ${de(c.entreprise)} est passée de ${eur(f.debut)} à ${eur(f.fin)}. Quelle est la variation de la banque ? De combien s'écarte-t-elle du résultat, ${eur(t.resultat)} ?`;
       },
       champs: (c) => {
         const t = resultatDuTrimestre(c);
@@ -250,7 +250,7 @@ export const CHARGES_ET_ENCAISSEMENTS: Chapitre = {
       titre: "Ce que vous savez faire",
       notions: ["income_statement"],
       texte: (c) => [
-        `Vous savez poser les deux questions à chaque opération de ${c.entreprise} : charge ou produit, encaissement ou décaissement, et quand.`,
+        `Vous savez poser les deux questions à chaque opération ${de(c.entreprise)} : charge ou produit, encaissement ou décaissement, et quand.`,
         "Une entreprise peut gagner de l'argent et manquer de trésorerie, si ses clients paient tard ; elle peut perdre de l'argent et en avoir encore, si elle vient d'emprunter. Le compte de résultat et la trésorerie se lisent ensemble.",
       ],
       repere: () =>

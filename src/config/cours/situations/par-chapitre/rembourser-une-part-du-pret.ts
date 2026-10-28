@@ -2,7 +2,7 @@ import { montantEcrit as eur } from "../../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../../pedagogy/cours/etats";
 import type { Cas } from "../../cas";
 import { dateDuCours as date } from "../../dates";
-import { de, nomDuClient } from "../../provisions";
+import { de, delaiDuClientPro, nomDuClient } from "../../provisions";
 import type { Situation } from "../types";
 
 /**
@@ -36,6 +36,18 @@ const a = (nom: string) => (nom.startsWith("le ") ? `au ${nom.slice(3)}` : nom.s
 const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 const resultatEcrit = (x: number) => (x >= 0 ? `un bénéfice de ${eur(x)}` : `une perte de ${eur(-x)}`);
 const variationEcrite = (x: number) => (x >= 0 ? `montera de ${eur(x)}` : `baissera de ${eur(-x)}`);
+
+/**
+ * L'échéance d'une facture du client, décalée de `decalage` jours (un mois pour la vente de février) :
+ * « payable le 20 mars », ou, quand le client paie au-delà du délai convenu (plafonné à 60 jours entre
+ * professionnels), « payable le 20 mars, réglée en fait le 20 avril, en retard ».
+ */
+function echeanceDuClient(c: Cas, decalage: number) {
+  const d = delaiDuClientPro(c);
+  return d.retard > 0
+    ? `payable le ${date(d.echeanceConvenue + decalage)}, réglée en fait le ${date(d.paiement + decalage)}, en retard`
+    : `payable le ${date(d.paiement + decalage)}`;
+}
 
 /** Les chiffres de la réponse, calculés une fois du cas. */
 export function remboursementParAvance(c: Cas) {
@@ -88,10 +100,10 @@ export const REMBOURSER_UNE_PART_DU_PRET: Situation = {
           colonnes: ["Hors taxes", "Taxes comprises"],
           lignes: [
             { libelle: "Ventes au comptant de février, encaissées dans le mois", valeurs: [eur(c.venteComptant.ht), eur(c.venteComptant.ttc)] },
-            { libelle: `Vente de février ${a(r.client)}, payable le ${date(c.venteCredit.echeance + UN_MOIS)}`, valeurs: [eur(c.venteCredit.ht), eur(c.venteCredit.ttc)] },
+            { libelle: `Vente de février ${a(r.client)}, ${echeanceDuClient(c, UN_MOIS)}`, valeurs: [eur(c.venteCredit.ht), eur(c.venteCredit.ttc)] },
             { libelle: `Achat de février chez ${c.achat.fournisseur}, payable le ${date(c.achat.echeance + UN_MOIS)}`, valeurs: [eur(c.achat.ht), eur(c.achat.ttc)] },
-            { libelle: `Facture de janvier de ${c.achat.fournisseur}, payée le ${date(c.achat.echeance)}`, valeurs: ["", eur(c.achat.ttc)] },
-            { libelle: `Facture de janvier ${de(r.client)}, payable par le client le ${date(c.venteCredit.echeance)}`, valeurs: ["", eur(c.venteCredit.ttc)] },
+            { libelle: `Facture de janvier ${de(c.achat.fournisseur)}, payée le ${date(c.achat.echeance)}`, valeurs: ["", eur(c.achat.ttc)] },
+            { libelle: `Facture de janvier ${de(r.client)}, ${echeanceDuClient(c, 0)}`, valeurs: ["", eur(c.venteCredit.ttc)] },
             { libelle: `Loyer de février, prélevé le ${date(c.loyer.date + UN_MOIS)}, sans TVA`, valeurs: ["", eur(c.loyer.montant)] },
             { libelle: "Salaires bruts et cotisations patronales de février", valeurs: ["", eur(c.personnel.cout)] },
             { libelle: `dont salaires nets versés le ${date(c.personnel.date + UN_MOIS)}`, valeurs: ["", eur(c.personnel.net)] },
@@ -129,7 +141,7 @@ export const REMBOURSER_UNE_PART_DU_PRET: Situation = {
             libelle: `Vente de février ${a(r.client)}`,
             montant: c.venteCredit.ht,
             categorie: "resultat",
-            pourquoi: `Un produit de février, que le client paiera le ${date(c.venteCredit.echeance + UN_MOIS)} seulement.`,
+            pourquoi: `Un produit de février, que le client paiera le ${date(c.venteCredit.echeance + UN_MOIS)} seulement${delaiDuClientPro(c).retard > 0 ? ", en retard sur l'échéance convenue" : ""}.`,
           },
           {
             libelle: `Achat de février chez ${c.achat.fournisseur}`,
@@ -138,7 +150,7 @@ export const REMBOURSER_UNE_PART_DU_PRET: Situation = {
             pourquoi: `Une charge de février, payée le ${date(c.achat.echeance + UN_MOIS)} seulement.`,
           },
           {
-            libelle: `Facture de janvier de ${c.achat.fournisseur}`,
+            libelle: `Facture de janvier ${de(c.achat.fournisseur)}`,
             montant: c.achat.ttc,
             categorie: "banque",
             pourquoi: "La charge a été comptée en janvier : la payer en février ne fait que solder la dette.",

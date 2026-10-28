@@ -77,7 +77,7 @@ export const LIRE_LE_COMPTE_DE_RESULTAT: Chapitre = {
       texte: (c) => {
         const k = compteDeResultat(c);
         return [
-          `Le compte de résultat raconte une année : ce que l'entreprise a gagné en vendant (les produits) et ce que cela lui a coûté (les charges). Voici l'année ${dE(c.entreprise)} dans l'arène, en grandes masses.`,
+          `Le compte de résultat raconte une année : ce que l'entreprise a gagné en vendant (les produits) et ce que cela lui a coûté (les charges). Voici l'année ${dE(c.entreprise)} dans la simulation du cours, en grandes masses.`,
           `Les produits sont surtout les ventes : ${eur(k.s.ventes)}. Les charges sont de trois natures : celles de l'activité (achats, personnel, loyer, usure de l'équipement...), celles du financement (les intérêts de l'emprunt) et l'impôt sur les bénéfices.`,
         ];
       },
@@ -100,7 +100,7 @@ export const LIRE_LE_COMPTE_DE_RESULTAT: Chapitre = {
           { libelle: "Intérêts de l'emprunt", valeurs: [eur(s.interets)] },
           { libelle: "Impôt sur les bénéfices", valeurs: [eur(s.impot)] },
         );
-        return { titre: `L'année ${dE(c.entreprise)} dans l'arène`, colonnes: ["Montant"], lignes };
+        return { titre: `L'année ${dE(c.entreprise)} dans la simulation du cours`, colonnes: ["Montant"], lignes };
       },
       repere: () => "Résultat = produits − charges. Positif, c'est un bénéfice ; négatif, une perte.",
     },
@@ -155,7 +155,7 @@ export const LIRE_LE_COMPTE_DE_RESULTAT: Chapitre = {
           k.benefice
             ? `${c.entreprise} termine l'année sur un bénéfice de ${eur(k.resultat)} : ses produits ont couvert toutes ses charges, et il en reste.`
             : `${c.entreprise} termine l'année sur une perte de ${eur(-k.resultat)} : ses produits n'ont pas couvert toutes ses charges.`,
-          `C'est le résultat que l'arène affiche pour l'année, à l'euro près : ${eur(k.s.arene.resultatNet)}.`,
+          `C'est le résultat que la simulation du cours donne pour l'année, à l'euro près : ${eur(k.s.arene.resultatNet)}.`,
         ];
       },
     },

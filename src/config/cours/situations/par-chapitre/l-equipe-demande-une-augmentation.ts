@@ -4,6 +4,9 @@ import { anneeAuxSalaires, remuneration } from "../../chapitres/remuneration-et-
 import { ECART_D_INDICE, rejouerLAnnee, vendues } from "../../ressources-humaines";
 import type { Situation } from "../types";
 
+/** « que » devant un nom, élidé devant une voyelle : qu'ATLAS CONSEIL. */
+const que = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈÊ]/.test(nom) ? `qu'${nom}` : `que ${nom}`);
+
 /**
  * CAS PRATIQUE DU CHAPITRE « RÉMUNÉRATION ET MOTIVATION » : L'ÉQUIPE DEMANDE UNE AUGMENTATION
  * (Bac STMG, ressources humaines, palier 1).
@@ -94,7 +97,7 @@ export const L_EQUIPE_DEMANDE_UNE_AUGMENTATION: Situation = {
       type: "lecture",
       titre: "La demande de la gérante",
       texte: (c) => [
-        `« Les représentants du personnel demandent ${ecart} % de plus pour tous les salariés, toute l'année. Ils disent qu'une équipe mieux payée travaille mieux, et que ${c.entreprise} s'y retrouvera. Avant de leur répondre, je veux savoir ce que la hausse coûterait, ce qu'elle ferait gagner à l'équipe, et ce qu'il en resterait à notre résultat. »`,
+        `« Les représentants du personnel demandent ${ecart} % de plus pour tous les salariés, toute l'année. Ils disent qu'une équipe mieux payée travaille mieux, et ${que(c.entreprise)} s'y retrouvera. Avant de leur répondre, je veux savoir ce que la hausse coûterait, ce qu'elle ferait gagner à l'équipe, et ce qu'il en resterait à notre résultat. »`,
         "Pas de cours cette fois : vous avez les chiffres de l'équipe, et les calculs sont ceux du chapitre, dans l'autre sens. L'arène a rejoué l'année avec les salaires demandés.",
       ],
       tableau: (c) => {

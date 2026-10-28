@@ -13,7 +13,7 @@ import { compteDeResultat } from "./lire-le-compte-de-resultat";
  * renouveler son équipement et se développer.
  *
  * Les montants sont ceux de l'année de l'arène (`compteDeResultat`, qui reprend les soldes de
- * gestion vérifiés à l'euro près). L'arène ne verse pas de dividendes : la part des associés
+ * gestion vérifiés à l'euro près). La simulation du cours ne verse pas de dividendes : la part des associés
  * reste dans l'entreprise, et le chapitre le dit. Aucune hypothèse n'est ajoutée.
  */
 
@@ -158,7 +158,7 @@ export const VALEUR_AJOUTEE: Chapitre = {
         const entreprise = v.parts[3]!;
         return [
           entreprise.montant >= 0 && v.k.resultat >= 0
-            ? `L'entreprise garde ${pct(entreprise.part)} de la richesse qu'elle crée : de quoi remplacer son équipement usé et financer sa croissance. L'arène ne verse pas de dividendes aux associés : leur part reste dans l'entreprise.`
+            ? `L'entreprise garde ${pct(entreprise.part)} de la richesse qu'elle crée : de quoi remplacer son équipement usé et financer sa croissance. La simulation du cours ne verse pas de dividendes aux associés : leur part reste dans l'entreprise.`
             : entreprise.montant >= 0
               ? `L'entreprise ne garde que ${pct(entreprise.part)} de la richesse qu'elle crée : sa perte de l'année, ${eur(-v.k.resultat)}, entame ce qu'elle met de côté pour l'usure de son équipement. Elle n'a rien pour financer sa croissance.`
               : `La part de l'entreprise est négative : sa perte de l'année dépasse ce qu'elle met de côté pour l'usure de son équipement. Elle a distribué aux salariés, aux prêteurs et à l'État plus que la richesse qu'elle a créée.`,

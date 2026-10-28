@@ -347,7 +347,7 @@ export const TABLEAU_DE_BORD: Chapitre = {
           {
             libelle: "Seuil de rentabilité du mois",
             attendu: m.seuil,
-            calcul: `${eur(m.chargesFixes)} ÷ ${pct(m.tauxDeMarge)} ≈ ${eur(m.seuil)}`,
+            calcul: `${eur(m.chargesFixes)} ÷ (${eur(m.marge)} ÷ ${eur(m.chiffreDAffaires)}) = ${eur(m.seuil)}, avec le taux exact ; avec ${pct(m.tauxDeMarge)}, on trouve à peu près le même seuil`,
             // Le taux arrondi au dixième que l'élève emploie déplace le seuil d'environ un millième.
             tolerance: Math.max(2, Math.round(m.seuil * 0.003)),
           },

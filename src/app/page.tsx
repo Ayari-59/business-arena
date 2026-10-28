@@ -8,7 +8,7 @@ import { CONCEPTS } from "@/config/pedagogy/concepts";
 import { DECISION_MODELS } from "@/config/pedagogy/models";
 import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import { Icone } from "@/components/icone";
-import { DESCRIPTION_ACCUEIL, TITRE_ACCUEIL } from "@/config/seo";
+import { DESCRIPTION_ACCUEIL, OPEN_GRAPH_DU_SITE, TITRE_ACCUEIL } from "@/config/seo";
 import { bouton, LIEN_A_L_ENCRE } from "@/components/bouton";
 import { TEMPS_DU_TOUR } from "@/config/temps-du-tour";
 import { DonneesStructurees } from "@/components/donnees-structurees";
@@ -100,6 +100,7 @@ export const metadata: Metadata = {
   title: { absolute: TITRE_ACCUEIL },
   description: DESCRIPTION_ACCUEIL,
   alternates: { canonical: "/" },
+  openGraph: { ...OPEN_GRAPH_DU_SITE, url: "/" },
 };
 
 /**

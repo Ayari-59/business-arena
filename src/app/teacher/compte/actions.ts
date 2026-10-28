@@ -2,9 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/session";
 import { enregistrerConsentement } from "@/services/nouveautes.service";
 import { envoyerLeLienDeConfirmation } from "@/services/confirmation-email.service";
+import { clearSession, getSession } from "@/lib/session";
+import { supprimerCompteEnseignant } from "@/services/effacement.service";
+import { MOT_DE_SUPPRESSION } from "@/config/conservation";
+import type { EtatDeSuppression } from "@/components/suppression-confirmee";
 
 /**
  * LE RÉGLAGE DES NOUVEAUTÉS, DANS L'ESPACE ENSEIGNANT : la case cochée enregistre l'accord
@@ -30,4 +33,27 @@ export async function renvoyerLeLienAction(): Promise<void> {
   const r = await envoyerLeLienDeConfirmation(session.userId);
   const suite = r.etat === "trop_tot" ? `trop_tot&minutes=${r.minutes}` : r.etat;
   redirect(`/teacher/compte?lien=${suite}#adresse`);
+}
+
+/**
+ * « SUPPRIMER MON COMPTE » (RGPD, droit à l'effacement) : le compte de la session, jamais
+ * un identifiant venu du formulaire. Le mot de confirmation, tapé dans la page, est
+ * revérifié ici. La suppression emporte les parties, classes, examens, concours, cohortes
+ * et classes du cours de l'enseignant, et les élèves sans compte qui n'y étaient rattachés
+ * que par lui (services/effacement.service.ts). La session est fermée ensuite.
+ */
+export async function supprimerMonCompteAction(
+  _etat: EtatDeSuppression,
+  formData: FormData,
+): Promise<EtatDeSuppression> {
+  const session = await getSession();
+  if (!session) redirect("/teacher/login");
+  const mot = String(formData.get("confirmation") ?? "").trim().toUpperCase();
+  if (mot !== MOT_DE_SUPPRESSION) {
+    return { erreur: `Tapez ${MOT_DE_SUPPRESSION} pour confirmer la suppression.` };
+  }
+  const r = await supprimerCompteEnseignant(session.userId);
+  if (!r.ok) return { erreur: r.raison };
+  await clearSession();
+  redirect("/teacher/login?compte=supprime");
 }

@@ -1,4 +1,5 @@
 import { valeurCreee } from "@/engine/groupe";
+import { tuteurActifPour } from "@/services/tuteur.service";
 import { premierNiveauQuiOuvre } from "@/config/difficulty";
 import { appelleLInvestissement } from "@/config/investissement-par-niveau";
 import { aideDuPlafond } from "@/config/refus-de-decision";
@@ -198,7 +199,10 @@ export default async function ArenaPage({
   const aiEnt = await entitlementsForUser(userId);
   const aiCoachEnabled =
     !copie && aiEnt.ai && view.kind === "solo" && (await resolveAiSurface("coach")) !== null;
-  const aiTutor = !copie && aiEnt.ai && (await resolveAiSurface("tutor")) !== null;
+  // Le tuteur se cache aussi quand l'enseignant l'a coupé pour cette partie
+  // (services/tuteur.service.ts) ; l'action le refuse de toute façon côté serveur.
+  const aiTutor =
+    !copie && aiEnt.ai && (await resolveAiSurface("tutor")) !== null && (await tuteurActifPour(gameId));
 
   const finished = view.status === "finished";
   // Chaque période est une pièce de l'accordéon. Les tours RÉSOLUS forment la

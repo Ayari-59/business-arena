@@ -19,6 +19,7 @@ import Link from "next/link";
 import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import { COMPETENCES } from "@/config/episodes/competences";
 import { EPISODES } from "@/pedagogy/episodes/registre";
+import { FICHES } from "@/config/episodes/fiches";
 import { bouton } from "@/components/bouton";
 import { Bande } from "@/components/bande";
 import { BandeDeChiffres } from "@/components/bande-de-chiffres";
@@ -89,7 +90,7 @@ const PREUVES = [
   {
     titre: "La progression se mesure, elle ne se déclare pas",
     texte:
-      "Un épisode d'entrée et un épisode de contrôle, joués au même niveau, encadrent le parcours : l'écart est la mesure.",
+      "Le profil compare les premiers épisodes joués aux plus récents : il ne parle de progrès que si les deux groupes ne se recouvrent plus.",
   },
   {
     titre: "La promotion se lit en agrégats",
@@ -120,9 +121,9 @@ const PARCOURS = [
   },
   {
     quand: "Semaine 8",
-    quoi: "Le contrôle et la clôture",
+    quoi: "La clôture",
     texte:
-      "L'épisode de contrôle, puis chacun lit son profil et choisit une compétence à travailler.",
+      "Un dernier épisode, puis chacun lit son profil, qui compare ses premiers épisodes aux plus récents, et choisit une compétence à travailler.",
   },
 ];
 
@@ -141,7 +142,10 @@ const QUESTIONS = [
   },
   {
     q: "Combien de temps pour l'enseignant ?",
-    r: "Une partie ou une cohorte se crée en quelques minutes ; chaque épisode a son guide de débrief, avec la décision qui fait débattre.",
+    // AUDIT P0-1 : vrai tant que le registre des fiches couvre tous les épisodes
+    // (tests/architecture/promesses-commerciales.test.ts) ; les fiches se lisent sur
+    // /enseignants/episodes.
+    r: `Une partie ou une cohorte se crée en quelques minutes ; chaque épisode a son guide de débrief, avec la décision qui fait débattre : les ${FICHES.length} fiches se lisent librement sur la page Épisodes en classe.`,
   },
 ];
 

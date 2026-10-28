@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import { getSession } from "@/lib/session";
 import { getStaffContext } from "@/services/admin.service";
 import { getTeacherOrgId } from "@/services/auth.service";
@@ -59,7 +60,7 @@ export default async function MesExamensPage({
 }) {
   const { refus } = await searchParams;
   const session = await getSession();
-  if (!session) redirect("/teacher/login");
+  if (!session) redirect(await connexionPourLaPageDemandee());
   const org = await getTeacherOrgId(session.userId);
   const [liste, module, licence, staff, messageDuModule] = await Promise.all([
     examensDeLEnseignant(session.userId),

@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { coachRoundAction, tutorChatAction } from "@/app/arena/[gameId]/ai-actions";
+import { MAX_CARACTERES_PAR_MESSAGE } from "@/lib/bornes-du-tuteur";
 import { bouton } from "@/components/bouton";
 import { Icone } from "@/components/icone";
 
@@ -90,7 +91,8 @@ function Tutor({ gameId }: { gameId: string }) {
     setInput("");
     setPending(true);
     setError(null);
-    const res = await tutorChatAction(gameId, history, q);
+    // Le serveur ne lit que les six derniers échanges : inutile d'envoyer le reste.
+    const res = await tutorChatAction(gameId, history.slice(-6), q);
     setPending(false);
     if (res.ok) {
       setMessages((m) => [...m, { role: "assistant", content: res.text }]);
@@ -124,6 +126,7 @@ function Tutor({ gameId }: { gameId: string }) {
       <div className="mt-2 flex gap-2">
         <input
           value={input}
+          maxLength={MAX_CARACTERES_PAR_MESSAGE}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {

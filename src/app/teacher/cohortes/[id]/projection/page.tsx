@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import { getSession } from "@/lib/session";
 import { lienDInvitation, origineDeLaRequete } from "@/lib/origine";
 import { compter } from "@/lib/format";
@@ -29,7 +30,7 @@ export default async function ProjectionDeLaCohorte({
   params: Promise<{ id: string }>;
 }) {
   const session = await getSession();
-  if (!session) redirect("/teacher/login");
+  if (!session) redirect(await connexionPourLaPageDemandee());
   const { id } = await params;
   const [cohorte, origine] = await Promise.all([
     cohorteDeLEnseignant(session.userId, id),

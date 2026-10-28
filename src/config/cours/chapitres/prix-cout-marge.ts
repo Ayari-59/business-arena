@@ -13,11 +13,11 @@ import type { Chapitre } from "../types";
  * payées les charges fixes ; puis l'effet d'une baisse de prix, et la place de la TVA.
  *
  * Aucune hypothèse : le prix moyen, les coûts par unité, les quantités et les charges fixes
- * sont ceux du mois du cas, tirés du premier trimestre de l'arène (`cas.ts`). La baisse de
- * prix reprend l'écart que l'arène joue au chapitre « Décider ».
+ * sont ceux du mois du cas, figés dans la simulation du cours (`cas.ts`). La baisse de prix
+ * reprend l'écart que le chapitre « Décider » étudie.
  */
 
-/** La baisse de prix étudiée : celle que le chapitre « Décider » fait jouer à l'arène. */
+/** La baisse de prix étudiée : celle que le chapitre « Décider » étudie. */
 export const BAISSE_DE_PRIX = 0.1;
 
 const auDixieme = (x: number) => Math.round(x * 10) / 10;
@@ -94,8 +94,8 @@ export const PRIX_COUT_MARGE: Chapitre = {
       texte: (c) => {
         const m = prixCoutMarge(c);
         return [
-          `${c.entreprise} vend en moyenne chaque ${c.unite} ${eur(m.prix)} hors taxes : c'est le prix de l'arène sur le premier trimestre. Pour chacune de ses ventes, elle dépense ${eur(m.matiere)} d'achats et ${eur(m.autres)} d'autres coûts (${m.autresCoutsVariables}).`,
-          "Entre le prix et le coût, il reste la marge. C'est elle qui paie le reste : le loyer, les salaires, l'équipement. Et c'est le prix que vous fixez à chaque tour dans l'arène.",
+          `${c.entreprise} vend en moyenne chaque ${c.unite} ${eur(m.prix)} hors taxes : c'est son prix moyen du mois dans la simulation du cours. Pour chacune de ses ventes, elle dépense ${eur(m.matiere)} d'achats et ${eur(m.autres)} d'autres coûts (${m.autresCoutsVariables}).`,
+          "Entre le prix et le coût, il reste la marge. C'est elle qui paie le reste : le loyer, les salaires, l'équipement.",
         ];
       },
       repere: () => "Marge = prix de vente − coût. Elle se calcule pour une unité, puis pour toutes les unités vendues.",
@@ -238,7 +238,7 @@ export const PRIX_COUT_MARGE: Chapitre = {
       explication: (c) => {
         const m = prixCoutMarge(c);
         return [
-          `Le prix baisse de ${pct(BAISSE_DE_PRIX * 100)}, la marge de ${pct(m.baisseDeLaMarge)} : toute la baisse est prise sur la marge, le coût ne bouge pas. Pour garder la même marge du mois, il faudrait vendre davantage. Le chapitre « Décider », au palier 4, fait jouer cette baisse à l'arène pour voir si les clients suivent.`,
+          `Le prix baisse de ${pct(BAISSE_DE_PRIX * 100)}, la marge de ${pct(m.baisseDeLaMarge)} : toute la baisse est prise sur la marge, le coût ne bouge pas. Pour garder la même marge du mois, il faudrait vendre davantage. Le chapitre « Décider », au palier 4, regarde si les clients suivent.`,
         ];
       },
     },

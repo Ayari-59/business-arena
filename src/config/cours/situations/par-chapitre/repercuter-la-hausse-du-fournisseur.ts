@@ -4,6 +4,9 @@ import type { Cas } from "../../cas";
 import { demandeEtPrix } from "../../chapitres/demande-et-prix";
 import type { Situation } from "../types";
 
+/** « que » devant un nom, élidé devant une voyelle : qu'ATLAS CONSEIL. */
+const que = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈÊ]/.test(nom) ? `qu'${nom}` : `que ${nom}`);
+
 /**
  * CAS PRATIQUE DU CHAPITRE « LA DEMANDE RÉPOND AU PRIX » : RÉPERCUTER LA HAUSSE DU
  * FOURNISSEUR ? (Bac STMG, mercatique, palier 1).
@@ -85,7 +88,7 @@ export const REPERCUTER_LA_HAUSSE_DU_FOURNISSEUR: Situation = {
       texte: (c) => {
         const r = hausseDuFournisseur(c);
         return [
-          `« Nos fournisseurs augmentent leurs tarifs. Pour le répercuter, je pense monter nos prix de ${pct(r.hausse)}. L'arène a rejoué notre premier trimestre avec ${pct(r.d.ecart)} de hausse, mais pas avec ${pct(r.hausse)}. Servez-vous de ce trimestre rejoué pour me dire ce que ${c.entreprise} perdrait de clients, et ce que deviendrait notre chiffre d'affaires. »`,
+          `« Nos fournisseurs augmentent leurs tarifs. Pour le répercuter, je pense monter nos prix de ${pct(r.hausse)}. L'arène a rejoué notre premier trimestre avec ${pct(r.d.ecart)} de hausse, mais pas avec ${pct(r.hausse)}. Servez-vous de ce trimestre rejoué pour me dire ce ${que(c.entreprise)} perdrait de clients, et ce que deviendrait notre chiffre d'affaires. »`,
           "Pas de cours cette fois : vous avez la demande aux deux prix, et la méthode est celle du chapitre. À vous de l'enchaîner, puis de vous en servir pour prévoir.",
         ];
       },

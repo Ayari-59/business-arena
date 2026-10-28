@@ -167,7 +167,7 @@ export const REGLER_LE_VOYANT: Situation = {
             libelle: "Seuil de rentabilité du semestre",
             attendu: r.seuil,
             tolerance: r.toleranceDuSeuil,
-            calcul: `${eur(r.chargesFixes)} ÷ ${pct(r.tauxDeMarge)} ≈ ${eur(r.seuil)}`,
+            calcul: `${eur(r.chargesFixes)} ÷ (${eur(r.marge)} ÷ ${eur(r.chiffreDAffaires)}) = ${eur(r.seuil)}, avec le taux exact ; avec ${pct(r.tauxDeMarge)}, on trouve à peu près le même seuil`,
           },
           {
             libelle: "Indice de sécurité du semestre (%)",

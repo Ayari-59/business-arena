@@ -3,6 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "description": "BUSINESS ARENA — simulation, apprentissage, aide à la décision et compétition en management",
+  "imports": {
+    "#situations-des-secteurs": {
+      "browser": "./src/config/scenarios/situations-des-secteurs.navigateur.ts",
+      "default": "./src/config/scenarios/situations-des-secteurs.ts"
+    }
+  },
   "scripts": {
     "dev": "next dev -p 3030",
     "build": "next build",
@@ -21,6 +27,7 @@
     "cohorte:creer": "tsx --env-file=.env scripts/creer-cohorte.ts",
     "verify:migrations": "tsx --env-file=.env scripts/verifier-migrations.ts",
     "verify:qr": "tsx scripts/verifier-qr.ts",
+    "verifier-bundles": "tsx scripts/verifier-bundles.ts",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "test:coverage": "vitest run --coverage"
   },

@@ -13,14 +13,47 @@ vi.mock("@/db", async () => {
 });
 
 import { db } from "@/db";
-import { competitionEntries, games, organizations, rounds, situationInstances, users } from "@/db/schema";
-import { DEMO_ACCOUNTS, isDemoSeeded, seedDemoWorld } from "@/services/demo.service";
+import {
+  competitionEntries,
+  games,
+  orgInvites,
+  orgLicences,
+  organizations,
+  rounds,
+  situationInstances,
+  users,
+} from "@/db/schema";
+import {
+  DEMO_ACCOUNTS,
+  DEMO_REFUSEE_EN_PRODUCTION,
+  PLAFOND_ENSEIGNANTS_DEMO,
+  fermerLesComptesDeDemo,
+  isDemoSeeded,
+  renouvelerLeMotDePasseDeDemo,
+  seedDemoWorld,
+} from "@/services/demo.service";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { loginTeacher } from "@/services/auth.service";
 import { getOrgDashboard } from "@/services/admin.service";
 import { getTeacherGameView, getTeacherGames } from "@/services/game.service";
 import { getTeacherPedagogyView } from "@/services/pedagogy.service";
 
 describe("monde démo", () => {
+  it("est refusé en production, sauf drapeau explicite", async () => {
+    await expect(seedDemoWorld({ NODE_ENV: "production" })).rejects.toThrow(DEMO_REFUSEE_EN_PRODUCTION);
+    await expect(renouvelerLeMotDePasseDeDemo({ NODE_ENV: "production" })).rejects.toThrow(
+      DEMO_REFUSEE_EN_PRODUCTION,
+    );
+    expect(await isDemoSeeded()).toBe(false);
+  });
+
+  it("aucun mot de passe n'est écrit dans le code de la démo", () => {
+    const source = readFileSync(join(process.cwd(), "src/services/demo.service.ts"), "utf8");
+    expect(source).not.toMatch(/password:\s*"/);
+    expect(source).not.toMatch(/bcrypt\.hash\(\s*"/);
+  });
+
   it("se génère complet : comptes, partie avancée, pédagogie, concours", async () => {
     expect(await isDemoSeeded()).toBe(false);
     const world = await seedDemoWorld();
@@ -30,13 +63,14 @@ describe("monde démo", () => {
     expect(await isDemoSeeded()).toBe(true);
 
     // les deux comptes se connectent avec le mot de passe démo
+    expect(world.password).toMatch(/^[\w-]{24}$/);
     const direction = await loginTeacher({
       email: DEMO_ACCOUNTS.orgAdmin.email,
-      password: DEMO_ACCOUNTS.password,
+      password: world.password!,
     });
     const prof = await loginTeacher({
       email: DEMO_ACCOUNTS.teacher.email,
-      password: DEMO_ACCOUNTS.password,
+      password: world.password!,
     });
     expect("userId" in direction).toBe(true);
     expect("userId" in prof).toBe(true);
@@ -75,6 +109,20 @@ describe("monde démo", () => {
     // concours en inscriptions avec 4 équipes
     const entries = await db.select().from(competitionEntries);
     expect(entries).toHaveLength(4);
+  }, 60_000);
+
+  it("licence plafonnée, élèves sans mot de passe, mot de passe différent à chaque tirage", async () => {
+    const licences = await db.select().from(orgLicences);
+    expect(licences).toHaveLength(1);
+    expect(licences[0]!.maxTeachers).toBe(PLAFOND_ENSEIGNANTS_DEMO);
+    const eleves = (await db.select().from(users)).filter((u) => u.email.startsWith("lea@demo"));
+    expect(eleves).toHaveLength(1);
+    expect(eleves[0]!.passwordHash).toBeNull();
+    const a = await renouvelerLeMotDePasseDeDemo();
+    const b = await renouvelerLeMotDePasseDeDemo();
+    expect(a).not.toBe(b);
+    expect("userId" in (await loginTeacher({ email: DEMO_ACCOUNTS.teacher.email, password: b }))).toBe(true);
+    expect("userId" in (await loginTeacher({ email: DEMO_ACCOUNTS.teacher.email, password: a }))).toBe(false);
   });
 
   it("est idempotent : un second appel ne duplique rien", async () => {
@@ -86,5 +134,15 @@ describe("monde démo", () => {
     expect((await db.select().from(organizations)).length).toBe(orgsBefore);
     expect((await db.select().from(users)).length).toBe(usersBefore);
     expect((await db.select().from(games)).length).toBe(gamesBefore);
+  });
+
+  it("se ferme : plus de connexion, codes d'invitation désactivés", async () => {
+    const mdp = await renouvelerLeMotDePasseDeDemo();
+    await fermerLesComptesDeDemo();
+    const r = await loginTeacher({ email: DEMO_ACCOUNTS.orgAdmin.email, password: mdp, now: Date.now() + 86_400_000 });
+    expect("userId" in r).toBe(false);
+    const invites = await db.select().from(orgInvites);
+    expect(invites.length).toBeGreaterThan(0);
+    expect(invites.every((i) => !i.active)).toBe(true);
   });
 });

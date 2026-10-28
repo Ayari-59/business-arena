@@ -5,7 +5,7 @@ import { OrientationForm } from "@/components/orientation-form";
 import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import { ATELIERS } from "@/config/ateliers";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
-import { OBJECTIFS } from "@/config/orientation";
+import { OBJECTIFS, vueDOrientation } from "@/config/orientation";
 import { familyOf, scenarioByCode } from "@/config/scenarios/registry";
 import { nomEntreprise } from "@/config/scenarios/presentation";
 import { PiedDePage } from "@/components/pied-de-page";
@@ -128,7 +128,7 @@ export default function OrientationPage() {
               recommandation s&apos;écrit à mesure.
             </p>
             <div className="mt-4 sm:mt-8">
-              <OrientationForm />
+              <OrientationForm vue={vueDOrientation()} />
             </div>
           </section>
 

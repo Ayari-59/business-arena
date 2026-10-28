@@ -7,6 +7,7 @@ import { dureeDuTour } from "@/config/duree-du-tour";
 import { DureeDuTourAffichee } from "@/components/duree-du-tour";
 import { getObservationSeance } from "@/services/observation.service";
 import { notFound, redirect } from "next/navigation";
+import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import { getSession } from "@/lib/session";
 import { getTeacherGameView } from "@/services/game.service";
 import { compositionDesEquipes } from "@/services/affectation.service";
@@ -53,6 +54,9 @@ import { entitlementsForUser } from "@/services/entitlements.service";
 import { MARQUE_DE_L_ARENE } from "@/config/tarifs";
 import { LIEN_TARIFS } from "@/config/vitrine-solo";
 import { resolveAiSurface } from "@/services/ai.service";
+import { tuteurActifPour } from "@/services/tuteur.service";
+import { QUESTIONS_AU_TUTEUR_PAR_PARTIE } from "@/config/tuteur";
+import { reglerLeTuteurAction } from "./tuteur-actions";
 import { CodeQr } from "@/components/code-qr";
 import { urlDeJonction } from "@/lib/qr";
 import { bouton } from "@/components/bouton";
@@ -79,7 +83,7 @@ export default async function TeacherGamePage({
   searchParams: Promise<{ recommencer?: string; supprimer?: string }>;
 }) {
   const session = await getSession();
-  if (!session) redirect("/teacher/login");
+  if (!session) redirect(await connexionPourLaPageDemandee());
   const { gameId } = await params;
   const { recommencer, supprimer } = await searchParams;
   const view = await getTeacherGameView(gameId, session.userId);
@@ -130,6 +134,9 @@ export default async function TeacherGamePage({
   // admin + clé API.
   const aiEnt = await entitlementsForUser(session.userId);
   const aiReview = aiEnt.ai && (await resolveAiSurface("teacherReview")) !== null;
+  // Le tuteur IA des élèves : allumé en admin, l'enseignant peut le couper pour sa partie.
+  const tuteurOuvert = (await resolveAiSurface("tutor")) !== null;
+  const tuteurActif = tuteurOuvert ? await tuteurActifPour(gameId) : false;
 
   const toursBornes = view.rounds.filter((r) => r.opensAt || r.deadline).length;
   // La frise : un segment plein par tour clos, sans signe (il y a un résultat
@@ -997,6 +1004,47 @@ export default async function TeacherGamePage({
                       {MISSED_POLICY_LABELS[p]}
                     </span>
                     <span className="mt-1 block text-sm text-slate-400">{MISSED_POLICY_HELP[p]}</span>
+                  </SubmitButton>
+                </GuardedForm>
+              );
+            })}
+          </div>
+        </Tiroir>
+      ) : null}
+      {!finished && tuteurOuvert ? (
+        <Tiroir icone="idee" titre="Tuteur IA des élèves" quoi={tuteurActif ? "activé" : "désactivé"}>
+          <p className="mt-1 max-w-3xl text-sm text-slate-400">
+            Le tuteur répond aux questions écrites des élèves pendant la partie, au plus{" "}
+            {QUESTIONS_AU_TUTEUR_PAR_PARTIE} questions par élève. Leurs questions sont envoyées à Anthropic
+            (États-Unis) pour produire la réponse. Coupé, il disparaît de l&apos;arène de vos élèves.
+          </p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2" data-reglage-tuteur={tuteurActif ? "oui" : "non"}>
+            {([true, false] as const).map((choix) => {
+              const active = choix === tuteurActif;
+              return (
+                <GuardedForm
+                  key={String(choix)}
+                  action={reglerLeTuteurAction.bind(null, view.gameId)}
+                  label="tuteur IA"
+                >
+                  <input type="hidden" name="tuteur" value={choix ? "oui" : "non"} />
+                  <SubmitButton
+                    disabled={active}
+                    className={`h-full w-full rounded-lg border px-3 py-3 text-left transition ${
+                      active
+                        ? "cursor-default border-amber-400/60 bg-amber-400/10"
+                        : "border-white/10 bg-slate-950 hover:border-amber-400/40"
+                    }`}
+                  >
+                    <span className="text-sm font-medium text-slate-100">
+                      {active ? "✓ " : ""}
+                      {choix ? "Tuteur activé" : "Tuteur désactivé"}
+                    </span>
+                    <span className="mt-1 block text-sm text-slate-400">
+                      {choix
+                        ? "Les élèves peuvent poser leurs questions dans l'arène."
+                        : "Aucune question ne part : le tuteur est masqué et refusé."}
+                    </span>
                   </SubmitButton>
                 </GuardedForm>
               );

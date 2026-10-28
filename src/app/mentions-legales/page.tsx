@@ -2,6 +2,17 @@ import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import Link from "next/link";
 import { VENDEUR } from "@/config/editeur";
 import type { Metadata } from "next";
+import {
+  DEMANDES_JOURS,
+  ENSEIGNANTS_INACTIFS_JOURS,
+  EXAMENS_JOURS,
+  INVITES_INACTIFS_JOURS,
+  IP_DES_PARTIES_SOLO_JOURS,
+  PARTIES_ET_RESULTATS_JOURS,
+  TENTATIVES_DE_CONNEXION_HEURES,
+  enAnnees,
+} from "@/config/conservation";
+import { QUESTIONS_AU_TUTEUR_PAR_PARTIE } from "@/config/tuteur";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/mentions-legales" },
@@ -19,6 +30,25 @@ const EDITEUR = {
   adresse: `${VENDEUR.adresse.rue}, ${VENDEUR.adresse.codePostal} ${VENDEUR.adresse.ville}`,
   contact: VENDEUR.contact,
   directeur: VENDEUR.directeurDeLaPublication,
+};
+
+/**
+ * LES DURÉES, LUES DANS config/conservation.ts : la page dit ce que la purge de chaque nuit
+ * applique (services/purge.service.ts), et rien d'autre.
+ */
+const ans = (j: number) => {
+  const n = enAnnees(j);
+  return `${n} an${n > 1 ? "s" : ""}`;
+};
+const mois = (j: number) => `${Math.round((j * 12) / 365)} mois`;
+const DUREES = {
+  tentatives: `${TENTATIVES_DE_CONNEXION_HEURES} heures`,
+  ipSolo: `${IP_DES_PARTIES_SOLO_JOURS} jours`,
+  invites: mois(INVITES_INACTIFS_JOURS),
+  parties: ans(PARTIES_ET_RESULTATS_JOURS),
+  examens: ans(EXAMENS_JOURS),
+  enseignants: ans(ENSEIGNANTS_INACTIFS_JOURS),
+  demandes: ans(DEMANDES_JOURS),
 };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -57,8 +87,10 @@ export default function MentionsLegalesPage() {
             <li>
               <strong className="text-slate-200">Aucun compte élève.</strong> Les élèves
               rejoignent une partie avec un code et un pseudo librement choisi (qui peut être
-              un prénom d&apos;emprunt). Ni e-mail, ni nom de famille, ni date de naissance ne
-              sont demandés : la plateforme ne peut pas identifier un mineur.
+              un prénom d&apos;emprunt). Ni e-mail ni date de naissance ne sont demandés. Deux
+              exceptions, quand l&apos;enseignant les choisit : l&apos;examen individuel enregistre
+              le nom et le numéro d&apos;étudiant du candidat, avec sa note ; une classe du cours
+              enregistre le nom que l&apos;élève donne en la rejoignant.
             </li>
             <li>
               <strong className="text-slate-200">Aucun traceur.</strong> Pas de cookies
@@ -68,9 +100,15 @@ export default function MentionsLegalesPage() {
               CNIL.
             </li>
             <li>
-              <strong className="text-slate-200">Données conservées dans l&apos;Union
+              <strong className="text-slate-200">Base de données dans l&apos;Union
               européenne.</strong> La base de données et les traitements de l&apos;application sont
-              situés à Francfort (Allemagne).
+              situés à Francfort (Allemagne). Plusieurs prestataires sont des sociétés américaines :
+              les transferts hors de l&apos;Union sont détaillés plus bas.
+            </li>
+            <li>
+              <strong className="text-slate-200">Des durées courtes, appliquées chaque nuit.</strong>{" "}
+              Une purge automatique supprime chaque nuit ce qui a dépassé sa durée de conservation
+              (le tableau ci-dessous).
             </li>
             <li>
               <strong className="text-slate-200">Toutes les données de jeu sont
@@ -130,10 +168,48 @@ export default function MentionsLegalesPage() {
                 <tr className="border-t border-white/5">
                   <td className="py-2 pr-3 font-medium text-slate-200">Élèves / joueurs</td>
                   <td className="py-2 pr-3">
-                    Pseudo librement choisi ; identifiant technique aléatoire (cookie)
+                    Pseudo librement choisi ; identifiant technique aléatoire (cookie) ; s&apos;il
+                    utilise le tuteur IA, le nombre de questions posées dans la partie (pas leur texte)
                   </td>
-                  <td className="py-2 pr-3">Rattacher le joueur à son équipe et à ses parties</td>
-                  <td className="py-2">Cookie : 12 mois</td>
+                  <td className="py-2 pr-3">
+                    Rattacher le joueur à son équipe et à ses parties ; limiter le tuteur IA à{" "}
+                    {QUESTIONS_AU_TUTEUR_PAR_PARTIE} questions par partie
+                  </td>
+                  <td className="py-2">
+                    Cookie : 12 mois. L&apos;identité est supprimée après {DUREES.invites} sans
+                    activité
+                  </td>
+                </tr>
+                <tr className="border-t border-white/5" data-ligne-ip-solo="">
+                  <td className="py-2 pr-3 font-medium text-slate-200">Parties solo</td>
+                  <td className="py-2 pr-3">Adresse IP depuis laquelle la partie est créée</td>
+                  <td className="py-2 pr-3">
+                    Plafonner le nombre de parties créées depuis une même adresse, contre les abus
+                  </td>
+                  <td className="py-2">{DUREES.ipSolo}, puis l&apos;adresse est effacée</td>
+                </tr>
+                <tr className="border-t border-white/5" data-ligne-examens="">
+                  <td className="py-2 pr-3 font-medium text-slate-200">Candidats à un examen</td>
+                  <td className="py-2 pr-3">
+                    Nom et numéro d&apos;étudiant (saisis par le candidat, ou reçus de la plateforme de
+                    l&apos;établissement), partie jouée, note et détail de la notation
+                  </td>
+                  <td className="py-2 pr-3">
+                    Noter l&apos;examen individuel organisé par l&apos;enseignant (exécution du service
+                    demandé par l&apos;établissement)
+                  </td>
+                  <td className="py-2">{DUREES.examens} après l&apos;examen</td>
+                </tr>
+                <tr className="border-t border-white/5" data-ligne-cours="">
+                  <td className="py-2 pr-3 font-medium text-slate-200">Élèves d&apos;une classe du cours</td>
+                  <td className="py-2 pr-3">
+                    Nom donné en rejoignant la classe, progression dans les chapitres
+                  </td>
+                  <td className="py-2 pr-3">Permettre à l&apos;enseignant de suivre sa classe</td>
+                  <td className="py-2">
+                    Durée de la classe ; l&apos;identité de l&apos;élève est supprimée après{" "}
+                    {DUREES.invites} sans activité
+                  </td>
                 </tr>
                 <tr className="border-t border-white/5" data-ligne-enseignants="">
                   <td className="py-2 pr-3 font-medium text-slate-200">Enseignants / personnels</td>
@@ -152,18 +228,21 @@ export default function MentionsLegalesPage() {
                     espace enseignant) : au plus une fois par mois
                   </td>
                   <td className="py-2">
-                    Durée du compte ; pour les nouveautés, jusqu&apos;au retrait du consentement ou à
-                    la suppression du compte
+                    Durée du compte. Un compte resté {DUREES.enseignants} sans connexion est supprimé,
+                    après un e-mail d&apos;avertissement un mois avant. Pour les nouveautés,
+                    jusqu&apos;au retrait du consentement ou à la suppression du compte
                   </td>
                 </tr>
                 <tr className="border-t border-white/5">
                   <td className="py-2 pr-3 font-medium text-slate-200">Données de jeu</td>
                   <td className="py-2 pr-3">
-                    Décisions, résultats simulés, scores pédagogiques, données fictives
-                    d&apos;entreprises virtuelles
+                    Décisions, justifications écrites par les équipes, résultats simulés, scores
+                    pédagogiques, données fictives d&apos;entreprises virtuelles
                   </td>
                   <td className="py-2 pr-3">Le jeu, le débriefing et la progression pédagogique</td>
-                  <td className="py-2">Durée des parties</td>
+                  <td className="py-2">
+                    {DUREES.parties} après la fin de la partie (sa dernière activité)
+                  </td>
                 </tr>
                 <tr className="border-t border-white/5">
                   <td className="py-2 pr-3 font-medium text-slate-200">Managers en cohorte</td>
@@ -174,7 +253,10 @@ export default function MentionsLegalesPage() {
                   <td className="py-2 pr-3">
                     Jouer les épisodes de la cohorte, retrouver son profil sur un autre appareil
                   </td>
-                  <td className="py-2">Durée de la cohorte</td>
+                  <td className="py-2">
+                    Durée de la cohorte ; les parties d&apos;épisodes, {DUREES.parties} ;
+                    l&apos;identité, supprimée après {DUREES.invites} sans activité
+                  </td>
                 </tr>
                 <tr className="border-t border-white/5" data-ligne-lti="">
                   <td className="py-2 pr-3 font-medium text-slate-200">
@@ -221,7 +303,15 @@ export default function MentionsLegalesPage() {
                   <td className="py-2 pr-3">
                     Répondre à une demande de rendez-vous, de devis ou de simulation
                   </td>
-                  <td className="py-2">3 ans après le dernier contact</td>
+                  <td className="py-2">{DUREES.demandes} après le dernier contact</td>
+                </tr>
+                <tr className="border-t border-white/5" data-ligne-tentatives="">
+                  <td className="py-2 pr-3 font-medium text-slate-200">Tentatives de connexion</td>
+                  <td className="py-2 pr-3">
+                    E-mail saisi et adresse IP d&apos;une tentative de connexion échouée
+                  </td>
+                  <td className="py-2 pr-3">Freiner les essais de mots de passe</td>
+                  <td className="py-2">{DUREES.tentatives}</td>
                 </tr>
               </tbody>
             </table>
@@ -229,8 +319,26 @@ export default function MentionsLegalesPage() {
           <p>
             Sous-traitants : Vercel (hébergement de l&apos;application), Neon (base de
             données), Resend (envoi des e-mails), Google (agenda des rendez-vous) et, seulement
-            si l&apos;assistant d&apos;IA est activé, Anthropic (réponses de l&apos;assistant à
-            partir des justifications écrites par les joueurs).
+            si l&apos;assistant d&apos;IA est activé, Anthropic (réponses de l&apos;assistant).
+          </p>
+          <p data-assistant-ia="">
+            Assistant d&apos;IA : quand il est activé, deux textes partent chez Anthropic PBC, aux
+            États-Unis, pour produire une réponse : les justifications écrites par les équipes,
+            sous le nom de leur entreprise fictive, quand l&apos;enseignant demande une synthèse ;
+            les questions que les élèves posent au tuteur, avec le nom de leur entreprise fictive
+            et un résumé chiffré de leur partie. Aucun pseudo, nom ni identifiant d&apos;élève
+            n&apos;y est joint, mais ces textes libres partent tels
+            quels : les élèves ne doivent pas y écrire de données personnelles. L&apos;enseignant
+            peut couper le tuteur pour sa partie, et chaque élève dispose d&apos;au plus{" "}
+            {QUESTIONS_AU_TUTEUR_PAR_PARTIE} questions par partie.
+          </p>
+          <p data-transferts-hors-ue="">
+            Transferts hors de l&apos;Union européenne : Vercel Inc., Resend, Google et Anthropic
+            sont des sociétés américaines, et Neon Inc. aussi (ses serveurs restent à Francfort).
+            Les données qu&apos;ils traitent peuvent donc être accessibles depuis les
+            États-Unis. Ces transferts reposent, selon le prestataire, sur les clauses
+            contractuelles types de la Commission européenne ou sur le cadre de protection des
+            données UE-États-Unis, prévus par leurs conditions de traitement des données.
           </p>
           <p data-federation-renater="">
             Fédération Éducation-Recherche (RENATER) : RENATER n&apos;est pas un sous-traitant de
@@ -248,11 +356,27 @@ export default function MentionsLegalesPage() {
             commerciales, ni utilisée pour de la publicité. Aucun profilage n&apos;est
             effectué.
           </p>
-          <p>
+          <p data-vos-droits="">
             Conformément au RGPD et à la loi Informatique et Libertés, vous disposez de droits
-            d&apos;accès, de rectification, d&apos;effacement, de limitation et
-            d&apos;opposition sur vos données. Pour les exercer : {EDITEUR.contact}. Vous
-            pouvez également saisir la CNIL (cnil.fr).
+            d&apos;accès, de rectification, d&apos;effacement, de portabilité, de limitation et
+            d&apos;opposition sur vos données.
+          </p>
+          <ul className="list-disc space-y-1 pl-5">
+            <li>
+              Enseignants : dans l&apos;espace enseignant, la page « Mon compte » propose
+              « Exporter mes données » (un fichier JSON, pour l&apos;accès et la portabilité) et
+              « Supprimer mon compte » (l&apos;effacement, avec vos parties et les données des élèves
+              qui y sont rattachées).
+            </li>
+            <li>
+              Élèves, parents, établissements, et pour toute rectification : écrivez à{" "}
+              {EDITEUR.contact}, en donnant pour un élève le code de la partie et le pseudo
+              utilisé. Un établissement peut demander la suppression de toutes ses données.
+            </li>
+          </ul>
+          <p>
+            Si vous estimez que vos droits ne sont pas respectés, vous pouvez adresser une
+            réclamation à la CNIL (cnil.fr).
           </p>
         </Section>
 
