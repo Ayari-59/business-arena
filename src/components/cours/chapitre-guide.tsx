@@ -820,8 +820,15 @@ function GraphiqueDuLaboratoire({ graphique, levier, position }: { graphique: Gr
   const xs = Array.from({ length: n + 1 }, (_, i) => levier.min + ((levier.max - levier.min) * i) / n);
   const series = graphique.courbes.map((c) => xs.map((v) => c.valeur({ ...position, [levier.code]: v })));
   const toutes = series.flat().filter(Number.isFinite);
-  const haut = Math.max(...toutes, 0);
-  const bas = Math.min(...toutes, 0);
+  const plusHaut = Math.max(...toutes);
+  const plusBas = Math.min(...toutes);
+  // Des courbes loin de zéro (un CMPC entre 7 et 9 %) seraient écrasées par un axe qui part de
+  // zéro : l'axe se resserre alors sur leurs valeurs, et ses bornes s'écrivent pour que l'échelle
+  // reste lisible. Sinon, il garde zéro, et sa ligne.
+  const loinDeZero = plusBas > 0 ? plusBas > plusHaut / 2 : plusHaut < 0 && plusHaut < plusBas / 2;
+  const jeu = (plusHaut - plusBas) * 0.1 || Math.abs(plusHaut) * 0.05 || 1;
+  const haut = loinDeZero ? plusHaut + jeu : Math.max(plusHaut, 0);
+  const bas = loinDeZero ? plusBas - jeu : Math.min(plusBas, 0);
   const ecart = haut - bas || 1;
   const x = (v: number) => marge.g + ((v - levier.min) / (levier.max - levier.min || 1)) * (L - marge.g - marge.d);
   const y = (v: number) => H - marge.b - ((v - bas) / ecart) * (H - marge.h - marge.b);
@@ -830,7 +837,17 @@ function GraphiqueDuLaboratoire({ graphique, levier, position }: { graphique: Gr
   return (
     <figure className="grid gap-2" data-graphique-du-laboratoire="">
       <svg viewBox={`0 0 ${L} ${H}`} className="h-auto w-full max-w-2xl" role="img" aria-label={`${graphique.courbes.map((c) => c.libelle).join(", ")} selon ${levier.libelle.toLowerCase()}`}>
-        <line x1={x(levier.min)} y1={y(0)} x2={x(levier.max)} y2={y(0)} stroke="currentColor" strokeOpacity="0.4" />
+        {!loinDeZero && <line x1={x(levier.min)} y1={y(0)} x2={x(levier.max)} y2={y(0)} stroke="currentColor" strokeOpacity="0.4" />}
+        {loinDeZero && (
+          <>
+            <text x={x(levier.min)} y={marge.h + 10} fontSize="11" fill="currentColor" opacity="0.7">
+              {valeurDeLigne(haut, unite === "€" ? undefined : unite)}
+            </text>
+            <text x={x(levier.min)} y={H - marge.b - 4} fontSize="11" fill="currentColor" opacity="0.7">
+              {valeurDeLigne(bas, unite === "€" ? undefined : unite)}
+            </text>
+          </>
+        )}
         {series.map((pts, k) => (
           <polyline
             key={graphique.courbes[k]!.libelle}

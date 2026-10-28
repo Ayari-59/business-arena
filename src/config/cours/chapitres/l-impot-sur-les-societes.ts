@@ -1,167 +1,274 @@
-import type { CompanyRoundResult } from "../../../engine/types";
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../pedagogy/cours/etats";
-import { scenarioByCode } from "../../scenarios/registry";
-import { type Cas } from "../cas";
-import { anneeDuCours as anneeJouee } from "../monde/annee-du-cours";
-import type { Chapitre } from "../types";
+import type { Cas } from "../cas";
+import { acomptes, eligibleAuTauxReduit, impotDuBenefice, resultatFiscal, solde } from "../monde/finance";
+import {
+  ACOMPTES,
+  CONDITIONS_DU_TAUX_REDUIT,
+  DEPENSE_DE_FIN_D_ANNEE,
+  EXERCICE_N1_DE_NOVA,
+  IMPOT_DE_NOVA_EN_N,
+  MAJORATION_DE_RETARD,
+  NOVA_ET_LE_TAUX_REDUIT,
+  PIXEL_ET_LE_TAUX_REDUIT,
+  PLAFOND_DU_TAUX_REDUIT,
+  TAUX_NORMAL,
+  TAUX_REDUIT,
+  VOITURE_DU_GERANT,
+  type ExerciceFiscal,
+} from "../monde/projets-et-financement";
+import type { Chapitre, TableauDeDonnees } from "../types";
 
-/** Au centime, sans zéro négatif : −0,001 € s'écrit 0 €, pas « −0 € ». */
-const centime = (x: number) => auCentime(x) || 0;
+/**
+ * CHAPITRE : L'IMPÔT SUR LES SOCIÉTÉS, DU RÉSULTAT À L'IMPÔT (fiscalité de l'entreprise, palier 3 ;
+ * BTS CG, DCG UE4, BUT GEA).
+ *
+ * LE CHAPITRE JOUE DANS LE MONDE DU COURS (src/config/cours/monde), pas dans l'arène : le second
+ * exercice de NOVA, N+1, a une fiche figée (monde/projets-et-financement.ts, EXERCICE_N1_DE_NOVA) et
+ * l'impôt se calcule par le modèle du cours (monde/finance.ts : `resultatFiscal`, `impotDuBenefice`,
+ * `acomptes`, `solde`). Une évolution du moteur ne change rien ici.
+ *
+ * L'objet : du résultat comptable au résultat fiscal (deux réintégrations : l'amortissement de la
+ * voiture du gérant au-delà du plafond, une majoration de retard), le barème du taux réduit et ses
+ * conditions, le taux effectif face au taux marginal, les acomptes calculés sur l'impôt de N et le
+ * solde du 15 mai N+2. Puis une critique : l'impôt qui pousse à dépenser en fin d'année.
+ *
+ * Le piège central : le taux réduit fait croire qu'un euro de charge en plus économise 15 %. Au-delà
+ * de 42 500 € de bénéfice, chaque euro paie 25 % : le taux marginal est le taux normal, quel que soit
+ * le taux effectif, et c'est lui qui dit ce que rapporte (ou coûte) un euro de plus.
+ *
+ * LES TROIS TEMPS (demande du propriétaire, octobre 2026 : le niveau d'arrivée est celui de l'examen) :
+ *   · guidé : intro, le-resultat-fiscal, la-majoration (la formule est au repère ou dans la question,
+ *     qui nomme les chiffres) ;
+ *   · l'expérience avant la formule (prédire, manipuler, constater, formaliser) : predire-le-taux-effectif
+ *     puis le-taux-effectif-au-curseur (le bénéfice de 42 500 € à 200 000 €, l'impôt face à 20 % du
+ *     bénéfice : ils se croisent à 85 000 €) avant l-impot-de-l-exercice ; predire-le-solde puis
+ *     le-solde-au-curseur (le bénéfice de N+1, l'impôt face aux acomptes calculés sur N : ils se
+ *     croisent à 99 968 €) avant les-acomptes-et-le-solde ;
+ *   · autonome : l-impot-de-l-exercice (le repère donne le barème, la question ne nomme plus les
+ *     chiffres), les-conditions-du-taux-reduit, les-acomptes-et-le-solde, au-31-decembre ;
+ *   · expert : le-laboratoire-de-l-impot (résultat comptable, réintégrations, taux réduit ou taux
+ *     normal, et le graphique du taux effectif face au taux marginal ; défi : un taux effectif sous
+ *     20 % avec un taux marginal de 25 %), sans-le-taux-reduit (une variante : un fonds entre au
+ *     capital, le taux réduit tombe), a-rebours (retrouver l'impôt et le résultat fiscal de N+2 à
+ *     partir du solde), la-depense-de-decembre (la critique) ; puis la synthèse.
+ *
+ * CE QUI A DISPARU, AVEC L'ARÈNE : les quatre trimestres de l'année jouée, les acomptes que le moteur
+ * prélevait sur le résultat cumulé de l'exercice en cours, le trimestre de perte qui les faisait
+ * rendre. Le cours suit maintenant le droit : des acomptes sur l'impôt de l'exercice précédent, un
+ * solde après la clôture, une dette d'impôt au bilan.
+ */
 
-/** Un montant à la française, avec le signe moins typographique. */
+/**
+ * LE REPÈRE DU TAUX EFFECTIF, hypothèse du cours : 20 %, le taux sous lequel on cherche à garder le
+ * taux effectif de NOVA (au curseur, puis au laboratoire). Ce n'est pas un taux du droit.
+ */
+export const TAUX_EFFECTIF_VISE = 0.2;
+
+/**
+ * LA VARIANTE SANS TAUX RÉDUIT, hypothèse du cours : en N+1, un fonds d'investissement entre au
+ * capital de NOVA ; les associés fondateurs n'en gardent que 70 %. Le chiffre d'affaires et le
+ * résultat ne changent pas.
+ */
+export const PART_DES_FONDATEURS_APRES_LE_FONDS = 0.7;
+
+/**
+ * LE CALCUL À REBOURS, hypothèse du cours : au 15 mai N+3, l'État rend 1 870 € à NOVA au titre de
+ * N+2 (un solde négatif). Les acomptes de N+2 se sont calculés sur l'impôt de N+1, comme le cours le
+ * suppose, et NOVA a toujours droit au taux réduit.
+ */
+export const SOLDE_DE_N2_A_REBOURS = -1_870;
+
+/**
+ * LA MACHINE DE DÉCEMBRE, hypothèse du cours (l'étape de la critique) : une machine de 20 000 € hors
+ * taxes achetée le 20 décembre, qu'on croit déduire en entier de l'exercice.
+ */
+export const MACHINE_DE_DECEMBRE = 20_000;
+
+/** Les bornes des curseurs du bénéfice : à partir du plafond du taux réduit, où l'impôt est une droite. */
+export const BENEFICE_DU_CURSEUR = { min: PLAFOND_DU_TAUX_REDUIT, max: 200_000 } as const;
+
+/** Les leviers du laboratoire de l'impôt : le résultat comptable et les réintégrations, en euros. */
+export const LEVIERS_DE_L_IMPOT = {
+  resultat: { min: 30_000, max: 200_000, pas: 20 },
+  reintegrations: { min: 0, max: 20_000, pas: 20 },
+} as const;
+
+/** Le levier à choix du barème : le taux réduit d'une PME, ou le taux normal seul. */
+export const BAREMES = { normal: 0, reduit: 1 } as const;
+
+/**
+ * Une solution du défi du laboratoire, hypothèse du cours : 60 000 € de résultat comptable, les
+ * réintégrations de N+1, le taux réduit. 64 020 € de bénéfice, 11 755 € d'impôt : 19,59 %.
+ */
+export const SOLUTION_DU_LABORATOIRE = { resultat: 60_000, reintegrations: 4_020, bareme: BAREMES.reduit } as const;
+
+/** L'impôt sur les sociétés se calcule ici sur l'exercice de NOVA. */
+export const ENTREPRISES_DE_L_IMPOT: readonly string[] = ["nova"];
+
+/** Les exercices du cours, par code d'entreprise : celui de NOVA en N+1. */
+const EXERCICES: Readonly<Record<string, ExerciceFiscal>> = { nova: EXERCICE_N1_DE_NOVA };
+
+/** L'exercice de l'entreprise, lu par son code. */
+export const exerciceDe = (c: Pick<Cas, "code">): ExerciceFiscal => EXERCICES[c.code]!;
+
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-/** « gagne 3 622 € » ou « perd 2 971 € » : un gain négatif se dit comme une perte. */
-const gagne = (x: number) => (x >= 0 ? `gagne ${eur(x)}` : `perd ${eur(-x)}`);
 /** Un taux déjà en pour cent : 25 donne « 25 % ». */
 const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
-const auCentieme = (x: number) => Math.round(x * 100) / 100;
+/** Une fraction en pour cent, au centième de point : 0,222607 donne 22,26. */
+const enPct = (x: number) => Math.round(x * 10_000) / 100;
+const auCentime = (x: number) => Math.round(x * 100) / 100;
+const somme = (xs: readonly number[]) => auCentime(xs.reduce((s, x) => s + x, 0));
+/** « de NOVA », « d'Escale » : l'élision devant une voyelle. */
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
-/**
- * Le cours calcule sur les résultats trimestriels arrondis au centime, l'arène sur ses montants
- * exacts : quand un total de l'arène s'en écarte d'un centime, le texte le dit.
- */
-const aLArrondiPres = (arene: number, cours: number) =>
-  Math.abs(arene - cours) >= 0.005 ? `, à ${eur(auCentime(Math.abs(arene - cours)))} d'arrondi près` : "";
+
+/** L'impôt au taux réduit sur la part du bénéfice qui y a droit : 42 500 € × 15 % = 6 375 €. */
+const IMPOT_DE_LA_TRANCHE_REDUITE = auCentime(PLAFOND_DU_TAUX_REDUIT * TAUX_REDUIT);
 
 /**
- * CHAPITRE : L'IMPÔT SUR LES SOCIÉTÉS, DU RÉSULTAT À L'IMPÔT (fiscalité de l'entreprise,
- * palier 3).
- *
- * L'année du cours (`anneeJouee`), ses quatre trimestres, telle que l'arène la joue aujourd'hui :
- * l'impôt sur l'exercice (`impotSurLExercice`). Le chapitre part des résultats avant impôt des
- * quatre trimestres, calcule l'impôt de l'exercice au taux du scénario, le résultat net et le
- * taux effectif, puis refait ce que le moteur fait chaque trimestre : l'acompte, l'impôt du
- * résultat cumulé depuis le début de l'exercice moins les acomptes déjà versés, qui devient un
- * remboursement quand un trimestre de perte fait baisser le cumul (src/engine/finance/statements.ts).
- *
- * CE QUE LE MOTEUR FAIT, ET RIEN DE PLUS. Un seul taux, celui du scénario (`finance.taxRate`), sur
- * tout le bénéfice : pas de taux réduit. Le bénéfice imposable est le résultat avant impôt, sans
- * réintégration ni déduction. L'acompte sort de la trésorerie dans le trimestre (le flux
- * « impot ») et le bilan ne porte aucune dette d'impôt : au 31 décembre, l'exercice est soldé.
- * Le chapitre le dit, et dit en quoi le droit diffère ; le taux réduit du droit n'est chiffré
- * que comme une hypothèse du cours (`TAUX_REDUIT_DU_DROIT`), pour mesurer la simplification.
- *
- * Ce n'est pas « La clôture », qui calcule l'impôt depuis la balance et le passe au journal (695
- * et 444) : ici, l'impôt se calcule depuis les trimestres, et le chapitre suit son paiement.
- *
- * LES ENTREPRISES. Tenue par le bon gestionnaire, l'année du cours finit en bénéfice dans toutes
- * les entreprises : le chapitre se joue partout, et ne restreint pas ses entreprises (la garde
- * recompte). « Le déficit reporté » fait perdre une année en bénéfice par une décision du chapitre
- * (`FACTEUR_DU_GRAND_ENTRETIEN`).
- *
- * CE QUI NE SE LIT PLUS. Dans cette année, aucun cumul n'est en perte à la fin du trimestre 3 et
- * aucun dernier acompte n'est rendu : l'explication des acomptes ne lit plus que sa branche « le
- * cumul était déjà en bénéfice ». Et toutes les entreprises gagnent plus que le plafond du taux
- * réduit : la branche « tout son bénéfice reste sous le plafond » ne se lit plus. Les branches
- * restent, justes, pour une autre année.
+ * LE TAUX MARGINAL D'UN BÉNÉFICE (une fonction du chapitre, que le modèle n'a pas) : ce que paie le
+ * prochain euro de bénéfice. Rien sur une perte ; le taux réduit sous le plafond, pour une société
+ * qui y a droit ; le taux normal au-delà.
  */
-
-/** Les entreprises où l'année du cours finit en bénéfice, celles où l'impôt se calcule : toutes. */
-export const ENTREPRISES_IMPOSABLES = ["nova", "boutique", "hotel", "bistrot", "conseil", "ecommerce", "fitness", "batiment", "transport"] as const;
-
-/** Le trimestre dont le chapitre fait calculer l'acompte : le dernier de l'exercice. */
-export const TRIMESTRE_DE_L_ACOMPTE = 4;
+export function tauxMarginal(benefice: number, eligible: boolean): number {
+  if (benefice < 0) return 0;
+  return eligible && benefice < PLAFOND_DU_TAUX_REDUIT ? TAUX_REDUIT : TAUX_NORMAL;
+}
 
 /**
- * LE TAUX RÉDUIT DU DROIT, QUE L'ARÈNE N'APPLIQUE PAS : une hypothèse du cours, pour mesurer ce
- * que la simplification change. Article 219, I-b du code général des impôts, pour les exercices
- * ouverts depuis le 1er janvier 2023 : 15 % jusqu'à 42 500 € de bénéfice, le taux normal au-delà,
- * pour une PME dont le chiffre d'affaires hors taxes reste sous 10 millions d'euros et dont le
- * capital, entièrement libéré, est détenu pour 75 % au moins par des personnes physiques.
+ * LE RÉSULTAT FISCAL D'UN IMPÔT DONNÉ (une fonction du chapitre, le calcul à rebours) : le barème
+ * remonté. Au-delà de l'impôt de la tranche réduite, chaque euro d'impôt vient de 4 € de bénéfice au
+ * taux normal.
  */
-export const TAUX_REDUIT_DU_DROIT = 0.15;
-export const PLAFOND_DU_TAUX_REDUIT = 42_500;
-export const CHIFFRE_D_AFFAIRES_MAXIMAL_DU_TAUX_REDUIT = 10_000_000;
-export const PART_DES_PERSONNES_PHYSIQUES = 0.75;
-
-/** L'impôt du droit, si l'entreprise avait droit au taux réduit : 15 % jusqu'au plafond, le taux normal au-delà. */
-export function impotAuTauxReduit(benefice: number, tauxNormal: number) {
-  const base = Math.max(0, benefice);
-  const reduite = Math.min(base, PLAFOND_DU_TAUX_REDUIT);
-  const normale = auCentime(base - reduite);
-  const aTauxReduit = auCentime(reduite * TAUX_REDUIT_DU_DROIT);
-  const aTauxNormal = auCentime(normale * tauxNormal);
-  return { reduite, normale, aTauxReduit, aTauxNormal, impot: auCentime(aTauxReduit + aTauxNormal) };
+export function resultatFiscalDeLImpot(impot: number, eligible: boolean): number {
+  if (!eligible) return auCentime(impot / TAUX_NORMAL);
+  if (impot <= IMPOT_DE_LA_TRANCHE_REDUITE) return auCentime(impot / TAUX_REDUIT);
+  return auCentime(PLAFOND_DU_TAUX_REDUIT + (impot - IMPOT_DE_LA_TRANCHE_REDUITE) / TAUX_NORMAL);
 }
 
-/** Un trimestre de l'exercice, tel que le moteur le compte. */
-export interface TrimestreFiscal {
-  trimestre: number;
-  avantImpot: number;
-  /** Le résultat avant impôt cumulé depuis le premier trimestre de l'exercice. */
-  cumul: number;
-  /** L'impôt de ce cumul : ce que l'exercice doit à la fin du trimestre. */
-  du: number;
-  /** L'acompte du trimestre : l'impôt du cumul moins les acomptes déjà versés (négatif : rendu). */
-  acompte: number;
-  /** L'impôt que l'arène inscrit au trimestre. */
-  arene: number;
-}
-
-/** Les trimestres d'un exercice, l'acompte de chacun recalculé comme le moteur le calcule. */
-export function trimestresFiscaux(tours: readonly CompanyRoundResult[], taux: number, report = 0): TrimestreFiscal[] {
-  let cumul = 0;
-  let verse = 0;
-  return tours.map((r, i) => {
-    const avantImpot = centime(r.incomeStatement.pretaxIncome);
-    cumul = centime(cumul + avantImpot);
-    const du = centime(taux * Math.max(0, cumul - report));
-    const acompte = centime(du - verse);
-    verse = du;
-    return { trimestre: i + 1, avantImpot, cumul, du, acompte, arene: centime(r.incomeStatement.tax) };
-  });
-}
-
-const calculs = new Map<string, ReturnType<typeof calculer>>();
-
-/** L'impôt de l'année du cours : les trimestres, l'exercice, le taux effectif, et le taux réduit en hypothèse. */
-export function impotDeLAnnee(c: Cas) {
-  const deja = calculs.get(c.code);
-  if (deja) return deja;
-  const r = calculer(c);
-  calculs.set(c.code, r);
-  return r;
-}
-
-function calculer(c: Cas) {
-  const taux = scenarioByCode(c.code).scenario.finance.taxRate;
-  const tours = anneeJouee(c.code).partie.rounds.map((t) => t.results["joueur"]!);
-  const trimestres = trimestresFiscaux(tours, taux);
-  const dernier = trimestres.at(-1)!;
-  const avantImpot = dernier.cumul;
-  const impot = dernier.du;
-  const resultatNet = auCentime(avantImpot - impot);
-  const tauxEffectif = avantImpot > 0 ? auCentieme((impot / avantImpot) * 100) : 0;
-  // Le trimestre de l'acompte et celui qui le précède.
-  const acompte = trimestres[TRIMESTRE_DE_L_ACOMPTE - 1]!;
-  const avant = trimestres[TRIMESTRE_DE_L_ACOMPTE - 2]!;
-  // Le premier trimestre où l'arène rend une part des acomptes : un trimestre de perte après un bon.
-  const rendu = trimestres.find((t) => t.acompte < 0) ?? null;
-  const reduit = impotAuTauxReduit(avantImpot, taux);
+/** L'impôt, le taux effectif (sur le résultat comptable) et le taux marginal, pour un résultat comptable, des réintégrations et un barème. */
+export function laboratoireDeLImpot(resultatComptable: number, reintegrations: number, eligible: boolean) {
+  const benefice = auCentime(resultatComptable + reintegrations);
+  const i = impotDuBenefice(benefice, eligible);
   return {
-    taux,
-    tauxPct: auCentieme(taux * 100),
-    trimestres,
-    avantImpot,
-    impot,
-    resultatNet,
-    tauxEffectif,
-    acompte,
-    avant,
-    rendu,
-    // Ce que l'arène a inscrit sur l'année, trimestre après trimestre.
-    impotDeLArene: centime(tours.reduce((t, r) => t + r.incomeStatement.tax, 0)),
-    // Ce que les acomptes ont fait sortir de la trésorerie sur l'année.
-    impotDecaisse: auCentime(-tours.reduce((t, r) => t + r.cashFlow.items.filter((i) => i.label === "impot").reduce((s, i) => s + i.amount, 0), 0)),
-    chiffreDAffaires: c.annee.ventes,
-    reduit,
-    tauxEffectifReduit: avantImpot > 0 ? auCentieme((reduit.impot / avantImpot) * 100) : 0,
-    economieDuTauxReduit: auCentime(impot - reduit.impot),
+    benefice,
+    aTauxReduit: i.aTauxReduit,
+    aTauxNormal: i.aTauxNormal,
+    impot: i.impot,
+    resultatNet: auCentime(resultatComptable - i.impot),
+    tauxEffectif: resultatComptable > 0 ? enPct(i.impot / resultatComptable) : 0,
+    tauxMarginal: enPct(tauxMarginal(benefice, eligible)),
+    economieDuTauxReduit: auCentime(impotDuBenefice(benefice, false).impot - impotDuBenefice(benefice, true).impot),
   };
 }
 
-const T = TRIMESTRE_DE_L_ACOMPTE;
+/** L'impôt de N+1 de NOVA : tout ce que le chapitre et son cas demandent. */
+export function impotDeNova(c: Pick<Cas, "code">) {
+  const e = exerciceDe(c);
+  const v = VOITURE_DU_GERANT;
+  const amortissementComptable = auCentime(v.prixTtc / v.dureeDAmortissement);
+  const amortissementDeductible = auCentime(v.plafondDeDeduction / v.dureeDAmortissement);
+  const reintegrations = somme(e.reintegrations.map((r) => r.montant));
+  const benefice = resultatFiscal(e);
+  const eligible = eligibleAuTauxReduit(NOVA_ET_LE_TAUX_REDUIT);
+  const i = impotDuBenefice(benefice, eligible);
+  const verses = acomptes(IMPOT_DE_NOVA_EN_N);
+  const totalVerse = somme(verses);
+  // La variante : les fondateurs ne gardent que 70 % du capital, le taux réduit tombe.
+  const avecLeFonds = { ...NOVA_ET_LE_TAUX_REDUIT, partDesPersonnesPhysiques: PART_DES_FONDATEURS_APRES_LE_FONDS };
+  const eligibleAvecLeFonds = eligibleAuTauxReduit(avecLeFonds);
+  const sansTauxReduit = impotDuBenefice(benefice, eligibleAvecLeFonds).impot;
+  // Le calcul à rebours : N+2, ses acomptes sur l'impôt de N+1, son solde donné.
+  const acomptesDeN2 = acomptes(i.impot);
+  const versesEnN2 = somme(acomptesDeN2);
+  const impotDeN2 = auCentime(versesEnN2 + SOLDE_DE_N2_A_REBOURS);
+  const beneficeDeN2 = resultatFiscalDeLImpot(impotDeN2, eligible);
+  // Les curseurs : le bénéfice où le taux effectif atteint 20 %, celui où l'impôt rejoint les acomptes.
+  const seuilDuTauxEffectif = Math.floor(((TAUX_NORMAL - TAUX_REDUIT) * PLAFOND_DU_TAUX_REDUIT) / (TAUX_NORMAL - TAUX_EFFECTIF_VISE) + 1e-6);
+  const seuilDuSolde = Math.floor(PLAFOND_DU_TAUX_REDUIT + (totalVerse - IMPOT_DE_LA_TRANCHE_REDUITE) / TAUX_NORMAL + 1e-6);
+  return {
+    e,
+    entreprise: e.entreprise,
+    amortissementComptable,
+    amortissementDeductible,
+    amortissementReintegre: auCentime(amortissementComptable - amortissementDeductible),
+    reintegrations,
+    benefice,
+    eligible,
+    aTauxReduit: i.aTauxReduit,
+    baseAuTauxNormal: i.baseAuTauxNormal,
+    aTauxNormal: i.aTauxNormal,
+    impot: i.impot,
+    resultatNet: auCentime(e.resultatComptable - i.impot),
+    tauxEffectif: enPct(i.impot / e.resultatComptable),
+    tauxEffectifFiscal: enPct(i.impot / benefice),
+    tauxMarginal: enPct(tauxMarginal(benefice, eligible)),
+    acompte: verses[0]!,
+    totalVerse,
+    solde: solde(i.impot, verses),
+    eligibleAvecLeFonds,
+    sansTauxReduit,
+    impotEnPlus: auCentime(sansTauxReduit - i.impot),
+    tauxEffectifSansTauxReduit: enPct(sansTauxReduit / e.resultatComptable),
+    acompteDeN2: acomptesDeN2[0]!,
+    versesEnN2,
+    impotDeN2,
+    beneficeDeN2,
+    tauxEffectifDeN2: enPct(impotDeN2 / beneficeDeN2),
+    seuilDuTauxEffectif,
+    seuilDuSolde,
+  };
+}
+
+export type ImpotDeNova = ReturnType<typeof impotDeNova>;
+
+/** Le taux effectif visé appliqué à un bénéfice, en points entiers pour un calcul exact : 20 × b ÷ 100. */
+const vingtPourCent = (b: number) => (b * Math.round(TAUX_EFFECTIF_VISE * 100)) / 100;
+
+/** L'impôt d'un bénéfice au-delà du plafond, pour une société qui a droit au taux réduit : la droite des curseurs. */
+export const impotAuDelaDuPlafond = (benefice: number) => IMPOT_DE_LA_TRANCHE_REDUITE + (benefice - PLAFOND_DU_TAUX_REDUIT) * TAUX_NORMAL;
+
+/** Le document de départ : l'exercice N+1 de NOVA, et ce qu'il faut pour son impôt. */
+function tableauDeLExercice(x: ImpotDeNova): TableauDeDonnees {
+  const v = VOITURE_DU_GERANT;
+  return {
+    titre: `Le second exercice ${dE(x.entreprise)}, ${x.e.exercice}`,
+    colonnes: ["Valeur"],
+    lignes: [
+      { libelle: "Résultat comptable avant impôt", valeurs: [eur(x.e.resultatComptable)] },
+      { libelle: "Voiture du gérant, prix toutes taxes comprises", valeurs: [eur(v.prixTtc)] },
+      { libelle: "Durée d'amortissement de la voiture", valeurs: [`${v.dureeDAmortissement} ans`] },
+      { libelle: "Plafond de l'amortissement déductible", valeurs: [eur(v.plafondDeDeduction)] },
+      { libelle: "Majoration de retard sur la TVA", valeurs: [eur(MAJORATION_DE_RETARD)] },
+      { libelle: "Chiffre d'affaires de N", valeurs: [eur(NOVA_ET_LE_TAUX_REDUIT.chiffreDAffaires)] },
+      { libelle: "Capital détenu par les associés fondateurs", valeurs: [pct(NOVA_ET_LE_TAUX_REDUIT.partDesPersonnesPhysiques * 100)] },
+      { libelle: "Impôt sur les sociétés de N", valeurs: [eur(IMPOT_DE_NOVA_EN_N)] },
+      { libelle: `Taux réduit, jusqu'à ${eur(PLAFOND_DU_TAUX_REDUIT)}`, valeurs: [pct(TAUX_REDUIT * 100)] },
+      { libelle: "Taux normal", valeurs: [pct(TAUX_NORMAL * 100)] },
+    ],
+  };
+}
+
+/** La synthèse : du résultat comptable au solde. */
+function tableauDeLImpot(x: ImpotDeNova): TableauDeDonnees {
+  return {
+    titre: `L'impôt ${dE(x.entreprise)} en ${x.e.exercice}`,
+    colonnes: ["Montant"],
+    lignes: [
+      { libelle: "Résultat comptable avant impôt", valeurs: [eur(x.e.resultatComptable)] },
+      { libelle: "Réintégrations", valeurs: [eur(x.reintegrations)] },
+      { libelle: "Résultat fiscal", valeurs: [eur(x.benefice)] },
+      { libelle: `Impôt au taux réduit, ${pct(TAUX_REDUIT * 100)}`, valeurs: [eur(x.aTauxReduit)] },
+      { libelle: `Impôt au taux normal, ${pct(TAUX_NORMAL * 100)}`, valeurs: [eur(x.aTauxNormal)] },
+      { libelle: "Impôt sur les sociétés", valeurs: [eur(x.impot)] },
+      { libelle: "Acomptes versés en N+1", valeurs: [eur(x.totalVerse)] },
+      { libelle: `Solde du ${ACOMPTES.dateDuSolde} N+2`, valeurs: [eur(x.solde)] },
+      { libelle: "Taux effectif, sur le résultat comptable", valeurs: [pct(x.tauxEffectif)] },
+      { libelle: "Taux marginal", valeurs: [pct(x.tauxMarginal)] },
+    ],
+  };
+}
+
+const NB = ACOMPTES.dates.length;
 
 export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
   code: "l-impot-sur-les-societes",
@@ -174,156 +281,305 @@ export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
   ],
   titre: "L'impôt sur les sociétés : du résultat à l'impôt",
   accroche:
-    "Quatre trimestres de résultats, un impôt pour l'exercice : le taux, le résultat net, le taux effectif, et les acomptes que l'arène prélève chaque trimestre, jusqu'à rendre ce qu'elle a pris en trop.",
+    "Du résultat comptable au résultat fiscal, le taux réduit d'une PME et ses conditions, le taux effectif face au taux marginal, les acomptes et le solde : l'impôt d'un exercice de NOVA, et pourquoi dépenser en décembre pour payer moins d'impôt est un mauvais calcul.",
   objectifs: [
-    "Calculer l'impôt sur les sociétés d'un exercice, le résultat net et le taux effectif",
-    "Calculer l'acompte d'un trimestre sur le résultat cumulé de l'exercice",
-    "Expliquer pourquoi un trimestre de perte fait rendre une part des acomptes",
-    "Dire en quoi l'arène simplifie le droit : un seul taux, des acomptes sur l'exercice en cours",
-    "Mesurer ce que changerait le taux réduit d'une PME",
+    "Passer du résultat comptable au résultat fiscal par les réintégrations et les déductions",
+    "Calculer l'impôt au taux réduit puis au taux normal, et vérifier les conditions du taux réduit",
+    "Distinguer le taux effectif et le taux marginal, et dire lequel juge une décision",
+    "Calculer les acomptes, le solde, et la dette d'impôt à la clôture",
+    "Remonter d'un solde à l'impôt et au résultat fiscal, et critiquer la dépense de fin d'année",
   ],
   libre: false,
+  entreprises: {
+    codes: ENTREPRISES_DE_L_IMPOT,
+    pourquoi:
+      "l'impôt se calcule ici sur un exercice complet, le second de NOVA, la fabrique d'enceintes du cours : son résultat fiscal, son taux réduit de PME, ses acomptes et son solde. Venu d'une autre entreprise, vous y apprenez la mécanique que vous retrouverez sur vos propres chiffres.",
+  },
   etapes: [
     {
       id: "intro",
       type: "lecture",
       titre: "Un impôt pour l'exercice",
       notions: ["income_statement"],
+      tableau: (c) => tableauDeLExercice(impotDeNova(c)),
       texte: (c) => {
-        const k = impotDeLAnnee(c);
+        const x = impotDeNova(c);
         return [
-          `L'impôt sur les sociétés se calcule sur le bénéfice d'un exercice, l'année entière, pas sur un trimestre. Voici les ${k.trimestres.length} trimestres ${dE(c.entreprise)} dans l'arène : le résultat avant impôt de chacun, ce que l'activité a laissé une fois toutes les charges payées, intérêts compris.`,
-          `L'arène applique un seul taux, celui du scénario, ${pct(k.tauxPct)}, à tout le bénéfice de l'exercice, et prend pour bénéfice imposable le résultat avant impôt, tel quel. En droit, le résultat fiscal part du résultat comptable, puis réintègre les charges que la loi ne déduit pas et retire certains produits ; l'arène n'en fait rien. Elle simplifie, et ce chapitre dit où.`,
+          `Ce chapitre se joue dans la simulation du cours, chez ${x.entreprise}, la fabrique d'enceintes, sur son second exercice, ${x.e.exercice}. L'impôt sur les sociétés porte sur le bénéfice de l'exercice entier, mais pas sur le bénéfice comptable tel quel : la loi refuse de déduire certaines charges, qu'on réintègre, et exonère certains produits, qu'on déduit. On obtient le résultat fiscal, et c'est lui qu'on taxe.`,
+          `Les hypothèses de la simulation. ${x.entreprise} gagne ${eur(x.e.resultatComptable)} avant impôt en ${x.e.exercice}. Le gérant roule dans une voiture de tourisme achetée en janvier, dont la loi plafonne l'amortissement déductible ; une déclaration de TVA déposée en retard a coûté une majoration. ${x.entreprise} remplit les conditions du taux réduit : ${pct(TAUX_REDUIT * 100)} jusqu'à ${eur(PLAFOND_DU_TAUX_REDUIT)} de bénéfice, ${pct(TAUX_NORMAL * 100)} au-delà. L'impôt s'arrondit à l'euro.`,
+          `L'impôt se paie en ${NB} acomptes, le ${ACOMPTES.dates.join(", le ")}, puis un solde le ${ACOMPTES.dateDuSolde} qui suit la clôture. Le cours simplifie : les ${NB} acomptes de ${x.e.exercice} se calculent tous sur l'impôt de N, ${eur(IMPOT_DE_NOVA_EN_N)} (le droit calcule celui du ${ACOMPTES.dates[0]} sur l'avant-dernier exercice quand le dernier n'est pas encore déclaré).`,
         ];
       },
-      tableau: (c) => {
-        const k = impotDeLAnnee(c);
-        return {
-          titre: `L'année ${dE(c.entreprise)}, trimestre par trimestre`,
-          colonnes: ["Valeur"],
-          lignes: [
-            ...k.trimestres.map((t) => ({ libelle: `Résultat avant impôt, trimestre ${t.trimestre}`, valeurs: [eur(t.avantImpot)] })),
-            { libelle: "Taux de l'impôt sur les sociétés", valeurs: [pct(k.tauxPct)] },
-          ],
-        };
-      },
-      repere: () => "Résultat avant impôt de l'exercice × taux = impôt sur les sociétés ; résultat avant impôt − impôt = résultat net.",
+      repere: () => "Résultat fiscal = résultat comptable avant impôt + réintégrations − déductions. L'impôt se calcule sur le résultat fiscal.",
     },
     {
-      id: "impot-de-l-exercice",
+      id: "le-resultat-fiscal",
+      type: "montants",
+      titre: "Le résultat fiscal",
+      notions: ["income_statement", "depreciation"],
+      question: (c) => {
+        const x = impotDeNova(c);
+        const v = VOITURE_DU_GERANT;
+        return `La voiture du gérant, ${eur(v.prixTtc)} toutes taxes comprises, s'amortit sur ${v.dureeDAmortissement} ans ; la loi ne déduit l'amortissement que sur ${eur(v.plafondDeDeduction)}. Calculez l'amortissement déductible de l'année, puis l'amortissement à réintégrer (l'amortissement comptable, ${eur(x.amortissementComptable)}, moins le déductible), et enfin le résultat fiscal : ${eur(x.e.resultatComptable)}, plus cet amortissement, plus la majoration de retard de ${eur(MAJORATION_DE_RETARD)}.`;
+      },
+      champs: (c) => {
+        const x = impotDeNova(c);
+        const v = VOITURE_DU_GERANT;
+        return [
+          { libelle: "Amortissement déductible de la voiture", attendu: x.amortissementDeductible, calcul: `${eur(v.plafondDeDeduction)} ÷ ${v.dureeDAmortissement} = ${eur(x.amortissementDeductible)}` },
+          { libelle: "Amortissement à réintégrer", attendu: x.amortissementReintegre, calcul: `${eur(x.amortissementComptable)} − ${eur(x.amortissementDeductible)} = ${eur(x.amortissementReintegre)}` },
+          {
+            libelle: "Résultat fiscal",
+            attendu: x.benefice,
+            calcul: `${eur(x.e.resultatComptable)} + ${eur(x.amortissementReintegre)} + ${eur(MAJORATION_DE_RETARD)} = ${eur(x.benefice)}`,
+          },
+        ];
+      },
+      explication: (c) => {
+        const x = impotDeNova(c);
+        return [
+          `La voiture reste amortie de ${eur(x.amortissementComptable)} dans les comptes : la comptabilité ne change pas. La réintégration se fait hors comptabilité, sur la déclaration (le tableau 2058-A) : ${eur(x.reintegrations)} de charges que la loi ne déduit pas, et ${x.entreprise} est taxée sur ${eur(x.benefice)}, plus que son bénéfice.`,
+        ];
+      },
+    },
+    {
+      id: "la-majoration",
+      type: "choix",
+      titre: "La majoration de retard",
+      notions: ["income_statement"],
+      question: (c) => `La majoration de retard, ${eur(MAJORATION_DE_RETARD)}, est passée en charges dans les comptes ${dE(impotDeNova(c).entreprise)}. Pour le résultat fiscal, qu'en faites-vous ?`,
+      options: () => [
+        {
+          texte: "Je la réintègre : une pénalité ne se déduit pas",
+          juste: true,
+          retour: `Oui. Les amendes et les pénalités ne sont pas déductibles : laisser l'État financer une part de ses propres sanctions n'aurait pas de sens. Les ${eur(MAJORATION_DE_RETARD)} restent une charge comptable, et s'ajoutent au résultat fiscal.`,
+        },
+        {
+          texte: "Rien : c'est une charge de l'exercice comme une autre",
+          juste: false,
+          retour: "Non : toute charge comptable n'est pas déductible. Les pénalités, les amendes, l'impôt sur les sociétés lui-même, l'amortissement d'une voiture au-delà du plafond se réintègrent.",
+        },
+        {
+          texte: `Je la réintègre pour ${pct(TAUX_NORMAL * 100)} de son montant, sa part d'impôt`,
+          juste: false,
+          retour: `Non : on réintègre la charge entière, ${eur(MAJORATION_DE_RETARD)}, au résultat fiscal. C'est l'impôt calculé ensuite qui en prend ${pct(TAUX_NORMAL * 100)}.`,
+        },
+        {
+          texte: "Je la retranche du résultat comptable, une seconde fois",
+          juste: false,
+          retour: "Non : ce serait la déduire deux fois. Une charge non déductible s'ajoute au résultat comptable pour faire le résultat fiscal.",
+        },
+      ],
+    },
+    {
+      id: "predire-le-taux-effectif",
+      type: "choix",
+      titre: "Pariez sur le taux effectif",
+      notions: ["income_statement"],
+      question: (c) => {
+        const x = impotDeNova(c);
+        return `Avant de calculer, pariez. ${x.entreprise} paie ${pct(TAUX_REDUIT * 100)} sur ses premiers ${eur(PLAFOND_DU_TAUX_REDUIT)} de bénéfice, ${pct(TAUX_NORMAL * 100)} sur le reste. Plus son bénéfice grandit, plus son impôt rapporté à son bénéfice, le taux effectif…`;
+      },
+      options: () => {
+        const voir = "Faites varier le bénéfice à l'étape suivante : le curseur montre où va le taux effectif, et à quelle vitesse.";
+        return [
+          { texte: `Monte vers ${pct(TAUX_NORMAL * 100)}, sans jamais l'atteindre`, juste: true, retour: `Bon pari. ${voir}` },
+          { texte: `Reste à ${pct(TAUX_REDUIT * 100)} : une PME paie le taux réduit`, juste: false, retour: `Pari à vérifier. ${voir}` },
+          { texte: `Vaut ${pct(((TAUX_REDUIT + TAUX_NORMAL) / 2) * 100)}, la moyenne des deux taux`, juste: false, retour: `Pari à vérifier. ${voir}` },
+        ];
+      },
+    },
+    {
+      id: "le-taux-effectif-au-curseur",
+      type: "curseur",
+      titre: "Faites varier le bénéfice",
+      notions: ["income_statement"],
+      question: (c) => {
+        const x = impotDeNova(c);
+        return `Faites varier le bénéfice imposable ${dE(x.entreprise)} de ${eur(BENEFICE_DU_CURSEUR.min)} à ${eur(BENEFICE_DU_CURSEUR.max)}. Une droite donne son impôt, ${pct(TAUX_REDUIT * 100)} puis ${pct(TAUX_NORMAL * 100)} ; l'autre, ${pct(TAUX_EFFECTIF_VISE * 100)} du bénéfice. Placez le curseur sur le plus grand bénéfice où l'impôt ne dépasse pas ${pct(TAUX_EFFECTIF_VISE * 100)} du bénéfice, puis validez.`;
+      },
+      grandeur: () => ({ libelle: "Bénéfice imposable", unite: "€" }),
+      sens: "plus-grande",
+      cible: (c) => ({ attendu: impotDeNova(c).seuilDuTauxEffectif, min: BENEFICE_DU_CURSEUR.min, max: BENEFICE_DU_CURSEUR.max }),
+      zones: [`Taux effectif sous ${pct(TAUX_EFFECTIF_VISE * 100)}`, `Taux effectif au-dessus de ${pct(TAUX_EFFECTIF_VISE * 100)}`],
+      rates: () => ({
+        dessous: `Le taux effectif reste encore sous ${pct(TAUX_EFFECTIF_VISE * 100)} un peu plus loin : cherchez le plus grand bénéfice.`,
+        dessus: `À cette position, l'impôt dépasse déjà ${pct(TAUX_EFFECTIF_VISE * 100)} du bénéfice.`,
+      }),
+      montrer: "Montrer la limite",
+      lecture: (_c, b) => {
+        const l = laboratoireDeLImpot(b, 0, true);
+        const vise = vingtPourCent(b);
+        return [
+          { libelle: "Impôt sur les sociétés", montant: l.impot },
+          { libelle: `${pct(TAUX_EFFECTIF_VISE * 100)} du bénéfice`, montant: vise },
+          { libelle: "Économie du taux réduit", montant: l.economieDuTauxReduit },
+          { libelle: `Marge sous ${pct(TAUX_EFFECTIF_VISE * 100)} du bénéfice`, montant: auCentime(vise - l.impot), fort: true },
+        ];
+      },
+      droites: () => ({
+        produit: vingtPourCent,
+        cout: impotAuDelaDuPlafond,
+        libelles: [`${pct(TAUX_EFFECTIF_VISE * 100)} du bénéfice`, "Impôt, au taux réduit puis au taux normal"],
+      }),
+      explication: (c) => {
+        const x = impotDeNova(c);
+        const economie = auCentime(PLAFOND_DU_TAUX_REDUIT * (TAUX_NORMAL - TAUX_REDUIT));
+        return [
+          `Jusqu'à ${eur(x.seuilDuTauxEffectif)}, l'impôt reste sous ${pct(TAUX_EFFECTIF_VISE * 100)} du bénéfice ; au-delà, il passe au-dessus. L'économie du taux réduit ne grandit pas avec le bénéfice : elle reste ${eur(economie)}, ${eur(PLAFOND_DU_TAUX_REDUIT)} × (${pct(TAUX_NORMAL * 100)} − ${pct(TAUX_REDUIT * 100)}), et pèse de moins en moins. Le taux effectif monte vers ${pct(TAUX_NORMAL * 100)} sans l'atteindre.`,
+          `Au-delà de ${eur(PLAFOND_DU_TAUX_REDUIT)}, la droite de l'impôt monte de ${pct(TAUX_NORMAL * 100)} par euro de bénéfice : c'est le taux marginal, ce que paie le prochain euro. ${x.entreprise} gagne ${eur(x.benefice)} : son taux effectif est sous ${pct(TAUX_NORMAL * 100)}, son taux marginal est ${pct(TAUX_NORMAL * 100)}.`,
+        ];
+      },
+    },
+    {
+      id: "l-impot-de-l-exercice",
       type: "montants",
       titre: "L'impôt de l'exercice",
       notions: ["income_statement"],
-      question: (c) =>
-        `Calculez le résultat avant impôt de l'exercice ${dE(c.entreprise)}, l'impôt sur les sociétés au taux de ${pct(impotDeLAnnee(c).tauxPct)}, le résultat net, puis le taux effectif : l'impôt rapporté au résultat avant impôt, en %.`,
+      question: (c) => {
+        const x = impotDeNova(c);
+        return `Calculez l'impôt sur les sociétés ${dE(x.entreprise)} en ${x.e.exercice} sur son résultat fiscal : la part au taux réduit, la part au taux normal, l'impôt, puis le taux effectif, l'impôt rapporté au résultat comptable avant impôt, en %.`;
+      },
       champs: (c) => {
-        const k = impotDeLAnnee(c);
+        const x = impotDeNova(c);
         return [
+          { libelle: "Impôt au taux réduit", attendu: x.aTauxReduit, calcul: `${eur(PLAFOND_DU_TAUX_REDUIT)} × ${pct(TAUX_REDUIT * 100)} = ${eur(x.aTauxReduit)}` },
           {
-            libelle: "Résultat avant impôt de l'exercice",
-            attendu: k.avantImpot,
-            calcul: `${k.trimestres.map((t, i) => (i === 0 ? eur(t.avantImpot) : `${t.avantImpot < 0 ? "−" : "+"} ${eur(Math.abs(t.avantImpot))}`)).join(" ")} = ${eur(k.avantImpot)}`,
+            libelle: "Impôt au taux normal",
+            attendu: x.aTauxNormal,
+            calcul: `(${eur(x.benefice)} − ${eur(PLAFOND_DU_TAUX_REDUIT)}) × ${pct(TAUX_NORMAL * 100)} = ${eur(x.baseAuTauxNormal)} × ${pct(TAUX_NORMAL * 100)} = ${eur(x.aTauxNormal)}`,
           },
-          { libelle: "Impôt sur les sociétés de l'exercice", attendu: k.impot, calcul: `${eur(k.avantImpot)} × ${pct(k.tauxPct)} = ${eur(k.impot)}`, tolerance: 1 },
-          { libelle: "Résultat net de l'exercice", attendu: k.resultatNet, calcul: `${eur(k.avantImpot)} − ${eur(k.impot)} = ${eur(k.resultatNet)}`, tolerance: 1 },
-          { libelle: "Taux effectif d'impôt (%)", attendu: k.tauxEffectif, calcul: `${eur(k.impot)} ÷ ${eur(k.avantImpot)} × 100 = ${pct(k.tauxEffectif)}`, tolerance: 0.1 },
+          { libelle: "Impôt sur les sociétés", attendu: x.impot, calcul: `${eur(x.aTauxReduit)} + ${eur(x.aTauxNormal)} = ${eur(x.impot)}` },
+          {
+            libelle: "Taux effectif (%)",
+            attendu: x.tauxEffectif,
+            calcul: `${eur(x.impot)} ÷ ${eur(x.e.resultatComptable)} × 100 = ${pct(x.tauxEffectif)}`,
+            tolerance: 0.1,
+          },
         ];
       },
       explication: (c) => {
-        const k = impotDeLAnnee(c);
-        const pertes = k.trimestres.filter((t) => t.avantImpot < 0);
+        const x = impotDeNova(c);
         return [
-          pertes.length > 0
-            ? `L'impôt porte sur l'exercice : ${pertes.length > 1 ? "les trimestres de perte" : `le trimestre ${pertes[0]!.trimestre}, en perte,`} ${pertes.length > 1 ? "viennent" : "vient"} en déduction des bons trimestres avant le calcul, et ${c.entreprise} paie ${eur(k.impot)} sur ${eur(k.avantImpot)} de bénéfice.`
-            : `Les ${k.trimestres.length} trimestres sont en bénéfice : ${c.entreprise} paie ${eur(k.impot)} sur ${eur(k.avantImpot)} de bénéfice, et garde ${eur(k.resultatNet)}.`,
-          `Le taux effectif est égal au taux du scénario, ${pct(k.tauxPct)} : l'arène applique un seul taux à tout le bénéfice, sans rien réintégrer ni déduire. Dans une vraie entreprise, il s'en écarte souvent : le taux réduit d'une PME le fait baisser, une charge que la loi ne déduit pas le fait monter.`,
+          `${x.entreprise} paie ${eur(x.impot)}, et garde ${eur(x.resultatNet)} de résultat net. Sur son résultat fiscal, l'impôt fait ${pct(x.tauxEffectifFiscal)} ; sur son résultat comptable, ${pct(x.tauxEffectif)}, parce qu'il porte aussi sur les ${eur(x.reintegrations)} réintégrés. Le taux réduit le fait baisser, une charge que la loi ne déduit pas le fait monter.`,
+          `L'impôt se passe en charges au 31 décembre (le compte 695, au crédit du compte 444, État, impôt sur les bénéfices) : il est l'impôt de l'exercice, quoi qu'il en reste à payer.`,
         ];
       },
     },
     {
-      id: "acomptes",
-      type: "montants",
-      titre: "L'acompte du trimestre",
+      id: "les-conditions-du-taux-reduit",
+      type: "choix",
+      titre: "Les conditions du taux réduit",
+      notions: ["income_statement"],
+      question: () => {
+        const p = PIXEL_ET_LE_TAUX_REDUIT;
+        return `PIXEL & CO, le commerçant en ligne du cours, fait ${eur(p.chiffreDAffaires)} de chiffre d'affaires hors taxes ; son capital est entièrement libéré, et ses fondateurs en détiennent ${pct(p.partDesPersonnesPhysiques * 100)}, un groupe de distribution le reste. Son bénéfice dépasse ${eur(PLAFOND_DU_TAUX_REDUIT)}. A-t-elle droit au taux réduit ?`;
+      },
+      options: () => {
+        const k = CONDITIONS_DU_TAUX_REDUIT;
+        return [
+          {
+            texte: `Non : son capital n'est pas détenu à ${pct(k.partMinimaleDesPersonnesPhysiques * 100)} par des personnes physiques`,
+            juste: !eligibleAuTauxReduit(PIXEL_ET_LE_TAUX_REDUIT),
+            retour: `Oui. Les conditions vont ensemble : un chiffre d'affaires sous ${eur(k.chiffreDAffairesMaximal)}, un capital entièrement libéré, et détenu pour ${pct(k.partMinimaleDesPersonnesPhysiques * 100)} au moins par des personnes physiques (ou par une société qui remplit elle-même ces conditions, ce que n'est pas un groupe de cette taille). PIXEL & CO paie ${pct(TAUX_NORMAL * 100)} sur tout son bénéfice.`,
+          },
+          {
+            texte: `Oui : son chiffre d'affaires reste sous ${eur(k.chiffreDAffairesMaximal)}`,
+            juste: false,
+            retour: "Non : le chiffre d'affaires n'est qu'une des conditions. Le capital doit aussi être détenu, pour l'essentiel, par des personnes physiques.",
+          },
+          {
+            texte: "Oui : son capital est entièrement libéré",
+            juste: false,
+            retour: "Non : un capital libéré ne suffit pas. Il doit aussi être détenu, pour l'essentiel, par des personnes physiques.",
+          },
+          {
+            texte: `Non : son bénéfice dépasse ${eur(PLAFOND_DU_TAUX_REDUIT)}`,
+            juste: false,
+            retour: `Non : ${eur(PLAFOND_DU_TAUX_REDUIT)} n'est pas une condition d'accès, c'est le plafond de la tranche taxée au taux réduit. Une PME qui y a droit paie ${pct(TAUX_REDUIT * 100)} sur ses premiers ${eur(PLAFOND_DU_TAUX_REDUIT)}, quel que soit son bénéfice.`,
+          },
+        ];
+      },
+    },
+    {
+      id: "predire-le-solde",
+      type: "choix",
+      titre: "Pariez sur le solde",
       notions: ["income_statement", "cash_budget"],
       question: (c) => {
-        const k = impotDeLAnnee(c);
-        return `L'arène n'attend pas la fin de l'année : chaque trimestre, elle prélève un acompte, l'impôt du résultat cumulé depuis le début de l'exercice moins les acomptes déjà versés. Calculez le résultat cumulé à la fin du trimestre ${T - 1}, l'impôt de ce cumul (${pct(k.tauxPct)}, rien sur un cumul en perte), puis l'acompte du trimestre ${T} (négatif si l'arène rend).`;
+        const x = impotDeNova(c);
+        return `Avant de calculer, pariez. Les acomptes de ${x.e.exercice} se calculent sur l'impôt de N, ${eur(IMPOT_DE_NOVA_EN_N)}. En ${x.e.exercice}, ${x.entreprise} gagne plus qu'en N. Le ${ACOMPTES.dateDuSolde} N+2…`;
       },
-      champs: (c) => {
-        const k = impotDeLAnnee(c);
-        const a = k.avant;
+      options: () => {
+        const voir = "Faites varier le bénéfice de N+1 à l'étape suivante : le curseur montre quand les acomptes suffisent, et quand ils ne suffisent plus.";
         return [
-          {
-            libelle: `Résultat cumulé à la fin du trimestre ${T - 1}`,
-            attendu: a.cumul,
-            calcul: `${k.trimestres
-              .slice(0, T - 1)
-              .map((t, i) => (i === 0 ? eur(t.avantImpot) : `${t.avantImpot < 0 ? "−" : "+"} ${eur(Math.abs(t.avantImpot))}`))
-              .join(" ")} = ${eur(a.cumul)}`,
-          },
-          {
-            libelle: `Impôt du cumul à la fin du trimestre ${T - 1}`,
-            attendu: a.du,
-            calcul: a.cumul > 0 ? `${eur(a.cumul)} × ${pct(k.tauxPct)} = ${eur(a.du)}` : `un cumul en perte : pas d'impôt, ${eur(0)}`,
-            tolerance: 1,
-          },
-          {
-            libelle: `Acompte du trimestre ${T}`,
-            attendu: k.acompte.acompte,
-            calcul: `${eur(k.impot)} d'impôt de l'exercice − ${eur(a.du)} déjà versés = ${eur(k.acompte.acompte)}`,
-            tolerance: 1,
-          },
-        ];
-      },
-      explication: (c) => {
-        const k = impotDeLAnnee(c);
-        const a = k.acompte;
-        const quart = auCentime(a.avantImpot * k.taux);
-        return [
-          `Au trimestre ${T}, ${c.entreprise} ${gagne(a.avantImpot)} avant impôt. ${
-            a.acompte < 0
-              ? `Le cumul baisse : l'impôt dû aussi, et l'arène rend ${eur(-a.acompte)} d'acomptes versés en trop.`
-              : Math.abs(a.acompte - quart) < 1
-                ? `L'acompte vaut ${pct(k.tauxPct)} du résultat du trimestre, ${eur(a.acompte)}, parce que le cumul était déjà en bénéfice.`
-                : `L'acompte, ${eur(a.acompte)}, n'est pas ${pct(k.tauxPct)} du résultat du trimestre (${eur(quart)}) : ${a.cumul - a.avantImpot < 0 ? "le cumul partait d'une perte, qui absorbe d'abord une part du bénéfice du trimestre" : "il porte sur le cumul de l'exercice"}.`
-          }`,
-          `L'arène a inscrit, trimestre après trimestre : ${k.trimestres.map((t) => `${eur(t.arene)}`).join(", ")}. Leur somme, ${eur(k.impotDeLArene)}, est l'impôt de l'exercice${aLArrondiPres(k.impotDeLArene, k.impot)} : les acomptes se corrigent l'un l'autre jusqu'au dernier.`,
+          { texte: "Elle paiera un solde : les acomptes ont suivi l'impôt de N", juste: true, retour: `Bon pari. ${voir}` },
+          { texte: "L'État lui rendra une part des acomptes", juste: false, retour: `Pari à vérifier. ${voir}` },
+          { texte: "Elle ne devra rien : les acomptes suivent le bénéfice de l'année", juste: false, retour: `Pari à vérifier. ${voir}` },
         ];
       },
     },
     {
-      id: "trimestre-de-perte",
-      type: "choix",
-      titre: "Un trimestre de perte",
-      notions: ["income_statement"],
-      si: (c) => impotDeLAnnee(c).rendu !== null,
+      id: "le-solde-au-curseur",
+      type: "curseur",
+      titre: "Les acomptes face à l'impôt",
+      notions: ["income_statement", "cash_budget"],
       question: (c) => {
-        const t = impotDeLAnnee(c).rendu!;
-        return `Au trimestre ${t.trimestre}, ${c.entreprise} ${gagne(t.avantImpot)} avant impôt, et l'arène inscrit au compte de résultat ${eur(-t.arene)} d'« Impôt rendu (acomptes de l'exercice en trop) ». D'où vient ce montant ?`;
+        const x = impotDeNova(c);
+        return `Faites varier le bénéfice imposable ${dE(x.entreprise)} en ${x.e.exercice}, de ${eur(BENEFICE_DU_CURSEUR.min)} à ${eur(BENEFICE_DU_CURSEUR.max)}. Une droite donne les acomptes versés, calculés sur l'impôt de N : ils ne bougent pas. L'autre donne l'impôt de ${x.e.exercice}. Placez le curseur sur le plus grand bénéfice où les acomptes couvrent encore l'impôt, puis validez.`;
       },
-      options: (c) => {
-        const k = impotDeLAnnee(c);
-        const t = k.rendu!;
-        const quart = auCentime(-t.avantImpot * k.taux);
-        const coincide = Math.abs(quart + t.acompte) < 1;
+      grandeur: () => ({ libelle: "Bénéfice imposable de N+1", unite: "€" }),
+      sens: "plus-grande",
+      cible: (c) => ({ attendu: impotDeNova(c).seuilDuSolde, min: BENEFICE_DU_CURSEUR.min, max: BENEFICE_DU_CURSEUR.max }),
+      zones: ["L'État rend l'excédent", "Un solde à payer"],
+      rates: () => ({
+        dessous: "Les acomptes couvrent encore l'impôt un peu plus loin : cherchez le plus grand bénéfice.",
+        dessus: "À cette position, l'impôt dépasse déjà les acomptes : il reste un solde à payer.",
+      }),
+      montrer: "Montrer la limite",
+      lecture: (c, b) => {
+        const x = impotDeNova(c);
+        const impot = impotDuBenefice(b, true).impot;
         return [
-          {
-            texte: "L'impôt dû porte sur le résultat cumulé de l'exercice : le cumul a baissé, et l'arène rend ce qui avait été versé en trop",
-            juste: true,
-            retour: `Oui : à la fin du trimestre ${t.trimestre - 1}, le cumul de l'exercice devait ${eur(t.du - t.acompte)} d'impôt ; à la fin du trimestre ${t.trimestre}, ${t.cumul > 0 ? `il n'en doit plus que ${eur(t.du)}` : "il est en perte et ne doit plus rien"}. L'arène rend la différence. En droit, l'excédent d'acomptes se rembourse après la clôture ; l'arène le rend dans le trimestre.`,
-          },
-          {
-            texte: `L'État rembourse ${pct(k.tauxPct)} de chaque perte trimestrielle, quoi qu'il arrive à l'exercice`,
-            juste: false,
-            retour: coincide
-              ? `Le chiffre tombe juste ici, parce que le cumul reste en bénéfice : la perte du trimestre fait baisser l'impôt de l'exercice de ${pct(k.tauxPct)} de son montant. Mais l'arène ne rend jamais plus que les acomptes déjà versés : rien ne se rembourse sur une perte en tant que telle.`
-              : `${pct(k.tauxPct)} de la perte ferait ${eur(quart)} ; l'arène ne rend que ${eur(-t.acompte)}, les acomptes versés depuis le début de l'exercice, et pas plus. Une perte ne se rembourse pas en tant que telle.`,
-          },
-          {
-            texte: "C'est le déficit reporté : la perte du trimestre vient en déduction de l'impôt de l'exercice suivant",
-            juste: false,
-            retour: "Non : dans l'exercice, une perte se compense avec les bons trimestres, avant le calcul de l'impôt. Le déficit ne se reporte qu'à la clôture, quand l'exercice entier finit en perte.",
-          },
+          { libelle: "Impôt de l'exercice", montant: impot },
+          { libelle: "Acomptes versés, sur l'impôt de N", montant: x.totalVerse },
+          { libelle: `Solde du ${ACOMPTES.dateDuSolde} N+2`, montant: auCentime(impot - x.totalVerse), fort: true },
+        ];
+      },
+      droites: (c) => {
+        const x = impotDeNova(c);
+        return { produit: () => x.totalVerse, cout: impotAuDelaDuPlafond, libelles: ["Acomptes versés, sur l'impôt de N", "Impôt de N+1"] };
+      },
+      explication: (c) => {
+        const x = impotDeNova(c);
+        return [
+          `Les acomptes couvrent l'impôt jusqu'à ${eur(x.seuilDuSolde)} de bénéfice, presque exactement le bénéfice de N : ils reproduisent l'impôt de l'année d'avant. En dessous, l'État rend l'excédent après la déclaration ; au-dessus, ${x.entreprise} paie un solde. À ${eur(x.benefice)}, le solde est de ${eur(x.solde)}.`,
+          "Une entreprise qui grandit paie donc toujours en retard d'un an une part de son impôt ; une entreprise dont le bénéfice baisse avance de l'impôt à l'État. Le droit lui permet de réduire ses derniers acomptes si elle prévoit un impôt plus faible, à ses risques.",
+        ];
+      },
+    },
+    {
+      id: "les-acomptes-et-le-solde",
+      type: "montants",
+      titre: "Les acomptes et le solde",
+      notions: ["income_statement", "cash_budget"],
+      question: (c) => {
+        const x = impotDeNova(c);
+        return `Sans formule cette fois. Calculez chaque acompte ${dE(x.entreprise)} en ${x.e.exercice}, le total versé avant la clôture, puis le solde du ${ACOMPTES.dateDuSolde} N+2 (négatif si l'État rend).`;
+      },
+      champs: (c) => {
+        const x = impotDeNova(c);
+        return [
+          { libelle: "Chaque acompte de N+1", attendu: x.acompte, calcul: `${eur(IMPOT_DE_NOVA_EN_N)} d'impôt de N ÷ ${NB} = ${eur(x.acompte)}` },
+          { libelle: "Acomptes versés en N+1", attendu: x.totalVerse, calcul: `${NB} × ${eur(x.acompte)} = ${eur(x.totalVerse)}` },
+          { libelle: `Solde du ${ACOMPTES.dateDuSolde} N+2`, attendu: x.solde, calcul: `${eur(x.impot)} − ${eur(x.totalVerse)} = ${eur(x.solde)}` },
+        ];
+      },
+      explication: (c) => {
+        const x = impotDeNova(c);
+        return [
+          `Les acomptes ont payé ${eur(x.totalVerse)} sur ${eur(x.impot)} : ${x.entreprise} doit encore ${eur(x.solde)}, qu'elle paiera le ${ACOMPTES.dateDuSolde} N+2 avec sa déclaration. Les acomptes de N+2 se calculeront à leur tour sur ${eur(x.impot)}, soit ${eur(x.acompteDeN2)} chacun : la trésorerie de N+2 paiera à la fois le solde de N+1 et des acomptes plus lourds.`,
+          `Un acompte n'est dû que si l'impôt de référence atteint ${eur(ACOMPTES.seuilDeDispense)} ; au premier exercice d'une société nouvelle, il n'y en a pas. C'est pourquoi ${x.entreprise} n'en avait versé aucun en N.`,
         ];
       },
     },
@@ -331,69 +587,206 @@ export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
       id: "au-31-decembre",
       type: "choix",
       titre: "Au 31 décembre",
-      notions: ["cash_budget", "income_statement"],
-      question: (c) => `Au 31 décembre, ${c.entreprise} a versé ses acomptes dans l'arène, trimestre après trimestre. Au titre de l'impôt de l'exercice, que doit-elle encore à l'État ?`,
+      notions: ["balance_sheet", "income_statement"],
+      question: (c) => {
+        const x = impotDeNova(c);
+        return `Au 31 décembre ${x.e.exercice}, ${x.entreprise} a passé l'impôt de l'exercice en charges et versé ses ${NB} acomptes. Que porte son bilan au titre de l'impôt sur les sociétés ?`;
+      },
       options: (c) => {
-        const k = impotDeLAnnee(c);
-        const dernier = k.trimestres.at(-1)!;
+        const x = impotDeNova(c);
         return [
           {
-            texte: `Rien : les acomptes de l'année ont payé l'impôt de l'exercice, ${eur(k.impot)}`,
+            texte: `Une dette de ${eur(x.solde)} envers l'État`,
             juste: true,
-            retour: `Oui. Dans l'arène, chaque acompte sort de la trésorerie le trimestre même, à la ligne « Impôt sur les sociétés » du budget de trésorerie : ${eur(k.impotDecaisse)} sur l'année${aLArrondiPres(k.impotDecaisse, k.impot)}. Le bilan de l'arène ne porte aucune dette d'impôt. En droit, c'est autrement : les acomptes se calculent sur le bénéfice de l'exercice précédent, et le solde se paie après la clôture ; au 31 décembre, l'impôt de l'année se passe en charge, et ce qui n'est pas réglé reste dû à l'État, comme dans « La clôture ».`,
+            retour: `Oui : le compte 444 est crédité de l'impôt, ${eur(x.impot)}, et débité des acomptes, ${eur(x.totalVerse)}. Son solde créditeur, ${eur(x.solde)}, est une dette fiscale, payée le ${ACOMPTES.dateDuSolde} suivant.`,
           },
           {
-            texte: `Tout l'impôt de l'exercice, ${eur(k.impot)}, à payer l'année suivante`,
+            texte: `Une dette de ${eur(x.impot)}, l'impôt de l'exercice entier`,
             juste: false,
-            retour: `Non : l'arène a prélevé les acomptes chaque trimestre, ${eur(k.impotDecaisse)} sur l'année. Rien ne reste à payer : le payer encore, ce serait le payer deux fois.`,
+            retour: `Non : c'est oublier les acomptes. Ils ont déjà payé ${eur(x.totalVerse)} de cet impôt ; seul le reste est dû.`,
           },
           {
-            texte: `La moitié de l'impôt de l'exercice, ${eur(auCentime(k.impot / 2))}, au titre du solde`,
+            texte: `Une créance de ${eur(x.solde)} sur l'État`,
             juste: false,
-            retour: `Non : dans l'arène, aucun solde ne reste dû, le dernier acompte (${eur(dernier.acompte)}) a ajusté le tout. En droit, un solde se paie bien après la clôture, mais c'est l'impôt de l'exercice moins les acomptes versés, sans proportion fixe.`,
+            retour: `Non : le signe est inversé. ${x.entreprise} a versé moins que son impôt ; c'est elle qui doit. Une créance naîtrait si les acomptes avaient dépassé l'impôt.`,
+          },
+          {
+            texte: "Rien : les acomptes ont payé l'impôt de l'exercice",
+            juste: false,
+            retour: `Non : les acomptes se calculent sur l'impôt de N, pas sur celui de ${x.e.exercice}. Ils n'en ont payé que ${eur(x.totalVerse)}.`,
           },
         ];
       },
     },
     {
-      id: "taux-reduit",
-      type: "montants",
-      titre: "Ce que changerait le taux réduit",
+      id: "le-laboratoire-de-l-impot",
+      type: "simulation",
+      titre: "Le laboratoire de l'impôt",
       notions: ["income_statement"],
       question: (c) => {
-        const k = impotDeLAnnee(c);
-        return `L'arène applique ${pct(k.tauxPct)} à tout le bénéfice. Le droit prévoit, pour une PME dont le chiffre d'affaires hors taxes reste sous ${eur(CHIFFRE_D_AFFAIRES_MAXIMAL_DU_TAUX_REDUIT)} et dont le capital, entièrement libéré, est détenu pour ${pct(PART_DES_PERSONNES_PHYSIQUES * 100)} au moins par des personnes physiques, un taux réduit de ${pct(TAUX_REDUIT_DU_DROIT * 100)} jusqu'à ${eur(PLAFOND_DU_TAUX_REDUIT)} de bénéfice, puis le taux normal au-delà. Si ${c.entreprise} y avait droit, quel serait son impôt de l'exercice, et son taux effectif ?`;
+        const x = impotDeNova(c);
+        return `Faites varier le résultat comptable ${dE(x.entreprise)}, ses réintégrations et son barème. Le tableau suit le résultat fiscal, l'impôt et les deux taux ; le graphique trace le taux effectif et le taux marginal selon le résultat comptable. Relevez le défi, et comparez les deux taux.`;
+      },
+      leviers: (c) => {
+        const x = impotDeNova(c);
+        const L = LEVIERS_DE_L_IMPOT;
+        return [
+          { code: "resultat", libelle: "Résultat comptable avant impôt", unite: "€", min: L.resultat.min, max: L.resultat.max, pas: L.resultat.pas, depart: x.e.resultatComptable },
+          { code: "reintegrations", libelle: "Réintégrations", unite: "€", min: L.reintegrations.min, max: L.reintegrations.max, pas: L.reintegrations.pas, depart: x.reintegrations },
+          {
+            code: "bareme",
+            libelle: "Le barème",
+            unite: "",
+            min: BAREMES.normal,
+            max: BAREMES.reduit,
+            pas: 1,
+            depart: x.eligible ? BAREMES.reduit : BAREMES.normal,
+            choix: [
+              { valeur: BAREMES.normal, libelle: `Le taux normal seul, ${pct(TAUX_NORMAL * 100)}` },
+              { valeur: BAREMES.reduit, libelle: `Le taux réduit d'une PME, ${pct(TAUX_REDUIT * 100)} puis ${pct(TAUX_NORMAL * 100)}` },
+            ],
+          },
+        ];
+      },
+      lecture: (c, p) => {
+        const x = impotDeNova(c);
+        const l = laboratoireDeLImpot(p.resultat!, p.reintegrations!, p.bareme === BAREMES.reduit);
+        const d = laboratoireDeLImpot(x.e.resultatComptable, x.reintegrations, x.eligible);
+        return [
+          { libelle: "Résultat fiscal", montant: l.benefice, reference: d.benefice },
+          { libelle: "Impôt sur les sociétés", montant: l.impot, reference: d.impot, fort: true },
+          { libelle: "Économie du taux réduit", montant: p.bareme === BAREMES.reduit ? l.economieDuTauxReduit : 0, reference: d.economieDuTauxReduit, effet: true },
+          { libelle: "Résultat net", montant: l.resultatNet, reference: d.resultatNet },
+          { libelle: "Taux effectif, sur le résultat comptable", montant: l.tauxEffectif, reference: d.tauxEffectif, unite: "%" },
+          { libelle: "Taux marginal", montant: l.tauxMarginal, reference: d.tauxMarginal, unite: "%" },
+        ];
+      },
+      graphique: () => ({
+        levier: "resultat",
+        unite: "%",
+        courbes: [
+          { libelle: "Taux effectif", valeur: (p) => laboratoireDeLImpot(p.resultat!, p.reintegrations!, p.bareme === BAREMES.reduit).tauxEffectif },
+          { libelle: "Taux marginal", valeur: (p) => laboratoireDeLImpot(p.resultat!, p.reintegrations!, p.bareme === BAREMES.reduit).tauxMarginal },
+        ],
+      }),
+      defi: () => {
+        const vise = enPct(TAUX_EFFECTIF_VISE);
+        const reussi = (p: Readonly<Record<string, number>>) => {
+          const l = laboratoireDeLImpot(p.resultat!, p.reintegrations!, p.bareme === BAREMES.reduit);
+          return l.tauxEffectif < vise && l.tauxMarginal === enPct(TAUX_NORMAL);
+        };
+        return {
+          consigne: `Trouvez une position où le taux effectif passe sous ${pct(vise)} alors que le taux marginal reste à ${pct(TAUX_NORMAL * 100)}.`,
+          atteint: reussi,
+          indice: (p) => {
+            const l = laboratoireDeLImpot(p.resultat!, p.reintegrations!, p.bareme === BAREMES.reduit);
+            if (p.bareme !== BAREMES.reduit) return `Au taux normal seul, l'impôt fait ${pct(TAUX_NORMAL * 100)} du résultat fiscal, et plus encore du résultat comptable dès qu'il y a des réintégrations : le taux effectif ne descend jamais sous ${pct(TAUX_NORMAL * 100)}.`;
+            if (l.tauxMarginal !== enPct(TAUX_NORMAL)) return `Sous ${eur(PLAFOND_DU_TAUX_REDUIT)} de résultat fiscal, le prochain euro ne paie que ${pct(TAUX_REDUIT * 100)} : le taux marginal doit rester à ${pct(TAUX_NORMAL * 100)}.`;
+            return `Le taux effectif vaut ${pct(l.tauxEffectif)} : l'économie du taux réduit, ${eur(l.economieDuTauxReduit)}, pèse trop peu sur ${eur(p.resultat!)}. Baissez le résultat comptable, ou les réintégrations.`;
+          },
+          solution: SOLUTION_DU_LABORATOIRE,
+        };
+      },
+      explication: (c, p) => {
+        const x = impotDeNova(c);
+        const l = laboratoireDeLImpot(p.resultat!, p.reintegrations!, p.bareme === BAREMES.reduit);
+        return [
+          `À ${eur(p.resultat!)} de résultat comptable, l'impôt fait ${pct(l.tauxEffectif)} : le taux effectif est sous ${pct(enPct(TAUX_EFFECTIF_VISE))}, et pourtant le prochain euro de bénéfice paiera ${pct(l.tauxMarginal)}. Le taux effectif est une moyenne, le taux marginal une pente : la courbe du premier monte doucement, celle du second est une marche, à ${eur(PLAFOND_DU_TAUX_REDUIT)} de résultat fiscal.`,
+          `Pour juger une décision (une charge de plus, une vente de plus, un projet), c'est le taux marginal qui compte : chez ${x.entreprise}, chaque euro de plus ou de moins pèse ${pct(x.tauxMarginal)}. Et une réintégration fait monter le taux effectif sur le résultat comptable : elle est taxée sans être un bénéfice.`,
+        ];
+      },
+    },
+    {
+      id: "sans-le-taux-reduit",
+      type: "montants",
+      titre: "Variante : un fonds entre au capital",
+      notions: ["income_statement"],
+      question: (c) => {
+        const x = impotDeNova(c);
+        return `Variante : en ${x.e.exercice}, un fonds d'investissement entre au capital ${dE(x.entreprise)}, et les associés fondateurs n'en gardent que ${pct(PART_DES_FONDATEURS_APRES_LE_FONDS * 100)}. Rien d'autre ne change. Calculez l'impôt de ${x.e.exercice}, l'impôt en plus par rapport au taux réduit, puis le taux effectif sur le résultat comptable, en %.`;
       },
       champs: (c) => {
-        const k = impotDeLAnnee(c);
-        const r = k.reduit;
+        const x = impotDeNova(c);
         return [
+          { libelle: "Impôt sans le taux réduit", attendu: x.sansTauxReduit, calcul: `${pct(PART_DES_FONDATEURS_APRES_LE_FONDS * 100)} < ${pct(CONDITIONS_DU_TAUX_REDUIT.partMinimaleDesPersonnesPhysiques * 100)} : plus de taux réduit, ${eur(x.benefice)} × ${pct(TAUX_NORMAL * 100)} = ${eur(x.sansTauxReduit)}` },
+          { libelle: "Impôt en plus", attendu: x.impotEnPlus, calcul: `${eur(x.sansTauxReduit)} − ${eur(x.impot)} = ${eur(x.impotEnPlus)}, soit ${eur(PLAFOND_DU_TAUX_REDUIT)} × (${pct(TAUX_NORMAL * 100)} − ${pct(TAUX_REDUIT * 100)})` },
           {
-            libelle: "Impôt de l'exercice au taux réduit",
-            attendu: r.impot,
-            calcul:
-              r.normale > 0
-                ? `${eur(r.reduite)} × ${pct(TAUX_REDUIT_DU_DROIT * 100)} + ${eur(r.normale)} × ${pct(k.tauxPct)} = ${eur(r.aTauxReduit)} + ${eur(r.aTauxNormal)} = ${eur(r.impot)}`
-                : `${eur(r.reduite)} × ${pct(TAUX_REDUIT_DU_DROIT * 100)} = ${eur(r.impot)} : tout le bénéfice reste sous le plafond`,
-            tolerance: 1,
-          },
-          {
-            libelle: "Taux effectif au taux réduit (%)",
-            attendu: k.tauxEffectifReduit,
-            calcul: `${eur(r.impot)} ÷ ${eur(k.avantImpot)} × 100 = ${pct(k.tauxEffectifReduit)}`,
+            libelle: "Taux effectif sans le taux réduit (%)",
+            attendu: x.tauxEffectifSansTauxReduit,
+            calcul: `${eur(x.sansTauxReduit)} ÷ ${eur(x.e.resultatComptable)} × 100 = ${pct(x.tauxEffectifSansTauxReduit)}`,
             tolerance: 0.1,
           },
         ];
       },
       explication: (c) => {
-        const k = impotDeLAnnee(c);
+        const x = impotDeNova(c);
         return [
-          `Avec le taux réduit, ${c.entreprise} paierait ${eur(k.economieDuTauxReduit)} de moins, et son taux effectif tomberait de ${pct(k.tauxEffectif)} à ${pct(k.tauxEffectifReduit)}. ${
-            k.reduit.normale > 0
-              ? `L'économie est plafonnée : seuls les premiers ${eur(PLAFOND_DU_TAUX_REDUIT)} de bénéfice en profitent, et plus le bénéfice grandit, plus le taux effectif remonte vers ${pct(k.tauxPct)}.`
-              : `Tout son bénéfice reste sous le plafond : il est taxé en entier au taux réduit.`
-          }`,
-          `Son chiffre d'affaires de l'année, ${eur(k.chiffreDAffaires)}, reste sous le plafond ; le reste des conditions dépend de qui détient son capital, ce que l'arène ne dit pas : elle s'en tient au taux normal.`,
+          `Le taux réduit valait ${eur(x.impotEnPlus)} par an à ${x.entreprise}, quel que soit son bénéfice au-delà de ${eur(PLAFOND_DU_TAUX_REDUIT)}. Sans lui, son taux effectif sur le résultat comptable passe à ${pct(x.tauxEffectifSansTauxReduit)}, au-dessus du taux normal : les ${eur(x.reintegrations)} réintégrés paient l'impôt sans être un bénéfice.`,
+          `C'est un coût de l'ouverture du capital que les associés doivent chiffrer : l'argent du fonds a un prix, et la perte du taux réduit en fait partie. Le taux marginal, lui, ne change pas : il était déjà de ${pct(x.tauxMarginal)}.`,
+        ];
+      },
+    },
+    {
+      id: "a-rebours",
+      type: "montants",
+      titre: "Remonter du solde à l'impôt",
+      notions: ["income_statement", "cash_budget"],
+      question: (c) => {
+        const x = impotDeNova(c);
+        return `Un an plus tard, le relevé du ${ACOMPTES.dateDuSolde} N+3 annonce que l'État rend ${eur(-SOLDE_DE_N2_A_REBOURS)} à ${x.entreprise} au titre de N+2. Ses acomptes de N+2 se sont calculés sur l'impôt de ${x.e.exercice}, et elle a toujours droit au taux réduit. Retrouvez les acomptes versés en N+2, l'impôt de N+2, puis son résultat fiscal.`;
+      },
+      champs: (c) => {
+        const x = impotDeNova(c);
+        return [
+          { libelle: "Acomptes versés en N+2", attendu: x.versesEnN2, calcul: `${NB} × (${eur(x.impot)} ÷ ${NB}) = ${NB} × ${eur(x.acompteDeN2)} = ${eur(x.versesEnN2)}` },
+          { libelle: "Impôt de N+2", attendu: x.impotDeN2, calcul: `${eur(x.versesEnN2)} − ${eur(-SOLDE_DE_N2_A_REBOURS)} rendus = ${eur(x.impotDeN2)}` },
+          {
+            libelle: "Résultat fiscal de N+2",
+            attendu: x.beneficeDeN2,
+            calcul: `${eur(PLAFOND_DU_TAUX_REDUIT)} + (${eur(x.impotDeN2)} − ${eur(IMPOT_DE_LA_TRANCHE_REDUITE)}) ÷ ${pct(TAUX_NORMAL * 100)} = ${eur(x.beneficeDeN2)}`,
+          },
+        ];
+      },
+      explication: (c) => {
+        const x = impotDeNova(c);
+        return [
+          `Remonter le barème demande de savoir où l'on est : l'impôt de N+2, ${eur(x.impotDeN2)}, dépasse les ${eur(IMPOT_DE_LA_TRANCHE_REDUITE)} de la tranche réduite, donc le bénéfice dépasse ${eur(PLAFOND_DU_TAUX_REDUIT)}, et chaque euro d'impôt au-delà vient de ${eur(1 / TAUX_NORMAL)} de bénéfice. ${x.entreprise} a gagné ${eur(x.beneficeDeN2)} de résultat fiscal en N+2, moins qu'en ${x.e.exercice} : ses acomptes, calculés sur l'année d'avant, étaient trop lourds.`,
+          `Diviser ${eur(x.impotDeN2)} par ${pct(TAUX_NORMAL * 100)} donnerait ${eur(auCentime(x.impotDeN2 / TAUX_NORMAL))} : c'est oublier que les premiers ${eur(PLAFOND_DU_TAUX_REDUIT)} ne paient que ${pct(TAUX_REDUIT * 100)}.`,
+        ];
+      },
+    },
+    {
+      id: "la-depense-de-decembre",
+      type: "choix",
+      titre: "La dépense de décembre",
+      notions: ["income_statement"],
+      question: (c) => {
+        const x = impotDeNova(c);
+        return `En décembre ${x.e.exercice}, le gérant ${dE(x.entreprise)} veut « dépenser avant le 31 pour payer moins d'impôt ». Que vaut l'argument ?`;
+      },
+      options: (c) => {
+        const x = impotDeNova(c);
+        return [
+          {
+            texte: `Une charge inutile coûte ${pct((1 - TAUX_NORMAL) * 100)} de son montant : l'impôt n'en paie qu'un quart`,
+            juste: true,
+            retour: `Oui. Au taux marginal de ${pct(x.tauxMarginal)}, ${eur(DEPENSE_DE_FIN_D_ANNEE)} de charges font ${eur(auCentime(DEPENSE_DE_FIN_D_ANNEE * TAUX_NORMAL))} d'impôt en moins et ${eur(auCentime(DEPENSE_DE_FIN_D_ANNEE * (1 - TAUX_NORMAL)))} de résultat net en moins. Une dépense utile de toute façon peut être avancée ; une dépense faite pour l'impôt appauvrit l'entreprise. Et avancer une charge ne fait souvent que décaler l'impôt d'un exercice.`,
+          },
+          {
+            texte: "Chaque euro dépensé fait économiser un euro d'impôt",
+            juste: false,
+            retour: `Non : un euro de charge retire un euro au bénéfice, et seulement ${pct(TAUX_NORMAL * 100)} à l'impôt.`,
+          },
+          {
+            texte: `Elle n'économise que ${pct(TAUX_REDUIT * 100)} de son montant, le taux réduit de la PME`,
+            juste: false,
+            retour: `Non : c'est confondre le taux réduit et le taux marginal. ${x.entreprise} gagne ${eur(x.benefice)}, bien au-delà de ${eur(PLAFOND_DU_TAUX_REDUIT)} : le dernier euro paie ${pct(TAUX_NORMAL * 100)}, et c'est lui que la dépense retire.`,
+          },
+          {
+            texte: `Une machine de ${eur(MACHINE_DE_DECEMBRE)} achetée le 20 décembre fait ${eur(MACHINE_DE_DECEMBRE * TAUX_NORMAL)} d'impôt en moins`,
+            juste: false,
+            retour: "Non : une machine est une immobilisation, pas une charge. Seul son amortissement de l'exercice, quelques jours au prorata, se déduit cette année.",
+          },
         ];
       },
     },
@@ -401,16 +794,19 @@ export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
       id: "fin",
       type: "lecture",
       titre: "Ce que vous savez faire",
-      notions: ["income_statement", "cash_budget"],
+      notions: ["income_statement", "cash_budget", "balance_sheet"],
+      tableau: (c) => tableauDeLImpot(impotDeNova(c)),
       texte: (c) => {
-        const k = impotDeLAnnee(c);
+        const x = impotDeNova(c);
         return [
-          `${c.entreprise} gagne ${eur(k.avantImpot)} avant impôt sur l'exercice, paie ${eur(k.impot)} d'impôt sur les sociétés, et garde ${eur(k.resultatNet)} : un taux effectif de ${pct(k.tauxEffectif)}.`,
-          `Dans l'arène, l'impôt se paie au fil de l'exercice : chaque trimestre verse ce qui manque à l'impôt du résultat cumulé, et rend ce qui a été payé en trop. Il ne reste rien à payer au 31 décembre. Le droit fait autrement, avec des acomptes calculés sur l'exercice précédent et un solde après la clôture, mais l'impôt de l'année est le même : celui du bénéfice de l'exercice.`,
+          `${x.entreprise} gagne ${eur(x.e.resultatComptable)} avant impôt en ${x.e.exercice}, et elle est taxée sur ${eur(x.benefice)} : ${eur(x.reintegrations)} de charges que la loi ne déduit pas. Elle paie ${eur(x.impot)}, ${eur(x.aTauxReduit)} au taux réduit et ${eur(x.aTauxNormal)} au taux normal ; ses acomptes, calculés sur l'impôt de N, en ont payé ${eur(x.totalVerse)}, et le solde de ${eur(x.solde)} est une dette au 31 décembre.`,
+          `Deux taux à ne pas confondre : le taux effectif, ${pct(x.tauxEffectif)}, dit ce que l'impôt prend en moyenne ; le taux marginal, ${pct(x.tauxMarginal)}, dit ce que paie le prochain euro, et c'est lui qui juge une dépense, une vente ou un projet. Dépenser en décembre pour l'impôt, c'est perdre ${pct((1 - TAUX_NORMAL) * 100)} de chaque euro.`,
+          "Au niveau de l'examen, vous savez passer du résultat comptable au résultat fiscal, appliquer le barème et ses conditions, calculer les acomptes et le solde, remonter d'un solde au résultat fiscal, et critiquer une décision prise pour l'impôt.",
+          "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
         ];
       },
       repere: () =>
-        "L'impôt sur les sociétés porte sur le bénéfice de l'exercice entier. Taux effectif = impôt ÷ résultat avant impôt. Un trimestre de perte se compense avec les bons trimestres du même exercice.",
+        `Résultat fiscal = résultat comptable + réintégrations − déductions. Impôt = ${pct(TAUX_REDUIT * 100)} jusqu'à ${eur(PLAFOND_DU_TAUX_REDUIT)} (pour une PME qui y a droit) + ${pct(TAUX_NORMAL * 100)} au-delà. Taux effectif = impôt ÷ résultat comptable avant impôt ; taux marginal = ce que paie le prochain euro. Solde = impôt de l'exercice − acomptes versés.`,
     },
   ],
 };

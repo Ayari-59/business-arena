@@ -1,58 +1,92 @@
 import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
 import type { Cas } from "../../cas";
-import { TRIMESTRE_DE_L_ACHAT, machineDuChapitre } from "../../chapitres/croitre-en-investissant";
-import { COUT_DU_CAPITAL_ANNUEL, LA_VALEUR_ACTUELLE_NETTE, TAUX_TRIMESTRIEL, projet } from "../../chapitres/la-valeur-actuelle-nette";
+import { ENTREPRISES_DES_PROJETS, LA_VALEUR_ACTUELLE_NETTE, gammeDuChapitre, premierPositif, toleranceDActualisation } from "../../chapitres/la-valeur-actuelle-nette";
+import { auCentime } from "../../monde/amortissement";
+import { coefficientDActualisation, fluxDuProjet, van } from "../../monde/finance";
 import type { Situation } from "../types";
-
-/** Au centime, sans zéro négatif. */
-const centime = (x: number) => auCentime(x) || 0;
-/** Un montant à la française, avec le signe moins typographique. */
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const coef4 = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
-const auCentieme = (x: number) => Math.round(x * 100) / 100;
-const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /**
  * CAS PRATIQUE DU CHAPITRE « LA VALEUR ACTUELLE NETTE D'UN INVESTISSEMENT » : REVENDRE LA MACHINE
  * PLUS TÔT (DSCG, UE2 Finance, palier 4).
  *
- * Le chapitre a gardé la machine pendant les douze trimestres du projet. Le directeur financier
- * envisage de la revendre au bout de huit (`DUREE_AVANT_LA_REVENTE`) : moins de flux, mais une
- * revente plus forte, la machine étant moins amortie. L'élève refait seul les calculs du chapitre
- * sur ce projet raccourci : la valeur résiduelle au bout du huitième trimestre, la valeur actuelle
- * des flux, la VAN, et la compare à celle du chapitre.
+ * Le chapitre a mené le projet A de NOVA (la gamme sur une seconde ligne manuelle) sur 5 ans. Le
+ * directeur financier aura besoin de l'atelier à la fin de N+3 : la ligne serait revendue après
+ * 3 ans. L'élève refait seul la revente (la ligne et les moules, moins amortis, font économiser plus
+ * d'impôt), le dernier flux (le BFR revient au plus haut) et la VAN raccourcie : −850,54 €, quand
+ * 4 ans en créent 41 966,11 €. Puis, à rebours, le prix de cession de la ligne qui sauverait le
+ * projet de 3 ans : 19 468,63 €, 64,90 % de sa valeur nette comptable au lieu de 60 %. Un curseur
+ * sur ce prix le montre avant le calcul. La réponse demande un jugement : 3 ans ne suffisent pas
+ * aux conditions prévues ; la décision dépend de l'acheteur de la ligne, ou d'un an de plus.
  *
- * Là où la machine détruit de la valeur gardée jusqu'au bout (L'ESCALE), la revendre tôt peut en
- * créer : moins amortie, elle se reprend plus cher, et les trimestres abandonnés rapportaient peu.
- * Là où elle en crée gardée, la revendre tôt peut en détruire (LA TABLE D'AUGUSTIN), ou en créer
- * moins (ailleurs). Les textes ne disent pas « encore de la valeur » là où il n'y en avait pas.
+ * Choix de durée (l4-monde.md proposait 3 ans ou 4) : 3 ans, où la VAN devient négative. C'est
+ * honnête, et c'est ce qui donne une question au cas : la revente seule peut-elle sauver le projet ?
  *
- * Les flux sont ceux du chapitre, trimestre pour trimestre : l'arène ne décide rien en fonction
- * de la durée de la partie (seule la boucle de `runGame` lit `roundsCount`), si bien que les huit
- * premiers trimestres du projet de douze sont ceux d'un projet de huit. La revente suit la règle
- * du moteur, à la part du catalogue de la valeur nette comptable.
+ * Comme son chapitre, le cas se joue dans la simulation du cours (src/config/cours/monde) : ses
+ * flux sont ceux de `fluxDuProjet`, arrêté plus tôt.
  */
 
-/** La revente envisagée par le directeur financier, une hypothèse du cas : au bout du huitième trimestre, deux exercices. */
-export const DUREE_AVANT_LA_REVENTE = 8;
+/** L'ARRÊT DU PROJET (hypothèse du cas) : l'atelier sera repris à la fin de N+3, pour une autre fabrication. */
+export const DUREE_AVANT_LA_REVENTE = 3;
 
-export type Verdict = "garder-cree-plus" | "revendre-detruit" | "revendre-cree-plus";
+/** Les bornes du curseur du prix de cession de la ligne, en euros : jusqu'à sa valeur nette comptable. */
+export const PRIX_DE_LA_LIGNE_AU_CURSEUR = { min: 10_000 } as const;
 
-/** Le projet raccourci, face à celui du chapitre. */
-export function revendrePlusTot(c: Cas) {
-  const machine = machineDuChapitre(c.code);
-  const court = projet(c.code, [machine], DUREE_AVANT_LA_REVENTE);
-  const long = projet(c.code, [machine]);
-  const ecart = centime(court.van - long.van);
-  const verdict: Verdict = court.van <= 0 ? "revendre-detruit" : court.van >= long.van ? "revendre-cree-plus" : "garder-cree-plus";
-  return { court, long, ecart, verdict };
+export type Verdict = "trois-ans-detruisent" | "trois-ans-creent";
+
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
+const entre = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
+const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const pct = (x: number) => `${x.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
+const coef4 = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+const auCentieme = (x: number) => Math.round(x * 100) / 100;
+
+const calculs = new Map<string, ReturnType<typeof calculer>>();
+
+/** Le projet raccourci, face à celui du chapitre, et le prix de la ligne qui le sauverait. */
+export function revendrePlusTot(c: Pick<Cas, "code">) {
+  const deja = calculs.get(c.code);
+  if (deja) return deja;
+  const r = calculer(c);
+  calculs.set(c.code, r);
+  return r;
 }
 
-const T = TRIMESTRE_DE_L_ACHAT;
-const TAUX_PCT = auCentieme(TAUX_TRIMESTRIEL * 100);
+function calculer(c: Pick<Cas, "code">) {
+  const x = gammeDuChapitre(c);
+  const n = DUREE_AVANT_LA_REVENTE;
+  const court = fluxDuProjet(x.p, { duree: n, tauxDeLImpot: x.k.impot });
+  const unAnDePlus = fluxDuProjet(x.p, { duree: n + 1, tauxDeLImpot: x.k.impot });
+  const vanCourte = van(court.flux, x.t);
+  const vanUnAnDePlus = van(unAnDePlus.flux, x.t);
+  const [ligne, moules] = court.residuels;
+  const actifLigne = x.p.actifs[0]!;
+  // Le prix de cession de la ligne, levier du curseur : la VAN du projet raccourci est affine dans ce prix.
+  const vanAuPrix = (prix: number) =>
+    van(fluxDuProjet({ ...x.p, actifs: x.p.actifs.map((a, i) => (i === 0 ? { ...a, tauxDeReprise: prix / ligne!.vnc } : a)) }, { duree: n, tauxDeLImpot: x.k.impot }).flux, x.t);
+  // À rebours : la valeur résiduelle nette qui manque à la date n, puis le prix de cession qui la donne.
+  const manque = auCentime(-vanCourte / coefficientDActualisation(x.t, n));
+  const nettePourZero = auCentime(ligne!.nette + manque);
+  const prixMinimal = auCentime((nettePourZero - x.k.impot * ligne!.vnc) / (1 - x.k.impot));
+  const verdict: Verdict = vanCourte <= 0 ? "trois-ans-detruisent" : "trois-ans-creent";
+  return {
+    x,
+    n,
+    court,
+    unAnDePlus,
+    vanCourte,
+    vanUnAnDePlus,
+    ligne: ligne!,
+    moules: moules!,
+    actifLigne,
+    vanAuPrix,
+    manque,
+    nettePourZero,
+    prixMinimal,
+    partMinimale: auCentieme((prixMinimal / ligne!.vnc) * 100),
+    prixEntier: premierPositif(vanAuPrix, PRIX_DE_LA_LIGNE_AU_CURSEUR.min, ligne!.vnc, prixMinimal),
+    verdict,
+  };
+}
 
 export const REVENDRE_LA_MACHINE_PLUS_TOT: Situation = {
   code: "revendre-la-machine-plus-tot",
@@ -62,106 +96,208 @@ export const REVENDRE_LA_MACHINE_PLUS_TOT: Situation = {
   reprend: [LA_VALEUR_ACTUELLE_NETTE.code],
   commanditaire: "Le directeur financier",
   titre: "Revendre la machine plus tôt",
-  accroche: `Le directeur financier voudrait revendre la machine au bout de ${DUREE_AVANT_LA_REVENTE} trimestres : moins de flux, mais une revente plus forte. L'investissement crée-t-il de la valeur, et autant qu'en gardant la machine ?`,
+  accroche: `L'atelier sera repris à la fin de N+${DUREE_AVANT_LA_REVENTE} : la ligne de la gamme serait revendue après ${DUREE_AVANT_LA_REVENTE} ans au lieu de 5. Le lancement crée-t-il encore de la valeur, et sinon, à quel prix faudrait-il revendre la ligne ?`,
   objectifs: [
-    "Calculer la valeur résiduelle d'un équipement revendu avant la fin de son amortissement",
-    "Actualiser les flux d'un projet raccourci et calculer sa VAN",
-    "Comparer deux durées d'un même projet par leur VAN",
-    "Répondre au directeur financier, chiffre à l'appui",
+    "Calculer la valeur résiduelle nette d'équipements revendus avant la fin de leur amortissement",
+    "Refaire le dernier flux et la VAN d'un projet raccourci, BFR compris",
+    "Retrouver à rebours le prix de cession qui annule la VAN",
+    "Répondre au directeur financier, chiffres à l'appui",
   ],
   libre: false,
-  entreprises: LA_VALEUR_ACTUELLE_NETTE.entreprises,
+  entreprises: {
+    codes: ENTREPRISES_DES_PROJETS,
+    pourquoi: "ce cas reprend le chapitre « La valeur actuelle nette d'un investissement », qui se calcule sur les projets de NOVA, dans la simulation du cours.",
+  },
   etapes: [
     {
       id: "demande",
       type: "lecture",
       titre: "La question du directeur financier",
-      texte: (c) => {
-        const { court, long } = revendrePlusTot(c);
-        return [
-          `« Nous aurons peut-être besoin de la place dans ${DUREE_AVANT_LA_REVENTE} trimestres. Si nous achetons la machine « ${court.machine} » au trimestre ${T} et la revendons à la fin du trimestre ${DUREE_AVANT_LA_REVENTE}, au lieu de la garder ${long.duree} trimestres, ${long.van > 0 ? "l'investissement crée-t-il encore de la valeur ? Et autant ?" : "reprise plus cher, la machine crée-t-elle alors de la valeur ?"} »`,
-          `Pas de cours cette fois : vous avez les flux de la machine, trimestre par trimestre, ceux que l'arène a rejoués au chapitre, et les conditions de la revente. Au chapitre, gardée ${long.duree} trimestres, la machine avait une VAN de ${eur(long.van)}.`,
-        ];
-      },
       tableau: (c) => {
-        const { court } = revendrePlusTot(c);
+        const r = revendrePlusTot(c);
+        const [ligne, moules] = r.x.p.actifs;
         return {
-          titre: `La machine ${dE(c.entreprise)}, revendue au bout de ${DUREE_AVANT_LA_REVENTE} trimestres`,
+          titre: `Le projet A, arrêté à la fin de N+${r.n}`,
           colonnes: ["Valeur"],
           lignes: [
-            { libelle: `Prix de la machine, décaissé au trimestre ${T}`, valeurs: [eur(court.cout)] },
-            { libelle: "Durée d'amortissement (trimestres)", valeurs: [qte(court.dureeDAmortissement)] },
-            { libelle: "Part de la valeur nette comptable reprise à la revente", valeurs: [pct(court.vr.ratio * 100)] },
-            { libelle: "Taux de l'impôt sur les sociétés", valeurs: [pct(court.tauxPct)] },
-            { libelle: "Taux d'actualisation, par trimestre", valeurs: [pct(TAUX_PCT)] },
-            ...court.lignes.map((l) => ({ libelle: `Flux de trésorerie du trimestre ${l.trimestre}`, valeurs: [eur(l.flux)] })),
+            ...r.court.annees.map((a) => ({ libelle: `Flux d'exploitation après impôt de N+${a.annee}`, valeurs: [eur(a.fluxDExploitation)] })),
+            ...r.court.annees.map((a) => ({ libelle: `BFR de N+${a.annee}`, valeurs: [eur(a.bfr)] })),
+            { libelle: `Prix de ${ligne!.libelle}, amortie sur ${qte(ligne!.dureeDAmortissement)} ans`, valeurs: [eur(ligne!.montant)] },
+            { libelle: "Reprise de la ligne par un acheteur d'occasion", valeurs: [`${pct(ligne!.tauxDeReprise * 100)} de sa valeur nette comptable`] },
+            { libelle: `Prix ${moules!.libelle.replace(/^les /, "des ")}, amortis sur ${qte(moules!.dureeDAmortissement)} ans, sans revente`, valeurs: [eur(moules!.montant)] },
+            { libelle: "Taux de l'impôt sur le résultat", valeurs: [pct(r.x.impotPct)] },
+            { libelle: "Taux d'actualisation", valeurs: [pct(r.x.tauxPct)] },
           ],
         };
       },
-      repere: () => "À rendre : la valeur résiduelle de la machine revendue tôt, la VAN du projet raccourci, et votre réponse.",
+      texte: (c) => {
+        const r = revendrePlusTot(c);
+        return [
+          `« Nous aurons besoin de l'atelier à la fin de N+${r.n}, pour une autre fabrication. Si nous lançons la gamme, la ligne manuelle serait revendue au bout de ${r.n} ans, au lieu de 5, et les moules mis au rebut. Le lancement crée-t-il encore de la valeur ? Et sinon, à quel prix faudrait-il revendre la ligne pour qu'il en crée ? »`,
+          `Pas de cours cette fois : les calculs sont ceux du chapitre, à vous d'en trouver l'ordre. Au chapitre, sur 5 ans, le projet avait une VAN de ${eur(r.x.van)}. Le BFR de chaque année se constitue au début de l'année et revient en entier à l'arrêt du projet.`,
+        ];
+      },
+      repere: () => "À rendre : la valeur résiduelle nette du projet raccourci, son dernier flux et sa VAN, le prix de cession de la ligne qui l'annule, et votre réponse.",
     },
     {
-      id: "revente",
+      id: "la-revente",
       type: "montants",
       titre: "Ce que rend la revente",
       notions: ["depreciation"],
-      question: (c) => {
-        const { court } = revendrePlusTot(c);
-        return `Revendue à la fin du trimestre ${DUREE_AVANT_LA_REVENTE}, la machine aura servi ${court.vr.enService} trimestres. Calculez sa valeur nette comptable à la revente, son prix de cession, puis la valeur résiduelle nette d'impôt.`;
-      },
+      question: (c) => `Revendue à la fin de N+${revendrePlusTot(c).n}, la ligne a servi moins longtemps, et les moules ne sont pas amortis. Calculez la valeur nette comptable de la ligne, sa valeur résiduelle nette d'impôt, puis celle de tout le projet, moules compris.`,
       champs: (c) => {
-        const { court: p } = revendrePlusTot(c);
-        const v = p.vr;
+        const r = revendrePlusTot(c);
+        const a = r.actifLigne;
+        const m = r.x.p.actifs[1]!;
+        const t = pct(r.x.impotPct);
         return [
+          { libelle: `Valeur nette comptable de la ligne à la fin de N+${r.n}`, attendu: r.ligne.vnc, calcul: `${eur(a.montant)} − ${qte(r.n)} × ${eur(a.montant / a.dureeDAmortissement)} = ${eur(r.ligne.vnc)}` },
           {
-            libelle: "Valeur nette comptable à la revente",
-            attendu: v.vnc,
-            calcul: `${eur(p.cout)} × (1 − ${v.enService} ÷ ${p.dureeDAmortissement}) = ${eur(v.vnc)}`,
-            tolerance: 1,
+            libelle: "Valeur résiduelle nette de la ligne",
+            attendu: r.ligne.nette,
+            calcul: `${pct(a.tauxDeReprise * 100)} × ${eur(r.ligne.vnc)} = ${eur(r.ligne.prixDeCession)} de prix de cession, plus ${t} × (${eur(r.ligne.vnc)} − ${eur(r.ligne.prixDeCession)}) d'impôt économisé = ${eur(r.ligne.nette)}`,
           },
-          { libelle: "Prix de cession", attendu: v.prix, calcul: `${eur(v.vnc)} × ${pct(v.ratio * 100)} = ${eur(v.prix)}`, tolerance: 1 },
           {
-            libelle: "Valeur résiduelle nette d'impôt",
-            attendu: v.nette,
-            calcul: `${eur(v.prix)} + ${pct(p.tauxPct)} × (${eur(v.vnc)} − ${eur(v.prix)}) = ${eur(v.nette)}`,
-            tolerance: 1,
+            libelle: "Valeur résiduelle nette du projet",
+            attendu: r.court.valeurResiduelle,
+            calcul: `${eur(r.ligne.nette)} + les moules, ${eur(m.montant)} − ${qte(r.n)} × ${eur(m.montant / m.dureeDAmortissement)} = ${eur(r.moules.vnc)} de valeur nette comptable mis au rebut, soit ${t} × ${eur(r.moules.vnc)} = ${eur(r.moules.nette)} d'impôt économisé : ${eur(r.court.valeurResiduelle)}`,
           },
         ];
       },
       explication: (c) => {
-        const { court, long } = revendrePlusTot(c);
+        const r = revendrePlusTot(c);
         return [
-          `Revendue tôt, la machine rend ${eur(court.vr.nette)}, impôt compris, contre ${eur(long.vr.nette)} au bout de ${long.duree} trimestres : moins amortie, elle se reprend plus cher. Mais l'arène n'en reprend que ${pct(court.vr.ratio * 100)} de la valeur nette comptable : la revente ne rend jamais ce que la machine n'a pas encore amorti.`,
+          `Arrêté tôt, le projet récupère ${eur(r.court.valeurResiduelle)}, contre ${eur(r.x.f.valeurResiduelle)} au bout de 5 ans : les équipements moins amortis se reprennent plus cher, et leur moins-value fait économiser plus d'impôt. Mais une valeur résiduelle plus forte ne rend jamais ce que les équipements n'ont pas encore servi.`,
         ];
       },
     },
     {
-      id: "van",
+      id: "la-van-raccourcie",
       type: "montants",
       titre: "La VAN du projet raccourci",
-      notions: ["discounting"],
-      question: () =>
-        `Au taux de ${pct(TAUX_PCT)} par trimestre, calculez la valeur actuelle des flux des ${DUREE_AVANT_LA_REVENTE} trimestres, celle de la valeur résiduelle, puis la VAN du projet raccourci.`,
+      notions: ["discounting", "bfr"],
+      question: (c) => {
+        const r = revendrePlusTot(c);
+        return `Calculez le flux de trésorerie disponible de la date ${r.n}, la VAN du projet arrêté à la fin de N+${r.n}, puis, pour comparer, celle du projet arrêté un an plus tard.`;
+      },
       champs: (c) => {
-        const { court: p } = revendrePlusTot(c);
+        const r = revendrePlusTot(c);
+        const n = r.n;
+        const a = r.court.annees[n - 1]!;
+        const coefs = r.court.flux.map((_, d) => coefficientDActualisation(r.x.t, d));
+        const p = r.unAnDePlus;
+        const b = p.annees[n]!;
         return [
-          { libelle: "Valeur actuelle des flux d'exploitation", attendu: p.va, calcul: `la somme des flux × (1 + ${pct(TAUX_PCT)})^(−k), k de 1 à ${p.duree} : ${eur(p.va)}`, tolerance: p.tolerance },
-          { libelle: "Valeur actuelle de la valeur résiduelle", attendu: p.vaResiduelle, calcul: `${eur(p.vr.nette)} × ${coef4(p.coefFin)} = ${eur(p.vaResiduelle)}`, tolerance: 1 },
-          { libelle: "VAN du projet raccourci", attendu: p.van, calcul: `${eur(p.va)} + ${eur(p.vaResiduelle)} − ${eur(p.cout)} = ${eur(p.van)}`, tolerance: p.tolerance + 1 },
+          {
+            libelle: `Flux disponible de la date ${n}`,
+            attendu: r.court.flux[n]!,
+            calcul: `${eur(a.fluxDExploitation)} + ${eur(r.court.valeurResiduelle)} de valeur résiduelle + ${eur(r.court.recuperationDuBfr)} de BFR récupéré = ${eur(r.court.flux[n]!)}`,
+          },
+          {
+            libelle: `VAN du projet arrêté à la fin de N+${n}`,
+            attendu: r.vanCourte,
+            calcul: `${r.court.flux.map((f, d) => `${entre(f)} × ${coef4(coefs[d]!)}`).join(" + ")} = ${eur(r.vanCourte)}`,
+            tolerance: toleranceDActualisation(r.court.flux),
+          },
+          {
+            libelle: `VAN du projet arrêté à la fin de N+${n + 1}`,
+            attendu: r.vanUnAnDePlus,
+            calcul: `la valeur résiduelle nette vaut ${eur(p.valeurResiduelle)} à la fin de N+${n + 1}, le BFR récupéré ${eur(p.recuperationDuBfr)} : flux de la date ${n + 1} = ${eur(b.fluxDExploitation)} + ${eur(p.valeurResiduelle)} + ${eur(p.recuperationDuBfr)}${p.variationsDuBfr[n] ? ` − ${entre(p.variationsDuBfr[n]!)}` : ""} = ${eur(p.flux[n + 1]!)}, la date ${n} gardant son flux de ${eur(p.flux[n]!)}, et la VAN ${eur(r.vanUnAnDePlus)}`,
+            tolerance: toleranceDActualisation(p.flux),
+          },
         ];
       },
       explication: (c) => {
-        const { court, long, ecart } = revendrePlusTot(c);
-        const abandonnes = centime(long.va - court.va);
-        const revente = centime(court.vaResiduelle - long.vaResiduelle);
+        const r = revendrePlusTot(c);
         return [
-          `Gardée ${long.duree} trimestres, la machine avait une VAN de ${eur(long.van)} ; revendue au bout de ${court.duree}, ${eur(court.van)}, soit ${eur(Math.abs(ecart))} ${ecart <= 0 ? "de moins" : "de plus"}. ${
-            ecart <= 0
-              ? `Les ${long.duree - court.duree} trimestres abandonnés rapportaient ${eur(abandonnes)} en valeur actuelle ; la revente avancée n'en rend que ${eur(revente)} de plus.`
-              : abandonnes >= 0
-                ? `La revente avancée rend ${eur(revente)} de plus en valeur actuelle, plus que les ${eur(abandonnes)} que rapportaient les ${long.duree - court.duree} trimestres abandonnés.`
-                : `La revente avancée rend ${eur(revente)} de plus en valeur actuelle, et les ${long.duree - court.duree} trimestres abandonnés, loin de rapporter, retiraient ${eur(-abandonnes)} en valeur actuelle.`
-          }`,
+          r.vanCourte <= 0
+            ? `Arrêté à la fin de N+${r.n}, le projet détruit ${eur(-r.vanCourte)} : la gamme n'a pas le temps de payer son lancement. Un an de plus, et elle crée ${eur(r.vanUnAnDePlus)} : la quatrième année, la gamme plafonne, et c'est elle qui rapporte.`
+            : `Arrêté à la fin de N+${r.n}, le projet crée encore ${eur(r.vanCourte)}, et ${eur(r.vanUnAnDePlus)} avec un an de plus.`,
+          `Le BFR revient au plus haut, ${eur(r.court.recuperationDuBfr)}, puisque l'année ${r.n} est une année pleine : l'arrêt avancé le rend plus tôt, ce qui joue pour le projet, mais ne compense pas les flux perdus.`,
+        ];
+      },
+    },
+    {
+      id: "le-prix-au-curseur",
+      type: "curseur",
+      titre: "Le prix de revente de la ligne",
+      notions: ["depreciation", "discounting"],
+      question: (c) => {
+        const r = revendrePlusTot(c);
+        return `Faites varier le prix auquel un acheteur reprendrait la ligne à la fin de N+${r.n}, de ${eur(PRIX_DE_LA_LIGNE_AU_CURSEUR.min)} à sa valeur nette comptable, ${eur(r.ligne.vnc)}. Placez le curseur sur le prix le plus bas où le projet de ${qte(r.n)} ans ne détruit plus de valeur, puis validez.`;
+      },
+      grandeur: () => ({ libelle: "Prix de cession de la ligne", unite: "€" }),
+      cible: (c) => {
+        const r = revendrePlusTot(c);
+        return { attendu: r.prixEntier, min: PRIX_DE_LA_LIGNE_AU_CURSEUR.min, max: r.ligne.vnc };
+      },
+      zones: ["Le projet crée de la valeur", "Le projet détruit de la valeur"],
+      rates: () => ({
+        dessous: "À ce prix, la VAN du projet raccourci reste négative.",
+        dessus: "Plus bas, la VAN reste positive : cherchez le prix le plus bas.",
+      }),
+      montrer: "Montrer le prix minimal",
+      lecture: (c, prix) => {
+        const r = revendrePlusTot(c);
+        const nette = auCentime(prix - r.x.k.impot * (prix - r.ligne.vnc));
+        return [
+          { libelle: "Valeur résiduelle nette de la ligne", montant: nette },
+          { libelle: `Flux disponible de la date ${r.n}`, montant: auCentime(r.court.flux[r.n]! + nette - r.ligne.nette) },
+          { libelle: `VAN du projet de ${qte(r.n)} ans`, montant: r.vanAuPrix(prix), fort: true },
+        ];
+      },
+      droites: (c) => {
+        const r = revendrePlusTot(c);
+        return {
+          produit: (prix) => r.vanAuPrix(prix) + r.x.equipements,
+          cout: () => r.x.equipements,
+          libelles: ["Ce que rapporte le projet raccourci, en valeur actuelle", "Équipements de la date 0"],
+        };
+      },
+      explication: (c) => {
+        const r = revendrePlusTot(c);
+        return [
+          `La VAN s'annule entre ${eur(r.prixEntier - 1)} et ${eur(r.prixEntier)} : il faudrait revendre la ligne environ ${pct(Math.round(r.partMinimale))} de sa valeur nette comptable, au lieu des ${pct(r.actifLigne.tauxDeReprise * 100)} prévus. Chaque euro de prix en plus ne rend que ${eur(auCentime(1 - r.x.k.impot))} : le reste aurait été une économie d'impôt sur la moins-value.`,
+        ];
+      },
+    },
+    {
+      id: "a-rebours",
+      type: "montants",
+      titre: "Le prix minimal, à rebours",
+      notions: ["depreciation", "discounting"],
+      question: (c) => {
+        const r = revendrePlusTot(c);
+        return `Retrouvez au centime le prix que le curseur a montré. Calculez ce qui manque à la valeur résiduelle nette, à la date ${r.n}, pour annuler la VAN, puis le prix de cession de la ligne qui le rendrait, et ce qu'il représente de sa valeur nette comptable.`;
+      },
+      champs: (c) => {
+        const r = revendrePlusTot(c);
+        const t = r.x.k.impot;
+        return [
+          {
+            libelle: `Valeur résiduelle nette qui manque à la date ${r.n}`,
+            attendu: r.manque,
+            calcul: `${eur(-r.vanCourte)} × (1 + ${pct(r.x.tauxPct)})^${r.n} = ${eur(r.manque)}`,
+            tolerance: 0.5,
+          },
+          {
+            libelle: "Prix de cession minimal de la ligne",
+            attendu: r.prixMinimal,
+            calcul: `la valeur résiduelle nette vaut prix × (1 − ${pct(t * 100)}) + ${pct(t * 100)} × ${eur(r.ligne.vnc)} ; il la faut à ${eur(r.ligne.nette)} + ${eur(r.manque)} = ${eur(r.nettePourZero)} : (${eur(r.nettePourZero)} − ${eur(auCentime(t * r.ligne.vnc))}) ÷ ${qte(1 - t)} = ${eur(r.prixMinimal)}`,
+            tolerance: 1,
+          },
+          {
+            libelle: "Part de la valeur nette comptable (%)",
+            attendu: r.partMinimale,
+            calcul: `${eur(r.prixMinimal)} ÷ ${eur(r.ligne.vnc)} = ${pct(r.partMinimale)}`,
+            tolerance: 0.02,
+          },
+        ];
+      },
+      explication: (c) => {
+        const r = revendrePlusTot(c);
+        return [
+          `Pour sauver le projet de ${qte(r.n)} ans, l'acheteur devrait payer ${eur(r.prixMinimal)}, ${pct(r.partMinimale)} de la valeur nette comptable : ${eur(auCentime(r.prixMinimal - r.ligne.prixDeCession))} de plus que la reprise prévue. Un écart de VAN de ${eur(-r.vanCourte)} se paie ${eur(r.manque)} à la date ${r.n}, et ${eur(auCentime(r.prixMinimal - r.ligne.prixDeCession))} de prix, puisque l'impôt en reprend ${pct(r.x.impotPct)}.`,
         ];
       },
     },
@@ -170,47 +306,34 @@ export const REVENDRE_LA_MACHINE_PLUS_TOT: Situation = {
       type: "choix",
       titre: "Votre réponse au directeur financier",
       notions: ["discounting"],
-      question: () => "Quelle phrase envoyez-vous au directeur financier ?",
+      question: () => "Quelle réponse envoyez-vous au directeur financier ?",
       options: (c) => {
-        const { court, long, verdict } = revendrePlusTot(c);
-        const cout = pct(auCentieme(COUT_DU_CAPITAL_ANNUEL * 100));
+        const r = revendrePlusTot(c);
+        const detruit = r.verdict === "trois-ans-detruisent";
         return [
           {
-            texte: "Revendre tôt crée encore de la valeur, mais moins que garder la machine",
-            juste: verdict === "garder-cree-plus",
-            retour:
-              verdict === "garder-cree-plus"
-                ? `Oui : la VAN reste positive, ${eur(court.van)}, mais garder la machine ${long.duree} trimestres en crée ${eur(long.van)}. Si la place ne manque pas, mieux vaut la garder.`
-                : verdict === "revendre-detruit"
-                  ? `Non : revendue tôt, la machine a une VAN négative, ${eur(court.van)}.`
-                  : `Non : revendue tôt, elle crée plus de valeur, ${eur(court.van)} contre ${eur(long.van)}.`,
+            texte: `Pas sur ${qte(r.n)} ans tel quel : il faut revendre la ligne au moins ${eur(r.prixMinimal)}, ou garder l'atelier un an de plus`,
+            juste: detruit,
+            retour: detruit
+              ? `Oui : sur ${qte(r.n)} ans, la VAN est de ${eur(r.vanCourte)}. Elle ne devient positive que si un acheteur paie la ligne ${pct(r.partMinimale)} de sa valeur nette comptable, au lieu de ${pct(r.actifLigne.tauxDeReprise * 100)} ; avec un an de plus, le projet crée ${eur(r.vanUnAnDePlus)}. C'est à la direction de choisir entre chercher l'acheteur et retarder l'autre fabrication.`
+              : `Non : sur ${qte(r.n)} ans, la VAN reste positive, ${eur(r.vanCourte)}.`,
           },
           {
-            texte: "Revendre tôt détruit de la valeur : sa VAN est négative",
-            juste: verdict === "revendre-detruit",
-            retour:
-              verdict === "revendre-detruit"
-                ? `Oui : sur ${court.duree} trimestres, ses flux et sa revente, actualisés à ${cout} par an, ne rendent pas son prix : la VAN est de ${eur(court.van)}. ${
-                    long.van > 0
-                      ? `Gardée ${long.duree} trimestres, elle en créait ${eur(long.van)}. Mieux vaut ne pas l'acheter si elle doit partir si tôt.`
-                      : `Gardée ${long.duree} trimestres, elle n'en créait pas non plus : sa VAN était de ${eur(long.van)}. Mieux vaut ne pas l'acheter du tout.`
-                  }`
-                : `Non : la VAN du projet raccourci reste positive, ${eur(court.van)}.`,
-          },
-          {
-            texte: "Revendre tôt crée plus de valeur que garder la machine",
-            juste: verdict === "revendre-cree-plus",
-            retour:
-              verdict === "revendre-cree-plus"
-                ? `Oui : la VAN du projet raccourci, ${eur(court.van)}, dépasse celle du projet entier, ${eur(long.van)}.`
-                : verdict === "revendre-detruit"
-                  ? `Non : revendue tôt, la machine ne crée pas de valeur : la VAN du projet raccourci est négative, ${eur(court.van)}.`
-                  : `Non : la VAN du projet raccourci, ${eur(court.van)}, est sous celle du projet entier, ${eur(long.van)}.`,
-          },
-          {
-            texte: "Rien ne change : la revente rend à l'entreprise tout ce que la machine n'a pas encore amorti",
+            texte: `Oui, lançons : à ${eur(r.vanCourte)}, la VAN est presque nulle, l'écart est négligeable face aux ${eur(r.x.equipements)} investis`,
             juste: false,
-            retour: `Non : l'arène ne reprend que ${pct(court.vr.ratio * 100)} de la valeur nette comptable, et les trimestres abandonnés ne rapportent plus rien. La VAN passe de ${eur(long.van)} à ${eur(court.van)}.`,
+            retour: `Non : une VAN négative, même petite, dit que le projet rend moins que les ${pct(r.x.tauxPct)} qu'exigent les capitaux. Lancer à ces conditions, c'est accepter de détruire ${eur(-r.vanCourte)}.`,
+          },
+          {
+            texte: `Oui, lançons : revendus plus tôt, les équipements rendent ${eur(r.court.valeurResiduelle)} au lieu de ${eur(r.x.f.valeurResiduelle)}, ce qui compense les années perdues`,
+            juste: !detruit,
+            retour: detruit
+              ? `Non : la valeur résiduelle monte de ${eur(auCentime(r.court.valeurResiduelle - r.x.f.valeurResiduelle))}, mais les années perdues rapportaient bien plus. La VAN passe de ${eur(r.x.van)} à ${eur(r.vanCourte)}.`
+              : `Oui : la VAN du projet raccourci reste positive, ${eur(r.vanCourte)}.`,
+          },
+          {
+            texte: "Non : seul le projet entier, sur 5 ans, crée de la valeur ; il faut garder la ligne jusqu'au bout",
+            juste: false,
+            retour: `Non : un an de plus suffit, le projet arrêté à la fin de N+${r.n + 1} crée ${eur(r.vanUnAnDePlus)}. Et une revente à ${eur(r.prixMinimal)} sauverait même le projet de ${qte(r.n)} ans.`,
           },
         ];
       },

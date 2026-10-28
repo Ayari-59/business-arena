@@ -1,16 +1,7 @@
 import type { Cas } from "../../cas";
-import { rejouerAvec } from "../../gestion-de-la-pme";
-import {
-  L_EFFET_DE_LEVIER,
-  auCentieme,
-  dE,
-  effetDeLevier,
-  eur,
-  pct,
-  points,
-  rentabilitesDe,
-  structureDe,
-} from "../../chapitres/l-effet-de-levier";
+import { L_EFFET_DE_LEVIER, auCentieme, dE, enPct, eur, levierDeLEscale, nombre, pct, points, rentabilitesDe } from "../../chapitres/l-effet-de-levier";
+import { bilanApres, seuilDeMassue } from "../../monde/finance";
+import { TAUX_RELEVE } from "../../monde/projets-et-financement";
 import type { TableauDeDonnees } from "../../types";
 import type { Situation } from "../types";
 
@@ -18,76 +9,80 @@ import type { Situation } from "../types";
  * CAS PRATIQUE DU CHAPITRE « L'EFFET DE LEVIER » : LE LEVIER FACE À LA HAUSSE DU TAUX (DSCG, UE2
  * Finance, palier 4).
  *
- * L'emprunt de l'entreprise est à taux variable, et la banque annonce une hausse. La directrice
- * financière demande si la dette jouera encore pour les associés. L'arène rejoue l'année du cours
- * avec le taux du scénario relevé (`finance.loanAnnualRate`, le paramètre `scenario` de
- * `rejouerAvec`) : l'exploitation ne bouge pas, les charges financières montent. L'élève refait
- * seul les calculs du chapitre au taux relevé (la rentabilité économique, le coût de
- * l'endettement net, la rentabilité des capitaux propres), puis cherche le taux à partir duquel
- * le levier s'inverse.
+ * Comme son chapitre, le cas se joue dans la simulation du cours (src/config/cours/monde), pas dans
+ * l'arène : le bilan de L'ESCALE est celui de la fiche, et l'année au taux relevé est le scénario
+ * figé de la fiche (TAUX_RELEVE, refait par bilanApres), à la place du rejeu de l'arène.
  *
- * Le cas est neuf par sa question : le chapitre faisait varier la structure à taux donné, le cas
- * fait varier le taux à structure donnée. Les chiffres de l'année sont ceux du chapitre
- * (`effetDeLevier`) ; ceux du taux relevé, la même lecture du bilan (`structureDe`) sur l'année
- * rejouée. Au taux relevé, l'année finit encore en bénéfice dans les entreprises du chapitre :
- * l'impôt suit le taux, et la relation du levier tient ; le test le vérifie.
+ * L'emprunt de l'hôtel est à taux variable, et la banque annonce une hausse. La directrice
+ * financière demande si la dette jouera encore pour les associés, combien de résultat
+ * d'exploitation l'hôtel pourrait perdre avant qu'elle ne se retourne, et à partir de quel taux.
+ * L'élève refait seul les rentabilités au taux relevé, cherche au curseur le seuil de massue au
+ * nouveau taux, le croise avec celui du taux actuel (la baisse supportable fond), puis retrouve à
+ * rebours le taux limite. La réponse demande un jugement : le levier tient, mais sa marge de
+ * sécurité a fondu.
  *
- * Dans l'année que joue le bon gestionnaire, le levier tient partout au taux relevé : le taux où
- * il s'inverserait est loin au-dessus. Les textes du levier qui s'inverse, ou qui jouait déjà
- * contre les associés, ne s'y lisent pas ; ils restent justes pour une année qui les ferait lire.
+ * LA CONVENTION DES SEUILS, celle du chapitre : à endettement net inchangé, celui du 31 décembre de
+ * la fiche. Le seuil de massue au taux relevé est donc les charges financières au taux relevé ×
+ * actif économique ÷ endettement net de la fiche.
  */
-
-/**
- * LA HAUSSE DU TAUX : 3 points, une hypothèse du cours. C'est l'ordre de grandeur de la remontée
- * des taux des crédits aux entreprises en 2022 et 2023, ce qu'un emprunt à taux variable a payé
- * en plus en deux ans.
- */
-export const HAUSSE_DU_TAUX_VARIABLE = 0.03;
-
-/** L'année du cours rejouée au taux relevé. */
-export const anneeAuTauxReleve = (code: string) =>
-  rejouerAvec(code, "l-effet-de-levier:hausse-du-taux", () => undefined, (s) => ({
-    ...s,
-    finance: { ...s.finance, loanAnnualRate: s.finance.loanAnnualRate + HAUSSE_DU_TAUX_VARIABLE },
-  }));
 
 export type Verdict = "tient" | "s-inverse" | "deja";
 
+/** Les bornes du curseur du résultat d'exploitation, en euros. */
+export const RESULTAT_DU_CURSEUR_DU_CAS = { min: 50_000, max: 400_000 } as const;
+
+const auCentime = (x: number) => Math.round(x * 100) / 100 || 0;
+
 const calculs = new Map<string, ReturnType<typeof calculer>>();
 
-/** Le levier au taux actuel et au taux relevé, et le taux où il s'inverse. */
-export function levierFaceALaHausse(c: Cas) {
+/** Le levier au taux actuel et au taux relevé, ses seuils, et le taux où il s'inverse. */
+export function levierFaceALaHausse(c: Pick<Cas, "code">) {
   const deja = calculs.get(c.code);
   if (deja) return deja;
-  const r = calculer(c);
-  calculs.set(c.code, r);
-  return r;
+  const x = calculer(c);
+  calculs.set(c.code, x);
+  return x;
 }
 
-function calculer(c: Cas) {
-  const l = effetDeLevier(c);
-  const releve = structureDe(anneeAuTauxReleve(c.code));
-  const r2 = rentabilitesDe(releve, l.tauxIS);
-  const tauxReleve = auCentieme(l.taux + HAUSSE_DU_TAUX_VARIABLE * 100);
-  // À endettement net inchangé, le coût de la dette suit le taux : il égale Re au taux actuel × Re ÷ i.
-  const tauxLimite = auCentieme((l.taux * l.r.re) / l.r.i);
-  const verdict: Verdict = l.r.exact.re <= l.r.exact.i ? "deja" : r2.exact.re < r2.exact.i ? "s-inverse" : "tient";
-  return { ...l, releve, r2, tauxReleve, tauxLimite, verdict, perteDeRcp: auCentieme(l.r.rcp - r2.rcp) };
+function calculer(c: Pick<Cas, "code">) {
+  const l = levierDeLEscale(c);
+  const releve = bilanApres(l.b, { tauxDeLEmprunt: TAUX_RELEVE });
+  const r2 = rentabilitesDe(releve);
+  const tauxReleve = enPct(TAUX_RELEVE);
+  // À endettement net inchangé : les charges financières au taux relevé, sur l'actif et la dette de la fiche.
+  const chargesAuTauxReleve = r2.a.chargesFinancieres;
+  const seuilAuTauxReleve = seuilDeMassue(chargesAuTauxReleve, l.a.actifEconomique, l.a.endettementNet);
+  const baisseAuTauxReleve = enPct((l.b.resultatDExploitation - seuilAuTauxReleve) / l.b.resultatDExploitation);
+  const verdict: Verdict = l.a.re <= l.a.i ? "deja" : r2.a.re < r2.a.i ? "s-inverse" : "tient";
+  return {
+    ...l,
+    releve,
+    r2,
+    tauxReleve,
+    chargesAuTauxReleve,
+    seuilAuTauxReleve,
+    baisseAuTauxReleve,
+    margeAuTauxReleve: auCentieme(l.tauxLimite - tauxReleve),
+    perteDeRcp: auCentieme(l.r.rcp - r2.rcp),
+    verdict,
+  };
 }
 
 function tableauDesDeuxTaux(c: Cas): TableauDeDonnees {
-  const { s, releve, taux, tauxReleve } = levierFaceALaHausse(c);
+  const x = levierFaceALaHausse(c);
+  const a2 = x.r2.a;
   return {
-    titre: `L'année ${dE(c.entreprise)}, au taux actuel et au taux relevé`,
+    titre: `L'année ${dE(x.entreprise)}, au taux actuel et au taux relevé`,
     colonnes: ["Taux actuel", "Taux relevé"],
     lignes: [
-      { libelle: "Taux annuel de l'emprunt", valeurs: [pct(taux), pct(tauxReleve)] },
-      { libelle: "Résultat d'exploitation", valeurs: [eur(s.resultatDExploitation), eur(releve.resultatDExploitation)] },
-      { libelle: "Charges financières", valeurs: [eur(s.chargesFinancieres), eur(releve.chargesFinancieres)] },
-      { libelle: "Résultat net", valeurs: [eur(s.resultatNet), eur(releve.resultatNet)] },
-      { libelle: "Actif économique au 31 décembre", valeurs: [eur(s.actifEconomique), eur(releve.actifEconomique)] },
-      { libelle: "Capitaux propres au 31 décembre", valeurs: [eur(s.capitauxPropres), eur(releve.capitauxPropres)] },
-      { libelle: "Endettement net au 31 décembre", valeurs: [eur(s.endettementNet), eur(releve.endettementNet)] },
+      { libelle: "Taux annuel de l'emprunt", valeurs: [pct(x.taux), pct(x.tauxReleve)] },
+      { libelle: "Résultat d'exploitation", valeurs: [eur(x.b.resultatDExploitation), eur(x.releve.resultatDExploitation)] },
+      { libelle: "Charges financières", valeurs: [eur(x.a.chargesFinancieres), eur(a2.chargesFinancieres)] },
+      { libelle: "Résultat net", valeurs: [eur(x.a.resultatNet), eur(a2.resultatNet)] },
+      { libelle: "Actif économique au 31 décembre", valeurs: [eur(x.a.actifEconomique), eur(a2.actifEconomique)] },
+      { libelle: "Capitaux propres au 31 décembre", valeurs: [eur(x.a.capitauxPropres), eur(a2.capitauxPropres)] },
+      { libelle: "Endettement net au 31 décembre", valeurs: [eur(x.a.endettementNet), eur(a2.endettementNet)] },
+      { libelle: "Taux de l'impôt sur les sociétés", valeurs: [pct(x.tPct), pct(x.tPct)] },
     ],
   };
 }
@@ -101,11 +96,11 @@ export const LE_LEVIER_FACE_A_LA_HAUSSE_DU_TAUX: Situation = {
   commanditaire: "La directrice financière",
   titre: "Le levier face à la hausse du taux",
   accroche:
-    "L'emprunt est à taux variable, et la banque annonce une hausse. La dette jouera-t-elle encore pour les associés ? Les rentabilités au taux relevé, et le taux à partir duquel le levier s'inverse.",
+    "L'emprunt est à taux variable, et la banque annonce une hausse. La dette jouera-t-elle encore pour les associés, et combien de résultat l'hôtel pourra-t-il perdre avant qu'elle ne se retourne ? Les rentabilités au taux relevé, le seuil de massue qui monte, et le taux limite.",
   objectifs: [
-    "Calculer la rentabilité économique et le coût de l'endettement net après impôt",
-    "Calculer la rentabilité des capitaux propres au taux relevé",
-    "Trouver le taux d'emprunt à partir duquel le levier s'inverse",
+    "Calculer les rentabilités au taux relevé",
+    "Chiffrer le seuil de massue au nouveau taux, et la baisse d'activité que la dette supporte encore",
+    "Retrouver à rebours le taux d'emprunt à partir duquel le levier s'inverse",
     "Répondre à la directrice financière, chiffre à l'appui",
   ],
   libre: false,
@@ -115,15 +110,15 @@ export const LE_LEVIER_FACE_A_LA_HAUSSE_DU_TAUX: Situation = {
       id: "demande",
       type: "lecture",
       titre: "La question de la directrice financière",
+      tableau: tableauDesDeuxTaux,
       texte: (c) => {
-        const { taux, tauxReleve } = levierFaceALaHausse(c);
+        const x = levierFaceALaHausse(c);
         return [
-          `« Notre emprunt est à taux variable, et la banque annonce que son taux passera de ${pct(taux)} à ${pct(tauxReleve)}. Jusqu'ici, la dette ${dE(c.entreprise)} a-t-elle joué pour les associés, et jouera-t-elle encore au nouveau taux ? À partir de quel taux se retournerait-elle contre eux ? »`,
-          "Pas de cours cette fois : l'arène a rejoué l'année au taux relevé, tout le reste égal, et les calculs sont ceux du chapitre. Les rentabilités se calculent après impôt, au taux de l'arène, et sur le bilan du 31 décembre.",
+          `« Notre emprunt est à taux variable, et la banque annonce que son taux passera de ${pct(x.taux)} à ${pct(x.tauxReleve)}. La dette ${dE(x.entreprise)} jouera-t-elle encore pour les associés ? De combien notre résultat d'exploitation pourrait-il baisser, au nouveau taux, avant qu'elle ne se retourne contre eux, et à partir de quel taux se retournerait-elle ? »`,
+          "Pas de cours cette fois : la simulation du cours a refait l'année au taux relevé, tout le reste égal, et les calculs sont ceux du chapitre. Comme dans le chapitre, les seuils se calculent à endettement net inchangé, celui du 31 décembre au taux actuel.",
         ];
       },
-      tableau: tableauDesDeuxTaux,
-      repere: () => "À rendre : les rentabilités au taux relevé, le taux où le levier s'inverse, et votre réponse.",
+      repere: () => "À rendre : les rentabilités au taux relevé, le seuil de massue au nouveau taux, le taux limite, et votre réponse.",
     },
     {
       id: "au-taux-releve",
@@ -131,37 +126,105 @@ export const LE_LEVIER_FACE_A_LA_HAUSSE_DU_TAUX: Situation = {
       titre: "Les rentabilités au taux relevé",
       notions: ["profitability_vs_return", "loan_schedule"],
       tableau: tableauDesDeuxTaux,
-      question: (c) => {
-        const { tauxISPct } = levierFaceALaHausse(c);
-        return `Au taux relevé, calculez la rentabilité économique après impôt (le résultat d'exploitation après impôt rapporté à l'actif économique), le coût de l'endettement net après impôt (les charges financières après impôt rapportées à l'endettement net), et la rentabilité des capitaux propres (le résultat net rapporté aux capitaux propres), en %. L'impôt est de ${pct(tauxISPct)}.`;
-      },
+      question: () => "Au taux relevé, calculez la rentabilité économique après impôt, le coût de l'endettement net après impôt et la rentabilité des capitaux propres, en %.",
       champs: (c) => {
-        const { releve, r2 } = levierFaceALaHausse(c);
+        const x = levierFaceALaHausse(c);
+        const a2 = x.r2.a;
+        return [
+          { libelle: "Re au taux relevé (%)", attendu: x.r2.re, calcul: `${eur(a2.resultatDExploitationApresImpot)} ÷ ${eur(a2.actifEconomique)} × 100 = ${pct(x.r2.re)}`, tolerance: 0.01 },
+          {
+            libelle: "i au taux relevé (%)",
+            attendu: x.r2.i,
+            calcul: `${eur(a2.chargesFinancieres)} × (1 − ${nombre(x.t)}) = ${eur(a2.chargesFinancieresApresImpot)} ; ${eur(a2.chargesFinancieresApresImpot)} ÷ ${eur(a2.endettementNet)} × 100 = ${pct(x.r2.i)}`,
+            tolerance: 0.01,
+          },
+          { libelle: "Rcp au taux relevé (%)", attendu: x.r2.rcp, calcul: `${eur(a2.resultatNet)} ÷ ${eur(a2.capitauxPropres)} × 100 = ${pct(x.r2.rcp)}`, tolerance: 0.01 },
+        ];
+      },
+      explication: (c) => {
+        const x = levierFaceALaHausse(c);
+        return [
+          `L'outil rapporte la même chose aux deux taux, ${pct(x.r2.re)} : la hausse ne touche que le financement. Le coût de l'endettement net passe de ${pct(x.r.i)} à ${pct(x.r2.i)}, et la rentabilité des associés perd ${points(x.perteDeRcp)}, de ${pct(x.r.rcp)} à ${pct(x.r2.rcp)}.`,
+        ];
+      },
+    },
+    {
+      id: "le-seuil-au-curseur",
+      type: "curseur",
+      titre: "Le seuil de massue au nouveau taux",
+      notions: ["profitability_vs_return", "safety_margin"],
+      question: (c) => {
+        const x = levierFaceALaHausse(c);
+        return `Au taux relevé, les charges financières montent à ${eur(x.chargesAuTauxReleve)}. Faites varier le résultat d'exploitation, à endettement net inchangé : une droite donne le résultat net des associés, l'autre ce qu'ils gagneraient sans dette. Placez le curseur sur le plus petit résultat d'exploitation où la dette joue encore pour eux, puis validez.`;
+      },
+      grandeur: () => ({ libelle: "Résultat d'exploitation de l'année", unite: "€" }),
+      cible: (c) => {
+        const x = levierFaceALaHausse(c);
+        return { attendu: Math.ceil(x.seuilAuTauxReleve - 1e-9), min: RESULTAT_DU_CURSEUR_DU_CAS.min, max: RESULTAT_DU_CURSEUR_DU_CAS.max };
+      },
+      zones: ["Effet de levier", "Effet de massue"],
+      rates: () => ({
+        dessous: "À cette position, le résultat net reste sous ce que les associés gagneraient sans dette : la dette joue contre eux.",
+        dessus: "Plus bas, la dette joue encore pour les associés : cherchez le plus petit résultat d'exploitation.",
+      }),
+      montrer: "Montrer le seuil de massue",
+      lecture: (c, rex) => {
+        const x = levierFaceALaHausse(c);
+        const net = auCentime((rex - x.chargesAuTauxReleve) * (1 - x.t));
+        const sansDette = auCentime((rex * (1 - x.t) * x.a.capitauxPropres) / x.a.actifEconomique);
+        return [
+          { libelle: "Résultat net des associés", montant: net },
+          { libelle: "Ce qu'ils gagneraient sans dette", montant: sansDette },
+          { libelle: "Effet de levier, en euros", montant: auCentime(net - sansDette), fort: true },
+        ];
+      },
+      droites: (c) => {
+        const x = levierFaceALaHausse(c);
+        return {
+          produit: (rex) => (rex - x.chargesAuTauxReleve) * (1 - x.t),
+          cout: (rex) => (rex * (1 - x.t) * x.a.capitauxPropres) / x.a.actifEconomique,
+          libelles: ["Résultat net des associés", "Ce qu'ils gagneraient sans dette"],
+        };
+      },
+      explication: (c) => {
+        const x = levierFaceALaHausse(c);
+        return [`Au taux relevé, la dette se retourne sous ${eur(x.seuilAuTauxReleve)} de résultat d'exploitation, au lieu de ${eur(x.a.seuilDeMassue)} au taux actuel : le seuil monte avec les charges financières.`];
+      },
+    },
+    {
+      id: "la-marge-de-securite",
+      type: "montants",
+      titre: "Ce que la hausse coûte en sécurité",
+      notions: ["safety_margin", "profitability_vs_return"],
+      question: () =>
+        "Chiffrez le seuil de massue au taux relevé, puis la baisse du résultat d'exploitation que la dette supporte avant de se retourner, au taux relevé et au taux actuel, en part du résultat d'exploitation de l'année (en %).",
+      champs: (c) => {
+        const x = levierFaceALaHausse(c);
         return [
           {
-            libelle: "Rentabilité économique au taux relevé, Re (%)",
-            attendu: r2.re,
-            calcul: `${eur(r2.exploitationApresImpot)} ÷ ${eur(releve.actifEconomique)} × 100 = ${pct(r2.re)}`,
+            libelle: "Seuil de massue au taux relevé",
+            attendu: x.seuilAuTauxReleve,
+            calcul: `${eur(x.chargesAuTauxReleve)} × ${eur(x.a.actifEconomique)} ÷ ${eur(x.a.endettementNet)} = ${eur(x.seuilAuTauxReleve)}`,
+            tolerance: 1,
+          },
+          {
+            libelle: "Baisse supportable au taux relevé (%)",
+            attendu: x.baisseAuTauxReleve,
+            calcul: `(${eur(x.b.resultatDExploitation)} − ${eur(x.seuilAuTauxReleve)}) ÷ ${eur(x.b.resultatDExploitation)} × 100 = ${pct(x.baisseAuTauxReleve)}`,
             tolerance: 0.01,
           },
           {
-            libelle: "Coût de l'endettement net au taux relevé, i (%)",
-            attendu: r2.i,
-            calcul: `${eur(r2.chargesApresImpot)} ÷ ${eur(releve.endettementNet)} × 100 = ${pct(r2.i)}`,
-            tolerance: 0.01,
-          },
-          {
-            libelle: "Rcp au taux relevé (%)",
-            attendu: r2.rcp,
-            calcul: `${eur(releve.resultatNet)} ÷ ${eur(releve.capitauxPropres)} × 100 = ${pct(r2.rcp)}`,
+            libelle: "Baisse supportable au taux actuel (%)",
+            attendu: x.baisseSupportable,
+            calcul: `Le seuil au taux actuel est ${eur(x.a.chargesFinancieres)} × ${eur(x.a.actifEconomique)} ÷ ${eur(x.a.endettementNet)} = ${eur(x.a.seuilDeMassue)} ; (${eur(x.b.resultatDExploitation)} − ${eur(x.a.seuilDeMassue)}) ÷ ${eur(x.b.resultatDExploitation)} × 100 = ${pct(x.baisseSupportable)}`,
             tolerance: 0.01,
           },
         ];
       },
       explication: (c) => {
-        const { r, r2, perteDeRcp } = levierFaceALaHausse(c);
+        const x = levierFaceALaHausse(c);
         return [
-          `L'outil rapporte la même chose aux deux taux, ${pct(r2.re)} : la hausse ne touche que le financement. Le coût de l'endettement net passe de ${pct(r.i)} à ${pct(r2.i)}, et la rentabilité des associés perd ${points(perteDeRcp)}, de ${pct(r.rcp)} à ${pct(r2.rcp)}.`,
+          `La rentabilité des associés ne perd que ${points(x.perteDeRcp)}, mais la sécurité fond : au taux actuel, le résultat d'exploitation pouvait baisser de ${pct(x.baisseSupportable)} avant que la dette ne se retourne ; au taux relevé, une baisse de ${pct(x.baisseAuTauxReleve)} suffit.`,
         ];
       },
     },
@@ -170,35 +233,24 @@ export const LE_LEVIER_FACE_A_LA_HAUSSE_DU_TAUX: Situation = {
       type: "montants",
       titre: "Le taux où le levier s'inverse",
       notions: ["profitability_vs_return", "loan_schedule"],
-      question: (c) => {
-        const { taux } = levierFaceALaHausse(c);
-        return `À endettement net inchangé, le coût de la dette est proportionnel au taux de l'emprunt. Calculez le coût de l'endettement net après impôt au taux actuel, ${pct(taux)} (en %), puis le taux de l'emprunt où il égalerait la rentabilité économique : le taux actuel × Re ÷ i (en %).`;
-      },
+      question: () =>
+        "Retrouvez à rebours le taux de l'emprunt où le coût de l'endettement net égalerait la rentabilité économique, à endettement net inchangé et à partir du taux actuel (en %), puis la marge qui reste entre ce taux et le taux relevé, en points.",
       champs: (c) => {
-        const { s, r, taux, tauxLimite } = levierFaceALaHausse(c);
+        const x = levierFaceALaHausse(c);
         return [
-          {
-            libelle: "Coût de l'endettement net au taux actuel, i (%)",
-            attendu: r.i,
-            calcul: `${eur(r.chargesApresImpot)} ÷ ${eur(s.endettementNet)} × 100 = ${pct(r.i)}`,
-            tolerance: 0.01,
-          },
-          {
-            libelle: "Taux de l'emprunt où le levier s'inverse (%)",
-            attendu: tauxLimite,
-            calcul: `${pct(taux)} × ${pct(r.re)} ÷ ${pct(r.i)} = ${pct(tauxLimite)}`,
-            tolerance: 0.02,
-          },
+          { libelle: "Coût de l'endettement net au taux actuel, i (%)", attendu: x.r.i, calcul: `${eur(x.a.chargesFinancieresApresImpot)} ÷ ${eur(x.a.endettementNet)} × 100 = ${pct(x.r.i)}`, tolerance: 0.01 },
+          { libelle: "Taux de l'emprunt où le levier s'inverse (%)", attendu: x.tauxLimite, calcul: `i suit le taux : ${pct(x.taux)} × ${pct(x.r.re)} ÷ ${pct(x.r.i)} = ${pct(x.tauxLimite)}`, tolerance: 0.02 },
+          { libelle: "Marge sous le taux limite, au taux relevé (points)", attendu: x.margeAuTauxReleve, calcul: `${pct(x.tauxLimite)} − ${pct(x.tauxReleve)} = ${points(x.margeAuTauxReleve)}`, tolerance: 0.02 },
         ];
       },
       explication: (c) => {
-        const { taux, tauxReleve, tauxLimite } = levierFaceALaHausse(c);
+        const x = levierFaceALaHausse(c);
         return [
-          tauxLimite <= taux
-            ? `Le levier s'inverse dès ${pct(tauxLimite)}, sous le taux actuel de ${pct(taux)} : la dette coûte déjà plus que l'outil ne rapporte, et la hausse ne fait qu'alourdir la massue.`
-            : tauxLimite > tauxReleve
-              ? `Le levier s'inverserait à ${pct(tauxLimite)}, au-dessus des ${pct(tauxReleve)} annoncés : la marge se réduit, mais la dette rapporte encore plus qu'elle ne coûte.`
-              : `Le levier s'inverse à ${pct(tauxLimite)}, sous les ${pct(tauxReleve)} annoncés : au nouveau taux, la dette coûtera plus que l'outil ne rapporte.`,
+          x.tauxLimite <= x.taux
+            ? `Le levier s'inverse dès ${pct(x.tauxLimite)}, sous le taux actuel de ${pct(x.taux)} : la dette coûte déjà plus que l'outil ne rapporte.`
+            : x.tauxLimite > x.tauxReleve
+              ? `Le levier s'inverserait à ${pct(x.tauxLimite)}, ${points(x.margeAuTauxReleve)} au-dessus des ${pct(x.tauxReleve)} annoncés : la marge se réduit, mais la dette rapporte encore plus qu'elle ne coûte.`
+              : `Le levier s'inverse à ${pct(x.tauxLimite)}, sous les ${pct(x.tauxReleve)} annoncés : au nouveau taux, la dette coûtera plus que l'outil ne rapporte.`,
         ];
       },
     },
@@ -206,37 +258,39 @@ export const LE_LEVIER_FACE_A_LA_HAUSSE_DU_TAUX: Situation = {
       id: "reponse",
       type: "choix",
       titre: "Votre réponse à la directrice financière",
+      notions: ["profitability_vs_return", "safety_margin"],
       question: () => "Quelle phrase envoyez-vous à la directrice financière ?",
       options: (c) => {
-        const { r, r2, tauxReleve, tauxLimite, verdict } = levierFaceALaHausse(c);
+        const x = levierFaceALaHausse(c);
         return [
           {
-            texte: "Le levier tient : l'outil rapportera encore plus que la dette ne coûtera",
-            juste: verdict === "tient",
+            texte: `Le levier tient, mais la baisse qu'il supporte passe de ${pct(x.baisseSupportable)} à ${pct(x.baisseAuTauxReleve)}`,
+            juste: x.verdict === "tient",
             retour:
-              verdict === "tient"
-                ? `Oui : au taux relevé, l'outil rapporte ${pct(r2.re)} et l'endettement net coûte ${pct(r2.i)}. Les associés gardent un effet de levier, ${pct(r2.rcp)} contre ${pct(r.rcp)} avant la hausse, tant que le taux reste sous ${pct(tauxLimite)}.`
-                : verdict === "deja"
-                  ? `Non : la dette coûte déjà ${pct(r.i)} au taux actuel, plus que les ${pct(r.re)} que rapporte l'outil.`
-                  : `Non : au taux relevé, l'endettement net coûte ${pct(r2.i)}, plus que les ${pct(r2.re)} de l'outil.`,
+              x.verdict === "tient"
+                ? `Oui : au taux relevé, l'outil rapporte ${pct(x.r2.re)}, l'endettement net coûte ${pct(x.r2.i)}, et les associés gardent ${pct(x.r2.rcp)}. Mais la dette se retournerait dès que le résultat d'exploitation tomberait sous ${eur(x.seuilAuTauxReleve)}. La hausse ne retourne pas le levier : elle le rend plus fragile.`
+                : `Non : au taux relevé, l'endettement net coûte ${pct(x.r2.i)}, et l'outil rapporte ${pct(x.r2.re)}.`,
           },
           {
-            texte: "Le levier s'inverse : la dette coûtera plus que l'outil ne rapportera",
-            juste: verdict === "s-inverse",
+            texte: "Le levier s'inverse : au nouveau taux, l'endettement net coûtera plus que l'outil ne rapportera",
+            juste: x.verdict === "s-inverse",
             retour:
-              verdict === "s-inverse"
-                ? `Oui : le levier s'inverse à ${pct(tauxLimite)}, sous les ${pct(tauxReleve)} annoncés. Au taux relevé, l'endettement net coûte ${pct(r2.i)} pour un outil qui rapporte ${pct(r2.re)}.`
-                : verdict === "deja"
-                  ? `Non : il ne s'inverse pas au nouveau taux, il est déjà inversé au taux actuel, dès ${pct(tauxLimite)}.`
-                  : `Non : le levier ne s'inverserait qu'à ${pct(tauxLimite)}, au-dessus des ${pct(tauxReleve)} annoncés.`,
+              x.verdict === "s-inverse"
+                ? `Oui : le levier s'inverse à ${pct(x.tauxLimite)}, sous les ${pct(x.tauxReleve)} annoncés.`
+                : `Non : le levier ne s'inverserait qu'à ${pct(x.tauxLimite)}, au-dessus des ${pct(x.tauxReleve)} annoncés.`,
+          },
+          {
+            texte: `Rien ne change pour les associés : tant que le taux reste sous ${pct(x.tauxLimite)}, la dette joue pour eux`,
+            juste: false,
+            retour: `Non : la dette joue encore pour eux, mais leur rentabilité perd ${points(x.perteDeRcp)}, et surtout le seuil de massue monte de ${eur(x.a.seuilDeMassue)} à ${eur(x.seuilAuTauxReleve)}. Leur risque a changé.`,
           },
           {
             texte: "Le levier jouait déjà contre les associés : la hausse alourdit la massue",
-            juste: verdict === "deja",
+            juste: x.verdict === "deja",
             retour:
-              verdict === "deja"
-                ? `Oui : au taux actuel, l'endettement net coûte ${pct(r.i)} et l'outil ne rapporte que ${pct(r.re)}. Au taux relevé, la rentabilité des associés tombe de ${pct(r.rcp)} à ${pct(r2.rcp)}. Réduire la dette, ou la trésorerie oisive qui la renchérit, devient urgent.`
-                : `Non : au taux actuel, l'outil rapporte ${pct(r.re)}, plus que les ${pct(r.i)} que coûte l'endettement net.`,
+              x.verdict === "deja"
+                ? `Oui : au taux actuel, l'endettement net coûte ${pct(x.r.i)} et l'outil ne rapporte que ${pct(x.r.re)}.`
+                : `Non : au taux actuel, l'outil rapporte ${pct(x.r.re)}, plus que les ${pct(x.r.i)} que coûte l'endettement net.`,
           },
         ];
       },
