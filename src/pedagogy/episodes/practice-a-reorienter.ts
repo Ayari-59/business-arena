@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 75 — LA PRACTICE DONT LE MARCHÉ S'ÉTEINT, tel que l'interface et le bilan le lisent.
+ * LA PRACTICE DONT LE MARCHÉ S'ÉTEINT, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que Tempora montre à Abel chaque semaine, ce que la

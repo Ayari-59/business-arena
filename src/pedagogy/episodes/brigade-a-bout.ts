@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 55 — LA BRIGADE À BOUT, tel que l'interface et le bilan le lisent.
+ * LA BRIGADE À BOUT, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de la cuisine d'Elio montre, ce

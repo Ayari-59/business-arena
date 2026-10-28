@@ -72,7 +72,7 @@ export const FICHE: FicheEnseignant = {
       "Source « Relever les numéros de série » : 28 des 31 appareils revenus en six semaines sont du lot L-2607, qui fait encore 60 % du stock des agences (120 appareils sur 200), et les agences s'en servent pour remplacer. Tant que le lot reste en rayon, chaque panne remplacée et chaque vente remettent un appareil du lot chez un client : c'est ce qui fait monter le flux.",
       "Si le lot est bloqué dès la semaine 2, plus aucun appareil du lot ne sort. Mais la centaine d'appareils du lot déjà chez les clients (50 chez des maçons et chapistes, 46 chez d'autres métiers, 10 chez Pélissier) continue de casser, quelques-uns chaque semaine, et chacun est remplacé par un appareil sain. Les dix de Pélissier, échangés en semaine 3 contre des appareils sains, sortent du compte. Le flux reste donc autour de 9 et commence à peine à baisser.",
       "Sous le tirage n° 12, le modèle donne 9,7 retours en semaine 2, 8,3 en semaine 3 et 8,9 en semaine 4, une semaine de chantiers plus chargée. Pour ceux qui ont continué de remplacer en rayon ou d'attendre, il en donne 12,7.",
-      "L'épisode juge juste à 1 retour près, proche à 2,5. Selon les trente tirages du bilan, la valeur va de 5,8 à 9,7 avec le lot bloqué.",
+      "L'épisode juge juste à 2 retours près, proche à 3,5. Selon les trente tirages du bilan, la valeur va de 5,8 à 9,7 avec le lot bloqué.",
     ],
     erreurs: [
       {

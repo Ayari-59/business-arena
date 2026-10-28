@@ -57,10 +57,10 @@ const BERTILLE = { de: "Bertille Charvet", role: "Directrice générale" } as co
 const OCTAVIEN = { de: "Octavien Rouanet", role: "Directeur administratif et financier" } as const;
 const SOLENN = { de: "Solenn Tixier", role: "Directrice du réseau d'agences" } as const;
 const TIDIANE = { de: "Tidiane Sarr", role: "Chef de projet réemploi" } as const;
-const GONZAGUE = { de: "Thadée Sartel", role: "Président, Sartel Déconstruction" } as const;
+const THADEE = { de: "Thadée Sartel", role: "Président, Sartel Déconstruction" } as const;
 const HENRIETTE = { de: "Henriette Grollier", role: "Gérante, Grollier Démolition" } as const;
-const AUGUSTIN = { de: "Isidore Ferrari-Lebel", role: "Acheteur public, Métropole" } as const;
-const SIXTINE = { de: "Mélisande Delabarre", role: "Directrice régionale, Orréa" } as const;
+const ISIDORE = { de: "Isidore Ferrari-Lebel", role: "Acheteur public, Métropole" } as const;
+const MELISANDE = { de: "Mélisande Delabarre", role: "Directrice régionale, Orréa" } as const;
 const AMEDEE = { de: "Amédée Pruvost", role: "Délégué régional, fédération du négoce" } as const;
 const LUDWIG = {
   de: "Ludwig Haberkorn",
@@ -214,7 +214,7 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 4,
     messages: (ctx) => [
       {
-        ...GONZAGUE,
+        ...THADEE,
         heure: "09:20",
         alerte: true,
         texte:
@@ -287,26 +287,26 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...GONZAGUE,
+          ...THADEE,
           texte: "Marché conclu. Nos premières bennes partent chez vous dans quinze jours.",
         },
         { ...HENRIETTE, texte: "Pour nous aussi : je signe lundi." },
       ],
       [
         {
-          ...GONZAGUE,
+          ...THADEE,
           texte:
             "Un an, sans exclusivité… Je signe, mais je ne refuserai pas de recevoir Vercoran l'an prochain.",
         },
       ],
       [
         {
-          ...GONZAGUE,
+          ...THADEE,
           texte: "Je comprends. Je ne pourrai pas faire attendre Vercoran indéfiniment.",
         },
       ],
       [
-        { ...GONZAGUE, texte: "Marché conclu. Nos premières bennes partent dans quinze jours." },
+        { ...THADEE, texte: "Marché conclu. Nos premières bennes partent dans quinze jours." },
         { ...HENRIETTE, texte: "Dommage pour nous. On verra avec qui on travaillera." },
       ],
     ],
@@ -317,7 +317,7 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 6,
     messages: (ctx) => [
       {
-        ...AUGUSTIN,
+        ...ISIDORE,
         heure: "10:00",
         alerte: true,
         texte: `La Métropole publie son accord-cadre de dépose et de réemploi : ${n0(Number(ctx.volumeAccord))} t par an pendant quatre ans, sur les bâtiments qu'elle démolit. Prix à la tonne, ferme quatre ans ; le titulaire garde la revente. Offres en semaine 6, attribution en semaine 10.`,
@@ -375,10 +375,10 @@ export const ETAPES: readonly Etape[] = [
       },
     ],
     reactions: [
-      [{ ...AUGUSTIN, texte: "Offre reçue. Attribution en semaine 10." }],
+      [{ ...ISIDORE, texte: "Offre reçue. Attribution en semaine 10." }],
       null,
-      [{ ...AUGUSTIN, texte: "Nous prenons note. D'autres candidats ont répondu." }],
-      [{ ...AUGUSTIN, texte: "Offre reçue. Attribution en semaine 10." }],
+      [{ ...ISIDORE, texte: "Nous prenons note. D'autres candidats ont répondu." }],
+      [{ ...ISIDORE, texte: "Offre reçue. Attribution en semaine 10." }],
     ],
   },
   {
@@ -480,7 +480,7 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 11,
     messages: () => [
       {
-        ...SIXTINE,
+        ...MELISANDE,
         heure: "09:30",
         alerte: true,
         texte: `Madame Okoye, Orréa propose aux distributeurs de prendre en charge toute la reprise obligatoire : bennes en agence, collecte, traitement, déclarations, ${REPRISE.cleEnMain} € la tonne pour cinq ans, flux réemployables compris. L'offre est réservée aux trois premiers distributeurs qui signent ; deux l'ont fait.`,
@@ -538,18 +538,18 @@ export const ETAPES: readonly Etape[] = [
       },
     ],
     reactions: [
-      [{ ...SIXTINE, texte: "Contrat signé : nos bennes arrivent dans vos agences en juin." }],
+      [{ ...MELISANDE, texte: "Contrat signé : nos bennes arrivent dans vos agences en juin." }],
       [
         {
-          ...SIXTINE,
+          ...MELISANDE,
           texte:
             "C'est entendu : nous reprenons les déchets non réemployables, vous gardez le reste. Contrat signé.",
         },
       ],
-      [{ ...SIXTINE, texte: "Nous restons à votre disposition, au tarif standard, si besoin." }],
+      [{ ...MELISANDE, texte: "Nous restons à votre disposition, au tarif standard, si besoin." }],
       [
         {
-          ...SIXTINE,
+          ...MELISANDE,
           texte:
             "Je ne peux pas vous garantir que l'offre sera encore ouverte en décembre. Il reste une place.",
         },

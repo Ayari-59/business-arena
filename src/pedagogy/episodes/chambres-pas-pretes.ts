@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 53 — LES CHAMBRES PAS PRÊTES À 15 H, tel que l'interface et le bilan le lisent.
+ * LES CHAMBRES PAS PRÊTES À 15 H, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord des étages de Djeneba montre, ce

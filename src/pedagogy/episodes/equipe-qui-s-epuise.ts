@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 2 — L'ÉQUIPE QUI S'ÉPUISE, tel que l'interface et le bilan le lisent.
+ * L'ÉQUIPE QUI S'ÉPUISE, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Nadia montre, ce que la courbe

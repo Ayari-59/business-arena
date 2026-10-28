@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 21 — LES TOURNÉES QUI DÉBORDENT, tel que l'interface et le bilan le lisent.
+ * LES TOURNÉES QUI DÉBORDENT, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Farid montre, ce que la courbe
@@ -175,7 +175,7 @@ export function axe([information, diagnostic, reflexe, calibrage, tournees]: rea
 }
 
 const AWA = { de: "Awa Kouyaté", role: "Planificatrice transport" } as const;
-const DUMONTEL = {
+const MERCADIER = {
   de: "Yohann Mercadier",
   role: "Conducteur de travaux, Dumontel Bâtiment",
 } as const;
@@ -354,7 +354,7 @@ export const EPISODE_TRANSPORT: Episode<Trimestre> = {
     }
     if (arrive.grandComptePart) {
       lies.push({
-        ...DUMONTEL,
+        ...MERCADIER,
         heure: "sem. 7",
         alerte: true,
         texte:
@@ -362,7 +362,7 @@ export const EPISODE_TRANSPORT: Episode<Trimestre> = {
       });
     } else if (arrive.grandCompteReste) {
       lies.push({
-        ...DUMONTEL,
+        ...MERCADIER,
         heure: "sem. 7",
         texte:
           "Notre direction a hésité à changer de négoce. On reste chez vous pour l'instant, mais elle regarde chaque livraison en retard.",

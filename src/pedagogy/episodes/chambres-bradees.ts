@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 49 — LES CHAMBRES QU'ON BRADE, tel que l'interface et le bilan le lisent.
+ * LES CHAMBRES QU'ON BRADE, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de L'Escale Lac montre, ce que la

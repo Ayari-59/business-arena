@@ -54,12 +54,12 @@ const JUN = { de: "Jun Takeda", role: "Consultant, cabinet Silvacane" } as const
 const OTTAVIA = { de: "Ottavia Brémond", role: "Gérante des Faïenceries Brémond" } as const;
 const YAELLE = { de: "Yaëlle Brochard", role: "Responsable du showroom de Rillieux" } as const;
 const NATHAN = { de: "Nathan Bouvreuil", role: "Responsable du showroom de Saint-Priest" } as const;
-const ELIOTT = {
+const WENCESLAS = {
   de: "Wenceslas Grandjean",
   role: "Directeur de l'agence de Saint-Priest",
 } as const;
 const BETTINA = { de: "Bettina Laforgue", role: "Responsable du showroom d'Écully" } as const;
-const AUGUSTIN = {
+const PACOME = {
   de: "Pacôme Sorel",
   role: "Gestionnaire, Foncière Ravenel (bailleur d'Écully)",
 } as const;
@@ -375,7 +375,7 @@ export const ETAPES: readonly Etape[] = [
               "Je n'ai toujours que les visites, les devis et les ventes du showroom. Ce que les artisans commandent ensuite au comptoir de l'agence, je ne le vois pas.",
           },
       {
-        ...ELIOTT,
+        ...WENCESLAS,
         heure: "16:20",
         texte:
           "Mes artisans amènent leurs clients au showroom pour choisir le carrelage et la douche, puis ils commandent chez moi. Si vous fermez, je perds ça. Si vous en faisiez leur showroom, je vous en amène le double.",
@@ -435,7 +435,7 @@ export const ETAPES: readonly Etape[] = [
       [{ ...ACHILLE, texte: "Merci. On va faire un salon record." }],
       [
         {
-          ...ELIOTT,
+          ...WENCESLAS,
           texte:
             "Je fais la liste des artisans avec Nathan dès lundi. On ouvre le nouveau format dans deux semaines.",
         },
@@ -538,7 +538,7 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 13,
     messages: (ctx) => [
       {
-        ...AUGUSTIN,
+        ...PACOME,
         heure: "09:45",
         alerte: true,
         texte:

@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 108 — L'OFFRE DE RACHAT, tel que l'interface et le bilan le lisent.
+ * L'OFFRE DE RACHAT, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le dossier de cession de Yannig montre, ce que la

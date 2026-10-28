@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 29 — L'ÉQUIPE DISPERSÉE, tel que l'interface et le bilan le lisent.
+ * L'ÉQUIPE DISPERSÉE, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Benoît montre, ce que la
@@ -101,7 +101,7 @@ export function comportements(p: PartieJouee, t: Trimestre): Constat[] {
     t.semaines[3]!.marge / 1000,
     "de marge de l'équipe en semaine 3",
     "k€",
-    { juste: 2, proche: 5 },
+    { juste: 4, proche: 8 },
     (e) => `${nombre(e)} k€`,
   );
 
@@ -176,12 +176,12 @@ export function axe([information, diagnostic, reflexe, calibrage, lien]: readonl
   };
 }
 
-const RAPHAEL = { de: "Marius Montagnon", role: "Directeur commercial régional" } as const;
+const MARIUS = { de: "Marius Montagnon", role: "Directeur commercial régional" } as const;
 const ALASSANE = { de: "Alassane Koné", role: "Technico-commercial, Rhône est" } as const;
-const ELODIE = { de: "Ambre Vasquez", role: "Technico-commerciale, Isère nord" } as const;
+const AMBRE = { de: "Ambre Vasquez", role: "Technico-commerciale, Isère nord" } as const;
 const KILLIAN = { de: "Killian Desbois", role: "Technico-commercial, Isère sud" } as const;
-const GREGOIRE = { de: "Félix Matthey", role: "Technico-commercial, Ain" } as const;
-const OPHELIE = { de: "Albane Grangier", role: "Technico-commerciale, Rhône sud" } as const;
+const FELIX = { de: "Félix Matthey", role: "Technico-commercial, Ain" } as const;
+const ALBANE = { de: "Albane Grangier", role: "Technico-commerciale, Rhône sud" } as const;
 
 export const EPISODE_DISTANCE: Episode<Trimestre> = {
   code: "equipe-dispersee",
@@ -222,7 +222,7 @@ export const EPISODE_DISTANCE: Episode<Trimestre> = {
       const perdu = Math.max(0, j - JOURS_SANS_PERTE) * PERTE_PAR_JOUR;
       if (perdu <= 0) return null;
       return {
-        ...RAPHAEL,
+        ...MARIUS,
         alerte: true,
         texte: `Pendant ce temps, deux devis techniques sont restés sans réponse et sont partis chez un concurrent : ${euros(perdu)} de marge perdue.`,
       };
@@ -345,7 +345,7 @@ export const EPISODE_DISTANCE: Episode<Trimestre> = {
     if (etape === D.fin && choix === 2) {
       return [
         {
-          ...GREGOIRE,
+          ...FELIX,
           texte: remiseSuivie(graine) ? REPONSES.remiseSuivie : REPONSES.remiseIgnoree,
         },
       ];
@@ -362,14 +362,14 @@ export const EPISODE_DISTANCE: Episode<Trimestre> = {
       lies.push({ ...KILLIAN, heure: "sem. 8", alerte: true, texte: REPONSES.killianPart });
     }
     if (arrive.elodiePart) {
-      lies.push({ ...ELODIE, heure: "sem. 10", alerte: true, texte: REPONSES.elodiePart });
+      lies.push({ ...AMBRE, heure: "sem. 10", alerte: true, texte: REPONSES.elodiePart });
     }
     if (arrive.elodieReste) {
-      lies.push({ ...ELODIE, heure: "sem. 10", texte: REPONSES.elodieReste });
+      lies.push({ ...AMBRE, heure: "sem. 10", texte: REPONSES.elodieReste });
     }
     if (arrive.atelier === "complet") {
       lies.push({
-        ...OPHELIE,
+        ...ALBANE,
         heure: "sem. 10",
         texte:
           "L'atelier, c'était la meilleure journée depuis longtemps : Ambre et Alassane ont déroulé un vrai chantier d'isolation, du relevé au devis, et chacun est reparti avec le sien.",
@@ -377,7 +377,7 @@ export const EPISODE_DISTANCE: Episode<Trimestre> = {
     }
     if (arrive.atelier === "sans-elodie") {
       lies.push({
-        ...OPHELIE,
+        ...ALBANE,
         heure: "sem. 10",
         texte:
           "Sans Ambre, Alassane a animé l'atelier seul. Utile, mais on a manqué de cas concrets, et on a fini en milieu d'après-midi.",

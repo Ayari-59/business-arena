@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 9 — LE QUAI DANGEREUX, tel que l'interface et le bilan le lisent.
+ * LE QUAI DANGEREUX, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Agathe montre, ce que la courbe
@@ -223,7 +223,7 @@ export const EPISODE_SECURITE: Episode<Trimestre> = {
   prevision: {
     libelle: "le nombre de presque-accidents déclarés d'ici la fin de la semaine 4",
     unite: "",
-    placeholder: "6",
+    placeholder: "0",
     min: 0,
     max: 60,
     step: 1,

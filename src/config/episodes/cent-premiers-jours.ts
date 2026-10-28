@@ -33,7 +33,7 @@ export const DIAGNOSTICS = [
   },
 ] as const;
 
-const VINCENT = {
+const GERARD = {
   de: "Gérard Rabier",
   role: "Directeur régional des agences",
 } as const;
@@ -41,10 +41,10 @@ const CHRISTOPHE = {
   de: "Christophe Rambaud",
   role: "Adjoint, ventes chantier",
 } as const;
-const AICHA = { de: "Amina Ouarab", role: "Vendeuse comptoir" } as const;
+const AMINA = { de: "Amina Ouarab", role: "Vendeuse comptoir" } as const;
 const JOSE = { de: "José Carvalho", role: "Chef de dépôt" } as const;
-const LINH = { de: "Thao Vo", role: "Commerciale terrain" } as const;
-const EMILIE = { de: "Axelle Peyrol", role: "Assistante commerciale" } as const;
+const THAO = { de: "Thao Vo", role: "Commerciale terrain" } as const;
+const AXELLE = { de: "Axelle Peyrol", role: "Assistante commerciale" } as const;
 const GESTION = {
   de: "Contrôle de gestion",
   role: "Direction régionale",
@@ -57,7 +57,7 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 3,
     messages: () => [
       {
-        ...VINCENT,
+        ...GERARD,
         heure: "07:50",
         alerte: true,
         texte:
@@ -70,7 +70,7 @@ export const ETAPES: readonly Etape[] = [
           "Bonjour. Le planning de la semaine est sur ton bureau, j'ai tenu l'agence depuis le départ de Jean-Paul. Si tu as besoin, tu sais où me trouver.",
       },
       {
-        ...AICHA,
+        ...AMINA,
         heure: "09:40",
         texte:
           "On se demande tous ce que vous allez changer. À Dijon, il paraît que vous avez tout réorganisé ?",
@@ -143,7 +143,7 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...AICHA,
+          ...AMINA,
           texte:
             "Ouverture à 7 heures, commandes par application, dépôt rangé par familles… On travaille autrement depuis vingt ans. Vous êtes venu voir comment on fait, au moins ?",
         },
@@ -162,14 +162,14 @@ export const ETAPES: readonly Etape[] = [
       ],
       [
         {
-          ...LINH,
+          ...THAO,
           texte:
             "Le questionnaire est rempli. Les gens ont été prudents : on ne vous connaît pas encore.",
         },
       ],
       [
         {
-          ...AICHA,
+          ...AMINA,
           texte: "On ne voit pas beaucoup le nouveau directeur. Christophe dit que c'est normal.",
         },
       ],
@@ -181,20 +181,20 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 5,
     messages: (ctx) => [
       {
-        ...VINCENT,
+        ...GERARD,
         heure: "09:00",
         alerte: true,
         texte: `Thibaut, trois semaines déjà. Marge de la semaine : ${ctx.marge}, pour un budget de 27 k€. Qu'est-ce que tu lances ?`,
       },
       ctx.ecoute
         ? {
-            ...AICHA,
+            ...AMINA,
             heure: "10:30",
             texte:
               "Dans vos entretiens, presque tout le monde vous a parlé du poste en panne. Si vous ne deviez faire qu'une chose…",
           }
         : {
-            ...AICHA,
+            ...AMINA,
             heure: "10:30",
             texte:
               "Le second poste du comptoir est toujours en panne. Plus personne n'en parle, on a pris l'habitude.",
@@ -249,7 +249,7 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...AICHA,
+          ...AMINA,
           texte:
             "Deux postes qui marchent, et le comptoir express pour les bons. Ce matin, personne n'a attendu plus de dix minutes. Au comptoir, ils n'en reviennent pas.",
         },
@@ -265,7 +265,7 @@ export const ETAPES: readonly Etape[] = [
       null,
       [
         {
-          ...VINCENT,
+          ...GERARD,
           texte:
             "Je comprends qu'il faut du temps. Mais en semaine 8, il me faudra autre chose qu'un diagnostic.",
         },
@@ -278,14 +278,14 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 7,
     messages: (ctx) => [
       {
-        ...LINH,
+        ...THAO,
         heure: "10:20",
         alerte: true,
         texte:
           "Thibaut, je préfère vous le dire avant que ça se sache : Christophe a accordé hier 12 % de remise à l'entreprise Gauthier sans vous en parler, et il dit au comptoir que « de toute façon, le nouveau ne connaît pas les clients ».",
       },
       {
-        ...EMILIE,
+        ...AXELLE,
         heure: "11:05",
         texte: `Délai moyen de réponse aux devis de chantier : ${ctx.delai}. Christophe en a quatorze sur son bureau.`,
       },
@@ -345,13 +345,13 @@ export const ETAPES: readonly Etape[] = [
           texte: "Bien reçu. Je ferai ce qu'on me demande, ni plus ni moins.",
         },
         {
-          ...AICHA,
+          ...AMINA,
           texte: "Au comptoir, ça jase. Christophe a dix-neuf ans de maison, quand même.",
         },
       ],
       [
         {
-          ...LINH,
+          ...THAO,
           texte:
             "Les gros clients continuent d'appeler Christophe pour tout. On ne sait plus très bien qui décide.",
         },
@@ -370,7 +370,7 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 9,
     messages: (ctx) => [
       {
-        ...VINCENT,
+        ...GERARD,
         heure: "08:30",
         alerte: true,
         texte: `Thibaut, le comité régional est mardi. J'ai besoin de ton plan, et de quelque chose qui se voie sur la marge avant l'été. L'agence est à ${ctx.ecart}.`,
@@ -385,7 +385,7 @@ export const ETAPES: readonly Etape[] = [
       ...(ctx.ecoute
         ? [
             {
-              ...AICHA,
+              ...AMINA,
               heure: "15:40",
               texte:
                 "Dans vos entretiens, trois choses revenaient : les devis qui traînent, le comptoir du matin, et les artisans partis sans que personne ne les rappelle.",
@@ -433,7 +433,7 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...LINH,
+          ...THAO,
           texte:
             "On a fait la liste des artisans perdus. J'en ai rappelé huit cette semaine ; trois sont déjà repassés.",
         },
@@ -452,7 +452,7 @@ export const ETAPES: readonly Etape[] = [
           texte: "Sans l'intérimaire, on ne prépare plus les bons du matin. On fait ce qu'on peut.",
         },
       ],
-      [{ ...VINCENT, texte: "Le comité a pris note. Il attendait un plan." }],
+      [{ ...GERARD, texte: "Le comité a pris note. Il attendait un plan." }],
     ],
   },
   {
@@ -461,14 +461,14 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 11,
     messages: () => [
       {
-        ...EMILIE,
+        ...AXELLE,
         heure: "09:10",
         alerte: true,
         texte:
           "Dorval Bâtiment nous consulte pour le lot plâtrerie-isolation de la résidence des Peupliers : vingt-quatre logements, environ 120 k€, livraisons en semaines 11 à 13. Réponse attendue mercredi.",
       },
       {
-        ...LINH,
+        ...THAO,
         heure: "11:30",
         texte:
           "Dorval a aussi consulté le négoce d'en face. Leur conducteur de travaux est un ancien client de Christophe.",
@@ -518,7 +518,7 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...EMILIE,
+          ...AXELLE,
           texte:
             "Le devis est parti mardi soir, avec le planning de livraison par étage. Christophe a appelé le conducteur de travaux.",
         },
@@ -531,13 +531,13 @@ export const ETAPES: readonly Etape[] = [
       ],
       [
         {
-          ...LINH,
+          ...THAO,
           texte: "À ce prix-là, on a toutes les chances. On ne gagnera pas grand-chose dessus.",
         },
       ],
       [
         {
-          ...EMILIE,
+          ...AXELLE,
           texte: "J'ai prévenu Dorval. Ils ont remercié, et consulté quelqu'un d'autre.",
         },
       ],
@@ -549,7 +549,7 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 13,
     messages: (ctx) => [
       {
-        ...VINCENT,
+        ...GERARD,
         heure: "08:30",
         alerte: true,
         texte: `Thibaut, ton bilan des cent jours passe au comité dans deux semaines. L'agence est à ${ctx.ecart}. Qu'est-ce que tu annonces pour la suite ?`,
@@ -561,7 +561,7 @@ export const ETAPES: readonly Etape[] = [
             texte: `Le pôle chantiers tourne : nos devis partent en ${ctx.delai}. Thao se débrouille seule sur les petits.`,
           }
         : {
-            ...AICHA,
+            ...AMINA,
             heure: "12:10",
             texte: "L'équipe se demande ce que vous allez annoncer au comité.",
           },
@@ -598,32 +598,32 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...VINCENT,
+          ...GERARD,
           texte:
             "C'est la première fois qu'une équipe d'agence me présente elle-même son plan. Je le soutiens.",
         },
       ],
       [
         {
-          ...AICHA,
+          ...AMINA,
           texte:
             "Encore Dijon. L'équipe a l'impression que tout ce qu'on a fait depuis trois mois ne comptait pas.",
         },
       ],
       [
         {
-          ...VINCENT,
+          ...GERARD,
           texte: "Noté : 10 % de plus au prochain trimestre. Je l'inscris au budget.",
         },
         {
-          ...AICHA,
+          ...AMINA,
           texte:
             "Des objectifs individuels de vente ? On va pousser des produits aux artisans. Ils vont adorer.",
         },
       ],
       [
         {
-          ...VINCENT,
+          ...GERARD,
           texte: "Pas d'annonce ? Le comité aurait aimé savoir où va l'agence.",
         },
       ],

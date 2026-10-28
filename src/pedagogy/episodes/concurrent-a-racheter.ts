@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 42 — LE CONCURRENT À RACHETER, tel que l'interface et le bilan le lisent.
+ * LE CONCURRENT À RACHETER, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord du dossier Mourgue montre, ce que

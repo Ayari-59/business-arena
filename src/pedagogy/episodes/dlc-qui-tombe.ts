@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 95 — LES PALETTES QUI PÉRIMENT, tel que l'interface et le bilan le lisent.
+ * LES PALETTES QUI PÉRIMENT, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de la supply chain d'Ysée montre,

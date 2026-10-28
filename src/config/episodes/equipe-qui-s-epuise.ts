@@ -401,7 +401,7 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 11,
     messages: (ctx) => [
       {
-        de: "Délégués du personnel",
+        de: "Élus du CSE",
         role: "Service client",
         heure: "09:30",
         alerte: true,
@@ -461,14 +461,14 @@ export const ETAPES: readonly Etape[] = [
       ],
       [
         {
-          de: "Délégués du personnel",
+          de: "Élus du CSE",
           role: "Service client",
           texte: "L'équipe prend acte. Elle est déçue.",
         },
       ],
       [
         {
-          de: "Délégués du personnel",
+          de: "Élus du CSE",
           role: "Service client",
           texte: "L'équipe aurait préféré une réponse.",
         },

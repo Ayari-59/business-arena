@@ -90,7 +90,7 @@ export const LOMIG = {
   role: "Consultant senior, Énergie et bâtiment",
 } as const;
 export const JAKEZ = { de: "Jakez Kerzerho", role: "Manager data, bureau de Rennes" } as const;
-export const HAMIDOU = { de: "Hamidou Thoraval", role: "Secrétaire du CSE" } as const;
+export const HAMIDOU = { de: "Hamidou Thoraval", role: "Délégué syndical, secrétaire du CSE" } as const;
 const TABLEAU = { de: "Suivi des départs", role: "Point hebdomadaire" } as const;
 
 const NOMS: Record<Segment, string> = {
@@ -161,7 +161,7 @@ export const ETAPES: readonly Etape[] = [
         ...HAMIDOU,
         heure: "11:30",
         texte:
-          "Le CSE demandera 6 % aux négociations annuelles. Les consultants comparent avec les offres de Halden, qui circulent.",
+          "Le syndicat demandera 6 % aux négociations annuelles. Les consultants comparent avec les offres de Halden, qui circulent.",
       },
     ],
     budget: 5,

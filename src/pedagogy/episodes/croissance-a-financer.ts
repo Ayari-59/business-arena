@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 38 — LA CROISSANCE À FINANCER, tel que l'interface et le bilan le lisent.
+ * LA CROISSANCE À FINANCER, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Benoît montre, ce que la courbe

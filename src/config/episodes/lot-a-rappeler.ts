@@ -110,7 +110,7 @@ export const ETAPES: readonly Etape[] = [
         cout: 0.5,
         nature: "decisive",
         resultat:
-          "Article 19 du règlement européen sur la sécurité des aliments : l'exploitant qui considère ou a des raisons de penser qu'une denrée qu'il a mise sur le marché n'est pas sûre engage immédiatement son retrait et en informe les autorités compétentes. Le guide de gestion des alertes d'origine alimentaire : à défaut d'éléments plus précis, le périmètre d'un retrait couvre tous les lots produits entre deux nettoyages-désinfections complets de la ligne ; un rinçage ne le borne pas. Un rappel des consommateurs s'ajoute au retrait quand le danger est confirmé dans un produit déjà vendu. Le laboratoire est tenu, lui aussi, de transmettre à l'administration un résultat qui montre qu'une denrée peut être préjudiciable à la santé.",
+          "Article 19 du règlement européen sur la sécurité des aliments : l'exploitant qui considère ou a des raisons de penser qu'une denrée qu'il a mise sur le marché n'est pas sûre engage immédiatement son retrait et en informe les autorités compétentes, ici la DDPP. Si le produit a pu atteindre le consommateur, il l'informe et rappelle les produits déjà vendus quand le retrait ne suffit pas à protéger la santé ; en France, tout rappel est publié sur RappelConso, le site public des rappels, et affiché en magasin. L'article 18 impose la traçabilité : dire, lot par lot, à qui chaque palette a été livrée. Le guide de gestion des alertes d'origine alimentaire : à défaut d'éléments plus précis, le périmètre d'un retrait couvre tous les lots produits entre deux nettoyages-désinfections complets de la ligne ; un rinçage ne le borne pas. Le laboratoire est tenu, lui aussi, de transmettre à l'administration un résultat qui montre qu'une denrée peut être préjudiciable à la santé.",
       },
       {
         id: "laboratoire",
@@ -155,7 +155,7 @@ export const ETAPES: readonly Etape[] = [
       },
       {
         t: "Retirer et rappeler tout le fromage blanc de Pontivy du dernier mois, par précaution",
-        d: "240 palettes et un avis de rappel des consommateurs dès ce soir. Personne ne pourra dire que vous avez minimisé.",
+        d: "240 palettes et un avis de rappel publié sur RappelConso dès ce soir. Personne ne pourra dire que vous avez minimisé.",
       },
     ],
     reactions: [
@@ -552,7 +552,7 @@ export const ETAPES: readonly Etape[] = [
         {
           ...TREPHINE,
           texte:
-            "Merci pour le dossier. Vos auditeurs nous ont montré la ligne, les résultats et le plan. Nous rendons notre décision la semaine prochaine.",
+            "Merci pour le dossier. Nos auditeurs ont vu la ligne, les résultats et le plan. Nous rendons notre décision la semaine prochaine.",
         },
       ],
       [

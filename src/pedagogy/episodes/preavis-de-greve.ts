@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 19 — LE PRÉAVIS DE GRÈVE, tel que l'interface et le bilan le lisent.
+ * LE PRÉAVIS DE GRÈVE, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Christine montre, ce que la
@@ -30,12 +30,12 @@ import {
   type Trimestre,
 } from "@/engine/episodes/preavis-de-greve";
 import {
-  BENSAID,
+  BENKHALED,
   CONCESSIONS,
   DIAGNOSTICS,
   ETAPES,
   FERMETES,
-  LE_GOFF,
+  JACQUIER,
   MALLET,
   REFERENCES,
   REPONSES,
@@ -388,7 +388,7 @@ export const EPISODE_DIALOGUE_SOCIAL: Episode<Trimestre> = {
     const lies: Message[] = [];
     if (arrive.leveeSemaine2) {
       lies.push({
-        ...BENSAID,
+        ...BENKHALED,
         heure: "sem. 2",
         texte:
           "Les équipes ont voté ce week-end : le préavis est levé. Mais personne n'a oublié les 4,5 %.",
@@ -396,7 +396,7 @@ export const EPISODE_DIALOGUE_SOCIAL: Episode<Trimestre> = {
     }
     if (arrive.maintenuSemaine2) {
       lies.push({
-        ...BENSAID,
+        ...BENKHALED,
         heure: "sem. 2",
         alerte: true,
         texte:
@@ -406,9 +406,9 @@ export const EPISODE_DIALOGUE_SOCIAL: Episode<Trimestre> = {
     if (arrive.leveeSemaine4) {
       lies.push(
         chemin[D.preavis] === 3
-          ? { ...BENSAID, heure: "sem. 4", texte: "L'avance est acceptée : le préavis est levé." }
+          ? { ...BENKHALED, heure: "sem. 4", texte: "L'avance est acceptée : le préavis est levé." }
           : {
-              ...LE_GOFF,
+              ...JACQUIER,
               heure: "sem. 4",
               texte:
                 "Les équipes ont voté : le préavis est levé. On vous attend aux trois réunions, et on suivra l'étude de près.",
@@ -417,7 +417,7 @@ export const EPISODE_DIALOGUE_SOCIAL: Episode<Trimestre> = {
     }
     if (arrive.refusSemaine4) {
       lies.push({
-        ...BENSAID,
+        ...BENKHALED,
         heure: "sem. 4",
         alerte: true,
         texte:
@@ -440,7 +440,7 @@ export const EPISODE_DIALOGUE_SOCIAL: Episode<Trimestre> = {
     }
     if (arrive.signature !== null && chemin[D.cloture] === 2) {
       lies.push({
-        ...BENSAID,
+        ...BENKHALED,
         heure: `sem. ${arrive.signature}`,
         texte:
           "Les équipes ont voté oui dans les trois dépôts : nous signons. Rendez-vous en septembre pour le suivi.",
@@ -456,7 +456,7 @@ export const EPISODE_DIALOGUE_SOCIAL: Episode<Trimestre> = {
     }
     if (arrive.refusDuPaquet) {
       lies.push({
-        ...LE_GOFF,
+        ...JACQUIER,
         heure: "sem. 10",
         alerte: true,
         texte:

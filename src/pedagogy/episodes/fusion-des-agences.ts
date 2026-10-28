@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 27 — LA FUSION DES AGENCES, tel que l'interface et le bilan le lisent.
+ * LA FUSION DES AGENCES, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Jérôme montre, ce que la
@@ -42,7 +42,7 @@ const ecartAuPlan = (v: number) =>
   v >= 0 ? `${kE(v)} au-dessus du plan de rachat` : `${kE(-v)} sous le plan de rachat`;
 
 const RAYMOND = { de: "Raymond Combelle", role: "Ancien dirigeant du négoce, conseiller" } as const;
-const CHRISTOPHE = { de: "Gilbert Aubin", role: "Chef des ventes, Arvel Vienne" } as const;
+const GILBERT = { de: "Gilbert Aubin", role: "Chef des ventes, Arvel Vienne" } as const;
 
 /** Les vendeurs clés du négoce partis pendant le trimestre. */
 const partis = (t: Trimestre) =>
@@ -219,7 +219,7 @@ export const EPISODE_FUSION: Episode<Trimestre> = {
       const perdu = Math.max(0, j - JOURS_SANS_PERTE) * PERTE_PAR_JOUR;
       if (perdu <= 0) return null;
       return {
-        ...CHRISTOPHE,
+        ...GILBERT,
         alerte: true,
         texte: `Pendant ce temps, le Comptoir Rhodanien a appelé les artisans du négoce un par un : des commandes de chantier sont parties chez lui, ${euros(perdu)} de marge perdue.`,
       };
@@ -228,7 +228,7 @@ export const EPISODE_FUSION: Episode<Trimestre> = {
   prevision: {
     libelle: "la part des clients du négoce qui commandent encore en semaine 3, en %",
     unite: "%",
-    placeholder: "95",
+    placeholder: "97",
     min: 0,
     max: 100,
     step: 0.5,
@@ -340,7 +340,7 @@ export const EPISODE_FUSION: Episode<Trimestre> = {
       });
     }
     if (arrive.raymondVexe) {
-      lies.push({ ...CHRISTOPHE, heure: "sem. 7", alerte: true, texte: REPONSES.raymondDejeune });
+      lies.push({ ...GILBERT, heure: "sem. 7", alerte: true, texte: REPONSES.raymondDejeune });
     }
     if (arrive.joelPart) {
       lies.push({
@@ -380,7 +380,7 @@ export const EPISODE_FUSION: Episode<Trimestre> = {
       });
     }
     if (arrive.devisAPerte) {
-      lies.push({ ...CHRISTOPHE, heure: "sem. 11", alerte: true, texte: REPONSES.devisAPerte });
+      lies.push({ ...GILBERT, heure: "sem. 11", alerte: true, texte: REPONSES.devisAPerte });
     }
     const imprevus = arrive.imprevus.map(({ imprevu, semaine }) => ({
       de: imprevu.de,

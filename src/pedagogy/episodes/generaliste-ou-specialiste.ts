@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 78 — RESTER GÉNÉRALISTE OU SE SPÉCIALISER, tel que l'interface et
+ * RESTER GÉNÉRALISTE OU SE SPÉCIALISER, tel que l'interface et
  * le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont

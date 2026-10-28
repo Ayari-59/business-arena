@@ -72,7 +72,7 @@ export const FICHE: FicheEnseignant = {
       "Sources « Extraire les ventes, le stock et les ruptures par classe ABC » et « Relire les paramètres » : les A font 63 % des ventes et 85 % des ruptures, et leurs ventes ont progressé de 26 % depuis le calcul des paramètres. Dans le dépôt, les A ont 195 k€ de stock pour environ 240 k€ de ventes par semaine : moins d'une semaine de couverture. Le comptage montre en plus 7 références sur 30 introuvables alors que le système les croit en stock.",
       "Les commandes passées en fin de semaine 1 arrivent deux ou trois semaines plus tard : ni le recalcul des paramètres, ni le relèvement de 25 %, ni l'attente ne changent le stock avant la semaine 4. Seul l'express livre dès la semaine 2, sans changer grand-chose (86 % en semaine 3). Le taux de service continue donc de glisser : 89,3 % en semaine 1 et 87,9 % en semaine 2 sous le tirage de la classe.",
       "Ce que personne ne pouvait prévoir en semaine 1 : sous le tirage n° 10, la reprise des chantiers après les intempéries fait monter les ventes des A de 15 % en semaines 2 et 3. Le taux de service tombe à 85,4 % en semaine 3, quelle que soit la décision de la semaine 1 (hors express).",
-      "L'épisode juge juste à 1,5 point près, proche à 4. Un raisonnement juste sans l'imprévu donne autour de 88 à 89 %, ce qui est « proche » ; selon les trente tirages du bilan, la valeur va de 77,3 % à 93,4 %, le plus souvent entre 86 et 91 %.",
+      "L'épisode juge juste à 5 points près, proche à 8. Un raisonnement juste sans l'imprévu donne autour de 88 à 89 %, ce qui est jugé juste ; selon les trente tirages du bilan, la valeur va de 77,3 % à 93,4 %, le plus souvent entre 86 et 91 %.",
     ],
     erreurs: [
       {

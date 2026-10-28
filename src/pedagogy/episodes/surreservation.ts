@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 61 — LES CHAMBRES VENDUES DEUX FOIS, tel que l'interface et le bilan le lisent.
+ * LES CHAMBRES VENDUES DEUX FOIS, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord du revenue management de Lucile

@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 22 — LE SITE QUI NE VEND PAS, tel que l'interface et le bilan le lisent.
+ * LE SITE QUI NE VEND PAS, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Pauline montre, ce que la

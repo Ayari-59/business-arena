@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 30 — LES CENT PREMIERS JOURS, tel que l'interface et le bilan le lisent.
+ * LES CENT PREMIERS JOURS, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Thibaut montre, ce que la
@@ -200,9 +200,9 @@ export function axe([information, diagnostic, reflexe, calibrage, adjoint]: read
 }
 
 const CHRISTOPHE = { de: "Christophe Rambaud", role: "Adjoint, ventes chantier" } as const;
-const VINCENT = { de: "Gérard Rabier", role: "Directeur régional des agences" } as const;
-const AICHA = { de: "Amina Ouarab", role: "Vendeuse comptoir" } as const;
-const EMILIE = { de: "Axelle Peyrol", role: "Assistante commerciale" } as const;
+const GERARD = { de: "Gérard Rabier", role: "Directeur régional des agences" } as const;
+const AMINA = { de: "Amina Ouarab", role: "Vendeuse comptoir" } as const;
+const AXELLE = { de: "Axelle Peyrol", role: "Assistante commerciale" } as const;
 
 export const EPISODE_PRISE_DE_POSTE: Episode<Trimestre> = {
   code: "cent-premiers-jours",
@@ -240,7 +240,7 @@ export const EPISODE_PRISE_DE_POSTE: Episode<Trimestre> = {
       const perdu = Math.max(0, j - JOURS_SANS_PERTE) * PERTE_PAR_JOUR;
       if (perdu <= 0) return null;
       return {
-        ...EMILIE,
+        ...AXELLE,
         alerte: true,
         texte: `Pendant ce temps, des devis de chantier sont restés sans signature, et des artisans ont commandé ailleurs : ${euros(perdu)} de marge perdue.`,
       };
@@ -352,7 +352,7 @@ export const EPISODE_PRISE_DE_POSTE: Episode<Trimestre> = {
       const oui = renfortAccorde(graine);
       return [
         {
-          ...VINCENT,
+          ...GERARD,
           alerte: !oui,
           texte: oui ? REPONSES.renfortAccorde : REPONSES.renfortRefuse,
         },
@@ -365,7 +365,7 @@ export const EPISODE_PRISE_DE_POSTE: Episode<Trimestre> = {
     const lies: Message[] = [];
     if (arrive.renfort !== null) {
       lies.push({
-        ...AICHA,
+        ...AMINA,
         heure: "sem. 6",
         alerte: !arrive.renfort,
         texte: arrive.renfort ? REPONSES.renfortArrive : REPONSES.renfortAttendu,
@@ -386,7 +386,7 @@ export const EPISODE_PRISE_DE_POSTE: Episode<Trimestre> = {
     }
     if (arrive.chantier !== null) {
       lies.push({
-        ...EMILIE,
+        ...AXELLE,
         heure: "sem. 10",
         alerte: !arrive.chantier,
         texte: !arrive.chantier

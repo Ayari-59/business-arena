@@ -210,10 +210,18 @@ export const REMARQUE = [
 export const PLAFOND = 40000;
 /** Les factures en attente visées : une semaine de factures, au plus. */
 export const OBJECTIF_EN_ATTENTE = FACTURES_PAR_SEMAINE;
-/** Les factures payées en retard visées, par semaine. */
-export const OBJECTIF_RETARDS = 5;
-/** Les litiges ouverts visés, au plus. */
-export const OBJECTIF_LITIGES = 2;
+/**
+ * Les factures payées en retard visées, par semaine. La pile de départ et les échéances déjà
+ * passées en font payer en retard une dizaine par semaine même à la meilleure méthode : un
+ * objectif à 5 n'était tenu sous aucun des trente tirages (garde : episodes-coherence.test.ts).
+ */
+export const OBJECTIF_RETARDS = 12;
+/**
+ * Les litiges ouverts visés, en moyenne, au plus. Le litige Bressan est ouvert au départ et le
+ * comptoir en ouvre d'autres tant que l'accueil n'est pas réglé : la meilleure méthode tient
+ * entre 4 et 5,3 en moyenne ; un objectif à 2 n'était jamais tenu.
+ */
+export const OBJECTIF_LITIGES = 5;
 export const JOURS_SANS_PERTE = 2;
 /** Chaque jour d'enquête au-delà de deux, la pile grossit et des factures passent leur échéance. */
 export const PERTE_PAR_JOUR = 300;

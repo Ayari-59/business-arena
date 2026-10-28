@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 90 — L'ÉQUIPE DE JOUR ET L'ÉQUIPE DE NUIT, tel que l'interface et le bilan le lisent.
+ * L'ÉQUIPE DE JOUR ET L'ÉQUIPE DE NUIT, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord du service d'Hélier montre, ce que

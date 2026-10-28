@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 32 — LE PRODUIT QUI PERD DE L'ARGENT, tel que l'interface et le bilan le lisent.
+ * LE PRODUIT QUI PERD DE L'ARGENT, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Matthias montre, ce que la

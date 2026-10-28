@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 96 — LE LOT QU'IL FAUT PEUT-ÊTRE RAPPELER, tel que l'interface et le
+ * LE LOT QU'IL FAUT PEUT-ÊTRE RAPPELER, tel que l'interface et le
  * bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont

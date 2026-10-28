@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 65 — LE CLIENT QUI EN DEMANDE TOUJOURS PLUS, tel que l'interface et le bilan le lisent.
+ * LE CLIENT QUI EN DEMANDE TOUJOURS PLUS, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord d'Amélie montre, ce que la

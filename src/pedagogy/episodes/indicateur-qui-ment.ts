@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 15 — L'INDICATEUR QUI MENT, tel que l'interface et le bilan le lisent.
+ * L'INDICATEUR QUI MENT, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Sonia montre, ce que la courbe

@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 36 — L'ATELIER SATURÉ, tel que l'interface et le bilan le lisent.
+ * L'ATELIER SATURÉ, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le suivi de l'atelier de Florent montre, ce que la

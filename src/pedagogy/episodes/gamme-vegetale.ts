@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 107 — LA GAMME VÉGÉTALE, telle que l'interface et le bilan la lisent.
+ * LA GAMME VÉGÉTALE, telle que l'interface et le bilan la lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord d'Herveline montre, ce que la

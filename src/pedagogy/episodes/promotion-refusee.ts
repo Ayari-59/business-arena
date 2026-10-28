@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 72 — LA PROMOTION QU'IL FAUDRA REFUSER, tel que l'interface et le bilan le lisent.
+ * LA PROMOTION QU'IL FAUDRA REFUSER, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Noé montre, ce que la courbe

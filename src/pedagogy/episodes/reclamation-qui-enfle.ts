@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 8 — LA RÉCLAMATION QUI ENFLE, tel que l'interface et le bilan le lisent.
+ * LA RÉCLAMATION QUI ENFLE, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Laure montre, ce que la courbe
@@ -99,7 +99,7 @@ export function comportements(p: PartieJouee, t: Trimestre): Constat[] {
     t.semaines[4]!.retours,
     "de retours en panne en semaine 4",
     "retours",
-    { juste: 1, proche: 2.5 },
+    { juste: 2, proche: 3.5 },
     (e) => `${nombre(e)} retour${e >= 2 ? "s" : ""}`,
   );
 

@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 64 — LES APPELS D'OFFRES EN RAFALE, tel que l'interface et le bilan le lisent.
+ * LES APPELS D'OFFRES EN RAFALE, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Florimond montre, ce que la

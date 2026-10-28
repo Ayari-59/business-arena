@@ -147,7 +147,7 @@ export const TRACES: Readonly<Record<string, TracesDeLEpisode>> = {
   "depot-qui-deborde": {
     diagnostic: { juste: "repartition", proche: "inventaire" },
     reflexes: [...depotQuiDeborde.REFLEXES],
-    prevision: { juste: 1.5, proche: 4 },
+    prevision: { juste: 5, proche: 8 },
   },
   "budget-qui-ne-tient-pas": {
     diagnostic: { juste: "engagements", proche: "energie" },
@@ -162,7 +162,7 @@ export const TRACES: Readonly<Record<string, TracesDeLEpisode>> = {
   "fournisseur-qui-augmente": {
     diagnostic: { juste: "levier", proche: "couts" },
     reflexes: [...fournisseurQuiAugmente.REFLEXES],
-    prevision: { juste: 1, proche: 2.5 },
+    prevision: { juste: 1.5, proche: 3 },
   },
   "poste-qui-reste-vide": {
     diagnostic: { juste: "annonce", proche: "marche" },
@@ -172,7 +172,7 @@ export const TRACES: Readonly<Record<string, TracesDeLEpisode>> = {
   "reclamation-qui-enfle": {
     diagnostic: { juste: "lot", proche: "usage" },
     reflexes: [...reclamationQuiEnfle.REFLEXES],
-    prevision: { juste: 1, proche: 2.5 },
+    prevision: { juste: 2, proche: 3.5 },
   },
   "quai-dangereux": {
     diagnostic: { juste: "signaux", proche: "habilitation" },
@@ -187,7 +187,7 @@ export const TRACES: Readonly<Record<string, TracesDeLEpisode>> = {
   "tresorerie-qui-fond": {
     diagnostic: { juste: "bfr", proche: "clients" },
     reflexes: [...tresorerieQuiFond.REFLEXES],
-    prevision: { juste: 40, proche: 120 },
+    prevision: { juste: 140, proche: 250 },
   },
   "agence-qui-demarre": {
     diagnostic: { juste: "service", proche: "notoriete" },
@@ -202,7 +202,7 @@ export const TRACES: Readonly<Record<string, TracesDeLEpisode>> = {
   "collaborateur-qui-decroche": {
     diagnostic: { juste: "outil", proche: "confiance" },
     reflexes: [...collaborateurQuiDecroche.REFLEXES],
-    prevision: { juste: 0.5, proche: 1.2 },
+    prevision: { juste: 1.2, proche: 2 },
   },
   "indicateur-qui-ment": {
     diagnostic: { juste: "goodhart", proche: "formation" },
@@ -277,7 +277,7 @@ export const TRACES: Readonly<Record<string, TracesDeLEpisode>> = {
   "equipe-dispersee": {
     diagnostic: { juste: "isolement", proche: "competences" },
     reflexes: [...equipeDispersee.REFLEXES],
-    prevision: { juste: 2, proche: 5 },
+    prevision: { juste: 4, proche: 8 },
   },
   "cent-premiers-jours": {
     diagnostic: { juste: "irritants", proche: "comptoir" },

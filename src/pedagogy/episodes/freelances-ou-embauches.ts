@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 74 — EMBAUCHER OU LOUER DES FREELANCES, tel que l'interface et le
+ * EMBAUCHER OU LOUER DES FREELANCES, tel que l'interface et le
  * bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont

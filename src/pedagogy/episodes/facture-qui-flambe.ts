@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 25 — LA FACTURE QUI FLAMBE, tel que l'interface et le bilan le lisent.
+ * LA FACTURE QUI FLAMBE, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le suivi énergie de Cyprien montre, ce que la courbe
@@ -40,7 +40,7 @@ const tonnes = (v: number) => `${nombre(v, 0)} t de CO₂`;
 const ecartAuBudget = (v: number) =>
   v >= 0 ? `${kE(v)} sous le budget` : `${kE(-v)} au-delà du budget`;
 
-const INGRID = {
+const ASTRID = {
   de: "Astrid Solberg",
   role: "Responsable achats responsables, Ostral Construction",
 } as const;
@@ -321,7 +321,7 @@ export const EPISODE_ENERGIE: Episode<Trimestre> = {
     if (etape === D.ostral && choix === 3) {
       // Ostral répond à la demande de délai selon le hasard du trimestre.
       return [
-        { ...INGRID, texte: ostralAttend(graine) ? REPONSES.delaiAccepte : REPONSES.delaiRefuse },
+        { ...ASTRID, texte: ostralAttend(graine) ? REPONSES.delaiAccepte : REPONSES.delaiRefuse },
       ];
     }
     return null;
@@ -361,7 +361,7 @@ export const EPISODE_ENERGIE: Episode<Trimestre> = {
             : plan === 3
               ? REPONSES.ostralSansPlan
               : REPONSES.ostralNonAffichage;
-      lies.push({ ...INGRID, heure: "sem. 12", alerte: !arrive.ostral, texte });
+      lies.push({ ...ASTRID, heure: "sem. 12", alerte: !arrive.ostral, texte });
     }
     if (arrive.penalite) {
       const historique = chemin[D.contrat] === 0;

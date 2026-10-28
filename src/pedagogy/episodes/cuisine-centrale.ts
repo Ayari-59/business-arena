@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 59 — LA CUISINE CENTRALE QU'ON N'ATTENDAIT PAS, tel que l'interface et le bilan le lisent.
+ * LA CUISINE CENTRALE QU'ON N'ATTENDAIT PAS, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Théo montre, ce que la courbe
@@ -200,7 +200,7 @@ export const EPISODE_CUISINE_CENTRALE: Episode<Trimestre> = {
   persona:
     "Vous êtes Théo Garrigues, directeur de la restauration du Groupe Escale, à Annecy : cinq Tables d'Augustin (Annecy, Chambéry, Aix-les-Bains, Évian, Megève), leurs cinq chefs, et le nouveau laboratoire de production de Seynod, sa brigade de cinq personnes et son camion. De janvier à mars, la basse saison partout sauf à Megève, vous devez y faire passer la production avant le printemps.",
   mandat: [
-    { fort: "264 k€", texte: "d'économie par an promis par le dossier, frais fixes déduits" },
+    { fort: "316 k€", texte: "d'économie par an, le chiffre du dossier présenté au comité" },
     { fort: "5 Tables", texte: "à servir depuis Seynod, dont Megève en pleine saison" },
     { fort: "4,46/5", texte: "de note moyenne des avis, à ne pas perdre" },
     { fort: "1 000 €", texte: "de frais fixes du laboratoire par semaine, qu'il produise ou non" },

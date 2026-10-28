@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 80 — LES SORTIES QUI BLOQUENT, tel que l'interface et le bilan le lisent.
+ * LES SORTIES QUI BLOQUENT, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le suivi de la clinique de Médéric montre, ce que la

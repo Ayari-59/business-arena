@@ -138,7 +138,7 @@ export const FICHE: FicheEnseignant = {
     "Chambéry et Aix-les-Bains, en basse saison, à 35 et 45 minutes de Seynod : qu'est-ce que le pilote a montré qu'une bascule des cinq Tables aurait découvert en ruptures de service ?",
     "Sous le tirage 12, la bascule des cinq Tables lundi perd 24,8 k€ face au pilote. Sur les trente tirages, elle fait mieux 12 fois. Ceux pour qui elle a réussi avaient-ils raison de la choisir ?",
     "Sous le tirage 12, « Appliquer la décision du comité » finit 144 k€ sous « Mutualiser avec les chefs ». D'où vient l'écart : des achats, des incidents, des produits refaits, de la note, du départ d'un chef ?",
-    "Pourquoi l'économie nette du trimestre reste-t-elle faible, même pour la meilleure méthode, quand le dossier promet 264 k€ par an ?",
+    "Pourquoi l'économie nette du trimestre reste-t-elle faible, même pour la meilleure méthode, quand le dossier, frais fixes déduits, donne 264 k€ par an ?",
     "Quelle règle gardez-vous pour mutualiser une production entre plusieurs établissements ? Formulez-la en une phrase, avec un chiffre de l'épisode dedans.",
   ],
   prolongement: {
@@ -155,5 +155,5 @@ export const FICHE: FicheEnseignant = {
     "L'élève distingue, sur la bascule de la semaine 2, la qualité du choix lue sur les trente tirages et le résultat obtenu sous le tirage 12.",
   ],
   vigilance:
-    "La limite de 3 °C à réception et le refus d'un bac à 8 °C sont posés par l'épisode : les températures réglementaires du transport et de la réception des préparations réfrigérées sont à vérifier avec un enseignant de cuisine ou d'hygiène. Le mandat de l'épisode affiche déjà les 264 k€ que la prévision demande : la correction porte donc sur la construction du chiffre plus que sur sa valeur.",
+    "La limite de 3 °C à réception et le refus d'un bac à 8 °C sont posés par l'épisode : les températures réglementaires du transport et de la réception des préparations réfrigérées sont à vérifier avec un enseignant de cuisine ou d'hygiène. Le mandat affiche les 316 k€ du dossier, frais fixes non déduits : c'est l'erreur fréquente qu'il faut faire corriger.",
 };

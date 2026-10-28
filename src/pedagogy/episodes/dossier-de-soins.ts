@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 86 — LE DOSSIER DE SOINS QUE PERSONNE NE REMPLIT, tel que l'interface
+ * LE DOSSIER DE SOINS QUE PERSONNE NE REMPLIT, tel que l'interface
  * et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont

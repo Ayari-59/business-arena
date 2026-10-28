@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 94 — LES CHANGEMENTS QUI MANGENT LA LIGNE, tel que l'interface et
+ * LES CHANGEMENTS QUI MANGENT LA LIGNE, tel que l'interface et
  * le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont

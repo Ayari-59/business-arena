@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 99 — LA MARQUE DU DISTRIBUTEUR, tel que l'interface et le bilan le lisent.
+ * LA MARQUE DU DISTRIBUTEUR, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord du dossier de Naïm montre, ce que

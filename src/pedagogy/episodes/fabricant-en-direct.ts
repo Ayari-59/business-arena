@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 44 — LE FABRICANT QUI VEND EN DIRECT, tel que l'interface et le bilan le lisent.
+ * LE FABRICANT QUI VEND EN DIRECT, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Séverin montre, ce que la

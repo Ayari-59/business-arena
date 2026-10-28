@@ -210,7 +210,9 @@ describe("ce que les sources affichent, recalculé depuis le modèle", () => {
 
   it("le mandat dit l'économie du dossier et les frais fixes de la semaine", () => {
     const forts = EPISODE_CUISINE_CENTRALE.mandat.map((m) => m.fort);
-    expect(forts).toContain(`${k(ECONOMIE_PREVUE)} k€`);
+    // Le chiffre présenté au comité, frais fixes non déduits : le net est la réponse de la prévision.
+    expect(forts).toContain(`${k(ECONOMIE_PREVUE + FRAIS_FIXES_ANNUELS)} k€`);
+    expect(forts).not.toContain(`${k(ECONOMIE_PREVUE)} k€`);
     expect(forts).toContain(`${fr(FRAIS_FIXES_SEMAINE)} €`);
     expect(forts).toContain(`${NOTE_DEPART.toLocaleString("fr-FR")}/5`);
   });

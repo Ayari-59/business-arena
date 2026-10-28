@@ -50,15 +50,15 @@ const TAOUS = {
   de: "Taous Tahiri",
   role: "Vendeuse comptoir, Combelle",
 } as const;
-const JOEL = {
+const PIERRICK = {
   de: "Pierrick Daguerre",
   role: "Chef de comptoir, Combelle",
 } as const;
-const ELODIE = {
+const ARIANE = {
   de: "Ariane Ravier",
   role: "Cheffe de comptoir, Arvel Vienne",
 } as const;
-const CHRISTOPHE = {
+const GILBERT = {
   de: "Gilbert Aubin",
   role: "Chef des ventes, Arvel Vienne",
 } as const;
@@ -103,7 +103,7 @@ export const ETAPES: readonly Etape[] = [
           "Bonjour Jérôme. Mes gars sont inquiets, vous vous en doutez : ils ont appris la vente par le journal. Je serai au comptoir tous les matins, comme d'habitude. Ça les rassure.",
       },
       {
-        ...ELODIE,
+        ...ARIANE,
         heure: "09:00",
         texte:
           "On a deux chefs de comptoir pour un seul comptoir. Le siège m'a dit que les procédures d'Arvel s'appliqueraient « rapidement ». Ça veut dire quoi, pour moi ?",
@@ -195,14 +195,14 @@ export const ETAPES: readonly Etape[] = [
       ],
       [
         {
-          ...ELODIE,
+          ...ARIANE,
           texte:
             "Le négoce et nous avons livré le même chantier à Pont-Évêque, à une heure d'écart. Et chacun a fait sa remise.",
         },
       ],
       [
         {
-          ...JOEL,
+          ...PIERRICK,
           texte:
             "Au comptoir, les gars m'ont demandé s'ils allaient être licenciés. Je n'ai rien su leur répondre.",
         },
@@ -215,14 +215,14 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 5,
     messages: (ctx) => [
       {
-        ...JOEL,
+        ...PIERRICK,
         heure: "07:30",
         alerte: true,
         texte:
           "Ariane m'a demandé de remplir ses fiches de réception. Ça fait vingt-deux ans que je tiens ce comptoir. J'aimerais savoir si j'ai encore un poste.",
       },
       {
-        ...ELODIE,
+        ...ARIANE,
         heure: "11:10",
         texte:
           "Je ne peux pas diriger un comptoir où la moitié de l'équipe prend ses consignes ailleurs. Il faut trancher.",
@@ -280,20 +280,20 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...JOEL,
+          ...PIERRICK,
           texte:
             "Responsable des comptes artisans… Je ne savais pas que ça existait. Mes clients, je les connais tous : je m'y mets lundi.",
         },
       ],
       [
         {
-          ...JOEL,
+          ...PIERRICK,
           texte: "J'ai compris. Je serai au comptoir lundi, derrière Ariane.",
         },
       ],
       [
         {
-          ...ELODIE,
+          ...ARIANE,
           texte:
             "Ce matin, Pierrick a fait livrer un client sans bon de commande. Je l'ai appris par le chauffeur.",
         },
@@ -312,7 +312,7 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 7,
     messages: (ctx) => [
       {
-        ...CHRISTOPHE,
+        ...GILBERT,
         heure: "09:20",
         alerte: true,
         texte:
@@ -378,14 +378,14 @@ export const ETAPES: readonly Etape[] = [
       null,
       [
         {
-          ...CHRISTOPHE,
+          ...GILBERT,
           texte:
             "Raymond a encore fait une remise de 12 % sur une commande de parpaings. C'est la troisième cette semaine.",
         },
       ],
       [
         {
-          ...ELODIE,
+          ...ARIANE,
           texte:
             "Le négoce a ses consignes, nous les nôtres. Les deux équipes ne se parlent plus qu'à la machine à café.",
         },
@@ -410,7 +410,7 @@ export const ETAPES: readonly Etape[] = [
         texte: `La ressaisie des commandes du négoce et les deux licences coûtent 2,8 k€ par semaine. Doublons de la semaine 7, tout compris : ${ctx.doublons}.`,
       },
       {
-        ...(ctx.naimaLa ? TAOUS : ELODIE),
+        ...(ctx.naimaLa ? TAOUS : ARIANE),
         heure: "15:10",
         texte:
           "Dans le logiciel d'Arvel, je ne trouve pas où mettre les prix négociés avec chaque artisan. Au négoce, il y en a 1 900.",
@@ -459,7 +459,7 @@ export const ETAPES: readonly Etape[] = [
       ],
       [
         {
-          ...ELODIE,
+          ...ARIANE,
           texte:
             "Les binômes sont faits : un vendeur du négoce avec un vendeur d'Arvel. Ils vérifient les fiches clients ensemble. Ça discute beaucoup, et ça trouve des erreurs.",
         },
@@ -485,7 +485,7 @@ export const ETAPES: readonly Etape[] = [
           "Trois de mes artisans m'ont dit la même chose cette semaine : « Chez Combelle, le devis arrive dans l'heure et la palette le lendemain à 7 h. Chez vous, il faut deux jours. » J'ai perdu un chantier de 18 k€ comme ça.",
       },
       {
-        ...CHRISTOPHE,
+        ...GILBERT,
         heure: "11:40",
         texte:
           "Les vendeurs du négoce font des devis de 4 000 € sans validation. Si on laisse faire, on ne maîtrise plus nos marges.",
@@ -557,7 +557,7 @@ export const ETAPES: readonly Etape[] = [
       ],
       [
         {
-          ...ELODIE,
+          ...ARIANE,
           texte:
             "Les petits devis partent dans l'heure, relus par un vendeur du négoce. Les gros attendent toujours deux jours.",
         },
@@ -570,7 +570,7 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 13,
     messages: (ctx) => [
       {
-        ...CHRISTOPHE,
+        ...GILBERT,
         heure: "08:20",
         alerte: true,
         texte:
@@ -642,7 +642,7 @@ export const ETAPES: readonly Etape[] = [
       ],
       [
         {
-          ...CHRISTOPHE,
+          ...GILBERT,
           texte:
             "La remise a calmé les artisans du négoce. Ceux d'Arvel l'ont appris, et demandent la même.",
         },

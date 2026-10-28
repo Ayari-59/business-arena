@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 106 — LES DESSERTS QUI PLAISENT À L'EXPORT, tel que l'interface et
+ * LES DESSERTS QUI PLAISENT À L'EXPORT, tel que l'interface et
  * le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont

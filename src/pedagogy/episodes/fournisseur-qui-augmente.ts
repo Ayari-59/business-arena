@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 6 — LE FOURNISSEUR QUI AUGMENTE, tel que l'interface et le bilan le lisent.
+ * LE FOURNISSEUR QUI AUGMENTE, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord d'Élodie montre, ce que la courbe
@@ -99,7 +99,7 @@ export function comportements(p: PartieJouee, t: Trimestre): Constat[] {
     t.semaines[6]!.hausse * 100,
     "de hausse du prix d'achat des plaques en semaine 6",
     "%",
-    { juste: 1, proche: 2.5 },
+    { juste: 1.5, proche: 3 },
     (e) => `${nombre(e)} point${e >= 2 ? "s" : ""}`,
   );
 

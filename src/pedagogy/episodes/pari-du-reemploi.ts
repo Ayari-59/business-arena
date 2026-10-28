@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 47 — LE PARI DU RÉEMPLOI, tel que l'interface et le bilan le lisent.
+ * LE PARI DU RÉEMPLOI, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord d'Ysaline montre, ce que la
@@ -64,10 +64,10 @@ const pct = (v: number) => taux(v, 0);
 
 const OCTAVIEN = { de: "Octavien Rouanet", role: "Directeur administratif et financier" } as const;
 const TIDIANE = { de: "Tidiane Sarr", role: "Chef de projet réemploi" } as const;
-const AUGUSTIN = { de: "Isidore Ferrari-Lebel", role: "Acheteur public, Métropole" } as const;
-const SIXTINE = { de: "Mélisande Delabarre", role: "Directrice régionale, Orréa" } as const;
+const ISIDORE = { de: "Isidore Ferrari-Lebel", role: "Acheteur public, Métropole" } as const;
+const MELISANDE = { de: "Mélisande Delabarre", role: "Directrice régionale, Orréa" } as const;
 const AMEDEE = { de: "Amédée Pruvost", role: "Délégué régional, fédération du négoce" } as const;
-const ANAELLE = {
+const EUPHEMIE = {
   de: "Euphémie Ferrié",
   role: "Ingénieure, bureau d'études en diagnostic",
 } as const;
@@ -405,8 +405,8 @@ export const EPISODE_REEMPLOI: Episode<Trimestre> = {
       // La caractérisation mesure le taux de réemploi des bâtiments : l'offre suit la mesure.
       const h = hasard(graine);
       return [
-        { ...ANAELLE, texte: REPONSES.caracterisation(h.reemploi, prixRemis(1, h.reemploi)!) },
-        { ...AUGUSTIN, texte: REPONSES.offreRecue },
+        { ...EUPHEMIE, texte: REPONSES.caracterisation(h.reemploi, prixRemis(1, h.reemploi)!) },
+        { ...ISIDORE, texte: REPONSES.offreRecue },
       ];
     }
     return null;
@@ -440,7 +440,7 @@ export const EPISODE_REEMPLOI: Episode<Trimestre> = {
     if (arrive.accord) {
       const concurrent = coutAccord(h.reemploi) + ACCORD.margeConcurrents;
       lies.push({
-        ...AUGUSTIN,
+        ...ISIDORE,
         heure: `sem. ${ACCORD.attribution}`,
         alerte: !t.accord,
         texte: t.accord
@@ -450,7 +450,7 @@ export const EPISODE_REEMPLOI: Episode<Trimestre> = {
     }
     if (arrive.decret && t.accord && !t.scenario.obligation) {
       lies.push({
-        ...AUGUSTIN,
+        ...ISIDORE,
         heure: `sem. ${PUBLICATION}`,
         alerte: true,
         texte:
@@ -459,7 +459,7 @@ export const EPISODE_REEMPLOI: Episode<Trimestre> = {
     }
     if (arrive.orrea) {
       lies.push({
-        ...SIXTINE,
+        ...MELISANDE,
         heure: `sem. ${PUBLICATION}`,
         alerte: offreCaduque(graine),
         texte: offreCaduque(graine)
