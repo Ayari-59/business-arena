@@ -119,11 +119,14 @@ describe("/cours : le catalogue par thème et le chapitre libre", () => {
 });
 
 describe("le chapitre pilote, joué sans faute", () => {
-  it("chez LA TABLE D'AUGUSTIN : chaque étape réussie du premier coup, jusqu'au bilan", async () => {
-    const code = "bistrot";
+  /**
+   * Le chapitre pilote, de bout en bout, comme un élève qui ne se trompe pas : chaque écriture, chaque
+   * question, chaque calcul, le curseur de la TVA et le laboratoire de la trésorerie. Au téléphone, les
+   * montants se tapent chiffre à chiffre, et le bouton de signe donne les négatifs.
+   */
+  async function jouerLePilote(page: Page, code: string, telephone = false) {
     const cas = casDeLEntreprise(code);
     const chapitre = chapitreDuCas(CHAPITRES[0]!, cas);
-    const page = await nouvellePage();
     await aller(page, chemin(code));
     for (const [i, etape] of chapitre.etapes.entries()) {
       await expect.poll(() => page.locator("h1").innerText(), { timeout: 15_000 }).toBe(etape.titre);
@@ -145,8 +148,22 @@ describe("le chapitre pilote, joué sans faute", () => {
             : etape.options(cas, etatAvant(chapitre, cas, indexDeLEtape(chapitre, etape.avantLEtape)), avant);
         await page.getByRole("radio", { name: options.find((o) => o.juste)!.texte }).click();
       } else if (etape.type === "montants") {
-        for (const c of etape.champs(cas, avant)) await page.getByLabel(c.libelle, { exact: true }).fill(virgule(c.attendu));
+        for (const c of etape.champs(cas, avant)) {
+          if (!telephone) {
+            await page.getByLabel(c.libelle, { exact: true }).fill(virgule(c.attendu));
+            continue;
+          }
+          await page.getByLabel(c.libelle, { exact: true }).pressSequentially(virgule(Math.abs(c.attendu)));
+          if (c.attendu < 0) await page.getByRole("button", { name: `Changer le signe : ${c.libelle}`, exact: true }).tap();
+        }
         await page.getByRole("button", { name: "Vérifier", exact: true }).click();
+      } else if (etape.type === "curseur") {
+        await page.getByLabel(`${etape.grandeur?.(cas).libelle ?? "Ventes du mois"}, au clavier`, { exact: true }).fill(String(etape.cible(cas).attendu));
+        await page.getByRole("button", { name: "Valider cette position" }).click();
+      } else if (etape.type === "simulation") {
+        const solution = etape.defi(cas).solution;
+        for (const l of etape.leviers(cas)) await page.getByLabel(`${l.libelle}, au clavier`, { exact: true }).fill(virgule(solution[l.code]!));
+        await page.getByRole("button", { name: "Valider cette position" }).click();
       }
       const dernier = i === chapitre.etapes.length - 1;
       await page.getByRole("button", { name: dernier ? "Terminer le chapitre" : "Étape suivante" }).click();
@@ -155,6 +172,13 @@ describe("le chapitre pilote, joué sans faute", () => {
     await expect
       .poll(() => page.locator("main").innerText(), { timeout: 15_000 })
       .toContain(`${notees} étapes réussies du premier coup sur ${notees}`);
+    return cas;
+  }
+
+  it("chez LA TABLE D'AUGUSTIN : chaque étape réussie du premier coup, jusqu'au bilan", async () => {
+    const code = "bistrot";
+    const page = await nouvellePage();
+    const cas = await jouerLePilote(page, code);
 
     // Et maintenant, jouez-le : la partie s'ouvre chez la même entreprise, au niveau de la mission.
     const mission = page.locator("[data-jouez-le]");
@@ -164,6 +188,14 @@ describe("le chapitre pilote, joué sans faute", () => {
     await jouer.click();
     await page.waitForURL(/\/jouer\?secteur=bistrot&niveau=1/, { timeout: 60_000 });
     await page.context().close();
+  }, 240_000);
+
+  it("chez NOVA, au téléphone : le crédit de TVA se tape avec le bouton de signe, et la page ne déborde pas", async () => {
+    const ctx = await navigateur.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, locale: "fr-FR" });
+    const page = await ctx.newPage();
+    await jouerLePilote(page, "nova", true);
+    expect(await debordement(page)).toBeLessThanOrEqual(0);
+    await ctx.close();
   }, 240_000);
 });
 
@@ -389,11 +421,16 @@ describe("le seuil de rentabilité, chapitre réservé", () => {
 
 describe.each([
   { code: "la-paie", entreprise: "hotel" },
+  { code: "la-paie", entreprise: "conseil", telephone: true },
   { code: "l-emprunt", entreprise: "transport" },
+  { code: "l-emprunt", entreprise: "nova", telephone: true },
   { code: "immobilisations", entreprise: "batiment" },
+  { code: "immobilisations", entreprise: "conseil", telephone: true },
   { code: "les-stocks", entreprise: "ecommerce" },
+  { code: "les-stocks", entreprise: "boutique", telephone: true },
   { code: "la-cloture", entreprise: "nova" },
   { code: "remises-et-reglements", entreprise: "conseil" },
+  { code: "remises-et-reglements", entreprise: "nova", telephone: true },
   { code: "cout-complet", entreprise: "nova" },
   // Au téléphone, des montants négatifs : l'élève tape les chiffres, puis le bouton de signe.
   { code: "cout-complet", entreprise: "nova", telephone: true },
@@ -443,7 +480,7 @@ describe.each([
   { code: "tableau-de-bord-du-manager", entreprise: "boutique" },
   { code: "negocier-le-prix", entreprise: "conseil" },
   { code: "negocier-le-prix", entreprise: "conseil", telephone: true },
-  { code: "remises-et-conditions", entreprise: "transport" },
+  { code: "remises-et-conditions", entreprise: "conseil" },
   { code: "remises-et-conditions", entreprise: "conseil", telephone: true },
   { code: "valeur-d-un-client", entreprise: "conseil" },
   { code: "valeur-d-un-client", entreprise: "conseil", telephone: true },
@@ -491,10 +528,10 @@ describe.each([
   { code: "former", entreprise: "ecommerce", telephone: true },
   { code: "indicateurs-sociaux", entreprise: "batiment" },
   { code: "indicateurs-sociaux", entreprise: "hotel", telephone: true },
-  { code: "choisir-son-fournisseur", entreprise: "batiment" },
+  { code: "choisir-son-fournisseur", entreprise: "nova" },
   { code: "choisir-son-fournisseur", entreprise: "nova", telephone: true },
-  { code: "le-client-qui-paie-tard", entreprise: "conseil" },
-  { code: "le-client-qui-paie-tard", entreprise: "boutique", telephone: true },
+  { code: "le-client-qui-paie-tard", entreprise: "nova" },
+  { code: "le-client-qui-paie-tard", entreprise: "nova", telephone: true },
   { code: "s-assurer-contre-les-aleas", entreprise: "nova" },
   { code: "s-assurer-contre-les-aleas", entreprise: "nova", telephone: true },
   { code: "le-cout-de-la-non-qualite", entreprise: "nova" },
@@ -551,10 +588,16 @@ describe.each([
   { code: "rembourser-une-part-du-pret", entreprise: "conseil", telephone: true },
   { code: "la-commande-du-31-janvier", entreprise: "transport" },
   { code: "l-escompte-demande-par-le-client", entreprise: "bistrot", telephone: true },
+  { code: "la-commande-du-31-janvier", entreprise: "hotel", telephone: true }, // son curseur au téléphone aussi
+  { code: "l-escompte-demande-par-le-client", entreprise: "batiment" }, // son curseur sur ordinateur aussi
   { code: "la-prime-exceptionnelle", entreprise: "batiment" },
+  { code: "la-prime-exceptionnelle", entreprise: "conseil", telephone: true },
   { code: "un-deuxieme-pret", entreprise: "hotel", telephone: true },
+  { code: "un-deuxieme-pret", entreprise: "nova" },
   { code: "un-second-equipement", entreprise: "fitness" },
+  { code: "un-second-equipement", entreprise: "hotel", telephone: true },
   { code: "le-stock-qui-manque", entreprise: "boutique", telephone: true },
+  { code: "le-stock-qui-manque", entreprise: "ecommerce" },
   { code: "acheter-avant-la-cloture", entreprise: "nova" },
   { code: "la-creance-qui-se-degrade", entreprise: "nova", telephone: true },
   { code: "l-assurance-sur-plusieurs-annees", entreprise: "nova" },
@@ -585,7 +628,7 @@ describe.each([
   { code: "une-rallonge-pour-la-campagne", entreprise: "fitness", telephone: true },
   { code: "l-intermediaire-veut-payer-plus-tard", entreprise: "ecommerce" },
   { code: "la-remise-autorisee", entreprise: "conseil", telephone: true },
-  { code: "la-remise-par-palier", entreprise: "transport" },
+  { code: "la-remise-par-palier", entreprise: "conseil" },
   { code: "le-programme-de-fidelite", entreprise: "conseil", telephone: true },
   { code: "couper-le-budget-de-campagne", entreprise: "conseil" },
   { code: "la-mise-en-avant-payante", entreprise: "conseil", telephone: true },
@@ -607,8 +650,8 @@ describe.each([
   { code: "l-equipe-demande-une-augmentation", entreprise: "batiment", telephone: true },
   { code: "doubler-le-budget-de-formation", entreprise: "nova" },
   { code: "la-masse-salariale-qui-baisse", entreprise: "transport", telephone: true },
-  { code: "le-fournisseur-allonge-son-delai", entreprise: "transport" },
-  { code: "escompter-chaque-trimestre", entreprise: "bistrot", telephone: true },
+  { code: "le-fournisseur-allonge-son-delai", entreprise: "nova" },
+  { code: "escompter-chaque-trimestre", entreprise: "nova", telephone: true },
   { code: "l-assureur-augmente-la-prime", entreprise: "nova" },
   { code: "une-seule-demarche-qualite", entreprise: "nova", telephone: true },
   { code: "recruter-des-l-annonce-du-depart", entreprise: "nova" },
@@ -640,14 +683,14 @@ describe.each([
   { code: "le-cout-du-trimestre-creux", entreprise: "bistrot" },
   { code: "plus-cher-au-plus-fort-de-la-saison", entreprise: "hotel", telephone: true },
   { code: "la-declaration-de-tva", entreprise: "batiment" },
-  { code: "la-declaration-de-tva", entreprise: "transport", telephone: true },
-  { code: "la-tva-et-la-tresorerie", entreprise: "transport" },
+  { code: "la-declaration-de-tva", entreprise: "batiment", telephone: true },
+  { code: "la-tva-et-la-tresorerie", entreprise: "batiment" },
   { code: "la-tva-et-la-tresorerie", entreprise: "batiment", telephone: true },
   { code: "l-impot-sur-les-societes", entreprise: "nova" },
   { code: "l-impot-sur-les-societes", entreprise: "nova", telephone: true },
   { code: "le-deficit-reporte", entreprise: "ecommerce" },
   { code: "le-deficit-reporte", entreprise: "ecommerce", telephone: true },
-  { code: "la-tva-du-dernier-trimestre", entreprise: "transport", telephone: true },
+  { code: "la-tva-du-dernier-trimestre", entreprise: "batiment", telephone: true },
   { code: "la-tva-avancee-pour-le-client", entreprise: "batiment" },
   { code: "la-depense-de-fin-d-annee", entreprise: "nova", telephone: true },
   { code: "la-depense-de-l-annee-en-perte", entreprise: "ecommerce" },
