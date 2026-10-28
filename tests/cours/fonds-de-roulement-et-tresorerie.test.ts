@@ -16,25 +16,26 @@ import { NOVA, VIDE, etape, gardeDuCurseur, gardeDuLaboratoire, gardesDeTexte } 
  * FONDS DE ROULEMENT, BESOIN ET TRÉSORERIE, AU 31 DÉCEMBRE DU PREMIER EXERCICE DE NOVA DU MONDE DU
  * COURS, ET SON CAS : LE FOURNISSEUR RACCOURCIT SES DÉLAIS.
  *
- * Refait à la main : les ressources durables, 229 225,96 + 5 000 + 68 000 ; la ligne nette,
- * 50 138,89 € ; le cycle, 13 500 + 104 548 + 11 400 € face à 81 000 + 41 119,27 + 7 911,11 € ; la
+ * Refait à la main, avec les grandeurs du bilan fonctionnel du supérieur : les ressources
+ * durables, 229 225,96 + 21 071,11 (amortissements et dépréciations) + 5 000 + 68 000 ; la ligne à
+ * sa valeur d'origine, 60 000 € ; le cycle, 13 500 + 115 758 (clients bruts) + 11 400 € face à 81 000 + 41 119,27 + 7 911,11 € ; la
  * banque et le compte à terme, 252 669,45 €. Une facture de CampusTech : 320 enceintes à 59 €, TVA
  * de 20 % comprise.
  */
 
 const ch = chapitreDuCas(FONDS_DE_ROULEMENT, NOVA);
 const c = (x: number) => Math.round(x * 100) / 100 + 0;
-const FR = c(229_225.96 + 5_000 + 68_000 - 50_138.89);
-const BFR = c(13_500 + 104_548 + 11_400 - (81_000 + 41_119.27 + 7_911.11));
+const FR = c(229_225.96 + 21_071.11 + 5_000 + 68_000 - 60_000);
+const BFR = c(13_500 + 115_758 + 11_400 - (81_000 + 41_119.27 + 7_911.11));
 
 describe("le fonds de roulement de NOVA", () => {
   const k = fondsDeRoulement(NOVA);
 
   it("le fonds de roulement, le besoin et la trésorerie se refont à la main, et se tiennent", () => {
-    expect(FR).toBe(252_087.07);
-    expect(BFR).toBe(-582.38);
-    expect(etape(ch, "frng", "montants").champs(NOVA, VIDE).map((x) => x.attendu)).toEqual([302_225.96, FR]);
-    expect(etape(ch, "bfr", "montants").champs(NOVA, VIDE).map((x) => x.attendu)).toEqual([129_448, 130_030.38, BFR]);
+    expect(FR).toBe(263_297.07);
+    expect(BFR).toBe(10_627.62);
+    expect(etape(ch, "frng", "montants").champs(NOVA, VIDE).map((x) => x.attendu)).toEqual([323_297.07, FR]);
+    expect(etape(ch, "bfr", "montants").champs(NOVA, VIDE).map((x) => x.attendu)).toEqual([140_658, 130_030.38, BFR]);
     expect(etape(ch, "tresorerie", "montants").champs(NOVA, VIDE).map((x) => x.attendu)).toEqual([252_669.45, c(FR - BFR)]);
     expect(c(FR - BFR)).toBe(k.tresorerie);
   });

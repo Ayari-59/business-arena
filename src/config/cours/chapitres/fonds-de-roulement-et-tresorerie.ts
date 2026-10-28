@@ -90,7 +90,8 @@ export const FONDS_DE_ROULEMENT: Chapitre = {
       texte: (c) => {
         const k = fondsDeRoulement(c);
         return [
-          `Le bilan ${dE(k.entreprise)} se lit aussi comme une histoire d'argent. Les ressources durables, celles qui restent dans l'entreprise des années (ce que les associés ont laissé, la provision pour un litige, l'emprunt), paient d'abord ce qui dure : la ligne de montage. Ce qui reste, c'est le fonds de roulement.`,
+          `Le bilan ${dE(k.entreprise)} se lit aussi comme une histoire d'argent. Les ressources durables, celles qui restent dans l'entreprise des années (ce que les associés ont laissé, les amortissements et dépréciations mis de côté, la provision pour un litige, l'emprunt), paient d'abord ce qui dure : la ligne de montage, à son prix d'achat. Ce qui reste, c'est le fonds de roulement.`,
+          "Ces grandeurs sont celles du bilan fonctionnel que l'on étudie après le bac : l'équipement s'y compte à sa valeur d'origine, et son usure, comme la dépréciation d'une créance, avec les ressources ; les créances sur les clients s'y comptent avant dépréciation.",
           "Le quotidien, lui, immobilise de l'argent : les clients qui n'ont pas encore payé, les composants en stock, la TVA que l'État doit rendre. Les fournisseurs, l'État et le personnel, qui n'ont pas encore été payés, en financent une partie. Ce qui reste à financer, c'est le besoin en fonds de roulement. Et ce que le fonds de roulement laisse une fois ce besoin financé, c'est la trésorerie, positive ou négative.",
         ];
       },
@@ -99,7 +100,12 @@ export const FONDS_DE_ROULEMENT: Chapitre = {
         return {
           titre: `Le bilan ${dE(k.entreprise)} au 31 décembre`,
           colonnes: ["Montant"],
-          lignes: k.postes.filter((x) => x.montant !== 0 || x.code === "decouvert").map((x) => ({ libelle: x.libelle, valeurs: [eur(x.montant)] })),
+          lignes: [
+            ...k.postes.filter((x) => x.montant !== 0 || x.code === "decouvert").map((x) => ({ libelle: x.libelle, valeurs: [eur(x.montant)] })),
+            { libelle: "Équipement à sa valeur d'origine", valeurs: [eur(k.equipementBrut)] },
+            { libelle: "Amortissements et dépréciations (usure de la ligne, créance de Sonora)", valeurs: [eur(k.amortissementsEtDepreciations)] },
+            { libelle: "Créances sur les clients avant dépréciation", valeurs: [eur(k.clientsBruts)] },
+          ],
         };
       },
       repere: () => "Fonds de roulement − besoin en fonds de roulement = trésorerie.",
@@ -109,12 +115,12 @@ export const FONDS_DE_ROULEMENT: Chapitre = {
       type: "montants",
       titre: "Le fonds de roulement",
       notions: ["frng"],
-      question: () => "Calculez les ressources durables (capitaux propres + provision + emprunt), puis le fonds de roulement : ce qui reste une fois l'équipement payé.",
+      question: () => "Calculez les ressources durables (capitaux propres + amortissements et dépréciations + provision + emprunt), puis le fonds de roulement : ce qui reste une fois l'équipement payé, à sa valeur d'origine.",
       champs: (c) => {
         const k = fondsDeRoulement(c);
         return [
-          { libelle: "Ressources durables", attendu: k.ressourcesDurables, calcul: `${eur(k.capitauxPropres)} + ${eur(k.poste("provision"))} + ${eur(k.poste("emprunt"))} = ${eur(k.ressourcesDurables)}`, tolerance: 1 },
-          { libelle: "Fonds de roulement", attendu: k.fondsDeRoulement, calcul: `${eur(k.ressourcesDurables)} − ${eur(k.poste("equipement"))} = ${eur(k.fondsDeRoulement)}`, tolerance: 1 },
+          { libelle: "Ressources durables", attendu: k.ressourcesDurables, calcul: `${eur(k.capitauxPropres)} + ${eur(k.amortissementsEtDepreciations)} + ${eur(k.poste("provision"))} + ${eur(k.poste("emprunt"))} = ${eur(k.ressourcesDurables)}`, tolerance: 1 },
+          { libelle: "Fonds de roulement", attendu: k.fondsDeRoulement, calcul: `${eur(k.ressourcesDurables)} − ${eur(k.equipementBrut)} = ${eur(k.fondsDeRoulement)}`, tolerance: 1 },
         ];
       },
       explication: (c) => {
@@ -132,11 +138,11 @@ export const FONDS_DE_ROULEMENT: Chapitre = {
       titre: "Le besoin en fonds de roulement",
       notions: ["bfr"],
       question: () =>
-        "Calculez ce que le cycle immobilise (stock, créances sur les clients, autres créances), ce que financent les dettes du cycle (fournisseurs, État et personnel, autres dettes de l'année), puis le besoin en fonds de roulement.",
+        "Calculez ce que le cycle immobilise (stock, créances sur les clients avant dépréciation, autres créances), ce que financent les dettes du cycle (fournisseurs, État et personnel, autres dettes de l'année), puis le besoin en fonds de roulement.",
       champs: (c) => {
         const k = fondsDeRoulement(c);
         return [
-          { libelle: "Ce que le cycle immobilise", attendu: k.besoinsDuCycle, calcul: `${eur(k.poste("stocks"))} + ${eur(k.poste("clients"))} + ${eur(k.poste("autresCreances"))} = ${eur(k.besoinsDuCycle)}`, tolerance: 1 },
+          { libelle: "Ce que le cycle immobilise", attendu: k.besoinsDuCycle, calcul: `${eur(k.poste("stocks"))} + ${eur(k.clientsBruts)} + ${eur(k.poste("autresCreances"))} = ${eur(k.besoinsDuCycle)}`, tolerance: 1 },
           { libelle: "Dettes du cycle", attendu: k.dettesDuCycle, calcul: `${eur(k.poste("fournisseurs"))} + ${eur(k.poste("etat"))} + ${eur(k.poste("autresDettes"))} = ${eur(k.dettesDuCycle)}`, tolerance: 1 },
           { libelle: "Besoin en fonds de roulement", attendu: k.besoin, calcul: `${eur(k.besoinsDuCycle)} − ${eur(k.dettesDuCycle)} = ${eur(k.besoin)}`, tolerance: 1 },
         ];

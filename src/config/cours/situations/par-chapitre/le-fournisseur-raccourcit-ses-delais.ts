@@ -90,6 +90,9 @@ export const LE_FOURNISSEUR_RACCOURCIT_SES_DELAIS: Situation = {
           colonnes: ["Montant"],
           lignes: [
             ...k.postes.filter((x) => x.montant !== 0 || x.code === "decouvert").map((x) => ({ libelle: x.libelle, valeurs: [eur(x.montant)] })),
+            { libelle: "Équipement à sa valeur d'origine", valeurs: [eur(k.equipementBrut)] },
+            { libelle: "Amortissements et dépréciations (usure de la ligne, créance de Sonora)", valeurs: [eur(k.amortissementsEtDepreciations)] },
+            { libelle: "Créances sur les clients avant dépréciation", valeurs: [eur(k.clientsBruts)] },
             { libelle: "Baisse des dettes fournisseurs", valeurs: [pct(BAISSE_DU_CREDIT_FOURNISSEUR * 100)] },
           ],
         };
@@ -103,11 +106,11 @@ export const LE_FOURNISSEUR_RACCOURCIT_SES_DELAIS: Situation = {
       titre: "Le bilan d'aujourd'hui",
       notions: ["frng", "bfr", "net_treasury"],
       question: () =>
-        "Commencez par le bilan tel qu'il est : le fonds de roulement (capitaux propres, provision et emprunt, moins l'équipement), le besoin en fonds de roulement (stock, créances et autres créances, moins les dettes du cycle), puis la trésorerie (fonds de roulement moins besoin).",
+        "Commencez par le bilan tel qu'il est : le fonds de roulement (capitaux propres, amortissements et dépréciations, provision et emprunt, moins l'équipement à sa valeur d'origine), le besoin en fonds de roulement (stock, créances sur les clients avant dépréciation et autres créances, moins les dettes du cycle), puis la trésorerie (fonds de roulement moins besoin).",
       champs: (c) => {
         const k = fournisseurPresse(c);
         return [
-          { libelle: "Fonds de roulement", attendu: k.fondsDeRoulement, calcul: `${eur(k.ressourcesDurables)} − ${eur(k.poste("equipement"))} = ${eur(k.fondsDeRoulement)}`, tolerance: 1 },
+          { libelle: "Fonds de roulement", attendu: k.fondsDeRoulement, calcul: `${eur(k.ressourcesDurables)} − ${eur(k.equipementBrut)} = ${eur(k.fondsDeRoulement)}`, tolerance: 1 },
           { libelle: "Besoin en fonds de roulement", attendu: k.besoin, calcul: `${eur(k.besoinsDuCycle)} − ${eur(k.dettesDuCycle)} = ${eur(k.besoin)}`, tolerance: 1 },
           { libelle: "Trésorerie", attendu: k.tresorerie, calcul: `${eur(k.fondsDeRoulement)} ${k.besoin < 0 ? `+ ${eur(-k.besoin)}` : `− ${eur(k.besoin)}`} = ${eur(k.tresorerie)}`, tolerance: 1 },
         ];
@@ -137,7 +140,7 @@ export const LE_FOURNISSEUR_RACCOURCIT_SES_DELAIS: Situation = {
       explication: (c) => {
         const k = fournisseurPresse(c);
         return [
-          `Le fonds de roulement ne bouge pas : il dépend des capitaux propres, de la provision, de l'emprunt et de l'équipement. Le besoin grossit de ${eur(k.enMoins)}, ce que le fournisseur ne finance plus, et la trésorerie baisse d'autant.`,
+          `Le fonds de roulement ne bouge pas : il dépend des capitaux propres, des amortissements, de la provision, de l'emprunt et de l'équipement. Le besoin grossit de ${eur(k.enMoins)}, ce que le fournisseur ne finance plus, et la trésorerie baisse d'autant.`,
           k.tnApres >= 0
             ? `${k.entreprise} garderait ${eur(k.tnApres)} de trésorerie : elle peut encaisser le nouveau délai.`
             : k.tresorerie >= 0

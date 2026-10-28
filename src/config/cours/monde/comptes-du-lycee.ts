@@ -13,11 +13,10 @@ import { EXERCICES_DU_COURS, type FicheDeLExercice } from "./exercice-de-nova";
  * laboratoire fait bouger un levier. Il ne lit ni le moteur, ni l'arène.
  *
  * CE QUI EST SIMPLIFIÉ, ET POURQUOI (le niveau est celui du bac) :
- *   · le bilan se lit en valeurs nettes (l'équipement après son usure, les clients après la
- *     dépréciation de la créance de Sonora) ; le fonds de roulement est celui des ressources
- *     durables (capitaux propres, provision, emprunt) moins l'équipement net ; les dettes de moins
- *     d'un an (fournisseurs, État et personnel, intérêts courus, ventes facturées d'avance) sont
- *     toutes des dettes du cycle. La trésorerie, elle, est exactement celle du bilan fonctionnel ;
+ *   · le bilan comptable se lit en valeurs nettes ; le fonds de roulement, le besoin et la
+ *     trésorerie sont exactement ceux du bilan fonctionnel du supérieur (cloture.ts), nommés avec
+ *     les mots du lycée : les dettes de moins d'un an (fournisseurs, État et personnel, intérêts
+ *     courus, ventes facturées d'avance) sont les dettes du cycle ;
  *   · les variantes ne rejouent que ce que leur levier change (hypothèses ci-dessous).
  */
 
@@ -243,9 +242,17 @@ export function bilanDuLycee(f: FicheDeLExercice, v: Partial<VarianteDuBilan> = 
   const passif = total("passif");
   const capitauxPropres = p.capitauxPropres!;
   const dettes = auCentime(passif - capitauxPropres);
-  const ressourcesDurables = auCentime(capitauxPropres + p.provision! + p.emprunt!);
-  const fondsDeRoulement = auCentime(ressourcesDurables - p.equipement!);
-  const besoinsDuCycle = auCentime(p.stocks! + p.clients! + p.autresCreances!);
+  // Le fonds de roulement et le besoin sont ceux du bilan fonctionnel de la clôture (le chapitre
+  // « Bilan fonctionnel et BFR »), au centime : l'équipement à sa valeur d'origine, les
+  // amortissements et la dépréciation de la créance de Sonora avec les ressources durables, les
+  // clients à leur montant brut. Seuls les mots changent.
+  const fo = k.fonctionnel;
+  const equipementBrut = auCentime(fo.emploisStables + equipementEnPlus);
+  const amortissementsEtDepreciations = fo.ressourcesStables.amortissementsEtDepreciations;
+  const clientsBruts = b.actif.clients.brut;
+  const ressourcesDurables = auCentime(capitauxPropres + amortissementsEtDepreciations + p.provision! + p.emprunt!);
+  const fondsDeRoulement = auCentime(ressourcesDurables - equipementBrut);
+  const besoinsDuCycle = auCentime(p.stocks! + clientsBruts + p.autresCreances!);
   const dettesDuCycle = auCentime(p.fournisseurs! + p.etat! + p.autresDettes!);
   const besoin = auCentime(besoinsDuCycle - dettesDuCycle);
   const disponible = auCentime(p.placement! + p.banque!);
@@ -262,6 +269,9 @@ export function bilanDuLycee(f: FicheDeLExercice, v: Partial<VarianteDuBilan> = 
     decouvert: p.decouvert!,
     /** Ce qu'il faut payer dans l'année : les dettes du cycle et le découvert. */
     aCourtTerme: auCentime(dettesDuCycle + p.decouvert!),
+    equipementBrut,
+    amortissementsEtDepreciations,
+    clientsBruts,
     ressourcesDurables,
     fondsDeRoulement,
     besoinsDuCycle,
@@ -272,8 +282,8 @@ export function bilanDuLycee(f: FicheDeLExercice, v: Partial<VarianteDuBilan> = 
     autonomie: capitauxPropres / passif,
     /** L'emprunt rapporté aux capitaux propres. */
     endettement: p.emprunt! / capitauxPropres,
-    /** La trésorerie nette du bilan fonctionnel de la clôture, pour la garde. */
-    tresorerieDuBilanFonctionnel: k.fonctionnel.tresorerieNette,
+    /** Le bilan fonctionnel de la clôture, pour la garde qui compare le lycée au supérieur. */
+    fonctionnel: fo,
   };
 }
 

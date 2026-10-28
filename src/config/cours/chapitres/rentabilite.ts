@@ -18,8 +18,10 @@ import type { Chapitre } from "../types";
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS : le premier exercice de NOVA, son compte de résultat et
  * son bilan du 31 décembre rangés pour le lycée (monde/comptes-du-lycee.ts), et le taux de son
- * emprunt (le contrat de la fiche). Les capitaux investis sont l'équipement net et le besoin en
- * fonds de roulement du chapitre « Fonds de roulement ». HYPOTHÈSE du laboratoire : l'argent
+ * emprunt (le contrat de la fiche). Les capitaux investis sont l'actif économique du supérieur
+ * (l-effet-de-levier.ts : immobilisations nettes + besoin en fonds de roulement), le besoin étant
+ * celui du bilan fonctionnel de la clôture ; la rentabilité économique se prend ici avant impôt,
+ * le supérieur la prend après, et le chapitre le dit. HYPOTHÈSE du laboratoire : l'argent
  * repris par les associés est emprunté au taux de l'emprunt de la fiche, pour toute l'année, et les
  * capitaux investis ne bougent pas avec les ventes.
  */
@@ -165,8 +167,9 @@ export const RENTABILITE: Chapitre = {
           `Pour 100 € laissés par les associés, ${r.entreprise} ${r.financiere >= 0 ? `a gagné ${pct(r.financiere).replace(" %", " €")}` : `a perdu ${pct(-r.financiere).replace(" %", " €")}`} cette année. Pour 100 € mobilisés par l'activité, elle ${r.economique >= 0 ? `en a tiré ${pct(r.economique).replace(" %", " €")}` : `en a perdu ${pct(-r.economique).replace(" %", " €")}`} avant le financement et l'impôt.`,
           // Au-delà de 100 %, l'activité rapporte en un an plus que tout ce qu'elle mobilise.
           r.resultatExploitation > r.capitauxInvestis
-            ? "En un an, l'activité rapporte plus que tout ce qu'elle mobilise : ses capitaux investis sont faibles, une seule ligne de montage et un besoin en fonds de roulement presque nul, parce que les particuliers paient à la commande. Le reste de l'argent des associés dort en banque et sur le compte à terme : il ne travaille pas pour l'activité."
+            ? "En un an, l'activité rapporte plus que tout ce qu'elle mobilise : ses capitaux investis sont faibles, une seule ligne de montage et un besoin en fonds de roulement réduit, parce que les particuliers paient à la commande. Le reste de l'argent des associés dort en banque et sur le compte à terme : il ne travaille pas pour l'activité."
             : "La première intéresse les associés ; la seconde juge l'activité elle-même, quelle que soit la façon dont elle est financée.",
+          "Les capitaux investis sont ce que le supérieur appelle l'actif économique : l'équipement net et le besoin en fonds de roulement du bilan fonctionnel. Le supérieur prend ensuite le résultat de l'activité après impôt ; au lycée, on le prend avant.",
         ];
       },
     },

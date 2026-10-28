@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { bilanDeLExercice } from "../../src/config/cours/chapitres/bilan-fonctionnel";
+import { rentabilite } from "../../src/config/cours/chapitres/rentabilite";
 import { soldesDeNova } from "../../src/config/cours/chapitres/soldes-intermediaires";
 import { cloture } from "../../src/config/cours/monde/cloture";
 import { ENTREPRISES_DES_COMPTES_DU_LYCEE, bilanDuLycee, compteDuLycee, coutVariableDeLEnceinte, enceintesDeLAnnee, exerciceDe } from "../../src/config/cours/monde/comptes-du-lycee";
@@ -132,19 +134,35 @@ describe("le bilan de NOVA au 31 décembre, au lycée", () => {
     expect(b.dettes).toBe(203_030.38);
   });
 
-  it("le fonds de roulement, le besoin et la trésorerie se refont, et la trésorerie est celle du bilan fonctionnel", () => {
+  it("le fonds de roulement, le besoin et la trésorerie se refont, et sont ceux du bilan fonctionnel du supérieur", () => {
     const P = POSTES;
-    expect(b.ressourcesDurables).toBe(c(P.capitauxPropres + P.provision + P.emprunt));
-    expect(b.fondsDeRoulement).toBe(252_087.07);
-    expect(b.besoinsDuCycle).toBe(c(P.stocks + P.clients + P.autresCreances));
+    expect(b.ressourcesDurables).toBe(c(P.capitauxPropres + 21_071.11 + P.provision + P.emprunt));
+    expect(b.equipementBrut).toBe(60_000);
+    expect(b.fondsDeRoulement).toBe(263_297.07);
+    expect(b.besoinsDuCycle).toBe(c(P.stocks + 115_758 + P.autresCreances));
     expect(b.dettesDuCycle).toBe(c(P.fournisseurs + P.etat + P.autresDettes));
-    expect(b.besoin).toBe(-582.38);
+    expect(b.besoin).toBe(10_627.62);
     expect(b.tresorerie).toBe(252_669.45);
     expect(c(b.fondsDeRoulement - b.besoin)).toBe(b.tresorerie);
-    expect(b.tresorerie).toBe(b.tresorerieDuBilanFonctionnel);
-    expect(b.tresorerie).toBe(cloture(f).fonctionnel.tresorerieNette);
-    expect(c(b.autonomie * 1000) / 10).toBeCloseTo(53, 0);
+    expect(b.autonomie).toBeCloseTo(229_225.96 / 432_256.34, 10);
     expect(b.endettement).toBeCloseTo(68_000 / 229_225.96, 10);
+  });
+
+  it("le lycée et le supérieur disent les mêmes grandeurs : fonds de roulement, besoin, trésorerie", () => {
+    const sup = bilanDeLExercice({ code: "nova" });
+    const fo = cloture(f).fonctionnel;
+    for (const x of [b, bilanDuLycee(f, { delaiCampusTech: 60 }), bilanDuLycee(f, { delaiFournisseur: 40 })]) {
+      expect(x.fondsDeRoulement).toBe(x.fonctionnel.fondsDeRoulement);
+      expect(x.besoin).toBe(x.fonctionnel.besoinEnFondsDeRoulement);
+      expect(x.tresorerie).toBe(x.fonctionnel.tresorerieNette);
+      expect(x.ressourcesDurables).toBe(x.fonctionnel.ressourcesStables.total);
+    }
+    expect(b.fondsDeRoulement).toBe(sup.fondsDeRoulement);
+    expect(b.besoin).toBe(sup.besoin);
+    expect(b.tresorerie).toBe(sup.tresorerieNette);
+    expect(b.besoin).toBe(fo.besoinEnFondsDeRoulement);
+    // Les capitaux investis du lycée sont l'actif économique du supérieur : immobilisations nettes + besoin.
+    expect(c(rentabilite({ code: "nova" }).capitauxInvestis)).toBe(c(b.poste("equipement") + sup.besoin));
   });
 
   it("CampusTech qui paie à l'échéance convenue : une facture TTC de moins chez le client, autant en banque", () => {
@@ -154,7 +172,7 @@ describe("le bilan de NOVA au 31 décembre, au lycée", () => {
     expect(x.poste("clients")).toBe(c(104_548 - facture));
     expect(x.poste("banque")).toBe(c(115_734.87 + facture));
     expect(x.fondsDeRoulement).toBe(b.fondsDeRoulement);
-    expect(x.besoin).toBe(c(-582.38 - facture));
+    expect(x.besoin).toBe(c(10_627.62 - facture));
     expect(x.tresorerie).toBe(c(252_669.45 + facture));
   });
 

@@ -88,6 +88,9 @@ export const LE_RENDEZ_VOUS_A_LA_BANQUE: Situation = {
             { libelle: "Impôt sur les bénéfices", valeurs: [eur(v.k.impot)] },
             { libelle: "Résultat net de l'année", valeurs: [eur(f.resultatNet)] },
             ...k.postes.filter((x) => x.montant !== 0 || x.code === "decouvert").map((x) => ({ libelle: x.libelle, valeurs: [eur(x.montant)] })),
+            { libelle: "Équipement à sa valeur d'origine", valeurs: [eur(k.equipementBrut)] },
+            { libelle: "Amortissements et dépréciations (usure de la ligne, créance de Sonora)", valeurs: [eur(k.amortissementsEtDepreciations)] },
+            { libelle: "Créances sur les clients avant dépréciation", valeurs: [eur(k.clientsBruts)] },
           ],
         };
       },
@@ -167,11 +170,11 @@ export const LE_RENDEZ_VOUS_A_LA_BANQUE: Situation = {
       titre: "Fonds de roulement, besoin, trésorerie",
       notions: ["frng", "bfr", "net_treasury"],
       question: () =>
-        "Calculez le fonds de roulement (capitaux propres, provision et emprunt, moins l'équipement), le besoin en fonds de roulement (stock, créances et autres créances, moins les dettes du cycle), puis la trésorerie (banque et compte à terme, moins le découvert).",
+        "Calculez le fonds de roulement (capitaux propres, amortissements et dépréciations, provision et emprunt, moins l'équipement à sa valeur d'origine), le besoin en fonds de roulement (stock, créances sur les clients avant dépréciation et autres créances, moins les dettes du cycle), puis la trésorerie (banque et compte à terme, moins le découvert).",
       champs: (c) => {
         const { k } = dossierDeLaBanque(c);
         return [
-          { libelle: "Fonds de roulement", attendu: k.fondsDeRoulement, calcul: `${eur(k.ressourcesDurables)} − ${eur(k.poste("equipement"))} = ${eur(k.fondsDeRoulement)}`, tolerance: 1 },
+          { libelle: "Fonds de roulement", attendu: k.fondsDeRoulement, calcul: `${eur(k.ressourcesDurables)} − ${eur(k.equipementBrut)} = ${eur(k.fondsDeRoulement)}`, tolerance: 1 },
           { libelle: "Besoin en fonds de roulement", attendu: k.besoin, calcul: `${eur(k.besoinsDuCycle)} − ${eur(k.dettesDuCycle)} = ${eur(k.besoin)}`, tolerance: 1 },
           { libelle: "Trésorerie", attendu: k.tresorerie, calcul: `${eur(k.disponible)} − ${eur(k.decouvert)} = ${eur(k.tresorerie)}`, tolerance: 1 },
         ];
