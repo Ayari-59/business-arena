@@ -18,7 +18,7 @@ import {
   marcheDeReference,
   prixMonte,
 } from "../../src/config/cours/chapitres/la-concurrence";
-import { valeurAjoutee } from "../../src/config/cours/chapitres/valeur-ajoutee-et-partage";
+import { soldesDeGestion } from "../../src/config/cours/chapitres/soldes-intermediaires";
 import { rejouerAvec } from "../../src/config/cours/gestion-de-la-pme";
 import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
 import { CHAPITRES, PARCOURS, PROGRAMME } from "../../src/config/cours/registre";
@@ -373,9 +373,9 @@ describe.each(ENTREPRISES_DU_COURS)("créer des richesses chez %s", (code) => {
       expect(v.valeurAjoutee).toBe(v.salaires + v.interets + v.impots + v.profit);
       expect(v.consommations).toBe(lignesDesComptes(v).filter((l) => l.categorie === "ci").reduce((t, l) => t + l.montant, 0));
     });
-    // Sans embauche, la valeur ajoutée de l'élève est celle du chapitre de gestion et finance, à l'euro près.
+    // Sans embauche, la valeur ajoutée de l'élève est celle des soldes de l'année figée de l'arène, à l'euro près.
     if (anneeJouee(code).partie.rounds.every((t) => (t.results["joueur"]!.hr?.cost ?? 0) === 0)) {
-      expect(Math.abs(k.entreprise.valeurAjoutee - valeurAjoutee(cas).va)).toBeLessThanOrEqual(3);
+      expect(Math.abs(k.entreprise.valeurAjoutee - soldesDeGestion(cas).valeurAjoutee)).toBeLessThanOrEqual(3);
     }
   });
 

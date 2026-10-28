@@ -11,7 +11,7 @@ import { embaucheDeSaison } from "../../src/config/cours/situations/embaucher-po
 import { COMMANDES_PROMISES, remiseDuGrandCompte } from "../../src/config/cours/situations/la-remise-du-grand-compte";
 import { prixDeLaSaison } from "../../src/config/cours/situations/quel-prix-pour-la-saison";
 import { factureContestee } from "../../src/config/cours/situations/la-facture-contestee";
-import { dossierDeLaBanque } from "../../src/config/cours/situations/le-rendez-vous-a-la-banque";
+import { LE_RENDEZ_VOUS_A_LA_BANQUE, dossierDeLaBanque } from "../../src/config/cours/situations/le-rendez-vous-a-la-banque";
 import { baisseDuConcurrent } from "../../src/config/cours/situations/suivre-la-baisse";
 import { auCentime } from "../../src/pedagogy/cours/etats";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
@@ -156,25 +156,19 @@ describe("la facture contestée", () => {
 });
 
 describe("le rendez-vous à la banque", () => {
-  it("les chiffres du dossier se recoupent, et les trois réponses se rencontrent dans le cours", () => {
-    const choix = new Set<string>();
-    for (const code of ENTREPRISES_DU_COURS) {
-      const { v, r, k, f } = dossierDeLaBanque(casDeLEntreprise(code));
-      // Un seul résultat net, un seul bilan : les chapitres repris parlent des mêmes chiffres.
-      expect(r.resultatNet, code).toBe(f.resultatNet);
-      expect(r.capitauxPropres, code).toBe(f.capitauxPropres);
-      expect(k.f.capitauxPropres, code).toBe(f.capitauxPropres);
-      expect(k.f.emprunts, code).toBe(f.emprunts);
-      // L'explication dit que fonds de roulement moins besoin donne la trésorerie.
-      expect(Math.abs(k.frng - k.bfr - k.tn), code).toBeLessThanOrEqual(0.02);
-      // L'explication dit que l'activité crée de la richesse.
-      expect(v.va, code).toBeGreaterThan(0);
-      choix.add(f.choix);
-    }
-    // Dans l'année du bon gestionnaire, la capacité d'autofinancement couvre l'équipement partout
-    // sauf à l'hôtel, dont l'emprunt dépasserait les capitaux propres : la réponse « emprunt » ne se
-    // rencontre plus (financer-l-entreprise.ts). Si elle revient, cette garde le dira.
-    expect([...choix].sort()).toEqual(["apport", "autofinancement"]);
+  it("les chiffres du dossier se recoupent, sur le premier exercice de NOVA", () => {
+    expect(LE_RENDEZ_VOUS_A_LA_BANQUE.entreprises?.codes).toEqual(["nova"]);
+    const { v, r, k, f } = dossierDeLaBanque(casDeLEntreprise("nova"));
+    // Un seul résultat net, un seul bilan : les chapitres repris parlent des mêmes chiffres.
+    expect(r.resultatNet).toBe(f.resultatNet);
+    expect(r.capitauxPropres).toBe(f.capitauxPropres);
+    expect(k.capitauxPropres).toBe(f.capitauxPropres);
+    expect(k.poste("emprunt")).toBe(f.emprunts);
+    // L'explication dit que fonds de roulement moins besoin donne la trésorerie, au centime.
+    expect(Math.round((k.fondsDeRoulement - k.besoin) * 100) / 100).toBe(k.tresorerie);
+    expect(v.va).toBe(254_034);
+    // La capacité d'autofinancement (105 297,07 €) couvre la deuxième ligne (60 000 €).
+    expect(f.choix).toBe("autofinancement");
   });
 });
 

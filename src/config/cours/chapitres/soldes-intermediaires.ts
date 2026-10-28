@@ -52,9 +52,9 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     enchaînés) et garder-l-emprunt (un jugement).
  *
  * L'EXPORT DE COMPATIBILITÉ `soldesDeGestion(c)` lit encore l'année figée de l'arène
- * (monde/annee-du-cours.ts et `c.annee`), dans toutes les entreprises : les chapitres du Bac STMG qui
- * le lisent (« Le compte de résultat », « La rentabilité », « Financer l'entreprise », leurs cas) et
- * « Bilan fonctionnel et BFR » en dépendent. Le chapitre lui-même ne s'en sert plus.
+ * (monde/annee-du-cours.ts et `c.annee`), dans toutes les entreprises : « L'effectif et la masse
+ * salariale » en dépend encore. Les chapitres de gestion et finance du Bac STMG et leurs cas sont
+ * passés sur le monde du cours (monde/comptes-du-lycee.ts). Le chapitre lui-même ne s'en sert plus.
  */
 
 /** Les entreprises du chapitre : celles qui ont un exercice dans le monde du cours, NOVA seule. */
@@ -948,9 +948,8 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * LES SOLDES DE L'ANNÉE FIGÉE DE L'ARÈNE, dans toutes les entreprises du cours : l'export que lisent
- * « Le compte de résultat », « La rentabilité », « Financer l'entreprise », « Bilan fonctionnel et
- * BFR » et leurs cas. C'est le calcul de l'ancien chapitre, à l'identique : les grandes masses de
+ * LES SOLDES DE L'ANNÉE FIGÉE DE L'ARÈNE, dans toutes les entreprises du cours : l'export que lit
+ * encore « L'effectif et la masse salariale ». C'est le calcul de l'ancien chapitre, à l'identique : les grandes masses de
  * l'année (`c.annee`), la dotation et la variation du stock en travaux d'inventaire, l'impôt au taux
  * de l'arène, et la trésorerie de l'année figée (monde/annee-du-cours.ts). Le chapitre ne la lit pas :
  * il joue sur l'exercice de NOVA du monde du cours (`soldesDeNova`).

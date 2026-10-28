@@ -1,93 +1,85 @@
 import { describe, expect, it } from "vitest";
-import { casDeLEntreprise } from "../../src/config/cours/cas";
-import { FONDS_DE_ROULEMENT, fondsDeRoulement } from "../../src/config/cours/chapitres/fonds-de-roulement-et-tresorerie";
-import { bilanFonctionnel } from "../../src/config/cours/chapitres/bilan-fonctionnel";
-import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
-import { CONCEPTS } from "../../src/config/pedagogy/concepts";
-import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
-import type { Cas } from "../../src/config/cours/cas";
-import type { Etape, EtatDuCours } from "../../src/config/cours/types";
+import {
+  FONDS_DE_ROULEMENT,
+  GAIN_DU_DEFI,
+  SOLUTION_DES_DELAIS,
+  delaisDuLaboratoire,
+  equipementPossible,
+  factureDeCampusTech,
+  fondsDeRoulement,
+} from "../../src/config/cours/chapitres/fonds-de-roulement-et-tresorerie";
+import { LE_FOURNISSEUR_RACCOURCIT_SES_DELAIS, fournisseurPresse } from "../../src/config/cours/situations/par-chapitre/le-fournisseur-raccourcit-ses-delais";
+import { chapitreDuCas } from "../../src/pedagogy/cours/deroule";
+import { NOVA, VIDE, etape, gardeDuCurseur, gardeDuLaboratoire, gardesDeTexte } from "./gardes-du-lycee";
 
 /**
- * FONDS DE ROULEMENT, BESOIN ET TRÉSORERIE, AU 31 DÉCEMBRE DE L'ARÈNE.
+ * FONDS DE ROULEMENT, BESOIN ET TRÉSORERIE, AU 31 DÉCEMBRE DU PREMIER EXERCICE DE NOVA DU MONDE DU
+ * COURS, ET SON CAS : LE FOURNISSEUR RACCOURCIT SES DÉLAIS.
  *
- * Les trois grandeurs simplifiées sont celles du bilan fonctionnel ; fonds de roulement moins
- * besoin redonne la trésorerie à l'euro près.
+ * Refait à la main : les ressources durables, 229 225,96 + 5 000 + 68 000 ; la ligne nette,
+ * 50 138,89 € ; le cycle, 13 500 + 104 548 + 11 400 € face à 81 000 + 41 119,27 + 7 911,11 € ; la
+ * banque et le compte à terme, 252 669,45 €. Une facture de CampusTech : 320 enceintes à 59 €, TVA
+ * de 20 % comprise.
  */
 
-function textesDe(e: Etape, cas: Cas, etat: EtatDuCours): string[] {
-  const tableau = e.tableau ? [e.tableau(cas).titre, ...e.tableau(cas).lignes.flatMap((l) => [l.libelle, ...l.valeurs])] : [];
-  switch (e.type) {
-    case "lecture":
-      return [...e.texte(cas), e.repere?.(cas) ?? "", ...tableau];
-    case "choix":
-      return [e.question(cas, etat), ...e.options(cas, etat).flatMap((o) => [o.texte, o.retour]), ...tableau];
-    case "montants":
-      return [e.question(cas, etat), ...e.champs(cas, etat).flatMap((c) => [c.libelle, c.calcul, String(c.attendu)]), ...e.explication(cas, etat), ...tableau];
-    case "tri":
-      return [e.question(cas), ...e.elements(cas).flatMap((x) => [x.libelle, x.pourquoi]), ...e.explication(cas)];
-    default:
-      return [];
-  }
-}
+const ch = chapitreDuCas(FONDS_DE_ROULEMENT, NOVA);
+const c = (x: number) => Math.round(x * 100) / 100 + 0;
+const FR = c(229_225.96 + 5_000 + 68_000 - 50_138.89);
+const BFR = c(13_500 + 104_548 + 11_400 - (81_000 + 41_119.27 + 7_911.11));
 
-describe.each(ENTREPRISES_DU_COURS)("le fonds de roulement chez %s", (code) => {
-  const cas = casDeLEntreprise(code);
-  const k = fondsDeRoulement(cas);
-  const chapitre = chapitreDuCas(FONDS_DE_ROULEMENT, cas);
+describe("le fonds de roulement de NOVA", () => {
+  const k = fondsDeRoulement(NOVA);
 
-  it("les trois grandeurs sont celles du bilan fonctionnel, et se tiennent", () => {
-    const b = bilanFonctionnel(cas);
-    expect(k.frng).toBeCloseTo(b.apres.frng, 0);
-    expect(k.bfr).toBeCloseTo(b.apres.bfr, 1);
-    expect(k.tn).toBeCloseTo(b.apres.tn, 1);
-    expect(Math.abs(k.frng - k.bfr - k.tn)).toBeLessThanOrEqual(1);
+  it("le fonds de roulement, le besoin et la trésorerie se refont à la main, et se tiennent", () => {
+    expect(FR).toBe(252_087.07);
+    expect(BFR).toBe(-582.38);
+    expect(etape(ch, "frng", "montants").champs(NOVA, VIDE).map((x) => x.attendu)).toEqual([302_225.96, FR]);
+    expect(etape(ch, "bfr", "montants").champs(NOVA, VIDE).map((x) => x.attendu)).toEqual([129_448, 130_030.38, BFR]);
+    expect(etape(ch, "tresorerie", "montants").champs(NOVA, VIDE).map((x) => x.attendu)).toEqual([252_669.45, c(FR - BFR)]);
+    expect(c(FR - BFR)).toBe(k.tresorerie);
   });
 
-  it("les textes suivent les chiffres : signes, centime d'arrondi, TVA due, poids des créances", () => {
-    const etat = { soldes: {} };
-    const etape = (id: string) => chapitre.etapes.find((e) => e.id === id)!;
-    const calculs = chapitre.etapes.flatMap((e) => (e.type === "montants" ? e.champs(cas, etat).map((c) => c.calcul) : []));
-    expect(calculs.join(" "), "un signe doublé dans un calcul").not.toMatch(/[+−-] -/);
-    const tresorerie = etape("tresorerie");
-    if (tresorerie.type !== "montants") throw new Error("Pas d'étape tresorerie");
-    const ecart = Math.round((k.frng - k.bfr) * 100) !== Math.round(k.tn * 100);
-    expect(tresorerie.explication(cas, etat).join(" ").includes("au centime d'arrondi près")).toBe(ecart);
-    const bfr = etape("bfr");
-    if (bfr.type !== "montants") throw new Error("Pas d'étape bfr");
-    if (k.bfr < 0) expect(bfr.explication(cas, etat).join(" ").includes("l'État")).toBe(k.f.tva > 0);
-    const clients = etape("clients");
-    if (clients.type !== "choix") throw new Error("Pas d'étape clients");
-    const juste = clients.options(cas, etat).find((o) => o.juste)!;
-    expect(juste.retour).not.toMatch(/premier levier/);
-    expect(juste.retour).toContain("que le cycle immobilise");
+  it("des clients plus rapides font monter la trésorerie : une seule bonne réponse", () => {
+    const juste = etape(ch, "clients", "choix").options(NOVA, VIDE).filter((o) => o.juste);
+    expect(juste.map((o) => o.texte)).toEqual(["Elle monterait : le besoin en fonds de roulement baisserait"]);
   });
 
-  it("aucun texte ne sort undefined ni « de le » ; une seule bonne réponse ; les notions existent", () => {
-    const codes = new Set(CONCEPTS.map((x) => x.code));
-    for (const [i, e] of chapitre.etapes.entries()) {
-      const etat = etatAvant(chapitre, cas, i);
-      for (const x of textesDe(e, cas, etat)) {
-        expect(x, `${e.id} : ${x}`).not.toMatch(/undefined|NaN|Infinity|\[object/);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/(^|\s)(de|à) [Ll]es? /);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/ [-–—] /);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/(^|[\s'(])de [aeiouyéèêAEIOUYÉ]/);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/\bque [AEIOUYÉ]/);
-      }
-      if (e.type === "choix") expect(e.options(cas, etat).filter((o) => o.juste), e.id).toHaveLength(1);
-      for (const n of e.notions ?? []) expect(codes.has(n), `${e.id} : ${n}`).toBe(true);
-    }
+  it("le curseur : un équipement de 252 669 € payé comptant au plus", () => {
+    expect(equipementPossible(k)).toBe(Math.floor(FR - BFR));
+    const e = gardeDuCurseur(ch, "un-equipement-paye-comptant", 252_669);
+    expect(e.lecture(NOVA, 252_669)[2]!.montant).toBe(0.45);
+    expect(e.lecture(NOVA, 252_670)[2]!.montant).toBe(-0.55);
+  });
+
+  it("le laboratoire : CampusTech à l'échéance convenue rend une facture, 22 656 €", () => {
+    gardeDuLaboratoire(ch, "le-laboratoire-des-delais");
+    expect(factureDeCampusTech(k)).toBe(c(320 * 59 * 1.2));
+    expect(SOLUTION_DES_DELAIS).toEqual({ campustech: 60, fournisseur: 22 });
+    const x = delaisDuLaboratoire(k, SOLUTION_DES_DELAIS);
+    expect(x.tresorerie).toBe(c(252_669.45 + 22_656));
+    expect(x.fondsDeRoulement).toBe(FR);
+    expect(x.besoin).toBe(c(BFR - 22_656));
+    expect(x.tresorerie - k.tresorerie >= GAIN_DU_DEFI).toBe(true);
+    // 70 jours ne changent rien au 31 décembre : la facture du 20 octobre est encaissée le 30 décembre.
+    expect(delaisDuLaboratoire(k, { campustech: 70, fournisseur: 22 }).tresorerie).toBe(x.tresorerie);
+    // Un CampusTech plus en retard, à 110 jours, immobilise une facture de plus.
+    expect(delaisDuLaboratoire(k, { campustech: 110, fournisseur: 22 }).tresorerie).toBe(c(252_669.45 - 22_656));
+  });
+
+  it("les textes sont propres, une seule bonne réponse, les notions existent", () => {
+    gardesDeTexte(FONDS_DE_ROULEMENT);
   });
 });
 
-describe("les cas que le chapitre distingue se rencontrent dans le cours", () => {
-  const toutes = ENTREPRISES_DU_COURS.map((c) => fondsDeRoulement(casDeLEntreprise(c)));
-  it("un besoin négatif, un fonds de roulement négatif, une trésorerie négative, un centime d'arrondi", () => {
-    expect(toutes.some((k) => k.bfr < 0)).toBe(true);
-    // Dans l'année du bon gestionnaire, les ressources durables paient l'équipement partout : la
-    // phrase du fonds de roulement négatif n'est plus lue. S'il revient, cette garde le dira.
-    expect(toutes.filter((k) => k.frng < 0)).toHaveLength(0);
-    expect(toutes.some((k) => k.tn < 0)).toBe(true);
-    expect(toutes.some((k) => Math.round((k.frng - k.bfr) * 100) !== Math.round(k.tn * 100))).toBe(true);
+describe("le cas : le fournisseur raccourcit ses délais", () => {
+  const r = fournisseurPresse(NOVA);
+  it("la moitié des 81 000 € de dettes fournisseurs passe dans le besoin", () => {
+    expect(r.enMoins).toBe(40_500);
+    expect(r.bfrApres).toBe(c(BFR + 40_500));
+    expect(r.tnApres).toBe(c(FR - (BFR + 40_500)));
+    expect(r.frFaux).toBe(c(FR - 40_500));
+  });
+  it("les textes sont propres, une seule bonne réponse", () => {
+    gardesDeTexte(LE_FOURNISSEUR_RACCOURCIT_SES_DELAIS);
   });
 });

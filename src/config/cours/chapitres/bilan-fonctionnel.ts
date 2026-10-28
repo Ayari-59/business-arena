@@ -1058,11 +1058,11 @@ function fonctions(m: Masses, brut: number, amortissements: number) {
 /**
  * EXPORT DE COMPATIBILITÉ, QUE LE CHAPITRE NE LIT PLUS : le bilan en grandes masses de l'année du
  * cours figée (monde/annee-du-cours.ts), au 1er janvier et au 31 décembre, dans chacune des neuf
- * entreprises. Quatre chapitres hors de ce chapitre le lisent encore (lire-le-bilan,
- * financer-l-entreprise, fonds-de-roulement-et-tresorerie, rentabilite) : il garde leur forme et
- * leurs chiffres, au centime, sans plus dépendre d'aucun autre chapitre. La dotation et les ventes
- * de l'année sont celles des trimestres figés. À déplacer dans le monde du cours quand ces chapitres
- * y passeront.
+ * entreprises. Les quatre chapitres du Bac STMG qui le lisaient (lire-le-bilan,
+ * financer-l-entreprise, fonds-de-roulement-et-tresorerie, rentabilite) sont passés sur le monde du
+ * cours (monde/comptes-du-lycee.ts) : plus aucun chapitre ne le lit, seule sa garde
+ * (tests/cours/bilan-fonctionnel.test.ts) le garde au centime. La dotation et les ventes de l'année
+ * sont celles des trimestres figés.
  */
 export function bilanFonctionnel(c: Pick<Cas, "code">) {
   const { partie, depart } = anneeDuCours(c.code);

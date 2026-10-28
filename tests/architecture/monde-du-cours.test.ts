@@ -215,6 +215,64 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
 const CHAPITRES_ET_CAS = [...fichiersDe("chapitres"), ...fichiersDe("situations")].filter((f) => !f.endsWith("index.ts") && !f.endsWith("types.ts"));
 
+/**
+ * L'ANNÉE FIGÉE DE L'ARÈNE (monde/annee-du-cours.ts) N'EST PAS LE MONDE DU COURS. Elle a été relevée
+ * une fois sur l'arène pour que les chapitres qui la lisaient ne bougent plus avec le moteur, mais
+ * ses chiffres sont ceux de l'arène (NOVA à 1 452 521 € de ventes), pas ceux du premier exercice de
+ * NOVA (1 390 276 €). Un chapitre passé sur le monde du cours ne doit donc pas l'atteindre non plus,
+ * ni de proche en proche : le registre ci-dessous ne fait que grandir.
+ */
+const ANNEE_FIGEE_DE_L_ARENE = join(COURS, "monde", "annee-du-cours.ts");
+
+const NE_LISENT_PLUS_L_ANNEE_FIGEE: readonly string[] = [
+  "chapitres/financer-l-entreprise.ts",
+  "chapitres/fonds-de-roulement-et-tresorerie.ts",
+  "chapitres/lire-le-bilan.ts",
+  "chapitres/lire-le-compte-de-resultat.ts",
+  "chapitres/rentabilite.ts",
+  "chapitres/valeur-ajoutee-et-partage.ts",
+  "situations/le-rendez-vous-a-la-banque.ts",
+  "situations/par-chapitre/ce-qu-exige-le-fonds.ts",
+  "situations/par-chapitre/l-annuite-du-pret.ts",
+  "situations/par-chapitre/l-investisseuse-au-capital.ts",
+  "situations/par-chapitre/la-hausse-des-salaires.ts",
+  "situations/par-chapitre/le-fournisseur-raccourcit-ses-delais.ts",
+  "situations/par-chapitre/un-technicien-plutot-qu-un-prestataire.ts",
+];
+
+/** Le premier chemin d'imports qui atteint un fichier donné, ou rien. */
+function cheminVers(depart: string, cible: string): string[] | null {
+  const vus = new Set<string>();
+  const pile: string[][] = [[depart]];
+  while (pile.length) {
+    const chemin = pile.pop()!;
+    const ici = chemin.at(-1)!;
+    if (ici === cible) return chemin.map((x) => relative(SRC, x));
+    if (vus.has(ici)) continue;
+    vus.add(ici);
+    for (const suivant of importsDe(ici)) pile.push([...chemin, suivant]);
+  }
+  return null;
+}
+
+describe("les chapitres passés sur les comptes du monde du cours ne lisent plus l'année figée de l'arène", () => {
+  it.each(NE_LISENT_PLUS_L_ANNEE_FIGEE)("%s n'atteint pas monde/annee-du-cours.ts", (f) => {
+    expect(PASSES_SUR_LE_MONDE).toContain(f);
+    expect(cheminVers(join(COURS, f), ANNEE_FIGEE_DE_L_ARENE)).toBeNull();
+    expect(readFileSync(join(COURS, f), "utf8")).not.toMatch(/\bc\.annee\b|soldesDeGestion|anneeDuCours/);
+  });
+
+  it("tout chapitre du Bac STMG gestion et finance, et tout cas qui en reprend un, est au registre", () => {
+    const stmgGf = CHAPITRES_ET_CAS.filter((f) => /parcours: "stmg-gf"/.test(readFileSync(join(COURS, f), "utf8")));
+    expect(stmgGf.filter((f) => !NE_LISENT_PLUS_L_ANNEE_FIGEE.includes(f))).toEqual([]);
+  });
+
+  it("la garde voit l'année figée, même de proche en proche", () => {
+    // « Soldes intermédiaires de gestion » garde l'export de compatibilité qui la lit.
+    expect(cheminVers(join(COURS, "chapitres", "soldes-intermediaires.ts"), ANNEE_FIGEE_DE_L_ARENE)).not.toBeNull();
+  });
+});
+
 describe("le monde du cours ne lit pas l'arène", () => {
   it.each([...DU_MONDE, ...PASSES_SUR_LE_MONDE])("%s n'atteint ni le moteur, ni les scénarios, ni l'année jouée par l'arène", (f) => {
     expect(cheminInterdit(join(COURS, f))).toBeNull();
