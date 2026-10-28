@@ -1,7 +1,9 @@
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import type { Cas } from "../cas";
 import { chiffreDAffairesParLesIndicateurs, indicateursDuMois, referenceDe } from "../monde/boutique";
+import { JOURS_DE_L_ANNEE_BANCAIRE, JOURS_DE_L_ANNEE_CIVILE } from "../monde/delais-et-tva";
 import type { FicheDeLaBoutique } from "../monde/maille-et-co";
+import { CSE_DES_LABORATOIRES_VERNAL, TAUX_DES_PENALITES, suivreUnMauvaisPayeur } from "../monde/mauvais-payeurs";
 import type { Chapitre, TableauDeDonnees } from "../types";
 import { ENTREPRISES_DU_POINT_DE_VENTE, ficheDe } from "./taux-de-marque";
 
@@ -35,7 +37,9 @@ import { ENTREPRISES_DU_POINT_DE_VENTE, ficheDe } from "./taux-de-marque";
  *   · expert : deux-taux (le taux de service n'est pas le taux de transformation), la-decomposition
  *     (un calcul à rebours : l'indice de vente qu'exige l'objectif quand le prix moyen monte),
  *     le-panier-sans-les-comites et quel-panier-viser (une moyenne tirée par quelques grosses
- *     commandes : dire de quel panier on parle) ; puis la synthèse.
+ *     commandes : dire de quel panier on parle), le-comite-qui-paie-tard (le CSE des Laboratoires
+ *     Vernal, monde/mauvais-payeurs.ts : l'indemnité de 40 € pèse plus que les pénalités) ; puis la
+ *     synthèse.
  *
  * LES HYPOTHÈSES DE LA SIMULATION, DITES À L'ÉLÈVE : le compteur à la porte donne les entrées, un
  * ticket de caisse fait un passage, et une commande d'un comité d'entreprise compte pour un passage ;
@@ -651,6 +655,33 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
             juste: false,
             retour: `Non : c'est le prix moyen d'un article, pas le panier. Le panier est ce que rapporte un passage, ${deux(k.indice)} articles en moyenne.`,
           },
+        ];
+      },
+    },
+    {
+      id: "le-comite-qui-paie-tard",
+      type: "montants",
+      titre: "Le comité qui paie tard",
+      notions: ["average_basket", "payment_terms"],
+      question: (c) => {
+        const k = indicateursDuPointDeVente(c);
+        const v = suivreUnMauvaisPayeur(CSE_DES_LABORATOIRES_VERNAL);
+        return `Hypothèse du cours : ${v.client} passe ${v.objet}, une commande moyenne de comité, ${eur(v.ht)} HT, soit ${eur(v.ttc)} TTC, payable à ${qte(v.delaiConvenu)} jours. Le trésorier du comité ne signe les virements qu'à la réunion du mois : il paie ${qte(v.retard)} jours en retard. ${k.f.entreprise} vend des biens, elle a déjà déclaré la TVA à la livraison et finance la commande toutes taxes comprises. Calculez ce que le retard lui coûte au découvert, à ${pct(v.tauxDeFinancement * 100)} l'an, les pénalités de retard à ${pct(TAUX_DES_PENALITES * 100)} l'an, puis tout ce qu'elle peut réclamer, indemnité forfaitaire comprise.`;
+      },
+      champs: () => {
+        const v = suivreUnMauvaisPayeur(CSE_DES_LABORATOIRES_VERNAL);
+        return [
+          { libelle: "Coût du retard", attendu: v.coutDuRetard, calcul: `${eur(v.finance)} × ${pct(v.tauxDeFinancement * 100)} × ${qte(v.retard)} ÷ ${JOURS_DE_L_ANNEE_BANCAIRE} = ${eur(v.coutDuRetard)}` },
+          { libelle: "Pénalités de retard", attendu: v.penalites, calcul: `${eur(v.ttc)} × ${pct(TAUX_DES_PENALITES * 100)} × ${qte(v.retard)} ÷ ${JOURS_DE_L_ANNEE_CIVILE} = ${eur(v.penalites)}` },
+          { libelle: "Réclamable, indemnité comprise", attendu: v.reclamable, calcul: `${eur(v.penalites)} + ${eur(v.indemnite)} = ${eur(v.reclamable)}` },
+        ];
+      },
+      explication: () => {
+        const v = suivreUnMauvaisPayeur(CSE_DES_LABORATOIRES_VERNAL);
+        const lIndemnitePese = v.indemnite > v.penalites;
+        return [
+          `Sur une petite facture, les pénalités pèsent peu : ${eur(v.penalites)} pour ${qte(v.retard)} jours. L'indemnité forfaitaire de ${eur(v.indemnite)}, due par facture quelle que soit la durée du retard, ${lIndemnitePese ? "pèse plus qu'elles" : "pèse moins qu'elles"} : ${eur(v.reclamable)} réclamables, quand le retard coûte ${eur(v.coutDuRetard)}.`,
+          `Un comité d'entreprise achète pour ses salariés, mais il paie comme un professionnel : le délai convenu et les pénalités s'appliquent. Un gros panier se négocie avec ses conditions de paiement, et un retard se relance, comme pour tout client professionnel.`,
         ];
       },
     },

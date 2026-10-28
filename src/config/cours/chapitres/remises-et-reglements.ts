@@ -213,7 +213,7 @@ function tableauDeLaVente(c: Cas): TableauDeDonnees {
       { libelle: `Escompte pour un paiement sous ${qte(JOURS_D_ESCOMPTE)} jours`, valeurs: [pct(TAUX_D_ESCOMPTE)] },
       { libelle: "Taux de TVA", valeurs: [pct(c.venteCredit.tauxTva, 1)] },
       { libelle: "Délai de paiement convenu", valeurs: [`${qte(d.convenu)} jours`] },
-      { libelle: "Délai de paiement constaté", valeurs: [`${qte(d.reel)} jours`] },
+      { libelle: "Délai de paiement constaté", valeurs: [d.retard > 0 ? `${qte(d.reel)} jours, en retard de ${qte(d.retard)} jours sur les ${qte(d.convenu)} convenus` : `${qte(d.reel)} jours`] },
     ],
   };
 }

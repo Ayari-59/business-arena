@@ -25,6 +25,7 @@ import {
   retardDeCampusTech,
   tauxDesPenalites,
 } from "../monde/delais";
+import { CAMPUSTECH_MAUVAIS_PAYEUR, RELANCES, TAUX_DES_PENALITES, suivreUnMauvaisPayeur } from "../monde/mauvais-payeurs";
 import type { Chapitre } from "../types";
 
 /**
@@ -57,7 +58,8 @@ import type { Chapitre } from "../types";
  *     puis le-retard-au-curseur (jusqu'où, au plancher légal, ce que NOVA peut réclamer couvre le coût
  *     du retard) avant le-cout-du-retard ; predire-l-escompte puis l-escompte-ou-le-decouvert (un
  *     escompte de 60 jours coûte autant que 40 jours de découvert) avant une-facture-mobilisee ;
- *   · autonome : le-cout-du-retard, que-faire-du-retard, ce-que-cache-le-delai-moyen,
+ *   · autonome : le-cout-du-retard, que-faire-du-retard, les-relances (les dates de la procédure de
+ *     recouvrement, monde/mauvais-payeurs.ts), ce-que-cache-le-delai-moyen,
  *     une-facture-mobilisee (ni formule ni chiffres donnés ; la correction montre le chemin) ;
  *   · expert : le-prix-de-la-garantie (une critique de l'outil), a-l-echeance (une variante chiffrée),
  *     a-rebours (retrouver le retard et les pénalités à partir d'un relevé de banque), le
@@ -71,6 +73,28 @@ import type { Chapitre } from "../types";
  * l'échéance convenue, puis le retard sur son découvert, la banque ayant repris la facture impayée).
  */
 export const COUT_RELEVE_A_REBOURS = 396.48;
+
+/**
+ * LE MOIS DE LA FACTURE SUIVIE PAR LES RELANCES, hypothèse du cours : celle du 20 janvier N + 1
+ * (le jour de facturation est celui de la fiche). Les dates se comptent en mois de 30 jours.
+ */
+export const MOIS_DE_LA_FACTURE_RELANCEE = 1;
+
+const MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"] as const;
+
+/** La date, en mois de 30 jours, n jours après le jour j du mois m (1 à 12) : « 28 mars ». */
+export function dateApres(j: number, m: number, n: number) {
+  const t = j - 1 + n;
+  return `${(t % 30) + 1} ${MOIS[(m - 1 + Math.floor(t / 30)) % 12]}`;
+}
+
+/** Le retard de CampusTech suivi par les relances (monde/mauvais-payeurs.ts) : échéance, relance amiable, mise en demeure, paiement. */
+export function relancesDeCampusTech(c: Pick<Cas, "code">) {
+  const f = ficheDe(c);
+  const s = suivreUnMauvaisPayeur(CAMPUSTECH_MAUVAIS_PAYEUR);
+  const le = (n: number) => dateApres(f.campustech.jourDeFacturation, MOIS_DE_LA_FACTURE_RELANCEE, n);
+  return { f, s, facture: le(0), echeance: le(s.echeance), relance: le(s.relanceAmiable!), miseEnDemeure: le(s.miseEnDemeure!), paiement: le(s.paiement) };
+}
 
 /** Les bornes du retard dans le premier curseur, en jours : un jour de retard au moins. */
 export const RETARD_DU_CURSEUR = { min: 1, max: 120 } as const;
@@ -494,6 +518,38 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
             juste: false,
             retour: `Non : ${eur(r.coutDuRetardParAn)} par an, et une facture de plus au bilan, ${eur(r.creanceEnPlusTTC)} de trésorerie qui attend.`,
           },
+        ];
+      },
+    },
+    {
+      id: "les-relances",
+      type: "montants",
+      titre: "Relancer, puis mettre en demeure",
+      notions: ["payment_terms"],
+      question: (c) => {
+        const x = relancesDeCampusTech(c);
+        return `${x.f.entreprise} suit désormais une procédure de recouvrement (hypothèse du cours) : une relance amiable, par courriel et téléphone, ${jours(RELANCES.relanceAmiable)} après l'échéance ; une mise en demeure, par lettre recommandée, ${jours(RELANCES.miseEnDemeure)} après l'échéance. La facture ${dE(x.s.client)} du ${x.facture} est payable à ${jours(x.s.delaiConvenu)}. Comptez, en jours après la facture, la relance amiable, la mise en demeure et le paiement réel ; puis ce que ${x.f.entreprise} peut réclamer pour cette facture, pénalités et indemnité forfaitaire comprises.`;
+      },
+      champs: (c) => {
+        const x = relancesDeCampusTech(c);
+        const s = x.s;
+        return [
+          { libelle: "Relance amiable (jours après la facture)", attendu: s.relanceAmiable!, calcul: `${s.echeance} + ${RELANCES.relanceAmiable} = ${s.relanceAmiable}, le ${x.relance}` },
+          { libelle: "Mise en demeure (jours après la facture)", attendu: s.miseEnDemeure!, calcul: `${s.echeance} + ${RELANCES.miseEnDemeure} = ${s.miseEnDemeure}, le ${x.miseEnDemeure}` },
+          { libelle: "Paiement réel (jours après la facture)", attendu: s.paiement, calcul: `${s.echeance} + ${s.retard} = ${s.paiement}, le ${x.paiement}` },
+          {
+            libelle: "Réclamable pour la facture",
+            attendu: s.reclamable,
+            calcul: `${eur(s.ttc)} × ${pct(TAUX_DES_PENALITES)} × ${s.retard} ÷ ${JOURS_DE_L_ANNEE_CIVILE} = ${eur(s.penalites)} de pénalités, plus ${eur(s.indemnite)} d'indemnité = ${eur(s.reclamable)}`,
+          },
+        ];
+      },
+      explication: (c) => {
+        const x = relancesDeCampusTech(c);
+        const s = x.s;
+        return [
+          `Échue le ${x.echeance}, la facture est relancée le ${x.relance}, mise en demeure le ${x.miseEnDemeure}, payée le ${x.paiement}. Les pénalités n'attendent pas la mise en demeure : elles courent de plein droit dès le lendemain de l'échéance, ${eur(s.penalites)} pour ${jours(s.retard)}. L'indemnité forfaitaire de ${eur(s.indemnite)} est due dès le premier jour de retard, quelle qu'en soit la durée.`,
+          `La mise en demeure ne fait pas courir les pénalités : elle constate le retard et prépare, si le client ne paie toujours pas, une injonction de payer. ${s.client} est solvable : sa créance reste au compte 411, sans dépréciation.`,
         ];
       },
     },

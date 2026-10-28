@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { casDeLEntreprise } from "../../src/config/cours/cas";
 import { DEPRECIATIONS_ET_PROVISIONS } from "../../src/config/cours/chapitres/depreciations-et-provisions";
+import { INDICATEURS_DU_POINT_DE_VENTE } from "../../src/config/cours/chapitres/indicateurs-du-point-de-vente";
+import { LA_TVA_ET_LA_TRESORERIE } from "../../src/config/cours/chapitres/la-tva-et-la-tresorerie";
+import { LE_CLIENT_QUI_PAIE_TARD } from "../../src/config/cours/chapitres/le-client-qui-paie-tard";
+import { REMISES_ET_CONDITIONS } from "../../src/config/cours/chapitres/remises-et-conditions";
+import { REMISES_ET_REGLEMENTS } from "../../src/config/cours/chapitres/remises-et-reglements";
+import type { Chapitre, EtapeMontants } from "../../src/config/cours/types";
 import { CAS_DES_ENTREPRISES } from "../../src/config/cours/monde/cas-des-entreprises";
 import { cloture } from "../../src/config/cours/monde/cloture";
 import { DELAI_MAXIMAL_CONVENU, NOVA_DELAIS } from "../../src/config/cours/monde/delais-et-tva";
@@ -156,5 +162,59 @@ describe("le chapitre des dépréciations oppose le retard et la défaillance", 
     expect(texte).toMatch(/CampusTech aussi doit de l'argent, et paie en retard : chaque facture 20 jours après les 60 jours convenus/);
     expect(texte).toMatch(/sa créance reste au compte 411, sans dépréciation/);
     expect(texte).toMatch(/redressement judiciaire/);
+  });
+});
+
+describe("les chapitres font vivre les mauvais payeurs, en lisant le modèle", () => {
+  const etat = { soldes: {} };
+  const etape = (ch: Chapitre, id: string) => {
+    const e = ch.etapes.find((x) => x.id === id);
+    if (!e) throw new Error(`${ch.code} : pas d'étape ${id}`);
+    return e;
+  };
+  const champs = (ch: Chapitre, id: string, code: string) => {
+    const e = etape(ch, id);
+    if (e.type !== "montants") throw new Error(`${id} : une étape de montants`);
+    return e.champs(casDeLEntreprise(code), etat);
+  };
+  const tout = (ch: Chapitre, id: string, code: string) => {
+    const e = etape(ch, id) as EtapeMontants;
+    const c = casDeLEntreprise(code);
+    return [e.question(c, etat), ...e.champs(c, etat).map((x) => x.calcul), ...e.explication(c, etat)].join(" ");
+  };
+
+  it("le client qui paie tard (NOVA) : relancée le 68e jour (28 mars), mise en demeure le 75e (5 avril), payée le 80e (10 avril)", () => {
+    const s = suivreUnMauvaisPayeur(CAMPUSTECH_MAUVAIS_PAYEUR);
+    expect(champs(LE_CLIENT_QUI_PAIE_TARD, "les-relances", "nova").map((x) => x.attendu)).toEqual([s.relanceAmiable, s.miseEnDemeure, s.paiement, s.reclamable]);
+    expect(s.reclamable).toBe(190.83);
+    const t = tout(LE_CLIENT_QUI_PAIE_TARD, "les-relances", "nova");
+    expect(t).toMatch(/le 28 mars/);
+    expect(t).toMatch(/le 5 avril/);
+    expect(t).toMatch(/le 10 avril/);
+    expect(t).toMatch(/40,00 €|40 €/);
+  });
+
+  it("la TVA et la trésorerie (MARTEL & FILS) : Varenne décale la TVA au 105e jour, coûte le HT ; Doriac au 416, dépréciée sur le HT, sans TVA à récupérer", () => {
+    expect(champs(LA_TVA_ET_LA_TRESORERIE, "le-client-en-retard", "batiment").map((x) => x.attendu)).toEqual([7_200, 105, 405, 647.11]);
+    expect(champs(LA_TVA_ET_LA_TRESORERIE, "le-client-defaillant", "batiment").map((x) => x.attendu)).toEqual([28_800, 12_000, 16_800, 0]);
+    expect(LA_TVA_ET_LA_TRESORERIE.etapes.at(-1)!.id).toBe("synthese");
+  });
+
+  it("remises et conditions (ATLAS CONSEIL) : Kerval coûte 228 € de retard sur le HT, 404,30 € réclamables", () => {
+    const k = suivreUnMauvaisPayeur(KERVAL_DISTRIBUTION);
+    const [cout, , reclamable] = champs(REMISES_ET_CONDITIONS, "le-client-en-retard", "conseil").map((x) => x.attendu);
+    expect([cout, reclamable]).toEqual([k.coutDuRetard, k.reclamable]);
+    expect(k.reclamable).toBe(404.3);
+  });
+
+  it("indicateurs du point de vente (MAILLE & CO) : le CSE Vernal, où l'indemnité pèse plus que les pénalités", () => {
+    expect(champs(INDICATEURS_DU_POINT_DE_VENTE, "le-comite-qui-paie-tard", "boutique").map((x) => x.attendu)).toEqual([11.48, 15.28, 55.28]);
+    expect(tout(INDICATEURS_DU_POINT_DE_VENTE, "le-comite-qui-paie-tard", "boutique")).toMatch(/pèse plus qu'elles/);
+  });
+
+  it("remises et règlements (MARTEL & FILS) : le délai constaté nomme les 60 jours convenus et le retard", () => {
+    const intro = REMISES_ET_REGLEMENTS.etapes[0]!;
+    const lignes = intro.tableau!(casDeLEntreprise("batiment")).lignes;
+    expect(lignes.find((l) => l.libelle === "Délai de paiement constaté")!.valeurs).toEqual(["90 jours, en retard de 30 jours sur les 60 convenus"]);
   });
 });
