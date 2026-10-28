@@ -2,14 +2,6 @@ import { describe, expect, it } from "vitest";
 import { casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
 import { UNITES_FEMININES } from "../../src/config/cours/accords";
 import {
-  CROITRE_EN_INVESTISSANT,
-  TRIMESTRE_DE_L_ACHAT,
-  anneeAvecLaMachine,
-  anneeSansInvestir,
-  investissement,
-  machineDuChapitre,
-} from "../../src/config/cours/chapitres/croitre-en-investissant";
-import {
   BUDGET_RSE_EN_ECHELLES,
   LA_RESPONSABILITE_SOCIETALE,
   anneeEngagee,
@@ -18,7 +10,6 @@ import {
   engagementRse,
   reglagesRse,
 } from "../../src/config/cours/chapitres/la-responsabilite-societale";
-import { VOIR_PLUS_GRAND, plusGrandeMachine, voirPlusGrand } from "../../src/config/cours/situations/par-chapitre/voir-plus-grand";
 import {
   TRIMESTRES_AVANT_LE_LABEL,
   VISER_LE_LABEL,
@@ -41,12 +32,12 @@ import type { Situation } from "../../src/config/cours/situations/types";
 import type { Chapitre, Etape, EtatDuCours } from "../../src/config/cours/types";
 
 /**
- * CROÎTRE EN INVESTISSANT, ET LA RESPONSABILITÉ SOCIÉTALE (parcours stratégie et management,
- * paliers 3 et 4).
+ * LA RESPONSABILITÉ SOCIÉTALE (parcours stratégie et management, palier 4).
  *
- * Deux chapitres et leurs cas dédiés, qui rejouent l'année du cours avec une décision changée
- * (gestion-de-la-pme.ts) : une machine achetée au trimestre 1, un budget RSE chaque trimestre.
- * Ces gardes vérifient que le moteur honore ces décisions dans le scénario rejoué, que leurs
+ * Le chapitre et son cas dédié, qui rejouent l'année du cours avec une décision changée
+ * (gestion-de-la-pme.ts) : un budget RSE chaque trimestre. « Croître en investissant », passé sur
+ * le monde du cours, a ses gardes dans tests/cours/croitre-en-investissant.test.ts.
+ * Ces gardes vérifient que le moteur honore cette décision dans le scénario rejoué, que ses
  * chiffres se recomposent entre eux et avec le moteur dans chacune des neuf entreprises, que les
  * verdicts se lisent dans les chiffres, et que les textes se lisent : rien d'indéfini, pas de
  * « de le », pas de tiret au milieu d'une phrase, une seule bonne réponse, des notions qui
@@ -71,17 +62,14 @@ function textesDe(e: Etape, cas: Cas, etat: EtatDuCours): string[] {
   }
 }
 
-const DEUX_CHAPITRES: readonly Chapitre[] = [CROITRE_EN_INVESTISSANT, LA_RESPONSABILITE_SOCIETALE];
-const DEUX_CAS: readonly Situation[] = [VOIR_PLUS_GRAND, VISER_LE_LABEL];
+const LES_CHAPITRES: readonly Chapitre[] = [LA_RESPONSABILITE_SOCIETALE];
+const LES_CAS: readonly Situation[] = [VISER_LE_LABEL];
 const entreprisesDe = (ch: Chapitre) => ENTREPRISES_DU_COURS.filter((x) => !ch.entreprises || ch.entreprises.codes.includes(x));
 const niveauQuiOuvre = (levier: "investment" | "rse") => DIFFICULTY_PRESETS.find((p) => p.decisions[levier])!.level;
 
-describe("croissance et RSE : la place dans le parcours", () => {
-  it("les titres sont ceux du programme, aux paliers 3 et 4 du parcours stratégie, et les blocs existent tels quels au registre", () => {
-    for (const [ch, palier] of [
-      [CROITRE_EN_INVESTISSANT, 3],
-      [LA_RESPONSABILITE_SOCIETALE, 4],
-    ] as const) {
+describe("la RSE : la place dans le parcours", () => {
+  it("le titre est celui du programme, au palier 4 du parcours stratégie, et les blocs existent tels quels au registre", () => {
+    for (const [ch, palier] of [[LA_RESPONSABILITE_SOCIETALE, 4]] as const) {
       expect(ch.parcours).toBe("strategie");
       expect(ch.palier).toBe(palier);
       expect(PROGRAMME.strategie[palier], ch.code).toContain(ch.titre);
@@ -93,15 +81,11 @@ describe("croissance et RSE : la place dans le parcours", () => {
         expect(r!.referentiel.entrees.some((x) => b.endsWith(` ${x}`)), b).toBe(true);
       }
     }
-    expect(CROITRE_EN_INVESTISSANT.blocs).toEqual(["DCG UE6 · Finance d'entreprise", "DSCG UE3 · Contrôle de gestion et stratégie", "BUT GEA · Concevoir la stratégie de création de valeur"]);
     expect(LA_RESPONSABILITE_SOCIETALE.blocs).toContain("STMG Thème 3 · Les organisations et la société");
   });
 
-  it("chaque cas est dédié à son chapitre : même palier, même parcours, mêmes entreprises", () => {
-    for (const [s, ch] of [
-      [VOIR_PLUS_GRAND, CROITRE_EN_INVESTISSANT],
-      [VISER_LE_LABEL, LA_RESPONSABILITE_SOCIETALE],
-    ] as const) {
+  it("le cas est dédié à son chapitre : même palier, même parcours, mêmes entreprises", () => {
+    for (const [s, ch] of [[VISER_LE_LABEL, LA_RESPONSABILITE_SOCIETALE]] as const) {
       expect(s.reprend).toEqual([ch.code]);
       expect(s.palier).toBe(ch.palier);
       expect(s.parcours).toBe(ch.parcours);
@@ -116,44 +100,20 @@ describe("croissance et RSE : la place dans le parcours", () => {
     }
   });
 
-  it("les décisions s'ouvrent aux niveaux 4 et 5, mais le moteur les honore dans le scénario de l'année du cours", () => {
-    expect(niveauQuiOuvre("investment")).toBe(4);
+  it("la décision s'ouvre au niveau 5, mais le moteur l'honore dans le scénario de l'année du cours", () => {
     expect(niveauQuiOuvre("rse")).toBe(5);
     for (const code of ENTREPRISES_DU_COURS) {
-      const r = investissement(casDeLEntreprise(code));
-      expect(r.avec.capaciteOutil - r.sans.capaciteOutil, code).toBe(r.capacite);
       const engagee = anneeEngagee(code);
       expect(engagee[0]!.rse!.imageCapital, code).toBeGreaterThan(0);
-      // Les réglages RSE et le catalogue d'équipements du niveau qui ouvre la décision sont ceux de l'année du cours.
+      // Les réglages RSE du niveau qui ouvre la décision sont ceux de l'année du cours.
       const s = scenarioByCode(code).scenario;
       expect(scenarioByCode(scenarioCodeForLevel(code, 5)).scenario.rse, code).toEqual(s.rse);
       expect(scenarioByCode(scenarioCodeForLevel(code, 5)).scenario.marketing.scale, code).toBe(s.marketing.scale);
-      expect(scenarioByCode(scenarioCodeForLevel(code, 4)).scenario.equipment!.types, code).toEqual(s.equipment!.types);
-    }
-  });
-
-  it("sans achat, le drapeau du parc ne change rien à l'année du cours", () => {
-    for (const code of ENTREPRISES_DU_COURS) {
-      const a = anneeSansInvestir(code);
-      const b = anneeDeReference(code);
-      for (const k of a.keys()) expect(is(a[k]!).netIncome, code).toBe(is(b[k]!).netIncome);
     }
   });
 
   it("les verdicts varient d'une entreprise à l'autre : la réponse se lit dans les chiffres", () => {
     const verdicts = (f: (c: Cas) => string) => [...new Set(ENTREPRISES_DU_COURS.map((c) => f(casDeLEntreprise(c))))].sort();
-    // Sur l'année du cours, le bon gestionnaire produit la demande qu'il a vue : la machine paie là
-    // où l'outil bridait des ventes manquées ; elle fait vendre trop peu pour payer là où l'outil ne
-    // bridait qu'à peine ; elle ne fait rien vendre là où l'équipe plafonne avant l'outil, ou là où
-    // l'outil ne manquait pas. Les trois réponses du chapitre se rencontrent, et les trois du cas.
-    expect(verdicts((c) => investissement(c).verdict)).toEqual(["croitre-paie", "la-capacite-ne-manquait-pas", "la-demande-ne-suit-pas"]);
-    expect(ENTREPRISES_DU_COURS.filter((c) => investissement(casDeLEntreprise(c)).verdict === "croitre-paie")).toEqual(["nova", "boutique", "fitness", "transport"]);
-    expect(ENTREPRISES_DU_COURS.filter((c) => investissement(casDeLEntreprise(c)).verdict === "la-demande-ne-suit-pas")).toEqual(["bistrot", "batiment"]);
-    const sansVenteEnPlus = ENTREPRISES_DU_COURS.map((c) => investissement(casDeLEntreprise(c))).filter((r) => r.verdict === "la-capacite-ne-manquait-pas");
-    expect([...new Set(sansVenteEnPlus.map((r) => r.equipeLimite))].sort()).toEqual([false, true]);
-    // L'outil agrandi fait embaucher le bon gestionnaire chez les unes, pas chez les autres.
-    expect([...new Set(ENTREPRISES_DU_COURS.map((c) => investissement(casDeLEntreprise(c)).embauchesEnPlus > 0))].sort()).toEqual([false, true]);
-    expect(verdicts((c) => voirPlusGrand(c).verdict)).toEqual(["aucune", "la-grande", "la-petite"]);
     // Le bon gestionnaire produit aussi la demande que l'engagement RSE amène : elle se vend
     // partout. La branche « la demande gagnée ne se vend pas » du chapitre n'est lue dans aucune
     // entreprise ; restent les deux autres, selon que la marge gagnée paie ou non l'engagement.
@@ -169,105 +129,6 @@ describe("croissance et RSE : la place dans le parcours", () => {
     expect(ENTREPRISES_DU_COURS.filter((c) => servie(casDeLEntreprise(c)))).toEqual(ENTREPRISES_DU_COURS);
     // Seuls le bistrot et le marchand en ligne comptent des rebuts : l'étape du process propre ne vit que là.
     expect(ENTREPRISES_DU_COURS.filter((c) => engagementRse(casDeLEntreprise(c)).aDesRebuts)).toEqual(["bistrot", "ecommerce"]);
-  });
-});
-
-describe.each(ENTREPRISES_DU_COURS)("croître en investissant chez %s", (code) => {
-  const cas = casDeLEntreprise(code);
-  const s = scenarioByCode(code).scenario;
-  const k = TRIMESTRE_DE_L_ACHAT; // l'indice du trimestre où la machine entre en service
-
-  it("la machine est le premier équipement du cas, l'emprunt est accordé en entier, la capacité entre au trimestre suivant", () => {
-    const m = machineDuChapitre(code);
-    expect(m.name).toBe(cas.immobilisation.designation);
-    expect(m.costPerUnit).toBe(cas.immobilisation.prixUnitaire);
-    const sans = anneeSansInvestir(code);
-    const avec = anneeAvecLaMachine(code, m, "emprunt");
-    expect((avec[0]!.debt?.newLoan ?? 0) - (sans[0]!.debt?.newLoan ?? 0)).toBe(m.costPerUnit);
-    for (const r of avec) expect(r.debt?.loanRefused ?? 0).toBe(0);
-    expect(avec[0]!.investment?.outlay).toBe(m.costPerUnit);
-    // L'achat et son emprunt ne se jouent qu'au trimestre de l'achat : le formulaire ne les reconduit pas.
-    for (let t = TRIMESTRE_DE_L_ACHAT; t < avec.length; t++) {
-      expect(avec[t]!.investment?.outlay ?? 0, `T${t + 1}`).toBe(0);
-      expect((avec[t]!.debt?.newLoan ?? 0) - (sans[t]!.debt?.newLoan ?? 0), `T${t + 1}`).toBe(0);
-    }
-    expect(avec[0]!.production.machineCapacity).toBe(sans[0]!.production.machineCapacity);
-    // La machine compte une fois, à chaque trimestre où elle sert : le parc sans doublon.
-    for (let t = k; t < avec.length; t++) pres(avec[t]!.production.machineCapacity - sans[t]!.production.machineCapacity, m.capacityPerUnit, 1e-6);
-  });
-
-  it("l'amortissement et les intérêts du chapitre sont ceux que le moteur compte", () => {
-    const r = investissement(cas);
-    const sans = anneeSansInvestir(code);
-    const avec = anneeAvecLaMachine(code, machineDuChapitre(code), "emprunt");
-    pres(r.amortissement, somme(avec, (x) => is(x).depreciation) - somme(sans, (x) => is(x).depreciation), 0.02);
-    expect(r.trimestresEnService).toBe(avec.length - TRIMESTRE_DE_L_ACHAT);
-    expect(r.taux).toBeCloseTo(s.finance.loanAnnualRate * 100, 6);
-    // Le capital dû à l'ouverture de chaque trimestre en service est celui de l'échéancier du moteur.
-    r.lignes.forEach((l, i) => {
-      pres(avec[i]!.balanceSheet.financialDebt - sans[i]!.balanceSheet.financialDebt, l.du, 0.05);
-      pres(l.interets, (l.du * s.finance.loanAnnualRate) / 4, 0.01);
-    });
-    pres(r.interets, r.lignes.reduce((t, l) => t + l.interets, 0), 0.01);
-    // Rien d'autre n'a changé que la marge, l'entretien, les salaires d'une embauche, l'amortissement,
-    // les charges financières et l'impôt.
-    for (const f of [(x: CompanyRoundResult) => is(x).marketingCost, (x: CompanyRoundResult) => is(x).qualityCost]) pres(somme(avec, f), somme(sans, f), 0.01);
-    pres(r.chargesFixesEnPlus, somme(avec, (x) => is(x).fixedCosts) - somme(sans, (x) => is(x).fixedCosts), 1);
-    // Des charges fixes en plus, ce sont des embauches que le bon gestionnaire n'aurait pas faites sans la machine.
-    const embauches = (a: readonly CompanyRoundResult[]) => somme(a, (x) => x.hr?.hired ?? 0);
-    expect(r.embauchesEnPlus).toBe(embauches(avec) - embauches(sans));
-    expect(r.chargesFixesEnPlus > 0, code).toBe(r.embauchesEnPlus > 0);
-    expect(r.chargesFixesEnPlus).toBeGreaterThanOrEqual(0);
-  });
-
-  it("l'année rejouée se recompose : marge, charges de la machine, résultat net, délai et rentabilité", () => {
-    const r = investissement(cas);
-    expect(r.margeUnitaire).toBe(Math.round((r.margeSans / r.venduesSans) * 100) / 100);
-    expect(r.margeSiLaDemandeSuit).toBeGreaterThanOrEqual(r.margeGagnee);
-    expect(r.capaciteGagnee).toBe(r.capacite * r.trimestresEnService);
-    pres(r.exploitationGagnee, r.margeGagnee - r.entretienEnPlus - r.chargesFixesEnPlus - r.amortissementsEnPlus, 2);
-    pres(r.resultatNetGagne, r.exploitationGagnee - r.chargesFinancieresEnPlus - r.impotEnPlus, 2);
-    pres(r.amortissementsEnPlus, r.amortissement, 1);
-    // Le bon gestionnaire reconduit son entretien sans le relever pour la machine de plus : le
-    // texte « d'entretien en plus » n'est lu dans aucune entreprise.
-    expect(r.entretienEnPlus).toBe(0);
-    expect(r.caf).toBe(r.resultatNetGagne + Math.round(r.amortissement));
-    if (r.caf > 0) pres(r.delai!, (r.cout * r.trimestresEnService) / r.caf, 0.05);
-    else expect(r.delai).toBeNull();
-    expect(r.rentabilite).toBe(Math.round((r.resultatNetGagne / r.cout) * 1000) / 10);
-    const ventes = surLAnnee(anneeAvecLaMachine(code, machineDuChapitre(code), "emprunt"), soldUnits) - surLAnnee(anneeSansInvestir(code), soldUnits);
-    if (r.verdict === "la-capacite-ne-manquait-pas") expect(Math.abs(ventes)).toBeLessThan(0.5);
-    else expect(ventes).toBeGreaterThan(0.5);
-    if (r.verdict === "croitre-paie") expect(r.resultatNetGagne).toBeGreaterThan(0);
-    if (r.verdict === "la-demande-ne-suit-pas") expect(r.resultatNetGagne).toBeLessThanOrEqual(0);
-    if (r.equipeLimite) expect(r.verdict).toBe("la-capacite-ne-manquait-pas");
-  });
-
-  it("payée par la trésorerie, la machine rapporte le même résultat d'exploitation : seules les charges financières changent", () => {
-    const r = investissement(cas);
-    const comptant = anneeAvecLaMachine(code, machineDuChapitre(code), "tresorerie");
-    const sans = anneeSansInvestir(code);
-    for (const t of comptant.keys()) expect((comptant[t]!.debt?.newLoan ?? 0) - (sans[t]!.debt?.newLoan ?? 0)).toBe(0);
-    pres(r.exploitationGagneeComptant, r.exploitationGagnee, 1);
-    expect(r.ecartDeFinancement).toBe(r.resultatNetGagneComptant - r.resultatNetGagne);
-    expect(r.comptant.tresoreriePlusBasse).toBeLessThanOrEqual(r.avec.tresoreriePlusBasse);
-    if (r.comptant.tresoreriePlusBasse === r.avec.tresoreriePlusBasse) expect(r.avec.tresoreriePlusBasse).toBe(-r.plafondDeDecouvert);
-  });
-
-  it("le cas : la plus grande machine, ses charges, et la comparaison à la petite", () => {
-    const v = voirPlusGrand(cas);
-    const g = plusGrandeMachine(code);
-    expect(g.code).not.toBe(machineDuChapitre(code).code);
-    expect(v.grande.capacite).toBeGreaterThan(v.petite.capacite);
-    expect(v.grande.cout).toBe(g.costPerUnit);
-    const avec = anneeAvecLaMachine(code, g, "emprunt");
-    for (const r of avec) expect(r.debt?.loanRefused ?? 0).toBe(0);
-    pres(v.grande.amortissement, somme(avec, (x) => is(x).depreciation) - somme(anneeSansInvestir(code), (x) => is(x).depreciation), 0.02);
-    expect(v.grande.sans).toEqual(v.petite.sans);
-    expect(v.ecart).toBe(v.grande.resultatNetGagne - v.petite.resultatNetGagne);
-    if (v.verdict === "la-grande") expect(v.ecart > 0 && v.grande.resultatNetGagne > 0).toBe(true);
-    if (v.verdict === "la-petite") expect(v.petite.resultatNetGagne > 0 && v.ecart <= 0).toBe(true);
-    if (v.verdict === "aucune") expect(Math.max(v.petite.resultatNetGagne, v.grande.resultatNetGagne)).toBeLessThanOrEqual(0);
   });
 });
 
@@ -402,7 +263,7 @@ describe.each(ENTREPRISES_DU_COURS)("la responsabilité sociétale chez %s", (co
 const FAUTES_D_ACCORD = (u: string) =>
   new RegExp(`\\bun ${u}\\b|\\b${u} (vendu|perdu|produit|servi)\\b(?!e)|\\b${u}s (vendu|perdu|produit|servi)s\\b`, "i");
 
-for (const contenu of [...DEUX_CHAPITRES, ...DEUX_CAS]) {
+for (const contenu of [...LES_CHAPITRES, ...LES_CAS]) {
   describe.each(entreprisesDe(contenu))(`${contenu.code} chez %s`, (code) => {
     it("aucun texte ne sort undefined, « de le » ni un tiret ; une seule bonne réponse ; des libellés uniques ; les notions existent", () => {
       const cas = casDeLEntreprise(code);
@@ -428,7 +289,7 @@ for (const contenu of [...DEUX_CHAPITRES, ...DEUX_CAS]) {
           // L'élève (et le test de bout en bout) choisit une option par son texte : aucun n'en contient un autre.
           for (const o of options) for (const p of options) if (o !== p) expect(p.texte.includes(o.texte), `${e.id} : ${o.texte}`).toBe(false);
           expect(new Set(options.map((o) => o.texte)).size, e.id).toBe(options.length);
-          if (DEUX_CAS.some((s) => s.code === contenu.code)) {
+          if (LES_CAS.some((s) => s.code === contenu.code)) {
             const juste = options.find((o) => o.juste)!;
             const plusLongue = Math.max(...options.filter((o) => !o.juste).map((o) => o.texte.length));
             expect(juste.texte.length, `${e.id} : la bonne réponse est la plus longue`).toBeLessThanOrEqual(plusLongue);
