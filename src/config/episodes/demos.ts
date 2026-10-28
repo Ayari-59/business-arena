@@ -83,6 +83,18 @@ export const licencePourLEpisode = (acces: AccesAuxEpisodes, code: string): bool
 export const estUneDemoPour = (acces: Pick<AccesAuxEpisodes, "demos">, code: string): boolean =>
   acces.demos ? acces.demos.includes(code) : estUneDemo(code);
 
+/**
+ * UNE PARTIE DE DÉMONSTRATION (décision du propriétaire, octobre 2026 : elle n'est PAS
+ * gardée en base). C'est une partie d'épisode jouée sans licence qui couvre cet épisode :
+ * sans licence, seules les démonstrations de la Découverte se lancent
+ * (`niveauxDeLEpisode`). Elle se joue et se juge entièrement dans le navigateur (bilan,
+ * aperçu du profil : pedagogy/profil/apercu.ts) ; le serveur la refuse à l'écriture
+ * (app/entreprises/episode/actions.ts). À ne pas confondre avec le « monde démo » de
+ * l'administration (services/demo.service.ts).
+ */
+export const estUnePartieDeDemonstration = (acces: AccesAuxEpisodes, code: string): boolean =>
+  !licencePourLEpisode(acces, code);
+
 /** Les niveaux auxquels cet épisode se lance ; vide : il ne se lance pas. */
 export function niveauxDeLEpisode(acces: AccesAuxEpisodes, code: string): readonly CodeNiveau[] {
   if (licencePourLEpisode(acces, code)) return NIVEAUX.map((n) => n.code);

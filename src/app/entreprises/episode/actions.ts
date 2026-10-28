@@ -13,7 +13,12 @@ import {
   reprendreProfil,
 } from "@/services/cohortes.service";
 import { choisirObjectif, objectifDe } from "@/services/episode-objectifs.service";
-import { effacerParties, enregistrerPartie, partiesDe } from "@/services/episode-parties.service";
+import {
+  effacerParties,
+  enregistrerPartie,
+  estUnePartieDeDemonstrationPour,
+  partiesDe,
+} from "@/services/episode-parties.service";
 import type { CodeNiveau } from "@/config/episodes/niveaux";
 import { CONSEIL_SANS_LICENCE, ceQuOuvrentLesEpisodes } from "@/config/tarifs";
 import { EPISODES } from "@/pedagogy/episodes/registre";
@@ -59,13 +64,26 @@ const ECHEC: SuiteDeLaPartie = {
  */
 export async function enregistrerPartieAction(entree: unknown): Promise<SuiteDeLaPartie> {
   try {
+    // LES PARTIES DE DÉMONSTRATION NE SONT PAS GARDÉES (décision du propriétaire) : jouée
+    // sans licence qui couvre l'épisode, la partie reste dans le navigateur (bilan et
+    // aperçu du profil s'y calculent). Rien ne s'écrit, pas même une identité invitée.
+    const session = await getSession();
+    const invite = await getGuestUserId();
+    if (await estUnePartieDeDemonstrationPour({ userId: invite, sessionUserId: session?.userId, brut: entree })) {
+      return {
+        ...ECHEC,
+        ok: true,
+        compte: "decouverte",
+        conseil: CONSEIL_SANS_LICENCE,
+        // Devant un élève (il suit une cohorte), pas de message de vente (audit C-02).
+        offre: (await suitUneCohorte(invite)) ? null : ceQuOuvrentLesEpisodes(EPISODES.length),
+      };
+    }
     const userId = await getOrCreateGuestUserId();
-    // La partie jouée est toujours gardée, licence ou non : c'est la fin d'une partie
-    // commencée, et on n'en casse jamais une. La SUITE, elle, ne propose sans licence
-    // que ce qui se lance : les démonstrations, en Découverte.
+    // Sous licence, la partie jouée est toujours gardée : c'est la fin d'une partie
+    // commencée, et on n'en casse jamais une.
     const r = await enregistrerPartie(userId, entree);
     if (!r.ok) return ECHEC;
-    const session = await getSession();
     const [parties, objectif, acces] = await Promise.all([
       partiesDe(userId),
       objectifDe(userId),

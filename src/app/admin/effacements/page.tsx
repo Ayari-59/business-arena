@@ -109,9 +109,9 @@ export default async function EffacementsAdminPage({
         </h2>
         <p className="text-sm text-slate-300">
           La suppression emporte ses parties, classes, examens, concours, cohortes, licences et codes
-          d&apos;invitation ; les comptes de ses enseignants qui n&apos;appartiennent à aucun autre établissement ;
-          les élèves sans compte qui n&apos;étaient rattachés qu&apos;à lui. Les comptes administrateurs de la
-          plateforme et de démonstration restent.
+          d&apos;invitation ; les élèves sans compte qui n&apos;étaient rattachés qu&apos;à lui. Les comptes
+          enseignants ne sont pas supprimés : ils restent, détachés de l&apos;établissement et sans sa licence,
+          avec leurs données propres (un enseignant efface son compte lui-même, « Supprimer mon compte »).
         </p>
         {etablissements.length === 0 ? (
           <p className="text-sm text-slate-400">Aucun établissement.</p>

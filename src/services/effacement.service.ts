@@ -65,7 +65,7 @@ export const REFUS_EFFACEMENT = {
 } as const;
 
 export type ResultatEffacement =
-  | { ok: true; parties: number; eleves: number; comptes: number }
+  | { ok: true; parties: number; eleves: number; comptes: number; enseignantsDetaches?: number }
   | { ok: false; raison: string };
 
 const distincts = (xs: (string | null)[]): string[] => [...new Set(xs.filter((x): x is string => !!x))];
@@ -281,9 +281,10 @@ export async function supprimerUnEleve(userId: string): Promise<ResultatEffaceme
 
 /**
  * SUPPRIMER UN ÉTABLISSEMENT ENTIER (administration, sur demande) : ses parties, classes,
- * examens, concours, cohortes et licences ; les comptes de ses enseignants qui n'appartiennent
- * à aucun autre établissement (avec tout ce qu'ils ont créé) ; les élèves sans compte qui
- * n'étaient rattachés qu'à lui. L'établissement « Grand public », qui porte les parties
+ * examens, concours, cohortes, licences et rattachements ; les élèves sans compte qui
+ * n'étaient rattachés qu'à lui. Les comptes enseignants ne sont JAMAIS supprimés par ce geste
+ * (décision du propriétaire) : ils restent, détachés de l'établissement et sans sa licence,
+ * avec leurs données propres. Pour effacer un enseignant, il y a « Supprimer mon compte ». L'établissement « Grand public », qui porte les parties
  * solo, est refusé.
  */
 export async function supprimerUnEtablissement(organizationId: string): Promise<ResultatEffacement> {
@@ -294,50 +295,17 @@ export async function supprimerUnEtablissement(organizationId: string): Promise<
   if (!org) return { ok: false, raison: REFUS_EFFACEMENT.etablissementIntrouvable };
   if (org.kind === "public") return { ok: false, raison: REFUS_EFFACEMENT.etablissementPublic };
 
-  // Les enseignants de ce seul établissement : leur compte part avec lui.
-  const membres = await db
+  // Décision du propriétaire : les comptes enseignants RESTENT. Ils sont seulement détachés
+  // (leur rattachement et les licences de l'établissement partent en cascade avec lui) ;
+  // ce qu'ils ont créé hors de cet établissement leur reste. Aucune clé étrangère ne relie
+  // un compte à un établissement autrement que par `organization_members`.
+  const enseignants = await db
     .select({ id: organizationMembers.userId })
     .from(organizationMembers)
-    .innerJoin(users, eq(users.id, organizationMembers.userId))
-    .where(
-      and(
-        eq(organizationMembers.organizationId, organizationId),
-        ne(organizationMembers.role, "student"),
-        eq(users.isPlatformAdmin, false),
-        sql`${users.email} NOT LIKE ${ADRESSE_DE_DEMO}`,
-      ),
-    );
-  const ailleurs = new Set(
-    membres.length
-      ? (
-          await db
-            .select({ id: organizationMembers.userId })
-            .from(organizationMembers)
-            .where(
-              and(
-                inArray(
-                  organizationMembers.userId,
-                  membres.map((m) => m.id),
-                ),
-                ne(organizationMembers.organizationId, organizationId),
-              ),
-            )
-        ).map((m) => m.id)
-      : [],
-  );
-  let comptes = 0;
+    .where(and(eq(organizationMembers.organizationId, organizationId), ne(organizationMembers.role, "student")));
   let parties = 0;
-  let eleves = 0;
-  for (const m of membres) {
-    if (ailleurs.has(m.id)) continue;
-    const r = await supprimerCompteEnseignant(m.id);
-    if (r.ok) {
-      comptes += 1;
-      parties += r.parties;
-      eleves += r.eleves;
-    }
-  }
 
+  // Les données de l'établissement, quel qu'en soit l'auteur.
   // Ce qui reste de l'établissement (créé par des comptes rattachés ailleurs aussi).
   const ids = async (q: Promise<{ id: string }[]>) => (await q).map((r) => r.id);
   const sesParties = await ids(
@@ -380,7 +348,7 @@ export async function supprimerUnEtablissement(organizationId: string): Promise<
   await db.delete(organizations).where(eq(organizations.id, organizationId));
 
   const r = await supprimerDesEleves(await orphelins(candidats));
-  return { ok: true, parties: parties + r.parties, eleves: eleves + r.eleves, comptes };
+  return { ok: true, parties: parties + r.parties, eleves: r.eleves, comptes: 0, enseignantsDetaches: enseignants.length };
 }
 
 /**

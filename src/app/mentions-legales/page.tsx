@@ -241,7 +241,9 @@ export default function MentionsLegalesPage() {
                   </td>
                   <td className="py-2 pr-3">Le jeu, le débriefing et la progression pédagogique</td>
                   <td className="py-2">
-                    {DUREES.parties} après la fin de la partie (sa dernière activité)
+                    {DUREES.parties} après la fin de la partie (sa dernière activité). Les
+                    démonstrations d&apos;épisodes jouées sans licence ne sont pas enregistrées :
+                    elles se jouent et se jugent dans le navigateur
                   </td>
                 </tr>
                 <tr className="border-t border-white/5">
@@ -371,7 +373,10 @@ export default function MentionsLegalesPage() {
             <li>
               Élèves, parents, établissements, et pour toute rectification : écrivez à{" "}
               {EDITEUR.contact}, en donnant pour un élève le code de la partie et le pseudo
-              utilisé. Un établissement peut demander la suppression de toutes ses données.
+              utilisé. Un établissement peut demander la suppression de toutes ses données
+              (parties, classes, examens, licences, élèves qui n&apos;y étaient rattachés) ; les comptes
+              de ses enseignants ne sont pas supprimés pour autant : ils sont détachés de
+              l&apos;établissement et chaque enseignant reste libre de supprimer le sien.
             </li>
           </ul>
           <p>

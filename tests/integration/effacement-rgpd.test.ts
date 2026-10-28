@@ -27,7 +27,9 @@ import {
   examenCandidats,
   examens,
   games,
+  organizationMembers,
   organizations,
+  orgLicences,
   players,
   users,
 } from "@/db/schema";
@@ -194,11 +196,17 @@ describe("les effacements sur demande de l'administration", () => {
     expect(await existe(b.prof.userId)).toBe(true);
   });
 
-  it("un établissement entier : ses enseignants, ses parties, ses examens et ses élèves", async () => {
+  it("un établissement entier : ses parties, ses examens et ses élèves, mais PAS ses enseignants", async () => {
     const r = await supprimerUnEtablissement(b.prof.orgId);
     expect(r.ok).toBe(true);
     expect(await db.select().from(organizations).where(eq(organizations.id, b.prof.orgId))).toEqual([]);
-    expect(await existe(b.prof.userId)).toBe(false);
+    // Décision du propriétaire : le compte enseignant reste, détaché, sans licence de l'établissement.
+    expect(await existe(b.prof.userId)).toBe(true);
+    expect(r.ok && r.comptes).toBe(0);
+    expect(
+      await db.select().from(organizationMembers).where(eq(organizationMembers.userId, b.prof.userId)),
+    ).toEqual([]);
+    expect(await db.select().from(orgLicences).where(eq(orgLicences.organizationId, b.prof.orgId))).toEqual([]);
     for (const id of [b.lea, b.tom, partout]) expect(await existe(id)).toBe(false);
     expect(await db.select().from(games).where(eq(games.id, b.partie.gameId))).toEqual([]);
     expect(await db.select().from(examens).where(eq(examens.id, b.examenId))).toEqual([]);

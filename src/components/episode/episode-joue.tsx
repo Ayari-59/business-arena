@@ -668,9 +668,9 @@ function Intro({
           <>
             Une démonstration se joue en Découverte, et la Découverte ne compte pas dans le profil
             décisionnel : à la fin, le bilan en montre un aperçu, calculé sur cet épisode seul.
-            Avec une licence, chaque épisode enrichit votre profil. Vos choix sont gardés sur cet
-            appareil, sans votre nom ni aucun texte saisi ; vous pouvez les effacer depuis le
-            profil.
+            Avec une licence, chaque épisode enrichit votre profil. Une démonstration n&apos;est
+            pas enregistrée : la partie se joue et se juge dans votre navigateur, rien n&apos;est
+            gardé sur nos serveurs.
           </>
         ) : (
           <>

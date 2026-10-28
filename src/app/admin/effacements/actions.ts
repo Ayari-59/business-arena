@@ -41,7 +41,7 @@ export async function supprimerEtablissementAction(
   await noterLEffacement(
     adminId,
     "effacement_etablissement",
-    `${org?.nom ?? "établissement"} : ${r.comptes} compte(s) enseignant, ${r.parties} partie(s), ${r.eleves} élève(s)`,
+    `${org?.nom ?? "établissement"} : ${r.enseignantsDetaches ?? 0} enseignant(s) détaché(s) (comptes conservés), ${r.parties} partie(s), ${r.eleves} élève(s)`,
   );
   revalidatePath("/admin");
   redirect("/admin/effacements?fait=etablissement");

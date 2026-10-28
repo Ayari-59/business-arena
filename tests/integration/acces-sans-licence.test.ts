@@ -289,3 +289,20 @@ describe("les épisodes", () => {
     expect(r.ok).toBe(true);
   });
 });
+
+describe("les parties de démonstration ne sont pas gardées (décision du propriétaire)", () => {
+  it("sans licence, une partie d'épisode est une démonstration ; sous licence, elle se garde", async () => {
+    const { estUnePartieDeDemonstrationPour } = await import("@/services/episode-parties.service");
+    const brut = { code: EPISODES_DE_DEMO[0] };
+    expect(await estUnePartieDeDemonstrationPour({ userId: null, brut })).toBe(true);
+    expect(await estUnePartieDeDemonstrationPour({ userId: invite, brut })).toBe(true);
+    expect(await estUnePartieDeDemonstrationPour({ userId: null, sessionUserId: sansLicence.userId, brut })).toBe(true);
+    expect(await estUnePartieDeDemonstrationPour({ userId: null, sessionUserId: sousLicence.userId, brut })).toBe(
+      false,
+    );
+    // Une entrée illisible n'écrit rien.
+    expect(await estUnePartieDeDemonstrationPour({ userId: null, sessionUserId: sousLicence.userId, brut: {} })).toBe(
+      true,
+    );
+  });
+});

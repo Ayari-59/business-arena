@@ -23,7 +23,8 @@ import { enregistrerPartieAction, type SuiteDeLaPartie } from "@/app/entreprises
  * L'APERÇU DU PROFIL (audit P0-2, décision du propriétaire) : une démonstration jouée
  * sans licence, en Découverte, ne compte pas dans le profil. Un quatrième bloc montre
  * alors les axes du profil calculés sur cette partie seule (`pedagogy/profil/apercu.ts`),
- * dans le navigateur : rien n'est enregistré pour lui.
+ * dans le navigateur. La partie elle-même n'est pas gardée : le serveur refuse d'écrire
+ * une partie de démonstration (`estUnePartieDeDemonstration`, config/episodes/demos.ts).
  */
 
 type Envoi = { etat: "attente" } | { etat: "fait"; suite: SuiteDeLaPartie };
