@@ -799,7 +799,8 @@ describe.each([
         const solution = etape.defi(cas).solution;
         for (const l of etape.leviers(cas)) {
           const choix = l.choix?.find((x) => x.valeur === solution[l.code]);
-          if (choix) await page.locator(`[data-levier-a-choix="${l.code}"]`).getByRole("radio", { name: choix.libelle, exact: true }).check();
+          // Le bouton radio est masqué : l'élève clique sur l'étiquette visible du choix.
+          if (choix) await page.locator(`[data-levier-a-choix="${l.code}"] label`).getByText(choix.libelle, { exact: true }).click();
           else await page.getByLabel(`${l.libelle}, au clavier`, { exact: true }).fill(virgule(solution[l.code]!));
         }
         await page.getByRole("button", { name: "Valider cette position" }).click();
