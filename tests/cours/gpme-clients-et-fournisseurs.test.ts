@@ -486,10 +486,18 @@ describe("le fournisseur allonge son délai : 60 jours face à AsiaComponents", 
     expect(juste(s, "reponse")).toBe("La contre-offre : le besoin de l'autre dépasse ce que l'entreprise peut porter");
   });
 
+  it("la demande dit « la réserve », 133 000 € placés et 22 656 € versés le 1er janvier, pas « le placement »", () => {
+    expect(CAPACITE_D_ABSORPTION.reserve).toBe(133_000 + 22_656);
+    const demande = s.etapes[0]!;
+    const texte = demande.type === "lecture" ? demande.texte(cas).join(" ") : "";
+    expect(texte).toContain(`la réserve, ${ecrit(155_656)} sur deux comptes à terme, est celle de la gamme à venir`);
+    expect(texte).not.toMatch(/le placement de/);
+  });
+
   it("textes propres, une seule bonne réponse, notions existantes : le cas", () => verifierLesTextes(s));
 });
 
-describe("le client qui paie tard : CampusTech, 60 jours convenus, payée à 80", () => {
+describe("le client qui paie tard : CampusTech, 60 jours convenus, payée à l'échéance ; et si elle payait à 80", () => {
   const ch = LE_CLIENT_QUI_PAIE_TARD;
   // La facture, refaite à la main : 320 enceintes à 59 € HT, 20 % de TVA.
   const HT = 320 * 59;
@@ -499,20 +507,22 @@ describe("le client qui paie tard : CampusTech, 60 jours convenus, payée à 80"
   const plancher = 3 * 0.0276;
   const loi = 0.0215 + 0.1;
 
-  it("la fiche donne les chiffres de la consigne : un retard de 20 jours sur 60 convenus", () => {
+  it("la fiche donne les chiffres de la consigne : payée à l'échéance, 60 jours, et un retard supposé de 20 jours", () => {
     expect([HT, TVA, TTC]).toEqual([18_880, 3_776, 22_656]);
-    expect([NOVA_DELAIS.campustech.delaiConvenu, NOVA_DELAIS.campustech.delaiReel]).toEqual([60, 80]);
+    const ct = NOVA_DELAIS.campustech;
+    expect([ct.delaiConvenu, ct.delaiReel, ct.retardSuppose, ct.delaiSiRetard]).toEqual([60, 60, 20, 60 + 20]);
     expect(parJour).toBeCloseTo(5.664, 12);
   });
 
   it("les étapes guidées : les créances facture par facture, le délai moyen, le crédit convenu", () => {
-    // Payées 80 jours après le 20 du mois, les factures d'octobre, de novembre et de décembre sont dues au 31 décembre.
-    expect(attendus(ch, "les-creances")).toEqual({ "Montant d'une facture de CampusTech (TTC)": TTC, "Factures encore dues au 31 décembre": 3, "Créances clients au 31 décembre (TTC)": 3 * TTC });
+    // L'hypothèse : payées 80 jours après le 20 du mois, les factures d'octobre (jour 20), de novembre (50) et de décembre (80) tomberaient après le 31 décembre (jour 90).
+    expect([20 + 80 > 90, 50 + 80 > 90, 80 + 80 > 90]).toEqual([true, true, true]);
+    expect(attendus(ch, "les-creances")).toEqual({ "Montant d'une facture de CampusTech (TTC)": TTC, "Factures encore dues au 31 décembre, en retard": 3, "Créances clients au 31 décembre, en retard (TTC)": 3 * TTC });
     expect(3 * TTC).toBe(67_968);
     const caTTC = 7_000 * 59 * 1.2;
     expect(attendus(ch, "le-delai-moyen")).toEqual({
       "Chiffre d'affaires du dernier trimestre (TTC)": caTTC,
-      "Délai moyen de paiement des clients (jours)": Math.round(((3 * TTC) / caTTC) * 90 * 10) / 10,
+      "Délai moyen de paiement des clients, en retard (jours)": Math.round(((3 * TTC) / caTTC) * 90 * 10) / 10,
       "Part de CampusTech dans le chiffre d'affaires (%)": centime(((3 * HT) / (7_000 * 59)) * 100),
     });
     expect([caTTC, Math.round(((3 * TTC) / caTTC) * 90 * 10) / 10, centime(((3 * HT) / (7_000 * 59)) * 100)]).toEqual([495_600, 12.3, 13.71]);
@@ -558,7 +568,7 @@ describe("le client qui paie tard : CampusTech, 60 jours convenus, payée à 80"
     });
     expect([centime(parJour * 20), penalites, centime(12 * 113.28), centime(12 * (penalites + 40))]).toEqual([113.28, 150.83, 1_359.36, 2_289.96]);
     expect(juste(ch, "que-faire-du-retard")).toBe("Lui rappeler les pénalités et l'indemnité dues, pour obtenir le paiement à l'échéance");
-    expect(juste(ch, "ce-que-cache-le-delai-moyen")).toBe("La moyenne cache le retard : les particuliers paient comptant, CampusTech paie en retard");
+    expect(juste(ch, "ce-que-cache-le-delai-moyen")).toBe("La moyenne cache le retard : les particuliers paient comptant, CampusTech paierait en retard");
   });
 
   it("le curseur de l'escompte : un escompte de 60 jours coûte autant que 40 jours de découvert", () => {
@@ -589,11 +599,12 @@ describe("le client qui paie tard : CampusTech, 60 jours convenus, payée à 80"
   });
 
   it("les étapes d'expert : la variante à l'échéance, le retard retrouvé à rebours", () => {
-    // À 60 jours, la facture d'octobre (jour 20) est payée au jour 80 : restent novembre et décembre.
+    // Au réel, à 60 jours, la facture d'octobre (jour 20) est payée au jour 80 : restent novembre et décembre.
+    expect([20 + 60 > 90, 50 + 60 > 90, 80 + 60 > 90]).toEqual([false, true, true]);
     expect(attendus(ch, "a-l-echeance")).toEqual({
       "Créances clients au 31 décembre, à l'échéance (TTC)": 2 * TTC,
       "Délai moyen de paiement à l'échéance (jours)": Math.round(((2 * TTC) / 495_600) * 90 * 10) / 10,
-      "Ce que le retard laisse en plus au bilan (TTC)": TTC,
+      "Ce que le retard laisserait en plus au bilan (TTC)": TTC,
     });
     expect([2 * TTC, Math.round(((2 * TTC) / 495_600) * 90 * 10) / 10]).toEqual([45_312, 8.2]);
     // Le relevé : 396,48 € = 226,56 € d'escompte + j × 5,664 € de découvert.
@@ -643,6 +654,21 @@ describe("le client qui paie tard : CampusTech, 60 jours convenus, payée à 80"
     // Au compte débiteur et au délai de la fiche, le laboratoire redonne la facture mobilisée du modèle.
     const m = mobiliserUneFacture(NOVA_DELAIS);
     expect(financerUneFacture(NOVA_DELAIS, { delaiReel: 80, tauxDuCompte: 0.09, base: "bce" }).couts).toEqual({ attendre: m.decouvert, escompte: m.escompteEtRetard, affacturage: m.affacturage });
+  });
+
+  it("le retard est une hypothèse : CampusTech paie à l'échéance, jamais « à 80 jours » au présent", () => {
+    const intro = ch.etapes.find((e) => e.id === "intro")!;
+    const t = intro.tableau!(cas);
+    expect(t.lignes.find((l) => l.libelle === "Paiement réel")!.valeurs).toEqual(["à l'échéance, 60 jours après la facture"]);
+    expect(t.lignes.find((l) => l.libelle === "Hypothèse du chapitre : un paiement en retard")!.valeurs).toEqual(["80 jours après la facture, 20 jours de retard"]);
+    expect(intro.type === "lecture" && intro.texte(cas).join(" ")).toMatch(/CampusTech paie à l'échéance\. Ce chapitre pose une hypothèse : si CampusTech payait 20 jours en retard, à 80 jours/);
+    const synthese = ch.etapes.find((e) => e.id === "synthese")!;
+    expect(synthese.type === "lecture" && synthese.texte(cas)[0]).toContain(`paie à l'échéance et doit ${ecrit(2 * 22_656)} au 31 décembre, 2 factures. Si elle payait 20 jours en retard, elle en devrait ${ecrit(3 * 22_656)}`);
+    for (const e of ch.etapes) for (const x of textesDe(e, cas, etatVide)) expect(x, `${e.id} : ${x}`).not.toMatch(/(paie|payée|tient son délai|délai réel) (à|de) 80 jours/);
+    // Un délai de plus de 60 jours ne se convient pas : l'option qui le propose est fausse, et son retour rappelle le plafond.
+    const o = (ch.etapes.find((e) => e.id === "que-faire-du-retard") as EtapeChoix).options(cas, etatVide).find((x) => /80 jours/.test(x.texte))!;
+    expect(o.juste).toBe(false);
+    expect(o.retour).toMatch(/la loi plafonne le délai convenu à 60 jours/);
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(ch));

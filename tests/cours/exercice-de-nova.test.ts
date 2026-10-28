@@ -149,9 +149,13 @@ describe("les factures de l'année", () => {
   });
 
   it("l'échéance des factures de CampusTech, en mois de 30 jours", () => {
-    expect(echeanceDUneFacture({ jour: 20, mois: 1 }, 80)).toEqual({ jour: 10, mois: 4, exercice: 0 });
-    expect(echeanceDUneFacture({ jour: 20, mois: 10 }, 80)).toEqual({ jour: 10, mois: 1, exercice: 1 });
-    for (const cr of f.creances) expect(echeanceDUneFacture(cr.date, cr.client === "Sonora" ? 60 : 80)).toEqual({ exercice: 0, ...cr.echeance });
+    expect(f.campustech.delai).toBe(60);
+    expect(echeanceDUneFacture({ jour: 20, mois: 1 }, 60)).toEqual({ jour: 20, mois: 3, exercice: 0 });
+    // La facture d'octobre tombe le 20 décembre : payée dans l'exercice. Celle de novembre, le 20 janvier N+1.
+    expect(echeanceDUneFacture({ jour: 20, mois: 10 }, 60)).toEqual({ jour: 20, mois: 12, exercice: 0 });
+    expect(echeanceDUneFacture({ jour: 20, mois: 11 }, 60)).toEqual({ jour: 20, mois: 1, exercice: 1 });
+    expect(f.creances.filter((cr) => cr.client === "CampusTech").map((cr) => cr.date.mois)).toEqual([11, 12]);
+    for (const cr of f.creances) expect(echeanceDUneFacture(cr.date, 60)).toEqual({ exercice: 0, ...cr.echeance });
   });
 });
 
@@ -209,7 +213,8 @@ describe("la balance avant inventaire, refaite sur les opérations de l'année",
     expect(solde("164")).toBe(-(80_000 - 3 * 4_000));
     expect(solde("2154")).toBe(60_000);
     expect(solde("401")).toBe(-c(1_500 * 22 * 1.2));
-    expect(solde("411")).toBe(c(3 * CAMPUSTECH_TTC + 33_630));
+    expect(solde("411")).toBe(c(2 * CAMPUSTECH_TTC + 33_630));
+    expect(solde("411")).toBe(78_942);
     expect(somme(f.creances.map((x) => x.ttc))).toBe(solde("411"));
     for (const cr of f.creances) {
       expect(cr.ht).toBe(cr.client === "Sonora" ? 28_025 : cr.enceintes * PRIX);
@@ -233,7 +238,8 @@ describe("la balance avant inventaire, refaite sur les opérations de l'année",
     // Payée dans l'année : les déclarations de janvier à novembre.
     const tvaPayee = c(somme(collectee.slice(0, 11)) - somme(deductible.slice(0, 11)));
     expect(tvaPayee).toBe(76_457.12);
-    const encaissements = c(150_000 + 80_000 + somme(PARTICULIERS) * PRIX * 1.2 + 9 * CAMPUSTECH_TTC + 26_365.92);
+    // CampusTech : les factures de janvier à octobre, payées à 60 jours (celle d'octobre le 20 décembre).
+    const encaissements = c(150_000 + 80_000 + somme(PARTICULIERS) * PRIX * 1.2 + 10 * CAMPUSTECH_TTC + 26_365.92);
     const decaissements = c(
       72_000 +
         somme(LIVRAISONS.slice(0, 11)) * 22 * 1.2 + // les composants de janvier à novembre, payés le 1er du mois suivant
@@ -245,11 +251,11 @@ describe("la balance avant inventaire, refaite sur les opérations de l'année",
         (5_000 + 4_950 + 4_900) + // les trois échéances de l'emprunt
         6_000, // la prime d'assurance
     );
-    expect([encaissements, decaissements]).toEqual([1_790_531.12, 1_541_796.25]);
+    expect([encaissements, decaissements]).toEqual([1_813_187.12, 1_541_796.25]);
     // Le compte à terme : 133 000 € sortis du compte courant le 6 janvier.
     expect(solde("508")).toBe(133_000);
     expect(solde("512")).toBe(c(encaissements - decaissements - 133_000));
-    expect(solde("512")).toBe(115_734.87);
+    expect(solde("512")).toBe(138_390.87);
   });
 
   it("la balance s'équilibre, et le bilan avant inventaire aussi", () => {
@@ -259,7 +265,7 @@ describe("la balance avant inventaire, refaite sur les opérations de l'année",
     expect(k.resultatAvantInventaire).toBe(c(1_385_556 - charges));
     expect(k.resultatAvantInventaire).toBe(CLOTURE_DE_LA_FICHE.resultatAvantInventaire);
     const b = k.bilanAvantInventaire;
-    expect(b.totalActif).toBe(c(60_000 + 101_598 + 133_000 + 115_734.87));
+    expect(b.totalActif).toBe(c(60_000 + 78_942 + 133_000 + 138_390.87));
     expect(b.totalPassif).toBe(c(150_000 + 134_715.6 + 68_000 + 39_600 + 4_050 + 750 + 121.27 + 13_096));
     expect(b.totalActif).toBe(b.totalPassif);
   });
@@ -339,10 +345,10 @@ describe("le compte de résultat et le bilan après inventaire", () => {
     const { actif, passif, totalActif, totalPassif } = k.bilan;
     expect(actif.immobilisations).toEqual({ brut: 60_000, amortissements: 9_861.11, net: c(60_000 - 9_861.11) });
     expect(actif.stocks.net).toBe(13_500);
-    expect(actif.clients).toEqual({ brut: c(3 * CAMPUSTECH_TTC + 33_630 + 200 * PRIX * 1.2), depreciation: 11_210, net: c(67_968 + 33_630 + 14_160 - 11_210) });
+    expect(actif.clients).toEqual({ brut: c(2 * CAMPUSTECH_TTC + 33_630 + 200 * PRIX * 1.2), depreciation: 11_210, net: c(45_312 + 33_630 + 14_160 - 11_210) });
     expect(actif.autresCreances).toBe(6_900);
     expect(actif.valeursMobilieresDePlacement).toBe(c(133_000 + 3_934.58));
-    expect(actif.disponibilites).toBe(115_734.87);
+    expect(actif.disponibilites).toBe(138_390.87);
     expect(actif.chargesConstateesDAvance).toBe(4_500);
     expect(passif.capitauxPropres).toEqual({ capital: 150_000, resultat: 79_225.96, total: 229_225.96 });
     expect(passif.provisions).toBe(5_000);
@@ -350,7 +356,7 @@ describe("le compte de résultat et le bilan après inventaire", () => {
     expect(passif.fournisseurs).toBe(c(39_600 + 41_400));
     expect(passif.dettesFiscalesEtSociales).toBe(c(4_050 + 750 + 121.27 + 13_096 + 2_360 + 20_742));
     expect(passif.produitsConstatesDAvance).toBe(7_080);
-    expect(totalActif).toBe(c(50_138.89 + 13_500 + 104_548 + 6_900 + 136_934.58 + 115_734.87 + 4_500));
+    expect(totalActif).toBe(c(50_138.89 + 13_500 + 81_892 + 6_900 + 136_934.58 + 138_390.87 + 4_500));
     expect(totalActif).toBe(totalPassif);
     expect(totalActif).toBe(CLOTURE_DE_LA_FICHE.totalDuBilan);
   });
@@ -414,15 +420,21 @@ describe("le bilan fonctionnel", () => {
     expect(b.ressourcesStables).toEqual({ capitauxPropres: 229_225.96, amortissementsEtDepreciations: c(9_861.11 + 11_210), provisions: 5_000, dettesFinancieres: 68_000, total: c(229_225.96 + 21_071.11 + 5_000 + 68_000) });
     expect(b.fondsDeRoulement).toBe(c(323_297.07 - 60_000));
     // L'exploitation : le stock, les créances brutes, la TVA à récupérer de la facture non parvenue, l'assurance d'avance.
-    expect(b.actifDExploitation).toBe(13_500 + (67_968 + 33_630 + 14_160) + 6_900 + 4_500);
+    expect(b.actifDExploitation).toBe(13_500 + (45_312 + 33_630 + 14_160) + 6_900 + 4_500);
     // Les fournisseurs, les dettes sociales, la TVA de décembre et celle de la facture à établir, le produit d'avance.
     expect(b.passifDExploitation).toBe(c(39_600 + 41_400 + 4_050 + 750 + 121.27 + 13_096 + 2_360 + 7_080));
     // Hors exploitation : l'impôt dû et les intérêts courus.
     expect(b.passifHorsExploitation).toBe(c(20_742 + 831.11));
+    expect(b.besoinDExploitation).toBe(c(118_002 - 108_457.27));
+    expect(b.besoinDExploitation).toBe(9_544.73);
     expect(b.besoinEnFondsDeRoulement).toBe(c(b.besoinDExploitation + b.besoinHorsExploitation));
+    // Négatif : l'impôt dû et les intérêts courus dépassent le besoin d'exploitation.
+    expect(b.besoinEnFondsDeRoulement).toBe(c(9_544.73 - 21_573.11));
+    expect(b.besoinEnFondsDeRoulement).toBe(-12_028.38);
     // La trésorerie active : le compte courant, le compte à terme et ses intérêts courus.
-    expect(b.tresorerieActive).toBe(c(115_734.87 + 133_000 + 3_934.58));
-    expect(b.tresorerieNette).toBe(252_669.45);
+    expect(b.tresorerieActive).toBe(c(138_390.87 + 133_000 + 3_934.58));
+    expect(b.tresorerieNette).toBe(275_325.45);
+    expect(c(263_297.07 + 12_028.38)).toBe(275_325.45);
     expect(c(b.fondsDeRoulement - b.besoinEnFondsDeRoulement)).toBe(b.tresorerieNette);
     expect(b).toMatchObject({
       fondsDeRoulement: CLOTURE_DE_LA_FICHE.fonctionnel.fondsDeRoulement,
@@ -437,7 +449,7 @@ describe("le bilan fonctionnel", () => {
     // CampusTech à 30 jours : seule la facture du 20 décembre reste due ; le fournisseur à 60 jours : novembre et décembre.
     const v = cloture(f, { delaiCampusTech: 30, delaiFournisseur: 60 });
     expect(v.resultatNet).toBe(k.resultatNet);
-    expect(v.fonctionnel.tresorerieNette).toBe(c(252_669.45 + 2 * CAMPUSTECH_TTC + 2_070 * 22 * 1.2));
+    expect(v.fonctionnel.tresorerieNette).toBe(c(275_325.45 + CAMPUSTECH_TTC + 2_070 * 22 * 1.2));
     expect(c(v.fonctionnel.fondsDeRoulement - v.fonctionnel.besoinEnFondsDeRoulement)).toBe(v.fonctionnel.tresorerieNette);
     expect(v.bilan.totalActif).toBe(v.bilan.totalPassif);
     // Comptant : CampusTech ne doit plus rien.
@@ -446,9 +458,11 @@ describe("le bilan fonctionnel", () => {
 
   it("le besoin normatif : affine en délai, et la trésorerie nette qui en découle", () => {
     const p = { fondsDeRoulement: 263_297.07, ventesTtcAnnuelles: 12 * CAMPUSTECH_TTC, achatsTtcAnnuels: 0, delaiFournisseurs: 0, stock: 0, autres: 0 };
-    const a = besoinSelonLesDelais({ ...p, delaiClients: 80 });
-    const b2 = besoinSelonLesDelais({ ...p, delaiClients: 81 });
-    expect(a.creances).toBe(c((271_872 * 80) / 360));
+    const a = besoinSelonLesDelais({ ...p, delaiClients: 60 });
+    const b2 = besoinSelonLesDelais({ ...p, delaiClients: 61 });
+    expect(a.creances).toBe(c((271_872 * 60) / 360));
+    // À 60 jours, le besoin normatif retrouve les deux factures de CampusTech encore dues.
+    expect(a.creances).toBe(2 * CAMPUSTECH_TTC);
     expect(c(b2.besoin - a.besoin)).toBe(c(271_872 / 360));
     expect(a.tresorerieNette).toBe(c(263_297.07 - a.besoin));
   });
@@ -480,7 +494,7 @@ describe("les leviers de la clôture : tout reste équilibré", () => {
     expect(v.resultatAvantImpot).toBe(c(99_967.96 + 9_861.11 - 17_500));
     expect(v.impot.impot).toBe(Math.round(6_375 + (v.resultatAvantImpot - 42_500) * 0.25));
     // La trésorerie ne bouge pas : l'impôt n'est pas encore payé.
-    expect(v.fonctionnel.tresorerieNette).toBe(252_669.45);
+    expect(v.fonctionnel.tresorerieNette).toBe(275_325.45);
   });
 
   it("le PEPS gonfle le stock final quand les prix montent, et le résultat avec lui", () => {

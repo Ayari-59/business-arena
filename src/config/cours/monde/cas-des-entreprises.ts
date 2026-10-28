@@ -11,6 +11,10 @@ import type { Cas } from "../cas";
  *
  * Ne pas régénérer ce fichier depuis l'arène sans décision du propriétaire : tous les chapitres
  * qui lisent le cas changeraient de chiffres.
+ *
+ * UNE RETOUCHE, DÉCIDÉE PAR LE PROPRIÉTAIRE : chez NOVA, la vente à crédit à CampusTech est payée à
+ * 60 jours (échéance au 80e jour de l'année), le délai maximal convenu entre professionnels, et non
+ * aux 80 jours relevés sur l'arène. Le reste du cas est tel que relevé.
  */
 export const CAS_DES_ENTREPRISES: Readonly<Record<string, Cas>> = {
   "nova": {
@@ -120,8 +124,8 @@ export const CAS_DES_ENTREPRISES: Readonly<Record<string, Cas>> = {
       "acceptes": [],
       "client": "CampusTech",
       "date": 20,
-      "delai": 80,
-      "echeance": 100
+      "delai": 60,
+      "echeance": 80
     },
     "personnel": {
       "effectif": 4,

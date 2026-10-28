@@ -408,10 +408,16 @@ describe("les soldes intermédiaires de gestion, à l'exercice de NOVA du monde 
     expect(juste(ch, "ce-que-mesure-l-ebe")).toMatch(/^Parce qu'il ne dépend ni de la façon dont l'entreprise est financée/);
     // Du 6 janvier, la ligne payée, au 31 décembre : le compte courant et le compte à terme.
     const debut = 150_000 + 80_000 - 72_000;
-    const fin = 115_734.87 + 133_000;
+    // CampusTech paie à 60 jours : sa facture d'octobre est rentrée le 20 décembre, la banque porte 138 390,87 €.
+    const fin = 138_390.87 + 133_000;
+    expect(c2(fin - debut)).toBe(113_390.87);
+    // La trésorerie gagne plus que la CAF : les dettes encore dues dépassent ce que retiennent les clients et le stock.
+    expect(c2(fin - debut)).toBeGreaterThan(CAF);
     const e = ch.etapes.find((x) => x.id === "caf-et-tresorerie") as EtapeChoix;
     expect(e.question(cas, etatVide)).toContain(`${(158_000).toLocaleString("fr-FR")} €`);
-    expect(e.question(cas, etatVide)).toContain(`${c2(fin - debut).toLocaleString("fr-FR")} €`);
+    expect(e.question(cas, etatVide)).toContain(`la trésorerie a gagné ${c2(fin - debut).toLocaleString("fr-FR")} €, plus que la CAF.`);
+    expect(e.question(cas, etatVide)).not.toContain("n'a gagné que");
+    expect(e.options(cas, etatVide).find((o) => o.juste)!.retour).toContain("ils la gonflent");
     expect(juste(ch, "caf-et-tresorerie")).toBe("Parce que la CAF compte l'encaissable, pas l'encaissé, et ignore les 12 000 € d'emprunt remboursés et les écarts de délais");
   });
 

@@ -310,7 +310,8 @@ describe("remises et règlements : le chapitre, dans les neuf entreprises", () =
         return [code, e.defi(casDeLEntreprise(code)).solution.escompte];
       }),
     );
-    expect(defis).toEqual({ nova: 1.5, boutique: 0.7, hotel: 0.7, bistrot: 0.4, conseil: 1, ecommerce: 0.4, fitness: 0.7, batiment: 1.7, transport: 1 });
+    // NOVA : 60 − 10 = 50 jours avancés ; 8 % × 50 ÷ 360 = 1,111 %, ÷ (1 + 1,111 %) = 1,099 %, soit 1 % au dixième inférieur.
+    expect(defis).toEqual({ nova: 1, boutique: 0.7, hotel: 0.7, bistrot: 0.4, conseil: 1, ecommerce: 0.4, fitness: 0.7, batiment: 1.7, transport: 1 });
     for (const code of CODES) expect(juste(ch, casDeLEntreprise(code), "predire-l-escompte-accorde"), code).toBe("Moins que les 2 % des conditions du cours");
   });
 
@@ -350,16 +351,17 @@ describe("remises et règlements : le chapitre, dans les neuf entreprises", () =
     expect(juste(ch, cas, "critique")).toBe(`Pas la même chose : l'escompte achète ${j} jours de trésorerie, la remise n'achète rien`);
   });
 
-  it("chez NOVA, les chiffres épinglés, et le délai de CampusTech dit comme le propriétaire l'a décidé", () => {
+  it("chez NOVA, les chiffres épinglés, et le délai de CampusTech dit comme le propriétaire l'a décidé : 60 jours, à l'échéance", () => {
     const cas = casDeLEntreprise("nova");
-    expect(factureDeVente(cas)).toEqual({ brut: 18_880, remise: 944, netCommercial: 17_936, escompte: 358.72, netFinancier: 17_577.28, tauxTva: 0.2, tva: 3_515.46, ttc: 21_092.74, date: 20, paiement: 30, joursAvances: 70 });
+    expect(factureDeVente(cas)).toEqual({ brut: 18_880, remise: 944, netCommercial: 17_936, escompte: 358.72, netFinancier: 17_577.28, tauxTva: 0.2, tva: 3_515.46, ttc: 21_092.74, date: 20, paiement: 30, joursAvances: 50 });
     const a = achatALaMain(cas);
     expect([a.esc, a.nf, a.jours, centime(a.taux * 100)]).toEqual([699.6, 34_280.4, 12, 61.22]);
-    expect(attendus(ch, cas, "l-escompte-maximal")).toEqual({ "Coût du découvert sur la période, en %": 1.56, "Escompte le plus fort, en %": 1.53, "Escompte sur la facture, à ce taux arrondi": 274.42 });
+    expect(attendus(ch, cas, "l-escompte-maximal")).toEqual({ "Coût du découvert sur la période, en %": 1.11, "Escompte le plus fort, en %": 1.1, "Escompte sur la facture, à ce taux arrondi": 197.3 });
     expect(attendus(ch, cas, "a-rebours")).toEqual({ "Net financier": 8_788.64, "Net commercial": 8_968, "Prix brut, hors taxes": 9_440, "Nombre d'enceintes": 160 });
     const intro = ch.etapes[0]!;
     if (intro.type !== "lecture") throw new Error("l'intro est une lecture");
-    expect(intro.texte(cas)[0]).toContain("CampusTech achète au prix affiché et paie à 80 jours, 20 jours au-delà des 60 jours convenus.");
+    expect(intro.texte(cas)[0]).toContain("CampusTech achète au prix affiché et paie à 60 jours.");
+    expect(intro.texte(cas)[0]).not.toContain("80 jours");
     // La facture contestée lit toujours la facture juste du chapitre.
     expect(factureContestee(cas).juste.ttc).toBe(21_092.74);
   });
@@ -455,10 +457,11 @@ describe("le cas : l'escompte demandé par le client", () => {
     const cas = casDeLEntreprise("nova");
     const k = escompte(cas);
     expect([k.f.esc, k.f.nf, k.f.tva, k.f.ttc]).toEqual([538.08, 17_397.92, 3_479.58, 20_877.5]);
-    expect([k.jours, centime(k.periode * 100), centime(k.annuel * 100), k.centiemes, k.necessaires, k.surcout]).toEqual([70, 3.09, 15.91, 96, 223, 368.93]);
-    expect(juste(s, cas, "reponse")).toBe("Ne le généralisons pas : 15,9 % par an, contre 5 % pour l'emprunt");
+    expect([k.jours, centime(k.periode * 100), centime(k.annuel * 100), k.centiemes, k.necessaires, k.surcout]).toEqual([50, 3.09, 22.27, 68, 223, 417.26]);
+    expect(juste(s, cas, "reponse")).toBe("Ne le généralisons pas : 22,3 % par an, contre 5 % pour l'emprunt");
     const demande = s.etapes[0]!;
     if (demande.type !== "lecture") throw new Error("la demande est une lecture");
-    expect(demande.texte(cas)[0]).toContain("CampusTech paie à 80 jours, 20 jours au-delà des 60 jours convenus");
+    expect(demande.texte(cas)[0]).toContain("aujourd'hui, CampusTech paie à 60 jours.");
+    expect(demande.texte(cas)[0]).not.toContain("80 jours");
   });
 });

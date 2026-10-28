@@ -70,7 +70,8 @@ function budgetALaMain(h: Hypotheses = {}) {
   const p = (h.particuliers ?? PARTICULIERS).map((q) => Math.round(q * (1 + (h.hausse ?? 0))));
   const ct = (h.campustech ?? CAMPUSTECH).map((q) => Math.round(q * (1 + (h.hausse ?? 0))));
   const q = p.map((x, k) => x + ct[k]!);
-  const mCT = decalage(20, h.delaiCampusTech ?? 80);
+  // CampusTech paie à 60 jours, le délai convenu (nova-gestion.ts, DELAI_DE_CAMPUSTECH).
+  const mCT = decalage(20, h.delaiCampusTech ?? 60);
   const mF = decalage(10, h.delaiFournisseur ?? 22);
   const ttc = (x: number) => c(x * (1 + TVA));
   let tresorerie = DEPART;
@@ -263,7 +264,16 @@ const BLOCS = [
 
 const ch = BUDGET_DE_TRESORERIE;
 const base = budgetALaMain();
-const avecLeBanc = budgetALaMain({ banc: 3 });
+/** Le banc de la fiche, en février (1 pour février) : il passait d'avril à février avec CampusTech à 60 jours. */
+const avecLeBanc = budgetALaMain({ banc: 1 });
+/** Un montant comme le cours l'écrit (montantEcrit), refait ici. */
+const eur = (x: number) => `${x.toLocaleString("fr-FR", { minimumFractionDigits: Number.isInteger(x) ? 0 : 2, maximumFractionDigits: 2 }).replace("-", "−")} €`;
+
+/** Tous les textes d'un chapitre ou d'un cas, étape par étape. */
+function tousLesTextes(x: Chapitre) {
+  const chapitre = chapitreDuCas(x, cas);
+  return chapitre.etapes.flatMap((e, i) => textesDe(e, cas, etatAvant(chapitre, cas, i)).map((t) => [e.id, t] as const));
+}
 
 describe("le budget de trésorerie, chez NOVA dans le monde du cours", () => {
   it("se joue chez NOVA seule, au palier 4 du contrôle de gestion, avec ses blocs", () => {
@@ -288,65 +298,77 @@ describe("le budget de trésorerie, chez NOVA dans le monde du cours", () => {
     const s = NOVA_GESTION.semestre;
     expect(s.clienteles.map((x) => [x.code, [...x.quantites], x.jourDeFacturation, x.delai])).toEqual([
       ["particuliers", PARTICULIERS, 30, 0],
-      ["campustech", CAMPUSTECH, 20, 80],
+      ["campustech", CAMPUSTECH, 20, 60],
     ]);
     expect([NOVA_GESTION.moisDeReference.prix, NOVA_GESTION.moisDeReference.coutVariable, s.tauxDeTva, s.tresorerieDeDepart, s.paie]).toEqual([PRIX, { composants: COMPOSANTS, autres: AUTRES }, TVA, DEPART, { net: NET, cotisations: COTISATIONS }]);
-    expect([s.fournisseur.jourDeFacturation, s.fournisseur.delai, s.investissement.montantHt, s.investissement.mois, s.investissement.dureeDAmortissementMois]).toEqual([10, 22, BANC, 3, 60]);
+    expect([s.fournisseur.jourDeFacturation, s.fournisseur.delai, s.investissement.montantHt, s.investissement.mois, s.investissement.dureeDAmortissementMois]).toEqual([10, 22, BANC, 1, 60]);
     expect(NOVA_GESTION.moisDeReference.chargesFixes).toEqual({ loyer: LOYER, personnel: NET + COTISATIONS, amortissement: FIXES_DU_MOIS - LOYER - NET - COTISATIONS });
-    expect(base.fins).toEqual([58_838, 31_998, 19_302.8, 33_810, 50_068, 63_641.6]);
-    expect(avecLeBanc.fins).toEqual([58_838, 31_998, 19_302.8, -2_190, 20_068, 33_641.6]);
-    expect(base.creances).toBe(3 * 320 * 59 * 1.2);
-    expect(base.plusBas.nom).toBe("mars");
+    // À 60 jours, la facture de janvier rentre en mars.
+    expect(base.fins).toEqual([58_838, 31_998, 41_958.8, 56_466, 72_724, 86_297.6]);
+    // Le banc en février : 36 000 € TTC d'un coup, et février à découvert.
+    expect(avecLeBanc.fins).toEqual([58_838, -4_002, 11_958.8, 26_466, 42_724, 56_297.6]);
+    expect(c(31_998 - 36_000)).toBe(-4_002);
+    expect(base.creances).toBe(2 * 320 * 59 * 1.2);
+    expect(base.plusBas.nom).toBe("février");
     expect(base.resultat).toBe(40_941);
   });
 
-  it("les étapes guidées : l'échéance, les encaissements, la TVA et les décaissements d'avril", () => {
-    expect(juste(ch, "le-mois-de-l-echeance")).toBe("En avril");
-    expect(decalage(20, 80)).toBe(3);
-    expect(attendus(ch, "les-encaissements-d-avril")).toEqual({
-      "Ventes TTC d'avril aux particuliers": c(1_580 * 59 * 1.2),
-      "Facture TTC de janvier de CampusTech": c(320 * 59 * 1.2),
-      "Encaissements d'avril": c(1_580 * 59 * 1.2 + 320 * 59 * 1.2),
+  it("les étapes guidées : l'échéance, puis les encaissements, la TVA et les décaissements de février", () => {
+    expect(juste(ch, "le-mois-de-l-echeance")).toBe("En mars");
+    expect(decalage(20, 60)).toBe(2);
+    // En février, CampusTech ne paie rien : sa facture de janvier rentre en mars.
+    expect(base.mois[1]!.enc).toBe(c(1_130 * 59 * 1.2));
+    expect(attendus(ch, "les-encaissements-du-mois")).toEqual({
+      "Ventes TTC de février aux particuliers": c(1_130 * 59 * 1.2),
+      "Facture TTC de février de CampusTech": c(320 * 59 * 1.2),
+      "Encaissements de février": c(1_130 * 59 * 1.2),
     });
-    expect(Object.values(attendus(ch, "les-encaissements-d-avril"))).toEqual([111_864, 22_656, 134_520]);
-    // La TVA de mars, payée en avril : 1 738 enceintes vendues, toutes clientèles.
+    expect(Object.values(attendus(ch, "les-encaissements-du-mois"))).toEqual([80_004, 22_656, 80_004]);
+    // La TVA de janvier, payée en février : 1 590 enceintes vendues, toutes clientèles.
     expect(attendus(ch, "la-tva-a-decaisser")).toEqual({
-      "TVA collectée de mars": c(1_738 * 59 * 0.2),
-      "TVA déductible de mars": c(1_738 * 38 * 0.2),
-      "TVA à décaisser en avril": c(1_738 * 21 * 0.2),
+      "TVA collectée de janvier": c(1_590 * 59 * 0.2),
+      "TVA déductible de janvier": c(1_590 * 38 * 0.2),
+      "TVA à décaisser en février": c(1_590 * 21 * 0.2),
     });
-    expect(Object.values(attendus(ch, "la-tva-a-decaisser"))).toEqual([20_508.4, 13_208.8, 7_299.6]);
-    const decAvril = c(1_738 * 22 * 1.2 + 1_900 * 16 * 1.2 + LOYER + NET + COTISATIONS + 7_299.6);
-    expect(attendus(ch, "les-decaissements-d-avril")).toEqual({
-      "Paiement au fournisseur en avril": c(1_738 * 22 * 1.2),
-      "Autres coûts variables TTC d'avril": c(1_900 * 16 * 1.2),
-      "Décaissements d'avril": decAvril,
-      "Trésorerie de fin d'avril": c(19_302.8 + 134_520 - decAvril),
+    expect(Object.values(attendus(ch, "la-tva-a-decaisser"))).toEqual([18_762, 12_084, 6_678]);
+    const decFevrier = c(1_590 * 22 * 1.2 + 1_450 * 16 * 1.2 + LOYER + NET + COTISATIONS + 6_678);
+    expect(attendus(ch, "les-decaissements-du-mois")).toEqual({
+      "Paiement au fournisseur en février": c(1_590 * 22 * 1.2),
+      "Autres coûts variables TTC de février": c(1_450 * 16 * 1.2),
+      "Décaissements de février": decFevrier,
+      "Trésorerie de fin de février": c(58_838 + 80_004 - decFevrier),
     });
-    expect([decAvril, c(19_302.8 + 134_520 - decAvril)]).toEqual([120_012.8, 33_810]);
-    expect(base.mois[3]!.dec).toBe(decAvril);
+    expect([decFevrier, c(58_838 + 80_004 - decFevrier)]).toEqual([106_844, 31_998]);
+    expect(base.mois[1]!.dec).toBe(decFevrier);
   });
 
-  it("l'étape autonome : le mois de mars refait seul, avec l'échéance de l'emprunt", () => {
+  it("l'étape autonome : le mois de mars refait seul, avec la première facture de CampusTech et l'échéance de l'emprunt", () => {
     expect(MOIS_AUTONOME).toBe(2);
     const mars = base.mois[2]!;
     expect(attendus(ch, "mars-sans-aide")).toEqual({
-      "Encaissements de mars": c(1_418 * 59 * 1.2),
+      "Encaissements de mars": c(1_418 * 59 * 1.2 + 320 * 59 * 1.2),
       "Paiement au fournisseur en mars": c(1_450 * 22 * 1.2),
       "TVA payée en mars": c(1_450 * 21 * 0.2),
       "Échéance de l'emprunt": 4_000 + (80_000 * 0.05 * 3) / 12,
       "Trésorerie de fin de mars": mars.fin,
     });
-    expect([mars.enc, mars.fournisseur, mars.tvaPayee, mars.echeance, mars.fin]).toEqual([100_394.4, 38_280, 6_090, 5_000, 19_302.8]);
-    expect(juste(ch, "le-point-bas")).toBe("CampusTech n'a encore rien payé, et l'échéance de l'emprunt tombe");
-    // Février vend moins que mars : le point bas ne vient pas des ventes du mois.
-    expect(base.mois[1]!.quantite).toBeLessThan(base.mois[2]!.quantite);
+    expect([mars.enc, mars.fournisseur, mars.tvaPayee, mars.echeance, mars.fin]).toEqual([123_050.4, 38_280, 6_090, 5_000, 41_958.8]);
+  });
+
+  it("le point bas : février, où se paient les dettes de janvier quand CampusTech ne paie rien", () => {
+    const fev = base.mois[1]!;
+    // Février perd 733 € ; sa trésorerie baisse de 26 840 €.
+    expect([1_450 * 21 - FIXES_DU_MOIS, c(fev.debut - fev.fin)]).toEqual([-733, 26_840]);
+    expect([fev.fournisseur, fev.tvaPayee, fev.echeance]).toEqual([41_976, 6_678, 0]);
+    expect(juste(ch, "le-point-bas")).toBe("Les dettes de janvier qui se paient, et CampusTech qui ne paie rien");
+    const e = ch.etapes.find((x) => x.id === "le-point-bas") as EtapeChoix;
+    expect(e.question(cas, etatVide)).toBe(`Voici le budget de trésorerie du semestre. Son point bas est février, ${eur(31_998)}. Ce mois-là, NOVA perd ${eur(733)}, mais sa trésorerie baisse de ${eur(26_840)}. Qu'est-ce qui creuse la trésorerie de février ?`);
   });
 
   it("le curseur du délai de CampusTech, refait à la main : au plus 5 mois de décalage", () => {
     // Chaque mois de décalage repousse une facture de 22 656 € après le 30 juin : juin = 131 609,60 − 22 656 × m.
     const juin = (m: number) => budgetALaMain({ delaiCampusTech: 30 * (m + 1) - 20 }).juin;
-    expect([0, 1, 2, 3, 4, 5, 6].map(juin)).toEqual([0, 1, 2, 3, 4, 5, 6].map((m) => c(63_641.6 + (3 - m) * 22_656)));
+    expect([0, 1, 2, 3, 4, 5, 6].map(juin)).toEqual([0, 1, 2, 3, 4, 5, 6].map((m) => c(86_297.6 + (2 - m) * 22_656)));
     expect(DECALAGE_DU_CURSEUR).toEqual({ min: 0, max: 6 });
     const a5 = budgetALaMain({ delaiCampusTech: 160 });
     expect(curseur(ch, "le-delai-au-curseur")).toEqual({
@@ -363,56 +385,62 @@ describe("le budget de trésorerie, chez NOVA dans le monde du cours", () => {
     expect([juin(0), juin(5), juin(6), a5.plusBas.fin, a5.plusBas.nom]).toEqual([131_609.6, 18_329.6, -4_326.4, 4_756, "mai"]);
     expect(juste(ch, "predire-le-delai")).toBe("Baisse, mais reste positive");
     expect(DELAI_DU_PARI).toBe(160);
+    // Le pari est une hypothèse, au-delà du plafond légal : la question et la bonne réponse le disent.
+    const pari = ch.etapes.find((x) => x.id === "predire-le-delai") as EtapeChoix;
+    expect(pari.question(cas, etatVide)).toMatch(/^Avant de calculer, pariez\. Supposons que CampusTech paie à 160 jours au lieu des 60 convenus, bien au-delà du plafond légal de 60 jours\./);
+    expect(pari.options(cas, etatVide).find((o) => o.juste)!.retour).toMatch(/la loi plafonne le délai entre professionnels à 60 jours\.$/);
   });
 
-  it("le délai le plus long, à rebours : 160 jours", () => {
+  it("le délai le plus long, à rebours : 160 jours que le budget supporte, et que la loi ne permet pas", () => {
     // 20 + d ≤ 6 × 30 : à 160 jours, la facture de janvier tombe en juin ; à 161, en juillet.
     expect([decalage(20, 160), decalage(20, 161)]).toEqual([5, 6]);
     expect(attendus(ch, "le-delai-a-rebours")).toEqual({
-      "Délai le plus long accordable, en jours": 6 * 30 - 20,
+      "Délai le plus long que le budget supporte, en jours": 6 * 30 - 20,
       "Créances sur CampusTech au 30 juin": 5 * 22_656,
-      "Trésorerie au 30 juin, à ce délai": c(63_641.6 - (5 - 3) * 22_656),
+      "Trésorerie au 30 juin, à ce délai": c(86_297.6 - (5 - 2) * 22_656),
     });
     expect(budgetALaMain({ delaiCampusTech: 160 }).creances).toBe(113_280);
+    const e = ch.etapes.find((x) => x.id === "le-delai-a-rebours") as EtapeMontants;
+    expect(e.explication(cas, etatVide).join(" ")).toMatch(new RegExp(`mai tomberait à ${eur(4_756)}, sous le matelas de ${eur(10_000)}.*le délai convenu ne peut dépasser 60 jours`));
   });
 
-  it("le pari et le curseur du banc : le plus petit nombre d'enceintes d'avril qui évite le découvert", () => {
-    expect(juste(ch, "predire-le-banc")).toBe("Négative : 36 000 € TTC sortent d'un coup");
-    // Une enceinte de plus en avril : 70,80 € encaissés, 19,20 € d'autres coûts payés dans le mois.
-    const avril = (q: number) => budgetALaMain({ banc: 3, particuliers: PARTICULIERS.map((x, k) => (k === 3 ? q : x)) }).mois[3]!;
-    expect(avril(1_623).fin).toBe(c(-2_190 + 43 * (70.8 - 19.2)));
-    expect(VENTES_DU_CURSEUR).toEqual({ min: 1_500, max: 1_700 });
+  it("le pari et le curseur du banc : le plus petit nombre d'enceintes de février qui évite le découvert", () => {
+    expect(juste(ch, "predire-le-banc")).toBe(`Négative : ${eur(36_000)} TTC sortent d'un coup`);
+    // Une enceinte de plus en février : 70,80 € encaissés, 19,20 € d'autres coûts payés dans le mois.
+    const fevrier = (q: number) => budgetALaMain({ banc: 1, particuliers: PARTICULIERS.map((x, k) => (k === 1 ? q : x)) }).mois[1]!;
+    expect(fevrier(1_208).fin).toBe(c(-4_002 + 78 * (70.8 - 19.2)));
+    expect(VENTES_DU_CURSEUR).toEqual({ min: 1_100, max: 1_300 });
     expect(curseur(ch, "les-ventes-au-curseur")).toEqual({
-      attendu: 1_580 + Math.ceil(2_190 / 51.6),
-      bornes: [1_500, 1_700],
-      droites: [avril(1_500).fin, 0, avril(1_700).fin, 0],
-      lecture: { "Encaissements du mois": avril(1_623).enc, "Décaissements du mois, banc compris": avril(1_623).dec, "Trésorerie de fin de mois": avril(1_623).fin },
+      attendu: 1_130 + Math.ceil(4_002 / 51.6),
+      bornes: [1_100, 1_300],
+      droites: [fevrier(1_100).fin, 0, fevrier(1_300).fin, 0],
+      lecture: { "Encaissements du mois": fevrier(1_208).enc, "Décaissements du mois, banc compris": fevrier(1_208).dec, "Trésorerie de fin de mois": fevrier(1_208).fin },
     });
-    expect([avril(1_500).fin, avril(1_622).fin, avril(1_623).fin, avril(1_623).enc, avril(1_623).dec]).toEqual([-6_318, -22.8, 28.8, 137_564.4, 156_838.4]);
+    expect([fevrier(1_100).fin, fevrier(1_207).fin, fevrier(1_208).fin, fevrier(1_208).enc, fevrier(1_208).dec]).toEqual([-5_550, -28.8, 22.8, 85_526.4, 144_341.6]);
   });
 
   it("le minimum de ventes, à rebours, et ce qu'il fait sortir le mois suivant", () => {
     expect(attendus(ch, "le-minimum-a-rebours")).toEqual({
-      "Ce qu'une enceinte de plus laisse en banque fin d'avril": c(59 * 1.2 - 16 * 1.2),
-      "Enceintes à vendre en plus": Math.ceil(2_190 / 51.6),
-      "Ventes minimales d'avril aux particuliers": 1_580 + 43,
-      "Ce que ces enceintes font sortir en mai": c(43 * (22 * 1.2 + 21 * 0.2)),
+      "Ce qu'une enceinte de plus laisse en banque fin de février": c(59 * 1.2 - 16 * 1.2),
+      "Enceintes à vendre en plus": Math.ceil(4_002 / 51.6),
+      "Ventes minimales de février aux particuliers": 1_130 + 78,
+      "Ce que ces enceintes font sortir en mars": c(78 * (22 * 1.2 + 21 * 0.2)),
     });
-    expect(Object.values(attendus(ch, "le-minimum-a-rebours"))).toEqual([51.6, 43, 1_623, 1_315.8]);
-    // Le mois suivant le paie bien : mai garde ce que les 43 enceintes ont laissé en avril, moins 1 315,80 €.
-    const plus = budgetALaMain({ banc: 3, particuliers: PARTICULIERS.map((x, k) => (k === 3 ? 1_623 : x)) });
-    expect(c(plus.fins[4]! - avecLeBanc.fins[4]!)).toBe(c(43 * 51.6 - 1_315.8));
+    expect(Object.values(attendus(ch, "le-minimum-a-rebours"))).toEqual([51.6, 78, 1_208, 2_386.8]);
+    // Le mois suivant le paie bien : mars garde ce que les 78 enceintes ont laissé en février, moins 2 386,80 €.
+    const plus = budgetALaMain({ banc: 1, particuliers: PARTICULIERS.map((x, k) => (k === 1 ? 1_208 : x)) });
+    expect(c(plus.fins[2]! - avecLeBanc.fins[2]!)).toBe(c(78 * 51.6 - 2_386.8));
   });
 
-  it("le laboratoire : le banc d'avril sans découvert, et ce que chaque levier doit valoir seul", () => {
+  it("le laboratoire : le banc de février sans découvert, et ce que chaque levier doit valoir seul", () => {
     const l = laboratoire(ch, "le-laboratoire-de-tresorerie");
-    expect(l.depart).toEqual({ campustech: 80, fournisseur: 22, hausse: 0, achat: 3 });
-    expect(l.solution).toEqual({ campustech: 70, fournisseur: 22, hausse: 0, achat: 3 });
+    expect(l.depart).toEqual({ campustech: 60, fournisseur: 22, hausse: 0, achat: 1 });
+    expect(l.solution).toEqual({ campustech: 40, fournisseur: 22, hausse: 0, achat: 1 });
     expect(l.reussi).toEqual([false, true]);
     expect(LEVIERS_DU_LABORATOIRE).toEqual({ campustech: { min: 0, max: 180, pas: 10 }, fournisseur: { min: 0, max: 90, pas: 1 }, hausse: { min: -10, max: 20, pas: 1 } });
     const lire = (b: ReturnType<typeof budgetALaMain>) => ({
-      "Trésorerie de fin d'avril": b.fins[3],
-      "Trésorerie de fin de mai": b.fins[4],
+      "Trésorerie de fin de février": b.fins[1],
+      "Trésorerie de fin de mars": b.fins[2],
       "Trésorerie au 30 juin": b.juin,
       "Créances clients au 30 juin": b.creances,
       "Dettes fournisseurs au 30 juin": c(2_151 * 22 * 1.2),
@@ -420,62 +448,68 @@ describe("le budget de trésorerie, chez NOVA dans le monde du cours", () => {
       "Trésorerie la plus basse du semestre": b.plusBas.fin,
     });
     expect(l.auDepart).toEqual(lire(avecLeBanc));
-    const solution = budgetALaMain({ banc: 3, delaiCampusTech: 70 });
+    const solution = budgetALaMain({ banc: 1, delaiCampusTech: 40 });
     expect(l.aLaSolution).toEqual(lire(solution));
-    expect([solution.fins[3], solution.plusBas.fin, solution.resultat, solution.creances]).toEqual([20_466, 20_466, 40_941 - 1_500, 2 * 22_656]);
-    // Chaque levier seul : CampusTech à 70 jours au plus (une facture de plus avant fin avril), le
-    // fournisseur à 51 jours au moins, 2 % de ventes en plus, ou l'achat en mai.
-    const passe = (h: Hypotheses) => budgetALaMain({ banc: 3, ...h }).plusBas.fin >= 0;
-    expect([passe({ delaiCampusTech: 70 }), passe({ delaiCampusTech: 80 })]).toEqual([true, false]);
+    // Le banc en février : cinq mois d'usure, 2 500 €.
+    expect([solution.fins[1], solution.plusBas.fin, solution.resultat, solution.creances]).toEqual([18_654, 18_654, 40_941 - 2_500, 22_656]);
+    // Chaque levier seul : CampusTech à 40 jours au plus (la facture de janvier rentre avant fin février), le
+    // fournisseur à 51 jours au moins, 7 % de ventes en plus, ou l'achat en mars.
+    const passe = (h: Hypotheses) => budgetALaMain({ banc: 1, ...h }).plusBas.fin >= 0;
+    expect([passe({ delaiCampusTech: 40 }), passe({ delaiCampusTech: 41 })]).toEqual([true, false]);
     expect([passe({ delaiFournisseur: 51 }), passe({ delaiFournisseur: 50 })]).toEqual([true, false]);
-    expect([passe({ hausse: 0.02 }), passe({ hausse: 0.01 })]).toEqual([true, false]);
-    expect(budgetALaMain({ banc: 4 }).plusBas.fin).toBeGreaterThanOrEqual(0);
-    expect(budgetALaMain({ banc: 4 }).fins[4]).toBe(c(50_068 - 36_000));
+    expect([passe({ hausse: 0.07 }), passe({ hausse: 0.06 })]).toEqual([true, false]);
+    expect(budgetALaMain({ banc: 2 }).plusBas.fin).toBeGreaterThanOrEqual(0);
+    expect(budgetALaMain({ banc: 2 }).fins[2]).toBe(c(41_958.8 - 36_000));
     for (const [code, v, ok] of [
-      ["campustech", 70, true],
-      ["campustech", 80, false],
+      ["campustech", 40, true],
+      ["campustech", 50, false],
       ["fournisseur", 51, true],
       ["fournisseur", 50, false],
-      ["hausse", 2, true],
-      ["hausse", 1, false],
-      ["achat", 4, true],
+      ["hausse", 7, true],
+      ["hausse", 6, false],
+      ["achat", 2, true],
     ] as const) {
       expect(l.d.atteint({ ...l.depart, [code]: v }), `${code} à ${v}`).toBe(ok);
     }
-    expect(l.e.explication(cas, l.solution).join(" ")).toMatch(/70 jours au plus.*51 jours au moins.*2 % de ventes en plus.*l'achat en mai/);
+    expect(l.e.explication(cas, l.solution).join(" ")).toMatch(/40 jours au plus.*51 jours au moins.*7 % de ventes en plus.*l'achat en mars/);
     // Les délais ne changent pas le résultat ; la hausse des ventes, si.
     const resultat = (p: Record<string, number>) => l.e.lecture(cas, p).find((x) => x.libelle === "Résultat du semestre")!.montant;
     expect(resultat({ ...l.depart, campustech: 0, fournisseur: 60 })).toBe(avecLeBanc.resultat);
-    expect(resultat({ ...l.depart, hausse: 2 })).toBe(budgetALaMain({ banc: 3, hausse: 0.02 }).resultat);
+    expect(resultat({ ...l.depart, hausse: 2 })).toBe(budgetALaMain({ banc: 1, hausse: 0.02 }).resultat);
   });
 
   it("le graphique du laboratoire : la trésorerie va par marches selon le délai de CampusTech", () => {
     const { e, depart } = laboratoire(ch, "le-laboratoire-de-tresorerie");
     const g = e.graphique!(cas);
     expect(g.levier).toBe("campustech");
-    const [avril, plusBas] = g.courbes;
-    const en = (d: number) => [avril!.valeur({ ...depart, campustech: d }), plusBas!.valeur({ ...depart, campustech: d })];
-    // Avril reçoit les factures de janvier à avril − m : 4, 3, 2, 1 ou 0 factures de 22 656 €.
-    expect(en(0)).toEqual([c(-2_190 + 3 * 22_656), c(-2_190 + 3 * 22_656)]);
-    expect(en(40)).toEqual([c(-2_190 + 2 * 22_656), c(-2_190 + 2 * 22_656)]);
-    expect(en(70)).toEqual([20_466, 20_466]);
-    expect(en(80)).toEqual([-2_190, -2_190]);
-    expect(en(110)).toEqual([c(-2_190 - 22_656), c(-2_190 - 22_656)]);
-    // À 140 jours, le point bas passe en mai ; à 170, en juin.
-    expect(budgetALaMain({ banc: 3, delaiCampusTech: 140 }).plusBas).toMatchObject({ nom: "mai", fin: c(20_068 - 2 * 22_656) });
-    expect(en(140)).toEqual([c(-2_190 - 22_656), c(20_068 - 2 * 22_656)]);
-    expect(en(170)[1]).toBe(c(33_641.6 - 3 * 22_656));
+    const [fevrier, plusBas] = g.courbes;
+    const en = (d: number) => [fevrier!.valeur({ ...depart, campustech: d }), plusBas!.valeur({ ...depart, campustech: d })];
+    const aLaMain = (d: number) => {
+      const b = budgetALaMain({ banc: 1, delaiCampusTech: d });
+      return [b.fins[1], b.plusBas.fin];
+    };
+    // Février reçoit les factures de janvier à février − m : 2, 1 ou 0 factures de 22 656 €.
+    expect(en(0)).toEqual([c(-4_002 + 2 * 22_656), c(-4_002 + 2 * 22_656)]);
+    expect(en(40)).toEqual([c(-4_002 + 22_656), c(-4_002 + 22_656)]);
+    expect(en(60)).toEqual([-4_002, -4_002]);
+    // Au-delà, février ne bouge plus : le point bas passe en mars, puis en avril, en mai, en juin.
+    expect(en(80)).toEqual([-4_002, c(11_958.8 - 22_656)]);
+    expect(en(110)).toEqual([-4_002, c(26_466 - 2 * 22_656)]);
+    expect(en(140)).toEqual([-4_002, c(42_724 - 3 * 22_656)]);
+    expect(en(170)).toEqual([-4_002, c(56_297.6 - 4 * 22_656)]);
+    for (const d of [0, 40, 60, 80, 110, 140, 170]) expect(en(d), `${d} jours`).toEqual(aLaMain(d));
+    expect(budgetALaMain({ banc: 1, delaiCampusTech: 140 }).plusBas.nom).toBe("mai");
   });
 
-  it("la TVA du banc : la déclaration d'avril, payée en mai", () => {
+  it("la TVA du banc : la déclaration de février, payée en mars", () => {
     expect(attendus(ch, "la-tva-du-banc")).toEqual({
-      "TVA collectée d'avril": c(1_900 * 59 * 0.2),
-      "TVA déductible d'avril, banc compris": c(1_900 * 38 * 0.2 + BANC * 0.2),
-      "TVA à décaisser en mai": c(1_900 * 21 * 0.2 - BANC * 0.2),
-      "Trésorerie de fin de mai, banc acheté": avecLeBanc.fins[4],
+      "TVA collectée de février": c(1_450 * 59 * 0.2),
+      "TVA déductible de février, banc compris": c(1_450 * 38 * 0.2 + BANC * 0.2),
+      "TVA à décaisser en mars": c(1_450 * 21 * 0.2 - BANC * 0.2),
+      "Trésorerie de fin de mars, banc acheté": avecLeBanc.fins[2],
     });
-    expect(Object.values(attendus(ch, "la-tva-du-banc"))).toEqual([22_420, 20_440, 1_980, 20_068]);
-    expect(avecLeBanc.mois[4]!.tvaPayee).toBe(1_980);
+    expect(Object.values(attendus(ch, "la-tva-du-banc"))).toEqual([17_110, 17_020, 90, 11_958.8]);
+    expect(avecLeBanc.mois[2]!.tvaPayee).toBe(90);
   });
 
   it("les verdicts : la TVA due à la livraison, le dirigeant qui négocie avant, la synthèse", () => {
@@ -484,11 +518,22 @@ describe("le budget de trésorerie, chez NOVA dans le monde du cours", () => {
     const synthese = ch.etapes.find((e) => e.id === "synthese")!;
     if (synthese.type !== "lecture") throw new Error("lecture attendue");
     expect(synthese.texte(cas).at(-1)).toBe("Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.");
+    expect(synthese.texte(cas)[1]).toMatch(/le budget supporterait que CampusTech paie jusqu'à 160 jours sans découvert au 30 juin, quand la loi plafonne le délai convenu à 60 jours/);
     const t = synthese.tableau!(cas);
-    expect(t.lignes.find((l) => l.libelle === "Trésorerie de fin de mois")!.valeurs).toEqual(["58 838 €", "31 998 €", "19 302,80 €", "33 810 €", "50 068 €", "63 641,60 €"]);
+    expect(t.lignes.find((l) => l.libelle === "Trésorerie de fin de mois")!.valeurs).toEqual(base.fins.map(eur));
+    expect(base.fins.map(eur)).toEqual(["58 838 €", "31 998 €", "41 958,80 €", "56 466 €", "72 724 €", "86 297,60 €"].map((x) => x.replace(/(\d) (\d)/g, "$1 $2")));
     // La TVA de chaque mois, 4,20 € par enceinte, payée le mois suivant.
     expect([1_590, 1_450, 1_738, 1_900, 2_030].map((q) => c(q * 4.2))).toEqual([6_678, 6_090, 7_299.6, 7_980, 8_526]);
-    expect(t.lignes.find((l) => l.libelle === "TVA à décaisser")!.valeurs).toEqual(["0 €", "6 678 €", "6 090 €", "7 299,60 €", "7 980 €", "8 526 €"]);
+    expect(t.lignes.find((l) => l.libelle === "TVA à décaisser")!.valeurs).toEqual([0, 6_678, 6_090, 7_299.6, 7_980, 8_526].map(eur));
+  });
+
+  it("CampusTech paie à 60 jours : 80 jours n'est jamais son délai, un délai au-delà de 60 jours n'est jamais convenu", () => {
+    for (const x of [ch, UN_TRIMESTRE_DE_CROISSANCE]) {
+      for (const [id, t] of tousLesTextes(x)) {
+        expect(t, `${id} : ${t}`).not.toMatch(/\b80 jours\b/);
+        expect(t, `${id} : ${t}`).not.toMatch(/accordable|peut payer jusqu/);
+      }
+    }
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(ch));
@@ -496,15 +541,17 @@ describe("le budget de trésorerie, chez NOVA dans le monde du cours", () => {
 
 describe("le cas : un trimestre de croissance", () => {
   const s = UN_TRIMESTRE_DE_CROISSANCE;
-  const commande = CAMPUSTECH.map((q, k) => (k >= 3 ? q + 300 : q));
+  // La commande, recalibrée : 300 enceintes de plus de janvier à mars (le premier trimestre).
+  const commande = CAMPUSTECH.map((q, k) => (k <= 2 ? q + 300 : q));
   const avec = budgetALaMain({ campustech: commande });
-  const avecBanc = budgetALaMain({ campustech: commande, banc: 3 });
+  const avecBanc = budgetALaMain({ campustech: commande, banc: 1 });
 
   it("est le cas dédié du chapitre, chez NOVA, et la commande tient dans la capacité", () => {
     casDedie(s, ch);
     expect(s.commanditaire).toBe("Le dirigeant");
-    expect([COMMANDE_EN_PLUS, MOIS_DE_LA_COMMANDE]).toEqual([300, 3]);
-    expect(1_900 + 2_030 + 2_151 + 3 * 300).toBeLessThanOrEqual(NOVA_GESTION.decision.capacite);
+    expect([COMMANDE_EN_PLUS, MOIS_DE_LA_COMMANDE]).toEqual([300, 0]);
+    expect(1_590 + 1_450 + 1_738 + 3 * 300).toBe(5_678);
+    expect(5_678).toBeLessThanOrEqual(NOVA_GESTION.decision.capacite);
   });
 
   it("un mois de commande, et la trésorerie du trimestre, refaits à la main", () => {
@@ -515,44 +562,50 @@ describe("le cas : un trimestre de croissance", () => {
       "TVA à décaisser le mois suivant": c(300 * 21 * 0.2),
     });
     expect(Object.values(attendus(s, "un-mois-de-commande"))).toEqual([21_240, 5_760, 7_920, 1_260]);
+    // Mars reçoit la facture de janvier de la commande (21 240 €) ; celles de février et de mars attendent.
     expect(attendus(s, "la-tresorerie-du-trimestre")).toEqual({
-      "Trésorerie de fin d'avril": c(33_810 - 5_760),
-      "Trésorerie de fin de mai": c(50_068 - 2 * 5_760 - (7_920 + 1_260)),
-      "Trésorerie au 30 juin": c(63_641.6 - 3 * 5_760 - 2 * (7_920 + 1_260)),
-      "Créances sur CampusTech au 30 juin": c(3 * 620 * 59 * 1.2),
+      "Trésorerie de fin de janvier": c(58_838 - 5_760),
+      "Trésorerie de fin de février": c(31_998 - 2 * 5_760 - (7_920 + 1_260)),
+      "Trésorerie de fin de mars": c(41_958.8 - 3 * 5_760 - 2 * (7_920 + 1_260) + 21_240),
+      "Créances sur CampusTech à la fin de mars": c(2 * 620 * 59 * 1.2),
     });
-    expect(avec.fins.slice(3)).toEqual([28_050, 29_368, 28_001.6]);
-    expect(avec.creances).toBe(131_688);
+    expect(avec.fins.slice(0, 3)).toEqual([53_078, 11_298, 27_558.8]);
   });
 
-  it("le croisement : le résultat monte de 18 900 €, la trésorerie baisse de 35 640 €", () => {
+  it("le croisement, à la fin de mars : le résultat monte de 18 900 €, la trésorerie baisse de 14 400 €", () => {
     expect(attendus(s, "le-croisement")).toEqual({
       "Résultat en plus sur le trimestre": 900 * 21,
-      "Créances en plus au 30 juin": 3 * 21_240,
-      "Dettes en plus au 30 juin": 7_920 + 1_260,
-      "Variation de la trésorerie du 30 juin": c(28_001.6 - 63_641.6),
+      "Créances en plus à la fin de mars": 2 * 21_240,
+      "Dettes en plus à la fin de mars": 7_920 + 1_260,
+      "Variation de la trésorerie de fin de mars": c(27_558.8 - 41_958.8),
     });
     // Le passage : résultat − créances en plus + dettes en plus = variation de la trésorerie.
-    expect(c(18_900 - 63_720 + 9_180)).toBe(-35_640);
+    expect(c(18_900 - 42_480 + 9_180)).toBe(-14_400);
     expect(c(avec.resultat - base.resultat)).toBe(18_900);
+    // Au 30 juin, toutes les factures de la commande sont payées : la trésorerie a gagné le résultat en plus.
+    expect(c(avec.juin - base.juin)).toBe(18_900);
+    const e = s.etapes.find((x) => x.id === "le-croisement") as EtapeMontants;
+    expect(e.explication(cas, etatVide).join(" ")).toMatch(new RegExp(`au 30 juin, toutes les factures de la commande sont payées, et la trésorerie a ${eur(18_900)} de plus qu'au budget`));
   });
 
-  it("à rebours : avec la commande, le banc ne passe qu'avec CampusTech à 70 jours au plus", () => {
-    expect(avecBanc.fins.slice(3)).toEqual([-7_950, -632, -1_998.4]);
+  it("à rebours : avec la commande, le banc de février ne passe qu'avec CampusTech à 40 jours au plus", () => {
+    expect(avecBanc.fins.slice(1, 3)).toEqual([-24_702, -2_441.2]);
     expect(attendus(s, "a-rebours")).toEqual({
-      "Trésorerie de fin d'avril, banc compris": c(28_050 - 36_000),
-      "Délai le plus long de CampusTech, en jours": 3 * 30 - 20,
-      "Trésorerie de fin d'avril, à ce délai": c(-7_950 + 22_656),
+      "Trésorerie de fin de février, banc compris": c(11_298 - 36_000),
+      "Délai le plus long de CampusTech, en jours": 2 * 30 - 20,
+      "Trésorerie de fin de février, à ce délai": c(-24_702 + 620 * 59 * 1.2),
     });
-    const a70 = budgetALaMain({ campustech: commande, banc: 3, delaiCampusTech: 70 });
-    const a71 = budgetALaMain({ campustech: commande, banc: 3, delaiCampusTech: 71 });
-    expect(a70.fins.slice(3)).toEqual([14_706, 22_024, 41_897.6]);
-    expect(a70.plusBas.fin).toBeGreaterThanOrEqual(0);
-    expect(a71.plusBas.fin).toBeLessThan(0);
+    const a40 = budgetALaMain({ campustech: commande, banc: 1, delaiCampusTech: 40 });
+    const a41 = budgetALaMain({ campustech: commande, banc: 1, delaiCampusTech: 41 });
+    expect([a40.fins[1], a40.plusBas.nom, a40.plusBas.fin]).toEqual([19_194, "février", 19_194]);
+    expect(a40.plusBas.fin).toBeGreaterThanOrEqual(0);
+    expect(a41.plusBas.fin).toBeLessThan(0);
+    // Sans la commande, le banc ne laissait que 4 002 € de découvert.
+    expect(avecLeBanc.fins[1]).toBe(-4_002);
   });
 
   it("la réponse demande un jugement : accepter la commande, financer le banc", () => {
-    expect(juste(s, "reponse")).toBe("Oui à la commande, mais le banc d'avril demande un financement, ou CampusTech à 70 jours");
+    expect(juste(s, "reponse")).toBe("Oui à la commande, mais le banc de février demande un financement, ou CampusTech à 40 jours");
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le cas", () => verifierLesTextes(s));

@@ -43,8 +43,18 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *
  * CE QUE LA SIMULATION SUPPOSE (dit à l'élève dans l'intro) : les hypothèses de la fiche (un compte à
  * terme de 12 mois à 3 %, bloqué jusqu'au 6 janvier N+1 ; des particuliers qui paient à la commande ;
- * CampusTech à 80 jours ; le fournisseur de composants à 22 jours ; aucun investissement après
- * janvier, aucun dividende), et celles du chapitre, des constantes nommées ci-dessous.
+ * CampusTech à 60 jours, le délai convenu, qu'elle tient ; le fournisseur de composants à 22 jours ;
+ * aucun investissement après janvier, aucun dividende), et celles du chapitre, des constantes nommées
+ * ci-dessous.
+ *
+ * CAMPUSTECH À 60 JOURS (décision du propriétaire, octobre 2026 ; la fiche disait 80 jours). La
+ * facture d'octobre rentre le 20 décembre : 22 656 € de créance en moins, autant de banque en plus.
+ * Le besoin d'exploitation tombe à 9 544,73 €, et le besoin en fonds de roulement devient NÉGATIF
+ * (−12 028,38 €) : le chapitre le dit à l'élève (une ressource, pas un besoin). Le laboratoire part
+ * désormais de 60 jours, qui était sa solution : la solution est recalibrée à CampusTech à 40 jours
+ * (la facture de novembre rentre le 30 décembre, en mois de 30 jours), le même effet qu'avant
+ * (12 504 €) ; à 60 jours seuls, le stock de la gamme laisse la trésorerie nette 10 152 € sous le
+ * départ, et le défi reste à relever.
  */
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -76,8 +86,11 @@ export const LEVIERS_DU_LABORATOIRE = {
   placement: { min: 0, pas: 1_000 },
 } as const;
 
-/** La solution que montre la correction du laboratoire : CampusTech à 60 jours, le fournisseur à 51 jours. */
-export const SOLUTION_DU_LABORATOIRE = { delaiCampusTech: 60, delaiFournisseur: 51 } as const;
+/**
+ * La solution que montre la correction du laboratoire : CampusTech à 40 jours (sa facture de novembre
+ * rentre avant la clôture), le fournisseur à 51 jours (sa facture de novembre reste due).
+ */
+export const SOLUTION_DU_LABORATOIRE = { delaiCampusTech: 40, delaiFournisseur: 51 } as const;
 
 /**
  * LA CROISSANCE (hypothèse du cours, reprise par le cas « Vendre plus, financer plus ») : 20 % de
@@ -598,6 +611,9 @@ export const BILAN_FONCTIONNEL: Chapitre = {
         return [
           "Les deux calculs tombent sur le même chiffre, et c'est toujours le cas : le bilan s'équilibre, et la trésorerie est ce que le fonds de roulement laisse une fois le besoin financé.",
           `Le hors exploitation est une ressource de ${eur(-x.besoinHorsExploitation)} : l'impôt et les intérêts sont dus, pas encore payés. Une ressource à quelques semaines : en janvier et en mai, elle sortira de la trésorerie.`,
+          ...(x.besoin < 0
+            ? [`Le besoin en fonds de roulement est négatif, ${eur(x.besoin)} : ce que les fournisseurs, les salariés et l'État font encore crédit dépasse ce que le cycle avance. C'est une ressource, qui s'ajoute au fonds de roulement dans la trésorerie nette ; elle tient tant que les délais tiennent.`]
+            : []),
         ];
       },
     },
@@ -651,7 +667,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
         const x = bilanDeLExercice(c);
         return [
           `Le fonds de roulement a grandi de la capacité d'autofinancement, ${eur(x.caf)}, moins le capital remboursé, ${eur(x.rembourse)} : ${eur(x.caf)} − ${eur(x.rembourse)} = ${eur(auCentime(x.caf - x.rembourse))}. Aucun investissement, aucun dividende, aucun apport ni emprunt nouveau ne s'y ajoutent.`,
-          `La trésorerie a gagné ${eur(x.variationDeLaTresorerie)}, plus que le résultat net (${eur(x.postes.resultat)}) : la CAF y ajoute les charges qui ne sortent pas (la dotation, la dépréciation, la provision), et le besoin ${x.variationDuBesoin < 0 ? `a baissé de ${eur(-x.variationDuBesoin)}, la TVA de la ligne récupérée valant plus que le besoin de fin d'année` : `a grandi de ${eur(x.variationDuBesoin)}`}. Variation de la trésorerie = variation du fonds de roulement − variation du besoin.`,
+          `La trésorerie a gagné ${eur(x.variationDeLaTresorerie)}, plus que le résultat net (${eur(x.postes.resultat)}) : la CAF y ajoute les charges qui ne sortent pas (la dotation, la dépréciation, la provision), et le besoin ${x.variationDuBesoin < 0 ? `a baissé de ${eur(-x.variationDuBesoin)}, ${x.besoin < 0 ? `la TVA de la ligne récupérée, et un besoin de fin d'année devenu une ressource (${eur(x.besoin)})` : "la TVA de la ligne récupérée valant plus que le besoin de fin d'année"}` : `a grandi de ${eur(x.variationDuBesoin)}`}. Variation de la trésorerie = variation du fonds de roulement − variation du besoin.`,
         ];
       },
     },
@@ -787,7 +803,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
       notions: ["bfr", "payment_terms", "net_treasury", "stock"],
       question: (c) => {
         const x = bilanDeLExercice(c);
-        return `Faites varier le délai de CampusTech, celui du fournisseur de composants (un délai plus long que ${x.f.fournisseur.delai} jours laisse plus de factures dues au 31 décembre), le stock de composants et la somme placée le 6 janvier. Le tableau suit le bilan fonctionnel ; le graphique, la trésorerie nette selon le délai de CampusTech. Relevez le défi.`;
+        return `Faites varier le délai de CampusTech (au-delà des ${x.f.campustech.delai} jours convenus, ce serait un retard, que la loi sanctionne), celui du fournisseur de composants (un délai plus long que ${x.f.fournisseur.delai} jours laisse plus de factures dues au 31 décembre), le stock de composants et la somme placée le 6 janvier. Le tableau suit le bilan fonctionnel ; le graphique, la trésorerie nette selon le délai de CampusTech. Relevez le défi.`;
       },
       leviers: (c) => {
         const x = bilanDeLExercice(c);
@@ -1014,7 +1030,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
       texte: (c) => {
         const x = bilanDeLExercice(c);
         return [
-          `Vous avez relu le bilan ${dE(x.entreprise)} par fonction : un fonds de roulement de ${eur(x.fondsDeRoulement)}, un besoin de ${eur(x.besoin)} (${eur(x.besoinDExploitation)} d'exploitation, ${eur(x.besoinHorsExploitation)} hors exploitation), une trésorerie nette de ${eur(x.tresorerieNette)}. Depuis la création, le fonds de roulement a grandi de la CAF moins le capital remboursé.`,
+          `Vous avez relu le bilan ${dE(x.entreprise)} par fonction : un fonds de roulement de ${eur(x.fondsDeRoulement)}, un besoin de ${eur(x.besoin)} (${eur(x.besoinDExploitation)} d'exploitation, ${eur(x.besoinHorsExploitation)} hors exploitation)${x.besoin < 0 ? ", négatif, donc une ressource" : ""}, une trésorerie nette de ${eur(x.tresorerieNette)}. Depuis la création, le fonds de roulement a grandi de la CAF moins le capital remboursé.`,
           `Deux pièges. Une trésorerie nette positive n'est pas une trésorerie libre : ${eur(x.placement)} sont bloqués jusqu'au 6 janvier, et ${eur(x.postes.emprunt)} sont dus à la banque. Et un ratio lit une photo du 31 décembre : il se critique avant de se croire.`,
           "Au niveau de l'examen, vous savez reclasser un bilan (valeurs brutes, amortissements, dépréciations et provisions, intérêts courus, impôt dû, placements), calculer le fonds de roulement, le besoin d'exploitation et hors exploitation et la trésorerie nette, expliquer leur variation, exprimer le besoin en jours de chiffre d'affaires et chiffrer l'effet d'un délai ou d'une croissance, calculer et critiquer les ratios de rotation, et juger le coût d'une trésorerie gardée.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",

@@ -322,8 +322,10 @@ describe("la clôture : les étapes", () => {
     const attendu = Object.fromEntries(Object.entries(k.soldes).map(([compte, v]) => [compte === "4455" ? "44551" : compte, v]));
     for (const [compte, v] of Object.entries(attendu)) expect(fin[compte] ?? 0, compte).toBeCloseTo(v, 2);
     for (const [compte, v] of Object.entries(fin)) expect(attendu[compte] ?? 0, compte).toBeCloseTo(v, 2);
-    // La trésorerie ne bouge pas : la banque et le compte à terme de la balance.
-    expect([fin["512"], fin["508"]]).toEqual([115_734.87, 133_000]);
+    // La trésorerie ne bouge pas : la banque et le compte à terme de la balance. CampusTech paie à
+    // 60 jours : sa facture d'octobre (22 656 €) est rentrée le 20 décembre, 115 734,87 + 22 656.
+    expect([fin["512"], fin["508"]]).toEqual([138_390.87, 133_000]);
+    expect(c(115_734.87 + 22_656)).toBe(138_390.87);
   });
 
   it("le laboratoire des travaux oubliés : le départ trop beau, une seule position retrouve la clôture", () => {
@@ -343,7 +345,7 @@ describe("la clôture : les étapes", () => {
       "Intérêts courus de l'emprunt": -interets + 0,
       "Résultat avant impôt": r,
       "Impôt sur les sociétés": isDe(r),
-      "Banque et compte à terme": c(115_734.87 + 133_000),
+      "Banque et compte à terme": c(138_390.87 + 133_000),
     });
     expect(l.auDepart).toEqual(lire(raiDepart, dotation, 0, 0, 0));
     expect(l.aLaSolution).toEqual(lire(rai, dotation, stockFinal, fnp.ht, icne));

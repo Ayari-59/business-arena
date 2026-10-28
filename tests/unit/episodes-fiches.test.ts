@@ -3,7 +3,7 @@ import { FICHES, hasardDeLaClasse, lienDeLaClasse } from "../../src/config/episo
 import { formationParCode } from "../../src/config/formations";
 import { TRACES } from "../../src/config/episodes/traces";
 import { EPISODES_DE_DEMO } from "../../src/config/episodes/demos";
-import { episodeParCode } from "../../src/pedagogy/episodes/registre";
+import { EPISODES, episodeParCode } from "../../src/pedagogy/episodes/registre";
 
 /**
  * Une fiche enseignant donne un corrigé et commente des réflexes : elle doit
@@ -11,12 +11,10 @@ import { episodeParCode } from "../../src/pedagogy/episodes/registre";
  * tableau un chiffre que le bilan contredit.
  */
 describe("les fiches enseignant", () => {
-  it("couvrent les épisodes 31 à 48 et les cinq démonstrations, une fois chacun, dans l'ordre des numéros", () => {
-    // Décision du propriétaire (octobre 2026) : « fiche séance sur la démo ».
-    const attendus = [
-      ...Array.from({ length: 18 }, (_, i) => 31 + i),
-      ...EPISODES_DE_DEMO.map((code) => episodeParCode(code)!.numero),
-    ].sort((a, b) => a - b);
+  it("couvrent tous les épisodes du registre, une fois chacun, dans l'ordre des numéros", () => {
+    // Le site promet « le guide de débrief des 113 épisodes » : chaque épisode a sa fiche.
+    const attendus = [...EPISODES].map((e) => e.numero).sort((a, b) => a - b);
+    expect(attendus.length).toBe(113);
     expect(FICHES.map((f) => episodeParCode(f.code)?.numero)).toEqual(attendus);
     const codes = FICHES.map((f) => f.code);
     expect(new Set(codes).size).toBe(codes.length);
