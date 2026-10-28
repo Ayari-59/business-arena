@@ -142,7 +142,7 @@ export const LA_TVA_ET_LA_TRESORERIE: Chapitre = {
         const k = tvaEtTresorerie(c);
         return [
           `Pour son ${nomDuTrimestre(TRIMESTRE_DECLARE)}, ${c.entreprise} doit ${eur(declarationDeTva(c).declare.nette)} de TVA à l'État : la TVA collectée sur ses ventes, moins la TVA déductible sur ses achats. Mais à quel moment l'argent de cette TVA est-il entré dans sa caisse, et quand en sort-il ?`,
-          `Dans l'arène, les clients paient TTC, chacun à son délai ; le fournisseur est payé TTC au sien ; l'État reçoit la TVA nette du trimestre au trimestre suivant. Trois délais différents pour une même taxe : selon le moment, la TVA est déjà dans la caisse de l'entreprise, ou pas encore.`,
+          `Dans l'arène, les clients paient TTC, chacun à son délai ; le fournisseur est payé TTC au sien ; l'État reçoit la TVA nette du trimestre au trimestre suivant, calculée sur les ventes facturées : l'arène fait comme si ${c.entreprise} avait opté pour la TVA d'après les débits (sans cette option, la TVA de travaux ou de services n'est due qu'une fois le client payé). Trois délais différents pour une même taxe : selon le moment, la TVA est déjà dans la caisse de l'entreprise, ou pas encore.`,
           `Le compte de résultat, lui, reste hors taxes : la TVA (${pct(k.taux)} dans le scénario) n'est ni une charge ni un produit. Elle ne change que le moment où l'argent entre et sort.`,
         ];
       },

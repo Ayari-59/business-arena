@@ -13,8 +13,10 @@ import type { Situation } from "../types";
  *
  * Une clientèle qui paie à crédit demande un délai plus long. La gérante veut savoir ce que cela
  * aurait coûté en trésorerie au 31 décembre, accordé dès janvier, et quelle part de cette somme
- * est de la TVA que l'entreprise avance à l'État pour ses clients : dans l'arène, la TVA d'une
- * vente se verse au trimestre qui suit, que le client ait payé ou non. L'élève refait les calculs
+ * est de la TVA que l'entreprise avance à l'État pour ses clients : dans l'arène, l'entreprise a
+ * opté pour la TVA d'après les débits, et la TVA d'une vente se verse au trimestre qui suit, que le
+ * client ait payé ou non (sans l'option, la TVA de travaux ou de services n'est due qu'à
+ * l'encaissement, et le délai n'en avancerait aucune). L'élève refait les calculs
  * du chapitre (la TVA contenue dans une créance TTC, ce que la TVA laisse en trésorerie), l'arène
  * rejoue l'année avec le délai allongé (le `paymentDelayDays` de la clientèle dans le scénario,
  * tout le reste identique), puis il rend sa réponse.
@@ -112,6 +114,7 @@ export const LA_TVA_AVANCEE_POUR_LE_CLIENT: Situation = {
         const k = tvaAvanceePourLeClient(c);
         return [
           `« La clientèle ${k.clientele.court} nous demande de payer à ${k.delai} jours au lieu de ${k.clientele.delai}. Si nous l'avions accepté dès janvier, combien aurions-nous de moins en trésorerie au 31 décembre ? Et dans cette somme, combien de TVA aurions-nous versée à l'État sans l'avoir encore reçue de ces clients ? »`,
+          `${c.entreprise} a opté pour la TVA d'après les débits : la TVA de chaque facture est due au trimestre qui suit, que le client ait payé ou non.`,
           "Pas de cours cette fois : les calculs sont ceux du chapitre. L'arène a rejoué l'année avec le délai demandé, tout le reste identique.",
         ];
       },
@@ -150,7 +153,7 @@ export const LA_TVA_AVANCEE_POUR_LE_CLIENT: Situation = {
       explication: (c) => {
         const k = tvaAvanceePourLeClient(c);
         return [
-          `Ces ${eur(k.tvaEnPlus)} de TVA, l'arène les fait verser à l'État au trimestre qui suit la vente, que le client ait payé ou non : l'entreprise les avance pour ses clients.`,
+          `Ces ${eur(k.tvaEnPlus)} de TVA, l'option pour les débits les fait verser à l'État au trimestre qui suit la vente, que le client ait payé ou non : l'entreprise les avance pour ses clients.`,
         ];
       },
     },
@@ -221,7 +224,7 @@ export const LA_TVA_AVANCEE_POUR_LE_CLIENT: Situation = {
           {
             texte: "Ce délai ne coûte rien : l'entreprise ne reverse la TVA à l'État qu'une fois payée par le client",
             juste: false,
-            retour: `Non : dans l'arène, la TVA d'une vente se verse au trimestre suivant, que le client ait payé ou non. Et la trésorerie perd ${eur(k.perte)} au 31 décembre.`,
+            retour: `Non : ce serait vrai sans l'option, car la TVA de travaux ou de services n'est due par défaut qu'à l'encaissement. Mais ${c.entreprise} a opté pour les débits : la TVA de chaque facture se verse au trimestre suivant, que le client ait payé ou non. Et la trésorerie perd ${eur(k.perte)} au 31 décembre.`,
           },
         ];
       },
