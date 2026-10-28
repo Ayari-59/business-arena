@@ -1,71 +1,90 @@
-import { montantEcrit as eur } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
+import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { ENTREPRISES_DES_PARTENAIRES, partenairesDuCabinet } from "../../chapitres/commissions-des-partenaires";
 import type { Cas } from "../../cas";
-import { canaux } from "../../chapitres/commissions-des-partenaires";
 import type { Situation } from "../types";
 
 /**
- * CAS PRATIQUE DU CHAPITRE « LES COMMISSIONS DES CANAUX PARTENAIRES » : LA MISE EN AVANT
- * PAYANTE (BTS NDRC, palier 3).
+ * CAS PRATIQUE DU CHAPITRE « LES COMMISSIONS DES CANAUX PARTENAIRES » : LA MISE EN AVANT PAYANTE
+ * (BTS NDRC, palier 3).
  *
- * La place de marché propose une offre de mise en avant : une commission plus forte, en
- * échange de plus de commandes. La responsable des ventes en ligne demande s'il faut
- * signer. L'élève refait seul le chemin du chapitre : la commission et la marge après
- * commission d'une commande, la marge que le canal laisse sur le trimestre, la même chose
- * avec l'offre, les commandes qu'il faudrait pour payer la hausse, et la phrase qu'il rend.
+ * LE CAS JOUE DANS LE MONDE DU COURS : le cabinet ATLAS CONSEIL (monde/atlas-conseil.ts) et son modèle
+ * (monde/relation-client.ts), lus par le chapitre (`partenairesDuCabinet`). Hypothèse du cas : le
+ * cabinet a décidé de passer aussi par la plateforme de mise en relation l'an prochain. Son offre de
+ * base est celle de la fiche (20 % de chaque mission, 40 % des comptes revenus en direct après la
+ * première année) et lui amènerait 5 comptes par an. La plateforme propose sa mise en avant : le
+ * cabinet en tête de ses recherches, 6 comptes par an, mais 25 % de commission, sur tous les comptes.
  *
- * Le cas est neuf par sa question : la commission n'est plus celle du scénario, et elle
- * s'échange contre un volume. Les chiffres de départ sont ceux du premier trimestre de
- * l'arène, canal par canal, lus par `canaux`.
+ * L'élève refait seul le chemin du chapitre, à valeur vie égale : la première année des deux offres,
+ * puis la vie des comptes, le calcul à rebours des comptes qu'il faudrait pour payer la hausse (sur la
+ * vie, et sur la première année seule : les deux lectures se croisent et ne disent pas la même chose),
+ * la commission la plus haute que la mise en avant peut prendre (un curseur), et sa réponse.
+ *
+ * Le jugement : la directrice commerciale a fait le compte sur la première année, et elle y perd ;
+ * sur la vie des comptes, la mise en avant rapporte. Il faut le dire, chiffres à l'appui.
+ *
+ * Ce qui a changé en passant sur le monde du cours : la place de marché de PIXEL & CO, ses commandes
+ * et sa marge du trimestre deviennent la plateforme d'un cabinet, ses comptes et leur valeur vie.
  */
+
+/** La commission de la mise en avant (hypothèse du cas) : 25 % de chaque mission, au lieu de 20 %. */
+export const COMMISSION_PROPOSEE = 0.25;
 
 /**
- * La commission de l'offre de mise en avant : 15 % du prix au lieu de 12 %. Trois points
- * de plus, l'écart courant entre l'offre de base d'une place de marché et son offre
- * « premium », qui place les produits en tête des résultats de recherche.
+ * LES COMPTES QUE LA PLATEFORME AMÈNERAIT CHAQUE ANNÉE (hypothèse du cas) : 5 avec l'offre de base,
+ * 6 avec la mise en avant. Ce sont des comptes attendus, la promesse de la plateforme, que le cas ne
+ * discute pas : il calcule ce qu'elle devrait valoir pour payer la hausse.
  */
-export const COMMISSION_PROPOSEE = 0.15;
+export const COMPTES_DE_L_OFFRE_DE_BASE = 5;
+export const COMPTES_PROMIS = 6;
 
-/**
- * Ce que la place de marché promet en échange : un dixième de commandes en plus. C'est
- * sa promesse commerciale, que le cas ne discute pas : il calcule ce qu'elle devrait
- * valoir pour payer la hausse.
- */
-export const COMMANDES_EN_PLUS_PROMISES = 0.1;
+/** Les bornes du curseur de la commission de la mise en avant, en %. */
+export const COMMISSION_DU_CURSEUR_DU_CAS = { min: 20, max: 40 } as const;
 
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const qte = (n: number) => n.toLocaleString("fr-FR");
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
+const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
+const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
+const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
 
-/** Le canal aujourd'hui et avec l'offre de mise en avant. */
-export function miseEnAvant(c: Cas) {
-  const k = canaux(c);
-  const commandes = k.place.commandes;
-  const margeDuCanal = auCentime(commandes * k.margeApresCommission);
-  const commission = auCentime(k.prix * COMMISSION_PROPOSEE);
-  const margeAvec = auCentime(k.margeParCommande - commission);
-  const commandesPromises = Math.round(commandes * (1 + COMMANDES_EN_PLUS_PROMISES));
-  const margeDuCanalAvec = auCentime(commandesPromises * margeAvec);
-  // Les commandes qui, à la nouvelle commission, laissent la marge du canal d'aujourd'hui : arrondies au-dessus.
-  const commandesNecessaires = Math.ceil(margeDuCanal / margeAvec - 1e-9);
+/** Les deux offres de la plateforme, sur la première année et sur la vie des comptes. */
+export function miseEnAvant(c: Pick<Cas, "code">) {
+  const x = partenairesDuCabinet(c);
+  const ca = x.m.chiffreDAffaires;
+  const base = x.plateforme.commission;
+  const enDirect = x.plateforme.partQuiRevientEnDirect;
+  // Une offre : sa commission, les comptes qu'elle amène, ce qu'elle coûte et laisse par compte et en tout.
+  const offre = (commission: number, comptes: number) => {
+    const premiere = auCentime(ca * commission);
+    const suivante = auCentime(premiere * (1 - enDirect));
+    const surLaVie = auCentime(premiere + suivante * x.anneesSuivantes);
+    const netParCompte = auCentime(x.v.valeurVie - surLaVie);
+    const margePremiereAnnee = auCentime(comptes * (x.m.marge - premiere));
+    return { commission, comptes, premiere, suivante, surLaVie, netParCompte, margePremiereAnnee, valeur: auCentime(comptes * netParCompte) };
+  };
+  const b = offre(base, COMPTES_DE_L_OFFRE_DE_BASE);
+  const m = offre(COMMISSION_PROPOSEE, COMPTES_PROMIS);
+  // Le calcul à rebours : les comptes qu'il faudrait, à la nouvelle commission, pour garder ce que l'offre de base laisse.
+  const comptesNecessaires = b.valeur / m.netParCompte;
+  const comptesNecessairesALaPremiereAnnee = b.margePremiereAnnee / (x.m.marge - m.premiere);
+  // Le curseur : la plus haute commission (en %) où les comptes promis laissent encore la valeur de l'offre de base.
+  const plafond = Math.floor((((x.v.valeurVie - b.valeur / COMPTES_PROMIS) / (ca * x.facteur)) * 100) + 1e-9);
+  const ecart = auCentime(m.valeur - b.valeur);
   return {
-    k,
-    commandes,
-    margeDuCanal,
-    tauxPropose: COMMISSION_PROPOSEE * 100,
-    promesse: COMMANDES_EN_PLUS_PROMISES * 100,
-    points: auDixieme(COMMISSION_PROPOSEE * 100 - k.taux),
-    commission,
-    margeAvec,
-    commandesPromises,
-    margeDuCanalAvec,
-    commandesNecessaires,
-    hausseNecessaire: auDixieme((commandesNecessaires / commandes - 1) * 100),
-    ecart: auCentime(margeDuCanalAvec - margeDuCanal),
-    // Les erreurs classiques : compter les ventes en plus comme un gain, et oublier que la
-    // nouvelle commission se paie aussi sur les commandes qu'on avait déjà.
-    ventesEnPlus: auCentime((commandesPromises - commandes) * k.prix),
-    margeDesCommandesEnPlus: auCentime((commandesPromises - commandes) * margeAvec),
+    x,
+    b,
+    m,
+    hausse: auDixieme((COMMISSION_PROPOSEE - base) * 100),
+    promesse: auDixieme((COMPTES_PROMIS / COMPTES_DE_L_OFFRE_DE_BASE - 1) * 100),
+    comptesNecessaires: auCentime(comptesNecessaires),
+    hausseNecessaire: auCentime((comptesNecessaires / COMPTES_DE_L_OFFRE_DE_BASE - 1) * 100),
+    hausseNecessaireALaPremiereAnnee: auDixieme((comptesNecessairesALaPremiereAnnee / COMPTES_DE_L_OFFRE_DE_BASE - 1) * 100),
+    ecart,
+    ecartALaPremiereAnnee: auCentime(m.margePremiereAnnee - b.margePremiereAnnee),
+    plafond,
+    signer: ecart > 0,
+    // Les erreurs classiques : ne compter que le compte en plus, en oubliant la hausse payée par les autres.
+    valeurDuCompteEnPlus: m.netParCompte,
+    hausseSurLesAutres: auCentime(COMPTES_DE_L_OFFRE_DE_BASE * (b.netParCompte - m.netParCompte)),
   };
 }
 
@@ -75,156 +94,227 @@ export const LA_MISE_EN_AVANT_PAYANTE: Situation = {
   palier: 3,
   blocs: [],
   reprend: ["commissions-des-partenaires"],
-  commanditaire: "La responsable des ventes en ligne",
+  commanditaire: "La directrice commerciale",
   titre: "La mise en avant payante",
   accroche:
-    "La place de marché promet plus de commandes contre une commission plus forte. La responsable des ventes en ligne veut savoir s'il faut signer.",
+    "La plateforme promet un compte de plus par an contre une commission plus forte. La directrice commerciale a fait le compte sur la première année : faut-il signer ?",
   objectifs: [
-    "Calculer la commission et la marge après commission d'une commande",
-    "Calculer la marge qu'un canal partenaire laisse sur le trimestre",
-    "Trouver le volume qui paie une hausse de commission",
-    "Rédiger une réponse chiffrée à la responsable des ventes en ligne",
+    "Comparer deux offres d'un partenaire sur la première année et sur la vie des comptes",
+    "Retrouver à rebours les comptes qui paieraient une hausse de commission",
+    "Trouver la commission la plus haute qu'une offre peut prendre",
+    "Rédiger une réponse chiffrée à la directrice commerciale",
   ],
   libre: false,
   entreprises: {
-    codes: ["ecommerce"],
-    pourquoi: "ce cas suit un canal partenaire commissionné, et PIXEL & CO est l'entreprise de l'arène qui vend par une place de marché.",
+    codes: ENTREPRISES_DES_PARTENAIRES,
+    pourquoi:
+      "ce cas se joue au cabinet ATLAS CONSEIL, qui gagne ses comptes d'entreprise un à un, par sa propre prospection ou par des partenaires payés à la commission : c'est là qu'une commission se pèse sur toute la vie d'un compte.",
   },
   etapes: [
     {
       id: "demande",
       type: "lecture",
-      titre: "La demande de la responsable des ventes en ligne",
+      titre: "La demande de la directrice commerciale",
       texte: (c) => {
         const r = miseEnAvant(c);
         return [
-          `« La place de marché nous propose son offre de mise en avant : nos produits en tête des recherches, et une commission qui passe de ${pct(r.k.taux)} à ${pct(r.tauxPropose)} du prix. Elle nous promet ${pct(r.promesse)} de commandes en plus. Est-ce que ${c.entreprise} doit signer ? »`,
-          "Pas de cours cette fois : vous avez les chiffres du premier trimestre, et la méthode est celle du chapitre. À vous de l'enchaîner.",
+          `« L'an prochain, nous passerons aussi par la plateforme de mise en relation. Son offre de base nous amènerait ${qte(r.b.comptes)} comptes par an, à ${pct(r.b.commission * 100)} de chaque mission. Elle nous propose sa mise en avant : notre cabinet en tête de ses recherches, ${qte(r.m.comptes)} comptes par an, mais ${pct(r.m.commission * 100)} de commission, sur tous les comptes. J'ai fait le compte sur la première année : nous y perdrions. Faut-il signer ? »`,
+          `Les comptes de la plateforme sont des comptes moyens du cabinet : la fiche donne leur chiffre d'affaires et leur marge, l'attrition de ${pct(r.x.n.attrition * 100)} vaut pour toute leur vie, et ${pct(r.x.plateforme.partQuiRevientEnDirect * 100)} d'entre eux reviennent signer en direct après la première année, dans les deux offres. Les comptes promis sont des comptes attendus.`,
+          "Pas de cours cette fois : la méthode est celle du chapitre. À vous de l'enchaîner.",
         ];
       },
       tableau: (c) => {
         const r = miseEnAvant(c);
         return {
-          titre: `La place de marché, premier trimestre · ${c.entreprise}`,
-          colonnes: ["Valeur"],
+          titre: `Les deux offres de la plateforme · ${r.x.f.entreprise}`,
+          colonnes: ["Offre de base", "Mise en avant"],
           lignes: [
-            { libelle: "Prix d'une commande", valeurs: [eur(r.k.prix)] },
-            { libelle: "Coût variable d'une commande", valeurs: [eur(r.k.coutVariable)] },
-            { libelle: "Commandes passées par la place de marché", valeurs: [qte(r.commandes)] },
-            { libelle: "Commission aujourd'hui, en part du prix", valeurs: [pct(r.k.taux)] },
-            { libelle: "Commission de l'offre de mise en avant", valeurs: [pct(r.tauxPropose)] },
-            { libelle: "Commandes en plus promises", valeurs: [pct(r.promesse)] },
+            { libelle: "Commission, en part de chaque mission", valeurs: [pct(r.b.commission * 100), pct(r.m.commission * 100)] },
+            { libelle: "Comptes attendus par an", valeurs: [qte(r.b.comptes), qte(r.m.comptes)] },
+            { libelle: "Comptes revenus en direct après la première année", valeurs: [pct(r.x.plateforme.partQuiRevientEnDirect * 100), pct(r.x.plateforme.partQuiRevientEnDirect * 100)] },
+            { libelle: "Chiffre d'affaires d'un compte, par an", valeurs: [eur(r.x.m.chiffreDAffaires), eur(r.x.m.chiffreDAffaires)] },
+            { libelle: "Marge d'un compte, par an", valeurs: [eur(r.x.m.marge), eur(r.x.m.marge)] },
+            { libelle: "Comptes perdus chaque année (attrition)", valeurs: [pct(r.x.n.attrition * 100), pct(r.x.n.attrition * 100)] },
           ],
         };
       },
       repere: () =>
-        "À rendre : la marge du canal aujourd'hui et avec l'offre, les commandes qu'il faudrait pour payer la hausse, et votre réponse.",
+        "À rendre : la marge de la première année et la valeur vie nette des comptes, dans les deux offres, les comptes qu'il faudrait pour payer la hausse, la commission la plus haute que la mise en avant peut prendre, et votre réponse.",
     },
     {
-      id: "aujourd-hui",
+      id: "la-premiere-annee",
       type: "montants",
-      titre: "Le canal aujourd'hui",
+      titre: "Le compte de la première année",
       notions: ["distribution_commission", "contribution_margin"],
       question: () =>
-        "À la commission d'aujourd'hui, calculez la commission prélevée sur une commande, la marge après commission d'une commande, puis la marge que le canal laisse sur le trimestre.",
+        "Refaites le compte de la directrice. Calculez la commission de la première année sur un compte, dans l'offre de base puis avec la mise en avant, et la marge que laissent, la première année, les comptes de chaque offre une fois la commission payée.",
       champs: (c) => {
         const r = miseEnAvant(c);
+        const ca = r.x.m.chiffreDAffaires;
         return [
-          { libelle: "Commission par commande", attendu: r.k.commissionParCommande, calcul: `${eur(r.k.prix)} × ${pct(r.k.taux)} = ${eur(r.k.commissionParCommande)}` },
-          { libelle: "Marge après commission", attendu: r.k.margeApresCommission, calcul: `${eur(r.k.prix)} − ${eur(r.k.coutVariable)} − ${eur(r.k.commissionParCommande)} = ${eur(r.k.margeApresCommission)}` },
-          { libelle: "Marge du canal sur le trimestre", attendu: r.margeDuCanal, calcul: `${qte(r.commandes)} × ${eur(r.k.margeApresCommission)} = ${eur(r.margeDuCanal)}` },
+          { libelle: "Commission de la première année, offre de base", attendu: r.b.premiere, calcul: `${eur(ca)} × ${pct(r.b.commission * 100)} = ${eur(r.b.premiere)}` },
+          { libelle: "Commission de la première année, mise en avant", attendu: r.m.premiere, calcul: `${eur(ca)} × ${pct(r.m.commission * 100)} = ${eur(r.m.premiere)}` },
+          {
+            libelle: "Marge de la première année, offre de base",
+            attendu: r.b.margePremiereAnnee,
+            calcul: `${qte(r.b.comptes)} × (${eur(r.x.m.marge)} − ${eur(r.b.premiere)}) = ${eur(r.b.margePremiereAnnee)}`,
+          },
+          {
+            libelle: "Marge de la première année, mise en avant",
+            attendu: r.m.margePremiereAnnee,
+            calcul: `${qte(r.m.comptes)} × (${eur(r.x.m.marge)} − ${eur(r.m.premiere)}) = ${eur(r.m.margePremiereAnnee)}`,
+          },
         ];
       },
       explication: (c) => {
         const r = miseEnAvant(c);
         return [
-          `Aujourd'hui, la place de marché laisse ${eur(r.margeDuCanal)} de marge sur le trimestre, une fois sa commission payée. C'est ce que l'offre doit dépasser.`,
+          r.ecartALaPremiereAnnee < 0
+            ? `La directrice a raison sur la première année : la mise en avant laisse ${eur(-r.ecartALaPremiereAnnee)} de moins. La hausse de ${qte(r.hausse)} points se paie sur tous les comptes, pas seulement sur celui qu'elle amène en plus.`
+            : `Sur la première année, la mise en avant laisse déjà ${eur(r.ecartALaPremiereAnnee)} de plus.`,
+          "Mais un compte ne vit pas un an : la comparaison se fait sur sa vie.",
         ];
       },
     },
     {
-      id: "avec-l-offre",
+      id: "sur-la-vie",
       type: "montants",
-      titre: "Le canal avec l'offre",
-      notions: ["distribution_commission", "contribution_margin"],
-      question: (c) => {
-        const r = miseEnAvant(c);
-        return `À ${pct(r.tauxPropose)} de commission, calculez la commission par commande et la marge après commission. Si la promesse de ${pct(r.promesse)} de commandes en plus est tenue, combien de commandes passeront par le canal (à l'unité), et quelle marge laissera-t-il sur le trimestre ?`;
-      },
+      titre: "Les deux offres sur la vie des comptes",
+      notions: ["distribution_commission", "customer_lifetime_value"],
+      question: () =>
+        "À la valeur vie simple, calculez les commissions de la mise en avant sur toute la vie d'un compte, la valeur vie nette d'un compte dans chaque offre, puis la valeur vie nette des comptes d'une année, dans chaque offre.",
       champs: (c) => {
         const r = miseEnAvant(c);
+        const x = r.x;
         return [
-          { libelle: "Commission par commande", attendu: r.commission, calcul: `${eur(r.k.prix)} × ${pct(r.tauxPropose)} = ${eur(r.commission)}` },
-          { libelle: "Marge après commission", attendu: r.margeAvec, calcul: `${eur(r.k.margeParCommande)} − ${eur(r.commission)} = ${eur(r.margeAvec)}` },
-          { libelle: "Commandes promises", attendu: r.commandesPromises, tolerance: 1, calcul: `${qte(r.commandes)} × (1 + ${pct(r.promesse)}) ≈ ${qte(r.commandesPromises)}` },
-          { libelle: "Marge du canal avec l'offre", attendu: r.margeDuCanalAvec, tolerance: Math.max(1, r.margeAvec), calcul: `${qte(r.commandesPromises)} × ${eur(r.margeAvec)} = ${eur(r.margeDuCanalAvec)}` },
+          {
+            libelle: "Commissions sur la vie d'un compte, mise en avant",
+            attendu: r.m.surLaVie,
+            calcul: `${eur(r.m.premiere)} + ${eur(r.m.premiere)} × (1 − ${pct(x.plateforme.partQuiRevientEnDirect * 100)}) × (1 − ${pct(x.n.attrition * 100)}) ÷ ${pct(x.n.attrition * 100)} = ${eur(r.m.premiere)} + ${eur(r.m.suivante)} × ${qte(x.anneesSuivantes)} = ${eur(r.m.surLaVie)}`,
+          },
+          { libelle: "Valeur vie nette d'un compte, offre de base", attendu: r.b.netParCompte, calcul: `${eur(x.v.valeurVie)} − (${eur(r.b.premiere)} + ${eur(r.b.suivante)} × ${qte(x.anneesSuivantes)}) = ${eur(r.b.netParCompte)}` },
+          { libelle: "Valeur vie nette d'un compte, mise en avant", attendu: r.m.netParCompte, calcul: `${eur(x.v.valeurVie)} − ${eur(r.m.surLaVie)} = ${eur(r.m.netParCompte)}` },
+          { libelle: "Valeur vie nette des comptes d'une année, offre de base", attendu: r.b.valeur, calcul: `${qte(r.b.comptes)} × ${eur(r.b.netParCompte)} = ${eur(r.b.valeur)}` },
+          { libelle: "Valeur vie nette des comptes d'une année, mise en avant", attendu: r.m.valeur, calcul: `${qte(r.m.comptes)} × ${eur(r.m.netParCompte)} = ${eur(r.m.valeur)}` },
         ];
       },
       explication: (c) => {
         const r = miseEnAvant(c);
         return [
-          `La hausse de commission se paie sur toutes les commandes du canal, pas seulement sur celles qu'elle amène : chacune laisse ${eur(r.margeAvec)} au lieu de ${eur(r.k.margeApresCommission)}.`,
-          r.margeAvec > r.k.margeApresAcquisition
-            ? `À ${pct(r.tauxPropose)}, une commande de la place de marché laisse encore plus qu'une commande de la campagne (${eur(r.k.margeApresAcquisition)}) : la question n'est pas de quitter le canal, mais de savoir si la mise en avant vaut ce qu'elle coûte.`
-            : `À ${pct(r.tauxPropose)}, une commande de la place de marché laisse moins qu'une commande de la campagne (${eur(r.k.margeApresAcquisition)}).`,
+          r.signer
+            ? `Sur la vie des comptes, la mise en avant laisse ${eur(r.ecart)} de plus : le compte en plus vaut ${eur(r.valeurDuCompteEnPlus)}, et la hausse coûte ${eur(r.hausseSurLesAutres)} sur les ${qte(r.b.comptes)} autres.`
+            : `Sur la vie des comptes, la mise en avant laisse ${eur(-r.ecart)} de moins : le compte en plus vaut ${eur(r.valeurDuCompteEnPlus)}, et la hausse coûte ${eur(r.hausseSurLesAutres)} sur les ${qte(r.b.comptes)} autres.`,
         ];
       },
     },
     {
-      id: "volume",
+      id: "a-rebours",
       type: "montants",
-      titre: "Les commandes qui paieraient la hausse",
-      notions: ["distribution_commission"],
-      question: (c) => {
-        const r = miseEnAvant(c);
-        return `Combien de commandes faudrait-il, à ${eur(r.margeAvec)} de marge chacune, pour retrouver la marge du canal d'aujourd'hui (${eur(r.margeDuCanal)}), à l'unité supérieure ? Quelle hausse des commandes cela représente-t-il, en pourcentage au dixième ?`;
-      },
+      titre: "Les comptes qui paieraient la hausse",
+      notions: ["distribution_commission", "customer_lifetime_value"],
+      question: () =>
+        "Combien de comptes attendus par an faudrait-il à la mise en avant pour laisser autant que l'offre de base sur la vie des comptes (au centième) ? Quelle hausse des comptes cela représente-t-il, au centième ? Et quelle hausse faudrait-il si l'on ne regardait que la première année, au dixième ?",
       champs: (c) => {
         const r = miseEnAvant(c);
         return [
-          { libelle: "Commandes nécessaires", attendu: r.commandesNecessaires, tolerance: 1, calcul: `${eur(r.margeDuCanal)} ÷ ${eur(r.margeAvec)}, arrondi au-dessus = ${qte(r.commandesNecessaires)}` },
-          { libelle: "Hausse nécessaire des commandes (%)", attendu: r.hausseNecessaire, tolerance: 0.2, calcul: `(${qte(r.commandesNecessaires)} ÷ ${qte(r.commandes)} − 1) × 100 = ${pct(r.hausseNecessaire)}` },
+          { libelle: "Comptes nécessaires, sur la vie", attendu: r.comptesNecessaires, tolerance: 0.01, calcul: `${eur(r.b.valeur)} ÷ ${eur(r.m.netParCompte)} = ${qte(r.comptesNecessaires)} comptes attendus` },
+          {
+            libelle: "Hausse nécessaire des comptes, sur la vie (%)",
+            attendu: r.hausseNecessaire,
+            tolerance: 0.1,
+            calcul: `(${qte(r.comptesNecessaires)} ÷ ${qte(r.b.comptes)} − 1) × 100 = ${pct(r.hausseNecessaire)}`,
+          },
+          {
+            libelle: "Hausse nécessaire, sur la première année seule (%)",
+            attendu: r.hausseNecessaireALaPremiereAnnee,
+            tolerance: 0.1,
+            calcul: `(${eur(r.b.margePremiereAnnee)} ÷ (${eur(r.x.m.marge)} − ${eur(r.m.premiere)}) ÷ ${qte(r.b.comptes)} − 1) × 100 = ${pct(r.hausseNecessaireALaPremiereAnnee)}`,
+          },
         ];
       },
       explication: (c) => {
         const r = miseEnAvant(c);
         return [
-          r.hausseNecessaire > r.promesse
-            ? `Pour payer ${qte(r.points)} points de commission, il faudrait ${pct(r.hausseNecessaire)} de commandes en plus. La place de marché en promet ${pct(r.promesse)} : même tenue, la promesse ne suffit pas.`
-            : `Pour payer ${qte(r.points)} points de commission, il suffirait de ${pct(r.hausseNecessaire)} de commandes en plus. La place de marché en promet ${pct(r.promesse)} : tenue, la promesse paie la hausse.`,
+          `La plateforme promet ${pct(r.promesse)} de comptes en plus. Sur la vie des comptes, il en faudrait ${pct(r.hausseNecessaire)} ; sur la première année seule, ${pct(r.hausseNecessaireALaPremiereAnnee)}. Les deux lectures se croisent : la promesse passe la barre de la vie, pas celle de la première année.`,
+          "La première année exagère le coût d'une hausse : elle pèse sur une marge que la commission entame déjà, et elle ignore les comptes qui reviennent en direct.",
+        ];
+      },
+    },
+    {
+      id: "jusqu-ou",
+      type: "curseur",
+      titre: "Jusqu'où la commission de la mise en avant",
+      notions: ["distribution_commission", "customer_lifetime_value"],
+      question: (c) => {
+        const r = miseEnAvant(c);
+        return `La plateforme pourrait demander plus. Faites varier la commission de la mise en avant, de ${pct(COMMISSION_DU_CURSEUR_DU_CAS.min)} à ${pct(COMMISSION_DU_CURSEUR_DU_CAS.max)}, ses ${qte(r.m.comptes)} comptes restant promis. Placez le curseur sur la plus haute commission, au pourcentage entier, où ses comptes laissent encore, sur leur vie, autant que l'offre de base (${eur(r.b.valeur)}), puis validez.`;
+      },
+      grandeur: () => ({ libelle: "Commission de la mise en avant", unite: "%" }),
+      sens: "plus-grande",
+      cible: (c) => ({ attendu: miseEnAvant(c).plafond, min: COMMISSION_DU_CURSEUR_DU_CAS.min, max: COMMISSION_DU_CURSEUR_DU_CAS.max }),
+      zones: ["La mise en avant laisse plus", "L'offre de base laisse plus"],
+      rates: () => ({
+        dessous: "Plus haut, la mise en avant laisse encore autant que l'offre de base : cherchez la commission la plus haute.",
+        dessus: "À cette commission, les comptes promis laissent moins que ceux de l'offre de base.",
+      }),
+      montrer: "Montrer la commission la plus haute",
+      lecture: (c, t) => {
+        const r = miseEnAvant(c);
+        const x = r.x;
+        const vie = auCentime(((x.m.chiffreDAffaires * t) / 100) * x.facteur);
+        const valeur = auCentime(r.m.comptes * (x.v.valeurVie - vie));
+        return [
+          { libelle: "Commissions sur la vie d'un compte", montant: vie },
+          { libelle: "Valeur vie nette des comptes promis", montant: valeur },
+          { libelle: "Valeur vie nette des comptes de l'offre de base", montant: r.b.valeur },
+          { libelle: "Écart en faveur de la mise en avant", montant: auCentime(valeur - r.b.valeur), fort: true },
+        ];
+      },
+      droites: (c) => {
+        const r = miseEnAvant(c);
+        const x = r.x;
+        return {
+          produit: (t) => r.m.comptes * (x.v.valeurVie - ((x.m.chiffreDAffaires * t) / 100) * x.facteur),
+          cout: () => r.b.valeur,
+          libelles: ["Valeur vie nette des comptes de la mise en avant", "Valeur vie nette des comptes de l'offre de base"],
+        };
+      },
+      explication: (c) => {
+        const r = miseEnAvant(c);
+        return [
+          `Avec ${qte(r.m.comptes)} comptes promis, la mise en avant reste meilleure jusqu'à ${pct(r.plafond)} de commission ; elle en demande ${pct(r.m.commission * 100)}. C'est la marge de négociation du cabinet, si la promesse est tenue.`,
         ];
       },
     },
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse à la responsable des ventes en ligne",
-      question: () => "Quelle phrase envoyez-vous à la responsable des ventes en ligne ?",
+      titre: "Votre réponse à la directrice commerciale",
+      notions: ["distribution_commission", "customer_lifetime_value"],
+      question: () => "Quelle phrase envoyez-vous à la directrice commerciale ?",
       options: (c) => {
         const r = miseEnAvant(c);
-        const signer = r.ecart > 0;
+        const sens = r.signer ? "de plus" : "de moins";
         return [
           {
-            texte: signer
-              ? `Signer : il suffit de ${pct(r.hausseNecessaire)} de commandes en plus`
-              : `Refuser : il faudrait ${pct(r.hausseNecessaire)} de commandes en plus, pas ${pct(r.promesse)}`,
+            texte: r.signer ? `Signer : sur la vie, la mise en avant laisse ${eur(r.ecart)} de plus` : `Refuser : sur la vie, la mise en avant laisse ${eur(-r.ecart)} de moins`,
             juste: true,
-            retour: `Oui : avec l'offre, le canal laisserait ${eur(r.margeDuCanalAvec)} au lieu de ${eur(r.margeDuCanal)}, soit ${eur(Math.abs(r.ecart))} ${signer ? "de plus" : "de moins"} sur le trimestre. Il faudrait ${qte(r.commandesNecessaires)} commandes pour payer la hausse ; la promesse en donne ${qte(r.commandesPromises)}.`,
+            retour: `Oui : sur la vie des comptes, ${qte(r.m.comptes)} comptes à ${eur(r.m.netParCompte)} laissent ${eur(r.m.valeur)}, contre ${eur(r.b.valeur)} pour ${qte(r.b.comptes)} comptes à ${eur(r.b.netParCompte)}, soit ${eur(Math.abs(r.ecart))} ${sens}. Il suffirait de ${qte(r.comptesNecessaires)} comptes attendus ; la plateforme en promet ${qte(r.m.comptes)}. Le compte de la première année trompe : il ignore les années où les comptes, revenus en direct ou non, rapportent encore.`,
           },
           {
-            texte: `Signer : ${qte(r.points)} points de commission contre ${pct(r.promesse)} de commandes en plus`,
+            texte: `Refuser : la première année, la mise en avant laisse ${eur(Math.abs(r.ecartALaPremiereAnnee))} ${r.ecartALaPremiereAnnee < 0 ? "de moins" : "de plus"}`,
             juste: false,
-            retour: `Non : les deux pourcentages ne portent pas sur la même chose. Les ${qte(r.points)} points se prennent sur le prix, donc sur une marge de ${eur(r.k.margeParCommande)} : chaque commande laisse ${eur(r.margeAvec)} au lieu de ${eur(r.k.margeApresCommission)}, soit ${pct(auDixieme((1 - r.margeAvec / r.k.margeApresCommission) * 100))} de moins.`,
+            retour: `Non : c'est juger une commission qui revient chaque année sur sa seule première année. Sur la vie des comptes, la mise en avant laisse ${eur(r.m.valeur)} contre ${eur(r.b.valeur)}.`,
           },
           {
-            texte: `Signer : nous y gagnerons ${eur(r.ventesEnPlus)} par trimestre`,
+            texte: `Signer : un compte de plus, c'est ${eur(r.valeurDuCompteEnPlus)} de valeur vie en plus`,
             juste: false,
-            retour: `Non : ${eur(r.ventesEnPlus)}, ce sont les ventes en plus, pas le gain. Il faut en retirer leurs coûts variables et la commission, et payer la hausse sur toutes les autres commandes : la marge du canal ${r.ecart < 0 ? "baisse" : "monte"} de ${eur(Math.abs(r.ecart))}.`,
+            retour: `Non, pas ce chiffre : c'est la valeur du compte en plus, mais la hausse de commission se paie aussi sur les ${qte(r.b.comptes)} autres, ${eur(r.hausseSurLesAutres)} sur leur vie. Tout compté, l'écart est de ${eur(r.ecart)}.`,
           },
           {
-            texte: `Signer : le canal laissera ${eur(r.margeDesCommandesEnPlus)} de marge en plus`,
+            texte: `Refuser : à ${pct(r.m.commission * 100)}, un compte de la plateforme vaut moins qu'un compte gagné en propre`,
             juste: false,
-            retour: `Non : ${eur(r.margeDesCommandesEnPlus)}, c'est la marge des seules commandes en plus. C'est oublier que les ${qte(r.commandes)} commandes d'aujourd'hui paieront elles aussi ${pct(r.tauxPropose)}, soit ${eur(auCentime(r.commission - r.k.commissionParCommande))} de plus chacune. Tout compté, la marge du canal ${r.ecart < 0 ? "baisse" : "monte"} de ${eur(Math.abs(r.ecart))}.`,
+            retour: `Non : c'est vrai (${eur(r.m.netParCompte)} contre ${eur(r.x.v.enPropre)}), mais ce n'est pas la question. Les comptes de la plateforme viennent en plus de la conquête du cabinet ; entre ses deux offres, c'est la mise en avant qui laisse le plus.`,
           },
         ];
       },

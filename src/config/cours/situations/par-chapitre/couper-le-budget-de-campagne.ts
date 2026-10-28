@@ -1,50 +1,74 @@
-import { montantEcrit as eur } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
+import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
 import type { Cas } from "../../cas";
-import { campagne } from "../../chapitres/cout-d-acquisition";
+import { ENTREPRISES_DE_L_ACQUISITION, acquisitionDuCabinet } from "../../chapitres/cout-d-acquisition";
 import type { Situation } from "../types";
 
 /**
- * CAS PRATIQUE DU CHAPITRE « LE COÛT D'ACQUISITION » : COUPER LE BUDGET DE CAMPAGNE ?
- * (BTS NDRC, palier 3).
+ * CAS PRATIQUE DU CHAPITRE « LE COÛT D'ACQUISITION » : COUPER LE BUDGET DE CAMPAGNE ? (BTS NDRC,
+ * palier 3).
  *
- * Le directeur financier veut économiser sur la publicité : il propose de couper de
- * moitié le budget de campagne du trimestre. L'élève refait seul le chemin du chapitre,
- * dans l'autre sens : le coût d'acquisition et la marge après acquisition d'aujourd'hui,
- * ce que la coupe ferait perdre en clients et en marge, ce que coûtaient les clients
- * perdus, puis la phrase qu'il rend.
+ * LE CAS JOUE DANS LE MONDE DU COURS : les chiffres sont ceux du cabinet ATLAS CONSEIL (fiche
+ * monde/atlas-conseil.ts), lus par `acquisitionDuCabinet`, le modèle du chapitre (la courbe figée de
+ * la campagne digitale, l'entonnoir de N et la valeur vie d'un compte).
  *
- * Le cas est neuf par sa question : le chapitre se demandait s'il fallait dépenser plus ;
- * le directeur demande s'il faut dépenser moins. Les chiffres sont ceux du trimestre
- * rejoué par l'arène à plusieurs budgets (`campagne.ts`), lus par `campagne`.
+ * La directrice financière veut couper de moitié le budget de la campagne digitale : une économie
+ * visible, et un coût d'acquisition moyen qui baisse. L'élève refait seul le chemin du chapitre, dans
+ * l'autre sens : les comptes et le coût moyen aux deux budgets, les comptes que la coupe fait perdre
+ * et ce que coûtait chacun (le coût du compte en plus, vu d'en haut), au curseur la valeur d'un compte
+ * sous laquelle la coupe paierait (à rebours), puis le croisement de trois mesures (la première année,
+ * la valeur vie simple, la valeur vie actualisée) et la phrase qu'il rend.
+ *
+ * LE JUGEMENT : le coût moyen baisse (10 000 € au lieu de 12 000 €), et c'est un piège ; la coupe ne
+ * paierait que si un compte valait moins de 15 000 €, moins que sa seule marge de la première année.
+ * Elle fait perdre 55 200 € de valeur vie nette, 36 000 € actualisée, et déjà 4 800 € sur la première
+ * année.
  */
 
 /**
- * Le budget envisagé, en part du budget du trimestre : la moitié. C'est le palier que
- * l'arène a rejoué sous le budget joué (`PALIERS_DE_BUDGET`), et la coupe qu'un
- * directeur financier propose d'ordinaire quand il cherche une économie visible.
+ * Le budget envisagé, en part du budget de N : la moitié. C'est le premier palier de la courbe de la
+ * campagne, et la coupe qu'une direction financière propose d'ordinaire quand elle cherche une
+ * économie visible.
  */
 export const BUDGET_ENVISAGE = 0.5;
 
-const qte = (n: number) => n.toLocaleString("fr-FR");
+/** Les bornes du curseur de la valeur d'un compte, en milliers d'euros. */
+export const VALEUR_DU_CURSEUR_DU_CAS = { min: 0, max: 40 } as const;
 
-/** Le trimestre au budget joué et au budget coupé, et ce qui les sépare. */
-export function coupeDuBudget(c: Cas) {
-  const k = campagne(c);
-  const coupe = k.budgets.find((b) => b.facteur === BUDGET_ENVISAGE)!;
-  const economie = k.jouee.budget - coupe.budget;
-  const nouveauxPerdus = k.jouee.nouveaux - coupe.nouveaux;
-  const margePerdue = k.jouee.marge - coupe.marge;
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
+const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+
+/** La campagne au budget de N et au budget coupé, et ce qui les sépare. */
+export function coupeDuBudget(c: Pick<Cas, "code">) {
+  const x = acquisitionDuCabinet(c);
+  const budget = x.budgetDeN;
+  const budgetCoupe = auCentime(budget * BUDGET_ENVISAGE);
+  const palier = (b: number) => {
+    const p = x.paliers.find((y) => y.budget === b);
+    if (!p) throw new Error(`Pas de palier à ${b} €`);
+    return p;
+  };
+  const aujourdhui = palier(budget);
+  const coupe = palier(budgetCoupe);
+  const economie = auCentime(budget - budgetCoupe);
+  const comptesPerdus = auCentime(aujourdhui.comptes - coupe.comptes);
+  const valeurPerdue = auCentime(comptesPerdus * x.v.simple);
   return {
-    k,
+    x,
+    aujourdhui,
     coupe,
     economie,
-    nouveauxPerdus,
-    commandesPerdues: k.jouee.commandes - coupe.commandes,
-    margePerdue,
-    effet: economie - margePerdue,
-    cacDesPerdus: auCentime(economie / nouveauxPerdus),
-    cacMoyenApres: auCentime(coupe.budget / coupe.nouveaux),
+    comptesPerdus,
+    coutDUnComptePerdu: auCentime(economie / comptesPerdus),
+    valeurPerdue,
+    netPerdu: auCentime(valeurPerdue - economie),
+    margeDeLaPremiereAnneePerdue: auCentime(comptesPerdus * x.v.m.marge),
+    effetSurLaPremiereAnnee: auCentime(economie - comptesPerdus * x.v.m.marge),
+    netPerduActualise: auCentime(comptesPerdus * x.v.actualisee - economie),
+    /** La plus forte valeur d'un compte, en milliers d'euros, sous laquelle la coupe paierait. */
+    valeurSousLaquelleCouper: Math.floor(economie / comptesPerdus / 1_000 + 1e-9),
+    /** Le verdict : la coupe fait-elle perdre de la valeur vie ? */
+    verdict: valeurPerdue > economie ? ("garder" as const) : ("couper" as const),
   };
 }
 
@@ -54,72 +78,77 @@ export const COUPER_LE_BUDGET_DE_CAMPAGNE: Situation = {
   palier: 3,
   blocs: [],
   reprend: ["cout-d-acquisition"],
-  commanditaire: "Le directeur financier",
+  commanditaire: "La directrice financière",
   titre: "Couper le budget de campagne ?",
   accroche:
-    "Le directeur financier veut couper de moitié le budget de campagne pour faire des économies. Ce que l'entreprise y gagnerait, et ce qu'elle y perdrait.",
+    "La directrice financière veut couper de moitié le budget de la campagne digitale : une économie visible, et un coût d'acquisition qui baisse. Ce que le cabinet y gagnerait, et ce qu'il y perdrait.",
   objectifs: [
-    "Calculer le coût d'acquisition et la marge après acquisition",
-    "Mesurer les clients et la marge qu'une coupe de budget ferait perdre",
-    "Calculer le coût des clients perdus et le comparer à ce qu'ils laissent",
-    "Rédiger une réponse chiffrée au directeur financier",
+    "Calculer les comptes attendus et le coût d'acquisition moyen à deux budgets",
+    "Calculer ce que coûtaient les comptes que la coupe ferait perdre",
+    "Retrouver à rebours la valeur d'un compte sous laquelle la coupe paierait",
+    "Croiser la première année, la valeur vie simple et la valeur vie actualisée, et rédiger une réponse chiffrée",
   ],
   libre: false,
   entreprises: {
-    codes: ["ecommerce"],
-    pourquoi: "ce cas suit les nouveaux clients d'une campagne, et PIXEL & CO est l'entreprise de l'arène qui les distingue de ses clients fidèles.",
+    codes: ENTREPRISES_DE_L_ACQUISITION,
+    pourquoi: "ce cas suit la campagne d'un cabinet qui vend ses journées à des entreprises : il se joue chez ATLAS CONSEIL, le cabinet du chapitre, sur son année N figée par la simulation du cours.",
   },
   etapes: [
     {
       id: "demande",
       type: "lecture",
-      titre: "La demande du directeur financier",
+      titre: "La demande de la directrice financière",
       texte: (c) => {
         const r = coupeDuBudget(c);
         return [
-          `« Les comptes sont serrés. Je propose de couper de moitié le budget de campagne : ${eur(r.economie)} d'économie par trimestre, c'est concret. Avant que je tranche, dites-moi ce que ${c.entreprise} y perdrait, et si l'économie en vaut la peine. »`,
-          "Pas de cours cette fois : l'arène a rejoué le trimestre aux deux budgets, et la méthode est celle du chapitre. À vous de l'enchaîner.",
+          `« Les comptes sont serrés. Je propose de couper de moitié la campagne digitale : ${eur(r.economie)} d'économie dès cette année, c'est concret. Et un compte gagné nous coûterait moins cher qu'aujourd'hui. Avant que je tranche, dites-moi ce que le cabinet y perdrait, et si l'économie en vaut la peine. »`,
+          "Pas de cours cette fois : vous avez la courbe de la campagne, son entonnoir et ce que vaut un compte, et la méthode est celle du chapitre. À vous de l'enchaîner.",
         ];
       },
       tableau: (c) => {
-        const { k, coupe } = coupeDuBudget(c);
+        const r = coupeDuBudget(c);
+        const x = r.x;
+        const d = x.digital;
         return {
-          titre: `Le premier trimestre, rejoué à deux budgets · ${c.entreprise}`,
-          colonnes: ["Budget du trimestre", "Moitié du budget"],
+          titre: `La campagne digitale · ${x.f.entreprise}`,
+          colonnes: ["Budget de N", "Moitié du budget"],
           lignes: [
-            { libelle: "Budget de la campagne", valeurs: [eur(k.jouee.budget), eur(coupe.budget)] },
-            { libelle: "Commandes de nouveaux clients", valeurs: [qte(k.jouee.nouveaux), qte(coupe.nouveaux)] },
-            { libelle: "Commandes en tout", valeurs: [qte(k.jouee.commandes), qte(coupe.commandes)] },
-            { libelle: "Marge sur les ventes", valeurs: [eur(k.jouee.marge), eur(coupe.marge)] },
-            { libelle: "Prix d'une commande", valeurs: [eur(k.prix), eur(k.prix)] },
-            { libelle: "Coût variable d'une commande", valeurs: [eur(k.coutVariable), eur(k.coutVariable)] },
+            { libelle: "Budget de la campagne", valeurs: [eur(r.aujourdhui.budget), eur(r.coupe.budget)] },
+            { libelle: "Contacts amenés", valeurs: [qte(r.aujourdhui.contacts), qte(r.coupe.contacts)] },
+            { libelle: "Contacts pour un rendez-vous", valeurs: [qte(d.contacts / d.rendezVous), qte(d.contacts / d.rendezVous)] },
+            { libelle: "Rendez-vous pour un devis", valeurs: [qte(d.rendezVous / d.devis), qte(d.rendezVous / d.devis)] },
+            { libelle: "Devis pour un contrat", valeurs: [qte(d.devis / d.contrats), qte(d.devis / d.contrats)] },
+            { libelle: "Marge annuelle d'un compte", valeurs: [eur(x.v.m.marge), eur(x.v.m.marge)] },
+            { libelle: "Valeur vie d'un compte, simple", valeurs: [eur(x.v.simple), eur(x.v.simple)] },
+            { libelle: "Valeur vie d'un compte, actualisée", valeurs: [eur(x.v.actualisee), eur(x.v.actualisee)] },
           ],
         };
       },
       repere: () =>
-        "À rendre : le coût d'acquisition d'aujourd'hui, les clients et la marge que la coupe ferait perdre, ce que coûtaient ces clients, et votre réponse.",
+        "À rendre : les comptes et le coût d'acquisition aux deux budgets, ce que coûtaient les comptes perdus, la valeur d'un compte sous laquelle la coupe paierait, ce qu'elle fait perdre selon la mesure, et votre réponse.",
     },
     {
       id: "aujourd-hui",
       type: "montants",
-      titre: "Le coût d'un nouveau client aujourd'hui",
-      notions: ["customer_acquisition_cost", "contribution_margin"],
+      titre: "Les comptes aux deux budgets",
+      notions: ["customer_acquisition_cost", "conversion_rate"],
       question: () =>
-        "Au budget du trimestre, calculez le coût d'acquisition d'un nouveau client, la marge d'une commande, puis la marge qui reste sur la première commande d'un nouveau client.",
+        "Calculez les comptes attendus de la campagne au budget de N, puis à la moitié du budget, au centième (ce sont des comptes attendus), et le coût d'acquisition moyen d'un compte aux deux budgets.",
       champs: (c) => {
-        const { k } = coupeDuBudget(c);
+        const r = coupeDuBudget(c);
+        const d = r.x.digital;
+        const chemin = (contacts: number, comptes: number) => `${qte(contacts)} ÷ ${qte(d.contacts / d.rendezVous)} ÷ ${qte(d.rendezVous / d.devis)} ÷ ${qte(d.devis / d.contrats)} = ${qte(comptes)}`;
         return [
-          { libelle: "Coût d'acquisition", attendu: k.cac, calcul: `${eur(k.jouee.budget)} ÷ ${qte(k.jouee.nouveaux)} = ${eur(k.cac)}` },
-          { libelle: "Marge par commande", attendu: k.margeParCommande, calcul: `${eur(k.prix)} − ${eur(k.coutVariable)} = ${eur(k.margeParCommande)}` },
-          { libelle: "Marge après acquisition", attendu: k.margeApresAcquisition, calcul: `${eur(k.margeParCommande)} − ${eur(k.cac)} = ${eur(k.margeApresAcquisition)}` },
+          { libelle: "Comptes attendus au budget de N", attendu: r.aujourdhui.comptes, tolerance: 0.05, calcul: chemin(r.aujourdhui.contacts, r.aujourdhui.comptes) },
+          { libelle: "Comptes attendus à la moitié du budget", attendu: r.coupe.comptes, tolerance: 0.05, calcul: chemin(r.coupe.contacts, r.coupe.comptes) },
+          { libelle: "Coût d'acquisition moyen au budget de N", attendu: r.aujourdhui.cacMoyen!, calcul: `${eur(r.aujourdhui.budget)} ÷ ${qte(r.aujourdhui.comptes)} = ${eur(r.aujourdhui.cacMoyen!)}` },
+          { libelle: "Coût d'acquisition moyen à la moitié du budget", attendu: r.coupe.cacMoyen!, calcul: `${eur(r.coupe.budget)} ÷ ${qte(r.coupe.comptes)} = ${eur(r.coupe.cacMoyen!)}` },
         ];
       },
       explication: (c) => {
-        const { k } = coupeDuBudget(c);
+        const r = coupeDuBudget(c);
         return [
-          k.margeApresAcquisition > 0
-            ? `Aujourd'hui, la première commande d'un nouveau client paie sa conquête et laisse encore ${eur(k.margeApresAcquisition)}. La question du directeur porte sur les clients que la coupe ferait disparaître : coûtent-ils plus qu'ils ne laissent ?`
-            : `Aujourd'hui, la première commande d'un nouveau client ne paie pas sa conquête : il manque ${eur(-k.margeApresAcquisition)}. La question du directeur porte sur les clients que la coupe ferait disparaître.`,
+          `La directrice a raison sur un point : à la moitié du budget, un compte coûte ${eur(r.coupe.cacMoyen!)} en moyenne au lieu de ${eur(r.aujourdhui.cacMoyen!)}. La campagne garde ses premiers contacts, les moins chers, et perd les autres. Reste à savoir ce que valaient ceux-là.`,
         ];
       },
     },
@@ -127,79 +156,126 @@ export const COUPER_LE_BUDGET_DE_CAMPAGNE: Situation = {
       id: "la-coupe",
       type: "montants",
       titre: "Ce que la coupe ferait perdre",
-      notions: ["customer_acquisition_cost"],
+      notions: ["customer_acquisition_cost", "customer_lifetime_value"],
       question: () =>
-        "Avec la moitié du budget, calculez l'économie de budget, les commandes de nouveaux clients perdues, la marge perdue sur les ventes, puis l'effet de la coupe sur le résultat (économie − marge perdue ; négatif s'il baisse).",
+        "Calculez les comptes que la coupe ferait perdre, ce que coûtait chacun d'eux (l'économie ÷ les comptes perdus), puis la valeur vie nette que la coupe ferait perdre, à la valeur vie simple (valeur vie des comptes perdus − économie).",
       champs: (c) => {
         const r = coupeDuBudget(c);
         return [
-          { libelle: "Économie de budget", attendu: r.economie, calcul: `${eur(r.k.jouee.budget)} − ${eur(r.coupe.budget)} = ${eur(r.economie)}` },
-          { libelle: "Commandes de nouveaux clients perdues", attendu: r.nouveauxPerdus, calcul: `${qte(r.k.jouee.nouveaux)} − ${qte(r.coupe.nouveaux)} = ${qte(r.nouveauxPerdus)}` },
-          { libelle: "Marge perdue", attendu: r.margePerdue, calcul: `${eur(r.k.jouee.marge)} − ${eur(r.coupe.marge)} = ${eur(r.margePerdue)}` },
-          { libelle: "Effet sur le résultat", attendu: r.effet, calcul: `${eur(r.economie)} − ${eur(r.margePerdue)} = ${eur(r.effet)}` },
+          { libelle: "Comptes perdus", attendu: r.comptesPerdus, tolerance: 0.05, calcul: `${qte(r.aujourdhui.comptes)} − ${qte(r.coupe.comptes)} = ${qte(r.comptesPerdus)}` },
+          { libelle: "Coût d'un compte perdu", attendu: r.coutDUnComptePerdu, calcul: `${eur(r.economie)} ÷ ${qte(r.comptesPerdus)} = ${eur(r.coutDUnComptePerdu)}` },
+          {
+            libelle: "Valeur vie nette perdue",
+            attendu: r.netPerdu,
+            calcul: `${qte(r.comptesPerdus)} × ${eur(r.x.v.simple)} − ${eur(r.economie)} = ${eur(r.valeurPerdue)} − ${eur(r.economie)} = ${eur(r.netPerdu)}`,
+          },
         ];
       },
       explication: (c) => {
         const r = coupeDuBudget(c);
         return [
-          r.effet < 0
-            ? `La coupe économise ${eur(r.economie)}, mais fait perdre ${eur(r.margePerdue)} de marge : le résultat du trimestre baisserait de ${eur(-r.effet)}. L'économie se voit sur la ligne publicité, la perte se cache dans les ventes.`
-            : `La coupe économise ${eur(r.economie)} et ne fait perdre que ${eur(r.margePerdue)} de marge : le résultat du trimestre monterait de ${eur(r.effet)}.`,
-          `La coupe ne fait pas perdre que des commandes de nouveaux clients : ${qte(r.commandesPerdues)} commandes en tout, dont ${qte(r.commandesPerdues - r.nouveauxPerdus)} d'autres clientèles que la campagne entraînait.`,
+          `Chaque compte perdu coûtait ${eur(r.coutDUnComptePerdu)} : plus que la moyenne, ${eur(r.aujourdhui.cacMoyen!)}, car c'est le compte en plus de ce palier, vu d'en haut. Mais il valait ${eur(r.x.v.simple)} sur sa vie. L'économie se voit sur la ligne de la campagne ; la perte, ${eur(r.netPerdu)}, se cache dans les années à venir.`,
         ];
       },
     },
     {
-      id: "clients-perdus",
+      id: "le-seuil-de-la-coupe",
+      type: "curseur",
+      titre: "La valeur sous laquelle couper paierait",
+      notions: ["customer_acquisition_cost", "customer_lifetime_value"],
+      question: (c) => {
+        const r = coupeDuBudget(c);
+        return `La coupe économise ${eur(r.economie)} et fait perdre ${qte(r.comptesPerdus)} compte. Faites varier ce que vaut un compte, de ${qte(VALEUR_DU_CURSEUR_DU_CAS.min)} à ${qte(VALEUR_DU_CURSEUR_DU_CAS.max)} milliers d'euros. Placez le curseur sur la plus forte valeur où l'économie couvre encore ce que la coupe fait perdre, puis validez.`;
+      },
+      grandeur: () => ({ libelle: "Valeur d'un compte gagné", unite: "milliers d'euros" }),
+      sens: "plus-grande",
+      cible: (c) => ({ attendu: coupeDuBudget(c).valeurSousLaquelleCouper, min: VALEUR_DU_CURSEUR_DU_CAS.min, max: VALEUR_DU_CURSEUR_DU_CAS.max }),
+      zones: ["Couper paierait", "Couper fait perdre"],
+      rates: () => ({
+        dessous: "À cette valeur, la coupe paie encore : cherchez la plus forte.",
+        dessus: "À cette valeur, les comptes perdus valent déjà plus que l'économie.",
+      }),
+      montrer: "Montrer la valeur",
+      lecture: (c, k) => {
+        const r = coupeDuBudget(c);
+        const perdue = auCentime(r.comptesPerdus * k * 1_000);
+        return [
+          { libelle: "Économie de la coupe", montant: r.economie },
+          { libelle: "Valeur des comptes perdus", montant: perdue },
+          { libelle: "Ce que la coupe rapporte ou fait perdre", montant: auCentime(r.economie - perdue), fort: true },
+        ];
+      },
+      droites: (c) => {
+        const r = coupeDuBudget(c);
+        return {
+          produit: () => r.economie,
+          cout: (k) => r.comptesPerdus * k * 1_000,
+          libelles: ["Économie de la coupe", "Valeur des comptes perdus"],
+        };
+      },
+      explication: (c) => {
+        const r = coupeDuBudget(c);
+        return [
+          `La coupe ne paierait que si un compte valait au plus ${eur(r.valeurSousLaquelleCouper * 1_000)} : le coût d'un compte perdu. Or un compte laisse déjà ${eur(r.x.v.m.marge)} de marge sa première année, avant même de revenir.`,
+        ];
+      },
+    },
+    {
+      id: "trois-mesures",
       type: "montants",
-      titre: "Ce que coûtaient les clients perdus",
-      notions: ["customer_acquisition_cost"],
+      titre: "La coupe, selon la mesure",
+      notions: ["customer_lifetime_value", "discounting", "customer_acquisition_cost"],
       question: () =>
-        "Combien coûtait chacun des nouveaux clients que la coupe ferait perdre (économie ÷ commandes de nouveaux clients perdues) ? Et quel serait le coût d'acquisition moyen avec la moitié du budget ?",
+        "La directrice objecte que la valeur vie est lointaine. Calculez la marge de la première année que la coupe ferait perdre, ce que la coupe rapporte sur cette seule année (économie − marge perdue ; négatif si elle fait perdre), puis la valeur vie nette perdue, actualisée.",
       champs: (c) => {
         const r = coupeDuBudget(c);
         return [
-          { libelle: "Coût d'un client perdu", attendu: r.cacDesPerdus, calcul: `${eur(r.economie)} ÷ ${qte(r.nouveauxPerdus)} = ${eur(r.cacDesPerdus)}` },
-          { libelle: "Coût d'acquisition moyen, moitié du budget", attendu: r.cacMoyenApres, calcul: `${eur(r.coupe.budget)} ÷ ${qte(r.coupe.nouveaux)} = ${eur(r.cacMoyenApres)}` },
+          { libelle: "Marge de la première année perdue", attendu: r.margeDeLaPremiereAnneePerdue, calcul: `${qte(r.comptesPerdus)} × ${eur(r.x.v.m.marge)} = ${eur(r.margeDeLaPremiereAnneePerdue)}` },
+          { libelle: "Effet de la coupe sur la première année", attendu: r.effetSurLaPremiereAnnee, calcul: `${eur(r.economie)} − ${eur(r.margeDeLaPremiereAnneePerdue)} = ${eur(r.effetSurLaPremiereAnnee)}` },
+          {
+            libelle: "Valeur vie nette perdue, actualisée",
+            attendu: r.netPerduActualise,
+            calcul: `${qte(r.comptesPerdus)} × ${eur(r.x.v.actualisee)} − ${eur(r.economie)} = ${eur(r.netPerduActualise)}`,
+          },
         ];
       },
       explication: (c) => {
         const r = coupeDuBudget(c);
         return [
-          `La coupe retire d'abord les clients les plus chers à gagner : ${eur(r.cacDesPerdus)} chacun, plus que la moyenne. Le coût moyen baisserait donc à ${eur(r.cacMoyenApres)}. Mais ce qui compte est ailleurs : chacun de ces clients laissait ${eur(r.k.margeParCommande)} de marge sur sa commande, ${r.cacDesPerdus < r.k.margeParCommande ? "plus" : "moins"} qu'il ne coûtait.`,
+          r.effetSurLaPremiereAnnee < 0
+            ? `Même sur la seule première année, la coupe fait perdre ${eur(-r.effetSurLaPremiereAnnee)} : les comptes perdus auraient laissé ${eur(r.margeDeLaPremiereAnneePerdue)} de marge, plus que les ${eur(r.economie)} économisés.`
+            : `Sur la seule première année, la coupe rapporterait ${eur(r.effetSurLaPremiereAnnee)}.`,
+          `Actualisée au taux du cabinet, la perte reste de ${eur(r.netPerduActualise)}. Les trois mesures disent la même chose : la coupe détruit de la valeur. Seul le coût moyen dit le contraire, parce qu'il ne compare rien à ce que valent les comptes.`,
         ];
       },
     },
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse au directeur financier",
-      question: () => "Quelle phrase envoyez-vous au directeur financier ?",
+      titre: "Votre réponse à la directrice financière",
+      question: () => "Quelle phrase envoyez-vous à la directrice financière ?",
       options: (c) => {
         const r = coupeDuBudget(c);
-        const garder = r.effet < 0;
         return [
           {
-            texte: garder
-              ? `Garder : ${eur(r.economie)} économisés, ${eur(r.margePerdue)} de marge en moins`
-              : `Couper : ${eur(r.economie)} économisés, ${eur(r.margePerdue)} de marge en moins`,
+            texte: `Garder : la coupe détruit ${eur(r.netPerdu)} de valeur vie nette`,
             juste: true,
-            retour: `Oui : la coupe ${garder ? "ferait baisser" : "ferait monter"} le résultat de ${eur(Math.abs(r.effet))}. Les clients perdus coûtaient ${eur(r.cacDesPerdus)} chacun et laissaient ${eur(r.k.margeParCommande)} de marge sur leur commande, sans compter les commandes entraînées.`,
+            retour: `Oui : ${qte(r.comptesPerdus)} compte perdu valait ${eur(r.valeurPerdue)} sur sa vie, pour ${eur(r.economie)} économisés. Même actualisée, la perte est de ${eur(r.netPerduActualise)}, et dès la première année de ${eur(-r.effetSurLaPremiereAnnee)}.`,
           },
           {
-            texte: `Couper : un nouveau client ne coûterait plus que ${eur(r.cacMoyenApres)}`,
+            texte: `Couper : un compte n'y coûterait plus que ${eur(r.coupe.cacMoyen!)}, contre ${eur(r.aujourdhui.cacMoyen!)}`,
             juste: false,
-            retour: `Non : le coût moyen baisse parce que la coupe retire les clients les plus chers, pas parce qu'elle rapporte. Le résultat, lui, ${garder ? "baisserait" : "monterait"} de ${eur(Math.abs(r.effet))}.`,
+            retour: `Non : le coût moyen baisse parce que la coupe retire les comptes les plus chers à gagner, pas parce qu'elle rapporte. Ces comptes coûtaient ${eur(r.coutDUnComptePerdu)} et valaient ${eur(r.x.v.simple)}.`,
           },
           {
-            texte: `Couper : les clients perdus coûtent ${eur(r.cacDesPerdus)}, plus que la moyenne`,
+            texte: `Couper : l'économie de ${eur(r.economie)} est sûre, la valeur vie est lointaine`,
             juste: false,
-            retour: `Non : un client se compare à ce qu'il laisse, pas à la moyenne. Il coûtait ${eur(r.cacDesPerdus)} et laissait ${eur(r.k.margeParCommande)} de marge sur sa commande.`,
+            retour: `Non : sur la seule première année, la coupe fait déjà perdre ${eur(-r.effetSurLaPremiereAnnee)}, et actualisée, elle détruit ${eur(r.netPerduActualise)}. La valeur vie n'est pas une promesse lointaine : elle commence dès cette année.`,
           },
           {
-            texte: `Couper : on ne perd que ${qte(r.commandesPerdues)} commandes sur ${qte(r.k.jouee.commandes)}`,
+            texte: `Couper : chaque compte perdu coûtait ${eur(r.coutDUnComptePerdu)}, plus que la moyenne`,
             juste: false,
-            retour: `Non : ce n'est pas la part des commandes qui décide, c'est ce qu'elles laissaient. Elles emportent ${eur(r.margePerdue)} de marge, pour ${eur(r.economie)} d'économie.`,
+            retour: `Non : un compte se compare à ce qu'il vaut, pas à la moyenne. Il coûtait ${eur(r.coutDUnComptePerdu)} et laissait ${eur(r.x.v.m.marge)} de marge dès sa première année.`,
           },
         ];
       },

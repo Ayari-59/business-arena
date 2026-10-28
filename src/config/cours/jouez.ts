@@ -546,23 +546,24 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
   }),
   "valeur-d-un-client": (c) => ({
     niveau: 2,
-    faire: `${partie(c, 2)} Jouez quatre tours. À chaque tour, relevez le portefeuille d'adhérents (partis, nouveaux, occupation), puis le taux d'attrition et la valeur vie client.`,
-    lieux: ["portefeuille", "indicateurs"],
-    chercher: `Au tour où l'occupation dépasse ${Math.round((scenarioByCode(c.code).scenario.subscription?.crowdingThreshold ?? 0) * 100)} %, l'attrition monte-t-elle ? De combien la valeur vie client baisse-t-elle alors ? Quelle décision la ferait redescendre : moins d'inscriptions, plus d'encadrement, ou plus de place ?`,
+    faire: `${partie(c, 2)} Jouez deux tours. À chaque tour, relevez les journées vendues et le chiffre d'affaires de chaque clientèle, puis le TJM réalisé et le taux d'occupation.`,
+    lieux: ["marche-du-tour", "indicateurs"],
+    chercher:
+      "Quelle clientèle vous laisse le plus de chiffre d'affaires par journée vendue ? Si un compte de cette clientèle restait 4 ans, que vaudrait sa marge sur sa vie, et combien pourriez-vous dépenser pour le gagner ? Votre taux d'occupation vous laisse-t-il de la place pour un compte de plus ?",
   }),
   "cout-d-acquisition": (c) => ({
     niveau: 2,
     faire: `${partie(c, 2)} Jouez un premier tour sans rien changer, puis un second en augmentant « Budget marketing » de moitié.`,
-    lieux: ["indicateurs", "marche-du-tour", "compte-de-resultat"],
+    lieux: ["marche-du-tour", "indicateurs", "compte-de-resultat"],
     chercher:
-      "Combien de nouveaux clients le budget en plus a-t-il amenés, et que coûte chacun d'eux ? La marge gagnée a-t-elle payé le budget ajouté ? Comparez le coût d'acquisition affiché dans les indicateurs aux deux tours.",
+      "Combien de journées le budget en plus a-t-il fait vendre, et que coûte chacune d'elles ? La marge sur ces journées a-t-elle payé le budget ajouté ? Votre taux d'occupation a-t-il monté, ou le cabinet était-il déjà plein ?",
   }),
   "commissions-des-partenaires": (c) => ({
     niveau: 2,
-    faire: `${partie(c, 2)} Jouez un tour, puis relevez les ventes de chaque clientèle et la ligne des commissions des canaux partenaires.`,
-    lieux: ["marche-du-tour", "compte-de-resultat", "indicateurs"],
+    faire: `${partie(c, 2)} Jouez un tour, puis relevez les journées vendues à chaque clientèle, votre TJM réalisé et la marge sur coût variable de l'analyse des coûts.`,
+    lieux: ["marche-du-tour", "indicateurs", "analyse-des-couts"],
     chercher:
-      "Quelle part de vos commandes vient de la place de marché, et quelle part de votre marge, une fois la commission payée ? La commission par commande est-elle plus basse ou plus haute que le coût d'acquisition des indicateurs ?",
+      "Si une plateforme vous apportait un compte de PME contre une commission sur son chiffre d'affaires, quel taux vous laisserait encore une marge par journée ? Et si ce compte revenait ensuite vers vous en direct, la commission de la première année serait-elle toujours trop chère ?",
   }),
   "portefeuille-abc": (c) => {
     const niveau = niveauDeLaGamme(c.code)!;
@@ -1161,10 +1162,10 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
   },
   "tableau-de-bord-commercial": (c) => ({
     niveau: 2,
-    faire: `${partie(c, 2)} Jouez quatre tours. À chaque tour, relevez la demande adressée, vos ventes, votre part de marché et votre marge.`,
-    lieux: ["marche-du-tour", "plan-face-au-realise", "compte-de-resultat"],
+    faire: `${partie(c, 2)} Jouez quatre tours. À chaque tour, relevez la demande adressée et les journées vendues de chaque clientèle, votre TJM réalisé, votre taux d'occupation et votre marge.`,
+    lieux: ["marche-du-tour", "indicateurs", "compte-de-resultat"],
     chercher:
-      "À quel tour vos ventes ont-elles servi la plus petite part de la demande ? Le chiffre d'affaires a-t-il baissé parce que les clients manquaient, ou parce que vous ne pouviez pas les servir ? Quelle décision avez-vous prise ensuite ?",
+      "Quel indicateur a décroché le premier ? À quel tour le cabinet a-t-il refusé des journées faute de consultants, et à quel tour en a-t-il manqué faute de clients ? Quelle décision avez-vous prise ensuite, et a-t-elle remis l'indicateur dans le vert ?",
   }),
 };
 
