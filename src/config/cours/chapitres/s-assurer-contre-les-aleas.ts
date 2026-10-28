@@ -13,7 +13,7 @@ import {
   margeUnitaire,
   type ChoixDAssurance,
 } from "../monde/capacite";
-import { CAPACITES_DU_COURS, type CodeDeFormule, type FicheDeLaCapacite } from "../monde/nova-capacite";
+import { CAPACITES_DU_COURS, VERSEMENT_A_LA_RESERVE, type CodeDeFormule, type FicheDeLaCapacite } from "../monde/nova-capacite";
 import type { Chapitre, TableauDeDonnees } from "../types";
 
 /**
@@ -621,11 +621,11 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
         const a = assuranceDeNova(c);
         const k = a.absorption;
         return {
-          titre: `La clôture ${dE(a.f.entreprise)} au 31 décembre N`,
+          titre: `Les comptes ${dE(a.f.entreprise)} au 1er janvier N + 1, après le versement à la réserve`,
           colonnes: ["Montant"],
           lignes: [
             { libelle: "Compte courant", valeurs: [eur(k.compteCourant)] },
-            { libelle: "Réserve placée, gardée pour la gamme à venir", valeurs: [eur(k.reserve)] },
+            { libelle: "Réserve placée sur deux comptes à terme, gardée pour la gamme à venir", valeurs: [eur(k.reserve)] },
             { libelle: "Matelas de trésorerie que le dirigeant garde", valeurs: [eur(k.matelas)] },
             { libelle: "Capitaux propres", valeurs: [eur(k.capitauxPropres)] },
             { libelle: "Capital social", valeurs: [eur(k.capitalSocial)] },
@@ -635,7 +635,7 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
       question: (c) => {
         const a = assuranceDeNova(c);
         const k = a.absorption;
-        return `La capacité d'absorption est ce que l'entreprise peut perdre d'un coup sans se mettre en danger. Par la trésorerie : le compte courant moins le matelas (la réserve n'est pas comptée). Par les capitaux propres : ce qui les sépare de la moitié du capital social (${eur(k.plancherDesCapitaux)}). Calculez les deux, puis la capacité d'absorption, la plus petite des deux.`;
+        return `Le 1er janvier, le dirigeant a versé ${eur(VERSEMENT_A_LA_RESERVE.montant)} du compte courant à la réserve ; le tableau donne les comptes après ce versement. La capacité d'absorption est ce que l'entreprise peut perdre d'un coup sans se mettre en danger. Par la trésorerie : le compte courant moins le matelas (la réserve n'est pas comptée). Par les capitaux propres : ce qui les sépare de la moitié du capital social (${eur(k.plancherDesCapitaux)}). Calculez les deux, puis la capacité d'absorption, la plus petite des deux.`;
       },
       champs: (c) => {
         const a = assuranceDeNova(c);

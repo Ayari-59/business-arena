@@ -5,6 +5,7 @@ import { casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
 import {
   CIBLE_DE_L_INDICE,
   DELAI_DU_PARI,
+  DELAI_SI_RETARD,
   LEVIERS_DES_VOYANTS,
   MOIS_GUIDE,
   TABLEAU_DE_BORD,
@@ -50,11 +51,11 @@ const NOMS = ["janvier", "février", "mars", "avril", "mai", "juin"];
 const SEUIL = c((FIXES * PRIX) / (PRIX - CV));
 const ALERTE = { indice: 0.05, resultat: 0, tresorerie: 10_000, part: 0.25 };
 
-/** La trésorerie de fin de chaque mois, refaite en clair (le budget du chapitre précédent). */
+/** La trésorerie de fin de chaque mois, refaite en clair (le budget du chapitre précédent). CampusTech paie à 60 jours. */
 function tresorerieALaMain(h: { prix?: number; publicite?: number; delaiCampusTech?: number; banc?: number | null } = {}) {
   const prix = h.prix ?? PRIX;
   const pub = h.publicite ?? 0;
-  const mCT = (h.delaiCampusTech ?? 80) <= 0 ? 0 : Math.ceil((20 + (h.delaiCampusTech ?? 80)) / 30) - 1;
+  const mCT = (h.delaiCampusTech ?? 60) <= 0 ? 0 : Math.ceil((20 + (h.delaiCampusTech ?? 60)) / 30) - 1;
   let t = 25_000;
   let tvaDue = 0;
   let credit = 0;
@@ -74,6 +75,10 @@ function tresorerieALaMain(h: { prix?: number; publicite?: number; delaiCampusTe
 }
 
 const TRESORERIE = tresorerieALaMain();
+/** L'hypothèse de la divergence : CampusTech paierait 20 jours en retard, à 80 jours. */
+const TRESORERIE_EN_RETARD = tresorerieALaMain({ delaiCampusTech: 80 });
+/** Un montant comme le cours l'écrit (montantEcrit), refait ici. */
+const eur = (x: number) => `${x.toLocaleString("fr-FR", { minimumFractionDigits: Number.isInteger(x) ? 0 : 2, maximumFractionDigits: 2 }).replace("-", "−")} €`;
 const MOIS = Q.map((q, k) => {
   const ca = q * PRIX;
   const resultat = q * (PRIX - CV) - FIXES;
@@ -281,12 +286,19 @@ describe("le tableau de bord, chez NOVA dans le monde du cours", () => {
     expect([...f.semestre.marche]).toEqual(MARCHE);
     expect(f.seuilsDAlerte).toEqual({ indiceDeSecurite: ALERTE.indice, resultat: ALERTE.resultat, tresorerie: ALERTE.tresorerie, partDeMarche: ALERTE.part });
     expect(MOIS.map((m) => m.resultat)).toEqual([2_207, -733, 5_315, 8_717, 11_447, 13_988]);
-    expect(TRESORERIE).toEqual([58_838, 31_998, 19_302.8, 33_810, 50_068, 63_641.6]);
+    // CampusTech paie à 60 jours : sa facture de janvier rentre en mars.
+    expect(TRESORERIE).toEqual([58_838, 31_998, 41_958.8, 56_466, 72_724, 86_297.6]);
+    expect(TRESORERIE_EN_RETARD).toEqual([58_838, 31_998, 19_302.8, 33_810, 50_068, 63_641.6]);
     expect(SEUIL).toBe(87_609.38);
     // Les voyants : le résultat et l'indice en février ; la part de marché en mai et en juin.
     expect(MOIS.map((m) => Object.entries(m.voyants).filter(([, v]) => v).map(([k]) => k))).toEqual([[], ["indice", "resultat"], [], [], ["part"], ["part"]]);
-    // De février à mars, le résultat monte de 6 048 € quand la trésorerie baisse de 12 695,20 €.
-    expect([MOIS[2]!.resultat - MOIS[1]!.resultat, c(TRESORERIE[2]! - TRESORERIE[1]!)]).toEqual([6_048, -12_695.2]);
+    // À 60 jours, aucun mois ne voit le résultat et la trésorerie aller en sens contraires.
+    const sensContraires = (t: number[]) => MOIS.map((m, k) => k > 0 && (m.resultat - MOIS[k - 1]!.resultat) * (t[k]! - t[k - 1]!) < 0);
+    expect(sensContraires(TRESORERIE).some(Boolean)).toBe(false);
+    // Si CampusTech payait à 80 jours : de février à mars, le résultat monte de 6 048 € quand la trésorerie baisse de 12 695,20 €.
+    expect(DELAI_SI_RETARD).toBe(80);
+    expect(sensContraires(TRESORERIE_EN_RETARD).indexOf(true)).toBe(2);
+    expect([MOIS[2]!.resultat - MOIS[1]!.resultat, c(TRESORERIE_EN_RETARD[2]! - TRESORERIE_EN_RETARD[1]!)]).toEqual([6_048, -12_695.2]);
   });
 
   it("l'étape guidée : les indicateurs de février", () => {
@@ -314,6 +326,18 @@ describe("le tableau de bord, chez NOVA dans le monde du cours", () => {
     expect(t.lignes.find((l) => l.libelle === "Indice de sécurité")!.valeurs).toEqual(MOIS.map((m) => `${dixieme(m.indice * 100).toLocaleString("fr-FR", { minimumFractionDigits: 1 }).replace("-", "−")} %`));
     // Le tableau de la question ne donne pas les voyants : c'est à l'élève de les lire.
     expect(t.lignes.some((l) => l.libelle === "Voyants allumés")).toBe(false);
+    // L'étape du résultat et de la trésorerie montre l'hypothèse du retard à côté du délai convenu.
+    const r = ch.etapes.find((e) => e.id === "resultat-et-tresorerie")!;
+    if (r.type !== "choix") throw new Error("choix attendu");
+    expect(r.question(cas, etatVide)).toBe(
+      `Supposons que CampusTech paie 20 jours en retard, à 80 jours. De février à mars, le résultat du mois passe de ${eur(MOIS[1]!.resultat)} à ${eur(MOIS[2]!.resultat)}, la trésorerie de fin de mois de ${eur(TRESORERIE_EN_RETARD[1]!)} à ${eur(TRESORERIE_EN_RETARD[2]!)} : l'un monte quand l'autre baisse. Comment est-ce possible ?`,
+    );
+    expect(r.tableau!(cas).lignes.map((l) => [l.libelle, l.valeurs])).toEqual([
+      ["Résultat du mois", MOIS.map((m) => eur(m.resultat))],
+      ["Trésorerie de fin de mois, CampusTech à 60 jours", TRESORERIE.map(eur)],
+      ["Trésorerie de fin de mois, si CampusTech payait à 80 jours", TRESORERIE_EN_RETARD.map(eur)],
+    ]);
+    expect(r.options(cas, etatVide).find((o) => o.juste)!.retour).toMatch(/^C'est cela\. À 60 jours, la facture de CampusTech qui rentre en mars compense celle de mars, et la trésorerie monte avec le résultat, à 41 958,80 €/);
   });
 
   it("le pari et le curseur du voyant de l'indice : il s'allume sous 1 564 enceintes, avant la perte", () => {
@@ -354,10 +378,13 @@ describe("le tableau de bord, chez NOVA dans le monde du cours", () => {
   it("le pari et le laboratoire des voyants : la trésorerie s'allume, le résultat non", () => {
     expect(DELAI_DU_PARI).toBe(140);
     expect(juste(ch, "predire-la-divergence")).toBe("Ne bouge pas, mais la trésorerie baisse");
+    const pari = ch.etapes.find((e) => e.id === "predire-la-divergence") as EtapeChoix;
+    expect(pari.question(cas, etatVide)).toMatch(/140 jours au lieu des 60 convenus, bien au-delà du plafond légal de 60 jours/);
+    expect(pari.options(cas, etatVide).find((o) => o.juste)!.retour).toMatch(/la loi plafonne le délai entre professionnels à 60 jours/);
     const l = laboratoire(ch, "le-laboratoire-des-voyants");
     expect(LEVIERS_DES_VOYANTS).toEqual({ prix: { min: 55, max: 63, pas: 0.1 }, publicite: { min: 0, max: 5_000, pas: 100 }, campustech: { min: 0, max: 180, pas: 10 } });
-    expect(l.depart).toEqual({ prix: 59, publicite: 0, campustech: 80, banc: 0 });
-    expect(l.solution).toEqual({ prix: 59, publicite: 0, campustech: 80, banc: 3 });
+    expect(l.depart).toEqual({ prix: 59, publicite: 0, campustech: 60, banc: 0 });
+    expect(l.solution).toEqual({ prix: 59, publicite: 0, campustech: 60, banc: 1 });
     expect(l.reussi).toEqual([false, true]);
     const lire = (p: Parameters<typeof semestreALaMain>[0]) => {
       const s = semestreALaMain(p);
@@ -371,16 +398,20 @@ describe("le tableau de bord, chez NOVA dans le monde du cours", () => {
         "Voyants allumés sur le semestre": s.voyants,
       };
     };
-    expect(l.auDepart).toEqual(lire({ prix: 59, publicite: 0, campustech: 80, banc: 0 }));
-    expect(l.aLaSolution).toEqual(lire({ prix: 59, publicite: 0, campustech: 80, banc: 3 }));
-    expect(Object.values(l.auDepart)).toEqual([640_681, 18, 25.3, 19_302.8, 40_941, 9_302.8, 0]);
-    expect(Object.values(l.aLaSolution)).toEqual([640_681, 17.3, 25.3, -2_190, 39_441, -12_190, 1]);
-    // Les autres solutions : CampusTech à 140 jours, ou une publicité de 3 000 € par mois ; une baisse de prix allume aussi le résultat.
+    expect(l.auDepart).toEqual(lire({ prix: 59, publicite: 0, campustech: 60, banc: 0 }));
+    expect(l.aLaSolution).toEqual(lire({ prix: 59, publicite: 0, campustech: 60, banc: 1 }));
+    expect(Object.values(l.auDepart)).toEqual([640_681, 18, 25.3, 31_998, 40_941, 21_998, 0]);
+    // Le banc en février : cinq mois d'usure (2 500 €) au résultat, 36 000 € TTC d'un coup à la banque.
+    expect(Object.values(l.aLaSolution)).toEqual([640_681, 16.9, 25.3, -4_002, 38_441, -14_002, 1]);
+    expect(c(31_998 - 36_000)).toBe(-4_002);
+    // L'autre solution : CampusTech à 140 jours (une hypothèse au-delà du plafond légal). Aucune publicité
+    // du laboratoire n'y suffit : elle retire au résultat presque tout ce qu'elle retire à la banque.
+    // Une baisse de prix allume aussi le résultat.
     for (const [p, ok] of [
       [{ campustech: 140 }, true],
       [{ campustech: 130 }, false],
-      [{ publicite: 3_000 }, true],
-      [{ publicite: 2_900 }, false],
+      [{ publicite: 5_000 }, false],
+      [{ publicite: 2_500 }, false],
       [{ prix: 55 }, false],
     ] as const) {
       const pos = { ...l.depart, ...p };
@@ -388,8 +419,13 @@ describe("le tableau de bord, chez NOVA dans le monde du cours", () => {
       expect(l.d.atteint(pos), JSON.stringify(p)).toBe(ok);
       expect(s.tresorerieAllumee && !s.resultatAllume, JSON.stringify(p)).toBe(ok);
     }
-    expect(semestreALaMain({ prix: 55, publicite: 0, campustech: 80, banc: 0 }).resultat).toBe(-2_495);
-    expect(l.e.explication(cas, l.solution).join(" ")).toMatch(/500 € par mois dès avril.*36 000 € TTC.*140 jours.*3 000 € par mois/);
+    for (let pub = 0; pub <= 5_000; pub += 100) {
+      const s = semestreALaMain({ prix: 59, campustech: 60, banc: 0, publicite: pub });
+      expect(s.tresorerieAllumee && !s.resultatAllume, `publicité ${pub}`).toBe(false);
+      expect(l.d.atteint({ ...l.depart, publicite: pub }), `publicité ${pub}`).toBe(false);
+    }
+    expect(semestreALaMain({ prix: 55, publicite: 0, campustech: 60, banc: 0 }).resultat).toBe(-2_495);
+    expect(l.e.explication(cas, l.solution).join(" ")).toMatch(/500 € par mois dès février.*36 000 € TTC.*Si CampusTech payait à 140 jours, au-delà du plafond légal.*même à 5 000 € par mois, le voyant de trésorerie reste éteint/);
   });
 
   it("le graphique du laboratoire : le résultat reste plat, la trésorerie la plus basse descend par marches", () => {
@@ -398,16 +434,17 @@ describe("le tableau de bord, chez NOVA dans le monde du cours", () => {
     expect(g.levier).toBe("campustech");
     const [resultat, plusBas] = g.courbes;
     const en = (d: number) => [resultat!.valeur({ ...depart, campustech: d }), plusBas!.valeur({ ...depart, campustech: d })];
-    // Payée dans le mois, CampusTech remplit la banque : le point bas passe en février.
+    // Payée dans le mois, CampusTech remplit la banque : le point bas reste en février.
     expect(en(0)).toEqual([40_941, Math.min(...tresorerieALaMain({ delaiCampusTech: 0 }))]);
     expect(Math.min(...tresorerieALaMain({ delaiCampusTech: 0 }))).toBe(c(31_998 + 2 * 22_656));
+    expect(en(60)).toEqual([40_941, 31_998]);
     expect(en(80)).toEqual([40_941, 19_302.8]);
     expect(en(110)).toEqual([40_941, c(33_810 - 22_656)]);
     expect(en(140)).toEqual([40_941, c(50_068 - 2 * 22_656)]);
     expect(en(170)).toEqual([40_941, c(63_641.6 - 3 * 22_656)]);
   });
 
-  it("du résultat à la trésorerie : le passage de mars", () => {
+  it("du résultat à la trésorerie : le passage de mars, si CampusTech payait à 80 jours", () => {
     const a = attendus(ch, "du-resultat-a-la-tresorerie");
     expect(a).toEqual({
       "Ce que l'exploitation dégage avant les délais": 5_315 + 833,
@@ -417,14 +454,30 @@ describe("le tableau de bord, chez NOVA dans le monde du cours", () => {
     });
     // Le passage, refait : la dette fournisseur grandit de (1 738 − 1 450) × 26,40 €, la TVA due de (1 738 − 1 450) × 4,20 €.
     expect(c(6_148 - 22_656 + (1_738 - 1_450) * 26.4 + (1_738 - 1_450) * 4.2 - 5_000)).toBe(-12_695.2);
+    // Au délai convenu, la facture de janvier rentre en mars et compense celle de mars : la trésorerie monte.
+    expect(c(TRESORERIE[2]! - TRESORERIE[1]!)).toBe(c(-12_695.2 + 22_656));
+    const e = ch.etapes.find((x) => x.id === "du-resultat-a-la-tresorerie") as EtapeMontants;
+    expect(e.question(cas, etatVide)).toMatch(/^Toujours si CampusTech payait à 80 jours, retracez le passage de mars/);
+    expect(e.explication(cas, etatVide).join(" ")).toMatch(/31 998 € − 12 695,20 € = 19 302,80 €.*Au délai convenu, 60 jours, la facture de janvier de CampusTech rentrerait en mars, 22 656 €/);
   });
 
   it("les verdicts d'expert, et la synthèse", () => {
-    expect(juste(ch, "les-limites")).toBe("Ses voyants constatent le mois écoulé : le budget voyait le découvert d'avril dès janvier");
+    expect(juste(ch, "les-limites")).toBe("Ses voyants constatent le mois écoulé : le budget voyait le découvert de février dès janvier");
     const synthese = ch.etapes.find((e) => e.id === "synthese")!;
     if (synthese.type !== "lecture") throw new Error("lecture attendue");
     expect(synthese.texte(cas).at(-1)).toBe("Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.");
     expect(synthese.tableau!(cas).lignes.find((l) => l.libelle === "Voyants allumés")!.valeurs).toEqual(["aucun", "indice de sécurité, résultat", "aucun", "aucun", "part de marché", "part de marché"]);
+  });
+
+  it("CampusTech paie à 60 jours : 80 jours ne s'écrit qu'en hypothèse de retard", () => {
+    for (const x of [ch, REGLER_LE_VOYANT]) {
+      const chapitre = chapitreDuCas(x, cas);
+      for (const [i, e] of chapitre.etapes.entries()) {
+        for (const t of textesDe(e, cas, etatAvant(chapitre, cas, i))) {
+          for (const phrase of t.split(/(?<=[.?!])\s/)) if (/\b80 jours\b/.test(phrase)) expect(phrase, `${e.id} : ${phrase}`).toMatch(/retard|si CampusTech payait/);
+        }
+      }
+    }
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(ch));
@@ -479,10 +532,11 @@ describe("le cas : régler le voyant de sécurité", () => {
   });
 
   it("le jugement : le voyant ne voit pas le découvert du banc", () => {
-    const banc = semestreALaMain({ prix: 59, publicite: 0, campustech: 80, banc: 3 });
-    expect([dixieme(banc.indice * 100), banc.plusBas]).toEqual([17.3, -2_190]);
+    // Le banc en février : cinq mois d'usure, et février à découvert.
+    const banc = semestreALaMain({ prix: 59, publicite: 0, campustech: 60, banc: 1 });
+    expect([dixieme(banc.indice * 100), banc.plusBas]).toEqual([16.9, -4_002]);
     expect(banc.indice).toBeGreaterThan(0.15);
-    expect(juste(s, "ce-que-le-voyant-ne-voit-pas")).toBe("Non : l'indice reste à 17,3 %, mais avril finit à découvert");
+    expect(juste(s, "ce-que-le-voyant-ne-voit-pas")).toBe("Non : l'indice reste à 16,9 %, mais février finit à découvert");
     expect(juste(s, "reponse")).toBe("Sous 618 419,16 € par semestre ; et gardez à côté le voyant de trésorerie");
   });
 

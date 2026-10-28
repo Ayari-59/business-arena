@@ -319,9 +319,11 @@ describe("dépréciations et provisions : les étapes", () => {
     const fin = etatAvant(chapitre, cas, chapitre.etapes.length).soldes;
     for (const compte of ["416", "491", "1511"]) expect(fin[compte] ?? 0, compte).toBe(0);
     expect([fin["654"], fin["7817"], fin["7815"], fin["658"]]).toEqual([perteHt, -depreciation, -provision, condamnation]);
-    expect(fin["512"]).toBe(c(115_734.87 + verse - condamnation));
-    // La créance ne laisse que les trois factures de CampusTech au compte clients.
-    expect(fin["411"]).toBe(c(101_598 - ttc));
+    // La banque de la clôture : CampusTech paie à 60 jours, sa facture d'octobre est rentrée le 20 décembre.
+    expect(fin["512"]).toBe(c(138_390.87 + verse - condamnation));
+    // La créance ne laisse que les deux factures de CampusTech au compte clients (novembre et décembre).
+    expect(fin["411"]).toBe(c(78_942 - ttc));
+    expect(fin["411"]).toBe(2 * 22_656);
   });
 
   it("le stock, la ligne : examinés, laissés tels quels", () => {

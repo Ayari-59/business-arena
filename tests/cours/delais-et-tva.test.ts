@@ -165,11 +165,13 @@ describe("la fiche tient debout, et c'est le monde des autres fiches", () => {
     expect(somme(n.ventes)).toBe(26_000);
   });
 
-  it("CampusTech : un délai convenu de 60 jours, le maximum permis, et le paiement réel à 80 jours des autres fiches : 20 jours de retard", () => {
+  it("CampusTech : un délai convenu de 60 jours, le maximum permis, tenu comme dans les autres fiches ; le retard de 20 jours est une hypothèse", () => {
     expect(n.campustech.delaiConvenu).toBe(60);
     expect(n.campustech.delaiConvenu).toBeLessThanOrEqual(DELAI_MAXIMAL_CONVENU.joursDeLaFacture);
     expect(n.campustech.delaiReel).toBe(CAMPUSTECH.delai);
-    expect(n.campustech.delaiReel - n.campustech.delaiConvenu).toBe(20);
+    expect(n.campustech.delaiReel).toBe(60);
+    expect(n.campustech.retardSuppose).toBe(20);
+    expect(n.campustech.delaiSiRetard).toBe(60 + 20);
     expect(n.penalites.base).toBe("bce");
   });
 
@@ -505,22 +507,26 @@ describe("5. le crédit client et le retard (NOVA et CampusTech)", () => {
     expect(CAMPUS_TTC).toBe(22_656);
   });
 
-  it("les créances du 31 décembre : 3 factures payées à 80 jours (67 968 € TTC), 2 si CampusTech tenait ses 60 jours (45 312 €)", () => {
+  it("les créances du 31 décembre : 2 factures payées à 60 jours (45 312 € TTC) ; 3 si CampusTech payait à 80 jours (67 968 €)", () => {
     const reel = creancesDuTrimestre(n, 4);
+    expect(reel.delai).toBe(60);
     expect(reel.caHT).toBe(7_000 * 59);
     expect(reel.caTTC).toBe(7_000 * 59 * 1.2);
     expect(reel.campustechHT).toBe(3 * CAMPUS_HT);
     expect(reel.particuliersHT).toBe((7_000 - 960) * 59);
-    expect(reel.factures).toBe(3);
-    expect(reel.creancesTTC).toBe(3 * CAMPUS_TTC);
-    expect(reel.delaiMoyen).toBeCloseTo((67_968 / 495_600) * 90, 12);
-    const convenu = creancesDuTrimestre(n, 4, { delai: 60 });
-    expect(convenu.creancesTTC).toBe(2 * CAMPUS_TTC);
-    expect(convenu.delaiMoyen).toBeCloseTo((45_312 / 495_600) * 90, 12);
+    expect(reel.factures).toBe(2);
+    expect(reel.creancesTTC).toBe(2 * CAMPUS_TTC);
+    expect(reel.delaiMoyen).toBeCloseTo((45_312 / 495_600) * 90, 12);
+    const enRetard = creancesDuTrimestre(n, 4, { delai: n.campustech.delaiSiRetard });
+    expect(enRetard.factures).toBe(3);
+    expect(enRetard.creancesTTC).toBe(3 * CAMPUS_TTC);
+    expect(enRetard.delaiMoyen).toBeCloseTo((67_968 / 495_600) * 90, 12);
   });
 
-  it("le retard de 20 jours coûte 113,28 € par facture au découvert ; NOVA pourrait réclamer 150,83 € de pénalités et 40 € d'indemnité", () => {
+  it("si CampusTech payait 20 jours en retard : 113,28 € par facture au découvert ; NOVA pourrait réclamer 150,83 € de pénalités et 40 € d'indemnité", () => {
+    // Par défaut, le modèle du retard chiffre l'hypothèse : un paiement au 80e jour.
     const r = retardDeCampusTech(n);
+    expect(r.delaiReel).toBe(80);
     expect(r.joursDeRetard).toBe(20);
     expect(r.enRetard).toBe(true);
     expect(r.coutDuCreditConvenuParFacture).toBe(auCentime((22_656 * 0.09 * 60) / 360));
@@ -540,9 +546,11 @@ describe("5. le crédit client et le retard (NOVA et CampusTech)", () => {
 
   it("au plancher légal (8,28 %), les pénalités baissent ; payé à l'heure, rien à réclamer ; un délai convenu de 80 jours ne serait pas permis", () => {
     expect(retardDeCampusTech(n, { base: "taux-legal" }).penalitesParFacture).toBe(auCentime((22_656 * 0.0828 * 20) / 365));
-    const aLHeure = retardDeCampusTech(n, { delaiReel: 60 });
+    // Le paiement réel de la fiche : à l'heure, rien à réclamer.
+    const aLHeure = retardDeCampusTech(n, { delaiReel: n.campustech.delaiReel });
     expect(aLHeure.enRetard).toBe(false);
     expect(aLHeure.reclamableParAn).toBe(0);
+    expect(aLHeure.creanceEnPlusTTC).toBe(0);
     expect(retardDeCampusTech(n, { delaiConvenu: 80 }).delaiConvenuPermis).toBe(false);
     // Financé par l'argent qui dort (3 %), le retard coûte trois fois moins.
     expect(retardDeCampusTech(n, { tauxDeFinancement: 0.03 }).coutDuRetardParFacture).toBe(auCentime((22_656 * 0.03 * 20) / 360));
@@ -551,7 +559,9 @@ describe("5. le crédit client et le retard (NOVA et CampusTech)", () => {
 
 describe("6. l'escompte, l'affacturage et le découvert", () => {
   it("une facture de CampusTech : escompte puis retard 339,84 €, découvert seul 453,12 €, affacturage 528,64 €", () => {
+    // Par défaut, la facture payée au 80e jour, l'hypothèse du retard.
     const x = mobiliserUneFacture(n);
+    expect([x.convenu, x.reel, x.retard]).toEqual([60, 80, 20]);
     expect(x.escompte).toBe(auCentime((22_656 * 0.06 * 60) / 360));
     expect(x.retardAuDecouvert).toBe(auCentime((22_656 * 0.09 * 20) / 360));
     expect(x.escompteEtRetard).toBe(auCentime(226.56 + 113.28));
@@ -656,10 +666,13 @@ describe("la garde voit le modèle et la fiche", () => {
     // Des entreprises payées comptant : les deux régimes se rejoignent pour elles.
     const comptant: FicheDuBatiment = { ...m, clienteles: m.clienteles.map((g) => ({ ...g, delai: 0 })) };
     expect(comparerLesRegimes(comptant).ecartsDeTvaNette).toEqual([0, 0, 0, 0]);
-    // NOVA avec un CampusTech qui tient ses 60 jours : plus de retard, plus de pénalités.
-    const ponctuel: FicheDesDelaisDeNova = { ...n, campustech: { ...n.campustech, delaiReel: 60 } };
+    // NOVA sans l'hypothèse du retard : plus de retard, plus de pénalités.
+    const ponctuel: FicheDesDelaisDeNova = { ...n, campustech: { ...n.campustech, retardSuppose: 0, delaiSiRetard: 60 } };
     expect(retardDeCampusTech(ponctuel).coutDuRetardParAn).toBe(0);
-    expect(creancesDuTrimestre(ponctuel, 4).creancesTTC).toBe(45_312);
+    expect(mobiliserUneFacture(ponctuel).retardAuDecouvert).toBe(0);
+    // Une CampusTech qui paierait vraiment à 80 jours : 3 factures dues au 31 décembre.
+    const tardive: FicheDesDelaisDeNova = { ...n, campustech: { ...n.campustech, delaiReel: 80 } };
+    expect(creancesDuTrimestre(tardive, 4).creancesTTC).toBe(67_968);
     // Une banque qui escompte à 9 % : l'escompte ne vaut plus que 60 jours de découvert, et ne sert plus au T4.
     const escompteCher: FicheDesDelaisDeNova = { ...n, banque: { ...n.banque, escompte: { ...n.banque.escompte, taux: 0.09 } } };
     expect(escompterChaqueTrimestre(escompteCher).trimestres[3]!.mieux).toBe("decouvert");
