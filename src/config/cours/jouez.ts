@@ -17,7 +17,6 @@ import { REMISE_DE_LA_PROMOTION } from "./chapitres/le-prix-affiche";
 import { FOND_DE_CAISSE, PART_EN_ESPECES } from "./chapitres/tenir-la-caisse";
 import { METIERS } from "./metiers";
 import { FACTEUR_DU_GRAND_ENTRETIEN } from "./chapitres/le-deficit-reporte";
-import { venteDuMetier } from "./chapitres/le-panier-moyen";
 import { PROGRESSION_EN_POURCENT } from "./chapitres/suivre-ses-ventes";
 import { PRIX_BAS } from "./chapitres/l-offre-et-la-demande";
 import { PAS_DU_TATONNEMENT } from "./chapitres/le-prix-d-equilibre";
@@ -28,6 +27,7 @@ import { BAISSE_DE_PRIX_DU_COMMERCIAL, COUPE_DU_FINANCIER, HAUSSE_DE_PUBLICITE_D
 import { RETARD } from "./chapitres/une-information-a-temps";
 import { SEUILS_ABC } from "./negociation";
 import { scenarioByCode, scenarioCodeForLevel } from "../scenarios/registry";
+import { ARTICLES_PAR_TICKET } from "../scenarios/sector-kpis";
 import { DIFFICULTY_PRESETS } from "../difficulty";
 import { LES_OFFRES_DE_L_ARENE } from "../tarifs";
 import { VITRINE_SOLO_PAR_DEFAUT } from "../vitrine-solo";
@@ -138,13 +138,6 @@ export const LIEUX_DE_L_ARENE = {
     reperes: [
       { fichier: "src/components/dashboard-tabs.tsx", texte: 'label: "Marché"' },
       { fichier: "src/components/period-dashboard.tsx", texte: "Votre plan face au réalisé" },
-    ],
-  },
-  portefeuille: {
-    chemin: "Résultats › Synthèse › Portefeuille d'adhérents",
-    reperes: [
-      { fichier: "src/components/dashboard-tabs.tsx", texte: 'label: "Synthèse"' },
-      { fichier: "src/components/period-dashboard.tsx", texte: 'data-testid="portefeuille-tour"' },
     ],
   },
   "rh-du-tour": {
@@ -1068,7 +1061,8 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     };
   },
   "le-panier-moyen": (c) => {
-    const { unitesParVente } = venteDuMetier(c);
+    // Une gamme se compte en passages en caisse : l'arène pose son nombre d'articles par passage.
+    const unitesParVente = (scenarioByCode(c.code).scenario.products?.length ?? 0) > 1 ? ARTICLES_PAR_TICKET : 1;
     return {
       niveau: 1,
       faire: `${partie(c, 1)} Jouez un tour sans toucher à la feuille de décision proposée.`,
@@ -1083,16 +1077,13 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Votre plan face au réalisé donne l'écart entre votre objectif et vos ventes : calculez votre taux de réalisation. Dans le marché du tour écoulé, la demande adressée dépassait-elle votre objectif ? L'écart vient-il des clients venus, ou des clients repartis sans être servis ?",
   }),
-  "le-client-qui-revient": (c) => {
-    const { volume } = feuilleDe(c, 2);
-    return {
-      niveau: 2,
-      faire: `${partie(c, 2)} Jouez un premier tour sans rien changer, puis un deuxième où vous baissez « ${volume} » d'un tiers, puis un troisième où vous le remettez comme au premier.`,
-      lieux: ["portefeuille", "compte-de-resultat"],
-      chercher:
-        "Au deuxième tour, combien d'adhérents sont restés sans place ? Au troisième, la salle les a-t-elle retrouvés ? Relevez la marge des trois tours : un adhérent refusé coûte-t-il plus qu'un trimestre d'abonnement ?",
-    };
-  },
+  "le-client-qui-revient": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours sans toucher à la feuille de décision proposée.`,
+    lieux: ["marche-du-tour"],
+    chercher:
+      "Au marché du tour écoulé, relevez la demande que chaque clientèle vous adresse, aux deux tours. Dans l'arène, la part de clientèle gagnée au tour d'avant rend l'entreprise plus attirante au tour suivant : une clientèle bien servie au premier tour revient-elle plus nombreuse au second ? Et celle que vous n'avez pas servie ?",
+  }),
   "un-nouveau-client": (c) => ({
     niveau: 2,
     faire: `${partie(c, 2)} Jouez un tour sans rien changer, puis un deuxième où vous doublez « Budget marketing », puis un troisième où vous le remettez comme au premier.`,

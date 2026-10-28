@@ -266,7 +266,7 @@ export const PARCOURS: readonly Parcours[] = [
     formation: "cap-epc",
     titre: "CAP EPC · Équipier polyvalent du commerce",
     resume:
-      "Recevoir une livraison et la contrôler, remplir le rayon avant la rupture, afficher le bon prix, tenir la caisse : les gestes du magasin, comptés sur les chiffres de l'arène.",
+      "Recevoir une livraison et la contrôler, remplir le rayon avant la rupture, afficher le bon prix, tenir la caisse : les gestes du magasin, comptés sur la boutique du cours.",
     publics: { 1: "CAP Équipier polyvalent du commerce" },
   },
   {
@@ -274,7 +274,7 @@ export const PARCOURS: readonly Parcours[] = [
     formation: "bac-pro-mcv",
     titre: "Bac pro MCV · Vendre et suivre ses ventes",
     resume:
-      "Le panier moyen et la marge d'une vente, l'objectif et le réalisé, le client qui revient ou qui part, ce que rapporte un nouveau client : la vente au comptoir de l'arène, chiffrée.",
+      "Le panier moyen et la marge d'une vente, l'objectif et le réalisé, le client qui revient ou qui part, ce que rapporte un nouveau client : la vente au comptoir de la boutique du cours, chiffrée.",
     publics: { 1: "Seconde professionnelle relation client, première bac pro MCV", 2: "Terminale bac pro MCV" },
   },
   {

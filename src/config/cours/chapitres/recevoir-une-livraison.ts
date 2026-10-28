@@ -1,159 +1,79 @@
-import type { CompanyRoundResult } from "../../../engine/types";
-import { scenarioByCode } from "../../scenarios/registry";
-import { type Cas } from "../cas";
-import { anneeDuCours as anneeJouee } from "../monde/annee-du-cours";
+import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import type { Cas } from "../cas";
+import { BOUTIQUES_DU_COURS, type CodeDeReference, type FicheDeLaBoutique } from "../monde/maille-et-co";
+import {
+  ARTICLES_PAR_CARTON,
+  cartonsQuiPeuventManquer,
+  disponibleAvecDesCartonsManquants,
+  receptionDuFaconnier,
+  saisieDeLaReception,
+} from "../monde/vente-et-caisse";
 import type { Chapitre } from "../types";
 
 /**
  * CHAPITRE : RECEVOIR UNE LIVRAISON, LE BON DE LIVRAISON ET LA COMMANDE (CAP Équipier
  * polyvalent du commerce, palier 1).
  *
- * Le geste de l'équipier à la réception : il lit la commande que le magasin a passée, prend le
- * bon de livraison que le livreur lui tend, compte les articles carton par carton, ligne par
- * ligne, trouve l'écart, l'écrit sur le bon avant de signer (la réserve), prévient son
- * responsable, et calcule le stock en réserve après la réception. Un calcul simple par étape :
- * une addition, une soustraction.
+ * Le geste de l'équipier à la réception : il lit ce que le magasin attend, prend le bon de
+ * livraison que le livreur lui tend, compte les articles carton par carton, ligne par ligne,
+ * trouve l'écart, l'écrit sur le bon avant de signer (la réserve), prévient son responsable, et
+ * calcule le stock en réserve après la réception. Puis l'expérience : un curseur (combien de
+ * cartons peuvent manquer avant que le rayon manque des ventes ?) et un laboratoire (saisir en
+ * stock et réclamer au fournisseur ce qui est juste).
  *
- * CE QUI VIENT DE L'ARÈNE. La commande est celle que l'année du cours (`anneeJouee`) fait passer
- * à MAILLE & CO au premier trimestre, référence par référence (`products[code].planned`, la case
- * « Articles à mettre en rayon » de la feuille de décision), arrondie à l'article. Le stock avant
- * la réception est le stock d'ouverture de la boutique, référence par référence
- * (`finishedGoodsByProduct`). Le fournisseur est celui que le moteur a servi (`supplier.name`).
+ * LE CHAPITRE JOUE DANS LE MONDE DU COURS : la boutique MAILLE & CO (monde/maille-et-co.ts), son
+ * stock du 1er janvier et les livraisons de janvier de son façonnier, à leur prix d'achat. Les
+ * calculs sont dans monde/vente-et-caisse.ts.
  *
- * CE QUE L'ARÈNE NE FAIT PAS. Le moteur ne simule ni bon de livraison, ni cartons, ni écart de
- * livraison : ce qui est commandé entre en stock en entier (`produced` = `planned` sur toute
- * l'année du cours, sans rupture du fournisseur). Le bon de livraison, les cartons et le carton
- * manquant sont donc des HYPOTHÈSES DU COURS, posées ci-dessous en constantes nommées, et le
- * texte le dit à l'élève.
+ * HYPOTHÈSES DU COURS, dites à l'élève : les livraisons du mois regroupées sur un seul bon ; des
+ * cartons de 10 articles ; un carton qui manque sur la ligne la plus grosse.
+ *
+ * CE QUI A CHANGÉ. Le chapitre lisait la commande du premier trimestre de l'arène (4 564 articles,
+ * 4 554 reçus, 5 664 en réserve après). Il lit maintenant le bon de janvier : 1 000 articles sur le
+ * bon, 990 reçus, 2 150 en réserve après.
  */
 
-/** Le premier trimestre de l'année du cours : celui où la commande est reçue. */
-export const TRIMESTRE_DE_LA_LIVRAISON = 1;
-
-/**
- * LES ARTICLES ARRIVENT EN CARTONS DE 10 : hypothèse du cours. Le moteur ne compte pas de
- * cartons ; un carton de dix pièces se compte facilement de tête.
- */
-export const ARTICLES_PAR_CARTON = 10;
-
-/**
- * UN CARTON MANQUE, sur la ligne la plus grosse de la commande : hypothèse du cours. Dans
- * l'arène, la livraison arrive toujours complète ; le cours imagine un carton perdu en route pour
- * entraîner l'élève au contrôle.
- */
-export const CARTONS_MANQUANTS = 1;
-
-/** Les entreprises du chapitre : un magasin, qui reçoit plusieurs articles de son fournisseur. */
+/** Les entreprises du chapitre : la boutique du cours, qui reçoit plusieurs articles de son façonnier. */
 export const MAGASINS: readonly string[] = ["boutique"];
 
 /**
- * LE NOM DES ARTICLES DANS UNE PHRASE. Le scénario les nomme pour un tableau (« Col rond ») ;
- * une phrase demande le pluriel et le genre (« les écharpes manquantes »). Ce n'est pas un
- * chiffre : c'est la façon de dire. La garde vérifie que chaque référence de la boutique a le sien.
+ * LE NOM DES ARTICLES DANS UNE PHRASE. La fiche les nomme pour un tableau (« Pull col rond ») ; une
+ * phrase demande le pluriel et le genre (« les écharpes manquantes »). Ce n'est pas un chiffre :
+ * c'est la façon de dire.
  */
-export const ARTICLES_DE_LA_BOUTIQUE: Readonly<Record<string, { pluriel: string; feminin: boolean }>> = {
-  "pull-col-rond": { pluriel: "pulls col rond", feminin: false },
+export const ARTICLES_DE_LA_BOUTIQUE: Readonly<Record<CodeDeReference, { pluriel: string; feminin: boolean }>> = {
+  "col-rond": { pluriel: "pulls col rond", feminin: false },
   cardigan: { pluriel: "cardigans", feminin: false },
-  "pull-merinos": { pluriel: "pulls mérinos", feminin: false },
+  merinos: { pluriel: "pulls mérinos", feminin: false },
   echarpe: { pluriel: "écharpes", feminin: true },
   bonnet: { pluriel: "bonnets", feminin: false },
 };
 
 export const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 /** « de » devant un nom : élidé devant une voyelle. */
 export const de = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 /** Un adjectif accordé au pluriel avec l'article (« manquants », « manquantes »). */
 export const accordeA = (feminin: boolean, adjectif: string) => `${adjectif}${feminin ? "es" : "s"}`;
-const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+export const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-export interface LigneDeLivraison {
-  code: string;
-  /** Le nom du tableau, celui du scénario. */
-  nom: string;
-  /** Le nom d'une phrase, au pluriel. */
-  pluriel: string;
-  feminin: boolean;
-  /** En réserve avant la réception. */
-  avant: number;
-  commandee: number;
-}
+export const ficheDe = (c: Pick<Cas, "code">): FicheDeLaBoutique => BOUTIQUES_DU_COURS[c.code]!;
 
-/** Les références de la boutique, dans l'ordre du scénario. */
-export function referencesDuMagasin(code: string) {
-  const s = scenarioByCode(code).scenario;
-  return (s.products ?? []).map((p) => {
-    const mots = ARTICLES_DE_LA_BOUTIQUE[p.code];
-    if (!mots) throw new Error(`Pas de nom de phrase pour l'article ${p.code}`);
-    return { code: p.code, nom: p.name, ...mots };
-  });
-}
+/** Les mots d'une référence : son pluriel et son genre. */
+export const motsDe = (code: CodeDeReference) => ARTICLES_DE_LA_BOUTIQUE[code];
 
-/** Le résultat du joueur au trimestre donné (1 à 4) de l'année du cours. */
-export function trimestreDuCours(code: string, trimestre: number): CompanyRoundResult {
-  const r = anneeJouee(code).partie.rounds[trimestre - 1]?.results["joueur"];
-  if (!r?.products) throw new Error(`Pas de trimestre ${trimestre} par référence pour ${code}`);
-  return r;
-}
-
-/** Ce qui est en réserve, article par article, au début du trimestre donné. */
-export function stockAuDebut(code: string, trimestre: number): Record<string, number> {
-  if (trimestre === 1) {
-    const fg = anneeJouee(code).depart.finishedGoodsByProduct ?? {};
-    return Object.fromEntries(Object.entries(fg).map(([k, v]) => [k, Math.round(v.quantity)]));
-  }
-  const avant = trimestreDuCours(code, trimestre - 1).products!;
-  return Object.fromEntries(Object.entries(avant).map(([k, v]) => [k, Math.round(v.stock.quantity)]));
-}
-
-/** La commande d'un trimestre, référence par référence, et ce qui était en réserve avant. */
-export function commandeDuTrimestre(code: string, trimestre: number) {
-  const r = trimestreDuCours(code, trimestre);
-  const avant = stockAuDebut(code, trimestre);
-  const lignes: LigneDeLivraison[] = referencesDuMagasin(code).map((a) => ({
-    ...a,
-    avant: avant[a.code] ?? 0,
-    commandee: Math.round(r.products![a.code]!.planned),
-  }));
-  const fournisseurs = new Set(Object.values(r.products!).map((p) => p.supplier?.name ?? ""));
-  if (fournisseurs.size !== 1) throw new Error(`Plusieurs fournisseurs au trimestre ${trimestre} chez ${code}`);
-  return {
-    lignes,
-    fournisseur: [...fournisseurs][0]!,
-    totalCommande: lignes.reduce((t, l) => t + l.commandee, 0),
-    totalAvant: lignes.reduce((t, l) => t + l.avant, 0),
-  };
-}
-
-/** La livraison du chapitre : la commande, le bon, le compte, l'écart, le stock après. */
-export function livraison(c: Cas) {
-  const commande = commandeDuTrimestre(c.code, TRIMESTRE_DE_LA_LIVRAISON);
-  const { lignes } = commande;
-  const plusGrosse = lignes.reduce((a, b) => (b.commandee > a.commandee ? b : a));
-  const plusPetite = lignes.reduce((a, b) => (b.commandee < a.commandee ? b : a));
-  const manquants = CARTONS_MANQUANTS * ARTICLES_PAR_CARTON;
-  // Le bon de livraison reprend la commande : le fournisseur annonce tout ce qui a été commandé.
-  const comptes = lignes.map((l) => ({ ...l, surLeBon: l.commandee, comptee: l.code === plusGrosse.code ? l.commandee - manquants : l.commandee }));
-  const totalRecu = comptes.reduce((t, l) => t + l.comptee, 0);
-  const ecart = comptes.find((l) => l.code === plusGrosse.code)!;
-  return {
-    ...commande,
-    comptes,
-    ecart,
-    enTrop: plusPetite,
-    manquants,
-    totalRecu,
-    apresDeLEcart: ecart.avant + ecart.comptee,
-    totalApres: commande.totalAvant + totalRecu,
-    /** Dans l'arène : ce qui est entré en stock au trimestre, la commande entière. */
-    entreDansLArene: Math.round(trimestreDuCours(c.code, TRIMESTRE_DE_LA_LIVRAISON).products![ecart.code]!.produced),
-  };
+/** La livraison du chapitre, avec les mots de chaque ligne. */
+export function livraison(c: Pick<Cas, "code">) {
+  const r = receptionDuFaconnier(ficheDe(c));
+  const avecLesMots = <T extends { code: CodeDeReference }>(l: T) => ({ ...l, ...motsDe(l.code) });
+  return { ...r, lignes: r.lignes.map(avecLesMots), comptes: r.comptes.map(avecLesMots), ecart: avecLesMots(r.ecart), enTrop: avecLesMots(r.enTrop) };
 }
 
 const tableauDeLaCommande = (c: Cas) => {
   const l = livraison(c);
   return {
-    titre: `La commande ${de(c.entreprise)} au trimestre ${TRIMESTRE_DE_LA_LIVRAISON} (fournisseur : ${l.fournisseur})`,
-    colonnes: ["Articles commandés"],
+    titre: `Ce que le façonnier livre à ${c.entreprise} en janvier`,
+    colonnes: ["Articles attendus"],
     lignes: l.lignes.map((x) => ({ libelle: x.nom, valeurs: [qte(x.commandee)] })),
   };
 };
@@ -174,7 +94,7 @@ export const RECEVOIR_UNE_LIVRAISON: Chapitre = {
   blocs: ["CAP EPC Bloc 1 · Recevoir et suivre les commandes"],
   titre: "Recevoir une livraison : le bon de livraison et la commande",
   accroche:
-    "Le livreur dépose les cartons et tend un papier à signer. Avant de signer, on compte. Ce que le magasin a commandé, ce que le bon annonce, ce qui est vraiment arrivé.",
+    "Le livreur dépose les cartons et tend un papier à signer. Avant de signer, on compte. Ce que le magasin a commandé, ce que le bon annonce, ce qui est vraiment arrivé, et ce qu'on saisit en stock.",
   objectifs: [
     "Lire une commande et un bon de livraison",
     "Compter une livraison ligne par ligne",
@@ -185,7 +105,7 @@ export const RECEVOIR_UNE_LIVRAISON: Chapitre = {
   libre: false,
   entreprises: {
     codes: MAGASINS,
-    pourquoi: "ce chapitre reçoit les articles d'un magasin, référence par référence, et elle n'a pas de magasin.",
+    pourquoi: "ce chapitre reçoit les articles de la boutique du cours, MAILLE & CO, référence par référence.",
   },
   etapes: [
     {
@@ -196,9 +116,9 @@ export const RECEVOIR_UNE_LIVRAISON: Chapitre = {
       texte: (c) => {
         const l = livraison(c);
         return [
-          `Au trimestre ${TRIMESTRE_DE_LA_LIVRAISON}, ${c.entreprise} commande ${qte(l.totalCommande)} articles à son fournisseur (${l.fournisseur}). Dans l'arène, c'est la case « ${scenarioByCode(c.code).vocabulary.productionPlanLabel} » de la feuille de décision. Le tableau donne la commande, article par article.`,
-          "La commande, c'est ce que le magasin a demandé. Le jour de la livraison, le livreur dépose les cartons et vous tend le bon de livraison : ce que le fournisseur dit avoir envoyé. Votre travail : compter ce qui est vraiment arrivé.",
-          `Dans l'arène, une livraison arrive toujours complète. Pour vous entraîner, le cours imagine des cartons de ${qte(ARTICLES_PAR_CARTON)} articles, et un carton perdu en route.`,
+          `En janvier, ${c.entreprise} attend ${qte(l.totalCommande)} articles de son façonnier. Le tableau les donne, article par article : c'est la commande, ce que le magasin a demandé.`,
+          "Le jour de la livraison, le livreur dépose les cartons et vous tend le bon de livraison : ce que le fournisseur dit avoir envoyé. Votre travail : compter ce qui est vraiment arrivé.",
+          `Pour l'exercice, le cours regroupe les livraisons du mois sur un seul bon, en cartons de ${qte(ARTICLES_PAR_CARTON)} articles, et imagine un carton perdu en route.`,
         ];
       },
       tableau: tableauDeLaCommande,
@@ -213,18 +133,9 @@ export const RECEVOIR_UNE_LIVRAISON: Chapitre = {
       question: () => "Additionnez les lignes de la commande : combien d'articles le magasin attend-il en tout ?",
       champs: (c) => {
         const l = livraison(c);
-        return [
-          {
-            libelle: "Total des articles commandés",
-            attendu: l.totalCommande,
-            calcul: `${l.lignes.map((x) => qte(x.commandee)).join(" + ")} = ${qte(l.totalCommande)}`,
-          },
-        ];
+        return [{ libelle: "Total des articles commandés", attendu: l.totalCommande, calcul: `${l.lignes.map((x) => qte(x.commandee)).join(" + ")} = ${qte(l.totalCommande)}` }];
       },
-      explication: (c) => {
-        const l = livraison(c);
-        return [`Le magasin attend ${qte(l.totalCommande)} articles. Ce total servira à la fin : si le compte ne tombe pas juste, il y a un écart quelque part.`];
-      },
+      explication: (c) => [`Le magasin attend ${qte(livraison(c).totalCommande)} articles. Ce total servira à la fin : si le compte ne tombe pas juste, il y a un écart quelque part.`],
     },
     {
       id: "le-document",
@@ -232,21 +143,9 @@ export const RECEVOIR_UNE_LIVRAISON: Chapitre = {
       titre: "Le papier du livreur",
       question: () => "Le livreur arrive avec les cartons. Quel document vous tend-il, pour que vous le signiez ?",
       options: () => [
-        {
-          texte: "Le bon de livraison",
-          juste: true,
-          retour: "Oui. Le bon de livraison dit ce que le fournisseur a envoyé. En le signant, vous dites que vous avez bien tout reçu : on compte donc avant de signer.",
-        },
-        {
-          texte: "Le bon de commande",
-          juste: false,
-          retour: "Non. Le bon de commande, c'est le magasin qui l'a envoyé au fournisseur, avant. Le livreur apporte le bon de livraison.",
-        },
-        {
-          texte: "Le ticket de caisse",
-          juste: false,
-          retour: "Non. Le ticket de caisse se donne au client qui achète. Le livreur apporte le bon de livraison.",
-        },
+        { texte: "Le bon de livraison", juste: true, retour: "Oui. Le bon de livraison dit ce que le fournisseur a envoyé. En le signant, vous dites que vous avez bien tout reçu : on compte donc avant de signer." },
+        { texte: "Le bon de commande", juste: false, retour: "Non. Le bon de commande, c'est le magasin qui l'a envoyé au fournisseur, avant. Le livreur apporte le bon de livraison." },
+        { texte: "Le ticket de caisse", juste: false, retour: "Non. Le ticket de caisse se donne au client qui achète. Le livreur apporte le bon de livraison." },
       ],
     },
     {
@@ -274,30 +173,17 @@ export const RECEVOIR_UNE_LIVRAISON: Chapitre = {
       titre: "L'écart compté",
       notions: ["stock"],
       tableau: tableauDuControle,
-      question: (c) => {
-        const l = livraison(c);
-        return `Calculez combien ${de(l.ecart.pluriel)} manquent : ce que dit le bon, moins ce que vous avez compté. Puis le total des articles vraiment reçus.`;
-      },
+      question: (c) => `Calculez combien ${de(livraison(c).ecart.pluriel)} manquent : ce que dit le bon, moins ce que vous avez compté. Puis le total des articles vraiment reçus.`,
       champs: (c) => {
         const l = livraison(c);
         return [
-          {
-            libelle: `${majuscule(l.ecart.pluriel)} ${accordeA(l.ecart.feminin, "manquant")}`,
-            attendu: l.manquants,
-            calcul: `${qte(l.ecart.surLeBon)} − ${qte(l.ecart.comptee)} = ${qte(l.manquants)}`,
-          },
-          {
-            libelle: "Total des articles reçus",
-            attendu: l.totalRecu,
-            calcul: `${l.comptes.map((x) => qte(x.comptee)).join(" + ")} = ${qte(l.totalRecu)}`,
-          },
+          { libelle: `${majuscule(l.ecart.pluriel)} ${accordeA(l.ecart.feminin, "manquant")}`, attendu: l.manquants, calcul: `${qte(l.ecart.surLeBon)} − ${qte(l.ecart.comptee)} = ${qte(l.manquants)}` },
+          { libelle: "Total des articles reçus", attendu: l.totalRecu, calcul: `${l.comptes.map((x) => qte(x.comptee)).join(" + ")} = ${qte(l.totalRecu)}` },
         ];
       },
       explication: (c) => {
         const l = livraison(c);
-        return [
-          `Il manque ${qte(l.manquants)} ${l.ecart.pluriel}, un carton entier. Le magasin attendait ${qte(l.totalCommande)} articles, il en a reçu ${qte(l.totalRecu)}.`,
-        ];
+        return [`Il manque ${qte(l.manquants)} ${l.ecart.pluriel}, un carton entier. Le magasin attendait ${qte(l.totalCommande)} articles, il en a reçu ${qte(l.totalRecu)}.`];
       },
     },
     {
@@ -317,16 +203,8 @@ export const RECEVOIR_UNE_LIVRAISON: Chapitre = {
             juste: true,
             retour: `Oui. C'est la réserve : écrite sur le bon, datée, signée, elle prouve que le carton n'est pas arrivé. Vous prévenez ensuite votre responsable, qui réclame les ${l.ecart.pluriel} au fournisseur.`,
           },
-          {
-            texte: "Signer sans rien écrire, et prévenir le fournisseur plus tard",
-            juste: false,
-            retour: `Non. Un bon signé sans réserve dit que tout est arrivé. Le fournisseur pourra répondre que les ${qte(l.manquants)} ${l.ecart.pluriel} ont été livrés.`,
-          },
-          {
-            texte: "Refuser toute la livraison et rendre les cartons",
-            juste: false,
-            retour: `Non. ${qte(l.totalRecu)} articles sont bien là, et le magasin en a besoin. On garde ce qui est arrivé, et on écrit ce qui manque.`,
-          },
+          { texte: "Signer sans rien écrire, et prévenir le fournisseur plus tard", juste: false, retour: `Non. Un bon signé sans réserve dit que tout est arrivé. Le fournisseur pourra répondre que les ${qte(l.manquants)} ${l.ecart.pluriel} ont été livrés.` },
+          { texte: "Refuser toute la livraison et rendre les cartons", juste: false, retour: `Non. ${qte(l.totalRecu)} articles sont bien là, et le magasin en a besoin. On garde ce qui est arrivé, et on écrit ce qui manque.` },
         ];
       },
     },
@@ -337,21 +215,13 @@ export const RECEVOIR_UNE_LIVRAISON: Chapitre = {
       notions: ["stock"],
       question: (c) => {
         const l = livraison(c);
-        return `Avant la livraison, il y avait ${qte(l.ecart.avant)} ${l.ecart.pluriel} en réserve, et ${qte(l.totalAvant)} articles en tout. Calculez le stock ${de(l.ecart.pluriel)} après la réception, puis le stock total en réserve. Comptez ce que vous avez vraiment reçu.`;
+        return `Au 1er janvier, il y avait ${qte(l.ecart.avant)} ${l.ecart.pluriel} en réserve, et ${qte(l.totalAvant)} articles en tout. Calculez le stock ${de(l.ecart.pluriel)} après la réception, puis le stock total en réserve. Comptez ce que vous avez vraiment reçu.`;
       },
       champs: (c) => {
         const l = livraison(c);
         return [
-          {
-            libelle: `Stock ${de(l.ecart.pluriel)} après la réception`,
-            attendu: l.apresDeLEcart,
-            calcul: `${qte(l.ecart.avant)} + ${qte(l.ecart.comptee)} = ${qte(l.apresDeLEcart)}`,
-          },
-          {
-            libelle: "Stock total après la réception",
-            attendu: l.totalApres,
-            calcul: `${qte(l.totalAvant)} + ${qte(l.totalRecu)} = ${qte(l.totalApres)}`,
-          },
+          { libelle: `Stock ${de(l.ecart.pluriel)} après la réception`, attendu: l.apresDeLEcart, calcul: `${qte(l.ecart.avant)} + ${qte(l.ecart.comptee)} = ${qte(l.apresDeLEcart)}` },
+          { libelle: "Stock total après la réception", attendu: l.totalApres, calcul: `${qte(l.totalAvant)} + ${qte(l.totalRecu)} = ${qte(l.totalApres)}` },
         ];
       },
       explication: (c) => {
@@ -365,10 +235,7 @@ export const RECEVOIR_UNE_LIVRAISON: Chapitre = {
       id: "en-trop",
       type: "choix",
       titre: "Un carton en plus",
-      question: (c) => {
-        const l = livraison(c);
-        return `Une autre fois, un carton de ${qte(ARTICLES_PAR_CARTON)} ${l.enTrop.pluriel} arrive en plus : il n'est ni sur la commande, ni sur le bon. Que faites-vous ?`;
-      },
+      question: (c) => `Une autre fois, un carton de ${qte(ARTICLES_PAR_CARTON)} ${livraison(c).enTrop.pluriel} arrive en plus : il n'est ni sur la commande, ni sur le bon. Que faites-vous ?`,
       options: (c) => {
         const l = livraison(c);
         return [
@@ -377,16 +244,100 @@ export const RECEVOIR_UNE_LIVRAISON: Chapitre = {
             juste: true,
             retour: `Oui. Un écart en trop se signale comme un manquant : le fournisseur les facturera peut-être, ou viendra les reprendre. C'est votre responsable qui décide : garder les ${l.enTrop.pluriel}, ou les rendre.`,
           },
-          {
-            texte: "Les mettre en rayon : ce sont des ventes en plus",
-            juste: false,
-            retour: `Non. Ces ${l.enTrop.pluriel} ne sont pas commandés : le fournisseur peut les facturer plus tard. Sans rien écrire, le stock ne correspond plus aux papiers.`,
+          { texte: "Les mettre en rayon : ce sont des ventes en plus", juste: false, retour: `Non. Ces ${l.enTrop.pluriel} ne sont pas commandés : le fournisseur peut les facturer plus tard. Sans rien écrire, le stock ne correspond plus aux papiers.` },
+          { texte: "Les rendre au livreur sans rien noter", juste: false, retour: "Non. Rendre peut être la bonne décision, mais elle se prend avec le responsable, et elle s'écrit sur le bon : sinon, rien ne prouve que le carton est reparti." },
+        ];
+      },
+    },
+    {
+      id: "combien-peuvent-manquer",
+      type: "curseur",
+      titre: "Combien de cartons peuvent manquer ?",
+      notions: ["stock"],
+      question: (c) => {
+        const l = livraison(c);
+        const demande = ficheDe(c).gamme.find((r) => r.code === l.ecart.code)!.demandeDuMois;
+        return `En janvier, les clients demandent ${qte(demande)} ${l.ecart.pluriel}. Il y en avait ${qte(l.ecart.avant)} en réserve, et le bon en annonce ${qte(l.ecart.surLeBon)}. Faites varier les cartons qui manquent sur cette ligne : une droite donne les ${l.ecart.pluriel} disponibles dans le mois, l'autre la demande. Placez le curseur sur le plus grand nombre de cartons qui peuvent manquer sans qu'un client reparte sans son article, puis validez.`;
+      },
+      grandeur: () => ({ libelle: "Cartons manquants sur la ligne", unite: "cartons" }),
+      sens: "plus-grande",
+      cible: (c) => ({ attendu: cartonsQuiPeuventManquer(ficheDe(c)), min: 0, max: 50 }),
+      zones: ["Le rayon sert toute la demande du mois", "Des clients repartent sans leur article"],
+      rates: () => ({
+        dessous: "Avec autant de cartons perdus, le rayon ne sert plus toute la demande du mois.",
+        dessus: "Le rayon tient encore : un carton de plus peut manquer. Cherchez le plus grand nombre.",
+      }),
+      montrer: "Montrer les cartons",
+      lecture: (c, q) => {
+        const l = livraison(c);
+        const demande = ficheDe(c).gamme.find((r) => r.code === l.ecart.code)!.demandeDuMois;
+        const dispo = disponibleAvecDesCartonsManquants(ficheDe(c), q);
+        return [
+          { libelle: "Articles manquants sur la ligne", montant: q * ARTICLES_PAR_CARTON },
+          { libelle: "Disponibles dans le mois", montant: dispo, fort: true },
+          { libelle: "Demandés dans le mois", montant: demande },
+        ];
+      },
+      droites: (c) => {
+        const demande = ficheDe(c).gamme.find((r) => r.code === livraison(c).ecart.code)!.demandeDuMois;
+        return { produit: (q) => disponibleAvecDesCartonsManquants(ficheDe(c), q), cout: () => demande, libelles: ["Articles disponibles dans le mois", "Articles demandés"] };
+      },
+      explication: (c) => {
+        const l = livraison(c);
+        const q = cartonsQuiPeuventManquer(ficheDe(c));
+        return [
+          `Jusqu'à ${qte(q)} cartons perdus, la réserve suffit encore pour le mois. Ici, ${qte(l.manquants / ARTICLES_PAR_CARTON)} sur ${qte(l.ecart.surLeBon / ARTICLES_PAR_CARTON)} manque : le rayon n'en souffre pas.`,
+          `Mais le façonnier facture ce que dit le bon. Sans la réserve écrite, la boutique paierait les ${qte(l.manquants)} ${l.ecart.pluriel} qu'elle n'a pas reçus, même si ses clients ne s'en aperçoivent pas.`,
+        ];
+      },
+    },
+    {
+      id: "le-laboratoire-de-la-saisie",
+      type: "simulation",
+      titre: "Le laboratoire de la saisie",
+      notions: ["stock"],
+      question: (c) => {
+        const l = livraison(c);
+        return `Après la réception, vous saisissez les ${l.ecart.pluriel} reçus dans le stock de la caisse, et votre responsable réclame au façonnier ce qui manque. Le façonnier facture ce que dit le bon : ${qte(l.ecart.surLeBon)} ${l.ecart.pluriel} à ${eur(l.ecart.prixDAchat)} pièce. Faites varier ce que vous saisissez et ce que vous réclamez, et relevez le défi.`;
+      },
+      leviers: (c) => {
+        const l = livraison(c);
+        return [
+          { code: "saisis", libelle: `${majuscule(l.ecart.pluriel)} ${accordeA(l.ecart.feminin, "saisi")} en stock`, unite: "articles", min: l.ecart.surLeBon - 3 * ARTICLES_PAR_CARTON, max: l.ecart.surLeBon + ARTICLES_PAR_CARTON, pas: ARTICLES_PAR_CARTON, depart: l.ecart.surLeBon },
+          { code: "reclames", libelle: `${majuscule(l.ecart.pluriel)} ${accordeA(l.ecart.feminin, "réclamé")} au façonnier`, unite: "articles", min: 0, max: 3 * ARTICLES_PAR_CARTON, pas: ARTICLES_PAR_CARTON, depart: 0 },
+        ];
+      },
+      lecture: (c, p) => {
+        const x = saisieDeLaReception(ficheDe(c), p.saisis!, p.reclames!);
+        return [
+          { libelle: "Stock affiché par la caisse", montant: x.enMachine, unite: "articles", reference: x.enReserve },
+          { libelle: "Stock vraiment en réserve", montant: x.enReserve, unite: "articles" },
+          { libelle: "Écart entre le stock affiché et la réserve", montant: x.ecartDInventaire, unite: "articles", fort: true },
+          { libelle: "Facture du façonnier pour la ligne", montant: x.facture },
+          { libelle: "Avoir réclamé", montant: x.avoir },
+          { libelle: "Payé pour des articles jamais reçus", montant: x.payeSansEtreRecu, fort: true },
+        ];
+      },
+      defi: (c) => {
+        const l = livraison(c);
+        return {
+          consigne: "Faites que le stock affiché soit celui de la réserve, et que la boutique ne paie ni plus ni moins que ce qu'elle a reçu.",
+          atteint: (p) => saisieDeLaReception(ficheDe(c), p.saisis!, p.reclames!).juste,
+          indice: (p) => {
+            const x = saisieDeLaReception(ficheDe(c), p.saisis!, p.reclames!);
+            if (x.ecartDInventaire !== 0) return `Le stock affiché compte ${qte(Math.abs(x.ecartDInventaire))} articles ${x.ecartDInventaire > 0 ? "de trop" : "de moins"} : on saisit ce qu'on a compté, pas ce que dit le bon.`;
+            return x.payeSansEtreRecu > 0
+              ? `La boutique paierait ${eur(x.payeSansEtreRecu)} pour des articles qu'elle n'a pas reçus : réclamez ce qui manque.`
+              : "La boutique réclame plus que ce qui manque : le façonnier refusera. Réclamez seulement ce qui manque.";
           },
-          {
-            texte: "Les rendre au livreur sans rien noter",
-            juste: false,
-            retour: "Non. Rendre peut être la bonne décision, mais elle se prend avec le responsable, et elle s'écrit sur le bon : sinon, rien ne prouve que le carton est reparti.",
-          },
+          solution: { saisis: l.ecart.comptee, reclames: l.manquants },
+        };
+      },
+      explication: (c, p) => {
+        const x = saisieDeLaReception(ficheDe(c), p.saisis!, p.reclames!);
+        return [
+          `Défi relevé : le stock affiché est de ${qte(x.enMachine)} articles, comme la réserve, et la boutique paie ${eur(x.aPayer)} au lieu de ${eur(x.facture)}, grâce à l'avoir de ${eur(x.avoir)}.`,
+          "On saisit ce qu'on a compté, et on réclame ce qui manque. C'est la réserve écrite sur le bon qui permet de réclamer.",
         ];
       },
     },
@@ -398,8 +349,8 @@ export const RECEVOIR_UNE_LIVRAISON: Chapitre = {
       texte: (c) => {
         const l = livraison(c);
         return [
-          `On compte avant de signer. Ici, le bon annonçait ${qte(l.totalCommande)} articles, il en est arrivé ${qte(l.totalRecu)} : la réserve écrite sur le bon protège le magasin.`,
-          `Dans l'arène, la livraison arrive complète : ${qte(l.entreDansLArene)} ${l.ecart.pluriel} entrent en réserve au trimestre ${TRIMESTRE_DE_LA_LIVRAISON}, ce que la boutique a commandé. Dans un vrai magasin, le contrôle trouve parfois un carton qui manque, ou un carton en trop.`,
+          `On compte avant de signer. Ici, le bon annonçait ${qte(l.totalCommande)} articles, il en est arrivé ${qte(l.totalRecu)} : la réserve écrite sur le bon protège le magasin, et l'avoir lui évite de payer ${eur(l.manquants * l.ecart.prixDAchat)} pour rien.`,
+          "Dans l'arène, la livraison arrive toujours complète, et les chiffres de votre entreprise seront différents. Dans un vrai magasin, le contrôle trouve parfois un carton qui manque, ou un carton en trop.",
         ];
       },
       repere: () => "Écart = quantité sur le bon − quantité comptée. Stock après la réception = stock avant + quantité vraiment reçue.",

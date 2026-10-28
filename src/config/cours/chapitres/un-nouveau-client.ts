@@ -1,201 +1,77 @@
-import { soldUnits } from "../../../engine/simulation/runGame";
-import type { CompanyRoundResult, RoundDecisions } from "../../../engine/types";
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../pedagogy/cours/etats";
-import { accord } from "../accords";
 import type { Cas } from "../cas";
-import { anneeDeReference, rejouerAvec, type Changement } from "../gestion-de-la-pme";
+import { BOUTIQUES_DU_COURS, type FicheDeLaBoutique } from "../monde/maille-et-co";
+import {
+  CAMPAGNE_DU_CHAPITRE,
+  OFFRES_DE_CAMPAGNE,
+  PART_DES_GAGNES_QUI_PRENNENT_LA_CARTE,
+  campagne,
+  carteDeFidelite,
+  meilleureCampagne,
+  passantsDeJanvier,
+  ventesPourPayer,
+} from "../monde/vente-et-caisse";
 import type { Chapitre, TableauDeDonnees } from "../types";
+import { ENTREPRISES_DE_LA_VENTE } from "./le-panier-moyen";
 
 /**
  * CHAPITRE : CE QUE RAPPORTE UN NOUVEAU CLIENT (Bac pro Métiers du commerce et de la vente,
  * terminale, palier 2).
  *
- * Le vendeur propose une campagne de publicité pour gagner des clients. L'arène rejoue l'année
- * avec la campagne : le chapitre compte les ventes gagnées, ce qu'a coûté chacune, la marge
- * qu'elle rapporte, et dit si la campagne paie. Et pourquoi la campagne d'un trimestre fait
- * encore vendre ensuite : la part de clientèle gagnée compte au trimestre suivant
- * (`loyaltyEffect`), et la gestion prépare davantage pour la demande qu'elle a vue.
+ * La vendeuse propose une campagne pour faire entrer des passants. Le chapitre compte les ventes
+ * gagnées, ce qu'a coûté chacune, la marge qu'elle rapporte, et dit si la campagne paie ; puis ce
+ * qu'elle rapporte encore ensuite, quand une partie des clients gagnés prend la carte. Puis
+ * l'expérience : un curseur (combien de ventes gagnées paient la campagne ?) et un laboratoire
+ * (quelle offre de l'agence laisse le plus, une fois payée ?).
  *
  * Il ne double pas « Le coût d'acquisition et la rentabilité d'une campagne » (BTS NDRC, palier
- * 3 : le premier trimestre à cinq budgets, le coût du client en plus, le retour sur
- * investissement), ni « Ce que rapporte la communication » (bac STMG : le meilleur de cinq
- * budgets), ni « Décider avec des chiffres » (seconde : la publicité de toute l'année, gardée ou
- * supprimée). Ici, une seule campagne, d'un trimestre, suivie sur l'année, et des divisions
- * simples.
+ * 3 : cinq budgets, le coût du client en plus, le retour sur investissement), ni « Ce que rapporte
+ * la communication » (bac STMG). Ici, une campagne d'un mois et des divisions simples.
  *
- * D'OÙ VIENNENT LES CHIFFRES. L'année du cours (`anneeDeReference`) et son rejeu (`rejouerAvec`,
- * clé « un-nouveau-client:… ») : au trimestre de la campagne, le budget de publicité vaut celui
- * de l'année du cours plus la campagne ; aux autres trimestres, celui de l'année du cours. Ce
- * sont des valeurs posées sur l'année du cours, trimestre par trimestre, et non un multiple de la
- * décision reçue : le formulaire reconduit la décision jouée, et un multiple reconduit se
- * composerait (la garde vérifie le budget joué à chaque trimestre). À la boutique, qui vend
- * plusieurs articles, la publicité se décide article par article : chacun suit la même règle.
+ * LE CHAPITRE JOUE DANS LE MONDE DU COURS : les passants de MAILLE & CO en janvier (monde/maille-et-co.ts :
+ * 3 160 entrées, 600 passages en caisse, leurs articles et leur marge) et la carte de fidélité du
+ * chapitre « Le client qui revient ». Les calculs sont dans monde/vente-et-caisse.ts.
  *
- * Dans l'arène, on ne compte pas les clients un par un (sauf les abonnés de la salle de sport) :
- * on compte les ventes. Une vente gagnée, c'est un client servi en plus.
+ * HYPOTHÈSES DU COURS, dites à l'élève : les offres de l'agence (300 entrées en plus pour 1 000 €,
+ * 500 pour 2 000 €, 650 pour 4 000 €) ; la campagne du chapitre à 2 000 € ; les passants gagnés
+ * achètent comme ceux de janvier ; un client gagné sur cinq prend la carte.
+ *
+ * CE QUI A CHANGÉ. Le chapitre rejouait dans l'arène l'année avec la publicité du premier trimestre
+ * doublée, chez six entreprises (à la boutique : 126 ventes gagnées, une campagne qui coûtait
+ * 1 537 € de plus qu'elle ne rapportait). Il se joue maintenant chez MAILLE & CO seule : 95 ventes
+ * gagnées, 21,05 € par vente, 3 057,10 € de marge, une campagne qui laisse 1 057,10 €.
  */
-
-/** Le trimestre de la campagne : le premier, en janvier (hypothèse du cours). */
-export const TRIMESTRE_DE_LA_CAMPAGNE = 1;
-
-/**
- * LA CAMPAGNE (hypothèse du cours) : elle ajoute au trimestre l'équivalent de son budget de
- * publicité de l'année du cours. La publicité du trimestre double, puis revient à son niveau.
- */
-export const HAUSSE_DE_LA_CAMPAGNE = 1;
-
-/**
- * En dessous de 10 ventes gagnées sur l'année, la campagne ne gagne presque aucun client : le
- * chapitre ne s'y joue pas (la garde recompte la liste sur le moteur).
- */
-export const VENTES_GAGNEES_MINIMUM = 10;
-
-/**
- * Les entreprises où la campagne fait gagner des ventes sur l'année. Ailleurs, elle n'en gagne
- * presque aucune : le cabinet de conseil et l'entreprise du bâtiment manquent déjà d'équipe ou de
- * chantiers pour servir leurs clients, et la salle de sport est pleine en janvier.
- */
-export const ENTREPRISES_DE_LA_CAMPAGNE = ["nova", "boutique", "hotel", "bistrot", "ecommerce", "transport"] as const;
 
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
+const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−");
+const pct = (t: number) => `${qte(t)} %`;
+const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
-const T = (n: number) => `T${n}`;
-const ordinal = (n: number) => (n === 1 ? "premier" : n === 2 ? "deuxième" : n === 3 ? "troisième" : "quatrième");
 
-/** Le budget de publicité de l'année du cours au trimestre `t`, multiplié par `k` : marque et articles compris. */
-export function changementDeLaCampagne(code: string, trimestre: number, hausse: number): Changement {
-  const reference = anneeDeReference(code);
-  return (t, d): RoundDecisions | undefined => {
-    const r = reference[t - 1];
-    if (!r) return undefined;
-    const k = t === trimestre ? 1 + hausse : 1;
-    if (d.products && r.products) {
-      const products = Object.fromEntries(
-        Object.entries(d.products).map(([p, x]) => [p, { ...x, marketingBudget: (r.products![p]?.marketingBudget ?? 0) * k }]),
-      );
-      const articles = Object.values(products).reduce((s, x) => s + (x.marketingBudget ?? 0), 0);
-      return { ...d, products, marketingBudget: articles };
-    }
-    return { ...d, marketingBudget: r.incomeStatement.marketingCost * k };
-  };
+export const ficheDe = (c: Pick<Cas, "code">): FicheDeLaBoutique => BOUTIQUES_DU_COURS[c.code]!;
+
+/** Ce qu'une campagne laisse une fois payée, ou ce qu'il lui manque, en mots. */
+export const bilanDeLaCampagne = (x: number) =>
+  x > 0 ? `laisse ${eur(x)} une fois payée` : x < 0 ? `coûte ${eur(-x)} de plus qu'elle ne rapporte` : "se paie tout juste";
+
+/** La campagne du chapitre, et les passants de janvier sur lesquels elle se calcule. */
+export function campagneDuChapitre(c: Pick<Cas, "code">) {
+  const f = ficheDe(c);
+  return { ...campagne(f, CAMPAGNE_DU_CHAPITRE), passants: passantsDeJanvier(f), tauxEnPourcentage: auDixieme(passantsDeJanvier(f).tauxDeTransformation * 100) };
 }
 
-/** L'année rejouée avec la campagne. */
-export const anneeAvecLaCampagne = (code: string, trimestre: number, hausse: number) =>
-  rejouerAvec(code, `un-nouveau-client:campagne-t${trimestre}-plus-${hausse}`, changementDeLaCampagne(code, trimestre, hausse));
-
-/** Un trimestre, en ventes et en euros arrondis ; zéro après une défaillance. */
-export interface TrimestreDeVente {
-  trimestre: number;
-  publicite: number;
-  ventes: number;
-  marge: number;
-}
-
-/** Les quatre trimestres d'une année : une entreprise défaillante ne vend plus les trimestres suivants. */
-export function trimestresDeVente(annee: readonly CompanyRoundResult[]): TrimestreDeVente[] {
-  return annee.map((r, i) =>
-    annee.slice(0, i).some((x) => x.defaillant)
-      ? { trimestre: i + 1, publicite: 0, ventes: 0, marge: 0 }
-      : {
-          trimestre: i + 1,
-          publicite: Math.round(r.incomeStatement.marketingCost),
-          ventes: Math.round(soldUnits(r)),
-          marge: Math.round(r.incomeStatement.grossMargin),
-        },
-  );
-}
-
-const somme = (a: readonly TrimestreDeVente[], f: (x: TrimestreDeVente) => number) => a.reduce((t, x) => t + f(x), 0);
-
-export type VerdictDeLaCampagne = "paie" | "ne-paie-pas";
-
-/** Une campagne rejouée : les ventes et la marge gagnées, le coût d'une vente gagnée, et le verdict. */
-export function campagneRejouee(c: Cas, trimestre: number, hausse: number) {
-  const ref = anneeDeReference(c.code);
-  const reference = trimestresDeVente(ref);
-  const annee = anneeAvecLaCampagne(c.code, trimestre, hausse);
-  const avec = trimestresDeVente(annee);
-  const k = trimestre - 1;
-  const budgetDuTrimestre = reference[k]!.publicite;
-  const campagne = somme(avec, (x) => x.publicite) - somme(reference, (x) => x.publicite);
-  const ventesSans = somme(reference, (x) => x.ventes);
-  const ventesAvec = somme(avec, (x) => x.ventes);
-  const ventesGagnees = ventesAvec - ventesSans;
-  if (ventesGagnees <= 0) throw new Error(`La campagne ne fait rien vendre de plus chez ${c.entreprise} : le chapitre ne s'y joue pas.`);
-  const gagneesAuTrimestre = avec[k]!.ventes - reference[k]!.ventes;
-  const margeSans = somme(reference, (x) => x.marge);
-  const margeAvec = somme(avec, (x) => x.marge);
-  const margeGagnee = margeAvec - margeSans;
-  const manquees = (r: CompanyRoundResult) => Math.round(Object.values(r.market.bySegment).reduce((t, v) => t + v.lost, 0));
-  const laisse = margeGagnee - campagne;
+export function tableauDesPassants(c: Cas): TableauDeDonnees {
+  const p = passantsDeJanvier(ficheDe(c));
   return {
-    trimestre,
-    hausse,
-    budgetDuTrimestre,
-    campagne,
-    reference,
-    avec,
-    ventesSans,
-    ventesAvec,
-    ventesGagnees,
-    gagneesAuTrimestre,
-    gagneesEnsuite: ventesGagnees - gagneesAuTrimestre,
-    /** Les clients repartis sans être servis au trimestre de la campagne, sans et avec elle. */
-    manqueesSans: manquees(ref[k]!),
-    manqueesAvec: manquees(annee[k]!),
-    coutDUneVente: auCentime(campagne / ventesGagnees),
-    margeSans,
-    margeAvec,
-    margeGagnee,
-    margeDUneVente: auCentime(margeGagnee / ventesGagnees),
-    laisse,
-    verdict: (laisse > 0 ? "paie" : "ne-paie-pas") as VerdictDeLaCampagne,
-  };
-}
-
-/** La campagne du chapitre : la publicité de janvier doublée. */
-export const campagneDuChapitre = (c: Cas) => campagneRejouee(c, TRIMESTRE_DE_LA_CAMPAGNE, HAUSSE_DE_LA_CAMPAGNE);
-
-export function tableauDeLAnneeDuCours(c: Cas): TableauDeDonnees {
-  const k = campagneDuChapitre(c);
-  return {
-    titre: `L'année ${dE(c.entreprise)} dans l'arène, sans campagne`,
-    colonnes: [...k.reference.map((t) => T(t.trimestre)), "Année"],
+    titre: `Les passants ${dE(c.entreprise)} en janvier`,
+    colonnes: ["Janvier"],
     lignes: [
-      { libelle: "Publicité", valeurs: [...k.reference.map((t) => eur(t.publicite)), eur(somme(k.reference, (x) => x.publicite))] },
-      { libelle: `Ventes (${c.unites})`, valeurs: [...k.reference.map((t) => qte(t.ventes)), qte(k.ventesSans)] },
-      { libelle: "Marge sur les ventes", valeurs: [...k.reference.map((t) => eur(t.marge)), eur(k.margeSans)] },
+      { libelle: "Entrées en boutique", valeurs: [qte(p.entrees)] },
+      { libelle: "Passages en caisse", valeurs: [qte(p.tickets)] },
+      { libelle: "Chiffre d'affaires hors taxes", valeurs: [eur(p.chiffreDAffaires)] },
+      { libelle: "Coût des articles vendus", valeurs: [eur(p.coutDesVentes)] },
     ],
   };
-}
-
-/** Les deux années côte à côte : sans et avec une campagne. */
-export function tableauDeLaCampagne(c: Cas, k: ReturnType<typeof campagneRejouee>, nom: string): TableauDeDonnees {
-  return {
-    titre: `L'année ${dE(c.entreprise)}, rejouée avec ${nom}`,
-    colonnes: [...k.reference.map((t) => T(t.trimestre)), "Année"],
-    lignes: [
-      { libelle: "Publicité, sans campagne", valeurs: [...k.reference.map((t) => eur(t.publicite)), eur(somme(k.reference, (x) => x.publicite))] },
-      { libelle: "Publicité, avec la campagne", valeurs: [...k.avec.map((t) => eur(t.publicite)), eur(somme(k.avec, (x) => x.publicite))] },
-      { libelle: "Ventes, sans campagne", valeurs: [...k.reference.map((t) => qte(t.ventes)), qte(k.ventesSans)] },
-      { libelle: "Ventes, avec la campagne", valeurs: [...k.avec.map((t) => qte(t.ventes)), qte(k.ventesAvec)] },
-      { libelle: "Marge, sans campagne", valeurs: [...k.reference.map((t) => eur(t.marge)), eur(k.margeSans)] },
-      { libelle: "Marge, avec la campagne", valeurs: [...k.avec.map((t) => eur(t.marge)), eur(k.margeAvec)] },
-    ],
-  };
-}
-
-/** Ce qu'est une vente gagnée, dans les mots de l'entreprise. */
-const uneVenteGagnee = (c: Cas) => `une vente gagnée, c'est un client servi en plus, pour ${accord(c, "un")} ${c.unite}`;
-
-/** Ce que la campagne laisse, en une phrase. */
-export function ceQueLaCampagneLaisse(k: ReturnType<typeof campagneRejouee>): string {
-  return k.laisse > 0
-    ? `La campagne a fait gagner ${eur(k.margeGagnee)} de marge pour ${eur(k.campagne)} de dépense : elle laisse ${eur(k.laisse)} une fois payée.`
-    : `La campagne a fait gagner ${eur(k.margeGagnee)} de marge pour ${eur(k.campagne)} de dépense : il manque ${eur(-k.laisse)} pour la payer.`;
 }
 
 export const UN_NOUVEAU_CLIENT: Chapitre = {
@@ -204,20 +80,18 @@ export const UN_NOUVEAU_CLIENT: Chapitre = {
   palier: 2,
   blocs: ["Bac pro MCV Bloc 4B · Prospecter et valoriser l'offre commerciale"],
   titre: "Ce que rapporte un nouveau client",
-  accroche:
-    "Une campagne de publicité amène des clients. Combien en gagne-t-elle, combien coûte chacun, quelle marge rapporte-t-il, et la campagne paie-t-elle ?",
+  accroche: "Une campagne fait entrer des passants. Combien deviennent des clients, combien a coûté chacun, que rapporte sa vente, et la campagne paie-t-elle ?",
   objectifs: [
-    "Compter les ventes qu'une campagne fait gagner",
+    "Calculer les ventes qu'une campagne fait gagner",
     "Calculer le coût d'une vente gagnée",
-    "Calculer la marge qu'une vente gagnée rapporte",
-    "Dire si une campagne paie",
-    "Expliquer pourquoi un client gagné revient",
+    "Comparer la marge gagnée au coût de la campagne",
+    "Voir ce qu'un client gagné rapporte encore ensuite",
+    "Choisir la campagne qui laisse le plus",
   ],
   libre: false,
   entreprises: {
-    codes: ENTREPRISES_DE_LA_CAMPAGNE,
-    pourquoi:
-      "ce chapitre compte les clients qu'une campagne fait gagner, et ailleurs l'arène ne lui en fait gagner presque aucun : l'équipe, les chantiers ou les places manquent déjà.",
+    codes: ENTREPRISES_DE_LA_VENTE,
+    pourquoi: "ce chapitre suit les passants de la boutique du cours, MAILLE & CO, de l'entrée à la caisse.",
   },
   etapes: [
     {
@@ -225,155 +99,216 @@ export const UN_NOUVEAU_CLIENT: Chapitre = {
       type: "lecture",
       titre: "Une campagne pour gagner des clients",
       notions: ["customer_acquisition_cost"],
-      tableau: tableauDeLAnneeDuCours,
+      tableau: tableauDesPassants,
       texte: (c) => {
         const k = campagneDuChapitre(c);
         return [
-          `Au ${ordinal(k.trimestre)} trimestre, ${c.entreprise} dépense ${eur(k.budgetDuTrimestre)} en publicité. Le vendeur propose une campagne : ${eur(k.campagne)} de plus ce trimestre-là, puis le budget habituel. La publicité du trimestre double.`,
-          "L'arène a rejoué l'année avec cette campagne, avec les mêmes concurrents et la même façon de gérer. Dans l'arène, la publicité rend l'entreprise plus attirante, mais chaque euro de plus attire un peu moins que le précédent.",
-          `On ne compte pas les clients un par un : on compte les ventes. Ici, ${uneVenteGagnee(c)}.`,
+          `En janvier, ${qte(k.passants.entrees)} passants sont entrés chez ${c.entreprise}, et ${qte(k.passants.tickets)} sont passés en caisse. La vendeuse propose une campagne d'affiches et de réseaux sociaux à ${eur(k.budget)} : l'agence promet ${qte(k.entrees)} entrées de plus dans le mois.`,
+          "Une entrée n'est pas une vente : il faut que le passant achète. Le cours suppose que les passants gagnés achètent comme ceux de janvier.",
         ];
       },
-      repere: () =>
-        "Coût d'une vente gagnée = coût de la campagne ÷ ventes gagnées. Marge d'une vente gagnée = marge gagnée ÷ ventes gagnées. La campagne paie si la marge gagnée dépasse son coût.",
+      repere: () => "Ventes gagnées = entrées en plus × taux de transformation. Coût d'une vente gagnée = budget ÷ ventes gagnées.",
     },
     {
-      id: "ventes-gagnees",
+      id: "les-ventes",
       type: "montants",
       titre: "Les ventes gagnées",
-      notions: ["customer_acquisition_cost", "revenue"],
-      tableau: (c) => tableauDeLaCampagne(c, campagneDuChapitre(c), "la campagne"),
+      notions: ["conversion_rate", "customer_acquisition_cost"],
       question: (c) => {
         const k = campagneDuChapitre(c);
-        return `D'après le tableau, calculez les ventes gagnées au ${T(k.trimestre)}, le trimestre de la campagne, puis les ventes gagnées sur toute l'année.`;
+        return `Calculez le taux de transformation des passants de janvier (${qte(k.passants.tickets)} passages ÷ ${qte(k.passants.entrees)} entrées × 100, au dixième), puis les ventes que gagnent les ${qte(k.entrees)} entrées de la campagne, à l'unité.`;
       },
       champs: (c) => {
         const k = campagneDuChapitre(c);
-        const t = k.trimestre - 1;
         return [
-          {
-            libelle: `Ventes gagnées au ${T(k.trimestre)}`,
-            attendu: k.gagneesAuTrimestre,
-            calcul: `${qte(k.avec[t]!.ventes)} − ${qte(k.reference[t]!.ventes)} = ${qte(k.gagneesAuTrimestre)}`,
-            tolerance: 0,
-          },
-          {
-            libelle: "Ventes gagnées sur l'année",
-            attendu: k.ventesGagnees,
-            calcul: `${qte(k.ventesAvec)} − ${qte(k.ventesSans)} = ${qte(k.ventesGagnees)}`,
-            tolerance: 0,
-          },
+          { libelle: "Taux de transformation (%)", attendu: k.tauxEnPourcentage, calcul: `${qte(k.passants.tickets)} ÷ ${qte(k.passants.entrees)} × 100 = ${pct(k.tauxEnPourcentage)}`, tolerance: 0.1 },
+          { libelle: "Ventes gagnées", attendu: k.ventes, calcul: `${qte(k.entrees)} × ${qte(k.passants.tickets)} ÷ ${qte(k.passants.entrees)} = ${qte(k.ventes)}, à l'unité`, tolerance: 1 },
         ];
       },
       explication: (c) => {
         const k = campagneDuChapitre(c);
-        const auTrimestre =
-          k.gagneesAuTrimestre > 0
-            ? `La campagne fait gagner ${qte(k.gagneesAuTrimestre)} ventes au ${T(k.trimestre)}.`
-            : `Au ${T(k.trimestre)}, la campagne ne fait gagner ${k.gagneesAuTrimestre === 0 ? "aucune vente" : "aucune vente de plus"} : ${c.entreprise} n'avait pas préparé de quoi servir plus de clients. Les clients en plus sont repartis sans être servis : ${qte(k.manqueesAvec)} ventes manquées au lieu de ${qte(k.manqueesSans)} sans la campagne.`;
-        return [
-          `${auTrimestre} Sur l'année, elle en fait gagner ${qte(k.ventesGagnees)}${k.gagneesAuTrimestre === 0 ? ", toutes après le trimestre de la campagne" : k.gagneesEnsuite > 0 && k.gagneesAuTrimestre > 0 ? `, dont ${qte(k.gagneesEnsuite)} après le trimestre de la campagne` : ""}.`,
-        ];
+        return [`Sur ${qte(k.entrees)} passants de plus, ${qte(k.ventes)} achètent. Les autres regardent et repartent : c'est le cas de la plupart des passants.`];
       },
     },
     {
-      id: "apres-la-campagne",
-      type: "choix",
-      titre: "Des ventes après la campagne",
-      notions: ["demand_market_share"],
-      question: (c) => {
-        const k = campagneDuChapitre(c);
-        return `La campagne ne dure que le ${ordinal(k.trimestre)} trimestre. Pourtant, ${c.entreprise} fait ${qte(k.gagneesEnsuite)} ${k.gagneesEnsuite > 1 ? "ventes" : "vente"} de plus après. Pourquoi ?`;
-      },
-      options: (c) => {
-        const k = campagneDuChapitre(c);
-        return [
-          {
-            texte: "Les clients attirés comptent encore au trimestre suivant",
-            juste: true,
-            retour: `Oui. Dans l'arène, la part de clientèle gagnée au ${T(k.trimestre)} rend l'entreprise plus attirante au trimestre suivant : c'est la fidélité. Et la gestion, qui a vu plus de demande, prépare plus pour le trimestre d'après.`,
-          },
-          {
-            texte: "La publicité reste doublée toute l'année",
-            juste: false,
-            retour: `Non : le tableau le montre, la publicité revient à ${eur(k.reference[k.trimestre]?.publicite ?? k.budgetDuTrimestre)} dès le trimestre suivant.`,
-          },
-          {
-            texte: "Ces ventes n'ont rien à voir avec la campagne",
-            juste: false,
-            retour: "Non : l'année a été rejouée avec les mêmes concurrents et la même façon de gérer. Seule la publicité du trimestre de la campagne a changé : tout l'écart en vient.",
-          },
-        ];
-      },
-      si: (c) => campagneDuChapitre(c).gagneesEnsuite > 0,
-    },
-    {
-      id: "cout-d-une-vente",
+      id: "le-cout",
       type: "montants",
-      titre: "Le coût d'une vente gagnée",
+      titre: "Ce que coûte une vente gagnée",
       notions: ["customer_acquisition_cost"],
       question: (c) => {
         const k = campagneDuChapitre(c);
-        return `La campagne a coûté ${eur(k.campagne)} et fait gagner ${qte(k.ventesGagnees)} ventes sur l'année. Calculez le coût d'une vente gagnée (au centime).`;
+        return `La campagne coûte ${eur(k.budget)} et gagne ${qte(k.ventes)} ventes. Calculez ce que coûte une vente gagnée, au centime.`;
       },
       champs: (c) => {
         const k = campagneDuChapitre(c);
-        return [{ libelle: "Coût d'une vente gagnée", attendu: k.coutDUneVente, calcul: `${eur(k.campagne)} ÷ ${qte(k.ventesGagnees)} = ${eur(k.coutDUneVente)}` }];
+        return [{ libelle: "Coût d'une vente gagnée", attendu: k.coutDUneVente, calcul: `${eur(k.budget)} ÷ ${qte(k.ventes)} = ${eur(k.coutDUneVente)}` }];
       },
-      explication: (c) => {
-        const k = campagneDuChapitre(c);
-        return [`Chaque vente gagnée, chaque client servi en plus, a coûté ${eur(k.coutDUneVente)} de publicité. Il reste à savoir ce qu'elle rapporte.`];
-      },
+      explication: (c) => [`Chaque vente gagnée a coûté ${eur(campagneDuChapitre(c).coutDUneVente)} de campagne. Reste à savoir ce qu'elle rapporte.`],
     },
     {
-      id: "marge-d-une-vente",
+      id: "la-marge",
       type: "montants",
-      titre: "La marge qu'une vente gagnée rapporte",
-      notions: ["contribution_margin"],
-      tableau: (c) => tableauDeLaCampagne(c, campagneDuChapitre(c), "la campagne"),
-      question: () =>
-        "Une vente ne rapporte pas son prix, mais sa marge : ce qui reste une fois payé ce que la vente coûte à l'entreprise. D'après le tableau, calculez la marge gagnée sur l'année, puis la marge d'une vente gagnée (au centime).",
+      titre: "La marge gagnée",
+      notions: ["customer_acquisition_cost", "contribution_margin"],
+      question: (c) => {
+        const k = campagneDuChapitre(c);
+        return `En janvier, les passants ont laissé ${eur(k.passants.marge)} de marge pour ${qte(k.passants.tickets)} passages en caisse. Calculez la marge d'une vente de passant (au centime), la marge des ${qte(k.ventes)} ventes gagnées, puis ce que la campagne laisse une fois payée.`;
+      },
       champs: (c) => {
         const k = campagneDuChapitre(c);
         return [
-          { libelle: "Marge gagnée sur l'année", attendu: k.margeGagnee, calcul: `${eur(k.margeAvec)} − ${eur(k.margeSans)} = ${eur(k.margeGagnee)}`, tolerance: 1 },
-          { libelle: "Marge d'une vente gagnée", attendu: k.margeDUneVente, calcul: `${eur(k.margeGagnee)} ÷ ${qte(k.ventesGagnees)} = ${eur(k.margeDUneVente)}` },
+          { libelle: "Marge d'une vente de passant", attendu: k.passants.margeDUneVente, calcul: `${eur(k.passants.marge)} ÷ ${qte(k.passants.tickets)} = ${eur(k.passants.margeDUneVente)}` },
+          { libelle: "Marge des ventes gagnées", attendu: k.marge, calcul: `${qte(k.ventes)} × ${eur(k.passants.margeDUneVente)} = ${eur(k.marge)}` },
+          { libelle: "Ce que la campagne laisse", attendu: k.laisse, calcul: `${eur(k.marge)} − ${eur(k.budget)} = ${eur(k.laisse)}` },
         ];
       },
       explication: (c) => {
         const k = campagneDuChapitre(c);
-        return [`Chaque vente gagnée laisse ${eur(k.margeDUneVente)} de marge en moyenne. Elle a coûté ${eur(k.coutDUneVente)} de publicité.`];
+        return [`Les ventes gagnées rapportent ${eur(k.marge)} de marge, pour ${eur(k.budget)} de campagne : la campagne ${bilanDeLaCampagne(k.laisse)}.`];
       },
     },
     {
-      id: "la-campagne-paie",
+      id: "paie-t-elle",
       type: "choix",
       titre: "La campagne paie-t-elle ?",
       notions: ["customer_acquisition_cost", "contribution_margin"],
       question: (c) => {
         const k = campagneDuChapitre(c);
-        return `Une vente gagnée a coûté ${eur(k.coutDUneVente)} de publicité et rapporte ${eur(k.margeDUneVente)} de marge. La campagne paie-t-elle ?`;
+        return `Une vente gagnée coûte ${eur(k.coutDUneVente)} de campagne et rapporte ${eur(k.passants.margeDUneVente)} de marge. Que dire de la campagne ?`;
       },
       options: (c) => {
         const k = campagneDuChapitre(c);
-        const paie = k.verdict === "paie";
-        const phrase = ceQueLaCampagneLaisse(k);
+        const paie = k.laisse > 0;
         return [
           {
-            texte: "Oui : une vente gagnée rapporte plus qu'elle n'a coûté",
+            texte: "Elle paie : chaque vente gagnée rapporte plus qu'elle n'a coûté",
             juste: paie,
-            retour: paie ? `Oui. ${phrase}` : `Non : ${eur(k.margeDUneVente)} de marge pour ${eur(k.coutDUneVente)} de publicité. ${phrase}`,
+            retour: paie ? `Oui : ${eur(k.passants.margeDUneVente)} de marge pour ${eur(k.coutDUneVente)} de campagne. La campagne ${bilanDeLaCampagne(k.laisse)}.` : `Non : chaque vente gagnée coûte plus qu'elle ne rapporte. La campagne ${bilanDeLaCampagne(k.laisse)}.`,
           },
           {
-            texte: "Non : une vente gagnée coûte plus qu'elle ne rapporte",
+            texte: "Elle ne paie pas : chaque vente gagnée coûte plus qu'elle ne rapporte",
             juste: !paie,
-            retour: !paie ? `Oui. ${phrase}` : `Non : ${eur(k.margeDUneVente)} de marge pour ${eur(k.coutDUneVente)} de publicité. ${phrase}`,
+            retour: !paie ? `Oui : la campagne ${bilanDeLaCampagne(k.laisse)}.` : `Non : ${eur(k.passants.margeDUneVente)} de marge pour ${eur(k.coutDUneVente)} de campagne, elle paie.`,
           },
           {
-            texte: "Oui, puisque le chiffre d'affaires monte",
+            texte: "Elle paie, puisqu'elle fait du chiffre d'affaires",
             juste: false,
-            retour: `Non : une vente gagnée ne rapporte pas son prix, seulement sa marge. ${phrase}`,
+            retour: `Non : les ventes gagnées font ${eur(k.chiffreDAffaires)} de chiffre d'affaires, mais c'est leur marge, ${eur(k.marge)}, qui paie la campagne. On compare la marge au budget, jamais le chiffre d'affaires.`,
           },
+        ];
+      },
+    },
+    {
+      id: "et-ensuite",
+      type: "montants",
+      titre: "Ce que rapporte encore un client gagné",
+      notions: ["customer_lifetime_value", "contribution_margin"],
+      question: (c) => {
+        return `Le cours suppose que ${pct(PART_DES_GAGNES_QUI_PRENNENT_LA_CARTE * 100)} des clients gagnés prennent la carte de fidélité et reviennent chaque mois, avec la marge d'un passage de cliente fidèle, ${eur(carteDeFidelite(ficheDe(c)).margeDUnMois)}. Calculez les clients gagnés qui prennent la carte (à l'unité), puis la marge qu'ils rapportent dès le mois suivant.`;
+      },
+      champs: (c) => {
+        const k = campagneDuChapitre(c);
+        const m = carteDeFidelite(ficheDe(c)).margeDUnMois;
+        return [
+          { libelle: "Clients gagnés qui prennent la carte", attendu: k.nouvellesFideles, calcul: `${qte(k.ventes)} × ${pct(PART_DES_GAGNES_QUI_PRENNENT_LA_CARTE * 100)} = ${qte(k.nouvellesFideles)}, à l'unité`, tolerance: 1 },
+          { libelle: "Marge du mois suivant", attendu: k.margeDuMoisSuivant, calcul: `${qte(k.nouvellesFideles)} × ${eur(m)} = ${eur(k.margeDuMoisSuivant)}`, tolerance: 1 },
+        ];
+      },
+      explication: (c) => {
+        const k = campagneDuChapitre(c);
+        return [`Les ${qte(k.nouvellesFideles)} clients qui reviennent rapportent ${eur(k.margeDuMoisSuivant)} dès le mois suivant, et encore les mois d'après : une campagne se juge aussi sur les clients qu'elle fait revenir.`];
+      },
+    },
+    {
+      id: "combien-de-ventes",
+      type: "curseur",
+      titre: "Combien de ventes pour payer la campagne ?",
+      notions: ["customer_acquisition_cost", "contribution_margin"],
+      question: (c) => {
+        const k = campagneDuChapitre(c);
+        return `Faites varier les ventes gagnées par la campagne de ${eur(k.budget)} : une droite donne leur marge, à ${eur(k.passants.margeDUneVente)} la vente, l'autre le budget de la campagne. Placez le curseur sur le plus petit nombre de ventes gagnées qui paie la campagne, puis validez.`;
+      },
+      grandeur: () => ({ libelle: "Ventes gagnées par la campagne", unite: "ventes" }),
+      cible: (c) => ({ attendu: ventesPourPayer(ficheDe(c)), min: 0, max: 150 }),
+      zones: ["La campagne est payée", "La campagne coûte plus qu'elle ne rapporte"],
+      rates: () => ({
+        dessous: "Avec si peu de ventes gagnées, leur marge ne paie pas la campagne.",
+        dessus: "Ces ventes paient la campagne, mais moins suffirait : cherchez le plus petit nombre.",
+      }),
+      montrer: "Montrer les ventes",
+      lecture: (c, q) => {
+        const k = campagneDuChapitre(c);
+        const marge = Math.round(q * k.passants.margeDUneVente * 100) / 100;
+        return [
+          { libelle: "Marge des ventes gagnées", montant: marge, fort: true },
+          { libelle: "Budget de la campagne", montant: k.budget },
+          { libelle: "Ce que la campagne laisse", montant: Math.round((marge - k.budget) * 100) / 100 },
+        ];
+      },
+      droites: (c) => {
+        const k = campagneDuChapitre(c);
+        return { produit: (q) => q * k.passants.margeDUneVente, cout: () => k.budget, libelles: ["Marge des ventes gagnées", "Budget de la campagne"] };
+      },
+      explication: (c) => {
+        const k = campagneDuChapitre(c);
+        const q = ventesPourPayer(ficheDe(c));
+        return [
+          `Il faut ${qte(q)} ventes gagnées pour payer ${eur(k.budget)} : ${eur(k.budget)} ÷ ${eur(k.passants.margeDUneVente)}, arrondi à la vente du dessus. La campagne en gagne ${qte(k.ventes)} : elle ${bilanDeLaCampagne(k.laisse)}.`,
+        ];
+      },
+    },
+    {
+      id: "le-laboratoire-de-la-campagne",
+      type: "simulation",
+      titre: "Le laboratoire de la campagne",
+      notions: ["customer_acquisition_cost", "contribution_margin"],
+      question: () =>
+        "L'agence propose trois offres, et la boutique peut aussi ne rien faire. Plus la campagne est grosse, plus elle fait entrer de passants, mais de moins en moins par euro. Choisissez une offre : les ventes gagnées, leur marge et ce que la campagne laisse se refont. Relevez le défi.",
+      leviers: () => [
+        {
+          code: "budget",
+          libelle: "Offre de l'agence",
+          unite: "€",
+          min: Math.min(...OFFRES_DE_CAMPAGNE.map((o) => o.budget)),
+          max: Math.max(...OFFRES_DE_CAMPAGNE.map((o) => o.budget)),
+          pas: 1,
+          depart: 0,
+          choix: OFFRES_DE_CAMPAGNE.map((o) => ({ valeur: o.budget, libelle: o.budget === 0 ? "Pas de campagne" : `${eur(o.budget)}, ${qte(o.entrees)} entrées en plus` })),
+        },
+      ],
+      lecture: (c, p) => {
+        const x = campagne(ficheDe(c), p.budget!);
+        return [
+          { libelle: "Entrées en plus", montant: x.entrees, unite: "entrées" },
+          { libelle: "Ventes gagnées", montant: x.ventes, unite: "ventes" },
+          { libelle: "Coût d'une vente gagnée", montant: x.coutDUneVente },
+          { libelle: "Marge des ventes gagnées", montant: x.marge },
+          { libelle: "Ce que la campagne laisse", montant: x.laisse, effet: true, fort: true },
+        ];
+      },
+      defi: (c) => {
+        const meilleure = meilleureCampagne(ficheDe(c));
+        return {
+          consigne: "Choisissez l'offre qui laisse le plus de marge à la boutique, une fois la campagne payée.",
+          atteint: (p) => p.budget === meilleure.budget,
+          indice: (p) => {
+            const x = campagne(ficheDe(c), p.budget!);
+            return x.budget === 0
+              ? "Sans campagne, la boutique ne dépense rien, mais ne gagne rien non plus. Une offre laisse-t-elle plus ?"
+              : `Cette offre ${bilanDeLaCampagne(x.laisse)}. Comparez-la aux autres : une plus grosse campagne gagne plus de ventes, mais chacune coûte plus cher.`;
+          },
+          solution: { budget: meilleure.budget },
+        };
+      },
+      explication: (c, p) => {
+        const f = ficheDe(c);
+        const x = campagne(f, p.budget!);
+        const plusGrosse = OFFRES_DE_CAMPAGNE.filter((o) => o.budget > x.budget).map((o) => campagne(f, o.budget));
+        return [
+          `Défi relevé : l'offre à ${eur(x.budget)} gagne ${qte(x.ventes)} ventes, à ${eur(x.coutDUneVente)} la vente, et ${bilanDeLaCampagne(x.laisse)}.`,
+          plusGrosse.length > 0
+            ? `L'offre à ${eur(plusGrosse[0]!.budget)} gagnerait ${qte(plusGrosse[0]!.ventes)} ventes, mais chacune coûterait ${eur(plusGrosse[0]!.coutDUneVente)} : elle ${bilanDeLaCampagne(plusGrosse[0]!.laisse)}. Au-delà d'un point, chaque euro de plus gagne moins de clients qu'il ne coûte.`
+            : "Ici, la plus grosse offre est aussi celle qui laisse le plus.",
         ];
       },
     },
@@ -381,15 +316,15 @@ export const UN_NOUVEAU_CLIENT: Chapitre = {
       id: "synthese",
       type: "lecture",
       titre: "Ce qu'il faut retenir",
-      notions: ["customer_acquisition_cost", "contribution_margin"],
+      notions: ["customer_acquisition_cost", "customer_lifetime_value"],
       texte: (c) => {
         const k = campagneDuChapitre(c);
         return [
-          `Chez ${c.entreprise}, la campagne de ${eur(k.campagne)} a fait gagner ${qte(k.ventesGagnees)} ventes sur l'année. Chacune a coûté ${eur(k.coutDUneVente)} et rapporte ${eur(k.margeDUneVente)} de marge : ${k.verdict === "paie" ? "la campagne paie" : "la campagne ne paie pas"}. Le résultat de l'année en est ${k.laisse > 0 ? "plus haut" : "plus bas"} de ${eur(Math.abs(k.laisse))}, à l'arrondi près.`,
-          "Avant de lancer une campagne, le vendeur compare deux chiffres : ce que coûte un client gagné, et la marge qu'il rapporte. Un client gagné qui revient rapporte encore les trimestres suivants.",
+          `La campagne de ${eur(k.budget)} gagne ${qte(k.ventes)} ventes : chacune coûte ${eur(k.coutDUneVente)} et rapporte ${eur(k.passants.margeDUneVente)} de marge. La campagne ${bilanDeLaCampagne(k.laisse)}, et ${qte(k.nouvellesFideles)} clients gagnés reviendront.`,
+          "Un nouveau client se juge sur sa marge, pas sur son chiffre d'affaires, et sur le temps qu'il reste. Dans l'arène, les chiffres de votre entreprise seront différents : le calcul sera le même.",
         ];
       },
-      repere: () => "Coût d'une vente gagnée = coût de la campagne ÷ ventes gagnées. La campagne paie si la marge d'une vente gagnée dépasse son coût.",
+      repere: () => "Une campagne paie si la marge des ventes gagnées dépasse son budget.",
     },
   ],
 };

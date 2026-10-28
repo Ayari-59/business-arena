@@ -1,57 +1,41 @@
 import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
 import type { Cas } from "../../cas";
-import {
-  HAUSSE_DE_LA_CAMPAGNE,
-  TRIMESTRE_DE_LA_CAMPAGNE,
-  UN_NOUVEAU_CLIENT,
-  campagneDuChapitre,
-  campagneRejouee,
-  ceQueLaCampagneLaisse,
-  tableauDeLaCampagne,
-} from "../../chapitres/un-nouveau-client";
+import { UN_NOUVEAU_CLIENT, bilanDeLaCampagne, ficheDe } from "../../chapitres/un-nouveau-client";
+import { CAMPAGNE_DU_CHAPITRE, CAMPAGNE_PLUS_FORTE, campagne, passantsDeJanvier } from "../../monde/vente-et-caisse";
 import type { Situation } from "../types";
 
 /**
  * CAS PRATIQUE DU CHAPITRE « CE QUE RAPPORTE UN NOUVEAU CLIENT » : UNE CAMPAGNE PLUS FORTE
  * (Bac pro Métiers du commerce et de la vente, palier 2).
  *
- * Le responsable commercial veut refaire la campagne de janvier, deux fois plus forte. L'élève
- * lit l'année rejouée avec cette campagne, refait les calculs du chapitre (les ventes gagnées, le
- * coût d'une vente gagnée, la marge qu'elle rapporte, ce que la campagne laisse), puis choisit
- * entre la campagne plus forte, celle du chapitre et aucune campagne.
+ * Le responsable commercial veut refaire la campagne du chapitre, deux fois plus forte. L'élève
+ * refait les calculs du chapitre (les ventes gagnées, le coût d'une vente gagnée, la marge, ce que
+ * la campagne laisse), puis choisit entre la campagne plus forte, celle du chapitre et aucune.
  *
- * Le cas est neuf par sa question : le chapitre juge une campagne, le cas en compare deux, et
- * l'absence de campagne. Les chiffres sont ceux de `campagneRejouee` (le chapitre) : au trimestre
- * de la campagne, le budget de publicité vaut celui de l'année du cours plus deux fois ce
- * budget, une valeur posée sur l'année du cours (clé « un-nouveau-client:… »). Le verdict se
- * calcule : il suit ce que chaque campagne laisse une fois payée.
+ * LE CAS JOUE DANS LE MONDE DU COURS : les passants de MAILLE & CO en janvier et les offres de
+ * l'agence (monde/vente-et-caisse.ts : 650 entrées en plus pour 4 000 €, 500 pour 2 000 €).
+ * Le verdict se calcule : il suit ce que chaque campagne laisse une fois payée.
+ *
+ * CE QUI A CHANGÉ. Le cas rejouait dans l'arène une publicité triplée. Il compte maintenant l'offre
+ * à 4 000 € : 123 ventes gagnées, 32,52 € par vente, une campagne qui coûte 41,86 € de plus qu'elle
+ * ne rapporte, quand celle à 2 000 € laisse 1 057,10 €.
  */
 
-/** La campagne plus forte : deux fois la hausse du chapitre (hypothèse du cas). */
-export const HAUSSE_PLUS_FORTE = 2 * HAUSSE_DE_LA_CAMPAGNE;
-
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const T = (n: number) => `T${n}`;
-const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
-/** Ce qu'une campagne laisse une fois payée, ou ce qu'il lui manque. */
-const bilan = (x: number) =>
-  x > 0 ? `laisse ${eur(x)} une fois payée` : x < 0 ? `coûte ${eur(-x)} de plus qu'elle ne rapporte` : "se paie tout juste";
+const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−");
 
-export type ChoixDeLaCampagne = "plus-forte" | "celle-de-janvier" | "aucune";
+export type ChoixDeLaCampagne = "plus-forte" | "celle-du-chapitre" | "aucune";
 
 /** La campagne plus forte, celle du chapitre, et celle qui laisse le plus une fois payée. */
-export function campagnePlusForte(c: Cas) {
-  const forte = campagneRejouee(c, TRIMESTRE_DE_LA_CAMPAGNE, HAUSSE_PLUS_FORTE);
-  const janvier = campagneDuChapitre(c);
-  const choix: ChoixDeLaCampagne =
-    forte.laisse <= 0 && janvier.laisse <= 0 ? "aucune" : forte.laisse > janvier.laisse ? "plus-forte" : "celle-de-janvier";
-  return { forte, janvier, choix };
+export function campagnePlusForte(c: Pick<Cas, "code">) {
+  const f = ficheDe(c);
+  const forte = campagne(f, CAMPAGNE_PLUS_FORTE);
+  const chapitre = campagne(f, CAMPAGNE_DU_CHAPITRE);
+  const choix: ChoixDeLaCampagne = forte.laisse <= 0 && chapitre.laisse <= 0 ? "aucune" : forte.laisse > chapitre.laisse ? "plus-forte" : "celle-du-chapitre";
+  return { forte, chapitre, passants: passantsDeJanvier(f), choix };
 }
 
-/** Ce que chaque campagne laisse, en une phrase. */
-const lesDeux = (k: ReturnType<typeof campagnePlusForte>) =>
-  `La campagne de janvier ${bilan(k.janvier.laisse)} ; la campagne plus forte ${bilan(k.forte.laisse)}.`;
+const lesDeux = (k: ReturnType<typeof campagnePlusForte>) => `La campagne à ${eur(k.chapitre.budget)} ${bilanDeLaCampagne(k.chapitre.laisse)} ; la campagne à ${eur(k.forte.budget)} ${bilanDeLaCampagne(k.forte.laisse)}.`;
 
 export const UNE_CAMPAGNE_PLUS_FORTE: Situation = {
   code: "une-campagne-plus-forte",
@@ -61,13 +45,8 @@ export const UNE_CAMPAGNE_PLUS_FORTE: Situation = {
   reprend: [UN_NOUVEAU_CLIENT.code],
   commanditaire: "Le responsable commercial",
   titre: "Une campagne plus forte",
-  accroche:
-    "Le responsable veut refaire la campagne de janvier, deux fois plus forte. Compter les ventes qu'elle gagne, ce que coûte chacune et ce qu'elle rapporte, et lui répondre.",
-  objectifs: [
-    "Compter les ventes gagnées par une campagne",
-    "Calculer le coût et la marge d'une vente gagnée",
-    "Choisir entre deux campagnes et aucune",
-  ],
+  accroche: "Le responsable veut refaire la campagne, deux fois plus forte. Compter les ventes qu'elle gagne, ce que coûte chacune et ce qu'elle rapporte, et lui répondre.",
+  objectifs: ["Compter les ventes gagnées par une campagne", "Calculer le coût et la marge d'une vente gagnée", "Choisir entre deux campagnes et aucune"],
   libre: false,
   entreprises: UN_NOUVEAU_CLIENT.entreprises,
   etapes: [
@@ -78,8 +57,8 @@ export const UNE_CAMPAGNE_PLUS_FORTE: Situation = {
       texte: (c) => {
         const k = campagnePlusForte(c);
         return [
-          `« La campagne de janvier a coûté ${eur(k.janvier.campagne)}. L'an prochain, je veux la faire deux fois plus forte : ${eur(k.forte.campagne)} de plus au ${T(k.forte.trimestre)}. Plus de publicité, plus de clients, non ? Dites-moi ce qu'il faut faire. »`,
-          `Pas de cours cette fois. L'arène a rejoué l'année ${dE(c.entreprise)} avec la campagne plus forte, avec les mêmes concurrents et la même façon de gérer.`,
+          `« La campagne à ${eur(k.chapitre.budget)} a fait entrer ${qte(k.chapitre.entrees)} passants de plus. L'agence en promet ${qte(k.forte.entrees)} pour ${eur(k.forte.budget)}. Plus de publicité, plus de clients, non ? Dites-moi ce qu'il faut faire. »`,
+          `Pas de cours cette fois. Les passants gagnés achètent comme ceux de janvier : ${qte(k.passants.tickets)} passages en caisse pour ${qte(k.passants.entrees)} entrées, ${eur(k.passants.margeDUneVente)} de marge par vente.`,
         ];
       },
       repere: () => "À rendre : les ventes gagnées, le coût et la marge d'une vente gagnée, et la campagne à faire.",
@@ -88,23 +67,20 @@ export const UNE_CAMPAGNE_PLUS_FORTE: Situation = {
       id: "les-ventes",
       type: "montants",
       titre: "Les ventes de la campagne plus forte",
-      notions: ["customer_acquisition_cost"],
-      tableau: (c) => tableauDeLaCampagne(c, campagnePlusForte(c).forte, "la campagne plus forte"),
-      question: () => "D'après le tableau, calculez les ventes gagnées sur l'année avec la campagne plus forte, puis le coût d'une vente gagnée (au centime).",
+      notions: ["customer_acquisition_cost", "conversion_rate"],
+      question: (c) => `Calculez les ventes que gagnent les ${qte(campagnePlusForte(c).forte.entrees)} entrées de la campagne plus forte (au taux de transformation des passants, à l'unité), puis le coût d'une vente gagnée, au centime.`,
       champs: (c) => {
-        const { forte: k } = campagnePlusForte(c);
+        const { forte: k, passants: p } = campagnePlusForte(c);
         return [
-          { libelle: "Ventes gagnées sur l'année", attendu: k.ventesGagnees, calcul: `${qte(k.ventesAvec)} − ${qte(k.ventesSans)} = ${qte(k.ventesGagnees)}`, tolerance: 0 },
-          { libelle: "Coût d'une vente gagnée", attendu: k.coutDUneVente, calcul: `${eur(k.campagne)} ÷ ${qte(k.ventesGagnees)} = ${eur(k.coutDUneVente)}` },
+          { libelle: "Ventes gagnées", attendu: k.ventes, calcul: `${qte(k.entrees)} × ${qte(p.tickets)} ÷ ${qte(p.entrees)} = ${qte(k.ventes)}, à l'unité`, tolerance: 1 },
+          { libelle: "Coût d'une vente gagnée", attendu: k.coutDUneVente, calcul: `${eur(k.budget)} ÷ ${qte(k.ventes)} = ${eur(k.coutDUneVente)}`, tolerance: 0.3 },
         ];
       },
       explication: (c) => {
         const k = campagnePlusForte(c);
         return [
-          `Avec la campagne de janvier, une vente gagnée coûtait ${eur(k.janvier.coutDUneVente)} ; avec la campagne plus forte, ${eur(k.forte.coutDUneVente)}. ${
-            k.forte.coutDUneVente > k.janvier.coutDUneVente
-              ? "Chaque euro de plus attire un peu moins de clients que le précédent : la vente gagnée coûte plus cher."
-              : "La vente gagnée ne coûte pas plus cher : les clients en plus suivent la publicité."
+          `Avec la campagne à ${eur(k.chapitre.budget)}, une vente gagnée coûtait ${eur(k.chapitre.coutDUneVente)} ; avec la campagne plus forte, ${eur(k.forte.coutDUneVente)}. ${
+            k.forte.coutDUneVente > k.chapitre.coutDUneVente ? "Chaque euro de plus attire moins de clients que le précédent : la vente gagnée coûte plus cher." : "La vente gagnée ne coûte pas plus cher."
           }`,
         ];
       },
@@ -114,50 +90,29 @@ export const UNE_CAMPAGNE_PLUS_FORTE: Situation = {
       type: "montants",
       titre: "La marge de la campagne plus forte",
       notions: ["contribution_margin"],
-      tableau: (c) => tableauDeLaCampagne(c, campagnePlusForte(c).forte, "la campagne plus forte"),
-      question: () =>
-        "D'après le tableau, calculez la marge gagnée sur l'année, la marge d'une vente gagnée (au centime), puis ce que la campagne laisse une fois payée (marge gagnée − coût de la campagne, négatif si elle ne se paie pas).",
+      question: () => "Calculez la marge des ventes gagnées, puis ce que la campagne plus forte laisse une fois payée (négatif si elle ne se paie pas).",
       champs: (c) => {
-        const { forte: k } = campagnePlusForte(c);
+        const { forte: k, passants: p } = campagnePlusForte(c);
         return [
-          { libelle: "Marge gagnée sur l'année", attendu: k.margeGagnee, calcul: `${eur(k.margeAvec)} − ${eur(k.margeSans)} = ${eur(k.margeGagnee)}`, tolerance: 1 },
-          { libelle: "Marge d'une vente gagnée", attendu: k.margeDUneVente, calcul: `${eur(k.margeGagnee)} ÷ ${qte(k.ventesGagnees)} = ${eur(k.margeDUneVente)}` },
-          { libelle: "Ce que la campagne laisse", attendu: k.laisse, calcul: `${eur(k.margeGagnee)} − ${eur(k.campagne)} = ${eur(k.laisse)}`, tolerance: 1 },
+          { libelle: "Marge des ventes gagnées", attendu: k.marge, calcul: `${qte(k.ventes)} × ${eur(p.margeDUneVente)} = ${eur(k.marge)}`, tolerance: 33 },
+          { libelle: "Ce que la campagne laisse", attendu: k.laisse, calcul: `${eur(k.marge)} − ${eur(k.budget)} = ${eur(k.laisse)}`, tolerance: 33 },
         ];
       },
-      explication: (c) => [ceQueLaCampagneLaisse(campagnePlusForte(c).forte)],
+      explication: (c) => [`La campagne plus forte ${bilanDeLaCampagne(campagnePlusForte(c).forte.laisse)}.`],
     },
     {
       id: "reponse",
       type: "choix",
       titre: "Votre réponse au responsable",
       notions: ["customer_acquisition_cost"],
-      question: (c) => {
-        const k = campagnePlusForte(c);
-        return `${lesDeux(k)} Quelle campagne conseillez-vous ?`;
-      },
+      question: (c) => `${lesDeux(campagnePlusForte(c))} Quelle campagne conseillez-vous ?`,
       options: (c) => {
         const k = campagnePlusForte(c);
         const faits = lesDeux(k);
         return [
-          {
-            texte: "Une campagne deux fois plus forte",
-            juste: k.choix === "plus-forte",
-            retour: k.choix === "plus-forte" ? `Oui. ${faits} Les ventes en plus paient la publicité en plus.` : `Non. ${faits}`,
-          },
-          {
-            texte: "La campagne de janvier, sans plus",
-            juste: k.choix === "celle-de-janvier",
-            retour:
-              k.choix === "celle-de-janvier"
-                ? `Oui. ${faits} Au-delà, les ventes en plus ne paient plus la publicité en plus.`
-                : `Non. ${faits}`,
-          },
-          {
-            texte: "Aucune campagne, le budget normal",
-            juste: k.choix === "aucune",
-            retour: k.choix === "aucune" ? `Oui. ${faits} Aucune des deux ne rapporte plus de marge qu'elle ne coûte.` : `Non. ${faits}`,
-          },
+          { texte: "La campagne deux fois plus forte", juste: k.choix === "plus-forte", retour: k.choix === "plus-forte" ? `Oui. ${faits} Les ventes en plus paient la publicité en plus.` : `Non. ${faits}` },
+          { texte: "Celle du chapitre, sans plus", juste: k.choix === "celle-du-chapitre", retour: k.choix === "celle-du-chapitre" ? `Oui. ${faits} Au-delà, les ventes en plus ne paient plus la publicité en plus.` : `Non. ${faits}` },
+          { texte: "Aucune campagne", juste: k.choix === "aucune", retour: k.choix === "aucune" ? `Oui. ${faits} Aucune des deux ne rapporte plus de marge qu'elle ne coûte.` : `Non. ${faits}` },
         ];
       },
     },
