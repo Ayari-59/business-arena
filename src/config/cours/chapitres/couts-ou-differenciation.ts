@@ -1,48 +1,49 @@
-import { PART_DE_QUALITE_NEUTRE } from "../../../engine/bots";
-import type { CompanyRoundResult, RoundDecisions } from "../../../engine/types";
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../pedagogy/cours/etats";
-import { scenarioByCode } from "../../scenarios/registry";
-import { type Cas } from "../cas";
-import { anneeJouee } from "../annee-de-l-arene";
-import { anneeDeReference, rejouerAvec, surLAnnee, type Changement } from "../gestion-de-la-pme";
-import type { Chapitre } from "../types";
-import { MARCHES } from "./marche-et-part-de-marche";
+import type { Cas } from "../cas";
+import { anneeDuMarche, battreAuris, enseigneDe, gammeDe, meilleurPrix, offreDeNova, qualitePercue, strategiesGeneriques, type BilanDUneEnseigne } from "../monde/attractivite";
+import { MARCHES_DU_COURS, type CodeDeGamme, type FicheDuMarche } from "../monde/marche-a-trois";
+import type { Chapitre, TableauDeDonnees } from "../types";
 
 /**
- * CHAPITRE : DOMINATION PAR LES COÛTS OU DIFFÉRENCIATION (Stratégie et management, palier 2).
+ * CHAPITRE : DOMINATION PAR LES COÛTS OU DIFFÉRENCIATION (Stratégie et management, palier 2 ;
+ * STMG, DCG UE7, BUT GEA).
  *
- * Les deux stratégies génériques : vendre moins cher que tous parce qu'on produit au coût le
- * plus bas, ou vendre plus cher parce que les clients reconnaissent à l'offre quelque chose de
- * plus. L'arène rejoue l'année du cours (gestion-de-la-pme.ts : même graine, mêmes concurrents)
- * avec chacune, décidée dès le premier trimestre et tenue jusqu'à la clôture, et la compare à
- * l'année du cours elle-même, celle du bon gestionnaire (arene-du-cours.ts), qui reste au
- * milieu : le prix que le formulaire propose, entre ceux des deux concurrents, et ses budgets.
+ * LE CHAPITRE JOUE DANS LE MONDE DU COURS (src/config/cours/monde), pas dans l'arène : le marché des
+ * enceintes, où NOVA affronte SoundBox et Auris, a une fiche figée (monde/marche-a-trois.ts) et un
+ * modèle simple (monde/attractivite.ts) : chaque trimestre, 17 500 enceintes se partagent entre les
+ * trois enseignes selon leur attractivité, (59 ÷ prix) puissance 4 × qualité perçue puissance 2 ×
+ * (1 + image). Une évolution du moteur ne change rien ici. Le chapitre se jouait dans plusieurs
+ * marchés de l'arène ; il se joue désormais chez NOVA seule, la même PME que dans le reste du cours.
  *
- * Chaque stratégie se pose sur la décision de l'année du cours au même trimestre : son prix,
- * ses budgets de qualité et de marketing, multipliés par les constantes ci-dessous
- * (`strategie`). La production planifiée est celle que le bon gestionnaire règle dans l'année
- * rejouée, sur la demande qu'il y voit, multipliée elle aussi. Le reste (entretien, équipe,
- * créances), il le décide dans l'année rejouée avec ses règles de toujours. Les concurrents
- * jouent comme dans l'année du cours : dans le réglage du cours, ils ne lisent pas le prix de
- * l'entreprise (`reactToHumanPrice` ne joue que face à des équipes humaines).
+ * Les deux stratégies génériques sont des offres de la fiche, tenues toute l'année : la domination
+ * par les coûts (la gamme standard, 54 €, le budget qualité coupé de moitié), le milieu (NOVA
+ * aujourd'hui) et la différenciation (la gamme soignée, 69 €, le budget qualité doublé et un peu de
+ * communication). L'élève en tire la part de marché, la marge par enceinte, le coût complet, le
+ * seuil de rentabilité et le résultat ; il voit le milieu coincé (ni le volume de l'une, ni la marge
+ * de l'autre) et dernier ; puis il cherche, au laboratoire, l'offre qui bat Auris.
  *
- * Ce que le moteur fait des leviers, et que le chapitre lit : le prix fait l'attraction de
- * l'offre (élasticité de chaque clientèle), le budget qualité fait la qualité produite, que la
- * qualité perçue suit avec inertie (elle agit donc sur les trimestres suivants), le budget
- * marketing fait l'attraction du trimestre, et la production planifiée borne les ventes.
- *
- * LA BOUTIQUE EN EST : ses décisions passent par ses références (`products`), qui ignorent le
- * prix unique et le budget qualité scalaires. Les multiplicateurs s'appliquent donc aussi à
- * chaque référence, et au budget de marque. Le test le vérifie : chaque levier change bien
- * l'année dans chaque entreprise du chapitre.
- *
- * VOLT FITNESS N'EN EST PAS, pour la raison du chapitre « Le marché et la part de marché » : son
- * marché se compte en abonnés gardés, et ses ventes de l'année (les nouveaux adhérents) ne font
- * ni sa part de marché ni une marge par unité vendue.
+ * LES TROIS TEMPS (demande du propriétaire, octobre 2026 : progressif, mais au niveau de l'examen) :
+ *   · guidé : intro, volume, marge, resultat (la formule est dans la question, qui nomme les
+ *     chiffres ; resultat fait calculer le coût complet des trois stratégies, défaut de l'audit) ;
+ *   · l'expérience avant la formule (prédire, manipuler, constater, formaliser) : predire-le-seuil
+ *     puis le-seuil-au-curseur (les ventes où la différenciation devient rentable) avant resultat ;
+ *     predire-le-rattrapage puis le-volume-au-curseur (les ventes qu'il faudrait à la stratégie de
+ *     coûts pour égaler la différenciation) avant ce-qu-il-faudrait-vendre ; predire-auris puis
+ *     le-laboratoire-de-l-offre (prix, gamme, budget qualité, communication : battre Auris) avant
+ *     battre-auris-a-la-main ;
+ *   · autonome : ecarts-au-milieu, laquelle, milieu, ce-qu-il-faudrait-vendre (ni formule ni
+ *     chiffres donnés ; le calcul de la correction montre le chemin) ;
+ *   · expert : a-rebours (le coût variable qu'il faudrait au milieu pour égaler la différenciation),
+ *     le-laboratoire-de-l-offre, battre-auris-a-la-main (une variante chiffrée : l'année refaite à la
+ *     main, la gamme soignée à 67 €, avec le résultat d'Auris la même année), les-limites (une
+ *     critique de la méthode : le classement dépend des hypothèses) ; puis la synthèse.
  */
 
-/** Ce qu'une stratégie change à la décision de l'année du cours, chaque trimestre : des multiplicateurs. */
+/**
+ * LES STRATÉGIES DE LA MISSION JOUÉE DANS L'ARÈNE (jouez.ts) : des multiplicateurs de la décision du
+ * joueur, chaque tour (le prix baisse de 10 % ou monte de 15 %). Le chapitre, lui, raisonne sur les
+ * offres de la fiche du monde du cours (monde/marche-a-trois.ts, `STRATEGIES`).
+ */
 export interface Leviers {
   prix: number;
   qualite: number;
@@ -50,172 +51,68 @@ export interface Leviers {
   production: number;
 }
 
-/**
- * LA DOMINATION PAR LES COÛTS, telle que le cours la pose : le prix baisse de 10 %, assez pour
- * se rapprocher du concurrent qui casse les prix (12 % sous le prix usuel dans l'arène) sans
- * s'aligner sur lui ; les budgets de qualité et de marketing sont coupés de moitié, ce sont les
- * coûts que l'entreprise choisit (là où l'année du cours ne met rien en qualité, il n'y a rien
- * à couper) ; la production planifiée monte de 40 %, parce qu'une stratégie de coûts vise le
- * volume, et que le bon gestionnaire produit la demande qu'il a vue au trimestre d'avant : sans
- * production en plus, la demande que le prix bas fait venir serait perdue le trimestre même.
- */
+/** @deprecated Pour la seule mission « jouez » de l'arène (son `prix`) : le chapitre lit les offres de la fiche du monde du cours. */
 export const STRATEGIE_DE_COUTS: Leviers = { prix: 0.9, qualite: 0.5, marketing: 0.5, production: 1.4 };
 
-/**
- * LA DIFFÉRENCIATION, telle que le cours la pose : le prix monte de 15 %, moins que le
- * concurrent haut de gamme (30 % au-dessus du prix usuel, moins là où le scénario le dit) ; le
- * budget qualité double (celui du secteur, là où l'année du cours n'en met pas :
- * `budgetQualiteDuSecteur`) et le budget marketing monte de moitié, pour que les clients voient
- * la différence qu'ils paient ; la production planifiée reste celle que le bon gestionnaire
- * règle sur la demande, puisqu'un prix plus haut ne cherche pas plus de clients.
- */
+/** @deprecated Pour la seule mission « jouez » de l'arène (son `prix`) : le chapitre lit les offres de la fiche du monde du cours. */
 export const STRATEGIE_DE_DIFFERENCIATION: Leviers = { prix: 1.15, qualite: 2, marketing: 1.5, production: 1 };
 
-/**
- * LES DÉCISIONS DE L'ANNÉE DU COURS, trimestre par trimestre : celles que le bon gestionnaire a
- * jouées (arene-du-cours.ts), relevées pendant qu'il rejoue l'année sans rien changer. Une
- * stratégie se pose sur elles, et non sur la décision qu'il prendrait dans l'année rejouée :
- * il part chaque trimestre de la décision jouée au trimestre d'avant, et un levier multiplié
- * chaque trimestre sur cette base se multiplierait encore au suivant (une qualité coupée de
- * moitié deux fois, puis trois). Posée sur l'année du cours, la stratégie est tenue telle quelle.
- */
-const decisionsRelevees = new Map<string, readonly RoundDecisions[]>();
-export function decisionsDeLAnneeDuCours(code: string): readonly RoundDecisions[] {
-  const deja = decisionsRelevees.get(code);
-  if (deja) return deja;
-  const vues: RoundDecisions[] = [];
-  rejouerAvec(code, "couts-ou-differenciation-decisions-de-l-annee", (tour, d) => {
-    vues[tour - 1] = structuredClone(d);
-    return undefined;
-  });
-  decisionsRelevees.set(code, vues);
-  return vues;
-}
+/** Le marché à trois enseignes se joue chez NOVA, face à SoundBox et Auris. */
+export const ENTREPRISES_DU_MARCHE_A_TROIS: readonly string[] = ["nova"];
+
+/** Ce que l'on dit à l'élève qui arrive d'une autre entreprise. */
+export const POURQUOI_LE_MARCHE_A_TROIS =
+  "ce chapitre se joue sur le marché des enceintes de la simulation du cours, où NOVA, la PME du reste du cours, affronte deux concurrents que la simulation fait jouer, SoundBox et Auris.";
+
+/** Les bornes du curseur du seuil : les ventes de l'année avec la différenciation. */
+export const VENTES_DU_CURSEUR_DU_SEUIL = { min: 10_000, max: 24_000 } as const;
+
+/** Les bornes du curseur du rattrapage : les ventes de l'année avec la stratégie de coûts. */
+export const VENTES_DU_CURSEUR_DU_RATTRAPAGE = { min: 20_000, max: 28_000 } as const;
+
+/** Le laboratoire : le prix de vente (au pas d'un euro) et les budgets par trimestre (au pas de 1 000 €). */
+export const PRIX_DU_LABORATOIRE = { min: 50, max: 80, pas: 1 } as const;
+export const BUDGET_DU_LABORATOIRE = { min: 0, max: 16_000, pas: 1_000 } as const;
+
+/** La gamme du laboratoire est un levier à choix : la valeur 0, 1 ou 2 désigne la gamme standard, actuelle ou soignée. */
+export const GAMMES_DU_LABORATOIRE: readonly CodeDeGamme[] = ["standard", "actuelle", "soignee"];
 
 /**
- * LE BUDGET QUALITÉ USUEL DU SECTEUR, par trimestre : celui de la gestion neutre
- * (`PART_DE_QUALITE_NEUTRE` de l'échelle de qualité du scénario). Le bon gestionnaire tient le
- * budget que le formulaire propose, nul là où la qualité ne paie pas au prix proposé
- * (`qualiteProposee`) : doubler zéro ne différencie rien. La stratégie qui monte la qualité
- * part alors de ce budget usuel ; celle qui la coupe n'a rien à couper.
+ * LA VARIANTE DE L'EXPERT, hypothèse du cours : la gamme soignée vendue 67 €, avec les budgets
+ * d'aujourd'hui (4 000 € de qualité par trimestre, pas de communication). C'est l'offre qui bat Auris
+ * avec le meilleur résultat de NOVA ; l'élève refait l'année à la main.
  */
-export const budgetQualiteDuSecteur = (code: string) => PART_DE_QUALITE_NEUTRE * scenarioByCode(code).scenario.production.qualityScale;
+export const VARIANTE_DE_L_EXPERT: { gamme: CodeDeGamme; prix: number } = { gamme: "soignee", prix: 67 };
 
 /**
- * Les leviers d'une stratégie, chaque trimestre : le prix et les budgets de qualité et de
- * marketing de l'année du cours au même trimestre, multipliés ; la production planifiée, celle
- * que le bon gestionnaire règle dans l'année rejouée sur la demande qu'il y voit, multipliée.
- * Le reste (entretien, équipe, créances) reste ce qu'il décide dans l'année rejouée.
+ * LA CRITIQUE, hypothèse du cours : des clients moins sensibles à la qualité, l'attractivité variant
+ * comme la qualité perçue puissance 1 au lieu de 2. Le classement des stratégies s'en trouve renversé.
  */
-export function strategie(code: string, l: Leviers): Changement {
-  const annee = decisionsDeLAnneeDuCours(code);
-  const usuel = budgetQualiteDuSecteur(code);
-  return (tour: number, d: RoundDecisions): RoundDecisions => {
-    const ref = annee[tour - 1]!;
-    // Un budget qualité nul ne se multiplie pas : qui le monte part du budget usuel du secteur.
-    const qualite = (q: number, part: number) => (q > 0 || l.qualite <= 1 ? q : usuel * part) * l.qualite;
-    const plans = d.products ? Object.values(d.products).reduce((t, p) => t + Math.max(0, p.productionPlan), 0) : 0;
-    return {
-      ...d,
-      price: ref.price * l.prix,
-      qualityBudget: qualite(ref.qualityBudget, 1),
-      marketingBudget: ref.marketingBudget * l.marketing,
-      productionPlan: d.productionPlan * l.production,
-      // En gamme, chaque référence porte son prix, ses budgets et son plan ; la marque, son budget.
-      ...(d.products
-        ? {
-            products: Object.fromEntries(
-              Object.entries(d.products).map(([cle, p]) => {
-                const r = ref.products?.[cle] ?? p;
-                return [
-                  cle,
-                  {
-                    ...p,
-                    price: r.price * l.prix,
-                    productionPlan: p.productionPlan * l.production,
-                    ...(r.marketingBudget !== undefined ? { marketingBudget: r.marketingBudget * l.marketing } : {}),
-                    ...(r.qualityBudget !== undefined
-                      ? { qualityBudget: qualite(r.qualityBudget, plans > 0 ? Math.max(0, p.productionPlan) / plans : 0) }
-                      : {}),
-                  },
-                ];
-              }),
-            ),
-          }
-        : {}),
-      ...(ref.brandMarketingBudget !== undefined ? { brandMarketingBudget: ref.brandMarketingBudget * l.marketing } : {}),
-    };
-  };
-}
+export const ELASTICITE_A_LA_QUALITE_DE_LA_CRITIQUE = 1;
 
-/** Un montant à la française, avec le signe moins typographique ; retranché, un négatif va entre parenthèses. */
+/** L'explication du laboratoire compare le meilleur prix de la gamme soignée à un prix plus bas de 3 € : l'avance sur Auris grandit, le résultat baisse. */
+export const BAISSE_DE_L_EXPLICATION = 3;
+
+/** Un prix d'une offre à essayer, au pari d'Auris : la différenciation du chapitre, vendue plus cher encore. */
+export const PRIX_DE_LA_DIFFERENCIATION_PLUS_CHERE = 75;
+
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
-/** « de » devant un nom : élidé devant une voyelle, contracté devant l'article (« du Comptoir »). */
-const dE = (nom: string) =>
-  /^Le /.test(nom) ? `du ${nom.slice(3)}` : /^Les /.test(nom) ? `des ${nom.slice(4)}` : /^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`;
-/** « à » devant un nom, contracté devant l'article (« au Comptoir »). */
-const aU = (nom: string) => (/^Le /.test(nom) ? `au ${nom.slice(3)}` : /^Les /.test(nom) ? `aux ${nom.slice(4)}` : `à ${nom}`);
-/** « que » devant un nom, élidé devant une voyelle (« qu'Auris »). */
-const quE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `qu'${nom}` : `que ${nom}`);
-/** Une variation d'un levier, dans le tableau : « −10 % », « +100 % », ou « inchangé ». */
-const variation = (k: number, feminin = false) => {
-  const v = Math.round((k - 1) * 100);
-  return v === 0 ? (feminin ? "inchangée" : "inchangé") : v > 0 ? `+${v} %` : `−${-v} %`;
-};
-/** Un écart de montant, signé. */
-const ecart = (x: number) => (x > 0 ? `+${eur(x)}` : eur(x));
-/** Des points de part de marché, signés. */
-const points = (x: number) => (x > 0 ? `+${qte(x)}` : qte(x));
+const entre = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
+const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+/** Une part (une fraction) en pourcentage au centième. */
+const pct = (x: number) => `${qte(Math.round(x * 10_000) / 100)} %`;
+const auCentieme = (x: number) => Math.round(x * 100) / 100 + 0;
+const auCentime = auCentieme;
+/** Un nombre au nombre de décimales donné, à la française (une qualité, une attractivité). */
+const dec = (x: number, n = 2) => x.toLocaleString("fr-FR", { minimumFractionDigits: n, maximumFractionDigits: n });
+const signe = (x: number) => (x > 0 ? `+${eur(x)}` : eur(x));
+/** « de NOVA », « d'Auris » : l'élision devant une voyelle. */
+const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
-const ventesDuTrimestre = (r: CompanyRoundResult) => Object.values(r.market.bySegment).reduce((t, v) => t + v.sold, 0);
-const marcheDuTrimestre = (r: CompanyRoundResult) => Object.values(r.market.bySegment).reduce((t, v) => t + v.potential, 0);
+/** La fiche du marché à trois. */
+export const ficheDe = (c: Pick<Cas, "code">): FicheDuMarche => MARCHES_DU_COURS[c.code]!;
 
 export type CodeDeStrategie = "couts" | "milieu" | "differenciation";
-
-/** Une année rejouée, en grandes masses : ce que le chapitre compare. */
-export function bilanDeLAnnee<C extends string>(code: C, annee: readonly CompanyRoundResult[]) {
-  const ventes = Math.round(surLAnnee(annee, ventesDuTrimestre));
-  const marche = Math.round(surLAnnee(annee, marcheDuTrimestre));
-  const chiffreDAffaires = Math.round(surLAnnee(annee, (r) => r.incomeStatement.revenue));
-  const marge = Math.round(surLAnnee(annee, (r) => r.incomeStatement.grossMargin));
-  const exploitation = Math.round(surLAnnee(annee, (r) => r.incomeStatement.operatingIncome));
-  return {
-    code,
-    ventes,
-    marche,
-    chiffreDAffaires,
-    marge,
-    exploitation,
-    qualite: Math.round(surLAnnee(annee, (r) => r.incomeStatement.qualityCost)),
-    marketing: Math.round(surLAnnee(annee, (r) => r.incomeStatement.marketingCost)),
-    resultat: Math.round(surLAnnee(annee, (r) => r.incomeStatement.netIncome)),
-    part: auDixieme((ventes / marche) * 100),
-    prixMoyen: auCentime(chiffreDAffaires / ventes),
-    margeUnitaire: auCentime(marge / ventes),
-    tauxDeMarge: auDixieme((marge / chiffreDAffaires) * 100),
-    /** Ce que coûte une unité vendue, tout compris : les charges d'exploitation des unités vendues. */
-    coutComplet: auCentime((chiffreDAffaires - exploitation) / ventes),
-  };
-}
-
-export type BilanDeLAnnee = ReturnType<typeof bilanDeLAnnee<CodeDeStrategie>>;
-
-/** Les deux concurrents de l'année du cours : leur prix moyen de l'année, le moins cher et le plus cher. */
-export function concurrentsDeLAnnee(c: Cas) {
-  const def = scenarioByCode(c.code);
-  const { partie } = anneeJouee(c.code);
-  const liste = def.bots.slice(0, 2).map((b) => {
-    const annee = partie.rounds.map((t) => t.results[b.id]!);
-    const ventes = Math.round(surLAnnee(annee, ventesDuTrimestre));
-    return { nom: b.name, prix: auCentime(Math.round(surLAnnee(annee, (r) => r.incomeStatement.revenue)) / ventes) };
-  });
-  const parPrix = [...liste].sort((a, b) => a.prix - b.prix);
-  return { bas: parPrix[0]!, haut: parPrix.at(-1)! };
-}
 
 export const NOMS_DES_STRATEGIES: Record<CodeDeStrategie, string> = {
   couts: "la domination par les coûts",
@@ -223,36 +120,162 @@ export const NOMS_DES_STRATEGIES: Record<CodeDeStrategie, string> = {
   differenciation: "la différenciation",
 };
 
-/** Les trois années, et ce qu'elles disent. */
-export function coutsOuDifferenciation(c: Cas) {
-  const couts = bilanDeLAnnee("couts", rejouerAvec(c.code, "couts-ou-differenciation-couts", strategie(c.code, STRATEGIE_DE_COUTS)));
-  const milieu = bilanDeLAnnee("milieu", anneeDeReference(c.code));
-  const differenciation = bilanDeLAnnee(
-    "differenciation",
-    rejouerAvec(c.code, "couts-ou-differenciation-differenciation", strategie(c.code, STRATEGIE_DE_DIFFERENCIATION)),
-  );
-  const trois = [couts, milieu, differenciation];
-  const parResultat = [...trois].sort((a, b) => b.resultat - a.resultat);
-  const meilleure = parResultat[0]!;
-  const pire = parResultat.at(-1)!;
-  const rangDuMilieu: "premier" | "entre" | "dernier" = meilleure === milieu ? "premier" : pire === milieu ? "dernier" : "entre";
+/** L'année de NOVA à une position du laboratoire : prix, gamme (0, 1 ou 2), budget qualité, communication. */
+export function laboratoireDeLOffre(f: FicheDuMarche, p: Readonly<Record<string, number>>) {
+  const nova = { prix: p.prix!, gamme: GAMMES_DU_LABORATOIRE[p.gamme!]!, budgetQualite: p.qualite!, budgetCommunication: p.communication! };
+  const b = battreAuris(f, { nova });
+  return { nova: b.nova, auris: b.auris, ecart: b.ecart, battue: b.battue };
+}
+
+function calculer(c: Pick<Cas, "code">) {
+  const f = ficheDe(c);
+  const s = strategiesGeneriques(f);
+  const { couts, milieu, differenciation } = s;
+  const trois: readonly { code: CodeDeStrategie; bilan: BilanDUneEnseigne }[] = [
+    { code: "couts", bilan: couts },
+    { code: "milieu", bilan: milieu },
+    { code: "differenciation", bilan: differenciation },
+  ];
+  const strategie = (code: CodeDeStrategie) => f.strategies.find((x) => x.code === code)!;
+  const offres = trois.map((x) => {
+    const st = strategie(x.code);
+    const g = gammeDe(f, st.gamme);
+    return { code: x.code, gamme: g, strategie: st, qualite: qualitePercue(f, offreDeNova(f, { gamme: st.gamme, budgetQualite: st.budgetQualite })) };
+  });
+  const auris = enseigneDe(f, "auris");
+  const soundbox = enseigneDe(f, "soundbox");
+  // Le rattrapage : les ventes qu'il faudrait à la stratégie de coûts pour égaler la différenciation.
+  const ventesPourEgaler = s.ventesDesCoutsPourEgalerLaDifferenciation;
+  // Le calcul à rebours : la marge par enceinte qu'il faudrait au milieu, à ses ventes, pour égaler la
+  // différenciation ; le coût variable le plus haut qui la donne, au prix d'aujourd'hui.
+  const margeNecessaire = auCentime((differenciation.resultat + milieu.charges) / milieu.ventes);
+  const coutVariableMaximal = auCentime(milieu.offre.prix - margeNecessaire);
+  const baisseDuCoutVariable = auCentime(milieu.coutVariable - coutVariableMaximal);
+  // La gamme standard au prix d'aujourd'hui, les budgets d'aujourd'hui : 4 € de moins, mais moins de qualité.
+  const standardAuPrixDuMilieu = anneeDuMarche(f, { nova: { gamme: "standard" } }).nova;
+  // La variante de l'expert : la gamme soignée à 67 €, les budgets d'aujourd'hui.
+  const v = anneeDuMarche(f, { nova: VARIANTE_DE_L_EXPERT });
+  const [aNova, aSoundbox, aAuris] = v.trimestres[0]!.map((x) => x.attractivite) as [number, number, number];
+  const variante = {
+    annee: v,
+    nova: v.nova,
+    auris: v.auris,
+    attractiviteNova: aNova,
+    attractiviteSoundbox: aSoundbox,
+    attractiviteAuris: aAuris,
+    sommeDesAttractivites: aNova + aSoundbox + aAuris,
+    partDuTrimestre: auCentieme(v.nova.trimestres[0]!.part * 100),
+    ventesDuTrimestre: v.nova.trimestres[0]!.ventes,
+    ventesDAurisDuTrimestre: v.auris.trimestres[0]!.ventes,
+    ecart: auCentime(v.nova.resultat - v.auris.resultat),
+  };
+  // Le laboratoire : battre Auris n'est pas gagner le plus. La gamme soignée, aux budgets d'aujourd'hui,
+  // sur toute la course du prix ; et le meilleur que donne la gamme standard.
+  const soignee = (prix: number) => battreAuris(f, { nova: { gamme: "soignee", prix } });
+  const prixDuLabo = Array.from({ length: (PRIX_DU_LABORATOIRE.max - PRIX_DU_LABORATOIRE.min) / PRIX_DU_LABORATOIRE.pas + 1 }, (_, i) => PRIX_DU_LABORATOIRE.min + i * PRIX_DU_LABORATOIRE.pas);
+  const soigneeQuiBat = prixDuLabo.filter((p) => soignee(p).battue);
+  const meilleurSoigne = meilleurPrix(f, { nova: { gamme: "soignee" } }, PRIX_DU_LABORATOIRE);
+  // Sur la course du laboratoire (au pas d'un euro), avec les budgets d'aujourd'hui : les meilleurs de la gamme standard.
+  const meilleurStandard = meilleurPrix(f, { nova: { gamme: "standard" } }, PRIX_DU_LABORATOIRE);
+  const meilleurActuel = meilleurPrix(f, {}, { min: 40, max: 80, pas: 0.5 });
+  const plusBas = meilleurSoigne.prix - BAISSE_DE_L_EXPLICATION;
+  // Le pari d'Auris : trois offres, une seule bat Auris.
+  const paris = {
+    actuelle: battreAuris(f, { nova: { prix: meilleurActuel.prix } }),
+    soignee: soignee(VARIANTE_DE_L_EXPERT.prix),
+    plusChere: battreAuris(f, { nova: { gamme: "soignee", prix: PRIX_DE_LA_DIFFERENCIATION_PLUS_CHERE, budgetQualite: strategie("differenciation").budgetQualite, budgetCommunication: strategie("differenciation").budgetCommunication } }),
+  };
+  // La critique : des clients moins sensibles à la qualité.
+  const critique = strategiesGeneriques({ ...f, attractivite: { ...f.attractivite, elasticiteALaQualite: ELASTICITE_A_LA_QUALITE_DE_LA_CRITIQUE } });
   return {
+    f,
+    s,
     couts,
     milieu,
     differenciation,
     trois,
-    meilleure,
-    pire,
-    rangDuMilieu,
-    concurrents: concurrentsDeLAnnee(c),
-    /** Le milieu n'a ni le volume de la stratégie de coûts, ni la marge par unité de la différenciation. */
-    coince: milieu.part < couts.part && milieu.margeUnitaire < differenciation.margeUnitaire,
-    ecartCouts: couts.resultat - milieu.resultat,
-    ecartDifferenciation: differenciation.resultat - milieu.resultat,
+    offres,
+    auris,
+    soundbox,
+    meilleure: s.meilleure,
+    rangDuMilieu: s.rangDuMilieu,
+    coince: s.coince,
+    ecartCouts: s.ecartCouts,
+    ecartDifferenciation: s.ecartDifferenciation,
+    ecartEntreLesDeux: auCentime(differenciation.resultat - couts.resultat),
+    ventesPourEgaler,
+    enceintesDePlus: ventesPourEgaler - couts.ventes,
+    partPourEgaler: ventesPourEgaler / s.annees.couts.marche,
+    margeNecessaire,
+    coutVariableMaximal,
+    baisseDuCoutVariable,
+    standardAuPrixDuMilieu,
+    variante,
+    aurisDansLAnnee: { couts: s.annees.couts.auris.resultat, milieu: s.annees.milieu.auris.resultat, differenciation: s.annees.differenciation.auris.resultat },
+    soundboxDansLAnnee: { couts: s.annees.couts.soundbox.resultat, milieu: s.annees.milieu.soundbox.resultat, differenciation: s.annees.differenciation.soundbox.resultat },
+    soigneeQuiBat,
+    meilleurSoigne,
+    meilleurStandard,
+    meilleurActuel,
+    plusBas: { prix: plusBas, bilan: soignee(plusBas) },
+    paris,
+    critique,
   };
 }
 
+const memo = new Map<string, ReturnType<typeof calculer>>();
+
+/** Les trois stratégies, et tout ce que le chapitre et son cas en tirent. */
+export function coutsOuDifferenciation(c: Pick<Cas, "code">) {
+  const deja = memo.get(c.code);
+  if (deja) return deja;
+  const x = calculer(c);
+  memo.set(c.code, x);
+  return x;
+}
+
+export type CoutsOuDifferenciation = ReturnType<typeof coutsOuDifferenciation>;
+
 const COLONNES = ["Domination par les coûts", "Au milieu", "Différenciation"];
+
+/** Ce que chaque stratégie met sur le marché, chaque trimestre : le document de départ. */
+function tableauDesOffres(c: Pick<Cas, "code">): TableauDeDonnees {
+  const k = coutsOuDifferenciation(c);
+  return {
+    titre: `Ce que chaque stratégie ${dE(k.f.entreprise)} met sur le marché, chaque trimestre`,
+    colonnes: COLONNES,
+    lignes: [
+      { libelle: "Gamme", valeurs: k.offres.map((o) => o.gamme.nom.replace(/^la /, "")) },
+      { libelle: "Coût variable d'une enceinte", valeurs: k.offres.map((o) => eur(o.gamme.composants + o.gamme.autres)) },
+      { libelle: "Qualité de conception de la gamme", valeurs: k.offres.map((o) => dec(o.gamme.qualiteDeConception)) },
+      { libelle: "Prix de vente", valeurs: k.offres.map((o) => eur(o.strategie.prix)) },
+      { libelle: "Budget qualité par trimestre", valeurs: k.offres.map((o) => eur(o.strategie.budgetQualite)) },
+      { libelle: "Qualité perçue", valeurs: k.offres.map((o) => dec(o.qualite)) },
+      { libelle: "Communication par trimestre", valeurs: k.offres.map((o) => eur(o.strategie.budgetCommunication)) },
+    ],
+  };
+}
+
+/** Le bilan des trois stratégies, pour la synthèse. */
+function tableauDuBilan(c: Pick<Cas, "code">): TableauDeDonnees {
+  const k = coutsOuDifferenciation(c);
+  const b = k.trois.map((x) => x.bilan);
+  return {
+    titre: "Les trois stratégies, tenues toute l'année",
+    colonnes: COLONNES,
+    lignes: [
+      { libelle: `Ventes de l'année (${k.f.unites})`, valeurs: b.map((x) => qte(x.ventes)) },
+      { libelle: "Part de marché", valeurs: b.map((x) => pct(x.part)) },
+      { libelle: "Marge par enceinte", valeurs: b.map((x) => eur(x.margeUnitaire)) },
+      { libelle: "Coût complet d'une enceinte vendue", valeurs: b.map((x) => eur(x.coutComplet)) },
+      { libelle: `Seuil de rentabilité (${k.f.unites})`, valeurs: b.map((x) => qte(x.seuilDeRentabilite)) },
+      { libelle: "Résultat de l'année", valeurs: b.map((x) => eur(x.resultat)) },
+    ],
+  };
+}
+
+/** Le rang du milieu, en mots. */
+const rangEcrit = (r: "premier" | "entre" | "dernier") => (r === "dernier" ? "dernier des trois" : r === "premier" ? "premier des trois" : "entre les deux stratégies");
 
 export const COUTS_OU_DIFFERENCIATION: Chapitre = {
   code: "couts-ou-differenciation",
@@ -265,59 +288,35 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
   ],
   titre: "Domination par les coûts ou différenciation",
   accroche:
-    "Vendre moins cher que tous, ou plus cher parce qu'on est meilleur : les deux stratégies génériques, jouées toute une année dans l'arène, face aux mêmes concurrents. Et pourquoi rester au milieu peut coûter le plus.",
+    "Vendre moins cher que tous, ou plus cher parce qu'on est meilleur : les deux stratégies génériques, tenues toute une année dans la simulation du cours, face aux mêmes concurrents. Ce que chacune vend, gagne et coûte par enceinte, pourquoi rester au milieu coûte le plus, et l'offre qui bat le haut de gamme.",
   objectifs: [
     "Distinguer la domination par les coûts et la différenciation",
-    "Comparer deux stratégies par la part de marché, la marge par unité et le résultat",
-    "Choisir la stratégie qui convient à l'entreprise face à ses concurrents",
+    "Comparer des stratégies par la part de marché, la marge par enceinte, le coût complet et le seuil de rentabilité",
     "Expliquer pourquoi rester au milieu peut être le pire",
+    "Retrouver à rebours le coût ou le volume qu'une stratégie demanderait",
+    "Critiquer un classement de stratégies par ses hypothèses",
   ],
   libre: false,
-  entreprises: {
-    codes: MARCHES,
-    pourquoi: "ce chapitre compare des parts de marché et des marges par unité vendue, et chez VOLT FITNESS le marché se compte d'abord en abonnés gardés.",
-  },
+  entreprises: { codes: ENTREPRISES_DU_MARCHE_A_TROIS, pourquoi: POURQUOI_LE_MARCHE_A_TROIS },
   etapes: [
     {
       id: "intro",
       type: "lecture",
       titre: "Deux stratégies pour un même marché",
       notions: ["demand_market_share", "full_unit_cost"],
+      tableau: tableauDesOffres,
       texte: (c) => {
         const k = coutsOuDifferenciation(c);
-        const { bas, haut } = k.concurrents;
+        const f = k.f;
+        const a = f.attractivite;
         return [
-          "Face à ses concurrents, une entreprise peut chercher à vendre moins cher que les autres, parce que ses coûts sont les plus bas : c'est la domination par les coûts. Elle peut aussi vendre plus cher, parce que ses clients lui reconnaissent quelque chose de plus, ici la qualité et l'image : c'est la différenciation.",
-          `Sur le marché ${dE(c.entreprise)}, ${bas.nom} vend en moyenne à ${eur(bas.prix)}, ${haut.nom} à ${eur(haut.prix)}. ${c.entreprise} reste au milieu : son année du cours, jouée par un bon gestionnaire qui tient le formulaire de la partie, vend à ${eur(k.milieu.prixMoyen)} en moyenne, ${
-            k.milieu.qualite > 0 ? `avec ${eur(k.milieu.qualite)} de budget qualité sur l'année` : "sans budget qualité, comme le formulaire le propose dans ce secteur"
-          }.`,
-          "L'arène a rejoué cette année deux fois, avec chaque stratégie décidée dès le premier trimestre et tenue jusqu'à la clôture. Le tableau dit ce que chacune change, chaque trimestre, au prix et aux budgets de l'année du cours, et à la production que le bon gestionnaire règle sur la demande qu'il voit. Le reste, il le décide avec ses règles de toujours, et les concurrents jouent comme dans l'année du cours.",
+          "Face à ses concurrents, une entreprise peut chercher à vendre moins cher que les autres, parce que ses coûts sont les plus bas : c'est la domination par les coûts. Elle peut aussi vendre plus cher, parce que ses clients lui reconnaissent quelque chose de plus, ici la qualité : c'est la différenciation.",
+          `Ce chapitre se joue dans la simulation du cours, chez ${f.entreprise}, sur une année type : l'année de la simulation du cours, faite de trimestres égaux, qui n'est ni l'année N ni l'année N + 1 des autres chapitres. Chaque trimestre, les clients achètent ${qte(f.marche.parTrimestre)} ${f.unites} aux trois enseignes du marché, ${f.entreprise}, ${k.soundbox.nom} et ${k.auris.nom}. Le marché ne grandit pas : ce qu'une enseigne gagne, elle le prend aux deux autres.`,
+          `Chaque enseigne prend une part du marché égale à son attractivité rapportée à la somme des trois : attractivité = (${eur(a.prixDeReference)} ÷ prix) puissance ${a.elasticiteAuPrix} × qualité perçue puissance ${a.elasticiteALaQualite} × (1 + image). Le prix compte double de la qualité. La qualité perçue vient surtout de la gamme, un peu du budget qualité ; l'image vient de la communication.`,
+          `${k.soundbox.nom} vend à ${eur(k.soundbox.offre.prix)} une enceinte fabriquée en très grandes séries ; ${k.auris.nom} vend ${eur(k.auris.offre.prix)} une enceinte haut de gamme. Les concurrents ne réagissent pas : leurs offres sont tenues toute l'année. Les charges fixes ${dE(f.entreprise)} sont celles de janvier, ${eur(k.milieu.chargesFixes / 12)} par mois, sur l'année : ${eur(k.milieu.chargesFixes)} ; les budgets sont des charges du trimestre, et le résultat est avant impôt.`,
+          `La simulation du cours joue l'année avec chaque stratégie, tenue tous les trimestres. Le tableau dit ce que chacune met sur le marché : la gamme, son coût variable et sa qualité, le prix et les budgets. Le milieu, c'est ${f.entreprise} aujourd'hui.`,
         ];
       },
-      tableau: (c) => ({
-        titre: "Ce que chaque stratégie change, chaque trimestre",
-        colonnes: COLONNES,
-        lignes: [
-          { libelle: "Prix de vente", valeurs: [variation(STRATEGIE_DE_COUTS.prix), variation(1), variation(STRATEGIE_DE_DIFFERENCIATION.prix)] },
-          {
-            libelle: "Budget qualité",
-            // Un budget nul ne se coupe pas, et la différenciation part du budget usuel du secteur.
-            valeurs:
-              coutsOuDifferenciation(c).milieu.qualite > 0
-                ? [variation(STRATEGIE_DE_COUTS.qualite), variation(1), variation(STRATEGIE_DE_DIFFERENCIATION.qualite)]
-                : [
-                    "aucun, rien à couper",
-                    "aucun",
-                    `${eur(budgetQualiteDuSecteur(c.code) * STRATEGIE_DE_DIFFERENCIATION.qualite)} : le budget usuel du secteur, ${variation(STRATEGIE_DE_DIFFERENCIATION.qualite)}`,
-                  ],
-          },
-          { libelle: "Budget marketing", valeurs: [variation(STRATEGIE_DE_COUTS.marketing), variation(1), variation(STRATEGIE_DE_DIFFERENCIATION.marketing)] },
-          {
-            libelle: "Production planifiée",
-            valeurs: [variation(STRATEGIE_DE_COUTS.production, true), variation(1, true), variation(STRATEGIE_DE_DIFFERENCIATION.production, true)],
-          },
-        ],
-      }),
       repere: () =>
         "Domination par les coûts : les coûts les plus bas du marché, pour vendre moins cher et en grand volume. Différenciation : une offre que les clients jugent meilleure, pour la vendre plus cher.",
     },
@@ -329,41 +328,33 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
       tableau: (c) => {
         const k = coutsOuDifferenciation(c);
         return {
-          titre: "L'année rejouée avec chaque stratégie : les ventes",
+          titre: "L'année jouée avec chaque stratégie : les ventes",
           colonnes: COLONNES,
           lignes: [
-            { libelle: "Prix moyen de vente", valeurs: k.trois.map((x) => eur(x.prixMoyen)) },
-            { libelle: `Ventes de l'année (${c.unites})`, valeurs: k.trois.map((x) => qte(x.ventes)) },
-            { libelle: `Marché de l'année (${c.unites})`, valeurs: k.trois.map((x) => qte(x.marche)) },
+            { libelle: "Prix de vente", valeurs: k.trois.map((x) => eur(x.bilan.offre.prix)) },
+            { libelle: "Qualité perçue", valeurs: k.trois.map((x) => dec(x.bilan.qualite)) },
+            { libelle: `Ventes de l'année (${k.f.unites})`, valeurs: k.trois.map((x) => qte(x.bilan.ventes)) },
+            { libelle: `Marché de l'année (${k.f.unites})`, valeurs: k.trois.map(() => qte(k.s.annees.milieu.marche)) },
             { libelle: "Part de marché", valeurs: ["à calculer", pct(k.milieu.part), "à calculer"] },
           ],
         };
       },
-      question: (c) =>
-        `Le marché est le même dans les trois années : ce que les clients auraient pu acheter. Calculez la part de marché ${dE(c.entreprise)} avec la domination par les coûts, puis avec la différenciation, en pourcentage au dixième.`,
+      question: (c) => {
+        const k = coutsOuDifferenciation(c);
+        return `Le marché de l'année est de ${qte(k.s.annees.milieu.marche)} ${k.f.unites}, le même avec chaque stratégie. Calculez la part de marché ${dE(k.f.entreprise)} avec la domination par les coûts, puis avec la différenciation : ventes ÷ marché × 100, en pourcentage au centième.`;
+      },
       champs: (c) => {
         const k = coutsOuDifferenciation(c);
+        const m = k.s.annees.milieu.marche;
         return [
-          {
-            libelle: "Part de marché, domination par les coûts (%)",
-            attendu: k.couts.part,
-            calcul: `${qte(k.couts.ventes)} ÷ ${qte(k.couts.marche)} × 100 = ${pct(k.couts.part)}`,
-            tolerance: 0.1,
-          },
-          {
-            libelle: "Part de marché, différenciation (%)",
-            attendu: k.differenciation.part,
-            calcul: `${qte(k.differenciation.ventes)} ÷ ${qte(k.differenciation.marche)} × 100 = ${pct(k.differenciation.part)}`,
-            tolerance: 0.1,
-          },
+          { libelle: "Part de marché, domination par les coûts (%)", attendu: auCentieme(k.couts.part * 100), calcul: `${qte(k.couts.ventes)} ÷ ${qte(m)} × 100 = ${pct(k.couts.part)}` },
+          { libelle: "Part de marché, différenciation (%)", attendu: auCentieme(k.differenciation.part * 100), calcul: `${qte(k.differenciation.ventes)} ÷ ${qte(m)} × 100 = ${pct(k.differenciation.part)}` },
         ];
       },
       explication: (c) => {
         const k = coutsOuDifferenciation(c);
-        const dc = auDixieme(k.couts.part - k.milieu.part);
-        const dd = auDixieme(k.differenciation.part - k.milieu.part);
         return [
-          `Par rapport au milieu (${pct(k.milieu.part)}), la domination par les coûts fait ${points(dc)} points de part de marché, la différenciation ${points(dd)} points. ${dc > 0 && dd < 0 ? "Le prix bas et la production en plus attirent des clients ; le prix haut en fait partir, que la qualité ne retient pas tous." : "Le prix, la qualité et le marketing jouent ensemble sur les ventes."}`,
+          `Face au milieu (${pct(k.milieu.part)}), la domination par les coûts prend ${pct(k.couts.part)} du marché, la différenciation ${pct(k.differenciation.part)}. Le prix bas attire des clients malgré une qualité un peu plus basse ; le prix haut en fait partir, que la gamme soignée ne retient pas tous.`,
           "La part de marché dit combien l'entreprise vend, pas ce que chaque vente lui rapporte : c'est la marge qui le dit.",
         ];
       },
@@ -376,87 +367,184 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
       tableau: (c) => {
         const k = coutsOuDifferenciation(c);
         return {
-          titre: "L'année rejouée avec chaque stratégie : la marge",
+          titre: "L'année jouée avec chaque stratégie : la marge",
           colonnes: COLONNES,
           lignes: [
-            { libelle: "Chiffre d'affaires", valeurs: k.trois.map((x) => eur(x.chiffreDAffaires)) },
-            { libelle: "Marge sur coût variable", valeurs: k.trois.map((x) => eur(x.marge)) },
-            { libelle: `Ventes de l'année (${c.unites})`, valeurs: k.trois.map((x) => qte(x.ventes)) },
-            { libelle: "Marge par unité vendue", valeurs: ["à calculer", eur(k.milieu.margeUnitaire), "à calculer"] },
+            { libelle: "Prix de vente", valeurs: k.trois.map((x) => eur(x.bilan.offre.prix)) },
+            { libelle: "Coût variable d'une enceinte", valeurs: k.trois.map((x) => eur(x.bilan.coutVariable)) },
+            { libelle: `Ventes de l'année (${k.f.unites})`, valeurs: k.trois.map((x) => qte(x.bilan.ventes)) },
+            { libelle: "Marge par enceinte", valeurs: ["à calculer", eur(k.milieu.margeUnitaire), "à calculer"] },
+            { libelle: "Marge sur coût variable de l'année", valeurs: ["à calculer", eur(k.milieu.marge), "à calculer"] },
           ],
         };
       },
-      question: (c) =>
-        `La marge sur coût variable est ce qui reste des ventes une fois payé ce que coûte chaque unité. Calculez la marge par unité vendue ${dE(c.entreprise)} avec chaque stratégie, au centime.`,
+      question: (c) => {
+        const k = coutsOuDifferenciation(c);
+        return `La marge par enceinte est ce qui reste du prix une fois payé le coût variable de la gamme : prix − coût variable. Calculez-la avec la domination par les coûts et avec la différenciation, puis la marge sur coût variable de l'année de chacune : marge par enceinte × ventes (au milieu : ${eur(k.milieu.margeUnitaire)} × ${qte(k.milieu.ventes)} = ${eur(k.milieu.marge)}).`;
+      },
       champs: (c) => {
         const k = coutsOuDifferenciation(c);
+        const { couts: a, differenciation: b } = k;
         return [
-          {
-            libelle: "Marge par unité, domination par les coûts",
-            attendu: k.couts.margeUnitaire,
-            calcul: `${eur(k.couts.marge)} ÷ ${qte(k.couts.ventes)} = ${eur(k.couts.margeUnitaire)}`,
-            tolerance: 0.01,
-          },
-          {
-            libelle: "Marge par unité, différenciation",
-            attendu: k.differenciation.margeUnitaire,
-            calcul: `${eur(k.differenciation.marge)} ÷ ${qte(k.differenciation.ventes)} = ${eur(k.differenciation.margeUnitaire)}`,
-            tolerance: 0.01,
-          },
+          { libelle: "Marge par enceinte, domination par les coûts", attendu: a.margeUnitaire, calcul: `${eur(a.offre.prix)} − ${eur(a.coutVariable)} = ${eur(a.margeUnitaire)}` },
+          { libelle: "Marge par enceinte, différenciation", attendu: b.margeUnitaire, calcul: `${eur(b.offre.prix)} − ${eur(b.coutVariable)} = ${eur(b.margeUnitaire)}` },
+          { libelle: "Marge sur coût variable de l'année, domination par les coûts", attendu: a.marge, calcul: `${eur(a.margeUnitaire)} × ${qte(a.ventes)} = ${eur(a.marge)}` },
+          { libelle: "Marge sur coût variable de l'année, différenciation", attendu: b.marge, calcul: `${eur(b.margeUnitaire)} × ${qte(b.ventes)} = ${eur(b.marge)}` },
         ];
       },
       explication: (c) => {
         const k = coutsOuDifferenciation(c);
+        const taux = (b: BilanDUneEnseigne) => pct(b.tauxDeMarge);
         return [
-          `Une unité vendue laisse ${eur(k.couts.margeUnitaire)} avec la domination par les coûts, ${eur(k.milieu.margeUnitaire)} au milieu et ${eur(k.differenciation.margeUnitaire)} avec la différenciation : ${k.couts.margeUnitaire < k.milieu.margeUnitaire && k.milieu.margeUnitaire < k.differenciation.margeUnitaire ? "plus le prix est bas, moins chaque vente rapporte" : "le prix ne fait pas seul la marge"}. Le taux de marge passe de ${pct(k.couts.tauxDeMarge)} à ${pct(k.differenciation.tauxDeMarge)} du chiffre d'affaires.`,
-          "La stratégie de coûts gagne par le nombre de ventes, la différenciation par ce que rapporte chacune. Reste à savoir laquelle paie le mieux les charges de l'année.",
+          `Une enceinte vendue laisse ${eur(k.couts.margeUnitaire)} avec la domination par les coûts, ${eur(k.milieu.margeUnitaire)} au milieu et ${eur(k.differenciation.margeUnitaire)} avec la différenciation. La stratégie de coûts baisse son prix de ${eur(k.milieu.offre.prix - k.couts.offre.prix)}, mais sa gamme coûte ${eur(k.milieu.coutVariable - k.couts.coutVariable)} de moins : elle ne perd que ${eur(k.milieu.margeUnitaire - k.couts.margeUnitaire)} par enceinte. C'est ce qui distingue une stratégie de coûts d'une simple baisse de prix.`,
+          `Rapportée au prix, la marge fait ${taux(k.couts)} avec les coûts, ${taux(k.milieu)} au milieu et ${taux(k.differenciation)} avec la différenciation : le milieu a le plus petit taux de marge des trois. Reste à savoir laquelle paie le mieux les charges de l'année.`,
+        ];
+      },
+    },
+    {
+      id: "predire-le-seuil",
+      type: "choix",
+      titre: "Pariez sur le seuil de rentabilité",
+      notions: ["breakeven", "contribution_margin"],
+      question: (c) => {
+        const k = coutsOuDifferenciation(c);
+        return `Avant de calculer, pariez. La différenciation vend ${qte(k.differenciation.ventes)} ${k.f.unites}, la stratégie de coûts ${qte(k.couts.ventes)}, le milieu ${qte(k.milieu.ventes)}. Laquelle des trois couvre ses charges de l'année avec le moins de ventes ?`;
+      },
+      options: (c) => {
+        const k = coutsOuDifferenciation(c);
+        const voir = "Faites varier les ventes à l'étape suivante : le curseur montre où la marge couvre les charges.";
+        const plusBas = [...k.trois].sort((a, b) => a.bilan.seuilDeRentabilite - b.bilan.seuilDeRentabilite)[0]!.code;
+        const textes: Record<CodeDeStrategie, string> = { differenciation: "La différenciation", couts: "La domination par les coûts", milieu: "Le milieu" };
+        return (["differenciation", "couts", "milieu"] as const).map((code) => ({
+          texte: textes[code],
+          juste: code === plusBas,
+          retour: `${code === plusBas ? "Bon pari." : "Pari à vérifier."} ${voir}`,
+        }));
+      },
+    },
+    {
+      id: "le-seuil-au-curseur",
+      type: "curseur",
+      titre: "Le seuil de la différenciation",
+      notions: ["breakeven", "contribution_margin"],
+      question: (c) => {
+        const k = coutsOuDifferenciation(c);
+        const d = k.differenciation;
+        return `Faites varier les ventes de l'année avec la différenciation, de ${qte(VENTES_DU_CURSEUR_DU_SEUIL.min)} à ${qte(VENTES_DU_CURSEUR_DU_SEUIL.max)} ${k.f.unites}. Une droite donne la marge sur coût variable (${eur(d.margeUnitaire)} par enceinte), l'autre les charges de l'année, fixes et budgets (${eur(d.charges)}). Placez le curseur sur le plus petit nombre de ventes où la marge couvre les charges, puis validez.`;
+      },
+      grandeur: (c) => ({ libelle: "Ventes de l'année, avec la différenciation", unite: coutsOuDifferenciation(c).f.unites }),
+      cible: (c) => {
+        const d = coutsOuDifferenciation(c).differenciation;
+        return { attendu: Math.ceil(d.charges / d.margeUnitaire - 1e-9), min: VENTES_DU_CURSEUR_DU_SEUIL.min, max: VENTES_DU_CURSEUR_DU_SEUIL.max };
+      },
+      zones: ["Au-dessus du seuil : un bénéfice", "Sous le seuil : une perte"],
+      rates: () => ({
+        dessous: "À cette position, la marge ne couvre pas encore les charges de l'année : la différenciation perd de l'argent.",
+        dessus: "Plus bas, la marge couvre encore les charges : cherchez le plus petit nombre de ventes.",
+      }),
+      lecture: (c, q) => {
+        const d = coutsOuDifferenciation(c).differenciation;
+        return [
+          { libelle: "Marge sur coût variable", montant: auCentime(d.margeUnitaire * q) },
+          { libelle: "Charges fixes et budgets de l'année", montant: d.charges },
+          { libelle: "Coût complet d'une enceinte vendue", montant: auCentime(d.coutVariable + d.charges / q) },
+          { libelle: "Résultat de l'année", montant: auCentime(d.margeUnitaire * q - d.charges), fort: true },
+        ];
+      },
+      droites: (c) => {
+        const d = coutsOuDifferenciation(c).differenciation;
+        return { produit: (q) => d.margeUnitaire * q, cout: () => d.charges, libelles: ["Marge sur coût variable", "Charges fixes et budgets"] };
+      },
+      explication: (c) => {
+        const k = coutsOuDifferenciation(c);
+        const d = k.differenciation;
+        return [
+          `La différenciation couvre ses charges dès ${qte(d.seuilDeRentabilite)} ${k.f.unites} : là, une enceinte coûte tout compris son prix, ${eur(d.offre.prix)}. Elle en vend ${qte(d.ventes)}, soit ${qte(d.ventes - d.seuilDeRentabilite)} de plus que son seuil.`,
+          `Ses charges sont les plus lourdes (${eur(d.charges)}), mais chaque enceinte en paie ${eur(d.margeUnitaire)}. La stratégie de coûts, à ${eur(k.couts.margeUnitaire)} par enceinte, a besoin de ${qte(k.couts.seuilDeRentabilite)} ventes ; le milieu, de ${qte(k.milieu.seuilDeRentabilite)}. Le seuil se calcule à l'étape suivante, avec le coût complet.`,
         ];
       },
     },
     {
       id: "resultat",
       type: "montants",
-      titre: "Le résultat de l'année",
-      notions: ["full_unit_cost", "income_statement"],
+      titre: "Le coût complet d'une enceinte",
+      notions: ["full_unit_cost", "breakeven"],
       tableau: (c) => {
         const k = coutsOuDifferenciation(c);
         return {
-          titre: "L'année rejouée avec chaque stratégie : les coûts et le résultat",
+          titre: "L'année jouée avec chaque stratégie : les coûts",
           colonnes: COLONNES,
           lignes: [
-            { libelle: "Budgets qualité et marketing de l'année", valeurs: k.trois.map((x) => eur(x.qualite + x.marketing)) },
-            { libelle: "Coût complet d'une unité vendue", valeurs: k.trois.map((x) => eur(x.coutComplet)) },
-            { libelle: "Résultat de l'exercice", valeurs: k.trois.map((x) => eur(x.resultat)) },
+            { libelle: `Ventes de l'année (${k.f.unites})`, valeurs: k.trois.map((x) => qte(x.bilan.ventes)) },
+            { libelle: "Coût variable d'une enceinte", valeurs: k.trois.map((x) => eur(x.bilan.coutVariable)) },
+            { libelle: "Charges fixes de l'année", valeurs: k.trois.map((x) => eur(x.bilan.chargesFixes)) },
+            { libelle: "Budgets qualité et communication de l'année", valeurs: k.trois.map((x) => eur(x.bilan.budgets)) },
+            { libelle: "Charges fixes et budgets", valeurs: k.trois.map((x) => eur(x.bilan.charges)) },
+            { libelle: "Coût complet d'une enceinte vendue", valeurs: k.trois.map(() => "à calculer") },
           ],
         };
       },
-      question: () =>
-        "Le coût complet d'une unité vendue compte toutes les charges d'exploitation, réparties sur les ventes. Calculez l'écart de résultat de l'exercice entre chaque stratégie et le milieu.",
+      question: (c) => {
+        const k = coutsOuDifferenciation(c);
+        return `Le coût complet d'une enceinte vendue compte toutes les charges de l'année, réparties sur les ventes : coût variable + (charges fixes + budgets) ÷ ventes. Calculez-le pour chaque stratégie, au centime. Puis le seuil de rentabilité de la domination par les coûts : (charges fixes + budgets) ÷ marge par enceinte (${eur(k.couts.margeUnitaire)}), à l'enceinte supérieure.`;
+      },
       champs: (c) => {
         const k = coutsOuDifferenciation(c);
+        const cc = (b: BilanDUneEnseigne) => `${eur(b.coutVariable)} + ${eur(b.charges)} ÷ ${qte(b.ventes)} = ${eur(b.coutComplet)}`;
         return [
+          { libelle: "Coût complet, domination par les coûts", attendu: k.couts.coutComplet, calcul: cc(k.couts) },
+          { libelle: "Coût complet, milieu", attendu: k.milieu.coutComplet, calcul: cc(k.milieu) },
+          { libelle: "Coût complet, différenciation", attendu: k.differenciation.coutComplet, calcul: cc(k.differenciation) },
           {
-            libelle: "Écart de résultat, domination par les coûts moins milieu",
-            attendu: k.ecartCouts,
-            calcul: `${eur(k.couts.resultat)} − ${retranche(k.milieu.resultat)} = ${eur(k.ecartCouts)}`,
-            tolerance: 1,
-          },
-          {
-            libelle: "Écart de résultat, différenciation moins milieu",
-            attendu: k.ecartDifferenciation,
-            calcul: `${eur(k.differenciation.resultat)} − ${retranche(k.milieu.resultat)} = ${eur(k.ecartDifferenciation)}`,
-            tolerance: 1,
+            libelle: "Seuil de rentabilité, domination par les coûts",
+            attendu: k.couts.seuilDeRentabilite,
+            calcul: `${eur(k.couts.charges)} ÷ ${eur(k.couts.margeUnitaire)} = ${qte(auCentieme(k.couts.charges / k.couts.margeUnitaire))}, arrondi à ${qte(k.couts.seuilDeRentabilite)} ${k.f.unites}`,
+            tolerance: 0,
           },
         ];
       },
       explication: (c) => {
         const k = coutsOuDifferenciation(c);
-        const plusBas = k.couts.coutComplet < k.milieu.coutComplet && k.couts.coutComplet < k.differenciation.coutComplet;
         return [
-          plusBas
-            ? `La domination par les coûts porte bien son nom : une unité vendue y coûte ${eur(k.couts.coutComplet)} tout compris, contre ${eur(k.milieu.coutComplet)} au milieu et ${eur(k.differenciation.coutComplet)} avec la différenciation. Les budgets coupés pèsent moins, et les charges fixes se répartissent sur plus de ventes.`
-            : `Une unité vendue coûte ${eur(k.couts.coutComplet)} tout compris avec la domination par les coûts, ${eur(k.milieu.coutComplet)} au milieu et ${eur(k.differenciation.coutComplet)} avec la différenciation.`,
-          `Sur l'année, la domination par les coûts fait ${ecart(k.ecartCouts)} de résultat par rapport au milieu, la différenciation ${ecart(k.ecartDifferenciation)}.`,
+          `La domination par les coûts porte bien son nom : une enceinte y coûte ${eur(k.couts.coutComplet)} tout compris, contre ${eur(k.milieu.coutComplet)} au milieu et ${eur(k.differenciation.coutComplet)} avec la différenciation. Sa gamme coûte moins, ses budgets sont coupés, et ses charges fixes se répartissent sur plus de ventes.`,
+          `Le coût complet ne dit pas seul ce que l'enceinte rapporte : il faut le comparer au prix. Une fois tout payé, une enceinte laisse ${eur(auCentime(k.couts.offre.prix - k.couts.coutComplet))} avec les coûts, ${eur(auCentime(k.milieu.offre.prix - k.milieu.coutComplet))} au milieu et ${eur(auCentime(k.differenciation.offre.prix - k.differenciation.coutComplet))} avec la différenciation. Le seuil de la stratégie de coûts, ${qte(k.couts.seuilDeRentabilite)} ${k.f.unites}, est plus haut que celui de la différenciation (${qte(k.differenciation.seuilDeRentabilite)}) : chaque enceinte y paie moins de charges.`,
+        ];
+      },
+    },
+    {
+      id: "ecarts-au-milieu",
+      type: "montants",
+      titre: "Le résultat de l'année",
+      notions: ["income_statement", "contribution_margin"],
+      tableau: (c) => {
+        const k = coutsOuDifferenciation(c);
+        return {
+          titre: "L'année jouée avec chaque stratégie : le résultat",
+          colonnes: COLONNES,
+          lignes: [
+            { libelle: "Marge sur coût variable de l'année", valeurs: k.trois.map((x) => eur(x.bilan.marge)) },
+            { libelle: "Charges fixes et budgets", valeurs: k.trois.map((x) => eur(x.bilan.charges)) },
+            { libelle: "Résultat de l'année", valeurs: ["à calculer", eur(k.milieu.resultat), "à calculer"] },
+          ],
+        };
+      },
+      question: () =>
+        "Sans formule cette fois. Calculez le résultat de l'année avec la domination par les coûts et avec la différenciation, puis l'écart de chacune avec le milieu. Négatif pour un écart défavorable.",
+      champs: (c) => {
+        const k = coutsOuDifferenciation(c);
+        return [
+          { libelle: "Résultat, domination par les coûts", attendu: k.couts.resultat, calcul: `${eur(k.couts.marge)} − ${eur(k.couts.charges)} = ${eur(k.couts.resultat)}` },
+          { libelle: "Résultat, différenciation", attendu: k.differenciation.resultat, calcul: `${eur(k.differenciation.marge)} − ${eur(k.differenciation.charges)} = ${eur(k.differenciation.resultat)}` },
+          { libelle: "Écart, domination par les coûts moins milieu", attendu: k.ecartCouts, calcul: `${eur(k.couts.resultat)} − ${entre(k.milieu.resultat)} = ${eur(k.ecartCouts)}` },
+          { libelle: "Écart, différenciation moins milieu", attendu: k.ecartDifferenciation, calcul: `${eur(k.differenciation.resultat)} − ${entre(k.milieu.resultat)} = ${eur(k.ecartDifferenciation)}` },
+        ];
+      },
+      explication: (c) => {
+        const k = coutsOuDifferenciation(c);
+        const d = k.differenciation;
+        return [
+          `Sur l'année, la domination par les coûts fait ${signe(k.ecartCouts)} de résultat face au milieu, la différenciation ${signe(k.ecartDifferenciation)}. Les deux stratégies battent le milieu, chacune par son côté.`,
+          `La différenciation gagne malgré moins de ventes : ses ${eur(d.margeUnitaire - k.milieu.margeUnitaire)} de marge en plus par enceinte, sur ${qte(d.ventes)} ventes, paient largement ses ${eur(d.budgets - k.milieu.budgets)} de budgets en plus.`,
         ];
       },
     },
@@ -466,37 +554,27 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
       titre: "Quelle stratégie retenir ?",
       notions: ["demand_market_share", "contribution_margin"],
       question: (c) => {
-        const { bas, haut } = coutsOuDifferenciation(c).concurrents;
-        return `Face ${aU(bas.nom)} et ${aU(haut.nom)}, quelle stratégie donne à ${c.entreprise} le meilleur résultat de l'année ?`;
+        const k = coutsOuDifferenciation(c);
+        return `Face à ${k.soundbox.nom} et à ${k.auris.nom}, quelle stratégie donne à ${k.f.entreprise} le meilleur résultat de l'année ?`;
       },
       options: (c) => {
         const k = coutsOuDifferenciation(c);
-        const { bas, haut } = k.concurrents;
         const m = k.meilleure;
-        const non = (x: BilanDeLAnnee) =>
-          `Non : ${NOMS_DES_STRATEGIES[x.code]} donne ${eur(x.resultat)} sur l'année, contre ${eur(m.resultat)} avec ${NOMS_DES_STRATEGIES[m.code]}.`;
+        const resultats = `${eur(k.couts.resultat)} avec la domination par les coûts, ${eur(k.milieu.resultat)} au milieu, ${eur(k.differenciation.resultat)} avec la différenciation`;
         const oui: Record<CodeDeStrategie, string> = {
-          couts: `Oui : ${eur(k.couts.resultat)} sur l'année, contre ${eur(k.milieu.resultat)} au milieu et ${eur(k.differenciation.resultat)} avec la différenciation. Les ventes en plus (${pct(k.couts.part)} du marché, contre ${pct(k.milieu.part)}) paient la marge perdue sur chaque unité. ${
-            k.couts.prixMoyen > bas.prix
-              ? `${bas.nom} reste moins cher (${eur(bas.prix)}) : ${c.entreprise} n'a pas besoin d'être la moins chère du marché pour gagner du volume, elle doit avoir des coûts assez bas pour vivre de petites marges.`
-              : `${c.entreprise} devient la moins chère du marché, sous ${bas.nom} (${eur(bas.prix)}) : il lui faut tenir des coûts plus bas que les siens.`
-          }`,
-          differenciation: `Oui : ${eur(k.differenciation.resultat)} sur l'année, contre ${eur(k.milieu.resultat)} au milieu et ${eur(k.couts.resultat)} avec la domination par les coûts. Chaque unité laisse ${eur(k.differenciation.margeUnitaire)} de marge, contre ${eur(k.milieu.margeUnitaire)} au milieu : ${c.entreprise} vend moins, mais gagne plus sur chaque vente. ${
-            k.differenciation.prixMoyen < haut.prix
-              ? `${haut.nom} reste plus cher (${eur(haut.prix)}) : ${c.entreprise} se différencie sans aller jusqu'au prix du haut de gamme.`
-              : `${c.entreprise} vend même plus cher ${quE(haut.nom)} (${eur(haut.prix)}) : sa qualité doit le justifier aux yeux des clients.`
-          }`,
-          milieu: `Oui : ${eur(k.milieu.resultat)} sur l'année, plus qu'avec la domination par les coûts (${eur(k.couts.resultat)}) ou la différenciation (${eur(k.differenciation.resultat)}). Ici, aucune des deux stratégies, telle que l'arène la joue, ne paie ce qu'elle change.`,
+          differenciation: `Oui : ${resultats}. Chaque enceinte laisse ${eur(k.differenciation.margeUnitaire)} de marge, contre ${eur(k.milieu.margeUnitaire)} au milieu : ${k.f.entreprise} vend moins, mais gagne plus sur chaque vente. ${k.auris.nom} reste plus chère (${eur(k.auris.offre.prix)}) : ${k.f.entreprise} se différencie sans aller jusqu'au prix du haut de gamme.`,
+          couts: `Oui : ${resultats}. Les ventes en plus paient la marge perdue sur chaque enceinte.`,
+          milieu: `Oui : ${resultats}. Ici, aucune des deux stratégies ne paie ce qu'elle change.`,
         };
-        const options: { code: CodeDeStrategie; texte: string }[] = [
-          { code: "couts", texte: "La domination par les coûts" },
-          { code: "differenciation", texte: "La différenciation" },
-          { code: "milieu", texte: "Rester au milieu, comme l'année du cours" },
+        const options: { code: CodeDeStrategie; texte: string; erreur: string }[] = [
+          { code: "differenciation", texte: "La différenciation", erreur: "" },
+          { code: "couts", texte: `La domination par les coûts, qui prend ${pct(k.couts.part)} du marché`, erreur: "la plus grande part de marché ne fait pas le meilleur résultat" },
+          { code: "milieu", texte: "Le milieu, qui n'engage aucun budget en plus", erreur: "économiser des budgets ne paie pas une marge et un volume moyens" },
         ];
         return options.map((o) => ({
           texte: o.texte,
           juste: o.code === m.code,
-          retour: o.code === m.code ? oui[o.code] : non(k.trois.find((x) => x.code === o.code)!),
+          retour: o.code === m.code ? oui[o.code] : `Non : ${resultats}. ${o.erreur ? `${o.erreur.charAt(0).toUpperCase()}${o.erreur.slice(1)}.` : ""}`.trim(),
         }));
       },
     },
@@ -508,36 +586,388 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
       question: (c) => {
         const k = coutsOuDifferenciation(c);
         return k.coince
-          ? `Au milieu, ${c.entreprise} n'a ni la part de marché de la domination par les coûts (${pct(k.couts.part)}, contre ${pct(k.milieu.part)}), ni la marge par unité de la différenciation (${eur(k.differenciation.margeUnitaire)}, contre ${eur(k.milieu.margeUnitaire)}). Par le résultat de l'année, où le milieu se classe-t-il ?`
-          : `Par le résultat de l'année, où le milieu se classe-t-il face aux deux stratégies ?`;
+          ? `Au milieu, ${k.f.entreprise} n'a ni la part de marché de la domination par les coûts (${pct(k.couts.part)}, contre ${pct(k.milieu.part)}), ni la marge par enceinte de la différenciation (${eur(k.differenciation.margeUnitaire)}, contre ${eur(k.milieu.margeUnitaire)}). Par le résultat de l'année, où le milieu se classe-t-il ?`
+          : "Par le résultat de l'année, où le milieu se classe-t-il face aux deux stratégies ?";
       },
       options: (c) => {
         const k = coutsOuDifferenciation(c);
-        const { bas, haut } = k.concurrents;
         const m = k.milieu;
         const classement = `le milieu donne ${eur(m.resultat)}, la domination par les coûts ${eur(k.couts.resultat)}, la différenciation ${eur(k.differenciation.resultat)}`;
-        const autre = k.trois.find((x) => x !== m && x !== k.meilleure)!;
         return [
           {
             texte: "Dernier des trois",
             juste: k.rangDuMilieu === "dernier",
             retour:
               k.rangDuMilieu === "dernier"
-                ? `Oui : ${classement}. C'est l'enlisement au milieu : ${c.entreprise} n'a ni le volume qui baisse le coût complet d'une unité (${eur(m.coutComplet)}, contre ${eur(k.couts.coutComplet)} avec les coûts), ni la marge par unité qui paie la qualité (${eur(m.margeUnitaire)}, contre ${eur(k.differenciation.margeUnitaire)}). ${bas.nom} tient déjà le prix bas, ${haut.nom} le haut de gamme.`
+                ? `Oui : ${classement}. C'est l'enlisement au milieu : ${k.f.entreprise} n'a ni le volume qui baisse le coût complet d'une enceinte (${eur(m.coutComplet)}, contre ${eur(k.couts.coutComplet)} avec les coûts), ni la marge par enceinte qui paie la qualité (${eur(m.margeUnitaire)}, contre ${eur(k.differenciation.margeUnitaire)}). ${k.soundbox.nom} tient déjà le prix bas, ${k.auris.nom} le haut de gamme.`
                 : `Non : ${classement}.`,
           },
           {
             texte: "Premier des trois",
             juste: k.rangDuMilieu === "premier",
-            retour: k.rangDuMilieu === "premier" ? `Oui : ${classement}. Ici, rester au milieu paie mieux que les deux stratégies.` : `Non : ${classement}.`,
+            retour: k.rangDuMilieu === "premier" ? `Oui : ${classement}.` : `Non : ${classement}. Ne rien changer n'est pas le choix le plus sûr.`,
           },
           {
             texte: "Entre les deux stratégies",
             juste: k.rangDuMilieu === "entre",
-            retour:
-              k.rangDuMilieu === "entre"
-                ? `Oui : ${classement}. Ici, le milieu fait mieux que ${NOMS_DES_STRATEGIES[autre.code]}, mais il gagne ${eur(k.meilleure.resultat - m.resultat)} de moins que ${NOMS_DES_STRATEGIES[k.meilleure.code]}. Rester au milieu n'est pas toujours le pire ; c'est rarement le mieux, parce que chaque concurrent tient déjà un côté du marché.`
-                : `Non : ${classement}.`,
+            retour: k.rangDuMilieu === "entre" ? `Oui : ${classement}.` : `Non : ${classement}. Les deux stratégies battent le milieu.`,
+          },
+        ];
+      },
+    },
+    {
+      id: "predire-le-rattrapage",
+      type: "choix",
+      titre: "Pariez sur le rattrapage",
+      notions: ["demand_market_share", "contribution_margin"],
+      question: (c) => {
+        const k = coutsOuDifferenciation(c);
+        return `La domination par les coûts gagne ${eur(k.ecartEntreLesDeux)} de moins que la différenciation. Pariez : à ${eur(k.couts.margeUnitaire)} de marge par enceinte et à charges égales, combien de ventes de plus lui faudrait-il pour la rattraper ?`;
+      },
+      options: (c) => {
+        const k = coutsOuDifferenciation(c);
+        const voir = "Faites varier ses ventes à l'étape suivante : le curseur montre où son résultat rejoint celui de la différenciation.";
+        const n = k.enceintesDePlus;
+        return [
+          { texte: "Moins de 2 000 ventes de plus", juste: n < 2_000, retour: `${n < 2_000 ? "Bon pari." : "Pari à vérifier."} ${voir}` },
+          { texte: "Entre 2 000 et 5 000 ventes de plus", juste: n >= 2_000 && n <= 5_000, retour: `${n >= 2_000 && n <= 5_000 ? "Bon pari." : "Pari à vérifier."} ${voir}` },
+          { texte: "Au-delà de 5 000 ventes de plus", juste: n > 5_000, retour: `${n > 5_000 ? "Bon pari." : "Pari à vérifier."} ${voir}` },
+        ];
+      },
+    },
+    {
+      id: "le-volume-au-curseur",
+      type: "curseur",
+      titre: "Rattraper par le volume",
+      notions: ["demand_market_share", "contribution_margin"],
+      question: (c) => {
+        const k = coutsOuDifferenciation(c);
+        return `Faites varier les ventes de l'année avec la domination par les coûts, de ${qte(VENTES_DU_CURSEUR_DU_RATTRAPAGE.min)} à ${qte(VENTES_DU_CURSEUR_DU_RATTRAPAGE.max)} ${k.f.unites}, à ${eur(k.couts.margeUnitaire)} de marge par enceinte et à ses charges de l'année (${eur(k.couts.charges)}). Placez le curseur sur le plus petit nombre de ventes où son résultat égale celui de la différenciation (${eur(k.differenciation.resultat)}), puis validez.`;
+      },
+      grandeur: (c) => ({ libelle: "Ventes de l'année, avec la stratégie de coûts", unite: coutsOuDifferenciation(c).f.unites }),
+      cible: (c) => {
+        const k = coutsOuDifferenciation(c);
+        return { attendu: k.ventesPourEgaler, min: VENTES_DU_CURSEUR_DU_RATTRAPAGE.min, max: VENTES_DU_CURSEUR_DU_RATTRAPAGE.max };
+      },
+      zones: ["La stratégie de coûts rattrape", "La différenciation reste devant"],
+      rates: () => ({
+        dessous: "À cette position, la stratégie de coûts gagne encore moins que la différenciation.",
+        dessus: "Plus bas, son résultat égale encore celui de la différenciation : cherchez le plus petit nombre de ventes.",
+      }),
+      montrer: "Montrer le rattrapage",
+      lecture: (c, q) => {
+        const k = coutsOuDifferenciation(c);
+        const r = auCentime(k.couts.margeUnitaire * q - k.couts.charges);
+        return [
+          { libelle: "Marge sur coût variable", montant: auCentime(k.couts.margeUnitaire * q) },
+          { libelle: "Charges fixes et budgets de l'année", montant: k.couts.charges },
+          { libelle: "Résultat de la stratégie de coûts", montant: r },
+          { libelle: "Écart avec la différenciation", montant: auCentime(r - k.differenciation.resultat), fort: true },
+        ];
+      },
+      droites: (c) => {
+        const k = coutsOuDifferenciation(c);
+        return {
+          produit: (q) => k.couts.margeUnitaire * q - k.couts.charges,
+          cout: () => k.differenciation.resultat,
+          libelles: ["Résultat de la stratégie de coûts", "Résultat de la différenciation"],
+        };
+      },
+      explication: (c) => {
+        const k = coutsOuDifferenciation(c);
+        return [
+          `Il faudrait à la stratégie de coûts ${qte(k.ventesPourEgaler)} ${k.f.unites}, ${qte(k.enceintesDePlus)} de plus qu'elle n'en vend : chaque enceinte de plus n'y rapporte que ${eur(k.couts.margeUnitaire)}, et l'écart à combler est de ${eur(k.ecartEntreLesDeux)}.`,
+          `Or le marché ne grandit pas : ces ventes, il faudrait les prendre à ${k.soundbox.nom} et à ${k.auris.nom}, donc baisser encore le prix, ce qui baisse la marge de chaque enceinte. La course au volume demande toujours plus de volume. L'étape suivante refait ce calcul.`,
+        ];
+      },
+    },
+    {
+      id: "ce-qu-il-faudrait-vendre",
+      type: "montants",
+      titre: "Ce qu'il faudrait vendre",
+      notions: ["demand_market_share", "contribution_margin"],
+      question: () =>
+        "Sans le curseur cette fois. Retrouvez par le calcul les ventes qu'il faudrait à la domination par les coûts pour égaler le résultat de la différenciation, les ventes que cela fait de plus qu'aujourd'hui avec cette stratégie, puis la part du marché de l'année qu'elles représenteraient.",
+      champs: (c) => {
+        const k = coutsOuDifferenciation(c);
+        return [
+          {
+            libelle: "Ventes qu'il faudrait à la stratégie de coûts",
+            attendu: k.ventesPourEgaler,
+            calcul: `(${eur(k.differenciation.resultat)} + ${eur(k.couts.charges)}) ÷ ${eur(k.couts.margeUnitaire)} = ${qte(auCentieme((k.differenciation.resultat + k.couts.charges) / k.couts.margeUnitaire))}, arrondi à ${qte(k.ventesPourEgaler)} ${k.f.unites}`,
+            tolerance: 0,
+          },
+          { libelle: "Ventes de plus qu'avec la stratégie de coûts", attendu: k.enceintesDePlus, calcul: `${qte(k.ventesPourEgaler)} − ${qte(k.couts.ventes)} = ${qte(k.enceintesDePlus)}`, tolerance: 0 },
+          {
+            libelle: "Part de marché qu'il faudrait (%)",
+            attendu: auCentieme(k.partPourEgaler * 100),
+            calcul: `${qte(k.ventesPourEgaler)} ÷ ${qte(k.s.annees.couts.marche)} × 100 = ${pct(k.partPourEgaler)}`,
+          },
+        ];
+      },
+      explication: (c) => {
+        const k = coutsOuDifferenciation(c);
+        return [
+          `Ventes nécessaires = (résultat visé + charges fixes et budgets) ÷ marge par enceinte. Il faudrait ${pct(k.partPourEgaler)} du marché, contre ${pct(k.couts.part)} : une stratégie de coûts vit du volume, et chaque euro de marge en moins se paie en ventes en plus.`,
+        ];
+      },
+    },
+    {
+      id: "a-rebours",
+      type: "montants",
+      titre: "Le coût qu'il faudrait au milieu",
+      notions: ["full_unit_cost", "variable_costs"],
+      question: (c) => {
+        const k = coutsOuDifferenciation(c);
+        return `Le directeur propose de rester au milieu, mais en produisant moins cher : même prix (${eur(k.milieu.offre.prix)}), même qualité perçue, donc mêmes ventes (${qte(k.milieu.ventes)} ${k.f.unites}), mêmes charges. Le coût d'une enceinte ne change pas son attractivité. Retrouvez la marge par enceinte qu'il faudrait au milieu pour gagner autant que la différenciation, le coût variable le plus haut qui la donne, et la baisse que cela demande sur chaque enceinte.`;
+      },
+      champs: (c) => {
+        const k = coutsOuDifferenciation(c);
+        return [
+          {
+            libelle: "Marge par enceinte qu'il faudrait au milieu",
+            attendu: k.margeNecessaire,
+            calcul: `(${eur(k.differenciation.resultat)} + ${eur(k.milieu.charges)}) ÷ ${qte(k.milieu.ventes)} = ${eur(k.margeNecessaire)}`,
+          },
+          { libelle: "Coût variable le plus haut", attendu: k.coutVariableMaximal, calcul: `${eur(k.milieu.offre.prix)} − ${eur(k.margeNecessaire)} = ${eur(k.coutVariableMaximal)}` },
+          { libelle: "Baisse du coût variable par enceinte", attendu: k.baisseDuCoutVariable, calcul: `${eur(k.milieu.coutVariable)} − ${eur(k.coutVariableMaximal)} = ${eur(k.baisseDuCoutVariable)}` },
+        ];
+      },
+      explication: (c) => {
+        const k = coutsOuDifferenciation(c);
+        const std = k.offres[0]!.gamme;
+        const st = k.standardAuPrixDuMilieu;
+        return [
+          `Il faudrait au milieu ${eur(k.baisseDuCoutVariable)} de moins sur chaque enceinte, sans rien perdre en qualité. La seule gamme moins chère de la ligne, ${std.nom}, coûte ${eur(std.composants + std.autres)}, mais sa qualité de conception n'est que de ${dec(std.qualiteDeConception)} : vendue ${eur(k.milieu.offre.prix)}, elle ne fait que ${qte(st.ventes)} ventes, contre ${qte(k.milieu.ventes)}, pour ${eur(st.resultat)} de résultat. ${st.resultat < k.differenciation.resultat ? `Les euros économisés ne rattrapent pas la différenciation (${eur(k.differenciation.resultat)}) : ils se paient en ventes perdues.` : ""}`.trim(),
+          "C'est l'enlisement : au milieu, on ne réduit ses coûts qu'en perdant de la qualité, et on ne gagne de la qualité qu'en payant plus. Une stratégie choisit son côté, et règle son prix sur lui.",
+        ];
+      },
+    },
+    {
+      id: "predire-auris",
+      type: "choix",
+      titre: "Pariez sur l'offre qui bat Auris",
+      notions: ["demand_market_share", "price_elasticity"],
+      question: (c) => {
+        const k = coutsOuDifferenciation(c);
+        return `Aucune stratégie du chapitre ne bat ${k.auris.nom} dans la même année : ${eur(k.couts.resultat - k.aurisDansLAnnee.couts)} avec la domination par les coûts, ${eur(k.differenciation.resultat - k.aurisDansLAnnee.differenciation)} avec la différenciation. Pariez : laquelle de ces offres y parvient ?`;
+      },
+      options: (c) => {
+        const k = coutsOuDifferenciation(c);
+        const voir = "Le laboratoire de l'étape suivante vous le dira : essayez-la.";
+        const p = k.paris;
+        return [
+          { texte: `La gamme actuelle, à son meilleur prix (${eur(k.meilleurActuel.prix)})`, juste: p.actuelle.battue, retour: `${p.actuelle.battue ? "Bon pari." : "Pari à vérifier."} ${voir}` },
+          {
+            texte: `La gamme soignée à ${eur(VARIANTE_DE_L_EXPERT.prix)}, sans budget en plus`,
+            juste: p.soignee.battue,
+            retour: `${p.soignee.battue ? "Bon pari." : "Pari à vérifier."} ${voir}`,
+          },
+          {
+            texte: `La différenciation du chapitre, vendue ${eur(PRIX_DE_LA_DIFFERENCIATION_PLUS_CHERE)}`,
+            juste: p.plusChere.battue,
+            retour: `${p.plusChere.battue ? "Bon pari." : "Pari à vérifier."} ${voir}`,
+          },
+        ];
+      },
+    },
+    {
+      id: "le-laboratoire-de-l-offre",
+      type: "simulation",
+      titre: "Le laboratoire de l'offre",
+      notions: ["demand_market_share", "price_elasticity", "contribution_margin"],
+      question: (c) => {
+        const k = coutsOuDifferenciation(c);
+        return `Réglez l'offre ${dE(k.f.entreprise)} pour toute l'année : son prix, sa gamme, son budget qualité et sa communication par trimestre. Le tableau suit ses ventes, son résultat et celui ${dE(k.auris.nom)} la même année ; le graphique, les deux résultats selon le prix. Relevez le défi, puis regardez ce que vous avez gagné.`;
+      },
+      leviers: (c) => {
+        const k = coutsOuDifferenciation(c);
+        const o = k.milieu.offre;
+        return [
+          { code: "prix", libelle: "Prix de vente", unite: "€", ...PRIX_DU_LABORATOIRE, depart: o.prix },
+          {
+            code: "gamme",
+            libelle: "Gamme",
+            unite: "",
+            min: 0,
+            max: GAMMES_DU_LABORATOIRE.length - 1,
+            pas: 1,
+            depart: GAMMES_DU_LABORATOIRE.indexOf("actuelle"),
+            choix: GAMMES_DU_LABORATOIRE.map((g, i) => {
+              const x = gammeDe(k.f, g);
+              return { valeur: i, libelle: `${x.nom.charAt(0).toUpperCase()}${x.nom.slice(1)} (${eur(x.composants + x.autres)})` };
+            }),
+          },
+          { code: "qualite", libelle: "Budget qualité par trimestre", unite: "€", ...BUDGET_DU_LABORATOIRE, depart: o.budgetQualite },
+          { code: "communication", libelle: "Communication par trimestre", unite: "€", ...BUDGET_DU_LABORATOIRE, depart: o.budgetCommunication },
+        ];
+      },
+      lecture: (c, p) => {
+        const k = coutsOuDifferenciation(c);
+        const l = laboratoireDeLOffre(k.f, p);
+        const d = { nova: k.milieu, auris: k.s.annees.milieu.auris };
+        return [
+          { libelle: `Ventes ${dE(k.f.entreprise)}`, montant: l.nova.ventes, unite: k.f.unites, reference: d.nova.ventes },
+          { libelle: `Part de marché ${dE(k.f.entreprise)}`, montant: auCentieme(l.nova.part * 100), unite: "%", reference: auCentieme(d.nova.part * 100) },
+          { libelle: "Demande perdue, faute de capacité", montant: l.nova.refusees, unite: k.f.unites, reference: d.nova.refusees },
+          { libelle: "Marge par enceinte", montant: l.nova.margeUnitaire, reference: d.nova.margeUnitaire },
+          { libelle: `Résultat ${dE(k.f.entreprise)}`, montant: l.nova.resultat, reference: d.nova.resultat },
+          { libelle: `Résultat ${dE(k.auris.nom)}`, montant: l.auris.resultat, reference: d.auris.resultat },
+          { libelle: "Résultat gagné sur aujourd'hui", montant: auCentime(l.nova.resultat - d.nova.resultat), reference: 0, effet: true },
+          { libelle: `Avance sur ${k.auris.nom}`, montant: l.ecart, reference: auCentime(d.nova.resultat - d.auris.resultat), effet: true, fort: true },
+        ].map((y) => ({ ...y, montant: y.montant + 0, reference: y.reference + 0 }));
+      },
+      // Les deux résultats selon le prix ne sont pas des droites : la demande suit le prix puissance 4.
+      graphique: (c) => {
+        const k = coutsOuDifferenciation(c);
+        return {
+          levier: "prix",
+          courbes: [
+            { libelle: `Résultat ${dE(k.f.entreprise)}`, valeur: (p) => laboratoireDeLOffre(k.f, p).nova.resultat + 0 },
+            { libelle: `Résultat ${dE(k.auris.nom)}`, valeur: (p) => laboratoireDeLOffre(k.f, p).auris.resultat + 0 },
+          ],
+        };
+      },
+      defi: (c) => {
+        const k = coutsOuDifferenciation(c);
+        const o = k.milieu.offre;
+        return {
+          consigne: `Battez ${k.auris.nom} en résultat, dans la même année.`,
+          atteint: (p) => laboratoireDeLOffre(k.f, p).battue,
+          indice: (p) => {
+            const l = laboratoireDeLOffre(k.f, p);
+            const g = GAMMES_DU_LABORATOIRE[p.gamme!]!;
+            const conseil =
+              g === "actuelle"
+                ? `La gamme actuelle est déjà à son meilleur prix (${eur(k.meilleurActuel.prix)} ne donne que ${eur(k.meilleurActuel.resultat)}) : changez d'offre.`
+                : g === "soignee"
+                  ? "La gamme soignée se vend plus cher, mais pas trop : regardez où les deux courbes se croisent, et ce que chaque budget en plus rapporte vraiment."
+                  : "La gamme standard ne se vend qu'à petit prix : regardez aussi ce que fait l'autre bout de la ligne.";
+            return `Il manque ${eur(-l.ecart)} : ${k.f.entreprise} fait ${eur(l.nova.resultat)}, ${k.auris.nom} ${eur(l.auris.resultat)}. ${conseil}`;
+          },
+          solution: { prix: VARIANTE_DE_L_EXPERT.prix, gamme: GAMMES_DU_LABORATOIRE.indexOf(VARIANTE_DE_L_EXPERT.gamme), qualite: o.budgetQualite, communication: o.budgetCommunication },
+        };
+      },
+      explication: (c, p) => {
+        const k = coutsOuDifferenciation(c);
+        const l = laboratoireDeLOffre(k.f, p);
+        const g = GAMMES_DU_LABORATOIRE[p.gamme!]!;
+        const m = k.meilleurSoigne;
+        const debut = `${k.f.entreprise} bat ${k.auris.nom} de ${eur(l.ecart)} : ${eur(l.nova.resultat)} contre ${eur(l.auris.resultat)}, la même année.`;
+        if (g === "standard")
+          return [
+            `${debut} En cassant les prix, ${k.f.entreprise} prend des ventes à ${k.auris.nom}, qui n'en fait plus que ${qte(l.auris.ventes)} : elle la bat en la faisant reculer, pas en gagnant le plus. Avec la gamme standard, ${k.f.entreprise} ne dépasse jamais ${eur(k.meilleurStandard.resultat)} (à ${eur(k.meilleurStandard.prix)}, avec les budgets d'aujourd'hui).`,
+            `La gamme soignée vendue ${eur(m.prix)}, avec les budgets d'aujourd'hui, bat aussi ${k.auris.nom} et donne à ${k.f.entreprise} ${eur(m.resultat)}, son meilleur résultat. Battre un concurrent n'est pas un but : gagner le plus en est un.`,
+          ];
+        return [
+          `${debut} La gamme soignée paie sa qualité : à ${eur(p.prix!)}, chaque enceinte laisse ${eur(l.nova.margeUnitaire)} de marge. Le meilleur résultat ${dE(k.f.entreprise)} est à ${eur(m.prix)} avec les budgets d'aujourd'hui (${eur(m.resultat)}). Moins cher, l'avance sur ${k.auris.nom} grandit (${eur(k.plusBas.bilan.ecart)} à ${eur(k.plusBas.prix)}), mais le résultat ${dE(k.f.entreprise)} baisse (${eur(k.plusBas.bilan.nova.resultat)}) : battre ${k.auris.nom} n'est pas gagner le plus.`,
+          `La différenciation du chapitre n'y parvenait pas : ses ${eur(k.differenciation.budgets - k.milieu.budgets)} de budgets en plus sur l'année ne rapportent pas ce qu'ils coûtent, et à ${eur(k.differenciation.offre.prix)} elle laissait trop de clients à ${k.auris.nom}. Une stratégie générique donne la direction ; le prix et les budgets se règlent ensuite.`,
+        ];
+      },
+    },
+    {
+      id: "battre-auris-a-la-main",
+      type: "montants",
+      titre: "L'année de la gamme soignée, à la main",
+      notions: ["demand_market_share", "price_elasticity", "income_statement"],
+      tableau: (c) => {
+        const k = coutsOuDifferenciation(c);
+        const v = k.variante;
+        const sb = k.s.annees.milieu.soundbox;
+        const au = k.s.annees.milieu.auris;
+        return {
+          titre: `Les trois offres de l'année, ${k.f.entreprise} en gamme soignée à ${eur(VARIANTE_DE_L_EXPERT.prix)}`,
+          colonnes: [k.f.entreprise, k.soundbox.nom, k.auris.nom],
+          lignes: [
+            { libelle: "Prix de vente", valeurs: [eur(v.nova.offre.prix), eur(sb.offre.prix), eur(au.offre.prix)] },
+            { libelle: "Qualité perçue", valeurs: [dec(v.nova.qualite), dec(sb.qualite), dec(au.qualite)] },
+            { libelle: "Attractivité", valeurs: ["à calculer", dec(v.attractiviteSoundbox, 4), dec(v.attractiviteAuris, 4)] },
+            { libelle: "Coût variable d'une enceinte", valeurs: [eur(v.nova.coutVariable), eur(sb.coutVariable), eur(au.coutVariable)] },
+            { libelle: "Charges fixes et budgets de l'année", valeurs: [eur(v.nova.charges), eur(sb.charges), eur(au.charges)] },
+          ],
+        };
+      },
+      question: (c) => {
+        const k = coutsOuDifferenciation(c);
+        return `${k.f.entreprise} monte la gamme soignée, la vend ${eur(VARIANTE_DE_L_EXPERT.prix)} et garde ses budgets d'aujourd'hui ; les concurrents ne bougent pas, et le marché reste de ${qte(k.f.marche.parTrimestre)} ${k.f.unites} par trimestre. Refaites l'année à la main : la part de marché ${dE(k.f.entreprise)} chaque trimestre (au centième de pour cent), ses ventes de l'année (à l'enceinte, chaque trimestre), son résultat, puis le résultat ${dE(k.auris.nom)} la même année.`;
+      },
+      champs: (c) => {
+        const k = coutsOuDifferenciation(c);
+        const v = k.variante;
+        const t = k.f.marche.trimestres;
+        return [
+          {
+            libelle: `Part de marché ${dE(k.f.entreprise)}, chaque trimestre (%)`,
+            attendu: v.partDuTrimestre,
+            calcul: `(${qte(k.f.attractivite.prixDeReference)} ÷ ${qte(VARIANTE_DE_L_EXPERT.prix)}) puissance ${k.f.attractivite.elasticiteAuPrix} × ${dec(v.nova.qualite)} au carré = ${dec(v.attractiviteNova, 4)} ; ${dec(v.attractiviteNova, 4)} ÷ (${dec(v.attractiviteNova, 4)} + ${dec(v.attractiviteSoundbox, 4)} + ${dec(v.attractiviteAuris, 4)}) × 100 = ${qte(v.partDuTrimestre)} %`,
+          },
+          {
+            libelle: `Ventes ${dE(k.f.entreprise)} sur l'année`,
+            attendu: v.nova.ventes,
+            calcul: `${qte(v.partDuTrimestre)} % × ${qte(k.f.marche.parTrimestre)} = ${qte(v.ventesDuTrimestre)} ${k.f.unites} par trimestre, × ${t} = ${qte(v.nova.ventes)}`,
+            tolerance: 0,
+          },
+          {
+            libelle: `Résultat ${dE(k.f.entreprise)}`,
+            attendu: v.nova.resultat,
+            calcul: `${qte(v.nova.ventes)} × (${eur(v.nova.offre.prix)} − ${eur(v.nova.coutVariable)}) − ${eur(v.nova.charges)} = ${eur(v.nova.resultat)}`,
+            tolerance: 1,
+          },
+          {
+            libelle: `Résultat ${dE(k.auris.nom)} la même année`,
+            attendu: v.auris.resultat,
+            calcul: `${dec(v.attractiviteAuris, 4)} ÷ ${dec(v.sommeDesAttractivites, 4)} × ${qte(k.f.marche.parTrimestre)} = ${qte(v.ventesDAurisDuTrimestre)} ${k.f.unites} par trimestre ; ${qte(v.auris.ventes)} × ${eur(v.auris.margeUnitaire)} − ${eur(v.auris.charges)} = ${eur(v.auris.resultat)}`,
+            tolerance: 1,
+          },
+        ];
+      },
+      explication: (c) => {
+        const k = coutsOuDifferenciation(c);
+        const v = k.variante;
+        const plus = v.auris.resultat > k.aurisDansLAnnee.milieu;
+        return [
+          `${k.f.entreprise} gagne ${eur(v.nova.resultat)}, ${k.auris.nom} ${eur(v.auris.resultat)} : ${signe(v.ecart)} d'avance. ${k.f.entreprise} vend ${qte(v.nova.ventes)} ${k.f.unites}, contre ${qte(k.milieu.ventes)} aujourd'hui, mais chacune lui laisse ${eur(v.nova.margeUnitaire)} au lieu de ${eur(k.milieu.margeUnitaire)} : la qualité soutient la demande malgré le prix plus haut.`,
+          `${plus ? `${k.auris.nom} gagne même un peu plus qu'aujourd'hui (${eur(k.aurisDansLAnnee.milieu)}) : ${k.f.entreprise}, plus chère, lui laisse quelques clients.` : `${k.auris.nom} gagne moins qu'aujourd'hui (${eur(k.aurisDansLAnnee.milieu)}).`} Dans un marché qui ne grandit pas, chaque décision change les ventes de tous : on ne lit le résultat d'un concurrent que dans la même année, avec ce que l'on fait soi-même.`,
+        ];
+      },
+    },
+    {
+      id: "les-limites",
+      type: "choix",
+      titre: "Ce que vaut ce classement",
+      notions: ["price_elasticity", "segmentation"],
+      question: (c) => {
+        const k = coutsOuDifferenciation(c);
+        return `Le directeur conclut : « La simulation prouve que la différenciation est la bonne stratégie pour ${k.f.entreprise}. » Quelle limite lui opposez-vous ?`;
+      },
+      options: (c) => {
+        const k = coutsOuDifferenciation(c);
+        const x = k.critique;
+        const renverse = x.meilleure.code !== k.meilleure.code;
+        return [
+          {
+            texte: "Le classement dépend des clients : moins sensibles à la qualité, ils le renverseraient",
+            juste: renverse,
+            retour: renverse
+              ? `Oui. Si l'attractivité variait comme la qualité puissance ${ELASTICITE_A_LA_QUALITE_DE_LA_CRITIQUE} et non ${k.f.attractivite.elasticiteALaQualite}, la domination par les coûts ferait ${eur(x.couts.resultat)}, le milieu ${eur(x.milieu.resultat)}, la différenciation ${eur(x.differenciation.resultat)}. Et les concurrents ne réagissent pas : face à la stratégie de coûts, ${k.soundbox.nom} passerait de ${eur(k.soundboxDansLAnnee.milieu)} à ${eur(k.soundboxDansLAnnee.couts)}, et ne resterait pas sans rien faire. Une simulation éclaire une décision ; elle vaut ce que valent ses hypothèses.`
+              : "Non : ici, le classement tient aussi avec des clients moins sensibles à la qualité.",
+          },
+          {
+            texte: "Aucune : la simulation joue l'année entière, le classement est sûr",
+            juste: !renverse,
+            retour: !renverse
+              ? "Oui : le classement tient avec d'autres hypothèses."
+              : `Non : jouer l'année entière ne rend pas les hypothèses vraies. Avec des clients moins sensibles à la qualité, la domination par les coûts passerait devant (${eur(x.couts.resultat)} contre ${eur(x.differenciation.resultat)}).`,
+          },
+          {
+            texte: "La domination par les coûts vend le plus : c'est elle qui devrait gagner",
+            juste: false,
+            retour: `Non : c'est confondre la part de marché et le résultat. La stratégie de coûts vend le plus (${pct(k.couts.part)}) et gagne ${eur(k.ecartEntreLesDeux)} de moins que la différenciation.`,
+          },
+          {
+            texte: "Le classement oublie les charges fixes, qui sont les mêmes partout",
+            juste: false,
+            retour: `Non : les charges fixes (${eur(k.milieu.chargesFixes)}) et les budgets de chaque stratégie sont dans le résultat, et dans le coût complet que vous avez calculé.`,
           },
         ];
       },
@@ -546,17 +976,20 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
       id: "synthese",
       type: "lecture",
       titre: "Ce qu'il faut retenir",
-      notions: ["demand_market_share", "full_unit_cost"],
+      notions: ["demand_market_share", "full_unit_cost", "breakeven"],
+      tableau: tableauDuBilan,
       texte: (c) => {
         const k = coutsOuDifferenciation(c);
         const m = k.meilleure;
         return [
-          `Chez ${c.entreprise}, ${NOMS_DES_STRATEGIES[m.code]} donne le meilleur résultat de l'année rejouée (${eur(m.resultat)}), et le milieu se classe ${k.rangDuMilieu === "dernier" ? "dernier des trois" : k.rangDuMilieu === "premier" ? "premier des trois" : "entre les deux stratégies"}.`,
-          "Une stratégie générique est un choix cohérent : la domination par les coûts baisse le prix, les budgets et le coût d'une unité, et vit du volume ; la différenciation monte le prix, la qualité et la communication, et vit de la marge. Celle qui convient dépend du marché et de ce que les concurrents occupent déjà. Rester au milieu, c'est risquer de n'avoir ni le volume de l'une ni la marge de l'autre.",
+          `Chez ${k.f.entreprise}, ${NOMS_DES_STRATEGIES[m.code]} donne le meilleur résultat de l'année (${eur(m.bilan.resultat)}), et le milieu se classe ${rangEcrit(k.rangDuMilieu)}. La stratégie de coûts vend le plus et gagne le moins par enceinte ; la différenciation, l'inverse, avec le seuil de rentabilité le plus bas.`,
+          "Une stratégie générique est un choix cohérent : la domination par les coûts baisse le coût de la gamme, les budgets et le prix, et vit du volume ; la différenciation monte la gamme, la qualité et le prix, et vit de la marge. Rester au milieu, c'est n'avoir ni le volume de l'une ni la marge de l'autre. Et le réglage compte autant que la direction : la gamme soignée vendue moins cher, sans budget en plus, bat même le haut de gamme.",
+          "Au niveau de l'examen, vous savez comparer des stratégies par la part de marché, la marge par enceinte, le coût complet, le seuil de rentabilité et le résultat ; retrouver à rebours le volume ou le coût qu'une stratégie demanderait ; refaire une année à la main ; et dire ce qu'un classement doit à ses hypothèses.",
+          "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
         ];
       },
       repere: () =>
-        "Part de marché = ventes ÷ marché × 100. Marge par unité = marge sur coût variable ÷ ventes. Une stratégie se juge au résultat de l'année, pas à la part de marché seule.",
+        "Part de marché = ventes ÷ marché × 100. Marge par enceinte = prix − coût variable. Coût complet = coût variable + (charges fixes + budgets) ÷ ventes. Seuil de rentabilité = (charges fixes + budgets) ÷ marge par enceinte. Une stratégie se juge au résultat de l'année, pas à la part de marché seule.",
     },
   ],
 };
