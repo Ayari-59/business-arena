@@ -19,6 +19,13 @@ import { describe, expect, it } from "vitest";
  *    exportent les mêmes noms ;
  * 3. le build : si un build postérieur au correctif est présent, le script
  *    `npm run verifier-bundles` y cherche les corrigés.
+ *
+ * LES CHAPITRES DU COURS, MÊME GARDE (audit, P0). Le guide d'un chapitre, client,
+ * importait le registre du cours : les 113 chapitres et les cas pratiques, réservés
+ * compris, se lisaient dans un fichier public de 4,5 Mo. La page sert désormais le
+ * seul chapitre ouvert, réduit à ses données (pedagogy/cours/chapitre-servi.ts) ;
+ * aucun module client n'atteint plus les chapitres, les cas pratiques ni le registre,
+ * et le script cherche dans le build des extraits des chapitres réservés.
  */
 
 const RACINE = process.cwd();
@@ -31,6 +38,11 @@ const INTERDITS = [
   /^src\/config\/scenarios\/[^/]+\/situations\.ts$/,
   /^src\/config\/scenarios\/situations-des-secteurs\.ts$/,
   /^src\/config\/ateliers\//,
+  // Le contenu du cours : servi par la page après le contrôle de la licence, jamais importé.
+  /^src\/config\/cours\/chapitres\//,
+  /^src\/config\/cours\/situations\//,
+  /^src\/config\/cours\/registre\.ts$/,
+  /^src\/pedagogy\/cours\/chapitre-servi\.ts$/,
 ];
 
 function fichiers(dossier: string): string[] {
@@ -164,6 +176,14 @@ describe("le build ne porte aucun corrigé", () => {
   it.skipIf(!recent)("npm run verifier-bundles ne trouve rien dans .next/static", async () => {
     const { fuitesDuBuild } = await import("../../scripts/verifier-bundles");
     const fuites = fuitesDuBuild(dossierNext);
+    expect(fuites.map((f) => `${relative(RACINE, f.fichier)} : ${f.marqueur}`)).toEqual([]);
+  }, 60_000);
+
+  const recentPourLeCours =
+    existsSync(buildId) && statSync(buildId).mtimeMs > statSync(join(RACINE, "src/pedagogy/cours/chapitre-servi.ts")).mtimeMs;
+  it.skipIf(!recentPourLeCours)("aucun extrait d'un chapitre réservé dans .next/static", async () => {
+    const { fuitesDuCours } = await import("../../scripts/verifier-bundles");
+    const fuites = fuitesDuCours(dossierNext);
     expect(fuites.map((f) => `${relative(RACINE, f.fichier)} : ${f.marqueur}`)).toEqual([]);
   }, 60_000);
 });

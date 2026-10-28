@@ -5,32 +5,26 @@ import { useEffect, useId, useMemo, useState } from "react";
 import { bouton } from "@/components/bouton";
 import { sansMolette } from "@/components/sans-molette";
 import { CONCEPTS } from "@/config/pedagogy/concepts";
-import { PALIERS, PARCOURS, chapitreParCode } from "@/config/cours/registre";
-import { motsDuContenu } from "@/config/cours/situations";
 import type { Cas } from "@/config/cours/cas";
 import type { MissionAffichee } from "@/config/cours/jouez";
 import type { Lien, SuitesDuChapitre } from "@/pedagogy/cours/suites";
+import type { OptionDeChoix, Piece } from "@/config/cours/types";
 import type {
-  Chapitre,
-  Etape,
-  EtapeChoix,
-  EtapeComparaison,
-  EtapeCurseur,
-  EtapeEcriture,
-  EtapeLecture,
-  EtapeMontants,
-  EtapeSimulation,
-  GraphiqueDeSimulation,
-  LevierDeSimulation,
-  EtapeTri,
-  EtatDuCours,
-  OptionDeChoix,
-  Piece,
-} from "@/config/cours/types";
+  ChapitreServi,
+  ChoixServi,
+  ComparaisonServie,
+  CurseurServi,
+  EcritureServie,
+  EtapeServie,
+  LectureDuCurseur,
+  LectureDuLaboratoire,
+  LectureServie,
+  MontantsServis,
+  SimulationServie,
+  TriServi,
+} from "@/pedagogy/cours/chapitre-servi";
 import { champJuste, changerDeSigne, corriger, enSaisie, montantEcrit, type Correction } from "@/pedagogy/cours/correcteur";
-import { chapitreDuCas, etatAvant, indexDeLEtape, journalAvant } from "@/pedagogy/cours/deroule";
-import type { Ecriture } from "@/pedagogy/cours/etats";
-import { cleDeLaQuestion, dansLOrdreAffiche } from "@/pedagogy/cours/ordre-des-options";
+import { soldes, type Ecriture } from "@/pedagogy/cours/etats";
 import { Journal, TableauDuCas, VueBilan, VueDEtape, VueResultat } from "./etats-du-cours";
 import { Calculatrice } from "./calculatrice";
 import { SaisieEcriture } from "./saisie-ecriture";
@@ -51,7 +45,57 @@ import { enregistrerProgressionAction } from "@/app/cours/actions";
  *
  * La progression se garde sur l'appareil, par chapitre et par entreprise : on
  * reprend où on s'était arrêté. Rien ne part au serveur.
+ *
+ * LE GUIDE NE PORTE AUCUN CHAPITRE (audit, P0). Il reçoit de la page le seul chapitre
+ * ouvert, réduit à ses données après le contrôle de la licence
+ * (pedagogy/cours/chapitre-servi.ts) ; le curseur et le laboratoire lisent chaque
+ * position au serveur (/api/cours/lecture). Importer ici le registre du cours mettrait
+ * tous les chapitres, réservés compris, dans les fichiers publics
+ * (scripts/verifier-bundles.ts).
  */
+
+/** Le journal avant l'étape `index` : la balance d'ouverture et les écritures déjà passées. */
+const journalAvant = (chapitre: ChapitreServi, index: number): Ecriture[] => chapitre.journal.slice(0, chapitre.ecrituresAvant[index]);
+const etatAvant = (chapitre: ChapitreServi, index: number) => ({ soldes: soldes(journalAvant(chapitre, index)) });
+
+/** Ce que montre une simulation à une position, lu au serveur ; null si la lecture échoue. */
+async function lireAuServeur<T>(corps: Record<string, unknown>, signal?: AbortSignal): Promise<T | null> {
+  try {
+    const r = await fetch("/api/cours/lecture", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(corps),
+      signal,
+    });
+    return r.ok ? ((await r.json()) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * La lecture d'une position que la page ne connaît pas d'avance : demandée au serveur un
+ * court instant après le dernier geste, la précédente restant affichée en attendant.
+ * `demande` nul : rien à lire (la position est connue).
+ */
+function useLectureAuServeur<T>(demande: Record<string, unknown> | null): T | null {
+  const [lue, setLue] = useState<T | null>(null);
+  const cle = demande ? JSON.stringify(demande) : null;
+  useEffect(() => {
+    if (!cle) return;
+    const arret = new AbortController();
+    const minuterie = setTimeout(() => {
+      void lireAuServeur<T>(JSON.parse(cle) as Record<string, unknown>, arret.signal).then((v) => {
+        if (v) setLue(v);
+      });
+    }, 40);
+    return () => {
+      clearTimeout(minuterie);
+      arret.abort();
+    };
+  }, [cle]);
+  return lue;
+}
 
 interface SuiviDEtape {
   essais: number;
@@ -215,7 +259,7 @@ function RetourDeCorrection({ c }: { c: Correction }) {
 interface PropsDEtape<E> {
   etape: E;
   cas: Cas;
-  chapitre: Chapitre;
+  chapitre: ChapitreServi;
   index: number;
   suivi: SuiviDEtape | undefined;
   classe: boolean;
@@ -224,49 +268,49 @@ interface PropsDEtape<E> {
   suite: () => void;
 }
 
-function BoutonSuite({ suite, dernier, code }: { suite: () => void; dernier: boolean; code: string }) {
+function BoutonSuite({ suite, dernier, terminer }: { suite: () => void; dernier: boolean; terminer: string }) {
   return (
     <div>
       <button type="button" className={bouton({ taille: "l" })} onClick={suite}>
-        {dernier ? motsDuContenu(code).terminer : "Étape suivante"}
+        {dernier ? terminer : "Étape suivante"}
       </button>
     </div>
   );
 }
 
-function Lecture({ etape, cas, noter, suite, chapitre, index }: PropsDEtape<EtapeLecture>) {
+function Lecture({ etape, noter, suite, chapitre, index }: PropsDEtape<LectureServie>) {
   return (
     <>
-      <Paragraphes textes={etape.texte(cas)} />
-      {etape.tableau && <TableauDuCas tableau={etape.tableau(cas)} />}
-      {etape.repere && <Repere texte={etape.repere(cas)} />}
+      <Paragraphes textes={etape.texte} />
+      {etape.tableau && <TableauDuCas tableau={etape.tableau} />}
+      {etape.repere && <Repere texte={etape.repere} />}
       <BoutonSuite
         dernier={index === chapitre.etapes.length - 1}
         suite={() => {
           noter({ reussi: true });
           suite();
         }}
-        code={chapitre.code}
+        terminer={chapitre.mots.terminer}
       />
     </>
   );
 }
 
-function EtapeDEcriture({ etape, cas, chapitre, index, suivi, classe, noter, suite }: PropsDEtape<EtapeEcriture>) {
-  const attendue = etape.ecriture(cas);
+function EtapeDEcriture({ etape, chapitre, index, suivi, classe, noter, suite }: PropsDEtape<EcritureServie>) {
+  const attendue = etape.attendue;
   const [correction, setCorrection] = useState<Correction | null>(null);
   const [indices, setIndices] = useState(0);
   const fait = suivi?.reussi ?? false;
   const essais = suivi?.essais ?? 0;
-  const tousLesIndices = etape.indices(cas);
+  const tousLesIndices = etape.indices;
   const peutMontrer = classe || essais >= ESSAIS_AVANT_LA_CORRECTION;
-  const journal = journalAvant(chapitre, cas, index + 1);
-  const avant = etatAvant(chapitre, cas, index);
-  const apres = etatAvant(chapitre, cas, index + 1);
-  const piece = etape.piece?.(cas);
+  const journal = journalAvant(chapitre, index + 1);
+  const avant = etatAvant(chapitre, index);
+  const apres = etatAvant(chapitre, index + 1);
+  const piece = etape.piece;
   return (
     <>
-      <p className="max-w-2xl text-base leading-relaxed">{etape.evenement(cas)}</p>
+      <p className="max-w-2xl text-base leading-relaxed">{etape.evenement}</p>
       {piece && <PieceComptable p={piece} />}
       <section className="grid gap-3" aria-label="Le journal">
         <p className="text-sm font-semibold">
@@ -316,13 +360,13 @@ function EtapeDEcriture({ etape, cas, chapitre, index, suivi, classe, noter, sui
       )}
       {fait && (
         <>
-          <Paragraphes textes={etape.explication(cas, apres)} />
+          <Paragraphes textes={etape.explication} />
           {etape.vue && (
             <div className="papier rounded-xl p-4 sm:p-5">
               <VueDEtape vue={etape.vue} journal={journal} soldes={apres.soldes} avant={avant.soldes} />
             </div>
           )}
-          <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} code={chapitre.code} />
+          <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} terminer={chapitre.mots.terminer} />
         </>
       )}
     </>
@@ -371,16 +415,16 @@ function Options({
   );
 }
 
-function EtapeDeChoix({ etape, cas, chapitre, index, suivi, classe, noter, suite }: PropsDEtape<EtapeChoix>) {
-  const avant = etatAvant(chapitre, cas, index);
-  // L'ordre écrit met souvent la bonne réponse en tête : la page la mélange, de façon stable.
-  const options = dansLOrdreAffiche(etape.options(cas, avant), cleDeLaQuestion(chapitre.code, etape.id, cas.code));
+function EtapeDeChoix({ etape, chapitre, index, suivi, classe, noter, suite }: PropsDEtape<ChoixServi>) {
+  const avant = etatAvant(chapitre, index);
+  // L'ordre écrit met souvent la bonne réponse en tête : le serveur l'a mélangé, de façon stable.
+  const options = etape.options;
   const [choisie, setChoisie] = useState<number | null>(null);
   const fait = suivi?.reussi ?? false;
   return (
     <>
-      {etape.tableau && <TableauDuCas tableau={etape.tableau(cas)} />}
-      <p className="max-w-2xl text-lg font-semibold leading-snug">{etape.question(cas, avant)}</p>
+      {etape.tableau && <TableauDuCas tableau={etape.tableau} />}
+      <p className="max-w-2xl text-lg font-semibold leading-snug">{etape.question}</p>
       <Options
         options={options}
         choisie={choisie}
@@ -402,19 +446,19 @@ function EtapeDeChoix({ etape, cas, chapitre, index, suivi, classe, noter, suite
         <>
           {etape.vue && (
             <div className="papier rounded-xl p-4 sm:p-5">
-              <VueDEtape vue={etape.vue} journal={journalAvant(chapitre, cas, index)} soldes={avant.soldes} />
+              <VueDEtape vue={etape.vue} journal={journalAvant(chapitre, index)} soldes={avant.soldes} />
             </div>
           )}
-          <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} code={chapitre.code} />
+          <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} terminer={chapitre.mots.terminer} />
         </>
       )}
     </>
   );
 }
 
-function EtapeDeMontants({ etape, cas, chapitre, index, suivi, classe, noter, suite }: PropsDEtape<EtapeMontants>) {
-  const avant: EtatDuCours = etatAvant(chapitre, cas, index);
-  const champs = etape.champs(cas, avant);
+function EtapeDeMontants({ etape, chapitre, index, suivi, classe, noter, suite }: PropsDEtape<MontantsServis>) {
+  const avant = etatAvant(chapitre, index);
+  const champs = etape.champs;
   const [valeurs, setValeurs] = useState<string[]>(() => champs.map(() => ""));
   const [verifie, setVerifie] = useState<boolean[] | null>(null);
   const racine = useId();
@@ -423,8 +467,8 @@ function EtapeDeMontants({ etape, cas, chapitre, index, suivi, classe, noter, su
   const peutMontrer = classe || essais >= ESSAIS_AVANT_LA_CORRECTION;
   return (
     <>
-      {etape.tableau && <TableauDuCas tableau={etape.tableau(cas)} />}
-      <p className="max-w-2xl text-base leading-relaxed">{etape.question(cas, avant)}</p>
+      {etape.tableau && <TableauDuCas tableau={etape.tableau} />}
+      <p className="max-w-2xl text-base leading-relaxed">{etape.question}</p>
       <form
         className="grid max-w-xl gap-3"
         onSubmit={(ev) => {
@@ -500,21 +544,21 @@ function EtapeDeMontants({ etape, cas, chapitre, index, suivi, classe, noter, su
               </li>
             ))}
           </ul>
-          <Paragraphes textes={etape.explication(cas, avant)} />
+          <Paragraphes textes={etape.explication} />
           {etape.vue && (
             <div className="papier rounded-xl p-4 sm:p-5">
-              <VueDEtape vue={etape.vue} journal={journalAvant(chapitre, cas, index)} soldes={avant.soldes} />
+              <VueDEtape vue={etape.vue} journal={journalAvant(chapitre, index)} soldes={avant.soldes} />
             </div>
           )}
-          <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} code={chapitre.code} />
+          <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} terminer={chapitre.mots.terminer} />
         </>
       )}
     </>
   );
 }
 
-function EtapeDeTri({ etape, cas, chapitre, index, suivi, classe, noter, suite }: PropsDEtape<EtapeTri>) {
-  const elements = etape.elements(cas);
+function EtapeDeTri({ etape, chapitre, index, suivi, classe, noter, suite }: PropsDEtape<TriServi>) {
+  const elements = etape.elements;
   const [choix, setChoix] = useState<(string | null)[]>(() => elements.map(() => null));
   const [verifie, setVerifie] = useState<boolean[] | null>(null);
   const fait = suivi?.reussi ?? false;
@@ -523,8 +567,8 @@ function EtapeDeTri({ etape, cas, chapitre, index, suivi, classe, noter, suite }
   const libelleDe = (code: string) => etape.categories.find((k) => k.code === code)?.libelle ?? code;
   return (
     <>
-      {etape.tableau && <TableauDuCas tableau={etape.tableau(cas)} />}
-      <p className="max-w-2xl text-base leading-relaxed">{etape.question(cas)}</p>
+      {etape.tableau && <TableauDuCas tableau={etape.tableau} />}
+      <p className="max-w-2xl text-base leading-relaxed">{etape.question}</p>
       <ul className="grid max-w-2xl gap-2" aria-label="Éléments à ranger">
         {elements.map((el, i) => {
           const valeur = fait ? el.categorie : choix[i];
@@ -592,8 +636,8 @@ function EtapeDeTri({ etape, cas, chapitre, index, suivi, classe, noter, suite }
       )}
       {fait && (
         <>
-          <Paragraphes textes={etape.explication(cas)} />
-          <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} code={chapitre.code} />
+          <Paragraphes textes={etape.explication} />
+          <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} terminer={chapitre.mots.terminer} />
         </>
       )}
     </>
@@ -606,6 +650,7 @@ function GraphiqueDuSeuil({
   max,
   produit,
   cout,
+  ici,
   libelles,
   zones,
   position,
@@ -613,8 +658,10 @@ function GraphiqueDuSeuil({
 }: {
   min: number;
   max: number;
-  produit: (q: number) => number;
-  cout: (q: number) => number;
+  /** Les deux droites à leurs extrémités, et à la position du curseur (lue au serveur). */
+  produit: readonly [number, number];
+  cout: readonly [number, number];
+  ici: { produit: number; cout: number };
   libelles: [string, string];
   zones: readonly [string, string];
   position: number;
@@ -624,13 +671,13 @@ function GraphiqueDuSeuil({
   const H = 260;
   const marge = { g: 8, d: 8, h: 12, b: 26 };
   // L'axe des montants va de zéro (ou du plus bas des deux droites, s'il est négatif) au plus haut.
-  const valeurs = [produit(min), produit(max), cout(min), cout(max)];
+  const valeurs = [...produit, ...cout];
   const hautMax = Math.max(...valeurs, 0) * 1.05 || 1;
   const basMin = Math.min(...valeurs, 0) * 1.05;
   const x = (q: number) => marge.g + ((q - min) / (max - min || 1)) * (L - marge.g - marge.d);
   const y = (v: number) => H - marge.b - ((v - basMin) / (hautMax - basMin)) * (H - marge.h - marge.b);
-  const ligne = (f: (q: number) => number) => `M ${x(min)} ${y(f(min))} L ${x(max)} ${y(f(max))}`;
-  const couvre = produit(position) >= cout(position);
+  const ligne = ([a, b]: readonly [number, number]) => `M ${x(min)} ${y(a)} L ${x(max)} ${y(b)}`;
+  const couvre = ici.produit >= ici.cout;
   return (
     <figure className="grid gap-2">
       <svg viewBox={`0 0 ${L} ${H}`} className="h-auto w-full max-w-2xl" role="img" aria-label={`${libelles[0]} et ${libelles[1]} selon ${axe}`}>
@@ -638,8 +685,8 @@ function GraphiqueDuSeuil({
         <path d={ligne(cout)} stroke="#b45309" strokeWidth="2.5" fill="none" />
         <path d={ligne(produit)} stroke="#0e7490" strokeWidth="2.5" fill="none" />
         <line x1={x(position)} y1={H - marge.b} x2={x(position)} y2={marge.h} stroke="currentColor" strokeDasharray="4 4" strokeOpacity="0.6" />
-        <circle cx={x(position)} cy={y(produit(position))} r="5" fill="#0e7490" />
-        <circle cx={x(position)} cy={y(cout(position))} r="5" fill="#b45309" />
+        <circle cx={x(position)} cy={y(ici.produit)} r="5" fill="#0e7490" />
+        <circle cx={x(position)} cy={y(ici.cout)} r="5" fill="#b45309" />
         <text x={x(min)} y={H - 6} fontSize="12" fill="currentColor">
           {min.toLocaleString("fr-FR")}
         </text>
@@ -660,30 +707,25 @@ function GraphiqueDuSeuil({
   );
 }
 
-/** Ce qu'un curseur fait varier quand l'étape ne le dit pas : les ventes du mois, comme au seuil. */
-const VENTES_DU_MOIS = (cas: Cas) => ({ libelle: "Ventes du mois", unite: cas.unites });
-const RATES_DU_SEUIL = {
-  dessous: "À cette position, l'entreprise perd encore de l'argent.",
-  dessus: "Plus bas, l'entreprise ne perd toujours pas d'argent : cherchez la plus petite quantité.",
-};
-
-function EtapeDeCurseur({ etape, cas, chapitre, index, suivi, classe, noter, suite }: PropsDEtape<EtapeCurseur>) {
-  const { attendu, max, min = 0 } = etape.cible(cas);
-  const droites = etape.droites(cas);
-  const grandeur = (etape.grandeur ?? VENTES_DU_MOIS)(cas);
-  const parDefaut = !etape.grandeur;
-  const rates = etape.rates?.(cas) ?? RATES_DU_SEUIL;
+function EtapeDeCurseur({ etape, cas, chapitre, index, suivi, classe, noter, suite }: PropsDEtape<CurseurServi>) {
+  const { attendu, max, min } = etape.cible;
+  const { droites, grandeur, parDefaut, rates } = etape;
   const fait = suivi?.reussi ?? false;
   const essais = suivi?.essais ?? 0;
-  const [valeur, setValeur] = useState(() => Math.round(min + (max - min) / 4));
+  const [valeur, setValeur] = useState(etape.depart);
   const [rate, setRate] = useState<string | null>(null);
   const position = fait ? attendu : valeur;
-  const lecture = etape.lecture(cas, position);
+  // Le départ et la position attendue sont servis avec l'étape ; les autres se lisent au serveur.
+  const connue = position === attendu ? etape.lectureAttendue : position === etape.depart ? etape.lectureDeDepart : null;
+  const lue = useLectureAuServeur<LectureDuCurseur>(
+    connue ? null : { chapitre: chapitre.code, entreprise: cas.code, etape: etape.id, quantite: position },
+  );
+  const lecture = connue ?? lue ?? etape.lectureDeDepart;
   const peutMontrer = classe || essais >= ESSAIS_AVANT_LA_CORRECTION;
   const borne = (n: number) => Math.min(max, Math.max(min, n));
   return (
     <>
-      <p className="max-w-2xl text-base leading-relaxed">{etape.question(cas)}</p>
+      <p className="max-w-2xl text-base leading-relaxed">{etape.question}</p>
       <div className="papier grid gap-4 rounded-xl p-4 sm:p-5" data-simulation="">
         <label className="grid gap-2">
           <span className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
@@ -742,14 +784,15 @@ function EtapeDeCurseur({ etape, cas, chapitre, index, suivi, classe, noter, sui
           max={max}
           produit={droites.produit}
           cout={droites.cout}
+          ici={lecture}
           libelles={droites.libelles}
-          zones={etape.zones ?? ["Zone de bénéfice", "Zone de perte"]}
+          zones={etape.zones}
           position={position}
           axe={grandeur.libelle.toLowerCase()}
         />
         <table className="w-full max-w-md text-sm">
           <tbody>
-            {lecture.map((l) => (
+            {lecture.lignes.map((l) => (
               <tr key={l.libelle} className={l.fort ? "border-t border-slate-300 font-semibold" : ""}>
                 <td className="py-1 pr-2">{l.libelle}</td>
                 <td className="whitespace-nowrap py-1 text-right tabular-nums" data-lecture={l.libelle}>
@@ -787,8 +830,8 @@ function EtapeDeCurseur({ etape, cas, chapitre, index, suivi, classe, noter, sui
       )}
       {fait && (
         <>
-          <Paragraphes textes={etape.explication(cas)} />
-          <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} code={chapitre.code} />
+          <Paragraphes textes={etape.explication} />
+          <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} terminer={chapitre.mots.terminer} />
         </>
       )}
     </>
@@ -812,14 +855,23 @@ const COULEURS_DES_COURBES = ["#0e7490", "#b45309", "#7c3aed"] as const;
  * Le graphique du laboratoire : chaque courbe calculée point par point sur toute la course d'un
  * levier, les autres leviers à leur position du moment ; un trait marque la position de l'élève.
  */
-function GraphiqueDuLaboratoire({ graphique, levier, position }: { graphique: GraphiqueDeSimulation; levier: LevierDeSimulation; position: Readonly<Record<string, number>> }) {
+function GraphiqueDuLaboratoire({
+  graphique,
+  points,
+  levier,
+  position,
+}: {
+  graphique: NonNullable<SimulationServie["graphique"]>;
+  /** Les courbes calculées au serveur pour cette position (chapitre-servi.ts). */
+  points: NonNullable<LectureDuLaboratoire["graphique"]>;
+  levier: SimulationServie["leviers"][number];
+  position: Readonly<Record<string, number>>;
+}) {
   const L = 560;
   const H = 240;
   const marge = { g: 8, d: 8, h: 12, b: 26 };
-  // Un point par pas du levier, entre 60 et 200 : des dents de scie sur 90 jours restent nettes.
-  const n = Math.min(200, Math.max(60, Math.round((levier.max - levier.min) / levier.pas)));
-  const xs = Array.from({ length: n + 1 }, (_, i) => levier.min + ((levier.max - levier.min) * i) / n);
-  const series = graphique.courbes.map((c) => xs.map((v) => c.valeur({ ...position, [levier.code]: v })));
+  const { xs, series } = points;
+  const courbes = graphique.libelles;
   const toutes = series.flat().filter(Number.isFinite);
   const plusHaut = Math.max(...toutes);
   const plusBas = Math.min(...toutes);
@@ -837,7 +889,7 @@ function GraphiqueDuLaboratoire({ graphique, levier, position }: { graphique: Gr
   const unite = graphique.unite ?? "€";
   return (
     <figure className="grid gap-2" data-graphique-du-laboratoire="">
-      <svg viewBox={`0 0 ${L} ${H}`} className="h-auto w-full max-w-2xl" role="img" aria-label={`${graphique.courbes.map((c) => c.libelle).join(", ")} selon ${levier.libelle.toLowerCase()}`}>
+      <svg viewBox={`0 0 ${L} ${H}`} className="h-auto w-full max-w-2xl" role="img" aria-label={`${courbes.join(", ")} selon ${levier.libelle.toLowerCase()}`}>
         {!loinDeZero && <line x1={x(levier.min)} y1={y(0)} x2={x(levier.max)} y2={y(0)} stroke="currentColor" strokeOpacity="0.4" />}
         {loinDeZero && (
           <>
@@ -851,7 +903,7 @@ function GraphiqueDuLaboratoire({ graphique, levier, position }: { graphique: Gr
         )}
         {series.map((pts, k) => (
           <polyline
-            key={graphique.courbes[k]!.libelle}
+            key={courbes[k]}
             points={pts.map((v, i) => `${x(xs[i]!)},${y(v)}`).join(" ")}
             fill="none"
             stroke={COULEURS_DES_COURBES[k % COULEURS_DES_COURBES.length]}
@@ -859,8 +911,8 @@ function GraphiqueDuLaboratoire({ graphique, levier, position }: { graphique: Gr
           />
         ))}
         <line x1={x(ici)} y1={H - marge.b} x2={x(ici)} y2={marge.h} stroke="currentColor" strokeDasharray="4 4" strokeOpacity="0.6" />
-        {graphique.courbes.map((c, k) => (
-          <circle key={c.libelle} cx={x(ici)} cy={y(c.valeur(position))} r="5" fill={COULEURS_DES_COURBES[k % COULEURS_DES_COURBES.length]} />
+        {courbes.map((c, k) => (
+          <circle key={c} cx={x(ici)} cy={y(points.ici[k]!)} r="5" fill={COULEURS_DES_COURBES[k % COULEURS_DES_COURBES.length]} />
         ))}
         <text x={x(levier.min)} y={H - 6} fontSize="12" fill="currentColor">
           {levier.min.toLocaleString("fr-FR")} {levier.unite}
@@ -870,10 +922,10 @@ function GraphiqueDuLaboratoire({ graphique, levier, position }: { graphique: Gr
         </text>
       </svg>
       <figcaption className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
-        {graphique.courbes.map((c, k) => (
-          <span key={c.libelle} className="flex items-center gap-1.5">
-            <span aria-hidden className="inline-block h-1 w-5" style={{ background: COULEURS_DES_COURBES[k % COULEURS_DES_COURBES.length] }} /> {c.libelle} :{" "}
-            <strong className="tabular-nums">{valeurDeLigne(c.valeur(position), unite === "€" ? undefined : unite)}</strong>
+        {courbes.map((c, k) => (
+          <span key={c} className="flex items-center gap-1.5">
+            <span aria-hidden className="inline-block h-1 w-5" style={{ background: COULEURS_DES_COURBES[k % COULEURS_DES_COURBES.length] }} /> {c} :{" "}
+            <strong className="tabular-nums">{valeurDeLigne(points.ici[k]!, unite === "€" ? undefined : unite)}</strong>
           </span>
         ))}
       </figcaption>
@@ -887,9 +939,13 @@ function GraphiqueDuLaboratoire({ graphique, levier, position }: { graphique: Gr
  * barre verte ou rouge à l'échelle des effets que les leviers peuvent produire. L'élève valide
  * quand il pense avoir relevé le défi ; ses essais restent écrits, pour qu'il compare.
  */
-function EtapeDeSimulation({ etape, cas, chapitre, index, suivi, classe, noter, suite }: PropsDEtape<EtapeSimulation>) {
-  const leviers = etape.leviers(cas);
-  const defi = etape.defi(cas);
+/** Deux positions des leviers égales. */
+const memePosition = (a: Readonly<Record<string, number>>, b: Readonly<Record<string, number>>) =>
+  Object.keys(a).length === Object.keys(b).length && Object.keys(a).every((k) => a[k] === b[k]);
+
+function EtapeDeSimulation({ etape, cas, chapitre, index, suivi, classe, noter, suite }: PropsDEtape<SimulationServie>) {
+  const { leviers } = etape;
+  const defi = { consigne: etape.consigne, solution: etape.solution };
   const depart = useMemo(() => Object.fromEntries(leviers.map((l) => [l.code, l.depart])), [leviers]);
   const fait = suivi?.reussi ?? false;
   const essais = suivi?.essais ?? 0;
@@ -897,17 +953,25 @@ function EtapeDeSimulation({ etape, cas, chapitre, index, suivi, classe, noter, 
   const [saisies, setSaisies] = useState<Record<string, string>>(() => Object.fromEntries(leviers.map((l) => [l.code, ecrireLevier(l.depart)])));
   const [indice, setIndice] = useState<string | null>(null);
   const [traces, setTraces] = useState<{ position: Record<string, number>; atteint: boolean }[]>([]);
-  const [reussie, setReussie] = useState<Record<string, number> | null>(null);
-  const affichee = fait ? (reussie ?? defi.solution) : position;
-  const lecture = etape.lecture(cas, affichee);
-  const graphique = etape.graphique?.(cas);
+  const [reussie, setReussie] = useState<{ position: Record<string, number>; lecture: LectureDuLaboratoire } | null>(null);
+  const [verification, setVerification] = useState(false);
+  const affichee = fait ? (reussie?.position ?? defi.solution) : position;
+  // Le départ et la solution sont servis avec l'étape ; les autres positions se lisent au serveur.
+  const connue = fait
+    ? (reussie?.lecture ?? etape.lectureDeLaSolution)
+    : memePosition(position, depart)
+      ? etape.lectureDeDepart
+      : memePosition(position, defi.solution)
+        ? etape.lectureDeLaSolution
+        : null;
+  const demande = { chapitre: chapitre.code, entreprise: cas.code, etape: etape.id };
+  const lue = useLectureAuServeur<LectureDuLaboratoire>(connue ? null : { ...demande, position });
+  const lecture = connue ?? lue ?? etape.lectureDeDepart;
+  const graphique = etape.graphique;
   const peutMontrer = classe || essais >= ESSAIS_AVANT_LA_CORRECTION;
   // L'échelle des barres : le plus grand effet au départ, à la solution ou à la position du moment.
   // Elle suit l'élève : une barre se compare toujours à ce qu'il a sous les yeux.
-  const echelle = Math.max(
-    1,
-    ...[depart, defi.solution, affichee].flatMap((p) => etape.lecture(cas, p).filter((x) => x.effet).map((x) => Math.abs(x.montant))),
-  );
+  const echelle = Math.max(1, etape.lectureDeDepart.plusGrandEffet, etape.lectureDeLaSolution.plusGrandEffet, lecture.plusGrandEffet);
   const placer = (code: string, n: number) => {
     const l = leviers.find((x) => x.code === code)!;
     const v = surLePas(l, n);
@@ -917,7 +981,7 @@ function EtapeDeSimulation({ etape, cas, chapitre, index, suivi, classe, noter, 
   };
   return (
     <>
-      <p className="max-w-2xl text-base leading-relaxed">{etape.question(cas)}</p>
+      <p className="max-w-2xl text-base leading-relaxed">{etape.question}</p>
       <p className="encadre-distinction max-w-2xl rounded-lg px-4 py-2.5 text-sm font-semibold" data-defi="">
         {defi.consigne}
       </p>
@@ -994,7 +1058,9 @@ function EtapeDeSimulation({ etape, cas, chapitre, index, suivi, classe, noter, 
             ),
           )}
         </div>
-        {graphique && <GraphiqueDuLaboratoire graphique={graphique} levier={leviers.find((l) => l.code === graphique.levier)!} position={affichee} />}
+        {graphique && lecture.graphique && (
+          <GraphiqueDuLaboratoire graphique={graphique} points={lecture.graphique} levier={leviers.find((l) => l.code === graphique.levier)!} position={affichee} />
+        )}
         <div className="overflow-x-auto">
           <table className="w-full min-w-[22rem] text-sm">
             <thead>
@@ -1006,7 +1072,7 @@ function EtapeDeSimulation({ etape, cas, chapitre, index, suivi, classe, noter, 
               </tr>
             </thead>
             <tbody>
-              {lecture.map((x) => {
+              {lecture.lignes.map((x) => {
                 const largeur = x.effet ? Math.min(50, (Math.abs(x.montant) / echelle) * 50) : 0;
                 return (
                   <tr key={x.libelle} className={x.fort ? "border-t border-slate-300 font-semibold" : ""}>
@@ -1036,18 +1102,29 @@ function EtapeDeSimulation({ etape, cas, chapitre, index, suivi, classe, noter, 
             </tbody>
           </table>
         </div>
-        {lecture.some((x) => x.effet) && <p className="text-xs opacity-80">Barre verte : favorable au résultat ; rouge : défavorable.</p>}
+        {lecture.lignes.some((x) => x.effet) && <p className="text-xs opacity-80">Barre verte : favorable au résultat ; rouge : défavorable.</p>}
       </div>
       {!fait && (
         <div className="flex flex-wrap gap-3">
           <button
             type="button"
             className={bouton({ taille: "m" })}
-            onClick={() => {
-              const juste = defi.atteint(position);
+            disabled={verification}
+            onClick={async () => {
+              // La position se vérifie au serveur : le défi fait partie du chapitre.
+              setVerification(true);
+              const lu = memePosition(position, depart)
+                ? etape.lectureDeDepart
+                : await lireAuServeur<LectureDuLaboratoire>({ ...demande, position });
+              setVerification(false);
+              if (!lu) {
+                setIndice("La simulation ne répond pas : vérifiez la connexion, puis validez de nouveau.");
+                return;
+              }
+              const juste = lu.atteint;
               setTraces((t) => [...t, { position, atteint: juste }].slice(-5));
-              setIndice(juste ? null : defi.indice(position));
-              if (juste) setReussie(position);
+              setIndice(juste ? null : lu.indice);
+              if (juste) setReussie({ position, lecture: lu });
               const ou = leviers.map((l) => `${l.libelle} ${position[l.code]!.toLocaleString("fr-FR")} ${l.unite}`).join(", ");
               noter({ essai: true, ...(juste ? { reussi: true } : { remarques: [`A essayé : ${ou}`] }) });
             }}
@@ -1091,27 +1168,23 @@ function EtapeDeSimulation({ etape, cas, chapitre, index, suivi, classe, noter, 
       )}
       {fait && (
         <>
-          <Paragraphes textes={etape.explication(cas, affichee)} />
-          <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} code={chapitre.code} />
+          <Paragraphes textes={lecture.explication ?? etape.lectureDeLaSolution.explication ?? []} />
+          <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} terminer={chapitre.mots.terminer} />
         </>
       )}
     </>
   );
 }
 
-function EtapeDeComparaison({ etape, cas, chapitre, index, suivi, classe, noter, suite }: PropsDEtape<EtapeComparaison>) {
-  const k = indexDeLEtape(chapitre, etape.avantLEtape);
-  const avant = etatAvant(chapitre, cas, k);
-  const apres = etatAvant(chapitre, cas, index);
-  const options = dansLOrdreAffiche(
-    etape.options(cas, avant, apres),
-    cleDeLaQuestion(chapitre.code, etape.id, cas.code),
-  );
+function EtapeDeComparaison({ etape, chapitre, index, suivi, classe, noter, suite }: PropsDEtape<ComparaisonServie>) {
+  const avant = etatAvant(chapitre, etape.avantLEtape);
+  const apres = etatAvant(chapitre, index);
+  const options = etape.options;
   const [choisie, setChoisie] = useState<number | null>(null);
   const fait = suivi?.reussi ?? false;
   return (
     <>
-      <p className="max-w-2xl text-lg font-semibold leading-snug">{etape.question(cas)}</p>
+      <p className="max-w-2xl text-lg font-semibold leading-snug">{etape.question}</p>
       <Options
         options={options}
         choisie={choisie}
@@ -1131,7 +1204,7 @@ function EtapeDeComparaison({ etape, cas, chapitre, index, suivi, classe, noter,
       )}
       {fait && (
         <>
-          <Paragraphes textes={etape.explication(cas, avant, apres)} />
+          <Paragraphes textes={etape.explication} />
           <div className="grid gap-4">
             {[
               { titre: etape.libelles.avant, s: avant.soldes, a: undefined },
@@ -1144,7 +1217,7 @@ function EtapeDeComparaison({ etape, cas, chapitre, index, suivi, classe, noter,
               </div>
             ))}
           </div>
-          <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} code={chapitre.code} />
+          <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} terminer={chapitre.mots.terminer} />
         </>
       )}
     </>
@@ -1157,13 +1230,13 @@ function Sommaire({
   suivi,
   aller,
 }: {
-  chapitre: Chapitre;
+  chapitre: ChapitreServi;
   courant: number;
   suivi: Suivi;
   aller: (i: number) => void;
 }) {
   return (
-    <nav aria-label={motsDuContenu(chapitre.code).etapes}>
+    <nav aria-label={chapitre.mots.etapes}>
       <ol className="grid gap-0.5 text-sm">
         {chapitre.etapes.map((e, i) => {
           const s = suivi.etapes[e.id];
@@ -1233,18 +1306,18 @@ function EtMaintenantJouezLe({ mission, cas }: { mission: MissionAffichee; cas: 
  * pas allonger la page : un clic l'ouvre. Rien quand la première étape n'est pas
  * un énoncé chiffré (une lecture avec son tableau).
  */
-function RappelDeLEnonce({ enonce, cas }: { enonce: Etape; cas: Cas }) {
+function RappelDeLEnonce({ enonce }: { enonce: EtapeServie }) {
   if (enonce.type !== "lecture" || !enonce.tableau) return null;
   return (
     <details className="papier rounded-xl p-3" data-rappel-enonce="">
       <summary className="cursor-pointer text-sm font-semibold">Rappel de l&apos;énoncé : {enonce.titre}</summary>
       <div className="mt-3 grid gap-3">
-        {enonce.texte(cas).map((t) => (
+        {enonce.texte.map((t) => (
           <p key={t} className="max-w-3xl text-sm leading-relaxed">
             {t}
           </p>
         ))}
-        <TableauDuCas tableau={enonce.tableau(cas)} />
+        <TableauDuCas tableau={enonce.tableau} />
       </div>
     </details>
   );
@@ -1319,7 +1392,7 @@ function FinDuChapitre({
   mission,
   suites,
 }: {
-  chapitre: Chapitre;
+  chapitre: ChapitreServi;
   cas: Cas;
   suivi: Suivi;
   entreprises: { code: string; nom: string }[];
@@ -1334,11 +1407,11 @@ function FinDuChapitre({
     return s?.reussi && s.essais === 1 && !s.aide;
   }).length;
   const notions = [...new Set(chapitre.etapes.flatMap((e) => e.notions ?? []))];
-  const journal: Ecriture[] = journalAvant(chapitre, cas, chapitre.etapes.length);
+  const journal: Ecriture[] = chapitre.journal;
   return (
     <div className="grid gap-6">
       <div className="grid gap-2">
-        <p className="text-sm font-semibold uppercase tracking-etiquette text-amber-300">{motsDuContenu(chapitre.code).termine}</p>
+        <p className="text-sm font-semibold uppercase tracking-etiquette text-amber-300">{chapitre.mots.termine}</p>
         <h2 className="text-3xl font-bold leading-tight text-slate-50">{chapitre.titre}</h2>
         <p className="text-lg text-slate-200">
           {duPremierCoup} étape{duPremierCoup > 1 ? "s" : ""} réussie{duPremierCoup > 1 ? "s" : ""} du premier coup sur {notees.length}, chez {cas.entreprise}.
@@ -1356,14 +1429,14 @@ function FinDuChapitre({
       {suites && <EtEnsuite suites={suites} cas={cas} />}
       <Notions codes={notions} />
       <details className="papier rounded-xl p-4">
-        <summary className="cursor-pointer font-semibold">{motsDuContenu(chapitre.code).journal}</summary>
+        <summary className="cursor-pointer font-semibold">{chapitre.mots.journal}</summary>
         <div className="mt-3">
           <Journal journal={journal} />
         </div>
       </details>
       <div className="flex flex-wrap items-center gap-3">
         <button type="button" className={bouton({ taille: "m" })} onClick={recommencer}>
-          {motsDuContenu(chapitre.code).recommencer}
+          {chapitre.mots.recommencer}
         </button>
         <Link href="/cours" className={bouton({ variante: "secondaire", taille: "m" })}>
           Retour au cours
@@ -1390,7 +1463,7 @@ function FinDuChapitre({
 }
 
 export function ChapitreGuide({
-  code,
+  chapitre,
   cas,
   entreprises,
   classe,
@@ -1399,7 +1472,8 @@ export function ChapitreGuide({
   suites = null,
   calculatrice = true,
 }: {
-  code: string;
+  /** Le chapitre ouvert, réduit à ses données pour cette entreprise, après le contrôle de la licence. */
+  chapitre: ChapitreServi;
   cas: Cas;
   entreprises: { code: string; nom: string }[];
   classe: boolean;
@@ -1412,16 +1486,14 @@ export function ChapitreGuide({
   /** La calculatrice, permise sauf si l'enseignant l'a retirée à la classe de l'élève. */
   calculatrice?: boolean;
 }) {
-  // Le chapitre dans l'ordre de cette entreprise : ses règlements suivent leurs dates.
-  const chapitre = useMemo(() => chapitreDuCas(chapitreParCode(code)!, cas), [code, cas]);
+  // Le chapitre est servi dans l'ordre de cette entreprise : ses règlements suivent leurs dates.
+  const { code } = chapitre;
   const [suivi, changer, lu] = useSuivi(`cours:${code}:${cas.code}`);
   const [vue, setVue] = useState<number | null>(null);
   const n = chapitre.etapes.length;
   const fini = suivi.index >= n;
   const courant = Math.min(vue ?? suivi.index, n - 1);
   const etape = chapitre.etapes[courant]!;
-  const parcours = PARCOURS.find((p) => p.code === chapitre.parcours)!;
-  const palier = PALIERS.find((p) => p.palier === chapitre.palier)!;
 
   // EN CLASSE, chaque geste remonte : la progression entière (elle est petite) et, pour un
   // essai manqué, les remarques du correcteur. Hors classe, rien ne quitte l'appareil.
@@ -1490,7 +1562,7 @@ export function ChapitreGuide({
           <Link href="/cours" className="hover:text-slate-300">
             Cours
           </Link>{" "}
-          · {parcours.titre} · Palier {palier.palier}
+          · {chapitre.parcours} · Palier {chapitre.palier}
         </p>
         <span className="rounded-full border border-white/15 px-2.5 py-0.5 text-xs font-semibold text-slate-300">{cas.entreprise}</span>
         {classe && <span className="rounded-full border border-white/15 px-2.5 py-0.5 text-xs text-slate-400">Mode classe</span>}
@@ -1524,7 +1596,7 @@ export function ChapitreGuide({
               </p>
               <h1 className="mt-1 text-3xl font-bold leading-tight tracking-tight text-slate-50">{etape.titre}</h1>
             </div>
-            {etape.type !== "lecture" && <RappelDeLEnonce enonce={chapitre.etapes[0]!} cas={cas} />}
+            {etape.type !== "lecture" && <RappelDeLEnonce enonce={chapitre.etapes[0]!} />}
             {etape.type === "lecture" && <Lecture etape={etape} {...props} />}
             {etape.type === "ecriture" && <EtapeDEcriture etape={etape} {...props} />}
             {etape.type === "choix" && <EtapeDeChoix etape={etape} {...props} />}
@@ -1541,7 +1613,7 @@ export function ChapitreGuide({
               <Sommaire chapitre={chapitre} courant={courant} suivi={suivi} aller={(i) => setVue(i)} />
             </div>
             <details className="carte p-3 lg:hidden">
-              <summary className="cursor-pointer text-sm font-semibold">{motsDuContenu(chapitre.code).etapes}</summary>
+              <summary className="cursor-pointer text-sm font-semibold">{chapitre.mots.etapes}</summary>
               <div className="mt-2">
                 <Sommaire chapitre={chapitre} courant={courant} suivi={suivi} aller={(i) => setVue(i)} />
               </div>
@@ -1549,9 +1621,9 @@ export function ChapitreGuide({
 {/* Le journal, pour les chapitres qui en tiennent un : le contrôle de gestion n'en passe pas. */}
             {chapitre.etapes.some((e) => e.type === "ecriture") && (
                           <details className="papier rounded-xl p-4" open={classe}>
-              <summary className="cursor-pointer text-sm font-semibold">Le journal ({ecritures(journalAvant(chapitre, cas, courant).length)})</summary>
+              <summary className="cursor-pointer text-sm font-semibold">Le journal ({ecritures(journalAvant(chapitre, courant).length)})</summary>
               <div className="mt-3">
-                <Journal journal={journalAvant(chapitre, cas, courant)} />
+                <Journal journal={journalAvant(chapitre, courant)} />
               </div>
             </details>
             )}
