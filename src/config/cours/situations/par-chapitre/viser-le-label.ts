@@ -1,106 +1,106 @@
-import type { CompanyRoundResult } from "../../../../engine/types";
-import { RSE_CARD_CODES } from "../../../../engine/rse";
 import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
-import { soldUnits } from "../../../../engine/simulation/runGame";
-import { scenarioByCode } from "../../../scenarios/registry";
 import type { Cas } from "../../cas";
 import {
+  ENTREPRISES_DE_LA_RSE,
   LA_RESPONSABILITE_SOCIETALE,
-  anneeEngagee,
-  budgetRse,
-  courriersPossibles,
-  reglagesRse,
+  PLAN_QUI_MONTE,
+  TRIMESTRES_AVANT_LE_LABEL,
+  TRIMESTRE_DU_LABEL_VISE,
+  ficheDe,
 } from "../../chapitres/la-responsabilite-societale";
-import { anneeDeReference, rejouerAvec, surLAnnee } from "../../gestion-de-la-pme";
+import { capitalImage, effortRse, engagementRse, trimestresPourLeSeuil, viserLeLabel as viserLeLabelDuModele } from "../../monde/attractivite";
 import type { Situation } from "../types";
 
-/** Un montant à la française, avec le signe moins typographique ; retranché, un négatif va entre parenthèses. */
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
 /**
  * CAS PRATIQUE DU CHAPITRE « LA RESPONSABILITÉ SOCIÉTALE » : VISER LE LABEL (stratégie et
  * management, palier 4).
  *
- * Le chapitre a montré qu'au budget du cours le label ne vient pas dans l'année. La direction le
- * veut avant la fin de l'année : elle propose le budget RSE qui fait passer le seuil du label au
- * capital-image en trois trimestres, pour que l'arène l'accorde au quatrième. L'élève vérifie le
- * calcul du capital, chiffre ce que l'année coûtera, puis lit ce que l'arène en fait, face au
- * budget du chapitre.
+ * Le chapitre a montré qu'au budget du cours (12 000 € par trimestre) le label ne vient jamais. La
+ * direction le veut avant la fin de l'année, et propose 24 000 € chaque trimestre : deux fois
+ * l'échelle de l'effort. L'élève vérifie que le capital passe le seuil (0,80 à la fin du trimestre
+ * 3, une marge nette sur 0,70), chiffre l'année face à l'année sans engagement et au budget du cours,
+ * cherche au curseur les ventes qu'il faudrait gagner pour payer le budget en plus, puis croise la
+ * proposition avec le plan qui monte du chapitre, au même budget du trimestre 4 : le même label aux
+ * mêmes trimestres, pour moins. La réponse demande un jugement : le label, s'il est voulu, ne
+ * s'achète pas à 24 000 € constants : le plan qui monte l'obtient pour 16 000 € de moins, et un
+ * budget constant plus juste (19 500 €) l'obtiendrait aussi, de justesse.
  *
- * Le cas est neuf par sa question : le chapitre suivait un budget donné, le cas part d'un objectif
- * (le label à une date) pour trouver le budget, et pèse ce que l'objectif rapporte de plus. Le
- * capital se calcule comme dans le chapitre (src/engine/rse : `rseEffort`, `updateRseCapital`) ;
- * le label est le courrier du moteur (`evaluateRseCards`), accordé sur le capital d'ouverture du
- * trimestre ; l'année est l'année du cours rejouée (`rejouerAvec`).
+ * RECALIBRÉ (audit du niveau, § 3.6 et § 4) : l'ancien cas proposait 19 500 €, le budget constant à la
+ * centaine supérieure, et le capital tombait à 0,70005 pour un seuil de 0,70, à un arrondi près. Les
+ * 24 000 € donnent un effort de ln 3 = 1,10 et un capital de 0,80 : l'élève qui arrondit au centième
+ * trouve encore 0,80.
+ *
+ * Comme son chapitre, le cas se joue dans la simulation du cours (src/config/cours/monde) : ses
+ * chiffres sont ceux de monde/attractivite.ts (`viserLeLabel`, `engagementRse`). Les courriers de
+ * l'arène (bad buzz, sanction) n'y existent pas, et l'arène ne rejoue plus rien.
  */
 
-/** Le label se vise au trimestre 4 : le capital doit passer son seuil à la fin du trimestre 3. */
-export const TRIMESTRES_AVANT_LE_LABEL = 3;
+/** LA PROPOSITION DE LA DIRECTION, hypothèse du cours : 24 000 € de budget RSE chaque trimestre, deux fois l'échelle de l'effort. */
+export const PROPOSITION_DE_LA_DIRECTION = 24_000;
 
-/**
- * Le budget de la direction : le plus petit, à la centaine d'euros supérieure, qui porte le
- * capital-image au seuil du label en trois trimestres, à budget constant. Le capital après n
- * trimestres vaut effort × (1 − inertie puissance n) : il faut un effort d'au moins seuil ÷ (1 −
- * inertie puissance 3), soit un budget de l'échelle × (e puissance cet effort − 1).
- */
-export function budgetDuLabel(code: string): number {
-  const g = reglagesRse(code);
-  const echelle = scenarioByCode(code).scenario.marketing.scale;
-  const effort = g.cards.labelImageThreshold / (1 - g.imageInertia ** TRIMESTRES_AVANT_LE_LABEL);
-  return Math.ceil((echelle * (Math.exp(effort) - 1)) / 100) * 100;
-}
+/** Les bornes du curseur des enceintes vendues en plus que le budget du cours. */
+export const VENTES_DU_CURSEUR_DU_CAS = { min: 0, max: 4_000 } as const;
 
-/** L'année du cours, le budget de la direction engagé chaque trimestre. */
-export const anneeVersLeLabel = (code: string) =>
-  rejouerAvec(code, "la-responsabilite-societale:vers-le-label", (_t, d) => ({ ...d, rse: { ...d.rse, budget: budgetDuLabel(code) } }));
-
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const dec = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-/** Au centième : le correcteur lit la saisie au centième, comme un montant. */
-const auCentieme = (x: number) => Math.round(x * 100) / 100;
-const somme = (annee: readonly CompanyRoundResult[], f: (r: CompanyRoundResult) => number) => Math.round(surLAnnee(annee, f));
-const demande = (r: CompanyRoundResult) => Object.values(r.market.bySegment).reduce((t, v) => t + v.demandForCompany, 0);
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
+const entre = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
+const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const dec = (x: number, n = 2) => x.toLocaleString("fr-FR", { minimumFractionDigits: n, maximumFractionDigits: n }).replace(/^-/, "−");
+const pct = (t: number, n = 1) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: n }).replace(/^-/, "−")} %`;
+const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const somme = (xs: readonly number[]) => xs.reduce((t, x) => t + x, 0);
 
 export type Verdict = "viser-le-label" | "pas-cette-annee";
 
-/** Le budget du label, le capital qu'il bâtit, et ce que l'arène fait de l'année. */
-export function viserLeLabel(c: Cas) {
-  const g = reglagesRse(c.code);
-  const echelle = scenarioByCode(c.code).scenario.marketing.scale;
-  const budget = budgetDuLabel(c.code);
-  const effortExact = Math.log(1 + budget / echelle);
-  const k = g.imageInertia;
-  const lire = (annee: readonly CompanyRoundResult[]) => ({
-    demandeT4: Math.round(demande(annee[annee.length - 1]!)),
-    ventes: somme(annee, soldUnits),
-    marge: somme(annee, (r) => r.incomeStatement.grossMargin),
-    engagement: somme(annee, (r) => r.incomeStatement.engagementRse ?? 0),
-    resultatDExploitation: somme(annee, (r) => r.incomeStatement.operatingIncome),
-  });
-  const vers = anneeVersLeLabel(c.code);
-  const sans = lire(anneeDeReference(c.code));
-  const chapitre = lire(anneeEngagee(c.code));
-  const label = lire(vers);
-  const ecartAuSans = label.resultatDExploitation - sans.resultatDExploitation;
-  const ecartAuChapitre = label.resultatDExploitation - chapitre.resultatDExploitation;
+/** La proposition de la direction, l'année qu'elle donne, et le plan qui monte au même budget du trimestre 4. */
+export function viserLeLabel(c: Pick<Cas, "code">) {
+  const f = ficheDe(c);
+  const r = f.rse;
+  const k = r.inertie;
+  const n = TRIMESTRES_AVANT_LE_LABEL;
+  const budget = PROPOSITION_DE_LA_DIRECTION;
+  const v = viserLeLabelDuModele(f, budget);
+  // Comme l'élève le calcule : l'effort au centième, puis le capital au centième.
+  const effort = Math.round(v.effort * 100) / 100;
+  const capitalT3 = Math.round(v.capitalT3 * 100) / 100;
+  const sans = v.vers.sans;
+  const proposition = v.vers.avec;
+  const cours = v.depart.avec;
+  const ventesEnPlus = proposition.ventes - cours.ventes;
+  const m = proposition.margeUnitaire;
+  const ventesPourPayer = Math.ceil(v.coutEnPlus / m - 1e-9);
+  // Le croisement : le plan qui monte du chapitre, suivi du budget du trimestre 4 de la direction.
+  const plan = [...PLAN_QUI_MONTE, budget];
+  const monte = engagementRse(f, plan);
+  const capitalMonteT3 = capitalImage(f, plan).fins[2]!;
+  const economie = auCentime(n * budget - somme(PLAN_QUI_MONTE));
+  const ecartMonte = auCentime(monte.avec.resultat - proposition.resultat);
+  const ecartMonteAuCours = auCentime(monte.avec.resultat - cours.resultat);
   return {
-    echelle,
+    f,
+    r,
+    k,
+    n,
     budget,
-    budgetDuChapitre: budgetRse(c.code),
-    reglages: g,
-    effort: auCentieme(effortExact),
-    capitalT3: auCentieme(effortExact * (1 - k ** TRIMESTRES_AVANT_LE_LABEL)),
-    cout: budget * vers.length,
-    trimestres: vers.length,
-    courriers: courriersPossibles(c.code, vers),
-    labelAuTrimestre: courriersPossibles(c.code, vers).find((x) => x.code === RSE_CARD_CODES.label)?.trimestre ?? null,
+    budgetDuCours: r.budgetDuCours,
+    v,
+    effort,
+    capitalT3,
+    margeSurLeSeuil: auCentime(v.capitalT3 - r.seuilDuLabel),
+    trimestresPourLeSeuil: trimestresPourLeSeuil(f, budget),
     sans,
-    chapitre,
-    label,
-    ecartAuSans,
-    ecartAuChapitre,
-    verdict: (ecartAuChapitre > 0 ? "viser-le-label" : "pas-cette-annee") as Verdict,
+    proposition,
+    cours,
+    ventesEnPlus,
+    margeEnPlus: auCentime(ventesEnPlus * m),
+    m,
+    ventesPourPayer,
+    plan,
+    monte,
+    capitalMonteT3,
+    economie,
+    ecartMonte,
+    ecartMonteAuCours,
+    verdict: v.verdict as Verdict,
   };
 }
 
@@ -113,44 +113,50 @@ export const VISER_LE_LABEL: Situation = {
   commanditaire: "La direction",
   titre: "Viser le label",
   accroche:
-    "La direction veut le label RSE avant la fin de l'année, et propose le budget qui l'y mène. Le capital qu'il bâtit, ce que l'année coûte, et ce que l'arène en fait face au budget du chapitre.",
+    "La direction veut le label RSE avant la fin de l'année, et propose de doubler le budget du cours chaque trimestre. Le capital qu'il bâtit, ce que l'année coûte face au budget du cours, et un plan qui obtient le même label pour moins.",
   objectifs: [
-    "Calculer le capital-image qu'un budget RSE bâtit en trois trimestres",
-    "Chiffrer le coût d'un engagement sur l'année",
-    "Comparer deux budgets RSE dans l'année rejouée",
-    "Répondre à la direction, chiffre à l'appui",
+    "Calculer le capital-image qu'un budget RSE bâtit avant le trimestre du label",
+    "Chiffrer une année engagée face à l'année sans engagement et au budget du cours",
+    "Retrouver les ventes qu'il faudrait gagner pour payer un budget en plus",
+    "Croiser deux plans au même budget du dernier trimestre, et répondre à la direction",
   ],
   libre: false,
+  entreprises: {
+    codes: ENTREPRISES_DE_LA_RSE,
+    pourquoi: "ce cas reprend le chapitre « La responsabilité sociétale », qui se calcule sur le marché des enceintes que NOVA partage avec SoundBox et Auris dans la simulation du cours.",
+  },
   etapes: [
     {
       id: "demande",
       type: "lecture",
       titre: "La demande de la direction",
+      notions: ["csr_index", "brand_capital"],
       texte: (c) => {
-        const v = viserLeLabel(c);
+        const x = viserLeLabel(c);
         return [
-          `« Le label RSE, je le veux avant la fin de l'année : c'est ce qui distinguera ${c.entreprise} de ses concurrents. Je propose ${eur(v.budget)} de budget RSE chaque trimestre, au lieu de ${eur(v.budgetDuChapitre)}. Vérifiez que le capital-image passera le seuil du label en ${TRIMESTRES_AVANT_LE_LABEL} trimestres, dites-moi ce que l'année coûtera, et si cela vaut mieux que le budget de départ. »`,
-          "Pas de cours cette fois : vous avez les réglages RSE de l'arène, et le calcul du capital est celui du chapitre. L'arène a rejoué l'année avec chacun des deux budgets.",
+          `« Le label RSE, je le veux avant la fin de l'année : c'est ce qui distinguera ${x.f.entreprise} de ses concurrents. Je propose ${eur(x.budget)} de budget RSE chaque trimestre, ${qte(x.budget / x.budgetDuCours)} fois le budget du cours, pour passer le seuil avec de la marge. Vérifiez que le label viendra, dites-moi ce que l'année coûtera, et si cela vaut mieux que ${eur(x.budgetDuCours)} par trimestre. »`,
+          "Pas de cours cette fois : vous avez les réglages du capital-image et de la simulation du cours, et le calcul du capital est celui du chapitre. La simulation a joué l'année avec chaque budget ; à vous d'enchaîner les calculs.",
         ];
       },
       tableau: (c) => {
-        const v = viserLeLabel(c);
-        const g = v.reglages;
+        const x = viserLeLabel(c);
         return {
-          titre: `Les réglages RSE de l'arène, chez ${c.entreprise}`,
+          titre: `Le capital-image et le label, chez ${x.f.entreprise}`,
           colonnes: ["Valeur"],
           lignes: [
-            { libelle: "Budget RSE proposé, par trimestre", valeurs: [eur(v.budget)] },
-            { libelle: "Budget RSE de départ, par trimestre", valeurs: [eur(v.budgetDuChapitre)] },
-            { libelle: "Échelle de dépense du scénario", valeurs: [eur(v.echelle)] },
-            { libelle: "Inertie du capital-image", valeurs: [dec(g.imageInertia)] },
-            { libelle: "Seuil du label (capital-image)", valeurs: [dec(g.cards.labelImageThreshold)] },
-            { libelle: "Bonus de demande du label", valeurs: [pct(g.cards.labelDemandBonus * 100)] },
-            { libelle: "Durée du label (trimestres)", valeurs: [qte(g.cards.labelDuration)] },
+            { libelle: "Budget RSE proposé, par trimestre", valeurs: [eur(x.budget)] },
+            { libelle: "Budget RSE du cours, par trimestre", valeurs: [eur(x.budgetDuCours)] },
+            { libelle: "Échelle de l'effort", valeurs: [eur(x.r.echelle)] },
+            { libelle: "Inertie du capital-image", valeurs: [dec(x.k)] },
+            { libelle: "Seuil du label (capital d'ouverture)", valeurs: [dec(x.r.seuilDuLabel)] },
+            { libelle: "Premier trimestre où le label peut venir", valeurs: [`trimestre ${x.r.premierTrimestreDuLabel}`] },
+            { libelle: "Hausse d'attractivité du label", valeurs: [pct(x.r.bonusDuLabel, 0)] },
+            { libelle: "Durée du label", valeurs: [`${qte(x.r.dureeDuLabel)} trimestres`] },
+            { libelle: `Marge sur coût variable d'une ${x.f.unite}`, valeurs: [eur(x.m)] },
           ],
         };
       },
-      repere: () => "À rendre : le capital à la fin du trimestre 3, le coût de l'année, ce que l'arène en fait, et votre réponse.",
+      repere: () => "À rendre : le capital à la fin du trimestre 3, le coût de l'année, ce que l'année en fait face au budget du cours, et votre réponse.",
     },
     {
       id: "capital",
@@ -158,81 +164,148 @@ export const VISER_LE_LABEL: Situation = {
       titre: "Le capital passera-t-il le seuil ?",
       notions: ["brand_capital", "csr_index"],
       question: (c) => {
-        const v = viserLeLabel(c);
-        return `Le capital-image part de zéro. Calculez l'effort d'un trimestre au budget proposé, ln(1 + ${eur(v.budget)} ÷ ${eur(v.echelle)}), au centième, puis le capital-image à la fin du trimestre ${TRIMESTRES_AVANT_LE_LABEL}, au centième, et le coût de l'engagement sur l'année.`;
+        const x = viserLeLabel(c);
+        return `Le capital-image part de zéro. Calculez l'effort d'un trimestre au budget proposé (au centième), le capital-image à la fin du trimestre ${x.n} (au centième), et le coût de l'engagement sur l'année.`;
       },
       champs: (c) => {
-        const v = viserLeLabel(c);
-        const k = dec(v.reglages.imageInertia);
+        const x = viserLeLabel(c);
         return [
-          { libelle: "Effort d'un trimestre", attendu: v.effort, calcul: `ln(1 + ${eur(v.budget)} ÷ ${eur(v.echelle)}) = ${dec(v.effort)}`, tolerance: 0.01 },
-          {
-            libelle: `Capital-image à la fin du trimestre ${TRIMESTRES_AVANT_LE_LABEL}`,
-            attendu: v.capitalT3,
-            calcul: `${dec(v.effort)} × (1 − ${k} puissance ${TRIMESTRES_AVANT_LE_LABEL}) = ${dec(v.capitalT3)}`,
-            tolerance: 0.01,
-          },
-          { libelle: "Coût de l'engagement sur l'année", attendu: v.cout, calcul: `${eur(v.budget)} × ${v.trimestres} = ${eur(v.cout)}`, tolerance: 1 },
+          { libelle: "Effort d'un trimestre", attendu: x.effort, calcul: `ln(1 + ${eur(x.budget)} ÷ ${eur(x.r.echelle)}) = ${dec(x.effort)}`, tolerance: 0.01 },
+          { libelle: `Capital-image à la fin du trimestre ${x.n}`, attendu: x.capitalT3, calcul: `${dec(x.effort)} × (1 − ${dec(x.k)} puissance ${x.n}) = ${dec(x.capitalT3)}`, tolerance: 0.01 },
+          { libelle: "Coût de l'engagement sur l'année", attendu: x.v.cout, calcul: `${eur(x.budget)} × ${qte(x.f.marche.trimestres)} = ${eur(x.v.cout)}`, tolerance: 1 },
         ];
       },
       explication: (c) => {
-        const v = viserLeLabel(c);
+        const x = viserLeLabel(c);
         return [
-          `${dec(v.capitalT3)} à la fin du trimestre ${TRIMESTRES_AVANT_LE_LABEL}, pour un seuil de ${dec(v.reglages.cards.labelImageThreshold)} : l'arène accorde le label au trimestre ${v.labelAuTrimestre}, sur le capital d'ouverture, avec ${pct(v.reglages.cards.labelDemandBonus * 100)} de demande en plus. L'année coûte ${eur(v.cout - v.budgetDuChapitre * v.trimestres)} de plus qu'au budget de départ.`,
+          `${dec(x.capitalT3)} à la fin du trimestre ${x.n}, pour un seuil de ${dec(x.r.seuilDuLabel)} : ${dec(x.margeSurLeSeuil)} de marge, que l'arrondi ne menace pas. La simulation accorde le label au trimestre ${x.v.labelAuTrimestre}, sur le capital d'ouverture, avec ${pct(x.r.bonusDuLabel, 0)} d'attractivité en plus. L'année coûte ${eur(x.v.coutEnPlus)} de plus qu'au budget du cours.`,
         ];
       },
     },
     {
-      id: "arene",
+      id: "l-annee",
       type: "montants",
-      titre: "L'arène rejoue l'année avec chaque budget",
+      titre: "L'année avec chaque budget",
       notions: ["csr_index", "contribution_margin"],
       tableau: (c) => {
-        const v = viserLeLabel(c);
+        const x = viserLeLabel(c);
+        const col = [x.sans, x.cours, x.proposition];
         return {
-          titre: "L'année jouée, sans engagement, au budget de départ, au budget du label",
-          colonnes: ["Sans engagement", "Budget de départ", "Budget du label"],
+          titre: "L'année jouée, sans engagement, au budget du cours, au budget proposé",
+          colonnes: ["Sans engagement", "Budget du cours", "Budget proposé"],
           lignes: [
-            { libelle: `Demande adressée au trimestre 4 (${c.unites})`, valeurs: [qte(v.sans.demandeT4), qte(v.chapitre.demandeT4), qte(v.label.demandeT4)] },
-            { libelle: `Ventes de l'année (${c.unites})`, valeurs: [qte(v.sans.ventes), qte(v.chapitre.ventes), qte(v.label.ventes)] },
-            { libelle: "Marge sur coût variable", valeurs: [eur(v.sans.marge), eur(v.chapitre.marge), eur(v.label.marge)] },
-            { libelle: "Engagement RSE", valeurs: [eur(v.sans.engagement), eur(v.chapitre.engagement), eur(v.label.engagement)] },
-            {
-              libelle: "Résultat d'exploitation",
-              valeurs: [eur(v.sans.resultatDExploitation), eur(v.chapitre.resultatDExploitation), eur(v.label.resultatDExploitation)],
-            },
+            ...[0, 1, 2, 3].map((i) => ({ libelle: `Ventes du trimestre ${i + 1} (${x.f.unites})`, valeurs: col.map((e) => qte(e.trimestres[i]!.ventes)) })),
+            { libelle: "Label dans l'année", valeurs: col.map((e) => (e.labels.premier === null ? "aucun" : `au trimestre ${e.labels.premier}`)) },
+            { libelle: "Marge sur coût variable", valeurs: col.map((e) => eur(e.marge)) },
+            { libelle: "Budget RSE de l'année", valeurs: col.map((e) => eur(e.budgetRse)) },
+            { libelle: "Résultat de l'année", valeurs: col.map((e) => eur(e.resultat)) },
           ],
         };
       },
       question: () =>
-        "D'après le tableau, calculez l'écart de résultat d'exploitation entre le budget du label et l'année sans engagement, puis entre le budget du label et le budget de départ.",
+        "D'après le tableau, calculez la marge gagnée par le budget proposé face à l'année sans engagement, puis l'écart de résultat du budget proposé avec l'année sans engagement, et avec le budget du cours. Négatif pour un écart défavorable.",
       champs: (c) => {
-        const v = viserLeLabel(c);
+        const x = viserLeLabel(c);
         return [
-          {
-            libelle: "Écart de résultat, label contre sans engagement",
-            attendu: v.ecartAuSans,
-            calcul: `${eur(v.label.resultatDExploitation)} − ${retranche(v.sans.resultatDExploitation)} = ${eur(v.ecartAuSans)}`,
-            tolerance: 1,
-          },
-          {
-            libelle: "Écart de résultat, label contre budget de départ",
-            attendu: v.ecartAuChapitre,
-            calcul: `${eur(v.label.resultatDExploitation)} − ${retranche(v.chapitre.resultatDExploitation)} = ${eur(v.ecartAuChapitre)}`,
-            tolerance: 1,
-          },
+          { libelle: "Marge gagnée face à l'année sans engagement", attendu: x.v.vers.margeGagnee, calcul: `${eur(x.proposition.marge)} − ${eur(x.sans.marge)} = ${eur(x.v.vers.margeGagnee)}`, tolerance: 1 },
+          { libelle: "Écart de résultat avec l'année sans engagement", attendu: x.v.ecartAuSans, calcul: `${eur(x.proposition.resultat)} − ${entre(x.sans.resultat)} = ${eur(x.v.ecartAuSans)}`, tolerance: 1 },
+          { libelle: "Écart de résultat avec le budget du cours", attendu: x.v.ecartAuDepart, calcul: `${eur(x.proposition.resultat)} − ${entre(x.cours.resultat)} = ${eur(x.v.ecartAuDepart)}`, tolerance: 1 },
         ];
       },
       explication: (c) => {
-        const v = viserLeLabel(c);
+        const x = viserLeLabel(c);
+        const t4 = x.proposition.trimestres[3]!.ventes - x.cours.trimestres[3]!.ventes;
         return [
-          `Au trimestre 4, avec le label, la demande adressée à ${c.entreprise} atteint ${qte(v.label.demandeT4)} ${c.unites}, contre ${qte(v.chapitre.demandeT4)} au budget de départ. ${
-            v.ecartAuChapitre > 0
-              ? `L'année finit mieux de ${eur(v.ecartAuChapitre)} qu'au budget de départ : la marge gagnée paie le budget en plus.`
-              : v.label.ventes <= v.chapitre.ventes
-                ? `L'année finit moins bien de ${eur(-v.ecartAuChapitre)} qu'au budget de départ : la demande en plus n'est pas servie, les ventes ne montent pas, et le budget en plus ne rapporte rien cette année.`
-                : `L'année finit moins bien de ${eur(-v.ecartAuChapitre)} qu'au budget de départ : le label n'arrive qu'au dernier trimestre, trop tard pour payer, cette année, le budget en plus des trois premiers.`
-          }`,
+          `Au trimestre ${x.v.labelAuTrimestre}, avec le label, ${x.f.entreprise} vend ${qte(t4)} ${x.f.unites} de plus qu'au budget du cours. Sur l'année, le budget proposé en vend ${qte(x.ventesEnPlus)} de plus, ${eur(x.margeEnPlus)} de marge, pour ${eur(x.v.coutEnPlus)} de budget en plus : l'année finit ${eur(-x.v.ecartAuDepart)} sous le budget du cours. Le label n'arrive qu'au dernier trimestre, trop tard pour payer, cette année, le budget en plus des trimestres d'avant.`,
+        ];
+      },
+    },
+    {
+      id: "ce-qu-il-faudrait-vendre",
+      type: "curseur",
+      titre: "Ce qu'il faudrait vendre de plus",
+      notions: ["contribution_margin", "csr_index"],
+      question: (c) => {
+        const x = viserLeLabel(c);
+        return `Le budget proposé coûte ${eur(x.v.coutEnPlus)} de plus que le budget du cours sur l'année. Faites varier les ${x.f.unites} qu'il vendrait de plus que le budget du cours, et placez le curseur sur le plus petit nombre qui paie ce budget en plus, puis validez.`;
+      },
+      grandeur: (c) => ({ libelle: "Enceintes vendues de plus qu'au budget du cours", unite: ficheDe(c).unites }),
+      cible: (c) => ({ attendu: viserLeLabel(c).ventesPourPayer, min: VENTES_DU_CURSEUR_DU_CAS.min, max: VENTES_DU_CURSEUR_DU_CAS.max }),
+      zones: ["Le budget en plus se paie", "Le budget en plus ne se paie pas"],
+      rates: () => ({
+        dessous: "À cette position, la marge de ces ventes ne couvre pas encore le budget en plus.",
+        dessus: "Plus bas, la marge couvre encore le budget en plus : cherchez le plus petit nombre.",
+      }),
+      montrer: "Montrer le point mort",
+      lecture: (c, q) => {
+        const x = viserLeLabel(c);
+        return [
+          { libelle: "Marge de ces ventes", montant: auCentime(x.m * q) },
+          { libelle: "Budget en plus", montant: x.v.coutEnPlus },
+          { libelle: "Écart avec le budget du cours", montant: auCentime(x.m * q - x.v.coutEnPlus), fort: true },
+        ];
+      },
+      droites: (c) => {
+        const x = viserLeLabel(c);
+        return { produit: (q) => x.m * q, cout: () => x.v.coutEnPlus, libelles: ["Marge des ventes en plus", "Budget en plus de l'année"] };
+      },
+      explication: (c) => {
+        const x = viserLeLabel(c);
+        return [
+          `Il faudrait ${qte(x.ventesPourPayer)} ${x.f.unites} de plus qu'au budget du cours, à ${eur(x.m)} l'${x.f.unite}. Le budget proposé en vend ${qte(x.ventesEnPlus)} de plus, ${pct(x.ventesEnPlus / x.ventesPourPayer, 0)} de ce qu'il faudrait : la marge sur le seuil se paie cher.`,
+        ];
+      },
+    },
+    {
+      id: "le-plan-qui-monte",
+      type: "montants",
+      titre: "Le même label, autrement",
+      notions: ["brand_capital", "csr_index"],
+      tableau: (c) => {
+        const x = viserLeLabel(c);
+        const col = [x.v.vers, x.monte];
+        return {
+          titre: `Deux plans, le même budget au trimestre ${TRIMESTRE_DU_LABEL_VISE}`,
+          colonnes: ["Budget proposé", "Plan qui monte"],
+          lignes: [
+            ...[0, 1, 2, 3].map((i) => ({ libelle: `Budget RSE du trimestre ${i + 1}`, valeurs: col.map((e) => eur(e.budgets[i]!)) })),
+            { libelle: "Label dans l'année", valeurs: col.map((e) => (e.labels.premier === null ? "aucun" : `au trimestre ${e.labels.premier}`)) },
+            { libelle: "Capital à la fin de l'année", valeurs: col.map((e) => dec(e.capital.fins[3]!)) },
+            { libelle: "Résultat de l'année", valeurs: col.map((e) => eur(e.avec.resultat)) },
+          ],
+        };
+      },
+      question: (c) => {
+        const x = viserLeLabel(c);
+        return `Le chapitre a montré qu'il vaut mieux dépenser tard. Croisez la proposition avec le plan qui monte, suivi du même budget au trimestre ${TRIMESTRE_DU_LABEL_VISE}. Calculez le capital de ce plan à la fin du trimestre ${x.n} (au centième), ce qu'il économise sur les trimestres 1 à ${x.n}, et l'écart de résultat de l'année avec le budget proposé. Négatif pour un écart défavorable.`;
+      },
+      champs: (c) => {
+        const x = viserLeLabel(c);
+        const reste = dec(1 - x.k);
+        const kk = dec(x.k);
+        const ef = (b: number) => dec(effortRse(x.f, b));
+        const [a, b, d] = PLAN_QUI_MONTE;
+        return [
+          {
+            libelle: `Capital du plan qui monte à la fin du trimestre ${x.n}`,
+            attendu: Math.round(x.capitalMonteT3 * 100) / 100,
+            calcul: `${reste} × (${kk} × ${kk} × ${ef(a!)} + ${kk} × ${ef(b!)} + ${ef(d!)}) = ${dec(x.capitalMonteT3)}`,
+            tolerance: 0.01,
+          },
+          {
+            libelle: `Économie sur les trimestres 1 à ${x.n}`,
+            attendu: x.economie,
+            calcul: `${qte(x.n)} × ${eur(x.budget)} − (${PLAN_QUI_MONTE.map(eur).join(" + ")}) = ${eur(x.economie)}`,
+            tolerance: 1,
+          },
+          { libelle: "Écart de résultat avec le budget proposé", attendu: x.ecartMonte, calcul: `${eur(x.monte.avec.resultat)} − ${entre(x.proposition.resultat)} = ${eur(x.ecartMonte)}`, tolerance: 1 },
+        ];
+      },
+      explication: (c) => {
+        const x = viserLeLabel(c);
+        return [
+          `Le plan qui monte passe aussi le seuil (${dec(x.capitalMonteT3)}), obtient le label au même trimestre, et le garde au début de l'année suivante : son capital finit l'année à ${dec(x.monte.capital.fins[3]!)}, au-dessus du seuil, comme celui du budget proposé. Il dépense ${eur(x.economie)} de moins, et l'année finit ${eur(x.ecartMonte)} plus haut : la marge de la direction sur le seuil achetait surtout du capital aux premiers trimestres, que l'inertie oublie en partie.`,
+          `Même ainsi, l'année reste ${eur(-x.ecartMonteAuCours)} sous le budget du cours : le label ne se paie pas cette année. C'est un choix de stratégie, qui se juge sur plusieurs années.`,
         ];
       },
     },
@@ -240,30 +313,36 @@ export const VISER_LE_LABEL: Situation = {
       id: "reponse",
       type: "choix",
       titre: "Votre réponse à la direction",
+      notions: ["csr_index", "brand_capital"],
       question: () => "Quelle phrase envoyez-vous à la direction ?",
       options: (c) => {
-        const v = viserLeLabel(c);
+        const x = viserLeLabel(c);
+        const moinsCher = x.monte.labels.premier === x.v.labelAuTrimestre && x.ecartMonte > 0 && x.economie > 0;
         return [
           {
-            texte: "Visons le label : l'année finit mieux qu'au budget de départ",
-            juste: v.verdict === "viser-le-label",
+            texte: `Validons ${eur(x.budget)} : l'année finit mieux qu'au budget du cours`,
+            juste: x.verdict === "viser-le-label" && !moinsCher,
             retour:
-              v.verdict === "viser-le-label"
-                ? `Oui : dans l'arène, le label arrive au trimestre ${v.labelAuTrimestre}, et le résultat d'exploitation de l'année finit ${eur(v.ecartAuChapitre)} au-dessus du budget de départ. Le label dure ${v.reglages.cards.labelDuration} trimestres, et se renouvelle tant que le capital reste au-dessus du seuil.`
-                : `Non : l'année finit ${eur(-v.ecartAuChapitre)} en dessous du budget de départ.`,
+              x.verdict === "viser-le-label"
+                ? `L'année finit ${eur(x.v.ecartAuDepart)} au-dessus du budget du cours, mais le plan qui monte fait mieux encore.`
+                : `Non : l'année finit ${eur(-x.v.ecartAuDepart)} sous le budget du cours. Les ${qte(x.ventesEnPlus)} ${x.f.unites} vendues de plus ne paient pas les ${eur(x.v.coutEnPlus)} de budget en plus ; il en faudrait ${qte(x.ventesPourPayer)}.`,
           },
           {
-            texte: "Pas cette année : le label coûte plus qu'il ne rapporte",
-            juste: v.verdict === "pas-cette-annee",
-            retour:
-              v.verdict === "pas-cette-annee"
-                ? `Oui : le label arrive au trimestre ${v.labelAuTrimestre}, mais le résultat d'exploitation finit ${eur(-v.ecartAuChapitre)} en dessous du budget de départ. Le label n'est pas perdu pour autant : il joue encore au début de l'année suivante, et c'est sur plusieurs années qu'il se juge.`
-                : `Non : l'année finit mieux de ${eur(v.ecartAuChapitre)} qu'au budget de départ.`,
-          },
-          {
-            texte: "Inutile de payer plus : le budget de départ donne déjà le label",
+            texte: `Gardons ${eur(x.budgetDuCours)} : le label viendra l'an prochain`,
             juste: false,
-            retour: "Non : au budget de départ, le capital-image reste sous le seuil du label toute l'année.",
+            retour: `Non : à ${eur(x.budgetDuCours)} par trimestre, le capital tend vers ${dec(effortRse(x.f, x.budgetDuCours))} et ne passe jamais ${dec(x.r.seuilDuLabel)}. Le label ne viendra ni cette année ni plus tard.`,
+          },
+          {
+            texte: `Le label, oui, mais pas à ${eur(x.budget)} : il s'obtient pour moins`,
+            juste: moinsCher,
+            retour: moinsCher
+              ? `Oui : le plan qui monte du chapitre, ${PLAN_QUI_MONTE.map(eur).join(", ")} aux trimestres 1 à ${x.n}, puis les ${eur(x.budget)} du trimestre ${TRIMESTRE_DU_LABEL_VISE}, donne le même label au même trimestre, gardé au début de l'année suivante, pour ${eur(x.economie)} de moins, et l'année finit ${eur(x.ecartMonte)} plus haut. La marge de ${dec(x.margeSurLeSeuil)} sur le seuil coûtait cher. Le label ne se paie pas encore cette année (${eur(-x.ecartMonteAuCours)} sous le budget du cours) : c'est un choix de stratégie, à juger sur plusieurs années.`
+              : "Non : le plan qui monte ne fait pas mieux que la proposition.",
+          },
+          {
+            texte: `Ajoutons au trimestre ${TRIMESTRE_DU_LABEL_VISE} pour assurer le label`,
+            juste: false,
+            retour: `Non : le label du trimestre ${TRIMESTRE_DU_LABEL_VISE} se lit sur le capital de la fin du trimestre ${x.n}. Un euro de plus au trimestre ${TRIMESTRE_DU_LABEL_VISE} ne sert que l'année suivante.`,
           },
         ];
       },

@@ -1,79 +1,96 @@
 import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
 import type { Cas } from "../../cas";
-import { bilanDeLAnnee, strategie } from "../../chapitres/couts-ou-differenciation";
-import { LIRE_LA_STRATEGIE_DES_CONCURRENTS, dE, strategiesDesConcurrents } from "../../chapitres/lire-la-strategie-des-concurrents";
-import { anneeDeReference, rejouerAvec, type Changement } from "../../gestion-de-la-pme";
+import { ficheDe } from "../../chapitres/couts-ou-differenciation";
+import { LIRE_LA_STRATEGIE_DES_CONCURRENTS, NOMS_DES_STRATEGIES_LUES, dE, strategiesDesConcurrents } from "../../chapitres/lire-la-strategie-des-concurrents";
+import { allerDansLEspaceLibre, anneeAvec, gammeDe } from "../../monde/attractivite";
 import type { Situation } from "../types";
 
 /**
  * CAS PRATIQUE DU CHAPITRE « LIRE LA STRATÉGIE DE SES CONCURRENTS » : ALLER DANS L'ESPACE LIBRE
  * (Stratégie et management, palier 2).
  *
- * Le chapitre se termine sur une question qu'il laisse ouverte : une place libre sur la carte,
- * des clients l'attendent-ils, et une offre y paierait-elle ses coûts ? La directrice la pose.
- * L'élève refait les calculs du chapitre (le prix de la place, l'indice de prix, la part de
- * marché), lit l'année rejouée, et répond.
+ * LE CAS JOUE DANS LE MONDE DU COURS, comme son chapitre : le marché à trois enseignes
+ * (monde/marche-a-trois.ts) et son modèle (monde/attractivite.ts, `allerDansLEspaceLibre`), chez NOVA.
  *
- * LE PRIX DE LA PLACE, selon la règle du cours : celui de l'enseigne qui a laissé sa place en
- * quittant le marché, ou, s'il n'y en a pas, le milieu du plus grand écart de prix entre deux
- * enseignes voisines (la moyenne de leurs deux prix). L'arène rejoue l'année du cours avec ce
- * prix dès le premier trimestre, et les budgets de qualité et de marketing de l'année du cours :
- * la directrice veut savoir ce que vaut la place elle-même, avant d'y engager des budgets. En
- * mono-produit, le prix de chaque trimestre est celui de la place ; en gamme, chaque référence
- * prend son prix de l'année du cours au même trimestre, multiplié par le rapport entre le prix
- * de la place et le prix moyen de l'entreprise (`strategie`, couts-ou-differenciation.ts). La
- * production, le bon gestionnaire la règle sur la demande qu'il voit dans l'année rejouée, et
- * il décide du reste avec ses règles de toujours : un prix qui change la demande change aussi
- * ce qu'il produit, trimestre après trimestre.
+ * Le chapitre se termine sur une question qu'il laisse ouverte : une place libre sur la carte, une
+ * offre y paierait-elle ses coûts ? La directrice la pose. La place se lit sur les deux indices :
+ * elle a un prix (69 €, le milieu de NOVA et d'Auris) et une qualité (1,17). L'élève compare deux
+ * façons d'y aller, chacune tenue toute l'année : par le seul prix (la gamme et les budgets
+ * d'aujourd'hui, l'ancienne lecture de la carte), ou en y amenant la qualité (la gamme la moins
+ * chère qui l'atteint, la gamme soignée, aux budgets d'aujourd'hui). Il croise l'écart entre les deux
+ * (le volume que la qualité retient, le coût de la gamme), retrouve au curseur les ventes qu'il faut
+ * à la place pour égaler aujourd'hui, et répond. La bonne réponse n'est pas « y aller » ou « rester »
+ * seulement : y aller en y amenant la qualité ; le distracteur chiffré est « y placer son prix ».
  */
 
+/** Les bornes du curseur : les ventes de l'année à la place, avec la gamme soignée. */
+export const VENTES_DU_CURSEUR_DE_LA_PLACE = { min: 12_000, max: 22_000 } as const;
+
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
-const signe = (x: number) => (x > 0 ? `+${pct(x)}` : pct(x));
+const entre = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
+const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const pct = (x: number) => `${qte(Math.round(x * 10_000) / 100)} %`;
+const dec = (x: number, n = 2) => x.toLocaleString("fr-FR", { minimumFractionDigits: n, maximumFractionDigits: n });
+const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const signe = (x: number) => (x > 0 ? `+${eur(x)}` : eur(x));
 
-/** Ce que l'arène a rejoué, dans le texte de la demande. */
-const REJEU =
-  "L'arène a rejoué l'année avec ce prix et les budgets de l'année du cours ; la production, le bon gestionnaire l'a réglée sur la demande que ce prix lui amenait.";
+export type ReponseALaDirectrice = "avec-la-qualite" | "prix-seul" | "rester";
 
-export type VerdictDeLEspaceLibre = "y-aller" | "rester";
-
-/** La place libre de la carte, son prix, et l'année rejouée à ce prix. */
-export function espaceLibre(c: Cas) {
+/** La place libre de la carte, et l'année jouée pour y aller, par le seul prix ou avec la qualité. */
+export function espaceLibre(c: Pick<Cas, "code">) {
+  const f = ficheDe(c);
   const k = strategiesDesConcurrents(c);
-  const e = k.entreprise;
-  const p = k.partie;
-  const g = k.plusGrand;
-  const prixVise = p ? p.prix : auCentime((g.bas.prix + g.haut.prix) / 2);
-  const facteur = prixVise / e.prix;
-  const variation = auDixieme((facteur - 1) * 100);
-  const indiceVise = Math.round((prixVise / k.prixDuMarche) * 100);
-  const avant = bilanDeLAnnee("annee-du-cours", anneeDeReference(c.code));
-  // Les budgets de l'année du cours, et le prix de la place tenu toute l'année : en
-  // mono-produit, ce prix même ; en gamme, chaque référence déplacée du même rapport.
-  const tenue = strategie(c.code, { prix: facteur, qualite: 1, marketing: 1, production: 1 });
-  const auPrixDeLaPlace: Changement = (tour, d) => {
-    const x = tenue(tour, d)!;
-    return x.products ? x : { ...x, price: prixVise };
+  const x = allerDansLEspaceLibre(f);
+  const seul = x.prixSeul;
+  const avec = x.avecLaQualite!;
+  const gamme = gammeDe(f, x.gamme ?? "soignee");
+  const tSeul = seul.trimestres[0]!;
+  const tAvec = avec.trimestres[0]!;
+  // Les attractivités des concurrents réunies : elles ne bougent pas avec NOVA.
+  const desConcurrents = tSeul.attractivite / tSeul.part - tSeul.attractivite;
+  // Le croisement : les ventes que la qualité retient, à la marge de la gamme soignée ; le coût de la
+  // gamme, sur les ventes du prix seul ; et les budgets (les mêmes ici).
+  const effetDuVolume = auCentime((avec.ventes - seul.ventes) * avec.margeUnitaire);
+  const effetDeLaGamme = auCentime((avec.margeUnitaire - seul.margeUnitaire) * seul.ventes);
+  const effetDesBudgets = auCentime(seul.charges - avec.charges);
+  const ecartEntreLesDeux = auCentime(avec.resultat - seul.resultat);
+  // Les ventes qu'il faut à la place, à la marge de la gamme soignée, pour égaler aujourd'hui ; et au prix seul.
+  const ventesPourEgaler = Math.ceil((x.aujourdhui.resultat + avec.charges) / avec.margeUnitaire - 1e-9);
+  const ventesPourEgalerAuPrixSeul = Math.ceil((x.aujourdhui.resultat + seul.charges) / seul.margeUnitaire - 1e-9);
+  const ecartSeul = x.ecartPrixSeul;
+  const ecartAvec = x.ecartAvecLaQualite ?? -Infinity;
+  const reponse: ReponseALaDirectrice = ecartAvec > 0 && ecartAvec >= ecartSeul ? "avec-la-qualite" : ecartSeul > 0 ? "prix-seul" : "rester";
+  return {
+    f,
+    k,
+    x,
+    place: x.place,
+    aujourdhui: x.aujourdhui,
+    seul,
+    avec,
+    gamme,
+    attractiviteSeul: tSeul.attractivite,
+    attractiviteAvec: tAvec.attractivite,
+    attractivitesDesConcurrents: desConcurrents,
+    partSeul: Math.round(tSeul.part * 10_000) / 100,
+    partAvec: Math.round(tAvec.part * 10_000) / 100,
+    variation: auDixieme(x.variationDuPrix * 100),
+    indiceDeLaPlace: x.indiceDePrixDeLaPlace,
+    lectureSeul: k.carteAuPrixSeul.nova,
+    lectureAvec: k.carteALaPlace.nova,
+    ecartSeul,
+    ecartAvec: x.ecartAvecLaQualite!,
+    effetDuVolume,
+    effetDeLaGamme,
+    effetDesBudgets,
+    ecartEntreLesDeux,
+    ventesPourEgaler,
+    ventesPourEgalerAuPrixSeul,
+    differenciationDuChapitre: anneeAvec(f, "differenciation").nova,
+    reponse,
   };
-  const rejouee = rejouerAvec(c.code, "lire-la-strategie-des-concurrents-espace-libre", auPrixDeLaPlace);
-  const apres = bilanDeLAnnee("espace-libre", rejouee);
-  // UNE ENTREPRISE DÉFAILLANTE NE VEND PLUS : ses trimestres manquants ne pèsent plus sur le
-  // résultat de l'année, qui peut alors sembler meilleur. La défaillance tranche avant lui.
-  // (Sur l'année du cours, le prix de la place ne mène à la défaillance dans aucune entreprise.)
-  const k1 = rejouee.findIndex((r) => r.defaillant === true);
-  const defaillance = k1 < 0 ? null : k1 + 1;
-  const ecartDeResultat = apres.resultat - avant.resultat;
-  const verdict: VerdictDeLEspaceLibre = defaillance === null && ecartDeResultat > 0 ? "y-aller" : "rester";
-  return { k, e, p, g, prixVise, facteur, variation, indiceVise, avant, apres, defaillance, ecartDeResultat, verdict };
 }
-
-/** Où est la place, dans une phrase. */
-const laPlace = (x: ReturnType<typeof espaceLibre>) =>
-  x.p ? `la place ${dE(x.p.nom)}, qui a quitté le marché` : `l'écart entre ${x.g.bas.nom} et ${x.g.haut.nom}`;
 
 export const ALLER_DANS_L_ESPACE_LIBRE: Situation = {
   code: "aller-dans-l-espace-libre",
@@ -84,144 +101,225 @@ export const ALLER_DANS_L_ESPACE_LIBRE: Situation = {
   commanditaire: "La directrice",
   titre: "Aller dans l'espace libre",
   accroche:
-    "La carte du marché montre une place que personne ne tient. La directrice veut savoir si l'entreprise aurait gagné à y placer son prix, et l'arène rejoue l'année pour le dire.",
+    "La carte du marché montre une place que personne ne tient. La directrice veut savoir si l'entreprise gagnerait à y aller, et comment : en y plaçant son prix, ou en y amenant la qualité que la place demande.",
   objectifs: [
-    "Repérer l'espace libre et le prix qui le vise",
-    "Calculer un indice de prix et une part de marché",
-    "Lire ce qu'un repositionnement change au résultat de l'année",
+    "Repérer la place libre, son prix et sa qualité",
+    "Refaire l'année de deux façons d'y aller : par le seul prix, ou avec la qualité",
+    "Décomposer l'écart entre les deux en effet du volume et du coût de la gamme",
     "Répondre à la directrice, chiffre à l'appui",
   ],
   libre: false,
-  entreprises: {
-    codes: LIRE_LA_STRATEGIE_DES_CONCURRENTS.entreprises!.codes,
-    pourquoi: "ce cas lit le prix moyen de chaque enseigne dans ses ventes, et chez VOLT FITNESS le chiffre d'affaires vient d'abord des abonnés gardés.",
-  },
+  entreprises: LIRE_LA_STRATEGIE_DES_CONCURRENTS.entreprises!,
   etapes: [
     {
       id: "demande",
       type: "lecture",
       titre: "La question de la directrice",
-      texte: (c) => {
-        const x = espaceLibre(c);
-        return [
-          `« Votre carte du marché montre un espace libre : ${laPlace(x)}. Si ${c.entreprise} y avait placé son prix dès le premier trimestre, sans toucher à ses budgets, l'année aurait-elle été meilleure ? Je veux le savoir avant d'y engager des budgets. »`,
-          x.p
-            ? `Pas de cours cette fois : les calculs sont ceux du chapitre. Le prix de la place est le prix moyen ${dE(x.p.nom)}. ${REJEU}`
-            : `Pas de cours cette fois : les calculs sont ceux du chapitre. Le prix de la place est le milieu de l'écart : la moyenne des prix des deux enseignes voisines. ${REJEU}`,
-        ];
-      },
       tableau: (c) => {
-        const x = espaceLibre(c);
+        const k = espaceLibre(c).k;
         return {
-          titre: "L'année du cours, enseigne par enseigne",
-          colonnes: x.k.enseignes.map((y) => y.nom),
+          titre: "La carte du marché aujourd'hui, enseigne par enseigne",
+          colonnes: k.enseignes.map((y) => y.nom),
           lignes: [
-            { libelle: "Prix moyen", valeurs: x.k.enseignes.map((y) => eur(y.prix)) },
-            { libelle: "Indice de prix", valeurs: x.k.enseignes.map((y) => qte(y.indicePrix)) },
-            { libelle: "Indice de qualité", valeurs: x.k.enseignes.map((y) => qte(y.indiceQualite)) },
-            { libelle: "Part de marché", valeurs: x.k.enseignes.map((y) => pct(y.part)) },
-            { libelle: "Toujours sur le marché en fin d'année", valeurs: x.k.enseignes.map((y) => (y.defaillante ? "non" : "oui")) },
+            { libelle: "Prix de vente", valeurs: k.enseignes.map((y) => eur(y.offre.prix)) },
+            { libelle: "Qualité perçue", valeurs: k.enseignes.map((y) => dec(y.qualite)) },
+            { libelle: "Indice de prix", valeurs: k.enseignes.map((y) => qte(y.indicePrix)) },
+            { libelle: "Indice de qualité", valeurs: k.enseignes.map((y) => qte(y.indiceQualite)) },
+            { libelle: "Part de marché", valeurs: k.enseignes.map((y) => pct(y.part)) },
+            { libelle: "Résultat de l'année", valeurs: k.enseignes.map((y) => eur(y.resultat)) },
           ],
         };
       },
-      repere: (c) =>
-        `À rendre : le prix de la place, ce qu'il change au prix ${dE(c.entreprise)}, son indice de prix, ce que l'année rejouée vend et gagne, et votre réponse. Le prix moyen du marché de l'année du cours est de ${eur(espaceLibre(c).k.prixDuMarche)}.`,
+      texte: (c) => {
+        const e = espaceLibre(c);
+        const { f, k, place } = e;
+        const g = f.gammes.map((x) => `${x.nom} (${eur(x.composants + x.autres)} par enceinte, ${dec(x.qualiteDeConception)} de qualité)`);
+        return [
+          `« Votre carte du marché montre un espace libre, entre ${place.entre.bas.nom} et ${place.entre.haut.nom}. Si ${f.entreprise} y était allée dès le premier trimestre, l'année aurait-elle été meilleure ? Je veux le savoir avant d'y engager quoi que ce soit, et savoir ce qu'il faudrait changer. »`,
+          `Pas de cours cette fois : les calculs sont ceux du chapitre, dans la même simulation. Le marché reste de ${qte(f.marche.parTrimestre)} ${f.unites} par trimestre, partagé selon l'attractivité, (${qte(f.attractivite.prixDeReference)} ÷ prix) puissance ${f.attractivite.elasticiteAuPrix} × qualité perçue puissance ${f.attractivite.elasticiteALaQualite}. ${k.soundbox.nom} et ${k.auris.nom} ne changent rien : leurs attractivités réunies valent ${dec(e.attractivitesDesConcurrents, 4)} chaque trimestre. Le prix moyen du marché est de ${eur(k.carte.prixMoyen)}.`,
+          `${f.entreprise} peut monter ${g.join(", ")}, au budget qualité d'aujourd'hui (${eur(e.aujourdhui.offre.budgetQualite)} par trimestre). Ses charges de l'année restent de ${eur(e.aujourdhui.charges)}.`,
+        ];
+      },
+      repere: () =>
+        "À rendre : le prix et la qualité de la place, ce que l'année y donne par le seul prix et avec la qualité, d'où vient l'écart entre les deux, et votre réponse.",
     },
     {
-      id: "prix",
+      id: "la-place",
       type: "montants",
-      titre: "Le prix de la place",
+      titre: "La place libre",
       notions: ["segmentation", "price_elasticity"],
       question: (c) => {
-        const x = espaceLibre(c);
-        return x.p
-          ? `Le prix de la place est celui ${dE(x.p.nom)}. Relevez-le, puis calculez ce qu'il change au prix moyen ${dE(c.entreprise)} (${eur(x.e.prix)}), en pourcentage au dixième, et l'indice de prix qu'il donnerait, à l'unité, au prix moyen du marché de l'année du cours.`
-          : `Le prix de la place est la moyenne des prix ${dE(x.g.bas.nom)} et ${dE(x.g.haut.nom)}. Calculez-le, au centime, puis ce qu'il change au prix moyen ${dE(c.entreprise)} (${eur(x.e.prix)}), en pourcentage au dixième, et l'indice de prix qu'il donnerait, à l'unité, au prix moyen du marché de l'année du cours.`;
+        const e = espaceLibre(c);
+        return `Donnez le prix de la place (la moyenne des prix des deux voisines), ce qu'il change au prix ${dE(e.f.entreprise)}, en pourcentage au dixième, l'indice de prix qu'il donnerait au prix moyen d'aujourd'hui, et la qualité de la place (la moyenne de leurs qualités perçues).`;
       },
       champs: (c) => {
-        const x = espaceLibre(c);
+        const e = espaceLibre(c);
+        const p = e.place;
         return [
-          {
-            libelle: "Prix de la place",
-            attendu: x.prixVise,
-            calcul: x.p ? `Le prix moyen ${dE(x.p.nom)} : ${eur(x.prixVise)}` : `(${eur(x.g.bas.prix)} + ${eur(x.g.haut.prix)}) ÷ 2 = ${eur(x.prixVise)}`,
-            tolerance: 0.01,
-          },
-          {
-            libelle: "Variation du prix (%)",
-            attendu: x.variation,
-            calcul: `(${eur(x.prixVise)} ÷ ${eur(x.e.prix)} − 1) × 100 = ${pct(x.variation)}`,
-            tolerance: 0.1,
-          },
-          {
-            libelle: "Indice de prix de la place",
-            attendu: x.indiceVise,
-            calcul: `${eur(x.prixVise)} ÷ ${eur(x.k.prixDuMarche)} × 100 = ${qte(x.indiceVise)}`,
-            tolerance: 1,
-          },
+          { libelle: "Prix de la place", attendu: p.prix, calcul: `(${eur(p.entre.bas.prix)} + ${eur(p.entre.haut.prix)}) ÷ 2 = ${eur(p.prix)}` },
+          { libelle: "Variation du prix (%)", attendu: e.variation, calcul: `(${eur(p.prix)} ÷ ${eur(e.aujourdhui.offre.prix)} − 1) × 100 = ${qte(e.variation)} %`, tolerance: 0.1 },
+          { libelle: "Indice de prix de la place", attendu: e.indiceDeLaPlace, calcul: `${eur(p.prix)} ÷ ${eur(e.k.carte.prixMoyen)} × 100 = ${qte(e.indiceDeLaPlace)}`, tolerance: 1 },
+          { libelle: "Qualité de la place", attendu: p.qualite, calcul: `(${dec(p.entre.bas.qualite)} + ${dec(p.entre.haut.qualite)}) ÷ 2 = ${dec(p.qualite)}` },
         ];
       },
       explication: (c) => {
-        const x = espaceLibre(c);
+        const e = espaceLibre(c);
         return [
-          `Pour aller dans l'espace libre, ${c.entreprise} change son prix de ${signe(x.variation)} : son indice de prix passerait de ${qte(x.e.indicePrix)} à ${qte(x.indiceVise)}, sans que sa qualité bouge.`,
+          `La place est à ${eur(e.place.prix)} et ${dec(e.place.qualite)} de qualité perçue. ${e.f.entreprise} peut y mettre son prix d'un trait de plume ; sa qualité, ${dec(e.aujourdhui.qualite)} aujourd'hui, demande une autre gamme : la moins chère qui y suffit est ${e.gamme.nom} (${dec(e.gamme.qualiteDeConception)}).`,
         ];
       },
     },
     {
-      id: "arene",
+      id: "par-le-seul-prix",
       type: "montants",
-      titre: "L'année rejouée dans l'espace libre",
-      notions: ["demand_market_share", "income_statement"],
-      tableau: (c) => {
-        const x = espaceLibre(c);
-        const deux = [x.avant, x.apres];
-        return {
-          titre: "L'année du cours, et l'année rejouée au prix de la place",
-          colonnes: ["L'année du cours", "Au prix de la place"],
-          lignes: [
-            { libelle: "Prix moyen de vente", valeurs: deux.map((y) => eur(y.prixMoyen)) },
-            { libelle: `Ventes de l'année (${c.unites})`, valeurs: deux.map((y) => qte(y.ventes)) },
-            { libelle: `Marché de l'année (${c.unites})`, valeurs: deux.map((y) => qte(y.marche)) },
-            { libelle: "Marge sur coût variable", valeurs: deux.map((y) => eur(y.marge)) },
-            { libelle: "Résultat de l'exercice", valeurs: deux.map((y) => eur(y.resultat)) },
-            { libelle: "Défaillance", valeurs: ["non", x.defaillance === null ? "non" : `à la fin du T${x.defaillance}`] },
-          ],
-        };
+      titre: "Y aller par le seul prix",
+      notions: ["demand_market_share", "price_elasticity", "income_statement"],
+      question: (c) => {
+        const e = espaceLibre(c);
+        return `Première façon : ${e.f.entreprise} vend à ${eur(e.place.prix)} toute l'année, avec la gamme et les budgets d'aujourd'hui. Donnez sa part du marché de chaque trimestre (au centième de pour cent), ses ventes de l'année, son résultat, et son écart avec aujourd'hui (${eur(e.aujourdhui.resultat)}). Négatif pour un écart défavorable.`;
       },
-      question: () =>
-        "Calculez la part de marché de l'année rejouée au prix de la place, en pourcentage au dixième, puis l'écart de résultat de l'exercice avec l'année du cours.",
       champs: (c) => {
-        const x = espaceLibre(c);
+        const e = espaceLibre(c);
+        const s = e.seul;
+        const a = dec(e.attractiviteSeul, 4);
         return [
           {
-            libelle: "Part de marché au prix de la place (%)",
-            attendu: x.apres.part,
-            calcul: `${qte(x.apres.ventes)} ÷ ${qte(x.apres.marche)} × 100 = ${pct(x.apres.part)}`,
-            tolerance: 0.1,
+            libelle: "Part de marché par le seul prix, chaque trimestre (%)",
+            attendu: e.partSeul,
+            calcul: `(${qte(e.f.attractivite.prixDeReference)} ÷ ${qte(e.place.prix)}) puissance ${e.f.attractivite.elasticiteAuPrix} × ${dec(s.qualite)} au carré = ${a} ; ${a} ÷ (${a} + ${dec(e.attractivitesDesConcurrents, 4)}) × 100 = ${qte(e.partSeul)} %`,
           },
           {
-            libelle: "Écart de résultat, place moins année du cours",
-            attendu: x.ecartDeResultat,
-            calcul: `${eur(x.apres.resultat)} − ${retranche(x.avant.resultat)} = ${eur(x.ecartDeResultat)}`,
+            libelle: "Ventes de l'année par le seul prix",
+            attendu: s.ventes,
+            calcul: `${qte(e.partSeul)} % × ${qte(e.f.marche.parTrimestre)} = ${qte(s.trimestres[0]!.ventes)} par trimestre, × ${e.f.marche.trimestres} = ${qte(s.ventes)}`,
+            tolerance: 0,
+          },
+          { libelle: "Résultat par le seul prix", attendu: s.resultat, calcul: `${qte(s.ventes)} × (${eur(s.offre.prix)} − ${eur(s.coutVariable)}) − ${eur(s.charges)} = ${eur(s.resultat)}`, tolerance: 1 },
+          { libelle: "Écart avec aujourd'hui, par le seul prix", attendu: e.ecartSeul, calcul: `${eur(s.resultat)} − ${entre(e.aujourdhui.resultat)} = ${eur(e.ecartSeul)}`, tolerance: 1 },
+        ];
+      },
+      explication: (c) => {
+        const e = espaceLibre(c);
+        const l = e.lectureSeul;
+        return [
+          `Par le seul prix, ${e.f.entreprise} vend ${qte(e.seul.ventes)} ${e.f.unites}, contre ${qte(e.aujourdhui.ventes)} aujourd'hui : chaque enceinte laisse ${eur(e.seul.margeUnitaire)} au lieu de ${eur(e.aujourdhui.margeUnitaire)}, mais les clients partent. Sur la carte, elle serait à ${qte(l.indicePrix)} en prix et ${qte(l.indiceQualite)} en qualité, ${NOMS_DES_STRATEGIES_LUES[l.lecture]} : une enceinte chère, pas une enceinte différenciée.`,
+        ];
+      },
+    },
+    {
+      id: "avec-la-qualite",
+      type: "montants",
+      titre: "Y aller avec la qualité",
+      notions: ["demand_market_share", "full_unit_cost", "income_statement"],
+      question: (c) => {
+        const e = espaceLibre(c);
+        return `Seconde façon : ${e.f.entreprise} vend à ${eur(e.place.prix)} toute l'année, avec la gamme la moins chère qui la porte à la qualité de la place, et les budgets d'aujourd'hui. Donnez sa part du marché de chaque trimestre (au centième de pour cent), ses ventes de l'année, son résultat, et son écart avec aujourd'hui. Négatif pour un écart défavorable.`;
+      },
+      champs: (c) => {
+        const e = espaceLibre(c);
+        const v = e.avec;
+        const a = dec(e.attractiviteAvec, 4);
+        return [
+          {
+            libelle: "Part de marché avec la qualité, chaque trimestre (%)",
+            attendu: e.partAvec,
+            calcul: `${e.gamme.nom.charAt(0).toUpperCase()}${e.gamme.nom.slice(1)} : (${qte(e.f.attractivite.prixDeReference)} ÷ ${qte(e.place.prix)}) puissance ${e.f.attractivite.elasticiteAuPrix} × ${dec(v.qualite)} au carré = ${a} ; ${a} ÷ (${a} + ${dec(e.attractivitesDesConcurrents, 4)}) × 100 = ${qte(e.partAvec)} %`,
+          },
+          {
+            libelle: "Ventes de l'année avec la qualité",
+            attendu: v.ventes,
+            calcul: `${qte(e.partAvec)} % × ${qte(e.f.marche.parTrimestre)} = ${qte(v.trimestres[0]!.ventes)} par trimestre, × ${e.f.marche.trimestres} = ${qte(v.ventes)}`,
+            tolerance: 0,
+          },
+          { libelle: "Résultat avec la qualité", attendu: v.resultat, calcul: `${qte(v.ventes)} × (${eur(v.offre.prix)} − ${eur(v.coutVariable)}) − ${eur(v.charges)} = ${eur(v.resultat)}`, tolerance: 1 },
+          { libelle: "Écart avec aujourd'hui, avec la qualité", attendu: e.ecartAvec, calcul: `${eur(v.resultat)} − ${entre(e.aujourdhui.resultat)} = ${eur(e.ecartAvec)}`, tolerance: 1 },
+        ];
+      },
+      explication: (c) => {
+        const e = espaceLibre(c);
+        const l = e.lectureAvec;
+        return [
+          `Avec ${e.gamme.nom}, ${e.f.entreprise} garde ${qte(e.avec.ventes)} ventes, ${pct(e.avec.part)} du marché, et chaque enceinte lui laisse ${eur(e.avec.margeUnitaire)} : ${eur(e.avec.resultat)} sur l'année, pour un coût complet de ${eur(e.avec.coutComplet)} l'enceinte. Sur la carte de cette année-là, elle est à ${qte(l.indicePrix)} et ${qte(l.indiceQualite)} : ${NOMS_DES_STRATEGIES_LUES[l.lecture]}.`,
+        ];
+      },
+    },
+    {
+      id: "le-croisement",
+      type: "montants",
+      titre: "D'où vient l'écart entre les deux",
+      notions: ["contribution_margin", "volume_price_variance"],
+      question: (c) => {
+        const e = espaceLibre(c);
+        return `Au même prix, la gamme soignée fait ${eur(e.ecartEntreLesDeux)} de plus que le seul prix. Décomposez cet écart : les ventes que la qualité retient, valorisées à la marge de la gamme soignée ; puis le coût de la gamme, sur les ventes du seul prix. Vérifiez qu'ils refont l'écart entre les deux. Négatif pour un écart défavorable.`;
+      },
+      champs: (c) => {
+        const e = espaceLibre(c);
+        return [
+          {
+            libelle: "Effet des ventes retenues par la qualité",
+            attendu: e.effetDuVolume,
+            calcul: `(${qte(e.avec.ventes)} − ${qte(e.seul.ventes)}) × ${eur(e.avec.margeUnitaire)} = ${eur(e.effetDuVolume)}`,
+            tolerance: 1,
+          },
+          {
+            libelle: "Effet du coût de la gamme",
+            attendu: e.effetDeLaGamme,
+            calcul: `(${eur(e.avec.margeUnitaire)} − ${eur(e.seul.margeUnitaire)}) × ${qte(e.seul.ventes)} = ${eur(e.effetDeLaGamme)}`,
+            tolerance: 1,
+          },
+          {
+            libelle: "Écart entre les deux façons d'y aller",
+            attendu: e.ecartEntreLesDeux,
+            calcul: `${eur(e.effetDuVolume)} + ${entre(e.effetDeLaGamme)}${e.effetDesBudgets !== 0 ? ` + ${entre(e.effetDesBudgets)}` : ""} = ${eur(e.ecartEntreLesDeux)}, soit ${eur(e.avec.resultat)} − ${entre(e.seul.resultat)}`,
             tolerance: 1,
           },
         ];
       },
       explication: (c) => {
-        const x = espaceLibre(c);
-        const plusCher = x.variation > 0;
+        const e = espaceLibre(c);
         return [
-          ...(x.defaillance !== null
-            ? [
-                `Attention : au prix de la place, ${c.entreprise} tombe en défaillance à la fin du T${x.defaillance}, et ne vend plus ensuite. Le résultat de l'année ne compte plus les trimestres qui manquent : ${x.ecartDeResultat > 0 ? "s'il paraît meilleur, c'est que l'entreprise a cessé son activité" : "il ne dit même pas tout de la perte"}.`,
-              ]
-            : []),
-          `La part de marché passe de ${pct(x.avant.part)} à ${pct(x.apres.part)}, et la marge sur coût variable de ${eur(x.avant.marge)} à ${eur(x.apres.marge)}. ${
-            plusCher
-              ? `${c.entreprise} vend moins, plus cher : ${x.apres.marge > x.avant.marge ? "la marge de l'année y gagne" : "la marge de l'année y perd"}.`
-              : `${c.entreprise} vend plus, moins cher : ${x.apres.marge > x.avant.marge ? "la marge de l'année y gagne" : "la marge de l'année y perd"}.`
-          }`,
+          `La gamme soignée coûte ${eur(-e.effetDeLaGamme)} sur les ventes du seul prix, mais elle retient ${qte(e.avec.ventes - e.seul.ventes)} clients qui en rapportent ${eur(e.effetDuVolume)}. À ce prix, la qualité n'est pas une dépense : c'est ce qui fait acheter.`,
+        ];
+      },
+    },
+    {
+      id: "les-ventes-au-curseur",
+      type: "curseur",
+      titre: "Ce que la place doit vendre",
+      notions: ["breakeven", "contribution_margin"],
+      question: (c) => {
+        const e = espaceLibre(c);
+        return `La directrice demande la marge de sécurité. Faites varier les ventes de l'année à la place, avec ${e.gamme.nom} (${eur(e.avec.margeUnitaire)} par enceinte, ${eur(e.avec.charges)} de charges). Placez le curseur sur le plus petit nombre de ventes où le résultat égale celui d'aujourd'hui (${eur(e.aujourdhui.resultat)}), puis validez.`;
+      },
+      grandeur: (c) => ({ libelle: "Ventes de l'année à la place", unite: ficheDe(c).unites }),
+      cible: (c) => {
+        const e = espaceLibre(c);
+        return { attendu: e.ventesPourEgaler, min: VENTES_DU_CURSEUR_DE_LA_PLACE.min, max: VENTES_DU_CURSEUR_DE_LA_PLACE.max };
+      },
+      zones: ["La place paie mieux qu'aujourd'hui", "La place paie moins qu'aujourd'hui"],
+      rates: () => ({
+        dessous: "À cette position, la place rapporte encore moins qu'aujourd'hui.",
+        dessus: "Plus bas, la place rapporte encore autant qu'aujourd'hui : cherchez le plus petit nombre de ventes.",
+      }),
+      montrer: "Montrer le point d'égalité",
+      lecture: (c, q) => {
+        const e = espaceLibre(c);
+        const r = auCentime(e.avec.margeUnitaire * q - e.avec.charges);
+        return [
+          { libelle: "Marge sur coût variable", montant: auCentime(e.avec.margeUnitaire * q) },
+          { libelle: "Charges fixes et budgets de l'année", montant: e.avec.charges },
+          { libelle: "Résultat à la place", montant: r },
+          { libelle: "Écart avec aujourd'hui", montant: auCentime(r - e.aujourdhui.resultat), fort: true },
+        ];
+      },
+      droites: (c) => {
+        const e = espaceLibre(c);
+        return { produit: (q) => e.avec.margeUnitaire * q - e.avec.charges, cout: () => e.aujourdhui.resultat, libelles: ["Résultat à la place", "Résultat d'aujourd'hui"] };
+      },
+      explication: (c) => {
+        const e = espaceLibre(c);
+        return [
+          `Il faut ${qte(e.ventesPourEgaler)} ventes à la place pour égaler aujourd'hui ; la gamme soignée en fait ${qte(e.avec.ventes)}, soit ${qte(e.avec.ventes - e.ventesPourEgaler)} de marge. Par le seul prix, à ${eur(e.seul.margeUnitaire)} l'enceinte, il en faudrait ${qte(e.ventesPourEgalerAuPrixSeul)}, et il n'en vient que ${qte(e.seul.ventes)}.`,
         ];
       },
     },
@@ -232,32 +330,36 @@ export const ALLER_DANS_L_ESPACE_LIBRE: Situation = {
       notions: ["segmentation"],
       question: () => "Quelle phrase envoyez-vous à la directrice ?",
       options: (c) => {
-        const x = espaceLibre(c);
-        const chiffres = `${eur(x.apres.resultat)} de résultat au prix de la place, contre ${eur(x.avant.resultat)} dans l'année du cours`;
-        const chute = x.defaillance !== null ? `au prix de la place, ${c.entreprise} tombe en défaillance à la fin du T${x.defaillance}` : null;
+        const e = espaceLibre(c);
+        const chiffres = `${eur(e.avec.resultat)} avec la qualité, ${eur(e.seul.resultat)} par le seul prix, ${eur(e.aujourdhui.resultat)} aujourd'hui`;
+        const d = e.differenciationDuChapitre;
         return [
           {
-            texte: "Oui : la place paie, l'année aurait été meilleure",
-            juste: x.verdict === "y-aller",
+            texte: "Y aller, en y amenant la qualité",
+            juste: e.reponse === "avec-la-qualite",
             retour:
-              x.verdict === "y-aller"
-                ? `Oui : ${chiffres}, soit ${eur(x.ecartDeResultat)} de plus. À ce prix, la place paie mieux que la position d'aujourd'hui. Reste à la tenir : un concurrent peut la viser aussi.`
-                : chute
-                  ? `Non : ${chute}. Une entreprise qui disparaît n'a pas fait une meilleure année.`
-                  : `Non : ${chiffres}. La place est libre, mais l'année y aurait été moins bonne.`,
+              e.reponse === "avec-la-qualite"
+                ? [
+                    `Oui : ${chiffres}, soit ${signe(e.ecartAvec)}. La place a un prix et une qualité : on ne l'atteint qu'avec les deux.`,
+                    ...(d.resultat < e.avec.resultat ? [`Elle fait même mieux que la différenciation du chapitre « Domination par les coûts ou différenciation » (${eur(d.resultat)}), dont les budgets en plus ne se paient pas.`] : []),
+                    "Reste à la tenir : la simulation fait jouer des concurrents qui ne réagissent pas, un vrai concurrent pourrait la viser aussi.",
+                  ].join(" ")
+                : `Non : ${chiffres}.`,
           },
           {
-            texte: "Non : la place est libre, mais l'année aurait été moins bonne",
-            juste: x.verdict === "rester",
-            retour:
-              x.verdict === "rester"
-                ? `Oui : ${chute ? `${chute}, et ne vend plus ensuite` : `${chiffres}, soit ${eur(-x.ecartDeResultat)} de moins`}. Une place libre n'est pas toujours une place à prendre${x.p ? ` : ${x.p.nom} y a fini en défaillance` : ""}. ${x.variation > 0 ? "Les clients ne suivent pas un prix plus haut que rien d'autre ne justifie." : "Le volume gagné ne paie pas la marge perdue sur chaque unité."}`
-                : `Non : ${chiffres}. L'année aurait été meilleure dans l'espace libre.`,
+            texte: "Y placer son prix, sans rien changer d'autre",
+            juste: e.reponse === "prix-seul",
+            retour: e.reponse === "prix-seul" ? `Oui : ${chiffres}.` : `Non : ${chiffres}. Un prix plus haut que rien ne justifie fait partir les clients : ${signe(e.ecartSeul)} sur l'année.`,
           },
           {
-            texte: "Impossible à dire sans aller sur la place pendant une année entière",
+            texte: "Rester où elle est : la place ne paie pas",
+            juste: e.reponse === "rester",
+            retour: e.reponse === "rester" ? `Oui : ${chiffres}.` : `Non : ${chiffres}. La place paie, mais pas par le seul prix : c'est la conclusion qu'on tire en ne lisant la carte que sur un axe.`,
+          },
+          {
+            texte: "Impossible à dire sans y passer une année entière",
             juste: false,
-            retour: `Non : l'arène a rejoué l'année avec le prix de la place : ${chute ?? chiffres}.`,
+            retour: `Non : la simulation du cours a joué les deux années, ${chiffres}. Une décision se prépare avec les chiffres qu'on peut avoir.`,
           },
         ];
       },
