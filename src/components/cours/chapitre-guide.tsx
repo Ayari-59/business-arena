@@ -27,7 +27,7 @@ import type {
   OptionDeChoix,
   Piece,
 } from "@/config/cours/types";
-import { changerDeSigne, corriger, enSaisie, lireMontant, montantEcrit, type Correction } from "@/pedagogy/cours/correcteur";
+import { champJuste, changerDeSigne, corriger, enSaisie, montantEcrit, type Correction } from "@/pedagogy/cours/correcteur";
 import { chapitreDuCas, etatAvant, indexDeLEtape, journalAvant } from "@/pedagogy/cours/deroule";
 import type { Ecriture } from "@/pedagogy/cours/etats";
 import { cleDeLaQuestion, dansLOrdreAffiche } from "@/pedagogy/cours/ordre-des-options";
@@ -429,10 +429,7 @@ function EtapeDeMontants({ etape, cas, chapitre, index, suivi, classe, noter, su
         className="grid max-w-xl gap-3"
         onSubmit={(ev) => {
           ev.preventDefault();
-          const v = champs.map((c, i) => {
-            const x = lireMontant(valeurs[i] ?? "");
-            return x !== null && !Number.isNaN(x) && Math.abs(x - c.attendu) <= (c.tolerance ?? 0.01) + 1e-9;
-          });
+          const v = champs.map((c, i) => champJuste(valeurs[i] ?? "", c));
           setVerifie(v);
           noter({
             essai: true,

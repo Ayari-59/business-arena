@@ -63,6 +63,23 @@ export function lireMontant(texte: string): number | null {
 }
 
 /**
+ * Un nombre saisi dans un champ de calcul, sans l'arrondir au centime : un champ peut demander un
+ * taux ou un coefficient au dix-millième (0,9568), que l'arrondi d'un montant rendrait faux.
+ */
+export function lireNombre(texte: string): number | null {
+  const net = texte.replace(/[\s  €%]/g, "").replace(",", ".").replace("−", "-");
+  if (net === "") return null;
+  if (!/^-?\d+(\.\d+)?$/.test(net)) return Number.NaN;
+  return Number(net);
+}
+
+/** Un champ de calcul est juste quand le nombre saisi tombe dans sa tolérance (le centime par défaut). */
+export function champJuste(texte: string, champ: { attendu: number; tolerance?: number }): boolean {
+  const x = lireNombre(texte);
+  return x !== null && !Number.isNaN(x) && Math.abs(x - champ.attendu) <= (champ.tolerance ?? 0.01) + 1e-9;
+}
+
+/**
  * Le montant saisi, de signe changé. Le clavier numérique d'un téléphone n'a pas de signe
  * moins : un bouton, à côté de chaque champ, le met ou l'enlève.
  */

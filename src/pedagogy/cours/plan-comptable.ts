@@ -41,6 +41,7 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "2183", intitule: "Matériel de bureau et informatique", nature: "actif" },
   { numero: "2184", intitule: "Mobilier", nature: "actif" },
   // Classe 3 : stocks
+  { numero: "31", intitule: "Matières premières et fournitures", nature: "actif" },
   { numero: "335", intitule: "Travaux en cours", nature: "actif" },
   { numero: "37", intitule: "Stocks de marchandises", nature: "actif" },
   { numero: "370", intitule: "Stocks de marchandises", nature: "actif" },
@@ -79,7 +80,9 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "487", intitule: "Produits constatés d'avance", nature: "passif" },
   // Dépréciations des comptes de tiers : en soustraction des créances qu'elles suivent.
   { numero: "491", intitule: "Dépréciations des comptes de clients", nature: "actif" },
-  // Classe 5 : trésorerie
+  // Classe 5 : trésorerie (les placements à un an au plus et leurs intérêts courus en sont, comme au bilan fonctionnel)
+  { numero: "508", intitule: "Autres valeurs mobilières de placement et créances assimilées", nature: "tresorerie" },
+  { numero: "5088", intitule: "Intérêts courus sur placements", nature: "tresorerie" },
   { numero: "512", intitule: "Banque", nature: "tresorerie" },
   { numero: "530", intitule: "Caisse", nature: "tresorerie" },
   // Classe 6 : charges
@@ -91,6 +94,7 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "6063", intitule: "Fournitures d'entretien et de petit équipement", nature: "charge" },
   { numero: "603", intitule: "Variations des stocks (approvisionnements et marchandises)", nature: "charge" },
   { numero: "6037", intitule: "Variation des stocks de marchandises", nature: "charge" },
+  { numero: "6031", intitule: "Variation des stocks de matières premières et fournitures", nature: "charge" },
   { numero: "607", intitule: "Achats de marchandises", nature: "charge" },
   { numero: "61", intitule: "Services extérieurs (loyer et frais de structure)", nature: "charge" },
   { numero: "613", intitule: "Locations", nature: "charge" },
@@ -104,6 +108,7 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "641", intitule: "Rémunérations du personnel", nature: "charge" },
   { numero: "645", intitule: "Charges de sécurité sociale et de prévoyance", nature: "charge" },
   { numero: "654", intitule: "Pertes sur créances irrécouvrables", nature: "charge" },
+  { numero: "658", intitule: "Charges diverses de gestion courante", nature: "charge" },
   { numero: "661", intitule: "Charges d'intérêts", nature: "charge" },
   { numero: "665", intitule: "Escomptes accordés", nature: "charge" },
   { numero: "6611", intitule: "Intérêts des emprunts et dettes", nature: "charge" },
@@ -115,6 +120,7 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   // Classe 7 : produits
   { numero: "701", intitule: "Ventes de produits finis", nature: "produit" },
   { numero: "765", intitule: "Escomptes obtenus", nature: "produit" },
+  { numero: "764", intitule: "Revenus des valeurs mobilières de placement", nature: "produit" },
   { numero: "7133", intitule: "Variation des en-cours de production de biens", nature: "produit" },
   { numero: "704", intitule: "Travaux", nature: "produit" },
   { numero: "706", intitule: "Prestations de services", nature: "produit" },
