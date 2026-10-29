@@ -23,7 +23,7 @@ import { getPlatformConfig } from "@/services/admin.service";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/parcours" },
-  title: "Parcours par diplôme",
+  title: "Référentiels par diplôme",
   description:
     "La correspondance entre votre référentiel et ce que vos étudiants vivent dans l'arène, bloc par bloc, pour chaque diplôme servi.",
 };
@@ -165,7 +165,7 @@ export default async function ParcoursPage() {
           l'en-tête ouvre déjà.
         */}
         <EnTeteDePage
-          surtitre="Parcours par diplôme"
+          surtitre="Référentiels par diplôme"
           titre={<>Votre référentiel, vécu dans l&apos;arène</>}
           chapeau={
             <>

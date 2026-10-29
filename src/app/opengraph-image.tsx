@@ -1,7 +1,5 @@
 import { ImageResponse } from "next/og";
-import { TITRE_ACCUEIL } from "@/config/seo";
-import { NOMBRE_D_EPISODES } from "@/config/episodes/familles";
-import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
+import { LIGNE_DE_PARTAGE, TITRE_ACCUEIL } from "@/config/seo";
 
 /**
  * L'image d'un lien partagé : le tableau de bord de NOVA, celui de la page
@@ -69,7 +67,7 @@ export default function Image() {
         {/* Colonne gauche : le propos */}
         <div style={{ display: "flex", flexDirection: "column", width: 520, paddingRight: 40 }}>
           <span style={{ fontSize: 20, letterSpacing: 6, color: AMBRE, textTransform: "uppercase" }}>
-            Simulation · Apprentissage · Décision
+            Cours · Simulation · Épisodes
           </span>
           <span style={{ fontSize: 64, fontWeight: 800, lineHeight: 1.05, marginTop: 24 }}>
             Dirigez une entreprise.
@@ -79,8 +77,7 @@ export default function Image() {
           </span>
           <span style={{ fontSize: 24, color: "#c2bcb2", marginTop: 28, lineHeight: 1.4 }}>
             {/* Les nombres de l'accueil, comptés dans les registres (voir config/seo.ts). */}
-            {SCENARIO_CHOICES.length} entreprises à piloter, {NOMBRE_D_EPISODES} épisodes manager.
-            Découverte gratuite en solo, sans compte.
+            {LIGNE_DE_PARTAGE} Le premier chapitre et la partie solo, gratuits et sans compte.
           </span>
           <span style={{ fontSize: 26, fontWeight: 700, marginTop: "auto", color: "#f1ede4" }}>
             business-arena.fr

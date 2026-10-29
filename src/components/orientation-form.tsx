@@ -425,6 +425,32 @@ export function OrientationForm({
               La fiche de cette entreprise
             </Link>
           ) : null}
+          {/* LES SORTIES DE L'ORIENTATION (audit produit du 28 octobre 2026, P1-3) : elle ne
+              menait ni au devis ni à l'essai. Le devis reprend le réglage conseillé ; l'essai
+              est la partie solo ; le cours seul a son devis, sans entreprise ni niveau imposés. */}
+          {reco ? (
+            <Link
+              href={`/devis?offre=classe&entreprise=${encodeURIComponent(reco.scenarioCode)}&niveau=${reco.niveau}`}
+              className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/30"
+              data-sortie-orientation="devis"
+            >
+              Demander un devis pour ce réglage
+            </Link>
+          ) : null}
+          <Link
+            href="/jouer"
+            className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/30"
+            data-sortie-orientation="essai"
+          >
+            Essayer en solo, sans compte
+          </Link>
+          <Link
+            href="/devis?offre=classe&interet=cours"
+            className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/30"
+            data-sortie-orientation="cours"
+          >
+            Le cours seul : demander un devis
+          </Link>
           {!state.ok ? (
             <button
               type="submit"

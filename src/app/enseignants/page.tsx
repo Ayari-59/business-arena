@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { ATELIERS_A_REFERENTIEL, DIPLOMES_DES_ATELIERS, LES_OFFRES_DE_L_ARENE } from "@/config/tarifs";
+import { ATELIERS_A_REFERENTIEL, LES_OFFRES_DE_L_ARENE } from "@/config/tarifs";
 import { LigneDePrix } from "@/components/ligne-de-prix";
 import { publicDeLAtelier } from "@/config/formations";
+import { formationsAvecUnePage } from "@/config/couverture";
 import Link from "next/link";
 import { ATELIERS, dureeTotaleHeures } from "@/config/ateliers";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
@@ -23,20 +24,18 @@ import { Bande } from "@/components/bande";
 import { contrasteDeLaBande } from "@/config/theme-du-site";
 import { RepliableSurTelephone } from "@/components/repliable-sur-telephone";
 import { ParagrapheSurMesure } from "@/components/encart-sur-mesure";
+import { LeCoursEnBref } from "@/components/le-cours-en-bref";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/enseignants" },
   title: "Pour les enseignants",
   description:
-    "Le business game qui mesure une décision, pas un clic, et rend compte au référentiel sans mentir. Ateliers clés en main du STMG au DCG, partie créée en 30 secondes.",
+    "Le business game qui mesure une décision, pas un clic, et rend compte au référentiel sans mentir. Ateliers clés en main de la seconde au DCG, cours de gestion du CAP au DSCG, partie créée en 30 secondes.",
 };
 
-/**
- * Les diplômes visés : les codes de diplôme des ateliers, une option comptant pour son
- * diplôme (BTS MHR et ses options B et C : un diplôme), les ateliers sans diplôme
- * exclus (audit C-09 : le compte des publics annonçait « 12 diplômes » pour 8).
- */
-const DIPLOMES = DIPLOMES_DES_ATELIERS;
+/** Les formations qui ont leur page (/parcours/…), et celles qu'un atelier sert. */
+const FORMATIONS_SERVIES = formationsAvecUnePage();
+const FORMATIONS_A_ATELIER = FORMATIONS_SERVIES.filter((f) => ATELIERS.some((a) => a.formations.includes(f.code)));
 const HEURES_TOTALES = Math.round(
   ATELIERS.reduce((s, a) => s + dureeTotaleHeures(a), 0),
 );
@@ -55,9 +54,12 @@ const HERO_STATS = [
       "Déroulés de séance minutés, livrables et grilles d'évaluation compris",
   },
   {
-    value: `${DIPLOMES.length}`,
-    label: "diplômes visés",
-    detail: "Du lycée à l'expertise comptable, chacun adossé à son référentiel",
+    // UN SEUL MOT, « FORMATION », POUR LES ENTRÉES DU REGISTRE (audit produit du 28 octobre
+    // 2026, P1-8) : la page disait « 9 diplômes visés » quand /cours et /parcours en servent 20.
+    // Les deux nombres se lisent dans les registres, et le second dit ce que le premier couvre.
+    value: `${FORMATIONS_SERVIES.length}`,
+    label: "formations servies",
+    detail: `Du CAP au DSCG, chacune avec sa page de référentiel ; ${FORMATIONS_A_ATELIER.length} avec un atelier clé en main`,
   },
 ];
 
@@ -385,6 +387,8 @@ export default async function EnseignantsPage() {
           {/* LES SITUATIONS SUR MESURE, en un paragraphe : le texte de
               config/sur-mesure.ts, le même que l'encart des ateliers. */}
           <ParagrapheSurMesure className="mx-auto mt-6 max-w-2xl text-center text-sm leading-relaxed text-slate-400" />
+          {/* Le cours, que cette page taisait (audit produit, P1-2) : ses nombres viennent des registres. */}
+          <LeCoursEnBref className="mx-auto mt-10 max-w-3xl" />
         </Bande>
 
         {/*

@@ -2030,6 +2030,15 @@ body {
   opacity: 1;
   transform: none;
 }
+/* LE FILET DU BOUTON SECONDAIRE, à 3 pour 1 au moins (WCAG 1.4.11) : le blanc ou le noir
+   translucide des classes (`border-white/25`) tombait à 1,8 sur le papier, 2,2 à contre-jour.
+   Hors couche, la règle l'emporte sur l'utilitaire ; le survol fonce le filet. */
+.bouton-filet:not(:disabled) {
+  border-color: var(--filet-interactif, #7d8aa0);
+}
+.bouton-filet:not(:disabled):hover {
+  border-color: var(--filet-interactif-survol, #5a6880);
+}
 .bouton-filet:disabled,
 .bouton-filet:disabled:hover {
   border-color: var(--bouton-inactif-fond);
@@ -2324,7 +2333,8 @@ a.carte {
    foncée, filet net, et l'orange du focus. */
 .papier .champ {
   background-color: var(--papier-creux);
-  border-color: #c3ccdb;
+  /* #c3ccdb donnait 1,6 pour 1 sur le blanc : sous le seuil de 3 d'un élément interactif. */
+  border-color: var(--filet-interactif, #7d8aa0);
   color: var(--encre);
   box-shadow: inset 0 1px 2px rgb(11 37 69 / 0.08);
 }

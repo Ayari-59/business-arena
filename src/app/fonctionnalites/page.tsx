@@ -14,6 +14,7 @@ import { Bande } from "@/components/bande";
 import { contrasteDeLaBande } from "@/config/theme-du-site";
 import { getPlatformConfig } from "@/services/admin.service";
 import { RepliableSurTelephone } from "@/components/repliable-sur-telephone";
+import { LeCoursEnBref } from "@/components/le-cours-en-bref";
 
 export const metadata = {
   alternates: { canonical: "/fonctionnalites" },
@@ -208,6 +209,8 @@ export default async function FonctionnalitesPage() {
               </div>
             ))}
           </dl>
+          {/* Le cours, que cette page taisait (audit produit, P1-2). */}
+          <LeCoursEnBref className="mx-auto mt-10 max-w-3xl" />
         </Bande>
 
         {/* Models list */}

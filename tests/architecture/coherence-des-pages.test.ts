@@ -31,7 +31,8 @@ describe("les promesses d'accès suivent le code", () => {
     const page = lire("src/app/cours/[chapitre]/page.tsx");
     expect(page).toContain("data-acces-du-cours");
     expect(page).toContain("href={LIEN_TARIFS}");
-    expect(page).toContain('href="/devis"');
+    // Le devis du cours seul : l'entreprise et le niveau d'arène y sont facultatifs (audit produit du 28 octobre).
+    expect(page).toContain('href="/devis?offre=classe&interet=cours"');
     expect(page).toContain("href={`/cours/${CHAPITRE_LIBRE}`}");
   });
 });

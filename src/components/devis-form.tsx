@@ -5,6 +5,7 @@ import { bouton } from "@/components/bouton";
 import { envoyerDemandeDeDevisAction, type DevisFormState } from "@/app/devis/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import { euros } from "@/config/catalogue";
+import type { AteliersDeLaClasse } from "@/config/ateliers-de-la-classe";
 
 /**
  * LE FORMULAIRE DE DEMANDE DE DEVIS.
@@ -49,6 +50,10 @@ export function DevisForm({
   mentionTva,
   contact,
   initial = ETAT_INITIAL,
+  interetInitial = "arene",
+  entrepriseInitiale = "",
+  niveauInitial = "",
+  ateliers = {},
 }: {
   offres: readonly OffreDuFormulaire[];
   offreInitiale: string;
@@ -61,6 +66,19 @@ export function DevisForm({
   mentionTva: string;
   contact: string;
   initial?: DevisFormState;
+  /**
+   * Ce qui intéresse le demandeur, de l'adresse (`?interet=cours`, depuis un chapitre réservé
+   * ou l'orientation) : le cours seul rend l'entreprise et le niveau facultatifs.
+   */
+  interetInitial?: "arene" | "cours";
+  /** Le réglage déjà choisi ailleurs (`?entreprise=…&niveau=…`, depuis l'orientation). */
+  entrepriseInitiale?: string;
+  niveauInitial?: string;
+  /**
+   * Les ateliers de chaque combinaison « entreprise:niveau » (config/ateliers-de-la-classe.ts) :
+   * l'offre qui se paramètre à un niveau dit, au moment du choix, ce qu'elle ouvre.
+   */
+  ateliers?: Readonly<Record<string, AteliersDeLaClasse>>;
 }) {
   const { state, formAction, pending, formRef, guardError } = useGuardedAction(
     envoyerDemandeDeDevisAction,
@@ -70,6 +88,16 @@ export function DevisForm({
   const v = state.values;
   const [offre, setOffre] = useState(v?.offre || offreInitiale);
   const choisie = offres.find((o) => o.code === offre) ?? offres[0]!;
+  const [interet, setInteret] = useState<"arene" | "cours">(v?.interet === "cours" ? "cours" : v ? "arene" : interetInitial);
+  const parametree = Boolean(choisie.entreprise || choisie.niveau);
+  // Le cours seul ne se paramètre pas : l'entreprise et le niveau restent proposés, facultatifs.
+  const facultatif = parametree && interet === "cours";
+  const [entrepriseChoisie, setEntreprise] = useState(v?.entreprise ?? entrepriseInitiale);
+  const [niveauChoisi, setNiveau] = useState(v?.niveau ?? niveauInitial);
+  const combinaison =
+    choisie.entreprise && choisie.niveau && entrepriseChoisie && niveauChoisi
+      ? ateliers[`${entrepriseChoisie}:${niveauChoisi}`]
+      : undefined;
 
   const champ = "mt-1 w-full champ px-3 py-2 text-sm text-slate-100 outline-none";
   const etiquette = "text-xs font-medium uppercase tracking-wide text-slate-400";
@@ -186,6 +214,33 @@ export function DevisForm({
         <span className={etiquette}>{choisie.identifiant}</span>
         <input name="identifiant" maxLength={40} defaultValue={v?.identifiant ?? ""} className={champ} />
       </label>
+      {parametree ? (
+        <fieldset className="sm:col-span-2" data-champ-devis="interet">
+          <legend className={etiquette}>Ce qui vous intéresse</legend>
+          <div className="mt-1 flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-200">
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="interet"
+                value="arene"
+                checked={interet === "arene"}
+                onChange={() => setInteret("arene")}
+              />
+              L&apos;arène, avec le cours
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="interet"
+                value="cours"
+                checked={interet === "cours"}
+                onChange={() => setInteret("cours")}
+              />
+              Le cours seul
+            </label>
+          </div>
+        </fieldset>
+      ) : null}
       {choisie.entreprise ? (
         <label className="block" data-champ-devis="entreprise">
           <span className={etiquette}>L&apos;entreprise souhaitée</span>
@@ -193,9 +248,16 @@ export function DevisForm({
               remet le formulaire à zéro sur la valeur PAR DÉFAUT de la liste, que seul un
               nouveau montage met à jour. Sans elle, la liste revenait à « Choisir » et
               bloquait le second envoi. */}
-          <select key={v?.entreprise ?? ""} name="entreprise" required defaultValue={v?.entreprise ?? ""} className={champ}>
-            <option value="" disabled>
-              Choisir l&apos;entreprise
+          <select
+            key={v?.entreprise ?? entrepriseInitiale}
+            name="entreprise"
+            required={!facultatif}
+            onChange={(e) => setEntreprise(e.target.value)}
+            defaultValue={v?.entreprise ?? entrepriseInitiale}
+            className={champ}
+          >
+            <option value="" disabled={!facultatif}>
+              {facultatif ? "Aucune pour l'instant" : "Choisir l'entreprise"}
             </option>
             {entreprises.map((e) => (
               <option key={e.code} value={e.code}>
@@ -203,14 +265,22 @@ export function DevisForm({
               </option>
             ))}
           </select>
+          {facultatif ? <span className="mt-1 block text-xs text-slate-400">Facultatif pour le cours seul.</span> : null}
         </label>
       ) : null}
       {choisie.niveau ? (
         <label className="block" data-champ-devis="niveau">
           <span className={etiquette}>Le niveau souhaité</span>
-          <select key={v?.niveau ?? ""} name="niveau" required defaultValue={v?.niveau ?? ""} className={champ}>
-            <option value="" disabled>
-              Choisir le niveau
+          <select
+            key={v?.niveau ?? niveauInitial}
+            name="niveau"
+            required={!facultatif}
+            onChange={(e) => setNiveau(e.target.value)}
+            defaultValue={v?.niveau ?? niveauInitial}
+            className={champ}
+          >
+            <option value="" disabled={!facultatif}>
+              {facultatif ? "Aucun pour l'instant" : "Choisir le niveau"}
             </option>
             {niveaux.map((n) => (
               <option key={n.niveau} value={n.niveau}>
@@ -218,7 +288,24 @@ export function DevisForm({
               </option>
             ))}
           </select>
+          {facultatif ? <span className="mt-1 block text-xs text-slate-400">Facultatif pour le cours seul.</span> : null}
         </label>
+      ) : null}
+      {combinaison ? (
+        // CE QUE CE CHOIX OUVRE EN ATELIERS, dit avant l'envoi (audit produit, P1-4) : près
+        // d'une combinaison sur deux n'en a aucun, et la carte de l'offre ne le disait pas.
+        <p className="encadre-neutre rounded-lg px-3 py-2 text-sm leading-relaxed text-slate-200 sm:col-span-2" data-ateliers-du-choix="" aria-live="polite">
+          {combinaison.exacts.length + combinaison.adaptables.length === 0
+            ? "Aucun atelier clé en main n'est écrit pour cette entreprise à ce niveau, ni à un niveau près. L'offre comprend alors le cours entier et les parties de l'arène à ce niveau, sans atelier : choisissez un autre niveau ou une autre entreprise pour en avoir un."
+            : [
+                combinaison.exacts.length
+                  ? `Ateliers clés en main écrits pour ce choix : ${combinaison.exacts.map((a) => a.titre).join(", ")}.`
+                  : "Aucun atelier n'est écrit pour ce niveau exact.",
+                combinaison.adaptables.length
+                  ? ` À adapter d'un niveau (section « Adapter le niveau » de la fiche) : ${combinaison.adaptables.map((a) => `${a.titre} (niveau ${a.niveau})`).join(", ")}.`
+                  : "",
+              ].join("")}
+        </p>
       ) : null}
       {choisie.effectif ? (
         <label className="block">

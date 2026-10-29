@@ -52,6 +52,12 @@ const schema = z.object({
   email: z.string().trim().email("E-mail invalide").max(200),
   message: z.string().trim().max(1200, "Le message est limité à 1 200 caractères").catch(""),
   codePromo: z.string().trim().max(40, "Un code promo tient en 40 caractères").catch(""),
+  /**
+   * CE QUI INTÉRESSE LE DEMANDEUR (audit produit du 28 octobre 2026, P1-6) : l'arène (avec le
+   * cours), ou le cours seul. Le cours seul ne se paramètre pas : l'entreprise et le niveau
+   * d'arène deviennent facultatifs. Toute autre valeur vaut l'arène, le cas d'avant.
+   */
+  interet: z.enum(["arene", "cours"]).catch("arene"),
   /** Piège à robots : un champ invisible qu'un humain ne remplit pas. */
   site: z.string().max(0, "Formulaire invalide").catch("x"),
 });
@@ -66,7 +72,7 @@ export async function envoyerDemandeDeDevisAction(
   formData: FormData,
 ): Promise<DevisFormState> {
   const brut = Object.fromEntries(
-    ["offre", "nom", "fonction", "organisation", "identifiant", "effectif", "entreprise", "niveau", "email", "message", "codePromo", "site"].map(
+    ["offre", "nom", "fonction", "organisation", "identifiant", "effectif", "entreprise", "niveau", "email", "message", "codePromo", "interet", "site"].map(
       (k) => [k, String(formData.get(k) ?? "")],
     ),
   );
@@ -84,14 +90,17 @@ export async function envoyerDemandeDeDevisAction(
   const offre = offresDuDevis(catalogue).find((o) => o.code === d.offre);
   if (!offre) return { error: "Choisissez l'offre", ok: null, values };
   // L'entreprise et le niveau : seulement pour les offres qui se paramètrent à l'achat, et
-  // alors requis ; une valeur hors du registre est refusée.
+  // alors requis, sauf pour qui ne veut que le cours (facultatifs) ; une valeur saisie hors
+  // du registre est refusée dans les deux cas.
   const libelles = libellesDuDevisDe(offre);
+  const coursSeul = d.interet === "cours" && Boolean(libelles.entreprise || libelles.niveau);
   const entreprise = libelles.entreprise ? brut.entreprise!.trim() : "";
-  if (libelles.entreprise && !ENTREPRISES.some((e) => e.code === entreprise)) {
+  if (libelles.entreprise && !(coursSeul && !entreprise) && !ENTREPRISES.some((e) => e.code === entreprise)) {
     return { error: "Choisissez l'entreprise souhaitée", ok: null, values };
   }
-  const niveau = libelles.niveau ? Number(brut.niveau) : null;
-  if (libelles.niveau && !NIVEAUX_DE_L_ARENE.some((n) => n.niveau === niveau)) {
+  const niveauSaisi = brut.niveau!.trim();
+  const niveau = libelles.niveau && !(coursSeul && !niveauSaisi) ? Number(niveauSaisi) : null;
+  if (libelles.niveau && niveau !== null && !NIVEAUX_DE_L_ARENE.some((n) => n.niveau === niveau)) {
     return { error: "Choisissez le niveau souhaité", ok: null, values };
   }
   // Le code promo, s'il est saisi : vérifié côté serveur, refusé avec sa phrase.
@@ -125,6 +134,7 @@ export async function envoyerDemandeDeDevisAction(
     effectif: libelles.effectif && d.effectif ? Number(d.effectif) : null,
     entreprise: entreprise || null,
     niveau,
+    coursSeul,
     email: d.email,
     message: d.message,
     ip: await adresseOrigine(),

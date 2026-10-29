@@ -38,6 +38,12 @@ export interface DemandeDeDevis {
   entreprise?: string | null;
   /** Le niveau souhaité (Classe) ; null sinon. */
   niveau?: number | null;
+  /**
+   * Le demandeur ne veut que le cours : l'entreprise et le niveau d'arène étaient facultatifs.
+   * Non enregistré en colonne (une demande Classe sans entreprise le dit déjà) ; il est écrit
+   * dans le récapitulatif des deux courriels.
+   */
+  coursSeul?: boolean;
   email: string;
   message: string;
   ip: string | null;
@@ -161,6 +167,7 @@ function recapitulatif(d: DemandeDeDevis, montants = true): string[] {
   const l = d.libelles;
   return [
     `Offre : ${l.offre}`,
+    d.coursSeul ? "Intérêt : le cours seul, sans paramétrage de l'arène" : null,
     `${l.organisation} : ${d.organisation.trim()}`,
     d.identifiant.trim() ? `${l.identifiant.replace(/ \(facultatif\)$/, "")} : ${d.identifiant.trim()}` : null,
     d.entreprise ? `Entreprise souhaitée : ${nomDeLEntreprise(d.entreprise)}` : null,
