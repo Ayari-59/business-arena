@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { enEcriture, montantEcrit } from "../../../pedagogy/cours/correcteur";
 import { auCentime, type Ecriture } from "../../../pedagogy/cours/etats";
 import type { Cas } from "../cas";
 import type { DateDuCours } from "../monde/amortissement";
@@ -6,6 +6,7 @@ import { DELAI_CONVENU_DE_CAMPUSTECH, JOURS_DU_MOIS_COMMERCIAL, RETARD_DE_CAMPUS
 import { valeurNetteALaCloture } from "../monde/amortissement";
 import { cloture as clotureDuMonde, depreciationDeCreance, impotSurLesSocietes, perteSurCreance, type CodeDeTravail } from "../monde/cloture";
 import type { Chapitre, TableauDeDonnees } from "../types";
+import { etapesAvant, etapesDepuis, partieDuChapitre } from "./decoupage";
 import { ENTREPRISES_DE_LA_CLOTURE, balanceApresLaCloture, clotureDeNova, dateDe, ficheDe } from "./la-cloture";
 
 /**
@@ -219,7 +220,8 @@ function tableauDesDeuxExercices(y: PrudenceDeNova): TableauDeDonnees {
 // LE CHAPITRE
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = {
+/** Le chapitre tel qu'il était écrit, en un seul tenant : ses deux parties en sont tirées (plus bas). */
+const DEPRECIATIONS_ET_PROVISIONS_ENTIER: Chapitre = {
   code: "depreciations-et-provisions",
   parcours: "comptabilite-generale",
   palier: 4,
@@ -1025,3 +1027,73 @@ export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = {
   ],
 };
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LES DEUX PARTIES (audit pédagogique : aucun chapitre de plus de 20 étapes)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const CODE_DE_L_ANNEE_SUIVANTE = "le-denouement-des-risques";
+export const TITRE_DE_L_ANNEE_SUIVANTE = "Le dénouement des risques : reprendre, solder, corriger";
+
+/**
+ * DÉPRÉCIATIONS ET PROVISIONS, PREMIÈRE PARTIE : la prudence au 31 décembre N (la créance douteuse,
+ * la provision, le stock et la ligne examinés, l'estimation chiffrée), jusqu'au curseur du
+ * liquidateur, puis sa propre synthèse.
+ */
+export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = partieDuChapitre(DEPRECIATIONS_ET_PROVISIONS_ENTIER, [
+  ...etapesAvant(DEPRECIATIONS_ET_PROVISIONS_ENTIER, "annee-suivante"),
+  {
+    id: "synthese",
+    type: "lecture",
+    titre: "Ce que vous savez faire",
+    notions: ["income_statement", "payment_terms"],
+    texte: (c) => {
+      const y = prudenceDeNova(c);
+      return [
+        `Vous avez fait les travaux de prudence de ${y.f.entreprise} au 31 décembre : une créance reclassée et dépréciée sur son hors taxes, une provision au montant probable, un stock et une ligne examinés et laissés tels quels. Le résultat avant impôt passe de ${eur(y.resultatSansPrudence)} à ${eur(y.resultat)}, l'impôt baisse de ${eur(y.impotEnMoins)}.`,
+        `La suite, « ${TITRE_DE_L_ANNEE_SUIVANTE} », passe à l'année N+1 : le jugement et la liquidation dénouent les deux risques, et l'on mesure ce que l'estimation a déplacé d'un exercice à l'autre.`,
+        "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
+      ];
+    },
+    repere: () => "Dépréciation d'un actif, provision pour une dette probable : une dotation au 31 décembre, au montant qu'on estime probable. Les pertes probables se comptent, les gains probables attendent.",
+  },
+]);
+
+/** Le journal en ouvrant la suite : la balance de « La clôture », plus les écritures de prudence de N. */
+function ouvertureDeLAnneeSuivante(c: Cas): Ecriture {
+  const passees = etapesAvant(DEPRECIATIONS_ET_PROVISIONS_ENTIER, "annee-suivante").flatMap((e) => (e.type === "ecriture" ? enEcriture(e.ecriture(c)).lignes : []));
+  return { date: "31 décembre", libelle: "Balance après « La clôture » et les travaux de prudence de N, avant l'impôt", lignes: [...ouverture(c).lignes, ...passees] };
+}
+
+/**
+ * DÉPRÉCIATIONS ET PROVISIONS, SUITE : l'année N+1 (le jugement, la liquidation, les reprises), le
+ * laboratoire des deux exercices, les variantes et la critique, puis la synthèse du chapitre.
+ */
+export const LE_DENOUEMENT_DES_RISQUES: Chapitre = partieDuChapitre(
+  DEPRECIATIONS_ET_PROVISIONS_ENTIER,
+  [
+    {
+      id: "intro",
+      type: "lecture",
+      titre: "Deux risques à dénouer",
+      notions: ["payment_terms", "income_statement"],
+      tableau: (c) => tableauDesCreances(prudenceDeNova(c)),
+      texte: (c) => {
+        const y = prudenceDeNova(c);
+        return [
+          `Ce chapitre suit « Dépréciations et provisions » : au 31 décembre N, ${y.f.entreprise} a déprécié la créance de ${y.f.sonora.nom} de ${eur(y.d.depreciation)} et provisionné le litige pour ${eur(y.provision)}. Le journal s'ouvre sur ces écritures.`,
+          "L'année N+1 dit si l'estimation était bonne : vous passez les écritures qui dénouent les deux risques, puis vous mesurez ce que l'estimation a déplacé d'un exercice à l'autre.",
+        ];
+      },
+      repere: () => "Ce qu'on a estimé en N se dénoue en N+1 : la charge réelle se constate, l'estimation se reprend.",
+    },
+    ...etapesDepuis(DEPRECIATIONS_ET_PROVISIONS_ENTIER, "annee-suivante"),
+  ],
+  {
+    code: CODE_DE_L_ANNEE_SUIVANTE,
+    titre: TITRE_DE_L_ANNEE_SUIVANTE,
+    accroche: "Le jugement tombe, le liquidateur verse sa part : vous dénouez la provision et la créance douteuse, puis vous mesurez ce que l'estimation a déplacé d'un exercice à l'autre.",
+    prerequis: ["depreciations-et-provisions"],
+    ouverture: ouvertureDeLAnneeSuivante,
+  },
+);

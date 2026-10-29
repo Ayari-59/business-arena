@@ -19,7 +19,7 @@ import type { Situation } from "../types";
  * ne compte pas (`SEUIL_DE_VARIATION`).
  *
  * CE QUI A CHANGÉ. Le cas comparait les trimestres 1 et 4 de l'arène chez quatre entreprises. Il
- * compare maintenant janvier (92,25 € de panier, 46,68 € de marge) et décembre (83,07 € et 42,72 €) :
+ * compare maintenant janvier (82,18 € de panier en caisse, 41,44 € de marge) et décembre (74,79 € et 38,43 €) :
  * le panier baisse, les clients prennent des articles moins chers à offrir.
  */
 

@@ -255,6 +255,8 @@ export async function supprimerCompteEnseignant(userId: string): Promise<Resulta
   if (sesCohortes.length) await db.delete(episodeCohortes).where(inArray(episodeCohortes.id, sesCohortes));
   if (sesClassesDuCours.length) await db.delete(coursClasses).where(inArray(coursClasses.id, sesClassesDuCours));
   await db.delete(hintUsages).where(eq(hintUsages.userId, userId));
+  // Les jetons de « mot de passe oublié » partent avec le compte (cascade, migration 0054) :
+  // un lien envoyé avant la suppression ne rouvre rien.
   await db.delete(users).where(eq(users.id, userId));
 
   const eleves = await supprimerDesEleves(await orphelins(candidats));

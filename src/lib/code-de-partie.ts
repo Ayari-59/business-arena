@@ -68,10 +68,11 @@ export function avecLePrenom(vers: string, prenom: string): string {
 
 /**
  * TROP D'ESSAIS DEPUIS CETTE ADRESSE (audit UX du 29 octobre 2026, P1-4) : la garde des codes
- * (lib/garde-des-codes.ts) ferme la porte à toute l'adresse, code juste compris. Le dire, avec
- * l'attente, au lieu de « ce code ne mène à aucune classe », faux et déroutant.
+ * (lib/garde-des-codes.ts) refuse et ralentit les codes FAUX de toute l'adresse ; un code juste,
+ * lui, passe toujours. Le dire, avec l'attente : ce code-ci est faux, et l'on ne peut plus en
+ * essayer d'autres avant un moment.
  */
 export function refusTropDEssais(attente: string | undefined): string {
   const n = Math.max(1, Math.min(60, Number.parseInt(attente ?? "", 10) || 15));
-  return `Trop de codes ont été essayés depuis ce réseau ces dernières minutes. Réessayez dans ${n} minute${n > 1 ? "s" : ""} ; d'ici là, même un code juste est refusé.`;
+  return `Trop de codes ont été essayés depuis ce réseau ces dernières minutes. Ce code n'est pas reconnu : vérifiez-le auprès de votre enseignant. Un code juste passe toujours ; pour en essayer d'autres, réessayez dans ${n} minute${n > 1 ? "s" : ""}.`;
 }

@@ -23,6 +23,10 @@ import { refusDuDomaine } from "@/config/inscriptions";
  * - les e-mails listés dans ADMIN_EMAILS deviennent admin général.
  */
 
+/** La règle des mots de passe : l'inscription et la réinitialisation l'appliquent toutes deux. */
+export const LONGUEUR_MINIMALE_DU_MOT_DE_PASSE = 8;
+export const MOT_DE_PASSE_TROP_COURT = `Mot de passe : ${LONGUEUR_MINIMALE_DU_MOT_DE_PASSE} caractères minimum.`;
+
 export async function registerTeacher(args: {
   email: string;
   password: string;
@@ -36,7 +40,7 @@ export async function registerTeacher(args: {
   nouveautes?: boolean;
 }): Promise<{ userId: string } | { error: string }> {
   const email = args.email.trim().toLowerCase();
-  if (args.password.length < 8) return { error: "Mot de passe : 8 caractères minimum." };
+  if (args.password.length < LONGUEUR_MINIMALE_DU_MOT_DE_PASSE) return { error: MOT_DE_PASSE_TROP_COURT };
 
   const invite = args.inviteCode?.trim() ? await resolveInvite(args.inviteCode) : null;
   if (args.inviteCode?.trim() && !invite) {
@@ -136,7 +140,7 @@ export const COMPTE_DESACTIVE =
 const IDENTIFIANTS_INCORRECTS = "Identifiants incorrects.";
 
 /** Le coût bcrypt des vrais mots de passe (`registerTeacher`). */
-const COUT_BCRYPT = 10;
+export const COUT_BCRYPT = 10;
 
 let empreinte: Promise<string> | null = null;
 /**

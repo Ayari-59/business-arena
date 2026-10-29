@@ -11,6 +11,7 @@ import {
   PART_VERSEE_VARIANTE,
   PRIX_DU_JEU_APRES_NOEL,
   TAUX_ESTIME_A_REBOURS,
+  LE_DENOUEMENT_DES_RISQUES,
 } from "../../src/config/cours/chapitres/depreciations-et-provisions";
 import { LA_CLOTURE } from "../../src/config/cours/chapitres/la-cloture";
 import { EXERCICE_DE_NOVA as f } from "../../src/config/cours/monde/exercice-de-nova";
@@ -293,7 +294,8 @@ describe("dépréciations et provisions : les étapes", () => {
 
   it("les écritures, au montant de la main", () => {
     const montants = (id: string) => {
-      const e = ch.etapes.find((x) => x.id === id)!;
+      // Le chapitre est découpé en deux : les écritures de N+1 sont dans la suite.
+      const e = [...ch.etapes, ...LE_DENOUEMENT_DES_RISQUES.etapes].find((x) => x.id === id)!;
       if (e.type !== "ecriture") throw new Error(id);
       return Object.fromEntries(e.ecriture(cas).lignes.map((l) => [`${l.sens} ${l.compte}`, l.montant]));
     };
@@ -316,7 +318,11 @@ describe("dépréciations et provisions : les étapes", () => {
     const b = bilan(s);
     expect(b.passif.find((x) => x.libelle === "Provisions")?.montant).toBe(provision);
     expect(-(s["491"] ?? 0)).toBe(depreciation);
-    const fin = etatAvant(chapitre, cas, chapitre.etapes.length).soldes;
+    // La suite s'ouvre sur ce journal, et N+1 le dénoue.
+    verifierLeJournal(LE_DENOUEMENT_DES_RISQUES);
+    const suite = chapitreDuCas(LE_DENOUEMENT_DES_RISQUES, cas);
+    expect(etatAvant(suite, cas, 0).soldes).toEqual(etatAvant(chapitre, cas, chapitre.etapes.length).soldes);
+    const fin = etatAvant(suite, cas, suite.etapes.length).soldes;
     for (const compte of ["416", "491", "1511"]) expect(fin[compte] ?? 0, compte).toBe(0);
     expect([fin["654"], fin["7817"], fin["7815"], fin["658"]]).toEqual([perteHt, -depreciation, -provision, condamnation]);
     expect(fin["512"]).toBe(c(115_734.87 + verse - condamnation));
@@ -361,7 +367,7 @@ describe("dépréciations et provisions : les étapes", () => {
   });
 
   it("le laboratoire des deux exercices : N+1 sans charge nette, et un total qui ne bouge pas", () => {
-    const l = laboratoire(ch, "le-laboratoire-des-deux-exercices");
+    const l = laboratoire(LE_DENOUEMENT_DES_RISQUES, "le-laboratoire-des-deux-exercices");
     expect(l.depart).toEqual({ taux: 40, provision: 5_000 });
     expect(l.solution).toEqual({ taux: 50, provision: 4_000 });
     expect(l.reussi).toEqual([false, true]);
@@ -395,7 +401,7 @@ describe("dépréciations et provisions : les étapes", () => {
   });
 
   it("les étapes d'expert : deux exercices, la variante, le taux à rebours, et ce qu'on ne corrige pas", () => {
-    expect(attendus(ch, "deux-annees")).toEqual({
+    expect(attendus(LE_DENOUEMENT_DES_RISQUES, "deux-annees")).toEqual({
       "Coût de la créance sur les deux exercices": perteHt,
       "Charge nette de N+1 sur la créance": chargeNette,
       "Effet du litige sur N+1": effetDuJugement,
@@ -403,7 +409,7 @@ describe("dépréciations et provisions : les étapes", () => {
     });
     expect(PART_VERSEE_VARIANTE).toBe(0.2);
     const v = { ttc: c(ttc - ttc * 0.2) };
-    expect(attendus(ch, "variante-vingt-pour-cent")).toEqual({
+    expect(attendus(LE_DENOUEMENT_DES_RISQUES, "variante-vingt-pour-cent")).toEqual({
       "Perte toutes taxes comprises": v.ttc,
       "Perte hors taxes": c(v.ttc / 1.2),
       "TVA récupérée": c(v.ttc - v.ttc / 1.2),
@@ -414,14 +420,15 @@ describe("dépréciations et provisions : les étapes", () => {
     const r = { perteHt: c((ttc - ttc * 0.3) / 1.2), depreciation: c(ht * 0.65) };
     const chargeNetteARebours = c(r.perteHt - r.depreciation);
     expect([r.perteHt, r.depreciation, chargeNetteARebours]).toEqual([19_617.5, 18_216.25, 1_401.25]);
-    expect(attendus(ch, "a-rebours")).toEqual({ "Perte hors taxes": r.perteHt, "Dépréciation constatée en N": c(r.perteHt - chargeNetteARebours), "Perte estimée en N, en %": c((c(r.perteHt - chargeNetteARebours) / ht) * 100) });
-    expect((ch.etapes.find((e) => e.id === "a-rebours") as EtapeMontants).question(cas, etatVide)).toContain("1\u202f401,25 €");
-    expect(juste(ch, "corriger-n")).toBe("Non : l'estimation était la meilleure au 31 décembre, et l'écart va dans N+1");
+    expect(attendus(LE_DENOUEMENT_DES_RISQUES, "a-rebours")).toEqual({ "Perte hors taxes": r.perteHt, "Dépréciation constatée en N": c(r.perteHt - chargeNetteARebours), "Perte estimée en N, en %": c((c(r.perteHt - chargeNetteARebours) / ht) * 100) });
+    expect((LE_DENOUEMENT_DES_RISQUES.etapes.find((e) => e.id === "a-rebours") as EtapeMontants).question(cas, etatVide)).toContain("1\u202f401,25 €");
+    expect(juste(LE_DENOUEMENT_DES_RISQUES, "corriger-n")).toBe("Non : l'estimation était la meilleure au 31 décembre, et l'écart va dans N+1");
     expect(juste(ch, "client-douteux")).toBe("Il passe la créance en clients douteux, et la déprécie de la perte probable, calculée sur son montant hors taxes");
     expect(juste(ch, "litige")).toBe("Une provision pour litige de 5\u202f000 € : le montant probable");
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(ch));
+  it("textes propres, une seule bonne réponse, notions existantes : la suite", () => verifierLesTextes(LE_DENOUEMENT_DES_RISQUES));
 });
 
 describe("le cas : la créance qui se dégrade", () => {

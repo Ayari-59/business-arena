@@ -780,6 +780,7 @@ export function PeriodDashboard({
           <div className="space-y-3">
             <FinancialStatements
               result={r}
+              secteur={view.sector}
               // La colonne d'écart des états : le tour d'avant, entier (compte
               // de résultat, bilan et flux), ou `null` au premier tour.
               precedent={resultatPrecedent}

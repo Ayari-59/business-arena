@@ -60,7 +60,7 @@ import {
 } from "@/config/ventes-estimees";
 import { aideDuBudgetEntretien } from "@/config/entretien";
 import { AIDE_DU_BUDGET_QUALITE } from "@/config/qualite";
-import type { ScenarioVocabulary } from "@/config/scenarios/registry";
+import type { ScenarioVocabulary, Sector } from "@/config/scenarios/registry";
 import type { GameView } from "@/services/game-view.service";
 import { formatEuro, formatEuroCents, formatUnits } from "@/lib/format";
 import {
@@ -2387,6 +2387,7 @@ export function DecisionForm({
   niveauDuFinancement = null,
   capacityFacts,
   vocabulary,
+  secteur,
   verrou,
   echeance = null,
   sauvetage,
@@ -2587,6 +2588,8 @@ export function DecisionForm({
   plafondInvestissement?: GameView["plafondInvestissement"];
   /** Vocabulaire du secteur joué (registre des scénarios). */
   vocabulary: ScenarioVocabulary;
+  /** Le secteur joué : l'estimation nomme son stock selon le métier. */
+  secteur: Sector;
   /** Capacité de production : goulots et levier RH. */
   capacityFacts?: {
     machineCapacity: number;
@@ -4121,6 +4124,7 @@ export function DecisionForm({
         <EncartResultatEstime
           estime={estime}
           vocabulary={v}
+          secteur={secteur}
           allerAuChamp={allerAuChampDesVentes}
           limites={
             groupe && donneesRecap

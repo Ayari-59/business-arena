@@ -238,7 +238,7 @@ export const ATELIER_GEA: AtelierDefinition = {
           minutes: 25,
           titre: "Où passe l'argent",
           detail:
-            "Les équipes partent des créances, des dettes et des délais relevés avant la séance et reconstituent leur cycle : elles paient leurs charges avant d'encaisser leurs ventes, comptant auprès des étudiants et des passionnés, à soixante jours auprès de la grande distribution, à quatre-vingts jours auprès du compte-clé quand il arrive. Le décalage porte un nom, et chacune le chiffre dans son propre bilan.",
+            "Les équipes partent des créances, des dettes et des délais relevés avant la séance et reconstituent leur cycle : elles paient leurs charges avant d'encaisser leurs ventes, comptant auprès des étudiants et des passionnés, à soixante jours auprès de la grande distribution, à quatre-vingts jours auprès du compte-clé quand il arrive, soit vingt jours de retard sur les soixante convenus. Le décalage porte un nom, et chacune le chiffre dans son propre bilan.",
         },
         {
           minutes: 25,

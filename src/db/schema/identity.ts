@@ -92,6 +92,31 @@ export const loginAttempts = pgTable(
   (t) => [index("login_attempts_email_idx").on(t.email), index("login_attempts_ip_idx").on(t.ip)],
 );
 
+/**
+ * LES JETONS DE « MOT DE PASSE OUBLIÉ » (migration 0054, services/mot-de-passe-oublie.service.ts).
+ *
+ * Seule l'EMPREINTE (SHA-256) du jeton est gardée : une lecture de la base ne donne aucun
+ * lien utilisable. Un jeton vaut une heure et sert une fois (`utiliseLe`). La purge de
+ * chaque nuit retire ceux qui ont expiré ; supprimer le compte les emporte (cascade).
+ */
+export const jetonsDeReinitialisation = pgTable(
+  "jetons_de_reinitialisation",
+  {
+    id: id(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    empreinte: text("empreinte").notNull().unique(),
+    expireLe: timestamp("expire_le", { withTimezone: true }).notNull(),
+    utiliseLe: timestamp("utilise_le", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("jetons_de_reinitialisation_user_idx").on(t.userId),
+    index("jetons_de_reinitialisation_expire_idx").on(t.expireLe),
+  ],
+);
+
 export const organizations = pgTable("organizations", {
   id: id(),
   name: text("name").notNull(),

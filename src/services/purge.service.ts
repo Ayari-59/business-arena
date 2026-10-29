@@ -32,6 +32,7 @@ import {
   supprimerDesExamens,
   supprimerDesParties,
 } from "@/services/effacement.service";
+import { purgerLesJetonsExpires } from "@/services/mot-de-passe-oublie.service";
 
 /**
  * LA PURGE DE CHAQUE NUIT : appliquer les durées de conservation (config/conservation.ts).
@@ -90,6 +91,8 @@ export const AVERTISSEMENTS_PAR_NUIT = 100;
 
 export interface BilanDePurge {
   tentatives: number;
+  /** Jetons de « mot de passe oublié » expirés (services/mot-de-passe-oublie.service.ts). */
+  jetonsDeReinitialisation: number;
   ipEffacees: number;
   demandes: number;
   examens: number;
@@ -157,6 +160,9 @@ export async function purger(
   const tentatives = (
     await db.delete(loginAttempts).where(lt(loginAttempts.createdAt, s.tentatives)).returning({ id: loginAttempts.id })
   ).length;
+
+  // 1 bis. Les jetons de « mot de passe oublié » expirés : passé leur heure, ils ne servent plus.
+  const jetonsDeReinitialisation = await purgerLesJetonsExpires(maintenant);
 
   // 2. L'adresse IP des parties solo : seule l'adresse part, la partie reste.
   const ipEffacees = (
@@ -310,6 +316,7 @@ export async function purger(
 
   return {
     tentatives,
+    jetonsDeReinitialisation,
     ipEffacees,
     demandes: devis.length + rdv.length + orientation.length,
     examens: examensFaits.examens,

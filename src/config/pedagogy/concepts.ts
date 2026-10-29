@@ -717,7 +717,7 @@ export const CONCEPTS: ConceptDef[] = [
     definition:
       "Le temps qui sépare une vente de son encaissement, et l'argent qui dort chez les clients pendant ce temps.",
     intuition:
-      "Vendre à un compte-clé payé à quatre-vingts jours, c'est lui prêter le prix de la vente pendant presque un trimestre : le résultat monte tout de suite, la caisse attend.",
+      "Vendre à un compte-clé qui paie à quatre-vingts jours, en retard sur les soixante convenus, c'est lui prêter le prix de la vente pendant presque un trimestre : le résultat monte tout de suite, la caisse attend.",
     method:
       "Relevez le délai de chaque clientèle, calculez les créances en fin de période (ventes × délai / durée de la période) et demandez-vous qui finance cet encours : le découvert, l'escompte ou l'affacturage.",
     formula:

@@ -103,6 +103,7 @@ const rendu = (result: CompanyRoundResult, precedent: CompanyRoundResult | null)
       price: 64,
       otherVariableCostPerUnit: 4,
       vocabulary: NOVA_DEFINITION.vocabulary,
+      secteur: NOVA_DEFINITION.sector,
     }),
   ).replace(/[  ]/g, " ");
 

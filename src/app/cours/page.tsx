@@ -7,6 +7,7 @@ import { ArticulationDuCours } from "@/components/articulation-du-cours";
 import { OuvreLeTiroirVise } from "@/components/ouvre-le-tiroir-vise";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { CHAPITRES, PALIERS, PARCOURS, PROGRAMME } from "@/config/cours/registre";
+import { PARCOURS_DE_FORMATION, chapitresDuParcoursDeFormation } from "@/config/cours/parcours-de-formation";
 import { dureeDuChapitre, dureeEnClair } from "@/config/cours/duree";
 import { diplomesParNiveau, programmeDuDiplome } from "@/config/cours/programme";
 import { THEMES, episodesDuTheme, themeDuChapitre, type Theme } from "@/config/cours/themes";
@@ -57,6 +58,7 @@ export default async function CoursPage({
   const pilote = CHAPITRES.find((c) => c.libre)!;
   const [{ classe: annonce, diplome }, userId] = await Promise.all([searchParams, getGuestUserId()]);
   const programme = diplome ? programmeDuDiplome(diplome) : null;
+  const parcoursDeFormation = programme ? PARCOURS_DE_FORMATION.find((p) => p.formation === programme.formation.code) : undefined;
   const classe = userId ? await classeDeLEleve(userId) : null;
   const imposee = classe?.entreprise ? ENTREPRISES.find((e) => e.code === classe.entreprise) : undefined;
   return (
@@ -271,6 +273,16 @@ export default async function CoursPage({
                     </p>
                   )}
                 </div>
+
+                {/* LE PARCOURS DE FORMATION (le BUT) : il regroupe des chapitres d'autres parcours, sans
+                    les dupliquer ; une classe qui le choisit les ouvre tous (config/cours/parcours-de-formation.ts). */}
+                {parcoursDeFormation ? (
+                  <p className="text-sm text-slate-300" data-parcours-de-formation={parcoursDeFormation.code}>
+                    Pour une classe : le parcours « {parcoursDeFormation.titre} » regroupe{" "}
+                    {chapitresDuParcoursDeFormation(parcoursDeFormation.code).length} chapitres écrits pour d&apos;autres parcours.
+                    Choisi pour la classe, il les ouvre tous, avec leurs cas pratiques.
+                  </p>
+                ) : null}
 
                 <div className="grid gap-3">
                   <h4 className="text-sm font-semibold uppercase tracking-etiquette text-slate-400">Les chapitres</h4>

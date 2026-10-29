@@ -299,6 +299,12 @@ export const LOYER_DU_MOIS = { montant: CHARGES_FIXES_DU_MOIS.loyer, jour: 5 };
  * comprises). La CSG et la CRDS non déductibles, 2,9 % sur 98,25 % du brut, font le net imposable ;
  * le prélèvement à la source est de 2 %. Le net à payer se vire le 28 ; les cotisations et le
  * prélèvement se versent le 15 du mois suivant (déclaration sociale nominative).
+ *
+ * TAUX SIMPLIFIÉS DU COURS (vérifiés le 29 octobre 2026) : de vraies cotisations se comptent ligne par
+ * ligne, par tranche du plafond de la sécurité sociale, et les patronales baissent près du SMIC par la
+ * réduction générale dégressive unique (RGDU) depuis le 1er janvier 2026 (economie.gouv.fr,
+ * « Comment fonctionne la RGDU »). 22 % et 42 % sont des ordres de grandeur usuels, pas un barème.
+ * La CSG et la CRDS non déductibles, 2,4 % + 0,5 % sur 98,25 % du brut, sont celles de l'URSSAF.
  */
 export const TAUX_DE_LA_PAIE: TauxDeLaPaie = {
   salarialUrssaf: 0.18,

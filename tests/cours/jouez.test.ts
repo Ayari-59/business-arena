@@ -123,12 +123,14 @@ describe("la mission dit où l'arène s'écarte du chapitre", () => {
   const mission = (chapitre: string, code: string) => missionDuChapitre(chapitre, casDeLEntreprise(code))!;
   const texte = (chapitre: string, code: string) => `${mission(chapitre, code).faire} ${mission(chapitre, code).chercher}`.replace(/[\u00a0\u202f]/g, " ");
 
-  it("un commerce a un stock de marchandises, même si l'écran parle de produits finis", () => {
+  it("un commerce a un stock de marchandises, et l'écran le nomme ainsi", () => {
     for (const code of ["boutique", "ecommerce"]) {
-      expect(texte("les-stocks", code)).toMatch(/marchandises/);
+      expect(texte("les-stocks", code)).toMatch(/« Stocks de marchandises »/);
       expect(texte("les-stocks", code)).toMatch(/ne fabrique rien/);
+      expect(texte("les-stocks", code)).not.toMatch(/produits finis|« Production stockée/);
     }
-    expect(texte("stock-du-point-de-vente", "boutique")).toMatch(/marchandises/);
+    expect(texte("stock-du-point-de-vente", "boutique")).toMatch(/« Stocks de marchandises »/);
+    expect(texte("stock-du-point-de-vente", "boutique")).not.toMatch(/produits finis/);
   });
 
   it("l'escompte de l'arène est bancaire, celui du chapitre est de règlement", () => {

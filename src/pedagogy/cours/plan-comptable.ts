@@ -23,9 +23,16 @@ export interface Compte {
 export const PLAN_DU_COURS: readonly Compte[] = [
   // Classe 1 : capitaux
   { numero: "101", intitule: "Capital", nature: "passif" },
+  { numero: "1013", intitule: "Capital souscrit, appelé, versé", nature: "passif" },
+  { numero: "1041", intitule: "Primes d'émission", nature: "passif" },
+  { numero: "1061", intitule: "Réserve légale", nature: "passif" },
+  { numero: "1068", intitule: "Autres réserves", nature: "passif" },
   { numero: "108", intitule: "Compte de l'exploitant", nature: "passif" },
+  // Les provisions réglementées (l'amortissement dérogatoire) : au passif, avec les capitaux propres.
+  { numero: "145", intitule: "Amortissements dérogatoires", nature: "passif" },
   { numero: "151", intitule: "Provisions pour risques", nature: "passif" },
   { numero: "1511", intitule: "Provisions pour litiges", nature: "passif" },
+  { numero: "1515", intitule: "Provisions pour pertes de change", nature: "passif" },
   { numero: "164", intitule: "Emprunts auprès des établissements de crédit", nature: "passif" },
   { numero: "1641", intitule: "Emprunts bancaires", nature: "passif" },
   { numero: "1688", intitule: "Intérêts courus sur emprunts", nature: "passif" },
@@ -57,6 +64,9 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "28182", intitule: "Amortissements du matériel de transport", nature: "actif" },
   { numero: "28183", intitule: "Amortissements du matériel de bureau et informatique", nature: "actif" },
   { numero: "28184", intitule: "Amortissements du mobilier", nature: "actif" },
+  // Les dépréciations des immobilisations : en soustraction de l'immobilisation, comme les amortissements.
+  { numero: "291", intitule: "Dépréciations des immobilisations corporelles", nature: "actif" },
+  { numero: "2915", intitule: "Dépréciations des installations techniques, matériel et outillage", nature: "actif" },
   // Classe 4 : tiers
   { numero: "401", intitule: "Fournisseurs", nature: "passif" },
   { numero: "404", intitule: "Fournisseurs d'immobilisations", nature: "passif" },
@@ -76,6 +86,9 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "44571", intitule: "TVA collectée", nature: "tva" },
   { numero: "44587", intitule: "TVA sur factures à établir", nature: "tva" },
   { numero: "44551", intitule: "TVA à décaisser", nature: "tva" },
+  // Les écarts de conversion des créances et des dettes en devises, à la clôture.
+  { numero: "476", intitule: "Différence de conversion, actif", nature: "actif" },
+  { numero: "477", intitule: "Différence de conversion, passif", nature: "passif" },
   { numero: "486", intitule: "Charges constatées d'avance", nature: "actif" },
   { numero: "487", intitule: "Produits constatés d'avance", nature: "passif" },
   // Dépréciations des comptes de tiers : en soustraction des créances qu'elles suivent.
@@ -116,7 +129,12 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "695", intitule: "Impôts sur les bénéfices", nature: "charge" },
   { numero: "6811", intitule: "Dotations aux amortissements des immobilisations incorporelles et corporelles", nature: "charge" },
   { numero: "6815", intitule: "Dotations aux provisions d'exploitation", nature: "charge" },
+  { numero: "6816", intitule: "Dotations aux dépréciations des immobilisations incorporelles et corporelles", nature: "charge" },
   { numero: "6817", intitule: "Dotations aux dépréciations des actifs circulants", nature: "charge" },
+  { numero: "686", intitule: "Dotations aux amortissements, dépréciations et provisions, charges financières", nature: "charge" },
+  { numero: "6865", intitule: "Dotations aux provisions financières", nature: "charge" },
+  { numero: "687", intitule: "Dotations aux amortissements, dépréciations et provisions, charges exceptionnelles", nature: "charge" },
+  { numero: "6872", intitule: "Dotations aux provisions réglementées (immobilisations)", nature: "charge" },
   // Classe 7 : produits
   { numero: "701", intitule: "Ventes de produits finis", nature: "produit" },
   { numero: "765", intitule: "Escomptes obtenus", nature: "produit" },

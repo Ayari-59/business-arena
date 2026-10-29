@@ -1,3 +1,4 @@
+import type { OuvrablePar } from "@/config/cours/parcours-de-formation";
 import type { Chapitre } from "@/config/cours/types";
 import { getSession } from "@/lib/session";
 import { getGuestUserId } from "@/lib/guest";
@@ -14,7 +15,7 @@ import { coursOuvert } from "@/services/cours.service";
  * toutes deux par ici : le contenu d'un chapitre réservé ne part au navigateur qu'après
  * ce contrôle (pedagogy/cours/chapitre-servi.ts).
  */
-export async function chapitreOuvert(chapitre: Pick<Chapitre, "libre" | "parcours">): Promise<boolean> {
+export async function chapitreOuvert(chapitre: Pick<Chapitre, "libre"> & OuvrablePar): Promise<boolean> {
   if (chapitre.libre) return true;
   const [session, invite] = await Promise.all([getSession(), getGuestUserId()]);
   return coursOuvert({ enseignant: session?.userId ?? null, eleve: invite }, chapitre);

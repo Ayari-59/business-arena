@@ -21,6 +21,8 @@ import { coursClasses, users } from "@/db/schema";
 import { CHAPITRES } from "@/config/cours/registre";
 import { placerSousLicence } from "./helpers/licence";
 import { choisirLeParcours, classeAChoisirSonParcours, coursOuvert, creerClasse, rejoindreClasse } from "@/services/cours.service";
+import { CHAPITRES_DES_PARCOURS_DE_FORMATION } from "@/config/cours/parcours-de-formation";
+import { casDuChapitre } from "@/config/cours/situations";
 
 const reserves = CHAPITRES.filter((c) => !c.libre);
 const deLaClasse = reserves.find((c) => c.parcours === "mco")!;
@@ -103,6 +105,33 @@ describe("l'accès au cours selon l'offre", () => {
     expect(await coursOuvert({ eleve, enseignant: prof }, dUnAutre)).toBe(true);
     expect(await coursOuvert({ eleve }, deLaClasse)).toBe(false);
     expect(await coursOuvert({ enseignant: prof }, deLaClasse)).toBe(false);
+  });
+
+  it("Classe, parcours BUT GEA : les chapitres que le parcours regroupe s'ouvrent, avec leurs cas ; les autres restent fermés", async () => {
+    const prof = await utilisateur();
+    await placerSousLicence(prof, { arene: "classe", entreprises: ["hotel"], niveaux: [2] });
+    const c = (await creerClasse({ enseignantId: prof, nom: "BUT GEA 2", parcours: "but-gea" }))!;
+    expect(c).toBeTruthy();
+    const eleve = await utilisateur();
+    await rejoindreClasse(eleve, c.code, "Sacha");
+    const gea = CHAPITRES_DES_PARCOURS_DE_FORMATION["but-gea"]!;
+    // Un chapitre de la comptabilité générale, un du contrôle de gestion, un de l'UE10 : trois parcours d'origine.
+    const ouverts = (["comptabilite-generale", "controle-de-gestion", "dcg-comptabilite-approfondie"] as const).map((p) => reserves.find((x) => x.parcours === p && gea.includes(x.code))!);
+    for (const ch of ouverts) {
+      expect(gea, ch.code).toContain(ch.code);
+      expect(await coursOuvert({ eleve }, ch), ch.code).toBe(true);
+      expect(await coursOuvert({ enseignant: prof }, ch), ch.code).toBe(true);
+    }
+    const cas = casDuChapitre("le-test-de-depreciation")!;
+    expect(await coursOuvert({ eleve }, cas)).toBe(true);
+    // Un chapitre du BTS MCO qui ne cite aucune compétence du BUT GEA reste fermé.
+    const ferme = reserves.find((x) => x.parcours === "mco" && !gea.includes(x.code))!;
+    expect(await coursOuvert({ eleve }, ferme)).toBe(false);
+    expect(await coursOuvert({ enseignant: prof }, ferme)).toBe(false);
+    // Le parcours de formation se choisit aussi pour une classe héritée.
+    const h = (await creerClasse({ enseignantId: prof, nom: "Ancienne GEA", parcours: "mco" }))!;
+    await db.update(coursClasses).set({ parcours: null, heritee: true }).where(eq(coursClasses.id, h.id));
+    expect(await choisirLeParcours({ enseignantId: prof, classeId: h.id, parcours: "but-tc" })).toBe(true);
   });
 
   it("Campus : tout est ouvert", async () => {

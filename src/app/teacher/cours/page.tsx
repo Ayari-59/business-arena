@@ -11,7 +11,8 @@ import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { SubmitButton } from "@/components/submit-button";
 import { bouton, LIEN_A_L_ENCRE } from "@/components/bouton";
 import { ENTREPRISES } from "@/app/cours/entreprises";
-import { CHAPITRES, PARCOURS } from "@/config/cours/registre";
+import { CHAPITRES } from "@/config/cours/registre";
+import { PARCOURS_A_CHOISIR, titreDuParcours } from "@/config/cours/parcours-de-formation";
 import { classeSansOffre, offreDuCoursDeLEnseignant } from "@/services/chapitres-de-la-classe";
 import { lienDuDevis, LIBELLE_DU_DEVIS, OFFRES } from "@/config/tarifs";
 import { ArticulationDuCours } from "@/components/articulation-du-cours";
@@ -114,7 +115,9 @@ export default async function MesClassesDuCoursPage({ searchParams }: { searchPa
                   <option value="" disabled>
                     Choisir un parcours
                   </option>
-                  {PARCOURS.map((p) => (
+                  {/* Les parcours du registre, puis les parcours de formation (le BUT), qui regroupent
+                      des chapitres d'autres parcours (config/cours/parcours-de-formation.ts). */}
+                  {PARCOURS_A_CHOISIR.map((p) => (
                     <option key={p.code} value={p.code}>
                       {p.titre}
                     </option>
@@ -164,7 +167,7 @@ export default async function MesClassesDuCoursPage({ searchParams }: { searchPa
                   </span>
                   <span className="mt-0.5 block text-sm text-slate-400">
                     {compter(c.eleves, "élève")} · créée {jourDeCreation(c.createdAt)}
-                    {c.parcours ? ` · ${PARCOURS.find((p) => p.code === c.parcours)?.titre ?? ""}` : ""}
+                    {c.parcours ? ` · ${titreDuParcours(c.parcours) ?? ""}` : ""}
                     {c.entreprise ? ` · ${ENTREPRISES.find((e) => e.code === c.entreprise)?.nom ?? ""}` : ""}
                   </span>
                 </Link>

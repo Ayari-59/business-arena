@@ -4,27 +4,27 @@ import { LA_PAIE } from "./chapitres/la-paie";
 import { L_EMPRUNT } from "./chapitres/l-emprunt";
 import { IMMOBILISATIONS } from "./chapitres/immobilisations";
 import { LES_STOCKS } from "./chapitres/les-stocks";
-import { LA_CLOTURE } from "./chapitres/la-cloture";
+import { DECIDER_APRES_LA_CLOTURE, LA_CLOTURE } from "./chapitres/la-cloture";
 import { REMISES_ET_REGLEMENTS } from "./chapitres/remises-et-reglements";
-import { SEUIL_DE_RENTABILITE } from "./chapitres/seuil-de-rentabilite";
+import { LES_LEVIERS_DU_SEUIL, SEUIL_DE_RENTABILITE } from "./chapitres/seuil-de-rentabilite";
 import { COUT_COMPLET } from "./chapitres/cout-complet";
 import { COUT_PAR_PRODUIT } from "./chapitres/cout-par-produit";
 import { BUDGET_DE_TRESORERIE } from "./chapitres/budget-de-tresorerie";
-import { LE_COUT_PREETABLI_ET_LES_BUDGETS } from "./chapitres/le-cout-preetabli-et-les-budgets";
+import { LE_BUDGET_FLEXIBLE, LE_COUT_PREETABLI_ET_LES_BUDGETS } from "./chapitres/le-cout-preetabli-et-les-budgets";
 import { LES_ECARTS_SUR_CHARGES_DIRECTES } from "./chapitres/les-ecarts-sur-charges-directes";
 import { LES_ECARTS_SUR_CHARGES_INDIRECTES } from "./chapitres/les-ecarts-sur-charges-indirectes";
 import { LES_ECARTS_SUR_VENTES_ET_MARGE } from "./chapitres/les-ecarts-sur-ventes-et-marge";
-import { ANALYSE_DES_ECARTS } from "./chapitres/analyse-des-ecarts";
+import { ANALYSE_DES_ECARTS, LES_ECARTS_ET_LEURS_RESPONSABLES } from "./chapitres/analyse-des-ecarts";
 import { TABLEAU_DE_BORD } from "./chapitres/tableau-de-bord";
 import { DECIDER } from "./chapitres/decider";
-import { DEPRECIATIONS_ET_PROVISIONS } from "./chapitres/depreciations-et-provisions";
+import { DEPRECIATIONS_ET_PROVISIONS, LE_DENOUEMENT_DES_RISQUES } from "./chapitres/depreciations-et-provisions";
 import { REGULARISATIONS } from "./chapitres/regularisations";
 import { SOLDES_INTERMEDIAIRES } from "./chapitres/soldes-intermediaires";
 import { BILAN_FONCTIONNEL } from "./chapitres/bilan-fonctionnel";
 import { LES_FLUX } from "./chapitres/les-flux";
 import { CHARGES_ET_ENCAISSEMENTS } from "./chapitres/charges-et-encaissements";
 import { PRIX_COUT_MARGE } from "./chapitres/prix-cout-marge";
-import { TAUX_DE_MARQUE } from "./chapitres/taux-de-marque";
+import { S_ALIGNER_SUR_LE_CONCURRENT, TAUX_DE_MARQUE } from "./chapitres/taux-de-marque";
 import { INDICATEURS_DU_POINT_DE_VENTE } from "./chapitres/indicateurs-du-point-de-vente";
 import { STOCK_DU_POINT_DE_VENTE } from "./chapitres/stock-du-point-de-vente";
 import { PREVOIR_LES_VENTES } from "./chapitres/prevoir-les-ventes";
@@ -70,7 +70,7 @@ import { SE_FIXER_DES_OBJECTIFS } from "./chapitres/se-fixer-des-objectifs";
 import { COUTS_OU_DIFFERENCIATION } from "./chapitres/couts-ou-differenciation";
 import { LIRE_LA_STRATEGIE_DES_CONCURRENTS } from "./chapitres/lire-la-strategie-des-concurrents";
 import { CROITRE_EN_INVESTISSANT } from "./chapitres/croitre-en-investissant";
-import { LA_RESPONSABILITE_SOCIETALE } from "./chapitres/la-responsabilite-societale";
+import { CE_QUE_RAPPORTE_L_ENGAGEMENT, LA_RESPONSABILITE_SOCIETALE } from "./chapitres/la-responsabilite-societale";
 import { LE_PROJET_D_ENTREPRISE } from "./chapitres/le-projet-d-entreprise";
 import { ORGANISER_L_ACTIVITE } from "./chapitres/organiser-l-activite";
 import { DECIDER_AVEC_DES_CHIFFRES } from "./chapitres/decider-avec-des-chiffres";
@@ -83,7 +83,7 @@ import { LE_COUT_MATIERE } from "./chapitres/le-cout-matiere";
 import { OCCUPATION_ET_REVENU_PAR_CHAMBRE } from "./chapitres/occupation-et-revenu-par-chambre";
 import { LA_PRODUCTIVITE_DU_SERVICE } from "./chapitres/la-productivite-du-service";
 import { LE_PRIX_SELON_LA_SAISON } from "./chapitres/le-prix-selon-la-saison";
-import { LA_DECLARATION_DE_TVA } from "./chapitres/la-declaration-de-tva";
+import { ENCAISSEMENTS_OU_DEBITS, LA_DECLARATION_DE_TVA } from "./chapitres/la-declaration-de-tva";
 import { LA_TVA_ET_LA_TRESORERIE } from "./chapitres/la-tva-et-la-tresorerie";
 import { L_IMPOT_SUR_LES_SOCIETES } from "./chapitres/l-impot-sur-les-societes";
 import { LE_DEFICIT_REPORTE } from "./chapitres/le-deficit-reporte";
@@ -112,6 +112,11 @@ import { LE_CLIENT_QUI_REVIENT } from "./chapitres/le-client-qui-revient";
 import { UN_NOUVEAU_CLIENT } from "./chapitres/un-nouveau-client";
 import { PRODUIRE } from "./chapitres/produire";
 import { PRODUIRE_BIEN } from "./chapitres/produire-bien";
+import { LES_COMPOSANTS_ET_L_AMORTISSEMENT_DEROGATOIRE } from "./chapitres/les-composants-et-l-amortissement-derogatoire";
+import { LE_TEST_DE_DEPRECIATION } from "./chapitres/le-test-de-depreciation";
+import { LES_OPERATIONS_EN_DEVISES } from "./chapitres/les-operations-en-devises";
+import { LES_CONTRATS_A_LONG_TERME } from "./chapitres/les-contrats-a-long-terme";
+import { L_AUGMENTATION_DE_CAPITAL } from "./chapitres/l-augmentation-de-capital";
 import type { Chapitre } from "./types";
 
 /**
@@ -293,6 +298,14 @@ export const PARCOURS: readonly Parcours[] = [
       "Produire avec une capacité et une équipe, produire bien, partager la valeur créée, décider ensemble et sur une information à jour : l'organisation d'une entreprise, lue dans les comptes de la simulation du cours.",
     publics: { 1: "Première et terminale STMG, management" },
   },
+  {
+    code: "dcg-comptabilite-approfondie",
+    formation: "dcg",
+    titre: "DCG · Comptabilité approfondie",
+    resume:
+      "Les composants et l'amortissement dérogatoire, le test de dépréciation d'un actif, les opérations en devises, les contrats à long terme, l'augmentation de capital : la comptabilité approfondie sur l'année N + 1 de NOVA dans la simulation du cours.",
+    publics: { 4: "DCG, UE10 Comptabilité approfondie" },
+  },
 ];
 
 export const PALIERS: readonly { palier: Chapitre["palier"]; titre: string; public: string }[] = [
@@ -459,12 +472,21 @@ export const PROGRAMME: Record<CodeParcours, Partial<Record<Chapitre["palier"], 
       "Une information qui circule à temps",
     ],
   },
+  "dcg-comptabilite-approfondie": {
+    4: [
+      "L'approche par composants et l'amortissement dérogatoire",
+      "Le test de dépréciation d'une immobilisation",
+      "Les opérations en devises : écarts de conversion et perte de change",
+      "Les contrats à long terme : le résultat à l'avancement",
+      "L'augmentation de capital : prime d'émission et droit de souscription",
+    ],
+  },
 };
 
 /** Les paliers que la carte montre pour un parcours, dans l'ordre. */
 export const paliersDuParcours = (code: CodeParcours) => PALIERS.filter((pa) => PROGRAMME[code][pa.palier] !== undefined);
 
-export const CHAPITRES: readonly Chapitre[] = [CREATION_PREMIER_BILAN, DU_RESULTAT_A_LA_TRESORERIE, LES_FLUX, CHARGES_ET_ENCAISSEMENTS, LA_PAIE, L_EMPRUNT, IMMOBILISATIONS, LES_STOCKS, LA_CLOTURE, REMISES_ET_REGLEMENTS, DEPRECIATIONS_ET_PROVISIONS, REGULARISATIONS, SOLDES_INTERMEDIAIRES, BILAN_FONCTIONNEL, PRIX_COUT_MARGE, SEUIL_DE_RENTABILITE, COUT_COMPLET, COUT_PAR_PRODUIT, BUDGET_DE_TRESORERIE, LE_COUT_PREETABLI_ET_LES_BUDGETS, LES_ECARTS_SUR_CHARGES_DIRECTES, LES_ECARTS_SUR_CHARGES_INDIRECTES, LES_ECARTS_SUR_VENTES_ET_MARGE, ANALYSE_DES_ECARTS, TABLEAU_DE_BORD, DECIDER, TAUX_DE_MARQUE, INDICATEURS_DU_POINT_DE_VENTE, STOCK_DU_POINT_DE_VENTE, PREVOIR_LES_VENTES, BUDGET_DU_POINT_DE_VENTE, SEUIL_DU_POINT_DE_VENTE, PROMOTION_QUI_PAIE, ASSORTIMENT, EQUIPE_ET_PLANNING, TABLEAU_DE_BORD_DU_MANAGER, NEGOCIER_LE_PRIX, REMISES_ET_CONDITIONS, VALEUR_D_UN_CLIENT, COUT_D_ACQUISITION, COMMISSIONS_DES_PARTENAIRES, PORTEFEUILLE_ABC, TABLEAU_DE_BORD_COMMERCIAL, MARCHE_ET_PART_DE_MARCHE, SEGMENTER_ET_CIBLER, PRIX_PSYCHOLOGIQUE, DEMANDE_ET_PRIX, COMMUNICATION, CANAUX_DE_DISTRIBUTION, LIRE_LE_COMPTE_DE_RESULTAT, LIRE_LE_BILAN, VALEUR_AJOUTEE, RENTABILITE, FONDS_DE_ROULEMENT, FINANCER_L_ENTREPRISE, EFFECTIF_ET_MASSE_SALARIALE, SALAIRE_BRUT_NET_COUT, RECRUTER, REMUNERATION_ET_MOTIVATION, FORMER, INDICATEURS_SOCIAUX, CHOISIR_SON_FOURNISSEUR, LE_CLIENT_QUI_PAIE_TARD, S_ASSURER_CONTRE_LES_ALEAS, LE_COUT_DE_LA_NON_QUALITE, LE_DEPART_D_UN_SALARIE, ENTRETENIR_L_OUTIL, LE_DIAGNOSTIC_STRATEGIQUE, SE_FIXER_DES_OBJECTIFS, COUTS_OU_DIFFERENCIATION, LIRE_LA_STRATEGIE_DES_CONCURRENTS, CROITRE_EN_INVESTISSANT, LA_RESPONSABILITE_SOCIETALE, LE_PROJET_D_ENTREPRISE, ORGANISER_L_ACTIVITE, DECIDER_AVEC_DES_CHIFFRES, EVALUER_SON_ACTIVITE, DES_DONNEES_A_L_INFORMATION, CONSTRUIRE_UN_INDICATEUR_JUSTE, UNE_DONNEE_FAUSSE, CE_QUE_COUTE_UN_OUTIL_NUMERIQUE, LE_COUT_MATIERE, OCCUPATION_ET_REVENU_PAR_CHAMBRE, LA_PRODUCTIVITE_DU_SERVICE, LE_PRIX_SELON_LA_SAISON, LA_DECLARATION_DE_TVA, LA_TVA_ET_LA_TRESORERIE, L_IMPOT_SUR_LES_SOCIETES, LE_DEFICIT_REPORTE, LE_STOCK_DE_SECURITE, CE_QUE_COUTE_UNE_LIVRAISON, LE_TAUX_DE_REMPLISSAGE, LIVRER_A_TEMPS, LA_VALEUR_ACTUELLE_NETTE, LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS, L_EFFET_DE_LEVIER, LA_CREATION_DE_VALEUR, RECEVOIR_UNE_LIVRAISON, REMPLIR_LE_RAYON, LE_PRIX_AFFICHE, TENIR_LA_CAISSE, LE_PANIER_MOYEN, SUIVRE_SES_VENTES, LE_CLIENT_QUI_REVIENT, UN_NOUVEAU_CLIENT, L_OFFRE_ET_LA_DEMANDE, LE_PRIX_D_EQUILIBRE, LA_CONCURRENCE, CREER_DES_RICHESSES, PRODUIRE, PRODUIRE_BIEN, LES_ACTEURS_ET_LA_VALEUR, DECIDER_ENSEMBLE, UNE_INFORMATION_A_TEMPS];
+export const CHAPITRES: readonly Chapitre[] = [CREATION_PREMIER_BILAN, DU_RESULTAT_A_LA_TRESORERIE, LES_FLUX, CHARGES_ET_ENCAISSEMENTS, LA_PAIE, L_EMPRUNT, IMMOBILISATIONS, LES_STOCKS, LA_CLOTURE, DECIDER_APRES_LA_CLOTURE, REMISES_ET_REGLEMENTS, DEPRECIATIONS_ET_PROVISIONS, LE_DENOUEMENT_DES_RISQUES, REGULARISATIONS, SOLDES_INTERMEDIAIRES, BILAN_FONCTIONNEL, PRIX_COUT_MARGE, SEUIL_DE_RENTABILITE, LES_LEVIERS_DU_SEUIL, COUT_COMPLET, COUT_PAR_PRODUIT, BUDGET_DE_TRESORERIE, LE_COUT_PREETABLI_ET_LES_BUDGETS, LE_BUDGET_FLEXIBLE, LES_ECARTS_SUR_CHARGES_DIRECTES, LES_ECARTS_SUR_CHARGES_INDIRECTES, LES_ECARTS_SUR_VENTES_ET_MARGE, ANALYSE_DES_ECARTS, LES_ECARTS_ET_LEURS_RESPONSABLES, TABLEAU_DE_BORD, DECIDER, TAUX_DE_MARQUE, S_ALIGNER_SUR_LE_CONCURRENT, INDICATEURS_DU_POINT_DE_VENTE, STOCK_DU_POINT_DE_VENTE, PREVOIR_LES_VENTES, BUDGET_DU_POINT_DE_VENTE, SEUIL_DU_POINT_DE_VENTE, PROMOTION_QUI_PAIE, ASSORTIMENT, EQUIPE_ET_PLANNING, TABLEAU_DE_BORD_DU_MANAGER, NEGOCIER_LE_PRIX, REMISES_ET_CONDITIONS, VALEUR_D_UN_CLIENT, COUT_D_ACQUISITION, COMMISSIONS_DES_PARTENAIRES, PORTEFEUILLE_ABC, TABLEAU_DE_BORD_COMMERCIAL, MARCHE_ET_PART_DE_MARCHE, SEGMENTER_ET_CIBLER, PRIX_PSYCHOLOGIQUE, DEMANDE_ET_PRIX, COMMUNICATION, CANAUX_DE_DISTRIBUTION, LIRE_LE_COMPTE_DE_RESULTAT, LIRE_LE_BILAN, VALEUR_AJOUTEE, RENTABILITE, FONDS_DE_ROULEMENT, FINANCER_L_ENTREPRISE, EFFECTIF_ET_MASSE_SALARIALE, SALAIRE_BRUT_NET_COUT, RECRUTER, REMUNERATION_ET_MOTIVATION, FORMER, INDICATEURS_SOCIAUX, CHOISIR_SON_FOURNISSEUR, LE_CLIENT_QUI_PAIE_TARD, S_ASSURER_CONTRE_LES_ALEAS, LE_COUT_DE_LA_NON_QUALITE, LE_DEPART_D_UN_SALARIE, ENTRETENIR_L_OUTIL, LE_DIAGNOSTIC_STRATEGIQUE, SE_FIXER_DES_OBJECTIFS, COUTS_OU_DIFFERENCIATION, LIRE_LA_STRATEGIE_DES_CONCURRENTS, CROITRE_EN_INVESTISSANT, LA_RESPONSABILITE_SOCIETALE, CE_QUE_RAPPORTE_L_ENGAGEMENT, LE_PROJET_D_ENTREPRISE, ORGANISER_L_ACTIVITE, DECIDER_AVEC_DES_CHIFFRES, EVALUER_SON_ACTIVITE, DES_DONNEES_A_L_INFORMATION, CONSTRUIRE_UN_INDICATEUR_JUSTE, UNE_DONNEE_FAUSSE, CE_QUE_COUTE_UN_OUTIL_NUMERIQUE, LE_COUT_MATIERE, OCCUPATION_ET_REVENU_PAR_CHAMBRE, LA_PRODUCTIVITE_DU_SERVICE, LE_PRIX_SELON_LA_SAISON, LA_DECLARATION_DE_TVA, ENCAISSEMENTS_OU_DEBITS, LA_TVA_ET_LA_TRESORERIE, L_IMPOT_SUR_LES_SOCIETES, LE_DEFICIT_REPORTE, LE_STOCK_DE_SECURITE, CE_QUE_COUTE_UNE_LIVRAISON, LE_TAUX_DE_REMPLISSAGE, LIVRER_A_TEMPS, LA_VALEUR_ACTUELLE_NETTE, LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS, L_EFFET_DE_LEVIER, LA_CREATION_DE_VALEUR, RECEVOIR_UNE_LIVRAISON, REMPLIR_LE_RAYON, LE_PRIX_AFFICHE, TENIR_LA_CAISSE, LE_PANIER_MOYEN, SUIVRE_SES_VENTES, LE_CLIENT_QUI_REVIENT, UN_NOUVEAU_CLIENT, L_OFFRE_ET_LA_DEMANDE, LE_PRIX_D_EQUILIBRE, LA_CONCURRENCE, CREER_DES_RICHESSES, PRODUIRE, PRODUIRE_BIEN, LES_ACTEURS_ET_LA_VALEUR, DECIDER_ENSEMBLE, UNE_INFORMATION_A_TEMPS, LES_COMPOSANTS_ET_L_AMORTISSEMENT_DEROGATOIRE, LE_TEST_DE_DEPRECIATION, LES_OPERATIONS_EN_DEVISES, LES_CONTRATS_A_LONG_TERME, L_AUGMENTATION_DE_CAPITAL];
 
 /**
  * Un chapitre, ou un cas pratique, par son code : la page d'un chapitre et la

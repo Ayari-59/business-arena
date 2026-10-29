@@ -240,7 +240,7 @@ describe("la cascade du compte estimé est celle du compte réel", () => {
   };
 
   it("chaque poste du compte est soit dans la cascade, soit nommé hors d'elle", () => {
-    const dansLaCascade = new Set(lignesDuCompte(compteComplet).map((l) => l.cle));
+    const dansLaCascade = new Set(lignesDuCompte(compteComplet, "industrie").map((l) => l.cle));
     const oublies = (Object.keys(compteComplet) as (keyof IncomeStatement)[]).filter(
       (cle) => !dansLaCascade.has(cle) && !POSTES_HORS_CASCADE.includes(cle),
     );
@@ -251,12 +251,12 @@ describe("la cascade du compte estimé est celle du compte réel", () => {
   });
 
   it("les charges s'y lisent en négatif, et les soldes portent leur filet", () => {
-    const lignes = lignesDuCompte(compteComplet);
+    const lignes = lignesDuCompte(compteComplet, "industrie");
     const par = (cle: string) => lignes.find((l) => l.cle === cle)!;
     expect(par("cogs").valeur).toBe(-40);
     expect(par("tax").valeur).toBe(-3);
     // Un impôt nul s'écrit « 0 € », jamais « −0 € ».
-    const sansImpot = lignesDuCompte({ ...compteComplet, tax: 0 });
+    const sansImpot = lignesDuCompte({ ...compteComplet, tax: 0 }, "industrie");
     expect(Object.is(sansImpot.find((l) => l.cle === "tax")!.valeur, -0)).toBe(false);
     expect(par("revenue").valeur).toBe(100);
     for (const solde of ["grossMargin", "ebitda", "operatingIncome", "pretaxIncome", "netIncome"]) {
@@ -277,7 +277,7 @@ describe("la cascade du compte estimé est celle du compte réel", () => {
       taxLossUsed: 0,
       productionStocked: 0,
     };
-    const cles = lignesDuCompte(sobre).map((l) => l.cle);
+    const cles = lignesDuCompte(sobre, "industrie").map((l) => l.cle);
     for (const absente of [
       "commissionCost",
       "engagementRse",

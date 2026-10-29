@@ -10,7 +10,7 @@
  * UN SEUL MOIS DE RÉFÉRENCE : JANVIER DE L'ANNÉE N. Les anciens chapitres donnaient au mois de la
  * boutique quatre chiffres d'affaires différents (85 603,50 €, 85 107 €, 85 610 € et 85 090 €).
  * Ici, le mois est écrit une fois, référence par référence et clientèle par clientèle : 1 530
- * articles, 87 450 € hors taxes, 948 passages en caisse, 3 848 entrées. Tous les chapitres le
+ * articles, 87 450 € hors taxes, 940 passages en caisse (plus 8 commandes de comités, hors caisse), 3 848 entrées. Tous les chapitres le
  * lisent, et la garde vérifie que chaque façon de le compter retombe sur le même total.
  *
  * CE QUI VIENT DE L'ARÈNE, ET CE QUI A ÉTÉ CHOISI. Les cinq références, leurs coûts d'achat et
@@ -267,9 +267,9 @@ export interface ClienteleDeLaBoutique {
  * LES TROIS CLIENTÈLES. Le compteur à l'entrée donne le trafic (3 848 entrées) ; la part de chaque
  * clientèle vient d'une enquête à la porte et de la carte de fidélité (hypothèse du cours). Les
  * comités d'entreprise passent commande en boutique : huit commandes en janvier, réglées à 45
- * jours. Les indicateurs du point de vente du BTS MCO comptent chacune pour une entrée et un passage
- * (boutique.ts) ; la caisse, elle, ne les encaisse pas : « Tenir la caisse » et le panier moyen du bac
- * pro (vente-et-caisse.ts) ne retiennent que les clientèles réglées en caisse. Les articles de
+ * jours. Elles ne passent pas en caisse : tout le cours (le bac pro, vente-et-caisse.ts, comme les
+ * indicateurs du BTS MCO, boutique.ts) ne compte comme passages en caisse que les clientèles réglées
+ * en caisse, et un seul panier moyen, 77 250 € ÷ 940 passages (garde une-seule-maille-et-co). Les articles de
  * chaque clientèle, référence par référence, refont exactement les ventes de la gamme.
  */
 export const CLIENTELES: readonly ClienteleDeLaBoutique[] = [
@@ -460,9 +460,20 @@ export const PLANNING_ACTUEL: Readonly<Record<JourDOuverture, readonly number[]>
 
 /**
  * JANVIER DE L'ANNÉE N − 1 (hypothèse du cours), pour comparer : 4 160 entrées (960 par semaine),
- * 1 000 passages en caisse, 1 600 articles vendus pour 1 610 demandés, 89 600 € hors taxes.
+ * 1 000 passages en caisse pour 1 400 articles et 79 400 € hors taxes encaissés, plus les commandes
+ * des comités d'entreprise (200 articles, 10 200 €, hors caisse comme en janvier N) ; en tout, 1 600
+ * articles vendus pour 1 610 demandés, 89 600 € hors taxes. Le panier moyen et l'indice de vente se
+ * lisent en caisse (un seul panier dans tout le cours, voir indicateursDuMois).
  */
-export const JANVIER_N_MOINS_1 = { trafic: 4_160, tickets: 1_000, articles: 1_600, demande: 1_610, chiffreDAffaires: 89_600 } as const;
+export const JANVIER_N_MOINS_1 = {
+  trafic: 4_160,
+  tickets: 1_000,
+  articlesEnCaisse: 1_400,
+  chiffreDAffairesEnCaisse: 79_400,
+  articles: 1_600,
+  demande: 1_610,
+  chiffreDAffaires: 89_600,
+} as const;
 
 export type CodeDIndicateurDuManager =
   | "realisationDeLObjectif"
@@ -486,7 +497,7 @@ export interface SeuilDAlerte {
  * LES SEUILS D'ALERTE DU MANAGER (hypothèse du cours). L'objectif du mois est le tiers du chiffre
  * d'affaires budgété pour le trimestre : un voyant sous 95 % de réalisation. Le trafic ne doit pas
  * perdre plus de 5 % sur janvier N − 1 ; le taux de transformation rester au-dessus de 22 %, le
- * panier moyen de 85 €, l'indice de vente de 1,5 article par passage en caisse, le taux de service
+ * panier moyen en caisse de 80 €, l'indice de vente de 1,4 article par passage en caisse, le taux de service
  * de 97 % de la demande, le taux de marque de 55 %, l'indice de sécurité de 20 %. La part du
  * personnel ne doit pas dépasser 18 % du chiffre d'affaires, ni la durée de stockage 30 jours.
  */
@@ -494,8 +505,8 @@ export const SEUILS_D_ALERTE: Readonly<Record<CodeDIndicateurDuManager, SeuilDAl
   realisationDeLObjectif: { seuil: 0.95, sens: "plancher" },
   evolutionDuTrafic: { seuil: -0.05, sens: "plancher" },
   tauxDeTransformation: { seuil: 0.22, sens: "plancher" },
-  panierMoyen: { seuil: 85, sens: "plancher" },
-  indiceDeVente: { seuil: 1.5, sens: "plancher" },
+  panierMoyen: { seuil: 80, sens: "plancher" },
+  indiceDeVente: { seuil: 1.4, sens: "plancher" },
   tauxDeService: { seuil: 0.97, sens: "plancher" },
   tauxDeMarque: { seuil: 0.55, sens: "plancher" },
   indiceDeSecurite: { seuil: 0.2, sens: "plancher" },

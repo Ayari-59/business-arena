@@ -40,14 +40,17 @@ export function janvierFaceALObjectif(c: Pick<Cas, "code">) {
   const x = tableauDeBordDuMois(c);
   const reste = auCentime(x.budgetDuTrimestre - x.ca);
   const parMois = auCentime(reste / MOIS_RESTANTS);
-  const transformationDuRattrapage = auDixieme((parMois / (x.m.entrees * x.m.panierMoyen)) * 100);
-  const entreesDuRattrapage = plafond(parMois / x.caParEntree);
+  // Un seul panier, celui de la caisse : les commandes des comités (hors caisse) font leur part du mois.
+  const parMoisEnCaisse = parMois - x.commandes;
+  const transformationDuRattrapage = auDixieme((parMoisEnCaisse / (x.m.entrees * x.m.panierMoyen)) * 100);
+  const entreesDuRattrapage = plafond(parMoisEnCaisse / x.caParEntree);
   // La plus haute transformation connue : celle de janvier N ou de janvier N − 1.
   const meilleureTransformation = Math.max(x.transformationN, x.transformationN1);
   return {
     x,
     reste,
     parMois,
+    parMoisEnCaisse: auCentime(parMoisEnCaisse),
     transformationDuRattrapage,
     entreesDuRattrapage,
     hausseDuTraficSurN1: auDixieme((entreesDuRattrapage / x.n1.trafic - 1) * 100),
@@ -132,7 +135,7 @@ export const LE_TRIMESTRE_FACE_A_L_OBJECTIF: Situation = {
             tolerance: 0.5,
             calcul: `(${qte(x.m.tickets)} − ${qte(x.m.entrees)} × ${qte(n1.tickets)} ÷ ${qte(n1.trafic)}) × ${eur(x.panierN1)} = (${qte(x.m.tickets)} − ${qte(x.passagesAuTauxN1)}) × ${eur(x.panierN1)} = ${eur(x.effetDeLaTransformation)}`,
           },
-          { libelle: "Effet du panier", attendu: x.effetDuPanier, tolerance: 0.5, calcul: `${eur(x.ca)} − ${qte(x.m.tickets)} × ${eur(x.panierN1)} = ${eur(x.effetDuPanier)}` },
+          { libelle: "Effet du panier", attendu: x.effetDuPanier, tolerance: 0.5, calcul: `${eur(x.caEnCaisse)} − ${qte(x.m.tickets)} × ${eur(x.panierN1)} = ${eur(x.effetDuPanier)}` },
         ];
       },
       explication: (c) => {
@@ -159,7 +162,7 @@ export const LE_TRIMESTRE_FACE_A_L_OBJECTIF: Situation = {
             libelle: "Taux de transformation nécessaire (%)",
             attendu: r.transformationDuRattrapage,
             tolerance: 0.1,
-            calcul: `${eur(r.parMois)} ÷ (${qte(x.m.entrees)} entrées × ${eur(x.panierN)}) × 100 = ${pct(r.transformationDuRattrapage)}`,
+            calcul: `(${eur(r.parMois)} − ${eur(x.commandes)} des commandes des comités) ÷ (${qte(x.m.entrees)} entrées × ${eur(x.panierN)}) × 100 = ${pct(r.transformationDuRattrapage)}`,
           },
         ];
       },
@@ -178,7 +181,7 @@ export const LE_TRIMESTRE_FACE_A_L_OBJECTIF: Situation = {
       notions: ["dashboard", "conversion_rate"],
       question: (c) => {
         const r = janvierFaceALObjectif(c);
-        return `Gardez la transformation et le panier de janvier : chaque entrée rapporte ${eur(auCentime(r.x.caParEntree))}. Faites varier les entrées d'un mois de rattrapage : à partir de combien le mois fait-il ${eur(r.parMois)} ? Placez le curseur sur le plus petit nombre, puis validez.`;
+        return `Gardez la transformation et le panier de janvier : chaque entrée rapporte ${eur(auCentime(r.x.caParEntree))} en caisse, et les commandes des comités ajoutent ${eur(r.x.commandes)} au mois. Faites varier les entrées d'un mois de rattrapage : à partir de combien le mois fait-il ${eur(r.parMois)} ? Placez le curseur sur le plus petit nombre, puis validez.`;
       },
       grandeur: () => ({ libelle: "Entrées du mois", unite: "entrées" }),
       cible: (c) => ({ attendu: janvierFaceALObjectif(c).entreesDuRattrapage, min: ENTREES_DU_RATTRAPAGE.min, max: ENTREES_DU_RATTRAPAGE.max }),
@@ -190,7 +193,7 @@ export const LE_TRIMESTRE_FACE_A_L_OBJECTIF: Situation = {
       montrer: "Montrer le croisement",
       lecture: (c, n) => {
         const r = janvierFaceALObjectif(c);
-        const ca = auCentime(n * r.x.caParEntree);
+        const ca = auCentime(n * r.x.caParEntree + r.x.commandes);
         return [
           { libelle: "Chiffre d'affaires du mois", montant: ca },
           { libelle: "Part du reste du budget", montant: r.parMois },
@@ -200,7 +203,7 @@ export const LE_TRIMESTRE_FACE_A_L_OBJECTIF: Situation = {
       },
       droites: (c) => {
         const r = janvierFaceALObjectif(c);
-        return { produit: (n) => n * r.x.caParEntree, cout: () => r.parMois, libelles: ["Chiffre d'affaires des entrées", "Part du reste du budget"] };
+        return { produit: (n) => n * r.x.caParEntree + r.x.commandes, cout: () => r.parMois, libelles: ["Chiffre d'affaires des entrées", "Part du reste du budget"] };
       },
       explication: (c) => {
         const r = janvierFaceALObjectif(c);

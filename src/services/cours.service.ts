@@ -1,9 +1,10 @@
 import { randomInt } from "node:crypto";
-import { and, asc, count, desc, eq, isNull, ne, or } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNull, ne, or } from "drizzle-orm";
 import { db } from "@/db";
 import { coursClasses, coursEleves, coursProgressions, organizationMembers, type SuiviDEtapeEnregistre } from "@/db/schema";
 import { ALPHABET_REPRISE } from "@/config/reprise";
-import { chapitreParCode, PARCOURS } from "@/config/cours/registre";
+import { chapitreParCode } from "@/config/cours/registre";
+import { parcoursAChoisir, parcoursQuiOuvrent, type OuvrablePar } from "@/config/cours/parcours-de-formation";
 import type { Chapitre } from "@/config/cours/types";
 import { ENTREPRISES_DU_COURS } from "@/config/cours/metiers";
 import type { ProgressionLue } from "@/pedagogy/cours/suivi";
@@ -49,7 +50,8 @@ export const normaliserCodeDeClasse = (saisi: string) =>
     .slice(0, 20);
 
 const entrepriseValide = (e: string | null | undefined) => (e && ENTREPRISES_DU_COURS.includes(e) ? e : null);
-const parcoursValide = (p: string | null | undefined) => (p && PARCOURS.some((x) => x.code === p) ? p : null);
+/** Un parcours du registre, ou un parcours de formation (le BUT : config/cours/parcours-de-formation.ts). */
+const parcoursValide = (p: string | null | undefined) => (parcoursAChoisir(p) ? p : null);
 
 export async function creerClasse(args: {
   enseignantId: string;
@@ -311,26 +313,31 @@ export async function classeSousLicence(userId: string): Promise<boolean> {
  *    tous ses groupes, pas tout le catalogue : c'est l'offre Campus qui ouvre tout) ;
  *  · une classe héritée (d'avant la migration 0052) sans parcours : sous Classe ou Programme,
  *    l'accès d'avant (tout le cours), jusqu'à ce que son enseignant choisisse son parcours ;
+ *  · LE PARCOURS D'UNE FORMATION (le BUT GEA, TC ou GACO) : il regroupe des chapitres d'autres
+ *    parcours sans les dupliquer ; un chapitre s'ouvre à la classe dont le parcours est le sien ou
+ *    un parcours de formation qui le regroupe, un cas dédié avec le chapitre qu'il reprend
+ *    (`parcoursQuiOuvrent`, config/cours/parcours-de-formation.ts) ;
  *  · sans licence de l'arène en cours : aucun.
  * L'offre est celle de l'établissement de l'enseignant (celui de la classe, pour l'élève).
  */
 export async function coursOuvert(
   qui: { enseignant?: string | null; eleve?: string | null },
-  chapitre: Pick<Chapitre, "libre" | "parcours">,
+  chapitre: Pick<Chapitre, "libre"> & OuvrablePar,
 ): Promise<boolean> {
   if (chapitre.libre) return true;
-  if (qui.enseignant && (await ouvertALEnseignant(qui.enseignant, chapitre.parcours))) return true;
-  if (qui.eleve && (await ouvertALEleve(qui.eleve, chapitre.parcours))) return true;
+  const parcours = parcoursQuiOuvrent(chapitre);
+  if (qui.enseignant && (await ouvertALEnseignant(qui.enseignant, parcours))) return true;
+  if (qui.eleve && (await ouvertALEleve(qui.eleve, parcours))) return true;
   return false;
 }
 
-async function ouvertALEnseignant(enseignant: string, parcours: string): Promise<boolean> {
+async function ouvertALEnseignant(enseignant: string, parcours: readonly string[]): Promise<boolean> {
   const org = await getTeacherOrgId(enseignant);
   const offre = org ? await offreDuCoursDe(org) : null;
   if (!offre) return false;
   if (offre === "campus") return true;
   const qui = offre === "classe" ? eq(coursClasses.creePar, enseignant) : eq(organizationMembers.organizationId, org!);
-  const condition = and(qui, or(eq(coursClasses.parcours, parcours), and(eq(coursClasses.heritee, true), isNull(coursClasses.parcours))));
+  const condition = and(qui, or(inArray(coursClasses.parcours, [...parcours]), and(eq(coursClasses.heritee, true), isNull(coursClasses.parcours))));
   const [une] = await db
     .select({ id: coursClasses.id })
     .from(coursClasses)
@@ -340,7 +347,7 @@ async function ouvertALEnseignant(enseignant: string, parcours: string): Promise
   return Boolean(une);
 }
 
-async function ouvertALEleve(eleve: string, parcours: string): Promise<boolean> {
+async function ouvertALEleve(eleve: string, parcours: readonly string[]): Promise<boolean> {
   const [m] = await db
     .select({ creePar: coursClasses.creePar, parcours: coursClasses.parcours, heritee: coursClasses.heritee })
     .from(coursEleves)
@@ -350,5 +357,5 @@ async function ouvertALEleve(eleve: string, parcours: string): Promise<boolean> 
   const org = await getTeacherOrgId(m.creePar);
   const offre = org ? await offreDuCoursDe(org) : null;
   if (!offre) return false;
-  return offre === "campus" || m.parcours === parcours || (m.heritee && m.parcours === null);
+  return offre === "campus" || (m.parcours !== null && parcours.includes(m.parcours)) || (m.heritee && m.parcours === null);
 }

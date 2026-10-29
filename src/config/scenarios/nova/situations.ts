@@ -303,7 +303,7 @@ const SOURCES: SituationDef[] = [
     problem:
       "Votre entreprise gagne de l'argent mais n'en a plus en caisse. Identifiez les causes possibles de ce paradoxe.",
     diagnosticOptions: [
-      { id: "receivables", label: "CampusTech paie à 80 jours : le CA est devenu des créances, pas du cash", correct: true },
+      { id: "receivables", label: "CampusTech, à 60 jours convenus, paie en retard à 80 jours : le CA est devenu des créances, pas du cash", correct: true },
       { id: "bfr_growth", label: "La croissance gonfle le besoin en fonds de roulement plus vite que les ressources", correct: true },
       { id: "fake_profit", label: "Le résultat comptable est faux, il faut le recalculer", correct: false },
       { id: "too_much_marketing", label: "Le budget marketing a vidé la caisse à lui seul", correct: false },

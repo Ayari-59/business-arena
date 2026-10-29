@@ -27,7 +27,8 @@ export const HORS_DU_CHAMP: Readonly<Record<string, Readonly<Record<string, stri
   },
   // Audit pédagogique (P1-3) : les unités du DCG et du DSCG que le cours ne travaille pas, et ne
   // travaillera pas, sont dites hors de son champ au lieu de paraître comme des manques. L'UE10 du
-  // DCG (comptabilité approfondie) n'y est pas : elle est dans le champ, et reste « non travaillée ».
+  // DCG (comptabilité approfondie) n'y est pas : elle est dans le champ, et le parcours « DCG ·
+  // Comptabilité approfondie » la travaille (config/cours/registre.ts).
   dcg: {
     "UE1 · Fondamentaux du droit": "Le droit se travaille sur des textes, des contrats et de la jurisprudence ; la simulation chiffre des décisions de gestion, elle ne fait pas raisonner en droit.",
     "UE2 · Droit des affaires": "Le droit des sociétés et des contrats commerciaux sort du champ d'une simulation de gestion : le cours n'en prépare pas les épreuves.",

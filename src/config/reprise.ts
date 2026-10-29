@@ -77,6 +77,8 @@ export const AIDE_CODE_DE_REPRISE_SOLO =
  * sort souvent par la même adresse (le réseau du lycée) : trente-cinq élèves qui se trompent
  * d'une lettre ne doivent pas fermer la porte aux autres. Soixante échecs laissent passer une
  * classe maladroite, et restent dérisoires face aux centaines de millions de codes possibles.
+ * Au-delà, seuls les codes FAUX sont refusés et ralentis : un code juste passe toujours
+ * (lib/garde-des-codes.ts).
  */
 export const MAX_CODES_FAUX_PAR_ADRESSE = 60;
 

@@ -490,7 +490,7 @@ export const ATELIER_STMG: AtelierDefinition = {
           minutes: 20,
           titre: "Bilan collectif",
           detail:
-            "Vous reprenez les décisions relevées et faites nommer par la classe les notions qu'elles mobilisent. En première, la liste obtenue est celle du programme de sciences de gestion, écrite par les élèves à partir de leur propre année. En terminale, vous prolongez vers la question des choix de l'organisation et de leurs effets au-delà de son résultat. Une dernière question, pour tous : l'équipe qui a le meilleur résultat a-t-elle aussi la meilleure trésorerie, et sinon pourquoi, quand le compte-clé paie à quatre-vingts jours.",
+            "Vous reprenez les décisions relevées et faites nommer par la classe les notions qu'elles mobilisent. En première, la liste obtenue est celle du programme de sciences de gestion, écrite par les élèves à partir de leur propre année. En terminale, vous prolongez vers la question des choix de l'organisation et de leurs effets au-delà de son résultat. Une dernière question, pour tous : l'équipe qui a le meilleur résultat a-t-elle aussi la meilleure trésorerie, et sinon pourquoi, quand le compte-clé, à soixante jours convenus, paie en retard à quatre-vingts jours.",
         },
       ],
       livrable:

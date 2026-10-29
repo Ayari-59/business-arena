@@ -18,7 +18,7 @@ import { Icone } from "@/components/icone";
 import { chapitreOuvertALaClasse, classeSansOffre, offreDuCoursDeLEnseignant } from "@/services/chapitres-de-la-classe";
 import { SubmitButton } from "@/components/submit-button";
 import { ENTREPRISES } from "@/app/cours/entreprises";
-import { PARCOURS } from "@/config/cours/registre";
+import { PARCOURS_A_CHOISIR, titreDuParcours } from "@/config/cours/parcours-de-formation";
 import { lienDuDevis, LIBELLE_DU_DEVIS, OFFRES } from "@/config/tarifs";
 import { calculatriceAction, cloreClasseAction, parcoursAction } from "../actions";
 
@@ -147,7 +147,7 @@ export default async function ClasseDuCoursPage({
               Programme ; choisi une fois, il ne change plus (services/cours.service.ts). */}
           {classe.parcours ? (
             <p className="text-sm text-slate-400" data-parcours-de-la-classe={classe.parcours}>
-              Parcours du cours : {PARCOURS.find((p) => p.code === classe.parcours)?.titre ?? classe.parcours}.
+              Parcours du cours : {titreDuParcours(classe.parcours) ?? classe.parcours}.
             </p>
           ) : (
             <form action={parcoursAction.bind(null, classe.id)} className="grid gap-2" data-parcours-de-la-classe="">
@@ -157,7 +157,9 @@ export default async function ClasseDuCoursPage({
                   <option value="" disabled>
                     Choisir un parcours
                   </option>
-                  {PARCOURS.map((p) => (
+                  {/* Les parcours du registre, puis les parcours de formation (le BUT), qui regroupent
+                      des chapitres d'autres parcours (config/cours/parcours-de-formation.ts). */}
+                  {PARCOURS_A_CHOISIR.map((p) => (
                     <option key={p.code} value={p.code}>
                       {p.titre}
                     </option>

@@ -461,12 +461,17 @@ export const ETAPES: readonly Etape[] = [
     ],
     sources: [
       {
+        // Vérifié le 29 octobre 2026 sur service-public.gouv.fr (fiche F13243, « Cumul emploi-retraite du
+        // salarié ») : cumul intégral si toutes les pensions sont liquidées et le taux plein atteint ;
+        // chez le dernier employeur, une reprise avant six mois n'ouvre aucun nouveau droit (cumul
+        // intégral) ou suspend la pension de base (cumul plafonné) ; seconde pension plafonnée depuis le
+        // 1er janvier 2023. La LFSS pour 2026 (loi n° 2025-1403) change ces règles au 1er janvier 2027.
         id: "retraite",
         titre: "Demander aux ressources humaines ce que permet le cumul emploi-retraite",
         cout: 0.5,
         nature: "decisive",
         resultat:
-          "René a l'âge légal et tous ses trimestres. S'il fait liquider toutes ses retraites, de base et complémentaires, son cumul emploi-retraite est intégral : il peut reprendre un contrat à temps partiel chez nous, sans plafond de revenus et sans délai d'attente, une fois son contrat actuel rompu. Depuis la réforme de 2023, ce travail lui ouvre aussi de nouveaux droits, pour une seconde pension plafonnée. Sans ces conditions, le cumul serait plafonné, et une reprise chez son dernier employeur devrait attendre six mois. Ce que nous proposerions : deux jours par semaine, 500 € chargés par semaine, à partir de la semaine 9. Reporter son départ à plein temps, en revanche, l'obligerait à décaler sa retraite et ses projets : c'est rarement accepté.",
+          "René a l'âge légal et tous ses trimestres. S'il fait liquider toutes ses retraites, de base et complémentaires, son cumul emploi-retraite est intégral : il peut reprendre un contrat à temps partiel chez nous dès la rupture de son contrat actuel, sans plafond de revenus. Mais nous sommes son dernier employeur : repris avant six mois, ce travail ne lui ouvrira aucun nouveau droit, alors qu'après six mois il lui vaudrait une seconde pension, plafonnée (réforme de 2023). Sans ces conditions, le cumul serait plafonné, et sa pension de base serait suspendue s'il revenait chez nous avant six mois. Ce que nous proposerions : deux jours par semaine, 500 € chargés par semaine, à partir de la semaine 9. Reporter son départ à plein temps, en revanche, l'obligerait à décaler sa retraite et ses projets : c'est rarement accepté.",
       },
       {
         id: "cafe",

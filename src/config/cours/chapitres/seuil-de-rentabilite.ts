@@ -4,6 +4,7 @@ import type { Cas } from "../cas";
 import { coutsDeLaGamme, donneesDuMois, seuilDeRentabilite } from "../monde/couts-et-budgets";
 import { GESTION_DU_COURS, type FicheDeGestion } from "../monde/nova-gestion";
 import type { Chapitre, TableauDeDonnees } from "../types";
+import { etapesAvant, etapesDepuis, partieDuChapitre } from "./decoupage";
 
 /**
  * CHAPITRE : LE SEUIL DE RENTABILITÉ (contrôle de gestion, palier 2 ; BTS CG, DCG UE11, BUT GEA et
@@ -240,7 +241,8 @@ const laPlusVendue = (x: SeuilDuMois) => [...x.gamme.references].sort((a, b) => 
 
 const voirLeCurseur = "Déplacez le curseur à l'étape suivante : la simulation tranchera.";
 
-export const SEUIL_DE_RENTABILITE: Chapitre = {
+/** Le chapitre tel qu'il était écrit, en un seul tenant : ses deux parties en sont tirées (plus bas). */
+const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
   code: "seuil-de-rentabilite",
   parcours: "controle-de-gestion",
   palier: 2,
@@ -978,3 +980,61 @@ export const SEUIL_DE_RENTABILITE: Chapitre = {
     },
   ],
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LES DEUX PARTIES (audit pédagogique : aucun chapitre de plus de 20 étapes)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const CODE_DE_LA_SUITE = "les-leviers-du-seuil";
+export const TITRE_DE_LA_SUITE = "Les leviers du seuil : le prix, le levier opérationnel, la gamme";
+
+/** PREMIÈRE PARTIE : les étapes du chapitre d'origine jusqu'à `baisse-de-prix` exclue, puis sa propre synthèse. */
+export const SEUIL_DE_RENTABILITE: Chapitre = partieDuChapitre(SEUIL_DE_RENTABILITE_ENTIER, [
+  ...etapesAvant(SEUIL_DE_RENTABILITE_ENTIER, "baisse-de-prix"),
+  {
+    id: "synthese",
+    type: "lecture",
+    titre: "Ce qu'il faut retenir",
+    notions: ["breakeven", "safety_margin"],
+    tableau: tableauDuMois,
+    texte: (c) => {
+      const { f, s, seuilQuantite, seuilValeur, indiceDeSecurite } = seuilDuMois(c);
+      return [
+        `En janvier, ${f.entreprise} couvre ses charges fixes à partir de ${qte(seuilQuantite)} ${f.unites}, ${eur(seuilValeur)} de chiffre d'affaires ; avec ${qte(s.quantite)} ${f.unites}, son indice de sécurité est de ${pct(indiceDeSecurite, 1)}.`,
+        `Le seuil se divise par la marge sur coût variable, pas par le prix, et vendre plus ne le déplace pas : il s'atteint plus tôt. La suite, « ${TITRE_DE_LA_SUITE} », fait jouer le prix, le levier opérationnel, la gamme et les charges fixes par paliers.`,
+        "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
+      ];
+    },
+    repere: () => "Seuil de rentabilité = charges fixes ÷ marge sur coût variable unitaire (en valeur : ÷ taux de marge). Indice de sécurité = (chiffre d'affaires − seuil) ÷ chiffre d'affaires.",
+  },
+]);
+
+/** SUITE : sa propre introduction, puis les étapes du chapitre d'origine depuis `baisse-de-prix`, synthèse comprise. */
+export const LES_LEVIERS_DU_SEUIL: Chapitre = partieDuChapitre(
+  SEUIL_DE_RENTABILITE_ENTIER,
+  [
+    {
+      id: "intro",
+      type: "lecture",
+      titre: "Un seuil connu, des leviers à juger",
+      notions: ["breakeven", "operating_leverage"],
+      tableau: tableauDuMois,
+      texte: (c) => {
+        const { f, seuilQuantite, seuilValeur } = seuilDuMois(c);
+        return [
+          `Ce chapitre suit « Le seuil de rentabilité » : en janvier, ${f.entreprise} couvre ses charges fixes à partir de ${qte(seuilQuantite)} ${f.unites}, ${eur(seuilValeur)} de chiffre d'affaires.`,
+          "Il reste à faire jouer ce seuil comme un dirigeant : une baisse de prix, le levier opérationnel, une gamme de plusieurs produits, des charges fixes qui montent par paliers. Chaque fois, une décision se chiffre.",
+        ];
+      },
+      repere: () => "Un seuil ne vaut que dans ses hypothèses : un prix, une composition des ventes, des charges fixes qui ne changent pas de palier.",
+    },
+    ...etapesDepuis(SEUIL_DE_RENTABILITE_ENTIER, "baisse-de-prix"),
+  ],
+  {
+    code: CODE_DE_LA_SUITE,
+    titre: TITRE_DE_LA_SUITE,
+    accroche: "Le seuil de NOVA est connu : une baisse de prix, le levier opérationnel, le seuil d'une gamme et des charges fixes par paliers, jusqu'à la décision chiffrée.",
+    prerequis: ["seuil-de-rentabilite"],
+    ouverture: undefined,
+  },
+);

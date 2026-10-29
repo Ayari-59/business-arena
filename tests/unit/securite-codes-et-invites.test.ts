@@ -6,8 +6,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  *
  * - P2-2 : les codes de partie, de classe et de cohorte n'avaient aucune limite de
  *   débit : un script pouvait les essayer tous. Chaque code inconnu compte
- *   désormais un échec pour l'adresse (`lib/garde-des-codes.ts`), et au-delà du
- *   plafond le code n'est même plus cherché.
+ *   désormais un échec pour l'adresse (`lib/garde-des-codes.ts`) ; au-delà du
+ *   plafond, un code faux est ralenti et refusé, mais un code juste passe toujours.
  * - P2-3 : rejoindre une classe du cours ou une cohorte créait le compte invité
  *   AVANT de vérifier le code : une ligne `users` par requête sans cookie, sans
  *   limite. Le code se vérifie d'abord.
@@ -37,7 +37,15 @@ vi.mock("@/lib/guest", () => ({
 }));
 
 const garde = { refus: null as string | null, echec: vi.fn(async () => undefined), succes: vi.fn(async () => undefined) };
-vi.mock("@/lib/garde-des-codes", () => ({ gardeDesCodes: async () => garde }));
+vi.mock("@/lib/garde-des-codes", () => ({
+  gardeDesCodes: async () => garde,
+  minutesDuRefus: () => 15,
+  // Le vrai `codeFaux` compte et ralentit ; ici, il compte seulement.
+  codeFaux: async (g: typeof garde) => {
+    await g.echec();
+    return g.refus;
+  },
+}));
 
 vi.mock("@/services/cours.service", () => ({
   classeParCode: vi.fn(async () => null),
@@ -109,12 +117,13 @@ describe("un code inconnu ne crée aucun compte invité et compte un échec", ()
     expect(garde.echec).toHaveBeenCalledTimes(1);
   });
 
-  it("au-delà du plafond, le code n'est même plus cherché", async () => {
+  it("au-delà du plafond, le code est encore cherché : faux, il est compté et refusé", async () => {
     garde.refus = "Trop de tentatives, réessayez dans 15 minutes.";
     const r = await joinGameAction({ error: null }, formulaire({ code: "ABCDEF", pseudo: "Léa" }));
     expect(r.error).toBe(garde.refus);
     const { refusDeRejoindre } = await import("@/services/game.service");
-    expect(vi.mocked(refusDeRejoindre)).not.toHaveBeenCalledWith("ABCDEF");
+    expect(vi.mocked(refusDeRejoindre)).toHaveBeenCalledWith("ABCDEF");
+    expect(garde.echec).toHaveBeenCalledTimes(1);
   });
 
   it("sans identité, ni code de reprise ni objectif effacé ne créent de compte", async () => {
@@ -128,6 +137,6 @@ describe("la porte unique des parties d'établissement compte aussi les échecs"
   it("le code inconnu y est compté", () => {
     const source = readFileSync("src/app/etablissement/parties/actions.ts", "utf8");
     expect(source).toMatch(/gardeDesCodes\(\)/);
-    expect(source).toMatch(/await garde\.echec\(\);\s*redirect\(`\/etablissement\/parties\?code=inconnu#code`\)/);
+    expect(source).toMatch(/await codeFaux\(garde\);\s*redirect\(`\/etablissement\/parties\?code=inconnu#code`\)/);
   });
 });

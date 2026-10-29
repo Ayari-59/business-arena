@@ -161,7 +161,16 @@ function ratios(entrees: number, tickets: number, articles: number, chiffreDAffa
   };
 }
 
-/** Les indicateurs du mois de référence, clientèle par clientèle, puis pour la boutique. */
+/**
+ * Les indicateurs du mois de référence, clientèle par clientèle, puis pour la boutique.
+ *
+ * UN SEUL PANIER MOYEN DANS TOUT LE COURS : le chiffre d'affaires ENCAISSÉ EN CAISSE divisé par les
+ * passages en caisse (la définition du bac pro, panierDuMois dans vente-et-caisse.ts). Les commandes
+ * des comités d'entreprise, facturées et réglées à terme, ne passent pas en caisse : elles ne font
+ * ni un passage ni un ticket, et ne gonflent ni le panier, ni l'indice de vente, ni la transformation.
+ * Leur chiffre d'affaires s'ajoute à celui de la caisse pour faire le chiffre d'affaires du mois.
+ * Les entrées restent celles du compteur de la porte (tout le monde, comités compris).
+ */
 export function indicateursDuMois(f: FicheDeLaBoutique) {
   const prix = (code: CodeDeReference) => referenceDe(f, code).prixHt;
   const clienteles = f.clienteles.map((c) => {
@@ -170,12 +179,28 @@ export function indicateursDuMois(f: FicheDeLaBoutique) {
     const chiffreDAffaires = auCentime(somme(lignes.map(([code, q]) => q * prix(code))));
     return { code: c.code as CodeDeClientele, nom: c.nom, delaiDeReglement: c.delaiDeReglement, ...ratios(c.entrees, c.tickets, articles, chiffreDAffaires) };
   });
-  const total = ratios(
+  const enCaisse = clienteles.filter((c) => c.delaiDeReglement === 0);
+  const facturees = clienteles.filter((c) => c.delaiDeReglement > 0);
+  const commandes = {
+    nombre: somme(facturees.map((c) => c.tickets)),
+    articles: somme(facturees.map((c) => c.articles)),
+    chiffreDAffaires: auCentime(somme(facturees.map((c) => c.chiffreDAffaires))),
+  };
+  const caisse = ratios(
     somme(clienteles.map((c) => c.entrees)),
-    somme(clienteles.map((c) => c.tickets)),
-    somme(clienteles.map((c) => c.articles)),
-    auCentime(somme(clienteles.map((c) => c.chiffreDAffaires))),
+    somme(enCaisse.map((c) => c.tickets)),
+    somme(enCaisse.map((c) => c.articles)),
+    auCentime(somme(enCaisse.map((c) => c.chiffreDAffaires))),
   );
+  const total = {
+    ...caisse,
+    /** Les articles et le chiffre d'affaires en caisse, sans les commandes. */
+    articlesEnCaisse: caisse.articles,
+    chiffreDAffairesEnCaisse: caisse.chiffreDAffaires,
+    /** Les articles et le chiffre d'affaires du mois : la caisse plus les commandes. */
+    articles: caisse.articles + commandes.articles,
+    chiffreDAffaires: auCentime(caisse.chiffreDAffaires + commandes.chiffreDAffaires),
+  };
   const references = f.gamme.map((r) => ({
     code: r.code,
     nom: r.nom,
@@ -189,6 +214,7 @@ export function indicateursDuMois(f: FicheDeLaBoutique) {
   const ventesManquees = somme(references.map((r) => r.ventesManquees));
   return {
     clienteles,
+    commandes,
     ...total,
     /** Le chiffre d'affaires du mois pour un mètre carré de surface de vente. */
     chiffreDAffairesAuM2: total.chiffreDAffaires / f.surfaceDeVente,
@@ -217,14 +243,17 @@ export function leviersDuMois(f: FicheDeLaBoutique): LeviersDesIndicateurs {
 
 /**
  * Le chiffre d'affaires par ses indicateurs : trafic × taux de transformation × indice de vente ×
- * prix moyen d'un article. Avec les leviers du mois, il retombe sur le chiffre d'affaires du mois.
+ * prix moyen d'un article donne le chiffre d'affaires EN CAISSE ; les commandes des comités
+ * d'entreprise (inchangées) s'y ajoutent. Avec les leviers du mois, il retombe sur le mois.
  */
 export function chiffreDAffairesParLesIndicateurs(f: FicheDeLaBoutique, leviers: Partial<LeviersDesIndicateurs> = {}) {
   const l = { ...leviersDuMois(f), ...leviers };
+  const { commandes } = indicateursDuMois(f);
   const tickets = l.trafic * l.tauxDeTransformation;
   const articles = tickets * l.indiceDeVente;
   const panierMoyen = l.indiceDeVente * l.prixMoyenDeLArticle;
-  return { ...l, tickets, articles, panierMoyen, chiffreDAffaires: auCentime(tickets * panierMoyen) };
+  const chiffreDAffairesEnCaisse = auCentime(tickets * panierMoyen);
+  return { ...l, tickets, articles, panierMoyen, chiffreDAffairesEnCaisse, commandes, chiffreDAffaires: auCentime(chiffreDAffairesEnCaisse + commandes.chiffreDAffaires) };
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -650,8 +679,8 @@ export interface LeviersDuSeuil {
 
 /**
  * Le seuil du mois. Le taux de marge sur coût variable est celui du mois de référence (la
- * composition des ventes ne change pas) ; le chiffre d'affaires vaut passages × panier, réduit
- * des jours de fermeture (ventes régulières sur le mois). Le seuil en valeur = charges fixes ÷
+ * composition des ventes ne change pas) ; le chiffre d'affaires vaut passages en caisse × panier,
+ * plus les commandes des comités d'entreprise (qui ne passent pas en caisse), réduit des jours de fermeture (ventes régulières sur le mois). Le seuil en valeur = charges fixes ÷
  * taux de marge ; le point mort est le jour où les ventes cumulées l'atteignent, fermeture du
  * début du mois comprise (null s'il n'est pas atteint).
  */
@@ -664,7 +693,8 @@ export function seuilDuPointDeVente(f: FicheDeLaBoutique, leviers: Partial<Levie
   const tickets = leviers.tickets ?? m.tickets;
   const panierMoyen = leviers.panierMoyen ?? m.panierMoyen;
   const chargesFixes = leviers.chargesFixes ?? chargesFixesDuMois(f).total;
-  const chiffreDAffairesDUnMoisPlein = tickets * panierMoyen;
+  const commandes = m.commandes.chiffreDAffaires;
+  const chiffreDAffairesDUnMoisPlein = tickets * panierMoyen + commandes;
   const chiffreDAffaires = auCentime((chiffreDAffairesDUnMoisPlein * (jours - fermeture)) / jours);
   const marge = auCentime(chiffreDAffaires * tauxDeMarge);
   const seuil = auCentime(chargesFixes / tauxDeMarge);
@@ -684,10 +714,12 @@ export function seuilDuPointDeVente(f: FicheDeLaBoutique, leviers: Partial<Levie
     margeDeSecurite,
     indiceDeSecurite: margeDeSecurite / chiffreDAffaires,
     pointMort: fermeture + joursDeVenteAuSeuil <= jours ? fermeture + joursDeVenteAuSeuil : null,
-    /** Les passages en caisse qu'il faut au panier moyen pour atteindre le seuil. */
-    ticketsAuSeuil: plafond(seuil / panierMoyen),
+    /** Le chiffre d'affaires des commandes des comités, qui ne passent pas en caisse. */
+    commandes,
+    /** Les passages en caisse qu'il faut au panier moyen pour atteindre le seuil, commandes comprises. */
+    ticketsAuSeuil: plafond((seuil - commandes) / panierMoyen),
     /** Le plus petit panier qui ne fait pas perdre d'argent, aux passages en caisse et aux jours ouverts. */
-    panierPlancher: (chargesFixes / tauxDeMarge / tickets) * (jours / (jours - fermeture)),
+    panierPlancher: ((seuil * jours) / (jours - fermeture) - commandes) / tickets,
   };
 }
 
@@ -858,8 +890,8 @@ export function tableauDeBordDuManager(f: FicheDeLaBoutique, leviers: Partial<Le
     realisationDeLObjectif: { valeur: ca.chiffreDAffaires / objectif, n1: null },
     evolutionDuTrafic: { valeur: ca.trafic / n1.trafic - 1, n1: null },
     tauxDeTransformation: { valeur: ca.tauxDeTransformation, n1: n1.tickets / n1.trafic },
-    panierMoyen: { valeur: ca.panierMoyen, n1: n1.chiffreDAffaires / n1.tickets },
-    indiceDeVente: { valeur: ca.indiceDeVente, n1: n1.articles / n1.tickets },
+    panierMoyen: { valeur: ca.panierMoyen, n1: n1.chiffreDAffairesEnCaisse / n1.tickets },
+    indiceDeVente: { valeur: ca.indiceDeVente, n1: n1.articlesEnCaisse / n1.tickets },
     tauxDeService: { valeur: mois.tauxDeService, n1: n1.articles / n1.demande },
     tauxDeMarque: { valeur: marges.tauxDeMarque, n1: null },
     indiceDeSecurite: { valeur: seuil.indiceDeSecurite, n1: null },

@@ -61,7 +61,7 @@ const rendu = (noeud: Parameters<typeof renderToStaticMarkup>[0]) =>
 describe("l'encart « Résultat estimé »", () => {
   it("montre les quatre chiffres, et dit d'où ils viennent", () => {
     const estime = estimerLeTour(dossier, decisions, { [CODE]: 1_500 });
-    const html = rendu(createElement(EncartResultatEstime, { estime, vocabulary: v }));
+    const html = rendu(createElement(EncartResultatEstime, { estime, vocabulary: v, secteur: NOVA_DEFINITION.sector }));
     expect(html).toContain("Résultat estimé");
     expect(html).toContain("selon vos ventes estimées");
     for (const titre of [
@@ -80,7 +80,7 @@ describe("l'encart « Résultat estimé »", () => {
 
   it("une estimation qu'on ne pourra pas livrer se dit, avec le nombre", () => {
     const estime = estimerLeTour(dossier, decisions, { [CODE]: 5_000 });
-    const html = rendu(createElement(EncartResultatEstime, { estime, vocabulary: v }));
+    const html = rendu(createElement(EncartResultatEstime, { estime, vocabulary: v, secteur: NOVA_DEFINITION.sector }));
     expect(html).toContain("Vous ne pourrez livrer que");
     expect(estime.manquantes).toBeGreaterThan(0);
   });
@@ -92,7 +92,7 @@ describe("l'encart « Résultat estimé »", () => {
       { [CODE]: 0 },
     );
     // Sans vente estimée, pas de zéros : le cadran invite à estimer (lot P7).
-    const sansVentes = rendu(createElement(EncartResultatEstime, { estime, vocabulary: v }));
+    const sansVentes = rendu(createElement(EncartResultatEstime, { estime, vocabulary: v, secteur: NOVA_DEFINITION.sector }));
     expect(sansVentes).toContain("Estimez vos ventes pour voir le résultat");
     expect(sansVentes).not.toContain("<dl");
     expect(sansVentes).not.toContain("passe sous zéro");
@@ -102,7 +102,7 @@ describe("l'encart « Résultat estimé »", () => {
       { [CODE]: 100 },
     );
     expect(avecVentes.tresorerieNette).toBeLessThan(0);
-    const html = rendu(createElement(EncartResultatEstime, { estime: avecVentes, vocabulary: v }));
+    const html = rendu(createElement(EncartResultatEstime, { estime: avecVentes, vocabulary: v, secteur: NOVA_DEFINITION.sector }));
     expect(html).toContain("passe sous zéro");
     expect(html).toContain("pastille-etat");
     expect(html).not.toMatch(/text-(?:red|emerald)-\d{3}/);
@@ -116,12 +116,12 @@ describe("l'encart « Résultat estimé »", () => {
    * estimé ; une invitation et un lien vers le champ quand les ventes valent 0.
    */
   it("rien n'est estimé : aucun chiffre, et zéro vente invite à estimer", () => {
-    const attente = rendu(createElement(EncartResultatEstime, { estime: null, vocabulary: v }));
+    const attente = rendu(createElement(EncartResultatEstime, { estime: null, vocabulary: v, secteur: NOVA_DEFINITION.sector }));
     expect(attente).toContain("Résultat estimé");
     expect(attente).not.toContain("<dl");
     expect(attente).not.toMatch(/\d\s?€/);
     const zero = estimerLeTour(dossier, decisions, { [CODE]: 0 });
-    const html = rendu(createElement(EncartResultatEstime, { estime: zero, vocabulary: v }));
+    const html = rendu(createElement(EncartResultatEstime, { estime: zero, vocabulary: v, secteur: NOVA_DEFINITION.sector }));
     expect(html).toContain("Estimez vos ventes pour voir le résultat");
     expect(html).toMatch(/<a [^>]*href="#decisions"/);
     expect(html).not.toContain("<dl");
@@ -130,7 +130,7 @@ describe("l'encart « Résultat estimé »", () => {
 
   it("le cadran est collant, relevé, et porte le résultat net et la trésorerie en grand", () => {
     const estime = estimerLeTour(dossier, decisions, { [CODE]: 1_500 });
-    const html = rendu(createElement(EncartResultatEstime, { estime, vocabulary: v }));
+    const html = rendu(createElement(EncartResultatEstime, { estime, vocabulary: v, secteur: NOVA_DEFINITION.sector }));
     expect(html).toMatch(/^<section[^>]*class="cadran-estime"/);
     // Le résultat net est le premier chiffre du bandeau, marqué pour l'e2e.
     const bande = html.slice(html.indexOf("cadran-bande"), html.indexOf("cadran-detail"));
@@ -433,7 +433,7 @@ describe("la valeur de départ des ventes estimées (lot P4)", () => {
     );
     // Et l'estimation que la proposition fait parler est un compte, pas un vide.
     const estime = estimerLeTour(dossier, decisions, { [CODE]: decisions.productionPlan });
-    const html = rendu(createElement(EncartResultatEstime, { estime, vocabulary: v }));
+    const html = rendu(createElement(EncartResultatEstime, { estime, vocabulary: v, secteur: NOVA_DEFINITION.sector }));
     expect(html).toContain("data-resultat-estime");
   });
 });

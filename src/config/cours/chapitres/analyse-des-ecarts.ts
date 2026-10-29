@@ -3,6 +3,7 @@ import type { Cas } from "../cas";
 import { controleBudgetaire, coutPreetabli, coutStandardDeLHeureMachine } from "../monde/ecarts";
 import { USINES_DU_COURS, type FicheDeLUsine } from "../monde/nova-usine";
 import type { Chapitre, TableauDeDonnees } from "../types";
+import { etapesAvant, etapesDepuis, partieDuChapitre } from "./decoupage";
 
 /**
  * CHAPITRE : L'ANALYSE DES ÉCARTS, DU RÉSULTAT PRÉVU AU RÉSULTAT RÉEL (contrôle de gestion,
@@ -372,7 +373,8 @@ function tableauDuCentre(c: Pick<Cas, "code">): TableauDeDonnees {
   };
 }
 
-export const ANALYSE_DES_ECARTS: Chapitre = {
+/** Le chapitre tel qu'il était écrit, en un seul tenant : ses deux parties en sont tirées (plus bas). */
+const ANALYSE_DES_ECARTS_ENTIERE: Chapitre = {
   code: "analyse-des-ecarts",
   parcours: "controle-de-gestion",
   palier: 4,
@@ -1129,3 +1131,61 @@ export const ANALYSE_DES_ECARTS: Chapitre = {
     },
   ],
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LES DEUX PARTIES (audit pédagogique : aucun chapitre de plus de 20 étapes)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const CODE_DE_LA_SUITE = "les-ecarts-et-leurs-responsables";
+export const TITRE_DE_LA_SUITE = "Les écarts et leurs responsables";
+
+/** PREMIÈRE PARTIE : les étapes du chapitre d'origine jusqu'à `le-levier-des-heures` exclue, puis sa propre synthèse. */
+export const ANALYSE_DES_ECARTS: Chapitre = partieDuChapitre(ANALYSE_DES_ECARTS_ENTIERE, [
+  ...etapesAvant(ANALYSE_DES_ECARTS_ENTIERE, "le-levier-des-heures"),
+  {
+    id: "fin",
+    type: "lecture",
+    titre: "Ce que vous savez faire",
+    notions: ["cost_variance", "volume_price_variance"],
+    tableau: tableauDesEcarts,
+    texte: (c) => {
+      const s = syntheseDesEcarts(c);
+      return [
+        `Vous avez partagé les ${eur(-s.e.ecartDeResultat)} qui manquent au résultat de ${s.f.entreprise} : ${eur(s.ventes)} pour les ventes, ${eur(s.production)} pour la production, ${eur(s.distribution)} pour la distribution, chaque écart avec son signe au tableau de passage.`,
+        `La suite, « ${TITRE_DE_LA_SUITE} », cherche ce que les écarts cachent : une heure perdue qui pèse deux fois, un chiffre réel retrouvé à rebours, puis le responsable de chaque écart et les limites de la méthode.`,
+        "Dans l'arène, les chiffres de votre usine seront différents : la notion, elle, est la même.",
+      ];
+    },
+    repere: () => "Écart de résultat = écart sur prix de vente + écart sur volume (à la marge préétablie) − écart global sur coûts − écart sur distribution. Au tableau de passage, un écart sur charge change de signe.",
+  },
+]);
+
+/** SUITE : sa propre introduction, puis les étapes du chapitre d'origine depuis `le-levier-des-heures`, synthèse comprise. */
+export const LES_ECARTS_ET_LEURS_RESPONSABLES: Chapitre = partieDuChapitre(
+  ANALYSE_DES_ECARTS_ENTIERE,
+  [
+    {
+      id: "intro",
+      type: "lecture",
+      titre: "Un tableau de passage à faire parler",
+      notions: ["cost_variance", "dashboard"],
+      tableau: tableauDesEcarts,
+      texte: (c) => {
+        const s = syntheseDesEcarts(c);
+        return [
+          `Ce chapitre suit « ${ANALYSE_DES_ECARTS.titre} » : le résultat de ${s.f.entreprise} manque de ${eur(-s.e.ecartDeResultat)}, partagés au tableau de passage entre les ventes, la production et la distribution.`,
+          "Il reste à faire parler ce tableau : ce qu'une heure perdue fait à deux écarts, un chiffre réel retrouvé à rebours, le budget rattrapé dans un laboratoire, puis le responsable de chaque écart.",
+        ];
+      },
+      repere: () => "Un écart se juge par celui qui peut agir dessus : un écart que son responsable ne maîtrise pas ne dit rien de son travail.",
+    },
+    ...etapesDepuis(ANALYSE_DES_ECARTS_ENTIERE, "le-levier-des-heures"),
+  ],
+  {
+    code: CODE_DE_LA_SUITE,
+    titre: TITRE_DE_LA_SUITE,
+    accroche: "Le tableau de passage de NOVA est dressé : ce qu'un écart favorable peut cacher, un coût réel retrouvé à rebours, puis qui doit agir sur chaque écart, et ce que la méthode ne dit pas.",
+    prerequis: ["analyse-des-ecarts"],
+    ouverture: undefined,
+  },
+);

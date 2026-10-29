@@ -122,8 +122,10 @@ export function previsionDesVentes(c: Pick<Cas, "code">) {
   const sommeDesCarresBrute = bruts.reduce((t, s) => t + (s.x - brute.droite.xMoyen) ** 2, 0);
   const sommeDesProduitsBrute = bruts.reduce((t, s) => t + (s.x - brute.droite.xMoyen) * (s.y - yMoyenBrut), 0);
   const tendanceBrute = (t: number) => brute.droite.a * t + brute.droite.b;
-  // Le prix moyen d'un article de janvier : la lecture des curseurs, en chiffre d'affaires.
-  const prixMoyen = auCentime(indicateursDuMois(f).prixMoyenDeLArticle);
+  // Le prix moyen d'un article de janvier, tous articles vendus (caisse et commandes des comités) : la
+  // demande prévue compte tous les articles, la lecture des curseurs la met en chiffre d'affaires.
+  const janvier = indicateursDuMois(f);
+  const prixMoyen = auCentime(janvier.chiffreDAffaires / janvier.articles);
   return {
     f,
     p,

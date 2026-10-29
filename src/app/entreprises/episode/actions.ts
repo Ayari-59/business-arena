@@ -23,7 +23,7 @@ import type { CodeNiveau } from "@/config/episodes/niveaux";
 import { CONSEIL_SANS_LICENCE, ceQuOuvrentLesEpisodes } from "@/config/tarifs";
 import { EPISODES } from "@/pedagogy/episodes/registre";
 import { getSession } from "@/lib/session";
-import { gardeDesCodes } from "@/lib/garde-des-codes";
+import { codeFaux, gardeDesCodes } from "@/lib/garde-des-codes";
 import { accesAuxEpisodes, episodeOuvert, suitUneCohorte } from "@/services/acces.service";
 
 export interface SuiteDeLaPartie {
@@ -136,9 +136,10 @@ export async function effacerMesPartiesAction(): Promise<void> {
 export async function rejoindreCohorteAction(code: string): Promise<void> {
   // LE CODE D'ABORD, L'INVITÉ ENSUITE (audit, P2-3) : un code inconnu ne crée plus de
   // compte invité, et compte un échec pour l'adresse (lib/garde-des-codes.ts).
+  // Un code juste passe toujours ; un code faux compte, et ralentit au-delà du plafond.
   const garde = await gardeDesCodes();
-  if (garde.refus || !(await cohorteParCode(code))) {
-    if (!garde.refus) await garde.echec();
+  if (!(await cohorteParCode(code))) {
+    await codeFaux(garde);
     redirect(`/entreprises/episode/rejoindre?code=${encodeURIComponent(code)}&inconnu=1`);
   }
   const userId = await getOrCreateGuestUserId();

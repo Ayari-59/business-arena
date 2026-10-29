@@ -59,6 +59,9 @@ const MOIS_PAR_AN = 12;
  * jour à chaque revalorisation. Un salarié ne peut pas être payé moins de l'heure, et la garde
  * tests/cours/une-seule-nova.test.ts vérifie qu'aucun salaire horaire du monde n'y descend.
  */
+// Décret n° 2025-1228 du 17 décembre 2025 (Légifrance) et urssaf.fr « Montant du Smic » : 12,02 € de
+// l'heure et 1 823,03 € par mois au 1er janvier 2026. Revalorisé depuis (arrêté du 22 mai 2026) à
+// 12,31 € et 1 867,02 € au 1er juin 2026 : le cours garde le montant du 1er janvier, hypothèse datée.
 export const SMIC_HORAIRE_BRUT = 12.02;
 /** La durée légale du travail mensualisée : 35 heures × 52 semaines ÷ 12 mois. */
 export const HEURES_LEGALES_PAR_MOIS = 151.67;

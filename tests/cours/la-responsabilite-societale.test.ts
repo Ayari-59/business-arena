@@ -10,6 +10,7 @@ import {
   PLAN_QUI_MONTE,
   TOUT_AU_T3,
   budgetRse,
+  CE_QUE_RAPPORTE_L_ENGAGEMENT,
 } from "../../src/config/cours/chapitres/la-responsabilite-societale";
 import { MARCHE_A_TROIS } from "../../src/config/cours/monde/marche-a-trois";
 import { CHAPITRES, PROGRAMME } from "../../src/config/cours/registre";
@@ -259,18 +260,21 @@ describe("la responsabilité sociétale : la place dans le parcours et le monde 
   });
 
   it("le gabarit : trois temps, au moins deux paris suivis d'un curseur ou du laboratoire, un laboratoire avec graphique et levier à choix, des étapes d'expert à trois champs", () => {
-    const ids = ch.etapes.map((e) => e.id);
+    // Découpé en deux (aucun chapitre de plus de 20 étapes) : le gabarit se lit sur les deux parties, dans l'ordre.
+    const etapes = [...ch.etapes, ...CE_QUE_RAPPORTE_L_ENGAGEMENT.etapes];
+    const ids = etapes.map((e) => e.id);
     for (const [pari, experience] of [
       ["predire-le-label", "l-effort-du-seuil"],
       ["predire-l-ordre", "le-laboratoire-du-label"],
       ["predire-les-ventes", "ce-qu-il-faut-vendre"],
     ] as const)
       expect(ids.indexOf(experience), pari).toBe(ids.indexOf(pari) + 1);
-    const labo = ch.etapes.find((e) => e.type === "simulation") as EtapeSimulation;
+    const labo = etapes.find((e) => e.type === "simulation") as EtapeSimulation;
     expect(labo.graphique).toBeDefined();
     expect(labo.leviers(cas).some((l) => l.choix)).toBe(true);
-    for (const id of ["a-rebours", "a-budget-du-t4-egal", "le-label-des-le-t3"]) expect(Object.keys(attendus(ch, id)).length, id).toBeGreaterThanOrEqual(3);
-    expect(ch.etapes.filter((e) => e.type === "curseur")).toHaveLength(2);
+    const partieDe = (id: string) => (CE_QUE_RAPPORTE_L_ENGAGEMENT.etapes.some((e) => e.id === id) ? CE_QUE_RAPPORTE_L_ENGAGEMENT : ch);
+    for (const id of ["a-rebours", "a-budget-du-t4-egal", "le-label-des-le-t3"]) expect(Object.keys(attendus(partieDe(id), id)).length, id).toBeGreaterThanOrEqual(3);
+    expect(etapes.filter((e) => e.type === "curseur")).toHaveLength(2);
   });
 });
 
@@ -480,13 +484,13 @@ describe("l'année engagée : ce que l'engagement coûte et rapporte, refait à 
     const hausses = COURS.ouv.map((c) => Math.round(S * c * 1000) / 10);
     expect(hausses).toEqual([0, 5.3, 8.8, 11.1]);
     expect((COURS.total - SANS.total) / SANS.total).toBeLessThan(0.05);
-    expect(juste(ch, "predire-les-ventes")).toBe("De moins de 5 % : une part monte moins vite que l'attractivité");
+    expect(juste(CE_QUE_RAPPORTE_L_ENGAGEMENT, "predire-les-ventes")).toBe("De moins de 5 % : une part monte moins vite que l'attractivité");
   });
 
   it("le curseur des ventes : 2 286 enceintes en plus paieraient les 48 000 €", () => {
     const attendu = Math.ceil(48_000 / MARGE);
     expect(attendu).toBe(2_286);
-    expect(curseur(ch, "ce-qu-il-faut-vendre")).toEqual({
+    expect(curseur(CE_QUE_RAPPORTE_L_ENGAGEMENT, "ce-qu-il-faut-vendre")).toEqual({
       attendu,
       bornes: [0, 4_000],
       droites: [0, 48_000, MARGE * 4_000, 48_000],
@@ -497,7 +501,7 @@ describe("l'année engagée : ce que l'engagement coûte et rapporte, refait à 
 
   it("l'année engagée : 812 enceintes, 17 052 € de marge, −19 792 €, −30 948 €", () => {
     const gagnees = COURS.total - SANS.total;
-    expect(attendus(ch, "l-annee-engagee")).toEqual({
+    expect(attendus(CE_QUE_RAPPORTE_L_ENGAGEMENT, "l-annee-engagee")).toEqual({
       "Ventes gagnées sur l'année": gagnees,
       "Marge gagnée sur l'année": gagnees * MARGE,
       "Résultat de l'année engagée": COURS.resultat,
@@ -509,7 +513,7 @@ describe("l'année engagée : ce que l'engagement coûte et rapporte, refait à 
   });
 
   it("le coût complet : 58,42 € sans engagement, 59,99 € au budget du cours", () => {
-    expect(attendus(ch, "le-cout-complet")).toEqual({
+    expect(attendus(CE_QUE_RAPPORTE_L_ENGAGEMENT, "le-cout-complet")).toEqual({
       "Coût complet sans engagement": SANS.coutComplet,
       "Coût complet au budget du cours": COURS.coutComplet,
       "Hausse du coût complet": centime(COURS.coutComplet - SANS.coutComplet),
@@ -519,13 +523,13 @@ describe("l'année engagée : ce que l'engagement coûte et rapporte, refait à 
   });
 
   it("le verdict de l'année : pas encore", () => {
-    expect(juste(ch, "verdict")).toBe("Pas encore : la demande gagnée se vend, mais pas assez pour payer l'année");
+    expect(juste(CE_QUE_RAPPORTE_L_ENGAGEMENT, "verdict")).toBe("Pas encore : la demande gagnée se vend, mais pas assez pour payer l'année");
   });
 
   it("à budget du trimestre 4 égal : le plan qui monte paraît gagner 2 815 €, il perd 9 185 €", () => {
     expect(20_439 * 21 - 390_196 - 56_000).toBe(-16_977);
     expect([MONTE.ventes, MONTE.resultat, COURS_SANS_T4.resultat]).toEqual([[4_778, 4_851, 5_035, 5_775], -16_977, -7_792]);
-    expect(attendus(ch, "a-budget-du-t4-egal")).toEqual({
+    expect(attendus(CE_QUE_RAPPORTE_L_ENGAGEMENT, "a-budget-du-t4-egal")).toEqual({
       "Écart du plan qui monte au budget du cours": MONTE.resultat - COURS.resultat,
       "Effet du budget du trimestre 4 sur le résultat de l'année": COURS.resultat - COURS_SANS_T4.resultat,
       "Écart du plan qui monte, à budget du trimestre 4 égal": MONTE.resultat - COURS_SANS_T4.resultat,
@@ -544,7 +548,7 @@ describe("l'année engagée : ce que l'engagement coûte et rapporte, refait à 
     expect(DU_T3.ventes).toEqual([4_778, 5_022, 5_766, 5_592]);
     expect(DU_T3.resultat).toBe((4_778 + 5_022 + 5_766 + 5_592) * 21 - 390_196 - 56_000);
     expect(DU_T3.resultat).toBe(-1_878);
-    expect(attendus(ch, "le-label-des-le-t3")).toEqual({
+    expect(attendus(CE_QUE_RAPPORTE_L_ENGAGEMENT, "le-label-des-le-t3")).toEqual({
       "Capital à la fin du trimestre 2": centime(DU_T3.fins[1]!),
       "Écart au budget du cours sans le trimestre 4": DU_T3.resultat - COURS_SANS_T4.resultat,
       "Écart à l'année sans engagement": DU_T3.resultat - SANS.resultat,
@@ -556,8 +560,8 @@ describe("l'année engagée : ce que l'engagement coûte et rapporte, refait à 
   });
 
   it("les verdicts du label et de fond : plus il vient tôt, plus il rapporte ; un investissement", () => {
-    expect(juste(ch, "ce-que-paie-le-label")).toBe("Plus il vient tôt, plus il rapporte : au trimestre 3, il paie son budget");
-    expect(juste(ch, "de-fond")).toBe("Un investissement : un capital payé maintenant, qui rapporte ensuite");
+    expect(juste(CE_QUE_RAPPORTE_L_ENGAGEMENT, "ce-que-paie-le-label")).toBe("Plus il vient tôt, plus il rapporte : au trimestre 3, il paie son budget");
+    expect(juste(CE_QUE_RAPPORTE_L_ENGAGEMENT, "de-fond")).toBe("Un investissement : un capital payé maintenant, qui rapporte ensuite");
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(ch));

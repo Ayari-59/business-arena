@@ -1,7 +1,8 @@
 import type { CompanyRoundResult } from "@/engine/types";
 import type { ResultatDeGroupe } from "@/engine/groupe/types";
 import { libelleDeLEbeRetenu } from "@/engine/groupe/valorisation";
-import type { ScenarioVocabulary } from "@/config/scenarios/registry";
+import type { ScenarioVocabulary, Sector } from "@/config/scenarios/registry";
+import { libellesDuStock } from "@/config/scenarios/libelles-des-stocks";
 import { Tiroir } from "@/components/tiroir";
 import {
   ecartAuTourPrecedent,
@@ -289,6 +290,7 @@ export function FinancialStatements({
   price,
   otherVariableCostPerUnit,
   vocabulary,
+  secteur,
   nomsDesReferences,
   roundDays = 90,
 }: {
@@ -308,12 +310,16 @@ export function FinancialStatements({
   /** Le métier nomme lui-même ce qu'il achète : on ne vend pas des matières
    *  premières dans une salle de sport. */
   vocabulary: ScenarioVocabulary;
+  /** Le métier joué : le stock d'une boutique est fait de marchandises, pas de
+   *  produits finis (voir `config/scenarios/libelles-des-stocks`). */
+  secteur: Sector;
   /** Le nom de chaque référence de la gamme, par code (la nouveauté du niveau 7 se nomme). */
   nomsDesReferences?: Readonly<Record<string, string>>;
   /** La durée d'un tour : l'EBE qui fait la valeur du niveau 7 se nomme selon sa fenêtre. */
   roundDays?: number;
 }) {
   const cr = result.incomeStatement;
+  const libellesDesStocks = libellesDuStock(secteur);
   const b = result.balanceSheet;
   const pcr = precedent?.incomeStatement ?? null;
   const pb = precedent?.balanceSheet ?? null;
@@ -371,7 +377,7 @@ export function FinancialStatements({
           <Ligne label="Chiffre d'affaires" valeur={cr.revenue} avant={pcr?.revenue ?? null} />
           {Math.abs(cr.productionStocked) > 0.5 ? (
             <Ligne
-              label="Production stockée (± Δ stock)"
+              label={libellesDesStocks.variation}
               valeur={cr.productionStocked}
               avant={pcr?.productionStocked ?? null}
               decalee
@@ -538,7 +544,7 @@ export function FinancialStatements({
                 <Ligne label="Écart d'acquisition" valeur={b.goodwill ?? 0} avant={pb ? (pb.goodwill ?? 0) : null} />
               ) : null}
               <Ligne
-                label="Stocks de produits finis"
+                label={libellesDesStocks.stock}
                 valeur={b.inventoryValue}
                 avant={pb?.inventoryValue ?? null}
               />

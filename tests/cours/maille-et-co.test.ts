@@ -199,15 +199,21 @@ describe("2. les indicateurs du point de vente", () => {
     expect(comites!.panierMoyen).toBe(10_200 / 8);
   });
 
-  it("la boutique : 948 passages pour 3 848 entrées, indice de vente, panier, prix moyen, CA au m²", () => {
+  it("la boutique : 940 passages en caisse pour 3 848 entrées, les 8 commandes des comités hors caisse ; un seul panier", () => {
     expect(m.entrees).toBe(3_848);
-    expect(m.tickets).toBe(340 + 600 + 8);
-    expect(m.tauxDeTransformation).toBeCloseTo(948 / 3_848, 12);
-    expect(m.indiceDeVente).toBeCloseTo(1_530 / 948, 12);
-    expect(m.panierMoyen).toBeCloseTo(87_450 / 948, 12);
-    expect(m.prixMoyenDeLArticle).toBeCloseTo(87_450 / 1_530, 12);
+    // Les commandes des comités, facturées à 45 jours, ne passent pas en caisse.
+    expect(m.tickets).toBe(340 + 600);
+    expect(m.commandes).toEqual({ nombre: 8, articles: 200, chiffreDAffaires: 10_200 });
+    expect(m.articlesEnCaisse).toBe(595 + 735);
+    expect(m.chiffreDAffairesEnCaisse).toBe(38_825 + 38_425);
+    expect(m.articles).toBe(1_530);
+    expect(m.chiffreDAffaires).toBe(77_250 + 10_200);
+    expect(m.tauxDeTransformation).toBeCloseTo(940 / 3_848, 12);
+    expect(m.indiceDeVente).toBeCloseTo(1_330 / 940, 12);
+    expect(m.panierMoyen).toBeCloseTo(77_250 / 940, 12);
+    expect(m.prixMoyenDeLArticle).toBeCloseTo(77_250 / 1_330, 12);
     expect(m.chiffreDAffairesAuM2).toBe(87_450 / 120);
-    expect([Math.round(m.tauxDeTransformation * 1000) / 10, Math.round(m.panierMoyen * 100) / 100, Math.round(m.indiceDeVente * 100) / 100]).toEqual([24.6, 92.25, 1.61]);
+    expect([Math.round(m.tauxDeTransformation * 1000) / 10, Math.round(m.panierMoyen * 100) / 100, Math.round(m.indiceDeVente * 100) / 100]).toEqual([24.4, 82.18, 1.41]);
   });
 
   it("le taux de service n'est pas le taux de transformation : 1 530 servis sur 1 554 demandés", () => {
@@ -218,10 +224,13 @@ describe("2. les indicateurs du point de vente", () => {
   });
 
   it("le chiffre d'affaires par ses quatre leviers : trafic × transformation × indice de vente × prix moyen", () => {
+    // Les leviers font le chiffre d'affaires en caisse ; les commandes des comités s'y ajoutent, inchangées.
+    expect(chiffreDAffairesParLesIndicateurs(f).chiffreDAffaires).toBe(87_450);
     const l = chiffreDAffairesParLesIndicateurs(f, { trafic: 3_848 * 1.1 });
-    expect(l.chiffreDAffaires).toBe(Math.round(87_450 * 1.1 * 100) / 100);
+    expect(l.chiffreDAffairesEnCaisse).toBe(Math.round(77_250 * 1.1 * 100) / 100);
+    expect(l.chiffreDAffaires).toBe(Math.round((77_250 * 1.1 + 10_200) * 100) / 100);
     const p = chiffreDAffairesParLesIndicateurs(f, { prixMoyenDeLArticle: 60 });
-    expect(p.chiffreDAffaires).toBe(1_530 * 60);
+    expect(p.chiffreDAffaires).toBe(1_330 * 60 + 10_200);
   });
 });
 
@@ -463,7 +472,8 @@ describe("7. le seuil de rentabilité du point de vente", () => {
     expect(s.pointMort).toBe(Math.ceil((60_661.64 / 87_450) * 30));
     expect(s.pointMort).toBe(21);
     expect(s.resultat).toBe(44_250 - 30_695);
-    expect(s.ticketsAuSeuil).toBe(Math.ceil(60_661.64 / (87_450 / 948)));
+    expect(s.commandes).toBe(10_200);
+    expect(s.ticketsAuSeuil).toBe(Math.ceil((60_661.64 - 10_200) / (77_250 / 940)));
   });
 
   it("fermé 5 jours pour travaux : le seuil ne bouge pas, le point mort recule au 26", () => {
@@ -481,11 +491,11 @@ describe("7. le seuil de rentabilité du point de vente", () => {
     expect(seuilDuPointDeVente(f, { joursDeFermeture: 10 }).resultat).toBeLessThan(0);
   });
 
-  it("le panier plancher : 64 € aux 948 passages en caisse", () => {
-    expect(s.panierPlancher).toBeCloseTo(30_695 / (44_250 / 87_450) / 948, 9);
-    expect(Math.ceil(s.panierPlancher)).toBe(64);
-    expect(seuilDuPointDeVente(f, { panierMoyen: 64 }).resultat).toBeGreaterThanOrEqual(0);
-    expect(seuilDuPointDeVente(f, { panierMoyen: 63 }).resultat).toBeLessThan(0);
+  it("le panier plancher : 54 € aux 940 passages en caisse, les commandes des comités comprises", () => {
+    expect(s.panierPlancher).toBeCloseTo((60_661.64 - 10_200) / 940, 9);
+    expect(Math.ceil(s.panierPlancher)).toBe(54);
+    expect(seuilDuPointDeVente(f, { panierMoyen: 54 }).resultat).toBeGreaterThanOrEqual(0);
+    expect(seuilDuPointDeVente(f, { panierMoyen: 53 }).resultat).toBeLessThan(0);
   });
 });
 
@@ -590,7 +600,9 @@ describe("10. le tableau de bord du manager", () => {
     expect(v("realisationDeLObjectif").valeur).toBeCloseTo(87_450 / 96_616.67, 12);
     expect(v("evolutionDuTrafic").valeur).toBeCloseTo(3_848 / 4_160 - 1, 12);
     expect(v("tauxDeTransformation").n1).toBe(1_000 / 4_160);
-    expect(v("panierMoyen").n1).toBe(89_600 / 1_000);
+    expect(v("panierMoyen").n1).toBe(79_400 / 1_000);
+    expect(v("indiceDeVente").n1).toBe(1_400 / 1_000);
+    expect(v("panierMoyen").valeur).toBeCloseTo(77_250 / 940, 12);
     expect(v("tauxDeService").n1).toBe(1_600 / 1_610);
     expect(t.evolutionDuChiffreDAffaires).toBeCloseTo(87_450 / 89_600 - 1, 12);
     expect(v("partDuPersonnel").valeur).toBeCloseTo(14_342 / 87_450, 12);
@@ -606,7 +618,7 @@ describe("10. le tableau de bord du manager", () => {
 
   it("le trafic de janvier N − 1 éteint les deux voyants", () => {
     const u = tableauDeBordDuManager(f, { trafic: 4_160 });
-    expect(u.chiffreDAffaires).toBe(Math.round(((87_450 * 4_160) / 3_848) * 100) / 100);
+    expect(u.chiffreDAffaires).toBe(Math.round(((77_250 * 4_160) / 3_848 + 10_200) * 100) / 100);
     expect(u.voyantsAllumes).toEqual([]);
   });
 });

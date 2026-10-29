@@ -310,7 +310,7 @@ export const ATELIER_CG1: AtelierDefinition = {
           minutes: 25,
           titre: "Le budget, sur tableur",
           detail:
-            "Chaque équipe reprend le budget qu'elle a préparé dans le cockpit et le passe au crible des délais du scénario : les particuliers paient comptant, le compte-clé à quatre-vingts jours quand il arrive au troisième trimestre, l'export à quatre-vingt-dix ; les fournisseurs se règlent selon le contrat retenu. Le solde de fin de trimestre est la ligne qui compte.",
+            "Chaque équipe reprend le budget qu'elle a préparé dans le cockpit et le passe au crible des délais du scénario : les particuliers paient comptant, le compte-clé à soixante jours convenus mais en retard, à quatre-vingts jours, quand il arrive au troisième trimestre, l'export à quatre-vingt-dix ; les fournisseurs se règlent selon le contrat retenu. Le solde de fin de trimestre est la ligne qui compte.",
         },
         {
           minutes: 20,

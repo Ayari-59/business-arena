@@ -2,6 +2,11 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { CONCEPTS, conceptByCode } from "../../src/config/pedagogy/concepts";
 import { libelleDeLEbeRetenu } from "../../src/engine/groupe/valorisation";
+import { LIBELLES_DES_STOCKS } from "../../src/config/scenarios/libelles-des-stocks";
+
+/** Les libellés du stock et de sa variation, un par métier (voir `libelles-des-stocks`). */
+const STOCKS = [...new Set(Object.values(LIBELLES_DES_STOCKS).map((l) => l.stock))];
+const VARIATIONS = [...new Set(Object.values(LIBELLES_DES_STOCKS).map((l) => l.variation))];
 
 /**
  * CHAQUE CHIFFRE DES COMPTES DE L'ÉLÈVE A UNE FICHE, OU EST DÉCLARÉ SANS.
@@ -41,7 +46,7 @@ const FICHE_DE_LA_LIGNE: Record<string, string> = {
   "− Charges de structure": "fixed_costs",
   "= Excédent brut d'exploitation (EBE)": "ebitda_margin",
   "− Dotations aux amortissements": "depreciation",
-  "Stocks de produits finis": "stock",
+  ...Object.fromEntries(STOCKS.map((l) => [l, "stock"])),
   "Créances clients": "bfr",
   "Dettes fournisseurs": "bfr",
   "Dettes financières": "loan_schedule",
@@ -123,7 +128,7 @@ const SANS_FICHE: string[] = [
   "+ Subvention exceptionnelle (sauvetage)",
   "= RÉSULTAT NET",
   "= Résultat d'exploitation",
-  "Production stockée (± Δ stock)",
+  ...VARIATIONS,
   "Valeurs mobilières de placement",
   // Niveau 7 : des sous-totaux du rachat et du bilan consolidé, lus avec leur panneau.
   "dont trésorerie",
@@ -137,6 +142,9 @@ const libelles = () => {
   // Le libellé de l'EBE du niveau 7 se calcule selon la durée du tour : la garde lit
   // ceux qu'il prend au mois, au trimestre et à l'année.
   const calcules = src.includes("label={libelleDeLEbeRetenu(") ? [30, 90, 360].map(libelleDeLEbeRetenu) : [];
+  // Le stock et sa variation se nomment selon le métier : la garde lit ceux de chaque secteur.
+  if (src.includes("label={libellesDesStocks.stock}")) calcules.push(...STOCKS);
+  if (src.includes("label={libellesDesStocks.variation}")) calcules.push(...VARIATIONS);
   return [...new Set([...[...src.matchAll(/label="([^"]+)"/g)].map((m) => m[1]!), ...calcules])];
 };
 

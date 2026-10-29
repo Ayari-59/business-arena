@@ -1,5 +1,7 @@
 import type { BalanceSheet, CashFlowItem, CompanyRoundResult, IncomeStatement } from "@/engine/types";
 import { formatEuro, formatPercent } from "@/lib/format";
+import type { Sector } from "@/config/scenarios/registry";
+import { libellesDuStock } from "@/config/scenarios/libelles-des-stocks";
 
 /**
  * CE QUE LES COMPTES DISENT, en une phrase en tête de chaque état.
@@ -182,7 +184,8 @@ export interface LigneDeCompte {
   decalee?: boolean;
 }
 
-export function lignesDuCompte(cr: IncomeStatement): LigneDeCompte[] {
+/** `secteur` : la variation du stock se nomme selon le métier (`config/scenarios/libelles-des-stocks`), comme dans les états. */
+export function lignesDuCompte(cr: IncomeStatement, secteur: Sector): LigneDeCompte[] {
   const lignes: LigneDeCompte[] = [];
   // Une charge nulle s'écrit « 0 € », jamais « −0 € » : le zéro négatif de la
   // virgule flottante est une curiosité de machine, pas un montant.
@@ -196,7 +199,7 @@ export function lignesDuCompte(cr: IncomeStatement): LigneDeCompte[] {
   poser({ cle: "revenue", label: "Chiffre d'affaires", valeur: cr.revenue });
   siServie(cr.productionStocked, {
     cle: "productionStocked",
-    label: "Production stockée (± Δ stock)",
+    label: libellesDuStock(secteur).variation,
     decalee: true,
   });
   poser({ cle: "cogs", label: "− Coût variable des ventes", valeur: moins(cr.cogs), decalee: true });

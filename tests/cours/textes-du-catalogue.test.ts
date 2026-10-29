@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
+import { PREMIERE_PARTIE_DE_LA_SUITE } from "../../src/config/cours/jouez";
 import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
 import { CHAPITRES, PARCOURS } from "../../src/config/cours/registre";
 import { SITUATIONS } from "../../src/config/cours/situations";
@@ -226,7 +227,10 @@ function codesDuMonde(): Set<string> {
   const garde = readFileSync(join(process.cwd(), "tests", "architecture", "monde-du-cours.test.ts"), "utf8");
   const registre = garde.slice(garde.indexOf("PASSES_SUR_LE_MONDE"), garde.indexOf("];", garde.indexOf("PASSES_SUR_LE_MONDE")));
   const fichiers = [...registre.matchAll(/"((?:chapitres|situations)\/[^"]+\.ts)"/g)].map((m) => m[1]!);
-  return new Set(fichiers.flatMap((f) => /\bcode: "([^"]+)",\s+parcours:/.exec(readFileSync(join(cours, f), "utf8"))?.slice(1) ?? []));
+  const codes = new Set(fichiers.flatMap((f) => /\bcode: "([^"]+)",\s+parcours:/.exec(readFileSync(join(cours, f), "utf8"))?.slice(1) ?? []));
+  // La suite d'un chapitre découpé vit dans le fichier de sa première partie, sur le même monde.
+  for (const [suite, premiere] of Object.entries(PREMIERE_PARTIE_DE_LA_SUITE)) if (codes.has(premiere)) codes.add(suite);
+  return codes;
 }
 
 describe("le monde du cours ne se dit pas l'arène", () => {
