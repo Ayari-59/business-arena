@@ -79,3 +79,13 @@ export const AIDE_CODE_DE_REPRISE_SOLO =
  * classe maladroite, et restent dérisoires face aux centaines de millions de codes possibles.
  */
 export const MAX_CODES_FAUX_PAR_ADRESSE = 60;
+
+/**
+ * L'INSCRIPTION ENSEIGNANT, PLAFONNÉE PAR ADRESSE D'ORIGINE (audit d'octobre 2026, P2-4).
+ *
+ * Chaque inscription envoie un lien de confirmation à l'adresse saisie : sans plafond, un
+ * script faisait écrire à autant de tiers qu'il voulait. Cinq inscriptions par adresse
+ * d'origine dans la fenêtre de la reprise (quinze minutes) : une salle des professeurs
+ * derrière une même IP s'inscrit en plusieurs fois, un robot non.
+ */
+export const MAX_INSCRIPTIONS_PAR_ADRESSE = 5;

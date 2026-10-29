@@ -186,9 +186,10 @@ describe("3. la valeur finale est dans le DOM dès le départ", () => {
   });
 
   it("une valeur rafraîchie rend son contenu tel quel, sans attendre", () => {
-    const html = renderToStaticMarkup(
-      createElement(ValeurRafraichie, { valeur: 12000, children: "12 000 €" }),
-    );
+    // L'enfant passe en troisième argument (react/no-children-prop) ; le type des props
+    // l'exige pourtant dans l'objet, d'où l'annotation : React le pose là au rendu.
+    const props = { valeur: 12000 } as Parameters<typeof ValeurRafraichie>[0];
+    const html = renderToStaticMarkup(createElement(ValeurRafraichie, props, "12 000 €"));
     expect(html).toContain("12 000 €");
     expect(html).toContain('data-valeur-rafraichie="posee"');
   });

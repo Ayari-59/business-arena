@@ -189,8 +189,6 @@ describe("contraste de l'encre sur fond sombre", () => {
     ...fichiers(SRC, [".tsx"])
       .filter((f) => readFileSync(f, "utf8").includes('data-theme="clair"'))
       .map((f) => f.slice(SRC.length)),
-    "/training/components/glossary-panel.tsx",
-    "/training/components/tutorial-overlay.tsx",
     "/app/animations/[code]/page.tsx",
   ];
 

@@ -70,6 +70,7 @@ import { paletteDuSite } from "@/config/theme-du-site";
 import { feuilleDePalette } from "@/config/palettes";
 import { getPlatformConfig } from "@/services/admin.service";
 import { SITE_URL } from "@/config/site";
+import { SCRIPT_DU_SITE } from "@/config/security-headers";
 import { DESCRIPTION_ACCUEIL, GABARIT_DE_TITRE, OPEN_GRAPH_DU_SITE, TITRE_ACCUEIL } from "@/config/seo";
 
 /**
@@ -151,7 +152,8 @@ export default async function RootLayout({
         <BarreDActionMobile />
         <script
           dangerouslySetInnerHTML={{
-            __html: `if("serviceWorker"in navigator)window.addEventListener("load",function(){navigator.serviceWorker.register("/sw.js")});window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__bip=e;window.dispatchEvent(new Event("bip-ready"))})`,
+            // Autorisé dans les zones à nonce par son empreinte (config/security-headers.ts).
+            __html: SCRIPT_DU_SITE,
           }}
         />
       </body>

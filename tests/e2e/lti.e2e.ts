@@ -1,4 +1,5 @@
 import { createHmac, randomBytes, randomUUID } from "node:crypto";
+import { cleDerivee } from "@/lib/cles";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { Client } from "pg";
@@ -257,7 +258,7 @@ async function administrateur(ctx: BrowserContext): Promise<void> {
   });
   const now = Date.now();
   const corps = Buffer.from(JSON.stringify({ id: userId, role: "teacher", v: 1, iat: now, exp: now + 3600_000 })).toString("base64url");
-  const signature = createHmac("sha256", process.env.AUTH_SECRET!).update(corps).digest("hex").slice(0, 32);
+  const signature = createHmac("sha256", cleDerivee("session", process.env.AUTH_SECRET!)).update(corps).digest("hex").slice(0, 32);
   await ctx.addCookies([{ name: "ba_session", value: `${corps}.${signature}`, url: BASE }]);
 }
 

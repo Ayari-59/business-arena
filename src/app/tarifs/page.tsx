@@ -20,11 +20,15 @@ import { bandeauDeLaPromotion, lireLEtatDuCatalogue } from "@/services/catalogue
  * empilées sur un téléphone ; la ligne des réseaux ; la bande des épisodes manager, à part,
  * sur devis ; les options ; les conditions ; les questions. Un seul bouton plein, celui de
  * l'offre mise en avant. La promotion affichée, s'il y en a une en cours, pose un bandeau
- * sobre, retiré à sa date de fin. La page se rend à chaque visite (le catalogue, lui, est
- * en cache) : un enregistrement dans /admin/offres et la fin d'une promotion s'y lisent
- * aussitôt, sans page régénérée en retard.
+ * sobre, retiré à sa date de fin.
+ *
+ * LA PAGE SE SERT DU CACHE (audit d'octobre 2026, P2-6). Elle se rendait à chaque visite,
+ * toujours en `no-store`, alors qu'elle ne lit rien de la requête. Elle est régénérée
+ * toutes les cinq minutes, et aussitôt après un enregistrement dans /admin/offres
+ * (`revalidatePath`, admin/offres/actions.ts). Seule la fin d'une promotion peut s'y lire
+ * avec au plus cinq minutes de retard (plus la visite qui déclenche la régénération).
  */
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export async function generateMetadata(): Promise<Metadata> {
   const { catalogue, affichage } = await lireLEtatDuCatalogue();

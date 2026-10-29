@@ -18,7 +18,7 @@ import {
 export type SegmentedTab = { key: string; label: string; icon?: NomDIcone };
 
 /**
- * Un jeu d'onglets local et autonome : contrairement à `ArenaLayout`, il ne
+ * Un jeu d'onglets local et autonome : contrairement à l'ancien `ArenaLayout` (supprimé), il ne
  * touche ni à une barre collante ni, par défaut, au hash de l'URL — plusieurs
  * instances (une par période de l'accordéon) cohabitent sans se marcher dessus.
  * Seul l'onglet dont le contenu est fourni (non `null`) est proposé.

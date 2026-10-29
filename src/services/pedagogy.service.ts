@@ -43,7 +43,8 @@ import type { CompanyRoundResult } from "@/engine/types";
  *   - pedagogy-seed.service       : seed idempotent des référentiels
  *   - situation-instance.service  : ouverture / chargement des situations
  *   - hints.service               : plafond et déblocage des indices
- *   - diagnosis.service           : diagnostic + score F1
+ *   - le diagnostic (score F1) est ICI : diagnosis.service, sa copie, n'était
+ *                                   importé par personne (supprimé, audit d'octobre 2026)
  *   - debrief.service             : rattrapage, politique de rattrapage, vue
  *                                   (toView). Le QCM et le débriefing sont
  *                                   ICI : la copie qu'en portait ce service-là

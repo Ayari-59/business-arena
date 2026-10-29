@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { COOKIE_INVITE, optionsCookieInvite } from "@/lib/cookie-invite";
 import { cheminDemande, ENTETE_CHEMIN_DEMANDE } from "@/lib/connexion-enseignant";
+import { CSP_HEADER_NAME, cspANonce, sousNonce } from "@/config/security-headers";
 
 /**
  * UNE BARRE OBLIQUE INVERSE DANS L'ADRESSE (« \ », encodée %5C).
@@ -47,21 +48,41 @@ function barreInverse(request: NextRequest): NextResponse | null {
  * seulement si le cookie est là : l'accueil statique reste servi du cache pour
  * les visiteurs sans cookie, robots compris.
  */
+/** Les pages où le cookie invité se prolonge : les entrées du matcher à cookie. */
+const PAGES_DE_JEU = /^\/(?:jouer|profile|reprendre|arena(?:\/.*)?)?\/?$/;
+
 export function proxy(request: NextRequest) {
   const refus = barreInverse(request);
   if (refus) return refus;
 
+  const { pathname } = request.nextUrl;
+  const entetes = new Headers(request.headers);
+  let modifiees = false;
+
   // L'ESPACE ENSEIGNANT : la page demandée est transmise à la page serveur, qui
   // la met dans l'adresse de connexion si la session manque
   // (lib/connexion-enseignant.ts). L'en-tête reçu du client est écrasé.
-  if (request.nextUrl.pathname === "/teacher" || request.nextUrl.pathname.startsWith("/teacher/")) {
-    const entetes = new Headers(request.headers);
+  if (pathname === "/teacher" || pathname.startsWith("/teacher/")) {
     entetes.set(ENTETE_CHEMIN_DEMANDE, cheminDemande(request.nextUrl));
-    return NextResponse.next({ request: { headers: entetes } });
+    modifiees = true;
   }
 
-  const response = NextResponse.next();
-  const valeur = request.cookies.get(COOKIE_INVITE)?.value;
+  // LA CSP À NONCE des zones déjà dynamiques (config/security-headers.ts, audit P2-6).
+  // Posée dans la requête, elle fait poser le nonce par Next sur ses propres scripts ;
+  // posée dans la réponse, elle s'applique. Un nonce neuf à chaque requête.
+  let csp: string | null = null;
+  if (sousNonce(pathname)) {
+    const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
+    csp = cspANonce(nonce);
+    entetes.set(CSP_HEADER_NAME, csp);
+    modifiees = true;
+  }
+
+  const response = modifiees ? NextResponse.next({ request: { headers: entetes } }) : NextResponse.next();
+  if (csp) response.headers.set(CSP_HEADER_NAME, csp);
+  // Le cookie invité ne se prolonge que sur les pages de jeu (voir `matcher`) : les
+  // autres zones passent ici pour la CSP ou le retour après connexion.
+  const valeur = PAGES_DE_JEU.test(pathname) ? request.cookies.get(COOKIE_INVITE)?.value : undefined;
   if (valeur) response.cookies.set(COOKIE_INVITE, valeur, optionsCookieInvite());
   return response;
 }
@@ -74,8 +95,17 @@ export const config = {
     { source: "/profile", has: [{ type: "cookie", key: "ba_guest" }] },
     { source: "/reprendre", has: [{ type: "cookie", key: "ba_guest" }] },
     { source: "/arena/:path*", has: [{ type: "cookie", key: "ba_guest" }] },
-    // L'espace enseignant, pour le retour après connexion (voir plus haut).
+    // L'espace enseignant, pour le retour après connexion (voir plus haut), et les
+    // zones à CSP à nonce (config/security-headers.ts, ZONES_A_NONCE) ; le test
+    // csp-a-nonce vérifie que la liste est la même.
     { source: "/teacher/:path*" },
+    { source: "/admin/:path*" },
+    { source: "/arena/:path*" },
+    { source: "/etablissement/:path*" },
+    { source: "/org/:path*" },
+    { source: "/examen/:path*" },
+    { source: "/compete/:path*" },
+    { source: "/profile/:path*" },
     // Toute adresse qui contient une barre oblique inverse, encodée ou non.
     { source: "/(.*%5[cC].*)" },
     { source: "/(.*\\\\.*)" },
