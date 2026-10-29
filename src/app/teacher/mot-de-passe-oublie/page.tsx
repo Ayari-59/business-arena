@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { LIEN_A_L_ENCRE } from "@/components/bouton";
 import { DemandeDeReinitialisation } from "@/components/mot-de-passe-oublie-forms";
@@ -14,7 +15,9 @@ export const metadata: Metadata = {
  * LA DEMANDE DE RÉINITIALISATION (services/mot-de-passe-oublie.service.ts) : une adresse,
  * et toujours la même réponse, que le compte existe ou non.
  */
-export default function MotDePasseOubliePage() {
+export default async function MotDePasseOubliePage() {
+  // Rendue à chaque requête : la zone /teacher porte une CSP à nonce (proxy.ts).
+  await connection();
   return (
     <main id="main" className="pb-16">
       <EnTeteDePage
