@@ -1,8 +1,11 @@
-import { montantEcrit as eur } from "../../../../pedagogy/cours/correcteur";
+import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../../pedagogy/cours/etats";
 import type { Cas } from "../../cas";
-import { demandeEtPrix } from "../../chapitres/demande-et-prix";
+import { DEMANDE_ET_PRIX, demandeEtPrix } from "../../chapitres/demande-et-prix";
 import type { Situation } from "../types";
+
+/** Un montant à la française, avec le signe moins typographique. */
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 
 /** « que » devant un nom, élidé devant une voyelle : qu'ATLAS CONSEIL. */
 const que = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈÊ]/.test(nom) ? `qu'${nom}` : `que ${nom}`);
@@ -12,8 +15,8 @@ const que = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈÊ]/.test(nom) ? `qu'${no
  * FOURNISSEUR ? (Bac STMG, mercatique, palier 1).
  *
  * Un fournisseur augmente ses tarifs. Pour la répercuter, la direction envisage une hausse
- * de prix plus petite que celle que l'arène a rejouée, et demande ce qu'elle ferait à la
- * demande et au chiffre d'affaires. L'élève calcule l'élasticité sur le trimestre rejoué,
+ * de prix plus petite que celle du chapitre, et demande ce qu'elle ferait à la
+ * demande et au chiffre d'affaires. L'élève calcule l'élasticité sur le premier trimestre de NOVA,
  * comme au chapitre, puis s'en sert pour prévoir : le nouveau prix, la variation de la
  * demande, la demande et le chiffre d'affaires attendus, et la phrase qu'il rend.
  *
@@ -24,15 +27,15 @@ const que = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈÊ]/.test(nom) ? `qu'${no
 
 /**
  * La hausse de prix envisagée : 5 %, de quoi répercuter une hausse des tarifs d'un
- * fournisseur sans aller jusqu'aux 10 % que l'arène a rejoués. L'élasticité mesurée sur
+ * fournisseur sans aller jusqu'aux 10 % du chapitre. L'élasticité mesurée sur
  * 10 % sert à prévoir l'effet de ces 5 %.
  */
 export const HAUSSE_DE_PRIX_ENVISAGEE = 0.05;
 
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
-const pct1 = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const qte = (n: number) => n.toLocaleString("fr-FR");
-const ratio = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`.replace(/^-/, "−");
+const pct1 = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`.replace(/^-/, "−");
+const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
+const ratio = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/^-/, "−");
 const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const auCentieme = (x: number) => Math.round(x * 100) / 100;
 
@@ -80,6 +83,7 @@ export const REPERCUTER_LA_HAUSSE_DU_FOURNISSEUR: Situation = {
     "Rédiger une réponse chiffrée à la direction",
   ],
   libre: false,
+  entreprises: DEMANDE_ET_PRIX.entreprises,
   etapes: [
     {
       id: "demande",
@@ -88,14 +92,14 @@ export const REPERCUTER_LA_HAUSSE_DU_FOURNISSEUR: Situation = {
       texte: (c) => {
         const r = hausseDuFournisseur(c);
         return [
-          `« Nos fournisseurs augmentent leurs tarifs. Pour le répercuter, je pense monter nos prix de ${pct(r.hausse)}. L'arène a rejoué notre premier trimestre avec ${pct(r.d.ecart)} de hausse, mais pas avec ${pct(r.hausse)}. Servez-vous de ce trimestre rejoué pour me dire ce ${que(c.entreprise)} perdrait de clients, et ce que deviendrait notre chiffre d'affaires. »`,
+          `« Nos fournisseurs augmentent leurs tarifs. Pour le répercuter, je pense monter nos prix de ${pct(r.hausse)}. Nous connaissons la demande de notre premier trimestre avec ${pct(r.d.ecart)} de hausse, pas avec ${pct(r.hausse)}. Servez-vous de ce trimestre pour me dire ce ${que(c.entreprise)} perdrait de clients, et ce que deviendrait notre chiffre d'affaires. »`,
           "Pas de cours cette fois : vous avez la demande aux deux prix, et la méthode est celle du chapitre. À vous de l'enchaîner, puis de vous en servir pour prévoir.",
         ];
       },
       tableau: (c) => {
         const r = hausseDuFournisseur(c);
         return {
-          titre: `Le premier trimestre rejoué · ${c.entreprise}`,
+          titre: `Le premier trimestre, à deux prix · ${c.entreprise}`,
           colonnes: ["Valeur"],
           lignes: [
             { libelle: "Prix pratiqué", valeurs: [eur(r.d.base.prix)] },

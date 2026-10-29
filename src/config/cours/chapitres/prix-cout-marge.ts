@@ -1,7 +1,16 @@
-import { montantEcrit as eur } from "../../../pedagogy/cours/correcteur";
+import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../pedagogy/cours/etats";
 import { accord } from "../accords";
 import type { Cas } from "../cas";
+import {
+  ENTREPRISES_DE_LA_GESTION_DE_BASE,
+  FICHE_DE_GESTION,
+  PAS_DES_QUANTITES,
+  baisseDePrixEtudiee,
+  margeDuMois,
+  prixPlancherDuMois,
+  quantitePourGarderLaMarge,
+} from "../monde/gestion-et-information";
 import type { Chapitre } from "../types";
 
 /**
@@ -10,20 +19,33 @@ import type { Chapitre } from "../types";
  * La première marche du contrôle de gestion, pour le lycée : ce qu'une unité vendue coûte à
  * l'entreprise, ce qu'elle rapporte, et ce qui reste entre les deux. La marge par unité, ses
  * deux taux (sur le coût, sur le prix), la marge du mois, et ce qu'il en reste une fois
- * payées les charges fixes ; puis l'effet d'une baisse de prix, et la place de la TVA.
+ * payées les charges fixes ; puis le prix plancher (un curseur), l'effet d'une baisse de prix, les
+ * ventes qu'il faudrait pour garder la marge du mois (un laboratoire), et la place de la TVA.
  *
- * Aucune hypothèse : le prix moyen, les coûts par unité, les quantités et les charges fixes
- * sont ceux du mois du cas, figés dans la simulation du cours (`cas.ts`). La baisse de prix
- * reprend l'écart que le chapitre « Décider » étudie.
+ * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA seule : le mois de janvier du contrôle de
+ * gestion (nova-gestion.ts, lu par monde/gestion-et-information.ts) : 1 590 enceintes à 59 € hors
+ * taxes, 22 € de composants et 16 € d'autres coûts par enceinte, 31 183 € de charges fixes. La
+ * baisse de prix étudiée est l'écart de prix de la fiche, 10 %.
+ *
+ * CE QUI A CHANGÉ. Le chapitre se jouait dans les neuf entreprises, sur le mois figé de chacune ; à
+ * la boutique, il donnait au mois un chiffre d'affaires de 85 610 €, que la fiche de MAILLE & CO
+ * compte 87 450 €. Il se joue maintenant chez NOVA seule, où les chiffres étaient déjà ceux de la
+ * fiche (aucun ne change) ; ses cas « Le fournisseur augmente ses prix » et « Suivre la baisse du
+ * concurrent » aussi.
  */
 
-/** La baisse de prix étudiée : celle que le chapitre « Décider » étudie. */
-export const BAISSE_DE_PRIX = 0.1;
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
+/** La baisse de prix étudiée : celle que le chapitre « Décider » étudie, l'écart de prix de la fiche. */
+export const BAISSE_DE_PRIX = baisseDePrixEtudiee();
+
 const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 const qte = (n: number) => n.toLocaleString("fr-FR");
 const majuscule = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+const auDixieme = (x: number) => Math.round(x * 10) / 10;
+
+export const POURQUOI_PRIX_COUT_MARGE =
+  "ce chapitre lit le mois de janvier de NOVA, celui que le contrôle de gestion du cours suit, avec ses prix, ses coûts et ses charges fixes.";
 
 /**
  * Le prix plancher : le plus bas, à l'euro, qui couvre les charges fixes du mois quand les
@@ -32,37 +54,33 @@ const majuscule = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
  */
 export function prixPlancher(c: Cas) {
   const m = prixCoutMarge(c);
-  const plancher = Math.ceil(m.cout + m.chargesFixes / m.quantite - 1e-9);
+  const plancher = prixPlancherDuMois(FICHE_DE_GESTION);
   return { ...m, plancher, min: Math.floor(m.cout), max: Math.ceil(Math.max(plancher, m.prix) * 1.3) };
 }
 
-/** Le prix, le coût et la marge d'une unité, et ceux du mois. */
-export function prixCoutMarge(c: Cas) {
-  const g = c.gestion;
-  const prix = g.prixMoyen;
-  const cout = g.coutVariableUnitaire;
-  const marge = auCentime(prix - cout);
-  const margeDuMois = auCentime(marge * g.quantite);
-  const prixBaisse = auCentime(prix * (1 - BAISSE_DE_PRIX));
-  const margeBaissee = auCentime(prixBaisse - cout);
+/** Le prix, le coût et la marge d'une unité, et ceux du mois : ceux de la fiche de NOVA. */
+export function prixCoutMarge(_c: Cas) {
+  const m = margeDuMois(FICHE_DE_GESTION);
+  const prixBaisse = auCentime(m.prix * (1 - BAISSE_DE_PRIX));
+  const margeBaissee = auCentime(prixBaisse - m.cout);
   return {
-    prix,
-    matiere: g.matiereParUnite,
-    autres: g.autresParUnite,
-    autresCoutsVariables: g.autresCoutsVariables,
-    cout,
-    marge,
-    tauxDeMarge: auDixieme((marge / cout) * 100),
-    tauxDeMarque: auDixieme((marge / prix) * 100),
-    quantite: g.quantite,
-    margeDuMois,
-    chargesFixes: g.chargesFixes,
-    resultat: auCentime(margeDuMois - g.chargesFixes),
+    prix: m.prix,
+    matiere: m.composants,
+    autres: m.autres,
+    autresCoutsVariables: m.autresCoutsVariables,
+    cout: m.cout,
+    marge: m.marge,
+    tauxDeMarge: m.tauxDeMarge,
+    tauxDeMarque: m.tauxDeMarque,
+    quantite: m.quantite,
+    margeDuMois: m.margeDuMois,
+    chargesFixes: m.chargesFixes,
+    resultat: m.resultat,
     prixBaisse,
     margeBaissee,
-    baisseDeLaMarge: auDixieme(((marge - margeBaissee) / marge) * 100),
-    tauxTva: c.venteComptant.tauxTva,
-    prixTtc: auCentime(prix * (1 + c.venteComptant.tauxTva)),
+    baisseDeLaMarge: auDixieme(((m.marge - margeBaissee) / m.marge) * 100),
+    tauxTva: m.tauxDeTva,
+    prixTtc: m.prixTtc,
   };
 }
 
@@ -85,6 +103,7 @@ export const PRIX_COUT_MARGE: Chapitre = {
     "Dire pourquoi la marge se calcule hors taxes",
   ],
   libre: false,
+  entreprises: { codes: ENTREPRISES_DE_LA_GESTION_DE_BASE, pourquoi: POURQUOI_PRIX_COUT_MARGE },
   etapes: [
     {
       id: "intro",
@@ -239,6 +258,50 @@ export const PRIX_COUT_MARGE: Chapitre = {
         const m = prixCoutMarge(c);
         return [
           `Le prix baisse de ${pct(BAISSE_DE_PRIX * 100)}, la marge de ${pct(m.baisseDeLaMarge)} : toute la baisse est prise sur la marge, le coût ne bouge pas. Pour garder la même marge du mois, il faudrait vendre davantage. Le chapitre « Décider », au palier 4, regarde si les clients suivent.`,
+        ];
+      },
+    },
+    {
+      id: "le-laboratoire-des-quantites",
+      type: "simulation",
+      titre: "Vendre plus pour garder la marge",
+      notions: ["contribution_margin", "price_elasticity"],
+      question: (c) => {
+        const m = prixCoutMarge(c);
+        return `Au prix baissé, ${eur(m.prixBaisse)}, chaque ${c.unite} ne laisse plus que ${eur(m.margeBaissee)}. Faites varier les ${c.unites} vendues dans le mois, et cherchez combien il en faudrait pour que la marge du mois reste à ${eur(m.margeDuMois)}.`;
+      },
+      leviers: (c) => [{ code: "quantite", libelle: `${majuscule(c.unites)} vendues dans le mois`, unite: c.unites, min: 1_500, max: 3_000, pas: PAS_DES_QUANTITES, depart: prixCoutMarge(c).quantite }],
+      lecture: (c, p) => {
+        const m = prixCoutMarge(c);
+        const apres = margeDuMois(FICHE_DE_GESTION, { prix: m.prixBaisse, quantite: p.quantite! });
+        return [
+          { libelle: "Marge d'une unité, au prix baissé", montant: apres.marge, reference: m.marge },
+          { libelle: "Marge du mois", montant: apres.margeDuMois, reference: m.margeDuMois, fort: true },
+          { libelle: "Résultat du mois", montant: apres.resultat, reference: m.resultat },
+        ];
+      },
+      defi: (c) => {
+        const { auPas } = quantitePourGarderLaMarge(FICHE_DE_GESTION);
+        const m = prixCoutMarge(c);
+        return {
+          consigne: `Trouvez le plus petit nombre d'${c.unites}, à la dizaine, qui garde au prix baissé une marge du mois d'au moins ${eur(m.margeDuMois)}.`,
+          atteint: (p) => p.quantite === auPas,
+          indice: (p) => {
+            const apres = margeDuMois(FICHE_DE_GESTION, { prix: m.prixBaisse, quantite: p.quantite! });
+            return apres.margeDuMois < m.margeDuMois
+              ? `La marge du mois tombe à ${eur(apres.margeDuMois)} : il manque ${eur(auCentime(m.margeDuMois - apres.margeDuMois))}. Il faut vendre davantage.`
+              : `La marge du mois atteint ${eur(apres.margeDuMois)} : moins de ${c.unites} suffirait-il ?`;
+          },
+          solution: { quantite: auPas },
+        };
+      },
+      explication: (c, p) => {
+        const m = prixCoutMarge(c);
+        const { juste } = quantitePourGarderLaMarge(FICHE_DE_GESTION);
+        const hausse = auDixieme((p.quantite! / m.quantite - 1) * 100);
+        return [
+          `Défi relevé : ${qte(p.quantite!)} ${c.unites} au lieu de ${qte(m.quantite)}, soit ${pct(hausse)} de ventes en plus, pour une baisse de prix de ${pct(BAISSE_DE_PRIX * 100)}. Au plus juste, il en faudrait ${qte(juste)}.`,
+          `Une petite baisse de prix demande beaucoup de ventes en plus, parce qu'elle se prend tout entière sur la marge. Les clients suivront-ils ? C'est la question du chapitre « Décider », au palier 4.`,
         ];
       },
     },

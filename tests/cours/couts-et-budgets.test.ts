@@ -71,14 +71,13 @@ describe("la fiche de NOVA : une seule entreprise, d'un chapitre à l'autre", ()
     expect(f.decision.chargesFixes).toBe(3 * 31_183);
   });
 
-  it("la droite de demande passe près des trois rejeux de l'arène", () => {
-    const rejeux: [number, number][] = [[53.1, 6_911], [59, 5_762], [64.9, 4_512]];
-    const droite = rejeux.map(([p]) => Math.floor(17_700 - 203 * p + 1e-9));
-    expect(droite).toEqual([6_920, 5_723, 4_525]);
-    expect(rejeux.map(([p]) => demandeAuPrix(f, p))).toEqual(droite);
-    expect(rejeux.map(([, d], i) => droite[i]! - d)).toEqual([9, -39, 13]);
-    // Elle s'annule vers 87,19 €, et jamais ne devient négative.
-    expect(demandeAuPrix(f, 87.19)).toBe(Math.floor(17_700 - 203 * 87.19));
+  it("une seule demande de NOVA : la droite passe par les 4 778 enceintes du premier trimestre à 59 €, avec la pente des rejeux de l'arène", () => {
+    // 16 755 = 4 778 + 203 × 59 : toute la demande de N a été servie (nova-capacite.ts).
+    expect(f.decision.demande.aPrixNul).toBe(f.decision.production + 203 * 59);
+    const droite = [53.1, 59, 64.9].map((p) => Math.floor(16_755 - 203 * p + 1e-9));
+    expect(droite).toEqual([5_975, 4_778, 3_580]);
+    expect([53.1, 59, 64.9].map((p) => demandeAuPrix(f, p))).toEqual(droite);
+    expect(demandeAuPrix(f, 82.5)).toBe(Math.floor(16_755 - 203 * 82.5));
     expect(demandeAuPrix(f, 90)).toBe(0);
   });
 
@@ -373,54 +372,44 @@ describe("le coût par produit : la gamme Go, One, Studio", () => {
 });
 
 describe("la décision : prix, fabriquer ou acheter", () => {
-  it("le trimestre au prix de 59 € : le plan de production borne les ventes", () => {
+  it("le trimestre au prix de 59 € : la production sert toute la demande", () => {
     const t = trimestreDeDecision(f);
-    expect(t.demande).toBe(17_700 - 203 * 59);
-    expect([t.ventes, t.nonServie, t.stock]).toEqual([4_778, 5_723 - 4_778, 0]);
-    expect(t.chiffreDAffaires).toBe(4_778 * 59);
-    expect(t.marge).toBe(4_778 * 21);
+    expect(t.demande).toBe(16_755 - 203 * 59);
+    expect([t.ventes, t.nonServie, t.stock]).toEqual([4_778, 0, 0]);
     expect(t.marge).toBe(100_338);
-    expect(t.resultat).toBe(100_338 - 93_549);
     expect(t.resultat).toBe(6_789);
     expect(t.capaciteRestante).toBe(7_000 - 4_778);
   });
 
-  it("les trois prix, à plan de production égal : +10 % donne le meilleur résultat", () => {
+  it("les trois prix, à plan de production égal : le prix du trimestre donne le meilleur résultat", () => {
     const [b, m, h] = [53.1, 59, 64.9].map((prix) => trimestreDeDecision(f, { prix }));
-    expect([b!.ventes, m!.ventes, h!.ventes]).toEqual([4_778, 4_778, 4_525]);
-    expect([b!.nonServie, m!.nonServie, h!.nonServie]).toEqual([6_920 - 4_778, 945, 0]);
-    expect(h!.stock).toBe(4_778 - 4_525);
-    expect(b!.marge).toBe(c(4_778 * 15.1));
-    expect(h!.marge).toBe(c(4_525 * 26.9));
-    expect([b!.resultat, m!.resultat, h!.resultat]).toEqual([c(72_147.8 - 93_549), 6_789, c(121_722.5 - 93_549)]);
-    expect([b!.resultat, m!.resultat, h!.resultat]).toEqual([-21_401.2, 6_789, 28_173.5]);
-    // À volume constant, 10 % de prix déplacent 28 190,20 € de marge, tout droit au résultat.
-    expect(c(100_338 + 0.1 * 281_902)).toBe(128_528.2);
-    expect(Math.ceil(100_338 / 15.1)).toBe(6_645);
+    expect([b!.ventes, m!.ventes, h!.ventes]).toEqual([4_778, 4_778, 3_580]);
+    expect([b!.nonServie, m!.nonServie, h!.nonServie]).toEqual([5_975 - 4_778, 0, 0]);
+    expect(h!.stock).toBe(4_778 - 3_580);
+    expect([b!.resultat, m!.resultat, h!.resultat]).toEqual([c(4_778 * 15.1 - 93_549), 6_789, c(3_580 * 26.9 - 93_549)]);
+    expect([b!.resultat, m!.resultat, h!.resultat]).toEqual([-21_401.2, 6_789, 2_753]);
   });
 
   it("au-delà de la capacité, le sous-traitant sert le reste, à 52 € l'enceinte", () => {
-    const t = trimestreDeDecision(f, { prix: 50, production: 7_000, sousTraitance: 1_000 });
-    expect(t.demande).toBe(17_700 - 203 * 50);
-    expect([t.fabriqueesVendues, t.sousTraitees, t.nonServie]).toEqual([7_000, 550, 0]);
-    expect(t.coutVariable).toBe(7_000 * 38 + 550 * 52);
-    expect(t.marge).toBe(7_000 * 12 - 550 * 2);
-    expect(t.margeSousTraitee).toBe(-2);
-    // Le plafond borne la sous-traitance, et la ligne ne dépasse pas sa capacité.
-    expect(trimestreDeDecision(f, { prix: 50, production: 8_000, sousTraitance: 100 })).toMatchObject({ production: 7_000, sousTraitees: 100, nonServie: 450 });
+    const t = trimestreDeDecision(f, { prix: 45, production: 7_000, sousTraitance: 1_000 });
+    expect(t.demande).toBe(16_755 - 203 * 45);
+    expect([t.fabriqueesVendues, t.sousTraitees, t.nonServie]).toEqual([7_000, 620, 0]);
+    expect(t.coutVariable).toBe(7_000 * 38 + 620 * 52);
+    expect(t.marge).toBe(7_000 * 7 - 620 * 7);
+    expect(trimestreDeDecision(f, { prix: 45, production: 8_000, sousTraitance: 100 })).toMatchObject({ production: 7_000, sousTraitees: 100, nonServie: 520 });
     expect(trimestreDeDecision(f, { prix: 59 }).margeSousTraitee).toBe(7);
   });
 
-  it("le défi du laboratoire : le meilleur résultat sans demande non servie", () => {
+  it("le défi du laboratoire : le meilleur résultat sans demande non servie, à 60,30 €", () => {
     const meilleur = meilleurPrixSansDemandeNonServie(f, { min: 40, max: 80, pas: 0.1 });
-    expect(meilleur.prix).toBe(62.6);
-    expect(meilleur.demande).toBe(Math.floor(17_700 - 203 * 62.6));
-    expect([meilleur.production, meilleur.ventes, meilleur.nonServie]).toEqual([4_992, 4_992, 0]);
-    expect(meilleur.resultat).toBe(c(4_992 * 24.6 - 93_549));
-    expect(meilleur.resultat).toBe(29_254.2);
+    expect(meilleur.prix).toBe(60.3);
+    expect(meilleur.demande).toBe(Math.floor(16_755 - 203 * 60.3));
+    expect([meilleur.production, meilleur.ventes, meilleur.nonServie]).toEqual([4_514, 4_514, 0]);
+    expect(meilleur.resultat).toBe(c(4_514 * 22.3 - 93_549));
+    expect(meilleur.resultat).toBe(7_113.2);
     // Les deux prix voisins font moins bien.
-    expect(c(5_012 * 24.5 - 93_549)).toBeLessThan(29_254.2);
-    expect(c(4_971 * 24.7 - 93_549)).toBeLessThan(29_254.2);
+    expect(c(4_534 * 22.2 - 93_549)).toBeLessThan(7_113.2);
+    expect(c(4_493 * 22.4 - 93_549)).toBeLessThan(7_113.2);
   });
 });
 

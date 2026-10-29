@@ -1,60 +1,60 @@
 import { accordPluriel } from "../../accords";
 import { type Cas } from "../../cas";
-import { anneeJouee } from "../../annee-de-l-arene";
-import { MARCHES } from "../../chapitres/marche-et-part-de-marche";
+import { POURQUOI_L_INDICATEUR } from "../../chapitres/construire-un-indicateur-juste";
+import { ENTREPRISES_DE_LA_GESTION_DE_BASE, FICHE_DE_GESTION, PART_STABLE, semestreDeNova } from "../../monde/gestion-et-information";
 import type { Situation } from "../types";
 
 /**
  * CAS PRATIQUE DU CHAPITRE « CONSTRUIRE UN INDICATEUR JUSTE » : LA PART DE MARCHÉ ANNONCÉE
  * (Bac STMG, systèmes d'information de gestion, palier 1).
  *
- * Le commercial annonce, pour le rapport de l'année, une part de marché égale à la moyenne de ses
- * parts trimestrielles. La directrice commerciale veut savoir si c'est la part de l'année avant de
- * la publier. L'élève refait le calcul du chapitre (la moyenne de ratios face au ratio des
- * sommes) sur un autre indicateur : la part de marché de l'entreprise, ses ventes rapportées à la
- * demande des clients du marché, sur les quatre trimestres de l'année du cours (`anneeJouee`).
+ * Le commercial annonce, pour le rapport du semestre, une part de marché égale à la moyenne de ses
+ * parts mensuelles. La directrice commerciale veut savoir si c'est la part du semestre avant de la
+ * publier. L'élève refait le calcul du chapitre (la moyenne de ratios face au ratio des sommes) sur
+ * un autre indicateur : la part de marché de NOVA, ses ventes rapportées aux enceintes vendues par
+ * tout le marché, sur les six mois du semestre.
  *
  * Le cas est neuf par sa question : le chapitre pondère des prix par les ventes des enseignes ; le
- * cas pondère des parts de marché par la taille du marché de chaque trimestre, qui change avec la
- * saison. Il se joue dans les mêmes entreprises que le chapitre.
+ * cas pondère des parts de marché par la taille du marché de chaque mois, qui grandit au printemps.
+ *
+ * LE CAS JOUE DANS LE MONDE DU COURS, chez NOVA seule : ses ventes du semestre et le marché des
+ * enceintes mois par mois (nova-gestion.ts, lus par monde/gestion-et-information.ts). Il lisait
+ * l'année de l'arène, dans huit entreprises.
  */
 
 /**
- * L'ÉCART QUI NE CHANGE RIEN : sous 1 point de part de marché, la moyenne annoncée et la part de
- * l'année disent la même chose au lecteur du rapport. C'est la règle de lecture du cours, la même
+ * L'ÉCART QUI NE CHANGE RIEN : sous 1 point de part de marché, la moyenne annoncée et la part du
+ * semestre disent la même chose au lecteur du rapport. C'est la règle de lecture du cours, la même
  * que celle d'une part stable dans « Des données à l'information ».
  */
-export const ECART_NEGLIGEABLE = 1;
+export const ECART_NEGLIGEABLE = PART_STABLE;
 
 const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
 const points = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} point${Math.abs(t) >= 2 ? "s" : ""}`;
 const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
+const majuscule = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 
 export type VerdictDeLaPart = "plus-basse" | "plus-haute" | "la-meme";
 
-/** Les parts de marché de chaque trimestre, leur moyenne simple et la part de l'année. */
-export function partAnnoncee(c: Cas) {
-  const { partie } = anneeJouee(c.code);
-  const trimestres = partie.rounds.map((tour, k) => {
-    const segments = Object.values(tour.results["joueur"]!.market.bySegment);
-    const ventes = Math.round(segments.reduce((t, v) => t + v.sold, 0));
-    const marche = Math.round(segments.reduce((t, v) => t + v.potential, 0));
-    return { trimestre: k + 1, ventes, marche, part: auDixieme((ventes / marche) * 100) };
+/** Les parts de marché de chaque mois, leur moyenne simple et la part du semestre. */
+export function partAnnoncee() {
+  const f = FICHE_DE_GESTION;
+  const mois = semestreDeNova(f).map((m, k) => {
+    const marche = f.semestre.marche[k]!;
+    return { nom: m.nom, ventes: m.ventes, marche, part: auDixieme((m.ventes / marche) * 100) };
   });
-  const sommeDesParts = auDixieme(trimestres.reduce((t, x) => t + x.part, 0));
-  const moyenne = auDixieme(sommeDesParts / trimestres.length);
-  const ventes = trimestres.reduce((t, x) => t + x.ventes, 0);
-  const marche = trimestres.reduce((t, x) => t + x.marche, 0);
-  const partDeLAnnee = auDixieme((ventes / marche) * 100);
-  const ecart = auDixieme(partDeLAnnee - moyenne);
+  const sommeDesParts = auDixieme(mois.reduce((t, x) => t + x.part, 0));
+  const moyenne = auDixieme(sommeDesParts / mois.length);
+  const ventes = mois.reduce((t, x) => t + x.ventes, 0);
+  const marche = mois.reduce((t, x) => t + x.marche, 0);
+  const partDuSemestre = auDixieme((ventes / marche) * 100);
+  const ecart = auDixieme(partDuSemestre - moyenne);
   const verdict: VerdictDeLaPart = ecart < -ECART_NEGLIGEABLE ? "plus-basse" : ecart > ECART_NEGLIGEABLE ? "plus-haute" : "la-meme";
-  const plusGrosMarche = trimestres.reduce((m, x) => (x.marche > m.marche ? x : m), trimestres[0]!);
-  return { trimestres, sommeDesParts, moyenne, ventes, marche, partDeLAnnee, ecart, verdict, plusGrosMarche };
+  const plusGrosMarche = mois.reduce((m, x) => (x.marche > m.marche ? x : m), mois[0]!);
+  return { mois, sommeDesParts, moyenne, ventes, marche, partDuSemestre, ecart, verdict, plusGrosMarche };
 }
-
-const TRIMESTRES = ["1er trim.", "2e trim.", "3e trim.", "4e trim."] as const;
 
 export const LA_PART_DE_MARCHE_ANNONCEE: Situation = {
   code: "la-part-de-marche-annoncee",
@@ -64,105 +64,66 @@ export const LA_PART_DE_MARCHE_ANNONCEE: Situation = {
   reprend: ["construire-un-indicateur-juste"],
   commanditaire: "La directrice commerciale",
   titre: "La part de marché annoncée",
-  accroche:
-    "Le commercial annonce une part de marché de l'année égale à la moyenne de ses parts trimestrielles. Avant de la publier, la directrice commerciale veut savoir si c'est la bonne.",
-  objectifs: [
-    "Calculer la moyenne simple de parts trimestrielles",
-    "Calculer la part de l'année comme un ratio des sommes",
-    "Dire si l'indicateur annoncé est juste, chiffre à l'appui",
-  ],
+  accroche: "Le commercial annonce une part de marché du semestre égale à la moyenne de ses parts mensuelles. Avant de la publier, la directrice commerciale veut savoir si c'est la bonne.",
+  objectifs: ["Calculer la moyenne simple de parts mensuelles", "Calculer la part du semestre comme un ratio des sommes", "Dire si l'indicateur annoncé est juste, chiffre à l'appui"],
   libre: false,
-  entreprises: {
-    codes: MARCHES,
-    pourquoi:
-      "ce cas reprend le chapitre « Construire un indicateur juste », qui ne se joue pas chez VOLT FITNESS : son chiffre d'affaires compte aussi les abonnés gardés, que ses ventes ne comptent pas.",
-  },
+  entreprises: { codes: ENTREPRISES_DE_LA_GESTION_DE_BASE, pourquoi: POURQUOI_L_INDICATEUR },
   etapes: [
     {
       id: "demande",
       type: "lecture",
       titre: "La part que le commercial annonce",
-      tableau: (c) => {
-        const k = partAnnoncee(c);
+      tableau: (c: Cas) => {
+        const k = partAnnoncee();
         return {
-          titre: `Les ventes ${dE(c.entreprise)} et la demande du marché, trimestre par trimestre`,
-          colonnes: TRIMESTRES.slice(0, k.trimestres.length),
+          titre: `Les ventes ${dE(c.entreprise)} et le marché des ${c.unites}, mois par mois`,
+          colonnes: k.mois.map((x) => majuscule(x.nom)),
           lignes: [
-            { libelle: `Ventes (${c.unites})`, valeurs: k.trimestres.map((x) => qte(x.ventes)) },
-            { libelle: `Marché : demande des clients (${c.unites})`, valeurs: k.trimestres.map((x) => qte(x.marche)) },
-            { libelle: "Part de marché du trimestre", valeurs: k.trimestres.map((x) => pct(x.part)) },
+            { libelle: `Ventes (${c.unites})`, valeurs: k.mois.map((x) => qte(x.ventes)) },
+            { libelle: `Marché : ${c.unites} vendues par toutes les enseignes`, valeurs: k.mois.map((x) => qte(x.marche)) },
+            { libelle: "Part de marché du mois", valeurs: k.mois.map((x) => pct(x.part)) },
           ],
         };
       },
       texte: (c) => [
-        `« Pour le rapport de l'année, le commercial annonce la part de marché ${dE(c.entreprise)} : la moyenne de ses parts trimestrielles. Avant de la publier, dites-moi si c'est bien la part de l'année, et sinon laquelle. »`,
-        "Pas de cours cette fois : le calcul est celui du chapitre. La part de marché d'un trimestre est ce que l'entreprise a vendu, divisé par la demande de tous les clients du marché ce trimestre.",
+        `« Pour le rapport du semestre, le commercial annonce la part de marché ${dE(c.entreprise)} : la moyenne de ses parts mensuelles. Avant de la publier, dites-moi si c'est bien la part du semestre, et sinon laquelle. »`,
+        "Pas de cours cette fois : le calcul est celui du chapitre. La part de marché d'un mois est ce que l'entreprise a vendu, divisé par ce que tout le marché a vendu ce mois-là.",
       ],
-      repere: () => "À rendre : la moyenne annoncée, la part de l'année et l'écart entre les deux, et votre réponse.",
+      repere: () => "À rendre : la moyenne annoncée, la part du semestre et l'écart entre les deux, et votre réponse.",
     },
     {
       id: "la-moyenne",
       type: "montants",
       titre: "La part annoncée",
       notions: ["demand_market_share", "dashboard"],
-      question: () => "Calculez la part que le commercial annonce : la moyenne simple des parts de marché des trimestres, en pourcentage au dixième.",
-      champs: (c) => {
-        const k = partAnnoncee(c);
-        return [
-          {
-            libelle: "Moyenne des parts trimestrielles (%)",
-            attendu: k.moyenne,
-            calcul: `(${k.trimestres.map((x) => pct(x.part)).join(" + ")}) ÷ ${qte(k.trimestres.length)} = ${pct(k.moyenne)}`,
-            tolerance: 0.1,
-          },
-        ];
+      question: () => "Calculez la part que le commercial annonce : la moyenne simple des parts de marché mensuelles, en pourcentage au dixième.",
+      champs: () => {
+        const k = partAnnoncee();
+        return [{ libelle: "Moyenne des parts mensuelles (%)", attendu: k.moyenne, calcul: `(${k.mois.map((x) => pct(x.part)).join(" + ")}) ÷ ${qte(k.mois.length)} = ${pct(k.moyenne)}`, tolerance: 0.1 }];
       },
-      explication: (c) => {
-        const k = partAnnoncee(c);
-        return [`Le commercial annoncerait ${pct(k.moyenne)}. Chaque trimestre y compte pour autant, que le marché y soit petit ou grand.`];
-      },
+      explication: () => [`Le commercial annoncerait ${pct(partAnnoncee().moyenne)}. Chaque mois y compte pour autant, que le marché y soit petit ou grand.`],
     },
     {
-      id: "la-part-de-l-annee",
+      id: "la-part-du-semestre",
       type: "montants",
-      titre: "La part de l'année",
+      titre: "La part du semestre",
       notions: ["demand_market_share", "seasonality"],
       question: (c) =>
-        `Calculez la part de marché ${dE(c.entreprise)} sur l'année comme un ratio des sommes : les ventes de l'année, la demande du marché sur l'année, leur rapport en pourcentage au dixième, puis l'écart avec la moyenne annoncée, en points (part de l'année moins moyenne).`,
-      champs: (c) => {
-        const k = partAnnoncee(c);
+        `Calculez la part de marché ${dE(c.entreprise)} sur le semestre comme un ratio des sommes : ses ventes du semestre, celles du marché, leur rapport en pourcentage au dixième, puis l'écart avec la moyenne annoncée, en points (part du semestre moins moyenne).`,
+      champs: () => {
+        const k = partAnnoncee();
         return [
-          {
-            libelle: "Ventes de l'année",
-            attendu: k.ventes,
-            calcul: `${k.trimestres.map((x) => qte(x.ventes)).join(" + ")} = ${qte(k.ventes)}`,
-            tolerance: 1,
-          },
-          {
-            libelle: "Demande du marché sur l'année",
-            attendu: k.marche,
-            calcul: `${k.trimestres.map((x) => qte(x.marche)).join(" + ")} = ${qte(k.marche)}`,
-            tolerance: 1,
-          },
-          {
-            libelle: "Part de marché de l'année (%)",
-            attendu: k.partDeLAnnee,
-            calcul: `${qte(k.ventes)} ÷ ${qte(k.marche)} × 100 = ${pct(k.partDeLAnnee)}`,
-            tolerance: 0.1,
-          },
-          {
-            libelle: "Écart avec la moyenne annoncée (points)",
-            attendu: k.ecart,
-            calcul: `${pct(k.partDeLAnnee)} − ${pct(k.moyenne)} = ${points(k.ecart)}`,
-            tolerance: 0.1,
-          },
+          { libelle: "Ventes du semestre", attendu: k.ventes, calcul: `${k.mois.map((x) => qte(x.ventes)).join(" + ")} = ${qte(k.ventes)}` },
+          { libelle: "Ventes du marché sur le semestre", attendu: k.marche, calcul: `${k.mois.map((x) => qte(x.marche)).join(" + ")} = ${qte(k.marche)}` },
+          { libelle: "Part de marché du semestre (%)", attendu: k.partDuSemestre, calcul: `${qte(k.ventes)} ÷ ${qte(k.marche)} × 100 = ${pct(k.partDuSemestre)}`, tolerance: 0.1 },
+          { libelle: "Écart avec la moyenne annoncée (points)", attendu: k.ecart, calcul: `${pct(k.partDuSemestre)} − ${pct(k.moyenne)} = ${points(k.ecart)}`, tolerance: 0.1 },
         ];
       },
       explication: (c) => {
-        const k = partAnnoncee(c);
+        const k = partAnnoncee();
         const g = k.plusGrosMarche;
         return [
-          `Le marché est le plus grand au ${TRIMESTRES[g.trimestre - 1]!.replace(" trim.", " trimestre")} (${qte(g.marche)} ${c.unites} ${accordPluriel(c, "demandé")}), où ${c.entreprise} prend ${pct(g.part)}. La part de l'année pèse chaque trimestre par la taille de son marché ; la moyenne simple, non.`,
+          `Le marché est le plus grand en ${g.nom} (${qte(g.marche)} ${c.unites} ${accordPluriel(c, "vendu")}), où ${c.entreprise} ne prend que ${pct(g.part)}. La part du semestre pèse chaque mois par la taille de son marché ; la moyenne simple donne autant de poids au petit mois de février qu'au grand mois de juin.`,
         ];
       },
     },
@@ -173,32 +134,26 @@ export const LA_PART_DE_MARCHE_ANNONCEE: Situation = {
       notions: ["demand_market_share"],
       question: () => "Quelle réponse envoyez-vous à la directrice commerciale ?",
       options: (c) => {
-        const k = partAnnoncee(c);
-        const chiffres = `${pct(k.partDeLAnnee)} sur l'année, contre ${pct(k.moyenne)} annoncés : ${points(k.ecart)} d'écart`;
+        const k = partAnnoncee();
+        const chiffres = `${pct(k.partDuSemestre)} sur le semestre, contre ${pct(k.moyenne)} annoncés : ${points(k.ecart)} d'écart`;
         return [
           {
-            texte: "Non : la part de l'année est plus basse que celle annoncée",
+            texte: "Non : la part du semestre est plus basse que celle annoncée",
             juste: k.verdict === "plus-basse",
-            retour:
-              k.verdict === "plus-basse"
-                ? `Oui : ${chiffres}. ${c.entreprise} pèse moins dans les trimestres où le marché est grand : la moyenne simple embellit l'année. Publiée, elle ferait croire à une place que l'entreprise n'a pas, et fixerait des objectifs sur un chiffre faux.`
-                : `Non : ${chiffres}.`,
+            retour: k.verdict === "plus-basse" ? `Oui : ${chiffres}. ${c.entreprise} pèse moins dans les mois où le marché est grand : la moyenne simple embellit le semestre.` : `Non : ${chiffres}.`,
           },
           {
-            texte: "Non : la part de l'année est plus haute que celle annoncée",
+            texte: "Non : la part du semestre est plus haute que celle annoncée",
             juste: k.verdict === "plus-haute",
-            retour:
-              k.verdict === "plus-haute"
-                ? `Oui : ${chiffres}. ${c.entreprise} pèse plus dans les trimestres où le marché est grand : la moyenne simple sous-estime l'année.`
-                : `Non : ${chiffres}.`,
+            retour: k.verdict === "plus-haute" ? `Oui : ${chiffres}. ${c.entreprise} pèse plus dans les mois où le marché est grand : la moyenne simple sous-estime le semestre.` : `Non : ${chiffres}.`,
           },
           {
             texte: `Oui : l'écart reste sous ${points(ECART_NEGLIGEABLE)}, c'est la même`,
             juste: k.verdict === "la-meme",
             retour:
               k.verdict === "la-meme"
-                ? `Oui : ${chiffres}. Ici, l'écart ne change pas la lecture du rapport. La part juste reste pourtant celle de l'année : c'est elle qu'on publie, la moyenne simple tomberait juste par hasard.`
-                : `Non : ${chiffres}. L'écart dépasse ${points(ECART_NEGLIGEABLE)} : la moyenne simple ne pèse pas chaque trimestre par la taille de son marché.`,
+                ? `Oui : ${chiffres}. Ici, l'écart ne change pas la lecture du rapport. La part juste reste pourtant celle du semestre : c'est elle qu'on publie, la moyenne simple tombe juste par chance, parce que la part de ${c.entreprise} bouge peu d'un mois à l'autre.`
+                : `Non : ${chiffres}. L'écart dépasse ${points(ECART_NEGLIGEABLE)} : la moyenne simple ne pèse pas chaque mois par la taille de son marché.`,
           },
         ];
       },

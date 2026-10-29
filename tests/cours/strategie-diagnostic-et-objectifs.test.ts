@@ -13,10 +13,7 @@ import {
   diagnostic,
 } from "../../src/config/cours/chapitres/le-diagnostic-strategique";
 import {
-  ENTREPRISES_DES_OBJECTIFS,
   SE_FIXER_DES_OBJECTIFS,
-  TAUX_DE_CAPACITE_VISE,
-  suiviDesObjectifs,
 } from "../../src/config/cours/chapitres/se-fixer-des-objectifs";
 import { anneeDeReference, rejouerAvec, surLAnnee } from "../../src/config/cours/gestion-de-la-pme";
 import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
@@ -25,7 +22,6 @@ import {
   DES_CLIENTS_REPARTIS_SANS_ETRE_SERVIS,
   clientsRepartis,
 } from "../../src/config/cours/situations/par-chapitre/des-clients-repartis-sans-etre-servis";
-import { TAUX_AMBITIEUX, UN_OBJECTIF_PLUS_AMBITIEUX, objectifAmbitieux } from "../../src/config/cours/situations/par-chapitre/un-objectif-plus-ambitieux";
 import type { Situation } from "../../src/config/cours/situations/types";
 import type { Chapitre, Etape, EtatDuCours } from "../../src/config/cours/types";
 import type { CompanyRoundResult } from "../../src/engine/types";
@@ -140,7 +136,7 @@ const BLOC_DIAGNOSTIC = "STMG Thème 2 · Le management stratégique, du diagnos
 
 describe("les deux chapitres et leurs cas, dans le parcours Stratégie et management", () => {
   it("portent les titres du programme, au palier 1, dans le parcours de la stratégie", () => {
-    for (const ch of [LE_DIAGNOSTIC_STRATEGIQUE, SE_FIXER_DES_OBJECTIFS]) {
+    for (const ch of [LE_DIAGNOSTIC_STRATEGIQUE]) {
       expect(PROGRAMME.strategie[1], ch.code).toContain(ch.titre);
       expect(ch.parcours).toBe("strategie");
       expect(ch.palier).toBe(1);
@@ -154,8 +150,7 @@ describe("les deux chapitres et leurs cas, dans le parcours Stratégie et manage
 
   it("citent des blocs qui portent le préfixe d'un diplôme et désignent une entrée de son texte", () => {
     expect(LE_DIAGNOSTIC_STRATEGIQUE.blocs).toEqual([BLOC_DIAGNOSTIC, "DCG UE7 · Management des organisations"]);
-    expect(SE_FIXER_DES_OBJECTIFS.blocs).toEqual([BLOC_DIAGNOSTIC, "2de MG · Organiser et décider, des objectifs à la réalisation"]);
-    for (const bloc of [...LE_DIAGNOSTIC_STRATEGIQUE.blocs, ...SE_FIXER_DES_OBJECTIFS.blocs]) {
+    for (const bloc of [...LE_DIAGNOSTIC_STRATEGIQUE.blocs]) {
       const cite = referentielDeCitation(bloc);
       expect(cite, bloc).not.toBeNull();
       expect(blocOfficiel(bloc, cite!.code), bloc).not.toBeNull();
@@ -165,9 +160,8 @@ describe("les deux chapitres et leurs cas, dans le parcours Stratégie et manage
   it("se jouent partout sauf chez VOLT FITNESS, dont le marché se compte en abonnés gardés", () => {
     expect(ENTREPRISES_DU_DIAGNOSTIC).toEqual(ENTREPRISES_DU_COURS.filter((c) => c !== "fitness"));
     expect(ENTREPRISES_DU_DIAGNOSTIC).toEqual(MARCHES);
-    expect(ENTREPRISES_DES_OBJECTIFS).toEqual(MARCHES);
     expect(scenarioByCode("fitness").scenario.subscription).toBeDefined();
-    for (const ch of [LE_DIAGNOSTIC_STRATEGIQUE, SE_FIXER_DES_OBJECTIFS]) {
+    for (const ch of [LE_DIAGNOSTIC_STRATEGIQUE]) {
       expect(ch.entreprises!.codes).toEqual(MARCHES);
       expect(ch.entreprises!.pourquoi).toContain("VOLT FITNESS");
     }
@@ -176,7 +170,6 @@ describe("les deux chapitres et leurs cas, dans le parcours Stratégie et manage
   it("chaque cas est dédié à son chapitre : même palier, même parcours, mêmes entreprises, sans cours", () => {
     const paires: [Situation, Chapitre][] = [
       [DES_CLIENTS_REPARTIS_SANS_ETRE_SERVIS, LE_DIAGNOSTIC_STRATEGIQUE],
-      [UN_OBJECTIF_PLUS_AMBITIEUX, SE_FIXER_DES_OBJECTIFS],
     ];
     for (const [s, ch] of paires) {
       expect(s.reprend, s.code).toEqual([ch.code]);
@@ -195,9 +188,6 @@ describe("les deux chapitres et leurs cas, dans le parcours Stratégie et manage
 
   it("les hypothèses du cours sont des constantes, et l'objectif du cas vise plus haut que celui du chapitre", () => {
     expect(TAUX_DE_SERVICE_ATTENDU).toBe(0.95);
-    expect(TAUX_DE_CAPACITE_VISE).toBe(0.7);
-    expect(TAUX_AMBITIEUX).toBe(0.9);
-    expect(TAUX_AMBITIEUX).toBeGreaterThan(TAUX_DE_CAPACITE_VISE);
   });
 });
 
@@ -237,9 +227,6 @@ describe.each(ENTREPRISES_DU_DIAGNOSTIC)("le diagnostic stratégique chez %s", (
     const d = diagnostic(cas);
     for (const r of joueur) expect(vendues(r) + manquees(r)).toBeCloseTo(demandees(r), 3);
     expect(d.manquees).toBe(somme(joueur.map((r) => Math.round(manquees(r)))));
-    // Les deux chapitres lisent les mêmes ventes et la même demande de l'année.
-    const o = suiviDesObjectifs(cas);
-    expect([d.entreprise.ventes, d.demande]).toEqual([o.ventesDeLAnnee, o.demandeDeLAnnee]);
     expect(d.demande).toBe(d.entreprise.ventes + d.manquees);
     // Ventes et ventes manquées s'arrondissent à l'unité trimestre par trimestre : la demande
     // recomposée ne s'écarte de celle du moteur que de ces arrondis, pas d'une unité de plus.
@@ -368,70 +355,6 @@ describe("le diagnostic stratégique, sur les huit entreprises", () => {
   });
 });
 
-describe.each(ENTREPRISES_DES_OBJECTIFS)("se fixer des objectifs chez %s", (code) => {
-  const cas = casDeLEntreprise(code);
-  const { partie } = anneeJouee(code);
-  const joueur = partie.rounds.map((t) => t.results["joueur"]!);
-
-  it("l'objectif se tire de la capacité de départ, la plus petite de l'équipement et de l'équipe", () => {
-    const o = suiviDesObjectifs(cas);
-    const p = joueur[0]!.production;
-    expect(o.capacite).toBe(Math.min(Math.round(p.machineCapacity), Math.round(p.laborCapacity)));
-    expect(o.objectif).toBe(Math.round(o.capacite * TAUX_DE_CAPACITE_VISE));
-    expect(o.objectifDeLAnnee).toBe(o.objectif * 4);
-    expect(o.objectif).toBeLessThan(o.capacite);
-  });
-
-  it("les écarts se recomposent avec les ventes et la demande du moteur", () => {
-    const o = suiviDesObjectifs(cas);
-    o.trimestres.forEach((t, i) => {
-      expect(t.ventes, `T${i + 1}`).toBe(Math.round(vendues(joueur[i]!)));
-      expect(t.manquees, `T${i + 1}`).toBe(Math.round(manquees(joueur[i]!)));
-      expect(Math.abs(t.demande - demandees(joueur[i]!)), `T${i + 1}`).toBeLessThanOrEqual(1);
-      expect(t.ecart).toBe(t.ventes - o.objectif);
-      expect(t.origine).toBe(t.demande < o.objectif ? "demande" : "production");
-    });
-    expect(o.ventesDeLAnnee).toBe(somme(o.trimestres.map((t) => t.ventes)));
-    expect(o.ecartDeLAnnee).toBe(o.ventesDeLAnnee - o.objectifDeLAnnee);
-    expect(o.realisation).toBe(auDixieme((o.ventesDeLAnnee / o.objectifDeLAnnee) * 100));
-    expect(o.pire.ecart).toBe(Math.min(...o.trimestres.map((t) => t.ecart)));
-    expect(o.verdict).toBe(o.ventesDeLAnnee >= o.objectifDeLAnnee ? "tenu" : o.demandeDeLAnnee >= o.objectifDeLAnnee ? "a-revoir" : "mal-pose");
-    // Le chapitre dit « des clients repartis sans être servis » quand la production manque : il y en a.
-    if (o.pire.origine === "production" && !o.pire.tenu) expect(o.pire.manquees).toBeGreaterThan(0);
-  });
-
-  it("les valeurs attendues des champs sont celles du suivi", () => {
-    const champsDe = (id: string) => {
-      const e = SE_FIXER_DES_OBJECTIFS.etapes.find((x) => x.id === id);
-      if (e?.type !== "montants") throw new Error(`étape de montants ${id}`);
-      return e.champs(cas, { soldes: {} }).map((c) => c.attendu);
-    };
-    const p = joueur[0]!.production;
-    const capacite = Math.min(Math.round(p.machineCapacity), Math.round(p.laborCapacity));
-    const objectif = Math.round(capacite * 0.7);
-    expect(champsDe("objectif")).toEqual([capacite, objectif, objectif * 4]);
-    const ventes = joueur.map((r) => Math.round(vendues(r)));
-    expect(champsDe("ecarts")).toEqual([...ventes.map((v) => v - objectif), auDixieme((somme(ventes) / (objectif * 4)) * 100)]);
-  });
-
-  it("textes propres, une seule bonne réponse, notions existantes", () => verifierLesTextes(SE_FIXER_DES_OBJECTIFS, code));
-});
-
-describe("se fixer des objectifs, sur les huit entreprises", () => {
-  it("l'objectif est tenu chez les unes, à revoir ou mal posé chez les autres", () => {
-    const verdicts = new Set(ENTREPRISES_DES_OBJECTIFS.map((c) => suiviDesObjectifs(casDeLEntreprise(c)).verdict));
-    expect([...verdicts].sort()).toEqual(["a-revoir", "mal-pose", "tenu"]);
-    const origines = new Set(ENTREPRISES_DES_OBJECTIFS.map((c) => suiviDesObjectifs(casDeLEntreprise(c)).pire.origine));
-    expect([...origines].sort()).toEqual(["demande", "production"]);
-  });
-
-  it("chez NOVA, les chiffres du suivi", () => {
-    const o = suiviDesObjectifs(casDeLEntreprise("nova"));
-    expect([o.capacite, o.objectif, o.objectifDeLAnnee, o.ventesDeLAnnee, o.realisation, o.verdict]).toEqual([7000, 4900, 19600, 24286, 123.9, "tenu"]);
-    expect(o.trimestres.map((t) => t.ecart)).toEqual([-122, 1181, 1860, 1767]);
-  });
-});
-
 describe.each(ENTREPRISES_DU_DIAGNOSTIC)("des clients repartis sans être servis chez %s", (code) => {
   const cas = casDeLEntreprise(code);
   const { partie, depart } = anneeJouee(code);
@@ -489,31 +412,3 @@ describe("des clients repartis sans être servis, sur les huit entreprises", () 
   });
 });
 
-describe.each(ENTREPRISES_DES_OBJECTIFS)("un objectif plus ambitieux chez %s", (code) => {
-  const cas = casDeLEntreprise(code);
-
-  it("l'objectif proposé est celui du chapitre au taux du directeur, éprouvé sur la même demande", () => {
-    const k = objectifAmbitieux(cas);
-    expect(k.o.capacite).toBe(k.actuel.capacite);
-    expect(k.o.objectif).toBe(Math.round(k.o.capacite * TAUX_AMBITIEUX));
-    expect(k.o.objectif).toBeGreaterThan(k.actuel.objectif);
-    expect(k.o.trimestres.map((t) => t.demande)).toEqual(k.actuel.trimestres.map((t) => t.demande));
-    expect(k.o.demandeDeLAnnee).toBe(somme(k.o.trimestres.map((t) => t.demande)));
-    expect(k.trimestresPossibles).toBe(k.o.trimestres.filter((t) => t.demande >= k.o.objectif).length);
-    expect(k.verdict).toBe(k.o.ventesDeLAnnee >= k.o.objectifDeLAnnee ? "tenu" : k.o.demandeDeLAnnee >= k.o.objectifDeLAnnee ? "a-revoir" : "mal-pose");
-    const champs = UN_OBJECTIF_PLUS_AMBITIEUX.etapes.flatMap((e) => (e.type === "montants" ? e.champs(cas, { soldes: {} }).map((c) => c.attendu) : []));
-    expect(champs).toEqual([Math.round(k.o.capacite * 0.9), Math.round(k.o.capacite * 0.9) * 4, k.o.demandeDeLAnnee, k.trimestresPossibles]);
-  });
-
-  it("textes propres, une seule bonne réponse qui ne se devine pas à sa longueur", () => {
-    verifierLesTextes(UN_OBJECTIF_PLUS_AMBITIEUX, code);
-    reponseNonTrahie(UN_OBJECTIF_PLUS_AMBITIEUX, code);
-  });
-});
-
-describe("un objectif plus ambitieux, sur les huit entreprises", () => {
-  it("tenable ici à condition de produire, hors de portée là", () => {
-    const verdicts = new Set(ENTREPRISES_DES_OBJECTIFS.map((c) => objectifAmbitieux(casDeLEntreprise(c)).verdict));
-    expect([...verdicts].sort()).toEqual(["a-revoir", "mal-pose"]);
-  });
-});

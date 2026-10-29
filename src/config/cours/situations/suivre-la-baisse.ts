@@ -2,7 +2,8 @@ import { montantEcrit as eur } from "../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../pedagogy/cours/etats";
 import { accord } from "../accords";
 import type { Cas } from "../cas";
-import { BAISSE_DE_PRIX, prixCoutMarge } from "../chapitres/prix-cout-marge";
+import { BAISSE_DE_PRIX, POURQUOI_PRIX_COUT_MARGE, prixCoutMarge } from "../chapitres/prix-cout-marge";
+import { ENTREPRISES_DE_LA_GESTION_DE_BASE } from "../monde/gestion-et-information";
 import type { Situation } from "./types";
 
 /**
@@ -16,7 +17,7 @@ import type { Situation } from "./types";
  *
  * Aucun cours : les notions sont celles des chapitres « Prix, coût et marge » et
  * « Le seuil de rentabilité », que la situation reprend dans un ordre que l'élève
- * doit trouver seul. Les chiffres sont ceux du mois du cas (`cas.ts`), et la
+ * doit trouver seul. Les chiffres sont ceux du mois de janvier de NOVA (monde/gestion-et-information.ts), et la
  * baisse étudiée est celle du chapitre « Prix, coût et marge » (BAISSE_DE_PRIX).
  */
 
@@ -65,6 +66,7 @@ export const SUIVRE_LA_BAISSE: Situation = {
     "Rédiger une réponse chiffrée à la direction",
   ],
   libre: false,
+  entreprises: { codes: ENTREPRISES_DE_LA_GESTION_DE_BASE, pourquoi: POURQUOI_PRIX_COUT_MARGE },
   etapes: [
     {
       id: "demande",

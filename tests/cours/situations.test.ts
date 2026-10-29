@@ -5,7 +5,6 @@ import { CHAPITRES, chapitreParCode } from "../../src/config/cours/registre";
 import { CAS_DE_SYNTHESE, CAS_PAR_CHAPITRE, SITUATIONS, casDuChapitre } from "../../src/config/cours/situations";
 import { COMMERCES } from "../../src/config/cours/chapitres/taux-de-marque";
 import { NEGOCIATIONS } from "../../src/config/cours/chapitres/negocier-le-prix";
-import { prixRejoues } from "../../src/config/cours/decision";
 import { commandePourLaPromotion } from "../../src/config/cours/situations/commander-pour-la-promotion";
 import { embaucheDeSaison } from "../../src/config/cours/situations/embaucher-pour-la-saison";
 import { COMMANDES_PROMISES, remiseDuGrandCompte } from "../../src/config/cours/situations/la-remise-du-grand-compte";
@@ -193,24 +192,18 @@ describe("commander pour la promotion", () => {
 });
 
 describe("quel prix pour la saison", () => {
-  it("la marge, pas la demande ni le chiffre d'affaires, désigne le prix, et chacun des trois gagne quelque part", () => {
-    const gagnants = new Set<string>();
-    let caEtMargeDivergent = false;
-    for (const code of ENTREPRISES_DU_COURS) {
-      const r = prixDeLaSaison(casDeLEntreprise(code));
-      // La capacité est la même aux trois prix rejoués : une seule ligne au tableau.
-      expect(new Set(prixRejoues(code).map((v) => v.capacite)).size, code).toBe(1);
-      for (const p of r.prix) {
-        expect(p.ventes, code).toBeLessThanOrEqual(r.capacite);
-        expect(r.meilleur.marge, code).toBeGreaterThanOrEqual(p.marge);
-      }
-      // L'erreur « la demande ne dépend pas du prix » reste fausse partout.
-      expect(r.d.elasticite, code).toBeLessThan(0);
-      gagnants.add(r.meilleur.nom);
-      if (r.plusGrosCa.prix !== r.meilleur.prix) caEtMargeDivergent = true;
-    }
-    expect([...gagnants].sort()).toEqual(["le prix actuel", "le prix bas", "le prix haut"]);
-    expect(caEtMargeDivergent).toBe(true);
+  it("chez NOVA, dans le monde du cours : 5 975, 4 778 et 3 580 enceintes demandées, la plus grosse marge au prix haut", () => {
+    // La droite de demande de nova-gestion.ts, 16 755 − 203 × prix, à l'enceinte inférieure ; 38 € de coût variable.
+    const r = prixDeLaSaison(casDeLEntreprise("nova"));
+    expect(r.prix.map((p) => [p.prix, p.demande, p.ventes])).toEqual([
+      [53.1, 5_975, 5_975],
+      [59, 4_778, 4_778],
+      [64.9, 3_580, 3_580],
+    ]);
+    expect(r.capacite).toBe(7_000);
+    expect(r.prix.map((p) => p.marge)).toEqual([Math.round(5_975 * 15.1), 4_778 * 21, Math.round(3_580 * 26.9)]);
+    expect([r.meilleur.nom, r.plusGrosCa.nom]).toEqual(["le prix actuel", "le prix bas"]);
+    expect(r.d.elasticite).toBe(-2.51);
   });
 });
 

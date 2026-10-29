@@ -1,105 +1,63 @@
-import type { CompanyRoundResult } from "../../../engine/types";
+import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import { accordPluriel } from "../accords";
 import { type Cas } from "../cas";
-import { anneeJouee } from "../annee-de-l-arene";
+import {
+  ENTREPRISES_DE_LA_GESTION_DE_BASE,
+  FICHE_DE_CAPACITE,
+  TAUX_DE_CAPACITE_VISE,
+  TAUX_ESSAYES,
+  suiviDesObjectifs as suiviDuMonde,
+  tauxTenuChaqueTrimestre,
+  type VerdictDeLObjectif,
+} from "../monde/gestion-et-information";
 import type { Chapitre } from "../types";
-import { MARCHES } from "./marche-et-part-de-marche";
 
 /**
  * CHAPITRE : SE FIXER DES OBJECTIFS ET LES SUIVRE
  * (Stratégie et management, palier 1 : seconde option management et gestion, première STMG).
  *
- * En janvier, la direction se fixe un objectif de ventes chiffré, daté et mesurable : vendre
- * chaque trimestre au moins une part de ce que l'entreprise peut produire. Puis elle le suit,
- * trimestre après trimestre, dans l'année de l'arène (`anneeJouee`) : l'écart entre l'objectif
- * et le réalisé, ce qui l'explique (des clients trop peu nombreux, ou des clients repartis sans
- * être servis, faute d'une production suffisante), et ce qu'elle en conclut : objectif tenu, à
- * revoir dans ses moyens, ou mal posé.
+ * En janvier de l'année N, la direction de NOVA se fixe un objectif de ventes chiffré, daté et
+ * mesurable : vendre chaque trimestre au moins une part de ce qu'elle peut produire. Puis elle le
+ * suit, trimestre après trimestre : l'écart entre l'objectif et le réalisé, ce qui l'explique (des
+ * clients trop peu nombreux, ou des clients repartis sans être servis, faute d'une production
+ * suffisante), et ce qu'elle en conclut : objectif tenu, à revoir dans ses moyens, ou mal posé. Un
+ * curseur (le plus haut objectif que chaque trimestre de N aurait tenu) et un laboratoire (l'objectif
+ * à poser pour N + 1, sur la demande prévue).
  *
- * L'objectif se déduit des chiffres de départ : la capacité de production du premier trimestre,
- * la plus petite de celle de l'équipement et de celle de l'équipe, telle que le moteur la
- * calcule (`production.machineCapacity`, `production.laborCapacity`). Les ventes, les ventes
- * manquées et la demande adressée à l'entreprise sont celles du moteur, clientèle par clientèle.
+ * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA seule : la capacité de la ligne et de l'équipe,
+ * les ventes réalisées de N et la demande prévue de N + 1 (nova-capacite.ts, lus par
+ * monde/gestion-et-information.ts). En N, toute la demande a été servie : les ventes sont la demande.
  *
- * VOLT FITNESS N'EN EST PAS, comme du chapitre sur la part de marché : ses ventes du trimestre
- * comptent surtout des abonnés gardés, et un objectif de ventes ne s'y lit pas de la même façon.
+ * CE QUI A CHANGÉ. Le chapitre suivait l'année de l'arène, dans huit entreprises. Il suit maintenant
+ * l'année N de NOVA : 7 000 enceintes de capacité par trimestre, un objectif de 4 900, 23 609
+ * enceintes vendues pour 19 600 visées.
  */
 
-/**
- * La part de la capacité de production que l'objectif vise : 70 %. HYPOTHÈSE DU COURS : un
- * objectif ambitieux sans être hors de portée, ni le plein (que la moindre panne ou la moindre
- * saison creuse rend impossible), ni la moitié (qu'on atteint sans rien changer).
- */
-export const TAUX_DE_CAPACITE_VISE = 0.7;
+export { TAUX_DE_CAPACITE_VISE };
 
-export const ENTREPRISES_DES_OBJECTIFS = MARCHES;
+/** Les entreprises du chapitre : NOVA seule. */
+export const ENTREPRISES_DES_OBJECTIFS = ENTREPRISES_DE_LA_GESTION_DE_BASE;
 
+export const POURQUOI_LES_OBJECTIFS =
+  "ce chapitre suit NOVA, dont le cours tient la capacité, les ventes de l'année N et la demande prévue de l'année suivante.";
+
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
+/** Le prix d'une enceinte : les droites du curseur comptent en chiffre d'affaires. */
+const PRIX = FICHE_DE_CAPACITE.enceinte.prix;
 const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
 /** Un écart signé : « +250 », « −1 078 ». */
 const signe = (n: number) => (n > 0 ? `+${qte(n)}` : qte(n));
-/** « de » devant un nom propre : « d'ATLAS CONSEIL », « de NOVA ». */
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
-/** « que » devant un nom propre : « qu'ATLAS CONSEIL », « que NOVA ». */
 const quE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `qu'${nom}` : `que ${nom}`);
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const rang = (k: number) => (k === 1 ? "1er" : `${k}e`);
 
-const ventesDu = (r: CompanyRoundResult) => Object.values(r.market.bySegment).reduce((t, v) => t + v.sold, 0);
-const manqueesDu = (r: CompanyRoundResult) => Object.values(r.market.bySegment).reduce((t, v) => t + v.lost, 0);
+export type Verdict = VerdictDeLObjectif;
 
-export type Origine = "demande" | "production";
-export type Verdict = "tenu" | "a-revoir" | "mal-pose";
-
-/** L'objectif posé en janvier, et l'année suivie face à lui. */
-export function suiviDesObjectifs(c: Cas, taux = TAUX_DE_CAPACITE_VISE) {
-  const { partie } = anneeJouee(c.code);
-  const joueur = partie.rounds.map((t) => t.results["joueur"]!);
-  const p = joueur[0]!.production;
-  const capaciteMachines = Math.round(p.machineCapacity);
-  const capaciteEquipe = Math.round(p.laborCapacity);
-  const capacite = Math.min(capaciteMachines, capaciteEquipe);
-  const objectif = Math.round(capacite * taux);
-  const trimestres = joueur.map((r, i) => {
-    const ventes = Math.round(ventesDu(r));
-    const manquees = Math.round(manqueesDu(r));
-    const demande = ventes + manquees;
-    return {
-      numero: i + 1,
-      ventes,
-      manquees,
-      demande,
-      ecart: ventes - objectif,
-      tenu: ventes >= objectif,
-      // Le trimestre manqué l'est par la demande quand, même en servant tous ses clients,
-      // l'entreprise n'atteignait pas l'objectif ; sinon, par sa production.
-      origine: (demande < objectif ? "demande" : "production") as Origine,
-    };
-  });
-  const n = trimestres.length;
-  const objectifDeLAnnee = objectif * n;
-  const ventesDeLAnnee = trimestres.reduce((t, x) => t + x.ventes, 0);
-  const demandeDeLAnnee = trimestres.reduce((t, x) => t + x.demande, 0);
-  const ecartDeLAnnee = ventesDeLAnnee - objectifDeLAnnee;
-  const realisation = auDixieme((ventesDeLAnnee / objectifDeLAnnee) * 100);
-  const pire = trimestres.reduce((m, x) => (x.ecart < m.ecart ? x : m));
-  const verdict: Verdict = ventesDeLAnnee >= objectifDeLAnnee ? "tenu" : demandeDeLAnnee >= objectifDeLAnnee ? "a-revoir" : "mal-pose";
-  return {
-    taux,
-    capaciteMachines,
-    capaciteEquipe,
-    capacite,
-    objectif,
-    trimestres,
-    objectifDeLAnnee,
-    ventesDeLAnnee,
-    demandeDeLAnnee,
-    ecartDeLAnnee,
-    realisation,
-    tenus: trimestres.filter((x) => x.tenu).length,
-    pire,
-    verdict,
-  };
+/** L'objectif posé en janvier de N, et l'année suivie face à lui (avec les mots du chapitre). */
+export function suiviDesObjectifs(_c?: Cas, taux = TAUX_DE_CAPACITE_VISE, annee: "N" | "N+1" = "N") {
+  const o = suiviDuMonde(FICHE_DE_CAPACITE, taux, annee);
+  return { ...o, capaciteMachines: o.outil, capaciteEquipe: o.equipe };
 }
 
 /** L'objectif, en une phrase : « vendre au moins 4 900 enceintes chaque trimestre de l'année ». */
@@ -137,11 +95,7 @@ export const SE_FIXER_DES_OBJECTIFS: Chapitre = {
     "Conclure : objectif tenu, à revoir, ou mal posé",
   ],
   libre: false,
-  entreprises: {
-    codes: ENTREPRISES_DES_OBJECTIFS,
-    pourquoi:
-      "ce chapitre suit un objectif de ventes, et chez VOLT FITNESS les ventes du trimestre comptent d'abord des abonnés gardés.",
-  },
+  entreprises: { codes: ENTREPRISES_DES_OBJECTIFS, pourquoi: POURQUOI_LES_OBJECTIFS },
   etapes: [
     {
       id: "intro",
@@ -151,7 +105,7 @@ export const SE_FIXER_DES_OBJECTIFS: Chapitre = {
       texte: (c) => {
         const o = suiviDesObjectifs(c);
         return [
-          `En janvier, la direction ${dE(c.entreprise)} se fixe un objectif de ventes : ${phraseDeLObjectif(c, o.objectif)}. Elle l'a déduit de ce que l'entreprise peut produire : ${pct(o.taux * 100)} de sa capacité de production par trimestre.`,
+          `En janvier de l'année N, la direction ${dE(c.entreprise)} se fixe un objectif de ventes : ${phraseDeLObjectif(c, o.objectif)}. Elle l'a déduit de ce que l'entreprise peut produire : ${pct(o.taux * 100)} de sa capacité de production par trimestre.`,
           "Un objectif bien posé se vérifie. Il dit précisément ce qu'on vise (spécifique), avec un chiffre (mesurable), à un niveau qu'on peut atteindre (atteignable et réaliste), pour une date (temporel) : on dit SMART. Il se suit ensuite, période après période, en comparant le réalisé à l'objectif.",
         ];
       },
@@ -357,6 +311,84 @@ export const SE_FIXER_DES_OBJECTIFS: Chapitre = {
                 : `Non : ${chiffres}. La demande de l'année suffisait à atteindre l'objectif : il était réaliste, ce sont les moyens qui ont manqué.`,
         };
         return (["tenu", "a-revoir", "mal-pose"] as const).map((v) => ({ texte: LIBELLES_DU_VERDICT[v], juste: v === o.verdict, retour: retours[v] }));
+      },
+    },
+    {
+      id: "le-plus-haut-objectif",
+      type: "curseur",
+      titre: "Le plus haut objectif tenu chaque trimestre",
+      notions: ["capacity", "dashboard"],
+      sens: "plus-grande",
+      question: (c) => {
+        const o = suiviDesObjectifs(c);
+        return `Et si la direction avait visé plus haut ? Faites varier la part de la capacité visée, en pour cent. Les deux droites comptent en chiffre d'affaires, à ${eur(PRIX)} l'${c.unite} : l'une donne celui du trimestre le plus faible de l'année (${qte(o.pire.ventes)} ${c.unites}), l'autre celui de l'objectif par trimestre. Placez le curseur sur la plus haute part que chaque trimestre de l'année aurait tenue.`;
+      },
+      grandeur: () => ({ libelle: "Part de la capacité visée", unite: "%" }),
+      cible: () => ({ attendu: tauxTenuChaqueTrimestre(FICHE_DE_CAPACITE, "N"), min: 50, max: 100 }),
+      zones: ["Chaque trimestre tient l'objectif", "Un trimestre au moins le manque"],
+      rates: () => ({ dessous: "Chaque trimestre tient cet objectif, mais un objectif plus haut l'aurait été aussi : cherchez le plus haut.", dessus: "Avec cet objectif, le trimestre le plus faible le manque." }),
+      montrer: "Montrer la part",
+      lecture: (_c, t) => {
+        const o = suiviDesObjectifs(undefined, t / 100);
+        return [
+          { libelle: "Chiffre d'affaires de l'objectif par trimestre", montant: o.objectif * PRIX },
+          { libelle: "Chiffre d'affaires du trimestre le plus faible", montant: Math.min(...o.trimestres.map((x) => x.ventes)) * PRIX, fort: true },
+        ];
+      },
+      droites: () => {
+        const o = suiviDesObjectifs();
+        const pire = Math.min(...o.trimestres.map((x) => x.ventes));
+        return { produit: () => pire * PRIX, cout: (t) => Math.round((o.capacite * t) / 100) * PRIX, libelles: ["Trimestre le plus faible", "Objectif par trimestre"] };
+      },
+      explication: (c) => {
+        const t = tauxTenuChaqueTrimestre(FICHE_DE_CAPACITE, "N");
+        const o = suiviDesObjectifs(c, t / 100);
+        const plus = suiviDesObjectifs(c, (t + 1) / 100);
+        return [
+          `À ${qte(t)} % de la capacité, l'objectif est de ${qte(o.objectif)} ${c.unites} : le trimestre le plus faible, avec ${qte(o.pire.ventes)} ${c.unites}, le tient. À ${qte(t + 1)} %, il faudrait ${qte(plus.objectif)} : il le manque.`,
+          `Le ${rang(o.pire.numero)} trimestre est le plus faible de l'année : un objectif par trimestre doit tenir compte de la saison, ou se poser sur l'année.`,
+        ];
+      },
+    },
+    {
+      id: "le-laboratoire-de-l-objectif",
+      type: "simulation",
+      titre: "Poser l'objectif de l'année suivante",
+      notions: ["capacity", "dashboard"],
+      question: (c) => {
+        const n1 = suiviDesObjectifs(c, TAUX_DE_CAPACITE_VISE, "N+1");
+        return `Pour l'année N + 1, ${c.entreprise} prévoit ${qte(n1.demandeDeLAnnee)} ${c.unites} de demande, plus que sa ligne ne peut monter au printemps et à Noël. Faites varier la part de la capacité visée, et regardez combien de trimestres tiendraient l'objectif, les ventes ne dépassant jamais la capacité.`;
+      },
+      leviers: () => [{ code: "taux", libelle: "Part de la capacité visée", unite: "%", ...TAUX_ESSAYES, depart: Math.round(TAUX_DE_CAPACITE_VISE * 100) }],
+      lecture: (_c, p) => {
+        const o = suiviDesObjectifs(undefined, p.taux! / 100, "N+1");
+        const d = suiviDesObjectifs(undefined, TAUX_DE_CAPACITE_VISE, "N+1");
+        return [
+          { libelle: "Objectif par trimestre", montant: o.objectif, unite: "enceintes", reference: d.objectif },
+          { libelle: "Ventes prévues du trimestre le plus faible", montant: Math.min(...o.trimestres.map((x) => x.ventes)), unite: "enceintes" },
+          { libelle: "Trimestres qui tiendraient l'objectif", montant: o.tenus, unite: "trimestres", reference: d.tenus, fort: true },
+        ];
+      },
+      defi: () => {
+        const juste = tauxTenuChaqueTrimestre(FICHE_DE_CAPACITE, "N+1", TAUX_ESSAYES.pas);
+        return {
+          consigne: "Trouvez l'objectif le plus ambitieux, de 5 en 5 points, que chaque trimestre de N + 1 tiendrait.",
+          atteint: (p) => p.taux === juste,
+          indice: (p) => {
+            const o = suiviDesObjectifs(undefined, p.taux! / 100, "N+1");
+            return o.tenus < o.trimestres.length
+              ? `À ${qte(p.taux!)} %, ${qte(o.trimestres.length - o.tenus)} trimestre${o.trimestres.length - o.tenus > 1 ? "s" : ""} sur ${qte(o.trimestres.length)} le manquerai${o.trimestres.length - o.tenus > 1 ? "ent" : "t"} : c'est trop ambitieux.`
+              : `À ${qte(p.taux!)} %, chaque trimestre le tiendrait : pouvez-vous viser plus haut ?`;
+          },
+          solution: { taux: juste },
+        };
+      },
+      explication: (c, p) => {
+        const o = suiviDesObjectifs(c, p.taux! / 100, "N+1");
+        return [
+          `Défi relevé : à ${qte(p.taux!)} % de la capacité, l'objectif de ${qte(o.objectif)} ${c.unites} par trimestre est tenu chaque trimestre de N + 1, même le plus calme, avec ${qte(o.pire.ventes)} ${c.unites} prévues.`,
+          `Au-delà, c'est le trimestre le plus calme qui manquerait l'objectif ; au printemps et à Noël, c'est la ligne qui bornerait les ventes, à ${qte(o.capacite)} ${c.unites}. Un objectif se pose sur la demande prévue et sur les moyens, pas sur l'envie.`,
+        ];
       },
     },
     {

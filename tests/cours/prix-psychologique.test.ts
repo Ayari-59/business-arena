@@ -1,83 +1,62 @@
 import { describe, expect, it } from "vitest";
-import { casDeLEntreprise } from "../../src/config/cours/cas";
-import { PRIX_PSYCHOLOGIQUE, prixPsychologique } from "../../src/config/cours/chapitres/prix-psychologique";
-import { SEGMENTATIONS } from "../../src/config/cours/chapitres/segmenter-et-cibler";
-import { priceEffect } from "../../src/engine/market/attraction";
-import { scenarioByCode } from "../../src/config/scenarios/registry";
-import { CONCEPTS } from "../../src/config/pedagogy/concepts";
-import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
-import type { Cas } from "../../src/config/cours/cas";
-import type { Etape, EtatDuCours } from "../../src/config/cours/types";
+import { PRIX_PSYCHOLOGIQUE } from "../../src/config/cours/chapitres/prix-psychologique";
+import { PROGRAMME } from "../../src/config/cours/registre";
+import { UNE_PROMOTION_TROP_FORTE, promotionTropForte } from "../../src/config/cours/situations/par-chapitre/une-promotion-trop-forte";
+import { NOVA, attendus, gardeDuCas, gardeDuCurseur, gardeDuLaboratoire, gardesDeTexte, juste } from "./gardes-du-marche";
 
 /**
- * LE PRIX PSYCHOLOGIQUE, SUR LES REPÈRES DU SCÉNARIO ET L'ATTRACTION DU MOTEUR.
+ * LE PRIX PSYCHOLOGIQUE (bac STMG mercatique, palier 1), SUR LES REPÈRES DE PRIX DE NOVA DU MONDE DU
+ * COURS, ET SON CAS : UNE PROMOTION TROP FORTE ?
  *
- * Les repères sont ceux du scénario ; la demande perdue au seuil est celle que calcule la
- * fonction d'attraction ; elle dépasse de loin ce que la seule élasticité ferait perdre ; la
- * clientèle « avantageuse » est unique et suit l'écart au prix jugé normal.
+ * Refait à la main sur la fiche (monde/mercatique-de-nova.ts) : NOVA vend à 59 € ; les familles jugent
+ * normal 59 €, se méfient sous 39 €, ne veulent pas passer 60 € ; leur droite, 5 000 − 55 × prix,
+ * perd 15 % à partir de 60 € ; 38 € de coût variable.
  */
 
-function textesDe(e: Etape, cas: Cas, etat: EtatDuCours): string[] {
-  const tableau = e.tableau ? [e.tableau(cas).titre, ...e.tableau(cas).lignes.flatMap((l) => [l.libelle, ...l.valeurs])] : [];
-  switch (e.type) {
-    case "lecture":
-      return [...e.texte(cas), e.repere?.(cas) ?? "", ...tableau];
-    case "choix":
-      return [e.question(cas, etat), ...e.options(cas, etat).flatMap((o) => [o.texte, o.retour]), ...tableau];
-    case "montants":
-      return [e.question(cas, etat), ...e.champs(cas, etat).flatMap((c) => [c.libelle, c.calcul, String(c.attendu)]), ...e.explication(cas, etat), ...tableau];
-    default:
-      return [];
-  }
-}
+const d = (x: number) => Math.round(x * 10) / 10;
+const familles = (p: number) => (5_000 - 55 * p) * (p >= 60 ? 0.85 : 1);
 
-describe.each(SEGMENTATIONS)("le prix psychologique chez %s", (code) => {
-  const cas = casDeLEntreprise(code);
-  const p = prixPsychologique(cas);
-  const chapitre = chapitreDuCas(PRIX_PSYCHOLOGIQUE, cas);
-  const segments = scenarioByCode(code).scenario.market.segments;
-
-  it("les repères sont ceux du scénario, et le seuil étudié est celui de la clientèle qui rapporte le plus parmi celles qui en ont un", () => {
-    for (const k of p.clienteles) {
-      const g = segments.find((s) => s.code === k.code)!;
-      expect(k.normal).toBe(g.refPrice);
-      expect(k.tropBas).toBe(g.minAcceptablePrice);
-      expect(k.seuil).toBe(g.psychThresholds[0]?.threshold ?? null);
-    }
-    const avecSeuil = p.clienteles.filter((k) => k.seuil !== null);
-    expect(p.etudie.chiffreDAffaires).toBe(Math.max(...avecSeuil.map((k) => k.chiffreDAffaires)));
+describe("le prix psychologique", () => {
+  it("au programme du bac STMG, chez NOVA seule, et son cas lui est dédié", () => {
+    expect(PROGRAMME.stmg[1]).toContain(PRIX_PSYCHOLOGIQUE.titre);
+    expect(PRIX_PSYCHOLOGIQUE.entreprises?.codes).toEqual(["nova"]);
+    gardeDuCas(UNE_PROMOTION_TROP_FORTE, PRIX_PSYCHOLOGIQUE);
   });
 
-  it("la demande perdue au seuil est celle de l'attraction, bien plus que la seule élasticité", () => {
-    const g = segments.find((s) => s.code === p.etudie.code)!;
-    expect(p.perte).toBeCloseTo((1 - priceEffect(p.seuil + 0.1, g) / priceEffect(p.seuil - 0.1, g)) * 100, 1);
-    expect(p.perte).toBeGreaterThan(p.hausse * Math.abs(g.priceElasticity) * 3);
-    expect(p.sous).toBeLessThan(p.seuil);
-    expect(p.dessus).toBeGreaterThan(p.seuil);
+  it("les textes sont propres, une seule bonne réponse, les notions existent", () => {
+    gardesDeTexte(PRIX_PSYCHOLOGIQUE);
   });
 
-  it("la clientèle avantageuse est unique, et suit l'écart au prix jugé normal", () => {
-    const ecarts = p.clienteles.map((k) => k.ecart);
-    expect(ecarts.filter((e) => e === Math.min(...ecarts))).toHaveLength(1);
-    const etape = chapitre.etapes.find((e) => e.id === "avantageux");
-    if (etape?.type !== "choix") throw new Error("Pas d'étape avantageux");
-    const nom = p.clienteles.find((k) => k.ecart === Math.min(...ecarts))!.nom;
-    expect(etape.options(cas, { soldes: {} }).find((o) => o.juste)!.texte).toBe(nom);
+  it("les familles : 0 % d'écart au prix normal, 1 € sous le seuil ; les mélomanes trouvent NOVA la plus avantageuse", () => {
+    expect(attendus(PRIX_PSYCHOLOGIQUE, "ecart")).toEqual([0, 1]);
+    expect(juste(PRIX_PSYCHOLOGIQUE, "avantageux")).toEqual(["Mélomanes"]);
   });
 
-  it("aucun texte ne sort undefined ni « de le » ; une seule bonne réponse ; les notions existent", () => {
-    const codes = new Set(CONCEPTS.map((x) => x.code));
-    for (const [i, e] of chapitre.etapes.entries()) {
-      const etat = etatAvant(chapitre, cas, i);
-      for (const x of textesDe(e, cas, etat)) {
-        expect(x, `${e.id} : ${x}`).not.toMatch(/undefined|NaN|Infinity|\[object/);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/(^|\s)(de|à) [Ll]es? /);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/ [-–—] /);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/\bde [aeiouyéèêAEIOUYÉ]/);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/\bque [AEIOUYÉ]/);
-      }
-      if (e.type === "choix") expect(e.options(cas, etat).filter((o) => o.juste), e.id).toHaveLength(1);
-      for (const n of e.notions ?? []) expect(codes.has(n), `${e.id} : ${n}`).toBe(true);
-    }
+  it("de 59,90 € à 60,10 € : 15,5 % de demande perdue pour 0,33 % de hausse, 47 fois plus", () => {
+    const perte = d((1 - familles(60.1) / familles(59.9)) * 100);
+    const hausse = Math.round((60.1 / 59.9 - 1) * 10_000) / 100;
+    expect([perte, hausse]).toEqual([15.5, 0.33]);
+    expect(attendus(PRIX_PSYCHOLOGIQUE, "seuil")).toEqual([hausse, Math.round(perte / hausse)]);
+    expect(juste(PRIX_PSYCHOLOGIQUE, "virgule-quatre-vingt-dix")).toEqual(["59,90 € : rester sous le seuil psychologique"]);
+  });
+
+  it("le curseur : 33 % de remise laissent 39,53 €, encore au-dessus des 39 € de méfiance ; 34 % tombent à 38,94 €", () => {
+    const e = gardeDuCurseur(PRIX_PSYCHOLOGIQUE, "la-promotion-croyable", 33);
+    expect([e.droites(NOVA).produit(33), e.droites(NOVA).produit(34), e.droites(NOVA).cout(0)]).toEqual([39.53, 38.94, 39]);
+  });
+
+  it("le laboratoire : 59,90 € laisse la plus grande marge sur les familles, 1 705,5 × 21,90 = 37 350,45 €", () => {
+    const e = gardeDuLaboratoire(PRIX_PSYCHOLOGIQUE, "le-laboratoire-du-seuil");
+    expect(e.defi(NOVA).solution).toEqual({ prix: 59.9 });
+    expect(Math.round(familles(59.9) * 21.9 * 100) / 100).toBe(37_350.45);
+    expect(familles(61) * 23).toBeLessThan(37_350.45);
+  });
+});
+
+describe("une promotion trop forte ?", () => {
+  it("30 % de remise : 41,30 €, au-dessus des 39 € ; la marge passe de 21 € à 3,30 €", () => {
+    const r = promotionTropForte(NOVA);
+    expect([r.prixPromo, r.ecartAuNormal, r.baisseMaximale, r.ecartALaMefiance, r.credible]).toEqual([41.3, -30, d((1 - 39 / 59) * 100), 2.3, true]);
+    expect([r.margeAvant, r.margeApres, r.baisseDeLaMarge]).toEqual([21, 3.3, d((1 - 3.3 / 21) * 100)]);
   });
 });

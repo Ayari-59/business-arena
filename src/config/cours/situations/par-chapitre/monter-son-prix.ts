@@ -13,10 +13,10 @@ import type { Situation } from "../types";
  * différentiel du chapitre, dans l'autre sens : la marge d'une enceinte avant et après la hausse, la
  * plus petite quantité qui garde la marge du trimestre (un curseur la fait trouver avant le calcul),
  * les ventes que l'on peut perdre. Puis il croise ce seuil avec la demande de l'étude de marché : au
- * plan de production du trimestre, la demande dépasse encore ce que la ligne fabrique, et la hausse ne
- * fera perdre aucune vente. Il retrouve à rebours le prix le plus haut qui garde toutes les ventes.
- * La réponse demande un jugement : comparer la baisse de la demande au seuil, c'est oublier que le
- * plan, pas la demande, bornait les ventes.
+ * trimestre, toute la demande était servie (4 778 enceintes à 59 €, une seule demande de NOVA depuis
+ * la réconciliation d'octobre 2026), et la hausse fait perdre 599 ventes, plus que les 588 que la
+ * marge supporte. La réponse : renoncer. (Avant : la demande dépassait la production, aucune vente
+ * n'était perdue.)
  *
  * Comme son chapitre, le cas se joue dans la simulation du cours (src/config/cours/monde) : ses
  * chiffres sont ceux de `decision` et du modèle `trimestreDeDecision`. Les charges fixes du trimestre
@@ -248,7 +248,9 @@ export const MONTER_SON_PRIX: Situation = {
       explication: (c) => {
         const r = monterSonPrix(c);
         return [
-          `La demande baisse de ${qte(r.baisseDeLaDemande)} enceintes, de ${qte(r.b.demande)} à ${qte(r.apres.demande)}, mais elle reste au-dessus de la production : ${r.ventesPerdues === 0 ? "aucune vente n'est perdue" : `${qte(r.ventesPerdues)} ventes sont perdues`}. Au prix du trimestre, ${qte(r.b.nonServie)} clients repartaient déjà sans enceinte : la hausse ne fait que réduire cette file. Le résultat passe de ${eur(r.b.resultat)} à ${eur(r.apres.resultat)}.`,
+          r.ventesPerdues === 0
+            ? `La demande baisse de ${qte(r.baisseDeLaDemande)} enceintes, de ${qte(r.b.demande)} à ${qte(r.apres.demande)}, mais elle reste au-dessus de la production : aucune vente n'est perdue. Au prix du trimestre, ${qte(r.b.nonServie)} clients repartaient déjà sans enceinte : la hausse ne fait que réduire cette file. Le résultat passe de ${eur(r.b.resultat)} à ${eur(r.apres.resultat)}.`
+            : `La demande baisse de ${qte(r.baisseDeLaDemande)} enceintes, de ${qte(r.b.demande)} à ${qte(r.apres.demande)}, sous la production : ${qte(r.ventesPerdues)} ventes sont perdues. Au prix du trimestre, toute la demande était servie : chaque client parti est une vente de moins. Le résultat passe de ${eur(r.b.resultat)} à ${eur(r.apres.resultat)}.`,
         ];
       },
     },
@@ -280,11 +282,13 @@ export const MONTER_SON_PRIX: Situation = {
             retour: `Non : garder le chiffre d'affaires n'est pas garder la marge. Chaque vente perdue retire aussi son coût variable : on peut en perdre davantage, ${qte(r.perte)}, avant que la marge ne baisse.`,
           },
           {
-            texte: `Renoncer : la demande baisserait de ${qte(r.baisseDeLaDemande)} enceintes, plus que les ${qte(r.perte)} que la marge supporte, et le résultat du trimestre en souffrirait`,
+            texte: `Renoncer : ${qte(r.ventesPerdues)} ventes perdues, plus que les ${qte(r.perte)} que la marge supporte`,
             juste: !aucune && r.verdict === "perte-trop-forte",
             retour: aucune
               ? `Non : c'est confondre la demande et les ventes. Les ventes étaient bornées par le plan de production, ${qte(r.b.production)} enceintes, pas par la demande, ${qte(r.b.demande)} : la demande peut baisser de ${qte(r.b.demande - r.b.production)} avant qu'une seule vente ne soit perdue.`
-              : `La demande tombe sous la production : ${qte(r.ventesPerdues)} ventes perdues.`,
+              : r.verdict === "perte-trop-forte"
+                ? `Oui : à ${eur(r.nouveauPrix)}, la demande tombe à ${qte(r.apres.demande)} enceintes, sous les ${qte(r.b.production)} fabriquées : ${qte(r.ventesPerdues)} ventes perdues, plus que les ${qte(r.perte)} que la marge supporte. Le résultat passe de ${eur(r.b.resultat)} à ${eur(r.apres.resultat)}.`
+                : `Non : ${qte(r.ventesPerdues)} ventes perdues, moins que les ${qte(r.perte)} que la marge supporte.`,
           },
         ];
       },

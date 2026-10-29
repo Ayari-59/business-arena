@@ -1,15 +1,15 @@
 import type { Cas } from "../../cas";
-import { MARCHES, marcheEtPart } from "../../chapitres/marche-et-part-de-marche";
+import { MARCHE_ET_PART_DE_MARCHE, marcheEtPart } from "../../chapitres/marche-et-part-de-marche";
 import type { Situation } from "../types";
 
 /**
  * CAS PRATIQUE DU CHAPITRE « LE MARCHÉ ET LA PART DE MARCHÉ » : GARDER SA PART DE MARCHÉ
  * (Bac STMG, mercatique, palier 1).
  *
- * L'étude de marché annonce que le marché va encore grandir au prochain trimestre. La
+ * L'étude de marché annonce que le marché des enceintes va encore grandir au prochain trimestre. La
  * direction demande ce que deviendrait la part de marché de l'entreprise si ses ventes ne
  * bougeaient pas, et combien il faudrait vendre pour la garder. L'élève part du dernier
- * trimestre de l'arène et refait seul les calculs du chapitre : la part de marché, la
+ * trimestre du semestre de NOVA (monde/economie-et-marketing.ts) et refait seul les calculs du chapitre : la part de marché, la
  * taille du marché prévue, la part sans ventes en plus, les points perdus, puis les ventes
  * qui gardent la part.
  *
@@ -25,8 +25,8 @@ import type { Situation } from "../types";
  */
 export const CROISSANCE_PREVUE_DU_MARCHE = 0.08;
 
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const qte = (n: number) => n.toLocaleString("fr-FR");
+const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`.replace(/^-/, "−");
+const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
@@ -34,7 +34,7 @@ const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` 
 export function garderSaPart(c: Cas) {
   const m = marcheEtPart(c);
   const marche = m.fin.marche;
-  const ventes = m.fin.entreprise.ventes;
+  const ventes = m.fin.nova.ventes;
   const part = auDixieme((ventes / marche) * 100);
   const marchePrevu = Math.round(marche * (1 + CROISSANCE_PREVUE_DU_MARCHE));
   const partSansEffort = auDixieme((ventes / marchePrevu) * 100);
@@ -43,7 +43,7 @@ export function garderSaPart(c: Cas) {
   const ventesExactes = Math.round(((ventes * marchePrevu) / marche) * 10) / 10;
   const ventesNecessaires = Math.ceil((ventes * marchePrevu) / marche - 1e-9);
   return {
-    trimestre: m.trimestres,
+    trimestre: m.fin.trimestre,
     marche,
     ventes,
     part,
@@ -78,10 +78,7 @@ export const GARDER_SA_PART_DE_MARCHE: Situation = {
     "Rédiger une réponse chiffrée à la direction",
   ],
   libre: false,
-  entreprises: {
-    codes: MARCHES,
-    pourquoi: "ce cas mesure un marché en ventes, et chez VOLT FITNESS le marché se compte d'abord en abonnés gardés.",
-  },
+  entreprises: MARCHE_ET_PART_DE_MARCHE.entreprises,
   etapes: [
     {
       id: "demande",

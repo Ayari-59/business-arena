@@ -182,7 +182,7 @@ export const PARCOURS: readonly Parcours[] = [
     formation: "stmg",
     titre: "Bac STMG · Mercatique",
     resume:
-      "Le marché, les clients, le prix, la communication et la distribution : les questions du mercaticien, sur les chiffres de l'arène, au niveau du lycée.",
+      "Le marché, les clients, le prix, la communication et la distribution : les questions du mercaticien, sur le marché de la simulation du cours, au niveau du lycée.",
     publics: { 1: "Terminale STMG, mercatique" },
   },
   {
@@ -228,7 +228,7 @@ export const PARCOURS: readonly Parcours[] = [
     formation: "stmg",
     titre: "Bac STMG · Systèmes d'information de gestion",
     resume:
-      "Des données à la décision : trier et calculer, construire un indicateur juste, se méfier d'une donnée fausse, chiffrer un outil numérique, sur les chiffres de l'arène.",
+      "Des données à la décision : trier et calculer, construire un indicateur juste, se méfier d'une donnée fausse, chiffrer un outil numérique, sur les chiffres de NOVA.",
     publics: { 1: "Terminale STMG, systèmes d'information de gestion" },
   },
   {
@@ -282,7 +282,7 @@ export const PARCOURS: readonly Parcours[] = [
     formation: "seconde-ses",
     titre: "Seconde SES · Le marché et les prix",
     resume:
-      "L'offre et la demande, le prix qui vide le stock ou qui laisse partir les clients, la concurrence entre vendeurs, la richesse créée : le marché de l'arène, rejoué au prix qu'on choisit.",
+      "L'offre et la demande, le prix qui vide le stock ou qui laisse partir les clients, la concurrence entre vendeurs, la richesse créée : le marché de la simulation du cours, lu au prix qu'on choisit.",
     publics: { 1: "Seconde générale et technologique, sciences économiques et sociales" },
   },
   {

@@ -2,7 +2,9 @@ import { montantEcrit as eur } from "../../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../../pedagogy/cours/etats";
 import type { Cas } from "../../cas";
 import { dateDuCours as date } from "../../dates";
-import { de, delaiDuClientPro, nomDuClient } from "../../provisions";
+import { POURQUOI_LA_GESTION_DE_BASE } from "../../chapitres/les-flux";
+import { DELAI_MAXIMAL_CONVENU } from "../../monde/delais-et-tva";
+import { ENTREPRISES_DE_LA_GESTION_DE_BASE } from "../../monde/gestion-et-information";
 import type { Situation } from "../types";
 
 /**
@@ -18,7 +20,8 @@ import type { Situation } from "../types";
  *
  * Le cas est neuf par sa question : dans le chapitre, l'argent suit toujours le flux
  * réel ou tombe avec lui ; ici, une partie le précède. Les autres chiffres sont ceux du
- * mois du cas (`cas.ts`).
+ * mois de janvier de NOVA (le cas figé, cas-des-entreprises.ts, celui de l'exercice de NOVA). Le
+ * cas se jouait dans les neuf entreprises ; il se joue chez NOVA seule, comme son chapitre.
  */
 
 /**
@@ -29,6 +32,19 @@ export const ACOMPTE_A_LA_COMMANDE = 0.3;
 
 /** Le client commande dix jours avant d'être livré : le temps de préparer sa commande. */
 export const JOURS_ENTRE_COMMANDE_ET_LIVRAISON = 10;
+
+/** « de » devant un nom, élidé devant une voyelle. */
+const de = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈÊ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
+
+/**
+ * LE DÉLAI DU CLIENT PROFESSIONNEL, DIT HONNÊTEMENT : le délai convenu ne dépasse pas 60 jours après la
+ * facture (code de commerce, article L. 441-10) ; au-delà, le client paie en retard.
+ */
+function delaiDuClientPro(c: Pick<Cas, "venteCredit">) {
+  const reel = c.venteCredit.delai;
+  const convenu = Math.min(reel, DELAI_MAXIMAL_CONVENU.joursDeLaFacture);
+  return { reel, convenu, retard: reel - convenu, echeanceConvenue: c.venteCredit.date + convenu, paiement: c.venteCredit.echeance };
+}
 
 const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 const qte = (n: number) => n.toLocaleString("fr-FR");
@@ -54,7 +70,7 @@ export function acompteDuClient(c: Cas) {
   const sorties = auCentime(c.loyer.montant + c.immobilisation.ttc + c.personnel.net);
   const banque = auCentime(entrees - sorties);
   return {
-    client: nomDuClient(v.client),
+    client: v.client,
     commande: v.date - JOURS_ENTRE_COMMANDE_ET_LIVRAISON,
     acompte,
     solde,
@@ -84,6 +100,7 @@ export const L_ACOMPTE_DU_CLIENT: Situation = {
     "Dire ce que les partenaires doivent encore, ou attendent de l'entreprise",
   ],
   libre: false,
+  entreprises: { codes: ENTREPRISES_DE_LA_GESTION_DE_BASE, pourquoi: POURQUOI_LA_GESTION_DE_BASE },
   etapes: [
     {
       id: "demande",

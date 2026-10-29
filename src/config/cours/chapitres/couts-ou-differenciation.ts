@@ -10,7 +10,7 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS (src/config/cours/monde), pas dans l'arène : le marché des
  * enceintes, où NOVA affronte SoundBox et Auris, a une fiche figée (monde/marche-a-trois.ts) et un
- * modèle simple (monde/attractivite.ts) : chaque trimestre, 17 500 enceintes se partagent entre les
+ * modèle simple (monde/attractivite.ts) : chaque trimestre, 15 502 enceintes se partagent entre les
  * trois enseignes selon leur attractivité, (59 ÷ prix) puissance 4 × qualité perçue puissance 2 ×
  * (1 + image). Une évolution du moteur ne change rien ici. Le chapitre se jouait dans plusieurs
  * marchés de l'arène ; il se joue désormais chez NOVA seule, la même PME que dans le reste du cours.
@@ -78,11 +78,11 @@ export const BUDGET_DU_LABORATOIRE = { min: 0, max: 16_000, pas: 1_000 } as cons
 export const GAMMES_DU_LABORATOIRE: readonly CodeDeGamme[] = ["standard", "actuelle", "soignee"];
 
 /**
- * LA VARIANTE DE L'EXPERT, hypothèse du cours : la gamme soignée vendue 67 €, avec les budgets
+ * LA VARIANTE DE L'EXPERT, hypothèse du cours : la gamme soignée vendue 65 € (67 € avant la réconciliation du marché), avec les budgets
  * d'aujourd'hui (4 000 € de qualité par trimestre, pas de communication). C'est l'offre qui bat Auris
  * avec le meilleur résultat de NOVA ; l'élève refait l'année à la main.
  */
-export const VARIANTE_DE_L_EXPERT: { gamme: CodeDeGamme; prix: number } = { gamme: "soignee", prix: 67 };
+export const VARIANTE_DE_L_EXPERT: { gamme: CodeDeGamme; prix: number } = { gamme: "soignee", prix: 65 };
 
 /**
  * LA CRITIQUE, hypothèse du cours : des clients moins sensibles à la qualité, l'attractivité variant

@@ -11,7 +11,7 @@ import { AUTRES_COUTS_PAR_ENCEINTE, CAPACITE_DU_TRIMESTRE, CHARGES_FIXES_DU_MOIS
  * des trois chapitres du lot et de leurs cas. Le modèle qui les calcule est dans
  * monde/attractivite.ts ; la garde tests/cours/marche-a-trois.test.ts refait chaque chiffre à la main.
  *
- * TROIS ENSEIGNES SE PARTAGENT UN MARCHÉ. Chaque trimestre, les clients achètent 17 500 enceintes
+ * TROIS ENSEIGNES SE PARTAGENT UN MARCHÉ. Chaque trimestre, les clients achètent 15 502 enceintes
  * aux trois enseignes réunies. Chacune en prend une part égale à son attractivité rapportée à la
  * somme des trois : attractivité = (prix de référence ÷ prix) puissance 4 × qualité perçue
  * puissance 2 × (1 + image) × (1 + bonus du label, quand il est accordé). Ses ventes sont cette part
@@ -25,7 +25,7 @@ import { AUTRES_COUTS_PAR_ENCEINTE, CAPACITE_DU_TRIMESTRE, CHARGES_FIXES_DU_MOIS
  *
  * UNE ANNÉE TYPE, À MARCHÉ PLAT. Les trois chapitres raisonnent sur une année de quatre trimestres
  * égaux : la saison, que suivent les chapitres de la capacité (nova-capacite.ts), est mise à part.
- * À sa position d'aujourd'hui, NOVA y vend 21 576 enceintes (l'année N en a livré 23 609, la
+ * À sa position d'aujourd'hui, NOVA y vend 19 112 enceintes, quatre premiers trimestres (l'année N en a livré 23 609, la
  * demande prévue de N + 1 est de 27 200) : la capacité de la ligne ne borne aucune des stratégies
  * des chapitres, et la notion se lit sans goulot. Le marché est celui des trois enseignes, pas
  * tout le marché des enceintes de nova-gestion.ts : NOVA y tient 30,8 % (24 à 26 % du marché
@@ -57,12 +57,17 @@ import { AUTRES_COUTS_PAR_ENCEINTE, CAPACITE_DU_TRIMESTRE, CHARGES_FIXES_DU_MOIS
 export type Trimestre = 1 | 2 | 3 | 4;
 
 /**
- * LE MARCHÉ (hypothèse du cours) : 17 500 enceintes par trimestre, achetées aux trois enseignes
- * réunies, 70 000 sur l'année. Il est le même chaque trimestre (l'année type, à marché plat), et ne
- * grandit pas quand une enseigne devient plus attractive : ce qu'elle gagne, elle le prend aux deux
- * autres.
+ * LE MARCHÉ : 15 502 enceintes par trimestre, achetées aux trois enseignes réunies, 62 008 sur
+ * l'année. Il est le même chaque trimestre (l'année type, à marché plat), et ne grandit pas quand une
+ * enseigne devient plus attractive : ce qu'elle gagne, elle le prend aux deux autres.
+ * UNE SEULE DEMANDE DE NOVA (réconciliation d'octobre 2026) : le trimestre type est celui de janvier
+ * à mars, la saison mise à part. La taille est choisie pour qu'à sa position d'aujourd'hui (59 €),
+ * NOVA y reçoive la demande de la droite de nova-gestion.ts à 59 €, 4 778 enceintes, celles qu'elle a
+ * vendues au premier trimestre de N : 15 502, ce sont aussi les ventes des trois enseignes sur le
+ * marché de toutes les enceintes de janvier à mars (monde/economie-et-marketing.ts). La garde
+ * tests/cours/une-seule-nova.test.ts le vérifie. (Avant : 17 500, et 5 394 enceintes pour NOVA.)
  */
-export const MARCHE = { parTrimestre: 17_500, trimestres: 4 } as const;
+export const MARCHE = { parTrimestre: 15_502, trimestres: 4 } as const;
 
 /** Un point d'une courbe : un budget par trimestre, et ce qu'il ajoute (ou retire, s'il est négatif). */
 export interface PointDeCourbe {

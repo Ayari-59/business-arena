@@ -1,155 +1,74 @@
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../pedagogy/cours/etats";
-import { scenarioByCode } from "../../scenarios/registry";
 import { type Cas } from "../cas";
-import { anneeJouee } from "../annee-de-l-arene";
+import {
+  ENTREPRISES_DE_LA_GESTION_DE_BASE,
+  FICHE_DE_GESTION,
+  PART_STABLE,
+  commandePourGarderLaPart,
+  donneesALInformation as donneesDuMonde,
+  tableDesVentes as lignesDeLaTable,
+  type LigneDeVentes,
+} from "../monde/gestion-et-information";
+import { DELAI_CONVENU_DE_CAMPUSTECH, RETARD_DE_CAMPUSTECH } from "../monde/nova-gestion";
 import type { Chapitre, TableauDeDonnees } from "../types";
 
 /**
  * CHAPITRE : DES DONNÉES À L'INFORMATION, TRIER, REGROUPER, CALCULER (Bac STMG, systèmes
  * d'information de gestion, palier 1).
  *
- * Une table de la base de données des ventes : une ligne par trimestre et par enseigne, avec les
- * ventes et le chiffre d'affaires. Ce sont les chiffres de l'année du cours (`anneeJouee` :
- * l'entreprise, jouée par le bon gestionnaire de l'élève, et ses deux concurrents, joués par les
- * robots du scénario), arrondis à l'unité et à l'euro. Une enseigne qui ne vend plus n'a plus de ligne ;
- * sur l'année du cours, dont les concurrents sont assainis (arene-du-cours.ts), aucune ne cesse
- * de vendre, et la lecture « un concurrent a cessé de vendre » reste écrite pour une partie où le
- * moteur en déclarerait une.
+ * Une table de la base de données des ventes : une ligne par mois et par clientèle, avec les ventes
+ * et le chiffre d'affaires. L'élève y distingue la donnée (une case de la table) de l'information
+ * (ce qu'on en tire), puis fait à la main ce que fait une requête : regrouper les lignes par
+ * clientèle et additionner, choisir le critère et le regroupement qui répondent à une question,
+ * filtrer les lignes d'un trimestre et calculer une part. La question de gestion : NOVA dépend-elle
+ * moins de CampusTech, son client professionnel qui paie en retard, d'un trimestre à l'autre ? Un
+ * curseur (ce que CampusTech devrait commander pour garder sa part) et un laboratoire (filtrer un
+ * mois, trouver celui où CampusTech pèse le moins).
  *
- * L'élève y distingue la donnée (une case de la table) de l'information (ce qu'on en tire), puis
- * fait à la main ce que fait une requête : regrouper les lignes par enseigne et additionner,
- * choisir le critère et le regroupement qui répondent à une question, filtrer les lignes d'un
- * semestre et calculer une part. La question de gestion : l'entreprise gagne-t-elle du terrain
- * sur ses concurrents d'un semestre à l'autre ? L'information obtenue dit où porter l'effort.
+ * Il ne double pas « Le marché et la part de marché » (mercatique) : ici, la part se calcule dans le
+ * chiffre d'affaires de l'entreprise, et l'objet est le traitement des données.
  *
- * Il ne double pas « Le marché et la part de marché » (mercatique : la part en volume, face à la
- * demande du marché) : ici, la part se calcule dans le chiffre d'affaires des enseignes, et
- * l'objet est le traitement des données.
+ * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA seule : les ventes du semestre, clientèle par
+ * clientèle (nova-gestion.ts, lues par monde/gestion-et-information.ts), au prix de 59 € hors
+ * taxes. La règle de lecture PART_STABLE est là-bas.
  *
- * VOLT FITNESS EN EST : le chapitre ne divise jamais son chiffre d'affaires par ses ventes. Ses
- * ventes comptent les nouveaux adhérents du trimestre, son chiffre d'affaires les cotisations de
- * tous ses adhérents ; l'extrait le dit.
+ * CE QUI A CHANGÉ. La table comptait une ligne par trimestre et par enseigne de l'année de l'arène,
+ * dans neuf entreprises. Elle compte maintenant douze lignes : six mois, deux clientèles. La part de
+ * CampusTech passe de 20,1 % du chiffre d'affaires au premier trimestre à 15,8 % au deuxième.
  */
 
-/**
- * LA RÈGLE DE LECTURE DU COURS : d'un semestre à l'autre, une part du chiffre d'affaires qui
- * bouge de moins de 1 point se lit comme stable. L'écart tient alors à la saison et au hasard des
- * ventes, pas à une place gagnée ou perdue.
- */
-export const PART_STABLE = 1;
+export { PART_STABLE };
 
-/** Un montant à la française, avec le signe moins typographique. */
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const points = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} point${Math.abs(t) >= 2 ? "s" : ""}`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
-/** « de » devant un nom : élidé devant une voyelle, contracté devant l'article (« du Comptoir »). */
-const dE = (nom: string) =>
-  /^Le /.test(nom) ? `du ${nom.slice(3)}` : /^Les /.test(nom) ? `des ${nom.slice(4)}` : /^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`;
+const points = (t: number) => `${Math.abs(t).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} point${Math.abs(t) >= 2 ? "s" : ""}`;
+const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
+const majuscule = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+
+export const POURQUOI_LES_DONNEES = "ce chapitre lit la table des ventes de NOVA, mois par mois et clientèle par clientèle, sur le semestre que le cours tient.";
 
 /** Le trimestre écrit court, en chiffres : « 1er », « 2e ». */
 export const ordinal = (t: number) => (t === 1 ? "1er" : `${t}e`);
 
-export interface LigneDeVentes {
-  /** Le numéro de la ligne dans l'extrait, à partir de 1. */
-  numero: number;
-  trimestre: number;
-  /** L'identifiant de l'enseigne dans l'arène (« joueur » pour l'entreprise). */
-  id: string;
-  enseigne: string;
-  ventes: number;
-  chiffreDAffaires: number;
-}
+export type { LigneDeVentes };
 
-/**
- * La table des ventes de l'année du cours : une ligne par trimestre et par enseigne qui a vendu,
- * l'entreprise d'abord, puis ses deux concurrents, dans l'ordre du scénario.
- */
-export function extraitDesVentes(c: Cas): LigneDeVentes[] {
-  const def = scenarioByCode(c.code);
-  const { partie } = anneeJouee(c.code);
-  const enseignes = [{ id: "joueur", nom: c.entreprise }, ...def.bots.slice(0, 2).map((b) => ({ id: b.id, nom: b.name }))];
-  const lignes = partie.rounds.flatMap((tour, k) =>
-    enseignes.map((e) => {
-      const r = tour.results[e.id]!;
-      return {
-        trimestre: k + 1,
-        id: e.id,
-        enseigne: e.nom,
-        ventes: Math.round(Object.values(r.market.bySegment).reduce((t, v) => t + v.sold, 0)),
-        chiffreDAffaires: Math.round(r.incomeStatement.revenue),
-      };
-    }),
-  );
-  return lignes.filter((l) => l.ventes > 0).map((l, i) => ({ numero: i + 1, ...l }));
-}
-
-export type LectureDesSemestres = "monte-depart" | "monte" | "stable" | "baisse";
+/** La table des ventes du semestre : une ligne par mois et par clientèle. */
+export const extraitDesVentes = (_c?: Cas): LigneDeVentes[] => lignesDeLaTable(FICHE_DE_GESTION);
 
 /** Ce que les données donnent, une fois triées, regroupées et calculées. */
-export function donneesALInformation(c: Cas) {
-  const def = scenarioByCode(c.code);
-  const lignes = extraitDesVentes(c);
-  const somme = (garder: (l: LigneDeVentes) => boolean) => lignes.filter(garder).reduce((t, l) => t + l.chiffreDAffaires, 0);
-  const enseignes = [{ id: "joueur", nom: c.entreprise }, ...def.bots.slice(0, 2).map((b) => ({ id: b.id, nom: b.name }))].map((e) => ({
-    ...e,
-    /** Le chiffre d'affaires de l'année : les lignes de l'enseigne, additionnées. */
-    chiffreDeLAnnee: somme((l) => l.id === e.id),
-    lignes: lignes.filter((l) => l.id === e.id).length,
-  }));
-  const entreprise = enseignes[0]!;
-  const concurrents = enseignes.slice(1);
-  const ventesDeLAnnee = lignes.filter((l) => l.id === "joueur").reduce((t, l) => t + l.ventes, 0);
-  const semestre = (debut: number, fin: number) => {
-    const total = somme((l) => l.trimestre >= debut && l.trimestre <= fin);
-    const deLEntreprise = somme((l) => l.trimestre >= debut && l.trimestre <= fin && l.id === "joueur");
-    return { total, deLEntreprise, part: auDixieme((deLEntreprise / total) * 100) };
-  };
-  const premier = semestre(1, 2);
-  const second = semestre(3, 4);
-  const ecart = auDixieme(second.part - premier.part);
-  const dernier = Math.max(...lignes.map((l) => l.trimestre));
-  // Un concurrent a cessé de vendre quand il n'a plus de ligne au dernier trimestre.
-  const partis = concurrents.filter((e) => !lignes.some((l) => l.id === e.id && l.trimestre === dernier));
-  const lecture: LectureDesSemestres =
-    ecart > PART_STABLE ? (partis.length > 0 ? "monte-depart" : "monte") : ecart < -PART_STABLE ? "baisse" : "stable";
-  // La requête de l'étape « la-requete » : les lignes des concurrents, regroupées par trimestre.
-  const concurrentsAuPremier = somme((l) => l.trimestre === 1 && l.id !== "joueur");
-  const premiere = lignes[0]!;
-  const derniere = lignes.at(-1)!;
+export const donneesALInformation = (_c?: Cas) => donneesDuMonde(FICHE_DE_GESTION);
+
+export function tableDesVentes(c: Cas): TableauDeDonnees {
   return {
-    lignes,
-    enseignes,
-    entreprise,
-    concurrents,
-    ventesDeLAnnee,
-    premier,
-    second,
-    ecart,
-    partis,
-    lecture,
-    concurrentsAuPremier,
-    /** Le chiffre d'affaires moyen d'un trimestre de l'entreprise, au centime. */
-    moyenneParTrimestre: auCentime(entreprise.chiffreDeLAnnee / entreprise.lignes),
-    marcheAuPremier: somme((l) => l.trimestre === 1),
-    premiere,
-    derniere,
+    titre: "Extrait de la table des ventes : une ligne par mois et par clientèle",
+    colonnes: ["Mois", "Clientèle", `Ventes (${c.unites})`, "Chiffre d'affaires"],
+    lignes: extraitDesVentes(c).map((l) => ({ libelle: `Ligne ${l.numero}`, valeurs: [majuscule(l.nomDuMois), l.nomDeLaClientele, qte(l.ventes), eur(l.chiffreDAffaires)] })),
   };
 }
 
-export function tableDesVentes(c: Cas): TableauDeDonnees {
-  const abonnement = !!scenarioByCode(c.code).scenario.subscription;
-  return {
-    titre: "Extrait de la table des ventes : une ligne par trimestre et par enseigne",
-    colonnes: ["Trimestre", "Enseigne", abonnement ? `Ventes (nouveaux ${c.unites})` : `Ventes (${c.unites})`, "Chiffre d'affaires"],
-    lignes: extraitDesVentes(c).map((l) => ({
-      libelle: `Ligne ${l.numero}`,
-      valeurs: [`T${l.trimestre}`, l.enseigne, qte(l.ventes), eur(l.chiffreDAffaires)],
-    })),
-  };
-}
+const CAMPUSTECH = () => FICHE_DE_GESTION.semestre.clienteles.find((x) => x.code === "campustech")!;
 
 export const DES_DONNEES_A_L_INFORMATION: Chapitre = {
   code: "des-donnees-a-l-information",
@@ -158,7 +77,7 @@ export const DES_DONNEES_A_L_INFORMATION: Chapitre = {
   blocs: ["STMG Thème 3 · Information, action et décision"],
   titre: "Des données à l'information : trier, regrouper, calculer",
   accroche:
-    "Une table de la base de données des ventes, une ligne par trimestre et par enseigne : des données brutes. Les filtrer, les regrouper et calculer, comme le fait une requête, pour en tirer une information qui aide à décider.",
+    "Une table de la base de données des ventes, une ligne par mois et par clientèle : des données brutes. Les filtrer, les regrouper et calculer, comme le fait une requête, pour en tirer une information qui aide à décider.",
   objectifs: [
     "Distinguer une donnée d'une information",
     "Regrouper des lignes et calculer une somme, une moyenne, une part",
@@ -166,6 +85,7 @@ export const DES_DONNEES_A_L_INFORMATION: Chapitre = {
     "Dire ce que l'information obtenue permet de décider",
   ],
   libre: false,
+  entreprises: { codes: ENTREPRISES_DE_LA_GESTION_DE_BASE, pourquoi: POURQUOI_LES_DONNEES },
   etapes: [
     {
       id: "intro",
@@ -175,23 +95,12 @@ export const DES_DONNEES_A_L_INFORMATION: Chapitre = {
       tableau: tableDesVentes,
       texte: (c) => {
         const k = donneesALInformation(c);
-        const [a, b] = k.concurrents;
-        const abonnement = !!scenarioByCode(c.code).scenario.subscription;
         return [
-          `Le système d'information ${dE(c.entreprise)} enregistre chaque trimestre les ventes de l'entreprise et celles de ses concurrents, ${a!.nom} et ${b!.nom}. La table des ventes en garde une ligne par trimestre et par enseigne : ${qte(k.lignes.length)} lignes sur l'année du cours.`,
-          "Chaque case est une donnée : un fait brut, enregistré tel quel. Une donnée seule ne répond à aucune question. La direction veut savoir si l'entreprise gagne du terrain sur ses concurrents au fil de l'année : pour le dire, il faut trier les lignes, les regrouper et calculer.",
-          ...(abonnement
-            ? [
-                `Chez ${c.entreprise}, les ventes comptent les nouveaux ${c.unites} du trimestre ; le chiffre d'affaires, les cotisations de tous les ${c.unites}, nouveaux et anciens.`,
-              ]
-            : []),
-          ...(k.partis.length > 0
-            ? [`${k.partis.map((e) => e.nom).join(" et ")} n'${k.partis.length > 1 ? "ont" : "a"} plus de ligne à la fin de l'année : une enseigne qui ne vend plus n'enregistre plus rien.`]
-            : []),
+          `Le système d'information ${dE(c.entreprise)} enregistre chaque mois ses ventes, clientèle par clientèle : les particuliers, qui commandent en ligne et paient à la commande, et ${CAMPUSTECH().nom}, un client professionnel qui paie à ${qte(CAMPUSTECH().delai)} jours, en retard de ${qte(RETARD_DE_CAMPUSTECH)} jours sur les ${qte(DELAI_CONVENU_DE_CAMPUSTECH)} convenus. La table des ventes en garde une ligne par mois et par clientèle : ${qte(k.lignes.length)} lignes pour le semestre.`,
+          `Chaque case est une donnée : un fait brut, enregistré tel quel. Une donnée seule ne répond à aucune question. La direction veut savoir si ${c.entreprise} dépend moins de ${CAMPUSTECH().nom} au fil du semestre : pour le dire, il faut trier les lignes, les regrouper et calculer.`,
         ];
       },
-      repere: () =>
-        "Une donnée est un fait brut enregistré. Une information est une donnée traitée (triée, regroupée, calculée) qui répond à une question et aide à décider.",
+      repere: () => "Une donnée est un fait brut enregistré. Une information est une donnée traitée (triée, regroupée, calculée) qui répond à une question et aide à décider.",
     },
     {
       id: "donnee-ou-information",
@@ -204,41 +113,17 @@ export const DES_DONNEES_A_L_INFORMATION: Chapitre = {
         { code: "donnee", libelle: "Donnée" },
         { code: "information", libelle: "Information" },
       ],
-      elements: (c) => {
-        const k = donneesALInformation(c);
-        const p = k.premiere;
-        const d = k.derniere;
+      elements: () => {
+        const k = donneesALInformation();
+        const p = k.lignes[0]!;
+        const d = k.lignes.at(-1)!;
+        const ct = k.parClientele.find((x) => x.code === "campustech")!;
         return [
-          {
-            libelle: `Chiffre d'affaires ${dE(p.enseigne)} au ${ordinal(p.trimestre)} trimestre`,
-            montant: p.chiffreDAffaires,
-            categorie: "donnee",
-            pourquoi: `Une case de la ligne ${p.numero}, lue telle quelle.`,
-          },
-          {
-            libelle: `Chiffre d'affaires ${dE(c.entreprise)} sur l'année`,
-            montant: k.entreprise.chiffreDeLAnnee,
-            categorie: "information",
-            pourquoi: `Les ${qte(k.entreprise.lignes)} lignes ${dE(c.entreprise)}, regroupées et additionnées.`,
-          },
-          {
-            libelle: `Chiffre d'affaires ${dE(d.enseigne)} au ${ordinal(d.trimestre)} trimestre`,
-            montant: d.chiffreDAffaires,
-            categorie: "donnee",
-            pourquoi: `Une case de la ligne ${d.numero}, la dernière de l'extrait.`,
-          },
-          {
-            libelle: `Chiffre d'affaires moyen ${dE(c.entreprise)} par trimestre`,
-            montant: k.moyenneParTrimestre,
-            categorie: "information",
-            pourquoi: `Le chiffre d'affaires de l'année, ${eur(k.entreprise.chiffreDeLAnnee)}, divisé par ${qte(k.entreprise.lignes)} trimestres : une moyenne.`,
-          },
-          {
-            libelle: "Chiffre d'affaires des enseignes réunies au 1er trimestre",
-            montant: k.marcheAuPremier,
-            categorie: "information",
-            pourquoi: "Les lignes du 1er trimestre, filtrées puis additionnées.",
-          },
+          { libelle: `Chiffre d'affaires des ${p.nomDeLaClientele.toLowerCase()} en ${p.nomDuMois}`, montant: p.chiffreDAffaires, categorie: "donnee", pourquoi: `Une case de la ligne ${p.numero}, lue telle quelle.` },
+          { libelle: `Chiffre d'affaires de ${ct.nom} sur le semestre`, montant: ct.chiffre, categorie: "information", pourquoi: `Les ${qte(ct.lignes)} lignes de ${ct.nom}, regroupées et additionnées.` },
+          { libelle: `Chiffre d'affaires de ${d.nomDeLaClientele} en ${d.nomDuMois}`, montant: d.chiffreDAffaires, categorie: "donnee", pourquoi: `Une case de la ligne ${d.numero}, la dernière de l'extrait.` },
+          { libelle: `Chiffre d'affaires moyen de ${ct.nom} par mois`, montant: auCentime(ct.chiffre / ct.lignes), categorie: "information", pourquoi: `Le chiffre d'affaires du semestre, ${eur(ct.chiffre)}, divisé par ${qte(ct.lignes)} mois : une moyenne.` },
+          { libelle: "Chiffre d'affaires de toutes les clientèles au 1er trimestre", montant: k.premier.total, categorie: "information", pourquoi: "Les lignes de janvier, février et mars, filtrées puis additionnées." },
         ];
       },
       explication: () => [
@@ -248,35 +133,23 @@ export const DES_DONNEES_A_L_INFORMATION: Chapitre = {
     {
       id: "regrouper",
       type: "montants",
-      titre: "Regrouper les lignes par enseigne",
+      titre: "Regrouper les lignes par clientèle",
       notions: ["revenue", "dashboard"],
       tableau: tableDesVentes,
-      question: (c) =>
-        `Regroupez les lignes par enseigne et additionnez : le chiffre d'affaires de l'année de chaque enseigne, à l'euro. Puis, en ne gardant que les lignes ${dE(c.entreprise)}, ses ventes de l'année.`,
-      champs: (c) => {
-        const k = donneesALInformation(c);
-        const lignesDe = (id: string) => k.lignes.filter((l) => l.id === id);
-        return [
-          ...k.enseignes.map((e) => ({
-            libelle: `Chiffre d'affaires de l'année, ${e.nom}`,
-            attendu: e.chiffreDeLAnnee,
-            calcul: `${lignesDe(e.id).map((l) => eur(l.chiffreDAffaires)).join(" + ")} = ${eur(e.chiffreDeLAnnee)}`,
-            tolerance: 1,
-          })),
-          {
-            libelle: `Ventes de l'année, ${c.entreprise}`,
-            attendu: k.ventesDeLAnnee,
-            calcul: `${lignesDe("joueur").map((l) => qte(l.ventes)).join(" + ")} = ${qte(k.ventesDeLAnnee)}`,
-            tolerance: 1,
-          },
-        ];
+      question: () => "Regroupez les lignes par clientèle et additionnez : le chiffre d'affaires du semestre de chaque clientèle, à l'euro.",
+      champs: () => {
+        const k = donneesALInformation();
+        return k.parClientele.map((g) => ({
+          libelle: `Chiffre d'affaires du semestre, ${g.nom}`,
+          attendu: g.chiffre,
+          calcul: `${k.lignes.filter((l) => l.clientele === g.code).map((l) => eur(l.chiffreDAffaires)).join(" + ")} = ${eur(g.chiffre)}`,
+        }));
       },
-      explication: (c) => {
-        const k = donneesALInformation(c);
-        const premiere = [...k.enseignes].sort((a, b) => b.chiffreDeLAnnee - a.chiffreDeLAnnee)[0]!;
+      explication: () => {
+        const k = donneesALInformation();
         return [
-          `Sur l'année, ${premiere.nom} fait le plus gros chiffre d'affaires : ${eur(premiere.chiffreDeLAnnee)}. Les ${qte(k.lignes.length)} lignes de l'extrait sont devenues ${qte(k.enseignes.length)} totaux, un par enseigne : c'est un regroupement.`,
-          "Une requête le fait en une phrase. En langage de requête (SQL), elle s'écrit : SELECT Enseigne, SUM(ChiffreAffaires) FROM Ventes GROUP BY Enseigne. SUM additionne ; GROUP BY dit sur quelle colonne regrouper. Pour les ventes, un critère s'ajoute, WHERE : ne garder que les lignes de l'entreprise.",
+          `Les ${qte(k.lignes.length)} lignes de l'extrait sont devenues ${qte(k.parClientele.length)} totaux, un par clientèle : c'est un regroupement.`,
+          "Une requête le fait en une phrase. En langage de requête (SQL), elle s'écrit : SELECT Clientele, SUM(ChiffreAffaires) FROM Ventes GROUP BY Clientele. SUM additionne ; GROUP BY dit sur quelle colonne regrouper.",
         ];
       },
     },
@@ -285,33 +158,16 @@ export const DES_DONNEES_A_L_INFORMATION: Chapitre = {
       type: "choix",
       titre: "Le critère et le regroupement",
       notions: ["dashboard"],
-      question: (c) =>
-        `La direction veut connaître, trimestre par trimestre, le chiffre d'affaires de ses concurrents réunis. Quelle requête lui répond ? (${c.entreprise} est l'entreprise ; ses concurrents sont les autres enseignes.)`,
-      // La bonne réponse est la même dans toutes les entreprises : la question porte sur la méthode.
-      options: (c) => {
-        const k = donneesALInformation(c);
-        const resultat = `Au 1er trimestre, la requête donne ${eur(k.concurrentsAuPremier)}.`;
+      question: () => "La direction veut connaître, mois par mois, le chiffre d'affaires des particuliers. Quelle requête lui répond ?",
+      options: () => {
+        const k = donneesALInformation();
+        const janvier = k.lignes.find((l) => l.mois === 1 && l.clientele === "particuliers")!;
+        const resultat = `En janvier, la requête donne ${eur(janvier.chiffreDAffaires)}.`;
         return [
-          {
-            texte: "Garder les lignes des concurrents, regrouper par trimestre, additionner",
-            juste: true,
-            retour: `Oui : le critère écarte les lignes ${dE(c.entreprise)}, le regroupement fait un total par trimestre, la somme additionne. ${resultat}`,
-          },
-          {
-            texte: "Garder les lignes des concurrents, regrouper par enseigne, additionner",
-            juste: false,
-            retour: `Non : regrouper par enseigne donne le total de l'année de chaque concurrent, pas celui de chaque trimestre. ${resultat}`,
-          },
-          {
-            texte: "Garder toutes les lignes, regrouper par trimestre, additionner",
-            juste: false,
-            retour: `Non : sans critère, les lignes ${dE(c.entreprise)} entrent dans le total, qui devient celui de toutes les enseignes. ${resultat}`,
-          },
-          {
-            texte: "Garder les lignes des concurrents, regrouper par trimestre, faire la moyenne",
-            juste: false,
-            retour: `Non : la moyenne donnerait le chiffre d'affaires d'un concurrent moyen, pas celui des concurrents réunis. ${resultat}`,
-          },
+          { texte: "Garder les lignes des particuliers, regrouper par mois, additionner", juste: true, retour: `Oui : le critère écarte les lignes de ${CAMPUSTECH().nom}, le regroupement fait un total par mois, la somme additionne. ${resultat}` },
+          { texte: "Garder les lignes des particuliers, regrouper par clientèle, additionner", juste: false, retour: `Non : regrouper par clientèle donne le total du semestre des particuliers, pas celui de chaque mois. ${resultat}` },
+          { texte: "Garder toutes les lignes, regrouper par mois, additionner", juste: false, retour: `Non : sans critère, les lignes de ${CAMPUSTECH().nom} entrent dans le total, qui devient celui de toutes les clientèles. ${resultat}` },
+          { texte: "Garder les lignes des particuliers, regrouper par mois, faire la moyenne", juste: false, retour: `Non : chaque mois n'a qu'une ligne de particuliers ; la moyenne ne réunit rien, et ne répondrait pas à une question sur plusieurs clientèles. ${resultat}` },
         ];
       },
     },
@@ -319,44 +175,25 @@ export const DES_DONNEES_A_L_INFORMATION: Chapitre = {
       id: "critere-et-part",
       type: "montants",
       titre: "Un critère, puis une part",
-      notions: ["revenue", "demand_market_share", "seasonality"],
+      notions: ["revenue", "dashboard"],
       tableau: tableDesVentes,
-      question: (c) =>
-        `Filtrez les lignes du premier semestre (critère : trimestre 1 ou 2), puis celles du second (trimestre 3 ou 4). Pour chacun, calculez le chiffre d'affaires des enseignes réunies, puis la part ${dE(c.entreprise)} dans ce total, en pourcentage au dixième.`,
-      champs: (c) => {
-        const k = donneesALInformation(c);
+      question: () =>
+        `Filtrez les lignes du premier trimestre (critère : janvier, février ou mars), puis celles du deuxième (avril, mai ou juin). Pour chacun, calculez le chiffre d'affaires de toutes les clientèles, puis la part de ${CAMPUSTECH().nom} dans ce total, en pourcentage au dixième.`,
+      champs: () => {
+        const k = donneesALInformation();
+        const ct = CAMPUSTECH().nom;
         return [
-          {
-            libelle: "Chiffre d'affaires des enseignes, premier semestre",
-            attendu: k.premier.total,
-            calcul: `Les lignes des trimestres 1 et 2, additionnées : ${eur(k.premier.total)}`,
-            tolerance: 1,
-          },
-          {
-            libelle: `Part ${dE(c.entreprise)}, premier semestre (%)`,
-            attendu: k.premier.part,
-            calcul: `${eur(k.premier.deLEntreprise)} ÷ ${eur(k.premier.total)} × 100 = ${pct(k.premier.part)}`,
-            tolerance: 0.1,
-          },
-          {
-            libelle: "Chiffre d'affaires des enseignes, second semestre",
-            attendu: k.second.total,
-            calcul: `Les lignes des trimestres 3 et 4, additionnées : ${eur(k.second.total)}`,
-            tolerance: 1,
-          },
-          {
-            libelle: `Part ${dE(c.entreprise)}, second semestre (%)`,
-            attendu: k.second.part,
-            calcul: `${eur(k.second.deLEntreprise)} ÷ ${eur(k.second.total)} × 100 = ${pct(k.second.part)}`,
-            tolerance: 0.1,
-          },
+          { libelle: "Chiffre d'affaires du premier trimestre", attendu: k.premier.total, calcul: `Les lignes de janvier, février et mars, additionnées : ${eur(k.premier.total)}` },
+          { libelle: `Part de ${ct}, premier trimestre (%)`, attendu: k.premier.part, calcul: `${eur(k.premier.campustech)} ÷ ${eur(k.premier.total)} × 100 = ${pct(k.premier.part)}`, tolerance: 0.1 },
+          { libelle: "Chiffre d'affaires du deuxième trimestre", attendu: k.second.total, calcul: `Les lignes d'avril, mai et juin, additionnées : ${eur(k.second.total)}` },
+          { libelle: `Part de ${ct}, deuxième trimestre (%)`, attendu: k.second.part, calcul: `${eur(k.second.campustech)} ÷ ${eur(k.second.total)} × 100 = ${pct(k.second.part)}`, tolerance: 0.1 },
         ];
       },
-      explication: (c) => {
-        const k = donneesALInformation(c);
+      explication: () => {
+        const k = donneesALInformation();
         return [
-          `La part ${dE(c.entreprise)} passe de ${pct(k.premier.part)} à ${pct(k.second.part)} du chiffre d'affaires des enseignes, d'un semestre à l'autre. Le critère choisit les lignes, la somme les réunit, la division les compare : trois traitements pour une information.`,
-          "Une part se calcule toujours dans un total qui a le même critère : le chiffre d'affaires de l'entreprise au second semestre, divisé par celui de toutes les enseignes au second semestre, jamais sur l'année.",
+          `La part de ${CAMPUSTECH().nom} passe de ${pct(k.premier.part)} à ${pct(k.second.part)} du chiffre d'affaires, d'un trimestre à l'autre. Le critère choisit les lignes, la somme les réunit, la division les compare : trois traitements pour une information.`,
+          "Une part se calcule toujours dans un total qui a le même critère : le chiffre d'affaires d'une clientèle au deuxième trimestre, divisé par celui de toutes les clientèles au deuxième trimestre, jamais sur le semestre.",
         ];
       },
     },
@@ -364,53 +201,115 @@ export const DES_DONNEES_A_L_INFORMATION: Chapitre = {
       id: "decider",
       type: "choix",
       titre: "Ce que l'information permet de décider",
-      notions: ["demand_market_share", "dashboard"],
+      notions: ["payment_terms", "dashboard"],
       question: (c) => {
         const k = donneesALInformation(c);
-        return `D'un semestre à l'autre, la part ${dE(c.entreprise)} dans le chiffre d'affaires des enseignes passe de ${pct(k.premier.part)} à ${pct(k.second.part)}. Que dit cette information ${dE(c.entreprise)} ? (Selon la règle du cours, une part qui bouge de moins de ${points(PART_STABLE)} est stable.)`;
+        return `D'un trimestre à l'autre, la part de ${CAMPUSTECH().nom} dans le chiffre d'affaires ${dE(c.entreprise)} passe de ${pct(k.premier.part)} à ${pct(k.second.part)}. Que dit cette information ? (Selon la règle du cours, une part qui bouge de moins de ${points(PART_STABLE)} est stable.)`;
       },
       options: (c) => {
         const k = donneesALInformation(c);
-        const ecart = `${k.ecart > 0 ? "+" : ""}${points(k.ecart).replace(/^-/, "−")} d'un semestre à l'autre`;
-        const partis = k.partis.map((e) => e.nom).join(" et ");
-        const neVendPlus = `${partis} ${k.partis.length > 1 ? "ne vendent" : "ne vend"} plus`;
-        const non = `Non : ${ecart}${k.partis.length > 0 ? `, et ${neVendPlus} à la fin de l'année` : ", et chaque concurrent vend encore à la fin de l'année"}.`;
-        const oui = (texte: string) => `Oui : ${ecart}. ${texte}`;
+        const ecart = `${k.ecart > 0 ? "+" : "−"}${points(k.ecart)} d'un trimestre à l'autre`;
+        const ct = CAMPUSTECH().nom;
         return [
           {
-            texte: "Elle gagne du terrain, surtout parce qu'un concurrent a cessé de vendre",
-            juste: k.lecture === "monte-depart",
-            retour:
-              k.lecture === "monte-depart"
-                ? oui(
-                    `${neVendPlus} : ${k.partis.length > 1 ? "leurs" : "ses"} clients se répartissent entre les enseignes qui restent. L'information dit où porter l'effort : servir cette demande qui se libère, sans croire que l'entreprise a battu ses concurrents.`,
-                  )
-                : non,
-          },
-          {
-            texte: "Elle gagne du terrain sur des concurrents qui vendent toujours",
-            juste: k.lecture === "monte",
-            retour:
-              k.lecture === "monte"
-                ? oui("Les mêmes enseignes vendent encore : l'entreprise prend une plus grande part du même marché. L'information confirme les choix de l'année ; on les garde, et on cherche ce qui a fait la différence.")
-                : non,
-          },
-          {
-            texte: "Elle garde sa place : sa part ne bouge presque pas",
-            juste: k.lecture === "stable",
-            retour:
-              k.lecture === "stable"
-                ? oui("Rien n'a changé dans le partage du marché. L'information ne pousse à rien changer, mais elle dit que l'entreprise n'a pris aucun client à ses concurrents : pour grandir, il faudra un autre levier.")
-                : non,
-          },
-          {
-            texte: "Elle perd du terrain : sa part recule",
+            texte: `${c.entreprise} dépend moins de ${ct} : sa part recule`,
             juste: k.lecture === "baisse",
             retour:
               k.lecture === "baisse"
-                ? oui("Les concurrents prennent une plus grande part du marché. L'information pousse à chercher pourquoi : le prix, la qualité, la communication.")
-                : non,
+                ? `Oui : ${ecart}. ${ct} commande autant, mais les particuliers achètent de plus en plus. Un client qui paie en retard pèse moins dans les ventes, et donc dans la trésorerie : l'information rassure, sans dispenser de relancer ${ct}.`
+                : `Non : ${ecart}.`,
           },
+          { texte: `${c.entreprise} dépend autant de ${ct} : sa part ne bouge presque pas`, juste: k.lecture === "stable", retour: k.lecture === "stable" ? `Oui : ${ecart}.` : `Non : ${ecart}.` },
+          { texte: `${c.entreprise} dépend plus de ${ct} : sa part monte`, juste: k.lecture === "monte", retour: k.lecture === "monte" ? `Oui : ${ecart}.` : `Non : ${ecart}.` },
+        ];
+      },
+    },
+    {
+      id: "garder-sa-part",
+      type: "curseur",
+      titre: "Ce qu'il faudrait pour garder sa part",
+      notions: ["revenue", "dashboard"],
+      question: () => {
+        const k = donneesALInformation();
+        const ct = CAMPUSTECH();
+        return `${ct.nom} commande ${qte(ct.quantites[0]!)} enceintes par mois. Au deuxième trimestre, les particuliers font ${eur(k.second.particuliers)}. Faites varier les enceintes que ${ct.nom} commanderait chaque mois du deuxième trimestre : une droite donne son chiffre d'affaires, l'autre ce qu'il lui faudrait pour peser autant qu'au premier trimestre, ${pct(k.premier.part)} du total. Placez le curseur sur la plus petite commande qui lui garde sa part.`;
+      },
+      grandeur: () => ({ libelle: "Enceintes commandées chaque mois", unite: "enceintes" }),
+      cible: () => ({ attendu: commandePourGarderLaPart(FICHE_DE_GESTION), min: 300, max: 600 }),
+      zones: ["CampusTech garde sa part", "La part de CampusTech recule"],
+      montrer: "Montrer la commande",
+      lecture: (_c, q) => {
+        const k = donneesALInformation();
+        const prix = FICHE_DE_GESTION.moisDeReference.prix;
+        const ca = auCentime(3 * q * prix);
+        return [
+          { libelle: "Chiffre d'affaires de CampusTech, deuxième trimestre", montant: ca, fort: true },
+          { libelle: "Chiffre d'affaires du deuxième trimestre", montant: auCentime(k.second.particuliers + ca) },
+          { libelle: "Ce qu'il faudrait pour garder la part du premier trimestre", montant: auCentime((k.premier.campustech / k.premier.total) * (k.second.particuliers + ca)) },
+        ];
+      },
+      droites: () => {
+        const k = donneesALInformation();
+        const prix = FICHE_DE_GESTION.moisDeReference.prix;
+        const part = k.premier.campustech / k.premier.total;
+        return { produit: (q) => 3 * q * prix, cout: (q) => part * (k.second.particuliers + 3 * q * prix), libelles: ["Chiffre d'affaires de CampusTech", "Ce qu'il faudrait"] };
+      },
+      explication: () => {
+        const q = commandePourGarderLaPart(FICHE_DE_GESTION);
+        const ct = CAMPUSTECH();
+        return [
+          `Il faudrait que ${ct.nom} commande ${qte(q)} enceintes par mois au lieu de ${qte(ct.quantites[3]!)} pour peser autant qu'au premier trimestre. Elle ne le fait pas : sa part recule parce que les autres ventes grandissent, pas parce qu'elle achète moins.`,
+          "Une part dépend de deux nombres : ce qu'on compte, et le total. Elle baisse quand le total monte plus vite.",
+        ];
+      },
+    },
+    {
+      id: "le-laboratoire-du-filtre",
+      type: "simulation",
+      titre: "Le laboratoire du filtre",
+      notions: ["dashboard", "revenue"],
+      question: () => `Un filtre ne garde que les lignes d'un mois. Choisissez le mois, et lisez la part de ${CAMPUSTECH().nom} dans le chiffre d'affaires de ce mois.`,
+      leviers: () => [
+        {
+          code: "mois",
+          libelle: "Mois filtré",
+          unite: "",
+          min: 1,
+          max: FICHE_DE_GESTION.semestre.mois.length,
+          pas: 1,
+          depart: 1,
+          choix: FICHE_DE_GESTION.semestre.mois.map((m, i) => ({ valeur: i + 1, libelle: majuscule(m.nom) })),
+        },
+      ],
+      lecture: (_c, p) => {
+        const m = donneesALInformation().parMois[p.mois! - 1]!;
+        const d = donneesALInformation().parMois[0]!;
+        return [
+          { libelle: "Chiffre d'affaires du mois", montant: m.total, reference: d.total },
+          { libelle: "Chiffre d'affaires de CampusTech", montant: m.campustech, reference: d.campustech },
+          { libelle: "Part de CampusTech", montant: m.part, unite: "%", reference: d.part, fort: true },
+        ];
+      },
+      defi: () => {
+        const k = donneesALInformation();
+        const juste = k.parMois.indexOf(k.moisLePlusFaible) + 1;
+        return {
+          consigne: "Trouvez le mois où CampusTech pèse le moins dans le chiffre d'affaires.",
+          atteint: (p) => p.mois === juste,
+          indice: (p) => {
+            const m = k.parMois[p.mois! - 1]!;
+            return `En ${m.nom}, ${CAMPUSTECH().nom} fait ${pct(m.part)} du chiffre d'affaires. Un autre mois fait-il moins ?`;
+          },
+          solution: { mois: juste },
+        };
+      },
+      explication: (c, p) => {
+        const k = donneesALInformation(c);
+        const m = k.parMois[p.mois! - 1]!;
+        const max = k.parMois.reduce((g, x) => (x.part > g.part ? x : g));
+        return [
+          `Défi relevé : en ${m.nom}, ${CAMPUSTECH().nom} ne fait plus que ${pct(m.part)} du chiffre d'affaires ${dE(c.entreprise)}. Sa part la plus haute est en ${max.nom}, ${pct(max.part)} : le mois le plus court, où les particuliers achètent le moins.`,
+          "Le même filtre, posé sur un autre mois, donne une autre information. Choisir le critère, c'est choisir la question.",
         ];
       },
     },
@@ -422,11 +321,11 @@ export const DES_DONNEES_A_L_INFORMATION: Chapitre = {
       texte: (c) => {
         const k = donneesALInformation(c);
         return [
-          `Chez ${c.entreprise}, ${qte(k.lignes.length)} lignes de données brutes ont donné une information : une part du chiffre d'affaires des enseignes passée de ${pct(k.premier.part)} à ${pct(k.second.part)} d'un semestre à l'autre.`,
-          "Une requête choisit les lignes (le critère), les range en groupes (le regroupement) et calcule (somme, moyenne, part). Le bon traitement dépend de la question : la même table répond à beaucoup de questions, à condition de choisir le critère et le regroupement qui vont avec chacune.",
+          `Chez ${c.entreprise}, ${qte(k.lignes.length)} lignes de données brutes ont donné une information : la part de ${CAMPUSTECH().nom} dans le chiffre d'affaires est passée de ${pct(k.premier.part)} à ${pct(k.second.part)} d'un trimestre à l'autre.`,
+          "Une requête choisit les lignes (le critère), les range en groupes (le regroupement) et calcule (somme, moyenne, part). Le bon traitement dépend de la question. Dans l'arène, les tableaux de fin de tour sont déjà des informations : demandez-vous de quelles données elles viennent.",
         ];
       },
-      repere: () => "Données brutes, puis critère, regroupement et calcul : l'information. Elle ne vaut que si elle répond à la question posée, et elle se lit avec ce qui s'est passé sur le marché.",
+      repere: () => "Données brutes, puis critère, regroupement et calcul : l'information. Elle ne vaut que si elle répond à la question posée.",
     },
   ],
 };

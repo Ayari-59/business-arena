@@ -1,6 +1,6 @@
 import { accordPluriel } from "../../accords";
 import type { Cas } from "../../cas";
-import { ENTREPRISES_DES_OBJECTIFS, TAUX_DE_CAPACITE_VISE, suiviDesObjectifs, type Verdict } from "../../chapitres/se-fixer-des-objectifs";
+import { ENTREPRISES_DES_OBJECTIFS, POURQUOI_LES_OBJECTIFS, TAUX_DE_CAPACITE_VISE, suiviDesObjectifs, type Verdict } from "../../chapitres/se-fixer-des-objectifs";
 import type { Situation } from "../types";
 
 /**
@@ -16,7 +16,9 @@ import type { Situation } from "../types";
  *
  * Le cas est neuf par sa question : le chapitre suit un objectif posé, le cas éprouve un
  * objectif proposé avant de le poser. Les chiffres sont ceux du chapitre (`suiviDesObjectifs`),
- * avec le taux du directeur.
+ * avec le taux du directeur : l'année N de NOVA, dans le monde du cours (nova-capacite.ts). Le cas
+ * se jouait dans huit entreprises de l'arène ; chez NOVA, l'objectif proposé (6 300 enceintes par
+ * trimestre, 25 200 sur l'année) dépasse la demande de N (23 609) : il est mal posé.
  */
 
 /**
@@ -58,10 +60,7 @@ export const UN_OBJECTIF_PLUS_AMBITIEUX: Situation = {
     "Répondre au directeur commercial, chiffre à l'appui",
   ],
   libre: false,
-  entreprises: {
-    codes: ENTREPRISES_DES_OBJECTIFS,
-    pourquoi: "ce cas éprouve un objectif de ventes, et chez VOLT FITNESS les ventes du trimestre comptent d'abord des abonnés gardés.",
-  },
+  entreprises: { codes: ENTREPRISES_DES_OBJECTIFS, pourquoi: POURQUOI_LES_OBJECTIFS },
   etapes: [
     {
       id: "demande",

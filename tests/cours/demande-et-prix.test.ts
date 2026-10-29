@@ -1,79 +1,60 @@
 import { describe, expect, it } from "vitest";
-import { casDeLEntreprise } from "../../src/config/cours/cas";
 import { DEMANDE_ET_PRIX, demandeEtPrix } from "../../src/config/cours/chapitres/demande-et-prix";
-import { prixRejoues } from "../../src/config/cours/decision";
-import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
-import { CONCEPTS } from "../../src/config/pedagogy/concepts";
-import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
-import type { Cas } from "../../src/config/cours/cas";
-import type { Etape, EtatDuCours } from "../../src/config/cours/types";
+import { PROGRAMME } from "../../src/config/cours/registre";
+import { REPERCUTER_LA_HAUSSE_DU_FOURNISSEUR, hausseDuFournisseur } from "../../src/config/cours/situations/par-chapitre/repercuter-la-hausse-du-fournisseur";
+import { QUEL_PRIX_POUR_LA_SAISON } from "../../src/config/cours/situations/quel-prix-pour-la-saison";
+import { NOVA, attendus, gardeDuCas, gardeDuCurseur, gardeDuLaboratoire, gardesDeTexte, juste } from "./gardes-du-marche";
 
 /**
- * LA DEMANDE RÉPOND AU PRIX, SUR LE TRIMESTRE QUE L'ARÈNE REJOUE.
+ * LA DEMANDE RÉPOND AU PRIX (bac STMG mercatique, palier 1), SUR LA DROITE DE DEMANDE DE NOVA DU
+ * MONDE DU COURS, ET SES CAS : RÉPERCUTER LA HAUSSE DU FOURNISSEUR, QUEL PRIX POUR LA SAISON ?
  *
- * La demande est celle du moteur (ventes et ventes perdues) aux trois prix ; l'élasticité se
- * recompose ; la bonne réponse suit l'élasticité ; l'explication du chiffre d'affaires suit son
- * signe, y compris le cas limite où la demande peu élastique fait tout de même baisser le
- * chiffre d'affaires sur une hausse de dix pour cent.
+ * Refait à la main : 16 755 − 203 × prix enceintes par trimestre, à l'enceinte inférieure
+ * (nova-gestion.ts) ; 5 975 à 53,10 €, 4 778 à 59 €, 3 580 à 64,90 € ; 38 € de coût variable ; la
+ * ligne de 7 000 enceintes.
  */
 
-function textesDe(e: Etape, cas: Cas, etat: EtatDuCours): string[] {
-  const tableau = e.tableau ? [e.tableau(cas).titre, ...e.tableau(cas).lignes.flatMap((l) => [l.libelle, ...l.valeurs])] : [];
-  switch (e.type) {
-    case "lecture":
-      return [...e.texte(cas), e.repere?.(cas) ?? "", ...tableau];
-    case "choix":
-      return [e.question(cas, etat), ...e.options(cas, etat).flatMap((o) => [o.texte, o.retour]), ...tableau];
-    case "montants":
-      return [e.question(cas, etat), ...e.champs(cas, etat).flatMap((c) => [c.libelle, c.calcul, String(c.attendu)]), ...e.explication(cas, etat), ...tableau];
-    default:
-      return [];
-  }
-}
+const d = (x: number) => Math.round(x * 10) / 10;
+const demande = (p: number) => Math.floor(16_755 - 203 * p + 1e-9);
+const marge = (p: number) => Math.round(Math.min(demande(p), 7_000) * (p - 38) * 100) / 100;
 
-describe.each(ENTREPRISES_DU_COURS)("la demande et le prix chez %s", (code) => {
-  const cas = casDeLEntreprise(code);
-  const d = demandeEtPrix(cas);
-  const chapitre = chapitreDuCas(DEMANDE_ET_PRIX, cas);
-
-  it("la demande aux trois prix est celle du moteur, et elle baisse quand le prix monte", () => {
-    const v = prixRejoues(code);
-    expect([d.bas.demande, d.base.demande, d.haut.demande]).toEqual(v.map((x) => x.quantite + x.perdues));
-    expect(d.bas.demande).toBeGreaterThan(d.base.demande);
-    expect(d.haut.demande).toBeLessThan(d.base.demande);
+describe("la demande répond au prix", () => {
+  it("au programme du bac STMG, chez NOVA seule ; ses cas jouent chez elle", () => {
+    expect(PROGRAMME.stmg[1]).toContain(DEMANDE_ET_PRIX.titre);
+    expect(DEMANDE_ET_PRIX.entreprises?.codes).toEqual(["nova"]);
+    gardeDuCas(REPERCUTER_LA_HAUSSE_DU_FOURNISSEUR, DEMANDE_ET_PRIX);
+    expect(QUEL_PRIX_POUR_LA_SAISON.entreprises?.codes).toEqual(["nova"]);
+    gardesDeTexte(QUEL_PRIX_POUR_LA_SAISON);
   });
 
-  it("l'élasticité se recompose, et la bonne réponse la suit", () => {
-    expect(d.elasticite).toBeCloseTo(d.variationDemande / d.variationPrix, 2);
-    expect(d.elasticite).toBeLessThan(0);
-    const etape = chapitre.etapes.find((e) => e.id === "elastique");
-    if (etape?.type !== "choix") throw new Error("Pas d'étape elastique");
-    expect(etape.options(cas, { soldes: {} }).find((o) => o.juste)!.texte).toMatch(Math.abs(d.elasticite) > 1 ? /^Élastique/ : /^Peu élastique/);
+  it("les textes sont propres, une seule bonne réponse, les notions existent", () => {
+    gardesDeTexte(DEMANDE_ET_PRIX);
   });
 
-  it("l'explication du chiffre d'affaires suit son signe, cas limite compris", () => {
-    expect(d.caAvant).toBe(Math.round(d.base.demande * d.base.prix));
-    expect(d.caApres).toBe(Math.round(d.haut.demande * d.haut.prix));
-    expect(d.variationCa).toBeCloseTo((d.caApres / d.caAvant - 1) * 100, 1);
-    const etape = chapitre.etapes.find((e) => e.id === "chiffre-d-affaires");
-    if (etape?.type !== "montants") throw new Error("Pas d'étape chiffre-d-affaires");
-    const texte = etape.explication(cas, { soldes: {} }).join(" ");
-    expect(texte).toMatch(d.variationCa >= 0 ? /monte/ : d.elastique ? /élastique\./ : /tout juste/);
+  it("l'élasticité : +10 % de prix, −25,1 % de demande, −2,51 ; élastique ; le chiffre d'affaires baisse", () => {
+    expect([demande(53.1), demande(59), demande(64.9)]).toEqual([5_975, 4_778, 3_580]);
+    expect(attendus(DEMANDE_ET_PRIX, "elasticite")).toEqual([10, d((3_580 / 4_778 - 1) * 100), Math.round((-25.1 / 10) * 100) / 100]);
+    expect(juste(DEMANDE_ET_PRIX, "elastique")).toEqual(["Élastique : elle baisse plus que le prix ne monte"]);
+    expect(attendus(DEMANDE_ET_PRIX, "chiffre-d-affaires")).toEqual([4_778 * 59, Math.round(3_580 * 64.9), d((Math.round(3_580 * 64.9) / (4_778 * 59) - 1) * 100)]);
+    expect(demandeEtPrix(NOVA).gagneDemandeEnBaissant).toBe(d((5_975 / 4_778 - 1) * 100));
   });
 
-  it("aucun texte ne sort undefined ni « de le » ; une seule bonne réponse ; les notions existent", () => {
-    const codes = new Set(CONCEPTS.map((x) => x.code));
-    for (const [i, e] of chapitre.etapes.entries()) {
-      const etat = etatAvant(chapitre, cas, i);
-      for (const x of textesDe(e, cas, etat)) {
-        expect(x, `${e.id} : ${x}`).not.toMatch(/undefined|NaN|Infinity|\[object/);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/(^|\s)(de|à) [Ll]es? /);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/ [-–—] /);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/\bde [aeiouyéèêAEIOUYÉ]/);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/\bque [AEIOUYÉ]/);
-      }
-      if (e.type === "choix") expect(e.options(cas, etat).filter((o) => o.juste), e.id).toHaveLength(1);
-      for (const n of e.notions ?? []) expect(codes.has(n), `${e.id} : ${n}`).toBe(true);
-    }
+  it("le curseur : à 61 €, 4 372 enceintes laissent 100 556 €, au moins les 100 338 € de 59 € ; à 62 €, 100 056 €", () => {
+    gardeDuCurseur(DEMANDE_ET_PRIX, "jusqu-ou-monter", 61);
+    expect([marge(59), marge(61), marge(62)]).toEqual([4_778 * 21, 4_372 * 23, 4_169 * 24]);
+  });
+
+  it("le laboratoire : 60 € laisse la plus grande marge, 4 575 × 22 = 100 650 €", () => {
+    const e = gardeDuLaboratoire(DEMANDE_ET_PRIX, "le-laboratoire-du-prix");
+    expect(e.defi(NOVA).solution).toEqual({ prix: 60 });
+    expect([marge(59), marge(60), marge(61)]).toEqual([100_338, 100_650, 100_556]);
+  });
+});
+
+describe("répercuter la hausse du fournisseur", () => {
+  it("5 % de hausse : 61,95 €, −12,55 % de demande, 4 178 enceintes, 258 827 € de chiffre d'affaires", () => {
+    const r = hausseDuFournisseur(NOVA);
+    expect([r.nouveauPrix, r.variationDemande, r.demandePrevue, r.caPrevu]).toEqual([61.95, -12.55, Math.round(4_778 * (1 - 0.1255)), Math.round(4_178 * 61.95)]);
+    expect(r.variationCa).toBe(d((Math.round(4_178 * 61.95) / (4_778 * 59) - 1) * 100));
   });
 });

@@ -188,14 +188,17 @@ export const GAMME_DE_NOVA: GammeDeNova = {
 
 /**
  * LA DROITE DE DEMANDE DU TRIMESTRE (hypothèse du cours, figée) : au prix p, les clients demandent
- * à NOVA 17 700 − 203 × p enceintes par trimestre, arrondies à l'unité inférieure (on ne vend pas
- * une fraction d'enceinte). Elle est ajustée par les moindres carrés, puis arrondie, sur les trois
- * rejeux du premier trimestre par l'arène (relevés le 27 octobre 2026) : 6 911, 5 762 et 4 512
- * enceintes demandées à 53,10 €, 59 € et 64,90 €. La droite en donne 6 920, 5 723 et 4 525 :
- * des écarts de 9, −39 et 13 enceintes. Elle s'annule à 87,19 € ; chaque euro de hausse coûte
- * 203 enceintes demandées.
+ * à NOVA 16 755 − 203 × p enceintes par trimestre de janvier à mars, arrondies à l'unité inférieure
+ * (on ne vend pas une fraction d'enceinte). UNE SEULE DEMANDE DE NOVA (réconciliation d'octobre
+ * 2026) : à 59 €, la droite donne les 4 778 enceintes vendues au premier trimestre de N (1 270 +
+ * 1 130 + 1 418 aux particuliers, 3 × 320 à CampusTech), car toute la demande de N a été servie
+ * (nova-capacite.ts) : 16 755 = 4 778 + 203 × 59. La pente, 203 enceintes par euro, est celle que
+ * les moindres carrés tiraient des trois rejeux du premier trimestre par l'arène (6 911, 5 762 et
+ * 4 512 enceintes à 53,10 €, 59 € et 64,90 €). Les autres trimestres suivent la saison de N
+ * (monde/economie-et-marketing.ts) ; le trimestre type du marché à trois est ce premier trimestre
+ * (monde/marche-a-trois.ts). La garde tests/cours/une-seule-nova.test.ts compare ces fiches.
  */
-export const DEMANDE_A_PRIX_NUL = 17_700;
+export const DEMANDE_A_PRIX_NUL = 16_755;
 export const DEMANDE_PERDUE_PAR_EURO = 203;
 
 /** La capacité de la ligne de montage, en enceintes par trimestre (celle de l'arène). */

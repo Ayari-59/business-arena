@@ -34,7 +34,7 @@ const c = (x: number) => Math.round(x * 100) / 100 + 0;
 // ─── La fiche, refaite à la main ───
 const cv = m.coutVariable.composants + m.coutVariable.autres;
 const fixes = 3 * (m.chargesFixes.loyer + m.chargesFixes.personnel + m.chargesFixes.amortissement);
-const demande = (p: number) => Math.floor(17_700 - 203 * p + 1e-9);
+const demande = (p: number) => Math.floor(16_755 - 203 * p + 1e-9);
 /** Le trimestre à la main : ventes = la plus petite de la demande et du disponible (fabriqué, puis sous-traité). */
 function trimestre(p: number, production = 4_778, plafond = 0) {
   const dem = demande(p);
@@ -232,8 +232,8 @@ describe("décider : prix, fabriquer ou acheter, chez NOVA du monde du cours", (
     expect([cv, fixes, d.production, d.capacite, d.coutDuSousTraitant]).toEqual([38, 93_549, 1_590 + 1_450 + 1_738, 7_000, 52]);
     expect(d.production).toBe(4_778);
     const t = trimestre(59);
-    expect(t).toEqual({ demande: 5_723, fab: 4_778, st: 0, ventes: 4_778, nonServie: 945, stock: 0, marge: 100_338, resultat: 6_789 });
-    expect([trimestre(53.1).resultat, trimestre(59).resultat, trimestre(64.9).resultat]).toEqual([-21_401.2, 6_789, 28_173.5]);
+    expect(t).toEqual({ demande: 4_778, fab: 4_778, st: 0, ventes: 4_778, nonServie: 0, stock: 0, marge: 100_338, resultat: 6_789 });
+    expect([trimestre(53.1).resultat, trimestre(59).resultat, trimestre(64.9).resultat]).toEqual([-21_401.2, 6_789, 2_753]);
   });
 
   it("les étapes guidées : à volume constant, puis le volume qu'une baisse exige", () => {
@@ -257,10 +257,10 @@ describe("décider : prix, fabriquer ou acheter, chez NOVA du monde du cours", (
     expect(6_644 * 15.1).toBeLessThan(100_338);
   });
 
-  it("le laboratoire du prix : le meilleur résultat sans demande non servie ni stock, à 62,60 €", () => {
+  it("le laboratoire du prix : le meilleur résultat sans demande non servie ni stock, à 60,30 €", () => {
     const l = laboratoire(ch, "le-laboratoire-du-prix");
     expect(l.depart).toEqual({ prix: 59, production: 4_778, sousTraitance: 0 });
-    expect(l.solution).toEqual({ prix: 62.6, production: 4_992, sousTraitance: 0 });
+    expect(l.solution).toEqual({ prix: 60.3, production: 4_514, sousTraitance: 0 });
     expect(l.reussi).toEqual([false, true]);
     // La solution refaite à la main : toute la demande servie, au prix de la grille de 0,10 € qui donne le plus.
     let meilleur = { prix: 0, resultat: -Infinity };
@@ -270,8 +270,8 @@ describe("décider : prix, fabriquer ou acheter, chez NOVA du monde du cours", (
       const r = dem <= 7_000 ? dem * (p - cv) - fixes : 7_000 * (p - cv) + (dem - 7_000) * (p - 52) - fixes;
       if (r > meilleur.resultat + 1e-9) meilleur = { prix: p, resultat: c(r) };
     }
-    expect(meilleur).toEqual({ prix: 62.6, resultat: 29_254.2 });
-    expect(demande(62.6)).toBe(4_992);
+    expect(meilleur).toEqual({ prix: 60.3, resultat: 7_113.2 });
+    expect(demande(60.3)).toBe(4_514);
     const lire = (t: ReturnType<typeof trimestre>) => ({
       "Enceintes demandées": t.demande,
       "Enceintes fabriquées et vendues": t.fab,
@@ -283,12 +283,12 @@ describe("décider : prix, fabriquer ou acheter, chez NOVA du monde du cours", (
       "Gain sur le trimestre joué": c(t.resultat - 6_789),
     });
     expect(l.auDepart).toEqual(lire(trimestre(59)));
-    expect(l.aLaSolution).toEqual(lire(trimestre(62.6, 4_992)));
-    expect(l.aLaSolution["Gain sur le trimestre joué"]).toBe(22_465.2);
+    expect(l.aLaSolution).toEqual(lire(trimestre(60.3, 4_514)));
+    expect(l.aLaSolution["Gain sur le trimestre joué"]).toBe(324.2);
     // Le défi ne se relève pas avec du stock, ni avec un prix voisin.
-    expect(l.dd.atteint({ prix: 62.6, production: 7_000, sousTraitance: 0 })).toBe(false);
-    expect(l.dd.atteint({ prix: 62.5, production: demande(62.5), sousTraitance: 0 })).toBe(false);
-    expect(l.dd.atteint({ prix: 62.7, production: demande(62.7), sousTraitance: 0 })).toBe(false);
+    expect(l.dd.atteint({ prix: 60.3, production: 7_000, sousTraitance: 0 })).toBe(false);
+    expect(l.dd.atteint({ prix: 60.2, production: demande(60.2), sousTraitance: 0 })).toBe(false);
+    expect(l.dd.atteint({ prix: 60.4, production: demande(60.4), sousTraitance: 0 })).toBe(false);
     expect(juste(ch, "predire-la-baisse")).toBe("Non : le plan de production les bornera");
   });
 
@@ -302,32 +302,32 @@ describe("décider : prix, fabriquer ou acheter, chez NOVA du monde du cours", (
     // Au plan du trimestre : une droite tant que le plan borne, puis la demande.
     expect(plan!.valeur(p(53.1))).toBe(c(4_778 * 15.1 - fixes));
     expect(plan!.valeur(p(59))).toBe(6_789);
-    expect(plan!.valeur(p(64.9))).toBe(c(4_525 * 26.9 - fixes));
-    // Toute la demande servie : une parabole, au sommet à 62,60 €, la sous-traitance au-delà de 7 000.
-    expect(tout!.valeur(p(53.1))).toBe(c(6_920 * 15.1 - fixes));
-    expect(tout!.valeur(p(62.6))).toBe(29_254.2);
+    expect(plan!.valeur(p(64.9))).toBe(c(3_580 * 26.9 - fixes));
+    // Toute la demande servie : une parabole, au sommet à 60,30 €, la sous-traitance au-delà de 7 000.
+    expect(tout!.valeur(p(53.1))).toBe(c(5_975 * 15.1 - fixes));
+    expect(tout!.valeur(p(60.3))).toBe(7_113.2);
     expect(tout!.valeur(p(75))).toBe(c(demande(75) * 37 - fixes));
     expect(tout!.valeur(p(45))).toBe(c(7_000 * 7 + (demande(45) - 7_000) * (45 - 52) - fixes));
-    expect(tout!.valeur(p(45))).toBe(-55_504);
+    expect(tout!.valeur(p(45))).toBe(-48_889);
   });
 
-  it("l'étape autonome des trois prix, et les verdicts : le plan borne, +10 % est le meilleur des trois", () => {
+  it("l'étape autonome des trois prix, et les verdicts : le plan borne la baisse, le prix du trimestre est le meilleur des trois", () => {
     expect(attendus(ch, "les-trois-prix")).toEqual({
       "Enceintes demandées à −10 %": demande(53.1),
       "Résultat d'exploitation à −10 %": trimestre(53.1).resultat,
       "Enceintes demandées à +10 %": demande(64.9),
       "Résultat d'exploitation à +10 %": trimestre(64.9).resultat,
     });
-    expect(Object.values(attendus(ch, "les-trois-prix"))).toEqual([6_920, -21_401.2, 4_525, 28_173.5]);
+    expect(Object.values(attendus(ch, "les-trois-prix"))).toEqual([5_975, -21_401.2, 3_580, 2_753]);
     expect(juste(ch, "ce-qui-borne")).toBe("Le plan de production : le marché demandait plus que ce qui était fabriqué");
-    expect(juste(ch, "meilleur-prix")).toBe("Prix +10 % (64,90 €)");
+    expect(juste(ch, "meilleur-prix")).toBe("Prix du trimestre (59 €)");
     const borne = ch.etapes.find((e) => e.id === "ce-qui-borne") as EtapeChoix;
-    expect(borne.question(cas, etatVide)).toBe("À −10 %, la demande monte à 6 920 enceintes, mais les ventes restent à 4 778. Qu'est-ce qui les borne ?");
+    expect(borne.question(cas, etatVide)).toBe("À −10 %, la demande monte à 5 975 enceintes, mais les ventes restent à 4 778. Qu'est-ce qui les borne ?");
   });
 
   it("l'expert : le prix qui maximise le résultat, par le calcul", () => {
-    const p = c((17_700 / 203 + 38) / 2);
-    expect(p).toBe(62.6);
+    const p = c((16_755 / 203 + 38) / 2);
+    expect(p).toBe(60.27);
     expect(attendus(ch, "le-prix-optimal")).toEqual({ "Prix qui rend le résultat le plus grand": p, "Enceintes demandées à ce prix": demande(p), "Résultat du trimestre à ce prix": c(demande(p) * (p - cv) - fixes) });
   });
 
@@ -339,36 +339,31 @@ describe("décider : prix, fabriquer ou acheter, chez NOVA du monde du cours", (
     expect(decision(cas).gainDeLaCommande).toBe(54_208);
   });
 
-  it("l'expert : la commande exceptionnelle, son prix plancher au curseur et au centime", () => {
+  it("l'expert : la commande exceptionnelle tient dans la capacité restante, son prix plancher est le coût variable", () => {
     expect(COMMANDE_EXCEPTIONNELLE).toEqual({ quantite: 2_000, prix: 50 });
     const libre = 7_000 - demande(59);
-    const st = 2_000 - libre;
-    const cout = libre * 38 + st * 52;
-    expect([libre, st, cout]).toEqual([1_277, 723, 86_122]);
+    expect(libre).toBe(2_222);
+    const cout = 2_000 * 38;
     expect(attendus(ch, "la-commande-exceptionnelle")).toEqual({
-      "Marge des enceintes fabriquées": libre * 12,
-      "Marge des enceintes sous-traitées": st * (50 - 52),
+      "Marge des enceintes fabriquées": 2_000 * 12,
+      "Marge des enceintes sous-traitées": 0,
       "Marge de la commande entière": 2_000 * 50 - cout,
-      "Prix plancher de la commande": c(cout / 2_000),
+      "Prix plancher de la commande": 38,
     });
-    expect(Object.values(attendus(ch, "la-commande-exceptionnelle"))).toEqual([15_324, -1_446, 13_878, 43.06]);
     expect(curseur(ch, "le-prix-plancher")).toEqual({
-      attendu: 44,
+      attendu: 38,
       bornes: [30, 60],
       droites: [60_000, cout, 120_000, cout],
-      lecture: { "Chiffre d'affaires de la commande": 88_000, "Ce qu'elle coûte en plus (fabriqué et sous-traité)": cout, "Marge de la commande": 88_000 - cout },
+      lecture: { "Chiffre d'affaires de la commande": 76_000, "Ce qu'elle coûte en plus (fabriqué et sous-traité)": cout, "Marge de la commande": 0 },
     });
-    expect(2_000 * 43).toBeLessThan(cout);
+    expect(2_000 * 37).toBeLessThan(cout);
     expect(juste(ch, "predire-la-commande")).toBe("Peut rapporter : seul compte ce qu'elle rapporte face à ce qu'elle coûte en plus");
   });
 
-  it("l'expert : sans sous-traitant, la capacité est le facteur rare", () => {
-    const net = 2_000 * (50 - 38) - 723 * 21;
-    expect(net).toBe(8_817);
-    expect(juste(ch, "sans-sous-traitant")).toBe("Accepter : 8 817 € de plus, une fois perdue la marge des ventes qu'elle chasse");
-    // Le coût complet de janvier, l'erreur de la troisième option : 91 603 € pour 1 590 enceintes.
+  it("l'expert : sans sous-traitant, la commande ne chasse aucune vente : la capacité n'est plus le facteur rare", () => {
+    expect(2_000 * (50 - 38)).toBe(24_000);
+    expect(juste(ch, "sans-sous-traitant")).toBe("Accepter : 24"+"\u202f"+"000 € de plus, une fois perdue la marge des ventes qu'elle chasse");
     expect(decision(cas).coutDeRevientDeJanvier).toBe(c(91_603 / 1_590));
-    expect(c(91_603 / 1_590)).toBe(57.61);
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(ch));
@@ -402,27 +397,24 @@ describe("le cas : monter son prix ?", () => {
     });
   });
 
-  it("le croisement avec la demande, et le prix à rebours : aucune vente perdue jusqu'à 63,65 €", () => {
+  it("le croisement avec la demande : à 61,95 €, 4 179 demandées, 599 ventes perdues ; 59 € est déjà le prix le plus haut qui garde toutes les ventes", () => {
     const dem = demande(61.95);
-    // Le prix le plus haut, au centime, où la demande couvre encore les 4 778 enceintes du plan.
     let limite = 0;
-    for (let k = 6_000; k <= 7_000; k++) if (demande(k / 100) >= 4_778) limite = k / 100;
-    expect([dem, dem - 4_778, limite]).toEqual([5_124, 346, 63.65]);
-    expect(demande(63.66)).toBeLessThan(4_778);
+    for (let k = 5_000; k <= 7_000; k++) if (demande(k / 100) >= 4_778) limite = k / 100;
+    expect([dem, limite]).toEqual([4_179, 59]);
     expect(attendus(s, "la-demande-au-nouveau-prix")).toEqual({
       "Enceintes demandées au nouveau prix": dem,
-      "Demande sans réponse au nouveau prix": dem - 4_778,
+      "Demande sans réponse au nouveau prix": 0,
       "Prix le plus haut qui garde toutes les ventes": limite,
-      "Résultat du trimestre au nouveau prix": c(4_778 * mh - fixes),
+      "Résultat du trimestre au nouveau prix": c(dem * mh - fixes),
     });
-    expect(c(4_778 * mh - fixes)).toBe(20_884.1);
+    expect(c(dem * mh - fixes)).toBe(6_538.05);
   });
 
-  it("le verdict : la hausse ne coûte aucune vente, le plan bornait les ventes", () => {
-    expect(monterSonPrix(cas).verdict).toBe("aucune-vente-perdue");
-    expect(juste(s, "reponse")).toBe("Nous pouvons en perdre 588, et nous n'en perdrons aucune : à 61,95 €, la demande dépasse encore notre production");
-    // L'erreur du distracteur : la demande baisse de 599, plus que 588, mais 945 clients n'étaient pas servis.
-    expect([demande(59) - demande(61.95), demande(59) - 4_778]).toEqual([599, 945]);
+  it("le verdict : 599 ventes perdues, plus que les 588 que la marge supporte : renoncer", () => {
+    expect(monterSonPrix(cas).verdict).toBe("perte-trop-forte");
+    expect(juste(s, "reponse")).toBe("Renoncer : 599 ventes perdues, plus que les 588 que la marge supporte");
+    expect(demande(59) - demande(61.95)).toBe(599);
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le cas", () => verifierLesTextes(s));

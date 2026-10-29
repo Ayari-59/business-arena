@@ -1,88 +1,61 @@
-import { montantEcrit as eur } from "../../../pedagogy/cours/correcteur";
-import { scenarioByCode } from "../../scenarios/registry";
-import { type Cas } from "../cas";
-import { anneeJouee } from "../annee-de-l-arene";
-import { ECART_DE_PRIX } from "../decision";
-import { ENTREPRISES_DU_COURS } from "../metiers";
+import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import type { Cas } from "../cas";
+import {
+  coutVariable,
+  grille,
+  meilleurTarif,
+  prixDeNova,
+  segmentation as segmenter,
+  tarifLePlusBasSansPerte,
+  tarifReserve,
+  type Segment,
+} from "../monde/economie-et-marketing";
+import { ENTREPRISES_DU_MARCHE_DE_NOVA, POURQUOI_LE_MARCHE_DE_NOVA, mercatiqueDe } from "../monde/mercatique-de-nova";
 import type { Chapitre } from "../types";
 
 /**
  * CHAPITRE : SEGMENTER ET CIBLER (Bac STMG, mercatique, palier 1).
  *
- * Un marché n'est pas un bloc : il se découpe en clientèles qui n'attendent pas la même chose.
- * Le chapitre lit les clientèles de l'entreprise (leur taille, ce que l'entreprise y vend, le
- * prix qu'elles jugent normal), calcule le poids de chacune et la part de marché qu'on y tient,
- * puis compare ce qui les fait acheter (le prix, la qualité, la publicité) pour choisir une
- * cible selon l'offre.
+ * Un marché n'est pas un bloc : il se découpe en clientèles qui n'attendent pas la même chose. Le
+ * chapitre lit les trois clientèles de NOVA (leur taille, ce qu'elles demandent à NOVA, ce qu'elles
+ * rapportent, le prix qu'elles jugent normal), calcule le poids de chacune et la part de marché qu'on
+ * y tient, puis compare ce qui les fait acheter (le prix, la qualité, la publicité) pour choisir une
+ * cible selon l'offre. Puis l'expérience : un tarif réservé aux étudiants, la clientèle la plus
+ * sensible au prix. Le curseur cherche jusqu'où le baisser sans perdre de marge ; le laboratoire, le
+ * tarif qui en laisse le plus.
  *
- * Les clientèles et leurs sensibilités sont celles du scénario ; les tailles, les ventes et le
- * chiffre d'affaires, celles du premier trimestre de l'arène. Le chapitre se joue chez les
- * entreprises à une seule offre : là où chaque produit a ses clientèles (une gamme), il y en
- * aurait trop pour une première lecture. Aucune hypothèse n'est ajoutée.
+ * LE CHAPITRE JOUE DANS LE MONDE DU COURS (monde/mercatique-de-nova.ts) : les trois clientèles de la
+ * fiche, dont les droites s'additionnent en celle de NOVA (17 700 − 203 × prix enceintes par
+ * trimestre), la taille de chaque segment au premier trimestre (18 100 enceintes en tout), le prix de
+ * 59 € et le coût variable de 38 €.
+ *
+ * CE QUI A CHANGÉ. Le chapitre lisait les clientèles de l'arène chez cinq entreprises ; il se joue
+ * chez NOVA seule, sur ses trois clientèles.
  */
 
-/** Les entreprises à une seule offre, dont le marché se découpe en quelques clientèles. */
-export const SEGMENTATIONS = ENTREPRISES_DU_COURS.filter((code) => !scenarioByCode(code).scenario.products);
+/** Les entreprises du chapitre : NOVA seule. */
+export const SEGMENTATIONS: readonly string[] = ENTREPRISES_DU_MARCHE_DE_NOVA;
 
+/** La clientèle du tarif réservé : la plus sensible au prix, les étudiants. */
+const CIBLE_DU_TARIF = "etudiants" as const;
+
+/** Les bornes du curseur (à l'euro) et du laboratoire (au demi-euro) : le tarif réservé. */
+const TARIF_DU_CURSEUR = { min: 45, max: 62 } as const;
+const TARIF_DU_LABORATOIRE = { min: 50, max: 59, pas: 0.5 } as const;
+
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const qte = (n: number) => n.toLocaleString("fr-FR");
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
+const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 1 });
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
-export interface Clientele {
-  code: string;
-  nom: string;
-  taille: number;
-  ventes: number;
-  chiffreDAffaires: number;
-  prixNormal: number;
-  /** La demande perdue, en %, si le prix montait de l'écart que l'arène rejoue. */
-  sensibilitePrix: number;
-  sensibiliteQualite: number;
-  sensibilitePublicite: number;
-  part: number;
-  poids: number;
-  aGagner: number;
-}
+const f = (c: Cas) => mercatiqueDe(c);
 
 /** Les clientèles du premier trimestre, et les cibles que leurs sensibilités désignent. */
-export function segmentation(c: Cas) {
-  const s = scenarioByCode(c.code).scenario;
-  const r = anneeJouee(c.code).partie.rounds[0]!.results["joueur"]!;
-  const brutes = s.market.segments
-    .map((g) => ({ g, v: r.market.bySegment[g.code]! }))
-    .filter(({ v }) => v.potential >= 0.5 && v.sold >= 0.5);
-  const ca = brutes.reduce((t, { v }) => t + v.revenue, 0);
-  const clienteles: Clientele[] = brutes.map(({ g, v }) => ({
-    code: g.code,
-    nom: g.name.replace(/\s*\(.*\)\s*$/, ""),
-    taille: Math.round(v.potential),
-    ventes: Math.round(v.sold),
-    chiffreDAffaires: Math.round(v.revenue),
-    prixNormal: g.refPrice,
-    sensibilitePrix: auDixieme((1 - Math.pow(1 + ECART_DE_PRIX, g.priceElasticity)) * 100),
-    sensibiliteQualite: g.qualitySensitivity,
-    sensibilitePublicite: g.marketingSensitivity,
-    part: auDixieme((v.sold / v.potential) * 100),
-    poids: auDixieme((v.revenue / ca) * 100),
-    aGagner: Math.round(v.potential - v.sold),
-  }));
-  const max = (f: (k: Clientele) => number) => clienteles.reduce((a, b) => (f(b) > f(a) ? b : a));
-  return {
-    clienteles,
-    chiffreDAffaires: Math.round(ca),
-    plusGrosse: max((k) => k.chiffreDAffaires),
-    premium: max((k) => k.sensibiliteQualite),
-    promotion: max((k) => k.sensibilitePrix),
-    publicite: max((k) => k.sensibilitePublicite),
-    reserve: max((k) => k.aGagner),
-    ecart: Math.round(ECART_DE_PRIX * 100),
-  };
-}
+export const segmentation = (c: Cas) => segmenter(f(c));
 
 /** Ce que chaque segment est pour l'entreprise, un segment par phrase, ses rôles réunis. */
 function rolesParSegment(g: ReturnType<typeof segmentation>) {
-  const roles: [Clientele, string][] = [
+  const roles: [Segment, string][] = [
     [g.plusGrosse, "pèse le plus lourd"],
     [g.reserve, "garde le plus de clients à gagner"],
     [g.premium, "est la cible d'une offre haut de gamme"],
@@ -93,22 +66,14 @@ function rolesParSegment(g: ReturnType<typeof segmentation>) {
   return [...parSegment.values()].map(({ nom, roles: rs }) => `« ${nom} » ${rs.length === 1 ? rs[0] : `${rs.slice(0, -1).join(", ")} et ${rs.at(-1)}`}`);
 }
 
-/** Le rang d'une sensibilité parmi les clientèles, en mots : la plus forte, la plus faible, entre les deux. */
-function rang(k: Clientele, toutes: Clientele[], f: (x: Clientele) => number) {
-  const tries = [...toutes].sort((a, b) => f(b) - f(a));
-  const i = tries.findIndex((x) => x.code === k.code);
-  return i === 0 ? "la plus forte" : i === tries.length - 1 ? "la plus faible" : "moyenne";
-}
+/** Le meilleur tarif réservé, au demi-euro. */
+export const tarifDuLaboratoire = (c: Cas) => meilleurTarif(f(c), CIBLE_DU_TARIF, grille(TARIF_DU_LABORATOIRE.min, TARIF_DU_LABORATOIRE.max, TARIF_DU_LABORATOIRE.pas));
 
 export const SEGMENTER_ET_CIBLER: Chapitre = {
   code: "segmenter-et-cibler",
   parcours: "stmg",
   palier: 1,
-  blocs: [
-    "STMG Thème 1 · La définition de l'offre",
-    "BUT TC · Conduire les actions marketing",
-    "BUT GACO · Concevoir la démarche marketing",
-  ],
+  blocs: ["STMG Thème 1 · La définition de l'offre", "BUT TC · Conduire les actions marketing", "BUT GACO · Concevoir la démarche marketing"],
   titre: "Segmenter et cibler",
   accroche:
     "Un marché se découpe en clientèles qui n'attendent pas la même chose. Lesquelles pèsent le plus, où reste-t-il des clients à gagner, et laquelle viser selon l'offre ?",
@@ -119,10 +84,7 @@ export const SEGMENTER_ET_CIBLER: Chapitre = {
     "Choisir une cible selon l'offre",
   ],
   libre: false,
-  entreprises: {
-    codes: SEGMENTATIONS,
-    pourquoi: "ce chapitre lit les clientèles d'une entreprise à une seule offre ; dans une gamme, chaque produit a les siennes.",
-  },
+  entreprises: { codes: SEGMENTATIONS, pourquoi: POURQUOI_LE_MARCHE_DE_NOVA },
   etapes: [
     {
       id: "intro",
@@ -132,8 +94,8 @@ export const SEGMENTER_ET_CIBLER: Chapitre = {
       texte: (c) => {
         const g = segmentation(c);
         return [
-          `Le marché ${dE(c.entreprise)} n'est pas un bloc : il se découpe en ${qte(g.clienteles.length)} clientèles, des segments qui n'achètent pas pour les mêmes raisons ni au même prix.`,
-          "Le tableau donne, pour le premier trimestre de l'arène, la taille de chaque segment (ce qu'il aurait pu acheter), ce que l'entreprise y a vendu, ce qu'il lui a rapporté, et le prix qu'il juge normal.",
+          `Le marché ${dE(c.entreprise)} n'est pas un bloc : il se découpe en ${g.clienteles.length} clientèles, des segments qui n'achètent pas pour les mêmes raisons ni au même prix.`,
+          `Le tableau donne, pour le premier trimestre, la taille de chaque segment (ce qu'il a acheté à tous les vendeurs), ce qu'il demande à ${c.entreprise} à son prix de ${eur(prixDeNova(f(c)))}, ce que cela lui rapporte, et le prix qu'il juge normal.`,
         ];
       },
       tableau: (c) => {
@@ -143,7 +105,7 @@ export const SEGMENTER_ET_CIBLER: Chapitre = {
           colonnes: g.clienteles.map((k) => k.nom),
           lignes: [
             { libelle: `Taille du segment (${c.unites})`, valeurs: g.clienteles.map((k) => qte(k.taille)) },
-            { libelle: `Ventes ${dE(c.entreprise)}`, valeurs: g.clienteles.map((k) => qte(k.ventes)) },
+            { libelle: `Demande reçue par ${c.entreprise}`, valeurs: g.clienteles.map((k) => qte(k.demande)) },
             { libelle: "Chiffre d'affaires", valeurs: g.clienteles.map((k) => eur(k.chiffreDAffaires)) },
             { libelle: "Prix jugé normal", valeurs: g.clienteles.map((k) => eur(k.prixNormal)) },
           ],
@@ -159,21 +121,21 @@ export const SEGMENTER_ET_CIBLER: Chapitre = {
       question: (c) => {
         const g = segmentation(c);
         const k = g.plusGrosse;
-        return `Le segment « ${k.nom} » a rapporté ${eur(k.chiffreDAffaires)} sur ${eur(g.chiffreDAffaires)}. Calculez son poids dans le chiffre d'affaires, puis la part de marché que l'entreprise y tient (${qte(k.ventes)} ventes sur ${qte(k.taille)}), en pourcentage au dixième, et le nombre d'achats du segment qu'elle n'a pas servis.`;
+        return `Le segment « ${k.nom} » rapporte ${eur(k.chiffreDAffaires)} sur ${eur(g.chiffreDAffaires)}. Calculez son poids dans le chiffre d'affaires, puis la part de marché que l'entreprise y tient (${qte(k.demande)} ventes sur ${qte(k.taille)}), en pourcentage au dixième, et le nombre d'achats du segment qui vont à d'autres vendeurs.`;
       },
       champs: (c) => {
-        const k = segmentation(c).plusGrosse;
         const g = segmentation(c);
+        const k = g.plusGrosse;
         return [
           { libelle: "Poids du segment (%)", attendu: k.poids, calcul: `${eur(k.chiffreDAffaires)} ÷ ${eur(g.chiffreDAffaires)} × 100 = ${pct(k.poids)}`, tolerance: 0.1 },
-          { libelle: "Part de marché dans le segment (%)", attendu: k.part, calcul: `${qte(k.ventes)} ÷ ${qte(k.taille)} × 100 = ${pct(k.part)}`, tolerance: 0.1 },
-          { libelle: "Achats du segment non servis", attendu: k.aGagner, calcul: `${qte(k.taille)} − ${qte(k.ventes)} = ${qte(k.aGagner)}` },
+          { libelle: "Part de marché dans le segment (%)", attendu: k.part, calcul: `${qte(k.demande)} ÷ ${qte(k.taille)} × 100 = ${pct(k.part)}`, tolerance: 0.1 },
+          { libelle: "Achats du segment faits ailleurs", attendu: k.aGagner, calcul: `${qte(k.taille)} − ${qte(k.demande)} = ${qte(k.aGagner)}` },
         ];
       },
       explication: (c) => {
         const k = segmentation(c).plusGrosse;
         return [
-          `Le segment « ${k.nom} » fait ${pct(k.poids)} du chiffre d'affaires : c'est le cœur de clientèle ${dE(c.entreprise)}. Pourtant l'entreprise n'y tient que ${pct(k.part)} du marché : ${qte(k.aGagner)} achats possibles sont allés ailleurs.`,
+          `Le segment « ${k.nom} » fait ${pct(k.poids)} du chiffre d'affaires : c'est le cœur de clientèle ${dE(c.entreprise)}. Pourtant l'entreprise n'y tient que ${pct(k.part)} du marché : ${qte(k.aGagner)} achats sont allés ailleurs.`,
         ];
       },
     },
@@ -182,7 +144,7 @@ export const SEGMENTER_ET_CIBLER: Chapitre = {
       type: "choix",
       titre: "Où sont les clients à gagner",
       notions: ["segmentation"],
-      question: (c) => `Dans quel segment ${c.entreprise} a-t-elle le plus de clients à gagner, c'est-à-dire le plus d'achats possibles qu'elle n'a pas servis ?`,
+      question: (c) => `Dans quel segment ${c.entreprise} a-t-elle le plus de clients à gagner, c'est-à-dire le plus d'achats faits chez d'autres vendeurs ?`,
       options: (c) => {
         const g = segmentation(c);
         return g.clienteles.map((k) => ({
@@ -190,7 +152,7 @@ export const SEGMENTER_ET_CIBLER: Chapitre = {
           juste: k.code === g.reserve.code,
           retour:
             k.code === g.reserve.code
-              ? `Oui : ${qte(k.taille)} achats possibles, ${qte(k.ventes)} servis, soit ${qte(k.aGagner)} à gagner. C'est le segment où une action commerciale a le plus de place pour grandir.`
+              ? `Oui : ${qte(k.taille)} achats, dont ${qte(k.demande)} chez ${c.entreprise}, soit ${qte(k.aGagner)} à gagner. C'est le segment où une action commerciale a le plus de place pour grandir.`
               : `Non : ${qte(k.aGagner)} achats à gagner, contre ${qte(g.reserve.aGagner)} dans le segment « ${g.reserve.nom} ».`,
         }));
       },
@@ -203,7 +165,7 @@ export const SEGMENTER_ET_CIBLER: Chapitre = {
       texte: (c) => {
         const g = segmentation(c);
         return [
-          `Chaque segment réagit à sa façon. Si ${c.entreprise} montait son prix de ${qte(g.ecart)} %, certains partiraient beaucoup, d'autres presque pas. De même, certains choisissent sur la qualité, d'autres se laissent convaincre par la publicité.`,
+          `Chaque segment réagit à sa façon. Si ${c.entreprise} montait son prix de ${g.ecart} %, certains partiraient beaucoup, d'autres presque pas. De même, certains choisissent sur la qualité, d'autres se laissent convaincre par la publicité.`,
           "Le tableau range ces sensibilités : c'est ce qui permet de choisir une cible selon l'offre qu'on veut lui faire.",
         ];
       },
@@ -213,9 +175,9 @@ export const SEGMENTER_ET_CIBLER: Chapitre = {
           titre: "Les sensibilités de chaque segment",
           colonnes: g.clienteles.map((k) => k.nom),
           lignes: [
-            { libelle: `Demande perdue si le prix monte de ${qte(g.ecart)} %`, valeurs: g.clienteles.map((k) => pct(k.sensibilitePrix)) },
-            { libelle: "Sensibilité à la qualité", valeurs: g.clienteles.map((k) => rang(k, g.clienteles, (x) => x.sensibiliteQualite)) },
-            { libelle: "Sensibilité à la publicité", valeurs: g.clienteles.map((k) => rang(k, g.clienteles, (x) => x.sensibilitePublicite)) },
+            { libelle: `Demande perdue si le prix monte de ${g.ecart} %`, valeurs: g.clienteles.map((k) => pct(k.sensibilitePrix)) },
+            { libelle: "Sensibilité à la qualité", valeurs: g.clienteles.map((k) => k.qualite) },
+            { libelle: "Sensibilité à la publicité", valeurs: g.clienteles.map((k) => k.publicite) },
           ],
         };
       },
@@ -233,8 +195,8 @@ export const SEGMENTER_ET_CIBLER: Chapitre = {
           juste: k.code === g.premium.code,
           retour:
             k.code === g.premium.code
-              ? `Oui : c'est le segment le plus sensible à la qualité, et une hausse de prix de ${qte(g.ecart)} % ne lui ferait perdre que ${pct(k.sensibilitePrix)} de sa demande. Il paie pour mieux, et juge normal un prix de ${eur(k.prixNormal)}.`
-              : `Non : ce segment est moins sensible à la qualité que « ${g.premium.nom} », et perdrait ${pct(k.sensibilitePrix)} de sa demande pour ${qte(g.ecart)} % de hausse.`,
+              ? `Oui : c'est le segment le plus sensible à la qualité, et une hausse de prix de ${g.ecart} % ne lui ferait perdre que ${pct(k.sensibilitePrix)} de sa demande. Il paie pour mieux, et juge normal un prix de ${eur(k.prixNormal)}.`
+              : `Non : ce segment est moins sensible à la qualité que « ${g.premium.nom} », et perdrait ${pct(k.sensibilitePrix)} de sa demande pour ${g.ecart} % de hausse.`,
         }));
       },
     },
@@ -251,9 +213,90 @@ export const SEGMENTER_ET_CIBLER: Chapitre = {
           juste: k.code === g.promotion.code,
           retour:
             k.code === g.promotion.code
-              ? `Oui : c'est le segment le plus sensible au prix. Une hausse de ${qte(g.ecart)} % lui ferait perdre ${pct(k.sensibilitePrix)} de sa demande ; une baisse l'attire autant. Une promotion vise ce segment, et coûte cher si elle est offerte à ceux qui auraient acheté de toute façon.`
-              : `Non : ce segment réagit moins au prix (${pct(k.sensibilitePrix)} de demande perdue pour ${qte(g.ecart)} % de hausse) que « ${g.promotion.nom} » (${pct(g.promotion.sensibilitePrix)}).`,
+              ? `Oui : c'est le segment le plus sensible au prix. Une hausse de ${g.ecart} % lui ferait perdre ${pct(k.sensibilitePrix)} de sa demande ; une baisse l'attire autant. Une promotion vise ce segment, et coûte cher si elle est offerte à ceux qui auraient acheté de toute façon.`
+              : `Non : ce segment réagit moins au prix (${pct(k.sensibilitePrix)} de demande perdue pour ${g.ecart} % de hausse) que « ${g.promotion.nom} » (${pct(g.promotion.sensibilitePrix)}).`,
         }));
+      },
+    },
+    {
+      id: "le-tarif-etudiant",
+      type: "curseur",
+      titre: "Un tarif pour les étudiants",
+      notions: ["segmentation", "contribution_margin"],
+      question: (c) => {
+        const t = tarifReserve(f(c), CIBLE_DU_TARIF, prixDeNova(f(c)));
+        return `${c.entreprise} veut offrir un tarif réservé aux étudiants, sur présentation de leur carte. À ${eur(t.prix)}, ils lui demandent ${qte(t.demande)} ${c.unites} par trimestre, qui laissent ${eur(t.marge)} de marge (le prix moins ${eur(coutVariable(f(c)))} de coût variable, fois les ventes). Faites varier le tarif, à l'euro : une courbe donne la marge du segment à ce tarif, l'autre la marge d'aujourd'hui. Placez le curseur sur le tarif le plus bas qui garde au moins la marge d'aujourd'hui, puis validez.`;
+      },
+      grandeur: () => ({ libelle: "Tarif étudiant", unite: "€" }),
+      cible: (c) => ({ attendu: tarifLePlusBasSansPerte(f(c), CIBLE_DU_TARIF), ...TARIF_DU_CURSEUR }),
+      zones: ["Le tarif garde la marge", "Le tarif fait perdre de la marge"],
+      rates: () => ({
+        dessous: "À ce tarif, les étudiants en plus ne compensent pas ce que chaque vente perd : la marge baisse.",
+        dessus: "Ce tarif garde la marge, mais un tarif plus bas la garderait aussi : cherchez le plus bas.",
+      }),
+      montrer: "Montrer le tarif",
+      lecture: (c, q) => {
+        const t = tarifReserve(f(c), CIBLE_DU_TARIF, q);
+        return [
+          { libelle: "Chiffre d'affaires du segment", montant: t.demande * q },
+          { libelle: "Marge du segment à ce tarif", montant: t.marge, fort: true },
+          { libelle: "Marge du segment aujourd'hui", montant: tarifReserve(f(c), CIBLE_DU_TARIF, prixDeNova(f(c))).marge },
+        ];
+      },
+      droites: (c) => ({
+        produit: (q) => tarifReserve(f(c), CIBLE_DU_TARIF, q).marge,
+        cout: () => tarifReserve(f(c), CIBLE_DU_TARIF, prixDeNova(f(c))).marge,
+        libelles: ["Marge du segment à ce tarif", "Marge d'aujourd'hui"],
+      }),
+      explication: (c) => {
+        const p = tarifLePlusBasSansPerte(f(c), CIBLE_DU_TARIF);
+        const a = tarifReserve(f(c), CIBLE_DU_TARIF, p);
+        const b = tarifReserve(f(c), CIBLE_DU_TARIF, p - 1);
+        return [
+          `À ${eur(p)}, les étudiants demandent ${qte(a.demande)} ${c.unites} : ${eur(a.marge)} de marge, autant ou plus qu'aujourd'hui. À ${eur(p - 1)}, ${qte(b.demande)} ${c.unites} ne laissent que ${eur(b.marge)}.`,
+          "Un segment très sensible au prix répond fort à une baisse : un tarif réservé peut gagner des clients sans perdre de marge, tant que les autres clientèles paient le prix normal.",
+        ];
+      },
+    },
+    {
+      id: "le-laboratoire-du-tarif",
+      type: "simulation",
+      titre: "Le laboratoire du tarif étudiant",
+      notions: ["segmentation", "contribution_margin"],
+      question: () => "Faites varier le tarif étudiant, au demi-euro, et relevez le défi : les autres clientèles paient le prix normal.",
+      leviers: (c) => [{ code: "tarif", libelle: "Tarif étudiant", unite: "€", ...TARIF_DU_LABORATOIRE, depart: prixDeNova(f(c)) }],
+      lecture: (c, p) => {
+        const t = tarifReserve(f(c), CIBLE_DU_TARIF, p.tarif!);
+        const d = tarifReserve(f(c), CIBLE_DU_TARIF, prixDeNova(f(c)));
+        return [
+          { libelle: "Étudiants servis", montant: t.demande, unite: c.unites, reference: d.demande },
+          { libelle: "Marge sur une enceinte", montant: p.tarif! - coutVariable(f(c)), reference: d.prix - coutVariable(f(c)) },
+          { libelle: "Marge du segment", montant: t.marge, reference: d.marge, fort: true },
+        ];
+      },
+      graphique: (c) => ({ levier: "tarif", courbes: [{ libelle: "Marge du segment", valeur: (p) => tarifReserve(f(c), CIBLE_DU_TARIF, p.tarif!).marge }] }),
+      defi: (c) => {
+        const juste = tarifDuLaboratoire(c);
+        return {
+          consigne: "Trouvez le tarif étudiant qui laisse la plus grande marge sur le segment.",
+          atteint: (p) => p.tarif === juste.prix,
+          indice: (p) => {
+            const t = tarifReserve(f(c), CIBLE_DU_TARIF, p.tarif!);
+            const plus = tarifReserve(f(c), CIBLE_DU_TARIF, p.tarif! + TARIF_DU_LABORATOIRE.pas);
+            return plus.marge > t.marge
+              ? `À ${eur(t.prix)}, la marge est de ${eur(t.marge)} ; un tarif un peu plus haut en laisserait plus.`
+              : `À ${eur(t.prix)}, la marge est de ${eur(t.marge)} ; un tarif un peu plus bas en laisserait-il plus ?`;
+          },
+          solution: { tarif: juste.prix },
+        };
+      },
+      explication: (c, p) => {
+        const t = tarifReserve(f(c), CIBLE_DU_TARIF, p.tarif!);
+        const d = tarifReserve(f(c), CIBLE_DU_TARIF, prixDeNova(f(c)));
+        return [
+          `Défi relevé : à ${eur(t.prix)}, ${qte(t.demande)} étudiants achètent, et le segment laisse ${eur(t.marge)} de marge, ${eur(t.marge - d.marge)} de plus qu'au prix normal.`,
+          "Cibler, c'est aussi faire une offre à chaque segment : le même produit, à un prix qui parle à la clientèle visée.",
+        ];
       },
     },
     {
@@ -265,7 +308,7 @@ export const SEGMENTER_ET_CIBLER: Chapitre = {
         const g = segmentation(c);
         return [
           `Chez ${c.entreprise}, ${rolesParSegment(g).join(" ; ")}.`,
-          "Segmenter, c'est découper le marché en groupes qui achètent pour les mêmes raisons ; cibler, c'est choisir ceux qu'on veut servir ; positionner, c'est leur faire une offre qui leur parle. Une même entreprise peut viser plusieurs segments, avec une offre pour chacun.",
+          "Segmenter, c'est découper le marché en groupes qui achètent pour les mêmes raisons ; cibler, c'est choisir ceux qu'on veut servir ; positionner, c'est leur faire une offre qui leur parle. Dans l'arène, le marché du tour donne les ventes de chaque clientèle.",
         ];
       },
       repere: () => "Segmenter : découper le marché en groupes homogènes. Cibler : choisir les segments à servir. Positionner : construire l'offre qui leur parle.",
