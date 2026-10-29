@@ -22,9 +22,11 @@ export const metadata: Metadata = {
 export default async function TeacherLoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ suite?: string | string[] }>;
+  searchParams: Promise<{ suite?: string | string[]; reinitialise?: string | string[] }>;
 }) {
-  const brut = (await searchParams).suite;
+  const parametres = await searchParams;
+  const brut = parametres.suite;
+  const reinitialise = parametres.reinitialise === "1";
   const suite = suiteInterne(Array.isArray(brut) ? brut[0] : brut);
   const session = await getSession();
   if (session) redirect(suite ?? "/teacher");
@@ -44,6 +46,11 @@ export default async function TeacherLoginPage({
         }
       />
       <div className={`${COLONNE_DE_PAGE} space-y-4 pb-16`}>
+        {reinitialise ? (
+          <p role="status" data-mot-de-passe-reinitialise="" className="max-w-md carte p-4 text-sm text-slate-200">
+            Votre mot de passe est enregistré, et vos autres sessions sont fermées. Connectez-vous avec le nouveau.
+          </p>
+        ) : null}
         <TeacherAuthForms suite={suite} />
         {/* La connexion par l'établissement (RENATER), si elle est configurée : un
             bouton secondaire, sous les formulaires habituels. */}

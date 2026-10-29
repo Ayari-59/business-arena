@@ -49,8 +49,11 @@ export function accordDeBranche(c: Pick<Cas, "code">) {
   const hausse = auCentime(coutApres - x.e.cout);
   const caEnPlus = plafond(hausse / x.tauxMcv);
   const passagesEnPlus = plafond(caEnPlus / x.panier);
-  const margeParPassage = (x.ca * x.tauxMcv) / x.tickets;
+  // Un seul panier, celui de la caisse : la marge d'un passage se lit sur le chiffre d'affaires encaissé ;
+  // celle des commandes des comités, hors caisse, ne change pas.
+  const margeParPassage = (x.caEnCaisse * x.tauxMcv) / x.tickets;
   const margeAvant = auCentime(x.ca * x.tauxMcv);
+  const margeDesCommandes = x.commandes * x.tauxMcv;
   // L'économie du responsable : le contrat de l'étudiante, et les heures de vente qu'il emporte.
   const etudiante = x.e.salaries.find((s) => s.code === CONTRAT_NON_RENOUVELE)!;
   const venteSansElle = x.planning.heuresPlanifiees - etudiante.heuresParSemaine;
@@ -65,9 +68,10 @@ export function accordDeBranche(c: Pick<Cas, "code">) {
     passagesEnPlus,
     transformationVisee: auDixieme(((x.tickets + passagesEnPlus) / x.entreesDuMois) * 100),
     margeParPassage,
+    margeDesCommandes,
     margeAvant,
     margeARetrouver: auCentime(margeAvant + hausse),
-    passagesAuCurseur: plafond((margeAvant + hausse) / margeParPassage),
+    passagesAuCurseur: plafond((margeAvant + hausse - margeDesCommandes) / margeParPassage),
     etudiante,
     economie: etudiante.cout,
     venteSansElle,
@@ -149,7 +153,7 @@ export const L_ACCORD_DE_BRANCHE: Situation = {
       notions: ["contribution_margin", "average_basket"],
       question: (c) => {
         const r = accordDeBranche(c);
-        return `Au panier moyen de janvier, chaque passage en caisse laisse ${eur(auCentime(r.margeParPassage))} de marge sur coût variable. Faites varier les passages en caisse du mois : à partir de combien la marge paie-t-elle la paie revalorisée, soit la marge de janvier plus la hausse (${eur(r.margeARetrouver)}) ? Placez le curseur sur le plus petit nombre, puis validez.`;
+        return `Au panier moyen de janvier, chaque passage en caisse laisse ${eur(auCentime(r.margeParPassage))} de marge sur coût variable ; les commandes des comités, hors caisse, en laissent ${eur(auCentime(r.margeDesCommandes))}. Faites varier les passages en caisse du mois : à partir de combien la marge paie-t-elle la paie revalorisée, soit la marge de janvier plus la hausse (${eur(r.margeARetrouver)}) ? Placez le curseur sur le plus petit nombre, puis validez.`;
       },
       grandeur: () => ({ libelle: "Passages en caisse du mois", unite: "passages" }),
       cible: (c) => ({ attendu: accordDeBranche(c).passagesAuCurseur, min: PASSAGES_DU_CURSEUR.min, max: PASSAGES_DU_CURSEUR.max }),
@@ -161,9 +165,9 @@ export const L_ACCORD_DE_BRANCHE: Situation = {
       montrer: "Montrer le croisement",
       lecture: (c, n) => {
         const r = accordDeBranche(c);
-        const marge = auCentime(n * r.margeParPassage);
+        const marge = auCentime(n * r.margeParPassage + r.margeDesCommandes);
         return [
-          { libelle: "Chiffre d'affaires du mois", montant: auCentime(n * r.x.panier) },
+          { libelle: "Chiffre d'affaires du mois", montant: auCentime(n * r.x.panier + r.x.commandes) },
           { libelle: "Marge sur coût variable", montant: marge },
           { libelle: "Marge de janvier plus la hausse", montant: r.margeARetrouver },
           { libelle: "Ce que la hausse laisse au résultat", montant: auCentime(marge - r.margeARetrouver), fort: true },
@@ -171,7 +175,7 @@ export const L_ACCORD_DE_BRANCHE: Situation = {
       },
       droites: (c) => {
         const r = accordDeBranche(c);
-        return { produit: (n) => n * r.margeParPassage, cout: () => r.margeARetrouver, libelles: ["Marge sur coût variable des passages", "Marge de janvier plus la hausse"] };
+        return { produit: (n) => n * r.margeParPassage + r.margeDesCommandes, cout: () => r.margeARetrouver, libelles: ["Marge sur coût variable des passages", "Marge de janvier plus la hausse"] };
       },
       explication: (c) => {
         const r = accordDeBranche(c);

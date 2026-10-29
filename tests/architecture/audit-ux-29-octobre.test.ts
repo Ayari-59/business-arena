@@ -126,13 +126,12 @@ describe("P1-2 · l'élève qui rejoint une classe arrive sur « Ma classe »", 
   });
 });
 
-describe("P1-5 · la connexion garde l'e-mail ; pas de « mot de passe oublié » inventé", () => {
+describe("P1-5 · la connexion garde l'e-mail ; le « mot de passe oublié » mène au vrai flux", () => {
   it("l'e-mail revient dans son champ après un refus", () => {
     const f = lire("components/teacher-auth-forms.tsx");
     expect(f).toContain('defaultValue={loginState.values?.email ?? ""}');
-    // Aucun flux de réinitialisation n'existe : aucun lien qui y prétende (commentaires ôtés).
-    const code = f.replace(/\{\/\*[\s\S]*?\*\/\}/g, "").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
-    expect(code).not.toMatch(/oubli/i);
+    // Le lien existe et mène à la page de demande (services/mot-de-passe-oublie.service.ts).
+    expect(f).toMatch(/href="\/teacher\/mot-de-passe-oublie"/);
   });
 });
 

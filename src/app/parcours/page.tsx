@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { PARCOURS } from "@/config/parcours";
+import { PARCOURS_DE_FORMATION, chapitresDuParcoursDeFormation } from "@/config/cours/parcours-de-formation";
 import { ATELIERS, dureeTotaleHeures } from "@/config/ateliers";
 import {
   AU_DELA_DES_SEANCES,
@@ -436,6 +437,43 @@ export default async function ParcoursPage() {
             </details>
           ))}
         </div>
+
+        {/* LES PARCOURS DE FORMATION DU COURS (le BUT) : un chapitre n'a qu'un parcours, celui de sa
+            discipline ; une formation regroupe ceux qui citent ses compétences, sans les dupliquer,
+            et une classe peut la choisir pour parcours (config/cours/parcours-de-formation.ts). */}
+        <section
+          aria-labelledby="parcours-de-formation"
+          className="mx-auto max-w-4xl space-y-4 px-6 pb-8"
+          data-parcours-de-formation=""
+        >
+          <h2
+            id="parcours-de-formation"
+            className="text-2xl font-bold leading-tight text-slate-50"
+          >
+            Les parcours de formation du cours
+          </h2>
+          <p className="max-w-2xl text-base leading-relaxed text-slate-400">
+            Les chapitres du cours s&apos;écrivent par discipline. Pour le BUT,
+            un parcours de formation regroupe ceux qui travaillent ses
+            compétences, d&apos;où qu&apos;ils viennent : une classe qui le
+            choisit les ouvre tous, avec leurs cas pratiques.
+          </p>
+          <ul className="grid gap-2">
+            {PARCOURS_DE_FORMATION.map((p) => (
+              <li key={p.code} data-parcours-de-formation={p.code} title={p.resume}>
+                <Link
+                  href={`/cours?diplome=${p.formation}#programme`}
+                  className="font-medium text-slate-200 underline-offset-4 transition-colors hover:text-amber-300 hover:underline"
+                >
+                  {p.titre}
+                </Link>{" "}
+                <span className="text-sm text-slate-400">
+                  · {chapitresDuParcoursDeFormation(p.code).length} chapitres
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
 
         {DIPLOMES_SANS_ATELIER.length > 0 ? (
           <section

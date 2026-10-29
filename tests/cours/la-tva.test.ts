@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { blocOfficiel, referentielDeCitation } from "../../src/config/ateliers/referentiels";
 import { UNITES_FEMININES } from "../../src/config/cours/accords";
 import { casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
-import { ENTREPRISES_DE_LA_TVA, LA_DECLARATION_DE_TVA, TRIMESTRE_A_REBOURS } from "../../src/config/cours/chapitres/la-declaration-de-tva";
+import { ENTREPRISES_DE_LA_TVA, LA_DECLARATION_DE_TVA, TRIMESTRE_A_REBOURS, ENCAISSEMENTS_OU_DEBITS } from "../../src/config/cours/chapitres/la-declaration-de-tva";
 import { LA_TVA_ET_LA_TRESORERIE } from "../../src/config/cours/chapitres/la-tva-et-la-tresorerie";
 import { MARTEL_ET_FILS } from "../../src/config/cours/monde/delais-et-tva";
 import { CHAPITRES, PROGRAMME } from "../../src/config/cours/registre";
@@ -360,7 +360,7 @@ describe("la déclaration de TVA", () => {
       "TVA à payer, crédit imputé": encaisse(3) * T - 150_000 * T - 11_200,
     });
     expect(encaisse(3) * T - 30_000 - 11_200).toBe(37_800);
-    expect(attendus(ch, "aux-debits")).toEqual({
+    expect(attendus(ENCAISSEMENTS_OU_DEBITS, "aux-debits")).toEqual({
       "TVA collectée aux débits": 480_000 * T,
       "TVA à payer aux débits": 480_000 * T - 85_200,
       "Écart de TVA nette, encaissements moins débits": (370_000 - 480_000) * T,
@@ -369,7 +369,7 @@ describe("la déclaration de TVA", () => {
     // Versée dans l'année : la TVA du dernier trimestre de N − 1 et des trois premiers de N, crédit imputé.
     const ouverture = encaisse(0) * T - 180_000 * T;
     expect(ouverture).toBe(34_000);
-    expect(attendus(ch, "echeance")).toEqual({ "TVA versée à l'État pendant l'année N": 34_000 + 37_000 + 0 + 37_800, "TVA due à l'État au 31 décembre": 33_800 });
+    expect(attendus(ENCAISSEMENTS_OU_DEBITS, "echeance")).toEqual({ "TVA versée à l'État pendant l'année N": 34_000 + 37_000 + 0 + 37_800, "TVA due à l'État au 31 décembre": 33_800 });
     expect(juste(ch, "lire-le-credit")).toBe("Il s'impute sur la déclaration suivante");
   });
 
@@ -378,7 +378,7 @@ describe("la déclaration de TVA", () => {
     const collecteeDeb = [1, 2, 3, 4].reduce((s, r) => s + ventes(r), 0) * T;
     const ded = [1, 2, 3, 4].reduce((s, r) => s + deductible(r), 0);
     expect([collecteeEnc, collecteeDeb, ded]).toEqual([285_000, 291_000, 176_400]);
-    const a = attendus(ch, "l-ecart-de-l-annee");
+    const a = attendus(ENCAISSEMENTS_OU_DEBITS, "l-ecart-de-l-annee");
     expect(a).toEqual({
       "TVA nette de l'année aux encaissements": collecteeEnc - ded,
       "TVA nette de l'année aux débits": collecteeDeb - ded,
@@ -390,19 +390,19 @@ describe("la déclaration de TVA", () => {
     expect([creances(0), creances(4)]).toEqual([160_000, 190_000]);
     expect(a["Hausse des créances clients de l'année (HT)"]).toBe(creances(4) - creances(0));
     expect(TRIMESTRE_A_REBOURS).toEqual({ aPayer: 42_600, achatsHT: 108_000, immobilisationHT: 45_000, immobilisation: "une mini-pelle" });
-    expect(attendus(ch, "a-rebours")).toEqual({
+    expect(attendus(ENCAISSEMENTS_OU_DEBITS, "a-rebours")).toEqual({
       "TVA déductible du trimestre": (108_000 + 45_000) * T,
       "TVA collectée du trimestre": 42_600 + (108_000 + 45_000) * T,
       "Encaissements du trimestre (HT)": (42_600 + 30_600) / T,
     });
     expect((42_600 + 30_600) / T).toBe(366_000);
-    expect(juste(ch, "l-option-pour-les-debits")).toBe("L'option fait verser plus tôt la TVA des factures pas encore payées : de la trésorerie en moins, pas d'impôt en plus");
+    expect(juste(ENCAISSEMENTS_OU_DEBITS, "l-option-pour-les-debits")).toBe("L'option fait verser plus tôt la TVA des factures pas encore payées : de la trésorerie en moins, pas d'impôt en plus");
   });
 
   it("les paris : un crédit au printemps, des clients plus rapides qui le font fondre, une TVA à payer avec l'option", () => {
     expect(juste(ch, "predire-le-credit")).toBe("Un crédit de TVA : l'État devra de l'argent à MARTEL & FILS");
-    expect(juste(ch, "predire-le-delai")).toBe("Fondrait, jusqu'à disparaître : la TVA collectée suit l'argent reçu");
-    expect(juste(ch, "predire-l-option")).toBe("Avec une TVA à payer : la collectée suit les travaux facturés");
+    expect(juste(ENCAISSEMENTS_OU_DEBITS, "predire-le-delai")).toBe("Fondrait, jusqu'à disparaître : la TVA collectée suit l'argent reçu");
+    expect(juste(ENCAISSEMENTS_OU_DEBITS, "predire-l-option")).toBe("Avec une TVA à payer : la collectée suit les travaux facturés");
   });
 
   it("les curseurs, refaits à la main : l'investissement qui fait naître le crédit, le délai des entreprises qui le fait naître", () => {
@@ -424,7 +424,7 @@ describe("la déclaration de TVA", () => {
     const collectee = (j: number) => encaisse(2, j) * T;
     expect(collectee(18)).toBe(85_200);
     expect(collectee(19)).toBeLessThan(85_200);
-    expect(curseur(ch, "le-delai-qui-fait-le-credit")).toEqual({
+    expect(curseur(ENCAISSEMENTS_OU_DEBITS, "le-delai-qui-fait-le-credit")).toEqual({
       attendu: 18,
       sens: "plus-grande",
       // Le curseur s'arrête au délai maximal convenu entre professionnels, 60 jours (art. L. 441-10).
@@ -441,7 +441,7 @@ describe("la déclaration de TVA", () => {
   });
 
   it("le laboratoire de la déclaration : le printemps sans crédit, investissement gardé, par l'option pour les débits", () => {
-    const l = laboratoire(ch, "le-laboratoire-de-la-declaration");
+    const l = laboratoire(ENCAISSEMENTS_OU_DEBITS, "le-laboratoire-de-la-declaration");
     expect(l.depart).toEqual({ regime: 0, entreprises: 60, investissement: 1, taux: 20 });
     expect(l.solution).toEqual({ regime: 1, entreprises: 60, investissement: 1, taux: 20 });
     expect(l.reussi).toEqual([false, true]);

@@ -217,7 +217,7 @@ const SOURCES: SituationDef[] = [
     category: "contexte_marche",
     title: "Le paradoxe du succès",
     narrative:
-      "{{Trimestre record : Noël a doublé les Go, CampusTech a passé sa grosse commande de One, les studios ont pris leurs Studio.}} Le résultat est positif… et pourtant votre banquier appelle : le compte vire au rouge. La grande distribution règle à soixante jours, CampusTech à quatre-vingts, et les composants, eux, ont été payés.",
+      "{{Trimestre record : Noël a doublé les Go, CampusTech a passé sa grosse commande de One, les studios ont pris leurs Studio.}} Le résultat est positif… et pourtant votre banquier appelle : le compte vire au rouge. La grande distribution règle à soixante jours, CampusTech à quatre-vingts au lieu des soixante convenus, en retard, et les composants, eux, ont été payés.",
     problem:
       "Votre entreprise gagne de l'argent mais n'en a plus en caisse. Identifiez les causes de ce paradoxe, référence par référence.",
     diagnosticOptions: [
@@ -251,7 +251,7 @@ const SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Le BFR, c'est de l'argent avancé en attendant d'être payé. Une One vendue à CampusTech attend quatre-vingts jours, une Go vendue à un lycéen est encaissée aussitôt : à chiffre d'affaires égal, ce n'est pas la même avance.",
+          "Le BFR, c'est de l'argent avancé en attendant d'être payé. Une One vendue à CampusTech attend quatre-vingts jours (soixante convenus, vingt de retard), une Go vendue à un lycéen est encaissée aussitôt : à chiffre d'affaires égal, ce n'est pas la même avance.",
       },
     ],
     modelRelevance: {
@@ -265,7 +265,7 @@ const SOURCES: SituationDef[] = [
     hints: hints([
       "Examinez ce qui a le plus évolué à votre bilan depuis le tour dernier.",
       "Quel élément du cycle d'exploitation (stocks, créances clients, dettes fournisseurs) a explosé ? Et qui, parmi vos clients, ne vous a pas encore payé ?",
-      "Chaque circuit a son délai : lycéens et étudiants au comptant, studios à trente jours, grande distribution à soixante, CampusTech à quatre-vingts.",
+      "Chaque circuit a son délai : lycéens et étudiants au comptant, studios à trente jours, grande distribution à soixante, CampusTech à soixante aussi, mais elle paie en retard, à quatre-vingts.",
       "Une analyse FRNG / BFR décomposerait votre trésorerie et montrerait où elle est partie, référence par référence.",
       "Calculez le FRNG (ressources stables − immobilisations), puis le BFR (stocks + créances − fournisseurs) : TN = FRNG − BFR. Leviers : mobiliser les créances, emprunter, ou vendre plus au comptant.",
     ]),

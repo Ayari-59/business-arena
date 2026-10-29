@@ -3,6 +3,7 @@ import type { Cas } from "../cas";
 import { controleBudgetaire, coutPreetabli } from "../monde/ecarts";
 import { USINES_DU_COURS, type FicheDeLUsine, type ModeleDeNova } from "../monde/nova-usine";
 import type { Chapitre, EtapeChoix, EtapeCurseur, EtapeSimulation, TableauDeDonnees } from "../types";
+import { etapesAvant, etapesDepuis, partieDuChapitre } from "./decoupage";
 
 /**
  * CHAPITRE : LE COÛT PRÉÉTABLI, LE BUDGET STANDARD ET LE BUDGET FLEXIBLE (contrôle de gestion,
@@ -459,7 +460,8 @@ const LABORATOIRE_DE_LA_PRODUCTION: EtapeSimulation = {
 const surLesModeles = (b: BudgetsDeLUsine, q: (x: BudgetsDeLUsine["modeles"][number]) => number, total: number) =>
   `${b.modeles.map((x) => `${qte(q(x))} × ${eur(x.cout.total)}`).join(" + ")} = ${eur(total)}`;
 
-export const LE_COUT_PREETABLI_ET_LES_BUDGETS: Chapitre = {
+/** Le chapitre tel qu'il était écrit, en un seul tenant : ses deux parties en sont tirées (plus bas). */
+const LE_COUT_PREETABLI_ET_LES_BUDGETS_ENTIER: Chapitre = {
   code: "le-cout-preetabli-et-les-budgets",
   parcours: "controle-de-gestion",
   palier: 4,
@@ -956,3 +958,62 @@ export const LE_COUT_PREETABLI_ET_LES_BUDGETS: Chapitre = {
     },
   ],
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LES DEUX PARTIES (audit pédagogique : aucun chapitre de plus de 20 étapes)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const CODE_DE_LA_SUITE = "le-budget-flexible";
+export const TITRE_DE_LA_SUITE = "Le budget flexible et le choix du standard";
+
+/** PREMIÈRE PARTIE : les étapes du chapitre d'origine jusqu'à `predire-l-activite` exclue, puis sa propre synthèse. */
+export const LE_COUT_PREETABLI_ET_LES_BUDGETS: Chapitre = partieDuChapitre(LE_COUT_PREETABLI_ET_LES_BUDGETS_ENTIER, [
+  ...etapesAvant(LE_COUT_PREETABLI_ET_LES_BUDGETS_ENTIER, "predire-l-activite"),
+  {
+    id: "synthese",
+    type: "lecture",
+    titre: "Ce qu'il faut retenir",
+    notions: ["standard_costing", "cost_variance"],
+    tableau: tableauDesStandards,
+    texte: (c) => {
+      const b = budgetsDeLUsine(c);
+      const e = b.e;
+      return [
+        `À l'usine de ${b.f.entreprise}, le réel, ${eur(e.reelTotal)}, dépasse le budget standard de ${eur(b.reelMoinsBudget)}. Mais ${eur(b.effetDeLaProduction)} ne sont que le coût préétabli de la production réellement faite : l'écart à expliquer est l'écart global sur coûts, ${ecartDit(e.ecartGlobalSurCouts)}, face au coût préétabli de la production réelle (${eur(e.preetabliDuReel.total)}).`,
+        `La suite, « ${TITRE_DE_LA_SUITE} », regarde le centre d'analyse : le budget flexible à l'activité réelle, l'écart sur activité, puis le choix du standard et le seuil de significativité.`,
+        "Dans l'arène, les chiffres de votre usine seront différents : la notion, elle, est la même.",
+      ];
+    },
+    repere: () => "Le réel se compare au coût préétabli de la production réelle, pas au budget de départ : la quantité produite n'est pas un écart de coût.",
+  },
+]);
+
+/** SUITE : sa propre introduction, puis les étapes du chapitre d'origine depuis `predire-l-activite`, synthèse comprise. */
+export const LE_BUDGET_FLEXIBLE: Chapitre = partieDuChapitre(
+  LE_COUT_PREETABLI_ET_LES_BUDGETS_ENTIER,
+  [
+    {
+      id: "intro",
+      type: "lecture",
+      titre: "Le centre et son activité",
+      notions: ["standard_costing", "fixed_costs"],
+      tableau: tableauDesStandards,
+      texte: (c) => {
+        const b = budgetsDeLUsine(c);
+        return [
+          `Ce chapitre suit « Le coût préétabli, le budget standard et le budget flexible » : la fiche de coût préétabli de ${b.f.entreprise} est établie, et l'écart global sur coûts se mesure face au coût préétabli de la production réelle.`,
+          "Il reste le centre d'analyse : ses charges fixes ne suivent pas l'activité. Le budget flexible le dit, le coût préétabli ne le dit pas ; puis vous choisirez un standard et trierez les écarts.",
+        ];
+      },
+      repere: () => "Budget flexible = charges variables standard à l'activité réelle + charges fixes budgétées, inchangées.",
+    },
+    ...etapesDepuis(LE_COUT_PREETABLI_ET_LES_BUDGETS_ENTIER, "predire-l-activite"),
+  ],
+  {
+    code: CODE_DE_LA_SUITE,
+    titre: TITRE_DE_LA_SUITE,
+    accroche: "Le centre de NOVA tourne plus que prévu : le budget flexible, l'écart sur activité, puis le standard qu'on retient et les écarts qui méritent qu'on s'y arrête.",
+    prerequis: ["le-cout-preetabli-et-les-budgets"],
+    ouverture: undefined,
+  },
+);

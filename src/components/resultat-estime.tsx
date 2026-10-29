@@ -11,7 +11,7 @@ import { dureeDuJeton } from "@/lib/mouvement";
 import { formatEuro, formatUnits } from "@/lib/format";
 import { Icone } from "@/components/icone";
 import type { EstimationEnCours } from "@/lib/estimation-en-cours";
-import type { ScenarioVocabulary } from "@/config/scenarios/registry";
+import type { ScenarioVocabulary, Sector } from "@/config/scenarios/registry";
 
 /**
  * « VOUS DÉCIDEZ » : CE QUE VOS DÉCISIONS DONNERAIENT, PENDANT QUE VOUS DÉCIDEZ.
@@ -247,6 +247,7 @@ function AnnonceEstimee({ resume }: { resume: EstimationEnCours | null }) {
 export function EncartResultatEstime({
   estime,
   vocabulary: v,
+  secteur,
   /** Le lien du cockpit de prévision, laissé à sa place : il reste. */
   cockpit = null,
   /** Mène au champ des ventes estimées (son étape, puis le focus). */
@@ -259,6 +260,8 @@ export function EncartResultatEstime({
 }: {
   estime: ResultatEstime | null;
   vocabulary: ScenarioVocabulary;
+  /** Le métier joué : il nomme la variation du stock de l'estimation. */
+  secteur: Sector;
   cockpit?: React.ReactNode;
   allerAuChamp?: () => void;
   limites?: string | null;
@@ -450,7 +453,7 @@ export function EncartResultatEstime({
                 ) : null}
               </ul>
             ) : null}
-            <CompteEstime estime={estime} />
+            <CompteEstime estime={estime} secteur={secteur} />
             {cockpit ? <div>{cockpit}</div> : null}
           </div>
         </Repliable>
@@ -461,7 +464,7 @@ export function EncartResultatEstime({
 }
 
 /** Le compte de résultat estimé, dans la grammaire des tableaux financiers. */
-function CompteEstime({ estime }: { estime: ResultatEstime }) {
+function CompteEstime({ estime, secteur }: { estime: ResultatEstime; secteur: Sector }) {
   return (
     <div className="tableau-financier">
       <table className="text-sm">
@@ -480,7 +483,7 @@ function CompteEstime({ estime }: { estime: ResultatEstime }) {
           </tr>
         </thead>
         <tbody>
-          {lignesDuCompte(estime.compte).map((ligne) => (
+          {lignesDuCompte(estime.compte, secteur).map((ligne) => (
             <tr key={ligne.cle} className={ligne.fort ? "border-t border-white/15" : ""}>
               <th
                 scope="row"

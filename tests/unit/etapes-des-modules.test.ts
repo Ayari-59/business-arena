@@ -143,6 +143,7 @@ describe("le formulaire range chaque module dans la section de son étape", () =
       alreadySubmitted: false,
       enabled: preset.decisions,
       vocabulary: SCENARIOS[0]!.vocabulary,
+      secteur: SCENARIOS[0]!.sector,
       modulesOffer,
     };
     return { html: renderToStaticMarkup(createElement(DecisionForm, props)), modulesOffer };

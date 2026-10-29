@@ -1298,6 +1298,7 @@ export default async function ArenaPage({
                   ) : null;
   const formulaireDeDecision = (
     <DecisionForm
+      secteur={view.sector}
       telephone={telephone}
       enTeteDuRecapitulatif={
         // Rien à dire : pas de conteneur vide, qui laisserait quand même son interligne.

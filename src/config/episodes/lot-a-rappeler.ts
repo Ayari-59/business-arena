@@ -110,6 +110,9 @@ export const ETAPES: readonly Etape[] = [
         cout: 0.5,
         nature: "decisive",
         resultat:
+          // Règlement (CE) n° 178/2002, art. 18 (traçabilité) et 19 (retrait, information des autorités,
+          // rappel) ; publication des rappels sur RappelConso obligatoire depuis le 1er avril 2021
+          // (economie.gouv.fr, DGCCRF ; vérifié le 29 octobre 2026).
           "Article 19 du règlement européen sur la sécurité des aliments : l'exploitant qui considère ou a des raisons de penser qu'une denrée qu'il a mise sur le marché n'est pas sûre engage immédiatement son retrait et en informe les autorités compétentes, ici la DDPP. Si le produit a pu atteindre le consommateur, il l'informe et rappelle les produits déjà vendus quand le retrait ne suffit pas à protéger la santé ; en France, tout rappel est publié sur RappelConso, le site public des rappels, et affiché en magasin. L'article 18 impose la traçabilité : dire, lot par lot, à qui chaque palette a été livrée. Le guide de gestion des alertes d'origine alimentaire : à défaut d'éléments plus précis, le périmètre d'un retrait couvre tous les lots produits entre deux nettoyages-désinfections complets de la ligne ; un rinçage ne le borne pas. Le laboratoire est tenu, lui aussi, de transmettre à l'administration un résultat qui montre qu'une denrée peut être préjudiciable à la santé.",
       },
       {

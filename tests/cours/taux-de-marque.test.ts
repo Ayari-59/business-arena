@@ -8,6 +8,7 @@ import {
   MARGE_VISEE_DU_LABORATOIRE,
   TAUX_DE_MARQUE,
   margesDuRayon,
+  S_ALIGNER_SUR_LE_CONCURRENT,
 } from "../../src/config/cours/chapitres/taux-de-marque";
 import { MAILLE_ET_CO } from "../../src/config/cours/monde/maille-et-co";
 import { CHAPITRES } from "../../src/config/cours/registre";
@@ -207,16 +208,20 @@ describe("le chapitre et son cas, à la boutique du monde du cours", () => {
   });
 
   it("au moins deux cycles pari, puis curseur, puis formalisation ; un laboratoire ; la synthèse finit par l'arène", () => {
+    // Découpé en deux (aucun chapitre de plus de 20 étapes) : un cycle dans chaque partie.
     const ids = TAUX_DE_MARQUE.etapes.map((e) => e.id);
-    const avant = (a: string, b: string) => expect(ids.indexOf(a), `${a} avant ${b}`).toBeLessThan(ids.indexOf(b));
+    const idsDeLaSuite = S_ALIGNER_SUR_LE_CONCURRENT.etapes.map((e) => e.id);
+    const avant = (a: string, b: string, l = ids) => expect(l.indexOf(a), `${a} avant ${b}`).toBeLessThan(l.indexOf(b));
     avant("predire-l-etiquette", "l-etiquette-de-l-atelier");
     avant("l-etiquette-de-l-atelier", "le-prix-du-plus-cher");
-    avant("predire-le-prix-d-achat", "le-prix-d-achat-au-curseur");
-    avant("le-prix-d-achat-au-curseur", "garder-la-marque-ou-la-marge");
-    expect(TAUX_DE_MARQUE.etapes.filter((e) => e.type === "simulation")).toHaveLength(1);
-    const s = TAUX_DE_MARQUE.etapes.at(-1)!;
-    if (s.type !== "lecture") throw new Error("La synthèse est une lecture");
-    expect(s.texte(cas).at(-1)).toBe("Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.");
+    avant("predire-le-prix-d-achat", "le-prix-d-achat-au-curseur", idsDeLaSuite);
+    avant("le-prix-d-achat-au-curseur", "garder-la-marque-ou-la-marge", idsDeLaSuite);
+    expect(S_ALIGNER_SUR_LE_CONCURRENT.etapes.filter((e) => e.type === "simulation")).toHaveLength(1);
+    for (const partie of [TAUX_DE_MARQUE, S_ALIGNER_SUR_LE_CONCURRENT]) {
+      const s = partie.etapes.at(-1)!;
+      if (s.type !== "lecture") throw new Error("La synthèse est une lecture");
+      expect(s.texte(cas).at(-1), partie.code).toBe("Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.");
+    }
     // Les hypothèses de la simulation sont dites dans l'intro.
     const intro = TAUX_DE_MARQUE.etapes[0]!;
     if (intro.type !== "lecture") throw new Error("L'intro est une lecture");
@@ -311,7 +316,7 @@ describe("taux de marque, taux de marge, coefficient : le pull col rond", () => 
   it("l'expert : le coefficient du concurrent, à rebours", () => {
     expect(COEFFICIENT_TTC_DU_CONCURRENT).toBe(2.4);
     expect(f.concurrent.prixTtc).toBe(60);
-    expect(attendus(ch, "le-coefficient-du-concurrent")).toEqual({
+    expect(attendus(S_ALIGNER_SUR_LE_CONCURRENT, "le-coefficient-du-concurrent")).toEqual({
       "Prix d'achat du concurrent, hors taxes": 60 / 2.4,
       "Coefficient HT du concurrent": 2.4 / 1.2,
       "Taux de marque du concurrent (%)": (1 - 1 / 2) * 100,
@@ -321,17 +326,17 @@ describe("taux de marque, taux de marge, coefficient : le pull col rond", () => 
 
   it("le second cycle : s'aligner, parier sur le prix d'achat, le chercher au curseur, puis garder la marque ou la marge", () => {
     expect(demande(50)).toBe(681);
-    expect(attendus(ch, "le-prix-aligne")).toEqual({
+    expect(attendus(S_ALIGNER_SUR_LE_CONCURRENT, "le-prix-aligne")).toEqual({
       "Prix aligné, hors taxes": 60 / 1.2,
       "Pulls demandés au prix aligné": 681,
       "Taux de marque au prix aligné (%)": 50,
       "Marge commerciale du mois, alignée": 681 * 25,
     });
     expect(681 * 25).toBe(17_025);
-    expect(juste(ch, "predire-le-prix-d-achat")).toBe("Moins que pour garder le taux de marque : le prix bas fait vendre plus");
+    expect(juste(S_ALIGNER_SUR_LE_CONCURRENT, "predire-le-prix-d-achat")).toBe("Moins que pour garder le taux de marque : le prix bas fait vendre plus");
     // 681 × (50 − a) ≥ 18 000 : a ≤ 50 − 26,43… = 23,568 €, soit 2 356 centimes au plus.
     expect(Math.floor((50 - 18_000 / 681) * 100)).toBe(2_356);
-    expect(curseur(ch, "le-prix-d-achat-au-curseur")).toEqual({
+    expect(curseur(S_ALIGNER_SUR_LE_CONCURRENT, "le-prix-d-achat-au-curseur")).toEqual({
       attendu: 2_356,
       bornes: [2_000, 2_600],
       droites: [681 * 30, 18_000, 681 * 24, 18_000],
@@ -344,7 +349,7 @@ describe("taux de marque, taux de marge, coefficient : le pull col rond", () => 
     });
     expect(centime(681 * 26.44)).toBe(18_005.64);
     const marque = centime(50 * (25 / 55));
-    expect(attendus(ch, "garder-la-marque-ou-la-marge")).toEqual({
+    expect(attendus(S_ALIGNER_SUR_LE_CONCURRENT, "garder-la-marque-ou-la-marge")).toEqual({
       "Prix d'achat qui garde le taux de marque": marque,
       "Prix d'achat qui garde la marge du mois": 23.56,
       "Baisse qui garde le taux de marque (%)": dixieme(((25 - marque) / 25) * 100),
@@ -354,7 +359,7 @@ describe("taux de marque, taux de marge, coefficient : le pull col rond", () => 
   });
 
   it("le laboratoire des prix : l'atelier local retrouve au moins 15 000 € entre le prix de janvier et celui qui garde le taux", () => {
-    const l = laboratoire(ch, "le-laboratoire-des-prix");
+    const l = laboratoire(S_ALIGNER_SUR_LE_CONCURRENT, "le-laboratoire-des-prix");
     expect(MARGE_VISEE_DU_LABORATOIRE).toBe(15_000);
     expect(l.depart).toEqual({ prix: 55, fournisseur: 1 });
     expect(l.reussi).toEqual([false, true]);
@@ -402,7 +407,7 @@ describe("taux de marque, taux de marge, coefficient : le pull col rond", () => 
   });
 
   it("la critique du taux : il est gardé, pas la marge", () => {
-    expect(juste(ch, "la-critique-du-taux")).toBe("Le taux est gardé, pas la marge : 14 713,20 € au lieu de 15 301,50 € vers 60,80 €");
+    expect(juste(S_ALIGNER_SUR_LE_CONCURRENT, "la-critique-du-taux")).toBe("Le taux est gardé, pas la marge : 14 713,20 € au lieu de 15 301,50 € vers 60,80 €");
   });
 
   it("le modèle du chapitre retombe sur la fiche", () => {

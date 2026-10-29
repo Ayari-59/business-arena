@@ -8,6 +8,7 @@ import {
   DEMANDE_AU_DELA_DU_PALIER,
   SEUIL_DE_RENTABILITE,
   SUPPLEMENT_DU_PALIER,
+  LES_LEVIERS_DU_SEUIL,
 } from "../../src/config/cours/chapitres/seuil-de-rentabilite";
 import { NOVA_GESTION } from "../../src/config/cours/monde/nova-gestion";
 import { CHAPITRES } from "../../src/config/cours/registre";
@@ -228,11 +229,13 @@ describe("le seuil de rentabilité, au mois de janvier de NOVA", () => {
   });
 
   it("le gabarit de l'étalon : deux paris, deux curseurs, un laboratoire, au moins deux étapes d'expert à trois champs", () => {
-    expect(ch.etapes.filter((e) => e.type === "choix" && e.titre.startsWith("Pariez"))).toHaveLength(2);
-    expect(ch.etapes.filter((e) => e.type === "curseur")).toHaveLength(2);
-    expect(ch.etapes.filter((e) => e.type === "simulation")).toHaveLength(1);
+    // Découpé en deux (aucun chapitre de plus de 20 étapes) : le gabarit se lit sur les deux parties.
+    const etapes = [...ch.etapes, ...LES_LEVIERS_DU_SEUIL.etapes];
+    expect(etapes.filter((e) => e.type === "choix" && e.titre.startsWith("Pariez"))).toHaveLength(2);
+    expect(etapes.filter((e) => e.type === "curseur")).toHaveLength(2);
+    expect(etapes.filter((e) => e.type === "simulation")).toHaveLength(1);
     for (const id of ["baisse-de-prix", "le-levier-operationnel", "seuil-de-la-gamme", "charges-fixes-par-paliers"]) {
-      expect(Object.keys(attendus(ch, id)).length, id).toBeGreaterThanOrEqual(3);
+      expect(Object.keys(attendus(LES_LEVIERS_DU_SEUIL, id)).length, id).toBeGreaterThanOrEqual(3);
     }
     // Chaque pari vient avant son curseur, et chaque curseur avant sa formalisation.
     const place = (id: string) => ch.etapes.findIndex((e) => e.id === id);
@@ -303,7 +306,7 @@ describe("le seuil de rentabilité, au mois de janvier de NOVA", () => {
     const pb = c(p * 0.9);
     const mb = c(pb - cv);
     expect([pb, mb]).toEqual([53.1, 15.1]);
-    expect(attendus(ch, "baisse-de-prix")).toEqual({
+    expect(attendus(LES_LEVIERS_DU_SEUIL, "baisse-de-prix")).toEqual({
       "Nouvelle marge sur coût variable unitaire": mb,
       "Nouveau seuil en quantité (enceintes)": Math.ceil(cf / mb),
       "Ventes pour garder le résultat de janvier": Math.ceil((cf + resultat) / mb),
@@ -311,7 +314,7 @@ describe("le seuil de rentabilité, au mois de janvier de NOVA", () => {
     expect([Math.ceil(cf / mb), Math.ceil((cf + resultat) / mb)]).toEqual([2_066, 2_212]);
     expect(BAISSE_DES_VENTES_DU_LEVIER).toBe(0.05);
     const apres = c(mcv * 0.95 - cf);
-    expect(attendus(ch, "le-levier-operationnel")).toEqual({
+    expect(attendus(LES_LEVIERS_DU_SEUIL, "le-levier-operationnel")).toEqual({
       "Levier opérationnel": c(mcv / resultat),
       "Résultat avec 5 % de ventes en moins": apres,
       "Variation du résultat, en %": c(((apres - resultat) / resultat) * 100),
@@ -332,20 +335,20 @@ describe("le seuil de rentabilité, au mois de janvier de NOVA", () => {
     expect([caG, cvG, pub]).toEqual([103_063, 62_975, 1_999]);
     const taux = (caG - cvG) / caG;
     const seuilG = c((communes + pub) / taux);
-    expect(attendus(ch, "seuil-de-la-gamme")).toEqual({
+    expect(attendus(LES_LEVIERS_DU_SEUIL, "seuil-de-la-gamme")).toEqual({
       "Taux de marge moyen de la gamme, en %": c(taux * 100),
       "Seuil de rentabilité de la gamme": seuilG,
       "Indice de sécurité de la gamme, en %": c(((caG - seuilG) / caG) * 100),
     });
     expect([c(taux * 100), seuilG, c(((caG - seuilG) / caG) * 100)]).toEqual([38.9, 91_465.58, 11.25]);
     // One, la plus vendue, a le plus faible taux : la pousser fait monter le seuil.
-    expect(juste(ch, "la-composition-de-la-gamme")).toBe("Il monte : NOVA One a le plus faible taux de marge, 35,6 %");
+    expect(juste(LES_LEVIERS_DU_SEUIL, "la-composition-de-la-gamme")).toBe("Il monte : NOVA One a le plus faible taux de marge, 35,6 %");
   });
 
   it("les étapes d'expert : les charges fixes par paliers, et le verdict du palier", () => {
     expect([SUPPLEMENT_DU_PALIER, DEMANDE_AU_DELA_DU_PALIER, f.centres.activiteNormale]).toEqual([15_000, 2_400, 2_120]);
     const cf2 = cf + 15_000;
-    expect(attendus(ch, "charges-fixes-par-paliers")).toEqual({
+    expect(attendus(LES_LEVIERS_DU_SEUIL, "charges-fixes-par-paliers")).toEqual({
       [`Résultat à ${n(2_120)} enceintes`]: 2_120 * mu - cf,
       [`Résultat à ${n(2_121)} enceintes`]: 2_121 * mu - cf2,
       "Second seuil de rentabilité": Math.ceil(cf2 / mu),
@@ -356,15 +359,15 @@ describe("le seuil de rentabilité, au mois de janvier de NOVA", () => {
     expect(Math.floor((13_337 + cf2) / mu)).toBe(2_834);
     expect(2_835 * mu - cf2).toBeGreaterThan(13_337);
     expect(2_834 * mu - cf2).toBeLessThanOrEqual(13_337);
-    expect(juste(ch, "franchir-le-palier")).toBe(`Pas pour ${n(2_400)} : il faut plus de ${n(2_834)} enceintes pour gagner plus qu'à ${n(2_120)}`);
+    expect(juste(LES_LEVIERS_DU_SEUIL, "franchir-le-palier")).toBe(`Pas pour ${n(2_400)} : il faut plus de ${n(2_834)} enceintes pour gagner plus qu'à ${n(2_120)}`);
   });
 
   it("les verdicts des paris et des choix", () => {
     expect(juste(ch, "une-de-plus")).toBe("De 21 € : la marge sur coût variable unitaire.");
     expect(juste(ch, "predire-le-seuil")).toBe("Sous les ventes de janvier : la marge du mois couvre déjà les charges fixes");
     expect(juste(ch, "predire-les-fixes")).toBe(`De ${n(2_207)} €, le résultat de janvier`);
-    expect(juste(ch, "leviers")).toBe("Gagner plus sur chaque vente, ou réduire ses charges fixes.");
-    expect(juste(ch, "lire-le-levier")).toBe("C'est un signe de fragilité : l'entreprise travaille près de son seuil");
+    expect(juste(LES_LEVIERS_DU_SEUIL, "leviers")).toBe("Gagner plus sur chaque vente, ou réduire ses charges fixes.");
+    expect(juste(LES_LEVIERS_DU_SEUIL, "lire-le-levier")).toBe("C'est un signe de fragilité : l'entreprise travaille près de son seuil");
   });
 
   it("les curseurs, refaits à la main : le seuil sur les ventes, les charges fixes tenables", () => {
@@ -387,7 +390,7 @@ describe("le seuil de rentabilité, au mois de janvier de NOVA", () => {
   });
 
   it("le laboratoire du seuil : baisser le prix de 10 % sans monter le seuil", () => {
-    const l = laboratoire(ch, "le-laboratoire-du-seuil");
+    const l = laboratoire(LES_LEVIERS_DU_SEUIL, "le-laboratoire-du-seuil");
     expect(l.depart).toEqual({ prix: 59, coutVariable: 38, chargesFixes: cf, ventes: q });
     expect(l.solution).toEqual({ prix: 53.1, coutVariable: 32.1, chargesFixes: cf, ventes: q });
     expect(l.reussi).toEqual([false, true]);
@@ -417,7 +420,7 @@ describe("le seuil de rentabilité, au mois de janvier de NOVA", () => {
   });
 
   it("le graphique du laboratoire : le seuil selon le prix n'est pas une droite, les ventes sont plates", () => {
-    const l = laboratoire(ch, "le-laboratoire-du-seuil");
+    const l = laboratoire(LES_LEVIERS_DU_SEUIL, "le-laboratoire-du-seuil");
     const g = l.e.graphique!(cas);
     expect(g.levier).toBe("prix");
     expect(g.unite).toBe("enceintes");

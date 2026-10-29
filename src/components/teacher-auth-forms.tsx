@@ -1,6 +1,7 @@
 "use client";
 
 import { bouton } from "@/components/bouton";
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import { loginAction, registerAction, type FormState } from "@/app/teacher/actions";
 import { TEXTE_DU_CONSENTEMENT } from "@/config/nouveautes";
@@ -98,8 +99,7 @@ export function TeacherAuthForms({ suite = null }: { suite?: string | null }) {
       {tab === "login" ? (
         <form action={avecLAncre(loginFormAction)} className="space-y-4">
           {suite ? <input type="hidden" name="suite" value={suite} /> : null}
-          {/* L'E-MAIL GARDÉ après un mauvais mot de passe (audit UX, P1-5). Pas de lien
-              « mot de passe oublié » : aucun flux de réinitialisation n'existe encore. */}
+          {/* L'E-MAIL GARDÉ après un mauvais mot de passe (audit UX, P1-5). */}
           <Input
             label="E-mail"
             name="email"
@@ -115,6 +115,16 @@ export function TeacherAuthForms({ suite = null }: { suite?: string | null }) {
             required
             autoComplete="current-password"
           />
+          <p className="text-right text-sm">
+            <Link
+              href="/teacher/mot-de-passe-oublie"
+              prefetch={false}
+              data-mot-de-passe-oublie=""
+              className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2"
+            >
+              Mot de passe oublié ?
+            </Link>
+          </p>
           <ErrorBox error={loginState.error} />
           <button
             type="submit"

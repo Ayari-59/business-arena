@@ -36,18 +36,20 @@ import { ENTREPRISES_DU_POINT_DE_VENTE, ficheDe } from "./taux-de-marque";
  *     fois : gagner l'objectif sans un client de plus) avant la-decomposition ;
  *   · expert : deux-taux (le taux de service n'est pas le taux de transformation), la-decomposition
  *     (un calcul à rebours : l'indice de vente qu'exige l'objectif quand le prix moyen monte),
- *     le-panier-sans-les-comites et quel-panier-viser (une moyenne tirée par quelques grosses
- *     commandes : dire de quel panier on parle), le-comite-qui-paie-tard (le CSE des Laboratoires
+ *     le-panier-avec-les-comites et quel-panier-viser (une moyenne que gonfleraient quelques grosses
+ *     commandes passées hors caisse : dire de quel panier on parle), le-comite-qui-paie-tard (le CSE des Laboratoires
  *     Vernal, monde/mauvais-payeurs.ts : l'indemnité de 40 € pèse plus que les pénalités) ; puis la
  *     synthèse.
  *
  * LES HYPOTHÈSES DE LA SIMULATION, DITES À L'ÉLÈVE : le compteur à la porte donne les entrées, un
- * ticket de caisse fait un passage, et une commande d'un comité d'entreprise compte pour un passage ;
+ * ticket de caisse fait un passage ; une commande d'un comité d'entreprise, facturée et réglée à
+ * terme, ne passe pas en caisse : ni passage, ni panier (un seul panier moyen dans tout le cours, celui
+ * du bac pro : chiffre d'affaires encaissé en caisse ÷ passages en caisse, voir indicateursDuMois) ;
  * la surface de vente est celle de la fiche ; l'objectif de hausse et la variante du prix moyen sont
  * des hypothèses du cours.
  */
 
-/** L'OBJECTIF DE LA DIRECTION, hypothèse du cours : 10 % de chiffre d'affaires de plus qu'en janvier. */
+/** L'OBJECTIF DE LA DIRECTION, hypothèse du cours : 10 % de chiffre d'affaires en caisse de plus qu'en janvier. */
 export const HAUSSE_VISEE = 0.1;
 
 /**
@@ -80,7 +82,7 @@ export function laboratoireDesIndicateurs(f: FicheDeLaBoutique, p: Readonly<Reco
     indiceDeVente: m.indiceDeVente * facteur("indice"),
     prixMoyenDeLArticle: m.prixMoyenDeLArticle * facteur("prix"),
   });
-  return { ...x, gain: auCentime(x.chiffreDAffaires - m.chiffreDAffaires) };
+  return { ...x, gain: auCentime(x.chiffreDAffairesEnCaisse - m.chiffreDAffairesEnCaisse) };
 }
 
 /** Tout ce que le chapitre et son cas demandent sur le mois de janvier. */
@@ -88,7 +90,7 @@ export function indicateursDuPointDeVente(c: Pick<Cas, "code">) {
   const f = ficheDe(c);
   const m = indicateursDuMois(f);
   const [fideles, passants, comites] = m.clienteles;
-  const caVise = auCentime(m.chiffreDAffaires * (1 + HAUSSE_VISEE));
+  const caVise = auCentime(m.chiffreDAffairesEnCaisse * (1 + HAUSSE_VISEE));
   const passagesVises = plafond(caVise / m.panierMoyen);
   const entreesVisees = plafond(passagesVises / m.tauxDeTransformation);
   // La variante : un prix moyen plus haut de 4 %, à entrées et transformation inchangées.
@@ -96,8 +98,8 @@ export function indicateursDuPointDeVente(c: Pick<Cas, "code">) {
   const indiceVise = m.indiceDeVente * (1 + hausseDeLIndice);
   const prixMoyenVariante = m.prixMoyenDeLArticle * (1 + HAUSSE_DU_PRIX_MOYEN);
   const articlesVises = plafond(caVise / prixMoyenVariante);
-  // Le panier sans les comités d'entreprise.
-  const sansComites = { chiffreDAffaires: auCentime(m.chiffreDAffaires - comites!.chiffreDAffaires), tickets: m.tickets - comites!.tickets };
+  // Le panier qu'on obtiendrait en comptant à tort les commandes des comités comme des passages.
+  const avecComites = { chiffreDAffaires: m.chiffreDAffaires, tickets: m.tickets + comites!.tickets };
   const cardigan = m.references.find((r) => r.code === "cardigan")!;
   return {
     f,
@@ -123,7 +125,7 @@ export function indicateursDuPointDeVente(c: Pick<Cas, "code">) {
     hausseDeLIndice: auDixieme(hausseDeLIndice * 100),
     indiceVise: auCentime(indiceVise),
     articlesVises,
-    sansComites: { ...sansComites, panier: auCentime(sansComites.chiffreDAffaires / sansComites.tickets) },
+    avecComites: { ...avecComites, panier: auCentime(avecComites.chiffreDAffaires / avecComites.tickets) },
     panierDesComites: auCentime(comites!.panierMoyen),
     /** Deux hausses de 5 % sur deux leviers : leur effet sur le chiffre d'affaires. */
     deuxFoisCinq: auDixieme((1.05 * 1.05 - 1) * 100),
@@ -135,14 +137,14 @@ export type IndicateursDuPointDeVente = ReturnType<typeof indicateursDuPointDeVe
 /** Le mois de janvier, clientèle par clientèle : le document de départ. */
 export function tableauDuMois(c: Pick<Cas, "code">): TableauDeDonnees {
   const k = indicateursDuPointDeVente(c);
-  const ligne = (libelle: string, x: { entrees: number; tickets: number; articles: number; chiffreDAffaires: number }) => ({
+  const ligne = (libelle: string, x: { entrees: number; tickets: number; articles: number; chiffreDAffaires: number }, enCaisse = true) => ({
     libelle,
-    valeurs: [qte(x.entrees), qte(x.tickets), qte(x.articles), eur(x.chiffreDAffaires)],
+    valeurs: [qte(x.entrees), enCaisse ? qte(x.tickets) : `aucun (${qte(x.tickets)} commandes)`, qte(x.articles), eur(x.chiffreDAffaires)],
   });
   return {
     titre: `${k.f.entreprise} en ${k.f.moisDeReference}, clientèle par clientèle`,
     colonnes: ["Entrées", "Passages en caisse", "Articles achetés", "Chiffre d'affaires HT"],
-    lignes: [...k.m.clienteles.map((x) => ligne(x.nom, x)), ligne("Toute la boutique", k.m)],
+    lignes: [...k.m.clienteles.map((x) => ligne(x.nom, x, x.delaiDeReglement === 0)), ligne("Toute la boutique", k.m)],
   };
 }
 
@@ -162,9 +164,9 @@ function tableauDesIndicateurs(k: IndicateursDuPointDeVente): TableauDeDonnees {
     colonnes: ["Calcul", "Valeur"],
     lignes: [
       { libelle: "Taux de transformation", valeurs: ["passages ÷ entrées", pct(k.transformation)] },
-      { libelle: "Indice de vente", valeurs: ["articles ÷ passages", deux(k.indice)] },
-      { libelle: "Panier moyen", valeurs: ["chiffre d'affaires ÷ passages", eur(k.panier)] },
-      { libelle: "Prix moyen d'un article", valeurs: ["chiffre d'affaires ÷ articles", eur(k.prixMoyen)] },
+      { libelle: "Indice de vente", valeurs: ["articles en caisse ÷ passages", deux(k.indice)] },
+      { libelle: "Panier moyen", valeurs: ["chiffre d'affaires en caisse ÷ passages", eur(k.panier)] },
+      { libelle: "Prix moyen d'un article", valeurs: ["chiffre d'affaires en caisse ÷ articles en caisse", eur(k.prixMoyen)] },
       { libelle: "Chiffre d'affaires au m²", valeurs: ["chiffre d'affaires ÷ surface de vente", eur(k.caAuM2)] },
       { libelle: "Taux de service", valeurs: ["articles vendus ÷ articles demandés", pct(k.tauxDeService)] },
     ],
@@ -188,7 +190,7 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
     "Calculer le taux de transformation, passages ÷ entrées, et le distinguer du taux de service",
     "Chiffrer ce que coûtent des ventes manquées",
     "Décomposer le chiffre d'affaires en entrées × transformation × indice de vente × prix moyen, et chiffrer un objectif levier par levier",
-    "Dire de quel panier on parle quand quelques grosses commandes tirent la moyenne",
+    "Dire de quel panier on parle quand quelques grosses commandes passent hors caisse",
   ],
   libre: false,
   entreprises: {
@@ -207,7 +209,7 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
         const k = indicateursDuPointDeVente(c);
         return [
           `Ce chapitre se joue dans la simulation du cours, à la boutique ${k.f.entreprise}, sur le mois de ${k.f.moisDeReference} de l'année N. Le soir, le manager ne lit pas le compte de résultat : il lit quelques chiffres, toujours les mêmes. Combien de personnes sont entrées, combien sont passées en caisse, combien d'articles chacune a pris, pour quel montant.`,
-          `La simulation compte les entrées au compteur de la porte, et un ticket de caisse pour un passage. Les comités d'entreprise passent commande en boutique : chaque commande compte pour une entrée et un passage. La surface de vente est de ${qte(k.f.surfaceDeVente)} m². Tous les montants sont hors taxes.`,
+          `La simulation compte les entrées au compteur de la porte, et un ticket de caisse pour un passage. Les comités d'entreprise passent commande en boutique : la commande est facturée et réglée plus tard, elle ne passe pas en caisse. Elle compte dans le chiffre d'affaires du mois, pas dans les passages. La surface de vente est de ${qte(k.f.surfaceDeVente)} m². Tous les montants sont hors taxes.`,
         ];
       },
       repere: () => "Un indicateur se lit toujours comparé : au mois dernier, à l'objectif, ou au magasin voisin. Et toujours en disant de quoi il est le rapport.",
@@ -221,14 +223,15 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
       tableau: tableauDuMois,
       question: (c) => {
         const k = indicateursDuPointDeVente(c);
-        return `Additionnez les ${qte(k.m.clienteles.length)} clientèles : le chiffre d'affaires du mois, les passages en caisse et les articles vendus. Puis le chiffre d'affaires au m² : le chiffre d'affaires divisé par les ${qte(k.f.surfaceDeVente)} m² de surface de vente.`;
+        return `Additionnez les ${qte(k.m.clienteles.length)} clientèles : le chiffre d'affaires du mois et les articles vendus. Les passages en caisse, eux, ne viennent que des clientèles qui paient en caisse. Puis le chiffre d'affaires au m² : le chiffre d'affaires divisé par les ${qte(k.f.surfaceDeVente)} m² de surface de vente.`;
       },
       champs: (c) => {
         const k = indicateursDuPointDeVente(c);
         const cl = k.m.clienteles;
+        const enCaisse = cl.filter((x) => x.delaiDeReglement === 0);
         return [
           { libelle: "Chiffre d'affaires du mois", attendu: k.m.chiffreDAffaires, calcul: `${cl.map((x) => eur(x.chiffreDAffaires)).join(" + ")} = ${eur(k.m.chiffreDAffaires)}` },
-          { libelle: "Passages en caisse", attendu: k.m.tickets, calcul: `${cl.map((x) => qte(x.tickets)).join(" + ")} = ${qte(k.m.tickets)}` },
+          { libelle: "Passages en caisse", attendu: k.m.tickets, calcul: `${enCaisse.map((x) => qte(x.tickets)).join(" + ")} = ${qte(k.m.tickets)}, sans les commandes des comités` },
           { libelle: "Articles vendus", attendu: k.m.articles, calcul: `${cl.map((x) => qte(x.articles)).join(" + ")} = ${qte(k.m.articles)}` },
           { libelle: "Chiffre d'affaires au m²", attendu: k.caAuM2, calcul: `${eur(k.m.chiffreDAffaires)} ÷ ${qte(k.f.surfaceDeVente)} = ${eur(k.caAuM2)}` },
         ];
@@ -248,14 +251,14 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
       notions: ["average_basket"],
       question: (c) => {
         const k = indicateursDuPointDeVente(c);
-        return `Le panier moyen est le chiffre d'affaires divisé par les passages en caisse ; l'indice de vente, les articles divisés par les passages ; le prix moyen d'un article, le chiffre d'affaires divisé par les articles. Calculez les trois pour ${k.f.entreprise}, au centime ou au centième.`;
+        return `Le panier moyen est le chiffre d'affaires encaissé en caisse divisé par les passages en caisse ; l'indice de vente, les articles passés en caisse divisés par les passages ; le prix moyen d'un article, le chiffre d'affaires en caisse divisé par ces articles. Les clientes fidèles et les passants paient en caisse. Calculez les trois pour ${k.f.entreprise}, au centime ou au centième.`;
       },
       champs: (c) => {
         const k = indicateursDuPointDeVente(c);
         return [
-          { libelle: "Panier moyen", attendu: k.panier, calcul: `${eur(k.m.chiffreDAffaires)} ÷ ${qte(k.m.tickets)} = ${eur(k.panier)}` },
-          { libelle: "Indice de vente", attendu: k.indice, calcul: `${qte(k.m.articles)} ÷ ${qte(k.m.tickets)} = ${deux(k.indice)} articles par passage`, tolerance: 0.01 },
-          { libelle: "Prix moyen d'un article", attendu: k.prixMoyen, calcul: `${eur(k.m.chiffreDAffaires)} ÷ ${qte(k.m.articles)} = ${eur(k.prixMoyen)}` },
+          { libelle: "Panier moyen", attendu: k.panier, calcul: `${eur(k.m.chiffreDAffairesEnCaisse)} ÷ ${qte(k.m.tickets)} = ${eur(k.panier)}` },
+          { libelle: "Indice de vente", attendu: k.indice, calcul: `${qte(k.m.articlesEnCaisse)} ÷ ${qte(k.m.tickets)} = ${deux(k.indice)} articles par passage`, tolerance: 0.01 },
+          { libelle: "Prix moyen d'un article", attendu: k.prixMoyen, calcul: `${eur(k.m.chiffreDAffairesEnCaisse)} ÷ ${qte(k.m.articlesEnCaisse)} = ${eur(k.prixMoyen)}` },
         ];
       },
       explication: (c) => {
@@ -401,7 +404,7 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
       notions: ["average_basket", "revenue"],
       question: (c) => {
         const k = indicateursDuPointDeVente(c);
-        return `Avant de calculer, pariez. La direction veut ${pct(HAUSSE_VISEE * 100)} de chiffre d'affaires de plus qu'en ${k.f.moisDeReference}. Au même panier moyen, il faudra…`;
+        return `Avant de calculer, pariez. La direction veut ${pct(HAUSSE_VISEE * 100)} de chiffre d'affaires en caisse de plus qu'en ${k.f.moisDeReference}. Au même panier moyen, il faudra…`;
       },
       options: (c) => {
         const k = indicateursDuPointDeVente(c);
@@ -439,7 +442,7 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
           { libelle: "Chiffre d'affaires de ces passages", montant: ca, fort: true },
           { libelle: "Objectif de la direction", montant: k.caVise },
           { libelle: "Écart à l'objectif", montant: auCentime(ca - k.caVise) },
-          { libelle: "Chiffre d'affaires gagné sur janvier", montant: auCentime(ca - k.m.chiffreDAffaires) },
+          { libelle: "Chiffre d'affaires gagné sur janvier", montant: auCentime(ca - k.m.chiffreDAffairesEnCaisse) },
         ];
       },
       droites: (c) => {
@@ -461,12 +464,12 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
       notions: ["average_basket", "revenue", "conversion_rate"],
       question: (c) => {
         const k = indicateursDuPointDeVente(c);
-        return `Le chiffre d'affaires est le produit des passages en caisse et du panier moyen. Calculez l'objectif (${pct(HAUSSE_VISEE * 100)} de plus qu'en ${k.f.moisDeReference}), les passages nécessaires au même panier (à l'unité supérieure), le panier nécessaire avec les mêmes passages, puis les entrées nécessaires à la même transformation (à l'unité supérieure).`;
+        return `Le chiffre d'affaires en caisse est le produit des passages en caisse et du panier moyen. Calculez l'objectif (${pct(HAUSSE_VISEE * 100)} de plus qu'en ${k.f.moisDeReference}), les passages nécessaires au même panier (à l'unité supérieure), le panier nécessaire avec les mêmes passages, puis les entrées nécessaires à la même transformation (à l'unité supérieure).`;
       },
       champs: (c) => {
         const k = indicateursDuPointDeVente(c);
         return [
-          { libelle: "Chiffre d'affaires visé", attendu: k.caVise, calcul: `${eur(k.m.chiffreDAffaires)} × ${(1 + HAUSSE_VISEE).toLocaleString("fr-FR")} = ${eur(k.caVise)}` },
+          { libelle: "Chiffre d'affaires visé en caisse", attendu: k.caVise, calcul: `${eur(k.m.chiffreDAffairesEnCaisse)} × ${(1 + HAUSSE_VISEE).toLocaleString("fr-FR")} = ${eur(k.caVise)}` },
           { libelle: "Passages nécessaires, au même panier", attendu: k.passagesVises, calcul: `${eur(k.caVise)} ÷ ${eur(k.panier)} = ${qte(k.passagesVises)}`, tolerance: 1 },
           { libelle: "Panier nécessaire, aux mêmes passages", attendu: k.panierVise, calcul: `${eur(k.caVise)} ÷ ${qte(k.m.tickets)} = ${eur(k.panierVise)}`, tolerance: 0.01 },
           { libelle: "Entrées nécessaires, à la même transformation", attendu: k.entreesVisees, calcul: `${qte(k.passagesVises)} × ${qte(k.m.entrees)} ÷ ${qte(k.m.tickets)} = ${qte(k.entreesVisees)}, les passages divisés par la transformation de janvier`, tolerance: 6 },
@@ -550,7 +553,7 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
           { libelle: "Indice de vente", montant: auCentime(x.indiceDeVente), reference: auCentime(d.indiceDeVente), unite: "articles par passage" },
           { libelle: "Prix moyen d'un article", montant: auCentime(x.prixMoyenDeLArticle), reference: auCentime(d.prixMoyenDeLArticle) },
           { libelle: "Panier moyen", montant: auCentime(x.panierMoyen), reference: auCentime(d.panierMoyen) },
-          { libelle: "Chiffre d'affaires", montant: x.chiffreDAffaires, reference: d.chiffreDAffaires },
+          { libelle: "Chiffre d'affaires en caisse", montant: x.chiffreDAffairesEnCaisse, reference: d.chiffreDAffairesEnCaisse },
           { libelle: "Chiffre d'affaires gagné sur janvier", montant: x.gain, reference: 0, effet: true, fort: true },
         ];
       },
@@ -558,15 +561,15 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
         const k = indicateursDuPointDeVente(c);
         const atteint = (p: Readonly<Record<string, number>>) => {
           const x = laboratoireDesIndicateurs(k.f, p);
-          return x.chiffreDAffaires >= k.caVise && x.tickets <= k.m.tickets + 1e-9;
+          return x.chiffreDAffairesEnCaisse >= k.caVise && x.tickets <= k.m.tickets + 1e-9;
         };
         return {
-          consigne: `Atteignez ${eur(k.caVise)} de chiffre d'affaires sans un passage en caisse de plus qu'en ${k.f.moisDeReference}.`,
+          consigne: `Atteignez ${eur(k.caVise)} de chiffre d'affaires en caisse sans un passage en caisse de plus qu'en ${k.f.moisDeReference}.`,
           atteint,
           indice: (p) => {
             const x = laboratoireDesIndicateurs(k.f, p);
             if (x.tickets > k.m.tickets + 1e-9) return `Vous avez ${qte(auDixieme(x.tickets))} passages en caisse, plus que les ${qte(k.m.tickets)} de ${k.f.moisDeReference} : le défi demande de faire sans un client de plus. Jouez sur le panier.`;
-            return `Il manque ${eur(auCentime(k.caVise - x.chiffreDAffaires))} : sans un passage de plus, seuls l'indice de vente et le prix moyen font monter le panier.`;
+            return `Il manque ${eur(auCentime(k.caVise - x.chiffreDAffairesEnCaisse))} : sans un passage de plus, seuls l'indice de vente et le prix moyen font monter le panier.`;
           },
           solution: { entrees: 0, transformation: 0, indice: HAUSSE_VISEE * 100, prix: 0 },
         };
@@ -575,7 +578,7 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
         const k = indicateursDuPointDeVente(c);
         const x = laboratoireDesIndicateurs(k.f, p);
         return [
-          `Avec ${qte(auDixieme(x.tickets))} passages en caisse, la boutique fait ${eur(x.chiffreDAffaires)} : un indice de vente de ${deux(x.indiceDeVente)} et un prix moyen de ${eur(auCentime(x.prixMoyenDeLArticle))} font un panier de ${eur(auCentime(x.panierMoyen))}. Sans un client de plus, l'objectif se gagne par le panier.`,
+          `Avec ${qte(auDixieme(x.tickets))} passages en caisse, la boutique encaisse ${eur(x.chiffreDAffairesEnCaisse)} : un indice de vente de ${deux(x.indiceDeVente)} et un prix moyen de ${eur(auCentime(x.prixMoyenDeLArticle))} font un panier de ${eur(auCentime(x.panierMoyen))}. Sans un client de plus, l'objectif se gagne par le panier.`,
           `Les leviers se multiplient : 5 % sur l'indice de vente et 5 % sur le prix moyen font ${pct(k.deuxFoisCinq)} de chiffre d'affaires, pas 10 %. Et des entrées en plus ne servent à rien si la transformation baisse d'autant : 10 % de visiteurs en plus, transformés 10 % moins, font moins de passages qu'avant.`,
         ];
       },
@@ -611,34 +614,34 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
       explication: (c) => {
         const k = indicateursDuPointDeVente(c);
         return [
-          `Les hausses se multiplient, elles ne s'ajoutent pas : (1 + ${pct(HAUSSE_DU_PRIX_MOYEN * 100)}) × (1 + ${pct(k.hausseDeLIndice)}) = 1 + ${pct(HAUSSE_VISEE * 100)}. Soustraire les pourcentages (${pct((HAUSSE_VISEE - HAUSSE_DU_PRIX_MOYEN) * 100)}) donnerait un indice un peu trop haut. Il faut ${deux(k.indiceVise)} articles par passage au lieu de ${deux(k.indice)}, soit ${qte(k.articlesVises)} articles au lieu de ${qte(k.m.articles)}.`,
+          `Les hausses se multiplient, elles ne s'ajoutent pas : (1 + ${pct(HAUSSE_DU_PRIX_MOYEN * 100)}) × (1 + ${pct(k.hausseDeLIndice)}) = 1 + ${pct(HAUSSE_VISEE * 100)}. Soustraire les pourcentages (${pct((HAUSSE_VISEE - HAUSSE_DU_PRIX_MOYEN) * 100)}) donnerait un indice un peu trop haut. Il faut ${deux(k.indiceVise)} articles par passage au lieu de ${deux(k.indice)}, soit ${qte(k.articlesVises)} articles en caisse au lieu de ${qte(k.m.articlesEnCaisse)}.`,
         ];
       },
     },
     {
-      id: "le-panier-sans-les-comites",
+      id: "le-panier-avec-les-comites",
       objectifs: [4],
       type: "montants",
-      titre: "Le panier, sans les comités",
+      titre: "Le panier, si l'on comptait les comités",
       notions: ["average_basket", "segmentation"],
       tableau: tableauDuMois,
       question: (c) => {
         const k = indicateursDuPointDeVente(c);
-        return `Les ${qte(k.comites.tickets)} commandes des comités d'entreprise comptent chacune pour un passage. Calculez leur panier moyen, puis le chiffre d'affaires, les passages et le panier moyen de la boutique sans elles.`;
+        return `Les ${qte(k.comites.tickets)} commandes des comités d'entreprise ne passent pas en caisse. Un stagiaire les compte pourtant comme des passages. Calculez le panier d'une commande de comité, puis le chiffre d'affaires, les « passages » et le panier moyen qu'il obtient.`;
       },
       champs: (c) => {
         const k = indicateursDuPointDeVente(c);
         return [
-          { libelle: "Panier moyen des comités", attendu: k.panierDesComites, calcul: `${eur(k.comites.chiffreDAffaires)} ÷ ${qte(k.comites.tickets)} = ${eur(k.panierDesComites)}` },
-          { libelle: "Chiffre d'affaires sans les comités", attendu: k.sansComites.chiffreDAffaires, calcul: `${eur(k.m.chiffreDAffaires)} − ${eur(k.comites.chiffreDAffaires)} = ${eur(k.sansComites.chiffreDAffaires)}` },
-          { libelle: "Passages sans les comités", attendu: k.sansComites.tickets, calcul: `${qte(k.m.tickets)} − ${qte(k.comites.tickets)} = ${qte(k.sansComites.tickets)}` },
-          { libelle: "Panier moyen sans les comités", attendu: k.sansComites.panier, calcul: `${eur(k.sansComites.chiffreDAffaires)} ÷ ${qte(k.sansComites.tickets)} = ${eur(k.sansComites.panier)}` },
+          { libelle: "Panier d'une commande de comité", attendu: k.panierDesComites, calcul: `${eur(k.comites.chiffreDAffaires)} ÷ ${qte(k.comites.tickets)} = ${eur(k.panierDesComites)}` },
+          { libelle: "Chiffre d'affaires, comités compris", attendu: k.avecComites.chiffreDAffaires, calcul: `${eur(k.m.chiffreDAffairesEnCaisse)} + ${eur(k.comites.chiffreDAffaires)} = ${eur(k.avecComites.chiffreDAffaires)}` },
+          { libelle: "« Passages », comités compris", attendu: k.avecComites.tickets, calcul: `${qte(k.m.tickets)} + ${qte(k.comites.tickets)} = ${qte(k.avecComites.tickets)}` },
+          { libelle: "Panier moyen du stagiaire", attendu: k.avecComites.panier, calcul: `${eur(k.avecComites.chiffreDAffaires)} ÷ ${qte(k.avecComites.tickets)} = ${eur(k.avecComites.panier)}` },
         ];
       },
       explication: (c) => {
         const k = indicateursDuPointDeVente(c);
         return [
-          `${qte(k.comites.tickets)} passages sur ${qte(k.m.tickets)} font ${eur(k.comites.chiffreDAffaires)} : à ${eur(k.panierDesComites)} chacun, ils tirent la moyenne de toute la boutique de ${eur(k.sansComites.panier)} à ${eur(k.panier)}. Une moyenne se laisse tirer par quelques valeurs très fortes.`,
+          `${qte(k.comites.tickets)} commandes à ${eur(k.panierDesComites)} chacune porteraient le panier de ${eur(k.panier)} à ${eur(k.avecComites.panier)}. Une moyenne se laisse tirer par quelques valeurs très fortes : c'est pourquoi le panier moyen se calcule sur la caisse seule, chiffre d'affaires encaissé ÷ passages en caisse.`,
         ];
       },
     },
@@ -656,14 +659,14 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
         const k = indicateursDuPointDeVente(c);
         return [
           {
-            texte: `${eur(k.sansComites.panier)}, celui des clients du comptoir`,
+            texte: `${eur(k.panier)}, celui de la caisse`,
             juste: true,
-            retour: `Oui. Les vendeurs agissent sur les clients qui passent en boutique ; les ${qte(k.comites.tickets)} commandes des comités, à ${eur(k.panierDesComites)}, se négocient ailleurs et varient d'un mois à l'autre. Un objectif sur ${eur(k.panier)} récompenserait ou punirait les vendeurs pour des commandes qu'ils ne font pas.`,
+            retour: `Oui. Les vendeurs agissent sur les clients qui passent en caisse ; les ${qte(k.comites.tickets)} commandes des comités, à ${eur(k.panierDesComites)}, se négocient ailleurs et varient d'un mois à l'autre. Un objectif sur ${eur(k.avecComites.panier)} récompenserait ou punirait les vendeurs pour des commandes qu'ils ne font pas.`,
           },
           {
-            texte: `${eur(k.panier)}, celui de toute la boutique au tableau de bord`,
+            texte: `${eur(k.avecComites.panier)}, celui qui compte aussi les commandes des comités`,
             juste: false,
-            retour: `Non : ce panier mêle ${qte(k.comites.tickets)} commandes à ${eur(k.panierDesComites)} et ${qte(k.sansComites.tickets)} passages au comptoir. Un comité de moins le mois prochain ferait rater l'objectif sans que les vendeurs y soient pour rien.`,
+            retour: `Non : ce panier mêle ${qte(k.comites.tickets)} commandes à ${eur(k.panierDesComites)} et ${qte(k.m.tickets)} passages en caisse. Un comité de moins le mois prochain ferait rater l'objectif sans que les vendeurs y soient pour rien.`,
           },
           {
             texte: `${eur(k.prixMoyen)}, le prix moyen d'un article`,
@@ -710,14 +713,14 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
       texte: (c) => {
         const k = indicateursDuPointDeVente(c);
         return [
-          `Le chiffre d'affaires de ${k.f.entreprise} se décompose en quatre indicateurs qui se multiplient : ${qte(k.m.entrees)} entrées × ${pct(k.transformation)} de transformation × ${deux(k.indice)} articles par passage × ${eur(k.prixMoyen)} = ${eur(k.m.chiffreDAffaires)}. Le panier moyen (${eur(k.panier)}) est le produit des deux derniers. Un objectif se chiffre levier par levier, et deux hausses se multiplient.`,
-          `Deux pièges. Le taux de transformation rapporte les passages aux entrées (${pct(k.transformation)}) ; le taux de service rapporte les ventes à la demande (${pct(k.tauxDeService)}) : l'un mesure la vente, l'autre le rayon. Et une moyenne se laisse tirer : sans les comités d'entreprise, le panier tombe à ${eur(k.sansComites.panier)}. Dites toujours de quel panier vous parlez.`,
+          `Le chiffre d'affaires en caisse de ${k.f.entreprise} se décompose en quatre indicateurs qui se multiplient : ${qte(k.m.entrees)} entrées × ${pct(k.transformation)} de transformation × ${deux(k.indice)} articles par passage × ${eur(k.prixMoyen)} = ${eur(k.m.chiffreDAffairesEnCaisse)}. Les commandes des comités (${eur(k.m.commandes.chiffreDAffaires)}) s'y ajoutent pour faire ${eur(k.m.chiffreDAffaires)}. Le panier moyen (${eur(k.panier)}) est le produit des deux derniers. Un objectif se chiffre levier par levier, et deux hausses se multiplient.`,
+          `Deux pièges. Le taux de transformation rapporte les passages aux entrées (${pct(k.transformation)}) ; le taux de service rapporte les ventes à la demande (${pct(k.tauxDeService)}) : l'un mesure la vente, l'autre le rayon. Et une moyenne se laisse tirer : compter les commandes des comités comme des passages porterait le panier à ${eur(k.avecComites.panier)}. Dites toujours de quel panier vous parlez.`,
           "Au niveau de l'examen, vous savez calculer et interpréter les indicateurs d'un point de vente, décomposer le chiffre d'affaires en ses leviers, chiffrer un objectif à rebours, et choisir l'indicateur qui juge l'équipe sur ce qu'elle fait.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
         ];
       },
       repere: () =>
-        "Chiffre d'affaires = entrées × taux de transformation × indice de vente × prix moyen d'un article. Taux de transformation = passages en caisse ÷ entrées. Indice de vente = articles ÷ passages. Panier moyen = chiffre d'affaires ÷ passages = indice de vente × prix moyen. Taux de service = articles vendus ÷ articles demandés.",
+        "Chiffre d'affaires en caisse = entrées × taux de transformation × indice de vente × prix moyen d'un article. Taux de transformation = passages en caisse ÷ entrées. Indice de vente = articles ÷ passages. Panier moyen = chiffre d'affaires en caisse ÷ passages en caisse = indice de vente × prix moyen. Taux de service = articles vendus ÷ articles demandés.",
     },
   ],
 };

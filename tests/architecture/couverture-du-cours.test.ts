@@ -288,10 +288,22 @@ describe("la couverture par le cours", () => {
 });
 
 describe("le DCG et le DSCG ne prétendent pas couvrir ce qu'ils ne travaillent pas (audit pédagogique, P1-3)", () => {
-  it.each(["dcg", "dscg"])("%s : chaque unité non travaillée est hors du champ, sauf l'UE10 du DCG, à venir", (code) => {
+  it.each(["dcg", "dscg"])("%s : chaque unité non travaillée est hors du champ", (code) => {
     const restent = tableauDeCouverture(code)
       .lignes.filter((l) => !l.couverture && !l.horsDuChamp)
       .map((l) => l.bloc);
-    expect(restent).toEqual(code === "dcg" ? ["UE10 · Comptabilité approfondie"] : []);
+    expect(restent).toEqual([]);
+  });
+
+  it("l'UE10 du DCG, comptabilité approfondie, est couverte par ses chapitres, et n'est pas hors du champ", () => {
+    const ligne = tableauDeCouverture("dcg").lignes.find((l) => l.bloc === "UE10 · Comptabilité approfondie")!;
+    expect(ligne.horsDuChamp).toBeUndefined();
+    expect(ligne.couverture?.adequation).toBe("couvert");
+    expect(ligne.couverture!.chapitres.length).toBeGreaterThanOrEqual(3);
+    for (const c of ligne.couverture!.chapitres) {
+      const ch = CHAPITRES.find((x) => x.code === c.code)!;
+      expect(ch.parcours, c.code).toBe("dcg-comptabilite-approfondie");
+      expect(ch.entreprises?.codes, c.code).toEqual(["nova"]);
+    }
   });
 });

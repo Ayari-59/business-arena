@@ -107,7 +107,7 @@ export const ATELIER_CAMPUS: AtelierDefinition = {
         "part de marché",
       ],
       preparation:
-        "Créez le concours une semaine avant, notez le code à six caractères et publiez sa page publique : c'est l'affiche de l'immersion. Composez les équipes AVANT la première séance, une par filière et cinq élèves par équipe, en mélangeant les classes : laisser les élèves se choisir reproduit les classes et vide l'exercice de son sens. Imprimez les cinq cartes de poste, une par élève, et la fiche de tour vierge, une par équipe et par séance. Les chiffres que les équipes doivent retrouver seules : 22 € de matières et 16 € d'autres charges variables par enceinte, soit 38 € de coût variable ; 91 000 € de charges fixes par trimestre, plus 5 000 € d'amortissements ; un atelier de 7 000 enceintes et une main-d'œuvre qui en couvre 7 200. Trois clientèles, qui n'ont ni le même prix de référence ni la même sensibilité : les étudiants autour de 59 €, très sensibles au prix, les passionnés autour de 79 €, sensibles à la qualité, et CampusTech, la chaîne de magasins, autour de 55 € et réglée à quatre-vingts jours.",
+        "Créez le concours une semaine avant, notez le code à six caractères et publiez sa page publique : c'est l'affiche de l'immersion. Composez les équipes AVANT la première séance, une par filière et cinq élèves par équipe, en mélangeant les classes : laisser les élèves se choisir reproduit les classes et vide l'exercice de son sens. Imprimez les cinq cartes de poste, une par élève, et la fiche de tour vierge, une par équipe et par séance. Les chiffres que les équipes doivent retrouver seules : 22 € de matières et 16 € d'autres charges variables par enceinte, soit 38 € de coût variable ; 91 000 € de charges fixes par trimestre, plus 5 000 € d'amortissements ; un atelier de 7 000 enceintes et une main-d'œuvre qui en couvre 7 200. Trois clientèles, qui n'ont ni le même prix de référence ni la même sensibilité : les étudiants autour de 59 €, très sensibles au prix, les passionnés autour de 79 €, sensibles à la qualité, et CampusTech, la chaîne de magasins, autour de 55 €, à soixante jours convenus mais réglée en retard, à quatre-vingts jours.",
       deroule: [
         {
           minutes: 12,
@@ -317,7 +317,7 @@ export const ATELIER_CAMPUS: AtelierDefinition = {
         "STMG thème 4 · Temps et risque",
       ],
       objectif:
-        "Comprendre pourquoi un trimestre record peut vider la caisse quand la chaîne de magasins règle à quatre-vingts jours, et couvrir le besoin de trésorerie avant qu'il ne coûte cher.",
+        "Comprendre pourquoi un trimestre record peut vider la caisse quand la chaîne de magasins, payable à soixante jours, règle en retard à quatre-vingts jours, et couvrir le besoin de trésorerie avant qu'il ne coûte cher.",
       competences: [
         "Je relie le besoin en fonds de roulement d'une entreprise aux délais de règlement de ses clientèles.",
         "Je construis un plan de trésorerie de trimestre et j'y repère le point de tension.",
@@ -331,7 +331,7 @@ export const ATELIER_CAMPUS: AtelierDefinition = {
         "découvert et coût du financement court terme",
       ],
       preparation:
-        "C'est la séance de la direction financière, et celle qui décide du tournoi : prévoyez-y tout le temps annoncé. Les chiffres du jeu : les étudiants et les passionnés paient comptant, CampusTech à quatre-vingts jours, les fournisseurs se règlent à vingt-deux jours. Le découvert autorisé est de 30 000 € à 12 % l'an, l'escompte coûte 6 % l'an sur la moitié du poste clients au plus, l'affacturage 2,5 % de la créance cédée. La caisse d'ouverture était de 25 000 € seulement. Préparez un plan de trésorerie vierge où chaque équipe inscrira son solde attendu AVANT la clôture. Exigez que la direction financière l'explique aux quatre autres postes : c'est la notion la plus difficile de l'immersion, et la seule que personne ne devine.",
+        "C'est la séance de la direction financière, et celle qui décide du tournoi : prévoyez-y tout le temps annoncé. Les chiffres du jeu : les étudiants et les passionnés paient comptant, CampusTech à soixante jours convenus mais en retard, à quatre-vingts jours dans les faits, les fournisseurs se règlent à vingt-deux jours. Le découvert autorisé est de 30 000 € à 12 % l'an, l'escompte coûte 6 % l'an sur la moitié du poste clients au plus, l'affacturage 2,5 % de la créance cédée. La caisse d'ouverture était de 25 000 € seulement. Préparez un plan de trésorerie vierge où chaque équipe inscrira son solde attendu AVANT la clôture. Exigez que la direction financière l'explique aux quatre autres postes : c'est la notion la plus difficile de l'immersion, et la seule que personne ne devine.",
       deroule: [
         {
           minutes: 10,
@@ -343,7 +343,7 @@ export const ATELIER_CAMPUS: AtelierDefinition = {
           minutes: 25,
           titre: "Le cycle qui avance de l'argent",
           detail:
-            "La finance reconstitue le cycle devant les autres : matières payées à vingt-deux jours, charges tous les mois, chaîne de magasins encaissée à quatre-vingts jours. Vendre davantage à ce client-là creuse la caisse avant de la remplir. C'est le besoin en fonds de roulement, et il se voit ici avant de se définir.",
+            "La finance reconstitue le cycle devant les autres : matières payées à vingt-deux jours, charges tous les mois, chaîne de magasins encaissée à quatre-vingts jours, avec vingt jours de retard sur les soixante convenus. Vendre davantage à ce client-là creuse la caisse avant de la remplir. C'est le besoin en fonds de roulement, et il se voit ici avant de se définir.",
         },
         {
           minutes: 20,

@@ -48,9 +48,14 @@ const taux = centime(paie / heuresPayees);
 const ca = somme(f.gamme.map((r) => r.ventesDuMois * r.prixHt));
 const cv = somme(f.gamme.map((r) => r.ventesDuMois * (r.coutDAchat + r.autresCoutsVariables)));
 const tauxMcv = (ca - cv) / ca;
-const tickets = somme(f.clienteles.map((c) => c.tickets));
+// Un seul panier dans tout le cours : les commandes des comités, facturées à terme, ne passent pas en caisse.
+const enCaisse = f.clienteles.filter((c) => c.delaiDeReglement === 0);
+const tickets = somme(enCaisse.map((c) => c.tickets));
 const entrees = somme(f.clienteles.map((c) => c.entrees));
-const panier = ca / tickets;
+const prixDe = (code: string) => f.gamme.find((r) => r.code === code)!.prixHt;
+const caEnCaisse = somme(enCaisse.flatMap((c) => Object.entries(c.achats).map(([code, q]) => q * prixDe(code))));
+const comites = ca - caEnCaisse;
+const panier = caEnCaisse / tickets;
 const JOURS: readonly JourDOuverture[] = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
 /** Les vendeurs nécessaires d'un jour : au moins 2, un pour 8 entrées, à l'unité supérieure. */
 const besoinDu = (jour: JourDOuverture, a = 1) => f.affluence[jour].map((e) => Math.max(2, auDessus((e * a) / 8)));
@@ -227,7 +232,7 @@ describe("l'équipe et son planning, à la boutique du monde du cours", () => {
 
   it("la fiche donne les chiffres de la consigne", () => {
     expect([heuresDeContrat, heuresPayees, brut, paie, taux]).toEqual([165, 715.01, 10_100, 14_342, 20.06]);
-    expect([ca, cv, tickets, entrees]).toEqual([87_450, 43_200, 948, 3_848]);
+    expect([ca, cv, tickets, entrees]).toEqual([87_450, 43_200, 940, 3_848]);
     expect(ecarts()).toEqual({ manque: 11, trop: 16, vente: 140 });
     expect(ecarts().vente + f.reglesDuPlanning.tachesHorsVente).toBe(160);
   });
@@ -275,9 +280,9 @@ describe("l'équipe et son planning, à la boutique du monde du cours", () => {
     expect(attendus(ch, "la-part-visee")).toEqual({
       "Chiffre d'affaires de la part visée": 95_614,
       "Hausse sur janvier (%)": dixieme((95_614 / ca - 1) * 100),
-      "Passages en caisse nécessaires": Math.ceil(95_614 / panier),
+      "Passages en caisse nécessaires": Math.ceil((95_614 - comites) / panier),
     });
-    expect([dixieme((95_614 / ca - 1) * 100), Math.ceil(95_614 / panier)]).toEqual([9.3, 1_037]);
+    expect([dixieme((95_614 / ca - 1) * 100), Math.ceil((95_614 - comites) / panier)]).toEqual([9.3, 1_040]);
   });
 
   it("le laboratoire du planning : déplacer 11 heures couvre chaque créneau sans un euro de plus", () => {
@@ -387,21 +392,23 @@ describe("l'équipe et son planning, à la boutique du monde du cours", () => {
       "Passages en caisse en plus": passages,
       "Taux de transformation à atteindre (%)": dixieme(((tickets + passages) / entrees) * 100),
     });
-    expect([enPlus, passages, dixieme(((tickets + passages) / entrees) * 100)]).toEqual([851, 10, 24.9]);
-    // Le curseur : la marge d'un passage en caisse, 44 250 € ÷ 948, face à la marge de janvier plus la hausse.
-    const margeParPassage = (ca - cv) / tickets;
+    expect([enPlus, passages, dixieme(((tickets + passages) / entrees) * 100)]).toEqual([851, 11, 24.7]);
+    // Le curseur : la marge d'un passage en caisse, 77 250 € × taux ÷ 940, plus celle des commandes des
+    // comités, face à la marge de janvier plus la hausse.
+    const margeParPassage = (caEnCaisse * tauxMcv) / tickets;
+    const margeDesComites = comites * tauxMcv;
     const cible = centime(ca - cv + hausse);
-    const attendu = Math.ceil(cible / margeParPassage);
+    const attendu = Math.ceil((cible - margeDesComites) / margeParPassage - 1e-9);
     expect(attendu).toBe(tickets + passages);
     expect(curseur(s, "le-curseur-des-passages")).toEqual({
       attendu,
       bornes: [900, 1_100],
-      droites: [900 * margeParPassage, cible, 1_100 * margeParPassage, cible].map(centime),
+      droites: [900 * margeParPassage + margeDesComites, cible, 1_100 * margeParPassage + margeDesComites, cible].map(centime),
       lecture: {
-        "Chiffre d'affaires du mois": centime(attendu * panier),
-        "Marge sur coût variable": centime(attendu * margeParPassage),
+        "Chiffre d'affaires du mois": centime(attendu * panier + comites),
+        "Marge sur coût variable": centime(attendu * margeParPassage + margeDesComites),
         "Marge de janvier plus la hausse": cible,
-        "Ce que la hausse laisse au résultat": centime(centime(attendu * margeParPassage) - cible),
+        "Ce que la hausse laisse au résultat": centime(centime(attendu * margeParPassage + margeDesComites) - cible),
       },
     });
     // L'économie proposée : le CDD de l'étudiante, 12 h par semaine, 650 € de brut.

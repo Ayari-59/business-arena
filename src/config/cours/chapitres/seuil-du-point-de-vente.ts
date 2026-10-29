@@ -48,10 +48,11 @@ export const ENTREPRISES_DU_SEUIL: readonly string[] = ["boutique"];
 
 /**
  * LE PANIER EN PROMOTION (hypothèse du cours, pour la variante) : le manager veut faire descendre le
- * panier moyen à 70 € par une remise sur toute la boutique, les mêmes articles se vendant aux mêmes
- * clients. Les coûts variables, eux, ne baissent pas.
+ * panier moyen en caisse à 65 € par une remise sur toute la boutique, les mêmes articles se vendant
+ * aux mêmes clients ; les commandes des comités d'entreprise, hors caisse, gardent leurs prix. Les
+ * coûts variables, eux, ne baissent pas.
  */
-export const PANIER_EN_PROMOTION = 70;
+export const PANIER_EN_PROMOTION = 65;
 
 /**
  * LA CAMPAGNE D'AFFICHAGE (hypothèse du cours, pour la variante) : 1 500 € de publicité de plus par
@@ -101,9 +102,10 @@ export function seuilDeLaBoutique(c: Pick<Cas, "code">) {
   const resultatAuxJoursSupportables = auCentime((s.marge * (jours - joursSupportables)) / jours - s.chargesFixes);
   const panierPlancher = Math.ceil(s.panierPlancher - 1e-9);
   // La variante du panier en promotion : les mêmes articles, une remise sur tout ; les coûts variables restent.
-  const caEnPromotion = auCentime(s.tickets * PANIER_EN_PROMOTION);
+  // Les commandes des comités, hors caisse, ne prennent pas la remise.
+  const caEnPromotion = auCentime(s.tickets * PANIER_EN_PROMOTION + s.commandes);
   const margeEnPromotion = auCentime(caEnPromotion - s.coutsVariables);
-  const plancherEnPromotion = Math.ceil((s.chargesFixes + s.coutsVariables) / s.tickets - 1e-9);
+  const plancherEnPromotion = Math.ceil((s.chargesFixes + s.coutsVariables - s.commandes) / s.tickets - 1e-9);
   // Le calcul à rebours : un mois dont l'indice de sécurité tombe au seuil d'alerte du manager.
   const indiceARebours = f.seuilsDAlerte.indiceDeSecurite.seuil;
   const caARebours = auCentime(s.seuil / (1 - indiceARebours));
@@ -147,7 +149,7 @@ export type SeuilDeLaBoutique = ReturnType<typeof seuilDeLaBoutique>;
 /** Le laboratoire du seuil : le mois pour des passages, une variation du panier (en %) et des jours de fermeture. */
 export function laboratoireDuSeuil(x: SeuilDeLaBoutique, passages: number, panier: number, fermeture: number) {
   const s = seuilDuMois(x.f, { tickets: passages, panierMoyen: x.m.panierMoyen * (1 + panier / 100), joursDeFermeture: fermeture });
-  const caParJourOuvert = (passages * x.m.panierMoyen * (1 + panier / 100)) / x.jours;
+  const caParJourOuvert = (passages * x.m.panierMoyen * (1 + panier / 100) + s.commandes) / x.jours;
   return { ...s, caParJourOuvert, caCumule: (jour: number) => caParJourOuvert * Math.max(0, Math.min(jour, x.jours) - fermeture) };
 }
 
@@ -479,13 +481,18 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
       notions: ["breakeven", "average_basket"],
       question: (c) => {
         const x = seuilDeLaBoutique(c);
-        return `Le manager pense en clients. Avec ${qte(x.s.tickets)} passages en caisse ce mois-ci, quel est le panier moyen (au centime) ? Combien de passages faut-il au minimum, à ce panier, pour atteindre le seuil ?`;
+        return `Le manager pense en clients. Avec ${qte(x.s.tickets)} passages en caisse ce mois-ci et ${eur(x.m.chiffreDAffairesEnCaisse)} encaissés en caisse, quel est le panier moyen (au centime) ? Les commandes des comités d'entreprise (${eur(x.s.commandes)}) ne passent pas en caisse. Combien de passages faut-il au minimum, à ce panier, pour atteindre le seuil ?`;
       },
       champs: (c) => {
         const x = seuilDeLaBoutique(c);
         return [
-          { libelle: "Panier moyen", attendu: x.panier, tolerance: 0.01, calcul: `${eur(x.s.chiffreDAffaires)} ÷ ${qte(x.s.tickets)} = ${eur(x.panier)}` },
-          { libelle: "Passages en caisse au seuil", attendu: x.s.ticketsAuSeuil, tolerance: 1, calcul: `${eur(x.s.seuil)} ÷ ${eur(x.panier)} = ${qte(x.s.ticketsAuSeuil)}, arrondi au-dessus` },
+          { libelle: "Panier moyen", attendu: x.panier, tolerance: 0.01, calcul: `${eur(x.m.chiffreDAffairesEnCaisse)} ÷ ${qte(x.s.tickets)} = ${eur(x.panier)}, le chiffre d'affaires encaissé en caisse` },
+          {
+            libelle: "Passages en caisse au seuil",
+            attendu: x.s.ticketsAuSeuil,
+            tolerance: 1,
+            calcul: `(${eur(x.s.seuil)} − ${eur(x.s.commandes)}) ÷ ${eur(x.panier)} = ${qte(x.s.ticketsAuSeuil)}, arrondi au-dessus : les commandes des comités couvrent déjà une part du seuil`,
+          },
         ];
       },
       explication: (c) => {
@@ -501,13 +508,13 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
       notions: ["breakeven", "average_basket"],
       question: (c) => {
         const x = seuilDeLaBoutique(c);
-        return `Les passages en caisse restent ${qte(x.s.tickets)} par mois, et la composition des ventes celle de janvier. Faites varier le panier moyen, et placez le curseur sur le plus petit, à l'euro, qui ne fait pas perdre d'argent à ${x.f.entreprise}.`;
+        return `Les passages en caisse restent ${qte(x.s.tickets)} par mois, les commandes des comités ${eur(x.s.commandes)}, et la composition des ventes celle de janvier. Faites varier le panier moyen, et placez le curseur sur le plus petit, à l'euro, qui ne fait pas perdre d'argent à ${x.f.entreprise}.`;
       },
       grandeur: () => ({ libelle: "Panier moyen", unite: "€" }),
       cible: (c) => ({ attendu: seuilDeLaBoutique(c).panierPlancher, min: PANIER_DU_CURSEUR.min, max: PANIER_DU_CURSEUR.max }),
       lecture: (c, p) => {
         const x = seuilDeLaBoutique(c);
-        const ca = auCentime(x.s.tickets * p);
+        const ca = auCentime(x.s.tickets * p + x.s.commandes);
         const marge = auCentime(ca * x.taux);
         return [
           { libelle: "Chiffre d'affaires du mois", montant: ca },
@@ -518,7 +525,7 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
       },
       droites: (c) => {
         const x = seuilDeLaBoutique(c);
-        return { produit: (p) => x.s.tickets * p * x.taux, cout: () => x.s.chargesFixes, libelles: ["Marge sur coût variable", "Charges fixes"] };
+        return { produit: (p) => (x.s.tickets * p + x.s.commandes) * x.taux, cout: () => x.s.chargesFixes, libelles: ["Marge sur coût variable", "Charges fixes"] };
       },
       rates: () => ({
         dessous: "À ce panier, la marge du mois ne paie pas les charges fixes.",
@@ -528,7 +535,7 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
       explication: (c) => {
         const x = seuilDeLaBoutique(c);
         return [
-          `Avec les mêmes passages en caisse, le panier moyen peut descendre jusqu'à ${eur(x.panierPlancher)} au lieu de ${eur(x.panier)} avant que ${x.f.entreprise} ne perde de l'argent : c'est le seuil divisé par les passages. Le curseur suppose que le panier baisse à composition constante, avec le même taux de marge ; l'étape suivante regarde ce que devient ce plancher quand le panier baisse par une remise.`,
+          `Avec les mêmes passages en caisse, le panier moyen peut descendre jusqu'à ${eur(x.panierPlancher)} au lieu de ${eur(x.panier)} avant que ${x.f.entreprise} ne perde de l'argent : c'est le seuil, moins les commandes des comités, divisé par les passages. Le curseur suppose que le panier baisse à composition constante, avec le même taux de marge ; l'étape suivante regarde ce que devient ce plancher quand le panier baisse par une remise.`,
         ];
       },
     },
@@ -540,18 +547,18 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
       notions: ["breakeven", "average_basket", "contribution_margin"],
       question: (c) => {
         const x = seuilDeLaBoutique(c);
-        return `Variante : le manager veut faire descendre le panier à ${eur(PANIER_EN_PROMOTION)} par une remise sur toute la boutique. Les mêmes ${qte(x.s.tickets)} clients achètent les mêmes articles : les coûts variables restent ${eur(x.s.coutsVariables)}. Calculez le chiffre d'affaires du mois, la marge sur coût variable, le résultat (négatif en cas de perte), puis le vrai panier plancher d'une remise, à l'euro supérieur.`;
+        return `Variante : le manager veut faire descendre le panier à ${eur(PANIER_EN_PROMOTION)} par une remise sur toute la boutique. Les mêmes ${qte(x.s.tickets)} clients achètent les mêmes articles : les coûts variables restent ${eur(x.s.coutsVariables)}. Les commandes des comités (${eur(x.s.commandes)}) gardent leurs prix. Calculez le chiffre d'affaires du mois, la marge sur coût variable, le résultat (négatif en cas de perte), puis le vrai panier plancher d'une remise, à l'euro supérieur.`;
       },
       champs: (c) => {
         const x = seuilDeLaBoutique(c);
         return [
-          { libelle: "Chiffre d'affaires avec la remise", attendu: x.caEnPromotion, calcul: `${qte(x.s.tickets)} × ${eur(PANIER_EN_PROMOTION)} = ${eur(x.caEnPromotion)}` },
+          { libelle: "Chiffre d'affaires avec la remise", attendu: x.caEnPromotion, calcul: `${qte(x.s.tickets)} × ${eur(PANIER_EN_PROMOTION)} + ${eur(x.s.commandes)} = ${eur(x.caEnPromotion)}` },
           { libelle: "Marge sur coût variable avec la remise", attendu: x.margeEnPromotion, calcul: `${eur(x.caEnPromotion)} − ${eur(x.s.coutsVariables)} = ${eur(x.margeEnPromotion)}` },
           { libelle: "Résultat du mois avec la remise", attendu: x.resultatEnPromotion, calcul: `${eur(x.margeEnPromotion)} − ${eur(x.s.chargesFixes)} = ${eur(x.resultatEnPromotion)}` },
           {
             libelle: "Panier plancher d'une remise",
             attendu: x.plancherEnPromotion,
-            calcul: `(${eur(x.s.chargesFixes)} + ${eur(x.s.coutsVariables)}) ÷ ${qte(x.s.tickets)} = ${eur(auCentime((x.s.chargesFixes + x.s.coutsVariables) / x.s.tickets))}, soit ${eur(x.plancherEnPromotion)}`,
+            calcul: `(${eur(x.s.chargesFixes)} + ${eur(x.s.coutsVariables)} − ${eur(x.s.commandes)}) ÷ ${qte(x.s.tickets)} = ${eur(auCentime((x.s.chargesFixes + x.s.coutsVariables - x.s.commandes) / x.s.tickets))}, soit ${eur(x.plancherEnPromotion)}`,
           },
         ];
       },
@@ -654,7 +661,7 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
             const necessaire = auCentime((l.seuil / ouverts) * x.jours);
             return `Le seuil reste à ${eur(l.seuil)}. Pour l'atteindre en ${qte(ouverts)} jours de vente, il faut ${eur(necessaire)} de chiffre d'affaires sur un mois plein ; vous en êtes à ${eur(auCentime(l.caParJourOuvert * x.jours))}.`;
           },
-          solution: { passages: 1_000, panier: 10, fermeture: 0, jour: POINT_MORT_VISE },
+          solution: { passages: 1_000, panier: 12, fermeture: 0, jour: POINT_MORT_VISE },
         };
       },
       montrer: "Montrer une solution",

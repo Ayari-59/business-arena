@@ -88,7 +88,11 @@ export const FORMER: Chapitre = {
         return [
           `En N + 1, ${c.entreprise} ajoute un cinquième poste à sa ligne : elle peut monter ${qte(f.capaciteDeLOutil)} ${c.unites} par trimestre. Mais ses ${f.operateurs} opérateurs n'en montent que ${qte(f.equipeDuDepart)} : c'est maintenant l'équipe qui borne la production.`,
           `Le fabricant de la ligne propose un stage : chaque opérateur monterait une enceinte en ${minutes(f.minutes)} au lieu de ${minutes(f.minutesDuDepart)}. Chaque minute gagnée coûte ${eur(COUT_D_UNE_MINUTE_GAGNEE_PAR_OPERATEUR)} par opérateur, payés en janvier ; le gain dure tant que les opérateurs restent.`,
-          "Former ses salariés n'est pas qu'un choix de gestion : l'employeur doit les adapter à leur poste et maintenir leur capacité à occuper un emploi, et faire avec chacun, tous les deux ans, un entretien professionnel sur ses perspectives et ses formations.",
+          // Code du travail, art. L. 6321-1 (adaptation au poste) et L. 6315-1 dans sa rédaction issue de la
+          // loi n° 2025-989 du 24 octobre 2025 (Légifrance, vérifié le 29 octobre 2026) : l'entretien
+          // professionnel bisannuel devient l'entretien de parcours professionnel, la première année puis
+          // tous les quatre ans au moins.
+          "Former ses salariés n'est pas qu'un choix de gestion : l'employeur doit les adapter à leur poste et maintenir leur capacité à occuper un emploi, et faire avec chacun un entretien de parcours professionnel sur ses perspectives et ses formations, dans l'année qui suit l'embauche puis au moins tous les quatre ans.",
         ];
       },
       tableau: (c) => {

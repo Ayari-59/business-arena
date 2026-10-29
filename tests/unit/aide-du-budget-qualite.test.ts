@@ -51,6 +51,7 @@ describe("l'aide du budget qualité, au niveau 2", () => {
     alreadySubmitted: false,
     enabled: presetByLevel.get(2)!.decisions,
     vocabulary: SCENARIOS[0]!.vocabulary,
+    secteur: SCENARIOS[0]!.sector,
   };
   const lu = texte(renderToStaticMarkup(createElement(DecisionForm, props)));
 

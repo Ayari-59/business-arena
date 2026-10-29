@@ -7,6 +7,7 @@ import {
   LE_COUT_PREETABLI_ET_LES_BUDGETS,
   SEUIL_DE_SIGNIFICATIVITE,
   SURCONSOMMATION_DU_STANDARD_COURANT,
+  LE_BUDGET_FLEXIBLE,
 } from "../../src/config/cours/chapitres/le-cout-preetabli-et-les-budgets";
 import { LES_ECARTS_SUR_CHARGES_DIRECTES, VARIANTE_A_REBOURS } from "../../src/config/cours/chapitres/les-ecarts-sur-charges-directes";
 import { L_USINE_DE_NOVA } from "../../src/config/cours/monde/nova-usine";
@@ -241,11 +242,17 @@ describe("le coût préétabli, le budget standard et le budget flexible", () =>
   it("est inscrit au registre, et se donne en trois temps", () => {
     expect(CHAPITRES).toContain(ch);
     expect(ch.entreprises?.codes).toEqual(["nova"]);
-    aSesEtapes(ch, ["predire-la-production", "experience-production", "laboratoire-production", "predire-l-activite", "experience-activite", "heure-machine", "fiche", "budget-standard", "cout-reel", "a-quoi-comparer", "ecart-global", "budget-flexible", "flexible-ou-preetabli", "variante-activite", "standard-courant", "quel-standard", "seuil", "gestion-par-exception", "synthese"]);
-    expect(ch.etapes[0]!.type).toBe("lecture");
-    const synthese = ch.etapes.at(-1)!;
-    if (synthese.type !== "lecture") throw new Error("la synthèse n'est pas une lecture");
-    expect(synthese.texte(cas).at(-1)).toBe("Dans l'arène, les chiffres de votre usine seront différents : la notion, elle, est la même.");
+    // Découpé en deux (aucun chapitre de plus de 20 étapes) : le centre et le choix du standard forment la suite.
+    expect(CHAPITRES).toContain(LE_BUDGET_FLEXIBLE);
+    expect(LE_BUDGET_FLEXIBLE.prerequis).toEqual([ch.code]);
+    aSesEtapes(ch, ["predire-la-production", "experience-production", "laboratoire-production", "heure-machine", "fiche", "budget-standard", "cout-reel", "a-quoi-comparer", "ecart-global", "synthese"]);
+    aSesEtapes(LE_BUDGET_FLEXIBLE, ["intro", "predire-l-activite", "experience-activite", "budget-flexible", "flexible-ou-preetabli", "variante-activite", "standard-courant", "quel-standard", "seuil", "gestion-par-exception", "synthese"]);
+    for (const partie of [ch, LE_BUDGET_FLEXIBLE]) {
+      expect(partie.etapes[0]!.type).toBe("lecture");
+      const synthese = partie.etapes.at(-1)!;
+      if (synthese.type !== "lecture") throw new Error("la synthèse n'est pas une lecture");
+      expect(synthese.texte(cas).at(-1), partie.code).toBe("Dans l'arène, les chiffres de votre usine seront différents : la notion, elle, est la même.");
+    }
   });
 
   it("le coût standard de l'heure-machine et la fiche de chaque enceinte", () => {
@@ -277,18 +284,18 @@ describe("le coût préétabli, le budget standard et le budget flexible", () =>
 
   it("budget flexible contre coût préétabli de l'activité réelle : 203 200 € contre 208 000 €", () => {
     const flexible = 120_000 + 16 * 5_200;
-    expect(attendus(ch, "budget-flexible")).toEqual({
+    expect(attendus(LE_BUDGET_FLEXIBLE, "budget-flexible")).toEqual({
       "Budget flexible de l'activité réelle": flexible,
       "Coût préétabli de l'activité réelle": 40 * 5_200,
       "Budget flexible moins coût préétabli de l'activité réelle": flexible - 40 * 5_200,
     });
     expect([flexible, 40 * 5_200, flexible - 40 * 5_200]).toEqual([203_200, 208_000, -4_800]);
-    expect(juste(ch, "flexible-ou-preetabli")).toBe("Les fixes ne bougent pas au budget flexible, mais le coût préétabli en impute à chaque heure");
+    expect(juste(LE_BUDGET_FLEXIBLE, "flexible-ou-preetabli")).toBe("Les fixes ne bougent pas au budget flexible, mais le coût préétabli en impute à chaque heure");
   });
 
   it("variante : un centre à 4 600 heures-machine, sous son activité normale", () => {
     const h = 4_600;
-    expect(attendus(ch, "variante-activite")).toEqual({
+    expect(attendus(LE_BUDGET_FLEXIBLE, "variante-activite")).toEqual({
       [`Budget flexible à ${n(h)} heures-machine`]: 120_000 + 16 * h,
       [`Coût préétabli de ${n(h)} heures-machine`]: 40 * h,
       "Écart sur activité de la variante": (5_000 - h) * 24,
@@ -299,17 +306,17 @@ describe("le coût préétabli, le budget standard et le budget flexible", () =>
   it("variante : un standard courant, 2,5 % de matière en plus par enceinte", () => {
     const kilos = 11_000 * 0.82 + 4_600 * 2.05;
     expect(kilos).toBeCloseTo(18_450, 6);
-    expect(attendus(ch, "standard-courant")).toEqual({
+    expect(attendus(LE_BUDGET_FLEXIBLE, "standard-courant")).toEqual({
       "Kilos préétablis au standard courant": 18_450,
       "Écart sur quantité au standard courant": (18_500 - 18_450) * 15,
       "Écart global sur coûts au standard courant": reelTotal - (preetabliDuReel + 450 * 15),
     });
     expect(reelTotal - (preetabliDuReel + 450 * 15)).toBe(22_950);
-    expect(juste(ch, "quel-standard")).toBe("Le standard normal : atteignable, il laisse voir les gaspillages");
+    expect(juste(LE_BUDGET_FLEXIBLE, "quel-standard")).toBe("Le standard normal : atteignable, il laisse voir les gaspillages");
   });
 
   it("le seuil de significativité : la matière et le centre au-dessus de 3 %, la main-d'œuvre en dessous, qui cache ses deux écarts", () => {
-    expect(attendus(ch, "seuil")).toEqual({
+    expect(attendus(LE_BUDGET_FLEXIBLE, "seuil")).toEqual({
       "Part de l'écart, matière (%)": dixieme((14_900 / 270_000) * 100),
       "Part de l'écart, main-d'œuvre directe (%)": dixieme((3_800 / 225_000) * 100),
       "Part de l'écart, centre de montage (%)": dixieme((11_000 / 202_000) * 100),
@@ -317,7 +324,7 @@ describe("le coût préétabli, le budget standard et le budget flexible", () =>
     expect([dixieme((14_900 / 270_000) * 100), dixieme((3_800 / 225_000) * 100), dixieme((11_000 / 202_000) * 100)]).toEqual([5.5, 1.7, 5.4]);
     // L'écart sur taux dépasse à lui seul le seuil que le global ne passe pas.
     expect(8_800).toBeGreaterThan(0.03 * 225_000);
-    expect(juste(ch, "gestion-par-exception")).toBe("Pas sur son seul écart global : deux écarts de sens contraire peuvent s'y compenser");
+    expect(juste(LE_BUDGET_FLEXIBLE, "gestion-par-exception")).toBe("Pas sur son seul écart global : deux écarts de sens contraire peuvent s'y compenser");
   });
 
   it("les expériences : la production qui rejoint le budget, le centre qui croise son budget flexible", () => {
@@ -335,16 +342,16 @@ describe("le coût préétabli, le budget standard et le budget flexible", () =>
     expect(iProd).toBeLessThan(rang(ch, "budget-standard"));
     expect(juste(ch, "predire-la-production")).toBe("Plus que le budget standard");
     // Coût préétabli 40 × h, budget flexible 120 000 + 16 × h : ils se croisent à 120 000 ÷ 24 = 5 000.
-    const iAct = curseur(ch, "experience-activite", {
+    const iAct = curseur(LE_BUDGET_FLEXIBLE, "experience-activite", {
       attendu: 5_000,
       min: 4_000,
       max: 6_000,
       bornes: [40 * 4_000, 120_000 + 16 * 4_000, 40 * 6_000, 120_000 + 16 * 6_000],
       lecture: { "Coût préétabli des heures": 200_000, "Budget flexible": 200_000, "Charges fixes imputées": 120_000, "Budget flexible moins coût préétabli": 0 },
     });
-    expect(rang(ch, "predire-l-activite")).toBe(iAct - 1);
-    expect(iAct).toBeLessThan(rang(ch, "budget-flexible"));
-    expect(juste(ch, "predire-l-activite")).toBe("Plus que le budget flexible");
+    expect(rang(LE_BUDGET_FLEXIBLE, "predire-l-activite")).toBe(iAct - 1);
+    expect(iAct).toBeLessThan(rang(LE_BUDGET_FLEXIBLE, "budget-flexible"));
+    expect(juste(LE_BUDGET_FLEXIBLE, "predire-l-activite")).toBe("Plus que le budget flexible");
   });
 
   it("le laboratoire : une autre production qui vaut le budget standard", () => {

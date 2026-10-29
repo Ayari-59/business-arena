@@ -7,6 +7,7 @@ import { empruntALaCloture, interetsCourus } from "../monde/emprunt";
 import { EXERCICES_DU_COURS, MOIS_DE_L_EXERCICE, type FicheDeLExercice } from "../monde/exercice-de-nova";
 import { valoriserLeStock } from "../monde/stock";
 import type { Chapitre, TableauDeDonnees } from "../types";
+import { etapesAvant, etapesDepuis, partieDuChapitre } from "./decoupage";
 
 /**
  * CHAPITRE : LA CLÔTURE (comptabilité générale, palier 3 ; BTS CG, DCG UE9, BUT GEA).
@@ -343,7 +344,8 @@ function tableauDuPassage(x: ClotureDeNova): TableauDeDonnees {
 /** La clôture se joue sur l'exercice de NOVA du monde du cours. */
 export const ENTREPRISES_DE_LA_CLOTURE: readonly string[] = ["nova"];
 
-export const LA_CLOTURE: Chapitre = {
+/** Le chapitre tel qu'il était écrit, en un seul tenant : ses deux parties en sont tirées (plus bas). */
+const LA_CLOTURE_ENTIERE: Chapitre = {
   code: "la-cloture",
   parcours: "comptabilite-generale",
   palier: 3,
@@ -1153,3 +1155,70 @@ export const LA_CLOTURE: Chapitre = {
     },
   ],
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LES DEUX PARTIES (audit pédagogique : aucun chapitre de plus de 20 étapes)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Le code et le titre de la suite, que la première partie annonce. */
+export const CODE_DE_LA_SUITE_DE_LA_CLOTURE = "decider-apres-la-cloture";
+export const TITRE_DE_LA_SUITE_DE_LA_CLOTURE = "Après la clôture : l'impôt qui décide, la méthode qui déplace";
+
+/**
+ * LA CLÔTURE, PREMIÈRE PARTIE : de la balance avant inventaire à l'impôt passé au journal (les
+ * étapes du chapitre d'origine jusqu'à `ecriture-de-l-impot`), puis sa propre synthèse.
+ */
+export const LA_CLOTURE: Chapitre = partieDuChapitre(LA_CLOTURE_ENTIERE, [
+  ...etapesAvant(LA_CLOTURE_ENTIERE, "predire-le-placement"),
+  {
+    id: "synthese",
+    type: "lecture",
+    titre: "Ce que vous savez faire",
+    notions: ["income_statement", "stock", "depreciation"],
+    tableau: (c) => tableauDuPassage(clotureDeNova(c)),
+    texte: (c) => {
+      const x = clotureDeNova(c);
+      return [
+        `Vous avez clôturé le premier exercice de ${x.f.entreprise} : la balance, la dotation, les intérêts courus à recevoir et à payer, le stock final, la facture non parvenue, puis l'impôt au taux réduit et au taux normal. Chaque travail rattache à l'exercice ce qui lui appartient ; aucun ne fait bouger la banque.`,
+        `Le résultat avant impôt est de ${eur(x.resultatAvantImpot)}, l'impôt de ${eur(x.impot.impot)}, le résultat net de ${eur(x.resultatNet)}. La suite, « ${TITRE_DE_LA_SUITE_DE_LA_CLOTURE} », s'en sert pour décider : une décision de trésorerie au taux marginal, une autre méthode d'amortissement, un stock retrouvé à rebours.`,
+        "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
+      ];
+    },
+    repere: () =>
+      "Une charge appartient à l'exercice où elle naît, un produit à celui où il est acquis : la dotation, le stock consommé, les achats livrés, les intérêts courus se rattachent au 31 décembre, payés ou non. L'impôt vient en dernier : au taux réduit jusqu'au plafond, au taux normal au-delà.",
+  },
+]);
+
+/**
+ * LA CLÔTURE, SUITE : le niveau de l'examen (emprunter pour placer, au taux marginal ; la variante
+ * dégressive et ce qu'elle décale ; le stock à rebours), puis la synthèse du chapitre d'origine. Elle
+ * repart du résultat arrêté par la première partie ; aucune écriture n'y est passée.
+ */
+export const DECIDER_APRES_LA_CLOTURE: Chapitre = partieDuChapitre(
+  LA_CLOTURE_ENTIERE,
+  [
+    {
+      id: "intro",
+      type: "lecture",
+      titre: "Le résultat est arrêté",
+      notions: ["income_statement", "depreciation"],
+      tableau: (c) => tableauDuPassage(clotureDeNova(c)),
+      texte: (c) => {
+        const x = clotureDeNova(c);
+        return [
+          `Ce chapitre suit « La clôture » : le premier exercice de ${x.f.entreprise} est clôturé, son résultat avant impôt arrêté à ${eur(x.resultatAvantImpot)}, son impôt à ${eur(x.impot.impot)}.`,
+          "Il reste à s'en servir comme un examinateur : juger une décision de trésorerie au taux marginal de l'impôt, mesurer ce qu'une autre méthode d'amortissement change vraiment, et retrouver un stock à rebours à partir d'un résultat.",
+        ];
+      },
+      repere: () => "Une décision se juge au taux marginal de l'impôt : celui que paie le dernier euro de résultat, pas le taux moyen.",
+    },
+    ...etapesDepuis(LA_CLOTURE_ENTIERE, "predire-le-placement"),
+  ],
+  {
+    code: CODE_DE_LA_SUITE_DE_LA_CLOTURE,
+    titre: TITRE_DE_LA_SUITE_DE_LA_CLOTURE,
+    accroche: "Le premier exercice de NOVA est clôturé : faut-il emprunter pour placer, que change le dégressif, quel stock donne un autre résultat ? Le niveau de l'examen, au taux marginal.",
+    prerequis: ["la-cloture"],
+    ouverture: undefined,
+  },
+);

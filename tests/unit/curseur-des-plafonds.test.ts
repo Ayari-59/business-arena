@@ -42,6 +42,7 @@ function rendu(extra: Partial<Props> = {}, niveau: 1 | 2 | 3 | 4 | 5 | 6 = 5): s
     alreadySubmitted: false,
     enabled: preset.decisions,
     vocabulary: SCENARIOS[0]!.vocabulary,
+    secteur: SCENARIOS[0]!.sector,
     ...extra,
   };
   return renderToStaticMarkup(createElement(DecisionForm, props));

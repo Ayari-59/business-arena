@@ -3,6 +3,7 @@ import type { Cas } from "../cas";
 import { coutQuiGardeLeTauxDeMarque, fournisseurDe, margeDeLArticle, margeDuMois, margesDeLaGamme, prixQuiGardeLeTauxDeMarque, referenceDe } from "../monde/boutique";
 import { BOUTIQUES_DU_COURS, type CodeDeFournisseur, type FicheDeLaBoutique } from "../monde/maille-et-co";
 import type { Chapitre, TableauDeDonnees } from "../types";
+import { etapesAvant, etapesDepuis, partieDuChapitre } from "./decoupage";
 
 /**
  * CHAPITRE : TAUX DE MARQUE, TAUX DE MARGE, COEFFICIENT (BTS MCO, palier 2 : la porte d'entrée du
@@ -252,7 +253,8 @@ function tableauDesFournisseurs(m: MargesDuRayon): TableauDeDonnees {
   };
 }
 
-export const TAUX_DE_MARQUE: Chapitre = {
+/** Le chapitre tel qu'il était écrit, en un seul tenant : ses deux parties en sont tirées (plus bas). */
+const TAUX_DE_MARQUE_ENTIER: Chapitre = {
   code: "taux-de-marque-et-coefficient",
   parcours: "mco",
   palier: 2,
@@ -931,3 +933,61 @@ export const TAUX_DE_MARQUE: Chapitre = {
     },
   ],
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LES DEUX PARTIES (audit pédagogique : aucun chapitre de plus de 20 étapes)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const CODE_DE_LA_SUITE = "s-aligner-sur-le-concurrent";
+export const TITRE_DE_LA_SUITE = "S'aligner sur le concurrent : garder la marque ou la marge";
+
+/** PREMIÈRE PARTIE : les étapes du chapitre d'origine jusqu'à `le-coefficient-du-concurrent` exclue, puis sa propre synthèse. */
+export const TAUX_DE_MARQUE: Chapitre = partieDuChapitre(TAUX_DE_MARQUE_ENTIER, [
+  ...etapesAvant(TAUX_DE_MARQUE_ENTIER, "le-coefficient-du-concurrent"),
+  {
+    id: "synthese",
+    type: "lecture",
+    titre: "Ce qu'il faut retenir",
+    notions: ["margin_rates", "markup_coefficient"],
+    tableau: tableauDeLaGamme,
+    texte: (c) => {
+      const m = margesDuRayon(c);
+      return [
+        `La marge commerciale (${eur(m.a.margeCommerciale)} sur le ${m.r.nom.toLowerCase()}) se dit de trois façons : le taux de marque (${pct(m.tMarque)}, sur le prix de vente), le taux de marge (${pct(m.tMarge)}, sur le prix d'achat) et le coefficient (${coef(m.coefHt)} hors taxes, ${coef(m.coefTtc)} toutes taxes comprises). Le taux de marque de la boutique se pondère par les ventes : ${pct(m.gamme.tMarque)}.`,
+        `À taux de marque constant, le prix de vente suit le prix d'achat dans la même proportion. La suite, « ${TITRE_DE_LA_SUITE} », met la boutique face au concurrent : garder le taux de marque et garder la marge du mois ne demandent pas le même prix d'achat.`,
+        "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
+      ];
+    },
+    repere: () => "Taux de marque = marge ÷ prix de vente HT. Taux de marge = marge ÷ prix d'achat HT. Coefficient = prix de vente ÷ prix d'achat HT ; le coefficient TTC ajoute la TVA.",
+  },
+]);
+
+/** SUITE : sa propre introduction, puis les étapes du chapitre d'origine depuis `le-coefficient-du-concurrent`, synthèse comprise. */
+export const S_ALIGNER_SUR_LE_CONCURRENT: Chapitre = partieDuChapitre(
+  TAUX_DE_MARQUE_ENTIER,
+  [
+    {
+      id: "intro",
+      type: "lecture",
+      titre: "Le concurrent affiche moins cher",
+      notions: ["margin_rates", "markup_coefficient"],
+      tableau: tableauDeLaGamme,
+      texte: (c) => {
+        const m = margesDuRayon(c);
+        return [
+          `Ce chapitre suit « Taux de marque, taux de marge, coefficient » : la boutique vend le ${m.r.nom.toLowerCase()} avec un taux de marque de ${pct(m.tMarque)} et un coefficient de ${coef(m.coefHt)} hors taxes.`,
+          "Un concurrent de la rue affiche moins cher. Vous retrouverez son coefficient à rebours, chiffrerez le prix aligné, puis le prix d'achat à négocier : celui qui garde le taux de marque n'est pas celui qui garde la marge du mois.",
+        ];
+      },
+      repere: () => "Quand les clients répondent au prix, c'est la marge du mois qui décide, pas le taux.",
+    },
+    ...etapesDepuis(TAUX_DE_MARQUE_ENTIER, "le-coefficient-du-concurrent"),
+  ],
+  {
+    code: CODE_DE_LA_SUITE,
+    titre: TITRE_DE_LA_SUITE,
+    accroche: "Le concurrent affiche moins cher : le coefficient retrouvé à rebours, le prix aligné, puis le prix d'achat qui garde le taux de marque et celui qui garde la marge du mois.",
+    prerequis: ["taux-de-marque-et-coefficient"],
+    ouverture: undefined,
+  },
+);

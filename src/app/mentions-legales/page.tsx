@@ -1,3 +1,4 @@
+import { DUREE_DU_JETON_DITE } from "@/config/mot-de-passe-oublie";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import Link from "next/link";
 import { VENDEUR } from "@/config/editeur";
@@ -314,6 +315,18 @@ export default function MentionsLegalesPage() {
                   </td>
                   <td className="py-2 pr-3">Freiner les essais de mots de passe</td>
                   <td className="py-2">{DUREES.tentatives}</td>
+                </tr>
+                <tr className="border-t border-white/5" data-ligne-reinitialisation="">
+                  <td className="py-2 pr-3 font-medium text-slate-200">Mot de passe oublié</td>
+                  <td className="py-2 pr-3">
+                    Empreinte du lien de réinitialisation envoyé par e-mail (le lien lui-même
+                    n&apos;est pas gardé), compte concerné, dates d&apos;envoi et d&apos;usage ;
+                    adresse IP de la demande (protection contre les envois abusifs)
+                  </td>
+                  <td className="py-2 pr-3">Permettre à un enseignant de choisir un nouveau mot de passe</td>
+                  <td className="py-2">
+                    {DUREE_DU_JETON_DITE} (le lien) ; supprimée à la purge suivante, et avec le compte
+                  </td>
                 </tr>
               </tbody>
             </table>

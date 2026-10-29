@@ -28,6 +28,7 @@ import { RETARD } from "./chapitres/une-information-a-temps";
 import { SEUILS_ABC } from "./negociation";
 import { scenarioByCode, scenarioCodeForLevel } from "../scenarios/registry";
 import { ARTICLES_PAR_TICKET } from "../scenarios/sector-kpis";
+import { libellesDuStock } from "../scenarios/libelles-des-stocks";
 import { DIFFICULTY_PRESETS } from "../difficulty";
 import { LES_OFFRES_DE_L_ARENE } from "../tarifs";
 import { VITRINE_SOLO_PAR_DEFAUT } from "../vitrine-solo";
@@ -174,6 +175,7 @@ export const MISSIONS_AU_NIVEAU_DE_LEUR_DECISION: Readonly<Record<string, Missio
   "s-assurer-contre-les-aleas": NIVEAU_DE_L_ASSURANCE,
   "croitre-en-investissant": NIVEAU_DE_L_INVESTISSEMENT,
   "la-responsabilite-societale": NIVEAU_DE_LA_RSE,
+  "ce-que-rapporte-l-engagement": NIVEAU_DE_LA_RSE,
   "la-valeur-actuelle-nette": NIVEAU_DE_L_INVESTISSEMENT,
   "le-tri-et-le-choix-entre-deux-projets": NIVEAU_DE_L_INVESTISSEMENT,
 };
@@ -282,11 +284,15 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
   }),
   "les-stocks": (c) => {
     const { volume } = feuilleDe(c, 1);
+    // L'arène nomme le stock selon le métier de la partie (`libelles-des-stocks`).
+    const secteur = scenarioByCode(scenarioCodeForLevel(c.code, 1)).sector;
+    const l = libellesDuStock(secteur);
+    const marchandises = secteur === "commerce" || secteur === "ecommerce";
     return {
       niveau: 1,
       faire: `${partie(c, 1)} Dans « ${volume} », mettez nettement plus que les ventes estimées, puis jouez le tour.`,
       lieux: ["compte-de-resultat", "bilan", "budget-de-tresorerie"],
-      chercher: `Au bilan, retrouvez la ligne des stocks : l'arène l'appelle « Stocks de produits finis » dans toutes les entreprises, mais ${c.entreprise} ne fabrique rien, c'est son stock de marchandises (compte 37). Au compte de résultat, la ligne « Production stockée » porte la variation de ce stock, que le chapitre passe en variation de stock de marchandises (6037), avec les achats. Les invendus ont-ils pesé autant sur le résultat que sur la trésorerie ? Pourquoi ?`,
+      chercher: `Au bilan, retrouvez la ligne « ${l.stock} »${marchandises ? ` : ${c.entreprise} ne fabrique rien, c'est son stock de marchandises (compte 37)` : ""}. Au compte de résultat, la ligne « ${l.variation} » porte la variation de ce stock${marchandises ? ", que le chapitre range avec les achats (compte 6037)" : ""}. Les invendus ont-ils pesé autant sur le résultat que sur la trésorerie ? Pourquoi ?`,
     };
   },
   "la-cloture": (c) => ({
@@ -471,12 +477,12 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
   },
   "stock-du-point-de-vente": (c) => {
     const { volume } = feuilleDe(c, 1);
+    const { stock } = libellesDuStock(scenarioByCode(scenarioCodeForLevel(c.code, 1)).sector);
     return {
       niveau: 1,
       faire: `${partie(c, 1)} Jouez un tour, puis un second où vous mettez dans « ${volume} » nettement moins que les ventes estimées.`,
       lieux: ["bilan", "compte-de-resultat"],
-      chercher:
-        "Au bilan, retrouvez la ligne des stocks à la fin de chaque tour : l'écran l'appelle « Stocks de produits finis », ce sont les marchandises du magasin. Calculez le stock moyen du second tour, puis sa rotation avec le coût variable des ventes du compte de résultat. Le stock a-t-il tourné plus vite ? Et les ventes, ont-elles souffert ?",
+      chercher: `Au bilan, retrouvez la ligne des stocks à la fin de chaque tour : l'écran l'appelle « ${stock} ». Calculez le stock moyen du second tour, puis sa rotation avec le coût variable des ventes du compte de résultat. Le stock a-t-il tourné plus vite ? Et les ventes, ont-elles souffert ?`,
     };
   },
   "prevoir-les-ventes": (c) => ({
@@ -1185,7 +1191,60 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Quel indicateur a décroché le premier ? À quel tour le cabinet a-t-il refusé des journées faute de consultants, et à quel tour en a-t-il manqué faute de clients ? Quelle décision avez-vous prise ensuite, et a-t-elle remis l'indicateur dans le vert ?",
   }),
+  // L'UE10 DU DCG (comptabilité approfondie) : l'arène tient une comptabilité simplifiée ; la
+  // mission fait chercher à l'écran ce que le chapitre approfondit.
+  "les-composants-et-l-amortissement-derogatoire": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "L'arène amortit l'équipement d'un bloc. Retrouvez sa dotation au compte de résultat : si ses moteurs duraient moitié moins que son bâti, la dotation des premiers tours serait-elle plus forte ou plus faible ?",
+  }),
+  "le-test-de-depreciation": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours.`,
+    lieux: ["bilan"],
+    chercher:
+      "Relevez la valeur nette des immobilisations au bilan. Si l'équipement ne rapportait plus que la moitié de ce qu'il rapporte, sa valeur d'usage resterait-elle au-dessus de cette valeur nette ?",
+  }),
+  "les-operations-en-devises": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour.`,
+    lieux: ["bilan", "compte-de-resultat"],
+    chercher:
+      "Relevez les créances clients au bilan. Si elles étaient dues en dollars et que le dollar baissait de 2 % avant la clôture, quelle provision pour perte de change faudrait-il passer ?",
+  }),
+  "les-contrats-a-long-terme": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours.`,
+    lieux: ["compte-de-resultat"],
+    chercher:
+      "Dans l'arène, chaque vente est livrée dans le tour. Si la moitié du chiffre d'affaires du premier tour venait d'un chantier livré au tour suivant, quel chiffre d'affaires le premier tour porterait-il à l'avancement ?",
+  }),
+  "l-augmentation-de-capital": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour.`,
+    lieux: ["bilan"],
+    chercher:
+      "Relevez les capitaux propres au bilan. Si l'entreprise émettait des actions nouvelles sous la valeur de ses actions anciennes, qui y perdrait, et qu'est-ce qui le compenserait ?",
+  }),
 };
+
+/**
+ * LES SUITES DES CHAPITRES DÉCOUPÉS (aucun chapitre de plus de 20 étapes) : chacune joue la mission
+ * de sa première partie, dont elle reprend l'entreprise et la notion.
+ */
+export const PREMIERE_PARTIE_DE_LA_SUITE: Readonly<Record<string, string>> = {
+  "decider-apres-la-cloture": "la-cloture",
+  "le-denouement-des-risques": "depreciations-et-provisions",
+  "les-leviers-du-seuil": "seuil-de-rentabilite",
+  "le-budget-flexible": "le-cout-preetabli-et-les-budgets",
+  "les-ecarts-et-leurs-responsables": "analyse-des-ecarts",
+  "s-aligner-sur-le-concurrent": "taux-de-marque-et-coefficient",
+  "ce-que-rapporte-l-engagement": "la-responsabilite-societale",
+  "encaissements-ou-debits": "la-declaration-de-tva",
+};
+for (const [suite, premiere] of Object.entries(PREMIERE_PARTIE_DE_LA_SUITE)) MISSIONS[suite] = MISSIONS[premiere]!;
 
 /** La mission du chapitre, chez cette entreprise ; aucune pour un chapitre inconnu. */
 export function missionDuChapitre(code: string, c: Cas): MissionDansLArene | null {

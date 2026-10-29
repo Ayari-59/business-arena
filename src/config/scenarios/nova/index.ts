@@ -57,7 +57,7 @@ const rawNova = {
       },
       {
         code: "campustech",
-        name: "CampusTech (chaîne de magasins, 80 j)",
+        name: "CampusTech (chaîne de magasins, 60 j convenus, paie à 80 j en retard)",
         size: 12000,
         growth: 0.04,
         priceElasticity: -1.2,

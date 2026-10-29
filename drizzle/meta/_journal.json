@@ -386,6 +386,13 @@
       "when": 1793457962176,
       "tag": "0053_cours_selon_l_offre",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1793544362176,
+      "tag": "0054_mot_de_passe_oublie",
+      "breakpoints": true
     }
   ]
 }

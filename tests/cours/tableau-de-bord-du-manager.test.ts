@@ -42,8 +42,13 @@ const somme = (xs: readonly number[]) => xs.reduce((t, x) => t + x, 0);
 const ca = somme(f.gamme.map((r) => r.ventesDuMois * r.prixHt));
 const cv = somme(f.gamme.map((r) => r.ventesDuMois * (r.coutDAchat + r.autresCoutsVariables)));
 const entrees = somme(f.clienteles.map((c) => c.entrees));
-const tickets = somme(f.clienteles.map((c) => c.tickets));
-const panier = ca / tickets;
+// Un seul panier dans tout le cours : les commandes des comités, facturées à terme, ne passent pas en caisse.
+const enCaisse = f.clienteles.filter((c) => c.delaiDeReglement === 0);
+const tickets = somme(enCaisse.map((c) => c.tickets));
+const prixDe = (code: string) => f.gamme.find((r) => r.code === code)!.prixHt;
+const caEnCaisse = somme(enCaisse.flatMap((c) => Object.entries(c.achats).map(([code, q]) => q * prixDe(code))));
+const comites = ca - caEnCaisse;
+const panier = caEnCaisse / tickets;
 const n1 = f.moisN1;
 const budget = somme(f.gamme.map((r) => f.budget.ventesPrevues[r.code] * r.prixHt));
 const objectif = centime(budget / 3);
@@ -194,7 +199,7 @@ const juste = (ch: Chapitre, id: string) => (ch.etapes.find((x) => x.id === id) 
 
 describe("le tableau de bord du manager, à la boutique du monde du cours", () => {
   const ch = TABLEAU_DE_BORD_DU_MANAGER;
-  const caParEntree = ca / entrees;
+  const caParEntree = caEnCaisse / entrees;
   const cible = objectif * 0.95;
 
   it("se joue chez MAILLE & CO seule, au palier 4 du BTS MCO, et son cas aussi", () => {
@@ -211,8 +216,8 @@ describe("le tableau de bord du manager, à la boutique du monde du cours", () =
   });
 
   it("la fiche donne les chiffres de la consigne", () => {
-    expect([ca, entrees, tickets, budget, objectif]).toEqual([87_450, 3_848, 948, 289_850, 96_616.67]);
-    expect([n1.trafic, n1.tickets, n1.chiffreDAffaires]).toEqual([4_160, 1_000, 89_600]);
+    expect([ca, caEnCaisse, comites, entrees, tickets, budget, objectif]).toEqual([87_450, 77_250, 10_200, 3_848, 940, 289_850, 96_616.67]);
+    expect([n1.trafic, n1.tickets, n1.chiffreDAffairesEnCaisse, n1.chiffreDAffaires]).toEqual([4_160, 1_000, 79_400, 89_600]);
     expect([chargesFixes, seuil]).toEqual([30_695, 60_661.64]);
     expect(dixieme((ca / n1.chiffreDAffaires - 1) * 100)).toBe(-2.4);
   });
@@ -223,7 +228,7 @@ describe("le tableau de bord du manager, à la boutique du monde du cours", () =
       "Évolution des entrées (%)": dixieme((entrees / n1.trafic - 1) * 100),
       "Évolution des passages en caisse (%)": dixieme((tickets / n1.tickets - 1) * 100),
     });
-    expect(Object.values(attendus(ch, "evolutions"))).toEqual([-2.4, -7.5, -5.2]);
+    expect(Object.values(attendus(ch, "evolutions"))).toEqual([-2.4, -7.5, -6]);
     expect(attendus(ch, "l-objectif")).toEqual({
       "Objectif du mois": objectif,
       "Écart à l'objectif": centime(ca - objectif),
@@ -238,9 +243,9 @@ describe("le tableau de bord du manager, à la boutique du monde du cours", () =
     expect(Object.fromEntries(tri.elements(cas).map((x) => [x.libelle, x.categorie]))).toEqual({
       "Réalisation de l'objectif : 90,5 %": "vendre",
       "Évolution du trafic sur janvier N − 1 : −7,5 %": "vendre",
-      "Taux de transformation : 24,6 %": "vendre",
-      "Panier moyen : 92,25 €": "vendre",
-      "Indice de vente : 1,61": "vendre",
+      "Taux de transformation : 24,4 %": "vendre",
+      "Panier moyen : 82,18 €": "vendre",
+      "Indice de vente : 1,41": "vendre",
       "Taux de service : 98,5 %": "stock",
       "Taux de marque : 56,2 %": "rentabilite",
       "Indice de sécurité : 30,6 %": "rentabilite",
@@ -250,19 +255,20 @@ describe("le tableau de bord du manager, à la boutique du monde du cours", () =
     });
   });
 
-  it("le curseur du trafic qui manque : 4 039 entrées, moins que janvier N − 1", () => {
+  it("le curseur du trafic qui manque : 4 064 entrées, moins que janvier N − 1", () => {
     expect(ENTREES_DU_CURSEUR).toEqual({ min: 3_500, max: 4_500 });
-    const attendu = Math.ceil(cible / caParEntree);
-    expect(attendu).toBe(4_039);
+    // Les commandes des comités font leur part sans une entrée : le trafic fait le reste, en caisse.
+    const attendu = Math.ceil((cible - comites) / caParEntree);
+    expect(attendu).toBe(4_064);
     expect(curseur(ch, "le-trafic-qui-manque")).toEqual({
       attendu,
       bornes: [3_500, 4_500],
-      droites: [3_500 * caParEntree, cible, 4_500 * caParEntree, cible].map(centime),
+      droites: [3_500 * caParEntree + comites, cible, 4_500 * caParEntree + comites, cible].map(centime),
       lecture: {
-        "Chiffre d'affaires du mois": centime(attendu * caParEntree),
+        "Chiffre d'affaires du mois": centime(attendu * caParEntree + comites),
         "95 % de l'objectif": centime(cible),
         "Chiffre d'affaires de janvier N − 1": n1.chiffreDAffaires,
-        "Marge sur le seuil du voyant": centime(centime(attendu * caParEntree) - centime(cible)),
+        "Marge sur le seuil du voyant": centime(centime(attendu * caParEntree + comites) - centime(cible)),
       },
     });
     expect(juste(ch, "predire-le-trafic")).toBe("Moins d'entrées qu'en janvier N − 1 (4 160)");
@@ -273,45 +279,45 @@ describe("le tableau de bord du manager, à la boutique du monde du cours", () =
       "Taux de transformation de janvier N (%)": dixieme((tickets / entrees) * 100),
       "Taux de transformation de janvier N − 1 (%)": dixieme((n1.tickets / n1.trafic) * 100),
       "Panier moyen de janvier N": centime(panier),
-      "Panier moyen de janvier N − 1": n1.chiffreDAffaires / n1.tickets,
+      "Panier moyen de janvier N − 1": n1.chiffreDAffairesEnCaisse / n1.tickets,
     });
-    expect(Object.values(attendus(ch, "les-ratios"))).toEqual([24.6, 24, 92.25, 89.6]);
+    expect(Object.values(attendus(ch, "les-ratios"))).toEqual([24.4, 24, 82.18, 79.4]);
     expect(juste(ch, "le-voyant-rouge")).toBe("Le trafic : il faut faire venir, ceux qui entrent achètent mieux");
-    expect(juste(ch, "predire-sans-trafic")).toBe("D'environ 5 %, ce qui manque au chiffre d'affaires");
-    const passages = Math.ceil(cible / panier);
+    expect(juste(ch, "predire-sans-trafic")).toBe("D'environ 6 %, ce qui manque au chiffre d'affaires");
+    const passages = Math.ceil((cible - comites) / panier);
     expect(attendus(ch, "la-transformation-qui-eteint")).toEqual({
       "Chiffre d'affaires du seuil du voyant": centime(cible),
       "Passages en caisse nécessaires": passages,
       "Taux de transformation nécessaire (%)": dixieme((passages / entrees) * 100),
     });
-    expect([centime(cible), passages, dixieme((passages / entrees) * 100)]).toEqual([91_785.84, 996, 25.9]);
+    expect([centime(cible), passages, dixieme((passages / entrees) * 100)]).toEqual([91_785.84, 993, 25.8]);
   });
 
-  it("le laboratoire des voyants : +5 % de transformation éteint l'objectif, le trafic reste rouge", () => {
+  it("le laboratoire des voyants : +6 % de transformation éteint l'objectif, le trafic reste rouge", () => {
     expect(LEVIERS_DES_VOYANTS).toEqual({ min: 80, max: 120, pas: 0.5 });
     const l = laboratoire(ch, "le-laboratoire-des-voyants");
     expect(l.depart).toEqual({ trafic: 100, transformation: 100, panier: 100 });
-    expect(l.solution).toEqual({ trafic: 100, transformation: 105, panier: 100 });
+    expect(l.solution).toEqual({ trafic: 100, transformation: 106, panier: 100 });
     expect(l.reussi).toEqual([false, true]);
     const lire = (k: number, voyants: number) => ({
       Entrées: entrees,
       "Taux de transformation": centime((tickets / entrees) * k * 100),
       "Passages en caisse": dixieme(tickets * k),
       "Panier moyen": centime(panier),
-      "Chiffre d'affaires": centime(ca * k),
-      "Réalisation de l'objectif": centime(((ca * k) / objectif) * 100),
-      "Écart à l'objectif": centime(centime(ca * k) - objectif),
-      "Écart sur janvier N − 1": centime(centime(ca * k) - n1.chiffreDAffaires),
+      "Chiffre d'affaires": centime(caEnCaisse * k + comites),
+      "Réalisation de l'objectif": centime(((caEnCaisse * k + comites) / objectif) * 100),
+      "Écart à l'objectif": centime(centime(caEnCaisse * k + comites) - objectif),
+      "Écart sur janvier N − 1": centime(centime(caEnCaisse * k + comites) - n1.chiffreDAffaires),
       "Voyants allumés": voyants,
     });
     expect(l.auDepart).toEqual(lire(1, 2));
-    expect(l.aLaSolution).toEqual(lire(1.05, 1));
-    expect(Object.values(lire(1.05, 1))).toEqual([3_848, 25.87, 995.4, 92.25, 91_822.5, 95.04, -4_794.17, 2_222.5, 1]);
-    // Un demi-point de moins ne suffit pas ; le panier fait aussi bien ; un client de plus est interdit.
-    expect(l.atteint({ trafic: 100, transformation: 104.5, panier: 100 })).toBe(false);
-    expect(l.atteint({ trafic: 100, transformation: 100, panier: 105 })).toBe(true);
-    expect(l.atteint({ trafic: 102.5, transformation: 102.5, panier: 100 })).toBe(false);
-    expect(l.atteint({ trafic: 100, transformation: 102.5, panier: 102.5 })).toBe(true);
+    expect(l.aLaSolution).toEqual(lire(1.06, 1));
+    expect(Object.values(lire(1.06, 1))).toEqual([3_848, 25.89, 996.4, 82.18, 92_085, 95.31, -4_531.67, 2_485, 1]);
+    // Cinq points ne suffisent pas ; le panier fait aussi bien ; un client de plus est interdit.
+    expect(l.atteint({ trafic: 100, transformation: 105.5, panier: 100 })).toBe(false);
+    expect(l.atteint({ trafic: 100, transformation: 100, panier: 106 })).toBe(true);
+    expect(l.atteint({ trafic: 103, transformation: 103, panier: 100 })).toBe(false);
+    expect(l.atteint({ trafic: 100, transformation: 103, panier: 103 })).toBe(true);
   });
 
   it("le graphique des voyants : la réalisation en droite, l'indice de sécurité et la part du personnel en courbe", () => {
@@ -320,38 +326,38 @@ describe("le tableau de bord du manager, à la boutique du monde du cours", () =
     const [realisation, securite, part] = g.courbes;
     for (const k of [80, 100, 105, 120]) {
       const p = { trafic: 100, transformation: k, panier: 100 };
-      const chiffre = centime((ca * k) / 100);
+      const chiffre = centime((caEnCaisse * k) / 100 + comites);
       expect(realisation!.valeur(p), `${k}`).toBe(centime((chiffre / objectif) * 100));
       expect(securite!.valeur(p), `${k}`).toBe(centime(((chiffre - seuil) / chiffre) * 100));
       expect(part!.valeur(p), `${k}`).toBe(centime((paie / chiffre) * 100));
     }
-    expect([80, 100, 120].map((k) => part!.valeur({ trafic: 100, transformation: k, panier: 100 }))).toEqual([20.5, 16.4, 13.67]);
+    expect([80, 100, 120].map((k) => part!.valeur({ trafic: 100, transformation: k, panier: 100 }))).toEqual([19.92, 16.4, 13.94]);
   });
 
   it("les étapes d'expert : l'écart décomposé, février à rebours, la critique de l'objectif", () => {
-    const effetTrafic = centime((entrees - n1.trafic) * (n1.chiffreDAffaires / n1.trafic));
-    const effetTransformation = centime((tickets - (entrees * n1.tickets) / n1.trafic) * (n1.chiffreDAffaires / n1.tickets));
-    const effetPanier = centime(ca - tickets * (n1.chiffreDAffaires / n1.tickets));
+    const effetTrafic = centime((entrees - n1.trafic) * (n1.chiffreDAffairesEnCaisse / n1.trafic));
+    const effetTransformation = centime((tickets - (entrees * n1.tickets) / n1.trafic) * (n1.chiffreDAffairesEnCaisse / n1.tickets));
+    const effetPanier = centime(caEnCaisse - tickets * (n1.chiffreDAffairesEnCaisse / n1.tickets));
     expect(attendus(ch, "decomposer-l-ecart")).toEqual({ "Effet du trafic": effetTrafic, "Effet de la transformation": effetTransformation, "Effet du panier": effetPanier });
-    expect([effetTrafic, effetTransformation, effetPanier]).toEqual([-6_720, 2_060.8, 2_509.2]);
+    expect([effetTrafic, effetTransformation, effetPanier]).toEqual([-5_955, 1_191, 2_614]);
     expect(centime(effetTrafic + effetTransformation + effetPanier)).toBe(ca - n1.chiffreDAffaires);
-    // Le panier de N s'affiche arrondi, 92,25 € (87 450 ÷ 948 = 92,247…) : 948 × (92,25 − 89,60) = 2 512,20 €.
+    // Le panier de N s'affiche arrondi, 82,18 € (77 250 ÷ 940 = 82,180…) : 940 × (82,18 − 79,40) = 2 613,20 €.
     // La réponse est juste aussi ; une vraie erreur (le panier de N − 1 oublié, l'écart total) reste refusée.
     const panier = (ch.etapes.find((x) => x.id === "decomposer-l-ecart") as EtapeMontants).champs(cas, etatVide).find((x) => x.libelle === "Effet du panier")!;
-    expect(centime(948 * (centime(ca / 948) - 89.6))).toBe(2_512.2);
-    expect(champJuste("2 512,20", panier)).toBe(true);
-    expect(champJuste("2 509,20", panier)).toBe(true);
+    expect(centime(940 * (centime(caEnCaisse / 940) - 79.4))).toBe(2_613.2);
+    expect(champJuste("2 613,20", panier)).toBe(true);
+    expect(champJuste("2 613,40", panier)).toBe(true);
     expect(champJuste("2 150", panier)).toBe(false);
-    expect(champJuste("2 520", panier)).toBe(false);
+    expect(champJuste("2 620", panier)).toBe(false);
 
     expect(FEVRIER_A_REBOURS).toEqual({ realisation: 0.97, entrees: 3_700, transformation: 0.25 });
     const caFevrier = centime(objectif * 0.97);
     expect(attendus(ch, "a-rebours")).toEqual({
       "Chiffre d'affaires de février": caFevrier,
       "Passages en caisse de février": 3_700 * 0.25,
-      "Panier moyen de février": centime(caFevrier / 925),
+      "Panier moyen de février": centime((caFevrier - comites) / 925),
     });
-    expect([caFevrier, centime(caFevrier / 925)]).toEqual([93_718.17, 101.32]);
+    expect([caFevrier, centime((caFevrier - comites) / 925)]).toEqual([93_718.17, 90.29]);
     expect(juste(ch, "critique-de-l-objectif")).toBe("Il dit vrai sur l'écart, mais un tiers par mois suppose trois mois égaux : l'objectif se répartit selon la saison");
   });
 
@@ -361,27 +367,27 @@ describe("le tableau de bord du manager, à la boutique du monde du cours", () =
     expect(s.code).toBe("le-trimestre-face-a-l-objectif");
     expect(s.titre).toBe("Janvier face à l'objectif");
     expect(attendus(s, "l-objectif")).toEqual({ "Objectif de janvier": objectif, "Écart à l'objectif": -9_166.67, "Taux de réalisation (%)": 90.5 });
-    expect(attendus(s, "ce-qui-explique")).toEqual({ "Effet du trafic": -6_720, "Effet de la transformation": 2_060.8, "Effet du panier": 2_509.2 });
+    expect(attendus(s, "ce-qui-explique")).toEqual({ "Effet du trafic": -5_955, "Effet de la transformation": 1_191, "Effet du panier": 2_614 });
     expect(MOIS_RESTANTS).toBe(2);
     const reste = budget - ca;
     const parMois = reste / 2;
     expect(attendus(s, "ce-qui-reste-a-faire")).toEqual({
       "Reste à faire sur le trimestre": reste,
       "Chiffre d'affaires par mois": parMois,
-      "Taux de transformation nécessaire (%)": dixieme((parMois / (entrees * panier)) * 100),
+      "Taux de transformation nécessaire (%)": dixieme(((parMois - comites) / (entrees * panier)) * 100),
     });
-    expect([reste, parMois, dixieme((parMois / (entrees * panier)) * 100)]).toEqual([202_400, 101_200, 28.5]);
-    const attendu = Math.ceil(parMois / caParEntree);
-    expect(attendu).toBe(4_454);
+    expect([reste, parMois, dixieme(((parMois - comites) / (entrees * panier)) * 100)]).toEqual([202_400, 101_200, 28.8]);
+    const attendu = Math.ceil((parMois - comites) / caParEntree);
+    expect(attendu).toBe(4_533);
     expect(curseur(s, "le-trafic-du-rattrapage")).toEqual({
       attendu,
       bornes: [3_800, 4_800],
-      droites: [3_800 * caParEntree, parMois, 4_800 * caParEntree, parMois].map(centime),
+      droites: [3_800 * caParEntree + comites, parMois, 4_800 * caParEntree + comites, parMois].map(centime),
       lecture: {
-        "Chiffre d'affaires du mois": centime(attendu * caParEntree),
+        "Chiffre d'affaires du mois": centime(attendu * caParEntree + comites),
         "Part du reste du budget": parMois,
         "Chiffre d'affaires de janvier N − 1": n1.chiffreDAffaires,
-        "Avance sur la part du budget": centime(centime(attendu * caParEntree) - parMois),
+        "Avance sur la part du budget": centime(centime(attendu * caParEntree + comites) - parMois),
       },
     });
     expect(janvierFaceALObjectif(cas).verdict).toBe("le-trafic-doit-revenir");

@@ -73,6 +73,11 @@ import { UNE_SEULE_DEMARCHE_QUALITE } from "./par-chapitre/une-seule-demarche-qu
 import { RECRUTER_DES_L_ANNONCE_DU_DEPART } from "./par-chapitre/recruter-des-l-annonce-du-depart";
 import { ENTRETENIR_AU_SEUIL } from "./par-chapitre/entretenir-au-seuil";
 import { DES_CLIENTS_REPARTIS_SANS_ETRE_SERVIS } from "./par-chapitre/des-clients-repartis-sans-etre-servis";
+import { LES_MOTEURS_QUI_S_USENT_PLUS_VITE } from "./par-chapitre/les-moteurs-qui-s-usent-plus-vite";
+import { VENDRE_LA_LIGNE_OU_LA_GARDER } from "./par-chapitre/vendre-la-ligne-ou-la-garder";
+import { COUVRIR_LA_CREANCE_EN_DOLLARS } from "./par-chapitre/couvrir-la-creance-en-dollars";
+import { LE_CHANTIER_QUI_DERAPE } from "./par-chapitre/le-chantier-qui-derape";
+import { LE_PRIX_DE_L_INVESTISSEUSE } from "./par-chapitre/le-prix-de-l-investisseuse";
 import { UN_OBJECTIF_PLUS_AMBITIEUX } from "./par-chapitre/un-objectif-plus-ambitieux";
 import { BAISSER_LES_PRIX_SANS_RIEN_COUPER } from "./par-chapitre/baisser-les-prix-sans-rien-couper";
 import { ALLER_DANS_L_ESPACE_LIBRE } from "./par-chapitre/aller-dans-l-espace-libre";
@@ -121,6 +126,15 @@ import { DEUX_EMBAUCHES_POUR_PRODUIRE_PLUS } from "./par-chapitre/deux-embauches
 import { LA_MOITIE_DU_BUDGET_QUALITE } from "./par-chapitre/la-moitie-du-budget-qualite";
 import type { Situation } from "./types";
 
+// Les cas dédiés des suites des chapitres découpés (aucun chapitre de plus de 20 étapes).
+import { LE_COMPTE_A_TERME_MIEUX_REMUNERE } from "./par-chapitre/le-compte-a-terme-mieux-remunere";
+import { LE_LIQUIDATEUR_VERSE_DAVANTAGE } from "./par-chapitre/le-liquidateur-verse-davantage";
+import { LA_BAISSE_DE_PRIX_PROMISE } from "./par-chapitre/la-baisse-de-prix-promise";
+import { LE_CENTRE_TOURNE_PLUS } from "./par-chapitre/le-centre-tourne-plus";
+import { LA_PRIME_DU_CHEF_D_ATELIER } from "./par-chapitre/la-prime-du-chef-d-atelier";
+import { LE_CONCURRENT_SOLDE } from "./par-chapitre/le-concurrent-solde";
+import { UN_ENGAGEMENT_PLUS_MODESTE } from "./par-chapitre/un-engagement-plus-modeste";
+import { LES_ENTREPRISES_PAIENT_PLUS_VITE } from "./par-chapitre/les-entreprises-paient-plus-vite";
 export type { Situation } from "./types";
 
 /**
@@ -212,6 +226,11 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   RECRUTER_DES_L_ANNONCE_DU_DEPART,
   ENTRETENIR_AU_SEUIL,
   DES_CLIENTS_REPARTIS_SANS_ETRE_SERVIS,
+  LES_MOTEURS_QUI_S_USENT_PLUS_VITE,
+  VENDRE_LA_LIGNE_OU_LA_GARDER,
+  COUVRIR_LA_CREANCE_EN_DOLLARS,
+  LE_CHANTIER_QUI_DERAPE,
+  LE_PRIX_DE_L_INVESTISSEUSE,
   UN_OBJECTIF_PLUS_AMBITIEUX,
   BAISSER_LES_PRIX_SANS_RIEN_COUPER,
   ALLER_DANS_L_ESPACE_LIBRE,
@@ -258,6 +277,14 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LA_MOITIE_DU_BUDGET_QUALITE,
   CHACUN_SON_LEVIER,
   LE_COMPTE_RENDU_EN_RETARD,
+  LE_COMPTE_A_TERME_MIEUX_REMUNERE,
+  LE_LIQUIDATEUR_VERSE_DAVANTAGE,
+  LA_BAISSE_DE_PRIX_PROMISE,
+  LE_CENTRE_TOURNE_PLUS,
+  LA_PRIME_DU_CHEF_D_ATELIER,
+  LE_CONCURRENT_SOLDE,
+  UN_ENGAGEMENT_PLUS_MODESTE,
+  LES_ENTREPRISES_PAIENT_PLUS_VITE,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

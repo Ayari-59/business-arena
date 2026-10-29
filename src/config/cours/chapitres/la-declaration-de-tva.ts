@@ -3,6 +3,7 @@ import type { Cas } from "../cas";
 import { DELAI_MAXIMAL_CONVENU, MARTEL_ET_FILS, type FicheDuBatiment, type RegimeDExigibilite } from "../monde/delais-et-tva";
 import { comparerLesRegimes, declarationDuTrimestre, declarationsDeLAnnee, ventesDuTrimestre, type LeviersDeLaTva } from "../monde/delais";
 import type { Chapitre, TableauDeDonnees } from "../types";
+import { etapesAvant, etapesDepuis, partieDuChapitre } from "./decoupage";
 
 /**
  * CHAPITRE : LA DÉCLARATION DE TVA : COLLECTÉE, DÉDUCTIBLE, À PAYER (fiscalité, palier 3 ; BTS CG,
@@ -277,7 +278,8 @@ function tableauDeLAnnee(x: DeclarationDeMartel): TableauDeDonnees {
   };
 }
 
-export const LA_DECLARATION_DE_TVA: Chapitre = {
+/** Le chapitre tel qu'il était écrit, en un seul tenant : ses deux parties en sont tirées (plus bas). */
+const LA_DECLARATION_DE_TVA_ENTIERE: Chapitre = {
   code: "la-declaration-de-tva",
   parcours: "fiscalite",
   palier: 3,
@@ -1058,3 +1060,59 @@ export const LA_DECLARATION_DE_TVA: Chapitre = {
     },
   ],
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LES DEUX PARTIES (audit pédagogique : aucun chapitre de plus de 20 étapes)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const CODE_DE_LA_SUITE = "encaissements-ou-debits";
+export const TITRE_DE_LA_SUITE = "Encaissements ou débits : le régime qui décide";
+
+/** PREMIÈRE PARTIE : les étapes du chapitre d'origine jusqu'à `predire-le-delai` exclue, puis sa propre synthèse. */
+export const LA_DECLARATION_DE_TVA: Chapitre = partieDuChapitre(LA_DECLARATION_DE_TVA_ENTIERE, [
+  ...etapesAvant(LA_DECLARATION_DE_TVA_ENTIERE, "predire-le-delai"),
+  {
+    id: "synthese",
+    type: "lecture",
+    titre: "Ce qu'il faut retenir",
+    notions: ["vat_payable"],
+    texte: (c) => {
+      const x = declarationDeTva(c);
+      return [
+        `${x.f.entreprise} déclare sa TVA chaque trimestre : la TVA collectée, moins la TVA déductible, donne la TVA à payer, ou un crédit qui s'impute sur la déclaration suivante. Pour des travaux, la TVA collectée naît à l'encaissement, sauf option pour les débits.`,
+        `La suite, « ${TITRE_DE_LA_SUITE} », compare les deux régimes sur un trimestre et sur l'année, relie leur écart au délai des clients, puis remonte une déclaration jusqu'aux encaissements.`,
+        "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
+      ];
+    },
+    repere: () => "TVA à payer = TVA collectée − TVA déductible ; négative, c'est un crédit, imputé sur la déclaration suivante.",
+  },
+]);
+
+/** SUITE : sa propre introduction, puis les étapes du chapitre d'origine depuis `predire-le-delai`, synthèse comprise. */
+export const ENCAISSEMENTS_OU_DEBITS: Chapitre = partieDuChapitre(
+  LA_DECLARATION_DE_TVA_ENTIERE,
+  [
+    {
+      id: "intro",
+      type: "lecture",
+      titre: "Deux régimes pour une même année",
+      notions: ["vat_payable", "payment_terms"],
+      texte: (c) => {
+        const x = declarationDeTva(c);
+        return [
+          `Ce chapitre suit « ${LA_DECLARATION_DE_TVA.titre} » : ${x.f.entreprise} déclare chaque trimestre sa TVA collectée à l'encaissement, son régime pour des travaux.`,
+          "Il reste à mesurer ce que ce régime change : le délai des clients qui fait naître un crédit, le même trimestre aux débits, l'année entière aux deux régimes, puis une déclaration remontée jusqu'aux encaissements.",
+        ];
+      },
+      repere: () => "Aux encaissements, la TVA suit la banque ; aux débits, elle suit les factures : l'écart entre les deux, ce sont les créances clients.",
+    },
+    ...etapesDepuis(LA_DECLARATION_DE_TVA_ENTIERE, "predire-le-delai"),
+  ],
+  {
+    code: CODE_DE_LA_SUITE,
+    titre: TITRE_DE_LA_SUITE,
+    accroche: "La déclaration de l'entreprise du bâtiment est passée : le délai des clients qui fait le crédit, le même trimestre aux deux régimes, l'année entière, puis une déclaration remontée jusqu'aux encaissements.",
+    prerequis: ["la-declaration-de-tva"],
+    ouverture: undefined,
+  },
+);

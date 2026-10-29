@@ -143,7 +143,10 @@ export function equipeEtPlanning(c: Pick<Cas, "code">) {
     heuresDeContrat: e.heuresParSemaine,
     caVise,
     hausseVisee: auDixieme((caVise / ca - 1) * 100),
-    passagesVises: plafond(caVise / panier),
+    // Un seul panier dans tout le cours, celui de la caisse : les commandes des comités, hors caisse, restent.
+    commandes: ind.commandes.chiffreDAffaires,
+    caEnCaisse: ind.chiffreDAffairesEnCaisse,
+    passagesVises: plafond((caVise - ind.commandes.chiffreDAffaires) / panier),
     masseAdmissible,
     heuresPayablesDuMois,
     heuresPayablesParSemaine,
@@ -397,7 +400,7 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
       notions: ["fixed_costs", "payroll", "average_basket"],
       question: (c) => {
         const x = equipeEtPlanning(c);
-        return `Sans formule cette fois. Quel chiffre d'affaires du mois ferait peser la paie ${pct(PART_DU_PERSONNEL_VISEE * 100)} exactement (à l'euro, arrondi au-dessus) ? De combien dépasse-t-il janvier, en pourcentage, au dixième ? Combien de passages en caisse faut-il pour le faire, au panier moyen de janvier (à l'unité, arrondi au-dessus) ? Les passages en caisse de janvier sont ${qte(x.tickets)}.`;
+        return `Sans formule cette fois. Quel chiffre d'affaires du mois ferait peser la paie ${pct(PART_DU_PERSONNEL_VISEE * 100)} exactement (à l'euro, arrondi au-dessus) ? De combien dépasse-t-il janvier, en pourcentage, au dixième ? Combien de passages en caisse faut-il pour le faire, au panier moyen de janvier (à l'unité, arrondi au-dessus) ? Les passages en caisse de janvier sont ${qte(x.tickets)} ; les commandes des comités, hors caisse, restent de ${eur(x.commandes)}.`;
       },
       champs: (c) => {
         const x = equipeEtPlanning(c);
@@ -408,7 +411,7 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
             libelle: "Passages en caisse nécessaires",
             attendu: x.passagesVises,
             tolerance: 1,
-            calcul: `Le panier moyen de janvier vaut ${eur(x.ca)} ÷ ${qte(x.tickets)} = ${eur(auCentime(x.panier))} ; ${eur(x.caVise)} ÷ ${eur(auCentime(x.panier))} = ${qte(x.passagesVises)} passages`,
+            calcul: `Le panier moyen de janvier vaut ${eur(x.caEnCaisse)} encaissés ÷ ${qte(x.tickets)} = ${eur(auCentime(x.panier))} ; (${eur(x.caVise)} − ${eur(x.commandes)} des commandes des comités) ÷ ${eur(auCentime(x.panier))} = ${qte(x.passagesVises)} passages`,
           },
         ];
       },

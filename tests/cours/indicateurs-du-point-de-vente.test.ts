@@ -32,12 +32,18 @@ const dixieme = (x: number) => Math.round(x * 10) / 10;
 
 // Le mois de janvier, refait à la main sur la fiche, clientèle par clientèle.
 const CA = 600 * 55 + 360 * 75 + 90 * 135 + 330 * 35 + 150 * 25;
+// Les commandes des comités d'entreprise : facturées à 45 jours, elles ne passent pas en caisse.
+const COMITES = 80 * 55 + 20 * 135 + 60 * 35 + 40 * 25;
+const CA_EN_CAISSE = CA - COMITES;
 const ENTREES = 680 + 3_160 + 8;
-const PASSAGES = 340 + 600 + 8;
+const PASSAGES = 340 + 600;
 const ARTICLES = 600 + 360 + 90 + 330 + 150;
-const PANIER = CA / PASSAGES;
-const PRIX_MOYEN = CA / ARTICLES;
-const VISE = centime(CA * 1.1);
+const ARTICLES_EN_CAISSE = ARTICLES - (80 + 20 + 60 + 40);
+// Un seul panier dans tout le cours : chiffre d'affaires encaissé en caisse ÷ passages en caisse.
+const PANIER = CA_EN_CAISSE / PASSAGES;
+const PRIX_MOYEN = CA_EN_CAISSE / ARTICLES_EN_CAISSE;
+const VISE = centime(CA_EN_CAISSE * 1.1);
+const plafond = (x: number) => Math.ceil(x - 1e-9);
 
 function textesDe(e: Etape, c: Cas, etat: EtatDuCours): string[] {
   const t = e.tableau?.(c);
@@ -220,14 +226,14 @@ describe("les indicateurs du point de vente : le mois de janvier", () => {
   const ch = INDICATEURS_DU_POINT_DE_VENTE;
 
   it("la fiche donne les chiffres de la consigne", () => {
-    expect([CA, ENTREES, PASSAGES, ARTICLES]).toEqual([87_450, 3_848, 948, 1_530]);
-    expect([centime(PANIER), centime(ARTICLES / PASSAGES), centime(PRIX_MOYEN), dixieme((PASSAGES / ENTREES) * 100)]).toEqual([92.25, 1.61, 57.16, 24.6]);
+    expect([CA, COMITES, CA_EN_CAISSE, ENTREES, PASSAGES, ARTICLES, ARTICLES_EN_CAISSE]).toEqual([87_450, 10_200, 77_250, 3_848, 940, 1_530, 1_330]);
+    expect([centime(PANIER), centime(ARTICLES_EN_CAISSE / PASSAGES), centime(PRIX_MOYEN), dixieme((PASSAGES / ENTREES) * 100)]).toEqual([82.18, 1.41, 58.08, 24.4]);
     expect([CA / 120, dixieme((1_530 / 1_554) * 100)]).toEqual([728.75, 98.5]);
   });
 
   it("les étapes guidées : le mois en quatre chiffres, le panier, l'indice de vente, le prix moyen", () => {
     expect(attendus(ch, "le-mois")).toEqual({ "Chiffre d'affaires du mois": CA, "Passages en caisse": PASSAGES, "Articles vendus": ARTICLES, "Chiffre d'affaires au m²": CA / 120 });
-    expect(attendus(ch, "le-panier")).toEqual({ "Panier moyen": centime(PANIER), "Indice de vente": centime(ARTICLES / PASSAGES), "Prix moyen d'un article": centime(PRIX_MOYEN) });
+    expect(attendus(ch, "le-panier")).toEqual({ "Panier moyen": centime(PANIER), "Indice de vente": centime(ARTICLES_EN_CAISSE / PASSAGES), "Prix moyen d'un article": centime(PRIX_MOYEN) });
   });
 
   it("les étapes autonomes : la transformation (passages ÷ entrées), le taux de service, le rayon vide", () => {
@@ -244,30 +250,30 @@ describe("les indicateurs du point de vente : le mois de janvier", () => {
       "Ventes manquées": 384 - 360,
       "Chiffre d'affaires manqué": 24 * 75,
     });
-    expect(juste(ch, "deux-taux")).toBe("98,5 % est le taux de service ; la transformation vaut 24,6 %");
+    expect(juste(ch, "deux-taux")).toBe("98,5 % est le taux de service ; la transformation vaut 24,4 %");
     expect(juste(ch, "pourquoi-manquees")).toBe("Commander plus de cardigans : le rayon en a eu moins que la demande");
   });
 
   it("le premier cycle : les passages pariés, cherchés au curseur, puis les deux leviers formalisés", () => {
     expect(HAUSSE_VISEE).toBe(0.1);
-    expect(VISE).toBe(96_195);
+    expect(VISE).toBe(84_975);
     expect(juste(ch, "predire-les-passages")).toBe("Environ 10 % de passages en caisse en plus");
-    // PANIER × n ≥ 96 195 : n ≥ 1 042,8, soit 1 043 passages.
-    expect(Math.ceil(VISE / PANIER)).toBe(1_043);
-    const ca = centime(1_043 * PANIER);
+    // PANIER × n ≥ 84 975 : n ≥ 1 034 tout juste (10 % de 940), soit 1 034 passages.
+    expect(plafond(VISE / PANIER)).toBe(1_034);
+    const ca = centime(1_034 * PANIER);
     expect(curseur(ch, "les-passages-au-curseur")).toEqual({
-      attendu: 1_043,
+      attendu: 1_034,
       bornes: [900, 1_200],
       droites: [centime(900 * PANIER), VISE, centime(1_200 * PANIER), VISE],
-      lecture: { "Chiffre d'affaires de ces passages": ca, "Objectif de la direction": VISE, "Écart à l'objectif": centime(ca - VISE), "Chiffre d'affaires gagné sur janvier": centime(ca - CA) },
+      lecture: { "Chiffre d'affaires de ces passages": ca, "Objectif de la direction": VISE, "Écart à l'objectif": centime(ca - VISE), "Chiffre d'affaires gagné sur janvier": centime(ca - CA_EN_CAISSE) },
     });
     expect(attendus(ch, "deux-leviers")).toEqual({
-      "Chiffre d'affaires visé": VISE,
-      "Passages nécessaires, au même panier": 1_043,
+      "Chiffre d'affaires visé en caisse": VISE,
+      "Passages nécessaires, au même panier": 1_034,
       "Panier nécessaire, aux mêmes passages": centime(VISE / PASSAGES),
-      "Entrées nécessaires, à la même transformation": Math.ceil((1_043 * ENTREES) / PASSAGES),
+      "Entrées nécessaires, à la même transformation": plafond((1_034 * ENTREES) / PASSAGES),
     });
-    expect([centime(VISE / PASSAGES), Math.ceil((1_043 * ENTREES) / PASSAGES)]).toEqual([101.47, 4_234]);
+    expect([centime(VISE / PASSAGES), plafond((1_034 * ENTREES) / PASSAGES)]).toEqual([90.4, 4_233]);
     expect(juste(ch, "quel-levier")).toBe("Remplir le panier : le client est déjà là");
   });
 
@@ -279,25 +285,25 @@ describe("les indicateurs du point de vente : le mois de janvier", () => {
     expect(l.reussi).toEqual([false, true]);
     expect(l.auDepart).toEqual({
       Entrées: ENTREES,
-      "Taux de transformation": 24.6,
+      "Taux de transformation": 24.4,
       "Passages en caisse": PASSAGES,
-      "Indice de vente": 1.61,
-      "Prix moyen d'un article": 57.16,
-      "Panier moyen": 92.25,
-      "Chiffre d'affaires": CA,
+      "Indice de vente": 1.41,
+      "Prix moyen d'un article": 58.08,
+      "Panier moyen": 82.18,
+      "Chiffre d'affaires en caisse": CA_EN_CAISSE,
       "Chiffre d'affaires gagné sur janvier": 0,
     });
     expect(l.aLaSolution).toEqual({
       Entrées: ENTREES,
-      "Taux de transformation": 24.6,
+      "Taux de transformation": 24.4,
       "Passages en caisse": PASSAGES,
-      "Indice de vente": centime((ARTICLES / PASSAGES) * 1.1),
-      "Prix moyen d'un article": 57.16,
+      "Indice de vente": centime((ARTICLES_EN_CAISSE / PASSAGES) * 1.1),
+      "Prix moyen d'un article": 58.08,
       "Panier moyen": centime(PANIER * 1.1),
-      "Chiffre d'affaires": VISE,
-      "Chiffre d'affaires gagné sur janvier": centime(VISE - CA),
+      "Chiffre d'affaires en caisse": VISE,
+      "Chiffre d'affaires gagné sur janvier": centime(VISE - CA_EN_CAISSE),
     });
-    expect([centime((ARTICLES / PASSAGES) * 1.1), centime(PANIER * 1.1), centime(VISE - CA)]).toEqual([1.78, 101.47, 8_745]);
+    expect([centime((ARTICLES_EN_CAISSE / PASSAGES) * 1.1), centime(PANIER * 1.1), centime(VISE - CA_EN_CAISSE)]).toEqual([1.56, 90.4, 7_725]);
     // Des clients en plus ne relèvent pas le défi ; deux fois 5 % sur le panier, si (1,05² = 1,1025).
     expect(l.d.atteint({ entrees: 10, transformation: 0, indice: 0, prix: 0 })).toBe(false);
     expect(l.d.atteint({ entrees: 0, transformation: 0, indice: 5, prix: 5 })).toBe(true);
@@ -308,23 +314,22 @@ describe("les indicateurs du point de vente : le mois de janvier", () => {
     expect(HAUSSE_DU_PRIX_MOYEN).toBe(0.04);
     expect(attendus(ch, "la-decomposition")).toEqual({
       "Hausse de l'indice de vente (%)": dixieme((1.1 / 1.04 - 1) * 100),
-      "Indice de vente visé": centime((ARTICLES / PASSAGES) * (1.1 / 1.04)),
-      "Articles à vendre dans le mois": Math.ceil(VISE / (PRIX_MOYEN * 1.04)),
+      "Indice de vente visé": centime((ARTICLES_EN_CAISSE / PASSAGES) * (1.1 / 1.04)),
+      "Articles à vendre dans le mois": plafond(VISE / (PRIX_MOYEN * 1.04)),
     });
-    expect([dixieme((1.1 / 1.04 - 1) * 100), centime((ARTICLES / PASSAGES) * (1.1 / 1.04)), Math.ceil(VISE / (PRIX_MOYEN * 1.04))]).toEqual([5.8, 1.71, 1_619]);
+    expect([dixieme((1.1 / 1.04 - 1) * 100), centime((ARTICLES_EN_CAISSE / PASSAGES) * (1.1 / 1.04)), plafond(VISE / (PRIX_MOYEN * 1.04))]).toEqual([5.8, 1.5, 1_407]);
   });
 
-  it("l'expert : le panier sans les comités, et le panier que l'on vise", () => {
-    const comites = 80 * 55 + 20 * 135 + 60 * 35 + 40 * 25;
-    expect(comites).toBe(10_200);
-    expect(attendus(ch, "le-panier-sans-les-comites")).toEqual({
-      "Panier moyen des comités": comites / 8,
-      "Chiffre d'affaires sans les comités": CA - comites,
-      "Passages sans les comités": PASSAGES - 8,
-      "Panier moyen sans les comités": centime((CA - comites) / (PASSAGES - 8)),
+  it("l'expert : le panier qu'on aurait en comptant les comités, et le panier que l'on vise", () => {
+    expect(COMITES).toBe(10_200);
+    expect(attendus(ch, "le-panier-avec-les-comites")).toEqual({
+      "Panier d'une commande de comité": COMITES / 8,
+      "Chiffre d'affaires, comités compris": CA,
+      "« Passages », comités compris": PASSAGES + 8,
+      "Panier moyen du stagiaire": centime(CA / (PASSAGES + 8)),
     });
-    expect([comites / 8, centime((CA - comites) / (PASSAGES - 8))]).toEqual([1_275, 82.18]);
-    expect(juste(ch, "quel-panier-viser")).toBe("82,18 €, celui des clients du comptoir");
+    expect([COMITES / 8, centime(CA / (PASSAGES + 8))]).toEqual([1_275, 92.25]);
+    expect(juste(ch, "quel-panier-viser")).toBe("82,18 €, celui de la caisse");
     expect(indicateursDuPointDeVente(cas).deuxFoisCinq).toBe(10.3);
   });
 
@@ -344,30 +349,34 @@ describe("le cas : moins de clients le mois prochain", () => {
   });
 
   it("chaque chiffre, refait à la main", () => {
-    expect([entrees, passages]).toEqual([3_271, 806]);
-    expect(attendus(s, "le-mois")).toEqual({ "Taux de transformation (%)": 24.6, "Panier moyen": 92.25, "Prix moyen d'un article": 57.16 });
+    expect([entrees, passages]).toEqual([3_271, 799]);
+    expect(attendus(s, "le-mois")).toEqual({ "Taux de transformation (%)": 24.4, "Panier moyen": 82.18, "Prix moyen d'un article": 58.08 });
     const ca = centime(passages * PANIER);
     expect(attendus(s, "moins-de-clients")).toEqual({
       "Entrées pendant les travaux": entrees,
       "Passages en caisse pendant les travaux": passages,
       "Chiffre d'affaires au même panier": ca,
-      "Chiffre d'affaires perdu": centime(CA - ca),
+      "Chiffre d'affaires perdu": centime(CA_EN_CAISSE - ca),
     });
-    expect([ca, centime(CA - ca)]).toEqual([74_350.95, 13_099.05]);
+    expect([ca, centime(CA_EN_CAISSE - ca)]).toEqual([65_662.5, 11_587.5]);
     expect(attendus(s, "le-panier-qui-compense")).toEqual({
-      "Panier moyen nécessaire": centime(CA / passages),
+      "Panier moyen nécessaire": centime(CA_EN_CAISSE / passages),
       "Hausse du panier (%)": dixieme((PASSAGES / passages - 1) * 100),
-      "Indice de vente nécessaire": centime(ARTICLES / passages),
+      "Indice de vente nécessaire": centime(ARTICLES_EN_CAISSE / passages),
     });
-    expect([centime(CA / passages), dixieme((PASSAGES / passages - 1) * 100), centime(ARTICLES / passages)]).toEqual([108.5, 17.6, 1.9]);
-    // 3 271 × t ÷ 1 000 × PANIER ≥ 87 450 : t ≥ 948 ÷ 3 271 × 1 000 = 289,8, soit 290 passages pour 1 000 entrées.
-    expect(Math.ceil((PASSAGES / entrees) * 1_000)).toBe(290);
+    expect([centime(CA_EN_CAISSE / passages), dixieme((PASSAGES / passages - 1) * 100), centime(ARTICLES_EN_CAISSE / passages)]).toEqual([96.68, 17.6, 1.66]);
+    // 3 271 × t ÷ 1 000 × PANIER ≥ 77 250 : t ≥ 940 ÷ 3 271 × 1 000 = 287,4, soit 288 passages pour 1 000 entrées.
+    expect(Math.ceil((PASSAGES / entrees) * 1_000)).toBe(288);
     const au = (t: number) => centime(((entrees * t) / 1_000) * PANIER);
     expect(curseur(s, "la-transformation-au-curseur")).toEqual({
-      attendu: 290,
+      attendu: 288,
       bornes: [240, 320],
-      droites: [au(240), CA, au(320), CA],
-      lecture: { "Chiffre d'affaires du mois des travaux": au(290), "Chiffre d'affaires de janvier": CA, "Écart sur janvier": centime(au(290) - CA) },
+      droites: [au(240), CA_EN_CAISSE, au(320), CA_EN_CAISSE],
+      lecture: {
+        "Chiffre d'affaires en caisse du mois des travaux": au(288),
+        "Chiffre d'affaires en caisse de janvier": CA_EN_CAISSE,
+        "Écart sur janvier": centime(au(288) - CA_EN_CAISSE),
+      },
     });
   });
 
@@ -375,8 +384,8 @@ describe("le cas : moins de clients le mois prochain", () => {
     const x = moinsDeClients(cas);
     expect(x.verdict).toBe("il-faut-plus-que-la-baisse");
     expect([x.panierFaux, x.transformationFausse]).toEqual([centime(PANIER * 1.15), dixieme((PASSAGES / ENTREES) * 1.15 * 100)]);
-    expect([centime(PANIER * 1.15), dixieme((PASSAGES / ENTREES) * 1.15 * 100)]).toEqual([106.08, 28.3]);
-    expect(juste(s, "reponse")).toBe("17,6 % de panier en plus, pas 15 % : 108,50 €");
+    expect([centime(PANIER * 1.15), dixieme((PASSAGES / ENTREES) * 1.15 * 100)]).toEqual([94.51, 28.1]);
+    expect(juste(s, "reponse")).toBe("17,6 % de panier en plus, pas 15 % : 96,68 €");
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le cas", () => verifierLesTextes(s));

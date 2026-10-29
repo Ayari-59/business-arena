@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { blocOfficiel, referentielDeCitation } from "../../src/config/ateliers/referentiels";
 import { UNITES_FEMININES } from "../../src/config/cours/accords";
 import { casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
-import { CHARGE_DU_PARI, DEPART_DU_LABORATOIRE, LA_CLOTURE, TAUX_MOYEN_CHERCHE, TRAVAUX_DU_PALIER_SUIVANT } from "../../src/config/cours/chapitres/la-cloture";
+import { CHARGE_DU_PARI, DEPART_DU_LABORATOIRE, LA_CLOTURE, TAUX_MOYEN_CHERCHE, TRAVAUX_DU_PALIER_SUIVANT, DECIDER_APRES_LA_CLOTURE } from "../../src/config/cours/chapitres/la-cloture";
 import { cloture as clotureDuMonde } from "../../src/config/cours/monde/cloture";
 import { EXERCICE_DE_NOVA as f } from "../../src/config/cours/monde/exercice-de-nova";
 import { CHAPITRES } from "../../src/config/cours/registre";
@@ -391,7 +391,7 @@ describe("la clôture : les étapes", () => {
     expect([charge, t]).toEqual([3_681.11, 467]);
     const produit = (bp: number) => (80_000 * bp * 355) / 10_000 / 360;
     expect(produit(466)).toBeLessThan(charge);
-    expect(curseur(ch, "le-taux-qui-paierait-l-emprunt")).toEqual({
+    expect(curseur(DECIDER_APRES_LA_CLOTURE, "le-taux-qui-paierait-l-emprunt")).toEqual({
       attendu: 467,
       bornes: [0, 600],
       droites: [0, charge, c(produit(600)), charge],
@@ -403,7 +403,7 @@ describe("la clôture : les étapes", () => {
   it("les étapes d'expert : emprunter pour placer, le dégressif, le stock à rebours", () => {
     const charge = c(2_850 + icne);
     const placeAuTaux = c(80_000 * 0.03 * (355 / 360));
-    expect(attendus(ch, "emprunter-pour-placer")).toEqual({
+    expect(attendus(DECIDER_APRES_LA_CLOTURE, "emprunter-pour-placer")).toEqual({
       "Charge de l'emprunt sur l'exercice": charge,
       "Intérêts des mêmes fonds placés": placeAuTaux,
       "Coût net avant impôt": c(charge - placeAuTaux),
@@ -413,7 +413,7 @@ describe("la clôture : les étapes", () => {
     // Le dégressif : 60 000 € × 1,75 ÷ 6, douze mois (la ligne est acquise en janvier).
     const degressive = c(60_000 * (1.75 / 6) * (12 / 12));
     const raiDegressif = c(rai + dotation - degressive);
-    expect(attendus(ch, "variante-degressive")).toEqual({
+    expect(attendus(DECIDER_APRES_LA_CLOTURE, "variante-degressive")).toEqual({
       "Dotation dégressive de l'exercice": degressive,
       "Résultat avant impôt en dégressif": raiDegressif,
       "Impôt en dégressif": isDe(raiDegressif),
@@ -422,15 +422,15 @@ describe("la clôture : les étapes", () => {
     expect([degressive, raiDegressif, isDe(raiDegressif), impot - isDe(raiDegressif)]).toEqual([17_500, 99_319.07, 20_580, 1_909]);
     // Le stock au dernier prix : les 600 jeux à 23 €, le prix du dernier lot.
     const autreStock = jeux * 23;
-    expect(attendus(ch, "a-rebours")).toEqual({ "Écart de résultat": c(autreStock - stockFinal), "Stock final retenu": autreStock, "Coût d'un jeu en stock": 23 });
+    expect(attendus(DECIDER_APRES_LA_CLOTURE, "a-rebours")).toEqual({ "Écart de résultat": c(autreStock - stockFinal), "Stock final retenu": autreStock, "Coût d'un jeu en stock": 23 });
     expect(c(rai + autreStock - stockFinal)).toBe(107_257.96);
-    expect((ch.etapes.find((e) => e.id === "a-rebours") as EtapeMontants).question(cas, etatVide)).toContain("107\u202f257,96 €");
+    expect((DECIDER_APRES_LA_CLOTURE.etapes.find((e) => e.id === "a-rebours") as EtapeMontants).question(cas, etatVide)).toContain("107\u202f257,96 €");
   });
 
   it("les verdicts : le pari du stock, le pari du placement, le dégressif ne fait que décaler l'impôt", () => {
     expect(juste(ch, "predire-le-stock")).toBe("Monter le résultat : ces jeux sortent des charges de l'exercice");
-    expect(juste(ch, "predire-le-placement")).toBe("Coûte : la même somme placée rapporte moins que l'emprunt ne coûte");
-    expect(juste(ch, "le-degressif-differe")).toBe("L'impôt n'est que décalé : la ligne s'amortit de 60 000 € en tout, dans les deux modes");
+    expect(juste(DECIDER_APRES_LA_CLOTURE, "predire-le-placement")).toBe("Coûte : la même somme placée rapporte moins que l'emprunt ne coûte");
+    expect(juste(DECIDER_APRES_LA_CLOTURE, "le-degressif-differe")).toBe("L'impôt n'est que décalé : la ligne s'amortit de 60 000 € en tout, dans les deux modes");
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(ch));

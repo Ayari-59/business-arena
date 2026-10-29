@@ -9,7 +9,8 @@ import type { Situation } from "../types";
  * PROCHAIN (BTS MCO, palier 2).
  *
  * Des travaux vont fermer la rue de la boutique pendant un mois : le gérant attend 15 % d'entrées en
- * moins. Il veut savoir ce que cela retire au chiffre d'affaires, et ce qu'il faudrait pour le garder.
+ * moins. Il veut savoir ce que cela retire au chiffre d'affaires encaissé en caisse (les commandes des
+ * comités d'entreprise, hors caisse, ne dépendent pas de la rue), et ce qu'il faudrait pour le garder.
  * L'élève refait seul les indicateurs du chapitre, applique la baisse au trafic (la transformation
  * ne bouge pas), puis remonte à rebours : le panier qui compense, l'indice de vente qu'il exige au
  * même prix moyen, et, au curseur, la transformation qui compenserait à la place du panier. Le piège
@@ -48,11 +49,11 @@ export function moinsDeClients(c: Pick<Cas, "code">) {
   const entreesApres = Math.round(m.entrees * (1 - BAISSE_DES_ENTREES));
   const passagesApres = Math.round(entreesApres * m.tauxDeTransformation);
   const caSansAction = auCentime(passagesApres * m.panierMoyen);
-  const panierExact = m.chiffreDAffaires / passagesApres;
+  const panierExact = m.chiffreDAffairesEnCaisse / passagesApres;
   const panierVise = auCentime(panierExact);
   const hausseDuPanier = auDixieme((panierExact / m.panierMoyen - 1) * 100);
   // La transformation qui compense à la place du panier, en passages pour 1 000 entrées.
-  const transformationVisee = Math.ceil((m.chiffreDAffaires / (entreesApres * m.panierMoyen)) * 1_000 - 1e-9);
+  const transformationVisee = Math.ceil((m.chiffreDAffairesEnCaisse / (entreesApres * m.panierMoyen)) * 1_000 - 1e-9);
   // Les erreurs classiques : rattraper 15 % de visiteurs en moins avec 15 % de plus sur un autre levier.
   const panierFaux = auCentime(m.panierMoyen * (1 + BAISSE_DES_ENTREES));
   const verdict: Verdict = hausseDuPanier > BAISSE_DES_ENTREES * 100 ? "il-faut-plus-que-la-baisse" : "la-baisse-suffit";
@@ -61,7 +62,7 @@ export function moinsDeClients(c: Pick<Cas, "code">) {
     entreesApres,
     passagesApres,
     caSansAction,
-    caPerdu: auCentime(m.chiffreDAffaires - caSansAction),
+    caPerdu: auCentime(m.chiffreDAffairesEnCaisse - caSansAction),
     panierVise,
     hausseDuPanier,
     indiceVise: auCentime(panierExact / m.prixMoyenDeLArticle),
@@ -107,8 +108,9 @@ export const MOINS_DE_CLIENTS_LE_MOIS_PROCHAIN: Situation = {
           lignes: [
             { libelle: "Entrées comptées à la porte", valeurs: [qte(k.m.entrees)] },
             { libelle: "Passages en caisse", valeurs: [qte(k.m.tickets)] },
-            { libelle: "Articles vendus", valeurs: [qte(k.m.articles)] },
-            { libelle: "Chiffre d'affaires hors taxes", valeurs: [eur(k.m.chiffreDAffaires)] },
+            { libelle: "Articles vendus en caisse", valeurs: [qte(k.m.articlesEnCaisse)] },
+            { libelle: "Chiffre d'affaires encaissé hors taxes", valeurs: [eur(k.m.chiffreDAffairesEnCaisse)] },
+            { libelle: "Commandes des comités, hors caisse", valeurs: [eur(k.m.commandes.chiffreDAffaires)] },
             { libelle: "Baisse des entrées attendue pendant les travaux", valeurs: [pct(BAISSE_DES_ENTREES * 100)] },
           ],
         };
@@ -116,7 +118,7 @@ export const MOINS_DE_CLIENTS_LE_MOIS_PROCHAIN: Situation = {
       texte: (c) => {
         const { k } = moinsDeClients(c);
         return [
-          `« Le mois prochain, des travaux vont fermer notre rue à la circulation. Je m'attends à ${pct(BAISSE_DES_ENTREES * 100)} d'entrées en moins. Je veux savoir ce que cela retirerait à notre chiffre d'affaires si rien ne change, et quel objectif donner à l'équipe pour garder le chiffre d'affaires de ${k.f.moisDeReference}. »`,
+          `« Le mois prochain, des travaux vont fermer notre rue à la circulation. Je m'attends à ${pct(BAISSE_DES_ENTREES * 100)} d'entrées en moins. Je veux savoir ce que cela retirerait à notre chiffre d'affaires si rien ne change, et quel objectif donner à l'équipe pour garder le chiffre d'affaires en caisse de ${k.f.moisDeReference}. Les commandes des comités d'entreprise, elles, ne dépendent pas de la rue. »`,
           "Pas de cours cette fois : les calculs sont ceux du chapitre, à vous d'en trouver l'ordre. La simulation du cours suppose que les visiteurs qui viennent encore achètent comme en janvier : la transformation, l'indice de vente et le prix moyen ne bougent pas d'eux-mêmes.",
         ];
       },
@@ -133,8 +135,8 @@ export const MOINS_DE_CLIENTS_LE_MOIS_PROCHAIN: Situation = {
         const { k } = moinsDeClients(c);
         return [
           { libelle: "Taux de transformation (%)", attendu: k.transformation, calcul: `${qte(k.m.tickets)} ÷ ${qte(k.m.entrees)} × 100 = ${pct(k.transformation)}`, tolerance: 0.1 },
-          { libelle: "Panier moyen", attendu: k.panier, calcul: `${eur(k.m.chiffreDAffaires)} ÷ ${qte(k.m.tickets)} = ${eur(k.panier)}` },
-          { libelle: "Prix moyen d'un article", attendu: k.prixMoyen, calcul: `${eur(k.m.chiffreDAffaires)} ÷ ${qte(k.m.articles)} = ${eur(k.prixMoyen)}` },
+          { libelle: "Panier moyen", attendu: k.panier, calcul: `${eur(k.m.chiffreDAffairesEnCaisse)} ÷ ${qte(k.m.tickets)} = ${eur(k.panier)}` },
+          { libelle: "Prix moyen d'un article", attendu: k.prixMoyen, calcul: `${eur(k.m.chiffreDAffairesEnCaisse)} ÷ ${qte(k.m.articlesEnCaisse)} = ${eur(k.prixMoyen)}` },
         ];
       },
       explication: (c) => {
@@ -157,7 +159,7 @@ export const MOINS_DE_CLIENTS_LE_MOIS_PROCHAIN: Situation = {
           { libelle: "Passages en caisse pendant les travaux", attendu: x.passagesApres, calcul: `${qte(x.entreesApres)} × ${pct(x.k.transformation)} = ${qte(x.passagesApres)}`, tolerance: 1 },
           // Le panier arrondi au centime que l'élève a gardé déplace le chiffre d'affaires de quelques euros.
           { libelle: "Chiffre d'affaires au même panier", attendu: x.caSansAction, calcul: `${qte(x.passagesApres)} × ${eur(x.k.panier)} = ${eur(x.caSansAction)}`, tolerance: 5 },
-          { libelle: "Chiffre d'affaires perdu", attendu: x.caPerdu, calcul: `${eur(m.chiffreDAffaires)} − ${eur(x.caSansAction)} = ${eur(x.caPerdu)}`, tolerance: 5 },
+          { libelle: "Chiffre d'affaires perdu", attendu: x.caPerdu, calcul: `${eur(m.chiffreDAffairesEnCaisse)} − ${eur(x.caSansAction)} = ${eur(x.caPerdu)}`, tolerance: 5 },
         ];
       },
       explication: (c) => {
@@ -173,12 +175,12 @@ export const MOINS_DE_CLIENTS_LE_MOIS_PROCHAIN: Situation = {
       titre: "Le panier qui compense",
       notions: ["average_basket"],
       question: () =>
-        "Remontez à rebours. Pour garder le chiffre d'affaires de janvier avec les passages qui restent, quel panier moyen faudrait-il ? De combien devrait-il monter, au dixième de pour cent ? Et, au même prix moyen d'un article, quel indice de vente faudrait-il, au centième ?",
+        "Remontez à rebours. Pour garder le chiffre d'affaires en caisse de janvier avec les passages qui restent, quel panier moyen faudrait-il ? De combien devrait-il monter, au dixième de pour cent ? Et, au même prix moyen d'un article, quel indice de vente faudrait-il, au centième ?",
       champs: (c) => {
         const x = moinsDeClients(c);
         const m = x.k.m;
         return [
-          { libelle: "Panier moyen nécessaire", attendu: x.panierVise, calcul: `${eur(m.chiffreDAffaires)} ÷ ${qte(x.passagesApres)} = ${eur(x.panierVise)}` },
+          { libelle: "Panier moyen nécessaire", attendu: x.panierVise, calcul: `${eur(m.chiffreDAffairesEnCaisse)} ÷ ${qte(x.passagesApres)} = ${eur(x.panierVise)}` },
           { libelle: "Hausse du panier (%)", attendu: x.hausseDuPanier, calcul: `(${eur(x.panierVise)} ÷ ${eur(x.k.panier)} − 1) × 100 = ${pct(x.hausseDuPanier)}`, tolerance: 0.1 },
           { libelle: "Indice de vente nécessaire", attendu: x.indiceVise, calcul: `${eur(x.panierVise)} ÷ ${eur(x.k.prixMoyen)} = ${deux(x.indiceVise)} articles par passage`, tolerance: 0.01 },
         ];
@@ -197,7 +199,7 @@ export const MOINS_DE_CLIENTS_LE_MOIS_PROCHAIN: Situation = {
       notions: ["conversion_rate", "revenue"],
       question: (c) => {
         const x = moinsDeClients(c);
-        return `Autre voie : garder le panier de janvier (${eur(x.k.panier)}) et transformer davantage les ${qte(x.entreesApres)} visiteurs. Faites varier les passages en caisse pour 1 000 entrées : combien en faudrait-il, au moins, pour garder ${eur(x.k.m.chiffreDAffaires)} ? Placez le curseur, puis validez.`;
+        return `Autre voie : garder le panier de janvier (${eur(x.k.panier)}) et transformer davantage les ${qte(x.entreesApres)} visiteurs. Faites varier les passages en caisse pour 1 000 entrées : combien en faudrait-il, au moins, pour garder ${eur(x.k.m.chiffreDAffairesEnCaisse)} ? Placez le curseur, puis validez.`;
       },
       grandeur: () => ({ libelle: "Passages en caisse pour 1 000 entrées", unite: "passages" }),
       cible: (c) => ({ attendu: moinsDeClients(c).transformationVisee, min: TRANSFORMATION_DU_CURSEUR.min, max: TRANSFORMATION_DU_CURSEUR.max }),
@@ -211,17 +213,17 @@ export const MOINS_DE_CLIENTS_LE_MOIS_PROCHAIN: Situation = {
         const x = moinsDeClients(c);
         const ca = auCentime(((x.entreesApres * t) / 1_000) * x.k.m.panierMoyen);
         return [
-          { libelle: "Chiffre d'affaires du mois des travaux", montant: ca, fort: true },
-          { libelle: "Chiffre d'affaires de janvier", montant: x.k.m.chiffreDAffaires },
-          { libelle: "Écart sur janvier", montant: auCentime(ca - x.k.m.chiffreDAffaires) },
+          { libelle: "Chiffre d'affaires en caisse du mois des travaux", montant: ca, fort: true },
+          { libelle: "Chiffre d'affaires en caisse de janvier", montant: x.k.m.chiffreDAffairesEnCaisse },
+          { libelle: "Écart sur janvier", montant: auCentime(ca - x.k.m.chiffreDAffairesEnCaisse) },
         ];
       },
       droites: (c) => {
         const x = moinsDeClients(c);
         return {
           produit: (t) => ((x.entreesApres * t) / 1_000) * x.k.m.panierMoyen,
-          cout: () => x.k.m.chiffreDAffaires,
-          libelles: ["Chiffre d'affaires du mois des travaux", "Chiffre d'affaires de janvier"],
+          cout: () => x.k.m.chiffreDAffairesEnCaisse,
+          libelles: ["Chiffre d'affaires en caisse du mois des travaux", "Chiffre d'affaires en caisse de janvier"],
         };
       },
       explication: (c) => {
@@ -243,7 +245,7 @@ export const MOINS_DE_CLIENTS_LE_MOIS_PROCHAIN: Situation = {
           {
             texte: `${pct(x.hausseDuPanier)} de panier en plus, pas ${baisse} : ${eur(x.panierVise)}`,
             juste: x.verdict === "il-faut-plus-que-la-baisse",
-            retour: `Oui : ${eur(x.k.m.chiffreDAffaires)} à faire avec ${qte(x.passagesApres)} passages, c'est ${eur(x.panierVise)} par passage, ${deux(x.indiceVise)} articles au prix moyen de janvier. Sans rien faire, la boutique perdrait ${eur(x.caPerdu)}. L'autre voie, ${pct(x.transformationVisee / 10)} de transformation, demande la même hausse.`,
+            retour: `Oui : ${eur(x.k.m.chiffreDAffairesEnCaisse)} à faire avec ${qte(x.passagesApres)} passages, c'est ${eur(x.panierVise)} par passage, ${deux(x.indiceVise)} articles au prix moyen de janvier. Sans rien faire, la boutique perdrait ${eur(x.caPerdu)}. L'autre voie, ${pct(x.transformationVisee / 10)} de transformation, demande la même hausse.`,
           },
           {
             texte: `Un panier de ${eur(x.panierFaux)}, ${baisse} de plus, comme le trafic perdu`,

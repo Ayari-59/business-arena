@@ -104,8 +104,8 @@ describe("P1-3 · le prénom n'est pas redemandé", () => {
 });
 
 describe("P1-4 · trop d'essais depuis l'adresse", () => {
-  it("un code juste, bloqué par la garde, dit « trop d'essais » et l'attente", async () => {
-    classe.trouvee = true;
+  it("un code FAUX, au-delà du plafond, dit « trop d'essais » et l'attente", async () => {
+    classe.trouvee = false;
     garde.refus = "Trop de tentatives, réessayez dans 12 minutes.";
     const vers = await redirectionDe(rejoindreClasseAction(formulaire({ code: "BTS1-7K3P", nom: "Léa" })));
     expect(vers).toContain("refus=trop");
@@ -113,10 +113,17 @@ describe("P1-4 · trop d'essais depuis l'adresse", () => {
     expect(vers).not.toContain("refus=inconnu");
   });
 
-  it("la phrase dit l'attente, et que même un code juste attend", () => {
-    expect(refusTropDEssais("12")).toMatch(/Réessayez dans 12 minutes/);
-    expect(refusTropDEssais("12")).toMatch(/même un code juste/);
-    expect(refusTropDEssais("1")).toMatch(/dans 1 minute ;/);
+  it("un code JUSTE passe toujours, même au-delà du plafond", async () => {
+    classe.trouvee = true;
+    garde.refus = "Trop de tentatives, réessayez dans 12 minutes.";
+    const vers = await redirectionDe(rejoindreClasseAction(formulaire({ code: "BTS1-7K3P", nom: "Léa" })));
+    expect(vers).not.toContain("refus=trop");
+  });
+
+  it("la phrase dit l'attente, et qu'un code juste passe toujours", () => {
+    expect(refusTropDEssais("12")).toMatch(/réessayez dans 12 minutes/);
+    expect(refusTropDEssais("12")).toMatch(/Un code juste passe toujours/);
+    expect(refusTropDEssais("1")).toMatch(/dans 1 minute\./);
     // Une attente illisible ou absurde dans l'adresse ne s'affiche pas telle quelle.
     expect(refusTropDEssais("<script>")).toMatch(/dans 15 minutes/);
     expect(refusTropDEssais("9999")).toMatch(/dans 60 minutes/);

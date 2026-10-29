@@ -15,6 +15,7 @@ import {
 } from "../monde/attractivite";
 import { MARCHES_DU_COURS, type FicheDuMarche } from "../monde/marche-a-trois";
 import type { Chapitre, TableauDeDonnees } from "../types";
+import { etapesAvant, etapesDepuis, partieDuChapitre } from "./decoupage";
 
 /**
  * CHAPITRE : LA RESPONSABILITÉ SOCIÉTALE : CE QU'ELLE COÛTE, CE QU'ELLE RAPPORTE (stratégie et
@@ -330,7 +331,8 @@ export function tableauDesReglages(c: Pick<Cas, "code">): TableauDeDonnees {
 
 const CONVENTION_DES_ECARTS = "Un écart de résultat est le résultat de l'année engagée moins celui de l'année comparée : négatif, l'année finit plus bas.";
 
-export const LA_RESPONSABILITE_SOCIETALE: Chapitre = {
+/** Le chapitre tel qu'il était écrit, en un seul tenant : ses deux parties en sont tirées (plus bas). */
+const LA_RESPONSABILITE_SOCIETALE_ENTIERE: Chapitre = {
   code: "la-responsabilite-societale",
   parcours: "strategie",
   palier: 4,
@@ -1177,3 +1179,61 @@ export const LA_RESPONSABILITE_SOCIETALE: Chapitre = {
     },
   ],
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LES DEUX PARTIES (audit pédagogique : aucun chapitre de plus de 20 étapes)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const CODE_DE_LA_SUITE = "ce-que-rapporte-l-engagement";
+export const TITRE_DE_LA_SUITE = "Ce que rapporte l'engagement : l'année, le coût complet, la stratégie";
+
+/** PREMIÈRE PARTIE : les étapes du chapitre d'origine jusqu'à `predire-les-ventes` exclue, puis sa propre synthèse. */
+export const LA_RESPONSABILITE_SOCIETALE: Chapitre = partieDuChapitre(LA_RESPONSABILITE_SOCIETALE_ENTIERE, [
+  ...etapesAvant(LA_RESPONSABILITE_SOCIETALE_ENTIERE, "predire-les-ventes"),
+  {
+    id: "synthese",
+    type: "lecture",
+    titre: "Ce qu'il faut retenir",
+    notions: ["csr_index", "brand_capital"],
+    tableau: tableauDesReglages,
+    texte: (c) => {
+      const x = responsabilite(c);
+      return [
+        `Chez ${x.f.entreprise}, ${eur(x.b)} de budget RSE par trimestre ne donnent jamais le label : le capital plafonne à l'effort, ${dec(x.effort)}, sous le seuil de ${dec(x.r.seuilDuLabel)}, et il manque ${eur(x.manque)} par trimestre.`,
+        `L'inertie fait compter plus les derniers euros avant la date du label : le budget constant qui l'obtient au trimestre ${TRIMESTRE_DU_LABEL_VISE} coûte ${eur(x.coutConstant)}. La suite, « ${TITRE_DE_LA_SUITE} », chiffre ce que l'engagement coûte et rapporte sur l'année, puis le juge.`,
+        "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
+      ];
+    },
+    repere: () => "Capital à budget constant après n trimestres = effort × (1 − inertie puissance n) ; il tend vers l'effort sans le dépasser.",
+  },
+]);
+
+/** SUITE : sa propre introduction, puis les étapes du chapitre d'origine depuis `predire-les-ventes`, synthèse comprise. */
+export const CE_QUE_RAPPORTE_L_ENGAGEMENT: Chapitre = partieDuChapitre(
+  LA_RESPONSABILITE_SOCIETALE_ENTIERE,
+  [
+    {
+      id: "intro",
+      type: "lecture",
+      titre: "Un label, et son année",
+      notions: ["csr_index", "brand_capital"],
+      tableau: tableauDesReglages,
+      texte: (c) => {
+        const x = responsabilite(c);
+        return [
+          `Ce chapitre suit « ${LA_RESPONSABILITE_SOCIETALE.titre} » : chez ${x.f.entreprise}, le budget constant qui obtient le label au trimestre ${TRIMESTRE_DU_LABEL_VISE} coûte ${eur(x.coutConstant)}, et dépenser tard compte plus.`,
+          "Il reste à juger l'engagement sur l'année : les ventes qu'il gagne, ce qu'il coûte une fois le coût complet compté, puis deux plans comparés à tout le reste égal.",
+        ];
+      },
+      repere: () => "Un engagement se juge comme un investissement : ce qu'il coûte maintenant, ce qu'il rapporte ensuite, tout le reste égal.",
+    },
+    ...etapesDepuis(LA_RESPONSABILITE_SOCIETALE_ENTIERE, "predire-les-ventes"),
+  ],
+  {
+    code: CODE_DE_LA_SUITE,
+    titre: TITRE_DE_LA_SUITE,
+    accroche: "Le label de NOVA se mérite, son budget se chiffre : ce que l'engagement fait vendre sur l'année, coût complet compris, puis deux plans comparés à tout le reste égal.",
+    prerequis: ["la-responsabilite-societale"],
+    ouverture: undefined,
+  },
+);

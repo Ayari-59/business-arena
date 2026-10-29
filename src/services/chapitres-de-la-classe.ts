@@ -1,3 +1,4 @@
+import { parcoursQuiOuvrent, type OuvrablePar } from "@/config/cours/parcours-de-formation";
 import type { Chapitre } from "@/config/cours/types";
 import { getTeacherOrgId } from "@/services/auth.service";
 import { offreDuCoursDe } from "@/services/acces.service";
@@ -6,7 +7,8 @@ import { offreDuCoursDe } from "@/services/acces.service";
  * CE QU'UNE CLASSE DU COURS OUVRE À SES ÉLÈVES, DIT À L'ENSEIGNANT (audit UX du 29 octobre
  * 2026, P1-1). La règle est celle de l'élève (services/cours.service.ts, `coursOuvert`) :
  * le chapitre libre pour tous ; sous Campus, tout ; sous Classe ou Programme, les chapitres
- * du parcours de la classe, et tout le cours pour une classe héritée sans parcours ; sans
+ * du parcours de la classe (ou que regroupe son parcours de formation, le BUT), et tout le cours
+ * pour une classe héritée sans parcours ; sans
  * offre de l'arène en cours, le chapitre libre seul. Écrite ici en fonction pure, pour que
  * la page de la classe marque d'un cadenas, AVANT que les élèves ne s'y heurtent, chaque
  * chapitre qui leur restera fermé.
@@ -16,12 +18,12 @@ export type OffreDuCours = "classe" | "programme" | "campus" | null;
 export function chapitreOuvertALaClasse(
   offre: OffreDuCours,
   classe: { parcours: string | null; heritee: boolean },
-  chapitre: Pick<Chapitre, "libre" | "parcours">,
+  chapitre: Pick<Chapitre, "libre"> & OuvrablePar,
 ): boolean {
   if (chapitre.libre) return true;
   if (!offre) return false;
   if (offre === "campus") return true;
-  return classe.parcours === chapitre.parcours || (classe.heritee && classe.parcours === null);
+  return (classe.parcours !== null && parcoursQuiOuvrent(chapitre).includes(classe.parcours)) || (classe.heritee && classe.parcours === null);
 }
 
 /** L'offre de l'arène en cours de l'établissement de l'enseignant ; null sans offre. */

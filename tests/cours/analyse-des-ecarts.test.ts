@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { UNITES_FEMININES } from "../../src/config/cours/accords";
 import { casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
-import { ANALYSE_DES_ECARTS, RESPONSABLE_DE_L_ECART, syntheseDesEcarts } from "../../src/config/cours/chapitres/analyse-des-ecarts";
+import { ANALYSE_DES_ECARTS, RESPONSABLE_DE_L_ECART, syntheseDesEcarts, LES_ECARTS_ET_LEURS_RESPONSABLES } from "../../src/config/cours/chapitres/analyse-des-ecarts";
 import { L_USINE_DE_NOVA, USINES_DU_COURS } from "../../src/config/cours/monde/nova-usine";
 import { casDuChapitre } from "../../src/config/cours/situations";
 import { LE_RESULTAT_QUI_MANQUE, resultatQuiManque } from "../../src/config/cours/situations/par-chapitre/le-resultat-qui-manque";
@@ -272,14 +272,14 @@ describe("l'analyse des écarts, à l'usine du monde du cours", () => {
     const perdues = -effets["Centre de montage : écart sur rendement"]! / cHm;
     const heures = hmPreetablies + perdues;
     expect([hmPreetablies, perdues, heures]).toEqual([5_050, 150, r.centre.heuresMachine]);
-    expect(attendus(ANALYSE_DES_ECARTS, "a-rebours")).toEqual({
+    expect(attendus(LES_ECARTS_ET_LEURS_RESPONSABLES, "a-rebours")).toEqual({
       "Heures-machine réelles": heures,
       "Budget flexible de l'activité réelle": f.centre.chargesFixes + f.centre.coutVariableParHeure * heures,
       "Coût réel du centre": f.centre.chargesFixes + f.centre.coutVariableParHeure * heures - effets["Centre de montage : écart sur budget"]!,
     });
-    expect(attendus(ANALYSE_DES_ECARTS, "a-rebours")["Coût réel du centre"]).toBe(r.centre.cout);
+    expect(attendus(LES_ECARTS_ET_LEURS_RESPONSABLES, "a-rebours")["Coût réel du centre"]).toBe(r.centre.cout);
     const partFixe = f.centre.chargesFixes / f.centre.activiteNormale;
-    expect(attendus(ANALYSE_DES_ECARTS, "l-heure-de-trop")).toEqual({
+    expect(attendus(LES_ECARTS_ET_LEURS_RESPONSABLES, "l-heure-de-trop")).toEqual({
       "Heures-machine au-delà de l'activité normale": r.centre.heuresMachine - f.centre.activiteNormale,
       "Heures-machine au-delà du préétabli de la production réelle": perdues,
       "Part du boni due aux heures perdues": perdues * partFixe,
@@ -291,7 +291,7 @@ describe("l'analyse des écarts, à l'usine du monde du cours", () => {
   });
 
   it("expert : chaque écart à son responsable, la part de chacun, et le premier à agir", () => {
-    const tri = ANALYSE_DES_ECARTS.etapes.find((e) => e.id === "qui-doit-agir") as EtapeTri;
+    const tri = LES_ECARTS_ET_LEURS_RESPONSABLES.etapes.find((e) => e.id === "qui-doit-agir") as EtapeTri;
     const attendu: Record<string, string> = {
       "Ventes : écart sur prix": "commercial",
       "Ventes : écart sur quantité globale": "commercial",
@@ -309,7 +309,7 @@ describe("l'analyse des écarts, à l'usine du monde du cours", () => {
     // Toute ligne du passage du modèle a un responsable.
     for (const l of syntheseDesEcarts(cas).e.passage) expect(RESPONSABLE_DE_L_ECART[l.poste], l.poste).toBeDefined();
     const part = (rr: string) => sommeDe(Object.keys(attendu).filter((p) => attendu[p] === rr));
-    expect(attendus(ANALYSE_DES_ECARTS, "la-part-de-chacun")).toEqual({
+    expect(attendus(LES_ECARTS_ET_LEURS_RESPONSABLES, "la-part-de-chacun")).toEqual({
       "Part du commercial": part("commercial"),
       "Part des achats": part("achats"),
       "Part de l'atelier": part("atelier"),
@@ -319,22 +319,26 @@ describe("l'analyse des écarts, à l'usine du monde du cours", () => {
     });
     expect(["commercial", "centre", "rh", "atelier", "achats", "direction"].map(part)).toEqual([-13_400, -9_800, -8_800, -8_500, -7_400, 4_800]);
     expect(syntheseDesEcarts(cas).ordre).toEqual(["commercial", "centre", "rh", "atelier", "achats", "distribution", "direction"]);
-    expect(optionJuste(ANALYSE_DES_ECARTS, "la-prime").texte).toBe("C'est risqué : une matière achetée moins cher peut se gaspiller à l'atelier");
-    expect(optionJuste(ANALYSE_DES_ECARTS, "le-tableau-de-bord").texte).toBe("La vitesse et les causes : il arrive après le trimestre, en euros");
+    expect(optionJuste(LES_ECARTS_ET_LEURS_RESPONSABLES, "la-prime").texte).toBe("C'est risqué : une matière achetée moins cher peut se gaspiller à l'atelier");
+    expect(optionJuste(LES_ECARTS_ET_LEURS_RESPONSABLES, "le-tableau-de-bord").texte).toBe("La vitesse et les causes : il arrive après le trimestre, en euros");
   });
 
   it("les trois temps : au moins deux étapes d'expert à trois champs ou plus, et la synthèse finit par l'arène", () => {
     const experts = ["le-tableau-de-passage", "a-rebours", "l-heure-de-trop", "la-part-de-chacun"];
-    for (const id of experts) expect(Object.keys(attendus(ANALYSE_DES_ECARTS, id)).length, id).toBeGreaterThanOrEqual(3);
-    const fin = ANALYSE_DES_ECARTS.etapes.at(-1)!;
-    if (fin.type !== "lecture") throw new Error("la synthèse n'est pas une lecture");
-    expect(fin.texte(cas).at(-1)).toBe("Dans l'arène, les chiffres de votre usine seront différents : la notion, elle, est la même.");
+    // Le chapitre est découpé en deux (aucun chapitre de plus de 20 étapes) : chaque étape se lit dans sa partie.
+    const partieDe = (id: string) => (LES_ECARTS_ET_LEURS_RESPONSABLES.etapes.some((e) => e.id === id) ? LES_ECARTS_ET_LEURS_RESPONSABLES : ANALYSE_DES_ECARTS);
+    for (const id of experts) expect(Object.keys(attendus(partieDe(id), id)).length, id).toBeGreaterThanOrEqual(3);
+    for (const partie of [ANALYSE_DES_ECARTS, LES_ECARTS_ET_LEURS_RESPONSABLES]) {
+      const fin = partie.etapes.at(-1)!;
+      if (fin.type !== "lecture") throw new Error("la synthèse n'est pas une lecture");
+      expect(fin.texte(cas).at(-1), partie.code).toBe("Dans l'arène, les chiffres de votre usine seront différents : la notion, elle, est la même.");
+    }
     // La convention est dite dès l'intro, et chaque question de montants dit le signe attendu.
     const intro = ANALYSE_DES_ECARTS.etapes[0]!;
     if (intro.type !== "lecture") throw new Error("l'intro n'est pas une lecture");
     expect(intro.texte(cas).join(" ")).toContain("Un écart est toujours le réel moins le prévu.");
     // Toute question qui demande un écart ou un effet dit le signe attendu ; seule l'étape à rebours, qui demande des heures et des coûts, n'en a pas besoin.
-    for (const e of [...ANALYSE_DES_ECARTS.etapes, ...LE_RESULTAT_QUI_MANQUE.etapes]) {
+    for (const e of [...ANALYSE_DES_ECARTS.etapes, ...LES_ECARTS_ET_LEURS_RESPONSABLES.etapes, ...LE_RESULTAT_QUI_MANQUE.etapes]) {
       if (e.type === "montants" && e.id !== "a-rebours") expect(e.question(cas, etatVide), e.id).toMatch(/[Nn]égatif|positif/);
     }
   });
@@ -407,7 +411,8 @@ describe("l'expérience : prédire, manipuler, constater, puis formaliser", () =
   const auxHeures = (h: number) => centime(resultatReel + (r.centre.heuresMachine - h) * f.centre.coutVariableParHeure);
 
   it("les curseurs viennent avant les calculs qu'ils éclairent, le pari avant le premier", () => {
-    const ids = ANALYSE_DES_ECARTS.etapes.map((e) => e.id);
+    // Les deux parties du chapitre, dans l'ordre où l'élève les fait.
+    const ids = [...ANALYSE_DES_ECARTS.etapes, ...LES_ECARTS_ET_LEURS_RESPONSABLES.etapes].map((e) => e.id);
     const avant = (a: string, b: string) => expect(ids.indexOf(a), `${a} avant ${b}`).toBeLessThan(ids.indexOf(b));
     avant("le-pari", "le-levier-du-prix");
     avant("le-levier-du-prix", "la-part-des-ventes");
@@ -455,7 +460,7 @@ describe("l'expérience : prédire, manipuler, constater, puis formaliser", () =
   });
 
   it("les heures-machine : chacune ne vaut que son coût variable, il faudrait n'en tourner que 2 256 ; les trois leviers au standard ne rendent que 32 100 €", () => {
-    const e = curseur(ANALYSE_DES_ECARTS, "le-levier-des-heures");
+    const e = curseur(LES_ECARTS_ET_LEURS_RESPONSABLES, "le-levier-des-heures");
     // Le plus grand h entier tel que 302 900 + (5 200 − h) × 16 ≥ 350 000 : 5 200 − 47 100 ÷ 16 = 2 256,25, donc 2 256.
     expect(e.cible(cas)).toEqual({ attendu: 2_256, min: 2_000, max: 5_500 });
     expect(auxHeures(2_256)).toBeGreaterThanOrEqual(resultatPrevu);
@@ -494,7 +499,7 @@ describe("l'expérience : prédire, manipuler, constater, puis formaliser", () =
   });
 
   it("le laboratoire : au départ le trimestre réel, au standard 343 800 €, et la solution à 17 500 kg qui rattrape le budget", () => {
-    const e = laboratoire(ANALYSE_DES_ECARTS, "le-laboratoire");
+    const e = laboratoire(LES_ECARTS_ET_LEURS_RESPONSABLES, "le-laboratoire");
     const leviers = e.leviers(cas);
     const depart = Object.fromEntries(leviers.map((l) => [l.code, l.depart]));
     expect(depart).toEqual({ prixNomade: 57, kilos: 18_500, taux: 26, heures: 5_200 });

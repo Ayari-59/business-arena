@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { getGuestUserId, getOrCreateGuestUserId } from "@/lib/guest";
-import { gardeDesCodes, minutesDuRefus } from "@/lib/garde-des-codes";
+import { codeFaux, gardeDesCodes, minutesDuRefus } from "@/lib/garde-des-codes";
 import {
   classeParCode,
   enregistrerProgression,
@@ -30,13 +30,13 @@ export async function rejoindreClasseAction(formData: FormData): Promise<void> {
   // un compte dès qu'aucun cookie n'est présent ; le faire avant de vérifier le code
   // laissait une ligne par requête, sans limite. Et un code inconnu compte un échec
   // pour l'adresse (lib/garde-des-codes.ts).
+  // Un code juste passe toujours, plafond atteint ou non : le code est cherché d'abord.
   const garde = await gardeDesCodes();
-  // TROP D'ESSAIS DEPUIS CETTE ADRESSE (audit UX, P1-4) : le dire, avec l'attente, et non
-  // « ce code ne mène à aucune classe », faux quand le code est juste.
-  if (garde.refus) refuser("trop", `&attente=${minutesDuRefus(garde.refus)}`);
   if (!nom.trim()) refuser("nom");
   if (!(await classeParCode(code))) {
-    await garde.echec();
+    // TROP D'ESSAIS DEPUIS CETTE ADRESSE (audit UX, P1-4) : le dire, avec l'attente.
+    const trop = await codeFaux(garde);
+    if (trop) refuser("trop", `&attente=${minutesDuRefus(trop)}`);
     refuser("inconnu");
   }
   const userId = await getOrCreateGuestUserId();
