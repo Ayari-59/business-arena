@@ -258,6 +258,7 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
     },
     {
       id: "la-commission",
+      objectifs: [0],
       type: "montants",
       titre: "Ce que prélève la plateforme",
       notions: ["distribution_commission", "contribution_margin"],
@@ -283,6 +284,7 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
     },
     {
       id: "predire-le-plafond",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur la commission plafond",
       notions: ["distribution_commission", "customer_lifetime_value"],
@@ -304,6 +306,7 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
     },
     {
       id: "le-plafond-au-curseur",
+      objectifs: [2],
       type: "curseur",
       titre: "La commission plafond au curseur",
       notions: ["distribution_commission", "customer_lifetime_value", "customer_acquisition_cost"],
@@ -353,6 +356,7 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
     },
     {
       id: "sur-la-vie",
+      objectifs: [1],
       type: "montants",
       titre: "Ce que la plateforme coûte sur la vie du compte",
       notions: ["distribution_commission", "customer_lifetime_value", "churn_rate"],
@@ -387,6 +391,7 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
     },
     {
       id: "le-plafond",
+      objectifs: [2],
       type: "montants",
       titre: "La commission plafond, et le piège de la première année",
       notions: ["distribution_commission", "customer_acquisition_cost"],
@@ -425,6 +430,7 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
     },
     {
       id: "predire-les-retours",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur les retours en direct",
       notions: ["distribution_commission", "customer_lifetime_value"],
@@ -447,6 +453,7 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
     },
     {
       id: "les-retours-au-curseur",
+      objectifs: [3],
       type: "curseur",
       titre: "Les retours en direct au curseur",
       notions: ["distribution_commission", "customer_acquisition_cost"],
@@ -494,6 +501,7 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
     },
     {
       id: "les-retours-en-direct",
+      objectifs: [3],
       type: "montants",
       titre: "La part de retours qui rend la plateforme rentable",
       notions: ["distribution_commission", "customer_acquisition_cost"],
@@ -533,6 +541,7 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
     },
     {
       id: "le-client",
+      objectifs: [1],
       type: "choix",
       titre: "Ce que le partenaire garde",
       notions: ["distribution_commission", "customer_lifetime_value"],
@@ -561,6 +570,7 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
     },
     {
       id: "predire-l-actualisation",
+      objectifs: [4],
       type: "choix",
       titre: "Pariez sur l'actualisation",
       notions: ["discounting", "customer_lifetime_value"],
@@ -583,6 +593,7 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
     },
     {
       id: "le-laboratoire-des-partenaires",
+      objectifs: [1],
       type: "simulation",
       titre: "Le laboratoire des partenaires",
       notions: ["distribution_commission", "customer_lifetime_value", "discounting"],
@@ -674,6 +685,7 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
     },
     {
       id: "la-valeur-actualisee",
+      objectifs: [4],
       type: "montants",
       titre: "La comparaison à la valeur vie actualisée",
       notions: ["discounting", "customer_lifetime_value", "distribution_commission"],
@@ -715,6 +727,7 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
     },
     {
       id: "l-apporteur",
+      objectifs: [4],
       type: "montants",
       titre: "Variante : l'apporteur d'affaires, payé une fois",
       notions: ["distribution_commission", "customer_acquisition_cost"],
@@ -746,6 +759,7 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
     },
     {
       id: "tout-par-l-apporteur",
+      objectifs: [1],
       type: "choix",
       titre: "Le canal le moins cher suffit-il ?",
       notions: ["customer_acquisition_cost", "distribution_commission"],

@@ -374,6 +374,7 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
     },
     {
       id: "le-flux-d-une-annee",
+      objectifs: [0],
       type: "montants",
       titre: "Le flux d'exploitation d'une année",
       notions: ["ebitda_margin", "income_statement"],
@@ -415,6 +416,7 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
     },
     {
       id: "l-annee-de-lancement",
+      objectifs: [1],
       type: "choix",
       titre: "L'impôt d'une année en perte",
       notions: ["income_statement", "ebitda_margin"],
@@ -453,6 +455,7 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
     },
     {
       id: "le-taux-et-le-temps",
+      objectifs: [2],
       type: "montants",
       titre: "Le taux d'actualisation et le prix du temps",
       notions: ["discounting"],
@@ -487,6 +490,7 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
     },
     {
       id: "predire-le-bfr",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur le BFR",
       notions: ["bfr", "discounting"],
@@ -506,6 +510,7 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-gamme",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire de la gamme",
       notions: ["discounting", "bfr"],
@@ -591,6 +596,7 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
     },
     {
       id: "le-bfr",
+      objectifs: [0, 3],
       type: "montants",
       titre: "Le BFR, année après année",
       notions: ["bfr"],
@@ -628,6 +634,7 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
     },
     {
       id: "la-valeur-residuelle",
+      objectifs: [0],
       type: "montants",
       titre: "La valeur résiduelle",
       notions: ["depreciation"],
@@ -664,6 +671,7 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
     },
     {
       id: "les-flux-disponibles",
+      objectifs: [2],
       type: "montants",
       titre: "Les flux de trésorerie disponibles et la VAN",
       notions: ["discounting", "bfr"],
@@ -714,6 +722,7 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
     },
     {
       id: "ce-que-coute-le-bfr",
+      objectifs: [3],
       type: "montants",
       titre: "Ce que coûte le BFR",
       notions: ["bfr", "discounting"],
@@ -753,6 +762,7 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
     },
     {
       id: "decision",
+      objectifs: [2],
       type: "choix",
       titre: "Lancer la gamme ou non",
       notions: ["discounting", "profitability_vs_return"],
@@ -791,6 +801,7 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
     },
     {
       id: "predire-les-ventes",
+      objectifs: [4],
       type: "choix",
       titre: "Pariez sur les ventes",
       notions: ["discounting", "safety_margin"],
@@ -810,6 +821,7 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
     },
     {
       id: "les-ventes-au-curseur",
+      objectifs: [4],
       type: "curseur",
       titre: "Faites varier les ventes",
       notions: ["discounting", "safety_margin"],
@@ -854,6 +866,7 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
     },
     {
       id: "le-seuil-des-ventes",
+      objectifs: [4],
       type: "montants",
       titre: "Les ventes qui annulent la VAN",
       notions: ["safety_margin", "discounting"],
@@ -895,6 +908,7 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
     },
     {
       id: "le-prix-de-studio",
+      objectifs: [4],
       type: "curseur",
       titre: "Le prix de NOVA Studio",
       notions: ["discounting", "safety_margin"],
@@ -937,6 +951,7 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
     },
     {
       id: "quel-risque-surveiller",
+      objectifs: [4],
       type: "choix",
       titre: "Quel risque surveiller",
       notions: ["safety_margin", "contribution_margin"],

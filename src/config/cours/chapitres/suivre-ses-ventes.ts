@@ -182,6 +182,7 @@ export const SUIVRE_SES_VENTES: Chapitre = {
     },
     {
       id: "l-objectif",
+      objectifs: [0],
       type: "montants",
       titre: "L'objectif du trimestre",
       notions: ["dashboard"],
@@ -197,6 +198,7 @@ export const SUIVRE_SES_VENTES: Chapitre = {
     },
     {
       id: "l-ecart",
+      objectifs: [1],
       type: "montants",
       titre: "L'écart avec l'objectif",
       notions: ["dashboard", "volume_price_variance"],
@@ -222,6 +224,7 @@ export const SUIVRE_SES_VENTES: Chapitre = {
     },
     {
       id: "le-taux-de-realisation",
+      objectifs: [2],
       type: "montants",
       titre: "Le taux de réalisation",
       notions: ["dashboard"],
@@ -243,6 +246,7 @@ export const SUIVRE_SES_VENTES: Chapitre = {
     },
     {
       id: "les-clients",
+      objectifs: [3],
       type: "montants",
       titre: "Les clients venus et les clients servis",
       notions: ["conversion_rate", "dashboard"],
@@ -270,6 +274,7 @@ export const SUIVRE_SES_VENTES: Chapitre = {
     },
     {
       id: "pourquoi",
+      objectifs: [3],
       type: "choix",
       titre: "Ce qui explique l'écart",
       notions: ["dashboard", "conversion_rate"],
@@ -279,6 +284,7 @@ export const SUIVRE_SES_VENTES: Chapitre = {
     },
     {
       id: "et-ensuite",
+      objectifs: [4],
       type: "choix",
       titre: "Ce que l'équipe fait ensuite",
       notions: ["dashboard"],
@@ -300,6 +306,7 @@ export const SUIVRE_SES_VENTES: Chapitre = {
     },
     {
       id: "jusqu-ou-viser",
+      objectifs: [0, 4],
       type: "curseur",
       titre: "Jusqu'où l'objectif tenait ?",
       notions: ["dashboard"],
@@ -339,6 +346,7 @@ export const SUIVRE_SES_VENTES: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-reserve",
+      objectifs: [4],
       type: "simulation",
       titre: "Le laboratoire de la réserve de Noël",
       notions: ["dashboard", "stock"],

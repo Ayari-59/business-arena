@@ -266,6 +266,7 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
     },
     {
       id: "les-defauts",
+      objectifs: [0],
       type: "montants",
       titre: "Les défauts de l'année",
       notions: ["variable_costs"],
@@ -290,6 +291,7 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
     },
     {
       id: "cout-total",
+      objectifs: [0],
       type: "montants",
       titre: "Le coût total de la qualité",
       notions: ["variable_costs", "income_statement"],
@@ -316,6 +318,7 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
     },
     {
       id: "predire-le-double",
+      objectifs: [1],
       type: "choix",
       titre: "Pariez sur le double",
       notions: ["variable_costs", "fixed_costs"],
@@ -338,6 +341,7 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
     },
     {
       id: "le-cout-d-un-retour",
+      objectifs: [1],
       type: "curseur",
       titre: "Le prix d'un retour",
       notions: ["variable_costs"],
@@ -383,6 +387,7 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
     },
     {
       id: "le-u",
+      objectifs: [1],
       type: "montants",
       titre: "La courbe en U",
       notions: ["variable_costs", "fixed_costs"],
@@ -409,6 +414,7 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
     },
     {
       id: "par-le-cout",
+      objectifs: [1],
       type: "choix",
       titre: "Le budget au coût le plus bas",
       notions: ["variable_costs"],
@@ -440,6 +446,7 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
     },
     {
       id: "predire-le-resultat",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur le résultat",
       notions: ["demand_market_share", "income_statement"],
@@ -462,6 +469,7 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
     },
     {
       id: "la-qualite-percue",
+      objectifs: [2],
       type: "curseur",
       titre: "Les ventes que perd un défaut",
       notions: ["demand_market_share", "income_statement"],
@@ -503,6 +511,7 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
     },
     {
       id: "le-resultat-de-la-qualite",
+      objectifs: [2],
       type: "montants",
       titre: "Le résultat de la qualité",
       notions: ["income_statement", "demand_market_share"],
@@ -544,6 +553,7 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
     },
     {
       id: "par-le-resultat",
+      objectifs: [2],
       type: "choix",
       titre: "Ce que le coût de la qualité ne compte pas",
       notions: ["demand_market_share", "income_statement"],
@@ -595,6 +605,7 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
     },
     {
       id: "l-euro-de-prevention",
+      objectifs: [2],
       type: "montants",
       titre: "Ce que rapporte un euro de prévention",
       notions: ["variable_costs", "income_statement"],
@@ -633,6 +644,7 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-qualite",
+      objectifs: [1, 2],
       type: "simulation",
       titre: "Le laboratoire de la qualité",
       notions: ["variable_costs", "demand_market_share", "income_statement"],
@@ -701,6 +713,7 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [3],
       type: "montants",
       titre: "Retrouver le budget à rebours",
       notions: ["variable_costs"],
@@ -741,6 +754,7 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
     },
     {
       id: "la-standardisation",
+      objectifs: [4],
       type: "montants",
       titre: "Une démarche qualité, payée une fois",
       notions: ["irr_payback"],
@@ -772,6 +786,7 @@ export const LE_COUT_DE_LA_NON_QUALITE: Chapitre = {
     },
     {
       id: "la-critique",
+      objectifs: [2],
       type: "choix",
       titre: "Ce que vaut une vente perdue",
       notions: ["capacity", "demand_market_share"],

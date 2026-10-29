@@ -377,6 +377,7 @@ export const LA_RESPONSABILITE_SOCIETALE: Chapitre = {
     },
     {
       id: "capital",
+      objectifs: [0],
       type: "montants",
       titre: "Un capital qui se bâtit lentement",
       notions: ["brand_capital"],
@@ -405,6 +406,7 @@ export const LA_RESPONSABILITE_SOCIETALE: Chapitre = {
     },
     {
       id: "predire-le-label",
+      objectifs: [1],
       type: "choix",
       titre: "Pariez sur le label",
       notions: ["brand_capital", "csr_index"],
@@ -428,6 +430,7 @@ export const LA_RESPONSABILITE_SOCIETALE: Chapitre = {
     },
     {
       id: "l-effort-du-seuil",
+      objectifs: [1],
       type: "curseur",
       titre: "Cherchez l'effort du label",
       notions: ["brand_capital", "csr_index"],
@@ -471,6 +474,7 @@ export const LA_RESPONSABILITE_SOCIETALE: Chapitre = {
     },
     {
       id: "le-plafond",
+      objectifs: [1],
       type: "montants",
       titre: "Jusqu'où monte le capital",
       notions: ["brand_capital", "csr_index"],
@@ -498,6 +502,7 @@ export const LA_RESPONSABILITE_SOCIETALE: Chapitre = {
     },
     {
       id: "le-budget-constant",
+      objectifs: [1],
       type: "montants",
       titre: "Le budget constant du label",
       notions: ["brand_capital", "csr_index"],
@@ -534,6 +539,7 @@ export const LA_RESPONSABILITE_SOCIETALE: Chapitre = {
     },
     {
       id: "predire-l-ordre",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur l'ordre des budgets",
       notions: ["brand_capital"],
@@ -558,6 +564,7 @@ export const LA_RESPONSABILITE_SOCIETALE: Chapitre = {
     },
     {
       id: "le-laboratoire-du-label",
+      objectifs: [2],
       type: "simulation",
       titre: "Le laboratoire du label",
       notions: ["brand_capital", "csr_index", "contribution_margin"],
@@ -647,6 +654,7 @@ export const LA_RESPONSABILITE_SOCIETALE: Chapitre = {
     },
     {
       id: "le-poids-des-trimestres",
+      objectifs: [2],
       type: "montants",
       titre: "Dépenser tard compte plus",
       notions: ["brand_capital"],
@@ -674,6 +682,7 @@ export const LA_RESPONSABILITE_SOCIETALE: Chapitre = {
     },
     {
       id: "deux-ordres",
+      objectifs: [2],
       type: "montants",
       titre: "Deux ordres, un même total",
       notions: ["brand_capital", "csr_index"],
@@ -709,6 +718,7 @@ export const LA_RESPONSABILITE_SOCIETALE: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [2],
       type: "montants",
       titre: "Le budget du trimestre 3, à rebours",
       notions: ["brand_capital", "csr_index"],
@@ -752,6 +762,7 @@ export const LA_RESPONSABILITE_SOCIETALE: Chapitre = {
     },
     {
       id: "le-plan-le-moins-cher",
+      objectifs: [2],
       type: "choix",
       titre: "Pourquoi pas tout au trimestre 3 ?",
       notions: ["brand_capital"],
@@ -788,6 +799,7 @@ export const LA_RESPONSABILITE_SOCIETALE: Chapitre = {
     },
     {
       id: "predire-les-ventes",
+      objectifs: [0, 3],
       type: "choix",
       titre: "Pariez sur les ventes gagnées",
       notions: ["demand_market_share", "brand_capital"],
@@ -813,6 +825,7 @@ export const LA_RESPONSABILITE_SOCIETALE: Chapitre = {
     },
     {
       id: "ce-qu-il-faut-vendre",
+      objectifs: [3],
       type: "curseur",
       titre: "Ce qu'il faudrait vendre en plus",
       notions: ["contribution_margin", "csr_index"],
@@ -850,6 +863,7 @@ export const LA_RESPONSABILITE_SOCIETALE: Chapitre = {
     },
     {
       id: "l-annee-engagee",
+      objectifs: [3],
       type: "montants",
       titre: "L'année engagée",
       notions: ["contribution_margin", "csr_index"],
@@ -902,6 +916,7 @@ export const LA_RESPONSABILITE_SOCIETALE: Chapitre = {
     },
     {
       id: "le-cout-complet",
+      objectifs: [3],
       type: "montants",
       titre: "Le coût complet d'une enceinte",
       notions: ["full_unit_cost", "csr_index"],
@@ -931,6 +946,7 @@ export const LA_RESPONSABILITE_SOCIETALE: Chapitre = {
     },
     {
       id: "verdict",
+      objectifs: [3],
       type: "choix",
       titre: "L'engagement de l'année a-t-il payé ?",
       notions: ["csr_index", "brand_capital"],
@@ -973,6 +989,7 @@ export const LA_RESPONSABILITE_SOCIETALE: Chapitre = {
     },
     {
       id: "a-budget-du-t4-egal",
+      objectifs: [4],
       type: "montants",
       titre: "Comparer à budget du trimestre 4 égal",
       notions: ["csr_index", "brand_capital"],
@@ -1031,6 +1048,7 @@ export const LA_RESPONSABILITE_SOCIETALE: Chapitre = {
     },
     {
       id: "le-label-des-le-t3",
+      objectifs: [2],
       type: "montants",
       titre: "Variante : le label dès le trimestre 3",
       notions: ["brand_capital", "csr_index"],
@@ -1079,6 +1097,7 @@ export const LA_RESPONSABILITE_SOCIETALE: Chapitre = {
     },
     {
       id: "ce-que-paie-le-label",
+      objectifs: [4],
       type: "choix",
       titre: "Ce que le label rapporte dans l'année",
       notions: ["csr_index", "brand_capital"],
@@ -1113,6 +1132,7 @@ export const LA_RESPONSABILITE_SOCIETALE: Chapitre = {
     },
     {
       id: "de-fond",
+      objectifs: [4],
       type: "choix",
       titre: "Contrainte, investissement ou stratégie ?",
       notions: ["csr_index", "brand_capital"],

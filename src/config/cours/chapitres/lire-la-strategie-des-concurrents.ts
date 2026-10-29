@@ -268,6 +268,7 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
     },
     {
       id: "carte",
+      objectifs: [0, 1],
       type: "montants",
       titre: "Situer l'entreprise sur la carte",
       notions: ["demand_market_share", "price_elasticity"],
@@ -302,6 +303,7 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
     },
     {
       id: "strategies",
+      objectifs: [2],
       type: "tri",
       titre: "La stratégie de chacun",
       notions: ["segmentation", "demand_market_share"],
@@ -341,6 +343,7 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
     },
     {
       id: "predire-le-prix-seul",
+      objectifs: [1],
       type: "choix",
       titre: "Pariez sur le prix seul",
       notions: ["segmentation", "price_elasticity"],
@@ -361,6 +364,7 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
     },
     {
       id: "le-prix-au-curseur",
+      objectifs: [0, 1],
       type: "curseur",
       titre: "Le prix qui passe la barre",
       notions: ["segmentation", "price_elasticity"],
@@ -406,6 +410,7 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
     },
     {
       id: "la-qualite-qu-il-faut",
+      objectifs: [0],
       type: "montants",
       titre: "La qualité qu'il faut",
       notions: ["segmentation"],
@@ -447,6 +452,7 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
     },
     {
       id: "predire-la-reussite",
+      objectifs: [4],
       type: "choix",
       titre: "Pariez sur le meilleur résultat",
       notions: ["demand_market_share", "income_statement"],
@@ -466,6 +472,7 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
     },
     {
       id: "le-volume-de-soundbox",
+      objectifs: [4],
       type: "curseur",
       titre: "Ce que vaut une part de marché",
       notions: ["demand_market_share", "contribution_margin"],
@@ -512,6 +519,7 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
     },
     {
       id: "les-resultats",
+      objectifs: [4],
       type: "montants",
       titre: "Les résultats des concurrents",
       notions: ["contribution_margin", "income_statement"],
@@ -557,6 +565,7 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
     },
     {
       id: "reussite",
+      objectifs: [4],
       type: "choix",
       titre: "Ce que dit l'année",
       notions: ["income_statement", "demand_market_share"],
@@ -596,6 +605,7 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
     },
     {
       id: "l-espace-libre",
+      objectifs: [3],
       type: "montants",
       titre: "Mesurer l'espace libre",
       notions: ["segmentation"],
@@ -630,6 +640,7 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
     },
     {
       id: "espace",
+      objectifs: [3],
       type: "choix",
       titre: "L'espace libre",
       notions: ["segmentation"],
@@ -655,6 +666,7 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
     },
     {
       id: "les-coins-vides",
+      objectifs: [3],
       type: "montants",
       titre: "Les coins vides de la carte",
       notions: ["segmentation", "capacity", "contribution_margin"],
@@ -702,6 +714,7 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
     },
     {
       id: "predire-l-offre",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur l'offre",
       notions: ["segmentation", "price_elasticity"],
@@ -722,6 +735,7 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-carte",
+      objectifs: [1, 2],
       type: "simulation",
       titre: "Le laboratoire de la carte",
       notions: ["segmentation", "price_elasticity", "demand_market_share"],
@@ -800,6 +814,7 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
     },
     {
       id: "une-autre-annee",
+      objectifs: [3],
       type: "montants",
       titre: "La carte d'une autre année",
       notions: ["segmentation", "demand_market_share"],

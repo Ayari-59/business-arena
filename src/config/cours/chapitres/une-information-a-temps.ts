@@ -145,6 +145,7 @@ export const UNE_INFORMATION_A_TEMPS: Chapitre = {
     },
     {
       id: "quels-chiffres",
+      objectifs: [0, 1],
       type: "choix",
       titre: "Sur quels chiffres l'équipe décide",
       notions: ["dashboard"],
@@ -157,6 +158,7 @@ export const UNE_INFORMATION_A_TEMPS: Chapitre = {
     },
     {
       id: "le-plan-en-retard",
+      objectifs: [1, 2],
       type: "montants",
       titre: "Le plan joué en retard",
       notions: ["capacity"],
@@ -176,6 +178,7 @@ export const UNE_INFORMATION_A_TEMPS: Chapitre = {
     },
     {
       id: "le-trimestre-le-plus-touche",
+      objectifs: [2],
       type: "choix",
       titre: "Le trimestre le plus touché",
       notions: ["capacity", "dashboard"],
@@ -194,6 +197,7 @@ export const UNE_INFORMATION_A_TEMPS: Chapitre = {
     },
     {
       id: "ce-que-coute-le-retard",
+      objectifs: [3],
       type: "montants",
       titre: `Ce que coûte ${R1}`,
       notions: ["contribution_margin", "dashboard"],
@@ -215,6 +219,7 @@ export const UNE_INFORMATION_A_TEMPS: Chapitre = {
     },
     {
       id: "deux-trimestres",
+      objectifs: [3],
       type: "montants",
       titre: `Avec ${R2}`,
       notions: ["contribution_margin"],
@@ -231,6 +236,7 @@ export const UNE_INFORMATION_A_TEMPS: Chapitre = {
     },
     {
       id: "un-chiffre-plus-vieux",
+      objectifs: [3],
       type: "choix",
       titre: "Un chiffre plus vieux coûte-t-il plus cher ?",
       notions: ["dashboard"],
@@ -247,6 +253,7 @@ export const UNE_INFORMATION_A_TEMPS: Chapitre = {
     },
     {
       id: "la-precaution",
+      objectifs: [3],
       type: "curseur",
       titre: "Une précaution pour couvrir le retard",
       notions: ["capacity", "contribution_margin"],
@@ -283,6 +290,7 @@ export const UNE_INFORMATION_A_TEMPS: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-precaution",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire de la précaution",
       notions: ["capacity", "contribution_margin"],

@@ -104,6 +104,7 @@ export const DES_DONNEES_A_L_INFORMATION: Chapitre = {
     },
     {
       id: "donnee-ou-information",
+      objectifs: [0],
       type: "tri",
       titre: "Donnée ou information ?",
       notions: ["dashboard"],
@@ -132,6 +133,7 @@ export const DES_DONNEES_A_L_INFORMATION: Chapitre = {
     },
     {
       id: "regrouper",
+      objectifs: [1],
       type: "montants",
       titre: "Regrouper les lignes par clientèle",
       notions: ["revenue", "dashboard"],
@@ -155,6 +157,7 @@ export const DES_DONNEES_A_L_INFORMATION: Chapitre = {
     },
     {
       id: "la-requete",
+      objectifs: [2],
       type: "choix",
       titre: "Le critère et le regroupement",
       notions: ["dashboard"],
@@ -173,6 +176,7 @@ export const DES_DONNEES_A_L_INFORMATION: Chapitre = {
     },
     {
       id: "critere-et-part",
+      objectifs: [1, 2],
       type: "montants",
       titre: "Un critère, puis une part",
       notions: ["revenue", "dashboard"],
@@ -199,6 +203,7 @@ export const DES_DONNEES_A_L_INFORMATION: Chapitre = {
     },
     {
       id: "decider",
+      objectifs: [3],
       type: "choix",
       titre: "Ce que l'information permet de décider",
       notions: ["payment_terms", "dashboard"],
@@ -226,6 +231,7 @@ export const DES_DONNEES_A_L_INFORMATION: Chapitre = {
     },
     {
       id: "garder-sa-part",
+      objectifs: [3],
       type: "curseur",
       titre: "Ce qu'il faudrait pour garder sa part",
       notions: ["revenue", "dashboard"],
@@ -265,6 +271,7 @@ export const DES_DONNEES_A_L_INFORMATION: Chapitre = {
     },
     {
       id: "le-laboratoire-du-filtre",
+      objectifs: [2],
       type: "simulation",
       titre: "Le laboratoire du filtre",
       notions: ["dashboard", "revenue"],

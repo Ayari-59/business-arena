@@ -280,6 +280,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
     },
     {
       id: "predire-le-depart",
+      objectifs: [0],
       type: "choix",
       titre: "Pariez sur le départ",
       notions: ["pay_and_motivation", "staff_turnover"],
@@ -300,6 +301,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
     },
     {
       id: "le-salaire-qui-garde",
+      objectifs: [0],
       type: "curseur",
       titre: "Le salaire qui garde l'opérateur",
       notions: ["pay_and_motivation", "staff_turnover"],
@@ -339,6 +341,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
     },
     {
       id: "le-seuil-de-demission",
+      objectifs: [0],
       type: "montants",
       titre: "Le seuil de démission",
       notions: ["pay_and_motivation", "payroll"],
@@ -380,6 +383,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
     },
     {
       id: "le-poste-vide",
+      objectifs: [1],
       type: "montants",
       titre: "Le poste vide, mois par mois",
       notions: ["capacity", "staff_turnover"],
@@ -413,6 +417,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
     },
     {
       id: "les-ventes-perdues",
+      objectifs: [1],
       type: "montants",
       titre: "Ce que le goulot fait perdre",
       notions: ["capacity", "contribution_margin"],
@@ -448,6 +453,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
     },
     {
       id: "le-cout-du-depart",
+      objectifs: [2],
       type: "montants",
       titre: "Le coût complet du départ",
       notions: ["staff_turnover", "payroll", "contribution_margin"],
@@ -483,6 +489,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
     },
     {
       id: "verdict",
+      objectifs: [2],
       type: "choix",
       titre: "Fallait-il suivre le marché ?",
       notions: ["pay_and_motivation", "staff_turnover"],
@@ -519,6 +526,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
     },
     {
       id: "predire-l-augmentation",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur l'augmentation",
       notions: ["pay_and_motivation", "payroll"],
@@ -538,6 +546,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
     },
     {
       id: "jusqu-ou-augmenter",
+      objectifs: [2],
       type: "curseur",
       titre: "Jusqu'où augmenter",
       notions: ["pay_and_motivation", "payroll", "staff_turnover"],
@@ -577,6 +586,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
     },
     {
       id: "predire-l-integration",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur un recrutement anticipé",
       notions: ["staff_turnover", "capacity"],
@@ -596,6 +606,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
     },
     {
       id: "le-laboratoire-du-depart",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire du départ",
       notions: ["staff_turnover", "pay_and_motivation", "capacity"],
@@ -695,6 +706,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
     },
     {
       id: "recruter-en-fevrier",
+      objectifs: [3],
       type: "montants",
       titre: "Variante : recruter avant l'annonce",
       notions: ["staff_turnover", "capacity", "payroll"],
@@ -732,6 +744,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
     },
     {
       id: "la-demande-de-n",
+      objectifs: [1],
       type: "montants",
       titre: "Variante : la demande de N",
       notions: ["capacity", "staff_turnover", "contribution_margin"],
@@ -774,6 +787,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [4],
       type: "montants",
       titre: "Retrouver les ventes perdues à rebours",
       notions: ["staff_turnover", "contribution_margin", "payroll"],
@@ -812,6 +826,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
     },
     {
       id: "ce-que-le-calcul-ne-compte-pas",
+      objectifs: [4],
       type: "choix",
       titre: "Ce que le coût du départ ne compte pas",
       notions: ["staff_turnover", "pay_and_motivation"],

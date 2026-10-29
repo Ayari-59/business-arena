@@ -323,6 +323,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
     },
     {
       id: "ce-que-l-outil-refuse",
+      objectifs: [0],
       type: "montants",
       titre: "Ce que l'outil refuse",
       notions: ["capacity", "contribution_margin"],
@@ -357,6 +358,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
     },
     {
       id: "predire-le-goulot",
+      objectifs: [0],
       type: "choix",
       titre: "Pariez sur le goulot",
       notions: ["capacity"],
@@ -378,6 +380,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
     },
     {
       id: "le-laboratoire-de-l-atelier",
+      objectifs: [0, 3],
       type: "simulation",
       titre: "Le laboratoire de l'atelier",
       notions: ["capacity", "discounting", "irr_payback"],
@@ -476,6 +479,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
     },
     {
       id: "le-goulot-se-deplace",
+      objectifs: [0],
       type: "montants",
       titre: "Le goulot se déplace",
       notions: ["capacity", "productivity"],
@@ -503,6 +507,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
     },
     {
       id: "les-charges-de-l-annee",
+      objectifs: [1],
       type: "montants",
       titre: "Ce que coûtent la machine et son opérateur",
       notions: ["depreciation", "loan_schedule", "payroll"],
@@ -541,6 +546,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
     },
     {
       id: "predire-le-point-mort",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur les ventes qu'il faut",
       notions: ["contribution_margin", "breakeven"],
@@ -561,6 +567,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
     },
     {
       id: "le-point-mort-de-la-machine",
+      objectifs: [2],
       type: "curseur",
       titre: "Les ventes qui paient l'année",
       notions: ["contribution_margin", "breakeven"],
@@ -602,6 +609,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
     },
     {
       id: "le-resultat-gagne",
+      objectifs: [2],
       type: "montants",
       titre: "Le résultat que l'année y gagne",
       notions: ["contribution_margin", "fixed_costs"],
@@ -630,6 +638,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
     },
     {
       id: "les-flux-et-la-van",
+      objectifs: [3],
       type: "montants",
       titre: "Les flux et la VAN",
       notions: ["discounting", "irr_payback"],
@@ -661,6 +670,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
     },
     {
       id: "la-van-du-poste-seul",
+      objectifs: [3],
       type: "montants",
       titre: "La VAN du poste seul",
       notions: ["discounting", "irr_payback", "capacity"],
@@ -694,6 +704,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
     },
     {
       id: "predire-la-hausse",
+      objectifs: [4],
       type: "choix",
       titre: "Pariez sur la demande",
       notions: ["discounting", "demand_market_share"],
@@ -714,6 +725,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
     },
     {
       id: "la-hausse-qui-annule-la-van",
+      objectifs: [4],
       type: "curseur",
       titre: "La hausse qui annule la VAN",
       notions: ["discounting", "demand_market_share"],
@@ -761,6 +773,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
     },
     {
       id: "a-plus-cinq",
+      objectifs: [3],
       type: "montants",
       titre: `Variante : la demande monte de ${pct(HAUSSE_DE_LA_VARIANTE, 1)}`,
       notions: ["discounting", "irr_payback", "capacity"],
@@ -800,6 +813,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [4],
       type: "montants",
       titre: "De la VAN nulle à la demande, à rebours",
       notions: ["discounting", "breakeven"],
@@ -836,6 +850,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
     },
     {
       id: "les-interets",
+      objectifs: [3],
       type: "choix",
       titre: "Les intérêts et la VAN",
       notions: ["loan_schedule", "discounting"],
@@ -868,6 +883,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
     },
     {
       id: "la-rentabilite-d-une-annee",
+      objectifs: [4],
       type: "choix",
       titre: "Un ratio qui n'est pas une rentabilité",
       notions: ["profitability_vs_return", "irr_payback"],
@@ -901,6 +917,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
     },
     {
       id: "verdict",
+      objectifs: [3],
       type: "choix",
       titre: "Acheter le poste ?",
       notions: ["capacity", "discounting", "irr_payback"],

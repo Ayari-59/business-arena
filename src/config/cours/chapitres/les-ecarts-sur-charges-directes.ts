@@ -166,6 +166,7 @@ const pari = (texte: string, juste: boolean) => ({
 
 const PREDIRE_LA_MATIERE: EtapeChoix = {
   id: "predire-la-matiere",
+  objectifs: [0],
   type: "choix",
   titre: "Pariez : tenir la matière malgré le fournisseur",
   notions: ["material_price_variance"],
@@ -187,6 +188,7 @@ const PREDIRE_LA_MATIERE: EtapeChoix = {
 
 const ETAPE_DE_LA_MATIERE: EtapeCurseur = {
   id: "experience-matiere",
+  objectifs: [0],
   type: "curseur",
   titre: "Faites varier les kilos consommés",
   notions: ["material_price_variance", "efficiency_variance"],
@@ -232,6 +234,7 @@ const ETAPE_DE_LA_MATIERE: EtapeCurseur = {
 
 const PREDIRE_LA_MAIN_D_OEUVRE: EtapeChoix = {
   id: "predire-la-main-d-oeuvre",
+  objectifs: [1],
   type: "choix",
   titre: "Pariez : moins d'heures, mais plus chères",
   notions: ["efficiency_variance"],
@@ -252,6 +255,7 @@ const PREDIRE_LA_MAIN_D_OEUVRE: EtapeChoix = {
 
 const ETAPE_DE_LA_MAIN_D_OEUVRE: EtapeCurseur = {
   id: "experience-main-d-oeuvre",
+  objectifs: [1],
   type: "curseur",
   titre: "Faites varier les heures",
   notions: ["efficiency_variance"],
@@ -333,6 +337,7 @@ export function laboratoireDesChargesDirectes(c: Pick<Cas, "code">) {
 
 const LABORATOIRE_DES_CHARGES_DIRECTES: EtapeSimulation = {
   id: "laboratoire-charges-directes",
+  objectifs: [3],
   type: "simulation",
   titre: "Le laboratoire des charges directes",
   notions: ["material_price_variance", "efficiency_variance", "cost_variance"],
@@ -431,6 +436,7 @@ export const LES_ECARTS_SUR_CHARGES_DIRECTES: Chapitre = {
     },
     {
       id: "quantites-preetablies",
+      objectifs: [0, 1],
       type: "montants",
       titre: "Les quantités préétablies",
       notions: ["standard_costing"],
@@ -453,6 +459,7 @@ export const LES_ECARTS_SUR_CHARGES_DIRECTES: Chapitre = {
     },
     {
       id: "ecart-global-matiere",
+      objectifs: [0],
       type: "montants",
       titre: "L'écart global sur matière",
       notions: ["cost_variance"],
@@ -491,6 +498,7 @@ export const LES_ECARTS_SUR_CHARGES_DIRECTES: Chapitre = {
     },
     {
       id: "prix-et-quantite",
+      objectifs: [0],
       type: "montants",
       titre: "Écart sur prix, écart sur quantité",
       notions: ["material_price_variance", "efficiency_variance"],
@@ -518,6 +526,7 @@ export const LES_ECARTS_SUR_CHARGES_DIRECTES: Chapitre = {
     ETAPE_DE_LA_MAIN_D_OEUVRE,
     {
       id: "ecart-mod",
+      objectifs: [1],
       type: "montants",
       titre: "Les écarts sur main-d'œuvre directe",
       notions: ["cost_variance", "efficiency_variance"],
@@ -547,6 +556,7 @@ export const LES_ECARTS_SUR_CHARGES_DIRECTES: Chapitre = {
     },
     {
       id: "global-faible",
+      objectifs: [1],
       type: "choix",
       titre: "Un écart global faible",
       notions: ["cost_variance"],
@@ -582,6 +592,7 @@ export const LES_ECARTS_SUR_CHARGES_DIRECTES: Chapitre = {
     },
     {
       id: "qui-agit",
+      objectifs: [4],
       type: "tri",
       titre: "Qui doit agir ?",
       notions: ["material_price_variance", "efficiency_variance"],
@@ -606,6 +617,7 @@ export const LES_ECARTS_SUR_CHARGES_DIRECTES: Chapitre = {
     },
     {
       id: "la-somme",
+      objectifs: [0, 1],
       type: "choix",
       titre: "La somme des quatre écarts",
       notions: ["cost_variance"],
@@ -635,6 +647,7 @@ export const LES_ECARTS_SUR_CHARGES_DIRECTES: Chapitre = {
     },
     {
       id: "ecart-mixte",
+      objectifs: [2],
       type: "montants",
       titre: "L'écart mixte",
       notions: ["material_price_variance"],
@@ -665,6 +678,7 @@ export const LES_ECARTS_SUR_CHARGES_DIRECTES: Chapitre = {
     },
     {
       id: "place-du-mixte",
+      objectifs: [2],
       type: "choix",
       titre: "Où ranger l'écart mixte ?",
       notions: ["material_price_variance", "efficiency_variance"],
@@ -697,6 +711,7 @@ export const LES_ECARTS_SUR_CHARGES_DIRECTES: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [3],
       type: "montants",
       titre: "À rebours : retrouver le réel",
       notions: ["material_price_variance", "efficiency_variance"],
@@ -734,6 +749,7 @@ export const LES_ECARTS_SUR_CHARGES_DIRECTES: Chapitre = {
     LABORATOIRE_DES_CHARGES_DIRECTES,
     {
       id: "interdependance",
+      objectifs: [3],
       type: "montants",
       titre: "Deux écarts, une même décision ?",
       notions: ["efficiency_variance", "cost_variance"],
@@ -758,6 +774,7 @@ export const LES_ECARTS_SUR_CHARGES_DIRECTES: Chapitre = {
     },
     {
       id: "la-prime",
+      objectifs: [4],
       type: "choix",
       titre: "Primer l'atelier ?",
       notions: ["efficiency_variance", "cost_variance"],

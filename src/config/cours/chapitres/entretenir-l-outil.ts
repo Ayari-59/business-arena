@@ -218,6 +218,7 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
     },
     {
       id: "predire-le-seuil",
+      objectifs: [1],
       type: "choix",
       titre: "Pariez sur le seuil",
       notions: ["capacity", "fixed_costs"],
@@ -237,6 +238,7 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
     },
     {
       id: "le-seuil-au-curseur",
+      objectifs: [1],
       type: "curseur",
       titre: "Le budget sous lequel la ligne s'use",
       notions: ["capacity", "fixed_costs"],
@@ -287,6 +289,7 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
     },
     {
       id: "le-seuil",
+      objectifs: [1],
       type: "montants",
       titre: "Le seuil d'entretien",
       notions: ["capacity", "fixed_costs"],
@@ -311,6 +314,7 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
     },
     {
       id: "la-disponibilite",
+      objectifs: [0],
       type: "montants",
       titre: "La ligne après le trimestre sans entretien",
       notions: ["capacity"],
@@ -345,6 +349,7 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
     },
     {
       id: "predire-la-perte",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur la perte",
       notions: ["capacity", "contribution_margin"],
@@ -367,6 +372,7 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
     },
     {
       id: "la-demande-qui-coute",
+      objectifs: [2],
       type: "curseur",
       titre: "La demande qui fait perdre l'économie",
       notions: ["capacity", "contribution_margin"],
@@ -409,6 +415,7 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
     },
     {
       id: "le-goulot",
+      objectifs: [2],
       type: "montants",
       titre: "Ce que coûte l'outil quand il est le goulot",
       notions: ["capacity", "contribution_margin"],
@@ -441,6 +448,7 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
     },
     {
       id: "verdict",
+      objectifs: [2],
       type: "choix",
       titre: "L'économie valait-elle la peine ?",
       notions: ["capacity", "contribution_margin"],
@@ -481,6 +489,7 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
     },
     {
       id: "la-demande-de-n",
+      objectifs: [2],
       type: "montants",
       titre: "Variante : la demande de N",
       notions: ["capacity", "contribution_margin"],
@@ -513,6 +522,7 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
     },
     {
       id: "les-defauts",
+      objectifs: [3],
       type: "montants",
       titre: "Les défauts du trimestre sans entretien",
       notions: ["variable_costs", "contribution_margin"],
@@ -556,6 +566,7 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
     },
     {
       id: "predire-le-meilleur-budget",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur le meilleur budget",
       notions: ["capacity", "variable_costs"],
@@ -575,6 +586,7 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
     },
     {
       id: "le-laboratoire-de-l-entretien",
+      objectifs: [0, 3],
       type: "simulation",
       titre: "Le laboratoire de l'entretien",
       notions: ["capacity", "contribution_margin", "variable_costs"],
@@ -653,6 +665,7 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
     },
     {
       id: "au-trimestre-2",
+      objectifs: [2],
       type: "montants",
       titre: "Variante : sauter le trimestre 2",
       notions: ["capacity", "contribution_margin", "variable_costs"],
@@ -694,6 +707,7 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [4],
       type: "montants",
       titre: "Retrouver un budget à rebours",
       notions: ["capacity", "contribution_margin"],
@@ -730,6 +744,7 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
     },
     {
       id: "ce-que-vaut-le-chiffre",
+      objectifs: [4],
       type: "choix",
       titre: "Ce que vaut le chiffre des ventes perdues",
       notions: ["contribution_margin", "capacity"],

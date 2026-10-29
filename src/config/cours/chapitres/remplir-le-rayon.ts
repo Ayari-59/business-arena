@@ -96,6 +96,7 @@ export const REMPLIR_LE_RAYON: Chapitre = {
     },
     {
       id: "par-jour",
+      objectifs: [0],
       type: "montants",
       titre: "Les ventes d'une journée",
       notions: ["stock"],
@@ -115,6 +116,7 @@ export const REMPLIR_LE_RAYON: Chapitre = {
     },
     {
       id: "jours-avant",
+      objectifs: [1],
       type: "montants",
       titre: "Les jours avant la rupture",
       notions: ["stock"],
@@ -133,6 +135,7 @@ export const REMPLIR_LE_RAYON: Chapitre = {
     },
     {
       id: "reassort",
+      objectifs: [2],
       type: "montants",
       titre: "Le temps du réassort",
       notions: ["stock"],
@@ -156,6 +159,7 @@ export const REMPLIR_LE_RAYON: Chapitre = {
     },
     {
       id: "le-geste",
+      objectifs: [2],
       type: "choix",
       titre: "Ce que fait l'équipier",
       question: (c) => {
@@ -177,6 +181,7 @@ export const REMPLIR_LE_RAYON: Chapitre = {
     },
     {
       id: "ce-que-coute",
+      objectifs: [3],
       type: "montants",
       titre: "Ce que coûte la rupture",
       notions: ["stock", "revenue"],
@@ -198,6 +203,7 @@ export const REMPLIR_LE_RAYON: Chapitre = {
     },
     {
       id: "lire-la-rupture",
+      objectifs: [3],
       type: "choix",
       titre: "Ce que dit la rupture",
       question: (c) => {
@@ -226,6 +232,7 @@ export const REMPLIR_LE_RAYON: Chapitre = {
     },
     {
       id: "quand-prevenir",
+      objectifs: [2],
       type: "curseur",
       titre: "Quand prévenir ?",
       notions: ["stock"],
@@ -263,6 +270,7 @@ export const REMPLIR_LE_RAYON: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-commande",
+      objectifs: [4],
       type: "simulation",
       titre: "Le laboratoire de la commande",
       notions: ["stock"],

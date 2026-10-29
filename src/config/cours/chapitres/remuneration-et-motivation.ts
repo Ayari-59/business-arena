@@ -95,6 +95,7 @@ export const REMUNERATION_ET_MOTIVATION: Chapitre = {
     },
     {
       id: "le-marche",
+      objectifs: [0],
       type: "montants",
       titre: "Le salaire face au marché",
       notions: ["pay_and_motivation"],
@@ -116,6 +117,7 @@ export const REMUNERATION_ET_MOTIVATION: Chapitre = {
     },
     {
       id: "sans-rien-changer",
+      objectifs: [0, 3],
       type: "choix",
       titre: "Si rien ne change",
       notions: ["pay_and_motivation"],
@@ -147,6 +149,7 @@ export const REMUNERATION_ET_MOTIVATION: Chapitre = {
     },
     {
       id: "le-cout-de-chaque-choix",
+      objectifs: [1, 2],
       type: "montants",
       titre: "L'augmentation ou le départ",
       notions: ["pay_and_motivation", "payroll"],
@@ -182,6 +185,7 @@ export const REMUNERATION_ET_MOTIVATION: Chapitre = {
     },
     {
       id: "jusqu-ou-augmenter",
+      objectifs: [2],
       type: "curseur",
       titre: "Jusqu'où augmenter",
       notions: ["pay_and_motivation"],
@@ -211,6 +215,7 @@ export const REMUNERATION_ET_MOTIVATION: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-remuneration",
+      objectifs: [3],
       type: "simulation",
       titre: "Augmenter ou verser une prime",
       notions: ["pay_and_motivation"],

@@ -137,6 +137,7 @@ export const LES_ACTEURS_ET_LA_VALEUR: Chapitre = {
     },
     {
       id: "parts",
+      objectifs: [0, 1],
       type: "montants",
       titre: "Sur 100 € payés par les clients",
       notions: ["income_statement", "payroll"],
@@ -163,6 +164,7 @@ export const LES_ACTEURS_ET_LA_VALEUR: Chapitre = {
     },
     {
       id: "attentes",
+      objectifs: [2],
       type: "choix",
       titre: "Des attentes qui s'opposent",
       notions: ["pay_and_motivation"],
@@ -186,6 +188,7 @@ export const LES_ACTEURS_ET_LA_VALEUR: Chapitre = {
     },
     {
       id: "hausse",
+      objectifs: [3],
       type: "montants",
       titre: "La hausse chiffrée",
       notions: ["payroll", "income_statement"],
@@ -211,6 +214,7 @@ export const LES_ACTEURS_ET_LA_VALEUR: Chapitre = {
     },
     {
       id: "qui-paie",
+      objectifs: [3],
       type: "choix",
       titre: "Qui paie la hausse ?",
       notions: ["payroll", "income_statement"],
@@ -228,6 +232,7 @@ export const LES_ACTEURS_ET_LA_VALEUR: Chapitre = {
     },
     {
       id: "la-hausse-acceptable",
+      objectifs: [2, 3],
       type: "curseur",
       titre: "La hausse que les associés acceptent",
       notions: ["payroll", "income_statement"],
@@ -261,6 +266,7 @@ export const LES_ACTEURS_ET_LA_VALEUR: Chapitre = {
     },
     {
       id: "le-laboratoire-du-prix",
+      objectifs: [3],
       type: "simulation",
       titre: "Et si les clients payaient la hausse ?",
       notions: ["payroll", "price_elasticity"],

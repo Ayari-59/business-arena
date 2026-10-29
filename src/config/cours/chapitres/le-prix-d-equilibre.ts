@@ -207,6 +207,7 @@ export const LE_PRIX_D_EQUILIBRE: Chapitre = {
     },
     {
       id: "penurie-ou-excedent",
+      objectifs: [0],
       type: "choix",
       titre: "Pénurie ou excédent",
       notions: ["demand_market_share", "stock"],
@@ -218,6 +219,7 @@ export const LE_PRIX_D_EQUILIBRE: Chapitre = {
     },
     {
       id: "dans-quel-sens",
+      objectifs: [1],
       type: "choix",
       titre: "Dans quel sens bouger le prix",
       notions: ["price_elasticity"],
@@ -254,6 +256,7 @@ export const LE_PRIX_D_EQUILIBRE: Chapitre = {
     },
     {
       id: "le-tatonnement",
+      objectifs: [2],
       type: "montants",
       titre: "Le marché cherche son prix à tâtons",
       notions: ["price_elasticity", "demand_market_share"],
@@ -279,6 +282,7 @@ export const LE_PRIX_D_EQUILIBRE: Chapitre = {
     },
     {
       id: "l-intervalle",
+      objectifs: [3],
       type: "choix",
       titre: "Entre deux prix essayés",
       notions: ["price_elasticity"],
@@ -296,6 +300,7 @@ export const LE_PRIX_D_EQUILIBRE: Chapitre = {
     },
     {
       id: "au-milieu",
+      objectifs: [2],
       type: "montants",
       titre: "Un essai au milieu de l'intervalle",
       notions: ["price_elasticity", "demand_market_share"],
@@ -315,6 +320,7 @@ export const LE_PRIX_D_EQUILIBRE: Chapitre = {
     },
     {
       id: "le-prix-trouve",
+      objectifs: [3],
       type: "choix",
       titre: "Le prix d'équilibre, serré de plus près",
       notions: ["price_elasticity"],
@@ -324,6 +330,7 @@ export const LE_PRIX_D_EQUILIBRE: Chapitre = {
     },
     {
       id: "le-prix-sans-excedent",
+      objectifs: [0, 3],
       type: "curseur",
       titre: "Le prix le plus haut sans excédent",
       notions: ["price_elasticity", "stock"],
@@ -363,6 +370,7 @@ export const LE_PRIX_D_EQUILIBRE: Chapitre = {
     },
     {
       id: "le-laboratoire-de-l-equilibre",
+      objectifs: [2],
       type: "simulation",
       titre: "Le laboratoire de l'équilibre",
       notions: ["price_elasticity", "demand_market_share"],

@@ -108,6 +108,7 @@ export const FORMER: Chapitre = {
     },
     {
       id: "gain",
+      objectifs: [0],
       type: "montants",
       titre: "Ce que le stage fait gagner",
       notions: ["training", "productivity"],
@@ -133,6 +134,7 @@ export const FORMER: Chapitre = {
     },
     {
       id: "cout",
+      objectifs: [1],
       type: "montants",
       titre: "Ce que le stage coûte et rapporte",
       notions: ["training"],
@@ -155,6 +157,7 @@ export const FORMER: Chapitre = {
     },
     {
       id: "comparer",
+      objectifs: [2],
       type: "choix",
       titre: "Former ou recruter",
       notions: ["training", "payroll"],
@@ -199,6 +202,7 @@ export const FORMER: Chapitre = {
     },
     {
       id: "le-prix-du-stage",
+      objectifs: [1],
       type: "curseur",
       titre: "Le plus haut prix du stage",
       notions: ["training", "contribution_margin"],
@@ -234,6 +238,7 @@ export const FORMER: Chapitre = {
     },
     {
       id: "le-laboratoire-du-stage",
+      objectifs: [3],
       type: "simulation",
       titre: "La formation qui rapporte le plus",
       notions: ["training", "capacity"],

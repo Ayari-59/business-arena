@@ -136,6 +136,7 @@ export const DECIDER_ENSEMBLE: Chapitre = {
     },
     {
       id: "commercial",
+      objectifs: [0, 1],
       type: "montants",
       titre: "Le commercial seul",
       notions: ["price_elasticity", "capacity"],
@@ -159,6 +160,7 @@ export const DECIDER_ENSEMBLE: Chapitre = {
     },
     {
       id: "financier",
+      objectifs: [0, 1],
       type: "montants",
       titre: "Le financier seul",
       notions: ["fixed_costs", "capacity"],
@@ -184,6 +186,7 @@ export const DECIDER_ENSEMBLE: Chapitre = {
     },
     {
       id: "meilleur-resultat",
+      objectifs: [2],
       type: "choix",
       titre: "Quelle façon de décider ?",
       notions: ["dashboard"],
@@ -202,6 +205,7 @@ export const DECIDER_ENSEMBLE: Chapitre = {
     },
     {
       id: "le-prix-qui-sert-noel",
+      objectifs: [0, 3],
       type: "curseur",
       titre: "Le prix qui sert Noël",
       notions: ["price_elasticity", "capacity"],
@@ -240,6 +244,7 @@ export const DECIDER_ENSEMBLE: Chapitre = {
     },
     {
       id: "le-laboratoire-de-l-equipe",
+      objectifs: [3],
       type: "simulation",
       titre: "Croiser les écrans",
       notions: ["dashboard", "capacity"],

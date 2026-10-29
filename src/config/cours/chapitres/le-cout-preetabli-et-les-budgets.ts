@@ -240,6 +240,7 @@ const pari = (texte: string, juste: boolean): { texte: string; juste: boolean; r
 /** L'étape de curseur sur la production réelle, reprise par le cas « Le budget dépassé ». */
 export const ETAPE_DE_LA_PRODUCTION: EtapeCurseur = {
   id: "experience-production",
+  objectifs: [1],
   type: "curseur",
   titre: "Faites varier la production",
   notions: ["standard_costing"],
@@ -283,6 +284,7 @@ export const ETAPE_DE_LA_PRODUCTION: EtapeCurseur = {
 
 const PREDIRE_LA_PRODUCTION: EtapeChoix = {
   id: "predire-la-production",
+  objectifs: [1],
   type: "choix",
   titre: "Pariez : moins d'enceintes, moins de coût ?",
   notions: ["standard_costing"],
@@ -302,6 +304,7 @@ const PREDIRE_LA_PRODUCTION: EtapeChoix = {
 
 const PREDIRE_L_ACTIVITE: EtapeChoix = {
   id: "predire-l-activite",
+  objectifs: [1],
   type: "choix",
   titre: "Pariez : le centre tourne plus",
   notions: ["fixed_costs"],
@@ -321,6 +324,7 @@ const PREDIRE_L_ACTIVITE: EtapeChoix = {
 
 const ETAPE_DE_L_ACTIVITE: EtapeCurseur = {
   id: "experience-activite",
+  objectifs: [1],
   type: "curseur",
   titre: "Faites tourner le centre",
   notions: ["fixed_costs", "variable_costs"],
@@ -399,6 +403,7 @@ export function laboratoireDeLaProduction(c: Pick<Cas, "code">) {
 
 const LABORATOIRE_DE_LA_PRODUCTION: EtapeSimulation = {
   id: "laboratoire-production",
+  objectifs: [2],
   type: "simulation",
   titre: "Le laboratoire de la production",
   notions: ["standard_costing", "cost_variance"],
@@ -499,6 +504,7 @@ export const LE_COUT_PREETABLI_ET_LES_BUDGETS: Chapitre = {
     },
     {
       id: "heure-machine",
+      objectifs: [0],
       type: "montants",
       titre: "Le coût standard de l'heure-machine",
       notions: ["standard_costing", "fixed_costs", "variable_costs"],
@@ -523,6 +529,7 @@ export const LE_COUT_PREETABLI_ET_LES_BUDGETS: Chapitre = {
     },
     {
       id: "fiche",
+      objectifs: [0],
       type: "montants",
       titre: "La fiche de coût préétabli",
       notions: ["standard_costing"],
@@ -574,6 +581,7 @@ export const LE_COUT_PREETABLI_ET_LES_BUDGETS: Chapitre = {
     },
     {
       id: "budget-standard",
+      objectifs: [1],
       type: "montants",
       titre: "Le budget standard et le préétabli du réel",
       notions: ["standard_costing"],
@@ -598,6 +606,7 @@ export const LE_COUT_PREETABLI_ET_LES_BUDGETS: Chapitre = {
     },
     {
       id: "cout-reel",
+      objectifs: [2],
       type: "montants",
       titre: "Le coût réel de la production",
       notions: ["cost_variance"],
@@ -619,6 +628,7 @@ export const LE_COUT_PREETABLI_ET_LES_BUDGETS: Chapitre = {
     },
     {
       id: "a-quoi-comparer",
+      objectifs: [1],
       type: "choix",
       titre: "À quoi comparer le réel ?",
       notions: ["cost_variance", "standard_costing"],
@@ -650,6 +660,7 @@ export const LE_COUT_PREETABLI_ET_LES_BUDGETS: Chapitre = {
     },
     {
       id: "ecart-global",
+      objectifs: [2],
       type: "montants",
       titre: "L'écart global sur coûts",
       notions: ["cost_variance"],
@@ -678,6 +689,7 @@ export const LE_COUT_PREETABLI_ET_LES_BUDGETS: Chapitre = {
     ETAPE_DE_L_ACTIVITE,
     {
       id: "budget-flexible",
+      objectifs: [1],
       type: "montants",
       titre: "Le budget flexible du centre",
       notions: ["fixed_costs", "variable_costs", "standard_costing"],
@@ -712,6 +724,7 @@ export const LE_COUT_PREETABLI_ET_LES_BUDGETS: Chapitre = {
     },
     {
       id: "flexible-ou-preetabli",
+      objectifs: [1],
       type: "choix",
       titre: "Budget flexible ou coût préétabli",
       notions: ["fixed_costs", "standard_costing"],
@@ -751,6 +764,7 @@ export const LE_COUT_PREETABLI_ET_LES_BUDGETS: Chapitre = {
     },
     {
       id: "variante-activite",
+      objectifs: [1],
       type: "montants",
       titre: "Variante : un centre sous son activité normale",
       notions: ["fixed_costs", "variable_costs"],
@@ -788,6 +802,7 @@ export const LE_COUT_PREETABLI_ET_LES_BUDGETS: Chapitre = {
     },
     {
       id: "standard-courant",
+      objectifs: [3],
       type: "montants",
       titre: "Variante : un standard courant",
       notions: ["standard_costing", "cost_variance"],
@@ -825,6 +840,7 @@ export const LE_COUT_PREETABLI_ET_LES_BUDGETS: Chapitre = {
     },
     {
       id: "quel-standard",
+      objectifs: [3],
       type: "choix",
       titre: "Quel standard retenir ?",
       notions: ["standard_costing"],
@@ -856,6 +872,7 @@ export const LE_COUT_PREETABLI_ET_LES_BUDGETS: Chapitre = {
     },
     {
       id: "seuil",
+      objectifs: [3],
       type: "montants",
       titre: "Le seuil de significativité",
       notions: ["cost_variance"],
@@ -883,6 +900,7 @@ export const LE_COUT_PREETABLI_ET_LES_BUDGETS: Chapitre = {
     },
     {
       id: "gestion-par-exception",
+      objectifs: [3],
       type: "choix",
       titre: "Ce que le seuil peut cacher",
       notions: ["cost_variance"],

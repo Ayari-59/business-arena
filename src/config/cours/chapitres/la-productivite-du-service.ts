@@ -337,6 +337,7 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
     },
     {
       id: "plein",
+      objectifs: [0, 1],
       type: "montants",
       titre: "Le trimestre le plus chargé",
       notions: ["productivity"],
@@ -359,6 +360,7 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
     },
     {
       id: "creux",
+      objectifs: [0, 1],
       type: "montants",
       titre: "Le trimestre le plus creux",
       notions: ["productivity"],
@@ -381,6 +383,7 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
     },
     {
       id: "predire-le-cout",
+      objectifs: [1],
       type: "choix",
       titre: "Pariez sur le coût du creux",
       notions: ["productivity", "fixed_costs"],
@@ -404,6 +407,7 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
     },
     {
       id: "remplir-le-creux-au-curseur",
+      objectifs: [2],
       type: "curseur",
       titre: "Le trimestre creux au curseur",
       notions: ["productivity", "fixed_costs"],
@@ -455,6 +459,7 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
     },
     {
       id: "ecart",
+      objectifs: [2],
       type: "montants",
       titre: "Ce que le creux change",
       notions: ["productivity", "fixed_costs"],
@@ -488,6 +493,7 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
     },
     {
       id: "pourquoi",
+      objectifs: [2],
       type: "choix",
       titre: "Pourquoi le creux coûte plus cher",
       notions: ["productivity", "fixed_costs"],
@@ -520,6 +526,7 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
     },
     {
       id: "plafond",
+      objectifs: [3],
       type: "montants",
       titre: "La productivité la plus haute",
       notions: ["productivity", "capacity"],
@@ -573,6 +580,7 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
     },
     {
       id: "remplir-le-creux",
+      objectifs: [4],
       type: "choix",
       titre: "Faire baisser le coût du creux",
       notions: ["productivity", "capacity"],
@@ -606,6 +614,7 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
     },
     {
       id: "predire-l-equipe",
+      objectifs: [5],
       type: "choix",
       titre: "Pariez sur l'équipe du creux",
       notions: ["productivity", "payroll"],
@@ -627,6 +636,7 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
     },
     {
       id: "l-equipe-au-curseur",
+      objectifs: [5],
       type: "curseur",
       titre: "L'équipe au curseur",
       notions: ["productivity", "payroll"],
@@ -673,6 +683,7 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
     },
     {
       id: "l-equipe-du-creux",
+      objectifs: [5],
       type: "montants",
       titre: "Une équipe réduite au creux",
       notions: ["productivity", "payroll", "capacity"],
@@ -715,6 +726,7 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
     },
     {
       id: "le-laboratoire-de-l-equipe",
+      objectifs: [4],
       type: "simulation",
       titre: "Le laboratoire de l'équipe",
       notions: ["productivity", "payroll", "capacity"],
@@ -785,6 +797,7 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
     },
     {
       id: "une-equipe-de-plus",
+      objectifs: [5],
       type: "montants",
       titre: "Variante : un salarié de plus",
       notions: ["productivity", "payroll"],
@@ -825,6 +838,7 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
     },
     {
       id: "juger-l-equipe",
+      objectifs: [5],
       type: "choix",
       titre: "Primer la productivité ?",
       notions: ["productivity", "capacity"],

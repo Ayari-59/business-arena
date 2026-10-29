@@ -259,6 +259,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
     },
     {
       id: "facture-de-vente",
+      objectifs: [0],
       type: "montants",
       titre: "La facture du client",
       notions: ["payment_terms", "vat_payable"],
@@ -287,6 +288,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
     },
     {
       id: "ecriture-de-vente",
+      objectifs: [2],
       type: "ecriture",
       titre: "La vente, au journal",
       notions: ["payment_terms", "vat_payable"],
@@ -321,6 +323,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
     },
     {
       id: "remise-ou-escompte",
+      objectifs: [1],
       type: "choix",
       titre: "Remise et escompte",
       notions: ["payment_terms"],
@@ -342,6 +345,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
     },
     {
       id: "encaissement",
+      objectifs: [2],
       type: "ecriture",
       titre: "Le client paie à temps",
       notions: ["payment_terms"],
@@ -371,6 +375,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
     },
     {
       id: "predire-l-escompte",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur l'escompte du fournisseur",
       notions: ["payment_terms"],
@@ -390,6 +395,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
     },
     {
       id: "jours-d-avance",
+      objectifs: [3],
       type: "curseur",
       titre: "Jusqu'où l'escompte paie l'argent avancé",
       notions: ["payment_terms", "net_treasury"],
@@ -433,6 +439,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
     },
     {
       id: "escompte-du-fournisseur",
+      objectifs: [3],
       type: "montants",
       titre: "L'escompte du fournisseur",
       notions: ["payment_terms"],
@@ -463,6 +470,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
     },
     {
       id: "decision",
+      objectifs: [3],
       type: "choix",
       titre: "Le prendre ou non",
       notions: ["payment_terms", "net_treasury"],
@@ -497,6 +505,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
     },
     {
       id: "facture-d-achat",
+      objectifs: [2],
       type: "ecriture",
       titre: "La facture du fournisseur",
       notions: ["payment_terms", "vat_payable"],
@@ -529,6 +538,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
     },
     {
       id: "paiement-fournisseur",
+      objectifs: [2],
       type: "ecriture",
       titre: "Le fournisseur est payé",
       notions: ["payment_terms"],
@@ -556,6 +566,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
     },
     {
       id: "predire-l-escompte-accorde",
+      objectifs: [4],
       type: "choix",
       titre: "Pariez sur l'escompte à accorder",
       notions: ["payment_terms", "net_treasury"],
@@ -575,6 +586,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
     },
     {
       id: "le-laboratoire-de-l-escompte",
+      objectifs: [4],
       type: "simulation",
       titre: "Le laboratoire de l'escompte",
       notions: ["payment_terms", "net_treasury"],
@@ -645,6 +657,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
     },
     {
       id: "l-escompte-maximal",
+      objectifs: [4],
       type: "montants",
       titre: "L'escompte le plus fort, en formule",
       notions: ["payment_terms", "net_treasury"],
@@ -681,6 +694,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [4],
       type: "montants",
       titre: "Remonter une facture à rebours",
       notions: ["payment_terms", "vat_payable"],
@@ -709,6 +723,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
     },
     {
       id: "en-cascade",
+      objectifs: [0],
       type: "montants",
       titre: "Variante : une remise et un rabais en cascade",
       notions: ["payment_terms", "vat_payable"],
@@ -739,6 +754,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
     },
     {
       id: "critique",
+      objectifs: [1],
       type: "choix",
       titre: "Une remise à la place de l'escompte ?",
       notions: ["payment_terms", "net_treasury"],

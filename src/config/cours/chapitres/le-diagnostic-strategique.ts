@@ -112,6 +112,7 @@ export const LE_DIAGNOSTIC_STRATEGIQUE: Chapitre = {
     },
     {
       id: "interne-ou-externe",
+      objectifs: [0],
       type: "choix",
       titre: "Interne ou externe ?",
       notions: ["demand_market_share"],
@@ -139,6 +140,7 @@ export const LE_DIAGNOSTIC_STRATEGIQUE: Chapitre = {
     },
     {
       id: "chiffres",
+      objectifs: [1],
       type: "montants",
       titre: "Les chiffres du diagnostic",
       notions: ["demand_market_share", "capacity"],
@@ -174,6 +176,7 @@ export const LE_DIAGNOSTIC_STRATEGIQUE: Chapitre = {
     },
     {
       id: "ranger",
+      objectifs: [2],
       type: "tri",
       titre: "Ranger les constats",
       notions: ["income_statement", "net_treasury", "capacity", "demand_market_share"],
@@ -193,6 +196,7 @@ export const LE_DIAGNOSTIC_STRATEGIQUE: Chapitre = {
     },
     {
       id: "conclusion",
+      objectifs: [3],
       type: "choix",
       titre: "Que conclure ?",
       notions: ["capacity", "demand_market_share"],
@@ -221,6 +225,7 @@ export const LE_DIAGNOSTIC_STRATEGIQUE: Chapitre = {
     },
     {
       id: "le-marche-qui-monte",
+      objectifs: [1, 2],
       type: "curseur",
       titre: "Quand le salaire cesse d'être une force",
       notions: ["pay_and_motivation"],
@@ -255,6 +260,7 @@ export const LE_DIAGNOSTIC_STRATEGIQUE: Chapitre = {
     },
     {
       id: "le-laboratoire-du-diagnostic",
+      objectifs: [3],
       type: "simulation",
       titre: "Corriger une faiblesse",
       notions: ["pay_and_motivation"],

@@ -297,6 +297,7 @@ export const TAUX_DE_MARQUE: Chapitre = {
     },
     {
       id: "marge-commerciale",
+      objectifs: [0],
       type: "montants",
       titre: "La marge commerciale",
       notions: ["margin_rates"],
@@ -320,6 +321,7 @@ export const TAUX_DE_MARQUE: Chapitre = {
     },
     {
       id: "les-deux-taux",
+      objectifs: [1],
       type: "montants",
       titre: "Taux de marque, taux de marge",
       notions: ["margin_rates"],
@@ -343,6 +345,7 @@ export const TAUX_DE_MARQUE: Chapitre = {
     },
     {
       id: "qui-a-raison",
+      objectifs: [1],
       type: "choix",
       titre: "Deux chiffres pour une marge",
       notions: ["margin_rates"],
@@ -373,6 +376,7 @@ export const TAUX_DE_MARQUE: Chapitre = {
     },
     {
       id: "la-marge-de-la-gamme",
+      objectifs: [0],
       type: "montants",
       titre: "La marge de la gamme",
       notions: ["margin_rates"],
@@ -400,6 +404,7 @@ export const TAUX_DE_MARQUE: Chapitre = {
     },
     {
       id: "le-taux-de-la-boutique",
+      objectifs: [1],
       type: "choix",
       titre: "Le taux de marque moyen",
       notions: ["margin_rates"],
@@ -430,6 +435,7 @@ export const TAUX_DE_MARQUE: Chapitre = {
     },
     {
       id: "d-un-taux-a-l-autre",
+      objectifs: [1],
       type: "montants",
       titre: "D'un taux à l'autre",
       notions: ["margin_rates", "markup_coefficient"],
@@ -454,6 +460,7 @@ export const TAUX_DE_MARQUE: Chapitre = {
     },
     {
       id: "coefficient",
+      objectifs: [2],
       type: "montants",
       titre: "Le coefficient multiplicateur",
       notions: ["markup_coefficient", "vat_payable"],
@@ -478,6 +485,7 @@ export const TAUX_DE_MARQUE: Chapitre = {
     },
     {
       id: "predire-l-etiquette",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur l'étiquette",
       notions: ["markup_coefficient", "margin_rates"],
@@ -498,6 +506,7 @@ export const TAUX_DE_MARQUE: Chapitre = {
     },
     {
       id: "l-etiquette-de-l-atelier",
+      objectifs: [3],
       type: "curseur",
       titre: "Déplacez l'étiquette",
       notions: ["markup_coefficient", "margin_rates", "vat_payable"],
@@ -541,6 +550,7 @@ export const TAUX_DE_MARQUE: Chapitre = {
     },
     {
       id: "le-prix-du-plus-cher",
+      objectifs: [3],
       type: "montants",
       titre: "Garder le taux de marque",
       notions: ["margin_rates", "markup_coefficient"],
@@ -582,6 +592,7 @@ export const TAUX_DE_MARQUE: Chapitre = {
     },
     {
       id: "moins-cher",
+      objectifs: [3],
       type: "montants",
       titre: "Un fournisseur moins cher",
       notions: ["margin_rates"],
@@ -606,6 +617,7 @@ export const TAUX_DE_MARQUE: Chapitre = {
     },
     {
       id: "le-vrai-prix",
+      objectifs: [3],
       type: "choix",
       titre: "Ce que coûte le moins cher",
       notions: ["payment_terms", "margin_rates", "stock"],
@@ -636,6 +648,7 @@ export const TAUX_DE_MARQUE: Chapitre = {
     },
     {
       id: "le-coefficient-du-concurrent",
+      objectifs: [2],
       type: "montants",
       titre: "Le coefficient du concurrent, à rebours",
       notions: ["markup_coefficient", "vat_payable", "margin_rates"],
@@ -662,6 +675,7 @@ export const TAUX_DE_MARQUE: Chapitre = {
     },
     {
       id: "le-prix-aligne",
+      objectifs: [4],
       type: "montants",
       titre: "S'aligner sur le concurrent",
       notions: ["margin_rates", "price_elasticity", "vat_payable"],
@@ -691,6 +705,7 @@ export const TAUX_DE_MARQUE: Chapitre = {
     },
     {
       id: "predire-le-prix-d-achat",
+      objectifs: [4],
       type: "choix",
       titre: "Pariez sur le prix d'achat",
       notions: ["margin_rates", "price_elasticity"],
@@ -710,6 +725,7 @@ export const TAUX_DE_MARQUE: Chapitre = {
     },
     {
       id: "le-prix-d-achat-au-curseur",
+      objectifs: [4],
       type: "curseur",
       titre: "Le prix d'achat qui garde la marge",
       notions: ["margin_rates", "price_elasticity"],
@@ -754,6 +770,7 @@ export const TAUX_DE_MARQUE: Chapitre = {
     },
     {
       id: "garder-la-marque-ou-la-marge",
+      objectifs: [4],
       type: "montants",
       titre: "Garder la marque ou garder la marge",
       notions: ["margin_rates", "price_elasticity"],
@@ -786,6 +803,7 @@ export const TAUX_DE_MARQUE: Chapitre = {
     },
     {
       id: "le-laboratoire-des-prix",
+      objectifs: [4],
       type: "simulation",
       titre: "Le laboratoire des prix",
       notions: ["margin_rates", "price_elasticity", "markup_coefficient"],
@@ -859,6 +877,7 @@ export const TAUX_DE_MARQUE: Chapitre = {
     },
     {
       id: "la-critique-du-taux",
+      objectifs: [3],
       type: "choix",
       titre: "Le taux de marque, un objectif ?",
       notions: ["margin_rates", "price_elasticity"],

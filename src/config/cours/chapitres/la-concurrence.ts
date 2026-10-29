@@ -144,6 +144,7 @@ export const LA_CONCURRENCE: Chapitre = {
     },
     {
       id: "parts",
+      objectifs: [0],
       type: "montants",
       titre: "La part de marché de chacun",
       notions: ["demand_market_share"],
@@ -171,6 +172,7 @@ export const LA_CONCURRENCE: Chapitre = {
     },
     {
       id: "prix-et-ventes",
+      objectifs: [1],
       type: "choix",
       titre: "Le prix, la qualité et les ventes",
       notions: ["demand_market_share", "price_elasticity"],
@@ -195,6 +197,7 @@ export const LA_CONCURRENCE: Chapitre = {
     },
     {
       id: "hausse",
+      objectifs: [2],
       type: "montants",
       titre: "Si l'entreprise monte son prix",
       notions: ["price_elasticity", "demand_market_share"],
@@ -226,6 +229,7 @@ export const LA_CONCURRENCE: Chapitre = {
     },
     {
       id: "ou-vont-les-clients",
+      objectifs: [2],
       type: "choix",
       titre: "Où partent les clients",
       notions: ["demand_market_share", "capacity"],
@@ -248,6 +252,7 @@ export const LA_CONCURRENCE: Chapitre = {
     },
     {
       id: "benefice",
+      objectifs: [1],
       type: "choix",
       titre: "La hausse a-t-elle payé ?",
       notions: ["income_statement", "price_elasticity"],
@@ -273,6 +278,7 @@ export const LA_CONCURRENCE: Chapitre = {
     },
     {
       id: "la-concurrence-tire-les-prix",
+      objectifs: [3],
       type: "choix",
       titre: "Ce que la concurrence fait au prix",
       notions: ["price_elasticity", "demand_market_share"],
@@ -301,6 +307,7 @@ export const LA_CONCURRENCE: Chapitre = {
     },
     {
       id: "jusqu-ou-monter",
+      objectifs: [3],
       type: "curseur",
       titre: "Jusqu'où monter le prix",
       notions: ["price_elasticity", "fixed_costs"],
@@ -339,6 +346,7 @@ export const LA_CONCURRENCE: Chapitre = {
     },
     {
       id: "le-laboratoire-du-prix",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire du prix face aux concurrents",
       notions: ["demand_market_share", "price_elasticity"],

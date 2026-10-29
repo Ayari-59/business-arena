@@ -110,6 +110,7 @@ export const PRODUIRE: Chapitre = {
     },
     {
       id: "capacite",
+      objectifs: [0],
       type: "montants",
       titre: "La capacité et son utilisation",
       notions: ["capacity"],
@@ -135,6 +136,7 @@ export const PRODUIRE: Chapitre = {
     },
     {
       id: "ce-qui-bride",
+      objectifs: [1],
       type: "choix",
       titre: "La ressource qui bride la production",
       notions: ["capacity"],
@@ -172,6 +174,7 @@ export const PRODUIRE: Chapitre = {
     },
     {
       id: "productivite",
+      objectifs: [2],
       type: "montants",
       titre: "La productivité du travail",
       notions: ["productivity"],
@@ -199,6 +202,7 @@ export const PRODUIRE: Chapitre = {
     },
     {
       id: "une-embauche",
+      objectifs: [3],
       type: "montants",
       titre: "Un opérateur de plus",
       notions: ["productivity", "payroll"],
@@ -232,6 +236,7 @@ export const PRODUIRE: Chapitre = {
     },
     {
       id: "embaucher",
+      objectifs: [3],
       type: "choix",
       titre: "Embaucher pour produire plus ?",
       notions: ["productivity", "capacity"],
@@ -253,6 +258,7 @@ export const PRODUIRE: Chapitre = {
     },
     {
       id: "ce-que-doit-monter-un-operateur",
+      objectifs: [1],
       type: "curseur",
       titre: "Ce que doit monter un opérateur",
       notions: ["productivity", "capacity"],
@@ -295,6 +301,7 @@ export const PRODUIRE: Chapitre = {
     },
     {
       id: "le-laboratoire-de-l-effectif",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire de l'effectif",
       notions: ["productivity", "payroll"],

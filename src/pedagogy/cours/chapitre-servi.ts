@@ -41,6 +41,8 @@ interface BaseServie {
   id: string;
   titre: string;
   notions?: readonly string[];
+  /** Les objectifs du chapitre que l'étape travaille, par leur indice (config/cours/types.ts). */
+  objectifs?: readonly number[];
   tableau?: TableauDeDonnees;
 }
 
@@ -159,6 +161,8 @@ export interface ChapitreServi {
   code: string;
   titre: string;
   objectifs: readonly string[];
+  /** Les compétences du référentiel que le chapitre fait travailler, annoncées au début et rappelées à la fin. */
+  blocs: readonly string[];
   /** Les chapitres à avoir vus avant, annoncés à la première étape (audit pédagogique, P1-2). */
   prerequis: { code: string; titre: string }[];
   parcours: string;
@@ -240,6 +244,7 @@ export function servirLeChapitre(source: Chapitre, cas: Cas): ChapitreServi {
       id: e.id,
       titre: e.titre,
       ...(e.notions ? { notions: e.notions } : {}),
+      ...(e.objectifs ? { objectifs: e.objectifs } : {}),
       ...(e.tableau ? { tableau: e.tableau(cas) } : {}),
     };
     const avant = etatAvant(chapitre, cas, index);
@@ -330,6 +335,7 @@ export function servirLeChapitre(source: Chapitre, cas: Cas): ChapitreServi {
     code: chapitre.code,
     titre: chapitre.titre,
     objectifs: chapitre.objectifs,
+    blocs: chapitre.blocs,
     prerequis: (chapitre.prerequis ?? []).map((code) => ({ code, titre: CHAPITRES.find((c) => c.code === code)!.titre })),
     parcours: PARCOURS.find((p) => p.code === chapitre.parcours)!.titre,
     palier: PALIERS.find((p) => p.palier === chapitre.palier)!.palier,

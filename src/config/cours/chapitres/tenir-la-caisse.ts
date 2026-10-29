@@ -144,6 +144,7 @@ export const TENIR_LA_CAISSE: Chapitre = {
     },
     {
       id: "le-ticket",
+      objectifs: [0],
       type: "montants",
       titre: "Le total du ticket",
       notions: ["average_basket"],
@@ -160,6 +161,7 @@ export const TENIR_LA_CAISSE: Chapitre = {
     },
     {
       id: "la-monnaie",
+      objectifs: [1],
       type: "montants",
       titre: "La monnaie à rendre",
       notions: ["average_basket"],
@@ -178,6 +180,7 @@ export const TENIR_LA_CAISSE: Chapitre = {
     },
     {
       id: "rendre-juste",
+      objectifs: [1],
       type: "choix",
       titre: "Les billets et les pièces à rendre",
       notions: ["average_basket"],
@@ -193,6 +196,7 @@ export const TENIR_LA_CAISSE: Chapitre = {
     },
     {
       id: "la-journee",
+      objectifs: [2],
       type: "montants",
       titre: "Le chiffre d'affaires du jour",
       notions: ["revenue"],
@@ -216,6 +220,7 @@ export const TENIR_LA_CAISSE: Chapitre = {
     },
     {
       id: "les-especes",
+      objectifs: [2],
       type: "montants",
       titre: "Les espèces de la journée",
       notions: ["revenue", "vat_payable"],
@@ -237,6 +242,7 @@ export const TENIR_LA_CAISSE: Chapitre = {
     },
     {
       id: "le-fond-de-caisse",
+      objectifs: [2],
       type: "montants",
       titre: "Le fond de caisse du matin",
       notions: ["net_treasury"],
@@ -252,6 +258,7 @@ export const TENIR_LA_CAISSE: Chapitre = {
     },
     {
       id: "le-comptage",
+      objectifs: [3],
       type: "montants",
       titre: "Le comptage du soir",
       notions: ["net_treasury"],
@@ -271,6 +278,7 @@ export const TENIR_LA_CAISSE: Chapitre = {
     },
     {
       id: "que-faire-de-l-ecart",
+      objectifs: [3],
       type: "choix",
       titre: "Ce que l'équipier fait de l'écart",
       question: (c) => {
@@ -288,6 +296,7 @@ export const TENIR_LA_CAISSE: Chapitre = {
     },
     {
       id: "avant-le-coffre",
+      objectifs: [4],
       type: "curseur",
       titre: "Avant de vider le tiroir",
       notions: ["net_treasury"],
@@ -321,6 +330,7 @@ export const TENIR_LA_CAISSE: Chapitre = {
     },
     {
       id: "le-laboratoire-du-coffre",
+      objectifs: [4],
       type: "simulation",
       titre: "Le laboratoire des passages au coffre",
       notions: ["net_treasury"],

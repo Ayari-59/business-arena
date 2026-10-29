@@ -280,6 +280,7 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
     },
     {
       id: "l-attrition",
+      objectifs: [0],
       type: "montants",
       titre: "Le taux d'attrition, année par année",
       notions: ["churn_rate"],
@@ -311,6 +312,7 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
     },
     {
       id: "la-marge-d-un-compte",
+      objectifs: [1],
       type: "montants",
       titre: "Ce que laisse un compte chaque année",
       notions: ["contribution_margin", "customer_lifetime_value"],
@@ -339,6 +341,7 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
     },
     {
       id: "la-valeur-vie",
+      objectifs: [2],
       type: "montants",
       titre: "La valeur vie client",
       notions: ["customer_lifetime_value", "churn_rate"],
@@ -363,6 +366,7 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
     },
     {
       id: "quelle-marge",
+      objectifs: [1],
       type: "choix",
       titre: "Quelle marge diviser par l'attrition",
       notions: ["customer_lifetime_value", "contribution_margin"],
@@ -395,6 +399,7 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
     },
     {
       id: "le-cout-d-acquisition",
+      objectifs: [3],
       type: "montants",
       titre: "Ce qu'a coûté un compte gagné",
       notions: ["customer_acquisition_cost", "customer_lifetime_value"],
@@ -428,6 +433,7 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
     },
     {
       id: "predire-l-equilibre",
+      objectifs: [4],
       type: "choix",
       titre: "Pariez sur le portefeuille",
       notions: ["churn_rate", "customer_portfolio"],
@@ -447,6 +453,7 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
     },
     {
       id: "le-portefeuille-au-curseur",
+      objectifs: [4],
       type: "curseur",
       titre: "Faites vivre le portefeuille",
       notions: ["churn_rate", "customer_portfolio"],
@@ -490,6 +497,7 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
     },
     {
       id: "l-equilibre",
+      objectifs: [4],
       type: "montants",
       titre: "Le portefeuille d'équilibre",
       notions: ["churn_rate", "customer_portfolio"],
@@ -513,6 +521,7 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
     },
     {
       id: "predire-recruter-ou-fideliser",
+      objectifs: [4],
       type: "choix",
       titre: "Pariez : recruter ou fidéliser",
       notions: ["churn_rate", "customer_portfolio"],
@@ -529,6 +538,7 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
     },
     {
       id: "l-attrition-au-curseur",
+      objectifs: [4],
       type: "curseur",
       titre: "L'attrition qui remplit les consultants",
       notions: ["churn_rate", "capacity", "customer_portfolio"],
@@ -573,6 +583,7 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
     },
     {
       id: "recruter-ou-fideliser",
+      objectifs: [4],
       type: "montants",
       titre: "Recruter ou fidéliser, face à la capacité",
       notions: ["churn_rate", "customer_portfolio", "capacity"],
@@ -603,6 +614,7 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
     },
     {
       id: "la-capacite",
+      objectifs: [4],
       type: "choix",
       titre: "Ce que vous dites au directeur",
       notions: ["customer_portfolio", "capacity", "churn_rate"],
@@ -638,6 +650,7 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
     },
     {
       id: "predire-l-actualisation",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur la valeur actualisée",
       notions: ["customer_lifetime_value", "discounting"],
@@ -656,6 +669,7 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-valeur",
+      objectifs: [2],
       type: "simulation",
       titre: "Le laboratoire de la valeur",
       notions: ["customer_lifetime_value", "discounting", "customer_portfolio", "customer_acquisition_cost"],
@@ -741,6 +755,7 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
     },
     {
       id: "la-valeur-actualisee",
+      objectifs: [2],
       type: "montants",
       titre: "La valeur vie actualisée",
       notions: ["customer_lifetime_value", "discounting"],
@@ -780,6 +795,7 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [3],
       type: "montants",
       titre: "L'attrition qui tient l'objectif, à rebours",
       notions: ["customer_lifetime_value", "discounting", "churn_rate"],

@@ -259,6 +259,7 @@ export const DECIDER: Chapitre = {
     },
     {
       id: "volume-constant",
+      objectifs: [0],
       type: "montants",
       titre: "Si les ventes ne bougeaient pas",
       notions: ["contribution_margin"],
@@ -283,6 +284,7 @@ export const DECIDER: Chapitre = {
     },
     {
       id: "predire-le-volume",
+      objectifs: [0],
       type: "choix",
       titre: "Pariez sur le volume",
       notions: ["contribution_margin"],
@@ -302,6 +304,7 @@ export const DECIDER: Chapitre = {
     },
     {
       id: "volume-au-curseur",
+      objectifs: [0],
       type: "curseur",
       titre: "Le volume qu'il faudrait",
       notions: ["contribution_margin", "price_elasticity"],
@@ -343,6 +346,7 @@ export const DECIDER: Chapitre = {
     },
     {
       id: "volume-necessaire",
+      objectifs: [0],
       type: "montants",
       titre: "Ce qu'une baisse oblige à vendre",
       notions: ["contribution_margin", "breakeven"],
@@ -365,6 +369,7 @@ export const DECIDER: Chapitre = {
     },
     {
       id: "predire-la-baisse",
+      objectifs: [1],
       type: "choix",
       titre: "Pariez sur la baisse",
       notions: ["price_elasticity", "capacity"],
@@ -385,6 +390,7 @@ export const DECIDER: Chapitre = {
     },
     {
       id: "le-laboratoire-du-prix",
+      objectifs: [1],
       type: "simulation",
       titre: "Le laboratoire du prix",
       notions: ["price_elasticity", "capacity", "make_or_buy"],
@@ -442,6 +448,7 @@ export const DECIDER: Chapitre = {
     },
     {
       id: "les-trois-prix",
+      objectifs: [1],
       type: "montants",
       titre: "Le trimestre aux trois prix",
       notions: ["price_elasticity", "contribution_margin"],
@@ -470,6 +477,7 @@ export const DECIDER: Chapitre = {
     },
     {
       id: "ce-qui-borne",
+      objectifs: [1],
       type: "choix",
       titre: "Ce qui borne les ventes",
       notions: ["price_elasticity", "capacity"],
@@ -508,6 +516,7 @@ export const DECIDER: Chapitre = {
     },
     {
       id: "meilleur-prix",
+      objectifs: [1],
       type: "choix",
       titre: "Le meilleur des trois prix",
       notions: ["price_elasticity", "contribution_margin"],
@@ -531,6 +540,7 @@ export const DECIDER: Chapitre = {
     },
     {
       id: "le-prix-optimal",
+      objectifs: [2],
       type: "montants",
       titre: "Le meilleur prix, par le calcul",
       notions: ["price_elasticity", "contribution_margin"],
@@ -566,6 +576,7 @@ export const DECIDER: Chapitre = {
     },
     {
       id: "fabriquer-ou-acheter",
+      objectifs: [3],
       type: "montants",
       titre: "Fabriquer ou acheter",
       notions: ["contribution_margin", "capacity", "make_or_buy"],
@@ -587,6 +598,7 @@ export const DECIDER: Chapitre = {
     },
     {
       id: "la-commande",
+      objectifs: [3],
       type: "choix",
       titre: "La commande au-delà de la capacité",
       notions: ["contribution_margin", "capacity", "make_or_buy"],
@@ -619,6 +631,7 @@ export const DECIDER: Chapitre = {
     },
     {
       id: "predire-la-commande",
+      objectifs: [4],
       type: "choix",
       titre: "Pariez sur une commande sous le coût complet",
       notions: ["contribution_margin", "full_unit_cost", "price_floor"],
@@ -638,6 +651,7 @@ export const DECIDER: Chapitre = {
     },
     {
       id: "le-prix-plancher",
+      objectifs: [4],
       type: "curseur",
       titre: "Le prix plancher de la commande",
       notions: ["contribution_margin", "price_floor", "make_or_buy"],
@@ -677,6 +691,7 @@ export const DECIDER: Chapitre = {
     },
     {
       id: "la-commande-exceptionnelle",
+      objectifs: [4],
       type: "montants",
       titre: "La commande exceptionnelle",
       notions: ["contribution_margin", "make_or_buy", "price_floor", "capacity"],
@@ -704,6 +719,7 @@ export const DECIDER: Chapitre = {
     },
     {
       id: "sans-sous-traitant",
+      objectifs: [4],
       type: "choix",
       titre: "Sans sous-traitant : la capacité, facteur rare",
       notions: ["capacity", "contribution_margin", "full_unit_cost"],

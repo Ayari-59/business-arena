@@ -226,6 +226,7 @@ const INDICES_DE_L_ECHEANCE = [
 function echeanceSansAvis(k: 2 | 3, titre: string): EtapeEcriture {
   return {
     id: `echeance-${k}`,
+    objectifs: [1],
     type: "ecriture",
     titre,
     notions: ["loan_schedule"],
@@ -289,6 +290,7 @@ export const L_EMPRUNT: Chapitre = {
     },
     {
       id: "deblocage",
+      objectifs: [1],
       type: "ecriture",
       titre: "Les fonds sont versés",
       notions: ["loan_schedule"],
@@ -309,6 +311,7 @@ export const L_EMPRUNT: Chapitre = {
     },
     {
       id: "premiere-ligne",
+      objectifs: [0],
       type: "montants",
       titre: "La première ligne du tableau",
       notions: ["loan_schedule"],
@@ -338,6 +341,7 @@ export const L_EMPRUNT: Chapitre = {
     },
     {
       id: "echeance-1",
+      objectifs: [1],
       type: "ecriture",
       titre: "La première échéance",
       notions: ["loan_schedule"],
@@ -374,6 +378,7 @@ export const L_EMPRUNT: Chapitre = {
     echeanceSansAvis(2, "La deuxième échéance"),
     {
       id: "pourquoi-baisse",
+      objectifs: [0],
       type: "choix",
       titre: "Des intérêts qui baissent",
       notions: ["loan_schedule"],
@@ -401,6 +406,7 @@ export const L_EMPRUNT: Chapitre = {
     echeanceSansAvis(3, "La troisième échéance"),
     {
       id: "premiere-annee",
+      objectifs: [2],
       type: "montants",
       titre: "L'emprunt au 31 décembre",
       notions: ["loan_schedule", "balance_sheet"],
@@ -428,6 +434,7 @@ export const L_EMPRUNT: Chapitre = {
     },
     {
       id: "les-interets-courus",
+      objectifs: [3],
       type: "montants",
       titre: "Les intérêts courus au 31 décembre",
       notions: ["loan_schedule", "income_statement"],
@@ -460,6 +467,7 @@ export const L_EMPRUNT: Chapitre = {
     },
     {
       id: "ecriture-des-interets-courus",
+      objectifs: [3],
       type: "ecriture",
       titre: "Les intérêts courus, au journal",
       notions: ["loan_schedule", "income_statement"],
@@ -489,6 +497,7 @@ export const L_EMPRUNT: Chapitre = {
     },
     {
       id: "predire-le-croisement",
+      objectifs: [4],
       type: "choix",
       titre: "Pariez sur l'échéance constante",
       notions: ["loan_schedule"],
@@ -508,6 +517,7 @@ export const L_EMPRUNT: Chapitre = {
     },
     {
       id: "les-echeances-qui-se-croisent",
+      objectifs: [4],
       type: "curseur",
       titre: "Les échéances qui se croisent",
       notions: ["loan_schedule"],
@@ -549,6 +559,7 @@ export const L_EMPRUNT: Chapitre = {
     },
     {
       id: "annuites-constantes",
+      objectifs: [0],
       type: "montants",
       titre: "Le tableau en échéances constantes",
       notions: ["loan_schedule"],
@@ -577,6 +588,7 @@ export const L_EMPRUNT: Chapitre = {
     },
     {
       id: "predire-le-cout",
+      objectifs: [4],
       type: "choix",
       titre: "Pariez sur le coût du crédit",
       notions: ["loan_schedule"],
@@ -596,6 +608,7 @@ export const L_EMPRUNT: Chapitre = {
     },
     {
       id: "le-laboratoire-du-pret",
+      objectifs: [4],
       type: "simulation",
       titre: "Le laboratoire du prêt",
       notions: ["loan_schedule", "income_statement"],
@@ -673,6 +686,7 @@ export const L_EMPRUNT: Chapitre = {
     },
     {
       id: "cout-du-credit",
+      objectifs: [4],
       type: "montants",
       titre: "Le coût du crédit, dans les deux modes",
       notions: ["loan_schedule"],
@@ -708,6 +722,7 @@ export const L_EMPRUNT: Chapitre = {
     },
     {
       id: "le-taux-a-rebours",
+      objectifs: [4],
       type: "montants",
       titre: "Retrouver le taux à rebours",
       notions: ["loan_schedule"],
@@ -746,6 +761,7 @@ export const L_EMPRUNT: Chapitre = {
     },
     {
       id: "quel-mode",
+      objectifs: [4],
       type: "choix",
       titre: "Quel mode conseiller",
       notions: ["loan_schedule"],

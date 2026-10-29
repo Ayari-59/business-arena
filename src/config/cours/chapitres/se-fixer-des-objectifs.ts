@@ -124,6 +124,7 @@ export const SE_FIXER_DES_OBJECTIFS: Chapitre = {
     },
     {
       id: "smart",
+      objectifs: [0],
       type: "choix",
       titre: "Un objectif bien posé",
       notions: ["dashboard"],
@@ -148,6 +149,7 @@ export const SE_FIXER_DES_OBJECTIFS: Chapitre = {
     },
     {
       id: "objectif",
+      objectifs: [1],
       type: "montants",
       titre: "Chiffrer l'objectif",
       notions: ["capacity"],
@@ -188,6 +190,7 @@ export const SE_FIXER_DES_OBJECTIFS: Chapitre = {
     },
     {
       id: "ecarts",
+      objectifs: [2],
       type: "montants",
       titre: "L'écart, trimestre après trimestre",
       notions: ["dashboard"],
@@ -231,6 +234,7 @@ export const SE_FIXER_DES_OBJECTIFS: Chapitre = {
     },
     {
       id: "origine",
+      objectifs: [3],
       type: "choix",
       titre: "D'où vient l'écart ?",
       notions: ["capacity", "stock"],
@@ -282,6 +286,7 @@ export const SE_FIXER_DES_OBJECTIFS: Chapitre = {
     },
     {
       id: "conclusion",
+      objectifs: [4],
       type: "choix",
       titre: "Que conclut la direction ?",
       notions: ["dashboard", "capacity"],
@@ -315,6 +320,7 @@ export const SE_FIXER_DES_OBJECTIFS: Chapitre = {
     },
     {
       id: "le-plus-haut-objectif",
+      objectifs: [1],
       type: "curseur",
       titre: "Le plus haut objectif tenu chaque trimestre",
       notions: ["capacity", "dashboard"],
@@ -352,6 +358,7 @@ export const SE_FIXER_DES_OBJECTIFS: Chapitre = {
     },
     {
       id: "le-laboratoire-de-l-objectif",
+      objectifs: [1, 4],
       type: "simulation",
       titre: "Poser l'objectif de l'année suivante",
       notions: ["capacity", "dashboard"],

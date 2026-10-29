@@ -114,6 +114,7 @@ export const ORGANISER_L_ACTIVITE: Chapitre = {
     },
     {
       id: "les-capacites",
+      objectifs: [0],
       type: "montants",
       titre: "Les deux capacités",
       notions: ["capacity"],
@@ -140,6 +141,7 @@ export const ORGANISER_L_ACTIVITE: Chapitre = {
     },
     {
       id: "l-occupation",
+      objectifs: [1],
       type: "montants",
       titre: "Le taux d'occupation",
       notions: ["capacity"],
@@ -160,6 +162,7 @@ export const ORGANISER_L_ACTIVITE: Chapitre = {
     },
     {
       id: "ce-qui-limite",
+      objectifs: [2],
       type: "choix",
       titre: "Ce qui a limité l'activité",
       notions: ["capacity", "demand_market_share"],
@@ -179,6 +182,7 @@ export const ORGANISER_L_ACTIVITE: Chapitre = {
     },
     {
       id: "le-delai",
+      objectifs: [3],
       type: "montants",
       titre: "Le délai d'un renfort",
       notions: ["capacity", "payroll"],
@@ -200,6 +204,7 @@ export const ORGANISER_L_ACTIVITE: Chapitre = {
     },
     {
       id: "la-commande-en-plus",
+      objectifs: [0, 2],
       type: "curseur",
       titre: "La commande en plus",
       notions: ["capacity"],
@@ -235,6 +240,7 @@ export const ORGANISER_L_ACTIVITE: Chapitre = {
     },
     {
       id: "le-laboratoire-du-renfort",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire du renfort",
       notions: ["capacity"],

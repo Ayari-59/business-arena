@@ -129,6 +129,7 @@ export const CONSTRUIRE_UN_INDICATEUR_JUSTE: Chapitre = {
     },
     {
       id: "la-fiche",
+      objectifs: [0],
       type: "choix",
       titre: "La fiche de l'indicateur",
       notions: ["dashboard"],
@@ -154,6 +155,7 @@ export const CONSTRUIRE_UN_INDICATEUR_JUSTE: Chapitre = {
     },
     {
       id: "deux-calculs",
+      objectifs: [1],
       type: "montants",
       titre: "Deux calculs du prix moyen",
       notions: ["revenue", "demand_market_share"],
@@ -191,6 +193,7 @@ export const CONSTRUIRE_UN_INDICATEUR_JUSTE: Chapitre = {
     },
     {
       id: "lequel-est-juste",
+      objectifs: [2],
       type: "choix",
       titre: "Lequel est juste ?",
       notions: ["revenue"],
@@ -223,6 +226,7 @@ export const CONSTRUIRE_UN_INDICATEUR_JUSTE: Chapitre = {
     },
     {
       id: "deux-indices",
+      objectifs: [1],
       type: "montants",
       titre: "L'indice de prix, de deux façons",
       notions: ["price_elasticity", "dashboard"],
@@ -253,6 +257,7 @@ export const CONSTRUIRE_UN_INDICATEUR_JUSTE: Chapitre = {
     },
     {
       id: "ce-que-l-erreur-ferait-decider",
+      objectifs: [3],
       type: "choix",
       titre: "Ce que l'erreur ferait décider",
       notions: ["price_elasticity", "demand_market_share"],
@@ -299,6 +304,7 @@ export const CONSTRUIRE_UN_INDICATEUR_JUSTE: Chapitre = {
     },
     {
       id: "le-poids-des-ventes",
+      objectifs: [2],
       type: "curseur",
       titre: "Le poids des ventes",
       notions: ["revenue", "demand_market_share"],
@@ -341,6 +347,7 @@ export const CONSTRUIRE_UN_INDICATEUR_JUSTE: Chapitre = {
     },
     {
       id: "le-laboratoire-de-l-indice",
+      objectifs: [1],
       type: "simulation",
       titre: "Le laboratoire de l'indice",
       notions: ["price_elasticity", "dashboard"],

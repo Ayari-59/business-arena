@@ -268,6 +268,7 @@ export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = {
     },
     {
       id: "client-douteux",
+      objectifs: [0, 1],
       type: "choix",
       titre: "Un client en difficulté",
       notions: ["payment_terms"],
@@ -296,6 +297,7 @@ export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = {
     },
     {
       id: "reclassement",
+      objectifs: [1],
       type: "ecriture",
       titre: "La créance devient douteuse",
       notions: ["payment_terms"],
@@ -324,6 +326,7 @@ export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = {
     },
     {
       id: "montant-depreciation",
+      objectifs: [1],
       type: "montants",
       titre: "Le montant de la dépréciation",
       notions: ["payment_terms"],
@@ -348,6 +351,7 @@ export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = {
     },
     {
       id: "dotation-depreciation",
+      objectifs: [1],
       type: "ecriture",
       titre: "La dépréciation, au journal",
       notions: ["payment_terms", "income_statement"],
@@ -377,6 +381,7 @@ export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = {
     },
     {
       id: "litige",
+      objectifs: [2],
       type: "choix",
       titre: "Le salon qui a brûlé",
       notions: ["income_statement"],
@@ -407,6 +412,7 @@ export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = {
     },
     {
       id: "provision",
+      objectifs: [2],
       type: "ecriture",
       titre: "La provision, au journal",
       notions: ["income_statement"],
@@ -433,6 +439,7 @@ export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = {
     },
     {
       id: "le-stock-de-composants",
+      objectifs: [3],
       type: "choix",
       titre: "Et le stock de composants ?",
       notions: ["stock"],
@@ -463,6 +470,7 @@ export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = {
     },
     {
       id: "equipement",
+      objectifs: [3],
       type: "choix",
       titre: "Et la ligne de montage ?",
       notions: ["depreciation"],
@@ -496,6 +504,7 @@ export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = {
     },
     {
       id: "predire-l-objectif",
+      objectifs: [0],
       type: "choix",
       titre: "Pariez sur l'estimation",
       notions: ["payment_terms", "income_statement"],
@@ -515,6 +524,7 @@ export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = {
     },
     {
       id: "le-taux-de-perte",
+      objectifs: [0],
       type: "curseur",
       titre: "Jusqu'où l'objectif tient",
       notions: ["payment_terms", "income_statement"],
@@ -559,6 +569,7 @@ export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = {
     },
     {
       id: "resultat",
+      objectifs: [0],
       type: "montants",
       titre: "La prudence, chiffrée",
       notions: ["income_statement"],
@@ -588,6 +599,7 @@ export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = {
     },
     {
       id: "predire-le-liquidateur",
+      objectifs: [5],
       type: "choix",
       titre: "Pariez sur le liquidateur",
       notions: ["payment_terms"],
@@ -607,6 +619,7 @@ export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = {
     },
     {
       id: "l-encaissement-qui-suffit",
+      objectifs: [5],
       type: "curseur",
       titre: "Ce que le liquidateur doit verser",
       notions: ["payment_terms"],
@@ -666,6 +679,7 @@ export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = {
     },
     {
       id: "la-condamnation",
+      objectifs: [4],
       type: "ecriture",
       titre: "La condamnation",
       notions: ["income_statement"],
@@ -692,6 +706,7 @@ export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = {
     },
     {
       id: "reprise-de-la-provision",
+      objectifs: [4],
       type: "ecriture",
       titre: "La reprise de la provision",
       notions: ["income_statement"],
@@ -717,6 +732,7 @@ export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = {
     },
     {
       id: "encaissement",
+      objectifs: [4],
       type: "ecriture",
       titre: "Ce que le liquidateur verse",
       notions: ["payment_terms"],
@@ -740,6 +756,7 @@ export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = {
     },
     {
       id: "perte",
+      objectifs: [4],
       type: "ecriture",
       titre: "La part perdue",
       notions: ["payment_terms", "vat_payable"],
@@ -775,6 +792,7 @@ export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = {
     },
     {
       id: "reprise",
+      objectifs: [4],
       type: "ecriture",
       titre: "La reprise de la dépréciation",
       notions: ["payment_terms", "income_statement"],
@@ -800,6 +818,7 @@ export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = {
     },
     {
       id: "le-laboratoire-des-deux-exercices",
+      objectifs: [5],
       type: "simulation",
       titre: "Le laboratoire des deux exercices",
       notions: ["payment_terms", "income_statement"],
@@ -871,6 +890,7 @@ export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = {
     },
     {
       id: "deux-annees",
+      objectifs: [5],
       type: "montants",
       titre: "Ce que chaque risque a coûté",
       notions: ["income_statement"],
@@ -898,6 +918,7 @@ export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = {
     },
     {
       id: "variante-vingt-pour-cent",
+      objectifs: [4],
       type: "montants",
       titre: "Variante : un liquidateur plus avare",
       notions: ["payment_terms", "vat_payable"],
@@ -925,6 +946,7 @@ export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [5],
       type: "montants",
       titre: "Retrouver l'estimation à rebours",
       notions: ["payment_terms"],
@@ -954,6 +976,7 @@ export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = {
     },
     {
       id: "corriger-n",
+      objectifs: [5],
       type: "choix",
       titre: "Faut-il corriger l'exercice N ?",
       notions: ["income_statement", "payment_terms"],

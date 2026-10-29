@@ -102,6 +102,7 @@ export const CANAUX_DE_DISTRIBUTION: Chapitre = {
     },
     {
       id: "part",
+      objectifs: [0, 1],
       type: "montants",
       titre: "Le poids du canal indirect",
       notions: ["distribution_commission"],
@@ -124,6 +125,7 @@ export const CANAUX_DE_DISTRIBUTION: Chapitre = {
     },
     {
       id: "cout",
+      objectifs: [2],
       type: "montants",
       titre: "Ce que coûte l'intermédiaire",
       notions: ["distribution_commission", "payment_terms"],
@@ -148,6 +150,7 @@ export const CANAUX_DE_DISTRIBUTION: Chapitre = {
     },
     {
       id: "avantage",
+      objectifs: [3],
       type: "choix",
       titre: "Pourquoi passer par un intermédiaire",
       notions: ["distribution_commission", "segmentation"],
@@ -167,6 +170,7 @@ export const CANAUX_DE_DISTRIBUTION: Chapitre = {
     },
     {
       id: "le-delai-acceptable",
+      objectifs: [2],
       type: "curseur",
       titre: "Le délai le plus long qu'on peut accepter",
       notions: ["payment_terms", "distribution_commission"],
@@ -205,6 +209,7 @@ export const CANAUX_DE_DISTRIBUTION: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-remise",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire de la remise",
       notions: ["distribution_commission", "contribution_margin"],

@@ -111,6 +111,7 @@ export const UN_NOUVEAU_CLIENT: Chapitre = {
     },
     {
       id: "les-ventes",
+      objectifs: [0],
       type: "montants",
       titre: "Les ventes gagnées",
       notions: ["conversion_rate", "customer_acquisition_cost"],
@@ -132,6 +133,7 @@ export const UN_NOUVEAU_CLIENT: Chapitre = {
     },
     {
       id: "le-cout",
+      objectifs: [1],
       type: "montants",
       titre: "Ce que coûte une vente gagnée",
       notions: ["customer_acquisition_cost"],
@@ -147,6 +149,7 @@ export const UN_NOUVEAU_CLIENT: Chapitre = {
     },
     {
       id: "la-marge",
+      objectifs: [2],
       type: "montants",
       titre: "La marge gagnée",
       notions: ["customer_acquisition_cost", "contribution_margin"],
@@ -169,6 +172,7 @@ export const UN_NOUVEAU_CLIENT: Chapitre = {
     },
     {
       id: "paie-t-elle",
+      objectifs: [2],
       type: "choix",
       titre: "La campagne paie-t-elle ?",
       notions: ["customer_acquisition_cost", "contribution_margin"],
@@ -200,6 +204,7 @@ export const UN_NOUVEAU_CLIENT: Chapitre = {
     },
     {
       id: "et-ensuite",
+      objectifs: [3],
       type: "montants",
       titre: "Ce que rapporte encore un client gagné",
       notions: ["customer_lifetime_value", "contribution_margin"],
@@ -221,6 +226,7 @@ export const UN_NOUVEAU_CLIENT: Chapitre = {
     },
     {
       id: "combien-de-ventes",
+      objectifs: [2],
       type: "curseur",
       titre: "Combien de ventes pour payer la campagne ?",
       notions: ["customer_acquisition_cost", "contribution_margin"],
@@ -259,6 +265,7 @@ export const UN_NOUVEAU_CLIENT: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-campagne",
+      objectifs: [4],
       type: "simulation",
       titre: "Le laboratoire de la campagne",
       notions: ["customer_acquisition_cost", "contribution_margin"],

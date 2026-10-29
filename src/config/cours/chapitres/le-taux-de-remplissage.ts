@@ -107,6 +107,7 @@ export const LE_TAUX_DE_REMPLISSAGE: Chapitre = {
     },
     {
       id: "le-remplissage",
+      objectifs: [0],
       type: "montants",
       titre: "Le remplissage de la tournée",
       notions: ["capacity"],
@@ -127,6 +128,7 @@ export const LE_TAUX_DE_REMPLISSAGE: Chapitre = {
     },
     {
       id: "la-place-vide",
+      objectifs: [1],
       type: "montants",
       titre: "Ce que coûte une place vide",
       notions: ["fixed_costs", "full_unit_cost"],
@@ -148,6 +150,7 @@ export const LE_TAUX_DE_REMPLISSAGE: Chapitre = {
     },
     {
       id: "pourquoi",
+      objectifs: [2],
       type: "choix",
       titre: "Pourquoi une place vide coûte",
       notions: ["fixed_costs"],
@@ -160,6 +163,7 @@ export const LE_TAUX_DE_REMPLISSAGE: Chapitre = {
     },
     {
       id: "remplir-aux-trois-quarts",
+      objectifs: [0],
       type: "curseur",
       titre: "Remplir aux trois quarts",
       notions: ["capacity"],
@@ -189,6 +193,7 @@ export const LE_TAUX_DE_REMPLISSAGE: Chapitre = {
     },
     {
       id: "le-laboratoire-des-tournees",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire des tournées",
       notions: ["capacity", "fixed_costs"],

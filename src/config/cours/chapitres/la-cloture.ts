@@ -391,6 +391,7 @@ export const LA_CLOTURE: Chapitre = {
     },
     {
       id: "resultat-provisoire",
+      objectifs: [0],
       type: "montants",
       titre: "La balance avant inventaire",
       notions: ["income_statement"],
@@ -412,6 +413,7 @@ export const LA_CLOTURE: Chapitre = {
     },
     {
       id: "dotation",
+      objectifs: [1],
       type: "ecriture",
       titre: "La dotation de l'exercice",
       notions: ["depreciation"],
@@ -443,6 +445,7 @@ export const LA_CLOTURE: Chapitre = {
     },
     {
       id: "interets-du-placement",
+      objectifs: [1],
       type: "ecriture",
       titre: "Les intérêts du compte à terme",
       notions: ["income_statement"],
@@ -478,6 +481,7 @@ export const LA_CLOTURE: Chapitre = {
     },
     {
       id: "predire-le-stock",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur le stock",
       notions: ["stock"],
@@ -496,6 +500,7 @@ export const LA_CLOTURE: Chapitre = {
     },
     {
       id: "le-laboratoire-des-travaux",
+      objectifs: [2],
       type: "simulation",
       titre: "Le laboratoire des travaux oubliés",
       notions: ["stock", "depreciation", "income_statement"],
@@ -614,6 +619,7 @@ export const LA_CLOTURE: Chapitre = {
     },
     {
       id: "le-stock-final",
+      objectifs: [1],
       type: "montants",
       titre: "Le stock final, au coût moyen",
       notions: ["stock"],
@@ -645,6 +651,7 @@ export const LA_CLOTURE: Chapitre = {
     },
     {
       id: "ecriture-du-stock",
+      objectifs: [1],
       type: "ecriture",
       titre: "Le stock, au journal",
       notions: ["stock"],
@@ -672,6 +679,7 @@ export const LA_CLOTURE: Chapitre = {
     },
     {
       id: "la-facture-non-parvenue",
+      objectifs: [1],
       type: "ecriture",
       titre: "La facture non parvenue",
       notions: ["stock", "vat_payable"],
@@ -705,6 +713,7 @@ export const LA_CLOTURE: Chapitre = {
     },
     {
       id: "les-interets-courus",
+      objectifs: [1],
       type: "montants",
       titre: "Les intérêts courus de l'emprunt",
       notions: ["loan_schedule"],
@@ -742,6 +751,7 @@ export const LA_CLOTURE: Chapitre = {
     },
     {
       id: "ecriture-des-interets-courus",
+      objectifs: [1],
       type: "ecriture",
       titre: "Les intérêts courus, au journal",
       notions: ["loan_schedule"],
@@ -771,6 +781,7 @@ export const LA_CLOTURE: Chapitre = {
     },
     {
       id: "resultat-avant-impot",
+      objectifs: [2],
       type: "montants",
       titre: "Le résultat avant impôt",
       notions: ["income_statement"],
@@ -793,6 +804,7 @@ export const LA_CLOTURE: Chapitre = {
     },
     {
       id: "predire-l-impot",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur l'impôt",
       notions: ["income_statement"],
@@ -814,6 +826,7 @@ export const LA_CLOTURE: Chapitre = {
     },
     {
       id: "le-taux-moyen",
+      objectifs: [3],
       type: "curseur",
       titre: "Taux moyen, taux marginal",
       notions: ["income_statement"],
@@ -864,6 +877,7 @@ export const LA_CLOTURE: Chapitre = {
     },
     {
       id: "l-impot",
+      objectifs: [3],
       type: "montants",
       titre: "L'impôt sur les sociétés",
       notions: ["income_statement"],
@@ -895,6 +909,7 @@ export const LA_CLOTURE: Chapitre = {
     },
     {
       id: "ecriture-de-l-impot",
+      objectifs: [3],
       type: "ecriture",
       titre: "L'impôt, au journal",
       notions: ["income_statement"],
@@ -919,6 +934,7 @@ export const LA_CLOTURE: Chapitre = {
     },
     {
       id: "predire-le-placement",
+      objectifs: [4],
       type: "choix",
       titre: "Pariez sur le placement",
       notions: ["loan_schedule"],
@@ -943,6 +959,7 @@ export const LA_CLOTURE: Chapitre = {
     },
     {
       id: "le-taux-qui-paierait-l-emprunt",
+      objectifs: [4],
       type: "curseur",
       titre: "Le taux qui paierait l'emprunt",
       notions: ["loan_schedule"],
@@ -987,6 +1004,7 @@ export const LA_CLOTURE: Chapitre = {
     },
     {
       id: "emprunter-pour-placer",
+      objectifs: [4],
       type: "montants",
       titre: "Emprunter pour placer ?",
       notions: ["loan_schedule", "income_statement"],
@@ -1022,6 +1040,7 @@ export const LA_CLOTURE: Chapitre = {
     },
     {
       id: "variante-degressive",
+      objectifs: [2],
       type: "montants",
       titre: "Variante : la ligne en dégressif",
       notions: ["depreciation", "income_statement"],
@@ -1059,6 +1078,7 @@ export const LA_CLOTURE: Chapitre = {
     },
     {
       id: "le-degressif-differe",
+      objectifs: [2],
       type: "choix",
       titre: "Ce que le dégressif fait gagner",
       notions: ["depreciation"],
@@ -1090,6 +1110,7 @@ export const LA_CLOTURE: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [2],
       type: "montants",
       titre: "Retrouver le stock à rebours",
       notions: ["stock"],

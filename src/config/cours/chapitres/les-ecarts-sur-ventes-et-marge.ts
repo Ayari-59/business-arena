@@ -290,6 +290,7 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
     },
     {
       id: "chiffre-d-affaires",
+      objectifs: [0],
       type: "montants",
       titre: "L'écart sur chiffre d'affaires",
       notions: ["volume_price_variance", "revenue"],
@@ -312,6 +313,7 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
     },
     {
       id: "prix-et-quantites",
+      objectifs: [0],
       type: "montants",
       titre: "L'écart sur prix et l'écart sur quantités",
       notions: ["volume_price_variance"],
@@ -344,6 +346,7 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
     },
     {
       id: "le-chiffre-presque-tenu",
+      objectifs: [0],
       type: "choix",
       titre: "Un chiffre d'affaires presque tenu",
       notions: ["volume_price_variance"],
@@ -374,6 +377,7 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
     },
     {
       id: "la-marge-preetablie",
+      objectifs: [1],
       type: "montants",
       titre: "La marge préétablie",
       notions: ["contribution_margin", "standard_costing"],
@@ -406,6 +410,7 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
     },
     {
       id: "le-prix-de-la-nomade",
+      objectifs: [1],
       type: "curseur",
       titre: "Le prix de la Nomade, au curseur",
       notions: ["contribution_margin", "volume_price_variance"],
@@ -456,6 +461,7 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
     },
     {
       id: "ecart-sur-marge",
+      objectifs: [1],
       type: "montants",
       titre: "L'écart sur marge",
       notions: ["contribution_margin", "volume_price_variance"],
@@ -486,6 +492,7 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
     },
     {
       id: "volume-par-modele",
+      objectifs: [1],
       type: "montants",
       titre: "L'écart sur volume, modèle par modèle",
       notions: ["contribution_margin", "volume_price_variance"],
@@ -505,6 +512,7 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
     },
     {
       id: "le-volume-au-prix",
+      objectifs: [1],
       type: "choix",
       titre: "Le volume, au prix ou à la marge",
       notions: ["contribution_margin", "volume_price_variance"],
@@ -536,6 +544,7 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
     },
     {
       id: "predire-le-mix",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur une Salon de plus",
       notions: ["contribution_margin"],
@@ -558,6 +567,7 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
     },
     {
       id: "le-mix-au-curseur",
+      objectifs: [2],
       type: "curseur",
       titre: "Le mix, au curseur",
       notions: ["contribution_margin", "volume_price_variance"],
@@ -608,6 +618,7 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
     },
     {
       id: "quantite-globale",
+      objectifs: [2],
       type: "montants",
       titre: "L'écart sur quantité globale",
       notions: ["contribution_margin", "volume_price_variance"],
@@ -635,6 +646,7 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
     },
     {
       id: "composition",
+      objectifs: [2],
       type: "montants",
       titre: "L'écart sur composition des ventes",
       notions: ["contribution_margin", "volume_price_variance"],
@@ -666,6 +678,7 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
     },
     {
       id: "les-deux-lectures",
+      objectifs: [2],
       type: "montants",
       titre: "Les deux lectures du volume",
       notions: ["contribution_margin", "volume_price_variance"],
@@ -699,6 +712,7 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
     },
     {
       id: "le-mix-qui-masque",
+      objectifs: [4],
       type: "choix",
       titre: "Un mix favorable",
       notions: ["contribution_margin", "volume_price_variance"],
@@ -735,6 +749,7 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
     },
     {
       id: "le-laboratoire-des-ventes",
+      objectifs: [1],
       type: "simulation",
       titre: "Le laboratoire des ventes",
       notions: ["contribution_margin", "volume_price_variance"],
@@ -796,6 +811,7 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
     },
     {
       id: "une-autre-composition",
+      objectifs: [3],
       type: "montants",
       titre: "Variante : une autre composition prévue",
       notions: ["contribution_margin", "volume_price_variance"],
@@ -847,6 +863,7 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [3],
       type: "montants",
       titre: "Retrouver un prix de vente à rebours",
       notions: ["volume_price_variance"],
@@ -886,6 +903,7 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
     },
     {
       id: "qui-doit-agir",
+      objectifs: [4],
       type: "tri",
       titre: "Qui doit agir",
       notions: ["volume_price_variance"],

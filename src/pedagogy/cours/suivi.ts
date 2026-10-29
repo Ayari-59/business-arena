@@ -1,4 +1,5 @@
 import type { Chapitre } from "../../config/cours/types";
+import { bilanDesObjectifs } from "./aides-du-guide";
 
 /**
  * LA VUE DE L'ENSEIGNANT SUR UNE CLASSE : CE QUE LES PROGRESSIONS DISENT, AGRÉGÉ.
@@ -53,9 +54,23 @@ export interface LigneDEtape {
   remarques: { texte: string; eleves: number }[];
 }
 
+/**
+ * Un objectif du chapitre, vu sur la classe : parmi les élèves qui ont fini le chapitre, combien
+ * l'ont acquis, en cours ou à revoir, par la règle du bilan de fin (`bilanDesObjectifs`). Un
+ * élève en route ne compte pas : ses étapes à venir le mettraient « à revoir ».
+ */
+export interface LigneDObjectif {
+  objectif: string;
+  acquis: number;
+  enCours: number;
+  aRevoir: number;
+}
+
 export interface VueDeLaClasse {
   eleves: LigneDEleve[];
   etapes: LigneDEtape[];
+  /** Vide quand les étapes du chapitre ne disent pas leurs objectifs. */
+  objectifs: LigneDObjectif[];
   finis: number;
 }
 
@@ -100,5 +115,18 @@ export function vueDeLaClasse(chapitre: Chapitre, progressions: readonly Progres
       remarques,
     };
   });
-  return { eleves, etapes, finis: eleves.filter((e) => e.fini).length };
+  const bilans = progressions.filter((p) => p.etape >= n).map((p) => bilanDesObjectifs(chapitre.objectifs, chapitre.etapes, p.etapes));
+  const avecObjectifs = chapitre.etapes.some((e) => e.type !== "lecture" && e.objectifs?.length);
+  const objectifs = avecObjectifs
+    ? chapitre.objectifs.map((objectif, k): LigneDObjectif => {
+        const etats = bilans.map((b) => b?.[k]?.etat);
+        return {
+          objectif,
+          acquis: etats.filter((x) => x === "acquis").length,
+          enCours: etats.filter((x) => x === "en-cours").length,
+          aRevoir: etats.filter((x) => x === "a-revoir").length,
+        };
+      })
+    : [];
+  return { eleves, etapes, objectifs, finis: eleves.filter((e) => e.fini).length };
 }

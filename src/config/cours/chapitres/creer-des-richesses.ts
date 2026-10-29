@@ -158,6 +158,7 @@ export const CREER_DES_RICHESSES: Chapitre = {
     },
     {
       id: "ranger",
+      objectifs: [0],
       type: "tri",
       titre: "Acheté à d'autres, ou partagé",
       notions: ["income_statement"],
@@ -171,6 +172,7 @@ export const CREER_DES_RICHESSES: Chapitre = {
     },
     {
       id: "valeur-ajoutee",
+      objectifs: [1],
       type: "montants",
       titre: "La valeur ajoutée de l'entreprise",
       notions: ["income_statement", "revenue"],
@@ -193,6 +195,7 @@ export const CREER_DES_RICHESSES: Chapitre = {
     },
     {
       id: "valeur-du-marche",
+      objectifs: [2],
       type: "montants",
       titre: "La richesse créée par tout le marché",
       notions: ["income_statement", "revenue"],
@@ -217,6 +220,7 @@ export const CREER_DES_RICHESSES: Chapitre = {
     },
     {
       id: "sans-double-compte",
+      objectifs: [2],
       type: "choix",
       titre: "Pourquoi additionner les valeurs ajoutées",
       notions: ["income_statement"],
@@ -244,6 +248,7 @@ export const CREER_DES_RICHESSES: Chapitre = {
     },
     {
       id: "qui-cree-le-plus",
+      objectifs: [2],
       type: "choix",
       titre: "Qui crée le plus de richesse",
       notions: ["income_statement", "revenue"],
@@ -265,6 +270,7 @@ export const CREER_DES_RICHESSES: Chapitre = {
     },
     {
       id: "partage",
+      objectifs: [3],
       type: "montants",
       titre: "Ce que la valeur ajoutée rémunère",
       notions: ["payroll", "income_statement"],
@@ -291,6 +297,7 @@ export const CREER_DES_RICHESSES: Chapitre = {
     },
     {
       id: "richesse-et-benefice",
+      objectifs: [3],
       type: "choix",
       titre: "Créer de la richesse, faire un bénéfice",
       notions: ["income_statement"],
@@ -313,6 +320,7 @@ export const CREER_DES_RICHESSES: Chapitre = {
     },
     {
       id: "la-richesse-qui-paie-les-salaires",
+      objectifs: [3],
       type: "curseur",
       titre: "Assez de richesse pour payer l'équipe",
       notions: ["payroll", "income_statement"],
@@ -340,6 +348,7 @@ export const CREER_DES_RICHESSES: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-richesse",
+      objectifs: [4],
       type: "simulation",
       titre: "Le laboratoire de la richesse",
       notions: ["income_statement", "revenue"],

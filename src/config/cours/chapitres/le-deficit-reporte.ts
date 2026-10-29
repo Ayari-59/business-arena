@@ -330,6 +330,7 @@ export const LE_DEFICIT_REPORTE: Chapitre = {
     },
     {
       id: "le-deficit-de-n",
+      objectifs: [0],
       type: "montants",
       titre: "Le déficit de N",
       notions: ["income_statement", "cash_budget"],
@@ -356,6 +357,7 @@ export const LE_DEFICIT_REPORTE: Chapitre = {
     },
     {
       id: "sur-quoi-s-impute",
+      objectifs: [1],
       type: "choix",
       titre: "Sur quoi s'impute le déficit",
       notions: ["income_statement"],
@@ -383,6 +385,7 @@ export const LE_DEFICIT_REPORTE: Chapitre = {
     },
     {
       id: "predire-l-impot-evite",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur l'impôt évité",
       notions: ["income_statement"],
@@ -402,6 +405,7 @@ export const LE_DEFICIT_REPORTE: Chapitre = {
     },
     {
       id: "la-perte-au-curseur",
+      objectifs: [1],
       type: "curseur",
       titre: "Faites varier la perte",
       notions: ["income_statement"],
@@ -443,6 +447,7 @@ export const LE_DEFICIT_REPORTE: Chapitre = {
     },
     {
       id: "le-report-en-avant",
+      objectifs: [1],
       type: "montants",
       titre: "Le report en avant",
       notions: ["income_statement"],
@@ -473,6 +478,7 @@ export const LE_DEFICIT_REPORTE: Chapitre = {
     },
     {
       id: "l-impot-evite",
+      objectifs: [2],
       type: "montants",
       titre: "L'impôt évité",
       notions: ["income_statement"],
@@ -498,6 +504,7 @@ export const LE_DEFICIT_REPORTE: Chapitre = {
     },
     {
       id: "predire-le-report-en-arriere",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur le report en arrière",
       notions: ["income_statement", "balance_sheet"],
@@ -516,6 +523,7 @@ export const LE_DEFICIT_REPORTE: Chapitre = {
     },
     {
       id: "le-laboratoire-du-deficit",
+      objectifs: [4],
       type: "simulation",
       titre: "Le laboratoire du déficit",
       notions: ["income_statement", "balance_sheet"],
@@ -599,6 +607,7 @@ export const LE_DEFICIT_REPORTE: Chapitre = {
     },
     {
       id: "le-report-en-arriere",
+      objectifs: [3],
       type: "montants",
       titre: "Le report en arrière",
       notions: ["income_statement", "balance_sheet"],
@@ -633,6 +642,7 @@ export const LE_DEFICIT_REPORTE: Chapitre = {
     },
     {
       id: "le-choix-entre-les-deux",
+      objectifs: [4],
       type: "choix",
       titre: "Lequel choisir",
       notions: ["income_statement", "balance_sheet", "cash_budget"],
@@ -668,6 +678,7 @@ export const LE_DEFICIT_REPORTE: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [4],
       type: "montants",
       titre: "Remonter de la créance au déficit",
       notions: ["income_statement", "balance_sheet"],
@@ -697,6 +708,7 @@ export const LE_DEFICIT_REPORTE: Chapitre = {
     },
     {
       id: "le-plafond",
+      objectifs: [1],
       type: "montants",
       titre: "Variante : au-delà du million",
       notions: ["income_statement"],

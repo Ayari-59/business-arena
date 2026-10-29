@@ -44,6 +44,13 @@ interface Base {
   /** Les fiches notions que l'étape fait vivre (`/notions#code`). */
   notions?: readonly string[];
   /**
+   * Les objectifs du chapitre que l'étape travaille, par leur indice dans `Chapitre.objectifs`.
+   * Le bilan de fin de chapitre s'en sert, objectif par objectif. Absent : une étape de lecture
+   * ou de synthèse, qui n'en travaille aucun. Chaque objectif est travaillé par au moins une étape
+   * évaluée (tests/cours/objectifs-des-etapes.test.ts).
+   */
+  objectifs?: readonly number[];
+  /**
    * L'étape n'existe que dans les entreprises où elle a un objet (une écriture de stock là
    * où il y a un stock) : `chapitreDuCas` retire les autres. Absent : partout.
    */

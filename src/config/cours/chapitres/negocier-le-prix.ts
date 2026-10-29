@@ -238,6 +238,7 @@ export const NEGOCIER_LE_PRIX: Chapitre = {
     },
     {
       id: "cout-complet",
+      objectifs: [0],
       type: "montants",
       titre: "Le coût complet d'une journée",
       notions: ["variable_costs", "full_unit_cost", "fixed_costs"],
@@ -262,6 +263,7 @@ export const NEGOCIER_LE_PRIX: Chapitre = {
     },
     {
       id: "predire-la-remise",
+      objectifs: [1],
       type: "choix",
       titre: "Pariez sur la remise maximale",
       notions: ["price_floor"],
@@ -281,6 +283,7 @@ export const NEGOCIER_LE_PRIX: Chapitre = {
     },
     {
       id: "remise-maximale",
+      objectifs: [1],
       type: "curseur",
       titre: "Jusqu'où céder",
       notions: ["price_floor", "full_unit_cost"],
@@ -327,6 +330,7 @@ export const NEGOCIER_LE_PRIX: Chapitre = {
     },
     {
       id: "marge-de-manoeuvre",
+      objectifs: [0, 1],
       type: "montants",
       titre: "La marge de manœuvre",
       notions: ["price_floor"],
@@ -355,6 +359,7 @@ export const NEGOCIER_LE_PRIX: Chapitre = {
     },
     {
       id: "remise-demandee",
+      objectifs: [1],
       type: "choix",
       titre: "La remise demandée",
       notions: ["price_floor"],
@@ -389,6 +394,7 @@ export const NEGOCIER_LE_PRIX: Chapitre = {
     },
     {
       id: "contrepartie",
+      objectifs: [2],
       type: "montants",
       titre: "Une remise contre du volume",
       notions: ["contribution_margin", "price_floor"],
@@ -424,6 +430,7 @@ export const NEGOCIER_LE_PRIX: Chapitre = {
     },
     {
       id: "predire-le-t4",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur le trimestre plein",
       notions: ["capacity", "price_floor"],
@@ -445,6 +452,7 @@ export const NEGOCIER_LE_PRIX: Chapitre = {
     },
     {
       id: "les-jours-libres",
+      objectifs: [3],
       type: "curseur",
       titre: "Les jours qu'il reste",
       notions: ["capacity", "contribution_margin"],
@@ -493,6 +501,7 @@ export const NEGOCIER_LE_PRIX: Chapitre = {
     },
     {
       id: "deux-planchers",
+      objectifs: [3],
       type: "montants",
       titre: "Le plancher d'une affaire en plus",
       notions: ["price_floor", "capacity", "contribution_margin"],
@@ -526,6 +535,7 @@ export const NEGOCIER_LE_PRIX: Chapitre = {
     },
     {
       id: "au-t3-ou-au-t4",
+      objectifs: [3],
       type: "choix",
       titre: "Où placer la contre-proposition",
       notions: ["price_floor", "capacity"],
@@ -562,6 +572,7 @@ export const NEGOCIER_LE_PRIX: Chapitre = {
     },
     {
       id: "vingt-jours-libres",
+      objectifs: [3],
       type: "montants",
       titre: "Variante : un trimestre presque plein",
       notions: ["price_floor", "capacity"],
@@ -596,6 +607,7 @@ export const NEGOCIER_LE_PRIX: Chapitre = {
     },
     {
       id: "le-laboratoire-de-l-affaire",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire de l'affaire",
       notions: ["price_floor", "capacity", "contribution_margin"],
@@ -667,6 +679,7 @@ export const NEGOCIER_LE_PRIX: Chapitre = {
     },
     {
       id: "baisse-pour-tous",
+      objectifs: [4],
       type: "choix",
       titre: "Une baisse accordée à tous",
       notions: ["price_elasticity", "contribution_margin"],
@@ -715,6 +728,7 @@ export const NEGOCIER_LE_PRIX: Chapitre = {
     },
     {
       id: "qui-tient-le-prix",
+      objectifs: [4],
       type: "choix",
       titre: "Les clients qui tiennent le prix",
       notions: ["price_elasticity", "segmentation"],

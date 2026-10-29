@@ -109,6 +109,7 @@ export const LIVRER_A_TEMPS: Chapitre = {
     },
     {
       id: "le-taux-de-service",
+      objectifs: [0],
       type: "montants",
       titre: "Le taux de service",
       notions: ["capacity"],
@@ -131,6 +132,7 @@ export const LIVRER_A_TEMPS: Chapitre = {
     },
     {
       id: "quand",
+      objectifs: [1],
       type: "choix",
       titre: "Quand les commandes manquent",
       notions: ["capacity", "seasonality"],
@@ -144,6 +146,7 @@ export const LIVRER_A_TEMPS: Chapitre = {
     },
     {
       id: "ce-que-coute-une-commande-perdue",
+      objectifs: [2],
       type: "montants",
       titre: "Ce que coûtent les commandes perdues",
       notions: ["contribution_margin"],
@@ -159,6 +162,7 @@ export const LIVRER_A_TEMPS: Chapitre = {
     },
     {
       id: "la-capacite-qui-manque",
+      objectifs: [1, 2],
       type: "curseur",
       titre: "La capacité qui manque à Noël",
       notions: ["capacity"],
@@ -196,6 +200,7 @@ export const LIVRER_A_TEMPS: Chapitre = {
     },
     {
       id: "le-laboratoire-de-l-avance",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire de l'avance",
       notions: ["capacity", "stock"],

@@ -110,6 +110,7 @@ export const CE_QUE_COUTE_UNE_LIVRAISON: Chapitre = {
     },
     {
       id: "la-tournee",
+      objectifs: [0, 1],
       type: "montants",
       titre: "Ce que coûte la tournée",
       notions: ["variable_costs", "fixed_costs"],
@@ -130,6 +131,7 @@ export const CE_QUE_COUTE_UNE_LIVRAISON: Chapitre = {
     },
     {
       id: "par-palette",
+      objectifs: [2],
       type: "montants",
       titre: "Ce que coûte une palette livrée",
       notions: ["full_unit_cost"],
@@ -150,6 +152,7 @@ export const CE_QUE_COUTE_UNE_LIVRAISON: Chapitre = {
     },
     {
       id: "tournee-ou-messagerie",
+      objectifs: [3],
       type: "choix",
       titre: "La tournée ou la messagerie ?",
       notions: ["full_unit_cost", "make_or_buy"],
@@ -165,6 +168,7 @@ export const CE_QUE_COUTE_UNE_LIVRAISON: Chapitre = {
     },
     {
       id: "les-palettes-qui-paient",
+      objectifs: [1, 3],
       type: "curseur",
       titre: "Les palettes qui paient la tournée",
       notions: ["full_unit_cost", "fixed_costs"],
@@ -201,6 +205,7 @@ export const CE_QUE_COUTE_UNE_LIVRAISON: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-livraison",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire de la livraison",
       notions: ["full_unit_cost"],

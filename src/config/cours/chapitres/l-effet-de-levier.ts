@@ -289,6 +289,7 @@ export const L_EFFET_DE_LEVIER: Chapitre = {
     },
     {
       id: "actif-economique",
+      objectifs: [0],
       type: "montants",
       titre: "L'actif économique et l'endettement net",
       notions: ["bfr", "net_treasury"],
@@ -317,6 +318,7 @@ export const L_EFFET_DE_LEVIER: Chapitre = {
     },
     {
       id: "rentabilite-economique",
+      objectifs: [1],
       type: "montants",
       titre: "La rentabilité économique après impôt",
       notions: ["profitability_vs_return"],
@@ -344,6 +346,7 @@ export const L_EFFET_DE_LEVIER: Chapitre = {
     },
     {
       id: "cout-de-la-dette",
+      objectifs: [1],
       type: "montants",
       titre: "Le coût de l'endettement net",
       notions: ["loan_schedule", "net_treasury"],
@@ -369,6 +372,7 @@ export const L_EFFET_DE_LEVIER: Chapitre = {
     },
     {
       id: "predire-le-levier",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur la rentabilité des associés",
       notions: ["profitability_vs_return"],
@@ -388,6 +392,7 @@ export const L_EFFET_DE_LEVIER: Chapitre = {
     },
     {
       id: "le-resultat-au-curseur",
+      objectifs: [3],
       type: "curseur",
       titre: "Faites varier le résultat d'exploitation",
       notions: ["profitability_vs_return", "safety_margin"],
@@ -434,6 +439,7 @@ export const L_EFFET_DE_LEVIER: Chapitre = {
     },
     {
       id: "la-relation",
+      objectifs: [2],
       type: "montants",
       titre: "La relation du levier, vérifiée",
       notions: ["profitability_vs_return"],
@@ -468,6 +474,7 @@ export const L_EFFET_DE_LEVIER: Chapitre = {
     },
     {
       id: "seuil-de-massue",
+      objectifs: [3],
       type: "montants",
       titre: "Le seuil de massue",
       notions: ["profitability_vs_return", "safety_margin"],
@@ -498,6 +505,7 @@ export const L_EFFET_DE_LEVIER: Chapitre = {
     },
     {
       id: "predire-le-taux",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur le taux limite",
       notions: ["loan_schedule", "profitability_vs_return"],
@@ -517,6 +525,7 @@ export const L_EFFET_DE_LEVIER: Chapitre = {
     },
     {
       id: "le-taux-au-curseur",
+      objectifs: [3],
       type: "curseur",
       titre: "Faites monter le taux de l'emprunt",
       notions: ["loan_schedule", "profitability_vs_return"],
@@ -566,6 +575,7 @@ export const L_EFFET_DE_LEVIER: Chapitre = {
     },
     {
       id: "taux-limite",
+      objectifs: [3],
       type: "montants",
       titre: "Le taux limite",
       notions: ["loan_schedule", "profitability_vs_return"],
@@ -593,6 +603,7 @@ export const L_EFFET_DE_LEVIER: Chapitre = {
     },
     {
       id: "apport",
+      objectifs: [4],
       type: "montants",
       titre: "La simulation rejoue l'année avec moins de dette",
       notions: ["profitability_vs_return", "loan_schedule"],
@@ -636,6 +647,7 @@ export const L_EFFET_DE_LEVIER: Chapitre = {
     },
     {
       id: "moins-de-dette",
+      objectifs: [4],
       type: "choix",
       titre: "Ce que l'apport a changé pour les associés",
       notions: ["profitability_vs_return"],
@@ -672,6 +684,7 @@ export const L_EFFET_DE_LEVIER: Chapitre = {
     },
     {
       id: "une-mauvaise-annee",
+      objectifs: [4],
       type: "montants",
       titre: "Variante : une mauvaise année",
       notions: ["profitability_vs_return", "safety_margin"],
@@ -708,6 +721,7 @@ export const L_EFFET_DE_LEVIER: Chapitre = {
     },
     {
       id: "le-laboratoire-du-levier",
+      objectifs: [2, 4],
       type: "simulation",
       titre: "Le laboratoire du levier",
       notions: ["profitability_vs_return", "loan_schedule", "safety_margin"],
@@ -795,6 +809,7 @@ export const L_EFFET_DE_LEVIER: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [3],
       type: "montants",
       titre: "Le résultat qu'exige une rentabilité visée",
       notions: ["profitability_vs_return"],
@@ -827,6 +842,7 @@ export const L_EFFET_DE_LEVIER: Chapitre = {
     },
     {
       id: "la-limite-de-la-relation",
+      objectifs: [4],
       type: "choix",
       titre: "Ce que la relation ne dit pas",
       notions: ["profitability_vs_return", "loan_schedule"],

@@ -117,6 +117,7 @@ export const CE_QUE_COUTE_UN_OUTIL_NUMERIQUE: Chapitre = {
     },
     {
       id: "cout",
+      objectifs: [0],
       type: "montants",
       titre: "Ce que l'outil coûte la première année",
       notions: ["fixed_costs"],
@@ -136,6 +137,7 @@ export const CE_QUE_COUTE_UN_OUTIL_NUMERIQUE: Chapitre = {
     },
     {
       id: "gain",
+      objectifs: [1],
       type: "montants",
       titre: "Ce que l'outil peut rapporter",
       notions: ["contribution_margin", "capacity"],
@@ -157,6 +159,7 @@ export const CE_QUE_COUTE_UN_OUTIL_NUMERIQUE: Chapitre = {
     },
     {
       id: "delai",
+      objectifs: [2],
       type: "montants",
       titre: "Le délai de récupération",
       notions: ["irr_payback"],
@@ -175,6 +178,7 @@ export const CE_QUE_COUTE_UN_OUTIL_NUMERIQUE: Chapitre = {
     },
     {
       id: "adoption",
+      objectifs: [3],
       type: "montants",
       titre: "Si l'équipe ne s'en sert pas",
       notions: ["irr_payback", "productivity"],
@@ -194,6 +198,7 @@ export const CE_QUE_COUTE_UN_OUTIL_NUMERIQUE: Chapitre = {
     },
     {
       id: "verdict",
+      objectifs: [4],
       type: "choix",
       titre: "L'outil rapporte-t-il ?",
       notions: ["irr_payback"],
@@ -212,6 +217,7 @@ export const CE_QUE_COUTE_UN_OUTIL_NUMERIQUE: Chapitre = {
     },
     {
       id: "l-adoption-qui-paie",
+      objectifs: [3],
       type: "curseur",
       titre: "L'adoption qui paie l'abonnement",
       notions: ["irr_payback", "productivity"],
@@ -244,6 +250,7 @@ export const CE_QUE_COUTE_UN_OUTIL_NUMERIQUE: Chapitre = {
     },
     {
       id: "le-laboratoire-de-l-adoption",
+      objectifs: [4],
       type: "simulation",
       titre: "Le laboratoire de l'adoption",
       notions: ["irr_payback", "productivity"],

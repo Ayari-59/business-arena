@@ -105,6 +105,7 @@ export const COMMUNICATION: Chapitre = {
     },
     {
       id: "rentabilite",
+      objectifs: [0, 1, 2],
       type: "montants",
       titre: "Ce que rapporte la campagne",
       notions: ["customer_acquisition_cost", "contribution_margin"],
@@ -131,6 +132,7 @@ export const COMMUNICATION: Chapitre = {
     },
     {
       id: "ce-qu-il-faudrait-vendre",
+      objectifs: [2],
       type: "curseur",
       titre: "Ce qu'il faudrait vendre pour payer la campagne",
       notions: ["customer_acquisition_cost", "contribution_margin"],
@@ -169,6 +171,7 @@ export const COMMUNICATION: Chapitre = {
     },
     {
       id: "meilleur-budget",
+      objectifs: [3],
       type: "choix",
       titre: "Le meilleur budget",
       notions: ["customer_acquisition_cost"],
@@ -187,6 +190,7 @@ export const COMMUNICATION: Chapitre = {
     },
     {
       id: "rendements",
+      objectifs: [5],
       type: "choix",
       titre: "Pourquoi chaque euro rapporte moins",
       notions: ["customer_acquisition_cost", "capacity"],
@@ -212,6 +216,7 @@ export const COMMUNICATION: Chapitre = {
     },
     {
       id: "le-laboratoire-du-budget",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire du budget",
       notions: ["customer_acquisition_cost", "contribution_margin"],
@@ -256,6 +261,7 @@ export const COMMUNICATION: Chapitre = {
     },
     {
       id: "l-objectif-de-la-campagne",
+      objectifs: [4],
       type: "choix",
       titre: "L'objectif de la campagne",
       notions: ["customer_acquisition_cost"],

@@ -1,6 +1,15 @@
 "use client";
 
-import { etapesARevoir, grandPasDuCurseur, montantInsecable, phraseDeReprise } from "@/pedagogy/cours/aides-du-guide";
+import {
+  bilanDesObjectifs,
+  etapesARevoir,
+  grandPasDuCurseur,
+  LIBELLE_DE_L_ETAT,
+  montantInsecable,
+  phraseDeReprise,
+  REGLE_D_ACQUISITION,
+  type EtatDeLObjectif,
+} from "@/pedagogy/cours/aides-du-guide";
 import Link from "next/link";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { bouton } from "@/components/bouton";
@@ -1414,6 +1423,52 @@ function EtEnsuite({ suites, cas }: { suites: SuitesDuChapitre; cas: Cas }) {
   );
 }
 
+/**
+ * CE QUE LE CHAPITRE FAIT TRAVAILLER, ANNONCÉ À LA PREMIÈRE ÉTAPE (demande du propriétaire,
+ * octobre 2026) : ses objectifs et les compétences du référentiel qu'il sert. Sur téléphone,
+ * le bloc se replie, comme le sommaire : il passerait avant l'étape, plus long qu'elle.
+ */
+function ObjectifsDuChapitre({ chapitre }: { chapitre: ChapitreServi }) {
+  const contenu = (
+    <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid content-start gap-1">
+        <p className="text-sm font-semibold text-slate-100">Objectifs</p>
+        <ul className="grid list-disc gap-0.5 pl-5 text-sm text-slate-300">
+          {chapitre.objectifs.map((o) => (
+            <li key={o}>{o}</li>
+          ))}
+        </ul>
+      </div>
+      {chapitre.blocs.length > 0 && (
+        <div className="grid content-start gap-1">
+          <p className="text-sm font-semibold text-slate-100">Compétences du référentiel</p>
+          <ul className="grid gap-0.5 text-sm text-slate-300">
+            {chapitre.blocs.map((b) => (
+              <li key={b}>{b}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+  return (
+    <div className="mb-4" data-objectifs-du-chapitre="">
+      <div className="carte p-4 max-sm:hidden">{contenu}</div>
+      <details className="carte p-3 sm:hidden">
+        <summary className="cursor-pointer text-sm font-semibold">Objectifs et compétences du chapitre</summary>
+        <div className="mt-2">{contenu}</div>
+      </details>
+    </div>
+  );
+}
+
+/** L'état d'un objectif, en pastille de la charte : un point plein, vert, neutre ou rouge (globals.css). */
+const PASTILLE_DE_L_ETAT: Record<EtatDeLObjectif, string> = {
+  acquis: "pastille-gain",
+  "en-cours": "pastille-etat",
+  "a-revoir": "pastille-perte",
+};
+
 function FinDuChapitre({
   chapitre,
   cas,
@@ -1446,6 +1501,11 @@ function FinDuChapitre({
   // UN BILAN HONNÊTE (audit UX du 29 octobre 2026, P1-10) : ce qui n'a pas été réussi du
   // premier coup est à revoir, et « ce que vous savez faire » ne se dit que sans reste.
   const aRevoir = etapesARevoir(chapitre.etapes, suivi.etapes);
+  // LE BILAN OBJECTIF PAR OBJECTIF : il remplace la liste des objectifs et celle des étapes à
+  // revoir, chaque objectif non acquis portant ses étapes. Une situation, sans objectifs aux
+  // étapes, garde les deux listes.
+  const bilan = bilanDesObjectifs(chapitre.objectifs, chapitre.etapes, suivi.etapes);
+  const compte = (etat: EtatDeLObjectif) => bilan?.filter((o) => o.etat === etat).length ?? 0;
   return (
     <div className="grid gap-6">
       <div className="grid gap-2">
@@ -1455,31 +1515,90 @@ function FinDuChapitre({
           {duPremierCoup} étape{duPremierCoup > 1 ? "s" : ""} réussie{duPremierCoup > 1 ? "s" : ""} du premier coup sur {notees.length}, chez {cas.entreprise}.
         </p>
       </div>
+      {bilan ? (
+        <>
+          <section className="grid gap-3" data-bilan-des-objectifs="">
+            <h3 className="font-semibold text-slate-100">Objectif par objectif</h3>
+            <ul className="grid gap-2">
+              {bilan.map((o, k) => (
+                <li key={o.objectif} className="carte grid gap-2 p-3" data-objectif={k} data-etat={o.etat ?? ""}>
+                  <div className="flex flex-wrap items-start gap-x-3 gap-y-1">
+                    {o.etat && (
+                      <span className={`${PASTILLE_DE_L_ETAT[o.etat]} shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold text-slate-100`}>
+                        {LIBELLE_DE_L_ETAT[o.etat]}
+                      </span>
+                    )}
+                    <span className="min-w-0 flex-1 text-slate-200">{o.objectif}</span>
+                  </div>
+                  {o.aRevoir.length > 0 && (
+                    <ul className="flex flex-wrap gap-2 text-sm" data-a-revoir="">
+                      {o.aRevoir.map((e) => (
+                        <li key={e.id}>
+                          <button type="button" className={bouton({ variante: "secondaire", taille: "s" })} onClick={() => revoir(e.index)}>
+                            {e.titre}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              ))}
+            </ul>
+            <details className="text-sm text-slate-400">
+              <summary className="cursor-pointer">Comment se lit ce bilan</summary>
+              <ul className="mt-1 grid gap-0.5 pl-1">
+                {(Object.keys(REGLE_D_ACQUISITION) as EtatDeLObjectif[]).map((etat) => (
+                  <li key={etat}>
+                    <span className="font-semibold text-slate-300">{LIBELLE_DE_L_ETAT[etat]}</span> : {REGLE_D_ACQUISITION[etat]}
+                  </li>
+                ))}
+                <li>Relisez les étapes proposées sous un objectif, puis refaites le chapitre.</li>
+              </ul>
+            </details>
+          </section>
+          {chapitre.blocs.length > 0 && (
+            <section className="grid gap-2" data-competences-du-referentiel="">
+              <h3 className="font-semibold text-slate-100">Compétences du référentiel</h3>
+              <ul className="grid gap-0.5 text-sm text-slate-300">
+                {chapitre.blocs.map((b) => (
+                  <li key={b}>{b}</li>
+                ))}
+              </ul>
+              <p className="text-sm text-slate-300" data-etat-des-competences="">
+                Les objectifs du chapitre qui les travaillent : {compte("acquis")} acquis, {compte("en-cours")} en cours, {compte("a-revoir")} à revoir, sur {bilan.length}.
+              </p>
+            </section>
+          )}
+        </>
+      ) : (
+        <>
       {aRevoir.length > 0 ? (
-        <section className="grid gap-2" data-a-revoir="">
-          <h3 className="font-semibold text-slate-100">À revoir</h3>
-          <p className="text-sm text-slate-300">
-            Les étapes réussies après une erreur ou avec la correction : relisez-les, puis refaites le chapitre.
-          </p>
-          <ul className="flex flex-wrap gap-2 text-sm">
-            {aRevoir.map((e) => (
-              <li key={e.id}>
-                <button type="button" className={bouton({ variante: "secondaire", taille: "s" })} onClick={() => revoir(e.index)}>
-                  {e.titre}
-                </button>
-              </li>
+          <section className="grid gap-2" data-a-revoir="">
+            <h3 className="font-semibold text-slate-100">À revoir</h3>
+            <p className="text-sm text-slate-300">
+              Les étapes réussies après une erreur ou avec la correction : relisez-les, puis refaites le chapitre.
+            </p>
+            <ul className="flex flex-wrap gap-2 text-sm">
+              {aRevoir.map((e) => (
+                <li key={e.id}>
+                  <button type="button" className={bouton({ variante: "secondaire", taille: "s" })} onClick={() => revoir(e.index)}>
+                    {e.titre}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+        <section className="grid gap-2">
+          <h3 className="font-semibold text-slate-100">{aRevoir.length > 0 ? "Ce que le chapitre vous a fait travailler" : "Ce que vous savez faire"}</h3>
+          <ul className="grid list-disc gap-1 pl-5 text-slate-200">
+            {chapitre.objectifs.map((o) => (
+              <li key={o}>{o}</li>
             ))}
           </ul>
         </section>
-      ) : null}
-      <section className="grid gap-2">
-        <h3 className="font-semibold text-slate-100">{aRevoir.length > 0 ? "Ce que le chapitre vous a fait travailler" : "Ce que vous savez faire"}</h3>
-        <ul className="grid list-disc gap-1 pl-5 text-slate-200">
-          {chapitre.objectifs.map((o) => (
-            <li key={o}>{o}</li>
-          ))}
-        </ul>
-      </section>
+        </>
+      )}
       {mission && <EtMaintenantJouezLe mission={mission} cas={cas} />}
       {suites && <EtEnsuite suites={suites} cas={cas} />}
       <Notions codes={notions} />
@@ -1654,6 +1773,7 @@ export function ChapitreGuide({
           .
         </p>
       )}
+      {courant === 0 && !fini && <ObjectifsDuChapitre chapitre={chapitre} />}
       {calculatrice && lu && !(fini && vue === null) && <Calculatrice />}
       {!lu ? null : fini && vue === null ? (
         <FinDuChapitre

@@ -292,6 +292,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
     },
     {
       id: "les-creances",
+      objectifs: [0],
       type: "montants",
       titre: "Les créances, facture par facture",
       notions: ["payment_terms", "balance_sheet"],
@@ -325,6 +326,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
     },
     {
       id: "le-delai-moyen",
+      objectifs: [0],
       type: "montants",
       titre: "Le délai moyen de paiement",
       notions: ["payment_terms", "bfr"],
@@ -359,6 +361,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
     },
     {
       id: "le-cout-du-credit",
+      objectifs: [1, 2],
       type: "montants",
       titre: "Ce que coûte le crédit convenu",
       notions: ["payment_terms", "vat_payable"],
@@ -387,6 +390,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
     },
     {
       id: "predire-le-retard",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur ce que la loi permet de réclamer",
       notions: ["payment_terms"],
@@ -408,6 +412,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
     },
     {
       id: "le-retard-au-curseur",
+      objectifs: [2],
       type: "curseur",
       titre: "Le retard, au curseur",
       notions: ["payment_terms"],
@@ -453,6 +458,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
     },
     {
       id: "le-cout-du-retard",
+      objectifs: [2],
       type: "montants",
       titre: "Le coût du retard et ce qui se réclame",
       notions: ["payment_terms"],
@@ -492,6 +498,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
     },
     {
       id: "que-faire-du-retard",
+      objectifs: [1],
       type: "choix",
       titre: "Que faire du retard",
       notions: ["payment_terms"],
@@ -523,6 +530,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
     },
     {
       id: "les-relances",
+      objectifs: [2],
       type: "montants",
       titre: "Relancer, puis mettre en demeure",
       notions: ["payment_terms"],
@@ -555,6 +563,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
     },
     {
       id: "ce-que-cache-le-delai-moyen",
+      objectifs: [0],
       type: "choix",
       titre: "Ce que cache le délai moyen",
       notions: ["payment_terms", "bfr"],
@@ -585,6 +594,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
     },
     {
       id: "predire-l-escompte",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur l'escompte",
       notions: ["receivables_financing"],
@@ -605,6 +615,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
     },
     {
       id: "l-escompte-ou-le-decouvert",
+      objectifs: [4],
       type: "curseur",
       titre: "L'escompte ou le découvert",
       notions: ["receivables_financing"],
@@ -648,6 +659,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
     },
     {
       id: "une-facture-mobilisee",
+      objectifs: [3],
       type: "montants",
       titre: "Trois façons de financer une facture",
       notions: ["receivables_financing"],
@@ -684,6 +696,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
     },
     {
       id: "le-prix-de-la-garantie",
+      objectifs: [4],
       type: "choix",
       titre: "Ce que paie l'affacturage",
       notions: ["receivables_financing"],
@@ -715,6 +728,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
     },
     {
       id: "a-l-echeance",
+      objectifs: [0],
       type: "montants",
       titre: "Variante : le client paie à l'échéance",
       notions: ["payment_terms", "bfr"],
@@ -753,6 +767,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [3],
       type: "montants",
       titre: "Retrouver le retard à rebours",
       notions: ["receivables_financing", "payment_terms"],
@@ -786,6 +801,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-facture",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire de la facture",
       notions: ["receivables_financing", "payment_terms"],

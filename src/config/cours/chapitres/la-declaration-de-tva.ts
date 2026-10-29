@@ -321,6 +321,7 @@ export const LA_DECLARATION_DE_TVA: Chapitre = {
     },
     {
       id: "l-exigibilite",
+      objectifs: [0],
       type: "choix",
       titre: "Quand la TVA des travaux est due",
       notions: ["vat_payable", "payment_terms"],
@@ -356,6 +357,7 @@ export const LA_DECLARATION_DE_TVA: Chapitre = {
     },
     {
       id: "les-encaissements",
+      objectifs: [0],
       type: "montants",
       titre: "Ce que les clients ont payé",
       notions: ["payment_terms", "vat_payable"],
@@ -386,6 +388,7 @@ export const LA_DECLARATION_DE_TVA: Chapitre = {
     },
     {
       id: "calcul",
+      objectifs: [1],
       type: "montants",
       titre: "Collectée, déductible, à payer",
       notions: ["vat_payable"],
@@ -414,6 +417,7 @@ export const LA_DECLARATION_DE_TVA: Chapitre = {
     },
     {
       id: "liquidation",
+      objectifs: [1],
       type: "ecriture",
       titre: "L'écriture de la déclaration",
       notions: ["vat_payable", "balance_sheet"],
@@ -463,6 +467,7 @@ export const LA_DECLARATION_DE_TVA: Chapitre = {
     },
     {
       id: "deductible",
+      objectifs: [1],
       type: "choix",
       titre: "Ce que l'entreprise déduit",
       notions: ["vat_payable"],
@@ -498,6 +503,7 @@ export const LA_DECLARATION_DE_TVA: Chapitre = {
     },
     {
       id: "predire-le-credit",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur la déclaration du printemps",
       notions: ["vat_payable"],
@@ -517,6 +523,7 @@ export const LA_DECLARATION_DE_TVA: Chapitre = {
     },
     {
       id: "jusqu-ou-investir",
+      objectifs: [2],
       type: "curseur",
       titre: "Jusqu'où investir sans crédit",
       notions: ["vat_payable"],
@@ -561,6 +568,7 @@ export const LA_DECLARATION_DE_TVA: Chapitre = {
     },
     {
       id: "le-credit",
+      objectifs: [2],
       type: "montants",
       titre: "Le crédit de TVA du printemps",
       notions: ["vat_payable", "balance_sheet"],
@@ -597,6 +605,7 @@ export const LA_DECLARATION_DE_TVA: Chapitre = {
     },
     {
       id: "l-imputation",
+      objectifs: [2],
       type: "montants",
       titre: "Le crédit imputé à l'été",
       notions: ["vat_payable"],
@@ -627,6 +636,7 @@ export const LA_DECLARATION_DE_TVA: Chapitre = {
     },
     {
       id: "lire-le-credit",
+      objectifs: [2],
       type: "choix",
       titre: "Ce que devient un crédit de TVA",
       notions: ["vat_payable", "balance_sheet"],
@@ -663,6 +673,7 @@ export const LA_DECLARATION_DE_TVA: Chapitre = {
     },
     {
       id: "predire-le-delai",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur le délai des entreprises",
       notions: ["vat_payable", "payment_terms"],
@@ -682,6 +693,7 @@ export const LA_DECLARATION_DE_TVA: Chapitre = {
     },
     {
       id: "le-delai-qui-fait-le-credit",
+      objectifs: [3],
       type: "curseur",
       titre: "Le délai qui fait le crédit",
       notions: ["vat_payable", "payment_terms"],
@@ -727,6 +739,7 @@ export const LA_DECLARATION_DE_TVA: Chapitre = {
     },
     {
       id: "predire-l-option",
+      objectifs: [0, 3],
       type: "choix",
       titre: "Pariez sur l'option pour les débits",
       notions: ["vat_payable"],
@@ -746,6 +759,7 @@ export const LA_DECLARATION_DE_TVA: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-declaration",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire de la déclaration",
       notions: ["vat_payable", "payment_terms"],
@@ -860,6 +874,7 @@ export const LA_DECLARATION_DE_TVA: Chapitre = {
     },
     {
       id: "aux-debits",
+      objectifs: [3],
       type: "montants",
       titre: "Le même trimestre, deux régimes",
       notions: ["vat_payable"],
@@ -888,6 +903,7 @@ export const LA_DECLARATION_DE_TVA: Chapitre = {
     },
     {
       id: "echeance",
+      objectifs: [1],
       type: "montants",
       titre: "Ce qui se verse dans l'année",
       notions: ["vat_payable", "cash_budget"],
@@ -915,6 +931,7 @@ export const LA_DECLARATION_DE_TVA: Chapitre = {
     },
     {
       id: "l-ecart-de-l-annee",
+      objectifs: [3],
       type: "montants",
       titre: "L'année aux deux régimes",
       notions: ["vat_payable", "bfr"],
@@ -948,6 +965,7 @@ export const LA_DECLARATION_DE_TVA: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [4],
       type: "montants",
       titre: "Retrouver les encaissements à rebours",
       notions: ["vat_payable", "payment_terms"],
@@ -974,6 +992,7 @@ export const LA_DECLARATION_DE_TVA: Chapitre = {
     },
     {
       id: "l-option-pour-les-debits",
+      objectifs: [3],
       type: "choix",
       titre: "Faut-il opter pour les débits",
       notions: ["vat_payable", "payment_terms"],

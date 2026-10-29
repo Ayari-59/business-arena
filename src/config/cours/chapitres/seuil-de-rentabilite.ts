@@ -288,6 +288,7 @@ export const SEUIL_DE_RENTABILITE: Chapitre = {
     },
     {
       id: "classement",
+      objectifs: [0],
       type: "tri",
       titre: "Variables ou fixes",
       notions: ["fixed_costs", "variable_costs"],
@@ -321,6 +322,7 @@ export const SEUIL_DE_RENTABILITE: Chapitre = {
     },
     {
       id: "marge-unitaire",
+      objectifs: [1],
       type: "montants",
       titre: "La marge sur coût variable",
       notions: ["contribution_margin", "margin_rates"],
@@ -346,6 +348,7 @@ export const SEUIL_DE_RENTABILITE: Chapitre = {
     },
     {
       id: "resultat-differentiel",
+      objectifs: [0],
       type: "montants",
       titre: "Le compte de résultat différentiel",
       notions: ["contribution_margin", "income_statement"],
@@ -375,6 +378,7 @@ export const SEUIL_DE_RENTABILITE: Chapitre = {
     },
     {
       id: "une-de-plus",
+      objectifs: [1],
       type: "choix",
       titre: "Une vente de plus",
       notions: ["contribution_margin"],
@@ -397,6 +401,7 @@ export const SEUIL_DE_RENTABILITE: Chapitre = {
     },
     {
       id: "predire-le-seuil",
+      objectifs: [1],
       type: "choix",
       titre: "Pariez sur le seuil",
       notions: ["breakeven"],
@@ -419,6 +424,7 @@ export const SEUIL_DE_RENTABILITE: Chapitre = {
     },
     {
       id: "simulation",
+      objectifs: [1],
       type: "curseur",
       titre: "Faites tourner les ventes",
       notions: ["breakeven", "dead_point"],
@@ -460,6 +466,7 @@ export const SEUIL_DE_RENTABILITE: Chapitre = {
     },
     {
       id: "seuil",
+      objectifs: [1],
       type: "montants",
       titre: "Le seuil de rentabilité",
       notions: ["breakeven"],
@@ -495,6 +502,7 @@ export const SEUIL_DE_RENTABILITE: Chapitre = {
     },
     {
       id: "securite",
+      objectifs: [2],
       type: "montants",
       titre: "La marge de sécurité et le point mort",
       notions: ["safety_margin", "dead_point"],
@@ -526,6 +534,7 @@ export const SEUIL_DE_RENTABILITE: Chapitre = {
     },
     {
       id: "predire-les-fixes",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur les charges fixes",
       notions: ["fixed_costs", "safety_margin"],
@@ -545,6 +554,7 @@ export const SEUIL_DE_RENTABILITE: Chapitre = {
     },
     {
       id: "les-fixes-au-curseur",
+      objectifs: [2],
       type: "curseur",
       titre: "Faites monter les charges fixes",
       notions: ["fixed_costs", "breakeven"],
@@ -584,6 +594,7 @@ export const SEUIL_DE_RENTABILITE: Chapitre = {
     },
     {
       id: "les-fixes-tenables",
+      objectifs: [2],
       type: "montants",
       titre: "Les charges fixes tenables",
       notions: ["fixed_costs", "breakeven", "safety_margin"],
@@ -617,6 +628,7 @@ export const SEUIL_DE_RENTABILITE: Chapitre = {
     },
     {
       id: "baisse-de-prix",
+      objectifs: [3],
       type: "montants",
       titre: "Et si le prix baissait ?",
       notions: ["breakeven", "operating_leverage", "price_elasticity"],
@@ -656,6 +668,7 @@ export const SEUIL_DE_RENTABILITE: Chapitre = {
     },
     {
       id: "le-laboratoire-du-seuil",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire du seuil",
       notions: ["breakeven", "contribution_margin", "fixed_costs"],
@@ -721,6 +734,7 @@ export const SEUIL_DE_RENTABILITE: Chapitre = {
     },
     {
       id: "leviers",
+      objectifs: [3],
       type: "choix",
       titre: "Abaisser le seuil",
       notions: ["breakeven", "operating_leverage"],
@@ -737,6 +751,7 @@ export const SEUIL_DE_RENTABILITE: Chapitre = {
     },
     {
       id: "le-levier-operationnel",
+      objectifs: [3],
       type: "montants",
       titre: "Le levier opérationnel",
       notions: ["operating_leverage", "safety_margin"],
@@ -771,6 +786,7 @@ export const SEUIL_DE_RENTABILITE: Chapitre = {
     },
     {
       id: "lire-le-levier",
+      objectifs: [3],
       type: "choix",
       titre: "Ce que dit le levier",
       notions: ["operating_leverage"],
@@ -801,6 +817,7 @@ export const SEUIL_DE_RENTABILITE: Chapitre = {
     },
     {
       id: "seuil-de-la-gamme",
+      objectifs: [4],
       type: "montants",
       titre: "Le seuil d'une gamme",
       notions: ["breakeven", "margin_rates", "safety_margin"],
@@ -843,6 +860,7 @@ export const SEUIL_DE_RENTABILITE: Chapitre = {
     },
     {
       id: "la-composition-de-la-gamme",
+      objectifs: [4],
       type: "choix",
       titre: "Le seuil et la composition des ventes",
       notions: ["breakeven", "margin_rates"],
@@ -871,6 +889,7 @@ export const SEUIL_DE_RENTABILITE: Chapitre = {
     },
     {
       id: "charges-fixes-par-paliers",
+      objectifs: [4],
       type: "montants",
       titre: "Des charges fixes par paliers",
       notions: ["fixed_costs", "breakeven", "capacity"],
@@ -909,6 +928,7 @@ export const SEUIL_DE_RENTABILITE: Chapitre = {
     },
     {
       id: "franchir-le-palier",
+      objectifs: [4],
       type: "choix",
       titre: "Franchir le palier ?",
       notions: ["fixed_costs", "breakeven", "capacity"],

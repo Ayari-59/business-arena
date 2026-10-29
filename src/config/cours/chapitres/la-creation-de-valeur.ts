@@ -220,6 +220,7 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
     },
     {
       id: "cout-des-capitaux-propres",
+      objectifs: [0],
       type: "montants",
       titre: "Le coût des capitaux propres",
       notions: ["total_shareholder_return"],
@@ -255,6 +256,7 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
     },
     {
       id: "cmpc",
+      objectifs: [1],
       type: "montants",
       titre: "Le coût moyen pondéré du capital",
       notions: ["profitability_vs_return", "loan_schedule"],
@@ -280,6 +282,7 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
     },
     {
       id: "predire-la-valeur",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur la valeur créée",
       notions: ["enterprise_value"],
@@ -300,6 +303,7 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
     },
     {
       id: "le-resultat-qui-couvre-le-capital",
+      objectifs: [2],
       type: "curseur",
       titre: "Faites varier le résultat d'exploitation",
       notions: ["enterprise_value", "profitability_vs_return"],
@@ -346,6 +350,7 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
     },
     {
       id: "eva",
+      objectifs: [2],
       type: "montants",
       titre: "La valeur créée sur l'année",
       notions: ["enterprise_value", "profitability_vs_return"],
@@ -381,6 +386,7 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
     },
     {
       id: "verdict",
+      objectifs: [2],
       type: "choix",
       titre: "Créer ou détruire de la valeur",
       notions: ["enterprise_value"],
@@ -417,6 +423,7 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
     },
     {
       id: "predire-l-exigence",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur l'exigence que l'hôtel couvre",
       notions: ["total_shareholder_return", "enterprise_value"],
@@ -436,6 +443,7 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
     },
     {
       id: "l-exigence-au-curseur",
+      objectifs: [2],
       type: "curseur",
       titre: "Faites monter l'exigence des associés",
       notions: ["total_shareholder_return", "enterprise_value"],
@@ -482,6 +490,7 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
     },
     {
       id: "residuel",
+      objectifs: [2],
       type: "montants",
       titre: "Le résultat résiduel, pour recouper",
       notions: ["total_shareholder_return"],
@@ -506,6 +515,7 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
     },
     {
       id: "la-salle-de-seminaire",
+      objectifs: [3],
       type: "montants",
       titre: "Variante : une salle de séminaire",
       notions: ["enterprise_value", "capacity"],
@@ -554,6 +564,7 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
     },
     {
       id: "la-salle-cree-t-elle",
+      objectifs: [3],
       type: "choix",
       titre: "La salle crée-t-elle de la valeur ?",
       notions: ["enterprise_value"],
@@ -594,6 +605,7 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
     },
     {
       id: "hamada",
+      objectifs: [0],
       type: "montants",
       titre: "Le bêta d'un comparable, désendetté puis réendetté",
       notions: ["total_shareholder_return"],
@@ -634,6 +646,7 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
     },
     {
       id: "predire-la-structure",
+      objectifs: [4],
       type: "choix",
       titre: "Pariez sur le coût du capital",
       notions: ["enterprise_value", "loan_schedule"],
@@ -655,6 +668,7 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-structure",
+      objectifs: [4],
       type: "simulation",
       titre: "Le laboratoire de la structure financière",
       notions: ["enterprise_value", "total_shareholder_return", "loan_schedule"],
@@ -737,6 +751,7 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
     },
     {
       id: "modigliani-miller",
+      objectifs: [4],
       type: "choix",
       titre: "Modigliani et Miller",
       notions: ["enterprise_value", "loan_schedule"],

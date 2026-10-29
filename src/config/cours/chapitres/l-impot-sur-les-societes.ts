@@ -315,6 +315,7 @@ export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
     },
     {
       id: "le-resultat-fiscal",
+      objectifs: [0],
       type: "montants",
       titre: "Le résultat fiscal",
       notions: ["income_statement", "depreciation"],
@@ -345,6 +346,7 @@ export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
     },
     {
       id: "la-majoration",
+      objectifs: [0],
       type: "choix",
       titre: "La majoration de retard",
       notions: ["income_statement"],
@@ -374,6 +376,7 @@ export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
     },
     {
       id: "predire-le-taux-effectif",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur le taux effectif",
       notions: ["income_statement"],
@@ -392,6 +395,7 @@ export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
     },
     {
       id: "le-taux-effectif-au-curseur",
+      objectifs: [2],
       type: "curseur",
       titre: "Faites varier le bénéfice",
       notions: ["income_statement"],
@@ -434,6 +438,7 @@ export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
     },
     {
       id: "l-impot-de-l-exercice",
+      objectifs: [1],
       type: "montants",
       titre: "L'impôt de l'exercice",
       notions: ["income_statement"],
@@ -469,6 +474,7 @@ export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
     },
     {
       id: "les-conditions-du-taux-reduit",
+      objectifs: [1],
       type: "choix",
       titre: "Les conditions du taux réduit",
       notions: ["income_statement"],
@@ -504,6 +510,7 @@ export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
     },
     {
       id: "predire-le-solde",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur le solde",
       notions: ["income_statement", "cash_budget"],
@@ -522,6 +529,7 @@ export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
     },
     {
       id: "le-solde-au-curseur",
+      objectifs: [3],
       type: "curseur",
       titre: "Les acomptes face à l'impôt",
       notions: ["income_statement", "cash_budget"],
@@ -561,6 +569,7 @@ export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
     },
     {
       id: "les-acomptes-et-le-solde",
+      objectifs: [3],
       type: "montants",
       titre: "Les acomptes et le solde",
       notions: ["income_statement", "cash_budget"],
@@ -586,6 +595,7 @@ export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
     },
     {
       id: "au-31-decembre",
+      objectifs: [3],
       type: "choix",
       titre: "Au 31 décembre",
       notions: ["balance_sheet", "income_statement"],
@@ -621,6 +631,7 @@ export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
     },
     {
       id: "le-laboratoire-de-l-impot",
+      objectifs: [2],
       type: "simulation",
       titre: "Le laboratoire de l'impôt",
       notions: ["income_statement"],
@@ -699,6 +710,7 @@ export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
     },
     {
       id: "sans-le-taux-reduit",
+      objectifs: [1],
       type: "montants",
       titre: "Variante : un fonds entre au capital",
       notions: ["income_statement"],
@@ -729,6 +741,7 @@ export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [4],
       type: "montants",
       titre: "Remonter du solde à l'impôt",
       notions: ["income_statement", "cash_budget"],
@@ -758,6 +771,7 @@ export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
     },
     {
       id: "la-depense-de-decembre",
+      objectifs: [4],
       type: "choix",
       titre: "La dépense de décembre",
       notions: ["income_statement"],

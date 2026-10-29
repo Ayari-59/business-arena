@@ -115,6 +115,7 @@ export const UNE_DONNEE_FAUSSE: Chapitre = {
     },
     {
       id: "coherence",
+      objectifs: [1],
       type: "montants",
       titre: "Le contrôle de cohérence",
       notions: ["revenue"],
@@ -131,6 +132,7 @@ export const UNE_DONNEE_FAUSSE: Chapitre = {
     },
     {
       id: "donnee",
+      objectifs: [0, 1],
       type: "choix",
       titre: "La donnée fausse",
       notions: ["revenue"],
@@ -149,6 +151,7 @@ export const UNE_DONNEE_FAUSSE: Chapitre = {
     },
     {
       id: "la-saisie-qui-retombe",
+      objectifs: [2],
       type: "curseur",
       titre: "La saisie qui fait retomber le contrôle",
       notions: ["revenue", "dashboard"],
@@ -183,6 +186,7 @@ export const UNE_DONNEE_FAUSSE: Chapitre = {
     },
     {
       id: "prevision",
+      objectifs: [2],
       type: "montants",
       titre: "Corriger, puis prévoir",
       notions: ["revenue", "capacity"],
@@ -207,6 +211,7 @@ export const UNE_DONNEE_FAUSSE: Chapitre = {
     },
     {
       id: "le-trimestre-rejoue",
+      objectifs: [3],
       type: "montants",
       titre: `Le trimestre ${D} rejoué`,
       notions: ["capacity", "contribution_margin"],
@@ -244,6 +249,7 @@ export const UNE_DONNEE_FAUSSE: Chapitre = {
     },
     {
       id: "verdict",
+      objectifs: [3],
       type: "choix",
       titre: "Ce que la virgule a coûté",
       notions: ["contribution_margin"],
@@ -260,6 +266,7 @@ export const UNE_DONNEE_FAUSSE: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-prevision",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire de la prévision",
       notions: ["capacity", "dashboard"],
@@ -302,6 +309,7 @@ export const UNE_DONNEE_FAUSSE: Chapitre = {
     },
     {
       id: "controle",
+      objectifs: [4],
       type: "choix",
       titre: "Le contrôle qui l'aurait arrêtée",
       notions: ["dashboard"],

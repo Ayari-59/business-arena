@@ -114,6 +114,7 @@ export const LE_CLIENT_QUI_REVIENT: Chapitre = {
     },
     {
       id: "partis",
+      objectifs: [0],
       type: "montants",
       titre: "Combien reviennent, combien partent",
       notions: ["churn_rate", "customer_portfolio"],
@@ -140,6 +141,7 @@ export const LE_CLIENT_QUI_REVIENT: Chapitre = {
     },
     {
       id: "poids-des-gardes",
+      objectifs: [1],
       type: "montants",
       titre: "Le poids des clientes qui reviennent",
       notions: ["churn_rate"],
@@ -161,6 +163,7 @@ export const LE_CLIENT_QUI_REVIENT: Chapitre = {
     },
     {
       id: "garde-toute-l-annee",
+      objectifs: [2],
       type: "montants",
       titre: "Une cliente gardée toute l'année",
       notions: ["contribution_margin", "customer_lifetime_value"],
@@ -179,6 +182,7 @@ export const LE_CLIENT_QUI_REVIENT: Chapitre = {
     },
     {
       id: "parti-apres-le-premier",
+      objectifs: [3],
       type: "montants",
       titre: "Une cliente qui part après janvier",
       notions: ["churn_rate", "customer_lifetime_value"],
@@ -197,6 +201,7 @@ export const LE_CLIENT_QUI_REVIENT: Chapitre = {
     },
     {
       id: "ce-que-dit-le-fichier",
+      objectifs: [4],
       type: "choix",
       titre: "Ce que dit le fichier",
       notions: ["churn_rate", "customer_portfolio"],
@@ -228,6 +233,7 @@ export const LE_CLIENT_QUI_REVIENT: Chapitre = {
     },
     {
       id: "remplacer-les-departs",
+      objectifs: [4],
       type: "curseur",
       titre: "Remplacer les départs",
       notions: ["customer_portfolio", "churn_rate"],
@@ -267,6 +273,7 @@ export const LE_CLIENT_QUI_REVIENT: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-fidelite",
+      objectifs: [4],
       type: "simulation",
       titre: "Le laboratoire de la fidélité",
       notions: ["churn_rate", "customer_portfolio"],

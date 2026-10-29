@@ -134,6 +134,7 @@ export const DECIDER_AVEC_DES_CHIFFRES: Chapitre = {
     },
     {
       id: "prevoir",
+      objectifs: [0, 1],
       type: "montants",
       titre: "Prévoir : ce que la publicité doit rapporter",
       notions: ["contribution_margin", "customer_acquisition_cost"],
@@ -158,6 +159,7 @@ export const DECIDER_AVEC_DES_CHIFFRES: Chapitre = {
     },
     {
       id: "les-ventes-qui-paient",
+      objectifs: [1],
       type: "curseur",
       titre: "Les ventes qui paient la publicité",
       notions: ["contribution_margin", "customer_acquisition_cost"],
@@ -191,6 +193,7 @@ export const DECIDER_AVEC_DES_CHIFFRES: Chapitre = {
     },
     {
       id: "choisir",
+      objectifs: [2],
       type: "choix",
       titre: "Choisir : la règle de décision",
       notions: ["contribution_margin"],
@@ -206,6 +209,7 @@ export const DECIDER_AVEC_DES_CHIFFRES: Chapitre = {
     },
     {
       id: "constater",
+      objectifs: [3],
       type: "montants",
       titre: "Constater : l'année rejouée",
       notions: ["contribution_margin", "income_statement"],
@@ -230,6 +234,7 @@ export const DECIDER_AVEC_DES_CHIFFRES: Chapitre = {
     },
     {
       id: "le-bon-choix",
+      objectifs: [3],
       type: "choix",
       titre: "Le bon choix, cette année",
       notions: ["income_statement"],
@@ -258,6 +263,7 @@ export const DECIDER_AVEC_DES_CHIFFRES: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-publicite",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire de la publicité",
       notions: ["customer_acquisition_cost", "contribution_margin"],

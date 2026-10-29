@@ -112,6 +112,7 @@ export const FONDS_DE_ROULEMENT: Chapitre = {
     },
     {
       id: "frng",
+      objectifs: [0],
       type: "montants",
       titre: "Le fonds de roulement",
       notions: ["frng"],
@@ -134,6 +135,7 @@ export const FONDS_DE_ROULEMENT: Chapitre = {
     },
     {
       id: "bfr",
+      objectifs: [1],
       type: "montants",
       titre: "Le besoin en fonds de roulement",
       notions: ["bfr"],
@@ -158,6 +160,7 @@ export const FONDS_DE_ROULEMENT: Chapitre = {
     },
     {
       id: "tresorerie",
+      objectifs: [2],
       type: "montants",
       titre: "La trésorerie",
       notions: ["net_treasury"],
@@ -179,6 +182,7 @@ export const FONDS_DE_ROULEMENT: Chapitre = {
     },
     {
       id: "clients",
+      objectifs: [3],
       type: "choix",
       titre: "Si les clients payaient plus vite",
       notions: ["bfr", "net_treasury", "payment_terms"],
@@ -209,6 +213,7 @@ export const FONDS_DE_ROULEMENT: Chapitre = {
     },
     {
       id: "un-equipement-paye-comptant",
+      objectifs: [0, 3],
       type: "curseur",
       titre: "Un équipement payé comptant",
       notions: ["frng", "net_treasury"],
@@ -248,6 +253,7 @@ export const FONDS_DE_ROULEMENT: Chapitre = {
     },
     {
       id: "le-laboratoire-des-delais",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire des délais",
       notions: ["bfr", "net_treasury", "payment_terms"],
