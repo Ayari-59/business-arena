@@ -42,7 +42,7 @@ import { NOVA, VIDE, attendus, etape, gardeDuCas, gardeDuCurseur, gardeDuLaborat
  * paie »), 127 800 € de personnel au premier exercice (les comptes 641 et 645 de la balance),
  * 1 390 276 € de ventes et 1 314 984,62 € de charges (le compte de résultat du lycée) ; en N + 1, la
  * demande de 5 800, 7 400, 6 200 et 7 800 enceintes, une ligne de 7 000 par trimestre, 600 enceintes
- * par opérateur et par mois (180 heures à 0,3 heure), 21 € de marge par enceinte, le marché à 2 000 €
+ * par opérateur et par mois (150 heures de montage sur 151,67 payées, à 0,25 heure), 21 € de marge par enceinte, le marché à 2 000 €
  * et le seuil de démission à 95 %, le recrutement de 2 mois à 3 000 €, le départ du 31 mars.
  */
 
@@ -165,9 +165,10 @@ describe("recruter", () => {
 });
 
 describe("former pour être plus efficace", () => {
-  it("à 16 minutes l'enceinte, 675 par mois, 8 100 par trimestre : les 800 enceintes que l'équipe refusait, 16 800 € de marge", () => {
-    expect(attendus(FORMER, "gain")).toEqual([(180 * 60) / 16, 675 * 4 * 3, 200 + 600, 800 * 21]);
-    expect(attendus(FORMER, "cout")).toEqual([2 * COUT_D_UNE_MINUTE_GAGNEE_PAR_OPERATEUR * 4, 16_800 - 6_000]);
+  it("à 13 minutes l'enceinte, 692 par mois, 8 304 par trimestre : les 800 enceintes que l'équipe refusait, 16 800 € de marge", () => {
+    expect(COUT_D_UNE_MINUTE_GAGNEE_PAR_OPERATEUR).toBe(400);
+    expect(attendus(FORMER, "gain")).toEqual([Math.floor((150 * 60) / 13), 692 * 4 * 3, 200 + 600, 800 * 21]);
+    expect(attendus(FORMER, "cout")).toEqual([2 * 400 * 4, 16_800 - 3_200]);
     expect(juste(FORMER, "comparer")).toEqual(["Former : le même gain, pour bien moins cher"]);
   });
 
@@ -175,13 +176,13 @@ describe("former pour être plus efficace", () => {
     gardeDuCurseur(FORMER, "le-prix-du-stage", 16_800 / 4);
   });
 
-  it("le laboratoire : 16 minutes rapportent 10 800 €, plus que 17 (10 020 €) et 15 (7 800 €)", () => {
+  it("le laboratoire : 13 minutes rapportent 13 600 €, plus que 14 (13 184 €) et 12 (12 000 €)", () => {
     const e = gardeDuLaboratoire(FORMER, "le-laboratoire-du-stage");
-    expect(e.defi(NOVA).solution).toEqual({ minutes: 16 });
-    // À 17 minutes : 635 par mois, 7 620 par trimestre, Noël refuse 180 enceintes.
-    expect(Math.floor((180 * 60) / 17) * 12).toBe(7_620);
-    expect((800 - 180) * 21 - 3_000).toBe(10_020);
-    expect(800 * 21 - 9_000).toBe(7_800);
+    expect(e.defi(NOVA).solution).toEqual({ minutes: 13 });
+    // À 14 minutes : 642 par mois, 7 704 par trimestre, Noël refuse 96 enceintes.
+    expect(Math.floor((150 * 60) / 14) * 12).toBe(7_704);
+    expect((800 - 96) * 21 - 1 * 400 * 4).toBe(13_184);
+    expect(800 * 21 - 3 * 400 * 4).toBe(12_000);
   });
 });
 
@@ -207,9 +208,10 @@ describe("rémunération et motivation", () => {
 });
 
 describe("les indicateurs sociaux", () => {
-  it("46 mois payés : 3,83 salariés en moyenne, 26,1 % de rotation, 8 280 heures prévues, 3,5 % d'absentéisme", () => {
+  it("46 mois payés : 3,83 salariés en moyenne, 26,1 % de rotation, 6 976,82 heures prévues, 3,5 % d'absentéisme", () => {
     expect(attendus(INDICATEURS_SOCIAUX, "rotation")).toEqual([3.83, Math.round((1 / (46 / 12)) * 1000) / 10]);
-    expect(attendus(INDICATEURS_SOCIAUX, "absenteisme")).toEqual([46 * 180, Math.round((HEURES_D_ABSENCE / 8_280) * 1000) / 10]);
+    expect(attendus(INDICATEURS_SOCIAUX, "absenteisme")).toEqual([c2(46 * 151.67), Math.round((HEURES_D_ABSENCE / 6_976.82) * 1000) / 10]);
+    expect(HEURES_D_ABSENCE).toBe(244);
     expect(attendus(INDICATEURS_SOCIAUX, "absenteisme")[1]).toBe(3.5);
   });
 
@@ -223,9 +225,9 @@ describe("les indicateurs sociaux", () => {
     expect(juste(INDICATEURS_SOCIAUX, "un-indicateur-qui-trompe")).toEqual(["Il monte parce que l'équipe a fondu, pas parce qu'elle vend mieux"]);
   });
 
-  it("le curseur : 248 heures d'absence tiennent sous 3 % des 8 280 heures prévues", () => {
+  it("le curseur : 209 heures d'absence tiennent sous 3 % des 6 976,82 heures prévues", () => {
     expect(SEUIL_D_ALERTE_DE_L_ABSENTEISME).toBe(0.03);
-    gardeDuCurseur(INDICATEURS_SOCIAUX, "les-absences-tolerees", Math.floor(8_280 * 0.03));
+    gardeDuCurseur(INDICATEURS_SOCIAUX, "les-absences-tolerees", Math.floor(6_976.82 * 0.03));
   });
 
   it("le laboratoire : seul un remplaçant arrivé le 1er mai garde les ventes perdues sous 1 000 enceintes (700)", () => {
@@ -269,9 +271,9 @@ describe("les cas pratiques du parcours", () => {
     expect([k.tot.enceintesDeLaRecrue, k.tard.enceintesDeLaRecrue, k.verdict]).toEqual([800, 800, "attendre"]);
   });
 
-  it("doubler le budget de formation : 14 minutes pour 12 000 €, aucune enceinte de plus, 4 800 € au lieu de 10 800 €", () => {
+  it("doubler le budget de formation : 11 minutes pour 6 400 €, aucune enceinte de plus, 10 400 € au lieu de 13 600 €", () => {
     const k = budgetDouble();
-    expect([k.d.minutes, k.d.cout, k.d.equipe, k.enceintesEnPlus, k.d.gain, k.f.gain, k.verdict]).toEqual([14, 4 * 750 * 4, Math.floor(10_800 / 14) * 12, 0, 16_800 - 12_000, 10_800, "garder"]);
+    expect([k.d.minutes, k.d.cout, k.d.equipe, k.enceintesEnPlus, k.d.gain, k.f.gain, k.verdict]).toEqual([11, 4 * 400 * 4, Math.floor(9_000 / 11) * 12, 0, 16_800 - 6_400, 13_600, "garder"]);
   });
 
   it("l'équipe demande 10 % : 187,50 € par mois, 12 780 € par an, 103,1 % du marché", () => {

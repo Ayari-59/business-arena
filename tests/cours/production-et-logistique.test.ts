@@ -26,7 +26,8 @@ import { NOVA, VIDE, attendus, gardeDuCas, gardeDuCurseur, gardeDuLaboratoire, g
  * TEMPS, ET LEURS CAS, chez NOVA.
  *
  * Refait à la main sur les fiches de NOVA : 4 postes de 1 750 enceintes par trimestre (7 000) ;
- * 4 opérateurs de 540 heures à 0,3 heure l'enceinte (1 800 chacun, 7 200) ; 1 875 € bruts et 42 % de
+ * 4 opérateurs de 151,67 heures payées par mois (455,01 par trimestre), dont 150 de montage à 0,25 heure
+ * l'enceinte (1 800 chacun, 7 200) ; 1 875 € bruts et 42 % de
  * cotisations (2 662,50 € par mois, 31 950 € par an) ; 3 000 € de recrutement, 2 mois de délai ; la
  * demande de N (4 778, 6 081, 5 810, 6 940) et de N + 1 (5 800, 7 400, 6 200, 7 800) ; 21 € de marge ;
  * la courbe de la prévention (8 %, 5 %, 3,5 %, 2 % à 0, 8 000, 16 000 et 32 000 €), le contrôle
@@ -92,9 +93,10 @@ describe("produire", () => {
     expect(juste(PRODUIRE, "ce-qui-bride")).toEqual(["Les postes de la ligne"]);
   });
 
-  it("la productivité : 6 500 enceintes par opérateur, 8 640 heures, 3,01 enceintes par heure", () => {
-    expect(attendus(PRODUIRE, "productivite")).toEqual([26_000 / 4, 4 * 540 * 4, Math.round((26_000 / 8_640) * 100) / 100]);
-    expect(attendus(PRODUIRE, "productivite")[2]).toBe(3.01);
+  it("la productivité : 6 500 enceintes par opérateur, 7 280,16 heures payées, 3,57 enceintes par heure", () => {
+    // 4 opérateurs × 151,67 heures payées × 3 mois × 4 trimestres.
+    expect(attendus(PRODUIRE, "productivite")).toEqual([26_000 / 4, 4 * 455.01 * 4, Math.round((26_000 / 7_280.16) * 100) / 100]);
+    expect(attendus(PRODUIRE, "productivite")[2]).toBe(3.57);
   });
 
   it("un opérateur de plus : l'équipe monte 9 000, la production reste à 26 000, le résultat baisse de 34 950 €", () => {

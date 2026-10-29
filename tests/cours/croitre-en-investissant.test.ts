@@ -284,8 +284,8 @@ describe("croître en investissant : les chiffres, refaits à la main sur la fic
     expect(f.ligne.capaciteParTrimestre).toBe(OUTIL);
     expect([MARGE, EQUIPE, SALAIRE]).toEqual([21, 7_200, 31_950]);
     expect(f.machines.map((m) => [m.code, m.prix, m.capaciteEnPlus, m.embauches, m.heuresParEnceinte, m.entretienParAn, m.dureeEnAnnees])).toEqual([
-      ["poste-manuel", 15_000, 1_750, 1, 0.3, 4_500, 6],
-      ["ligne-automatisee", 60_000, 3_500, 1, 0.15, 6_000, 6],
+      ["poste-manuel", 15_000, 1_750, 1, 0.25, 4_500, 6],
+      ["ligne-automatisee", 60_000, 3_500, 1, 0.125, 6_000, 6],
     ]);
     expect([f.investissement.tauxDeLEmprunt, f.investissement.tauxDActualisation, f.investissement.tauxDImpot, f.personnel.coutDUnRecrutement]).toEqual([0.05, 0.08, 0.25, 3_000]);
     expect(f.investissement.haussesDeLaDemande).toContain(HAUSSE_DE_LA_VARIANTE);

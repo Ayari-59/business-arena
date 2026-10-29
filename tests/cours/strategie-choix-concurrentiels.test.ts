@@ -498,9 +498,12 @@ describe("domination par les coûts ou différenciation : les trois stratégies,
       expect(nova!.valeur(p(prix)), `${prix} €`).toBe(ventesDe(a) * (prix - 43) - CHARGES);
       expect(auris!.valeur(p(prix)), `${prix} €`).toBe(resultatAU(a));
     }
-    // Les deux courbes se croisent entre 67 et 68 € : battre Auris n'est possible que sous ce prix.
-    expect([64, 65, 66, 67, 68, 69].map((x) => nova!.valeur(p(x)) - auris!.valeur(p(x)))).toEqual([7_568, 3_036, -2_356, -8_320, -14_868, -22_008]);
-    // À 67 €, c'est aussi le meilleur résultat de NOVA : moins cher, l'avance grandit et le résultat baisse.
+    // Les deux courbes se croisent entre 65 et 66 € : battre Auris n'est possible que sous ce prix.
+    const avance = (x: number) => ventesDe(attr(x, 1.28)) * (x - 43) - CHARGES - resultatAU(attr(x, 1.28));
+    expect([64, 65, 66, 67, 68, 69].map((x) => nova!.valeur(p(x)) - auris!.valeur(p(x)))).toEqual([64, 65, 66, 67, 68, 69].map(avance));
+    expect([64, 65, 66, 67, 68, 69].map(avance)).toEqual([7_568, 3_036, -2_356, -8_320, -14_868, -22_008]);
+    // Battre Auris n'est pas gagner le plus : le meilleur résultat de NOVA est à 67 €, où Auris reste devant ; moins cher, l'avance grandit et le résultat baisse.
+    expect(nova!.valeur(p(64))).toBe(ventesDe(attr(64, 1.28)) * 21 - CHARGES);
     expect(nova!.valeur(p(64))).toBe(59_372);
     expect(nova!.valeur(p(64))).toBeLessThan(nova!.valeur(p(67)));
   });
@@ -526,7 +529,7 @@ describe("baisser les prix sans rien couper : la demi-mesure, refaite à la main
       "Marge par enceinte de la proposition": 54 - 38,
     });
     expect([centime((a / (a + A_SB + A_AU)) * 100), V, parTrimestre(a)]).toEqual([38.84, 24_084, 6_021]);
-    // Sous la ligne, de peu : 6 797 enceintes par trimestre pour 7 000.
+    // Sous la ligne : 6 021 enceintes par trimestre pour 7 000.
     expect(parTrimestre(a)).toBeLessThan(7_000);
     // Le défaut « 24,4 % contre 24,4 % » est réglé : ni la part ni la marge ne sont celles de la stratégie de coûts.
     expect(V).not.toBe(V_COUTS);
@@ -581,8 +584,9 @@ describe("lire la stratégie de ses concurrents : la carte, refaite à la main",
   const c0 = carteMain(59, 1);
 
   it("la fiche donne les chiffres de la consigne : le prix moyen, la qualité moyenne, les indices", () => {
-    expect(c0.ca).toBe(3_677_532);
-    expect([c0.ca, c0.pm, c0.qm]).toEqual([3_677_532, 59.31, 1.08]);
+    expect(c0.ca).toBe(19_112 * 59 + 29_948 * 51 + 12_944 * 79);
+    expect([c0.ca, c0.pm, c0.qm]).toEqual([3_677_532, centime(3_677_532 / (19_112 + 29_948 + 12_944)), 1.08]);
+    expect(c0.pm).toBe(59.31);
     expect([c0.ip, c0.iq, c0.ipSB, c0.iqSB, c0.ipAU, c0.iqAU]).toEqual([99, 93, 86, 83, 133, 124]);
     expect(attendus(ch, "carte")).toEqual({ "Prix moyen du marché": c0.pm, "Indice de prix de NOVA": c0.ip, "Qualité moyenne du marché": c0.qm, "Indice de qualité de NOVA": c0.iq });
     const tri = ch.etapes.find((e) => e.id === "strategies") as EtapeTri;
@@ -622,7 +626,7 @@ describe("lire la stratégie de ses concurrents : la carte, refaite à la main",
     // Les coins vides : NOVA au prix d'Auris avec son enceinte ; la gamme soignée au prix d'aujourd'hui, que la ligne borne.
     const aCher = attr(79, 1);
     const aGen = attr(59, 1.28);
-    // La demande de la gamme soignée à 59 € dépasse la ligne : 4 × la part du marché, sans la borne.
+    // La demande de la gamme soignée à 59 € : 4 × la part du marché ; elle tient dans la ligne (26 168 pour 28 000).
     const demandeGen = 4 * Math.round((aGen / (aGen + A_SB + A_AU)) * MARCHE);
     expect(attendus(ch, "les-coins-vides")).toEqual({
       "Résultat au prix haut, gamme actuelle": ventesDe(aCher) * (79 - 38) - CHARGES,
@@ -719,6 +723,7 @@ describe("lire la stratégie de ses concurrents : la carte, refaite à la main",
       expect(nova!.valeur({ ...l.solution, prix }), `${prix} €`).toBe(ventesDe(attr(prix, 1.28)) * (prix - 43) - CHARGES);
       expect(aujourdhui!.valeur({ ...l.solution, prix })).toBe(R_MILIEU);
     }
+    expect(nova!.valeur({ ...l.solution, prix: 67 })).toBe(ventesDe(attr(67, 1.28)) * 24 - CHARGES);
     expect(nova!.valeur({ ...l.solution, prix: 67 })).toBe(63_788);
   });
 
@@ -806,9 +811,11 @@ describe("aller dans l'espace libre : par le seul prix, ou en y amenant la quali
         "Écart avec aujourd'hui": 26 * q - CHARGES - R_MILIEU,
       },
     });
-    // Par le seul prix, il faudrait (62 900 + 390 196) ÷ 31 ventes, et il n'en vient que 13 468.
+    // Par le seul prix, il faudrait (11 156 + 390 196) ÷ 31 ventes, et il n'en vient que 11 928.
+    expect(Math.ceil((11_156 + 390_196) / 31)).toBe(12_947);
     expect(Math.ceil((R_MILIEU + CHARGES) / 31)).toBe(12_947);
-    expect(VS).toBeLessThan(14_616);
+    expect(VS).toBe(11_928);
+    expect(VS).toBeLessThan(12_947);
   });
 
   it("le verdict : y aller, en y amenant la qualité", () => {

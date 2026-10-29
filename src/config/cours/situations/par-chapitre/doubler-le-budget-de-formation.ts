@@ -21,7 +21,7 @@ import type { Situation } from "../types";
  *
  * CE QUI A CHANGÉ. Le cas rejouait l'année de l'arène, dont le moteur tirait des rendements
  * décroissants ; il se joue chez NOVA, où la ligne borne le gain : la seconde moitié du budget,
- * 6 000 €, ne fait vendre aucune enceinte de plus.
+ * 3 200 €, ne fait vendre aucune enceinte de plus.
  */
 
 /** Le budget que propose la direction, en multiples de celui du chapitre : le double, deux fois plus de minutes gagnées. */

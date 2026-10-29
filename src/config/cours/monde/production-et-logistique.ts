@@ -12,7 +12,7 @@ import { VENTES_A_CAMPUSTECH } from "./nova-gestion";
  * figée, inspirée de l'arène, calculée par le cours). Ce fichier ne recopie aucun chiffre : il relit
  * les fiches qui existent déjà et n'ajoute que ce qui manquait pour lire la logistique.
  *   · nova-capacite.ts et capacite.ts : la ligne de 4 postes (7 000 enceintes par trimestre), les
- *     4 opérateurs (540 heures par trimestre chacun, 0,3 heure par enceinte), leur coût (2 662,50 € par
+ *     4 opérateurs (151,67 heures payées par mois chacun, dont 150 au montage, 0,25 heure par enceinte), leur coût (2 662,50 € par
  *     mois chacun), le recrutement (2 mois, 3 000 €), le cinquième poste du catalogue (1 750 enceintes
  *     de plus), la demande de N (4 778, 6 081, 5 810, 6 940) et celle de N + 1 (5 800, 7 400, 6 200,
  *     7 800), la marge de 21 € d'une enceinte, la qualité (la courbe de la prévention, le contrôle
@@ -133,8 +133,8 @@ export const enceintesParOperateur = (f: FicheDeLaCapacite) => enceintesParOpera
 /** Ce que coûte un opérateur à NOVA sur une année : 12 mois de salaire et de cotisations (31 950 €). */
 export const coutAnnuelDUnOperateur = (f: FicheDeLaCapacite) => auCentime(coutEmployeurMensuel(f) * 12);
 
-/** Les heures de travail d'un opérateur par trimestre (540). */
-export const heuresParTrimestre = (f: FicheDeLaCapacite) => f.operateurs.heuresParMois * MOIS_PAR_TRIMESTRE;
+/** Les heures payées d'un opérateur par trimestre, celles de la productivité : 151,67 × 3 = 455,01. */
+export const heuresParTrimestre = (f: FicheDeLaCapacite) => auCentime(f.operateurs.heuresPayeesParMois * MOIS_PAR_TRIMESTRE);
 
 /**
  * Une année de production avec un effectif et un nombre de postes : chaque trimestre, la capacité des
@@ -158,7 +158,7 @@ export function anneeAvec(f: FicheDeLaCapacite, leviers: Partial<{ operateurs: n
 export function production(f: FicheDeLaCapacite) {
   const a = anneeAvec(f);
   const t = a.trimestres[0]!;
-  const heures = a.operateurs * heuresParTrimestre(f) * 4;
+  const heures = auCentime(a.operateurs * heuresParTrimestre(f) * 4);
   const avec = anneeAvec(f, { operateurs: a.operateurs + 1 });
   const coutDeLEmbauche = auCentime(coutAnnuelDUnOperateur(f) + f.personnel.coutDUnRecrutement);
   const productionGagnee = avec.production - a.production;

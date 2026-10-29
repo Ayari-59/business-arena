@@ -18,8 +18,8 @@ import { bulletinDePaie } from "./paie";
  *     paie » du supérieur ; le bulletin se calcule par monde/paie.ts, ligne à ligne ;
  *   · comptes-du-lycee.ts : les ventes et les charges du premier exercice, le personnel compris
  *     (127 800 €, les comptes 641 et 645 de la balance) ;
- *   · nova-capacite.ts et capacite.ts : les quatre opérateurs (1 875 € bruts chacun, 600 enceintes
- *     par mois), la ligne de montage (7 000 enceintes par trimestre), la demande de l'année N + 1,
+ *   · nova-capacite.ts et capacite.ts : les quatre opérateurs (1 875 € bruts chacun pour 151,67 heures,
+ *     600 enceintes par mois), la ligne de montage (7 000 enceintes par trimestre), la demande de l'année N + 1,
  *     le salaire du marché, le seuil de démission, le recrutement (2 mois, 3 000 €), l'intégration
  *     d'un nouveau (la moitié de la production son premier mois), le cinquième poste manuel, et le
  *     départ d'un opérateur en N + 1, avec son coût.
@@ -51,10 +51,17 @@ const MOIS_PAR_AN = 12;
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * LE SMIC (droit du travail) : 12,02 € bruts de l'heure au 1er janvier 2026, soit 1 823,03 € bruts
- * par mois pour 35 heures par semaine (12,02 × 35 × 52 ÷ 12, la mensualisation de 151,67 heures). Un
- * salarié à temps plein ne peut pas être payé moins. À mettre à jour à chaque revalorisation.
+ * LE SMIC (droit du travail), HYPOTHÈSE DU COURS : 12,02 € bruts de l'heure au 1er janvier 2026,
+ * soit 1 823,03 € bruts par mois pour 35 heures par semaine (12,02 × 35 × 52 ÷ 12 ; la durée
+ * mensualisée s'écrit 151,67 heures). Ces deux valeurs sont celles que le cours retient ; elles n'ont
+ * pas été
+ * vérifiées contre le décret de revalorisation au moment de l'écrire : à confirmer, et à mettre à
+ * jour à chaque revalorisation. Un salarié ne peut pas être payé moins de l'heure, et la garde
+ * tests/cours/une-seule-nova.test.ts vérifie qu'aucun salaire horaire du monde n'y descend.
  */
+export const SMIC_HORAIRE_BRUT = 12.02;
+/** La durée légale du travail mensualisée : 35 heures × 52 semaines ÷ 12 mois. */
+export const HEURES_LEGALES_PAR_MOIS = 151.67;
 export const SMIC_MENSUEL_BRUT = 1_823.03;
 
 /** La hausse du net que demande un opérateur (chapitre « Du salaire brut au coût ») : 100 € par mois. */
@@ -95,13 +102,13 @@ export const MOIS_DU_RECRUTEMENT = 1;
  * LA FORMATION (hypothèses du chapitre « Former ») : NOVA ajoute un cinquième poste à sa ligne en
  * N + 1 (8 750 enceintes par trimestre) sans embaucher : l'équipe, 7 200 enceintes, devient le goulot.
  * Un stage du fabricant de la ligne fait gagner du temps de montage : chaque minute gagnée sur une
- * enceinte (18 minutes aujourd'hui, 0,3 heure) coûte 750 € par opérateur, payés en janvier. Le stage
+ * enceinte (15 minutes aujourd'hui, 0,25 heure) coûte 400 € par opérateur, payés en janvier. Le stage
  * proposé fait gagner 2 minutes.
  */
-export const COUT_D_UNE_MINUTE_GAGNEE_PAR_OPERATEUR = 750;
+export const COUT_D_UNE_MINUTE_GAGNEE_PAR_OPERATEUR = 400;
 export const MINUTES_GAGNEES_PAR_LE_STAGE = 2;
 /** Les durées de montage que le laboratoire essaie, en minutes par enceinte. */
-export const MINUTES_ESSAYEES = [18, 17, 16, 15] as const;
+export const MINUTES_ESSAYEES = [15, 14, 13, 12] as const;
 
 /**
  * LA RÉMUNÉRATION (hypothèse du chapitre « Rémunération et motivation ») : un opérateur compare son
@@ -113,10 +120,10 @@ export const AUGMENTATIONS_ESSAYEES = { min: 0, max: 100, pas: 25 } as const;
 
 /**
  * LES ABSENCES DE N + 1 (hypothèses du chapitre « Les indicateurs sociaux ») : deux arrêts de
- * maladie, 290 heures d'absence sur l'année. La direction s'alerte quand l'absentéisme dépasse 3 %
- * des heures de travail prévues. Un opérateur a 180 heures de travail prévues par mois (nova-capacite.ts).
+ * maladie, 244 heures d'absence sur l'année. La direction s'alerte quand l'absentéisme dépasse 3 %
+ * des heures de travail prévues. Un opérateur a 151,67 heures de travail prévues par mois, la durée légale (nova-capacite.ts).
  */
-export const HEURES_D_ABSENCE = 290;
+export const HEURES_D_ABSENCE = 244;
 export const SEUIL_D_ALERTE_DE_L_ABSENTEISME = 0.03;
 
 /** Le seuil du laboratoire des indicateurs : la direction accepte au plus 1 000 enceintes perdues par le départ. */
@@ -388,7 +395,7 @@ export function remunerationAuMoindreCout() {
  * Le tableau de bord social de N + 1, l'année du départ d'un opérateur (capacite.ts) : le remplaçant
  * arrive au premier jour du mois `arrivee`. L'effectif moyen compte les salariés payés chaque mois ;
  * le taux de rotation = (départs + arrivées) ÷ 2 ÷ effectif moyen ; l'absentéisme = heures d'absence
- * ÷ heures de travail prévues (180 par salarié payé et par mois) ; le chiffre d'affaires par salarié
+ * ÷ heures de travail prévues (151,67 par salarié payé et par mois) ; le chiffre d'affaires par salarié
  * = chiffre d'affaires ÷ effectif moyen, sur l'année et trimestre par trimestre.
  */
 export function indicateursDeNPlus1(arrivee?: number, heuresDAbsence = HEURES_D_ABSENCE) {
@@ -399,7 +406,7 @@ export function indicateursDeNPlus1(arrivee?: number, heuresDAbsence = HEURES_D_
   const effectifMoyen = d.equipe.moisPayes / MOIS_PAR_AN;
   const departs = 1;
   const arrivees = d.arrivee === null ? 0 : 1;
-  const heuresPrevues = d.equipe.moisPayes * f.operateurs.heuresParMois;
+  const heuresPrevues = auCentime(d.equipe.moisPayes * f.operateurs.heuresPayeesParMois);
   const coutMensuel = coutDUnBrut(f.operateurs.salaireBrutMensuel);
   const plan = anneeDeProduction(f, { annee: "N+1" });
   const trimestres = d.trimestres.map((t, i) => {

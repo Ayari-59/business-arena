@@ -10,7 +10,9 @@ import { CAS_DES_ENTREPRISES } from "../../src/config/cours/monde/cas-des-entrep
 import { compteDuLycee, exerciceDe } from "../../src/config/cours/monde/comptes-du-lycee";
 import { PAIE_DU_MOIS, TAUX_DE_LA_PAIE } from "../../src/config/cours/monde/exercice-de-nova";
 import { NOVA_CAPACITE } from "../../src/config/cours/monde/nova-capacite";
-import { paieDUnOperateur } from "../../src/config/cours/monde/ressources-humaines-de-nova";
+import { EQUIPE as EQUIPE_DE_MAILLE } from "../../src/config/cours/monde/maille-et-co";
+import { L_USINE_DE_NOVA } from "../../src/config/cours/monde/nova-usine";
+import { HEURES_LEGALES_PAR_MOIS, paieDUnOperateur, SMIC_HORAIRE_BRUT, SMIC_MENSUEL_BRUT, TAUX_PATRONAL } from "../../src/config/cours/monde/ressources-humaines-de-nova";
 
 /**
  * UNE SEULE NOVA DANS LE MONDE DU COURS (réconciliation d'octobre 2026). Les fiches qui disent la
@@ -80,5 +82,38 @@ describe("une seule paie de NOVA, d'une fiche à l'autre", () => {
     ]);
     const p = paieDUnOperateur();
     expect([p.effectif * p.brut, p.effectif * p.cout]).toEqual([PAIE_DU_MOIS.brut, cout]);
+  });
+});
+
+describe("aucun salaire horaire du monde sous le SMIC du cours", () => {
+  it("le SMIC du cours : 12,02 € de l'heure, 1 823,03 € pour 151,67 heures", () => {
+    expect(SMIC_HORAIRE_BRUT).toBe(12.02);
+    expect(HEURES_LEGALES_PAR_MOIS).toBe(Math.round((35 * 52 * 100) / 12) / 100);
+    // 12,02 × 35 × 52 ÷ 12 (et non × 151,67 arrondi, qui donnerait 1 823,07 €).
+    expect(Math.round(((12.02 * 35 * 52) / 12) * 100) / 100).toBe(SMIC_MENSUEL_BRUT);
+  });
+
+  it("les opérateurs de NOVA : 1 875 € pour 151,67 heures payées, 12,36 € de l'heure, sans heures supplémentaires", () => {
+    const o = NOVA_CAPACITE.operateurs;
+    expect(o.heuresPayeesParMois).toBe(HEURES_LEGALES_PAR_MOIS);
+    expect(o.heuresParMois).toBeLessThanOrEqual(o.heuresPayeesParMois);
+    expect(o.salaireBrutMensuel / o.heuresPayeesParMois).toBeGreaterThanOrEqual(SMIC_HORAIRE_BRUT);
+    expect(Math.round((1_875 / 151.67) * 100) / 100).toBe(12.36);
+    // Le salaire du marché et le seuil de démission (95 %) restent au-dessus du SMIC mensuel.
+    const m = NOVA_CAPACITE.personnel.salaireDuMarche;
+    expect(Math.min(m.n, m.nPlus1) * 0.95).toBeGreaterThanOrEqual(SMIC_MENSUEL_BRUT);
+  });
+
+  it("l'équipe de Maille & Co : chaque salarié, au prorata de ses heures, au moins au SMIC", () => {
+    for (const s of EQUIPE_DE_MAILLE) {
+      const heuresDuMois = Math.round((s.heuresParSemaine * 52 * 100) / 12) / 100;
+      expect(s.brutMensuel / heuresDuMois, s.code).toBeGreaterThanOrEqual(SMIC_HORAIRE_BRUT);
+    }
+  });
+
+  it("la main-d'œuvre de l'usine : ses taux horaires chargés, ramenés au brut, au-dessus du SMIC", () => {
+    for (const t of [L_USINE_DE_NOVA.tauxHoraireStandard, L_USINE_DE_NOVA.realise.mainDOeuvre.tauxHoraire]) {
+      expect(t / (1 + TAUX_PATRONAL)).toBeGreaterThanOrEqual(SMIC_HORAIRE_BRUT);
+    }
   });
 });

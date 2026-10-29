@@ -23,15 +23,15 @@ import type { Chapitre } from "../types";
  * laboratoire : au-delà de ce que la ligne peut monter, une minute de plus ne rapporte plus rien).
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA seule, sur l'année N + 1 : la demande, les
- * 4 opérateurs (180 heures par mois, 0,3 heure par enceinte), le cinquième poste manuel (1 750
+ * 4 opérateurs (150 heures de montage par mois sur 151,67 payées, 0,25 heure par enceinte), le cinquième poste manuel (1 750
  * enceintes de plus par trimestre), la marge d'une enceinte et l'embauche à comparer sont ceux de
  * nova-capacite.ts et du chapitre « Recruter » (monde/ressources-humaines-de-nova.ts). Le cinquième
  * poste installé sans embauche, le prix d'une minute gagnée et le stage sont des hypothèses du
  * cours, nommées là-bas.
  *
  * CE QUI A CHANGÉ. Le chapitre rejouait l'année de l'arène avec un budget de formation, dont le
- * moteur tirait un gain de productivité ; il chiffre maintenant un stage chez NOVA : 6 000 €,
- * 800 enceintes de plus, 10 800 € gagnés dans l'année.
+ * moteur tirait un gain de productivité ; il chiffre maintenant un stage chez NOVA : 3 200 €,
+ * 800 enceintes de plus, 13 600 € gagnés dans l'année.
  */
 
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
