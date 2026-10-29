@@ -79,7 +79,7 @@ export const SALAIRE_BRUT_NET_COUT: Chapitre = {
         return [
           `En janvier, ${c.entreprise} verse ${eur(s.brutDeLEquipe)} de salaires bruts à ses ${s.effectif} opérateurs, autant à chacun. Le brut est le salaire du contrat ; ce n'est ni ce que le salarié reçoit, ni ce que l'entreprise paie. Pour un temps plein, il ne peut pas être inférieur au SMIC, ${eur(s.smic)} bruts par mois.`,
           `Sur le brut, des cotisations salariales sont retenues (${pct(s.tauxSalarial)} du brut) : elles financent la sécurité sociale, l'assurance chômage et la retraite du salarié. Ce qui reste est le salaire net. L'entreprise, elle, paie en plus des cotisations patronales (${pct(s.tauxPatronal)} du brut) : le brut et ces cotisations font le coût du salarié.`,
-          "Ces taux sont des ordres de grandeur pour un salarié non cadre du secteur privé, avant les allègements que la loi accorde sur les bas salaires. Le net s'entend ici avant l'impôt sur le revenu, que l'entreprise prélève à la source pour l'État.",
+          "Ces taux sont des ordres de grandeur pour un salarié non cadre du secteur privé, avant les allègements que la loi accorde sur les bas salaires. Près du SMIC, comme ici, la réduction générale des cotisations patronales est forte : le vrai coût employeur est nettement plus bas que celui calculé, et le cours le surestime donc. Le net s'entend ici avant l'impôt sur le revenu, que l'entreprise prélève à la source pour l'État.",
         ];
       },
       tableau: (c) => {

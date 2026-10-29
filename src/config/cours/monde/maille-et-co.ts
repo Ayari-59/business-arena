@@ -267,8 +267,10 @@ export interface ClienteleDeLaBoutique {
  * LES TROIS CLIENTÈLES. Le compteur à l'entrée donne le trafic (3 848 entrées) ; la part de chaque
  * clientèle vient d'une enquête à la porte et de la carte de fidélité (hypothèse du cours). Les
  * comités d'entreprise passent commande en boutique : huit commandes en janvier, réglées à 45
- * jours, qui font chacune un passage en caisse. Les articles de chaque clientèle, référence par
- * référence, refont exactement les ventes de la gamme.
+ * jours. Les indicateurs du point de vente du BTS MCO comptent chacune pour une entrée et un passage
+ * (boutique.ts) ; la caisse, elle, ne les encaisse pas : « Tenir la caisse » et le panier moyen du bac
+ * pro (vente-et-caisse.ts) ne retiennent que les clientèles réglées en caisse. Les articles de
+ * chaque clientèle, référence par référence, refont exactement les ventes de la gamme.
  */
 export const CLIENTELES: readonly ClienteleDeLaBoutique[] = [
   {

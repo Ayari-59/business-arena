@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { getGuestUserId, getOrCreateGuestUserId } from "@/lib/guest";
-import { gardeDesCodes } from "@/lib/garde-des-codes";
+import { gardeDesCodes, minutesDuRefus } from "@/lib/garde-des-codes";
 import {
   classeParCode,
   enregistrerProgression,
@@ -22,14 +22,18 @@ import {
 export async function rejoindreClasseAction(formData: FormData): Promise<void> {
   const code = String(formData.get("code") ?? "");
   const nom = String(formData.get("nom") ?? "");
-  const refuser = (refus: string) =>
-    redirect(`/cours/rejoindre?code=${encodeURIComponent(code)}&refus=${refus}`);
+  // Le prénom saisi revient dans son champ après un refus (audit UX du 29 octobre 2026, P1-3).
+  const suite = nom.trim() ? `&nom=${encodeURIComponent(nom.trim())}` : "";
+  const refuser = (refus: string, attente = "") =>
+    redirect(`/cours/rejoindre?code=${encodeURIComponent(code)}&refus=${refus}${attente}${suite}`);
   // LE CODE D'ABORD, L'INVITÉ ENSUITE (audit, P2-3) : `getOrCreateGuestUserId` insère
   // un compte dès qu'aucun cookie n'est présent ; le faire avant de vérifier le code
   // laissait une ligne par requête, sans limite. Et un code inconnu compte un échec
   // pour l'adresse (lib/garde-des-codes.ts).
   const garde = await gardeDesCodes();
-  if (garde.refus) refuser("inconnu");
+  // TROP D'ESSAIS DEPUIS CETTE ADRESSE (audit UX, P1-4) : le dire, avec l'attente, et non
+  // « ce code ne mène à aucune classe », faux quand le code est juste.
+  if (garde.refus) refuser("trop", `&attente=${minutesDuRefus(garde.refus)}`);
   if (!nom.trim()) refuser("nom");
   if (!(await classeParCode(code))) {
     await garde.echec();
@@ -37,7 +41,7 @@ export async function rejoindreClasseAction(formData: FormData): Promise<void> {
   }
   const userId = await getOrCreateGuestUserId();
   const r = await rejoindreClasse(userId, code, nom);
-  if (!r.ok) redirect(`/cours/rejoindre?code=${encodeURIComponent(code)}&refus=${r.refus}`);
+  if (!r.ok) refuser(r.refus);
   redirect("/cours?classe=rejointe");
 }
 

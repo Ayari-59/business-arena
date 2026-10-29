@@ -26,7 +26,7 @@ let cohorte: { code: string };
 
 beforeAll(async () => {
   const [u] = await db.insert(users).values({ email: `${randomUUID()}@test.local`, displayName: "x" }).returning({ id: users.id });
-  classe = (await creerClasse({ enseignantId: u!.id, nom: "BTS CG 1 · porte", entreprise: null }))!;
+  classe = (await creerClasse({ enseignantId: u!.id, nom: "BTS CG 1 · porte", entreprise: null, parcours: "comptabilite-generale" }))!;
   cohorte = await creerCohorte("Cohorte de la porte");
 });
 

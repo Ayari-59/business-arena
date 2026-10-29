@@ -257,6 +257,7 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
     "Relier l'écart sur activité et l'écart sur rendement, et retrouver un coût réel à rebours",
   ],
   libre: false,
+  prerequis: ["le-cout-preetabli-et-les-budgets"],
   entreprises: {
     codes: ENTREPRISES_DU_CONTROLE_BUDGETAIRE,
     pourquoi: "les coûts préétablis et leurs écarts se calculent sur une production, celle de l'usine du cours, qui fabrique la Nomade et la Salon.",

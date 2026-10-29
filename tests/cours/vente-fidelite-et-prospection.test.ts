@@ -59,10 +59,10 @@ describe("le client qui revient et le client qui part", () => {
 });
 
 describe("les travaux de l'été", () => {
-  it("mai : 522 articles et 34 fidèles, 38 662,32 € ; juillet : 931 articles, 50 490,60 € ; mieux vaut mai", () => {
+  it("mai : 522 articles et 34 fidèles, 38 855,46 € ; juillet : 931 articles, 50 835,07 € ; mieux vaut mai", () => {
     const k = travauxDeLEte(BOUTIQUE);
-    expect(attendus(LES_TRAVAUX_DE_L_ETE, "en-mai")).toEqual([522, c(522 * 28.92), 34, c(34 * 693.12), c(522 * 28.92 + 34 * 693.12)]);
-    expect(attendus(LES_TRAVAUX_DE_L_ETE, "en-juillet")).toEqual([931, c(931 * 28.92), 34, c(34 * 693.12), c(931 * 28.92 + 34 * 693.12)]);
+    expect(attendus(LES_TRAVAUX_DE_L_ETE, "en-mai")).toEqual([522, c(522 * 29.29), 34, c(34 * 693.12), c(522 * 29.29 + 34 * 693.12)]);
+    expect(attendus(LES_TRAVAUX_DE_L_ETE, "en-juillet")).toEqual([931, c(931 * 29.29), 34, c(34 * 693.12), c(931 * 29.29 + 34 * 693.12)]);
     expect(k.quand).toBe("mai");
     expect(juste(LES_TRAVAUX_DE_L_ETE, "reponse")).toEqual(["En mai, quand la boutique vend le moins"]);
   });

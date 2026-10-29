@@ -47,12 +47,17 @@ export function JoinForm({
         <input
           name="code"
           required
-          defaultValue={codeInitial ?? undefined}
+          defaultValue={state.values?.code ?? codeInitial ?? undefined}
           autoCapitalize="characters"
           autoComplete="off"
-          placeholder="EX : K7M2PR"
+          aria-describedby="exemple-de-code"
           className="mt-1 w-full champ px-3 py-2 text-center font-mono text-lg uppercase tracking-annonce text-slate-100 outline-none"
         />
+        {/* L'EXEMPLE SOUS LE CHAMP, PAS DEDANS (audit UX du 29 octobre 2026, P2-7) : en
+            grandes capitales espacées, il ressemblait à un code déjà saisi. */}
+        <span id="exemple-de-code" className="mt-1 block text-xs text-slate-400" data-exemple-de-code="">
+          Par exemple K7M2PR : le code de votre partie, classe, cohorte, concours ou examen.
+        </span>
       </label>
       <label className="block">
         <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
@@ -63,6 +68,7 @@ export function JoinForm({
           required
           autoFocus={codeInitial !== null}
           maxLength={40}
+          defaultValue={state.values?.pseudo ?? ""}
           className="mt-1 w-full champ px-3 py-2 text-sm text-slate-100 outline-none"
         />
       </label>

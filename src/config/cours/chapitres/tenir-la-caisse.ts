@@ -48,6 +48,9 @@ export const FOND_DE_CAISSE = FOND_DU_MONDE;
 /** La part du chiffre d'affaires payée en espèces (le monde du cours). */
 export const PART_EN_ESPECES = PART_DU_MONDE;
 
+/** La course du curseur des clients avant le coffre : assez longue pour que le départ, au quart, ne tombe pas sur la réponse. */
+export const CLIENTS_SUR_LE_CURSEUR = 15;
+
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
@@ -294,11 +297,11 @@ export const TENIR_LA_CAISSE: Chapitre = {
       },
       grandeur: () => ({ libelle: "Clients payés en espèces depuis l'ouverture", unite: "clients" }),
       sens: "plus-grande",
-      cible: (c) => ({ attendu: clientsAvantLeCoffre(ficheDe(c)), min: 0, max: 10 }),
+      cible: (c) => ({ attendu: clientsAvantLeCoffre(ficheDe(c)), min: 0, max: CLIENTS_SUR_LE_CURSEUR }),
       zones: ["Le tiroir reste sous son plafond", "Le tiroir dépasse son plafond"],
       rates: () => ({
-        dessous: "Avec autant de clients, le tiroir dépasse déjà son plafond : il fallait passer au coffre avant.",
-        dessus: "Le tiroir accepte encore un client : cherchez le plus grand nombre.",
+        dessous: "Le tiroir accepte encore un client : cherchez le plus grand nombre.",
+        dessus: "Avec autant de clients, le tiroir dépasse déjà son plafond : il fallait passer au coffre avant.",
       }),
       montrer: "Montrer le nombre de clients",
       lecture: (c, q) => [

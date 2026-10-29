@@ -43,7 +43,7 @@ export const HAUSSE_DU_PRIX = 0.1;
 export const ENTREPRISES_DE_LA_CONCURRENCE = ENTREPRISES_DU_MARCHE;
 
 /** Les bornes du curseur et du laboratoire : le prix, à l'euro. */
-const PRIX_DU_CURSEUR = { min: 59, max: 80 } as const;
+const PRIX_DU_CURSEUR = { min: 59, max: 84 } as const;
 const PRIX_DU_LABORATOIRE = { min: 50, max: 70, pas: 1 } as const;
 
 /** Le départ du laboratoire : NOVA à 65 €, la hausse du chapitre arrondie à l'euro. */

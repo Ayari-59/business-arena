@@ -179,20 +179,26 @@ describe("le rayon", () => {
 });
 
 describe("le panier", () => {
-  it("janvier : 87 450 € ÷ 948 = 92,25 € ; 43 200 € ÷ 948 = 45,57 € ; 46,68 € de marge", () => {
+  // Le panier se lit EN CAISSE (audit pédagogique, P1-7) : les huit commandes des comités
+  // d'entreprise (200 articles, 10 200 € hors taxes, 4 900 € de coût), facturées et réglées à
+  // 45 jours, ne passent pas en caisse, comme le dit « Tenir la caisse ».
+  it("janvier en caisse : (87 450 − 10 200) € ÷ 940 = 82,18 € ; (43 200 − 4 900) € ÷ 940 = 40,74 € ; 41,44 € de marge", () => {
     const p = panierDuMois(f);
     expect(somme(ventes, PRIX)).toBe(87_450);
     expect(somme(ventes, CV)).toBe(43_200);
-    expect([p.tickets, p.panier, p.coutDUneVente, p.marge, p.caEnPlus, p.margeEnPlus]).toEqual([948, 92.25, 45.57, 46.68, 60 * 92.25, c(60 * 46.68)]);
+    expect([p.chiffreDAffaires, p.coutDesVentes, p.articles]).toEqual([87_450 - 10_200, 43_200 - 4_900, 1_530 - 200]);
+    expect([p.tickets, p.panier, p.coutDUneVente, p.marge, p.caEnPlus, p.margeEnPlus]).toEqual([940, c(77_250 / 940), c(38_300 / 940), 41.44, c(60 * 82.18), c(60 * 41.44)]);
+    expect(p.tickets).toBe(journeeEnCaisse(f).ticketsDuMois);
+    expect(p.chiffreDAffaires).toBe(journeeEnCaisse(f).chiffreDuMois);
   });
 
   it("les parts du panier, et l'article à proposer : le pull mérinos, 74 € de marge", () => {
     expect(articlesDuMois(f).map((a) => [a.code, a.dansLePanier])).toEqual([
-      ["col-rond", c(33_000 / 948)],
-      ["cardigan", c(27_000 / 948)],
-      ["merinos", c(12_150 / 948)],
-      ["echarpe", c(11_550 / 948)],
-      ["bonnet", c(3_750 / 948)],
+      ["col-rond", c((33_000 - 80 * 55) / 940)],
+      ["cardigan", c(27_000 / 940)],
+      ["merinos", c((12_150 - 20 * 135) / 940)],
+      ["echarpe", c((11_550 - 60 * 35) / 940)],
+      ["bonnet", c((3_750 - 40 * 25) / 940)],
     ]);
     const a = articleAConseiller(f);
     expect([a.meilleur.code, a.meilleur.marge, a.plusVendu.code, a.moinsCher.code]).toEqual(["merinos", 74, "cardigan", "bonnet"]);
@@ -203,16 +209,17 @@ describe("le panier", () => {
     expect(ventesPourLeVendeur(f)).toBe(3);
   });
 
-  it("l'indice de vente qui porte le panier à 100 € : 1,75 × 57,16 € = 100,02 € ; 1,74 donne 99,45 €", () => {
-    expect(indicePourLObjectif(f)).toBe(1.75);
-    expect(moisALIndice(f, 1.75).panier).toBe(c((1.75 * 87_450) / 1_530));
-    expect(moisALIndice(f, 1.74).panier).toBe(c((1.74 * 87_450) / 1_530));
+  it("l'indice de vente qui porte le panier à 100 € : 1,73 × 58,08 € = 100,48 € ; 1,72 donne 99,90 €", () => {
+    expect(indicePourLObjectif(f)).toBe(1.73);
+    expect(moisALIndice(f, 1.73).panier).toBe(c((1.73 * 77_250) / 1_330));
+    expect(moisALIndice(f, 1.72).panier).toBe(c((1.72 * 77_250) / 1_330));
+    expect(moisALIndice(f, 1.72).panier).toBeLessThan(100);
   });
 
-  it("décembre : 260 000 € ÷ 3 130 = 83,07 € de panier, 42,72 € de marge, le panier baisse", () => {
+  it("décembre en caisse : 231 850 € ÷ 3 100 = 74,79 € de panier, 38,43 € de marge, le panier baisse", () => {
     const d = decembreFaceAJanvier(f);
-    expect([d.fin.chiffreDAffaires, d.fin.coutDesVentes, d.fin.panier, d.fin.coutDUneVente, d.fin.marge]).toEqual([260_000, 126_300, 83.07, 40.35, 42.72]);
-    expect([d.ecartDuPanier, d.ecartDeLaMarge, d.bilan]).toEqual([-9.18, -3.96, "panier-baisse"]);
+    expect([d.fin.tickets, d.fin.chiffreDAffaires, d.fin.coutDesVentes, d.fin.panier, d.fin.coutDUneVente, d.fin.marge]).toEqual([3_100, 231_850, 112_715, 74.79, 36.36, 38.43]);
+    expect([d.ecartDuPanier, d.ecartDeLaMarge, d.bilan]).toEqual([c(74.79 - 82.18), c(38.43 - 41.44), "panier-baisse"]);
   });
 });
 
@@ -258,8 +265,8 @@ describe("la fidélité", () => {
     const [mai, juillet] = [fermeturePourTravaux(f, 2), fermeturePourTravaux(f, 3)];
     expect([mai.articlesPerdus, juillet.articlesPerdus]).toEqual([Math.round((3_132 / 90) * 15), Math.round((5_588 / 90) * 15)]);
     expect([mai.fidelesAttendues, mai.fidelesPerdues, juillet.fidelesPerdues]).toEqual([170, 34, 34]);
-    expect(mai.margeDUnArticle).toBe(c(44_250 / 1_530));
-    expect([mai.total, juillet.total]).toEqual([c(522 * 28.92 + 34 * 693.12), c(931 * 28.92 + 34 * 693.12)]);
+    expect(mai.margeDUnArticle).toBe(c((77_250 - 38_300) / 1_330));
+    expect([mai.total, juillet.total]).toEqual([c(522 * 29.29 + 34 * 693.12), c(931 * 29.29 + 34 * 693.12)]);
   });
 });
 

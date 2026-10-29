@@ -264,8 +264,8 @@ export const RECEVOIR_UNE_LIVRAISON: Chapitre = {
       cible: (c) => ({ attendu: cartonsQuiPeuventManquer(ficheDe(c)), min: 0, max: 50 }),
       zones: ["Le rayon sert toute la demande du mois", "Des clients repartent sans leur article"],
       rates: () => ({
-        dessous: "Avec autant de cartons perdus, le rayon ne sert plus toute la demande du mois.",
-        dessus: "Le rayon tient encore : un carton de plus peut manquer. Cherchez le plus grand nombre.",
+        dessous: "Le rayon tient encore : un carton de plus peut manquer. Cherchez le plus grand nombre.",
+        dessus: "Avec autant de cartons perdus, le rayon ne sert plus toute la demande du mois.",
       }),
       montrer: "Montrer les cartons",
       lecture: (c, q) => {

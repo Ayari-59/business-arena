@@ -586,6 +586,15 @@ export function libellesDuDevisDe(o: OffreDuCatalogue): LibellesDuDevis {
   return l;
 }
 
+/**
+ * L'ENTREPRISE ET LE NIVEAU SONT-ILS EXIGÉS AU DEVIS ? (audit UX du 29 octobre 2026, P1-7.)
+ * Oui pour l'offre Classe (une entreprise ET un niveau écrits sur le devis : pas d'offre
+ * « cours seul »). Non pour Programme et Campus : la direction qui demande le devis laisse
+ * ces choix pédagogiques à l'équipe ; ils restent proposés, facultatifs.
+ */
+export const parametrageRequisAuDevis = (l: { entreprise?: true; niveau?: true }): boolean =>
+  Boolean(l.entreprise && l.niveau);
+
 /* ---------------------------------------------------------------------------
  * LE CATALOGUE PAR DÉFAUT : LA GRILLE D'OCTOBRE 2026, TELLE QUE LA BASE LA REÇOIT.
  *
@@ -616,9 +625,21 @@ const LA_PARTIE_DE_CLASSE =
   "Les parties de classe : les étudiants rejoignent par un code, sans compte ni e-mail, en équipes, entreprises en concurrence.";
 const LE_SUIVI =
   "Le suivi : tableau de bord, observation, maîtrise des notions, révélation et projection en cours, relevé de notes exportable en tableur.";
-/** Le cours, inclus dans les trois offres de l'arène (décision du propriétaire, octobre 2026). */
-const LE_COURS =
-  "Le cours : tous les chapitres et leurs cas pratiques, suivis en classe chapitre par chapitre, calculatrice comprise.";
+/**
+ * LE COURS, SELON L'OFFRE (décision du propriétaire, octobre 2026 ; la règle :
+ * services/cours.service.ts, coursOuvert ; le catalogue en base : drizzle/0053). La
+ * Découverte ouvre le seul chapitre libre ; Classe, les chapitres du parcours de la classe,
+ * choisi à sa création ; Programme, ceux des parcours des classes du programme ; Campus, tout.
+ */
+export const LE_COURS_PAR_OFFRE = {
+  decouverte: "Le premier chapitre du cours et son cas pratique, en libre accès.",
+  classe:
+    "Le cours : les chapitres du parcours de la classe et leurs cas pratiques, suivis en classe chapitre par chapitre, calculatrice comprise.",
+  programme:
+    "Le cours : les chapitres des parcours de vos classes et leurs cas pratiques, suivis en classe chapitre par chapitre, calculatrice comprise.",
+  campus:
+    "Le cours : tous les chapitres de tous les parcours et leurs cas pratiques, suivis en classe chapitre par chapitre, calculatrice comprise.",
+} as const;
 
 /** L'intégration aux plateformes de cours (src/lti) : en ligne, décrite sur /integration. */
 export const INTEGRATION_LMS = {
@@ -781,6 +802,7 @@ export const OFFRES_PAR_DEFAUT: readonly OffreDuCatalogue[] = [
       "L'arène en solo sur les {entreprises} entreprises, niveaux {niveauxDecouverte} ({nomsDesNiveauxDecouverte}), en partie complète de {toursSolo} tours.",
       "Les fiches notions, le manuel et le guide.",
       "Un épisode manager de démonstration par métier ({demos} sur {episodes}), au niveau {niveauDesDemos}, avec son bilan.",
+      LE_COURS_PAR_OFFRE.decouverte,
     ],
     precisions: ["Les parties de classe et les concours commencent avec {lesOffresDeLArene}."],
     modules: [],
@@ -802,7 +824,7 @@ export const OFFRES_PAR_DEFAUT: readonly OffreDuCatalogue[] = [
       "Une classe de {elevesParClasse} élèves au plus, dans une partie comme dans le cours.",
       LA_PARTIE_DE_CLASSE,
       LE_SUIVI,
-      LE_COURS,
+      LE_COURS_PAR_OFFRE.classe,
       "Les ateliers clés en main qui se jouent avec cette entreprise et ce niveau, avec déroulé, corrigés et dossier enseignant.",
       "Un concours à la place d'une partie, si l'entreprise choisie est {entrepriseDesConcours} : les concours se jouent avec elle.",
     ],
@@ -828,7 +850,7 @@ export const OFFRES_PAR_DEFAUT: readonly OffreDuCatalogue[] = [
       "L'équipe pédagogique et les intervenants du programme, référent compris, au nombre fixé au devis.",
       LA_PARTIE_DE_CLASSE,
       LE_SUIVI,
-      LE_COURS,
+      LE_COURS_PAR_OFFRE.programme,
       "Les ateliers clés en main de cette entreprise, avec déroulé, corrigés et dossier enseignant.",
       "Les concours et le classement à l'IPG, si l'entreprise choisie est {entrepriseDesConcours} : les concours se jouent avec elle.",
     ],
@@ -852,7 +874,7 @@ export const OFFRES_PAR_DEFAUT: readonly OffreDuCatalogue[] = [
     inclus: [
       "Les {entreprises} entreprises, à tous les niveaux, dans tous les programmes.",
       "Des groupes, des enseignants et des intervenants sans limite.",
-      LE_COURS,
+      LE_COURS_PAR_OFFRE.campus,
       "Les {ateliers} ateliers clés en main, avec déroulé, corrigés et dossier enseignant, dont {ateliersReferentiel} adossés au référentiel d'un diplôme ({diplomes}).",
       "Les concours et le classement à l'IPG.",
       "L'examen individuel : une partie solo notée sur une grille fixe, la même pour tous les candidats.",
@@ -1096,6 +1118,26 @@ export const CONDITIONS_DE_VENTE: readonly string[] = [
   "Les étudiants et les élèves jouent sans nom ni e-mail : un code suffit.",
 ];
 
+const QUESTION_DE_L_ESSAI = "Peut-on essayer avec un groupe ?";
+
+/**
+ * L'ESSAI AVEC UN GROUPE (audit de l'offre, octobre 2026 : « Non » était le premier frein de
+ * l'enseignant seul). Le mécanisme existe déjà, sans paiement ni changement de base : la
+ * licence d'essai de /admin (nature « essai », à 0 €, datée, bornée par la durée maximale
+ * réglée dans /admin/offres, rubrique Gratuités ; services/vente.service.ts). Posée sur
+ * l'offre Classe, elle en porte toutes les limites, appliquées par le serveur, et se ferme
+ * seule à sa date de fin. La réponse suit ce réglage : « Non » tant qu'il est éteint (le
+ * défaut), l'essai et sa durée dès que le propriétaire l'active.
+ */
+export const reponseSurLEssai = (essai: { autorise: boolean; dureeMaxJours: number }): string =>
+  essai.autorise
+    ? `Oui, sur demande et sans paiement : un essai de l'offre ${OFFRES.classe.nom}, ${essai.dureeMaxJours} jours au plus, pour un enseignant et un groupe de ${ELEVES_PAR_CLASSE} élèves au plus, une partie à la fois, une entreprise et un niveau. Demandez-le par le devis ; il s'ouvre après votre demande et se ferme seul à son terme, sans facture ni reconduction.`
+    : `Non. Découvrez le simulateur en solo avec l'offre gratuite ; les parties de classe commencent avec ${LES_OFFRES_DE_L_ARENE}.`;
+
+/** Les questions de /tarifs, l'essai selon son réglage (/admin/offres). */
+export const questionsDesTarifs = (essai: { autorise: boolean; dureeMaxJours: number }): readonly { q: string; r: string }[] =>
+  QUESTIONS_TARIFS.map((x) => (x.q === QUESTION_DE_L_ESSAI ? { q: x.q, r: reponseSurLEssai(essai) } : x));
+
 /** Les questions qu'on nous pose avant d'acheter. */
 export const QUESTIONS_TARIFS: readonly { q: string; r: string }[] = [
   {
@@ -1111,7 +1153,7 @@ export const QUESTIONS_TARIFS: readonly { q: string; r: string }[] = [
     r: `${OFFRES.classe.nom} : un enseignant, un groupe à la fois, une entreprise et un niveau. ${OFFRES.programme.nom} : l'équipe d'un programme, toutes ses promotions en même temps, une entreprise à tous les niveaux. ${OFFRES.campus.nom} : toute l'école, les ${ENTREPRISES.length} entreprises, sans limite d'enseignants, d'intervenants ni de groupes.`,
   },
   {
-    q: "Peut-on essayer avec un groupe ?",
+    q: QUESTION_DE_L_ESSAI,
     r: `Non. Découvrez le simulateur en solo avec l'offre gratuite ; les parties de classe commencent avec ${LES_OFFRES_DE_L_ARENE}.`,
   },
   {

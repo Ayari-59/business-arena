@@ -19,6 +19,7 @@ import {
 } from "@/config/examen/textes";
 import { TAILLE_DU_LOT } from "@/pedagogy/examen/lot";
 import { LIEN_TARIFS } from "@/config/vitrine-solo";
+import { lienDuDevis, LIBELLE_DU_DEVIS } from "@/config/tarifs";
 import { compter, jourDeCreation } from "@/lib/format";
 import { NavigationEnseignant, Rubrique } from "@/components/en-tete-enseignant";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
@@ -71,7 +72,9 @@ export default async function MesExamensPage({
   ]);
   const isOrgAdmin = staff?.organizations.some((o) => o.role === "org_admin") ?? false;
   const raison = estUnRefusDeCreation(refus) ? refus : null;
-  const ouvrir = liste.length === 0 || !!raison;
+  // Sans le module, le formulaire ne s'ouvre pas de lui-même, et reste grisé : le message est
+  // au-dessus (audit UX du 29 octobre 2026, P0-1).
+  const ouvrir = (module && liste.length === 0) || !!raison;
   // Le formulaire part du périmètre de la licence (entreprises et niveaux qu'elle couvre).
   const entreprises = licence?.parametrage.entreprises ?? null;
   const niveaux = licence?.parametrage.niveaux ?? null;
@@ -112,6 +115,10 @@ export default async function MesExamensPage({
         {!module && raison !== "licence" ? (
           <p data-examens-sans-module="" className="rounded-lg encadre-neutre px-3 py-2.5 text-sm text-slate-300 sm:px-4 sm:py-3">
             <strong className="font-semibold text-slate-100">Examen individuel.</strong> {messageDuModule}{" "}
+            <Link href={lienDuDevis("campus")} prefetch={false} className={LIEN_A_L_ENCRE}>
+              {LIBELLE_DU_DEVIS}
+            </Link>{" "}
+            ·{" "}
             <Link href={LIEN_TARIFS} prefetch={false} className={LIEN_A_L_ENCRE}>
               Voir les offres
             </Link>
@@ -140,6 +147,7 @@ export default async function MesExamensPage({
               l&apos;examen à sa création : elle ne change plus ensuite.
             </p>
             <GuardedForm action={creerExamenAction} label="création d'un examen" className="mt-4 grid gap-5" timeoutMs={60_000}>
+              <fieldset disabled={!module || undefined} className="contents" data-formulaire-sans-offre={!module ? "" : undefined}>
               <label className="grid gap-1">
                 <span className={LIBELLE}>Nom de l&apos;examen</span>
                 <input name="nom" required maxLength={NOM_D_EXAMEN_MAX} placeholder="Gestion L2 · examen de fin de semestre" className={CHAMP} />
@@ -248,6 +256,7 @@ export default async function MesExamensPage({
               <SubmitButton pendingLabel="Création de l'examen…" className={bouton()}>
                 Créer l&apos;examen
               </SubmitButton>
+              </fieldset>
             </GuardedForm>
           </section>
         </details>

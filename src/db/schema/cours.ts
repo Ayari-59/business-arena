@@ -24,6 +24,18 @@ export const coursClasses = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     /** L'entreprise du cas, imposée à toute la classe. Nulle : chaque élève choisit. */
     entreprise: text("entreprise"),
+    /**
+     * LE PARCOURS DU COURS DE LA CLASSE (migration 0052) : un code de config/cours/registre.ts.
+     * Sous l'offre Classe ou Programme, c'est lui qui ouvre les chapitres réservés (les
+     * chapitres de ce parcours) ; sous Campus, tout est ouvert. Nul : aucun parcours choisi.
+     */
+    parcours: text("parcours"),
+    /**
+     * CLASSE D'AVANT LE PARCOURS (migration 0052) : créée avant la règle, elle garde l'accès
+     * d'avant (tout le cours sous licence) tant que son parcours est nul ; son enseignant est
+     * invité à le choisir. Une classe créée depuis porte toujours un parcours.
+     */
+    heritee: boolean("heritee").notNull().default(false),
     /** Close : plus de nouvel élève. Les progressions déjà remontées restent lisibles. */
     closeLe: timestamp("close_le", { withTimezone: true }),
     /** La calculatrice retirée à la classe (une évaluation de calcul mental) ; permise par défaut. */

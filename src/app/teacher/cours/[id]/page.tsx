@@ -13,10 +13,14 @@ import { SITE_URL } from "@/config/site";
 import { compter } from "@/lib/format";
 import { NavigationEnseignant, Rubrique } from "@/components/en-tete-enseignant";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
-import { bouton } from "@/components/bouton";
+import { bouton, LIEN_A_L_ENCRE } from "@/components/bouton";
+import { Icone } from "@/components/icone";
+import { chapitreOuvertALaClasse, classeSansOffre, offreDuCoursDeLEnseignant } from "@/services/chapitres-de-la-classe";
 import { SubmitButton } from "@/components/submit-button";
 import { ENTREPRISES } from "@/app/cours/entreprises";
-import { calculatriceAction, cloreClasseAction } from "../actions";
+import { PARCOURS } from "@/config/cours/registre";
+import { lienDuDevis, LIBELLE_DU_DEVIS, OFFRES } from "@/config/tarifs";
+import { calculatriceAction, cloreClasseAction, parcoursAction } from "../actions";
 
 export const metadata: Metadata = {
   title: "Une classe du cours",
@@ -31,6 +35,7 @@ const MESSAGES_DU_GESTE: Record<string, string> = {
   rouverte: "La classe est rouverte.",
   calculatrice: "La calculatrice est rendue à vos élèves.",
   "sans-calculatrice": "La calculatrice est retirée à vos élèves.",
+  parcours: "Le parcours de la classe est enregistré.",
 };
 
 /** Une case de la frise d'un élève : l'état d'une étape, en couleur et en mots. */
@@ -61,9 +66,10 @@ export default async function ClasseDuCoursPage({
   const session = await getSession();
   if (!session) redirect(await connexionPourLaPageDemandee());
   const choisi = chapitreParCode(demande ?? "") ?? CHAPITRES[0]!;
-  const [lu, staff] = await Promise.all([
+  const [lu, staff, offre] = await Promise.all([
     /^[0-9a-f-]{36}$/.test(id) ? classeDeLEnseignant(session.userId, id, choisi.code) : null,
     getStaffContext(session.userId),
+    offreDuCoursDeLEnseignant(session.userId),
   ]);
   if (!lu) notFound();
   const { classe, progressions } = lu;
@@ -82,6 +88,11 @@ export default async function ClasseDuCoursPage({
   const imposee = classe.entreprise ? ENTREPRISES.find((e) => e.code === classe.entreprise) : undefined;
   const nomDe = (code: string) => ENTREPRISES.find((e) => e.code === code)?.nom ?? "pas encore choisie";
   const close = classe.closeLe !== null;
+  // CE QUE LA CLASSE OUVRE À SES ÉLÈVES (audit UX du 29 octobre 2026, P1-1) : un cadenas sur
+  // chaque chapitre qui leur restera fermé, la règle de l'élève (services/chapitres-de-la-classe.ts).
+  const ouvert = (c: (typeof CHAPITRES)[number]) => chapitreOuvertALaClasse(offre, classe, c);
+  const ouverts = CHAPITRES.filter(ouvert).length;
+  const libre = CHAPITRES.find((c) => c.libre);
 
   return (
     <main id="main" className="pb-16">
@@ -101,6 +112,25 @@ export default async function ClasseDuCoursPage({
           </p>
         ) : null}
 
+        {!offre && libre ? (
+          <p data-classe-du-cours-sans-offre="" className="rounded-lg encadre-neutre px-4 py-2.5 text-sm text-slate-300">
+            <Icone nom="verrou" className="mr-1.5 h-3.5 w-3.5" />
+            {classeSansOffre(libre.titre)}{" "}
+            <Link href={lienDuDevis("classe")} prefetch={false} className={LIEN_A_L_ENCRE}>
+              {LIBELLE_DU_DEVIS}
+            </Link>
+          </p>
+        ) : null}
+
+        {/* UNE CLASSE D'AVANT LE PARCOURS (migration 0052) : elle garde l'accès d'avant, et la
+            page demande à l'enseignant de lui choisir son parcours. */}
+        {classe.heritee && !classe.parcours ? (
+          <p role="status" className="rounded-lg encadre-distinction px-4 py-2.5 text-sm" data-bandeau-parcours="">
+            Choisissez le parcours du cours de cette classe, plus bas. Jusque-là, elle garde l&apos;accès qu&apos;elle avait ; ensuite,
+            avec l&apos;offre {OFFRES.classe.nom} ou {OFFRES.programme.nom}, elle ouvrira les chapitres de ce parcours.
+          </p>
+        ) : null}
+
         <section className="carte grid gap-3 p-4 sm:p-6" aria-label="Inviter les élèves">
           <p className="text-sm text-slate-400">Code de la classe, à projeter ou à écrire au tableau</p>
           <p className="font-mono text-4xl font-bold tracking-wider text-slate-50" data-code-de-classe="">
@@ -113,6 +143,38 @@ export default async function ClasseDuCoursPage({
           <p className="text-sm text-slate-400">
             {imposee ? `Entreprise du cas, pour toute la classe : ${imposee.nom}.` : "Chaque élève choisit l'entreprise du cas."}
           </p>
+          {/* LE PARCOURS DE LA CLASSE (migration 0052) : il ouvre ses chapitres sous l'offre Classe ou
+              Programme ; choisi une fois, il ne change plus (services/cours.service.ts). */}
+          {classe.parcours ? (
+            <p className="text-sm text-slate-400" data-parcours-de-la-classe={classe.parcours}>
+              Parcours du cours : {PARCOURS.find((p) => p.code === classe.parcours)?.titre ?? classe.parcours}.
+            </p>
+          ) : (
+            <form action={parcoursAction.bind(null, classe.id)} className="grid gap-2" data-parcours-de-la-classe="">
+              <label className="grid gap-1">
+                <span className="text-sm font-semibold text-slate-200">Parcours du cours</span>
+                <select name="parcours" required defaultValue="" className="champ w-full px-3 py-2 text-base">
+                  <option value="" disabled>
+                    Choisir un parcours
+                  </option>
+                  {PARCOURS.map((p) => (
+                    <option key={p.code} value={p.code}>
+                      {p.titre}
+                    </option>
+                  ))}
+                </select>
+                <span className="text-sm text-slate-400">
+                  Avec l&apos;offre {OFFRES.classe.nom} ou {OFFRES.programme.nom}, la classe ouvre les chapitres de ce parcours ; choisi
+                  une fois, il ne change plus. Avec l&apos;offre {OFFRES.campus.nom}, tous les chapitres sont ouverts.
+                </span>
+              </label>
+              <div>
+                <SubmitButton pendingLabel="Enregistrement…" className={bouton({ variante: "secondaire", taille: "s" })}>
+                  Enregistrer le parcours
+                </SubmitButton>
+              </div>
+            </form>
+          )}
           <form action={cloreClasseAction.bind(null, classe.id, !close)}>
             <SubmitButton pendingLabel="Enregistrement…" className={bouton({ variante: "secondaire", taille: "s" })}>
               {close ? "Rouvrir la classe" : "Clore la classe (plus de nouvel élève)"}
@@ -131,19 +193,34 @@ export default async function ClasseDuCoursPage({
           </form>
         </section>
 
+        {/* LES CHAPITRES, REPLIÉS (audit UX, P1-9) : une cinquantaine de titres repoussaient le
+            tableau des élèves tout en bas, sur téléphone surtout. Le chapitre suivi se lit dans
+            le titre du tableau ; la liste s'ouvre pour en changer, un cadenas sur les fermés. */}
         {CHAPITRES.length > 1 ? (
-          <nav aria-label="Chapitres" className="flex flex-wrap gap-2 text-sm">
-            {CHAPITRES.map((c) => (
-              <Link
-                key={c.code}
-                href={`/teacher/cours/${classe.id}?chapitre=${c.code}`}
-                aria-current={c.code === chapitre.code ? "page" : undefined}
-                className={`rounded-full border px-3 py-1 ${c.code === chapitre.code ? "border-white/40 font-semibold" : "border-white/10"}`}
-              >
-                {c.titre}
-              </Link>
-            ))}
-          </nav>
+          <details className="group" data-chapitres-de-la-classe="">
+            <summary className="cursor-pointer text-sm text-slate-300 underline-offset-4 hover:underline">
+              Changer de chapitre ({compter(ouverts, "chapitre ouvert", "chapitres ouverts")} à vos élèves sur {CHAPITRES.length})
+            </summary>
+            <nav aria-label="Chapitres" className="mt-3 flex flex-wrap gap-2 text-sm">
+              {CHAPITRES.map((c) => (
+                <Link
+                  key={c.code}
+                  href={`/teacher/cours/${classe.id}?chapitre=${c.code}`}
+                  aria-current={c.code === chapitre.code ? "page" : undefined}
+                  data-chapitre-ferme={ouvert(c) ? undefined : ""}
+                  className={`rounded-full border px-3 py-1 ${c.code === chapitre.code ? "border-white/40 font-semibold" : "border-white/10"} ${ouvert(c) ? "" : "text-slate-400"}`}
+                >
+                  {ouvert(c) ? null : (
+                    <>
+                      <Icone nom="verrou" className="mr-1 h-3 w-3" />
+                      <span className="sr-only">Fermé à vos élèves : </span>
+                    </>
+                  )}
+                  {c.titre}
+                </Link>
+              ))}
+            </nav>
+          </details>
         ) : null}
 
         <Rubrique note={`${compter(progressions.length, "élève")} · ${compter(vue.finis, "chapitre fini", "chapitres finis")}`}>

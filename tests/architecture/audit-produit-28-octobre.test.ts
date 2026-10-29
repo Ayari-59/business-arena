@@ -26,7 +26,7 @@ import { DevisForm } from "@/components/devis-form";
  *  1. le cours se présente sur /enseignants, /ecoles, /fonctionnalites, nombres comptés ;
  *     (le titre, la description et l'image de partage : tests/unit/seo-metadata.test.ts) ;
  *  2. les portes de l'accueil : l'enseignant vers sa page, l'élève vers la saisie du code ;
- *  3. l'orientation mène au devis et à l'essai ; le devis du cours seul ne demande ni
+ *  3. l'orientation mène au devis et à l'essai ; plus de devis « cours seul » (décision du propriétaire) ; avant, il ne demandait ni
  *     entreprise ni niveau (la validation serveur : tests/integration/trois-offres.test.ts) ;
  *  4. un mot par sens : « formation » pour les entrées du registre, et « Découverte » à ses
  *     seuls quatre sens recensés, aucun cinquième ;
@@ -93,15 +93,15 @@ describe("2. les portes de l'accueil", () => {
   });
 });
 
-describe("3. l'orientation mène au devis et à l'essai ; le devis du cours seul", () => {
+describe("3. l'orientation mène au devis et à l'essai ; le cours vient avec l'offre", () => {
   const orientation = lire("components/orientation-form.tsx");
-  it("trois sorties : le devis du réglage, l'essai solo, le devis du cours seul", () => {
+  it("trois sorties : le devis du réglage, l'essai solo, le devis du cours (« le cours seul » n'est plus un choix)", () => {
     expect(orientation).toMatch(/\/devis\?offre=classe&entreprise=\$\{encodeURIComponent\(reco\.scenarioCode\)\}&niveau=\$\{reco\.niveau\}/);
     expect(orientation).toMatch(/href="\/jouer"/);
-    expect(orientation).toMatch(/href="\/devis\?offre=classe&interet=cours"/);
+    expect(orientation).toMatch(/href="\/devis\?offre=classe"/);
   });
-  it("le chapitre réservé ouvre le devis du cours seul", () => {
-    expect(lire("app/cours/[chapitre]/page.tsx")).toContain('href="/devis?offre=classe&interet=cours"');
+  it("le chapitre réservé ouvre le devis de l'offre Classe", () => {
+    expect(lire("components/cours/chapitre-reserve.tsx")).toContain('href="/devis?offre=classe"');
   });
 
   const props = {
@@ -123,14 +123,11 @@ describe("3. l'orientation mène au devis et à l'essai ; le devis du cours seul
     mentionTva: "TVA",
     contact: "c@x.test",
   };
-  it("le cours seul : entreprise et niveau facultatifs ; sinon requis", () => {
-    const cours = renderToStaticMarkup(createElement(DevisForm, { ...props, interetInitial: "cours" }));
-    expect(cours).toMatch(/name="interet" checked="" value="cours"/);
-    expect(cours).not.toMatch(/<select[^>]*name="entreprise"[^>]*required/);
-    expect(cours).not.toMatch(/<select[^>]*name="niveau"[^>]*required/);
-    expect(texte(cours)).toContain("Facultatif pour le cours seul");
+  it("plus de « cours seul » : l'entreprise et le niveau sont requis", () => {
     const arene = renderToStaticMarkup(createElement(DevisForm, props));
     expect(arene).toMatch(/<select[^>]*required[^>]*name="entreprise"|<select[^>]*name="entreprise"[^>]*required/);
+    expect(arene).not.toMatch(/name="interet"/);
+    expect(texte(arene)).not.toContain("Le cours seul");
   });
   it("le réglage choisi ailleurs est repris", () => {
     const html = renderToStaticMarkup(

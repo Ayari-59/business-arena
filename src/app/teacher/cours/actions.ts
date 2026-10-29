@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
-import { cloreClasse, creerClasse, permettreLaCalculatrice } from "@/services/cours.service";
+import { choisirLeParcours, cloreClasse, creerClasse, permettreLaCalculatrice } from "@/services/cours.service";
 
 /**
  * LES GESTES DE L'ENSEIGNANT SUR SES CLASSES DU COURS. L'enseignant est celui de la
@@ -22,8 +22,9 @@ export async function creerClasseAction(formData: FormData): Promise<void> {
     enseignantId,
     nom: String(formData.get("nom") ?? ""),
     entreprise: String(formData.get("entreprise") ?? "") || null,
+    parcours: String(formData.get("parcours") ?? "") || null,
   });
-  if (!cree) redirect("/teacher/cours?refus=nom#nouvelle-classe");
+  if (!cree) redirect("/teacher/cours?refus=nom#nouvelle-classe"); // un nom et un parcours sont requis
   revalidatePath("/teacher/cours");
   redirect(`/teacher/cours/${cree.id}?creee=1`);
 }
@@ -40,4 +41,12 @@ export async function calculatriceAction(classeId: string, permise: boolean): Pr
   if (!(await permettreLaCalculatrice({ enseignantId, classeId, permise }))) redirect("/teacher/cours?refus=introuvable");
   revalidatePath(`/teacher/cours/${classeId}`);
   redirect(`/teacher/cours/${classeId}?fait=${permise ? "calculatrice" : "sans-calculatrice"}`);
+}
+
+export async function parcoursAction(classeId: string, formData: FormData): Promise<void> {
+  const enseignantId = await enseignant();
+  const parcours = String(formData.get("parcours") ?? "");
+  if (!(await choisirLeParcours({ enseignantId, classeId, parcours }))) redirect(`/teacher/cours/${classeId}?refus=parcours`);
+  revalidatePath(`/teacher/cours/${classeId}`);
+  redirect(`/teacher/cours/${classeId}?fait=parcours`);
 }

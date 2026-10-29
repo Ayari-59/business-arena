@@ -28,12 +28,16 @@ describe("les promesses d'accès suivent le code", () => {
   });
 
   it("un chapitre réservé mène au chapitre libre, aux offres et au devis", () => {
-    const page = lire("src/app/cours/[chapitre]/page.tsx");
+    // La page du chapitre réservé vit dans son composant (audit UX du 29 octobre 2026 : une
+    // variante pour l'élève, sans vente) ; la page du chapitre le rend.
+    expect(lire("src/app/cours/[chapitre]/page.tsx")).toContain("<ChapitreReserve");
+    const page = lire("src/components/cours/chapitre-reserve.tsx");
     expect(page).toContain("data-acces-du-cours");
     expect(page).toContain("href={LIEN_TARIFS}");
-    // Le devis du cours seul : l'entreprise et le niveau d'arène y sont facultatifs (audit produit du 28 octobre).
-    expect(page).toContain('href="/devis?offre=classe&interet=cours"');
-    expect(page).toContain("href={`/cours/${CHAPITRE_LIBRE}`}");
+    // Le devis de l'offre Classe : pas d'offre « cours seul » (décision du propriétaire).
+    // « Le cours seul » n'est plus un choix du devis : le cours vient avec l'offre (audit de l'offre).
+    expect(page).toContain('href="/devis?offre=classe"');
+    expect(page).toContain("href={`/cours/${chapitreLibre}`}");
   });
 });
 

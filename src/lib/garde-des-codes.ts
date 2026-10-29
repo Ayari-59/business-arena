@@ -20,6 +20,12 @@ export async function adresseDOrigine(): Promise<string | null> {
   return h.get("x-real-ip") || h.get("x-forwarded-for")?.split(",").pop()?.trim() || null;
 }
 
+/** Les minutes d'attente que dit le refus (« réessayez dans 12 minutes ») ; 15 si illisible. */
+export function minutesDuRefus(refus: string): number {
+  const m = /(\d+)\s*minute/.exec(refus);
+  return m ? Number(m[1]) : 15;
+}
+
 export async function gardeDesCodes(): Promise<GardeDeReprise> {
   return garderLesTentatives({ marqueur: MARQUEUR_CODES_SAISIS, ip: await adresseDOrigine(), maxEchecs: MAX_CODES_FAUX_PAR_ADRESSE });
 }

@@ -587,6 +587,10 @@ describe.each([
   { code: "l-acompte-du-client", entreprise: "nova" },
   { code: "rembourser-une-part-du-pret", entreprise: "nova", telephone: true },
   { code: "la-commande-du-31-janvier", entreprise: "transport" },
+  // La suite du chapitre pilote (audit pédagogique : les trente étapes coupées en deux) et son cas.
+  { code: "du-resultat-a-la-tresorerie", entreprise: "nova" },
+  { code: "du-resultat-a-la-tresorerie", entreprise: "bistrot", telephone: true },
+  { code: "le-client-paie-a-la-commande", entreprise: "hotel" },
   { code: "l-escompte-demande-par-le-client", entreprise: "bistrot", telephone: true },
   { code: "la-commande-du-31-janvier", entreprise: "hotel", telephone: true }, // son curseur au téléphone aussi
   { code: "l-escompte-demande-par-le-client", entreprise: "batiment" }, // son curseur sur ordinateur aussi
@@ -786,10 +790,10 @@ describe.each([
       expect(texte).not.toContain("aux établissements sous licence");
     } else {
       expect(texte).toContain(`${motsDuContenu(chapitreCode).reserve} aux établissements sous licence`);
-      // Une sortie : le chapitre libre, les offres, le devis — celui du cours seul, sans
-      // entreprise ni niveau imposés (audit d'octobre 2026).
+      // Une sortie : le chapitre libre, les offres, le devis — celui de l'offre Classe (pas de cours seul) ;
+      // l'entreprise et le niveau se choisissent au devis.
       expect(sorties).toEqual(expect.arrayContaining(["/tarifs", `/cours/${CHAPITRES.find((c) => c.libre)!.code}`]));
-      expect(sorties).toContain("/devis?offre=classe&interet=cours");
+      expect(sorties).toContain("/devis?offre=classe");
     }
 
     const code = entreprise;

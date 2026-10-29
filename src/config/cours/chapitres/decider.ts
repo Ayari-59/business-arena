@@ -64,7 +64,7 @@ export const COMMANDE_AU_PRIX_DU_TRIMESTRE = 3_300;
 export const COMMANDE_EXCEPTIONNELLE = { quantite: 2_000, prix: 50 } as const;
 
 /** Les bornes du curseur du prix plancher, en euros entiers. */
-export const PRIX_DU_CURSEUR_PLANCHER = { min: 30, max: 60 } as const;
+export const PRIX_DU_CURSEUR_PLANCHER = { min: 30, max: 70 } as const;
 
 /** Les leviers du laboratoire : le prix (au pas de 10 centimes, la demande étant à l'enceinte inférieure), la production, la sous-traitance. */
 export const PRIX_DU_LABORATOIRE = { min: 45, max: 75, pas: 0.1 } as const;

@@ -519,35 +519,17 @@ describe("la demande de devis garde le paramétrage souhaité", () => {
     expect(notification.texte).toContain("Niveau souhaité : niveau 4 Arbitrage");
   });
 
-  it("Classe, le cours seul : l'entreprise et le niveau deviennent facultatifs, et la notification le dit", async () => {
-    vi.mocked(envoyerCourriel).mockClear();
+  it("« le cours seul » n'est plus un choix : sous Classe, l'entreprise et le niveau restent exigés", async () => {
     const r = await envoyerDemandeDeDevisAction(
       ETAT,
       formulaire({ ...base, offre: "classe", interet: "cours", email: "cours@ecole.test" }),
     );
-    expect(r.error).toBeNull();
-    expect(r.ok).toMatchObject({ offre: "classe" });
-    const [d] = await db.select().from(demandesDeDevis).where(eq(demandesDeDevis.email, "cours@ecole.test"));
-    expect(d).toMatchObject({ offre: "classe", entreprise: null, niveau: null });
-    const notification = vi.mocked(envoyerCourriel).mock.calls.map(([c]) => c).find((c) => c.texte.includes("cours@ecole.test"))!;
-    expect(notification.texte).toContain("Intérêt : le cours seul");
-    // Facultatives, elles restent vérifiées quand on les donne.
-    const faux = await envoyerDemandeDeDevisAction(
+    expect(r.error).toMatch(/entreprise/);
+    const sansNiveau = await envoyerDemandeDeDevisAction(
       ETAT,
-      formulaire({ ...base, offre: "classe", interet: "cours", entreprise: "inconnue", email: "cours2@ecole.test" }),
+      formulaire({ ...base, offre: "classe", interet: "cours", entreprise: "hotel", email: "cours2@ecole.test" }),
     );
-    expect(faux.error).toMatch(/entreprise/);
-    const niveauFaux = await envoyerDemandeDeDevisAction(
-      ETAT,
-      formulaire({ ...base, offre: "classe", interet: "cours", niveau: "9", email: "cours3@ecole.test" }),
-    );
-    expect(niveauFaux.error).toMatch(/niveau/);
-    // Sans l'intérêt « cours », ou avec une valeur inconnue, l'arène reste exigée.
-    const arene = await envoyerDemandeDeDevisAction(
-      ETAT,
-      formulaire({ ...base, offre: "classe", interet: "n'importe", email: "cours4@ecole.test" }),
-    );
-    expect(arene.error).toMatch(/entreprise/);
+    expect(sansNiveau.error).toMatch(/niveau/);
   });
 
   it("Programme : l'entreprise et l'effectif ; Campus : ni entreprise ni niveau", async () => {

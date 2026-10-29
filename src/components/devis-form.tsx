@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { bouton } from "@/components/bouton";
 import { envoyerDemandeDeDevisAction, type DevisFormState } from "@/app/devis/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import { euros } from "@/config/catalogue";
 import type { AteliersDeLaClasse } from "@/config/ateliers-de-la-classe";
+import { parametrageRequisAuDevis } from "@/config/tarifs";
 
 /**
  * LE FORMULAIRE DE DEMANDE DE DEVIS.
@@ -50,7 +51,6 @@ export function DevisForm({
   mentionTva,
   contact,
   initial = ETAT_INITIAL,
-  interetInitial = "arene",
   entrepriseInitiale = "",
   niveauInitial = "",
   ateliers = {},
@@ -66,11 +66,6 @@ export function DevisForm({
   mentionTva: string;
   contact: string;
   initial?: DevisFormState;
-  /**
-   * Ce qui intéresse le demandeur, de l'adresse (`?interet=cours`, depuis un chapitre réservé
-   * ou l'orientation) : le cours seul rend l'entreprise et le niveau facultatifs.
-   */
-  interetInitial?: "arene" | "cours";
   /** Le réglage déjà choisi ailleurs (`?entreprise=…&niveau=…`, depuis l'orientation). */
   entrepriseInitiale?: string;
   niveauInitial?: string;
@@ -88,16 +83,35 @@ export function DevisForm({
   const v = state.values;
   const [offre, setOffre] = useState(v?.offre || offreInitiale);
   const choisie = offres.find((o) => o.code === offre) ?? offres[0]!;
-  const [interet, setInteret] = useState<"arene" | "cours">(v?.interet === "cours" ? "cours" : v ? "arene" : interetInitial);
-  const parametree = Boolean(choisie.entreprise || choisie.niveau);
-  // Le cours seul ne se paramètre pas : l'entreprise et le niveau restent proposés, facultatifs.
-  const facultatif = parametree && interet === "cours";
+  // « LE COURS SEUL » N'EST PLUS UN CHOIX (audit de l'offre, octobre 2026) : le cours vient
+  // avec une offre de l'arène, Classe pour le parcours de la classe, Programme pour ceux de
+  // ses classes, Campus pour tout (config/tarifs.ts, LE_COURS_PAR_OFFRE). Une offre qui se
+  // paramètre demande donc toujours son entreprise et son niveau.
+  // Exigés pour Classe seulement ; facultatifs pour Programme et Campus (audit UX, P1-7).
+  const requis = parametrageRequisAuDevis(choisie);
   const [entrepriseChoisie, setEntreprise] = useState(v?.entreprise ?? entrepriseInitiale);
   const [niveauChoisi, setNiveau] = useState(v?.niveau ?? niveauInitial);
   const combinaison =
     choisie.entreprise && choisie.niveau && entrepriseChoisie && niveauChoisi
       ? ateliers[`${entrepriseChoisie}:${niveauChoisi}`]
       : undefined;
+
+  // L'ERREUR SOUS SON CHAMP, LE FOCUS DESSUS (audit UX du 29 octobre 2026, P1-6) : sur
+  // téléphone, un message en bas du formulaire obligeait à remonter chercher le champ.
+  const champEnErreur = state.error ? (state.champ ?? null) : null;
+  useEffect(() => {
+    if (!champEnErreur) return;
+    const el = formRef.current?.elements.namedItem(champEnErreur);
+    if (el && "focus" in el) (el as HTMLElement).focus();
+  }, [state, champEnErreur, formRef]);
+  const erreur = (nom: string) =>
+    champEnErreur === nom ? (
+      <span id={`erreur-${nom}`} role="alert" data-erreur-du-champ={nom} className="mt-1 block text-sm text-red-300">
+        {state.error}
+      </span>
+    ) : null;
+  const invalide = (nom: string) =>
+    champEnErreur === nom ? { "aria-invalid": true as const, "aria-describedby": `erreur-${nom}` } : {};
 
   const champ = "mt-1 w-full champ px-3 py-2 text-sm text-slate-100 outline-none";
   const etiquette = "text-xs font-medium uppercase tracking-wide text-slate-400";
@@ -166,7 +180,7 @@ export function DevisForm({
   }
 
   return (
-    <form ref={formRef} action={formAction} className="carte grid gap-4 p-6 sm:grid-cols-2" data-formulaire-devis="">
+    <form ref={formRef} action={formAction} noValidate className="carte grid gap-4 p-6 sm:grid-cols-2" data-formulaire-devis="">
       <label className="block sm:col-span-2">
         <span className={etiquette}>L&apos;offre</span>
         <select
@@ -174,6 +188,7 @@ export function DevisForm({
           value={offre}
           onChange={(e) => setOffre(e.target.value)}
           className={champ}
+          {...invalide("offre")}
         >
           {offres.map((o) => (
             <option key={o.code} value={o.code}>
@@ -181,10 +196,12 @@ export function DevisForm({
             </option>
           ))}
         </select>
+        {erreur("offre")}
       </label>
       <label className="block">
         <span className={etiquette}>Votre nom</span>
-        <input name="nom" required maxLength={120} autoComplete="name" defaultValue={v?.nom ?? ""} className={champ} />
+        <input name="nom" required maxLength={120} autoComplete="name" defaultValue={v?.nom ?? ""} className={champ} {...invalide("nom")} />
+        {erreur("nom")}
       </label>
       <label className="block">
         <span className={etiquette}>Votre fonction</span>
@@ -196,7 +213,9 @@ export function DevisForm({
           defaultValue={v?.fonction ?? ""}
           placeholder="Enseignant, proviseur adjoint, responsable formation…"
           className={champ}
+          {...invalide("fonction")}
         />
+        {erreur("fonction")}
       </label>
       <label className="block">
         <span className={etiquette}>{choisie.organisation}</span>
@@ -208,39 +227,15 @@ export function DevisForm({
           defaultValue={v?.organisation ?? ""}
           placeholder={choisie.exempleOrganisation}
           className={champ}
+          {...invalide("organisation")}
         />
+        {erreur("organisation")}
       </label>
       <label className="block">
         <span className={etiquette}>{choisie.identifiant}</span>
-        <input name="identifiant" maxLength={40} defaultValue={v?.identifiant ?? ""} className={champ} />
+        <input name="identifiant" maxLength={40} defaultValue={v?.identifiant ?? ""} className={champ} {...invalide("identifiant")} />
+        {erreur("identifiant")}
       </label>
-      {parametree ? (
-        <fieldset className="sm:col-span-2" data-champ-devis="interet">
-          <legend className={etiquette}>Ce qui vous intéresse</legend>
-          <div className="mt-1 flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-200">
-            <label className="flex items-center gap-2">
-              <input
-                type="radio"
-                name="interet"
-                value="arene"
-                checked={interet === "arene"}
-                onChange={() => setInteret("arene")}
-              />
-              L&apos;arène, avec le cours
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="radio"
-                name="interet"
-                value="cours"
-                checked={interet === "cours"}
-                onChange={() => setInteret("cours")}
-              />
-              Le cours seul
-            </label>
-          </div>
-        </fieldset>
-      ) : null}
       {choisie.entreprise ? (
         <label className="block" data-champ-devis="entreprise">
           <span className={etiquette}>L&apos;entreprise souhaitée</span>
@@ -251,13 +246,14 @@ export function DevisForm({
           <select
             key={v?.entreprise ?? entrepriseInitiale}
             name="entreprise"
-            required={!facultatif}
+            required={requis}
             onChange={(e) => setEntreprise(e.target.value)}
             defaultValue={v?.entreprise ?? entrepriseInitiale}
             className={champ}
+            {...invalide("entreprise")}
           >
-            <option value="" disabled={!facultatif}>
-              {facultatif ? "Aucune pour l'instant" : "Choisir l'entreprise"}
+            <option value="" disabled={requis}>
+              {requis ? "Choisir l'entreprise" : "À choisir plus tard par l'équipe"}
             </option>
             {entreprises.map((e) => (
               <option key={e.code} value={e.code}>
@@ -265,7 +261,12 @@ export function DevisForm({
               </option>
             ))}
           </select>
-          {facultatif ? <span className="mt-1 block text-xs text-slate-400">Facultatif pour le cours seul.</span> : null}
+          {requis ? null : (
+            <span className="mt-1 block text-xs text-slate-400" data-facultatif="entreprise">
+              Facultatif : un choix pédagogique que l&apos;équipe pourra faire.
+            </span>
+          )}
+          {erreur("entreprise")}
         </label>
       ) : null}
       {choisie.niveau ? (
@@ -274,13 +275,14 @@ export function DevisForm({
           <select
             key={v?.niveau ?? niveauInitial}
             name="niveau"
-            required={!facultatif}
+            required={requis}
             onChange={(e) => setNiveau(e.target.value)}
             defaultValue={v?.niveau ?? niveauInitial}
             className={champ}
+            {...invalide("niveau")}
           >
-            <option value="" disabled={!facultatif}>
-              {facultatif ? "Aucun pour l'instant" : "Choisir le niveau"}
+            <option value="" disabled={requis}>
+              {requis ? "Choisir le niveau" : "À choisir plus tard par l'équipe"}
             </option>
             {niveaux.map((n) => (
               <option key={n.niveau} value={n.niveau}>
@@ -288,7 +290,7 @@ export function DevisForm({
               </option>
             ))}
           </select>
-          {facultatif ? <span className="mt-1 block text-xs text-slate-400">Facultatif pour le cours seul.</span> : null}
+          {erreur("niveau")}
         </label>
       ) : null}
       {combinaison ? (
@@ -317,7 +319,9 @@ export function DevisForm({
             maxLength={6}
             defaultValue={v?.effectif ?? ""}
             className={champ}
+            {...invalide("effectif")}
           />
+          {erreur("effectif")}
         </label>
       ) : null}
       <label className="block">
@@ -330,7 +334,9 @@ export function DevisForm({
           autoComplete="email"
           defaultValue={v?.email ?? ""}
           className={champ}
+          {...invalide("email")}
         />
+        {erreur("email")}
       </label>
       <label className="block">
         <span className={etiquette}>Code promo</span>
@@ -342,8 +348,10 @@ export function DevisForm({
           spellCheck={false}
           defaultValue={v?.codePromo ?? ""}
           className={`${champ} font-mono`}
+          {...invalide("codePromo")}
         />
         <span className="mt-1 block text-xs text-slate-400">Facultatif.</span>
+        {erreur("codePromo")}
       </label>
       <label className="block sm:col-span-2">
         <span className={etiquette}>Votre message</span>
@@ -354,8 +362,10 @@ export function DevisForm({
           defaultValue={v?.message ?? ""}
           placeholder="La durée souhaitée, la date de démarrage, le service à qui adresser la facture, un numéro d'engagement Chorus Pro…"
           className={champ}
+          {...invalide("message")}
         />
         <span className="mt-1 block text-xs text-slate-400">Facultatif.</span>
+        {erreur("message")}
       </label>
       {/* piège à robots : invisible, doit rester vide */}
       <label className="hidden" aria-hidden="true">
@@ -363,7 +373,7 @@ export function DevisForm({
         <input name="site" tabIndex={-1} autoComplete="off" defaultValue="" />
       </label>
 
-      {state.error ? (
+      {state.error && !champEnErreur ? (
         <p role="alert" className="rounded-lg encadre-perte px-3 py-2 text-sm text-red-300 sm:col-span-2">
           {state.error}
         </p>

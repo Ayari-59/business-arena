@@ -110,8 +110,9 @@ export const MARGE_D_EQUILIBRE = 0.01;
 export const VENTES_DE_L_ANNEE_N = ANNEE_N.demande;
 
 /**
- * LA CAMPAGNE PROPOSÉE (hypothèse du chapitre « Ce que rapporte la communication ») : NOVA ne fait
- * pas de publicité payante ; une agence lui propose une campagne de 4 000 € par trimestre.
+ * LA CAMPAGNE PROPOSÉE (hypothèse du chapitre « Ce que rapporte la communication ») : pendant son
+ * premier exercice, NOVA ne fait pas de publicité payante (elle en fera pour sa gamme,
+ * GAMME_DE_NOVA) ; une agence lui propose une campagne de 4 000 € par trimestre pour la NOVA One.
  */
 export const CAMPAGNE_PROPOSEE = 4_000;
 

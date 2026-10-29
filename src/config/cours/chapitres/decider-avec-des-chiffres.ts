@@ -10,6 +10,7 @@ import {
   deuxChoix as deuxChoixDuMarche,
   meilleurBudgetDePublicite,
 } from "../monde/gestion-et-information";
+import { GAMME_DE_NOVA } from "../monde/nova-gestion";
 import type { Chapitre, TableauDeDonnees } from "../types";
 
 /**
@@ -28,7 +29,8 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * calcul.
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA seule, sur le marché à trois (marche-a-trois.ts
- * et attractivite.ts) : NOVA ne fait pas de publicité aujourd'hui ; la publicité envisagée,
+ * et attractivite.ts) : pendant son premier exercice, NOVA ne paie aucune publicité (elle en fera
+ * pour sa gamme, PUBLICITE_DE_LA_GAMME, comme le coût par produit et le cas figé) ; la publicité envisagée,
  * 4 000 € par trimestre, ajoute à son image ce que dit la courbe de la communication, et les clients
  * se partagent entre les trois enseignes. La publicité envisagée est une hypothèse du cours, nommée
  * dans monde/gestion-et-information.ts.
@@ -47,6 +49,9 @@ export const ENTREPRISES_DU_CHOIX = ENTREPRISES_DE_LA_GESTION_DE_BASE;
 
 export const POURQUOI_DECIDER =
   "ce chapitre suit NOVA sur le marché qu'elle partage avec SoundBox et Auris : le cours y rejoue l'année avec chaque choix, face aux mêmes concurrents.";
+
+/** La publicité de NOVA une fois sa gamme lancée : celle de ses trois références, par mois. */
+const PUBLICITE_DE_LA_GAMME = GAMME_DE_NOVA.references.reduce((t, r) => t + r.publicite, 0);
 
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
@@ -121,7 +126,7 @@ export const DECIDER_AVEC_DES_CHIFFRES: Chapitre = {
       texte: (c) => {
         const k = deuxChoix();
         return [
-          `${c.entreprise} ne fait pas de publicité. Une agence lui propose une campagne de ${eur(PUBLICITE_ENVISAGEE)} par trimestre, ${eur(k.budget)} sur l'année : son image serait meilleure, et des clients de SoundBox et d'Auris viendraient chez elle. Sans publicité, elle garde cet argent. Deux choix, et il faut en prendre un.`,
+          `Pendant son premier exercice, ${c.entreprise} ne vend que la NOVA One et ne paie aucune publicité ; elle en fera quand elle lancera sa gamme, ${eur(PUBLICITE_DE_LA_GAMME)} par mois. Pour la NOVA One seule, une agence lui propose une campagne de ${eur(PUBLICITE_ENVISAGEE)} par trimestre, ${eur(k.budget)} sur l'année : son image serait meilleure, et des clients de SoundBox et d'Auris viendraient chez elle. Sans publicité, elle garde cet argent. Deux choix, et il faut en prendre un.`,
           "Pour décider avec des chiffres, on avance en trois temps. Prévoir : ce que chaque choix coûte, et ce qu'il doit rapporter. Choisir : avec une règle fixée avant de connaître la réponse. Constater : on rejoue l'année avec la publicité, les mêmes concurrents en face, et on compare.",
         ];
       },

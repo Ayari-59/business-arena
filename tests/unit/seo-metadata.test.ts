@@ -100,6 +100,8 @@ describe("pages publiques : titre distinct, description, canonique", () => {
     ["/fonctionnalites/page", "Fonctionnalités", "/fonctionnalites"],
     ["/orientation/page", "Choisir sa simulation", "/orientation"],
     ["/mentions-legales/page", "Mentions légales", "/mentions-legales"],
+    ["/cgv/page", "Conditions générales de vente", "/cgv"],
+    ["/entreprises/offre/page", "Épisodes manager pour les entreprises", "/entreprises/offre"],
     // Prix éteints par défaut (offres sur mesure) : la page s'appelle « Offres ».
     ["/tarifs/page", "Offres", "/tarifs"],
     ["/integration/page", "Intégration à Moodle", "/integration"],

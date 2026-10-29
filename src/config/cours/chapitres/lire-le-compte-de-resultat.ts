@@ -115,7 +115,7 @@ export const LIRE_LE_COMPTE_DE_RESULTAT: Chapitre = {
     "Ranger les charges selon leur nature : activité, financement, impôt",
     "Calculer le résultat de l'année",
     "Calculer et interpréter un taux de résultat",
-    "Distinguer le résultat de l'activité et le résultat de l'année",
+    "Distinguer le résultat de l'activité (le résultat d'exploitation) et le résultat de l'année (le résultat net)",
     "Mesurer ce que les ventes et le prix changent au résultat",
   ],
   libre: false,

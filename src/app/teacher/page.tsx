@@ -30,6 +30,8 @@ import {
   type HorsLicence,
 } from "@/config/tarifs";
 import { LigneDEtatDeLOffre } from "@/components/etat-de-l-offre";
+import { AccueilDeLaDecouverte } from "@/components/accueil-de-la-decouverte";
+import { lireLEssai } from "@/services/catalogue.service";
 import { LIEN_A_L_ENCRE } from "@/components/bouton";
 import {
   archiverPartieAction,
@@ -100,9 +102,10 @@ export default async function TeacherDashboard({
   // niveau, marqués du nom de l'offre, et refusés par le serveur à la création.
   // L'ÉTAT DE L'OFFRE (PAR-13) : la ligne d'en-tête, et la règle de la classe (pas de
   // partie de classe ni de concours sans licence de l'arène en cours, PAR-01 et PAR-02).
-  const [{ vitrineSolo: regle }, etat] = await Promise.all([
+  const [{ vitrineSolo: regle }, etat, essai] = await Promise.all([
     getPlatformConfig(),
     etatDeLOffre(session.userId),
+    lireLEssai(),
   ]);
   const licence =
     etat.arene !== null && (etat.arene.state === "active" || etat.arene.state === "bientot_expiree");
@@ -197,6 +200,10 @@ export default async function TeacherDashboard({
 
       <LigneDEtatDeLOffre etat={etat} niveauMaxGratuit={regle.niveauMaxAutres} />
 
+      {!licence ? (
+        <AccueilDeLaDecouverte essai={essai} niveauMax={regle.active ? regle.niveauMaxAutres : NIVEAU_MAX} />
+      ) : null}
+
       {echec ? (
         <p
           role="alert"
@@ -282,7 +289,9 @@ export default async function TeacherDashboard({
       <details
         id="nouvelle-partie"
         className="group"
-        open={games.length === 0 || Boolean(echec) || undefined}
+        // Sans offre, le formulaire ne s'ouvre pas de lui-même : l'accueil de la Découverte
+        // dit d'abord ce qui se fait tout de suite (audit UX, P0-1).
+        open={(licence && games.length === 0) || Boolean(echec) || undefined}
       >
         <summary className="inline-flex cursor-pointer list-none rounded-lg [&::-webkit-details-marker]:hidden">
           {/* Deux visages, un seul affiché : le bouton plein quand c'est fermé,
@@ -375,6 +384,10 @@ export default async function TeacherDashboard({
           timeoutMs={30_000}
           className="mt-4 grid gap-4 sm:grid-cols-3"
         >
+          {/* SANS OFFRE, LE FORMULAIRE EST GRISÉ AVANT LA SAISIE (audit UX du 29 octobre 2026,
+              P0-1) : l'enseignant remplissait tout pour lire le refus après l'envoi. Le message
+              est juste au-dessus ; le serveur refuse de toute façon (`verifierLaClasse`). */}
+          <fieldset disabled={!licence || undefined} className="contents" data-formulaire-sans-offre={!licence ? "" : undefined}>
           <EconomicParams
             scenarios={[
               ...SCENARIO_CHOICES.map((d) => ({
@@ -687,6 +700,7 @@ export default async function TeacherDashboard({
           >
             Créer la partie et obtenir le code d&apos;invitation
           </SubmitButton>
+          </fieldset>
         </GuardedForm>
         <p className="mt-2 text-sm text-slate-400">
           Le nombre total d&apos;entreprises (équipes + bots) est plafonné à 8. Les élèves
@@ -941,7 +955,7 @@ export default async function TeacherDashboard({
               </Link>
             </p>
           ) : null}
-          <CompetitionCreateForm />
+          <CompetitionCreateForm desactive={!licence} />
           <p className="mt-2 text-sm text-slate-400">
             Les équipes s&apos;inscrivent avec le code sur /compete. Mode compétition :
             décisions verrouillées après validation, indices limités.

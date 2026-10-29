@@ -73,13 +73,20 @@ export function BarreDActionMobile() {
     chemin: null,
     visible: false,
   });
-  const boutonVisible = vu.chemin === chemin && vu.visible;
+  // AVANT LA PREMIÈRE MESURE, LA BARRE ATTEND (audit UX du 29 octobre 2026, P2-5) : au premier
+  // affichage, elle se montrait le temps que l'observateur réponde, et doublait sur le premier
+  // écran le bouton du héros. Elle n'apparaît qu'une fois ce bouton sorti de l'écran.
+  const boutonVisible = vu.chemin === chemin ? vu.visible : true;
 
   // Tant qu'un appel à l'action principal est à l'écran, la barre se tait.
   useEffect(() => {
     if (!quoi) return;
     const cibles = document.querySelectorAll("[data-cta-principal]");
-    if (cibles.length === 0) return;
+    if (cibles.length === 0) {
+      // Rien à surveiller : la barre se montre, après le premier affichage.
+      const image = requestAnimationFrame(() => setVu({ chemin, visible: false }));
+      return () => cancelAnimationFrame(image);
+    }
     const vus = new Set<Element>();
     const observateur = new IntersectionObserver((entrees) => {
       for (const e of entrees) {

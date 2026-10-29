@@ -290,6 +290,7 @@ export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
     "Remonter d'un solde à l'impôt et au résultat fiscal, et critiquer la dépense de fin d'année",
   ],
   libre: false,
+  prerequis: ["la-cloture"],
   entreprises: {
     codes: ENTREPRISES_DE_L_IMPOT,
     pourquoi:
@@ -320,7 +321,7 @@ export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
       question: (c) => {
         const x = impotDeNova(c);
         const v = VOITURE_DU_GERANT;
-        return `La voiture du gérant, ${eur(v.prixTtc)} toutes taxes comprises, s'amortit sur ${v.dureeDAmortissement} ans ; la loi ne déduit l'amortissement que sur ${eur(v.plafondDeDeduction)}. Calculez l'amortissement déductible de l'année, puis l'amortissement à réintégrer (l'amortissement comptable, ${eur(x.amortissementComptable)}, moins le déductible), et enfin le résultat fiscal : ${eur(x.e.resultatComptable)}, plus cet amortissement, plus la majoration de retard de ${eur(MAJORATION_DE_RETARD)}.`;
+        return `La voiture du gérant, ${eur(v.prixTtc)} toutes taxes comprises, s'amortit sur ${v.dureeDAmortissement} ans ; la loi ne déduit l'amortissement que sur ${eur(v.plafondDeDeduction)}, le plafond que ses émissions de CO2 lui donnent (il change selon le véhicule). Calculez l'amortissement déductible de l'année, puis l'amortissement à réintégrer (l'amortissement comptable, ${eur(x.amortissementComptable)}, moins le déductible), et enfin le résultat fiscal : ${eur(x.e.resultatComptable)}, plus cet amortissement, plus la majoration de retard de ${eur(MAJORATION_DE_RETARD)}.`;
       },
       champs: (c) => {
         const x = impotDeNova(c);

@@ -5,6 +5,7 @@ import { accordPluriel } from "../accords";
 import type { Cas, Facture } from "../cas";
 import { dateDuCours as date } from "../dates";
 import { joursCompris, JOURS_DE_L_ANNEE } from "../monde/amortissement";
+import type { Ecriture } from "../../../pedagogy/cours/etats";
 import type { Chapitre, EtatDuCours, Piece, TableauDeDonnees } from "../types";
 
 /**
@@ -40,6 +41,12 @@ import type { Chapitre, EtatDuCours, Piece, TableauDeDonnees } from "../types";
  *     l'équipement et les intérêts courus du mois), critique (ce résultat est-il celui du mois ?) ;
  *     puis la synthèse.
  *
+ * AUDIT PÉDAGOGIQUE (P1-4, P1-8) : le chapitre faisait trente étapes, et c'est la démonstration
+ * libre du cours. Il s'arrête maintenant au bilan du 31 janvier (dix-neuf étapes, avec la synthèse) ;
+ * la trésorerie, les échéances et le niveau de l'examen forment la suite, DU_RESULTAT_A_LA_TRESORERIE
+ * (plus bas), qui repart de la balance du 31 janvier. Les étapes, leurs textes et leurs chiffres
+ * n'ont pas changé.
+ *
  * Ce qui a disparu, pour resserrer le guidé : le calcul guidé de la facture de l'équipement (la pièce
  * la donne), le solde de la banque en une étape à part (il entre au bilan), les cotisations
  * patronales en écriture séparée (la paie se passe en une écriture), les questions « coût du
@@ -59,6 +66,9 @@ import type { Chapitre, EtatDuCours, Piece, TableauDeDonnees } from "../types";
  * la facture porte le délai convenu, le règlement arrive au délai du cas.
  */
 export const PLAFOND_DES_DELAIS_ENTRE_PROFESSIONNELS = 60;
+
+/** Le titre de la suite (la seconde moitié du mois), que la fin du premier chapitre annonce. */
+export const TITRE_DE_LA_SUITE = "Du résultat à la trésorerie : les échéances du premier mois";
 
 /** Le dernier jour du mois du chapitre : ce qui se règle au plus tard ce jour-là passe par la banque de janvier. */
 export const FIN_DE_JANVIER = 31;
@@ -424,14 +434,13 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
   ],
   titre: "De la création au premier bilan",
   accroche:
-    "Un mois de la vie d'une entreprise qu'on crée : vous passez chaque écriture, faites bouger la TVA et la trésorerie dans la simulation, puis construisez vous-même son compte de résultat et son bilan.",
+    "Un mois de la vie d'une entreprise qu'on crée : vous passez chaque écriture, faites bouger la TVA dans la simulation, puis construisez vous-même son compte de résultat et son bilan.",
   objectifs: [
     "Passer une écriture en partie double dans le journal",
     "Distinguer une charge, une immobilisation et un simple règlement",
     "Calculer la TVA du mois et dire s'il s'agit d'une TVA due ou d'un crédit de TVA",
     "Enregistrer la paie : salaires bruts, cotisations, net à payer, règlement à l'URSSAF",
-    "Construire le compte de résultat et le bilan à partir du journal, puis de la seule balance",
-    "Passer du résultat à la variation de la banque, et expliquer pourquoi le résultat n'est pas la trésorerie",
+    "Construire le compte de résultat et le bilan à partir du journal",
   ],
   libre: true,
   etapes: [
@@ -441,7 +450,7 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
       titre: "La partie double",
       notions: ["balance_sheet"],
       texte: (c) => [
-        `Ce chapitre se joue dans la simulation du cours : le premier mois ${dE(c.entreprise)}, figé, aux montants de son métier. Vous tenez sa comptabilité depuis sa création, le 1er janvier. Chaque opération arrive avec sa pièce : un relevé de banque, une facture, une quittance. Vous l'enregistrez dans le journal ; puis un curseur et un laboratoire font bouger le mois, pour voir ce que chaque montant change dans les comptes.`,
+        `Ce chapitre se joue dans la simulation du cours : le premier mois ${dE(c.entreprise)}, figé, aux montants de son métier. Vous tenez sa comptabilité depuis sa création, le 1er janvier. Chaque opération arrive avec sa pièce : un relevé de banque, une facture, une quittance. Vous l'enregistrez dans le journal ; puis un curseur fait bouger le mois, pour voir ce que chaque montant change dans les comptes.`,
         `Ce que la simulation suppose : un seul achat, consommé dans le mois (il n'y a pas de stock) ; deux ventes, l'une à un client professionnel payable à échéance, l'autre au comptant ; une TVA due dès la facture (c'est la règle d'une vente de biens ; pour un service, elle n'est due qu'à l'encaissement, sauf option pour les débits : pour garder le même calcul dans toutes les entreprises, ce chapitre la compte dès la facture, comme si l'option était prise, alors que plus loin dans le cours ATLAS CONSEIL et MARTEL & FILS n'ont pas opté) ; des jours comptés en mois de 30 jours.`,
         "Une opération s'écrit toujours deux fois, sur deux comptes au moins : c'est la partie double. Quand l'entreprise reçoit 100 € sur son compte bancaire, il faut dire aussi d'où ils viennent.",
         "Les comptes portent un numéro. Le premier chiffre dit leur famille : 1 les capitaux, 2 les immobilisations, 4 les tiers (clients, fournisseurs, État), 5 la trésorerie, 6 les charges, 7 les produits. Le plan de comptes du cours reste ouvert à côté du journal.",
@@ -871,7 +880,7 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
           r >= 0
             ? `${c.entreprise} dégage un bénéfice de ${eur(r)} en janvier : ses produits dépassent ses charges.`
             : `${c.entreprise} perd ${eur(-r)} en janvier : ses charges dépassent ses produits.`,
-          "Ni l'équipement, ni l'emprunt, ni la TVA n'y figurent : ce ne sont ni des charges ni des produits. Ce résultat reste pourtant incomplet, et la fin du chapitre dira ce qui lui manque.",
+          "Ni l'équipement, ni l'emprunt, ni la TVA n'y figurent : ce ne sont ni des charges ni des produits. Ce résultat reste pourtant incomplet, et le chapitre suivant dira ce qui lui manque.",
         ];
       },
       vue: "resultat",
@@ -898,6 +907,90 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
         ];
       },
       vue: "bilan",
+    },
+    {
+      id: "fin",
+      type: "lecture",
+      titre: "Ce que vous savez faire",
+      notions: ["balance_sheet", "income_statement", "vat_payable"],
+      texte: (c) => {
+        const j = janvierDe(c);
+        return [
+          `Vous avez tenu le premier mois ${dE(c.entreprise)} : chaque opération dans le journal, puis la TVA (${tvaDite(j.tvaNette)}), le compte de résultat (${resultatDit(j.resultat)}) et le bilan, construits à partir de vos propres écritures.`,
+          "Le curseur l'a montré avant la formule : la TVA de l'équipement se récupère, et un gros investissement fait un crédit de TVA, pas une charge.",
+          `La suite, « ${TITRE_DE_LA_SUITE} », repart de votre balance du 31 janvier : les règlements qui font bouger la banque sans toucher au résultat, puis le mois vu par un examinateur.`,
+          "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
+        ];
+      },
+      repere: () => "Une charge ou un produit naît à la facture ; une immobilisation n'est pas une charge ; la TVA ne passe jamais par le résultat. Le bilan est équilibré parce que chaque écriture l'est.",
+    },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LA SUITE : DU RÉSULTAT À LA TRÉSORERIE
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * La balance du 31 janvier en une écriture : le journal du premier chapitre, déjà passé, d'où la suite
+ * repart. Les soldes débiteurs au débit, les créditeurs au crédit.
+ */
+export function ouvertureDeJanvier(c: Cas): Ecriture {
+  const s = soldesDeJanvier(c);
+  const comptes = Object.keys(s)
+    .filter((k) => s[k] !== 0)
+    .sort();
+  return {
+    date: date(FIN_DE_JANVIER),
+    libelle: "Balance au 31 janvier : le journal du mois, passé au chapitre « De la création au premier bilan »",
+    lignes: comptes.map((k) => ({ compte: k, debit: s[k]! > 0 ? s[k]! : 0, credit: s[k]! < 0 ? -s[k]! : 0 })),
+  };
+}
+
+/**
+ * CHAPITRE : DU RÉSULTAT À LA TRÉSORERIE (comptabilité générale, palier 2). La seconde moitié de
+ * l'ancien chapitre pilote, qui faisait trente étapes (audit pédagogique, P1-4 et P1-8) : le pari et
+ * le laboratoire de la trésorerie, le passage du résultat à la banque, les trois échéances, puis le
+ * niveau de l'examen (la banque à rebours, le bilan du mois complet, la critique du résultat). Le
+ * journal s'ouvre sur la balance du 31 janvier du premier chapitre : mêmes écritures, mêmes chiffres.
+ */
+export const DU_RESULTAT_A_LA_TRESORERIE: Chapitre = {
+  code: "du-resultat-a-la-tresorerie",
+  parcours: "comptabilite-generale",
+  palier: 2,
+  blocs: [
+    "BTS CG P1 · Contrôle et traitement comptable des opérations commerciales",
+    "BTS CG P2 · Contrôle et production de l'information financière",
+    "DCG UE9 · Comptabilité",
+    "BUT GEA · Produire l'information comptable, fiscale et sociale de l'organisation",
+  ],
+  titre: TITRE_DE_LA_SUITE,
+  accroche:
+    "Le premier mois est au journal, le bilan est dressé : faites jouer les règlements dans la simulation, passez les échéances, puis lisez le mois comme un examinateur.",
+  objectifs: [
+    "Passer du résultat à la variation de la banque, et expliquer pourquoi le résultat n'est pas la trésorerie",
+    "Enregistrer les règlements d'un fournisseur, de l'URSSAF et d'un client",
+    "Remonter un relevé de banque à rebours",
+    "Dresser un bilan à partir de la seule balance, avec l'amortissement et les intérêts courus du mois",
+  ],
+  libre: false,
+  prerequis: ["creation-premier-bilan"],
+  ouverture: ouvertureDeJanvier,
+  etapes: [
+    {
+      id: "intro",
+      type: "lecture",
+      titre: "Le journal au 31 janvier",
+      notions: ["balance_sheet", "net_treasury"],
+      tableau: balanceDeJanvier,
+      texte: (c) => {
+        const j = janvierDe(c);
+        return [
+          `Ce chapitre suit « De la création au premier bilan » : le journal ${dE(c.entreprise)} repart de la balance du 31 janvier, ci-dessous, celle de vos écritures du premier mois. Le mois a fait ${resultatDit(j.resultat)}, et la banque finit à ${eur(j.banque)}.`,
+          "Il reste à comprendre pourquoi le résultat n'est pas la trésorerie : un laboratoire fait jouer les règlements, puis vous passez les échéances du mois. Enfin, vous lirez le mois comme un examinateur.",
+        ];
+      },
+      repere: () => "Le résultat naît des factures ; la banque bouge avec les règlements. Les deux ne mesurent pas la même chose.",
     },
     {
       id: "predire-la-banque",
@@ -1226,8 +1319,7 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
       texte: (c) => {
         const j = janvierDe(c);
         return [
-          `Vous avez tenu le premier mois ${dE(c.entreprise)} : chaque opération dans le journal, puis la TVA (${tvaDite(j.tvaNette)}), le compte de résultat (${resultatDit(j.resultat)}) et le bilan, construits à partir de vos propres écritures.`,
-          "Deux expériences l'ont montré avant la formule : la TVA de l'équipement se récupère, et un gros investissement fait un crédit de TVA, pas une charge ; les règlements font bouger la banque, jamais le résultat.",
+          `Vous avez suivi le premier mois ${dE(c.entreprise)} jusqu'à ses échéances : ${resultatDit(j.resultat)} au journal, une banque qui bouge avec les règlements et jamais avec le résultat.`,
           "Au niveau de l'examen, vous savez passer du résultat à la variation de la banque, remonter un relevé à rebours, dresser un bilan à partir de la seule balance, et dire ce qui manque à un résultat pour être celui du mois : l'amortissement et les intérêts courus, que les chapitres de l'emprunt, des immobilisations et de la clôture approfondissent.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
         ];
@@ -1237,4 +1329,3 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
     },
   ],
 };
-

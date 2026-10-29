@@ -312,8 +312,8 @@ export const SUIVRE_SES_VENTES: Chapitre = {
       cible: (c) => ({ attendu: progressionAtteinte(ficheDe(c)), min: 0, max: 20 }),
       zones: ["L'objectif est atteint", "L'objectif est manqué"],
       rates: () => ({
-        dessous: "Avec cette progression, l'objectif dépasse ce que l'équipe a vendu : visez moins haut.",
-        dessus: "L'équipe aurait encore atteint cet objectif : cherchez la plus forte progression.",
+        dessous: "L'équipe aurait encore atteint cet objectif : cherchez la plus forte progression.",
+        dessus: "Avec cette progression, l'objectif dépasse ce que l'équipe a vendu : visez moins haut.",
       }),
       montrer: "Montrer la progression",
       lecture: (c, q) => {

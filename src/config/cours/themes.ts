@@ -43,6 +43,7 @@ export const THEMES: readonly Theme[] = [
       "les-flux-de-l-entreprise",
       "charges-produits-encaissements",
       "creation-premier-bilan",
+      "du-resultat-a-la-tresorerie",
       "remises-et-reglements",
       "la-paie",
       "l-emprunt",

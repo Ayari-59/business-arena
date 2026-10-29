@@ -65,12 +65,24 @@ import { envoyerLeLienDeConfirmation } from "@/services/confirmation-email.servi
 
 export interface FormState {
   error: string | null;
+  /**
+   * LA SAISIE RENDUE APRÈS UN ÉCHEC (audit UX du 29 octobre 2026, P1-5) : l'e-mail (et, à
+   * l'inscription, le nom, l'établissement, le code) revient dans son champ ; jamais le mot
+   * de passe.
+   */
+  values?: Record<string, string>;
+  /** Le champ que l'erreur concerne : le message s'affiche sous lui (P2-9). */
+  champ?: string | null;
 }
 
+/** Ce que le formulaire peut rendre après un échec : tout sauf le mot de passe. */
+const saisieSansMotDePasse = (formData: FormData, champs: readonly string[]): Record<string, string> =>
+  Object.fromEntries(champs.map((k) => [k, String(formData.get(k) ?? "")]));
+
 const registerSchema = z.object({
-  email: z.string().email("E-mail invalide"),
-  password: z.string().min(8, "Mot de passe : 8 caractères minimum"),
-  displayName: z.string().min(1, "Votre nom est requis"),
+  displayName: z.string({ error: "Votre nom est requis" }).trim().min(1, "Votre nom est requis"),
+  email: z.string({ error: "E-mail invalide" }).email("E-mail invalide"),
+  password: z.string({ error: "Mot de passe : 8 caractères minimum" }).min(8, "Mot de passe : 8 caractères minimum"),
   schoolName: z.string().catch(""),
   inviteCode: z.string().catch(""),
   // La case des nouveautés : envoyée seulement si elle est cochée (jamais par défaut).
@@ -86,7 +98,11 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
     inviteCode: formData.get("inviteCode") ?? "",
     nouveautes: formData.get("nouveautes") ?? undefined,
   });
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide" };
+  const values = saisieSansMotDePasse(formData, ["displayName", "inviteCode", "schoolName", "email"]);
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    return { error: issue?.message ?? "Formulaire invalide", champ: issue ? String(issue.path[0] ?? "") || null : null, values };
+  }
   const { nouveautes, ...compte } = parsed.data;
   // Le plafond par adresse d'origine (audit, P2-4) : chaque tentative compte, réussie ou
   // non, puisque chacune peut faire partir un courriel vers l'adresse saisie.
@@ -95,10 +111,10 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
     ip: await adresseOrigine(),
     maxEchecs: MAX_INSCRIPTIONS_PAR_ADRESSE,
   });
-  if (garde.refus) return { error: garde.refus };
+  if (garde.refus) return { error: garde.refus, values };
   await garde.echec();
   const result = await registerTeacher({ ...compte, nouveautes: nouveautes === "oui" });
-  if ("error" in result) return { error: result.error };
+  if ("error" in result) return { error: result.error, values };
   // Le lien de confirmation de l'adresse (migration 0046). Un compte entré par un code
   // d'invitation n'en a pas besoin : le code lui a été remis. Un envoi qui échoue ne
   // défait pas l'inscription ; « Mon compte » propose de renvoyer le lien.
@@ -133,7 +149,7 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
   const password = String(formData.get("password") ?? "");
   const result = await loginTeacher({ email, password, ip: await adresseOrigine() });
   // Une action serveur ne porte pas de code HTTP : le 429 est le message.
-  if ("error" in result) return { error: result.error };
+  if ("error" in result) return { error: result.error, values: { email } };
   await setSession(result.userId, "teacher", result.sessionVersion);
   // La page demandée avant la connexion, si c'est un chemin interne
   // (lib/connexion-enseignant.ts) ; sinon l'accueil de l'espace.

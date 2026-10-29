@@ -554,9 +554,14 @@ export const OBJECTIF_DE_PANIER = 100;
 /** Les bornes de l'indice de vente (articles par passage en caisse) que l'élève essaie. */
 export const INDICES_ESSAYES = { min: 1, max: 2.5, pas: 0.01 } as const;
 
-/** Le panier, le coût et la marge d'une vente sur un mois (toutes les clientèles). */
+/**
+ * Le panier, le coût et la marge d'une vente sur un mois, EN CAISSE : le panier moyen divise le
+ * chiffre d'affaires encaissé en caisse par les passages en caisse. Les commandes des comités
+ * d'entreprise, facturées et réglées plus tard, ne passent pas en caisse (journeeEnCaisse, « Tenir la
+ * caisse ») : les compter au numérateur gonflerait le panier (audit pédagogique, P1-7).
+ */
 export function panierDuMois(f: FicheDeLaBoutique, mois: MoisDeVentes = janvier(f)) {
-  const k = comptesDe(f, mois.clienteles);
+  const k = comptesDe(f, mois.clienteles.filter((c) => c.delaiDeReglement === 0));
   const panier = auCentime(k.chiffreDAffaires / k.tickets);
   const coutDUneVente = auCentime(k.coutDesVentes / k.tickets);
   const marge = auCentime(panier - coutDUneVente);
@@ -583,7 +588,7 @@ export function panierDuMois(f: FicheDeLaBoutique, mois: MoisDeVentes = janvier(
 export function articlesDuMois(f: FicheDeLaBoutique, mois: MoisDeVentes = janvier(f)) {
   const { tickets } = panierDuMois(f, mois);
   return f.gamme.map((r) => {
-    const vendus = somme(mois.clienteles.map((c) => c.achats[r.code] ?? 0));
+    const vendus = somme(mois.clienteles.filter((c) => c.delaiDeReglement === 0).map((c) => c.achats[r.code] ?? 0));
     const chiffreDAffaires = auCentime(vendus * r.prixHt);
     const cout = coutVariable(r);
     return { code: r.code, nom: r.nom, vendus, chiffreDAffaires, prix: r.prixHt, cout, marge: auCentime(r.prixHt - cout), dansLePanier: auCentime(chiffreDAffaires / tickets) };
@@ -619,6 +624,32 @@ export function moisALIndice(f: FicheDeLaBoutique, indice: number) {
   const panier = auCentime(indice * p.prixMoyenDeLArticle);
   const marge = auCentime(indice * p.margeMoyenneDeLArticle);
   return { indice, panier, marge, articles: Math.round(indice * p.tickets), margeDuMois: auCentime(p.tickets * marge), chiffreDAffaires: auCentime(p.tickets * panier) };
+}
+
+/**
+ * Le mois à un nombre d'articles vendus donné, les passages en caisse et le prix moyen d'un article de
+ * janvier gardés : le levier du laboratoire du panier. Au départ, les articles de janvier : le
+ * laboratoire repart du mois que l'élève vient de lire, au centime près (audit pédagogique, P1-7 :
+ * l'indice arrondi au centième donnait un panier de départ qui n'était pas celui de janvier).
+ */
+export function moisAuxArticles(f: FicheDeLaBoutique, articles: number) {
+  const p = panierDuMois(f);
+  const panier = auCentime((articles * p.prixMoyenDeLArticle) / p.tickets);
+  const marge = auCentime((articles * p.margeMoyenneDeLArticle) / p.tickets);
+  return { articles, indice: Math.round((articles / p.tickets) * 100) / 100, panier, marge, margeDuMois: auCentime(articles * p.margeMoyenneDeLArticle) };
+}
+
+/** Les bornes du levier des articles du laboratoire : un article par passage en caisse, jusqu'à l'indice le plus haut essayé. */
+export const articlesEssayes = (f: FicheDeLaBoutique) => {
+  const { tickets } = panierDuMois(f);
+  return { min: Math.round(INDICES_ESSAYES.min * tickets), max: Math.round(INDICES_ESSAYES.max * tickets), pas: 1 };
+};
+
+/** Le plus petit nombre d'articles du mois qui porte le panier moyen à l'objectif. */
+export function articlesPourLObjectif(f: FicheDeLaBoutique): number {
+  const { min, max } = articlesEssayes(f);
+  for (let n = min; n <= max; n++) if (moisAuxArticles(f, n).panier >= OBJECTIF_DE_PANIER) return n;
+  throw new Error("Aucun nombre d'articles ne porte le panier à l'objectif");
 }
 
 /** Le plus petit indice de vente (au centième) qui porte le panier moyen à l'objectif. */

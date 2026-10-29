@@ -9,8 +9,11 @@ import { compter, jourDeCreation } from "@/lib/format";
 import { NavigationEnseignant, Rubrique } from "@/components/en-tete-enseignant";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { SubmitButton } from "@/components/submit-button";
-import { bouton } from "@/components/bouton";
+import { bouton, LIEN_A_L_ENCRE } from "@/components/bouton";
 import { ENTREPRISES } from "@/app/cours/entreprises";
+import { CHAPITRES, PARCOURS } from "@/config/cours/registre";
+import { classeSansOffre, offreDuCoursDeLEnseignant } from "@/services/chapitres-de-la-classe";
+import { lienDuDevis, LIBELLE_DU_DEVIS, OFFRES } from "@/config/tarifs";
 import { ArticulationDuCours } from "@/components/articulation-du-cours";
 import { creerClasseAction } from "./actions";
 
@@ -37,7 +40,12 @@ export default async function MesClassesDuCoursPage({ searchParams }: { searchPa
   const { refus } = await searchParams;
   const session = await getSession();
   if (!session) redirect(await connexionPourLaPageDemandee());
-  const [classes, staff] = await Promise.all([classesDeLEnseignant(session.userId), getStaffContext(session.userId)]);
+  const [classes, staff, offre] = await Promise.all([
+    classesDeLEnseignant(session.userId),
+    getStaffContext(session.userId),
+    offreDuCoursDeLEnseignant(session.userId),
+  ]);
+  const libre = CHAPITRES.find((c) => c.libre);
   const isOrgAdmin = staff?.organizations.some((o) => o.role === "org_admin") ?? false;
   const raison = refus && Object.hasOwn(REFUS, refus) ? REFUS[refus] : null;
   return (
@@ -75,6 +83,17 @@ export default async function MesClassesDuCoursPage({ searchParams }: { searchPa
             <h2 id="nouvelle-classe-titre" className="titre-carte text-slate-100">
               Nouvelle classe
             </h2>
+            {/* SANS OFFRE, LE DIRE AVANT LA CRÉATION (audit UX du 29 octobre 2026, P1-1) : la
+                classe se crée, mais n'ouvre que le chapitre libre ; les élèves ne doivent pas le
+                découvrir en se heurtant à un chapitre fermé. */}
+            {!offre && libre ? (
+              <p data-classe-du-cours-sans-offre="" className="mt-3 rounded-lg encadre-neutre px-3 py-2.5 text-sm text-slate-300">
+                {classeSansOffre(libre.titre)}{" "}
+                <Link href={lienDuDevis("classe")} prefetch={false} className={LIEN_A_L_ENCRE}>
+                  {LIBELLE_DU_DEVIS}
+                </Link>
+              </p>
+            ) : null}
             <form action={creerClasseAction} className="mt-4 grid gap-5">
               <label className="grid gap-1">
                 <span className="text-sm font-semibold text-slate-200">Nom de la classe</span>
@@ -85,6 +104,26 @@ export default async function MesClassesDuCoursPage({ searchParams }: { searchPa
                   placeholder="BTS CG 1 · groupe A"
                   className="champ w-full px-3 py-2 text-base"
                 />
+              </label>
+              {/* LE PARCOURS DE LA CLASSE (décision du propriétaire, octobre 2026) : sous l'offre
+                  Classe ou Programme, il ouvre les chapitres de ce parcours ; Campus ouvre tout
+                  (services/cours.service.ts, coursOuvert). */}
+              <label className="grid gap-1">
+                <span className="text-sm font-semibold text-slate-200">Parcours du cours</span>
+                <select name="parcours" required defaultValue="" className="champ w-full px-3 py-2 text-base" data-parcours-de-la-classe="">
+                  <option value="" disabled>
+                    Choisir un parcours
+                  </option>
+                  {PARCOURS.map((p) => (
+                    <option key={p.code} value={p.code}>
+                      {p.titre}
+                    </option>
+                  ))}
+                </select>
+                <span className="text-sm text-slate-400">
+                  Avec l&apos;offre {OFFRES.classe.nom} ou {OFFRES.programme.nom}, la classe ouvre les chapitres de ce parcours ; avec
+                  l&apos;offre {OFFRES.campus.nom}, tous les chapitres.
+                </span>
               </label>
               <label className="grid gap-1">
                 <span className="text-sm font-semibold text-slate-200">Entreprise du cas</span>
@@ -125,6 +164,7 @@ export default async function MesClassesDuCoursPage({ searchParams }: { searchPa
                   </span>
                   <span className="mt-0.5 block text-sm text-slate-400">
                     {compter(c.eleves, "élève")} · créée {jourDeCreation(c.createdAt)}
+                    {c.parcours ? ` · ${PARCOURS.find((p) => p.code === c.parcours)?.titre ?? ""}` : ""}
                     {c.entreprise ? ` · ${ENTREPRISES.find((e) => e.code === c.entreprise)?.nom ?? ""}` : ""}
                   </span>
                 </Link>

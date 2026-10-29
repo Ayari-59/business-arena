@@ -40,13 +40,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function TarifsPage() {
-  const { catalogue, decouverte, affichage } = await lireLEtatDuCatalogue();
+  const { catalogue, decouverte, essai, affichage } = await lireLEtatDuCatalogue();
   const prix = affichage.prixPublics;
   return (
     <PageDesTarifs
       vue={vueDesTarifs(catalogue, variablesDuCatalogue(decouverte), { prix })}
       bandeau={await bandeauDeLaPromotion()}
       prixPublics={prix}
+      essai={essai}
     />
   );
 }

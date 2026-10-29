@@ -169,7 +169,8 @@ describe("choisir son entreprise : neuf cartes photo", () => {
     const resume = CHOIX.slice(CHOIX.indexOf("data-resume-de-lancement"));
     expect(CHOIX.slice(0, CHOIX.indexOf("data-resume-de-lancement"))).not.toContain("Lancer la partie");
     expect(resume).toMatch(/^[^>]*class="[^"]*\bsticky bottom-0\b/);
-    expect(resume).toContain("NOVA · Niveau 3");
+    // Le niveau 1, que la page conseille (audit UX du 29 octobre 2026, P1-8).
+    expect(resume).toContain("NOVA · Niveau 1");
     expect(resume.match(/Lancer la partie/g) ?? []).toHaveLength(1);
     const page = lire("src/app/jouer/page.tsx");
     expect(page.match(/Lancer la partie/g) ?? []).toHaveLength(1);

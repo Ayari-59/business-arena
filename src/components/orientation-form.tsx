@@ -427,7 +427,7 @@ export function OrientationForm({
           ) : null}
           {/* LES SORTIES DE L'ORIENTATION (audit produit du 28 octobre 2026, P1-3) : elle ne
               menait ni au devis ni à l'essai. Le devis reprend le réglage conseillé ; l'essai
-              est la partie solo ; le cours seul a son devis, sans entreprise ni niveau imposés. */}
+              est la partie solo ; le cours vient avec l'offre Classe (pas d'offre « cours seul »). */}
           {reco ? (
             <Link
               href={`/devis?offre=classe&entreprise=${encodeURIComponent(reco.scenarioCode)}&niveau=${reco.niveau}`}
@@ -445,11 +445,11 @@ export function OrientationForm({
             Essayer en solo, sans compte
           </Link>
           <Link
-            href="/devis?offre=classe&interet=cours"
+            href="/devis?offre=classe"
             className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-white/30"
             data-sortie-orientation="cours"
           >
-            Le cours seul : demander un devis
+            Le cours en classe : demander un devis
           </Link>
           {!state.ok ? (
             <button

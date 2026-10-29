@@ -92,3 +92,23 @@ export function jourDeCreation(quand: Date, maintenant: Date = new Date()): stri
         : { day: "numeric", month: "long", year: "numeric" };
   return new Intl.DateTimeFormat("fr-FR", { ...options, timeZone: "Europe/Paris" }).format(quand);
 }
+
+/**
+ * DES HOMONYMES DISTINGUÉS (audit UX du 29 octobre 2026, P2-10) : « Inès (démo), Inès » ne
+ * disait pas qui était qui. Deux noms qui ne diffèrent que par la casse ou une mention entre
+ * parenthèses reçoivent chacun leur numéro, dans l'ordre : « Inès (démo) n°1, Inès n°2 ».
+ * Les autres noms restent tels quels.
+ */
+export function distinguerLesHomonymes(noms: readonly string[]): string[] {
+  const cle = (n: string) => n.replace(/\s*\([^)]*\)\s*$/, "").trim().toLocaleLowerCase("fr-FR");
+  const total = new Map<string, number>();
+  for (const n of noms) total.set(cle(n), (total.get(cle(n)) ?? 0) + 1);
+  const vus = new Map<string, number>();
+  return noms.map((n) => {
+    const k = cle(n);
+    if ((total.get(k) ?? 0) < 2) return n;
+    const rang = (vus.get(k) ?? 0) + 1;
+    vus.set(k, rang);
+    return `${n} n°${rang}`;
+  });
+}

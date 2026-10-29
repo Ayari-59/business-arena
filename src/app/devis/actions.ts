@@ -11,7 +11,7 @@ import {
   texteNotificationDevis,
 } from "@/services/devis.service";
 import { envoyerCourriel } from "@/lib/courriel";
-import { ENTREPRISES, libellesDuDevisDe, NIVEAUX_DE_L_ARENE } from "@/config/tarifs";
+import { ENTREPRISES, libellesDuDevisDe, NIVEAUX_DE_L_ARENE, parametrageRequisAuDevis } from "@/config/tarifs";
 import { VENDEUR } from "@/config/editeur";
 import { chiffrerLeDevis, cleDEtablissement, nomDansLeDevis, offresDuDevis, type DevisChiffre } from "@/config/catalogue";
 import { ETIQUETTE_DU_CATALOGUE, lireLEtatDuCatalogue, verifierUnCodePromo } from "@/services/catalogue.service";
@@ -26,6 +26,11 @@ import { ETIQUETTE_DU_CATALOGUE, lireLEtatDuCatalogue, verifierUnCodePromo } fro
  */
 export interface DevisFormState {
   error: string | null;
+  /**
+   * Le champ que l'erreur concerne (audit UX du 29 octobre 2026, P1-6) : le formulaire dit
+   * l'erreur SOUS ce champ et y place le focus, au lieu d'un message en bas de page.
+   */
+  champ?: string | null;
   /** La demande est enregistrée : ce que le demandeur doit savoir. */
   ok: {
     email: string;
@@ -52,12 +57,6 @@ const schema = z.object({
   email: z.string().trim().email("E-mail invalide").max(200),
   message: z.string().trim().max(1200, "Le message est limité à 1 200 caractères").catch(""),
   codePromo: z.string().trim().max(40, "Un code promo tient en 40 caractères").catch(""),
-  /**
-   * CE QUI INTÉRESSE LE DEMANDEUR (audit produit du 28 octobre 2026, P1-6) : l'arène (avec le
-   * cours), ou le cours seul. Le cours seul ne se paramètre pas : l'entreprise et le niveau
-   * d'arène deviennent facultatifs. Toute autre valeur vaut l'arène, le cas d'avant.
-   */
-  interet: z.enum(["arene", "cours"]).catch("arene"),
   /** Piège à robots : un champ invisible qu'un humain ne remplit pas. */
   site: z.string().max(0, "Formulaire invalide").catch("x"),
 });
@@ -72,7 +71,7 @@ export async function envoyerDemandeDeDevisAction(
   formData: FormData,
 ): Promise<DevisFormState> {
   const brut = Object.fromEntries(
-    ["offre", "nom", "fonction", "organisation", "identifiant", "effectif", "entreprise", "niveau", "email", "message", "codePromo", "interet", "site"].map(
+    ["offre", "nom", "fonction", "organisation", "identifiant", "effectif", "entreprise", "niveau", "email", "message", "codePromo", "site"].map(
       (k) => [k, String(formData.get(k) ?? "")],
     ),
   );
@@ -80,28 +79,32 @@ export async function envoyerDemandeDeDevisAction(
   delete values.site;
   const parsed = schema.safeParse(brut);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide", ok: null, values };
+    const issue = parsed.error.issues[0];
+    const nom = String(issue?.path[0] ?? "");
+    return { error: issue?.message ?? "Formulaire invalide", champ: nom && nom !== "site" ? nom : null, ok: null, values };
   }
   const d = parsed.data;
   if (brut.effectif && !/^\d{1,6}$/.test(brut.effectif.trim())) {
-    return { error: "Indiquez un nombre", ok: null, values };
+    return { error: "Indiquez un nombre", champ: "effectif", ok: null, values };
   }
   const { catalogue, affichage } = await lireLEtatDuCatalogue();
   const offre = offresDuDevis(catalogue).find((o) => o.code === d.offre);
-  if (!offre) return { error: "Choisissez l'offre", ok: null, values };
-  // L'entreprise et le niveau : seulement pour les offres qui se paramètrent à l'achat, et
-  // alors requis, sauf pour qui ne veut que le cours (facultatifs) ; une valeur saisie hors
-  // du registre est refusée dans les deux cas.
+  if (!offre) return { error: "Choisissez l'offre", champ: "offre", ok: null, values };
+  // L'entreprise et le niveau : seulement pour les offres qui se paramètrent à l'achat ; une
+  // valeur saisie hors du registre est refusée. « Le cours seul » n'est plus un choix (audit
+  // de l'offre, octobre 2026). REQUIS POUR CLASSE SEULEMENT (audit UX du 29 octobre 2026,
+  // P1-7) : pour Programme et Campus, ce sont des choix pédagogiques qu'une direction laisse
+  // à l'équipe ; facultatifs, gardés s'ils sont donnés (`parametrageRequisAuDevis`).
   const libelles = libellesDuDevisDe(offre);
-  const coursSeul = d.interet === "cours" && Boolean(libelles.entreprise || libelles.niveau);
+  const requis = parametrageRequisAuDevis(libelles);
   const entreprise = libelles.entreprise ? brut.entreprise!.trim() : "";
-  if (libelles.entreprise && !(coursSeul && !entreprise) && !ENTREPRISES.some((e) => e.code === entreprise)) {
-    return { error: "Choisissez l'entreprise souhaitée", ok: null, values };
+  if (libelles.entreprise && (requis || entreprise) && !ENTREPRISES.some((e) => e.code === entreprise)) {
+    return { error: "Choisissez l'entreprise souhaitée", champ: "entreprise", ok: null, values };
   }
   const niveauSaisi = brut.niveau!.trim();
-  const niveau = libelles.niveau && !(coursSeul && !niveauSaisi) ? Number(niveauSaisi) : null;
+  const niveau = libelles.niveau && (requis || niveauSaisi) ? Number(niveauSaisi) : null;
   if (libelles.niveau && niveau !== null && !NIVEAUX_DE_L_ARENE.some((n) => n.niveau === niveau)) {
-    return { error: "Choisissez le niveau souhaité", ok: null, values };
+    return { error: "Choisissez le niveau souhaité", champ: "niveau", ok: null, values };
   }
   // Le code promo, s'il est saisi : vérifié côté serveur, refusé avec sa phrase.
   let promo: NonNullable<Parameters<typeof deposerDemandeDeDevis>[0]["promo"]> | null = null;
@@ -113,7 +116,7 @@ export async function envoyerDemandeDeDevisAction(
       nomDeLOffre: nomDansLeDevis(offre),
       cleEtablissement: cle,
     });
-    if (!v.ok) return { error: v.message, ok: null, values };
+    if (!v.ok) return { error: v.message, champ: "codePromo", ok: null, values };
     promo = {
       id: v.code.id,
       code: v.code.code,
@@ -134,7 +137,6 @@ export async function envoyerDemandeDeDevisAction(
     effectif: libelles.effectif && d.effectif ? Number(d.effectif) : null,
     entreprise: entreprise || null,
     niveau,
-    coursSeul,
     email: d.email,
     message: d.message,
     ip: await adresseOrigine(),

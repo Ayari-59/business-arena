@@ -406,6 +406,7 @@ export const LES_ECARTS_SUR_CHARGES_DIRECTES: Chapitre = {
     "Attribuer chaque écart à son responsable, sans juger un responsable sur un seul écart",
   ],
   libre: false,
+  prerequis: ["le-cout-preetabli-et-les-budgets"],
   entreprises: {
     codes: ENTREPRISES_DES_ECARTS,
     pourquoi: "les coûts préétablis se calculent sur une production : ce chapitre se joue à l'usine de NOVA, qui fabrique des enceintes.",

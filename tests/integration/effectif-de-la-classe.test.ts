@@ -89,7 +89,7 @@ describe("une classe du cours sous l'offre Classe", () => {
   let inscrits: string[];
   beforeAll(async () => {
     const prof = await etablissementSousLicence("Cours", { arene: "classe", entreprises: ["nova"], niveaux: [3] });
-    const classe = (await creerClasse({ enseignantId: prof.userId, nom: "BTS CG 1 · effectif", entreprise: null }))!;
+    const classe = (await creerClasse({ enseignantId: prof.userId, nom: "BTS CG 1 · effectif", entreprise: null, parcours: "comptabilite-generale" }))!;
     code = classe.code;
     inscrits = await eleves(ELEVES_PAR_CLASSE);
     await db.insert(coursEleves).values(inscrits.map((userId, i) => ({ userId, classeId: classe.id, nom: `Élève ${i}` })));

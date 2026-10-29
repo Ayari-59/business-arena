@@ -42,7 +42,8 @@ export const AUTRES_COUTS_PAR_ENCEINTE = 16;
  * la TVA), la paie des quatre salariés (7 500 € bruts et 3 150 € de cotisations patronales), et
  * l'usure de la ligne de montage (60 000 € hors taxes amortis sur 72 mois, arrondis à l'euro).
  * HYPOTHÈSE DU COURS : elles sont les mêmes chaque mois du semestre, quoi qu'on vende, et NOVA ne
- * fait pas de publicité payante (ses ventes en ligne passent par le bouche-à-oreille).
+ * fait pas de publicité payante pendant ce premier exercice (ses ventes en ligne passent par le
+ * bouche-à-oreille) ; elle en fera pour sa gamme (GAMME_DE_NOVA, la publicité de chaque référence).
  */
 export const CHARGES_FIXES_DU_MOIS = { loyer: 19_700, personnel: 10_650, amortissement: 833 } as const;
 

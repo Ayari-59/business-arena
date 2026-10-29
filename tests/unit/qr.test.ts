@@ -285,7 +285,8 @@ describe("le chemin complet, du QR au champ", () => {
 
   it("le champ est rempli d'avance et le curseur va au prénom", () => {
     const form = lire("src/components/join-form.tsx");
-    expect(form).toContain("defaultValue={codeInitial ?? undefined}");
+    // Après un refus, la saisie revient d'abord (audit UX du 29 octobre 2026).
+    expect(form).toContain("defaultValue={state.values?.code ?? codeInitial ?? undefined}");
     // Le prénom est alors la seule chose qui reste à écrire : on y va tout de
     // suite. Sans code pré-rempli, rien n'est mis au premier plan.
     expect(form).toContain("autoFocus={codeInitial !== null}");

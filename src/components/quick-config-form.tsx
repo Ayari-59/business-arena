@@ -121,8 +121,12 @@ const offerte = (r: (typeof ROUNDS)[number], periode: string) => !r.seulement ||
  */
 const OPTION_COCHEE_CARTE = "border-amber-400 ring-1 ring-amber-400";
 
-/** Le niveau où l'on commence : 3 · Pilotage. */
-export const NIVEAU_PAR_DEFAUT = 3;
+/**
+ * Le niveau où l'on commence : 1 (audit UX du 29 octobre 2026, P1-8). La page dit
+ * « Premier contact ? Commencez au niveau 1 » : la présélection le fait, au lieu du niveau 3,
+ * le plus chargé du gratuit, qu'un visiteur pressé lançait sans l'avoir choisi.
+ */
+export const NIVEAU_PAR_DEFAUT = 1;
 
 export function QuickConfigFields({
   scenarios,
@@ -165,8 +169,8 @@ export function QuickConfigFields({
   lancement?: ReactNode;
 }) {
   const [scenario, setScenario] = useState(defaultScenario);
-  // On commence au niveau 3 · Pilotage ; les niveaux 1-2 (questions d'analyse entre deux
-  // réponses, l'équipe et les créances encore gérées pour vous) sont à un ou deux crans.
+  // On commence au niveau 1, comme la page le conseille ; un niveau demandé par
+  // l'adresse (le bilan d'une partie) l'emporte, borné aux niveaux ouverts.
   const [level, setLevel] = useState(() =>
     defaultLevel === undefined
       ? NIVEAU_PAR_DEFAUT

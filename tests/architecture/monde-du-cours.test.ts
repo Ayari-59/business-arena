@@ -227,6 +227,7 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "situations/par-chapitre/la-case-vide.ts",
   "situations/par-chapitre/la-cle-contestee.ts",
   "situations/par-chapitre/la-commande-du-31-janvier.ts",
+  "situations/par-chapitre/le-client-paie-a-la-commande.ts",
   "situations/par-chapitre/la-commande-exceptionnelle.ts",
   "situations/par-chapitre/la-creance-qui-se-degrade.ts",
   "situations/par-chapitre/la-depense-de-fin-d-annee.ts",

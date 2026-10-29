@@ -352,8 +352,8 @@ describe("décider : prix, fabriquer ou acheter, chez NOVA du monde du cours", (
     });
     expect(curseur(ch, "le-prix-plancher")).toEqual({
       attendu: 38,
-      bornes: [30, 60],
-      droites: [60_000, cout, 120_000, cout],
+      bornes: [30, 70],
+      droites: [60_000, cout, 140_000, cout],
       lecture: { "Chiffre d'affaires de la commande": 76_000, "Ce qu'elle coûte en plus (fabriqué et sous-traité)": cout, "Marge de la commande": 0 },
     });
     expect(2_000 * 37).toBeLessThan(cout);

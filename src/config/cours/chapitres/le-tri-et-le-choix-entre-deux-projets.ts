@@ -315,6 +315,7 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
     "Critiquer le TRI par le TRI global, et choisir entre deux projets qui s'excluent",
   ],
   libre: false,
+  prerequis: ["la-valeur-actuelle-nette"],
   entreprises: {
     codes: ENTREPRISES_DES_PROJETS,
     pourquoi:

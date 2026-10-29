@@ -33,6 +33,7 @@ export const PAGES_PUBLIQUES = [
   // Les épisodes, indexés depuis la décision du propriétaire d'octobre 2026 (« indexer ») :
   // le catalogue, la page des enseignants ; chaque épisode et chaque fiche, listés à part.
   "/entreprises/episode",
+  "/entreprises/offre",
   "/enseignants/episodes",
   "/guide",
   "/guides",
@@ -41,6 +42,7 @@ export const PAGES_PUBLIQUES = [
   "/rendez-vous",
   "/tarifs",
   "/devis",
+  "/cgv",
   "/mentions-legales",
 ] as const;
 

@@ -8,6 +8,7 @@ import { SUIVRE_LA_BAISSE } from "./suivre-la-baisse";
 import { L_ACOMPTE_DU_CLIENT } from "./par-chapitre/l-acompte-du-client";
 import { REMBOURSER_UNE_PART_DU_PRET } from "./par-chapitre/rembourser-une-part-du-pret";
 import { LA_COMMANDE_DU_31_JANVIER } from "./par-chapitre/la-commande-du-31-janvier";
+import { LE_CLIENT_PAIE_A_LA_COMMANDE } from "./par-chapitre/le-client-paie-a-la-commande";
 import { L_ESCOMPTE_DEMANDE_PAR_LE_CLIENT } from "./par-chapitre/l-escompte-demande-par-le-client";
 import { LA_PRIME_EXCEPTIONNELLE } from "./par-chapitre/la-prime-exceptionnelle";
 import { UN_DEUXIEME_PRET } from "./par-chapitre/un-deuxieme-pret";
@@ -146,6 +147,7 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   L_ACOMPTE_DU_CLIENT,
   REMBOURSER_UNE_PART_DU_PRET,
   LA_COMMANDE_DU_31_JANVIER,
+  LE_CLIENT_PAIE_A_LA_COMMANDE,
   L_ESCOMPTE_DEMANDE_PAR_LE_CLIENT,
   LA_PRIME_EXCEPTIONNELLE,
   UN_DEUXIEME_PRET,

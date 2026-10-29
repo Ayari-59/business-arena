@@ -2,13 +2,17 @@ import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import type { Cas } from "../cas";
 import { communication as lireLaCampagne, grille, meilleurBudget, trimestreAuBudget, ventesPourPayer } from "../monde/economie-et-marketing";
 import { ENTREPRISES_DU_MARCHE_DE_NOVA, POURQUOI_LE_MARCHE_DE_NOVA, mercatiqueDe } from "../monde/mercatique-de-nova";
+import { GAMME_DE_NOVA } from "../monde/nova-gestion";
 import type { Chapitre } from "../types";
 
 /**
  * CHAPITRE : CE QUE RAPPORTE LA COMMUNICATION (Bac STMG, mercatique, palier 1).
  *
- * La publicité coûte tout de suite ; elle rapporte si elle fait vendre assez pour se payer. NOVA ne
- * fait pas de publicité ; une agence lui propose une campagne. Le chapitre lit ce que la campagne et
+ * La publicité coûte tout de suite ; elle rapporte si elle fait vendre assez pour se payer. Pendant
+ * son premier exercice, NOVA ne vend que la NOVA One et ne paie aucune campagne ; quand elle lance sa
+ * gamme, elle consacre 1 999 € par mois à la publicité de ses trois références (GAMME_DE_NOVA, le
+ * chapitre « Coût par produit », le cas figé). Une agence lui propose une campagne pour la NOVA One
+ * seule. Le chapitre lit ce que la campagne et
  * quatre autres budgets feraient vendre en un trimestre, calcule ce que coûte chaque vente gagnée et
  * ce que la campagne laisse une fois payée, cherche le meilleur budget, et explique pourquoi chaque
  * euro de plus rapporte de moins en moins. Puis l'expérience : un curseur (combien de ventes gagnées
@@ -21,8 +25,19 @@ import type { Chapitre } from "../types";
  *
  * CE QUI A CHANGÉ. L'arène rejouait le premier trimestre à cinq budgets chez quatre entreprises ; le
  * chapitre se joue chez NOVA seule : la campagne de 4 000 € fait vendre 131 enceintes de plus, qui
- * laissent 2 751 € de marge. Elle ne se paie pas.
+ * laissent 2 751 € de marge. Elle ne se paie pas en ventes du trimestre.
+ *
+ * AUDIT PÉDAGOGIQUE (P0-2, P1-5). Le chapitre concluait « le bon budget peut être zéro », ce qui
+ * laissait entendre qu'il ne faut pas communiquer, et disait « NOVA ne fait pas de publicité » quand
+ * le coût par produit lui en donne. Il dit maintenant la chronologie (pas de campagne pendant le
+ * premier exercice, la publicité de la gamme ensuite), et sa conclusion distingue les objectifs : en
+ * ventes du trimestre, la campagne ne se paie pas ; une campagne de notoriété, qui fait connaître une
+ * nouvelle référence à sa cible, se juge sur d'autres indicateurs (personnes touchées, coût pour
+ * mille contacts, notoriété avant et après). Mêmes chiffres, un seul monde.
  */
+
+/** La publicité de NOVA une fois sa gamme lancée : celle de ses trois références, par mois. */
+export const PUBLICITE_DE_LA_GAMME = GAMME_DE_NOVA.references.reduce((t, r) => t + r.publicite, 0);
 
 /** Les entreprises du chapitre : NOVA seule. */
 export const COMMUNICATIONS: readonly string[] = ENTREPRISES_DU_MARCHE_DE_NOVA;
@@ -56,6 +71,7 @@ export const COMMUNICATION: Chapitre = {
     "Calculer le coût d'une vente gagnée par la communication",
     "Calculer ce que rapporte une campagne une fois payée",
     "Choisir un budget de communication",
+    "Relier une campagne à son objectif : faire connaître, faire aimer ou faire acheter",
     "Expliquer pourquoi chaque euro de plus rapporte de moins en moins",
   ],
   libre: false,
@@ -69,7 +85,7 @@ export const COMMUNICATION: Chapitre = {
       texte: (c) => {
         const k = communication(c);
         return [
-          `${c.entreprise} ne fait pas de publicité : ses clients la trouvent en ligne et par le bouche-à-oreille. Une agence lui propose une campagne de ${eur(k.jouee.budget)} par trimestre. Sur son marché, face à SoundBox et Auris, la publicité rend l'enceinte plus connue et plus attirante.`,
+          `Pendant son premier exercice, ${c.entreprise} ne vend que la NOVA One et ne paie aucune campagne : ses clients la trouvent en ligne et par le bouche-à-oreille. Quand elle lancera sa gamme, elle consacrera ${eur(PUBLICITE_DE_LA_GAMME)} par mois à la publicité de ses trois références. Pour la NOVA One seule, une agence lui propose dès maintenant une campagne de ${eur(k.jouee.budget)} par trimestre. Sur son marché, face à SoundBox et Auris, la publicité rend l'enceinte plus connue et plus attirante.`,
           "Le tableau dit ce que chaque budget ferait vendre en un trimestre, sans rien changer d'autre (ni le prix, ni la qualité, ni les concurrents), la marge que laissent ces ventes, et le résultat du trimestre une fois la publicité payée.",
         ];
       },
@@ -164,7 +180,7 @@ export const COMMUNICATION: Chapitre = {
           juste: b.facteur === k.meilleur.facteur,
           retour:
             b.facteur === k.meilleur.facteur
-              ? `Oui : ${eur(b.resultat)} de résultat, le meilleur des cinq. ${b.budget === 0 ? "Ici, chaque euro de publicité rapporte moins qu'il ne coûte : ne pas communiquer est le meilleur choix." : "C'est le budget au-delà duquel un euro de plus ne se paie plus."}`
+              ? `Oui : ${eur(b.resultat)} de résultat, le meilleur des cinq. ${b.budget === 0 ? "Ici, chaque euro de publicité rapporte moins de marge qu'il ne coûte : si le seul objectif est de vendre plus dans le trimestre, la campagne n'en vaut pas la peine." : "C'est le budget au-delà duquel un euro de plus ne se paie plus."}`
               : `Non : ${eur(b.resultat)} de résultat, contre ${eur(k.meilleur.resultat)} à ${eur(k.meilleur.budget)}.`,
         }));
       },
@@ -234,9 +250,35 @@ export const COMMUNICATION: Chapitre = {
         const k = communication(c);
         return [
           `Défi relevé : à ${eur(t.budget)}, le trimestre laisse ${eur(t.resultat)}. ${t.budget === 0 ? `Même le premier palier de ${eur(BUDGETS_DU_LABORATOIRE.pas)} fait vendre trop peu : ses ventes gagnées laissent moins de marge qu'il ne coûte.` : "Au-delà, chaque euro ajouté rapporte moins qu'il ne coûte."}`,
-          `Une campagne ne se paie que si une vente gagnée coûte moins que la marge qu'elle laisse : ici ${eur(k.margeUnitaire)} par ${c.unite}. Le bon budget peut être zéro.`,
+          `En ventes du trimestre, une campagne ne se paie que si une vente gagnée coûte moins que la marge qu'elle laisse : ici ${eur(k.margeUnitaire)} par ${c.unite}. Ce calcul juge un objectif de ventes immédiates ; une campagne qui vise d'abord à faire connaître une offre se juge aussi sur d'autres indicateurs.`,
         ];
       },
+    },
+    {
+      id: "l-objectif-de-la-campagne",
+      type: "choix",
+      titre: "L'objectif de la campagne",
+      notions: ["customer_acquisition_cost"],
+      question: (c) =>
+        `Quand ${c.entreprise} lancera ses deux nouvelles enceintes, encore inconnues des clients, elle leur consacrera de la publicité alors que, pour la NOVA One, une campagne ne se payait pas en ventes du trimestre. Quel objectif cette publicité poursuit-elle d'abord, et avec quel indicateur le suivre ?`,
+      options: () => [
+        {
+          texte: "Faire connaître les nouveautés à leur cible : on suit la notoriété",
+          juste: true,
+          retour:
+            "Oui : un produit que personne ne connaît ne se vend pas. Une campagne de notoriété se suit en personnes de la cible touchées, en coût pour mille contacts, en notoriété mesurée avant et après ; les ventes viennent ensuite, sur plusieurs trimestres.",
+        },
+        {
+          texte: "Vendre plus dès le premier trimestre : on suit le chiffre d'affaires",
+          juste: false,
+          retour: "Non : le chiffre d'affaires ne dit pas ce que la campagne a apporté, et c'est la marge des ventes gagnées qui compte. Pour la NOVA One, cette marge ne payait pas la campagne en un trimestre.",
+        },
+        {
+          texte: "Aucun : une dépense qui ne se paie pas dans son trimestre est une erreur de gestion",
+          juste: false,
+          retour: "Non : une campagne de lancement fait connaître une offre, et ses effets durent plus qu'un trimestre. On fixe l'objectif avant de dépenser, puis on le mesure avec l'indicateur qui lui correspond.",
+        },
+      ],
     },
     {
       id: "synthese",
@@ -247,11 +289,12 @@ export const COMMUNICATION: Chapitre = {
         const k = communication(c);
         return [
           `Chez ${c.entreprise}, la campagne de l'agence ferait vendre ${qte(k.ventesEnPlus)} ${c.unites} de plus, à ${eur(k.coutParVente)} chacune, et le meilleur des cinq budgets est ${eur(k.meilleur.budget)}.`,
-          "Une campagne se juge sur ce qu'elle fait vendre en plus, pas sur ce qu'elle coûte seule ni sur les ventes totales. Et chaque euro de plus rapporte moins que le précédent : le bon budget est celui au-delà duquel un euro de publicité ne se paie plus.",
-          "Une vraie campagne se suit aussi en personnes touchées, en clics, en coût pour mille contacts. Dans l'arène, faites varier votre budget marketing d'un tour à l'autre, et comptez ce que chaque vente gagnée vous a coûté.",
+          "Quand une campagne vise des ventes, elle se juge sur la marge des ventes en plus, pas sur ce qu'elle coûte seule ni sur les ventes totales. Et chaque euro de plus rapporte moins que le précédent : le bon budget est celui au-delà duquel un euro de publicité ne se paie plus.",
+          "Une campagne se prépare dans l'ordre : un objectif (faire connaître, faire aimer, faire acheter), une cible, des médias, puis les indicateurs qui suivent cet objectif : personnes touchées, coût pour mille contacts, notoriété avant et après, ventes en plus. Une campagne de notoriété, comme celle d'un lancement, ne se juge pas sur les seules ventes de son trimestre.",
+          "Dans l'arène, faites varier votre budget marketing d'un tour à l'autre, et comptez ce que chaque vente gagnée vous a coûté.",
         ];
       },
-      repere: () => "Une communication est rentable si la marge des ventes qu'elle apporte dépasse son coût.",
+      repere: () => "Objectif de ventes : la campagne est rentable si la marge des ventes qu'elle apporte dépasse son coût. Objectif de notoriété : elle se suit en personnes de la cible touchées et en notoriété gagnée.",
     },
   ],
 };

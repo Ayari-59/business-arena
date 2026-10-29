@@ -3,15 +3,16 @@ import type { Cas } from "../cas";
 import { AUTRES_COUTS_VARIABLES, BOUTIQUES_DU_COURS, type CodeDeReference, type FicheDeLaBoutique } from "../monde/maille-et-co";
 import {
   ARTICLES_COMPARES,
-  INDICES_ESSAYES,
   OBJECTIF_DE_PANIER,
   VENTES_DE_PLUS_PAR_JOUR,
   articleAConseiller,
   articlesDuMois,
+  articlesEssayes,
+  articlesPourLObjectif,
   coutDUnVendeurEnPlus,
-  indicePourLObjectif,
+  journeeEnCaisse,
   margeDesVentesEnPlus,
-  moisALIndice,
+  moisAuxArticles,
   panierDuMois,
   ventesPourLeVendeur,
 } from "../monde/vente-et-caisse";
@@ -33,7 +34,9 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * la monnaie) : ici, la marge d'une vente.
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS : le mois de janvier de MAILLE & CO (monde/maille-et-co.ts),
- * 948 passages en caisse, 1 530 articles, 87 450 € hors taxes ; le coût d'une vente est le coût
+ * réglé en caisse : 940 passages, 1 330 articles, 77 250 € hors taxes (les huit commandes des comités
+ * d'entreprise, 10 200 €, facturées et réglées à 45 jours, ne passent pas en caisse, comme le dit
+ * « Tenir la caisse » : audit pédagogique, P1-7) ; le coût d'une vente est le coût
  * variable des articles vendus (le prix d'achat et les autres coûts variables de la fiche). Le
  * vendeur de plus est celui de l'équipe de la fiche (2 000 € brut, 42 % de cotisations
  * patronales). Les calculs sont dans monde/vente-et-caisse.ts.
@@ -43,8 +46,9 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *
  * CE QUI A CHANGÉ. Le chapitre lisait le premier trimestre de l'arène chez quatre entreprises (à la
  * boutique : 2 876 passages en caisse, un panier de 88,78 €, une marge de 45,43 € par vente). Il se
- * joue maintenant chez MAILLE & CO seule, sur janvier : un panier de 92,25 €, un coût de 45,57 €,
- * une marge de 46,68 € par vente.
+ * joue maintenant chez MAILLE & CO seule, sur janvier en caisse : un panier de 82,18 €, un coût de
+ * 40,74 €, une marge de 41,44 € par vente. Le laboratoire fait varier les articles du mois, à partir
+ * de ceux de janvier.
  */
 
 /** Les entreprises du parcours de la vente : la boutique du cours, où un vendeur sert ses clients un par un. */
@@ -52,6 +56,9 @@ export const ENTREPRISES_DE_LA_VENTE = ["boutique"] as const;
 
 export const POURQUOI_LA_VENTE =
   "ce chapitre suit les ventes de la boutique du cours, MAILLE & CO, client par client : un passage en caisse, un panier, une marge.";
+
+/** La course du curseur des ventes de plus par jour : assez longue pour que le départ, au quart, ne tombe pas sur la réponse. */
+export const VENTES_SUR_LE_CURSEUR = 16;
 
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
@@ -68,7 +75,7 @@ const CE_QUE_COUTE_UNE_VENTE = `l'achat de ce qui est vendu et ses frais (${AUTR
 /** Le tableau d'un mois : chiffre d'affaires, articles, passages en caisse, coût des ventes. */
 export function tableauDuMois(c: Cas, k: ReturnType<typeof panierDuMois>): TableauDeDonnees {
   return {
-    titre: `${c.entreprise} · le mois de ${k.mois}`,
+    titre: `${c.entreprise} · le mois de ${k.mois}, réglé en caisse`,
     colonnes: [k.mois.charAt(0).toUpperCase() + k.mois.slice(1)],
     lignes: [
       { libelle: "Chiffre d'affaires hors taxes", valeurs: [eur(k.chiffreDAffaires)] },
@@ -120,10 +127,11 @@ export const LE_PANIER_MOYEN: Chapitre = {
       tableau: (c) => tableauDuMois(c, du(c)),
       texte: (c) => [
         `Vous vendez chez ${c.entreprise}. Chaque jour, vous servez des clients. Mais combien laisse un client, et que rapporte sa vente ?`,
-        `Le tableau donne le mois de janvier : le chiffre d'affaires hors taxes, les articles vendus, les passages en caisse, et le coût des ventes. Ce coût, c'est ${CE_QUE_COUTE_UNE_VENTE}.`,
+        `Le tableau donne le mois de janvier réglé en caisse : le chiffre d'affaires hors taxes, les articles vendus, les passages en caisse, et le coût des ventes. Ce coût, c'est ${CE_QUE_COUTE_UNE_VENTE}.`,
+        `Les commandes des comités d'entreprise (${eur(journeeEnCaisse(ficheDe(c)).chiffreFacture)} hors taxes) ne passent pas en caisse : elles sont facturées et réglées plus tard. Elles ne comptent donc pas dans le panier moyen, qui mesure ce que laisse un client du magasin.`,
         "À la caisse, un client achète souvent plus d'un article : une vente, c'est un passage en caisse.",
       ],
-      repere: () => "Panier moyen = chiffre d'affaires ÷ nombre de ventes.",
+      repere: () => "Panier moyen = chiffre d'affaires encaissé en caisse ÷ passages en caisse.",
     },
     {
       id: "le-panier",
@@ -132,7 +140,7 @@ export const LE_PANIER_MOYEN: Chapitre = {
       notions: ["average_basket"],
       question: (c) => {
         const k = du(c);
-        return `Calculez le panier moyen de janvier : ${eur(k.chiffreDAffaires)} de chiffre d'affaires divisé par ${qte(k.tickets)} passages en caisse, au centime.`;
+        return `Calculez le panier moyen de janvier : ${eur(k.chiffreDAffaires)} de chiffre d'affaires encaissé en caisse divisé par ${qte(k.tickets)} passages en caisse, au centime.`;
       },
       champs: (c) => {
         const k = du(c);
@@ -260,7 +268,7 @@ export const LE_PANIER_MOYEN: Chapitre = {
         return `La responsable pense embaucher un vendeur de plus, à temps plein : ${eur(v.brut)} brut par mois, ${eur(v.cout)} avec les cotisations patronales. Faites varier les ventes de plus qu'il ferait chaque jour : une droite donne la marge qu'elles rapportent dans le mois, l'autre ce que coûte le vendeur. Placez le curseur sur le plus petit nombre de ventes de plus par jour qui paie son coût, puis validez.`;
       },
       grandeur: () => ({ libelle: "Ventes de plus chaque jour", unite: "ventes" }),
-      cible: (c) => ({ attendu: ventesPourLeVendeur(ficheDe(c)), min: 0, max: 10 }),
+      cible: (c) => ({ attendu: ventesPourLeVendeur(ficheDe(c)), min: 0, max: VENTES_SUR_LE_CURSEUR }),
       zones: ["Le vendeur rapporte plus qu'il ne coûte", "Le vendeur coûte plus qu'il ne rapporte"],
       rates: () => ({
         dessous: "Avec si peu de ventes de plus, la marge gagnée ne paie pas le vendeur.",
@@ -289,45 +297,46 @@ export const LE_PANIER_MOYEN: Chapitre = {
       notions: ["average_basket", "contribution_margin"],
       question: (c) => {
         const k = du(c);
-        return `La responsable veut un panier moyen d'au moins ${eur(OBJECTIF_DE_PANIER)}. Le panier, c'est le nombre d'articles par passage en caisse (l'indice de vente) × le prix moyen d'un article, ${eur(k.prixMoyenDeLArticle)}. Faites varier l'indice de vente, les ${qte(k.tickets)} passages en caisse de janvier gardés, et relevez le défi.`;
+        return `La responsable veut un panier moyen d'au moins ${eur(OBJECTIF_DE_PANIER)}. Le panier, c'est le nombre d'articles par passage en caisse (l'indice de vente) × le prix moyen d'un article, ${eur(k.prixMoyenDeLArticle)}. Faites varier les articles vendus dans le mois, en partant des ${qte(k.articles)} de janvier, les ${qte(k.tickets)} passages en caisse gardés, et relevez le défi.`;
       },
-      leviers: (c) => [{ code: "indice", libelle: "Articles par passage en caisse", unite: "articles", ...INDICES_ESSAYES, depart: Math.round(du(c).indiceDeVente * 100) / 100 }],
+      leviers: (c) => [{ code: "articles", libelle: "Articles vendus dans le mois", unite: "articles", ...articlesEssayes(ficheDe(c)), depart: du(c).articles }],
       lecture: (c, p) => {
         const f = ficheDe(c);
-        const x = moisALIndice(f, p.indice!);
-        const depart = moisALIndice(f, Math.round(du(c).indiceDeVente * 100) / 100);
+        const x = moisAuxArticles(f, p.articles!);
+        const depart = moisAuxArticles(f, du(c).articles);
         return [
-          { libelle: "Articles vendus dans le mois", montant: x.articles, unite: "articles", reference: depart.articles },
+          { libelle: "Articles par passage en caisse", montant: x.indice, unite: "articles", reference: depart.indice },
           { libelle: "Panier moyen", montant: x.panier, reference: depart.panier, fort: true },
           { libelle: "Marge d'une vente", montant: x.marge, reference: depart.marge },
           { libelle: "Marge du mois", montant: x.margeDuMois, reference: depart.margeDuMois },
         ];
       },
       graphique: (c) => ({
-        levier: "indice",
+        levier: "articles",
         courbes: [
-          { libelle: "Panier moyen", valeur: (p) => moisALIndice(ficheDe(c), p.indice!).panier },
+          { libelle: "Panier moyen", valeur: (p) => moisAuxArticles(ficheDe(c), p.articles!).panier },
           { libelle: "Objectif de panier", valeur: () => OBJECTIF_DE_PANIER },
         ],
       }),
       defi: (c) => {
-        const juste = indicePourLObjectif(ficheDe(c));
+        const juste = articlesPourLObjectif(ficheDe(c));
         return {
-          consigne: `Trouvez le plus petit nombre d'articles par passage en caisse qui porte le panier moyen à ${eur(OBJECTIF_DE_PANIER)} au moins.`,
-          atteint: (p) => Math.abs(p.indice! - juste) < 1e-9,
+          consigne: `Trouvez le plus petit nombre d'articles vendus dans le mois qui porte le panier moyen à ${eur(OBJECTIF_DE_PANIER)} au moins.`,
+          atteint: (p) => p.articles === juste,
           indice: (p) => {
-            const x = moisALIndice(ficheDe(c), p.indice!);
+            const x = moisAuxArticles(ficheDe(c), p.articles!);
             return x.panier < OBJECTIF_DE_PANIER
               ? `Le panier est de ${eur(x.panier)} : il manque ${eur(OBJECTIF_DE_PANIER - x.panier)}. Il faut un peu plus d'articles par client.`
-              : `Le panier atteint ${eur(x.panier)}, l'objectif est dépassé : un peu moins d'articles par client suffirait-il ?`;
+              : `Le panier atteint ${eur(x.panier)}, l'objectif est dépassé : un peu moins d'articles suffirait-il ?`;
           },
-          solution: { indice: juste },
+          solution: { articles: juste },
         };
       },
       explication: (c, p) => {
-        const x = moisALIndice(ficheDe(c), p.indice!);
+        const k = du(c);
+        const x = moisAuxArticles(ficheDe(c), p.articles!);
         return [
-          `Défi relevé : à ${qte(x.indice)} article par passage en caisse, le panier monte à ${eur(x.panier)}, et la marge d'une vente à ${eur(x.marge)}. Sur le mois, la marge passe à ${eur(x.margeDuMois)}.`,
+          `Défi relevé : avec ${qte(x.articles)} articles, ${qte(x.articles - k.articles)} de plus qu'en janvier, l'indice de vente passe à ${qte(x.indice)} article par passage en caisse ; le panier monte à ${eur(x.panier)}, et la marge d'une vente à ${eur(x.marge)}. Sur le mois, la marge passe à ${eur(x.margeDuMois)}.`,
           "Faire prendre un article de plus à un client sur quelques-uns suffit : c'est la vente additionnelle, le geste du vendeur qui propose.",
         ];
       },

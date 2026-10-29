@@ -46,3 +46,32 @@ export function normaliserRangDEquipe(brut: string | undefined | null): number |
   const rang = Number(brut.trim());
   return rang >= 1 && rang <= RANG_EQUIPE_MAX ? rang : null;
 }
+
+/**
+ * LE REFUS DE /join QUAND LE CODE N'OUVRE RIEN (audit UX du 29 octobre 2026, P2-8). La page
+ * accepte tous les codes d'élève (partie, classe du cours, cohorte, concours, examen) : « Code
+ * de partie inconnu » laissait croire qu'un code de classe n'avait rien à y faire.
+ */
+export const CODE_INCONNU_PARTOUT =
+  "Ce code ne correspond à aucune partie, classe, cohorte, concours ni examen. Vérifiez-le avec votre enseignant, caractère par caractère, sans espace.";
+
+/**
+ * LE PRÉNOM QUI SUIT LE CODE (audit UX, P1-3). Un code de classe tapé sur /join renvoie à
+ * /cours/rejoindre : le prénom déjà saisi y est transmis, pour ne pas le redemander. Les
+ * autres pages n'ont pas de champ de prénom à pré-remplir : l'adresse reste telle quelle.
+ */
+export function avecLePrenom(vers: string, prenom: string): string {
+  const p = prenom.trim();
+  if (!p || !vers.startsWith("/cours/rejoindre?")) return vers;
+  return `${vers}&nom=${encodeURIComponent(p)}`;
+}
+
+/**
+ * TROP D'ESSAIS DEPUIS CETTE ADRESSE (audit UX du 29 octobre 2026, P1-4) : la garde des codes
+ * (lib/garde-des-codes.ts) ferme la porte à toute l'adresse, code juste compris. Le dire, avec
+ * l'attente, au lieu de « ce code ne mène à aucune classe », faux et déroutant.
+ */
+export function refusTropDEssais(attente: string | undefined): string {
+  const n = Math.max(1, Math.min(60, Number.parseInt(attente ?? "", 10) || 15));
+  return `Trop de codes ont été essayés depuis ce réseau ces dernières minutes. Réessayez dans ${n} minute${n > 1 ? "s" : ""} ; d'ici là, même un code juste est refusé.`;
+}

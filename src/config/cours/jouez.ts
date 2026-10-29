@@ -238,6 +238,13 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Retrouvez au bilan les capitaux propres, les dettes financières et les disponibilités : lequel vient des apports, lequel de l'emprunt ? Vérifiez que le total de l'actif égale celui du passif.",
   }),
+  "du-resultat-a-la-tresorerie": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour.`,
+    lieux: ["compte-de-resultat", "budget-de-tresorerie"],
+    chercher:
+      "Comparez le résultat du tour et la variation de la trésorerie : quelles créances et quelles dettes expliquent l'écart ?",
+  }),
   "les-flux-de-l-entreprise": (c) => ({
     niveau: 1,
     faire: `${partie(c, 1)} Jouez un tour.`,
