@@ -2,6 +2,7 @@ import { montantEcrit as eur } from "../../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../../pedagogy/cours/etats";
 import type { Cas } from "../../cas";
 import { masseSalariale } from "../../chapitres/effectif-et-masse-salariale";
+import { ENTREPRISES_DES_RESSOURCES_HUMAINES } from "../../monde/ressources-humaines-de-nova";
 import type { Situation } from "../types";
 
 /**
@@ -18,7 +19,10 @@ import type { Situation } from "../types";
  * Le cas est neuf par sa question : le chapitre mesure le poids du personnel tel qu'il est,
  * le cas prévoit celui de l'an prochain avec des salaires plus hauts, sans embauche.
  * L'effectif, le coût d'un salarié et les ventes de l'année sont ceux du chapitre
- * (`masseSalariale`).
+ * (`masseSalariale`), ceux du premier exercice de NOVA dans le monde du cours.
+ *
+ * CE QUI A CHANGÉ. Le cas lisait le coût d'un salarié du scénario de l'arène dans chaque entreprise ;
+ * il se joue chez NOVA : 127 800 € de masse salariale, 131 634 € après 3 %, 9,5 % des ventes.
  */
 
 /**
@@ -29,8 +33,8 @@ import type { Situation } from "../types";
  */
 export const AUGMENTATION_GENERALE = 0.03;
 
-/** Les trimestres d'une année de l'arène, comme au chapitre. */
-const TRIMESTRES_PAR_AN = 4;
+/** Les mois d'une année, comme au chapitre. */
+const MOIS_PAR_AN = 12;
 
 const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 const qte = (n: number) => n.toLocaleString("fr-FR");
@@ -75,6 +79,10 @@ export const L_AUGMENTATION_GENERALE: Situation = {
     "Répondre à la direction, chiffre à l'appui",
   ],
   libre: false,
+  entreprises: {
+    codes: ENTREPRISES_DES_RESSOURCES_HUMAINES,
+    pourquoi: "le cas reprend la masse salariale du premier exercice de NOVA, celle du chapitre.",
+  },
   etapes: [
     {
       id: "demande",
@@ -91,7 +99,7 @@ export const L_AUGMENTATION_GENERALE: Situation = {
           colonnes: ["Valeur"],
           lignes: [
             { libelle: "Effectif", valeurs: [`${qte(m.effectif)} salariés`] },
-            { libelle: "Coût d'un salarié par trimestre (brut et cotisations patronales)", valeurs: [eur(m.coutTrimestriel)] },
+            { libelle: "Coût d'un salarié par mois (brut et cotisations patronales)", valeurs: [eur(m.coutMensuel)] },
             { libelle: "Ventes de l'année", valeurs: [eur(m.ventes)] },
             { libelle: "Augmentation générale des salaires", valeurs: [pct(AUGMENTATION_GENERALE * 100)] },
           ],
@@ -110,7 +118,7 @@ export const L_AUGMENTATION_GENERALE: Situation = {
       champs: (c) => {
         const { m } = augmentationGenerale(c);
         return [
-          { libelle: "Coût annuel d'un salarié", attendu: m.coutAnnuel, tolerance: 1, calcul: `${eur(m.coutTrimestriel)} × ${TRIMESTRES_PAR_AN} trimestres = ${eur(m.coutAnnuel)}` },
+          { libelle: "Coût annuel d'un salarié", attendu: m.coutAnnuel, tolerance: 1, calcul: `${eur(m.coutMensuel)} × ${MOIS_PAR_AN} mois = ${eur(m.coutAnnuel)}` },
           { libelle: "Masse salariale de l'année", attendu: m.masse, tolerance: 1, calcul: `${eur(m.coutAnnuel)} × ${qte(m.effectif)} salariés = ${eur(m.masse)}` },
           { libelle: "Taux de frais de personnel (%)", attendu: m.tauxDeFraisDePersonnel, tolerance: 0.1, calcul: `${eur(m.masse)} ÷ ${eur(m.ventes)} × 100 = ${pct(m.tauxDeFraisDePersonnel)}` },
         ];

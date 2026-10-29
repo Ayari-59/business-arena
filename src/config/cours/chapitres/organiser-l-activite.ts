@@ -1,161 +1,86 @@
-import { soldUnits } from "../../../engine/simulation/runGame";
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
-import { scenarioByCode } from "../../scenarios/registry";
-import { accord, accordPluriel, pronom } from "../accords";
-import { type Cas } from "../cas";
-import { anneeJouee } from "../annee-de-l-arene";
-import { rejouerAvec } from "../gestion-de-la-pme";
-import { ENTREPRISES_DU_COURS } from "../metiers";
-import type { Chapitre } from "../types";
+import type { Cas } from "../cas";
+import {
+  ENTREPRISES_DE_LA_PRODUCTION_DE_NOVA,
+  POURQUOI_LA_PRODUCTION_DE_NOVA,
+  capaciteDUnPoste,
+  embaucheDuPremierJanvier,
+  enceintesParOperateur,
+  ficheDeNova,
+  heuresParTrimestre,
+  trimestreAvecDesRessources,
+  trimestreDeN,
+} from "../monde/production-et-logistique";
+import type { Chapitre, TableauDeDonnees } from "../types";
 
 /**
  * CHAPITRE : ORGANISER L'ACTIVITÉ, CAPACITÉ, ÉQUIPE ET DÉLAIS (Seconde, option management et
  * gestion, palier 1).
  *
- * Combien l'entreprise peut faire en un trimestre, et ce qui la limite. Deux capacités : celle de
- * ses équipements (ce que chacun fait par trimestre, additionné sur tout le parc) et celle de son
- * équipe (les heures de travail de tous les salariés, divisées par le temps que demande une
- * unité). La capacité de l'entreprise est la plus petite des deux. L'élève la calcule, lit le
- * premier trimestre de l'arène (la production, la demande, les ventes), calcule le taux
- * d'occupation et les ventes manquées, et dit ce qui a limité les ventes : les clients, la
- * production prévue, l'équipe ou les équipements. Puis il cherche ce qu'il faut ajouter pour faire
- * plus, et quand le décider : un équipement acheté ou un salarié embauché n'est là qu'au
- * trimestre suivant.
+ * Combien NOVA peut monter d'enceintes en un trimestre, et ce qui la limite. Deux capacités : celle
+ * des postes de la ligne (ce que chacun monte, additionné), celle de l'équipe (les heures de tous les
+ * opérateurs ÷ le temps d'une enceinte). La capacité de l'entreprise est la plus petite. L'élève les
+ * calcule au 1er trimestre de l'année N (monde/production-et-logistique.ts, qui relit
+ * nova-capacite.ts), lit la demande (4 778 enceintes), calcule le taux d'occupation de la ligne, dit
+ * ce qui a limité les ventes (les clients), puis le délai d'un renfort : un opérateur recruté le
+ * 1er janvier n'arrive que le 1er mars.
  *
- * Tout vient de l'arène : le parc et la capacité de chaque type d'équipement (`fleet`,
- * `equipment.types`), l'effectif, les heures d'un salarié et le temps d'une unité
- * (`headcount`, `hoursPerEmployee`, `hoursPerUnit`), le premier trimestre de l'année du cours
- * (`anneeJouee`), et l'année rejouée avec un équipement et une embauche décidés au premier
- * trimestre (`rejouerAvec`), qui montre le délai. « L'équipe et son planning » (BTS MCO) compte
- * les heures et le coût de l'équipe d'un point de vente ; ce chapitre-ci compare l'équipe à
- * l'outil, et dit lequel des deux fixe la capacité.
+ * L'EXPÉRIENCE. Un curseur : la plus grande commande que NOVA pourrait accepter en plus au 1er
+ * trimestre (2 222 enceintes). Un laboratoire : les postes et les opérateurs qui servent toute la
+ * demande de Noël de N + 1 (7 800), avec le moins de ressources ajoutées (5 et 5).
+ *
+ * « Produire » (bac STMG) suit l'année entière et la productivité ; ici, un trimestre et ses
+ * ressources. CE QUI A CHANGÉ : le chapitre se jouait dans sept entreprises de l'arène ; il se joue
+ * chez NOVA seule.
  */
 
-/**
- * Les entreprises du chapitre : celles qui font un seul produit, et le servent dans le trimestre.
- * La boutique vend une gamme d'articles qui ne demandent pas le même temps de travail, et la
- * salle de sport garde ses adhérents d'un trimestre à l'autre : ce qu'elle sert n'y est pas ce
- * qu'elle vend dans le trimestre.
- */
-export const ENTREPRISES_DE_L_ORGANISATION: readonly string[] = ENTREPRISES_DU_COURS.filter((code) => {
-  const s = scenarioByCode(code).scenario;
-  return !(s.products && s.products.length > 1) && !s.subscription;
-});
+/** Les entreprises du chapitre : NOVA seule. */
+export const ENTREPRISES_DE_L_ORGANISATION: readonly string[] = ENTREPRISES_DE_LA_PRODUCTION_DE_NOVA;
 
-/**
- * Chez Atlas Conseil, l'arène compte le temps de l'équipe en jours ouvrés : 60 jours par
- * consultant et par trimestre, et un jour-conseil prend un jour (scénario conseil). Ailleurs,
- * elle le compte en heures.
- */
-const TEMPS_EN_JOURS: ReadonlySet<string> = new Set(["conseil"]);
+/** Le trimestre du chapitre (le 1er de N) et celui du laboratoire (le 4e de N + 1, Noël). */
+export const TRIMESTRE_DU_CHAPITRE = 1;
+export const TRIMESTRE_DU_LABORATOIRE = 4;
 
-/** Un montant à la française, avec le signe moins typographique. */
+/** Les bornes du curseur (la commande en plus) et du laboratoire (les postes, les opérateurs). */
+const COMMANDE_DU_CURSEUR = { min: 0, max: 4_000 } as const;
+const POSTES_DU_LABORATOIRE = { min: 4, max: 6, pas: 1 } as const;
+const OPERATEURS_DU_LABORATOIRE = { min: 3, max: 6, pas: 1 } as const;
+
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
-const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
+const pct = (t: number) => `${(Math.round(t * 10) / 10).toLocaleString("fr-FR")} %`;
 
-/** Une durée de travail, dans l'unité de temps de l'entreprise : « 540 h », « 60 jours ». */
-const duree = (c: Cas, x: number) => (TEMPS_EN_JOURS.has(c.code) ? `${qte(x)} ${x >= 2 ? "jours" : "jour"}` : `${qte(x)} h`);
-/** Ce que la capacité gagne : « gagne 200 enceintes », ou « ne gagne rien ». */
-const gagne = (c: Cas, n: number) => (n === 0 ? "ne gagne rien" : `gagne ${qte(n)} ${c.unites}`);
-/** Ce qu'un renfort ajoute : « que 200 enceintes », ou « rien ». */
-const nAjoute = (c: Cas, n: number) => (n === 0 ? "n'ajouterait rien" : `n'ajouterait que ${qte(n)} ${c.unites}`);
+const f = (c: Pick<Cas, "code">) => ficheDeNova(c);
 
-/** Le nom de l'unité de temps, au pluriel : « heures », « jours ». */
-const temps = (c: Cas) => (TEMPS_EN_JOURS.has(c.code) ? "jours" : "heures");
+/** Le trimestre du chapitre : les capacités, la demande, l'occupation, ce qui a limité. */
+export const activiteDuTrimestre = (c: Pick<Cas, "code">) => trimestreDeN(f(c), TRIMESTRE_DU_CHAPITRE);
 
-export type Limite = "clients" | "prevision" | "equipe" | "outil";
+/** Le renfort du laboratoire : la position des leviers qui sert Noël avec le moins de ressources ajoutées. */
+export function renfortDuLaboratoire(c: Pick<Cas, "code">) {
+  const positions: ReturnType<typeof trimestreAvecDesRessources>[] = [];
+  for (let p = POSTES_DU_LABORATOIRE.min; p <= POSTES_DU_LABORATOIRE.max; p++)
+    for (let o = OPERATEURS_DU_LABORATOIRE.min; o <= OPERATEURS_DU_LABORATOIRE.max; o++) positions.push(trimestreAvecDesRessources(f(c), p, o, TRIMESTRE_DU_LABORATOIRE));
+  const servies = positions.filter((x) => x.refusees === 0);
+  const moins = Math.min(...servies.map((x) => x.postes + x.operateurs));
+  return { moins, solution: servies.find((x) => x.postes + x.operateurs === moins)! };
+}
 
-/** Les capacités, le premier trimestre de l'arène, et ce qui a limité ses ventes. */
-export function activiteDuTrimestre(c: Cas) {
-  const def = scenarioByCode(c.code);
-  const s = def.scenario;
-  const { partie, depart } = anneeJouee(c.code);
-  const types = new Map((s.equipment?.types ?? []).map((t) => [t.code, t]));
-  const parParType = new Map<string, { code: string; nom: string; nombre: number; capacite: number }>();
-  for (const lot of depart.fleet ?? []) {
-    const t = types.get(lot.typeCode)!;
-    const deja = parParType.get(lot.typeCode) ?? { code: t.code, nom: t.name, nombre: 0, capacite: t.capacityPerUnit };
-    parParType.set(lot.typeCode, { ...deja, nombre: deja.nombre + lot.count });
-  }
-  const parc = [...parParType.values()];
-  const outil = parc.reduce((t, p) => t + p.nombre * p.capacite, 0);
-  const effectif = depart.headcount;
-  const heuresParSalarie = depart.hoursPerEmployee;
-  const heuresParUnite = s.product.hoursPerUnit;
-  const equipe = Math.floor((effectif * heuresParSalarie * depart.productivity) / heuresParUnite + 1e-9);
-  const capacite = Math.min(outil, equipe);
-  const r = partie.rounds[0]!.results["joueur"]!;
-  const segments = Object.values(r.market.bySegment);
-  const production = Math.round(r.production.produced);
-  const ventes = Math.round(soldUnits(r));
-  const demande = Math.round(segments.reduce((t, v) => t + v.demandForCompany, 0));
-  const stock = s.perishable ? 0 : Math.round(depart.finishedGoods.quantity);
-  const manquees = Math.max(0, demande - ventes);
-  const limite: Limite = manquees === 0 ? "clients" : demande <= stock + capacite ? "prevision" : outil <= equipe ? "outil" : "equipe";
-
-  // Le renfort : un équipement du premier type du parc, ou un salarié de plus.
-  const ajoute = parc[0]!;
-  const type = types.get(ajoute.code)!;
-  const outilPlus = outil + type.capacityPerUnit;
-  const equipePlus = Math.floor(((effectif + 1) * heuresParSalarie * depart.productivity) / heuresParUnite + 1e-9);
-  const avecUnEquipement = Math.min(outilPlus, equipe);
-  const avecUnSalarie = Math.min(outil, equipePlus);
-  const hr = s.hr!;
+function tableauDuTrimestre(c: Cas): TableauDeDonnees {
+  const x = f(c);
+  const t = activiteDuTrimestre(c);
   return {
-    vocabulaire: def.vocabulary,
-    perissable: Boolean(s.perishable),
-    parc,
-    outil,
-    effectif,
-    heuresParSalarie,
-    heuresParUnite,
-    equipe,
-    capacite,
-    production,
-    ventes,
-    demande,
-    stock,
-    manquees,
-    occupation: auDixieme((production / capacite) * 100),
-    limite,
-    equipement: { code: type.code, nom: type.name, capacite: type.capacityPerUnit, prix: type.costPerUnit },
-    outilPlus,
-    equipePlus,
-    avecUnEquipement,
-    avecUnSalarie,
-    gainEquipement: avecUnEquipement - capacite,
-    gainSalarie: avecUnSalarie - capacite,
-    recrutement: hr.hiringCost,
-    salaireParTrimestre: hr.salaryPerEmployeePerRound,
+    titre: `${c.entreprise}, le 1er trimestre de l'année N`,
+    colonnes: ["Valeur"],
+    lignes: [
+      { libelle: "Postes de montage", valeurs: [qte(x.ligne.postes)] },
+      { libelle: `Ce que monte un poste en un trimestre (${c.unites})`, valeurs: [qte(capaciteDUnPoste(x))] },
+      { libelle: "Opérateurs", valeurs: [qte(x.plan.operateurs)] },
+      { libelle: "Heures d'un opérateur en un trimestre", valeurs: [qte(heuresParTrimestre(x))] },
+      { libelle: `Temps de montage d'une ${c.unite} (heure)`, valeurs: [qte(x.operateurs.heuresParEnceinte)] },
+      { libelle: `Demande des clients (${c.unites})`, valeurs: [qte(t.demande)] },
+    ],
   };
 }
-
-/**
- * L'année rejouée avec le renfort décidé au premier trimestre : un équipement du premier type du
- * parc acheté, un salarié embauché. Les capacités des deux premiers trimestres, telles que le
- * moteur les rend.
- */
-export function renfortRejoue(c: Cas) {
-  const a = activiteDuTrimestre(c);
-  const annee = rejouerAvec(c.code, "organiser-l-activite:renfort-au-premier-trimestre", (tour, d) =>
-    tour === 1 ? { ...d, investment: { ...(d.investment ?? {}), equipmentBuy: [{ typeCode: a.equipement.code, quantity: 1 }] }, hr: { ...(d.hr ?? {}), hire: 1 } } : undefined,
-  );
-  const lire = (k: number) => ({
-    outil: Math.round(annee[k]!.production.machineCapacity),
-    equipe: Math.floor(annee[k]!.production.laborCapacity + 1e-9),
-  });
-  return { premier: lire(0), deuxieme: lire(1) };
-}
-
-const LIBELLES_DES_LIMITES: Record<Limite, string> = {
-  clients: "Les clients : l'entreprise a servi toute la demande",
-  prevision: "La production prévue : trop basse, alors que la capacité suffisait",
-  equipe: "L'équipe : elle fixe la capacité, et la demande la dépassait",
-  outil: "Les équipements : ils fixent la capacité, et la demande la dépassait",
-};
 
 export const ORGANISER_L_ACTIVITE: Chapitre = {
   code: "organiser-l-activite",
@@ -164,262 +89,191 @@ export const ORGANISER_L_ACTIVITE: Chapitre = {
   blocs: ["2de MG · Organiser et décider, des objectifs à la réalisation"],
   titre: "Organiser l'activité : capacité, équipe et délais",
   accroche:
-    "Combien l'entreprise peut faire en un trimestre, avec ses équipements et son équipe ; ce qu'elle a vraiment fait ; et ce qui l'a limitée. Puis ce qu'il faut ajouter pour faire plus, et quand le décider.",
+    "Combien l'entreprise peut faire en un trimestre, avec ses postes et son équipe ; ce que ses clients lui ont demandé ; et ce qui l'a limitée. Puis ce qu'il faut ajouter pour faire plus, et le délai pour l'avoir.",
   objectifs: [
     "Calculer la capacité des équipements et celle de l'équipe",
-    "Dire laquelle des deux fixe la capacité de l'entreprise",
-    "Calculer un taux d'occupation et des ventes manquées",
-    "Dire ce qui limite l'activité : les clients, la prévision, l'équipe ou l'outil",
-    "Tenir compte du délai d'un équipement ou d'une embauche",
+    "Calculer le taux d'occupation de l'outil",
+    "Dire ce qui limite l'activité : les clients, l'équipe ou les équipements",
+    "Tenir compte du délai d'un renfort",
   ],
   libre: false,
-  entreprises: {
-    codes: ENTREPRISES_DE_L_ORGANISATION,
-    pourquoi:
-      "ce chapitre compte ce qu'une équipe et ses équipements font d'un seul produit en un trimestre : la boutique vend une gamme d'articles qui ne demandent pas le même temps de travail, et la salle de sport garde ses adhérents d'un trimestre à l'autre.",
-  },
+  entreprises: { codes: ENTREPRISES_DE_L_ORGANISATION, pourquoi: POURQUOI_LA_PRODUCTION_DE_NOVA },
   etapes: [
     {
       id: "intro",
       type: "lecture",
       titre: "Ce que l'entreprise peut faire",
-      notions: ["capacity", "productivity"],
-      texte: (c) => {
-        const a = activiteDuTrimestre(c);
-        return [
-          `Chaque trimestre, ${c.entreprise} ne peut pas faire autant ${dE(c.unites)} qu'elle le voudrait. Deux choses fixent sa capacité, c'est-à-dire le plus qu'elle peut faire : ses équipements, et le travail de son équipe.`,
-          `Chaque équipement fait un certain nombre ${dE(c.unites)} par trimestre (voir le tableau). L'équipe compte ${qte(a.effectif)} salariés, qui donnent chacun ${duree(c, a.heuresParSalarie)} de travail par trimestre ; ${accord(c, "un")} ${c.unite} demande ${duree(c, a.heuresParUnite)} de travail.`,
-          "La capacité de l'entreprise est la plus petite des deux : un équipement sans personne pour le faire tourner ne fait rien, une équipe sans équipement non plus.",
-        ];
-      },
-      tableau: (c) => {
-        const a = activiteDuTrimestre(c);
-        return {
-          titre: `Les moyens ${dE(c.entreprise)} au premier trimestre`,
-          colonnes: ["Nombre", "Ce que chacun fait par trimestre"],
-          lignes: [
-            ...a.parc.map((p) => ({ libelle: p.nom, valeurs: [qte(p.nombre), `${qte(p.capacite)} ${c.unites}`] })),
-            { libelle: "Salariés", valeurs: [qte(a.effectif), `${duree(c, a.heuresParSalarie)} de travail`] },
-          ],
-        };
-      },
-      repere: () => "Capacité de l'entreprise = la plus petite des deux : celle des équipements, celle de l'équipe.",
-    },
-    {
-      id: "capacites",
-      type: "montants",
-      titre: "Deux capacités, une seule compte",
-      notions: ["capacity", "productivity"],
-      question: (c) =>
-        `Calculez la capacité des équipements (ce que tout le parc fait en un trimestre), puis celle de l'équipe (les ${temps(c)} de travail de tous les salariés ÷ les ${temps(c)} que demande ${accord(c, "un")} ${c.unite}, arrondi à l'unité inférieure), et enfin la capacité de l'entreprise, en ${c.unites} par trimestre.`,
-      champs: (c) => {
-        const a = activiteDuTrimestre(c);
-        return [
-          { libelle: "Capacité des équipements", attendu: a.outil, calcul: `${a.parc.map((p) => `${qte(p.nombre)} × ${qte(p.capacite)}`).join(" + ")} = ${qte(a.outil)}` },
-          { libelle: "Capacité de l'équipe", attendu: a.equipe, calcul: `${qte(a.effectif)} × ${duree(c, a.heuresParSalarie)} ÷ ${duree(c, a.heuresParUnite)} = ${qte(a.equipe)}`, tolerance: 1 },
-          { libelle: "Capacité de l'entreprise", attendu: a.capacite, calcul: `la plus petite des deux : ${qte(a.capacite)}`, tolerance: 1 },
-        ];
-      },
-      explication: (c) => {
-        const a = activiteDuTrimestre(c);
-        return [
-          a.outil <= a.equipe
-            ? `Ce sont les équipements qui fixent la capacité : ${qte(a.capacite)} ${c.unites} par trimestre. L'équipe pourrait en faire ${qte(a.equipe - a.outil)} de plus, si elle avait de quoi.`
-            : `C'est l'équipe qui fixe la capacité : ${qte(a.capacite)} ${c.unites} par trimestre. Les équipements pourraient en faire ${qte(a.outil - a.equipe)} de plus, avec assez de monde pour les faire tourner.`,
-        ];
-      },
-    },
-    {
-      id: "premier-trimestre",
-      type: "montants",
-      titre: "Le premier trimestre",
       notions: ["capacity"],
-      tableau: (c) => {
-        const a = activiteDuTrimestre(c);
-        return {
-          titre: `Le premier trimestre ${dE(c.entreprise)} dans l'arène`,
-          colonnes: [c.unites.charAt(0).toUpperCase() + c.unites.slice(1)],
-          lignes: [
-            { libelle: "Capacité de l'entreprise", valeurs: [qte(a.capacite)] },
-            ...(a.stock > 0 ? [{ libelle: "Stock de départ", valeurs: [qte(a.stock)] }] : []),
-            { libelle: "Production du trimestre", valeurs: [qte(a.production)] },
-            { libelle: "Demande des clients", valeurs: [qte(a.demande)] },
-            { libelle: "Ventes", valeurs: [qte(a.ventes)] },
-          ],
-        };
-      },
-      question: (c) =>
-        `La production du trimestre, c'est ce que l'entreprise a prévu sur sa feuille de décision (« ${activiteDuTrimestre(c).vocabulaire.productionPlanLabel} »). Calculez le taux d'occupation (production ÷ capacité de l'entreprise × 100, au dixième), puis les ventes manquées (demande des clients − ventes), en ${c.unites}.`,
+      tableau: tableauDuTrimestre,
+      texte: (c) => [
+        `${c.entreprise} monte des ${c.unites} sur une ligne de postes, avec une équipe d'opérateurs. Chacune de ces deux ressources a sa capacité : ce que les postes peuvent monter en un trimestre, et ce que l'équipe peut monter dans ses heures de travail.`,
+        "La capacité de l'entreprise est la plus petite des deux : un poste sans opérateur ne monte rien, un opérateur sans poste non plus.",
+        "Le tableau donne les ressources de NOVA au 1er trimestre de l'année N, et ce que ses clients lui ont demandé.",
+      ],
+      repere: () => "Capacité de l'équipe = opérateurs × heures d'un opérateur ÷ temps d'une unité.",
+    },
+    {
+      id: "les-capacites",
+      type: "montants",
+      titre: "Les deux capacités",
+      notions: ["capacity"],
+      tableau: tableauDuTrimestre,
+      question: (c) => `Calculez la capacité des postes en un trimestre, celle de l'équipe, puis la capacité de l'entreprise, en ${c.unites}.`,
       champs: (c) => {
-        const a = activiteDuTrimestre(c);
+        const x = f(c);
+        const t = activiteDuTrimestre(c);
         return [
-          { libelle: "Taux d'occupation (%)", attendu: a.occupation, calcul: `${qte(a.production)} ÷ ${qte(a.capacite)} × 100 = ${pct(a.occupation)}`, tolerance: 0.1 },
-          { libelle: "Ventes manquées", attendu: a.manquees, calcul: `${qte(a.demande)} − ${qte(a.ventes)} = ${qte(a.manquees)}`, tolerance: 1 },
+          { libelle: "Capacité des postes", attendu: t.capaciteOutil, calcul: `${qte(x.ligne.postes)} × ${qte(capaciteDUnPoste(x))} = ${qte(t.capaciteOutil)}`, tolerance: 0 },
+          {
+            libelle: "Capacité de l'équipe",
+            attendu: t.capaciteEquipe,
+            calcul: `${qte(x.plan.operateurs)} × ${qte(heuresParTrimestre(x))} ÷ ${qte(x.operateurs.heuresParEnceinte)} = ${qte(t.capaciteEquipe)}`,
+            tolerance: 0,
+          },
+          { libelle: "Capacité de l'entreprise", attendu: t.capacite, calcul: `la plus petite de ${qte(t.capaciteOutil)} et ${qte(t.capaciteEquipe)} : ${qte(t.capacite)}`, tolerance: 0 },
         ];
       },
       explication: (c) => {
-        const a = activiteDuTrimestre(c);
-        const reste = a.stock + a.production - a.ventes;
-        const surLaProduction = a.perissable
-          ? reste > 0
-            ? `${qte(reste)} ${c.unites} ${accordPluriel(c, "préparé")} n'ont pas été ${accordPluriel(c, "vendu")} : ${pronom(c)}s ne se gardent pas, ${pronom(c)}s sont ${accordPluriel(c, "perdu")}.`
-            : `Tout ce qui a été préparé a été vendu.`
-          : a.ventes > a.production
-            ? `L'entreprise a vendu plus qu'elle n'a produit, en puisant dans son stock de départ.`
-            : reste > 0
-              ? `Ce qui n'a pas été vendu, ${qte(reste)} ${c.unites}, reste en stock pour le trimestre suivant.`
-              : "Tout ce qui a été produit a été vendu.";
+        const t = activiteDuTrimestre(c);
+        return [`L'équipe pourrait monter ${qte(t.capaciteEquipe)} ${c.unites}, mais les postes n'en montent que ${qte(t.capaciteOutil)} : ce sont eux qui fixent la capacité de ${c.entreprise}.`];
+      },
+    },
+    {
+      id: "l-occupation",
+      type: "montants",
+      titre: "Le taux d'occupation",
+      notions: ["capacity"],
+      tableau: tableauDuTrimestre,
+      question: (c) =>
+        `Au 1er trimestre de N, ${c.entreprise} a monté et vendu ce que ses clients lui ont demandé. Calculez le taux d'occupation de la ligne (production ÷ capacité des postes × 100, au dixième), puis ce qui restait de capacité libre.`,
+      champs: (c) => {
+        const t = activiteDuTrimestre(c);
         return [
-          `L'entreprise a utilisé ${pct(a.occupation)} de sa capacité. ${surLaProduction}`,
-          a.manquees > 0
-            ? `${qte(a.manquees)} ${c.unites} ${accordPluriel(c, "demandé")} par des clients n'ont pas été ${accordPluriel(c, "servi")} : ce sont des ventes perdues.`
-            : "Aucun client n'est reparti sans être servi.",
+          { libelle: "Taux d'occupation de la ligne (%)", attendu: Math.round(t.occupation * 10) / 10, calcul: `${qte(t.production)} ÷ ${qte(t.capaciteOutil)} × 100 = ${pct(t.occupation)}`, tolerance: 0.1 },
+          { libelle: "Capacité libre", attendu: t.libre, calcul: `${qte(t.capacite)} − ${qte(t.production)} = ${qte(t.libre)}`, tolerance: 0 },
         ];
+      },
+      explication: (c) => {
+        const t = activiteDuTrimestre(c);
+        return [`La ligne n'a tourné qu'à ${pct(t.occupation)} : ${qte(t.libre)} ${c.unites} de plus auraient pu être montées avec les mêmes postes et la même équipe.`];
       },
     },
     {
       id: "ce-qui-limite",
       type: "choix",
-      titre: "Ce qui a limité les ventes",
-      notions: ["capacity"],
-      question: (c) => {
-        const a = activiteDuTrimestre(c);
-        return `Au premier trimestre, ${c.entreprise} a vendu ${qte(a.ventes)} ${c.unites} pour une demande de ${qte(a.demande)}, avec une capacité de ${qte(a.capacite)}${a.stock > 0 ? ` et un stock de départ de ${qte(a.stock)}` : ""}. Qu'est-ce qui a limité ses ventes ?`;
-      },
+      titre: "Ce qui a limité l'activité",
+      notions: ["capacity", "demand_market_share"],
+      question: () => "Au 1er trimestre de N, qu'est-ce qui a limité les ventes ?",
       options: (c) => {
-        const a = activiteDuTrimestre(c);
-        const disponible = a.stock + a.capacite;
-        const retours: Record<Limite, string> = {
-          clients:
-            a.limite === "clients"
-              ? `Oui : tous les clients ont été servis, et il restait de la capacité (${pct(a.occupation)} d'occupation). Pour vendre plus, il faut d'abord plus de clients : le prix, la qualité, la publicité.`
-              : `Non : ${qte(a.manquees)} ${c.unites} ${accordPluriel(c, "demandé")} n'ont pas été ${accordPluriel(c, "servi")}.`,
-          prevision:
-            a.limite === "prevision"
-              ? `Oui : à pleine capacité, l'entreprise disposait de ${qte(disponible)} ${c.unites}, assez pour la demande de ${qte(a.demande)}. Elle n'a produit que ${qte(a.production)} : c'est la prévision qui a manqué, pas les moyens.`
-              : a.limite === "clients"
-                ? "Non : la production prévue n'était pas trop basse, puisque tous les clients ont été servis."
-                : `Non : même à pleine capacité, l'entreprise ne disposait que de ${qte(disponible)} ${c.unites}, pour une demande de ${qte(a.demande)}.`,
-          equipe:
-            a.limite === "equipe"
-              ? `Oui : l'équipe ne peut faire que ${qte(a.equipe)} ${c.unites} par trimestre, moins que les équipements (${qte(a.outil)}), et la demande était de ${qte(a.demande)}. Même avec une production parfaitement prévue, des clients seraient repartis.`
-              : a.outil <= a.equipe
-                ? `Non : l'équipe pourrait faire ${qte(a.equipe)} ${c.unites}, plus que les équipements (${qte(a.outil)}). Ce n'est pas elle qui fixe la capacité.`
-                : "Non : l'équipe fixe bien la capacité, mais elle suffisait à la demande.",
-          outil:
-            a.limite === "outil"
-              ? `Oui : les équipements ne peuvent faire que ${qte(a.outil)} ${c.unites} par trimestre, moins que l'équipe (${qte(a.equipe)}), et la demande était de ${qte(a.demande)}. Même avec une production parfaitement prévue, des clients seraient repartis.`
-              : a.outil > a.equipe
-                ? `Non : les équipements pourraient faire ${qte(a.outil)} ${c.unites}, plus que l'équipe (${qte(a.equipe)}). Ce ne sont pas eux qui fixent la capacité.`
-                : "Non : les équipements fixent bien la capacité, mais ils suffisaient à la demande.",
-        };
-        return (["clients", "prevision", "equipe", "outil"] as const).map((l) => ({ texte: LIBELLES_DES_LIMITES[l], juste: l === a.limite, retour: retours[l] }));
+        const t = activiteDuTrimestre(c);
+        return [
+          {
+            texte: "Les clients",
+            juste: t.limite === "clients",
+            retour: t.limite === "clients" ? `Oui : ils ont demandé ${qte(t.demande)} ${c.unites}, et la ligne pouvait en monter ${qte(t.capacite)}. Pour vendre plus, il fallait d'abord plus de clients.` : "Non : la demande dépassait la capacité.",
+          },
+          { texte: "Les postes de la ligne", juste: t.limite === "outil", retour: t.limite === "outil" ? "Oui." : `Non : les postes pouvaient monter ${qte(t.capaciteOutil)} ${c.unites}, et la demande n'était que de ${qte(t.demande)}.` },
+          { texte: "L'équipe des opérateurs", juste: t.limite === "equipe", retour: t.limite === "equipe" ? "Oui." : `Non : l'équipe pouvait monter ${qte(t.capaciteEquipe)} ${c.unites}, plus que les postes.` },
+        ];
       },
     },
     {
-      id: "renfort",
+      id: "le-delai",
       type: "montants",
-      titre: "Un équipement ou un salarié de plus",
-      notions: ["capacity", "productivity"],
+      titre: "Le délai d'un renfort",
+      notions: ["capacity", "payroll"],
       question: (c) => {
-        const a = activiteDuTrimestre(c);
-        return `La direction veut pouvoir faire plus. Calculez la capacité de l'entreprise avec un équipement « ${a.equipement.nom} » de plus (${qte(a.equipement.capacite)} ${c.unites} par trimestre), puis avec un salarié de plus (${duree(c, a.heuresParSalarie)} de travail par trimestre), tout le reste identique.`;
+        const e = embaucheDuPremierJanvier(f(c));
+        return `Un renfort ne se décide pas la veille : entre l'annonce d'un poste et l'arrivée d'un opérateur, il faut ${qte(e.delai)} mois de recrutement. Pour un opérateur recruté à partir du 1er janvier, calculez les mois où il monte au 1er trimestre, ce qu'il ajoute à l'équipe au 1er trimestre, puis au 2e. Un opérateur monte ${qte(enceintesParOperateur(f(c)) / 3)} ${c.unites} par mois.`;
       },
       champs: (c) => {
-        const a = activiteDuTrimestre(c);
+        const e = embaucheDuPremierJanvier(f(c));
         return [
-          {
-            libelle: "Capacité avec un équipement de plus",
-            attendu: a.avecUnEquipement,
-            calcul: `équipements : ${qte(a.outil)} + ${qte(a.equipement.capacite)} = ${qte(a.outilPlus)} ; équipe : ${qte(a.equipe)} ; la plus petite : ${qte(a.avecUnEquipement)}`,
-            tolerance: 1,
-          },
-          {
-            libelle: "Capacité avec un salarié de plus",
-            attendu: a.avecUnSalarie,
-            calcul: `équipe : ${qte(a.effectif + 1)} × ${duree(c, a.heuresParSalarie)} ÷ ${duree(c, a.heuresParUnite)} = ${qte(a.equipePlus)} ; équipements : ${qte(a.outil)} ; la plus petite : ${qte(a.avecUnSalarie)}`,
-            tolerance: 1,
-          },
+          { libelle: "Mois de travail au 1er trimestre", attendu: e.moisAuPremier, calcul: `3 − ${qte(e.delai)} = ${qte(e.moisAuPremier)}`, tolerance: 0 },
+          { libelle: "Capacité ajoutée au 1er trimestre", attendu: e.enPlusAuPremier, calcul: `${qte(e.moisAuPremier)} × ${qte(e.enPlusAuDeuxieme / 3)} = ${qte(e.enPlusAuPremier)}`, tolerance: 0 },
+          { libelle: "Capacité ajoutée au 2e trimestre", attendu: e.enPlusAuDeuxieme, calcul: `3 × ${qte(e.enPlusAuDeuxieme / 3)} = ${qte(e.enPlusAuDeuxieme)}`, tolerance: 0 },
         ];
+      },
+      explication: (c) => [
+        `Un renfort se décide un trimestre à l'avance : décidé en janvier, il ne compte vraiment qu'au 2e trimestre. Et ici, il ne ferait rien monter de plus : ce sont les postes qui fixent la capacité de ${c.entreprise}.`,
+      ],
+    },
+    {
+      id: "la-commande-en-plus",
+      type: "curseur",
+      titre: "La commande en plus",
+      notions: ["capacity"],
+      question: (c) => {
+        const t = activiteDuTrimestre(c);
+        return `Un client propose une commande en plus, à livrer au 1er trimestre de N. Faites varier sa taille : une droite donne la capacité de l'entreprise (${qte(t.capacite)} ${c.unites}), l'autre ce qu'il faudrait monter (${qte(t.demande)} pour les clients, plus la commande). Placez le curseur sur la plus grande commande que la ligne peut monter, puis validez.`;
+      },
+      grandeur: (c) => ({ libelle: "Commande en plus", unite: c.unites }),
+      sens: "plus-grande",
+      cible: (c) => ({ attendu: activiteDuTrimestre(c).libre, ...COMMANDE_DU_CURSEUR }),
+      zones: ["La ligne peut la monter", "La ligne ne peut pas la monter"],
+      rates: () => ({
+        dessous: "Cette commande tient dans la ligne, mais une plus grande aussi : cherchez la plus grande.",
+        dessus: "Cette commande dépasse ce que la ligne peut monter dans le trimestre.",
+      }),
+      montrer: "Montrer la commande",
+      lecture: (c, q) => {
+        const t = activiteDuTrimestre(c);
+        return [
+          { libelle: "À monter dans le trimestre", montant: t.demande + q, fort: true },
+          { libelle: "Capacité de l'entreprise", montant: t.capacite },
+          { libelle: "Capacité qui reste", montant: t.capacite - t.demande - q },
+        ];
+      },
+      droites: (c) => {
+        const t = activiteDuTrimestre(c);
+        return { produit: () => t.capacite, cout: (q) => t.demande + q, libelles: ["Capacité de l'entreprise", "À monter dans le trimestre"] };
       },
       explication: (c) => {
-        const a = activiteDuTrimestre(c);
-        return [
-          `Avec un équipement de plus, la capacité ${gagne(c, a.gainEquipement)} ; avec un salarié de plus, elle ${gagne(c, a.gainSalarie)}. Ajouter ce qui ne limite pas ne sert à rien : c'est l'autre qui bloque.`,
-        ];
+        const t = activiteDuTrimestre(c);
+        return [`La ligne pouvait monter ${qte(t.libre)} ${c.unites} de plus : ${qte(t.demande)} + ${qte(t.libre)} = ${qte(t.capacite)}. Au-delà, il aurait fallu un poste de plus, et le décider bien avant.`];
       },
     },
     {
-      id: "quoi-ajouter",
-      type: "choix",
-      titre: "Ce qu'il faut ajouter",
+      id: "le-laboratoire-du-renfort",
+      type: "simulation",
+      titre: "Le laboratoire du renfort",
       notions: ["capacity"],
       question: (c) => {
-        const a = activiteDuTrimestre(c);
-        return `Avec un équipement de plus, la capacité ${dE(c.entreprise)} ${gagne(c, a.gainEquipement)} ; avec un salarié de plus, elle ${gagne(c, a.gainSalarie)}. Que faut-il ajouter pour pouvoir faire plus ?`;
+        const t = trimestreAvecDesRessources(f(c), f(c).ligne.postes, f(c).plan.operateurs, TRIMESTRE_DU_LABORATOIRE);
+        return `Au 4e trimestre de N + 1, les clients demanderont ${qte(t.demande)} ${c.unites}. Faites varier les postes de la ligne (${qte(capaciteDUnPoste(f(c)))} ${c.unites} chacun) et les opérateurs (${qte(enceintesParOperateur(f(c)))} chacun), en partant de la ligne d'aujourd'hui. Relevez le défi.`;
       },
-      options: (c) => {
-        const a = activiteDuTrimestre(c);
-        const couts = `L'équipement coûte ${eur(a.equipement.prix)}, une fois ; le salarié, ${eur(a.recrutement)} de recrutement puis ${eur(a.salaireParTrimestre)} chaque trimestre.`;
-        const plafond =
-          a.gainEquipement > 0 && a.gainEquipement < a.equipement.capacite
-            ? ` Au-delà de ${qte(a.avecUnEquipement)}, c'est l'équipe qui bloque : pour aller plus loin, il faudrait aussi un salarié.`
-            : a.gainSalarie > 0 && a.equipePlus > a.outil
-              ? ` Au-delà de ${qte(a.avecUnSalarie)}, ce sont les équipements qui bloquent : pour aller plus loin, il faudrait aussi un équipement.`
-              : "";
+      leviers: (c) => [
+        { code: "postes", libelle: "Postes de montage", unite: "postes", ...POSTES_DU_LABORATOIRE, depart: f(c).ligne.postes },
+        { code: "operateurs", libelle: "Opérateurs", unite: "opérateurs", ...OPERATEURS_DU_LABORATOIRE, depart: f(c).plan.operateurs },
+      ],
+      lecture: (c, p) => {
+        const t = trimestreAvecDesRessources(f(c), p.postes!, p.operateurs!, TRIMESTRE_DU_LABORATOIRE);
         return [
-          {
-            texte: "Un équipement : ce sont les équipements qui fixent la capacité",
-            juste: a.gainEquipement > a.gainSalarie,
-            retour:
-              a.gainEquipement > a.gainSalarie
-                ? `Oui : ${qte(a.gainEquipement)} ${c.unites} de plus par trimestre, quand un salarié ${a.gainSalarie === 0 ? "n'ajouterait rien" : `n'en ajouterait que ${qte(a.gainSalarie)}`}.${plafond} ${couts}`
-                : `Non : un équipement ${nAjoute(c, a.gainEquipement)}, car l'équipe ne pourrait pas le faire tourner. ${couts}`,
-          },
-          {
-            texte: "Un salarié : c'est l'équipe qui fixe la capacité",
-            juste: a.gainSalarie > a.gainEquipement,
-            retour:
-              a.gainSalarie > a.gainEquipement
-                ? `Oui : ${qte(a.gainSalarie)} ${c.unites} de plus par trimestre, quand un équipement ${a.gainEquipement === 0 ? "n'ajouterait rien" : `n'en ajouterait que ${qte(a.gainEquipement)}`}.${plafond} ${couts}`
-                : `Non : un salarié ${nAjoute(c, a.gainSalarie)}, faute d'équipement pour travailler. ${couts}`,
-          },
-          {
-            texte: "N'importe lequel : chacun ajoute toute sa propre capacité",
-            juste: false,
-            retour: "Non : la capacité est la plus petite des deux. Ajouter à celle qui est déjà la plus grande ne change presque rien, et parfois rien du tout.",
-          },
+          { libelle: "Capacité des postes", montant: t.outil, unite: c.unites },
+          { libelle: "Capacité de l'équipe", montant: t.equipe, unite: c.unites },
+          { libelle: "Capacité de l'entreprise", montant: t.capacite, unite: c.unites, fort: true },
+          { libelle: "Demande refusée", montant: t.refusees, unite: c.unites },
         ];
       },
-    },
-    {
-      id: "delais",
-      type: "choix",
-      titre: "Décider à temps",
-      notions: ["capacity"],
-      question: (c) => {
-        const a = activiteDuTrimestre(c);
-        return `La direction décide, au premier trimestre, d'acheter un équipement « ${a.equipement.nom} » et d'embaucher un salarié. À partir de quand la capacité ${dE(c.entreprise)} augmente-t-elle ?`;
+      defi: (c) => {
+        const r = renfortDuLaboratoire(c);
+        return {
+          consigne: "Servez toute la demande de Noël en ajoutant le moins de ressources possible.",
+          atteint: (p) => trimestreAvecDesRessources(f(c), p.postes!, p.operateurs!, TRIMESTRE_DU_LABORATOIRE).refusees === 0 && p.postes! + p.operateurs! === r.moins,
+          indice: (p) => {
+            const t = trimestreAvecDesRessources(f(c), p.postes!, p.operateurs!, TRIMESTRE_DU_LABORATOIRE);
+            return t.refusees > 0
+              ? `Il reste ${qte(t.refusees)} ${c.unites} refusées : quelle ressource bride, les postes (${qte(t.outil)}) ou l'équipe (${qte(t.equipe)}) ?`
+              : `Toute la demande est servie, mais avec ${qte(p.postes!)} postes et ${qte(p.operateurs!)} opérateurs : une ressource ne sert-elle à rien ?`;
+          },
+          solution: { postes: r.solution.postes, operateurs: r.solution.operateurs },
+        };
       },
-      options: (c) => {
-        const r = renfortRejoue(c);
-        const arene = `Dans l'arène rejouée, la capacité des équipements reste à ${qte(r.premier.outil)} au premier trimestre et passe à ${qte(r.deuxieme.outil)} au deuxième ; celle de l'équipe passe de ${qte(r.premier.equipe)} à ${qte(r.deuxieme.equipe)}.`;
+      explication: (c, p) => {
+        const t = trimestreAvecDesRessources(f(c), p.postes!, p.operateurs!, TRIMESTRE_DU_LABORATOIRE);
         return [
-          {
-            texte: "Dès le premier trimestre, le jour même de la décision",
-            juste: false,
-            retour: `Non : un équipement se livre et s'installe, un salarié se recrute. ${arene}`,
-          },
-          {
-            texte: "Au deuxième trimestre : il faut le temps d'installer et de recruter",
-            juste: true,
-            retour: `Oui. ${arene} Pour servir les clients d'un trimestre chargé, il faut décider au moins un trimestre avant.`,
-          },
-          {
-            texte: "À la fin de l'année, une fois l'équipement payé",
-            juste: false,
-            retour: `Non : l'équipement se paie à l'achat, et il travaille dès qu'il est installé. ${arene}`,
-          },
+          `Défi relevé : ${qte(t.postes)} postes et ${qte(t.operateurs)} opérateurs montent ${qte(t.capacite)} ${c.unites}, assez pour Noël. Un poste seul ne suffit pas : il lui faut un opérateur ; un opérateur seul non plus : il lui faut un poste.`,
+          `Le poste et l'opérateur se décident tôt : le recrutement prend des mois, et ${eur(f(c).personnel.coutDUnRecrutement)}.`,
         ];
       },
     },
@@ -429,19 +283,14 @@ export const ORGANISER_L_ACTIVITE: Chapitre = {
       titre: "Ce qu'il faut retenir",
       notions: ["capacity"],
       texte: (c) => {
-        const a = activiteDuTrimestre(c);
-        const pourquoi: Record<Limite, string> = {
-          clients: "Ce sont les clients qui ont manqué, pas les moyens.",
-          prevision: "La capacité suffisait : c'est la production prévue qui a manqué.",
-          equipe: "C'est l'équipe qui a limité les ventes.",
-          outil: "Ce sont les équipements qui ont limité les ventes.",
-        };
+        const t = activiteDuTrimestre(c);
         return [
-          `Au premier trimestre, ${c.entreprise} pouvait faire ${qte(a.capacite)} ${c.unites} et en a produit ${qte(a.production)} : ${pct(a.occupation)} de sa capacité. ${pourquoi[a.limite]}`,
-          "Organiser l'activité, c'est faire correspondre trois choses : ce que les clients demandent, ce que les équipements et l'équipe peuvent faire, et ce que l'on prévoit de produire. C'est aussi décider à temps : un équipement ou un salarié de plus n'arrive qu'au trimestre suivant.",
+          `Au 1er trimestre de N, ${c.entreprise} pouvait monter ${qte(t.capacite)} ${c.unites}, et ses clients en ont demandé ${qte(t.demande)} : la ligne a tourné à ${pct(t.occupation)}, et ce sont les clients qui ont limité l'activité.`,
+          "Organiser l'activité, c'est savoir ce que chaque ressource peut faire, laquelle limite, et décider assez tôt ce qu'il faut ajouter : un renfort arrive toujours avec un délai.",
+          "Dans l'arène, les chiffres de votre entreprise seront différents : calculez votre capacité avant de prévoir votre production.",
         ];
       },
-      repere: () => "Taux d'occupation = production ÷ capacité × 100. Ventes manquées = demande − ventes.",
+      repere: () => "Taux d'occupation = production ÷ capacité × 100.",
     },
   ],
 };

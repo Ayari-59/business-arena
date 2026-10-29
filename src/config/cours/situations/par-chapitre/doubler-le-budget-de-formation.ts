@@ -1,77 +1,45 @@
-import { montantEcrit as eur } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
+import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
 import type { Cas } from "../../cas";
 import { formation } from "../../chapitres/former";
-import { rejouerLAnnee, vendues } from "../../ressources-humaines";
+import { MOIS_PAR_TRIMESTRE } from "../../monde/nova-capacite";
+import { ENTREPRISES_DES_RESSOURCES_HUMAINES, MINUTES_GAGNEES_PAR_LE_STAGE } from "../../monde/ressources-humaines-de-nova";
 import type { Situation } from "../types";
 
 /**
  * CAS PRATIQUE DU CHAPITRE « FORMER POUR ÊTRE PLUS EFFICACE » : DOUBLER LE BUDGET DE FORMATION
  * (Bac STMG, ressources humaines, palier 1).
  *
- * La direction a retenu du chapitre que la formation coûte peu par unité de capacité gagnée. Elle
- * propose de doubler le budget du premier trimestre : deux fois plus de formation, deux fois plus
- * de capacité ? L'élève refait les calculs du chapitre pour les deux budgets (la capacité gagnée,
- * le coût d'une unité de capacité), puis pour la seconde moitié seule, et lit ce que l'arène en
- * fait aux ventes et au résultat.
+ * La direction a retenu du chapitre que le stage rapporte bien plus qu'il ne coûte. Elle propose de
+ * doubler le budget : un stage deux fois plus poussé, deux fois plus de minutes gagnées sur chaque
+ * enceinte. Deux fois plus de ventes ? L'élève refait les calculs du chapitre pour les deux stages
+ * (la capacité de l'équipe, les ventes en plus, ce que chacun rapporte une fois payé), puis pour la
+ * seconde moitié du budget seule, et répond.
  *
- * Le cas est neuf par sa question : le chapitre mesure ce que rapporte un budget, le cas mesure ce
- * que rapporte un budget de plus. Le budget de référence est celui du chapitre (`formation`) ; le
- * budget doublé est la même année rejouée (`rejouerLAnnee`), qui joue les rendements décroissants
- * du moteur (src/engine/hr : le gain suit le logarithme du budget, plafonné).
+ * Le cas est neuf par sa question : le chapitre mesure ce que rapporte un stage, le cas ce que
+ * rapporte un budget de plus. Les deux stages sont ceux du chapitre (`formation`, chez NOVA, le
+ * cinquième poste installé), au même prix de la minute gagnée ; seul le multiple est posé ci-dessous.
+ *
+ * CE QUI A CHANGÉ. Le cas rejouait l'année de l'arène, dont le moteur tirait des rendements
+ * décroissants ; il se joue chez NOVA, où la ligne borne le gain : la seconde moitié du budget,
+ * 6 000 €, ne fait vendre aucune enceinte de plus.
  */
 
-/**
- * Le budget que propose la direction, en multiples du budget de référence du chapitre : le
- * double. Assez pour que les rendements décroissants se voient, sans approcher le plafond de
- * productivité d'aucune entreprise du cours (partie d'une productivité de 1, l'équipe gagne au
- * plus sensibilité × ln 3, moins de 0,09, et aucun plafond n'est sous 1,22). C'est la question
- * même du cas : son titre et ses phrases (« doubler », « la seconde moitié ») le disent, et
- * changeraient avec lui.
- */
+/** Le budget que propose la direction, en multiples de celui du chapitre : le double, deux fois plus de minutes gagnées. */
 export const MULTIPLE_DU_BUDGET = 2;
 
-const qte = (n: number) => n.toLocaleString("fr-FR");
-const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
-const somme = (xs: number[]) => xs.reduce((t, x) => t + x, 0);
-/** Un montant qu'on retranche : entre parenthèses quand il est négatif. */
-const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
+const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 export type Verdict = "doubler" | "garder" | "aucun";
 
-/** Les deux budgets, le second moins le premier, et ce que l'arène en fait. */
-export function budgetDouble(c: Cas) {
-  const f = formation(c);
-  const budget = f.budget * MULTIPLE_DU_BUDGET;
-  const base = rejouerLAnnee(c.code, "base", () => undefined);
-  const doublee = rejouerLAnnee(c.code, "formation-doublee", (t) => (t === 1 ? { trainingBudget: budget } : undefined));
-  const capaciteApres = Math.round(doublee[1]!.production.laborCapacity);
-  const capaciteGagnee = capaciteApres - f.capaciteAvant;
-  const coutParUnite = auCentime(budget / (capaciteGagnee * f.trimestresFormes));
-  // La seconde moitié du budget : ce qu'elle coûte, et la capacité qu'elle ajoute à la première.
-  const budgetEnPlus = budget - f.budget;
-  const capaciteEnPlus = capaciteGagnee - f.capaciteGagnee;
-  const coutParUniteEnPlus = auCentime(budgetEnPlus / (capaciteEnPlus * f.trimestresFormes));
-  const venduesEnPlus = Math.round(somme(doublee.map(vendues)) - somme(base.map(vendues)));
-  const resultatApres = Math.round(somme(doublee.map((r) => r.incomeStatement.operatingIncome)));
-  const ecartDeResultat = resultatApres - f.resultatAvant;
-  const verdict: Verdict = ecartDeResultat > f.ecartDeResultat ? "doubler" : f.ecartDeResultat > 0 ? "garder" : "aucun";
-  return {
-    f,
-    budget,
-    capaciteApres,
-    capaciteGagnee,
-    coutParUnite,
-    budgetEnPlus,
-    capaciteEnPlus,
-    coutParUniteEnPlus,
-    doubleLaCapacite: capaciteGagnee >= f.capaciteGagnee * MULTIPLE_DU_BUDGET,
-    venduesEnPlus,
-    resultatApres,
-    ecartDeResultat,
-    ecartEntreLesBudgets: ecartDeResultat - f.ecartDeResultat,
-    verdict,
-  };
+/** Les deux stages, et la seconde moitié du budget. */
+export function budgetDouble(_c?: Cas) {
+  const f = formation();
+  const d = formation(undefined, f.minutesDuDepart - MINUTES_GAGNEES_PAR_LE_STAGE * MULTIPLE_DU_BUDGET);
+  const coutEnPlus = d.cout - f.cout;
+  const enceintesEnPlus = d.enceintesEnPlus - f.enceintesEnPlus;
+  const verdict: Verdict = d.gain > f.gain ? "doubler" : f.gain > 0 ? "garder" : "aucun";
+  return { f, d, coutEnPlus, enceintesEnPlus, margeEnPlus: d.margeEnPlus - f.margeEnPlus, verdict };
 }
 
 export const DOUBLER_LE_BUDGET_DE_FORMATION: Situation = {
@@ -82,64 +50,64 @@ export const DOUBLER_LE_BUDGET_DE_FORMATION: Situation = {
   reprend: ["former"],
   commanditaire: "La direction",
   titre: "Doubler le budget de formation",
-  accroche:
-    "La direction veut doubler le budget de formation : deux fois plus de formation, deux fois plus de capacité ? Ce que rapporte la seconde moitié du budget, et ce que l'arène en fait.",
+  accroche: "La direction veut doubler le budget de formation : deux fois plus de minutes gagnées, deux fois plus de ventes ? Ce que rapporte la seconde moitié du budget.",
   objectifs: [
-    "Calculer la capacité gagnée et son coût par unité, pour deux budgets",
+    "Calculer la capacité qu'une formation fait gagner, pour deux budgets",
     "Calculer ce que rapporte un budget de formation en plus",
-    "Lire ce que le budget doublé change aux ventes et au résultat",
+    "Relier le gain d'une formation à ce qui limite les ventes",
     "Répondre à la direction, chiffre à l'appui",
   ],
   libre: false,
+  entreprises: {
+    codes: ENTREPRISES_DES_RESSOURCES_HUMAINES,
+    pourquoi: "le cas reprend le stage du chapitre, dans l'atelier de NOVA et son année N + 1.",
+  },
   etapes: [
     {
       id: "demande",
       type: "lecture",
       titre: "La demande de la direction",
-      texte: (c) => {
-        const d = budgetDouble(c);
+      texte: () => {
+        const k = budgetDouble();
         return [
-          `« ${d.f.formerCouteMoins ? "Former nous coûte moins cher que recruter pour obtenir du travail en plus." : "Former nous donne du travail en plus sans embaucher."} Alors pourquoi ${c.entreprise} se contenterait de ${eur(d.f.budget)} ? Je propose ${eur(d.budget)} au premier trimestre. Dites-moi si deux fois plus de formation donne deux fois plus de capacité, ce que coûte la capacité gagnée en plus, et s'il faut doubler. »`,
-          "Pas de cours cette fois : vous avez la capacité de l'équipe avec chaque budget, et les calculs sont ceux du chapitre. L'arène a rejoué l'année avec le budget doublé.",
+          `« Le stage de ${eur(k.f.cout)} rapporte ${eur(k.f.gain)} dès la première année. Doublons-le : ${eur(k.d.cout)}, et nos opérateurs monteront une enceinte en ${qte(k.d.minutes)} minutes au lieu de ${qte(k.f.minutes)}. Deux fois plus de formation, c'est deux fois plus de ventes, non ? » La direction`,
+          "Pas de cours cette fois : les calculs sont ceux du chapitre, pour deux stages au lieu d'un.",
         ];
       },
-      tableau: (c) => {
-        const d = budgetDouble(c);
+      tableau: () => {
+        const k = budgetDouble();
         return {
-          titre: `La formation ${dE(c.entreprise)}, selon le budget`,
-          colonnes: ["Sans", "Référence", "Doublé"],
+          titre: "L'atelier en N + 1, avec le cinquième poste",
+          colonnes: ["Stage du chapitre", "Stage doublé"],
           lignes: [
-            { libelle: "Budget de formation au premier trimestre", valeurs: [eur(0), eur(d.f.budget), eur(d.budget)] },
-            { libelle: `Capacité de l'équipe par trimestre, à partir du deuxième (${c.unites})`, valeurs: [qte(d.f.capaciteAvant), qte(d.f.capaciteApres), qte(d.capaciteApres)] },
-            { libelle: "Trimestres où le gain joue, dans l'année", valeurs: ["", String(d.f.trimestresFormes), String(d.f.trimestresFormes)] },
+            { libelle: "Minutes pour monter une enceinte", valeurs: [qte(k.f.minutes), qte(k.d.minutes)] },
+            { libelle: "Coût du stage", valeurs: [eur(k.f.cout), eur(k.d.cout)] },
+            { libelle: "Capacité de la ligne par trimestre", valeurs: [qte(k.f.capaciteDeLOutil), qte(k.d.capaciteDeLOutil)] },
+            { libelle: "Demande la plus forte d'un trimestre", valeurs: [qte(Math.max(...k.f.joue.trimestres.map((t) => t.demande))), qte(Math.max(...k.d.joue.trimestres.map((t) => t.demande)))] },
           ],
         };
       },
-      repere: () =>
-        "À rendre : la capacité gagnée et le coût d'une unité de capacité pour chaque budget, ce que rapporte la seconde moitié du budget, ce que l'arène en fait, et votre réponse.",
+      repere: () => "À rendre : la capacité de l'équipe et les ventes en plus pour chaque stage, ce que rapporte chacun, ce qu'apporte la seconde moitié du budget, et votre réponse.",
     },
     {
-      id: "deux-budgets",
+      id: "chaque-stage",
       type: "montants",
-      titre: "Ce que gagne chaque budget",
+      titre: "Ce que gagne chaque stage",
       notions: ["training", "productivity"],
-      question: () =>
-        "Pour chaque budget, calculez la capacité gagnée par trimestre, puis le coût d'une unité de capacité gagnée sur l'année (budget ÷ (capacité gagnée × trimestres où elle joue)), au centime.",
-      champs: (c) => {
-        const d = budgetDouble(c);
+      question: () => "Pour chaque stage, calculez la capacité de l'équipe par trimestre, puis les enceintes vendues de plus que sans stage.",
+      champs: () => {
+        const k = budgetDouble();
         return [
-          { libelle: `Capacité gagnée, budget de référence (${c.unites})`, attendu: d.f.capaciteGagnee, tolerance: 1, calcul: `${qte(d.f.capaciteApres)} − ${qte(d.f.capaciteAvant)} = ${qte(d.f.capaciteGagnee)}` },
-          { libelle: "Coût d'une unité de capacité, budget de référence", attendu: d.f.coutParUnite, tolerance: 0.05, calcul: `${eur(d.f.budget)} ÷ (${qte(d.f.capaciteGagnee)} × ${d.f.trimestresFormes}) = ${eur(d.f.coutParUnite)}` },
-          { libelle: `Capacité gagnée, budget doublé (${c.unites})`, attendu: d.capaciteGagnee, tolerance: 1, calcul: `${qte(d.capaciteApres)} − ${qte(d.f.capaciteAvant)} = ${qte(d.capaciteGagnee)}` },
-          { libelle: "Coût d'une unité de capacité, budget doublé", attendu: d.coutParUnite, tolerance: 0.05, calcul: `${eur(d.budget)} ÷ (${qte(d.capaciteGagnee)} × ${d.f.trimestresFormes}) = ${eur(d.coutParUnite)}` },
+          { libelle: "Capacité de l'équipe, stage du chapitre", attendu: k.f.equipe, calcul: `${qte(k.f.parMois)} × ${k.f.operateurs} × ${MOIS_PAR_TRIMESTRE} = ${qte(k.f.equipe)}`, tolerance: 0 },
+          { libelle: "Capacité de l'équipe, stage doublé", attendu: k.d.equipe, calcul: `${qte(k.d.parMois)} × ${k.d.operateurs} × ${MOIS_PAR_TRIMESTRE} = ${qte(k.d.equipe)}`, tolerance: 0 },
+          { libelle: "Ventes en plus, stage du chapitre", attendu: k.f.enceintesEnPlus, calcul: `${qte(k.f.joue.production)} − ${qte(k.f.sansFormation.production)} = ${qte(k.f.enceintesEnPlus)}`, tolerance: 0 },
+          { libelle: "Ventes en plus, stage doublé", attendu: k.d.enceintesEnPlus, calcul: `${qte(k.d.joue.production)} − ${qte(k.d.sansFormation.production)} = ${qte(k.d.enceintesEnPlus)}`, tolerance: 0 },
         ];
       },
-      explication: (c) => {
-        const d = budgetDouble(c);
+      explication: () => {
+        const k = budgetDouble();
         return [
-          d.doubleLaCapacite
-            ? `Le budget doublé fait gagner ${qte(d.capaciteGagnee)} ${c.unites} par trimestre, au moins deux fois le gain du budget de référence (${qte(d.f.capaciteGagnee)}).`
-            : `Deux fois le budget ne fait pas gagner deux fois la capacité : ${qte(d.capaciteGagnee)} ${c.unites} par trimestre, contre ${qte(d.f.capaciteGagnee)} avec le budget de référence. Chaque unité de capacité coûte donc plus cher : ${eur(d.coutParUnite)} au lieu de ${eur(d.f.coutParUnite)}.`,
+          `Le stage doublé fait monter l'équipe à ${qte(k.d.equipe)} enceintes par trimestre, plus que la ligne ne peut en monter (${qte(k.d.capaciteDeLOutil)}) et plus que la demande ne le demande. Les ventes, elles, ne montent que de ${qte(k.d.enceintesEnPlus)} enceintes, comme avec le stage du chapitre.`,
         ];
       },
     },
@@ -147,54 +115,23 @@ export const DOUBLER_LE_BUDGET_DE_FORMATION: Situation = {
       id: "seconde-moitie",
       type: "montants",
       titre: "Ce que rapporte la seconde moitié",
-      notions: ["training", "productivity"],
-      question: () =>
-        "La seconde moitié du budget, c'est le budget doublé moins le budget de référence. Calculez la capacité qu'elle ajoute par trimestre, puis le coût d'une unité de cette capacité en plus, au centime.",
-      champs: (c) => {
-        const d = budgetDouble(c);
+      notions: ["training"],
+      question: () => "Calculez ce que coûte la seconde moitié du budget, les enceintes qu'elle fait vendre en plus, puis ce que rapporte chaque stage une fois payé.",
+      champs: () => {
+        const k = budgetDouble();
         return [
-          { libelle: `Capacité ajoutée par la seconde moitié (${c.unites})`, attendu: d.capaciteEnPlus, tolerance: 1, calcul: `${qte(d.capaciteGagnee)} − ${qte(d.f.capaciteGagnee)} = ${qte(d.capaciteEnPlus)}` },
-          { libelle: "Coût d'une unité de capacité en plus", attendu: d.coutParUniteEnPlus, tolerance: 0.1, calcul: `(${eur(d.budget)} − ${eur(d.f.budget)}) ÷ (${qte(d.capaciteEnPlus)} × ${d.f.trimestresFormes}) = ${eur(d.coutParUniteEnPlus)}` },
+          { libelle: "Coût de la seconde moitié", attendu: k.coutEnPlus, calcul: `${eur(k.d.cout)} − ${eur(k.f.cout)} = ${eur(k.coutEnPlus)}`, tolerance: 1 },
+          { libelle: "Enceintes qu'elle fait vendre en plus", attendu: k.enceintesEnPlus, calcul: `${qte(k.d.enceintesEnPlus)} − ${qte(k.f.enceintesEnPlus)} = ${qte(k.enceintesEnPlus)}`, tolerance: 0 },
+          { libelle: "Ce que rapporte le stage du chapitre", attendu: k.f.gain, calcul: `${eur(k.f.margeEnPlus)} − ${eur(k.f.cout)} = ${eur(k.f.gain)}`, tolerance: 1 },
+          { libelle: "Ce que rapporte le stage doublé", attendu: k.d.gain, calcul: `${eur(k.d.margeEnPlus)} − ${eur(k.d.cout)} = ${eur(k.d.gain)}`, tolerance: 1 },
         ];
       },
-      explication: (c) => {
-        const d = budgetDouble(c);
+      explication: () => {
+        const k = budgetDouble();
         return [
-          `Les premiers ${eur(d.f.budget)} font gagner ${qte(d.f.capaciteGagnee)} ${c.unites} par trimestre ; les ${eur(d.budgetEnPlus)} suivants n'en ajoutent que ${qte(d.capaciteEnPlus)}, à ${eur(d.coutParUniteEnPlus)} l'unité. C'est ce que le chapitre appelait des rendements décroissants : chaque euro de formation en plus rapporte moins que le précédent.`,
-        ];
-      },
-    },
-    {
-      id: "arene",
-      type: "montants",
-      titre: "L'arène rejoue l'année",
-      notions: ["training", "capacity"],
-      tableau: (c) => {
-        const d = budgetDouble(c);
-        return {
-          titre: "L'année jouée, avec chaque budget",
-          colonnes: ["Sans", "Référence", "Doublé"],
-          lignes: [
-            { libelle: `Ventes en plus dans l'année (${c.unites})`, valeurs: ["", qte(d.f.venduesEnPlus), qte(d.venduesEnPlus)] },
-            { libelle: "Résultat de l'activité sur l'année", valeurs: [eur(d.f.resultatAvant), eur(d.f.resultatApres), eur(d.resultatApres)] },
-          ],
-        };
-      },
-      question: () =>
-        "Calculez l'écart de résultat de l'activité avec le budget doublé, par rapport à l'année sans formation, puis ce que la seconde moitié du budget change au résultat (résultat avec le budget doublé moins résultat avec le budget de référence).",
-      champs: (c) => {
-        const d = budgetDouble(c);
-        return [
-          { libelle: "Écart de résultat, budget doublé", attendu: d.ecartDeResultat, tolerance: 1, calcul: `${eur(d.resultatApres)} − ${retranche(d.f.resultatAvant)} = ${eur(d.ecartDeResultat)}` },
-          { libelle: "Ce que la seconde moitié change au résultat", attendu: d.ecartEntreLesBudgets, tolerance: 1, calcul: `${eur(d.resultatApres)} − ${retranche(d.f.resultatApres)} = ${eur(d.ecartEntreLesBudgets)}` },
-        ];
-      },
-      explication: (c) => {
-        const d = budgetDouble(c);
-        return [
-          d.venduesEnPlus > 0 || d.f.venduesEnPlus > 0
-            ? `Le budget doublé fait vendre ${qte(d.venduesEnPlus)} ${c.unites} de plus dans l'année, contre ${qte(d.f.venduesEnPlus)} avec le budget de référence : le travail manquait, et la capacité gagnée a trouvé des clients.`
-            : `Avec l'un ou l'autre budget, l'arène ne vend rien de plus : le travail ne manquait pas. Chaque euro de formation est une dépense de plus cette année, et la seconde moitié en coûte ${eur(-d.ecartEntreLesBudgets)} au résultat.`,
+          k.enceintesEnPlus > 0
+            ? `La seconde moitié fait vendre ${qte(k.enceintesEnPlus)} enceintes de plus, pour ${eur(k.coutEnPlus)}.`
+            : `La seconde moitié coûte ${eur(k.coutEnPlus)} et ne fait vendre aucune enceinte de plus : une fois toute la demande servie, une minute gagnée ne trouve plus de client.`,
         ];
       },
     },
@@ -202,42 +139,30 @@ export const DOUBLER_LE_BUDGET_DE_FORMATION: Situation = {
       id: "reponse",
       type: "choix",
       titre: "Votre réponse à la direction",
-      question: () => "Quelle phrase envoyez-vous à la direction ?",
-      options: (c) => {
-        const d = budgetDouble(c);
+      question: () => "Que répondez-vous à la direction ?",
+      options: () => {
+        const k = budgetDouble();
         return [
           {
-            texte: "Doublons : la seconde moitié fait encore vendre de quoi se payer",
-            juste: d.verdict === "doubler",
+            texte: `Garder le stage du chapitre : le doubler ferait perdre ${eur(k.f.gain - k.d.gain)}`,
+            juste: k.verdict === "garder",
             retour:
-              d.verdict === "doubler"
-                ? `Oui : la seconde moitié ajoute ${qte(d.capaciteEnPlus)} ${c.unites} de capacité par trimestre, à ${eur(d.coutParUniteEnPlus)} l'unité contre ${eur(d.f.coutParUnite)} pour la première, mais le travail manquait : le résultat gagne encore ${eur(d.ecartEntreLesBudgets)}.`
-                : `Non : la seconde moitié coûte ${eur(-d.ecartEntreLesBudgets)} au résultat. Elle ajoute de la capacité, ${d.venduesEnPlus > 0 ? "mais pas assez de ventes pour se payer" : "mais aucune vente"}.`,
+              k.verdict === "garder"
+                ? `Oui : le stage du chapitre rapporte ${eur(k.f.gain)}, le stage doublé ${eur(k.d.gain)}. Les deux font vendre autant ; le second coûte ${eur(k.coutEnPlus)} de plus pour rien.`
+                : `Non : le stage doublé rapporte ${eur(k.d.gain)}, le stage du chapitre ${eur(k.f.gain)}.`,
           },
           {
-            texte: "Gardons le budget de référence : il se paie, la seconde moitié non",
-            juste: d.verdict === "garder",
+            texte: "Doubler : deux fois plus de minutes gagnées, c'est deux fois plus d'enceintes montées et vendues",
+            juste: k.verdict === "doubler",
             retour:
-              d.verdict === "garder"
-                ? `Oui : le budget de référence fait monter le résultat de ${eur(d.f.ecartDeResultat)}, et la seconde moitié lui retire ${eur(-d.ecartEntreLesBudgets)}. Ses unités de capacité coûtent ${eur(d.coutParUniteEnPlus)}, contre ${eur(d.f.coutParUnite)} pour les premières.`
-                : d.verdict === "doubler"
-                  ? "Non : ici, la seconde moitié se paie aussi."
-                  : `Non : même le budget de référence ne se paie pas cette année, il fait baisser le résultat de ${eur(-d.f.ecartDeResultat)}.`,
+              k.verdict === "doubler"
+                ? `Oui : le stage doublé rapporte ${eur(k.d.gain)}.`
+                : `Non : l'équipe monterait davantage, mais la ligne et la demande ne suivent pas. Les ventes ne montent que de ${qte(k.d.enceintesEnPlus)} enceintes, comme avec le stage du chapitre.`,
           },
           {
-            texte: "Ne doublons pas : aucun des deux budgets ne se paie cette année",
-            juste: d.verdict === "aucun",
-            retour:
-              d.verdict === "aucun"
-                ? `Oui : le budget de référence fait baisser le résultat de ${eur(-d.f.ecartDeResultat)}, le budget doublé de ${eur(-d.ecartDeResultat)}${d.venduesEnPlus === 0 && d.f.venduesEnPlus === 0 ? " : l'équipe gagne de la capacité, mais le travail ne manquait pas" : ""}. Former reste un investissement, à proportionner à ce que la demande réclame.`
-                : `Non : avec le budget de référence, le résultat monte de ${eur(d.f.ecartDeResultat)} : la formation fait vendre.`,
-          },
-          {
-            texte: "Doublons : deux fois le budget donne deux fois la capacité gagnée",
-            juste: false,
-            retour: d.doubleLaCapacite
-              ? `Non : ici, la capacité gagnée double bien (${qte(d.f.capaciteGagnee)} puis ${qte(d.capaciteGagnee)} ${c.unites}), mais une capacité de plus ne vaut que les ventes qu'elle fait.`
-              : `Non : le budget doublé fait gagner ${qte(d.capaciteGagnee)} ${c.unites} par trimestre, pas ${qte(d.f.capaciteGagnee * MULTIPLE_DU_BUDGET)}. Les rendements de la formation décroissent : la seconde moitié rapporte moins que la première.`,
+            texte: "Ne former personne : la formation coûte et ne rapporte rien cette année",
+            juste: k.verdict === "aucun",
+            retour: k.verdict === "aucun" ? "Oui : aucun des deux stages ne se paie dans l'année." : `Non : le stage du chapitre rapporte ${eur(k.f.gain)} dès la première année.`,
           },
         ];
       },

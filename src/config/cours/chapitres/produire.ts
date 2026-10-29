@@ -1,233 +1,76 @@
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
-import type { CompanyRoundResult } from "../../../engine/types";
-import { scenarioByCode } from "../../scenarios/registry";
-import { accord } from "../accords";
-import { type Cas } from "../cas";
-import { anneeJouee } from "../annee-de-l-arene";
-import { anneeDeReference, rejouerAvec, surLAnnee, type Changement } from "../gestion-de-la-pme";
-import { ENTREPRISES_DU_COURS } from "../metiers";
+import type { Cas } from "../cas";
+import { margeUnitaire } from "../monde/capacite";
+import {
+  ENTREPRISES_DE_LA_PRODUCTION_DE_NOVA,
+  POURQUOI_LA_PRODUCTION_DE_NOVA,
+  coutAnnuelDUnOperateur,
+  enceintesParOperateur,
+  ficheDeNova,
+  heuresParTrimestre,
+  margeApresLEquipe,
+  production as productionDeNova,
+} from "../monde/production-et-logistique";
 import type { Chapitre, TableauDeDonnees } from "../types";
 
 /**
  * CHAPITRE : PRODUIRE, CAPACITÉ, ÉQUIPE ET PRODUCTIVITÉ (bac STMG, management, palier 1).
  *
- * Produire, c'est combiner des ressources : des équipements, une équipe, du temps. Le chapitre
- * lit l'année du cours trimestre par trimestre (`anneeJouee`, celle du bon gestionnaire) : la
- * capacité des équipements et celle de l'équipe telles que le moteur les rend
- * (`production.machineCapacity`, `production.laborCapacity`), l'effectif de chaque trimestre,
- * ce que l'entreprise a produit. L'élève en tire la capacité de l'entreprise sur l'année (chaque
- * trimestre, la plus petite des deux), son taux d'utilisation, la ressource qui bride la
- * production, puis la productivité du travail : la production par salarié et par heure de travail.
+ * Produire, c'est combiner des ressources : une ligne de montage, une équipe, du temps. Le chapitre
+ * lit l'année N + 1 de NOVA, trimestre par trimestre (monde/production-et-logistique.ts, qui relit
+ * nova-capacite.ts) : la capacité des 4 postes (7 000 enceintes par trimestre) et celle des 4
+ * opérateurs (7 200), la demande prévue (27 200 enceintes). L'élève en tire la capacité de l'année,
+ * son taux d'utilisation, la ressource qui bride la production, la productivité du travail, puis il
+ * juge une embauche : la ligne bride, un opérateur de plus ne fait rien produire de plus.
  *
- * Puis l'arène rejoue l'année avec une embauche de plus au premier trimestre, POSÉE EN PLUS des
- * embauches du gestionnaire : une décision RH rejouée remplace toute la décision RH du trimestre,
- * et chez Atlas Conseil, le gestionnaire embauche lui-même. Le gestionnaire réagit ensuite comme il
- * le fait d'habitude : le chapitre dit « les mêmes concurrents et la même façon de gérer », jamais
- * « tout le reste identique ». Le verdict se calcule : l'embauche fait produire plus et se paie là où
- * l'équipe bride la production, elle ne fait rien produire de plus là où ce sont les équipements.
+ * L'EXPÉRIENCE. Un curseur : ce que chaque opérateur doit monter, au moins, pour que l'équipe ne bride
+ * pas la ligne (1 750 enceintes par trimestre ; il en monte 1 800). Un laboratoire : l'effectif qui
+ * laisse la meilleure marge une fois l'équipe payée (4 opérateurs).
  *
- * Ce que le chapitre ne double pas : « Organiser l'activité » (seconde) calcule la capacité du
- * premier trimestre par les formules, le taux d'occupation et le délai d'un renfort ; « La
- * productivité du service » (BTS MHR) suit les couverts et les nuitées par salarié d'un trimestre
- * plein à un trimestre creux, et leur coût. Ici, l'objet est l'année entière, la productivité du
- * travail, et une décision de manager rejouée par l'arène : embaucher ou non.
+ * CE QUI A CHANGÉ. L'arène rejouait l'année de sept entreprises avec une embauche de plus ; le
+ * chapitre se joue chez NOVA seule, sur ses fiches.
  */
 
-/**
- * Les entreprises du chapitre : celles qui font un seul produit et le servent dans le trimestre.
- * La boutique vend une gamme d'articles qui ne demandent pas le même temps de travail, et la salle
- * de sport garde ses adhérents d'un trimestre à l'autre : ce qu'elle sert n'y est pas ce qu'elle
- * produit dans le trimestre. La garde recompte la liste sur le moteur.
- */
-export const ENTREPRISES_DE_LA_PRODUCTION: readonly string[] = ENTREPRISES_DU_COURS.filter((code) => {
-  const s = scenarioByCode(code).scenario;
-  return !(s.products && s.products.length > 1) && !s.subscription;
-});
+/** Les entreprises du chapitre : NOVA seule. */
+export const ENTREPRISES_DE_LA_PRODUCTION: readonly string[] = ENTREPRISES_DE_LA_PRODUCTION_DE_NOVA;
 
-/** Le trimestre où le dirigeant décide l'embauche du rejeu : le premier, pour en voir toute l'année. */
-export const TRIMESTRE_DE_L_EMBAUCHE = 1;
+/** Les bornes du curseur (les enceintes d'un opérateur par trimestre) et du laboratoire (l'effectif). */
+const PRODUCTIVITE_DU_CURSEUR = { min: 1_000, max: 2_500 } as const;
+const EFFECTIF_DU_LABORATOIRE = { min: 2, max: 6, pas: 1 } as const;
 
-/** L'embauche du chapitre : un salarié de plus, en plus de ceux que le gestionnaire embauche. */
-export const EMBAUCHES_DU_CHAPITRE = 1;
-
-/**
- * Chez Atlas Conseil, l'arène compte le temps de l'équipe en jours ouvrés : 60 jours par
- * consultant et par trimestre, et un jour-conseil prend un jour. Ailleurs, elle le compte en heures.
- */
-const TEMPS_EN_JOURS: ReadonlySet<string> = new Set(["conseil"]);
-
-/** Un montant à la française, avec le signe moins typographique ; retranché, un négatif va entre parenthèses. */
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
 const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
-const auCentieme = (x: number) => Math.round(x * 100) / 100;
-const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
-/** « 1er », « 2e » : le rang d'un trimestre, compté à partir de 1. */
+const pct = (t: number) => `${(Math.round(t * 10) / 10).toLocaleString("fr-FR")} %`;
 const rang = (n: number) => (n === 1 ? "1er" : `${n}e`);
 
-/** L'unité de temps de l'entreprise : « heure » ou « jour ». */
-const temps = (c: Pick<Cas, "code">) => (TEMPS_EN_JOURS.has(c.code) ? "jour" : "heure");
-/** Une durée de travail : « 540 h », « 60 jours ». */
-const duree = (c: Pick<Cas, "code">, x: number) => (TEMPS_EN_JOURS.has(c.code) ? `${qte(x)} ${x >= 2 ? "jours" : "jour"}` : `${qte(x)} h`);
+const f = (c: Pick<Cas, "code">) => ficheDeNova(c);
 
-/** Un trimestre de production, tel que le moteur le rend. */
-export interface TrimestreDeProduction {
-  numero: number;
-  /** L'effectif du trimestre : les salariés présents quand il commence. */
-  effectif: number;
-  /** Ce que les équipements peuvent faire, ce que l'équipe peut faire, et la plus petite des deux. */
-  outil: number;
-  equipe: number;
-  capacite: number;
-  production: number;
+/** Les chiffres du chapitre : l'année N + 1, sa capacité, son goulot, sa productivité, et l'embauche. */
+export const production = (c: Pick<Cas, "code">) => productionDeNova(f(c));
+
+/** Ce que chaque opérateur doit monter, au moins, pour que l'équipe suive les postes. */
+export const productiviteQuiSuitLaLigne = (c: Pick<Cas, "code">) => Math.ceil(production(c).capaciteOutil / f(c).plan.operateurs);
+
+/** L'effectif du laboratoire : celui qui laisse la meilleure marge une fois l'équipe payée. */
+export function effectifDuLaboratoire(c: Pick<Cas, "code">) {
+  const positions = Array.from({ length: EFFECTIF_DU_LABORATOIRE.max - EFFECTIF_DU_LABORATOIRE.min + 1 }, (_, i) => margeApresLEquipe(f(c), EFFECTIF_DU_LABORATOIRE.min + i));
+  return positions.reduce((m, x) => (x.reste > m.reste ? x : m));
 }
 
-/** Une année de production : ses quatre trimestres, ses sommes et sa productivité. */
-export interface AnneeDeProduction {
-  trimestres: TrimestreDeProduction[];
-  outil: number;
-  equipe: number;
-  capacite: number;
-  production: number;
-  /** La somme des effectifs des quatre trimestres, et sa moyenne. */
-  effectifs: number;
-  effectifMoyen: number;
-  /** Les heures (ou les jours) de travail de l'année : chaque effectif, par la durée d'un salarié. */
-  heures: number;
-  utilisation: number;
-  parSalarie: number;
-  parHeure: number;
-  embauches: number;
-  resultat: number;
-}
-
-/** L'année rejouée avec `n` embauches de plus au premier trimestre, en plus de celles du gestionnaire. */
-export const embauchesEnPlus =
-  (n: number): Changement =>
-  (tour, d) =>
-    tour === TRIMESTRE_DE_L_EMBAUCHE ? { ...d, hr: { ...(d.hr ?? {}), hire: (d.hr?.hire ?? 0) + n } } : undefined;
-
-/** L'année du cours rejouée avec `n` embauches de plus au premier trimestre. */
-export const anneeAvecEmbauches = (code: string, n: number, cle: string) => rejouerAvec(code, `produire:${cle}`, embauchesEnPlus(n));
-
-/** Une année de l'arène, lue par la production. */
-export function anneeDeProduction(code: string, annee: readonly CompanyRoundResult[]): AnneeDeProduction {
-  const { depart } = anneeJouee(code);
-  const heuresParSalarie = depart.hoursPerEmployee;
-  let effectif = depart.headcount;
-  const trimestres: TrimestreDeProduction[] = [];
-  for (const [k, r] of annee.entries()) {
-    // Le moteur ne rend la ligne RH qu'au trimestre où une décision RH est prise ; l'effectif
-    // reste sinon celui que le trimestre d'avant a laissé.
-    effectif = r.hr?.headcount ?? effectif;
-    const outil = Math.round(r.production.machineCapacity);
-    const equipe = Math.floor(r.production.laborCapacity + 1e-9);
-    trimestres.push({ numero: k + 1, effectif, outil, equipe, capacite: Math.min(outil, equipe), production: Math.round(r.production.produced) });
-    effectif = r.hr?.nextHeadcount ?? effectif;
-  }
-  const somme = (f: (t: TrimestreDeProduction) => number) => trimestres.reduce((x, t) => x + f(t), 0);
-  const production = somme((t) => t.production);
-  const capacite = somme((t) => t.capacite);
-  const effectifs = somme((t) => t.effectif);
-  const effectifMoyen = auCentieme(effectifs / trimestres.length);
-  const heures = effectifs * heuresParSalarie;
-  return {
-    trimestres,
-    outil: somme((t) => t.outil),
-    equipe: somme((t) => t.equipe),
-    capacite,
-    production,
-    effectifs,
-    effectifMoyen,
-    heures,
-    utilisation: auDixieme((production / capacite) * 100),
-    parSalarie: auDixieme(production / effectifMoyen),
-    parHeure: auCentieme(production / heures),
-    embauches: Math.round(surLAnnee(annee, (r) => r.hr?.hired ?? 0)),
-    resultat: Math.round(surLAnnee(annee, (r) => r.incomeStatement.operatingIncome)),
-  };
-}
-
-export type Bride = "outil" | "equipe";
-export type VerdictDeLEmbauche = "produit-plus-et-se-paie" | "produit-plus-sans-se-payer" | "ne-produit-pas-plus";
-
-const calculs = new Map<string, ReturnType<typeof calculer>>();
-
-/** La production du chapitre : l'année du cours, l'année avec une embauche de plus, et le verdict. */
-export function production(c: Pick<Cas, "code">) {
-  const deja = calculs.get(c.code);
-  if (deja) return deja;
-  const r = calculer(c.code);
-  calculs.set(c.code, r);
-  return r;
-}
-
-function calculer(code: string) {
-  const { depart } = anneeJouee(code);
-  const s = scenarioByCode(code).scenario;
-  const annee = anneeDeProduction(code, anneeDeReference(code));
-  const avec = anneeDeProduction(code, anneeAvecEmbauches(code, EMBAUCHES_DU_CHAPITRE, "une-embauche-au-premier-trimestre"));
-  const bride: Bride = annee.outil <= annee.equipe ? "outil" : "equipe";
-  const productionGagnee = avec.production - annee.production;
-  const ecartDeResultat = avec.resultat - annee.resultat;
-  const verdict: VerdictDeLEmbauche =
-    productionGagnee <= 0 ? "ne-produit-pas-plus" : ecartDeResultat > 0 ? "produit-plus-et-se-paie" : "produit-plus-sans-se-payer";
-  return {
-    heuresParSalarie: depart.hoursPerEmployee,
-    heuresParUnite: s.product.hoursPerUnit,
-    effectifDeDepart: depart.headcount,
-    salaire: s.hr!.salaryPerEmployeePerRound,
-    recrutement: s.hr!.hiringCost,
-    annee,
-    avec,
-    bride,
-    capaciteDeLEquipeGagnee: avec.equipe - annee.equipe,
-    capaciteGagnee: avec.capacite - annee.capacite,
-    productionGagnee,
-    ecartDeResultat,
-    verdict,
-  };
-}
-
-const COLONNES_DE_L_ANNEE = [1, 2, 3, 4].map((n) => `${rang(n)} trimestre`);
-
-/** L'année du cours, trimestre par trimestre : l'effectif, les deux capacités, la production. */
+/** L'année N + 1, trimestre par trimestre : la demande, les deux capacités, la production. */
 export function tableauDeLAnnee(c: Cas): TableauDeDonnees {
-  const p = production(c);
-  const t = p.annee.trimestres;
+  const t = production(c).annee.trimestres;
   return {
-    titre: `L'année ${dE(c.entreprise)} dans l'arène`,
-    colonnes: COLONNES_DE_L_ANNEE,
+    titre: `L'année N + 1 de ${c.entreprise}, prévue`,
+    colonnes: t.map((x) => `${rang(x.trimestre)} trimestre`),
     lignes: [
-      { libelle: "Effectif (salariés)", valeurs: t.map((x) => qte(x.effectif)) },
-      { libelle: `Capacité des équipements (${c.unites})`, valeurs: t.map((x) => qte(x.outil)) },
-      { libelle: `Capacité de l'équipe (${c.unites})`, valeurs: t.map((x) => qte(x.equipe)) },
+      { libelle: `Demande des clients (${c.unites})`, valeurs: t.map((x) => qte(x.demande)) },
+      { libelle: `Capacité des postes (${c.unites})`, valeurs: t.map((x) => qte(x.capaciteOutil)) },
+      { libelle: `Capacité des opérateurs (${c.unites})`, valeurs: t.map((x) => qte(x.capaciteEquipe)) },
       { libelle: `Production (${c.unites})`, valeurs: t.map((x) => qte(x.production)) },
     ],
   };
 }
-
-/** L'année du cours et l'année avec l'embauche, côte à côte. */
-function tableauDeLEmbauche(c: Cas): TableauDeDonnees {
-  const p = production(c);
-  const ligne = (libelle: string, f: (a: AnneeDeProduction) => string) => ({ libelle, valeurs: [f(p.annee), f(p.avec)] });
-  return {
-    titre: `L'année ${dE(c.entreprise)}, rejouée avec un salarié de plus`,
-    colonnes: ["L'année du cours", "Avec l'embauche"],
-    lignes: [
-      ligne("Effectif moyen", (a) => qte(a.effectifMoyen)),
-      ligne(`Capacité de l'équipe sur l'année (${c.unites})`, (a) => qte(a.equipe)),
-      ligne(`Capacité de l'entreprise sur l'année (${c.unites})`, (a) => qte(a.capacite)),
-      ligne(`Production de l'année (${c.unites})`, (a) => qte(a.production)),
-      ligne("Résultat de l'activité", (a) => eur(a.resultat)),
-    ],
-  };
-}
-
-/** Ce que la production gagne : « gagne 120 jours-conseil », ou « ne gagne rien ». */
-const gagne = (c: Cas, n: number) => (n <= 0 ? "ne gagne rien" : `gagne ${qte(n)} ${c.unites}`);
 
 export const PRODUIRE: Chapitre = {
   code: "produire",
@@ -239,7 +82,7 @@ export const PRODUIRE: Chapitre = {
   ],
   titre: "Produire : capacité, équipe et productivité",
   accroche:
-    "Des équipements, une équipe, du temps : ce que l'entreprise peut produire en un an, ce qu'elle a produit, ce que produit chaque salarié. Puis l'arène rejoue l'année avec une embauche de plus.",
+    "Une ligne de montage, une équipe, du temps : ce que l'entreprise peut produire en un an, ce qu'elle produira, ce que produit chaque salarié. Puis une embauche, jugée sur ce qu'elle fait produire.",
   objectifs: [
     "Calculer la capacité de l'entreprise et son taux d'utilisation",
     "Dire quelle ressource bride la production : les équipements ou l'équipe",
@@ -247,11 +90,7 @@ export const PRODUIRE: Chapitre = {
     "Juger une embauche sur ce qu'elle fait produire et sur le résultat",
   ],
   libre: false,
-  entreprises: {
-    codes: ENTREPRISES_DE_LA_PRODUCTION,
-    pourquoi:
-      "ce chapitre compte ce qu'une équipe et ses équipements produisent d'un seul produit dans le trimestre : la boutique vend une gamme d'articles qui ne demandent pas le même temps de travail, et la salle de sport garde ses adhérents d'un trimestre à l'autre.",
-  },
+  entreprises: { codes: ENTREPRISES_DE_LA_PRODUCTION, pourquoi: POURQUOI_LA_PRODUCTION_DE_NOVA },
   etapes: [
     {
       id: "intro",
@@ -260,11 +99,11 @@ export const PRODUIRE: Chapitre = {
       notions: ["capacity", "productivity"],
       tableau: tableauDeLAnnee,
       texte: (c) => {
-        const p = production(c);
+        const x = f(c);
         return [
-          `Pour produire, ${c.entreprise} combine des ressources : des équipements, une équipe de ${qte(p.effectifDeDepart)} salariés au départ, et du temps. Chaque salarié donne ${duree(c, p.heuresParSalarie)} de travail par trimestre, et ${accord(c, "un")} ${c.unite} demande ${duree(c, p.heuresParUnite)} de travail.`,
-          `Chaque ressource a sa capacité : le plus que les équipements peuvent faire en un trimestre, et le plus que l'équipe peut faire (ses ${temps(c)}s de travail ÷ le temps ${dE(accord(c, "un"))} ${c.unite}). La capacité de l'entreprise est la plus petite des deux : la ressource la plus faible bride toute la production.`,
-          "Le tableau donne l'année du cours, trimestre par trimestre. L'entreprise y joue le bon gestionnaire, qui prévoit sa production d'après la demande de ses clients.",
+          `Pour produire, ${c.entreprise} combine des ressources : une ligne de ${qte(x.ligne.postes)} postes de montage, ${qte(x.plan.operateurs)} opérateurs, et du temps. Chaque opérateur travaille ${qte(heuresParTrimestre(x))} heures par trimestre, et une ${c.unite} demande ${qte(x.operateurs.heuresParEnceinte)} heure de montage.`,
+          `Chaque ressource a sa capacité : le plus que les postes peuvent monter en un trimestre, et le plus que l'équipe peut monter (ses heures ÷ le temps d'une ${c.unite}). La capacité de l'entreprise est la plus petite des deux : la ressource la plus faible bride toute la production.`,
+          "Le tableau donne l'année N + 1, prévue trimestre par trimestre : ce que les clients demanderont, et ce que la ligne et l'équipe pourront monter.",
         ];
       },
       repere: () => "Capacité de l'entreprise = la plus petite des capacités de ses ressources, les équipements ou l'équipe.",
@@ -276,24 +115,21 @@ export const PRODUIRE: Chapitre = {
       notions: ["capacity"],
       tableau: tableauDeLAnnee,
       question: (c) =>
-        `Calculez la capacité de l'entreprise sur l'année (chaque trimestre, la plus petite des deux capacités, puis la somme des quatre trimestres), la production de l'année, puis le taux d'utilisation de la capacité (production ÷ capacité × 100, au dixième), en ${c.unites}.`,
+        `Calculez la capacité de l'entreprise sur l'année (chaque trimestre, la plus petite des deux capacités, puis la somme des 4 trimestres), la production de l'année, puis le taux d'utilisation de la capacité (production ÷ capacité × 100, au dixième), en ${c.unites}.`,
       champs: (c) => {
-        const a = production(c).annee;
+        const p = production(c);
+        const t = p.annee.trimestres;
         return [
-          { libelle: "Capacité de l'entreprise sur l'année", attendu: a.capacite, calcul: `${a.trimestres.map((t) => qte(t.capacite)).join(" + ")} = ${qte(a.capacite)}`, tolerance: 0 },
-          { libelle: "Production de l'année", attendu: a.production, calcul: `${a.trimestres.map((t) => qte(t.production)).join(" + ")} = ${qte(a.production)}`, tolerance: 0 },
-          { libelle: "Taux d'utilisation de la capacité (%)", attendu: a.utilisation, calcul: `${qte(a.production)} ÷ ${qte(a.capacite)} × 100 = ${pct(a.utilisation)}`, tolerance: 0.1 },
+          { libelle: "Capacité de l'entreprise sur l'année", attendu: p.annee.capacite, calcul: `${t.map((x) => qte(x.capacite)).join(" + ")} = ${qte(p.annee.capacite)}`, tolerance: 0 },
+          { libelle: "Production de l'année", attendu: p.annee.production, calcul: `${t.map((x) => qte(x.production)).join(" + ")} = ${qte(p.annee.production)}`, tolerance: 0 },
+          { libelle: "Taux d'utilisation de la capacité (%)", attendu: Math.round(p.utilisation * 10) / 10, calcul: `${qte(p.annee.production)} ÷ ${qte(p.annee.capacite)} × 100 = ${pct(p.utilisation)}`, tolerance: 0.1 },
         ];
       },
       explication: (c) => {
-        const a = production(c).annee;
-        const reste = a.capacite - a.production;
+        const p = production(c);
         return [
-          `${c.entreprise} a utilisé ${pct(a.utilisation)} de sa capacité sur l'année. ${
-            reste > 0
-              ? `Elle aurait pu produire ${qte(reste)} ${c.unites} de plus avec les mêmes ressources : une capacité inutilisée coûte quand même, car les équipements s'usent et les salariés sont payés, que l'entreprise produise ou non.`
-              : "Elle a produit tout ce que ses ressources permettaient : pour produire plus, il lui faudrait plus de ressources."
-          }`,
+          `${c.entreprise} utilisera ${pct(p.utilisation)} de sa capacité. Aux trimestres calmes, la ligne aura du jeu ; aux trimestres forts, elle sera pleine, et ${qte(p.annee.refusees)} ${c.unites} demandées ne seront pas montées.`,
+          "Une capacité inutilisée coûte quand même : les postes s'usent et les opérateurs sont payés, que la ligne tourne ou non.",
         ];
       },
     },
@@ -304,33 +140,32 @@ export const PRODUIRE: Chapitre = {
       notions: ["capacity"],
       tableau: tableauDeLAnnee,
       question: (c) => {
-        const a = production(c).annee;
-        return `Sur l'année, les équipements ${dE(c.entreprise)} pouvaient faire ${qte(a.outil)} ${c.unites}, son équipe ${qte(a.equipe)}. Quelle ressource bride la production ?`;
+        const p = production(c);
+        return `Chaque trimestre, les postes peuvent monter ${qte(p.capaciteOutil)} ${c.unites}, l'équipe ${qte(p.capaciteEquipe)}. Quelle ressource bride la production ?`;
       },
       options: (c) => {
         const p = production(c);
-        const a = p.annee;
         return [
           {
-            texte: "Les équipements : l'équipe pourrait faire davantage",
-            juste: p.bride === "outil",
+            texte: "Les postes de la ligne",
+            juste: p.goulot === "outil",
             retour:
-              p.bride === "outil"
-                ? `Oui : chaque trimestre, les équipements font moins que l'équipe (${qte(a.outil)} contre ${qte(a.equipe)} sur l'année). Pour produire plus, il faudrait d'abord des équipements de plus ; un salarié de plus ne ferait tourner aucun équipement en plus.`
-                : `Non : les équipements pourraient faire ${qte(a.outil)} ${c.unites} sur l'année, plus que l'équipe (${qte(a.equipe)}).`,
+              p.goulot === "outil"
+                ? `Oui : les postes montent moins que l'équipe (${qte(p.capaciteOutil)} contre ${qte(p.capaciteEquipe)}). Pour produire plus, il faudrait d'abord un poste de plus ; un opérateur de plus n'aurait pas de poste où monter.`
+                : `Non : les postes pourraient monter ${qte(p.capaciteOutil)} ${c.unites}, plus que l'équipe.`,
           },
           {
-            texte: "L'équipe : les équipements pourraient faire davantage",
-            juste: p.bride === "equipe",
+            texte: "L'équipe des opérateurs",
+            juste: p.goulot === "equipe",
             retour:
-              p.bride === "equipe"
-                ? `Oui : chaque trimestre, l'équipe fait moins que les équipements (${qte(a.equipe)} contre ${qte(a.outil)} sur l'année). Pour produire plus, il faut d'abord du travail en plus : des salariés, ou des salariés plus productifs.`
-                : `Non : l'équipe pourrait faire ${qte(a.equipe)} ${c.unites} sur l'année, plus que les équipements (${qte(a.outil)}).`,
+              p.goulot === "equipe"
+                ? `Oui : l'équipe monte moins que les postes (${qte(p.capaciteEquipe)} contre ${qte(p.capaciteOutil)}).`
+                : `Non : l'équipe pourrait monter ${qte(p.capaciteEquipe)} ${c.unites} par trimestre, plus que les postes (${qte(p.capaciteOutil)}).`,
           },
           {
-            texte: "Les deux ensemble : leurs capacités s'additionnent",
+            texte: "Les deux, car leurs capacités s'additionnent",
             juste: false,
-            retour: "Non : un équipement sans personne pour le faire tourner ne produit rien, une équipe sans équipement non plus. Les capacités ne s'additionnent pas : c'est la plus petite qui compte.",
+            retour: "Non : un poste sans opérateur ne monte rien, un opérateur sans poste non plus. Les capacités ne s'additionnent pas : c'est la plus petite qui compte.",
           },
         ];
       },
@@ -342,57 +177,47 @@ export const PRODUIRE: Chapitre = {
       notions: ["productivity"],
       tableau: tableauDeLAnnee,
       question: (c) => {
-        const p = production(c);
-        return `La productivité du travail mesure ce que produit le travail. Calculez l'effectif moyen de l'année (la somme des effectifs des quatre trimestres ÷ 4, au centième), la production par salarié (production de l'année ÷ effectif moyen, au dixième), puis la production par ${temps(c)} de travail (production de l'année ÷ ${temps(c)}s de travail de l'année, au centième). Chaque salarié donne ${duree(c, p.heuresParSalarie)} de travail par trimestre.`;
+        const x = f(c);
+        return `La productivité du travail mesure ce que produit le travail. Calculez la production par opérateur sur l'année (production ÷ ${qte(x.plan.operateurs)} opérateurs), les heures de travail de l'année (${qte(x.plan.operateurs)} opérateurs × ${qte(heuresParTrimestre(x))} heures × 4 trimestres), puis la production par heure de travail (au centième).`;
       },
       champs: (c) => {
         const p = production(c);
-        const a = p.annee;
+        const x = f(c);
         return [
-          { libelle: "Effectif moyen de l'année", attendu: a.effectifMoyen, calcul: `(${a.trimestres.map((t) => qte(t.effectif)).join(" + ")}) ÷ 4 = ${qte(a.effectifMoyen)}`, tolerance: 0.01 },
-          { libelle: "Production par salarié", attendu: a.parSalarie, calcul: `${qte(a.production)} ÷ ${qte(a.effectifMoyen)} = ${qte(a.parSalarie)}`, tolerance: 0.1 },
-          {
-            libelle: `Production par ${temps(c)} de travail`,
-            attendu: a.parHeure,
-            calcul: `${qte(a.production)} ÷ (${qte(a.effectifs)} × ${duree(c, p.heuresParSalarie)}) = ${qte(a.production)} ÷ ${duree(c, a.heures)} = ${qte(a.parHeure)}`,
-            tolerance: 0.01,
-          },
+          { libelle: "Production par opérateur", attendu: p.parOperateur, calcul: `${qte(p.annee.production)} ÷ ${qte(x.plan.operateurs)} = ${qte(p.parOperateur)}`, tolerance: 0 },
+          { libelle: "Heures de travail de l'année", attendu: p.heures, calcul: `${qte(x.plan.operateurs)} × ${qte(heuresParTrimestre(x))} × 4 = ${qte(p.heures)} h`, tolerance: 0 },
+          { libelle: "Production par heure de travail", attendu: Math.round(p.parHeure * 100) / 100, calcul: `${qte(p.annee.production)} ÷ ${qte(p.heures)} = ${qte(p.parHeure)}`, tolerance: 0.01 },
         ];
       },
       explication: (c) => {
         const p = production(c);
-        const a = p.annee;
         return [
-          `Chaque salarié ${dE(c.entreprise)} a produit en moyenne ${qte(a.parSalarie)} ${c.unites} sur l'année, soit ${qte(a.parHeure)} par ${temps(c)} de travail.`,
-          `C'est une productivité apparente : elle rapporte toute la production au seul travail, alors que les équipements y ont leur part. ${
-            p.bride === "outil"
-              ? "Ici, ce sont les équipements qui brident : un salarié de plus ajouterait des heures sans rien produire de plus, et la production par salarié baisserait."
-              : "Ici, c'est l'équipe qui bride : chaque salarié de plus apporte du travail que les équipements peuvent absorber."
-          }`,
+          `Chaque opérateur montera ${qte(p.parOperateur)} ${c.unites} sur l'année, soit ${qte(p.parHeure)} par heure de travail.`,
+          "C'est une productivité apparente : elle rapporte toute la production au seul travail, alors que la ligne y a sa part. Ici, c'est la ligne qui bride : un opérateur de plus ajouterait des heures sans rien monter de plus, et la production par opérateur baisserait.",
         ];
       },
     },
     {
       id: "une-embauche",
       type: "montants",
-      titre: "Une embauche de plus, rejouée",
-      notions: ["productivity", "payroll", "income_statement"],
-      tableau: tableauDeLEmbauche,
+      titre: "Un opérateur de plus",
+      notions: ["productivity", "payroll"],
+      tableau: tableauDeLAnnee,
       question: (c) => {
-        const p = production(c);
-        return `L'arène a rejoué l'année avec un salarié de plus, embauché au premier trimestre en plus de ceux que le gestionnaire embauche lui-même${
-          p.annee.embauches > 0 ? ` (il en embauche ${qte(p.annee.embauches)} dans l'année du cours)` : ""
-        }, avec les mêmes concurrents et la même façon de gérer. Le salarié arrive au deuxième trimestre ; il coûte ${eur(p.recrutement)} de recrutement, puis ${eur(p.salaire)} par trimestre. Calculez la production gagnée sur l'année, la production par salarié avec l'embauche (au dixième), puis l'écart de résultat de l'activité (avec l'embauche moins l'année du cours).`;
+        const x = f(c);
+        return `Le responsable de la production propose d'embaucher un opérateur de plus pour l'année N + 1. Il coûte ${eur(x.personnel.coutDUnRecrutement)} de recrutement, puis ${eur(coutAnnuelDUnOperateur(x))} sur l'année. Calculez la capacité de l'équipe par trimestre avec lui, la production de l'année avec lui, puis l'écart de résultat (la marge des ${c.unites} gagnées, à ${eur(margeUnitaire(x))} chacune, moins ce qu'il coûte).`;
       },
       champs: (c) => {
         const p = production(c);
+        const x = f(c);
+        const equipe = p.avec.trimestres[0]!.capaciteEquipe;
         return [
-          { libelle: "Production gagnée sur l'année", attendu: p.productionGagnee, calcul: `${qte(p.avec.production)} − ${qte(p.annee.production)} = ${qte(p.productionGagnee)}`, tolerance: 0 },
-          { libelle: "Production par salarié avec l'embauche", attendu: p.avec.parSalarie, calcul: `${qte(p.avec.production)} ÷ ${qte(p.avec.effectifMoyen)} = ${qte(p.avec.parSalarie)}`, tolerance: 0.1 },
+          { libelle: "Capacité de l'équipe par trimestre, avec lui", attendu: equipe, calcul: `${qte(p.avec.operateurs)} × ${qte(enceintesParOperateur(x))} = ${qte(equipe)}`, tolerance: 0 },
+          { libelle: "Production de l'année, avec lui", attendu: p.avec.production, calcul: `${p.avec.trimestres.map((t) => qte(t.production)).join(" + ")} = ${qte(p.avec.production)}`, tolerance: 0 },
           {
-            libelle: "Écart de résultat de l'activité, avec l'embauche moins l'année du cours",
+            libelle: "Écart de résultat de l'année",
             attendu: p.ecartDeResultat,
-            calcul: `${eur(p.avec.resultat)} − ${retranche(p.annee.resultat)} = ${eur(p.ecartDeResultat)}`,
+            calcul: `${qte(p.productionGagnee)} × ${eur(margeUnitaire(x))} − (${eur(x.personnel.coutDUnRecrutement)} + ${eur(coutAnnuelDUnOperateur(x))}) = ${eur(p.ecartDeResultat)}`,
             tolerance: 1,
           },
         ];
@@ -400,14 +225,8 @@ export const PRODUIRE: Chapitre = {
       explication: (c) => {
         const p = production(c);
         return [
-          `Avec un salarié de plus, la capacité de l'équipe ${gagne(c, p.capaciteDeLEquipeGagnee)} sur l'année, la capacité de l'entreprise ${gagne(c, p.capaciteGagnee)}, et la production ${gagne(c, p.productionGagnee)}. ${
-            p.productionGagnee > 0
-              ? `La production par salarié passe de ${qte(p.annee.parSalarie)} à ${qte(p.avec.parSalarie)} ${c.unites}.`
-              : `La production par salarié tombe de ${qte(p.annee.parSalarie)} à ${qte(p.avec.parSalarie)} ${c.unites} : le travail ajouté ne trouve pas d'équipement pour produire.`
-          }`,
-          p.ecartDeResultat > 0
-            ? `Le résultat de l'activité monte de ${eur(p.ecartDeResultat)} sur l'année : la marge de la production gagnée paie le recrutement et les salaires.`
-            : `Le résultat de l'activité baisse de ${eur(-p.ecartDeResultat)} sur l'année : ${p.productionGagnee > 0 ? "la marge de la production gagnée ne paie pas" : "rien ne vient payer"} le recrutement et les salaires.`,
+          `L'équipe pourrait monter ${qte(p.avec.trimestres[0]!.capaciteEquipe)} ${c.unites} par trimestre, mais les postes n'en montent toujours que ${qte(p.capaciteOutil)} : la production ne bouge pas, et le résultat baisse de ${eur(-p.ecartDeResultat)}.`,
+          `La production par opérateur tombe de ${qte(p.parOperateur)} à ${qte(p.avec.production / p.avec.operateurs)} ${c.unites} : le travail ajouté ne trouve pas de poste où monter.`,
         ];
       },
     },
@@ -416,37 +235,99 @@ export const PRODUIRE: Chapitre = {
       type: "choix",
       titre: "Embaucher pour produire plus ?",
       notions: ["productivity", "capacity"],
-      tableau: tableauDeLEmbauche,
-      question: (c) => {
-        const p = production(c);
-        return `Avec un salarié de plus, la production ${dE(c.entreprise)} ${gagne(c, p.productionGagnee)} sur l'année, et le résultat de l'activité ${p.ecartDeResultat > 0 ? "monte" : "baisse"} de ${eur(Math.abs(p.ecartDeResultat))}. Faut-il embaucher ?`;
-      },
+      question: (c) => `Faut-il embaucher un opérateur de plus chez ${c.entreprise} pour l'année N + 1 ?`,
       options: (c) => {
         const p = production(c);
-        const faits = `la production ${gagne(c, p.productionGagnee)} sur l'année, et le résultat ${p.ecartDeResultat > 0 ? "monte" : "baisse"} de ${eur(Math.abs(p.ecartDeResultat))}.`;
-        const pourquoi =
-          p.bride === "equipe"
-            ? "C'est l'équipe qui bride la production : du travail en plus fait produire plus, tant que les clients le demandent."
-            : "Ce sont les équipements qui brident la production : du travail en plus ne fait rien produire de plus.";
+        const faits = `la production ${p.productionGagnee > 0 ? `gagne ${qte(p.productionGagnee)} ${c.unites}` : "ne gagne rien"}, et le résultat ${p.ecartDeResultat > 0 ? "monte" : "baisse"} de ${eur(Math.abs(p.ecartDeResultat))}.`;
+        const verdict = p.productionGagnee <= 0 ? "rien" : p.ecartDeResultat > 0 ? "paie" : "pas-assez";
         return [
+          { texte: "Oui : la production monte, et paie son salaire", juste: verdict === "paie", retour: `${verdict === "paie" ? "Oui" : "Non"} : ${faits}` },
+          { texte: "Non : la production monte, mais trop peu", juste: verdict === "pas-assez", retour: `${verdict === "pas-assez" ? "Oui" : "Non"} : ${faits}` },
           {
-            texte: "Oui : la production monte, et paie le salaire",
-            juste: p.verdict === "produit-plus-et-se-paie",
-            retour: p.verdict === "produit-plus-et-se-paie" ? `Oui : ${faits} ${pourquoi}` : `Non : ${faits} ${pourquoi}`,
+            texte: "Non : il ne ferait rien produire",
+            juste: verdict === "rien",
+            retour: `${verdict === "rien" ? "Oui" : "Non"} : ${faits} Ce sont les postes qui brident : pour produire plus, il faudrait d'abord un poste de plus.`,
           },
-          {
-            texte: "Non : la production monte, mais ne paie pas le salaire",
-            juste: p.verdict === "produit-plus-sans-se-payer",
-            retour: p.verdict === "produit-plus-sans-se-payer" ? `Oui : ${faits} ${pourquoi}` : `Non : ${faits} ${pourquoi}`,
+        ];
+      },
+    },
+    {
+      id: "ce-que-doit-monter-un-operateur",
+      type: "curseur",
+      titre: "Ce que doit monter un opérateur",
+      notions: ["productivity", "capacity"],
+      question: (c) => {
+        const p = production(c);
+        const x = f(c);
+        return `Faites varier ce que chaque opérateur monte en un trimestre. Une droite donne ce que monte l'équipe de ${qte(x.plan.operateurs)}, l'autre ce que montent les postes (${qte(p.capaciteOutil)} ${c.unites}). Placez le curseur sur la plus petite production par opérateur qui fait que l'équipe ne bride pas la ligne, puis validez.`;
+      },
+      grandeur: (c) => ({ libelle: "Ce que monte un opérateur en un trimestre", unite: c.unites }),
+      cible: (c) => ({ attendu: productiviteQuiSuitLaLigne(c), ...PRODUCTIVITE_DU_CURSEUR }),
+      zones: ["L'équipe suit la ligne", "L'équipe bride la ligne"],
+      rates: () => ({
+        dessous: "À ce rythme, l'équipe monte moins que les postes : c'est elle qui bride la production.",
+        dessus: "À ce rythme, l'équipe suit la ligne, mais moins suffirait : cherchez la plus petite production.",
+      }),
+      montrer: "Montrer la production",
+      lecture: (c, q) => {
+        const p = production(c);
+        const equipe = q * f(c).plan.operateurs;
+        return [
+          { libelle: "Ce que monte l'équipe", montant: equipe, fort: true },
+          { libelle: "Ce que montent les postes", montant: p.capaciteOutil },
+          { libelle: "Capacité de l'entreprise", montant: Math.min(equipe, p.capaciteOutil) },
+        ];
+      },
+      droites: (c) => {
+        const p = production(c);
+        const n = f(c).plan.operateurs;
+        return { produit: (q) => q * n, cout: () => p.capaciteOutil, libelles: ["Ce que monte l'équipe", "Ce que montent les postes"] };
+      },
+      explication: (c) => {
+        const p = production(c);
+        const x = f(c);
+        const q = productiviteQuiSuitLaLigne(c);
+        return [
+          `Il suffit que chaque opérateur monte ${qte(q)} ${c.unites} par trimestre : ${qte(x.plan.operateurs)} × ${qte(q)} = ${qte(q * x.plan.operateurs)}, ce que montent les postes. Il en monte ${qte(enceintesParOperateur(x))} : l'équipe a de la marge, c'est la ligne qui bride.`,
+          `Si chaque opérateur montait plus vite, la production n'en bougerait pas : les postes resteraient à ${qte(p.capaciteOutil)}.`,
+        ];
+      },
+    },
+    {
+      id: "le-laboratoire-de-l-effectif",
+      type: "simulation",
+      titre: "Le laboratoire de l'effectif",
+      notions: ["productivity", "payroll"],
+      question: (c) =>
+        `Faites varier le nombre d'opérateurs de l'année N + 1, en partant de ${qte(production(c).avec.operateurs)} (avec l'embauche proposée). Le tableau donne la production de l'année, sa marge, ce que coûte l'équipe et ce qui reste. Relevez le défi.`,
+      leviers: (c) => [{ code: "operateurs", libelle: "Opérateurs", unite: "opérateurs", ...EFFECTIF_DU_LABORATOIRE, depart: production(c).avec.operateurs }],
+      lecture: (c, p) => {
+        const x = margeApresLEquipe(f(c), p.operateurs!);
+        const d = margeApresLEquipe(f(c), production(c).avec.operateurs);
+        return [
+          { libelle: "Production de l'année", montant: x.production, unite: c.unites, reference: d.production },
+          { libelle: "Marge des ventes", montant: x.marge, reference: d.marge },
+          { libelle: "Coût de l'équipe sur l'année", montant: x.equipe, reference: d.equipe },
+          { libelle: "Ce qui reste, l'équipe payée", montant: x.reste, reference: d.reste, fort: true },
+        ];
+      },
+      defi: (c) => {
+        const juste = effectifDuLaboratoire(c);
+        return {
+          consigne: "Trouvez l'effectif qui laisse le plus de marge une fois l'équipe payée.",
+          atteint: (p) => p.operateurs === juste.operateurs,
+          indice: (p) => {
+            const x = margeApresLEquipe(f(c), p.operateurs!);
+            return `Avec ${qte(x.operateurs)} opérateurs, la ligne monte ${qte(x.production)} ${c.unites} et il reste ${eur(x.reste)}. Un opérateur de plus ferait-il monter davantage ?`;
           },
-          {
-            texte: "Non : l'embauche ne fait rien produire de plus",
-            juste: p.verdict === "ne-produit-pas-plus",
-            retour:
-              p.verdict === "ne-produit-pas-plus"
-                ? `Oui : ${faits} ${pourquoi} Pour produire plus, il faudrait d'abord des équipements de plus.`
-                : `Non : ${faits} ${pourquoi}`,
-          },
+          solution: { operateurs: juste.operateurs },
+        };
+      },
+      explication: (c, p) => {
+        const x = margeApresLEquipe(f(c), p.operateurs!);
+        return [
+          `Défi relevé : avec ${qte(x.operateurs)} opérateurs, il reste ${eur(x.reste)}. Avec un de moins, l'équipe bride la ligne et la marge perdue dépasse le salaire économisé ; avec un de plus, la ligne bride et le salaire ne rapporte rien.`,
+          "Le bon effectif suit la ressource la plus faible : il ne cherche pas à servir toute la demande.",
         ];
       },
     },
@@ -457,18 +338,10 @@ export const PRODUIRE: Chapitre = {
       notions: ["capacity", "productivity"],
       texte: (c) => {
         const p = production(c);
-        const a = p.annee;
         return [
-          `Sur l'année du cours, ${c.entreprise} pouvait produire ${qte(a.capacite)} ${c.unites} et en a produit ${qte(a.production)} : ${pct(a.utilisation)} de sa capacité. ${
-            p.bride === "outil" ? "Ce sont ses équipements qui brident la production" : "C'est son équipe qui bride la production"
-          }, et chaque salarié a produit ${qte(a.parSalarie)} ${c.unites} en moyenne.`,
-          `Produire, pour un manager, c'est faire travailler ensemble des ressources dont la plus faible fixe la capacité. Ajouter une ressource ne sert que si c'est elle qui bride : ici, une embauche de plus ${
-            p.verdict === "ne-produit-pas-plus"
-              ? "n'a rien fait produire de plus, et la productivité du travail a baissé"
-              : p.verdict === "produit-plus-et-se-paie"
-                ? "a fait produire plus et a payé son salaire"
-                : "a fait produire plus, sans payer son salaire"
-          }.`,
+          `En N + 1, ${c.entreprise} pourra monter ${qte(p.annee.capacite)} ${c.unites} et en montera ${qte(p.annee.production)} : ${pct(p.utilisation)} de sa capacité. Ce sont ses postes qui brident la production, et chaque opérateur montera ${qte(p.parOperateur)} ${c.unites}.`,
+          "Produire, pour un manager, c'est faire travailler ensemble des ressources dont la plus faible fixe la capacité. Ajouter une ressource ne sert que si c'est elle qui bride : ici, une embauche ne ferait rien produire de plus, et ferait baisser la productivité du travail.",
+          "Dans l'arène, les chiffres de votre entreprise seront différents : comparez la capacité de vos équipements et celle de votre équipe avant d'embaucher.",
         ];
       },
       repere: () => "Taux d'utilisation = production ÷ capacité × 100. Productivité du travail = production ÷ effectif, ou ÷ heures de travail.",

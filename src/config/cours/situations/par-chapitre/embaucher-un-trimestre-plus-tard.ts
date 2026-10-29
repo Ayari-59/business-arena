@@ -1,81 +1,47 @@
-import { montantEcrit as eur } from "../../../../pedagogy/cours/correcteur";
+import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
 import type { Cas } from "../../cas";
 import { recrutement } from "../../chapitres/recruter";
-import { EMBAUCHES, rejouerLAnnee, vendues } from "../../ressources-humaines";
+import { MOIS_DE_L_EXERCICE } from "../../monde/exercice-de-nova";
+import { ENTREPRISES_DES_RESSOURCES_HUMAINES, MOIS_DU_RECRUTEMENT } from "../../monde/ressources-humaines-de-nova";
 import type { Situation } from "../types";
 
 /**
- * CAS PRATIQUE DU CHAPITRE « RECRUTER » : EMBAUCHER UN TRIMESTRE PLUS TARD (Bac STMG,
- * ressources humaines, palier 1).
+ * CAS PRATIQUE DU CHAPITRE « RECRUTER » : EMBAUCHER UN TRIMESTRE PLUS TARD (Bac STMG, ressources
+ * humaines, palier 1).
  *
- * Le gérant a lu le chapitre : une embauche décidée au premier trimestre coûte son recrutement
- * tout de suite et un salaire à chaque trimestre suivant. Il propose d'attendre un trimestre,
- * pour payer un salaire de moins. L'élève refait les calculs du chapitre sur l'embauche décalée
- * (son coût, les ventes qu'elle doit apporter), puis lit ce que l'arène en fait, à côté de
- * l'embauche du chapitre.
+ * Le laboratoire du chapitre l'a montré : pour servir toute la demande de N + 1, NOVA ajoute un
+ * cinquième poste à sa ligne et recrute quelqu'un pour le tenir. Le gérant propose de lancer le
+ * recrutement un trimestre plus tard qu'au chapitre, en avril, pour payer moins de mois de salaire.
+ * L'élève refait les calculs du chapitre pour les deux dates (le coût de l'embauche, les enceintes
+ * qu'elle fait monter de plus que le poste seul), puis répond.
  *
- * Le cas est neuf par sa question : le chapitre juge une embauche, le cas compare deux dates pour
- * la même embauche. L'embauche du premier trimestre est celle du chapitre (`recrutement`) ;
- * l'embauche décalée est la même année rejouée (`rejouerLAnnee`), le salarié décidé un trimestre
- * plus tard, présent un trimestre de moins.
+ * Le cas est neuf par sa question : le chapitre juge une embauche, le cas compare deux dates pour la
+ * même embauche. Les deux embauches sont celles du chapitre (`recrutement`, le cinquième poste
+ * installé), dans le monde du cours ; seule la date du recrutement décalé est posée ci-dessous.
+ *
+ * CE QUI A CHANGÉ. Le cas rejouait l'année de l'arène avec l'embauche au trimestre 2 ; il se joue chez
+ * NOVA : lancé en avril, le recrutement coûte 21 637,50 € au lieu de 29 625 €, pour les mêmes
+ * 800 enceintes de plus.
  */
 
-/**
- * Le trimestre où le gérant propose d'embaucher : le suivant de celui du chapitre. Le salarié
- * arrive au trimestre d'après, comme dans l'arène, et reste jusqu'à la fin de l'année.
- */
-export const TRIMESTRE_DE_L_EMBAUCHE_DECALEE = 2;
+/** Le mois où le gérant propose de lancer le recrutement : un trimestre après celui du chapitre. */
+export const MOIS_DU_RECRUTEMENT_DECALE = MOIS_DU_RECRUTEMENT + 3;
 
-const qte = (n: number) => n.toLocaleString("fr-FR");
-const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
-const somme = (xs: number[]) => xs.reduce((t, x) => t + x, 0);
-/** Un montant qu'on retranche : entre parenthèses quand il est négatif. */
-const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
+const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
+const mois = (m: number) => MOIS_DE_L_EXERCICE[m - 1]!;
 
-export type Verdict = "aucune" | "perte" | "maintenant" | "attendre";
+export type Verdict = "aucune" | "maintenant" | "attendre";
 
-/** Les deux embauches, celle du chapitre et la décalée, calculées une fois du cas. */
-export function embaucheDecalee(c: Cas) {
-  const r = recrutement(c);
-  // Le salarié du cas s'ajoute aux embauches que le bon gestionnaire fait ce trimestre-là dans
-  // l'année jouée (au conseil, une au trimestre 2) : la décision rejouée remplace toute celle du
-  // trimestre, et sans elles, l'embauche décalée ne ferait que reprendre la sienne.
-  const base = rejouerLAnnee(c.code, "base", () => undefined);
-  const decalee = rejouerLAnnee(c.code, "embauche-decalee:en-plus", (t) =>
-    t === TRIMESTRE_DE_L_EMBAUCHE_DECALEE ? { hire: EMBAUCHES + (base[t - 1]!.hr?.hired ?? 0) } : undefined,
-  );
-  const trimestresAvecLui = decalee.length - TRIMESTRE_DE_L_EMBAUCHE_DECALEE;
-  const salaires = r.salaireTrimestriel * EMBAUCHES * trimestresAvecLui;
-  const cout = r.coutDuRecrutement + salaires;
-  const ventesPourSePayer = Math.ceil(cout / r.margeUnitaire - 1e-9);
-  const venduesApres = Math.round(somme(decalee.map(vendues)));
-  const resultatApres = Math.round(somme(decalee.map((x) => x.incomeStatement.operatingIncome)));
-  const venduesEnPlus = venduesApres - r.venduesAvant;
-  const ecartDeResultat = resultatApres - r.resultatAvant;
-  // Ce que l'attente change au résultat, par rapport à l'embauche du chapitre.
-  const gainDeLAttente = ecartDeResultat - r.ecartDeResultat;
-  const verdict: Verdict =
-    venduesEnPlus <= 0 && r.venduesEnPlus <= 0
-      ? "aucune"
-      : ecartDeResultat <= 0 && r.ecartDeResultat <= 0
-        ? "perte"
-        : r.ecartDeResultat >= ecartDeResultat
-          ? "maintenant"
-          : "attendre";
-  return {
-    r,
-    trimestresAvecLui,
-    salaires,
-    cout,
-    economie: r.coutDeLEmbauche - cout,
-    ventesPourSePayer,
-    venduesApres,
-    venduesEnPlus,
-    resultatApres,
-    ecartDeResultat,
-    gainDeLAttente,
-    verdict,
-  };
+/** Les deux embauches, avec le cinquième poste : celle du chapitre et la décalée. */
+export function embaucheDecalee(_c?: Cas) {
+  const tot = recrutement(undefined, { poste: 1, moisDuRecrutement: MOIS_DU_RECRUTEMENT });
+  const tard = recrutement(undefined, { poste: 1, moisDuRecrutement: MOIS_DU_RECRUTEMENT_DECALE });
+  const economie = Math.round((tot.coutDeLaRecrue - tard.coutDeLaRecrue) * 100) / 100;
+  const ventesPerduesEnAttendant = tot.enceintesDeLaRecrue - tard.enceintesDeLaRecrue;
+  const margePerdueEnAttendant = ventesPerduesEnAttendant * tot.marge;
+  const verdict: Verdict = tot.enceintesDeLaRecrue <= 0 && tard.enceintesDeLaRecrue <= 0 ? "aucune" : margePerdueEnAttendant < economie ? "attendre" : "maintenant";
+  return { tot, tard, economie, ventesPerduesEnAttendant, margePerdueEnAttendant, gainDeLAttente: Math.round((economie - margePerdueEnAttendant) * 100) / 100, verdict };
 }
 
 export const EMBAUCHER_UN_TRIMESTRE_PLUS_TARD: Situation = {
@@ -86,94 +52,86 @@ export const EMBAUCHER_UN_TRIMESTRE_PLUS_TARD: Situation = {
   reprend: ["recruter"],
   commanditaire: "Le gérant",
   titre: "Embaucher un trimestre plus tard",
-  accroche:
-    "Le gérant veut attendre un trimestre avant d'embaucher, pour payer un salaire de moins. Ce que coûte l'embauche décalée, ce qu'elle doit faire vendre, et ce que l'arène en fait.",
+  accroche: "Le gérant veut lancer le recrutement un trimestre plus tard, pour payer moins de mois de salaire. Ce que coûte l'embauche décalée, et ce qu'elle fait encore vendre.",
   objectifs: [
-    "Calculer le coût d'une embauche selon le trimestre où on la décide",
-    "Calculer les ventes qu'elle doit apporter pour se payer",
-    "Comparer deux dates d'embauche dans l'année rejouée",
+    "Calculer le coût d'une embauche selon le mois où on la lance",
+    "Mesurer les ventes qu'une embauche fait gagner, selon sa date",
+    "Comparer l'économie d'une attente aux ventes qu'elle fait perdre",
     "Répondre au gérant, chiffre à l'appui",
   ],
   libre: false,
+  entreprises: {
+    codes: ENTREPRISES_DES_RESSOURCES_HUMAINES,
+    pourquoi: "le cas reprend l'embauche du chapitre, dans l'atelier de NOVA et son année N + 1.",
+  },
   etapes: [
     {
       id: "demande",
       type: "lecture",
       titre: "La demande du gérant",
-      texte: (c) => [
-        `« Si nous embauchons au premier trimestre, nous payons le salarié dès le trimestre suivant. Si ${c.entreprise} attend et le recrute au trimestre ${TRIMESTRE_DE_L_EMBAUCHE_DECALEE}, c'est un salaire de moins à payer cette année. Dites-moi ce que coûterait l'embauche décalée, ce qu'elle devrait faire vendre, et s'il vaut mieux attendre. »`,
-        "Pas de cours cette fois : vous avez les chiffres de l'embauche, et les calculs sont ceux du chapitre. L'arène a rejoué l'année avec les deux dates.",
-      ],
-      tableau: (c) => {
-        const e = embaucheDecalee(c);
+      texte: () => {
+        const k = embaucheDecalee();
+        return [
+          `« Le cinquième poste est commandé, et il faudra quelqu'un pour le tenir. Mais pourquoi lancer le recrutement dès ${mois(MOIS_DU_RECRUTEMENT)} ? En le lançant en ${mois(MOIS_DU_RECRUTEMENT_DECALE)}, la recrue arrive le 1er ${mois(k.tard.arrivee!)} au lieu du 1er ${mois(k.tot.arrivee!)}, et nous payons ${qte(k.tot.moisDeLaRecrue - k.tard.moisDeLaRecrue)} mois de salaire de moins. Dites-moi ce que nous y gagnons, et ce que nous y perdons. » Le gérant`,
+          "Pas de cours cette fois : les calculs sont ceux du chapitre. Les enceintes de la recrue se comptent face au cinquième poste tenu par l'équipe actuelle.",
+        ];
+      },
+      tableau: () => {
+        const k = embaucheDecalee();
         return {
-          titre: `L'embauche ${dE(c.entreprise)}, selon sa date`,
-          colonnes: ["Au trimestre 1", `Au trimestre ${TRIMESTRE_DE_L_EMBAUCHE_DECALEE}`],
+          titre: "L'atelier en N + 1, avec le cinquième poste",
+          colonnes: k.tot.joue.trimestres.map((t) => `T${t.trimestre}`),
           lignes: [
-            { libelle: "Coût du recrutement", valeurs: [eur(e.r.coutDuRecrutement), eur(e.r.coutDuRecrutement)] },
-            { libelle: "Coût du salarié par trimestre", valeurs: [eur(e.r.salaireTrimestriel), eur(e.r.salaireTrimestriel)] },
-            { libelle: "Trimestres où il est présent dans l'année", valeurs: [String(e.r.trimestresAvecLui), String(e.trimestresAvecLui)] },
-            { libelle: "Marge d'une unité vendue (prix moins coût variable)", valeurs: [eur(e.r.margeUnitaire), eur(e.r.margeUnitaire)] },
+            { libelle: "Demande prévue", valeurs: k.tot.joue.trimestres.map((t) => qte(t.demande)) },
+            { libelle: "Capacité de la ligne", valeurs: k.tot.joue.trimestres.map((t) => qte(t.capaciteOutil)) },
+            { libelle: "Équipe sans recrue", valeurs: k.tot.sans.joue.trimestres.map((t) => qte(t.capaciteEquipe)) },
+            { libelle: `Équipe, recrutement lancé en ${mois(MOIS_DU_RECRUTEMENT)}`, valeurs: k.tot.joue.trimestres.map((t) => qte(t.capaciteEquipe)) },
+            { libelle: `Équipe, recrutement lancé en ${mois(MOIS_DU_RECRUTEMENT_DECALE)}`, valeurs: k.tard.joue.trimestres.map((t) => qte(t.capaciteEquipe)) },
           ],
         };
       },
-      repere: () =>
-        "À rendre : le coût de l'embauche décalée, les ventes qu'elle doit apporter et ce qu'elle économise, ce que l'arène en fait, et votre réponse.",
+      repere: () => "À rendre : le coût de l'embauche à chaque date, l'économie de l'attente, les enceintes de la recrue à chaque date, et votre réponse.",
     },
     {
       id: "cout",
       type: "montants",
-      titre: "Ce que coûte l'embauche décalée",
-      notions: ["payroll", "contribution_margin"],
-      question: (c) =>
-        `Pour l'embauche au trimestre ${TRIMESTRE_DE_L_EMBAUCHE_DECALEE}, calculez son coût sur l'année (le recrutement, plus le salaire des trimestres où il est présent), le nombre ${dE(c.unites)} à vendre en plus pour le couvrir (arrondi à l'unité supérieure), et ce qu'elle coûte de moins que l'embauche au premier trimestre.`,
-      champs: (c) => {
-        const e = embaucheDecalee(c);
+      titre: "Ce que coûte l'embauche à chaque date",
+      notions: ["payroll"],
+      question: () => "Calculez le coût de l'embauche sur l'année pour chaque date (le recrutement, plus le coût de la recrue les mois où elle est payée), puis l'économie que fait l'attente.",
+      champs: () => {
+        const k = embaucheDecalee();
         return [
-          { libelle: "Coût de l'embauche décalée sur l'année", attendu: e.cout, tolerance: 1, calcul: `${eur(e.r.coutDuRecrutement)} + ${eur(e.r.salaireTrimestriel)} × ${e.trimestresAvecLui} = ${eur(e.cout)}` },
-          { libelle: `Ventes à faire en plus (${c.unites})`, attendu: e.ventesPourSePayer, tolerance: 1, calcul: `${eur(e.cout)} ÷ ${eur(e.r.margeUnitaire)} = ${qte(e.ventesPourSePayer)}` },
-          { libelle: "Coût en moins qu'au premier trimestre", attendu: e.economie, tolerance: 1, calcul: `${eur(e.r.coutDeLEmbauche)} − ${eur(e.cout)} = ${eur(e.economie)}` },
+          { libelle: `Coût, recrutement lancé en ${mois(MOIS_DU_RECRUTEMENT)}`, attendu: k.tot.coutDeLaRecrue, calcul: `${eur(k.tot.recrutement)} + ${eur(k.tot.coutMensuel)} × ${k.tot.moisDeLaRecrue} = ${eur(k.tot.coutDeLaRecrue)}`, tolerance: 1 },
+          { libelle: `Coût, recrutement lancé en ${mois(MOIS_DU_RECRUTEMENT_DECALE)}`, attendu: k.tard.coutDeLaRecrue, calcul: `${eur(k.tard.recrutement)} + ${eur(k.tard.coutMensuel)} × ${k.tard.moisDeLaRecrue} = ${eur(k.tard.coutDeLaRecrue)}`, tolerance: 1 },
+          { libelle: "Économie de l'attente", attendu: k.economie, calcul: `${eur(k.tot.coutDeLaRecrue)} − ${eur(k.tard.coutDeLaRecrue)} = ${eur(k.economie)}`, tolerance: 1 },
         ];
       },
-      explication: (c) => {
-        const e = embaucheDecalee(c);
-        return [
-          `Attendre fait bien économiser ${eur(e.economie)} : le recrutement coûte autant, mais il y a un salaire de moins à payer. L'embauche décalée doit encore faire vendre ${qte(e.ventesPourSePayer)} ${c.unites} de plus, contre ${qte(e.r.ventesPourSePayer)} pour celle du premier trimestre, et en un trimestre de moins.`,
-        ];
+      explication: () => {
+        const k = embaucheDecalee();
+        return [`Attendre fait économiser ${eur(k.economie)} de salaires et de cotisations. Le recrutement, lui, coûte le même prix à chaque date.`];
       },
     },
     {
-      id: "arene",
+      id: "ventes",
       type: "montants",
-      titre: "L'arène rejoue les deux dates",
-      notions: ["capacity", "productivity"],
-      tableau: (c) => {
-        const e = embaucheDecalee(c);
-        return {
-          titre: "L'année jouée, sans embauche et avec l'embauche à chaque date",
-          colonnes: ["Sans", "Au trimestre 1", `Au trimestre ${TRIMESTRE_DE_L_EMBAUCHE_DECALEE}`],
-          lignes: [
-            { libelle: `Ventes de l'année (${c.unites})`, valeurs: [qte(e.r.venduesAvant), qte(e.r.venduesApres), qte(e.venduesApres)] },
-            { libelle: "Résultat de l'activité sur l'année", valeurs: [eur(e.r.resultatAvant), eur(e.r.resultatApres), eur(e.resultatApres)] },
-          ],
-        };
-      },
-      question: (c) =>
-        `Pour l'embauche au trimestre ${TRIMESTRE_DE_L_EMBAUCHE_DECALEE}, calculez les ventes en plus sur l'année (en ${c.unites}) et l'écart de résultat de l'activité, par rapport à l'année sans embauche. Puis calculez ce que l'attente change au résultat, par rapport à l'embauche au premier trimestre (résultat avec l'embauche décalée moins résultat avec l'embauche au premier trimestre).`,
-      champs: (c) => {
-        const e = embaucheDecalee(c);
+      titre: "Ce que la recrue fait vendre à chaque date",
+      notions: ["capacity", "contribution_margin"],
+      question: () =>
+        "Chaque trimestre, l'atelier monte la plus petite de la demande, de la capacité de la ligne et de celle de l'équipe. Calculez les enceintes que la recrue fait monter de plus que l'équipe actuelle, pour chaque date, puis la marge que l'attente fait perdre.",
+      champs: () => {
+        const k = embaucheDecalee();
         return [
-          { libelle: `Ventes en plus, embauche décalée (${c.unites})`, attendu: e.venduesEnPlus, tolerance: 1, calcul: `${qte(e.venduesApres)} − ${qte(e.r.venduesAvant)} = ${qte(e.venduesEnPlus)}` },
-          { libelle: "Écart de résultat, embauche décalée", attendu: e.ecartDeResultat, tolerance: 1, calcul: `${eur(e.resultatApres)} − ${retranche(e.r.resultatAvant)} = ${eur(e.ecartDeResultat)}` },
-          { libelle: "Ce que l'attente change au résultat", attendu: e.gainDeLAttente, tolerance: 1, calcul: `${eur(e.resultatApres)} − ${retranche(e.r.resultatApres)} = ${eur(e.gainDeLAttente)}` },
+          { libelle: `Enceintes de la recrue, lancé en ${mois(MOIS_DU_RECRUTEMENT)}`, attendu: k.tot.enceintesDeLaRecrue, calcul: `${qte(k.tot.joue.production)} − ${qte(k.tot.sans.joue.production)} = ${qte(k.tot.enceintesDeLaRecrue)}`, tolerance: 0 },
+          { libelle: `Enceintes de la recrue, lancé en ${mois(MOIS_DU_RECRUTEMENT_DECALE)}`, attendu: k.tard.enceintesDeLaRecrue, calcul: `${qte(k.tard.joue.production)} − ${qte(k.tard.sans.joue.production)} = ${qte(k.tard.enceintesDeLaRecrue)}`, tolerance: 0 },
+          { libelle: "Marge que l'attente fait perdre", attendu: k.margePerdueEnAttendant, calcul: `(${qte(k.tot.enceintesDeLaRecrue)} − ${qte(k.tard.enceintesDeLaRecrue)}) × ${eur(k.tot.marge)} = ${eur(k.margePerdueEnAttendant)}`, tolerance: 1 },
         ];
       },
-      explication: (c) => {
-        const e = embaucheDecalee(c);
+      explication: () => {
+        const k = embaucheDecalee();
         return [
-          e.venduesEnPlus > 0 || e.r.venduesEnPlus > 0
-            ? `Embauché au premier trimestre, le salarié fait vendre ${qte(e.r.venduesEnPlus)} ${c.unites} de plus ; embauché au trimestre ${TRIMESTRE_DE_L_EMBAUCHE_DECALEE}, ${qte(e.venduesEnPlus)}. Le travail manquait par moments : un trimestre de moins avec lui, ce sont aussi des ventes de moins.`
-            : `À aucune des deux dates l'embauche ne fait vendre une unité de plus : ce n'est pas le travail qui limitait les ventes. Attendre réduit seulement la perte, de ${eur(e.gainDeLAttente)}.`,
+          k.ventesPerduesEnAttendant > 0
+            ? `En attendant, la recrue arrive trop tard pour une partie du printemps : ${qte(k.ventesPerduesEnAttendant)} enceintes de moins.`
+            : `La recrue n'est utile qu'au printemps et à Noël, quand la demande dépasse ce que l'équipe actuelle peut monter. Arrivée le 1er ${mois(k.tard.arrivee!)}, elle est là à temps : l'attente ne fait perdre aucune vente.`,
         ];
       },
     },
@@ -181,47 +139,33 @@ export const EMBAUCHER_UN_TRIMESTRE_PLUS_TARD: Situation = {
       id: "reponse",
       type: "choix",
       titre: "Votre réponse au gérant",
-      question: () => "Quelle phrase envoyez-vous au gérant ?",
-      options: (c) => {
-        const e = embaucheDecalee(c);
-        const perteMaintenant = eur(-e.r.ecartDeResultat);
-        const perteDecalee = eur(-e.ecartDeResultat);
+      question: () => "Que répondez-vous au gérant ?",
+      options: () => {
+        const k = embaucheDecalee();
         return [
           {
-            texte: "Ni maintenant ni plus tard : l'équipe ne limite pas nos ventes",
-            juste: e.verdict === "aucune",
+            texte: `Attendre ${mois(MOIS_DU_RECRUTEMENT_DECALE)} : la recrue arrive à temps, pour ${eur(k.economie)} de moins`,
+            juste: k.verdict === "attendre",
             retour:
-              e.verdict === "aucune"
-                ? `Oui : à aucune des deux dates l'arène ne vend une unité de plus. Attendre réduit la perte à ${perteDecalee} au lieu de ${perteMaintenant}, mais ne pas embaucher n'en fait aucune.`
-                : `Non : l'embauche fait vendre ${qte(Math.max(e.venduesEnPlus, e.r.venduesEnPlus))} ${c.unites} de plus à l'une des deux dates. L'équipe limitait les ventes par moments.`,
+              k.verdict === "attendre"
+                ? `Oui : les deux dates font monter ${qte(k.tard.enceintesDeLaRecrue)} enceintes de plus, et l'attente économise ${eur(k.economie)}. Une embauche se cale sur le moment où le travail manque, en comptant le temps du recrutement.`
+                : `Non : l'attente fait perdre ${eur(k.margePerdueEnAttendant)} de marge pour ${eur(k.economie)} d'économie.`,
           },
           {
-            texte: "Elle fait vendre, mais ne se paie à aucune des deux dates",
-            juste: e.verdict === "perte",
+            texte: `Recruter dès ${mois(MOIS_DU_RECRUTEMENT)} : une recrue présente plus longtemps fait toujours vendre davantage`,
+            juste: k.verdict === "maintenant",
             retour:
-              e.verdict === "perte"
-                ? `Oui : ${qte(e.r.venduesEnPlus)} ${c.unites} de plus au premier trimestre, ${qte(e.venduesEnPlus)} au trimestre ${TRIMESTRE_DE_L_EMBAUCHE_DECALEE}, quand il en faudrait ${qte(e.r.ventesPourSePayer)} et ${qte(e.ventesPourSePayer)}. Le résultat baisse de ${perteMaintenant} ou de ${perteDecalee} : le travail ne manque pas assez pour un salarié de plus.`
-                : e.verdict === "aucune"
-                  ? "Non : elle ne fait rien vendre de plus, à aucune des deux dates."
-                  : "Non : à l'une des deux dates au moins, elle rapporte plus qu'elle ne coûte.",
+              k.verdict === "maintenant"
+                ? `Oui : l'attente ferait perdre ${eur(k.margePerdueEnAttendant)} de marge, plus que les ${eur(k.economie)} qu'elle économise.`
+                : `Non : de ${mois(k.tot.arrivee!)} à ${mois(k.tard.arrivee! - 1)}, l'équipe actuelle suffit ; la recrue n'y ferait rien vendre de plus, et coûterait ${eur(k.economie)}.`,
           },
           {
-            texte: "Embauchons dès maintenant : attendre nous ferait perdre des ventes",
-            juste: e.verdict === "maintenant",
+            texte: "Ne pas recruter du tout : la ligne limite déjà les ventes",
+            juste: k.verdict === "aucune",
             retour:
-              e.verdict === "maintenant"
-                ? `Oui : au premier trimestre, le résultat monte de ${eur(e.r.ecartDeResultat)}, contre ${eur(e.ecartDeResultat)} au trimestre ${TRIMESTRE_DE_L_EMBAUCHE_DECALEE}. Le salaire économisé ne vaut pas les ventes d'un trimestre.`
-                : `Non : ${e.verdict === "aucune" ? "elle ne fait rien vendre de plus, à aucune des deux dates" : e.verdict === "perte" ? `elle coûte plus qu'elle ne rapporte, à chacune des deux dates` : "attendre rapporte davantage au résultat"}.`,
-          },
-          {
-            texte: `Attendons : l'embauche coûtera ${eur(e.economie)} de moins, et elle se paiera`,
-            juste: e.verdict === "attendre",
-            retour:
-              e.verdict === "attendre"
-                ? `Oui : au trimestre ${TRIMESTRE_DE_L_EMBAUCHE_DECALEE}, le résultat monte de ${eur(e.ecartDeResultat)}, contre ${eur(e.r.ecartDeResultat)} au premier trimestre. Le salaire économisé vaut plus que les ventes du trimestre attendu.`
-                : e.ecartDeResultat <= 0
-                  ? `Non : attendre économise bien ${eur(e.economie)}, mais l'embauche décalée fait encore baisser le résultat de ${perteDecalee}. Une embauche moins chère n'est pas une embauche qui se paie.`
-                  : `Non : attendre économise bien ${eur(e.economie)}, mais l'embauche au premier trimestre rapporte davantage au résultat (${eur(e.r.ecartDeResultat)} contre ${eur(e.ecartDeResultat)}).`,
+              k.verdict === "aucune"
+                ? "Oui : à aucune date la recrue ne fait vendre de plus."
+                : `Non : avec le cinquième poste, c'est l'équipe qui limite les ventes au printemps et à Noël ; la recrue y fait monter ${qte(k.tard.enceintesDeLaRecrue)} enceintes de plus.`,
           },
         ];
       },

@@ -1,65 +1,27 @@
 import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
-import { scenarioByCode } from "../../../scenarios/registry";
-import { accord } from "../../accords";
-import { type Cas } from "../../cas";
-import { anneeJouee } from "../../annee-de-l-arene";
-import { CE_QUE_COUTE_UNE_LIVRAISON, coutDUneLivraison } from "../../chapitres/ce-que-coute-une-livraison";
+import { CE_QUE_COUTE_UNE_LIVRAISON } from "../../chapitres/ce-que-coute-une-livraison";
+import { GAZOLE_APRES_LA_HAUSSE, PORTEUR, ROUTE_DE_CAMPUSTECH, gazoleQuiAnnuleLaTournee, tourneeDuMois } from "../../monde/production-et-logistique";
 import type { Situation } from "../types";
 
 /**
  * CAS PRATIQUE DU CHAPITRE « CE QUE COÛTE UNE LIVRAISON » : LE GAZOLE QUI AUGMENTE (2de pro GATL,
  * palier 1).
  *
- * Le chapitre a compté ce que coûte une palette livrée au premier trimestre : la route, la part du
- * chauffeur, la part des camions. Dans l'arène, le scénario du transporteur fait monter le gazole
- * à un trimestre fixé (`scriptedEvents` : l'événement qui multiplie le coût du carburant et des
- * péages). Le gérant demande s'il faut monter le prix de la palette d'autant. L'élève chiffre la
- * hausse par palette, le nouveau coût d'une palette livrée à volume égal (celui du premier
- * trimestre : seuls le carburant et les péages changent), ce qu'il en reste au prix du client,
- * et répond.
- *
- * Les chiffres sont ceux du chapitre (`coutDUneLivraison`) et de l'événement du scénario ; le
- * coût variable que le moteur compte au trimestre de la hausse est celui que l'élève trouve.
+ * Le gazole et les péages passent de 0,45 € à 0,60 € le kilomètre. Le gérant de NOVA demande s'il
+ * faut abandonner la tournée de CampusTech pour la messagerie. L'élève chiffre la route plus chère,
+ * la nouvelle tournée, ce qui la sépare encore de la messagerie, et le prix du kilomètre où elle cesse
+ * de l'emporter. Les chiffres sont ceux du chapitre (monde/production-et-logistique.ts) ; la hausse
+ * est l'hypothèse du cas (GAZOLE_APRES_LA_HAUSSE).
  */
 
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
-/** La hausse du gazole que le scénario programme : le trimestre, et le taux. */
-export function hausseDuGazole(code: string) {
-  const s = scenarioByCode(code).scenario;
-  for (const p of s.scriptedEvents ?? []) {
-    const ev = s.events.find((e) => e.code === p.eventCode);
-    const m = ev?.modifiers.find((x) => x.target === "material_cost" && x.op === "mul");
-    if (m) return { trimestre: p.round, taux: Math.round((m.value - 1) * 1000) / 1000 };
-  }
-  throw new Error(`Le scénario ${code} ne programme pas de hausse du carburant`);
-}
-
-/** Ce que la hausse fait à une palette, à volume égal, et ce que le moteur compte ce trimestre-là. */
-export function gazoleQuiAugmente(c: Cas) {
-  const k = coutDUneLivraison(c);
-  const h = hausseDuGazole(c.code);
-  const hausse = auCentime(k.carburant * h.taux);
-  const route = auCentime(k.route + hausse);
-  const cout = auCentime(route + k.chauffeurParPalette + k.camionsParPalette);
-  const reste = auCentime(k.prix - cout);
-  const r = anneeJouee(c.code).partie.rounds[h.trimestre - 1]!.results["joueur"]!;
-  return {
-    k,
-    h,
-    hausse,
-    route,
-    cout,
-    reste,
-    /** Le prix monté du même taux que le gazole, et ce que cela ferait payer en plus au client. */
-    prixMonte: auCentime(k.prix * (1 + h.taux)),
-    enPlusPourLeClient: auCentime(k.prix * h.taux),
-    /** Le coût variable unitaire que le moteur compte au trimestre de la hausse. */
-    routeDuMoteur: auCentime(r.breakeven.unitVariableCost),
-  };
+/** Le cas : la tournée avant et après la hausse, face à la messagerie. */
+export function gazoleQuiAugmente() {
+  const avant = tourneeDuMois();
+  const apres = tourneeDuMois(PORTEUR, GAZOLE_APRES_LA_HAUSSE);
+  return { avant, apres, hausse: Math.round((apres.cout.total - avant.cout.total) * 100) / 100, seuil: gazoleQuiAnnuleLaTournee() };
 }
 
 export const LE_GAZOLE_QUI_AUGMENTE: Situation = {
@@ -70,13 +32,8 @@ export const LE_GAZOLE_QUI_AUGMENTE: Situation = {
   reprend: [CE_QUE_COUTE_UNE_LIVRAISON.code],
   commanditaire: "Le gérant",
   titre: "Le gazole qui augmente",
-  accroche:
-    "Le gazole monte d'un coup. Le gérant se demande s'il faut monter le prix de la palette d'autant : chiffrer la hausse par palette, ce que coûte maintenant une palette livrée, ce qu'il en reste, et lui répondre.",
-  objectifs: [
-    "Chiffrer une hausse du carburant par palette",
-    "Recalculer ce que coûte une palette livrée",
-    "Comparer ce coût au prix payé par le client, et répondre au gérant",
-  ],
+  accroche: "Le gazole monte. Faut-il abandonner la tournée pour la messagerie ? Ce que la hausse ajoute, et jusqu'où la tournée tient.",
+  objectifs: ["Recalculer le coût d'une tournée quand un coût au kilomètre change", "Comparer la tournée et la messagerie après la hausse", "Répondre au gérant"],
   libre: false,
   entreprises: CE_QUE_COUTE_UNE_LIVRAISON.entreprises,
   etapes: [
@@ -84,109 +41,74 @@ export const LE_GAZOLE_QUI_AUGMENTE: Situation = {
       id: "demande",
       type: "lecture",
       titre: "La demande du gérant",
-      texte: (c) => {
-        const g = gazoleQuiAugmente(c);
+      texte: () => {
+        const k = gazoleQuiAugmente();
         return [
-          `« Au trimestre ${g.h.trimestre}, le gazole prend ${pct(g.h.taux * 100)}. Faut-il monter notre prix de ${eur(g.k.prix)} par ${c.unite} d'autant ? Dites-moi ce que coûte maintenant ${accord(c, "un")} ${c.unite} ${accord(c, "livré")}, et ce qu'il nous en reste. »`,
-          `Pas de cours cette fois : vous avez les coûts d'${accord(c, "un")} ${c.unite} au premier trimestre. Dans l'arène, la hausse touche le carburant et les péages, que le scénario compte ensemble. Raisonnez à volume égal : le chauffeur et les camions se partagent sur les mêmes ${c.unites} qu'au premier trimestre.`,
+          `« Le gazole et les péages nous coûtent maintenant ${eur(GAZOLE_APRES_LA_HAUSSE)} le kilomètre, au lieu de ${eur(ROUTE_DE_CAMPUSTECH.gazoleEtPeagesParKm)}. La tournée de CampusTech devient chère : passons à la messagerie, à ${eur(k.avant.messagerie / k.avant.palettes)} la palette. Qu'en pensez-vous ? »`,
+          "Pas de cours cette fois : la tournée est celle du chapitre.",
         ];
       },
-      tableau: (c) => {
-        const g = gazoleQuiAugmente(c);
+      tableau: () => {
+        const k = gazoleQuiAugmente();
         return {
-          titre: `${c.entreprise} · ${accord(c, "un")} ${c.unite} au premier trimestre`,
-          colonnes: [`Par ${c.unite}`],
+          titre: "La tournée du mois chez CampusTech",
+          colonnes: ["Avant la hausse", "Après la hausse"],
           lignes: [
-            { libelle: "Carburant et péages", valeurs: [eur(g.k.carburant)] },
-            { libelle: "Entretien courant, pneus, primes de route", valeurs: [eur(g.k.entretienCourant)] },
-            { libelle: "Part du chauffeur", valeurs: [eur(g.k.chauffeurParPalette)] },
-            { libelle: "Part des camions", valeurs: [eur(g.k.camionsParPalette)] },
-            { libelle: "Prix payé par le client", valeurs: [eur(g.k.prix)] },
+            { libelle: "Location et chauffeur, pour la journée", valeurs: [eur(k.avant.cout.journee), eur(k.apres.cout.journee)] },
+            { libelle: "Kilomètres, aller et retour", valeurs: [qte(ROUTE_DE_CAMPUSTECH.km), qte(ROUTE_DE_CAMPUSTECH.km)] },
+            { libelle: "Gazole et péages, par kilomètre", valeurs: [eur(ROUTE_DE_CAMPUSTECH.gazoleEtPeagesParKm), eur(GAZOLE_APRES_LA_HAUSSE)] },
+            { libelle: "Palettes du mois", valeurs: [qte(k.avant.palettes), qte(k.apres.palettes)] },
+            { libelle: "Le mois en messagerie", valeurs: [eur(k.avant.messagerie), eur(k.apres.messagerie)] },
           ],
         };
       },
-      repere: () => "À rendre : la hausse par palette, le nouveau coût d'une palette livrée, ce qu'il en reste, et votre réponse.",
+      repere: () => "À rendre : la tournée après la hausse, ce qui la sépare de la messagerie, et votre réponse.",
     },
     {
-      id: "route",
+      id: "la-route-plus-chere",
       type: "montants",
       titre: "La route plus chère",
       notions: ["variable_costs"],
-      question: (c) => {
-        const g = gazoleQuiAugmente(c);
-        return `Le carburant et les péages coûtaient ${eur(g.k.carburant)} par ${c.unite}. Calculez la hausse par ${c.unite} (${pct(g.h.taux * 100)} de ${eur(g.k.carburant)}), puis le nouveau coût de la route, qui était de ${eur(g.k.route)}.`;
-      },
-      champs: (c) => {
-        const g = gazoleQuiAugmente(c);
+      question: () => "Calculez la route après la hausse, la tournée après la hausse, puis ce que la tournée coûte encore de moins que la messagerie.",
+      champs: () => {
+        const k = gazoleQuiAugmente();
         return [
-          { libelle: `Hausse par ${c.unite}`, attendu: g.hausse, calcul: `${eur(g.k.carburant)} × ${pct(g.h.taux * 100)} = ${eur(g.hausse)}` },
-          { libelle: `Nouveau coût de la route par ${c.unite}`, attendu: g.route, calcul: `${eur(g.k.route)} + ${eur(g.hausse)} = ${eur(g.route)}` },
+          { libelle: "La route après la hausse", attendu: k.apres.cout.route, calcul: `${qte(ROUTE_DE_CAMPUSTECH.km)} × ${eur(GAZOLE_APRES_LA_HAUSSE)} = ${eur(k.apres.cout.route)}` },
+          { libelle: "La tournée après la hausse", attendu: k.apres.cout.total, calcul: `${eur(k.apres.cout.journee)} + ${eur(k.apres.cout.route)} = ${eur(k.apres.cout.total)}` },
+          { libelle: "Économie face à la messagerie", attendu: k.apres.economie, calcul: `${eur(k.apres.messagerie)} − ${eur(k.apres.cout.total)} = ${eur(k.apres.economie)}` },
         ];
       },
-      explication: (c) => {
-        const g = gazoleQuiAugmente(c);
-        return [
-          `Dans l'arène, au trimestre ${g.h.trimestre}, le coût variable d'${accord(c, "un")} ${c.unite} passe bien à ${eur(g.routeDuMoteur)}. La hausse de ${pct(g.h.taux * 100)} ne touche que le carburant et les péages : ${eur(g.hausse)} de plus par ${c.unite}.`,
-        ];
+      explication: () => {
+        const k = gazoleQuiAugmente();
+        return [`La hausse ajoute ${eur(k.hausse)} à la tournée : elle ne touche que la route, pas la journée du camion et du chauffeur.`];
       },
     },
     {
-      id: "reste",
+      id: "jusqu-ou",
       type: "montants",
-      titre: "Ce qui reste par palette",
-      notions: ["full_unit_cost"],
-      question: (c) => {
-        const g = gazoleQuiAugmente(c);
-        return `Ajoutez au nouveau coût de la route (${eur(g.route)}) la part du chauffeur (${eur(g.k.chauffeurParPalette)}) et celle des camions (${eur(g.k.camionsParPalette)}), qui ne changent pas. Puis calculez ce qui reste au prix de ${eur(g.k.prix)}.`;
+      titre: "Jusqu'où la tournée tient",
+      notions: ["variable_costs", "make_or_buy"],
+      question: () => "Calculez le prix du kilomètre où la tournée coûterait autant que la messagerie ((messagerie − journée) ÷ kilomètres, au centime inférieur).",
+      champs: () => {
+        const k = gazoleQuiAugmente();
+        return [{ libelle: "Prix du kilomètre où la tournée cesse de l'emporter", attendu: k.seuil, calcul: `(${eur(k.avant.messagerie)} − ${eur(k.avant.cout.journee)}) ÷ ${qte(ROUTE_DE_CAMPUSTECH.km)} = ${eur(k.seuil)}`, tolerance: 0.01 }];
       },
-      champs: (c) => {
-        const g = gazoleQuiAugmente(c);
-        return [
-          {
-            libelle: `Coût d'${accord(c, "un")} ${c.unite} ${accord(c, "livré")}`,
-            attendu: g.cout,
-            calcul: `${eur(g.route)} + ${eur(g.k.chauffeurParPalette)} + ${eur(g.k.camionsParPalette)} = ${eur(g.cout)}`,
-          },
-          { libelle: `Ce qui reste par ${c.unite}`, attendu: g.reste, calcul: `${eur(g.k.prix)} − ${eur(g.cout)} = ${eur(g.reste)}` },
-        ];
-      },
-      explication: (c) => {
-        const g = gazoleQuiAugmente(c);
-        return [
-          g.reste >= 0
-            ? `${majuscule(accord(c, "un"))} ${c.unite} coûte ${eur(g.cout)} au lieu de ${eur(g.k.coutDUnePalette)}. Il en reste ${eur(g.reste)} au lieu de ${eur(g.k.reste)} : moins qu'avant, mais le prix couvre encore la palette.`
-            : `${majuscule(accord(c, "un"))} ${c.unite} coûte ${eur(g.cout)}, plus que le prix de ${eur(g.k.prix)} : chaque ${c.unite} fait perdre ${eur(-g.reste)}.`,
-        ];
+      explication: () => {
+        const k = gazoleQuiAugmente();
+        return [`Le gazole et les péages devraient dépasser ${eur(k.seuil)} le kilomètre pour que la messagerie l'emporte.`];
       },
     },
     {
       id: "reponse",
       type: "choix",
       titre: "Votre réponse au gérant",
-      question: () => "Quelle réponse envoyez-vous au gérant ?",
-      options: (c) => {
-        const g = gazoleQuiAugmente(c);
-        const couvre = g.reste >= 0;
+      question: () => "Que répondez-vous au gérant ?",
+      options: () => {
+        const k = gazoleQuiAugmente();
         return [
-          {
-            texte: "Garder le prix : la palette couvre encore son coût",
-            juste: couvre,
-            retour: couvre
-              ? `Oui : ${accord(c, "un")} ${c.unite} coûte maintenant ${eur(g.cout)}, et le client la paie ${eur(g.k.prix)}. Il reste ${eur(g.reste)} par ${c.unite}, contre ${eur(g.k.reste)} avant la hausse.`
-              : `Non : ${accord(c, "un")} ${c.unite} coûte maintenant ${eur(g.cout)}, plus que les ${eur(g.k.prix)} du client.`,
-          },
-          {
-            texte: `Monter le prix de ${pct(g.h.taux * 100)}, comme le gazole`,
-            juste: false,
-            retour: `Non : ${pct(g.h.taux * 100)} de ${eur(g.k.prix)}, c'est ${eur(g.enPlusPourLeClient)} de plus pour le client (${eur(g.prixMonte)}), quand ${accord(c, "un")} ${c.unite} ne coûte que ${eur(g.hausse)} de plus. Le gazole n'est qu'une partie du coût, et les clients comparent les prix.`,
-          },
-          {
-            texte: "Monter le prix : la palette coûte plus qu'elle ne rapporte",
-            juste: !couvre,
-            retour: couvre
-              ? `Non : ${accord(c, "un")} ${c.unite} coûte ${eur(g.cout)} et rapporte ${eur(g.k.prix)}. Elle rapporte encore ${eur(g.reste)} de plus que ce qu'elle coûte.`
-              : `Oui : ${accord(c, "un")} ${c.unite} coûte ${eur(g.cout)} et ne rapporte que ${eur(g.k.prix)}. Il manque ${eur(-g.reste)} par ${c.unite}.`,
-          },
+          { texte: "Garder la tournée", juste: k.apres.economie > 0, retour: `Oui : même après la hausse, elle coûte ${eur(k.apres.cout.total)}, ${eur(k.apres.economie)} de moins que la messagerie.` },
+          { texte: "Passer à la messagerie, dès ce mois", juste: k.apres.economie <= 0, retour: `Non : la messagerie coûterait ${eur(k.apres.messagerie)}, plus que la tournée (${eur(k.apres.cout.total)}).` },
+          { texte: "Passer à la messagerie : le gazole pèse sur toute la tournée", juste: false, retour: `Non : le gazole ne pèse que sur la route ; la journée du camion et du chauffeur, ${eur(k.apres.cout.journee)}, ne bouge pas.` },
         ];
       },
     },

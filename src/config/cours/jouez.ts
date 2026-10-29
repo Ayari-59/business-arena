@@ -21,7 +21,7 @@ import { PROGRESSION_EN_POURCENT } from "./chapitres/suivre-ses-ventes";
 import { PRIX_BAS } from "./chapitres/l-offre-et-la-demande";
 import { PAS_DU_TATONNEMENT } from "./chapitres/le-prix-d-equilibre";
 import { HAUSSE_DU_PRIX } from "./chapitres/la-concurrence";
-import { budgetDuSecteur } from "./chapitres/produire-bien";
+import { PART_DE_QUALITE_NEUTRE } from "../../engine/bots";
 import { INDICE_DE_LA_HAUSSE } from "./chapitres/les-acteurs-et-la-valeur";
 import { BAISSE_DE_PRIX_DU_COMMERCIAL, COUPE_DU_FINANCIER, HAUSSE_DE_PUBLICITE_DU_COMMERCIAL } from "./chapitres/decider-ensemble";
 import { RETARD } from "./chapitres/une-information-a-temps";
@@ -215,6 +215,9 @@ export function niveauDeLaGamme(code: string): 2 | 3 | 4 | 5 | 6 | null {
 }
 
 const partie = (c: Cas, niveau: number) => `Lancez une partie chez ${c.entreprise}, au niveau ${niveau}.`;
+
+/** Le budget qualité par trimestre de la gestion neutre du secteur, à l'euro (l'ancien export de « Produire bien », passé sur le monde du cours). */
+const budgetDuSecteur = (code: string) => Math.round(PART_DE_QUALITE_NEUTRE * scenarioByCode(code).scenario.production.qualityScale);
 
 /**
  * La TVA de l'arène, dite à l'élève : elle est comptée à la facture, comme avec l'option pour les débits,

@@ -1,59 +1,73 @@
-import { montantEcrit as eur } from "../../../pedagogy/cours/correcteur";
+import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../pedagogy/cours/etats";
-import { accord } from "../accords";
 import type { Cas } from "../cas";
 import { masseSalariale } from "../chapitres/effectif-et-masse-salariale";
 import { salaire } from "../chapitres/salaire-brut-net-cout";
+import { anneeDeProduction, enceintesParOperateurEtParMois, margeUnitaire } from "../monde/capacite";
+import { ENTREPRISES_DES_RESSOURCES_HUMAINES, FICHE_RH } from "../monde/ressources-humaines-de-nova";
 import type { Situation } from "./types";
 
 /**
  * CAS PRATIQUE : EMBAUCHER POUR LA SAISON ? (Bac STMG, ressources humaines, palier 1).
  *
- * La direction veut un salarié de plus pour un trimestre chargé, payé comme ceux de
- * l'équipe. Avant de signer le contrat, elle demande ce qu'il coûtera, ce qu'il change à
- * la masse salariale et au taux de frais de personnel, et combien il faudra vendre en plus
- * pour qu'il se paie. L'élève rend ces chiffres, puis sa réponse.
+ * La direction de NOVA veut un opérateur de plus pour le trimestre de Noël de N + 1, payé comme ceux
+ * de l'équipe. Avant de signer le contrat, elle demande ce qu'il coûtera, ce qu'il change à la masse
+ * salariale et au taux de frais de personnel, et combien il faudra vendre en plus pour qu'il se paie.
+ * L'élève rend ces chiffres, puis sa réponse ; la correction rappelle ce que la ligne peut monter.
  *
- * Aucun cours : les calculs sont ceux des chapitres « Du salaire brut au coût pour
- * l'entreprise » et « L'effectif et la masse salariale », appelés tels quels (`salaire`,
- * `masseSalariale`). Le prix et le coût variable d'une unité sont ceux du mois du cas.
- * Seule la durée du contrat est posée ci-dessous.
+ * Aucun cours : les calculs sont ceux des chapitres « Du salaire brut au coût pour l'entreprise » et
+ * « L'effectif et la masse salariale », appelés tels quels (`salaire`, `masseSalariale`), dans le
+ * monde du cours. La marge d'une enceinte, la ligne et la demande de Noël sont celles de
+ * nova-capacite.ts. Seule la durée du contrat est posée ci-dessous.
+ *
+ * CE QUI A CHANGÉ. Le cas lisait la paie et le mois de chaque entreprise de l'arène ; il se joue chez
+ * NOVA : 7 987,50 € pour le contrat, 381 enceintes à vendre en plus, et une ligne déjà pleine à Noël.
  */
 
-/** Le contrat de saison : un trimestre, trois mois de salaire. */
+/** Le contrat de saison : le trimestre de Noël, trois mois de salaire (octobre, novembre, décembre). */
 export const MOIS_DE_LA_SAISON = 3;
+/** Le trimestre de la saison : le 4e, Noël. */
+export const TRIMESTRE_DE_LA_SAISON = 4;
 /** Les mois d'une année, pour l'erreur classique qui compte l'embauche sur l'année entière. */
 const MOIS_PAR_AN = 12;
 
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 const taux = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 const qte = (n: number) => n.toLocaleString("fr-FR");
 const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const auDessus = (x: number) => Math.ceil(x - 1e-9);
 
-/** Le salarié de la saison, ce qu'il coûte, et les ventes qui le paient. */
-export function embaucheDeSaison(c: Cas) {
-  const s = salaire(c);
-  const m = masseSalariale(c);
-  const g = c.gestion;
+/** L'opérateur de la saison, ce qu'il coûte, et les ventes qui le paient. */
+export function embaucheDeSaison(_c?: Cas) {
+  const s = salaire();
+  const m = masseSalariale();
+  const f = FICHE_RH;
+  const prix = f.enceinte.prix;
+  const coutVariable = auCentime(f.enceinte.coutVariable.composants + f.enceinte.coutVariable.autres);
+  const margeDUneUnite = margeUnitaire(f);
   const coutDeLaSaison = auCentime(s.cout * MOIS_DE_LA_SAISON);
   const masseAvec = auCentime(m.masse + coutDeLaSaison);
-  const margeDUneUnite = auCentime(g.prixMoyen - g.coutVariableUnitaire);
   const ventesNecessaires = auDessus(coutDeLaSaison / margeDUneUnite);
+  const noel = anneeDeProduction(f, { annee: "N+1" }).trimestres[TRIMESTRE_DE_LA_SAISON - 1]!;
   return {
     s,
     m,
-    prix: g.prixMoyen,
-    coutVariable: g.coutVariableUnitaire,
+    prix,
+    coutVariable,
     coutDeLaSaison,
     masseAvec,
     tauxAvec: auDixieme((masseAvec / m.ventes) * 100),
     margeDUneUnite,
     ventesNecessaires,
-    caNecessaire: auCentime(ventesNecessaires * g.prixMoyen),
+    caNecessaire: auCentime(ventesNecessaires * prix),
+    noel,
+    /** Ce que l'équipe monterait de plus à Noël avec l'opérateur de la saison, et ce que la ligne en laisse sortir. */
+    equipeAvec: noel.capaciteEquipe + MOIS_DE_LA_SAISON * enceintesParOperateurEtParMois(f),
+    enPlusANoel: Math.max(0, Math.min(noel.demande, noel.capaciteOutil) - noel.production),
     // Les erreurs classiques : le brut au lieu du coût, le prix au lieu de la marge, l'année au lieu de la saison.
     avecLeBrut: auDessus((s.brut * MOIS_DE_LA_SAISON) / margeDUneUnite),
-    avecLePrix: auDessus(coutDeLaSaison / g.prixMoyen),
+    avecLePrix: auDessus(coutDeLaSaison / prix),
     surLAnnee: auDessus((s.cout * MOIS_PAR_AN) / margeDUneUnite),
   };
 }
@@ -67,7 +81,7 @@ export const EMBAUCHER_POUR_LA_SAISON: Situation = {
   commanditaire: "La direction",
   titre: "Embaucher pour la saison ?",
   accroche:
-    "La direction veut un salarié de plus pour un trimestre chargé. Ce qu'il coûte, ce qu'il pèse dans la masse salariale, et ce qu'il faudra vendre pour qu'il se paie.",
+    "La direction veut un opérateur de plus pour le trimestre de Noël. Ce qu'il coûte, ce qu'il pèse dans la masse salariale, et ce qu'il faudra vendre pour qu'il se paie.",
   objectifs: [
     "Calculer le coût employeur d'un salarié à partir de son salaire brut",
     "Calculer la masse salariale et le taux de frais de personnel avec une embauche",
@@ -75,6 +89,10 @@ export const EMBAUCHER_POUR_LA_SAISON: Situation = {
     "Répondre à la direction, chiffre à l'appui",
   ],
   libre: false,
+  entreprises: {
+    codes: ENTREPRISES_DES_RESSOURCES_HUMAINES,
+    pourquoi: "le cas reprend la paie et la masse salariale de NOVA, celles des chapitres, et l'atelier de son année N + 1.",
+  },
   etapes: [
     {
       id: "demande",
@@ -83,8 +101,8 @@ export const EMBAUCHER_POUR_LA_SAISON: Situation = {
       texte: (c) => {
         const r = embaucheDeSaison(c);
         return [
-          `« Le prochain trimestre s'annonce chargé : je pense embaucher une personne de plus pour ${MOIS_DE_LA_SAISON} mois, au salaire de l'équipe, ${eur(r.s.brut)} brut par mois. Avant de signer le contrat, dites-moi ce qu'elle nous coûtera vraiment, ce que cela change à notre masse salariale, et combien il faudra vendre en plus pour que l'embauche se paie. » La direction`,
-          `L'équipe compte aujourd'hui ${qte(r.s.effectif)} salariés. Pas de cours cette fois : les calculs sont ceux que vous connaissez.`,
+          `« Pour Noël, nos clients demanderont ${qte(r.noel.demande)} enceintes. Je pense embaucher un opérateur de plus pour les ${MOIS_DE_LA_SAISON} mois du trimestre, au salaire de l'équipe, ${eur(r.s.brut)} bruts par mois. Avant de signer le contrat, dites-moi ce qu'il nous coûtera vraiment, ce que cela change à notre masse salariale, et combien il faudra vendre en plus pour que l'embauche se paie. » La direction`,
+          `L'équipe compte aujourd'hui ${qte(r.s.effectif)} opérateurs, et la masse salariale est celle du premier exercice. Pas de cours cette fois : les calculs sont ceux que vous connaissez.`,
         ];
       },
       tableau: (c) => {
@@ -98,8 +116,8 @@ export const EMBAUCHER_POUR_LA_SAISON: Situation = {
             { libelle: "Durée du contrat", valeurs: [`${MOIS_DE_LA_SAISON} mois`] },
             { libelle: "Masse salariale de l'année, sans l'embauche", valeurs: [eur(r.m.masse)] },
             { libelle: "Ventes de l'année", valeurs: [eur(r.m.ventes)] },
-            { libelle: `Prix de vente moyen d'${accord(c, "un")} ${c.unite}, hors taxes`, valeurs: [eur(r.prix)] },
-            { libelle: `Coût variable d'${accord(c, "un")} ${c.unite}`, valeurs: [eur(r.coutVariable)] },
+            { libelle: "Prix d'une enceinte, hors taxes", valeurs: [eur(r.prix)] },
+            { libelle: "Coût variable d'une enceinte", valeurs: [eur(r.coutVariable)] },
           ],
         };
       },
@@ -156,19 +174,19 @@ export const EMBAUCHER_POUR_LA_SAISON: Situation = {
       titre: "Les ventes qui paient l'embauche",
       notions: ["payroll", "fixed_costs"],
       question: () =>
-        "Calculez la marge d'une unité (prix moins coût variable), le nombre d'unités à vendre en plus dans le trimestre pour payer le contrat (arrondi à l'unité supérieure), et le chiffre d'affaires que ces ventes représentent.",
+        "Calculez la marge d'une enceinte (prix moins coût variable), le nombre d'enceintes à vendre en plus dans le trimestre pour payer le contrat (arrondi à l'unité supérieure), et le chiffre d'affaires que ces ventes représentent.",
       champs: (c) => {
         const r = embaucheDeSaison(c);
         return [
-          { libelle: "Marge d'une unité", attendu: r.margeDUneUnite, calcul: `${eur(r.prix)} − ${eur(r.coutVariable)} = ${eur(r.margeDUneUnite)}` },
-          { libelle: "Unités à vendre en plus", attendu: r.ventesNecessaires, calcul: `${eur(r.coutDeLaSaison)} ÷ ${eur(r.margeDUneUnite)} = ${qte(r.ventesNecessaires)} (arrondi au-dessus)` },
+          { libelle: "Marge d'une enceinte", attendu: r.margeDUneUnite, calcul: `${eur(r.prix)} − ${eur(r.coutVariable)} = ${eur(r.margeDUneUnite)}` },
+          { libelle: "Enceintes à vendre en plus", attendu: r.ventesNecessaires, calcul: `${eur(r.coutDeLaSaison)} ÷ ${eur(r.margeDUneUnite)} = ${qte(r.ventesNecessaires)} (arrondi au-dessus)` },
           { libelle: "Chiffre d'affaires en plus", attendu: r.caNecessaire, calcul: `${qte(r.ventesNecessaires)} × ${eur(r.prix)} = ${eur(r.caNecessaire)}`, tolerance: 1 },
         ];
       },
       explication: (c) => {
         const r = embaucheDeSaison(c);
         return [
-          `Chaque ${c.unite} ${accord(c, "vendu")} en plus laisse ${eur(r.margeDUneUnite)} de marge : il en faut ${qte(r.ventesNecessaires)} pour payer les ${eur(r.coutDeLaSaison)} du contrat, soit ${eur(r.caNecessaire)} de chiffre d'affaires. C'est la marge qui paie le salaire, pas le chiffre d'affaires.`,
+          `Chaque enceinte vendue en plus laisse ${eur(r.margeDUneUnite)} de marge : il en faut ${qte(r.ventesNecessaires)} pour payer les ${eur(r.coutDeLaSaison)} du contrat, soit ${eur(r.caNecessaire)} de chiffre d'affaires. C'est la marge qui paie le salaire, pas le chiffre d'affaires.`,
         ];
       },
     },
@@ -186,7 +204,7 @@ export const EMBAUCHER_POUR_LA_SAISON: Situation = {
             texte: phrase(r.ventesNecessaires),
             n: r.ventesNecessaires,
             juste: true,
-            retour: `Oui : ${eur(r.coutDeLaSaison)} de coût employeur, divisés par ${eur(r.margeDUneUnite)} de marge par ${c.unite}.`,
+            retour: `Oui : ${eur(r.coutDeLaSaison)} de coût employeur, divisés par ${eur(r.margeDUneUnite)} de marge par enceinte. Encore faut-il pouvoir les monter : avec l'opérateur de plus, l'équipe monterait ${qte(r.equipeAvec)} enceintes à Noël, mais la ligne n'en monte que ${qte(r.noel.capaciteOutil)}. ${r.enPlusANoel > 0 ? `Elle en laisserait sortir ${qte(r.enPlusANoel)} de plus.` : "Elle est déjà pleine : la direction ferait mieux de ne pas signer."}`,
           },
           {
             texte: phrase(r.avecLeBrut),
