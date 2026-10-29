@@ -99,7 +99,7 @@ describe("CSP à nonce des zones dynamiques", () => {
       const route = p.slice(app.length).replace(/\/page\.tsx$/, "") || "/";
       if (!sousNonce(route.replace(/\[[^\]]+\]/g, "x"))) return false;
       const src = readFileSync(p, "utf8");
-      return !/force-dynamic|getSession|requireAdmin|cookies\(|headers\(|searchParams|getGuest|params/.test(src);
+      return !/force-dynamic|getSession|requireAdmin|cookies\(|headers\(|searchParams|getGuest|params|connection\(/.test(src);
     });
     // Ce qui reste n'a pas d'API dynamique visible : vérifié au build (prerender-manifest).
     const manifeste = join(process.cwd(), ".next/prerender-manifest.json");
