@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 import { bouton } from "@/components/bouton";
 
 /**
@@ -18,7 +19,17 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function NotFound() {
+/**
+ * RENDUE À CHAQUE REQUÊTE, pour la CSP à nonce (audit d'octobre 2026, P2-6).
+ *
+ * Sous une zone à nonce (/arena, /teacher…, config/security-headers.ts), le proxy pose
+ * une CSP à nonce sur toute réponse, page introuvable comprise. Prérendue, cette page
+ * n'avait pas le nonce : ses scripts étaient bloqués (constaté dans Chromium sur GET
+ * /arena). Rendue à la demande, elle reçoit le nonce de la requête. Le coût : une 404
+ * n'est plus servie du cache, ce qui ne touche que les adresses erronées.
+ */
+export default async function NotFound() {
+  await connection();
   return (
     <main
       id="main"

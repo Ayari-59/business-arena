@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { bouton } from "@/components/bouton";
 import { sansMolette } from "@/components/sans-molette";
 import { CONCEPTS } from "@/config/pedagogy/concepts";
@@ -995,7 +995,12 @@ function EtapeDeSimulation({ etape, cas, chapitre, index, suivi, classe, noter, 
                 </legend>
                 <span className="flex flex-wrap gap-2">
                   {l.choix.map((x) => (
-                    <label key={x.valeur} className={`${bouton({ variante: affichee[l.code] === x.valeur ? "principal" : "secondaire", taille: "s" })} cursor-pointer`}>
+                    // LE FOCUS SE VOIT SUR LE LIBELLÉ : le bouton radio est en `sr-only`, l'anneau
+                    // posé sur lui ne se voyait pas (audit produit du 28 octobre 2026, 6.2).
+                    <label
+                      key={x.valeur}
+                      className={`${bouton({ variante: affichee[l.code] === x.valeur ? "principal" : "secondaire", taille: "s" })} cursor-pointer has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-amber-400 has-[:focus-visible]:ring-offset-2`}
+                    >
                       <input
                         type="radio"
                         className="sr-only"
@@ -1168,7 +1173,10 @@ function EtapeDeSimulation({ etape, cas, chapitre, index, suivi, classe, noter, 
       )}
       {fait && (
         <>
-          <Paragraphes textes={lecture.explication ?? etape.lectureDeLaSolution.explication ?? []} />
+          {/* Le résultat du laboratoire, seul à parler : la région vivante est ici, pas sur l'étape. */}
+          <div role="status" data-resultat-du-laboratoire="">
+            <Paragraphes textes={lecture.explication ?? etape.lectureDeLaSolution.explication ?? []} />
+          </div>
           <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} terminer={chapitre.mots.terminer} />
         </>
       )}
@@ -1495,6 +1503,16 @@ export function ChapitreGuide({
   const courant = Math.min(vue ?? suivi.index, n - 1);
   const etape = chapitre.etapes[courant]!;
 
+  // LE FOCUS AU DÉBUT DE CHAQUE NOUVELLE ÉTAPE (audit produit du 28 octobre 2026, 6.2) : le bouton
+  // « Suite » disparaissait et le focus retombait sur la page. Il va au titre de l'étape, à
+  // chaque changement d'étape, pas à l'ouverture du chapitre.
+  const titreDeLEtape = useRef<HTMLHeadingElement>(null);
+  const etapeMontee = useRef<string | null>(null);
+  useEffect(() => {
+    if (etapeMontee.current !== null && etapeMontee.current !== etape.id) titreDeLEtape.current?.focus();
+    etapeMontee.current = etape.id;
+  }, [etape.id]);
+
   // EN CLASSE, chaque geste remonte : la progression entière (elle est petite) et, pour un
   // essai manqué, les remarques du correcteur. Hors classe, rien ne quitte l'appareil.
   // Chaque geste est un envoi daté par son numéro ; l'erreur d'un essai manqué voyage avec lui.
@@ -1589,12 +1607,22 @@ export function ChapitreGuide({
         />
       ) : (
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-          <section className="grid min-w-0 gap-5" aria-live="polite" key={etape.id}>
+          {/* PAS DE RÉGION VIVANTE SUR L'ÉTAPE ENTIÈRE : le tableau du laboratoire, qui change à
+              chaque pas du curseur, s'y relisait. Seuls les résultats parlent (`role="status"`,
+              `role="alert"`), et le titre reçoit le focus. */}
+          <section className="grid min-w-0 gap-5" key={etape.id}>
             <div>
               <p className="text-sm font-semibold uppercase tracking-etiquette text-amber-300">
                 {chapitre.titre} · Étape {courant + 1}
               </p>
-              <h1 className="mt-1 text-3xl font-bold leading-tight tracking-tight text-slate-50">{etape.titre}</h1>
+              <h1
+                ref={titreDeLEtape}
+                tabIndex={-1}
+                className="mt-1 text-3xl font-bold leading-tight tracking-tight text-slate-50 focus:outline-none"
+                data-titre-de-l-etape=""
+              >
+                {etape.titre}
+              </h1>
             </div>
             {etape.type !== "lecture" && <RappelDeLEnonce enonce={chapitre.etapes[0]!} />}
             {etape.type === "lecture" && <Lecture etape={etape} {...props} />}

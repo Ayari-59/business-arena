@@ -3,6 +3,8 @@ import { CHAPITRES } from "./cours/registre";
 import { dureeDuChapitre, dureeEnClair } from "./cours/duree";
 import { SITUATIONS } from "./cours/situations";
 import { NOMBRE_D_EPISODES } from "./episodes/familles";
+import { coursDeLaFormation } from "./couverture";
+import { FORMATIONS } from "./formations";
 
 /**
  * COURS, CAS PRATIQUES, ARÈNE, ÉPISODES : COMMENT ILS S'ENCHAÎNENT.
@@ -96,3 +98,22 @@ export const ENCHAINEMENT: readonly string[] = [
   "L'épisode manager la confronte à une situation humaine, où le chiffre ne décide pas seul : il faut enquêter, peser et convaincre.",
   "Les passages existent dans la page : un chapitre se termine par une mission dans l'arène, et chaque chapitre a son cas pratique, et chaque thème ses cas de synthèse et ses épisodes.",
 ];
+
+/**
+ * LE COURS EN CHIFFRES, POUR LES PAGES DES PUBLICS (audit produit du 28 octobre 2026, P1-2).
+ *
+ * Le cours était le plus gros contenu du site et /enseignants, /ecoles, /fonctionnalites n'en
+ * disaient pas un mot. Chaque nombre se compte ici dans son registre : les chapitres, ceux qui
+ * ont leur laboratoire (une étape `simulation`, leviers et curseurs), les cas pratiques, les
+ * formations que le cours sert (une option comptant pour son diplôme), et le chapitre libre.
+ */
+export function leCoursEnChiffres() {
+  const libre = CHAPITRES.find((c) => c.libre)!;
+  return {
+    chapitres: CHAPITRES.length,
+    avecLaboratoire: CHAPITRES.filter((c) => c.etapes.some((e) => e.type === "simulation")).length,
+    casPratiques: SITUATIONS.length,
+    formations: FORMATIONS.filter((f) => !f.optionDe && coursDeLaFormation(f.code).length > 0).length,
+    libre: { href: `/cours/${libre.code}`, titre: libre.titre },
+  };
+}

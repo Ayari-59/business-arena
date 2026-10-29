@@ -1,4 +1,5 @@
 import { createHmac, randomUUID } from "node:crypto";
+import { cleDerivee } from "@/lib/cles";
 import { Client } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { devices, type Browser, type BrowserContext, type Page } from "playwright-core";
@@ -49,7 +50,7 @@ async function base<T>(f: (c: Client) => Promise<T>): Promise<T> {
 async function connecter(ctx: BrowserContext, userId: string): Promise<void> {
   const now = Date.now();
   const corps = Buffer.from(JSON.stringify({ id: userId, role: "teacher", v: 1, iat: now, exp: now + 3600_000 })).toString("base64url");
-  const signature = createHmac("sha256", process.env.AUTH_SECRET!).update(corps).digest("hex").slice(0, 32);
+  const signature = createHmac("sha256", cleDerivee("session", process.env.AUTH_SECRET!)).update(corps).digest("hex").slice(0, 32);
   await ctx.addCookies([{ name: "ba_session", value: `${corps}.${signature}`, url: BASE }]);
 }
 

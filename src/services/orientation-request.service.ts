@@ -1,4 +1,9 @@
 import { and, desc, eq, gt, sql } from "drizzle-orm";
+import {
+  FENETRE_PAR_DESTINATAIRE_MS,
+  PLAFOND_PAR_DESTINATAIRE_PAR_JOUR,
+  REFUS_PAR_DESTINATAIRE,
+} from "@/config/plafonds-des-formulaires";
 import { db } from "@/db";
 import { orientationRequests } from "@/db/schema";
 import { OBJECTIFS, diplomesProposes, recommander, type Recommandation, type Semestre } from "@/config/orientation";
@@ -46,6 +51,14 @@ export async function deposerDemandeOrientation(
     if ((compte?.n ?? 0) >= PLAFOND_PAR_IP_PAR_HEURE) {
       return { error: "Trop de demandes depuis cette connexion : réessayez dans une heure." };
     }
+  }
+  // Le plafond par destinataire, d'où que vienne la demande (config/plafonds-des-formulaires.ts).
+  {
+    const [parDestinataire] = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(orientationRequests)
+      .where(and(eq(orientationRequests.email, email), gt(orientationRequests.createdAt, new Date(now - FENETRE_PAR_DESTINATAIRE_MS))));
+    if ((parDestinataire?.n ?? 0) >= PLAFOND_PAR_DESTINATAIRE_PAR_JOUR) return { error: REFUS_PAR_DESTINATAIRE };
   }
   const recente = await db
     .select({ id: orientationRequests.id })

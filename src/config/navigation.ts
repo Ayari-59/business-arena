@@ -226,7 +226,7 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
       {
         href: "/parcours",
         libelle: "Référentiels par diplôme",
-        aide: "Votre référentiel bloc par bloc, pour chaque diplôme qui a un atelier : où chacun se travaille, et ce qui n'est qu'effleuré.",
+        aide: "Votre référentiel bloc par bloc, pour chaque formation servie, du CAP au DSCG : où chacun se travaille, et ce qui n'est qu'effleuré.",
       },
       {
         href: "/enseignants/episodes",

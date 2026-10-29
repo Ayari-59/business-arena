@@ -6,6 +6,7 @@ import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { LIEN_A_L_ENCRE } from "@/components/bouton";
 import { ENTREPRISES, libellesDuDevisDe, MENTION_TVA, NIVEAUX_DE_L_ARENE } from "@/config/tarifs";
 import { offresDuDevis } from "@/config/catalogue";
+import { ateliersParCombinaison } from "@/config/ateliers-de-la-classe";
 import { lireLeCatalogue } from "@/services/catalogue.service";
 import { VENDEUR } from "@/config/editeur";
 import { LIEN_CONTACT } from "@/config/navigation";
@@ -29,9 +30,13 @@ export const metadata: Metadata = {
 export default async function DevisPage({
   searchParams,
 }: {
-  searchParams: Promise<{ offre?: string }>;
+  searchParams: Promise<{ offre?: string; interet?: string; entreprise?: string; niveau?: string }>;
 }) {
-  const { offre } = await searchParams;
+  const { offre, interet, entreprise, niveau } = await searchParams;
+  // Ce qui a déjà été choisi ailleurs (orientation, chapitre réservé), lu contre les registres :
+  // une valeur inconnue est ignorée, jamais recopiée (audit produit du 28 octobre 2026, P1-6).
+  const entrepriseInitiale = ENTREPRISES.some((e) => e.code === entreprise) ? entreprise! : "";
+  const niveauInitial = NIVEAUX_DE_L_ARENE.some((n) => String(n.niveau) === niveau) ? niveau! : "";
   const offres = offresDuDevis(await lireLeCatalogue()).map((o) => ({ code: o.code, ...libellesDuDevisDe(o) }));
   const offreInitiale = offres.some((o) => o.code === offre) ? offre! : (offres[0]?.code ?? "");
   return (
@@ -51,6 +56,10 @@ export default async function DevisPage({
             vendeur={VENDEUR.nom}
             mentionTva={MENTION_TVA}
             contact={VENDEUR.contact}
+            interetInitial={interet === "cours" ? "cours" : "arene"}
+            entrepriseInitiale={entrepriseInitiale}
+            niveauInitial={niveauInitial}
+            ateliers={ateliersParCombinaison()}
           />
           <p className="mt-6 text-sm leading-relaxed text-slate-400">
             Vous préférez en parler de vive voix ?{" "}

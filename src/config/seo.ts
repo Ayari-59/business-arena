@@ -10,11 +10,18 @@
 
 import { NOMBRE_D_EPISODES } from "./episodes/familles";
 import { SCENARIO_CHOICES } from "./scenarios/registry";
+import { CHAPITRES } from "./cours/registre";
+import { SITUATIONS } from "./cours/situations";
 
 export const NOM_DU_SITE = "Business Arena";
 
-/** Le titre de la page d'accueil, et celui du site quand une page n'en a pas. */
-export const TITRE_ACCUEIL = "Business Arena · Simulation d'entreprise pour BTS, DCG et écoles";
+/**
+ * Le titre de la page d'accueil, et celui du site quand une page n'en a pas.
+ *
+ * Il disait « Simulation d'entreprise pour BTS, DCG et écoles » : ni le cours, devenu le plus
+ * gros contenu du site, ni le lycée, ni le CAP (audit produit du 28 octobre 2026, P1-2 et P1-8).
+ */
+export const TITRE_ACCUEIL = "Business Arena · Cours et simulation de gestion, du lycée au supérieur";
 
 /**
  * LES NOMBRES DE LA DESCRIPTION sont comptés dans les registres, et ce sont
@@ -22,7 +29,10 @@ export const TITRE_ACCUEIL = "Business Arena · Simulation d'entreprise pour BTS
  * Elle annonçait « 139 situations, 20 modèles d'analyse », deux nombres
  * qu'aucune page publique ne permettait de retrouver (audit d'octobre 2026).
  */
-export const DESCRIPTION_ACCUEIL = `Jeu d'entreprise pédagogique à essayer gratuitement, sans compte élève : ${SCENARIO_CHOICES.length} entreprises à piloter et ${NOMBRE_D_EPISODES} épisodes manager. Pilotez prix, production, trésorerie et affrontez la concurrence.`;
+export const DESCRIPTION_ACCUEIL = `Cours de gestion et jeu d'entreprise pédagogique, à essayer gratuitement, sans compte élève : ${CHAPITRES.length} chapitres guidés avec leur laboratoire, ${SITUATIONS.length} cas pratiques, ${SCENARIO_CHOICES.length} entreprises à piloter et ${NOMBRE_D_EPISODES} épisodes manager.`;
+
+/** La ligne de l'image de partage : les mêmes nombres, comptés dans les mêmes registres. */
+export const LIGNE_DE_PARTAGE = `${CHAPITRES.length} chapitres de cours, ${SITUATIONS.length} cas pratiques, ${SCENARIO_CHOICES.length} entreprises à piloter, ${NOMBRE_D_EPISODES} épisodes manager.`;
 
 /**
  * L'APERÇU DE PARTAGE COMMUN, SANS ADRESSE. Le gabarit portait l'adresse de

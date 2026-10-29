@@ -53,6 +53,13 @@ const demande = (debut: Date, over: Record<string, unknown> = {}) => ({
   ip: "203.0.113.7",
   ...over,
 });
+/**
+ * Une adresse e-mail propre à chaque appel : une même adresse est plafonnée à trois
+ * réservations par jour (config/plafonds-des-formulaires.ts, garde dans
+ * plafond-par-destinataire.test.ts), et ces tests-ci gardent autre chose.
+ */
+let numero = 0;
+const autreAdresse = () => `enseignant-${++numero}@lycee.fr`;
 
 describe("rendez-vous téléphonique, sans agenda", () => {
   it("propose des créneaux ; une réservation retire le sien ; le même créneau se refuse ensuite", async () => {
@@ -86,7 +93,7 @@ describe("rendez-vous téléphonique, sans agenda", () => {
 
   it("un créneau que la page ne propose pas se refuse : passé, hors plage, dimanche", async () => {
     for (const iso of ["2026-09-16T12:00:00Z", "2026-09-17T06:00:00Z", "2026-09-20T09:00:00Z"]) {
-      const r = await reserverRendezVous(demande(new Date(iso), { ip: null }), now, sansAgenda);
+      const r = await reserverRendezVous(demande(new Date(iso), { ip: null, email: autreAdresse() }), now, sansAgenda);
       expect(r, iso).toMatchObject({ error: expect.stringContaining("plus disponible") });
     }
   });
@@ -96,10 +103,10 @@ describe("rendez-vous téléphonique, sans agenda", () => {
     const libres = jours.flatMap((j) => j.creneaux).slice(-(PLAFOND_PAR_IP_PAR_HEURE + 1));
     const ip = "192.0.2.44";
     for (let i = 0; i < PLAFOND_PAR_IP_PAR_HEURE; i++) {
-      const r = await reserverRendezVous(demande(new Date(libres[i]!.iso), { ip }), now, sansAgenda);
+      const r = await reserverRendezVous(demande(new Date(libres[i]!.iso), { ip, email: autreAdresse() }), now, sansAgenda);
       expect("id" in r, `réservation ${i}`).toBe(true);
     }
-    const trop = await reserverRendezVous(demande(new Date(libres[PLAFOND_PAR_IP_PAR_HEURE]!.iso), { ip }), now, sansAgenda);
+    const trop = await reserverRendezVous(demande(new Date(libres[PLAFOND_PAR_IP_PAR_HEURE]!.iso), { ip, email: autreAdresse() }), now, sansAgenda);
     expect(trop).toMatchObject({ error: expect.stringContaining("Trop de réservations") });
   });
 });
@@ -175,7 +182,7 @@ describe("rendez-vous téléphonique, avec agenda", () => {
     expect(jours.find((j) => j.date === "2026-09-17")!.creneaux.some((c) => c.heure === "16 h 00")).toBe(true);
 
     // Le créneau libéré se reprend, l'index unique partiel ne bloque que ce qui tient.
-    const reprise = await reserverRendezVous(demande(debut, { ip: "203.0.113.51" }), now, deps);
+    const reprise = await reserverRendezVous(demande(debut, { ip: "203.0.113.51", email: autreAdresse() }), now, deps);
     expect("id" in reprise).toBe(true);
   });
 });

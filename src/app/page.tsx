@@ -78,7 +78,7 @@ const RENVOIS: {
   {
     title: "Référentiels par diplôme",
     href: "/parcours",
-    aide: "Pour chaque diplôme servi : les blocs du programme que l'atelier met en jeu, la séance où chacun se travaille, et ce qui reste effleuré.",
+    aide: "Pour chaque formation servie : les blocs du programme que l'atelier ou le cours met en jeu, la séance où chacun se travaille, et ce qui reste effleuré.",
   },
   {
     title: "Espace enseignant",
@@ -87,7 +87,8 @@ const RENVOIS: {
   },
   {
     title: "Concours entre classes",
-    href: "/compete",
+    // Décrit pour l'enseignant : la page qui l'explique, pas le formulaire d'élève de /compete.
+    href: "/guide#concours",
     aide: "Groupes tirés au sort, décisions verrouillées, qualification à l'IPG, finale et podium.",
   },
 ];
@@ -440,10 +441,21 @@ export default async function Home() {
             <Link href="/jouer" className={`${bouton({ taille: "l" })} w-full`}>
               Tester le simulateur
             </Link>
-            <Link href="/teacher/login" className={`${bouton({ variante: "secondaire", taille: "l" })} w-full`}>
+            {/* LES PORTES DES PUBLICS (audit produit du 28 octobre 2026, P1-1) : « Je suis
+                enseignant » menait à la connexion, une impasse pour qui découvre. Il mène à la
+                page des enseignants ; l'espace enseignant garde son libellé, plus bas. */}
+            <Link href="/enseignants" className={`${bouton({ variante: "secondaire", taille: "l" })} w-full`}>
               Je suis enseignant
             </Link>
           </div>
+          {/* L'ÉLÈVE QUI A UN CODE n'avait pas de porte sur l'accueil (deux touchers par le menu).
+              /join reconnaît le code et renvoie un code de classe du cours, de cohorte, de
+              concours ou d'examen à sa page (services/rejoindre.service.ts, `ouRejoindre`). */}
+          <p className="mt-4 text-base">
+            <Link href="/join" className={LIEN_A_L_ENCRE} data-porte-eleve="">
+              J&apos;ai un code de mon enseignant
+            </Link>
+          </p>
           {/* Celui qui revient retrouve sa dernière partie, en une ligne sous les
               boutons : l'accueil reste statique et celui de tout le monde ; l'îlot
               lit le cookie de l'appareil et ne rend rien s'il n'y a rien à reprendre. */}

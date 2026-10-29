@@ -1,6 +1,6 @@
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import type { Cas } from "../cas";
-import { anneeDuMarche, carteDuMarche, enseigneDe, gammeDe, gammePourLaQualite, type StrategieLue } from "../monde/attractivite";
+import { anneeDuMarche, battreAuris, carteDuMarche, enseigneDe, gammeDe, gammePourLaQualite, meilleurPrix, type StrategieLue } from "../monde/attractivite";
 import type { CodeDeGamme, FicheDuMarche } from "../monde/marche-a-trois";
 import type { Chapitre, TableauDeDonnees } from "../types";
 import { ENTREPRISES_DU_MARCHE_A_TROIS, ficheDe } from "./couts-ou-differenciation";
@@ -20,7 +20,8 @@ import { ENTREPRISES_DU_MARCHE_A_TROIS, ficheDe } from "./couts-ou-differenciati
  * et ce qu'elle gagne. L'élève place les trois enseignes sur une carte prix / qualité (deux indices,
  * base 100 la moyenne du marché), reconnaît la stratégie de chacune, voit que le prix seul ne déplace
  * une enseigne que sur un axe et que la moyenne bouge avec elle, mesure l'espace libre sur les deux
- * indices, écarte les coins vides qui ne sont pas des places à prendre, et cherche au laboratoire
+ * indices, chiffre les deux coins vides (l'un sans clients, l'autre une place à prendre, à ses
+ * conditions), et cherche au laboratoire
  * l'offre qui fait lire NOVA en différenciation avec un meilleur résultat.
  *
  * LES TROIS TEMPS (demande du propriétaire, octobre 2026 : progressif, mais au niveau de l'examen) :
@@ -34,8 +35,10 @@ import { ENTREPRISES_DU_MARCHE_A_TROIS, ficheDe } from "./couts-ou-differenciati
  *     une-autre-annee ;
  *   · autonome : les-resultats, reussite, l-espace-libre, espace (ni formule ni chiffres à prendre
  *     dans la question ; le calcul de la correction montre le chemin) ;
- *   · expert : les-coins-vides (un diagnostic chiffré : pourquoi deux coins vides de la carte ne sont
- *     pas des places à prendre), le-laboratoire-de-la-carte, une-autre-annee (une variante chiffrée :
+ *   · expert : les-coins-vides (un diagnostic chiffré : le coin cher est vide faute de clients ; le
+ *     coin généreux, la gamme soignée au prix d'aujourd'hui, paie déjà plus qu'aujourd'hui depuis la
+ *     réconciliation d'octobre 2026, concurrents immobiles et ligne qui suit : une place à prendre, qui
+ *     se vend mieux plus cher, 67 €, où Auris reste pourtant devant ; elle ne la bat qu'à 65 € ou moins), le-laboratoire-de-la-carte, une-autre-annee (une variante chiffrée :
  *     la carte refaite l'année où NOVA va dans l'espace libre avec la gamme soignée ; le prix moyen
  *     monte avec elle) ; puis la synthèse.
  */
@@ -107,6 +110,17 @@ function calculer(c: Pick<Cas, "code">) {
   // Les deux coins vides : le prix d'Auris avec la gamme d'aujourd'hui ; la gamme soignée au prix d'aujourd'hui.
   const coinCher = anneeDuMarche(f, { nova: { prix: auris.offre.prix } }).nova;
   const coinGenereux = anneeDuMarche(f, { nova: { gamme: "soignee" } }).nova;
+  // Le coin généreux paie (réconciliation d'octobre 2026) : son meilleur prix, et le plus haut prix entier
+  // où il bat encore Auris, concurrents immobiles. Ce n'est pas le même : gagner le plus n'est pas battre Auris.
+  const coinGenereuxAuMieux = meilleurPrix(f, { nova: { gamme: "soignee" } });
+  const aurisAuMieux = battreAuris(f, { nova: { gamme: "soignee", prix: coinGenereuxAuMieux.prix } }).auris;
+  let prixQuiBatAuris: number | null = null;
+  for (let p = Math.floor(coinGenereuxAuMieux.prix); p >= coinGenereux.offre.prix; p--) {
+    if (battreAuris(f, { nova: { gamme: "soignee", prix: p } }).battue) {
+      prixQuiBatAuris = p;
+      break;
+    }
+  }
   // L'espace libre et sa variante : NOVA à la place, avec la gamme qui l'amène à sa qualité.
   const place = carte.espaceLibre;
   const gammeDeLaPlace = gammePourLaQualite(f, place.qualite) ?? "soignee";
@@ -143,6 +157,9 @@ function calculer(c: Pick<Cas, "code">) {
     ventesDeSoundbox,
     coinCher,
     coinGenereux,
+    coinGenereuxAuMieux,
+    aurisAuMieux,
+    prixQuiBatAuris,
     place,
     gammeDeLaPlace,
     carteALaPlace,
@@ -621,7 +638,7 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
         const k = strategiesDesConcurrents(c);
         const p = k.place;
         const ou = `entre ${p.entre.bas.nom} et ${p.entre.haut.nom}, à ${dec(auDixieme(p.entre.distance), 1)} points`;
-        const coin = "Non : un coin vide n'est pas une place libre. Personne ne s'y tient parce que personne n'y gagne : l'étape suivante le chiffre.";
+        const coin = "Non : un coin vide n'est pas l'espace libre entre deux voisines. Il faut le chiffrer avant d'y aller : l'étape suivante le fait.";
         return [
           ...k.carte.voisines.map((v) => ({
             texte: `Entre ${v.bas.nom} et ${v.haut.nom}`,
@@ -677,8 +694,9 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
         return [
           `Au prix haut, personne n'achète une qualité moyenne : ${qte(a.ventes)} ventes, ${pct(a.part)} du marché, et ${eur(a.resultat)}. Ce coin est vide parce qu'il n'y a pas de clients.`,
           b.resultat < k.nova.resultat
-            ? `À l'inverse, la gamme soignée au prix d'aujourd'hui ${b.refusees > 0 ? `attire plus de clients que la ligne n'en sert (${qte(b.refusees)} perdus)` : "attire beaucoup de clients"}, et chaque enceinte ne laisse que ${eur(b.margeUnitaire)} : ${eur(b.resultat)}, moins qu'aujourd'hui (${eur(k.nova.resultat)}). Ce coin est vide parce qu'il ne paie pas. Une place libre vaut quelque chose quand des clients l'attendent et qu'une offre y paie ses coûts.`
-            : `À l'inverse, la gamme soignée au prix d'aujourd'hui attire beaucoup de clients${b.refusees > 0 ? ` (${qte(b.refusees)} que la ligne ne sert pas)` : ""} : chaque enceinte ne laisse que ${eur(b.margeUnitaire)}, mais le volume fait ${eur(b.resultat)}, plus qu'aujourd'hui (${eur(k.nova.resultat)}). Ce coin paie, mais il ne lit pas ${k.f.entreprise} en différenciation : la qualité y est offerte, pas vendue. Une place libre vaut quelque chose quand des clients l'attendent et qu'une offre y paie ses coûts.`,
+            ? `À l'inverse, la gamme soignée au prix d'aujourd'hui ${b.refusees > 0 ? `attire plus de clients que la ligne n'en sert (${qte(b.refusees)} perdus)` : "attire beaucoup de clients"}, mais chaque enceinte ne laisse que ${eur(b.margeUnitaire)} : ${eur(b.resultat)}, moins qu'aujourd'hui (${eur(k.nova.resultat)}). Ce coin est vide faute de marge.`
+            : `À l'inverse, la gamme soignée au prix d'aujourd'hui attire beaucoup de clients${b.refusees > 0 ? ` (${qte(b.refusees)} que la ligne ne sert pas)` : `, et la ligne les sert (${qte(b.ventes)} enceintes)`} : chaque enceinte ne laisse que ${eur(b.margeUnitaire)}, mais le volume fait ${eur(b.resultat)}, plus qu'aujourd'hui (${eur(k.nova.resultat)}). Ce coin-là est une place à prendre, à deux conditions : que la ligne suive le volume, et que les concurrents ne bougent pas (une baisse de prix ${dE(k.soundbox.nom)} ou ${dE(k.auris.nom)} la refermerait).`,
+          `Mais à ${eur(b.offre.prix)}, la qualité y est offerte, pas vendue. La même gamme se vend mieux plus cher : à ${eur(k.coinGenereuxAuMieux.prix)}, son meilleur prix, ${k.f.entreprise} gagnerait ${eur(k.coinGenereuxAuMieux.resultat)}, et ${k.auris.nom} resterait ${k.coinGenereuxAuMieux.resultat > k.aurisAuMieux.resultat ? "derrière" : "devant"} (${eur(k.aurisAuMieux.resultat)}). ${k.prixQuiBatAuris === null ? `Aucun prix ne la fait passer devant ${k.auris.nom}.` : `Pour passer devant ${k.auris.nom}, il faudrait vendre à ${eur(k.prixQuiBatAuris)} ou moins, et gagner moins.`} Une place vaut quelque chose quand des clients l'attendent et qu'une offre y paie ses coûts ; on la prend au prix qui la paie le mieux, pas au plus bas.`,
         ];
       },
     },
@@ -836,7 +854,7 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
         const k = strategiesDesConcurrents(c);
         return [
           `Sur le marché ${dE(k.f.entreprise)}, ${k.soundbox.nom} suit ${NOMS_DES_STRATEGIES_LUES[k.soundbox.lecture]}, ${k.auris.nom} ${NOMS_DES_STRATEGIES_LUES[k.auris.lecture]}, et ${k.f.entreprise} ${NOMS_DES_STRATEGIES_LUES[k.nova.lecture]}. ${k.meilleure.nom} a le meilleur résultat de l'année, avec la plus petite part du marché.`,
-          "Lire la stratégie d'un concurrent, c'est le placer sur une carte prix / qualité, puis vérifier dans ses budgets et ses comptes qu'il paie ce qu'il annonce. L'espace libre se mesure sur les deux axes : il a un prix et une qualité, et on ne l'atteint qu'en y amenant les deux. Un coin vide n'est pas une place libre : il l'est souvent parce que personne n'y gagne.",
+          "Lire la stratégie d'un concurrent, c'est le placer sur une carte prix / qualité, puis vérifier dans ses budgets et ses comptes qu'il paie ce qu'il annonce. L'espace libre se mesure sur les deux axes : il a un prix et une qualité, et on ne l'atteint qu'en y amenant les deux. Un coin vide se chiffre avant de s'y installer : vide faute de clients, il ne vaut rien ; ici, la qualité haute à petit prix paie, tant que la ligne suit et que les concurrents ne bougent pas, et elle paie mieux vendue plus cher.",
           "Au niveau de l'examen, vous savez calculer les indices d'une carte et lire la stratégie de chaque enseigne, mesurer l'espace libre sur les deux indices, refaire la carte d'une autre année, et dire pourquoi la part de marché ne fait pas le résultat.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
         ];

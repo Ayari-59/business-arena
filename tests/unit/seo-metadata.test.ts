@@ -48,8 +48,11 @@ describe("métadonnées communes (layout)", () => {
     const m = await meta("/layout");
     expect(String(m.metadataBase)).toBe("https://www.business-arena.fr/");
     expect((m.title as { template: string }).template).toBe("%s · Business Arena");
-    expect((m.title as { default: string }).default).toContain("Simulation d'entreprise");
-    expect((m.title as { default: string }).default).toContain("BTS");
+    // Le cours et l'arène, du lycée au supérieur (audit produit du 28 octobre 2026, P1-2) :
+    // le titre ne disait que « Simulation d'entreprise pour BTS, DCG et écoles ».
+    expect((m.title as { default: string }).default).toContain("Cours et simulation de gestion");
+    expect((m.title as { default: string }).default).toContain("du lycée au supérieur");
+    expect(m.description).toMatch(/cours de gestion/i);
     expect(m.description).toMatch(/jeu d'entreprise/i);
     expect(m.description).toContain("sans compte élève");
     expect(m.openGraph).toMatchObject({ siteName: "Business Arena", locale: "fr_FR", type: "website" });
@@ -73,6 +76,13 @@ describe("métadonnées communes (layout)", () => {
     expect(og.size).toEqual({ width: 1200, height: 630 });
     expect(og.contentType).toBe("image/png");
     expect(og.alt).toContain("Business Arena");
+    // L'image dit le cours, avec les nombres des registres, et plus « Découverte » (quatre sens).
+    const source = readFileSync(join(APP, "opengraph-image.tsx"), "utf8");
+    expect(source).toContain("LIGNE_DE_PARTAGE");
+    expect(source).not.toMatch(/Découverte gratuite/);
+    const { LIGNE_DE_PARTAGE } = await import("@/config/seo");
+    const { CHAPITRES } = await import("@/config/cours/registre");
+    expect(LIGNE_DE_PARTAGE).toContain(`${CHAPITRES.length} chapitres de cours`);
     const tw = (await import("@/app/twitter-image")) as { size: { width: number } };
     expect(tw.size.width).toBe(1200);
   });
@@ -80,13 +90,13 @@ describe("métadonnées communes (layout)", () => {
 
 describe("pages publiques : titre distinct, description, canonique", () => {
   const PUBLIQUES: [string, string, string][] = [
-    ["/page", "Business Arena · Simulation d'entreprise pour BTS, DCG et écoles", "/"],
+    ["/page", "Business Arena · Cours et simulation de gestion, du lycée au supérieur", "/"],
     ["/jouer/page", "Lancer une partie", "/jouer"],
     ["/entreprises/page", "entreprises jouables", "/entreprises"],
     ["/notions/page", "Fiches notions de gestion", "/notions"],
     ["/guide/page", "Règles du jeu", "/guide"],
     ["/animations/page", "Ateliers", "/animations"],
-    ["/parcours/page", "Parcours par diplôme", "/parcours"],
+    ["/parcours/page", "Référentiels par diplôme", "/parcours"],
     ["/fonctionnalites/page", "Fonctionnalités", "/fonctionnalites"],
     ["/orientation/page", "Choisir sa simulation", "/orientation"],
     ["/mentions-legales/page", "Mentions légales", "/mentions-legales"],
@@ -108,7 +118,7 @@ describe("pages publiques : titre distinct, description, canonique", () => {
 
   it("la home met le titre entier, hors gabarit, avec la description enrichie", async () => {
     const m = await meta("/page");
-    expect((m.title as { absolute: string }).absolute).toContain("BTS, DCG");
+    expect((m.title as { absolute: string }).absolute).toContain("Cours et simulation");
     expect(m.description).toContain("sans compte élève");
     // Les nombres que l'accueil affiche, comptés dans les registres : plus de
     // « 139 situations, 20 modèles d'analyse », invérifiables depuis le site.
@@ -117,6 +127,10 @@ describe("pages publiques : titre distinct, description, canonique", () => {
     expect(m.description).toContain(
       `${SCENARIO_CHOICES.length} entreprises à piloter et ${NOMBRE_D_EPISODES} épisodes manager`,
     );
+    // Le cours, compté dans ses registres comme le reste.
+    const { CHAPITRES } = await import("@/config/cours/registre");
+    const { SITUATIONS } = await import("@/config/cours/situations");
+    expect(m.description).toContain(`${CHAPITRES.length} chapitres guidés avec leur laboratoire, ${SITUATIONS.length} cas pratiques`);
     expect(m.description).not.toMatch(/situations|modèles d'analyse/);
   });
 

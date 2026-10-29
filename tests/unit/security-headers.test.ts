@@ -15,10 +15,9 @@ import {
  * Permissions-Policy absents ; X-Powered-By: Next.js ; HSTS sans
  * includeSubDomains ni preload.
  *
- * Tous ces en-têtes — CSP comprise — sont STATIQUES et posés par next.config
- * sur « /(.*) ». On a renoncé au nonce par requête (qui imposait un middleware
- * et un rendu dynamique de tout le site) : la CSP reste active mais tolère les
- * scripts inline.
+ * Ces en-têtes sont STATIQUES et posés par next.config. La CSP statique (qui
+ * tolère les scripts inline) couvre les pages publiques, prérendues ; les zones
+ * déjà dynamiques reçoivent du proxy une CSP à nonce (tests/unit/csp-a-nonce.test.ts).
  */
 
 const STATIQUES = [
@@ -59,15 +58,23 @@ describe("configuration Next", () => {
     for (const attendu of STATIQUES) expect(cles).toContain(attendu);
   });
 
-  it("pose la CSP en statique sur toutes les routes (plus de nonce, plus de proxy)", async () => {
+  it("pose la CSP statique sur les pages publiques", async () => {
     const globale = await regleGlobale();
     const cles = globale.headers.map((h) => h.key);
     expect(cles).toContain("Content-Security-Policy");
     expect(cles).not.toContain("Content-Security-Policy-Report-Only");
   });
 
-  it("toutes les pages, /lti/* comprises, gardent l'iframe interdite et la CSP du site", async () => {
-    for (const chemin of ["/", "/teacher", "/lti/activite", "/api/games/x", "/apilti", "/api/ltix"]) {
+  it("les zones à nonce gardent l'iframe interdite, leur CSP vient du proxy (csp-a-nonce.test.ts)", async () => {
+    for (const chemin of ["/teacher", "/admin/lti", "/arena/x"]) {
+      const cles = await entetesDe(chemin);
+      expect(cles, chemin).toContain("X-Frame-Options");
+      expect(cles, chemin).not.toContain("Content-Security-Policy");
+    }
+  });
+
+  it("toutes les pages publiques, /lti/* comprises, gardent l'iframe interdite et la CSP du site", async () => {
+    for (const chemin of ["/", "/notions", "/etablissement/sans-offre", "/lti/activite", "/api/games/x", "/apilti", "/api/ltix"]) {
       const cles = await entetesDe(chemin);
       expect(cles, chemin).toContain("X-Frame-Options");
       expect(cles, chemin).toContain("Content-Security-Policy");
@@ -125,7 +132,7 @@ describe("politique de sécurité du contenu", () => {
     expect(CSP_HEADER_NAME).toBe("Content-Security-Policy");
   });
 
-  it("en production : politique stricte, scripts inline tolérés, jamais d'eval ni de tiers", () => {
+  it("en production (pages publiques) : politique stricte, scripts inline tolérés, jamais d'eval ni de tiers", () => {
     const csp = contentSecurityPolicy("production");
     expect(directive(csp, "default-src")).toBe("default-src 'self'");
     expect(directive(csp, "frame-ancestors")).toBe("frame-ancestors 'none'");

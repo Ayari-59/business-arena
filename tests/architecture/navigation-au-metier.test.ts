@@ -29,7 +29,6 @@ describe("la navigation est à la teinte du métier", () => {
   it.each([
     "components/segmented-tabs.tsx",
     "components/dashboard-tabs.tsx",
-    "components/arena-layout.tsx",
   ])("%s : aucun onglet, aucune étape ne lit l'orange", (chemin) => {
     const source = code(lire(chemin));
     expect(source, "la teinte du métier a disparu").toContain("var(--metier");

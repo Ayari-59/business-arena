@@ -24,6 +24,7 @@ import { bouton } from "@/components/bouton";
 import { Bande } from "@/components/bande";
 import { BandeDeChiffres } from "@/components/bande-de-chiffres";
 import { BandeFinale } from "@/components/bande-finale";
+import { LeCoursEnBref } from "@/components/le-cours-en-bref";
 import { BandeOuverture, PORTE_SECONDAIRE } from "@/components/bande-ouverture";
 import { PiedDePage } from "@/components/pied-de-page";
 import { ParagrapheSurMesure } from "@/components/encart-sur-mesure";
@@ -445,6 +446,9 @@ export default async function EcolesPage() {
               </li>
             ))}
           </ol>
+          {/* Le cours, que cette page taisait (audit produit, P1-2) : un enseignant de DCG ou de
+              DSCG y trouve ses chapitres, sans passer par l'arène. */}
+          <LeCoursEnBref className="mx-auto mt-12 max-w-3xl" />
         </Bande>
 
         <Bande

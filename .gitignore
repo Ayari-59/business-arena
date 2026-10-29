@@ -24,3 +24,6 @@ next-env.d.ts
 docs/referentiels/*
 !docs/referentiels/.gitkeep
 !docs/referentiels/README.md
+
+# Rapport de couverture (npm run test:coverage) : régénéré à chaque passage.
+coverage/

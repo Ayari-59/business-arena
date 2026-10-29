@@ -5,6 +5,8 @@
 [data-theme="clair"] {
   --color-white: #000;
   --color-black: #fff;
+  --filet-interactif: #7d8aa0;
+  --filet-interactif-survol: #5a6880;
   --color-red-50: oklch(25.8% 0.092 26.042);
   --color-red-100: oklch(39.6% 0.141 25.723);
   --color-red-200: oklch(39.6% 0.141 25.723);
@@ -198,7 +200,7 @@
   --color-slate-300: #0e1a2b;
   --color-slate-400: #4b5970;
   --color-slate-500: #5a6880;
-  --color-slate-600: #66748b;
+  --color-slate-600: #5f6d84;
   --color-slate-700: #d3dbe8;
   --color-slate-800: #edf1f7;
   --color-slate-900: #ffffff;
@@ -313,6 +315,8 @@
 [data-theme="clair"] .ardoise {
     --color-white: #fff;
     --color-black: #000;
+    --filet-interactif: #7790b5;
+    --filet-interactif-survol: #c2bcb2;
     --color-red-50: oklch(97.1% 0.013 17.38);
     --color-red-100: oklch(93.6% 0.032 17.717);
     --color-red-200: #ff7070;

@@ -1,4 +1,9 @@
 import { and, desc, eq, gt, sql } from "drizzle-orm";
+import {
+  FENETRE_PAR_DESTINATAIRE_MS,
+  PLAFOND_PAR_DESTINATAIRE_PAR_JOUR,
+  REFUS_PAR_DESTINATAIRE,
+} from "@/config/plafonds-des-formulaires";
 import { consommerUneUtilisation, rendreUneUtilisation } from "@/services/catalogue.service";
 import { euros, type DevisChiffre } from "@/config/catalogue";
 import { db } from "@/db";
@@ -38,6 +43,12 @@ export interface DemandeDeDevis {
   entreprise?: string | null;
   /** Le niveau souhaité (Classe) ; null sinon. */
   niveau?: number | null;
+  /**
+   * Le demandeur ne veut que le cours : l'entreprise et le niveau d'arène étaient facultatifs.
+   * Non enregistré en colonne (une demande Classe sans entreprise le dit déjà) ; il est écrit
+   * dans le récapitulatif des deux courriels.
+   */
+  coursSeul?: boolean;
   email: string;
   message: string;
   ip: string | null;
@@ -67,6 +78,14 @@ export async function deposerDemandeDeDevis(
     if ((compte?.n ?? 0) >= PLAFOND_DEVIS_PAR_IP_PAR_HEURE) {
       return { error: "Trop de demandes depuis cette connexion : réessayez dans une heure." };
     }
+  }
+  // Le plafond par destinataire, d'où que vienne la demande (config/plafonds-des-formulaires.ts).
+  {
+    const [parDestinataire] = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(demandesDeDevis)
+      .where(and(eq(demandesDeDevis.email, email), gt(demandesDeDevis.createdAt, new Date(now - FENETRE_PAR_DESTINATAIRE_MS))));
+    if ((parDestinataire?.n ?? 0) >= PLAFOND_PAR_DESTINATAIRE_PAR_JOUR) return { error: REFUS_PAR_DESTINATAIRE };
   }
   const recente = await db
     .select({ id: demandesDeDevis.id })
@@ -161,6 +180,7 @@ function recapitulatif(d: DemandeDeDevis, montants = true): string[] {
   const l = d.libelles;
   return [
     `Offre : ${l.offre}`,
+    d.coursSeul ? "Intérêt : le cours seul, sans paramétrage de l'arène" : null,
     `${l.organisation} : ${d.organisation.trim()}`,
     d.identifiant.trim() ? `${l.identifiant.replace(/ \(facultatif\)$/, "")} : ${d.identifiant.trim()}` : null,
     d.entreprise ? `Entreprise souhaitée : ${nomDeLEntreprise(d.entreprise)}` : null,

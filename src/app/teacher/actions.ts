@@ -7,7 +7,8 @@ import { z } from "zod";
 import { getSession, setSession } from "@/lib/session";
 import { fermerLaSessionDeLAppareil } from "@/lib/deconnexion";
 import { suiteInterne } from "@/lib/connexion-enseignant";
-import { creerLesCodesManquants } from "@/services/reprise.service";
+import { creerLesCodesManquants, garderLesTentatives } from "@/services/reprise.service";
+import { MAX_INSCRIPTIONS_PAR_ADRESSE } from "@/config/reprise";
 import {
   bumpSessionVersion,
   getTeacherOrgId,
@@ -87,6 +88,15 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide" };
   const { nouveautes, ...compte } = parsed.data;
+  // Le plafond par adresse d'origine (audit, P2-4) : chaque tentative compte, réussie ou
+  // non, puisque chacune peut faire partir un courriel vers l'adresse saisie.
+  const garde = await garderLesTentatives({
+    marqueur: "inscription-enseignant",
+    ip: await adresseOrigine(),
+    maxEchecs: MAX_INSCRIPTIONS_PAR_ADRESSE,
+  });
+  if (garde.refus) return { error: garde.refus };
+  await garde.echec();
   const result = await registerTeacher({ ...compte, nouveautes: nouveautes === "oui" });
   if ("error" in result) return { error: result.error };
   // Le lien de confirmation de l'adresse (migration 0046). Un compte entré par un code

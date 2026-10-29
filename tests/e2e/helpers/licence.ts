@@ -1,4 +1,5 @@
 import { createHmac, randomUUID } from "node:crypto";
+import { cleDerivee } from "@/lib/cles";
 import { Client } from "pg";
 import type { BrowserContext } from "playwright-core";
 import { BASE } from "./browser";
@@ -100,7 +101,7 @@ async function poser(c: Client, orgId: string, perimetre: PerimetreE2E): Promise
   );
 }
 
-/** Le jeton de session enseignant, signé comme le fait `lib/session.ts`. */
+/** Le jeton de session enseignant, signé comme le fait `lib/session.ts` (clé dérivée de la session, lib/cles.ts). */
 export function jetonDeSession(userId: string): string {
   const secret = process.env.AUTH_SECRET;
   if (!secret) throw new Error("AUTH_SECRET manquant : il signe la session de l'enseignant");
@@ -109,7 +110,7 @@ export function jetonDeSession(userId: string): string {
     JSON.stringify({ id: userId, role: "teacher", v: 1, iat: now, exp: now + 24 * 3600 * 1000 }),
     "utf8",
   ).toString("base64url");
-  const signature = createHmac("sha256", secret).update(corps).digest("hex").slice(0, 32);
+  const signature = createHmac("sha256", cleDerivee("session", secret)).update(corps).digest("hex").slice(0, 32);
   return `${corps}.${signature}`;
 }
 

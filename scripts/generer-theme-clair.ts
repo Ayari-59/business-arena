@@ -103,7 +103,8 @@ const SURCHARGES: Record<string, number> = {
  *     1 sur le fond, 5,9 sur un champ ;
  *   · 500, le gris de la maquette, pour les mentions et le trait des champs :
  *     5,3 pour 1 sur le fond ;
- *   · 600, le gris le plus clair qui se lise encore sur une carte (4,7) ;
+ *   · 600, le gris le plus clair qui se lise encore sur la page, la carte et le champ (4,6 au
+ *     moins ; #66748b donnait 4,41 sur la page : audit produit du 28 octobre 2026, 6.1) ;
  *   · 700 et 800, le filet appuyé et le fond d'un champ ;
  *   · 900 et 950, la carte et la page.
  */
@@ -114,7 +115,7 @@ export const PAPIER: Record<number, string> = {
   300: "#0e1a2b",
   400: "#4b5970",
   500: "#5a6880",
-  600: "#66748b",
+  600: "#5f6d84",
   700: "#d3dbe8",
   800: "#edf1f7",
   900: "#ffffff",
@@ -209,9 +210,12 @@ export function genererThemeClair(sourceTailwind: string, sourceGlobals: string)
   }
 
   const clair = (lignes: string[]) =>
-    ["  --color-white: #000;", "  --color-black: #fff;", ...lignes].join("\n");
+    // LE FILET D'UN ÉLÉMENT INTERACTIF (bouton secondaire, champ du laboratoire), à 3 pour 1
+    // au moins sur la page, la carte et le creux (WCAG 1.4.11) : le noir à 25 % donnait 1,8.
+    ["  --color-white: #000;", "  --color-black: #fff;", "  --filet-interactif: #7d8aa0;", "  --filet-interactif-survol: #5a6880;", ...lignes].join("\n");
   const sombre = (lignes: string[]) =>
-    ["  --color-white: #fff;", "  --color-black: #000;", ...lignes].join("\n");
+    // À contre-jour : 3 pour 1 au moins sur le marine, le relevé et slate-800 (le blanc à 25 % : 2,2).
+    ["  --color-white: #fff;", "  --color-black: #000;", "  --filet-interactif: #7790b5;", "  --filet-interactif-survol: #c2bcb2;", ...lignes].join("\n");
 
   // Les blocs à contre-jour sont indentés d'un cran : leurs lignes vivent sous
   // un sélecteur descendant, et la feuille se relit mieux ainsi.

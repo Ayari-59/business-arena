@@ -776,15 +776,21 @@ describe.each([
     const libreDAcces = chapitreParCode(chapitreCode)!.libre;
     const libre = await nouvellePage();
     await aller(libre, `/cours/${chapitreCode}?entreprise=${entreprise}`);
-    if (libreDAcces) {
-      expect(await libre.locator("main").innerText()).not.toContain("aux établissements sous licence");
-    } else {
-      expect(await libre.locator("main").innerText()).toContain(`${motsDuContenu(chapitreCode).reserve} aux établissements sous licence`);
-      // Une sortie : le chapitre libre, les offres, le devis (audit d'octobre 2026).
-      const sorties = await libre.locator("main a").evaluateAll((xs) => xs.map((x) => x.getAttribute("href")));
-      expect(sorties).toEqual(expect.arrayContaining(["/tarifs", "/devis", `/cours/${CHAPITRES.find((c) => c.libre)!.code}`]));
-    }
+    // Lu, puis la page fermée AVANT de vérifier : une assertion qui échoue ne laisse pas
+    // un onglet ouvert. Sur 250 cas, les onglets laissés ouverts finissaient par saturer le
+    // serveur, et la suite restait bloquée sans rien écrire (octobre 2026).
+    const texte = await libre.locator("main").innerText();
+    const sorties = await libre.locator("main a").evaluateAll((xs) => xs.map((x) => x.getAttribute("href") ?? ""));
     await libre.context().close();
+    if (libreDAcces) {
+      expect(texte).not.toContain("aux établissements sous licence");
+    } else {
+      expect(texte).toContain(`${motsDuContenu(chapitreCode).reserve} aux établissements sous licence`);
+      // Une sortie : le chapitre libre, les offres, le devis — celui du cours seul, sans
+      // entreprise ni niveau imposés (audit d'octobre 2026).
+      expect(sorties).toEqual(expect.arrayContaining(["/tarifs", `/cours/${CHAPITRES.find((c) => c.libre)!.code}`]));
+      expect(sorties).toContain("/devis?offre=classe&interet=cours");
+    }
 
     const code = entreprise;
     const cas = casDeLEntreprise(code);

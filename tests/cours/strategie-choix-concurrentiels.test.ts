@@ -737,6 +737,30 @@ describe("lire la stratégie de ses concurrents : la carte, refaite à la main",
     expect(options).toEqual(expect.arrayContaining(["Le coin des prix hauts, à qualité basse", "Le coin du meilleur rapport qualité-prix"]));
   });
 
+  it("les coins vides : le coin cher n'a pas de clients ; le coin généreux est une place à prendre, chiffrée, à ses conditions", () => {
+    const plat = (xs: string[]) => xs.join(" ").replace(/\s/g, " ");
+    const coins = ch.etapes.find((e) => e.id === "les-coins-vides") as EtapeMontants;
+    const t = plat(coins.explication(cas, etatVide));
+    expect(t).toContain("−80 728 €");
+    expect(t).toContain("28 492 €");
+    expect(t).toContain("11 156 €");
+    expect(t).toMatch(/place à prendre/);
+    // Ses conditions : la ligne qui suit, des concurrents qui ne bougent pas ; et le meilleur prix, 67 €, où Auris reste devant.
+    expect(t).toMatch(/ligne/);
+    expect(t).toMatch(/concurrents ne bougent pas/);
+    expect(t).toContain("67 €");
+    expect(t).toContain("63 788 €");
+    expect(t).toContain("65 €");
+    expect(t).not.toMatch(/ne paie pas/);
+    const espace = (ch.etapes.find((e) => e.id === "espace") as EtapeChoix).options(cas, etatVide);
+    const genereux = espace.find((o) => o.texte === "Le coin du meilleur rapport qualité-prix")!;
+    expect(genereux.juste).toBe(false);
+    expect(genereux.retour).not.toMatch(/personne n'y gagne/);
+    const synthese = plat((ch.etapes.find((e) => e.id === "synthese") as EtapeLecture).texte(cas));
+    expect(synthese).not.toMatch(/personne n'y gagne/);
+    expect(synthese).toMatch(/coin vide/);
+  });
+
   it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(ch));
 });
 

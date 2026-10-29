@@ -463,7 +463,7 @@ describe("la carte du marché et l'espace libre", () => {
     expect(c.meilleure.lecture).toBe("differenciation");
   });
 
-  it("les deux coins vides de la carte ne sont pas des places à prendre", () => {
+  it("des deux coins vides, le prix haut n'a pas de clients ; la qualité haute à petit prix paie, et se vend mieux à 67 €", () => {
     // Prix haut, qualité de la gamme actuelle : presque personne n'achète.
     const cher = anneeDuMarche(f, { nova: { prix: 79 } }).nova;
     expect(cher.ventes).toBe(ventesDeNova(Math.pow(59 / 79, 4)));
@@ -476,7 +476,10 @@ describe("la carte du marché et l'espace libre", () => {
     expect(genereux.refusees).toBe(0);
     expect(genereux.margeUnitaire).toBe(16);
     expect(genereux.resultat).toBe(26_168 * 16 - 390_196);
+    expect(genereux.resultat).toBe(28_492);
     expect(genereux.resultat).toBeGreaterThan(11_156);
+    // C'est une place à prendre, concurrents immobiles : la gamme soignée se vend mieux plus cher.
+    expect(meilleurPrix(f, { nova: { gamme: "soignee" } })).toEqual({ prix: 67, resultat: 63_788 });
   });
 });
 

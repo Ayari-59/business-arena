@@ -107,7 +107,7 @@ export default async function PageDuDiplome({
                 href="/parcours"
                 className="underline-offset-4 hover:text-amber-300 hover:underline"
               >
-                Parcours par diplôme
+                Référentiels par diplôme
               </Link>{" "}
               · {formation.sigle}
             </>

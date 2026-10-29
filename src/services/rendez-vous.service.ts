@@ -1,4 +1,9 @@
 import { and, desc, eq, gt, gte, sql } from "drizzle-orm";
+import {
+  FENETRE_PAR_DESTINATAIRE_MS,
+  PLAFOND_PAR_DESTINATAIRE_PAR_JOUR,
+  REFUS_PAR_DESTINATAIRE,
+} from "@/config/plafonds-des-formulaires";
 import { db } from "@/db";
 import { phoneAppointments } from "@/db/schema";
 import {
@@ -163,6 +168,14 @@ export async function reserverRendezVous(
     if ((compte?.n ?? 0) >= PLAFOND_PAR_IP_PAR_HEURE) {
       return { error: "Trop de réservations depuis cette connexion : réessayez dans une heure." };
     }
+  }
+  // Le plafond par destinataire, d'où que vienne la demande (config/plafonds-des-formulaires.ts).
+  {
+    const [parDestinataire] = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(phoneAppointments)
+      .where(and(eq(phoneAppointments.email, d.email.trim().toLowerCase()), gt(phoneAppointments.createdAt, new Date(now.getTime() - FENETRE_PAR_DESTINATAIRE_MS))));
+    if ((parDestinataire?.n ?? 0) >= PLAFOND_PAR_DESTINATAIRE_PAR_JOUR) return { error: REFUS_PAR_DESTINATAIRE };
   }
   // Le créneau doit être un de ceux que la page propose EN CE MOMENT : ni
   // passé, ni hors plage, ni pris entre-temps dans l'agenda ou chez nous.

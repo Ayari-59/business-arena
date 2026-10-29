@@ -92,7 +92,8 @@ export default async function ChapitrePage({
             <Link href={LIEN_TARIFS} className={bouton({ variante: "secondaire", taille: "m" })}>
               Voir les offres
             </Link>
-            <Link href="/devis" className={bouton({ variante: "secondaire", taille: "m" })}>
+            {/* Qui vient du cours ne veut peut-être que lui : l'entreprise et le niveau d'arène y sont facultatifs. */}
+            <Link href="/devis?offre=classe&interet=cours" className={bouton({ variante: "secondaire", taille: "m" })}>
               {LIBELLE_DU_DEVIS}
             </Link>
             <Link href="/cours" className={bouton({ variante: "secondaire", taille: "m" })}>
