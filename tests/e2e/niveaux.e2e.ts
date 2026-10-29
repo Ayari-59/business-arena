@@ -83,37 +83,38 @@ describe("/jouer : le tableau des niveaux", () => {
       const p = await ctx.newPage();
       await p.goto(`${BASE}/jouer`, { waitUntil: "networkidle" });
 
-      // Niveau 3 à l'ouverture : l'équipe et les créances ; l'emprunt et l'investissement au suivant.
+      // Niveau 1 à l'ouverture, comme la page le conseille (audit UX du 29 octobre 2026, P1-8) :
+      // le prix, la production et le marketing ; le budget qualité au suivant.
       let t = await lireTableau(p);
-      expect(t.niveau).toBe("3");
-      expect(t.titres).toEqual(["Vous décidez", "Géré pour vous", "Au niveau suivant"]);
-      expect(t.decidez).toContain("Les embauches, la formation et les salaires");
-      expect(t.decidez).toContain("Les créances clients : escompte et affacturage");
-      expect(t.gere).toContain("La banque : le découvert couvre un manque, sans emprunt à décider");
-      expect(t.suivant).toEqual(
-        expect.arrayContaining(["L'emprunt et l'apport des associés", "L'investissement en capacité", "L'assurance"]),
-      );
-      expect(t.pleins).toEqual(["Lancer la partie"]);
-      expect(t.sort).toBe(false);
-      expect(t.deCote).toBe(0);
-      expect(t.comparatifVisible).toBe(largeur === 1280);
-
-      // Il change avec le niveau : 1, puis 2.
-      await choisirLeNiveau(p, 1);
-      t = await lireTableau(p);
       expect(t.niveau).toBe("1");
+      expect(t.titres).toEqual(["Vous décidez", "Géré pour vous", "Au niveau suivant"]);
       expect(t.decidez).toEqual([
         "Le prix, la production et le marketing",
         "Le fournisseur, les commandes exceptionnelles et les études, selon l'entreprise",
       ]);
       expect(t.gere).toContain("La qualité, tenue au niveau du marché");
       expect(t.suivant).toContain("Le budget qualité");
+      expect(t.pleins).toEqual(["Lancer la partie"]);
+      expect(t.sort).toBe(false);
       expect(t.deCote).toBe(0);
+      expect(t.comparatifVisible).toBe(largeur === 1280);
       await capturerLeTableau(p, `jouer-niveau-1-${largeur}`);
+
+      // Il change avec le niveau : 2, puis 3.
       await choisirLeNiveau(p, 2);
       expect((await lireTableau(p)).niveau).toBe("2");
       await capturerLeTableau(p, `jouer-niveau-2-${largeur}`);
+      // Niveau 3 : l'équipe et les créances ; l'emprunt et l'investissement au suivant.
       await choisirLeNiveau(p, 3);
+      t = await lireTableau(p);
+      expect(t.niveau).toBe("3");
+      expect(t.decidez).toContain("Les embauches, la formation et les salaires");
+      expect(t.decidez).toContain("Les créances clients : escompte et affacturage");
+      expect(t.gere).toContain("La banque : le découvert couvre un manque, sans emprunt à décider");
+      expect(t.suivant).toEqual(
+        expect.arrayContaining(["L'emprunt et l'apport des associés", "L'investissement en capacité", "L'assurance"]),
+      );
+      expect(t.deCote).toBe(0);
       await capturerLeTableau(p, `jouer-niveau-3-${largeur}`);
 
       if (largeur === 1280) {

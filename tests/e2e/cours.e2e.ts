@@ -254,6 +254,8 @@ describe("le cours en classe : l'enseignant crée, l'élève rejoint, l'erreur r
     const prof = await ctxProf.newPage();
     await aller(prof, "/teacher/cours");
     await prof.getByLabel("Nom de la classe").fill("BTS CG 1 e2e");
+    // Le parcours est requis (audit de l'offre, octobre 2026) : celui du chapitre pilote.
+    await prof.getByLabel("Parcours du cours").selectOption(chapitre.parcours);
     await prof.getByLabel("Entreprise du cas").selectOption("hotel");
     await prof.getByRole("button", { name: "Créer la classe" }).click();
     await prof.waitForURL(/\/teacher\/cours\/[0-9a-f-]{36}/, { timeout: 60_000 });
@@ -843,6 +845,11 @@ describe.each([
         await page.getByRole("button", { name: "Vérifier", exact: true }).click();
       } else if (etape.type === "choix") {
         await page.getByRole("radio", { name: etape.options(cas, avant).find((o) => o.juste)!.texte }).click();
+      } else if (etape.type === "comparaison") {
+        // La comparaison de deux moments du journal (la suite du chapitre pilote, découpé par
+        // l'audit pédagogique) : l'état à l'étape repère, puis l'état courant.
+        const repere = etatAvant(chapitre, cas, indexDeLEtape(chapitre, etape.avantLEtape));
+        await page.getByRole("radio", { name: etape.options(cas, repere, avant).find((o) => o.juste)!.texte }).click();
       } else if (etape.type === "curseur") {
         const libelle = etape.grandeur?.(cas).libelle ?? "Ventes du mois";
         await page.getByLabel(`${libelle}, au clavier`, { exact: true }).fill(String(etape.cible(cas).attendu));

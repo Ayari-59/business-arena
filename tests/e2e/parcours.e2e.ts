@@ -410,7 +410,21 @@ describe("parcours enseignant et élève", () => {
       expect(await etat.getAttribute("data-etat-offre")).toBe("expiree");
       expect(await etat.innerText()).toContain("terminée le");
       await ouvrirLaCreation(prof);
-      expect(await prof.locator("[data-classe-sans-licence]").isVisible()).toBe(true);
+      // Le pourquoi se lit AVANT la saisie (audit UX, P0-1) : la règle et la porte vers les
+      // offres, au-dessus d'un formulaire grisé, qu'on ne remplit plus pour rien.
+      const avis = prof.locator("[data-classe-sans-licence]");
+      expect(await avis.isVisible()).toBe(true);
+      expect(await avis.innerText()).toContain(REFUS_DE_LA_CLASSE);
+      expect(await avis.getByRole("link", { name: "Voir les offres" }).getAttribute("href")).toBe("/tarifs");
+      expect(await prof.locator("[data-formulaire-sans-offre]").count()).toBeGreaterThan(0);
+      expect(await prof.locator('select[name="scenarioCode"]').isDisabled()).toBe(true);
+      expect(await prof.getByRole("button", { name: /Créer la partie/ }).isDisabled()).toBe(true);
+
+      // Et le serveur refuse quand même, à l'écran : un formulaire dégrisé à la main
+      // (ou une page restée ouverte depuis la fin de la licence) reçoit le même refus.
+      await prof.evaluate(() =>
+        document.querySelectorAll("[data-formulaire-sans-offre]").forEach((f) => f.removeAttribute("disabled")),
+      );
       await prof.selectOption('select[name="scenarioCode"]', "nova");
       await prof.getByRole("button", { name: /Créer la partie/ }).click();
       // On attend le BANDEAU, pas l'URL : la page était déjà /teacher avant le
