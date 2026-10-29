@@ -281,6 +281,28 @@ export default async function ClasseDuCoursPage({
           </div>
         )}
 
+        {vue.objectifs.length > 0 && progressions.length > 0 && (
+          <>
+            <Rubrique note={compter(vue.finis, "élève a fini", "élèves ont fini")}>Objectif par objectif</Rubrique>
+            <p className="-mt-4 text-sm text-slate-400">
+              Parmi les élèves qui ont fini le chapitre. Acquis : toutes les étapes de l&apos;objectif réussies du premier coup. En cours :
+              réussies, au moins une après une erreur. À revoir : au moins une étape réussie avec la correction, ou pas réussie.
+            </p>
+            <ul className="grid gap-2" data-objectifs-de-la-classe="">
+              {vue.objectifs.map((o, k) => (
+                <li key={o.objectif} className="carte grid gap-1 px-3 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline sm:gap-4 sm:px-4" data-objectif={k}>
+                  <span className="text-slate-100">{o.objectif}</span>
+                  <span className="flex flex-wrap gap-x-3 text-sm tabular-nums text-slate-300">
+                    <span data-acquis={o.acquis}>{o.acquis} acquis</span>
+                    <span data-en-cours={o.enCours}>{o.enCours} en cours</span>
+                    <span data-a-revoir={o.aRevoir}>{o.aRevoir} à revoir</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+
         <Rubrique>Ce qui bloque, étape par étape</Rubrique>
         <p className="-mt-4 text-sm text-slate-400">
           Au vidéoprojecteur, une étape et les réponses de la classe, en direct et sans nom d&apos;élève :{" "}

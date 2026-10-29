@@ -146,6 +146,7 @@ export const FINANCER_L_ENTREPRISE: Chapitre = {
     },
     {
       id: "caf",
+      objectifs: [0],
       type: "montants",
       titre: "La capacité d'autofinancement",
       notions: ["frng", "income_statement"],
@@ -168,6 +169,7 @@ export const FINANCER_L_ENTREPRISE: Chapitre = {
     },
     {
       id: "suffit",
+      objectifs: [1],
       type: "choix",
       titre: "L'autofinancement suffit-il ?",
       notions: ["frng"],
@@ -203,6 +205,7 @@ export const FINANCER_L_ENTREPRISE: Chapitre = {
     },
     {
       id: "emprunt",
+      objectifs: [2],
       type: "montants",
       titre: "Ce que coûterait un emprunt",
       notions: ["frng", "balance_sheet"],
@@ -227,6 +230,7 @@ export const FINANCER_L_ENTREPRISE: Chapitre = {
     },
     {
       id: "choisir",
+      objectifs: [3],
       type: "choix",
       titre: "Choisir le financement",
       notions: ["frng", "balance_sheet"],
@@ -268,6 +272,7 @@ export const FINANCER_L_ENTREPRISE: Chapitre = {
     },
     {
       id: "jusqu-ou-s-autofinancer",
+      objectifs: [1],
       type: "curseur",
       titre: "Jusqu'où s'autofinancer",
       notions: ["frng"],
@@ -306,6 +311,7 @@ export const FINANCER_L_ENTREPRISE: Chapitre = {
     },
     {
       id: "le-laboratoire-du-financement",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire du financement",
       notions: ["frng", "balance_sheet"],

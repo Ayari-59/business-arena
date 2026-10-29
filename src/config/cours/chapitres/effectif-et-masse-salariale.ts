@@ -105,6 +105,7 @@ export const EFFECTIF_ET_MASSE_SALARIALE: Chapitre = {
     },
     {
       id: "masse",
+      objectifs: [0],
       type: "montants",
       titre: "La masse salariale",
       notions: ["payroll"],
@@ -125,6 +126,7 @@ export const EFFECTIF_ET_MASSE_SALARIALE: Chapitre = {
     },
     {
       id: "poids",
+      objectifs: [1],
       type: "montants",
       titre: "Ce que pèse le personnel",
       notions: ["payroll", "productivity"],
@@ -148,6 +150,7 @@ export const EFFECTIF_ET_MASSE_SALARIALE: Chapitre = {
     },
     {
       id: "embauche",
+      objectifs: [3],
       type: "choix",
       titre: "Un salarié de plus",
       notions: ["payroll", "fixed_costs"],
@@ -175,6 +178,7 @@ export const EFFECTIF_ET_MASSE_SALARIALE: Chapitre = {
     },
     {
       id: "les-ventes-d-un-salarie-de-plus",
+      objectifs: [2],
       type: "curseur",
       titre: "Les ventes d'un salarié de plus",
       notions: ["payroll", "productivity"],
@@ -211,6 +215,7 @@ export const EFFECTIF_ET_MASSE_SALARIALE: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-hausse-generale",
+      objectifs: [1],
       type: "simulation",
       titre: "Une hausse générale sous le plafond",
       notions: ["payroll"],

@@ -108,6 +108,7 @@ export const MARCHE_ET_PART_DE_MARCHE: Chapitre = {
     },
     {
       id: "parts",
+      objectifs: [0, 1],
       type: "montants",
       titre: "La part de marché",
       notions: ["demand_market_share"],
@@ -136,6 +137,7 @@ export const MARCHE_ET_PART_DE_MARCHE: Chapitre = {
     },
     {
       id: "position",
+      objectifs: [2],
       type: "choix",
       titre: "Leader, challenger ou suiveur",
       notions: ["demand_market_share"],
@@ -160,6 +162,7 @@ export const MARCHE_ET_PART_DE_MARCHE: Chapitre = {
     },
     {
       id: "prix",
+      objectifs: [3],
       type: "choix",
       titre: "Le prix des concurrents",
       notions: ["demand_market_share", "price_elasticity"],
@@ -198,6 +201,7 @@ export const MARCHE_ET_PART_DE_MARCHE: Chapitre = {
     },
     {
       id: "evolution",
+      objectifs: [4],
       type: "montants",
       titre: "Une part de marché qui bouge",
       notions: ["demand_market_share", "seasonality"],
@@ -234,6 +238,7 @@ export const MARCHE_ET_PART_DE_MARCHE: Chapitre = {
     },
     {
       id: "le-seuil-d-alerte",
+      objectifs: [4],
       type: "curseur",
       titre: "Le seuil d'alerte du tableau de bord",
       notions: ["demand_market_share", "dashboard"],
@@ -273,6 +278,7 @@ export const MARCHE_ET_PART_DE_MARCHE: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-part",
+      objectifs: [4],
       type: "simulation",
       titre: "Le laboratoire de la part de marché",
       notions: ["demand_market_share"],

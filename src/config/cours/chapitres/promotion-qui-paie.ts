@@ -278,6 +278,7 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
     },
     {
       id: "marge-unitaire",
+      objectifs: [0],
       type: "montants",
       titre: "Ce que la remise retire",
       notions: ["markdown", "contribution_margin"],
@@ -310,6 +311,7 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
     },
     {
       id: "predire-le-volume",
+      objectifs: [1],
       type: "choix",
       titre: "Pariez sur le volume nécessaire",
       notions: ["markdown", "contribution_margin"],
@@ -330,6 +332,7 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
     },
     {
       id: "combien-vendre",
+      objectifs: [1],
       type: "curseur",
       titre: "Faites vendre la promotion",
       notions: ["markdown", "contribution_margin"],
@@ -375,6 +378,7 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
     },
     {
       id: "volume-necessaire",
+      objectifs: [1],
       type: "montants",
       titre: "Le volume nécessaire",
       notions: ["markdown", "contribution_margin"],
@@ -408,6 +412,7 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
     },
     {
       id: "predire-le-rayon",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur le rayon",
       notions: ["markdown", "stock", "capacity"],
@@ -427,6 +432,7 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-promotion",
+      objectifs: [2, 3],
       type: "simulation",
       titre: "Le laboratoire de la promotion",
       notions: ["markdown", "price_elasticity", "stock", "capacity"],
@@ -493,6 +499,7 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
     },
     {
       id: "la-promotion-jouee",
+      objectifs: [2],
       type: "montants",
       titre: "La promotion prévue, chiffrée",
       notions: ["markdown", "price_elasticity", "stock"],
@@ -519,6 +526,7 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
     },
     {
       id: "pourquoi",
+      objectifs: [2],
       type: "choix",
       titre: "Pourquoi elle ne paie pas",
       notions: ["markdown", "stock", "capacity"],
@@ -534,6 +542,7 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
     },
     {
       id: "la-meilleure-remise",
+      objectifs: [3],
       type: "montants",
       titre: "Variante : le rayon plein",
       notions: ["markdown", "price_elasticity", "contribution_margin"],
@@ -565,6 +574,7 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
     },
     {
       id: "le-prix-plancher-du-rayon",
+      objectifs: [3],
       type: "curseur",
       titre: "Le prix le plus bas avec le rayon prévu",
       notions: ["markdown", "price_floor", "stock"],
@@ -612,6 +622,7 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [3],
       type: "montants",
       titre: "La remise la plus forte, à rebours",
       notions: ["markdown", "price_floor", "contribution_margin"],
@@ -641,6 +652,7 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
     },
     {
       id: "ce-que-le-calcul-ne-voit-pas",
+      objectifs: [4],
       type: "choix",
       titre: "Ce que le calcul ne voit pas",
       notions: ["markdown", "cannibalization"],
@@ -676,6 +688,7 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
     },
     {
       id: "avant-de-lancer",
+      objectifs: [4],
       type: "choix",
       titre: "Avant de lancer une promotion",
       notions: ["markdown", "stock"],

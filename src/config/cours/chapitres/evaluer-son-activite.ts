@@ -149,6 +149,7 @@ export const EVALUER_SON_ACTIVITE: Chapitre = {
     },
     {
       id: "evolutions",
+      objectifs: [1],
       type: "montants",
       titre: "L'évolution du chiffre d'affaires et des ventes",
       notions: ["revenue", "dashboard"],
@@ -170,6 +171,7 @@ export const EVALUER_SON_ACTIVITE: Chapitre = {
     },
     {
       id: "le-prix-moyen",
+      objectifs: [2],
       type: "choix",
       titre: "Ce que disent les deux pourcentages",
       notions: ["revenue"],
@@ -189,6 +191,7 @@ export const EVALUER_SON_ACTIVITE: Chapitre = {
     },
     {
       id: "le-meilleur-mois",
+      objectifs: [0],
       type: "choix",
       titre: "Le meilleur mois",
       notions: ["income_statement", "seasonality"],
@@ -208,6 +211,7 @@ export const EVALUER_SON_ACTIVITE: Chapitre = {
     },
     {
       id: "resultat-et-tresorerie",
+      objectifs: [0],
       type: "montants",
       titre: "Le résultat et la trésorerie",
       notions: ["income_statement", "net_treasury"],
@@ -231,6 +235,7 @@ export const EVALUER_SON_ACTIVITE: Chapitre = {
     },
     {
       id: "va-t-elle-bien",
+      objectifs: [3],
       type: "choix",
       titre: "L'activité va-t-elle mieux ?",
       notions: ["dashboard", "revenue", "income_statement"],
@@ -253,6 +258,7 @@ export const EVALUER_SON_ACTIVITE: Chapitre = {
     },
     {
       id: "le-mois-en-perte",
+      objectifs: [0],
       type: "curseur",
       titre: "Sortir le mois le plus faible de la perte",
       notions: ["income_statement", "fixed_costs"],
@@ -285,6 +291,7 @@ export const EVALUER_SON_ACTIVITE: Chapitre = {
     },
     {
       id: "le-laboratoire-du-prix",
+      objectifs: [2],
       type: "simulation",
       titre: "Le laboratoire du prix",
       notions: ["dashboard", "revenue"],

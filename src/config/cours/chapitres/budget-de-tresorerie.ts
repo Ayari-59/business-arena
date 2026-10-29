@@ -324,6 +324,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
     },
     {
       id: "le-mois-de-l-echeance",
+      objectifs: [0],
       type: "choix",
       titre: "Le mois de l'échéance",
       notions: ["payment_terms", "cash_budget"],
@@ -356,6 +357,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
     },
     {
       id: "les-encaissements-d-avril",
+      objectifs: [1],
       type: "montants",
       titre: "Le budget des encaissements",
       notions: ["cash_budget", "payment_terms"],
@@ -396,6 +398,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
     },
     {
       id: "la-tva-a-decaisser",
+      objectifs: [2],
       type: "montants",
       titre: "La TVA à décaisser",
       notions: ["vat_payable", "cash_budget"],
@@ -428,6 +431,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
     },
     {
       id: "les-decaissements-d-avril",
+      objectifs: [1],
       type: "montants",
       titre: "Le budget des décaissements",
       notions: ["cash_budget", "payment_terms"],
@@ -467,6 +471,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
     },
     {
       id: "mars-sans-aide",
+      objectifs: [3],
       type: "montants",
       titre: "Le mois de mars, sans aide",
       notions: ["cash_budget", "loan_schedule", "vat_payable"],
@@ -510,6 +515,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
     },
     {
       id: "le-point-bas",
+      objectifs: [3],
       type: "choix",
       titre: "Le point bas du semestre",
       notions: ["cash_budget", "bfr"],
@@ -551,6 +557,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
     },
     {
       id: "predire-le-delai",
+      objectifs: [4],
       type: "choix",
       titre: "Pariez sur le délai de CampusTech",
       notions: ["payment_terms", "receivables_financing"],
@@ -571,6 +578,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
     },
     {
       id: "le-delai-au-curseur",
+      objectifs: [4],
       type: "curseur",
       titre: "Le délai de CampusTech, au curseur",
       notions: ["payment_terms", "cash_budget"],
@@ -615,6 +623,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
     },
     {
       id: "le-delai-a-rebours",
+      objectifs: [4],
       type: "montants",
       titre: "Le délai le plus long, à rebours",
       notions: ["payment_terms", "receivables_financing"],
@@ -655,6 +664,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
     },
     {
       id: "predire-le-banc",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur le banc de mesure",
       notions: ["cash_budget", "vat_payable"],
@@ -676,6 +686,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
     },
     {
       id: "les-ventes-au-curseur",
+      objectifs: [4],
       type: "curseur",
       titre: "Les ventes qui évitent le découvert",
       notions: ["cash_budget"],
@@ -726,6 +737,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
     },
     {
       id: "le-minimum-a-rebours",
+      objectifs: [4],
       type: "montants",
       titre: "Le minimum de ventes, à rebours",
       notions: ["cash_budget", "vat_payable"],
@@ -767,6 +779,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
     },
     {
       id: "le-laboratoire-de-tresorerie",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire de la trésorerie",
       notions: ["cash_budget", "payment_terms", "receivables_financing"],
@@ -848,6 +861,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
     },
     {
       id: "la-tva-du-banc",
+      objectifs: [2],
       type: "montants",
       titre: "La TVA à décaisser, avec le banc",
       notions: ["vat_payable", "cash_budget"],
@@ -887,6 +901,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
     },
     {
       id: "la-tva-de-campustech",
+      objectifs: [2],
       type: "choix",
       titre: "La TVA d'une vente payée tard",
       notions: ["vat_payable", "payment_terms"],
@@ -918,6 +933,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
     },
     {
       id: "que-faire-du-decouvert",
+      objectifs: [3],
       type: "choix",
       titre: "À quoi sert ce budget",
       notions: ["cash_budget"],

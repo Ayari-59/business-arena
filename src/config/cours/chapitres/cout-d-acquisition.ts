@@ -241,6 +241,7 @@ export const COUT_D_ACQUISITION: Chapitre = {
     },
     {
       id: "cac-par-canal",
+      objectifs: [0],
       type: "montants",
       titre: "Ce que coûte un compte, canal par canal",
       notions: ["customer_acquisition_cost"],
@@ -261,6 +262,7 @@ export const COUT_D_ACQUISITION: Chapitre = {
     },
     {
       id: "le-canal-le-moins-cher",
+      objectifs: [0],
       type: "choix",
       titre: "Le canal le moins cher",
       notions: ["customer_acquisition_cost", "conversion_rate"],
@@ -291,6 +293,7 @@ export const COUT_D_ACQUISITION: Chapitre = {
     },
     {
       id: "l-entonnoir",
+      objectifs: [1],
       type: "montants",
       titre: "L'entonnoir et le taux de transformation des devis",
       notions: ["conversion_rate", "customer_acquisition_cost"],
@@ -321,6 +324,7 @@ export const COUT_D_ACQUISITION: Chapitre = {
     },
     {
       id: "predire-les-rendez-vous",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur les rendez-vous",
       notions: ["customer_acquisition_cost", "conversion_rate"],
@@ -342,6 +346,7 @@ export const COUT_D_ACQUISITION: Chapitre = {
     },
     {
       id: "les-rendez-vous-au-curseur",
+      objectifs: [2],
       type: "curseur",
       titre: "Les rendez-vous de la prospection",
       notions: ["customer_acquisition_cost", "conversion_rate"],
@@ -386,6 +391,7 @@ export const COUT_D_ACQUISITION: Chapitre = {
     },
     {
       id: "les-rendez-vous-qu-il-faut",
+      objectifs: [2],
       type: "montants",
       titre: "Les rendez-vous qu'il faut",
       notions: ["conversion_rate", "customer_acquisition_cost"],
@@ -420,6 +426,7 @@ export const COUT_D_ACQUISITION: Chapitre = {
     },
     {
       id: "les-paliers",
+      objectifs: [3],
       type: "montants",
       titre: "La campagne, palier par palier",
       notions: ["customer_acquisition_cost", "conversion_rate"],
@@ -447,6 +454,7 @@ export const COUT_D_ACQUISITION: Chapitre = {
     },
     {
       id: "predire-le-budget",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur le budget",
       notions: ["customer_acquisition_cost", "customer_lifetime_value"],
@@ -466,6 +474,7 @@ export const COUT_D_ACQUISITION: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-campagne",
+      objectifs: [4],
       type: "simulation",
       titre: "Le laboratoire de la campagne",
       notions: ["customer_acquisition_cost", "customer_lifetime_value", "conversion_rate"],
@@ -563,6 +572,7 @@ export const COUT_D_ACQUISITION: Chapitre = {
     },
     {
       id: "le-compte-en-plus",
+      objectifs: [3],
       type: "montants",
       titre: "Le coût du compte en plus",
       notions: ["customer_acquisition_cost", "customer_lifetime_value"],
@@ -591,6 +601,7 @@ export const COUT_D_ACQUISITION: Chapitre = {
     },
     {
       id: "le-dernier-palier-au-curseur",
+      objectifs: [4],
       type: "curseur",
       titre: "Ce que devrait valoir un compte",
       notions: ["customer_acquisition_cost", "customer_lifetime_value"],
@@ -633,6 +644,7 @@ export const COUT_D_ACQUISITION: Chapitre = {
     },
     {
       id: "mieux-transformer",
+      objectifs: [1],
       type: "montants",
       titre: "Variante : mieux signer les devis",
       notions: ["conversion_rate", "customer_acquisition_cost"],
@@ -671,6 +683,7 @@ export const COUT_D_ACQUISITION: Chapitre = {
     },
     {
       id: "jusqu-ou",
+      objectifs: [4],
       type: "choix",
       titre: "Le budget à proposer",
       notions: ["customer_acquisition_cost", "customer_lifetime_value"],

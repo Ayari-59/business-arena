@@ -284,6 +284,7 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
     },
     {
       id: "l-heure-machine",
+      objectifs: [0],
       type: "montants",
       titre: "Le coût standard de l'heure-machine",
       notions: ["standard_costing", "fixed_costs"],
@@ -307,6 +308,7 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
     },
     {
       id: "activite-preetablie",
+      objectifs: [0],
       type: "montants",
       titre: "L'activité préétablie de la production réelle",
       notions: ["standard_costing"],
@@ -339,6 +341,7 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
     },
     {
       id: "ecart-global",
+      objectifs: [1],
       type: "montants",
       titre: "L'écart global du centre",
       notions: ["cost_variance", "standard_costing"],
@@ -360,6 +363,7 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
     },
     {
       id: "la-bonne-reference",
+      objectifs: [1],
       type: "choix",
       titre: "À quoi comparer le coût réel",
       notions: ["cost_variance", "standard_costing"],
@@ -390,6 +394,7 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
     },
     {
       id: "ecart-sur-budget",
+      objectifs: [1, 2],
       type: "montants",
       titre: "Le budget flexible et l'écart sur budget",
       notions: ["cost_variance", "fixed_costs", "variable_costs"],
@@ -417,6 +422,7 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
     },
     {
       id: "predire-l-activite",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur l'écart sur activité",
       notions: ["fixed_costs", "cost_variance"],
@@ -436,6 +442,7 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
     },
     {
       id: "faire-tourner-le-centre",
+      objectifs: [2],
       type: "curseur",
       titre: "Faites tourner le centre",
       notions: ["fixed_costs", "cost_variance"],
@@ -484,6 +491,7 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
     },
     {
       id: "activite-et-rendement",
+      objectifs: [2],
       type: "montants",
       titre: "L'écart sur activité et l'écart sur rendement",
       notions: ["cost_variance", "fixed_costs", "efficiency_variance"],
@@ -515,6 +523,7 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
     },
     {
       id: "imputation-rationnelle",
+      objectifs: [3],
       type: "montants",
       titre: "L'imputation rationnelle",
       notions: ["fixed_costs", "standard_costing"],
@@ -539,6 +548,7 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
     },
     {
       id: "le-boni-de-suractivite",
+      objectifs: [3],
       type: "choix",
       titre: "Un écart sur activité favorable",
       notions: ["fixed_costs", "cost_variance"],
@@ -569,6 +579,7 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
     },
     {
       id: "jusqu-ou-tourner",
+      objectifs: [4],
       type: "curseur",
       titre: "Jusqu'où le centre pouvait tourner",
       notions: ["efficiency_variance", "fixed_costs"],
@@ -617,6 +628,7 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
     },
     {
       id: "les-heures-perdues",
+      objectifs: [4],
       type: "montants",
       titre: "Une heure de trop pèse deux fois",
       notions: ["efficiency_variance", "fixed_costs"],
@@ -654,6 +666,7 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
     },
     {
       id: "ce-que-coute-une-heure-perdue",
+      objectifs: [4],
       type: "choix",
       titre: "Ce que coûtent les heures perdues",
       notions: ["efficiency_variance", "fixed_costs", "variable_costs"],
@@ -690,6 +703,7 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
     },
     {
       id: "le-laboratoire-du-centre",
+      objectifs: [2],
       type: "simulation",
       titre: "Le laboratoire du centre",
       notions: ["cost_variance", "fixed_costs", "efficiency_variance"],
@@ -758,6 +772,7 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
     },
     {
       id: "en-sous-activite",
+      objectifs: [1, 3],
       type: "montants",
       titre: "Variante : un trimestre en sous-activité",
       notions: ["cost_variance", "fixed_costs", "efficiency_variance"],
@@ -805,6 +820,7 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [4],
       type: "montants",
       titre: "Retrouver le coût réel à rebours",
       notions: ["cost_variance", "fixed_costs"],
@@ -841,6 +857,7 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
     },
     {
       id: "qui-doit-agir",
+      objectifs: [2],
       type: "tri",
       titre: "Qui doit agir",
       notions: ["cost_variance", "efficiency_variance"],

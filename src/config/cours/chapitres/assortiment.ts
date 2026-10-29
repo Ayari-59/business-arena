@@ -255,6 +255,7 @@ export const ASSORTIMENT: Chapitre = {
     },
     {
       id: "marges",
+      objectifs: [0],
       type: "montants",
       titre: "La marge de chaque référence",
       notions: ["contribution_margin", "assortment"],
@@ -276,6 +277,7 @@ export const ASSORTIMENT: Chapitre = {
     },
     {
       id: "chiffre-et-marge",
+      objectifs: [1],
       type: "montants",
       titre: "Le chiffre d'affaires ne dit pas tout",
       notions: ["assortment"],
@@ -303,6 +305,7 @@ export const ASSORTIMENT: Chapitre = {
     },
     {
       id: "predire-le-merinos",
+      objectifs: [1],
       type: "choix",
       titre: "Pariez sur le mérinos",
       notions: ["assortment", "contribution_margin"],
@@ -327,6 +330,7 @@ export const ASSORTIMENT: Chapitre = {
     },
     {
       id: "le-merinos-au-curseur",
+      objectifs: [1],
       type: "curseur",
       titre: "Faites vendre le mérinos",
       notions: ["assortment", "contribution_margin"],
@@ -378,6 +382,7 @@ export const ASSORTIMENT: Chapitre = {
     },
     {
       id: "les-deux-moyennes",
+      objectifs: [2],
       type: "montants",
       titre: "Les deux repères du classement",
       notions: ["assortment", "contribution_margin"],
@@ -399,6 +404,7 @@ export const ASSORTIMENT: Chapitre = {
     },
     {
       id: "familles",
+      objectifs: [2],
       type: "tri",
       titre: "Les familles de l'assortiment",
       notions: ["assortment"],
@@ -422,6 +428,7 @@ export const ASSORTIMENT: Chapitre = {
     },
     {
       id: "la-moyenne-ponderee",
+      objectifs: [2],
       type: "choix",
       titre: "Quelle moyenne pour classer ?",
       notions: ["assortment", "contribution_margin"],
@@ -454,6 +461,7 @@ export const ASSORTIMENT: Chapitre = {
     },
     {
       id: "predire-le-retrait",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur le retrait",
       notions: ["assortment", "cannibalization"],
@@ -476,6 +484,7 @@ export const ASSORTIMENT: Chapitre = {
     },
     {
       id: "la-part-reportee",
+      objectifs: [3],
       type: "curseur",
       titre: "Faites jouer le report",
       notions: ["assortment", "cannibalization"],
@@ -520,6 +529,7 @@ export const ASSORTIMENT: Chapitre = {
     },
     {
       id: "le-retrait-chiffre",
+      objectifs: [3],
       type: "montants",
       titre: "Le retrait, chiffré",
       notions: ["assortment", "cannibalization", "contribution_margin"],
@@ -552,6 +562,7 @@ export const ASSORTIMENT: Chapitre = {
     },
     {
       id: "le-laboratoire-du-retrait",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire du retrait",
       notions: ["assortment", "cannibalization"],
@@ -631,6 +642,7 @@ export const ASSORTIMENT: Chapitre = {
     },
     {
       id: "retirer-l-echarpe",
+      objectifs: [3],
       type: "montants",
       titre: "Variante : retirer l'écharpe",
       notions: ["assortment", "cannibalization"],
@@ -674,6 +686,7 @@ export const ASSORTIMENT: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [4],
       type: "montants",
       titre: "Retrouver le report à rebours",
       notions: ["assortment", "cannibalization"],
@@ -699,6 +712,7 @@ export const ASSORTIMENT: Chapitre = {
     },
     {
       id: "retirer",
+      objectifs: [4],
       type: "choix",
       titre: "Faut-il retirer le bonnet ?",
       notions: ["assortment", "contribution_margin"],

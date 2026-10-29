@@ -141,6 +141,7 @@ export const LIRE_LE_COMPTE_DE_RESULTAT: Chapitre = {
     },
     {
       id: "ranger",
+      objectifs: [1],
       type: "tri",
       titre: "La nature des charges",
       notions: ["income_statement"],
@@ -163,6 +164,7 @@ export const LIRE_LE_COMPTE_DE_RESULTAT: Chapitre = {
     },
     {
       id: "resultat",
+      objectifs: [0, 2],
       type: "montants",
       titre: "Le résultat de l'année",
       notions: ["income_statement", "revenue"],
@@ -190,6 +192,7 @@ export const LIRE_LE_COMPTE_DE_RESULTAT: Chapitre = {
     },
     {
       id: "taux",
+      objectifs: [3],
       type: "montants",
       titre: "Sur cent euros de ventes",
       notions: ["income_statement", "margin_rates"],
@@ -213,6 +216,7 @@ export const LIRE_LE_COMPTE_DE_RESULTAT: Chapitre = {
     },
     {
       id: "activite-ou-financement",
+      objectifs: [4],
       type: "choix",
       titre: "L'activité ou le financement",
       notions: ["income_statement"],
@@ -248,6 +252,7 @@ export const LIRE_LE_COMPTE_DE_RESULTAT: Chapitre = {
     },
     {
       id: "le-seuil-de-l-activite",
+      objectifs: [5],
       type: "curseur",
       titre: "Combien d'enceintes pour gagner de l'argent",
       notions: ["income_statement", "breakeven"],
@@ -295,6 +300,7 @@ export const LIRE_LE_COMPTE_DE_RESULTAT: Chapitre = {
     },
     {
       id: "le-laboratoire-du-compte",
+      objectifs: [5],
       type: "simulation",
       titre: "Le laboratoire du prix et des ventes",
       notions: ["income_statement", "margin_rates"],

@@ -228,6 +228,7 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "le-stock-en-valeur",
+      objectifs: [0],
       type: "montants",
       titre: "Le stock en valeur",
       notions: ["stock"],
@@ -252,6 +253,7 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "stock-moyen",
+      objectifs: [0],
       type: "montants",
       titre: "Le stock moyen et le coût des vendues",
       notions: ["stock", "stock_rotation"],
@@ -279,6 +281,7 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "rotation",
+      objectifs: [0],
       type: "montants",
       titre: "La rotation et la durée de stockage",
       notions: ["stock_rotation"],
@@ -302,6 +305,7 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "lire-la-rotation",
+      objectifs: [0],
       type: "choix",
       titre: "Une rotation qui monte",
       notions: ["stock_rotation"],
@@ -326,6 +330,7 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "couverture",
+      objectifs: [1],
       type: "montants",
       titre: "La couverture du stock",
       notions: ["stock"],
@@ -349,6 +354,7 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "predire-le-point-de-commande",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur le moment de commander",
       notions: ["stock"],
@@ -367,6 +373,7 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "le-point-de-commande-au-curseur",
+      objectifs: [2],
       type: "curseur",
       titre: "Commandez au bon moment",
       notions: ["stock"],
@@ -416,6 +423,7 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "le-point-de-commande",
+      objectifs: [2],
       type: "montants",
       titre: "Le stock de sécurité et le point de commande",
       notions: ["stock"],
@@ -444,6 +452,7 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "le-cardigan",
+      objectifs: [2],
       type: "montants",
       titre: "Le cardigan en rupture",
       notions: ["stock"],
@@ -472,6 +481,7 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "predire-qui-finance",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur qui finance le stock",
       notions: ["payment_terms", "bfr"],
@@ -490,6 +500,7 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "le-credit-au-curseur",
+      objectifs: [3],
       type: "curseur",
       titre: "Le délai qui finance le stock",
       notions: ["payment_terms", "bfr", "stock_rotation"],
@@ -527,6 +538,7 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "qui-finance",
+      objectifs: [3],
       type: "montants",
       titre: "Qui finance le stock ?",
       notions: ["payment_terms", "bfr"],
@@ -566,6 +578,7 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "le-laboratoire-du-reassort",
+      objectifs: [2],
       type: "simulation",
       titre: "Le laboratoire du réassort",
       notions: ["stock", "stock_rotation"],
@@ -650,6 +663,7 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "l-atelier-local",
+      objectifs: [4],
       type: "montants",
       titre: "Variante : l'atelier local, plus proche",
       notions: ["stock", "payment_terms"],
@@ -686,6 +700,7 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "le-delai-court",
+      objectifs: [4],
       type: "choix",
       titre: "Ce que promet un délai court",
       notions: ["stock", "stock_rotation"],
@@ -714,6 +729,7 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [4],
       type: "montants",
       titre: "Retrouver le stock à viser",
       notions: ["stock_rotation", "stock"],

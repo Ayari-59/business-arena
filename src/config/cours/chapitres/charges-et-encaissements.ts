@@ -91,6 +91,7 @@ export const CHARGES_ET_ENCAISSEMENTS: Chapitre = {
     },
     {
       id: "charge-ou-produit",
+      objectifs: [0],
       type: "tri",
       titre: "Charge, produit, ou ni l'un ni l'autre ?",
       notions: ["income_statement"],
@@ -121,6 +122,7 @@ export const CHARGES_ET_ENCAISSEMENTS: Chapitre = {
     },
     {
       id: "entree-ou-sortie",
+      objectifs: [1],
       type: "tri",
       titre: "De l'argent, ce mois-ci ?",
       notions: ["payment_terms"],
@@ -157,6 +159,7 @@ export const CHARGES_ET_ENCAISSEMENTS: Chapitre = {
     },
     {
       id: "le-trimestre",
+      objectifs: [2],
       type: "montants",
       titre: "Le résultat du trimestre",
       notions: ["income_statement"],
@@ -180,6 +183,7 @@ export const CHARGES_ET_ENCAISSEMENTS: Chapitre = {
     },
     {
       id: "resultat-et-banque",
+      objectifs: [3],
       type: "montants",
       titre: "Le résultat et la banque",
       notions: ["income_statement", "net_treasury"],
@@ -205,6 +209,7 @@ export const CHARGES_ET_ENCAISSEMENTS: Chapitre = {
     },
     {
       id: "la-dotation",
+      objectifs: [3],
       type: "choix",
       titre: "Une charge qui ne se paie pas",
       notions: ["depreciation"],
@@ -222,6 +227,7 @@ export const CHARGES_ET_ENCAISSEMENTS: Chapitre = {
     },
     {
       id: "le-seuil-du-trimestre",
+      objectifs: [2],
       type: "curseur",
       titre: "Assez vendre pour ne pas perdre",
       notions: ["income_statement", "fixed_costs"],
@@ -254,6 +260,7 @@ export const CHARGES_ET_ENCAISSEMENTS: Chapitre = {
     },
     {
       id: "le-laboratoire-du-remboursement",
+      objectifs: [4],
       type: "simulation",
       titre: "Le laboratoire du remboursement",
       notions: ["loan_schedule", "net_treasury"],

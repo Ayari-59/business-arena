@@ -460,6 +460,7 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
     },
     {
       id: "apport",
+      objectifs: [0],
       type: "ecriture",
       titre: "Les apports des associés",
       notions: ["balance_sheet"],
@@ -487,6 +488,7 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
     },
     {
       id: "emprunt",
+      objectifs: [0],
       type: "ecriture",
       titre: "L'emprunt bancaire",
       notions: ["loan_schedule"],
@@ -509,6 +511,7 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
     },
     {
       id: "emprunt-charge",
+      objectifs: [1],
       type: "choix",
       titre: "Un emprunt, une charge ?",
       notions: ["loan_schedule"],
@@ -533,6 +536,7 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
     },
     {
       id: "loyer",
+      objectifs: [0],
       type: "ecriture",
       titre: "Le loyer du local",
       notions: ["fixed_costs"],
@@ -559,6 +563,7 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
     },
     {
       id: "immobilisation",
+      objectifs: [1],
       type: "ecriture",
       titre: "L'achat de l'équipement",
       notions: ["depreciation", "vat_payable"],
@@ -588,6 +593,7 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
     },
     {
       id: "immo-resultat",
+      objectifs: [1],
       type: "choix",
       titre: "Un équipement, une charge ?",
       notions: ["depreciation"],
@@ -613,6 +619,7 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
     },
     {
       id: "achat",
+      objectifs: [0],
       type: "ecriture",
       titre: "Un achat à crédit",
       notions: ["payment_terms", "vat_payable"],
@@ -641,6 +648,7 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
     },
     {
       id: "vente-credit",
+      objectifs: [0],
       type: "ecriture",
       titre: "Une vente à un client professionnel",
       notions: ["revenue", "payment_terms", "vat_payable"],
@@ -679,6 +687,7 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
     },
     {
       id: "bulletin",
+      objectifs: [3],
       type: "montants",
       titre: "La paie de janvier",
       notions: ["payroll", "fixed_costs"],
@@ -700,6 +709,7 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
     },
     {
       id: "paie",
+      objectifs: [3],
       type: "ecriture",
       titre: "Les salaires du mois",
       notions: ["payroll", "fixed_costs"],
@@ -732,6 +742,7 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
     },
     {
       id: "versement-salaires",
+      objectifs: [3],
       type: "ecriture",
       titre: "Le versement des salaires",
       notions: ["payroll"],
@@ -745,6 +756,7 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
     },
     {
       id: "vente-comptant",
+      objectifs: [0],
       type: "ecriture",
       titre: "Les ventes au comptant",
       notions: ["revenue", "vat_payable"],
@@ -769,6 +781,7 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
     },
     {
       id: "predire-la-tva",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur la TVA du mois",
       notions: ["vat_payable"],
@@ -791,6 +804,7 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
     },
     {
       id: "la-tva-de-l-equipement",
+      objectifs: [2],
       type: "curseur",
       titre: "Faites varier l'équipement",
       notions: ["vat_payable"],
@@ -834,6 +848,7 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
     },
     {
       id: "tva-nette",
+      objectifs: [2],
       type: "montants",
       titre: "La TVA du mois",
       notions: ["vat_payable"],
@@ -862,6 +877,7 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
     },
     {
       id: "resultat",
+      objectifs: [4],
       type: "montants",
       titre: "Le compte de résultat",
       notions: ["income_statement"],
@@ -887,6 +903,7 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
     },
     {
       id: "bilan",
+      objectifs: [4],
       type: "montants",
       titre: "Le bilan au 31 janvier",
       notions: ["balance_sheet", "net_treasury"],
@@ -994,6 +1011,7 @@ export const DU_RESULTAT_A_LA_TRESORERIE: Chapitre = {
     },
     {
       id: "predire-la-banque",
+      objectifs: [0],
       type: "choix",
       titre: "Pariez sur le résultat",
       notions: ["net_treasury", "income_statement"],
@@ -1012,6 +1030,7 @@ export const DU_RESULTAT_A_LA_TRESORERIE: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-tresorerie",
+      objectifs: [0],
       type: "simulation",
       titre: "Le laboratoire de la trésorerie",
       notions: ["net_treasury", "payment_terms", "income_statement"],
@@ -1071,6 +1090,7 @@ export const DU_RESULTAT_A_LA_TRESORERIE: Chapitre = {
     },
     {
       id: "du-resultat-a-la-banque",
+      objectifs: [0],
       type: "montants",
       titre: "Du résultat à la banque",
       notions: ["net_treasury", "income_statement", "balance_sheet"],
@@ -1123,6 +1143,7 @@ export const DU_RESULTAT_A_LA_TRESORERIE: Chapitre = {
     },
     {
       id: "paiement-fournisseur",
+      objectifs: [1],
       type: "ecriture",
       titre: "Le fournisseur est payé",
       notions: ["payment_terms"],
@@ -1142,6 +1163,7 @@ export const DU_RESULTAT_A_LA_TRESORERIE: Chapitre = {
     },
     {
       id: "paiement-urssaf",
+      objectifs: [1],
       type: "ecriture",
       titre: "L'URSSAF est payée",
       notions: ["payment_terms", "payroll"],
@@ -1161,6 +1183,7 @@ export const DU_RESULTAT_A_LA_TRESORERIE: Chapitre = {
     },
     {
       id: "encaissement-client",
+      objectifs: [1],
       type: "ecriture",
       titre: "Le client paie",
       notions: ["payment_terms"],
@@ -1184,6 +1207,7 @@ export const DU_RESULTAT_A_LA_TRESORERIE: Chapitre = {
     },
     {
       id: "apres-echeances",
+      objectifs: [0],
       type: "comparaison",
       titre: "Ce qui a changé",
       notions: ["net_treasury", "income_statement", "balance_sheet"],
@@ -1210,6 +1234,7 @@ export const DU_RESULTAT_A_LA_TRESORERIE: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [2],
       type: "montants",
       titre: "Retrouver les ventes à rebours",
       notions: ["revenue", "net_treasury", "vat_payable"],
@@ -1238,6 +1263,7 @@ export const DU_RESULTAT_A_LA_TRESORERIE: Chapitre = {
     },
     {
       id: "le-mois-complet",
+      objectifs: [3],
       type: "montants",
       titre: "Le bilan du mois complet",
       notions: ["balance_sheet", "depreciation", "loan_schedule"],
@@ -1278,6 +1304,7 @@ export const DU_RESULTAT_A_LA_TRESORERIE: Chapitre = {
     },
     {
       id: "critique",
+      objectifs: [3],
       type: "choix",
       titre: "Ce résultat est-il celui du mois ?",
       notions: ["income_statement", "depreciation"],

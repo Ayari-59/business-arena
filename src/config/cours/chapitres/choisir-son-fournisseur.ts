@@ -237,6 +237,7 @@ export const CHOISIR_SON_FOURNISSEUR: Chapitre = {
     },
     {
       id: "le-cout-des-composants",
+      objectifs: [0],
       type: "montants",
       titre: "Le coût des composants de l'année",
       notions: ["variable_costs"],
@@ -265,6 +266,7 @@ export const CHOISIR_SON_FOURNISSEUR: Chapitre = {
     },
     {
       id: "les-ruptures",
+      objectifs: [0],
       type: "montants",
       titre: "Ce que coûtent les ruptures",
       notions: ["contribution_margin", "capacity"],
@@ -297,6 +299,7 @@ export const CHOISIR_SON_FOURNISSEUR: Chapitre = {
     },
     {
       id: "predire-la-tresorerie",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur la trésorerie",
       notions: ["net_treasury", "payment_terms"],
@@ -317,6 +320,7 @@ export const CHOISIR_SON_FOURNISSEUR: Chapitre = {
     },
     {
       id: "le-delai-au-curseur",
+      objectifs: [4],
       type: "curseur",
       titre: "Le délai qui rattrape une offre",
       notions: ["payment_terms", "net_treasury", "bfr"],
@@ -362,6 +366,7 @@ export const CHOISIR_SON_FOURNISSEUR: Chapitre = {
     },
     {
       id: "dettes-et-stock",
+      objectifs: [1],
       type: "montants",
       titre: "La dette fournisseurs et le stock au bilan",
       notions: ["payment_terms", "bfr", "stock"],
@@ -414,6 +419,7 @@ export const CHOISIR_SON_FOURNISSEUR: Chapitre = {
     },
     {
       id: "l-ecart-de-tresorerie",
+      objectifs: [2],
       type: "montants",
       titre: "L'écart de trésorerie au 31 décembre",
       notions: ["net_treasury", "bfr"],
@@ -440,6 +446,7 @@ export const CHOISIR_SON_FOURNISSEUR: Chapitre = {
     },
     {
       id: "le-meilleur-resultat",
+      objectifs: [0],
       type: "choix",
       titre: "Le meilleur résultat",
       notions: ["variable_costs", "income_statement"],
@@ -460,6 +467,7 @@ export const CHOISIR_SON_FOURNISSEUR: Chapitre = {
     },
     {
       id: "ce-qui-change-quoi",
+      objectifs: [2],
       type: "tri",
       titre: "Ce qui change le résultat, ce qui change la trésorerie",
       notions: ["income_statement", "net_treasury", "bfr"],
@@ -487,6 +495,7 @@ export const CHOISIR_SON_FOURNISSEUR: Chapitre = {
     },
     {
       id: "predire-l-escompte",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur l'escompte du fournisseur",
       notions: ["payment_terms"],
@@ -508,6 +517,7 @@ export const CHOISIR_SON_FOURNISSEUR: Chapitre = {
     },
     {
       id: "l-escompte-au-curseur",
+      objectifs: [3],
       type: "curseur",
       titre: "Jusqu'où l'escompte paie le découvert",
       notions: ["payment_terms"],
@@ -553,6 +563,7 @@ export const CHOISIR_SON_FOURNISSEUR: Chapitre = {
     },
     {
       id: "l-escompte-en-taux-annuel",
+      objectifs: [3],
       type: "montants",
       titre: "L'escompte en taux annuel",
       notions: ["payment_terms", "net_treasury"],
@@ -595,6 +606,7 @@ export const CHOISIR_SON_FOURNISSEUR: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [4],
       type: "montants",
       titre: "Le délai du curseur, par le calcul",
       notions: ["payment_terms", "bfr"],
@@ -634,6 +646,7 @@ export const CHOISIR_SON_FOURNISSEUR: Chapitre = {
     },
     {
       id: "le-besoin-a-financer",
+      objectifs: [4],
       type: "montants",
       titre: "Le résultat, une fois la trésorerie financée",
       notions: ["bfr", "net_treasury", "income_statement"],
@@ -661,6 +674,7 @@ export const CHOISIR_SON_FOURNISSEUR: Chapitre = {
     },
     {
       id: "europarts-et-la-qualite",
+      objectifs: [0],
       type: "montants",
       titre: "Variante : la qualité comptée",
       notions: ["income_statement", "net_treasury"],
@@ -691,6 +705,7 @@ export const CHOISIR_SON_FOURNISSEUR: Chapitre = {
     },
     {
       id: "le-laboratoire-des-offres",
+      objectifs: [0, 2],
       type: "simulation",
       titre: "Le laboratoire des offres",
       notions: ["payment_terms", "net_treasury", "stock"],
@@ -766,6 +781,7 @@ export const CHOISIR_SON_FOURNISSEUR: Chapitre = {
     },
     {
       id: "resultat-ou-tresorerie",
+      objectifs: [4],
       type: "choix",
       titre: "Votre recommandation",
       notions: ["income_statement", "net_treasury", "bfr"],

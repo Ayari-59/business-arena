@@ -419,6 +419,7 @@ export const ANALYSE_DES_ECARTS: Chapitre = {
     },
     {
       id: "les-deux-resultats",
+      objectifs: [0],
       type: "montants",
       titre: "Les deux résultats",
       notions: ["income_statement", "cost_variance"],
@@ -453,6 +454,7 @@ export const ANALYSE_DES_ECARTS: Chapitre = {
     },
     {
       id: "le-pari",
+      objectifs: [3],
       type: "choix",
       titre: "Un pari sur le prix de la Nomade",
       notions: ["volume_price_variance"],
@@ -472,6 +474,7 @@ export const ANALYSE_DES_ECARTS: Chapitre = {
     },
     {
       id: "le-levier-du-prix",
+      objectifs: [2],
       type: "curseur",
       titre: "Le levier du prix",
       notions: ["volume_price_variance", "income_statement"],
@@ -516,6 +519,7 @@ export const ANALYSE_DES_ECARTS: Chapitre = {
     },
     {
       id: "le-levier-des-kilos",
+      objectifs: [2],
       type: "curseur",
       titre: "Le levier de la matière",
       notions: ["material_price_variance", "efficiency_variance"],
@@ -561,6 +565,7 @@ export const ANALYSE_DES_ECARTS: Chapitre = {
     },
     {
       id: "le-bon-repere",
+      objectifs: [2],
       type: "montants",
       titre: "Le coût préétabli de la production réelle",
       notions: ["standard_costing", "cost_variance"],
@@ -595,6 +600,7 @@ export const ANALYSE_DES_ECARTS: Chapitre = {
     },
     {
       id: "le-budget-de-depart",
+      objectifs: [2],
       type: "choix",
       titre: "Le budget de départ n'est pas le bon repère",
       notions: ["standard_costing", "cost_variance"],
@@ -625,6 +631,7 @@ export const ANALYSE_DES_ECARTS: Chapitre = {
     },
     {
       id: "la-part-des-ventes",
+      objectifs: [2],
       type: "montants",
       titre: "Ce que les ventes font au résultat",
       notions: ["volume_price_variance", "contribution_margin"],
@@ -663,6 +670,7 @@ export const ANALYSE_DES_ECARTS: Chapitre = {
     },
     {
       id: "volume-au-prix",
+      objectifs: [2],
       type: "choix",
       titre: "Le volume se juge à la marge",
       notions: ["volume_price_variance", "contribution_margin"],
@@ -695,6 +703,7 @@ export const ANALYSE_DES_ECARTS: Chapitre = {
     },
     {
       id: "le-signe",
+      objectifs: [1],
       type: "choix",
       titre: "Chaque écart avec son signe",
       notions: ["cost_variance", "income_statement"],
@@ -726,6 +735,7 @@ export const ANALYSE_DES_ECARTS: Chapitre = {
     },
     {
       id: "le-tableau-de-passage",
+      objectifs: [1],
       type: "montants",
       titre: "Le tableau de passage",
       notions: ["cost_variance", "volume_price_variance", "income_statement"],
@@ -763,6 +773,7 @@ export const ANALYSE_DES_ECARTS: Chapitre = {
     },
     {
       id: "se-compensent",
+      objectifs: [3],
       type: "choix",
       titre: "Les écarts qui se compensent",
       notions: ["volume_price_variance", "cost_variance"],
@@ -794,6 +805,7 @@ export const ANALYSE_DES_ECARTS: Chapitre = {
     },
     {
       id: "le-levier-des-heures",
+      objectifs: [2],
       type: "curseur",
       titre: "Le levier des heures-machine",
       notions: ["efficiency_variance", "fixed_costs"],
@@ -840,6 +852,7 @@ export const ANALYSE_DES_ECARTS: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [1],
       type: "montants",
       titre: "Le coût réel du centre, à rebours",
       notions: ["cost_variance", "fixed_costs"],
@@ -878,6 +891,7 @@ export const ANALYSE_DES_ECARTS: Chapitre = {
     },
     {
       id: "l-heure-de-trop",
+      objectifs: [3],
       type: "montants",
       titre: "Ce qu'un écart favorable peut cacher",
       notions: ["efficiency_variance", "fixed_costs"],
@@ -921,6 +935,7 @@ export const ANALYSE_DES_ECARTS: Chapitre = {
     },
     {
       id: "le-laboratoire",
+      objectifs: [1],
       type: "simulation",
       titre: "Le laboratoire : rattraper le budget",
       notions: ["cost_variance", "volume_price_variance", "efficiency_variance"],
@@ -976,6 +991,7 @@ export const ANALYSE_DES_ECARTS: Chapitre = {
     },
     {
       id: "qui-doit-agir",
+      objectifs: [4],
       type: "tri",
       titre: "Qui doit agir",
       notions: ["cost_variance", "material_price_variance", "efficiency_variance"],
@@ -1007,6 +1023,7 @@ export const ANALYSE_DES_ECARTS: Chapitre = {
     },
     {
       id: "la-part-de-chacun",
+      objectifs: [4],
       type: "montants",
       titre: "La part de chaque responsable",
       notions: ["cost_variance", "volume_price_variance"],
@@ -1034,6 +1051,7 @@ export const ANALYSE_DES_ECARTS: Chapitre = {
     },
     {
       id: "la-prime",
+      objectifs: [4],
       type: "choix",
       titre: "Maîtrisable ou non : la prime sur un seul écart",
       notions: ["material_price_variance", "efficiency_variance"],
@@ -1064,6 +1082,7 @@ export const ANALYSE_DES_ECARTS: Chapitre = {
     },
     {
       id: "le-tableau-de-bord",
+      objectifs: [4],
       type: "choix",
       titre: "Ce que le contrôle budgétaire ne dit pas",
       notions: ["dashboard", "standard_costing"],

@@ -126,6 +126,7 @@ export const LIRE_LE_BILAN: Chapitre = {
     },
     {
       id: "ranger",
+      objectifs: [0, 1],
       type: "tri",
       titre: "Actif ou passif",
       notions: ["balance_sheet"],
@@ -144,6 +145,7 @@ export const LIRE_LE_BILAN: Chapitre = {
     },
     {
       id: "equilibre",
+      objectifs: [2],
       type: "montants",
       titre: "L'équilibre du bilan",
       notions: ["balance_sheet"],
@@ -168,6 +170,7 @@ export const LIRE_LE_BILAN: Chapitre = {
     },
     {
       id: "autonomie",
+      objectifs: [3],
       type: "montants",
       titre: "Qui finance l'entreprise",
       notions: ["balance_sheet"],
@@ -191,6 +194,7 @@ export const LIRE_LE_BILAN: Chapitre = {
     },
     {
       id: "tresorerie",
+      objectifs: [4],
       type: "choix",
       titre: "L'argent disponible",
       notions: ["balance_sheet", "net_treasury"],
@@ -226,6 +230,7 @@ export const LIRE_LE_BILAN: Chapitre = {
     },
     {
       id: "jusqu-ou-emprunter",
+      objectifs: [5],
       type: "curseur",
       titre: "Jusqu'où emprunter",
       notions: ["balance_sheet"],
@@ -267,6 +272,7 @@ export const LIRE_LE_BILAN: Chapitre = {
     },
     {
       id: "le-laboratoire-du-bilan",
+      objectifs: [5],
       type: "simulation",
       titre: "Le laboratoire du 31 décembre",
       notions: ["balance_sheet", "net_treasury"],

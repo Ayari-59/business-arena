@@ -126,6 +126,7 @@ export const RECEVOIR_UNE_LIVRAISON: Chapitre = {
     },
     {
       id: "total-commande",
+      objectifs: [0],
       type: "montants",
       titre: "Le total commandé",
       notions: ["stock"],
@@ -139,6 +140,7 @@ export const RECEVOIR_UNE_LIVRAISON: Chapitre = {
     },
     {
       id: "le-document",
+      objectifs: [0],
       type: "choix",
       titre: "Le papier du livreur",
       question: () => "Le livreur arrive avec les cartons. Quel document vous tend-il, pour que vous le signiez ?",
@@ -150,6 +152,7 @@ export const RECEVOIR_UNE_LIVRAISON: Chapitre = {
     },
     {
       id: "la-ligne",
+      objectifs: [1, 2],
       type: "choix",
       titre: "La ligne qui ne va pas",
       notions: ["stock"],
@@ -169,6 +172,7 @@ export const RECEVOIR_UNE_LIVRAISON: Chapitre = {
     },
     {
       id: "l-ecart",
+      objectifs: [2],
       type: "montants",
       titre: "L'écart compté",
       notions: ["stock"],
@@ -188,6 +192,7 @@ export const RECEVOIR_UNE_LIVRAISON: Chapitre = {
     },
     {
       id: "signer",
+      objectifs: [3],
       type: "choix",
       titre: "Signer le bon",
       question: (c) => {
@@ -210,6 +215,7 @@ export const RECEVOIR_UNE_LIVRAISON: Chapitre = {
     },
     {
       id: "stock-apres",
+      objectifs: [4],
       type: "montants",
       titre: "Le stock après la réception",
       notions: ["stock"],
@@ -233,6 +239,7 @@ export const RECEVOIR_UNE_LIVRAISON: Chapitre = {
     },
     {
       id: "en-trop",
+      objectifs: [2, 3],
       type: "choix",
       titre: "Un carton en plus",
       question: (c) => `Une autre fois, un carton de ${qte(ARTICLES_PAR_CARTON)} ${livraison(c).enTrop.pluriel} arrive en plus : il n'est ni sur la commande, ni sur le bon. Que faites-vous ?`,
@@ -251,6 +258,7 @@ export const RECEVOIR_UNE_LIVRAISON: Chapitre = {
     },
     {
       id: "combien-peuvent-manquer",
+      objectifs: [4],
       type: "curseur",
       titre: "Combien de cartons peuvent manquer ?",
       notions: ["stock"],
@@ -293,6 +301,7 @@ export const RECEVOIR_UNE_LIVRAISON: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-saisie",
+      objectifs: [4],
       type: "simulation",
       titre: "Le laboratoire de la saisie",
       notions: ["stock"],

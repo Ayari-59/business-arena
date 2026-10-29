@@ -93,6 +93,7 @@ export const LES_FLUX: Chapitre = {
     },
     {
       id: "partenaires",
+      objectifs: [0, 1],
       type: "tri",
       titre: "Qui est concerné ?",
       notions: ["revenue"],
@@ -127,6 +128,7 @@ export const LES_FLUX: Chapitre = {
     },
     {
       id: "deux-sens",
+      objectifs: [2],
       type: "choix",
       titre: "Une vente, deux flux",
       notions: ["payment_terms"],
@@ -152,6 +154,7 @@ export const LES_FLUX: Chapitre = {
     },
     {
       id: "emprunt",
+      objectifs: [2],
       type: "choix",
       titre: "Et l'emprunt ?",
       notions: ["loan_schedule"],
@@ -168,6 +171,7 @@ export const LES_FLUX: Chapitre = {
     },
     {
       id: "le-trimestre",
+      objectifs: [3],
       type: "montants",
       titre: "Le trimestre vu de la banque",
       notions: ["cash_budget"],
@@ -194,6 +198,7 @@ export const LES_FLUX: Chapitre = {
     },
     {
       id: "ventes-et-encaissements",
+      objectifs: [3],
       type: "choix",
       titre: "Encaisser, est-ce vendre ?",
       notions: ["payment_terms", "revenue"],
@@ -216,6 +221,7 @@ export const LES_FLUX: Chapitre = {
     },
     {
       id: "des-ventes-en-mars",
+      objectifs: [4],
       type: "curseur",
       titre: "Des ventes en plus en mars",
       notions: ["cash_budget", "payment_terms"],
@@ -254,6 +260,7 @@ export const LES_FLUX: Chapitre = {
     },
     {
       id: "le-laboratoire-du-delai",
+      objectifs: [4],
       type: "simulation",
       titre: "Le laboratoire du délai",
       notions: ["payment_terms", "cash_budget"],

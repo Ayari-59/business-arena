@@ -275,6 +275,7 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
     },
     {
       id: "cout-horaire",
+      objectifs: [0],
       type: "montants",
       titre: "Le coût d'une heure",
       notions: ["payroll", "productivity"],
@@ -304,6 +305,7 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
     },
     {
       id: "productivite",
+      objectifs: [0],
       type: "montants",
       titre: "Ce que l'équipe fait vendre",
       notions: ["productivity", "revenue"],
@@ -328,6 +330,7 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
     },
     {
       id: "predire-la-part",
+      objectifs: [0],
       type: "choix",
       titre: "Pariez sur la part du personnel",
       notions: ["fixed_costs", "payroll"],
@@ -348,6 +351,7 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
     },
     {
       id: "le-chiffre-qui-paie-l-equipe",
+      objectifs: [0],
       type: "curseur",
       titre: "Le chiffre d'affaires qui paie l'équipe",
       notions: ["fixed_costs", "payroll"],
@@ -387,6 +391,7 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
     },
     {
       id: "la-part-visee",
+      objectifs: [0],
       type: "montants",
       titre: "Le chiffre d'affaires de la part visée",
       notions: ["fixed_costs", "payroll", "average_basket"],
@@ -416,6 +421,7 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
     },
     {
       id: "le-besoin-du-samedi",
+      objectifs: [1],
       type: "montants",
       titre: "Les heures que l'affluence demande",
       notions: ["capacity", "productivity"],
@@ -462,6 +468,7 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
     },
     {
       id: "predire-le-planning",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur le planning",
       notions: ["capacity"],
@@ -482,6 +489,7 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
     },
     {
       id: "le-laboratoire-du-planning",
+      objectifs: [2],
       type: "simulation",
       titre: "Le laboratoire du planning",
       notions: ["capacity", "payroll", "fixed_costs"],
@@ -552,6 +560,7 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
     },
     {
       id: "le-planning-face-au-besoin",
+      objectifs: [2],
       type: "montants",
       titre: "Le planning face au besoin",
       notions: ["capacity"],
@@ -589,6 +598,7 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
     },
     {
       id: "le-budget-d-heures",
+      objectifs: [3],
       type: "montants",
       titre: "Le budget d'heures",
       notions: ["payroll", "capacity", "fixed_costs"],
@@ -613,6 +623,7 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
     },
     {
       id: "la-braderie",
+      objectifs: [1, 2],
       type: "montants",
       titre: "Variante : la semaine de la braderie",
       notions: ["capacity", "payroll"],
@@ -668,6 +679,7 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
     },
     {
       id: "l-embauche",
+      objectifs: [4],
       type: "montants",
       titre: "Ce qu'une embauche doit rapporter",
       notions: ["contribution_margin", "fixed_costs", "payroll"],
@@ -697,6 +709,7 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
     },
     {
       id: "faut-il-embaucher",
+      objectifs: [4],
       type: "choix",
       titre: "Faut-il embaucher pour le samedi ?",
       notions: ["capacity", "contribution_margin"],

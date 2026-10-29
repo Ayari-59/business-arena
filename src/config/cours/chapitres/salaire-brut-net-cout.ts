@@ -99,6 +99,7 @@ export const SALAIRE_BRUT_NET_COUT: Chapitre = {
     },
     {
       id: "net",
+      objectifs: [0, 1],
       type: "montants",
       titre: "Ce que reçoit le salarié",
       notions: ["payroll"],
@@ -121,6 +122,7 @@ export const SALAIRE_BRUT_NET_COUT: Chapitre = {
     },
     {
       id: "cout",
+      objectifs: [2],
       type: "montants",
       titre: "Ce que paie l'entreprise",
       notions: ["payroll"],
@@ -145,6 +147,7 @@ export const SALAIRE_BRUT_NET_COUT: Chapitre = {
     },
     {
       id: "augmentation",
+      objectifs: [3],
       type: "choix",
       titre: "Une augmentation du net",
       notions: ["payroll", "pay_and_motivation"],
@@ -172,6 +175,7 @@ export const SALAIRE_BRUT_NET_COUT: Chapitre = {
     },
     {
       id: "le-brut-du-poste",
+      objectifs: [2],
       type: "curseur",
       titre: "Le plus haut brut d'un poste",
       notions: ["payroll"],
@@ -200,6 +204,7 @@ export const SALAIRE_BRUT_NET_COUT: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-hausse",
+      objectifs: [3],
       type: "simulation",
       titre: "Une hausse dans l'enveloppe",
       notions: ["payroll", "pay_and_motivation"],

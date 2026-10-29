@@ -267,6 +267,7 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
     },
     {
       id: "cout-de-l-incendie",
+      objectifs: [0],
       type: "montants",
       titre: "Ce que coûte un incendie",
       notions: ["capacity", "contribution_margin"],
@@ -306,6 +307,7 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
     },
     {
       id: "la-panne-selon-le-trimestre",
+      objectifs: [0],
       type: "montants",
       titre: "Variante : la panne, trimestre par trimestre",
       notions: ["capacity", "contribution_margin"],
@@ -351,6 +353,7 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
     },
     {
       id: "esperance",
+      objectifs: [0],
       type: "montants",
       titre: "L'espérance des sinistres",
       notions: ["capacity", "income_statement"],
@@ -376,6 +379,7 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
     },
     {
       id: "predire-la-probabilite",
+      objectifs: [1],
       type: "choix",
       titre: "Pariez sur la probabilité qui paie la prime",
       notions: ["fixed_costs"],
@@ -396,6 +400,7 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
     },
     {
       id: "la-probabilite-qui-rentabilise",
+      objectifs: [1],
       type: "curseur",
       titre: "La probabilité qui rentabilise la prime",
       notions: ["fixed_costs"],
@@ -439,6 +444,7 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
     },
     {
       id: "prime-pure-et-chargement",
+      objectifs: [1],
       type: "montants",
       titre: "La prime pure, le chargement, le coût moyen",
       notions: ["fixed_costs", "income_statement"],
@@ -476,6 +482,7 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
     },
     {
       id: "l-etendue-et-ses-franchises",
+      objectifs: [1],
       type: "montants",
       titre: "L'Étendue et ses franchises",
       notions: ["fixed_costs", "income_statement"],
@@ -510,6 +517,7 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
     },
     {
       id: "predire-l-incendie",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur l'incendie",
       notions: ["balance_sheet", "net_treasury"],
@@ -534,6 +542,7 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
     },
     {
       id: "le-laboratoire-de-l-assurance",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire de l'assurance",
       notions: ["net_treasury", "fixed_costs"],
@@ -614,6 +623,7 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
     },
     {
       id: "ce-que-nova-peut-encaisser",
+      objectifs: [2],
       type: "montants",
       titre: "La capacité d'absorption",
       notions: ["net_treasury", "balance_sheet"],
@@ -657,6 +667,7 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
     },
     {
       id: "l-incendie-et-la-reserve",
+      objectifs: [2],
       type: "montants",
       titre: "L'incendie, même avec la réserve",
       notions: ["net_treasury", "balance_sheet"],
@@ -685,6 +696,7 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
     },
     {
       id: "la-regle",
+      objectifs: [3],
       type: "choix",
       titre: "Quelle formule retenir",
       notions: ["fixed_costs", "net_treasury"],
@@ -732,6 +744,7 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
     },
     {
       id: "l-annee-sans-sinistre",
+      objectifs: [3],
       type: "choix",
       titre: "Une année sans sinistre",
       notions: ["fixed_costs"],
@@ -763,6 +776,7 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
     },
     {
       id: "la-tresorerie-qui-garde-la-basique",
+      objectifs: [2],
       type: "curseur",
       titre: "La trésorerie qui garde la Basique",
       notions: ["net_treasury"],
@@ -806,6 +820,7 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
     },
     {
       id: "croitre-et-s-assurer",
+      objectifs: [4],
       type: "montants",
       titre: "Variante : la ligne automatisée payée comptant",
       notions: ["net_treasury", "fixed_costs"],

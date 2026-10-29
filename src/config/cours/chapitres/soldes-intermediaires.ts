@@ -371,6 +371,7 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
     },
     {
       id: "production-et-consommations",
+      objectifs: [0],
       type: "montants",
       titre: "La production et les consommations",
       notions: ["income_statement", "stock"],
@@ -408,6 +409,7 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
     },
     {
       id: "valeur-ajoutee",
+      objectifs: [0],
       type: "montants",
       titre: "La valeur ajoutée",
       notions: ["income_statement"],
@@ -431,6 +433,7 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
     },
     {
       id: "ebe",
+      objectifs: [1],
       type: "montants",
       titre: "L'excédent brut d'exploitation",
       notions: ["ebitda_margin"],
@@ -454,6 +457,7 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
     },
     {
       id: "predire-la-location",
+      objectifs: [4],
       type: "choix",
       titre: "Pariez sur la ligne louée",
       notions: ["ebitda_margin", "depreciation"],
@@ -474,6 +478,7 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
     },
     {
       id: "louer-la-ligne",
+      objectifs: [4],
       type: "curseur",
       titre: "Louez la ligne",
       notions: ["ebitda_margin", "depreciation"],
@@ -522,6 +527,7 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
     },
     {
       id: "ce-que-mesure-l-ebe",
+      objectifs: [1],
       type: "choix",
       titre: "Ce que mesure l'EBE",
       notions: ["ebitda_margin"],
@@ -547,6 +553,7 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
     },
     {
       id: "jusqu-au-resultat",
+      objectifs: [1],
       type: "montants",
       titre: "Du résultat d'exploitation au résultat net",
       notions: ["income_statement", "depreciation"],
@@ -580,6 +587,7 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
     },
     {
       id: "predire-la-caf",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur la CAF",
       notions: ["depreciation", "income_statement"],
@@ -600,6 +608,7 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
     },
     {
       id: "le-laboratoire-de-l-ebe",
+      objectifs: [4],
       type: "simulation",
       titre: "Le laboratoire de l'EBE",
       notions: ["ebitda_margin", "depreciation", "income_statement"],
@@ -692,6 +701,7 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
     },
     {
       id: "caf",
+      objectifs: [2],
       type: "montants",
       titre: "La capacité d'autofinancement",
       notions: ["income_statement", "net_treasury", "depreciation"],
@@ -725,6 +735,7 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
     },
     {
       id: "caf-et-tresorerie",
+      objectifs: [2],
       type: "choix",
       titre: "La CAF et la trésorerie",
       notions: ["net_treasury", "bfr"],
@@ -755,6 +766,7 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
     },
     {
       id: "partage-de-la-valeur-ajoutee",
+      objectifs: [3],
       type: "montants",
       titre: "Le partage de la valeur ajoutée",
       notions: ["income_statement", "payroll"],
@@ -782,6 +794,7 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
     },
     {
       id: "les-retraitements",
+      objectifs: [3],
       type: "montants",
       titre: "Les retraitements de l'analyste",
       notions: ["ebitda_margin", "depreciation", "payroll"],
@@ -822,6 +835,7 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
     },
     {
       id: "pourquoi-retraiter",
+      objectifs: [3],
       type: "choix",
       titre: "Pourquoi retraiter",
       notions: ["ebitda_margin"],
@@ -852,6 +866,7 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
     },
     {
       id: "emprunter-pour-placer",
+      objectifs: [4],
       type: "montants",
       titre: "Emprunter à 5 % pour placer à 3 %",
       notions: ["loan_schedule", "profitability_vs_return"],
@@ -890,6 +905,7 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
     },
     {
       id: "garder-l-emprunt",
+      objectifs: [4],
       type: "choix",
       titre: "Fallait-il emprunter",
       notions: ["loan_schedule", "profitability_vs_return"],

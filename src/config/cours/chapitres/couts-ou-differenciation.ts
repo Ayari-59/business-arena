@@ -322,6 +322,7 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
     },
     {
       id: "volume",
+      objectifs: [0, 1],
       type: "montants",
       titre: "Ce que chaque stratégie vend",
       notions: ["demand_market_share", "price_elasticity"],
@@ -361,6 +362,7 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
     },
     {
       id: "marge",
+      objectifs: [1],
       type: "montants",
       titre: "Ce que chaque vente rapporte",
       notions: ["contribution_margin", "margin_rates"],
@@ -403,6 +405,7 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
     },
     {
       id: "predire-le-seuil",
+      objectifs: [1],
       type: "choix",
       titre: "Pariez sur le seuil de rentabilité",
       notions: ["breakeven", "contribution_margin"],
@@ -424,6 +427,7 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
     },
     {
       id: "le-seuil-au-curseur",
+      objectifs: [1],
       type: "curseur",
       titre: "Le seuil de la différenciation",
       notions: ["breakeven", "contribution_margin"],
@@ -466,6 +470,7 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
     },
     {
       id: "resultat",
+      objectifs: [1],
       type: "montants",
       titre: "Le coût complet d'une enceinte",
       notions: ["full_unit_cost", "breakeven"],
@@ -513,6 +518,7 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
     },
     {
       id: "ecarts-au-milieu",
+      objectifs: [2],
       type: "montants",
       titre: "Le résultat de l'année",
       notions: ["income_statement", "contribution_margin"],
@@ -550,6 +556,7 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
     },
     {
       id: "laquelle",
+      objectifs: [1],
       type: "choix",
       titre: "Quelle stratégie retenir ?",
       notions: ["demand_market_share", "contribution_margin"],
@@ -580,6 +587,7 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
     },
     {
       id: "milieu",
+      objectifs: [2],
       type: "choix",
       titre: "Rester au milieu",
       notions: ["full_unit_cost", "contribution_margin"],
@@ -617,6 +625,7 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
     },
     {
       id: "predire-le-rattrapage",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur le rattrapage",
       notions: ["demand_market_share", "contribution_margin"],
@@ -637,6 +646,7 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
     },
     {
       id: "le-volume-au-curseur",
+      objectifs: [3],
       type: "curseur",
       titre: "Rattraper par le volume",
       notions: ["demand_market_share", "contribution_margin"],
@@ -683,6 +693,7 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
     },
     {
       id: "ce-qu-il-faudrait-vendre",
+      objectifs: [3],
       type: "montants",
       titre: "Ce qu'il faudrait vendre",
       notions: ["demand_market_share", "contribution_margin"],
@@ -714,6 +725,7 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [3],
       type: "montants",
       titre: "Le coût qu'il faudrait au milieu",
       notions: ["full_unit_cost", "variable_costs"],
@@ -745,6 +757,7 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
     },
     {
       id: "predire-auris",
+      objectifs: [4],
       type: "choix",
       titre: "Pariez sur l'offre qui bat Auris",
       notions: ["demand_market_share", "price_elasticity"],
@@ -773,6 +786,7 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
     },
     {
       id: "le-laboratoire-de-l-offre",
+      objectifs: [0],
       type: "simulation",
       titre: "Le laboratoire de l'offre",
       notions: ["demand_market_share", "price_elasticity", "contribution_margin"],
@@ -867,6 +881,7 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
     },
     {
       id: "battre-auris-a-la-main",
+      objectifs: [4],
       type: "montants",
       titre: "L'année de la gamme soignée, à la main",
       notions: ["demand_market_share", "price_elasticity", "income_statement"],
@@ -933,6 +948,7 @@ export const COUTS_OU_DIFFERENCIATION: Chapitre = {
     },
     {
       id: "les-limites",
+      objectifs: [4],
       type: "choix",
       titre: "Ce que vaut ce classement",
       notions: ["price_elasticity", "segmentation"],

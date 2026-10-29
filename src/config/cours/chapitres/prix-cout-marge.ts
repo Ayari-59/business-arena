@@ -121,6 +121,7 @@ export const PRIX_COUT_MARGE: Chapitre = {
     },
     {
       id: "marge-unitaire",
+      objectifs: [0],
       type: "montants",
       titre: "La marge d'une unité",
       notions: ["margin_rates"],
@@ -142,6 +143,7 @@ export const PRIX_COUT_MARGE: Chapitre = {
     },
     {
       id: "les-taux",
+      objectifs: [1],
       type: "montants",
       titre: "Taux de marge, taux de marque",
       notions: ["margin_rates", "markup_coefficient"],
@@ -165,6 +167,7 @@ export const PRIX_COUT_MARGE: Chapitre = {
     },
     {
       id: "le-mois",
+      objectifs: [2],
       type: "montants",
       titre: "La marge du mois, et ce qu'il en reste",
       notions: ["contribution_margin", "fixed_costs"],
@@ -191,6 +194,7 @@ export const PRIX_COUT_MARGE: Chapitre = {
     },
     {
       id: "prix-plancher",
+      objectifs: [3],
       type: "curseur",
       titre: "Le prix plancher",
       notions: ["margin_rates", "breakeven"],
@@ -235,6 +239,7 @@ export const PRIX_COUT_MARGE: Chapitre = {
     },
     {
       id: "baisse-de-prix",
+      objectifs: [3],
       type: "montants",
       titre: "Et si le prix baissait ?",
       notions: ["margin_rates", "price_elasticity"],
@@ -263,6 +268,7 @@ export const PRIX_COUT_MARGE: Chapitre = {
     },
     {
       id: "le-laboratoire-des-quantites",
+      objectifs: [3],
       type: "simulation",
       titre: "Vendre plus pour garder la marge",
       notions: ["contribution_margin", "price_elasticity"],
@@ -307,6 +313,7 @@ export const PRIX_COUT_MARGE: Chapitre = {
     },
     {
       id: "hors-taxes",
+      objectifs: [4],
       type: "choix",
       titre: "Avec ou sans la TVA ?",
       notions: ["vat_payable"],

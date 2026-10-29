@@ -283,6 +283,7 @@ export const TABLEAU_DE_BORD: Chapitre = {
     },
     {
       id: "les-indicateurs-de-fevrier",
+      objectifs: [0],
       type: "montants",
       titre: "Les indicateurs d'un mois",
       notions: ["margin_rates", "breakeven", "safety_margin"],
@@ -335,6 +336,7 @@ export const TABLEAU_DE_BORD: Chapitre = {
     },
     {
       id: "les-voyants",
+      objectifs: [1],
       type: "choix",
       titre: "Le voyant qui s'allume",
       notions: ["dashboard", "safety_margin", "net_treasury"],
@@ -371,6 +373,7 @@ export const TABLEAU_DE_BORD: Chapitre = {
     },
     {
       id: "part-de-marche",
+      objectifs: [1],
       type: "choix",
       titre: "La part de marché",
       notions: ["demand_market_share", "dashboard"],
@@ -401,6 +404,7 @@ export const TABLEAU_DE_BORD: Chapitre = {
     },
     {
       id: "predire-l-alerte",
+      objectifs: [1],
       type: "choix",
       titre: "Pariez sur le voyant de l'indice",
       notions: ["safety_margin", "dashboard"],
@@ -420,6 +424,7 @@ export const TABLEAU_DE_BORD: Chapitre = {
     },
     {
       id: "l-alerte-au-curseur",
+      objectifs: [1],
       type: "curseur",
       titre: "Le voyant de l'indice, au curseur",
       notions: ["safety_margin", "breakeven"],
@@ -467,6 +472,7 @@ export const TABLEAU_DE_BORD: Chapitre = {
     },
     {
       id: "construire-un-indicateur",
+      objectifs: [3],
       type: "montants",
       titre: "Construire un indicateur, à rebours",
       notions: ["safety_margin", "dashboard"],
@@ -509,6 +515,7 @@ export const TABLEAU_DE_BORD: Chapitre = {
     },
     {
       id: "la-cible-et-l-alerte",
+      objectifs: [3],
       type: "choix",
       titre: "Où placer le seuil d'alerte",
       notions: ["dashboard", "safety_margin"],
@@ -539,6 +546,7 @@ export const TABLEAU_DE_BORD: Chapitre = {
     },
     {
       id: "predire-la-divergence",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur le résultat et la trésorerie",
       notions: ["payment_terms", "net_treasury"],
@@ -560,6 +568,7 @@ export const TABLEAU_DE_BORD: Chapitre = {
     },
     {
       id: "le-laboratoire-des-voyants",
+      objectifs: [1],
       type: "simulation",
       titre: "Le laboratoire des voyants",
       notions: ["dashboard", "net_treasury", "payment_terms"],
@@ -650,6 +659,7 @@ export const TABLEAU_DE_BORD: Chapitre = {
     },
     {
       id: "resultat-et-tresorerie",
+      objectifs: [2],
       type: "choix",
       titre: "Le résultat et la trésorerie",
       notions: ["net_treasury", "bfr"],
@@ -681,6 +691,7 @@ export const TABLEAU_DE_BORD: Chapitre = {
     },
     {
       id: "du-resultat-a-la-tresorerie",
+      objectifs: [2],
       type: "montants",
       titre: "Du résultat à la trésorerie",
       notions: ["net_treasury", "bfr", "depreciation"],
@@ -718,6 +729,7 @@ export const TABLEAU_DE_BORD: Chapitre = {
     },
     {
       id: "choisir",
+      objectifs: [4],
       type: "choix",
       titre: "Ce qui n'a rien à faire au tableau de bord",
       notions: ["dashboard"],
@@ -743,6 +755,7 @@ export const TABLEAU_DE_BORD: Chapitre = {
     },
     {
       id: "les-limites",
+      objectifs: [4],
       type: "choix",
       titre: "Les limites du tableau de bord",
       notions: ["dashboard", "cash_budget"],

@@ -147,6 +147,7 @@ export const VALEUR_AJOUTEE: Chapitre = {
     },
     {
       id: "va",
+      objectifs: [0, 1],
       type: "montants",
       titre: "La valeur ajoutée",
       notions: ["income_statement"],
@@ -169,6 +170,7 @@ export const VALEUR_AJOUTEE: Chapitre = {
     },
     {
       id: "partage",
+      objectifs: [2],
       type: "montants",
       titre: "Le partage de la valeur ajoutée",
       notions: ["income_statement"],
@@ -206,6 +208,7 @@ export const VALEUR_AJOUTEE: Chapitre = {
     },
     {
       id: "premiere-part",
+      objectifs: [3],
       type: "choix",
       titre: "La plus grosse part",
       notions: ["income_statement", "productivity"],
@@ -224,6 +227,7 @@ export const VALEUR_AJOUTEE: Chapitre = {
     },
     {
       id: "la-richesse-qui-paie-l-equipe",
+      objectifs: [3],
       type: "curseur",
       titre: "La richesse qui paie l'équipe",
       notions: ["income_statement", "productivity"],
@@ -263,6 +267,7 @@ export const VALEUR_AJOUTEE: Chapitre = {
     },
     {
       id: "le-laboratoire-du-partage",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire du partage",
       notions: ["income_statement", "pay_and_motivation"],

@@ -165,6 +165,7 @@ export const L_OFFRE_ET_LA_DEMANDE: Chapitre = {
     },
     {
       id: "ce-qui-fait-varier",
+      objectifs: [1],
       type: "choix",
       titre: "Ce qui fait varier la demande reçue",
       notions: ["demand_market_share", "price_elasticity"],
@@ -182,6 +183,7 @@ export const L_OFFRE_ET_LA_DEMANDE: Chapitre = {
     },
     {
       id: "qui-reagit-au-prix",
+      objectifs: [1],
       type: "choix",
       titre: "La clientèle qui réagit le plus au prix",
       notions: ["price_elasticity", "segmentation"],
@@ -201,6 +203,7 @@ export const L_OFFRE_ET_LA_DEMANDE: Chapitre = {
     },
     {
       id: "la-saison",
+      objectifs: [1],
       type: "montants",
       titre: "La demande change avec la saison",
       notions: ["seasonality", "demand_market_share"],
@@ -224,6 +227,7 @@ export const L_OFFRE_ET_LA_DEMANDE: Chapitre = {
     },
     {
       id: "l-offre-et-l-echange",
+      objectifs: [0, 2],
       type: "montants",
       titre: "L'offre et la quantité échangée",
       notions: ["stock", "capacity"],
@@ -267,6 +271,7 @@ export const L_OFFRE_ET_LA_DEMANDE: Chapitre = {
     },
     {
       id: "la-loi-de-la-demande",
+      objectifs: [3],
       type: "choix",
       titre: "La loi de la demande",
       notions: ["price_elasticity"],
@@ -296,6 +301,7 @@ export const L_OFFRE_ET_LA_DEMANDE: Chapitre = {
     },
     {
       id: "au-prix-bas",
+      objectifs: [2, 3],
       type: "montants",
       titre: "Ce que change le prix bas",
       notions: ["price_elasticity", "capacity"],
@@ -323,6 +329,7 @@ export const L_OFFRE_ET_LA_DEMANDE: Chapitre = {
     },
     {
       id: "l-offre-qui-suit",
+      objectifs: [2],
       type: "curseur",
       titre: "Mettre en vente ce que les acheteurs demandent",
       notions: ["capacity", "demand_market_share"],
@@ -361,6 +368,7 @@ export const L_OFFRE_ET_LA_DEMANDE: Chapitre = {
     },
     {
       id: "le-laboratoire-du-prix",
+      objectifs: [2, 3],
       type: "simulation",
       titre: "Le laboratoire du prix",
       notions: ["price_elasticity", "capacity"],

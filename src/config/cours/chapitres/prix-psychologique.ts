@@ -93,6 +93,7 @@ export const PRIX_PSYCHOLOGIQUE: Chapitre = {
     },
     {
       id: "ecart",
+      objectifs: [1],
       type: "montants",
       titre: "Le prix face au prix jugé normal",
       notions: ["psych_price"],
@@ -119,6 +120,7 @@ export const PRIX_PSYCHOLOGIQUE: Chapitre = {
     },
     {
       id: "avantageux",
+      objectifs: [0, 1],
       type: "choix",
       titre: "La clientèle qui trouve le prix avantageux",
       notions: ["psych_price", "segmentation"],
@@ -140,6 +142,7 @@ export const PRIX_PSYCHOLOGIQUE: Chapitre = {
     },
     {
       id: "seuil",
+      objectifs: [2],
       type: "montants",
       titre: "Quelques centimes de part et d'autre du seuil",
       notions: ["psych_price", "price_elasticity"],
@@ -163,6 +166,7 @@ export const PRIX_PSYCHOLOGIQUE: Chapitre = {
     },
     {
       id: "virgule-quatre-vingt-dix",
+      objectifs: [3],
       type: "choix",
       titre: "Pourquoi tant de prix finissent en ,90",
       notions: ["psych_price"],
@@ -193,6 +197,7 @@ export const PRIX_PSYCHOLOGIQUE: Chapitre = {
     },
     {
       id: "la-promotion-croyable",
+      objectifs: [0],
       type: "curseur",
       titre: "La promotion que le client croit encore",
       notions: ["psych_price", "price_elasticity"],
@@ -226,6 +231,7 @@ export const PRIX_PSYCHOLOGIQUE: Chapitre = {
     },
     {
       id: "le-laboratoire-du-seuil",
+      objectifs: [2],
       type: "simulation",
       titre: "Le laboratoire du seuil",
       notions: ["psych_price", "contribution_margin"],

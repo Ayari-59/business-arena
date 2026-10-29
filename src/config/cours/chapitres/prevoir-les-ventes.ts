@@ -263,6 +263,7 @@ export const PREVOIR_LES_VENTES: Chapitre = {
     },
     {
       id: "quelle-serie",
+      objectifs: [0],
       type: "choix",
       titre: "Les ventes, ou la demande ?",
       notions: ["seasonality", "stock"],
@@ -294,6 +295,7 @@ export const PREVOIR_LES_VENTES: Chapitre = {
     },
     {
       id: "les-moyennes-mobiles",
+      objectifs: [1],
       type: "montants",
       titre: "Les moyennes mobiles centrées",
       notions: ["seasonality"],
@@ -322,6 +324,7 @@ export const PREVOIR_LES_VENTES: Chapitre = {
     },
     {
       id: "la-droite",
+      objectifs: [1],
       type: "montants",
       titre: "La droite des moindres carrés",
       notions: ["seasonality"],
@@ -349,6 +352,7 @@ export const PREVOIR_LES_VENTES: Chapitre = {
     },
     {
       id: "predire-la-pente",
+      objectifs: [1],
       type: "choix",
       titre: "Pariez sur la pente",
       notions: ["seasonality"],
@@ -368,6 +372,7 @@ export const PREVOIR_LES_VENTES: Chapitre = {
     },
     {
       id: "la-tendance-au-curseur",
+      objectifs: [3],
       type: "curseur",
       titre: "Faites avancer la tendance",
       notions: ["seasonality"],
@@ -407,6 +412,7 @@ export const PREVOIR_LES_VENTES: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [3],
       type: "montants",
       titre: "Retrouver le trimestre à rebours",
       notions: ["seasonality"],
@@ -442,6 +448,7 @@ export const PREVOIR_LES_VENTES: Chapitre = {
     },
     {
       id: "les-rapports-a-la-tendance",
+      objectifs: [2],
       type: "montants",
       titre: "Le rapport de chaque trimestre à sa tendance",
       notions: ["seasonality"],
@@ -477,6 +484,7 @@ export const PREVOIR_LES_VENTES: Chapitre = {
     },
     {
       id: "les-coefficients-corriges",
+      objectifs: [2],
       type: "montants",
       titre: "Des coefficients qui se compensent",
       notions: ["seasonality"],
@@ -502,6 +510,7 @@ export const PREVOIR_LES_VENTES: Chapitre = {
     },
     {
       id: "predire-la-saison",
+      objectifs: [4],
       type: "choix",
       titre: "Pariez sur le trimestre calme",
       notions: ["seasonality"],
@@ -521,6 +530,7 @@ export const PREVOIR_LES_VENTES: Chapitre = {
     },
     {
       id: "la-saison-au-curseur",
+      objectifs: [4],
       type: "curseur",
       titre: "Retirez la saison",
       notions: ["seasonality"],
@@ -560,6 +570,7 @@ export const PREVOIR_LES_VENTES: Chapitre = {
     },
     {
       id: "la-prevision",
+      objectifs: [3],
       type: "montants",
       titre: "La prévision de l'année N",
       notions: ["seasonality"],
@@ -591,6 +602,7 @@ export const PREVOIR_LES_VENTES: Chapitre = {
     },
     {
       id: "le-mois-de-janvier",
+      objectifs: [4],
       type: "montants",
       titre: "Janvier face à la prévision",
       notions: ["seasonality"],
@@ -625,6 +637,7 @@ export const PREVOIR_LES_VENTES: Chapitre = {
     },
     {
       id: "ce-que-dit-janvier",
+      objectifs: [4],
       type: "choix",
       titre: "Ce que dit janvier",
       notions: ["seasonality"],
@@ -655,6 +668,7 @@ export const PREVOIR_LES_VENTES: Chapitre = {
     },
     {
       id: "predire-les-trimestres-bruts",
+      objectifs: [4],
       type: "choix",
       titre: "Pariez sur les trimestres bruts",
       notions: ["seasonality"],
@@ -673,6 +687,7 @@ export const PREVOIR_LES_VENTES: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-methode",
+      objectifs: [0, 4],
       type: "simulation",
       titre: "Le laboratoire de la méthode",
       notions: ["seasonality", "stock"],
@@ -760,6 +775,7 @@ export const PREVOIR_LES_VENTES: Chapitre = {
     },
     {
       id: "la-critique",
+      objectifs: [4],
       type: "montants",
       titre: "La critique des trimestres bruts",
       notions: ["seasonality"],
@@ -805,6 +821,7 @@ export const PREVOIR_LES_VENTES: Chapitre = {
     },
     {
       id: "pourquoi-la-droite-brute-trompe",
+      objectifs: [4],
       type: "choix",
       titre: "Pourquoi la droite brute trompe",
       notions: ["seasonality"],
@@ -832,6 +849,7 @@ export const PREVOIR_LES_VENTES: Chapitre = {
     },
     {
       id: "une-autre-methode",
+      objectifs: [3],
       type: "montants",
       titre: "Variante : la droite des totaux annuels",
       notions: ["seasonality"],

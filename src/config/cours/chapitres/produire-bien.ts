@@ -101,6 +101,7 @@ export const PRODUIRE_BIEN: Chapitre = {
     },
     {
       id: "les-defauts",
+      objectifs: [0],
       type: "montants",
       titre: "Les défauts de l'année",
       notions: ["variable_costs"],
@@ -121,6 +122,7 @@ export const PRODUIRE_BIEN: Chapitre = {
     },
     {
       id: "la-non-qualite",
+      objectifs: [1],
       type: "montants",
       titre: "Ce que coûtent les défauts",
       notions: ["variable_costs", "contribution_margin"],
@@ -144,6 +146,7 @@ export const PRODUIRE_BIEN: Chapitre = {
     },
     {
       id: "ou-coute-un-defaut",
+      objectifs: [2],
       type: "choix",
       titre: "Où un défaut coûte le plus",
       notions: ["variable_costs"],
@@ -163,6 +166,7 @@ export const PRODUIRE_BIEN: Chapitre = {
     },
     {
       id: "les-defauts-a-eviter",
+      objectifs: [3],
       type: "curseur",
       titre: "Les défauts qu'il faut éviter",
       notions: ["variable_costs", "contribution_margin"],
@@ -200,6 +204,7 @@ export const PRODUIRE_BIEN: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-prevention",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire de la prévention",
       notions: ["variable_costs", "contribution_margin"],

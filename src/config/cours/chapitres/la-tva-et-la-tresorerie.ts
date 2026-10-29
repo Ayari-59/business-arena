@@ -243,6 +243,7 @@ export const LA_TVA_ET_LA_TRESORERIE: Chapitre = {
     },
     {
       id: "au-30-juin",
+      objectifs: [0, 1],
       type: "montants",
       titre: "Au 30 juin, la TVA qui attend",
       notions: ["vat_payable", "bfr"],
@@ -277,6 +278,7 @@ export const LA_TVA_ET_LA_TRESORERIE: Chapitre = {
     },
     {
       id: "qui-finance-au-regime-reel",
+      objectifs: [2],
       type: "choix",
       titre: "Qui finance la TVA des clients, au régime réel",
       notions: ["vat_payable", "payment_terms"],
@@ -313,6 +315,7 @@ export const LA_TVA_ET_LA_TRESORERIE: Chapitre = {
     },
     {
       id: "predire-l-option",
+      objectifs: [1],
       type: "choix",
       titre: "Pariez sur l'option pour les débits",
       notions: ["vat_payable", "payment_terms"],
@@ -332,6 +335,7 @@ export const LA_TVA_ET_LA_TRESORERIE: Chapitre = {
     },
     {
       id: "le-delai-au-curseur",
+      objectifs: [1],
       type: "curseur",
       titre: "Le délai qui fait avancer la TVA",
       notions: ["vat_payable", "payment_terms"],
@@ -381,6 +385,7 @@ export const LA_TVA_ET_LA_TRESORERIE: Chapitre = {
     },
     {
       id: "aux-debits",
+      objectifs: [1],
       type: "montants",
       titre: "Le 30 juin, avec l'option",
       notions: ["vat_payable", "bfr"],
@@ -406,6 +411,7 @@ export const LA_TVA_ET_LA_TRESORERIE: Chapitre = {
     },
     {
       id: "qui-fait-credit",
+      objectifs: [2],
       type: "choix",
       titre: "Qui fait crédit à qui, avec l'option",
       notions: ["vat_payable", "payment_terms"],
@@ -445,6 +451,7 @@ export const LA_TVA_ET_LA_TRESORERIE: Chapitre = {
     },
     {
       id: "predire-le-negoce",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur le délai du négoce",
       notions: ["vat_payable", "payment_terms"],
@@ -464,6 +471,7 @@ export const LA_TVA_ET_LA_TRESORERIE: Chapitre = {
     },
     {
       id: "le-negoce-au-curseur",
+      objectifs: [2],
       type: "curseur",
       titre: "Le négoce qui fait crédit",
       notions: ["vat_payable", "payment_terms"],
@@ -511,6 +519,7 @@ export const LA_TVA_ET_LA_TRESORERIE: Chapitre = {
     },
     {
       id: "la-dette-au-negoce",
+      objectifs: [0],
       type: "montants",
       titre: "Le négoce à la limite",
       notions: ["vat_payable", "payment_terms"],
@@ -545,6 +554,7 @@ export const LA_TVA_ET_LA_TRESORERIE: Chapitre = {
     },
     {
       id: "sans-tva",
+      objectifs: [4],
       type: "choix",
       titre: "Le résultat et la trésorerie",
       notions: ["net_treasury", "income_statement"],
@@ -581,6 +591,7 @@ export const LA_TVA_ET_LA_TRESORERIE: Chapitre = {
     },
     {
       id: "l-ete",
+      objectifs: [3],
       type: "montants",
       titre: "La TVA dans les flux de l'été",
       notions: ["cash_budget", "vat_payable"],
@@ -621,6 +632,7 @@ export const LA_TVA_ET_LA_TRESORERIE: Chapitre = {
     },
     {
       id: "l-ete-aux-debits",
+      objectifs: [3],
       type: "montants",
       titre: "L'été, avec l'option",
       notions: ["cash_budget", "vat_payable"],
@@ -646,6 +658,7 @@ export const LA_TVA_ET_LA_TRESORERIE: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-tresorerie",
+      objectifs: [1],
       type: "simulation",
       titre: "Le laboratoire de la trésorerie",
       notions: ["vat_payable", "payment_terms", "bfr"],
@@ -731,6 +744,7 @@ export const LA_TVA_ET_LA_TRESORERIE: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [4],
       type: "montants",
       titre: "Retrouver les créances à rebours",
       notions: ["vat_payable", "bfr"],
@@ -759,6 +773,7 @@ export const LA_TVA_ET_LA_TRESORERIE: Chapitre = {
     },
     {
       id: "l-argent-de-la-tva",
+      objectifs: [4],
       type: "choix",
       titre: "L'argent de la TVA",
       notions: ["vat_payable", "net_treasury"],
@@ -795,6 +810,7 @@ export const LA_TVA_ET_LA_TRESORERIE: Chapitre = {
     },
     {
       id: "le-client-en-retard",
+      objectifs: [1],
       type: "montants",
       titre: "Un client en retard, aux encaissements",
       notions: ["vat_payable", "payment_terms"],
@@ -821,6 +837,7 @@ export const LA_TVA_ET_LA_TRESORERIE: Chapitre = {
     },
     {
       id: "le-client-defaillant",
+      objectifs: [4],
       type: "montants",
       titre: "Un client en redressement judiciaire",
       notions: ["payment_terms", "vat_payable"],

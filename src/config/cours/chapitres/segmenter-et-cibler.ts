@@ -115,6 +115,7 @@ export const SEGMENTER_ET_CIBLER: Chapitre = {
     },
     {
       id: "poids",
+      objectifs: [1],
       type: "montants",
       titre: "Le poids d'un segment",
       notions: ["segmentation", "demand_market_share"],
@@ -141,6 +142,7 @@ export const SEGMENTER_ET_CIBLER: Chapitre = {
     },
     {
       id: "reserve",
+      objectifs: [0, 1],
       type: "choix",
       titre: "Où sont les clients à gagner",
       notions: ["segmentation"],
@@ -184,6 +186,7 @@ export const SEGMENTER_ET_CIBLER: Chapitre = {
     },
     {
       id: "cible-premium",
+      objectifs: [2, 3],
       type: "choix",
       titre: "Une cible pour une offre haut de gamme",
       notions: ["segmentation", "price_elasticity"],
@@ -202,6 +205,7 @@ export const SEGMENTER_ET_CIBLER: Chapitre = {
     },
     {
       id: "cible-promotion",
+      objectifs: [2, 3],
       type: "choix",
       titre: "Une cible pour une promotion",
       notions: ["segmentation", "price_elasticity"],
@@ -220,6 +224,7 @@ export const SEGMENTER_ET_CIBLER: Chapitre = {
     },
     {
       id: "le-tarif-etudiant",
+      objectifs: [2],
       type: "curseur",
       titre: "Un tarif pour les étudiants",
       notions: ["segmentation", "contribution_margin"],
@@ -260,6 +265,7 @@ export const SEGMENTER_ET_CIBLER: Chapitre = {
     },
     {
       id: "le-laboratoire-du-tarif",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire du tarif étudiant",
       notions: ["segmentation", "contribution_margin"],

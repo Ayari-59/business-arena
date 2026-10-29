@@ -301,6 +301,7 @@ export const IMMOBILISATIONS: Chapitre = {
     },
     {
       id: "acquisition",
+      objectifs: [0],
       type: "ecriture",
       titre: "L'achat de l'équipement",
       notions: ["depreciation"],
@@ -324,6 +325,7 @@ export const IMMOBILISATIONS: Chapitre = {
     },
     {
       id: "charge-ou-immobilisation",
+      objectifs: [0],
       type: "tri",
       titre: "Dans le coût, ou en charges",
       notions: ["depreciation"],
@@ -368,6 +370,7 @@ export const IMMOBILISATIONS: Chapitre = {
     },
     {
       id: "le-cout-d-acquisition",
+      objectifs: [0],
       type: "montants",
       titre: "Le coût d'acquisition",
       notions: ["depreciation"],
@@ -398,6 +401,7 @@ export const IMMOBILISATIONS: Chapitre = {
     },
     {
       id: "plan",
+      objectifs: [1],
       type: "montants",
       titre: "Le plan d'amortissement",
       notions: ["depreciation"],
@@ -430,6 +434,7 @@ export const IMMOBILISATIONS: Chapitre = {
     },
     {
       id: "dotation",
+      objectifs: [2],
       type: "ecriture",
       titre: "La dotation du 31 décembre",
       notions: ["depreciation"],
@@ -467,6 +472,7 @@ export const IMMOBILISATIONS: Chapitre = {
     },
     {
       id: "tresorerie",
+      objectifs: [2],
       type: "choix",
       titre: "Une charge sans argent",
       notions: ["depreciation", "net_treasury"],
@@ -489,6 +495,7 @@ export const IMMOBILISATIONS: Chapitre = {
     },
     {
       id: "annees-suivantes",
+      objectifs: [1, 2],
       type: "montants",
       titre: "La suite du plan",
       notions: ["depreciation"],
@@ -515,6 +522,7 @@ export const IMMOBILISATIONS: Chapitre = {
     },
     {
       id: "predire-la-revente",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur la revente",
       notions: ["depreciation"],
@@ -531,6 +539,7 @@ export const IMMOBILISATIONS: Chapitre = {
     },
     {
       id: "le-prix-de-revente",
+      objectifs: [3],
       type: "curseur",
       titre: "Le prix de revente au curseur",
       notions: ["depreciation"],
@@ -572,6 +581,7 @@ export const IMMOBILISATIONS: Chapitre = {
     },
     {
       id: "revente",
+      objectifs: [3],
       type: "montants",
       titre: "Le résultat de la revente",
       notions: ["depreciation"],
@@ -602,6 +612,7 @@ export const IMMOBILISATIONS: Chapitre = {
     },
     {
       id: "predire-le-degressif",
+      objectifs: [4],
       type: "choix",
       titre: "Pariez sur le dégressif",
       notions: ["depreciation"],
@@ -620,6 +631,7 @@ export const IMMOBILISATIONS: Chapitre = {
     },
     {
       id: "le-laboratoire-du-plan",
+      objectifs: [4],
       type: "simulation",
       titre: "Le laboratoire du plan",
       notions: ["depreciation"],
@@ -696,6 +708,7 @@ export const IMMOBILISATIONS: Chapitre = {
     },
     {
       id: "le-plan-degressif",
+      objectifs: [4],
       type: "montants",
       titre: "Le plan dégressif",
       notions: ["depreciation"],
@@ -745,6 +758,7 @@ export const IMMOBILISATIONS: Chapitre = {
     },
     {
       id: "le-degressif-et-l-impot",
+      objectifs: [4],
       type: "choix",
       titre: "Le dégressif et l'impôt",
       notions: ["depreciation", "income_statement"],
@@ -780,6 +794,7 @@ export const IMMOBILISATIONS: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [1],
       type: "montants",
       titre: "Retrouver la mise en service à rebours",
       notions: ["depreciation"],

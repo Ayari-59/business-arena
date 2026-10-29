@@ -288,6 +288,7 @@ export const REMISES_ET_CONDITIONS: Chapitre = {
     },
     {
       id: "facture",
+      objectifs: [0],
       type: "montants",
       titre: "La facture de l'affaire",
       notions: ["payment_terms"],
@@ -317,6 +318,7 @@ export const REMISES_ET_CONDITIONS: Chapitre = {
     },
     {
       id: "marge",
+      objectifs: [1],
       type: "montants",
       titre: "Ce que la remise coûte",
       notions: ["contribution_margin"],
@@ -341,6 +343,7 @@ export const REMISES_ET_CONDITIONS: Chapitre = {
     },
     {
       id: "predire-la-contrepartie",
+      objectifs: [1],
       type: "choix",
       titre: "Pariez sur la contrepartie",
       notions: ["contribution_margin"],
@@ -360,6 +363,7 @@ export const REMISES_ET_CONDITIONS: Chapitre = {
     },
     {
       id: "la-contrepartie-au-curseur",
+      objectifs: [1],
       type: "curseur",
       titre: "Les journées qui paient la remise",
       notions: ["contribution_margin", "price_floor"],
@@ -408,6 +412,7 @@ export const REMISES_ET_CONDITIONS: Chapitre = {
     },
     {
       id: "contrepartie",
+      objectifs: [1],
       type: "montants",
       titre: "La contrepartie de la remise",
       notions: ["contribution_margin", "price_floor"],
@@ -437,6 +442,7 @@ export const REMISES_ET_CONDITIONS: Chapitre = {
     },
     {
       id: "le-credit",
+      objectifs: [2],
       type: "montants",
       titre: "Ce que coûte le délai de paiement",
       notions: ["payment_terms"],
@@ -460,6 +466,7 @@ export const REMISES_ET_CONDITIONS: Chapitre = {
     },
     {
       id: "qui-avance-la-tva",
+      objectifs: [2],
       type: "choix",
       titre: "Hors taxes ou toutes taxes comprises",
       notions: ["payment_terms", "vat_payable"],
@@ -495,6 +502,7 @@ export const REMISES_ET_CONDITIONS: Chapitre = {
     },
     {
       id: "le-client-en-retard",
+      objectifs: [2],
       type: "montants",
       titre: "Quand le client paie en retard",
       notions: ["payment_terms"],
@@ -527,6 +535,7 @@ export const REMISES_ET_CONDITIONS: Chapitre = {
     },
     {
       id: "predire-l-escompte",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur l'escompte",
       notions: ["payment_terms"],
@@ -546,6 +555,7 @@ export const REMISES_ET_CONDITIONS: Chapitre = {
     },
     {
       id: "l-escompte-au-curseur",
+      objectifs: [3],
       type: "curseur",
       titre: "L'escompte face au découvert",
       notions: ["payment_terms"],
@@ -591,6 +601,7 @@ export const REMISES_ET_CONDITIONS: Chapitre = {
     },
     {
       id: "le-taux-annuel",
+      objectifs: [3],
       type: "montants",
       titre: "Le taux annuel de l'escompte",
       notions: ["payment_terms"],
@@ -621,6 +632,7 @@ export const REMISES_ET_CONDITIONS: Chapitre = {
     },
     {
       id: "quel-raisonnement",
+      objectifs: [3],
       type: "choix",
       titre: "Garder l'escompte ou le retirer",
       notions: ["payment_terms"],
@@ -659,6 +671,7 @@ export const REMISES_ET_CONDITIONS: Chapitre = {
     },
     {
       id: "escompte-maximal",
+      objectifs: [4],
       type: "montants",
       titre: "Le plus fort escompte que le découvert justifie",
       notions: ["payment_terms"],
@@ -703,6 +716,7 @@ export const REMISES_ET_CONDITIONS: Chapitre = {
     },
     {
       id: "l-option-pour-les-debits",
+      objectifs: [2],
       type: "montants",
       titre: "Variante : l'option pour les débits",
       notions: ["payment_terms", "vat_payable"],
@@ -732,6 +746,7 @@ export const REMISES_ET_CONDITIONS: Chapitre = {
     },
     {
       id: "le-laboratoire-des-conditions",
+      objectifs: [1],
       type: "simulation",
       titre: "Le laboratoire des conditions",
       notions: ["payment_terms", "contribution_margin"],

@@ -135,6 +135,7 @@ export const LE_PANIER_MOYEN: Chapitre = {
     },
     {
       id: "le-panier",
+      objectifs: [0],
       type: "montants",
       titre: "Le panier moyen",
       notions: ["average_basket"],
@@ -153,6 +154,7 @@ export const LE_PANIER_MOYEN: Chapitre = {
     },
     {
       id: "le-panier-par-article",
+      objectifs: [0],
       type: "montants",
       titre: "Le panier, article par article",
       notions: ["average_basket", "assortment"],
@@ -182,6 +184,7 @@ export const LE_PANIER_MOYEN: Chapitre = {
     },
     {
       id: "la-marge",
+      objectifs: [1],
       type: "montants",
       titre: "Le coût et la marge d'une vente",
       notions: ["variable_costs", "contribution_margin"],
@@ -206,6 +209,7 @@ export const LE_PANIER_MOYEN: Chapitre = {
     },
     {
       id: "une-vente-de-plus",
+      objectifs: [2],
       type: "choix",
       titre: "Ce qu'une vente de plus rapporte",
       notions: ["contribution_margin", "fixed_costs"],
@@ -221,6 +225,7 @@ export const LE_PANIER_MOYEN: Chapitre = {
     },
     {
       id: "chaque-jour",
+      objectifs: [2],
       type: "montants",
       titre: "Des ventes de plus chaque jour",
       notions: ["contribution_margin", "revenue"],
@@ -243,6 +248,7 @@ export const LE_PANIER_MOYEN: Chapitre = {
     },
     {
       id: "l-article-a-proposer",
+      objectifs: [3],
       type: "choix",
       titre: "L'article à proposer en plus",
       notions: ["contribution_margin", "average_basket"],
@@ -260,6 +266,7 @@ export const LE_PANIER_MOYEN: Chapitre = {
     },
     {
       id: "le-vendeur-en-plus",
+      objectifs: [2],
       type: "curseur",
       titre: "Un vendeur de plus",
       notions: ["contribution_margin", "fixed_costs"],
@@ -292,6 +299,7 @@ export const LE_PANIER_MOYEN: Chapitre = {
     },
     {
       id: "le-laboratoire-du-panier",
+      objectifs: [4],
       type: "simulation",
       titre: "Le laboratoire du panier",
       notions: ["average_basket", "contribution_margin"],

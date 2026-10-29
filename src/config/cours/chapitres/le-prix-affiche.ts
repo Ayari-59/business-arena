@@ -151,6 +151,7 @@ export const LE_PRIX_AFFICHE: Chapitre = {
     },
     {
       id: "prix-ttc",
+      objectifs: [0],
       type: "montants",
       titre: "Le prix toutes taxes",
       notions: ["vat_payable"],
@@ -176,6 +177,7 @@ export const LE_PRIX_AFFICHE: Chapitre = {
     },
     {
       id: "la-bonne-etiquette",
+      objectifs: [1],
       type: "choix",
       titre: "La bonne étiquette",
       notions: ["vat_payable"],
@@ -195,6 +197,7 @@ export const LE_PRIX_AFFICHE: Chapitre = {
     },
     {
       id: "la-remise",
+      objectifs: [2],
       type: "montants",
       titre: "La remise de la promotion",
       notions: ["markdown"],
@@ -225,6 +228,7 @@ export const LE_PRIX_AFFICHE: Chapitre = {
     },
     {
       id: "l-etiquette-promo",
+      objectifs: [1, 2],
       type: "choix",
       titre: "L'étiquette de la promotion",
       notions: ["markdown"],
@@ -252,6 +256,7 @@ export const LE_PRIX_AFFICHE: Chapitre = {
     },
     {
       id: "ce-que-la-promotion-vend",
+      objectifs: [3],
       type: "montants",
       titre: "Ce que la promotion fait vendre",
       notions: ["markdown", "revenue", "stock"],
@@ -279,6 +284,7 @@ export const LE_PRIX_AFFICHE: Chapitre = {
     },
     {
       id: "bilan",
+      objectifs: [3],
       type: "choix",
       titre: "Le bilan de la promotion",
       notions: ["markdown", "revenue"],
@@ -299,6 +305,7 @@ export const LE_PRIX_AFFICHE: Chapitre = {
     },
     {
       id: "jusqu-ou-remiser",
+      objectifs: [4],
       type: "curseur",
       titre: "Jusqu'où remiser ?",
       notions: ["markdown", "revenue"],
@@ -340,6 +347,7 @@ export const LE_PRIX_AFFICHE: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-remise",
+      objectifs: [4],
       type: "simulation",
       titre: "Le laboratoire de la remise",
       notions: ["markdown", "stock"],

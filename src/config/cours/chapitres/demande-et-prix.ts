@@ -93,6 +93,7 @@ export const DEMANDE_ET_PRIX: Chapitre = {
     },
     {
       id: "elasticite",
+      objectifs: [0, 1],
       type: "montants",
       titre: "L'élasticité de la demande",
       notions: ["price_elasticity"],
@@ -115,6 +116,7 @@ export const DEMANDE_ET_PRIX: Chapitre = {
     },
     {
       id: "elastique",
+      objectifs: [2],
       type: "choix",
       titre: "Élastique ou peu élastique",
       notions: ["price_elasticity"],
@@ -146,6 +148,7 @@ export const DEMANDE_ET_PRIX: Chapitre = {
     },
     {
       id: "chiffre-d-affaires",
+      objectifs: [3],
       type: "montants",
       titre: "Ce que la hausse fait au chiffre d'affaires",
       notions: ["price_elasticity", "revenue"],
@@ -172,6 +175,7 @@ export const DEMANDE_ET_PRIX: Chapitre = {
     },
     {
       id: "baisser",
+      objectifs: [2, 3],
       type: "choix",
       titre: "Et si l'on baissait le prix ?",
       notions: ["price_elasticity"],
@@ -191,6 +195,7 @@ export const DEMANDE_ET_PRIX: Chapitre = {
     },
     {
       id: "jusqu-ou-monter",
+      objectifs: [3],
       type: "curseur",
       titre: "Jusqu'où monter sans perdre de marge",
       notions: ["price_elasticity", "contribution_margin"],
@@ -228,6 +233,7 @@ export const DEMANDE_ET_PRIX: Chapitre = {
     },
     {
       id: "le-laboratoire-du-prix",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire du prix",
       notions: ["price_elasticity", "contribution_margin"],

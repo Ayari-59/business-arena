@@ -245,6 +245,7 @@ export const COUT_PAR_PRODUIT: Chapitre = {
     },
     {
       id: "couts-directs",
+      objectifs: [0],
       type: "montants",
       titre: "Le coût direct de chaque référence",
       notions: ["full_unit_cost", "variable_costs"],
@@ -267,6 +268,7 @@ export const COUT_PAR_PRODUIT: Chapitre = {
     },
     {
       id: "heures",
+      objectifs: [0],
       type: "montants",
       titre: "L'unité d'œuvre : l'heure-machine",
       notions: ["full_unit_cost"],
@@ -294,6 +296,7 @@ export const COUT_PAR_PRODUIT: Chapitre = {
     },
     {
       id: "couts-complets",
+      objectifs: [0],
       type: "montants",
       titre: "Le coût complet de chaque référence",
       notions: ["full_unit_cost"],
@@ -320,6 +323,7 @@ export const COUT_PAR_PRODUIT: Chapitre = {
     },
     {
       id: "resultats",
+      objectifs: [0],
       type: "montants",
       titre: "Le résultat de chaque référence",
       notions: ["full_unit_cost"],
@@ -350,6 +354,7 @@ export const COUT_PAR_PRODUIT: Chapitre = {
     },
     {
       id: "predire-la-cle",
+      objectifs: [1],
       type: "choix",
       titre: "Pariez sur une autre clé",
       notions: ["full_unit_cost", "fixed_costs"],
@@ -370,6 +375,7 @@ export const COUT_PAR_PRODUIT: Chapitre = {
     },
     {
       id: "la-part-aux-heures",
+      objectifs: [1],
       type: "curseur",
       titre: "Faites glisser la clé",
       notions: ["full_unit_cost", "fixed_costs"],
@@ -414,6 +420,7 @@ export const COUT_PAR_PRODUIT: Chapitre = {
     },
     {
       id: "au-chiffre-d-affaires",
+      objectifs: [1],
       type: "montants",
       titre: "Les charges communes au chiffre d'affaires",
       notions: ["full_unit_cost", "fixed_costs"],
@@ -454,6 +461,7 @@ export const COUT_PAR_PRODUIT: Chapitre = {
     },
     {
       id: "predire-les-heures",
+      objectifs: [1],
       type: "choix",
       titre: "Pariez sur les heures",
       notions: ["full_unit_cost"],
@@ -472,6 +480,7 @@ export const COUT_PAR_PRODUIT: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-cle",
+      objectifs: [1],
       type: "simulation",
       titre: "Le laboratoire de la clé",
       notions: ["full_unit_cost", "fixed_costs", "contribution_margin"],
@@ -543,6 +552,7 @@ export const COUT_PAR_PRODUIT: Chapitre = {
     },
     {
       id: "abandon",
+      objectifs: [2],
       type: "choix",
       titre: "Faut-il abandonner la référence en perte ?",
       notions: ["full_unit_cost", "contribution_margin", "fixed_costs"],
@@ -573,6 +583,7 @@ export const COUT_PAR_PRODUIT: Chapitre = {
     },
     {
       id: "marge-specifique",
+      objectifs: [2],
       type: "montants",
       titre: "La marge sur coûts spécifiques",
       notions: ["contribution_margin", "fixed_costs"],
@@ -601,6 +612,7 @@ export const COUT_PAR_PRODUIT: Chapitre = {
     },
     {
       id: "les-deux-prix-de-one",
+      objectifs: [3],
       type: "montants",
       titre: "Les deux prix de la référence, à rebours",
       notions: ["full_unit_cost", "contribution_margin", "price_floor"],
@@ -634,6 +646,7 @@ export const COUT_PAR_PRODUIT: Chapitre = {
     },
     {
       id: "quelle-reference-sacrifier",
+      objectifs: [4],
       type: "choix",
       titre: "Pariez : quelle référence sacrifier",
       notions: ["capacity", "contribution_margin"],
@@ -669,6 +682,7 @@ export const COUT_PAR_PRODUIT: Chapitre = {
     },
     {
       id: "la-marge-par-heure",
+      objectifs: [4],
       type: "montants",
       titre: "La marge par heure-machine",
       notions: ["capacity", "contribution_margin"],
@@ -688,6 +702,7 @@ export const COUT_PAR_PRODUIT: Chapitre = {
     },
     {
       id: "le-plan-du-mois-de-pointe",
+      objectifs: [4],
       type: "montants",
       titre: "Le programme du mois de pointe",
       notions: ["capacity", "contribution_margin"],
@@ -729,6 +744,7 @@ export const COUT_PAR_PRODUIT: Chapitre = {
     },
     {
       id: "le-classement-en-cout-complet",
+      objectifs: [2],
       type: "choix",
       titre: "Ce que vaut le coût complet",
       notions: ["full_unit_cost", "contribution_margin"],

@@ -259,6 +259,7 @@ export const LA_PAIE: Chapitre = {
     },
     {
       id: "acompte",
+      objectifs: [1],
       type: "ecriture",
       titre: "L'acompte du 15 janvier",
       notions: ["payment_terms", "payroll"],
@@ -291,6 +292,7 @@ export const LA_PAIE: Chapitre = {
     },
     {
       id: "bulletin",
+      objectifs: [0],
       type: "montants",
       titre: "Le bulletin de janvier",
       notions: ["payroll", "fixed_costs"],
@@ -327,6 +329,7 @@ export const LA_PAIE: Chapitre = {
     },
     {
       id: "paie",
+      objectifs: [0],
       type: "ecriture",
       titre: "La paie de janvier",
       notions: ["payroll", "fixed_costs"],
@@ -386,6 +389,7 @@ export const LA_PAIE: Chapitre = {
     },
     {
       id: "cotisations-patronales",
+      objectifs: [2],
       type: "ecriture",
       titre: "Les cotisations patronales",
       notions: ["payroll", "fixed_costs"],
@@ -420,6 +424,7 @@ export const LA_PAIE: Chapitre = {
     },
     {
       id: "qui-supporte",
+      objectifs: [3],
       type: "tri",
       titre: "Qui supporte quoi",
       notions: ["payroll", "fixed_costs"],
@@ -450,6 +455,7 @@ export const LA_PAIE: Chapitre = {
     },
     {
       id: "versement-salaires",
+      objectifs: [1],
       type: "ecriture",
       titre: "Le versement des salaires",
       notions: ["payment_terms", "payroll"],
@@ -479,6 +485,7 @@ export const LA_PAIE: Chapitre = {
     },
     {
       id: "cout-du-personnel",
+      objectifs: [3],
       type: "choix",
       titre: "Le coût du personnel",
       notions: ["fixed_costs", "income_statement", "payroll"],
@@ -520,6 +527,7 @@ export const LA_PAIE: Chapitre = {
     },
     {
       id: "reglement-organismes",
+      objectifs: [2],
       type: "ecriture",
       titre: "Les organismes et l'État sont payés",
       notions: ["payment_terms", "payroll"],
@@ -556,6 +564,7 @@ export const LA_PAIE: Chapitre = {
     },
     {
       id: "predire-le-brut",
+      objectifs: [4],
       type: "choix",
       titre: "Pariez sur la prime brute",
       notions: ["payroll"],
@@ -581,6 +590,7 @@ export const LA_PAIE: Chapitre = {
     },
     {
       id: "la-prime-au-curseur",
+      objectifs: [4],
       type: "curseur",
       titre: "Du net promis au brut, au curseur",
       notions: ["payroll"],
@@ -621,6 +631,7 @@ export const LA_PAIE: Chapitre = {
     },
     {
       id: "du-net-au-brut",
+      objectifs: [4],
       type: "montants",
       titre: "Du net au brut, au centime",
       notions: ["payroll", "fixed_costs"],
@@ -658,6 +669,7 @@ export const LA_PAIE: Chapitre = {
     },
     {
       id: "predire-le-budget",
+      objectifs: [4],
       type: "choix",
       titre: "Pariez sur le brut d'une embauche",
       notions: ["payroll", "fixed_costs"],
@@ -679,6 +691,7 @@ export const LA_PAIE: Chapitre = {
     },
     {
       id: "le-budget-au-curseur",
+      objectifs: [4],
       type: "curseur",
       titre: "Le brut qu'un budget permet",
       notions: ["payroll", "fixed_costs"],
@@ -720,6 +733,7 @@ export const LA_PAIE: Chapitre = {
     },
     {
       id: "du-cout-au-net",
+      objectifs: [4],
       type: "montants",
       titre: "Du coût employeur au net",
       notions: ["payroll", "fixed_costs"],
@@ -754,6 +768,7 @@ export const LA_PAIE: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-prime",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire de la prime",
       notions: ["payroll", "fixed_costs"],
@@ -807,6 +822,7 @@ export const LA_PAIE: Chapitre = {
     },
     {
       id: "le-levier-de-l-employeur",
+      objectifs: [3],
       type: "choix",
       titre: "Le levier de l'employeur",
       notions: ["payroll", "income_statement"],

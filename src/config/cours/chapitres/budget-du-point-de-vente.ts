@@ -236,6 +236,7 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "budget-des-ventes",
+      objectifs: [0],
       type: "montants",
       titre: "Le budget des ventes",
       notions: ["revenue", "vat_payable"],
@@ -261,6 +262,7 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "quantites-a-acheter",
+      objectifs: [0],
       type: "montants",
       titre: "Le budget des achats",
       notions: ["stock"],
@@ -290,6 +292,7 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "marge-budgetee",
+      objectifs: [1],
       type: "montants",
       titre: "La marge commerciale budgétée",
       notions: ["margin_rates", "stock"],
@@ -316,6 +319,7 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "la-marge-du-vendeur",
+      objectifs: [1],
       type: "choix",
       titre: "Une marge calculée sur les achats",
       notions: ["margin_rates", "stock"],
@@ -346,6 +350,7 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "la-tva-du-trimestre",
+      objectifs: [1],
       type: "montants",
       titre: "La TVA à reverser",
       notions: ["vat_payable"],
@@ -368,6 +373,7 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "predire-le-delai",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur le délai",
       notions: ["payment_terms", "cash_budget"],
@@ -386,6 +392,7 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "le-delai-au-curseur",
+      objectifs: [2],
       type: "curseur",
       titre: "Négociez le délai",
       notions: ["payment_terms", "cash_budget"],
@@ -430,6 +437,7 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "les-decaissements",
+      objectifs: [2],
       type: "montants",
       titre: "Ce que la caisse paie, selon le fournisseur",
       notions: ["payment_terms", "cash_budget"],
@@ -461,6 +469,7 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "le-budget-relu",
+      objectifs: [3],
       type: "montants",
       titre: "Remonter de la caisse au stock voulu",
       notions: ["payment_terms", "stock"],
@@ -494,6 +503,7 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "predire-l-objectif",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur février et mars",
       notions: ["revenue", "dashboard"],
@@ -512,6 +522,7 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "l-objectif-au-curseur",
+      objectifs: [3],
       type: "curseur",
       titre: "Rattrapez le trimestre",
       notions: ["revenue", "dashboard"],
@@ -550,6 +561,7 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "le-rattrapage",
+      objectifs: [3],
       type: "montants",
       titre: "L'objectif des mois qui restent",
       notions: ["revenue", "dashboard"],
@@ -572,6 +584,7 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "le-laboratoire-du-budget",
+      objectifs: [4],
       type: "simulation",
       titre: "Le laboratoire du budget",
       notions: ["payment_terms", "cash_budget", "stock"],
@@ -652,6 +665,7 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "la-caisse-ou-la-rupture",
+      objectifs: [4],
       type: "choix",
       titre: "La marge, la caisse ou le stock",
       notions: ["payment_terms", "stock"],
@@ -683,6 +697,7 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "variante-fins-de-serie",
+      objectifs: [1],
       type: "montants",
       titre: "Variante : le stock au coût moyen",
       notions: ["weighted_average_cost", "stock"],
@@ -720,6 +735,7 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "si-on-se-trompe",
+      objectifs: [4],
       type: "choix",
       titre: "Si la prévision était trop haute",
       notions: ["stock", "cash_budget"],

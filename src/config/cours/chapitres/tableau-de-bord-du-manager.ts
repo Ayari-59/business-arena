@@ -262,6 +262,7 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
     },
     {
       id: "ranger",
+      objectifs: [0],
       type: "tri",
       titre: "Ce que chaque indicateur surveille",
       notions: ["dashboard"],
@@ -275,6 +276,7 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
     },
     {
       id: "evolutions",
+      objectifs: [1],
       type: "montants",
       titre: "Janvier N face à janvier N − 1",
       notions: ["dashboard", "revenue"],
@@ -298,6 +300,7 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
     },
     {
       id: "l-objectif",
+      objectifs: [1],
       type: "montants",
       titre: "Janvier face à l'objectif",
       notions: ["dashboard", "revenue"],
@@ -322,6 +325,7 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
     },
     {
       id: "predire-le-trafic",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur le trafic",
       notions: ["dashboard", "conversion_rate"],
@@ -341,6 +345,7 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
     },
     {
       id: "le-trafic-qui-manque",
+      objectifs: [3],
       type: "curseur",
       titre: "Le trafic qui manque",
       notions: ["dashboard", "conversion_rate"],
@@ -380,6 +385,7 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
     },
     {
       id: "les-ratios",
+      objectifs: [2],
       type: "montants",
       titre: "Ceux qui entrent achètent-ils moins ?",
       notions: ["conversion_rate", "average_basket"],
@@ -404,6 +410,7 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
     },
     {
       id: "le-voyant-rouge",
+      objectifs: [2],
       type: "choix",
       titre: "Le voyant qui explique",
       notions: ["dashboard", "conversion_rate"],
@@ -442,6 +449,7 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
     },
     {
       id: "predire-sans-trafic",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sans un client de plus",
       notions: ["dashboard", "conversion_rate"],
@@ -462,6 +470,7 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
     },
     {
       id: "le-laboratoire-des-voyants",
+      objectifs: [2],
       type: "simulation",
       titre: "Le laboratoire des voyants",
       notions: ["dashboard", "conversion_rate", "average_basket"],
@@ -528,6 +537,7 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
     },
     {
       id: "la-transformation-qui-eteint",
+      objectifs: [3],
       type: "montants",
       titre: "La transformation qui éteint le voyant",
       notions: ["conversion_rate", "dashboard"],
@@ -555,6 +565,7 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
     },
     {
       id: "decomposer-l-ecart",
+      objectifs: [3],
       type: "montants",
       titre: "Trafic, transformation, panier : l'écart décomposé",
       notions: ["dashboard", "conversion_rate", "average_basket"],
@@ -601,6 +612,7 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [4],
       type: "montants",
       titre: "Février, à rebours",
       notions: ["dashboard", "average_basket", "conversion_rate"],
@@ -626,6 +638,7 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
     },
     {
       id: "critique-de-l-objectif",
+      objectifs: [4],
       type: "choix",
       titre: "Que vaut le voyant de l'objectif ?",
       notions: ["dashboard", "seasonality"],

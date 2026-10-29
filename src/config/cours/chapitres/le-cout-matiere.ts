@@ -288,6 +288,7 @@ export const LE_COUT_MATIERE: Chapitre = {
     },
     {
       id: "ce-qui-entre",
+      objectifs: [0],
       type: "choix",
       titre: "Ce qui entre dans le coût matière",
       notions: ["variable_costs"],
@@ -315,6 +316,7 @@ export const LE_COUT_MATIERE: Chapitre = {
     },
     {
       id: "le-ratio-du-couvert",
+      objectifs: [1],
       type: "montants",
       titre: "Le ratio et le coefficient",
       notions: ["markup_coefficient", "margin_rates"],
@@ -340,6 +342,7 @@ export const LE_COUT_MATIERE: Chapitre = {
     },
     {
       id: "la-hausse",
+      objectifs: [2],
       type: "montants",
       titre: "Les denrées augmentent",
       notions: ["material_price_variance", "margin_rates"],
@@ -369,6 +372,7 @@ export const LE_COUT_MATIERE: Chapitre = {
     },
     {
       id: "predire-le-prix",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur le prix qui garde le ratio",
       notions: ["markup_coefficient", "margin_rates"],
@@ -391,6 +395,7 @@ export const LE_COUT_MATIERE: Chapitre = {
     },
     {
       id: "le-prix-au-curseur",
+      objectifs: [2],
       type: "curseur",
       titre: "Le ticket au curseur",
       notions: ["markup_coefficient", "margin_rates"],
@@ -441,6 +446,7 @@ export const LE_COUT_MATIERE: Chapitre = {
     },
     {
       id: "le-prix-du-plat",
+      objectifs: [2],
       type: "montants",
       titre: "Le prix qui garde le ratio",
       notions: ["markup_coefficient", "vat_payable"],
@@ -468,6 +474,7 @@ export const LE_COUT_MATIERE: Chapitre = {
     },
     {
       id: "predire-la-marge-de-manoeuvre",
+      objectifs: [4],
       type: "choix",
       titre: "Pariez sur la hausse que la carte absorbe",
       notions: ["margin_rates", "variable_costs"],
@@ -493,6 +500,7 @@ export const LE_COUT_MATIERE: Chapitre = {
     },
     {
       id: "la-hausse-au-curseur",
+      objectifs: [4],
       type: "curseur",
       titre: "La hausse au curseur",
       notions: ["margin_rates", "variable_costs"],
@@ -537,6 +545,7 @@ export const LE_COUT_MATIERE: Chapitre = {
     },
     {
       id: "l-annee",
+      objectifs: [3],
       type: "montants",
       titre: "Le ratio de l'année",
       notions: ["margin_rates", "variable_costs"],
@@ -581,6 +590,7 @@ export const LE_COUT_MATIERE: Chapitre = {
     },
     {
       id: "les-denrees-perdues",
+      objectifs: [4],
       type: "montants",
       titre: "Les plats préparés et non servis",
       notions: ["variable_costs", "material_price_variance"],
@@ -618,6 +628,7 @@ export const LE_COUT_MATIERE: Chapitre = {
     },
     {
       id: "ce-que-dit-le-ratio",
+      objectifs: [3],
       type: "choix",
       titre: "Ce que le ratio dit de la carte",
       notions: ["margin_rates", "material_price_variance"],
@@ -655,6 +666,7 @@ export const LE_COUT_MATIERE: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-cuisine",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire de la cuisine",
       notions: ["margin_rates", "price_elasticity", "contribution_margin"],
@@ -737,6 +749,7 @@ export const LE_COUT_MATIERE: Chapitre = {
     },
     {
       id: "la-prime-au-ratio",
+      objectifs: [3],
       type: "choix",
       titre: "Une prime sur le ratio ?",
       notions: ["margin_rates", "contribution_margin"],
@@ -769,6 +782,7 @@ export const LE_COUT_MATIERE: Chapitre = {
     },
     {
       id: "le-plat-du-jour",
+      objectifs: [2],
       type: "montants",
       titre: "Le plat du jour, à rebours",
       notions: ["markup_coefficient", "margin_rates", "vat_payable"],

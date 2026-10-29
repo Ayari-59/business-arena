@@ -107,6 +107,7 @@ export const INDICATEURS_SOCIAUX: Chapitre = {
     },
     {
       id: "rotation",
+      objectifs: [1],
       type: "montants",
       titre: "L'effectif moyen et la rotation",
       notions: ["dashboard"],
@@ -130,6 +131,7 @@ export const INDICATEURS_SOCIAUX: Chapitre = {
     },
     {
       id: "absenteisme",
+      objectifs: [2],
       type: "montants",
       titre: "Le taux d'absentéisme",
       notions: ["dashboard"],
@@ -153,6 +155,7 @@ export const INDICATEURS_SOCIAUX: Chapitre = {
     },
     {
       id: "un-indicateur-qui-trompe",
+      objectifs: [0, 3],
       type: "choix",
       titre: "Un indicateur qui trompe",
       notions: ["dashboard", "productivity"],
@@ -197,6 +200,7 @@ export const INDICATEURS_SOCIAUX: Chapitre = {
     },
     {
       id: "les-absences-tolerees",
+      objectifs: [2],
       type: "curseur",
       titre: "Les absences sous le seuil d'alerte",
       notions: ["dashboard"],
@@ -231,6 +235,7 @@ export const INDICATEURS_SOCIAUX: Chapitre = {
     },
     {
       id: "le-laboratoire-du-remplacement",
+      objectifs: [0, 1],
       type: "simulation",
       titre: "Quand arrive le remplaçant",
       notions: ["dashboard", "capacity"],

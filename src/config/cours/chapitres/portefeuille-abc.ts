@@ -243,6 +243,7 @@ export const PORTEFEUILLE_ABC: Chapitre = {
     },
     {
       id: "parts",
+      objectifs: [0],
       type: "montants",
       titre: "Ce que pèsent les premiers",
       notions: ["customer_portfolio"],
@@ -271,6 +272,7 @@ export const PORTEFEUILLE_ABC: Chapitre = {
     },
     {
       id: "classer",
+      objectifs: [0],
       type: "tri",
       titre: "Les trois classes",
       notions: ["customer_portfolio"],
@@ -319,6 +321,7 @@ export const PORTEFEUILLE_ABC: Chapitre = {
     },
     {
       id: "predire-le-poids",
+      objectifs: [1],
       type: "choix",
       titre: "Pariez sur le poids du premier compte",
       notions: ["customer_portfolio"],
@@ -339,6 +342,7 @@ export const PORTEFEUILLE_ABC: Chapitre = {
     },
     {
       id: "le-poids-du-premier",
+      objectifs: [1],
       type: "curseur",
       titre: "Le quart des ventes",
       notions: ["customer_portfolio"],
@@ -386,6 +390,7 @@ export const PORTEFEUILLE_ABC: Chapitre = {
     },
     {
       id: "la-concentration",
+      objectifs: [1],
       type: "montants",
       titre: "La concentration du portefeuille",
       notions: ["customer_portfolio"],
@@ -409,6 +414,7 @@ export const PORTEFEUILLE_ABC: Chapitre = {
     },
     {
       id: "concentration",
+      objectifs: [1],
       type: "choix",
       titre: "Un portefeuille concentré ?",
       notions: ["customer_portfolio"],
@@ -444,6 +450,7 @@ export const PORTEFEUILLE_ABC: Chapitre = {
     },
     {
       id: "la-marge-d-un-compte",
+      objectifs: [2],
       type: "montants",
       titre: "La marge d'un compte",
       notions: ["contribution_margin", "margin_rates"],
@@ -471,6 +478,7 @@ export const PORTEFEUILLE_ABC: Chapitre = {
     },
     {
       id: "predire-la-classe-a",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur la classe A par la marge",
       notions: ["customer_portfolio", "contribution_margin"],
@@ -488,6 +496,7 @@ export const PORTEFEUILLE_ABC: Chapitre = {
     },
     {
       id: "le-laboratoire-du-portefeuille",
+      objectifs: [2],
       type: "simulation",
       titre: "Le laboratoire du portefeuille",
       notions: ["customer_portfolio", "contribution_margin"],
@@ -556,6 +565,7 @@ export const PORTEFEUILLE_ABC: Chapitre = {
     },
     {
       id: "la-classe-a-par-la-marge",
+      objectifs: [2],
       type: "montants",
       titre: "La classe A par la marge",
       notions: ["customer_portfolio", "contribution_margin"],
@@ -597,6 +607,7 @@ export const PORTEFEUILLE_ABC: Chapitre = {
     },
     {
       id: "qui-sort-qui-entre",
+      objectifs: [3],
       type: "choix",
       titre: "Le compte qui sort de la classe A",
       notions: ["customer_portfolio", "contribution_margin"],
@@ -634,6 +645,7 @@ export const PORTEFEUILLE_ABC: Chapitre = {
     },
     {
       id: "le-prix-de-valbrune",
+      objectifs: [3],
       type: "curseur",
       titre: "Le prix qui ferait revenir le compte",
       notions: ["contribution_margin", "price_floor"],
@@ -678,6 +690,7 @@ export const PORTEFEUILLE_ABC: Chapitre = {
     },
     {
       id: "valbrune-renegocie",
+      objectifs: [3],
       type: "montants",
       titre: "Variante : le contrat renégocié",
       notions: ["contribution_margin", "customer_portfolio"],
@@ -707,6 +720,7 @@ export const PORTEFEUILLE_ABC: Chapitre = {
     },
     {
       id: "la-valeur-vie-des-comptes",
+      objectifs: [4],
       type: "choix",
       titre: "Ce que le classement d'une année ne voit pas",
       notions: ["customer_portfolio", "customer_lifetime_value", "churn_rate"],
@@ -752,6 +766,7 @@ export const PORTEFEUILLE_ABC: Chapitre = {
     },
     {
       id: "traiter",
+      objectifs: [4],
       type: "choix",
       titre: "Que faire de chaque classe",
       notions: ["customer_portfolio"],

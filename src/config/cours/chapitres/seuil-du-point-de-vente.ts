@@ -208,6 +208,7 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "la-marge",
+      objectifs: [0],
       type: "montants",
       titre: "La marge sur coût variable",
       notions: ["contribution_margin", "variable_costs"],
@@ -235,6 +236,7 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "les-charges",
+      objectifs: [0],
       type: "tri",
       titre: "Fixes ou variables",
       notions: ["fixed_costs", "variable_costs"],
@@ -267,6 +269,7 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "le-seuil",
+      objectifs: [1],
       type: "montants",
       titre: "Le seuil en chiffre d'affaires",
       notions: ["breakeven", "safety_margin"],
@@ -294,6 +297,7 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "predire-le-point-mort",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur le point mort",
       notions: ["dead_point"],
@@ -312,6 +316,7 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "le-point-mort-au-curseur",
+      objectifs: [2],
       type: "curseur",
       titre: "Faites défiler le mois",
       notions: ["dead_point", "breakeven"],
@@ -354,6 +359,7 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "le-point-mort",
+      objectifs: [2],
       type: "montants",
       titre: "Le point mort",
       notions: ["dead_point"],
@@ -378,6 +384,7 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "predire-la-fermeture",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur les jours de fermeture",
       notions: ["safety_margin", "fixed_costs"],
@@ -397,6 +404,7 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "la-fermeture-au-curseur",
+      objectifs: [2],
       type: "curseur",
       titre: "Fermez la boutique",
       notions: ["safety_margin", "fixed_costs"],
@@ -436,6 +444,7 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "ce-que-coute-un-jour-ferme",
+      objectifs: [2],
       type: "montants",
       titre: "Ce que coûte un jour fermé",
       notions: ["safety_margin", "fixed_costs", "contribution_margin"],
@@ -464,6 +473,7 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "en-passages",
+      objectifs: [3],
       type: "montants",
       titre: "Le seuil en passages en caisse",
       notions: ["breakeven", "average_basket"],
@@ -485,6 +495,7 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "le-panier-plancher",
+      objectifs: [3],
       type: "curseur",
       titre: "Le panier plancher",
       notions: ["breakeven", "average_basket"],
@@ -523,6 +534,7 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "le-panier-en-promotion",
+      objectifs: [3],
       type: "montants",
       titre: "Variante : un panier qui baisse par la remise",
       notions: ["breakeven", "average_basket", "contribution_margin"],
@@ -552,6 +564,7 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "le-plancher-en-question",
+      objectifs: [3],
       type: "choix",
       titre: "Ce que suppose le panier plancher",
       notions: ["breakeven", "average_basket"],
@@ -582,6 +595,7 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "le-laboratoire-du-seuil",
+      objectifs: [1],
       type: "simulation",
       titre: "Le laboratoire du seuil",
       notions: ["breakeven", "dead_point", "safety_margin"],
@@ -656,6 +670,7 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [4],
       type: "montants",
       titre: "Retrouver le mois à rebours",
       notions: ["safety_margin", "breakeven"],
@@ -685,6 +700,7 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "une-campagne-de-plus",
+      objectifs: [4],
       type: "montants",
       titre: "Variante : une campagne d'affichage",
       notions: ["breakeven", "dead_point", "fixed_costs"],

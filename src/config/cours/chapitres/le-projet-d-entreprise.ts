@@ -111,6 +111,7 @@ export const LE_PROJET_D_ENTREPRISE: Chapitre = {
     },
     {
       id: "ranger",
+      objectifs: [0],
       type: "tri",
       titre: "Besoin ou ressource",
       notions: ["balance_sheet"],
@@ -126,6 +127,7 @@ export const LE_PROJET_D_ENTREPRISE: Chapitre = {
     },
     {
       id: "equilibre",
+      objectifs: [1],
       type: "montants",
       titre: "Les deux totaux",
       notions: ["balance_sheet"],
@@ -146,6 +148,7 @@ export const LE_PROJET_D_ENTREPRISE: Chapitre = {
     },
     {
       id: "qui-paie",
+      objectifs: [2],
       type: "montants",
       titre: "Qui paie quoi",
       notions: ["balance_sheet", "loan_schedule"],
@@ -173,6 +176,7 @@ export const LE_PROJET_D_ENTREPRISE: Chapitre = {
     },
     {
       id: "tresorerie",
+      objectifs: [3],
       type: "montants",
       titre: "Combien de temps tient la trésorerie",
       notions: ["net_treasury", "fixed_costs"],
@@ -197,6 +201,7 @@ export const LE_PROJET_D_ENTREPRISE: Chapitre = {
     },
     {
       id: "le-plus-petit-apport",
+      objectifs: [2, 3],
       type: "curseur",
       titre: "Le plus petit apport",
       notions: ["net_treasury", "balance_sheet"],
@@ -230,6 +235,7 @@ export const LE_PROJET_D_ENTREPRISE: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-reserve",
+      objectifs: [3],
       type: "simulation",
       titre: "Placer la réserve",
       notions: ["net_treasury"],

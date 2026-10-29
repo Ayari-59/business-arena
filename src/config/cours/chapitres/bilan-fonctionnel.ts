@@ -434,6 +434,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
     },
     {
       id: "les-reclassements",
+      objectifs: [0],
       type: "tri",
       titre: "Les reclassements",
       notions: ["balance_sheet", "frng", "bfr"],
@@ -473,6 +474,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
     },
     {
       id: "les-interets-courus",
+      objectifs: [0],
       type: "choix",
       titre: "Deux intérêts courus, deux étages",
       notions: ["balance_sheet", "net_treasury"],
@@ -508,6 +510,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
     },
     {
       id: "frng",
+      objectifs: [1],
       type: "montants",
       titre: "Le fonds de roulement net global",
       notions: ["frng"],
@@ -539,6 +542,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
     },
     {
       id: "bfr-d-exploitation",
+      objectifs: [1],
       type: "montants",
       titre: "Le besoin en fonds de roulement d'exploitation",
       notions: ["bfr", "payment_terms"],
@@ -570,6 +574,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
     },
     {
       id: "hors-exploitation-et-tresorerie",
+      objectifs: [1],
       type: "montants",
       titre: "Hors exploitation, et la trésorerie nette",
       notions: ["bfr", "net_treasury"],
@@ -604,6 +609,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
     },
     {
       id: "predire-la-variation",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur la trésorerie de l'année",
       notions: ["net_treasury", "frng"],
@@ -627,6 +633,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
     },
     {
       id: "depuis-la-creation",
+      objectifs: [2],
       type: "montants",
       titre: "De la création à la clôture",
       notions: ["frng", "bfr", "net_treasury"],
@@ -658,6 +665,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
     },
     {
       id: "predire-la-place-de-marche",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur la place de marché",
       notions: ["bfr", "payment_terms", "receivables_financing"],
@@ -676,6 +684,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
     },
     {
       id: "la-place-de-marche",
+      objectifs: [3],
       type: "curseur",
       titre: "La place de marché qui reverse à d jours",
       notions: ["bfr", "payment_terms", "net_treasury"],
@@ -721,6 +730,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
     },
     {
       id: "le-bfr-normatif",
+      objectifs: [3],
       type: "montants",
       titre: "Le BFR normatif, en jours de chiffre d'affaires",
       notions: ["bfr", "payment_terms"],
@@ -762,6 +772,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
     },
     {
       id: "predire-le-stock",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur le stock de la gamme",
       notions: ["bfr", "stock"],
@@ -783,6 +794,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
     },
     {
       id: "le-laboratoire-du-besoin",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire du besoin",
       notions: ["bfr", "payment_terms", "net_treasury", "stock"],
@@ -854,6 +866,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
     },
     {
       id: "les-ratios-de-rotation",
+      objectifs: [4],
       type: "montants",
       titre: "Les ratios de rotation",
       notions: ["payment_terms", "stock_rotation"],
@@ -880,6 +893,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
     },
     {
       id: "le-ratio-et-le-contrat",
+      objectifs: [4],
       type: "choix",
       titre: "Le ratio et le contrat",
       notions: ["payment_terms"],
@@ -910,6 +924,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
     },
     {
       id: "la-croissance",
+      objectifs: [3],
       type: "montants",
       titre: "Variante : 20 % de ventes en plus",
       notions: ["bfr", "frng", "net_treasury"],
@@ -938,6 +953,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
     },
     {
       id: "garder-la-tresorerie",
+      objectifs: [4],
       type: "montants",
       titre: "Emprunter à 5 % pour garder une trésorerie à 3 %",
       notions: ["net_treasury", "loan_schedule"],
@@ -974,6 +990,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
     },
     {
       id: "emprunter-pour-garder",
+      objectifs: [4],
       type: "choix",
       titre: "Garder la trésorerie, ou rembourser ?",
       notions: ["net_treasury", "frng"],

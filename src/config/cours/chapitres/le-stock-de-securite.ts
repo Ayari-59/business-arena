@@ -106,6 +106,7 @@ export const LE_STOCK_DE_SECURITE: Chapitre = {
     },
     {
       id: "le-point-de-commande",
+      objectifs: [0, 1],
       type: "montants",
       titre: "Le point de commande",
       notions: ["stock"],
@@ -127,6 +128,7 @@ export const LE_STOCK_DE_SECURITE: Chapitre = {
     },
     {
       id: "commander",
+      objectifs: [2],
       type: "choix",
       titre: "Faut-il commander ce soir ?",
       notions: ["stock"],
@@ -155,6 +157,7 @@ export const LE_STOCK_DE_SECURITE: Chapitre = {
     },
     {
       id: "ce-qu-immobilise-la-securite",
+      objectifs: [3],
       type: "montants",
       titre: "Ce que la sécurité immobilise",
       notions: ["stock"],
@@ -170,6 +173,7 @@ export const LE_STOCK_DE_SECURITE: Chapitre = {
     },
     {
       id: "le-retard-couvert",
+      objectifs: [3],
       type: "curseur",
       titre: "Le retard que la sécurité couvre",
       notions: ["stock"],
@@ -209,6 +213,7 @@ export const LE_STOCK_DE_SECURITE: Chapitre = {
     },
     {
       id: "le-laboratoire-de-la-securite",
+      objectifs: [1, 3],
       type: "simulation",
       titre: "Le laboratoire de la sécurité",
       notions: ["stock"],

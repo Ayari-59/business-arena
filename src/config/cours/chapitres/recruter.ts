@@ -103,6 +103,7 @@ export const RECRUTER: Chapitre = {
     },
     {
       id: "cout",
+      objectifs: [0, 1],
       type: "montants",
       titre: "Ce que coûte l'embauche, ce qu'elle doit faire vendre",
       notions: ["payroll", "contribution_margin"],
@@ -123,6 +124,7 @@ export const RECRUTER: Chapitre = {
     },
     {
       id: "l-annee",
+      objectifs: [2],
       type: "montants",
       titre: "Ce que la recrue change à l'année",
       notions: ["capacity", "productivity"],
@@ -161,6 +163,7 @@ export const RECRUTER: Chapitre = {
     },
     {
       id: "verdict",
+      objectifs: [3],
       type: "choix",
       titre: "L'embauche se paie-t-elle ?",
       notions: ["payroll", "capacity"],
@@ -200,6 +203,7 @@ export const RECRUTER: Chapitre = {
     },
     {
       id: "les-ventes-qui-paient-l-embauche",
+      objectifs: [1],
       type: "curseur",
       titre: "Les ventes qui paient l'embauche",
       notions: ["contribution_margin", "payroll"],
@@ -235,6 +239,7 @@ export const RECRUTER: Chapitre = {
     },
     {
       id: "le-laboratoire-de-l-atelier",
+      objectifs: [2],
       type: "simulation",
       titre: "Servir toute la demande",
       notions: ["capacity", "payroll"],

@@ -214,6 +214,7 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "le-mois",
+      objectifs: [0],
       type: "montants",
       titre: "Le mois en quatre chiffres",
       notions: ["revenue", "sales_per_sqm"],
@@ -241,6 +242,7 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "le-panier",
+      objectifs: [0],
       type: "montants",
       titre: "Le panier, l'indice de vente, le prix moyen",
       notions: ["average_basket"],
@@ -265,6 +267,7 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "la-transformation",
+      objectifs: [1],
       type: "montants",
       titre: "Le taux de transformation",
       notions: ["conversion_rate"],
@@ -298,6 +301,7 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "le-taux-de-service",
+      objectifs: [1, 2],
       type: "montants",
       titre: "Les ventes manquées et le taux de service",
       notions: ["stock", "conversion_rate"],
@@ -328,6 +332,7 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "deux-taux",
+      objectifs: [1],
       type: "choix",
       titre: "Deux taux à ne pas confondre",
       notions: ["conversion_rate", "stock"],
@@ -358,6 +363,7 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "pourquoi-manquees",
+      objectifs: [2],
       type: "choix",
       titre: "Le rayon vide",
       notions: ["stock", "conversion_rate"],
@@ -389,6 +395,7 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "predire-les-passages",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur les passages",
       notions: ["average_basket", "revenue"],
@@ -409,6 +416,7 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "les-passages-au-curseur",
+      objectifs: [3],
       type: "curseur",
       titre: "Faites passer les clients en caisse",
       notions: ["average_basket", "revenue", "conversion_rate"],
@@ -447,6 +455,7 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "deux-leviers",
+      objectifs: [3],
       type: "montants",
       titre: "Deux leviers pour un objectif",
       notions: ["average_basket", "revenue", "conversion_rate"],
@@ -472,6 +481,7 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "quel-levier",
+      objectifs: [3],
       type: "choix",
       titre: "Le levier le moins cher",
       notions: ["average_basket", "customer_acquisition_cost"],
@@ -496,6 +506,7 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "predire-les-leviers",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur deux leviers",
       notions: ["average_basket", "revenue"],
@@ -513,6 +524,7 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "le-laboratoire-des-indicateurs",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire des indicateurs",
       notions: ["average_basket", "conversion_rate", "revenue"],
@@ -570,6 +582,7 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "la-decomposition",
+      objectifs: [3],
       type: "montants",
       titre: "L'indice de vente qu'exige l'objectif",
       notions: ["average_basket", "revenue"],
@@ -604,6 +617,7 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "le-panier-sans-les-comites",
+      objectifs: [4],
       type: "montants",
       titre: "Le panier, sans les comités",
       notions: ["average_basket", "segmentation"],
@@ -630,6 +644,7 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "quel-panier-viser",
+      objectifs: [4],
       type: "choix",
       titre: "De quel panier parle-t-on ?",
       notions: ["average_basket", "segmentation"],
@@ -660,6 +675,7 @@ export const INDICATEURS_DU_POINT_DE_VENTE: Chapitre = {
     },
     {
       id: "le-comite-qui-paie-tard",
+      objectifs: [4],
       type: "montants",
       titre: "Le comité qui paie tard",
       notions: ["average_basket", "payment_terms"],

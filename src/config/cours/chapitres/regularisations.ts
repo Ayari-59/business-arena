@@ -254,6 +254,7 @@ export const REGULARISATIONS: Chapitre = {
     },
     {
       id: "predire-la-prime",
+      objectifs: [1],
       type: "choix",
       titre: "Pariez sur la part d'avance",
       notions: ["income_statement"],
@@ -274,6 +275,7 @@ export const REGULARISATIONS: Chapitre = {
     },
     {
       id: "le-mois-de-souscription",
+      objectifs: [1],
       type: "curseur",
       titre: "Déplacez la souscription",
       notions: ["income_statement"],
@@ -317,6 +319,7 @@ export const REGULARISATIONS: Chapitre = {
     },
     {
       id: "part-d-avance",
+      objectifs: [1],
       type: "montants",
       titre: "La part de N+1",
       notions: ["income_statement"],
@@ -342,6 +345,7 @@ export const REGULARISATIONS: Chapitre = {
     },
     {
       id: "charge-d-avance",
+      objectifs: [1],
       type: "ecriture",
       titre: "La charge constatée d'avance",
       notions: ["income_statement", "balance_sheet"],
@@ -371,6 +375,7 @@ export const REGULARISATIONS: Chapitre = {
     },
     {
       id: "facture-non-parvenue",
+      objectifs: [2],
       type: "ecriture",
       titre: "Des composants sans facture",
       notions: ["income_statement", "vat_payable", "stock"],
@@ -404,6 +409,7 @@ export const REGULARISATIONS: Chapitre = {
     },
     {
       id: "facture-a-etablir",
+      objectifs: [2],
       type: "ecriture",
       titre: "Une vente pas encore facturée",
       notions: ["income_statement", "vat_payable"],
@@ -439,6 +445,7 @@ export const REGULARISATIONS: Chapitre = {
     },
     {
       id: "facture-d-avance",
+      objectifs: [1],
       type: "choix",
       titre: "Une facture trop tôt",
       notions: ["income_statement"],
@@ -474,6 +481,7 @@ export const REGULARISATIONS: Chapitre = {
     },
     {
       id: "produit-d-avance",
+      objectifs: [1],
       type: "ecriture",
       titre: "Le produit constaté d'avance",
       notions: ["income_statement", "balance_sheet"],
@@ -502,6 +510,7 @@ export const REGULARISATIONS: Chapitre = {
     },
     {
       id: "interets-du-placement",
+      objectifs: [3],
       type: "ecriture",
       titre: "Des intérêts sans pièce",
       notions: ["income_statement", "net_treasury"],
@@ -539,6 +548,7 @@ export const REGULARISATIONS: Chapitre = {
     },
     {
       id: "predire-l-effet-net",
+      objectifs: [4],
       type: "choix",
       titre: "Pariez sur l'effet net",
       notions: ["income_statement"],
@@ -558,6 +568,7 @@ export const REGULARISATIONS: Chapitre = {
     },
     {
       id: "le-laboratoire-des-pieces",
+      objectifs: [4],
       type: "simulation",
       titre: "Le laboratoire des pièces",
       notions: ["income_statement"],
@@ -632,6 +643,7 @@ export const REGULARISATIONS: Chapitre = {
     },
     {
       id: "resultat",
+      objectifs: [4],
       type: "montants",
       titre: "Ce que les régularisations changent",
       notions: ["income_statement"],
@@ -661,6 +673,7 @@ export const REGULARISATIONS: Chapitre = {
     },
     {
       id: "extourne",
+      objectifs: [4],
       type: "choix",
       titre: "Le 1er janvier",
       notions: ["income_statement"],
@@ -689,6 +702,7 @@ export const REGULARISATIONS: Chapitre = {
     },
     {
       id: "extourne-assurance",
+      objectifs: [4],
       type: "ecriture",
       titre: "L'assurance revient",
       notions: ["income_statement"],
@@ -712,6 +726,7 @@ export const REGULARISATIONS: Chapitre = {
     },
     {
       id: "ce-que-garde-n-plus-1",
+      objectifs: [4],
       type: "montants",
       titre: "Ce que garde N+1",
       notions: ["income_statement"],
@@ -750,6 +765,7 @@ export const REGULARISATIONS: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [1],
       type: "montants",
       titre: "Retrouver la nouvelle prime",
       notions: ["income_statement"],
@@ -788,6 +804,7 @@ export const REGULARISATIONS: Chapitre = {
     },
     {
       id: "la-facture-oubliee",
+      objectifs: [0],
       type: "choix",
       titre: "La facture qu'on voudrait laisser à N+1",
       notions: ["income_statement", "stock"],

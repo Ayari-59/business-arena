@@ -148,6 +148,7 @@ export const RENTABILITE: Chapitre = {
     },
     {
       id: "calcul",
+      objectifs: [1, 2],
       type: "montants",
       titre: "Les deux rentabilités",
       notions: ["profitability_vs_return"],
@@ -175,6 +176,7 @@ export const RENTABILITE: Chapitre = {
     },
     {
       id: "associes",
+      objectifs: [0, 3],
       type: "choix",
       titre: "Pour les associés",
       notions: ["profitability_vs_return"],
@@ -210,6 +212,7 @@ export const RENTABILITE: Chapitre = {
     },
     {
       id: "emprunter",
+      objectifs: [4],
       type: "choix",
       titre: "Emprunter pour investir",
       notions: ["profitability_vs_return"],
@@ -245,6 +248,7 @@ export const RENTABILITE: Chapitre = {
     },
     {
       id: "l-activite-face-a-l-emprunt",
+      objectifs: [3],
       type: "curseur",
       titre: "L'activité face au coût de l'emprunt",
       notions: ["profitability_vs_return"],
@@ -284,6 +288,7 @@ export const RENTABILITE: Chapitre = {
     },
     {
       id: "le-laboratoire-du-levier",
+      objectifs: [4],
       type: "simulation",
       titre: "Le laboratoire de l'effet de levier",
       notions: ["profitability_vs_return"],

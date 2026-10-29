@@ -297,6 +297,7 @@ export const COUT_COMPLET: Chapitre = {
     },
     {
       id: "directes-ou-indirectes",
+      objectifs: [0],
       type: "tri",
       titre: "Directes ou indirectes",
       notions: ["full_unit_cost"],
@@ -329,6 +330,7 @@ export const COUT_COMPLET: Chapitre = {
     },
     {
       id: "repartition-primaire",
+      objectifs: [0],
       type: "montants",
       titre: "La répartition primaire",
       notions: ["full_unit_cost"],
@@ -353,6 +355,7 @@ export const COUT_COMPLET: Chapitre = {
     },
     {
       id: "predire-les-prestations",
+      objectifs: [1],
       type: "choix",
       titre: "Pariez sur l'entretien",
       notions: ["full_unit_cost"],
@@ -373,6 +376,7 @@ export const COUT_COMPLET: Chapitre = {
     },
     {
       id: "le-point-fixe",
+      objectifs: [1],
       type: "curseur",
       titre: "Le total qui se retrouve lui-même",
       notions: ["full_unit_cost"],
@@ -413,6 +417,7 @@ export const COUT_COMPLET: Chapitre = {
     },
     {
       id: "prestations-reciproques",
+      objectifs: [1],
       type: "montants",
       titre: "Les prestations réciproques",
       notions: ["full_unit_cost"],
@@ -450,6 +455,7 @@ export const COUT_COMPLET: Chapitre = {
     },
     {
       id: "repartition-secondaire",
+      objectifs: [1],
       type: "montants",
       titre: "La répartition secondaire",
       notions: ["full_unit_cost"],
@@ -477,6 +483,7 @@ export const COUT_COMPLET: Chapitre = {
     },
     {
       id: "oublier-la-reciprocite",
+      objectifs: [1],
       type: "choix",
       titre: "Une répartition en cascade",
       notions: ["full_unit_cost"],
@@ -499,6 +506,7 @@ export const COUT_COMPLET: Chapitre = {
     },
     {
       id: "unites-d-oeuvre",
+      objectifs: [2],
       type: "montants",
       titre: "Le coût des unités d'œuvre",
       notions: ["full_unit_cost"],
@@ -527,6 +535,7 @@ export const COUT_COMPLET: Chapitre = {
     },
     {
       id: "chaine-des-couts",
+      objectifs: [2],
       type: "montants",
       titre: "La chaîne des coûts",
       notions: ["full_unit_cost"],
@@ -558,6 +567,7 @@ export const COUT_COMPLET: Chapitre = {
     },
     {
       id: "meme-resultat",
+      objectifs: [2],
       type: "choix",
       titre: "Deux méthodes, un résultat",
       notions: ["full_unit_cost", "breakeven"],
@@ -578,6 +588,7 @@ export const COUT_COMPLET: Chapitre = {
     },
     {
       id: "predire-le-volume",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur le volume",
       notions: ["full_unit_cost", "fixed_costs"],
@@ -596,6 +607,7 @@ export const COUT_COMPLET: Chapitre = {
     },
     {
       id: "le-cout-fige",
+      objectifs: [3],
       type: "curseur",
       titre: "Un coût complet figé",
       notions: ["full_unit_cost", "fixed_costs"],
@@ -638,6 +650,7 @@ export const COUT_COMPLET: Chapitre = {
     },
     {
       id: "imputation-rationnelle",
+      objectifs: [3],
       type: "montants",
       titre: "L'imputation rationnelle",
       notions: ["full_unit_cost", "fixed_costs"],
@@ -663,6 +676,7 @@ export const COUT_COMPLET: Chapitre = {
     },
     {
       id: "cout-rationnel",
+      objectifs: [3],
       type: "montants",
       titre: "Le coût de revient rationnel",
       notions: ["full_unit_cost", "fixed_costs"],
@@ -688,6 +702,7 @@ export const COUT_COMPLET: Chapitre = {
     },
     {
       id: "le-laboratoire-du-cout",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire du coût complet",
       notions: ["full_unit_cost", "fixed_costs"],
@@ -764,6 +779,7 @@ export const COUT_COMPLET: Chapitre = {
     },
     {
       id: "tableau-complet",
+      objectifs: [4],
       type: "montants",
       titre: "Variante : le tableau complet",
       notions: ["full_unit_cost"],
@@ -807,6 +823,7 @@ export const COUT_COMPLET: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [4],
       type: "montants",
       titre: "Retrouver les ventes à rebours",
       notions: ["full_unit_cost", "fixed_costs"],
@@ -836,6 +853,7 @@ export const COUT_COMPLET: Chapitre = {
     },
     {
       id: "commande",
+      objectifs: [3],
       type: "choix",
       titre: "Une commande sous le coût complet",
       notions: ["full_unit_cost", "contribution_margin"],

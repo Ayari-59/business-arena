@@ -57,3 +57,23 @@ describe("vueDeLaClasse", () => {
     expect(vue.etapes.find((x) => x.id === intro!.id)!.notee).toBe(false);
   });
 });
+
+describe("vueDeLaClasse, objectif par objectif", () => {
+  // Deux élèves qui ont fini le premier chapitre : l'un tout du premier coup, l'autre avec la
+  // correction sur l'étape du premier objectif. Un troisième, en route, ne compte pas encore.
+  const notees = chapitre.etapes.filter((e) => e.type !== "lecture");
+  const tout = (s: { essais: number; reussi: boolean; aide: boolean }) => Object.fromEntries(notees.map((e) => [e.id, s]));
+  const k = notees[0]!.objectifs![0]!;
+  const vue = vueDeLaClasse(chapitre, [
+    p("Zoé", chapitre.etapes.length, tout({ essais: 1, reussi: true, aide: false })),
+    p("Adam", chapitre.etapes.length, { ...tout({ essais: 1, reussi: true, aide: false }), [notees[0]!.id]: { essais: 2, reussi: true, aide: true } }),
+    p("Inès", 2, {}),
+  ]);
+
+  it("compte, parmi les élèves qui ont fini, les acquis, en cours et à revoir de chaque objectif", () => {
+    expect(vue.objectifs).toHaveLength(chapitre.objectifs.length);
+    expect(vue.objectifs[k]).toEqual({ objectif: chapitre.objectifs[k], acquis: 1, enCours: 0, aRevoir: 1 });
+    const autres = vue.objectifs.filter((_, i) => !notees[0]!.objectifs!.includes(i));
+    for (const o of autres) expect([o.acquis, o.enCours, o.aRevoir]).toEqual([2, 0, 0]);
+  });
+});

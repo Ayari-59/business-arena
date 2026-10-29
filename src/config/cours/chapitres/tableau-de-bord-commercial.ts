@@ -300,6 +300,7 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
     },
     {
       id: "le-cabinet",
+      objectifs: [0],
       type: "montants",
       titre: "L'année du cabinet",
       notions: ["dashboard", "capacity"],
@@ -334,6 +335,7 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
     },
     {
       id: "le-trimestre-qui-decroche",
+      objectifs: [0],
       type: "choix",
       titre: "Le trimestre qui décroche",
       notions: ["dashboard", "seasonality"],
@@ -390,6 +392,7 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
     },
     {
       id: "les-indicateurs-de-marc",
+      objectifs: [1],
       type: "montants",
       titre: "Les indicateurs d'un commercial",
       notions: ["dashboard", "conversion_rate", "average_basket"],
@@ -425,6 +428,7 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
     },
     {
       id: "predire-le-seuil",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur le seuil d'un commercial",
       notions: ["breakeven", "dashboard"],
@@ -450,6 +454,7 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
     },
     {
       id: "le-seuil-au-curseur",
+      objectifs: [2],
       type: "curseur",
       titre: "Le seuil d'Hugo au curseur",
       notions: ["breakeven", "dashboard"],
@@ -498,6 +503,7 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
     },
     {
       id: "le-seuil-d-hugo",
+      objectifs: [2],
       type: "montants",
       titre: "Le seuil de rentabilité d'un commercial",
       notions: ["breakeven", "margin_rates"],
@@ -526,6 +532,7 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
     },
     {
       id: "les-seuils-de-marc-et-de-nadia",
+      objectifs: [2],
       type: "montants",
       titre: "Les seuils des deux autres commerciaux",
       notions: ["breakeven", "margin_rates"],
@@ -563,6 +570,7 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
     },
     {
       id: "predire-la-transformation",
+      objectifs: [1],
       type: "choix",
       titre: "Pariez sur la transformation",
       notions: ["conversion_rate", "average_basket"],
@@ -586,6 +594,7 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
     },
     {
       id: "le-laboratoire-d-hugo",
+      objectifs: [1, 2],
       type: "simulation",
       titre: "Le laboratoire d'Hugo",
       notions: ["conversion_rate", "average_basket", "breakeven"],
@@ -665,6 +674,7 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
     },
     {
       id: "la-transformation-d-hugo",
+      objectifs: [1],
       type: "montants",
       titre: "Ce qu'il manquait à Hugo au premier trimestre",
       notions: ["conversion_rate", "average_basket", "breakeven"],
@@ -698,6 +708,7 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
     },
     {
       id: "predire-nadia",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur le tableau de Nadia",
       notions: ["dashboard", "conversion_rate"],
@@ -728,6 +739,7 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
     },
     {
       id: "les-devis-de-nadia",
+      objectifs: [3],
       type: "curseur",
       titre: "Les devis que Nadia a dû remettre",
       notions: ["conversion_rate", "dashboard"],
@@ -770,6 +782,7 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
     },
     {
       id: "les-voyants-de-nadia",
+      objectifs: [3],
       type: "montants",
       titre: "Le voyant que l'objectif cachait",
       notions: ["conversion_rate", "dashboard"],
@@ -808,6 +821,7 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
     },
     {
       id: "ranger",
+      objectifs: [0],
       type: "tri",
       titre: "Ranger les indicateurs",
       notions: ["dashboard"],
@@ -841,6 +855,7 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
     },
     {
       id: "les-trimestres-d-hugo",
+      objectifs: [4],
       type: "montants",
       titre: "Hugo, trimestre après trimestre",
       notions: ["breakeven", "dashboard"],
@@ -879,6 +894,7 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
     },
     {
       id: "la-commission-pour-tous",
+      objectifs: [2],
       type: "montants",
       titre: "Variante : une commission pour tous",
       notions: ["breakeven", "margin_rates"],
@@ -906,6 +922,7 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
     },
     {
       id: "juger-hugo",
+      objectifs: [4],
       type: "choix",
       titre: "Ce qu'un voyant ne dit pas",
       notions: ["dashboard", "breakeven"],

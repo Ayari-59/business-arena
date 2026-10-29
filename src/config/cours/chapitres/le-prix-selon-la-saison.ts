@@ -395,6 +395,7 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
     },
     {
       id: "coefficients",
+      objectifs: [0],
       type: "montants",
       titre: "Les coefficients saisonniers",
       notions: ["seasonality"],
@@ -431,6 +432,7 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
     },
     {
       id: "prix-unique",
+      objectifs: [1],
       type: "montants",
       titre: "Une année à prix unique",
       notions: ["occupancy_revpar", "seasonality"],
@@ -467,6 +469,7 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
     },
     {
       id: "lire-l-annee",
+      objectifs: [3],
       type: "choix",
       titre: "Ce que le prix unique laisse",
       notions: ["occupancy_revpar", "seasonality"],
@@ -512,6 +515,7 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
     },
     {
       id: "prix-de-la-saison",
+      objectifs: [2],
       type: "montants",
       titre: "Le prix de la saison",
       notions: ["seasonality", "occupancy_revpar"],
@@ -552,6 +556,7 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
     },
     {
       id: "verdict-de-la-saison",
+      objectifs: [2],
       type: "choix",
       titre: "Le prix de la saison a-t-il payé ?",
       notions: ["seasonality", "occupancy_revpar"],
@@ -594,6 +599,7 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
     },
     {
       id: "predire-la-baisse",
+      objectifs: [4],
       type: "choix",
       titre: "Pariez sur la baisse",
       notions: ["price_elasticity", "occupancy_revpar"],
@@ -616,6 +622,7 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
     },
     {
       id: "la-baisse-au-curseur",
+      objectifs: [4],
       type: "curseur",
       titre: "La baisse au curseur",
       notions: ["price_elasticity", "occupancy_revpar"],
@@ -664,6 +671,7 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
     },
     {
       id: "ce-qu-une-baisse-doit-vendre",
+      objectifs: [4],
       type: "montants",
       titre: "Ce qu'une baisse doit faire vendre",
       notions: ["occupancy_revpar", "price_elasticity"],
@@ -695,6 +703,7 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
     },
     {
       id: "predire-la-hausse",
+      objectifs: [4],
       type: "choix",
       titre: "Pariez sur la hausse",
       notions: ["price_elasticity", "occupancy_revpar"],
@@ -718,6 +727,7 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
     },
     {
       id: "la-hausse-au-curseur",
+      objectifs: [4],
       type: "curseur",
       titre: "La hausse au curseur",
       notions: ["price_elasticity", "occupancy_revpar"],
@@ -767,6 +777,7 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
     },
     {
       id: "ce-qu-une-hausse-peut-perdre",
+      objectifs: [4],
       type: "montants",
       titre: "Ce qu'une hausse peut perdre",
       notions: ["price_elasticity", "occupancy_revpar"],
@@ -804,6 +815,7 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
     },
     {
       id: "prix-du-remplissage",
+      objectifs: [3],
       type: "montants",
       titre: "Le prix qui suit le remplissage",
       notions: ["occupancy_revpar"],
@@ -850,6 +862,7 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
     },
     {
       id: "la-regle",
+      objectifs: [3],
       type: "choix",
       titre: "Fixer le prix d'un trimestre",
       notions: ["occupancy_revpar", "seasonality"],
@@ -884,6 +897,7 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
     },
     {
       id: "le-laboratoire-des-quatre-prix",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire des quatre prix",
       notions: ["occupancy_revpar", "price_elasticity", "seasonality"],
@@ -954,6 +968,7 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
     },
     {
       id: "le-prix-qui-remplit-juste",
+      objectifs: [4],
       type: "montants",
       titre: "Le prix qui remplit juste l'hôtel",
       notions: ["price_elasticity", "occupancy_revpar"],
@@ -1000,6 +1015,7 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
     },
     {
       id: "une-petite-baisse",
+      objectifs: [4],
       type: "montants",
       titre: "Variante : une baisse plus petite",
       notions: ["price_elasticity", "occupancy_revpar"],
@@ -1045,6 +1061,7 @@ export const LE_PRIX_SELON_LA_SAISON: Chapitre = {
     },
     {
       id: "la-regle-des-15-pour-cent",
+      objectifs: [3],
       type: "choix",
       titre: "Une règle à écrire ?",
       notions: ["occupancy_revpar", "price_elasticity"],

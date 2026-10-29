@@ -331,6 +331,7 @@ export const LES_STOCKS: Chapitre = {
     },
     {
       id: "achats",
+      objectifs: [0],
       type: "ecriture",
       titre: "Les achats du trimestre",
       notions: ["stock", "vat_payable"],
@@ -356,6 +357,7 @@ export const LES_STOCKS: Chapitre = {
     },
     {
       id: "ventes",
+      objectifs: [0],
       type: "ecriture",
       titre: "Les ventes du trimestre",
       notions: ["revenue", "vat_payable"],
@@ -384,6 +386,7 @@ export const LES_STOCKS: Chapitre = {
     },
     {
       id: "predire-le-cout-des-ventes",
+      objectifs: [1],
       type: "choix",
       titre: "Pariez sur le coût des ventes",
       notions: ["stock"],
@@ -403,6 +406,7 @@ export const LES_STOCKS: Chapitre = {
     },
     {
       id: "vendre-ce-qu-on-achete",
+      objectifs: [1],
       type: "curseur",
       titre: "Les ventes au curseur",
       notions: ["stock"],
@@ -460,6 +464,7 @@ export const LES_STOCKS: Chapitre = {
     },
     {
       id: "inventaire",
+      objectifs: [2],
       type: "montants",
       titre: "L'inventaire",
       notions: ["stock", "weighted_average_cost"],
@@ -494,6 +499,7 @@ export const LES_STOCKS: Chapitre = {
     },
     {
       id: "annulation-stock-initial",
+      objectifs: [0],
       type: "ecriture",
       titre: "Le stock initial s'annule",
       notions: ["stock"],
@@ -518,6 +524,7 @@ export const LES_STOCKS: Chapitre = {
     },
     {
       id: "constatation-stock-final",
+      objectifs: [0],
       type: "ecriture",
       titre: "Le stock final se constate",
       notions: ["stock"],
@@ -550,6 +557,7 @@ export const LES_STOCKS: Chapitre = {
     },
     {
       id: "effet-sur-le-resultat",
+      objectifs: [1],
       type: "choix",
       titre: "La variation et le résultat",
       notions: ["stock", "income_statement"],
@@ -582,6 +590,7 @@ export const LES_STOCKS: Chapitre = {
     },
     {
       id: "marge",
+      objectifs: [1],
       type: "montants",
       titre: "La marge commerciale",
       notions: ["stock", "margin_rates"],
@@ -604,6 +613,7 @@ export const LES_STOCKS: Chapitre = {
     },
     {
       id: "predire-la-methode",
+      objectifs: [3],
       type: "choix",
       titre: "Pariez sur la méthode",
       notions: ["stock", "weighted_average_cost"],
@@ -622,6 +632,7 @@ export const LES_STOCKS: Chapitre = {
     },
     {
       id: "le-prix-qui-separe-les-methodes",
+      objectifs: [3],
       type: "curseur",
       titre: "Le prix qui sépare les méthodes",
       notions: ["stock", "weighted_average_cost"],
@@ -673,6 +684,7 @@ export const LES_STOCKS: Chapitre = {
     },
     {
       id: "le-peps-du-mois",
+      objectifs: [2],
       type: "montants",
       titre: "La fiche de stock en PEPS",
       notions: ["stock"],
@@ -702,6 +714,7 @@ export const LES_STOCKS: Chapitre = {
     },
     {
       id: "inventaire-permanent",
+      objectifs: [2],
       type: "choix",
       titre: "L'inventaire permanent",
       notions: ["stock"],
@@ -725,6 +738,7 @@ export const LES_STOCKS: Chapitre = {
     },
     {
       id: "le-laboratoire-des-methodes",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire des méthodes",
       notions: ["stock", "weighted_average_cost", "margin_rates"],
@@ -804,6 +818,7 @@ export const LES_STOCKS: Chapitre = {
     },
     {
       id: "le-cmup-apres-chaque-entree",
+      objectifs: [2],
       type: "montants",
       titre: "Le coût moyen après chaque entrée",
       notions: ["stock", "weighted_average_cost"],
@@ -843,6 +858,7 @@ export const LES_STOCKS: Chapitre = {
     },
     {
       id: "la-methode-et-la-marge",
+      objectifs: [3],
       type: "choix",
       titre: "Changer de méthode pour la marge",
       notions: ["stock", "margin_rates"],
@@ -878,6 +894,7 @@ export const LES_STOCKS: Chapitre = {
     },
     {
       id: "le-stock-sinistre",
+      objectifs: [4],
       type: "montants",
       titre: "Retrouver un stock à rebours",
       notions: ["stock", "margin_rates"],
@@ -904,6 +921,7 @@ export const LES_STOCKS: Chapitre = {
     },
     {
       id: "stock-qui-dort",
+      objectifs: [1],
       type: "choix",
       titre: "Un stock, ça coûte",
       notions: ["stock", "bfr"],

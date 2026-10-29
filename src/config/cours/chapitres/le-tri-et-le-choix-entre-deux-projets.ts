@@ -343,6 +343,7 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
     },
     {
       id: "les-deux-van",
+      objectifs: [0, 1],
       type: "montants",
       titre: "La VAN de chaque ligne",
       notions: ["discounting"],
@@ -373,6 +374,7 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
     },
     {
       id: "predire-le-croisement",
+      objectifs: [1],
       type: "choix",
       titre: "Pariez sur le taux",
       notions: ["discounting", "irr_payback"],
@@ -394,6 +396,7 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
     },
     {
       id: "le-laboratoire-des-deux-lignes",
+      objectifs: [1],
       type: "simulation",
       titre: "Le laboratoire des deux lignes",
       notions: ["irr_payback", "discounting"],
@@ -466,6 +469,7 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
     },
     {
       id: "encadrer-le-tri",
+      objectifs: [0],
       type: "montants",
       titre: "Encadrer le TRI du projet A",
       notions: ["irr_payback"],
@@ -499,6 +503,7 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
     },
     {
       id: "le-tri-de-b",
+      objectifs: [0],
       type: "montants",
       titre: "Le TRI du projet B",
       notions: ["irr_payback"],
@@ -526,6 +531,7 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
     },
     {
       id: "le-classement",
+      objectifs: [1],
       type: "choix",
       titre: "Les deux critères classent-ils pareil ?",
       notions: ["irr_payback", "discounting"],
@@ -549,6 +555,7 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
     },
     {
       id: "le-taux-de-fisher",
+      objectifs: [1],
       type: "montants",
       titre: "Le taux d'intersection de Fisher",
       notions: ["irr_payback", "discounting"],
@@ -587,6 +594,7 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
     },
     {
       id: "predire-l-entretien",
+      objectifs: [2],
       type: "choix",
       titre: "Pariez sur l'entretien",
       notions: ["discounting"],
@@ -608,6 +616,7 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
     },
     {
       id: "l-entretien-au-curseur",
+      objectifs: [2],
       type: "curseur",
       titre: "Faites monter l'entretien de B",
       notions: ["discounting"],
@@ -647,6 +656,7 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
     },
     {
       id: "l-entretien-qui-egalise",
+      objectifs: [2],
       type: "montants",
       titre: "L'entretien qui égale les deux VAN",
       notions: ["discounting"],
@@ -684,6 +694,7 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
     },
     {
       id: "les-indices",
+      objectifs: [3],
       type: "montants",
       titre: "Indice de profitabilité et délai actualisé",
       notions: ["irr_payback", "discounting"],
@@ -709,6 +720,7 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
     },
     {
       id: "le-rationnement",
+      objectifs: [3],
       type: "montants",
       titre: "Un budget limité, un troisième projet",
       notions: ["irr_payback", "discounting"],
@@ -738,6 +750,7 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
     },
     {
       id: "le-programme",
+      objectifs: [3],
       type: "choix",
       titre: "Le programme sous le budget",
       notions: ["irr_payback", "discounting"],
@@ -773,6 +786,7 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
     },
     {
       id: "la-critique-du-tri",
+      objectifs: [4],
       type: "montants",
       titre: "Une critique du TRI",
       notions: ["irr_payback", "discounting"],
@@ -800,6 +814,7 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
     },
     {
       id: "le-choix",
+      objectifs: [4],
       type: "choix",
       titre: "Quelle ligne retenir ?",
       notions: ["discounting", "profitability_vs_return"],

@@ -287,6 +287,7 @@ export const OCCUPATION_ET_REVENU_PAR_CHAMBRE: Chapitre = {
     },
     {
       id: "occupation",
+      objectifs: [0, 1],
       type: "montants",
       titre: "Le taux d'occupation",
       notions: ["occupancy_revpar", "seasonality"],
@@ -313,6 +314,7 @@ export const OCCUPATION_ET_REVENU_PAR_CHAMBRE: Chapitre = {
     },
     {
       id: "prix-moyen",
+      objectifs: [2],
       type: "montants",
       titre: "Le prix moyen par chambre louée",
       notions: ["occupancy_revpar"],
@@ -337,6 +339,7 @@ export const OCCUPATION_ET_REVENU_PAR_CHAMBRE: Chapitre = {
     },
     {
       id: "predire-le-revpar",
+      objectifs: [4],
       type: "choix",
       titre: "Pariez sur le concurrent plus cher",
       notions: ["occupancy_revpar"],
@@ -364,6 +367,7 @@ export const OCCUPATION_ET_REVENU_PAR_CHAMBRE: Chapitre = {
     },
     {
       id: "le-terminus-au-curseur",
+      objectifs: [3],
       type: "curseur",
       titre: "Le concurrent au curseur",
       notions: ["occupancy_revpar"],
@@ -418,6 +422,7 @@ export const OCCUPATION_ET_REVENU_PAR_CHAMBRE: Chapitre = {
     },
     {
       id: "revpar",
+      objectifs: [3],
       type: "montants",
       titre: "Le revenu par chambre disponible",
       notions: ["occupancy_revpar"],
@@ -441,6 +446,7 @@ export const OCCUPATION_ET_REVENU_PAR_CHAMBRE: Chapitre = {
     },
     {
       id: "l-annee",
+      objectifs: [1, 2, 3],
       type: "montants",
       titre: "L'année en trois chiffres",
       notions: ["occupancy_revpar"],
@@ -464,6 +470,7 @@ export const OCCUPATION_ET_REVENU_PAR_CHAMBRE: Chapitre = {
     },
     {
       id: "face-au-concurrent",
+      objectifs: [3],
       type: "montants",
       titre: "Le concurrent plus cher",
       notions: ["occupancy_revpar", "price_elasticity"],
@@ -490,6 +497,7 @@ export const OCCUPATION_ET_REVENU_PAR_CHAMBRE: Chapitre = {
     },
     {
       id: "qui-vend-le-mieux",
+      objectifs: [4],
       type: "choix",
       titre: "Le juge du trimestre",
       notions: ["occupancy_revpar"],
@@ -523,6 +531,7 @@ export const OCCUPATION_ET_REVENU_PAR_CHAMBRE: Chapitre = {
     },
     {
       id: "pourquoi-le-revpar",
+      objectifs: [4],
       type: "choix",
       titre: "Pourquoi le RevPAR",
       notions: ["occupancy_revpar", "price_elasticity"],
@@ -550,6 +559,7 @@ export const OCCUPATION_ET_REVENU_PAR_CHAMBRE: Chapitre = {
     },
     {
       id: "predire-la-promotion",
+      objectifs: [5],
       type: "choix",
       titre: "Pariez sur la promotion",
       notions: ["occupancy_revpar", "contribution_margin"],
@@ -570,6 +580,7 @@ export const OCCUPATION_ET_REVENU_PAR_CHAMBRE: Chapitre = {
     },
     {
       id: "la-promotion-au-curseur",
+      objectifs: [5],
       type: "curseur",
       titre: "La promotion au curseur",
       notions: ["occupancy_revpar", "contribution_margin"],
@@ -623,6 +634,7 @@ export const OCCUPATION_ET_REVENU_PAR_CHAMBRE: Chapitre = {
     },
     {
       id: "deux-seuils",
+      objectifs: [5],
       type: "montants",
       titre: "Deux seuils pour une promotion",
       notions: ["occupancy_revpar", "contribution_margin"],
@@ -660,6 +672,7 @@ export const OCCUPATION_ET_REVENU_PAR_CHAMBRE: Chapitre = {
     },
     {
       id: "le-laboratoire-du-revpar",
+      objectifs: [3],
       type: "simulation",
       titre: "Le laboratoire du RevPAR",
       notions: ["occupancy_revpar", "price_elasticity", "contribution_margin"],
@@ -733,6 +746,7 @@ export const OCCUPATION_ET_REVENU_PAR_CHAMBRE: Chapitre = {
     },
     {
       id: "decomposer-l-ecart",
+      objectifs: [5],
       type: "montants",
       titre: "Décomposer l'écart de RevPAR",
       notions: ["occupancy_revpar", "price_elasticity"],
@@ -776,6 +790,7 @@ export const OCCUPATION_ET_REVENU_PAR_CHAMBRE: Chapitre = {
     },
     {
       id: "a-rebours",
+      objectifs: [3],
       type: "montants",
       titre: "Le concurrent, à rebours",
       notions: ["occupancy_revpar"],
@@ -804,6 +819,7 @@ export const OCCUPATION_ET_REVENU_PAR_CHAMBRE: Chapitre = {
     },
     {
       id: "la-limite-du-revpar",
+      objectifs: [4],
       type: "choix",
       titre: "Ce que le RevPAR ne voit pas",
       notions: ["occupancy_revpar", "contribution_margin"],
