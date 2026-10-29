@@ -45,14 +45,14 @@ let classe: { id: string; code: string };
 beforeAll(async () => {
   prof = await utilisateur();
   autreProf = await utilisateur();
-  classe = (await creerClasse({ enseignantId: prof, nom: "BTS CG 1 · groupe A", entreprise: "hotel" }))!;
+  classe = (await creerClasse({ enseignantId: prof, nom: "BTS CG 1 · groupe A", entreprise: "hotel", parcours: "comptabilite-generale" }))!;
 });
 
 describe("une classe du cours", () => {
   it("se crée avec un code lisible et l'entreprise choisie ; sans nom, rien ne se crée ; une entreprise inconnue est ignorée", async () => {
     expect(classe.code).toMatch(/^BTSCG1-[A-Z0-9]{4}$/);
     expect(await creerClasse({ enseignantId: prof, nom: "   " })).toBeNull();
-    const c = (await creerClasse({ enseignantId: prof, nom: "Autre", entreprise: "pas-une-entreprise" }))!;
+    const c = (await creerClasse({ enseignantId: prof, nom: "Autre", entreprise: "pas-une-entreprise", parcours: "comptabilite-generale" }))!;
     expect((await classeDeLEnseignant(prof, c.id, chapitre.code))!.classe.entreprise).toBeNull();
   });
 
@@ -120,7 +120,7 @@ describe("une classe du cours", () => {
   it("un chapitre réservé s'ouvre à l'élève par sa classe, quand son enseignant est sous licence", async () => {
     const profSousLicence = await utilisateur();
     await placerSousLicence(profSousLicence);
-    const ouverte = (await creerClasse({ enseignantId: profSousLicence, nom: "Sous licence" }))!;
+    const ouverte = (await creerClasse({ enseignantId: profSousLicence, nom: "Sous licence", parcours: "comptabilite-generale" }))!;
     const eleve = await utilisateur();
     expect(await classeSousLicence(eleve)).toBe(false);
     await rejoindreClasse(eleve, classe.code, "Sans licence");

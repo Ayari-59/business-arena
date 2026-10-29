@@ -474,6 +474,7 @@ export const LE_COUT_PREETABLI_ET_LES_BUDGETS: Chapitre = {
     "Mesurer l'effet du choix du standard et trier les écarts par un seuil de significativité",
   ],
   libre: false,
+  prerequis: ["cout-complet"],
   entreprises: {
     codes: ENTREPRISES_DES_ECARTS,
     pourquoi: "les coûts préétablis se calculent sur une production : ce chapitre se joue à l'usine de NOVA, qui fabrique des enceintes.",

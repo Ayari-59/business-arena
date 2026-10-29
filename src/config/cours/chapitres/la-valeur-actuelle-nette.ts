@@ -347,6 +347,7 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
     "Retrouver à rebours les ventes et le prix qui annulent la VAN, et dire quel risque surveiller",
   ],
   libre: false,
+  prerequis: ["immobilisations", "bilan-fonctionnel-et-bfr"],
   entreprises: {
     codes: ENTREPRISES_DES_PROJETS,
     pourquoi:

@@ -372,6 +372,20 @@
       "when": 1793285162176,
       "tag": "0051_prestations_sur_devis",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1793371562176,
+      "tag": "0052_parcours_de_la_classe",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1793457962176,
+      "tag": "0053_cours_selon_l_offre",
+      "breakpoints": true
     }
   ]
 }

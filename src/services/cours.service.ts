@@ -1,12 +1,14 @@
 import { randomInt } from "node:crypto";
-import { and, asc, count, desc, eq, ne } from "drizzle-orm";
+import { and, asc, count, desc, eq, isNull, ne, or } from "drizzle-orm";
 import { db } from "@/db";
-import { coursClasses, coursEleves, coursProgressions, type SuiviDEtapeEnregistre } from "@/db/schema";
+import { coursClasses, coursEleves, coursProgressions, organizationMembers, type SuiviDEtapeEnregistre } from "@/db/schema";
 import { ALPHABET_REPRISE } from "@/config/reprise";
-import { chapitreParCode } from "@/config/cours/registre";
+import { chapitreParCode, PARCOURS } from "@/config/cours/registre";
+import type { Chapitre } from "@/config/cours/types";
 import { ENTREPRISES_DU_COURS } from "@/config/cours/metiers";
 import type { ProgressionLue } from "@/pedagogy/cours/suivi";
-import { plafondDElevesDesComptes, unCompteSousLicence } from "@/services/acces.service";
+import { offreDuCoursDe, plafondDElevesDesComptes, unCompteSousLicence } from "@/services/acces.service";
+import { getTeacherOrgId } from "@/services/auth.service";
 
 /**
  * LES CLASSES DU COURS PAR LA SIMULATION.
@@ -47,18 +49,23 @@ export const normaliserCodeDeClasse = (saisi: string) =>
     .slice(0, 20);
 
 const entrepriseValide = (e: string | null | undefined) => (e && ENTREPRISES_DU_COURS.includes(e) ? e : null);
+const parcoursValide = (p: string | null | undefined) => (p && PARCOURS.some((x) => x.code === p) ? p : null);
 
 export async function creerClasse(args: {
   enseignantId: string;
   nom: string;
   entreprise?: string | null;
+  /** Le parcours du cours (config/cours/registre.ts) : obligatoire ; inconnu ou absent, rien ne se crée. */
+  parcours?: string | null;
 }): Promise<{ id: string; code: string } | null> {
   const nom = args.nom.trim().slice(0, NOM_DE_CLASSE_MAX);
-  if (!nom) return null;
+  // Le parcours est obligatoire à la création (migration 0052) : il ouvre les chapitres.
+  const parcours = parcoursValide(args.parcours);
+  if (!nom || !parcours) return null;
   for (let essai = 0; essai < 8; essai += 1) {
     const [cree] = await db
       .insert(coursClasses)
-      .values({ code: codeDeClasse(nom), nom, creePar: args.enseignantId, entreprise: entrepriseValide(args.entreprise) })
+      .values({ code: codeDeClasse(nom), nom, creePar: args.enseignantId, entreprise: entrepriseValide(args.entreprise), parcours })
       .onConflictDoNothing()
       .returning({ id: coursClasses.id, code: coursClasses.code });
     if (cree) return cree;
@@ -73,6 +80,7 @@ export async function classesDeLEnseignant(enseignantId: string) {
       code: coursClasses.code,
       nom: coursClasses.nom,
       entreprise: coursClasses.entreprise,
+      parcours: coursClasses.parcours,
       closeLe: coursClasses.closeLe,
       createdAt: coursClasses.createdAt,
       eleves: count(coursEleves.userId),
@@ -123,6 +131,33 @@ export async function cloreClasse(args: { enseignantId: string; classeId: string
     .where(and(eq(coursClasses.id, args.classeId), eq(coursClasses.creePar, args.enseignantId)))
     .returning({ id: coursClasses.id });
   return fait.length > 0;
+}
+
+/**
+ * Donner son parcours à une classe qui n'en a pas (une classe d'avant la migration 0052), par
+ * son enseignant seulement. Une fois choisi, il ne change plus : sous l'offre Classe, c'est lui
+ * qui ouvre les chapitres, et le changer à volonté ouvrirait tout le cours.
+ */
+export async function choisirLeParcours(args: { enseignantId: string; classeId: string; parcours: string }): Promise<boolean> {
+  const parcours = parcoursValide(args.parcours);
+  if (!parcours) return false;
+  const fait = await db
+    .update(coursClasses)
+    .set({ parcours })
+    .where(and(eq(coursClasses.id, args.classeId), eq(coursClasses.creePar, args.enseignantId), isNull(coursClasses.parcours)))
+    .returning({ id: coursClasses.id });
+  return fait.length > 0;
+}
+
+/** Une classe héritée de cet enseignant, sans parcours encore : sa page lui demande de le choisir. */
+export async function classeAChoisirSonParcours(enseignantId: string, classeId: string): Promise<boolean> {
+  const [c] = await db
+    .select({ id: coursClasses.id })
+    .from(coursClasses)
+    .where(
+      and(eq(coursClasses.id, classeId), eq(coursClasses.creePar, enseignantId), eq(coursClasses.heritee, true), isNull(coursClasses.parcours)),
+    );
+  return Boolean(c);
 }
 
 /** Permettre ou retirer la calculatrice aux élèves d'une classe, par son enseignant seulement. */
@@ -264,4 +299,56 @@ export async function classeSousLicence(userId: string): Promise<boolean> {
     .innerJoin(coursClasses, eq(coursClasses.id, coursEleves.classeId))
     .where(eq(coursEleves.userId, userId));
   return m ? unCompteSousLicence([m.creePar]) : false;
+}
+
+/**
+ * QUI OUVRE QUEL CHAPITRE (décision du propriétaire, octobre 2026). Le chapitre libre s'ouvre
+ * à tous (la Découverte). Les autres :
+ *  · Campus : tous ;
+ *  · Classe : ceux du parcours de la classe (`cours_classes.parcours`), pour l'élève par sa
+ *    classe, pour l'enseignant par les classes qu'il a créées ;
+ *  · Programme : de même, les parcours des classes de l'établissement (un programme couvre
+ *    tous ses groupes, pas tout le catalogue : c'est l'offre Campus qui ouvre tout) ;
+ *  · une classe héritée (d'avant la migration 0052) sans parcours : sous Classe ou Programme,
+ *    l'accès d'avant (tout le cours), jusqu'à ce que son enseignant choisisse son parcours ;
+ *  · sans licence de l'arène en cours : aucun.
+ * L'offre est celle de l'établissement de l'enseignant (celui de la classe, pour l'élève).
+ */
+export async function coursOuvert(
+  qui: { enseignant?: string | null; eleve?: string | null },
+  chapitre: Pick<Chapitre, "libre" | "parcours">,
+): Promise<boolean> {
+  if (chapitre.libre) return true;
+  if (qui.enseignant && (await ouvertALEnseignant(qui.enseignant, chapitre.parcours))) return true;
+  if (qui.eleve && (await ouvertALEleve(qui.eleve, chapitre.parcours))) return true;
+  return false;
+}
+
+async function ouvertALEnseignant(enseignant: string, parcours: string): Promise<boolean> {
+  const org = await getTeacherOrgId(enseignant);
+  const offre = org ? await offreDuCoursDe(org) : null;
+  if (!offre) return false;
+  if (offre === "campus") return true;
+  const qui = offre === "classe" ? eq(coursClasses.creePar, enseignant) : eq(organizationMembers.organizationId, org!);
+  const condition = and(qui, or(eq(coursClasses.parcours, parcours), and(eq(coursClasses.heritee, true), isNull(coursClasses.parcours))));
+  const [une] = await db
+    .select({ id: coursClasses.id })
+    .from(coursClasses)
+    .innerJoin(organizationMembers, eq(organizationMembers.userId, coursClasses.creePar))
+    .where(condition)
+    .limit(1);
+  return Boolean(une);
+}
+
+async function ouvertALEleve(eleve: string, parcours: string): Promise<boolean> {
+  const [m] = await db
+    .select({ creePar: coursClasses.creePar, parcours: coursClasses.parcours, heritee: coursClasses.heritee })
+    .from(coursEleves)
+    .innerJoin(coursClasses, eq(coursClasses.id, coursEleves.classeId))
+    .where(eq(coursEleves.userId, eleve));
+  if (!m) return false;
+  const org = await getTeacherOrgId(m.creePar);
+  const offre = org ? await offreDuCoursDe(org) : null;
+  if (!offre) return false;
+  return offre === "campus" || m.parcours === parcours || (m.heritee && m.parcours === null);
 }

@@ -7,18 +7,35 @@ import { TEXTE_DU_CONSENTEMENT } from "@/config/nouveautes";
 
 const initial: FormState = { error: null };
 
-function Input(props: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
-  const { label, ...rest } = props;
+/**
+ * Un champ, avec SON message d'erreur dessous (audit UX du 29 octobre 2026, P2-9) : les
+ * formulaires sont envoyés sans la validation du navigateur (`noValidate`), dont les
+ * bulles parlaient la langue du navigateur ; le serveur répond en français, sous le champ.
+ */
+function Input(props: React.InputHTMLAttributes<HTMLInputElement> & { label: string; erreur?: string | null }) {
+  const { label, erreur, ...rest } = props;
+  const idErreur = erreur ? `erreur-${rest.name}` : undefined;
   return (
     <label className="block">
       <span className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</span>
       <input
         {...rest}
+        aria-invalid={erreur ? true : undefined}
+        aria-describedby={idErreur}
         className="mt-1 w-full champ px-3 py-2 text-sm text-slate-100 outline-none"
       />
+      {erreur ? (
+        <span id={idErreur} role="alert" data-erreur-du-champ={rest.name} className="mt-1 block text-sm text-red-300">
+          {erreur}
+        </span>
+      ) : null}
     </label>
   );
 }
+
+/** L'erreur d'un champ précis, sinon rien (le message général reste sous le formulaire). */
+const erreurDe = (etat: FormState, nom: string): string | null =>
+  etat.error && etat.champ === nom ? etat.error : null;
 
 function ErrorBox({ error }: { error: string | null }) {
   if (!error) return null;
@@ -81,7 +98,16 @@ export function TeacherAuthForms({ suite = null }: { suite?: string | null }) {
       {tab === "login" ? (
         <form action={avecLAncre(loginFormAction)} className="space-y-4">
           {suite ? <input type="hidden" name="suite" value={suite} /> : null}
-          <Input label="E-mail" name="email" type="email" required autoComplete="email" />
+          {/* L'E-MAIL GARDÉ après un mauvais mot de passe (audit UX, P1-5). Pas de lien
+              « mot de passe oublié » : aucun flux de réinitialisation n'existe encore. */}
+          <Input
+            label="E-mail"
+            name="email"
+            type="email"
+            required
+            autoComplete="email"
+            defaultValue={loginState.values?.email ?? ""}
+          />
           <Input
             label="Mot de passe"
             name="password"
@@ -99,21 +125,38 @@ export function TeacherAuthForms({ suite = null }: { suite?: string | null }) {
           </button>
         </form>
       ) : (
-        <form action={avecLAncre(registerFormAction)} className="space-y-4">
+        <form action={avecLAncre(registerFormAction)} noValidate className="space-y-4">
           {suite ? <input type="hidden" name="suite" value={suite} /> : null}
-          <Input label="Votre nom" name="displayName" required autoComplete="name" />
+          <Input
+            label="Votre nom"
+            name="displayName"
+            required
+            autoComplete="name"
+            defaultValue={registerState.values?.displayName ?? ""}
+            erreur={erreurDe(registerState, "displayName")}
+          />
           <Input
             label="Code d'invitation (si votre établissement vous en a donné un)"
             name="inviteCode"
             autoComplete="off"
             placeholder="EX : K7M2PR9T"
+            defaultValue={registerState.values?.inviteCode ?? ""}
           />
           <Input
             label="Sinon : nom de votre établissement (il sera créé)"
             name="schoolName"
             placeholder="Lycée / IUT / École…"
+            defaultValue={registerState.values?.schoolName ?? ""}
           />
-          <Input label="E-mail" name="email" type="email" required autoComplete="email" />
+          <Input
+            label="E-mail"
+            name="email"
+            type="email"
+            required
+            autoComplete="email"
+            defaultValue={registerState.values?.email ?? ""}
+            erreur={erreurDe(registerState, "email")}
+          />
           <Input
             label="Mot de passe (8 caractères min.)"
             name="password"
@@ -121,6 +164,7 @@ export function TeacherAuthForms({ suite = null }: { suite?: string | null }) {
             required
             minLength={8}
             autoComplete="new-password"
+            erreur={erreurDe(registerState, "password")}
           />
           {/* LES NOUVEAUTÉS : une case NON cochée, facultative, sans effet sur le compte
               (services/nouveautes.service.ts). La date et la version du texte sont
@@ -137,7 +181,7 @@ export function TeacherAuthForms({ suite = null }: { suite?: string | null }) {
               <span className="text-slate-400">Facultatif, modifiable dans votre espace.</span>
             </span>
           </label>
-          <ErrorBox error={registerState.error} />
+          <ErrorBox error={registerState.champ ? null : registerState.error} />
           <button
             type="submit"
             disabled={registerPending}

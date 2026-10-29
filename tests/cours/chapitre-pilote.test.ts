@@ -108,10 +108,12 @@ describe.each(ENTREPRISES_DU_COURS)("le chapitre pilote chez %s", (code) => {
     }
   });
 
-  it("les échéances ne changent pas le résultat de janvier", () => {
-    const k = indexDeLEtape(chapitre, "echeances");
-    const finJanvier = compteDeResultat(etatAvant(chapitre, cas, k).soldes);
-    const fin = compteDeResultat(etatAvant(chapitre, cas, chapitre.etapes.length).soldes);
+  it("les échéances, passées dans la suite du pilote, ne changent pas le résultat de janvier", () => {
+    const suite = chapitreDuCas(CHAPITRES[1]!, cas);
+    const k = indexDeLEtape(suite, "echeances");
+    const finJanvier = compteDeResultat(etatAvant(suite, cas, k).soldes);
+    const fin = compteDeResultat(etatAvant(suite, cas, suite.etapes.length).soldes);
+    expect(finJanvier.resultat).toBe(compteDeResultat(etatAvant(chapitre, cas, chapitre.etapes.length).soldes).resultat);
     expect(fin.resultat).toBe(finJanvier.resultat);
     expect(finJanvier.totalProduits).toBeCloseTo(cas.venteComptant.ht + cas.venteCredit.ht, 2);
   });

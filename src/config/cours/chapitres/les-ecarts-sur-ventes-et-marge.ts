@@ -264,6 +264,7 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
     "Dire ce qu'un mix favorable peut cacher, et qui doit répondre de chaque écart",
   ],
   libre: false,
+  prerequis: ["le-cout-preetabli-et-les-budgets"],
   entreprises: {
     codes: ENTREPRISES_DES_VENTES,
     pourquoi: "les écarts sur marge se calculent à la marge préétablie, celle des coûts préétablis de l'usine du cours, qui fabrique la Nomade et la Salon.",

@@ -254,6 +254,8 @@ describe("le cours en classe : l'enseignant crée, l'élève rejoint, l'erreur r
     const prof = await ctxProf.newPage();
     await aller(prof, "/teacher/cours");
     await prof.getByLabel("Nom de la classe").fill("BTS CG 1 e2e");
+    // Le parcours est requis (audit de l'offre, octobre 2026) : celui du chapitre pilote.
+    await prof.getByLabel("Parcours du cours").selectOption(chapitre.parcours);
     await prof.getByLabel("Entreprise du cas").selectOption("hotel");
     await prof.getByRole("button", { name: "Créer la classe" }).click();
     await prof.waitForURL(/\/teacher\/cours\/[0-9a-f-]{36}/, { timeout: 60_000 });
@@ -587,6 +589,10 @@ describe.each([
   { code: "l-acompte-du-client", entreprise: "nova" },
   { code: "rembourser-une-part-du-pret", entreprise: "nova", telephone: true },
   { code: "la-commande-du-31-janvier", entreprise: "transport" },
+  // La suite du chapitre pilote (audit pédagogique : les trente étapes coupées en deux) et son cas.
+  { code: "du-resultat-a-la-tresorerie", entreprise: "nova" },
+  { code: "du-resultat-a-la-tresorerie", entreprise: "bistrot", telephone: true },
+  { code: "le-client-paie-a-la-commande", entreprise: "hotel" },
   { code: "l-escompte-demande-par-le-client", entreprise: "bistrot", telephone: true },
   { code: "la-commande-du-31-janvier", entreprise: "hotel", telephone: true }, // son curseur au téléphone aussi
   { code: "l-escompte-demande-par-le-client", entreprise: "batiment" }, // son curseur sur ordinateur aussi
@@ -786,10 +792,10 @@ describe.each([
       expect(texte).not.toContain("aux établissements sous licence");
     } else {
       expect(texte).toContain(`${motsDuContenu(chapitreCode).reserve} aux établissements sous licence`);
-      // Une sortie : le chapitre libre, les offres, le devis — celui du cours seul, sans
-      // entreprise ni niveau imposés (audit d'octobre 2026).
+      // Une sortie : le chapitre libre, les offres, le devis — celui de l'offre Classe (pas de cours seul) ;
+      // l'entreprise et le niveau se choisissent au devis.
       expect(sorties).toEqual(expect.arrayContaining(["/tarifs", `/cours/${CHAPITRES.find((c) => c.libre)!.code}`]));
-      expect(sorties).toContain("/devis?offre=classe&interet=cours");
+      expect(sorties).toContain("/devis?offre=classe");
     }
 
     const code = entreprise;
@@ -839,6 +845,11 @@ describe.each([
         await page.getByRole("button", { name: "Vérifier", exact: true }).click();
       } else if (etape.type === "choix") {
         await page.getByRole("radio", { name: etape.options(cas, avant).find((o) => o.juste)!.texte }).click();
+      } else if (etape.type === "comparaison") {
+        // La comparaison de deux moments du journal (la suite du chapitre pilote, découpé par
+        // l'audit pédagogique) : l'état à l'étape repère, puis l'état courant.
+        const repere = etatAvant(chapitre, cas, indexDeLEtape(chapitre, etape.avantLEtape));
+        await page.getByRole("radio", { name: etape.options(cas, repere, avant).find((o) => o.juste)!.texte }).click();
       } else if (etape.type === "curseur") {
         const libelle = etape.grandeur?.(cas).libelle ?? "Ventes du mois";
         await page.getByLabel(`${libelle}, au clavier`, { exact: true }).fill(String(etape.cible(cas).attendu));

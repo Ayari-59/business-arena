@@ -12,7 +12,7 @@ import { getSession } from "@/lib/session";
 import { getTeacherGameView } from "@/services/game.service";
 import { compositionDesEquipes } from "@/services/affectation.service";
 import { getGameGradeSheet, getTeacherPedagogyView } from "@/services/pedagogy.service";
-import { compter, formatDecimal, formatEuro, formatPercent } from "@/lib/format";
+import { compter, distinguerLesHomonymes, formatDecimal, formatEuro, formatPercent } from "@/lib/format";
 import { periodLabel } from "@/config/scenarios/periodicity";
 import { nomDuMois } from "@/config/scenarios/calendrier-mensuel";
 import { setAnswerFormatAction, setMissedPolicyAction, setQuizModeAction } from "../../actions";
@@ -475,12 +475,12 @@ export default async function TeacherGamePage({
                         colonne poussait la trésorerie hors de l'écran. */}
                     {t.controller === "human" ? (
                       <span className="block text-sm text-slate-400 sm:hidden">
-                        {t.playerNames.join(", ") || "aucun joueur"}
+                        {distinguerLesHomonymes(t.playerNames).join(", ") || "aucun joueur"}
                       </span>
                     ) : null}
                   </td>
                   <td className="hidden py-2 pr-3 text-slate-400 sm:table-cell">
-                    {t.controller === "bot" ? "—" : t.playerNames.join(", ") || "aucun joueur"}
+                    {t.controller === "bot" ? "—" : distinguerLesHomonymes(t.playerNames).join(", ") || "aucun joueur"}
                   </td>
                   <td className="py-2 pr-3">
                     {finished || essaiTermine ? (
@@ -840,7 +840,7 @@ export default async function TeacherGamePage({
                   <tr key={equipe.teamId} className="border-t border-white/5">
                     <td className="py-2 pr-3">{equipe.name}</td>
                     <td className="py-2 pr-3 text-xs text-slate-400">
-                      {equipe.students.length > 0 ? equipe.students.join(", ") : "aucun élève"}
+                      {equipe.students.length > 0 ? distinguerLesHomonymes(equipe.students).join(", ") : "aucun élève"}
                     </td>
                     <td className="py-2 pr-3 text-right tabular-nums text-slate-400">
                       {equipe.answered}

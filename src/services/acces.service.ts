@@ -157,6 +157,16 @@ export async function unCompteAvecEpisodes(
 }
 
 /**
+ * L'OFFRE DE L'ARÈNE EN COURS D'UNE ORGANISATION, pour le cours (cours.service, coursOuvert) :
+ * Classe, Programme ou Campus ; null sans licence de l'arène en cours.
+ */
+export async function offreDuCoursDe(organisation: string): Promise<"classe" | "programme" | "campus" | null> {
+  const statut = await getLicenceStatus(organisation, new Date(), "arene");
+  if (statut.state !== "active" && statut.state !== "bientot_expiree") return null;
+  return statut.licence?.arene ?? null;
+}
+
+/**
  * LE PLAFOND D'ÉLÈVES D'UNE CLASSE (décision du propriétaire, octobre 2026 : « une classe
  * max 35 élèves »). Sous l'offre Classe seulement, une partie de classe comme une classe du
  * cours accueille au plus `ELEVES_PAR_CLASSE` élèves. Une organisation sous Programme ou

@@ -37,7 +37,7 @@ export const GUIDE_ETUDIANT: Guide = {
       ],
       voir: "Vous arrivez dans la partie, placé automatiquement dans l'équipe la moins remplie.",
       erreur:
-        "Le message « Code de partie inconnu. » : le code a été mal recopié. Relisez-le au tableau, caractère par caractère.",
+        "Le message qui dit que le code ne correspond à aucune partie, classe, cohorte, concours ni examen : le code a été mal recopié. Relisez-le au tableau, caractère par caractère.",
       capture: {
         fichier: "rejoindre",
         largeur: 1280,

@@ -94,15 +94,24 @@ export function NavigationEnseignant({
     ...(liens.etablissement ? [LIEN_ETABLISSEMENT] : []),
     ...(liens.administration ? [LIEN_ADMINISTRATION] : []),
   ];
+  // CE QU'EST LA RUBRIQUE OUVERTE, en une ligne (audit UX du 29 octobre 2026, P2-11).
+  const aide = NAVIGATION_ENSEIGNANT.find((p) => p.code === actif)?.aide;
   return (
-    <PastillesDeNavigation
-      label="Espace enseignant"
-      pastilles={NAVIGATION_ENSEIGNANT}
-      actif={actif}
-      droite={droite}
-      fin={compte}
-      className={className}
-    />
+    <>
+      <PastillesDeNavigation
+        label="Espace enseignant"
+        pastilles={NAVIGATION_ENSEIGNANT}
+        actif={actif}
+        droite={droite}
+        fin={compte}
+        className={className}
+      />
+      {aide ? (
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400" data-aide-de-la-rubrique={actif}>
+          {aide}
+        </p>
+      ) : null}
+    </>
   );
 }
 

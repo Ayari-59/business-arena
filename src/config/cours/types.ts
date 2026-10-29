@@ -271,6 +271,11 @@ export interface Chapitre {
   /** Libre d'accès, sans licence. */
   libre: boolean;
   /**
+   * Les chapitres à avoir vus avant celui-ci, par leur code (audit pédagogique, P1-2) : la page les
+   * annonce à l'élève à la première étape, sans l'empêcher d'entrer. Absent : aucun.
+   */
+  prerequis?: readonly string[];
+  /**
    * Les seules entreprises où le chapitre se joue, quand il ne vaut pas pour toutes (un
    * service ne se stocke pas), et pourquoi, en une phrase dite à l'élève qui en arrive
    * d'une autre. Absent : les entreprises du cours, toutes.

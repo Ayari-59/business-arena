@@ -1,5 +1,5 @@
 import type { Cas } from "../../config/cours/cas";
-import { PALIERS, PARCOURS } from "../../config/cours/registre";
+import { CHAPITRES, PALIERS, PARCOURS } from "../../config/cours/registre";
 import { motsDuContenu } from "../../config/cours/situations";
 import type {
   ChampDeMontant,
@@ -159,6 +159,8 @@ export interface ChapitreServi {
   code: string;
   titre: string;
   objectifs: readonly string[];
+  /** Les chapitres à avoir vus avant, annoncés à la première étape (audit pédagogique, P1-2). */
+  prerequis: { code: string; titre: string }[];
   parcours: string;
   palier: number;
   mots: ReturnType<typeof motsDuContenu>;
@@ -328,6 +330,7 @@ export function servirLeChapitre(source: Chapitre, cas: Cas): ChapitreServi {
     code: chapitre.code,
     titre: chapitre.titre,
     objectifs: chapitre.objectifs,
+    prerequis: (chapitre.prerequis ?? []).map((code) => ({ code, titre: CHAPITRES.find((c) => c.code === code)!.titre })),
     parcours: PARCOURS.find((p) => p.code === chapitre.parcours)!.titre,
     palier: PALIERS.find((p) => p.palier === chapitre.palier)!.palier,
     mots: motsDuContenu(chapitre.code),

@@ -77,12 +77,31 @@ export default async function CoursPage({
           {/* L'ÉLÈVE D'UNE CLASSE le lit d'abord : sa classe, son nom, et l'entreprise que
               l'enseignant a choisie pour tous, s'il en a choisi une. */}
           {classe ? (
-            <section className="encadre-neutre grid gap-2 rounded-lg px-4 py-3 text-sm" data-classe-du-cours="">
-              <p>
-                {annonce === "rejointe" ? "Inscription enregistrée. " : ""}Vous suivez le cours avec la classe{" "}
-                <strong className="font-semibold">« {classe.classe} »</strong>, sous le nom{" "}
-                <strong className="font-semibold">{classe.eleve}</strong> : votre enseignant voit où vous en êtes.
+            // « MA CLASSE », EN TÊTE ET AVEC SON BOUTON (audit UX du 29 octobre 2026, P1-2) :
+            // l'inscription se noyait dans la vitrine du cours ; l'élève lit sa classe et le
+            // chapitre à commencer, avant tout ce qui s'adresse aux enseignants.
+            <section className="carte grid gap-3 p-5 sm:p-6" data-classe-du-cours="" aria-labelledby="ma-classe">
+              {annonce === "rejointe" ? (
+                <p role="status" className="text-sm font-semibold text-emerald-300">
+                  Inscription enregistrée.
+                </p>
+              ) : null}
+              <h2 id="ma-classe" className="text-2xl font-bold text-slate-50">
+                Ma classe : « {classe.classe} »
+              </h2>
+              <p className="text-sm text-slate-300">
+                Vous suivez le cours sous le nom <strong className="font-semibold">{classe.eleve}</strong> : votre
+                enseignant voit où vous en êtes.
                 {imposee ? ` Votre enseignant a choisi l'entreprise ${imposee.nom} pour toute la classe.` : ""}
+              </p>
+              <p>
+                <Link
+                  href={`/cours/${pilote.code}?entreprise=${imposee?.code ?? ENTREPRISES[0]!.code}`}
+                  className={bouton({ taille: "l" })}
+                  data-commencer-en-classe=""
+                >
+                  Commencer : {pilote.titre}
+                </Link>
               </p>
               <form action={quitterClasseAction}>
                 <SubmitButton pendingLabel="Départ…" className={bouton({ variante: "lien", taille: "s" })}>
@@ -116,12 +135,15 @@ export default async function CoursPage({
               <Link href={`/cours/${pilote.code}?entreprise=${ENTREPRISES[0]!.code}`} className={bouton({ taille: "m" })}>
                 Commencer avec {ENTREPRISES[0]!.nom}
               </Link>
-              <Link
-                href={`/cours/${pilote.code}?entreprise=${ENTREPRISES[0]!.code}&classe`}
-                className={bouton({ variante: "secondaire", taille: "m" })}
-              >
-                Projeter en classe
-              </Link>
+              {/* Projeter s'adresse à l'enseignant : l'élève d'une classe ne le voit pas. */}
+              {classe ? null : (
+                <Link
+                  href={`/cours/${pilote.code}?entreprise=${ENTREPRISES[0]!.code}&classe`}
+                  className={bouton({ variante: "secondaire", taille: "m" })}
+                >
+                  Projeter en classe
+                </Link>
+              )}
             </p>
             <details className="group">
               <summary className="cursor-pointer list-none text-sm font-semibold text-slate-200 [&::-webkit-details-marker]:hidden">
@@ -147,7 +169,8 @@ export default async function CoursPage({
             </details>
           </section>
 
-          <ArticulationDuCours />
+          {/* L'articulation des offres s'adresse aux enseignants : pas à l'élève d'une classe. */}
+          {classe ? null : <ArticulationDuCours />}
           {/* `/cours#theme-vente`, depuis la fin d'un chapitre ou le bilan d'un épisode : le tiroir s'ouvre. */}
           <OuvreLeTiroirVise />
 

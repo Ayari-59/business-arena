@@ -25,6 +25,24 @@ export const HORS_DU_CHAMP: Readonly<Record<string, Readonly<Record<string, stri
     "Comment s'organise la vie politique ?":
       "La vie politique relève de la science politique : un dialogue social dans une entreprise n'en est pas une.",
   },
+  // Audit pédagogique (P1-3) : les unités du DCG et du DSCG que le cours ne travaille pas, et ne
+  // travaillera pas, sont dites hors de son champ au lieu de paraître comme des manques. L'UE10 du
+  // DCG (comptabilité approfondie) n'y est pas : elle est dans le champ, et reste « non travaillée ».
+  dcg: {
+    "UE1 · Fondamentaux du droit": "Le droit se travaille sur des textes, des contrats et de la jurisprudence ; la simulation chiffre des décisions de gestion, elle ne fait pas raisonner en droit.",
+    "UE2 · Droit des affaires": "Le droit des sociétés et des contrats commerciaux sort du champ d'une simulation de gestion : le cours n'en prépare pas les épreuves.",
+    "UE3 · Droit social": "Le cours chiffre la paie et ses cotisations ; le droit du travail lui-même (contrat, licenciement, représentation) n'y est pas travaillé.",
+    "UE5 · Économie contemporaine": "L'économie contemporaine porte sur la croissance, la monnaie et les politiques publiques, à l'échelle d'un pays : la simulation ne montre que des marchés d'entreprises.",
+    "UE8 · Système d'information de gestion": "Les bases de données, les processus et l'architecture des systèmes d'information demandent un environnement informatique que le cours ne fournit pas.",
+    "UE12 · Anglais des affaires": "Le cours est écrit en français : il ne prépare pas une épreuve de langue.",
+  },
+  dscg: {
+    "UE1 · Gestion juridique, fiscale et sociale": "Le montage juridique et fiscal des groupes se travaille sur des dossiers de droit, hors du champ d'une simulation de gestion.",
+    "UE4 · Comptabilité et audit": "La consolidation et l'audit légal supposent des groupes et des dossiers de révision que la simulation du cours ne modélise pas.",
+    "UE5 · Management des systèmes d'information": "La gouvernance et l'audit des systèmes d'information demandent un environnement informatique que le cours ne fournit pas.",
+    "UE6 · Anglais des affaires": "Le cours est écrit en français : il ne prépare pas une épreuve de langue.",
+    "UE7 · Mémoire professionnel": "Le mémoire se rédige sur l'expérience professionnelle du candidat : aucun contenu de cours ne le remplace.",
+  },
 };
 
 /** La raison pour laquelle l'entrée est hors du champ de l'arène, ou undefined. */

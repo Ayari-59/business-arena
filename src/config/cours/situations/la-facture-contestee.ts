@@ -105,6 +105,7 @@ export const LA_FACTURE_CONTESTEE: Situation = {
         return [
           `« Nous avons bien reçu votre facture du ${date(juste.date)}. Elle ne tient pas compte de la remise de ${pct(TAUX_DE_REMISE)} prévue à nos conditions. Merci de nous adresser un avoir : nous réglerons dans les ${qte(JOURS_D_ESCOMPTE)} jours, escompte déduit, dès que nous l'aurons reçu. » ${c.venteCredit.client}`,
           `La facture est déjà passée au journal ${dE(c.entreprise)}, telle qu'elle est partie. Pas de cours cette fois : les calculs sont ceux que vous connaissez. À vous de les enchaîner.`,
+          `L'escompte est déduit dès la facture, avant la TVA : c'est l'usage. Si le client payait après les ${qte(JOURS_D_ESCOMPTE)} jours, l'escompte tomberait, et une facture rectificative rétablirait la TVA sur le montant sans escompte. Ici, il paie dans le délai.`,
         ];
       },
       tableau: (c) => {

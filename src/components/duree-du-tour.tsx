@@ -18,7 +18,7 @@ import { Icone } from "@/components/icone";
  */
 export function DureeDuTourAffichee({
   estimation,
-  mesure,
+  mesure: mesureBrute,
   libelleTourMesure,
   compact = false,
 }: {
@@ -30,6 +30,9 @@ export function DureeDuTourAffichee({
   /** Une phrase seule, pour une note de rubrique. */
   compact?: boolean;
 }) {
+  // UNE MESURE À ZÉRO N'EST PAS UNE MESURE (audit UX du 29 octobre 2026, P2-10) : « ≈ 0 min
+  // (mesuré) » en début de partie n'aidait personne. Sous une minute, l'estimation parle.
+  const mesure = mesureBrute !== null && mesureBrute >= 1 ? mesureBrute : null;
   if (compact) {
     return (
       <>

@@ -66,7 +66,9 @@ export default async function MesCohortesPage({
   const isOrgAdmin = staff?.organizations.some((o) => o.role === "org_admin") ?? false;
   const preselection = episode && episodeParCode(episode) ? episode : null;
   const raison = estUnRefusDeCohorte(refus) ? refus : null;
-  const ouvrir = cohortes.length === 0 || !!preselection || !!raison;
+  // Sans offre épisodes, le formulaire ne s'ouvre pas de lui-même, et reste grisé : le message
+  // est au-dessus (audit UX du 29 octobre 2026, P0-1).
+  const ouvrir = (licence && cohortes.length === 0) || !!preselection || !!raison;
 
   return (
     <main id="main" className="pb-16">
@@ -148,6 +150,7 @@ export default async function MesCohortesPage({
               label="création d'une cohorte"
               className="mt-4 grid gap-5"
             >
+              <fieldset disabled={!licence || undefined} className="contents" data-formulaire-sans-offre={!licence ? "" : undefined}>
               <label className="grid gap-1">
                 <span className="text-sm font-semibold text-slate-200">Nom de la cohorte</span>
                 <input
@@ -162,6 +165,7 @@ export default async function MesCohortesPage({
               <SubmitButton pendingLabel="Création de la cohorte…" className={bouton()}>
                 Créer la cohorte
               </SubmitButton>
+              </fieldset>
             </GuardedForm>
           </section>
         </details>

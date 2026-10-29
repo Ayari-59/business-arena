@@ -1,17 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { UNITES_FEMININES } from "../../src/config/cours/accords";
 import { casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
-import { CREATION_PREMIER_BILAN, soldesDeJanvier } from "../../src/config/cours/chapitres/creation-premier-bilan";
+import { CREATION_PREMIER_BILAN, DU_RESULTAT_A_LA_TRESORERIE, ouvertureDeJanvier, soldesDeJanvier } from "../../src/config/cours/chapitres/creation-premier-bilan";
 import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
 import { CHAPITRES } from "../../src/config/cours/registre";
 import { SITUATIONS, casDuChapitre } from "../../src/config/cours/situations";
 import { LA_COMMANDE_DU_31_JANVIER } from "../../src/config/cours/situations/par-chapitre/la-commande-du-31-janvier";
+import { LE_CLIENT_PAIE_A_LA_COMMANDE, clientALaCommande } from "../../src/config/cours/situations/par-chapitre/le-client-paie-a-la-commande";
 import type { Situation } from "../../src/config/cours/situations/types";
 import type { Chapitre, Etape, EtapeChoix, EtapeComparaison, EtapeCurseur, EtapeEcriture, EtapeMontants, EtapeSimulation, EtatDuCours } from "../../src/config/cours/types";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
 import { corriger, enEcriture, enSaisie } from "../../src/pedagogy/cours/correcteur";
 import { chapitreDuCas, etatAvant, indexDeLEtape } from "../../src/pedagogy/cours/deroule";
-import { compteDeResultat, equilibree } from "../../src/pedagogy/cours/etats";
+import { compteDeResultat, equilibree, soldes } from "../../src/pedagogy/cours/etats";
 import { compteDuPlan } from "../../src/pedagogy/cours/plan-comptable";
 
 /**
@@ -212,12 +213,32 @@ function juste(ch: Chapitre, cas: Cas, id: string) {
   return e.options(cas, avant(ch, cas, id)).find((o) => o.juste)!.texte;
 }
 
-const ch = CREATION_PREMIER_BILAN;
+/**
+ * LE MOIS EN ENTIER (audit pédagogique, P1-4 et P1-8) : le chapitre pilote s'arrête au bilan du 31
+ * janvier, sa suite repart de la balance de ce jour. Les gardes de chiffres lisent le mois en entier,
+ * le premier chapitre sans sa synthèse puis la suite sans son introduction : les mêmes étapes que
+ * l'ancien chapitre de trente étapes.
+ */
+const ch: Chapitre = {
+  ...CREATION_PREMIER_BILAN,
+  etapes: [...CREATION_PREMIER_BILAN.etapes.slice(0, -1), ...DU_RESULTAT_A_LA_TRESORERIE.etapes.slice(1)],
+};
 
 describe("de la création au premier bilan : le chapitre pilote, dans les neuf entreprises", () => {
   it("reste le chapitre libre du palier 2, joué partout, avec les étapes que l'e2e parcourt", () => {
-    expect(CHAPITRES[0]).toBe(ch);
+    expect(CHAPITRES[0]).toBe(CREATION_PREMIER_BILAN);
+    expect(CHAPITRES[1]).toBe(DU_RESULTAT_A_LA_TRESORERIE);
     expect(ch.libre).toBe(true);
+    expect([DU_RESULTAT_A_LA_TRESORERIE.libre, DU_RESULTAT_A_LA_TRESORERIE.palier, DU_RESULTAT_A_LA_TRESORERIE.parcours]).toEqual([false, 2, "comptabilite-generale"]);
+    // Le découpage : dix-neuf étapes jusqu'au bilan, treize pour la trésorerie et les échéances.
+    expect([CREATION_PREMIER_BILAN.etapes.length, DU_RESULTAT_A_LA_TRESORERIE.etapes.length]).toEqual([19, 13]);
+    expect(CREATION_PREMIER_BILAN.etapes.at(-2)!.id).toBe("bilan");
+    expect(DU_RESULTAT_A_LA_TRESORERIE.etapes[1]!.id).toBe("predire-la-banque");
+    for (const code of CODES) {
+      const cas = casDeLEntreprise(code);
+      const fin = etatAvant(chapitreDuCas(CREATION_PREMIER_BILAN, cas), cas, CREATION_PREMIER_BILAN.etapes.length).soldes;
+      expect(soldes([ouvertureDeJanvier(cas)]), code).toEqual(Object.fromEntries(Object.entries(fin).filter(([, v]) => v !== 0)));
+    }
     expect(ch.palier).toBe(2);
     expect(ch.entreprises).toBeUndefined();
     expect(ch.etapes.map((e) => e.id).slice(0, 4)).toEqual(["intro", "apport", "emprunt", "emprunt-charge"]);
@@ -242,10 +263,12 @@ describe("de la création au premier bilan : le chapitre pilote, dans les neuf e
   });
 
   it.each(CODES)("chez %s : les textes tiennent les gardes de l'étalon", (code) => {
-    verifierLesTextes(ch, casDeLEntreprise(code));
-    const fin = ch.etapes.at(-1)!;
-    if (fin.type !== "lecture") throw new Error("la synthèse est une lecture");
-    expect(fin.texte(casDeLEntreprise(code)).at(-1)).toBe("Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.");
+    for (const x of [CREATION_PREMIER_BILAN, DU_RESULTAT_A_LA_TRESORERIE]) {
+      verifierLesTextes(x, casDeLEntreprise(code));
+      const fin = x.etapes.at(-1)!;
+      if (fin.type !== "lecture") throw new Error("la synthèse est une lecture");
+      expect(fin.texte(casDeLEntreprise(code)).at(-1)).toBe("Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.");
+    }
   });
 
   it.each(CODES)("chez %s : chaque écriture s'équilibre et se corrige juste, et le journal donne le mois refait à la main", (code) => {
@@ -530,5 +553,20 @@ describe("le cas : la commande du 31 janvier", () => {
     const demande = s.etapes[0]!;
     if (demande.type !== "lecture") throw new Error("la demande est une lecture");
     expect(demande.texte(casDeLEntreprise("nova"))[0]).toContain("CampusTech paie à 80 jours, 20 jours au-delà des 60 jours convenus");
+  });
+});
+
+describe("le client paie à la commande, le cas de la suite du pilote", () => {
+  it.each(CODES)("chez %s : la banque gagne la facture TTC, le résultat ne bouge pas", (code) => {
+    const cas = casDeLEntreprise(code);
+    const m = aLaMain(cas);
+    const k = clientALaCommande(cas);
+    expect(casDuChapitre("du-resultat-a-la-tresorerie")).toBe(LE_CLIENT_PAIE_A_LA_COMMANDE);
+    expect([k.apres.banque, k.apres.creances, k.apres.resultat]).toEqual([centime(m.banque + cas.venteCredit.ttc), 0, m.resultat]);
+    expect(k.apres.variation).toBe(centime(m.banque + cas.venteCredit.ttc - cas.capital - cas.emprunt));
+    const r = LE_CLIENT_PAIE_A_LA_COMMANDE.etapes.at(-1) as EtapeChoix;
+    const options = r.options(cas, { soldes: {} });
+    expect(options.map((o) => o.juste)).toEqual([true, false, false]);
+    expect(options[0]!.texte).toMatch(/^La banque aurait eu .* de plus, le résultat le même$/);
   });
 });

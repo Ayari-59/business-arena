@@ -35,3 +35,20 @@ it("chaque chapitre a un code unique, et seul le premier est libre", () => {
   for (const c of CHAPITRES) expect(chapitreParCode(c.code)).toBe(c);
   expect(CHAPITRES.filter((c) => c.libre)).toEqual([CHAPITRES[0]]);
 });
+
+it("les prérequis déclarés existent, viennent avant, et sont servis à l'élève (audit pédagogique, P1-2)", async () => {
+  const { servirLeChapitre } = await import("../../src/pedagogy/cours/chapitre-servi");
+  const { casDeLEntreprise } = await import("../../src/config/cours/cas");
+  const avec = CHAPITRES.filter((c) => c.prerequis?.length);
+  expect(avec.map((c) => c.code)).toEqual(expect.arrayContaining(["l-impot-sur-les-societes", "la-valeur-actuelle-nette", "le-cout-preetabli-et-les-budgets", "du-resultat-a-la-tresorerie"]));
+  for (const c of avec) {
+    for (const code of c.prerequis!) {
+      const p = CHAPITRES.find((x) => x.code === code);
+      expect(p, `${c.code} : ${code}`).toBeDefined();
+      expect(p!.palier, `${c.code} : ${code}`).toBeLessThanOrEqual(c.palier);
+      expect(code).not.toBe(c.code);
+    }
+    const servi = servirLeChapitre(c, casDeLEntreprise(c.entreprises?.codes[0] ?? "nova"));
+    expect(servi.prerequis.map((p) => p.code)).toEqual(c.prerequis);
+  }
+}, 60_000);

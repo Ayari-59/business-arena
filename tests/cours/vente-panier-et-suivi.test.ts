@@ -10,9 +10,10 @@ import { BOUTIQUE, attendus, gardeDuCas, gardeDuCurseur, gardeDuLaboratoire, gar
  * LE PANIER MOYEN ET SUIVRE SES VENTES (bac pro MCV, palier 1), SUR LA BOUTIQUE DU MONDE DU COURS,
  * ET LEURS CAS : LE PANIER DE FIN D'ANNÉE, L'OBJECTIF DE L'ÉTÉ.
  *
- * Refait à la main sur la fiche de MAILLE & CO : janvier, 87 450 € hors taxes pour 948 passages en
- * caisse, 43 200 € de coût variable ; décembre de N − 1 (l'hypothèse du cours), 260 000 € pour
- * 3 130 passages, 126 300 € de coût ; les ventes de N − 2 et de N − 1, trimestre par trimestre.
+ * Refait à la main sur la fiche de MAILLE & CO, en caisse (les commandes des comités d'entreprise,
+ * facturées, n'y passent pas) : janvier, 77 250 € hors taxes pour 940 passages en caisse et 1 330
+ * articles, 38 300 € de coût variable ; décembre de N − 1 (l'hypothèse du cours), 231 850 € pour
+ * 3 100 passages, 112 715 € de coût ; les ventes de N − 2 et de N − 1, trimestre par trimestre.
  */
 
 const c = (x: number) => Math.round(x * 100) / 100 + 0;
@@ -41,32 +42,37 @@ describe("le panier moyen et la marge d'une vente", () => {
     gardesDeTexte(LE_PANIER_MOYEN);
   });
 
-  it("92,25 € de panier, 45,57 € de coût, 46,68 € de marge ; les parts de l'écharpe et du mérinos", () => {
-    expect(attendus(LE_PANIER_MOYEN, "le-panier")).toEqual([c(87_450 / 948)]);
-    expect(attendus(LE_PANIER_MOYEN, "le-panier-par-article")).toEqual([c((330 * 35) / 948), c((90 * 135) / 948)]);
-    expect(attendus(LE_PANIER_MOYEN, "la-marge")).toEqual([c(43_200 / 948), c(92.25 - 45.57)]);
-    expect(attendus(LE_PANIER_MOYEN, "chaque-jour")).toEqual([2 * 30, 60 * 92.25, c(60 * 46.68)]);
-    expect(juste(LE_PANIER_MOYEN, "une-vente-de-plus")).toEqual(["46,68 €, la marge d'une vente"]);
+  it("82,18 € de panier en caisse, 40,74 € de coût, 41,44 € de marge ; les parts de l'écharpe et du mérinos", () => {
+    expect(attendus(LE_PANIER_MOYEN, "le-panier")).toEqual([c(77_250 / 940)]);
+    expect(attendus(LE_PANIER_MOYEN, "le-panier-par-article")).toEqual([c((270 * 35) / 940), c((70 * 135) / 940)]);
+    expect(attendus(LE_PANIER_MOYEN, "la-marge")).toEqual([c(38_300 / 940), c(82.18 - 40.74)]);
+    expect(attendus(LE_PANIER_MOYEN, "chaque-jour")).toEqual([2 * 30, c(60 * 82.18), c(60 * 41.44)]);
+    expect(juste(LE_PANIER_MOYEN, "une-vente-de-plus")).toEqual(["41,44 €, la marge d'une vente"]);
     expect(juste(LE_PANIER_MOYEN, "l-article-a-proposer")).toEqual(["Pull mérinos"]);
   });
 
-  it("le curseur : 3 ventes de plus par jour paient un vendeur à 2 840 € ; 2 n'en font que 2 800,80 €", () => {
+  it("le curseur : 3 ventes de plus par jour paient un vendeur à 2 840 € ; 2 n'en font que 2 486,40 €", () => {
     const e = gardeDuCurseur(LE_PANIER_MOYEN, "le-vendeur-en-plus", 3);
-    expect(e.droites(BOUTIQUE).produit(2)).toBe(c(60 * 46.68));
+    expect(e.droites(BOUTIQUE).produit(2)).toBe(c(60 * 41.44));
     expect(e.droites(BOUTIQUE).cout(3)).toBe(2_000 * 1.42);
   });
 
-  it("le laboratoire : 1,75 article par passage, la seule position qui porte le panier à 100 € sans le dépasser d'un cran", () => {
+  it("le laboratoire : 1 619 articles, la seule position qui porte le panier à 100 € ; il part des 1 330 articles et des 82,18 € de janvier", () => {
     const e = gardeDuLaboratoire(LE_PANIER_MOYEN, "le-laboratoire-du-panier");
-    expect(e.defi(BOUTIQUE).solution).toEqual({ indice: 1.75 });
-    expect(e.leviers(BOUTIQUE)[0]!.depart).toBe(1.61);
+    expect(e.defi(BOUTIQUE).solution).toEqual({ articles: 1_619 });
+    expect(c((1_619 * 77_250) / 1_330 / 940)).toBeGreaterThanOrEqual(100);
+    expect(c((1_618 * 77_250) / 1_330 / 940)).toBeLessThan(100);
+    expect(e.leviers(BOUTIQUE)[0]!.depart).toBe(1_330);
+    // Le départ du laboratoire est le mois des étapes précédentes, sans arrondi (audit, P1-7).
+    const panier = e.lecture(BOUTIQUE, { articles: 1_330 }).find((l) => l.libelle === "Panier moyen")!;
+    expect([panier.montant, panier.reference]).toEqual([c(77_250 / 940), c(77_250 / 940)]);
   });
 });
 
 describe("le panier de fin d'année", () => {
-  it("décembre : 83,07 € de panier, 40,35 € de coût, 42,72 € de marge ; le panier baisse", () => {
-    expect(attendus(LE_PANIER_DE_FIN_D_ANNEE, "la-fin-d-annee")).toEqual([c(260_000 / 3_130), c(126_300 / 3_130), c(83.07 - 40.35)]);
-    expect(attendus(LE_PANIER_DE_FIN_D_ANNEE, "les-ecarts")).toEqual([c(83.07 - 92.25), c(42.72 - 46.68)]);
+  it("décembre en caisse : 74,79 € de panier, 36,36 € de coût, 38,43 € de marge ; le panier baisse", () => {
+    expect(attendus(LE_PANIER_DE_FIN_D_ANNEE, "la-fin-d-annee")).toEqual([c(231_850 / 3_100), c(112_715 / 3_100), c(74.79 - 36.36)]);
+    expect(attendus(LE_PANIER_DE_FIN_D_ANNEE, "les-ecarts")).toEqual([c(74.79 - 82.18), c(38.43 - 41.44)]);
     expect(juste(LE_PANIER_DE_FIN_D_ANNEE, "reponse")).toEqual(["Non : le panier a baissé, et la marge avec lui"]);
   });
 });

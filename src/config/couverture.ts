@@ -547,8 +547,9 @@ export interface LigneDeCouverture {
  * rien ne la travaille. Le DCG compte treize unités, dont le droit et l'anglais
  * des affaires : un enseignant le sait, et le lire ici dit qu'on le sait aussi.
  *
- * Sans texte lu (BTS MHR, BUT GEA), il n'y a pas de liste entière à opposer :
- * le tableau reprend ce que les ateliers citent, et la page le dit.
+ * Sans texte lu (aucune formation aujourd'hui : les textes du BTS MHR et du BUT
+ * GEA ont été lus depuis), il n'y aurait pas de liste entière à opposer : le
+ * tableau reprendrait ce que les ateliers citent, et la page le dirait.
  */
 export function tableauDeCouverture(formation: string): {
   referentiel: Referentiel | null;

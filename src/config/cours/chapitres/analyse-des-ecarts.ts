@@ -393,6 +393,7 @@ export const ANALYSE_DES_ECARTS: Chapitre = {
     "Imputer chaque écart à son responsable, distinguer ce qu'il maîtrise, et dire les limites de la méthode",
   ],
   libre: false,
+  prerequis: ["les-ecarts-sur-charges-directes", "les-ecarts-sur-charges-indirectes", "les-ecarts-sur-ventes-et-marge"],
   entreprises: {
     codes: ["nova"],
     pourquoi:

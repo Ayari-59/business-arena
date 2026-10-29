@@ -133,6 +133,13 @@ export const LIEN_REGLES: LienDeMenu = {
   aide: "Comment se joue un tour, comment on anime une classe, les concours, le courrier et le score, réunis au même endroit.",
 };
 
+/** Les conditions générales de vente (/cgv) : ce que signe un acheteur. */
+export const LIEN_CGV: LienDeMenu = {
+  href: "/cgv",
+  libelle: "Conditions générales de vente",
+  aide: "La commande, les prix, le paiement, la durée, la responsabilité et le droit applicable.",
+};
+
 /** Les mentions que la loi impose, discrètes mais jamais absentes. */
 export const LIEN_MENTIONS: LienDeMenu = {
   href: "/mentions-legales",
@@ -288,6 +295,11 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
         aide: `${NOMBRE_D_EPISODES} trimestres dans la peau d'un manager, du terrain à la stratégie : six décisions, et un bilan qui sépare la qualité des décisions du hasard.`,
       },
       {
+        href: "/entreprises/offre",
+        libelle: "Pour les entreprises",
+        aide: "Pour une entreprise ou un organisme de formation : les formules, ce qui est inclus, ce qui se chiffre au devis.",
+      },
+      {
         href: "/entreprises/episode/profil",
         libelle: "Mon profil décisionnel",
         aide: "Ce que vos épisodes disent de votre façon de décider : dix compétences, leurs preuves, et les épisodes à jouer ensuite.",
@@ -321,7 +333,7 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
     titre: "Offres",
     precision: "et contact",
     entree: "/tarifs",
-    liens: [LIEN_TARIFS_DU_MENU, LIEN_CONTACT, LIEN_MENTIONS],
+    liens: [LIEN_TARIFS_DU_MENU, LIEN_CONTACT, LIEN_CGV, LIEN_MENTIONS],
   },
 ];
 
@@ -373,6 +385,8 @@ export interface Pastille {
   code: string;
   href: string;
   libelle: string;
+  /** Une ligne qui dit ce qu'est la rubrique, sous la navigation quand elle est ouverte. */
+  aide?: string;
 }
 
 /**
@@ -380,13 +394,43 @@ export interface Pastille {
  * d'abord. L'aide mène au guide de prise en main de l'enseignant ; le manuel
  * s'y lit, et depuis le groupe « Aide » du site.
  */
+/*
+ * UNE LIGNE PAR RUBRIQUE (audit UX du 29 octobre 2026, P2-11) : un nouvel enseignant ne voyait
+ * pas la différence entre une partie, une classe du cours, une cohorte et un examen. La ligne
+ * de la rubrique ouverte se lit sous la navigation.
+ */
 export const NAVIGATION_ENSEIGNANT: readonly Pastille[] = [
-  { code: "parties", href: "/teacher", libelle: "Mes parties" },
-  { code: "examens", href: "/teacher/examens", libelle: "Mes examens" },
-  { code: "cohortes", href: "/teacher/cohortes", libelle: "Mes cohortes" },
-  { code: "cours", href: "/teacher/cours", libelle: "Mes classes du cours" },
-  { code: "scenarios", href: "/teacher/scenarios", libelle: "Mes scénarios" },
-  { code: "usage", href: "/teacher/usage", libelle: "Carnet d'usage" },
+  {
+    code: "parties",
+    href: "/teacher",
+    libelle: "Mes parties",
+    aide: "Une partie : vos élèves dirigent en équipes une entreprise de l'arène, tour après tour, face à des concurrents. Les concours entre classes se créent ici aussi.",
+  },
+  {
+    code: "examens",
+    href: "/teacher/examens",
+    libelle: "Mes examens",
+    aide: "Un examen : chaque candidat joue seul la même entreprise, dans un temps donné, et reçoit une note.",
+  },
+  {
+    code: "cohortes",
+    href: "/teacher/cohortes",
+    libelle: "Mes cohortes",
+    aide: "Une cohorte : une classe qui joue des épisodes manager, de courtes situations de management, par un code.",
+  },
+  {
+    code: "cours",
+    href: "/teacher/cours",
+    libelle: "Mes classes du cours",
+    aide: "Une classe du cours : vos élèves suivent les chapitres du cours par la simulation, et vous voyez où chacun en est.",
+  },
+  {
+    code: "scenarios",
+    href: "/teacher/scenarios",
+    libelle: "Mes scénarios",
+    aide: "Vos propres entreprises, écrites par vous, à lancer en partie comme celles de l'arène.",
+  },
+  { code: "usage", href: "/teacher/usage", libelle: "Carnet d'usage", aide: "Ce que vos classes ont fait sur la plateforme, partie après partie." },
   { code: "aide", href: "/guides/enseignant", libelle: "Aide" },
 ];
 

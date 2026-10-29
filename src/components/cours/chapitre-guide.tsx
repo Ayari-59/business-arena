@@ -1,5 +1,6 @@
 "use client";
 
+import { etapesARevoir, grandPasDuCurseur, montantInsecable, phraseDeReprise } from "@/pedagogy/cours/aides-du-guide";
 import Link from "next/link";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { bouton } from "@/components/bouton";
@@ -140,11 +141,11 @@ function useSuivi(cle: string): [Suivi, (f: (s: Suivi) => Suivi) => void, boolea
 }
 
 /** Un montant affiché : le signe moins typographique, comme dans les textes du cours. */
-const montantAffiche = (x: number) => montantEcrit(x).replace(/^-/, "−");
+const montantAffiche = (x: number) => montantInsecable(montantEcrit(x));
 
 /** Une ligne du laboratoire : en euros, ou dans son unité quand elle en a une (kilos, heures). */
 const valeurDeLigne = (x: number, unite?: string) =>
-  unite ? `${x.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} ${unite}` : montantAffiche(x);
+  unite ? montantInsecable(`${x.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} ${unite}`) : montantAffiche(x);
 
 /** « 0 écriture », « 1 écriture », « 2 écritures » : zéro s'accorde au singulier. */
 const ecritures = (n: number) => `${n} écriture${n > 1 ? "s" : ""}`;
@@ -213,7 +214,7 @@ function PieceComptable({ p }: { p: Piece }) {
                   </span>
                 )}
               </td>
-              <td className="py-1 text-right tabular-nums">{montantAffiche(l.montant)}</td>
+              <td className="whitespace-nowrap py-1 text-right tabular-nums">{montantAffiche(l.montant)}</td>
             </tr>
           ))}
         </tbody>
@@ -221,7 +222,7 @@ function PieceComptable({ p }: { p: Piece }) {
           {p.totaux.map((t) => (
             <tr key={t.libelle} className={t.fort ? "border-t border-slate-300 font-semibold" : ""}>
               <td className="py-1 pr-2">{t.libelle}</td>
-              <td className="py-1 text-right tabular-nums">{montantAffiche(t.montant)}</td>
+              <td className="whitespace-nowrap py-1 text-right tabular-nums">{montantAffiche(t.montant)}</td>
             </tr>
           ))}
         </tfoot>
@@ -531,7 +532,7 @@ function EtapeDeMontants({ etape, chapitre, index, suivi, classe, noter, suite }
       </form>
       {verifie && !fait && (
         <p className="encadre-perte max-w-2xl rounded-lg px-4 py-2.5 text-sm" role="alert">
-          {verifie.filter((v) => !v).length === 1 ? "Un montant ne convient pas encore." : "Des montants ne conviennent pas encore."} Reprenez-les à partir du journal.
+          {phraseDeReprise(verifie.filter((v) => !v).length, etape.vue)}
         </p>
       )}
       {fait && (
@@ -723,6 +724,9 @@ function EtapeDeCurseur({ etape, cas, chapitre, index, suivi, classe, noter, sui
   const lecture = connue ?? lue ?? etape.lectureDeDepart;
   const peutMontrer = classe || essais >= ESSAIS_AVANT_LA_CORRECTION;
   const borne = (n: number) => Math.min(max, Math.max(min, n));
+  // Au clavier, un grand pas pour Page haut / Page bas et Maj + flèche (audit UX, P2-3).
+  const grandPas = grandPasDuCurseur(min, max);
+  const aideClavier = useId();
   return (
     <>
       <p className="max-w-2xl text-base leading-relaxed">{etape.question}</p>
@@ -742,12 +746,32 @@ function EtapeDeCurseur({ etape, cas, chapitre, index, suivi, classe, noter, sui
             value={position}
             disabled={fait}
             aria-label={grandeur.libelle}
+            aria-describedby={grandPas > 1 ? aideClavier : undefined}
+            onKeyDown={(e) => {
+              if (grandPas <= 1) return;
+              const sens =
+                e.key === "PageUp" || (e.shiftKey && (e.key === "ArrowRight" || e.key === "ArrowUp"))
+                  ? 1
+                  : e.key === "PageDown" || (e.shiftKey && (e.key === "ArrowLeft" || e.key === "ArrowDown"))
+                    ? -1
+                    : 0;
+              if (!sens) return;
+              e.preventDefault();
+              setValeur((q) => borne(q + sens * grandPas));
+              setRate(null);
+            }}
             onChange={(e) => {
               setValeur(Number(e.target.value));
               setRate(null);
             }}
             className="w-full accent-amber-400"
           />
+          {grandPas > 1 && !fait ? (
+            <span id={aideClavier} className="text-sm" data-aide-du-curseur="">
+              Au clavier, Page haut et Page bas avancent de {grandPas.toLocaleString("fr-FR")} {grandeur.unite} ; ou tapez la
+              valeur dans le champ ci-dessous.
+            </span>
+          ) : null}
           {!fait && (
             <span className="flex flex-wrap items-center gap-2 text-sm">
               <button
@@ -1396,6 +1420,7 @@ function FinDuChapitre({
   suivi,
   entreprises,
   recommencer,
+  revoir,
   classe,
   mission,
   suites,
@@ -1405,6 +1430,8 @@ function FinDuChapitre({
   suivi: Suivi;
   entreprises: { code: string; nom: string }[];
   recommencer: () => void;
+  /** Rouvrir une étape, pour la relire avec sa correction. */
+  revoir: (index: number) => void;
   classe: boolean;
   mission: MissionAffichee | null;
   suites: SuitesDuChapitre | null;
@@ -1416,6 +1443,9 @@ function FinDuChapitre({
   }).length;
   const notions = [...new Set(chapitre.etapes.flatMap((e) => e.notions ?? []))];
   const journal: Ecriture[] = chapitre.journal;
+  // UN BILAN HONNÊTE (audit UX du 29 octobre 2026, P1-10) : ce qui n'a pas été réussi du
+  // premier coup est à revoir, et « ce que vous savez faire » ne se dit que sans reste.
+  const aRevoir = etapesARevoir(chapitre.etapes, suivi.etapes);
   return (
     <div className="grid gap-6">
       <div className="grid gap-2">
@@ -1425,8 +1455,25 @@ function FinDuChapitre({
           {duPremierCoup} étape{duPremierCoup > 1 ? "s" : ""} réussie{duPremierCoup > 1 ? "s" : ""} du premier coup sur {notees.length}, chez {cas.entreprise}.
         </p>
       </div>
+      {aRevoir.length > 0 ? (
+        <section className="grid gap-2" data-a-revoir="">
+          <h3 className="font-semibold text-slate-100">À revoir</h3>
+          <p className="text-sm text-slate-300">
+            Les étapes réussies après une erreur ou avec la correction : relisez-les, puis refaites le chapitre.
+          </p>
+          <ul className="flex flex-wrap gap-2 text-sm">
+            {aRevoir.map((e) => (
+              <li key={e.id}>
+                <button type="button" className={bouton({ variante: "secondaire", taille: "s" })} onClick={() => revoir(e.index)}>
+                  {e.titre}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
       <section className="grid gap-2">
-        <h3 className="font-semibold text-slate-100">Ce que vous savez faire</h3>
+        <h3 className="font-semibold text-slate-100">{aRevoir.length > 0 ? "Ce que le chapitre vous a fait travailler" : "Ce que vous savez faire"}</h3>
         <ul className="grid list-disc gap-1 pl-5 text-slate-200">
           {chapitre.objectifs.map((o) => (
             <li key={o}>{o}</li>
@@ -1593,6 +1640,20 @@ export function ChapitreGuide({
           {fini ? "Terminé" : `Étape ${courant + 1} sur ${n}`}
         </span>
       </div>
+      {courant === 0 && !fini && chapitre.prerequis.length > 0 && (
+        <p className="mb-4 text-sm text-slate-300" data-prerequis="">
+          À avoir vu avant ce chapitre :{" "}
+          {chapitre.prerequis.map((p, i) => (
+            <span key={p.code}>
+              {i > 0 && ", "}
+              <Link href={`/cours/${p.code}`} className="text-amber-300 underline-offset-2 hover:underline">
+                {p.titre}
+              </Link>
+            </span>
+          ))}
+          .
+        </p>
+      )}
       {calculatrice && lu && !(fini && vue === null) && <Calculatrice />}
       {!lu ? null : fini && vue === null ? (
         <FinDuChapitre
@@ -1601,6 +1662,10 @@ export function ChapitreGuide({
           suivi={suivi}
           entreprises={entreprises}
           recommencer={recommencer}
+          revoir={(i) => {
+            setVue(i);
+            if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
           classe={classe}
           mission={mission}
           suites={suites}

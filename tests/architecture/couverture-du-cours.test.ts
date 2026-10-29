@@ -286,3 +286,12 @@ describe("la couverture par le cours", () => {
     expect(PAGE).toContain("non travaillé");
   });
 });
+
+describe("le DCG et le DSCG ne prétendent pas couvrir ce qu'ils ne travaillent pas (audit pédagogique, P1-3)", () => {
+  it.each(["dcg", "dscg"])("%s : chaque unité non travaillée est hors du champ, sauf l'UE10 du DCG, à venir", (code) => {
+    const restent = tableauDeCouverture(code)
+      .lignes.filter((l) => !l.couverture && !l.horsDuChamp)
+      .map((l) => l.bloc);
+    expect(restent).toEqual(code === "dcg" ? ["UE10 · Comptabilité approfondie"] : []);
+  });
+});

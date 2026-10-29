@@ -27,9 +27,15 @@ const etiquette = "text-xs font-medium uppercase tracking-wide text-slate-400";
 
 export function CompetitionCreateForm({
   initial = ETAT_INITIAL,
+  desactive = false,
 }: {
   /** État de départ : celui d'un formulaire vierge, sauf pour reprendre un échec. */
   initial?: CreateCompetitionState;
+  /**
+   * Sans offre de l'arène, le formulaire est grisé AVANT la saisie (audit UX du 29 octobre
+   * 2026, P0-1) : la page dit au-dessus pourquoi ; le serveur refuse de toute façon.
+   */
+  desactive?: boolean;
 }) {
   const { state, formAction, pending, formRef, guardError } = useGuardedAction(
     createCompetitionAction,
@@ -42,6 +48,7 @@ export function CompetitionCreateForm({
 
   return (
     <form ref={formRef} action={formAction} className="mt-4 grid gap-4 sm:grid-cols-2">
+      <fieldset disabled={desactive || undefined} className="contents" data-formulaire-sans-offre={desactive ? "" : undefined}>
       <label className="block sm:col-span-2">
         <span className={etiquette}>Nom du concours</span>
         <input
@@ -141,6 +148,7 @@ export function CompetitionCreateForm({
       >
         {pending ? "Création du concours…" : "Créer le concours et ouvrir les inscriptions"}
       </button>
+      </fieldset>
     </form>
   );
 }

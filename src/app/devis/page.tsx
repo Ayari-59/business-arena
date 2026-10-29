@@ -30,9 +30,9 @@ export const metadata: Metadata = {
 export default async function DevisPage({
   searchParams,
 }: {
-  searchParams: Promise<{ offre?: string; interet?: string; entreprise?: string; niveau?: string }>;
+  searchParams: Promise<{ offre?: string; entreprise?: string; niveau?: string }>;
 }) {
-  const { offre, interet, entreprise, niveau } = await searchParams;
+  const { offre, entreprise, niveau } = await searchParams;
   // Ce qui a déjà été choisi ailleurs (orientation, chapitre réservé), lu contre les registres :
   // une valeur inconnue est ignorée, jamais recopiée (audit produit du 28 octobre 2026, P1-6).
   const entrepriseInitiale = ENTREPRISES.some((e) => e.code === entreprise) ? entreprise! : "";
@@ -56,7 +56,6 @@ export default async function DevisPage({
             vendeur={VENDEUR.nom}
             mentionTva={MENTION_TVA}
             contact={VENDEUR.contact}
-            interetInitial={interet === "cours" ? "cours" : "arene"}
             entrepriseInitiale={entrepriseInitiale}
             niveauInitial={niveauInitial}
             ateliers={ateliersParCombinaison()}
@@ -69,6 +68,10 @@ export default async function DevisPage({
             . Pour relire les offres :{" "}
             <Link href="/tarifs" className={LIEN_A_L_ENCRE}>
               les tarifs
+            </Link>
+            . La commande suit nos{" "}
+            <Link href="/cgv" className={LIEN_A_L_ENCRE}>
+              conditions générales de vente
             </Link>
             .
           </p>

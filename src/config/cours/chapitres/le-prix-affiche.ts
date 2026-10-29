@@ -311,8 +311,8 @@ export const LE_PRIX_AFFICHE: Chapitre = {
       cible: (c) => ({ attendu: remiseQuiGardeLeChiffre(ficheDe(c)), min: REMISES_ESSAYEES.min, max: REMISES_ESSAYEES.max }),
       zones: ["La promotion garde le chiffre d'affaires", "La promotion fait baisser le chiffre d'affaires"],
       rates: () => ({
-        dessous: "À cette remise, le chiffre d'affaires tombe sous celui du mois sans promotion : remisez moins.",
-        dessus: "Le chiffre d'affaires tient encore : vous pouvez remiser davantage. Cherchez la plus forte remise.",
+        dessous: "Le chiffre d'affaires tient encore : vous pouvez remiser davantage. Cherchez la plus forte remise.",
+        dessus: "À cette remise, le chiffre d'affaires tombe sous celui du mois sans promotion : remisez moins.",
       }),
       montrer: "Montrer la remise",
       lecture: (c, q) => {

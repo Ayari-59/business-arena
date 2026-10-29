@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { bouton } from "@/components/bouton";
 import { ChapitreGuide } from "@/components/cours/chapitre-guide";
 import { PiedDePage } from "@/components/pied-de-page";
 import { casDeLEntreprise } from "@/config/cours/cas";
@@ -14,8 +12,8 @@ import { servirLeChapitre } from "@/pedagogy/cours/chapitre-servi";
 import { chapitreOuvert } from "../acces";
 import { ENTREPRISES } from "../entreprises";
 import { suitesDuChapitre } from "@/pedagogy/cours/suites";
-import { LIBELLE_DU_DEVIS, OFFRES, OFFRES_DE_L_ARENE } from "@/config/tarifs";
-import { LIEN_TARIFS } from "@/config/vitrine-solo";
+import { getSession } from "@/lib/session";
+import { ChapitreReserve } from "@/components/cours/chapitre-reserve";
 
 /** Le chapitre que tout le monde peut ouvrir (`libre: true`), lu dans le registre. */
 const CHAPITRE_LIBRE = CHAPITRES.find((c) => c.libre)!.code;
@@ -69,38 +67,18 @@ export default async function ChapitrePage({
 
   // L'enseignant par son compte, l'élève par sa classe : l'un ou l'autre sous licence.
   if (!(await chapitreOuvert(chapitre))) {
+    // L'ÉLÈVE D'UNE CLASSE ne lit pas de vente (audit UX du 29 octobre 2026, P1-1) : ni « Voir
+    // les offres » ni « Demander un devis », mais à qui en parler. Un enseignant connecté
+    // garde la page commerciale, même sur un appareil qui porte une classe d'élève.
+    const eleve = classeDeLEleveLue && !(await getSession()) ? { classe: classeDeLEleveLue.classe } : null;
     return (
       <>
-        <main id="main" className="mx-auto grid max-w-2xl gap-4 px-6 py-16">
-          <p className="surtitre">Le cours par la simulation</p>
-          <h1 className="text-3xl font-bold text-slate-50">{chapitre.titre}</h1>
-          <p className="text-base text-slate-300">
-            {motsDuContenu(chapitre.code).reserve} aux établissements sous licence : le contenu s&apos;ouvre aux enseignants de
-            l&apos;établissement, et à leurs élèves par leur classe. Le premier chapitre du cours et son cas pratique, eux, sont libres.
-          </p>
-          {/* SORTIR DE L'IMPASSE (audit d'octobre 2026) : la page ne proposait que « Voir le cours ».
-              Le cours et ses cas pratiques s'ouvrent avec toute licence de l'arène (cours.service,
-              unCompteSousLicence) : la page le dit, et mène aux offres et au devis. */}
-          <p className="text-base text-slate-300" data-acces-du-cours="">
-            Le cours et ses cas pratiques s&apos;ouvrent avec une licence de l&apos;arène : offre{" "}
-            {OFFRES_DE_L_ARENE.map((o) => OFFRES[o].nom).join(", ").replace(/, ([^,]*)$/, " ou $1")}.
-          </p>
-          <p className="flex flex-wrap gap-3">
-            <Link href={`/cours/${CHAPITRE_LIBRE}`} className={bouton({ taille: "m" })}>
-              Essayer le chapitre libre
-            </Link>
-            <Link href={LIEN_TARIFS} className={bouton({ variante: "secondaire", taille: "m" })}>
-              Voir les offres
-            </Link>
-            {/* Qui vient du cours ne veut peut-être que lui : l'entreprise et le niveau d'arène y sont facultatifs. */}
-            <Link href="/devis?offre=classe&interet=cours" className={bouton({ variante: "secondaire", taille: "m" })}>
-              {LIBELLE_DU_DEVIS}
-            </Link>
-            <Link href="/cours" className={bouton({ variante: "secondaire", taille: "m" })}>
-              Voir le cours
-            </Link>
-          </p>
-        </main>
+        <ChapitreReserve
+          titre={chapitre.titre}
+          reserve={motsDuContenu(chapitre.code).reserve}
+          chapitreLibre={CHAPITRE_LIBRE}
+          eleve={eleve}
+        />
         <PiedDePage />
       </>
     );

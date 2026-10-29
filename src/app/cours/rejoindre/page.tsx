@@ -5,6 +5,7 @@ import { SubmitButton } from "@/components/submit-button";
 import { bouton } from "@/components/bouton";
 import { classeParCode, NOM_D_ELEVE_MAX } from "@/services/cours.service";
 import { refusDeLEffectif } from "@/config/tarifs";
+import { refusTropDEssais } from "@/lib/code-de-partie";
 import { rejoindreClasseAction } from "../actions";
 
 export const metadata: Metadata = {
@@ -32,11 +33,20 @@ const REFUS: Record<string, string> = {
 export default async function RejoindreUneClassePage({
   searchParams,
 }: {
-  searchParams: Promise<{ code?: string; refus?: string }>;
+  searchParams: Promise<{ code?: string; refus?: string; attente?: string; nom?: string }>;
 }) {
-  const { code = "", refus } = await searchParams;
+  const { code = "", refus, attente, nom = "" } = await searchParams;
   const classe = code ? await classeParCode(code) : null;
-  const message = refus && Object.hasOwn(REFUS, refus) ? REFUS[refus] : code && !classe ? REFUS.inconnu : null;
+  const message =
+    refus === "trop"
+      ? refusTropDEssais(attente)
+      : refus && Object.hasOwn(REFUS, refus)
+        ? REFUS[refus]
+        : code && !classe
+          ? REFUS.inconnu
+          : null;
+  // Le prénom déjà tapé sur /join ou avant un refus (audit UX, P1-3), borné à la longueur du champ.
+  const nomInitial = nom.slice(0, NOM_D_ELEVE_MAX);
   return (
     <>
       <main id="main" className="relative overflow-x-clip">
@@ -88,6 +98,7 @@ export default async function RejoindreUneClassePage({
                   required
                   maxLength={NOM_D_ELEVE_MAX}
                   autoComplete="given-name"
+                  defaultValue={nomInitial}
                   className="champ w-64 max-w-full px-3 py-2 text-base"
                 />
               </label>

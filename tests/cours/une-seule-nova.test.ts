@@ -1,11 +1,16 @@
 import { describe, expect, it } from "vitest";
+import { casDeLEntreprise } from "../../src/config/cours/cas";
+import { CHAPITRES } from "../../src/config/cours/registre";
+import { SITUATIONS } from "../../src/config/cours/situations";
+import { servirLeChapitre } from "../../src/pedagogy/cours/chapitre-servi";
+import { montantEcrit } from "../../src/pedagogy/cours/correcteur";
 import { anneeDuMarche } from "../../src/config/cours/monde/attractivite";
 import { coefficientDeSaison, demandeAuPrix, marcheEtPart } from "../../src/config/cours/monde/economie-et-marketing";
 import { VENTES_AUX_PARTICULIERS } from "../../src/config/cours/monde/exercice-de-nova";
 import { MARCHE_A_TROIS } from "../../src/config/cours/monde/marche-a-trois";
 import { MERCATIQUE_DE_NOVA } from "../../src/config/cours/monde/mercatique-de-nova";
 import { ANNEE_N } from "../../src/config/cours/monde/nova-capacite";
-import { CHARGES_FIXES_DU_MOIS, NOVA_GESTION, VENTES_A_CAMPUSTECH } from "../../src/config/cours/monde/nova-gestion";
+import { CHARGES_FIXES_DU_MOIS, GAMME_DE_NOVA, NOVA_GESTION, VENTES_A_CAMPUSTECH } from "../../src/config/cours/monde/nova-gestion";
 import { CAS_DES_ENTREPRISES } from "../../src/config/cours/monde/cas-des-entreprises";
 import { compteDuLycee, exerciceDe } from "../../src/config/cours/monde/comptes-du-lycee";
 import { PAIE_DU_MOIS, TAUX_DE_LA_PAIE } from "../../src/config/cours/monde/exercice-de-nova";
@@ -116,4 +121,30 @@ describe("aucun salaire horaire du monde sous le SMIC du cours", () => {
       expect(t / (1 + TAUX_PATRONAL)).toBeGreaterThanOrEqual(SMIC_HORAIRE_BRUT);
     }
   });
+});
+
+describe("une seule publicité de NOVA, d'un chapitre à l'autre (audit pédagogique, P0-2)", () => {
+  // Le coût par produit et le cas figé donnent à NOVA en gamme sa publicité, par référence ; aucun
+  // chapitre ne dit plus « NOVA ne fait pas de publicité » : le premier exercice est sans campagne,
+  // la gamme en a une, et les chapitres du lycée disent les deux.
+  const PUB = GAMME_DE_NOVA.references.reduce((t, r) => t + r.publicite, 0);
+  const textes = (code: string) => JSON.stringify(servirLeChapitre(CHAPITRES.find((c) => c.code === code)!, casDeLEntreprise("nova")));
+
+  it("la gamme fait 1 999 € de publicité par mois, ce que le cas figé arrondit à 2 000 €", () => {
+    expect(PUB).toBe(1_999);
+    expect(Math.abs(CAS_DES_ENTREPRISES.nova!.marche.marketing - PUB)).toBeLessThanOrEqual(1);
+  });
+
+  it.each(["ce-que-rapporte-la-communication", "decider-avec-des-chiffres"])("%s dit la publicité de la gamme, et jamais que NOVA n'en fait pas", (code) => {
+    const t = textes(code);
+    expect(t).not.toMatch(/ne fait pas de publicité/);
+    expect(t).toContain(`${montantEcrit(PUB)} par mois`);
+  });
+
+  it("aucun chapitre ni cas ne dit que NOVA ne fait pas de publicité", () => {
+    for (const c of [...CHAPITRES, ...SITUATIONS]) {
+      if (c.entreprises && !c.entreprises.codes.includes("nova")) continue;
+      expect(JSON.stringify(servirLeChapitre(c, casDeLEntreprise("nova"))), c.code).not.toMatch(/NOVA ne fait (?:pas|aucune) (?:de )?publicité/);
+    }
+  }, 60_000);
 });

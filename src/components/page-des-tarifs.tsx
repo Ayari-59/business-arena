@@ -9,7 +9,7 @@ import {
   CONDITIONS_DE_VENTE,
   LES_OFFRES_DE_L_ARENE,
   MENTION_TVA,
-  QUESTIONS_TARIFS,
+  questionsDesTarifs,
 } from "@/config/tarifs";
 import type { ColonneDEpisodes, VueDesTarifs } from "@/config/catalogue";
 import { VENDEUR } from "@/config/editeur";
@@ -31,8 +31,11 @@ export function PageDesTarifs({
   vue,
   bandeau,
   prixPublics,
+  essai = { autorise: false, dureeMaxJours: 0 },
 }: {
   vue: VueDesTarifs;
+  /** Le réglage de l'essai d'établissement (/admin/offres) : la question de l'essai le suit. */
+  essai?: { autorise: boolean; dureeMaxJours: number };
   bandeau: string | null;
   /**
    * Les prix de référence se lisent-ils ? (réglage de /admin/offres, éteint par défaut :
@@ -195,6 +198,13 @@ export function PageDesTarifs({
                 </li>
               ))}
             </ul>
+            <p className="mt-3 text-sm leading-relaxed text-slate-300">
+              Le texte complet :{" "}
+              <Link href="/cgv" className={LIEN_A_L_ENCRE}>
+                les conditions générales de vente
+              </Link>
+              .
+            </p>
           </Repliable>
         </section>
 
@@ -203,7 +213,7 @@ export function PageDesTarifs({
             Les questions qu&apos;on nous pose
           </h2>
           <dl className="mt-5 grid gap-x-10 md:grid-cols-2">
-            {QUESTIONS_TARIFS.map((x) => (
+            {questionsDesTarifs(essai).map((x) => (
               <div key={x.q} className="border-t border-white/10 py-4">
                 <dt className="titre-carte text-slate-100">{x.q}</dt>
                 <dd className="mt-1 text-base leading-relaxed text-slate-400">{x.r}</dd>
@@ -219,7 +229,7 @@ export function PageDesTarifs({
 
 
 /** Une colonne de la bande des épisodes : ses lignes, ou ses formules côte à côte. */
-function ColonneDesEpisodes({ colonne }: { colonne: ColonneDEpisodes }) {
+export function ColonneDesEpisodes({ colonne }: { colonne: ColonneDEpisodes }) {
   const entreprises = colonne.public === "entreprises";
   return (
     <div

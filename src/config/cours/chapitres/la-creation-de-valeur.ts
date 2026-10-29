@@ -195,6 +195,7 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
     "Discuter la structure financière qui minimise le coût du capital, face à Modigliani et Miller",
   ],
   libre: false,
+  prerequis: ["l-effet-de-levier"],
   entreprises: {
     codes: ENTREPRISES_DU_LEVIER,
     pourquoi:

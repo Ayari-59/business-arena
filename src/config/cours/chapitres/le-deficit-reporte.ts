@@ -306,6 +306,7 @@ export const LE_DEFICIT_REPORTE: Chapitre = {
     "Choisir entre les deux reports, et remonter d'une créance au déficit",
   ],
   libre: false,
+  prerequis: ["l-impot-sur-les-societes"],
   entreprises: {
     codes: ENTREPRISES_EN_DEFICIT,
     pourquoi:
