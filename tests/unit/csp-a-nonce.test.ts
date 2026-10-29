@@ -106,7 +106,14 @@ describe("CSP à nonce des zones dynamiques", () => {
     if (existsSync(manifeste)) {
       const routes = Object.keys(JSON.parse(readFileSync(manifeste, "utf8")).routes as Record<string, unknown>);
       expect(routes.filter((r) => sousNonce(r))).toEqual([]);
+      // La page introuvable est servie sous les zones aussi (GET /arena) : jamais prérendue.
+      expect(routes).not.toContain("/_not-found");
     }
     expect(statiques.map((p) => p.slice(app.length))).toEqual(["/teacher/courriers/print/page.tsx"]);
+  });
+
+  it("la page introuvable est rendue à la demande : sous une zone, elle reçoit le nonce", () => {
+    const src = readFileSync(join(process.cwd(), "src/app/not-found.tsx"), "utf8");
+    expect(src).toMatch(/await connection\(\)/);
   });
 });
