@@ -10,6 +10,7 @@ import { promesseDuCarton } from "@/services/game.service";
 /** Page d'entrée par code : un titre pour l'onglet, rien pour les moteurs. */
 export const metadata: Metadata = {
   title: "Rejoindre une partie",
+  description: "Entrez le code de la partie donné par votre enseignant pour rejoindre votre équipe.",
   robots: { index: false, follow: false },
 };
 

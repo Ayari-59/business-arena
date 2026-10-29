@@ -2,8 +2,12 @@ import { montantEcrit as eur } from "../../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../../pedagogy/cours/etats";
 import { accord } from "../../accords";
 import type { Cas } from "../../cas";
-import { prixCoutMarge } from "../../chapitres/prix-cout-marge";
+import { POURQUOI_PRIX_COUT_MARGE, prixCoutMarge } from "../../chapitres/prix-cout-marge";
+import { ENTREPRISES_DE_LA_GESTION_DE_BASE } from "../../monde/gestion-et-information";
 import type { Situation } from "../types";
+
+/** « que » devant un nom, élidé devant une voyelle : qu'ATLAS CONSEIL. */
+const que = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈÊ]/.test(nom) ? `qu'${nom}` : `que ${nom}`);
 
 /**
  * CAS PRATIQUE DU CHAPITRE « PRIX, COÛT ET MARGE » : LE FOURNISSEUR AUGMENTE SES PRIX
@@ -16,8 +20,8 @@ import type { Situation } from "../types";
  *
  * Le cas est neuf par sa question : c'est le coût qui bouge, pas le prix (le cas de
  * synthèse « Suivre la baisse du concurrent » fait jouer le prix). Seuls les achats
- * augmentent ; les autres coûts par unité, le prix et les quantités sont ceux du mois du
- * cas (`cas.ts`).
+ * augmentent ; les autres coûts par unité, le prix et les quantités sont ceux du mois de
+ * janvier de NOVA (monde/gestion-et-information.ts).
  */
 
 /**
@@ -82,13 +86,14 @@ export const LE_FOURNISSEUR_AUGMENTE: Situation = {
     "Rédiger une réponse chiffrée au gérant",
   ],
   libre: false,
+  entreprises: { codes: ENTREPRISES_DE_LA_GESTION_DE_BASE, pourquoi: POURQUOI_PRIX_COUT_MARGE },
   etapes: [
     {
       id: "demande",
       type: "lecture",
       titre: "La demande du gérant",
       texte: (c) => [
-        `« Notre fournisseur augmente ses prix de ${pct(HAUSSE_DES_ACHATS * 100)} le mois prochain. Je ne veux pas que ${c.entreprise} y perde : je veux garder le même taux de marque qu'aujourd'hui. À quel prix de vente moyen, hors taxes, faudra-t-il passer ? »`,
+        `« Notre fournisseur augmente ses prix de ${pct(HAUSSE_DES_ACHATS * 100)} le mois prochain. Je ne veux pas ${que(c.entreprise)} y perde : je veux garder le même taux de marque qu'aujourd'hui. À quel prix de vente moyen, hors taxes, faudra-t-il passer ? »`,
         "Pas de cours cette fois : vous avez les chiffres du mois, et la méthode est celle du chapitre. À vous de l'enchaîner.",
       ],
       tableau: (c) => {

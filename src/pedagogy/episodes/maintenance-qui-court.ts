@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 104 — LA MAINTENANCE QUI COURT APRÈS LES PANNES, tel que l'interface
+ * LA MAINTENANCE QUI COURT APRÈS LES PANNES, tel que l'interface
  * et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont

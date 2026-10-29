@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import { getSession } from "@/lib/session";
 import { getStaffContext } from "@/services/admin.service";
 import { consentementDuCompte } from "@/services/nouveautes.service";
@@ -11,8 +12,11 @@ import { GuardedForm } from "@/components/guarded-action";
 import { SubmitButton } from "@/components/submit-button";
 import { bouton, LIEN_A_L_ENCRE } from "@/components/bouton";
 import { logoutAction } from "../actions";
-import { reglerNouveautesAction, renvoyerLeLienAction } from "./actions";
+import { reglerNouveautesAction, renvoyerLeLienAction, supprimerMonCompteAction } from "./actions";
+import { SuppressionConfirmee } from "@/components/suppression-confirmee";
+import { MOT_DE_SUPPRESSION } from "@/config/conservation";
 import { DUREE_DU_LIEN_DITE, etatDeLAdresse } from "@/services/confirmation-email.service";
+import { FormulaireDeDeconnexion } from "@/components/formulaire-de-deconnexion";
 
 export const metadata: Metadata = {
   title: "Mon compte",
@@ -63,7 +67,7 @@ export default async function MonComptePage({
   searchParams: Promise<{ fait?: string; lien?: string; minutes?: string }>;
 }) {
   const session = await getSession();
-  if (!session) redirect("/teacher/login");
+  if (!session) redirect(await connexionPourLaPageDemandee());
   const [{ fait, lien, minutes }, staff, consentement, etatAdresse] = await Promise.all([
     searchParams,
     getStaffContext(session.userId),
@@ -71,7 +75,7 @@ export default async function MonComptePage({
     etatDeLAdresse(session.userId),
   ]);
   const retourDuLien = lien && LIENS[lien] ? LIENS[lien](minutes) : null;
-  if (!staff || !consentement) redirect("/teacher/login");
+  if (!staff || !consentement) redirect(await connexionPourLaPageDemandee());
   const isOrgAdmin = staff.organizations.some((o) => o.role === "org_admin");
   const { etat, adresse } = consentement;
 
@@ -86,11 +90,11 @@ export default async function MonComptePage({
           className="mt-6"
           liens={{ etablissement: isOrgAdmin, administration: staff.isPlatformAdmin }}
           compte={
-            <form action={logoutAction}>
+            <FormulaireDeDeconnexion action={logoutAction}>
               <button className="text-sm text-slate-400 underline-offset-4 hover:text-slate-300 hover:underline">
                 Se déconnecter
               </button>
-            </form>
+            </FormulaireDeDeconnexion>
           }
         />
       </EnTeteDePage>
@@ -190,6 +194,44 @@ export default async function MonComptePage({
             </Link>
             .
           </p>
+        </section>
+
+        <Rubrique>Vos données</Rubrique>
+        <section id="donnees" aria-label="Vos données" className="carte grid gap-4 p-4 sm:p-6" data-vos-donnees="">
+          <p className="text-sm text-slate-300">
+            Le fichier reprend votre compte, vos établissements, et les parties, classes, examens, concours et
+            cohortes que vous avez créés, avec leurs effectifs. Les pseudos, noms et notes de vos élèves n&apos;y
+            figurent pas : ce sont leurs données, que vous consultez dans votre espace.
+          </p>
+          <div>
+            <a href="/teacher/compte/export" download className={bouton({ variante: "secondaire" })} data-exporter-mes-donnees="">
+              Exporter mes données (JSON)
+            </a>
+          </div>
+          <div className="grid gap-2 border-t border-white/10 pt-4">
+            <p className="text-sm text-slate-300">
+              Supprimer votre compte efface aussi vos parties, vos classes, vos examens, vos concours, vos cohortes
+              et vos classes du cours, avec les données des élèves qui y sont rattachés. Rien ne se récupère
+              ensuite. Pensez à exporter vos données et vos relevés avant.
+            </p>
+            {staff.isPlatformAdmin ? (
+              <p className="text-sm text-slate-400">
+                Un compte administrateur de la plateforme ne se supprime pas d&apos;ici.
+              </p>
+            ) : (
+              <SuppressionConfirmee
+                action={supprimerMonCompteAction}
+                ouvrir="Supprimer mon compte"
+                confirmer="Supprimer définitivement mon compte"
+                mot={MOT_DE_SUPPRESSION}
+                label="suppression du compte"
+              >
+                Votre compte, vos parties, vos classes, vos examens (noms, numéros et notes des candidats compris),
+                vos concours, vos cohortes et vos classes du cours seront supprimés tout de suite. Les élèves sans
+                compte qui ne jouaient qu&apos;avec vous seront supprimés aussi.
+              </SuppressionConfirmee>
+            )}
+          </div>
         </section>
       </div>
     </main>

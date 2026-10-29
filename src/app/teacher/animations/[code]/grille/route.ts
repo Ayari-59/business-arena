@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import { getSession } from "@/lib/session";
 import { dossierOuvert } from "@/services/acces.service";
 import { REFUS_DU_DOSSIER } from "@/config/tarifs";
@@ -23,7 +24,7 @@ export async function GET(
   { params }: { params: Promise<{ code: string }> },
 ) {
   const session = await getSession();
-  if (!session) redirect("/teacher/login");
+  if (!session) redirect(await connexionPourLaPageDemandee());
   const { code } = await params;
   const atelier = atelierByCode.get(code);
   if (!atelier) return new Response("Atelier introuvable.", { status: 404 });

@@ -112,3 +112,44 @@ describe("les écrans cités existent sous ce nom", () => {
     expect([...servis].sort()).toEqual(Object.keys(LIEUX_DE_L_ARENE).sort());
   });
 });
+
+/**
+ * LA MISSION COLLE AU CHAPITRE RÉÉCRIT (audit du contenu, octobre 2026). L'arène et le monde du cours ne
+ * disent pas tout pareil : quand l'écran diffère du chapitre (un libellé de producteur pour un commerce,
+ * un autre escompte, une TVA comptée à la facture, une machine à une autre échelle, la TVA dans le BFR),
+ * la mission le dit, au lieu de laisser l'élève croire qu'il retrouvera le chapitre tel quel.
+ */
+describe("la mission dit où l'arène s'écarte du chapitre", () => {
+  const mission = (chapitre: string, code: string) => missionDuChapitre(chapitre, casDeLEntreprise(code))!;
+  const texte = (chapitre: string, code: string) => `${mission(chapitre, code).faire} ${mission(chapitre, code).chercher}`.replace(/[\u00a0\u202f]/g, " ");
+
+  it("un commerce a un stock de marchandises, même si l'écran parle de produits finis", () => {
+    for (const code of ["boutique", "ecommerce"]) {
+      expect(texte("les-stocks", code)).toMatch(/marchandises/);
+      expect(texte("les-stocks", code)).toMatch(/ne fabrique rien/);
+    }
+    expect(texte("stock-du-point-de-vente", "boutique")).toMatch(/marchandises/);
+  });
+
+  it("l'escompte de l'arène est bancaire, celui du chapitre est de règlement", () => {
+    expect(texte("remises-et-reglements", "nova")).toMatch(/escompte bancaire/);
+    expect(texte("remises-et-reglements", "nova")).toMatch(/escompte de règlement/);
+  });
+
+  it("la TVA de MARTEL & FILS est comptée à la facture dans l'arène, aux encaissements dans le chapitre", () => {
+    for (const chapitre of ["la-declaration-de-tva", "la-tva-et-la-tresorerie"]) {
+      expect(texte(chapitre, "batiment")).toMatch(/à la facture/);
+      expect(texte(chapitre, "batiment")).toMatch(/aux encaissements/);
+    }
+  });
+
+  it("les machines de l'arène ne sont pas les projets du chapitre : la mission donne les deux échelles", () => {
+    expect(texte("le-tri-et-le-choix-entre-deux-projets", "nova")).not.toMatch(/la machine du projet B/);
+    expect(texte("le-tri-et-le-choix-entre-deux-projets", "nova")).toMatch(/30 000 € dans l'arène, 150 000 €/);
+    expect(texte("la-valeur-actuelle-nette", "nova")).toMatch(/15 000 €.*60 000 €.*40 000 €/);
+  });
+
+  it("le BFR de l'arène retranche la TVA à décaisser, et la mission le fait recalculer", () => {
+    expect(texte("bilan-fonctionnel-et-bfr", "nova")).toMatch(/− TVA à décaisser/);
+  });
+});

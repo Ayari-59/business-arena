@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/session";
 import { ManuelImprimable } from "@/components/manuel-imprimable";
@@ -15,6 +16,6 @@ export const metadata: Metadata = {
 /** Le manuel pour l'enseignant connecté, qui y arrive par sa navigation. */
 export default async function ManuelPage() {
   const session = await getSession();
-  if (!session) redirect("/teacher/login");
+  if (!session) redirect(await connexionPourLaPageDemandee());
   return <ManuelImprimable retour={{ href: "/teacher", label: "Espace enseignant" }} />;
 }

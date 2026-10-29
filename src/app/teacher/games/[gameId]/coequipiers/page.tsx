@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import { getSession } from "@/lib/session";
 import { compter, formatDecimal } from "@/lib/format";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
@@ -438,7 +439,7 @@ export default async function CoequipiersEnseignantPage({
   searchParams: Promise<{ fait?: string; refus?: string }>;
 }) {
   const session = await getSession();
-  if (!session) redirect("/teacher/login");
+  if (!session) redirect(await connexionPourLaPageDemandee());
   const { gameId } = await params;
   const { fait, refus } = await searchParams;
   const t = await tableauDeLEnseignant(session.userId, gameId);

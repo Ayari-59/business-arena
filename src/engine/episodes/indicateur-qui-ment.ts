@@ -55,7 +55,7 @@ export const DUREE_LIBRE = 6.5;
 export const SAISIE = 1.5;
 export const OBJECTIF_DECROCHE = 0.9;
 export const OBJECTIF_PREMIER_APPEL = 0.7;
-export const SEUIL_RAPPEL = 0.15;
+export const SEUIL_RAPPEL = 0.19;
 /** La prime d'équipe : 250 € par conseiller et par mois quand le décroché tient. */
 export const PRIME_MOIS = 250 * CONSEILLERS;
 /** Un poste de conseiller, charges comprises, par semaine. */

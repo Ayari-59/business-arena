@@ -52,9 +52,9 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     enchaînés) et garder-l-emprunt (un jugement).
  *
  * L'EXPORT DE COMPATIBILITÉ `soldesDeGestion(c)` lit encore l'année figée de l'arène
- * (monde/annee-du-cours.ts et `c.annee`), dans toutes les entreprises : les chapitres du Bac STMG qui
- * le lisent (« Le compte de résultat », « La rentabilité », « Financer l'entreprise », leurs cas) et
- * « Bilan fonctionnel et BFR » en dépendent. Le chapitre lui-même ne s'en sert plus.
+ * (monde/annee-du-cours.ts et `c.annee`), dans toutes les entreprises : « L'effectif et la masse
+ * salariale » en dépend encore. Les chapitres de gestion et finance du Bac STMG et leurs cas sont
+ * passés sur le monde du cours (monde/comptes-du-lycee.ts). Le chapitre lui-même ne s'en sert plus.
  */
 
 /** Les entreprises du chapitre : celles qui ont un exercice dans le monde du cours, NOVA seule. */
@@ -730,10 +730,7 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
       notions: ["net_treasury", "bfr"],
       question: (c) => {
         const x = soldesDeNova(c);
-        // CampusTech payée à 60 jours, les dettes encore dues au 31 décembre (fournisseur, TVA, impôt)
-        // dépassent ce que retiennent les clients et le stock : la trésorerie gagne alors plus que la CAF.
-        const gagne = x.variationDeTresorerie < x.caf.additive ? `n'a gagné que ${eur(x.variationDeTresorerie)}` : `a gagné ${eur(x.variationDeTresorerie)}, plus que la CAF`;
-        return `La CAF ${dE(x.entreprise)} est de ${eur(x.caf.additive)}. Pourtant, entre le 6 janvier, la ligne payée (${eur(x.tresorerieDeDepart)} en banque et sur le compte à terme), et le 31 décembre (${eur(x.tresorerieDeFin)}), la trésorerie ${gagne}. Pourquoi les deux chiffres diffèrent-ils ?`;
+        return `La CAF ${dE(x.entreprise)} est de ${eur(x.caf.additive)}. Pourtant, entre le 6 janvier, la ligne payée (${eur(x.tresorerieDeDepart)} en banque et sur le compte à terme), et le 31 décembre (${eur(x.tresorerieDeFin)}), la trésorerie n'a gagné que ${eur(x.variationDeTresorerie)}. Pourquoi les deux chiffres diffèrent-ils ?`;
       },
       options: (c) => {
         const x = soldesDeNova(c);
@@ -741,7 +738,7 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
           {
             texte: `Parce que la CAF compte l'encaissable, pas l'encaissé, et ignore les ${eur(x.capitalRembourse)} d'emprunt remboursés et les écarts de délais`,
             juste: true,
-            retour: `C'est cela. La CAF est une capacité : ce que l'activité permet de financer. La trésorerie suit l'encaissé : les ${eur(x.capitalRembourse)} de capital remboursé la creusent, les intérêts du placement ne sont pas encore reçus, et les écarts de délais (clients, stock, fournisseurs, TVA, impôt dû) la creusent ou la gonflent. ${x.variationDeTresorerie < x.caf.additive ? "Ici, ils la creusent." : "Ici, ce qui reste à payer au 31 décembre dépasse ce qui reste à encaisser : ils la gonflent."} Le bilan fonctionnel, au chapitre suivant, met ces flux en face.`,
+            retour: `C'est cela. La CAF est une capacité : ce que l'activité permet de financer. La trésorerie, ce qui reste une fois payés les écarts de délais (clients, fournisseurs, stock, TVA, impôt dû), les ${eur(x.capitalRembourse)} de capital remboursé et les intérêts du placement encore à recevoir. Le bilan fonctionnel, au chapitre suivant, met ces flux en face.`,
           },
           {
             texte: "Parce que la CAF comprend la dotation aux amortissements, qui sort de la banque",
@@ -951,9 +948,8 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * LES SOLDES DE L'ANNÉE FIGÉE DE L'ARÈNE, dans toutes les entreprises du cours : l'export que lisent
- * « Le compte de résultat », « La rentabilité », « Financer l'entreprise », « Bilan fonctionnel et
- * BFR » et leurs cas. C'est le calcul de l'ancien chapitre, à l'identique : les grandes masses de
+ * LES SOLDES DE L'ANNÉE FIGÉE DE L'ARÈNE, dans toutes les entreprises du cours : l'export que lit
+ * encore « L'effectif et la masse salariale ». C'est le calcul de l'ancien chapitre, à l'identique : les grandes masses de
  * l'année (`c.annee`), la dotation et la variation du stock en travaux d'inventaire, l'impôt au taux
  * de l'arène, et la trésorerie de l'année figée (monde/annee-du-cours.ts). Le chapitre ne la lit pas :
  * il joue sur l'exercice de NOVA du monde du cours (`soldesDeNova`).

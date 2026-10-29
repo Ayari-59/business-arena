@@ -1,15 +1,7 @@
-import { scenarioByCode } from "../../../scenarios/registry";
 import type { Cas } from "../../cas";
-import {
-  L_OFFRE_ET_LA_DEMANDE,
-  TRIMESTRE_LU,
-  dE,
-  lireLeMarche,
-  marcheDeReference,
-  rang,
-  stockDuDebut,
-} from "../../chapitres/l-offre-et-la-demande";
-import { anneeDeReference, rejouerAvec } from "../../gestion-de-la-pme";
+import { L_OFFRE_ET_LA_DEMANDE, TRIMESTRE_LU, dE, rang } from "../../chapitres/l-offre-et-la-demande";
+import { marcheAuPrix, offreDuTrimestre } from "../../monde/economie-et-marketing";
+import { mercatiqueDe } from "../../monde/mercatique-de-nova";
 import type { TableauDeDonnees } from "../../types";
 import type { Situation } from "../types";
 
@@ -17,17 +9,16 @@ import type { Situation } from "../types";
  * CAS PRATIQUE DU CHAPITRE « L'OFFRE ET LA DEMANDE SUR UN MARCHÉ » : METTRE PLUS EN VENTE
  * (seconde, sciences économiques et sociales, palier 1).
  *
- * Le directeur commercial croit qu'en mettant plus en vente, l'entreprise aurait eu plus de
- * clients. L'arène rejoue le 1er trimestre avec 20 % de plus dans la décision de ce qui est mis en
- * vente (`rejouerAvec`, clé « l-offre-et-la-demande:mise-en-vente-plus-20 ») : seule cette décision
- * change, au seul 1er trimestre, posée en valeur absolue (le plan de l'année de référence, plus
- * 20 %). L'élève refait le calcul du chapitre (la quantité échangée, la plus petite de la demande
- * et de l'offre) dans les deux cas, et répond : la demande reçue n'a pas bougé (le test le
- * vérifie dans chaque entreprise) ; l'entreprise vend plus là où des acheteurs repartaient sans
- * rien, et rien de plus là où l'offre dépassait déjà la demande. Le verdict se calcule.
+ * Le directeur commercial croit qu'en mettant plus en vente, NOVA aurait eu plus de clients. Le cas
+ * refait le 1er trimestre du monde du cours avec 20 % de plus mis en vente (les 4 778 enceintes de la
+ * ligne, plus 20 %, à l'enceinte la plus proche), au même prix : la demande reçue ne bouge pas (la
+ * droite de demande ne dépend que du prix). L'élève refait le calcul du chapitre (la quantité
+ * échangée, la plus petite de la demande et de l'offre) dans les deux cas, et répond. Le verdict se
+ * calcule : NOVA vend plus là où des acheteurs repartaient sans rien, et rien de plus au-delà.
  *
- * Le cas est neuf par sa question : le chapitre fait varier le prix ; ici, c'est l'offre qui
- * change, et l'on constate qu'elle ne fait pas la demande.
+ * Le cas est neuf par sa question : le chapitre fait varier le prix ; ici, c'est l'offre qui change,
+ * et l'on constate qu'elle ne fait pas la demande. Il joue dans le monde du cours
+ * (monde/economie-et-marketing.ts), chez NOVA seule.
  */
 
 /** Ce que le directeur commercial veut mettre en vente en plus : 20 % (hypothèse du cas). */
@@ -38,33 +29,22 @@ const pct = (t: number) => `${Math.round(t * 100)} %`;
 
 export type Verdict = "vend-plus" | "rien-de-plus";
 
-/** Le 1er trimestre, tel qu'il a été joué et avec 20 % de plus mis en vente. */
+/** Le 1er trimestre, tel que la ligne l'a fabriqué et avec 20 % de plus mis en vente. */
 export function miseEnVenteAugmentee(c: Cas) {
-  const plan = anneeDeReference(c.code)[TRIMESTRE_LU - 1]!.production.planned;
-  const pose = plan * (1 + HAUSSE_DE_LA_MISE_EN_VENTE);
-  const annee = rejouerAvec(c.code, `l-offre-et-la-demande:mise-en-vente-plus-${Math.round(HAUSSE_DE_LA_MISE_EN_VENTE * 100)}`, (tour, d) =>
-    tour === TRIMESTRE_LU ? { ...d, productionPlan: pose } : undefined,
-  );
-  const sans = marcheDeReference(c.code, TRIMESTRE_LU);
-  const avec = lireLeMarche(annee[TRIMESTRE_LU - 1]!, stockDuDebut(c.code, TRIMESTRE_LU), sans.prix);
+  const f = mercatiqueDe(c);
+  const plan = offreDuTrimestre(f);
+  const pose = Math.round(plan * (1 + HAUSSE_DE_LA_MISE_EN_VENTE));
+  const sans = marcheAuPrix(f);
+  const avec = marcheAuPrix(f, { offre: pose });
   const verdict: Verdict = avec.echangee > sans.echangee ? "vend-plus" : "rien-de-plus";
-  return {
-    plan,
-    pose,
-    sans,
-    avec,
-    verdict,
-    demandeEnPlus: avec.demande - sans.demande,
-    echangeeEnPlus: avec.echangee - sans.echangee,
-    volume: scenarioByCode(c.code).vocabulary.productionPlanLabel,
-  };
+  return { plan, pose, sans, avec, verdict, demandeEnPlus: avec.demande - sans.demande, echangeeEnPlus: avec.echangee - sans.echangee };
 }
 
 function tableauDesDeuxTrimestres(c: Cas): TableauDeDonnees {
   const m = miseEnVenteAugmentee(c);
   return {
-    titre: `${c.entreprise} au ${rang(TRIMESTRE_LU)} trimestre, rejoué par l'arène, en ${c.unites}`,
-    colonnes: ["Trimestre joué", `Avec ${pct(HAUSSE_DE_LA_MISE_EN_VENTE)} de plus`],
+    titre: `${c.entreprise} au ${rang(TRIMESTRE_LU)} trimestre, en ${c.unites}`,
+    colonnes: ["Trimestre fabriqué", `Avec ${pct(HAUSSE_DE_LA_MISE_EN_VENTE)} de plus`],
     lignes: [
       { libelle: "Demande reçue", valeurs: [qte(m.sans.demande), qte(m.avec.demande)] },
       { libelle: "Quantité mise en vente", valeurs: [qte(m.sans.offre), qte(m.avec.offre)] },
@@ -81,7 +61,7 @@ export const METTRE_PLUS_EN_VENTE: Situation = {
   commanditaire: "Le directeur commercial",
   titre: "Mettre plus en vente",
   accroche:
-    "Le directeur commercial en est sûr : avec plus à vendre, il y aurait eu plus de clients. L'arène rejoue le trimestre avec 20 % de plus mis en vente. Calculer ce qui s'échange, et lui répondre.",
+    "Le directeur commercial en est sûr : avec plus à vendre, il y aurait eu plus de clients. Refaire le trimestre avec 20 % de plus mis en vente, calculer ce qui s'échange, et lui répondre.",
   objectifs: [
     "Calculer la quantité échangée quand l'offre change",
     "Distinguer la demande reçue et la quantité vendue",
@@ -99,7 +79,7 @@ export const METTRE_PLUS_EN_VENTE: Situation = {
         const m = miseEnVenteAugmentee(c);
         return [
           `« Au ${rang(TRIMESTRE_LU)} trimestre, nous avons mis ${qte(m.sans.offre)} ${c.unites} en vente. Avec ${pct(HAUSSE_DE_LA_MISE_EN_VENTE)} de plus, nous aurions eu plus de clients, j'en suis sûr. Dites-moi si j'ai raison, et ce que nous aurions vendu. »`,
-          `Pas de cours cette fois. L'arène a rejoué le ${rang(TRIMESTRE_LU)} trimestre ${dE(c.entreprise)} avec ${pct(HAUSSE_DE_LA_MISE_EN_VENTE)} de plus dans « ${m.volume} » : seule cette décision change, le prix et les concurrents restent les mêmes.`,
+          `Pas de cours cette fois. Le tableau refait le ${rang(TRIMESTRE_LU)} trimestre ${dE(c.entreprise)} avec ${pct(HAUSSE_DE_LA_MISE_EN_VENTE)} de plus mis en vente, soit ${qte(m.pose)} ${c.unites} : seule cette décision change, le prix et les concurrents restent les mêmes.`,
         ];
       },
       repere: () => "À rendre : ce qui s'échange dans les deux cas, ce qui reste, et votre réponse.",
@@ -110,12 +90,12 @@ export const METTRE_PLUS_EN_VENTE: Situation = {
       titre: "Ce qui s'échange, dans les deux cas",
       notions: ["demand_market_share", "stock"],
       tableau: tableauDesDeuxTrimestres,
-      question: () => "D'après le tableau, calculez la quantité échangée dans le trimestre joué, puis avec la quantité mise en vente augmentée.",
+      question: () => "D'après le tableau, calculez la quantité échangée dans le trimestre fabriqué, puis avec la quantité mise en vente augmentée.",
       champs: (c) => {
         const m = miseEnVenteAugmentee(c);
         return [
           {
-            libelle: "Quantité échangée, trimestre joué",
+            libelle: "Quantité échangée, trimestre fabriqué",
             attendu: m.sans.echangee,
             calcul: `la plus petite de ${qte(m.sans.demande)} et ${qte(m.sans.offre)} : ${qte(m.sans.echangee)}`,
             tolerance: 0,

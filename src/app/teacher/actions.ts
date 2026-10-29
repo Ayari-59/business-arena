@@ -4,7 +4,9 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { clearSession, getSession, setSession } from "@/lib/session";
+import { getSession, setSession } from "@/lib/session";
+import { fermerLaSessionDeLAppareil } from "@/lib/deconnexion";
+import { suiteInterne } from "@/lib/connexion-enseignant";
 import { creerLesCodesManquants } from "@/services/reprise.service";
 import {
   bumpSessionVersion,
@@ -98,7 +100,7 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
     }
   }
   await setSession(result.userId, "teacher");
-  redirect("/teacher");
+  redirect(suiteInterne(formData.get("suite")) ?? "/teacher");
 }
 
 /** L'adresse d'origine telle que Vercel la transmet ; null hors proxy. */
@@ -123,11 +125,13 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
   // Une action serveur ne porte pas de code HTTP : le 429 est le message.
   if ("error" in result) return { error: result.error };
   await setSession(result.userId, "teacher", result.sessionVersion);
-  redirect("/teacher");
+  // La page demandée avant la connexion, si c'est un chemin interne
+  // (lib/connexion-enseignant.ts) ; sinon l'accueil de l'espace.
+  redirect(suiteInterne(formData.get("suite")) ?? "/teacher");
 }
 
 export async function logoutAction(): Promise<void> {
-  await clearSession();
+  await fermerLaSessionDeLAppareil();
   redirect("/teacher/login");
 }
 
@@ -135,7 +139,7 @@ export async function logoutAction(): Promise<void> {
 export async function logoutEverywhereAction(): Promise<void> {
   const session = await getSession();
   if (session) await bumpSessionVersion(session.userId);
-  await clearSession();
+  await fermerLaSessionDeLAppareil();
   redirect("/teacher/login");
 }
 

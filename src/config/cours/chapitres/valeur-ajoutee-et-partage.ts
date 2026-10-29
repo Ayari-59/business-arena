@@ -1,6 +1,7 @@
-import { montantEcrit as eur } from "../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../pedagogy/cours/etats";
+import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import type { Cas } from "../cas";
+import { auCentime } from "../monde/amortissement";
+import { ENTREPRISES_DES_COMPTES_DU_LYCEE, compteDuLycee, type CompteDuLycee } from "../monde/comptes-du-lycee";
 import type { Chapitre } from "../types";
 import { compteDeResultat } from "./lire-le-compte-de-resultat";
 
@@ -10,40 +11,89 @@ import { compteDeResultat } from "./lire-le-compte-de-resultat";
  * Ce que l'entreprise crée par son travail : ce qu'elle produit, moins ce qu'elle a acheté à
  * d'autres entreprises pour le produire. Puis le partage de cette richesse entre ceux qui y ont
  * contribué : les salariés, les prêteurs, l'État, et l'entreprise elle-même, qui garde de quoi
- * renouveler son équipement et se développer.
+ * renouveler son équipement et se développer. Puis l'expérience : un curseur sur les enceintes
+ * vendues (combien faut-il en vendre pour que la richesse créée paie l'équipe ?), et un laboratoire
+ * du partage (augmenter les salaires de 20 % en gardant à l'entreprise un tiers de la valeur ajoutée).
  *
- * Les montants sont ceux de l'année de l'arène (`compteDeResultat`, qui reprend les soldes de
- * gestion vérifiés à l'euro près). L'arène ne verse pas de dividendes : la part des associés
- * reste dans l'entreprise, et le chapitre le dit. Aucune hypothèse n'est ajoutée.
+ * LE CHAPITRE JOUE DANS LE MONDE DU COURS : le premier exercice de NOVA, rangé en lignes du lycée
+ * (monde/comptes-du-lycee.ts, `compteDuLycee`, le même que « Le compte de résultat »). NOVA ne
+ * produit pas pour stocker : sa production est ses ventes. La simulation du cours ne verse pas de
+ * dividendes : la part des associés reste dans l'entreprise, et le chapitre le dit. Les revenus du
+ * compte à terme ne viennent pas de la valeur ajoutée : la part de l'entreprise est ce que la valeur
+ * ajoutée laisse une fois payés les salariés, les prêteurs et l'État.
  */
 
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
+/** Les bornes du curseur des enceintes vendues dans l'année. */
+export const ENCEINTES_DU_CURSEUR = { min: 15_000, max: 26_000 } as const;
+
+/** Les leviers du laboratoire : la hausse des salaires, en %, et les ventes, en % de celles de l'année. */
+export const LEVIERS_DU_PARTAGE = {
+  hausse: { min: 0, max: 20, pas: 1 },
+  ventes: { min: -20, max: 20, pas: 5 },
+} as const;
+
+/** Le défi du laboratoire : 20 % de hausse des salaires, et l'entreprise qui garde au moins un tiers de la valeur ajoutée. */
+export const HAUSSE_DU_DEFI = 20;
+export const PART_GARDEE_DU_DEFI = 1 / 3;
+
+/** La solution que montre la correction : la hausse de 20 %, et 5 % d'enceintes vendues en plus. */
+export const SOLUTION_DU_PARTAGE = { hausse: 20, ventes: 5 } as const;
+
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
+const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−");
+const pct = (t: number) => `${qte(t)} %`;
 const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
-/** La valeur ajoutée de l'année et ses parts. */
-export function valeurAjoutee(c: Cas) {
-  const k = compteDeResultat(c);
-  const s = k.s;
-  const consommations = auCentime(k.achatsConsommes + s.autres + s.commissions + s.publicite + s.entretien + s.loyerEtFrais);
-  const va = auCentime(k.produits - consommations);
-  const entreprise = auCentime(s.dotation + k.resultat);
+/** Le nom de chaque part, au laboratoire. */
+const LIBELLE_DE_LA_PART: Readonly<Record<string, string>> = {
+  salaries: "Part des salariés",
+  preteurs: "Part des prêteurs",
+  etat: "Part de l'État",
+  entreprise: "Part de l'entreprise",
+};
+
+/** Le partage de la valeur ajoutée d'une année du lycée. */
+function partage(k: CompteDuLycee) {
+  const va = k.valeurAjoutee;
+  const entreprise = auCentime(va - k.personnel - k.financement - k.impot);
   const part = (x: number) => auDixieme((x / va) * 100);
   const parts = [
-    { code: "salaries", nom: "Les salariés", montant: s.personnel, part: part(s.personnel), quoi: "les salaires et les cotisations" },
-    { code: "preteurs", nom: "Les prêteurs", montant: s.interets, part: part(s.interets), quoi: "les intérêts de l'emprunt" },
-    { code: "etat", nom: "L'État", montant: s.impot, part: part(s.impot), quoi: "l'impôt sur les bénéfices" },
-    { code: "entreprise", nom: "L'entreprise elle-même", montant: entreprise, part: part(entreprise), quoi: "l'usure de l'équipement à remplacer et le résultat de l'année" },
+    { code: "salaries", nom: "Les salariés", montant: k.personnel, part: part(k.personnel), quoi: "les salaires et les cotisations" },
+    { code: "preteurs", nom: "Les prêteurs", montant: k.financement, part: part(k.financement), quoi: "les intérêts de l'emprunt et les escomptes" },
+    { code: "etat", nom: "L'État", montant: k.impot, part: part(k.impot), quoi: "l'impôt sur les bénéfices" },
+    { code: "entreprise", nom: "L'entreprise elle-même", montant: entreprise, part: part(entreprise), quoi: "ce qu'elle garde pour remplacer sa ligne, couvrir ses risques et se développer" },
   ];
+  return { va, entreprise, parts, partGardee: entreprise / va };
+}
+
+/** La valeur ajoutée de l'année et ses parts. */
+export function valeurAjoutee(c: Pick<Cas, "code">) {
+  const k = compteDeResultat(c);
+  const p = partage(k);
   return {
     k,
-    consommations,
-    va,
-    tauxDeValeurAjoutee: auDixieme((va / s.ventes) * 100),
-    entreprise,
-    parts,
-    premiere: parts.reduce((a, b) => (b.montant > a.montant ? b : a)),
+    consommations: k.consommations,
+    ...p,
+    tauxDeValeurAjoutee: auDixieme((p.va / k.ventes) * 100),
+    premiere: p.parts.reduce((a, b) => (b.montant > a.montant ? b : a)),
   };
+}
+
+export type ValeurAjoutee = ReturnType<typeof valeurAjoutee>;
+
+/** Les enceintes à partir desquelles la valeur ajoutée paie le personnel. */
+export function enceintesQuiPaientLEquipe(v: ValeurAjoutee) {
+  return Math.ceil(v.k.quantiteDeLaFiche - (v.va - v.k.personnel) / v.k.margeParEnceinte - 1e-9);
+}
+
+/** La valeur ajoutée pour un nombre d'enceintes : chaque enceinte en plus laisse son prix moins ses consommations. */
+const vaPour = (v: ValeurAjoutee, q: number) => auCentime(v.va + v.k.margeParEnceinte * (q - v.k.quantiteDeLaFiche));
+
+/** Une position du laboratoire : la hausse des salaires et les ventes, en %. */
+export function partageDuLaboratoire(v: ValeurAjoutee, p: Readonly<Record<string, number>>) {
+  const k = compteDuLycee(v.k.f, { hausseDesSalaires: p.hausse! / 100, quantite: Math.round(v.k.quantiteDeLaFiche * (1 + p.ventes! / 100)) });
+  return { k, ...partage(k) };
 }
 
 export const VALEUR_AJOUTEE: Chapitre = {
@@ -62,9 +112,13 @@ export const VALEUR_AJOUTEE: Chapitre = {
     "Distinguer la production et les consommations venues d'autres entreprises",
     "Calculer la valeur ajoutée et le taux de valeur ajoutée",
     "Calculer le partage de la valeur ajoutée",
-    "Interpréter ce partage",
+    "Interpréter ce partage, et voir ce qui le fait bouger",
   ],
   libre: false,
+  entreprises: {
+    codes: ENTREPRISES_DES_COMPTES_DU_LYCEE,
+    pourquoi: "la valeur ajoutée se lit ici sur le premier exercice de NOVA dans la simulation du cours, celui du chapitre « Le compte de résultat » ; la méthode vaut pour toute entreprise.",
+  },
   etapes: [
     {
       id: "intro",
@@ -74,35 +128,20 @@ export const VALEUR_AJOUTEE: Chapitre = {
       texte: (c) => {
         const v = valeurAjoutee(c);
         return [
-          `En vendant ${eur(v.k.s.ventes)} dans l'année, ${c.entreprise} n'a pas créé ${eur(v.k.s.ventes)} de richesse : une partie de ce prix paie ce qu'elle a acheté à d'autres entreprises (les marchandises ou les matières, l'énergie, la publicité, le loyer). Cette part, ce sont les consommations ; la richesse que d'autres ont créée.`,
-          // La production n'est pas les ventes quand le stock de produits a bougé : la richesse
-          // créée se mesure sur ce qui a été produit dans l'année, vendu ou mis en stock.
-          ...(v.k.produits !== v.k.s.ventes
-            ? [
-                `Sa production de l'année, ${eur(v.k.produits)}, n'est pas tout à fait ses ventes : ${v.k.produits > v.k.s.ventes ? "une partie de ce qu'elle a produit attend en stock" : "une partie de ce qu'elle a vendu sortait du stock du début d'année"}. La richesse créée se mesure sur la production de l'année.`,
-              ]
-            : []),
-          "Ce qui reste est la valeur ajoutée : la richesse que l'entreprise a créée elle-même, par le travail de son équipe et l'usage de son équipement.",
+          `En vendant ${eur(v.k.ventes)} d'enceintes dans l'année, ${v.k.entreprise} n'a pas créé ${eur(v.k.ventes)} de richesse : une partie de ce prix paie ce qu'elle a acheté à d'autres entreprises (les composants, l'emballage, le transport, l'énergie, le local, l'assurance). Cette part, ce sont les consommations ; la richesse que d'autres ont créée.`,
+          `${v.k.entreprise} fabrique ce qu'elle vend, sans garder d'enceintes en stock : sa production de l'année est ses ventes. Ce qui reste, une fois les consommations retirées, est la valeur ajoutée : la richesse que l'entreprise a créée elle-même, par le travail de son équipe et l'usage de sa ligne.`,
         ];
       },
       tableau: (c) => {
         const v = valeurAjoutee(c);
-        const s = v.k.s;
-        const lignes = [
-          {
-            libelle: v.k.produits === s.ventes ? "Ventes de l'année" : "Production de l'année (ventes et variation du stock de produits)",
-            valeurs: [eur(v.k.produits)],
-          },
-          { libelle: s.marchandises ? "Marchandises consommées" : "Achats consommés", valeurs: [eur(v.k.achatsConsommes)] },
-          { libelle: "Autres coûts variables et qualité", valeurs: [eur(s.autres)] },
-        ];
-        if (s.commissions > 0) lignes.push({ libelle: "Commissions", valeurs: [eur(s.commissions)] });
-        lignes.push(
-          { libelle: "Publicité", valeurs: [eur(s.publicite)] },
-          { libelle: "Entretien", valeurs: [eur(s.entretien)] },
-          { libelle: "Loyer et frais de structure", valeurs: [eur(s.loyerEtFrais)] },
-        );
-        return { titre: "La production et les consommations de l'année", colonnes: ["Montant"], lignes };
+        return {
+          titre: "La production et les consommations de l'année",
+          colonnes: ["Montant"],
+          lignes: [
+            { libelle: "Production de l'année (les ventes d'enceintes)", valeurs: [eur(v.k.ventes)] },
+            ...v.k.lignes.filter((l) => l.consommation).map((l) => ({ libelle: l.libelle, valeurs: [eur(l.montant)] })),
+          ],
+        };
       },
       repere: () => "Valeur ajoutée = production − consommations venues d'autres entreprises.",
     },
@@ -111,19 +150,20 @@ export const VALEUR_AJOUTEE: Chapitre = {
       type: "montants",
       titre: "La valeur ajoutée",
       notions: ["income_statement"],
-      question: (c) => `Calculez le total des consommations venues d'autres entreprises, la valeur ajoutée ${dE(c.entreprise)}, puis le taux de valeur ajoutée (valeur ajoutée ÷ ventes × 100), au dixième.`,
+      question: (c) => `Calculez le total des consommations venues d'autres entreprises, la valeur ajoutée ${dE(valeurAjoutee(c).k.entreprise)}, puis le taux de valeur ajoutée (valeur ajoutée ÷ ventes × 100), au dixième.`,
       champs: (c) => {
         const v = valeurAjoutee(c);
+        const conso = v.k.lignes.filter((l) => l.consommation).map((l) => eur(l.montant));
         return [
-          { libelle: "Consommations", attendu: v.consommations, calcul: `somme des consommations = ${eur(v.consommations)}`, tolerance: 1 },
-          { libelle: "Valeur ajoutée", attendu: v.va, calcul: `${eur(v.k.produits)} − ${eur(v.consommations)} = ${eur(v.va)}`, tolerance: 2 },
-          { libelle: "Taux de valeur ajoutée (%)", attendu: v.tauxDeValeurAjoutee, calcul: `${eur(v.va)} ÷ ${eur(v.k.s.ventes)} × 100 = ${pct(v.tauxDeValeurAjoutee)}`, tolerance: 0.1 },
+          { libelle: "Consommations", attendu: v.consommations, calcul: `${conso.join(" + ")} = ${eur(v.consommations)}`, tolerance: 1 },
+          { libelle: "Valeur ajoutée", attendu: v.va, calcul: `${eur(v.k.ventes)} − ${eur(v.consommations)} = ${eur(v.va)}`, tolerance: 2 },
+          { libelle: "Taux de valeur ajoutée (%)", attendu: v.tauxDeValeurAjoutee, calcul: `${eur(v.va)} ÷ ${eur(v.k.ventes)} × 100 = ${pct(v.tauxDeValeurAjoutee)}`, tolerance: 0.1 },
         ];
       },
       explication: (c) => {
         const v = valeurAjoutee(c);
         return [
-          `Sur 100 € de ventes, ${c.entreprise} crée ${pct(v.tauxDeValeurAjoutee).replace(" %", " €")} de richesse ; le reste paie le travail d'autres entreprises. Un commerçant qui revend a souvent un taux faible ; une entreprise de services, dont la richesse est le travail de son équipe, un taux élevé.`,
+          `Sur 100 € de ventes, ${v.k.entreprise} crée ${pct(v.tauxDeValeurAjoutee).replace(" %", " €")} de richesse ; le reste paie le travail d'autres entreprises, d'abord ses fournisseurs de composants. Un fabricant qui assemble des pièces achetées a souvent un taux faible ; une entreprise de services, dont la richesse est le travail de son équipe, un taux élevé.`,
         ];
       },
     },
@@ -157,11 +197,10 @@ export const VALEUR_AJOUTEE: Chapitre = {
         const v = valeurAjoutee(c);
         const entreprise = v.parts[3]!;
         return [
-          entreprise.montant >= 0 && v.k.resultat >= 0
-            ? `L'entreprise garde ${pct(entreprise.part)} de la richesse qu'elle crée : de quoi remplacer son équipement usé et financer sa croissance. L'arène ne verse pas de dividendes aux associés : leur part reste dans l'entreprise.`
-            : entreprise.montant >= 0
-              ? `L'entreprise ne garde que ${pct(entreprise.part)} de la richesse qu'elle crée : sa perte de l'année, ${eur(-v.k.resultat)}, entame ce qu'elle met de côté pour l'usure de son équipement. Elle n'a rien pour financer sa croissance.`
-              : `La part de l'entreprise est négative : sa perte de l'année dépasse ce qu'elle met de côté pour l'usure de son équipement. Elle a distribué aux salariés, aux prêteurs et à l'État plus que la richesse qu'elle a créée.`,
+          entreprise.montant >= 0 && v.k.resultatNet >= 0
+            ? `L'entreprise garde ${pct(entreprise.part)} de la richesse qu'elle crée : de quoi remplacer sa ligne usée, couvrir les risques de l'année et financer sa croissance. La simulation du cours ne verse pas de dividendes aux associés : leur part reste dans l'entreprise.`
+            : `La part de l'entreprise n'est que de ${pct(entreprise.part)} : elle ne garde presque rien pour remplacer son équipement ni pour se développer.`,
+          `Ce qu'elle garde se retrouve dans son compte de résultat : l'usure et les risques de l'année (${eur(v.k.dotations)}) et le résultat (${eur(v.k.resultatNet)}), moins les revenus du compte à terme (${eur(v.k.produitsFinanciers)}), qui ne viennent pas de son activité.`,
         ];
       },
     },
@@ -170,7 +209,7 @@ export const VALEUR_AJOUTEE: Chapitre = {
       type: "choix",
       titre: "La plus grosse part",
       notions: ["income_statement", "productivity"],
-      question: (c) => `Qui reçoit la plus grosse part de la valeur ajoutée ${dE(c.entreprise)} ?`,
+      question: (c) => `Qui reçoit la plus grosse part de la valeur ajoutée ${dE(valeurAjoutee(c).k.entreprise)} ?`,
       options: (c) => {
         const v = valeurAjoutee(c);
         return v.parts.map((p) => ({
@@ -184,6 +223,101 @@ export const VALEUR_AJOUTEE: Chapitre = {
       },
     },
     {
+      id: "la-richesse-qui-paie-l-equipe",
+      type: "curseur",
+      titre: "La richesse qui paie l'équipe",
+      notions: ["income_statement", "productivity"],
+      question: (c) => {
+        const v = valeurAjoutee(c);
+        return `La valeur ajoutée paie d'abord les salariés. Faites varier les enceintes vendues dans l'année : chacune ajoute ${eur(v.k.prix)} à la production et ${eur(v.k.coutVariable)} aux consommations (composants, emballage, transport, énergie) ; le local et l'assurance ne bougent pas, ni le personnel (${eur(v.k.personnel)}). Placez le curseur sur le plus petit nombre d'enceintes où la valeur ajoutée paie toute l'équipe, puis validez.`;
+      },
+      grandeur: () => ({ libelle: "Enceintes vendues dans l'année", unite: "enceintes" }),
+      cible: (c) => ({ attendu: enceintesQuiPaientLEquipe(valeurAjoutee(c)), min: ENCEINTES_DU_CURSEUR.min, max: ENCEINTES_DU_CURSEUR.max }),
+      zones: ["La valeur ajoutée paie l'équipe", "La valeur ajoutée ne suffit pas"],
+      rates: () => ({
+        dessous: "À cette position, la valeur ajoutée ne suffit pas à payer les salaires et les cotisations.",
+        dessus: "Avec moins d'enceintes, la valeur ajoutée paie encore l'équipe : cherchez la plus petite quantité.",
+      }),
+      montrer: "Montrer la quantité",
+      lecture: (c, q) => {
+        const v = valeurAjoutee(c);
+        const va = vaPour(v, q);
+        return [
+          { libelle: "Valeur ajoutée", montant: va },
+          { libelle: "Personnel (salaires et cotisations)", montant: v.k.personnel },
+          { libelle: "Ce qui reste aux prêteurs, à l'État et à l'entreprise", montant: auCentime(va - v.k.personnel), fort: true },
+        ];
+      },
+      droites: (c) => {
+        const v = valeurAjoutee(c);
+        return { produit: (q) => vaPour(v, q), cout: () => v.k.personnel, libelles: ["Valeur ajoutée", "Personnel"] };
+      },
+      explication: (c) => {
+        const v = valeurAjoutee(c);
+        const q = enceintesQuiPaientLEquipe(v);
+        return [
+          `Il faut ${qte(q)} enceintes pour que la richesse créée paie toute l'équipe. ${v.k.entreprise} en a vendu ${qte(v.k.quantite)} : au-delà de ${qte(q)}, chaque enceinte laisse ${eur(v.k.margeParEnceinte)} à partager entre les prêteurs, l'État et l'entreprise.`,
+          "Le partage dépend donc de la richesse créée : quand l'activité baisse, la part des salariés grandit d'elle-même, parce que les salaires ne baissent pas avec les ventes.",
+        ];
+      },
+    },
+    {
+      id: "le-laboratoire-du-partage",
+      type: "simulation",
+      titre: "Le laboratoire du partage",
+      notions: ["income_statement", "pay_and_motivation"],
+      question: (c) => {
+        const v = valeurAjoutee(c);
+        return `L'équipe demande une hausse des salaires. Faites varier la hausse (salaires et cotisations) et les enceintes vendues : la valeur ajoutée, l'impôt et le résultat se refont, et le partage avec eux. Aujourd'hui, ${v.k.entreprise} garde ${pct(v.parts[3]!.part)} de sa valeur ajoutée. Relevez le défi.`;
+      },
+      leviers: () => [
+        { code: "hausse", libelle: "Hausse des salaires et des cotisations", unite: "%", ...LEVIERS_DU_PARTAGE.hausse, depart: 0 },
+        { code: "ventes", libelle: "Enceintes vendues, par rapport à l'année", unite: "%", ...LEVIERS_DU_PARTAGE.ventes, depart: 0 },
+      ],
+      lecture: (c, p) => {
+        const v = valeurAjoutee(c);
+        const x = partageDuLaboratoire(v, p);
+        return [
+          { libelle: "Valeur ajoutée", montant: x.va, reference: v.va },
+          ...x.parts.map((q, i) => ({ libelle: LIBELLE_DE_LA_PART[q.code]!, montant: q.part, unite: "%", reference: v.parts[i]!.part })),
+          { libelle: "Ce que garde l'entreprise", montant: x.entreprise, reference: v.entreprise, fort: true },
+        ];
+      },
+      graphique: (c) => {
+        const v = valeurAjoutee(c);
+        return {
+          levier: "hausse",
+          courbes: [
+            { libelle: "Part des salariés", valeur: (p) => partageDuLaboratoire(v, p).parts[0]!.part },
+            { libelle: "Part de l'entreprise", valeur: (p) => partageDuLaboratoire(v, p).parts[3]!.part },
+          ],
+          unite: "%",
+        };
+      },
+      defi: (c) => {
+        const v = valeurAjoutee(c);
+        return {
+          consigne: `Accordez une hausse de ${pct(HAUSSE_DU_DEFI)} des salaires, en gardant à l'entreprise au moins un tiers de la valeur ajoutée.`,
+          atteint: (p) => p.hausse! >= HAUSSE_DU_DEFI && partageDuLaboratoire(v, p).partGardee >= PART_GARDEE_DU_DEFI,
+          indice: (p) => {
+            const x = partageDuLaboratoire(v, p);
+            return p.hausse! < HAUSSE_DU_DEFI
+              ? `La hausse n'est que de ${pct(p.hausse!)} : le défi en demande ${pct(HAUSSE_DU_DEFI)}.`
+              : `L'entreprise ne garde que ${pct(auDixieme(x.partGardee * 100))} de la valeur ajoutée. Pour payer la hausse sans prendre sur sa part, il faut créer plus de richesse.`;
+          },
+          solution: SOLUTION_DU_PARTAGE,
+        };
+      },
+      explication: (c, p) => {
+        const v = valeurAjoutee(c);
+        const x = partageDuLaboratoire(v, p);
+        return [
+          `Défi relevé : avec ${pct(p.hausse!)} de hausse et ${qte(x.k.quantite)} enceintes vendues, la valeur ajoutée est de ${eur(x.va)} ; les salariés en reçoivent ${pct(x.parts[0]!.part)}, l'entreprise en garde ${pct(auDixieme(x.partGardee * 100))}.`,
+          "À richesse égale, ce que l'un reçoit de plus, un autre le perd : la hausse des salaires réduit d'abord la part de l'entreprise, et celle de l'État avec l'impôt. Pour augmenter les salaires sans s'appauvrir, l'entreprise doit créer plus de valeur : vendre plus, ou consommer moins pour produire autant.",
+        ];
+      },
+    },
+    {
       id: "synthese",
       type: "lecture",
       titre: "Ce qu'il faut retenir",
@@ -191,11 +325,11 @@ export const VALEUR_AJOUTEE: Chapitre = {
       texte: (c) => {
         const v = valeurAjoutee(c);
         return [
-          `Sur l'année, ${c.entreprise} crée ${eur(v.va)} de valeur ajoutée, soit ${pct(v.tauxDeValeurAjoutee)} de ses ventes. Les salariés en reçoivent ${pct(v.parts[0]!.part)}, ${v.entreprise >= 0 ? `l'entreprise en garde ${pct(v.parts[3]!.part)}` : `et la part de l'entreprise est négative (${pct(v.parts[3]!.part)}) : elle a distribué plus qu'elle n'a créé`}.`,
-          "La valeur ajoutée mesure la richesse créée, pas le profit. Son partage dit qui en profite : un partage où l'entreprise ne garde rien l'empêche d'investir, un partage où elle garde tout se fait au détriment des salariés. C'est un enjeu de gestion, et un enjeu social.",
+          `Sur l'année, ${v.k.entreprise} crée ${eur(v.va)} de valeur ajoutée, soit ${pct(v.tauxDeValeurAjoutee)} de ses ventes. Les salariés en reçoivent ${pct(v.parts[0]!.part)}, l'entreprise en garde ${pct(v.parts[3]!.part)}.`,
+          "La valeur ajoutée mesure la richesse créée, pas le profit. Son partage dit qui en profite : un partage où l'entreprise ne garde rien l'empêche d'investir, un partage où elle garde tout se fait au détriment des salariés. C'est un enjeu de gestion, et un enjeu social. Dans l'arène, les chiffres de votre entreprise seront différents : la méthode sera la même.",
         ];
       },
-      repere: () => "Valeur ajoutée = salariés (personnel) + prêteurs (intérêts) + État (impôt) + entreprise (amortissement et résultat gardé).",
+      repere: () => "Valeur ajoutée = salariés (personnel) + prêteurs (intérêts) + État (impôt) + entreprise (ce qu'elle garde).",
     },
   ],
 };

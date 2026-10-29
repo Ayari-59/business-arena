@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 52 — L'INTERSAISON QUI ASSÈCHE LA CAISSE, tel que l'interface et le bilan le lisent.
+ * L'INTERSAISON QUI ASSÈCHE LA CAISSE, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Bérenger montre, ce que la

@@ -3,7 +3,7 @@ import { auCentime } from "../../../pedagogy/cours/etats";
 import { scenarioByCode } from "../../scenarios/registry";
 import type { Cas } from "../cas";
 import type { Chapitre } from "../types";
-import { compteDeResultat } from "./lire-le-compte-de-resultat";
+import { soldesDeGestion } from "./soldes-intermediaires";
 
 /**
  * CHAPITRE : L'EFFECTIF ET LA MASSE SALARIALE (Bac STMG, ressources humaines, palier 1).
@@ -15,7 +15,8 @@ import { compteDeResultat } from "./lire-le-compte-de-resultat";
  * L'effectif est celui de l'entreprise au départ de la partie ; le coût d'un salarié par
  * trimestre (salaire brut et cotisations patronales) est celui du scénario de l'arène
  * (`hr.salaryPerEmployeePerRound`) ; les ventes et les charges sont celles de l'année jouée
- * (`compteDeResultat`). Aucune hypothèse n'est ajoutée. Défaut de l'arène, que le chapitre dit :
+ * (`soldesDeGestion`, l'année figée de l'arène ; « Le compte de résultat » est passé sur le monde
+ * du cours, ce chapitre pas encore). Aucune hypothèse n'est ajoutée. Défaut de l'arène, que le chapitre dit :
  * tous les salariés d'une entreprise y coûtent le même prix.
  */
 
@@ -29,7 +30,11 @@ const TRIMESTRES = 4;
 /** L'effectif, le coût d'un salarié et ce que le personnel pèse sur l'année. */
 export function masseSalariale(c: Cas) {
   const hr = scenarioByCode(c.code).scenario.hr!;
-  const k = compteDeResultat(c);
+  const s = soldesDeGestion(c);
+  // Les charges de l'année, comme les rangeait l'ancien chapitre « Le compte de résultat ».
+  const achatsConsommes = auCentime(s.marchandises ? s.achats - s.variation : s.achats);
+  const charges = auCentime(achatsConsommes + s.autres + s.commissions + s.publicite + s.entretien + s.loyerEtFrais + s.personnel + s.dotation + s.interets + s.impot);
+  const k = { s, charges };
   const effectif = c.personnel.effectif;
   const coutTrimestriel = hr.salaryPerEmployeePerRound;
   const coutAnnuel = auCentime(coutTrimestriel * TRIMESTRES);

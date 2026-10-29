@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { formationsEnToutesLettres } from "@/config/formations";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import { getSession } from "@/lib/session";
 import { atelierByCode } from "@/config/ateliers";
 import { dossierEnseignant } from "@/config/ateliers/dossiers";
@@ -49,7 +50,7 @@ export default async function DossierEnseignantPage({
   params: Promise<{ code: string }>;
 }) {
   const session = await getSession();
-  if (!session) redirect("/teacher/login");
+  if (!session) redirect(await connexionPourLaPageDemandee());
   const { code } = await params;
   const atelier = atelierByCode.get(code);
   if (!atelier) notFound();

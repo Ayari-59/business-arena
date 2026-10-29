@@ -1,425 +1,117 @@
 import { describe, expect, it } from "vitest";
-import { blocOfficiel, referentielDeCitation } from "../../src/config/ateliers/referentiels";
-import { UNITES_FEMININES } from "../../src/config/cours/accords";
-import { casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
-import { anneeJouee } from "../../src/config/cours/annee-de-l-arene";
-import {
-  ARRONDI_DE_L_ETIQUETTE,
-  ARTICLE_A_ETIQUETER,
-  ARTICLE_EN_PROMOTION,
-  ENTREPRISES_DU_MAGASIN,
-  LE_PRIX_AFFICHE,
-  REMISE_DE_LA_PROMOTION,
-  TRIMESTRE_DE_LA_PROMOTION,
-  arrondiDeLEtiquette,
-  etiquettesDuRayon,
-  promotionDuChapitre,
-  ventesDeLArticle,
-} from "../../src/config/cours/chapitres/le-prix-affiche";
-import {
-  BILLET_DU_CLIENT,
-  ERREUR_DE_LA_JOURNEE,
-  FOND_DE_CAISSE,
-  PANIER_DU_CLIENT,
-  PART_EN_ESPECES,
-  TENIR_LA_CAISSE,
-  TRIMESTRE_DE_LA_CAISSE,
-  caisseDuJour,
-  enCoupures,
-} from "../../src/config/cours/chapitres/tenir-la-caisse";
-import { rejouerAvec } from "../../src/config/cours/gestion-de-la-pme";
-import { METIERS } from "../../src/config/cours/metiers";
+import { ENTREPRISES_DU_MAGASIN, LE_PRIX_AFFICHE, REMISE_DE_LA_PROMOTION, faitsDeLaPromotion, remiseDuLaboratoire } from "../../src/config/cours/chapitres/le-prix-affiche";
+import { TENIR_LA_CAISSE, caisseDuJour, ditLesCoupures, nomDeLaCoupure } from "../../src/config/cours/chapitres/tenir-la-caisse";
+import { MAILLE_ET_CO } from "../../src/config/cours/monde/maille-et-co";
 import { PROGRAMME } from "../../src/config/cours/registre";
-import {
-  ERREUR_DU_SOIR,
-  LA_CAISSE_DU_TRIMESTRE_DE_NOEL,
-  TRIMESTRE_DU_CAS,
-  caisseDeNoel,
-} from "../../src/config/cours/situations/par-chapitre/la-caisse-du-trimestre-de-noel";
-import { LA_PROMOTION_DE_NOEL, REMISE_DE_NOEL, TRIMESTRE_DE_NOEL, promotionDeNoel } from "../../src/config/cours/situations/par-chapitre/la-promotion-de-noel";
-import type { Situation } from "../../src/config/cours/situations/types";
-import type { Chapitre, Etape, EtatDuCours } from "../../src/config/cours/types";
-import { CONCEPTS } from "../../src/config/pedagogy/concepts";
-import { scenarioByCode } from "../../src/config/scenarios/registry";
-import type { CompanyRoundResult } from "../../src/engine/types";
-import { auCentime } from "../../src/pedagogy/cours/etats";
-import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
+import { LA_CAISSE_DU_TRIMESTRE_DE_NOEL, caisseDeNoel } from "../../src/config/cours/situations/par-chapitre/la-caisse-du-trimestre-de-noel";
+import { LA_PROMOTION_DE_NOEL, REMISE_DE_NOEL, promotionDeNoel } from "../../src/config/cours/situations/par-chapitre/la-promotion-de-noel";
+import { BOUTIQUE, attendus, gardeDuCas, gardeDuCurseur, gardeDuLaboratoire, gardeDuProgramme, gardesDeTexte, juste } from "./gardes-de-la-boutique";
 
 /**
- * LE PRIX AFFICHÉ ET LA CAISSE (CAP ÉQUIPIER POLYVALENT DU COMMERCE), ET LEURS CAS PRATIQUES.
+ * LE PRIX AFFICHÉ ET TENIR LA CAISSE (CAP EPC, palier 1), SUR LA BOUTIQUE DU MONDE DU COURS, ET
+ * LEURS CAS : LA PROMOTION DE NOËL, LA CAISSE DU TRIMESTRE DE NOËL.
  *
- * Ces gardes recomposent les chiffres avec le moteur : le prix hors taxes que l'arène pratique
- * pour chaque article, la TVA du métier, la promotion rejouée (seul le prix de l'article change,
- * au seul trimestre de la promotion), les ventes réglées en caisse d'un trimestre. Les hypothèses
- * du cours (le panier, le billet, le fond de caisse, la part en espèces, l'erreur du soir) se
- * retrouvent telles qu'elles sont nommées. Et elles vérifient que les textes se lisent.
+ * Refait à la main sur la fiche de MAILLE & CO : le pull col rond à 55 € HT, 66 € TTC ; la
+ * promotion de février (10 %, 59,40 €, 780 pulls demandés pour 700 en rayon) ; la journée de
+ * janvier réglée en caisse (77 250 € ÷ 30 = 2 575 € HT, 3 090 € TTC, 772,50 € en espèces).
  */
 
-function textesDe(e: Etape, cas: Cas, etat: EtatDuCours): string[] {
-  const tableau = e.tableau ? [e.tableau(cas).titre, ...e.tableau(cas).colonnes, ...e.tableau(cas).lignes.flatMap((l) => [l.libelle, ...l.valeurs])] : [];
-  switch (e.type) {
-    case "lecture":
-      return [e.titre, ...e.texte(cas), e.repere?.(cas) ?? "", ...tableau];
-    case "choix":
-      return [e.titre, e.question(cas, etat), ...e.options(cas, etat).flatMap((o) => [o.texte, o.retour]), ...tableau];
-    case "montants":
-      return [e.titre, e.question(cas, etat), ...e.champs(cas, etat).flatMap((c) => [c.libelle, c.calcul, String(c.attendu)]), ...e.explication(cas, etat), ...tableau];
-    case "tri":
-      return [e.titre, e.question(cas), ...e.categories.map((k) => k.libelle), ...e.elements(cas).flatMap((x) => [x.libelle, x.pourquoi]), ...e.explication(cas)];
-    default:
-      return [];
-  }
-}
-
-const PARTICIPES = ["vendu", "fabriqué", "demandé", "servi", "produit", "dernier", "perdu", "livré", "prévu"];
-
-/** Les gardes de texte et de forme, communes aux chapitres et aux cas. */
-function verifierLesTextes(ch: Chapitre, code: string) {
-  const cas = casDeLEntreprise(code);
-  const chapitre = chapitreDuCas(ch, cas);
-  const notions = new Set(CONCEPTS.map((x) => x.code));
-  const u = cas.unite;
-  const masculinFautif = new RegExp(`\\bun ${u}\\b|\\b${u} (${PARTICIPES.join("|")})\\b(?!e)|\\b${u}s (${PARTICIPES.join("|")})s\\b`, "i");
-  expect(new Set(chapitre.etapes.map((e) => e.id)).size, ch.code).toBe(chapitre.etapes.length);
-  expect(new Set(chapitre.etapes.map((e) => e.titre)).size, ch.code).toBe(chapitre.etapes.length);
-  for (const [i, e] of chapitre.etapes.entries()) {
-    // Le test de bout en bout clique les boutons par leur nom : aucun titre ne s'y confond.
-    expect(e.titre, e.id).not.toMatch(/v[ée]rifier|étape suivante|terminer|montrer la réponse|changer le signe/i);
-    if (e.tableau) expect(["lecture", "choix", "montants", "tri"], e.id).toContain(e.type);
-    const etat = etatAvant(chapitre, cas, i);
-    for (const x of textesDe(e, cas, etat)) {
-      expect(x, `${e.id} : ${x}`).not.toMatch(/undefined|NaN|Infinity|\[object/);
-      expect(x, `${e.id} : ${x}`).not.toMatch(/(^|\s)(de|à) [Ll]es? /);
-      expect(x, `${e.id} : ${x}`).not.toMatch(/ [-–—] /);
-      expect(x, `${e.id} : ${x}`).not.toMatch(/(^|[\s'(])de [aeiouyéèêAEIOUYÉ]/);
-      expect(x, `${e.id} : ${x}`).not.toMatch(/(^|[\s'(])que [aeiouyéèêAEIOUYÉ]/);
-      expect(x, `${e.id} : ${x}`).not.toMatch(/mises? en situation/i);
-      expect(x, `${e.id} : ${x}`).not.toMatch(/« «|» »/);
-      // Pas de capitales espacées, pas de nombre en lettres là où il se calcule.
-      expect(x, `${e.id} : ${x}`).not.toMatch(/\b([A-Z] ){2,}[A-Z]\b/);
-      // Un négatif prend le signe moins (la valeur attendue brute, que l'élève ne lit pas, garde son trait d'union).
-      if (!/^-?\d+(\.\d+)?$/.test(x)) expect(x, `${e.id} : ${x}`).not.toMatch(/(^|[\s(])-\d/);
-      expect(x, `${e.id} : ${x}`).not.toMatch(/− −|\s{2,}/);
-      if (UNITES_FEMININES.has(u)) expect(x, `${e.id} : ${x}`).not.toMatch(masculinFautif);
-    }
-    if (e.tableau) {
-      const t = e.tableau(cas);
-      for (const l of t.lignes) expect(l.valeurs.length, `${e.id} : ${l.libelle}`).toBe(t.colonnes.length);
-      expect(new Set(t.lignes.map((l) => l.libelle)).size, e.id).toBe(t.lignes.length);
-    }
-    if (e.type === "choix") {
-      const options = e.options(cas, etat);
-      expect(options.filter((o) => o.juste), e.id).toHaveLength(1);
-      expect(new Set(options.map((o) => o.texte)).size, e.id).toBe(options.length);
-      // Le test de bout en bout clique l'option par son texte : aucun ne doit en contenir un autre.
-      for (const a of options) for (const b of options) if (a !== b) expect(a.texte.toLowerCase().includes(b.texte.toLowerCase()), `${e.id} : ${b.texte}`).toBe(false);
-    }
-    if (e.type === "montants") {
-      const champs = e.champs(cas, etat);
-      expect(new Set(champs.map((c) => c.libelle)).size, e.id).toBe(champs.length);
-      for (const c of champs) {
-        expect(Number.isFinite(c.attendu), `${e.id} : ${c.libelle}`).toBe(true);
-        // Au centime : le montant se saisit tel quel, au téléphone comme à l'ordinateur.
-        expect(auCentime(c.attendu), `${e.id} : ${c.libelle}`).toBe(c.attendu);
-      }
-    }
-    for (const n of e.notions ?? []) expect(notions.has(n), `${e.id} : ${n}`).toBe(true);
-  }
-}
-
-/** La bonne réponse du cas ne se devine pas à sa longueur. */
-function reponseSansIndice(s: Situation, code: string) {
-  const cas = casDeLEntreprise(code);
-  const e = s.etapes.at(-1)!;
-  if (e.type !== "choix") throw new Error("la réponse est un choix");
-  const options = e.options(cas, { soldes: {} });
-  const juste = options.find((o) => o.juste)!;
-  expect(juste.texte.length, `${s.code} chez ${code}`).toBeLessThanOrEqual(Math.max(...options.filter((o) => !o.juste).map((o) => o.texte.length)));
-}
-
-/** Les champs d'une étape de montants, par libellé. */
-function champs(ch: Chapitre, id: string, cas: Cas): Record<string, number> {
-  const e = ch.etapes.find((x) => x.id === id)!;
-  if (e.type !== "montants") throw new Error(`${id} n'est pas une étape de montants`);
-  return Object.fromEntries(e.champs(cas, { soldes: {} }).map((c) => [c.libelle, c.attendu]));
-}
-
-const justeDe = (ch: Chapitre, id: string, cas: Cas) => {
-  const e = ch.etapes.find((x) => x.id === id)!;
-  if (e.type !== "choix") throw new Error(`${id} n'est pas un choix`);
-  return e.options(cas, { soldes: {} }).find((o) => o.juste)!.texte;
-};
-
-const CODE = "boutique";
-const cas = casDeLEntreprise(CODE);
-const s = scenarioByCode(CODE).scenario;
-const taux = METIERS[CODE]!.vente.tauxTva;
-const { partie } = anneeJouee(CODE);
-const joueur = (k: number) => partie.rounds[k - 1]!.results["joueur"]!;
-const vendusDe = (r: CompanyRoundResult, a: string) => Math.round(r.products![a]!.sold);
-const chiffreDe = (r: CompanyRoundResult, a: string) => Math.round(r.products![a]!.revenue);
-
-/** Le trimestre rejoué par le test lui-même, avec le prix de l'article baissé : la recomposition. */
-function rejoueParLeTest(article: string, trimestre: number, prixHt: number) {
-  return rejouerAvec(CODE, `test-cap-prix:${article}:${trimestre}:${prixHt}`, (t, d) =>
-    t === trimestre ? { ...d, products: { ...d.products!, [article]: { ...d.products![article]!, price: prixHt } } } : undefined,
-  );
-}
+const CAP = /^CAP EPC · /;
 
 describe("les deux chapitres du CAP EPC et leurs cas", () => {
   it("portent les titres du programme, au palier 1, et des blocs du CAP EPC qui se résolvent", () => {
-    const attendus: [Chapitre, string[]][] = [
-      [LE_PRIX_AFFICHE, ["CAP EPC · Bloc 2 · Mettre en valeur et approvisionner"]],
-      [TENIR_LA_CAISSE, ["CAP EPC · Bloc 3 · Conseiller et accompagner le client dans son parcours d'achat"]],
-    ];
-    for (const [ch, blocs] of attendus) {
-      expect(PROGRAMME["cap-epc"][1], ch.code).toContain(ch.titre);
-      expect(ch.parcours).toBe("cap-epc");
-      expect(ch.palier).toBe(1);
-      expect(ch.libre).toBe(false);
-      expect(ch.blocs).toEqual(blocs);
-      for (const bloc of blocs) {
-        const cite = referentielDeCitation(bloc);
-        expect(cite?.code, bloc).toBe("cap-epc");
-        expect(blocOfficiel(bloc, cite!.code), bloc).toBe(bloc.replace("CAP EPC · ", ""));
-      }
+    for (const ch of [LE_PRIX_AFFICHE, TENIR_LA_CAISSE]) {
+      expect([ch.parcours, ch.palier]).toEqual(["cap-epc", 1]);
+      gardeDuProgramme(ch, PROGRAMME["cap-epc"][1]!, () => "cap-epc", CAP);
     }
-    expect(LE_PRIX_AFFICHE.code).toBe("le-prix-affiche");
-    expect(TENIR_LA_CAISSE.code).toBe("tenir-la-caisse");
+    expect(LE_PRIX_AFFICHE.blocs).toEqual(["CAP EPC · Bloc 2 · Mettre en valeur et approvisionner"]);
+    expect(TENIR_LA_CAISSE.blocs).toEqual(["CAP EPC · Bloc 3 · Conseiller et accompagner le client dans son parcours d'achat"]);
   });
 
-  it("se jouent dans la boutique seule : la seule entreprise dont l'unité est un article en rayon", () => {
+  it("se jouent à la boutique du cours seule, et leurs cas leur sont dédiés", () => {
     expect([...ENTREPRISES_DU_MAGASIN]).toEqual(["boutique"]);
-    expect(LE_PRIX_AFFICHE.entreprises?.codes).toBe(ENTREPRISES_DU_MAGASIN);
-    expect(TENIR_LA_CAISSE.entreprises?.codes).toBe(ENTREPRISES_DU_MAGASIN);
-    expect(s.products!.map((p) => p.code)).toContain(ARTICLE_EN_PROMOTION);
-    expect(s.products!.map((p) => p.code)).toContain(ARTICLE_A_ETIQUETER);
-    // Le commerce en ligne vend des commandes, le restaurant des couverts : pas d'étiquette d'article.
-    expect(casDeLEntreprise("ecommerce").unite).toBe("commande");
-    expect(casDeLEntreprise("bistrot").unite).toBe("couvert");
-  });
-
-  it("chaque cas est dédié à son chapitre : même palier, même parcours, mêmes entreprises, sans cours", () => {
-    const paires: [Situation, Chapitre][] = [
-      [LA_PROMOTION_DE_NOEL, LE_PRIX_AFFICHE],
-      [LA_CAISSE_DU_TRIMESTRE_DE_NOEL, TENIR_LA_CAISSE],
-    ];
-    for (const [sit, ch] of paires) {
-      expect(sit.reprend, sit.code).toEqual([ch.code]);
-      expect(sit.palier, sit.code).toBe(ch.palier);
-      expect(sit.parcours, sit.code).toBe(ch.parcours);
-      expect(sit.entreprises?.codes, sit.code).toEqual(ch.entreprises?.codes);
-      expect(sit.libre, sit.code).toBe(false);
-      expect(sit.blocs, sit.code).toEqual([]);
-      expect(sit.commanditaire.length, sit.code).toBeGreaterThan(3);
-      expect(sit.etapes[0]!.type, sit.code).toBe("lecture");
-      expect(sit.etapes.slice(1).filter((e) => e.type === "lecture"), sit.code).toHaveLength(0);
-      expect(sit.etapes.at(-1)!.type, sit.code).toBe("choix");
-      expect(sit.code, sit.code).not.toBe(ch.code);
-    }
+    gardeDuCas(LA_PROMOTION_DE_NOEL, LE_PRIX_AFFICHE);
+    gardeDuCas(LA_CAISSE_DU_TRIMESTRE_DE_NOEL, TENIR_LA_CAISSE);
   });
 });
 
-describe("le prix affiché, chez la boutique", () => {
-  it("les prix hors taxes sont ceux que l'arène pratique, la TVA celle du métier, l'étiquette arrondie vers le bas", () => {
-    expect(taux).toBe(0.2);
-    expect(ARRONDI_DE_L_ETIQUETTE).toBe(0.1);
-    const etiquettes = etiquettesDuRayon(cas);
-    expect(etiquettes.map((e) => e.code)).toEqual(s.products!.map((p) => p.code));
-    for (const e of etiquettes) {
-      expect(e.ht).toBe(joueur(1).products![e.code]!.price);
-      expect(e.tva).toBeCloseTo(e.ht * taux, 2);
-      expect(e.ttc).toBeCloseTo(e.ht * (1 + taux), 2);
-      expect(e.affiche).toBeLessThanOrEqual(e.ttc);
-      expect(e.ttc - e.affiche).toBeLessThan(ARRONDI_DE_L_ETIQUETTE);
-      expect(Math.round(e.affiche * 100) % 10).toBe(0);
-    }
-    expect(arrondiDeLEtiquette(71.04)).toBe(71);
-    expect(arrondiDeLEtiquette(24.96)).toBe(24.9);
-    expect(arrondiDeLEtiquette(52.8)).toBe(52.8);
-    const col = etiquettes.find((e) => e.code === ARTICLE_EN_PROMOTION)!;
-    const k = champs(LE_PRIX_AFFICHE, "prix-ttc", cas);
-    expect(k[`TVA sur l'article « ${col.nom} »`]).toBe(auCentime(joueur(1).products![ARTICLE_EN_PROMOTION]!.price * taux));
-    expect(k[`Prix TTC de l'article « ${col.nom} »`]).toBe(auCentime(joueur(1).products![ARTICLE_EN_PROMOTION]!.price * (1 + taux)));
-    // Les chiffres de l'arène aujourd'hui : 55 € hors taxes, 66 € affichés.
-    expect([col.ht, col.tva, col.ttc]).toEqual([55, 11, 66]);
-    const echarpe = etiquettes.find((e) => e.code === ARTICLE_A_ETIQUETER)!;
-    expect(justeDe(LE_PRIX_AFFICHE, "la-bonne-etiquette", cas)).toBe(`${echarpe.affiche.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €`);
-    expect(echarpe.affiche).toBe(43.2);
+describe("le prix affiché", () => {
+  it("les textes sont propres, une seule bonne réponse, les notions existent", () => {
+    gardesDeTexte(LE_PRIX_AFFICHE);
   });
 
-  it("la remise et le nouveau prix se recomposent", () => {
-    const p = promotionDuChapitre(cas);
-    const k = champs(LE_PRIX_AFFICHE, "la-remise", cas);
-    expect(REMISE_DE_LA_PROMOTION).toBe(0.2);
-    expect(k["Montant de la remise"]).toBe(auCentime(66 * REMISE_DE_LA_PROMOTION));
-    expect(k["Nouveau prix affiché"]).toBe(arrondiDeLEtiquette(66 - k["Montant de la remise"]!));
-    expect(k["Nouveau prix affiché"]).toBe(52.8);
-    expect(p.prixHtPromo).toBe(44);
+  it("la TVA, le prix TTC, l'étiquette de l'écharpe, la remise de février", () => {
+    expect(attendus(LE_PRIX_AFFICHE, "prix-ttc")).toEqual([11, 66]);
+    expect(juste(LE_PRIX_AFFICHE, "la-bonne-etiquette")).toEqual(["42 €"]);
+    expect(REMISE_DE_LA_PROMOTION).toBe(MAILLE_ET_CO.promotion.remise);
+    expect(attendus(LE_PRIX_AFFICHE, "la-remise")).toEqual([6.6, 59.4]);
   });
 
-  it("la promotion rejouée : seul le prix de l'article change, au seul trimestre de la promotion", () => {
-    const p = promotionDuChapitre(cas);
-    const T = TRIMESTRE_DE_LA_PROMOTION;
-    const reference = rejouerAvec(CODE, "reference", () => undefined);
-    const avec = rejoueParLeTest(ARTICLE_EN_PROMOTION, T, p.nouveauPrix / (1 + taux));
-    // La référence du rejeu est l'année du cours.
-    expect(reference.map((r) => r.incomeStatement.revenue)).toEqual(partie.rounds.map((t) => t.results["joueur"]!.incomeStatement.revenue));
-    // Aucune défaillance jusqu'au trimestre comparé : rien à trancher.
-    expect([...reference, ...avec].slice(0, T).some((r) => r.defaillant)).toBe(false);
-    for (const r of avec.slice(0, T)) expect(r.defaillant).toBeFalsy();
-    // Les trimestres d'avant ne bougent pas ; au trimestre de la promotion, l'article est au prix baissé.
-    for (let k = 0; k < T - 1; k++) expect(avec[k]!.incomeStatement.revenue).toBe(reference[k]!.incomeStatement.revenue);
-    expect(avec[T - 1]!.products![ARTICLE_EN_PROMOTION]!.price).toBeCloseTo(p.nouveauPrix / (1 + taux), 6);
-    for (const autre of s.products!.map((x) => x.code).filter((x) => x !== ARTICLE_EN_PROMOTION)) {
-      expect(avec[T - 1]!.products![autre]!.price, autre).toBe(reference[T - 1]!.products![autre]!.price);
-    }
-    expect(p.sans.vendus).toBe(vendusDe(reference[T - 1]!, ARTICLE_EN_PROMOTION));
-    expect(p.avec.vendus).toBe(vendusDe(avec[T - 1]!, ARTICLE_EN_PROMOTION));
-    expect(p.sans.chiffreDAffaires).toBe(chiffreDe(reference[T - 1]!, ARTICLE_EN_PROMOTION));
-    expect(p.avec.chiffreDAffaires).toBe(chiffreDe(avec[T - 1]!, ARTICLE_EN_PROMOTION));
-    const k = champs(LE_PRIX_AFFICHE, "ce-que-la-promotion-vend", cas);
-    expect(k["Articles vendus en plus"]).toBe(vendusDe(avec[T - 1]!, ARTICLE_EN_PROMOTION) - vendusDe(reference[T - 1]!, ARTICLE_EN_PROMOTION));
-    expect(k["Chiffre d'affaires en plus"]).toBe(chiffreDe(avec[T - 1]!, ARTICLE_EN_PROMOTION) - chiffreDe(reference[T - 1]!, ARTICLE_EN_PROMOTION));
-    // Les chiffres de l'arène aujourd'hui, et le verdict qui en suit.
-    expect(T).toBe(1);
-    expect([p.sans.vendus, p.avec.vendus, p.sans.chiffreDAffaires, p.avec.chiffreDAffaires]).toEqual([1726, 1945, 94947, 85580]);
-    expect([p.sans.manques, p.avec.manques]).toEqual([0, 938]);
-    expect(p.bilan).toBe("plus-mais-moins");
-    expect(justeDe(LE_PRIX_AFFICHE, "bilan", cas)).toBe("Elle fait vendre plus, mais le chiffre d'affaires baisse");
+  it("ce que la promotion fait vendre : 100 pulls et 1 650 € de plus, mais 80 clients sans pull", () => {
+    expect(attendus(LE_PRIX_AFFICHE, "ce-que-la-promotion-vend")).toEqual([700 - 600, 700 * 49.5 - 600 * 55]);
+    expect(juste(LE_PRIX_AFFICHE, "bilan")).toEqual(["Elle fait vendre plus, et le chiffre d'affaires monte"]);
+    expect(faitsDeLaPromotion({ ventesEnPlus: 1, chiffreEnPlus: -2 })).toBe("1 article vendu en plus, et un chiffre d'affaires qui baisse de 2 €");
   });
 
-  it("une défaillance avant le trimestre compté vaut zéro vente", () => {
-    const r = joueur(1);
-    const defaillante = [{ ...r, defaillant: true }, joueur(2)];
-    expect(ventesDeLArticle(defaillante, 2, ARTICLE_EN_PROMOTION)).toEqual({ vendus: 0, chiffreDAffaires: 0, manques: 0 });
-    expect(ventesDeLArticle([r, joueur(2)], 2, ARTICLE_EN_PROMOTION).vendus).toBe(vendusDe(joueur(2), ARTICLE_EN_PROMOTION));
+  it("le curseur : 14 % de remise au plus gardent les 33 000 € du mois ; à 15 %, 32 725 €", () => {
+    const e = gardeDuCurseur(LE_PRIX_AFFICHE, "jusqu-ou-remiser", 14);
+    expect(e.lecture(BOUTIQUE, 14).at(-1)!.montant).toBe(Math.round(700 * 55 * 0.86 * 100) / 100);
+    expect(e.droites(BOUTIQUE).produit(15)).toBe(700 * 46.75);
   });
 
-  it("textes propres, une seule bonne réponse, notions existantes", () => verifierLesTextes(LE_PRIX_AFFICHE, CODE));
-});
-
-describe("la promotion de Noël, chez la boutique", () => {
-  it("la remise de Noël rejouée au trimestre 4 ne fait rien vendre de plus : le rayon est déjà vide", () => {
-    const p = promotionDeNoel(cas);
-    expect([REMISE_DE_NOEL, TRIMESTRE_DE_NOEL]).toEqual([0.3, 4]);
-    const k1 = champs(LA_PROMOTION_DE_NOEL, "l-etiquette", cas);
-    expect(k1["Montant de la remise"]).toBe(auCentime(66 * REMISE_DE_NOEL));
-    expect(k1["Nouveau prix affiché"]).toBe(arrondiDeLEtiquette(66 - k1["Montant de la remise"]!));
-    const reference = rejouerAvec(CODE, "reference", () => undefined);
-    const avec = rejoueParLeTest(ARTICLE_EN_PROMOTION, TRIMESTRE_DE_NOEL, p.nouveauPrix / (1 + taux));
-    for (const r of [...reference, ...avec].filter((_, i) => i % 4 < TRIMESTRE_DE_NOEL)) expect(r.defaillant).toBeFalsy();
-    const T = TRIMESTRE_DE_NOEL - 1;
-    const k2 = champs(LA_PROMOTION_DE_NOEL, "le-trimestre-rejoue", cas);
-    expect(k2["Articles vendus en plus"]).toBe(vendusDe(avec[T]!, ARTICLE_EN_PROMOTION) - vendusDe(reference[T]!, ARTICLE_EN_PROMOTION));
-    expect(k2["Chiffre d'affaires en plus"]).toBe(chiffreDe(avec[T]!, ARTICLE_EN_PROMOTION) - chiffreDe(reference[T]!, ARTICLE_EN_PROMOTION));
-    expect(reference[T]!.products![ARTICLE_EN_PROMOTION]!.lost).toBeGreaterThan(0);
-    expect(p.ventesEnPlus).toBe(0);
-    expect(p.chiffreEnPlus).toBe(-41415);
-    expect(p.bilan).toBe("rien-de-plus");
-    expect(justeDe(LA_PROMOTION_DE_NOEL, "reponse", cas)).toBe("Ne pas la faire : le rayon ne suit pas");
-  });
-
-  it("les soldes d'hiver et Noël ne donnent pas le même verdict", () => {
-    expect(promotionDuChapitre(cas).bilan).not.toBe(promotionDeNoel(cas).bilan);
-    // Le cas le dit à la responsable : la promotion des soldes d'hiver a fait vendre plus.
-    expect(promotionDuChapitre(cas).ventesEnPlus).toBeGreaterThan(0);
-  });
-
-  it("textes propres, une seule bonne réponse qui ne se devine pas à sa longueur", () => {
-    verifierLesTextes(LA_PROMOTION_DE_NOEL, CODE);
-    reponseSansIndice(LA_PROMOTION_DE_NOEL, CODE);
+  it("le laboratoire : seule une remise de 5 % fait mieux sans laisser un client sans pull", () => {
+    gardeDuLaboratoire(LE_PRIX_AFFICHE, "le-laboratoire-de-la-remise");
+    expect(remiseDuLaboratoire(MAILLE_ET_CO)).toEqual([5]);
   });
 });
 
-/** Les ventes réglées en caisse d'un trimestre, recomposées : les segments sans délai de paiement. */
-function enCaisse(trimestre: number) {
-  const segments = [...s.market.segments, ...(s.products ?? []).flatMap((p) => p.market?.segments ?? [])];
-  const comptant = new Set(segments.filter((g) => (g.paymentDelayDays ?? 0) === 0).map((g) => g.code));
-  const r = joueur(trimestre);
-  const lignes = Object.entries(r.market.bySegment).filter(([g]) => comptant.has(g));
-  return {
-    ventes: Math.round(lignes.reduce((t, [, v]) => t + v.sold, 0)),
-    chiffre: Math.round(lignes.reduce((t, [, v]) => t + v.revenue, 0)),
-    total: Math.round(r.incomeStatement.revenue),
-    factures: segments.some((g) => (g.paymentDelayDays ?? 0) > 0),
-  };
-}
-
-const somme = (cs: readonly { valeur: number; nombre: number }[]) => auCentime(cs.reduce((t, x) => t + x.valeur * x.nombre, 0));
-
-describe("tenir la caisse, chez la boutique", () => {
-  it("le ticket au prix affiché, la monnaie sur le billet du client", () => {
-    const k = caisseDuJour(cas);
-    const etiquettes = etiquettesDuRayon(cas, TRIMESTRE_DE_LA_CAISSE);
-    const total = auCentime(PANIER_DU_CLIENT.reduce((t, l) => t + l.quantite * auCentime(etiquettes.find((e) => e.code === l.article)!.ht * (1 + taux)), 0));
-    const t = champs(TENIR_LA_CAISSE, "le-ticket", cas);
-    expect(t["Total du ticket"]).toBe(total);
-    expect(total).toBe(74.4);
-    expect(total).toBeLessThan(BILLET_DU_CLIENT);
-    const m = champs(TENIR_LA_CAISSE, "la-monnaie", cas);
-    expect(m["Monnaie à rendre"]).toBe(auCentime(BILLET_DU_CLIENT - total));
-    expect(somme(k.monnaie)).toBe(m["Monnaie à rendre"]);
-    expect(somme(k.plus.coupures)).toBe(auCentime(m["Monnaie à rendre"]! + 10));
-    expect(somme(k.moins.coupures)).toBeLessThan(m["Monnaie à rendre"]!);
-    expect(justeDe(TENIR_LA_CAISSE, "rendre-juste", cas)).toBe("1 billet de 20 €, 1 billet de 5 €, 1 pièce de 50 centimes et 1 pièce de 10 centimes");
-    // La décomposition prend toujours la plus grande coupure : rien ne se rend en deux pièces quand une suffit.
-    expect(enCoupures(3.8)).toEqual([{ valeur: 2, nombre: 1 }, { valeur: 1, nombre: 1 }, { valeur: 0.5, nombre: 1 }, { valeur: 0.2, nombre: 1 }, { valeur: 0.1, nombre: 1 }]);
+describe("la promotion de Noël", () => {
+  it("30 % sur 66 € : 46,20 € ; 200 pulls de plus, 15 400 € de moins, la réponse est de ne pas la faire", () => {
+    expect(REMISE_DE_NOEL).toBe(0.3);
+    const p = promotionDeNoel(BOUTIQUE);
+    expect([p.sans.demande, p.nouveauPrix, p.ventesEnPlus, p.chiffreEnPlus]).toEqual([400 + 850 + 150, 46.2, 1_600 - 1_400, 1_600 * 38.5 - 1_400 * 55]);
+    expect(attendus(LA_PROMOTION_DE_NOEL, "l-etiquette")).toEqual([19.8, 46.2]);
+    expect(juste(LA_PROMOTION_DE_NOEL, "reponse")).toEqual(["Ne pas la faire : elle rapporte moins"]);
   });
-
-  it("la journée moyenne vient des ventes réglées en caisse du trimestre, ÷ les jours du trimestre", () => {
-    const e = enCaisse(TRIMESTRE_DE_LA_CAISSE);
-    expect(e.factures).toBe(true);
-    expect(e.chiffre).toBeLessThan(e.total);
-    const j = champs(TENIR_LA_CAISSE, "la-journee", cas);
-    expect(j["Articles vendus en un jour"]).toBe(Math.round(e.ventes / s.roundDays));
-    expect(j["Chiffre d'affaires hors taxes d'un jour"]).toBe(auCentime(e.chiffre / s.roundDays));
-    const ht = auCentime(e.chiffre / s.roundDays);
-    const ttc = auCentime(ht + auCentime(ht * taux));
-    const es = champs(TENIR_LA_CAISSE, "les-especes", cas);
-    expect(es["Chiffre d'affaires TTC du jour"]).toBe(ttc);
-    expect(es["Espèces encaissées dans la journée"]).toBe(auCentime(ttc * PART_EN_ESPECES));
-    expect(champs(TENIR_LA_CAISSE, "le-fond-de-caisse", cas)["Espèces attendues le soir"]).toBe(auCentime(FOND_DE_CAISSE + auCentime(ttc * PART_EN_ESPECES)));
-    // Les chiffres de l'arène aujourd'hui.
-    expect([e.ventes, e.chiffre, s.roundDays]).toEqual([3949, 218777, 90]);
-    expect(ttc).toBe(2917.03);
-  });
-
-  it("le tiroir compté fait l'erreur de la journée, et l'écart la retrouve", () => {
-    const k = caisseDuJour(cas);
-    const c = champs(TENIR_LA_CAISSE, "le-comptage", cas);
-    expect(c["Total compté dans le tiroir"]).toBe(somme(k.jour.tiroir));
-    expect(c["Écart de caisse"]).toBe(ERREUR_DE_LA_JOURNEE);
-    expect(c["Écart de caisse"]).toBe(auCentime(c["Total compté dans le tiroir"]! - champs(TENIR_LA_CAISSE, "le-fond-de-caisse", cas)["Espèces attendues le soir"]!));
-    expect(k.jour.auCoffre).toBe(auCentime(c["Total compté dans le tiroir"]! - FOND_DE_CAISSE));
-    expect(justeDe(TENIR_LA_CAISSE, "que-faire-de-l-ecart", cas)).toBe("Noter l'écart et prévenir le responsable");
-  });
-
-  it("textes propres, une seule bonne réponse, notions existantes", () => verifierLesTextes(TENIR_LA_CAISSE, CODE));
 });
 
-describe("la caisse du trimestre de Noël, chez la boutique", () => {
-  it("les espèces attendues, le tiroir et l'écart se recomposent sur le trimestre 4", () => {
-    const e = enCaisse(TRIMESTRE_DU_CAS);
-    const j = caisseDeNoel(cas);
-    const ht = auCentime(e.chiffre / s.roundDays);
-    const ttc = auCentime(ht + auCentime(ht * taux));
-    const k1 = champs(LA_CAISSE_DU_TRIMESTRE_DE_NOEL, "les-especes", cas);
-    expect(k1["Chiffre d'affaires hors taxes d'un jour"]).toBe(ht);
-    expect(k1["Chiffre d'affaires TTC du jour"]).toBe(ttc);
-    expect(k1["Espèces encaissées dans la journée"]).toBe(auCentime(ttc * PART_EN_ESPECES));
-    const k2 = champs(LA_CAISSE_DU_TRIMESTRE_DE_NOEL, "le-tiroir", cas);
-    expect(k2["Total compté dans le tiroir"]).toBe(somme(j.tiroir));
-    expect(k2["Écart de caisse"]).toBe(ERREUR_DU_SOIR);
-    expect(k2["Écart de caisse"]).toBe(auCentime(k2["Total compté dans le tiroir"]! - auCentime(FOND_DE_CAISSE + k1["Espèces encaissées dans la journée"]!)));
-    expect(k2["Espèces à remettre au coffre"]).toBe(auCentime(k2["Total compté dans le tiroir"]! - FOND_DE_CAISSE));
-    expect([e.chiffre, ttc]).toEqual([274274, 3656.99]);
-    // L'écart du cas n'est pas celui du chapitre : un excédent, pas un manquant.
-    expect(Math.sign(ERREUR_DU_SOIR)).not.toBe(Math.sign(ERREUR_DE_LA_JOURNEE));
+describe("tenir la caisse", () => {
+  it("les textes sont propres, une seule bonne réponse, les notions existent", () => {
+    gardesDeTexte(TENIR_LA_CAISSE);
   });
 
-  it("textes propres, une seule bonne réponse qui ne se devine pas à sa longueur", () => {
-    verifierLesTextes(LA_CAISSE_DU_TRIMESTRE_DE_NOEL, CODE);
-    reponseSansIndice(LA_CAISSE_DU_TRIMESTRE_DE_NOEL, CODE);
+  it("le ticket, la monnaie, la journée, les espèces, le fond de caisse, le tiroir", () => {
+    expect(attendus(TENIR_LA_CAISSE, "le-ticket")).toEqual([42, 30, 72]);
+    expect(attendus(TENIR_LA_CAISSE, "la-monnaie")).toEqual([28]);
+    expect(juste(TENIR_LA_CAISSE, "rendre-juste")).toEqual(["1 billet de 20 €, 1 billet de 5 €, 1 pièce de 2 € et 1 pièce de 1 €"]);
+    expect(attendus(TENIR_LA_CAISSE, "la-journee")).toEqual([Math.round(1_330 / 30), 77_250 / 30]);
+    expect(attendus(TENIR_LA_CAISSE, "les-especes")).toEqual([3_090, 772.5]);
+    expect(attendus(TENIR_LA_CAISSE, "le-fond-de-caisse")).toEqual([922.5]);
+    expect(attendus(TENIR_LA_CAISSE, "le-comptage")).toEqual([912.5, -10]);
+    expect(caisseDuJour(BOUTIQUE).jour.tiroir).toEqual([
+      { valeur: 50, nombre: 18 },
+      { valeur: 10, nombre: 1 },
+      { valeur: 2, nombre: 1 },
+      { valeur: 0.5, nombre: 1 },
+    ]);
+    expect([nomDeLaCoupure(0.5, 2), ditLesCoupures([{ valeur: 0.01, nombre: 1 }])]).toEqual(["pièces de 50 centimes", "1 pièce de 1 centime"]);
+  });
+
+  it("le curseur : 3 clients en espèces au plus avant le coffre (150 + 3 × 98,62 = 445,86 €)", () => {
+    const e = gardeDuCurseur(TENIR_LA_CAISSE, "avant-le-coffre", 3);
+    expect(e.lecture(BOUTIQUE, 3).find((l) => l.fort)!.montant).toBe(Math.round((150 + 3 * 98.62) * 100) / 100);
+  });
+
+  it("le laboratoire : 2 passages au coffre, pas 1 (536,25 €), pas 3", () => {
+    gardeDuLaboratoire(TENIR_LA_CAISSE, "le-laboratoire-du-coffre");
+  });
+});
+
+describe("la caisse du trimestre de Noël", () => {
+  it("décembre : 231 850 € ÷ 30, 2 318,50 € d'espèces, 5 € de trop, 2 323,50 € au coffre", () => {
+    const j = caisseDeNoel(BOUTIQUE);
+    expect(attendus(LA_CAISSE_DU_TRIMESTRE_DE_NOEL, "les-especes")).toEqual([Math.round((231_850 / 30) * 100) / 100, 9_274, 2_318.5]);
+    expect(attendus(LA_CAISSE_DU_TRIMESTRE_DE_NOEL, "le-tiroir")).toEqual([2_473.5, 5, 2_323.5]);
+    expect(j.tiroir.reduce((t, x) => t + x.valeur * x.nombre, 0)).toBeCloseTo(2_473.5, 9);
   });
 });

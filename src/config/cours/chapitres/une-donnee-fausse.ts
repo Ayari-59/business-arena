@@ -1,156 +1,79 @@
-import type { CompanyRoundResult } from "../../../engine/types";
-import { soldUnits } from "../../../engine/simulation/runGame";
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../pedagogy/cours/etats";
-import { scenarioByCode } from "../../scenarios/registry";
 import { accordPluriel } from "../accords";
 import { type Cas } from "../cas";
-import { anneeJouee } from "../annee-de-l-arene";
-import { rejouerAvec } from "../gestion-de-la-pme";
-import { ENTREPRISES_DU_COURS } from "../metiers";
+import {
+  ENTREPRISES_DE_LA_GESTION_DE_BASE,
+  FACTEUR_DE_LA_VIRGULE,
+  FICHE_DE_CAPACITE,
+  TRIMESTRES_DE_L_EXTRAIT,
+  TRIMESTRE_DECIDE,
+  TRIMESTRE_DE_L_ERREUR,
+  donneeFausse as donneeFausseDuMonde,
+  extraitDuTableur,
+  meilleureCombinaison,
+  prevision,
+  trimestreDecide,
+  type RegleDePrevision,
+} from "../monde/gestion-et-information";
 import type { Chapitre } from "../types";
 
 /**
  * CHAPITRE : UNE DONNÉE FAUSSE, UNE DÉCISION FAUSSE (Bac STMG, systèmes d'information de
  * gestion, palier 1).
  *
- * La qualité des données. À la fin du trimestre 3, le gérant prépare le trimestre 4 : il cale sa
- * production sur la moyenne des ventes des trimestres 1 à 3, lue dans un extrait du tableur de
- * gestion (les ventes, le prix, le chiffre d'affaires de chaque trimestre). Une erreur de saisie
- * s'y est glissée : la virgule des ventes du trimestre 3 a glissé d'un rang. L'élève la repère
- * par un contrôle de cohérence (le chiffre d'affaires ne vaut plus les ventes multipliées par le
- * prix, et les ventes sortent de l'ordre de grandeur des autres trimestres), la corrige à partir
- * du chiffre d'affaires, puis chiffre la décision que l'erreur aurait fait prendre : l'arène
- * rejoue le trimestre 4 avec le plan calé sur la prévision juste, puis sur la prévision fausse.
- * Le chapitre finit sur le contrôle à la saisie qui l'aurait arrêtée.
+ * La qualité des données. À la fin du trimestre 3, le gérant de NOVA prépare le trimestre 4 : il
+ * cale son plan de production sur la moyenne des ventes des trimestres 1 à 3, lue dans un extrait
+ * du tableur de gestion (les ventes, le prix, le chiffre d'affaires de chaque trimestre). Une
+ * erreur de saisie s'y est glissée : la virgule des ventes du trimestre 3 a glissé d'un rang.
+ * L'élève la repère par un contrôle de cohérence (le chiffre d'affaires ne vaut plus les ventes
+ * multipliées par le prix, et les ventes sortent de l'ordre de grandeur des autres trimestres), la
+ * corrige à partir du chiffre d'affaires, puis chiffre la décision que l'erreur aurait fait prendre :
+ * le trimestre 4 rejoué avec le plan calé sur la prévision juste, puis sur la prévision fausse. Un
+ * curseur (les ventes à saisir pour que le contrôle retombe) et un laboratoire (la donnée et la
+ * règle de prévision qui font manquer le moins de ventes). Le chapitre finit sur le contrôle à la
+ * saisie qui aurait arrêté l'erreur.
  *
- * CE QUI VIENT DE L'ARÈNE : les ventes et le chiffre d'affaires des trimestres 1 à 3 de l'année du
- * cours (`anneeJouee`), le prix (chiffre d'affaires ÷ ventes, le même aux trois trimestres de
- * l'extrait : la garde le vérifie ; le bon gestionnaire de l'année peut le changer au trimestre
- * 4), et les deux trimestres 4 rejoués (`rejouerAvec`), où seule la décision de production
- * change. Les ventes de l'extrait sont arrondies à l'unité, et son chiffre d'affaires est celui de
- * ces ventes au prix de l'arène, comme sur une facture : il s'écarte de celui de l'arène de moins
- * d'un demi-prix par trimestre (la garde le vérifie).
+ * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA seule : les ventes des quatre trimestres de
+ * l'année N (nova-capacite.ts), au prix de 59 € hors taxes, la capacité de la ligne. L'erreur de
+ * saisie, la règle de prévision et le trimestre 4 rejoué sont des hypothèses du cours, nommées dans
+ * monde/gestion-et-information.ts.
  *
- * CE QUE LE COURS AJOUTE, nommé ci-dessous : l'erreur de saisie (le trimestre où elle tombe, et le
- * rang dont la virgule glisse), et la règle de prévision du gérant (la moyenne simple des
- * trimestres de l'extrait), sur laquelle il cale la décision de production du trimestre 4.
- *
- * LA BONNE RÉPONSE EST LA MÊME PARTOUT pour la donnée fausse (les ventes, par construction de
- * l'erreur) et pour le contrôle à la saisie (la cohérence ventes × prix = chiffre d'affaires) ; le
- * verdict sur ce que l'erreur coûte se calcule sur l'année rejouée, et dans les sept entreprises du
- * chapitre il dit, avec les chiffres de l'arène, que la prévision trop basse a fait manquer des
- * ventes au trimestre 4.
+ * CE QUI A CHANGÉ. Le chapitre lisait et rejouait l'année de l'arène, dans sept entreprises. Chez
+ * NOVA, la virgule fait maintenant passer les ventes du trimestre 3 de 5 810 à 581, la prévision de
+ * 5 556 à 3 813 enceintes, et coûte 36 603 € de marge au trimestre 4.
  */
 
-/**
- * Les entreprises du chapitre : celles qui vendent un seul produit à un seul prix, où le
- * chiffre d'affaires vaut les ventes multipliées par le prix.
- */
-export const ENTREPRISES_A_PRIX_UNIQUE: readonly string[] = ENTREPRISES_DU_COURS.filter((code) => {
-  const s = scenarioByCode(code).scenario;
-  return !(s.products && s.products.length > 1) && !s.subscription;
-});
+export { FACTEUR_DE_LA_VIRGULE, TRIMESTRES_DE_L_EXTRAIT, TRIMESTRE_DECIDE, TRIMESTRE_DE_L_ERREUR };
 
-/** Le trimestre de l'extrait où l'erreur de saisie est glissée. */
-export const TRIMESTRE_DE_L_ERREUR = 3;
+/** Les entreprises du chapitre : NOVA seule. */
+export const ENTREPRISES_A_PRIX_UNIQUE = ENTREPRISES_DE_LA_GESTION_DE_BASE;
 
-/**
- * L'ERREUR DE SAISIE : la virgule des ventes glisse d'un rang vers la gauche, et la valeur saisie
- * est celle des vraies ventes divisée par 10 (6 450 devient 645,0). C'est l'erreur de la saisie à
- * la main, au clavier numérique.
- */
-export const FACTEUR_DE_LA_VIRGULE = 10;
+export const POURQUOI_LA_DONNEE_FAUSSE =
+  "ce chapitre contrôle que le chiffre d'affaires vaut les ventes multipliées par le prix, chez NOVA, qui vend une seule enceinte à un seul prix.";
 
-/** Les trimestres de l'extrait, ceux dont le gérant fait la moyenne. */
-export const TRIMESTRES_DE_L_EXTRAIT = [1, 2, 3] as const;
-
-/** Le trimestre décidé sur la prévision : celui qui suit l'extrait. */
-export const TRIMESTRE_DECIDE = 4;
-
-/** Un montant à la française, avec le signe moins typographique ; retranché, un négatif va entre parenthèses. */
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
 const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
-/** « de » devant un nom : élidé devant une voyelle, contracté devant l'article. */
-const dE = (nom: string) =>
-  /^Le /.test(nom) ? `du ${nom.slice(3)}` : /^Les /.test(nom) ? `des ${nom.slice(4)}` : /^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`;
+const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
-const manquees = (r: CompanyRoundResult) => Object.values(r.market.bySegment).reduce((t, v) => t + v.lost, 0);
-
-/** L'année du cours rejouée, la décision de production du trimestre 4 calée sur une prévision. */
-export function anneeAvecLePlan(code: string, cle: string, plan: number) {
-  return rejouerAvec(code, `une-donnee-fausse:${cle}`, (t, d) => (t === TRIMESTRE_DECIDE ? { ...d, productionPlan: plan } : undefined));
+/** L'extrait, sa donnée fausse, les deux prévisions de la moyenne, et le trimestre 4 sur chacune. */
+export function donneeFausse(_c?: Cas) {
+  const r = donneeFausseDuMonde(FICHE_DE_CAPACITE);
+  return { ...r, autres: r.lignes.filter((l) => l !== r.fausse), margePerdue: r.coutDeLErreur };
 }
 
-export type Verdict = "l-erreur-coute" | "rien-ne-change" | "l-erreur-rapporte";
-
-/** L'extrait, sa donnée fausse, les deux prévisions, et le trimestre 4 rejoué sur chacune. */
-export function donneeFausse(c: Cas) {
-  const { partie } = anneeJouee(c.code);
-  const lignes = TRIMESTRES_DE_L_EXTRAIT.map((t) => {
-    const r = partie.rounds[t - 1]!.results["joueur"]!;
-    const ventes = Math.round(soldUnits(r));
-    const prix = auCentime(r.incomeStatement.revenue / soldUnits(r));
-    const saisie = t === TRIMESTRE_DE_L_ERREUR ? ventes / FACTEUR_DE_LA_VIRGULE : ventes;
-    const chiffreDAffaires = auCentime(ventes * prix);
-    const recalcule = auCentime(saisie * prix);
-    return { trimestre: t, ventes, saisie, prix, chiffreDAffaires, recalcule, ecart: auCentime(chiffreDAffaires - recalcule) };
-  });
-  const fausse = lignes.find((l) => l.trimestre === TRIMESTRE_DE_L_ERREUR)!;
-  const autres = lignes.filter((l) => l !== fausse);
-  const n = lignes.length;
-  const sommeJuste = lignes.reduce((t, l) => t + l.ventes, 0);
-  const sommeFausse = lignes.reduce((t, l) => t + l.saisie, 0);
-  const previsionJuste = Math.round(sommeJuste / n);
-  const previsionFausse = Math.round(sommeFausse / n);
-  const juste = anneeAvecLePlan(c.code, "plan-sur-la-prevision-juste", previsionJuste);
-  const faux = anneeAvecLePlan(c.code, "plan-sur-la-prevision-fausse", previsionFausse);
-  const k = TRIMESTRE_DECIDE - 1;
-  const tj = juste[k]!;
-  const tf = faux[k]!;
-  const venduesJuste = Math.round(soldUnits(tj));
-  const venduesFausse = Math.round(soldUnits(tf));
-  const margeJuste = Math.round(tj.incomeStatement.grossMargin);
-  const margeFausse = Math.round(tf.incomeStatement.grossMargin);
-  const resultatJuste = Math.round(tj.incomeStatement.operatingIncome);
-  const resultatFausse = Math.round(tf.incomeStatement.operatingIncome);
-  const ventesPerdues = venduesJuste - venduesFausse;
-  const coutDeLErreur = resultatJuste - resultatFausse;
-  const verdict: Verdict = coutDeLErreur > 0 ? "l-erreur-coute" : ventesPerdues === 0 ? "rien-ne-change" : "l-erreur-rapporte";
-  return {
-    libellePlan: scenarioByCode(c.code).vocabulary.productionPlanLabel,
-    lignes,
-    fausse,
-    autres,
-    prix: fausse.prix,
-    sommeJuste,
-    sommeFausse: auDixieme(sommeFausse),
-    previsionJuste,
-    previsionFausse,
-    ecartDePrevision: previsionJuste - previsionFausse,
-    ecartDePrevisionEnPourcentage: auDixieme(((previsionJuste - previsionFausse) / previsionJuste) * 100),
-    venduesJuste,
-    venduesFausse,
-    manqueesJuste: Math.round(manquees(tj)),
-    manqueesFausse: Math.round(manquees(tf)),
-    margeJuste,
-    margeFausse,
-    margePerdue: margeJuste - margeFausse,
-    resultatJuste,
-    resultatFausse,
-    ventesPerdues,
-    coutDeLErreur,
-    verdict,
-  };
-}
+export type Verdict = ReturnType<typeof donneeFausse>["verdict"];
 
 const E = TRIMESTRE_DE_L_ERREUR;
 const D = TRIMESTRE_DECIDE;
 const PREMIER = TRIMESTRES_DE_L_EXTRAIT[0];
 const DERNIER = TRIMESTRES_DE_L_EXTRAIT[TRIMESTRES_DE_L_EXTRAIT.length - 1]!;
+
+/** Les positions du laboratoire : la donnée (0 : la donnée fausse, 1 : corrigée) et la règle (0 : la moyenne, 1 : le dernier trimestre). */
+const DONNEES = [false, true] as const;
+const REGLES: readonly RegleDePrevision[] = ["moyenne", "dernier"];
+const planDe = (p: Readonly<Record<string, number>>) => prevision(FICHE_DE_CAPACITE, REGLES[p.regle!]!, DONNEES[p.donnee!]!);
 
 export const UNE_DONNEE_FAUSSE: Chapitre = {
   code: "une-donnee-fausse",
@@ -159,7 +82,7 @@ export const UNE_DONNEE_FAUSSE: Chapitre = {
   blocs: ["STMG Thème 2 · Management du système d'information et performance", "STMG Thème 3 · Information, action et décision"],
   titre: "Une donnée fausse, une décision fausse",
   accroche:
-    "Une virgule glisse dans une case du tableur, et la prévision des ventes tombe. Repérer la donnée fausse par un contrôle de cohérence, la corriger, puis chiffrer dans l'arène ce que la décision prise dessus aurait coûté.",
+    "Une virgule glisse dans une case du tableur, et la prévision des ventes tombe. Repérer la donnée fausse par un contrôle de cohérence, la corriger, puis chiffrer ce que la décision prise dessus aurait coûté.",
   objectifs: [
     "Dire ce qu'est une donnée exacte, complète et cohérente",
     "Repérer une erreur de saisie par un contrôle de cohérence et par l'ordre de grandeur",
@@ -168,25 +91,18 @@ export const UNE_DONNEE_FAUSSE: Chapitre = {
     "Choisir le contrôle à la saisie qui arrête l'erreur",
   ],
   libre: false,
-  entreprises: {
-    codes: ENTREPRISES_A_PRIX_UNIQUE,
-    pourquoi:
-      "ce chapitre contrôle que le chiffre d'affaires vaut les ventes multipliées par le prix, et MAILLE & CO vend une gamme d'articles à des prix différents, comme VOLT FITNESS tire son chiffre d'affaires des abonnés gardés.",
-  },
+  entreprises: { codes: ENTREPRISES_A_PRIX_UNIQUE, pourquoi: POURQUOI_LA_DONNEE_FAUSSE },
   etapes: [
     {
       id: "intro",
       type: "lecture",
       titre: "Un extrait du tableur à vérifier",
       notions: ["revenue", "dashboard"],
-      texte: (c) => {
-        const r = donneeFausse(c);
-        return [
-          `À la fin du trimestre ${DERNIER}, le gérant ${dE(c.entreprise)} prépare le trimestre ${D}. Il cale sa décision « ${r.libellePlan} » sur une prévision simple : la moyenne des ventes des trimestres ${PREMIER} à ${DERNIER}. Il la calcule sur un extrait du tableur de gestion, où les ventes sont saisies à la main, et où le prix et le chiffre d'affaires sont repris des factures.`,
-          "Une donnée de cet extrait est fausse : une erreur de saisie s'y est glissée. Avant de décider, il faut contrôler la qualité des données. Une donnée de qualité est exacte (elle dit la vraie valeur), complète (rien ne manque) et cohérente (elle s'accorde avec les autres : le chiffre d'affaires vaut les ventes multipliées par le prix).",
-          "Les chiffres sont ceux de l'année du cours dans l'arène, les ventes arrondies à l'unité. Seule l'erreur est ajoutée par le cours.",
-        ];
-      },
+      texte: (c) => [
+        `À la fin du trimestre ${DERNIER}, le gérant ${dE(c.entreprise)} prépare le trimestre ${D}. Il cale son plan de production sur une prévision simple : la moyenne des ventes des trimestres ${PREMIER} à ${DERNIER}. Il la calcule sur un extrait du tableur de gestion.`,
+        "Une donnée de cet extrait est fausse : une erreur de saisie s'y est glissée. Avant de décider, il faut contrôler la qualité des données. Une donnée de qualité est exacte (elle dit la vraie valeur), complète (rien ne manque) et cohérente (elle s'accorde avec les autres).",
+        `Les ventes sont celles de l'année N ${dE(c.entreprise)} ; le chiffre d'affaires vient des factures. Seule l'erreur est ajoutée par le cours.`,
+      ],
       tableau: (c) => {
         const r = donneeFausse(c);
         return {
@@ -202,19 +118,13 @@ export const UNE_DONNEE_FAUSSE: Chapitre = {
       type: "montants",
       titre: "Le contrôle de cohérence",
       notions: ["revenue"],
-      question: () =>
-        "Pour chaque trimestre de l'extrait, multipliez les ventes par le prix de vente, au centime. Comparez chaque résultat au chiffre d'affaires saisi.",
-      champs: (c) =>
-        donneeFausse(c).lignes.map((l) => ({
-          libelle: `Ventes × prix, trimestre ${l.trimestre}`,
-          attendu: l.recalcule,
-          calcul: `${qte(l.saisie)} × ${eur(l.prix)} = ${eur(l.recalcule)}`,
-        })),
+      question: () => "Pour chaque trimestre de l'extrait, multipliez les ventes par le prix de vente, au centime. Comparez chaque résultat au chiffre d'affaires saisi.",
+      champs: (c) => donneeFausse(c).lignes.map((l) => ({ libelle: `Ventes × prix, trimestre ${l.trimestre}`, attendu: l.recalcule, calcul: `${qte(l.saisie)} × ${eur(l.prix)} = ${eur(l.recalcule)}` })),
       explication: (c) => {
         const r = donneeFausse(c);
         const f = r.fausse;
         return [
-          `Aux trimestres ${r.autres.map((l) => l.trimestre).join(" et ")}, le produit retombe sur le chiffre d'affaires saisi : les données sont cohérentes. Au trimestre ${E}, il donne ${eur(f.recalcule)}, pour ${eur(f.chiffreDAffaires)} saisis : ${eur(f.ecart)} d'écart. Une donnée de cette ligne est fausse.`,
+          `Aux trimestres ${r.autres.map((l) => l.trimestre).join(" et ")}, le produit retombe sur le chiffre d'affaires saisi : les données sont cohérentes. Au trimestre ${E}, il donne ${eur(f.recalcule)}, pour ${eur(f.chiffreDAffaires)} saisis : ${eur(f.ecart)} d'écart. Une des données de cette ligne est fausse.`,
           `L'ordre de grandeur le confirmait déjà : ${qte(f.saisie)} ${c.unites}, quand les autres trimestres en comptent ${r.autres.map((l) => qte(l.ventes)).join(" et ")}.`,
         ];
       },
@@ -229,24 +139,45 @@ export const UNE_DONNEE_FAUSSE: Chapitre = {
         return `Au trimestre ${E}, le chiffre d'affaires ne retombe pas : ${eur(f.chiffreDAffaires)} saisis, ${eur(f.recalcule)} recalculés. Quelle donnée de la ligne est fausse ?`;
       },
       options: (c) => {
-        const r = donneeFausse(c);
-        const f = r.fausse;
+        const f = donneeFausse(c).fausse;
         return [
-          {
-            texte: `Les ventes du trimestre ${E}`,
-            juste: true,
-            retour: `Oui : ${qte(f.saisie)} ${c.unites}, ${FACTEUR_DE_LA_VIRGULE} fois moins que les vraies ventes. La virgule a glissé d'un rang à la saisie : ${eur(f.chiffreDAffaires)} ÷ ${eur(f.prix)} = ${qte(f.ventes)} ${c.unites}. Le prix est celui des autres trimestres, et le chiffre d'affaires reste dans leur ordre de grandeur.`,
-          },
-          {
-            texte: `Le prix du trimestre ${E}`,
-            juste: false,
-            retour: `Non : c'est le prix des autres trimestres, ${eur(f.prix)}. Ce sont les ventes, ${qte(f.saisie)} ${c.unites}, qui sortent de l'ordre de grandeur : ${eur(f.chiffreDAffaires)} ÷ ${eur(f.prix)} = ${qte(f.ventes)}.`,
-          },
-          {
-            texte: `Le chiffre d'affaires du trimestre ${E}`,
-            juste: false,
-            retour: `Non : ${eur(f.chiffreDAffaires)} reste dans l'ordre de grandeur des autres trimestres, et il est repris des factures. Ce sont les ventes saisies à la main, ${qte(f.saisie)} ${c.unites}, qui détonnent.`,
-          },
+          { texte: `Les ventes du trimestre ${E}`, juste: true, retour: `Oui : ${qte(f.saisie)} ${c.unites}, ${FACTEUR_DE_LA_VIRGULE} fois moins que les vraies ventes. La virgule a glissé d'un rang à la saisie : ${eur(f.chiffreDAffaires)} ÷ ${eur(f.prix)} = ${qte(f.ventes)} ${c.unites}. Le prix est celui des autres trimestres.` },
+          { texte: `Le prix du trimestre ${E}`, juste: false, retour: `Non : c'est le prix des autres trimestres, ${eur(f.prix)}. Ce sont les ventes, ${qte(f.saisie)} ${c.unites}, qui sortent de l'ordre de grandeur : ${eur(f.chiffreDAffaires)} ÷ ${eur(f.prix)} = ${qte(f.ventes)}.` },
+          { texte: `Le chiffre d'affaires du trimestre ${E}`, juste: false, retour: `Non : ${eur(f.chiffreDAffaires)} reste dans l'ordre de grandeur des autres trimestres, et il est repris des factures. Ce sont les ventes saisies à la main, ${qte(f.saisie)} ${c.unites}, qui détonnent.` },
+        ];
+      },
+    },
+    {
+      id: "la-saisie-qui-retombe",
+      type: "curseur",
+      titre: "La saisie qui fait retomber le contrôle",
+      notions: ["revenue", "dashboard"],
+      question: (c) => {
+        const f = donneeFausse(c).fausse;
+        return `Faites varier les ventes saisies au trimestre ${E} : une droite donne les ventes multipliées par le prix, ${eur(f.prix)}, l'autre le chiffre d'affaires des factures, ${eur(f.chiffreDAffaires)}. Placez le curseur sur la plus petite saisie qui fait retomber le contrôle de cohérence.`;
+      },
+      grandeur: (c) => ({ libelle: `Ventes saisies au trimestre ${E}`, unite: c.unites }),
+      cible: () => ({ attendu: donneeFausse().fausse.ventes, min: 0, max: 7_000 }),
+      zones: ["Le produit atteint le chiffre d'affaires", "Le produit reste sous le chiffre d'affaires"],
+      rates: () => ({ dessous: "Avec cette saisie, ventes × prix reste sous le chiffre d'affaires des factures.", dessus: "Le produit dépasse le chiffre d'affaires : la saisie est trop haute." }),
+      montrer: "Montrer la saisie",
+      lecture: (_c, q) => {
+        const f = donneeFausse().fausse;
+        return [
+          { libelle: "Ventes × prix", montant: auCentime(q * f.prix), fort: true },
+          { libelle: "Chiffre d'affaires des factures", montant: f.chiffreDAffaires },
+          { libelle: "Écart", montant: auCentime(f.chiffreDAffaires - q * f.prix) },
+        ];
+      },
+      droites: () => {
+        const f = donneeFausse().fausse;
+        return { produit: (q) => q * f.prix, cout: () => f.chiffreDAffaires, libelles: ["Ventes × prix", "Chiffre d'affaires des factures"] };
+      },
+      explication: (c) => {
+        const f = donneeFausse(c).fausse;
+        return [
+          `À ${qte(f.ventes)} ${c.unites}, ventes × prix retombe exactement sur ${eur(f.chiffreDAffaires)} : c'est la vraie valeur, celle que la virgule avait divisée par ${FACTEUR_DE_LA_VIRGULE}.`,
+          "Corriger une donnée, c'est la retrouver à partir des autres, qui sont sûres : ici le prix et les factures.",
         ];
       },
     },
@@ -262,70 +193,51 @@ export const UNE_DONNEE_FAUSSE: Chapitre = {
         const f = r.fausse;
         const n = r.lignes.length;
         return [
-          { libelle: `Ventes corrigées du trimestre ${E} (${c.unites})`, attendu: f.ventes, calcul: `${eur(f.chiffreDAffaires)} ÷ ${eur(f.prix)} = ${qte(f.ventes)}`, tolerance: 1 },
-          {
-            libelle: `Prévision avec la donnée fausse (${c.unites})`,
-            attendu: r.previsionFausse,
-            calcul: `(${r.lignes.map((l) => qte(l.saisie)).join(" + ")}) ÷ ${n} = ${qte(r.previsionFausse)}`,
-            tolerance: 1,
-          },
-          {
-            libelle: `Prévision avec la donnée corrigée (${c.unites})`,
-            attendu: r.previsionJuste,
-            calcul: `(${r.lignes.map((l) => qte(l.ventes)).join(" + ")}) ÷ ${n} = ${qte(r.previsionJuste)}`,
-            tolerance: 1,
-          },
+          { libelle: `Ventes corrigées du trimestre ${E} (${c.unites})`, attendu: f.ventes, calcul: `${eur(f.chiffreDAffaires)} ÷ ${eur(f.prix)} = ${qte(f.ventes)}` },
+          { libelle: `Prévision avec la donnée fausse (${c.unites})`, attendu: r.previsionFausse, calcul: `(${r.lignes.map((l) => qte(l.saisie)).join(" + ")}) ÷ ${n} = ${qte(r.previsionFausse)}`, tolerance: 1 },
+          { libelle: `Prévision avec la donnée corrigée (${c.unites})`, attendu: r.previsionJuste, calcul: `(${r.lignes.map((l) => qte(l.ventes)).join(" + ")}) ÷ ${n} = ${qte(r.previsionJuste)}`, tolerance: 1 },
         ];
       },
       explication: (c) => {
         const r = donneeFausse(c);
         return [
-          `Une seule case fausse sur ${r.lignes.length * 3}, et la prévision tombe de ${qte(r.ecartDePrevision)} ${c.unites}, soit ${pct(r.ecartDePrevisionEnPourcentage)} de moins que la prévision juste. Calé sur elle, le plan du trimestre ${D} serait trop bas d'autant.`,
+          `Une seule case fausse sur ${r.lignes.length * 3}, et la prévision tombe de ${qte(r.ecartDePrevision)} ${c.unites}, soit ${pct(r.ecartDePrevisionEnPourcentage)} de moins que la prévision juste. Calé sur elle, le plan du trimestre ${D} serait trop bas.`,
         ];
       },
     },
     {
-      id: "arene",
+      id: "le-trimestre-rejoue",
       type: "montants",
-      titre: `L'arène rejoue le trimestre ${D}`,
+      titre: `Le trimestre ${D} rejoué`,
       notions: ["capacity", "contribution_margin"],
       tableau: (c) => {
         const r = donneeFausse(c);
         return {
-          titre: `Le trimestre ${D} rejoué par l'arène`,
+          titre: `Le trimestre ${D}, rejoué avec chaque plan`,
           colonnes: ["Plan sur la prévision juste", "Plan sur la prévision fausse"],
           lignes: [
-            { libelle: `« ${r.libellePlan} » (${c.unites})`, valeurs: [qte(r.previsionJuste), qte(r.previsionFausse)] },
-            { libelle: `Ventes (${c.unites})`, valeurs: [qte(r.venduesJuste), qte(r.venduesFausse)] },
-            { libelle: `Demande non servie (${c.unites})`, valeurs: [qte(r.manqueesJuste), qte(r.manqueesFausse)] },
-            { libelle: "Marge sur coût variable", valeurs: [eur(r.margeJuste), eur(r.margeFausse)] },
-            { libelle: "Résultat de l'activité", valeurs: [eur(r.resultatJuste), eur(r.resultatFausse)] },
+            { libelle: `Plan de production (${c.unites})`, valeurs: [qte(r.previsionJuste), qte(r.previsionFausse)] },
+            { libelle: `Ventes (${c.unites})`, valeurs: [qte(r.juste.vendues), qte(r.faux.vendues)] },
+            { libelle: `Demande non servie (${c.unites})`, valeurs: [qte(r.juste.manquees), qte(r.faux.manquees)] },
+            { libelle: "Marge sur coût variable", valeurs: [eur(r.juste.marge), eur(r.faux.marge)] },
           ],
         };
       },
-      question: () =>
-        `L'arène a rejoué le trimestre ${D} avec chacun des plans : celui calé sur la prévision juste, puis celui calé sur la prévision fausse. Tout le reste est la gestion de l'année du cours. Calculez les ventes perdues à cause de l'erreur, la marge sur coût variable perdue, et ce que l'erreur coûte au résultat de l'activité du trimestre.`,
+      question: (c) => {
+        const r = donneeFausse(c);
+        return `Au trimestre ${D}, les clients demandent ${qte(r.juste.demande)} ${c.unites}. ${c.entreprise} ne fabrique que ce que son plan prévoit, et n'a pas de stock d'avance : la demande qui dépasse le plan repart sans être servie. Le tableau rejoue le trimestre avec chacun des plans. Calculez les ventes perdues à cause de l'erreur, puis la marge perdue.`;
+      },
       champs: (c) => {
         const r = donneeFausse(c);
         return [
-          { libelle: `Ventes perdues (${c.unites})`, attendu: r.ventesPerdues, calcul: `${qte(r.venduesJuste)} − ${qte(r.venduesFausse)} = ${qte(r.ventesPerdues)}`, tolerance: 1 },
-          { libelle: "Marge perdue", attendu: r.margePerdue, calcul: `${eur(r.margeJuste)} − ${retranche(r.margeFausse)} = ${eur(r.margePerdue)}`, tolerance: 1 },
-          {
-            libelle: "Coût de l'erreur sur le résultat",
-            attendu: r.coutDeLErreur,
-            calcul: `${eur(r.resultatJuste)} − ${retranche(r.resultatFausse)} = ${eur(r.coutDeLErreur)}`,
-            tolerance: 1,
-          },
+          { libelle: `Ventes perdues (${c.unites})`, attendu: r.ventesPerdues, calcul: `${qte(r.juste.vendues)} − ${qte(r.faux.vendues)} = ${qte(r.ventesPerdues)}` },
+          { libelle: "Marge perdue", attendu: r.margePerdue, calcul: `${eur(r.juste.marge)} − ${eur(r.faux.marge)} = ${eur(r.margePerdue)}` },
         ];
       },
       explication: (c) => {
         const r = donneeFausse(c);
         return [
-          r.verdict === "l-erreur-coute"
-            ? `Le plan trop bas laisse repartir des clients qui auraient acheté : ${qte(r.ventesPerdues)} ${c.unites} de moins, et ${eur(r.margePerdue)} de marge perdue. Les charges fixes, elles, ne baissent pas : le résultat du trimestre perd ${eur(r.coutDeLErreur)}.`
-            : r.verdict === "rien-ne-change"
-              ? `La demande du trimestre restait sous les deux plans : ${c.entreprise} vend autant avec l'un qu'avec l'autre, et l'erreur ne change presque rien au résultat (${eur(r.coutDeLErreur)}).`
-              : `Le plan plus bas fait vendre ${qte(r.ventesPerdues)} ${c.unites} de moins, mais il évite plus d'invendus qu'il ne perd de ventes : le résultat monte de ${eur(-r.coutDeLErreur)}.`,
+          `Le plan trop bas laisse repartir des clients qui auraient acheté : ${qte(r.ventesPerdues)} ${c.unites} de moins, et ${eur(r.margePerdue)} de marge perdue. Les charges fixes, elles, ne baissent pas : le résultat du trimestre perd autant.`,
           "Une donnée fausse ne coûte rien tant qu'elle reste dans le tableur : elle coûte le jour où une décision est prise dessus.",
         ];
       },
@@ -338,31 +250,53 @@ export const UNE_DONNEE_FAUSSE: Chapitre = {
       question: (c) => `Une virgule déplacée dans une case du tableur. Que retenir du trimestre ${D} ${dE(c.entreprise)} ?`,
       options: (c) => {
         const r = donneeFausse(c);
+        const coute = r.verdict === "l-erreur-coute";
         return [
-          {
-            texte: "L'erreur a coûté : la prévision trop basse a fait manquer des ventes",
-            juste: r.verdict === "l-erreur-coute",
-            retour:
-              r.verdict === "l-erreur-coute"
-                ? `Oui : ${qte(r.ventesPerdues)} ${c.unites} ${accordPluriel(c, "vendu")} en moins, et ${eur(r.coutDeLErreur)} de résultat en moins sur le seul trimestre ${D}. La décision était fausse parce que la donnée l'était.`
-                : `Non : dans l'arène, le résultat ne baisse pas (${eur(-r.coutDeLErreur)} d'écart en faveur du plan faux).`,
+          { texte: "L'erreur a coûté : la prévision trop basse a fait manquer des ventes", juste: coute, retour: coute ? `Oui : ${qte(r.ventesPerdues)} ${c.unites} ${accordPluriel(c, "vendu")} en moins, et ${eur(r.coutDeLErreur)} de résultat en moins sur le seul trimestre ${D}. La décision était fausse parce que la donnée l'était.` : `Non : le résultat ne baisse pas.` },
+          { texte: "L'erreur n'a rien coûté : la demande restait sous les deux plans", juste: !coute, retour: !coute ? "Oui : les ventes sont les mêmes avec les deux plans." : `Non : la demande dépassait le plan faux. La demande non servie monte à ${qte(r.faux.manquees)} ${c.unites}, contre ${qte(r.juste.manquees)} avec le plan juste.` },
+          { texte: "L'erreur a rapporté : le plan plus bas a évité des invendus", juste: false, retour: `Non : ${c.entreprise} ne fabrique que son plan, et la demande dépassait les deux plans : il n'y avait aucun invendu à éviter. Le plan plus bas a fait perdre ${eur(r.margePerdue)} de marge.` },
+        ];
+      },
+    },
+    {
+      id: "le-laboratoire-de-la-prevision",
+      type: "simulation",
+      titre: "Le laboratoire de la prévision",
+      notions: ["capacity", "dashboard"],
+      question: (c) =>
+        `La donnée corrigée, la prévision est-elle bonne pour autant ? Choisissez la donnée du trimestre ${E} (fausse ou corrigée) et la règle de prévision (la moyenne des trimestres ${PREMIER} à ${DERNIER}, ou le dernier seul), et regardez ce que le plan donne au trimestre ${D} ${dE(c.entreprise)}.`,
+      leviers: () => [
+        { code: "donnee", libelle: `Ventes du trimestre ${E}`, unite: "", min: 0, max: 1, pas: 1, depart: 0, choix: [{ valeur: 0, libelle: "La donnée fausse" }, { valeur: 1, libelle: "La donnée corrigée" }] },
+        { code: "regle", libelle: "Règle de prévision", unite: "", min: 0, max: 1, pas: 1, depart: 0, choix: [{ valeur: 0, libelle: `La moyenne des trimestres ${PREMIER} à ${DERNIER}` }, { valeur: 1, libelle: "Le dernier trimestre" }] },
+      ],
+      lecture: (_c, p) => {
+        const t = trimestreDecide(FICHE_DE_CAPACITE, planDe(p));
+        const d = trimestreDecide(FICHE_DE_CAPACITE, planDe({ donnee: 0, regle: 0 }));
+        return [
+          { libelle: "Plan de production", montant: t.plan, unite: "enceintes", reference: d.plan },
+          { libelle: "Demande non servie", montant: t.manquees, unite: "enceintes", reference: d.manquees },
+          { libelle: "Marge du trimestre", montant: t.marge, reference: d.marge, fort: true },
+        ];
+      },
+      defi: () => {
+        const m = meilleureCombinaison(FICHE_DE_CAPACITE);
+        const solution = { donnee: DONNEES.indexOf(m.juste), regle: REGLES.indexOf(m.regle) };
+        return {
+          consigne: `Trouvez la donnée et la règle qui laissent repartir le moins de clients au trimestre ${D}.`,
+          atteint: (p) => p.donnee === solution.donnee && p.regle === solution.regle,
+          indice: (p) => {
+            const t = trimestreDecide(FICHE_DE_CAPACITE, planDe(p));
+            return `Avec ce plan, ${qte(t.plan)} enceintes, ${qte(t.manquees)} enceintes demandées repartent sans être servies. Une autre combinaison fait-elle mieux ?`;
           },
-          {
-            texte: "L'erreur n'a rien coûté : la demande restait sous les deux plans",
-            juste: r.verdict === "rien-ne-change",
-            retour:
-              r.verdict === "rien-ne-change"
-                ? `Oui : les ventes sont les mêmes avec les deux plans. L'erreur n'a pas coûté cette fois ; avec plus de clients, elle aurait coûté.`
-                : `Non : la demande dépassait le plan faux. La demande non servie monte à ${qte(r.manqueesFausse)} ${c.unites}, contre ${qte(r.manqueesJuste)} avec le plan juste.`,
-          },
-          {
-            texte: "L'erreur a rapporté : le plan plus bas a évité des invendus",
-            juste: r.verdict === "l-erreur-rapporte",
-            retour:
-              r.verdict === "l-erreur-rapporte"
-                ? `Oui, par hasard : le plan plus bas évite plus d'invendus qu'il ne perd de ventes, et le résultat monte de ${eur(-r.coutDeLErreur)}. Une décision juste par accident reste une décision prise sur une donnée fausse.`
-                : `Non : le plan plus bas a fait perdre ${eur(r.margePerdue)} de marge, et le résultat baisse de ${eur(r.coutDeLErreur)}.`,
-          },
+          solution,
+        };
+      },
+      explication: (c, p) => {
+        const t = trimestreDecide(FICHE_DE_CAPACITE, planDe(p));
+        const moyenne = trimestreDecide(FICHE_DE_CAPACITE, prevision(FICHE_DE_CAPACITE, "moyenne", true));
+        return [
+          `Défi relevé : la donnée corrigée et le dernier trimestre donnent un plan de ${qte(t.plan)} ${c.unites} ; ${qte(t.manquees)} repartent encore, contre ${qte(moyenne.manquees)} avec la moyenne corrigée. Les ventes montent au fil de l'année : la moyenne regarde trop loin en arrière.`,
+          "Une donnée juste est nécessaire, pas suffisante : il faut aussi la bonne règle pour s'en servir.",
         ];
       },
     },
@@ -378,21 +312,9 @@ export const UNE_DONNEE_FAUSSE: Chapitre = {
       options: (c) => {
         const f = donneeFausse(c).fausse;
         return [
-          {
-            texte: "Rendre obligatoire la case des ventes",
-            juste: false,
-            retour: "Non : ce contrôle protège la complétude, et la case était remplie. Il arrête une case vide, pas une valeur fausse.",
-          },
-          {
-            texte: "N'accepter qu'un nombre dans la case des ventes",
-            juste: false,
-            retour: `Non : ${qte(f.saisie)} est bien un nombre. Un contrôle de format arrête une lettre ou un symbole, pas une virgule mal placée.`,
-          },
-          {
-            texte: "Comparer ventes × prix au chiffre d'affaires saisi",
-            juste: true,
-            retour: `Oui : c'est le contrôle de cohérence fait plus haut, confié au tableur au moment de la saisie. ${qte(f.saisie)} × ${eur(f.prix)} = ${eur(f.recalcule)}, loin des ${eur(f.chiffreDAffaires)} des factures : la saisie aurait été refusée avant de servir à la prévision.`,
-          },
+          { texte: "Rendre obligatoire la case des ventes", juste: false, retour: "Non : ce contrôle protège la complétude, et la case était remplie. Il arrête une case vide, pas une valeur fausse." },
+          { texte: "N'accepter qu'un nombre dans la case des ventes", juste: false, retour: `Non : ${qte(f.saisie)} est bien un nombre. Un contrôle de format arrête une lettre ou un symbole, pas une virgule mal placée.` },
+          { texte: "Comparer ventes × prix au chiffre d'affaires saisi", juste: true, retour: `Oui : c'est le contrôle de cohérence fait plus haut, confié au tableur au moment de la saisie. ${qte(f.saisie)} × ${eur(f.prix)} = ${eur(f.recalcule)}, loin des ${eur(f.chiffreDAffaires)} des factures : la saisie aurait été refusée sur-le-champ.` },
         ];
       },
     },
@@ -404,12 +326,14 @@ export const UNE_DONNEE_FAUSSE: Chapitre = {
       texte: (c) => {
         const r = donneeFausse(c);
         return [
-          `Chez ${c.entreprise}, une virgule déplacée dans les ventes du trimestre ${E} fait passer la prévision du trimestre ${D} de ${qte(r.previsionJuste)} à ${qte(r.previsionFausse)} ${c.unites}. L'arène montre ce que le plan calé dessus aurait changé : ${r.coutDeLErreur >= 0 ? `${eur(r.coutDeLErreur)} de résultat en moins` : `${eur(-r.coutDeLErreur)} de résultat en plus, par hasard`} sur ce seul trimestre.`,
-          "Une donnée fausse ne se voit pas toute seule. Elle se trahit par un contrôle de cohérence (un produit ou un total qui ne retombe pas) ou par un ordre de grandeur. Le meilleur contrôle est celui qui l'arrête à la saisie, avant qu'une décision soit prise dessus.",
+          `Chez ${c.entreprise}, une virgule déplacée dans les ventes du trimestre ${E} fait passer la prévision du trimestre ${D} de ${qte(r.previsionJuste)} à ${qte(r.previsionFausse)} ${c.unites}, et coûte ${eur(r.coutDeLErreur)} de marge au trimestre ${D}.`,
+          "Une donnée fausse ne se voit pas toute seule. Elle se trahit par un contrôle de cohérence (un produit ou un total qui ne retombe pas) ou par un ordre de grandeur. Le meilleur contrôle est celui qui l'arrête à la saisie. Dans l'arène, vérifiez vos propres chiffres avant de décider : une prévision ne vaut que ses données.",
         ];
       },
-      repere: () =>
-        "Exactitude, complétude, cohérence : les trois qualités d'une donnée. Le contrôle à la saisie les vérifie avant que la donnée serve à décider.",
+      repere: () => "Exactitude, complétude, cohérence : les trois qualités d'une donnée. Le contrôle à la saisie les vérifie avant que la donnée serve à décider.",
     },
   ],
 };
+
+/** L'extrait du tableur, tel que le chapitre le montre. */
+export { extraitDuTableur };

@@ -199,6 +199,15 @@ const LECTEURS: Record<string, { portee: Portee; raison: string }> = {
   "src/services/situation-instance.service.ts": { portee: "une partie", raison: "les situations d'un tour" },
   "src/services/subvention.service.ts": { portee: "une partie", raison: "les subventions d'une partie" },
   "src/services/tour-d-essai.service.ts": { portee: "une partie", raison: "la bascule et la relecture de l'essai" },
+  "src/services/tuteur.service.ts": { portee: "une partie", raison: "l'interrupteur du tuteur IA d'une partie" },
+  "src/services/effacement.service.ts": {
+    portee: "transversal",
+    raison: "les parties d'un compte ou d'un établissement à effacer (RGPD) ; une archive part avec sa partie",
+  },
+  "src/services/export-donnees.service.ts": {
+    portee: "transversal",
+    raison: "les parties d'un enseignant, dans l'export de ses données (RGPD)",
+  },
 };
 
 const FILTRES = /\b(horsArchivesDEssai|partieQuiCompte|tourQuiCompte)\b/;

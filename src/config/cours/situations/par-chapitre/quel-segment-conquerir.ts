@@ -1,9 +1,14 @@
-import { montantEcrit as eur } from "../../../../pedagogy/cours/correcteur";
+import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../../pedagogy/cours/etats";
 import { accord, accordPluriel } from "../../accords";
 import type { Cas } from "../../cas";
-import { SEGMENTATIONS, segmentation } from "../../chapitres/segmenter-et-cibler";
+import { SEGMENTER_ET_CIBLER, segmentation } from "../../chapitres/segmenter-et-cibler";
+import { coutVariable as coutVariableDe, prixDeNova } from "../../monde/economie-et-marketing";
+import { mercatiqueDe } from "../../monde/mercatique-de-nova";
 import type { Situation } from "../types";
+
+/** Un montant à la française, avec le signe moins typographique. */
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 
 /**
  * CAS PRATIQUE DU CHAPITRE « SEGMENTER ET CIBLER » : QUEL SEGMENT CONQUÉRIR ?
@@ -29,15 +34,14 @@ import type { Situation } from "../types";
  */
 export const POINTS_A_GAGNER = 5;
 
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const qte = (n: number) => n.toLocaleString("fr-FR");
-const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
+const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`.replace(/^-/, "−");
+const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 /** Les chiffres de la réponse, calculés une fois du cas. */
 export function segmentAConquerir(c: Cas) {
   const g = segmentation(c);
-  const prix = c.gestion.prixMoyen;
-  const coutVariable = c.gestion.coutVariableUnitaire;
+  const prix = prixDeNova(mercatiqueDe(c));
+  const coutVariable = coutVariableDe(mercatiqueDe(c));
   const margeUnitaire = auCentime(prix - coutVariable);
   const segments = g.clienteles.map((k) => ({
     ...k,
@@ -50,7 +54,7 @@ export function segmentAConquerir(c: Cas) {
   const caEnPlus = auCentime(meilleur.ventesEnPlus * prix);
   const margeEnPlus = auCentime(meilleur.ventesEnPlus * margeUnitaire);
   // L'erreur classique : prendre 5 % de nos ventes dans le segment au lieu de 5 points du segment.
-  const ventesSurNosVentes = Math.round((meilleur.ventes * POINTS_A_GAGNER) / 100);
+  const ventesSurNosVentes = Math.round((meilleur.demande * POINTS_A_GAGNER) / 100);
   return {
     prix,
     coutVariable,
@@ -83,10 +87,7 @@ export const QUEL_SEGMENT_CONQUERIR: Situation = {
     "Rédiger une recommandation chiffrée à la direction commerciale",
   ],
   libre: false,
-  entreprises: {
-    codes: SEGMENTATIONS,
-    pourquoi: "ce cas lit les clientèles d'une entreprise à une seule offre ; dans une gamme, chaque produit a les siennes.",
-  },
+  entreprises: SEGMENTER_ET_CIBLER.entreprises,
   etapes: [
     {
       id: "demande",
@@ -104,7 +105,7 @@ export const QUEL_SEGMENT_CONQUERIR: Situation = {
           lignes: [
             ...r.segments.flatMap((k) => [
               { libelle: `Taille du segment « ${k.nom} » (${c.unites})`, valeurs: [qte(k.taille)] },
-              { libelle: `Ventes ${dE(c.entreprise)} dans « ${k.nom} »`, valeurs: [qte(k.ventes)] },
+              { libelle: `Demande reçue par ${c.entreprise} dans « ${k.nom} »`, valeurs: [qte(k.demande)] },
             ]),
             { libelle: `Prix moyen d'${accord(c, "un")} ${c.unite}, hors taxes`, valeurs: [eur(r.prix)] },
             { libelle: `Coût variable d'${accord(c, "un")} ${c.unite}`, valeurs: [eur(r.coutVariable)] },
@@ -127,7 +128,7 @@ export const QUEL_SEGMENT_CONQUERIR: Situation = {
           libelle: `Part de marché dans « ${k.nom} » (%)`,
           attendu: k.part,
           tolerance: 0.1,
-          calcul: `${qte(k.ventes)} ÷ ${qte(k.taille)} × 100 = ${pct(k.part)}`,
+          calcul: `${qte(k.demande)} ÷ ${qte(k.taille)} × 100 = ${pct(k.part)}`,
         })),
       explication: (c) => {
         const r = segmentAConquerir(c);
@@ -202,7 +203,7 @@ export const QUEL_SEGMENT_CONQUERIR: Situation = {
           {
             texte: `Visons « ${k.nom} » : ${eur(r.margeSurNosVentes)} de marge en plus par trimestre`,
             juste: false,
-            retour: `Non : c'est prendre ${qte(POINTS_A_GAGNER)} % de nos ventes dans le segment (${qte(k.ventes)}), au lieu de ${qte(POINTS_A_GAGNER)} points du segment entier (${qte(k.taille)}). Une part de marché se calcule sur la taille du segment : ${qte(k.ventesEnPlus)} ${c.unites} en plus, ${eur(r.margeEnPlus)} de marge.`,
+            retour: `Non : c'est prendre ${qte(POINTS_A_GAGNER)} % de nos ventes dans le segment (${qte(k.demande)}), au lieu de ${qte(POINTS_A_GAGNER)} points du segment entier (${qte(k.taille)}). Une part de marché se calcule sur la taille du segment : ${qte(k.ventesEnPlus)} ${c.unites} en plus, ${eur(r.margeEnPlus)} de marge.`,
           },
           ...(r.plusForte.code !== k.code
             ? [

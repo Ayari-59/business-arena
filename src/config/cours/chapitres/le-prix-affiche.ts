@@ -1,157 +1,65 @@
-import type { CompanyRoundResult, RoundDecisions } from "../../../engine/types";
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../pedagogy/cours/etats";
-import { scenarioByCode } from "../../scenarios/registry";
-import { type Cas } from "../cas";
-import { anneeJouee } from "../annee-de-l-arene";
-import { rejouerAvec } from "../gestion-de-la-pme";
-import { METIERS } from "../metiers";
+import type { Cas } from "../cas";
+import { BOUTIQUES_DU_COURS, type FicheDeLaBoutique } from "../monde/maille-et-co";
+import {
+  ARTICLE_A_ETIQUETER,
+  REMISES_ESSAYEES,
+  etiquetteDe,
+  etiquettesDuRayon,
+  promotionDeFevrier,
+  remiseQuiGardeLeChiffre,
+  remiseQuiPaieSansRupture,
+  type BilanDeLaPromotion,
+} from "../monde/vente-et-caisse";
 import type { Chapitre, TableauDeDonnees } from "../types";
 
 /**
  * CHAPITRE : LE PRIX AFFICHÉ, HORS TAXES, TOUTES TAXES ET LA PROMOTION (CAP Équipier
  * polyvalent du commerce, palier 1).
  *
- * Le geste de l'équipier devant le rayon : lire le prix hors taxes que l'arène pratique, poser
- * sur l'étiquette le prix toutes taxes que paie le client, puis l'étiquette d'une promotion
- * (l'ancien prix, la remise, le nouveau prix). Et ce que la promotion a fait vendre : l'arène
- * rejoue le trimestre avec le prix de l'article baissé d'autant.
+ * Le geste de l'équipier devant le rayon : lire le prix hors taxes du magasin, poser sur
+ * l'étiquette le prix toutes taxes que paie le client, puis l'étiquette d'une promotion (l'ancien
+ * prix, la remise, le nouveau prix), et voir ce que la promotion fait vendre quand le rayon ne
+ * suit pas. Puis l'expérience : un curseur sur la remise (jusqu'où remiser sans perdre de chiffre
+ * d'affaires ?) et un laboratoire (la remise qui fait vendre plus sans laisser un client sans son
+ * pull).
  *
  * Il ne double ni « Le prix psychologique » (les repères du client, les seuils), ni « La
  * promotion qui paie » (la marge et le volume nécessaire, en BTS MCO), ni « Taux de marque »
- * (la marge commerciale) : ici, pas de marge ni de coût, seulement l'étiquette, au niveau CAP.
+ * (la marge commerciale) : ici, pas de marge ni de coût, seulement l'étiquette et les ventes.
  *
- * LA BOUTIQUE SEULE. C'est la seule entreprise du cours dont l'unité est un article posé en
- * rayon, avec son prix : le commerce en ligne vend des commandes (un panier moyen, pas une
- * étiquette), le restaurant des couverts.
+ * LE CHAPITRE JOUE DANS LE MONDE DU COURS : la boutique MAILLE & CO (monde/maille-et-co.ts), ses
+ * étiquettes rondes (66 € TTC font 55 € HT), la TVA de 20 % des vêtements, et la promotion que la
+ * fiche envisage (10 % sur le pull col rond en février, 700 pulls en rayon, la demande de janvier ;
+ * une remise de 1 % fait demander 3 % de pulls de plus). Les calculs sont dans
+ * monde/vente-et-caisse.ts. HYPOTHÈSES DU COURS : l'arrondi de l'étiquette aux 10 centimes du
+ * dessous, l'écharpe comme article à étiqueter, et les remises du laboratoire de 5 en 5 %.
  *
- * D'où viennent les chiffres. Les prix hors taxes sont ceux que le bon gestionnaire pratique
- * dans l'année du cours (`anneeJouee`, détail par article). L'arène joue hors taxes : la TVA est
- * celle que le cours applique au métier (`METIERS`, 20 % sur les vêtements). La promotion est
- * jouée par le moteur (`rejouerAvec`, clé « le-prix-affiche:… ») : même année, même graine,
- * seul le prix de l'article change, au trimestre de la promotion. La remise, le trimestre et
- * l'arrondi de l'étiquette sont des hypothèses du cours, nommées ci-dessous.
+ * CE QUI A CHANGÉ. Le chapitre rejouait dans l'arène le premier trimestre avec 20 % de remise sur le
+ * pull col rond (52,80 € au lieu de 66 € ; 1 945 pulls au lieu de 1 726, 85 580 € au lieu de
+ * 94 947 €, 938 ventes manquées). Il lit maintenant la promotion de février de la fiche : 10 %, une
+ * étiquette à 59,40 € ; 100 pulls vendus en plus, 1 650 € de chiffre d'affaires en plus, mais 80
+ * clients sans pull.
  */
 
-/** Les entreprises du chapitre : celles qui ont des articles en rayon, avec une étiquette. */
+/** Les entreprises du chapitre : la boutique du cours, où chaque article a son étiquette en rayon. */
 export const ENTREPRISES_DU_MAGASIN = ["boutique"] as const;
 
-/** L'article mis en promotion : le pull le plus vendu de la boutique (hypothèse du cours). */
-export const ARTICLE_EN_PROMOTION = "pull-col-rond";
+/** La remise de la promotion du chapitre : celle que la fiche envisage pour février. */
+export const REMISE_DE_LA_PROMOTION = BOUTIQUES_DU_COURS.boutique!.promotion.remise;
 
-/** L'article dont l'élève vérifie l'étiquette (hypothèse du cours). */
-export const ARTICLE_A_ETIQUETER = "echarpe";
+/** Les remises du laboratoire, de 5 en 5 % (hypothèse du cours : les remises que l'on affiche en magasin). */
+export const PAS_DES_REMISES = 5;
 
-/** La remise de la promotion : 20 % (hypothèse du cours, une remise courante en magasin). */
-export const REMISE_DE_LA_PROMOTION = 0.2;
-
-/**
- * Le trimestre de la promotion : l'hiver, celui des soldes (hypothèse du cours). Les trimestres
- * se comptent comme le moteur les compte, à partir de 1. Tenue par le bon gestionnaire, la
- * boutique commande à la demande : au printemps, le pull finit le trimestre sans réserve, et une
- * promotion n'y ferait rien vendre de plus (comme à Noël, dans le cas). Le premier trimestre est
- * le seul où il reste des pulls en réserve à la fin : c'est là qu'une promotion peut faire vendre.
- */
-export const TRIMESTRE_DE_LA_PROMOTION = 1;
-
-/**
- * L'ARRONDI DE L'ÉTIQUETTE (hypothèse du cours) : un prix affiché se termine par un multiple de
- * 10 centimes. On arrondit toujours vers le bas : le client ne paie jamais plus que le prix
- * calculé, et une remise annoncée de 20 % vaut au moins 20 %.
- */
-export const ARRONDI_DE_L_ETIQUETTE = 0.1;
-
-/** Un montant à la française, avec le signe moins typographique. */
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 /** « de » devant un nom : élidé devant une voyelle. */
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 
-/** Le prix affiché : au centime, puis aux 10 centimes du dessous. */
-export function arrondiDeLEtiquette(x: number): number {
-  const centimes = Math.round(x * 100);
-  const pas = Math.round(ARRONDI_DE_L_ETIQUETTE * 100);
-  return Math.floor(centimes / pas + 1e-9) * pas / 100;
-}
+export const ficheDe = (c: Pick<Cas, "code">): FicheDeLaBoutique => BOUTIQUES_DU_COURS[c.code]!;
 
-export interface Etiquette {
-  code: string;
-  nom: string;
-  ht: number;
-  tva: number;
-  /** Le prix toutes taxes, au centime. */
-  ttc: number;
-  /** Le prix posé sur l'étiquette, arrondi. */
-  affiche: number;
-}
-
-/** Les ventes d'un article à un trimestre ; zéro si l'entreprise a fait défaillance avant. */
-export function ventesDeLArticle(annee: readonly CompanyRoundResult[], trimestre: number, article: string) {
-  // Une entreprise défaillante ne vend plus les trimestres suivants : on tranche d'abord.
-  if (annee.slice(0, trimestre - 1).some((r) => r.defaillant)) return { vendus: 0, chiffreDAffaires: 0, manques: 0 };
-  const p = annee[trimestre - 1]!.products?.[article];
-  if (!p) throw new Error(`Pas d'article ${article} au trimestre ${trimestre}`);
-  return { vendus: Math.round(p.sold), chiffreDAffaires: Math.round(p.revenue), manques: Math.round(p.lost) };
-}
-
-/** Les étiquettes du rayon : le prix hors taxes de l'arène, la TVA du métier, le prix affiché. */
-export function etiquettesDuRayon(c: Cas, trimestre = 1): Etiquette[] {
-  const s = scenarioByCode(c.code).scenario;
-  const r = anneeJouee(c.code).partie.rounds[trimestre - 1]!.results["joueur"]!;
-  const taux = METIERS[c.code]!.vente.tauxTva;
-  return (s.products ?? []).map((p) => {
-    const ht = auCentime(r.products![p.code]!.price);
-    const tva = auCentime(ht * taux);
-    const ttc = auCentime(ht + tva);
-    return { code: p.code, nom: p.name, ht, tva, ttc, affiche: arrondiDeLEtiquette(ttc) };
-  });
-}
-
-/** Le trimestre de la promotion rejoué : seul le prix de l'article change. */
-export function anneeAvecLaPromotion(code: string, article: string, trimestre: number, prixHt: number, cle: string) {
-  return rejouerAvec(code, `le-prix-affiche:${cle}`, (t, d): RoundDecisions | undefined => {
-    if (t !== trimestre) return undefined;
-    if (!d.products?.[article]) throw new Error(`Pas de décision pour l'article ${article}`);
-    return { ...d, products: { ...d.products, [article]: { ...d.products[article]!, price: prixHt } } };
-  });
-}
-
-export type BilanDeLaPromotion = "plus-et-plus" | "plus-mais-moins" | "rien-de-plus";
-
-/** Une promotion : l'étiquette, puis ce que l'arène a vendu avec et sans elle. */
-export function promotionDuRayon(c: Cas, remise: number, trimestre: number, cle: string) {
-  const taux = METIERS[c.code]!.vente.tauxTva;
-  const article = etiquettesDuRayon(c, trimestre).find((e) => e.code === ARTICLE_EN_PROMOTION)!;
-  const montantDeLaRemise = auCentime(article.affiche * remise);
-  const calcule = auCentime(article.affiche - montantDeLaRemise);
-  const nouveauPrix = arrondiDeLEtiquette(calcule);
-  // L'arène joue hors taxes : le prix de la promotion, sans la TVA que le cours y ajoute.
-  const prixHtPromo = nouveauPrix / (1 + taux);
-  const sans = ventesDeLArticle(rejouerAvec(c.code, "reference", () => undefined), trimestre, ARTICLE_EN_PROMOTION);
-  const avec = ventesDeLArticle(anneeAvecLaPromotion(c.code, ARTICLE_EN_PROMOTION, trimestre, prixHtPromo, cle), trimestre, ARTICLE_EN_PROMOTION);
-  const ventesEnPlus = avec.vendus - sans.vendus;
-  const chiffreEnPlus = avec.chiffreDAffaires - sans.chiffreDAffaires;
-  const bilan: BilanDeLaPromotion = ventesEnPlus <= 0 ? "rien-de-plus" : chiffreEnPlus > 0 ? "plus-et-plus" : "plus-mais-moins";
-  return {
-    taux,
-    remise,
-    trimestre,
-    article,
-    montantDeLaRemise,
-    calcule,
-    nouveauPrix,
-    arrondi: auCentime(calcule - nouveauPrix) > 0,
-    prixHtPromo: auCentime(prixHtPromo),
-    sans,
-    avec,
-    ventesEnPlus,
-    chiffreEnPlus,
-    bilan,
-  };
-}
-
-/** Ce que la promotion a fait, en une phrase : « 219 articles vendus en plus, et un chiffre d'affaires qui baisse de 9 367 € ». */
+/** Ce que la promotion a fait, en une phrase : « 100 articles vendus en plus, et un chiffre d'affaires qui monte de 1 650 € ». */
 export function faitsDeLaPromotion(p: { ventesEnPlus: number; chiffreEnPlus: number }): string {
   const ventes =
     p.ventesEnPlus > 0
@@ -168,24 +76,14 @@ export function faitsDeLaPromotion(p: { ventesEnPlus: number; chiffreEnPlus: num
   return `${ventes}, et ${chiffre}`;
 }
 
-/** La promotion du chapitre : 20 % sur le pull le plus vendu, aux soldes d'hiver. */
-export const promotionDuChapitre = (c: Cas) => promotionDuRayon(c, REMISE_DE_LA_PROMOTION, TRIMESTRE_DE_LA_PROMOTION, "promotion-des-soldes-d-hiver");
-
-export function tableauDesEtiquettes(c: Cas): TableauDeDonnees {
+/** Le tableau d'une promotion : le prix, la demande, les ventes, le chiffre d'affaires et les ventes manquées, avec et sans. */
+export function tableauDUnePromotion(titre: string, p: ReturnType<typeof promotionDeFevrier>): TableauDeDonnees {
   return {
-    titre: `Les prix hors taxes des articles ${dE(c.entreprise)}`,
-    colonnes: ["Prix hors taxes"],
-    lignes: etiquettesDuRayon(c).map((e) => ({ libelle: e.nom, valeurs: [eur(e.ht)] })),
-  };
-}
-
-export function tableauDeLaPromotion(c: Cas): TableauDeDonnees {
-  const p = promotionDuChapitre(c);
-  return {
-    titre: `L'article « ${p.article.nom} » au trimestre ${p.trimestre}, rejoué par l'arène`,
+    titre,
     colonnes: ["Sans la promotion", "Avec la promotion"],
     lignes: [
       { libelle: "Prix affiché", valeurs: [eur(p.article.affiche), eur(p.nouveauPrix)] },
+      { libelle: "Articles demandés par les clients", valeurs: [qte(p.sans.demande), qte(p.avec.demande)] },
       { libelle: "Articles vendus", valeurs: [qte(p.sans.vendus), qte(p.avec.vendus)] },
       { libelle: "Chiffre d'affaires hors taxes", valeurs: [eur(p.sans.chiffreDAffaires), eur(p.avec.chiffreDAffaires)] },
       { libelle: "Ventes manquées (rayon vide)", valeurs: [qte(p.sans.manques), qte(p.avec.manques)] },
@@ -193,8 +91,26 @@ export function tableauDeLaPromotion(c: Cas): TableauDeDonnees {
   };
 }
 
-const ARTICLE = (c: Cas) => etiquettesDuRayon(c).find((e) => e.code === ARTICLE_EN_PROMOTION)!;
-const ECHARPE = (c: Cas) => etiquettesDuRayon(c).find((e) => e.code === ARTICLE_A_ETIQUETER)!;
+const promo = (c: Cas) => promotionDeFevrier(ficheDe(c));
+const ARTICLE = (c: Cas) => promo(c).article;
+const ECHARPE = (c: Cas) => etiquetteDe(ficheDe(c), ARTICLE_A_ETIQUETER);
+
+export function tableauDesEtiquettes(c: Cas): TableauDeDonnees {
+  return {
+    titre: `Les prix hors taxes des articles ${dE(c.entreprise)}`,
+    colonnes: ["Prix hors taxes"],
+    lignes: etiquettesDuRayon(ficheDe(c)).map((e) => ({ libelle: e.nom, valeurs: [eur(e.ht)] })),
+  };
+}
+
+const tableauDeLaPromotion = (c: Cas) => tableauDUnePromotion(`L'article « ${ARTICLE(c).nom} » en ${ficheDe(c).promotion.mois}`, promo(c));
+
+/** Le mois à une remise donnée, en % entier, au stock en rayon de la fiche. */
+const aLaRemise = (c: Cas, remise: number) => promotionDeFevrier(ficheDe(c), remise / 100);
+
+/** La remise du laboratoire qui relève le défi, sur les crans du levier. */
+export const remiseDuLaboratoire = (f: FicheDeLaBoutique) =>
+  Array.from({ length: REMISES_ESSAYEES.max / PAS_DES_REMISES + 1 }, (_, i) => i * PAS_DES_REMISES).filter((r) => remiseQuiPaieSansRupture(f, r / 100));
 
 export const LE_PRIX_AFFICHE: Chapitre = {
   code: "le-prix-affiche",
@@ -203,17 +119,18 @@ export const LE_PRIX_AFFICHE: Chapitre = {
   blocs: ["CAP EPC · Bloc 2 · Mettre en valeur et approvisionner"],
   titre: "Le prix affiché : hors taxes, toutes taxes et la promotion",
   accroche:
-    "Le magasin achète et vend hors taxes. Le client, lui, lit sur l'étiquette le prix toutes taxes. Poser le bon prix, puis l'étiquette d'une promotion, et voir ce qu'elle fait vendre.",
+    "Le magasin achète et vend hors taxes. Le client, lui, lit sur l'étiquette le prix toutes taxes. Poser le bon prix, puis l'étiquette d'une promotion, et voir ce qu'elle fait vendre quand le rayon suit, ou ne suit pas.",
   objectifs: [
     "Passer du prix hors taxes au prix toutes taxes",
     "Vérifier une étiquette",
     "Calculer une remise et le nouveau prix affiché",
     "Dire ce qu'une promotion a fait vendre",
+    "Choisir une remise que le rayon peut servir",
   ],
   libre: false,
   entreprises: {
     codes: ENTREPRISES_DU_MAGASIN,
-    pourquoi: "ce chapitre pose les étiquettes d'un magasin, où chaque article a son prix en rayon.",
+    pourquoi: "ce chapitre pose les étiquettes de la boutique du cours, MAILLE & CO, où chaque article a son prix en rayon.",
   },
   etapes: [
     {
@@ -223,14 +140,14 @@ export const LE_PRIX_AFFICHE: Chapitre = {
       notions: ["vat_payable"],
       tableau: tableauDesEtiquettes,
       texte: (c) => {
-        const taux = METIERS[c.code]!.vente.tauxTva;
+        const a = ARTICLE(c);
         return [
-          `${c.entreprise} est une boutique de pulls. Dans l'arène, elle fixe ses prix hors taxes (HT) : c'est ce que le magasin garde.`,
-          `Le client paie en plus une taxe, la TVA. Sur les vêtements, elle est de ${pct(taux)} du prix hors taxes. L'État la reçoit, pas le magasin.`,
+          `${c.entreprise} est une boutique de pulls. Elle fixe ses prix hors taxes (HT) : c'est ce que le magasin garde.`,
+          `Le client paie en plus une taxe, la TVA. Sur les vêtements, elle est de ${pct(a.taux)} du prix hors taxes. L'État la reçoit, pas le magasin.`,
           "L'étiquette montre toujours le prix toutes taxes comprises (TTC) : le prix que le client paie en caisse.",
         ];
       },
-      repere: (c) => `TVA = prix HT × ${pct(METIERS[c.code]!.vente.tauxTva)}. Prix TTC = prix HT + TVA.`,
+      repere: (c) => `TVA = prix HT × ${pct(ARTICLE(c).taux)}. Prix TTC = prix HT + TVA.`,
     },
     {
       id: "prix-ttc",
@@ -239,13 +156,12 @@ export const LE_PRIX_AFFICHE: Chapitre = {
       notions: ["vat_payable"],
       question: (c) => {
         const a = ARTICLE(c);
-        return `L'article « ${a.nom} » se vend ${eur(a.ht)} hors taxes. Calculez la TVA (${pct(METIERS[c.code]!.vente.tauxTva)} du prix HT), puis le prix TTC.`;
+        return `L'article « ${a.nom} » se vend ${eur(a.ht)} hors taxes. Calculez la TVA (${pct(a.taux)} du prix HT), puis le prix TTC.`;
       },
       champs: (c) => {
         const a = ARTICLE(c);
-        const taux = METIERS[c.code]!.vente.tauxTva;
         return [
-          { libelle: `TVA sur l'article « ${a.nom} »`, attendu: a.tva, calcul: `${eur(a.ht)} × ${pct(taux)} = ${eur(a.tva)}` },
+          { libelle: `TVA sur l'article « ${a.nom} »`, attendu: a.tva, calcul: `${eur(a.ht)} × ${pct(a.taux)} = ${eur(a.tva)}` },
           { libelle: `Prix TTC de l'article « ${a.nom} »`, attendu: a.ttc, calcul: `${eur(a.ht)} + ${eur(a.tva)} = ${eur(a.ttc)}` },
         ];
       },
@@ -267,30 +183,13 @@ export const LE_PRIX_AFFICHE: Chapitre = {
       question: (c) => `Vous posez les étiquettes du rayon. Quel prix doit afficher l'article « ${ECHARPE(c).nom} » ?`,
       options: (c) => {
         const e = ECHARPE(c);
-        const taux = METIERS[c.code]!.vente.tauxTva;
-        const sansTva = auCentime(e.ht - e.tva);
-        const plusLeTaux = auCentime(e.ht + taux * 100);
+        const sansTva = e.ht - e.tva;
+        const plusLeTaux = e.ht + e.taux * 100;
         return [
-          {
-            texte: eur(e.affiche),
-            juste: true,
-            retour: `Oui : ${eur(e.ht)} + ${eur(e.tva)} de TVA = ${eur(e.ttc)}. C'est le prix que le client paie.`,
-          },
-          {
-            texte: eur(e.ht),
-            juste: false,
-            retour: `Non : ${eur(e.ht)}, c'est le prix hors taxes. Il manque la TVA, ${eur(e.tva)}.`,
-          },
-          {
-            texte: eur(sansTva),
-            juste: false,
-            retour: `Non : la TVA a été retirée au lieu d'être ajoutée. ${eur(e.ht)} + ${eur(e.tva)} = ${eur(e.ttc)}.`,
-          },
-          {
-            texte: eur(plusLeTaux),
-            juste: false,
-            retour: `Non : on a ajouté ${eur(taux * 100)}. La TVA est ${pct(taux)} du prix, soit ${eur(e.tva)}.`,
-          },
+          { texte: eur(e.affiche), juste: true, retour: `Oui : ${eur(e.ht)} + ${eur(e.tva)} de TVA = ${eur(e.ttc)}. C'est le prix que le client paie.` },
+          { texte: eur(e.ht), juste: false, retour: `Non : ${eur(e.ht)}, c'est le prix hors taxes. Il manque la TVA, ${eur(e.tva)}.` },
+          { texte: eur(sansTva), juste: false, retour: `Non : la TVA a été retirée au lieu d'être ajoutée. ${eur(e.ht)} + ${eur(e.tva)} = ${eur(e.ttc)}.` },
+          { texte: eur(plusLeTaux), juste: false, retour: `Non : on a ajouté ${eur(e.taux * 100)}. La TVA est ${pct(e.taux)} du prix, soit ${eur(e.tva)}.` },
         ];
       },
     },
@@ -300,11 +199,11 @@ export const LE_PRIX_AFFICHE: Chapitre = {
       titre: "La remise de la promotion",
       notions: ["markdown"],
       question: (c) => {
-        const p = promotionDuChapitre(c);
-        return `Au trimestre ${p.trimestre}, la boutique fait une promotion : ${pct(p.remise)} sur l'article « ${p.article.nom} », affiché ${eur(p.article.affiche)}. Calculez le montant de la remise, puis le nouveau prix affiché (arrondi aux 10 centimes du dessous s'il le faut).`;
+        const p = promo(c);
+        return `En ${ficheDe(c).promotion.mois}, la boutique fait une promotion : ${pct(p.remise)} sur l'article « ${p.article.nom} », affiché ${eur(p.article.affiche)}. Calculez le montant de la remise, puis le nouveau prix affiché (arrondi aux 10 centimes du dessous s'il le faut).`;
       },
       champs: (c) => {
-        const p = promotionDuChapitre(c);
+        const p = promo(c);
         return [
           { libelle: "Montant de la remise", attendu: p.montantDeLaRemise, calcul: `${eur(p.article.affiche)} × ${pct(p.remise)} = ${eur(p.montantDeLaRemise)}` },
           {
@@ -317,10 +216,10 @@ export const LE_PRIX_AFFICHE: Chapitre = {
         ];
       },
       explication: (c) => {
-        const p = promotionDuChapitre(c);
+        const p = promo(c);
         return [
           `Le client paie ${eur(p.nouveauPrix)} au lieu de ${eur(p.article.affiche)}. ${p.arrondi ? "Le prix a été arrondi vers le bas : la remise reste au moins celle annoncée." : "Le prix tombe juste : pas d'arrondi."}`,
-          `Sans la TVA, le magasin vend l'article ${eur(p.prixHtPromo)} au lieu de ${eur(p.article.ht)} : c'est ce prix que l'arène joue.`,
+          `Sans la TVA, le magasin vend l'article ${eur(p.prixHtPromo)} au lieu de ${eur(p.article.ht)} : c'est ce prix qui compte dans son chiffre d'affaires.`,
         ];
       },
     },
@@ -329,12 +228,9 @@ export const LE_PRIX_AFFICHE: Chapitre = {
       type: "choix",
       titre: "L'étiquette de la promotion",
       notions: ["markdown"],
-      question: (c) => {
-        const p = promotionDuChapitre(c);
-        return `Vous changez l'étiquette de l'article « ${p.article.nom} » pour la promotion. Que doit-elle montrer ?`;
-      },
+      question: (c) => `Vous changez l'étiquette de l'article « ${ARTICLE(c).nom} » pour la promotion. Que doit-elle montrer ?`,
       options: (c) => {
-        const p = promotionDuChapitre(c);
+        const p = promo(c);
         return [
           {
             texte: "L'ancien prix barré, la remise et le nouveau prix",
@@ -357,32 +253,27 @@ export const LE_PRIX_AFFICHE: Chapitre = {
     {
       id: "ce-que-la-promotion-vend",
       type: "montants",
-      titre: "Ce que la promotion a fait vendre",
+      titre: "Ce que la promotion fait vendre",
       notions: ["markdown", "revenue", "stock"],
       tableau: tableauDeLaPromotion,
-      question: () =>
-        "L'arène a rejoué le trimestre avec la promotion. Seul ce prix a changé. D'après le tableau, calculez les articles vendus en plus, puis le chiffre d'affaires hors taxes en plus (négatif s'il baisse).",
+      question: (c) => {
+        const p = promo(c);
+        return `Le tableau compare le mois avec et sans la promotion, avec ${qte(p.stockEnRayon)} pulls en rayon et en réserve. Calculez les articles vendus en plus, puis le chiffre d'affaires hors taxes en plus (négatif s'il baisse).`;
+      },
       champs: (c) => {
-        const p = promotionDuChapitre(c);
+        const p = promo(c);
         return [
           { libelle: "Articles vendus en plus", attendu: p.ventesEnPlus, calcul: `${qte(p.avec.vendus)} − ${qte(p.sans.vendus)} = ${qte(p.ventesEnPlus)}` },
-          {
-            libelle: "Chiffre d'affaires en plus",
-            attendu: p.chiffreEnPlus,
-            calcul: `${eur(p.avec.chiffreDAffaires)} − ${eur(p.sans.chiffreDAffaires)} = ${eur(p.chiffreEnPlus)}`,
-            tolerance: 1,
-          },
+          { libelle: "Chiffre d'affaires en plus", attendu: p.chiffreEnPlus, calcul: `${eur(p.avec.chiffreDAffaires)} − ${eur(p.sans.chiffreDAffaires)} = ${eur(p.chiffreEnPlus)}` },
         ];
       },
       explication: (c) => {
-        const p = promotionDuChapitre(c);
+        const p = promo(c);
         return [
-          p.ventesEnPlus > 0
-            ? `La promotion a fait vendre ${qte(p.ventesEnPlus)} articles de plus.`
-            : "La promotion n'a fait vendre aucun article de plus.",
-          p.avec.manques > p.sans.manques
-            ? `Mais ${qte(p.avec.manques)} articles n'ont pas pu être vendus : le rayon était vide. Une promotion se prépare avec la réserve.`
-            : "Le rayon a suivi : aucune vente de plus n'a été manquée.",
+          p.ventesEnPlus > 0 ? `La promotion fait vendre ${qte(p.ventesEnPlus)} articles de plus.` : "La promotion ne fait vendre aucun article de plus.",
+          p.avec.manques > 0
+            ? `Mais ${qte(p.avec.demande)} pulls sont demandés, et le rayon n'en a que ${qte(p.stockEnRayon)} : ${qte(p.avec.manques)} clients repartent sans leur pull. Une promotion se prépare avec la réserve.`
+            : "Le rayon suit : aucun client ne repart sans son pull.",
         ];
       },
     },
@@ -392,28 +283,106 @@ export const LE_PRIX_AFFICHE: Chapitre = {
       titre: "Le bilan de la promotion",
       notions: ["markdown", "revenue"],
       question: (c) => {
-        const p = promotionDuChapitre(c);
+        const p = promo(c);
         return `Avec la promotion, la boutique vend ${qte(p.avec.vendus)} articles « ${p.article.nom} » au lieu de ${qte(p.sans.vendus)}, pour ${eur(p.avec.chiffreDAffaires)} au lieu de ${eur(p.sans.chiffreDAffaires)}. Que dire de la promotion ?`;
       },
       options: (c) => {
-        const p = promotionDuChapitre(c);
+        const p = promo(c);
         const faits = `${faitsDeLaPromotion(p)}.`;
+        const option = (b: BilanDeLaPromotion, texte: string, oui: string) => ({ texte, juste: p.bilan === b, retour: p.bilan === b ? `Oui : ${faits} ${oui}` : `Non : ${faits}` });
         return [
-          {
-            texte: "Elle fait vendre plus, et le chiffre d'affaires monte",
-            juste: p.bilan === "plus-et-plus",
-            retour: p.bilan === "plus-et-plus" ? `Oui : ${faits} Le prix baisse, mais les ventes montent plus vite.` : `Non : ${faits}`,
-          },
-          {
-            texte: "Elle fait vendre plus, mais le chiffre d'affaires baisse",
-            juste: p.bilan === "plus-mais-moins",
-            retour: p.bilan === "plus-mais-moins" ? `Oui : ${faits} Les ventes en plus ne paient pas la baisse du prix.` : `Non : ${faits}`,
-          },
-          {
-            texte: "Elle ne fait vendre aucun article de plus",
-            juste: p.bilan === "rien-de-plus",
-            retour: p.bilan === "rien-de-plus" ? `Oui : ${faits} Le rayon ne pouvait pas vendre plus.` : `Non : ${faits}`,
-          },
+          option("plus-et-plus", "Elle fait vendre plus, et le chiffre d'affaires monte", "Le prix baisse, mais les ventes montent plus vite."),
+          option("plus-mais-moins", "Elle fait vendre plus, mais le chiffre d'affaires baisse", "Les ventes en plus ne paient pas la baisse du prix."),
+          option("rien-de-plus", "Elle ne fait vendre aucun article de plus", "Le rayon ne pouvait pas vendre plus."),
+        ];
+      },
+    },
+    {
+      id: "jusqu-ou-remiser",
+      type: "curseur",
+      titre: "Jusqu'où remiser ?",
+      notions: ["markdown", "revenue"],
+      question: (c) => {
+        const p = promo(c);
+        return `Faites varier la remise sur l'article « ${p.article.nom} », toujours avec ${qte(p.stockEnRayon)} pulls en rayon. Une courbe donne le chiffre d'affaires du mois avec la remise, l'autre le chiffre d'affaires sans promotion, ${eur(p.sans.chiffreDAffaires)}. Placez le curseur sur la plus forte remise qui garde au moins ce chiffre d'affaires, puis validez.`;
+      },
+      grandeur: () => ({ libelle: "Remise sur l'étiquette", unite: "%" }),
+      sens: "plus-grande",
+      cible: (c) => ({ attendu: remiseQuiGardeLeChiffre(ficheDe(c)), min: REMISES_ESSAYEES.min, max: REMISES_ESSAYEES.max }),
+      zones: ["La promotion garde le chiffre d'affaires", "La promotion fait baisser le chiffre d'affaires"],
+      rates: () => ({
+        dessous: "À cette remise, le chiffre d'affaires tombe sous celui du mois sans promotion : remisez moins.",
+        dessus: "Le chiffre d'affaires tient encore : vous pouvez remiser davantage. Cherchez la plus forte remise.",
+      }),
+      montrer: "Montrer la remise",
+      lecture: (c, q) => {
+        const p = aLaRemise(c, q);
+        return [
+          { libelle: "Pulls demandés", montant: p.avec.demande },
+          { libelle: "Pulls vendus", montant: p.avec.vendus },
+          { libelle: "Chiffre d'affaires hors taxes, sans promotion", montant: p.sans.chiffreDAffaires },
+          { libelle: "Chiffre d'affaires hors taxes, avec la remise", montant: p.avec.chiffreDAffaires, fort: true },
+        ];
+      },
+      droites: (c) => ({
+        produit: (q) => aLaRemise(c, q).avec.chiffreDAffaires,
+        cout: () => aLaRemise(c, 0).sans.chiffreDAffaires,
+        libelles: ["Chiffre d'affaires avec la remise", "Chiffre d'affaires sans promotion"],
+      }),
+      explication: (c) => {
+        const q = remiseQuiGardeLeChiffre(ficheDe(c));
+        const p = aLaRemise(c, q);
+        return [
+          `Jusqu'à ${qte(q)} %, la promotion garde le chiffre d'affaires : à ${qte(q)} %, ${qte(p.avec.vendus)} pulls à ${eur(p.prixHtPromo)} hors taxes font ${eur(p.avec.chiffreDAffaires)}. Au-delà, le rayon est vide : la remise ne fait plus vendre un pull de plus, elle ne fait que baisser le prix.`,
+          "Une petite remise attire des clients ; une grosse remise, sans réserve pour la servir, fait seulement perdre de l'argent sur chaque pull vendu.",
+        ];
+      },
+    },
+    {
+      id: "le-laboratoire-de-la-remise",
+      type: "simulation",
+      titre: "Le laboratoire de la remise",
+      notions: ["markdown", "stock"],
+      question: (c) => {
+        const p = promo(c);
+        return `La responsable hésite sur la remise de ${ficheDe(c).promotion.mois}. Faites-la varier : la demande, les ventes, les clients sans pull et le chiffre d'affaires se refont, avec les ${qte(p.stockEnRayon)} pulls du rayon. Relevez le défi.`;
+      },
+      leviers: (c) => [
+        { code: "remise", libelle: `Remise sur l'article « ${ARTICLE(c).nom} »`, unite: "%", min: REMISES_ESSAYEES.min, max: REMISES_ESSAYEES.max, pas: PAS_DES_REMISES, depart: Math.round(REMISE_DE_LA_PROMOTION * 100) },
+      ],
+      lecture: (c, p) => {
+        const x = aLaRemise(c, p.remise!);
+        return [
+          { libelle: "Nouveau prix affiché", montant: x.nouveauPrix, reference: x.article.affiche },
+          { libelle: "Pulls demandés", montant: x.avec.demande, unite: "pulls", reference: x.sans.demande },
+          { libelle: "Pulls vendus", montant: x.avec.vendus, unite: "pulls", reference: x.sans.vendus },
+          { libelle: "Clients repartis sans leur pull", montant: x.avec.manques, unite: "clients", reference: 0 },
+          { libelle: "Chiffre d'affaires hors taxes", montant: x.avec.chiffreDAffaires, reference: x.sans.chiffreDAffaires, fort: true },
+        ];
+      },
+      graphique: (c) => ({
+        levier: "remise",
+        courbes: [
+          { libelle: "Pulls demandés", valeur: (p) => aLaRemise(c, p.remise!).avec.demande },
+          { libelle: "Pulls vendus", valeur: (p) => aLaRemise(c, p.remise!).avec.vendus },
+        ],
+        unite: "pulls",
+      }),
+      defi: (c) => ({
+        consigne: "Trouvez la remise qui fait monter le chiffre d'affaires au-dessus du mois sans promotion, sans qu'aucun client reparte sans son pull.",
+        atteint: (p) => remiseQuiPaieSansRupture(ficheDe(c), p.remise! / 100),
+        indice: (p) => {
+          const x = aLaRemise(c, p.remise!);
+          if (x.avec.manques > 0) return `${qte(x.avec.manques)} clients repartent sans leur pull : le rayon n'en a que ${qte(x.stockEnRayon)}. Une remise plus petite attire moins de monde.`;
+          return `Aucun client ne manque son pull, mais le chiffre d'affaires (${eur(x.avec.chiffreDAffaires)}) ne dépasse pas celui du mois sans promotion. Une petite remise peut faire mieux.`;
+        },
+        solution: { remise: remiseDuLaboratoire(ficheDe(c))[0] ?? REMISES_ESSAYEES.min },
+      }),
+      explication: (c, p) => {
+        const x = aLaRemise(c, p.remise!);
+        return [
+          `Défi relevé : à ${qte(p.remise!)} %, ${qte(x.avec.demande)} pulls sont demandés et le rayon en a ${qte(x.stockEnRayon)}. Tous les clients sont servis, et le chiffre d'affaires monte à ${eur(x.avec.chiffreDAffaires)}, contre ${eur(x.sans.chiffreDAffaires)} sans promotion.`,
+          "La bonne remise n'est pas la plus forte : c'est celle que le rayon peut servir. Avant de poser l'étiquette d'une promotion, l'équipier regarde la réserve.",
         ];
       },
     },
@@ -423,10 +392,10 @@ export const LE_PRIX_AFFICHE: Chapitre = {
       titre: "Ce qu'il faut retenir",
       notions: ["vat_payable", "markdown"],
       texte: (c) => {
-        const p = promotionDuChapitre(c);
+        const p = promo(c);
         return [
           `L'article « ${p.article.nom} » se vend ${eur(p.article.ht)} hors taxes. Avec la TVA, l'étiquette affiche ${eur(p.article.affiche)}. En promotion, ${eur(p.nouveauPrix)}.`,
-          "Avant de poser une étiquette, l'équipier vérifie le prix TTC. Pour une promotion, il montre l'ancien prix barré et vérifie que la réserve peut remplir le rayon.",
+          "Avant de poser une étiquette, l'équipier vérifie le prix TTC. Pour une promotion, il montre l'ancien prix barré et vérifie que la réserve peut remplir le rayon. Dans l'arène, les chiffres de votre entreprise seront différents : le calcul de l'étiquette sera le même.",
         ];
       },
       repere: () => "Prix TTC = prix HT + TVA. Remise = prix affiché × taux de remise. Nouveau prix = prix affiché − remise.",

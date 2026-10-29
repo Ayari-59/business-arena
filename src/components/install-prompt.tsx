@@ -1,6 +1,7 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+// Le chemin normalisé : `/index` (régénération de l'accueil sur Vercel) vaut `/`.
+import { useCheminDeLaPage } from "@/lib/chemin-de-la-page";
 import { bouton } from "@/components/bouton";
 import { useEffect, useRef, useState } from "react";
 import { unePartieAEteJouee } from "@/lib/partie-jouee";
@@ -75,7 +76,7 @@ export function InstallPrompt() {
   const [visible, setVisible] = useState(false);
   const [canPrompt, setCanPrompt] = useState(false);
   const [isIos, setIsIos] = useState(false);
-  const chemin = usePathname();
+  const chemin = useCheminDeLaPage();
   // LOT P2 : /jouer garde le bas de l'écran pour son résumé collant (« NOVA ·
   // Niveau 3 · Lancer la partie ») ; l'invitation s'y posait par-dessus le
   // bouton de lancement. Elle s'y tait, comme dans une partie.

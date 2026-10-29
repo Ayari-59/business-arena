@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 20 — LE CLIENT QUI S'EN VA, tel que l'interface et le bilan le lisent.
+ * LE CLIENT QUI S'EN VA, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord d'Arthur montre, ce que la courbe
@@ -175,7 +175,7 @@ export function axe([
   };
 }
 
-const MALIK = { de: "Lamine Ndiaye", role: "Commercial terrain" } as const;
+const LAMINE = { de: "Lamine Ndiaye", role: "Commercial terrain" } as const;
 const GREGORY = { de: "Grégory Tavares", role: "Chef des ventes" } as const;
 
 export const EPISODE_FIDELISATION: Episode<Trimestre> = {
@@ -221,7 +221,7 @@ export const EPISODE_FIDELISATION: Episode<Trimestre> = {
   prevision: {
     libelle: "le nombre d'artisans actifs en fin de semaine 3",
     unite: "artisans",
-    placeholder: "910",
+    placeholder: "920",
     min: 700,
     max: 1100,
     step: 1,
@@ -328,7 +328,7 @@ export const EPISODE_FIDELISATION: Episode<Trimestre> = {
     const lies: Message[] = [];
     if (arrive.kayaPart || arrive.kayaReste) {
       lies.push({
-        ...MALIK,
+        ...LAMINE,
         heure: "sem. 7",
         alerte: arrive.kayaPart,
         texte: kayaPart(chemin, graine) ? REPONSES.kayaPart : REPONSES.kayaReste,
@@ -342,7 +342,7 @@ export const EPISODE_FIDELISATION: Episode<Trimestre> = {
           : t.semaines[8]!.retours,
       );
       lies.push({
-        ...(chemin[D.reconquete] === 0 ? GREGORY : MALIK),
+        ...(chemin[D.reconquete] === 0 ? GREGORY : LAMINE),
         heure: "sem. 8",
         texte:
           chemin[D.reconquete] === 0

@@ -254,13 +254,8 @@ describe("le bilan fonctionnel, sur l'exercice de NOVA du monde du cours", () =>
     expect([dotation, stock, fnp.ht, fnp.tva, depreciation, cca, fae.ttc, pca, icne, interetsDuPlacement]).toEqual([9_861.11, 13_500, 34_500, 6_900, 11_210, 4_500, 14_160, 7_080, 831.11, 3_934.58]);
     expect([impot, resultatNet]).toEqual([20_742, 79_225.96]);
     expect([ressourcesStables, frng]).toEqual([323_297.07, 263_297.07]);
-    expect([actifDExploitation, passifDExploitation, bfre]).toEqual([118_002, 108_457.27, 9_544.73]);
-    // Le besoin en fonds de roulement devient négatif : une ressource.
-    expect([bfrhe, bfr, tn]).toEqual([-21_573.11, -12_028.38, 275_325.45]);
-    expect(bfr).toBeLessThan(0);
-    // CampusTech paie à 60 jours : au 31 décembre, deux factures restent dues (2 × 22 656 €), et Sonora (33 630 €).
-    expect(balance("411")).toBe(2 * 22_656 + 33_630);
-    expect(banque).toBe(138_390.87);
+    expect([actifDExploitation, passifDExploitation, bfre]).toEqual([140_658, 108_457.27, 32_200.73]);
+    expect([bfrhe, bfr, tn]).toEqual([-21_573.11, 10_627.62, 252_669.45]);
     expect(centime(frng - bfr)).toBe(tn);
     // Le modèle et la main retombent sur la clôture figée de la fiche.
     expect(CLOTURE_DE_LA_FICHE.fonctionnel).toEqual({
@@ -337,11 +332,8 @@ describe("le bilan fonctionnel, sur l'exercice de NOVA du monde du cours", () =>
     const caf = centime(resultatNet + dotation + depreciation + provision);
     expect(caf).toBe(CLOTURE_DE_LA_FICHE.capaciteDAutofinancement);
     expect(centime(caf - 3 * 4_000)).toBe(centime(frng - frng0));
-    expect([centime(frng - frng0), centime(bfr - bfr0), centime(tn - tn0)]).toEqual([93_297.07, -24_028.38, 117_325.45]);
+    expect([centime(frng - frng0), centime(bfr - bfr0), centime(tn - tn0)]).toEqual([93_297.07, -1_372.38, 94_669.45]);
     expect(juste(ch, "predire-la-variation")).toBe("De plus que le résultat net");
-    // Le besoin négatif est dit à l'élève : une ressource.
-    const hors = ch.etapes.find((e) => e.id === "hors-exploitation-et-tresorerie") as EtapeMontants;
-    expect(hors.explication(cas, etatVide).join(" ")).toContain(`Le besoin en fonds de roulement est négatif, ${eur(bfr)} : `);
     expect(centime(tn - tn0)).toBeGreaterThan(resultatNet);
   });
 
@@ -350,7 +342,7 @@ describe("le bilan fonctionnel, sur l'exercice de NOVA du monde du cours", () =>
     const unJour = particuliersTtc / 360;
     expect(centime(unJour)).toBe(3_695.17);
     const delai = Math.floor(tn / unJour);
-    expect(delai).toBe(74);
+    expect(delai).toBe(68);
     expect(curseur(ch, "la-place-de-marche")).toEqual({
       attendu: delai,
       bornes: [0, 120],
@@ -363,11 +355,11 @@ describe("le bilan fonctionnel, sur l'exercice de NOVA du monde du cours", () =>
         "Dont le compte courant, hors compte à terme": centime(banque - delai * unJour),
       },
     });
-    expect(centime(tn - delai * unJour)).toBe(1_882.87);
-    // La position voisine : à 75 jours, la trésorerie nette passe sous zéro.
-    expect(tn - 75 * unJour).toBeLessThan(0);
-    // Le compte courant, lui, tient 37 jours : le compte à terme est bloqué jusqu'au 6 janvier.
-    expect(Math.floor(banque / unJour)).toBe(37);
+    expect(centime(tn - delai * unJour)).toBe(1_397.89);
+    // La position voisine : à 69 jours, la trésorerie nette passe sous zéro.
+    expect(tn - 69 * unJour).toBeLessThan(0);
+    // Le compte courant, lui, tient 31 jours : le compte à terme est bloqué jusqu'au 6 janvier.
+    expect(Math.floor(banque / unJour)).toBe(31);
     expect(juste(ch, "predire-la-place-de-marche")).toBe("Le fonds de roulement ne bouge pas ; le besoin grossit, et la trésorerie baisse d'autant");
   });
 
@@ -379,14 +371,14 @@ describe("le bilan fonctionnel, sur l'exercice de NOVA du monde du cours", () =>
       "Coefficient de structure des ventes aux particuliers": coefficient,
       "Créance de la place de marché, en jours de chiffre d'affaires": centime((30 * particuliersTtc) / caHt),
     });
-    expect([enJours, coefficient, centime((30 * particuliersTtc) / caHt)]).toEqual([2.47, 0.9568, 28.7]);
+    expect([enJours, coefficient, centime((30 * particuliersTtc) / caHt)]).toEqual([8.34, 0.9568, 28.7]);
     expect(PLACE_DE_MARCHE.delai).toBe(30);
   });
 
   it("le laboratoire du besoin : le stock de la gamme, rendu par les délais", () => {
     const l = laboratoire(ch, "le-laboratoire-du-besoin");
-    expect(l.depart).toEqual({ delaiCampusTech: 60, delaiFournisseur: 22, stock: 600, placement: 133_000 });
-    expect(l.solution).toEqual({ delaiCampusTech: 40, delaiFournisseur: 51, stock: STOCK_POUR_LA_GAMME, placement: 133_000 });
+    expect(l.depart).toEqual({ delaiCampusTech: 80, delaiFournisseur: 22, stock: 600, placement: 133_000 });
+    expect(l.solution).toEqual({ delaiCampusTech: 60, delaiFournisseur: 51, stock: STOCK_POUR_LA_GAMME, placement: 133_000 });
     expect(l.reussi).toEqual([false, true]);
     expect(l.auDepart).toEqual({
       "Fonds de roulement": frng,
@@ -398,18 +390,14 @@ describe("le bilan fonctionnel, sur l'exercice de NOVA du monde du cours", () =>
       "Dont le compte à terme et ses intérêts": placement,
       "Effet sur la trésorerie nette": 0,
     });
-    // À la main : CampusTech à 40 jours encaisse la facture de novembre (320 × 59 € TTC, le 20 novembre
-    // + 40 jours = le 30 décembre, en mois de 30 jours) avant la clôture ;
+    // À la main : CampusTech à 60 jours encaisse la facture d'octobre (320 × 59 € TTC) avant la clôture ;
     // le fournisseur à 51 jours laisse due la facture du 10 novembre (2 070 jeux à 22 € TTC) ; le stock de
     // 2 400 jeux de plus coûte 22,50 € hors taxes chacun, payés TTC.
-    const campustech = 320 * PRIX * (1 + TVA);
+    const octobre = 320 * PRIX * (1 + TVA);
     const novembre = (f.ventesAuxParticuliers[10]! + 320) * 22 * (1 + TVA);
     const jeux = (STOCK_POUR_LA_GAMME - 600) * (stock / 600);
-    expect([campustech, centime(novembre), jeux, centime(jeux * (1 + TVA))]).toEqual([22_656, 54_648, 54_000, 64_800]);
-    const effet = centime(campustech + novembre - jeux * (1 + TVA));
-    // Sans toucher CampusTech (déjà à 60 jours), le fournisseur seul ne rend pas le stock : le défi reste à relever.
-    expect(centime(novembre - jeux * (1 + TVA))).toBe(-10_152);
-    expect(l.e.defi(cas).atteint({ ...l.depart, delaiFournisseur: 51, stock: STOCK_POUR_LA_GAMME })).toBe(false);
+    expect([octobre, centime(novembre), jeux, centime(jeux * (1 + TVA))]).toEqual([22_656, 54_648, 54_000, 64_800]);
+    const effet = centime(octobre + novembre - jeux * (1 + TVA));
     expect(l.aLaSolution).toEqual({
       "Fonds de roulement": frng,
       "Stock de composants": stock + jeux,
@@ -422,8 +410,6 @@ describe("le bilan fonctionnel, sur l'exercice de NOVA du monde du cours", () =>
     });
     expect(effet).toBe(12_504);
     expect(juste(ch, "predire-le-stock")).toBe("De 27 €, son prix toutes taxes comprises");
-    // CampusTech part de son délai convenu ; au-delà, le laboratoire le dit : un retard.
-    expect(l.e.question(cas)).toContain("au-delà des 60 jours convenus, ce serait un retard");
   });
 
   it("le graphique du laboratoire : la trésorerie nette descend par marches selon le délai de CampusTech", () => {
@@ -432,19 +418,15 @@ describe("le bilan fonctionnel, sur l'exercice de NOVA du monde du cours", () =>
     expect(g.levier).toBe("delaiCampusTech");
     const [tresorerie, besoin, fonds] = g.courbes;
     const a = (d: number) => [tresorerie!.valeur({ ...depart, delaiCampusTech: d }), besoin!.valeur({ ...depart, delaiCampusTech: d }), fonds!.valeur({ ...depart, delaiCampusTech: d })];
-    // Une facture de CampusTech (22 656 € TTC, le 20 du mois) reste due si 20 du mois + délai dépasse le
-    // 30 décembre, en mois de 30 jours : novembre au-delà de 40 jours, octobre au-delà de 70, septembre au-delà de 100.
+    // Une facture de CampusTech (22 656 € TTC, le 20 du mois) reste due si 20 du mois + délai dépasse le 31 décembre.
     const facture = 320 * PRIX * (1 + TVA);
-    expect(a(30)).toEqual([centime(tn + facture), centime(bfr - facture), frng]);
-    expect(a(40)).toEqual([centime(tn + facture), centime(bfr - facture), frng]);
-    expect(a(41)).toEqual([tn, bfr, frng]);
-    expect(a(60)).toEqual([tn, bfr, frng]);
-    expect(a(70)).toEqual([tn, bfr, frng]);
-    expect(a(71)).toEqual([centime(tn - facture), centime(bfr + facture), frng]);
-    expect(a(100)).toEqual([centime(tn - facture), centime(bfr + facture), frng]);
-    expect(a(101)).toEqual([centime(tn - 2 * facture), centime(bfr + 2 * facture), frng]);
-    expect(a(120)).toEqual([centime(tn - 2 * facture), centime(bfr + 2 * facture), frng]);
-    expect(centime(tn + facture)).toBe(297_981.45);
+    expect(a(30)).toEqual([centime(tn + 2 * facture), centime(bfr - 2 * facture), frng]);
+    expect(a(59)).toEqual([centime(tn + facture), centime(bfr - facture), frng]);
+    expect(a(80)).toEqual([tn, bfr, frng]);
+    expect(a(100)).toEqual([tn, bfr, frng]);
+    expect(a(101)).toEqual([centime(tn - facture), centime(bfr + facture), frng]);
+    expect(a(120)).toEqual([centime(tn - facture), centime(bfr + facture), frng]);
+    expect(centime(tn + 2 * facture)).toBe(297_981.45);
   });
 
   it("le placement dans le laboratoire : rien placé, la trésorerie nette perd les intérêts, le compte courant prend tout", () => {
@@ -468,7 +450,7 @@ describe("le bilan fonctionnel, sur l'exercice de NOVA du monde du cours", () =>
       "Délai de règlement des fournisseurs": centime((fournisseurs * 360) / achatsTtc),
       "Durée de rotation du stock": centime((stock * 360) / consommation),
     });
-    expect([centime((clientsBruts * 360) / (caHt * (1 + TVA))), centime((fournisseurs * 360) / achatsTtc), centime((stock * 360) / consommation)]).toEqual([20.09, 45.5, 9.34]);
+    expect([centime((clientsBruts * 360) / (caHt * (1 + TVA))), centime((fournisseurs * 360) / achatsTtc), centime((stock * 360) / consommation)]).toEqual([24.98, 45.5, 9.34]);
     expect(juste(ch, "le-ratio-et-le-contrat")).toBe("De décembre : le dépannage de Composants Express s'ajoute à la facture du mois, et le bilan est une photo de ce jour");
   });
 
@@ -479,7 +461,7 @@ describe("le bilan fonctionnel, sur l'exercice de NOVA du monde du cours", () =>
       "Besoin d'exploitation après la croissance": centime(bfre * 1.2),
       "Supplément de besoin à financer": centime(centime(bfre * 1.2) - bfre),
     });
-    expect([centime(caHt * 1.2), centime(bfre * 1.2), centime(centime(bfre * 1.2) - bfre)]).toEqual([1_668_331.2, 11_453.68, 1_908.95]);
+    expect([centime(caHt * 1.2), centime(bfre * 1.2), centime(centime(bfre * 1.2) - bfre)]).toEqual([1_668_331.2, 38_640.88, 6_440.15]);
   });
 
   it("les étapes d'expert : emprunter à 5 % pour garder une trésorerie placée à 3 %", () => {
@@ -508,11 +490,8 @@ describe("le cas : vendre plus, financer plus", () => {
   const creance = centime((particuliersApres * 30) / 360);
   const besoinApres = centime(bfreApres + bfrhe + creance);
   const tnApres = centime(frng - besoinApres);
-  // Le 1er janvier, 22 656 € (la facture d'octobre de CampusTech, rentrée le 20 décembre) quittent le compte
-  // courant pour la réserve : le plan ne touche ni à elle ni au compte à terme.
-  const versement = 22_656;
-  const compteCourantApres = centime(tnApres - placement - versement);
-  const sansPlace = centime(banque - versement - supplement);
+  const compteCourantApres = centime(tnApres - placement);
+  const sansPlace = centime(banque - supplement);
 
   it("tient la forme d'un cas dédié, chez NOVA seule", () => {
     casDedie(s, BILAN_FONCTIONNEL);
@@ -532,7 +511,7 @@ describe("le cas : vendre plus, financer plus", () => {
       "Ligne de montage, valeur brute": [60_000, "fixe"],
     });
     expect(attendus(s, "a-structure-constante")).toEqual({
-      "Besoin d'exploitation, en jours de chiffre d'affaires": 2.47,
+      "Besoin d'exploitation, en jours de chiffre d'affaires": 8.34,
       "Besoin d'exploitation après la croissance": bfreApres,
       "Supplément de besoin, à structure constante": supplement,
     });
@@ -545,19 +524,15 @@ describe("le cas : vendre plus, financer plus", () => {
       "Trésorerie nette après la croissance": tnApres,
       "Compte courant après la croissance": compteCourantApres,
     });
-    expect([particuliersApres, creance, besoinApres, tnApres, compteCourantApres]).toEqual([1_596_313.44, 133_026.12, 122_906.69, 140_390.38, -19_200.2]);
+    expect([particuliersApres, creance, besoinApres, tnApres, compteCourantApres]).toEqual([1_596_313.44, 133_026.12, 150_093.89, 113_203.18, -23_731.4]);
     expect(tnApres).toBeGreaterThan(0);
     expect(compteCourantApres).toBeLessThan(0);
-    // Le compte courant de l'an prochain part de 115 734,87 €, la réserve versée.
-    expect(centime(banque - versement)).toBe(115_734.87);
-    // Sans le versement, la banque du 31 décembre aurait financé le plan : le croisement aurait disparu.
-    expect(centime(tnApres - placement)).toBe(3_455.8);
   });
 
   it("le curseur du cas, à rebours : le délai de reversement que le compte courant supporte", () => {
     const unJour = particuliersApres / 360;
     const delai = Math.floor(sansPlace / unJour);
-    expect([sansPlace, delai]).toEqual([113_825.92, 25]);
+    expect([sansPlace, delai]).toEqual([109_294.72, 24]);
     expect(curseur(s, "le-delai-a-negocier")).toEqual({
       attendu: delai,
       bornes: [0, 60],
@@ -569,19 +544,17 @@ describe("le cas : vendre plus, financer plus", () => {
         "Compte courant": centime(sansPlace - delai * unJour),
       },
     });
-    expect(centime(sansPlace - delai * unJour)).toBe(2_970.82);
-    expect(sansPlace - 26 * unJour).toBeLessThan(0);
+    expect(centime(sansPlace - delai * unJour)).toBe(2_873.82);
+    expect(sansPlace - 25 * unJour).toBeLessThan(0);
   });
 
-  it("le verdict : pas à 30 jours, un reversement à 25 jours au plus", () => {
+  it("le verdict : pas à 30 jours, un reversement à 24 jours au plus", () => {
     const r = vendrePlus(cas);
     expect(r.verdict).toBe("reverser-plus-vite");
     // L'erreur de base : la créance comptée hors taxes.
     expect(r.compteCourantHorsTaxes).toBe(centime(sansPlace - (particuliersApres / 1.2) * (30 / 360)));
-    expect(r.compteCourantHorsTaxes).toBe(2_970.82);
-    expect(juste(s, "reponse")).toBe("Pas à 30 jours : le compte courant passerait à −19 200,20 € ; il faut un reversement à 25 jours au plus");
-    const reponse = s.etapes.find((e) => e.id === "reponse") as EtapeChoix;
-    expect(reponse.options(cas, etatVide).map((o) => o.texte)).toContain("Oui, de justesse : le compte courant resterait à 2 970,82 €, sans découvert");
+    expect(r.compteCourantHorsTaxes).toBe(-1_560.38);
+    expect(juste(s, "reponse")).toBe("Pas à 30 jours : le compte courant passerait à −23 731,40 € ; il faut un reversement à 24 jours au plus");
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le cas", () => verifierLesTextes(s));

@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 4 — LE BUDGET QUI NE TIENT PAS, tel que l'interface et le bilan le lisent.
+ * LE BUDGET QUI NE TIENT PAS, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Samuel montre, ce que la courbe
@@ -43,7 +43,7 @@ const realiseDebut = (t: Trimestre) =>
   [1, 2, 3].reduce((s, w) => s + t.semaines[w]!.realise, 0) / 1000;
 
 const VALERIE = { de: "Valérie Kessler", role: "Directrice administrative et financière" } as const;
-const TESSIER = { de: "Stéphane Morin", role: "Chargé d'affaires, Tessier Multiservices" } as const;
+const MORIN = { de: "Stéphane Morin", role: "Chargé d'affaires, Tessier Multiservices" } as const;
 
 /** Ce que les décisions révèlent, dans l'ordre où un manager les apprend. */
 export function comportements(p: PartieJouee, t: Trimestre): Constat[] {
@@ -324,7 +324,7 @@ export const EPISODE_BUDGET: Episode<Trimestre> = {
       const reponse = reponseDuPrestataire(graine);
       return [
         {
-          ...TESSIER,
+          ...MORIN,
           alerte: reponse === "braque",
           texte:
             reponse === "accepte"

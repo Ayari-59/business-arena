@@ -19,12 +19,14 @@ import type { Chapitre, LigneDeSimulation, TableauDeDonnees } from "../types";
  * production et la sous-traitance sur la demande figée : la demande répond, le plan de production
  * borne, et le meilleur prix n'est aucun des trois que le dirigeant envisageait. Puis fabriquer ou
  * acheter : une commande au-delà de la capacité, et, en expert, une commande exceptionnelle sous le
- * coût complet, avec puis sans sous-traitant (la capacité devient le facteur rare : une enceinte de
- * la commande chasse une vente qui rapportait plus).
+ * coût complet, avec puis sans sous-traitant. Depuis la réconciliation d'octobre 2026 (une seule
+ * demande de NOVA : 4 778 enceintes à 59 €, toute la demande de N servie), la commande tient dans la
+ * capacité restante : sans sous-traitant, elle ne chasse aucune vente ; le prix du trimestre est le
+ * meilleur des trois, et le sommet de la courbe est à 60,27 €.
  *
  * LES CHARGES FIXES DU TRIMESTRE valent 93 549 €, trois mois des charges fixes de janvier : l'arène en
  * comptait 106 686 €. Les résultats du trimestre aux trois prix en changent (−21 401,20 €, 6 789 € et
- * 28 173,50 €), et le chapitre le dit à l'élève dès l'intro.
+ * 2 753 €), et le chapitre le dit à l'élève dès l'intro.
  *
  * LES TROIS TEMPS (demande du propriétaire, octobre 2026 : le niveau d'arrivée est celui du DCG) :
  *   · guidé : intro, volume-constant (la question donne le calcul), fabriquer-ou-acheter ;
@@ -433,7 +435,7 @@ export const DECIDER: Chapitre = {
         const k = decision(c);
         const x = trimestreDeDecision(k.f, { prix: p.prix!, production: p.production!, sousTraitance: p.sousTraitance! });
         return [
-          `À ${eur(x.prix)}, la demande est de ${qte(x.demande)} enceintes, toutes fabriquées et vendues : ${eur(x.resultat)} de résultat, contre ${eur(k.base.resultat)} au trimestre joué et ${eur(k.haut.resultat)} au meilleur des trois prix envisagés. Ni ${eur(k.bas.prix)}, ni ${eur(k.d.prix)}, ni ${eur(k.haut.prix)} : le meilleur prix se trouve entre deux, au sommet de la courbe.`,
+          `À ${eur(x.prix)}, la demande est de ${qte(x.demande)} enceintes, toutes fabriquées et vendues : ${eur(x.resultat)} de résultat, contre ${eur(k.base.resultat)} au trimestre joué et ${eur(Math.max(...k.trois.map((t) => t.resultat)))} au meilleur des trois prix envisagés. Ni ${eur(k.bas.prix)}, ni ${eur(k.d.prix)}, ni ${eur(k.haut.prix)} : le meilleur prix se trouve entre deux, au sommet de la courbe.`,
           `Le résultat selon le prix n'est pas une droite. Monter le prix fait gagner sur chaque enceinte vendue et perdre des enceintes : tant que le gain l'emporte, le résultat monte, puis il redescend. Et un plan de production qui ne suit pas le prix laisse soit des clients sans réponse, soit du stock.`,
         ];
       },
@@ -495,7 +497,11 @@ export const DECIDER: Chapitre = {
           {
             texte: "La demande : les clients n'achètent pas autant de plus que la baisse l'exigerait",
             juste: !plan,
-            retour: plan ? `Non : la demande était là, ${qte(k.bas.demande)} enceintes, plus que les ${qte(k.volume)} qu'il fallait. Elle n'a pas été servie faute de production.` : "Oui : toute la demande a été servie, et elle n'a pas assez grandi.",
+            retour: plan
+              ? k.bas.demande >= k.volume
+                ? `Non : la demande était là, ${qte(k.bas.demande)} enceintes, plus que les ${qte(k.volume)} qu'il fallait. Elle n'a pas été servie faute de production.`
+                : `Pas d'abord : la demande, ${qte(k.bas.demande)} enceintes, n'atteint pas non plus les ${qte(k.volume)} qu'il faudrait ; mais ce qui borne les ventes ce trimestre, c'est le plan, qui n'en fabrique que ${qte(k.d.production)}.`
+              : "Oui : toute la demande a été servie, et elle n'a pas assez grandi.",
           },
         ];
       },
@@ -518,7 +524,7 @@ export const DECIDER: Chapitre = {
           juste: t === meilleur,
           retour:
             t === meilleur
-              ? `Oui : ${eur(t.resultat)} de résultat d'exploitation, le meilleur des trois. Les clients perdus coûtent moins que ce que rapportent les autres, payés plus cher. Mais ${qte(t.stock)} enceintes restent en stock, et le laboratoire a trouvé mieux : ${eur(k.meilleur.resultat)} à ${eur(k.meilleur.prix)}, la production ajustée à la demande.`
+              ? `Oui : ${eur(t.resultat)} de résultat d'exploitation, le meilleur des trois. ${t === k.base ? "Plus bas, chaque enceinte rapporte moins sans une vente de plus ; plus haut, les clients perdus coûtent plus que ce que rapportent les autres." : "Les clients perdus coûtent moins que ce que rapportent les autres, payés plus cher."}${t.stock > 0 ? ` Mais ${qte(t.stock)} enceintes restent en stock.` : ""} Le laboratoire a trouvé mieux : ${eur(k.meilleur.resultat)} à ${eur(k.meilleur.prix)}, la production ajustée à la demande.`
               : `${eur(t.resultat)} de résultat d'exploitation, pour ${eur(meilleur.resultat)} au meilleur des trois.`,
         }));
       },
@@ -760,7 +766,7 @@ export const DECIDER: Chapitre = {
       texte: (c) => {
         const k = decision(c);
         return [
-          `Décider, c'est comparer ce qui change : la marge de chaque enceinte, le volume que le marché accepte, la capacité qui borne. Chez ${k.f.entreprise}, le meilleur des trois prix envisagés donnait ${eur(k.haut.resultat)} ; le prix du sommet, ${eur(k.prixOptimal)} avec une production ajustée à la demande, en donne ${eur(k.resultatOptimal)}.`,
+          `Décider, c'est comparer ce qui change : la marge de chaque enceinte, le volume que le marché accepte, la capacité qui borne. Chez ${k.f.entreprise}, le meilleur des trois prix envisagés donnait ${eur(Math.max(...k.trois.map((t) => t.resultat)))} ; le prix du sommet, ${eur(k.prixOptimal)} avec une production ajustée à la demande, en donne ${eur(k.resultatOptimal)}.`,
           `Fabriquer ou acheter se joue au coût de l'enceinte de plus : son coût variable tant qu'il reste de la capacité, le prix du sous-traitant au-delà. Une commande sous le coût complet peut rapporter ; quand la capacité manque, elle se juge face à la marge des ventes qu'elle chasse.`,
           "Au niveau de l'examen, vous savez calculer l'effet différentiel d'un prix, le volume qu'une baisse exige, le prix qui maximise le résultat sur une demande linéaire, le choix de fabriquer ou de sous-traiter, et le prix plancher d'une commande, avec ou sans capacité libre.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",

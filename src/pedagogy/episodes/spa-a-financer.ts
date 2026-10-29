@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 62 — LE SPA QUI NE SE RENTABILISE PAS SEUL, tel que l'interface et
+ * LE SPA QUI NE SE RENTABILISE PAS SEUL, tel que l'interface et
  * le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont

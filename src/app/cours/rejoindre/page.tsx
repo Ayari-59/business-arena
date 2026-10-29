@@ -9,6 +9,7 @@ import { rejoindreClasseAction } from "../actions";
 
 export const metadata: Metadata = {
   title: "Rejoindre une classe du cours",
+  description: "Entrez le code de classe donné par votre enseignant pour suivre le cours par la simulation.",
   robots: { index: false, follow: false },
 };
 

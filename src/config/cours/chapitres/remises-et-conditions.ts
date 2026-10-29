@@ -3,10 +3,11 @@ import { auCentime as auCentimeDeLArene } from "../../../pedagogy/cours/etats";
 import type { Cas } from "../cas";
 import { auCentime } from "../monde/amortissement";
 import { CABINETS_DU_COURS, type CompteClient } from "../monde/atlas-conseil";
-import { DELAIS_DU_COURS, DELAI_MAXIMAL_CONVENU, JOURS_DE_L_ANNEE_BANCAIRE, type FicheDeLAffaire } from "../monde/delais-et-tva";
+import { DELAIS_DU_COURS, DELAI_MAXIMAL_CONVENU, JOURS_DE_L_ANNEE_BANCAIRE, JOURS_DE_L_ANNEE_CIVILE, type FicheDeLAffaire } from "../monde/delais-et-tva";
 import { affaireAuxConditions } from "../monde/delais";
 import { coutDeLAvance, tauxAnnuelDeLEscompte } from "../monde/facture";
 import { JOURS_D_ESCOMPTE, JOURS_PAR_AN, TAUX_DE_REMISE, TAUX_D_ESCOMPTE } from "../remises";
+import { KERVAL_DISTRIBUTION, RELANCES, TAUX_DES_PENALITES, suivreUnMauvaisPayeur } from "../monde/mauvais-payeurs";
 import type { Chapitre, TableauDeDonnees } from "../types";
 
 /**
@@ -44,7 +45,8 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     au prix remisé, leur marge face à celle du catalogue) avant contrepartie ; predire-l-escompte
  *     puis l-escompte-au-curseur (un curseur sur le délai de paiement, le découvert que l'escompte
  *     évite face à ce qu'il coûte) avant le-taux-annuel ;
- *   · autonome : contrepartie, qui-avance-la-tva, quel-raisonnement (ni formule ni chiffres à
+ *   · autonome : contrepartie, qui-avance-la-tva, le-client-en-retard (Kerval paie en retard,
+ *     monde/mauvais-payeurs.ts), quel-raisonnement (ni formule ni chiffres à
  *     prendre ; la correction montre le chemin) ;
  *   · expert : escompte-maximal (à rebours, du taux du découvert au plus fort escompte),
  *     l-option-pour-les-debits (une variante chiffrée : la TVA avancée), le-laboratoire-des-conditions
@@ -492,6 +494,38 @@ export const REMISES_ET_CONDITIONS: Chapitre = {
       },
     },
     {
+      id: "le-client-en-retard",
+      type: "montants",
+      titre: "Quand le client paie en retard",
+      notions: ["payment_terms"],
+      question: () => {
+        const r = suivreUnMauvaisPayeur(KERVAL_DISTRIBUTION);
+        return `Hypothèse du cours : ${r.client} ne prend pas l'escompte et paie ${qte(r.retard)} jours après les ${qte(r.delaiConvenu)} convenus, son service comptable ne réglant qu'une fois par mois. Le cabinet l'a relancé ${qte(RELANCES.relanceAmiable)} jours après l'échéance, puis mis en demeure ${qte(RELANCES.miseEnDemeure)} jours après. Calculez ce que le retard coûte au cabinet sur son découvert, le résultat de l'affaire une fois ce coût retiré, puis tout ce que le cabinet peut réclamer : les pénalités à ${pct(TAUX_DES_PENALITES)} l'an et l'indemnité forfaitaire.`;
+      },
+      champs: (c) => {
+        const k = conditionsDeKerval(c);
+        const r = suivreUnMauvaisPayeur(KERVAL_DISTRIBUTION);
+        const resultat = auCentime(k.resultat - r.coutDuRetard);
+        return [
+          { libelle: "Coût du retard", attendu: r.coutDuRetard, calcul: `${eur(r.finance)} × ${pct(r.tauxDeFinancement)} × ${qte(r.retard)} ÷ ${JOURS_DE_L_ANNEE_BANCAIRE} = ${eur(r.coutDuRetard)}` },
+          { libelle: "Résultat de l'affaire, retard compris (HT)", attendu: resultat, calcul: `${eur(k.resultat)} − ${eur(r.coutDuRetard)} = ${eur(resultat)}` },
+          {
+            libelle: "Réclamable (pénalités et indemnité)",
+            attendu: r.reclamable,
+            calcul: `${eur(r.ttc)} × ${pct(TAUX_DES_PENALITES)} × ${qte(r.retard)} ÷ ${JOURS_DE_L_ANNEE_CIVILE} = ${eur(r.penalites)}, plus ${eur(r.indemnite)} = ${eur(r.reclamable)}`,
+          },
+        ];
+      },
+      explication: (c) => {
+        const k = conditionsDeKerval(c);
+        const r = suivreUnMauvaisPayeur(KERVAL_DISTRIBUTION);
+        return [
+          `Un service : la TVA n'est due qu'à l'encaissement, le retard ne coûte au cabinet que le hors taxes, ${eur(r.coutDuRetard)}, en plus des ${eur(k.coutDuCredit)} du délai convenu. Les pénalités, elles, se comptent sur le TTC, ${eur(r.ttc)}, et sur ${JOURS_DE_L_ANNEE_CIVILE} jours : de plein droit dès le lendemain de l'échéance, sans attendre la mise en demeure.`,
+          `${r.client} reste un client solvable : sa créance reste au compte 411, sans dépréciation. Réclamer les ${eur(r.reclamable)}, ou s'en servir pour obtenir le paiement à l'échéance, est une décision commerciale ; ne rien dire, c'est lui accorder un délai que la loi ne permet pas de convenir.`,
+        ];
+      },
+    },
+    {
       id: "predire-l-escompte",
       type: "choix",
       titre: "Pariez sur l'escompte",
@@ -817,6 +851,9 @@ export const REMISES_ET_CONDITIONS: Chapitre = {
  */
 export function affaire(c: Cas) {
   const v = c.venteCredit;
+  // Le client exige le délai de son cas, au plus le délai maximal convenu entre professionnels (code de
+  // commerce, article L. 441-10) : le cabinet médical de MARTEL & FILS, qui paie à 90 jours, en demande 60.
+  const delai = Math.min(v.delai, DELAI_MAXIMAL_CONVENU.joursDeLaFacture);
   const coutVariable = c.gestion.coutVariableUnitaire;
   const arrondi = auCentimeDeLArene;
   const auDixieme = (x: number) => Math.round(x * 10) / 10;
@@ -828,14 +865,14 @@ export function affaire(c: Cas) {
   const coutsVariables = arrondi(v.quantite * coutVariable);
   const marge = arrondi(netCommercial - coutsVariables);
   const margeSansRemise = arrondi(brut - coutsVariables);
-  const coutDuCredit = arrondi((netCommercial * c.pret.tauxAnnuel * v.delai) / JOURS_PAR_AN);
+  const coutDuCredit = arrondi((netCommercial * c.pret.tauxAnnuel * delai) / JOURS_PAR_AN);
   const prixRemise = arrondi(v.prixUnitaire * (1 - TAUX_DE_REMISE));
   const quantitePourLaMemeMarge = Math.ceil(margeSansRemise / (prixRemise - coutVariable) - 1e-9);
   return {
     client: v.client,
     quantite: v.quantite,
     prix: v.prixUnitaire,
-    delai: v.delai,
+    delai,
     brut,
     tauxDeRemise: TAUX_DE_REMISE * 100,
     remise,
@@ -853,7 +890,7 @@ export function affaire(c: Cas) {
     tauxDeLEmprunt: auDixieme(c.pret.tauxAnnuel * 100),
     coutDuCredit,
     resultatDeLAffaire: arrondi(marge - coutDuCredit),
-    tauxAnnuelDeLEscompte: auDixieme((TAUX_D_ESCOMPTE / (1 - TAUX_D_ESCOMPTE)) * (JOURS_PAR_AN / (v.delai - JOURS_D_ESCOMPTE)) * 100),
+    tauxAnnuelDeLEscompte: auDixieme((TAUX_D_ESCOMPTE / (1 - TAUX_D_ESCOMPTE)) * (JOURS_PAR_AN / (delai - JOURS_D_ESCOMPTE)) * 100),
     prixRemise,
     quantitePourLaMemeMarge,
     enPlus: quantitePourLaMemeMarge - v.quantite,

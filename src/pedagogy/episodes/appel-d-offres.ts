@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 16 — L'APPEL D'OFFRES, tel que l'interface et le bilan le lisent.
+ * L'APPEL D'OFFRES, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Vincent montre, ce que la
@@ -171,7 +171,7 @@ export function axe([information, diagnostic, reflexe, calibrage, grille]: reado
   };
 }
 
-const SOLENE = { de: "Margot Kerguelen", role: "Responsable des marchés, Balmes Habitat" } as const;
+const MARGOT = { de: "Margot Kerguelen", role: "Responsable des marchés, Balmes Habitat" } as const;
 const FREDERIC = { de: "Frédéric Vautrin", role: "Acheteur, Groupe Vauclair" } as const;
 const LINH = { de: "Linh Pham", role: "Chargée d'études de prix" } as const;
 const LEILA = { de: "Leïla Ouazzani", role: "Chargée d'affaires" } as const;
@@ -370,7 +370,7 @@ export const EPISODE_APPEL_OFFRES: Episode<Trimestre> = {
       lies.push({ ...LINH, heure: "sem. 8", alerte: true, texte: REPONSES.erreur });
     }
     if (arrive.balmes) {
-      lies.push({ ...SOLENE, heure: "sem. 10", alerte: true, texte: attribution(t) });
+      lies.push({ ...MARGOT, heure: "sem. 10", alerte: true, texte: attribution(t) });
     }
     if (arrive.surcout) {
       lies.push({ ...LEILA, heure: "sem. 11", alerte: true, texte: REPONSES.surcout });

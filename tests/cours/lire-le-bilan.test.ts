@@ -1,93 +1,79 @@
 import { describe, expect, it } from "vitest";
-import { casDeLEntreprise } from "../../src/config/cours/cas";
-import { anneeJouee } from "../../src/config/cours/annee-de-l-arene";
-import { LIRE_LE_BILAN, bilanDeFinDAnnee } from "../../src/config/cours/chapitres/lire-le-bilan";
-import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
-import { CONCEPTS } from "../../src/config/pedagogy/concepts";
-import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
-import type { Cas } from "../../src/config/cours/cas";
-import type { Etape, EtatDuCours } from "../../src/config/cours/types";
+import { LIRE_LE_BILAN, SOLUTION_DU_BILAN, bilanDeFinDAnnee, bilanDuLaboratoire, empruntPossible } from "../../src/config/cours/chapitres/lire-le-bilan";
+import { L_INVESTISSEUSE_AU_CAPITAL, investisseuseAuCapital } from "../../src/config/cours/situations/par-chapitre/l-investisseuse-au-capital";
+import { chapitreDuCas } from "../../src/pedagogy/cours/deroule";
+import { NOVA, VIDE, etape, gardeDuCurseur, gardeDuLaboratoire, gardesDeTexte } from "./gardes-du-lycee";
 
 /**
- * LE BILAN, AU 31 DÉCEMBRE DE L'ANNÉE DE L'ARÈNE.
+ * LE BILAN, AU 31 DÉCEMBRE DU PREMIER EXERCICE DE NOVA DU MONDE DU COURS, ET SON CAS :
+ * L'INVESTISSEUSE AU CAPITAL.
  *
- * Les postes sont ceux du bilan du moteur ; l'actif égale le passif ; les équilibres se
- * recomposent ; la bonne réponse sur la trésorerie suit la banque et le découvert.
+ * Refait à la main sur les postes (épinglés dans tests/cours/comptes-du-lycee.test.ts) : l'actif,
+ * 432 256,34 € ; les capitaux propres, 229 225,96 € ; l'emprunt, 68 000 € ; l'argent disponible,
+ * 136 934,58 € placés et 115 734,87 € en banque ; les dettes de l'année, 130 030,38 €.
  */
 
-function textesDe(e: Etape, cas: Cas, etat: EtatDuCours): string[] {
-  const tableau = e.tableau ? [e.tableau(cas).titre, ...e.tableau(cas).lignes.flatMap((l) => [l.libelle, ...l.valeurs])] : [];
-  switch (e.type) {
-    case "lecture":
-      return [...e.texte(cas), e.repere?.(cas) ?? "", ...tableau];
-    case "choix":
-      return [e.question(cas, etat), ...e.options(cas, etat).flatMap((o) => [o.texte, o.retour]), ...tableau];
-    case "montants":
-      return [e.question(cas, etat), ...e.champs(cas, etat).flatMap((c) => [c.libelle, c.calcul, String(c.attendu)]), ...e.explication(cas, etat), ...tableau];
-    case "tri":
-      return [e.question(cas), ...e.elements(cas).flatMap((x) => [x.libelle, x.pourquoi]), ...e.explication(cas)];
-    default:
-      return [];
-  }
-}
+const ch = chapitreDuCas(LIRE_LE_BILAN, NOVA);
+const c = (x: number) => Math.round(x * 100) / 100 + 0;
 
-describe.each(ENTREPRISES_DU_COURS)("le bilan chez %s", (code) => {
-  const cas = casDeLEntreprise(code);
-  const b = bilanDeFinDAnnee(cas);
-  const chapitre = chapitreDuCas(LIRE_LE_BILAN, cas);
+describe("le bilan de NOVA", () => {
+  const b = bilanDeFinDAnnee(NOVA);
 
-  it("les postes sont ceux du bilan du moteur, et l'actif égale le passif", () => {
-    const r = anneeJouee(code).partie.rounds.at(-1)!.results["joueur"]!.balanceSheet;
-    expect(b.f.capitauxPropres).toBeCloseTo(r.equity, 1);
-    expect(b.f.emprunts).toBeCloseTo(r.financialDebt, 1);
-    expect(b.f.creances).toBeCloseTo(r.receivables, 1);
-    expect(Math.abs(b.actif - b.passif)).toBeLessThan(1);
+  it("les totaux et les équilibres se refont à la main", () => {
+    expect(etape(ch, "equilibre", "montants").champs(NOVA, VIDE).map((x) => x.attendu)).toEqual([432_256.34, c(432_256.34 - 229_225.96), 432_256.34]);
+    expect(b.partDesAssocies).toBe(53); // 229 225,96 ÷ 432 256,34 = 53,03 %
+    expect(b.rapportDEndettement).toBe(0.3); // 68 000 ÷ 229 225,96 = 0,297
+    expect(b.disponible).toBe(c(136_934.58 + 115_734.87));
+    expect(b.aCourtTerme).toBe(c(81_000 + 41_119.27 + 7_911.11));
   });
 
-  it("les équilibres se recomposent, et la réponse sur la trésorerie suit la banque et le découvert", () => {
-    expect(b.autonomie).toBeCloseTo((b.f.capitauxPropres / b.passif) * 100, 1);
-    expect(b.endettement).toBeCloseTo(b.f.emprunts / b.f.capitauxPropres, 2);
-    const etape = chapitre.etapes.find((e) => e.id === "tresorerie");
-    if (etape?.type !== "choix") throw new Error("Pas d'étape tresorerie");
-    const juste = etape.options(cas, { soldes: {} }).find((o) => o.juste)!;
-    expect(juste.texte).toMatch(b.f.decouvert > b.disponible ? /négative/ : /positive/);
-    // Payer ses dettes à court terme sans attendre ses clients se vérifie, ne s'affirme pas.
-    expect(b.aCourtTerme).toBeCloseTo(b.f.fournisseurs + Math.max(b.f.tva, 0) + b.f.decouvert, 2);
-    if (b.f.decouvert <= b.disponible)
-      expect(juste.retour).toMatch(b.disponible >= b.aCourtTerme ? /pourrait régler toutes ses dettes/ : /dépassent pourtant/);
+  it("le tri range treize postes moins le découvert nul, et la trésorerie est positive", () => {
+    const el = etape(ch, "ranger", "tri").elements(NOVA);
+    expect(el).toHaveLength(12);
+    expect(el.filter((x) => x.categorie === "actif")).toHaveLength(6);
+    expect(el.every((x) => x.pourquoi.length > 0)).toBe(true);
+    const juste = etape(ch, "tresorerie", "choix").options(NOVA, VIDE).filter((o) => o.juste);
+    expect(juste.map((o) => o.texte)).toEqual(["Elle a plus d'argent disponible que de découvert : sa trésorerie est positive"]);
   });
 
-  it("l'égalité de l'actif et du passif se dit au centime d'arrondi près quand les sommes diffèrent", () => {
-    const etape = chapitre.etapes.find((e) => e.id === "equilibre");
-    if (etape?.type !== "montants") throw new Error("Pas d'étape equilibre");
-    const texte = etape.explication(cas, etatAvant(chapitre, cas, chapitre.etapes.indexOf(etape))).join(" ");
-    expect(texte.includes("au centime d'arrondi près")).toBe(Math.round(b.actif * 100) !== Math.round(b.passif * 100));
+  it("le curseur : 161 225 € d'emprunt nouveau, la règle des banques tenue", () => {
+    expect(empruntPossible(b)).toBe(Math.floor(229_225.96 - 68_000));
+    const e = gardeDuCurseur(ch, "jusqu-ou-emprunter", 161_225);
+    expect(e.lecture(NOVA, 161_225)[1]!.montant).toBe(229_225);
   });
 
-  it("aucun texte ne sort undefined ni « de le » ; une seule bonne réponse ; les notions existent", () => {
-    const codes = new Set(CONCEPTS.map((x) => x.code));
-    for (const [i, e] of chapitre.etapes.entries()) {
-      const etat = etatAvant(chapitre, cas, i);
-      for (const x of textesDe(e, cas, etat)) {
-        expect(x, `${e.id} : ${x}`).not.toMatch(/undefined|NaN|Infinity|\[object/);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/(^|\s)(de|à) [Ll]es? /);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/ [-–—] /);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/(^|[\s'(])de [aeiouyéèêAEIOUYÉ]/);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/\bque [AEIOUYÉ]/);
-      }
-      if (e.type === "choix") expect(e.options(cas, etat).filter((o) => o.juste), e.id).toHaveLength(1);
-      for (const n of e.notions ?? []) expect(codes.has(n), `${e.id} : ${n}`).toBe(true);
-    }
+  it("le laboratoire : 100 000 € d'équipement et 30 000 € de dividende font passer l'argent disponible sous les dettes de l'année", () => {
+    gardeDuLaboratoire(ch, "le-laboratoire-du-bilan");
+    expect(SOLUTION_DU_BILAN).toEqual({ equipement: 100_000, dividende: 30_000 });
+    const x = bilanDuLaboratoire(b, SOLUTION_DU_BILAN);
+    expect(x.decouvert).toBe(c(130_000 - 115_734.87));
+    expect(x.disponible).toBe(136_934.58);
+    expect(x.aCourtTerme).toBe(c(130_030.38 + 14_265.13));
+    expect(x.actif).toBe(x.passif);
+    expect(x.actif).toBe(c(432_256.34 + 100_000 - 115_734.87));
+    // 120 000 € d'équipement seul ne suffisent pas ; 130 000 € suffisent.
+    const defi = etape(ch, "le-laboratoire-du-bilan", "simulation").defi(NOVA);
+    expect(defi.atteint({ equipement: 120_000, dividende: 0 })).toBe(false);
+    expect(defi.atteint({ equipement: 130_000, dividende: 0 })).toBe(true);
+  });
+
+  it("les textes sont propres, une seule bonne réponse, les notions existent", () => {
+    gardesDeTexte(LIRE_LE_BILAN);
   });
 });
 
-describe("les cas que le chapitre distingue se rencontrent dans le cours", () => {
-  // Sans cela, une branche du texte ne serait jamais lue par aucun élève, ni vérifiée par aucun test.
-  const bilans = ENTREPRISES_DU_COURS.map((c) => bilanDeFinDAnnee(casDeLEntreprise(c)));
-  it("une trésorerie négative, des dettes à court terme couvertes et non couvertes, un centime d'arrondi", () => {
-    expect(bilans.some((b) => b.f.decouvert > b.disponible)).toBe(true);
-    expect(bilans.some((b) => b.f.decouvert <= b.disponible && b.disponible >= b.aCourtTerme)).toBe(true);
-    expect(bilans.some((b) => b.f.decouvert <= b.disponible && b.disponible < b.aCourtTerme)).toBe(true);
-    expect(bilans.some((b) => Math.round(b.actif * 100) !== Math.round(b.passif * 100))).toBe(true);
+describe("le cas : l'investisseuse au capital", () => {
+  const r = investisseuseAuCapital(NOVA);
+  it("un quart des capitaux propres, arrondi à la centaine, en banque", () => {
+    expect(r.apport).toBe(57_300); // 229 225,96 × 20 % ÷ 80 % = 57 306,49
+    expect(r.comble).toBe(0);
+    expect(r.capitauxPropresApres).toBe(c(229_225.96 + 57_300));
+    expect(r.total).toBe(c(432_256.34 + 57_300));
+    expect(r.autonomieApres).toBe(58.5); // 286 525,96 ÷ 489 556,34 = 58,53 %
+    expect(r.sansLeTotal).toBe(66.3); // 286 525,96 ÷ 432 256,34
+    expect(r.tresorerieApres).toBe(c(252_669.45 + 57_300));
+  });
+  it("les textes sont propres, une seule bonne réponse", () => {
+    gardesDeTexte(L_INVESTISSEUSE_AU_CAPITAL);
   });
 });

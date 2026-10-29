@@ -5,6 +5,8 @@ import { episodeParties } from "@/db/schema";
 import { versionDuModele } from "@/config/episodes/versions";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
 import type { PartieEnregistree } from "@/pedagogy/profil/types";
+import { estUnePartieDeDemonstration } from "@/config/episodes/demos";
+import { accesAuxEpisodes } from "@/services/acces.service";
 
 /**
  * GARDER LES PARTIES D'ÉPISODES MANAGER.
@@ -59,6 +61,24 @@ function incoherence(e: EntreeDePartie): string | null {
     return "Prévision hors des bornes de l'épisode.";
   }
   return null;
+}
+
+/**
+ * CETTE PARTIE EST-ELLE UNE DÉMONSTRATION, DONC À NE PAS GARDER ? (décision du
+ * propriétaire : les parties de démonstration ne sont pas persistées.) Une partie jouée
+ * sans licence qui couvre son épisode, pour l'identité qui joue (`userId`, le cookie
+ * invité, peut-être absent) et le compte connecté sur ce navigateur. Une entrée illisible
+ * est traitée comme une démonstration : rien ne s'écrit.
+ */
+export async function estUnePartieDeDemonstrationPour(args: {
+  userId: string | null;
+  sessionUserId?: string | null;
+  brut: unknown;
+}): Promise<boolean> {
+  const lu = entreeDePartie.pick({ code: true }).safeParse(args.brut);
+  if (!lu.success) return true;
+  const acces = await accesAuxEpisodes({ userId: args.userId, sessionUserId: args.sessionUserId });
+  return estUnePartieDeDemonstration(acces, lu.data.code);
 }
 
 export async function enregistrerPartie(

@@ -1,7 +1,8 @@
-import { montantEcrit as eur } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
+import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
 import type { Cas } from "../../cas";
 import { financer } from "../../chapitres/financer-l-entreprise";
+import { auCentime } from "../../monde/amortissement";
+import { ENTREPRISES_DES_COMPTES_DU_LYCEE } from "../../monde/comptes-du-lycee";
 import type { Situation } from "../types";
 
 /**
@@ -17,7 +18,8 @@ import type { Situation } from "../types";
  * Le cas est neuf par sa question : le chapitre chiffre les intérêts de la première année
  * pour choisir un financement ; le cas suit le prêt jusqu'au bout et le confronte à la
  * capacité d'autofinancement. L'équipement, son prix, le taux et la capacité
- * d'autofinancement sont ceux du chapitre (`financer`).
+ * d'autofinancement sont ceux du chapitre (`financer`) : le premier exercice de NOVA, dans le monde
+ * du cours.
  */
 
 /**
@@ -28,14 +30,16 @@ import type { Situation } from "../types";
  */
 export const DUREE_DU_PRET = 5;
 
+/** Un montant, le signe moins typographique : « −582,38 € ». */
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 const qte = (n: number) => n.toLocaleString("fr-FR");
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /** Les chiffres de la réponse, calculés une fois du cas. */
-export function annuiteDuPret(c: Cas) {
+export function annuiteDuPret(c: Pick<Cas, "code">) {
   const f = financer(c);
-  const taux = c.pret.tauxAnnuel;
+  const taux = f.taux;
   const capital = auCentime(f.montant / DUREE_DU_PRET);
   const annuite = auCentime(capital + f.interets);
   return {
@@ -66,6 +70,10 @@ export const L_ANNUITE_DU_PRET: Situation = {
     "Rédiger une réponse chiffrée aux associés",
   ],
   libre: false,
+  entreprises: {
+    codes: ENTREPRISES_DES_COMPTES_DU_LYCEE,
+    pourquoi: "le cas reprend la deuxième ligne de NOVA et le premier exercice de la simulation du cours, ceux du chapitre ; la méthode vaut pour toute entreprise.",
+  },
   etapes: [
     {
       id: "demande",
@@ -74,21 +82,21 @@ export const L_ANNUITE_DU_PRET: Situation = {
       texte: (c) => {
         const r = annuiteDuPret(c);
         return [
-          `« Pour le nouvel équipement, « ${r.equipement} », la banque nous propose de prêter les ${eur(r.montant)} au taux de ${pct(r.tauxDeLEmprunt)} par an, sur ${qte(DUREE_DU_PRET)} ans, le capital remboursé en parts égales chaque année. Avant de signer, nous voulons savoir ce que nous paierons la première année et la dernière, et si ce que dégage l'activité ${dE(c.entreprise)} suffit à payer cette première année. »`,
+          `« Pour le nouvel équipement, « ${r.equipement} », la banque nous propose de prêter les ${eur(r.montant)} au taux de ${pct(r.tauxDeLEmprunt)} par an, sur ${qte(DUREE_DU_PRET)} ans, le capital remboursé en parts égales chaque année. Avant de signer, nous voulons savoir ce que nous paierons la première année et la dernière, et si ce que dégage l'activité ${dE(r.entreprise)} suffit à payer cette première année. »`,
           "Pas de cours cette fois : vous avez les chiffres de l'année et les conditions du prêt, et les calculs sont ceux du chapitre. À vous de les enchaîner.",
         ];
       },
       tableau: (c) => {
         const r = annuiteDuPret(c);
         return {
-          titre: `Le prêt et l'année · ${c.entreprise}`,
+          titre: `Le prêt et l'année · ${r.entreprise}`,
           colonnes: ["Montant"],
           lignes: [
             { libelle: `Prix de l'équipement, hors taxes (${r.equipement})`, valeurs: [eur(r.montant)] },
             { libelle: "Taux du prêt, par an", valeurs: [pct(r.tauxDeLEmprunt)] },
             { libelle: "Durée du prêt (années)", valeurs: [qte(DUREE_DU_PRET)] },
             { libelle: "Résultat net de l'année", valeurs: [eur(r.resultatNet)] },
-            { libelle: "Dotations aux amortissements de l'année", valeurs: [eur(r.dotation)] },
+            { libelle: "Dotations de l'année (usure de la ligne, dépréciation, provision)", valeurs: [eur(r.dotation)] },
           ],
         };
       },
@@ -113,7 +121,7 @@ export const L_ANNUITE_DU_PRET: Situation = {
       explication: (c) => {
         const r = annuiteDuPret(c);
         return [
-          `La première année, ${c.entreprise} paierait ${eur(r.annuite)} à la banque : les intérêts sont une charge, le capital remboursé n'en est pas une, mais il sort de la banque tout autant.`,
+          `La première année, ${r.entreprise} paierait ${eur(r.annuite)} à la banque : les intérêts sont une charge, le capital remboursé n'en est pas une, mais il sort de la banque tout autant.`,
         ];
       },
     },
@@ -143,7 +151,7 @@ export const L_ANNUITE_DU_PRET: Situation = {
       titre: "Ce que l'activité dégage",
       notions: ["frng", "income_statement"],
       question: () =>
-        "Calculez la capacité d'autofinancement de l'année (résultat net plus dotations aux amortissements), puis ce qu'il en resterait une fois payée la première annuité. Un résultat négatif dit qu'elle ne suffit pas.",
+        "Calculez la capacité d'autofinancement de l'année (résultat net plus dotations), puis ce qu'il en resterait une fois payée la première annuité. Un résultat négatif dit qu'elle ne suffit pas.",
       champs: (c) => {
         const r = annuiteDuPret(c);
         return [
@@ -155,10 +163,10 @@ export const L_ANNUITE_DU_PRET: Situation = {
         const r = annuiteDuPret(c);
         return [
           r.couvre
-            ? `Ce que l'activité ${dE(c.entreprise)} a dégagé cette année paie la première annuité, et il en reste ${eur(r.resteDeLaCaf)}.`
+            ? `Ce que l'activité ${dE(r.entreprise)} a dégagé cette année paie la première annuité, et il en reste ${eur(r.resteDeLaCaf)}.`
             : r.caf > 0
-              ? `Ce que l'activité ${dE(c.entreprise)} a dégagé cette année ne paie pas la première annuité : il manque ${eur(-r.resteDeLaCaf)}, à prendre sur la trésorerie.`
-              : `L'activité ${dE(c.entreprise)} n'a rien dégagé cette année : toute l'annuité, ${eur(r.annuite)}, serait à prendre sur la trésorerie.`,
+              ? `Ce que l'activité ${dE(r.entreprise)} a dégagé cette année ne paie pas la première annuité : il manque ${eur(-r.resteDeLaCaf)}, à prendre sur la trésorerie.`
+              : `L'activité ${dE(r.entreprise)} n'a rien dégagé cette année : toute l'annuité, ${eur(r.annuite)}, serait à prendre sur la trésorerie.`,
         ];
       },
     },

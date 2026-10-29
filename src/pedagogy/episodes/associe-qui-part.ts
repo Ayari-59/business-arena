@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 77 — L'ASSOCIÉ QUI VEUT VENDRE SES PARTS, tel que l'interface et le bilan le lisent.
+ * L'ASSOCIÉ QUI VEUT VENDRE SES PARTS, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le suivi de l'opération montre à Gustave, ce que la

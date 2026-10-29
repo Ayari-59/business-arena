@@ -37,6 +37,8 @@ const EXPECTED_TABLES = [
   "examens", "examen_candidats",
   // L'évaluation entre coéquipiers (migration 0044, /teacher/games/[gameId]/coequipiers).
   "pairs_evaluations", "pairs_moments", "pairs_reponses",
+  // Le quota du tuteur IA : un compteur par partie et par élève (migration 0050).
+  "tuteur_questions",
 ];
 
 describe("schéma de base de données", () => {

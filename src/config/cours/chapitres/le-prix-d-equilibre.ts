@@ -1,215 +1,132 @@
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../pedagogy/cours/etats";
 import type { Cas } from "../cas";
-import { rejouerAvec } from "../gestion-de-la-pme";
-import type { Chapitre, TableauDeDonnees } from "../types";
 import {
-  ENTREPRISES_DU_MARCHE,
-  dE,
-  lireLeMarche,
-  marcheDeReference,
-  rang,
-  stockDuDebut,
+  chercherLePrix as chercher,
+  grille,
+  marcheAuPrix,
+  capacite,
+  prixLePlusHautSansExcedent,
+  prixLePlusProche,
+  prixDeNova,
+  situationDuMarche as situation,
+  type Essai,
   type MarcheDuTrimestre,
-} from "./l-offre-et-la-demande";
+  type RechercheDuPrix,
+  type SituationDuMarche,
+  type TrimestreLu,
+} from "../monde/economie-et-marketing";
+import { POURQUOI_LE_MARCHE_DE_NOVA, mercatiqueDe } from "../monde/mercatique-de-nova";
+import type { Chapitre, TableauDeDonnees } from "../types";
+import { ENTREPRISES_DU_MARCHE, dE, enUnites, rang } from "./l-offre-et-la-demande";
 
 /**
  * CHAPITRE : LE PRIX QUI ÉQUILIBRE LE MARCHÉ (seconde, sciences économiques et sociales,
  * palier 1).
  *
- * Au début d'un trimestre, l'entreprise a décidé ce qu'elle met en vente ; les acheteurs, eux,
- * répondent au prix. À un prix trop bas, des acheteurs repartent sans être servis (la pénurie) ;
- * à un prix trop haut, une partie de l'offre reste sans acheteur, en stock ou en chambres vides
- * (l'excédent). L'élève cherche, comme l'économiste, le prix où la demande et l'offre se valent :
- * le prix d'équilibre.
+ * NOVA envisage de mettre en vente, au premier trimestre, tout ce que sa ligne peut monter : 7 000
+ * enceintes. Les acheteurs, eux, répondent au prix. À un prix trop bas, des acheteurs repartent sans
+ * être servis (la pénurie) ; à un prix trop haut, une partie de l'offre reste sans acheteur
+ * (l'excédent). L'élève cherche, comme l'économiste, le prix où la demande et l'offre se valent : le
+ * prix d'équilibre. Le tâtonnement part de 59 € et avance par pas de 10 %, jusqu'au premier prix où la
+ * situation s'inverse, puis essaie le milieu de l'intervalle. Puis l'expérience : un curseur (le prix
+ * le plus haut sans excédent, à l'euro) et un laboratoire (le prix d'équilibre, au dixième d'euro).
  *
- * LA RECHERCHE EST JOUÉE PAR L'ARÈNE. Le trimestre est rejoué (`rejouerAvec`, clés
- * « le-prix-d-equilibre:t<trimestre>-… ») avec un autre prix, et rien d'autre : la quantité mise
- * en vente ce trimestre-là est celle que le bon gestionnaire avait décidée avant que le prix ne
- * change (le test vérifie qu'elle est la même à tous les prix). Le prix part de celui de l'année
- * et avance par pas de `PAS_DU_TATONNEMENT` du prix de l'année, vers le haut tant que la demande
- * dépasse l'offre, vers le bas tant que l'offre dépasse la demande, jusqu'au premier prix où la
- * situation s'inverse (`ESSAIS_AU_PLUS` pas au plus) : le tâtonnement du marché. Puis l'arène
- * rejoue le trimestre au milieu de l'intervalle trouvé, pour serrer le prix.
+ * LE CHAPITRE JOUE DANS LE MONDE DU COURS (monde/economie-et-marketing.ts) : la droite de demande du
+ * premier trimestre (16 755 − 203 × prix), la ligne de 7 000 enceintes. HYPOTHÈSES DU CHAPITRE : toute
+ * la ligne mise en vente ; une demande et une offre qui ne s'écartent pas de plus de 1 % de l'offre se
+ * lisent comme égales (MARGE_D_EQUILIBRE). Au prix de 59 €, ce que NOVA a fabriqué (4 778 enceintes)
+ * égale déjà la demande : c'est la ligne pleine qui crée l'excédent.
  *
- * Chaque prix est posé, jamais multiplié : le formulaire reconduirait la décision reçue. Seul le
- * trimestre étudié change ; les trimestres d'après, le bon gestionnaire réagit, mais le chapitre
- * ne les lit pas. Rien ne change avant le trimestre étudié : aucune défaillance ne peut le
- * précéder.
- *
- * LA MARGE D'ÉQUILIBRE (hypothèse du cours) : une demande et une offre qui ne s'écartent pas de
- * plus de `MARGE_D_EQUILIBRE` de l'offre se lisent comme égales. Le moteur ne tombe jamais sur
- * l'égalité exacte, et un écart de quelques unités ne change pas la lecture de l'économiste.
- *
- * Ce que le chapitre ne double pas : « La demande répond au prix » (bac STMG) mesure ce qu'une
- * hausse fait au chiffre d'affaires ; « Remplir l'hôtel » cherche le prix qui rapporte le plus
- * selon la saison ; « Décider : prix, fabriquer ou acheter » raisonne en marge. Ici, ni chiffre
- * d'affaires ni marge : le prix qui accorde la demande et l'offre, ce que l'économiste appelle
- * l'équilibre du marché.
+ * CE QUI A CHANGÉ. L'arène rejouait le trimestre prix après prix, chez six entreprises ; le chapitre
+ * lit la droite de NOVA seule : 4 778 enceintes demandées à 59 €, 7 173 à 47,20 €, l'équilibre entre
+ * 47,20 € et 50,15 €.
  */
 
-/** Le trimestre que le chapitre rejoue : le premier de l'année. */
+/** Le trimestre du chapitre : le premier de l'année. */
 export const TRIMESTRE_DU_MARCHE = 1;
 
-/** Le pas du tâtonnement : 10 % du prix de l'année à chaque essai. */
+/** Le pas du tâtonnement : 10 % du prix à chaque essai (l'écart de prix de la fiche). */
 export const PAS_DU_TATONNEMENT = 0.1;
 
-/** Le nombre d'essais au plus, de part et d'autre du prix de l'année ; au-delà, le chapitre refuse de se calculer. */
-export const ESSAIS_AU_PLUS = 8;
-
-/** L'écart entre la demande et l'offre qui se lit comme l'équilibre : 1 % de l'offre (hypothèse du cours). */
-export const MARGE_D_EQUILIBRE = 0.01;
+/** Les bornes du curseur (à l'euro) et du laboratoire (au demi-euro). */
+const PRIX_DU_CURSEUR = { min: 40, max: 59 } as const;
+const PRIX_DU_LABORATOIRE = { min: 45, max: 59, pas: 0.1 } as const;
 
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
-export type SituationDuMarche = "penurie" | "excedent" | "equilibre";
+export type { SituationDuMarche };
 
-/** Pénurie, excédent ou équilibre : la demande et l'offre d'un trimestre comparées, à la marge d'équilibre près. */
-export function situationDuMarche(m: Pick<MarcheDuTrimestre, "demande" | "offre">): SituationDuMarche {
-  if (Math.abs(m.demande - m.offre) <= MARGE_D_EQUILIBRE * m.offre) return "equilibre";
-  return m.demande > m.offre ? "penurie" : "excedent";
-}
+const f = (c: Cas) => mercatiqueDe(c);
+const pourCent = (c: Cas) => Math.round(f(c).margeDEquilibre * 100);
 
-/** Le trimestre `trimestre` de l'année du cours, rejoué au prix `prix` : seul ce prix change. */
-export function marcheAuPrix(code: string, trimestre: number, prix: number, cle: string): MarcheDuTrimestre {
-  const annee = rejouerAvec(code, `le-prix-d-equilibre:t${trimestre}-${cle}`, (tour, d) => (tour === trimestre ? { ...d, price: prix } : undefined));
-  return lireLeMarche(annee[trimestre - 1]!, stockDuDebut(code, trimestre), prix);
-}
+/** Pénurie, excédent ou équilibre, à 1 % de l'offre près. */
+export const situationDuMarche = (c: Cas, m: Pick<MarcheDuTrimestre, "demande" | "offre">) => situation(f(c), m);
 
-/** Un essai du tâtonnement : le prix, son écart au prix de l'année (en pas), et le marché à ce prix. */
-export interface Essai extends MarcheDuTrimestre {
-  pas: number;
-}
+/** La recherche d'un trimestre : le tâtonnement et l'essai au milieu. */
+export const chercherLePrix = (c: Cas, trimestre: TrimestreLu): RechercheDuPrix => chercher(f(c), trimestre);
 
-export type OuEstLEquilibre = "sous-le-milieu" | "au-milieu" | "au-dessus-du-milieu";
+/** L'offre du chapitre : toute la ligne, mise en vente au 1er trimestre (hypothèse du chapitre). */
+export const offreDuChapitre = (c: Cas) => capacite(f(c));
 
-/**
- * LE TÂTONNEMENT : du prix de l'année, par pas de 10 %, jusqu'au premier prix où la situation
- * s'inverse ; puis le trimestre rejoué au milieu de l'intervalle.
- */
-export function chercherLePrix(code: string, trimestre: number) {
-  const depart = marcheDeReference(code, trimestre);
-  const situation = situationDuMarche(depart);
-  // Pénurie (ou équilibre par une demande au moins égale) : le prix monte ; excédent : il baisse.
-  const sens = depart.demande >= depart.offre ? 1 : -1;
-  const essais: Essai[] = [{ pas: 0, ...depart }];
-  for (let k = 1; k <= ESSAIS_AU_PLUS; k++) {
-    const facteur = Math.round((1 + sens * k * PAS_DU_TATONNEMENT) * 100) / 100;
-    const m = marcheAuPrix(code, trimestre, auCentime(depart.prix * facteur), `prix-x${facteur}`);
-    essais.push({ pas: sens * k, ...m });
-    if ((m.demande - m.offre) * sens <= 0) break;
-  }
-  const dernier = essais.at(-1)!;
-  const avant = essais.at(-2)!;
-  if ((dernier.demande - dernier.offre) * sens > 0) {
-    throw new Error(`Le marché de ${code} ne s'inverse pas en ${ESSAIS_AU_PLUS} pas de ${PAS_DU_TATONNEMENT * 100} %`);
-  }
-  const [bas, haut] = avant.prix < dernier.prix ? [avant, dernier] : [dernier, avant];
-  const prixDuMilieu = auCentime((bas.prix + haut.prix) / 2);
-  const milieu = marcheAuPrix(code, trimestre, prixDuMilieu, "milieu");
-  const equilibre: OuEstLEquilibre =
-    situationDuMarche(milieu) === "equilibre" ? "au-milieu" : milieu.demande > milieu.offre ? "au-dessus-du-milieu" : "sous-le-milieu";
-  return {
-    trimestre,
-    depart,
-    situation,
-    sens,
-    essais,
-    avant,
-    dernier,
-    bas,
-    haut,
-    milieu,
-    equilibre,
-    /** Le prix d'équilibre est au-dessus du prix de l'année (pénurie) ou en dessous (excédent). */
-    auDessus: sens > 0,
-  };
-}
-
-export type RechercheDuPrix = ReturnType<typeof chercherLePrix>;
-
-/** La recherche du chapitre : le 1er trimestre de l'année. */
-export const prixDEquilibre = (c: Cas) => chercherLePrix(c.code, TRIMESTRE_DU_MARCHE);
+/** La recherche du chapitre : le 1er trimestre, toute la ligne mise en vente. */
+export const prixDEquilibre = (c: Cas) => chercher(f(c), TRIMESTRE_DU_MARCHE, offreDuChapitre(c));
 
 /** « 64,90 €, 10 % plus cher » : le libellé d'un prix essayé. */
 export const libelleDeLEssai = (e: Essai) =>
   e.pas === 0
-    ? `${eur(e.prix)}, prix de l'année`
+    ? `${eur(e.prix)}, prix de départ`
     : `${eur(e.prix)}, ${Math.round(Math.abs(e.pas) * PAS_DU_TATONNEMENT * 100)} % ${e.pas > 0 ? "plus cher" : "moins cher"}`;
 
 /** L'écart entre la demande et l'offre, et son calcul. */
 export const ecartDemandeOffre = (m: MarcheDuTrimestre) => m.demande - m.offre;
 export const calculDeLEcart = (m: MarcheDuTrimestre) => `${qte(m.demande)} − ${qte(m.offre)} = ${qte(m.demande - m.offre)}`;
 
-/** Une quantité et son unité, au singulier pour une seule : « 1 jour-conseil », « 266 enceintes ». */
-export const enUnites = (n: number, c: Pick<Cas, "unite" | "unites">) => `${qte(n)} ${Math.abs(n) <= 1 ? c.unite : c.unites}`;
-
-/** Ce que dit un marché à un prix, en une phrase : « la demande dépasse l'offre de 984 enceintes, et des acheteurs repartent sans être servis ». */
-export function constat(m: MarcheDuTrimestre, c: Pick<Cas, "unite" | "unites">): string {
-  const s = situationDuMarche(m);
+/** Ce que dit un marché à un prix, en une phrase. */
+export function constat(m: MarcheDuTrimestre, c: Cas): string {
+  const s = situationDuMarche(c, m);
   if (s === "penurie") return `la demande dépasse l'offre de ${enUnites(m.demande - m.offre, c)}, et des acheteurs repartent sans être servis`;
   if (s === "excedent") return `l'offre dépasse la demande de ${enUnites(m.offre - m.demande, c)}, et une partie reste sans acheteur`;
   return `la demande et l'offre se valent, à ${enUnites(Math.abs(m.demande - m.offre), c)} près`;
 }
 
-/** La situation au prix de l'année, à choisir : pénurie, excédent ou équilibre. */
-export function optionsDeLaSituation(m: MarcheDuTrimestre, c: Pick<Cas, "unite" | "unites">) {
-  const s = situationDuMarche(m);
+/** La situation à un prix, à choisir : pénurie, excédent ou équilibre. */
+export function optionsDeLaSituation(m: MarcheDuTrimestre, c: Cas) {
+  const s = situationDuMarche(c, m);
   return [
+    { texte: "En pénurie : des acheteurs repartent sans être servis", juste: s === "penurie", retour: s === "penurie" ? `Oui : ${constat(m, c)}.` : `Non : ${constat(m, c)}.` },
+    { texte: "En excédent : une partie de l'offre reste invendue", juste: s === "excedent", retour: s === "excedent" ? `Oui : ${constat(m, c)}.` : `Non : ${constat(m, c)}.` },
     {
-      texte: "En pénurie : des acheteurs repartent sans être servis",
-      juste: s === "penurie",
-      retour: s === "penurie" ? `Oui : ${constat(m, c)}.` : `Non : ${constat(m, c)}.`,
-    },
-    {
-      texte: "En excédent : une partie de l'offre reste invendue",
-      juste: s === "excedent",
-      retour: s === "excedent" ? `Oui : ${constat(m, c)}.` : `Non : ${constat(m, c)}.`,
-    },
-    {
-      texte: "À l'équilibre : la demande et l'offre se valent à peu près",
+      texte: "À l'équilibre : la demande et l'offre se valent",
       juste: s === "equilibre",
-      retour:
-        s === "equilibre"
-          ? `Oui : ${constat(m, c)}, moins de ${Math.round(MARGE_D_EQUILIBRE * 100)} % de l'offre.`
-          : `Non : ${constat(m, c)}. L'écart dépasse ${Math.round(MARGE_D_EQUILIBRE * 100)} % de l'offre.`,
+      retour: s === "equilibre" ? `Oui : ${constat(m, c)}, moins de ${pourCent(c)} % de l'offre.` : `Non : ${constat(m, c)}. L'écart dépasse ${pourCent(c)} % de l'offre.`,
     },
   ];
 }
 
 /** Les trois réponses à « où est le prix d'équilibre ? », une fois l'intervalle coupé en deux. */
-export function optionsDuMilieu(p: RechercheDuPrix, c: Pick<Cas, "unite" | "unites">) {
+export function optionsDuMilieu(p: RechercheDuPrix, c: Cas) {
   const faits = `à ${eur(p.milieu.prix)}, ${constat(p.milieu, c)}`;
   return [
     {
       texte: `Entre ${eur(p.bas.prix)} et ${eur(p.milieu.prix)}`,
       juste: p.equilibre === "sous-le-milieu",
-      retour:
-        p.equilibre === "sous-le-milieu"
-          ? `Oui : ${faits}. Le prix du milieu est déjà trop haut ; l'équilibre est en dessous.`
-          : `Non : ${faits}.`,
+      retour: p.equilibre === "sous-le-milieu" ? `Oui : ${faits}. Le prix du milieu est déjà trop haut ; l'équilibre est en dessous.` : `Non : ${faits}.`,
     },
     {
       texte: `Entre ${eur(p.milieu.prix)} et ${eur(p.haut.prix)}`,
       juste: p.equilibre === "au-dessus-du-milieu",
-      retour:
-        p.equilibre === "au-dessus-du-milieu"
-          ? `Oui : ${faits}. Le prix du milieu est encore trop bas ; l'équilibre est au-dessus.`
-          : `Non : ${faits}.`,
+      retour: p.equilibre === "au-dessus-du-milieu" ? `Oui : ${faits}. Le prix du milieu est encore trop bas ; l'équilibre est au-dessus.` : `Non : ${faits}.`,
     },
     {
       texte: `Tout près de ${eur(p.milieu.prix)}`,
       juste: p.equilibre === "au-milieu",
-      retour:
-        p.equilibre === "au-milieu"
-          ? `Oui : ${faits}, moins de ${Math.round(MARGE_D_EQUILIBRE * 100)} % de l'offre.`
-          : `Non : ${faits}. L'écart dépasse ${Math.round(MARGE_D_EQUILIBRE * 100)} % de l'offre.`,
+      retour: p.equilibre === "au-milieu" ? `Oui : ${faits}, moins de ${pourCent(c)} % de l'offre.` : `Non : ${faits}. L'écart dépasse ${pourCent(c)} % de l'offre.`,
     },
   ];
 }
 
-/** Où est le prix d'équilibre, en quelques mots : « entre 59 € et 61,95 € », « tout près de 61,95 € ». */
+/** Où est le prix d'équilibre, en quelques mots. */
 export const ouEstLePrix = (p: RechercheDuPrix) =>
   p.equilibre === "au-milieu"
     ? `tout près de ${eur(p.milieu.prix)}`
@@ -220,7 +137,7 @@ export const ouEstLePrix = (p: RechercheDuPrix) =>
 export function tableauDuDepart(c: Cas, p: RechercheDuPrix): TableauDeDonnees {
   const m = p.depart;
   return {
-    titre: `Le marché ${dE(c.entreprise)} au ${rang(p.trimestre)} trimestre, au prix de l'année, en ${c.unites}`,
+    titre: `Le marché ${dE(c.entreprise)} au ${rang(p.trimestre)} trimestre, en ${c.unites}`,
     colonnes: [`À ${eur(m.prix)}`],
     lignes: [
       { libelle: "Demande reçue", valeurs: [qte(m.demande)] },
@@ -234,7 +151,7 @@ export function tableauDuDepart(c: Cas, p: RechercheDuPrix): TableauDeDonnees {
 
 export function tableauDuTatonnement(c: Cas, p: RechercheDuPrix): TableauDeDonnees {
   return {
-    titre: `Le ${rang(p.trimestre)} trimestre rejoué, prix après prix, en ${c.unites}`,
+    titre: `Le ${rang(p.trimestre)} trimestre, prix après prix, en ${c.unites}`,
     colonnes: ["Demande reçue", "Mise en vente"],
     lignes: p.essais.map((e) => ({ libelle: libelleDeLEssai(e), valeurs: [qte(e.demande), qte(e.offre)] })),
   };
@@ -243,7 +160,7 @@ export function tableauDuTatonnement(c: Cas, p: RechercheDuPrix): TableauDeDonne
 export function tableauDuMilieu(c: Cas, p: RechercheDuPrix): TableauDeDonnees {
   const cols = [p.bas, p.milieu, p.haut];
   return {
-    titre: `Le ${rang(p.trimestre)} trimestre rejoué au milieu de l'intervalle, en ${c.unites}`,
+    titre: `Le ${rang(p.trimestre)} trimestre au milieu de l'intervalle, en ${c.unites}`,
     colonnes: cols.map((m) => `À ${eur(m.prix)}`),
     lignes: [
       { libelle: "Demande reçue", valeurs: cols.map((m) => qte(m.demande)) },
@@ -252,6 +169,9 @@ export function tableauDuMilieu(c: Cas, p: RechercheDuPrix): TableauDeDonnees {
   };
 }
 
+/** Le prix d'équilibre du laboratoire, au dixième d'euro : celui de la grille où la demande s'écarte le moins de l'offre. */
+export const prixDuLaboratoire = (c: Cas) => prixLePlusProche(f(c), grille(PRIX_DU_LABORATOIRE.min, PRIX_DU_LABORATOIRE.max, PRIX_DU_LABORATOIRE.pas), offreDuChapitre(c));
+
 export const LE_PRIX_D_EQUILIBRE: Chapitre = {
   code: "le-prix-d-equilibre",
   parcours: "seconde-ses",
@@ -259,7 +179,7 @@ export const LE_PRIX_D_EQUILIBRE: Chapitre = {
   blocs: ["2de SES · Comment se forment les prix sur un marché ?"],
   titre: "Le prix qui équilibre le marché",
   accroche:
-    "Trop bas, des acheteurs repartent sans rien ; trop haut, l'offre reste sans acheteur. L'arène rejoue le trimestre prix après prix pour trouver celui où la demande et l'offre se valent.",
+    "Trop bas, des acheteurs repartent sans rien ; trop haut, l'offre reste sans acheteur. Chercher, prix après prix, celui où la demande et l'offre se valent.",
   objectifs: [
     "Reconnaître une pénurie et un excédent sur un marché",
     "Dire dans quel sens le prix doit bouger pour rapprocher la demande de l'offre",
@@ -267,11 +187,7 @@ export const LE_PRIX_D_EQUILIBRE: Chapitre = {
     "Situer le prix d'équilibre entre deux prix essayés",
   ],
   libre: false,
-  entreprises: {
-    codes: ENTREPRISES_DU_MARCHE,
-    pourquoi:
-      "ce chapitre lit un seul marché, celui d'une offre unique vendue à l'unité : une gamme a un marché par article, et un club de sport sert d'abord ses abonnés.",
-  },
+  entreprises: { codes: ENTREPRISES_DU_MARCHE, pourquoi: POURQUOI_LE_MARCHE_DE_NOVA },
   etapes: [
     {
       id: "intro",
@@ -282,8 +198,8 @@ export const LE_PRIX_D_EQUILIBRE: Chapitre = {
       texte: (c) => {
         const p = prixDEquilibre(c);
         return [
-          `Au début du ${rang(p.trimestre)} trimestre, ${c.entreprise} a décidé ce qu'elle mettait en vente : ${qte(p.depart.offre)} ${c.unites}. Les acheteurs, eux, répondent au prix : à ${eur(p.depart.prix)}, ils en ont demandé ${qte(p.depart.demande)}.`,
-          "L'économiste raisonne ainsi : la quantité mise en vente est fixée pour le trimestre, et c'est le prix qui fait bouger la demande. L'arène peut rejouer ce trimestre à un autre prix, avec les mêmes concurrents : les acheteurs répondent au nouveau prix, la quantité mise en vente reste la même.",
+          `Au ${rang(p.trimestre)} trimestre, ${c.entreprise} envisage de mettre en vente tout ce que sa ligne peut monter : ${qte(p.depart.offre)} ${c.unites}. Les acheteurs, eux, répondent au prix : à ${eur(p.depart.prix)}, ils en demandent ${qte(p.depart.demande)}.`,
+          "L'économiste raisonne ainsi : la quantité mise en vente est fixée pour le trimestre, et c'est le prix qui fait bouger la demande. À un autre prix, les acheteurs répondent autrement ; la quantité mise en vente reste la même.",
         ];
       },
       repere: () =>
@@ -296,7 +212,7 @@ export const LE_PRIX_D_EQUILIBRE: Chapitre = {
       notions: ["demand_market_share", "stock"],
       question: (c) => {
         const p = prixDEquilibre(c);
-        return `Au prix de l'année, ${eur(p.depart.prix)}, dans quelle situation se trouve le marché ${dE(c.entreprise)} ?`;
+        return `Au prix ${dE(c.entreprise)}, ${eur(p.depart.prix)}, dans quelle situation se trouve son marché ?`;
       },
       options: (c) => optionsDeLaSituation(prixDEquilibre(c).depart, c),
     },
@@ -315,9 +231,7 @@ export const LE_PRIX_D_EQUILIBRE: Chapitre = {
             retour:
               p.situation === "penurie"
                 ? "Oui : un prix plus haut fait renoncer une partie des acheteurs. La demande descend vers l'offre, et moins d'acheteurs repartent sans rien."
-                : p.situation === "excedent"
-                  ? "Non : l'offre dépasse déjà la demande. Un prix plus haut ferait partir d'autres acheteurs, et plus d'offre encore resterait sans acheteur."
-                  : "Non : la demande et l'offre se valent déjà. Un prix plus haut ferait partir des acheteurs, et une partie de l'offre resterait sans acheteur.",
+                : "Non : un prix plus haut ferait partir des acheteurs, et plus d'offre encore resterait sans acheteur.",
           },
           {
             texte: "Baisser le prix",
@@ -325,16 +239,14 @@ export const LE_PRIX_D_EQUILIBRE: Chapitre = {
             retour:
               p.situation === "excedent"
                 ? "Oui : un prix plus bas attire des acheteurs. La demande monte vers l'offre, et moins d'offre reste sans acheteur."
-                : p.situation === "penurie"
-                  ? "Non : la demande dépasse déjà l'offre. Un prix plus bas attirerait d'autres acheteurs, qui repartiraient sans rien."
-                  : "Non : la demande et l'offre se valent déjà. Un prix plus bas attirerait des acheteurs qu'on ne pourrait pas servir.",
+                : "Non : un prix plus bas attirerait d'autres acheteurs, qu'on ne pourrait pas servir.",
           },
           {
             texte: "Ne pas toucher au prix",
             juste: p.situation === "equilibre",
             retour:
               p.situation === "equilibre"
-                ? `Oui : la demande et l'offre se valent déjà, à moins de ${Math.round(MARGE_D_EQUILIBRE * 100)} % de l'offre près. Le prix est à l'équilibre.`
+                ? `Oui : la demande et l'offre se valent déjà, à moins de ${pourCent(c)} % de l'offre près.`
                 : `Non : ${constat(p.depart, c)}. Tant que l'écart demeure, le prix a une raison de bouger.`,
           },
         ];
@@ -348,7 +260,7 @@ export const LE_PRIX_D_EQUILIBRE: Chapitre = {
       tableau: (c) => tableauDuTatonnement(c, prixDEquilibre(c)),
       question: (c) => {
         const p = prixDEquilibre(c);
-        return `Un marché cherche son prix à tâtons : tant que des acheteurs repartent sans être servis, le prix monte ; tant que l'offre reste sans acheteur, il baisse. L'arène l'a fait pour ${c.entreprise}, par pas de ${Math.round(PAS_DU_TATONNEMENT * 100)} % du prix de l'année, jusqu'au premier prix où la situation s'inverse. Calculez l'écart entre la demande reçue et la quantité mise en vente au prix de l'année, puis au dernier prix essayé, ${eur(p.dernier.prix)} (négatif quand l'offre dépasse la demande).`;
+        return `Un marché cherche son prix à tâtons : tant que des acheteurs repartent sans être servis, le prix monte ; tant que l'offre reste sans acheteur, il baisse. Le tableau le fait pour ${c.entreprise}, par pas de ${Math.round(PAS_DU_TATONNEMENT * 100)} % du prix, jusqu'au premier prix où la situation s'inverse. Calculez l'écart entre la demande reçue et la quantité mise en vente au prix de départ, puis au dernier prix essayé, ${eur(p.dernier.prix)} (négatif quand l'offre dépasse la demande).`;
       },
       champs: (c) => {
         const p = prixDEquilibre(c);
@@ -376,21 +288,9 @@ export const LE_PRIX_D_EQUILIBRE: Chapitre = {
         const p = prixDEquilibre(c);
         const raison = `à ${eur(p.bas.prix)}, ${constat(p.bas, c)} ; à ${eur(p.haut.prix)}, ${constat(p.haut, c)}`;
         return [
-          {
-            texte: `Entre ${eur(p.bas.prix)} et ${eur(p.haut.prix)}`,
-            juste: true,
-            retour: `Oui : ${raison}. Le prix où la demande et l'offre se valent est entre les deux.`,
-          },
-          {
-            texte: `En dessous de ${eur(p.bas.prix)}`,
-            juste: false,
-            retour: `Non : ${raison}. En dessous de ${eur(p.bas.prix)}, la demande dépasserait l'offre plus encore.`,
-          },
-          {
-            texte: `Au-dessus de ${eur(p.haut.prix)}`,
-            juste: false,
-            retour: `Non : ${raison}. Au-dessus de ${eur(p.haut.prix)}, l'offre dépasserait la demande plus encore.`,
-          },
+          { texte: `Entre ${eur(p.bas.prix)} et ${eur(p.haut.prix)}`, juste: true, retour: `Oui : ${raison}. Le prix où la demande et l'offre se valent est entre les deux.` },
+          { texte: `En dessous de ${eur(p.bas.prix)}`, juste: false, retour: `Non : ${raison}. En dessous de ${eur(p.bas.prix)}, la demande dépasserait l'offre plus encore.` },
+          { texte: `Au-dessus de ${eur(p.haut.prix)}`, juste: false, retour: `Non : ${raison}. Au-dessus de ${eur(p.haut.prix)}, l'offre dépasserait la demande plus encore.` },
         ];
       },
     },
@@ -402,7 +302,7 @@ export const LE_PRIX_D_EQUILIBRE: Chapitre = {
       tableau: (c) => tableauDuMilieu(c, prixDEquilibre(c)),
       question: (c) => {
         const p = prixDEquilibre(c);
-        return `Pour serrer le prix, l'arène rejoue le trimestre au milieu de l'intervalle : (${eur(p.bas.prix)} + ${eur(p.haut.prix)}) ÷ 2 = ${eur(p.milieu.prix)}. Calculez l'écart entre la demande reçue et la quantité mise en vente à ce prix (négatif quand l'offre dépasse la demande).`;
+        return `Pour serrer le prix, essayons le milieu de l'intervalle : (${eur(p.bas.prix)} + ${eur(p.haut.prix)}) ÷ 2 = ${eur(p.milieu.prix)}. Calculez l'écart entre la demande reçue et la quantité mise en vente à ce prix (négatif quand l'offre dépasse la demande).`;
       },
       champs: (c) => {
         const p = prixDEquilibre(c);
@@ -423,20 +323,104 @@ export const LE_PRIX_D_EQUILIBRE: Chapitre = {
       options: (c) => optionsDuMilieu(prixDEquilibre(c), c),
     },
     {
+      id: "le-prix-sans-excedent",
+      type: "curseur",
+      titre: "Le prix le plus haut sans excédent",
+      notions: ["price_elasticity", "stock"],
+      question: (c) =>
+        `Faites varier le prix, à l'euro, avec les ${qte(offreDuChapitre(c))} ${c.unites} mises en vente. Une courbe donne ce que les acheteurs veulent dépenser à ce prix, l'autre ce que vaut toute l'offre à ce prix : tant que la seconde dépasse la première, des ${c.unites} restent sans acheteur. Placez le curseur sur le prix le plus haut auquel toute l'offre trouve acheteur, puis validez.`,
+      grandeur: () => ({ libelle: "Prix de l'enceinte", unite: "€" }),
+      sens: "plus-grande",
+      cible: (c) => ({ attendu: prixLePlusHautSansExcedent(f(c), offreDuChapitre(c)), ...PRIX_DU_CURSEUR }),
+      zones: ["Toute l'offre trouve acheteur", "Une partie de l'offre reste sans acheteur"],
+      rates: () => ({
+        dessous: "À ce prix, toute l'offre trouve acheteur, mais un prix plus haut le permettrait encore : cherchez le plus haut.",
+        dessus: "À ce prix, l'offre dépasse la demande : une partie reste sans acheteur.",
+      }),
+      montrer: "Montrer le prix",
+      lecture: (c, q) => {
+        const m = marcheAuPrix(f(c), { prix: q, offre: offreDuChapitre(c) });
+        return [
+          { libelle: "Ce que les acheteurs veulent dépenser", montant: m.demande * q },
+          { libelle: "Ce que vaut toute l'offre", montant: m.offre * q },
+          { libelle: "Chiffre d'affaires des ventes", montant: m.echangee * q, fort: true },
+        ];
+      },
+      droites: (c) => ({
+        produit: (q) => marcheAuPrix(f(c), { prix: q, offre: offreDuChapitre(c) }).demande * q,
+        cout: (q) => offreDuChapitre(c) * q,
+        libelles: ["Ce que les acheteurs veulent dépenser", "Ce que vaut toute l'offre"],
+      }),
+      explication: (c) => {
+        const p = prixLePlusHautSansExcedent(f(c), offreDuChapitre(c));
+        const a = marcheAuPrix(f(c), { prix: p, offre: offreDuChapitre(c) });
+        const b = marcheAuPrix(f(c), { prix: p + 1, offre: offreDuChapitre(c) });
+        return [
+          `À ${eur(p)}, les acheteurs demandent ${qte(a.demande)} ${c.unites}, au moins les ${qte(a.offre)} mises en vente : rien ne reste. À ${eur(p + 1)}, ils n'en demandent que ${qte(b.demande)} : ${enUnites(b.nonVendue, c)} restent sans acheteur.`,
+          "Le prix d'équilibre est entre ces deux prix : l'euro ne suffit plus à le dire, il faut serrer davantage.",
+        ];
+      },
+    },
+    {
+      id: "le-laboratoire-de-l-equilibre",
+      type: "simulation",
+      titre: "Le laboratoire de l'équilibre",
+      notions: ["price_elasticity", "demand_market_share"],
+      question: (c) =>
+        `Faites varier le prix, au dixième d'euro, avec les ${qte(offreDuChapitre(c))} ${c.unites} mises en vente. Le tableau dit la demande et son écart avec l'offre. Relevez le défi.`,
+      leviers: (c) => [{ code: "prix", libelle: "Prix de l'enceinte", unite: "€", ...PRIX_DU_LABORATOIRE, depart: prixDeNova(f(c)) }],
+      lecture: (c, p) => {
+        const m = marcheAuPrix(f(c), { prix: p.prix!, offre: offreDuChapitre(c) });
+        const d = marcheAuPrix(f(c), { offre: offreDuChapitre(c) });
+        return [
+          { libelle: "Demande reçue", montant: m.demande, unite: c.unites, reference: d.demande },
+          { libelle: "Quantité mise en vente", montant: m.offre, unite: c.unites },
+          { libelle: "Demande − offre", montant: m.demande - m.offre, unite: c.unites, reference: d.demande - d.offre, fort: true },
+        ];
+      },
+      graphique: (c) => ({
+        levier: "prix",
+        unite: c.unites,
+        courbes: [
+          { libelle: "Demande reçue", valeur: (p) => marcheAuPrix(f(c), { prix: p.prix!, offre: offreDuChapitre(c) }).demande },
+          { libelle: "Quantité mise en vente", valeur: () => offreDuChapitre(c) },
+        ],
+      }),
+      defi: (c) => {
+        const juste = prixDuLaboratoire(c);
+        return {
+          consigne: "Trouvez le prix, au dixième d'euro, auquel la demande s'écarte le moins de l'offre.",
+          atteint: (p) => Math.abs(p.prix! - juste) < 1e-9,
+          indice: (p) => {
+            const m = marcheAuPrix(f(c), { prix: p.prix!, offre: offreDuChapitre(c) });
+            return `À ${eur(m.prix)}, ${constat(m, c)} : ${m.demande > m.offre ? "il faut monter le prix" : "il faut baisser le prix"}.`;
+          },
+          solution: { prix: juste },
+        };
+      },
+      explication: (c, p) => {
+        const m = marcheAuPrix(f(c), { prix: p.prix!, offre: offreDuChapitre(c) });
+        return [
+          `Défi relevé : à ${eur(m.prix)}, ${constat(m, c)}. Dix centimes plus bas ou plus haut, l'écart serait plus grand.`,
+          "C'est le prix d'équilibre : celui où la quantité demandée égale la quantité offerte.",
+        ];
+      },
+    },
+    {
       id: "synthese",
       type: "lecture",
       titre: "Ce qu'il faut retenir",
       notions: ["demand_market_share", "price_elasticity"],
       texte: (c) => {
         const p = prixDEquilibre(c);
+        const juste = prixDuLaboratoire(c);
         return [
-          `Au prix de l'année, ${eur(p.depart.prix)}, ${constat(p.depart, c)}. Le prix qui équilibre le marché ${dE(c.entreprise)} au ${rang(p.trimestre)} trimestre se trouve ${ouEstLePrix(p)} : ${p.auDessus ? "au-dessus" : "en dessous"} du prix de l'année.`,
+          `Au prix ${dE(c.entreprise)}, ${eur(p.depart.prix)}, ${constat(p.depart, c)}. Le prix qui équilibre son marché au ${rang(p.trimestre)} trimestre se trouve ${ouEstLePrix(p)}, à ${eur(juste)} au dixième d'euro près : ${p.auDessus ? "au-dessus" : "en dessous"} de son prix.`,
           "Sur un marché, quand la demande dépasse l'offre, les vendeurs peuvent monter leur prix ; quand l'offre dépasse la demande, ils doivent le baisser pour vendre. Le prix tend ainsi vers le prix d'équilibre, celui où la quantité demandée égale la quantité offerte : ni acheteur sans offre, ni offre sans acheteur.",
-          "Ce prix n'est pas fixé une fois pour toutes : il bouge avec la saison, avec les concurrents, et avec ce que les vendeurs mettent en vente le trimestre suivant.",
+          "Ce prix n'est pas fixé une fois pour toutes : il bouge avec la saison, avec les concurrents, et avec ce que les vendeurs mettent en vente. Dans l'arène, la colonne « Manqué » du marché du tour dit de quel côté vous êtes.",
         ];
       },
-      repere: () =>
-        "Prix d'équilibre : le prix auquel la quantité demandée égale la quantité offerte. En dessous, pénurie ; au-dessus, excédent.",
+      repere: () => "Prix d'équilibre : le prix auquel la quantité demandée égale la quantité offerte. En dessous, pénurie ; au-dessus, excédent.",
     },
   ],
 };

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import { getSession } from "@/lib/session";
 import { decisionsDuCandidat, type NotationGardee } from "@/services/examen.service";
 import { formatEuro } from "@/lib/format";
@@ -33,7 +34,7 @@ export default async function DecisionsDuCandidatPage({
 }) {
   const { id, candidatId } = await params;
   const session = await getSession();
-  if (!session) redirect("/teacher/login");
+  if (!session) redirect(await connexionPourLaPageDemandee());
   const lu = await decisionsDuCandidat(session.userId, id, candidatId);
   if (!lu) notFound();
   const { examen, candidat, tours } = lu;

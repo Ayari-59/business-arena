@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 92 — L'ASSOCIATION QUI DEMANDE À ÊTRE REPRISE, tel que l'interface
+ * L'ASSOCIATION QUI DEMANDE À ÊTRE REPRISE, tel que l'interface
  * et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont

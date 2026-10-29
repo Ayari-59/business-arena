@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 46 — LE RÉSEAU D'AGENCES À REDESSINER, tel que l'interface et le bilan le lisent.
+ * LE RÉSEAU D'AGENCES À REDESSINER, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord du réseau montre à Mathurin, ce

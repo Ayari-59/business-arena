@@ -156,7 +156,7 @@ describe("les deux dossiers d'un atelier", () => {
     const corriges = readFileSync("src/app/teacher/animations/[code]/dossier/page.tsx", "utf-8");
     expect(corriges, "la page des corrigés ne demande pas de session").toContain("getSession()");
     expect(corriges, "la page des corrigés ne renvoie pas au login").toContain(
-      'redirect("/teacher/login")',
+      "redirect(await connexionPourLaPageDemandee())",
     );
     const eleve = readFileSync("src/app/animations/[code]/dossier/page.tsx", "utf-8");
     expect(eleve, "le dossier élève lit les corrigés").not.toContain("dossierEnseignant");

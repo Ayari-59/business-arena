@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 45 — LE PROJET QU'ON N'OSE PAS ARRÊTER, tel que l'interface et le bilan le lisent.
+ * LE PROJET QU'ON N'OSE PAS ARRÊTER, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord d'Arvel Maison montre, ce que la

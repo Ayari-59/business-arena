@@ -1,9 +1,8 @@
-import type { RoundDecisions } from "../../../../engine/types";
 import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { auCentime } from "../../../../pedagogy/cours/etats";
 import type { Cas } from "../../cas";
-import { decisionsDeLAnneeDuCours } from "../../chapitres/decider-ensemble";
-import { partsDeLAnnee, type PartsDeLAnnee } from "../../chapitres/les-acteurs-et-la-valeur";
-import { anneeDeReference, rejouerAvec } from "../../gestion-de-la-pme";
+import { ENTREPRISES_DES_ACTEURS, POURQUOI_LES_ACTEURS, lignesDesActeurs, type Parts } from "../../chapitres/les-acteurs-et-la-valeur";
+import { partsDesActeurs } from "../../monde/gestion-et-information";
 import type { TableauDeDonnees } from "../../types";
 import type { Situation } from "../types";
 
@@ -11,100 +10,77 @@ import type { Situation } from "../types";
  * CAS PRATIQUE DU CHAPITRE « LES ACTEURS DE L'ORGANISATION ET LE PARTAGE DE LA VALEUR » : LES
  * CLIENTS DEMANDENT UNE BAISSE (Bac STMG, management, palier 1).
  *
- * Le chapitre faisait rejouer une demande des salariés ; le cas fait rejouer celle d'un autre
- * acteur, les clients : tous les prix 5 % plus bas, toute l'année. L'élève reprend les calculs du
- * chapitre (la part de chacun dans ce que paient les clients, les écarts d'une année rejouée) et
- * répond à la gérante : qui gagnerait, qui paierait. La question est neuve : une baisse de prix
- * touche plus d'acteurs qu'une hausse de salaire (les clients paient moins chaque unité mais en
- * achètent davantage, les fournisseurs livrent plus), et dans certaines entreprises, les ventes
- * en plus la paient.
+ * Le chapitre chiffrait une demande des salariés ; le cas chiffre celle d'un autre acteur, les
+ * clients : un prix 5 % plus bas, toute l'année, contre la promesse de commander 5 % d'enceintes de
+ * plus. L'élève reprend les calculs du chapitre (la part de chacun dans ce que paient les clients,
+ * les écarts d'une année refaite) et répond à la gérante : qui gagnerait, qui paierait. La question
+ * est neuve : une baisse de prix touche plus d'acteurs qu'une hausse de salaire (les clients paient
+ * moins chaque enceinte mais en achètent davantage, les fournisseurs livrent plus).
  *
- * Les chiffres : l'année du cours (`anneeDeReference`) et la même année rejouée avec le prix de
- * chaque trimestre posé à 95 % de celui de l'année du cours au même trimestre (valeur absolue,
- * référence par référence pour une gamme : `decisionsDeLAnneeDuCours`). Le reste, le gestionnaire
- * le règle dans l'année rejouée, avec les mêmes concurrents. Les parts sont celles du chapitre
- * (`partsDeLAnnee`).
+ * LE CAS JOUE DANS LE MONDE DU COURS, chez NOVA seule : le premier exercice (comptes-du-lycee.ts),
+ * refait avec le prix baissé et les enceintes promises (partsDesActeurs, dans
+ * monde/gestion-et-information.ts) : les ventes et les coûts variables changent, et l'impôt se
+ * recalcule ; rien d'autre ne bouge.
+ *
+ * CE QUI A CHANGÉ. Le cas rejouait l'année de l'arène, dans neuf entreprises. Il refait maintenant
+ * l'exercice de NOVA : la baisse coûte 36 187,90 € de résultat net aux associés.
  */
 
-/** La baisse que demandent les clients (hypothèse du cas) : 5 % sur tous les prix. */
+/** La baisse que demandent les clients (hypothèse du cas) : 5 % sur le prix de l'enceinte. */
 export const BAISSE_DEMANDEE = 0.05;
 
+/** Ce que les clients promettent en échange (hypothèse du cas) : 5 % d'enceintes commandées en plus. */
+export const VENTES_EN_PLUS_PROMISES = 0.05;
+
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
 const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
 const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 const baisse = `${Math.round(BAISSE_DEMANDEE * 100)} %`;
-
-/** L'année du cours rejouée avec tous les prix baissés, posés sur ceux de l'année du cours. */
-export function anneeAuxPrixBaisses(code: string) {
-  const annee = decisionsDeLAnneeDuCours(code);
-  const k = 1 - BAISSE_DEMANDEE;
-  return rejouerAvec(code, `les-clients-demandent-une-baisse:prix-moins-${BAISSE_DEMANDEE}`, (tour, d): RoundDecisions => {
-    const r = annee[tour - 1]!;
-    return {
-      ...d,
-      price: r.price * k,
-      ...(d.products
-        ? { products: Object.fromEntries(Object.entries(d.products).map(([cle, p]) => [cle, { ...p, price: (r.products?.[cle] ?? p).price * k }])) }
-        : {}),
-    };
-  });
-}
+const enPlus = `${Math.round(VENTES_EN_PLUS_PROMISES * 100)} %`;
 
 export type Verdict = "ils-paient" | "elle-se-paie";
 
-/** La baisse rejouée : ce que chacun reçoit avant et après, et qui la paie. */
-export function baisseDemandee(c: Cas) {
-  const avant = partsDeLAnnee(c, anneeDeReference(c.code));
-  const apres = partsDeLAnnee(c, anneeAuxPrixBaisses(c.code));
-  const ecart = (f: (p: PartsDeLAnnee) => number) => f(apres) - f(avant);
-  const ecartDeResultat = ecart((p) => p.resultatNet);
-  const verdict: Verdict = ecartDeResultat >= 0 ? "elle-se-paie" : "ils-paient";
+/** La baisse chiffrée : ce que chacun reçoit avant et après, et qui la paie. */
+export function baisseDemandee() {
+  const avant = partsDesActeurs();
+  const apres = partsDesActeurs(0, auCentime(avant.prix * (1 - BAISSE_DEMANDEE)), Math.round(avant.enceintes * (1 + VENTES_EN_PLUS_PROMISES)));
+  const ecart = (f: (p: Parts) => number) => auCentime(f(apres) - f(avant));
+  const ecartDeResultat = ecart((p) => p.associes);
   return {
     avant,
     apres,
     partDesFournisseurs: auDixieme((avant.fournisseurs / avant.ventes) * 100),
-    partDesAssocies: auDixieme((avant.resultatNet / avant.ventes) * 100),
-    ecartDeVentes: ecart((p) => p.unitesVendues),
+    partDesAssocies: auDixieme((avant.associes / avant.ventes) * 100),
+    ecartDeVentes: apres.enceintes - avant.enceintes,
     ecartDeChiffre: ecart((p) => p.ventes),
     ecartFournisseurs: ecart((p) => p.fournisseurs),
-    ecartDeSalaires: ecart((p) => p.salaires),
-    ecartDInterets: ecart((p) => p.interets),
-    ecartDImpot: ecart((p) => p.impot),
+    ecartDeSalaires: ecart((p) => p.salaries),
+    ecartDImpot: ecart((p) => p.etat),
     ecartDeResultat,
-    verdict,
+    verdict: (ecartDeResultat >= 0 ? "elle-se-paie" : "ils-paient") as Verdict,
   };
 }
 
-const lignes = (p: PartsDeLAnnee) => [
-  { libelle: "Les clients : les ventes qu'ils ont payées", montant: p.ventes },
-  { libelle: "Les fournisseurs et prestataires : achats et services", montant: p.fournisseurs },
-  { libelle: "Les salariés : salaires et cotisations", montant: p.salaires },
-  { libelle: "Les prêteurs : intérêts de l'emprunt", montant: p.interets },
-  { libelle: "L'État : impôt sur les bénéfices", montant: p.impot },
-  { libelle: "Les associés : résultat net", montant: p.resultatNet },
-];
-
 function tableauDeLAnnee(c: Cas): TableauDeDonnees {
-  const k = baisseDemandee(c);
+  const k = baisseDemandee();
   return {
-    titre: `Ce que chaque acteur ${dE(c.entreprise)} a reçu dans l'année, aux prix habituels`,
+    titre: `Ce que chaque acteur ${dE(c.entreprise)} a reçu dans l'année, au prix habituel`,
     colonnes: ["Sur l'année"],
-    lignes: [{ libelle: `Ventes (${c.unites})`, valeurs: [qte(k.avant.unitesVendues)] }, ...lignes(k.avant).map((l) => ({ libelle: l.libelle, valeurs: [eur(l.montant)] }))],
+    lignes: [{ libelle: `Ventes (${c.unites})`, valeurs: [qte(k.avant.enceintes)] }, ...lignesDesActeurs(k.avant).map((l) => ({ libelle: l.libelle, valeurs: [eur(l.montant)] }))],
   };
 }
 
 function tableauDesDeuxAnnees(c: Cas): TableauDeDonnees {
-  const k = baisseDemandee(c);
-  const apres = lignes(k.apres);
+  const k = baisseDemandee();
+  const apres = lignesDesActeurs(k.apres);
   return {
-    titre: `L'année ${dE(c.entreprise)}, rejouée avec des prix ${baisse} plus bas`,
-    colonnes: ["Prix habituels", "Prix baissés"],
+    titre: `L'année ${dE(c.entreprise)}, refaite avec un prix ${baisse} plus bas`,
+    colonnes: ["Prix habituel", "Prix baissé"],
     lignes: [
-      { libelle: `Ventes (${c.unites})`, valeurs: [qte(k.avant.unitesVendues), qte(k.apres.unitesVendues)] },
-      ...lignes(k.avant).map((l, i) => ({ libelle: l.libelle, valeurs: [eur(l.montant), eur(apres[i]!.montant)] })),
+      { libelle: `Ventes (${c.unites})`, valeurs: [qte(k.avant.enceintes), qte(k.apres.enceintes)] },
+      ...lignesDesActeurs(k.avant).map((l, i) => ({ libelle: l.libelle, valeurs: [eur(l.montant), eur(apres[i]!.montant)] })),
     ],
   };
 }
@@ -117,25 +93,25 @@ export const LES_CLIENTS_DEMANDENT_UNE_BAISSE: Situation = {
   reprend: ["les-acteurs-et-la-valeur"],
   commanditaire: "La gérante",
   titre: "Les clients demandent une baisse",
-  accroche:
-    "Les clients réguliers demandent des prix 5 % plus bas. Avant de répondre, la gérante veut savoir qui y gagnerait et qui la paierait : l'arène rejoue l'année.",
+  accroche: `Les clients demandent un prix ${baisse} plus bas, et promettent de commander plus. Avant de répondre, la gérante veut savoir qui y gagnerait et qui la paierait.`,
   objectifs: [
     "Calculer la part de chaque acteur dans ce que paient les clients",
     "Chiffrer ce qu'une demande change pour chaque acteur",
     "Dire qui gagne et qui paie, chiffres à l'appui",
   ],
   libre: false,
+  entreprises: { codes: ENTREPRISES_DES_ACTEURS, pourquoi: POURQUOI_LES_ACTEURS },
   etapes: [
     {
       id: "demande",
       type: "lecture",
       titre: "La demande des clients",
       tableau: tableauDeLAnnee,
-      texte: (c) => {
-        const k = baisseDemandee(c);
+      texte: () => {
+        const k = baisseDemandee();
         return [
-          `« Nos clients réguliers nous demandent de baisser tous nos prix de ${baisse}. Cette année, ils nous ont payé ${eur(k.avant.ventes)}. Je ne veux pas répondre au hasard : dites-moi ce que chacun reçoit aujourd'hui, ce que la baisse changerait pour chacun, et qui la paierait. »`,
-          "Pas de cours cette fois : les calculs sont ceux du chapitre. L'arène a rejoué l'année avec des prix plus bas à chaque trimestre, les mêmes concurrents et la même façon de gérer le reste.",
+          `« Nos clients nous demandent de baisser le prix de l'enceinte de ${baisse}, de ${eur(k.avant.prix)} à ${eur(k.apres.prix)}. En échange, ils promettent de commander ${enPlus} d'enceintes de plus. Cette année, ils nous ont payé ${eur(k.avant.ventes)}. Dites-moi ce que chacun reçoit aujourd'hui, ce que la baisse changerait pour chacun, et qui la paierait. »`,
+          "Pas de cours cette fois : les calculs sont ceux du chapitre. Le tableau de l'étape suivante refait l'année avec le prix baissé et les enceintes promises : les composants et les autres coûts suivent les enceintes, l'impôt suit le bénéfice, le reste ne bouge pas.",
         ];
       },
       repere: () => "À rendre : la part de chacun aujourd'hui, ce que la baisse change pour chacun, et qui la paierait.",
@@ -147,39 +123,40 @@ export const LES_CLIENTS_DEMANDENT_UNE_BAISSE: Situation = {
       notions: ["income_statement"],
       question: (c) =>
         `Sur 100 € payés par les clients ${dE(c.entreprise)}, combien vont aux fournisseurs et prestataires, et combien restent aux associés ? Calculez chaque part (montant reçu ÷ ventes × 100), en pourcentage au dixième.`,
-      champs: (c) => {
-        const k = baisseDemandee(c);
+      champs: () => {
+        const k = baisseDemandee();
         return [
           { libelle: "Part des fournisseurs et prestataires (%)", attendu: k.partDesFournisseurs, calcul: `${eur(k.avant.fournisseurs)} ÷ ${eur(k.avant.ventes)} × 100 = ${pct(k.partDesFournisseurs)}`, tolerance: 0.1 },
-          { libelle: "Part des associés (%)", attendu: k.partDesAssocies, calcul: `${eur(k.avant.resultatNet)} ÷ ${eur(k.avant.ventes)} × 100 = ${pct(k.partDesAssocies)}`, tolerance: 0.1 },
+          { libelle: "Part des associés (%)", attendu: k.partDesAssocies, calcul: `${eur(k.avant.associes)} ÷ ${eur(k.avant.ventes)} × 100 = ${pct(k.partDesAssocies)}`, tolerance: 0.1 },
         ];
       },
       explication: (c) => {
-        const k = baisseDemandee(c);
-        return [`Sur 100 € de ventes, ${c.entreprise} en verse ${pct(k.partDesFournisseurs).replace(" %", " €")} à ses fournisseurs et prestataires, et en garde ${pct(k.partDesAssocies).replace(" %", " €")} pour ses associés.`];
+        const k = baisseDemandee();
+        return [`Sur 100 € de ventes, ${c.entreprise} en verse ${pct(k.partDesFournisseurs).replace(" %", " €")} à ses fournisseurs et prestataires, et en garde ${pct(k.partDesAssocies).replace(" %", " €")} pour ses associés. Une baisse de ${baisse} du prix, c'est presque autant que ce qui reste aux associés.`];
       },
     },
     {
       id: "ecarts",
       type: "montants",
-      titre: "L'année rejouée, acteur par acteur",
+      titre: "L'année refaite, acteur par acteur",
       notions: ["income_statement", "price_elasticity"],
       tableau: tableauDesDeuxAnnees,
       question: () =>
-        "Calculez, prix baissés moins prix habituels, l'écart de ce que paient les clients, l'écart des achats et services payés aux fournisseurs, l'écart d'impôt et l'écart de résultat net.",
-      champs: (c) => {
-        const k = baisseDemandee(c);
+        "Calculez, prix baissé moins prix habituel, l'écart de ce que paient les clients, l'écart des achats et services payés aux fournisseurs, l'écart d'impôt et l'écart de résultat net.",
+      champs: () => {
+        const k = baisseDemandee();
         return [
-          { libelle: "Écart de ce que paient les clients", attendu: k.ecartDeChiffre, calcul: `${eur(k.apres.ventes)} − ${eur(k.avant.ventes)} = ${eur(k.ecartDeChiffre)}`, tolerance: 1 },
-          { libelle: "Écart des achats et services", attendu: k.ecartFournisseurs, calcul: `${eur(k.apres.fournisseurs)} − ${eur(k.avant.fournisseurs)} = ${eur(k.ecartFournisseurs)}`, tolerance: 1 },
-          { libelle: "Écart d'impôt", attendu: k.ecartDImpot, calcul: `${eur(k.apres.impot)} − ${eur(k.avant.impot)} = ${eur(k.ecartDImpot)}`, tolerance: 1 },
-          { libelle: "Écart de résultat net", attendu: k.ecartDeResultat, calcul: `${eur(k.apres.resultatNet)} − ${retranche(k.avant.resultatNet)} = ${eur(k.ecartDeResultat)}`, tolerance: 1 },
+          { libelle: "Écart de ce que paient les clients", attendu: k.ecartDeChiffre, calcul: `${eur(k.apres.ventes)} − ${eur(k.avant.ventes)} = ${eur(k.ecartDeChiffre)}` },
+          { libelle: "Écart des achats et services", attendu: k.ecartFournisseurs, calcul: `${eur(k.apres.fournisseurs)} − ${eur(k.avant.fournisseurs)} = ${eur(k.ecartFournisseurs)}` },
+          { libelle: "Écart d'impôt", attendu: k.ecartDImpot, calcul: `${eur(k.apres.etat)} − ${eur(k.avant.etat)} = ${eur(k.ecartDImpot)}` },
+          { libelle: "Écart de résultat net", attendu: k.ecartDeResultat, calcul: `${eur(k.apres.associes)} − ${eur(k.avant.associes)} = ${eur(k.ecartDeResultat)}` },
         ];
       },
       explication: (c) => {
-        const k = baisseDemandee(c);
+        const k = baisseDemandee();
         return [
-          `Avec des prix ${baisse} plus bas, les clients ${dE(c.entreprise)} achètent ${k.ecartDeVentes >= 0 ? `${qte(k.ecartDeVentes)} ${c.unites} de plus` : `${qte(-k.ecartDeVentes)} ${c.unites} de moins`}, et paient ${k.ecartDeChiffre >= 0 ? `${eur(k.ecartDeChiffre)} de plus` : `${eur(-k.ecartDeChiffre)} de moins`} sur l'année. Les fournisseurs reçoivent ${k.ecartFournisseurs >= 0 ? `${eur(k.ecartFournisseurs)} de plus` : `${eur(-k.ecartFournisseurs)} de moins`}${k.ecartDeSalaires === 0 ? ", les salariés exactement la même chose" : ""}.`,
+          `Avec le prix baissé, les clients ${dE(c.entreprise)} achètent ${qte(k.ecartDeVentes)} ${c.unites} de plus, et paient ${k.ecartDeChiffre >= 0 ? `${eur(k.ecartDeChiffre)} de plus` : `${eur(-k.ecartDeChiffre)} de moins`} sur l'année. Les fournisseurs reçoivent ${eur(k.ecartFournisseurs)} de plus : ils livrent les composants des enceintes en plus.`,
+          k.ecartDeResultat < 0 ? `Le résultat net baisse de ${eur(-k.ecartDeResultat)}, l'impôt de ${eur(-k.ecartDImpot)}.` : `Le résultat net ne baisse pas : les enceintes en plus paient la baisse.`,
         ];
       },
     },
@@ -190,34 +167,18 @@ export const LES_CLIENTS_DEMANDENT_UNE_BAISSE: Situation = {
       notions: ["income_statement"],
       question: () => "Quelle phrase envoyez-vous à la gérante ?",
       options: (c) => {
-        const k = baisseDemandee(c);
+        const k = baisseDemandee();
         const chiffres = `Le résultat net varie de ${eur(k.ecartDeResultat)}, l'impôt de ${eur(k.ecartDImpot)}, les achats et services de ${eur(k.ecartFournisseurs)}.`;
         const paient = k.verdict === "ils-paient";
         return [
-          {
-            texte: "Les associés la paieraient surtout, l'État pour une part",
-            juste: paient,
-            retour: paient
-              ? `Oui : le résultat net baisse de ${eur(-k.ecartDeResultat)}, l'impôt de ${eur(-k.ecartDImpot)}. ${chiffres}`
-              : `Non : cette année, le résultat net ne baisse pas. ${chiffres}`,
-          },
+          { texte: "Les associés la paieraient surtout, l'État pour une part", juste: paient, retour: paient ? `Oui : le résultat net baisse de ${eur(-k.ecartDeResultat)}, l'impôt de ${eur(-k.ecartDImpot)}. ${chiffres}` : `Non : le résultat net ne baisse pas. ${chiffres}` },
           {
             texte: "Elle se paierait : les ventes en plus la couvrent",
             juste: !paient,
-            retour: !paient
-              ? `Oui : les clients achètent ${qte(k.ecartDeVentes)} ${c.unites} de plus, et le résultat net ne baisse pas. ${chiffres}`
-              : `Non : ${k.ecartDeVentes > 0 ? `les ${qte(k.ecartDeVentes)} ${c.unites} en plus ne suffisent pas` : "les ventes ne montent pas"}. ${chiffres}`,
+            retour: !paient ? `Oui : les ${qte(k.ecartDeVentes)} ${c.unites} en plus couvrent la baisse. ${chiffres}` : `Non : les ${qte(k.ecartDeVentes)} ${c.unites} en plus ne suffisent pas, parce que chacune coûte ses composants et ses autres coûts. ${chiffres}`,
           },
-          {
-            texte: "Les salariés la paieraient, par des salaires plus bas",
-            juste: false,
-            retour: `Non : les salaires de l'année varient de ${eur(k.ecartDeSalaires)}.${k.ecartDeSalaires === 0 ? " Personne n'a touché à la paie." : ""} ${chiffres}`,
-          },
-          {
-            texte: "Seuls les clients y gagnent, et aucun autre acteur ne voit la différence",
-            juste: false,
-            retour: `Non : une baisse de prix touche presque tous les acteurs. ${chiffres}`,
-          },
+          { texte: "Les salariés la paieraient, par des salaires plus bas", juste: false, retour: `Non : les salaires de l'année varient de ${eur(k.ecartDeSalaires)}. Personne n'a touché à la paie. ${chiffres}` },
+          { texte: "Seuls les clients y gagnent, et aucun autre acteur ne voit la différence", juste: false, retour: `Non : une baisse de prix touche presque tous les acteurs. ${chiffres}` },
         ];
       },
     },

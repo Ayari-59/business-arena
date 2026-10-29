@@ -1,86 +1,67 @@
 import { describe, expect, it } from "vitest";
-import { casDeLEntreprise } from "../../src/config/cours/cas";
-import { anneeJouee } from "../../src/config/cours/annee-de-l-arene";
-import { MARCHES, MARCHE_ET_PART_DE_MARCHE, marcheEtPart } from "../../src/config/cours/chapitres/marche-et-part-de-marche";
-import { CONCEPTS } from "../../src/config/pedagogy/concepts";
-import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
-import type { Cas } from "../../src/config/cours/cas";
-import type { Etape, EtatDuCours } from "../../src/config/cours/types";
+import { ENTREPRISES_DE_LA_PART_DE_MARCHE, MARCHES, MARCHE_ET_PART_DE_MARCHE } from "../../src/config/cours/chapitres/marche-et-part-de-marche";
+import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
+import { PROGRAMME } from "../../src/config/cours/registre";
+import { GARDER_SA_PART_DE_MARCHE, garderSaPart } from "../../src/config/cours/situations/par-chapitre/garder-sa-part-de-marche";
+import { NOVA, attendus, gardeDuCas, gardeDuCurseur, gardeDuLaboratoire, gardesDeTexte, juste } from "./gardes-du-marche";
 
 /**
- * LE MARCHÉ ET LA PART DE MARCHÉ, SUR L'ANNÉE DE L'ARÈNE.
+ * LE MARCHÉ ET LA PART DE MARCHÉ (bac STMG mercatique, palier 1), SUR LE MARCHÉ DE NOVA DU MONDE DU
+ * COURS, ET SON CAS : GARDER SA PART DE MARCHÉ.
  *
- * La part de marché est celle que le moteur calcule (ventes ÷ demande potentielle) ; la part
- * relative se lit face au premier concurrent ; la position suit le rang des ventes, la réponse
- * sur les prix suit le prix du leader ; l'évolution se recompose. Aucun nom de concurrent ne
- * reste sans contraction (« de Le Comptoir »).
+ * Refait à la main sur nova-gestion.ts : le marché de toutes les enceintes, 6 000 + 5 600 + 6 500 =
+ * 18 100 de janvier à mars, 7 400 + 8 300 + 9 200 = 24 900 d'avril à juin ; NOVA, 1 270 + 1 130 + 1 418
+ * aux particuliers et 3 × 320 à CampusTech (4 778), puis 1 580 + 1 710 + 1 831 + 960 (6 081) ; SoundBox
+ * et Auris dans les proportions de l'année type du marché à trois (33 808 et 14 616 pour 21 576).
  */
 
-function textesDe(e: Etape, cas: Cas, etat: EtatDuCours): string[] {
-  const tableau = e.tableau ? [e.tableau(cas).titre, ...e.tableau(cas).lignes.flatMap((l) => [l.libelle, ...l.valeurs])] : [];
-  switch (e.type) {
-    case "lecture":
-      return [...e.texte(cas), e.repere?.(cas) ?? "", ...tableau];
-    case "choix":
-      return [e.question(cas, etat), ...e.options(cas, etat).flatMap((o) => [o.texte, o.retour]), ...tableau];
-    case "montants":
-      return [e.question(cas, etat), ...e.champs(cas, etat).flatMap((c) => [c.libelle, c.calcul, String(c.attendu)]), ...e.explication(cas, etat), ...tableau];
-    default:
-      return [];
-  }
-}
+const d = (x: number) => Math.round(x * 10) / 10;
+const [M1, M2, N1, N2] = [6_000 + 5_600 + 6_500, 7_400 + 8_300 + 9_200, 1_270 + 1_130 + 1_418 + 960, 1_580 + 1_710 + 1_831 + 960];
+const SOUNDBOX = Math.round((N1 * 33_808) / 21_576);
+const AURIS = Math.round((N1 * 14_616) / 21_576);
 
-describe.each(MARCHES)("le marché chez %s", (code) => {
-  const cas = casDeLEntreprise(code);
-  const m = marcheEtPart(cas);
-  const chapitre = chapitreDuCas(MARCHE_ET_PART_DE_MARCHE, cas);
-  const etape = (id: string) => chapitre.etapes.find((e) => e.id === id)!;
-
-  it("la part de marché est celle que le moteur calcule, pour chaque enseigne", () => {
-    const t = anneeJouee(code).partie.rounds[0]!;
-    for (const e of m.debut.enseignes) expect(Math.abs(e.part - t.results[e.id]!.market.totalShare * 100), e.nom).toBeLessThan(0.11);
-    expect(m.debut.enseignes).toHaveLength(3);
-    expect(m.autres).toBeGreaterThanOrEqual(0);
+describe("le marché et la part de marché", () => {
+  it("au programme du bac STMG, chez NOVA seule ; la liste des marchés reste celle des autres chapitres", () => {
+    expect([MARCHE_ET_PART_DE_MARCHE.parcours, MARCHE_ET_PART_DE_MARCHE.palier]).toEqual(["stmg", 1]);
+    expect(PROGRAMME.stmg[1]).toContain(MARCHE_ET_PART_DE_MARCHE.titre);
+    expect([...ENTREPRISES_DE_LA_PART_DE_MARCHE]).toEqual(["nova"]);
+    expect(MARCHES).toEqual(ENTREPRISES_DU_COURS.filter((c) => c !== "fitness"));
+    gardeDuCas(GARDER_SA_PART_DE_MARCHE, MARCHE_ET_PART_DE_MARCHE);
   });
 
-  it("la part relative se lit face au premier concurrent, et la position suit le rang des ventes", () => {
-    const concurrents = m.debut.enseignes.filter((e) => e.id !== "joueur");
-    expect(m.premierConcurrent.ventes).toBe(Math.max(...concurrents.map((e) => e.ventes)));
-    expect(m.partRelative).toBeCloseTo(m.debut.entreprise.part / m.premierConcurrent.part, 2);
-    expect(m.rang).toBe(1 + m.debut.enseignes.filter((e) => e.ventes > m.debut.entreprise.ventes).length);
-    const position = etape("position");
-    if (position.type !== "choix") throw new Error("Pas d'étape position");
-    const juste = position.options(cas, { soldes: {} }).find((o) => o.juste)!;
-    expect(juste.texte).toMatch(m.rang === 1 ? /^Le leader/ : m.rang === 2 ? /^Le challenger/ : /^Le suiveur/);
+  it("les textes sont propres, une seule bonne réponse, les notions existent", () => {
+    gardesDeTexte(MARCHE_ET_PART_DE_MARCHE);
   });
 
-  it("la réponse sur les prix suit le prix du leader", () => {
-    const prix = etape("prix");
-    if (prix.type !== "choix") throw new Error("Pas d'étape prix");
-    const tries = [...m.debut.enseignes].sort((a, b) => a.prix - b.prix);
-    const attendu = tries[0]!.id === m.leader.id ? /moins chère/ : tries.at(-1)!.id === m.leader.id ? /plus chère/ : /ni le plus cher/;
-    expect(prix.options(cas, { soldes: {} }).find((o) => o.juste)!.texte).toMatch(attendu);
+  it("le premier trimestre : NOVA 26,4 %, SoundBox 41,4 % (7 487), une part relative de 0,64 ; challenger ; le moins cher vend le plus", () => {
+    expect([M1, N1, SOUNDBOX, AURIS]).toEqual([18_100, 4_778, 7_487, 3_237]);
+    expect(attendus(MARCHE_ET_PART_DE_MARCHE, "parts")).toEqual([d((N1 / M1) * 100), d((SOUNDBOX / M1) * 100), Math.round((26.4 / 41.4) * 100) / 100]);
+    expect(juste(MARCHE_ET_PART_DE_MARCHE, "position")).toEqual(["Le challenger : deuxième, elle cherche à prendre la place du leader"]);
+    expect(juste(MARCHE_ET_PART_DE_MARCHE, "prix")).toEqual(["L'enseigne la moins chère est celle qui vend le plus"]);
   });
 
-  it("l'évolution du marché, des ventes et de la part se recompose", () => {
-    expect(m.evolutionDuMarche).toBeCloseTo((m.fin.marche / m.debut.marche - 1) * 100, 1);
-    expect(m.evolutionDesVentes).toBeCloseTo((m.fin.entreprise.ventes / m.debut.entreprise.ventes - 1) * 100, 1);
-    expect(m.points).toBeCloseTo(m.fin.entreprise.part - m.debut.entreprise.part, 1);
+  it("le semestre : le marché +37,6 %, NOVA +27,3 %, sa part −2 points", () => {
+    expect(attendus(MARCHE_ET_PART_DE_MARCHE, "evolution")).toEqual([d((M2 / M1 - 1) * 100), d((N2 / N1 - 1) * 100), d(d((N2 / M2) * 100) - d((N1 / M1) * 100))]);
   });
 
-  it("aucun texte ne sort undefined ni « de le » ; une seule bonne réponse ; les notions existent", () => {
-    const codes = new Set(CONCEPTS.map((x) => x.code));
-    for (const [i, e] of chapitre.etapes.entries()) {
-      const etat = etatAvant(chapitre, cas, i);
-      for (const x of textesDe(e, cas, etat)) {
-        expect(x, `${e.id} : ${x}`).not.toMatch(/undefined|NaN|Infinity|\[object/);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/(^|\s)(de|à) [Ll]es? /);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/ [-–—] /);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/\bde [aeiouyéèêAEIOUYÉ]/);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/\bque [AEIOUYÉ]/);
-      }
-      if (e.type === "choix") expect(e.options(cas, etat).filter((o) => o.juste), e.id).toHaveLength(1);
-      for (const n of e.notions ?? []) expect(codes.has(n), `${e.id} : ${n}`).toBe(true);
-    }
+  it("le curseur : 6 225 enceintes d'avril à juin tiennent le seuil d'alerte de 25 % ; NOVA en a vendu 6 081", () => {
+    const e = gardeDuCurseur(MARCHE_ET_PART_DE_MARCHE, "le-seuil-d-alerte", 24_900 / 4);
+    expect(e.droites(NOVA).cout(0)).toBe(24_900 * 0.25 * 59);
+    expect(N2).toBe(6_081);
+  });
+
+  it("le laboratoire : 6 574 enceintes gardent les 26,4 % du premier trimestre ; 6 573 n'y suffisent pas", () => {
+    const e = gardeDuLaboratoire(MARCHE_ET_PART_DE_MARCHE, "le-laboratoire-de-la-part");
+    expect(e.defi(NOVA).solution).toEqual({ ventes: Math.ceil((N1 * M2) / M1) });
+    expect(Math.ceil((N1 * M2) / M1)).toBe(6_574);
+  });
+});
+
+describe("garder sa part de marché", () => {
+  it("le marché du deuxième trimestre grandit de 8 % : 26 892 enceintes, 22,6 % sans ventes en plus, 6 568 pour garder 24,4 %", () => {
+    const r = garderSaPart(NOVA);
+    expect([r.marche, r.ventes, r.part, r.marchePrevu]).toEqual([M2, N2, d((N2 / M2) * 100), Math.round(M2 * 1.08)]);
+    expect([r.partSansEffort, r.ventesNecessaires]).toEqual([d((N2 / 26_892) * 100), Math.ceil((N2 * 26_892) / M2)]);
+    expect(r.ventesNecessaires).toBe(6_568);
   });
 });

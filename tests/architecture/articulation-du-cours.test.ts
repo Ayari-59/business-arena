@@ -55,7 +55,7 @@ describe("l'articulation du cours", () => {
   it("le rappel plié de l'énoncé accompagne chaque étape notée", () => {
     // Demande du propriétaire (octobre 2026) : relire la demande et ses chiffres au moment des calculs.
     const guide = lire("src/components/cours/chapitre-guide.tsx");
-    expect(guide).toContain('{etape.type !== "lecture" && <RappelDeLEnonce enonce={chapitre.etapes[0]!} cas={cas} />}');
+    expect(guide).toContain('{etape.type !== "lecture" && <RappelDeLEnonce enonce={chapitre.etapes[0]!} />}');
     expect(guide).toMatch(/<details[^>]*data-rappel-enonce=""/);
   });
 });

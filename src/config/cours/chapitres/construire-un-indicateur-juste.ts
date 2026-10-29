@@ -1,58 +1,56 @@
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../pedagogy/cours/etats";
-import { scenarioByCode } from "../../scenarios/registry";
 import { type Cas } from "../cas";
-import { anneeJouee } from "../annee-de-l-arene";
+import {
+  ECART_ALIGNE,
+  ENTREPRISES_DE_LA_GESTION_DE_BASE,
+  FICHE_DU_MARCHE,
+  PRIX_ESSAYES,
+  indicateurDuPrix as indicateurDuMonde,
+  positionDe,
+  prixLePlusHautAligne,
+  ventesDAurisPourLaMoyenneSimple,
+  type Position,
+} from "../monde/gestion-et-information";
 import type { Chapitre, TableauDeDonnees } from "../types";
-import { MARCHES } from "./marche-et-part-de-marche";
 
 /**
  * CHAPITRE : CONSTRUIRE UN INDICATEUR JUSTE (Bac STMG, systèmes d'information de gestion,
  * palier 1).
  *
  * Un indicateur se définit avant de se calculer : sa formule, son unité, sa période, sa source.
- * L'exemple est le prix moyen du marché sur l'année du cours (`anneeJouee` : l'entreprise et ses
- * deux concurrents), et le piège classique de la moyenne de ratios face au ratio des sommes : la
- * moyenne simple des prix des enseignes donne à chacune le même poids, qu'elle vende peu ou
- * beaucoup ; le prix moyen pondéré par les ventes (chiffre d'affaires total ÷ ventes totales) dit
- * ce que les clients du marché ont payé en moyenne. L'élève calcule les deux, dit lequel répond à
- * la question, puis l'indice de prix de l'entreprise avec chacun, et ce que l'indicateur faux
- * ferait décider.
+ * L'exemple est le prix moyen du marché sur l'année (NOVA et ses deux concurrents), et le piège
+ * classique de la moyenne de ratios face au ratio des sommes : la moyenne simple des prix des
+ * enseignes donne à chacune le même poids, qu'elle vende peu ou beaucoup ; le prix moyen pondéré par
+ * les ventes (chiffre d'affaires total ÷ ventes totales) dit ce que les clients du marché ont payé en
+ * moyenne. L'élève calcule les deux, dit lequel répond à la question, puis l'indice de prix de NOVA
+ * avec chacun, et ce que l'indicateur faux ferait décider. Un curseur (les ventes d'Auris qui
+ * feraient rejoindre la moyenne simple) et un laboratoire (le prix le plus haut où NOVA reste
+ * alignée).
  *
  * L'ARÈNE EN DONNE UN EXEMPLE. Le benchmark concurrentiel de l'arène affiche une « Moyenne du
  * marché » qui est la moyenne simple des prix moyens des entreprises (services/game-view.service.ts,
- * `buildBenchmark`), et calcule l'indice de compétitivité-prix sur elle. Le chapitre le cite, sans
- * rien y changer.
+ * `buildBenchmark`). Le chapitre le cite, à sa dernière étape, sans rien y changer.
  *
- * Le prix de chaque enseigne est son chiffre d'affaires de l'année divisé par ses ventes, comme
- * dans « Lire la stratégie de ses concurrents » ; une enseigne qui cesse de vendre garde le prix
- * de ses trimestres de vente. Aucune autre hypothèse que la règle de lecture `ECART_ALIGNE`.
+ * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA seule, sur le marché à trois (marche-a-trois.ts
+ * et attractivite.ts) : NOVA à 59 €, SoundBox à 51 €, Auris à 79 €, et les ventes de l'année type.
+ * La règle de lecture ECART_ALIGNE est dans monde/gestion-et-information.ts.
  *
- * VOLT FITNESS N'EN EST PAS : son chiffre d'affaires compte les cotisations des abonnés gardés, et
- * ses ventes ne comptent que les nouveaux ; leur rapport ne fait pas un prix.
+ * CE QUI A CHANGÉ. Le chapitre lisait l'année de l'arène, dans huit entreprises. Chez NOVA, la
+ * moyenne simple vaut maintenant 63 € et le prix pondéré 59,31 € : l'indice simple, 94, la croit
+ * moins chère que le marché ; l'indice pondéré, 99, la dit au prix du marché.
  */
 
-/**
- * LA RÈGLE DE LECTURE DU COURS : un indice de prix à moins de 5 points de 100 se lit comme
- * aligné sur le marché ; en dessous de 95, l'entreprise vend moins cher que le marché ; au-dessus
- * de 105, plus cher. C'est, à 5 % près, la lecture du benchmark de l'arène
- * (components/competitive-benchmark.tsx : un indice de compétitivité entre 0,95 et 1,05 y dit
- * « aligné sur le marché »).
- */
-export const ECART_ALIGNE = 5;
-
-export type Position = "dessous" | "aligne" | "dessus";
+export { ECART_ALIGNE, positionDe, type Position };
 export type ErreurDeDecision = "monter" | "baisser" | "rester" | "aucune";
 
-/** Un montant à la française, avec le signe moins typographique. */
+export const POURQUOI_L_INDICATEUR =
+  "ce chapitre compare NOVA à SoundBox et Auris, les enseignes avec qui elle partage son marché, sur l'année que le cours tient.";
+
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-/** « de » devant un nom : élidé devant une voyelle, contracté devant l'article (« du Comptoir »). */
-const dE = (nom: string) =>
-  /^Le /.test(nom) ? `du ${nom.slice(3)}` : /^Les /.test(nom) ? `des ${nom.slice(4)}` : /^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`;
-
-/** « à » devant un nom, contracté devant l'article (« au Comptoir »). */
-const aE = (nom: string) => (/^Le /.test(nom) ? `au ${nom.slice(3)}` : /^Les /.test(nom) ? `aux ${nom.slice(4)}` : `à ${nom}`);
+const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
+const aE = (nom: string) => `à ${nom}`;
 
 const NOMS_DES_POSITIONS: Record<Position, string> = {
   dessous: "moins chère que le marché",
@@ -60,67 +58,24 @@ const NOMS_DES_POSITIONS: Record<Position, string> = {
   dessus: "plus chère que le marché",
 };
 
-/** La place d'un indice de prix, selon la règle du cours. */
-export const positionDe = (indice: number): Position =>
-  indice < 100 - ECART_ALIGNE ? "dessous" : indice > 100 + ECART_ALIGNE ? "dessus" : "aligne";
-
 /** Les enseignes du marché sur l'année, et les deux façons de calculer le prix moyen du marché. */
-export function indicateurDuPrix(c: Cas) {
-  const def = scenarioByCode(c.code);
-  const { partie } = anneeJouee(c.code);
-  const ids = ["joueur", ...def.bots.slice(0, 2).map((b) => b.id)];
-  const enseignes = ids.map((id) => {
-    const resultats = partie.rounds.map((t) => t.results[id]!);
-    const ventes = Math.round(resultats.reduce((t, r) => t + Object.values(r.market.bySegment).reduce((s, v) => s + v.sold, 0), 0));
-    const chiffreDAffaires = Math.round(resultats.reduce((t, r) => t + r.incomeStatement.revenue, 0));
-    return {
-      id,
-      nom: id === "joueur" ? c.entreprise : def.bots.find((b) => b.id === id)!.name,
-      ventes,
-      chiffreDAffaires,
-      /** Le prix moyen de l'enseigne, au centime, tel que le tableau le montre. */
-      prix: auCentime(chiffreDAffaires / ventes),
-    };
-  });
-  const entreprise = enseignes[0]!;
-  const sommeDesPrix = auCentime(enseignes.reduce((t, e) => t + e.prix, 0));
-  const ventesTotales = enseignes.reduce((t, e) => t + e.ventes, 0);
-  const chiffreTotal = enseignes.reduce((t, e) => t + e.chiffreDAffaires, 0);
-  // La moyenne simple : chaque enseigne compte pour une, quelles que soient ses ventes.
-  const moyenneSimple = auCentime(sommeDesPrix / enseignes.length);
-  // Le prix moyen pondéré : chaque vente compte pour une.
-  const prixPondere = auCentime(chiffreTotal / ventesTotales);
-  const indiceSimple = Math.round((entreprise.prix / moyenneSimple) * 100);
-  const indicePondere = Math.round((entreprise.prix / prixPondere) * 100);
-  const positionSimple = positionDe(indiceSimple);
-  const positionPonderee = positionDe(indicePondere);
+export function indicateurDuPrix(_c?: Cas, prixDeNova?: number, ventesDAuris?: number) {
+  const k = indicateurDuMonde(FICHE_DU_MARCHE, prixDeNova, ventesDAuris);
   const erreur: ErreurDeDecision =
-    positionSimple === positionPonderee ? "aucune" : positionSimple === "dessous" ? "monter" : positionSimple === "dessus" ? "baisser" : "rester";
-  const plusVendue = [...enseignes].sort((a, b) => b.ventes - a.ventes)[0]!;
-  const moinsChere = [...enseignes].sort((a, b) => a.prix - b.prix)[0]!;
+    k.positionSimple === k.positionPonderee ? "aucune" : k.positionSimple === "dessous" ? "monter" : k.positionSimple === "dessus" ? "baisser" : "rester";
   return {
-    enseignes,
-    entreprise,
-    sommeDesPrix,
-    ventesTotales,
-    chiffreTotal,
-    moyenneSimple,
-    prixPondere,
-    ecart: auCentime(moyenneSimple - prixPondere),
-    indiceSimple,
-    indicePondere,
-    positionSimple,
-    positionPonderee,
+    ...k,
+    entreprise: k.nova,
+    ecart: auCentime(k.moyenneSimple - k.prixPondere),
     erreur,
-    plusVendue,
-    moinsChere,
+    moinsChere: [...k.enseignes].sort((a, b) => a.prix - b.prix)[0]!,
   };
 }
 
 export function tableDesEnseignes(c: Cas): TableauDeDonnees {
   const k = indicateurDuPrix(c);
   return {
-    titre: "L'année du cours, enseigne par enseigne",
+    titre: "L'année, enseigne par enseigne",
     colonnes: k.enseignes.map((e) => e.nom),
     lignes: [
       { libelle: `Ventes de l'année (${c.unites})`, valeurs: k.enseignes.map((e) => qte(e.ventes)) },
@@ -154,11 +109,7 @@ export const CONSTRUIRE_UN_INDICATEUR_JUSTE: Chapitre = {
     "Mesurer ce qu'un indicateur faux ferait décider",
   ],
   libre: false,
-  entreprises: {
-    codes: MARCHES,
-    pourquoi:
-      "ce chapitre calcule le prix de chaque enseigne en divisant son chiffre d'affaires par ses ventes, et chez VOLT FITNESS le chiffre d'affaires compte aussi les abonnés gardés, que les ventes ne comptent pas.",
-  },
+  entreprises: { codes: ENTREPRISES_DE_LA_GESTION_DE_BASE, pourquoi: POURQUOI_L_INDICATEUR },
   etapes: [
     {
       id: "intro",
@@ -343,6 +294,88 @@ export const CONSTRUIRE_UN_INDICATEUR_JUSTE: Chapitre = {
                 ? `Oui. ${vrai} Ici, l'erreur ne change pas la décision : les deux indices tombent dans la même zone. Mais l'indicateur reste faux, et il tromperait le jour où les ventes se répartiraient autrement.`
                 : non,
           },
+        ];
+      },
+    },
+    {
+      id: "le-poids-des-ventes",
+      type: "curseur",
+      titre: "Le poids des ventes",
+      notions: ["revenue", "demand_market_share"],
+      question: (c) => {
+        const k = indicateurDuPrix(c);
+        const auris = k.enseignes.find((e) => e.code === "auris")!;
+        return `La moyenne simple ne bouge pas quand les ventes changent : elle reste à ${eur(k.moyenneSimple)}. Le prix pondéré, lui, suit les ventes. Faites varier les ventes ${dE(auris.nom)}, l'enseigne la plus chère, les deux autres gardées : une droite donne le chiffre d'affaires du marché, l'autre ce qu'il vaudrait si chaque ${c.unite} était payée la moyenne simple. Placez le curseur sur les plus petites ventes ${dE(auris.nom)} pour lesquelles le prix pondéré rejoint la moyenne simple.`;
+      },
+      grandeur: () => ({ libelle: "Ventes d'Auris dans l'année", unite: "enceintes" }),
+      cible: () => ({ attendu: ventesDAurisPourLaMoyenneSimple(FICHE_DU_MARCHE), min: 10_000, max: 40_000 }),
+      zones: ["Le prix pondéré atteint la moyenne simple", "Le prix pondéré reste sous la moyenne simple"],
+      rates: () => ({ dessous: "Avec ces ventes, le prix pondéré reste sous la moyenne simple : l'enseigne chère ne pèse pas encore assez.", dessus: "Le prix pondéré a rejoint la moyenne simple, mais moins de ventes suffisaient : cherchez le plus petit nombre." }),
+      montrer: "Montrer les ventes",
+      lecture: (_c, q) => {
+        const k = indicateurDuPrix(undefined, undefined, q);
+        return [
+          { libelle: "Chiffre d'affaires du marché", montant: k.chiffreTotal },
+          { libelle: "Ventes payées à la moyenne simple", montant: auCentime(k.ventesTotales * k.moyenneSimple) },
+          { libelle: "Prix moyen pondéré", montant: k.prixPondere, fort: true },
+          { libelle: "Moyenne simple des prix", montant: k.moyenneSimple },
+        ];
+      },
+      droites: () => ({
+        produit: (q) => indicateurDuPrix(undefined, undefined, q).chiffreTotal,
+        cout: (q) => {
+          const k = indicateurDuPrix(undefined, undefined, q);
+          return k.ventesTotales * k.moyenneSimple;
+        },
+        libelles: ["Chiffre d'affaires du marché", "Ventes payées à la moyenne simple"],
+      }),
+      explication: (c) => {
+        const q = ventesDAurisPourLaMoyenneSimple(FICHE_DU_MARCHE);
+        const k = indicateurDuPrix(c);
+        const auris = k.enseignes.find((e) => e.code === "auris")!;
+        return [
+          `Il faudrait qu'${auris.nom} vende ${qte(q)} ${c.unites}, au lieu de ${qte(auris.ventes)}, pour que le prix pondéré monte à la moyenne simple, ${eur(k.moyenneSimple)}.`,
+          "La moyenne simple ne dit donc ce que paient les clients que dans un cas : quand chaque enseigne pèse dans les ventes ce qu'il faut pour cela. Le prix pondéré, lui, se calcule toujours de la même façon : un total divisé par un total.",
+        ];
+      },
+    },
+    {
+      id: "le-laboratoire-de-l-indice",
+      type: "simulation",
+      titre: "Le laboratoire de l'indice",
+      notions: ["price_elasticity", "dashboard"],
+      question: (c) =>
+        `Et si ${c.entreprise} changeait son prix ? Les clients se partagent alors autrement entre les enseignes, et le prix pondéré du marché bouge avec eux. Faites varier le prix ${dE(c.entreprise)}, et regardez ses deux indices.`,
+      leviers: () => [{ code: "prix", libelle: "Prix de NOVA, hors taxes", unite: "€", ...PRIX_ESSAYES, depart: FICHE_DU_MARCHE.enseignes[0]!.offre.prix }],
+      lecture: (_c, p) => {
+        const k = indicateurDuPrix(undefined, p.prix!);
+        const d = indicateurDuPrix();
+        return [
+          { libelle: "Ventes de NOVA", montant: k.nova.ventes, unite: "enceintes", reference: d.nova.ventes },
+          { libelle: "Prix moyen pondéré du marché", montant: k.prixPondere, reference: d.prixPondere },
+          { libelle: "Indice avec la moyenne simple", montant: k.indiceSimple, unite: "points", reference: d.indiceSimple },
+          { libelle: "Indice avec le prix pondéré", montant: k.indicePondere, unite: "points", reference: d.indicePondere, fort: true },
+        ];
+      },
+      defi: () => {
+        const juste = prixLePlusHautAligne(FICHE_DU_MARCHE);
+        return {
+          consigne: `Trouvez le prix le plus haut, à l'euro, où NOVA reste au prix du marché selon le prix pondéré (un indice d'au plus ${qte(100 + ECART_ALIGNE)}).`,
+          atteint: (p) => p.prix === juste,
+          indice: (p) => {
+            const k = indicateurDuPrix(undefined, p.prix!);
+            return k.positionPonderee === "aligne"
+              ? `À ${eur(p.prix!)}, l'indice pondéré est de ${qte(k.indicePondere)} : NOVA est encore au prix du marché. Un prix plus haut l'y laisserait-il ?`
+              : `À ${eur(p.prix!)}, l'indice pondéré est de ${qte(k.indicePondere)} : NOVA n'est plus au prix du marché.`;
+          },
+          solution: { prix: juste },
+        };
+      },
+      explication: (c, p) => {
+        const k = indicateurDuPrix(c, p.prix!);
+        return [
+          `Défi relevé : à ${eur(p.prix!)}, l'indice pondéré est de ${qte(k.indicePondere)}. Avec la moyenne simple, ${c.entreprise} se croirait à l'indice ${qte(k.indiceSimple)} : ${NOMS_DES_POSITIONS[k.positionSimple]}.`,
+          "Les deux indices ne disent pas la même chose, et seul le pondéré mesure ce que paient les clients. Un indicateur juste se calcule toujours avec la même formule : sinon, il change de sens quand les ventes bougent.",
         ];
       },
     },

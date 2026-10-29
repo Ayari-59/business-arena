@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 51 — LE RATIO MATIÈRE QUI DÉRAPE, tel que l'interface et le bilan le lisent.
+ * LE RATIO MATIÈRE QUI DÉRAPE, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Nina montre — le ratio de la
@@ -186,7 +186,7 @@ export const EPISODE_RATIO_MATIERE: Episode<Trimestre> = {
   persona:
     "Vous êtes Nina Sabatier, gérante de La Table d'Augustin d'Annecy, le restaurant de bistronomie du Groupe Escale dans la vieille ville : 90 couverts, fermé le dimanche soir et le lundi, un ticket moyen nourriture de 29 € HT. Votre équipe : Séraphin Mermillod, chef de cuisine, une brigade de sept, et une équipe de salle menée par Anouar Benkirane, maître d'hôtel.",
   mandat: [
-    { fort: "30 %", texte: "de ratio matière, l'objectif du groupe" },
+    { fort: "31 %", texte: "de ratio matière en novembre, au plus : le palier vers les 30 % du groupe" },
     { fort: kE(BUDGET), texte: "de marge brute budgétée sur le trimestre" },
     { fort: "Sept. à nov.", texte: "la fin de la saison touristique, puis les clients d'ici" },
     { fort: "1er décembre", texte: "la cuisine ferme dix jours pour changer le piano" },
@@ -396,7 +396,7 @@ export const EPISODE_RATIO_MATIERE: Episode<Trimestre> = {
         {
           nom: "Ratio de novembre",
           valeur: taux(novembre),
-          aide: `réel ; objectif 30 % ; sur le trimestre : ${taux(t.ratio)}`,
+          aide: `réel ; objectif 31 % en novembre, 30 % pour le groupe ; sur le trimestre : ${taux(t.ratio)}`,
           tenu: novembre <= 0.31,
         },
         {

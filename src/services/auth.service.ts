@@ -67,7 +67,7 @@ export async function registerTeacher(args: {
     }
   }
 
-  const passwordHash = await bcrypt.hash(args.password, 10);
+  const passwordHash = await bcrypt.hash(args.password, COUT_BCRYPT);
   const inserted = await db
     .insert(users)
     .values({ email, passwordHash, displayName: args.displayName.trim() || "Enseignant" })
@@ -135,6 +135,19 @@ export const COMPTE_DESACTIVE =
 /** Le même message quel que soit le cas : l'e-mail inconnu n'est pas dit. */
 const IDENTIFIANTS_INCORRECTS = "Identifiants incorrects.";
 
+/** Le coût bcrypt des vrais mots de passe (`registerTeacher`). */
+const COUT_BCRYPT = 10;
+
+let empreinte: Promise<string> | null = null;
+/**
+ * Une empreinte bcrypt d'un mot de passe que personne ne connaît, calculée une
+ * fois par instance : la comparer coûte autant que comparer à une vraie.
+ */
+function empreinteFactice(): Promise<string> {
+  empreinte ??= bcrypt.hash(randomUUID(), COUT_BCRYPT);
+  return empreinte;
+}
+
 /**
  * Échecs récents pour cet e-mail OU cette adresse. En base, pas en mémoire :
  * Vercel sert depuis plusieurs instances qui ne partagent rien.
@@ -178,20 +191,29 @@ export async function loginTeacher(args: {
   };
 
   // Un mot de passe trop court ne peut pas être le bon : même message, même
-  // compteur, pour ne rien dire de plus qu'à un mot de passe faux.
-  if (args.password.length < 8) return echec();
-  const row = (await db.select().from(users).where(eq(users.email, email)))[0];
-  if (!row?.passwordHash) return echec();
+  // compteur, pour ne rien dire de plus qu'à un mot de passe faux. Et le même
+  // temps : un e-mail inconnu ou un mot de passe court répondaient sans calcul
+  // bcrypt, donc plus vite, ce qui disait qu'un compte existait (audit, P1-3).
+  // On compare alors à une empreinte factice, du même coût que les vraies.
+  const row =
+    args.password.length < 8
+      ? undefined
+      : (await db.select().from(users).where(eq(users.email, email)))[0];
+  if (!row?.passwordHash) {
+    await bcrypt.compare(args.password, await empreinteFactice());
+    return echec();
+  }
   const ok = await bcrypt.compare(args.password, row.passwordHash);
   if (!ok) return echec();
   // Un compte désactivé par l'administration ne se connecte plus (/admin/inscrits). Dit
   // seulement à qui connaît le mot de passe : l'existence du compte n'est pas révélée.
   if (row.desactiveLe) return { error: COMPTE_DESACTIVE };
 
-  // Succès : le compteur repart de zéro pour cet e-mail et cette adresse.
-  await db
-    .delete(loginAttempts)
-    .where(ip ? or(eq(loginAttempts.email, email), eq(loginAttempts.ip, ip)) : eq(loginAttempts.email, email));
+  // Succès : le compteur repart de zéro pour CET e-mail seulement. Effacer aussi
+  // les échecs de l'adresse effaçait ceux enregistrés contre d'autres comptes :
+  // un attaquant alternait quatre essais sur la victime et une connexion à son
+  // propre compte, et le plafond ne se déclenchait jamais (audit, P1-3).
+  await db.delete(loginAttempts).where(eq(loginAttempts.email, email));
   await db.update(users).set({ derniereConnexionLe: new Date(now) }).where(eq(users.id, row.id));
   await synchroniserLesDroitsDAdmin(row.id, email);
   return { userId: row.id, sessionVersion: row.sessionVersion };

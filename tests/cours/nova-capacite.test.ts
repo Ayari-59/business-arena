@@ -13,7 +13,7 @@ import {
   PLACEMENT,
   TAUX_DE_LA_PAIE,
 } from "../../src/config/cours/monde/exercice-de-nova";
-import { NOVA_CAPACITE, VERSEMENT_A_LA_RESERVE, type FicheDeLaCapacite } from "../../src/config/cours/monde/nova-capacite";
+import { NOVA_CAPACITE, type FicheDeLaCapacite } from "../../src/config/cours/monde/nova-capacite";
 import { AUTRES_COUTS_PAR_ENCEINTE, CAPACITE_DU_TRIMESTRE, COMPOSANTS_PAR_ENCEINTE, PRIX_DE_L_ENCEINTE, SEUILS_D_ALERTE } from "../../src/config/cours/monde/nova-gestion";
 import {
   aleasDeLAnnee,
@@ -130,13 +130,8 @@ describe("la fiche de NOVA tient debout, et c'est la NOVA des autres fiches", ()
   });
 
   it("la capacité d'absorption : le compte courant, le placement et les capitaux propres de la clôture de N, le matelas de nova-gestion.ts", () => {
-    // Le compte courant du 31 décembre N, moins le versement du 1er janvier N + 1 à la réserve.
-    expect(BALANCE_AVANT_INVENTAIRE.find((l) => l.compte === "512")!.debit).toBe(138_390.87);
-    expect(VERSEMENT_A_LA_RESERVE.montant).toBe(320 * 59 * 1.2);
-    expect(auCentime(138_390.87 - VERSEMENT_A_LA_RESERVE.montant)).toBe(f.absorption.compteCourant);
-    expect(f.absorption.compteCourant).toBe(115_734.87);
-    expect(PLACEMENT.montant + VERSEMENT_A_LA_RESERVE.montant).toBe(f.absorption.reserve);
-    expect(f.absorption.reserve).toBe(155_656);
+    expect(BALANCE_AVANT_INVENTAIRE.find((l) => l.compte === "512")!.debit).toBe(f.absorption.compteCourant);
+    expect(PLACEMENT.montant).toBe(f.absorption.reserve);
     expect(APPORT_EN_CAPITAL.montant).toBe(f.absorption.capitalSocial);
     expect(auCentime(APPORT_EN_CAPITAL.montant + CLOTURE_DE_LA_FICHE.resultatNet)).toBe(f.absorption.capitauxPropres);
     expect(SEUILS_D_ALERTE.tresorerie).toBe(f.absorption.matelas);
@@ -414,7 +409,7 @@ describe("4. les sinistres et l'assurance", () => {
     expect(encaisser(f, 75_000).seEncaisse).toBe(true);
     // Même la réserve comptée, l'incendie emporterait les capitaux propres sous la moitié du capital.
     const avecLaReserve = capaciteDAbsorption(f, { compterLaReserve: true });
-    expect(avecLaReserve.parLaTresorerie).toBe(auCentime(115_734.87 + 155_656 - 10_000));
+    expect(avecLaReserve.parLaTresorerie).toBe(auCentime(115_734.87 + 133_000 - 10_000));
     expect(avecLaReserve.capacite).toBe(154_225.96);
     expect(encaisser(f, 220_000, { compterLaReserve: true }).parLaTresorerie).toBe(true);
     expect(encaisser(f, 220_000, { compterLaReserve: true }).seEncaisse).toBe(false);

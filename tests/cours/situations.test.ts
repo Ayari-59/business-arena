@@ -5,13 +5,12 @@ import { CHAPITRES, chapitreParCode } from "../../src/config/cours/registre";
 import { CAS_DE_SYNTHESE, CAS_PAR_CHAPITRE, SITUATIONS, casDuChapitre } from "../../src/config/cours/situations";
 import { COMMERCES } from "../../src/config/cours/chapitres/taux-de-marque";
 import { NEGOCIATIONS } from "../../src/config/cours/chapitres/negocier-le-prix";
-import { prixRejoues } from "../../src/config/cours/decision";
 import { commandePourLaPromotion } from "../../src/config/cours/situations/commander-pour-la-promotion";
 import { embaucheDeSaison } from "../../src/config/cours/situations/embaucher-pour-la-saison";
 import { COMMANDES_PROMISES, remiseDuGrandCompte } from "../../src/config/cours/situations/la-remise-du-grand-compte";
 import { prixDeLaSaison } from "../../src/config/cours/situations/quel-prix-pour-la-saison";
 import { factureContestee } from "../../src/config/cours/situations/la-facture-contestee";
-import { dossierDeLaBanque } from "../../src/config/cours/situations/le-rendez-vous-a-la-banque";
+import { LE_RENDEZ_VOUS_A_LA_BANQUE, dossierDeLaBanque } from "../../src/config/cours/situations/le-rendez-vous-a-la-banque";
 import { baisseDuConcurrent } from "../../src/config/cours/situations/suivre-la-baisse";
 import { auCentime } from "../../src/pedagogy/cours/etats";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
@@ -156,25 +155,19 @@ describe("la facture contestée", () => {
 });
 
 describe("le rendez-vous à la banque", () => {
-  it("les chiffres du dossier se recoupent, et les trois réponses se rencontrent dans le cours", () => {
-    const choix = new Set<string>();
-    for (const code of ENTREPRISES_DU_COURS) {
-      const { v, r, k, f } = dossierDeLaBanque(casDeLEntreprise(code));
-      // Un seul résultat net, un seul bilan : les chapitres repris parlent des mêmes chiffres.
-      expect(r.resultatNet, code).toBe(f.resultatNet);
-      expect(r.capitauxPropres, code).toBe(f.capitauxPropres);
-      expect(k.f.capitauxPropres, code).toBe(f.capitauxPropres);
-      expect(k.f.emprunts, code).toBe(f.emprunts);
-      // L'explication dit que fonds de roulement moins besoin donne la trésorerie.
-      expect(Math.abs(k.frng - k.bfr - k.tn), code).toBeLessThanOrEqual(0.02);
-      // L'explication dit que l'activité crée de la richesse.
-      expect(v.va, code).toBeGreaterThan(0);
-      choix.add(f.choix);
-    }
-    // Dans l'année du bon gestionnaire, la capacité d'autofinancement couvre l'équipement partout
-    // sauf à l'hôtel, dont l'emprunt dépasserait les capitaux propres : la réponse « emprunt » ne se
-    // rencontre plus (financer-l-entreprise.ts). Si elle revient, cette garde le dira.
-    expect([...choix].sort()).toEqual(["apport", "autofinancement"]);
+  it("les chiffres du dossier se recoupent, sur le premier exercice de NOVA", () => {
+    expect(LE_RENDEZ_VOUS_A_LA_BANQUE.entreprises?.codes).toEqual(["nova"]);
+    const { v, r, k, f } = dossierDeLaBanque(casDeLEntreprise("nova"));
+    // Un seul résultat net, un seul bilan : les chapitres repris parlent des mêmes chiffres.
+    expect(r.resultatNet).toBe(f.resultatNet);
+    expect(r.capitauxPropres).toBe(f.capitauxPropres);
+    expect(k.capitauxPropres).toBe(f.capitauxPropres);
+    expect(k.poste("emprunt")).toBe(f.emprunts);
+    // L'explication dit que fonds de roulement moins besoin donne la trésorerie, au centime.
+    expect(Math.round((k.fondsDeRoulement - k.besoin) * 100) / 100).toBe(k.tresorerie);
+    expect(v.va).toBe(254_034);
+    // La capacité d'autofinancement (105 297,07 €) couvre la deuxième ligne (60 000 €).
+    expect(f.choix).toBe("autofinancement");
   });
 });
 
@@ -199,24 +192,18 @@ describe("commander pour la promotion", () => {
 });
 
 describe("quel prix pour la saison", () => {
-  it("la marge, pas la demande ni le chiffre d'affaires, désigne le prix, et chacun des trois gagne quelque part", () => {
-    const gagnants = new Set<string>();
-    let caEtMargeDivergent = false;
-    for (const code of ENTREPRISES_DU_COURS) {
-      const r = prixDeLaSaison(casDeLEntreprise(code));
-      // La capacité est la même aux trois prix rejoués : une seule ligne au tableau.
-      expect(new Set(prixRejoues(code).map((v) => v.capacite)).size, code).toBe(1);
-      for (const p of r.prix) {
-        expect(p.ventes, code).toBeLessThanOrEqual(r.capacite);
-        expect(r.meilleur.marge, code).toBeGreaterThanOrEqual(p.marge);
-      }
-      // L'erreur « la demande ne dépend pas du prix » reste fausse partout.
-      expect(r.d.elasticite, code).toBeLessThan(0);
-      gagnants.add(r.meilleur.nom);
-      if (r.plusGrosCa.prix !== r.meilleur.prix) caEtMargeDivergent = true;
-    }
-    expect([...gagnants].sort()).toEqual(["le prix actuel", "le prix bas", "le prix haut"]);
-    expect(caEtMargeDivergent).toBe(true);
+  it("chez NOVA, dans le monde du cours : 5 975, 4 778 et 3 580 enceintes demandées, la plus grosse marge au prix haut", () => {
+    // La droite de demande de nova-gestion.ts, 16 755 − 203 × prix, à l'enceinte inférieure ; 38 € de coût variable.
+    const r = prixDeLaSaison(casDeLEntreprise("nova"));
+    expect(r.prix.map((p) => [p.prix, p.demande, p.ventes])).toEqual([
+      [53.1, 5_975, 5_975],
+      [59, 4_778, 4_778],
+      [64.9, 3_580, 3_580],
+    ]);
+    expect(r.capacite).toBe(7_000);
+    expect(r.prix.map((p) => p.marge)).toEqual([Math.round(5_975 * 15.1), 4_778 * 21, Math.round(3_580 * 26.9)]);
+    expect([r.meilleur.nom, r.plusGrosCa.nom]).toEqual(["le prix actuel", "le prix bas"]);
+    expect(r.d.elasticite).toBe(-2.51);
   });
 });
 
@@ -224,6 +211,8 @@ describe("la remise du grand compte", () => {
   it("la remise se prend sur la marge, le délai sur le résultat, et le client vaut huit affaires", () => {
     for (const code of NEGOCIATIONS) {
       const { a, n, valeurDuClient, remiseSurLaDuree, verdict } = remiseDuGrandCompte(casDeLEntreprise(code));
+      // Le délai que le client exige ne dépasse jamais le délai maximal convenu entre professionnels.
+      expect(a.delai, code).toBe(Math.min(casDeLEntreprise(code).venteCredit.delai, 60));
       expect(auCentime(a.margeSansRemise - a.marge), code).toBe(a.remise);
       expect(auCentime(a.marge - a.coutDuCredit), code).toBe(a.resultatDeLAffaire);
       expect(valeurDuClient, code).toBe(auCentime(a.resultatDeLAffaire * COMMANDES_PROMISES));

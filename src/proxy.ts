@@ -1,6 +1,35 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { COOKIE_INVITE, optionsCookieInvite } from "@/lib/cookie-invite";
+import { cheminDemande, ENTETE_CHEMIN_DEMANDE } from "@/lib/connexion-enseignant";
+
+/**
+ * UNE BARRE OBLIQUE INVERSE DANS L'ADRESSE (« \ », encodée %5C).
+ *
+ * Constaté en production (audit d'octobre 2026) : `/tarifs%5C` répondait 500, Next
+ * cherchant un module `pages/tarifs%5C.js` qui n'existe pas, et le journal d'erreurs
+ * s'en remplissait. Un navigateur change de lui-même un « \ » tapé en « / » ; ces
+ * adresses viennent d'un copier-coller ou d'un robot.
+ *   · en fin d'adresse, on retire les « \ » et on redirige (308) vers la page ;
+ *   · ailleurs, aucune page du site n'en contient : on répond 404.
+ */
+const BARRE_INVERSE = /%5c|\\/i;
+const BARRES_INVERSES_FINALES = /(?:%5c|\\)+$/i;
+
+function barreInverse(request: NextRequest): NextResponse | null {
+  const { pathname } = request.nextUrl;
+  if (!BARRE_INVERSE.test(pathname)) return null;
+  const sans = pathname.replace(BARRES_INVERSES_FINALES, "");
+  if (!BARRE_INVERSE.test(sans)) {
+    const cible = request.nextUrl.clone();
+    cible.pathname = sans || "/";
+    return NextResponse.redirect(cible, 308);
+  }
+  return new NextResponse("Page introuvable", {
+    status: 404,
+    headers: { "content-type": "text/plain; charset=utf-8" },
+  });
+}
 
 /**
  * LE COOKIE INVITÉ SE RENOUVELLE À CHAQUE VISITE.
@@ -19,6 +48,18 @@ import { COOKIE_INVITE, optionsCookieInvite } from "@/lib/cookie-invite";
  * les visiteurs sans cookie, robots compris.
  */
 export function proxy(request: NextRequest) {
+  const refus = barreInverse(request);
+  if (refus) return refus;
+
+  // L'ESPACE ENSEIGNANT : la page demandée est transmise à la page serveur, qui
+  // la met dans l'adresse de connexion si la session manque
+  // (lib/connexion-enseignant.ts). L'en-tête reçu du client est écrasé.
+  if (request.nextUrl.pathname === "/teacher" || request.nextUrl.pathname.startsWith("/teacher/")) {
+    const entetes = new Headers(request.headers);
+    entetes.set(ENTETE_CHEMIN_DEMANDE, cheminDemande(request.nextUrl));
+    return NextResponse.next({ request: { headers: entetes } });
+  }
+
   const response = NextResponse.next();
   const valeur = request.cookies.get(COOKIE_INVITE)?.value;
   if (valeur) response.cookies.set(COOKIE_INVITE, valeur, optionsCookieInvite());
@@ -33,5 +74,10 @@ export const config = {
     { source: "/profile", has: [{ type: "cookie", key: "ba_guest" }] },
     { source: "/reprendre", has: [{ type: "cookie", key: "ba_guest" }] },
     { source: "/arena/:path*", has: [{ type: "cookie", key: "ba_guest" }] },
+    // L'espace enseignant, pour le retour après connexion (voir plus haut).
+    { source: "/teacher/:path*" },
+    // Toute adresse qui contient une barre oblique inverse, encodée ou non.
+    { source: "/(.*%5[cC].*)" },
+    { source: "/(.*\\\\.*)" },
   ],
 };

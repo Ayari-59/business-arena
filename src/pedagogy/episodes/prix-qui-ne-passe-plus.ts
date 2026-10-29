@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 17 — LE PRIX QUI NE PASSE PLUS, tel que l'interface et le bilan le lisent.
+ * LE PRIX QUI NE PASSE PLUS, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Malik montre, ce que la courbe
@@ -175,7 +175,7 @@ export function axe([information, diagnostic, reflexe, calibrage, politique]: re
 }
 
 const FLORIAN = { de: "Florian Duchêne", role: "Commercial grands comptes" } as const;
-const GARON = {
+const ALBERTINI = {
   de: "Benjamin Albertini",
   role: "Responsable achats, Garon Bâtiment",
 } as const;
@@ -355,7 +355,7 @@ export const EPISODE_PRIX: Episode<Trimestre> = {
     }
     if (arrive.garon === "accord" || (arrive.garon === "partiel" && chemin[D.garon] === 1)) {
       lies.push({
-        ...GARON,
+        ...ALBERTINI,
         heure: "sem. 10",
         alerte: arrive.garon === "partiel",
         texte: arrive.garon === "accord" ? REPONSES.garonAccord : REPONSES.garonPartielRendezVous,
@@ -363,7 +363,7 @@ export const EPISODE_PRIX: Episode<Trimestre> = {
     }
     if (arrive.garon === "garde" || (arrive.garon === "partiel" && chemin[D.garon] === 2)) {
       lies.push({
-        ...GARON,
+        ...ALBERTINI,
         heure: "sem. 10",
         alerte: arrive.garon === "partiel",
         texte: arrive.garon === "garde" ? REPONSES.garonGarde : REPONSES.garonPartielRefus,

@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 11 — LA TRÉSORERIE QUI FOND, tel que l'interface et le bilan le lisent.
+ * LA TRÉSORERIE QUI FOND, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de trésorerie de Béatrice montre, ce que la
@@ -101,7 +101,7 @@ export function comportements(p: PartieJouee, t: Trimestre): Constat[] {
     t.semaines[3]!.decouvert / 1000,
     "de découvert en fin de semaine 3",
     "k€",
-    { juste: 40, proche: 120 },
+    { juste: 140, proche: 250 },
     (e) => `${nombre(e, 0)} k€`,
   );
 

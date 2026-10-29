@@ -1,244 +1,80 @@
-import type { CompanyRoundResult } from "../../../engine/types";
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../pedagogy/cours/etats";
-import { scenarioByCode } from "../../scenarios/registry";
 import type { Cas } from "../cas";
-import { anneeDeReference, rejouerAvec } from "../gestion-de-la-pme";
+import { BOUTIQUES_DU_COURS, type FicheDeLaBoutique } from "../monde/maille-et-co";
+import {
+  NOUVELLES_CARTES_PAR_MOIS,
+  TAUX_DE_DEPART_PAR_MOIS,
+  TAUX_ESSAYES,
+  anneeDuFichier,
+  carteDeFidelite,
+  moisDuFichier,
+  tauxQuiGardeLeFichier,
+} from "../monde/vente-et-caisse";
 import type { Chapitre, TableauDeDonnees } from "../types";
+import { ENTREPRISES_DE_LA_VENTE } from "./le-panier-moyen";
 
 /**
  * CHAPITRE : LE CLIENT QUI REVIENT ET LE CLIENT QUI PART (Bac pro Métiers du commerce et de la
  * vente, terminale, palier 2).
  *
- * Le vendeur d'une salle de sport voit ses adhérents revenir chaque trimestre, ou partir. Le
- * chapitre compte ceux qui reviennent et ceux qui partent, ce que vaut un adhérent gardé toute
- * l'année (sa marge), ce que coûte un adhérent qui part, puis ce que coûtent des adhérents
- * refusés faute de place : l'arène rejoue l'année avec moins de places un trimestre.
+ * La vendeuse d'une boutique voit ses clientes fidèles revenir chaque mois, ou partir. Le chapitre
+ * compte celles qui reviennent et celles qui partent, ce que vaut une cliente gardée toute
+ * l'année (sa marge), ce que coûte une cliente qui part. Puis l'expérience : un curseur (combien de
+ * nouvelles cartes par mois pour que le fichier ne baisse pas ?) et un laboratoire (le plus haut
+ * taux de départ que le fichier supporte sur l'année).
  *
- * CE QUE L'ARÈNE SIMULE DE LA FIDÉLITÉ, ET RIEN DE PLUS.
- *  · Partout, la part de clientèle du trimestre d'avant rend l'entreprise plus attirante au
- *    trimestre suivant (`loyaltyEffect`, engine/market/attraction.ts : 1 + fidélité de la
- *    clientèle × part du tour d'avant). Cette part est celle de la demande, pas des ventes :
- *    un client refusé faute de stock ne la fait pas baisser. Aucun client n'y est compté.
- *  · Chez VOLT FITNESS seulement (bloc `subscription` du scénario), les clients sont comptés un
- *    par un : le portefeuille d'adhérents. À chaque trimestre, une part s'en va (l'attrition :
- *    la qualité perçue du service, le prix rapporté à celui de référence, une salle occupée
- *    au-delà du seuil de saturation, la saison), le reste revient et se sert d'abord sur les
- *    places proposées ; l'adhérent qui revient sans trouver de place est perdu, et les nouveaux
- *    n'ont que les places restantes (engine/simulation, `subServed`, `unserved`).
- *  · L'arène ne mesure pas la satisfaction : ces causes en tiennent lieu.
+ * Il ne double pas « La valeur d'un client » (BTS NDRC, palier 3 : taux d'attrition, valeur vie
+ * client, coût d'acquisition, portefeuille d'équilibre) : ici, des soustractions et des
+ * multiplications, mois par mois.
  *
- * D'où la restriction : compter qui revient et qui part n'a d'objet que là où l'arène compte
- * ses clients. Le chapitre ne double pas « La valeur d'un client » (BTS NDRC, palier 3 : taux
- * d'attrition, valeur vie client, coût d'acquisition, portefeuille d'équilibre) : ici, des
- * soustractions et des sommes sur l'année, et l'année rejouée.
+ * LE CHAPITRE JOUE DANS LE MONDE DU COURS : la clientèle des clientes fidèles de MAILLE & CO en
+ * janvier (monde/maille-et-co.ts : 340 passages en caisse, leurs articles référence par référence,
+ * la marge de leurs achats). Les calculs sont dans monde/vente-et-caisse.ts.
  *
- * Les chiffres sont ceux de l'année du cours (`anneeDeReference`) et d'un rejeu
- * (`rejouerAvec`, clé « le-client-qui-revient:… ») où seul le nombre d'abonnements proposés
- * change, au seul trimestre des travaux, à une valeur posée sur l'année du cours. Les travaux,
- * leur trimestre et les places qu'ils ferment sont des hypothèses du cours, nommées ci-dessous.
+ * HYPOTHÈSES DU COURS, dites à l'élève : une cliente fidèle passe en caisse une fois par mois
+ * (340 passages font 340 clientes) ; 5 % des clientes de la carte ne reviennent pas le mois
+ * suivant ; 15 passants prennent la carte chaque mois ; la marge d'un passage est celle de janvier.
+ *
+ * CE QUI A CHANGÉ. Le chapitre comptait les adhérents de la salle de sport de l'arène (2 200 au
+ * deuxième trimestre, 558 partis, 74,6 % qui reviennent, 376,01 € de marge sur l'année) et
+ * rejouait l'année avec des travaux. Il compte maintenant les clientes de la carte de MAILLE & CO :
+ * 340 en janvier, 17 qui partent en février, 95 % qui reviennent, 693,12 € de marge pour une
+ * cliente gardée toute l'année.
  */
-
-/** Les entreprises du chapitre : celles dont l'arène compte les clients un par un (un abonnement). */
-export const ENTREPRISES_DE_L_ABONNEMENT = ["fitness"] as const;
-
-/** Le trimestre dont le chapitre lit les départs : le deuxième, après la vague de janvier. */
-export const TRIMESTRE_DES_DEPARTS = 2;
-
-/**
- * LES TRAVAUX (hypothèse du cours) : au printemps, le deuxième trimestre, un plateau de la salle
- * ferme pour être rénové. La salle ne propose que 70 % des abonnements qu'elle proposait dans
- * l'année du cours ce trimestre-là (le champ « Adhérents à accueillir » du formulaire).
- */
-export const TRIMESTRE_DES_TRAVAUX = 2;
-export const PART_DES_PLACES_OUVERTES = 0.7;
-
-/**
- * Deux coûts « à peu près égaux » à 5 % près : en deçà, le chapitre ne dit pas que l'un dépasse
- * l'autre (hypothèse du cours, pour que le verdict ne tienne pas à un arrondi).
- */
-export const ECART_NEGLIGEABLE = 0.05;
 
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
+const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−");
+const pct = (t: number) => `${qte(t)} %`;
 const auDixieme = (x: number) => Math.round(x * 10) / 10;
-const T = (n: number) => `T${n}`;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
-const ordinal = (n: number) => (n === 1 ? "premier" : n === 2 ? "deuxième" : n === 3 ? "troisième" : "quatrième");
 
-/** Un trimestre du portefeuille, en adhérents entiers : les départs et les nouveaux se recomposent. */
-export interface TrimestreDesAdherents {
-  trimestre: number;
-  /** Les places proposées : les adhérents que la salle peut accueillir ce trimestre (« Adhérents à accueillir »). */
-  places: number;
-  debut: number;
-  partis: number;
-  gardes: number;
-  nouveaux: number;
-  /** Les adhérents servis : ceux qui paient le trimestre, et ouvrent le suivant. */
-  fin: number;
-  /** L'abonnement du trimestre : le chiffre d'affaires rapporté aux adhérents servis. */
-  abonnement: number;
-  /** La marge du trimestre : ce qui reste du chiffre d'affaires une fois payés les coûts variables. */
-  marge: number;
-}
+export const ficheDe = (c: Pick<Cas, "code">): FicheDeLaBoutique => BOUTIQUES_DU_COURS[c.code]!;
 
-/**
- * Les quatre trimestres d'une année, en adhérents entiers. Une salle défaillante ne sert plus
- * personne les trimestres suivants : on tranche avant de compter (aucune ne l'est dans l'année
- * du cours, la garde le vérifie).
- */
-export function trimestresDesAdherents(annee: readonly CompanyRoundResult[]): TrimestreDesAdherents[] {
-  return annee.map((r, i) => {
-    const eteinte = annee.slice(0, i).some((x) => x.defaillant);
-    const s = r.subscription;
-    if (eteinte || !s) return { trimestre: i + 1, places: 0, debut: 0, partis: 0, gardes: 0, nouveaux: 0, fin: 0, abonnement: 0, marge: 0 };
-    const debut = Math.round(s.opening);
-    const gardes = Math.round(s.retained);
-    const fin = Math.round(s.closing);
-    return {
-      trimestre: i + 1,
-      places: Math.round(r.production.planned),
-      debut,
-      partis: debut - gardes,
-      gardes,
-      nouveaux: fin - gardes,
-      fin,
-      abonnement: s.closing > 0 ? auCentime(r.incomeStatement.revenue / s.closing) : 0,
-      marge: Math.round(r.incomeStatement.grossMargin),
-    };
-  });
-}
-
-/** L'année du cours rejouée avec les travaux : moins d'abonnements proposés, au seul trimestre des travaux. */
-export function anneeAvecLesTravaux(code: string, trimestre: number, part: number, cle: string) {
-  const places = Math.round(anneeDeReference(code)[trimestre - 1]!.production.planned * part);
+/** La carte de fidélité et son mois de février. */
+export function clientesDeLaCarte(c: Pick<Cas, "code">) {
+  const f = ficheDe(c);
+  const carte = carteDeFidelite(f);
+  const fevrier = moisDuFichier(carte.clientes);
   return {
-    places,
-    annee: rejouerAvec(code, `le-client-qui-revient:${cle}`, (t, d) => (t === trimestre ? { ...d, productionPlan: places } : undefined)),
+    ...carte,
+    fevrier,
+    reviennent: auDixieme((fevrier.revenues / fevrier.debut) * 100),
+    partDesRevenues: auDixieme((fevrier.revenues / fevrier.fin) * 100),
   };
 }
 
-/** Ce que coûtent des travaux qui ferment des places un trimestre : les refusés, les adhérents et la marge perdus. */
-export function lesTravaux(c: Cas, trimestre: number, part: number, cle: string) {
-  const reference = trimestresDesAdherents(anneeDeReference(c.code));
-  const { places, annee } = anneeAvecLesTravaux(c.code, trimestre, part, cle);
-  const avec = trimestresDesAdherents(annee);
-  const k = trimestre - 1;
-  const refuses = reference[k]!.fin - avec[k]!.fin;
-  const margeDeLAnnee = (a: readonly TrimestreDesAdherents[]) => a.reduce((t, x) => t + x.marge, 0);
-  const margePerdue = margeDeLAnnee(reference) - margeDeLAnnee(avec);
-  const margePerdueAuTrimestre = reference[k]!.marge - avec[k]!.marge;
-  const coutVariable = coutVariableParAdherent(c);
-  const margeDUnTrimestre = auCentime(reference[k]!.abonnement - coutVariable);
-  const parRefuse = refuses > 0 ? auCentime(margePerdue / refuses) : 0;
-  const rapport = margeDUnTrimestre > 0 ? parRefuse / margeDUnTrimestre : 0;
-  const verdict: "plus" | "autant" | "moins" =
-    rapport > 1 + ECART_NEGLIGEABLE ? "plus" : rapport < 1 - ECART_NEGLIGEABLE ? "moins" : "autant";
-  // Les trimestres d'après où la salle, moins pleine, n'a pas fixé le même abonnement.
-  const abonnementsChanges = avec
-    .slice(trimestre)
-    .filter((x) => Math.abs(x.abonnement - reference[x.trimestre - 1]!.abonnement) >= 0.01)
-    .map((x) => ({ trimestre: x.trimestre, avant: reference[x.trimestre - 1]!.abonnement, apres: x.abonnement }));
+export function tableauDeLaCarte(c: Cas): TableauDeDonnees {
+  const k = clientesDeLaCarte(c);
   return {
-    trimestre,
-    part,
-    places,
-    placesAvant: reference[k]!.places,
-    reference,
-    avec,
-    refuses,
-    /** Les adhérents sans place au trimestre des travaux, tels que le moteur les compte (anciens et nouveaux). */
-    refusesDuMoteur: (annee[k]!.subscription?.unserved ?? 0) + Object.values(annee[k]!.market.bySegment).reduce((t, v) => t + v.lost, 0),
-    /** Les adhérents qui revenaient et n'ont pas trouvé de place, au trimestre des travaux. */
-    refusesAnciens: Math.round(annee[k]!.subscription?.unserved ?? 0),
-    enMoinsALaFin: reference.at(-1)!.fin - avec.at(-1)!.fin,
-    margeDeReference: margeDeLAnnee(reference),
-    margeAvec: margeDeLAnnee(avec),
-    margePerdue,
-    margePerdueAuTrimestre,
-    margePerdueEnsuite: margePerdue - margePerdueAuTrimestre,
-    margeDUnTrimestre,
-    parRefuse,
-    verdict,
-    abonnementsChanges,
-  };
-}
-
-/** Le coût variable d'un adhérent pour un trimestre : celui du scénario, par place. */
-export const coutVariableParAdherent = (c: Cas) => c.gestion.coutVariableUnitaire;
-
-/** Le portefeuille de l'année du cours, et ce que vaut un adhérent gardé ou perdu. */
-export function clientsDeLAnnee(c: Cas) {
-  const s = scenarioByCode(c.code).scenario.subscription!;
-  const trimestres = trimestresDesAdherents(anneeDeReference(c.code));
-  const lu = trimestres[TRIMESTRE_DES_DEPARTS - 1]!;
-  const coutVariable = coutVariableParAdherent(c);
-  const abonnementsDeLAnnee = auCentime(trimestres.reduce((t, x) => t + x.abonnement, 0));
-  const coutsDeLAnnee = auCentime(coutVariable * trimestres.length);
-  const apresLePremier = trimestres.slice(1);
-  const abonnementsPerdus = auCentime(apresLePremier.reduce((t, x) => t + x.abonnement, 0));
-  const coutsEvites = auCentime(coutVariable * apresLePremier.length);
-  return {
-    trimestres,
-    lu,
-    reviennent: auDixieme((lu.gardes / lu.debut) * 100),
-    partDesGardes: auDixieme((lu.gardes / lu.fin) * 100),
-    coutVariable,
-    abonnementsDeLAnnee,
-    coutsDeLAnnee,
-    margeDeLAnnee: auCentime(abonnementsDeLAnnee - coutsDeLAnnee),
-    abonnementsPerdus,
-    coutsEvites,
-    margePerdue: auCentime(abonnementsPerdus - coutsEvites),
-    seuilDeSaturation: auDixieme(s.crowdingThreshold * 100),
-    trimestreDEte: (s.churnSeasonality ?? []).slice(0, 4).reduce((m, x, i, a) => (x > a[m]! ? i : m), 0) + 1,
-  };
-}
-
-/** Les travaux du chapitre : un plateau fermé au printemps. */
-export const travauxDuChapitre = (c: Cas) => lesTravaux(c, TRIMESTRE_DES_TRAVAUX, PART_DES_PLACES_OUVERTES, "travaux-au-printemps");
-
-export function tableauDuPortefeuille(c: Cas): TableauDeDonnees {
-  const k = clientsDeLAnnee(c);
-  return {
-    titre: `Les adhérents ${dE(c.entreprise)}, trimestre par trimestre`,
-    colonnes: k.trimestres.map((t) => T(t.trimestre)),
+    titre: `Les clientes fidèles ${dE(c.entreprise)} en janvier`,
+    colonnes: ["Janvier"],
     lignes: [
-      { libelle: "En début de trimestre", valeurs: k.trimestres.map((t) => qte(t.debut)) },
-      { libelle: "Partis", valeurs: k.trimestres.map((t) => `− ${qte(t.partis)}`) },
-      { libelle: "Revenus (ils renouvellent)", valeurs: k.trimestres.map((t) => qte(t.gardes)) },
-      { libelle: "Nouveaux inscrits", valeurs: k.trimestres.map((t) => `+ ${qte(t.nouveaux)}`) },
-      { libelle: "En fin de trimestre", valeurs: k.trimestres.map((t) => qte(t.fin)) },
-      { libelle: "Abonnement du trimestre", valeurs: k.trimestres.map((t) => eur(t.abonnement)) },
+      { libelle: "Clientes de la carte (un passage par mois)", valeurs: [qte(k.clientes)] },
+      { libelle: "Articles achetés", valeurs: [qte(k.articles)] },
+      { libelle: "Chiffre d'affaires hors taxes", valeurs: [eur(k.chiffreDAffaires)] },
+      { libelle: "Coût des articles vendus", valeurs: [eur(k.coutDesVentes)] },
     ],
   };
-}
-
-/** Les deux années, trimestre par trimestre : sans et avec les travaux. */
-export function tableauDesTravaux(c: Cas, p: ReturnType<typeof lesTravaux>, quand: string): TableauDeDonnees {
-  return {
-    titre: `L'année ${dE(c.entreprise)}, rejouée avec les travaux ${quand}`,
-    colonnes: p.reference.map((t) => T(t.trimestre)),
-    lignes: [
-      { libelle: "Adhérents à accueillir, sans travaux", valeurs: p.reference.map((t) => qte(t.places)) },
-      { libelle: "Adhérents à accueillir, avec les travaux", valeurs: p.avec.map((t) => qte(t.places)) },
-      { libelle: "Adhérents servis, sans travaux", valeurs: p.reference.map((t) => qte(t.fin)) },
-      { libelle: "Adhérents servis, avec les travaux", valeurs: p.avec.map((t) => qte(t.fin)) },
-      { libelle: "Abonnement, sans travaux", valeurs: p.reference.map((t) => eur(t.abonnement)) },
-      { libelle: "Abonnement, avec les travaux", valeurs: p.avec.map((t) => eur(t.abonnement)) },
-      { libelle: "Marge, sans travaux", valeurs: p.reference.map((t) => eur(t.marge)) },
-      { libelle: "Marge, avec les travaux", valeurs: p.avec.map((t) => eur(t.marge)) },
-    ],
-  };
-}
-
-/** Ce que l'abonnement a changé après les travaux, en une phrase ; vide s'il n'a pas changé. */
-export function abonnementsApresLesTravaux(p: ReturnType<typeof lesTravaux>): string {
-  if (p.abonnementsChanges.length === 0) return "";
-  const liste = p.abonnementsChanges.map((x) => `${eur(x.apres)} au lieu de ${eur(x.avant)} au ${T(x.trimestre)}`).join(", ");
-  return ` Une partie de cette marge perdue vient aussi de l'abonnement : la salle, moins pleine, ne l'a pas monté de la même façon (${liste}). C'est la même façon de gérer, face à moins d'adhérents.`;
 }
 
 export const LE_CLIENT_QUI_REVIENT: Chapitre = {
@@ -247,237 +83,238 @@ export const LE_CLIENT_QUI_REVIENT: Chapitre = {
   palier: 2,
   blocs: ["Bac pro MCV Bloc 3 · Fidéliser la clientèle et développer la relation client"],
   titre: "Le client qui revient et le client qui part",
-  accroche:
-    "Chaque trimestre, des adhérents renouvellent leur abonnement, d'autres partent. Combien reviennent, que rapporte un adhérent gardé toute l'année, et que coûte un adhérent qu'on perd ?",
+  accroche: "Chaque mois, des clientes fidèles reviennent, d'autres ne reviennent plus. Combien reviennent, que rapporte une cliente gardée toute l'année, et que coûte une cliente qu'on perd ?",
   objectifs: [
     "Compter les clients qui reviennent et ceux qui partent",
     "Dire quelle part des clients revient",
     "Calculer la marge d'un client gardé toute l'année",
     "Calculer ce que coûte un client qui part",
-    "Mesurer ce que coûtent des clients refusés faute de place",
+    "Voir combien de nouveaux clients il faut pour remplacer ceux qui partent",
   ],
   libre: false,
   entreprises: {
-    codes: ENTREPRISES_DE_L_ABONNEMENT,
-    pourquoi: "ce chapitre compte les clients qui reviennent et ceux qui partent, et VOLT FITNESS est l'entreprise de l'arène qui suit ses abonnés un par un.",
+    codes: ENTREPRISES_DE_LA_VENTE,
+    pourquoi: "ce chapitre compte les clientes de la carte de fidélité de la boutique du cours, MAILLE & CO, mois par mois.",
   },
   etapes: [
     {
       id: "intro",
       type: "lecture",
-      titre: "Des adhérents qui reviennent, d'autres qui partent",
+      titre: "Des clientes qui reviennent, d'autres qui partent",
       notions: ["churn_rate", "customer_portfolio"],
-      tableau: tableauDuPortefeuille,
+      tableau: tableauDeLaCarte,
       texte: (c) => {
-        const k = clientsDeLAnnee(c);
+        const k = clientesDeLaCarte(c);
         return [
-          `Chez ${c.entreprise}, les clients paient un abonnement chaque trimestre. À la fin du trimestre, certains renouvellent : ce sont les clients qui reviennent. D'autres partent. Et de nouveaux clients s'inscrivent.`,
-          `Dans l'arène, quatre choses font partir un adhérent : un service de moins bonne qualité, un abonnement plus cher, une salle trop pleine (plus de ${pct(k.seuilDeSaturation)} des places prises en début de trimestre) et l'été, au ${ordinal(k.trimestreDEte)} trimestre. L'arène ne mesure pas la satisfaction des clients : ce sont ces quatre causes qui la remplacent.`,
-          "La salle sert d'abord les adhérents qui reviennent, puis les nouveaux, tant qu'il reste des places. Un adhérent qui revient et ne trouve pas de place est perdu.",
-          `${c.entreprise} est la seule entreprise de l'arène qui compte ses clients un par un. Ailleurs, la fidélité joue autrement : la part de clientèle gagnée au trimestre d'avant rend l'entreprise plus attirante au trimestre suivant.`,
+          `${c.entreprise} a une carte de fidélité. Dans le cas du cours, une cliente fidèle passe en caisse une fois par mois : les ${qte(k.tickets)} passages de janvier sont ${qte(k.clientes)} clientes.`,
+          `Chaque mois, certaines ne reviennent pas : elles déménagent, achètent ailleurs, oublient la boutique. Le cours suppose que ${pct(TAUX_DE_DEPART_PAR_MOIS * 100)} des clientes de la carte ne reviennent pas le mois suivant, et que ${qte(NOUVELLES_CARTES_PAR_MOIS)} passants prennent la carte chaque mois.`,
         ];
       },
-      repere: () => "Clients partis = clients du début de trimestre − clients qui reviennent. Un client gardé rapporte sa marge à chaque trimestre ; un client perdu emporte toutes ses marges à venir.",
+      repere: () => "Clientes à la fin du mois = clientes du début − clientes parties + nouvelles clientes.",
     },
     {
       id: "partis",
       type: "montants",
       titre: "Combien reviennent, combien partent",
-      notions: ["churn_rate"],
+      notions: ["churn_rate", "customer_portfolio"],
       question: (c) => {
-        const k = clientsDeLAnnee(c);
-        return `Au ${ordinal(k.lu.trimestre)} trimestre, la salle commence avec ${qte(k.lu.debut)} adhérents. ${qte(k.lu.gardes)} renouvellent leur abonnement. Calculez le nombre d'adhérents partis, puis la part des adhérents qui reviennent (en %, au dixième).`;
+        const k = clientesDeLaCarte(c);
+        return `Pour février, calculez les clientes qui ne reviennent pas (${pct(TAUX_DE_DEPART_PAR_MOIS * 100)} des ${qte(k.clientes)} de janvier, à l'unité), celles qui reviennent, puis les clientes de la carte à la fin de février, avec les ${qte(k.fevrier.nouvelles)} nouvelles.`;
       },
       champs: (c) => {
-        const k = clientsDeLAnnee(c);
+        const k = clientesDeLaCarte(c).fevrier;
         return [
-          { libelle: "Adhérents partis", attendu: k.lu.partis, calcul: `${qte(k.lu.debut)} − ${qte(k.lu.gardes)} = ${qte(k.lu.partis)}`, tolerance: 0 },
-          {
-            libelle: "Part des adhérents qui reviennent (%)",
-            attendu: k.reviennent,
-            calcul: `${qte(k.lu.gardes)} ÷ ${qte(k.lu.debut)} × 100 = ${pct(k.reviennent)}`,
-            tolerance: 0.1,
-          },
+          { libelle: "Clientes parties", attendu: k.parties, calcul: `${qte(k.debut)} × ${pct(TAUX_DE_DEPART_PAR_MOIS * 100)} = ${qte(k.parties)}` },
+          { libelle: "Clientes revenues", attendu: k.revenues, calcul: `${qte(k.debut)} − ${qte(k.parties)} = ${qte(k.revenues)}` },
+          { libelle: "Clientes de la carte fin février", attendu: k.fin, calcul: `${qte(k.revenues)} + ${qte(k.nouvelles)} = ${qte(k.fin)}` },
         ];
       },
       explication: (c) => {
-        const k = clientsDeLAnnee(c);
-        const t1 = k.trimestres[0]!;
+        const k = clientesDeLaCarte(c).fevrier;
         return [
-          `Sur 100 adhérents présents au début du trimestre, environ ${qte(Math.round(k.reviennent))} reviennent. Au premier trimestre, c'était ${qte(t1.gardes)} sur ${qte(t1.debut)} : le trimestre ${T(k.lu.trimestre)} a perdu ${qte(k.lu.partis)} adhérents, contre ${qte(t1.partis)} au ${T(1)}.`,
+          k.fin < k.debut
+            ? `Le fichier passe de ${qte(k.debut)} à ${qte(k.fin)} clientes : les ${qte(k.nouvelles)} nouvelles ne remplacent pas les ${qte(k.parties)} parties.`
+            : `Le fichier passe de ${qte(k.debut)} à ${qte(k.fin)} clientes : les nouvelles remplacent les parties.`,
         ];
       },
     },
     {
       id: "poids-des-gardes",
       type: "montants",
-      titre: "Le poids des clients qui reviennent",
-      notions: ["customer_portfolio"],
+      titre: "Le poids des clientes qui reviennent",
+      notions: ["churn_rate"],
       question: (c) => {
-        const k = clientsDeLAnnee(c);
-        return `À la fin du ${ordinal(k.lu.trimestre)} trimestre, la salle compte ${qte(k.lu.fin)} adhérents : ${qte(k.lu.gardes)} qui sont revenus et ${qte(k.lu.nouveaux)} nouveaux. Quelle part des adhérents sont des clients qui reviennent (en %, au dixième) ?`;
+        const k = clientesDeLaCarte(c).fevrier;
+        return `Calculez la part des clientes de janvier qui reviennent en février (${qte(k.revenues)} ÷ ${qte(k.debut)} × 100), puis la part des clientes revenues dans le fichier de fin février (${qte(k.revenues)} ÷ ${qte(k.fin)} × 100), au dixième.`;
       },
       champs: (c) => {
-        const k = clientsDeLAnnee(c);
+        const k = clientesDeLaCarte(c);
         return [
-          {
-            libelle: "Part des clients qui reviennent dans la salle (%)",
-            attendu: k.partDesGardes,
-            calcul: `${qte(k.lu.gardes)} ÷ ${qte(k.lu.fin)} × 100 = ${pct(k.partDesGardes)}`,
-            tolerance: 0.1,
-          },
+          { libelle: "Part qui revient (%)", attendu: k.reviennent, calcul: `${qte(k.fevrier.revenues)} ÷ ${qte(k.fevrier.debut)} × 100 = ${pct(k.reviennent)}`, tolerance: 0.1 },
+          { libelle: "Part des revenues dans le fichier (%)", attendu: k.partDesRevenues, calcul: `${qte(k.fevrier.revenues)} ÷ ${qte(k.fevrier.fin)} × 100 = ${pct(k.partDesRevenues)}`, tolerance: 0.1 },
         ];
       },
       explication: (c) => {
-        const k = clientsDeLAnnee(c);
-        const remplaces =
-          k.lu.nouveaux < k.lu.partis
-            ? `Les nouveaux ne remplacent pas les partis : ${qte(k.lu.nouveaux)} inscrits pour ${qte(k.lu.partis)} départs, et la salle finit le trimestre plus petite qu'elle ne l'a commencé.`
-            : `Les nouveaux remplacent les partis : ${qte(k.lu.nouveaux)} inscrits pour ${qte(k.lu.partis)} départs.`;
-        return [
-          `${pct(k.partDesGardes)} des adhérents qui paient ce trimestre sont des clients qui reviennent. ${remplaces}`,
-          k.partDesGardes > 50
-            ? "Pour le vendeur, ce sont les clients qui reviennent qui font la plus grande part du chiffre d'affaires du trimestre."
-            : "Ce trimestre, les nouveaux font la plus grande part du chiffre d'affaires : la salle dépend de ses inscriptions.",
-        ];
+        const k = clientesDeLaCarte(c);
+        return [`${pct(k.reviennent)} des clientes reviennent, et elles font ${pct(k.partDesRevenues)} du fichier de fin février : la boutique vit d'abord de celles qu'elle garde.`];
       },
     },
     {
       id: "garde-toute-l-annee",
       type: "montants",
-      titre: "Un adhérent gardé toute l'année",
+      titre: "Une cliente gardée toute l'année",
       notions: ["contribution_margin", "customer_lifetime_value"],
-      tableau: tableauDuPortefeuille,
       question: (c) => {
-        const k = clientsDeLAnnee(c);
-        return `Un adhérent reste toute l'année. Il paie l'abonnement de chaque trimestre (voir le tableau). Chaque trimestre, il coûte ${eur(k.coutVariable)} à la salle en coûts variables (entretien, énergie, eau, serviettes). Calculez ce qu'il paie sur l'année, ce qu'il coûte sur l'année, puis la marge qu'il laisse.`;
+        const k = clientesDeLaCarte(c);
+        return `En janvier, les achats des clientes fidèles ont laissé ${eur(k.marge)} de marge (${eur(k.chiffreDAffaires)} de chiffre d'affaires, moins ${eur(k.coutDesVentes)} de coût des articles), pour ${qte(k.tickets)} passages. Calculez la marge d'un passage, au centime, puis la marge d'une cliente gardée toute l'année, qui passe chaque mois.`;
       },
       champs: (c) => {
-        const k = clientsDeLAnnee(c);
+        const k = clientesDeLaCarte(c);
         return [
-          {
-            libelle: "Abonnements payés sur l'année",
-            attendu: k.abonnementsDeLAnnee,
-            calcul: `${k.trimestres.map((t) => eur(t.abonnement)).join(" + ")} = ${eur(k.abonnementsDeLAnnee)}`,
-          },
-          { libelle: "Coûts de l'adhérent sur l'année", attendu: k.coutsDeLAnnee, calcul: `${eur(k.coutVariable)} × ${qte(k.trimestres.length)} = ${eur(k.coutsDeLAnnee)}` },
-          {
-            libelle: "Marge d'un adhérent gardé toute l'année",
-            attendu: k.margeDeLAnnee,
-            calcul: `${eur(k.abonnementsDeLAnnee)} − ${eur(k.coutsDeLAnnee)} = ${eur(k.margeDeLAnnee)}`,
-          },
+          { libelle: "Marge d'un passage", attendu: k.margeDUnPassage, calcul: `${eur(k.marge)} ÷ ${qte(k.tickets)} = ${eur(k.margeDUnPassage)}` },
+          { libelle: "Marge d'une cliente sur l'année", attendu: k.margeDeLAnnee, calcul: `12 × ${eur(k.margeDUnMois)} = ${eur(k.margeDeLAnnee)}` },
         ];
       },
-      explication: (c) => {
-        const k = clientsDeLAnnee(c);
-        return [
-          `Un adhérent gardé toute l'année laisse ${eur(k.margeDeLAnnee)} à la salle pour payer le loyer, les coachs et le reste. Il ne coûte rien de plus à garder : il suffit qu'il revienne.`,
-        ];
-      },
+      explication: (c) => [`Une cliente gardée toute l'année laisse ${eur(clientesDeLaCarte(c).margeDeLAnnee)} de marge à la boutique : bien plus que son panier d'un jour.`],
     },
     {
       id: "parti-apres-le-premier",
       type: "montants",
-      titre: "Un adhérent qui part après le premier trimestre",
-      notions: ["contribution_margin", "churn_rate"],
-      question: (c) => {
-        const k = clientsDeLAnnee(c);
-        return `Un adhérent ne renouvelle pas à la fin du premier trimestre. Il ne paiera pas les ${qte(k.trimestres.length - 1)} trimestres suivants, mais la salle n'aura pas non plus à payer ses ${eur(k.coutVariable)} de coûts à chacun. Calculez les abonnements qu'il ne paiera pas, puis la marge que la salle perd.`;
-      },
+      titre: "Une cliente qui part après janvier",
+      notions: ["churn_rate", "customer_lifetime_value"],
+      question: () => "Une cliente passe en janvier, puis ne revient plus. Calculez la marge que la boutique ne fera pas avec elle, sur les mois qui restent dans l'année.",
       champs: (c) => {
-        const k = clientsDeLAnnee(c);
-        const apres = k.trimestres.slice(1);
-        return [
-          { libelle: "Abonnements qu'il ne paiera pas", attendu: k.abonnementsPerdus, calcul: `${apres.map((t) => eur(t.abonnement)).join(" + ")} = ${eur(k.abonnementsPerdus)}` },
-          {
-            libelle: "Marge que la salle perd",
-            attendu: k.margePerdue,
-            calcul: `${eur(k.abonnementsPerdus)} − ${eur(k.coutVariable)} × ${qte(apres.length)} = ${eur(k.margePerdue)}`,
-          },
-        ];
+        const k = clientesDeLaCarte(c);
+        return [{ libelle: "Marge perdue avec une cliente partie", attendu: k.margePerdueSiEllePart, calcul: `11 × ${eur(k.margeDUnMois)} = ${eur(k.margePerdueSiEllePart)}` }];
       },
       explication: (c) => {
-        const k = clientsDeLAnnee(c);
+        const k = clientesDeLaCarte(c);
+        const perte = k.fevrier.parties * k.margePerdueSiEllePart;
         return [
-          `Un client qui part ne coûte pas seulement le trimestre qu'il ne paie pas : il emporte ${eur(k.margePerdue)} de marge sur la fin de l'année. Pour la retrouver, il faudra trouver un nouveau client, et le payer en publicité.`,
+          `Une cliente qui part coûte ${eur(k.margePerdueSiEllePart)} de marge sur l'année. Les ${qte(k.fevrier.parties)} parties de février, c'est ${eur(perte)} de marge en moins d'ici décembre, si personne ne les remplace.`,
         ];
       },
     },
     {
-      id: "les-travaux",
-      type: "montants",
-      titre: "Des adhérents refusés faute de place",
-      notions: ["capacity", "churn_rate"],
-      tableau: (c) => tableauDesTravaux(c, travauxDuChapitre(c), "au printemps"),
-      question: (c) => {
-        const p = travauxDuChapitre(c);
-        return `Au ${ordinal(p.trimestre)} trimestre, un plateau de la salle ferme pour travaux : la salle ne peut accueillir que ${qte(p.places)} adhérents au lieu de ${qte(p.placesAvant)}. L'arène a rejoué l'année ainsi, avec les mêmes concurrents et la même façon de gérer. D'après le tableau, calculez les adhérents refusés au ${T(p.trimestre)}, les adhérents en moins à la fin de l'année, puis la marge perdue sur l'année.`;
-      },
-      champs: (c) => {
-        const p = travauxDuChapitre(c);
-        const fin = p.reference.length;
-        return [
-          {
-            libelle: `Adhérents refusés au ${T(p.trimestre)}`,
-            attendu: p.refuses,
-            calcul: `${qte(p.reference[p.trimestre - 1]!.fin)} − ${qte(p.avec[p.trimestre - 1]!.fin)} = ${qte(p.refuses)}`,
-            tolerance: 0,
-          },
-          {
-            libelle: "Adhérents en moins à la fin de l'année",
-            attendu: p.enMoinsALaFin,
-            calcul: `${qte(p.reference[fin - 1]!.fin)} − ${qte(p.avec[fin - 1]!.fin)} = ${qte(p.enMoinsALaFin)}`,
-            tolerance: 0,
-          },
-          {
-            libelle: "Marge perdue sur l'année",
-            attendu: p.margePerdue,
-            calcul: `${eur(p.margeDeReference)} − ${eur(p.margeAvec)} = ${eur(p.margePerdue)}, la marge de chaque trimestre additionnée`,
-            tolerance: 1,
-          },
-        ];
-      },
-      explication: (c) => {
-        const p = travauxDuChapitre(c);
-        return [
-          `Au ${T(p.trimestre)}, ${qte(p.refuses)} adhérents n'ont pas trouvé de place : ${p.refusesAnciens > 0 ? "des adhérents qui revenaient, et des nouveaux qui voulaient s'inscrire" : "des nouveaux qui voulaient s'inscrire"}. La salle a perdu ${eur(p.margePerdueAuTrimestre)} de marge ce trimestre-là.`,
-          p.margePerdueEnsuite > 0 && p.enMoinsALaFin > 0
-            ? `Mais ces adhérents ne reviennent pas une fois les travaux finis : à la fin de l'année, la salle en compte encore ${qte(p.enMoinsALaFin)} de moins, et elle perd ${eur(p.margePerdueEnsuite)} de marge sur les trimestres suivants.${abonnementsApresLesTravaux(p)}`
-            : `Une fois les travaux finis, la salle retrouve ses adhérents : la perte s'arrête presque au trimestre des travaux.${abonnementsApresLesTravaux(p)}`,
-        ];
-      },
-    },
-    {
-      id: "ce-que-coute-un-refus",
+      id: "ce-que-dit-le-fichier",
       type: "choix",
-      titre: "Ce que coûte un adhérent refusé",
-      notions: ["customer_lifetime_value", "capacity"],
+      titre: "Ce que dit le fichier",
+      notions: ["churn_rate", "customer_portfolio"],
       question: (c) => {
-        const p = travauxDuChapitre(c);
-        return `Les travaux ont fait perdre ${eur(p.margePerdue)} de marge sur l'année, pour ${qte(p.refuses)} adhérents refusés : ${eur(p.parRefuse)} par adhérent refusé. Un adhérent laisse ${eur(p.margeDUnTrimestre)} de marge sur un trimestre au ${T(p.trimestre)}. Que coûte un adhérent refusé ?`;
+        const k = clientesDeLaCarte(c).fevrier;
+        return `En février, ${qte(k.parties)} clientes partent et ${qte(k.nouvelles)} prennent la carte. Que dire ?`;
       },
       options: (c) => {
-        const p = travauxDuChapitre(c);
-        const calcul = `${eur(p.margePerdue)} ÷ ${qte(p.refuses)} = ${eur(p.parRefuse)} par adhérent refusé, pour ${eur(p.margeDUnTrimestre)} de marge sur un trimestre.`;
+        const k = clientesDeLaCarte(c).fevrier;
+        const baisse = k.parties > k.nouvelles;
         return [
           {
-            texte: "Plus qu'un trimestre de marge : il ne revient pas",
-            juste: p.verdict === "plus",
-            retour:
-              p.verdict === "plus"
-                ? `Oui. ${calcul} L'adhérent refusé ne revient pas au trimestre suivant : la salle perd aussi la suite de ses abonnements.`
-                : `Non. ${calcul}`,
+            texte: "Le fichier baisse : les départs dépassent les nouvelles cartes",
+            juste: baisse,
+            retour: baisse ? `Oui : ${qte(k.debut)} clientes en janvier, ${qte(k.fin)} fin février. Il faut garder les clientes, ou en gagner davantage.` : `Non : ${qte(k.nouvelles)} nouvelles pour ${qte(k.parties)} parties, le fichier ne baisse pas.`,
           },
           {
-            texte: "Un trimestre de marge, à peu près",
-            juste: p.verdict === "autant",
-            retour: p.verdict === "autant" ? `Oui. ${calcul} La perte s'arrête presque au trimestre des travaux.` : `Non. ${calcul}`,
+            texte: "Le fichier tient : les nouvelles cartes remplacent les départs",
+            juste: !baisse,
+            retour: !baisse ? `Oui : ${qte(k.nouvelles)} nouvelles pour ${qte(k.parties)} parties.` : `Non : ${qte(k.nouvelles)} nouvelles ne remplacent pas ${qte(k.parties)} parties.`,
           },
           {
-            texte: "Moins qu'un trimestre de marge",
-            juste: p.verdict === "moins",
-            retour: p.verdict === "moins" ? `Oui. ${calcul} La salle économise une partie des coûts des places fermées.` : `Non. ${calcul}`,
+            texte: "Les départs ne comptent pas : seules les nouvelles cartes font vendre",
+            juste: false,
+            retour: `Non : chaque cliente qui part emporte ${eur(clientesDeLaCarte(c).margePerdueSiEllePart)} de marge sur l'année. Les garder compte autant que d'en gagner.`,
           },
+        ];
+      },
+    },
+    {
+      id: "remplacer-les-departs",
+      type: "curseur",
+      titre: "Remplacer les départs",
+      notions: ["customer_portfolio", "churn_rate"],
+      question: (c) => {
+        const k = clientesDeLaCarte(c).fevrier;
+        return `En février, ${qte(k.parties)} clientes ne reviennent pas. Faites varier les nouvelles cartes du mois : une droite donne les clientes de fin février, l'autre celles de janvier. Placez le curseur sur le plus petit nombre de nouvelles cartes qui garde le fichier au moins à son niveau de janvier, puis validez.`;
+      },
+      grandeur: () => ({ libelle: "Nouvelles cartes dans le mois", unite: "clientes" }),
+      cible: (c) => ({ attendu: clientesDeLaCarte(c).fevrier.parties, min: 0, max: 40 }),
+      zones: ["Le fichier se maintient", "Le fichier baisse"],
+      rates: () => ({
+        dessous: "Avec si peu de nouvelles cartes, le fichier baisse : les départs ne sont pas remplacés.",
+        dessus: "Le fichier tient, mais moins de nouvelles cartes suffirait : cherchez le plus petit nombre.",
+      }),
+      montrer: "Montrer les nouvelles cartes",
+      lecture: (c, q) => {
+        const k = clientesDeLaCarte(c);
+        const m = moisDuFichier(k.clientes, TAUX_DE_DEPART_PAR_MOIS, q);
+        return [
+          { libelle: "Clientes parties", montant: m.parties },
+          { libelle: "Nouvelles cartes", montant: q },
+          { libelle: "Clientes de fin février", montant: m.fin, fort: true },
+          { libelle: "Clientes de janvier", montant: k.clientes },
+        ];
+      },
+      droites: (c) => {
+        const k = clientesDeLaCarte(c);
+        return { produit: (q) => moisDuFichier(k.clientes, TAUX_DE_DEPART_PAR_MOIS, q).fin, cout: () => k.clientes, libelles: ["Clientes de fin février", "Clientes de janvier"] };
+      },
+      explication: (c) => {
+        const k = clientesDeLaCarte(c).fevrier;
+        return [
+          `Il faut ${qte(k.parties)} nouvelles cartes, autant que de départs, pour que le fichier ne baisse pas. Avec ${qte(k.nouvelles)}, il perd ${qte(k.parties - k.nouvelles)} clientes chaque mois.`,
+          "Pour garder un fichier, on peut gagner plus de clientes, ou en perdre moins : les deux leviers comptent.",
+        ];
+      },
+    },
+    {
+      id: "le-laboratoire-de-la-fidelite",
+      type: "simulation",
+      titre: "Le laboratoire de la fidélité",
+      notions: ["churn_rate", "customer_portfolio"],
+      question: (c) => {
+        const k = clientesDeLaCarte(c);
+        return `La boutique veut finir l'année avec au moins ses ${qte(k.clientes)} clientes de janvier, en gardant ${qte(NOUVELLES_CARTES_PAR_MOIS)} nouvelles cartes par mois. Faites varier la part des clientes qui ne reviennent pas chaque mois (un meilleur accueil, une relance, une invitation la fait baisser) : le fichier se refait mois par mois jusqu'en décembre. Relevez le défi.`;
+      },
+      leviers: () => [{ code: "taux", libelle: "Clientes qui ne reviennent pas chaque mois", unite: "%", ...TAUX_ESSAYES, depart: Math.round(TAUX_DE_DEPART_PAR_MOIS * 100) }],
+      lecture: (c, p) => {
+        const f = ficheDe(c);
+        const a = anneeDuFichier(f, p.taux! / 100);
+        const depart = anneeDuFichier(f);
+        return [
+          { libelle: "Clientes parties en février", montant: a.fevrier.parties, unite: "clientes", reference: depart.fevrier.parties },
+          { libelle: "Clientes de la carte fin décembre", montant: a.finDeDecembre, unite: "clientes", reference: depart.finDeDecembre, fort: true },
+          { libelle: "Clientes de janvier", montant: a.depart, unite: "clientes" },
+        ];
+      },
+      graphique: (c) => ({
+        levier: "taux",
+        courbes: [
+          { libelle: "Clientes fin décembre", valeur: (p) => anneeDuFichier(ficheDe(c), p.taux! / 100).finDeDecembre },
+          { libelle: "Clientes de janvier", valeur: () => carteDeFidelite(ficheDe(c)).clientes },
+        ],
+        unite: "clientes",
+      }),
+      defi: (c) => {
+        const juste = tauxQuiGardeLeFichier(ficheDe(c));
+        return {
+          consigne: "Trouvez la plus haute part de départs par mois qui laisse encore au moins autant de clientes fin décembre qu'en janvier.",
+          atteint: (p) => p.taux === juste,
+          indice: (p) => {
+            const a = anneeDuFichier(ficheDe(c), p.taux! / 100);
+            return a.finDeDecembre < a.depart
+              ? `Fin décembre, il ne reste que ${qte(a.finDeDecembre)} clientes, pour ${qte(a.depart)} en janvier : il faut perdre moins de clientes.`
+              : `Le fichier tient (${qte(a.finDeDecembre)} clientes fin décembre). La boutique pourrait-elle supporter un peu plus de départs ? Cherchez la plus haute part.`;
+          },
+          solution: { taux: juste },
+        };
+      },
+      explication: (c, p) => {
+        const f = ficheDe(c);
+        const a = anneeDuFichier(f, p.taux! / 100);
+        const plus = anneeDuFichier(f, (p.taux! + 1) / 100);
+        const depart = anneeDuFichier(f);
+        return [
+          `Défi relevé : à ${pct(p.taux!)} de départs par mois, la carte compte ${qte(a.finDeDecembre)} clientes fin décembre. À ${pct(p.taux! + 1)}, elle n'en aurait plus que ${qte(plus.finDeDecembre)}.`,
+          `Aujourd'hui, à ${pct(TAUX_DE_DEPART_PAR_MOIS * 100)}, la carte finit l'année avec ${qte(depart.finDeDecembre)} clientes : chaque point de départs en moins se compte en clientes gardées. Fidéliser coûte souvent moins cher que conquérir.`,
         ];
       },
     },
@@ -487,16 +324,13 @@ export const LE_CLIENT_QUI_REVIENT: Chapitre = {
       titre: "Ce qu'il faut retenir",
       notions: ["churn_rate", "customer_lifetime_value"],
       texte: (c) => {
-        const k = clientsDeLAnnee(c);
-        const p = travauxDuChapitre(c);
+        const k = clientesDeLaCarte(c);
         return [
-          `Chez ${c.entreprise}, un adhérent gardé toute l'année laisse ${eur(k.margeDeLAnnee)} de marge. Un adhérent qui part après le premier trimestre en emporte ${eur(k.margePerdue)}.`,
-          p.margePerdueEnsuite > 0
-            ? `Un client refusé faute de place est un client perdu : les travaux du printemps ont coûté ${eur(p.margePerdue)} de marge sur l'année, dont ${eur(p.margePerdueEnsuite)} après la fin des travaux. Le vendeur garde ses clients en les servant bien, à un prix juste, dans une salle qui n'est pas trop pleine.`
-            : `Les travaux du printemps ont coûté ${eur(p.margePerdue)} de marge sur l'année. Le vendeur garde ses clients en les servant bien, à un prix juste, dans une salle qui n'est pas trop pleine.`,
+          `Chez ${c.entreprise}, ${pct(k.reviennent)} des clientes de la carte reviennent d'un mois à l'autre. Une cliente gardée toute l'année laisse ${eur(k.margeDeLAnnee)} de marge ; une cliente qui part après janvier en emporte ${eur(k.margePerdueSiEllePart)}.`,
+          "Un fichier de clients se garde comme un stock : ce qui part doit être remplacé. Dans l'arène, les chiffres de votre entreprise seront différents : le compte sera le même.",
         ];
       },
-      repere: () => "Marge d'un client gardé = abonnements de l'année − coûts du client sur l'année. Un client perdu coûte toutes les marges qu'il aurait laissées ensuite.",
+      repere: () => "Clients à la fin = clients du début − partis + nouveaux. Marge d'un client gardé = marge d'une visite × visites de l'année.",
     },
   ],
 };

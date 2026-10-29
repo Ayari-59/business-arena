@@ -25,7 +25,25 @@ function ErrorBox({ error }: { error: string | null }) {
   return <p className="rounded-lg encadre-perte px-3 py-2 text-sm text-red-300">{error}</p>;
 }
 
-export function TeacherAuthForms() {
+/**
+ * LA PAGE OÙ REVENIR APRÈS LA CONNEXION. Le serveur la reçoit dans `suite`
+ * (chemin et requête, déjà filtrés) ; l'ancre (`#nouvelle-cohorte`) ne lui
+ * parvient jamais, mais le navigateur la garde sur l'adresse de connexion. On la
+ * rajoute au moment d'envoyer, jamais au rendu : le HTML du serveur et celui du
+ * navigateur restent identiques. L'action la filtre de nouveau.
+ */
+function avecLAncre(action: (donnees: FormData) => void) {
+  return (donnees: FormData) => {
+    const suite = donnees.get("suite");
+    const ancre = window.location.hash;
+    if (typeof suite === "string" && suite && !suite.includes("#") && /^#[\w-]+$/.test(ancre)) {
+      donnees.set("suite", `${suite}${ancre}`);
+    }
+    action(donnees);
+  };
+}
+
+export function TeacherAuthForms({ suite = null }: { suite?: string | null }) {
   const [tab, setTab] = useState<"login" | "register">("login");
   const [loginState, loginFormAction, loginPending] = useActionState(loginAction, initial);
   const [registerState, registerFormAction, registerPending] = useActionState(
@@ -61,7 +79,8 @@ export function TeacherAuthForms() {
       </div>
 
       {tab === "login" ? (
-        <form action={loginFormAction} className="space-y-4">
+        <form action={avecLAncre(loginFormAction)} className="space-y-4">
+          {suite ? <input type="hidden" name="suite" value={suite} /> : null}
           <Input label="E-mail" name="email" type="email" required autoComplete="email" />
           <Input
             label="Mot de passe"
@@ -80,7 +99,8 @@ export function TeacherAuthForms() {
           </button>
         </form>
       ) : (
-        <form action={registerFormAction} className="space-y-4">
+        <form action={avecLAncre(registerFormAction)} className="space-y-4">
+          {suite ? <input type="hidden" name="suite" value={suite} /> : null}
           <Input label="Votre nom" name="displayName" required autoComplete="name" />
           <Input
             label="Code d'invitation (si votre établissement vous en a donné un)"

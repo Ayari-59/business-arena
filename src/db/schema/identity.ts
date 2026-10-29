@@ -64,6 +64,12 @@ export const users = pgTable("users", {
   emailConfirmeLe: timestamp("email_confirme_le", { withTimezone: true }),
   /** Le dernier lien de confirmation envoyé : un nouvel envoi attend quelques minutes. */
   confirmationEnvoyeeLe: timestamp("confirmation_envoyee_le", { withTimezone: true }),
+  /**
+   * L'AVERTISSEMENT AVANT SUPPRESSION (migration 0050, services/purge.service.ts) : la
+   * date de l'e-mail qui annonce la suppression d'un compte enseignant resté sans
+   * connexion (config/conservation.ts). Une connexion plus récente l'annule. Nul : jamais averti.
+   */
+  avertiInactiviteLe: timestamp("averti_inactivite_le", { withTimezone: true }),
   ...timestamps,
 });
 

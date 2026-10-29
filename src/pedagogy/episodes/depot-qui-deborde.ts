@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 3 — LE DÉPÔT QUI DÉBORDE, tel que l'interface et le bilan le lisent.
+ * LE DÉPÔT QUI DÉBORDE, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Juliette montre, ce que la
@@ -101,7 +101,7 @@ export function comportements(p: PartieJouee, t: Trimestre): Constat[] {
     t.semaines[3]!.service * 100,
     "de taux de service en semaine 3",
     "%",
-    { juste: 1.5, proche: 4 },
+    { juste: 5, proche: 8 },
     (e) => `${nombre(e)} point${e >= 2 ? "s" : ""}`,
   );
 

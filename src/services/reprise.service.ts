@@ -64,6 +64,8 @@ export async function garderLesTentatives(args: {
   marqueur: string;
   ip?: string | null;
   now?: number;
+  /** Le plafond d'échecs dans la fenêtre ; par défaut, celui de la reprise. */
+  maxEchecs?: number;
 }): Promise<GardeDeReprise> {
   const ip = args.ip?.trim() || null;
   const now = args.now ?? Date.now();
@@ -83,7 +85,7 @@ export async function garderLesTentatives(args: {
     : [];
 
   let refus: string | null = null;
-  if (echecs.length >= MAX_ECHECS_REPRISE) {
+  if (echecs.length >= (args.maxEchecs ?? MAX_ECHECS_REPRISE)) {
     const plusAncien = Math.min(...echecs.map((e) => e.createdAt.getTime()));
     const minutes = Math.max(1, Math.ceil((plusAncien + FENETRE_REPRISE_MS - now) / 60_000));
     refus = `Trop de tentatives, réessayez dans ${minutes} minute${minutes > 1 ? "s" : ""}.`;

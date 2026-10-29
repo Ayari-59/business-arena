@@ -155,5 +155,5 @@ export const FICHE: FicheEnseignant = {
     "L'élève distingue, sur une de ses décisions, la qualité du choix lue sur les trente tirages et le résultat obtenu sous le tirage n° 12.",
   ],
   vigilance:
-    "L'épisode fait demander 6 % par le secrétaire du CSE « aux négociations annuelles » : la négociation annuelle obligatoire sur les salaires se mène avec les organisations syndicales représentatives, par leurs délégués syndicaux, et non avec le CSE ; l'enseignant de droit social pourra le préciser. Un rattrapage réservé aux profils data doit reposer sur des raisons objectives et vérifiables, au regard du principe d'égalité de traitement.",
+    "Les 6 % sont demandés par Hamidou Thoraval en tant que délégué syndical : la négociation annuelle obligatoire sur les salaires se mène avec les organisations syndicales représentatives, par leurs délégués syndicaux, et non avec le CSE, qui est seulement consulté sur la politique sociale ; l'enseignant de droit social pourra le préciser. Un rattrapage réservé aux profils data doit reposer sur des raisons objectives et vérifiables, au regard du principe d'égalité de traitement.",
 };

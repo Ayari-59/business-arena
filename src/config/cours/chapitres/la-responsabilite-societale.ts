@@ -66,7 +66,7 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     le-label-des-le-t3 (une variante chiffrée), ce-que-paie-le-label, puis de-fond et la synthèse.
  *
  * LES HYPOTHÈSES DE LA SIMULATION (dites à l'élève dans l'intro) : l'année de la simulation du cours,
- * une année type de 4 trimestres égaux, qui n'est ni N ni N + 1 ; un marché de 17 500 enceintes par
+ * une année type de 4 trimestres égaux, au rythme du premier trimestre de N ; un marché de 15 502 enceintes par
  * trimestre partagé entre les 3 enseignes, qui ne grandit pas ; la part de marché est la part de
  * l'attractivité ; les concurrents ne réagissent pas ; NOVA garde ses autres leviers d'aujourd'hui ;
  * le budget RSE est une charge du trimestre ; le capital joue au trimestre suivant, le label se lit

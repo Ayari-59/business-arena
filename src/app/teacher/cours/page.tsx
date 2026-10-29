@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import { getSession } from "@/lib/session";
 import { getStaffContext } from "@/services/admin.service";
 import { classesDeLEnseignant, NOM_DE_CLASSE_MAX } from "@/services/cours.service";
@@ -35,7 +36,7 @@ const REFUS: Record<string, string> = {
 export default async function MesClassesDuCoursPage({ searchParams }: { searchParams: Promise<{ refus?: string }> }) {
   const { refus } = await searchParams;
   const session = await getSession();
-  if (!session) redirect("/teacher/login");
+  if (!session) redirect(await connexionPourLaPageDemandee());
   const [classes, staff] = await Promise.all([classesDeLEnseignant(session.userId), getStaffContext(session.userId)]);
   const isOrgAdmin = staff?.organizations.some((o) => o.role === "org_admin") ?? false;
   const raison = refus && Object.hasOwn(REFUS, refus) ? REFUS[refus] : null;

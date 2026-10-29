@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import { getSession } from "@/lib/session";
 import { revoirLEssai } from "@/services/tour-d-essai.service";
 import { compter, formatEuro, formatPercent, formatUnits } from "@/lib/format";
@@ -24,7 +25,7 @@ export default async function RevoirLEssaiPage({
   params: Promise<{ gameId: string }>;
 }) {
   const session = await getSession();
-  if (!session) redirect("/teacher/login");
+  if (!session) redirect(await connexionPourLaPageDemandee());
   const { gameId } = await params;
   const essai = await revoirLEssai({ gameId, teacherId: session.userId });
   if (!essai) notFound();

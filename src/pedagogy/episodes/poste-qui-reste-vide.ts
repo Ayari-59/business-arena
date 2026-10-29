@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 7 — LE POSTE QUI RESTE VIDE, tel que l'interface et le bilan le lisent.
+ * LE POSTE QUI RESTE VIDE, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Marion montre, ce que la

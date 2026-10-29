@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import { getSession } from "@/lib/session";
 import { getScenarioById, runEssaiABlanc } from "@/services/scenario-editor.service";
 import { SECTOR_LABELS, economicDefaults, type ScenarioDefinition } from "@/config/scenarios/registry";
@@ -83,7 +84,7 @@ export default async function ScenarioEditorPage({
   const { id } = await params;
   const { ok, echec, essai } = await searchParams;
   const session = await getSession();
-  if (!session) redirect("/teacher/login");
+  if (!session) redirect(await connexionPourLaPageDemandee());
   const loaded = await getScenarioById(id, session.userId);
   if (!loaded) notFound();
   const def = loaded.definition;

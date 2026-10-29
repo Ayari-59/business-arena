@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { casDeLEntreprise } from "../../src/config/cours/cas";
 import { montantEcrit } from "../../src/pedagogy/cours/correcteur";
 import { EFFECTIF_ET_MASSE_SALARIALE, masseSalariale } from "../../src/config/cours/chapitres/effectif-et-masse-salariale";
-import { compteDeResultat } from "../../src/config/cours/chapitres/lire-le-compte-de-resultat";
+import { soldesDeGestion } from "../../src/config/cours/chapitres/soldes-intermediaires";
 import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
 import { scenarioByCode } from "../../src/config/scenarios/registry";
@@ -40,7 +40,7 @@ describe.each(ENTREPRISES_DU_COURS)("la masse salariale chez %s", (code) => {
   it("la masse salariale est celle que le compte de résultat de l'année a comptée", () => {
     const hr = scenarioByCode(code).scenario.hr!;
     expect(m.effectif).toBe(hr.includedHeadcount);
-    expect(m.masse).toBeCloseTo(compteDeResultat(cas).s.personnel, 1);
+    expect(m.masse).toBeCloseTo(soldesDeGestion(cas).personnel, 1);
     expect(m.coutAnnuel * m.effectif).toBeCloseTo(m.masse, 1);
   });
 

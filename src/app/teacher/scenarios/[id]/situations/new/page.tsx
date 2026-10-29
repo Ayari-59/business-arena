@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import { getSession } from "@/lib/session";
 import { getScenarioById } from "@/services/scenario-editor.service";
 import { DECISION_MODELS } from "@/config/pedagogy/models";
@@ -49,7 +50,7 @@ export default async function NewSituationPage({
   const { id } = await params;
   const { echec } = await searchParams;
   const session = await getSession();
-  if (!session) redirect("/teacher/login");
+  if (!session) redirect(await connexionPourLaPageDemandee());
   const loaded = await getScenarioById(id, session.userId);
   if (!loaded) notFound();
 

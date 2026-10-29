@@ -89,6 +89,48 @@ describe("limitation des tentatives", () => {
   });
 });
 
+describe("un succès n'efface que les échecs de son propre e-mail (audit, P1-3)", () => {
+  it("alterner des essais sur la victime et une connexion à son propre compte ne remet pas le compteur à zéro", async () => {
+    const attaquant = "attaquant@lycee.test";
+    const r = await registerTeacher({
+      email: attaquant,
+      password: "son-propre-mdp",
+      displayName: "M. Attaquant",
+      schoolName: "Lycée de l'Attaque",
+    });
+    if ("error" in r) throw new Error(r.error);
+    const t0 = Date.now() + 5 * 60 * 60 * 1000;
+    const ip = "10.0.0.66";
+    // Quatre essais sur la victime, puis une connexion réussie à son compte, deux fois.
+    let t = t0;
+    for (let tour = 0; tour < 2; tour++) {
+      for (let i = 0; i < MAX_ECHECS - 1; i++) {
+        await loginTeacher({ email: EMAIL, password: `essai-${tour}-${i}`, ip, now: (t += 10) });
+      }
+      const lui = await loginTeacher({ email: attaquant, password: "son-propre-mdp", ip: "10.0.0.67", now: (t += 10) });
+      expect("userId" in lui).toBe(true);
+      await loginTeacher({ email: attaquant, password: "son-propre-mdp", ip, now: (t += 10) });
+    }
+    // La victime est bloquée, même avec le bon mot de passe et depuis une autre adresse.
+    const victime = await loginTeacher({ email: EMAIL, password: MDP, ip: "10.0.0.68", now: (t += 10) });
+    expect("retryAfterMinutes" in victime).toBe(true);
+  });
+
+  it("un e-mail inconnu ou un mot de passe court coûtent un calcul bcrypt, comme un e-mail connu", async () => {
+    const bcrypt = (await import("bcryptjs")).default;
+    const espion = vi.spyOn(bcrypt, "compare");
+    try {
+      const t0 = Date.now() + 7 * 60 * 60 * 1000;
+      await loginTeacher({ email: "fantome@lycee.test", password: "nimportequoi", ip: "10.0.0.70", now: t0 });
+      expect(espion).toHaveBeenCalledTimes(1);
+      await loginTeacher({ email: "fantome2@lycee.test", password: "abc", ip: "10.0.0.71", now: t0 });
+      expect(espion).toHaveBeenCalledTimes(2);
+    } finally {
+      espion.mockRestore();
+    }
+  });
+});
+
 describe("session horodatée et révocable", () => {
   it("un cookie sans iat ni exp (ancien format) ne vaut pas une session", async () => {
     magasin.set("ba_session", `${prof}.teacher.deadbeefdeadbeefdeadbeefdeadbeef`);

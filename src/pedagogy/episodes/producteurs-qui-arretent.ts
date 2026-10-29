@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 100 — LES PRODUCTEURS QUI ARRÊTENT, tel que l'interface et le bilan le lisent.
+ * LES PRODUCTEURS QUI ARRÊTENT, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de la collecte de Hoel montre, ce que la

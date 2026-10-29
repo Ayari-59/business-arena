@@ -7,6 +7,7 @@ import { REFUS_AU_CANDIDAT, estUnRefusAuCandidat, normaliserCodeDExamen } from "
 
 export const metadata: Metadata = {
   title: "Passer un examen",
+  description: "Entrez le code d'examen donné par votre enseignant pour lire les règles et vous identifier.",
   robots: { index: false, follow: false },
 };
 

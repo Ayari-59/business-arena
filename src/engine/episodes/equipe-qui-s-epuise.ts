@@ -34,7 +34,7 @@ export const DELAI_DEPART = 3.5;
 export const FATIGUE_DEPART = 0.45;
 export const OBJECTIF_DELAI = 2;
 export const OBJECTIF_SATISFACTION = 0.85;
-export const SEUIL_ABSENTEISME = 0.06;
+export const SEUIL_ABSENTEISME = 0.105;
 /** Le budget variable du service : heures supplémentaires, intérim, recrutement, gestes commerciaux. */
 export const BUDGET = 45000;
 export const JOURS_SANS_PERTE = 2;

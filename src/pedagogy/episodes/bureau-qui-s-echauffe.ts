@@ -224,7 +224,7 @@ export const EPISODE_BUREAU: Episode<Trimestre> = {
       fort: `${OBJECTIF_RETARDS}`,
       texte: "factures payées en retard par semaine, au plus",
     },
-    { fort: `${OBJECTIF_LITIGES}`, texte: "litiges ouverts, au plus" },
+    { fort: `${OBJECTIF_LITIGES}`, texte: "litiges ouverts en moyenne, au plus" },
     { fort: surDix(OBJECTIF_ENTENTE), texte: "d'entente au bureau, au moins" },
   ],
   jugement: `Nathalie fait le compte en euros de ce que le bureau a coûté en plus à l'agence : les indemnités de retard, ce qui a été payé à tort, les litiges, les clients perdus, les heures perdues en tensions. Elle le compare au plafond qu'elle a fixé, ${kE1(PLAFOND)}.`,

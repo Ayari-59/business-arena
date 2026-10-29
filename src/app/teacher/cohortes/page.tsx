@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import { getSession } from "@/lib/session";
 import { getStaffContext } from "@/services/admin.service";
 import { unCompteAvecEpisodes } from "@/services/acces.service";
@@ -54,7 +55,7 @@ export default async function MesCohortesPage({
 }) {
   const { refus, episode } = await searchParams;
   const session = await getSession();
-  if (!session) redirect("/teacher/login");
+  if (!session) redirect(await connexionPourLaPageDemandee());
   const [cohortes, droits, staff, { demos }] = await Promise.all([
     cohortesDeLEnseignant(session.userId),
     unCompteAvecEpisodes([session.userId]),

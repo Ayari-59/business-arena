@@ -32,11 +32,11 @@ export const DIAGNOSTICS = [
   { id: "secteurs", t: "Les secteurs des moins bons sont moins porteurs" },
 ] as const;
 
-const RAPHAEL = {
+const MARIUS = {
   de: "Marius Montagnon",
   role: "Directeur commercial régional",
 } as const;
-const ELODIE = {
+const AMBRE = {
   de: "Ambre Vasquez",
   role: "Technico-commerciale, Isère nord",
 } as const;
@@ -44,7 +44,7 @@ const ALASSANE = {
   de: "Alassane Koné",
   role: "Technico-commercial, Rhône est",
 } as const;
-const GREGOIRE = {
+const FELIX = {
   de: "Félix Matthey",
   role: "Technico-commercial, Ain",
 } as const;
@@ -56,11 +56,11 @@ const ANAIS = {
   de: "Anaïs Morvan",
   role: "Technico-commerciale, Bresse",
 } as const;
-const FARID = {
+const NORDINE = {
   de: "Nordine Messaoudi",
   role: "Technico-commercial, Lyon ouest",
 } as const;
-const JOSIANE = {
+const MONIQUE = {
   de: "Monique Bouvier",
   role: "Assistante commerciale",
 } as const;
@@ -72,7 +72,7 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 3,
     messages: () => [
       {
-        ...RAPHAEL,
+        ...MARIUS,
         heure: "07:40",
         alerte: true,
         texte:
@@ -159,12 +159,12 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...ELODIE,
+          ...AMBRE,
           texte:
             "Un boîtier dans ma voiture après douze ans de maison. Je finirai mes tournées, mais je ne vois pas ce que ça va vendre de plus.",
         },
         {
-          ...RAPHAEL,
+          ...MARIUS,
           texte: "Bien. Le siège sera content : on saura enfin où ils sont.",
         },
       ],
@@ -184,7 +184,7 @@ export const ETAPES: readonly Etape[] = [
       ],
       [
         {
-          ...RAPHAEL,
+          ...MARIUS,
           texte:
             "Laisser faire, c'est ce qu'on fait depuis un an, Benoît. Les chiffres de Killian ne remonteront pas tout seuls.",
         },
@@ -210,7 +210,7 @@ export const ETAPES: readonly Etape[] = [
         texte: `Marge de l'équipe en semaine 3 : ${ctx.marge}. Un autonome vend ${ctx.ecart} fois plus qu'un débutant.`,
       },
       {
-        ...RAPHAEL,
+        ...MARIUS,
         heure: "18:30",
         texte: ctx.geoloc
           ? "Les boîtiers sont posés : Killian fait autant de kilomètres que les autres. Alors qu'est-ce qui coince ?"
@@ -287,7 +287,7 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 7,
     messages: (ctx) => [
       {
-        ...RAPHAEL,
+        ...MARIUS,
         heure: "08:20",
         alerte: true,
         texte:
@@ -302,7 +302,7 @@ export const ETAPES: readonly Etape[] = [
       ...(ctx.geoloc
         ? [
             {
-              ...JOSIANE,
+              ...MONIQUE,
               heure: "09:15",
               texte:
                 "Les comptes rendus du soir arrivent, mais beaucoup tiennent en trois lettres : « RAS ». Je les classe.",
@@ -350,7 +350,7 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...FARID,
+          ...NORDINE,
           texte: "Bien reçu. Vous aurez vos comptes rendus.",
         },
         {
@@ -361,21 +361,21 @@ export const ETAPES: readonly Etape[] = [
       ],
       [
         {
-          ...FARID,
+          ...NORDINE,
           texte:
             "Trois lignes, je peux. Et si quelqu'un répond, j'y mettrai même les chantiers que je croise pour les autres.",
         },
       ],
       [
         {
-          ...JOSIANE,
+          ...MONIQUE,
           texte:
             "Les appels du soir sont calés. Certains me racontent leur journée pendant vingt minutes : ils n'ont personne d'autre à qui la raconter.",
         },
       ],
       [
         {
-          ...RAPHAEL,
+          ...MARIUS,
           texte: "Je note que tu ne changes rien. Le contrôle de gestion aussi.",
         },
       ],
@@ -387,7 +387,7 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 9,
     messages: (ctx) => [
       {
-        ...GREGOIRE,
+        ...FELIX,
         heure: "11:30",
         alerte: true,
         texte:
@@ -444,25 +444,25 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...ELODIE,
+          ...AMBRE,
           texte: "Référente grands comptes… Je ne m'y attendais pas. Laisse-moi le week-end.",
         },
       ],
       [
         {
-          ...ELODIE,
+          ...AMBRE,
           texte: "Merci pour le geste. Je vais réfléchir.",
         },
       ],
       [
         {
-          ...ELODIE,
+          ...AMBRE,
           texte: "Compris. Les mêmes règles pour tous.",
         },
       ],
       [
         {
-          ...GREGOIRE,
+          ...FELIX,
           texte: "Elle n'en parle plus. Mais elle a pris un deuxième déjeuner.",
         },
       ],
@@ -482,7 +482,7 @@ export const ETAPES: readonly Etape[] = [
           "Le fabricant lance sa gamme d'isolation thermique par l'extérieur en semaine 11. Les artisans la demandent ; c'est un produit technique, qui se vend sur le chantier, relevé et devis à l'appui.",
       },
       {
-        ...RAPHAEL,
+        ...MARIUS,
         heure: "10:15",
         texte:
           "Benoît, ta réunion de la semaine 10 tombe bien pour lancer la gamme. Qu'est-ce que tu prévois ?",
@@ -490,7 +490,7 @@ export const ETAPES: readonly Etape[] = [
       ...(ctx.killianParti
         ? [
             {
-              ...JOSIANE,
+              ...MONIQUE,
               heure: "11:00",
               texte:
                 "Le secteur de Killian est réparti entre Alassane et Jérémy en attendant un recrutement. Les clients demandent qui va passer.",
@@ -538,7 +538,7 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...JOSIANE,
+          ...MONIQUE,
           texte:
             "Atelier calé pour mardi à l'agence. Alassane a déjà choisi son chantier, et chacun apporte un devis en cours.",
         },
@@ -552,7 +552,7 @@ export const ETAPES: readonly Etape[] = [
       ],
       [
         {
-          ...GREGOIRE,
+          ...FELIX,
           texte: "Un challenge, j'aime bien. Je compte le gagner.",
         },
         {
@@ -575,7 +575,7 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 13,
     messages: (ctx) => [
       {
-        ...RAPHAEL,
+        ...MARIUS,
         heure: "08:30",
         alerte: true,
         texte: `Deux semaines avant la clôture. Marge nette de ton équipe à date : ${ctx.cumul}, pour un budget à date de ${ctx.budgetADate}. Qu'est-ce que tu fais pour finir ?`,
@@ -613,7 +613,7 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...FARID,
+          ...NORDINE,
           texte:
             "Le point de 8 heures, puis l'état des devis à 19 heures. Je passe plus de temps au téléphone avec vous qu'avec mes clients.",
         },
@@ -628,7 +628,7 @@ export const ETAPES: readonly Etape[] = [
       null,
       [
         {
-          ...RAPHAEL,
+          ...MARIUS,
           texte: "Bien. On fera les comptes à la clôture.",
         },
       ],

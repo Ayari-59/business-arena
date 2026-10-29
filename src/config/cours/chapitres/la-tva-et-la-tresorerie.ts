@@ -1,6 +1,7 @@
 import type { Cas } from "../cas";
-import type { FicheDuBatiment } from "../monde/delais-et-tva";
+import { JOURS_DE_L_ANNEE_BANCAIRE, JOURS_DE_L_ANNEE_CIVILE, type FicheDuBatiment } from "../monde/delais-et-tva";
 import { fluxDeTvaDuTrimestre, tvaALaCloture, type LeviersDeLaTva } from "../monde/delais";
+import { AGENCEMENTS_DORIAC, LOGISTIQUE_VARENNE, RELANCES, TAUX_DES_PENALITES, clientDefaillant, suivreUnMauvaisPayeur } from "../monde/mauvais-payeurs";
 import type { Chapitre, TableauDeDonnees } from "../types";
 import { ENTREPRISES_DE_LA_TVA, FINS_DES_TRIMESTRES, POURQUOI_LA_TVA, entre, eur, ficheDe, jours, nomDuTrimestre, pct } from "./la-declaration-de-tva";
 
@@ -40,7 +41,9 @@ import { ENTREPRISES_DE_LA_TVA, FINS_DES_TRIMESTRES, POURQUOI_LA_TVA, entre, eur
  *     le graphique de qui finance la TVA des créances, qui casse aux délais où l'État, puis le négoce,
  *     ne suffisent plus ; défi : opter pour les débits sans rien avancer, les entreprises restant à
  *     60 jours), a-rebours (retrouver les créances à partir de ce que la TVA laisse), l-argent-de-la-tva
- *     (la critique : cet argent n'est pas une ressource) ; puis la synthèse.
+ *     (la critique : cet argent n'est pas une ressource), le-client-en-retard et le-client-defaillant
+ *     (les mauvais payeurs de monde/mauvais-payeurs.ts : un retard, puis une perte, aux encaissements) ;
+ *     puis la synthèse.
  *
  * CE QUI A DISPARU, AVEC L'ARÈNE : le bilan du moteur et ses créances TTC « au délai de la clientèle »,
  * « l'arène rejoue l'année sans TVA » (l'effet calculé EST l'écart de trésorerie avec et sans TVA, et
@@ -159,6 +162,17 @@ export function tvaEtTresorerie(c: Pick<Cas, "code">) {
 }
 
 export type TvaEtTresorerie = ReturnType<typeof tvaEtTresorerie>;
+
+/**
+ * LES MAUVAIS PAYEURS DE MARTEL & FILS (hypothèses du cours, monde/mauvais-payeurs.ts, qui ne
+ * changent aucun chiffre de la fiche) : Logistique Varenne paie en retard, Agencements Doriac est en
+ * redressement judiciaire. Le chapitre y lit ce que le régime des encaissements change à un retard,
+ * puis à une perte.
+ */
+export function mauvaisPayeursDeMartel(c: Pick<Cas, "code">) {
+  const f = ficheDe(c);
+  return { f, v: suivreUnMauvaisPayeur(LOGISTIQUE_VARENNE), d: clientDefaillant(AGENCEMENTS_DORIAC), doriac: AGENCEMENTS_DORIAC };
+}
 
 
 const juinDit = FINS_DES_TRIMESTRES[TRIMESTRE_DE_LA_CLOTURE]!;
@@ -776,6 +790,62 @@ export const LA_TVA_ET_LA_TRESORERIE: Chapitre = {
             juste: false,
             retour: `Non : la TVA des sommes déjà encaissées au ${nomDuTrimestre(4)} est due, ${eur(d.detteEtat)} une fois la TVA déductible retirée. Seule la TVA des créances attend.`,
           },
+        ];
+      },
+    },
+    {
+      id: "le-client-en-retard",
+      type: "montants",
+      titre: "Un client en retard, aux encaissements",
+      notions: ["vat_payable", "payment_terms"],
+      question: (c) => {
+        const { f, v } = mauvaisPayeursDeMartel(c);
+        return `Hypothèse du cours : ${v.client}, un client de la clientèle « entreprises », reçoit une facture de ${eur(v.ht)} HT pour ${v.objet}, payable à ${jours(v.delaiConvenu)}. Relancé le ${v.relanceAmiable}e jour, mis en demeure le ${v.miseEnDemeure}e, il paie ${jours(v.retard)} après l'échéance. Calculez la TVA de la facture, le jour (après la facture) où elle devient due à l'État, ce que le retard coûte à ${f.entreprise} sur son découvert à ${pct(v.tauxDeFinancement)}, puis les pénalités de retard à ${pct(TAUX_DES_PENALITES)} l'an.`;
+      },
+      champs: (c) => {
+        const { v } = mauvaisPayeursDeMartel(c);
+        return [
+          { libelle: "TVA de la facture", attendu: v.tva, calcul: `${eur(v.ht)} × ${pct(v.tauxDeTva)} = ${eur(v.tva)}` },
+          { libelle: "Jour où la TVA devient due (après la facture)", attendu: v.paiement, calcul: `des travaux : la TVA est due à l'encaissement, ${v.delaiConvenu} + ${v.retard} = ${v.paiement}` },
+          { libelle: "Coût du retard", attendu: v.coutDuRetard, calcul: `le hors taxes seul : ${eur(v.finance)} × ${pct(v.tauxDeFinancement)} × ${v.retard} ÷ ${JOURS_DE_L_ANNEE_BANCAIRE} = ${eur(v.coutDuRetard)}` },
+          { libelle: "Pénalités de retard", attendu: v.penalites, calcul: `${eur(v.ttc)} × ${pct(TAUX_DES_PENALITES)} × ${v.retard} ÷ ${JOURS_DE_L_ANNEE_CIVILE} = ${eur(v.penalites)}` },
+        ];
+      },
+      explication: (c) => {
+        const { f, v } = mauvaisPayeursDeMartel(c);
+        return [
+          `Au régime des encaissements, le retard décale la TVA avec le paiement : ${f.entreprise} ne déclare les ${eur(v.tva)} qu'au ${v.paiement}e jour, au lieu du ${v.echeance}e. Elle n'en avance rien : le retard ne lui coûte que le hors taxes, ${eur(v.coutDuRetard)}. Avec l'option pour les débits, elle aurait déclaré cette TVA dès la facture, et financé ${eur(v.ttc)}.`,
+          `Les pénalités, elles, se comptent sur le TTC, ${eur(v.penalites)}, plus l'indemnité forfaitaire de ${eur(v.indemnite)}. La relance amiable (${RELANCES.relanceAmiable} jours après l'échéance) et la mise en demeure (${RELANCES.miseEnDemeure} jours après) ne les font pas courir : elles sont dues de plein droit. ${v.client} est solvable, sa créance reste au compte 411.`,
+        ];
+      },
+    },
+    {
+      id: "le-client-defaillant",
+      type: "montants",
+      titre: "Un client en redressement judiciaire",
+      notions: ["payment_terms", "vat_payable"],
+      question: (c) => {
+        const { f, doriac } = mauvaisPayeursDeMartel(c);
+        return `Hypothèse du cours : ${doriac.client}, un autre client « entreprises », doit une facture de travaux de ${eur(doriac.ht)} HT, échue et impayée malgré la mise en demeure. Le tribunal ouvre contre lui un redressement judiciaire ; le mandataire laisse craindre une perte de ${pct(doriac.tauxDePerteProbable)}. À l'inventaire, calculez la créance douteuse à porter au compte 416, la dotation à la dépréciation, puis la créance nette au bilan de ${f.entreprise}. Enfin, si la perte se confirme, la TVA que ${f.entreprise} récupérera de l'État.`;
+      },
+      champs: (c) => {
+        const { d, doriac } = mauvaisPayeursDeMartel(c);
+        return [
+          { libelle: "Créance douteuse au 416 (TTC)", attendu: d.reclassement.montant, calcul: `toute la créance passe du 411 au 416, TVA comprise : ${eur(doriac.ht)} + ${eur(d.tva)} = ${eur(d.ttc)}` },
+          { libelle: "Dotation à la dépréciation (6817, au crédit du 491)", attendu: d.depreciation.montant, calcul: `sur le hors taxes : ${eur(doriac.ht)} × ${pct(doriac.tauxDePerteProbable)} = ${eur(d.depreciation.montant)}` },
+          { libelle: "Créance nette au bilan", attendu: d.valeurNetteAuBilan, calcul: `${eur(d.ttc)} − ${eur(d.depreciation.montant)} = ${eur(d.valeurNetteAuBilan)}` },
+          {
+            libelle: "TVA à récupérer de l'État si la perte se confirme",
+            attendu: d.irrecouvrable.tvaARecupererDeLEtat,
+            calcul: `des travaux, aux encaissements : la TVA n'a jamais été reversée, il n'y a rien à récupérer ; les ${eur(d.irrecouvrable.tvaEnAttenteAnnulee)} en attente s'annulent`,
+          },
+        ];
+      },
+      explication: (c) => {
+        const { f, d } = mauvaisPayeursDeMartel(c);
+        return [
+          `Une procédure collective rend la créance douteuse : elle passe au 416 pour ${eur(d.ttc)}, et se déprécie sur son hors taxes, ${eur(d.depreciation.montant)}. La TVA n'est pas une perte : elle n'entre jamais dans la dépréciation.`,
+          `Aux encaissements, ${f.entreprise} n'a jamais déclaré les ${eur(d.tva)} de TVA de cette facture : si la perte se confirme, la TVA de la part perdue, ${eur(d.irrecouvrable.tvaEnAttenteAnnulee)}, s'annule, sans rien à demander à l'État. Une entreprise qui vend des biens, elle, l'aurait reversée à la livraison, et ne la récupérerait qu'une fois la créance irrécouvrable.`,
         ];
       },
     },

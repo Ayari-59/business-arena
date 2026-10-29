@@ -54,9 +54,9 @@ import type { Chapitre, EtatDuCours, Piece, TableauDeDonnees } from "../types";
 /**
  * LE PLAFOND LÉGAL DES DÉLAIS DE PAIEMENT ENTRE PROFESSIONNELS : 60 jours à compter de la facture
  * (code de commerce, art. L441-10). DÉCISION DU PROPRIÉTAIRE : chez NOVA, le délai convenu avec
- * CampusTech est ce plafond, et CampusTech le tient : elle paie à 60 jours, à l'échéance. Tout client
- * dont le cas dépasse le plafond (le cabinet médical de MARTEL & FILS, à 90 jours) se lit comme un
- * retard : la facture porte le délai convenu, le règlement arrive au délai du cas.
+ * CampusTech est ce plafond, et CampusTech paie à 80 jours, 20 jours en retard ; les montants ne
+ * changent pas. Le chapitre applique la même lecture à tout client dont le cas dépasse le plafond :
+ * la facture porte le délai convenu, le règlement arrive au délai du cas.
  */
 export const PLAFOND_DES_DELAIS_ENTRE_PROFESSIONNELS = 60;
 
@@ -115,7 +115,7 @@ export function delaiDuClient(c: Pick<Cas, "venteCredit">) {
   return { reel, convenu, retard: reel - convenu, echeanceConvenue: c.venteCredit.date + convenu };
 }
 
-/** « paie à 90 jours, 30 jours au-delà des 60 jours convenus », ou « paie à 60 jours ». */
+/** « paie à 80 jours, 20 jours au-delà des 60 jours convenus », ou « paie à 45 jours ». */
 export function paiementDuClient(c: Pick<Cas, "venteCredit">) {
   const d = delaiDuClient(c);
   return d.retard > 0 ? `paie à ${qte(d.reel)} jours, ${qte(d.retard)} jours au-delà des ${qte(d.convenu)} jours convenus` : `paie à ${qte(d.reel)} jours`;
@@ -442,7 +442,7 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
       notions: ["balance_sheet"],
       texte: (c) => [
         `Ce chapitre se joue dans la simulation du cours : le premier mois ${dE(c.entreprise)}, figé, aux montants de son métier. Vous tenez sa comptabilité depuis sa création, le 1er janvier. Chaque opération arrive avec sa pièce : un relevé de banque, une facture, une quittance. Vous l'enregistrez dans le journal ; puis un curseur et un laboratoire font bouger le mois, pour voir ce que chaque montant change dans les comptes.`,
-        `Ce que la simulation suppose : un seul achat, consommé dans le mois (il n'y a pas de stock) ; deux ventes, l'une à un client professionnel payable à échéance, l'autre au comptant ; une TVA due dès la facture (c'est la règle d'une vente de biens ; pour un service, elle n'est due qu'à l'encaissement, sauf option pour les débits, que le cours suppose prise) ; des jours comptés en mois de 30 jours.`,
+        `Ce que la simulation suppose : un seul achat, consommé dans le mois (il n'y a pas de stock) ; deux ventes, l'une à un client professionnel payable à échéance, l'autre au comptant ; une TVA due dès la facture (c'est la règle d'une vente de biens ; pour un service, elle n'est due qu'à l'encaissement, sauf option pour les débits : pour garder le même calcul dans toutes les entreprises, ce chapitre la compte dès la facture, comme si l'option était prise, alors que plus loin dans le cours ATLAS CONSEIL et MARTEL & FILS n'ont pas opté) ; des jours comptés en mois de 30 jours.`,
         "Une opération s'écrit toujours deux fois, sur deux comptes au moins : c'est la partie double. Quand l'entreprise reçoit 100 € sur son compte bancaire, il faut dire aussi d'où ils viennent.",
         "Les comptes portent un numéro. Le premier chiffre dit leur famille : 1 les capitaux, 2 les immobilisations, 4 les tiers (clients, fournisseurs, État), 5 la trésorerie, 6 les charges, 7 les produits. Le plan de comptes du cours reste ouvert à côté du journal.",
       ],

@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 5 — LE PROJET QUI GLISSE, tel que l'interface et le bilan le lisent.
+ * LE PROJET QUI GLISSE, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Camille montre, ce que la

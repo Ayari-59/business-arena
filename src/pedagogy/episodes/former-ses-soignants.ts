@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 89 — FORMER SES PROPRES SOIGNANTS, tel que l'interface et le bilan le lisent.
+ * FORMER SES PROPRES SOIGNANTS, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Prisca montre, ce que la courbe

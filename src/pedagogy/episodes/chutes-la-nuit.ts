@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 85 — LES CHUTES DE LA NUIT, tel que l'interface et le bilan le lisent.
+ * LES CHUTES DE LA NUIT, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord d'Ernestine montre, ce que la

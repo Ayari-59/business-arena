@@ -1,96 +1,95 @@
 import { describe, expect, it } from "vitest";
-import { casDeLEntreprise } from "../../src/config/cours/cas";
-import { VALEUR_AJOUTEE, valeurAjoutee } from "../../src/config/cours/chapitres/valeur-ajoutee-et-partage";
-import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
-import { CONCEPTS } from "../../src/config/pedagogy/concepts";
-import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
-import type { Cas } from "../../src/config/cours/cas";
-import type { Etape, EtatDuCours } from "../../src/config/cours/types";
+import {
+  HAUSSE_DU_DEFI,
+  PART_GARDEE_DU_DEFI,
+  SOLUTION_DU_PARTAGE,
+  VALEUR_AJOUTEE,
+  enceintesQuiPaientLEquipe,
+  partageDuLaboratoire,
+  valeurAjoutee,
+} from "../../src/config/cours/chapitres/valeur-ajoutee-et-partage";
+import { CONTRAT_D_ENTRETIEN_ANNUEL, UN_TECHNICIEN_PLUTOT_QU_UN_PRESTATAIRE, technicien } from "../../src/config/cours/situations/par-chapitre/un-technicien-plutot-qu-un-prestataire";
+import { chapitreDuCas } from "../../src/pedagogy/cours/deroule";
+import { NOVA, VIDE, etape, gardeDuCurseur, gardeDuLaboratoire, gardesDeTexte } from "./gardes-du-lycee";
 
 /**
- * LA VALEUR AJOUTÉE ET SON PARTAGE, SUR L'ANNÉE DE L'ARÈNE.
+ * LA VALEUR AJOUTÉE ET SON PARTAGE, SUR LE PREMIER EXERCICE DE NOVA DU MONDE DU COURS, ET SON CAS :
+ * UN TECHNICIEN PLUTÔT QU'UN PRESTATAIRE.
  *
- * La valeur ajoutée est celle des soldes de gestion ; ses parts la refont sans reste ; la plus
- * grosse part suit les montants.
+ * Refait à la main : la production est les ventes, 1 390 276 € ; les consommations sont les
+ * composants (520 598 €), l'emballage, le transport et l'énergie (377 744 €), le loyer (236 400 €) et
+ * l'assurance (1 500 €). Le partage : le personnel (127 800 €), les prêteurs (4 129,51 €), l'État
+ * (20 742 €), et l'entreprise, le reste.
  */
 
-function textesDe(e: Etape, cas: Cas, etat: EtatDuCours): string[] {
-  const tableau = e.tableau ? [e.tableau(cas).titre, ...e.tableau(cas).lignes.flatMap((l) => [l.libelle, ...l.valeurs])] : [];
-  switch (e.type) {
-    case "lecture":
-      return [...e.texte(cas), e.repere?.(cas) ?? "", ...tableau];
-    case "choix":
-      return [e.question(cas, etat), ...e.options(cas, etat).flatMap((o) => [o.texte, o.retour]), ...tableau];
-    case "montants":
-      return [e.question(cas, etat), ...e.champs(cas, etat).flatMap((c) => [c.libelle, c.calcul, String(c.attendu)]), ...e.explication(cas, etat), ...tableau];
-    default:
-      return [];
-  }
-}
+const ch = chapitreDuCas(VALEUR_AJOUTEE, NOVA);
+const c = (x: number) => Math.round(x * 100) / 100 + 0;
+const VA = 1_390_276 - (520_598 + 377_744 + 236_400 + 1_500);
 
-describe.each(ENTREPRISES_DU_COURS)("la valeur ajoutée chez %s", (code) => {
-  const cas = casDeLEntreprise(code);
-  const v = valeurAjoutee(cas);
-  const chapitre = chapitreDuCas(VALEUR_AJOUTEE, cas);
+describe("la valeur ajoutée de NOVA", () => {
+  const v = valeurAjoutee(NOVA);
 
-  it("la valeur ajoutée est celle des soldes de gestion, et ses parts la refont sans reste", () => {
-    expect(v.va).toBeCloseTo(v.k.s.valeurAjoutee, 1);
-    expect(v.parts.reduce((t, p) => t + p.montant, 0)).toBeCloseTo(v.va, 1);
-    expect(v.parts.reduce((t, p) => t + p.part, 0)).toBeCloseTo(100, 0);
-    expect(v.tauxDeValeurAjoutee).toBeCloseTo((v.va / v.k.s.ventes) * 100, 1);
-    expect(v.entreprise).toBeCloseTo(v.k.s.dotation + v.k.resultat, 1);
+  it("la valeur ajoutée, son taux et son partage se refont à la main", () => {
+    expect(VA).toBe(254_034);
+    expect(v.consommations).toBe(1_136_242);
+    expect(v.va).toBe(VA);
+    expect(v.tauxDeValeurAjoutee).toBe(18.3); // 254 034 ÷ 1 390 276 = 18,27 %
+    expect(v.entreprise).toBe(c(VA - 127_800 - 4_129.51 - 20_742));
+    expect(v.entreprise).toBe(101_362.49);
+    // Ce que l'entreprise garde : ses dotations et son résultat, moins les revenus du compte à terme.
+    expect(v.entreprise).toBe(c(26_071.11 + 79_225.96 - 3_934.58));
+    expect(v.parts.map((p) => p.part)).toEqual([50.3, 1.6, 8.2, 39.9]);
+    expect(etape(ch, "va", "montants").champs(NOVA, VIDE).map((x) => x.attendu)).toEqual([1_136_242, 254_034, 18.3]);
+    expect(etape(ch, "partage", "montants").champs(NOVA, VIDE).map((x) => x.attendu)).toEqual([50.3, 39.9]);
   });
 
-  it("la plus grosse part suit les montants", () => {
-    const etape = chapitre.etapes.find((e) => e.id === "premiere-part");
-    if (etape?.type !== "choix") throw new Error("Pas d'étape premiere-part");
-    const max = v.parts.reduce((a, b) => (b.montant > a.montant ? b : a));
-    expect(etape.options(cas, { soldes: {} }).find((o) => o.juste)!.texte).toBe(max.nom);
+  it("la plus grosse part revient aux salariés", () => {
+    const juste = etape(ch, "premiere-part", "choix").options(NOVA, VIDE).filter((o) => o.juste);
+    expect(juste.map((o) => o.texte)).toEqual(["Les salariés"]);
   });
 
-  it("la production se distingue des ventes quand le stock a bougé, et une part négative se dit négative", () => {
-    const intro = chapitre.etapes.find((e) => e.id === "intro");
-    if (intro?.type !== "lecture") throw new Error("Pas d'étape intro");
-    const texte = intro.texte(cas).join(" ");
-    expect(texte.includes("n'est pas tout à fait ses ventes"), "la production face aux ventes").toBe(v.k.produits !== v.k.s.ventes);
-    expect(intro.tableau!(cas).lignes[0]!.libelle).toBe(v.k.produits === v.k.s.ventes ? "Ventes de l'année" : "Production de l'année (ventes et variation du stock de produits)");
-    const synthese = chapitre.etapes.find((e) => e.id === "synthese");
-    if (synthese?.type !== "lecture") throw new Error("Pas d'étape synthese");
-    const fin = synthese.texte(cas).join(" ");
-    expect(fin.includes("en garde -"), "« garder » une part négative").toBe(false);
-    expect(fin.includes("est négative")).toBe(v.entreprise < 0);
-    const partage = chapitre.etapes.find((e) => e.id === "partage");
-    if (partage?.type !== "montants") throw new Error("Pas d'étape partage");
-    const dit = partage.explication(cas, { soldes: {} }).join(" ");
-    expect(dit.includes("financer sa croissance"), "une perte ne finance pas la croissance").toBe(v.entreprise >= 0);
-    expect(dit.includes("Elle n'a rien pour financer sa croissance")).toBe(v.entreprise >= 0 && v.k.resultat < 0);
+  it("le curseur : 17 553 enceintes pour que la valeur ajoutée paie l'équipe", () => {
+    // 23 564 − (254 034 − 127 800) ÷ 21 = 17 552,86.
+    expect(enceintesQuiPaientLEquipe(v)).toBe(17_553);
+    const e = gardeDuCurseur(ch, "la-richesse-qui-paie-l-equipe", 17_553);
+    expect(e.lecture(NOVA, 17_553)[0]!.montant).toBe(254_034 - 21 * (23_564 - 17_553));
+    expect(e.lecture(NOVA, 17_553)[2]!.montant).toBe(3);
   });
 
-  it("aucun texte ne sort undefined ni « de le » ; une seule bonne réponse ; les notions existent", () => {
-    const codes = new Set(CONCEPTS.map((x) => x.code));
-    for (const [i, e] of chapitre.etapes.entries()) {
-      const etat = etatAvant(chapitre, cas, i);
-      for (const x of textesDe(e, cas, etat)) {
-        expect(x, `${e.id} : ${x}`).not.toMatch(/undefined|NaN|Infinity|\[object/);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/(^|\s)(de|à) [Ll]es? /);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/ [-–—] /);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/(^|[\s'(])de [aeiouyéèêAEIOUYÉ]/);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/\bque [AEIOUYÉ]/);
-      }
-      if (e.type === "choix") expect(e.options(cas, etat).filter((o) => o.juste), e.id).toHaveLength(1);
-      for (const n of e.notions ?? []) expect(codes.has(n), `${e.id} : ${n}`).toBe(true);
-    }
+  it("le laboratoire : 20 % de hausse et un tiers gardé demandent 5 % de ventes en plus", () => {
+    gardeDuLaboratoire(ch, "le-laboratoire-du-partage");
+    expect(SOLUTION_DU_PARTAGE).toEqual({ hausse: HAUSSE_DU_DEFI, ventes: 5 });
+    // 20 % sans vendre plus : 153 360 € de personnel, 74 407,96 € avant impôt, 14 352 € d'impôt.
+    const sans = partageDuLaboratoire(v, { hausse: 20, ventes: 0 });
+    expect(sans.entreprise).toBe(c(254_034 - 153_360 - 4_129.51 - 14_352));
+    expect(sans.partGardee < PART_GARDEE_DU_DEFI).toBe(true);
+    // Et 5 % d'enceintes de plus : 24 742 enceintes, 1 178 × 21 € de valeur ajoutée en plus.
+    const avec = partageDuLaboratoire(v, { hausse: 20, ventes: 5 });
+    expect(avec.va).toBe(254_034 + 1_178 * 21);
+    expect(avec.k.impot).toBe(20_536); // 6 375 + 25 % × (99 145,96 − 42 500), arrondi
+    expect(avec.entreprise).toBe(c(278_772 - 153_360 - 4_129.51 - 20_536));
+    expect(avec.partGardee >= PART_GARDEE_DU_DEFI).toBe(true);
+    // Une hausse de 19 % ne relève pas le défi, même en vendant beaucoup plus.
+    expect(etape(ch, "le-laboratoire-du-partage", "simulation").defi(NOVA).atteint({ hausse: 19, ventes: 20 })).toBe(false);
+  });
+
+  it("les textes sont propres, une seule bonne réponse, les notions existent", () => {
+    gardesDeTexte(VALEUR_AJOUTEE);
   });
 });
 
-describe("les cas que le chapitre distingue se rencontrent dans le cours", () => {
-  const toutes = ENTREPRISES_DU_COURS.map((c) => valeurAjoutee(casDeLEntreprise(c)));
-  it("une production qui n'est pas les ventes, et aucune perte qui entame la part de l'entreprise", () => {
-    expect(toutes.some((v) => v.k.produits !== v.k.s.ventes)).toBe(true);
-    // Dans l'année du bon gestionnaire, les neuf entreprises finissent l'année en bénéfice : les
-    // branches « une perte entame ce qu'elle met de côté » et « part négative » ne sont plus lues.
-    // Si une perte revient, ces gardes le diront.
-    expect(toutes.filter((v) => v.k.resultat < 0)).toHaveLength(0);
-    expect(toutes.filter((v) => v.entreprise < 0)).toHaveLength(0);
+describe("le cas : un technicien plutôt qu'un prestataire", () => {
+  const r = technicien(NOVA);
+  it("le contrat de la fiche, douze mois à 1 562 €, sort des consommations et entre dans la valeur ajoutée", () => {
+    expect(CONTRAT_D_ENTRETIEN_ANNUEL).toBe(18_744);
+    expect(r.consommations).toBe(1_136_242 + 18_744);
+    expect(r.va).toBe(254_034 - 18_744);
+    expect(r.partAvant).toBe(54.3); // 127 800 ÷ 235 290
+    expect(r.salaire).toBe(c(18_744 * 0.9));
+    expect(r.vaApres).toBe(254_034);
+    expect(r.partApres).toBe(56.9); // 144 669,60 ÷ 254 034
+  });
+  it("les textes sont propres, une seule bonne réponse", () => {
+    gardesDeTexte(UN_TECHNICIEN_PLUTOT_QU_UN_PRESTATAIRE);
   });
 });

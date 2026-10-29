@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import { getSession } from "@/lib/session";
 import { classeDeLEnseignant } from "@/services/cours.service";
 import { casDeLEntreprise } from "@/config/cours/cas";
@@ -39,7 +40,7 @@ export default async function ProjectionDuCours({
 }) {
   const [{ id }, { chapitre: demande, etape: demandee, reponse }] = await Promise.all([params, searchParams]);
   const session = await getSession();
-  if (!session) redirect("/teacher/login");
+  if (!session) redirect(await connexionPourLaPageDemandee());
   const choisi = chapitreParCode(demande ?? "") ?? CHAPITRES[0]!;
   const lu = /^[0-9a-f-]{36}$/.test(id) ? await classeDeLEnseignant(session.userId, id, choisi.code) : null;
   if (!lu) notFound();

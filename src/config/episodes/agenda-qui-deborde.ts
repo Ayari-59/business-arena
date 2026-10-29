@@ -46,7 +46,7 @@ const HORTENSE = {
   de: "Hortense Valadier",
   role: "Directrice régionale",
 } as const;
-const MAELLE = { de: "Coralie Courtois", role: "Assistante d'agence" } as const;
+const CORALIE = { de: "Coralie Courtois", role: "Assistante d'agence" } as const;
 const NAWEL = { de: "Nawel Hamidi", role: "Vendeuse comptoir" } as const;
 const RODRIGUE = { de: "Rodrigue Ekambi", role: "Chef de cour" } as const;
 const BILAL = { de: "Bilal Kaboré", role: "Technico-commercial" } as const;
@@ -151,7 +151,7 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...MAELLE,
+          ...CORALIE,
           texte:
             "Vous étiez là à 6 h 30 ce matin. La pile baisse, mais Gwenaëlle et Tariq attendent toujours vos réponses pour les dossiers du jour.",
         },
@@ -343,7 +343,7 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...MAELLE,
+          ...CORALIE,
           texte:
             "J'ai bloqué le mardi et le jeudi après-midi dans votre agenda. Je dis à tout le monde que vous n'êtes pas là.",
         },
@@ -351,7 +351,7 @@ export const ETAPES: readonly Etape[] = [
       null,
       [
         {
-          ...MAELLE,
+          ...CORALIE,
           texte:
             "Votre mail sur le plan de circulation est parti dimanche à 23 h 40. Tariq l'a lu lundi à 6 heures.",
         },
@@ -629,7 +629,7 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...MAELLE,
+          ...CORALIE,
           texte: "L'offre est partie jeudi à 23 heures. Vous avez dormi, cette semaine ?",
         },
       ],
@@ -642,7 +642,7 @@ export const ETAPES: readonly Etape[] = [
       ],
       [
         {
-          ...MAELLE,
+          ...CORALIE,
           texte:
             "Vous êtes enfermé avec le dossier. Quatre personnes attendent devant votre porte.",
         },

@@ -157,7 +157,7 @@ export const ETAPES: readonly Etape[] = [
       [
         {
           de: "Kemal Aydin",
-          role: "Chauffeur, délégué du personnel",
+          role: "Chauffeur, élu du CSE",
           texte:
             "On fera les heures. Mais on finit à 19 h, et les retards sont toujours là le lendemain matin.",
         },
@@ -333,7 +333,7 @@ export const ETAPES: readonly Etape[] = [
       [
         {
           de: "Kemal Aydin",
-          role: "Chauffeur, délégué du personnel",
+          role: "Chauffeur, élu du CSE",
           texte:
             "J'ai pris l'express. Les commerciaux l'ont vendu à tout le monde : je fais des allers-retours pour un carton de vis.",
         },
@@ -448,7 +448,7 @@ export const ETAPES: readonly Etape[] = [
       [
         {
           de: "Kemal Aydin",
-          role: "Chauffeur, délégué du personnel",
+          role: "Chauffeur, élu du CSE",
           texte:
             "La prime, on la prend. Mais trois semaines de journées à onze heures, on va le sentir.",
         },
@@ -532,7 +532,7 @@ export const ETAPES: readonly Etape[] = [
       [
         {
           de: "Kemal Aydin",
-          role: "Chauffeur, délégué du personnel",
+          role: "Chauffeur, élu du CSE",
           texte:
             "On relivre le lendemain à 7 h. Les chantiers sont contents, mais les tournées s'allongent, et on rentre encore plus tard.",
         },
@@ -590,7 +590,7 @@ export const ETAPES: readonly Etape[] = [
       [
         {
           de: "Kemal Aydin",
-          role: "Chauffeur, délégué du personnel",
+          role: "Chauffeur, élu du CSE",
           texte:
             "Deux samedis de faits. Un chantier sur cinq était fermé : on a ramené une partie du chargement au dépôt.",
         },

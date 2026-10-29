@@ -12,27 +12,13 @@ import {
   decisionsDeLAnneeDuCours,
   troisFacons,
 } from "../../src/config/cours/chapitres/decider-ensemble";
-import {
-  ENTREPRISES_DES_ACTEURS,
-  INDICE_DE_LA_HAUSSE,
-  LES_ACTEURS_ET_LA_VALEUR,
-  acteursEtValeur,
-  anneeALaHausse,
-} from "../../src/config/cours/chapitres/les-acteurs-et-la-valeur";
 import { anneeDeReference } from "../../src/config/cours/gestion-de-la-pme";
 import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
 import { CHAPITRES, PARCOURS, PROGRAMME } from "../../src/config/cours/registre";
 import { CHACUN_SON_LEVIER, anneeDuPartage, chacunSonLevier } from "../../src/config/cours/situations/par-chapitre/chacun-son-levier";
-import {
-  BAISSE_DEMANDEE,
-  LES_CLIENTS_DEMANDENT_UNE_BAISSE,
-  anneeAuxPrixBaisses,
-  baisseDemandee,
-} from "../../src/config/cours/situations/par-chapitre/les-clients-demandent-une-baisse";
 import type { Situation } from "../../src/config/cours/situations/types";
 import type { Chapitre, Etape, EtapeChoix, EtapeMontants, EtatDuCours } from "../../src/config/cours/types";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
-import { scenarioByCode } from "../../src/config/scenarios/registry";
 import { soldUnits } from "../../src/engine/simulation/runGame";
 import type { CompanyRoundResult } from "../../src/engine/types";
 import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
@@ -129,7 +115,6 @@ function attendus(ch: Chapitre, id: string, cas: Cas): Record<string, number> {
 const juste = (ch: Chapitre, id: string, cas: Cas) => (ch.etapes.find((x) => x.id === id) as EtapeChoix).options(cas, etatVide).find((o) => o.juste)!.texte;
 
 const somme = (a: readonly CompanyRoundResult[], f: (r: CompanyRoundResult) => number) => Math.round(a.reduce((t, r) => t + f(r), 0));
-const dixieme = (x: number) => Math.round(x * 10) / 10;
 const perdus = (r: CompanyRoundResult) => Object.values(r.market.bySegment).reduce((t, v) => t + v.lost, 0) + (r.subscription?.unserved ?? 0);
 
 /**
@@ -143,39 +128,11 @@ function prixJoues(r: CompanyRoundResult): number[] {
     .map((v) => v.revenue / v.sold);
 }
 
-/**
- * Ce que chaque acteur reçoit dans une année, par l'égalité du compte de résultat : les achats et
- * services sont ce que les ventes (et la variation du stock) laissent, une fois retirés les salaires,
- * l'usure de l'équipement, les intérêts, l'impôt et le résultat net. Le chapitre, lui, additionne
- * les charges : les deux chemins doivent se rejoindre.
- */
-function partsRecomposees(c: Cas, a: readonly CompanyRoundResult[]) {
-  const hr = scenarioByCode(c.code).scenario.hr!;
-  const salaires = somme(a, (r) => (r.hr?.headcount ?? c.personnel.effectif) * hr.salaryPerEmployeePerRound * (r.hr?.salaryIndex ?? 1));
-  const i = (r: CompanyRoundResult) => r.incomeStatement;
-  const reste = somme(
-    a,
-    (r) =>
-      i(r).revenue + i(r).productionStocked + (i(r).financialIncome ?? 0) + (i(r).exceptionalIncome ?? 0) - (i(r).exceptionalCharge ?? 0) - i(r).depreciation - i(r).interest - i(r).tax - i(r).netIncome,
-  );
-  return {
-    ventes: somme(a, (r) => i(r).revenue),
-    unites: somme(a, soldUnits),
-    fournisseurs: reste - salaires,
-    salaires,
-    interets: somme(a, (r) => i(r).interest),
-    impot: somme(a, (r) => i(r).tax),
-    resultatNet: somme(a, (r) => i(r).netIncome),
-  };
-}
-
-const STMG_ACTEURS = "STMG Thème 2 · Les organisations et les acteurs";
 const STMG_NUMERIQUE = "STMG Thème 2 · Numérique et intelligence collective";
 
 describe("les deux chapitres de management et leurs cas, dans le parcours", () => {
   it("portent les titres du programme, au palier 1, et le thème du référentiel STMG qu'ils travaillent", () => {
     const paires: [Chapitre, string, string][] = [
-      [LES_ACTEURS_ET_LA_VALEUR, STMG_ACTEURS, "les-acteurs-et-la-valeur"],
       [DECIDER_ENSEMBLE, STMG_NUMERIQUE, "decider-ensemble"],
     ];
     for (const [ch, bloc, code] of paires) {
@@ -196,7 +153,6 @@ describe("les deux chapitres de management et leurs cas, dans le parcours", () =
 
   it("chaque cas est dédié à son chapitre : même palier, même parcours, mêmes entreprises, sans cours", () => {
     const paires: [Situation, Chapitre][] = [
-      [LES_CLIENTS_DEMANDENT_UNE_BAISSE, LES_ACTEURS_ET_LA_VALEUR],
       [CHACUN_SON_LEVIER, DECIDER_ENSEMBLE],
     ];
     for (const [s, ch] of paires) {
@@ -218,13 +174,7 @@ describe("les deux chapitres de management et leurs cas, dans le parcours", () =
   it(
     "les deux chapitres se jouent partout : recompté sur le moteur, chaque entreprise paie des salaires, des intérêts et l'impôt, et aucune année rejouée ne fait défaillance",
     () => {
-      expect(LES_ACTEURS_ET_LA_VALEUR.entreprises).toBeUndefined();
       expect(DECIDER_ENSEMBLE.entreprises).toBeUndefined();
-      const acteurs = ENTREPRISES_DU_COURS.filter((code) => {
-        const p = partsRecomposees(casDeLEntreprise(code), anneeDeReference(code));
-        return p.salaires > 0 && p.interets > 0 && p.impot > 0 && p.resultatNet > 0 && !anneeALaHausse(code).some((r) => r.defaillant);
-      });
-      expect(acteurs).toEqual([...ENTREPRISES_DES_ACTEURS]);
       const decision = ENTREPRISES_DU_COURS.filter((code) =>
         (["commercial", "financier", "equipe"] as const).every((f) => !anneeDecidee(code, f).some((r) => r.defaillant) && somme(anneeDecidee(code, f), soldUnits) > 0),
       );
@@ -232,135 +182,6 @@ describe("les deux chapitres de management et leurs cas, dans le parcours", () =
     },
     REJEUX * 3,
   );
-});
-
-describe.each(ENTREPRISES_DES_ACTEURS)("les acteurs et la valeur chez %s", (code) => {
-  const cas = casDeLEntreprise(code);
-
-  it(
-    "la hausse rejouée pose l'indice à chaque trimestre et garde les embauches du gestionnaire",
-    () => {
-      const ref = anneeDeReference(code);
-      const hausse = anneeALaHausse(code);
-      for (const [t, r] of hausse.entries()) {
-        expect(r.hr?.salaryIndex, `trimestre ${t + 1}`).toBe(INDICE_DE_LA_HAUSSE);
-        expect(r.hr!.hired, `trimestre ${t + 1}`).toBe(ref[t]!.hr?.hired ?? 0);
-        expect(r.hr!.departed, `trimestre ${t + 1}`).toBe(0);
-      }
-    },
-    REJEUX,
-  );
-
-  it("les champs attendent ce que le moteur donne, recomposé par l'égalité du compte de résultat", () => {
-    const avant = partsRecomposees(cas, anneeDeReference(code));
-    const apres = partsRecomposees(cas, anneeALaHausse(code));
-    const k = acteursEtValeur(cas);
-    expect(k.avant).toEqual({
-      ventes: avant.ventes,
-      unitesVendues: avant.unites,
-      fournisseurs: avant.fournisseurs,
-      salaires: avant.salaires,
-      interets: avant.interets,
-      impot: avant.impot,
-      resultatNet: avant.resultatNet,
-    });
-    expect(k.apres.fournisseurs).toBe(apres.fournisseurs);
-    // Le salaire de la hausse : la masse salariale de l'année du cours, à l'indice posé.
-    expect(Math.abs(apres.salaires - avant.salaires * INDICE_DE_LA_HAUSSE)).toBeLessThanOrEqual(1);
-    expect(attendus(LES_ACTEURS_ET_LA_VALEUR, "parts", cas)).toEqual({
-      "Part des salariés (%)": dixieme((avant.salaires / avant.ventes) * 100),
-      "Part de l'État (%)": dixieme((avant.impot / avant.ventes) * 100),
-      "Part des associés (%)": dixieme((avant.resultatNet / avant.ventes) * 100),
-    });
-    const ecartDeSalaires = apres.salaires - avant.salaires;
-    const ecartDeResultat = apres.resultatNet - avant.resultatNet;
-    expect(attendus(LES_ACTEURS_ET_LA_VALEUR, "hausse", cas)).toEqual({
-      "Écart de salaires": ecartDeSalaires,
-      "Écart d'impôt": apres.impot - avant.impot,
-      "Écart de résultat net": ecartDeResultat,
-      "Part de la hausse payée par les associés (%)": dixieme((-ecartDeResultat / ecartDeSalaires) * 100),
-    });
-    const ecartDImpot = apres.impot - avant.impot;
-    expect(juste(LES_ACTEURS_ET_LA_VALEUR, "qui-paie", cas)).toBe(
-      ecartDeResultat >= 0
-        ? "Personne : une équipe motivée vend assez pour la payer"
-        : -ecartDeResultat >= -ecartDImpot
-          ? "Surtout les associés, et l'État pour une part"
-          : "Surtout l'État, qui perd de l'impôt",
-    );
-  });
-
-  it(
-    "le cas : les prix posés à chaque trimestre, et les écarts recomposés",
-    () => {
-      const ref = anneeDeReference(code);
-      const baisse = anneeAuxPrixBaisses(code);
-      for (const [t, r] of baisse.entries()) {
-        const avant = prixJoues(ref[t]!);
-        const apres = prixJoues(r);
-        expect(apres.length, `trimestre ${t + 1}`).toBe(avant.length);
-        apres.forEach((p, i) => expect(p, `trimestre ${t + 1}`).toBeCloseTo(avant[i]! * (1 - BAISSE_DEMANDEE), 6));
-      }
-      const a = partsRecomposees(cas, ref);
-      const b = partsRecomposees(cas, baisse);
-      expect(attendus(LES_CLIENTS_DEMANDENT_UNE_BAISSE, "parts", cas)).toEqual({
-        "Part des fournisseurs et prestataires (%)": dixieme((a.fournisseurs / a.ventes) * 100),
-        "Part des associés (%)": dixieme((a.resultatNet / a.ventes) * 100),
-      });
-      expect(attendus(LES_CLIENTS_DEMANDENT_UNE_BAISSE, "ecarts", cas)).toEqual({
-        "Écart de ce que paient les clients": b.ventes - a.ventes,
-        "Écart des achats et services": b.fournisseurs - a.fournisseurs,
-        "Écart d'impôt": b.impot - a.impot,
-        "Écart de résultat net": b.resultatNet - a.resultatNet,
-      });
-      expect(baisseDemandee(cas).verdict).toBe(b.resultatNet >= a.resultatNet ? "elle-se-paie" : "ils-paient");
-    },
-    REJEUX,
-  );
-
-  it("dans le cas, la bonne réponse ne se devine pas à sa longueur", () => {
-    const options = (LES_CLIENTS_DEMANDENT_UNE_BAISSE.etapes.at(-1) as EtapeChoix).options(cas, etatVide);
-    const bonne = options.find((o) => o.juste)!;
-    expect(bonne.texte.length).toBeLessThanOrEqual(Math.max(...options.filter((o) => !o.juste).map((o) => o.texte.length)));
-  });
-
-  it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(LES_ACTEURS_ET_LA_VALEUR, code));
-  it("textes propres, une seule bonne réponse, notions existantes : le cas", () => verifierLesTextes(LES_CLIENTS_DEMANDENT_UNE_BAISSE, code));
-});
-
-describe("les acteurs et la valeur, sur les neuf entreprises", () => {
-  it("la hausse ne fait rien vendre de plus cette année : les associés la paient, l'État pour la part de l'impôt", () => {
-    for (const code of ENTREPRISES_DES_ACTEURS) {
-      const k = acteursEtValeur(casDeLEntreprise(code));
-      expect(k.ecartDeVentes, code).toBe(0);
-      expect(k.ecartDeChiffre, code).toBe(0);
-      expect(k.ecartFournisseurs, code).toBe(0);
-      expect(k.ecartDInterets, code).toBe(0);
-      // Rien d'autre ne bouge : le bénéfice baisse de la hausse, l'impôt de sa part.
-      expect(Math.abs(k.partDeLEtat - k.tauxDImpot * 100), code).toBeLessThanOrEqual(0.2);
-      expect(Math.abs(k.partDesAssocies + k.partDeLEtat - 100), code).toBeLessThanOrEqual(0.2);
-      expect(k.gainDeCapacite, code).toBeGreaterThan(0);
-    }
-    // Le verdict se calcule ; l'année n'en permet qu'un : sans vente de plus, la hausse se paie
-    // sur le résultat, et le taux de l'impôt (25 % partout) laisse aux associés la plus grosse part.
-    expect([...new Set(ENTREPRISES_DES_ACTEURS.map((c) => acteursEtValeur(casDeLEntreprise(c)).quiPaie))]).toEqual(["associes"]);
-  });
-
-  it("la baisse des prix du cas : les deux réponses se rencontrent", () => {
-    const verdicts = ENTREPRISES_DES_ACTEURS.map((c) => baisseDemandee(casDeLEntreprise(c)).verdict);
-    expect([...new Set(verdicts)].sort()).toEqual(["elle-se-paie", "ils-paient"]);
-    expect(ENTREPRISES_DES_ACTEURS.filter((_, i) => verdicts[i] === "elle-se-paie")).toEqual(["hotel"]);
-  });
-
-  it("chez NOVA, les chiffres du chapitre", () => {
-    const k = acteursEtValeur(casDeLEntreprise("nova"));
-    expect(k.avant).toEqual({ ventes: 1452521, unitesVendues: 24286, fournisseurs: 1201599, salaires: 128000, interets: 3700, impot: 24805, resultatNet: 74416 });
-    expect(k.partDesSalaries).toBe(8.8);
-    expect(k.ecartDeSalaires).toBe(6400);
-    expect(k.ecartDImpot).toBe(-1600);
-    expect(k.ecartDeResultat).toBe(-4800);
-    expect(k.partDesAssocies).toBe(75);
-  });
 });
 
 describe.each(ENTREPRISES_DE_LA_DECISION)("décider ensemble chez %s", (code) => {

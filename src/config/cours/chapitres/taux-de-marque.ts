@@ -550,11 +550,26 @@ export const TAUX_DE_MARQUE: Chapitre = {
       },
       champs: (c) => {
         const m = margesDuRayon(c);
+        // La question donne le taux arrondi au dixième : l'élève qui le garde trouve quelques centimes de
+        // moins que le taux exact. Sa réponse est juste aussi : la tolérance couvre l'écart d'arrondi.
+        const prixAuTauxAffiche = auCentime(m.achatAtelier / (1 - m.tMarque / 100));
+        const ttcAuTauxAffiche = auCentime(prixAuTauxAffiche * (1 + m.r.tauxTva));
+        const ecartDArrondi = (exact: number, affiche: number, plancher: number) => auCentime(Math.max(plancher, Math.abs(exact - affiche) + 0.01));
+        const tauxExact = `${(m.tauxDeMarqueExact * 100).toLocaleString("fr-FR", { maximumFractionDigits: 3 })} %`;
         return [
           { libelle: "Prix d'achat chez l'atelier local", attendu: m.achatAtelier, calcul: `${eur(m.r.coutDAchat)} × ${coef(m.atelier.multiplicateur)} = ${eur(m.achatAtelier)}` },
-          // Le taux arrondi au dixième que l'élève a gardé déplace le prix de quelques centimes.
-          { libelle: "Prix de vente HT qui garde le taux de marque", attendu: m.prixAtelier, calcul: `${eur(m.achatAtelier)} ÷ (1 − ${pct(m.tMarque)}) = ${eur(m.prixAtelier)}`, tolerance: 0.05 },
-          { libelle: "Étiquette TTC", attendu: m.ttcAtelier, calcul: `${eur(m.prixAtelier)} × ${coef(1 + m.r.tauxTva)} = ${eur(m.ttcAtelier)}`, tolerance: 0.06 },
+          {
+            libelle: "Prix de vente HT qui garde le taux de marque",
+            attendu: m.prixAtelier,
+            calcul: `${eur(m.achatAtelier)} ÷ (1 − ${tauxExact}) = ${eur(m.prixAtelier)}, au taux exact ; avec ${pct(m.tMarque)}, ${eur(prixAuTauxAffiche)}, juste aussi`,
+            tolerance: ecartDArrondi(m.prixAtelier, prixAuTauxAffiche, 0.05),
+          },
+          {
+            libelle: "Étiquette TTC",
+            attendu: m.ttcAtelier,
+            calcul: `${eur(m.prixAtelier)} × ${coef(1 + m.r.tauxTva)} = ${eur(m.ttcAtelier)} ; avec ${eur(prixAuTauxAffiche)}, ${eur(ttcAuTauxAffiche)}, juste aussi`,
+            tolerance: ecartDArrondi(m.ttcAtelier, ttcAuTauxAffiche, 0.06),
+          },
           { libelle: "Coefficient TTC de l'atelier local", attendu: m.coefTtcAtelier, calcul: `${eur(m.ttcAtelier)} ÷ ${eur(m.achatAtelier)} = ${coef(m.coefTtcAtelier)}`, tolerance: 0.01 },
         ];
       },

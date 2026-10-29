@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import { getSession } from "@/lib/session";
 import { EnTeteEnseignant } from "@/components/en-tete-enseignant";
 import { getTeacherUsageView } from "@/services/pedagogy.service";
@@ -25,7 +26,7 @@ function Empty({ children }: { children: React.ReactNode }) {
 
 export default async function UsagePage() {
   const session = await getSession();
-  if (!session) redirect("/teacher/login");
+  if (!session) redirect(await connexionPourLaPageDemandee());
   const usage = await getTeacherUsageView(session.userId);
 
   const totals = [

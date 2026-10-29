@@ -5,6 +5,7 @@ import { anneeDuCours } from "../monde/annee-du-cours";
 import { auCentime, joursCompris } from "../monde/amortissement";
 import { cloture, interetsDuPlacement, sommeDesComptes } from "../monde/cloture";
 import { EXERCICES_DU_COURS, type FicheDeLExercice } from "../monde/exercice-de-nova";
+import { DELAI_CONVENU_DE_CAMPUSTECH } from "../monde/nova-gestion";
 import type { Chapitre, TableauDeDonnees } from "../types";
 
 /**
@@ -43,18 +44,8 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *
  * CE QUE LA SIMULATION SUPPOSE (dit à l'élève dans l'intro) : les hypothèses de la fiche (un compte à
  * terme de 12 mois à 3 %, bloqué jusqu'au 6 janvier N+1 ; des particuliers qui paient à la commande ;
- * CampusTech à 60 jours, le délai convenu, qu'elle tient ; le fournisseur de composants à 22 jours ;
- * aucun investissement après janvier, aucun dividende), et celles du chapitre, des constantes nommées
- * ci-dessous.
- *
- * CAMPUSTECH À 60 JOURS (décision du propriétaire, octobre 2026 ; la fiche disait 80 jours). La
- * facture d'octobre rentre le 20 décembre : 22 656 € de créance en moins, autant de banque en plus.
- * Le besoin d'exploitation tombe à 9 544,73 €, et le besoin en fonds de roulement devient NÉGATIF
- * (−12 028,38 €) : le chapitre le dit à l'élève (une ressource, pas un besoin). Le laboratoire part
- * désormais de 60 jours, qui était sa solution : la solution est recalibrée à CampusTech à 40 jours
- * (la facture de novembre rentre le 30 décembre, en mois de 30 jours), le même effet qu'avant
- * (12 504 €) ; à 60 jours seuls, le stock de la gamme laisse la trésorerie nette 10 152 € sous le
- * départ, et le défi reste à relever.
+ * CampusTech, payée en retard, 80 jours après sa facture pour 60 convenus ; le fournisseur de composants à 22 jours ; aucun investissement après
+ * janvier, aucun dividende), et celles du chapitre, des constantes nommées ci-dessous.
  */
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -86,11 +77,8 @@ export const LEVIERS_DU_LABORATOIRE = {
   placement: { min: 0, pas: 1_000 },
 } as const;
 
-/**
- * La solution que montre la correction du laboratoire : CampusTech à 40 jours (sa facture de novembre
- * rentre avant la clôture), le fournisseur à 51 jours (sa facture de novembre reste due).
- */
-export const SOLUTION_DU_LABORATOIRE = { delaiCampusTech: 40, delaiFournisseur: 51 } as const;
+/** La solution que montre la correction du laboratoire : CampusTech à 60 jours, le fournisseur à 51 jours. */
+export const SOLUTION_DU_LABORATOIRE = { delaiCampusTech: 60, delaiFournisseur: 51 } as const;
 
 /**
  * LA CROISSANCE (hypothèse du cours, reprise par le cas « Vendre plus, financer plus ») : 20 % de
@@ -404,7 +392,7 @@ const intro = (x: BilanDeLExercice) => {
   const f = x.f;
   return [
     `Ce chapitre se joue dans la simulation du cours, chez ${x.entreprise}, sur son premier exercice. La création, la première semaine de janvier : ${eur(f.apport.montant)} d'apport, ${eur(f.pret.capital)} empruntés à ${pct(f.pret.tauxAnnuel)} sur ${f.pret.dureeAns} ans, une ligne de montage à ${eur(f.equipement.ht)} hors taxes, et ${eur(f.placement.montant)} placés le 6 janvier sur un compte à terme. Puis une année de ventes, et la clôture du 31 décembre, travaux d'inventaire et impôt compris. Voici le bilan comptable qui en sort.`,
-    `La simulation suppose : un compte à terme de ${f.placement.dureeMois} mois à ${pct(f.placement.tauxAnnuel)}, bloqué jusqu'au 6 janvier N+1 ; des particuliers qui paient à la commande ; CampusTech payé à ${f.campustech.delai} jours, le fournisseur de composants à ${f.fournisseur.delai} jours ; aucun investissement après janvier, aucun dividende. Les expériences du chapitre ajoutent leurs propres hypothèses, dites à chaque fois.`,
+    `La simulation suppose : un compte à terme de ${f.placement.dureeMois} mois à ${pct(f.placement.tauxAnnuel)}, bloqué jusqu'au 6 janvier N+1 ; des particuliers qui paient à la commande ; CampusTech, qui doit payer à ${DELAI_CONVENU_DE_CAMPUSTECH} jours et paie en retard, ${f.campustech.delai} jours après sa facture, le fournisseur de composants à ${f.fournisseur.delai} jours ; aucun investissement après janvier, aucun dividende. Les expériences du chapitre ajoutent leurs propres hypothèses, dites à chaque fois.`,
     "Le bilan comptable range par nature, en valeurs nettes. Le bilan fonctionnel range par fonction, en valeurs brutes, sur trois étages. En haut, le cycle d'investissement et de financement : les emplois stables (les immobilisations, à leur valeur brute) et les ressources stables (les capitaux propres, les amortissements, les dépréciations et les provisions, les dettes financières). Au milieu, le cycle d'exploitation : les stocks, les clients, les fournisseurs, et ce qui ne relève pas de l'exploitation à part. En bas, la trésorerie : la banque et les placements à moins d'un an, moins les découverts.",
   ];
 };
@@ -611,9 +599,6 @@ export const BILAN_FONCTIONNEL: Chapitre = {
         return [
           "Les deux calculs tombent sur le même chiffre, et c'est toujours le cas : le bilan s'équilibre, et la trésorerie est ce que le fonds de roulement laisse une fois le besoin financé.",
           `Le hors exploitation est une ressource de ${eur(-x.besoinHorsExploitation)} : l'impôt et les intérêts sont dus, pas encore payés. Une ressource à quelques semaines : en janvier et en mai, elle sortira de la trésorerie.`,
-          ...(x.besoin < 0
-            ? [`Le besoin en fonds de roulement est négatif, ${eur(x.besoin)} : ce que les fournisseurs, les salariés et l'État font encore crédit dépasse ce que le cycle avance. C'est une ressource, qui s'ajoute au fonds de roulement dans la trésorerie nette ; elle tient tant que les délais tiennent.`]
-            : []),
         ];
       },
     },
@@ -667,7 +652,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
         const x = bilanDeLExercice(c);
         return [
           `Le fonds de roulement a grandi de la capacité d'autofinancement, ${eur(x.caf)}, moins le capital remboursé, ${eur(x.rembourse)} : ${eur(x.caf)} − ${eur(x.rembourse)} = ${eur(auCentime(x.caf - x.rembourse))}. Aucun investissement, aucun dividende, aucun apport ni emprunt nouveau ne s'y ajoutent.`,
-          `La trésorerie a gagné ${eur(x.variationDeLaTresorerie)}, plus que le résultat net (${eur(x.postes.resultat)}) : la CAF y ajoute les charges qui ne sortent pas (la dotation, la dépréciation, la provision), et le besoin ${x.variationDuBesoin < 0 ? `a baissé de ${eur(-x.variationDuBesoin)}, ${x.besoin < 0 ? `la TVA de la ligne récupérée, et un besoin de fin d'année devenu une ressource (${eur(x.besoin)})` : "la TVA de la ligne récupérée valant plus que le besoin de fin d'année"}` : `a grandi de ${eur(x.variationDuBesoin)}`}. Variation de la trésorerie = variation du fonds de roulement − variation du besoin.`,
+          `La trésorerie a gagné ${eur(x.variationDeLaTresorerie)}, plus que le résultat net (${eur(x.postes.resultat)}) : la CAF y ajoute les charges qui ne sortent pas (la dotation, la dépréciation, la provision), et le besoin ${x.variationDuBesoin < 0 ? `a baissé de ${eur(-x.variationDuBesoin)}, la TVA de la ligne récupérée valant plus que le besoin de fin d'année` : `a grandi de ${eur(x.variationDuBesoin)}`}. Variation de la trésorerie = variation du fonds de roulement − variation du besoin.`,
         ];
       },
     },
@@ -803,7 +788,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
       notions: ["bfr", "payment_terms", "net_treasury", "stock"],
       question: (c) => {
         const x = bilanDeLExercice(c);
-        return `Faites varier le délai de CampusTech (au-delà des ${x.f.campustech.delai} jours convenus, ce serait un retard, que la loi sanctionne), celui du fournisseur de composants (un délai plus long que ${x.f.fournisseur.delai} jours laisse plus de factures dues au 31 décembre), le stock de composants et la somme placée le 6 janvier. Le tableau suit le bilan fonctionnel ; le graphique, la trésorerie nette selon le délai de CampusTech. Relevez le défi.`;
+        return `Faites varier le délai de CampusTech, celui du fournisseur de composants (un délai plus long que ${x.f.fournisseur.delai} jours laisse plus de factures dues au 31 décembre), le stock de composants et la somme placée le 6 janvier. Le tableau suit le bilan fonctionnel ; le graphique, la trésorerie nette selon le délai de CampusTech. Relevez le défi.`;
       },
       leviers: (c) => {
         const x = bilanDeLExercice(c);
@@ -889,7 +874,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
       explication: (c) => {
         const x = bilanDeLExercice(c);
         return [
-          `Les créances et les dettes se rapportent à des flux toutes taxes comprises, le stock à un flux hors taxes : le ratio compare ce qui est comparable. Les clients paient en moyenne à ${jours(x.delaiClients)}, alors que CampusTech paie à ${x.f.campustech.delai} jours : la moyenne mêle les particuliers, qui paient à la commande, et des créances qui n'ont rien de normal, comme celle de Sonora.`,
+          `Les créances et les dettes se rapportent à des flux toutes taxes comprises, le stock à un flux hors taxes : le ratio compare ce qui est comparable. Les clients paient en moyenne à ${jours(x.delaiClients)}, alors que CampusTech paie en retard, ${x.f.campustech.delai} jours après sa facture pour ${DELAI_CONVENU_DE_CAMPUSTECH} convenus : la moyenne mêle les particuliers, qui paient à la commande, et des créances qui n'ont rien de normal, comme celle de Sonora.`,
         ];
       },
     },
@@ -1030,7 +1015,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
       texte: (c) => {
         const x = bilanDeLExercice(c);
         return [
-          `Vous avez relu le bilan ${dE(x.entreprise)} par fonction : un fonds de roulement de ${eur(x.fondsDeRoulement)}, un besoin de ${eur(x.besoin)} (${eur(x.besoinDExploitation)} d'exploitation, ${eur(x.besoinHorsExploitation)} hors exploitation)${x.besoin < 0 ? ", négatif, donc une ressource" : ""}, une trésorerie nette de ${eur(x.tresorerieNette)}. Depuis la création, le fonds de roulement a grandi de la CAF moins le capital remboursé.`,
+          `Vous avez relu le bilan ${dE(x.entreprise)} par fonction : un fonds de roulement de ${eur(x.fondsDeRoulement)}, un besoin de ${eur(x.besoin)} (${eur(x.besoinDExploitation)} d'exploitation, ${eur(x.besoinHorsExploitation)} hors exploitation), une trésorerie nette de ${eur(x.tresorerieNette)}. Depuis la création, le fonds de roulement a grandi de la CAF moins le capital remboursé.`,
           `Deux pièges. Une trésorerie nette positive n'est pas une trésorerie libre : ${eur(x.placement)} sont bloqués jusqu'au 6 janvier, et ${eur(x.postes.emprunt)} sont dus à la banque. Et un ratio lit une photo du 31 décembre : il se critique avant de se croire.`,
           "Au niveau de l'examen, vous savez reclasser un bilan (valeurs brutes, amortissements, dépréciations et provisions, intérêts courus, impôt dû, placements), calculer le fonds de roulement, le besoin d'exploitation et hors exploitation et la trésorerie nette, expliquer leur variation, exprimer le besoin en jours de chiffre d'affaires et chiffrer l'effet d'un délai ou d'une croissance, calculer et critiquer les ratios de rotation, et juger le coût d'une trésorerie gardée.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
@@ -1073,11 +1058,11 @@ function fonctions(m: Masses, brut: number, amortissements: number) {
 /**
  * EXPORT DE COMPATIBILITÉ, QUE LE CHAPITRE NE LIT PLUS : le bilan en grandes masses de l'année du
  * cours figée (monde/annee-du-cours.ts), au 1er janvier et au 31 décembre, dans chacune des neuf
- * entreprises. Quatre chapitres hors de ce chapitre le lisent encore (lire-le-bilan,
- * financer-l-entreprise, fonds-de-roulement-et-tresorerie, rentabilite) : il garde leur forme et
- * leurs chiffres, au centime, sans plus dépendre d'aucun autre chapitre. La dotation et les ventes
- * de l'année sont celles des trimestres figés. À déplacer dans le monde du cours quand ces chapitres
- * y passeront.
+ * entreprises. Les quatre chapitres du Bac STMG qui le lisaient (lire-le-bilan,
+ * financer-l-entreprise, fonds-de-roulement-et-tresorerie, rentabilite) sont passés sur le monde du
+ * cours (monde/comptes-du-lycee.ts) : plus aucun chapitre ne le lit, seule sa garde
+ * (tests/cours/bilan-fonctionnel.test.ts) le garde au centime. La dotation et les ventes de l'année
+ * sont celles des trimestres figés.
  */
 export function bilanFonctionnel(c: Pick<Cas, "code">) {
   const { partie, depart } = anneeDuCours(c.code);

@@ -71,3 +71,11 @@ export const AIDE_CODE_DE_REPRISE_SOLO =
   "Notez ce code : il vous rend cette partie, au tour où vous l'avez laissée, " +
   "sur n'importe quel appareil — après avoir vidé vos cookies, ou en passant du " +
   "téléphone à l'ordinateur. Il se saisit sur la page « Reprendre ma partie ».";
+
+/**
+ * Le plafond des codes faux, par adresse et par fenêtre de quinze minutes. Toute une classe
+ * sort souvent par la même adresse (le réseau du lycée) : trente-cinq élèves qui se trompent
+ * d'une lettre ne doivent pas fermer la porte aux autres. Soixante échecs laissent passer une
+ * classe maladroite, et restent dérisoires face aux centaines de millions de codes possibles.
+ */
+export const MAX_CODES_FAUX_PAR_ADRESSE = 60;

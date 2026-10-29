@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 60 — LA RÉNOVATION SANS FERMER, tel que l'interface et le bilan le lisent.
+ * LA RÉNOVATION SANS FERMER, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de L'Escale Chambéry-Gare montre,

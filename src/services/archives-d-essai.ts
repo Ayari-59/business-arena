@@ -29,6 +29,7 @@ import {
   suppliers,
   teams,
   transactions,
+  tuteurQuestions,
 } from "@/db/schema";
 
 /*
@@ -124,6 +125,9 @@ export const RESTENT_A_LA_PARTIE: readonly { table: PgTable; colonne: PgColumn; 
   { table: pairsMoments, colonne: pairsMoments.gameId, raison: "les moments de l'évaluation : aucun pendant l'essai" },
   { table: pairsReponses, colonne: pairsReponses.gameId, raison: "les réponses entre coéquipiers : aucune pendant l'essai" },
   { table: pairsReponses, colonne: pairsReponses.teamId, raison: "les réponses entre coéquipiers : aucune pendant l'essai" },
+  // Le quota du tuteur IA (migration 0050) : les questions posées pendant l'essai comptent
+  // pour la partie, comme toute question.
+  { table: tuteurQuestions, colonne: tuteurQuestions.gameId, raison: "le compteur des questions au tuteur IA" },
 ];
 
 

@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 43 — LE MARCHÉ QUI S'OUVRE, tel que l'interface et le bilan le lisent.
+ * LE MARCHÉ QUI S'OUVRE, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Geneviève montre, ce que la

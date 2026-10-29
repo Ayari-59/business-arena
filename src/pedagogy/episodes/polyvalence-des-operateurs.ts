@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 103 — LA LIGNE QUI S'ARRÊTE QUAND IL MANQUE QUELQU'UN, tel que l'interface et le bilan le lisent.
+ * LA LIGNE QUI S'ARRÊTE QUAND IL MANQUE QUELQU'UN, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord d'Erwann montre, ce que la courbe

@@ -214,9 +214,12 @@ export function BilanDeLEpisode({
   onAutreHasard,
   onMemeHasard,
   cours = null,
+  sansLicence = false,
 }: {
   ep: Episode;
   partie: PartieJouee;
+  /** Aucune licence ne couvre cet épisode (la page serveur le sait) : voir `RetourDeLEpisode`. */
+  sansLicence?: boolean;
   /** La clé de la partie, pour la garder une seule fois ; `null` : on ne la garde pas. */
   cle: string | null;
   /** La partie jouée juste avant, pour les comparer. */
@@ -475,7 +478,7 @@ export function BilanDeLEpisode({
         </div>
       </section>
 
-      <RetourDeLEpisode ep={ep} partie={partie} cle={cle} />
+      <RetourDeLEpisode ep={ep} partie={partie} cle={cle} sansLicence={sansLicence} />
 
       {cours && <LeCoursDuTheme cours={cours} />}
 

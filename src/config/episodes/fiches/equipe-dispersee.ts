@@ -71,7 +71,7 @@ export const FICHE: FicheEnseignant = {
       "Source « Comparer les visites et les devis de chacun » : les neuf font entre 21 et 26 visites par semaine ; les débutants signent un devis sur cinq, contre un sur deux pour Ambre et Alassane. L'écart vient d'une compétence (les dossiers techniques), pas de l'activité.",
       "Aucune décision de la semaine 1 ne change cette compétence avant les binômes de la semaine 4 : les rituels donnent un peu de confiance dès la semaine 2, le boîtier quelques visites de plus le temps que l'effet s'use. La marge reste donc autour de 54 à 56 k€, selon l'activité des chantiers.",
       "Sous le tirage n° 12, le modèle donne 56,2 k€ en semaine 1, 54,4 k€ en semaine 2, puis 52 k€ en semaine 3, une semaine plus calme. Avec le contrôle de l'activité, il donne 49,9 k€ ; en laissant chacun faire, 50,4 k€.",
-      "L'épisode juge juste à 2 k€ près, proche à 5. Selon les trente tirages du bilan, la meilleure méthode donne de 47,3 à 62,7 k€ en semaine 3.",
+      "L'épisode juge juste à 4 k€ près, proche à 8 : « autour de 54 à 56 k€ » est juste, même sous une semaine 3 plus calme. Selon les trente tirages du bilan, la meilleure méthode donne de 47,3 à 62,7 k€ en semaine 3.",
     ],
     erreurs: [
       {

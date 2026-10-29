@@ -676,7 +676,9 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
         const [a, b] = [k.coinCher, k.coinGenereux];
         return [
           `Au prix haut, personne n'achète une qualité moyenne : ${qte(a.ventes)} ventes, ${pct(a.part)} du marché, et ${eur(a.resultat)}. Ce coin est vide parce qu'il n'y a pas de clients.`,
-          `À l'inverse, la gamme soignée au prix d'aujourd'hui attire plus de clients que la ligne n'en sert (${qte(b.refusees)} perdus), et chaque enceinte ne laisse que ${eur(b.margeUnitaire)} : ${eur(b.resultat)}, moins qu'aujourd'hui (${eur(k.nova.resultat)}). Ce coin est vide parce qu'il ne paie pas. Une place libre vaut quelque chose quand des clients l'attendent et qu'une offre y paie ses coûts.`,
+          b.resultat < k.nova.resultat
+            ? `À l'inverse, la gamme soignée au prix d'aujourd'hui ${b.refusees > 0 ? `attire plus de clients que la ligne n'en sert (${qte(b.refusees)} perdus)` : "attire beaucoup de clients"}, et chaque enceinte ne laisse que ${eur(b.margeUnitaire)} : ${eur(b.resultat)}, moins qu'aujourd'hui (${eur(k.nova.resultat)}). Ce coin est vide parce qu'il ne paie pas. Une place libre vaut quelque chose quand des clients l'attendent et qu'une offre y paie ses coûts.`
+            : `À l'inverse, la gamme soignée au prix d'aujourd'hui attire beaucoup de clients${b.refusees > 0 ? ` (${qte(b.refusees)} que la ligne ne sert pas)` : ""} : chaque enceinte ne laisse que ${eur(b.margeUnitaire)}, mais le volume fait ${eur(b.resultat)}, plus qu'aujourd'hui (${eur(k.nova.resultat)}). Ce coin paie, mais il ne lit pas ${k.f.entreprise} en différenciation : la qualité y est offerte, pas vendue. Une place libre vaut quelque chose quand des clients l'attendent et qu'une offre y paie ses coûts.`,
         ];
       },
     },

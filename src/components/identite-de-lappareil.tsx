@@ -5,6 +5,7 @@ import { useState } from "react";
 import { libererLAppareilAction, type LibererState } from "@/app/join/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import { Icone } from "@/components/icone";
+import { purgerLeHorsLigne } from "@/lib/purge-hors-ligne";
 
 /**
  * QUI EST ASSIS DEVANT CET ÉCRAN.
@@ -65,7 +66,12 @@ export function IdentiteDeLAppareil({
       </p>
 
       {confirmation ? (
-        <form ref={formRef} action={formAction} className="mt-2 space-y-2">
+        <form
+          ref={formRef}
+          action={formAction}
+          onSubmit={() => void purgerLeHorsLigne()}
+          className="mt-2 space-y-2"
+        >
           <p className="text-sm leading-relaxed text-slate-300">
             L&apos;appareil redeviendra neutre et vous reviendrez à l&apos;entrée par code. Les
             décisions déjà validées restent à l&apos;équipe : rien n&apos;est perdu.

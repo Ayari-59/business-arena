@@ -16,11 +16,11 @@
  */
 import type { Etape } from "./types";
 
-const PASCALE = {
+const MURIELLE = {
   de: "Murielle Andrieu",
   role: "Directrice administrative et financière",
 } as const;
-const RACHID = {
+const HAKIM = {
   de: "Hakim Boukhari",
   role: "Chef de la plateforme de Saint-Priest",
 } as const;
@@ -28,16 +28,16 @@ const KILLIAN = {
   de: "Killian Morisot",
   role: "Technicien de maintenance",
 } as const;
-const CHLOE = {
+const FANNY = {
   de: "Fanny Lebrun",
   role: "Responsable de l'agence de Vaulx-en-Velin",
 } as const;
 const TOMAS = { de: "Tomás Herrera", role: "Courtier en énergie" } as const;
-const BERENICE = {
+const BRIGITTE = {
   de: "Brigitte Collin",
   role: "Chargée de clientèle entreprises, Volténa Énergies",
 } as const;
-const INGRID = {
+const ASTRID = {
   de: "Astrid Solberg",
   role: "Responsable achats responsables, Ostral Construction",
 } as const;
@@ -70,20 +70,20 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 2,
     messages: () => [
       {
-        ...BERENICE,
+        ...BRIGITTE,
         heure: "08:10",
         alerte: true,
         texte:
           "Monsieur Lavergne, votre contrat d'électricité et de gaz s'achève le 31 octobre. Notre offre de renouvellement, à prix fixe sur trois ans : 195 €/MWh d'électricité et 76 €/MWh de gaz. Elle est valable jusqu'à vendredi prochain.",
       },
       {
-        ...PASCALE,
+        ...MURIELLE,
         heure: "08:45",
         texte:
           "Cyprien, aux prix de Volténa, l'énergie du trimestre passerait de 103 k€ l'an dernier à près de 180 k€. J'ai budgété 150 k€, pas un euro de plus, et le comité de direction ne veut pas entendre parler d'investissements lourds. Qu'est-ce que tu proposes ?",
       },
       {
-        ...INGRID,
+        ...ASTRID,
         heure: "09:30",
         texte:
           "Bonjour Monsieur Lavergne. Notre contrat-cadre avec Arvel arrive à renouvellement en décembre. Comme à tous nos fournisseurs, nous vous demanderons pour la fin de la semaine 10 votre bilan carbone et un plan de réduction chiffré.",
@@ -156,7 +156,7 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...CHLOE,
+          ...FANNY,
           texte:
             "14 °C au comptoir : les clients gardent leur blouson, mes vendeurs aussi. Deux d'entre eux ont rapporté un radiateur de chez eux.",
         },
@@ -170,14 +170,14 @@ export const ETAPES: readonly Etape[] = [
       ],
       [
         {
-          ...RACHID,
+          ...HAKIM,
           texte:
             "Les affiches sont au mur et les gars les ont lues. Pour le reste, je ne vois pas bien ce qui a changé.",
         },
       ],
       [
         {
-          ...PASCALE,
+          ...MURIELLE,
           texte: "D'accord pour le contrat. Mais d'ici là, on chauffe comme l'an dernier ?",
         },
       ],
@@ -189,7 +189,7 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 4,
     messages: (ctx) => [
       {
-        ...BERENICE,
+        ...BRIGITTE,
         heure: "09:00",
         alerte: true,
         texte:
@@ -252,7 +252,7 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...BERENICE,
+          ...BRIGITTE,
           texte:
             "Merci de votre confiance, Monsieur Lavergne. Le contrat démarre le 1er novembre, pour trois ans.",
         },
@@ -285,7 +285,7 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 6,
     messages: (ctx) => [
       {
-        ...PASCALE,
+        ...MURIELLE,
         heure: "08:30",
         alerte: true,
         texte: `Le nouveau contrat démarre lundi. Coût de l'énergie à date : ${ctx.couts}, pour ${ctx.budgetADate} prévus. Il nous faut un plan pour l'hiver, et que les sites l'appliquent.`,
@@ -345,7 +345,7 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...RACHID,
+          ...HAKIM,
           texte:
             "Les programmateurs sont réglés : les zones de stockage passent en hors-gel à 20 h. Les gars ont même proposé de fermer le quai 2 l'après-midi, il ne sert presque plus.",
         },
@@ -359,14 +359,14 @@ export const ETAPES: readonly Etape[] = [
       ],
       [
         {
-          ...CHLOE,
+          ...FANNY,
           texte:
             "Le classement est affiché en salle de pause. Décines est premier, personne ne sait trop comment.",
         },
       ],
       [
         {
-          ...RACHID,
+          ...HAKIM,
           texte: "On fait au mieux, chacun de son côté. Mais personne ne sait ce que fait l'autre.",
         },
       ],
@@ -378,7 +378,7 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 8,
     messages: (ctx) => [
       {
-        ...PASCALE,
+        ...MURIELLE,
         heure: "09:00",
         alerte: true,
         texte:
@@ -441,7 +441,7 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...RACHID,
+          ...HAKIM,
           texte:
             "Les LED sont posées. On y voit comme en plein jour, et les allées s'éteignent toutes seules quand personne n'y passe.",
         },
@@ -462,7 +462,7 @@ export const ETAPES: readonly Etape[] = [
       ],
       [
         {
-          ...PASCALE,
+          ...MURIELLE,
           texte: "Entendu. On en reparlera au budget de l'an prochain.",
         },
       ],
@@ -474,7 +474,7 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 10,
     messages: (ctx) => [
       {
-        ...INGRID,
+        ...ASTRID,
         heure: "09:15",
         alerte: true,
         texte:
@@ -543,21 +543,21 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...INGRID,
+          ...ASTRID,
           texte:
             "Merci, le dossier est complet. Notre auditeur l'étudie avant le comité de la semaine 12.",
         },
       ],
       [
         {
-          ...INGRID,
+          ...ASTRID,
           texte:
             "Nous avons bien reçu votre brochure. Notre auditeur vous demandera sans doute sur quoi repose l'objectif de 2030.",
         },
       ],
       [
         {
-          ...INGRID,
+          ...ASTRID,
           texte:
             "Nous avons bien reçu le certificat. Il ne dit rien de vos actions de réduction, mais nous le transmettons au comité.",
         },
@@ -571,7 +571,7 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 13,
     messages: (ctx) => [
       {
-        ...RACHID,
+        ...HAKIM,
         heure: "08:20",
         alerte: true,
         texte:
@@ -587,7 +587,7 @@ export const ETAPES: readonly Etape[] = [
         }`,
       },
       {
-        ...PASCALE,
+        ...MURIELLE,
         heure: "17:30",
         texte: `Coût de l'énergie à date : ${ctx.couts}, pour ${ctx.budgetADate} prévus. Finis le trimestre proprement.`,
       },
@@ -634,14 +634,14 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...RACHID,
+          ...HAKIM,
           texte:
             "Les peintures et les colles sont dans la travée chauffée. Le reste de la plateforme passe en hors-gel à 8 °C pendant les fêtes.",
         },
       ],
       [
         {
-          ...RACHID,
+          ...HAKIM,
           texte: "Chauffage coupé à partir du 20. J'ai laissé les bureaux à 19 °C.",
         },
       ],
@@ -654,7 +654,7 @@ export const ETAPES: readonly Etape[] = [
       ],
       [
         {
-          ...PASCALE,
+          ...MURIELLE,
           texte: "D'accord. Rendez-vous au bilan du trimestre.",
         },
       ],

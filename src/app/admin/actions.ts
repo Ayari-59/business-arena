@@ -8,7 +8,13 @@ import {
   deactivateInvite,
   updatePlatformConfig,
 } from "@/services/admin.service";
-import { seedDemoWorld } from "@/services/demo.service";
+import {
+  DEMO_REFUSEE_EN_PRODUCTION,
+  demoAutorisee,
+  fermerLesComptesDeDemo,
+  renouvelerLeMotDePasseDeDemo,
+  seedDemoWorld,
+} from "@/services/demo.service";
 import { deleteOrgLicence } from "@/services/licence.service";
 import { attribuerUneLicence } from "@/services/vente.service";
 import { DEFAULT_AI_CONFIG, isAiModelId } from "@/config/ai";
@@ -71,11 +77,51 @@ export async function deactivateAdminInviteAction(
   revalidatePath("/admin");
 }
 
-export async function seedDemoAction(): Promise<void> {
+/** Ce que voit l'admin après un geste sur le monde démo : le mot de passe, une seule fois. */
+export interface EtatDeLaDemo {
+  error: string | null;
+  /** Le mot de passe tiré, montré une fois puis perdu : il n'est gardé qu'en empreinte. */
+  motDePasse: string | null;
+  message: string | null;
+}
+
+export async function seedDemoAction(
+  _prev: EtatDeLaDemo,
+  _formData: FormData,
+): Promise<EtatDeLaDemo> {
   await requireAdminSession();
-  await seedDemoWorld();
+  if (!demoAutorisee()) return { error: DEMO_REFUSEE_EN_PRODUCTION, motDePasse: null, message: null };
+  const monde = await seedDemoWorld();
   revalidatePath("/admin");
-  revalidatePath("/teacher/login");
+  return {
+    error: null,
+    motDePasse: monde.password,
+    message: monde.created ? "Monde démo créé." : "Le monde démo était déjà en place.",
+  };
+}
+
+export async function renouvelerLeMotDePasseDeDemoAction(
+  _prev: EtatDeLaDemo,
+  _formData: FormData,
+): Promise<EtatDeLaDemo> {
+  await requireAdminSession();
+  if (!demoAutorisee()) return { error: DEMO_REFUSEE_EN_PRODUCTION, motDePasse: null, message: null };
+  const motDePasse = await renouvelerLeMotDePasseDeDemo();
+  return { error: null, motDePasse, message: "Nouveau mot de passe des deux comptes de démonstration." };
+}
+
+export async function fermerLesComptesDeDemoAction(
+  _prev: EtatDeLaDemo,
+  _formData: FormData,
+): Promise<EtatDeLaDemo> {
+  await requireAdminSession();
+  await fermerLesComptesDeDemo();
+  revalidatePath("/admin");
+  return {
+    error: null,
+    motDePasse: null,
+    message: "Comptes de démonstration fermés : plus de mot de passe, sessions et codes d'invitation révoqués.",
+  };
 }
 
 /**

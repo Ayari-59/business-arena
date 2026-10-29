@@ -43,6 +43,7 @@ export async function generateMetadata({
   return {
     title: `Dossier élève · ${atelier.titre}`,
     description: `Ce que vous allez diriger, ce que vous rendez et sur quoi vous serez évalué, pour ${formationsEnToutesLettres(atelier)}.`,
+    alternates: { canonical: `/animations/${atelier.code}/dossier` },
   };
 }
 

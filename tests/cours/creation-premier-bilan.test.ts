@@ -424,17 +424,14 @@ describe("de la création au premier bilan : le chapitre pilote, dans les neuf e
     expect(juste(ch, cas, "critique")).toBe(`Il manque l'usure de l'équipement et les intérêts du mois : le mois complet fait ${new Intl.NumberFormat("fr-FR", { minimumFractionDigits: Number.isInteger(m.resultatComplet) ? 0 : 2 }).format(m.resultatComplet).replace(/^-/, "−")} €`);
   });
 
-  it("le délai du client : CampusTech paie à 60 jours, le plafond convenu, et à l'échéance (décision du propriétaire)", () => {
+  it("le délai du client : CampusTech paie à 80 jours, 20 jours au-delà des 60 jours convenus (décision du propriétaire)", () => {
     const nova = casDeLEntreprise("nova");
-    // La facture du 20 janvier, à 60 jours : le 80e jour de l'année, 31 jours de janvier et 28 de février, le 21 mars.
-    expect(nova.venteCredit.delai).toBe(60);
-    expect(nova.venteCredit.echeance).toBe(20 + 60);
+    expect(nova.venteCredit.delai).toBe(80);
     const vente = ch.etapes.find((e) => e.id === "vente-credit") as EtapeEcriture;
-    expect(vente.evenement(nova)).toContain("CampusTech paiera à 60 jours, le 21 mars.");
-    expect(vente.evenement(nova)).not.toMatch(/80 jours|convenus|retard/);
+    expect(vente.evenement(nova)).toContain("CampusTech paie à 80 jours, 20 jours au-delà des 60 jours convenus : son règlement est attendu le 10 avril.");
     expect(vente.piece!(nova).mention).toBe("Payable à 60 jours, le 21 mars.");
     const encaissement = ch.etapes.find((e) => e.id === "encaissement-client") as EtapeEcriture;
-    expect(encaissement.evenement(nova)).toBe("Le 21 mars, CampusTech règle sa facture par virement : 22 656 €.".replace(/ (?=656)/, "\u202f"));
+    expect(encaissement.evenement(nova)).toBe("Le 10 avril, CampusTech règle sa facture par virement, 20 jours après l'échéance convenue : 22 656 €.".replace(/ (?=656)/, " "));
     // Le même plafond vaut pour tout client professionnel : MARTEL & FILS est payé 30 jours au-delà.
     expect(vente.evenement(casDeLEntreprise("batiment"))).toContain("le cabinet médical paie à 90 jours, 30 jours au-delà des 60 jours convenus");
     // Sous le plafond, la facture porte le délai du cas, sans retard.
@@ -532,7 +529,6 @@ describe("le cas : la commande du 31 janvier", () => {
     expect([centime(k.m.resultat + k.ht), centime(k.m.tva + k.tva), centime(22_656 + k.ttc)]).toEqual([37_979, 1_665.8, 34_054.8]);
     const demande = s.etapes[0]!;
     if (demande.type !== "lecture") throw new Error("la demande est une lecture");
-    expect(demande.texte(casDeLEntreprise("nova"))[0]).toContain("CampusTech paie à 60 jours.");
-    expect(demande.texte(casDeLEntreprise("nova"))[0]).not.toContain("80 jours");
+    expect(demande.texte(casDeLEntreprise("nova"))[0]).toContain("CampusTech paie à 80 jours, 20 jours au-delà des 60 jours convenus");
   });
 });

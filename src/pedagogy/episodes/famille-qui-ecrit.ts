@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 81 — LA FAMILLE QUI ÉCRIT À L'ARS, tel que l'interface et le bilan le lisent.
+ * LA FAMILLE QUI ÉCRIT À L'ARS, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de l'EHPAD de Montchapet montre à

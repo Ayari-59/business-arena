@@ -1,80 +1,63 @@
 import { describe, expect, it } from "vitest";
-import { casDeLEntreprise } from "../../src/config/cours/cas";
-import { anneeJouee } from "../../src/config/cours/annee-de-l-arene";
-import { SEGMENTATIONS, SEGMENTER_ET_CIBLER, segmentation } from "../../src/config/cours/chapitres/segmenter-et-cibler";
-import { scenarioByCode } from "../../src/config/scenarios/registry";
-import { CONCEPTS } from "../../src/config/pedagogy/concepts";
-import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
-import type { Cas } from "../../src/config/cours/cas";
-import type { Etape, EtatDuCours } from "../../src/config/cours/types";
+import { SEGMENTATIONS, SEGMENTER_ET_CIBLER } from "../../src/config/cours/chapitres/segmenter-et-cibler";
+import { PROGRAMME } from "../../src/config/cours/registre";
+import { POINTS_A_GAGNER, QUEL_SEGMENT_CONQUERIR, segmentAConquerir } from "../../src/config/cours/situations/par-chapitre/quel-segment-conquerir";
+import { NOVA, attendus, gardeDuCas, gardeDuCurseur, gardeDuLaboratoire, gardesDeTexte, juste } from "./gardes-du-marche";
 
 /**
- * SEGMENTER ET CIBLER, SUR LES CLIENTÈLES DU SCÉNARIO ET LE TRIMESTRE DE L'ARÈNE.
+ * SEGMENTER ET CIBLER (bac STMG mercatique, palier 1), SUR LES CLIENTÈLES DE NOVA DU MONDE DU COURS,
+ * ET SON CAS : QUEL SEGMENT CONQUÉRIR ?
  *
- * Les segments sont ceux du scénario, leurs tailles et leurs ventes celles du moteur ; les
- * poids font cent ; chaque cible est le segment que sa sensibilité désigne.
+ * Refait à la main sur la fiche (monde/mercatique-de-nova.ts) : à 59 €, les étudiants demandent
+ * 9 555 − 140 × 59 = 1 295 enceintes, les familles 5 000 − 55 × 59 = 1 755, les mélomanes
+ * 2 200 − 8 × 59 = 1 728 ; les segments achètent 9 000, 5 600 et 3 500 enceintes ; 38 € de coût
+ * variable.
  */
 
-function textesDe(e: Etape, cas: Cas, etat: EtatDuCours): string[] {
-  const tableau = e.tableau ? [e.tableau(cas).titre, ...e.tableau(cas).lignes.flatMap((l) => [l.libelle, ...l.valeurs])] : [];
-  switch (e.type) {
-    case "lecture":
-      return [...e.texte(cas), e.repere?.(cas) ?? "", ...tableau];
-    case "choix":
-      return [e.question(cas, etat), ...e.options(cas, etat).flatMap((o) => [o.texte, o.retour]), ...tableau];
-    case "montants":
-      return [e.question(cas, etat), ...e.champs(cas, etat).flatMap((c) => [c.libelle, c.calcul, String(c.attendu)]), ...e.explication(cas, etat), ...tableau];
-    default:
-      return [];
-  }
-}
+const d = (x: number) => Math.round(x * 10) / 10;
+const etudiants = (p: number) => 9_555 - 140 * p;
+const CA = (1_295 + 1_755 + 1_728) * 59;
 
-describe.each(SEGMENTATIONS)("la segmentation chez %s", (code) => {
-  const cas = casDeLEntreprise(code);
-  const g = segmentation(cas);
-  const chapitre = chapitreDuCas(SEGMENTER_ET_CIBLER, cas);
-  const segments = scenarioByCode(code).scenario.market.segments;
-  const juste = (id: string) => {
-    const e = chapitre.etapes.find((x) => x.id === id);
-    if (e?.type !== "choix") throw new Error(`Pas d'étape ${id}`);
-    return e.options(cas, { soldes: {} }).find((o) => o.juste)!.texte;
-  };
-
-  it("les segments sont ceux du scénario, avec les tailles et les ventes du moteur", () => {
-    const r = anneeJouee(code).partie.rounds[0]!.results["joueur"]!;
-    expect(g.clienteles.length).toBeGreaterThanOrEqual(2);
-    // Un segment que personne n'a pu acheter ce trimestre (CampusTech chez NOVA) ne se propose pas comme cible.
-    for (const k of g.clienteles) expect(k.taille > 0 && k.ventes > 0, k.nom).toBe(true);
-    for (const k of g.clienteles) {
-      const v = r.market.bySegment[k.code]!;
-      expect(k.taille).toBe(Math.round(v.potential));
-      expect(k.ventes).toBe(Math.round(v.sold));
-      expect(k.prixNormal).toBe(segments.find((s) => s.code === k.code)!.refPrice);
-    }
-    expect(g.clienteles.reduce((t, k) => t + k.poids, 0)).toBeCloseTo(100, 0);
+describe("segmenter et cibler", () => {
+  it("au programme du bac STMG, chez NOVA seule, et son cas lui est dédié", () => {
+    expect(PROGRAMME.stmg[1]).toContain(SEGMENTER_ET_CIBLER.titre);
+    expect([...SEGMENTATIONS]).toEqual(["nova"]);
+    gardeDuCas(QUEL_SEGMENT_CONQUERIR, SEGMENTER_ET_CIBLER);
   });
 
-  it("chaque cible est le segment que sa sensibilité désigne", () => {
-    const de = (k: (typeof g.clienteles)[number]) => segments.find((s) => s.code === k.code)!;
-    const max = (f: (s: (typeof segments)[number]) => number) => g.clienteles.reduce((a, b) => (f(de(b)) > f(de(a)) ? b : a));
-    expect(juste("cible-premium")).toBe(max((s) => s.qualitySensitivity).nom);
-    expect(juste("cible-promotion")).toBe(max((s) => -s.priceElasticity).nom);
-    expect(juste("reserve")).toBe(g.clienteles.reduce((a, b) => (b.taille - b.ventes > a.taille - a.ventes ? b : a)).nom);
+  it("les textes sont propres, une seule bonne réponse, les notions existent", () => {
+    gardesDeTexte(SEGMENTER_ET_CIBLER);
   });
 
-  it("aucun texte ne sort undefined ni « de le » ; une seule bonne réponse ; les notions existent", () => {
-    const codes = new Set(CONCEPTS.map((x) => x.code));
-    for (const [i, e] of chapitre.etapes.entries()) {
-      const etat = etatAvant(chapitre, cas, i);
-      for (const x of textesDe(e, cas, etat)) {
-        expect(x, `${e.id} : ${x}`).not.toMatch(/undefined|NaN|Infinity|\[object/);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/(^|\s)(de|à) [Ll]es? /);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/ [-–—] /);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/\bde [aeiouyéèêAEIOUYÉ]/);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/\bque [AEIOUYÉ]/);
-      }
-      if (e.type === "choix") expect(e.options(cas, etat).filter((o) => o.juste), e.id).toHaveLength(1);
-      for (const n of e.notions ?? []) expect(codes.has(n), `${e.id} : ${n}`).toBe(true);
-    }
+  it("les familles pèsent le plus (36,7 %) ; les étudiants gardent la plus grosse réserve (7 705 achats ailleurs) et sont les plus sensibles au prix", () => {
+    expect(attendus(SEGMENTER_ET_CIBLER, "poids")).toEqual([d(((1_755 * 59) / CA) * 100), d((1_755 / 5_600) * 100), 5_600 - 1_755]);
+    expect(juste(SEGMENTER_ET_CIBLER, "reserve")).toEqual(["Étudiants"]);
+    expect(juste(SEGMENTER_ET_CIBLER, "cible-premium")).toEqual(["Mélomanes"]);
+    expect(juste(SEGMENTER_ET_CIBLER, "cible-promotion")).toEqual(["Étudiants"]);
+  });
+
+  it("le curseur : un tarif étudiant à 48 € garde la marge de 59 € (2 835 × 10 = 28 350 € contre 1 295 × 21 = 27 195 €) ; à 47 €, 26 775 €", () => {
+    const e = gardeDuCurseur(SEGMENTER_ET_CIBLER, "le-tarif-etudiant", 48);
+    expect(e.droites(NOVA).produit(48)).toBe(etudiants(48) * 10);
+    expect(e.droites(NOVA).cout(0)).toBe(etudiants(59) * 21);
+    expect(e.droites(NOVA).produit(47)).toBe(2_975 * 9);
+  });
+
+  it("le laboratoire : 53 € laisse la plus grande marge sur les étudiants, 2 135 × 15 = 32 025 €", () => {
+    const e = gardeDuLaboratoire(SEGMENTER_ET_CIBLER, "le-laboratoire-du-tarif");
+    expect(e.defi(NOVA).solution).toEqual({ tarif: 53 });
+    expect(etudiants(53) * 15).toBe(32_025);
+    expect(etudiants(52.5) * 14.5).toBeLessThan(32_025);
+    expect(etudiants(53.5) * 15.5).toBeLessThan(32_025);
+  });
+});
+
+describe("quel segment conquérir ?", () => {
+  it("5 points de chaque segment : 450, 280 et 175 enceintes ; les étudiants, 26 550 € et 9 450 €", () => {
+    const r = segmentAConquerir(NOVA);
+    expect(r.segments.map((k) => k.ventesEnPlus)).toEqual([9_000, 5_600, 3_500].map((t) => Math.round((t * POINTS_A_GAGNER) / 100)));
+    expect([r.meilleur.nom, r.caEnPlus, r.margeEnPlus]).toEqual(["Étudiants", 450 * 59, 450 * 21]);
+    expect([r.ventesSurNosVentes, r.plusForte.nom]).toEqual([Math.round(1_295 * 0.05), "Mélomanes"]);
+    expect(juste(QUEL_SEGMENT_CONQUERIR, "reponse").length).toBe(1);
   });
 });

@@ -1,61 +1,55 @@
-import { montantEcrit as eur } from "../../../pedagogy/cours/correcteur";
+import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import { accord } from "../accords";
 import type { Cas } from "../cas";
-import { prixRejoues } from "../decision";
-import { demandeEtPrix } from "../chapitres/demande-et-prix";
-import { MARCHES, marcheEtPart } from "../chapitres/marche-et-part-de-marche";
+import { ENTREPRISES_DE_LA_DEMANDE, demandeEtPrix } from "../chapitres/demande-et-prix";
+import { ENTREPRISES_DE_LA_PART_DE_MARCHE, marcheEtPart } from "../chapitres/marche-et-part-de-marche";
 import { prixPsychologique } from "../chapitres/prix-psychologique";
 import { SEGMENTATIONS } from "../chapitres/segmenter-et-cibler";
+import { capacite, coutVariable, trimestreAuPrix } from "../monde/economie-et-marketing";
+import { POURQUOI_LE_MARCHE_DE_NOVA, mercatiqueDe } from "../monde/mercatique-de-nova";
 import type { Situation } from "./types";
+
+/** Un montant à la française, avec le signe moins typographique. */
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 
 /**
  * CAS PRATIQUE : QUEL PRIX POUR LA SAISON ? (Bac STMG, mercatique, palier 1).
  *
- * La direction hésite entre trois prix pour lancer la saison : un prix plus bas, le prix
- * actuel, un prix plus haut. L'élève a les chiffres du marché et la demande attendue à
- * chaque prix. Il rend la part de marché, l'élasticité de la demande au prix, l'écart des
- * prix au prix que la clientèle juge normal, puis le chiffre d'affaires et la marge
- * attendus à chaque prix, et recommande un prix.
+ * La direction de NOVA hésite entre trois prix pour lancer la saison : 10 % moins cher, le prix
+ * actuel, 10 % plus cher. L'élève a les chiffres du marché et la demande attendue à chaque prix. Il
+ * rend la part de marché, l'élasticité de la demande au prix, l'écart des prix au prix que la
+ * clientèle juge normal, puis le chiffre d'affaires et la marge attendus à chaque prix, et recommande
+ * un prix.
  *
- * Aucun cours : les calculs sont ceux des chapitres « Le marché et la part de marché »,
- * « La demande répond au prix » et « Le prix psychologique », appelés tels quels
- * (`marcheEtPart`, `demandeEtPrix`, `prixPsychologique`). Les trois prix et la demande à
- * chacun sont le trimestre que l'arène rejoue (`prixRejoues`), sa capacité aussi : au-delà,
- * la demande ne se sert pas. La marge se calcule comme dans tout le cours : les ventes
- * multipliées par le prix moins le coût variable d'une unité du cas.
+ * Aucun cours : les calculs sont ceux des chapitres « Le marché et la part de marché », « La demande
+ * répond au prix » et « Le prix psychologique », appelés tels quels. Il joue dans le monde du cours
+ * (monde/economie-et-marketing.ts) : la droite de demande du trimestre, la ligne de 7 000 enceintes,
+ * le coût variable de 38 €, le premier trimestre du marché, les repères des familles.
  */
 
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const qte = (n: number) => n.toLocaleString("fr-FR");
-const ratio = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`.replace(/^-/, "−");
+const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
+const ratio = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/^-/, "−");
 const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const majuscule = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 /** « a », « a et b », « a, b et c ». */
 const enListe = (t: string[]) => (t.length < 2 ? t.join("") : `${t.slice(0, -1).join(", ")} et ${t.at(-1)}`);
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
-const aUnMarche = (c: Cas) => (MARCHES as readonly string[]).includes(c.code);
-const aDesReperes = (c: Cas) => (SEGMENTATIONS as readonly string[]).includes(c.code);
+const aUnMarche = (c: Cas) => ENTREPRISES_DE_LA_PART_DE_MARCHE.includes(c.code);
+const aDesReperes = (c: Cas) => SEGMENTATIONS.includes(c.code);
 
 const NOMS = ["le prix bas", "le prix actuel", "le prix haut"] as const;
 
 /** Les trois prix, ce que chacun rapporterait, et les repères de la clientèle. */
 export function prixDeLaSaison(c: Cas) {
   const d = demandeEtPrix(c);
-  const cvu = c.gestion.coutVariableUnitaire;
-  // La capacité du trimestre rejoué au prix actuel : la même aux trois prix, puisque seul
-  // le prix change dans le trimestre rejoué.
-  const capacite = prixRejoues(c.code)[1]!.capacite;
+  const f = mercatiqueDe(c);
+  const cvu = coutVariable(f);
+  const cap = capacite(f);
   const prix = [d.bas, d.base, d.haut].map((x, i) => {
-    const ventes = Math.min(x.demande, capacite);
-    return {
-      nom: NOMS[i]!,
-      prix: x.prix,
-      demande: x.demande,
-      ventes,
-      chiffreDAffaires: Math.round(ventes * x.prix),
-      marge: Math.round(ventes * (x.prix - cvu)),
-    };
+    const t = trimestreAuPrix(f, x.prix);
+    return { nom: NOMS[i]!, prix: x.prix, demande: t.demande, ventes: t.ventes, chiffreDAffaires: Math.round(t.chiffreDAffaires), marge: Math.round(t.marge) };
   });
   const meilleur = prix.reduce((a, b) => (b.marge > a.marge ? b : a));
   const plusGrosCa = prix.reduce((a, b) => (b.chiffreDAffaires > a.chiffreDAffaires ? b : a));
@@ -73,7 +67,7 @@ export function prixDeLaSaison(c: Cas) {
         ecartHaut: auDixieme((d.haut.prix / psy.etudie.normal - 1) * 100),
       }
     : null;
-  return { d, cvu, capacite, prix, meilleur, plusGrosCa, marche, reperes };
+  return { d, cvu, capacite: cap, prix, meilleur, plusGrosCa, marche, reperes };
 }
 
 export const QUEL_PRIX_POUR_LA_SAISON: Situation = {
@@ -93,6 +87,7 @@ export const QUEL_PRIX_POUR_LA_SAISON: Situation = {
     "Comparer le chiffre d'affaires et la marge attendus à plusieurs prix, et recommander",
   ],
   libre: false,
+  entreprises: { codes: ENTREPRISES_DE_LA_DEMANDE, pourquoi: POURQUOI_LE_MARCHE_DE_NOVA },
   etapes: [
     {
       id: "demande",
@@ -116,7 +111,7 @@ export const QUEL_PRIX_POUR_LA_SAISON: Situation = {
             ...(m
               ? [
                   { libelle: `Taille du marché sur un trimestre (${c.unites})`, valeurs: [qte(m.debut.marche)] },
-                  { libelle: `Ventes ${dE(c.entreprise)} sur ce trimestre`, valeurs: [qte(m.debut.entreprise.ventes)] },
+                  { libelle: `Ventes ${dE(c.entreprise)} sur ce trimestre`, valeurs: [qte(m.debut.nova.ventes)] },
                   { libelle: `Ventes du principal concurrent, ${m.premierConcurrent.nom}`, valeurs: [qte(m.premierConcurrent.ventes)] },
                 ]
               : []),
@@ -153,7 +148,7 @@ export const QUEL_PRIX_POUR_LA_SAISON: Situation = {
         "Calculez la part de marché de l'entreprise, puis celle du principal concurrent (ventes ÷ marché × 100, au dixième), et la part de marché relative (la part de l'entreprise ÷ celle du concurrent, au centième).",
       champs: (c) => {
         const m = prixDeLaSaison(c).marche!;
-        const e = m.debut.entreprise;
+        const e = m.debut.nova;
         return [
           { libelle: "Part de marché de l'entreprise (%)", attendu: e.part, calcul: `${qte(e.ventes)} ÷ ${qte(m.debut.marche)} × 100 = ${pct(e.part)}`, tolerance: 0.1 },
           { libelle: "Part de marché du concurrent (%)", attendu: m.premierConcurrent.part, calcul: `${qte(m.premierConcurrent.ventes)} ÷ ${qte(m.debut.marche)} × 100 = ${pct(m.premierConcurrent.part)}`, tolerance: 0.1 },

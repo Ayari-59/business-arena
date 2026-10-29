@@ -72,7 +72,7 @@ export const FICHE: FicheEnseignant = {
       "La cause est une compétence qui manque (il n'a suivi que la première demi-journée de la formation) : aucune décision de la semaine 1 ne la lui donne. L'entretien ouvre la parole, l'avertissement ajoute un peu d'effort sous la menace, mais le binôme ou la formation n'agissent qu'à partir de la semaine 3.",
       "En semaine 2, le niveau reste donc celui des dernières semaines, autour de 4 erreurs, avec les variations d'une semaine plus ou moins chargée.",
       "Sous le tirage n° 12, la semaine 1 donne 3 erreurs et la semaine 2, plus chargée, 4,65 avec l'entretien ; avec l'avertissement, 4,80 ; sans rien faire, 4,97. Les erreurs ne commencent à baisser qu'en semaine 3 avec le binôme (2,9), et passent sous l'objectif de 2,5 en semaine 5.",
-      "L'épisode juge juste à 0,5 erreur près, proche à 1,2. Selon les trente tirages du bilan, la semaine 2 donne de 2,35 à 4,95 erreurs : la valeur de la classe est dans le haut de la fourchette.",
+      "L'épisode juge juste à 1,2 erreur près, proche à 2 : « autour de 4 » est juste, même dans le haut de la fourchette. Selon les trente tirages du bilan, la semaine 2 donne de 2,35 à 4,95 erreurs : la valeur de la classe est dans le haut de la fourchette.",
     ],
     erreurs: [
       {

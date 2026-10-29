@@ -6,6 +6,11 @@ import { dateDuCours as date } from "../dates";
 import { JOURS_D_ESCOMPTE, TAUX_D_ESCOMPTE, TAUX_DE_REMISE } from "../remises";
 import type { Situation } from "./types";
 
+/** « à » devant un nom, contracté : au comité, aux laboratoires, à la société. */
+const aNom = (nom: string) => (nom.startsWith("le ") ? `au ${nom.slice(3)}` : nom.startsWith("les ") ? `aux ${nom.slice(4)}` : `à ${nom}`);
+/** « de » devant un nom, élidé devant une voyelle : d'ATLAS CONSEIL. */
+const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈÊ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
+
 /**
  * CAS PRATIQUE : LA FACTURE CONTESTÉE (comptabilité générale, palier 3).
  *
@@ -99,13 +104,13 @@ export const LA_FACTURE_CONTESTEE: Situation = {
         const { juste } = factureContestee(c);
         return [
           `« Nous avons bien reçu votre facture du ${date(juste.date)}. Elle ne tient pas compte de la remise de ${pct(TAUX_DE_REMISE)} prévue à nos conditions. Merci de nous adresser un avoir : nous réglerons dans les ${qte(JOURS_D_ESCOMPTE)} jours, escompte déduit, dès que nous l'aurons reçu. » ${c.venteCredit.client}`,
-          `La facture est déjà passée au journal de ${c.entreprise}, telle qu'elle est partie. Pas de cours cette fois : les calculs sont ceux que vous connaissez. À vous de les enchaîner.`,
+          `La facture est déjà passée au journal ${dE(c.entreprise)}, telle qu'elle est partie. Pas de cours cette fois : les calculs sont ceux que vous connaissez. À vous de les enchaîner.`,
         ];
       },
       tableau: (c) => {
         const { envoyee } = factureContestee(c);
         return {
-          titre: `La facture envoyée à ${c.venteCredit.client}`,
+          titre: `La facture envoyée ${aNom(c.venteCredit.client)}`,
           colonnes: ["Montant"],
           lignes: [
             { libelle: `${qte(c.venteCredit.quantite)} ${c.unites} à ${eur(c.venteCredit.prixUnitaire)}, hors taxes`, valeurs: [eur(envoyee.brut)] },
@@ -175,7 +180,7 @@ export const LA_FACTURE_CONTESTEE: Situation = {
       notions: ["payment_terms", "vat_payable"],
       evenement: (c) => {
         const { avoir, dateAvoir } = factureContestee(c);
-        return `Le ${date(dateAvoir)}, ${c.entreprise} envoie à ${c.venteCredit.client} un avoir de ${eur(avoir.ttc)} pour la remise oubliée.`;
+        return `Le ${date(dateAvoir)}, ${c.entreprise} envoie ${aNom(c.venteCredit.client)} un avoir de ${eur(avoir.ttc)} pour la remise oubliée.`;
       },
       ecriture: (c) => {
         const { avoir, dateAvoir } = factureContestee(c);

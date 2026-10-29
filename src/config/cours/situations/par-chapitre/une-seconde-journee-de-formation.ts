@@ -21,12 +21,12 @@ import type { Situation } from "../types";
  * ce que la journée coûte et ce qu'elle rapporte chaque année.
  *
  * Le cas est neuf par sa question : le chapitre mesure un outil, le cas une dépense pour le faire
- * adopter. Les chiffres sont ceux du chapitre (`outilNumerique` : l'effectif, les ventes manquées de
- * l'année du cours, la marge de l'arène, l'offre du prestataire) ; la seule hypothèse ajoutée est
- * l'adoption après la seconde journée, nommée ci-dessous. Comme dans le chapitre, l'arène ne simule
- * pas de logiciel : le gain reste une hypothèse du cas, chiffrée sur ses données.
+ * adopter. Les chiffres sont ceux du chapitre (`outilNumerique`, chez NOVA, dans le monde du cours :
+ * l'effectif, les ventes que le retard des chiffres fait manquer, la marge d'une enceinte, l'offre du
+ * prestataire) ; la seule hypothèse ajoutée est l'adoption après la seconde journée, nommée
+ * ci-dessous. Le cas se jouait dans huit entreprises de l'arène.
  *
- * Le verdict se calcule : dans certaines entreprises la journée se paie dès la première année,
+ * Le verdict se calcule : selon ce que l'outil rapporte, la journée se paie dès la première année,
  * dans d'autres il lui faut l'année suivante, selon ce que l'outil rapporte face au nombre de
  * personnes à former.
  */
@@ -91,7 +91,7 @@ export const UNE_SECONDE_JOURNEE_DE_FORMATION: Situation = {
       titre: "La proposition de la responsable administrative",
       texte: (c) => [
         `« Le logiciel de gestion commerciale est installé, mais cette année, seuls ${AVANT} % d'entre nous s'en servent vraiment. Le prestataire propose une seconde journée de formation pour chaque utilisateur, au prix de la première, et il assure qu'ensuite ${APRES} % de l'équipe s'en servira. Cette journée se paie-t-elle pour ${c.entreprise}, et quand ? »`,
-        `Pas de cours cette fois : les chiffres de l'outil sont ceux du chapitre. L'arène ne simule pas de logiciel : le gain de l'outil reste une hypothèse du cas, ${PART} % des ventes manquées alors que l'entreprise pouvait produire, chiffrée sur les données de l'arène. Le gain suit la part de l'équipe qui se sert de l'outil.`,
+        `Pas de cours cette fois : les chiffres de l'outil sont ceux du chapitre. Le gain de l'outil reste une hypothèse du cas : ${PART} % des ventes que le retard des chiffres fait manquer, chiffrées à la marge d'une ${c.unite}. Le gain suit la part de l'équipe qui se sert de l'outil.`,
       ],
       tableau: (c) => {
         const s = secondeJournee(c);
@@ -101,7 +101,7 @@ export const UNE_SECONDE_JOURNEE_DE_FORMATION: Situation = {
           lignes: [
             { libelle: "Utilisateurs (l'effectif)", valeurs: [qte(s.o.utilisateurs)] },
             { libelle: "Seconde journée de formation, par utilisateur", valeurs: [eur(FORMATION_PAR_UTILISATEUR)] },
-            { libelle: `Ventes manquées alors que l'entreprise pouvait produire (${c.unites})`, valeurs: [qte(s.o.manqueesAvecDeLaPlace)] },
+            { libelle: `Ventes manquées à cause du retard des chiffres (${c.unites})`, valeurs: [qte(s.o.ventesManquees)] },
             { libelle: "Part de ces ventes que l'outil fait retrouver, si toute l'équipe s'en sert", valeurs: [`${PART} %`] },
             { libelle: "Marge sur coût variable moyenne d'une unité vendue", valeurs: [eur(s.o.marge)] },
             { libelle: "Adoption cette année", valeurs: [`${AVANT} %`] },
@@ -124,7 +124,7 @@ export const UNE_SECONDE_JOURNEE_DE_FORMATION: Situation = {
           {
             libelle: "Gain annuel si toute l'équipe s'en sert",
             attendu: s.o.gain,
-            calcul: `${qte(s.o.manqueesAvecDeLaPlace)} × ${PART} % = ${qte(s.o.ventesRetrouvees)} ; ${qte(s.o.ventesRetrouvees)} × ${eur(s.o.marge)} = ${eur(s.o.gain)}`,
+            calcul: `${qte(s.o.ventesManquees)} × ${PART} % = ${qte(s.o.ventesRetrouvees)} ; ${qte(s.o.ventesRetrouvees)} × ${eur(s.o.marge)} = ${eur(s.o.gain)}`,
             tolerance: 1,
           },
           { libelle: `Gain annuel à ${AVANT} % d'adoption`, attendu: s.o.gainAdopte, calcul: `${eur(s.o.gain)} × ${AVANT} % = ${eur(s.o.gainAdopte)}`, tolerance: 1 },

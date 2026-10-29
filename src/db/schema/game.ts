@@ -1,6 +1,7 @@
 import {
   type AnyPgColumn,
   bigint,
+  boolean,
   index,
   integer,
   interval,
@@ -120,6 +121,12 @@ export const games = pgTable(
      * (services/tour-d-essai.service.ts, `horsArchivesDEssai`) et part avec sa partie.
      */
     essaiDe: uuid("essai_de").references((): AnyPgColumn => games.id, { onDelete: "cascade" }),
+    /**
+     * LE TUTEUR IA DE LA PARTIE (migration 0050) : l'enseignant peut le couper pour sa
+     * classe. Vérifié côté serveur à chaque question (services/tuteur.service.ts). Vrai par
+     * défaut : le tuteur reste soumis aux réglages de l'admin et au droit du compte.
+     */
+    tuteurActif: boolean("tuteur_actif").notNull().default(true),
     ...timestamps,
   },
   (t) => [

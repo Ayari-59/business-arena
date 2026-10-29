@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 105 — LE PIC DES FÊTES, tel que l'interface et le bilan le lisent.
+ * LE PIC DES FÊTES, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord des lignes desserts de Maëwenn

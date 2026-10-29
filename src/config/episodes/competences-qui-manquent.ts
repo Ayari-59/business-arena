@@ -466,7 +466,7 @@ export const ETAPES: readonly Etape[] = [
         cout: 0.5,
         nature: "decisive",
         resultat:
-          "René peut liquider sa retraite et reprendre un contrat à temps partiel chez nous, sans plafond de revenus : deux jours par semaine, 500 € chargés par semaine, à partir de la semaine 9. Reporter son départ à plein temps, en revanche, l'obligerait à décaler sa retraite et ses projets : c'est rarement accepté.",
+          "René a l'âge légal et tous ses trimestres. S'il fait liquider toutes ses retraites, de base et complémentaires, son cumul emploi-retraite est intégral : il peut reprendre un contrat à temps partiel chez nous, sans plafond de revenus et sans délai d'attente, une fois son contrat actuel rompu. Depuis la réforme de 2023, ce travail lui ouvre aussi de nouveaux droits, pour une seconde pension plafonnée. Sans ces conditions, le cumul serait plafonné, et une reprise chez son dernier employeur devrait attendre six mois. Ce que nous proposerions : deux jours par semaine, 500 € chargés par semaine, à partir de la semaine 9. Reporter son départ à plein temps, en revanche, l'obligerait à décaler sa retraite et ses projets : c'est rarement accepté.",
       },
       {
         id: "cafe",

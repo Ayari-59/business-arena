@@ -535,9 +535,17 @@ describe("l'inscription dynamique", () => {
     );
 
   it("refuse un jeton inconnu, sans rien demander à la plateforme", async () => {
-    const r = await inscriptionGet(new Request(adresse("jeton-inconnu-0123456789")));
-    expect(r.status).toBe(403);
-    expect((await poster("jeton-inconnu-0123456789")).status).toBe(403);
+    // Aucun appel réseau, ni en GET ni en POST (audit, P2-1) : la configuration était
+    // lue AVANT le jeton en POST, et n'importe qui faisait appeler une adresse au serveur.
+    const reseau = vi.spyOn(globalThis, "fetch");
+    try {
+      const r = await inscriptionGet(new Request(adresse("jeton-inconnu-0123456789")));
+      expect(r.status).toBe(403);
+      expect((await poster("jeton-inconnu-0123456789")).status).toBe(403);
+      expect(reseau).not.toHaveBeenCalled();
+    } finally {
+      reseau.mockRestore();
+    }
     expect(nouvelle.inscriptions).toHaveLength(0);
   });
 

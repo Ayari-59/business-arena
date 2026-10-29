@@ -39,11 +39,11 @@ export const DIAGNOSTICS = [
   },
 ] as const;
 
-const BENSAID = {
+const BENKHALED = {
   de: "Walid Benkhaled",
   role: "Délégué syndical, dépôt de Chassieu",
 } as const;
-const LE_GOFF = {
+const JACQUIER = {
   de: "Laurine Jacquier",
   role: "Élue du CSE, dépôt de Moirans",
 } as const;
@@ -147,20 +147,20 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...BENSAID,
+          ...BENKHALED,
           texte: "2,5 %, à prendre ou à laisser ? Alors on laisse. Le préavis est maintenu.",
         },
       ],
       [
         {
-          ...LE_GOFF,
+          ...JACQUIER,
           texte:
             "C'est la première fois qu'on nous montre les vrais chiffres. On ne retire pas le préavis, mais on a de quoi discuter : la grille, les samedis, les quais.",
         },
       ],
       [
         {
-          ...BENSAID,
+          ...BENKHALED,
           texte:
             "3 % dès la première réunion, on prend note. On consulte les équipes ce week-end et on vous répond lundi.",
         },
@@ -181,13 +181,13 @@ export const ETAPES: readonly Etape[] = [
     messages: (ctx) => [
       ctx.preavisLeve
         ? {
-            ...BENSAID,
+            ...BENKHALED,
             heure: "08:10",
             texte:
               "Le préavis est levé, comme convenu. Mais rien n'est signé : les équipes attendent de voir la suite.",
           }
         : {
-            ...BENSAID,
+            ...BENKHALED,
             heure: "08:10",
             alerte: true,
             texte:
@@ -257,21 +257,21 @@ export const ETAPES: readonly Etape[] = [
       ],
       [
         {
-          ...BENSAID,
+          ...BENKHALED,
           texte:
             "Vous écrivez à nos collègues chez eux, par-dessus nos têtes ? Quelques-uns hésitent. La plupart l'ont très mal pris.",
         },
       ],
       [
         {
-          ...LE_GOFF,
+          ...JACQUIER,
           texte:
             "Une étude lancée cette semaine, c'est du concret. On réunit les équipes vendredi pour décider du préavis.",
         },
       ],
       [
         {
-          ...BENSAID,
+          ...BENKHALED,
           texte:
             "On présente l'avance aux équipes vendredi. Tout le monde a bien compris que le préavis avait payé.",
         },
@@ -284,7 +284,7 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 7,
     messages: (ctx) => [
       {
-        ...LE_GOFF,
+        ...JACQUIER,
         heure: "10:20",
         alerte: true,
         texte:
@@ -340,28 +340,28 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...BENSAID,
+          ...BENKHALED,
           texte:
             "2,8 %, on note que ça bouge. Mais les premiers niveaux resteront collés au Smic, et les samedis, on n'en parle pas.",
         },
       ],
       [
         {
-          ...LE_GOFF,
+          ...JACQUIER,
           texte:
             "Une prime, ça se dépense en juin et ça ne compte ni pour les congés ni pour la retraite. Les équipes veulent du durable.",
         },
       ],
       [
         {
-          ...LE_GOFF,
+          ...JACQUIER,
           texte:
             "Les +40 € pour les premiers niveaux et des samedis connus à l'avance, c'est exactement ce que demandaient les quais. On en parle aux équipes.",
         },
       ],
       [
         {
-          ...BENSAID,
+          ...BENKHALED,
           texte: "Vous attendez notre proposition ? La voici : 4 %, et on ne descendra pas.",
         },
       ],
@@ -381,13 +381,13 @@ export const ETAPES: readonly Etape[] = [
       },
       ctx.paquet
         ? {
-            ...LE_GOFF,
+            ...JACQUIER,
             heure: "11:00",
             texte:
               "On a appris que la logistique prépare les samedis. On vous rappelle ce qui est sur la table : des plannings connus quinze jours avant.",
           }
         : {
-            ...LE_GOFF,
+            ...JACQUIER,
             heure: "11:00",
             texte:
               "On a appris que la logistique prépare les samedis. Encore annoncés le jeudi pour le samedi ?",
@@ -426,14 +426,14 @@ export const ETAPES: readonly Etape[] = [
       null,
       [
         {
-          ...LE_GOFF,
+          ...JACQUIER,
           texte:
             "Annoncés jeudi pour samedi, encore. Aux quais, tout le monde y voit la réponse de la direction à la négociation.",
         },
       ],
       [
         {
-          ...BENSAID,
+          ...BENKHALED,
           texte:
             "Payés double et connus à l'avance, personne ne s'en plaindra. Obligatoires, ça passe moins bien chez ceux qui ont des enfants.",
         },
@@ -453,7 +453,7 @@ export const ETAPES: readonly Etape[] = [
     jusqua: 11,
     messages: (ctx) => [
       {
-        ...BENSAID,
+        ...BENKHALED,
         heure: "09:00",
         alerte: true,
         texte:
@@ -515,27 +515,27 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...BENSAID,
+          ...BENKHALED,
           texte:
             "C'est signé. Les équipes retiendront qu'il suffisait de menacer la saison. Nous aussi.",
         },
       ],
       [
         {
-          ...LE_GOFF,
+          ...JACQUIER,
           texte: "Pas d'accord, pas de signature. Nous appelons à la grève la semaine prochaine.",
         },
       ],
       [
         {
-          ...BENSAID,
+          ...BENKHALED,
           texte:
             "On présente votre dernière proposition aux équipes lundi matin, dans les trois dépôts. Réponse lundi soir.",
         },
       ],
       [
         {
-          ...BENSAID,
+          ...BENKHALED,
           texte:
             "Une médiation, d'accord. Mais tant que rien n'est signé, le mot d'ordre de grève tient.",
         },
@@ -603,27 +603,27 @@ export const ETAPES: readonly Etape[] = [
     reactions: [
       [
         {
-          ...LE_GOFF,
+          ...JACQUIER,
           texte:
             "Le calendrier est affiché à Moirans. Pour une fois, on sait quoi, quand, et qui s'en occupe.",
         },
       ],
       [
         {
-          ...BENSAID,
+          ...BENKHALED,
           texte:
             "Un mois de décalage sans rappel, après ce qui a été conclu ? Les équipes s'en souviendront à la prochaine négociation.",
         },
       ],
       [
         {
-          ...BENSAID,
+          ...BENKHALED,
           texte: "Merci pour la prime. Aux quais, on en conclut que le conflit rapporte.",
         },
       ],
       [
         {
-          ...LE_GOFF,
+          ...JACQUIER,
           texte:
             "Les salariés ont cherché leur augmentation sur leur fiche de paie, sans la trouver. Personne ne leur a dit pourquoi.",
         },
@@ -668,4 +668,4 @@ export const REPONSES = {
     "Désolés : en pleine saison, aucun cariste disponible. Nous continuons à chercher, sans garantie.",
 } as const;
 
-export { BENSAID, KOUASSI, LE_GOFF, MALLET };
+export { BENKHALED, KOUASSI, JACQUIER, MALLET };

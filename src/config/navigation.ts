@@ -409,6 +409,7 @@ export const NAVIGATION_ADMIN: readonly Pastille[] = [
   { code: "lti", href: "/admin/lti", libelle: "Moodle" },
   { code: "renater", href: "/admin/renater", libelle: "RENATER" },
   { code: "theme", href: "/admin/theme", libelle: "Thème" },
+  { code: "effacements", href: "/admin/effacements", libelle: "Effacements" },
 ];
 
 /**

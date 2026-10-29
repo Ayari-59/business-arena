@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 40 — LE CLIENT À RISQUE, tel que l'interface et le bilan le lisent.
+ * LE CLIENT À RISQUE, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord du crédit montre, ce que la

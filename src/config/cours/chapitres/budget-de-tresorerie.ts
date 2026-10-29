@@ -1,8 +1,7 @@
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import type { Cas } from "../cas";
 import { budgetDeTresorerie, investissementDeLaFiche, leviersDeBase, moisDeDecalage, tableauDeBord, type LeviersDuSemestre } from "../monde/couts-et-budgets";
-import { DELAI_MAXIMAL_CONVENU } from "../monde/delais-et-tva";
-import { GESTION_DU_COURS, type FicheDeGestion } from "../monde/nova-gestion";
+import { DELAI_CONVENU_DE_CAMPUSTECH, GESTION_DU_COURS, type FicheDeGestion } from "../monde/nova-gestion";
 import type { Chapitre, TableauDeDonnees } from "../types";
 
 /**
@@ -15,33 +14,25 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *
  * L'objet : le budget de trésorerie mensuel de NOVA, de janvier à juin, toutes taxes comprises, au
  * sens du BTS CG et du DCG. Le budget des encaissements, clientèle par clientèle (les particuliers
- * paient à la commande, CampusTech à 60 jours, le délai convenu, qu'elle tient) ; le budget des
- * décaissements (le fournisseur à
+ * paient à la commande, CampusTech, mauvais payeur, 20 jours après les 60 jours convenus) ; le budget des décaissements (le fournisseur à
  * 22 jours, les autres coûts variables, le loyer, la paie, les cotisations du mois précédent, la TVA
  * à décaisser du mois précédent, l'échéance de l'emprunt) ; la trésorerie de fin de mois. Puis ce
- * que le budget fait décider : jusqu'où le budget supporterait que CampusTech paie tard (une
- * hypothèse : au-delà de 60 jours, c'est un retard que la loi ne permet pas de convenir), et comment
- * financer en février un banc de mesure de 30 000 € HT sans découvert.
+ * que le budget fait décider : jusqu'où CampusTech peut payer tard, et comment financer en avril un
+ * banc de mesure de 30 000 € HT sans découvert.
  *
  * Le piège central : un délai ou une TVA ne coûtent rien au résultat, mais ils déplacent l'argent
- * dans le temps. La TVA du banc revient en mars ; le découvert, lui, tombe en février.
- *
- * CAMPUSTECH À 60 JOURS (décision du propriétaire, octobre 2026) : le banc passe d'avril à février
- * (nova-gestion.ts), et le mois guidé avec lui. En février, CampusTech ne paie encore rien (sa facture
- * de janvier rentre en mars) : l'étape des encaissements le fait trouver. Le point bas est février,
- * où se paient d'un coup les dettes de janvier ; mars, le mois autonome, voit rentrer la première
- * facture de CampusTech et tomber l'échéance de l'emprunt.
+ * dans le temps. La TVA du banc revient en mai ; le découvert, lui, tombe en avril.
  *
  * LES TROIS TEMPS (demande du propriétaire, octobre 2026 : le niveau d'arrivée est celui du DCG) :
- *   · guidé : intro, le-mois-de-l-echeance, les-encaissements-du-mois, la-tva-a-decaisser,
- *     les-decaissements-du-mois (la formule est au repère ou dans la question, qui nomme les
+ *   · guidé : intro, le-mois-de-l-echeance, les-encaissements-d-avril, la-tva-a-decaisser,
+ *     les-decaissements-d-avril (la formule est au repère ou dans la question, qui nomme les
  *     chiffres) ;
  *   · autonome : mars-sans-aide, le-point-bas (ni formule ni chiffres donnés : l'élève les prend dans
  *     le tableau de l'introduction ; le calcul de la correction montre le chemin) ;
  *   · l'expérience avant la formule (prédire, manipuler, constater, formaliser) : predire-le-delai
  *     puis le-delai-au-curseur (le décalage de paiement de CampusTech, la trésorerie du 30 juin face
  *     au découvert) avant le-delai-a-rebours ; predire-le-banc puis les-ventes-au-curseur (les ventes
- *     de février aux particuliers, banc acheté) avant le-minimum-a-rebours ;
+ *     d'avril aux particuliers, banc acheté) avant le-minimum-a-rebours ;
  *   · le laboratoire : le-laboratoire-de-tresorerie (délai de CampusTech, délai du fournisseur,
  *     hausse des ventes, mois de l'achat : financer le banc sans découvert), avec un graphique de la
  *     trésorerie selon le délai de CampusTech, qui va par marches ;
@@ -51,27 +42,20 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     l'encaissement) ; puis que-faire-du-decouvert et la synthèse.
  */
 
-/** Le mois que le chapitre bâtit pas à pas : février, le mois du banc (celui de la fiche). */
+/** Le mois que le chapitre bâtit pas à pas : avril, le mois du banc (celui de la fiche). */
 export const moisGuide = (f: FicheDeGestion) => f.semestre.investissement.mois;
 
 /** Le mois que l'élève refait seul : mars, la fin du premier trimestre, où tombe l'échéance de l'emprunt. */
 export const MOIS_AUTONOME = 2;
 
-/**
- * Le délai que le pari suppose : 160 jours au lieu des 60 convenus. Une hypothèse d'école, bien
- * au-delà du plafond légal (DELAI_MAXIMAL_CONVENU) : les textes le rappellent.
- */
+/** Le paiement que suppose le pari : CampusTech, déjà en retard, paierait au double de son délai réel, 160 jours après sa facture. */
 export const DELAI_DU_PARI = 160;
 
 /** Les bornes du curseur du décalage de CampusTech, en mois entre la facture et le paiement. */
 export const DECALAGE_DU_CURSEUR = { min: 0, max: 6 } as const;
 
-/**
- * Les bornes du curseur des ventes de février aux particuliers, en enceintes : 1 130 au budget, et le
- * minimum qui évite le découvert du banc dedans (elles allaient de 1 500 à 1 700 quand le banc tombait
- * en avril).
- */
-export const VENTES_DU_CURSEUR = { min: 1_100, max: 1_300 } as const;
+/** Les bornes du curseur des ventes d'avril aux particuliers, en enceintes. */
+export const VENTES_DU_CURSEUR = { min: 1_500, max: 1_700 } as const;
 
 /** Les leviers du laboratoire : bornes et pas des délais (en jours) et de la hausse des ventes (en %). */
 export const LEVIERS_DU_LABORATOIRE = {
@@ -87,7 +71,7 @@ const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
 const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-/** « d'avril », « de février » : l'élision devant une voyelle. */
+/** « d'avril », « de mai » : l'élision devant une voyelle. */
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/i.test(nom) ? `d'${nom}` : `de ${nom}`);
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const enBanque = (t: number) => (t >= 0 ? `${eur(t)} en banque` : `un découvert de ${eur(-t)}`);
@@ -95,8 +79,8 @@ const enBanque = (t: number) => (t >= 0 ? `${eur(t)} en banque` : `un découvert
 /** La fiche de gestion du cours. */
 export const ficheDe = (c: Pick<Cas, "code">): FicheDeGestion => GESTION_DU_COURS[c.code]!;
 
-/** La fiche où les particuliers achètent `quantite` enceintes le mois guidé (février) : seul ce mois change. */
-export function ficheAvecLesVentesDuMoisGuide(f: FicheDeGestion, quantite: number): FicheDeGestion {
+/** La fiche où les particuliers achètent `quantite` enceintes en avril : seul ce mois change. */
+export function ficheAvecLesVentesDAvril(f: FicheDeGestion, quantite: number): FicheDeGestion {
   const k = moisGuide(f);
   return {
     ...f,
@@ -135,8 +119,8 @@ export function laboratoireDeTresorerie(f: FicheDeGestion, p: Readonly<Record<st
   const b = budgetDeTresorerie(f, l);
   const k = moisGuide(f);
   return {
-    duMois: b.mois[k]!.tresorerieFin,
-    moisSuivant: b.mois[k + 1]!.tresorerieFin,
+    avril: b.mois[k]!.tresorerieFin,
+    mai: b.mois[k + 1]!.tresorerieFin,
     juin: b.tresorerieFin,
     plusBas: b.plusBas,
     creancesClients: b.fin.creancesClients,
@@ -171,12 +155,11 @@ function calculerLeChapitre(c: Pick<Cas, "code">) {
   const inv = investissementDeLaFiche(f);
   const avecLeBanc = budgetDeTresorerie(f, { investissement: inv });
   const k = moisGuide(f);
-  const duMois = base.mois[k]!;
-  const moisDAvant = base.mois[k - 1]!;
+  const avril = base.mois[k]!;
+  const mars = base.mois[k - 1]!;
   const a = base.mois[MOIS_AUTONOME]!;
   const decalage = moisDeDecalage(ct.jourDeFacturation, ct.delai, s.joursDuMoisCommercial);
   const factureCampusTech = auCentime(ct.quantites[0]! * prixTtc);
-  const factureDuMois = auCentime(ct.quantites[moisGuide(f)]! * prixTtc);
   const resultats = tableauDeBord(f).mois.map((x) => x.resultat);
 
   // Le curseur du décalage : le plus long qui laisse le 30 juin sans découvert.
@@ -186,7 +169,7 @@ function calculerLeChapitre(c: Pick<Cas, "code">) {
   const delaiMax = delaiLePlusLong(ct.jourDeFacturation, decalageMax, s.joursDuMoisCommercial);
   const auPari = budgetDeTresorerie(f, { delais: { ...leviersDeBase(f).delais, campustech: DELAI_DU_PARI } });
 
-  // Le minimum de ventes du mois guidé, banc acheté : ce qu'une enceinte de plus laisse en banque à la fin du mois.
+  // Le minimum de ventes d'avril, banc acheté : ce qu'une enceinte de plus laisse en banque fin avril.
   const netParEnceinte = auCentime(prixTtc - autresTtc);
   const manque = -avecLeBanc.mois[k]!.tresorerieFin;
   const enPlus = Math.ceil(manque / netParEnceinte - 1e-9);
@@ -202,8 +185,8 @@ function calculerLeChapitre(c: Pick<Cas, "code">) {
   const fournisseurMin = Math.min(...grille(L.fournisseur).filter((d) => passe({ ...depart, fournisseur: d })));
   const hausseMin = Math.min(...grille(L.hausse).filter((h) => passe({ ...depart, hausse: h })));
 
-  // La TVA du banc : la déclaration du mois guidé, payée le mois suivant.
-  const tvaDuMoisGuide = avecLeBanc.mois[k]!.tva;
+  // La TVA du banc : la déclaration d'avril, payée en mai.
+  const tvaDAvril = avecLeBanc.mois[k]!.tva;
   return {
     f,
     s,
@@ -220,12 +203,11 @@ function calculerLeChapitre(c: Pick<Cas, "code">) {
     inv,
     invTtc: auCentime(inv.montantHt * (1 + tva)),
     k,
-    duMois,
-    moisDAvant,
+    avril,
+    mars,
     a,
     decalage,
     factureCampusTech,
-    factureDuMois,
     resultats,
     decalageMax,
     auMax,
@@ -240,7 +222,7 @@ function calculerLeChapitre(c: Pick<Cas, "code">) {
     campusTechMax,
     fournisseurMin,
     hausseMin,
-    tvaDuMoisGuide,
+    tvaDAvril,
     nom: (i: number) => s.mois[i]!.nom,
   };
 }
@@ -257,7 +239,7 @@ export function tableauDesDonnees(c: Pick<Cas, "code">): TableauDeDonnees {
     colonnes: s.mois.map((m) => majuscule(m.nom)),
     lignes: [
       { libelle: "Enceintes vendues aux particuliers, payées à la commande", valeurs: x.part.quantites.map(qte) },
-      { libelle: `Enceintes vendues à CampusTech, facturées le ${x.ct.jourDeFacturation}, payées à ${x.ct.delai} jours`, valeurs: x.ct.quantites.map(qte) },
+      { libelle: `Enceintes vendues à CampusTech, facturées le ${x.ct.jourDeFacturation}, dues à ${DELAI_CONVENU_DE_CAMPUSTECH} jours, payées en retard, ${x.ct.delai} jours après la facture`, valeurs: x.ct.quantites.map(qte) },
       { libelle: "Loyer, sans TVA", valeurs: s.mois.map(() => eur(x.m.chargesFixes.loyer)) },
       { libelle: "Salaires nets, payés dans le mois", valeurs: s.mois.map(() => eur(s.paie.net)) },
       { libelle: "Cotisations sociales du mois, payées le mois suivant", valeurs: s.mois.map(() => eur(s.paie.cotisations)) },
@@ -305,7 +287,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
   ],
   titre: "Le budget de trésorerie",
   accroche:
-    "Bâtir mois par mois le budget de trésorerie de NOVA, toutes taxes comprises : ce que chaque clientèle paiera et quand, ce qui sortira, la TVA à décaisser le mois suivant. Puis s'en servir : jusqu'où le budget supporterait qu'un client paie tard, et comment financer un banc de 30 000 € en février sans découvert.",
+    "Bâtir mois par mois le budget de trésorerie de NOVA, toutes taxes comprises : ce que chaque clientèle paiera et quand, ce qui sortira, la TVA à décaisser le mois suivant. Puis s'en servir : jusqu'où un client peut payer tard, et comment financer un banc de 30 000 € en avril sans découvert.",
   objectifs: [
     "Dater un encaissement ou un décaissement à partir d'une date de facture et d'un délai",
     "Bâtir le budget des encaissements, clientèle par clientèle, et celui des décaissements, toutes taxes comprises",
@@ -329,7 +311,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
         const x = budgetDuChapitre(c);
         const s = x.s;
         return [
-          `Ce chapitre se joue dans la simulation du cours, chez ${x.f.entreprise}, de janvier à juin. ${x.f.entreprise} vend une enceinte, ${eur(x.m.prix)} HT, à ses clientèles : les particuliers, en ligne, qui paient à la commande, et CampusTech, un client professionnel, facturé le ${x.ct.jourDeFacturation} de chaque mois et payé à ${x.ct.delai} jours.`,
+          `Ce chapitre se joue dans la simulation du cours, chez ${x.f.entreprise}, de janvier à juin. ${x.f.entreprise} vend une enceinte, ${eur(x.m.prix)} HT, à ses clientèles : les particuliers, en ligne, qui paient à la commande, et CampusTech, un client professionnel, facturé le ${x.ct.jourDeFacturation} de chaque mois. Le délai convenu est de ${DELAI_CONVENU_DE_CAMPUSTECH} jours, le plafond légal entre professionnels ; mais CampusTech est un mauvais payeur : elle paie en retard, ${x.ct.delai} jours après sa facture.`,
           `Le dirigeant veut savoir s'il manquera d'argent. Le compte de résultat ne le dit pas : une vente n'est pas un encaissement, un achat n'est pas un paiement. Le budget de trésorerie suit l'argent lui-même, à la date où il entre et où il sort, et toutes taxes comprises, puisque c'est la somme TTC qui passe en banque. La TVA est de ${pct(x.tva)}.`,
           `Une enceinte demande ${eur(x.m.coutVariable.composants)} HT de composants, achetés chez ${s.fournisseur.nom}, facturés le ${s.fournisseur.jourDeFacturation} et payés à ${s.fournisseur.delai} jours, et ${eur(x.m.coutVariable.autres)} HT d'autres coûts variables (${x.m.autresCoutsVariables}), payés dans le mois. La TVA du mois (collectée sur les ventes, moins celle des achats, déductible) se déclare et se paie le mois suivant. L'emprunt de ${eur(s.emprunt.capitalRestantDu)} à ${pct(s.emprunt.tauxAnnuel)} l'an se rembourse le dernier mois de chaque trimestre : le capital du tableau, plus les intérêts du trimestre.`,
           `La simulation suppose que ${x.f.entreprise} n'a pas de stock : elle achète ses composants le mois où elle les consomme. Un délai se compte en mois de ${s.joursDuMoisCommercial} jours. Le budget part de ${eur(s.tresorerieDeDepart)} en banque au 1er janvier, sans créance ni dette, et les ventes ne répondent pas au prix. Une trésorerie négative est un découvert.`,
@@ -347,7 +329,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
       notions: ["payment_terms", "cash_budget"],
       question: (c) => {
         const x = budgetDuChapitre(c);
-        return `CampusTech reçoit sa facture de janvier le ${x.ct.jourDeFacturation} janvier, et la paie à ${x.ct.delai} jours. En comptant des mois de ${x.s.joursDuMoisCommercial} jours, en quel mois ${x.f.entreprise} l'encaisse-t-elle ?`;
+        return `CampusTech reçoit sa facture de janvier le ${x.ct.jourDeFacturation} janvier. Elle la doit à ${DELAI_CONVENU_DE_CAMPUSTECH} jours, mais la paie en retard, ${x.ct.delai} jours après la facture. En comptant des mois de ${x.s.joursDuMoisCommercial} jours, en quel mois ${x.f.entreprise} l'encaisse-t-elle ?`;
       },
       options: (c) => {
         const x = budgetDuChapitre(c);
@@ -362,7 +344,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
           {
             texte: `En ${x.nom(sansLeJour)}`,
             juste: false,
-            retour: `Non : ${x.ct.delai} jours, comptés depuis le 1er janvier, finiraient en ${x.nom(sansLeJour)} ; mais ils partent du ${x.ct.jourDeFacturation}. Le ${jour}e jour tombe en ${x.nom(x.decalage)}.`,
+            retour: `Non : ${x.ct.delai} jours font moins de ${x.decalage} mois, mais ils partent du ${x.ct.jourDeFacturation}, pas du 1er. Le ${jour}e jour tombe en ${x.nom(x.decalage)}.`,
           },
           {
             texte: "En janvier",
@@ -373,14 +355,14 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
       },
     },
     {
-      id: "les-encaissements-du-mois",
+      id: "les-encaissements-d-avril",
       type: "montants",
       titre: "Le budget des encaissements",
       notions: ["cash_budget", "payment_terms"],
       question: (c) => {
         const x = budgetDuChapitre(c);
         const n = x.nom(x.k);
-        return `En ${n}, ${x.f.entreprise} vend ${qte(x.part.quantites[x.k]!)} enceintes aux particuliers, à ${eur(x.m.prix)} HT, payées à la commande, et ${qte(x.ct.quantites[x.k]!)} à CampusTech, payées à ${x.ct.delai} jours. Calculez, TVA de ${pct(x.tva)} comprise, les ventes ${dE(n)} aux particuliers, la facture ${dE(n)} de CampusTech, puis le total des encaissements ${dE(n)}.`;
+        return `En ${n}, ${x.f.entreprise} vend ${qte(x.part.quantites[x.k]!)} enceintes aux particuliers, à ${eur(x.m.prix)} HT, payées à la commande, et encaisse la facture de janvier de CampusTech (${qte(x.ct.quantites[0]!)} enceintes). Calculez, TVA de ${pct(x.tva)} comprise, les ventes ${dE(n)} aux particuliers, la facture de janvier de CampusTech, puis le total des encaissements ${dE(n)}.`;
       },
       champs: (c) => {
         const x = budgetDuChapitre(c);
@@ -388,21 +370,18 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
         return [
           {
             libelle: `Ventes TTC ${dE(n)} aux particuliers`,
-            attendu: x.duMois.encaissements.particuliers,
-            calcul: `${qte(x.part.quantites[x.k]!)} × ${eur(x.m.prix)} × ${qte(1 + x.tva)} = ${eur(x.duMois.encaissements.particuliers)}`,
+            attendu: x.avril.encaissements.particuliers,
+            calcul: `${qte(x.part.quantites[x.k]!)} × ${eur(x.m.prix)} × ${qte(1 + x.tva)} = ${eur(x.avril.encaissements.particuliers)}`,
           },
           {
-            libelle: `Facture TTC ${dE(n)} de CampusTech`,
-            attendu: x.factureDuMois,
-            calcul: `${qte(x.ct.quantites[x.k]!)} × ${eur(x.m.prix)} × ${qte(1 + x.tva)} = ${eur(x.factureDuMois)}, encaissée en ${x.nom(x.k + x.decalage)}`,
+            libelle: "Facture TTC de janvier de CampusTech",
+            attendu: x.avril.encaissements.campustech,
+            calcul: `${qte(x.ct.quantites[0]!)} × ${eur(x.m.prix)} × ${qte(1 + x.tva)} = ${eur(x.avril.encaissements.campustech)}`,
           },
           {
             libelle: `Encaissements ${dE(n)}`,
-            attendu: x.duMois.encaissements.total,
-            calcul:
-              x.k < x.decalage
-                ? `${eur(x.duMois.encaissements.particuliers)} des particuliers ; CampusTech ne paie rien en ${n}, sa facture de janvier rentre en ${x.nom(x.decalage)} : ${eur(x.duMois.encaissements.total)}`
-                : `${eur(x.duMois.encaissements.particuliers)} + ${eur(x.duMois.encaissements.campustech)} de la facture ${dE(x.nom(x.k - x.decalage))} de CampusTech = ${eur(x.duMois.encaissements.total)}`,
+            attendu: x.avril.encaissements.total,
+            calcul: `${eur(x.avril.encaissements.particuliers)} + ${eur(x.avril.encaissements.campustech)} = ${eur(x.avril.encaissements.total)}`,
           },
         ];
       },
@@ -410,11 +389,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
         const x = budgetDuChapitre(c);
         const n = x.nom(x.k);
         return [
-          `En ${n}, ${x.f.entreprise} encaisse les ventes ${dE(n)} aux particuliers, ${
-            x.k < x.decalage
-              ? `mais rien de CampusTech : à ${x.ct.delai} jours, sa facture de janvier rentre en ${x.nom(x.decalage)}, celle ${dE(n)} en ${x.nom(x.k + x.decalage)}`
-              : `mais la facture ${dE(x.nom(x.k - x.decalage))} de CampusTech`
-          }. Les ventes à CampusTech ${dE(x.nom(x.s.mois.length - x.decalage))} à juin ne rentreront qu'après le 30 juin : elles restent en créances clients, ${eur(x.base.fin.creancesClients)} TTC.`,
+          `En ${n}, ${x.f.entreprise} encaisse les ventes ${dE(n)} aux particuliers, mais les ventes de janvier à CampusTech. Les ventes à CampusTech ${dE(x.nom(x.s.mois.length - x.decalage))} à juin ne rentreront qu'après le 30 juin : elles restent en créances clients, ${eur(x.base.fin.creancesClients)} TTC.`,
           `C'est la formule du budget des encaissements : encaissements = créances du début + ventes TTC − créances de fin. Sur le semestre, ${eur(0)} + ${eur(x.base.totaux.ventesTtc)} − ${eur(x.base.fin.creancesClients)} = ${eur(x.base.totaux.encaissements)}.`,
         ];
       },
@@ -427,18 +402,18 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
       question: (c) => {
         const x = budgetDuChapitre(c);
         const p = x.nom(x.k - 1);
-        return `La TVA ${dE(p)} se déclare et se paie en ${x.nom(x.k)}. En ${p}, ${x.f.entreprise} vend ${qte(x.moisDAvant.quantite)} enceintes à ${eur(x.m.prix)} HT, à toutes ses clientèles ; elle déduit la TVA de ses achats, ${eur(x.m.coutVariable.composants)} de composants et ${eur(x.m.coutVariable.autres)} d'autres coûts variables HT par enceinte. Calculez la TVA collectée ${dE(p)}, la TVA déductible ${dE(p)}, puis la TVA à décaisser en ${x.nom(x.k)} (collectée moins déductible).`;
+        return `La TVA ${dE(p)} se déclare et se paie en ${x.nom(x.k)}. En ${p}, ${x.f.entreprise} vend ${qte(x.mars.quantite)} enceintes à ${eur(x.m.prix)} HT, à toutes ses clientèles ; elle déduit la TVA de ses achats, ${eur(x.m.coutVariable.composants)} de composants et ${eur(x.m.coutVariable.autres)} d'autres coûts variables HT par enceinte. Calculez la TVA collectée ${dE(p)}, la TVA déductible ${dE(p)}, puis la TVA à décaisser en ${x.nom(x.k)} (collectée moins déductible).`;
       },
       champs: (c) => {
         const x = budgetDuChapitre(c);
         const p = x.nom(x.k - 1);
-        const t = x.moisDAvant.tva;
+        const t = x.mars.tva;
         return [
-          { libelle: `TVA collectée ${dE(p)}`, attendu: t.collectee, calcul: `${qte(x.moisDAvant.quantite)} × ${eur(x.m.prix)} × ${pct(x.tva)} = ${eur(t.collectee)}` },
+          { libelle: `TVA collectée ${dE(p)}`, attendu: t.collectee, calcul: `${qte(x.mars.quantite)} × ${eur(x.m.prix)} × ${pct(x.tva)} = ${eur(t.collectee)}` },
           {
             libelle: `TVA déductible ${dE(p)}`,
             attendu: t.deductible,
-            calcul: `${qte(x.moisDAvant.quantite)} × (${eur(x.m.coutVariable.composants)} + ${eur(x.m.coutVariable.autres)}) × ${pct(x.tva)} = ${eur(t.deductible)}`,
+            calcul: `${qte(x.mars.quantite)} × (${eur(x.m.coutVariable.composants)} + ${eur(x.m.coutVariable.autres)}) × ${pct(x.tva)} = ${eur(t.deductible)}`,
           },
           { libelle: `TVA à décaisser en ${x.nom(x.k)}`, attendu: t.solde, calcul: `${eur(t.collectee)} − ${eur(t.deductible)} = ${eur(t.solde)}` },
         ];
@@ -447,12 +422,12 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
         const x = budgetDuChapitre(c);
         const p = x.nom(x.k - 1);
         return [
-          `La TVA ne coûte rien à ${x.f.entreprise} : elle la collecte pour l'État et déduit celle qu'elle paie. Mais elle passe en banque, et à contretemps : celle ${dE(p)} sort en ${x.nom(x.k)}, ${eur(x.moisDAvant.tva.solde)}. Le loyer n'y entre pas : le bailleur n'a pas opté pour la TVA, il n'y en a aucune à déduire.`,
+          `La TVA ne coûte rien à ${x.f.entreprise} : elle la collecte pour l'État et déduit celle qu'elle paie. Mais elle passe en banque, et à contretemps : celle ${dE(p)} sort en ${x.nom(x.k)}, ${eur(x.mars.tva.solde)}. Le loyer n'y entre pas : le bailleur n'a pas opté pour la TVA, il n'y en a aucune à déduire.`,
         ];
       },
     },
     {
-      id: "les-decaissements-du-mois",
+      id: "les-decaissements-d-avril",
       type: "montants",
       titre: "Le budget des décaissements",
       notions: ["cash_budget", "payment_terms"],
@@ -460,16 +435,16 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
         const x = budgetDuChapitre(c);
         const n = x.nom(x.k);
         const p = x.nom(x.k - 1);
-        const d = x.duMois.decaissements;
-        return `En ${n}, ${x.f.entreprise} paie les composants ${dE(p)} (${qte(x.moisDAvant.quantite)} enceintes à ${eur(x.m.coutVariable.composants)} HT, payés à ${x.s.fournisseur.delai} jours, TTC), les autres coûts variables ${dE(n)} (${qte(x.duMois.quantite)} enceintes à ${eur(x.m.coutVariable.autres)} HT, TTC), le loyer (${eur(d.loyer)}), les salaires nets (${eur(d.salairesNets)}), les cotisations ${dE(p)} (${eur(d.cotisations)}) et la TVA ${dE(p)} (${eur(d.tva)}). Calculez le paiement au fournisseur, les autres coûts variables TTC, le total des décaissements ${dE(n)}, puis la trésorerie de fin ${dE(n)} (au début du mois : ${eur(x.duMois.tresorerieDebut)}).`;
+        const d = x.avril.decaissements;
+        return `En ${n}, ${x.f.entreprise} paie les composants ${dE(p)} (${qte(x.mars.quantite)} enceintes à ${eur(x.m.coutVariable.composants)} HT, payés à ${x.s.fournisseur.delai} jours, TTC), les autres coûts variables ${dE(n)} (${qte(x.avril.quantite)} enceintes à ${eur(x.m.coutVariable.autres)} HT, TTC), le loyer (${eur(d.loyer)}), les salaires nets (${eur(d.salairesNets)}), les cotisations ${dE(p)} (${eur(d.cotisations)}) et la TVA ${dE(p)} (${eur(d.tva)}). Calculez le paiement au fournisseur, les autres coûts variables TTC, le total des décaissements ${dE(n)}, puis la trésorerie de fin ${dE(n)} (au début du mois : ${eur(x.avril.tresorerieDebut)}).`;
       },
       champs: (c) => {
         const x = budgetDuChapitre(c);
         const n = x.nom(x.k);
-        const d = x.duMois.decaissements;
+        const d = x.avril.decaissements;
         return [
-          { libelle: `Paiement au fournisseur en ${n}`, attendu: d.fournisseur, calcul: `${qte(x.moisDAvant.quantite)} × ${eur(x.m.coutVariable.composants)} × ${qte(1 + x.tva)} = ${eur(d.fournisseur)}` },
-          { libelle: `Autres coûts variables TTC ${dE(n)}`, attendu: d.autresCoutsVariables, calcul: `${qte(x.duMois.quantite)} × ${eur(x.m.coutVariable.autres)} × ${qte(1 + x.tva)} = ${eur(d.autresCoutsVariables)}` },
+          { libelle: `Paiement au fournisseur en ${n}`, attendu: d.fournisseur, calcul: `${qte(x.mars.quantite)} × ${eur(x.m.coutVariable.composants)} × ${qte(1 + x.tva)} = ${eur(d.fournisseur)}` },
+          { libelle: `Autres coûts variables TTC ${dE(n)}`, attendu: d.autresCoutsVariables, calcul: `${qte(x.avril.quantite)} × ${eur(x.m.coutVariable.autres)} × ${qte(1 + x.tva)} = ${eur(d.autresCoutsVariables)}` },
           {
             libelle: `Décaissements ${dE(n)}`,
             attendu: d.total,
@@ -477,8 +452,8 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
           },
           {
             libelle: `Trésorerie de fin ${dE(n)}`,
-            attendu: x.duMois.tresorerieFin,
-            calcul: `${eur(x.duMois.tresorerieDebut)} + ${eur(x.duMois.encaissements.total)} − ${eur(d.total)} = ${eur(x.duMois.tresorerieFin)}`,
+            attendu: x.avril.tresorerieFin,
+            calcul: `${eur(x.avril.tresorerieDebut)} + ${eur(x.avril.encaissements.total)} − ${eur(d.total)} = ${eur(x.avril.tresorerieFin)}`,
           },
         ];
       },
@@ -486,7 +461,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
         const x = budgetDuChapitre(c);
         const n = x.nom(x.k);
         return [
-          `${majuscule(n)} finit avec ${enBanque(x.duMois.tresorerieFin)}. Le délai du fournisseur joue dans l'autre sens que celui de CampusTech : il laisse l'argent dans l'entreprise un mois de plus. Ce que ${x.f.entreprise} doit encore au 30 juin, les composants de juin, ${eur(x.base.fin.dettesFournisseurs)}, la TVA de juin, ${eur(x.base.fin.tvaDue)}, et les cotisations de juin, ${eur(x.base.fin.cotisationsDues)}, se paiera en juillet.`,
+          `${majuscule(n)} finit avec ${enBanque(x.avril.tresorerieFin)}. Le délai du fournisseur joue dans l'autre sens que celui de CampusTech : il laisse l'argent dans l'entreprise un mois de plus. Ce que ${x.f.entreprise} doit encore au 30 juin, les composants de juin, ${eur(x.base.fin.dettesFournisseurs)}, la TVA de juin, ${eur(x.base.fin.tvaDue)}, et les cotisations de juin, ${eur(x.base.fin.cotisationsDues)}, se paiera en juillet.`,
         ];
       },
     },
@@ -510,10 +485,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
           {
             libelle: `Encaissements ${dE(a.nom)}`,
             attendu: a.encaissements.total,
-            calcul:
-              a.encaissements.campustech > 0
-                ? `${qte(x.part.quantites[MOIS_AUTONOME]!)} × ${eur(x.prixTtc)} = ${eur(a.encaissements.particuliers)} ; CampusTech paie sa facture ${dE(x.nom(MOIS_AUTONOME - x.decalage))}, ${qte(x.ct.quantites[MOIS_AUTONOME - x.decalage]!)} × ${eur(x.prixTtc)} = ${eur(a.encaissements.campustech)} ; en tout ${eur(a.encaissements.total)}`
-                : `${qte(x.part.quantites[MOIS_AUTONOME]!)} × ${eur(x.prixTtc)} = ${eur(a.encaissements.particuliers)} ; CampusTech ne paie encore rien : ${eur(a.encaissements.campustech)}`,
+            calcul: `${qte(x.part.quantites[MOIS_AUTONOME]!)} × ${eur(x.prixTtc)} = ${eur(a.encaissements.particuliers)} ; CampusTech ne paie encore rien : ${eur(a.encaissements.campustech)}`,
           },
           { libelle: `Paiement au fournisseur en ${a.nom}`, attendu: d.fournisseur, calcul: `les composants ${dE(p.nom)} : ${qte(p.quantite)} × ${eur(x.composantsTtc)} = ${eur(d.fournisseur)}` },
           { libelle: `TVA payée en ${a.nom}`, attendu: d.tva, calcul: `la TVA ${dE(p.nom)} : ${qte(p.quantite)} × (${eur(x.m.prix)} − ${eur(x.m.coutVariable.composants + x.m.coutVariable.autres)}) × ${pct(x.tva)} = ${eur(d.tva)}` },
@@ -546,39 +518,33 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
         const x = budgetDuChapitre(c);
         const bas = x.base.plusBas;
         const i = x.s.mois.findIndex((m) => m.nom === bas.nom);
-        const m = x.base.mois[i]!;
-        const r = x.resultats[i]!;
-        return `Voici le budget de trésorerie du semestre. Son point bas est ${bas.nom}, ${eur(bas.tresorerie)}. Ce mois-là, ${x.f.entreprise} ${r < 0 ? `perd ${eur(-r)}` : `gagne ${eur(r)}`}, mais sa trésorerie baisse de ${eur(auCentime(m.tresorerieDebut - m.tresorerieFin))}. Qu'est-ce qui creuse la trésorerie ${dE(bas.nom)} ?`;
+        return `Voici le budget de trésorerie du semestre. Son point bas est ${bas.nom}, ${eur(bas.tresorerie)}, alors que ${x.f.entreprise} y gagne ${eur(x.resultats[i]!)} et qu'elle perdait ${eur(-x.resultats[i - 1]!)} en ${x.nom(i - 1)}. Qu'est-ce qui creuse la trésorerie de ${bas.nom} ?`;
       },
       options: (c) => {
         const x = budgetDuChapitre(c);
         const bas = x.base.plusBas;
         const i = x.s.mois.findIndex((m) => m.nom === bas.nom);
         const m = x.base.mois[i]!;
-        const d = m.decaissements;
-        const r = x.resultats[i]!;
-        const p = x.nom(i - 1);
-        const echeance = x.s.emprunt.moisDesEcheances.find((e) => e >= i)!;
         return [
           {
-            texte: `Les dettes ${dE(p)} qui se paient, et CampusTech qui ne paie rien`,
-            juste: m.encaissements.campustech === 0 && d.fournisseur > 0,
-            retour: `Oui. En ${bas.nom}, ${x.f.entreprise} paie ce que ${p} a laissé : les composants (${eur(d.fournisseur)}), la TVA (${eur(d.tva)}) et les cotisations (${eur(d.cotisations)}), alors que CampusTech n'a encore rien payé. Dès ${x.nom(x.decalage)}, la première facture de CampusTech rentre, ${eur(x.factureCampusTech)}, et la trésorerie remonte.`,
+            texte: "CampusTech n'a encore rien payé, et l'échéance de l'emprunt tombe",
+            juste: true,
+            retour: `Oui. En ${bas.nom}, les ventes à CampusTech de janvier à ${bas.nom} attendent leur paiement (aucune n'est encore encaissée), et l'emprunt prend ${eur(m.decaissements.emprunt)}. Dès ${x.nom(i + 1)}, la première facture de CampusTech rentre, ${eur(x.factureCampusTech)}, et la trésorerie remonte.`,
           },
           {
-            texte: r < 0 ? `La perte ${dE(bas.nom)}, ${eur(-r)}` : `Le résultat ${dE(bas.nom)}, ${eur(r)}`,
+            texte: `Les ventes de ${bas.nom}, les plus faibles du semestre`,
             juste: false,
-            retour: `Non : ${r < 0 ? `une perte de ${eur(-r)}` : "un mois gagnant"} n'explique pas une baisse de ${eur(auCentime(m.tresorerieDebut - m.tresorerieFin))}. Le point bas ne vient pas du résultat du mois, mais de ce qui se paie et de ce qui ne rentre pas encore.`,
+            retour: `Non : ${x.nom(i - 1)} vend moins (${qte(x.base.mois[i - 1]!.quantite)} enceintes) que ${bas.nom} (${qte(m.quantite)}). Le point bas ne vient pas des ventes du mois, mais de ce qui se paie et de ce qui ne rentre pas encore.`,
           },
           {
-            texte: `La TVA ${dE(bas.nom)}, payée dans le mois`,
+            texte: `La TVA de ${bas.nom}, payée dans le mois`,
             juste: false,
-            retour: `Non : la TVA ${dE(bas.nom)} se paie en ${x.nom(i + 1)}. En ${bas.nom}, ${x.f.entreprise} paie celle ${dE(p)}, ${eur(d.tva)}.`,
+            retour: `Non : la TVA de ${bas.nom} se paie en ${x.nom(i + 1)}. En ${bas.nom}, ${x.f.entreprise} paie celle ${dE(x.nom(i - 1))}, ${eur(m.decaissements.tva)}.`,
           },
           {
-            texte: "L'échéance de l'emprunt",
+            texte: `La perte ${dE(x.nom(i - 1))}, qui se paie le mois suivant`,
             juste: false,
-            retour: d.emprunt > 0 ? `Non : elle prend ${eur(d.emprunt)}, bien moins que ce qui sort pour les dettes ${dE(p)}.` : `Non : elle tombe le dernier mois du trimestre, en ${x.nom(echeance)}, pas en ${bas.nom}.`,
+            retour: "Non : un résultat ne se paie pas. Ce sont les flux qui passent en banque, chacun à sa date : les ventes encaissées, les charges payées, l'emprunt remboursé.",
           },
         ];
       },
@@ -590,18 +556,14 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
       notions: ["payment_terms", "receivables_financing"],
       question: (c) => {
         const x = budgetDuChapitre(c);
-        return `Avant de calculer, pariez. Supposons que CampusTech paie à ${DELAI_DU_PARI} jours au lieu des ${x.ct.delai} convenus, bien au-delà du plafond légal de ${DELAI_MAXIMAL_CONVENU.joursDeLaFacture} jours. Elle paierait les mêmes factures, simplement plus tard. La trésorerie du 30 juin…`;
+        return `Avant de calculer, pariez. Supposez que CampusTech prenne encore plus de retard : elle paierait ${DELAI_DU_PARI} jours après sa facture au lieu de ${x.ct.delai}, très au-delà des ${DELAI_CONVENU_DE_CAMPUSTECH} jours convenus. Elle paierait les mêmes factures, simplement plus tard. La trésorerie du 30 juin…`;
       },
       options: (c) => {
         const x = budgetDuChapitre(c);
         const juin = x.auPari.tresorerieFin;
         const voir = "Faites payer CampusTech plus ou moins tard à l'étape suivante : le curseur montre la trésorerie du 30 juin, mois de délai par mois de délai.";
         return [
-          {
-            texte: "Baisse, mais reste positive",
-            juste: juin >= 0 && juin < x.base.tresorerieFin,
-            retour: `Bon pari. ${voir} Un tel délai ne se convient pas : la loi plafonne le délai entre professionnels à ${DELAI_MAXIMAL_CONVENU.joursDeLaFacture} jours.`,
-          },
+          { texte: "Baisse, mais reste positive", juste: juin >= 0 && juin < x.base.tresorerieFin, retour: `Bon pari. ${voir}` },
           { texte: "Devient négative : un découvert", juste: juin < 0, retour: `Pari à vérifier. ${voir}` },
           { texte: "Ne bouge pas : ce sont les mêmes factures", juste: juin === x.base.tresorerieFin, retour: `Pari à vérifier. ${voir}` },
         ];
@@ -624,7 +586,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
       },
       zones: ["Sans découvert au 30 juin", "À découvert au 30 juin"],
       rates: () => ({
-        dessous: "Le budget supporte encore un paiement plus tardif sans découvert au 30 juin : cherchez le plus long décalage.",
+        dessous: "CampusTech peut encore payer plus tard sans découvert au 30 juin : cherchez le plus long décalage.",
         dessus: "À ce décalage, le 30 juin finit déjà à découvert.",
       }),
       montrer: "Montrer la limite",
@@ -658,7 +620,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
       notions: ["payment_terms", "receivables_financing"],
       question: (c) => {
         const x = budgetDuChapitre(c);
-        return `Le curseur l'a montré : le budget supporte que CampusTech paie au plus ${x.decalageMax} mois après sa facture sans découvert au 30 juin. Sans formule : retrouvez le délai le plus long en jours (factures du ${x.ct.jourDeFacturation}, mois de ${x.s.joursDuMoisCommercial} jours), ce que CampusTech devrait encore au 30 juin à ce délai, et la trésorerie du 30 juin.`;
+        return `Le curseur l'a montré : CampusTech peut payer au plus ${x.decalageMax} mois après sa facture sans découvert au 30 juin. Sans formule : retrouvez le délai le plus long en jours (factures du ${x.ct.jourDeFacturation}, mois de ${x.s.joursDuMoisCommercial} jours), ce que CampusTech devrait encore au 30 juin à ce délai, et la trésorerie du 30 juin.`;
       },
       champs: (c) => {
         const x = budgetDuChapitre(c);
@@ -666,7 +628,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
         const dues = Math.min(x.decalageMax, x.s.mois.length);
         return [
           {
-            libelle: "Délai le plus long que le budget supporte, en jours",
+            libelle: "Délai le plus long accordable, en jours",
             attendu: x.delaiMax,
             calcul: `le jour ${x.ct.jourDeFacturation} + d doit tomber au plus le dernier jour du ${x.decalageMax + 1}e mois, celui de la facture compris : ${x.ct.jourDeFacturation} + d ≤ ${x.decalageMax + 1} × ${x.s.joursDuMoisCommercial}, d ≤ ${x.delaiMax}`,
           },
@@ -687,7 +649,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
         const b = x.auMax.plusBas;
         return [
           `À ${x.delaiMax} jours, CampusTech ne paierait dans le semestre que ${eur(x.auMax.mois.reduce((t, m) => t + m.encaissements.campustech, 0))} : ses ventes TTC du semestre, ${eur(auCentime(x.ct.quantites.reduce((t, q) => t + q, 0) * x.prixTtc))}, moins les créances de fin, ${eur(x.auMax.fin.creancesClients)}. Un jour de plus, et la facture de janvier glisse en juillet.`,
-          `Le budget tient, mais de justesse : ${b.nom} tomberait à ${eur(b.tresorerie)}${b.tresorerie < x.f.seuilsDAlerte.tresorerie ? `, sous le matelas de ${eur(x.f.seuilsDAlerte.tresorerie)} que le dirigeant veut garder` : ""}. La loi, elle, ne le supporte pas : entre professionnels, le délai convenu ne peut dépasser ${DELAI_MAXIMAL_CONVENU.joursDeLaFacture} jours. Au-delà, c'est un retard, que ${x.f.entreprise} subit et peut sanctionner de pénalités. Laisser un client payer tard, c'est lui prêter : le budget dit combien, et jusqu'à quand.`,
+          `Le budget tient, mais de justesse : ${b.nom} tomberait à ${eur(b.tresorerie)}, sous le matelas de ${eur(x.f.seuilsDAlerte.tresorerie)} que le dirigeant veut garder. Subir le retard d'un client, c'est lui prêter : le budget dit combien, et jusqu'à quand.`,
         ];
       },
     },
@@ -699,7 +661,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
       question: (c) => {
         const x = budgetDuChapitre(c);
         const n = x.nom(x.k);
-        return `Avant de calculer, pariez. Le dirigeant envisage d'acheter en ${n} ${x.s.investissement.libelle}, ${eur(x.inv.montantHt)} HT, payé à la livraison ; sa TVA se récupère sur la déclaration ${dE(n)}, payée en ${x.nom(x.k + 1)}. Sans lui, ${n} finit à ${eur(x.duMois.tresorerieFin)}. Avec lui, la trésorerie de fin ${dE(n)} sera…`;
+        return `Avant de calculer, pariez. Le dirigeant envisage d'acheter en ${n} ${x.s.investissement.libelle}, ${eur(x.inv.montantHt)} HT, payé à la livraison ; sa TVA se récupère sur la déclaration ${dE(n)}, payée en ${x.nom(x.k + 1)}. Sans lui, ${n} finit à ${eur(x.avril.tresorerieFin)}. Avec lui, la trésorerie de fin ${dE(n)} sera…`;
       },
       options: (c) => {
         const x = budgetDuChapitre(c);
@@ -707,7 +669,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
         const voir = "Placez le banc dans le budget à l'étape suivante : le curseur montre la trésorerie de fin du mois, et ce qu'il faudrait vendre pour éviter le découvert.";
         return [
           { texte: `Négative : ${eur(x.invTtc)} TTC sortent d'un coup`, juste: fin < 0, retour: `Bon pari. ${voir}` },
-          { texte: `Positive : ${eur(x.duMois.tresorerieFin)} couvrent les ${eur(x.inv.montantHt)} HT`, juste: false, retour: `Pari à vérifier. ${voir}` },
+          { texte: `Positive : ${eur(x.avril.tresorerieFin)} couvrent les ${eur(x.inv.montantHt)} HT`, juste: false, retour: `Pari à vérifier. ${voir}` },
           { texte: "Positive : la TVA récupérée compense", juste: fin >= 0, retour: `Pari à vérifier. ${voir}` },
         ];
       },
@@ -738,7 +700,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
       montrer: "Montrer le minimum",
       lecture: (c, q) => {
         const x = budgetDuChapitre(c);
-        const m = budgetDeTresorerie(ficheAvecLesVentesDuMoisGuide(x.f, q), { investissement: x.inv }).mois[x.k]!;
+        const m = budgetDeTresorerie(ficheAvecLesVentesDAvril(x.f, q), { investissement: x.inv }).mois[x.k]!;
         return [
           { libelle: "Encaissements du mois", montant: m.encaissements.total },
           { libelle: "Décaissements du mois, banc compris", montant: m.decaissements.total },
@@ -748,7 +710,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
       droites: (c) => {
         const x = budgetDuChapitre(c);
         return {
-          produit: (q) => budgetDeTresorerie(ficheAvecLesVentesDuMoisGuide(x.f, q), { investissement: x.inv }).mois[x.k]!.tresorerieFin,
+          produit: (q) => budgetDeTresorerie(ficheAvecLesVentesDAvril(x.f, q), { investissement: x.inv }).mois[x.k]!.tresorerieFin,
           cout: () => 0,
           libelles: ["Trésorerie de fin de mois, banc acheté", "Le découvert"],
         };
@@ -810,7 +772,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
       notions: ["cash_budget", "payment_terms", "receivables_financing"],
       question: (c) => {
         const x = budgetDuChapitre(c);
-        return `Le banc de ${eur(x.inv.montantHt)} HT est décidé. Faites varier le délai de CampusTech (${x.ct.delai} jours convenus ; au-delà, c'est un retard que la loi ne permet pas de convenir), celui du fournisseur, les ventes de chaque mois et le mois de l'achat : le tableau suit la trésorerie et le résultat du semestre. Relevez le défi, puis cherchez les autres façons d'y arriver.`;
+        return `Le banc de ${eur(x.inv.montantHt)} HT est décidé. Faites varier le délai de CampusTech, celui du fournisseur, les ventes de chaque mois et le mois de l'achat : le tableau suit la trésorerie et le résultat du semestre. Relevez le défi, puis cherchez les autres façons d'y arriver.`;
       },
       leviers: (c) => {
         const x = budgetDuChapitre(c);
@@ -840,8 +802,8 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
         const l = laboratoireDeTresorerie(x.f, p);
         const d = laboratoireDeTresorerie(x.f, x.depart);
         return [
-          { libelle: `Trésorerie de fin ${dE(x.nom(x.k))}`, montant: l.duMois, reference: d.duMois },
-          { libelle: `Trésorerie de fin de ${x.nom(x.k + 1)}`, montant: l.moisSuivant, reference: d.moisSuivant },
+          { libelle: `Trésorerie de fin ${dE(x.nom(x.k))}`, montant: l.avril, reference: d.avril },
+          { libelle: `Trésorerie de fin de ${x.nom(x.k + 1)}`, montant: l.mai, reference: d.mai },
           { libelle: "Trésorerie au 30 juin", montant: l.juin, reference: d.juin },
           { libelle: "Créances clients au 30 juin", montant: l.creancesClients, reference: d.creancesClients },
           { libelle: "Dettes fournisseurs au 30 juin", montant: l.dettesFournisseurs, reference: d.dettesFournisseurs },
@@ -856,7 +818,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
         return {
           levier: "campustech",
           courbes: [
-            { libelle: `Trésorerie de fin ${dE(x.nom(x.k))}`, valeur: (p) => laboratoireDeTresorerie(x.f, p).duMois },
+            { libelle: `Trésorerie de fin ${dE(x.nom(x.k))}`, valeur: (p) => laboratoireDeTresorerie(x.f, p).avril },
             { libelle: "Trésorerie la plus basse du semestre", valeur: (p) => laboratoireDeTresorerie(x.f, p).plusBas.tresorerie },
           ],
         };
@@ -879,7 +841,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
         const d = laboratoireDeTresorerie(x.f, x.depart);
         return [
           `Défi relevé : le point bas du semestre est ${l.plusBas.nom}, à ${eur(l.plusBas.tresorerie)}, et le résultat du semestre vaut ${eur(l.resultat)} (${eur(d.resultat)} au départ).`,
-          `Chaque levier, seul, passait le banc : CampusTech payée à ${x.campusTechMax} jours au plus (une facture de plus rentre avant la fin ${dE(x.nom(x.k))}), le fournisseur payé à ${x.fournisseurMin} jours au moins (chaque facture de composants se paie un mois plus tard), ${pct(x.hausseMin / 100)} de ventes en plus chaque mois, ou l'achat en ${x.nom(x.k + 1)}.`,
+          `Chaque levier, seul, passait le banc : CampusTech payée au plus ${x.campusTechMax} jours après sa facture, un retard ramené à ${x.campusTechMax - DELAI_CONVENU_DE_CAMPUSTECH} jours (une facture de plus rentre avant la fin ${dE(x.nom(x.k))}), le fournisseur payé à ${x.fournisseurMin} jours au moins (chaque facture de composants se paie un mois plus tard), ${pct(x.hausseMin / 100)} de ventes en plus chaque mois, ou l'achat en ${x.nom(x.k + 1)}.`,
           "Seule la hausse des ventes change le résultat : les délais et la date de l'achat ne font que déplacer l'argent dans le temps. C'est tout l'objet du budget de trésorerie.",
         ];
       },
@@ -897,20 +859,20 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
       champs: (c) => {
         const x = budgetDuChapitre(c);
         const n = x.nom(x.k);
-        const t = x.tvaDuMoisGuide;
-        const suivant = x.avecLeBanc.mois[x.k + 1]!;
+        const t = x.tvaDAvril;
+        const mai = x.avecLeBanc.mois[x.k + 1]!;
         return [
-          { libelle: `TVA collectée ${dE(n)}`, attendu: t.collectee, calcul: `${qte(x.duMois.quantite)} × ${eur(x.m.prix)} × ${pct(x.tva)} = ${eur(t.collectee)}` },
+          { libelle: `TVA collectée ${dE(n)}`, attendu: t.collectee, calcul: `${qte(x.avril.quantite)} × ${eur(x.m.prix)} × ${pct(x.tva)} = ${eur(t.collectee)}` },
           {
             libelle: `TVA déductible ${dE(n)}, banc compris`,
             attendu: t.deductible,
-            calcul: `${qte(x.duMois.quantite)} × (${eur(x.m.coutVariable.composants)} + ${eur(x.m.coutVariable.autres)}) × ${pct(x.tva)} + ${eur(x.inv.montantHt)} × ${pct(x.tva)} = ${eur(auCentime(t.deductible - x.inv.montantHt * x.tva))} + ${eur(auCentime(x.inv.montantHt * x.tva))} = ${eur(t.deductible)}`,
+            calcul: `${qte(x.avril.quantite)} × (${eur(x.m.coutVariable.composants)} + ${eur(x.m.coutVariable.autres)}) × ${pct(x.tva)} + ${eur(x.inv.montantHt)} × ${pct(x.tva)} = ${eur(auCentime(t.deductible - x.inv.montantHt * x.tva))} + ${eur(auCentime(x.inv.montantHt * x.tva))} = ${eur(t.deductible)}`,
           },
           { libelle: `TVA à décaisser en ${x.nom(x.k + 1)}`, attendu: t.solde, calcul: `${eur(t.collectee)} − ${eur(t.deductible)} = ${eur(t.solde)}` },
           {
             libelle: `Trésorerie de fin de ${x.nom(x.k + 1)}, banc acheté`,
-            attendu: suivant.tresorerieFin,
-            calcul: `${eur(suivant.tresorerieDebut)} + ${eur(suivant.encaissements.total)} − ${eur(suivant.decaissements.total)} = ${eur(suivant.tresorerieFin)}`,
+            attendu: mai.tresorerieFin,
+            calcul: `${eur(mai.tresorerieDebut)} + ${eur(mai.encaissements.total)} − ${eur(mai.decaissements.total)} = ${eur(mai.tresorerieFin)}`,
           },
         ];
       },
@@ -1001,7 +963,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
         const x = budgetDuChapitre(c);
         return [
           `Vous avez bâti le budget de trésorerie mensuel de ${x.f.entreprise}, toutes taxes comprises : le budget des encaissements, clientèle par clientèle, celui des décaissements, la TVA à décaisser le mois suivant, et la trésorerie de fin de mois, de ${eur(x.s.tresorerieDeDepart)} au 1er janvier à ${eur(x.base.tresorerieFin)} au 30 juin, avec un point bas en ${x.base.plusBas.nom}.`,
-          `Puis vous vous en êtes servi : le budget supporterait que CampusTech paie jusqu'à ${x.delaiMax} jours sans découvert au 30 juin, quand la loi plafonne le délai convenu à ${DELAI_MAXIMAL_CONVENU.joursDeLaFacture} jours ; le banc ${dE(x.nom(x.k))} met ${x.f.entreprise} à découvert de ${eur(x.manque)}, qu'évitent ${qte(x.enPlus)} enceintes vendues en plus, un délai, ou un mois de patience. Un délai et la TVA ne changent pas le résultat : ils changent la date de l'argent.`,
+          `Puis vous vous en êtes servi : CampusTech peut payer jusqu'à ${x.delaiMax} jours sans découvert au 30 juin ; le banc ${dE(x.nom(x.k))} met ${x.f.entreprise} à découvert de ${eur(x.manque)}, qu'évitent ${qte(x.enPlus)} enceintes vendues en plus, un délai, ou un mois de patience. Un délai et la TVA ne changent pas le résultat : ils changent la date de l'argent.`,
           "Au niveau de l'examen, vous savez dater un flux à partir d'une facture et d'un délai, bâtir le budget des encaissements et celui des décaissements TTC, calculer la TVA à décaisser avec un investissement, retrouver à rebours un délai ou un minimum de ventes, et dire ce que le dirigeant doit négocier avant le découvert.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
         ];

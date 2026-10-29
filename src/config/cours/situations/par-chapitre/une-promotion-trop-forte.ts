@@ -1,10 +1,14 @@
-import { montantEcrit as eur } from "../../../../pedagogy/cours/correcteur";
+import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../../pedagogy/cours/etats";
 import { accord } from "../../accords";
 import type { Cas } from "../../cas";
-import { prixPsychologique } from "../../chapitres/prix-psychologique";
-import { SEGMENTATIONS } from "../../chapitres/segmenter-et-cibler";
+import { PRIX_PSYCHOLOGIQUE, prixPsychologique } from "../../chapitres/prix-psychologique";
+import { coutVariable as coutVariableDe } from "../../monde/economie-et-marketing";
+import { mercatiqueDe } from "../../monde/mercatique-de-nova";
 import type { Situation } from "../types";
+
+/** Un montant à la française, avec le signe moins typographique. */
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 
 /**
  * CAS PRATIQUE DU CHAPITRE « LE PRIX PSYCHOLOGIQUE » : UNE PROMOTION TROP FORTE ?
@@ -20,7 +24,7 @@ import type { Situation } from "../types";
  * Le cas est neuf par sa question : le chapitre regarde le seuil qu'un prix ne doit pas
  * franchir en montant, le cas regarde le prix sous lequel il ne doit pas descendre. La
  * clientèle et ses repères sont ceux que le chapitre étudie (`prixPsychologique`) ; le coût
- * variable d'une unité est celui du mois du cas (`cas.ts`).
+ * variable d'une unité est celui de la fiche (monde/economie-et-marketing.ts).
  */
 
 /**
@@ -30,7 +34,7 @@ import type { Situation } from "../types";
  */
 export const REMISE_PROMOTIONNELLE = 0.3;
 
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
+const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`.replace(/^-/, "−");
 const auDixieme = (x: number) => Math.round(x * 10) / 10;
 
 /** Les chiffres de la réponse, calculés une fois du cas. */
@@ -38,7 +42,7 @@ export function promotionTropForte(c: Cas) {
   const p = prixPsychologique(c);
   const k = p.etudie;
   const prix = p.prix;
-  const coutVariable = c.gestion.coutVariableUnitaire;
+  const coutVariable = coutVariableDe(mercatiqueDe(c));
   const prixPromo = auCentime(prix * (1 - REMISE_PROMOTIONNELLE));
   const margeAvant = auCentime(prix - coutVariable);
   const margeApres = auCentime(prixPromo - coutVariable);
@@ -76,10 +80,7 @@ export const UNE_PROMOTION_TROP_FORTE: Situation = {
     "Rédiger une réponse chiffrée à la direction",
   ],
   libre: false,
-  entreprises: {
-    codes: SEGMENTATIONS,
-    pourquoi: "ce cas lit les repères de prix des clientèles d'une entreprise à une seule offre.",
-  },
+  entreprises: PRIX_PSYCHOLOGIQUE.entreprises,
   etapes: [
     {
       id: "demande",

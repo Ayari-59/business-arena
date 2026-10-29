@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 63 — L'ENSEIGNE QUI FRAPPE À LA PORTE, tel que l'interface et le bilan le lisent.
+ * L'ENSEIGNE QUI FRAPPE À LA PORTE, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord d'Isaline montre, ce que la

@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 58 — LES APPRENTIS QUI DÉCROCHENT, tel que l'interface et le bilan le lisent.
+ * LES APPRENTIS QUI DÉCROCHENT, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Garance montre, ce que la

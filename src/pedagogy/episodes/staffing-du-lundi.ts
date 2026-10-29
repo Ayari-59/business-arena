@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 70 — LE STAFFING DU LUNDI, tel que l'interface et le bilan le lisent.
+ * LE STAFFING DU LUNDI, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord d'Aïssatou montre, ce que la

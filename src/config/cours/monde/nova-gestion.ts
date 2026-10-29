@@ -11,7 +11,7 @@
  * UNE SEULE ENTREPRISE, D'UN CHAPITRE À L'AUTRE. Le mois de référence est janvier, le même que
  * celui des chapitres de comptabilité (cas-des-entreprises.ts : 1 590 enceintes à 59 €, 22 € de
  * composants et 16 € d'autres coûts par enceinte, le loyer de 19 700 €, la paie de 10 650 €,
- * l'usure de 833 €, CampusTech qui paie à 60 jours). Le premier trimestre de la décision est
+ * l'usure de 833 €, CampusTech qui paie 20 jours après les 60 jours convenus). Le premier trimestre de la décision est
  * janvier, février et mars de ce semestre ; le budget de trésorerie et le tableau de bord suivent
  * les mêmes six mois ; la gamme vient plus tard, quand NOVA lance Go et Studio à côté de One, avec
  * le même local et la même équipe.
@@ -188,14 +188,17 @@ export const GAMME_DE_NOVA: GammeDeNova = {
 
 /**
  * LA DROITE DE DEMANDE DU TRIMESTRE (hypothèse du cours, figée) : au prix p, les clients demandent
- * à NOVA 17 700 − 203 × p enceintes par trimestre, arrondies à l'unité inférieure (on ne vend pas
- * une fraction d'enceinte). Elle est ajustée par les moindres carrés, puis arrondie, sur les trois
- * rejeux du premier trimestre par l'arène (relevés le 27 octobre 2026) : 6 911, 5 762 et 4 512
- * enceintes demandées à 53,10 €, 59 € et 64,90 €. La droite en donne 6 920, 5 723 et 4 525 :
- * des écarts de 9, −39 et 13 enceintes. Elle s'annule à 87,19 € ; chaque euro de hausse coûte
- * 203 enceintes demandées.
+ * à NOVA 16 755 − 203 × p enceintes par trimestre de janvier à mars, arrondies à l'unité inférieure
+ * (on ne vend pas une fraction d'enceinte). UNE SEULE DEMANDE DE NOVA (réconciliation d'octobre
+ * 2026) : à 59 €, la droite donne les 4 778 enceintes vendues au premier trimestre de N (1 270 +
+ * 1 130 + 1 418 aux particuliers, 3 × 320 à CampusTech), car toute la demande de N a été servie
+ * (nova-capacite.ts) : 16 755 = 4 778 + 203 × 59. La pente, 203 enceintes par euro, est celle que
+ * les moindres carrés tiraient des trois rejeux du premier trimestre par l'arène (6 911, 5 762 et
+ * 4 512 enceintes à 53,10 €, 59 € et 64,90 €). Les autres trimestres suivent la saison de N
+ * (monde/economie-et-marketing.ts) ; le trimestre type du marché à trois est ce premier trimestre
+ * (monde/marche-a-trois.ts). La garde tests/cours/une-seule-nova.test.ts compare ces fiches.
  */
-export const DEMANDE_A_PRIX_NUL = 17_700;
+export const DEMANDE_A_PRIX_NUL = 16_755;
 export const DEMANDE_PERDUE_PAR_EURO = 203;
 
 /** La capacité de la ligne de montage, en enceintes par trimestre (celle de l'arène). */
@@ -228,19 +231,31 @@ export const TAUX_DE_TVA = 0.2;
 
 /**
  * LE MOIS COMMERCIAL (convention du cours) : un délai en jours se lit sur des mois de 30 jours. Une
- * facture du 20 à 60 jours tombe le 80e jour, le 20 du deuxième mois suivant : janvier se paie
- * en mars.
+ * facture du 20 payée 80 jours après sa date tombe le 100e jour, le 10 du troisième mois suivant :
+ * la facture de janvier de CampusTech, due en mars, se paie en avril.
  */
 export const JOURS_DU_MOIS_COMMERCIAL = 30;
 
 /**
- * LE DÉLAI DE PAIEMENT DE CAMPUSTECH (décision du propriétaire du cours) : 60 jours après la facture,
- * le délai maximal qu'un professionnel peut convenir avec un autre (code de commerce, article
- * L. 441-10). CampusTech le tient : dans le monde du cours, elle paie à l'échéance. Le retard d'un
- * client est une hypothèse que pose le chapitre « Le client qui paie tard » (monde/delais-et-tva.ts),
- * pas un fait de la fiche.
+ * LE DÉLAI CONVENU AVEC CAMPUSTECH : 60 jours après la facture, le délai maximal qu'un professionnel
+ * peut convenir avec un autre (code de commerce, article L. 441-10). Une facture du 20 est due le 20
+ * du deuxième mois suivant.
  */
-export const DELAI_DE_CAMPUSTECH = 60;
+export const DELAI_CONVENU_DE_CAMPUSTECH = 60;
+
+/**
+ * LE RETARD DE CAMPUSTECH (décision du propriétaire du cours : le délai légal est plafonné, mais des
+ * clients paient en retard, c'est la réalité du marché). CampusTech est un MAUVAIS PAYEUR : elle paie
+ * chaque facture 20 jours après l'échéance convenue, après une relance. C'est un fait de la fiche,
+ * pas une hypothèse de chapitre : toutes les fiches du cours encaissent CampusTech à ce jour-là.
+ */
+export const RETARD_DE_CAMPUSTECH = 20;
+
+/**
+ * LE DÉLAI RÉEL DE CAMPUSTECH : le délai convenu et le retard, 80 jours après la facture, le 10 du
+ * troisième mois suivant. Ce n'est jamais un délai convenu : c'est le jour où l'argent arrive.
+ */
+export const DELAI_DE_CAMPUSTECH = DELAI_CONVENU_DE_CAMPUSTECH + RETARD_DE_CAMPUSTECH;
 
 export type CodeDeClientele = "particuliers" | "campustech";
 
@@ -278,8 +293,8 @@ export interface SemestreDeNova {
 
 /**
  * LES VENTES DU SEMESTRE (hypothèse du cours). CampusTech, le client professionnel, achète
- * 320 enceintes chaque mois, facturées le 20 et payées à 60 jours (DELAI_DE_CAMPUSTECH), comme en
- * janvier. Les
+ * 320 enceintes chaque mois, facturées le 20, dues à 60 jours et payées en retard, à 80 jours
+ * (DELAI_DE_CAMPUSTECH), comme en janvier. Les
  * particuliers paient par carte à la commande. Février, mois court et calme, passe sous le seuil
  * (1 450 enceintes) ; le premier trimestre fait 4 778 enceintes et le deuxième 6 081, comme dans
  * l'arène. HYPOTHÈSE : NOVA n'a pas de stock, elle fabrique ce qu'elle vend et achète ses
@@ -302,16 +317,10 @@ export const TRESORERIE_DE_DEPART = 25_000;
 
 /**
  * L'INVESTISSEMENT ENVISAGÉ (hypothèse du cours) : un banc de mesure acoustique de 30 000 € hors
- * taxes, livré et payé en février, amorti sur 60 mois (500 € par mois dès février). Sa TVA se
- * récupère sur la déclaration de février, payée en mars. Février est le mois où il met NOVA à
- * découvert.
- * POURQUOI FÉVRIER : le banc tombait en avril quand CampusTech payait à 80 jours. À 60 jours, sa
- * facture de janvier rentre dès mars, et avril finit à 56 466 € avant le banc : 36 000 € TTC n'y
- * font plus de découvert (20 466 € restent). En février, le mois le plus bas du semestre (31 998 €),
- * le même banc laisse un découvert de 4 002 €. Son prix ne change pas : c'est aussi le projet C de
- * projets-et-financement.ts.
+ * taxes, livré et payé en avril, amorti sur 60 mois (500 € par mois dès avril). Sa TVA se récupère
+ * sur la déclaration d'avril, payée en mai. Avril est le mois où il met NOVA à découvert.
  */
-export const INVESTISSEMENT_ENVISAGE = { libelle: "un banc de mesure acoustique", montantHt: 30_000, mois: 1, dureeDAmortissementMois: 60 } as const;
+export const INVESTISSEMENT_ENVISAGE = { libelle: "un banc de mesure acoustique", montantHt: 30_000, mois: 3, dureeDAmortissementMois: 60 } as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // LE TABLEAU DE BORD : SES VOYANTS

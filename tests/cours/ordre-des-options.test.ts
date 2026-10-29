@@ -67,8 +67,11 @@ describe("l'ordre des options", () => {
   }, PARCOURT_TOUT_LE_CATALOGUE);
 
   it("la page et la projection affichent les options mélangées", () => {
-    const guide = lire("src/components/cours/chapitre-guide.tsx");
-    expect(guide.match(/dansLOrdreAffiche\(/g)?.length, "une question affiche l'ordre écrit").toBe(2);
+    // Le chapitre est servi au navigateur déjà mélangé (audit, P0 : le guide ne porte plus le contenu).
+    const servi = lire("src/pedagogy/cours/chapitre-servi.ts");
+    expect(servi).toMatch(/dansLOrdreAffiche\(options, cleDeLaQuestion\(chapitre\.code, e\.id, cas\.code\)\)/);
+    expect(servi.match(/options: ordre\(/g)?.length, "une question affiche l'ordre écrit").toBe(2);
+    expect(lire("src/components/cours/chapitre-guide.tsx")).not.toMatch(/\.options\(/);
     expect(lire("src/pedagogy/cours/projection.ts")).toContain("dansLOrdreAffiche(");
   });
 });

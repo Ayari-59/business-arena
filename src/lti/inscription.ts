@@ -151,9 +151,19 @@ export async function inscrire(args: {
   jetonPlateforme: string | null;
   origine: string;
 }): Promise<Plateforme> {
-  const config = await lireConfiguration(args.urlConfiguration);
+  // LE JETON D'ABORD, LE RÉSEAU ENSUITE (audit, P2-1). Lire la configuration avant de
+  // vérifier le jeton faisait appeler par le serveur n'importe quelle adresse HTTPS
+  // fournie par un inconnu, sans authentification : une requête forgée à l'aveugle.
   const pris = await consommerJeton(args.jeton);
-  if (!pris) throw new InscriptionDynamiqueRefusee("jeton d'inscription inconnu, expiré ou déjà utilisé", config.issuer);
+  if (!pris) throw new InscriptionDynamiqueRefusee("jeton d'inscription inconnu, expiré ou déjà utilisé");
+  let config: ConfigurationPlateforme;
+  try {
+    config = await lireConfiguration(args.urlConfiguration);
+  } catch (e) {
+    // La configuration illisible ne consomme pas le jeton : l'établissement réessaie.
+    await rendreJeton(pris.id);
+    throw e;
+  }
   try {
     const { statut, json } = await demanderJson(config.registration_endpoint, {
       methode: "POST",

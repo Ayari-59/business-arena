@@ -1,49 +1,57 @@
 import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
 import type { Cas } from "../../cas";
-import {
-  ECART_NEGLIGEABLE,
-  LE_CLIENT_QUI_REVIENT,
-  PART_DES_PLACES_OUVERTES,
-  lesTravaux,
-  tableauDesTravaux,
-  travauxDuChapitre,
-} from "../../chapitres/le-client-qui-revient";
+import { LE_CLIENT_QUI_REVIENT, ficheDe } from "../../chapitres/le-client-qui-revient";
+import { JOURS_DE_FERMETURE, MOIS_DES_TRAVAUX, PART_DES_FIDELES_QUI_NE_REVIENNENT_PAS, carteDeFidelite, fermeturePourTravaux } from "../../monde/vente-et-caisse";
 import type { Situation } from "../types";
 
 /**
  * CAS PRATIQUE DU CHAPITRE « LE CLIENT QUI REVIENT ET LE CLIENT QUI PART » : LES TRAVAUX DE
  * L'ÉTÉ (Bac pro Métiers du commerce et de la vente, palier 2).
  *
- * Le chapitre a mesuré ce que coûtent des travaux au printemps : des adhérents refusés, qui ne
- * reviennent pas. La gérante peut les repousser à l'été, en fermant la même part de la salle.
- * L'élève lit l'année rejouée avec les travaux en été, refait les calculs du chapitre (les
- * refusés, les adhérents en moins, la marge perdue, le coût d'un refus), et répond.
+ * La boutique doit fermer 15 jours pour refaire sa vitrine. La gérante hésite entre mai et
+ * juillet. Pendant la fermeture, elle perd les ventes de ces jours, et des clientes fidèles qui
+ * trouvent porte close ne reviennent pas. L'élève refait les calculs du chapitre (la marge d'une
+ * cliente gardée toute l'année) sur les deux moments, et répond.
  *
- * Le cas est neuf par sa question : le chapitre mesure un trimestre, le cas en compare deux. Les
- * chiffres sont ceux de `lesTravaux` (le chapitre) : l'arène rejoue l'année avec moins
- * d'abonnements proposés au seul trimestre des travaux (clé « le-client-qui-revient:… »), à la
- * même part des places que le chapitre. Le verdict se calcule : il suit la marge perdue.
+ * LE CAS JOUE DANS LE MONDE DU COURS : les ventes trimestrielles de N − 1 de MAILLE & CO (la fiche),
+ * la marge moyenne d'un article de janvier, et la carte de fidélité du chapitre
+ * (monde/vente-et-caisse.ts). HYPOTHÈSES DU CAS : 15 jours de fermeture, au rythme du trimestre de
+ * N − 1 ; 20 % des clientes fidèles qui trouvent porte close ne reviennent pas, et chacune emporte
+ * une année de marge. Le verdict se calcule : il suit la marge perdue, à 5 % près.
+ *
+ * CE QUI A CHANGÉ. Le cas rejouait dans l'arène l'année de la salle de sport avec des places fermées
+ * au printemps ou en été. Il compte maintenant la fermeture de la boutique : en mai, 38 662,32 € de
+ * marge perdue ; en juillet, 50 490,60 €.
  */
 
-/** L'été : le troisième trimestre (hypothèse du cas). */
-export const TRIMESTRE_DE_L_ETE = 3;
+/** Deux coûts « à peu près égaux » à 5 % près (hypothèse du cas : le verdict ne tient pas à un arrondi). */
+export const ECART_NEGLIGEABLE = 0.05;
 
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const T = (n: number) => `T${n}`;
 
-export type QuandFaireLesTravaux = "ete" | "printemps" | "pareil";
+export type QuandFaireLesTravaux = "mai" | "juillet" | "pareil";
 
-/** Les travaux de l'été, ceux du printemps (le chapitre), et le trimestre qui coûte le moins. */
-export function travauxDeLEte(c: Cas) {
-  const ete = lesTravaux(c, TRIMESTRE_DE_L_ETE, PART_DES_PLACES_OUVERTES, "travaux-en-ete");
-  const printemps = travauxDuChapitre(c);
-  const ecart = ete.margePerdue - printemps.margePerdue;
-  const quand: QuandFaireLesTravaux =
-    Math.abs(ecart) <= ECART_NEGLIGEABLE * printemps.margePerdue ? "pareil" : ecart < 0 ? "ete" : "printemps";
-  return { ete, printemps, ecart, quand };
+/** La fermeture en mai et en juillet, et le moment qui coûte le moins. */
+export function travauxDeLEte(c: Pick<Cas, "code">) {
+  const f = ficheDe(c);
+  const mai = fermeturePourTravaux(f, MOIS_DES_TRAVAUX.mai);
+  const juillet = fermeturePourTravaux(f, MOIS_DES_TRAVAUX.juillet);
+  const ecart = Math.round((juillet.total - mai.total) * 100) / 100;
+  const quand: QuandFaireLesTravaux = Math.abs(ecart) <= ECART_NEGLIGEABLE * mai.total ? "pareil" : ecart < 0 ? "juillet" : "mai";
+  return { mai, juillet, ecart, quand, carte: carteDeFidelite(f) };
 }
+
+type Fermeture = ReturnType<typeof fermeturePourTravaux>;
+
+const champsDe = (x: Fermeture, margeDeLAnnee: number) => [
+  { libelle: "Articles non vendus pendant la fermeture", attendu: x.articlesPerdus, calcul: `${qte(x.ventesDuTrimestre)} ÷ ${qte(x.joursDuTrimestre)} × ${qte(JOURS_DE_FERMETURE)} = ${qte(x.articlesPerdus)}, à l'unité`, tolerance: 1 },
+  { libelle: "Marge de ces ventes", attendu: x.margeDesVentes, calcul: `${qte(x.articlesPerdus)} × ${eur(x.margeDUnArticle)} = ${eur(x.margeDesVentes)}`, tolerance: 30 },
+  { libelle: "Clientes fidèles perdues", attendu: x.fidelesPerdues, calcul: `${qte(x.fidelesAttendues)} × ${pct(PART_DES_FIDELES_QUI_NE_REVIENNENT_PAS)} = ${qte(x.fidelesPerdues)}` },
+  { libelle: "Marge perdue avec elles", attendu: x.margeDesFideles, calcul: `${qte(x.fidelesPerdues)} × ${eur(margeDeLAnnee)} = ${eur(x.margeDesFideles)}` },
+  { libelle: "Marge perdue en tout", attendu: x.total, calcul: `${eur(x.margeDesVentes)} + ${eur(x.margeDesFideles)} = ${eur(x.total)}`, tolerance: 30 },
+];
 
 export const LES_TRAVAUX_DE_L_ETE: Situation = {
   code: "les-travaux-de-l-ete",
@@ -51,15 +59,10 @@ export const LES_TRAVAUX_DE_L_ETE: Situation = {
   palier: 2,
   blocs: [],
   reprend: [LE_CLIENT_QUI_REVIENT.code],
-  commanditaire: "La gérante de la salle",
+  commanditaire: "La gérante de la boutique",
   titre: "Les travaux de l'été",
-  accroche:
-    "Les travaux du printemps ont fait perdre des adhérents. La gérante peut les repousser à l'été. Lire l'année rejouée, compter les adhérents refusés et la marge perdue, et lui répondre.",
-  objectifs: [
-    "Compter les clients refusés faute de place",
-    "Calculer la marge perdue sur l'année",
-    "Comparer deux moments pour des travaux",
-  ],
+  accroche: "La boutique doit fermer pour refaire sa vitrine. En mai ou en juillet ? Compter les ventes perdues, les clientes fidèles qui ne reviendront pas, et répondre à la gérante.",
+  objectifs: ["Compter les ventes perdues pendant une fermeture", "Chiffrer les clientes perdues avec leur marge de l'année", "Comparer deux moments pour des travaux"],
   libre: false,
   entreprises: LE_CLIENT_QUI_REVIENT.entreprises,
   etapes: [
@@ -67,109 +70,71 @@ export const LES_TRAVAUX_DE_L_ETE: Situation = {
       id: "demande",
       type: "lecture",
       titre: "La demande de la gérante",
+      tableau: (c) => {
+        const k = travauxDeLEte(c);
+        return {
+          titre: `${c.entreprise} · les ventes de N − 1`,
+          colonnes: ["Articles vendus dans le trimestre"],
+          lignes: [
+            { libelle: "Trimestre 2 (avril à juin)", valeurs: [qte(k.mai.ventesDuTrimestre)] },
+            { libelle: "Trimestre 3 (juillet à septembre)", valeurs: [qte(k.juillet.ventesDuTrimestre)] },
+          ],
+        };
+      },
       texte: (c) => {
         const k = travauxDeLEte(c);
         return [
-          `« Au printemps, fermer un plateau nous a coûté ${eur(k.printemps.margePerdue)} de marge sur l'année. Je peux faire les travaux en été, au ${T(k.ete.trimestre)}, en n'accueillant toujours que ${pct(PART_DES_PLACES_OUVERTES)} des adhérents prévus : ${qte(k.ete.places)} au lieu de ${qte(k.ete.placesAvant)}. Est-ce que ça coûte moins cher ? »`,
-          `Pas de cours cette fois. L'arène a rejoué l'année de ${c.entreprise} avec les travaux en été, avec les mêmes concurrents et la même façon de gérer.`,
+          `« Nous devons fermer ${qte(JOURS_DE_FERMETURE)} jours pour refaire la vitrine. En mai ou en juillet ? On perd les ventes de ces jours, au rythme du trimestre de l'an dernier. Et pendant la fermeture, ${qte(k.mai.fidelesAttendues)} clientes fidèles devaient passer : je crains que ${pct(PART_DES_FIDELES_QUI_NE_REVIENNENT_PAS)} d'entre elles ne reviennent pas. »`,
+          `Pas de cours cette fois. Un article vendu laisse en moyenne ${eur(k.mai.margeDUnArticle)} de marge, et une cliente fidèle gardée toute l'année ${eur(k.carte.margeDeLAnnee)}. Un trimestre compte ${qte(k.mai.joursDuTrimestre)} jours.`,
         ];
       },
-      repere: () => "À rendre : les adhérents refusés, la marge perdue sur l'année, et le meilleur moment pour les travaux.",
+      repere: () => "À rendre : la marge perdue en mai, la marge perdue en juillet, et le meilleur moment pour les travaux.",
     },
     {
-      id: "l-ete-rejoue",
+      id: "en-mai",
       type: "montants",
-      titre: "L'été rejoué",
-      notions: ["capacity", "churn_rate"],
-      tableau: (c) => tableauDesTravaux(c, travauxDeLEte(c).ete, "en été"),
-      question: (c) => {
-        const k = travauxDeLEte(c);
-        return `D'après le tableau, calculez les adhérents refusés au ${T(k.ete.trimestre)}, les adhérents en moins à la fin de l'année, puis la marge perdue sur l'année.`;
-      },
+      titre: "Fermer en mai",
+      notions: ["churn_rate", "customer_lifetime_value"],
+      question: () => "Pour une fermeture en mai, calculez les articles non vendus (les ventes du trimestre 2 ÷ les jours du trimestre × les jours de fermeture), leur marge, les clientes fidèles perdues, leur marge de l'année, puis la marge perdue en tout.",
       champs: (c) => {
-        const { ete: p } = travauxDeLEte(c);
-        const t = p.trimestre - 1;
-        const fin = p.reference.length - 1;
-        return [
-          {
-            libelle: `Adhérents refusés au ${T(p.trimestre)}`,
-            attendu: p.refuses,
-            calcul: `${qte(p.reference[t]!.fin)} − ${qte(p.avec[t]!.fin)} = ${qte(p.refuses)}`,
-            tolerance: 0,
-          },
-          {
-            libelle: "Adhérents en moins à la fin de l'année",
-            attendu: p.enMoinsALaFin,
-            calcul: `${qte(p.reference[fin]!.fin)} − ${qte(p.avec[fin]!.fin)} = ${qte(p.enMoinsALaFin)}`,
-            tolerance: 0,
-          },
-          {
-            libelle: "Marge perdue sur l'année",
-            attendu: p.margePerdue,
-            calcul: `${eur(p.margeDeReference)} − ${eur(p.margeAvec)} = ${eur(p.margePerdue)}`,
-            tolerance: 1,
-          },
-        ];
+        const k = travauxDeLEte(c);
+        return champsDe(k.mai, k.carte.margeDeLAnnee);
       },
       explication: (c) => {
         const k = travauxDeLEte(c);
-        return [
-          `En été, ${qte(k.ete.refuses)} adhérents ne trouvent pas de place, contre ${qte(k.printemps.refuses)} au printemps. ${
-            k.ete.refuses < k.printemps.refuses ? "L'été, moins d'adhérents reviennent et peu de nouveaux s'inscrivent : la salle fermée en refuse moins." : "L'été ne vide pas assez la salle pour refuser moins d'adhérents."
-          }`,
-        ];
+        return [`En mai, la fermeture coûte ${eur(k.mai.total)} de marge, dont ${eur(k.mai.margeDesFideles)} pour les clientes qui ne reviendront pas.`];
       },
     },
     {
-      id: "un-refus",
+      id: "en-juillet",
       type: "montants",
-      titre: "Ce que coûte un refus en été",
-      notions: ["customer_lifetime_value"],
-      question: (c) => {
-        const { ete: p } = travauxDeLEte(c);
-        return `Calculez la marge perdue par adhérent refusé en été (${eur(p.margePerdue)} pour ${qte(p.refuses)} adhérents refusés, au centime).`;
-      },
+      titre: "Fermer en juillet",
+      notions: ["churn_rate", "customer_lifetime_value"],
+      question: () => "Refaites les mêmes calculs pour une fermeture en juillet, au rythme du trimestre 3.",
       champs: (c) => {
-        const { ete: p } = travauxDeLEte(c);
-        return [{ libelle: "Marge perdue par adhérent refusé", attendu: p.parRefuse, calcul: `${eur(p.margePerdue)} ÷ ${qte(p.refuses)} = ${eur(p.parRefuse)}` }];
+        const k = travauxDeLEte(c);
+        return champsDe(k.juillet, k.carte.margeDeLAnnee);
       },
       explication: (c) => {
-        const { ete: p } = travauxDeLEte(c);
-        return [
-          p.verdict === "plus"
-            ? `Un adhérent refusé en été coûte ${eur(p.parRefuse)}, plus qu'un trimestre de marge (${eur(p.margeDUnTrimestre)}) : lui non plus ne revient pas.`
-            : `Un adhérent refusé en été coûte ${eur(p.parRefuse)}, pour ${eur(p.margeDUnTrimestre)} de marge sur un trimestre.`,
-        ];
+        const k = travauxDeLEte(c);
+        return [`En juillet, la fermeture coûte ${eur(k.juillet.total)} de marge : les mêmes clientes perdues, mais des ventes plus fortes qu'au printemps.`];
       },
     },
     {
       id: "reponse",
       type: "choix",
       titre: "Votre réponse à la gérante",
-      notions: ["capacity"],
       question: (c) => {
         const k = travauxDeLEte(c);
-        return `Les travaux coûtent ${eur(k.ete.margePerdue)} de marge sur l'année en été, ${eur(k.printemps.margePerdue)} au printemps. Quand faut-il les faire ?`;
+        return `La fermeture coûte ${eur(k.mai.total)} de marge en mai, ${eur(k.juillet.total)} en juillet. Quand faut-il faire les travaux ?`;
       },
       options: (c) => {
         const k = travauxDeLEte(c);
-        const faits = `En été, ${qte(k.ete.refuses)} adhérents refusés et ${eur(k.ete.margePerdue)} de marge perdue ; au printemps, ${qte(k.printemps.refuses)} refusés et ${eur(k.printemps.margePerdue)}.`;
+        const faits = `En mai, ${eur(k.mai.total)} de marge perdue ; en juillet, ${eur(k.juillet.total)}.`;
         return [
-          {
-            texte: "En été, quand la salle est moins pleine",
-            juste: k.quand === "ete",
-            retour: k.quand === "ete" ? `Oui. ${faits} Fermer des places quand peu de clients les demandent, c'est perdre moins de clients.` : `Non. ${faits}`,
-          },
-          {
-            texte: "Au printemps, quand les nouveaux arrivent",
-            juste: k.quand === "printemps",
-            retour: k.quand === "printemps" ? `Oui. ${faits}` : `Non. ${faits}${k.printemps.refuses > k.ete.refuses ? " Au printemps, la salle est plus demandée : les mêmes places fermées y refusent plus d'adhérents." : ""}`,
-          },
-          {
-            texte: "C'est pareil : les mêmes places sont fermées",
-            juste: k.quand === "pareil",
-            retour: k.quand === "pareil" ? `Oui. ${faits}` : `Non. ${faits} Les mêmes places fermées ne refusent pas autant de clients selon la saison.`,
-          },
+          { texte: "En mai, quand la boutique vend le moins", juste: k.quand === "mai", retour: k.quand === "mai" ? `Oui. ${faits} Fermer quand peu de clients viennent, c'est perdre moins de ventes ; les clientes fidèles, elles, coûtent autant à perdre dans les deux cas.` : `Non. ${faits}` },
+          { texte: "En juillet, pendant les vacances", juste: k.quand === "juillet", retour: k.quand === "juillet" ? `Oui. ${faits}` : `Non. ${faits} L'été vend plus que le printemps : les mêmes jours fermés y font perdre plus de ventes.` },
+          { texte: "C'est pareil : les mêmes jours sont fermés", juste: k.quand === "pareil", retour: k.quand === "pareil" ? `Oui. ${faits}` : `Non. ${faits} Les mêmes jours fermés ne coûtent pas autant selon la saison.` },
         ];
       },
     },

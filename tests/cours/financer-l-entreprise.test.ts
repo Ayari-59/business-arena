@@ -1,99 +1,75 @@
 import { describe, expect, it } from "vitest";
-import { casDeLEntreprise } from "../../src/config/cours/cas";
-import { FINANCER_L_ENTREPRISE, financer } from "../../src/config/cours/chapitres/financer-l-entreprise";
-import { rentabilite } from "../../src/config/cours/chapitres/rentabilite";
-import { soldesDeGestion } from "../../src/config/cours/chapitres/soldes-intermediaires";
-import { ENDETTEMENT_MAXIMAL } from "../../src/config/cours/financement";
-import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
-import { CONCEPTS } from "../../src/config/pedagogy/concepts";
-import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
-import type { Cas } from "../../src/config/cours/cas";
-import type { Etape, EtatDuCours } from "../../src/config/cours/types";
+import { FINANCER_L_ENTREPRISE, PRIX_DU_DEFI, SOLUTION_DU_FINANCEMENT, financementDuLaboratoire, financer, prixAutofinance } from "../../src/config/cours/chapitres/financer-l-entreprise";
+import { L_ANNUITE_DU_PRET, annuiteDuPret } from "../../src/config/cours/situations/par-chapitre/l-annuite-du-pret";
+import { LE_RENDEZ_VOUS_A_LA_BANQUE } from "../../src/config/cours/situations/le-rendez-vous-a-la-banque";
+import { chapitreDuCas } from "../../src/pedagogy/cours/deroule";
+import { NOVA, VIDE, etape, gardeDuCurseur, gardeDuLaboratoire, gardesDeTexte } from "./gardes-du-lycee";
 
 /**
- * FINANCER L'ENTREPRISE, SUR L'ANNÉE ET LE BILAN DE L'ARÈNE.
+ * FINANCER L'ENTREPRISE, SUR LE PREMIER EXERCICE DE NOVA DU MONDE DU COURS, ET SES CAS : L'ANNUITÉ
+ * DU PRÊT, LE RENDEZ-VOUS À LA BANQUE.
  *
- * La capacité d'autofinancement est celle des soldes de gestion ; le coût de l'emprunt et
- * l'endettement se recomposent ; le financement choisi suit la règle : autofinancement si la
- * capacité suffit, emprunt si l'endettement reste sous le seuil, apport sinon.
+ * Refait à la main : la capacité d'autofinancement, 79 225,96 € de résultat et 26 071,11 € de
+ * dotations ; la deuxième ligne, 4 postes à 15 000 € ; l'emprunt de 68 000 € et les capitaux propres
+ * de 229 225,96 € ; le taux de 5 %.
  */
 
-function textesDe(e: Etape, cas: Cas, etat: EtatDuCours): string[] {
-  const tableau = e.tableau ? [e.tableau(cas).titre, ...e.tableau(cas).lignes.flatMap((l) => [l.libelle, ...l.valeurs])] : [];
-  switch (e.type) {
-    case "lecture":
-      return [...e.texte(cas), e.repere?.(cas) ?? "", ...tableau];
-    case "choix":
-      return [e.question(cas, etat), ...e.options(cas, etat).flatMap((o) => [o.texte, o.retour]), ...tableau];
-    case "montants":
-      return [e.question(cas, etat), ...e.champs(cas, etat).flatMap((c) => [c.libelle, c.calcul, String(c.attendu)]), ...e.explication(cas, etat), ...tableau];
-    default:
-      return [];
-  }
-}
+const ch = chapitreDuCas(FINANCER_L_ENTREPRISE, NOVA);
+const c = (x: number) => Math.round(x * 100) / 100 + 0;
+const CAF = c(79_225.96 + 26_071.11);
 
-describe.each(ENTREPRISES_DU_COURS)("le financement chez %s", (code) => {
-  const cas = casDeLEntreprise(code);
-  const k = financer(cas);
-  const chapitre = chapitreDuCas(FINANCER_L_ENTREPRISE, cas);
-  const juste = (id: string) => {
-    const e = chapitre.etapes.find((x) => x.id === id);
-    if (e?.type !== "choix") throw new Error(`Pas d'étape ${id}`);
-    return e.options(cas, { soldes: {} }).find((o) => o.juste)!.texte;
-  };
+describe("financer la deuxième ligne de NOVA", () => {
+  const k = financer(NOVA);
 
-  it("la capacité d'autofinancement, le coût de l'emprunt et l'endettement se recomposent", () => {
-    expect(k.caf).toBeCloseTo(soldesDeGestion(cas).cafAdditive, 1);
-    expect(k.montant).toBe(cas.immobilisation.ht);
-    expect(k.interets).toBeCloseTo(k.montant * cas.pret.tauxAnnuel, 1);
-    expect(k.endettementApres).toBeCloseTo((k.emprunts + k.montant) / k.capitauxPropres, 2);
+  it("la capacité d'autofinancement, les intérêts et l'endettement se refont à la main", () => {
+    expect(CAF).toBe(105_297.07);
+    expect(k.montant).toBe(4 * 15_000);
+    expect(etape(ch, "caf", "montants").champs(NOVA, VIDE).map((x) => x.attendu)).toEqual([CAF]);
+    expect(etape(ch, "emprunt", "montants").champs(NOVA, VIDE).map((x) => x.attendu)).toEqual([3_000, 0.3, 0.56]);
+    // 68 000 ÷ 229 225,96 = 0,297 ; 128 000 ÷ 229 225,96 = 0,558.
   });
 
-  it("l'emprunt conseillé rappelle la rentabilité de l'activité quand elle ne couvre pas son taux", () => {
-    // Le chapitre « La rentabilité » l'apprend : emprunter à un taux plus élevé que ce que
-    // rapporte l'activité appauvrit les associés. Le conseil de financement ne peut pas l'oublier.
-    expect(k.economique).toBe(rentabilite(cas).economique);
-    const choisir = chapitre.etapes.find((e) => e.id === "choisir");
-    if (choisir?.type !== "choix") throw new Error("Pas d'étape choisir");
-    const juste = choisir.options(cas, { soldes: {} }).find((o) => o.juste)!;
-    if (k.choix === "emprunt") expect(juste.retour.includes("Reste que son activité rapporte")).toBe(k.economique <= k.tauxDeLEmprunt);
-    const textes = chapitre.etapes.flatMap((e) => (e.type === "choix" ? e.options(cas, { soldes: {} }).map((o) => o.retour) : []));
-    expect(textes.join(" "), "une entreprise endettée « ne doit rien à personne »").not.toMatch(/ne doit rien à personne/);
+  it("l'autofinancement suffit : une seule bonne réponse, partout", () => {
+    expect(k.choix).toBe("autofinancement");
+    expect(etape(ch, "suffit", "choix").options(NOVA, VIDE).filter((o) => o.juste).map((o) => o.texte)).toEqual(["Oui : sa capacité d'autofinancement couvre le prix"]);
+    expect(etape(ch, "choisir", "choix").options(NOVA, VIDE).filter((o) => o.juste).map((o) => o.texte)).toEqual(["Par autofinancement"]);
   });
 
-  it("le financement choisi suit la règle", () => {
-    const attendu = k.caf >= k.montant ? "autofinancement" : (k.emprunts + k.montant) / k.capitauxPropres <= ENDETTEMENT_MAXIMAL ? "emprunt" : "apport";
-    expect(k.choix).toBe(attendu);
-    expect(juste("choisir")).toMatch(attendu === "autofinancement" ? /autofinancement/ : attendu === "emprunt" ? /emprunt/ : /apport/);
-    expect(juste("suffit")).toMatch(k.caf >= k.montant ? /^Oui : sa capacité/ : /^Non/);
+  it("le curseur : 105 297 €, le prix le plus haut que l'activité paie seule", () => {
+    expect(prixAutofinance(k)).toBe(Math.floor(CAF));
+    gardeDuCurseur(ch, "jusqu-ou-s-autofinancer", 105_297);
   });
 
-  it("aucun texte ne sort undefined ni « de le » ; une seule bonne réponse ; les notions existent", () => {
-    const codes = new Set(CONCEPTS.map((x) => x.code));
-    for (const [i, e] of chapitre.etapes.entries()) {
-      const etat = etatAvant(chapitre, cas, i);
-      for (const x of textesDe(e, cas, etat)) {
-        expect(x, `${e.id} : ${x}`).not.toMatch(/undefined|NaN|Infinity|\[object/);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/(^|\s)(de|à) [Ll]es? /);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/ [-–—] /);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/(^|[\s'(])de [aeiouyéèêAEIOUYÉ]/);
-        expect(x, `${e.id} : ${x}`).not.toMatch(/\bque [AEIOUYÉ]/);
-      }
-      if (e.type === "choix") expect(e.options(cas, etat).filter((o) => o.juste), e.id).toHaveLength(1);
-      for (const n of e.notions ?? []) expect(codes.has(n), `${e.id} : ${n}`).toBe(true);
-    }
+  it("le laboratoire : 150 000 € empruntés tiennent la règle des banques, 170 000 € non", () => {
+    gardeDuLaboratoire(ch, "le-laboratoire-du-financement");
+    expect(SOLUTION_DU_FINANCEMENT).toEqual({ prix: PRIX_DU_DEFI, source: 1 });
+    const x = financementDuLaboratoire(k, SOLUTION_DU_FINANCEMENT);
+    expect(x.interets).toBe(7_500);
+    expect(x.endettement).toBe(0.95); // 218 000 ÷ 229 225,96
+    const defi = etape(ch, "le-laboratoire-du-financement", "simulation").defi(NOVA);
+    expect(defi.atteint({ prix: 160_000, source: 1 })).toBe(true); // 228 000 ÷ 229 225,96 = 0,99
+    expect(defi.atteint({ prix: 170_000, source: 1 })).toBe(false); // 238 000 ÷ 229 225,96 = 1,04
+    expect(defi.atteint({ prix: 150_000, source: 0 })).toBe(false); // l'autofinancement s'arrête à 105 297,07 €
+    expect(defi.atteint({ prix: 150_000, source: 2 })).toBe(false); // l'apport est interdit par le défi
+    expect(financementDuLaboratoire(k, { prix: 150_000, source: 0 }).manque).toBe(c(150_000 - CAF));
+  });
+
+  it("les textes sont propres, une seule bonne réponse, les notions existent", () => {
+    gardesDeTexte(FINANCER_L_ENTREPRISE);
   });
 });
 
-describe("les cas que le chapitre distingue se rencontrent dans le cours", () => {
-  const toutes = ENTREPRISES_DU_COURS.map((c) => financer(casDeLEntreprise(c)));
-  it("autofinancement et apport ; l'emprunt ne se conseille plus nulle part", () => {
-    for (const choix of ["autofinancement", "apport"]) expect(toutes.some((k) => k.choix === choix), choix).toBe(true);
-    // Dans l'année du bon gestionnaire, la capacité d'autofinancement couvre l'équipement partout
-    // sauf à l'hôtel, dont l'emprunt dépasserait les capitaux propres : la réponse « Par un
-    // emprunt » (et sa réserve sur une activité qui ne couvre pas son taux) n'est plus lue. Si elle
-    // revient, ces gardes le diront.
-    expect(toutes.filter((k) => k.choix === "emprunt")).toHaveLength(0);
-    expect(ENTREPRISES_DU_COURS.filter((_, i) => toutes[i]!.choix === "apport")).toEqual(["hotel"]);
+describe("le cas : l'annuité du prêt", () => {
+  const r = annuiteDuPret(NOVA);
+  it("12 000 € de capital et 3 000 € d'intérêts la première année, la capacité d'autofinancement les couvre", () => {
+    expect(r.capital).toBe(12_000);
+    expect(r.annuite).toBe(15_000);
+    expect(r.derniere).toBe(600);
+    expect(r.resteDeLaCaf).toBe(c(CAF - 15_000));
+    expect(r.couvre).toBe(true);
+  });
+  it("les textes sont propres, une seule bonne réponse", () => {
+    gardesDeTexte(L_ANNUITE_DU_PRET);
+    gardesDeTexte(LE_RENDEZ_VOUS_A_LA_BANQUE);
   });
 });

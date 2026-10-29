@@ -59,7 +59,7 @@ const JEANNE = {
   de: "Jeanne Bellamy",
   role: "Contrôleuse de gestion",
 } as const;
-const SOLENE = { de: "Romane Eymard", role: "Responsable marketing" } as const;
+const ROMANE = { de: "Romane Eymard", role: "Responsable marketing" } as const;
 const SUIVI = {
   de: "Tableau de suivi du service",
   role: "Point hebdomadaire",
@@ -79,7 +79,7 @@ export const ETAPES: readonly Etape[] = [
           "Chloé, le comité a validé la location de matériel. Je veux les douze agences avant la fin du trimestre : nos artisans nous la demandent, et chaque mois qui passe, c'est Ferlane qui encaisse. Le plan compte 18 locations par agence et par semaine.",
       },
       {
-        ...SOLENE,
+        ...ROMANE,
         heure: "09:00",
         texte:
           "Notre sondage est formidable : 78 % des artisans trouvent l'idée intéressante. Je peux préparer l'affichage pour les douze agences dès la semaine prochaine.",
@@ -194,7 +194,7 @@ export const ETAPES: readonly Etape[] = [
       ctx.loue
         ? [
             {
-              ...SOLENE,
+              ...ROMANE,
               heure: "11:20",
               alerte: true,
               texte: `${ctx.devis} demandes de devis en une semaine ! Le comité adore ce chiffre. Je propose qu'on le suive chaque lundi, agence par agence.`,
@@ -207,7 +207,7 @@ export const ETAPES: readonly Etape[] = [
           ]
         : [
             {
-              ...SOLENE,
+              ...ROMANE,
               heure: "11:20",
               alerte: true,
               texte: ctx.etude
@@ -273,7 +273,7 @@ export const ETAPES: readonly Etape[] = [
       ],
       [
         {
-          ...SOLENE,
+          ...ROMANE,
           texte: "Super ! Je mets le compteur de devis en page d'accueil de l'intranet.",
         },
       ],
@@ -636,7 +636,7 @@ export const ETAPES: readonly Etape[] = [
       ],
       [
         {
-          ...SOLENE,
+          ...ROMANE,
           texte:
             "L'e-mailing est parti : les devis explosent ! Bon, beaucoup demandent du matériel qu'on n'a pas, ou dans une agence qui ne loue pas.",
         },

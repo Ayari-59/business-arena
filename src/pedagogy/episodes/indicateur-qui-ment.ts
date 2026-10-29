@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 15 — L'INDICATEUR QUI MENT, tel que l'interface et le bilan le lisent.
+ * L'INDICATEUR QUI MENT, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Sonia montre, ce que la courbe
@@ -390,7 +390,7 @@ export const EPISODE_INDICATEURS: Episode<Trimestre> = {
         {
           nom: "Clients qui rappellent",
           valeur: pourcent(t.rappelMoyen),
-          aide: "en moyenne ; plafond 15 %",
+          aide: "en moyenne ; plafond 19 %",
           tenu: t.rappelMoyen <= SEUIL_RAPPEL,
         },
         {

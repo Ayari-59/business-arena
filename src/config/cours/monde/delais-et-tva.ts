@@ -1,7 +1,7 @@
 import { JOURS_DE_L_ANNEE } from "./amortissement";
 import { COUT_VARIABLE_D_UNE_JOURNEE, PRIX_CATALOGUE } from "./atlas-conseil";
 import { CAMPUSTECH, ELECTRO_COMPOSANTS, PLACEMENT } from "./exercice-de-nova";
-import { AUTRES_COUTS_PAR_ENCEINTE, JOURS_DU_MOIS_COMMERCIAL, PRIX_DE_L_ENCEINTE, TAUX_DE_TVA, VENTES_A_CAMPUSTECH } from "./nova-gestion";
+import { AUTRES_COUTS_PAR_ENCEINTE, DELAI_CONVENU_DE_CAMPUSTECH, JOURS_DU_MOIS_COMMERCIAL, PRIX_DE_L_ENCEINTE, RETARD_DE_CAMPUSTECH, TAUX_DE_TVA, VENTES_A_CAMPUSTECH } from "./nova-gestion";
 
 /**
  * LE MONDE DU COURS : LES DÉLAIS ET LA TVA (le lot de la trésorerie d'exploitation : la déclaration
@@ -317,27 +317,18 @@ export const OFFRES_DE_COMPOSANTS: readonly OffreDeFournisseur[] = [
 export const OFFRE_HABITUELLE: CodeDOffre = "electro-composants";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// NOVA : CAMPUSTECH, ET LE CLIENT QUI PAIERAIT TARD
+// NOVA : CAMPUSTECH, LE CLIENT QUI PAIE TARD
 // ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * LE RETARD SUPPOSÉ DE CAMPUSTECH (HYPOTHÈSE DU COURS, pour le chapitre « Le client qui paie tard ») :
- * dans le monde du cours, CampusTech paie à l'échéance ; le chapitre se demande ce qui se passerait
- * SI elle payait 20 jours en retard, au 80e jour, le 10 du troisième mois suivant. Un retard que la
- * loi sanctionne : des pénalités de retard et 40 € d'indemnité de recouvrement par facture.
- */
-export const RETARD_SUPPOSE_DE_CAMPUSTECH = 20;
 
 /**
  * CAMPUSTECH EN N + 1, le client professionnel de nova-gestion.ts et d'exercice-de-nova.ts : 320
  * enceintes chaque mois, au prix de 59 € hors taxes, facturées le 20 (18 880 € HT, 22 656 € TTC).
  *   - LE DÉLAI CONVENU : 60 jours après la facture, le délai maximal entre professionnels. Une
  *     facture du 20 est due le 20 du deuxième mois suivant.
- *   - LE DÉLAI RÉEL : CampusTech paie à l'échéance, à 60 jours (le délai des autres fiches du cours).
- *   - LE DÉLAI SI ELLE PAYAIT EN RETARD : 80 jours, le délai convenu et le retard supposé. C'est
- *     l'hypothèse que le modèle du retard (monde/delais.ts, `retardDeCampusTech` et
- *     `mobiliserUneFacture`) chiffre par défaut ; les créances du trimestre, elles, se comptent par
- *     défaut au délai réel.
+ *   - LE PAIEMENT RÉEL : CampusTech est un mauvais payeur. Elle paie 20 jours après l'échéance
+ *     (RETARD_DE_CAMPUSTECH, nova-gestion.ts), au 80e jour, le 10 du troisième mois suivant : toutes
+ *     les fiches du cours l'encaissent ce jour-là. C'est un RETARD, que la loi sanctionne : des
+ *     pénalités de retard et 40 € d'indemnité de recouvrement par facture.
  *   - NOVA vend des biens : la TVA de chaque facture est due à la livraison. En attendant d'être
  *     payée, NOVA finance la facture toutes taxes comprises.
  */
@@ -345,10 +336,9 @@ export const CAMPUSTECH_EN_N_PLUS_1 = {
   nom: CAMPUSTECH.nom,
   enceintesParFacture: VENTES_A_CAMPUSTECH[0]!,
   jourDeFacturation: CAMPUSTECH.jourDeFacturation,
-  delaiConvenu: DELAI_MAXIMAL_CONVENU.joursDeLaFacture,
+  delaiConvenu: DELAI_CONVENU_DE_CAMPUSTECH,
+  retard: RETARD_DE_CAMPUSTECH,
   delaiReel: CAMPUSTECH.delai,
-  retardSuppose: RETARD_SUPPOSE_DE_CAMPUSTECH,
-  delaiSiRetard: DELAI_MAXIMAL_CONVENU.joursDeLaFacture + RETARD_SUPPOSE_DE_CAMPUSTECH,
 } as const;
 
 /**
@@ -399,9 +389,7 @@ export interface BesoinDeTresorerie {
  * détaillé ici ; c'est ce qu'il donne avant toute mobilisation des créances). Au deuxième trimestre,
  * le solde de l'impôt de N et les composants du printemps creusent le compte : 25 000 € de découvert
  * pendant 20 jours. Au quatrième, la production de Noël part avant d'être payée : 40 000 € pendant
- * 50 jours. Les trimestres 1 et 3 restent créditeurs. Ils supposent le compte courant de l'ouverture,
- * 115 734,87 €, après le versement à la réserve du 1er janvier (nova-capacite.ts), et CampusTech payée
- * à l'échéance, à 60 jours : une facture rentre chaque mois, le 20.
+ * 50 jours. Les trimestres 1 et 3 restent créditeurs.
  */
 export const BESOINS_DE_TRESORERIE_N_PLUS_1: readonly BesoinDeTresorerie[] = [
   { trimestre: 1, montant: 0, jours: 0 },
@@ -487,9 +475,8 @@ export interface FicheDesDelaisDeNova {
     readonly enceintesParFacture: number;
     readonly jourDeFacturation: number;
     readonly delaiConvenu: number;
+    readonly retard: number;
     readonly delaiReel: number;
-    readonly retardSuppose: number;
-    readonly delaiSiRetard: number;
   };
   penalites: { readonly base: "bce" | "taux-legal"; readonly indemnite: number };
   banque: {

@@ -171,7 +171,7 @@ export const DES_CLIENTS_REPARTIS_SANS_ETRE_SERVIS: Situation = {
           k.aPleineCapacite
             ? `L'entreprise a déjà produit à pleine capacité, ${qte(k.t.production)} ${c.unites} : toute la demande manquée, ${qte(k.horsDePortee)} ${c.unites}, était hors de portée, et seule une capacité plus grande l'aurait servie.`
             : k.horsDePortee > 0
-              ? `En produisant à pleine capacité, l'entreprise aurait servi ${qte(k.servisEnPlus)} ${c.unites} de plus ; il en restait ${qte(k.horsDePortee)} hors de portée, que seule une capacité plus grande aurait servis.`
+              ? `En produisant à pleine capacité, l'entreprise aurait servi ${qte(k.servisEnPlus)} ${k.servisEnPlus === 1 ? c.unite : c.unites} de plus ; il en restait ${qte(k.horsDePortee)} hors de portée, que seule une capacité plus grande aurait servis.`
               : `En produisant à pleine capacité, l'entreprise aurait servi toute la demande : elle a produit ${qte(k.t.production)} ${c.unites}, pour une capacité de ${qte(k.t.capacite)}.`,
         ];
       },
@@ -201,7 +201,7 @@ export const DES_CLIENTS_REPARTIS_SANS_ETRE_SERVIS: Situation = {
               k.verdict === "capacite"
                 ? k.aPleineCapacite
                   ? `Oui : ${chiffres}. L'entreprise produisait déjà à pleine capacité ; pour servir les ${qte(k.horsDePortee)} ${c.unites} qui manquaient, il faut une capacité plus grande : de l'équipement ou du personnel en plus.`
-                  : `Oui : ${chiffres}. Produire à plein aurait déjà servi ${qte(k.servisEnPlus)} ${c.unites} de plus ; pour le reste, ${qte(k.horsDePortee)}, il faut une capacité plus grande : de l'équipement ou du personnel en plus.`
+                  : `Oui : ${chiffres}. Produire à plein aurait déjà servi ${qte(k.servisEnPlus)} ${k.servisEnPlus === 1 ? c.unite : c.unites} de plus ; pour le reste, ${qte(k.horsDePortee)}, il faut une capacité plus grande : de l'équipement ou du personnel en plus.`
                 : `Non : ${chiffres}. La capacité suffisait : augmenter la capacité coûterait sans servir un client de plus.`,
           },
           {

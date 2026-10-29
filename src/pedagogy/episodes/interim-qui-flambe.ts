@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 82 — L'INTÉRIM QUI FLAMBE, tel que l'interface et le bilan le lisent.
+ * L'INTÉRIM QUI FLAMBE, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord des remplacements de Cassien

@@ -1,10 +1,11 @@
-import { montantEcrit as eur } from "../../../pedagogy/cours/correcteur";
+import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import type { Cas } from "../cas";
 import { ENDETTEMENT_MAXIMAL } from "../financement";
 import { financer } from "../chapitres/financer-l-entreprise";
 import { fondsDeRoulement } from "../chapitres/fonds-de-roulement-et-tresorerie";
 import { rentabilite } from "../chapitres/rentabilite";
 import { valeurAjoutee } from "../chapitres/valeur-ajoutee-et-partage";
+import { ENTREPRISES_DES_COMPTES_DU_LYCEE } from "../monde/comptes-du-lycee";
 import type { Situation } from "./types";
 
 /**
@@ -19,15 +20,18 @@ import type { Situation } from "./types";
  *
  * Aucun cours : les calculs sont ceux des chapitres de gestion et finance, appelés tels
  * quels (`valeurAjoutee`, `rentabilite`, `fondsDeRoulement`, `financer`). L'équipement,
- * son prix et le seuil d'endettement sont ceux du chapitre « Financer l'entreprise ».
+ * son prix et le seuil d'endettement sont ceux du chapitre « Financer l'entreprise ». Le cas joue
+ * dans le monde du cours : le premier exercice de NOVA, celui des chapitres.
  */
 
+/** Un montant, le signe moins typographique : « −582,38 € ». */
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 const ratio = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /** Les chiffres que le banquier demande, calculés une fois du cas. */
-export function dossierDeLaBanque(c: Cas) {
+export function dossierDeLaBanque(c: Pick<Cas, "code">) {
   const v = valeurAjoutee(c);
   const r = rentabilite(c);
   const k = fondsDeRoulement(c);
@@ -53,6 +57,10 @@ export const LE_RENDEZ_VOUS_A_LA_BANQUE: Situation = {
     "Mesurer l'endettement avant et après un prêt, et répondre au banquier",
   ],
   libre: false,
+  entreprises: {
+    codes: ENTREPRISES_DES_COMPTES_DU_LYCEE,
+    pourquoi: "le cas reprend le premier exercice de NOVA dans la simulation du cours, celui des chapitres de gestion et finance ; la méthode vaut pour toute entreprise.",
+  },
   etapes: [
     {
       id: "demande",
@@ -62,36 +70,27 @@ export const LE_RENDEZ_VOUS_A_LA_BANQUE: Situation = {
         const { f } = dossierDeLaBanque(c);
         return [
           `« Vous nous demandez un prêt pour un nouvel équipement, « ${f.equipement} », à ${eur(f.montant)} hors taxes. Avant notre rendez-vous, j'ai besoin de quelques chiffres tirés de vos comptes de l'année : ce que votre activité crée, ce que rapportent les capitaux de vos associés, ce que votre activité dégage pour rembourser, votre fonds de roulement, votre besoin en fonds de roulement et votre trésorerie. Dites-moi aussi où en serait votre endettement avec ce prêt. » Le chargé d'affaires de la banque`,
-          `Vous avez sous les yeux les comptes ${dE(c.entreprise)}. Pas de cours cette fois : les calculs sont ceux que vous connaissez. À vous de les enchaîner.`,
+          `Vous avez sous les yeux les comptes ${dE(f.entreprise)}. Pas de cours cette fois : les calculs sont ceux que vous connaissez. À vous de les enchaîner.`,
         ];
       },
       tableau: (c) => {
         const { v, k, f } = dossierDeLaBanque(c);
-        const s = v.k.s;
-        const b = k.f;
         return {
-          titre: `Les comptes de l'année · ${c.entreprise}`,
+          titre: `Les comptes de l'année · ${f.entreprise}`,
           colonnes: ["Montant"],
           lignes: [
-            { libelle: "Ventes de l'année", valeurs: [eur(s.ventes)] },
-            // Une entreprise qui produit ajoute à ses ventes la variation de ses en-cours ; un
-            // commerce n'a que ses ventes, et la variation de stock corrige ses achats.
-            ...(v.k.produits !== s.ventes ? [{ libelle: "Production de l'année (ventes et variation des en-cours)", valeurs: [eur(v.k.produits)] }] : []),
-            { libelle: "Consommations venues d'autres entreprises (achats consommés, loyer, publicité, entretien…)", valeurs: [eur(v.consommations)] },
-            { libelle: "Charges de personnel", valeurs: [eur(s.personnel)] },
-            { libelle: "Dotations aux amortissements", valeurs: [eur(f.dotation)] },
-            { libelle: "Intérêts de l'emprunt", valeurs: [eur(s.interets)] },
-            { libelle: "Impôt sur les bénéfices", valeurs: [eur(s.impot)] },
+            { libelle: "Ventes de l'année", valeurs: [eur(v.k.ventes)] },
+            { libelle: "Revenus du compte à terme", valeurs: [eur(v.k.produitsFinanciers)] },
+            { libelle: "Consommations venues d'autres entreprises (composants, emballage, transport, énergie, loyer, assurance)", valeurs: [eur(v.consommations)] },
+            { libelle: "Charges de personnel", valeurs: [eur(v.k.personnel)] },
+            { libelle: "Dotations (usure de la ligne, dépréciation, provision)", valeurs: [eur(f.dotation)] },
+            { libelle: "Intérêts de l'emprunt et escomptes", valeurs: [eur(v.k.financement)] },
+            { libelle: "Impôt sur les bénéfices", valeurs: [eur(v.k.impot)] },
             { libelle: "Résultat net de l'année", valeurs: [eur(f.resultatNet)] },
-            { libelle: "Capitaux propres au 31 décembre", valeurs: [eur(b.capitauxPropres)] },
-            { libelle: "Emprunts", valeurs: [eur(b.emprunts)] },
-            { libelle: "Équipement (valeur nette)", valeurs: [eur(b.immobilisationsNettes)] },
-            { libelle: "Stocks", valeurs: [eur(b.stocks)] },
-            { libelle: "Créances sur les clients", valeurs: [eur(b.creances)] },
-            ...(b.tva !== 0 ? [{ libelle: b.tva > 0 ? "TVA due à l'État" : "TVA à récupérer", valeurs: [eur(Math.abs(b.tva))] }] : []),
-            { libelle: "Dettes envers les fournisseurs", valeurs: [eur(b.fournisseurs)] },
-            { libelle: "Banque et placements", valeurs: [eur(k.disponible)] },
-            { libelle: "Découvert bancaire", valeurs: [eur(b.decouvert)] },
+            ...k.postes.filter((x) => x.montant !== 0 || x.code === "decouvert").map((x) => ({ libelle: x.libelle, valeurs: [eur(x.montant)] })),
+            { libelle: "Équipement à sa valeur d'origine", valeurs: [eur(k.equipementBrut)] },
+            { libelle: "Amortissements et dépréciations (usure de la ligne, créance de Sonora)", valeurs: [eur(k.amortissementsEtDepreciations)] },
+            { libelle: "Créances sur les clients avant dépréciation", valeurs: [eur(k.clientsBruts)] },
           ],
         };
       },
@@ -104,18 +103,18 @@ export const LE_RENDEZ_VOUS_A_LA_BANQUE: Situation = {
       titre: "Ce que l'activité crée",
       notions: ["income_statement"],
       question: () =>
-        "Calculez la valeur ajoutée de l'année (la production, ou les ventes pour un commerce, moins les consommations venues d'autres entreprises), puis le taux de valeur ajoutée (valeur ajoutée ÷ ventes × 100), au dixième.",
+        "Calculez la valeur ajoutée de l'année (la production, ici les ventes d'enceintes, moins les consommations venues d'autres entreprises), puis le taux de valeur ajoutée (valeur ajoutée ÷ ventes × 100), au dixième.",
       champs: (c) => {
         const { v } = dossierDeLaBanque(c);
         return [
-          { libelle: "Valeur ajoutée", attendu: v.va, calcul: `${eur(v.k.produits)} − ${eur(v.consommations)} = ${eur(v.va)}`, tolerance: 1 },
-          { libelle: "Taux de valeur ajoutée (%)", attendu: v.tauxDeValeurAjoutee, calcul: `${eur(v.va)} ÷ ${eur(v.k.s.ventes)} × 100 = ${pct(v.tauxDeValeurAjoutee)}`, tolerance: 0.1 },
+          { libelle: "Valeur ajoutée", attendu: v.va, calcul: `${eur(v.k.ventes)} − ${eur(v.consommations)} = ${eur(v.va)}`, tolerance: 1 },
+          { libelle: "Taux de valeur ajoutée (%)", attendu: v.tauxDeValeurAjoutee, calcul: `${eur(v.va)} ÷ ${eur(v.k.ventes)} × 100 = ${pct(v.tauxDeValeurAjoutee)}`, tolerance: 0.1 },
         ];
       },
       explication: (c) => {
         const { v } = dossierDeLaBanque(c);
         return [
-          `Sur 100 € de ventes, ${c.entreprise} crée ${pct(v.tauxDeValeurAjoutee).replace(" %", " €")} de richesse : le reste payait ce que d'autres entreprises lui ont fourni. C'est avec cette valeur ajoutée qu'elle paie ses salariés, ses intérêts, son impôt, et qu'elle rembourserait le prêt.`,
+          `Sur 100 € de ventes, ${dossierDeLaBanque(c).f.entreprise} crée ${pct(v.tauxDeValeurAjoutee).replace(" %", " €")} de richesse : le reste payait ce que d'autres entreprises lui ont fourni. C'est avec cette valeur ajoutée qu'elle paie ses salariés, ses intérêts, son impôt, et qu'elle rembourserait le prêt.`,
         ];
       },
     },
@@ -136,8 +135,8 @@ export const LE_RENDEZ_VOUS_A_LA_BANQUE: Situation = {
         const { r } = dossierDeLaBanque(c);
         return [
           r.financiere >= 0
-            ? `Pour 100 € laissés par les associés, ${c.entreprise} a gagné ${pct(r.financiere).replace(" %", " €")} cette année. La banque prête à ${pct(r.tauxDeLEmprunt)} : elle compare.`
-            : `Pour 100 € laissés par les associés, ${c.entreprise} a perdu ${pct(-r.financiere).replace(" %", " €")} cette année. La banque le verra : une perte entame les capitaux propres qui la rassurent.`,
+            ? `Pour 100 € laissés par les associés, ${dossierDeLaBanque(c).f.entreprise} a gagné ${pct(r.financiere).replace(" %", " €")} cette année. La banque prête à ${pct(r.tauxDeLEmprunt)} : elle compare.`
+            : `Pour 100 € laissés par les associés, ${dossierDeLaBanque(c).f.entreprise} a perdu ${pct(-r.financiere).replace(" %", " €")} cette année. La banque le verra : une perte entame les capitaux propres qui la rassurent.`,
         ];
       },
     },
@@ -147,7 +146,7 @@ export const LE_RENDEZ_VOUS_A_LA_BANQUE: Situation = {
       titre: "Ce que l'activité dégage pour rembourser",
       notions: ["frng", "income_statement"],
       question: () =>
-        "Calculez la capacité d'autofinancement : le résultat net, plus les dotations aux amortissements, une charge qui ne fait sortir aucun argent.",
+        "Calculez la capacité d'autofinancement : le résultat net, plus les dotations, des charges qui ne font sortir aucun argent.",
       champs: (c) => {
         const { f } = dossierDeLaBanque(c);
         return [
@@ -158,7 +157,7 @@ export const LE_RENDEZ_VOUS_A_LA_BANQUE: Situation = {
         const { f } = dossierDeLaBanque(c);
         return [
           f.caf >= f.montant
-            ? `L'activité a dégagé ${eur(f.caf)} dans l'année, plus que le prix de l'équipement : ${c.entreprise} pourrait le payer sans emprunter.`
+            ? `L'activité a dégagé ${eur(f.caf)} dans l'année, plus que le prix de l'équipement : ${dossierDeLaBanque(c).f.entreprise} pourrait le payer sans emprunter.`
             : f.caf >= 0
               ? `L'activité a dégagé ${eur(f.caf)} dans l'année, moins que le prix de l'équipement, ${eur(f.montant)} : c'est avec cet argent que les échéances du prêt seraient remboursées.`
               : `La capacité d'autofinancement est négative, ${eur(f.caf)} : l'activité a consommé de l'argent au lieu d'en dégager. Rien ne viendrait de l'activité pour rembourser un prêt.`,
@@ -171,24 +170,24 @@ export const LE_RENDEZ_VOUS_A_LA_BANQUE: Situation = {
       titre: "Fonds de roulement, besoin, trésorerie",
       notions: ["frng", "bfr", "net_treasury"],
       question: () =>
-        "Calculez le fonds de roulement (capitaux propres et emprunts, moins l'équipement), le besoin en fonds de roulement (stocks, créances et TVA à récupérer, moins les fournisseurs et la TVA due), puis la trésorerie (banque et placements, moins le découvert).",
+        "Calculez le fonds de roulement (capitaux propres, amortissements et dépréciations, provision et emprunt, moins l'équipement à sa valeur d'origine), le besoin en fonds de roulement (stock, créances sur les clients avant dépréciation et autres créances, moins les dettes du cycle), puis la trésorerie (banque et compte à terme, moins le découvert).",
       champs: (c) => {
         const { k } = dossierDeLaBanque(c);
         return [
-          { libelle: "Fonds de roulement", attendu: k.frng, calcul: `${eur(k.ressources)} − ${eur(k.f.immobilisationsNettes)} = ${eur(k.frng)}`, tolerance: 1 },
-          { libelle: "Besoin en fonds de roulement", attendu: k.bfr, calcul: `${eur(k.besoins)} − ${eur(k.dettesDuCycle)} = ${eur(k.bfr)}`, tolerance: 1 },
-          { libelle: "Trésorerie", attendu: k.tn, calcul: `${eur(k.disponible)} − ${eur(k.f.decouvert)} = ${eur(k.tn)}`, tolerance: 1 },
+          { libelle: "Fonds de roulement", attendu: k.fondsDeRoulement, calcul: `${eur(k.ressourcesDurables)} − ${eur(k.equipementBrut)} = ${eur(k.fondsDeRoulement)}`, tolerance: 1 },
+          { libelle: "Besoin en fonds de roulement", attendu: k.besoin, calcul: `${eur(k.besoinsDuCycle)} − ${eur(k.dettesDuCycle)} = ${eur(k.besoin)}`, tolerance: 1 },
+          { libelle: "Trésorerie", attendu: k.tresorerie, calcul: `${eur(k.disponible)} − ${eur(k.decouvert)} = ${eur(k.tresorerie)}`, tolerance: 1 },
         ];
       },
       explication: (c) => {
         const { k } = dossierDeLaBanque(c);
         return [
-          k.tn >= 0
-            ? `Le fonds de roulement couvre le besoin du quotidien, et il reste ${eur(k.tn)} en banque : ${c.entreprise} n'a pas besoin du banquier pour vivre au jour le jour.`
-            : `Le fonds de roulement ne couvre pas le besoin du quotidien : la banque avance déjà ${eur(-k.tn)} par le découvert. Le banquier le saura avant vous.`,
-          k.bfr < 0
-            ? "Le besoin en fonds de roulement est négatif : les fournisseurs et l'État financent plus que ce qui attend chez les clients et dans les stocks."
-            : "Fonds de roulement moins besoin en fonds de roulement donne bien la trésorerie, au centime d'arrondi près.",
+          k.tresorerie >= 0
+            ? `Le fonds de roulement couvre le besoin du quotidien, et il reste ${eur(k.tresorerie)} en banque : ${dossierDeLaBanque(c).f.entreprise} n'a pas besoin du banquier pour vivre au jour le jour.`
+            : `Le fonds de roulement ne couvre pas le besoin du quotidien : la banque avance déjà ${eur(-k.tresorerie)} par le découvert. Le banquier le saura avant vous.`,
+          k.besoin < 0
+            ? "Le besoin en fonds de roulement est négatif : les fournisseurs, l'État et le personnel financent plus que ce qui attend chez les clients et dans le stock."
+            : "Fonds de roulement moins besoin en fonds de roulement donne bien la trésorerie.",
         ];
       },
     },
@@ -212,8 +211,8 @@ export const LE_RENDEZ_VOUS_A_LA_BANQUE: Situation = {
         const { f } = dossierDeLaBanque(c);
         return [
           f.endettementApres <= ENDETTEMENT_MAXIMAL
-            ? `Avec le prêt, les emprunts ${dE(c.entreprise)} resteraient sous ses capitaux propres (${ratio(f.endettementApres)} pour 1) : la règle de prudence de la plupart des banques est tenue.`
-            : `Avec le prêt, les emprunts ${dE(c.entreprise)} dépasseraient ses capitaux propres (${ratio(f.endettementApres)} pour 1) : au-delà d'un euro prêté pour un euro apporté, la plupart des banques demandent d'abord un apport des associés.`,
+            ? `Avec le prêt, les emprunts ${dE(f.entreprise)} resteraient sous ses capitaux propres (${ratio(f.endettementApres)} pour 1) : la règle de prudence de la plupart des banques est tenue.`
+            : `Avec le prêt, les emprunts ${dE(f.entreprise)} dépasseraient ses capitaux propres (${ratio(f.endettementApres)} pour 1) : au-delà d'un euro prêté pour un euro apporté, la plupart des banques demandent d'abord un apport des associés.`,
         ];
       },
     },
@@ -230,7 +229,7 @@ export const LE_RENDEZ_VOUS_A_LA_BANQUE: Situation = {
             juste: f.choix === "autofinancement",
             retour:
               f.choix === "autofinancement"
-                ? `Oui : la capacité d'autofinancement, ${eur(f.caf)}, dépasse le prix de l'équipement, ${eur(f.montant)}. Le prêt reste possible, mais ${c.entreprise} peut s'en passer.`
+                ? `Oui : la capacité d'autofinancement, ${eur(f.caf)}, dépasse le prix de l'équipement, ${eur(f.montant)}. Le prêt reste possible, mais ${f.entreprise} peut s'en passer.`
                 : `Non : la capacité d'autofinancement, ${eur(f.caf)}, ne couvre pas les ${eur(f.montant)} de l'équipement.`,
           },
           {
@@ -254,7 +253,7 @@ export const LE_RENDEZ_VOUS_A_LA_BANQUE: Situation = {
           {
             texte: "Nos capitaux propres dorment en banque : le prêt est sans risque",
             juste: false,
-            retour: `Non : les capitaux propres ne sont pas de l'argent en banque. Ils ont payé l'équipement et le quotidien. ${k.tn >= 0 ? `Ce qui reste en banque, c'est la trésorerie : ${eur(k.tn)}.` : `La trésorerie est même négative : ${eur(k.tn)}.`}`,
+            retour: `Non : les capitaux propres ne sont pas de l'argent en banque. Ils ont payé l'équipement et le quotidien. ${k.tresorerie >= 0 ? `Ce qui reste en banque, c'est la trésorerie : ${eur(k.tresorerie)}.` : `La trésorerie est même négative : ${eur(k.tresorerie)}.`}`,
           },
         ];
       },

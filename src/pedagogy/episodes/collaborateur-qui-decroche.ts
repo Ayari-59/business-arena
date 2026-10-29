@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 14 — LE COLLABORATEUR QUI DÉCROCHE, tel que l'interface et le bilan le lisent.
+ * LE COLLABORATEUR QUI DÉCROCHE, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord de Sandrine montre, ce que la
@@ -100,7 +100,7 @@ export function comportements(p: PartieJouee, t: Trimestre): Constat[] {
     t.semaines[2]!.erreurs,
     "d'erreurs de commande de Didier en semaine 2",
     "erreurs",
-    { juste: 0.5, proche: 1.2 },
+    { juste: 1.2, proche: 2 },
     (e) => `${nombre(e)} erreur${e >= 2 ? "s" : ""}`,
   );
 

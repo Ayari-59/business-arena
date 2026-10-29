@@ -9,6 +9,10 @@ vi.mock("@/db", () => ({ db: {} }));
 vi.mock("next/headers", () => ({ headers: vi.fn() }));
 
 import { OrientationForm } from "@/components/orientation-form";
+import { vueDOrientation } from "@/config/orientation";
+
+// La vue que la page prépare côté serveur (audit, P1-2).
+const vue = vueDOrientation();
 
 /**
  * LA DEMANDE DE SIMULATION PART PAR LE FORMULAIRE, PAS PAR LA MESSAGERIE.
@@ -20,7 +24,7 @@ import { OrientationForm } from "@/components/orientation-form";
  * plateforme (adresse de contact configurée ou non) n'est servi au visiteur.
  */
 describe("orientation : le formulaire recueille la demande", () => {
-  const html = renderToStaticMarkup(createElement(OrientationForm, {}));
+  const html = renderToStaticMarkup(createElement(OrientationForm, { vue }));
 
   it("plus aucun lien de messagerie, et rien sur la configuration", () => {
     expect(html).not.toContain("mailto:");
@@ -41,6 +45,7 @@ describe("orientation : le formulaire recueille la demande", () => {
   it("une saisie rejouée revient avec sa recommandation", () => {
     const rejoue = renderToStaticMarkup(
       createElement(OrientationForm, {
+        vue,
         initial: {
           error: "E-mail invalide",
           ok: null,
@@ -68,6 +73,7 @@ describe("orientation : le formulaire recueille la demande", () => {
   it("une fois envoyée, la demande le dit et le bouton s'efface", () => {
     const apres = renderToStaticMarkup(
       createElement(OrientationForm, {
+        vue,
         initial: { error: null, ok: { email: "prof@lycee.fr" }, values: null },
       }),
     );
@@ -79,6 +85,7 @@ describe("orientation : le formulaire recueille la demande", () => {
   it("après un échec, la saisie revient dans les champs", () => {
     const rejoue = renderToStaticMarkup(
       createElement(OrientationForm, {
+        vue,
         initial: {
           error: "E-mail invalide",
           ok: null,

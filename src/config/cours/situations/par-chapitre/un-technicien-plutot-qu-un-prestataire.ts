@@ -1,23 +1,33 @@
-import { montantEcrit as eur } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
+import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
 import type { Cas } from "../../cas";
 import { valeurAjoutee } from "../../chapitres/valeur-ajoutee-et-partage";
+import { auCentime } from "../../monde/amortissement";
+import { ENTREPRISES_DES_COMPTES_DU_LYCEE } from "../../monde/comptes-du-lycee";
+import { GAMME_DE_NOVA } from "../../monde/nova-gestion";
 import type { Situation } from "../types";
 
 /**
  * CAS PRATIQUE DU CHAPITRE « LA VALEUR AJOUTÉE ET SON PARTAGE » : UN TECHNICIEN PLUTÔT
  * QU'UN PRESTATAIRE (Bac STMG, gestion et finance, palier 1).
  *
- * L'entretien est confié à un prestataire. La direction envisage de le faire faire par un
- * technicien qu'elle embaucherait, et demande ce que ce changement ferait à la valeur
- * ajoutée et à la part qui revient aux salariés. L'élève refait seul les calculs du
- * chapitre (les consommations, la valeur ajoutée, la part des salariés), une fois sur
- * l'année réelle, une fois avec le technicien.
+ * L'entretien de la ligne va être confié à un prestataire. La direction envisage de le faire
+ * faire par un technicien qu'elle embaucherait, et demande ce que ce changement ferait à la
+ * valeur ajoutée et à la part qui revient aux salariés. L'élève refait seul les calculs du
+ * chapitre (les consommations, la valeur ajoutée, la part des salariés), une fois avec le
+ * prestataire, une fois avec le technicien, sur une année comme celle qui vient de finir.
  *
  * Le cas est neuf par sa question : le chapitre mesure la valeur ajoutée d'une année, le
  * cas montre qu'elle dépend de ce que l'entreprise fait elle-même ou fait faire. Les
- * montants sont ceux de l'année de l'arène (`valeurAjoutee`).
+ * montants sont ceux du premier exercice de NOVA dans le monde du cours (`valeurAjoutee`).
  */
+
+/**
+ * LE CONTRAT D'ENTRETIEN DE LA LIGNE : celui que la fiche de gestion de NOVA prévoit quand la
+ * gamme sera lancée (monde/nova-gestion.ts, 1 562 € par mois), compté sur douze mois. Le premier
+ * exercice n'en avait pas : HYPOTHÈSE DU CAS, l'année qui vient se joue comme celle qui vient de
+ * finir, le contrat en plus.
+ */
+export const CONTRAT_D_ENTRETIEN_ANNUEL = 12 * GAMME_DE_NOVA.communes.entretien;
 
 /**
  * Ce que coûterait le technicien, salaire et cotisations compris, en part du contrat
@@ -26,30 +36,34 @@ import type { Situation } from "../types";
  */
 export const COUT_DU_TECHNICIEN = 0.9;
 
+/** Un montant, le signe moins typographique : « −582,38 € ». */
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /** Les chiffres de la réponse, calculés une fois du cas. */
-export function technicien(c: Cas) {
+export function technicien(c: Pick<Cas, "code">) {
   const v = valeurAjoutee(c);
-  const s = v.k.s;
-  const contrat = s.entretien;
+  const contrat = CONTRAT_D_ENTRETIEN_ANNUEL;
   const salaire = auCentime(contrat * COUT_DU_TECHNICIEN);
-  const consommationsApres = auCentime(v.consommations - contrat);
-  const vaApres = auCentime(v.va + contrat);
-  const personnelApres = auCentime(s.personnel + salaire);
+  // Avec le prestataire, le contrat s'ajoute aux consommations de l'année.
+  const consommations = auCentime(v.consommations + contrat);
+  const va = auCentime(v.va - contrat);
+  const personnelApres = auCentime(v.k.personnel + salaire);
   return {
     ...v,
+    consommations,
+    va,
     contrat,
     salaire,
     economie: auCentime(contrat - salaire),
-    consommationsApres,
-    vaApres,
+    consommationsApres: v.consommations,
+    vaApres: v.va,
     personnelApres,
-    partAvant: v.parts[0]!.part,
-    partApres: auDixieme((personnelApres / vaApres) * 100),
-    tauxApres: auDixieme((vaApres / s.ventes) * 100),
+    partAvant: auDixieme((v.k.personnel / va) * 100),
+    partApres: auDixieme((personnelApres / v.va) * 100),
+    tauxApres: auDixieme((v.va / v.k.ventes) * 100),
   };
 }
 
@@ -70,6 +84,10 @@ export const UN_TECHNICIEN_PLUTOT_QU_UN_PRESTATAIRE: Situation = {
     "Rédiger une réponse chiffrée à la direction",
   ],
   libre: false,
+  entreprises: {
+    codes: ENTREPRISES_DES_COMPTES_DU_LYCEE,
+    pourquoi: "le cas reprend le premier exercice de NOVA dans la simulation du cours, celui du chapitre, et le contrat d'entretien de sa fiche ; la méthode vaut pour toute entreprise.",
+  },
   etapes: [
     {
       id: "demande",
@@ -78,27 +96,23 @@ export const UN_TECHNICIEN_PLUTOT_QU_UN_PRESTATAIRE: Situation = {
       texte: (c) => {
         const r = technicien(c);
         return [
-          `« L'entretien nous a coûté ${eur(r.contrat)} cette année, facturés par un prestataire. Nous pourrions embaucher un technicien qui ferait le même travail pour ${pct(COUT_DU_TECHNICIEN * 100)} de ce prix, salaire et cotisations compris. Avant d'en parler aux délégués du personnel, je veux savoir ce que ce changement aurait fait à la valeur ajoutée ${dE(c.entreprise)} cette année, et à la part qui revient aux salariés. »`,
-          "Pas de cours cette fois : vous avez les comptes de l'année, et la méthode est celle du chapitre. À vous de l'enchaîner.",
+          `« L'an prochain, l'entretien de la ligne nous coûtera ${eur(r.contrat)} par an, facturés par un prestataire. Nous pourrions embaucher un technicien qui ferait le même travail pour ${pct(COUT_DU_TECHNICIEN * 100)} de ce prix, salaire et cotisations compris. Avant d'en parler aux délégués du personnel, je veux savoir ce que l'un et l'autre feraient à la valeur ajoutée ${dE(r.k.entreprise)} sur une année comme celle qui vient de finir, et à la part qui revient aux salariés. »`,
+          "Pas de cours cette fois : vous avez les comptes de l'année et le contrat, et la méthode est celle du chapitre. À vous de l'enchaîner.",
         ];
       },
       tableau: (c) => {
         const r = technicien(c);
-        const s = r.k.s;
-        const lignes = [
-          { libelle: r.k.produits === s.ventes ? "Ventes de l'année" : "Production de l'année (ventes et variation du stock de produits)", valeurs: [eur(r.k.produits)] },
-          { libelle: s.marchandises ? "Marchandises consommées" : "Achats consommés", valeurs: [eur(r.k.achatsConsommes)] },
-          { libelle: "Autres coûts variables et qualité", valeurs: [eur(s.autres)] },
-        ];
-        if (s.commissions > 0) lignes.push({ libelle: "Commissions", valeurs: [eur(s.commissions)] });
-        lignes.push(
-          { libelle: "Publicité", valeurs: [eur(s.publicite)] },
-          { libelle: "Entretien, facturé par le prestataire", valeurs: [eur(s.entretien)] },
-          { libelle: "Loyer et frais de structure", valeurs: [eur(s.loyerEtFrais)] },
-          { libelle: "Personnel (salaires et cotisations)", valeurs: [eur(s.personnel)] },
-          { libelle: "Coût du technicien, en part du contrat d'entretien", valeurs: [pct(COUT_DU_TECHNICIEN * 100)] },
-        );
-        return { titre: `Les comptes de l'année · ${c.entreprise}`, colonnes: ["Montant"], lignes };
+        return {
+          titre: `Les comptes de l'année · ${r.k.entreprise}`,
+          colonnes: ["Montant"],
+          lignes: [
+            { libelle: "Production de l'année (les ventes d'enceintes)", valeurs: [eur(r.k.ventes)] },
+            ...r.k.lignes.filter((l) => l.consommation).map((l) => ({ libelle: l.libelle, valeurs: [eur(l.montant)] })),
+            { libelle: "Personnel (salaires et cotisations)", valeurs: [eur(r.k.personnel)] },
+            { libelle: "Contrat d'entretien de la ligne, l'an prochain", valeurs: [eur(r.contrat)] },
+            { libelle: "Coût du technicien, en part du contrat d'entretien", valeurs: [pct(COUT_DU_TECHNICIEN * 100)] },
+          ],
+        };
       },
       repere: () =>
         "À rendre : les consommations, la valeur ajoutée et la part des salariés de l'année, les mêmes chiffres avec le technicien, et votre réponse.",
@@ -109,19 +123,19 @@ export const UN_TECHNICIEN_PLUTOT_QU_UN_PRESTATAIRE: Situation = {
       titre: "L'année avec le prestataire",
       notions: ["income_statement"],
       question: () =>
-        "Commencez par l'année réelle : le total des consommations venues d'autres entreprises, la valeur ajoutée, puis la part des salariés dans la valeur ajoutée (personnel ÷ valeur ajoutée × 100), au dixième.",
+        "Commencez par l'année avec le prestataire, son contrat compris : le total des consommations venues d'autres entreprises, la valeur ajoutée, puis la part des salariés dans la valeur ajoutée (personnel ÷ valeur ajoutée × 100), au dixième.",
       champs: (c) => {
         const r = technicien(c);
         return [
-          { libelle: "Consommations", attendu: r.consommations, calcul: `somme des consommations = ${eur(r.consommations)}`, tolerance: 1 },
-          { libelle: "Valeur ajoutée", attendu: r.va, calcul: `${eur(r.k.produits)} − ${eur(r.consommations)} = ${eur(r.va)}`, tolerance: 2 },
-          { libelle: "Part des salariés (%)", attendu: r.partAvant, calcul: `${eur(r.k.s.personnel)} ÷ ${eur(r.va)} × 100 = ${pct(r.partAvant)}`, tolerance: 0.1 },
+          { libelle: "Consommations", attendu: r.consommations, calcul: `${eur(r.consommationsApres)} + ${eur(r.contrat)} de contrat = ${eur(r.consommations)}`, tolerance: 1 },
+          { libelle: "Valeur ajoutée", attendu: r.va, calcul: `${eur(r.k.ventes)} − ${eur(r.consommations)} = ${eur(r.va)}`, tolerance: 2 },
+          { libelle: "Part des salariés (%)", attendu: r.partAvant, calcul: `${eur(r.k.personnel)} ÷ ${eur(r.va)} × 100 = ${pct(r.partAvant)}`, tolerance: 0.1 },
         ];
       },
       explication: (c) => {
         const r = technicien(c);
         return [
-          `Le contrat d'entretien, ${eur(r.contrat)}, est dans les consommations : c'est le prestataire qui a créé cette richesse-là, pas ${c.entreprise}. Le personnel n'y est pas : il est payé sur la valeur ajoutée, dont il reçoit ${pct(r.partAvant)}.`,
+          `Le contrat d'entretien, ${eur(r.contrat)}, est dans les consommations : c'est le prestataire qui a créé cette richesse-là, pas ${r.k.entreprise}. Le personnel n'y est pas : il est payé sur la valeur ajoutée, dont il reçoit ${pct(r.partAvant)}.`,
         ];
       },
     },
@@ -136,11 +150,11 @@ export const UN_TECHNICIEN_PLUTOT_QU_UN_PRESTATAIRE: Situation = {
         const r = technicien(c);
         return [
           { libelle: "Consommations avec le technicien", attendu: r.consommationsApres, calcul: `${eur(r.consommations)} − ${eur(r.contrat)} = ${eur(r.consommationsApres)}`, tolerance: 1 },
-          { libelle: "Valeur ajoutée avec le technicien", attendu: r.vaApres, calcul: `${eur(r.k.produits)} − ${eur(r.consommationsApres)} = ${eur(r.vaApres)}`, tolerance: 2 },
+          { libelle: "Valeur ajoutée avec le technicien", attendu: r.vaApres, calcul: `${eur(r.k.ventes)} − ${eur(r.consommationsApres)} = ${eur(r.vaApres)}`, tolerance: 2 },
           {
             libelle: "Part des salariés (%)",
             attendu: r.partApres,
-            calcul: `(${eur(r.k.s.personnel)} + ${eur(r.salaire)}) ÷ ${eur(r.vaApres)} × 100 = ${pct(r.partApres)}`,
+            calcul: `(${eur(r.k.personnel)} + ${eur(r.salaire)}) ÷ ${eur(r.vaApres)} × 100 = ${pct(r.partApres)}`,
             tolerance: 0.1,
           },
         ];
@@ -148,7 +162,7 @@ export const UN_TECHNICIEN_PLUTOT_QU_UN_PRESTATAIRE: Situation = {
       explication: (c) => {
         const r = technicien(c);
         return [
-          `La valeur ajoutée grossit de tout le contrat, ${eur(r.contrat)}, et pas seulement de l'économie : le travail d'entretien est désormais fait par ${c.entreprise}, c'est elle qui crée cette richesse. Sur 100 € de ventes, elle en créerait ${pct(r.tauxApres).replace(" %", " €")}.`,
+          `La valeur ajoutée grossit de tout le contrat, ${eur(r.contrat)}, et pas seulement de l'économie : le travail d'entretien est désormais fait par ${r.k.entreprise}, c'est elle qui crée cette richesse. Sur 100 € de ventes, elle en créerait ${pct(r.tauxApres).replace(" %", " €")}.`,
           `Le salaire du technicien, ${eur(r.salaire)}, se paie sur cette valeur ajoutée : la part des salariés passe de ${pct(r.partAvant)} à ${pct(r.partApres)}.`,
         ];
       },

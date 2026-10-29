@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import { getSession } from "@/lib/session";
 import { codesDeRepriseDuConcours, getCompetitionView } from "@/services/competition.service";
 import { CompetitionBoard } from "@/components/competition-board";
@@ -20,7 +21,7 @@ export default async function TeacherCompetitionPage({
   params: Promise<{ competitionId: string }>;
 }) {
   const session = await getSession();
-  if (!session) redirect("/teacher/login");
+  if (!session) redirect(await connexionPourLaPageDemandee());
   const { competitionId } = await params;
   const view = await getCompetitionView(competitionId);
   if (!view || view.organizerId !== session.userId) notFound();

@@ -319,8 +319,15 @@ export function EpisodeJoue({
   niveaux = NIVEAUX.map((n) => n.code),
   offre = null,
   cours = null,
+  licence = true,
 }: {
   code: string;
+  /**
+   * Une licence qui inclut les épisodes couvre-t-elle celui-ci (la page serveur le lit,
+   * `licencePourLEpisode`) ? Sans elle, une partie en Découverte ne compte pas dans le
+   * profil : l'introduction le dit, et le bilan en montre un aperçu.
+   */
+  licence?: boolean;
   /** Le cours du thème de l'épisode, montré sous le bilan (pedagogy/cours/suites.ts). */
   cours?: CoursDeLEpisode | null;
   offre?: OffreDesEpisodes | null;
@@ -525,6 +532,7 @@ export function EpisodeJoue({
               niveau={choisi}
               niveaux={niveaux}
               offre={offre}
+              licence={licence}
               onNiveau={(n) => maj(() => ({ niveau: n }))}
               onCommencer={() => commencer(null)}
             />
@@ -560,6 +568,7 @@ export function EpisodeJoue({
               ep={ep}
               partie={partieJouee}
               cle={s.cle}
+              sansLicence={!licence}
               precedente={precedente}
               cours={cours}
               onAutreHasard={() => {
@@ -613,6 +622,7 @@ function Intro({
   niveau,
   niveaux,
   offre,
+  licence,
   onNiveau,
   onCommencer,
 }: {
@@ -620,6 +630,7 @@ function Intro({
   niveau: CodeNiveau;
   niveaux: readonly CodeNiveau[];
   offre: OffreDesEpisodes | null;
+  licence: boolean;
   onNiveau: (n: CodeNiveau) => void;
   onCommencer: () => void;
 }) {
@@ -652,9 +663,22 @@ function Intro({
       </div>
       <p className="max-w-2xl text-sm leading-relaxed text-slate-400">
         {ep.etapes.length} décisions, {ep.duree}. Les chiffres bougent avec vos choix ; à la fin, le
-        bilan rejoue chacune de vos décisions sous les mêmes trente tirages au hasard. À la fin,
-        vos choix sont gardés sur cet appareil pour votre profil décisionnel, sans votre nom ni
-        aucun texte saisi ; vous pouvez les effacer depuis le profil.
+        bilan rejoue chacune de vos décisions sous les mêmes trente tirages au hasard.{" "}
+        {!licence && niveaux.every((n) => n === "decouverte") ? (
+          <>
+            Une démonstration se joue en Découverte, et la Découverte ne compte pas dans le profil
+            décisionnel : à la fin, le bilan en montre un aperçu, calculé sur cet épisode seul.
+            Avec une licence, chaque épisode enrichit votre profil. Une démonstration n&apos;est
+            pas enregistrée : la partie se joue et se juge dans votre navigateur, rien n&apos;est
+            gardé sur nos serveurs.
+          </>
+        ) : (
+          <>
+            À la fin, vos choix sont gardés sur cet appareil pour votre profil décisionnel, sans
+            votre nom ni aucun texte saisi ; vous pouvez les effacer depuis le profil. Une partie
+            en Découverte n&apos;y compte pas.
+          </>
+        )}
       </p>
       <fieldset className="grid gap-2">
         <legend className="mb-1 font-semibold text-slate-50">Niveau</legend>

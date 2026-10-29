@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 101 — LE POT EN PLASTIQUE QU'IL FAUT REMPLACER, tel que l'interface
+ * LE POT EN PLASTIQUE QU'IL FAUT REMPLACER, tel que l'interface
  * et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont

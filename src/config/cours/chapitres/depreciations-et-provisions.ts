@@ -1,6 +1,8 @@
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import { auCentime, type Ecriture } from "../../../pedagogy/cours/etats";
 import type { Cas } from "../cas";
+import type { DateDuCours } from "../monde/amortissement";
+import { DELAI_CONVENU_DE_CAMPUSTECH, JOURS_DU_MOIS_COMMERCIAL, RETARD_DE_CAMPUSTECH } from "../monde/nova-gestion";
 import { valeurNetteALaCloture } from "../monde/amortissement";
 import { cloture as clotureDuMonde, depreciationDeCreance, impotSurLesSocietes, perteSurCreance, type CodeDeTravail } from "../monde/cloture";
 import type { Chapitre, TableauDeDonnees } from "../types";
@@ -179,13 +181,22 @@ function ouverture(c: Pick<Cas, "code">): Ecriture {
   return { date: "31 décembre", libelle: "Balance après les travaux de « La clôture », avant l'impôt", lignes: balanceApresLaCloture(c) };
 }
 
+/** L'échéance convenue d'une facture de CampusTech : 60 jours après sa date, en mois de 30 jours. */
+const echeanceConvenue = (k: PrudenceDeNova["f"]["creances"][number]): DateDuCours => {
+  const jour = (k.date.mois - 1) * JOURS_DU_MOIS_COMMERCIAL + k.date.jour + DELAI_CONVENU_DE_CAMPUSTECH;
+  return { jour: ((jour - 1) % JOURS_DU_MOIS_COMMERCIAL) + 1, mois: Math.floor((jour - 1) / JOURS_DU_MOIS_COMMERCIAL) + 1 };
+};
+
+/** Une facture de CampusTech échue avant la clôture et pas encore payée : un retard, pas un risque de perte. */
+const enRetardALaCloture = (k: PrudenceDeNova["f"]["creances"][number]) => k.client === "CampusTech" && echeanceConvenue(k).mois <= 12;
+
 /** Les créances clients au 31 décembre : le document de départ. */
 function tableauDesCreances(y: PrudenceDeNova): TableauDeDonnees {
   return {
     titre: `Les créances clients de ${y.f.entreprise} au 31 décembre N`,
     colonnes: ["Hors taxes", "TVA", "TVA comprise"],
     lignes: y.f.creances.map((k) => ({
-      libelle: `${k.client}, facture du ${dateDe(k.date)}${k.litigieuse ? `, échue le ${dateDe(k.echeance)} et impayée` : ""}`,
+      libelle: `${k.client}, facture du ${dateDe(k.date)}${k.litigieuse ? `, échue le ${dateDe(k.echeance)} et impayée` : enRetardALaCloture(k) ? `, échue le ${dateDe(echeanceConvenue(k))}, en retard` : ""}`,
       valeurs: [eur(k.ht), eur(k.tva), eur(k.ttc)],
     })),
   };
@@ -248,6 +259,7 @@ export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = {
         return [
           `Ce chapitre se joue dans la simulation du cours, chez ${f.entreprise}, là où « La clôture » l'a laissée : la balance, la dotation, le stock, la facture non parvenue et les intérêts courus sont passés. Le résultat avant impôt est de ${eur(y.resultatSansPrudence)}.`,
           `Avant l'impôt, le comptable regarde ce que l'exercice laisse de risques. ${f.sonora.nom}, client depuis septembre, n'a pas réglé sa facture du ${dateDe(y.creance.date)}, échue le ${dateDe(y.creance.echeance)} ; le ${dateDe(f.sonora.redressement.date)}, le tribunal a ouvert contre lui une procédure de redressement judiciaire. En novembre, la batterie d'une enceinte a pris feu chez un particulier, qui assigne ${f.entreprise}.`,
+          `${f.campustech.nom} aussi doit de l'argent, et paie en retard : chaque facture ${RETARD_DE_CAMPUSTECH} jours après les ${DELAI_CONVENU_DE_CAMPUSTECH} jours convenus. Celle du ${dateDe(f.creances[0]!.date)}, échue le ${dateDe(echeanceConvenue(f.creances[0]!))}, a été relancée ; elle sera payée le ${dateDe(f.creances[0]!.echeance)}. Un retard n'est pas une perte probable : ${f.campustech.nom} est solvable, sa créance reste au compte 411, sans dépréciation ; il ouvre des pénalités, que la prudence ne compte qu'une fois encaissées.`,
           `La simulation suppose que le mandataire et l'avocat estiment juste au 31 décembre, avec ce qu'ils savent ; les dénouements de N+1 sont ceux de la fiche. La règle est celle de la prudence : une perte probable se compte dès qu'on la connaît, un gain seulement quand il est acquis.`,
         ];
       },

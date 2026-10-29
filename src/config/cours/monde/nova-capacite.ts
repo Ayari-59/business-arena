@@ -357,21 +357,10 @@ export const FORMULES: readonly FormuleDAssurance[] = [
 ];
 
 /**
- * LE VERSEMENT À LA RÉSERVE (décision du dirigeant, hypothèse du cours) : CampusTech paie à 60 jours,
- * et sa facture d'octobre N est rentrée le 20 décembre ; au 31 décembre N, le compte courant porte
- * 138 390,87 € (exercice-de-nova.ts). Le 1er janvier N + 1, le dirigeant verse sur un second compte à
- * terme, à côté du placement de 133 000 €, ce que CampusTech a payé avant la clôture : une facture,
- * 22 656 € TTC. Le compte courant de N + 1 part donc de 115 734,87 €, celui sur lequel les besoins de
- * trésorerie de N + 1 (delais-et-tva.ts) et la capacité d'absorption sont calculés.
- */
-export const VERSEMENT_A_LA_RESERVE = { montant: 22_656, date: { jour: 1, mois: 1, exercice: 1 } } as const;
-
-/**
  * CE QUE NOVA PEUT ENCAISSER D'UN SEUL COUP, au 1er janvier N + 1 (la clôture d'exercice-de-nova.ts).
- *   - LA TRÉSORERIE : le compte courant porte 115 734,87 € (138 390,87 € au 31 décembre, moins le
- *     versement à la réserve) ; la réserve, 155 656 € (le placement de 133 000 € et les 22 656 € du
- *     versement), est celle de la gamme à venir, et le dirigeant n'y touche pas. Il garde un matelas
- *     de 10 000 € (le seuil d'alerte de la trésorerie de nova-gestion.ts).
+ *   - LA TRÉSORERIE : le compte courant porte 115 734,87 € ; le placement de 133 000 € est la réserve
+ *     de la gamme à venir, et le dirigeant n'y touche pas. Il garde un matelas de 10 000 € (le seuil
+ *     d'alerte de la trésorerie de nova-gestion.ts).
  *   - LES CAPITAUX PROPRES : 229 225,96 €, le capital de 150 000 € et le résultat de N
  *     (79 225,96 €), qui reste dans l'entreprise. HYPOTHÈSE DU COURS : un sinistre qui les ferait
  *     tomber sous la moitié du capital social (75 000 €) met l'entreprise en danger ; c'est le seuil
@@ -380,7 +369,7 @@ export const VERSEMENT_A_LA_RESERVE = { montant: 22_656, date: { jour: 1, mois: 
  */
 export const CAPACITE_D_ABSORPTION = {
   compteCourant: 115_734.87,
-  reserve: 155_656,
+  reserve: 133_000,
   matelas: 10_000,
   capitauxPropres: 229_225.96,
   capitalSocial: 150_000,

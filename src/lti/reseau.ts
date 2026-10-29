@@ -1,4 +1,6 @@
 import type { JsonWebKey } from "node:crypto";
+import { lookup } from "node:dns/promises";
+import { isIP } from "node:net";
 import { JwtInvalide } from "./jwt";
 
 /**
@@ -26,6 +28,66 @@ export function urlDePlateformeAdmise(brute: string, env: NodeJS.ProcessEnv = pr
   return null;
 }
 
+/**
+ * LES ADRESSES QU'UNE PLATEFORME NE PEUT PAS AVOIR (audit, P2-1) : boucle locale,
+ * réseaux privés, liens locaux, partage d'opérateur, multidiffusion, réservées. Une
+ * adresse de plateforme qui y mène ferait appeler par le serveur ses propres
+ * services internes (métadonnées de l'hébergeur, base, administration).
+ */
+export function adresseIpInterdite(ip: string): boolean {
+  const v4 = (a: string): boolean => {
+    const o = a.split(".").map(Number);
+    if (o.length !== 4 || o.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return true;
+    const [a0, a1] = o as [number, number, number, number];
+    return (
+      a0 === 0 ||
+      a0 === 10 ||
+      a0 === 127 ||
+      (a0 === 100 && a1 >= 64 && a1 <= 127) ||
+      (a0 === 169 && a1 === 254) ||
+      (a0 === 172 && a1 >= 16 && a1 <= 31) ||
+      (a0 === 192 && a1 === 0 && o[2] === 0) ||
+      (a0 === 192 && a1 === 168) ||
+      (a0 === 198 && (a1 === 18 || a1 === 19)) ||
+      a0 >= 224
+    );
+  };
+  const nue = ip.replace(/^\[|\]$/g, "").toLowerCase();
+  const famille = isIP(nue);
+  if (famille === 4) return v4(nue);
+  if (famille !== 6) return true;
+  // Une adresse IPv4 écrite en IPv6 (::ffff:10.0.0.1) se juge comme IPv4.
+  const mappee = nue.match(/^(?:0*:)*:?ffff:(\d+\.\d+\.\d+\.\d+)$/) ?? nue.match(/^64:ff9b::(\d+\.\d+\.\d+\.\d+)$/);
+  if (mappee) return v4(mappee[1]!);
+  if (nue === "::" || nue === "::1") return true;
+  const premier = parseInt(nue.split(":")[0] || "0", 16);
+  return (
+    (premier & 0xfe00) === 0xfc00 || // fc00::/7, adresses uniques locales
+    (premier & 0xffc0) === 0xfe80 || // fe80::/10, liens locaux
+    (premier & 0xff00) === 0xff00 || // ff00::/8, multidiffusion
+    nue.startsWith("::ffff:") ||
+    nue.startsWith("2001:db8:")
+  );
+}
+
+/**
+ * L'hôte de la plateforme mène-t-il à une adresse publique ? Résolu par le DNS : un
+ * nom public peut pointer vers une adresse privée. La machine locale reste permise
+ * là où `urlDePlateformeAdmise` la permet (le simulateur des tests).
+ */
+async function hoteAdmis(url: URL, env: NodeJS.ProcessEnv = process.env): Promise<boolean> {
+  const localPermis = env.NODE_ENV !== "production" || env.LTI_HTTP_LOCAL === "1";
+  if (localPermis && HOTES_LOCAUX.has(url.hostname)) return true;
+  const hote = url.hostname.replace(/^\[|\]$/g, "");
+  if (isIP(hote)) return !adresseIpInterdite(hote);
+  try {
+    const adresses = await lookup(hote, { all: true, verbatim: true });
+    return adresses.length > 0 && adresses.every((a) => !adresseIpInterdite(a.address));
+  } catch {
+    return false;
+  }
+}
+
 /** Un GET ou un POST JSON vers une plateforme, borné en temps et en taille. */
 export async function demanderJson(
   url: string,
@@ -33,6 +95,7 @@ export async function demanderJson(
 ): Promise<{ statut: number; json: unknown }> {
   const admise = urlDePlateformeAdmise(url);
   if (!admise) throw new JwtInvalide("adresse de plateforme refusée (HTTPS exigé)");
+  if (!(await hoteAdmis(admise))) throw new JwtInvalide("adresse de plateforme refusée");
   const reponse = await fetch(admise, {
     method: init.methode ?? "GET",
     headers: {

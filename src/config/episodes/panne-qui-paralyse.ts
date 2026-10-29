@@ -35,7 +35,7 @@ const DG = { de: "Marc-Antoine Vidal", role: "Directeur général" } as const;
 const KARIM = { de: "Karim Belkacem", role: "Chef d'agence, Villeurbanne" } as const;
 const AMANDINE = { de: "Amandine Roux", role: "Cheffe d'agence, Vénissieux" } as const;
 const NATHALIE = { de: "Nathalie Brun", role: "Acheteuse, Ferrand Habitat" } as const;
-const DELEGUES = { de: "Délégués du personnel", role: "Région lyonnaise" } as const;
+const DELEGUES = { de: "Élus du CSE", role: "Région lyonnaise" } as const;
 const LUCIE = { de: "Lucie Martin", role: "Responsable administrative" } as const;
 
 export const ETAPES: readonly Etape[] = [

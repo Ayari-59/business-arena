@@ -1,7 +1,8 @@
+import { randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
-import { eq } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { organizationMembers, organizations, users } from "@/db/schema";
+import { organizationMembers, organizations, orgInvites, users } from "@/db/schema";
 import {
   closeCurrentRound,
   joinGameByCode,
@@ -34,8 +35,35 @@ import type { RoundDecisions } from "@/engine/types";
 export const DEMO_ACCOUNTS = {
   orgAdmin: { email: "direction@demo.business-arena.fr", name: "Mme Direction (démo)" },
   teacher: { email: "prof@demo.business-arena.fr", name: "M. Professeur (démo)" },
-  password: "Demo2026!",
 } as const;
+
+/**
+ * LA DÉMONSTRATION N'EST PAS UNE PORTE DE PRODUCTION (audit, P1-4).
+ *
+ * Le mot de passe des comptes de démonstration était écrit dans le code, et le
+ * monde démo ouvrait une licence Campus sans plafond d'enseignants, en
+ * production, depuis l'admin. Désormais :
+ * - en production, la création est refusée, sauf si la variable
+ *   `AUTORISER_DEMO_EN_PRODUCTION` vaut `1` (un choix explicite du propriétaire) ;
+ * - le mot de passe est tiré au hasard à chaque création ou renouvellement, et
+ *   montré une seule fois : il n'est écrit nulle part dans le code ;
+ * - les élèves de démo n'ont aucun mot de passe ;
+ * - la licence de démo couvre deux personnels, ceux qu'elle crée : le code
+ *   d'invitation ne peut rattacher personne de plus.
+ */
+export const VARIABLE_DEMO_EN_PRODUCTION = "AUTORISER_DEMO_EN_PRODUCTION";
+export const PLAFOND_ENSEIGNANTS_DEMO = 2;
+export const DEMO_REFUSEE_EN_PRODUCTION =
+  "Le monde de démonstration n'est pas créé en production. Pour l'autoriser, réglez la variable AUTORISER_DEMO_EN_PRODUCTION à 1.";
+
+export function demoAutorisee(env: Record<string, string | undefined> = process.env): boolean {
+  return env.NODE_ENV !== "production" || env[VARIABLE_DEMO_EN_PRODUCTION] === "1";
+}
+
+/** Un mot de passe neuf, aléatoire, de 24 caractères lisibles. */
+export function tirerUnMotDePasseDeDemo(): string {
+  return randomBytes(18).toString("base64url");
+}
 
 const DEMO_ORG_NAME = "Lycée Démo Business Arena";
 
@@ -68,7 +96,7 @@ const TEAM_DECISIONS: RoundDecisions[] = [
   { price: 76, productionPlan: 3500, marketingBudget: 5000, qualityBudget: 9000, maintenanceBudget: 4000 },
 ];
 
-async function ensureUser(email: string, displayName: string, passwordHash: string): Promise<string> {
+async function ensureUser(email: string, displayName: string, passwordHash: string | null): Promise<string> {
   const existing = (await db.select().from(users).where(eq(users.email, email)))[0];
   if (existing) return existing.id;
   const inserted = await db
@@ -83,7 +111,8 @@ export interface DemoWorld {
   organizationId: string;
   orgAdminEmail: string;
   teacherEmail: string;
-  password: string;
+  /** Le mot de passe tiré pour cette création, à montrer une seule fois ; null si rien n'a été créé. */
+  password: string | null;
   gameJoinCode: string | null;
   competitionJoinCode: string | null;
 }
@@ -95,7 +124,10 @@ export async function isDemoSeeded(): Promise<boolean> {
   );
 }
 
-export async function seedDemoWorld(): Promise<DemoWorld> {
+export async function seedDemoWorld(
+  env: Record<string, string | undefined> = process.env,
+): Promise<DemoWorld> {
+  if (!demoAutorisee(env)) throw new Error(DEMO_REFUSEE_EN_PRODUCTION);
   // Idempotence : le monde démo existe déjà → ne rien dupliquer
   const already = (
     await db.select().from(users).where(eq(users.email, DEMO_ACCOUNTS.orgAdmin.email))
@@ -112,13 +144,14 @@ export async function seedDemoWorld(): Promise<DemoWorld> {
       organizationId: membership?.organizationId ?? "",
       orgAdminEmail: DEMO_ACCOUNTS.orgAdmin.email,
       teacherEmail: DEMO_ACCOUNTS.teacher.email,
-      password: DEMO_ACCOUNTS.password,
+      password: null,
       gameJoinCode: null,
       competitionJoinCode: null,
     };
   }
 
-  const passwordHash = await bcrypt.hash(DEMO_ACCOUNTS.password, 10);
+  const password = tirerUnMotDePasseDeDemo();
+  const passwordHash = await bcrypt.hash(password, 10);
 
   // Établissement + personnel (création directe : indépendant des réglages
   // d'inscription de la plateforme)
@@ -153,7 +186,7 @@ export async function seedDemoWorld(): Promise<DemoWorld> {
     label: "Licence de démonstration",
     startsAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
     endsAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
-    maxTeachers: null,
+    maxTeachers: PLAFOND_ENSEIGNANTS_DEMO,
     arene: "campus",
     episodes: false,
   });
@@ -161,7 +194,7 @@ export async function seedDemoWorld(): Promise<DemoWorld> {
   // Élèves (invités nommés, sans mot de passe)
   const studentIds: string[] = [];
   for (const s of STUDENTS) {
-    studentIds.push(await ensureUser(s.email, s.name, passwordHash));
+    studentIds.push(await ensureUser(s.email, s.name, null));
   }
 
   // Partie de classe : 3 équipes + 1 bot, 3 tours joués — le tour 4 (la crise
@@ -241,8 +274,52 @@ export async function seedDemoWorld(): Promise<DemoWorld> {
     organizationId,
     orgAdminEmail: DEMO_ACCOUNTS.orgAdmin.email,
     teacherEmail: DEMO_ACCOUNTS.teacher.email,
-    password: DEMO_ACCOUNTS.password,
+    password,
     gameJoinCode: joinCode,
     competitionJoinCode: competition.joinCode,
   };
+}
+
+/**
+ * Un nouveau mot de passe pour les deux comptes de démonstration, montré une seule
+ * fois. Sert aussi à fermer les comptes créés avant ce correctif, dont le mot de
+ * passe était écrit dans le code : le renouveler le rend inutilisable.
+ */
+export async function renouvelerLeMotDePasseDeDemo(
+  env: Record<string, string | undefined> = process.env,
+): Promise<string> {
+  if (!demoAutorisee(env)) throw new Error(DEMO_REFUSEE_EN_PRODUCTION);
+  const password = tirerUnMotDePasseDeDemo();
+  const passwordHash = await bcrypt.hash(password, 10);
+  await db
+    .update(users)
+    .set({ passwordHash })
+    .where(inArray(users.email, [DEMO_ACCOUNTS.orgAdmin.email, DEMO_ACCOUNTS.teacher.email]));
+  return password;
+}
+
+/**
+ * Fermer les comptes de démonstration, en production comme ailleurs : plus de mot
+ * de passe, sessions ouvertes révoquées, codes d'invitation de l'établissement de
+ * démo désactivés. C'est le geste à faire sur une base où le monde démo a été créé
+ * avant ce correctif, avec le mot de passe du code et une licence sans plafond.
+ */
+export async function fermerLesComptesDeDemo(): Promise<void> {
+  const comptes = await db
+    .update(users)
+    .set({ passwordHash: null, sessionVersion: sql`${users.sessionVersion} + 1` })
+    .where(inArray(users.email, [DEMO_ACCOUNTS.orgAdmin.email, DEMO_ACCOUNTS.teacher.email]))
+    .returning({ id: users.id });
+  if (comptes.length === 0) return;
+  const adhesions = await db
+    .select({ organizationId: organizationMembers.organizationId })
+    .from(organizationMembers)
+    .where(inArray(organizationMembers.userId, comptes.map((c) => c.id)));
+  const etablissements = [...new Set(adhesions.map((a) => a.organizationId))];
+  if (etablissements.length > 0) {
+    await db
+      .update(orgInvites)
+      .set({ active: false })
+      .where(inArray(orgInvites.organizationId, etablissements));
+  }
 }

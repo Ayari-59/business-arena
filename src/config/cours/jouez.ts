@@ -12,11 +12,11 @@ import { FACTEUR_DE_LA_VIRGULE, TRIMESTRE_DECIDE, TRIMESTRES_DE_L_EXTRAIT } from
 import { ABONNEMENT_PAR_UTILISATEUR_ET_PAR_MOIS, PART_DES_VENTES_RETROUVEES } from "./chapitres/ce-que-coute-un-outil-numerique";
 import { BAISSE_EN_BASSE_SAISON, HAUSSE_EN_HAUTE_SAISON, saisonDuMarche } from "./chapitres/le-prix-selon-la-saison";
 import { machineSuivante } from "./chapitres/le-tri-et-le-choix-entre-deux-projets";
+import { projetsDe } from "./chapitres/la-valeur-actuelle-nette";
 import { REMISE_DE_LA_PROMOTION } from "./chapitres/le-prix-affiche";
 import { FOND_DE_CAISSE, PART_EN_ESPECES } from "./chapitres/tenir-la-caisse";
 import { METIERS } from "./metiers";
 import { FACTEUR_DU_GRAND_ENTRETIEN } from "./chapitres/le-deficit-reporte";
-import { venteDuMetier } from "./chapitres/le-panier-moyen";
 import { PROGRESSION_EN_POURCENT } from "./chapitres/suivre-ses-ventes";
 import { PRIX_BAS } from "./chapitres/l-offre-et-la-demande";
 import { PAS_DU_TATONNEMENT } from "./chapitres/le-prix-d-equilibre";
@@ -27,6 +27,7 @@ import { BAISSE_DE_PRIX_DU_COMMERCIAL, COUPE_DU_FINANCIER, HAUSSE_DE_PUBLICITE_D
 import { RETARD } from "./chapitres/une-information-a-temps";
 import { SEUILS_ABC } from "./negociation";
 import { scenarioByCode, scenarioCodeForLevel } from "../scenarios/registry";
+import { ARTICLES_PAR_TICKET } from "../scenarios/sector-kpis";
 import { DIFFICULTY_PRESETS } from "../difficulty";
 import { LES_OFFRES_DE_L_ARENE } from "../tarifs";
 import { VITRINE_SOLO_PAR_DEFAUT } from "../vitrine-solo";
@@ -139,13 +140,6 @@ export const LIEUX_DE_L_ARENE = {
       { fichier: "src/components/period-dashboard.tsx", texte: "Votre plan face au réalisé" },
     ],
   },
-  portefeuille: {
-    chemin: "Résultats › Synthèse › Portefeuille d'adhérents",
-    reperes: [
-      { fichier: "src/components/dashboard-tabs.tsx", texte: 'label: "Synthèse"' },
-      { fichier: "src/components/period-dashboard.tsx", texte: 'data-testid="portefeuille-tour"' },
-    ],
-  },
   "rh-du-tour": {
     chemin: "Résultats › Finance › la ligne « RH · effectif », sous les états financiers",
     reperes: [
@@ -222,6 +216,17 @@ export function niveauDeLaGamme(code: string): 2 | 3 | 4 | 5 | 6 | null {
 
 const partie = (c: Cas, niveau: number) => `Lancez une partie chez ${c.entreprise}, au niveau ${niveau}.`;
 
+/**
+ * La TVA de l'arène, dite à l'élève : elle est comptée à la facture, comme avec l'option pour les débits,
+ * alors que le chapitre pose ses travaux aux encaissements, le régime de droit commun d'une prestation.
+ */
+const TVA_DE_L_ARENE = (c: Cas) =>
+  `L'arène compte la TVA de ${c.entreprise} à la facture, comme si l'entreprise avait opté pour les débits ; le chapitre, lui, la compte aux encaissements, le régime de droit commun des travaux. Lisez donc l'écran comme la variante aux débits du chapitre.`;
+
+/** Le prix d'un équipement dans le catalogue de l'arène, par son nom. */
+const prixDansLArene = (c: Cas, nom: string) => scenarioByCode(c.code).scenario.equipment?.types.find((t) => t.name === nom)?.costPerUnit;
+const euros = (x: number) => `${x.toLocaleString("fr-FR")} €`;
+
 const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
   "creation-premier-bilan": (c) => ({
     niveau: 1,
@@ -271,8 +276,7 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
       niveau: 1,
       faire: `${partie(c, 1)} Dans « ${volume} », mettez nettement plus que les ventes estimées, puis jouez le tour.`,
       lieux: ["compte-de-resultat", "bilan", "budget-de-tresorerie"],
-      chercher:
-        "Retrouvez la production stockée au compte de résultat et les stocks de produits finis au bilan. Les invendus ont-ils pesé autant sur le résultat que sur la trésorerie ? Pourquoi ?",
+      chercher: `Au bilan, retrouvez la ligne des stocks : l'arène l'appelle « Stocks de produits finis » dans toutes les entreprises, mais ${c.entreprise} ne fabrique rien, c'est son stock de marchandises (compte 37). Au compte de résultat, la ligne « Production stockée » porte la variation de ce stock, que le chapitre passe en variation de stock de marchandises (6037), avec les achats. Les invendus ont-ils pesé autant sur le résultat que sur la trésorerie ? Pourquoi ?`,
     };
   },
   "la-cloture": (c) => ({
@@ -284,10 +288,10 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
   }),
   "remises-et-reglements": (c) => ({
     niveau: 3,
-    faire: `${partie(c, 3)} Dans « Trésorerie · mobiliser le poste clients », escomptez une partie de vos créances.`,
+    faire: `${partie(c, 3)} Dans « Trésorerie · mobiliser le poste clients », escomptez une partie de vos créances auprès de la banque.`,
     lieux: ["budget-de-tresorerie", "compte-de-resultat", "bilan"],
     chercher:
-      "Retrouvez l'escompte de créances dans le budget de trésorerie, et son coût dans les charges financières. Combien a coûté l'argent reçu plus tôt ? Les créances clients du bilan ont-elles baissé d'autant ?",
+      "Attention au mot : l'arène fait jouer l'escompte bancaire, où la banque avance l'argent d'une créance contre un coût ; le chapitre enseigne l'escompte de règlement, que l'entreprise accorde à son client s'il paie plus tôt. Les deux font arriver l'argent plus tôt, et les deux se paient en charges financières. Retrouvez l'escompte de créances dans le budget de trésorerie, et son coût dans les charges financières : combien a coûté l'argent reçu plus tôt, en pourcentage de la somme avancée ? Comparez au taux d'escompte de règlement du chapitre.",
   }),
   "depreciations-et-provisions": (c) => ({
     niveau: 1,
@@ -315,7 +319,7 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     faire: `${partie(c, 1)} Jouez deux tours.`,
     lieux: ["frng-bfr", "bilan"],
     chercher:
-      "Sous le bilan, l'arène écrit FRNG − BFR = trésorerie nette. Recalculez le BFR à partir des stocks, des créances clients et des dettes fournisseurs. Quel poste l'a fait bouger d'un tour à l'autre ?",
+      "Sous le bilan, l'arène écrit FRNG − BFR = trésorerie nette. Recalculez le BFR : stocks + créances clients − dettes fournisseurs − TVA à décaisser. L'arène compte la TVA due à l'État comme une dette du cycle, comme le chapitre ; un crédit de TVA, lui, s'ajouterait aux créances. Retombez-vous sur le BFR de l'écran ? Quel poste l'a fait bouger d'un tour à l'autre ?",
   }),
   "prix-cout-et-marge": (c) => {
     const { prix } = feuilleDe(c, 1);
@@ -462,7 +466,7 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
       faire: `${partie(c, 1)} Jouez un tour, puis un second où vous mettez dans « ${volume} » nettement moins que les ventes estimées.`,
       lieux: ["bilan", "compte-de-resultat"],
       chercher:
-        "Au bilan, retrouvez les stocks de produits finis à la fin de chaque tour. Calculez le stock moyen du second tour, puis sa rotation avec le coût variable des ventes du compte de résultat. Le stock a-t-il tourné plus vite ? Et les ventes, ont-elles souffert ?",
+        "Au bilan, retrouvez la ligne des stocks à la fin de chaque tour : l'écran l'appelle « Stocks de produits finis », ce sont les marchandises du magasin. Calculez le stock moyen du second tour, puis sa rotation avec le coût variable des ventes du compte de résultat. Le stock a-t-il tourné plus vite ? Et les ventes, ont-elles souffert ?",
     };
   },
   "prevoir-les-ventes": (c) => ({
@@ -904,13 +908,16 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
         "Relevez à chaque tour le taux d'occupation, le PMC et le RevPAR. Au tour où vous avez monté le prix, restait-il des nuitées mises en vente invendues ? Au tour où vous l'avez baissé, des clients sont-ils repartis sans chambre ? Votre prix suivait-il la saison, ou le remplissage ?",
     };
   },
-  // Fiscalité de l'entreprise : la TVA de l'arène, là où le scénario la compte, au niveau 1.
+  // Fiscalité de l'entreprise : la TVA de l'arène, là où le scénario la compte, au niveau 1. L'arène
+  // compte la TVA à la facture (engine/finance/statements.ts) : la mission le dit, le chapitre pose
+  // MARTEL & FILS aux encaissements, le régime de droit commun des travaux, et l'option pour les débits
+  // en variante.
   "la-declaration-de-tva": (c) => ({
     niveau: 1,
     faire: `${partie(c, 1)} Jouez deux tours sans rien changer à la feuille de décision proposée.`,
     lieux: ["bilan", "budget-de-tresorerie", "compte-de-resultat"],
     chercher:
-      "Au bilan du premier tour, relevez la TVA à décaisser, au passif. Retrouvez-la au deuxième tour, à la ligne TVA décaissée du budget de trésorerie : est-ce le même montant ? Est-elle passée par le compte de résultat ? Au bilan du deuxième tour, la nouvelle TVA à décaisser est-elle plus forte ou plus faible, et le chiffre d'affaires a-t-il suivi ?",
+      `${TVA_DE_L_ARENE(c)} Au bilan du premier tour, relevez la TVA à décaisser, au passif. Retrouvez-la au deuxième tour, à la ligne TVA décaissée du budget de trésorerie : est-ce le même montant ? Est-elle passée par le compte de résultat ? Au bilan du deuxième tour, la nouvelle TVA à décaisser est-elle plus forte ou plus faible, et le chiffre d'affaires a-t-il suivi ?`,
   }),
   "la-tva-et-la-tresorerie": (c) => {
     const taux = Math.round((scenarioByCode(c.code).scenario.finance.vatRate ?? 0) * 100);
@@ -918,7 +925,7 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
       niveau: 1,
       faire: `${partie(c, 1)} Jouez trois tours sans rien changer à la feuille de décision proposée.`,
       lieux: ["budget-de-tresorerie", "bilan"],
-      chercher: `Au troisième tour, dans le budget de trésorerie, multipliez les encaissements clients et les paiements fournisseurs par ${taux} ÷ ${100 + taux} : c'est la TVA qu'ils contiennent. TVA encaissée, moins TVA payée, moins TVA décaissée : la TVA a-t-elle soulagé votre trésorerie ce tour, ou pesé sur elle ? Au bilan, la TVA à décaisser et la TVA des dettes fournisseurs couvrent-elles la TVA des créances clients ?`,
+      chercher: `${TVA_DE_L_ARENE(c)} Au troisième tour, dans le budget de trésorerie, multipliez les encaissements clients et les paiements fournisseurs par ${taux} ÷ ${100 + taux} : c'est la TVA qu'ils contiennent. TVA encaissée, moins TVA payée, moins TVA décaissée : la TVA a-t-elle soulagé votre trésorerie ce tour, ou pesé sur elle ? Au bilan, la TVA à décaisser et la TVA des dettes fournisseurs couvrent-elles la TVA des créances clients ? Aux débits, c'est la TVA que l'entreprise avance à l'État pour des clients qui n'ont pas encore payé ; aux encaissements, elle ne serait pas encore due.`,
     };
   },
   "l-impot-sur-les-societes": (c) => ({
@@ -975,21 +982,24 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
   },
   "la-valeur-actuelle-nette": (c) => {
     const m = machineDuChapitre(c.code);
+    const a = projetsDe(c).a;
     return {
       niveau: NIVEAU_DE_L_INVESTISSEMENT,
       faire: `${partie(c, NIVEAU_DE_L_INVESTISSEMENT)} Au tour ${TRIMESTRE_DE_L_ACHAT}, dans « Parc machines · investir ou céder », achetez un équipement de plus, ${m.name}, sans emprunter : la trésorerie le paie. Puis jouez la partie jusqu'au bout.`,
       lieux: ["budget-de-tresorerie", "compte-de-resultat"],
-      chercher: `Au budget de trésorerie du tour ${TRIMESTRE_DE_L_ACHAT}, retrouvez l'investissement décaissé. Au compte de résultat, les dotations aux amortissements montent-elles de ${(m.costPerUnit / m.depreciationRounds).toLocaleString("fr-FR")} € par tour à partir du tour suivant ? Relevez à chaque tour l'excédent brut d'exploitation : rapprochez sa hausse des flux que le chapitre a actualisés.`,
+      chercher: `Dans l'arène, cet équipement est un seul poste, à ${euros(m.costPerUnit)} : le projet A du chapitre est plus grand (${a.actifs.map((x) => `${x.libelle}, ${euros(x.montant)}`).join(" ; ")}). L'échelle change, la méthode reste. Au budget de trésorerie du tour ${TRIMESTRE_DE_L_ACHAT}, retrouvez l'investissement décaissé. Au compte de résultat, les dotations aux amortissements montent-elles de ${(m.costPerUnit / m.depreciationRounds).toLocaleString("fr-FR")} € par tour à partir du tour suivant ? Relevez à chaque tour l'excédent brut d'exploitation : rapprochez sa hausse des flux que le chapitre a actualisés.`,
     };
   },
   "le-tri-et-le-choix-entre-deux-projets": (c) => {
     const m = machineSuivante(c.code);
+    const b = projetsDe(c).b.actifs[0]!;
+    const prix = prixDansLArene(c, m.name);
     return {
       niveau: NIVEAU_DE_L_INVESTISSEMENT,
-      faire: `${partie(c, NIVEAU_DE_L_INVESTISSEMENT)} Au tour ${TRIMESTRE_DE_L_ACHAT}, dans « Parc machines · investir ou céder », achetez un équipement de plus, ${m.name}, la machine du projet B, sans emprunter. Puis jouez la partie jusqu'au bout.`,
+      faire: `${partie(c, NIVEAU_DE_L_INVESTISSEMENT)} Au tour ${TRIMESTRE_DE_L_ACHAT}, dans « Parc machines · investir ou céder », achetez un équipement de plus, ${m.name}, sans emprunter. Puis jouez la partie jusqu'au bout.`,
       lieux: ["feuille", "compte-de-resultat", "budget-de-tresorerie"],
       chercher:
-        "Au tour suivant, la capacité en service a-t-elle monté de ce que le catalogue promet ? Relevez à chaque tour l'excédent brut d'exploitation et le résultat d'exploitation : la machine rapporte-t-elle assez vite pour que son TRI dépasse le coût du capital du chapitre ?",
+        `C'est le même genre de machine que le projet B du chapitre, à une autre échelle : ${prix ? `${euros(prix)} dans l'arène` : "son prix dans l'arène"}, ${euros(b.montant)} pour ${b.libelle} du chapitre. Au tour suivant, la capacité en service a-t-elle monté de ce que le catalogue promet ? Relevez à chaque tour l'excédent brut d'exploitation et le résultat d'exploitation : la machine rapporte-t-elle assez vite pour que son TRI dépasse le coût du capital du chapitre ?`,
     };
   },
   "l-effet-de-levier": (c) => ({
@@ -1051,7 +1061,8 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     };
   },
   "le-panier-moyen": (c) => {
-    const { unitesParVente } = venteDuMetier(c);
+    // Une gamme se compte en passages en caisse : l'arène pose son nombre d'articles par passage.
+    const unitesParVente = (scenarioByCode(c.code).scenario.products?.length ?? 0) > 1 ? ARTICLES_PAR_TICKET : 1;
     return {
       niveau: 1,
       faire: `${partie(c, 1)} Jouez un tour sans toucher à la feuille de décision proposée.`,
@@ -1066,16 +1077,13 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Votre plan face au réalisé donne l'écart entre votre objectif et vos ventes : calculez votre taux de réalisation. Dans le marché du tour écoulé, la demande adressée dépassait-elle votre objectif ? L'écart vient-il des clients venus, ou des clients repartis sans être servis ?",
   }),
-  "le-client-qui-revient": (c) => {
-    const { volume } = feuilleDe(c, 2);
-    return {
-      niveau: 2,
-      faire: `${partie(c, 2)} Jouez un premier tour sans rien changer, puis un deuxième où vous baissez « ${volume} » d'un tiers, puis un troisième où vous le remettez comme au premier.`,
-      lieux: ["portefeuille", "compte-de-resultat"],
-      chercher:
-        "Au deuxième tour, combien d'adhérents sont restés sans place ? Au troisième, la salle les a-t-elle retrouvés ? Relevez la marge des trois tours : un adhérent refusé coûte-t-il plus qu'un trimestre d'abonnement ?",
-    };
-  },
+  "le-client-qui-revient": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours sans toucher à la feuille de décision proposée.`,
+    lieux: ["marche-du-tour"],
+    chercher:
+      "Au marché du tour écoulé, relevez la demande que chaque clientèle vous adresse, aux deux tours. Dans l'arène, la part de clientèle gagnée au tour d'avant rend l'entreprise plus attirante au tour suivant : une clientèle bien servie au premier tour revient-elle plus nombreuse au second ? Et celle que vous n'avez pas servie ?",
+  }),
   "un-nouveau-client": (c) => ({
     niveau: 2,
     faire: `${partie(c, 2)} Jouez un tour sans rien changer, puis un deuxième où vous doublez « Budget marketing », puis un troisième où vous le remettez comme au premier.`,

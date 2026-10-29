@@ -1,6 +1,6 @@
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import type { Cas } from "../cas";
-import { MARTEL_ET_FILS, type FicheDuBatiment, type RegimeDExigibilite } from "../monde/delais-et-tva";
+import { DELAI_MAXIMAL_CONVENU, MARTEL_ET_FILS, type FicheDuBatiment, type RegimeDExigibilite } from "../monde/delais-et-tva";
 import { comparerLesRegimes, declarationDuTrimestre, declarationsDeLAnnee, ventesDuTrimestre, type LeviersDeLaTva } from "../monde/delais";
 import type { Chapitre, TableauDeDonnees } from "../types";
 
@@ -64,8 +64,12 @@ export const TRIMESTRE_DU_CREDIT = 2;
 /** Les bornes du curseur de l'investissement du printemps, en milliers d'euros hors taxes. */
 export const INVESTISSEMENT_DU_CURSEUR = { min: 0, max: 300 } as const;
 
-/** Les bornes du délai des entreprises, au curseur et au laboratoire, en jours : jusqu'à un trimestre. */
-export const DELAI_DU_CURSEUR = { min: 0, max: 90 } as const;
+/**
+ * Les bornes du délai des entreprises, au curseur et au laboratoire, en jours : jusqu'au délai maximal
+ * qu'un professionnel peut convenir avec un autre, 60 jours après la facture (code de commerce, article
+ * L. 441-10). Un délai plus long ne serait pas un délai, ce serait un retard.
+ */
+export const DELAI_DU_CURSEUR = { min: 0, max: DELAI_MAXIMAL_CONVENU.joursDeLaFacture } as const;
 
 /**
  * LE CALCUL À REBOURS, hypothèse du cours : la déclaration du premier trimestre de N + 1 porte
@@ -683,7 +687,7 @@ export const LA_DECLARATION_DE_TVA: Chapitre = {
       notions: ["vat_payable", "payment_terms"],
       question: (c) => {
         const x = declarationDeTva(c);
-        return `Au régime des encaissements, faites varier le délai de paiement des entreprises, de ${DELAI_DU_CURSEUR.min} à ${DELAI_DU_CURSEUR.max} jours, tout le reste du printemps identique (investissement compris). Une droite donne la TVA collectée du ${nomDuTrimestre(TRIMESTRE_DU_CREDIT)}, l'autre sa TVA déductible, ${eur(x.printemps.deductible)}. Placez le curseur sur le plus long délai où la TVA collectée couvre encore la TVA déductible, puis validez.`;
+        return `Au régime des encaissements, faites varier le délai de paiement des entreprises, de ${DELAI_DU_CURSEUR.min} à ${DELAI_DU_CURSEUR.max} jours (le maximum que la loi permet de convenir), tout le reste du printemps identique (investissement compris). Une droite donne la TVA collectée du ${nomDuTrimestre(TRIMESTRE_DU_CREDIT)}, l'autre sa TVA déductible, ${eur(x.printemps.deductible)}. Placez le curseur sur le plus long délai où la TVA collectée couvre encore la TVA déductible, puis validez.`;
       },
       grandeur: () => ({ libelle: "Délai des entreprises", unite: "jours" }),
       sens: "plus-grande",

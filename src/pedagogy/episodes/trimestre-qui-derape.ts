@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 1 — LE TRIMESTRE QUI DÉRAPE, tel que l'interface et le bilan le lisent.
+ * LE TRIMESTRE QUI DÉRAPE, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici en une définition d'épisode : ce que le tableau de bord

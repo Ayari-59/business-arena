@@ -206,6 +206,8 @@ export function corriger(saisie: readonly LigneSaisie[], attendue: EcritureAtten
 }
 
 /** Un montant dans une phrase de correction. */
-export function montantEcrit(x: number): string {
+export function montantEcrit(montant: number): string {
+  // Un reste d'arrondi (−0,000001) s'écrit « 0 € », jamais « -0 € ».
+  const x = Math.abs(montant) < 0.005 ? 0 : montant;
   return `${x.toLocaleString("fr-FR", { minimumFractionDigits: Number.isInteger(x) ? 0 : 2, maximumFractionDigits: 2 })} €`;
 }

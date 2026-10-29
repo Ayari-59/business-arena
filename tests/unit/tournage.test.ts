@@ -78,6 +78,9 @@ describe("tout ce qui est cité existe", () => {
     expect(doc).toContain("npm run seed:demo");
     expect(lire("package.json")).toContain('"seed:demo"');
     expect(doc).toContain("Générer le monde démo");
-    expect(lire("src/app/admin/page.tsx")).toContain("Générer le monde démo");
+    // Le bouton vit dans le composant du monde démo, que la page d'admin affiche
+    // (audit, P1-4 : le mot de passe tiré au hasard s'y montre une seule fois).
+    expect(lire("src/app/admin/page.tsx")).toContain("<MondeDeDemonstration");
+    expect(lire("src/components/monde-de-demonstration.tsx")).toContain("Générer le monde démo");
   });
 });

@@ -108,7 +108,7 @@ export const TROUS_INVENTAIRE = 1;
 export const VENTES_PAR_REFERENCE = 6;
 export const MARGE_PAR_VENTE = 18;
 export const COUT_RUPTURE = VENTES_PAR_REFERENCE * MARGE_PAR_VENTE;
-export const OBJECTIF_RUPTURES = 5;
+export const OBJECTIF_RUPTURES = 7;
 
 /* ---------------------------------------------------------------------------
  * LES COMMANDES CLIENTS.

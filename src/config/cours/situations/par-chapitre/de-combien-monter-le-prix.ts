@@ -1,6 +1,8 @@
 import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
 import type { Cas } from "../../cas";
-import { HAUSSE_DU_PRIX, LA_CONCURRENCE, marcheAuPrixMonte, marcheDeReference, prixMonte, vendeursDe, type Vendeur } from "../../chapitres/la-concurrence";
+import { HAUSSE_DU_PRIX, LA_CONCURRENCE, type Vendeur } from "../../chapitres/la-concurrence";
+import { prixDeNova, vendeursAuPrix } from "../../monde/economie-et-marketing";
+import { mercatiqueDe } from "../../monde/mercatique-de-nova";
 import type { TableauDeDonnees } from "../../types";
 import type { Situation } from "../types";
 
@@ -8,16 +10,11 @@ import type { Situation } from "../types";
  * CAS PRATIQUE DU CHAPITRE « LA CONCURRENCE : PLUSIEURS VENDEURS POUR LES MÊMES CLIENTS » : DE
  * COMBIEN MONTER LE PRIX ? (Seconde, sciences économiques et sociales, palier 1).
  *
- * La dirigeante veut monter son prix, et hésite entre une petite hausse et la hausse du chapitre.
- * L'arène rejoue l'année aux deux prix (`marcheAuPrixMonte` : un prix absolu, celui du premier
- * trimestre monté de la hausse, posé à chaque trimestre ; clés « la-concurrence:prix-… »), avec
- * les mêmes concurrents et la même façon de gérer. L'élève reprend les calculs du chapitre : la
- * part de marché à chaque prix, ce que chaque hausse change au bénéfice, et rend sa réponse.
- *
- * Le cas est neuf par sa question : le chapitre montre qu'une hausse fait partir des clients ; le
- * cas demande jusqu'où la concurrence laisse monter le prix. La réponse se calcule : le prix au
- * meilleur bénéfice de l'année, tel que le moteur le rejoue. Selon l'entreprise, c'est garder son
- * prix, la petite hausse ou la grande. La petite hausse est la seule hypothèse du cas.
+ * La dirigeante de NOVA veut monter son prix, et hésite entre une petite hausse et la hausse du
+ * chapitre. Le cas lit l'année type du marché à trois (monde/attractivite.ts) aux trois prix : 59 €,
+ * 5 % et 10 % plus cher, les concurrents gardant leur offre. L'élève reprend les calculs du chapitre :
+ * la part de marché à chaque prix, ce que chaque hausse change au bénéfice, et rend sa réponse. Le
+ * verdict se calcule : le prix au meilleur bénéfice. La petite hausse est la seule hypothèse du cas.
  */
 
 /** La petite hausse que la dirigeante envisage : 5 % (hypothèse du cas). */
@@ -28,34 +25,37 @@ const ecart = (x: number) => (x > 0 ? `+${eur(x)}` : eur(x));
 const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
 const auDixieme = (x: number) => Math.round(x * 10) / 10;
-const dE = (nom: string) =>
-  /^Le /.test(nom) ? `du ${nom.slice(3)}` : /^Les /.test(nom) ? `des ${nom.slice(4)}` : /^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`;
+const auCentime = (x: number) => Math.round(x * 100) / 100;
+const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 export type Choix = "garder" | "douce" | "forte";
 
-/** L'année jouée à un prix : les trois vendeurs, la part de marché et le bénéfice de l'entreprise. */
+/** L'année type à un prix : les trois vendeurs, la part de marché et le bénéfice de l'entreprise. */
 function aCePrix(vendeurs: Vendeur[]) {
   const total = vendeurs.reduce((t, v) => t + v.ventes, 0);
   const e = vendeurs[0]!;
   return { vendeurs, entreprise: e, ventesDuMarche: total, part: auDixieme((e.ventes / total) * 100), benefice: e.benefice };
 }
 
-/** L'année au prix du cours, puis montée de 5 % et de 10 % : ce que le cas lit et calcule. */
+/** L'année au prix de NOVA, puis montée de 5 % et de 10 % : ce que le cas lit et calcule. */
 export function troisPrix(c: Cas) {
-  const f = {
-    garder: aCePrix(vendeursDe(c, marcheDeReference(c.code))),
-    douce: aCePrix(vendeursDe(c, marcheAuPrixMonte(c.code, HAUSSE_DOUCE))),
-    forte: aCePrix(vendeursDe(c, marcheAuPrixMonte(c.code, HAUSSE_DU_PRIX))),
+  const f = mercatiqueDe(c);
+  const avant = prixDeNova(f);
+  const prix = (h: number) => ({ avant, apres: auCentime(avant * (1 + h)) });
+  const x = {
+    garder: aCePrix(vendeursAuPrix(f, avant)),
+    douce: aCePrix(vendeursAuPrix(f, prix(HAUSSE_DOUCE).apres)),
+    forte: aCePrix(vendeursAuPrix(f, prix(HAUSSE_DU_PRIX).apres)),
   };
   const ordre: Choix[] = ["garder", "douce", "forte"];
-  const meilleur = ordre.reduce((a, b) => (f[b].benefice > f[a].benefice ? b : a));
+  const meilleur = ordre.reduce((a, b) => (x[b].benefice > x[a].benefice ? b : a));
   return {
-    ...f,
-    prixDouce: prixMonte(c.code, HAUSSE_DOUCE),
-    prixForte: prixMonte(c.code, HAUSSE_DU_PRIX),
-    perduesDouce: f.garder.entreprise.ventes - f.douce.entreprise.ventes,
-    ecartDouce: f.douce.benefice - f.garder.benefice,
-    ecartForte: f.forte.benefice - f.garder.benefice,
+    ...x,
+    prixDouce: prix(HAUSSE_DOUCE),
+    prixForte: prix(HAUSSE_DU_PRIX),
+    perduesDouce: x.garder.entreprise.ventes - x.douce.entreprise.ventes,
+    ecartDouce: auCentime(x.douce.benefice - x.garder.benefice),
+    ecartForte: auCentime(x.forte.benefice - x.garder.benefice),
     meilleur,
   };
 }
@@ -67,7 +67,7 @@ function tableauDesTroisPrix(c: Cas): TableauDeDonnees {
   const annees = [k.garder, k.douce, k.forte];
   const [, a, b] = k.garder.vendeurs as [Vendeur, Vendeur, Vendeur];
   return {
-    titre: `L'année ${dE(c.entreprise)}, rejouée à chaque prix`,
+    titre: `L'année type ${dE(c.entreprise)}, à chaque prix`,
     colonnes: COLONNES,
     lignes: [
       { libelle: `Prix moyen ${dE(c.entreprise)}`, valeurs: annees.map((x) => eur(x.entreprise.prix)) },
@@ -88,7 +88,7 @@ export const DE_COMBIEN_MONTER_LE_PRIX: Situation = {
   commanditaire: "La dirigeante de l'entreprise",
   titre: "De combien monter le prix ?",
   accroche:
-    "La dirigeante veut monter son prix, un peu ou beaucoup. Mais ses deux concurrents attendent les clients qu'elle laissera partir. L'arène rejoue l'année à chaque prix : à vous de dire jusqu'où monter.",
+    "La dirigeante veut monter son prix, un peu ou beaucoup. Mais ses deux concurrents attendent les clients qu'elle laissera partir. Lire l'année à chaque prix, et dire jusqu'où monter.",
   objectifs: [
     "Calculer une part de marché à chaque prix",
     "Chiffrer ce qu'une hausse de prix change au bénéfice",
@@ -105,12 +105,10 @@ export const DE_COMBIEN_MONTER_LE_PRIX: Situation = {
       texte: (c) => {
         const k = troisPrix(c);
         const [, a, b] = k.garder.vendeurs as [Vendeur, Vendeur, Vendeur];
-        const prix = k.prixDouce.articles
-          ? `chaque article ${pct(HAUSSE_DOUCE * 100)} ou ${pct(HAUSSE_DU_PRIX * 100)} plus cher qu'au premier trimestre`
-          : `${eur(k.prixDouce.apres)} ou ${eur(k.prixForte.apres)} au lieu de ${eur(k.prixDouce.avant)}`;
+        const prix = `${eur(k.prixDouce.apres)} ou ${eur(k.prixForte.apres)} au lieu de ${eur(k.prixDouce.avant)}`;
         return [
           `« Je veux monter notre prix : ${prix}, toute l'année. Mais ${a.nom} et ${b.nom} sont là, et je ne veux pas leur offrir nos clients. De combien monter, ou faut-il ne rien changer ? »`,
-          "L'arène a rejoué l'année à chaque prix, avec les mêmes concurrents et la même façon de gérer. Pas de cours cette fois : les calculs sont ceux du chapitre.",
+          "Le tableau donne l'année type du marché à chaque prix, les concurrents gardant le leur. Pas de cours cette fois : les calculs sont ceux du chapitre.",
         ];
       },
       repere: () => "À rendre : la part de marché de l'entreprise à chaque prix, ce que chaque hausse change au bénéfice, et votre réponse.",

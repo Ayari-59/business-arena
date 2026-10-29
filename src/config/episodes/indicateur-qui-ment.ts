@@ -192,7 +192,7 @@ export const ETAPES: readonly Etape[] = [
       },
       {
         id: "delegues",
-        titre: "Sonder les délégués du personnel",
+        titre: "Sonder les élus du CSE",
         cout: 0.5,
         nature: "utile",
         resultat:
@@ -222,7 +222,7 @@ export const ETAPES: readonly Etape[] = [
       [
         {
           de: "Hugo Lemaire",
-          role: "Délégué du personnel",
+          role: "Élu du CSE",
           texte:
             "La note est tombée sans un mot d'explication. Sur les deux plateaux, on parle de sanction.",
         },
@@ -245,7 +245,7 @@ export const ETAPES: readonly Etape[] = [
       [
         {
           de: "Hugo Lemaire",
-          role: "Délégué du personnel",
+          role: "Élu du CSE",
           texte:
             "95 % ? Il faudra décrocher encore plus vite. Les appels de commande longs, plus personne n'en voudra.",
         },

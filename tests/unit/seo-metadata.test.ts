@@ -54,7 +54,15 @@ describe("métadonnées communes (layout)", () => {
     expect(m.description).toContain("sans compte élève");
     expect(m.openGraph).toMatchObject({ siteName: "Business Arena", locale: "fr_FR", type: "website" });
     expect(m.twitter).toMatchObject({ card: "summary_large_image" });
-  });
+  }, IMPORT_D_UNE_PAGE);
+
+  it("le gabarit ne pose plus og:url : chaque page aurait porté l'adresse de l'accueil", async () => {
+    const m = await meta("/layout");
+    expect(m.openGraph).not.toHaveProperty("url");
+    // L'accueil pose la sienne, avec le socle commun (Next remplace l'objet entier).
+    const accueil = await meta("/page");
+    expect(accueil.openGraph).toMatchObject({ url: "/", siteName: "Business Arena", locale: "fr_FR" });
+  }, IMPORT_D_UNE_PAGE);
 
   it("l'image de partage est générée à côté du layout, 1200×630", async () => {
     const og = (await import("@/app/opengraph-image")) as {
@@ -102,7 +110,14 @@ describe("pages publiques : titre distinct, description, canonique", () => {
     const m = await meta("/page");
     expect((m.title as { absolute: string }).absolute).toContain("BTS, DCG");
     expect(m.description).toContain("sans compte élève");
-    expect(m.description).toMatch(/\d+ secteurs, \d+ situations/);
+    // Les nombres que l'accueil affiche, comptés dans les registres : plus de
+    // « 139 situations, 20 modèles d'analyse », invérifiables depuis le site.
+    const { SCENARIO_CHOICES } = await import("@/config/scenarios/registry");
+    const { NOMBRE_D_EPISODES } = await import("@/config/episodes/familles");
+    expect(m.description).toContain(
+      `${SCENARIO_CHOICES.length} entreprises à piloter et ${NOMBRE_D_EPISODES} épisodes manager`,
+    );
+    expect(m.description).not.toMatch(/situations|modèles d'analyse/);
   });
 
   it("aucun titre de page ne se termine plus par le nom du site en dur", () => {
@@ -152,5 +167,57 @@ describe("espaces privés : titre pour l'onglet, rien pour les moteurs", () => {
       const m = await meta(`/${espace}/layout`);
       expect(m.robots, espace).toMatchObject({ index: false, follow: false });
     }
+  });
+});
+
+describe("ateliers : canonique sur chaque page, une description par rôle", () => {
+  type Gen = (p: { params: Promise<Record<string, string>> }) => Promise<Metadata>;
+  const gen = async (chemin: string) => ((await import(`@/app${chemin}`)) as { generateMetadata: Gen }).generateMetadata;
+  const avec = (p: Record<string, string>) => ({ params: Promise.resolve(p) });
+
+  it("la fiche, le dossier, les formulaires et chaque dossier de rôle ont leur canonique", async () => {
+    expect((await (await gen("/animations/[code]/page"))(avec({ code: "mco" }))).alternates?.canonical).toBe(
+      "/animations/mco",
+    );
+    expect((await (await gen("/animations/[code]/dossier/page"))(avec({ code: "mco" }))).alternates?.canonical).toBe(
+      "/animations/mco/dossier",
+    );
+    expect(
+      (await (await gen("/animations/[code]/formulaires/page"))(avec({ code: "mco" }))).alternates?.canonical,
+    ).toBe("/animations/mco/formulaires");
+    const role = await gen("/animations/[code]/dossier/[role]/page");
+    expect((await role(avec({ code: "mco", role: "rh" }))).alternates?.canonical).toBe("/animations/mco/dossier/rh");
+  }, IMPORT_D_UNE_PAGE);
+
+  it("les cinq dossiers de rôle d'un atelier ont cinq descriptions distinctes", async () => {
+    const role = await gen("/animations/[code]/dossier/[role]/page");
+    const descriptions = await Promise.all(
+      ["direction", "commercial", "approvisionnement", "rh", "financier"].map(
+        async (r) => (await role(avec({ code: "mco", role: r }))).description,
+      ),
+    );
+    expect(new Set(descriptions).size).toBe(5);
+    expect(descriptions[3]).toContain("Responsable des ressources humaines");
+  }, IMPORT_D_UNE_PAGE);
+});
+
+describe("plus de description par défaut reprise par une page d'entrée", () => {
+  it.each([
+    ["/join/page"],
+    ["/compete/page"],
+    ["/examen/page"],
+    ["/reprendre/page"],
+    ["/cours/rejoindre/page"],
+    ["/teacher/login/page"],
+    ["/profile/layout"],
+  ])("%s a sa description propre", async (module) => {
+    const { DESCRIPTION_ACCUEIL } = await import("@/config/seo");
+    const m = await meta(module);
+    expect(m.description, module).toBeTruthy();
+    expect(m.description).not.toBe(DESCRIPTION_ACCUEIL);
+  }, IMPORT_D_UNE_PAGE);
+
+  it("/profile a son titre, distinct de celui de l'accueil", async () => {
+    expect(titre(await meta("/profile/layout"))).toBe("Mon profil");
   });
 });

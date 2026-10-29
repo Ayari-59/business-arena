@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 76 — L'ASSISTANT D'IA QUI CHANGE LE MÉTIER, tel que l'interface et le bilan le lisent.
+ * L'ASSISTANT D'IA QUI CHANGE LE MÉTIER, tel que l'interface et le bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
  * assemblés ici : ce que le tableau de bord d'Anouchka montre, ce que la

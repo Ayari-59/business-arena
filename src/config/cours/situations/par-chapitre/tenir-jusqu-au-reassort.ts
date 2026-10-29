@@ -1,44 +1,35 @@
 import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
 import type { Cas } from "../../cas";
-import { accordeA, de, qte, referencesDuMagasin } from "../../chapitres/recevoir-une-livraison";
-import { REMPLIR_LE_RAYON, articleDuTrimestre, articleEnRupture, calculsDuRayon } from "../../chapitres/remplir-le-rayon";
+import { accordeA, de, majuscule, qte } from "../../chapitres/recevoir-une-livraison";
+import { REMPLIR_LE_RAYON, rayon } from "../../chapitres/remplir-le-rayon";
 import type { Situation } from "../types";
 
 /**
  * CAS PRATIQUE DU CHAPITRE « REMPLIR LE RAYON AVANT LA RUPTURE » : TENIR JUSQU'AU RÉASSORT (CAP
  * Équipier polyvalent du commerce, palier 1).
  *
- * Le chapitre rejouait un trimestre où la boutique oubliait la commande d'un article. Ici, l'année
- * du cours telle qu'elle est jouée : une livraison arrive pendant le même trimestre, et le
- * responsable croit qu'elle suffira jusqu'au prochain réassort.
- * L'élève ajoute la livraison au stock, refait le rythme et les jours avant la rupture, compare
- * au délai du fournisseur, lit ce que l'arène a compté de ventes perdues, et répond.
+ * Le chapitre a vu le rayon des cardigans se vider avant la livraison du 12 janvier. Ici, la
+ * livraison arrive, et le responsable croit qu'elle suffira jusqu'au réassort qu'il commande
+ * aujourd'hui. L'élève refait le rythme et les jours avant la rupture, compare au délai du
+ * façonnier, chiffre les ventes en danger, et répond.
  *
- * L'article est, au trimestre du chapitre, celui que la boutique a commandé (`planned` > 0) et
- * qui a pourtant fini en rupture (`lost` > 0) ; parmi eux, celui dont la rupture a coûté le plus.
- * HYPOTHÈSES DU COURS, dites au texte : la livraison du trimestre arrive en une fois au début du
- * trimestre, et le réassort suivant prend le délai du chapitre (`DELAI_DE_REASSORT`).
+ * LE CAS JOUE DANS LE MONDE DU COURS : le cardigan de MAILLE & CO en janvier (monde/maille-et-co.ts :
+ * 240 cardigans livrés le 12, une réserve vide avant eux, 384 demandés dans le mois, le façonnier
+ * à 21 jours). HYPOTHÈSES DU CAS, dites au texte : les clients achètent au même rythme tous les
+ * jours, à l'unité ; le réassort est commandé le jour de la livraison. LA RÉPONSE SE CALCULE : la
+ * livraison tient si ses jours de stock atteignent le délai.
  *
- * LA RÉPONSE SE CALCULE : la livraison tient jusqu'au réassort si les jours avant la rupture
- * atteignent le délai. Dans l'année du cours tenue par le bon gestionnaire, elle tient : l'article
- * est la seule rupture du premier trimestre, une petite rupture de fin de trimestre, qu'un réassort
- * commandé à temps aurait évitée (le texte le dit). La branche « ça ne tient pas » reste juste pour
- * une autre année, mais ne se lit plus.
+ * CE QUI A CHANGÉ. Le cas lisait un article de l'arène au premier trimestre. Il lit maintenant la
+ * livraison du 12 janvier : 240 cardigans, 13 par jour, 18 jours de stock pour 21 jours de délai,
+ * 3 jours de rayon vide et 2 925 € de ventes en danger.
  */
 
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-/** L'article livré qui manque quand même, et ses calculs avec la livraison comptée. */
-export function reassortAttendu(c: Cas) {
-  const { trimestre } = articleEnRupture(c.code);
-  const candidats = referencesDuMagasin(c.code)
-    .map((a) => articleDuTrimestre(c.code, trimestre, a.code))
-    .filter((x) => x.commandee > 0 && x.perdues > 0);
-  if (candidats.length === 0) throw new Error(`Aucun article livré et pourtant en rupture chez ${c.code}`);
-  const x = candidats.reduce((a, b) => (b.perdues * b.prix > a.perdues * a.prix ? b : a));
-  const stockApres = x.stock + x.commandee;
-  return { x, stockApres, ...calculsDuRayon(x, stockApres) };
+/** La livraison du 12 janvier, ses jours de stock, et ce qu'un rayon vide mettrait en danger. */
+export function reassortAttendu(c: Pick<Cas, "code">) {
+  const r = rayon(c);
+  return { ...r, aTemps: r.joursSansApres === 0, ventesEnDanger: Math.round(r.articlesEnDanger * r.prixHt * 100) / 100 };
 }
 
 export const TENIR_JUSQU_AU_REASSORT: Situation = {
@@ -49,14 +40,8 @@ export const TENIR_JUSQU_AU_REASSORT: Situation = {
   reprend: [REMPLIR_LE_RAYON.code],
   commanditaire: "Le responsable du magasin",
   titre: "Tenir jusqu'au réassort",
-  accroche:
-    "Une livraison arrive, et le responsable pense qu'elle suffira jusqu'au réassort suivant. Ajouter, diviser, comparer au délai du fournisseur, et lui répondre.",
-  objectifs: [
-    "Ajouter une livraison au stock qui reste",
-    "Calculer les ventes par jour et les jours avant la rupture",
-    "Comparer ces jours au délai du fournisseur",
-    "Chiffrer les ventes perdues, et répondre à son responsable",
-  ],
+  accroche: "Une livraison arrive, et le responsable pense qu'elle suffira jusqu'au réassort suivant. Diviser, comparer au délai du fournisseur, chiffrer, et lui répondre.",
+  objectifs: ["Calculer les ventes par jour et les jours avant la rupture", "Comparer ces jours au délai du fournisseur", "Chiffrer les ventes en danger, et répondre à son responsable"],
   libre: false,
   entreprises: REMPLIR_LE_RAYON.entreprises,
   etapes: [
@@ -67,44 +52,41 @@ export const TENIR_JUSQU_AU_REASSORT: Situation = {
       texte: (c) => {
         const s = reassortAttendu(c);
         return [
-          `« Au trimestre ${s.x.trimestre}, on reçoit ${qte(s.x.commandee)} ${s.x.pluriel}, en plus de ce qui reste en réserve. Le réassort suivant met ${qte(s.delai)} jours à arriver. Est-ce que ça tient jusque-là, ou est-ce que je dois commander tout de suite ? »`,
-          "Pas de cours cette fois. Vous avez les chiffres de l'arène. Le cours suppose que la livraison arrive au début du trimestre, et que les clients achètent au même rythme tous les jours.",
+          `« Ce matin, le ${s.livraison.jour} janvier, on reçoit ${qte(s.livraison.quantite)} ${s.pluriel}, et la réserve était vide. Je commande le réassort aujourd'hui : le façonnier met ${qte(s.delai)} jours. Est-ce que ça tient jusque-là ? »`,
+          "Pas de cours cette fois. Le cours suppose que les clients achètent au même rythme tous les jours du mois.",
         ];
       },
       tableau: (c) => {
         const s = reassortAttendu(c);
         return {
-          titre: `${c.entreprise} · les ${s.x.pluriel} au trimestre ${s.x.trimestre}`,
+          titre: `${c.entreprise} · les ${s.pluriel} en janvier`,
           colonnes: ["Nombre"],
           lignes: [
-            { libelle: `${majuscule(s.x.pluriel)} en réserve au début du trimestre`, valeurs: [qte(s.x.stock)] },
-            { libelle: `${majuscule(s.x.pluriel)} ${accordeA(s.x.feminin, "livré")} au trimestre`, valeurs: [qte(s.x.commandee)] },
-            { libelle: `${majuscule(s.x.pluriel)} ${accordeA(s.x.feminin, "demandé")} par les clients`, valeurs: [qte(s.x.demande)] },
-            { libelle: "Jours dans le trimestre", valeurs: [qte(s.x.jours)] },
+            { libelle: `${majuscule(s.pluriel)} ${accordeA(s.feminin, "livré")} le ${s.livraison.jour} janvier`, valeurs: [qte(s.livraison.quantite)] },
+            { libelle: `${majuscule(s.pluriel)} ${accordeA(s.feminin, "demandé")} par les clients dans le mois`, valeurs: [qte(s.demande)] },
+            { libelle: "Jours dans le mois", valeurs: [qte(s.jours)] },
+            { libelle: "Délai du façonnier, en jours", valeurs: [qte(s.delai)] },
           ],
         };
       },
-      repere: () => "À rendre : le stock avec la livraison, le rythme, les jours avant la rupture, les ventes perdues, et votre réponse.",
+      repere: () => "À rendre : le rythme, les jours avant la rupture, les jours de rayon vide, les ventes en danger, et votre réponse.",
     },
     {
-      id: "stock-et-rythme",
+      id: "rythme",
       type: "montants",
-      titre: "Le stock et le rythme",
+      titre: "Le rythme",
       notions: ["stock"],
       question: (c) => {
         const s = reassortAttendu(c);
-        return `Calculez le stock ${de(s.x.pluriel)} une fois la livraison rangée, puis les ventes d'une journée, arrondies à l'unité.`;
+        return `Calculez les ventes ${de(s.pluriel)} d'une journée, arrondies à l'unité.`;
       },
       champs: (c) => {
         const s = reassortAttendu(c);
-        return [
-          { libelle: "Stock avec la livraison", attendu: s.stockApres, calcul: `${qte(s.x.stock)} + ${qte(s.x.commandee)} = ${qte(s.stockApres)}` },
-          { libelle: "Ventes par jour", attendu: s.parJour, calcul: `${qte(s.x.demande)} ÷ ${qte(s.x.jours)} = ${qte(s.parJour)}, arrondi à l'unité` },
-        ];
+        return [{ libelle: "Ventes par jour", attendu: s.parJour, calcul: `${qte(s.demande)} ÷ ${qte(s.jours)} = ${(s.demande / s.jours).toLocaleString("fr-FR")}, arrondi à ${qte(s.parJour)}` }];
       },
       explication: (c) => {
         const s = reassortAttendu(c);
-        return [`${qte(s.stockApres)} ${s.x.pluriel} pour ${qte(s.parJour)} ventes par jour.`];
+        return [`${qte(s.livraison.quantite)} ${s.pluriel} pour ${qte(s.parJour)} ventes par jour.`];
       },
     },
     {
@@ -112,18 +94,15 @@ export const TENIR_JUSQU_AU_REASSORT: Situation = {
       type: "montants",
       titre: "Les jours qui restent",
       notions: ["stock"],
-      question: (c) => {
-        const s = reassortAttendu(c);
-        return `Combien de jours entiers le stock tiendra-t-il ? Puis, avec un réassort qui met ${qte(s.delai)} jours, combien de jours le rayon restera-t-il vide ? Écrivez 0 s'il tient.`;
-      },
+      question: (c) => `Combien de jours entiers la livraison tiendra-t-elle ? Puis, avec un réassort qui met ${qte(reassortAttendu(c).delai)} jours, combien de jours le rayon restera-t-il vide ? Écrivez 0 s'il tient.`,
       champs: (c) => {
         const s = reassortAttendu(c);
         return [
-          { libelle: "Jours avant la rupture", attendu: s.joursAvant, calcul: `${qte(s.stockApres)} ÷ ${qte(s.parJour)} = ${qte(s.joursAvant)} jours entiers` },
+          { libelle: "Jours avant la rupture", attendu: s.joursApres, calcul: `${qte(s.livraison.quantite)} ÷ ${qte(s.parJour)} = ${qte(s.joursApres)} jours entiers` },
           {
             libelle: "Jours avec un rayon vide",
-            attendu: s.joursSans,
-            calcul: s.aTemps ? `${qte(s.joursAvant)} jours de stock, plus que ${qte(s.delai)} jours de délai : 0` : `${qte(s.delai)} − ${qte(s.joursAvant)} = ${qte(s.joursSans)}`,
+            attendu: s.joursSansApres,
+            calcul: s.aTemps ? `${qte(s.joursApres)} jours de stock, au moins les ${qte(s.delai)} jours du délai : 0` : `${qte(s.delai)} − ${qte(s.joursApres)} = ${qte(s.joursSansApres)}`,
           },
         ];
       },
@@ -131,34 +110,30 @@ export const TENIR_JUSQU_AU_REASSORT: Situation = {
         const s = reassortAttendu(c);
         return [
           s.aTemps
-            ? `Le stock tient ${qte(s.joursAvant)} jours : le réassort arrive avant la rupture.`
-            : `Le stock tient ${qte(s.joursAvant)} jours, le réassort en met ${qte(s.delai)} : ${qte(s.joursSans)} jours de rayon vide, même en commandant aujourd'hui.`,
+            ? `La livraison tient ${qte(s.joursApres)} jours : le réassort arrive avant la rupture.`
+            : `La livraison tient ${qte(s.joursApres)} jours, le réassort en met ${qte(s.delai)} : ${qte(s.joursSansApres)} jours de rayon vide, même en commandant aujourd'hui.`,
         ];
       },
     },
     {
-      id: "arene",
+      id: "en-danger",
       type: "montants",
-      titre: "Ce que l'arène a compté",
+      titre: "Les ventes en danger",
       notions: ["stock", "revenue"],
       question: (c) => {
         const s = reassortAttendu(c);
-        return `Dans l'arène, la boutique a vendu ${qte(s.x.vendues)} ${s.x.pluriel} au trimestre ${s.x.trimestre}, au prix de ${eur(s.x.prix)}. Calculez les articles que les clients n'ont pas trouvés, puis les ventes perdues en euros.`;
+        return `Pendant les jours de rayon vide, les clients continuent de demander ${qte(s.parJour)} ${s.pluriel} par jour, à ${eur(s.prixHt)} hors taxes pièce. Calculez les articles qu'ils ne trouveront pas, puis les ventes en danger en euros.`;
       },
       champs: (c) => {
         const s = reassortAttendu(c);
         return [
-          { libelle: "Articles non trouvés", attendu: s.x.perdues, calcul: `${qte(s.x.demande)} − ${qte(s.x.vendues)} = ${qte(s.x.perdues)}` },
-          { libelle: "Ventes perdues", attendu: s.ventesPerdues, calcul: `${qte(s.x.perdues)} × ${eur(s.x.prix)} = ${eur(s.ventesPerdues)}` },
+          { libelle: "Articles non trouvés", attendu: s.articlesEnDanger, calcul: `${qte(s.joursSansApres)} × ${qte(s.parJour)} = ${qte(s.articlesEnDanger)}` },
+          { libelle: "Ventes en danger hors taxes", attendu: s.ventesEnDanger, calcul: `${qte(s.articlesEnDanger)} × ${eur(s.prixHt)} = ${eur(s.ventesEnDanger)}` },
         ];
       },
       explication: (c) => {
         const s = reassortAttendu(c);
-        return [
-          s.aTemps
-            ? `Dans l'arène, aucun réassort n'est arrivé pendant le trimestre : ${qte(s.x.perdues)} ${s.x.pluriel} ${accordeA(s.x.feminin, "demandé")} n'étaient plus là, ${eur(s.ventesPerdues)} de ventes perdues. Commandé à temps, le réassort serait arrivé avant la rupture.`
-            : `Malgré la livraison, ${qte(s.x.perdues)} ${s.x.pluriel} ${accordeA(s.x.feminin, "demandé")} n'étaient plus là : ${eur(s.ventesPerdues)} de ventes perdues.`,
-        ];
+        return [`${eur(s.ventesEnDanger)} de ventes en danger : c'est ce que coûte un réassort commandé trop tard.`];
       },
     },
     {
@@ -170,23 +145,21 @@ export const TENIR_JUSQU_AU_REASSORT: Situation = {
         const s = reassortAttendu(c);
         return [
           {
-            texte: "Non, ça ne tient pas : commander aujourd'hui",
+            texte: "Non, ça ne tient pas : il faut un réassort plus rapide",
             juste: !s.aTemps,
             retour: !s.aTemps
-              ? `Oui : ${qte(s.joursAvant)} jours de stock pour ${qte(s.delai)} jours de réassort. Même commandé aujourd'hui, le rayon restera vide ${qte(s.joursSans)} jours. Dans l'arène, la rupture a coûté ${eur(s.ventesPerdues)}.`
-              : `Non : ${qte(s.joursAvant)} jours de stock, plus que les ${qte(s.delai)} jours du réassort. La livraison suffit.`,
+              ? `Oui : ${qte(s.joursApres)} jours de stock pour ${qte(s.delai)} jours de réassort. Commandé aujourd'hui chez le façonnier, le rayon restera vide ${qte(s.joursSansApres)} jours, ${eur(s.ventesEnDanger)} de ventes en danger. Il faut un fournisseur plus rapide pour ces quelques jours, ou commander plus tôt la prochaine fois.`
+              : `Non : ${qte(s.joursApres)} jours de stock, au moins les ${qte(s.delai)} jours du réassort. La livraison suffit.`,
           },
           {
             texte: "Oui, la livraison suffit jusqu'au réassort",
             juste: s.aTemps,
-            retour: s.aTemps
-              ? `Oui : ${qte(s.joursAvant)} jours de stock, plus que les ${qte(s.delai)} jours du réassort.`
-              : `Non : ${qte(s.stockApres)} ÷ ${qte(s.parJour)} = ${qte(s.joursAvant)} jours seulement, pour ${qte(s.delai)} jours de réassort. Le rayon sera vide ${qte(s.joursSans)} jours.`,
+            retour: s.aTemps ? `Oui : ${qte(s.joursApres)} jours de stock, au moins les ${qte(s.delai)} jours du réassort.` : `Non : ${qte(s.livraison.quantite)} ÷ ${qte(s.parJour)} = ${qte(s.joursApres)} jours seulement, pour ${qte(s.delai)} jours de réassort. Le rayon sera vide ${qte(s.joursSansApres)} jours.`,
           },
           {
             texte: "Impossible à dire : on le saura quand le rayon sera vide",
             juste: false,
-            retour: `Non : le calcul se fait aujourd'hui, ${qte(s.stockApres)} ÷ ${qte(s.parJour)} = ${qte(s.joursAvant)} jours. Attendre le rayon vide, c'est ajouter ${qte(s.delai)} jours de réassort sans rien à vendre.`,
+            retour: `Non : le calcul se fait aujourd'hui, ${qte(s.livraison.quantite)} ÷ ${qte(s.parJour)} = ${qte(s.joursApres)} jours. Attendre le rayon vide, c'est ajouter ${qte(s.delai)} jours de réassort sans rien à vendre.`,
           },
         ];
       },

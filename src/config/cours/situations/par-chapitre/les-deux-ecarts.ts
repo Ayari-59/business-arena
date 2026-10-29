@@ -1,73 +1,38 @@
 import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
-import { scenarioByCode } from "../../../scenarios/registry";
 import type { Cas } from "../../cas";
-import {
-  ARTICLES_PAR_CARTON,
-  RECEVOIR_UNE_LIVRAISON,
-  accordeA,
-  commandeDuTrimestre,
-  de,
-  qte,
-  trimestreDuCours,
-} from "../../chapitres/recevoir-une-livraison";
+import { RECEVOIR_UNE_LIVRAISON, accordeA, de, ficheDe, motsDe, qte } from "../../chapitres/recevoir-une-livraison";
+import { ARTICLES_PAR_CARTON, livraisonAvecDeuxEcarts } from "../../monde/vente-et-caisse";
 import type { Situation } from "../types";
 
 /**
  * CAS PRATIQUE DU CHAPITRE « RECEVOIR UNE LIVRAISON » : LES DEUX ÉCARTS (CAP Équipier polyvalent
  * du commerce, palier 1).
  *
- * Le chapitre a trouvé un carton manquant sur une ligne. Ici, la livraison suivante a deux
+ * Le chapitre a trouvé un carton manquant sur une ligne. Ici, la livraison de février a deux
  * écarts qui s'annulent : un carton manque sur une ligne, un carton est en trop sur une autre.
  * Le total du bon tombe juste, et la responsable du magasin voudrait signer sur ce seul total.
  * L'élève refait les deux totaux, contrôle ligne par ligne, chiffre ce que le magasin paierait
  * pour des articles jamais reçus, et répond.
  *
- * La commande est celle de l'arène au deuxième trimestre de l'année du cours (`commandeDuTrimestre`),
- * le prix d'achat est celui du fournisseur que le moteur a servi (coût d'achat de la référence ×
- * coefficient du fournisseur). Les deux cartons sont des HYPOTHÈSES DU COURS : le moteur livre
- * toujours la commande entière.
+ * LE CAS JOUE DANS LE MONDE DU COURS : le bon du façonnier de MAILLE & CO et ses prix d'achat
+ * (monde/vente-et-caisse.ts). HYPOTHÈSES DU CAS : en février, le façonnier livre les mêmes
+ * quantités qu'en janvier ; un carton manque sur la ligne la plus grosse, un carton est en trop sur
+ * la plus petite.
  *
- * LA BONNE RÉPONSE EST LA MÊME PARTOUT : écrire les deux écarts sur le bon. Ce qui se calcule, ce
- * sont les totaux qui tombent juste, les deux écarts et ce que coûterait une signature sans réserve.
+ * LA BONNE RÉPONSE EST LA MÊME PARTOUT : écrire les deux écarts sur le bon.
+ *
+ * CE QUI A CHANGÉ. Le cas lisait la commande du trimestre 2 de l'arène. Il lit maintenant le bon de
+ * février : 1 000 articles, 10 pulls col rond manquants, 10 pulls mérinos en trop, 250 € payés pour
+ * rien sans réserve.
  */
-
-/** Le trimestre de la livraison du cas : celui qui suit la livraison du chapitre. */
-export const TRIMESTRE_DU_CAS = 2;
-
-/**
- * UN CARTON MANQUE SUR LA LIGNE LA PLUS GROSSE, UN CARTON EST EN TROP SUR LA PLUS PETITE :
- * hypothèse du cours, pour que les deux écarts s'annulent dans le total.
- */
-export const CARTONS_DE_CHAQUE_ECART = 1;
 
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 
-export function deuxEcarts(c: Cas) {
-  const commande = commandeDuTrimestre(c.code, TRIMESTRE_DU_CAS);
-  const { lignes } = commande;
-  const manque = lignes.reduce((a, b) => (b.commandee > a.commandee ? b : a));
-  const enTrop = lignes.reduce((a, b) => (b.commandee < a.commandee ? b : a));
-  const ecart = CARTONS_DE_CHAQUE_ECART * ARTICLES_PAR_CARTON;
-  const comptes = lignes.map((l) => ({
-    ...l,
-    surLeBon: l.commandee,
-    comptee: l.code === manque.code ? l.commandee - ecart : l.code === enTrop.code ? l.commandee + ecart : l.commandee,
-  }));
-  const r = trimestreDuCours(c.code, TRIMESTRE_DU_CAS).products![manque.code]!;
-  const produit = (scenarioByCode(c.code).scenario.products ?? []).find((p) => p.code === manque.code)!;
-  const prixDAchat = auCentime(produit.materialCostPerUnit * (r.supplier?.costMultiplier ?? 1));
-  return {
-    ...commande,
-    comptes,
-    manque: comptes.find((l) => l.code === manque.code)!,
-    enTrop: comptes.find((l) => l.code === enTrop.code)!,
-    ecart,
-    totalSurLeBon: comptes.reduce((t, l) => t + l.surLeBon, 0),
-    totalCompte: comptes.reduce((t, l) => t + l.comptee, 0),
-    prixDAchat,
-    payesSansEtreRecus: auCentime(ecart * prixDAchat),
-  };
+/** Les deux écarts, avec les mots de chaque ligne. */
+export function deuxEcarts(c: Pick<Cas, "code">) {
+  const s = livraisonAvecDeuxEcarts(ficheDe(c));
+  const mots = <T extends { code: Parameters<typeof motsDe>[0] }>(l: T) => ({ ...l, ...motsDe(l.code) });
+  return { ...s, comptes: s.comptes.map(mots), manque: mots(s.manque), enTrop: mots(s.enTrop) };
 }
 
 export const LES_DEUX_ECARTS: Situation = {
@@ -78,14 +43,8 @@ export const LES_DEUX_ECARTS: Situation = {
   reprend: [RECEVOIR_UNE_LIVRAISON.code],
   commanditaire: "La responsable du magasin",
   titre: "Les deux écarts",
-  accroche:
-    "Le total du bon de livraison tombe juste, et la responsable veut signer. Mais deux lignes ne tombent pas juste. Compter, chiffrer, et lui répondre.",
-  objectifs: [
-    "Comparer le total du bon et le total compté",
-    "Contrôler une livraison ligne par ligne",
-    "Chiffrer ce que coûte un bon signé sans réserve",
-    "Répondre à sa responsable avant de signer",
-  ],
+  accroche: "Le total du bon de livraison tombe juste, et la responsable veut signer. Mais deux lignes ne tombent pas juste. Compter, chiffrer, et lui répondre.",
+  objectifs: ["Comparer le total du bon et le total compté", "Contrôler une livraison ligne par ligne", "Chiffrer ce que coûte un bon signé sans réserve", "Répondre à sa responsable avant de signer"],
   libre: false,
   entreprises: RECEVOIR_UNE_LIVRAISON.entreprises,
   etapes: [
@@ -96,8 +55,8 @@ export const LES_DEUX_ECARTS: Situation = {
       texte: (c) => {
         const s = deuxEcarts(c);
         return [
-          `« La livraison du trimestre ${TRIMESTRE_DU_CAS} est arrivée de chez notre fournisseur (${s.fournisseur}). Le bon annonce ${qte(s.totalSurLeBon)} articles, et vous en avez compté ${qte(s.totalCompte)}. Le total tombe juste : je peux signer sans rien écrire ? »`,
-          `Pas de cours cette fois. Vous avez le bon de livraison et votre compte, carton par carton. La commande est celle de l'arène ; les cartons de ${qte(ARTICLES_PAR_CARTON)} articles et les écarts sont imaginés par le cours, car dans l'arène la livraison arrive toujours complète.`,
+          `« La livraison de février du façonnier est arrivée. Le bon annonce ${qte(s.totalSurLeBon)} articles, et vous en avez compté ${qte(s.totalCompte)}. Le total tombe juste : je peux signer sans rien écrire ? »`,
+          `Pas de cours cette fois. Vous avez le bon de livraison et votre compte, carton par carton. Le cours imagine que le façonnier livre en février ce qu'il a livré en janvier, en cartons de ${qte(ARTICLES_PAR_CARTON)} articles, avec deux écarts.`,
         ];
       },
       tableau: (c) => {
@@ -119,22 +78,11 @@ export const LES_DEUX_ECARTS: Situation = {
       champs: (c) => {
         const s = deuxEcarts(c);
         return [
-          {
-            libelle: "Total sur le bon de livraison",
-            attendu: s.totalSurLeBon,
-            calcul: `${s.comptes.map((x) => qte(x.surLeBon)).join(" + ")} = ${qte(s.totalSurLeBon)}`,
-          },
-          {
-            libelle: "Total compté dans les cartons",
-            attendu: s.totalCompte,
-            calcul: `${s.comptes.map((x) => qte(x.comptee)).join(" + ")} = ${qte(s.totalCompte)}`,
-          },
+          { libelle: "Total sur le bon de livraison", attendu: s.totalSurLeBon, calcul: `${s.comptes.map((x) => qte(x.surLeBon)).join(" + ")} = ${qte(s.totalSurLeBon)}` },
+          { libelle: "Total compté dans les cartons", attendu: s.totalCompte, calcul: `${s.comptes.map((x) => qte(x.comptee)).join(" + ")} = ${qte(s.totalCompte)}` },
         ];
       },
-      explication: (c) => {
-        const s = deuxEcarts(c);
-        return [`Les deux totaux font ${qte(s.totalCompte)}. Un total juste ne prouve pas que chaque ligne est juste.`];
-      },
+      explication: (c) => [`Les deux totaux font ${qte(deuxEcarts(c).totalCompte)}. Un total juste ne prouve pas que chaque ligne est juste.`],
     },
     {
       id: "lignes",
@@ -148,23 +96,13 @@ export const LES_DEUX_ECARTS: Situation = {
       champs: (c) => {
         const s = deuxEcarts(c);
         return [
-          {
-            libelle: `${s.manque.nom} : articles manquants`,
-            attendu: s.manque.surLeBon - s.manque.comptee,
-            calcul: `${qte(s.manque.surLeBon)} − ${qte(s.manque.comptee)} = ${qte(s.manque.surLeBon - s.manque.comptee)}`,
-          },
-          {
-            libelle: `${s.enTrop.nom} : articles en trop`,
-            attendu: s.enTrop.comptee - s.enTrop.surLeBon,
-            calcul: `${qte(s.enTrop.comptee)} − ${qte(s.enTrop.surLeBon)} = ${qte(s.enTrop.comptee - s.enTrop.surLeBon)}`,
-          },
+          { libelle: `${s.manque.nom} : articles manquants`, attendu: s.manque.surLeBon - s.manque.comptee, calcul: `${qte(s.manque.surLeBon)} − ${qte(s.manque.comptee)} = ${qte(s.manque.surLeBon - s.manque.comptee)}` },
+          { libelle: `${s.enTrop.nom} : articles en trop`, attendu: s.enTrop.comptee - s.enTrop.surLeBon, calcul: `${qte(s.enTrop.comptee)} − ${qte(s.enTrop.surLeBon)} = ${qte(s.enTrop.comptee - s.enTrop.surLeBon)}` },
         ];
       },
       explication: (c) => {
         const s = deuxEcarts(c);
-        return [
-          `${qte(s.ecart)} ${s.manque.pluriel} manquent, ${qte(s.ecart)} ${s.enTrop.pluriel} sont en trop : les deux écarts s'annulent dans le total, et c'est pour cela qu'il ne les montre pas.`,
-        ];
+        return [`${qte(s.ecart)} ${s.manque.pluriel} manquent, ${qte(s.ecart)} ${s.enTrop.pluriel} sont en trop : les deux écarts s'annulent dans le total, et c'est pour cela qu'il ne les montre pas.`];
       },
     },
     {
@@ -174,23 +112,15 @@ export const LES_DEUX_ECARTS: Situation = {
       notions: ["stock"],
       question: (c) => {
         const s = deuxEcarts(c);
-        return `Signé sans rien écrire, le bon dit que les ${qte(s.manque.surLeBon)} ${s.manque.pluriel} sont ${accordeA(s.manque.feminin, "arrivé")} : le fournisseur les facturera tous. Chez le fournisseur, les ${s.manque.pluriel} s'achètent ${eur(s.prixDAchat)} pièce. Combien le magasin paierait-il pour des articles qu'il n'a pas reçus ?`;
+        return `Signé sans rien écrire, le bon dit que les ${qte(s.manque.surLeBon)} ${s.manque.pluriel} sont ${accordeA(s.manque.feminin, "arrivé")} : le façonnier les facturera tous. Les ${s.manque.pluriel} s'achètent ${eur(s.manque.prixDAchat)} pièce. Combien le magasin paierait-il pour des articles qu'il n'a pas reçus ?`;
       },
       champs: (c) => {
         const s = deuxEcarts(c);
-        return [
-          {
-            libelle: "Payé sans être reçu",
-            attendu: s.payesSansEtreRecus,
-            calcul: `${qte(s.ecart)} × ${eur(s.prixDAchat)} = ${eur(s.payesSansEtreRecus)}`,
-          },
-        ];
+        return [{ libelle: "Payé sans être reçu", attendu: s.payesSansEtreRecus, calcul: `${qte(s.ecart)} × ${eur(s.manque.prixDAchat)} = ${eur(s.payesSansEtreRecus)}` }];
       },
       explication: (c) => {
         const s = deuxEcarts(c);
-        return [
-          `${eur(s.payesSansEtreRecus)} payés pour rien. Et les ${qte(s.ecart)} ${s.enTrop.pluriel} en trop ne sont pas un cadeau : le fournisseur peut les facturer ou venir les reprendre.`,
-        ];
+        return [`${eur(s.payesSansEtreRecus)} payés pour rien. Et les ${qte(s.ecart)} ${s.enTrop.pluriel} en trop ne sont pas un cadeau : le façonnier peut les facturer ou venir les reprendre.`];
       },
     },
     {
@@ -203,21 +133,13 @@ export const LES_DEUX_ECARTS: Situation = {
         const manquants = `${qte(s.ecart)} ${s.manque.pluriel} ${accordeA(s.manque.feminin, "manquant")}`;
         const enTrop = `${qte(s.ecart)} ${s.enTrop.pluriel} en trop`;
         return [
-          {
-            texte: "Écrire les deux écarts sur le bon, puis signer",
-            juste: true,
-            retour: `Oui : « ${manquants}, ${enTrop} », écrit sur le bon avant de signer. Sans cette réserve, le magasin paierait ${eur(s.payesSansEtreRecus)} pour des articles jamais reçus.`,
-          },
+          { texte: "Écrire les deux écarts sur le bon, puis signer", juste: true, retour: `Oui : « ${manquants}, ${enTrop} », écrit sur le bon avant de signer. Sans cette réserve, le magasin paierait ${eur(s.payesSansEtreRecus)} pour des articles jamais reçus.` },
           {
             texte: "Signer sans rien écrire : le total tombe juste",
             juste: false,
             retour: `Non : le total tombe juste parce que deux écarts s'annulent. ${manquants.charAt(0).toUpperCase()}${manquants.slice(1)} seraient ${accordeA(s.manque.feminin, "payé")} ${eur(s.payesSansEtreRecus)} sans être ${accordeA(s.manque.feminin, "arrivé")}.`,
           },
-          {
-            texte: "Écrire seulement le manquant, et garder les articles en plus",
-            juste: false,
-            retour: `Non : les ${enTrop} se signalent aussi. Gardés sans rien écrire, le stock ne correspond plus aux papiers, et le fournisseur peut les facturer plus tard.`,
-          },
+          { texte: "Écrire seulement le manquant, et garder les articles en plus", juste: false, retour: `Non : les ${enTrop} se signalent aussi. Gardés sans rien écrire, le stock ne correspond plus aux papiers, et le façonnier peut les facturer plus tard.` },
         ];
       },
     },

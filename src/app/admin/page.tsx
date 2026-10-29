@@ -2,7 +2,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getPlatformOverview, getStaffContext } from "@/services/admin.service";
-import { DEMO_ACCOUNTS, isDemoSeeded } from "@/services/demo.service";
+import {
+  DEMO_ACCOUNTS,
+  DEMO_REFUSEE_EN_PRODUCTION,
+  demoAutorisee,
+  isDemoSeeded,
+} from "@/services/demo.service";
+import { MondeDeDemonstration } from "@/components/monde-de-demonstration";
 import { formatEuro } from "@/lib/format";
 import { AI_MODELS } from "@/config/ai";
 import { ANSWER_FORMATS } from "@/config/difficulty";
@@ -36,7 +42,6 @@ import {
   createEstablishmentAction,
   deactivateAdminInviteAction,
   newAdminInviteAction,
-  seedDemoAction,
   setLicenceAction,
   updatePlatformConfigAction,
   marquerDemandeOrientationTraiteeAction,
@@ -407,28 +412,12 @@ export default async function AdminPage({
           partie de classe déjà jouée sur 3 tours (le tour 4, celui de la crise de trésorerie, est
           le prochain), vues pédagogiques alimentées, et un concours prêt à lancer.
         </p>
-        {demoSeeded ? (
-          <div className="mt-3 rounded-lg bg-slate-950 p-4 text-sm text-slate-300">
-            <p className="text-emerald-400">✓ Monde démo en place</p>
-            <ul className="mt-2 space-y-1 font-mono text-xs">
-              <li>
-                Admin établissement : {DEMO_ACCOUNTS.orgAdmin.email} / {DEMO_ACCOUNTS.password}
-              </li>
-              <li>
-                Enseignant : {DEMO_ACCOUNTS.teacher.email} / {DEMO_ACCOUNTS.password}
-              </li>
-            </ul>
-            <p className="mt-2 text-xs text-slate-400">
-              Ces identifiants sont aussi affichés sur la page de connexion enseignant.
-            </p>
-          </div>
-        ) : (
-          <form action={seedDemoAction} className="mt-3">
-            <button className={bouton()}>
-              Générer le monde démo
-            </button>
-          </form>
-        )}
+        <MondeDeDemonstration
+          enPlace={demoSeeded}
+          autorisee={demoAutorisee()}
+          comptes={{ direction: DEMO_ACCOUNTS.orgAdmin.email, enseignant: DEMO_ACCOUNTS.teacher.email }}
+          refus={DEMO_REFUSEE_EN_PRODUCTION}
+        />
       </section>
 
       {/* Nouvel établissement */}

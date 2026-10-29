@@ -29,7 +29,7 @@ import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
  * sans les fonctions des chapitres ni le modèle (monde/attractivite.ts) : l'attractivité (59 ÷ prix)
  * puissance 4 × qualité puissance 2 × (1 + image), la part de chaque trimestre, les ventes arrondies
  * à l'enceinte chaque trimestre, la marge, les charges, le coût complet, le résultat, la carte. Les
- * valeurs absolues sont épinglées, les variantes (la gamme soignée à 67 €, l'autre année de la carte,
+ * valeurs absolues sont épinglées, les variantes (la gamme soignée à 65 €, l'autre année de la carte,
  * les coins vides, la critique) refaites comme le reste, et les verdicts aussi. Chaque curseur : son
  * attendu, sa position voisine, ses droites aux bornes, sa lecture. Chaque laboratoire : sa lecture au
  * départ et à la solution, et ses courbes en quelques points. Puis les gardes de texte de l'étalon.
@@ -43,8 +43,8 @@ const centime = (x: number) => Math.round(x * 100) / 100 + 0;
 const LN2 = Math.log(2);
 
 // ─── LA FICHE, À LA MAIN ────────────────────────────────────────────────────
-// Le marché : 17 500 enceintes par trimestre, 70 000 sur l'année ; le prix de référence 59 €.
-const MARCHE = 17_500;
+// Le marché : 15 502 enceintes par trimestre, 62 008 sur l'année ; le prix de référence 59 €.
+const MARCHE = 15_502;
 const ANNEE = 4 * MARCHE;
 const CF = 12 * (19_700 + 10_650 + 833);
 // Les charges de NOVA : fixes, et le budget qualité d'aujourd'hui, 4 000 € par trimestre.
@@ -281,7 +281,7 @@ describe("les deux chapitres et leurs cas, chez NOVA, sur le marché à trois du
       const intro = (ch.etapes[0] as EtapeLecture).texte(cas).join(" ");
       expect(intro).toMatch(/l'année de la simulation du cours/);
       expect(intro).toMatch(/ni l'année N ni l'année N \+ 1/);
-      expect(intro).toMatch(/17\s500 enceintes/);
+      expect(intro).toMatch(/15\s502 enceintes/);
       expect(intro).toMatch(/ne grandit pas/);
       expect(intro).toMatch(/ne réagissent pas/);
       expect(intro).toMatch(/puissance 4 × qualité perçue puissance 2/);
@@ -316,9 +316,9 @@ describe("domination par les coûts ou différenciation : les trois stratégies,
 
   it("la fiche donne les chiffres de la consigne : ventes, résultats, coûts complets", () => {
     expect(CF).toBe(374_196);
-    expect([V_COUTS, V_MILIEU, V_DIFF]).toEqual([23_776, 21_576, 20_376]);
-    expect([R_COUTS, R_MILIEU, R_DIFF]).toEqual([93_324, 62_900, 115_580]);
-    expect([centime(34 + 382_196 / V_COUTS), centime(38 + CHARGES / V_MILIEU), centime(43 + 414_196 / V_DIFF)]).toEqual([50.07, 56.08, 63.33]);
+    expect([V_COUTS, V_MILIEU, V_DIFF]).toEqual([21_060, 19_112, 18_048]);
+    expect([R_COUTS, R_MILIEU, R_DIFF]).toEqual([39_004, 11_156, 55_052]);
+    expect([centime(34 + 382_196 / V_COUTS), centime(38 + CHARGES / V_MILIEU), centime(43 + 414_196 / V_DIFF)]).toEqual([52.15, 58.42, 65.95]);
     const k = coutsOuDifferenciation(cas);
     expect([k.couts.resultat, k.milieu.resultat, k.differenciation.resultat]).toEqual([R_COUTS, R_MILIEU, R_DIFF]);
   });
@@ -328,14 +328,14 @@ describe("domination par les coûts ou différenciation : les trois stratégies,
       "Part de marché, domination par les coûts (%)": centime((V_COUTS / ANNEE) * 100),
       "Part de marché, différenciation (%)": centime((V_DIFF / ANNEE) * 100),
     });
-    expect(Object.values(attendus(ch, "volume"))).toEqual([33.97, 29.11]);
+    expect(Object.values(attendus(ch, "volume"))).toEqual([33.96, 29.11]);
     expect(attendus(ch, "marge")).toEqual({
       "Marge par enceinte, domination par les coûts": 54 - 34,
       "Marge par enceinte, différenciation": 69 - 43,
       "Marge sur coût variable de l'année, domination par les coûts": V_COUTS * 20,
       "Marge sur coût variable de l'année, différenciation": V_DIFF * 26,
     });
-    expect([V_COUTS * 20, V_DIFF * 26]).toEqual([475_520, 529_776]);
+    expect([V_COUTS * 20, V_DIFF * 26]).toEqual([421_200, 469_248]);
     // L'étape « résultat » fait calculer le coût complet des trois stratégies (le défaut de l'audit).
     expect(attendus(ch, "resultat")).toEqual({
       "Coût complet, domination par les coûts": centime(34 + (CF + 8_000) / V_COUTS),
@@ -353,38 +353,38 @@ describe("domination par les coûts ou différenciation : les trois stratégies,
       "Écart, domination par les coûts moins milieu": R_COUTS - R_MILIEU,
       "Écart, différenciation moins milieu": R_DIFF - R_MILIEU,
     });
-    expect([R_COUTS - R_MILIEU, R_DIFF - R_MILIEU]).toEqual([30_424, 52_680]);
+    expect([R_COUTS - R_MILIEU, R_DIFF - R_MILIEU]).toEqual([27_848, 43_896]);
     const v = Math.ceil((R_DIFF + CF + 8_000) / 20);
     expect(attendus(ch, "ce-qu-il-faudrait-vendre")).toEqual({
       "Ventes qu'il faudrait à la stratégie de coûts": v,
       "Ventes de plus qu'avec la stratégie de coûts": v - V_COUTS,
       "Part de marché qu'il faudrait (%)": centime((v / ANNEE) * 100),
     });
-    expect([v, v - V_COUTS, centime((v / ANNEE) * 100)]).toEqual([24_889, 1_113, 35.56]);
+    expect([v, v - V_COUTS, centime((v / ANNEE) * 100)]).toEqual([21_863, 803, 35.26]);
   });
 
-  it("les étapes d'expert : le coût qu'il faudrait au milieu, à rebours ; l'année de la gamme soignée à 67 €, à la main", () => {
+  it("les étapes d'expert : le coût qu'il faudrait au milieu, à rebours ; l'année de la gamme soignée à 65 €, à la main", () => {
     const marge = centime((R_DIFF + CHARGES) / V_MILIEU);
     expect(attendus(ch, "a-rebours")).toEqual({
       "Marge par enceinte qu'il faudrait au milieu": marge,
       "Coût variable le plus haut": centime(59 - marge),
       "Baisse du coût variable par enceinte": centime(38 - (59 - marge)),
     });
-    expect([marge, centime(59 - marge), centime(38 - (59 - marge))]).toEqual([23.44, 35.56, 2.44]);
+    expect([marge, centime(59 - marge), centime(38 - (59 - marge))]).toEqual([23.3, 35.7, 2.3]);
     // La gamme standard au prix d'aujourd'hui : 4 € de moins, mais 0,92 de qualité, donc moins de ventes.
     expect(coutsOuDifferenciation(cas).standardAuPrixDuMilieu.resultat).toBe(resultatNova(59, 34, 0.92));
     expect(resultatNova(59, 34, 0.92)).toBeLessThan(R_DIFF);
-    // La variante : la gamme soignée à 67 €, les budgets d'aujourd'hui.
-    expect(VARIANTE_DE_L_EXPERT).toEqual({ gamme: "soignee", prix: 67 });
-    const a = attr(67, 1.28);
+    // La variante : la gamme soignée à 65 €, les budgets d'aujourd'hui.
+    expect(VARIANTE_DE_L_EXPERT).toEqual({ gamme: "soignee", prix: 65 });
+    const a = attr(65, 1.28);
     const part = a / (a + A_SB + A_AU);
     expect(attendus(ch, "battre-auris-a-la-main")).toEqual({
       "Part de marché de NOVA, chaque trimestre (%)": centime(part * 100),
       "Ventes de NOVA sur l'année": ventesDe(a),
-      "Résultat de NOVA": ventesDe(a) * (67 - 43) - CHARGES,
+      "Résultat de NOVA": ventesDe(a) * (65 - 43) - CHARGES,
       "Résultat d'Auris la même année": resultatAU(a),
     });
-    expect([centime(part * 100), ventesDe(a), ventesDe(a) * 24 - CHARGES, resultatAU(a)]).toEqual([30.51, 21_356, 122_348, 117_360]);
+    expect([centime(part * 100), ventesDe(a), ventesDe(a) * 22 - CHARGES, resultatAU(a)]).toEqual([33.14, 20_548, 61_860, 58_824]);
     // L'élève qui arrondit les attractivités à quatre décimales retrouve les mêmes ventes.
     const a4 = Math.round(a * 10_000) / 10_000;
     expect(Math.round((a4 / (a4 + 1.5669 + 0.6773)) * MARCHE)).toBe(parTrimestre(a));
@@ -396,7 +396,7 @@ describe("domination par les coûts ou différenciation : les trois stratégies,
     expect(juste(ch, "laquelle")).toBe("La différenciation");
     expect(juste(ch, "milieu")).toBe("Dernier des trois");
     expect(juste(ch, "predire-le-rattrapage")).toBe("Moins de 2 000 ventes de plus");
-    expect(juste(ch, "predire-auris")).toBe("La gamme soignée à 67 €, sans budget en plus");
+    expect(juste(ch, "predire-auris")).toBe("La gamme soignée à 65 €, sans budget en plus");
     expect(juste(ch, "les-limites")).toBe("Le classement dépend des clients : moins sensibles à la qualité, ils le renverseraient");
     const k = coutsOuDifferenciation(cas);
     expect(k.rangDuMilieu).toBe("dernier");
@@ -411,10 +411,10 @@ describe("domination par les coûts ou différenciation : les trois stratégies,
     const r = (prix: number, cv: number, q: number, image: number, budgets: number) => 4 * parTrimestre(attr(prix, q, image, e), conc) * (prix - cv) - (CF + budgets);
     const critique = { couts: r(54, 34, 0.9, 0, 8_000), milieu: r(59, 38, 1, 0, 16_000), differenciation: r(69, 43, 1.3, IMAGE_2000, 40_000) };
     expect([k.critique.couts.resultat, k.critique.milieu.resultat, k.critique.differenciation.resultat]).toEqual([critique.couts, critique.milieu, critique.differenciation]);
-    expect(Object.values(critique)).toEqual([126_604, 62_648, 22_396]);
+    expect(Object.values(critique)).toEqual([68_524, 10_904, -27_524]);
     // Ce que la stratégie de coûts fait à SoundBox, à la main.
-    expect([resultatSB(attr(59, 1)), resultatSB(attr(54, 0.9))]).toEqual([73_584, 38_256]);
-    expect([k.soundboxDansLAnnee.milieu, k.soundboxDansLAnnee.couts]).toEqual([73_584, 38_256]);
+    expect([resultatSB(attr(59, 1)), resultatSB(attr(54, 0.9))]).toEqual([-15_196, -46_476]);
+    expect([k.soundboxDansLAnnee.milieu, k.soundboxDansLAnnee.couts]).toEqual([-15_196, -46_476]);
   });
 
   it("les curseurs, refaits à la main : le seuil de la différenciation, le rattrapage par le volume", () => {
@@ -446,13 +446,13 @@ describe("domination par les coûts ou différenciation : les trois stratégies,
         "Écart avec la différenciation": 20 * v - (CF + 8_000) - R_DIFF,
       },
     });
-    expect(20 * v - (CF + 8_000) - R_DIFF).toBe(4);
+    expect(20 * v - (CF + 8_000) - R_DIFF).toBe(12);
   });
 
-  it("le laboratoire de l'offre : battre Auris, avec la gamme soignée à 67 € ; la gamme standard bat Auris en la faisant reculer", () => {
+  it("le laboratoire de l'offre : battre Auris, avec la gamme soignée à 65 € ; la gamme standard ne la bat plus", () => {
     const l = laboratoire(ch, "le-laboratoire-de-l-offre");
     expect(l.depart).toEqual({ prix: 59, gamme: 1, qualite: 4_000, communication: 0 });
-    expect(l.solution).toEqual({ prix: 67, gamme: 2, qualite: 4_000, communication: 0 });
+    expect(l.solution).toEqual({ prix: 65, gamme: 2, qualite: 4_000, communication: 0 });
     expect(l.reussi).toEqual([false, true]);
     expect(l.e.leviers(cas).find((x) => x.code === "gamme")!.choix!.map((x) => x.valeur)).toEqual([0, 1, 2]);
     const aD = attr(59, 1);
@@ -466,23 +466,23 @@ describe("domination par les coûts ou différenciation : les trois stratégies,
       "Résultat gagné sur aujourd'hui": 0,
       "Avance sur Auris": R_MILIEU - resultatAU(aD),
     });
-    const aS = attr(67, 1.28);
-    const rS = ventesDe(aS) * 24 - CHARGES;
+    const aS = attr(65, 1.28);
+    const rS = ventesDe(aS) * 22 - CHARGES;
     expect(l.aLaSolution).toEqual({
       "Ventes de NOVA": ventesDe(aS),
       "Part de marché de NOVA": centime((ventesDe(aS) / ANNEE) * 100),
       "Demande perdue, faute de capacité": 0,
-      "Marge par enceinte": 24,
+      "Marge par enceinte": 22,
       "Résultat de NOVA": rS,
       "Résultat d'Auris": resultatAU(aS),
       "Résultat gagné sur aujourd'hui": rS - R_MILIEU,
       "Avance sur Auris": rS - resultatAU(aS),
     });
-    expect([resultatAU(aD), rS - R_MILIEU, rS - resultatAU(aS)]).toEqual([115_632, 59_448, 4_988]);
-    // La gamme standard à 54 €, au budget qualité d'aujourd'hui : NOVA bat Auris, mais gagne moins qu'avec la gamme soignée.
+    expect([resultatAU(aD), rS - R_MILIEU, rS - resultatAU(aS)]).toEqual([70_488, 50_704, 3_036]);
+    // La gamme standard à 54 €, au budget qualité d'aujourd'hui : depuis la réconciliation d'octobre 2026, elle ne bat plus Auris.
     const aStd = attr(54, 0.92);
-    expect(l.d.atteint({ prix: 54, gamme: 0, qualite: 4_000, communication: 0 })).toBe(true);
-    expect([ventesDe(aStd) * 20 - CHARGES, resultatAU(aStd)]).toEqual([99_244, 91_980]);
+    expect(l.d.atteint({ prix: 54, gamme: 0, qualite: 4_000, communication: 0 })).toBe(false);
+    expect([ventesDe(aStd) * 20 - CHARGES, resultatAU(aStd)]).toEqual([43_324, 49_644]);
     // La gamme actuelle ne bat Auris à aucun prix de la course, aux budgets d'aujourd'hui.
     for (let p = 50; p <= 80; p++) expect(l.d.atteint({ prix: p, gamme: 1, qualite: 4_000, communication: 0 }), `${p} €`).toBe(false);
   });
@@ -499,9 +499,9 @@ describe("domination par les coûts ou différenciation : les trois stratégies,
       expect(auris!.valeur(p(prix)), `${prix} €`).toBe(resultatAU(a));
     }
     // Les deux courbes se croisent entre 67 et 68 € : battre Auris n'est possible que sous ce prix.
-    expect([64, 65, 66, 67, 68, 69].map((x) => nova!.valeur(p(x)) - auris!.valeur(p(x)))).toEqual([22_868, 17_768, 11_768, 4_988, -2_484, -10_536]);
+    expect([64, 65, 66, 67, 68, 69].map((x) => nova!.valeur(p(x)) - auris!.valeur(p(x)))).toEqual([7_568, 3_036, -2_356, -8_320, -14_868, -22_008]);
     // À 67 €, c'est aussi le meilleur résultat de NOVA : moins cher, l'avance grandit et le résultat baisse.
-    expect(nova!.valeur(p(64))).toBe(117_332);
+    expect(nova!.valeur(p(64))).toBe(59_372);
     expect(nova!.valeur(p(64))).toBeLessThan(nova!.valeur(p(67)));
   });
 
@@ -525,7 +525,7 @@ describe("baisser les prix sans rien couper : la demi-mesure, refaite à la main
       "Ventes de l'année de la proposition": V,
       "Marge par enceinte de la proposition": 54 - 38,
     });
-    expect([centime((a / (a + A_SB + A_AU)) * 100), V, parTrimestre(a)]).toEqual([38.84, 27_188, 6_797]);
+    expect([centime((a / (a + A_SB + A_AU)) * 100), V, parTrimestre(a)]).toEqual([38.84, 24_084, 6_021]);
     // Sous la ligne, de peu : 6 797 enceintes par trimestre pour 7 000.
     expect(parTrimestre(a)).toBeLessThan(7_000);
     // Le défaut « 24,4 % contre 24,4 % » est réglé : ni la part ni la marge ne sont celles de la stratégie de coûts.
@@ -537,7 +537,7 @@ describe("baisser les prix sans rien couper : la demi-mesure, refaite à la main
       "Écart avec la stratégie de coûts": R - R_COUTS,
       "Écart avec aujourd'hui": R - R_MILIEU,
     });
-    expect([R, centime(38 + CHARGES / V), R - R_COUTS, R - R_MILIEU]).toEqual([44_812, 52.35, -48_512, -18_088]);
+    expect([R, centime(38 + CHARGES / V), R - R_COUTS, R - R_MILIEU]).toEqual([-4_852, 54.2, -43_856, -16_008]);
   });
 
   it("le croisement : la marge perdue, le volume gagné et les budgets gardés refont l'écart", () => {
@@ -545,13 +545,13 @@ describe("baisser les prix sans rien couper : la demi-mesure, refaite à la main
     const volume = (V - V_COUTS) * 20;
     const budgets = 4 * 2_000 - 4 * 4_000;
     expect(attendus(s, "le-croisement")).toEqual({ "Effet de la marge par enceinte": marge, "Effet du volume": volume, "Effet des budgets gardés": budgets });
-    expect([marge, volume, budgets]).toEqual([-108_752, 68_240, -8_000]);
+    expect([marge, volume, budgets]).toEqual([-96_336, 60_480, -8_000]);
     expect(marge + volume + budgets).toBe(R - R_COUTS);
   });
 
-  it("le curseur : il faudrait plus de ventes que la ligne n'en fabrique", () => {
+  it("le curseur : la ligne pourrait fabriquer ces ventes, mais le marché ne les donne pas", () => {
     const q = Math.ceil((R_COUTS + CHARGES) / 16);
-    expect(q).toBe(30_220);
+    expect(q).toBe(26_825);
     expect(curseur(s, "rattraper-au-curseur")).toEqual({
       attendu: q,
       bornes: [24_000, 32_000],
@@ -563,7 +563,8 @@ describe("baisser les prix sans rien couper : la demi-mesure, refaite à la main
         "Écart avec la stratégie de coûts": 16 * q - CHARGES - R_COUTS,
       },
     });
-    expect(q).toBeGreaterThan(4 * 7_000);
+    // Depuis la réconciliation d'octobre 2026, la ligne pourrait les fabriquer ; c'est le marché qui ne suit pas.
+    expect(q).toBeLessThan(4 * 7_000);
   });
 
   it("le verdict : la stratégie de coûts entière", () => {
@@ -580,8 +581,8 @@ describe("lire la stratégie de ses concurrents : la carte, refaite à la main",
   const c0 = carteMain(59, 1);
 
   it("la fiche donne les chiffres de la consigne : le prix moyen, la qualité moyenne, les indices", () => {
-    expect(c0.ca).toBe(21_576 * 59 + 33_808 * 51 + 14_616 * 79);
-    expect([c0.ca, c0.pm, c0.qm]).toEqual([4_151_856, 59.31, 1.08]);
+    expect(c0.ca).toBe(3_677_532);
+    expect([c0.ca, c0.pm, c0.qm]).toEqual([3_677_532, 59.31, 1.08]);
     expect([c0.ip, c0.iq, c0.ipSB, c0.iqSB, c0.ipAU, c0.iqAU]).toEqual([99, 93, 86, 83, 133, 124]);
     expect(attendus(ch, "carte")).toEqual({ "Prix moyen du marché": c0.pm, "Indice de prix de NOVA": c0.ip, "Qualité moyenne du marché": c0.qm, "Indice de qualité de NOVA": c0.iq });
     const tri = ch.etapes.find((e) => e.id === "strategies") as EtapeTri;
@@ -609,7 +610,7 @@ describe("lire la stratégie de ses concurrents : la carte, refaite à la main",
       "Marge par enceinte d'Auris": 79 - 34 - 18,
       "Résultat d'Auris": resultatAU(attr(59, 1)),
     });
-    expect([resultatSB(attr(59, 1)), resultatAU(attr(59, 1))]).toEqual([73_584, 115_632]);
+    expect([resultatSB(attr(59, 1)), resultatAU(attr(59, 1))]).toEqual([-15_196, 70_488]);
     const dixieme = (x: number) => Math.round(x * 10) / 10;
     expect(attendus(ch, "l-espace-libre")).toEqual({
       "Distance entre SoundBox et NOVA": dixieme(Math.sqrt((c0.ip - c0.ipSB) ** 2 + (c0.iq - c0.iqSB) ** 2)),
@@ -625,10 +626,10 @@ describe("lire la stratégie de ses concurrents : la carte, refaite à la main",
     const demandeGen = 4 * Math.round((aGen / (aGen + A_SB + A_AU)) * MARCHE);
     expect(attendus(ch, "les-coins-vides")).toEqual({
       "Résultat au prix haut, gamme actuelle": ventesDe(aCher) * (79 - 38) - CHARGES,
-      "Demande perdue, gamme soignée au prix d'aujourd'hui": demandeGen - 4 * 7_000,
-      "Résultat de la gamme soignée au prix d'aujourd'hui": 4 * 7_000 * (59 - 43) - CHARGES,
+      "Demande perdue, gamme soignée au prix d'aujourd'hui": Math.max(0, demandeGen - 4 * 7_000),
+      "Résultat de la gamme soignée au prix d'aujourd'hui": Math.min(demandeGen, 4 * 7_000) * (59 - 43) - CHARGES,
     });
-    expect([ventesDe(aCher), ventesDe(aCher) * 41 - CHARGES, demandeGen - 28_000, ventesDe(aGen), 28_000 * 16 - CHARGES]).toEqual([8_524, -40_712, 1_540, 28_000, 57_804]);
+    expect([ventesDe(aCher), ventesDe(aCher) * 41 - CHARGES, demandeGen - 26_168, ventesDe(aGen), 26_168 * 16 - CHARGES]).toEqual([7_548, -80_728, 0, 26_168, 28_492]);
   });
 
   it("une autre année : la carte refaite quand NOVA va dans l'espace libre avec la gamme soignée", () => {
@@ -639,7 +640,7 @@ describe("lire la stratégie de ses concurrents : la carte, refaite à la main",
       "Indice de prix de NOVA cette année": c1.ip,
       "Indice de qualité de NOVA cette année": c1.iq,
     });
-    expect([c1.ca, c1.pm, c1.qm, c1.ip, c1.iq]).toEqual([4_349_224, 62.13, 1.17, 111, 109]);
+    expect([c1.ca, c1.pm, c1.qm, c1.ip, c1.iq]).toEqual([3_852_632, 62.13, 1.17, 111, 109]);
     // Le prix moyen monte avec NOVA : la place visée à l'indice 116 au prix moyen d'aujourd'hui est lue à 111.
     expect(Math.round((69 / c0.pm) * 100)).toBe(116);
     expect([c1.ipSB, c1.iqSB, c1.ipAU, c1.iqAU]).toEqual([82, 77, 127, 115]);
@@ -659,17 +660,17 @@ describe("lire la stratégie de ses concurrents : la carte, refaite à la main",
     expect([c63.pm, c63.ip, c63.iq]).toEqual([60.36, 104, 93]);
     expect(strategiesDesConcurrents(cas).carteAuPrixQuiPasse.nova.indicePrix).toBe(c63.ip);
     // SoundBox : 23 € × q − 704 000 € face au résultat d'Auris.
-    const q = Math.ceil((115_632 + 704_000) / 23);
-    expect(q).toBe(35_637);
+    const q = Math.ceil((70_488 + 704_000) / 23);
+    expect(q).toBe(33_674);
     expect(curseur(ch, "le-volume-de-soundbox")).toEqual({
       attendu: q,
       bornes: [28_000, 40_000],
-      droites: [23 * 28_000 - 704_000, 115_632, 23 * 40_000 - 704_000, 115_632],
+      droites: [23 * 28_000 - 704_000, 70_488, 23 * 40_000 - 704_000, 70_488],
       lecture: {
         "Marge sur coût variable de SoundBox": 23 * q,
         "Charges fixes et budgets de l'année": 704_000,
         "Résultat de SoundBox": 23 * q - 704_000,
-        "Écart avec Auris": 23 * q - 704_000 - 115_632,
+        "Écart avec Auris": 23 * q - 704_000 - 70_488,
       },
     });
   });
@@ -697,7 +698,7 @@ describe("lire la stratégie de ses concurrents : la carte, refaite à la main",
       "Résultat de NOVA": r1,
       "Résultat gagné sur aujourd'hui": r1 - R_MILIEU,
     });
-    expect([r1, r1 - R_MILIEU]).toEqual([120_756, 57_856]);
+    expect([r1, r1 - R_MILIEU]).toEqual([62_412, 51_256]);
     // Au seul prix de 69 €, la gamme d'aujourd'hui reste intermédiaire, et perd ; un budget qualité doublé ne suffit pas non plus.
     const seul = carteMain(69, 1);
     expect([seul.ip, seul.iq]).toEqual([113, 93]);
@@ -718,7 +719,7 @@ describe("lire la stratégie de ses concurrents : la carte, refaite à la main",
       expect(nova!.valeur({ ...l.solution, prix }), `${prix} €`).toBe(ventesDe(attr(prix, 1.28)) * (prix - 43) - CHARGES);
       expect(aujourdhui!.valeur({ ...l.solution, prix })).toBe(R_MILIEU);
     }
-    expect(nova!.valeur({ ...l.solution, prix: 67 })).toBe(122_348);
+    expect(nova!.valeur({ ...l.solution, prix: 67 })).toBe(63_788);
   });
 
   it("les verdicts : la carte, l'espace libre, la réussite, les paris", () => {
@@ -765,14 +766,14 @@ describe("aller dans l'espace libre : par le seul prix, ou en y amenant la quali
       "Résultat par le seul prix": RS,
       "Écart avec aujourd'hui, par le seul prix": RS - R_MILIEU,
     });
-    expect([centime((aSeul / (aSeul + A_SB + A_AU)) * 100), VS, RS, RS - R_MILIEU]).toEqual([19.24, 13_468, 27_312, -35_588]);
+    expect([centime((aSeul / (aSeul + A_SB + A_AU)) * 100), VS, RS, RS - R_MILIEU]).toEqual([19.24, 11_928, -20_428, -31_584]);
     expect(attendus(s, "avec-la-qualite")).toEqual({
       "Part de marché avec la qualité, chaque trimestre (%)": centime((aAvec / (aAvec + A_SB + A_AU)) * 100),
       "Ventes de l'année avec la qualité": VA,
       "Résultat avec la qualité": RA,
       "Écart avec aujourd'hui, avec la qualité": RA - R_MILIEU,
     });
-    expect([centime((aAvec / (aAvec + A_SB + A_AU)) * 100), VA, RA, RA - R_MILIEU]).toEqual([28.07, 19_652, 120_756, 57_856]);
+    expect([centime((aAvec / (aAvec + A_SB + A_AU)) * 100), VA, RA, RA - R_MILIEU]).toEqual([28.07, 17_408, 62_412, 51_256]);
     // La gamme la moins chère qui atteint 1,17 au budget d'aujourd'hui : la soignée (1,28), pas l'actuelle (1,00).
     expect(espaceLibre(cas).gamme.code).toBe("soignee");
     // À la place, la gamme soignée sans budget en plus fait mieux que la différenciation du chapitre.
@@ -787,13 +788,13 @@ describe("aller dans l'espace libre : par le seul prix, ou en y amenant la quali
       "Effet du coût de la gamme": gamme,
       "Écart entre les deux façons d'y aller": RA - RS,
     });
-    expect([volume, gamme, RA - RS]).toEqual([160_784, -67_340, 93_444]);
+    expect([volume, gamme, RA - RS]).toEqual([142_480, -59_640, 82_840]);
     expect(volume + gamme).toBe(RA - RS);
   });
 
   it("le curseur : les ventes qu'il faut à la place pour égaler aujourd'hui", () => {
     const q = Math.ceil((R_MILIEU + CHARGES) / 26);
-    expect(q).toBe(17_427);
+    expect(q).toBe(15_437);
     expect(curseur(s, "les-ventes-au-curseur")).toEqual({
       attendu: q,
       bornes: [12_000, 22_000],
@@ -806,7 +807,7 @@ describe("aller dans l'espace libre : par le seul prix, ou en y amenant la quali
       },
     });
     // Par le seul prix, il faudrait (62 900 + 390 196) ÷ 31 ventes, et il n'en vient que 13 468.
-    expect(Math.ceil((R_MILIEU + CHARGES) / 31)).toBe(14_616);
+    expect(Math.ceil((R_MILIEU + CHARGES) / 31)).toBe(12_947);
     expect(VS).toBeLessThan(14_616);
   });
 

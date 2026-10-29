@@ -11,7 +11,7 @@
 export const HASARD_HABITUEL = 12;
 
 const AUTRES_HASARDS: Readonly<Record<string, number>> = {
-  "trimestre-qui-derape": 19,
+  "trimestre-qui-derape": 28,
   "depot-qui-deborde": 10,
   "projet-qui-glisse": 11,
   "quai-dangereux": 18,

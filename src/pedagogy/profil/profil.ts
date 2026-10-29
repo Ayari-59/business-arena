@@ -247,7 +247,7 @@ export interface ParEpisode {
   poids: number;
 }
 
-function parEpisode(observations: readonly Observation[]): ParEpisode[] {
+export function parEpisode(observations: readonly Observation[]): ParEpisode[] {
   const groupes = new Map<string, Observation[]>();
   for (const o of observations) groupes.set(o.code, [...(groupes.get(o.code) ?? []), o]);
   return [...groupes.values()].map((os) => {
@@ -318,7 +318,7 @@ function phraseDesDecisions(os: readonly Observation[]): string {
   return phrases.join(" ");
 }
 
-function preuve(c: CodeCompetence, os: readonly Observation[]): string {
+export function preuve(c: CodeCompetence, os: readonly Observation[]): string {
   if (os.length === 0) return "Aucun épisode joué ne l'observe encore.";
   const parSource = (s: Observation["source"]) => os.filter((o) => o.source === s);
   const morceaux: string[] = [];
@@ -585,6 +585,47 @@ function bilanDEntree(
 }
 
 /* ---------------------------------------------------------------------------
+ * LA ROBUSTESSE ET LE RISQUE : sur les décisions des parties qui comptent, ou
+ * sur celles d'une seule partie (l'aperçu d'une démonstration, `apercu.ts`).
+ * ------------------------------------------------------------------------- */
+
+export interface DecisionDuProfil {
+  m: PartieObservee["mesures"]["decisions"][number];
+  numero: number;
+  ep: Episode;
+}
+
+export function robustesseDesDecisions(decisions: readonly DecisionDuProfil[]): Profil["robustesse"] {
+  const fragile = [...decisions].sort((a, b) => a.m.choisie.robustesse - b.m.choisie.robustesse)[0];
+  const robMoy = decisions.length ? moyenne(decisions.map((x) => x.m.choisie.robustesse)) : null;
+  const tiennent = decisions.filter((x) => x.m.choisie.robustesse >= 0.7).length;
+  return {
+    moyenne: robMoy,
+    decisions: decisions.length,
+    phrase:
+      robMoy == null
+        ? "Aucune décision encore observée."
+        : `${tiennent} de vos ${decisions.length} choix tiennent quand le hasard tourne mal.${
+            fragile && fragile.m.choisie.robustesse < 0.7
+              ? ` Le plus exposé : ${fragile.numero}-D${fragile.m.d + 1}, « ${fragile.ep.etapes[fragile.m.d]!.options[fragile.m.choisie.option]!.t} ».`
+              : ""
+          }`,
+  };
+}
+
+export function risqueDesDecisions(decisions: readonly DecisionDuProfil[]): Profil["risque"] {
+  const possibles = decisions.filter((x) => x.m.securitePossible);
+  const prises = possibles.filter((x) => x.m.securiteChoisie).length;
+  return {
+    possibles: possibles.length,
+    prises,
+    phrase: possibles.length
+      ? `Quand une option plus sûre que la meilleure existait, vous l'avez prise ${fois(prises)} sur ${possibles.length}.`
+      : "Aucune décision jouée n'offrait encore une option plus sûre que la meilleure.",
+  };
+}
+
+/* ---------------------------------------------------------------------------
  * LE PROFIL.
  * ------------------------------------------------------------------------- */
 
@@ -638,30 +679,8 @@ export function construireProfil(
   const decisions = comptees.flatMap((p) =>
     p.mesures.decisions.map((m) => ({ m, numero: p.ep.numero, ep: p.ep })),
   );
-  const fragile = [...decisions].sort((a, b) => a.m.choisie.robustesse - b.m.choisie.robustesse)[0];
-  const robMoy = decisions.length ? moyenne(decisions.map((x) => x.m.choisie.robustesse)) : null;
-  const tiennent = decisions.filter((x) => x.m.choisie.robustesse >= 0.7).length;
-  const robustesse = {
-    moyenne: robMoy,
-    decisions: decisions.length,
-    phrase:
-      robMoy == null
-        ? "Aucune décision encore observée."
-        : `${tiennent} de vos ${decisions.length} choix tiennent quand le hasard tourne mal.${
-            fragile && fragile.m.choisie.robustesse < 0.7
-              ? ` Le plus exposé : ${fragile.numero}-D${fragile.m.d + 1}, « ${fragile.ep.etapes[fragile.m.d]!.options[fragile.m.choisie.option]!.t} ».`
-              : ""
-          }`,
-  };
-  const possibles = decisions.filter((x) => x.m.securitePossible);
-  const prises = possibles.filter((x) => x.m.securiteChoisie).length;
-  const risque = {
-    possibles: possibles.length,
-    prises,
-    phrase: possibles.length
-      ? `Quand une option plus sûre que la meilleure existait, vous l'avez prise ${fois(prises)} sur ${possibles.length}.`
-      : "Aucune décision jouée n'offrait encore une option plus sûre que la meilleure.",
-  };
+  const robustesse = robustesseDesDecisions(decisions);
+  const risque = risqueDesDecisions(decisions);
 
   const points: PointDeProgression[] = comptees.map((p) => {
     const offerts = p.observations.filter((o) => o.source === "reflexe");

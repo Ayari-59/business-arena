@@ -96,7 +96,12 @@ export function Calculatrice() {
   const visee = ouverte ? caseVisee() : null;
 
   return (
-    <div data-calculatrice="" className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] right-4 z-40 grid justify-items-end gap-2">
+    // SUR TÉLÉPHONE, UN ROND DANS LE COIN (audit d'octobre 2026). À 390 px, la
+    // pastille « Calculatrice » (près de 110 px de large, à 16 px du bord) couvrait
+    // la fin des lignes du texte, l'encadré « À retenir » compris. Fermée, elle
+    // devient un rond de 44 px, posé à 8 px du coin : il ne couvre plus que la
+    // marge et deux ou trois lettres. Son nom accessible reste « Calculatrice ».
+    <div data-calculatrice="" className="fixed bottom-[calc(0.5rem+env(safe-area-inset-bottom,0px))] right-2 z-40 grid justify-items-end gap-2 sm:bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:right-4">
       {ouverte && (
         <section
           id={id}
@@ -170,10 +175,32 @@ export function Calculatrice() {
         type="button"
         aria-expanded={ouverte}
         aria-controls={id}
-        className="rounded-full border border-white/15 bg-slate-900 px-4 py-2.5 text-sm font-semibold text-slate-100 shadow-lg hover:border-amber-400/50"
+        data-bouton-calculatrice=""
+        className={`rounded-full border border-white/15 bg-slate-900 text-sm font-semibold text-slate-100 shadow-lg hover:border-amber-400/50 ${
+          ouverte ? "px-4 py-2.5" : "grid h-11 w-11 place-items-center sm:h-auto sm:w-auto sm:px-4 sm:py-2.5"
+        }`}
         onClick={() => setOuverte((o) => !o)}
       >
-        {ouverte ? "Fermer la calculatrice" : "Calculatrice"}
+        {ouverte ? (
+          "Fermer la calculatrice"
+        ) : (
+          <>
+            <svg
+              aria-hidden
+              viewBox="0 0 24 24"
+              className="h-5 w-5 sm:hidden"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="5" y="3" width="14" height="18" rx="2" />
+              <path d="M8 7h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 18h.01M12 18h.01M16 18h.01" />
+            </svg>
+            <span className="max-sm:sr-only">Calculatrice</span>
+          </>
+        )}
       </button>
     </div>
   );

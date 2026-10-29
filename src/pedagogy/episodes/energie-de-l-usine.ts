@@ -1,5 +1,5 @@
 /**
- * ÉPISODE 102 — LA FACTURE D'ÉNERGIE DE L'USINE, tel que l'interface et le
+ * LA FACTURE D'ÉNERGIE DE L'USINE, tel que l'interface et le
  * bilan le lisent.
  *
  * Le modèle (src/engine/episodes) et le contenu (src/config/episodes) sont
