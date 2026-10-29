@@ -5,7 +5,14 @@ import { VENTES_AUX_PARTICULIERS } from "../../src/config/cours/monde/exercice-d
 import { MARCHE_A_TROIS } from "../../src/config/cours/monde/marche-a-trois";
 import { MERCATIQUE_DE_NOVA } from "../../src/config/cours/monde/mercatique-de-nova";
 import { ANNEE_N } from "../../src/config/cours/monde/nova-capacite";
-import { NOVA_GESTION, VENTES_A_CAMPUSTECH } from "../../src/config/cours/monde/nova-gestion";
+import { CHARGES_FIXES_DU_MOIS, NOVA_GESTION, VENTES_A_CAMPUSTECH } from "../../src/config/cours/monde/nova-gestion";
+import { CAS_DES_ENTREPRISES } from "../../src/config/cours/monde/cas-des-entreprises";
+import { compteDuLycee, exerciceDe } from "../../src/config/cours/monde/comptes-du-lycee";
+import { PAIE_DU_MOIS, TAUX_DE_LA_PAIE } from "../../src/config/cours/monde/exercice-de-nova";
+import { NOVA_CAPACITE } from "../../src/config/cours/monde/nova-capacite";
+import { EQUIPE as EQUIPE_DE_MAILLE } from "../../src/config/cours/monde/maille-et-co";
+import { L_USINE_DE_NOVA } from "../../src/config/cours/monde/nova-usine";
+import { HEURES_LEGALES_PAR_MOIS, paieDUnOperateur, SMIC_HORAIRE_BRUT, SMIC_MENSUEL_BRUT, TAUX_PATRONAL } from "../../src/config/cours/monde/ressources-humaines-de-nova";
 
 /**
  * UNE SEULE NOVA DANS LE MONDE DU COURS (réconciliation d'octobre 2026). Les fiches qui disent la
@@ -15,7 +22,10 @@ import { NOVA_GESTION, VENTES_A_CAMPUSTECH } from "../../src/config/cours/monde/
  *   · toute la demande de N a été servie : chaque trimestre de N tient dans la ligne ;
  *   · le trimestre type du marché à trois donne à NOVA, à 59 €, cette même demande ;
  *   · les clientèles de la mercatique refont la droite, et le marché à trois est fait des ventes des
- *     trois enseignes sur le marché de toutes les enceintes, de janvier à mars.
+ *     trois enseignes sur le marché de toutes les enceintes, de janvier à mars ;
+ *   · UNE SEULE PAIE (lot M6) : les opérateurs de l'atelier sont les salariés de la paie de l'exercice,
+ *     aux taux du chapitre « La paie » ; les charges fixes du contrôle de gestion, le personnel du
+ *     compte de résultat, le cas figé et les chapitres de ressources humaines disent le même coût.
  */
 
 const T1_DE_N = [0, 1, 2].reduce((t, m) => t + VENTES_AUX_PARTICULIERS[m]! + VENTES_A_CAMPUSTECH[m]!, 0);
@@ -46,5 +56,64 @@ describe("une seule NOVA, d'une fiche à l'autre", () => {
     expect(k.reduce((t, x) => t + x.perdueParEuro, 0)).toBe(NOVA_GESTION.decision.demande.perdueParEuro);
     // À l'arrondi près des ventes de SoundBox et d'Auris, tirées des proportions du marché à trois.
     expect(Math.abs(MARCHE_A_TROIS.marche.parTrimestre - marcheEtPart(MERCATIQUE_DE_NOVA).ventesDesTrois)).toBeLessThanOrEqual(1);
+  });
+});
+
+describe("une seule paie de NOVA, d'une fiche à l'autre", () => {
+  it("4 opérateurs à 1 875 € bruts font les 7 500 € de la paie ; 42 % de cotisations patronales partout", () => {
+    const o = NOVA_CAPACITE.operateurs;
+    expect(o.nombre).toBe(PAIE_DU_MOIS.effectif);
+    expect(NOVA_CAPACITE.plan.operateurs).toBe(PAIE_DU_MOIS.effectif);
+    expect(o.nombre * o.salaireBrutMensuel).toBe(PAIE_DU_MOIS.brut);
+    expect(o.tauxDesCotisationsPatronales).toBeCloseTo(TAUX_DE_LA_PAIE.patronalUrssaf + TAUX_DE_LA_PAIE.patronalRetraite, 12);
+  });
+
+  it("le personnel coûte 10 650 € par mois au contrôle de gestion, 127 800 € au compte de résultat, autant au cas figé et aux ressources humaines", () => {
+    const cout = PAIE_DU_MOIS.brut * (1 + TAUX_DE_LA_PAIE.patronalUrssaf + TAUX_DE_LA_PAIE.patronalRetraite);
+    expect(CHARGES_FIXES_DU_MOIS.personnel).toBe(cout);
+    expect(compteDuLycee(exerciceDe("nova")).personnel).toBe(12 * cout);
+    const cas = CAS_DES_ENTREPRISES.nova!.personnel;
+    expect([cas.effectif, cas.brut, cas.cout, cas.tauxSalarial, cas.tauxPatronal]).toEqual([
+      PAIE_DU_MOIS.effectif,
+      PAIE_DU_MOIS.brut,
+      cout,
+      TAUX_DE_LA_PAIE.salarialUrssaf + TAUX_DE_LA_PAIE.salarialRetraite,
+      TAUX_DE_LA_PAIE.patronalUrssaf + TAUX_DE_LA_PAIE.patronalRetraite,
+    ]);
+    const p = paieDUnOperateur();
+    expect([p.effectif * p.brut, p.effectif * p.cout]).toEqual([PAIE_DU_MOIS.brut, cout]);
+  });
+});
+
+describe("aucun salaire horaire du monde sous le SMIC du cours", () => {
+  it("le SMIC du cours : 12,02 € de l'heure, 1 823,03 € pour 151,67 heures", () => {
+    expect(SMIC_HORAIRE_BRUT).toBe(12.02);
+    expect(HEURES_LEGALES_PAR_MOIS).toBe(Math.round((35 * 52 * 100) / 12) / 100);
+    // 12,02 × 35 × 52 ÷ 12 (et non × 151,67 arrondi, qui donnerait 1 823,07 €).
+    expect(Math.round(((12.02 * 35 * 52) / 12) * 100) / 100).toBe(SMIC_MENSUEL_BRUT);
+  });
+
+  it("les opérateurs de NOVA : 1 875 € pour 151,67 heures payées, 12,36 € de l'heure, sans heures supplémentaires", () => {
+    const o = NOVA_CAPACITE.operateurs;
+    expect(o.heuresPayeesParMois).toBe(HEURES_LEGALES_PAR_MOIS);
+    expect(o.heuresParMois).toBeLessThanOrEqual(o.heuresPayeesParMois);
+    expect(o.salaireBrutMensuel / o.heuresPayeesParMois).toBeGreaterThanOrEqual(SMIC_HORAIRE_BRUT);
+    expect(Math.round((1_875 / 151.67) * 100) / 100).toBe(12.36);
+    // Le salaire du marché et le seuil de démission (95 %) restent au-dessus du SMIC mensuel.
+    const m = NOVA_CAPACITE.personnel.salaireDuMarche;
+    expect(Math.min(m.n, m.nPlus1) * 0.95).toBeGreaterThanOrEqual(SMIC_MENSUEL_BRUT);
+  });
+
+  it("l'équipe de Maille & Co : chaque salarié, au prorata de ses heures, au moins au SMIC", () => {
+    for (const s of EQUIPE_DE_MAILLE) {
+      const heuresDuMois = Math.round((s.heuresParSemaine * 52 * 100) / 12) / 100;
+      expect(s.brutMensuel / heuresDuMois, s.code).toBeGreaterThanOrEqual(SMIC_HORAIRE_BRUT);
+    }
+  });
+
+  it("la main-d'œuvre de l'usine : ses taux horaires chargés, ramenés au brut, au-dessus du SMIC", () => {
+    for (const t of [L_USINE_DE_NOVA.tauxHoraireStandard, L_USINE_DE_NOVA.realise.mainDOeuvre.tauxHoraire]) {
+      expect(t / (1 + TAUX_PATRONAL)).toBeGreaterThanOrEqual(SMIC_HORAIRE_BRUT);
+    }
   });
 });

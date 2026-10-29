@@ -198,7 +198,7 @@ export const PARCOURS: readonly Parcours[] = [
     formation: "stmg",
     titre: "Bac STMG · Ressources humaines",
     resume:
-      "L'effectif et ce qu'il coûte, la paie, le recrutement, la rémunération et la motivation, la formation et les indicateurs sociaux : les questions du gestionnaire des ressources humaines, sur l'équipe de l'arène, au niveau du lycée.",
+      "L'effectif et ce qu'il coûte, la paie, le recrutement, la rémunération et la motivation, la formation et les indicateurs sociaux : les questions du gestionnaire des ressources humaines, sur l'équipe de NOVA dans la simulation du cours, au niveau du lycée.",
     publics: { 1: "Terminale STMG, ressources humaines et communication" },
   },
   {
@@ -220,7 +220,7 @@ export const PARCOURS: readonly Parcours[] = [
     formation: "seconde-mg",
     titre: "Seconde · Management et gestion",
     resume:
-      "Entreprendre, organiser et décider, évaluer : une première entreprise, de l'idée aux premiers chiffres, sur l'arène au niveau de la découverte.",
+      "Entreprendre, organiser et décider, évaluer : une première entreprise, de l'idée aux premiers chiffres, dans la simulation du cours, au niveau de la découverte.",
     publics: { 1: "Seconde, option management et gestion" },
   },
   {
@@ -250,7 +250,7 @@ export const PARCOURS: readonly Parcours[] = [
     formation: "seconde-pro-gatl",
     titre: "2de pro GATL · Le transport et la logistique",
     resume:
-      "Le stock de sécurité et le point de commande, ce que coûte une livraison, le remplissage des véhicules, les délais tenus : les flux physiques de l'arène, chiffrés.",
+      "Le stock de sécurité et le point de commande, ce que coûte une livraison, le remplissage des véhicules, les délais tenus : les flux physiques de la simulation du cours, chiffrés.",
     publics: { 1: "Seconde professionnelle, gestion administrative, transport et logistique" },
   },
   {
@@ -290,7 +290,7 @@ export const PARCOURS: readonly Parcours[] = [
     formation: "stmg",
     titre: "Bac STMG · Management",
     resume:
-      "Produire avec une capacité et une équipe, produire bien, partager la valeur créée, décider ensemble et sur une information à jour : l'organisation de l'arène, lue dans ses comptes.",
+      "Produire avec une capacité et une équipe, produire bien, partager la valeur créée, décider ensemble et sur une information à jour : l'organisation d'une entreprise, lue dans les comptes de la simulation du cours.",
     publics: { 1: "Première et terminale STMG, management" },
   },
 ];

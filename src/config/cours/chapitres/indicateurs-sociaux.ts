@@ -1,77 +1,64 @@
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
-import { scenarioByCode } from "../../scenarios/registry";
 import type { Cas } from "../cas";
-import { ECART_D_INDICE } from "../ressources-humaines";
-import { anneeAuxSalaires } from "./remuneration-et-motivation";
+import { MOIS_DE_L_EXERCICE } from "../monde/exercice-de-nova";
+import {
+  ARRIVEES_POSSIBLES,
+  ENTREPRISES_DES_RESSOURCES_HUMAINES,
+  FICHE_RH,
+  POURQUOI_LES_RESSOURCES_HUMAINES,
+  SEUIL_D_ALERTE_DE_L_ABSENTEISME,
+  VENTES_PERDUES_ACCEPTEES,
+  arriveeSousLeSeuil,
+  indicateursDeNPlus1,
+} from "../monde/ressources-humaines-de-nova";
 import type { Chapitre } from "../types";
 
-
-/** Un montant à la française, avec le signe moins typographique ; retranché, un négatif va entre parenthèses. */
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
 /**
  * CHAPITRE : LES INDICATEURS SOCIAUX (Bac STMG, ressources humaines, palier 1).
  *
- * Le tableau de bord social d'une année difficile : celle où l'entreprise a payé ses salariés
- * 10 % de moins que d'habitude (le chapitre « Rémunération et motivation »). Effectif, départs,
- * masse salariale, chiffre d'affaires par salarié, trimestre après trimestre : le taux de
- * rotation du personnel, puis un indicateur qui trompe, le chiffre d'affaires par salarié, qui
- * peut monter quand l'équipe fond.
+ * Le tableau de bord social de l'année N + 1 de NOVA, celle où un opérateur démissionne et où son
+ * remplaçant n'arrive que deux mois après son départ. L'effectif mois par mois et l'effectif moyen,
+ * le taux de rotation, le taux d'absentéisme, puis un indicateur qui trompe : le chiffre d'affaires
+ * par salarié, qui monte au trimestre où l'équipe fond. Le curseur cherche les heures d'absence que
+ * le seuil d'alerte de la direction tolère ; le laboratoire, la date d'arrivée du remplaçant qui
+ * garde les ventes perdues sous ce que la direction accepte.
  *
- * L'année est celle que l'arène rejoue avec les salaires baissés (ressources-humaines.ts,
- * ECART_D_INDICE) ; l'effectif et les départs sont ceux que le moteur compte (`hr`). L'arène ne
- * simule ni l'absentéisme ni les accidents du travail : le tableau de bord n'en a pas, et le
- * chapitre le dit.
+ * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA seule : le départ, le préavis, le recrutement,
+ * l'intégration et les ventes que le poste vide fait perdre sont ceux du chapitre « Le départ d'un
+ * salarié » du BTS GPME (capacite.ts, nova-capacite.ts), lus par monde/ressources-humaines-de-nova.ts.
+ * Les heures d'absence, le seuil d'alerte de l'absentéisme et les ventes perdues acceptées sont des
+ * hypothèses du cours, nommées là-bas.
+ *
+ * CE QUI A CHANGÉ. Le chapitre lisait l'année que l'arène rejouait aux salaires baissés de 10 %,
+ * sans absentéisme ; il lit l'année N + 1 de NOVA : 3,83 salariés en moyenne, 26,1 % de rotation,
+ * 3,5 % d'absentéisme.
  */
 
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
+const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
 const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 const auDixieme = (x: number) => Math.round(x * 10) / 10;
-const somme = (xs: number[]) => xs.reduce((t, x) => t + x, 0);
+const auCentieme = (x: number) => Math.round(x * 100) / 100;
+const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
+const mois = (m: number) => MOIS_DE_L_EXERCICE[m - 1]!;
+const MOIS_ABREGES = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."] as const;
 
-/** Le tableau de bord social de l'année aux salaires baissés. */
-export function indicateursSociaux(c: Cas) {
-  const hr = scenarioByCode(c.code).scenario.hr!;
-  const indice = 1 - ECART_D_INDICE;
-  // L'année du chapitre « Rémunération et motivation » : les salaires baissés, les embauches de l'année jouée gardées.
-  const annee = anneeAuxSalaires(c.code, "salaires-baisses", indice);
-  const trimestres = annee.map((r, i) => {
-    const ventes = Math.round(r.incomeStatement.revenue);
-    return {
-      trimestre: i + 1,
-      effectif: r.hr!.headcount,
-      departs: r.hr!.departed,
-      masse: Math.round(r.hr!.headcount * hr.salaryPerEmployeePerRound * indice),
-      ventes,
-      // Sur le chiffre d'affaires arrondi à l'euro, celui que le tableau donne à l'élève : divisé
-      // à partir du chiffre exact, l'arrondi pouvait tomber à l'euro d'à côté.
-      caParSalarie: Math.round(ventes / r.hr!.headcount),
-    };
-  });
-  const departs = somme(trimestres.map((t) => t.departs));
-  const effectifMoyen = auDixieme(somme(trimestres.map((t) => t.effectif)) / trimestres.length);
-  const premier = trimestres[0]!;
-  const dernier = trimestres.at(-1)!;
+/** Le tableau de bord social de N + 1 (le cas de la masse salariale le reprend). */
+export function indicateursSociaux(_c?: Cas, arrivee?: number) {
+  const s = indicateursDeNPlus1(arrivee);
+  const [t1, t2] = s.trimestres;
   return {
-    ecart: Math.round(ECART_D_INDICE * 100),
-    trimestres,
-    departs,
-    effectifMoyen,
-    rotation: auDixieme((departs / effectifMoyen) * 100),
-    caParSalarieDebut: premier.caParSalarie,
-    caParSalarieFin: dernier.caParSalarie,
-    evolution: auDixieme(((dernier.caParSalarie - premier.caParSalarie) / premier.caParSalarie) * 100),
-    ventesDebut: premier.ventes,
-    ventesFin: dernier.ventes,
-    /**
-     * Le chiffre d'affaires par salarié monte surtout parce que l'équipe fond : l'effectif s'est plus
-     * réduit, en proportion, que les ventes n'ont monté. Sinon, ce sont surtout les ventes du dernier
-     * trimestre qui le font monter (au conseil, dont les embauches de l'année jouée sont gardées).
-     */
-    parLEquipe: premier.effectif / dernier.effectif >= dernier.ventes / premier.ventes,
-    evolutionDesVentes: auDixieme((dernier.ventes / premier.ventes - 1) * 100),
-    evolutionDeLEffectif: auDixieme((dernier.effectif / premier.effectif - 1) * 100),
+    ...s,
+    effectifMoyenAuCentieme: auCentieme(s.effectifMoyen),
+    rotationPct: auDixieme(s.rotation * 100),
+    absenteismePct: auDixieme(s.absenteisme * 100),
+    t1: t1!,
+    t2: t2!,
+    caParSalarieT1: Math.round(t1!.caParSalarie),
+    caParSalarieT2: Math.round(t2!.caParSalarie),
+    evolutionDuCaParSalarie: auDixieme((t2!.caParSalarie / t1!.caParSalarie - 1) * 100),
+    evolutionDesVentes: auDixieme((t2!.ventes / t1!.ventes - 1) * 100),
+    dernierMois: FICHE_RH.personnel.moisDeLAnnonce + FICHE_RH.personnel.preavisEnMois - 1,
   };
 }
 
@@ -85,141 +72,196 @@ export const INDICATEURS_SOCIAUX: Chapitre = {
   ],
   titre: "Les indicateurs sociaux",
   accroche:
-    "Le tableau de bord social d'une année où les salaires ont baissé : l'effectif, les départs, le taux de rotation, et un indicateur qui peut tromper.",
+    "Le tableau de bord social d'une année où un salarié part : l'effectif, la rotation, l'absentéisme, et un indicateur qui peut tromper.",
   objectifs: [
-    "Lire un tableau de bord social trimestre par trimestre",
-    "Calculer un effectif moyen et un taux de rotation du personnel",
-    "Calculer l'évolution du chiffre d'affaires par salarié",
-    "Interpréter un indicateur avec les autres, et pas seul",
+    "Lire un tableau de bord social mois par mois",
+    "Calculer l'effectif moyen et le taux de rotation du personnel",
+    "Calculer le taux d'absentéisme",
+    "Se méfier d'un indicateur qui monte quand l'équipe fond",
   ],
   libre: false,
+  entreprises: { codes: ENTREPRISES_DES_RESSOURCES_HUMAINES, pourquoi: POURQUOI_LES_RESSOURCES_HUMAINES },
   etapes: [
     {
       id: "intro",
       type: "lecture",
       titre: "Le tableau de bord social",
-      notions: ["staff_turnover", "payroll"],
+      notions: ["dashboard", "payroll"],
       texte: (c) => {
         const s = indicateursSociaux(c);
         return [
-          `Cette année, ${c.entreprise} a payé ses salariés ${s.ecart} % de moins que d'habitude. Son tableau de bord social suit, trimestre après trimestre, l'effectif, les départs, la masse salariale et ce que l'équipe fait vendre.`,
-          "Un vrai tableau de bord social suit aussi l'absentéisme, les accidents du travail ou les heures de formation. L'arène ne les simule pas : celui-ci s'en tient à ce qu'elle compte.",
+          `En N + 1, un opérateur ${dE(c.entreprise)} démissionne : payé sous le seuil du marché, il a trouvé mieux ailleurs. Il travaille jusqu'à la fin de ${mois(s.dernierMois)} ; le recrutement de son remplaçant commence en ${mois(s.debutDuRecrutement!)}, et le remplaçant arrive le 1er ${mois(s.arrivee!)}.`,
+          "Le tableau de bord social suit l'équipe avec quelques chiffres : l'effectif, les départs et les arrivées, les absences, ce que coûte le personnel et ce qu'il fait vendre. Chacun se lit sur une période, et face à un repère.",
+          "Ces chiffres se partagent : dès que l'effectif atteint 11 salariés pendant 12 mois de suite, l'entreprise organise l'élection d'un comité social et économique, qui porte auprès de la direction les questions des salariés sur l'emploi et les conditions de travail. Avec si peu de salariés, NOVA n'en a pas, mais rien ne l'empêche de les présenter à l'équipe.",
         ];
       },
       tableau: (c) => {
         const s = indicateursSociaux(c);
         return {
-          titre: `Le tableau de bord social ${dE(c.entreprise)}`,
-          colonnes: s.trimestres.map((t) => `T${t.trimestre}`),
-          lignes: [
-            { libelle: "Effectif", valeurs: s.trimestres.map((t) => String(t.effectif)) },
-            { libelle: "Départs", valeurs: s.trimestres.map((t) => String(t.departs)) },
-            { libelle: "Masse salariale", valeurs: s.trimestres.map((t) => eur(t.masse)) },
-            { libelle: "Chiffre d'affaires", valeurs: s.trimestres.map((t) => eur(t.ventes)) },
-          ],
+          titre: `L'effectif ${dE(c.entreprise)}, mois par mois, en N + 1`,
+          colonnes: [...MOIS_ABREGES],
+          lignes: [{ libelle: "Salariés payés", valeurs: s.effectifs.map((n) => String(n)) }],
         };
       },
-      repere: () => "Taux de rotation = départs de la période ÷ effectif moyen de la période.",
+      repere: () => "Effectif moyen = somme des effectifs de chaque mois ÷ 12. Taux de rotation = (départs + arrivées) ÷ 2 ÷ effectif moyen × 100.",
     },
     {
       id: "rotation",
       type: "montants",
-      titre: "Le taux de rotation",
-      notions: ["staff_turnover"],
-      question: (c) =>
-        `Calculez les départs de l'année, l'effectif moyen (la moyenne des ${indicateursSociaux(c).trimestres.length} trimestres, au dixième), puis le taux de rotation du personnel sur l'année, en pourcentage au dixième.`,
-      champs: (c) => {
-        const s = indicateursSociaux(c);
-        return [
-          { libelle: "Départs de l'année", attendu: s.departs, calcul: `${s.trimestres.map((t) => t.departs).join(" + ")} = ${s.departs}`, tolerance: 0 },
-          { libelle: "Effectif moyen", attendu: s.effectifMoyen, calcul: `(${s.trimestres.map((t) => t.effectif).join(" + ")}) ÷ ${s.trimestres.length} = ${qte(s.effectifMoyen)}`, tolerance: 0.1 },
-          { libelle: "Taux de rotation (%)", attendu: s.rotation, calcul: `${s.departs} ÷ ${qte(s.effectifMoyen)} × 100 = ${pct(s.rotation)}`, tolerance: 0.2 },
-        ];
-      },
-      explication: (c) => {
-        const s = indicateursSociaux(c);
-        return [
-          `Sur l'année, ${pct(s.rotation)} de l'effectif moyen ${dE(c.entreprise)} est parti. Chaque départ est un poste à pourvoir, un savoir-faire perdu, et souvent le signe que d'autres pensent à partir.`,
-          ...(s.rotation > 100
-            ? ["Un taux au-dessus de 100 % n'est pas une erreur : l'équipe a perdu plus de salariés qu'elle n'en comptait en moyenne, parce qu'elle a fondu en route."]
-            : []),
-        ];
-      },
-    },
-    {
-      id: "ca-par-salarie",
-      type: "montants",
-      titre: "Ce que fait vendre chaque salarié",
-      notions: ["payroll", "productivity"],
-      question: () =>
-        "Calculez le chiffre d'affaires par salarié au premier et au dernier trimestre (à l'euro), puis son évolution, en pourcentage au dixième.",
-      champs: (c) => {
-        const s = indicateursSociaux(c);
-        const p = s.trimestres[0]!;
-        const d = s.trimestres.at(-1)!;
-        return [
-          { libelle: "Chiffre d'affaires par salarié au premier trimestre", attendu: s.caParSalarieDebut, calcul: `${eur(p.ventes)} ÷ ${p.effectif} = ${eur(s.caParSalarieDebut)}`, tolerance: 1 },
-          { libelle: "Chiffre d'affaires par salarié au dernier trimestre", attendu: s.caParSalarieFin, calcul: `${eur(d.ventes)} ÷ ${d.effectif} = ${eur(s.caParSalarieFin)}`, tolerance: 1 },
-          { libelle: "Évolution (%)", attendu: s.evolution, calcul: `(${eur(s.caParSalarieFin)} − ${retranche(s.caParSalarieDebut)}) ÷ ${eur(s.caParSalarieDebut)} × 100 = ${pct(s.evolution)}`, tolerance: 0.2 },
-        ];
-      },
-      explication: (c) => {
-        const s = indicateursSociaux(c);
-        return [
-          `Du premier au dernier trimestre, le chiffre d'affaires par salarié ${s.evolution >= 0 ? "monte" : "baisse"} de ${pct(Math.abs(s.evolution))}, pendant que l'effectif passe de ${s.trimestres[0]!.effectif} à ${s.trimestres.at(-1)!.effectif}.`,
-        ];
-      },
-    },
-    {
-      id: "lecture",
-      type: "choix",
-      titre: "Une bonne nouvelle ?",
-      notions: ["staff_turnover", "productivity"],
+      titre: "L'effectif moyen et la rotation",
+      notions: ["dashboard"],
       question: (c) => {
         const s = indicateursSociaux(c);
-        return `Le chiffre d'affaires par salarié ${dE(c.entreprise)} est passé de ${eur(s.caParSalarieDebut)} à ${eur(s.caParSalarieFin)}. Comment le lire ?`;
+        return `Calculez l'effectif moyen de l'année (au centième), puis le taux de rotation du personnel (${s.departs} départ et ${s.arrivees} arrivée, en pourcentage au dixième).`;
+      },
+      champs: (c) => {
+        const s = indicateursSociaux(c);
+        return [
+          { libelle: "Effectif moyen de l'année", attendu: s.effectifMoyenAuCentieme, calcul: `${qte(s.moisPayes)} ÷ 12 = ${qte(s.effectifMoyenAuCentieme)}`, tolerance: 0.01 },
+          { libelle: "Taux de rotation (%)", attendu: s.rotationPct, calcul: `(${s.departs} + ${s.arrivees}) ÷ 2 ÷ ${qte(s.effectifMoyenAuCentieme)} × 100 = ${pct(s.rotationPct)}`, tolerance: 0.2 },
+        ];
+      },
+      explication: (c) => {
+        const s = indicateursSociaux(c);
+        return [
+          `Un départ et une arrivée dans une équipe de ${qte(s.effectifMoyenAuCentieme)} salariés en moyenne font un taux de rotation de ${pct(s.rotationPct)} : sur une petite équipe, un seul mouvement pèse lourd. Le taux se compare d'une année à l'autre, ou à celui des entreprises du même métier.`,
+        ];
+      },
+    },
+    {
+      id: "absenteisme",
+      type: "montants",
+      titre: "Le taux d'absentéisme",
+      notions: ["dashboard"],
+      question: (c) => {
+        const s = indicateursSociaux(c);
+        return `Chaque salarié payé a ${qte(FICHE_RH.operateurs.heuresParMois)} heures de travail prévues par mois. Dans l'année, deux arrêts de maladie ont fait ${qte(s.heuresDAbsence)} heures d'absence. Calculez les heures de travail prévues de l'année (${qte(s.moisPayes)} mois de salaire payés), puis le taux d'absentéisme (absences ÷ heures prévues × 100, au dixième).`;
+      },
+      champs: (c) => {
+        const s = indicateursSociaux(c);
+        return [
+          { libelle: "Heures de travail prévues", attendu: s.heuresPrevues, calcul: `${qte(s.moisPayes)} × ${qte(FICHE_RH.operateurs.heuresParMois)} = ${qte(s.heuresPrevues)}`, tolerance: 0 },
+          { libelle: "Taux d'absentéisme (%)", attendu: s.absenteismePct, calcul: `${qte(s.heuresDAbsence)} ÷ ${qte(s.heuresPrevues)} × 100 = ${pct(s.absenteismePct)}`, tolerance: 0.1 },
+        ];
+      },
+      explication: (c) => {
+        const s = indicateursSociaux(c);
+        return [
+          `Le taux d'absentéisme est de ${pct(s.absenteismePct)}, ${s.absenteisme > SEUIL_D_ALERTE_DE_L_ABSENTEISME ? "au-dessus" : "en dessous"} du seuil d'alerte de ${pct(SEUIL_D_ALERTE_DE_L_ABSENTEISME * 100)} que la direction s'est fixé. Un taux qui monte se lit avec la rotation : une équipe qui se fatigue s'absente, puis part.`,
+        ];
+      },
+    },
+    {
+      id: "un-indicateur-qui-trompe",
+      type: "choix",
+      titre: "Un indicateur qui trompe",
+      notions: ["dashboard", "productivity"],
+      tableau: (c) => {
+        const s = indicateursSociaux(c);
+        return {
+          titre: `Les deux premiers trimestres ${dE(c.entreprise)}`,
+          colonnes: ["T1", "T2"],
+          lignes: [
+            { libelle: "Effectif moyen du trimestre", valeurs: [qte(auCentieme(s.t1.effectif)), qte(auCentieme(s.t2.effectif))] },
+            { libelle: `Enceintes vendues`, valeurs: [qte(s.t1.ventes), qte(s.t2.ventes)] },
+            { libelle: "Enceintes que le plan prévoyait", valeurs: [qte(s.t1.ventesDuPlan), qte(s.t2.ventesDuPlan)] },
+            { libelle: "Chiffre d'affaires par salarié", valeurs: [eur(s.caParSalarieT1), eur(s.caParSalarieT2)] },
+          ],
+        };
+      },
+      question: (c) => {
+        const s = indicateursSociaux(c);
+        return `Au deuxième trimestre, le chiffre d'affaires par salarié ${dE(c.entreprise)} monte de ${pct(s.evolutionDuCaParSalarie)}. Le directeur y voit une équipe plus efficace. Que lui répondez-vous ?`;
       },
       options: (c) => {
         const s = indicateursSociaux(c);
-        const monte = s.caParSalarieFin > s.caParSalarieDebut;
-        const parLEquipe = monte && s.parLEquipe;
-        const parLesVentes = monte && !s.parLEquipe;
-        const chiffres = `Les ventes du trimestre évoluent de ${pct(s.evolutionDesVentes)}, l'effectif de ${pct(s.evolutionDeLEffectif)}.`;
+        const perdues = s.t2.ventesDuPlan - s.t2.ventes;
         return [
           {
-            texte: "C'est une bonne nouvelle : chaque salarié vend davantage, l'équipe est plus efficace",
+            texte: "Il monte parce que l'équipe a fondu, pas parce qu'elle vend mieux",
+            juste: true,
+            retour: `Oui : le chiffre d'affaires se divise par moins de salariés. Au même moment, ${qte(perdues)} enceintes que le plan prévoyait ne sont pas sorties : chacun a travaillé autant, l'entreprise a vendu moins.`,
+          },
+          {
+            texte: "Il a raison : chaque salarié a fait vendre davantage, c'est la preuve que l'équipe est plus efficace",
             juste: false,
-            retour: parLEquipe
-              ? `Non : l'indicateur monte parce que l'effectif fond (${s.departs} départs dans l'année), pas parce que l'équipe vend mieux. Lu seul, il prend une crise sociale pour un succès.`
-              : parLesVentes
-                ? `Non : ce sont les ventes du trimestre qui montent, pas l'efficacité de l'équipe, qui a perdu ${s.departs} salariés dans l'année. ${chiffres}`
-                : "Non : il baisse, et ce n'est pas une question d'efficacité : les ventes chutent plus vite que l'effectif.",
+            retour: `Non : un opérateur monte autant chaque mois. Le chiffre d'affaires par salarié monte parce que l'effectif baisse, et les ventes du trimestre restent ${qte(perdues)} enceintes sous le plan.`,
           },
           {
-            texte: "Il monte parce que l'équipe fond, pas parce qu'elle vend mieux",
-            juste: parLEquipe,
-            retour: parLEquipe
-              ? `Oui : le chiffre d'affaires se partage entre moins de salariés. Le taux de rotation (${pct(s.rotation)}) dit ce qui se passe vraiment : l'entreprise perd son équipe.`
-              : parLesVentes
-                ? `Non : l'équipe fond moins que les ventes ne montent. ${chiffres}`
-                : "Non : ici, l'indicateur baisse.",
+            texte: "Il se trompe : le chiffre d'affaires par salarié ne se calcule pas sur un trimestre, seulement sur l'année",
+            juste: false,
+            retour: "Non : il se calcule sur n'importe quelle période, tant que le chiffre d'affaires et l'effectif portent sur la même. C'est sa lecture qui trompe ici, pas son calcul.",
           },
-          {
-            texte: "Il monte surtout avec les ventes du trimestre, pendant que l'équipe perd des salariés",
-            juste: parLesVentes,
-            retour: parLesVentes
-              ? `Oui. ${chiffres} Le taux de rotation (${pct(s.rotation)}) dit ce que l'indicateur cache : ${s.departs} salariés sont partis dans l'année.`
-              : monte
-                ? `Non : l'effectif s'est plus réduit que les ventes n'ont monté. ${chiffres}`
-                : "Non : ici, l'indicateur baisse.",
-          },
-          {
-            texte: "Il baisse : les ventes chutent plus vite que l'effectif",
-            juste: !monte,
-            retour: !monte
-              ? `Oui : l'équipe, moins motivée puis moins nombreuse, ne peut plus servir les clients ; les ventes tombent de ${eur(s.ventesDebut)} à ${eur(s.ventesFin)} par trimestre, plus vite que l'effectif.`
-              : "Non : ici, l'indicateur monte. Mais c'est parce que l'équipe fond.",
-          },
+        ];
+      },
+    },
+    {
+      id: "les-absences-tolerees",
+      type: "curseur",
+      titre: "Les absences sous le seuil d'alerte",
+      notions: ["dashboard"],
+      sens: "plus-grande",
+      question: (c) => {
+        const s = indicateursSociaux(c);
+        return `La direction ${dE(c.entreprise)} s'alerte au-delà de ${pct(SEUIL_D_ALERTE_DE_L_ABSENTEISME * 100)} d'absentéisme. Faites varier les heures d'absence de l'année : une droite donne ${pct(SEUIL_D_ALERTE_DE_L_ABSENTEISME * 100)} des ${qte(s.heuresPrevues)} heures prévues, l'autre les heures d'absence. Placez le curseur sur le plus d'heures d'absence, à l'heure, qui reste sous le seuil.`;
+      },
+      grandeur: () => ({ libelle: "Heures d'absence de l'année", unite: "heures" }),
+      cible: () => ({ attendu: indicateursSociaux().absencesMaximales, max: 500 }),
+      zones: ["Sous le seuil d'alerte", "Au-delà du seuil d'alerte"],
+      rates: () => ({ dessous: "Ces absences restent sous le seuil, mais un peu plus aussi : cherchez le plus d'heures.", dessus: "Ces absences dépassent le seuil d'alerte." }),
+      montrer: "Montrer les heures",
+      lecture: (_c, h) => {
+        const s = indicateursSociaux();
+        return [
+          { libelle: "Taux d'absentéisme (%)", montant: auDixieme((h / s.heuresPrevues) * 100), fort: true },
+          { libelle: "Seuil d'alerte (%)", montant: SEUIL_D_ALERTE_DE_L_ABSENTEISME * 100 },
+        ];
+      },
+      droites: () => {
+        const s = indicateursSociaux();
+        return { produit: () => s.heuresPrevues * SEUIL_D_ALERTE_DE_L_ABSENTEISME, cout: (h) => h, libelles: ["Seuil d'alerte", "Heures d'absence"] };
+      },
+      explication: (c) => {
+        const s = indicateursSociaux(c);
+        return [
+          `Jusqu'à ${qte(s.absencesMaximales)} heures d'absence, l'absentéisme reste sous ${pct(SEUIL_D_ALERTE_DE_L_ABSENTEISME * 100)} ; ${s.heuresDAbsence > s.absencesMaximales ? `les ${qte(s.heuresDAbsence)} heures de l'année le dépassent de ${qte(s.heuresDAbsence - s.absencesMaximales)} heures.` : `les ${qte(s.heuresDAbsence)} heures de l'année restent dessous.`}`,
+          "Sur une petite équipe, un seul arrêt de maladie fait franchir un seuil : un taux se lit avec les heures qui le font, et avec leurs raisons.",
+        ];
+      },
+    },
+    {
+      id: "le-laboratoire-du-remplacement",
+      type: "simulation",
+      titre: "Quand arrive le remplaçant",
+      notions: ["dashboard", "capacity"],
+      question: (c) =>
+        `Le recrutement du remplaçant peut commencer dès l'annonce du départ, en ${mois(FICHE_RH.personnel.moisDeLAnnonce)}, ou plus tard. Faites varier le mois de son arrivée et regardez les indicateurs de l'année : les ventes perdues, l'effectif moyen, la rotation, le chiffre d'affaires par salarié. La direction accepte au plus ${qte(VENTES_PERDUES_ACCEPTEES)} ${c.unites} perdues.`,
+      leviers: () => [{ code: "arrivee", libelle: "Mois d'arrivée du remplaçant", unite: "", ...ARRIVEES_POSSIBLES, depart: indicateursSociaux().arrivee! }],
+      lecture: (_c, p) => {
+        const s = indicateursSociaux(undefined, p.arrivee!);
+        const d = indicateursSociaux();
+        return [
+          { libelle: "Enceintes perdues par le départ", montant: s.ventesPerdues, unite: "enceintes", reference: d.ventesPerdues, fort: true },
+          { libelle: "Effectif moyen", montant: auCentieme(s.effectifMoyen), unite: "salariés", reference: auCentieme(d.effectifMoyen) },
+          { libelle: "Taux de rotation", montant: auDixieme(s.rotation * 100), unite: "%" },
+          { libelle: "Chiffre d'affaires par salarié", montant: Math.round(s.caParSalarie), reference: Math.round(d.caParSalarie) },
+        ];
+      },
+      defi: () => {
+        const juste = arriveeSousLeSeuil()!;
+        return {
+          consigne: `Trouvez le mois d'arrivée qui garde les ventes perdues sous ${qte(VENTES_PERDUES_ACCEPTEES)} enceintes.`,
+          atteint: (p) => p.arrivee === juste,
+          indice: (p) => `Avec une arrivée le 1er ${mois(p.arrivee!)}, le départ fait perdre ${qte(indicateursSociaux(undefined, p.arrivee!).ventesPerdues)} enceintes : c'est trop.`,
+          solution: { arrivee: juste },
+        };
+      },
+      explication: (c, p) => {
+        const s = indicateursSociaux(c, p.arrivee!);
+        const d = indicateursSociaux(c);
+        return [
+          `Défi relevé : en recrutant dès l'annonce, le remplaçant arrive le 1er ${mois(p.arrivee!)}, et le départ ne fait perdre que ${qte(s.ventesPerdues)} ${c.unites}, contre ${qte(d.ventesPerdues)} avec une arrivée le 1er ${mois(d.arrivee!)}.`,
+          `Regardez le chiffre d'affaires par salarié : plus le remplaçant arrive tard, plus il monte en fin d'année, alors que les ventes perdues grandissent. Un indicateur social se lit toujours avec les ventes et l'effectif qui le font.`,
         ];
       },
     },
@@ -227,15 +269,15 @@ export const INDICATEURS_SOCIAUX: Chapitre = {
       id: "synthese",
       type: "lecture",
       titre: "Ce qu'il faut retenir",
-      notions: ["staff_turnover"],
+      notions: ["dashboard"],
       texte: (c) => {
         const s = indicateursSociaux(c);
         return [
-          `En une année aux salaires baissés, ${c.entreprise} a perdu ${s.departs} salariés : un taux de rotation de ${pct(s.rotation)}.`,
-          "Un indicateur social ne se lit jamais seul. Le chiffre d'affaires par salarié peut monter pendant que l'équipe s'effondre ; c'est le taux de rotation, l'effectif et les ventes, lus ensemble, qui disent si l'entreprise va bien.",
+          `Chez ${c.entreprise}, l'année N + 1 compte ${qte(s.effectifMoyenAuCentieme)} salariés en moyenne, un taux de rotation de ${pct(s.rotationPct)} et un absentéisme de ${pct(s.absenteismePct)}. Le départ fait perdre ${qte(s.ventesPerdues)} ${c.unites}, et le chiffre d'affaires par salarié monte au trimestre où l'équipe est la plus petite.`,
+          "Un indicateur social ne se lit jamais seul : la masse salariale baisse et le chiffre d'affaires par salarié monte quand l'équipe fond. Ce qui compte, c'est ce qui les fait bouger.",
         ];
       },
-      repere: () => "Lire un tableau de bord social : l'effectif, les départs et la rotation d'abord, les ratios ensuite.",
+      repere: () => "Taux d'absentéisme = heures d'absence ÷ heures de travail prévues × 100.",
     },
   ],
 };

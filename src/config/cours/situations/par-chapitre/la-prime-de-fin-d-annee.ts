@@ -1,7 +1,9 @@
 import { montantEcrit as eur } from "../../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../../pedagogy/cours/etats";
 import type { Cas } from "../../cas";
+import { masseSalariale } from "../../chapitres/effectif-et-masse-salariale";
 import { salaire } from "../../chapitres/salaire-brut-net-cout";
+import { ENTREPRISES_DES_RESSOURCES_HUMAINES } from "../../monde/ressources-humaines-de-nova";
 import type { Situation } from "../types";
 
 /** « que » devant un nom, élidé devant une voyelle : qu'ATLAS CONSEIL. */
@@ -20,7 +22,10 @@ const que = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈÊ]/.test(nom) ? `qu'${no
  * Le cas est neuf par sa question : le chapitre part du brut pour trouver le net et le
  * coût, le cas part du coût que l'entreprise accepte de payer pour trouver le brut et le
  * net. Les taux et l'effectif sont ceux du chapitre (`salaire`) ; les ventes de l'année,
- * celles de l'arène (`cas.annee`).
+ * celles du premier exercice de NOVA (`masseSalariale`, comptes-du-lycee.ts), dans le monde du cours.
+ *
+ * CE QUI A CHANGÉ. Le cas lisait les ventes de l'année de l'arène, dans chaque entreprise ; il se joue
+ * chez NOVA : 13 902,76 € d'enveloppe, 3 475,69 € par opérateur, 1 909,18 € nets.
  */
 
 /**
@@ -38,7 +43,7 @@ const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` 
 /** Les chiffres de la réponse, calculés une fois du cas. */
 export function primeDeFinDAnnee(c: Cas) {
   const s = salaire(c);
-  const ventes = c.annee.ventes;
+  const ventes = masseSalariale(c).ventes;
   const enveloppe = auCentime(ventes * PART_DES_VENTES_EN_PRIME);
   const parSalarie = auCentime(enveloppe / s.effectif);
   // Le coût est le brut augmenté des cotisations patronales : le brut s'en déduit par division.
@@ -81,6 +86,10 @@ export const LA_PRIME_DE_FIN_D_ANNEE: Situation = {
     "Répondre à la direction, chiffre à l'appui",
   ],
   libre: false,
+  entreprises: {
+    codes: ENTREPRISES_DES_RESSOURCES_HUMAINES,
+    pourquoi: "le cas reprend la paie de NOVA, celle du chapitre, et les ventes de son premier exercice.",
+  },
   etapes: [
     {
       id: "demande",

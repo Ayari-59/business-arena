@@ -1,186 +1,78 @@
-import { soldUnits } from "../../../engine/simulation/runGame";
-import type { SupplierDef } from "../../../engine/types";
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../pedagogy/cours/etats";
-import { scenarioByCode } from "../../scenarios/registry";
-import { accordPluriel, pronom } from "../accords";
-import { type Cas } from "../cas";
-import { anneeJouee } from "../annee-de-l-arene";
-import type { Chapitre } from "../types";
+import type { Cas } from "../cas";
+import {
+  DELAI_DU_FOURNISSEUR,
+  ENTREPRISES_DE_LA_PRODUCTION_DE_NOVA,
+  JOURS_DE_MONTAGE_PAR_TRIMESTRE,
+  JOURS_DE_SECURITE,
+  POURQUOI_LA_PRODUCTION_DE_NOVA,
+  RETARD_REDOUTE,
+  STOCK_DU_SOIR,
+  ficheDeNova,
+  kitsDuTrimestre,
+  retardCouvert,
+  securiteFaceAuRetard,
+} from "../monde/production-et-logistique";
+import type { Chapitre, TableauDeDonnees } from "../types";
 
 /**
  * CHAPITRE : LE STOCK DE SÉCURITÉ ET LE POINT DE COMMANDE (2de pro GATL, palier 1).
  *
- * Quand faut-il recommander ? L'élève lit le stock d'une année de l'arène, trimestre après
- * trimestre (le stock au début, les entrées, la demande des clients, les ventes, le stock à la
- * fin), calcule la demande par jour d'un trimestre, la consommation pendant le délai du
- * fournisseur, le stock de sécurité et le point de commande, puis dit s'il faut commander. Il
- * mesure enfin les deux erreurs telles que le moteur les joue : le stock qui déborde (des jours
- * de ventes payés d'avance, de l'argent bloqué au bilan) et le stock qui manque (la demande que
- * le stock ne sert pas est perdue, au même taux pour chaque clientèle).
+ * Quand faut-il recommander ? Chez NOVA, chaque enceinte se monte avec un kit de composants acheté à
+ * Électro-Composants Lyon. Au 1er trimestre de N + 1, la ligne monte 5 800 enceintes en 58 jours :
+ * 100 kits par jour. Le fournisseur livre 6 jours après la commande ; NOVA garde 3 jours de stock de
+ * sécurité. L'élève calcule la consommation par jour, la consommation pendant le délai, le stock de
+ * sécurité, le point de commande (900 kits), dit s'il faut commander ce soir, puis ce que le stock de
+ * sécurité immobilise.
  *
- * CE QUE LE MOTEUR FAIT, ET CE QU'IL NE FAIT PAS. Un trimestre de l'arène fait entrer en stock
- * ce que la feuille de décision commande, puis sert la demande avec le stock du début et ces
- * entrées ; ce qui manque est perdu (`lost`), ce qui reste passe au trimestre suivant, valorisé
- * au coût moyen pondéré. Il ne pose AUCUN délai de réapprovisionnement : ce qui est commandé dans
- * un trimestre est vendable dans ce trimestre. Le délai du cours est donc une hypothèse, prise
- * dans ce que la fiche du fournisseur de l'arène annonce au joueur (`DELAI_DE_REAPPROVISIONNEMENT`),
- * et le texte le dit. Le moteur ne compte pas non plus de coût de stockage à l'unité : l'entrepôt
- * est dans les charges de structure, le même montant plein ou vide. Ce que coûte un stock en trop,
- * dans l'arène, c'est l'argent payé au fournisseur et bloqué dans le stock.
+ * L'EXPÉRIENCE. Un curseur : le plus grand retard du fournisseur que le point de commande couvre
+ * (3 jours). Un laboratoire : le stock de sécurité qui ne laisse perdre aucune enceinte quand le
+ * fournisseur a 2 jours de retard, avec le moins d'argent immobilisé (2 jours).
  *
- * Les trimestres étudiés se lisent dans l'année du cours (`anneeJouee`) : le premier où le stock
- * manque (le pic, où la demande monte), et celui qui le précède, qui sert toute sa demande (la base
- * des calculs). Le premier, et non celui qui perd le plus : la gestion de l'arène commande d'après
- * la demande, et une fois le stock de départ écoulé, les trimestres suivants commencent à vide ;
- * seul le trimestre d'avant le premier manque garde un stock à comparer au point de commande.
- *
- * « Le stock du point de vente » (BTS MCO) mesure la rotation et le crédit fournisseur ; « Les
- * stocks » (comptabilité) passe les écritures d'inventaire. Ce chapitre-ci dit quand recommander.
+ * LE CHAPITRE JOUE DANS LE MONDE DU COURS (monde/production-et-logistique.ts : les jours de montage,
+ * le délai, le stock de sécurité, le stock du soir et le retard redouté sont ses hypothèses ; la
+ * production du trimestre et le coût d'un kit viennent des fiches de NOVA). CE QUI A CHANGÉ : il se
+ * jouait chez PIXEL & CO, sur une année de l'arène ; il se joue chez NOVA, sur ses composants.
  */
 
-/**
- * Les entreprises du chapitre : celle qui garde le stock d'un seul produit, acheté à un
- * fournisseur, d'un trimestre à l'autre. Les autres n'en ont pas (un service ou un repas ne se
- * garde pas), le fabriquent à la demande (NOVA), gardent des chantiers en cours (le bâtiment), ou
- * suivent plusieurs articles qui ont chacun leur stock (la boutique).
- */
-export const ENTREPRISES_DU_STOCK_DE_SECURITE: readonly string[] = ["ecommerce"];
+/** Les entreprises du chapitre : NOVA seule, qui garde un stock de kits de composants. */
+export const ENTREPRISES_DU_STOCK_DE_SECURITE: readonly string[] = ENTREPRISES_DE_LA_PRODUCTION_DE_NOVA;
 
-/**
- * LE DÉLAI DE RÉAPPROVISIONNEMENT, HYPOTHÈSE DU COURS. Le moteur n'en pose pas. Le cours prend
- * celui que la fiche du fournisseur de l'arène annonce au joueur, celui que l'année du cours
- * utilise : chez PIXEL & CO, le grossiste européen promet un « réassort sous une semaine ». La
- * garde du chapitre vérifie que la fiche le dit toujours.
- */
-export const DELAI_DE_REAPPROVISIONNEMENT: Readonly<Record<string, { jours: number; annonce: string }>> = {
-  ecommerce: { jours: 7, annonce: "réassort sous une semaine" },
-};
+export { JOURS_DE_SECURITE };
 
-/**
- * LE STOCK DE SÉCURITÉ, CHOIX DE GESTION DU COURS : l'entreprise garde d'avance 5 jours de
- * demande, pour un fournisseur en retard ou une demande qui monte. Ce n'est pas un chiffre de
- * l'arène, et le texte le présente comme le choix de l'entreprise.
- */
-export const JOURS_DE_SECURITE = 5;
+/** Les bornes du curseur (le retard du fournisseur, en jours) et du laboratoire (le stock de sécurité, en jours). */
+const RETARD_DU_CURSEUR = { min: 0, max: 8 } as const;
+const SECURITE_DU_LABORATOIRE = { min: 0, max: 6, pas: 1 } as const;
 
-/** Un montant à la française, avec le signe moins typographique. */
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const deux = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const jours = (n: number) => `${qte(n)} ${n >= 2 ? "jours" : "jour"}`;
 
-export interface TrimestreDuStock {
-  trimestre: number;
-  /** Ce qui est en stock au début du trimestre, et à la fin (unités entières). */
-  debut: number;
-  fin: number;
-  /** Ce qui entre en stock : ce qu'il faut pour que début + entrées − ventes = fin, au rond près. */
-  entrees: number;
-  demande: number;
-  ventes: number;
-  /** La demande que le stock n'a pas servie. */
-  perdues: number;
-  /** Le prix d'une unité vendue. */
-  prix: number;
-  /** La valeur du stock de fin au bilan de l'arène, et les charges de structure du trimestre. */
-  valeurFin: number;
-  chargesFixes: number;
+const f = (c: Pick<Cas, "code">) => ficheDeNova(c);
+
+/** Les kits du 1er trimestre de N + 1 : consommation, délai, sécurité, point de commande. */
+export const stockEtPointDeCommande = (c: Pick<Cas, "code">) => kitsDuTrimestre(f(c), 1);
+
+/** Le stock de sécurité du laboratoire : le plus petit qui ne laisse perdre aucune enceinte au retard redouté. */
+export function securiteDuLaboratoire(c: Pick<Cas, "code">) {
+  for (let s = SECURITE_DU_LABORATOIRE.min; s <= SECURITE_DU_LABORATOIRE.max; s++) if (securiteFaceAuRetard(f(c), s).perdues === 0) return s;
+  return SECURITE_DU_LABORATOIRE.max;
 }
 
-/** Le fournisseur que l'année du cours utilise (celui de la feuille proposée). */
-function fournisseurDuCours(c: Cas): SupplierDef {
-  const s = scenarioByCode(c.code).scenario;
-  const code = anneeJouee(c.code).partie.rounds[0]!.results["joueur"]!.supplier?.code;
-  const f = (s.suppliers ?? []).find((x) => x.code === code) ?? s.suppliers?.[0];
-  if (!f) throw new Error(`${c.entreprise} n'a pas de fournisseur dans l'arène`);
-  return f;
-}
-
-/** Le stock de l'année du cours, trimestre par trimestre, tel que le moteur le joue. */
-export function stockDeLAnnee(c: Cas): TrimestreDuStock[] {
-  const { partie, depart } = anneeJouee(c.code);
-  let debut = depart.finishedGoods.quantity;
-  return partie.rounds.map((tour, k) => {
-    const r = tour.results["joueur"]!;
-    const suivant = tour.companies.find((x) => x.id === "joueur")!;
-    const segments = Object.values(r.market.bySegment);
-    const d = Math.round(debut);
-    const f = Math.round(suivant.finishedGoods.quantity);
-    const ventes = Math.round(soldUnits(r));
-    const demande = Math.round(segments.reduce((t, v) => t + v.demandForCompany, 0));
-    const vendues = segments.reduce((t, v) => t + v.sold, 0);
-    debut = suivant.finishedGoods.quantity;
-    return {
-      trimestre: k + 1,
-      debut: d,
-      fin: f,
-      entrees: f - d + ventes,
-      demande,
-      ventes,
-      perdues: demande - ventes,
-      prix: auCentime(segments.reduce((t, v) => t + v.revenue, 0) / vendues),
-      valeurFin: auCentime(r.balanceSheet.inventoryValue),
-      chargesFixes: auCentime(r.incomeStatement.fixedCosts),
-    };
-  });
-}
-
-/** Les chiffres du chapitre : la base, le point de commande, le stock qui déborde et celui qui manque. */
-export function stockEtPointDeCommande(c: Cas) {
-  const s = scenarioByCode(c.code).scenario;
-  const annee = stockDeLAnnee(c);
-  const delai = DELAI_DE_REAPPROVISIONNEMENT[c.code];
-  if (!delai) throw new Error(`Pas de délai de réapprovisionnement pour ${c.entreprise}`);
-  // Le pic : le premier trimestre où le stock manque ; la base, celui d'avant, qui sert toute sa demande.
-  const pic = annee.find((t) => t.perdues > 0);
-  if (!pic) throw new Error(`${c.entreprise} ne manque jamais de stock dans l'année du cours`);
-  const base = annee[pic.trimestre - 2];
-  if (!base) throw new Error(`${c.entreprise} manque de stock dès le premier trimestre`);
-  const jours = s.roundDays;
-  const parJour = Math.ceil(base.demande / jours);
-  const pendantLeDelai = parJour * delai.jours;
-  const securite = parJour * JOURS_DE_SECURITE;
-  const pointDeCommande = pendantLeDelai + securite;
-  const couverture = Math.floor(base.fin / parJour);
-  const disponibles = pic.debut + pic.entrees;
-  const perdues = pic.demande - disponibles;
+function tableauDesKits(c: Cas): TableauDeDonnees {
+  const k = stockEtPointDeCommande(c);
   return {
-    annee,
-    fournisseur: fournisseurDuCours(c),
-    delai: delai.jours,
-    annonce: delai.annonce,
-    jours,
-    base,
-    pic,
-    parJour,
-    pendantLeDelai,
-    securite,
-    pointDeCommande,
-    /** Les jours de demande que le point de commande garde d'avance : le délai et la sécurité. */
-    joursDuPoint: delai.jours + JOURS_DE_SECURITE,
-    joursAvantDeCommander: Math.max(0, Math.floor((base.fin - pointDeCommande) / parJour)),
-    couverture,
-    disponibles,
-    perdues,
-    chiffreDAffairesPerdu: auCentime(perdues * pic.prix),
-  };
-}
-
-const tableauDeLAnnee = (c: Cas) => {
-  const a = stockDeLAnnee(c);
-  return {
-    titre: `${c.entreprise} · le stock de l'année dans l'arène, en ${c.unites}`,
-    colonnes: a.map((t) => `Trimestre ${t.trimestre}`),
+    titre: `Les kits de composants de ${c.entreprise}, le 1er trimestre de N + 1`,
+    colonnes: ["Valeur"],
     lignes: [
-      { libelle: "Stock au début", valeurs: a.map((t) => qte(t.debut)) },
-      { libelle: "Entrées en stock", valeurs: a.map((t) => qte(t.entrees)) },
-      { libelle: "Demande des clients", valeurs: a.map((t) => qte(t.demande)) },
-      { libelle: "Ventes", valeurs: a.map((t) => qte(t.ventes)) },
-      { libelle: "Stock à la fin", valeurs: a.map((t) => qte(t.fin)) },
+      { libelle: `${c.unites[0]!.toUpperCase()}${c.unites.slice(1)} à monter (un kit chacune)`, valeurs: [qte(k.montees)] },
+      { libelle: "Jours de montage du trimestre", valeurs: [qte(JOURS_DE_MONTAGE_PAR_TRIMESTRE)] },
+      { libelle: "Délai du fournisseur (jours de montage)", valeurs: [qte(DELAI_DU_FOURNISSEUR)] },
+      { libelle: "Stock de sécurité voulu (jours de consommation)", valeurs: [qte(JOURS_DE_SECURITE)] },
+      { libelle: "Coût d'un kit", valeurs: [eur(f(c).enceinte.coutVariable.composants)] },
     ],
   };
-};
+}
 
 export const LE_STOCK_DE_SECURITE: Chapitre = {
   code: "le-stock-de-securite",
@@ -189,209 +81,169 @@ export const LE_STOCK_DE_SECURITE: Chapitre = {
   blocs: ["2de pro GATL · 4 · Traiter les flux physiques en relation avec les données de gestion"],
   titre: "Le stock de sécurité et le point de commande",
   accroche:
-    "Quand faut-il recommander ? Assez tôt pour ne jamais laisser un client sans rien, assez tard pour ne pas remplir l'entrepôt d'argent qui dort. La demande par jour, le délai du fournisseur, le stock de sécurité et le point de commande, sur une année de l'arène.",
+    "Quand faut-il recommander ? Assez tôt pour que la ligne ne s'arrête jamais, assez tard pour ne pas remplir le magasin d'argent qui dort. La consommation par jour, le délai du fournisseur, le stock de sécurité et le point de commande.",
   objectifs: [
-    "Calculer une demande moyenne par jour",
-    "Calculer la consommation pendant le délai de réapprovisionnement",
-    "Calculer un stock de sécurité et un point de commande",
+    "Calculer une consommation par jour",
+    "Calculer le stock de sécurité et le point de commande",
     "Dire s'il faut commander, en comparant le stock au point de commande",
-    "Chiffrer un stock qui déborde, et un stock qui manque",
+    "Mesurer ce qu'un stock de sécurité immobilise, et ce qu'il évite",
   ],
   libre: false,
-  entreprises: {
-    codes: ENTREPRISES_DU_STOCK_DE_SECURITE,
-    pourquoi:
-      "ce chapitre suit le stock d'un seul produit, acheté à un fournisseur et gardé d'un trimestre à l'autre. Un service ou un repas ne se garde pas, NOVA fabrique à la demande, le bâtiment garde des chantiers en cours, et la boutique suit plusieurs articles qui ont chacun leur stock.",
-  },
+  entreprises: { codes: ENTREPRISES_DU_STOCK_DE_SECURITE, pourquoi: POURQUOI_LA_PRODUCTION_DE_NOVA },
   etapes: [
     {
       id: "intro",
       type: "lecture",
-      titre: "Ni trop, ni trop peu",
+      titre: "Commander avant de manquer",
       notions: ["stock"],
-      texte: (c) => {
-        const k = stockEtPointDeCommande(c);
-        return [
-          `Le stock de ${c.entreprise}, c'est ce qui attend en entrepôt d'être vendu. L'arène le compte en ${c.unites} : au début de l'année, de quoi en servir ${qte(k.annee[0]!.debut)}. Le tableau le suit trimestre après trimestre.`,
-          "Un stock peut se tromper de deux façons. S'il manque, le client repart sans rien : c'est une vente perdue. S'il déborde, des marchandises payées dorment en entrepôt : c'est de l'argent bloqué.",
-          `Quand on recommande, la marchandise n'arrive pas tout de suite : c'est le délai de réapprovisionnement. L'arène n'en compte pas : ce qui est commandé dans un trimestre arrive dans ce trimestre. Le cours suppose donc le délai qu'annonce le fournisseur de l'arène, « ${k.fournisseur.name} » (${k.annonce}) : ${qte(k.delai)} jours.`,
-        ];
-      },
-      repere: () => "Point de commande = consommation pendant le délai + stock de sécurité.",
-      tableau: tableauDeLAnnee,
+      tableau: tableauDesKits,
+      texte: (c) => [
+        `Chaque ${c.unite} ${c.entreprise} se monte avec un kit de composants (haut-parleur, carte, batterie, coque), acheté à Électro-Composants Lyon. Sans kit, la ligne s'arrête.`,
+        `Le fournisseur livre ${jours(DELAI_DU_FOURNISSEUR)} après la commande. Pendant ce délai, la ligne continue de consommer : il faut donc commander quand le stock suffit encore pour tout le délai, plus une réserve pour un retard. Cette réserve est le stock de sécurité.`,
+        "Le stock à partir duquel il faut commander est le point de commande.",
+      ],
+      repere: () => "Point de commande = consommation par jour × délai du fournisseur + stock de sécurité.",
     },
     {
-      id: "par-jour",
-      type: "montants",
-      titre: "La demande par jour",
-      notions: ["stock"],
-      question: (c) => {
-        const k = stockEtPointDeCommande(c);
-        return `Au trimestre ${k.base.trimestre}, les clients ont demandé ${qte(k.base.demande)} ${c.unites} en ${qte(k.jours)} jours. Calculez la demande moyenne par jour, arrondie à l'unité supérieure : en stock, on ne prévoit jamais trop juste.`;
-      },
-      champs: (c) => {
-        const k = stockEtPointDeCommande(c);
-        return [
-          {
-            libelle: "Demande par jour",
-            attendu: k.parJour,
-            calcul: `${qte(k.base.demande)} ÷ ${qte(k.jours)} = ${deux(k.base.demande / k.jours)}, soit ${qte(k.parJour)} en arrondissant au-dessus`,
-          },
-        ];
-      },
-      explication: (c) => {
-        const k = stockEtPointDeCommande(c);
-        return [`Chaque jour, ${qte(k.parJour)} ${c.unites} sortent du stock en moyenne : c'est la consommation du stock.`];
-      },
-    },
-    {
-      id: "pendant-le-delai",
-      type: "montants",
-      titre: "Pendant le délai",
-      notions: ["stock"],
-      question: (c) => {
-        const k = stockEtPointDeCommande(c);
-        return `Le fournisseur livre ${qte(k.delai)} jours après la commande. Combien de ${c.unites} les clients demandent-ils pendant ce délai, à ${qte(k.parJour)} par jour ?`;
-      },
-      champs: (c) => {
-        const k = stockEtPointDeCommande(c);
-        return [{ libelle: "Consommation pendant le délai", attendu: k.pendantLeDelai, calcul: `${qte(k.parJour)} × ${qte(k.delai)} = ${qte(k.pendantLeDelai)}` }];
-      },
-      explication: (c) => {
-        const k = stockEtPointDeCommande(c);
-        return [
-          `Pendant les ${qte(k.delai)} jours d'attente, ${qte(k.pendantLeDelai)} ${c.unites} sortent du stock. Une commande passée quand il en reste moins, et le stock est vide avant que la livraison n'arrive.`,
-        ];
-      },
-    },
-    {
-      id: "securite",
-      type: "montants",
-      titre: "Le stock de sécurité",
-      notions: ["stock"],
-      question: (c) => {
-        const k = stockEtPointDeCommande(c);
-        return `Un fournisseur peut livrer en retard, et la demande peut monter. Le cours suppose que ${c.entreprise} garde en plus ${qte(JOURS_DE_SECURITE)} jours de demande : c'est son stock de sécurité. Calculez-le, à ${qte(k.parJour)} ${c.unites} par jour.`;
-      },
-      champs: (c) => {
-        const k = stockEtPointDeCommande(c);
-        return [{ libelle: "Stock de sécurité", attendu: k.securite, calcul: `${qte(k.parJour)} × ${qte(JOURS_DE_SECURITE)} = ${qte(k.securite)}` }];
-      },
-      explication: (c) => {
-        const k = stockEtPointDeCommande(c);
-        return [
-          `Ces ${qte(k.securite)} ${c.unites} ne servent qu'en cas de surprise. Quand le fournisseur livre à l'heure et que la demande ne bouge pas, la livraison arrive avant qu'on y touche.`,
-        ];
-      },
-    },
-    {
-      id: "point-de-commande",
+      id: "le-point-de-commande",
       type: "montants",
       titre: "Le point de commande",
       notions: ["stock"],
-      question: (c) => {
-        const k = stockEtPointDeCommande(c);
-        return `Le point de commande, c'est le niveau de stock où il faut recommander : la consommation pendant le délai (${qte(k.pendantLeDelai)}), plus le stock de sécurité (${qte(k.securite)}). Calculez-le, en ${c.unites}.`;
-      },
+      tableau: tableauDesKits,
+      question: () => "Calculez la consommation par jour (au kit supérieur), la consommation pendant le délai du fournisseur, le stock de sécurité, puis le point de commande, en kits.",
       champs: (c) => {
         const k = stockEtPointDeCommande(c);
-        return [{ libelle: "Point de commande", attendu: k.pointDeCommande, calcul: `${qte(k.pendantLeDelai)} + ${qte(k.securite)} = ${qte(k.pointDeCommande)}` }];
+        return [
+          { libelle: "Consommation par jour", attendu: k.parJour, calcul: `${qte(k.montees)} ÷ ${qte(JOURS_DE_MONTAGE_PAR_TRIMESTRE)} = ${qte(k.parJour)}`, tolerance: 0 },
+          { libelle: "Consommation pendant le délai", attendu: k.pendantLeDelai, calcul: `${qte(k.parJour)} × ${qte(DELAI_DU_FOURNISSEUR)} = ${qte(k.pendantLeDelai)}`, tolerance: 0 },
+          { libelle: "Stock de sécurité", attendu: k.securite, calcul: `${qte(k.parJour)} × ${qte(JOURS_DE_SECURITE)} = ${qte(k.securite)}`, tolerance: 0 },
+          { libelle: "Point de commande", attendu: k.pointDeCommande, calcul: `${qte(k.pendantLeDelai)} + ${qte(k.securite)} = ${qte(k.pointDeCommande)}`, tolerance: 0 },
+        ];
       },
       explication: (c) => {
         const k = stockEtPointDeCommande(c);
-        return [
-          `Dès que le stock descend à ${qte(k.pointDeCommande)} ${c.unites}, on passe commande. Pendant le délai, les clients en prennent ${qte(k.pendantLeDelai)} : la livraison arrive quand il reste encore le stock de sécurité, ${qte(k.securite)}.`,
-        ];
+        return [`Dès que le stock descend à ${qte(k.pointDeCommande)} kits, le magasinier commande : les ${qte(k.pendantLeDelai)} premiers servent pendant le délai, les ${qte(k.securite)} autres attendent un retard.`];
       },
     },
     {
       id: "commander",
       type: "choix",
-      titre: "Commander ou attendre",
+      titre: "Faut-il commander ce soir ?",
+      notions: ["stock"],
+      question: () => `Ce soir, le magasinier compte ${qte(STOCK_DU_SOIR)} kits en stock. Faut-il commander ?`,
+      options: (c) => {
+        const k = stockEtPointDeCommande(c);
+        const sous = STOCK_DU_SOIR <= k.pointDeCommande;
+        return [
+          {
+            texte: "Oui, dès ce soir",
+            juste: sous,
+            retour: sous
+              ? `Oui : ${qte(STOCK_DU_SOIR)} kits, c'est moins que le point de commande (${qte(k.pointDeCommande)}). Le stock ne couvre plus le délai et la sécurité.`
+              : `Non : le stock est au-dessus du point de commande (${qte(k.pointDeCommande)}).`,
+          },
+          {
+            texte: "Non, il reste plus que le délai",
+            juste: !sous,
+            retour: !sous
+              ? "Oui : le stock couvre encore le délai et la sécurité."
+              : `Non : il reste de quoi tenir le délai (${qte(k.pendantLeDelai)} kits), mais plus toute la sécurité : en cas de retard, la ligne s'arrêterait.`,
+          },
+          { texte: "Non, il faut attendre que le stock soit vide", juste: false, retour: `Non : commandé à vide, le kit arriverait ${jours(DELAI_DU_FOURNISSEUR)} trop tard, et la ligne s'arrêterait tout ce temps.` },
+        ];
+      },
+    },
+    {
+      id: "ce-qu-immobilise-la-securite",
+      type: "montants",
+      titre: "Ce que la sécurité immobilise",
+      notions: ["stock"],
+      question: (c) => `Le stock de sécurité ne sert qu'en cas de retard, mais il a été payé. Calculez ce qu'il immobilise (kits de sécurité × ${eur(f(c).enceinte.coutVariable.composants)}).`,
+      champs: (c) => {
+        const k = stockEtPointDeCommande(c);
+        return [{ libelle: "Argent immobilisé par le stock de sécurité", attendu: k.immobilise, calcul: `${qte(k.securite)} × ${eur(f(c).enceinte.coutVariable.composants)} = ${eur(k.immobilise)}` }];
+      },
+      explication: (c) => {
+        const k = stockEtPointDeCommande(c);
+        return [`${eur(k.immobilise)} dorment dans le magasin, toute l'année : c'est le prix de la tranquillité. Chaque jour de sécurité en plus en immobilise ${eur(k.parJour * f(c).enceinte.coutVariable.composants)} de plus.`];
+      },
+    },
+    {
+      id: "le-retard-couvert",
+      type: "curseur",
+      titre: "Le retard que la sécurité couvre",
       notions: ["stock"],
       question: (c) => {
         const k = stockEtPointDeCommande(c);
-        return `À la fin du trimestre ${k.base.trimestre}, il reste ${qte(k.base.fin)} ${c.unites} en stock. Le point de commande est de ${qte(k.pointDeCommande)}. Faut-il passer commande ?`;
+        return `Le magasinier a commandé à ${qte(k.pointDeCommande)} kits. Faites varier le retard du fournisseur, en jours : une droite donne le stock de la commande, l'autre ce que la ligne consomme avant la livraison (${qte(k.parJour)} kits par jour, pendant le délai et le retard). Placez le curseur sur le plus grand retard que le stock couvre, puis validez.`;
       },
-      options: (c) => {
+      grandeur: () => ({ libelle: "Retard du fournisseur", unite: "jours" }),
+      sens: "plus-grande",
+      cible: (c) => {
         const k = stockEtPointDeCommande(c);
-        const auDessus = k.base.fin > k.pointDeCommande;
-        return [
-          {
-            texte: "Pas encore : le stock est au-dessus du point de commande",
-            juste: auDessus,
-            retour: auDessus
-              ? `Oui : ${qte(k.base.fin)} > ${qte(k.pointDeCommande)}. À ${qte(k.parJour)} par jour, le stock met encore ${qte(k.joursAvantDeCommander)} jours à descendre jusqu'au point de commande.`
-              : `Non : ${qte(k.base.fin)} ≤ ${qte(k.pointDeCommande)}. Le stock est déjà au point de commande : attendre, c'est risquer le stock vide avant la livraison.`,
-          },
-          {
-            texte: "Tout de suite : le stock est sous le point de commande",
-            juste: !auDessus,
-            retour: auDessus
-              ? `Non : ${qte(k.base.fin)} > ${qte(k.pointDeCommande)}. Le stock est encore au-dessus du point de commande : commander maintenant ferait déborder l'entrepôt.`
-              : `Oui : ${qte(k.base.fin)} ≤ ${qte(k.pointDeCommande)}. Il faut recommander tout de suite, pour que la livraison arrive avant que le stock ne soit vide.`,
-          },
-          {
-            texte: "Tout de suite : on recommande à chaque fin de trimestre",
-            juste: false,
-            retour:
-              "Non : on recommande quand le stock atteint le point de commande, pas à date fixe. Commander sans regarder le stock, c'est le faire déborder, ou manquer.",
-          },
-        ];
+        return { attendu: retardCouvert(k.pointDeCommande, k.parJour), ...RETARD_DU_CURSEUR };
       },
-    },
-    {
-      id: "deborde",
-      type: "montants",
-      titre: "Un stock qui déborde",
-      notions: ["stock", "stock_rotation"],
-      question: (c) => {
-        const k = stockEtPointDeCommande(c);
-        return `Combien de jours les ${qte(k.base.fin)} ${c.unites} en stock à la fin du trimestre ${k.base.trimestre} tiendraient-${pronom(c)}s, à ${qte(k.parJour)} par jour ? Arrondissez à l'unité inférieure.`;
-      },
-      champs: (c) => {
+      zones: ["La ligne tourne", "La ligne s'arrête"],
+      rates: () => ({
+        dessous: "Ce retard est couvert, mais un plus long aussi : cherchez le plus long.",
+        dessus: "Avec ce retard, le stock s'épuise avant la livraison : la ligne s'arrête.",
+      }),
+      montrer: "Montrer le retard",
+      lecture: (c, q) => {
         const k = stockEtPointDeCommande(c);
         return [
-          {
-            libelle: "Jours couverts par le stock",
-            attendu: k.couverture,
-            calcul: `${qte(k.base.fin)} ÷ ${qte(k.parJour)} = ${deux(k.base.fin / k.parJour)}, soit ${qte(k.couverture)} jours`,
-            tolerance: 1,
-          },
+          { libelle: "Stock au moment de commander", montant: k.pointDeCommande },
+          { libelle: "Consommé avant la livraison", montant: k.parJour * (DELAI_DU_FOURNISSEUR + q), fort: true },
+          { libelle: "Stock à la livraison", montant: k.pointDeCommande - k.parJour * (DELAI_DU_FOURNISSEUR + q) },
         ];
+      },
+      droites: (c) => {
+        const k = stockEtPointDeCommande(c);
+        return { produit: () => k.pointDeCommande, cout: (q) => k.parJour * (DELAI_DU_FOURNISSEUR + q), libelles: ["Stock au moment de commander", "Consommé avant la livraison"] };
       },
       explication: (c) => {
         const k = stockEtPointDeCommande(c);
-        return [
-          k.couverture > k.joursDuPoint
-            ? `Le stock tient ${qte(k.couverture)} jours, quand le point de commande n'en garde que ${qte(k.joursDuPoint)} d'avance (le délai et la sécurité) : il déborde. Ces marchandises ont été achetées et préparées : le bilan de l'arène compte ${eur(k.base.valeurFin)} de stock, de l'argent dépensé et pas encore revenu par les ventes.`
-            : `Le stock tient ${qte(k.couverture)} jours, pas plus que les ${qte(k.joursDuPoint)} jours que garde le point de commande (le délai et la sécurité) : il ne déborde pas. Le bilan de l'arène le compte pour ${eur(k.base.valeurFin)}.`,
-          `L'arène ne fait pas payer de loyer en plus pour un gros stock : l'entrepôt est dans les charges de structure (${eur(k.base.chargesFixes)} au trimestre ${k.base.trimestre}), le même montant plein ou vide. Ce que coûte un stock en trop, c'est l'argent bloqué dedans.`,
-        ];
+        const r = retardCouvert(k.pointDeCommande, k.parJour);
+        return [`Le stock couvre un retard de ${jours(r)} : ${qte(k.parJour)} × (${qte(DELAI_DU_FOURNISSEUR)} + ${qte(r)}) = ${qte(k.parJour * (DELAI_DU_FOURNISSEUR + r))}, le point de commande. C'est exactement le stock de sécurité, compté en jours.`];
       },
     },
     {
-      id: "manque",
-      type: "montants",
-      titre: "Un stock qui manque",
-      notions: ["stock", "revenue"],
-      question: (c) => {
-        const k = stockEtPointDeCommande(c);
-        return `Au trimestre ${k.pic.trimestre}, les clients demandent ${qte(k.pic.demande)} ${c.unites}. ${c.entreprise} commence le trimestre avec ${qte(k.pic.debut)} ${c.unites} en stock, et en fait entrer ${qte(k.pic.entrees)}. Calculez ce qu'elle a pu servir, ce qui a manqué, puis le chiffre d'affaires perdu, à ${eur(k.pic.prix)} par ${c.unite}.`;
-      },
-      champs: (c) => {
-        const k = stockEtPointDeCommande(c);
+      id: "le-laboratoire-de-la-securite",
+      type: "simulation",
+      titre: "Le laboratoire de la sécurité",
+      notions: ["stock"],
+      question: (c) =>
+        `Le fournisseur a déjà livré avec ${jours(RETARD_REDOUTE)} de retard. Faites varier le stock de sécurité, en jours de consommation, en partant de celui de ${c.entreprise} (${jours(JOURS_DE_SECURITE)}). Le tableau donne le point de commande, les ${c.unites} que la ligne ne monterait pas pendant un retard de ${jours(RETARD_REDOUTE)}, et l'argent immobilisé. Relevez le défi.`,
+      leviers: () => [{ code: "securite", libelle: "Stock de sécurité", unite: "jours", ...SECURITE_DU_LABORATOIRE, depart: JOURS_DE_SECURITE }],
+      lecture: (c, p) => {
+        const s = securiteFaceAuRetard(f(c), p.securite!);
+        const d = securiteFaceAuRetard(f(c), JOURS_DE_SECURITE);
         return [
-          { libelle: "Disponible pour les clients", attendu: k.disponibles, calcul: `${qte(k.pic.debut)} + ${qte(k.pic.entrees)} = ${qte(k.disponibles)}` },
-          { libelle: `${majuscule(c.unites)} ${accordPluriel(c, "perdu")}`, attendu: k.perdues, calcul: `${qte(k.pic.demande)} − ${qte(k.disponibles)} = ${qte(k.perdues)}` },
-          { libelle: "Chiffre d'affaires perdu", attendu: k.chiffreDAffairesPerdu, calcul: `${qte(k.perdues)} × ${eur(k.pic.prix)} = ${eur(k.chiffreDAffairesPerdu)}` },
+          { libelle: "Point de commande", montant: s.pointDeCommande, unite: "kits", reference: d.pointDeCommande },
+          { libelle: `${c.unites[0]!.toUpperCase()}${c.unites.slice(1)} non montées pendant le retard`, montant: s.perdues, unite: c.unites, reference: d.perdues },
+          { libelle: "Marge perdue", montant: s.margePerdue, reference: d.margePerdue },
+          { libelle: "Argent immobilisé par la sécurité", montant: s.immobilise, reference: d.immobilise, fort: true },
         ];
       },
-      explication: (c) => {
-        const k = stockEtPointDeCommande(c);
+      defi: (c) => {
+        const juste = securiteDuLaboratoire(c);
+        return {
+          consigne: `Ne perdez aucune ${c.unite} pendant un retard de ${jours(RETARD_REDOUTE)}, en immobilisant le moins d'argent possible.`,
+          atteint: (p) => p.securite === juste,
+          indice: (p) => {
+            const s = securiteFaceAuRetard(f(c), p.securite!);
+            return s.perdues > 0
+              ? `Avec ${jours(s.joursDeSecurite)} de sécurité, la ligne s'arrête et ${qte(s.perdues)} ${c.unites} ne sont pas montées.`
+              : `Aucune ${c.unite} perdue, mais ${eur(s.immobilise)} immobilisés : un jour de moins suffirait-il ?`;
+          },
+          solution: { securite: juste },
+        };
+      },
+      explication: (c, p) => {
+        const s = securiteFaceAuRetard(f(c), p.securite!);
         return [
-          `${k.pic.fin === 0 ? "Le stock s'est vidé avant la fin du trimestre" : "Le stock n'a pas suffi"} : ${qte(k.perdues)} ${c.unites} ${accordPluriel(c, "demandé")} n'ont pas été ${accordPluriel(c, "servi")}. L'arène sert alors chaque clientèle au même taux, et ce qui manque est perdu : ${eur(k.chiffreDAffairesPerdu)} de chiffre d'affaires en moins.`,
-          "Le point de commande se calcule sur la demande. Quand la demande change, il se recalcule.",
+          `Défi relevé : ${jours(s.joursDeSecurite)} de sécurité couvrent un retard de ${jours(RETARD_REDOUTE)}, pour ${eur(s.immobilise)} immobilisés. En dessous, la ligne s'arrête ; au-dessus, l'argent dort sans rien éviter de plus.`,
+          "Le stock de sécurité se règle sur le retard qu'on redoute, pas sur le délai normal du fournisseur.",
         ];
       },
     },
@@ -403,11 +255,12 @@ export const LE_STOCK_DE_SECURITE: Chapitre = {
       texte: (c) => {
         const k = stockEtPointDeCommande(c);
         return [
-          `À ${qte(k.parJour)} ${c.unites} par jour, avec un délai de ${qte(k.delai)} jours et ${qte(JOURS_DE_SECURITE)} jours de sécurité, ${c.entreprise} recommande quand son stock descend à ${qte(k.pointDeCommande)}.`,
-          `Trop de stock bloque de l'argent ; trop peu fait perdre des ventes : ${qte(k.perdues)} ${c.unites} au trimestre ${k.pic.trimestre} dans l'arène. Le point de commande se tient entre les deux, et il se recalcule quand la demande change.`,
+          `Au 1er trimestre de N + 1, ${c.entreprise} consomme ${qte(k.parJour)} kits par jour ; avec un délai de ${jours(DELAI_DU_FOURNISSEUR)} et ${jours(JOURS_DE_SECURITE)} de sécurité, elle commande dès que son stock descend à ${qte(k.pointDeCommande)} kits.`,
+          "Trop peu de stock, et la ligne s'arrête au premier retard ; trop de stock, et l'argent dort dans le magasin. Le point de commande dit quand commander, le stock de sécurité dit combien de retard on accepte de couvrir.",
+          "Dans l'arène, les chiffres de votre entreprise seront différents : comparez, à chaque tour, votre stock et la demande que vous prévoyez.",
         ];
       },
-      repere: () => "Consommation pendant le délai = demande par jour × délai. Stock de sécurité = demande par jour × jours de sécurité.",
+      repere: () => "Stock de sécurité = consommation par jour × jours de sécurité. Point de commande = consommation pendant le délai + stock de sécurité.",
     },
   ],
 };

@@ -98,8 +98,12 @@ describe("la fiche de NOVA tient debout, et c'est la NOVA des autres fiches", ()
     expect(f.operateurs.tauxDesCotisationsPatronales).toBeCloseTo(TAUX_DE_LA_PAIE.patronalUrssaf + TAUX_DE_LA_PAIE.patronalRetraite, 12);
     expect(coutEmployeurMensuel(f)).toBe(2_662.5);
     expect(COUT_EMPLOYEUR * 12).toBe(31_950);
-    // 180 heures par mois ÷ 0,3 heure l'enceinte ; 540 heures par trimestre, celles de l'arène.
-    expect(f.operateurs.heuresParMois * 3).toBe(540);
+    // 35 heures × 52 semaines ÷ 12 = 151,67 heures payées par mois ; 1 875 ÷ 151,67 = 12,36 € de l'heure.
+    expect(f.operateurs.heuresPayeesParMois).toBe(Math.round((35 * 52 * 100) / 12) / 100);
+    expect(Math.round((1_875 / 151.67) * 100) / 100).toBe(12.36);
+    // 150 heures de montage par mois ÷ 0,25 heure l'enceinte.
+    expect(f.operateurs.heuresParMois).toBe(150);
+    expect(150 / 0.25).toBe(600);
     expect(enceintesParOperateurEtParMois(f)).toBe(600);
     expect(capaciteDeLEquipe(f)).toBe(4 * 600 * 3);
     expect(capaciteDeLEquipe(f)).toBe(7_200);
@@ -574,7 +578,7 @@ describe("6. la machine en plus", () => {
   it("voir plus grand : la ligne automatisée vend autant que le poste tant que la demande plafonne, et ne passe devant qu'au-delà de 18 %", () => {
     const g = machineEnPlus(f, "ligne-automatisee");
     expect(g.capaciteOutil).toBe(10_500);
-    expect(g.capaciteEquipe).toBe(7_200 + 540 / 0.15);
+    expect(g.capaciteEquipe).toBe(7_200 + (150 * 3) / 0.125);
     expect(g.ventesGagnees).toBe(1_200);
     expect(g.charges).toBe(10_000 + 3_000 + 31_950 + 6_000);
     expect(machineEnPlus(f, "ligne-automatisee", { hausseDeLaDemande: 0.1 }).ventesGagnees).toBe(2_720);

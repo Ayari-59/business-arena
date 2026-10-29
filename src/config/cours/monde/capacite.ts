@@ -71,7 +71,7 @@ const TRIMESTRES: readonly Trimestre[] = [1, 2, 3, 4];
 /** La marge sur coût variable d'une enceinte : prix − composants − autres coûts variables (21 €). */
 export const margeUnitaire = (f: FicheDeLaCapacite) => auCentime(f.enceinte.prix - f.enceinte.coutVariable.composants - f.enceinte.coutVariable.autres);
 
-/** Les enceintes qu'un opérateur monte en un mois : ses heures ÷ les heures d'une enceinte (600). */
+/** Les enceintes qu'un opérateur monte en un mois : ses heures ÷ les heures d'une enceinte (150 ÷ 0,25 = 600). */
 export const enceintesParOperateurEtParMois = (f: FicheDeLaCapacite, heuresParEnceinte: number = f.operateurs.heuresParEnceinte) =>
   plancher(f.operateurs.heuresParMois / heuresParEnceinte);
 

@@ -6,7 +6,7 @@ import { CAS_DE_SYNTHESE, CAS_PAR_CHAPITRE, SITUATIONS, casDuChapitre } from "..
 import { COMMERCES } from "../../src/config/cours/chapitres/taux-de-marque";
 import { NEGOCIATIONS } from "../../src/config/cours/chapitres/negocier-le-prix";
 import { commandePourLaPromotion } from "../../src/config/cours/situations/commander-pour-la-promotion";
-import { embaucheDeSaison } from "../../src/config/cours/situations/embaucher-pour-la-saison";
+import { EMBAUCHER_POUR_LA_SAISON, embaucheDeSaison } from "../../src/config/cours/situations/embaucher-pour-la-saison";
 import { COMMANDES_PROMISES, remiseDuGrandCompte } from "../../src/config/cours/situations/la-remise-du-grand-compte";
 import { prixDeLaSaison } from "../../src/config/cours/situations/quel-prix-pour-la-saison";
 import { factureContestee } from "../../src/config/cours/situations/la-facture-contestee";
@@ -225,7 +225,8 @@ describe("la remise du grand compte", () => {
 
 describe("embaucher pour la saison", () => {
   it("les ventes trouvées paient le contrat, et les trois erreurs classiques donnent d'autres nombres", () => {
-    for (const code of ENTREPRISES_DU_COURS) {
+    // Le cas se joue chez NOVA, dans le monde du cours (ressources-humaines-chapitres.test.ts refait ses chiffres).
+    for (const code of EMBAUCHER_POUR_LA_SAISON.entreprises!.codes) {
       const r = embaucheDeSaison(casDeLEntreprise(code));
       expect(r.margeDUneUnite, code).toBeGreaterThan(0);
       expect(r.ventesNecessaires * r.margeDUneUnite, code).toBeGreaterThanOrEqual(r.coutDeLaSaison);
@@ -234,8 +235,8 @@ describe("embaucher pour la saison", () => {
       expect(r.avecLePrix, code).toBeLessThan(r.ventesNecessaires);
       expect(r.surLAnnee, code).toBeGreaterThan(r.ventesNecessaires);
       expect(new Set([r.ventesNecessaires, r.avecLeBrut, r.avecLePrix, r.surLAnnee]).size, code).toBe(4);
-      // La paie du cas et le coût que l'arène donne au personnel disent le même coût, à 1 % près.
-      expect(Math.abs(r.coutDeLaSaison - r.m.coutTrimestriel) / r.m.coutTrimestriel, code).toBeLessThan(0.01);
+      // Le contrat de saison coûte trois mois de ce que coûte un opérateur, celui de la masse salariale.
+      expect(r.coutDeLaSaison, code).toBe(3 * r.m.coutMensuel);
       expect(r.tauxAvec, code).toBeGreaterThan(r.m.tauxDeFraisDePersonnel);
     }
   });

@@ -1,224 +1,80 @@
-import type { CompanyRoundResult, EngineScenarioConfig } from "../../../engine/types";
-import { scenarioByCode } from "../../scenarios/registry";
-import { type Cas } from "../cas";
-import { anneeJouee } from "../annee-de-l-arene";
-import { rejouerAvec } from "../gestion-de-la-pme";
-import type { Chapitre } from "../types";
+import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import type { Cas } from "../cas";
+import { margeUnitaire } from "../monde/capacite";
 import {
-  ENTREPRISES_DU_TRANSPORT,
-  auDixieme,
-  demandeDuTrimestre,
-  eur,
-  jusquALaDefaillance,
-  nomCourt,
-  pct,
-  prixEtCout,
-  qte,
-  transportees,
-} from "./le-taux-de-remplissage";
+  COUT_DE_STOCKAGE_PAR_TRIMESTRE,
+  ENTREPRISES_DE_LA_PRODUCTION_DE_NOVA,
+  POURQUOI_LA_PRODUCTION_DE_NOVA,
+  anneeAvecDeLAvance,
+  ficheDeNova,
+  serviceDeLAnnee,
+} from "../monde/production-et-logistique";
+import type { Chapitre, TableauDeDonnees } from "../types";
 
 /**
- * CHAPITRE : LIVRER À TEMPS, LES DÉLAIS ET LE SERVICE (2de pro GATL, le transport et la
- * logistique, palier 1).
+ * CHAPITRE : LIVRER À TEMPS, LES DÉLAIS ET LE SERVICE (2de pro GATL, le transport et la logistique,
+ * palier 1).
  *
- * L'ARÈNE NE COMPTE AUCUN DÉLAI DE LIVRAISON. Ni retard en jours, ni heure de livraison : les seuls
- * délais en jours du moteur sont ceux des paiements. Le chapitre le dit, et prend ce que l'arène
- * calcule vraiment du service d'un transporteur :
+ * Un client qui commande une enceinte NOVA l'attend dans le trimestre ; s'il ne l'a pas, il achète
+ * ailleurs. En N + 1, la demande dépasse ce que la ligne peut monter au printemps et à Noël
+ * (monde/production-et-logistique.ts, qui relit nova-capacite.ts) : 1 200 enceintes ne seront pas
+ * livrées à temps. L'élève calcule le taux de service (95,6 %), dit quels trimestres manquent, chiffre
+ * la marge perdue, puis cherche comment livrer tout le monde : de la capacité en plus, ou des
+ * enceintes montées d'avance quand la ligne a du jeu.
  *
- *  · les clients servis ou refusés : chaque clientèle adresse une demande à l'entreprise
- *    (`demandForCompany`), qui n'en livre que ce qu'elle a chargé ; le reste est perdu (`lost`).
- *    Le taux de service est la part livrée ;
- *  · la qualité de service : dans le scénario du transport, la « qualité » est la ponctualité, le
- *    suivi, l'état du matériel et la marchandise intacte (scenarios/transport). Le moteur la fait
- *    baisser quand la flotte roule au-dessus de son seuil de surchauffe, 95 % de sa capacité
- *    (`computeProducedQuality`), et les clients la retiennent plusieurs trimestres
- *    (`qualityInertia`) ; elle pèse sur leur demande (`qualityEffect`), chez les industriels plus
- *    qu'ailleurs ;
- *  · la disponibilité de la flotte : une panne (la carte `transport_panne_flotte`) retire une part
- *    de la capacité du trimestre.
+ * L'EXPÉRIENCE. Un curseur : la capacité qu'il faudrait en plus au 4e trimestre pour tout livrer (800
+ * enceintes). Un laboratoire : les enceintes à monter d'avance au 1er et au 3e trimestre pour tout
+ * livrer au meilleur gain, stockage payé (400 et 800). Le coût de stockage est l'hypothèse du chapitre.
  *
- * Le lien entre le service et la fidélité est celui du moteur : la fidélité d'une clientèle joue
- * sur la part de sa demande gagnée au trimestre d'avant (`loyaltyEffect`, `lastMarketShare`), pas
- * sur ce qui lui a été livré. Un client refusé revient donc avec la même demande ; ce qu'il coûte,
- * c'est la vente perdue. L'arène le montre en rejouant l'année (`rejouerAvec`) : toute la demande
- * servie au premier trimestre, puis toute la flotte chargée, puis la panne.
- *
- * Ce que la panne coûte se lit dans l'année rejouée, pas dans une règle : des palettes qui ne
- * tiennent plus dans la flotte, une qualité de service qui baisse si le chargement dépasse le seuil
- * de la flotte en panne, une demande perdue qui ne coûte une vente que si la flotte l'aurait
- * chargée (`refuseEnsuite`). Dans l'année du cours, le chargement du trimestre 1 tient sous le
- * seuil même pendant la panne : elle n'y change ni les livraisons ni le résultat. Le chapitre le
- * dit, et la réponse se calcule ; le cas pratique pose un chargement plus haut.
- *
- * Il ne double pas « Entretenir l'outil » (BTS GPME), qui suit la disponibilité que l'entretien
- * protège : ici, la panne est un aléa, et ce qu'elle coûte passe par la qualité de service.
+ * CE QUI A CHANGÉ. Il se jouait chez ROUTE & CIE, sur une flotte de l'arène qui ne compte aucun
+ * délai ; il se joue chez NOVA, où une commande non montée dans son trimestre est une vente perdue.
  */
 
-/** Le trimestre que le chapitre rejoue : le premier, pour que l'arène en montre toute la suite. */
-export const TRIMESTRE_DU_SERVICE = 1;
+/** Les entreprises du chapitre : NOVA seule. */
+export const ENTREPRISES_DU_SERVICE: readonly string[] = ENTREPRISES_DE_LA_PRODUCTION_DE_NOVA;
 
-/** La panne de la flotte, telle que le scénario du transport la décrit (une carte de l'enseignant). */
-export const CARTE_DE_LA_PANNE = "transport_panne_flotte";
+/** Le trimestre du curseur : le 4e de N + 1, Noël, celui qui manque le plus. */
+export const TRIMESTRE_DU_CURSEUR = 4;
 
-/**
- * Le seuil de surchauffe du moteur quand le scénario n'en fixe pas : `computeProducedQuality`
- * (src/engine/production) fait baisser la qualité produite au-delà de 95 % de la capacité.
- */
-export const SEUIL_DE_SURCHAUFFE_PAR_DEFAUT = 0.95;
+/** Les bornes du curseur (la capacité en plus) et des leviers du laboratoire (l'avance, par 200 enceintes). */
+const CAPACITE_DU_CURSEUR = { min: 0, max: 2_000 } as const;
+const AVANCE_AU_PREMIER = { min: 0, max: 1_200, pas: 200 } as const;
+const AVANCE_AU_TROISIEME = { min: 0, max: 800, pas: 200 } as const;
 
-export const seuilDeSurchauffe = (code: string) => scenarioByCode(code).scenario.production.overheatThreshold ?? SEUIL_DE_SURCHAUFFE_PAR_DEFAUT;
+const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
+const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const pct = (t: number) => `${(Math.round(t * 10) / 10).toLocaleString("fr-FR")} %`;
+const rang = (n: number) => (n === 1 ? "1er" : `${n}e`);
 
-/** Ce que la panne laisse de la disponibilité : le produit de ses effets sur la disponibilité. */
-export function disponibiliteDeLaPanne(code: string): number {
-  const carte = scenarioByCode(code).scenario.events.find((e) => e.code === CARTE_DE_LA_PANNE);
-  if (!carte) throw new Error(`Pas de panne de la flotte dans le scénario ${code}`);
-  return carte.modifiers.filter((m) => m.target === "availability" && m.op === "mul").reduce((t, m) => t * m.value, 1);
+const f = (c: Pick<Cas, "code">) => ficheDeNova(c);
+
+/** Le service de l'année N + 1. */
+export const service = (c: Pick<Cas, "code">) => serviceDeLAnnee(f(c));
+
+/** L'année avec une avance au 1er et au 3e trimestre. */
+const avec = (c: Pick<Cas, "code">, a1: number, a3: number) => anneeAvecDeLAvance(f(c), [a1, 0, a3, 0]);
+
+/** Le laboratoire : l'avance qui laisse le meilleur gain. */
+export function avanceDuLaboratoire(c: Pick<Cas, "code">) {
+  let meilleur = { a1: 0, a3: 0, gain: avec(c, 0, 0).gain };
+  for (let a1 = AVANCE_AU_PREMIER.min; a1 <= AVANCE_AU_PREMIER.max; a1 += AVANCE_AU_PREMIER.pas)
+    for (let a3 = AVANCE_AU_TROISIEME.min; a3 <= AVANCE_AU_TROISIEME.max; a3 += AVANCE_AU_TROISIEME.pas) {
+      const g = avec(c, a1, a3).gain;
+      if (g > meilleur.gain) meilleur = { a1, a3, gain: g };
+    }
+  return meilleur;
 }
 
-/** Le scénario du cours, avec la panne posée sur l'entreprise au trimestre donné. */
-export const avecLaPanne = (trimestre: number) => (s: EngineScenarioConfig): EngineScenarioConfig => ({
-  ...s,
-  scriptedEvents: [...s.scriptedEvents, { round: trimestre, eventCode: CARTE_DE_LA_PANNE }],
-});
-
-/** Une somme sur l'année, arrêtée à la défaillance. */
-const surLAnnee = (annee: readonly CompanyRoundResult[], f: (r: CompanyRoundResult) => number) => jusquALaDefaillance(annee).reduce((t, r) => t + f(r), 0);
-
-export type Ecart = "plus" | "moins" | "meme";
-/** Une demande qui bouge de moins d'une palette n'a pas bougé. */
-const ecartDe = (avant: number, apres: number): Ecart => (apres - avant >= 1 ? "plus" : avant - apres >= 1 ? "moins" : "meme");
-
-export type CoutDeLaPanne = "rien" | "plus-tard" | "tout-de-suite";
-
-const calculs = new Map<string, ReturnType<typeof calculer>>();
-
-/** Le service de l'année, le client refusé, la flotte trop chargée et la panne, rejoués par l'arène. */
-export function service(c: Cas) {
-  const deja = calculs.get(c.code);
-  if (deja) return deja;
-  const r = calculer(c);
-  calculs.set(c.code, r);
-  return r;
-}
-
-function calculer(c: Cas) {
-  const def = scenarioByCode(c.code);
-  const s = def.scenario;
-  const { partie } = anneeJouee(c.code);
-  const reference = partie.rounds.map((t) => t.results["joueur"]!);
-  const annee = jusquALaDefaillance(reference);
-  const trimestres = annee.map((r, k) => {
-    const demandees = Math.round(demandeDuTrimestre(r));
-    const livrees = Math.round(Object.values(r.market.bySegment).reduce((t, v) => t + v.sold, 0));
-    return { numero: k + 1, demandees, livrees, refusees: Math.max(0, demandees - livrees), taux: auDixieme((livrees / demandees) * 100) };
-  });
-  const demandees = trimestres.reduce((t, x) => t + x.demandees, 0);
-  const livrees = trimestres.reduce((t, x) => t + x.livrees, 0);
-  const refusees = demandees - livrees;
-  const tauxDeService = auDixieme((livrees / demandees) * 100);
-  const pire = trimestres.reduce((m, x) => (x.taux < m.taux ? x : m), trimestres[0]!);
-
-  const T = TRIMESTRE_DU_SERVICE;
-  const r = reference[T - 1]!;
-  const premier = trimestres[T - 1]!;
-  const { prix, coutVariable, marge } = prixEtCout(r);
-  const margePerdue = Math.round(premier.refusees * marge);
-  const capacite = Math.round(r.production.machineCapacity);
-  const charge = Math.round(r.production.produced);
-  const seuil = seuilDeSurchauffe(c.code);
-  const demandeSuivante = (a: readonly CompanyRoundResult[]) => Math.round(demandeDuTrimestre(a[T]!));
-
-  // Toute la demande servie au premier trimestre.
-  const servie = rejouerAvec(c.code, `livrer-a-temps:toute-la-demande-au-trimestre-${T}`, (tour, d) =>
-    tour === T ? { ...d, productionPlan: demandeDuTrimestre(r) } : undefined,
-  );
-  const tousServis = {
-    plan: Math.round(demandeDuTrimestre(r)),
-    part: auDixieme(servie[T - 1]!.production.utilizationRate * 100),
-    livrees: Math.round(transportees(servie[T - 1]!)),
-    resultat: Math.round(servie[T - 1]!.incomeStatement.operatingIncome),
-    demandeSuivante: demandeSuivante(servie),
-  };
-  const ecartDuClientRefuse = ecartDe(demandeSuivante(reference), tousServis.demandeSuivante);
-
-  // Toute la flotte chargée au premier trimestre, pour ne refuser personne.
-  const pleine = rejouerAvec(c.code, `livrer-a-temps:toute-la-flotte-au-trimestre-${T}`, (tour, d) =>
-    tour === T ? { ...d, productionPlan: r.production.machineCapacity } : undefined,
-  );
-  const p1 = pleine[T - 1]!;
-  const flottePleine = {
-    plan: Math.round(p1.production.produced),
-    part: auDixieme(p1.production.utilizationRate * 100),
-    livrees: Math.round(transportees(p1)),
-    sansClient: Math.round(p1.production.produced - transportees(p1)),
-    gaspillage: Math.round((p1.production.produced - transportees(p1)) * coutVariable),
-    demandeSuivante: demandeSuivante(pleine),
-  };
-  const ecartDeLaFlottePleine = ecartDe(demandeSuivante(reference), flottePleine.demandeSuivante);
-
-  // La panne au premier trimestre, le chargement prévu inchangé.
-  const disponibilite = disponibiliteDeLaPanne(c.code);
-  const enPanne = rejouerAvec(c.code, `livrer-a-temps:panne-au-trimestre-${T}`, () => undefined, avecLaPanne(T));
-  const pT = enPanne[T - 1]!;
-  const capacitePendantLaPanne = Math.round(capacite * disponibilite);
-  const partPendantLaPanne = auDixieme((charge / capacitePendantLaPanne) * 100);
-  const suite = (a: readonly CompanyRoundResult[]) => Math.round(jusquALaDefaillance(a).slice(T).reduce((t, x) => t + demandeDuTrimestre(x), 0));
-  const panne = {
-    capaciteLue: Math.round(pT.production.machineCapacity),
-    livreesT: Math.round(transportees(pT)),
-    demandeEnsuiteAvant: suite(reference),
-    demandeEnsuiteApres: suite(enPanne),
-    livreesAvant: Math.round(surLAnnee(reference, transportees)),
-    livreesApres: Math.round(surLAnnee(enPanne, transportees)),
-    resultatAvant: Math.round(surLAnnee(reference, (x) => x.incomeStatement.operatingIncome)),
-    resultatApres: Math.round(surLAnnee(enPanne, (x) => x.incomeStatement.operatingIncome)),
-    // Après la panne, la flotte refuse encore des clients chaque trimestre : la demande perdue ne se serait pas chargée.
-    refuseEnsuite: jusquALaDefaillance(enPanne)
-      .slice(T)
-      .every((x) => demandeDuTrimestre(x) - Object.values(x.market.bySegment).reduce((t, v) => t + v.sold, 0) >= 1),
-  };
-  const livreesT = Math.round(transportees(r));
-  const coutDeLaPanne: CoutDeLaPanne =
-    panne.livreesT < livreesT ? "tout-de-suite" : panne.resultatApres < panne.resultatAvant ? "plus-tard" : "rien";
-
-  // Les clientèles, et celle qui regarde le plus la qualité de service.
-  const clienteles = s.market.segments.map((g) => nomCourt(g.name));
-  const plusExigeante = s.market.segments.reduce((m, g) => (g.qualitySensitivity > m.qualitySensitivity ? g : m), s.market.segments[0]!);
-
+function tableauDuService(c: Cas): TableauDeDonnees {
+  const t = service(c).a.trimestres;
   return {
-    vocabulaire: def.vocabulary,
-    clienteles,
-    plusExigeante: nomCourt(plusExigeante.name),
-    trimestres,
-    demandees,
-    livrees,
-    refusees,
-    tauxDeService,
-    pire,
-    T,
-    premier,
-    prix,
-    coutVariable,
-    marge,
-    margePerdue,
-    capacite,
-    charge,
-    part: auDixieme((charge / capacite) * 100),
-    seuil: Math.round(seuil * 100),
-    resultatT: Math.round(r.incomeStatement.operatingIncome),
-    demandeSuivante: demandeSuivante(reference),
-    tousServis,
-    gainDesTousServis: tousServis.resultat - Math.round(r.incomeStatement.operatingIncome),
-    ecartDuClientRefuse,
-    flottePleine,
-    ecartDeLaFlottePleine,
-    baisseDeDisponibilite: Math.round((1 - disponibilite) * 100),
-    capacitePendantLaPanne,
-    partPendantLaPanne,
-    nePartPas: Math.max(0, charge - capacitePendantLaPanne),
-    panne,
-    livreesT,
-    coutDeLaPanne,
+    titre: `L'année N + 1 de ${c.entreprise}, prévue`,
+    colonnes: t.map((x) => `${rang(x.trimestre)} trimestre`),
+    lignes: [
+      { libelle: `Demande des clients (${c.unites})`, valeurs: t.map((x) => qte(x.demande)) },
+      { libelle: `Capacité de la ligne (${c.unites})`, valeurs: t.map((x) => qte(x.capacite)) },
+      { libelle: `Livrées à temps (${c.unites})`, valeurs: t.map((x) => qte(x.production)) },
+    ],
   };
 }
 
@@ -226,294 +82,159 @@ export const LIVRER_A_TEMPS: Chapitre = {
   code: "livrer-a-temps",
   parcours: "logistique",
   palier: 1,
-  blocs: [
-    "2de pro GATL · 2 · Organiser et planifier l'activité",
-    "2de pro GATL · 5 · Assurer le respect de la réglementation, des normes et traiter les dysfonctionnements",
-  ],
+  blocs: ["2de pro GATL · 2 · Organiser et planifier l'activité", "2de pro GATL · 5 · Assurer le respect de la réglementation, des normes et traiter les dysfonctionnements"],
   titre: "Livrer à temps : les délais et le service",
-  accroche:
-    "Ce que l'arène compte du service d'un transporteur : les clients servis ou refusés, la qualité de service qui baisse quand la flotte roule trop chargée, et la panne qui immobilise des véhicules. Chaque fois, l'arène rejoue l'année.",
+  accroche: "Un client qui n'est pas livré à temps achète ailleurs. Le taux de service, les commandes perdues, et deux façons de livrer tout le monde : plus de capacité, ou un stock monté d'avance.",
   objectifs: [
-    "Calculer un taux de service et des palettes refusées",
-    "Chiffrer la marge perdue avec un client refusé",
-    "Dire ce qu'une flotte trop chargée fait à la qualité de service",
-    "Calculer la capacité d'une flotte pendant une panne",
-    "Dire ce que coûte une panne, tout de suite ou plus tard",
+    "Calculer un taux de service",
+    "Dire quand et pourquoi des commandes ne sont pas livrées à temps",
+    "Chiffrer ce que coûte une commande perdue",
+    "Préparer un pic en montant d'avance",
   ],
   libre: false,
-  entreprises: {
-    codes: ENTREPRISES_DU_TRANSPORT,
-    pourquoi: "ce chapitre suit les livraisons d'un transporteur, ses clients servis ou refusés et les pannes de sa flotte : seule ROUTE & CIE en a une.",
-  },
+  entreprises: { codes: ENTREPRISES_DU_SERVICE, pourquoi: POURQUOI_LA_PRODUCTION_DE_NOVA },
   etapes: [
     {
       id: "intro",
       type: "lecture",
-      titre: "Ce que l'arène compte du service",
+      titre: "Livrer dans le trimestre",
       notions: ["capacity", "demand_market_share"],
-      texte: (c) => {
-        const k = service(c);
-        const noms = k.clienteles.map((x) => x.charAt(0).toLowerCase() + x.slice(1));
-        return [
-          `Pour un transporteur, livrer à temps, c'est le métier. L'arène ne compte pourtant aucun retard en jours ni en heures : elle ne simule pas de délai de livraison. Elle compte trois choses, et chacune se chiffre.`,
-          `Les clients servis ou refusés. Chaque trimestre, ${k.clienteles.length} clientèles demandent des ${c.unites} (${noms.slice(0, -1).join(", ")} et ${noms.at(-1)}). ${c.entreprise} ne livre que ce qu'elle a chargé : le reste est refusé.`,
-          `La qualité de service. Pour un transporteur, l'arène y met la ponctualité, le suivi, l'état du matériel et la marchandise intacte. Elle baisse quand la flotte roule à plus de ${k.seuil} % de sa capacité : des véhicules trop chargés, des tournées trop serrées. Les clients s'en souviennent plusieurs trimestres, et c'est la clientèle « ${k.plusExigeante} » qui y regarde le plus.`,
-          "La disponibilité de la flotte. Un véhicule à l'atelier ne roule pas : une panne retire une part de la capacité du trimestre.",
-        ];
-      },
-      repere: () => "Taux de service = palettes livrées ÷ palettes demandées × 100.",
+      tableau: tableauDuService,
+      texte: (c) => [
+        `Les clients de ${c.entreprise} attendent leur ${c.unite} dans le trimestre où ils la commandent. Une commande que la ligne ne peut pas monter à temps est perdue : le client achète chez un concurrent.`,
+        "Le taux de service dit quelle part des commandes est livrée à temps : livrées à temps ÷ demandées.",
+        "Le tableau donne l'année N + 1, prévue trimestre par trimestre.",
+      ],
+      repere: () => "Taux de service = commandes livrées à temps ÷ commandes reçues × 100.",
     },
     {
-      id: "taux-de-service",
+      id: "le-taux-de-service",
       type: "montants",
-      titre: "La part des clients servis",
-      notions: ["demand_market_share"],
-      tableau: (c) => {
-        const k = service(c);
-        return {
-          titre: `L'année de ${c.entreprise} : les ${c.unites} demandées et livrées`,
-          colonnes: ["Demandées", "Livrées"],
-          lignes: [
-            ...k.trimestres.map((x) => ({ libelle: `Trimestre ${x.numero}`, valeurs: [qte(x.demandees), qte(x.livrees)] })),
-            { libelle: "L'année", valeurs: [qte(k.demandees), qte(k.livrees)] },
-          ],
-        };
-      },
-      question: () => "Calculez les palettes refusées sur l'année, puis le taux de service de l'année (palettes livrées ÷ palettes demandées × 100, au dixième).",
+      titre: "Le taux de service",
+      notions: ["capacity"],
+      tableau: tableauDuService,
+      question: (c) => `Calculez les ${c.unites} demandées sur l'année, celles livrées à temps, celles qui ne le sont pas, puis le taux de service (au dixième).`,
       champs: (c) => {
-        const k = service(c);
+        const s = service(c);
+        const t = s.a.trimestres;
         return [
-          { libelle: "Palettes refusées sur l'année", attendu: k.refusees, calcul: `${qte(k.demandees)} − ${qte(k.livrees)} = ${qte(k.refusees)}`, tolerance: 1 },
-          { libelle: "Taux de service de l'année (%)", attendu: k.tauxDeService, calcul: `${qte(k.livrees)} ÷ ${qte(k.demandees)} × 100 = ${pct(k.tauxDeService)}`, tolerance: 0.1 },
+          { libelle: "Demandées sur l'année", attendu: s.a.demande, calcul: `${t.map((x) => qte(x.demande)).join(" + ")} = ${qte(s.a.demande)}`, tolerance: 0 },
+          { libelle: "Livrées à temps", attendu: s.a.production, calcul: `${t.map((x) => qte(x.production)).join(" + ")} = ${qte(s.a.production)}`, tolerance: 0 },
+          { libelle: "Non livrées à temps", attendu: s.refusees, calcul: `${qte(s.a.demande)} − ${qte(s.a.production)} = ${qte(s.refusees)}`, tolerance: 0 },
+          { libelle: "Taux de service (%)", attendu: Math.round(s.tauxDeService * 10) / 10, calcul: `${qte(s.a.production)} ÷ ${qte(s.a.demande)} × 100 = ${pct(s.tauxDeService)}`, tolerance: 0.1 },
         ];
       },
       explication: (c) => {
-        const k = service(c);
-        return [
-          `Sur l'année, ${c.entreprise} a livré ${pct(k.tauxDeService)} des ${c.unites} demandées : ${qte(k.refusees)} ont été refusées. Le trimestre le plus mal servi est le trimestre ${k.pire.numero}, avec ${pct(k.pire.taux)}.`,
-        ];
+        const s = service(c);
+        return [`${pct(s.tauxDeService)} des commandes seront livrées à temps : ${qte(s.refusees)} ${c.unites} manqueront, toutes aux trimestres où la ligne est pleine.`];
       },
     },
     {
-      id: "client-refuse",
+      id: "quand",
+      type: "choix",
+      titre: "Quand les commandes manquent",
+      notions: ["capacity", "seasonality"],
+      tableau: tableauDuService,
+      question: () => "Pourquoi des commandes ne seront-elles pas livrées à temps ?",
+      options: () => [
+        { texte: "La ligne est pleine au printemps et à Noël", juste: true, retour: "Oui : au 2e et au 4e trimestre, la demande dépasse ce que la ligne peut monter. Aux deux autres, elle a du jeu." },
+        { texte: "Le fournisseur livre les composants trop tard", juste: false, retour: "Non : rien ne dit que les composants manquent ; c'est la capacité de la ligne qui borne ce qui se monte." },
+        { texte: "L'équipe est trop petite toute l'année, en toute saison", juste: false, retour: "Non : aux 1er et 3e trimestres, toutes les commandes sont livrées. Le manque suit la saison." },
+      ],
+    },
+    {
+      id: "ce-que-coute-une-commande-perdue",
       type: "montants",
-      titre: "Ce que coûte un client refusé",
+      titre: "Ce que coûtent les commandes perdues",
       notions: ["contribution_margin"],
-      question: (c) => {
-        const k = service(c);
-        return `Au trimestre ${k.T}, ${qte(k.premier.refusees)} ${c.unites} ont été refusées. Une ${c.unite} se vendait ${eur(k.prix)} en moyenne et coûtait ${eur(k.coutVariable)} de gazole, de péages et d'entretien. Calculez la marge d'une ${c.unite}, puis la marge perdue avec les ${c.unites} refusées.`;
-      },
+      question: (c) => `Chaque ${c.unite} vendue laisse ${eur(margeUnitaire(f(c)))} de marge sur coût variable. Calculez la marge perdue avec les commandes non livrées à temps.`,
       champs: (c) => {
-        const k = service(c);
-        return [
-          { libelle: `Marge par ${c.unite} au trimestre ${k.T}`, attendu: k.marge, calcul: `${eur(k.prix)} − ${eur(k.coutVariable)} = ${eur(k.marge)}` },
-          { libelle: `Marge perdue au trimestre ${k.T}`, attendu: k.margePerdue, calcul: `${qte(k.premier.refusees)} × ${eur(k.marge)} = ${eur(k.margePerdue)}`, tolerance: 1 },
-        ];
+        const s = service(c);
+        return [{ libelle: "Marge perdue sur l'année", attendu: s.margePerdue, calcul: `${qte(s.refusees)} × ${eur(margeUnitaire(f(c)))} = ${eur(s.margePerdue)}` }];
       },
       explication: (c) => {
-        const k = service(c);
-        return [
-          `Chaque ${c.unite} refusée est une marge perdue : ${eur(k.margePerdue)} au trimestre ${k.T}. Les charges fixes, elles, étaient payées de toute façon : servir ces clients n'aurait coûté que le gazole, les péages et l'entretien de leurs ${c.unites}.`,
-        ];
+        const s = service(c);
+        return [`${eur(s.margePerdue)} de marge perdue, sans compter les clients qui, déçus, ne reviendront pas l'année suivante.`];
       },
     },
     {
-      id: "revient",
-      type: "choix",
-      titre: "Le client refusé revient-il ?",
-      notions: ["demand_market_share"],
-      tableau: (c) => {
-        const k = service(c);
-        return {
-          titre: `Le trimestre ${k.T} rejoué, tous les clients servis`,
-          colonnes: ["Comme dans l'année", "Tous les clients servis"],
-          lignes: [
-            { libelle: `« ${k.vocabulaire.productionPlanLabel} » au trimestre ${k.T}`, valeurs: [qte(k.charge), qte(k.tousServis.plan)] },
-            { libelle: `${c.unites.charAt(0).toUpperCase()}${c.unites.slice(1)} livrées au trimestre ${k.T}`, valeurs: [qte(k.livreesT), qte(k.tousServis.livrees)] },
-            { libelle: `Résultat d'exploitation du trimestre ${k.T}`, valeurs: [eur(k.resultatT), eur(k.tousServis.resultat)] },
-            { libelle: `Demande des clients au trimestre ${k.T + 1}`, valeurs: [qte(k.demandeSuivante), qte(k.tousServis.demandeSuivante)] },
-          ],
-        };
-      },
-      question: (c) => {
-        const k = service(c);
-        return `L'arène a rejoué l'année en chargeant au trimestre ${k.T} toute la demande des clients, ${qte(k.tousServis.plan)} ${c.unites}. Que devient la demande des clients au trimestre ${k.T + 1} ?`;
-      },
-      options: (c) => {
-        const k = service(c);
-        const lu = `${qte(k.demandeSuivante)} ${c.unites} demandées au trimestre ${k.T + 1} comme dans l'année, ${qte(k.tousServis.demandeSuivante)} quand tous les clients ont été servis.`;
-        const pourquoi = `Dans l'arène, la demande d'un trimestre dépend du prix, de la publicité, de la qualité de service et de la part de marché du trimestre d'avant ; elle ne dépend pas de ce qui a été livré. Un client refusé coûte la vente perdue : ${eur(k.gainDesTousServis)} de résultat au trimestre ${k.T}. Dans la réalité, un client souvent refusé finit par changer de transporteur : l'arène ne le simule pas.`;
-        return [
-          {
-            texte: "La même : le client refusé revient avec la même demande",
-            juste: k.ecartDuClientRefuse === "meme",
-            retour: k.ecartDuClientRefuse === "meme" ? `Oui : ${lu} ${pourquoi}` : `Non : ${lu}`,
-          },
-          {
-            texte: "Plus forte : les clients bien servis demandent davantage",
-            juste: k.ecartDuClientRefuse === "plus",
-            retour: k.ecartDuClientRefuse === "plus" ? `Oui : ${lu}` : `Non : ${lu} ${pourquoi}`,
-          },
-          {
-            texte: "Plus faible : servir tout le monde a usé la flotte",
-            juste: k.ecartDuClientRefuse === "moins",
-            retour:
-              k.ecartDuClientRefuse === "moins"
-                ? `Oui : ${lu}`
-                : `Non : ${lu} Chargée à ${pct(k.tousServis.part)} de sa capacité, la flotte ${k.tousServis.part > k.seuil ? `a dépassé ${k.seuil} %, mais la demande n'a pas baissé` : `est restée sous ${k.seuil} % : la qualité de service n'a pas baissé`}.`,
-          },
-        ];
-      },
-    },
-    {
-      id: "flotte-pleine",
-      type: "choix",
-      titre: "Charger toute la flotte ?",
-      notions: ["capacity"],
-      tableau: (c) => {
-        const k = service(c);
-        return {
-          titre: `Le trimestre ${k.T} rejoué, toute la flotte chargée`,
-          colonnes: ["Comme dans l'année", "Toute la flotte"],
-          lignes: [
-            { libelle: `« ${k.vocabulaire.productionPlanLabel} » au trimestre ${k.T}`, valeurs: [qte(k.charge), qte(k.flottePleine.plan)] },
-            { libelle: "Part de la capacité chargée", valeurs: [pct(k.part), pct(k.flottePleine.part)] },
-            { libelle: `${c.unites.charAt(0).toUpperCase()}${c.unites.slice(1)} livrées au trimestre ${k.T}`, valeurs: [qte(k.livreesT), qte(k.flottePleine.livrees)] },
-            { libelle: `Demande des clients au trimestre ${k.T + 1}`, valeurs: [qte(k.demandeSuivante), qte(k.flottePleine.demandeSuivante)] },
-          ],
-        };
-      },
-      question: (c) => {
-        const k = service(c);
-        return `Pour ne refuser personne, le chef d'exploitation veut charger toute la flotte au trimestre ${k.T} : ${qte(k.flottePleine.plan)} ${c.unites}, pour ${qte(k.premier.demandees)} demandées. Que montre l'arène au trimestre ${k.T + 1} ?`;
-      },
-      options: (c) => {
-        const k = service(c);
-        const f = k.flottePleine;
-        const lu = `${qte(k.demandeSuivante)} ${c.unites} demandées au trimestre ${k.T + 1} comme dans l'année, ${qte(f.demandeSuivante)} avec toute la flotte chargée.`;
-        const pourquoi = `Chargée à ${pct(f.part)} de sa capacité, au-dessus de ${k.seuil} %, la flotte a moins bien livré : la qualité de service a baissé, et les clients l'ont retenu.`;
-        const gaspi =
-          f.sansClient > 0
-            ? ` Et ${qte(f.sansClient)} ${c.unites} chargées n'avaient pas de client : leur gazole, leurs péages et leur entretien sont payés pour rien, ${eur(f.gaspillage)}.`
-            : "";
-        return [
-          {
-            texte: "La demande baisse : la flotte trop chargée a moins bien livré",
-            juste: k.ecartDeLaFlottePleine === "moins",
-            retour: k.ecartDeLaFlottePleine === "moins" ? `Oui : ${lu} ${pourquoi}${gaspi}` : `Non : ${lu}`,
-          },
-          {
-            texte: "La demande monte : tous les clients ont été servis",
-            juste: k.ecartDeLaFlottePleine === "plus",
-            retour: k.ecartDeLaFlottePleine === "plus" ? `Oui : ${lu}` : `Non : ${lu} Servir tous les clients ne fait pas monter la demande suivante.${gaspi}`,
-          },
-          {
-            texte: "Rien ne change : seules les livraisons du trimestre comptent",
-            juste: k.ecartDeLaFlottePleine === "meme",
-            retour: k.ecartDeLaFlottePleine === "meme" ? `Oui : ${lu}${gaspi}` : `Non : ${lu} ${pourquoi}`,
-          },
-        ];
-      },
-    },
-    {
-      id: "panne",
-      type: "montants",
-      titre: "Une panne de la flotte",
+      id: "la-capacite-qui-manque",
+      type: "curseur",
+      titre: "La capacité qui manque à Noël",
       notions: ["capacity"],
       question: (c) => {
-        const k = service(c);
-        return `Au trimestre ${k.T}, une panne immobilise des véhicules : le garage annonce que la flotte perd ${k.baisseDeDisponibilite} % de sa disponibilité pour le trimestre. ${c.entreprise} avait prévu ${qte(k.charge)} « ${k.vocabulaire.productionPlanLabel} ». Calculez la capacité de la flotte pendant la panne, puis la part de cette capacité que le chargement prévu occupe (au dixième).`;
+        const t = service(c).a.trimestres[TRIMESTRE_DU_CURSEUR - 1]!;
+        return `Au ${rang(TRIMESTRE_DU_CURSEUR)} trimestre, les clients demanderont ${qte(t.demande)} ${c.unites}, et la ligne en monte ${qte(t.capacite)}. Faites varier la capacité en plus : une droite donne ce que la ligne monterait, l'autre la demande. Placez le curseur sur la plus petite capacité en plus qui livre tout à temps, puis validez.`;
       },
-      champs: (c) => {
-        const k = service(c);
+      grandeur: (c) => ({ libelle: "Capacité en plus au trimestre", unite: c.unites }),
+      cible: (c) => {
+        const t = service(c).a.trimestres[TRIMESTRE_DU_CURSEUR - 1]!;
+        return { attendu: t.demande - t.capacite, ...CAPACITE_DU_CURSEUR };
+      },
+      zones: ["Tout est livré à temps", "Des commandes sont perdues"],
+      rates: () => ({
+        dessous: "Avec si peu de capacité en plus, des commandes restent perdues.",
+        dessus: "Tout est livré, mais moins de capacité suffirait : cherchez la plus petite.",
+      }),
+      montrer: "Montrer la capacité",
+      lecture: (c, q) => {
+        const t = service(c).a.trimestres[TRIMESTRE_DU_CURSEUR - 1]!;
         return [
-          {
-            libelle: `Capacité de la flotte pendant la panne (${c.unites})`,
-            attendu: k.capacitePendantLaPanne,
-            calcul: `${qte(k.capacite)} × (100 % − ${k.baisseDeDisponibilite} %) = ${qte(k.capacitePendantLaPanne)}`,
-            tolerance: 1,
-          },
-          {
-            libelle: "Part de la capacité chargée pendant la panne (%)",
-            attendu: k.partPendantLaPanne,
-            calcul: `${qte(k.charge)} ÷ ${qte(k.capacitePendantLaPanne)} × 100 = ${pct(k.partPendantLaPanne)}`,
-            tolerance: 0.1,
-          },
+          { libelle: "Ce que la ligne monterait", montant: t.capacite + q, fort: true },
+          { libelle: "Demande du trimestre", montant: t.demande },
+          { libelle: "Commandes perdues", montant: Math.max(0, t.demande - t.capacite - q) },
         ];
+      },
+      droites: (c) => {
+        const t = service(c).a.trimestres[TRIMESTRE_DU_CURSEUR - 1]!;
+        return { produit: (q) => t.capacite + q, cout: () => t.demande, libelles: ["Ce que la ligne monterait", "Demande du trimestre"] };
       },
       explication: (c) => {
-        const k = service(c);
-        return [
-          k.nePartPas > 0
-            ? `${qte(k.nePartPas)} ${c.unites} prévues ne tiennent plus dans les véhicules qui restent : elles ne partiront pas.`
-            : `Toutes les ${c.unites} prévues tiennent dans les véhicules qui restent.`,
-          k.partPendantLaPanne > k.seuil
-            ? `Mais la flotte roule à ${pct(k.partPendantLaPanne)} de sa capacité, au-dessus de ${k.seuil} % : la qualité de service va baisser.`
-            : `Et la flotte reste sous ${k.seuil} % de sa capacité : la qualité de service ne baisse pas.`,
-        ];
+        const t = service(c).a.trimestres[TRIMESTRE_DU_CURSEUR - 1]!;
+        return [`Il manquerait ${qte(t.demande - t.capacite)} ${c.unites} de capacité à Noël. Un poste de plus les donnerait, mais il se paie toute l'année ; la ligne a pourtant du jeu au trimestre d'avant.`];
       },
     },
     {
-      id: "cout-de-la-panne",
-      type: "choix",
-      titre: "Ce que coûte la panne",
-      notions: ["capacity", "demand_market_share"],
-      tableau: (c) => {
-        const k = service(c);
-        const p = k.panne;
+      id: "le-laboratoire-de-l-avance",
+      type: "simulation",
+      titre: "Le laboratoire de l'avance",
+      notions: ["capacity", "stock"],
+      question: (c) =>
+        `Quand la ligne a du jeu, elle peut monter d'avance des ${c.unites} qui attendront en stock le trimestre suivant. Chaque ${c.unite} gardée un trimestre coûte ${eur(COUT_DE_STOCKAGE_PAR_TRIMESTRE)} de stockage. Faites varier l'avance montée au 1er et au 3e trimestre. Relevez le défi.`,
+      leviers: (c) => [
+        { code: "premier", libelle: "Avance montée au 1er trimestre", unite: c.unites, ...AVANCE_AU_PREMIER, depart: 0 },
+        { code: "troisieme", libelle: "Avance montée au 3e trimestre", unite: c.unites, ...AVANCE_AU_TROISIEME, depart: 0 },
+      ],
+      lecture: (c, p) => {
+        const x = avec(c, p.premier!, p.troisieme!);
+        const d = avec(c, 0, 0);
+        return [
+          { libelle: "Commandes perdues", montant: x.refusees, unite: c.unites, reference: d.refusees },
+          { libelle: "Taux de service", montant: Math.round(x.tauxDeService * 10) / 10, unite: "%", reference: Math.round(d.tauxDeService * 10) / 10 },
+          { libelle: "Marge gagnée", montant: x.margeGagnee, reference: d.margeGagnee },
+          { libelle: "Coût du stockage", montant: x.stockage, reference: d.stockage },
+          { libelle: "Gain de l'avance", montant: x.gain, reference: d.gain, fort: true },
+        ];
+      },
+      defi: (c) => {
+        const juste = avanceDuLaboratoire(c);
         return {
-          titre: `L'année de ${c.entreprise}, avec et sans la panne`,
-          colonnes: ["Sans panne", `Panne au trimestre ${k.T}`],
-          lignes: [
-            { libelle: `Capacité de la flotte au trimestre ${k.T}`, valeurs: [qte(k.capacite), qte(p.capaciteLue)] },
-            { libelle: `${c.unites.charAt(0).toUpperCase()}${c.unites.slice(1)} livrées au trimestre ${k.T}`, valeurs: [qte(k.livreesT), qte(p.livreesT)] },
-            { libelle: "Demande des clients sur les trimestres suivants", valeurs: [qte(p.demandeEnsuiteAvant), qte(p.demandeEnsuiteApres)] },
-            { libelle: `${c.unites.charAt(0).toUpperCase()}${c.unites.slice(1)} livrées sur l'année`, valeurs: [qte(p.livreesAvant), qte(p.livreesApres)] },
-            { libelle: "Résultat d'exploitation de l'année", valeurs: [eur(p.resultatAvant), eur(p.resultatApres)] },
-          ],
+          consigne: "Trouvez l'avance qui laisse le meilleur gain, stockage payé.",
+          atteint: (p) => p.premier === juste.a1 && p.troisieme === juste.a3,
+          indice: (p) => {
+            const x = avec(c, p.premier!, p.troisieme!);
+            return x.refusees > 0
+              ? `Il reste ${qte(x.refusees)} commandes perdues : l'avance couvre-t-elle le trimestre qui suit ?`
+              : `Tout est livré, mais le stockage coûte ${eur(x.stockage)} : une partie de l'avance attend-elle plus longtemps qu'il ne faut ?`;
+          },
+          solution: { premier: juste.a1, troisieme: juste.a3 },
         };
       },
-      question: (c) => {
-        const k = service(c);
-        return `L'arène a rejoué l'année avec la panne au trimestre ${k.T}, le chargement prévu inchangé. Qu'a-t-elle coûté à ${c.entreprise} ?`;
-      },
-      options: (c) => {
-        const k = service(c);
-        const p = k.panne;
-        const annee =
-          p.livreesApres === p.livreesAvant
-            ? `Sur l'année, les ${c.unites} livrées n'ont pas bougé (${qte(p.livreesAvant)}), et le résultat d'exploitation ${p.resultatApres === p.resultatAvant ? `reste à ${eur(p.resultatAvant)}` : `passe de ${eur(p.resultatAvant)} à ${eur(p.resultatApres)}`}.`
-            : `Sur l'année, ${qte(p.livreesAvant - p.livreesApres)} ${c.unites} de moins ont été livrées, et le résultat d'exploitation passe de ${eur(p.resultatAvant)} à ${eur(p.resultatApres)}.`;
-        const qualite = `Au trimestre ${k.T}, ${qte(p.livreesT)} ${c.unites} livrées, comme sans la panne. Mais la flotte a roulé à ${pct(k.partPendantLaPanne)} de sa capacité : la qualité de service a baissé, et les clients ont demandé ${qte(p.demandeEnsuiteAvant - p.demandeEnsuiteApres)} ${c.unites} de moins les trimestres suivants.`;
-        const tard = `${qualite} ${annee}`;
-        // La demande a baissé après la panne, mais la flotte refusait déjà des clients : elle n'aurait pas chargé ces palettes.
-        const dejaRefusees = k.coutDeLaPanne === "rien" && p.demandeEnsuiteApres < p.demandeEnsuiteAvant && p.refuseEnsuite;
-        const sansCout = dejaRefusees
-          ? `${qualite} Or ${c.entreprise} refusait déjà des clients chaque trimestre : ces ${c.unites} n'auraient pas été chargées. ${annee}`
-          : annee;
-        const lecture = k.coutDeLaPanne === "plus-tard" ? tard : sansCout;
+      explication: (c, p) => {
+        const x = avec(c, p.premier!, p.troisieme!);
         return [
-          {
-            texte: dejaRefusees ? "Rien : les clients perdus ensuite auraient été refusés" : "Rien : toutes les palettes prévues sont parties",
-            juste: k.coutDeLaPanne === "rien",
-            retour:
-              k.coutDeLaPanne === "rien"
-                ? `Oui. ${sansCout}${dejaRefusees ? ` Une panne coûte des clients même quand toutes les ${c.unites} partent ; cette année, ce sont des clients que la flotte n'aurait pas servis.` : ""}`
-                : `Non. ${lecture}`,
-          },
-          {
-            texte: "Des clients plus tard : la qualité de service a baissé",
-            juste: k.coutDeLaPanne === "plus-tard",
-            retour: k.coutDeLaPanne === "plus-tard" ? `Oui. ${tard} Une panne coûte même quand toutes les ${c.unites} partent.` : `Non. ${lecture}`,
-          },
-          {
-            texte: "Des palettes tout de suite : la flotte ne pouvait pas tout charger",
-            juste: k.coutDeLaPanne === "tout-de-suite",
-            retour:
-              k.coutDeLaPanne === "tout-de-suite"
-                ? `Oui : ${qte(k.livreesT - p.livreesT)} ${c.unites} prévues n'ont pas pu partir au trimestre ${k.T}. ${annee}`
-                : `Non : les ${qte(k.charge)} ${c.unites} prévues tenaient dans les ${qte(k.capacitePendantLaPanne)} places qui restaient. ${lecture}`,
-          },
+          `Défi relevé : ${qte(p.premier!)} ${c.unites} d'avance au 1er trimestre, ${qte(p.troisieme!)} au 3e. Toutes les commandes sont livrées à temps, et le gain atteint ${eur(x.gain)} : la marge retrouvée, moins ${eur(x.stockage)} de stockage.`,
+          "Monter d'avance juste ce qui manquera ensuite : plus, et le stock attend pour rien ; moins, et des commandes restent perdues.",
         ];
       },
     },
@@ -521,22 +242,16 @@ export const LIVRER_A_TEMPS: Chapitre = {
       id: "synthese",
       type: "lecture",
       titre: "Ce qu'il faut retenir",
-      notions: ["capacity", "demand_market_share"],
+      notions: ["capacity"],
       texte: (c) => {
-        const k = service(c);
+        const s = service(c);
         return [
-          `Sur l'année, ${c.entreprise} a livré ${pct(k.tauxDeService)} des ${c.unites} demandées. Chaque ${c.unite} refusée est une marge perdue : ${eur(k.margePerdue)} au trimestre ${k.T}. Dans l'arène, le client refusé revient, mais la vente du trimestre ne se rattrape pas.`,
-          `La qualité de service, c'est la ponctualité : elle baisse quand la flotte roule à plus de ${k.seuil} % de sa capacité, et les clients demandent moins ensuite. Une panne peut la faire baisser même quand toutes les ${c.unites} partent : elle laisse moins de place pour les mêmes livraisons.`,
-          k.partPendantLaPanne <= k.seuil && k.nePartPas === 0
-            ? `Cette année, le chargement prévu occupait ${pct(k.partPendantLaPanne)} de la flotte en panne, sous ${k.seuil} % : la panne n'a rien coûté. Un chargement plus haut l'aurait fait dépasser.`
-            : "",
-          k.coutDeLaPanne === "rien" && k.panne.refuseEnsuite && k.panne.demandeEnsuiteApres < k.panne.demandeEnsuiteAvant
-            ? `Cette année, ${c.entreprise} refusait déjà des clients chaque trimestre : la demande perdue après la panne ne lui a rien coûté. Une flotte qui sert toute sa demande perdrait ces ventes.`
-            : "",
-          "Livrer à temps, c'est charger ce que les clients demandent, ni plus ni moins, et savoir ce que coûte une flotte qui roule sans marge.",
-        ].filter((x) => x !== "");
+          `Sans rien changer, ${c.entreprise} livrera à temps ${pct(s.tauxDeService)} des commandes de N + 1, et perdra ${qte(s.refusees)} ${c.unites}, ${eur(s.margePerdue)} de marge.`,
+          "Livrer à temps, c'est prévoir les pics : ajouter de la capacité quand le manque dure, ou monter d'avance quand la ligne a du jeu juste avant. Un stock d'avance coûte, mais bien moins que les clients perdus.",
+          "Dans l'arène, les chiffres de votre entreprise seront différents : comparez, à chaque tour, la demande de vos clients et ce que vous avez pu leur livrer.",
+        ];
       },
-      repere: (c) => `Taux de service = palettes livrées ÷ palettes demandées × 100. Au-delà de ${service(c).seuil} % de la capacité de la flotte, la qualité de service baisse.`,
+      repere: () => "Taux de service = livrées à temps ÷ demandées × 100. Une commande perdue coûte sa marge.",
     },
   ],
 };

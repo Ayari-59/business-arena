@@ -1,74 +1,40 @@
 import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
-import { scenarioByCode } from "../../../scenarios/registry";
 import type { Cas } from "../../cas";
-import { PRODUIRE_BIEN, anneeAuBudget, anneeDeQualite, budgetDuSecteur, qualite, type AnneeDeQualite } from "../../chapitres/produire-bien";
-import type { TableauDeDonnees } from "../../types";
+import { PRODUIRE_BIEN, qualite } from "../../chapitres/produire-bien";
+import { ficheDeNova, qualiteAuBudget } from "../../monde/production-et-logistique";
 import type { Situation } from "../types";
 
 /**
  * CAS PRATIQUE DU CHAPITRE « PRODUIRE BIEN : LA QUALITÉ ET CE QU'ELLE COÛTE » : LA MOITIÉ DU
  * BUDGET QUALITÉ (bac STMG, management, palier 1).
  *
- * Le directeur financier propose de mettre chaque trimestre la moitié du budget qualité qu'engage
- * la gestion neutre du secteur (`budgetDuSecteur`) : là où le bon gestionnaire met ce budget (le
- * bistrot, le transporteur), c'est le couper en deux ; ailleurs, c'est en engager un petit, là où il
- * n'y en a aucun. La part est l'hypothèse du cas, nommée ci-dessous ; le budget se pose en valeur
- * absolue à chaque trimestre (`anneeAuBudget`, clé « produire-bien:budget-qualite-… »), sans rien
- * multiplier de la décision reçue. L'élève recalcule la qualité perçue, lit l'année rejouée face à
- * l'année du cours, et répond. Le verdict se calcule sur l'écart de résultat de l'activité.
+ * Le directeur financier de NOVA veut économiser : il propose de couper de moitié le budget de
+ * prévention de l'année N + 1 (16 000 €). L'élève recalcule les défauts, ce qu'ils coûtent de plus,
+ * les ventes que les clients déçus font perdre, et répond. Les chiffres sont ceux du chapitre
+ * (monde/production-et-logistique.ts) ; seule la part du budget gardée est l'hypothèse du cas. Le
+ * verdict se calcule sur l'écart de résultat.
  */
 
-/** La part du budget du secteur que propose le directeur financier (hypothèse du cas). */
-export const PART_DU_BUDGET_DU_SECTEUR = 0.5;
+/** La part du budget de prévention que garde le directeur financier (hypothèse du cas). */
+export const PART_DU_BUDGET_GARDEE = 0.5;
 
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
 const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
-const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
+const pct = (t: number) => `${(Math.round(t * 1000) / 10).toLocaleString("fr-FR")} %`;
+const c2 = (x: number) => Math.round(x * 100) / 100 + 0;
 
 export type ReponseALaMoitie = "passer-a-la-moitie" | "ne-rien-changer";
 
-/** Le cas : le budget proposé, la qualité perçue au premier trimestre, l'année rejouée et le verdict. */
-export function moitieDuBudget(c: Cas) {
-  const q = qualite(c);
-  const s = scenarioByCode(c.code).scenario;
-  const secteur = budgetDuSecteur(c.code);
-  const budget = Math.round(secteur * PART_DU_BUDGET_DU_SECTEUR);
-  const moitie = anneeDeQualite(c.code, anneeAuBudget(c.code, budget));
-  const produiteAuPremier = moitie.trimestres[0]!.produite;
-  const percueAuPremier = auDixieme((q.garde * q.percueDeDepart + (100 - q.garde) * produiteAuPremier) / 100);
-  const ventesEnPlus = moitie.ventes - q.annee.ventes;
-  const ecartDeResultat = moitie.resultat - q.annee.resultat;
-  const reponse: ReponseALaMoitie = ecartDeResultat > 0 ? "passer-a-la-moitie" : "ne-rien-changer";
-  return {
-    q,
-    secteur,
-    budget,
-    moitie,
-    produiteAuPremier,
-    percueAuPremier,
-    ventesEnPlus,
-    ecartDeResultat,
-    reponse,
-    rebutsComptes: s.qualityCosts !== undefined,
-  };
-}
-
-function tableauDesDeuxAnnees(c: Cas): TableauDeDonnees {
-  const k = moitieDuBudget(c);
-  const ligne = (libelle: string, f: (a: AnneeDeQualite) => string) => ({ libelle, valeurs: [f(k.q.annee), f(k.moitie)] });
-  return {
-    titre: `L'année ${dE(c.entreprise)}, rejouée à ${eur(k.budget)} de budget qualité par trimestre`,
-    colonnes: ["L'année du cours", "À la moitié du budget du secteur"],
-    lignes: [
-      ligne("Budget qualité de l'année", (a) => eur(a.budget)),
-      ligne("Qualité perçue en fin d'année (indice)", (a) => qte(a.trimestres.at(-1)!.percue)),
-      ligne(`Ventes de l'année (${c.unites})`, (a) => qte(a.ventes)),
-      ...(k.rebutsComptes ? [ligne("Coût de la non-qualité de l'année", (a) => eur(a.nonQualite))] : []),
-      ligne("Résultat de l'activité", (a) => eur(a.resultat)),
-    ],
-  };
+/** Le cas : l'année au budget actuel et à la moitié, et ce que la coupe change au résultat. */
+export function moitieDuBudget(c: Pick<Cas, "code">) {
+  const actuel = qualite(c);
+  const moitie = qualiteAuBudget(ficheDeNova(c), actuel.prevention * PART_DU_BUDGET_GARDEE);
+  const economie = c2(actuel.prevention - moitie.prevention);
+  const nonQualiteEnPlus = c2(moitie.nonQualite - actuel.nonQualite);
+  const margePerdueEnPlus = c2(moitie.margePerdue - actuel.margePerdue);
+  const ecart = c2(moitie.resultat - actuel.resultat);
+  const reponse: ReponseALaMoitie = ecart > 0 ? "passer-a-la-moitie" : "ne-rien-changer";
+  return { actuel, moitie, economie, nonQualiteEnPlus, margePerdueEnPlus, ecart, reponse };
 }
 
 export const LA_MOITIE_DU_BUDGET_QUALITE: Situation = {
@@ -79,13 +45,8 @@ export const LA_MOITIE_DU_BUDGET_QUALITE: Situation = {
   reprend: [PRODUIRE_BIEN.code],
   commanditaire: "Le directeur financier",
   titre: "La moitié du budget qualité",
-  accroche:
-    "Le directeur financier veut la moitié du budget qualité du secteur, chaque trimestre. Calculer la qualité perçue qu'elle donne, lire l'année rejouée par l'arène, et lui répondre.",
-  objectifs: [
-    "Calculer un budget qualité de l'année et la qualité perçue qu'il donne",
-    "Comparer deux années sur les ventes et le résultat",
-    "Répondre au directeur financier avec les chiffres",
-  ],
+  accroche: "Le directeur financier veut couper de moitié la prévention de la qualité. Ce que la coupe économise, ce que les défauts en plus coûtent, et votre réponse.",
+  objectifs: ["Calculer les défauts d'une production à un autre budget de prévention", "Comparer une économie et le coût de la non-qualité qu'elle crée", "Répondre au directeur financier avec les chiffres"],
   libre: false,
   entreprises: PRODUIRE_BIEN.entreprises,
   etapes: [
@@ -96,67 +57,72 @@ export const LA_MOITIE_DU_BUDGET_QUALITE: Situation = {
       texte: (c) => {
         const k = moitieDuBudget(c);
         return [
-          k.q.metUnBudget
-            ? `« Nous mettons ${eur(k.q.gestionnaire)} par trimestre dans la qualité, autant que la gestion ordinaire du secteur. Coupons-le en deux : ${eur(k.budget)} par trimestre suffiront. Dites-moi si l'année aurait été meilleure. »`
-            : `« Nous ne mettons rien dans la qualité, quand le secteur y met ${eur(k.secteur)} par trimestre. Mettons-en la moitié, ${eur(k.budget)} par trimestre : un petit budget, pour une qualité un peu meilleure. Dites-moi si l'année aurait été meilleure. »`,
-          "Pas de cours cette fois. L'arène a rejoué l'année avec ce budget à chaque trimestre, avec les mêmes concurrents et la même façon de gérer.",
+          `« La prévention de la qualité nous coûte ${eur(k.actuel.prevention)} par an. Passons à ${eur(k.moitie.prevention)} : c'est ${eur(k.economie)} d'économisés, et le contrôle final rattrapera les défauts. Ai-je raison ? »`,
+          "Pas de cours cette fois : les coûts de la qualité sont ceux du chapitre. Le tableau donne le taux de défaut aux deux budgets.",
         ];
       },
-      repere: () => "À rendre : le budget de l'année et la qualité perçue qu'il donne, ce qu'il change aux ventes et au résultat, et votre réponse.",
+      tableau: (c) => {
+        const k = moitieDuBudget(c);
+        const x = ficheDeNova(c);
+        return {
+          titre: `La qualité de ${c.entreprise}, l'année N + 1`,
+          colonnes: ["Budget actuel", "La moitié"],
+          lignes: [
+            { libelle: "Budget de prévention de l'année", valeurs: [eur(k.actuel.prevention), eur(k.moitie.prevention)] },
+            { libelle: "Taux de défaut", valeurs: [pct(k.actuel.tauxDeDefaut), pct(k.moitie.tauxDeDefaut)] },
+            { libelle: `${c.unites[0]!.toUpperCase()}${c.unites.slice(1)} montées`, valeurs: [qte(k.actuel.volume), qte(k.moitie.volume)] },
+            { libelle: "Part des défauts que le contrôle trouve", valeurs: [pct(x.qualite.controleFinal.tauxDeDetection), pct(x.qualite.controleFinal.tauxDeDetection)] },
+            { libelle: "Retouche d'un défaut trouvé", valeurs: [eur(x.qualite.coutDUnDefautDetecte), eur(x.qualite.coutDUnDefautDetecte)] },
+            { libelle: "Retour sous garantie d'un défaut parti", valeurs: [eur(x.qualite.coutDUnDefautLivre), eur(x.qualite.coutDUnDefautLivre)] },
+          ],
+        };
+      },
+      repere: () => "À rendre : les défauts à la moitié du budget, ce qu'ils coûtent de plus, et votre réponse.",
     },
     {
-      id: "la-qualite",
+      id: "les-defauts",
       type: "montants",
-      titre: "Le budget et la qualité perçue",
-      notions: ["demand_market_share"],
+      titre: "Les défauts à la moitié du budget",
+      notions: ["variable_costs"],
+      question: (c) => `À ${eur(moitieDuBudget(c).moitie.prevention)} de prévention, calculez les défauts de l'année, ceux qui partent chez le client, puis le coût de la non-qualité (retouches et retours).`,
+      champs: (c) => {
+        const x = ficheDeNova(c);
+        const m = moitieDuBudget(c).moitie;
+        return [
+          { libelle: "Défauts de l'année", attendu: m.defauts, calcul: `${qte(m.volume)} × ${pct(m.tauxDeDefaut)} = ${qte(m.defauts)}`, tolerance: 0 },
+          { libelle: "Défauts partis chez le client", attendu: m.livres, calcul: `${qte(m.defauts)} × (100 % − ${pct(m.tauxDeDetection)}) = ${qte(m.livres)}`, tolerance: 0 },
+          {
+            libelle: "Coût de la non-qualité",
+            attendu: m.nonQualite,
+            calcul: `${qte(m.detectes)} × ${eur(x.qualite.coutDUnDefautDetecte)} + ${qte(m.livres)} × ${eur(x.qualite.coutDUnDefautLivre)} = ${eur(m.nonQualite)}`,
+          },
+        ];
+      },
+      explication: (c) => {
+        const k = moitieDuBudget(c);
+        return [`Le contrôle trouve toujours la même part des défauts, mais il y en a plus : ${qte(k.moitie.livres - k.actuel.livres)} de plus partent chez un client.`];
+      },
+    },
+    {
+      id: "le-bilan",
+      type: "montants",
+      titre: "Ce que la coupe change au résultat",
+      notions: ["variable_costs", "contribution_margin"],
       question: (c) => {
         const k = moitieDuBudget(c);
-        return `Avec ${eur(k.budget)} par trimestre, la qualité produite du 1er trimestre vaut ${qte(k.produiteAuPremier)} (indice 100 : la qualité ordinaire du secteur). La qualité perçue partait de ${qte(k.q.percueDeDepart)} ; chaque trimestre, elle garde ${k.q.garde} % de sa valeur d'avant et prend ${100 - k.q.garde} % de la qualité produite. Calculez le budget qualité de l'année, puis la qualité perçue à la fin du 1er trimestre (au dixième).`;
+        return `Au budget actuel, la non-qualité coûte ${eur(k.actuel.nonQualite)} et les clients déçus font perdre ${eur(k.actuel.margePerdue)} de marge ; à la moitié, ils en font perdre ${eur(k.moitie.margePerdue)}. Calculez la non-qualité en plus, la marge perdue en plus, puis l'écart de résultat (économie, moins les deux).`;
       },
       champs: (c) => {
         const k = moitieDuBudget(c);
         return [
-          { libelle: "Budget qualité de l'année, à la moitié", attendu: k.moitie.budget, calcul: `4 × ${eur(k.budget)} = ${eur(k.moitie.budget)}`, tolerance: 0 },
-          {
-            libelle: "Qualité perçue à la fin du 1er trimestre (indice)",
-            attendu: k.percueAuPremier,
-            calcul: `(${k.q.garde} × ${qte(k.q.percueDeDepart)} + ${100 - k.q.garde} × ${qte(k.produiteAuPremier)}) ÷ 100 = ${qte(k.percueAuPremier)}`,
-            tolerance: 0.1,
-          },
+          { libelle: "Non-qualité en plus", attendu: k.nonQualiteEnPlus, calcul: `${eur(k.moitie.nonQualite)} − ${eur(k.actuel.nonQualite)} = ${eur(k.nonQualiteEnPlus)}` },
+          { libelle: "Marge perdue en plus", attendu: k.margePerdueEnPlus, calcul: `${eur(k.moitie.margePerdue)} − ${eur(k.actuel.margePerdue)} = ${eur(k.margePerdueEnPlus)}` },
+          { libelle: "Écart de résultat", attendu: k.ecart, calcul: `${eur(k.economie)} − ${eur(k.nonQualiteEnPlus)} − ${eur(k.margePerdueEnPlus)} = ${eur(k.ecart)}` },
         ];
       },
       explication: (c) => {
         const k = moitieDuBudget(c);
-        return [`La qualité perçue monte lentement : ${qte(k.percueAuPremier)} au premier trimestre, ${qte(k.moitie.trimestres.at(-1)!.percue)} en fin d'année.`];
-      },
-    },
-    {
-      id: "l-annee-rejouee",
-      type: "montants",
-      titre: "L'année rejouée à la moitié du budget",
-      notions: ["demand_market_share", "income_statement"],
-      tableau: tableauDesDeuxAnnees,
-      question: () =>
-        "D'après le tableau, calculez les ventes en plus à la moitié du budget du secteur (négatives si elles baissent), puis l'écart de résultat de l'activité (à la moitié moins l'année du cours).",
-      champs: (c) => {
-        const k = moitieDuBudget(c);
-        return [
-          { libelle: "Ventes en plus à la moitié du budget", attendu: k.ventesEnPlus, calcul: `${qte(k.moitie.ventes)} − ${qte(k.q.annee.ventes)} = ${qte(k.ventesEnPlus)}`, tolerance: 0 },
-          {
-            libelle: "Écart de résultat, à la moitié moins l'année du cours",
-            attendu: k.ecartDeResultat,
-            calcul: `${eur(k.moitie.resultat)} − ${retranche(k.q.annee.resultat)} = ${eur(k.ecartDeResultat)}`,
-            tolerance: 1,
-          },
-        ];
-      },
-      explication: (c) => {
-        const k = moitieDuBudget(c);
-        return [
-          `À la moitié du budget du secteur, ${c.entreprise} ${k.ventesEnPlus >= 0 ? `vend ${qte(k.ventesEnPlus)} ${c.unites} de plus` : `vend ${qte(-k.ventesEnPlus)} ${c.unites} de moins`} sur l'année, et son résultat de l'activité ${
-            k.ecartDeResultat > 0 ? `monte de ${eur(k.ecartDeResultat)}` : `baisse de ${eur(-k.ecartDeResultat)}`
-          }.`,
-        ];
+        return [k.ecart < 0 ? `La coupe économise ${eur(k.economie)}, mais les défauts en plus en coûtent davantage : le résultat baisse de ${eur(-k.ecart)}.` : `La coupe fait monter le résultat de ${eur(k.ecart)}.`];
       },
     },
     {
@@ -166,27 +132,15 @@ export const LA_MOITIE_DU_BUDGET_QUALITE: Situation = {
       question: () => "Que répondez-vous au directeur financier ?",
       options: (c) => {
         const k = moitieDuBudget(c);
-        const budgets = `${eur(k.moitie.budget)} de budget qualité sur l'année, contre ${eur(k.q.annee.budget)} dans l'année du cours`;
-        const faits = `${budgets} ; les ventes ${k.ventesEnPlus >= 0 ? `gagnent ${qte(k.ventesEnPlus)}` : `perdent ${qte(-k.ventesEnPlus)}`} ${c.unites}, et le résultat ${
-          k.ecartDeResultat > 0 ? `monte de ${eur(k.ecartDeResultat)}` : `baisse de ${eur(-k.ecartDeResultat)}`
-        }.`;
-        const passer = k.reponse === "passer-a-la-moitie";
+        const faits = `la coupe économise ${eur(k.economie)}, et le résultat ${k.ecart > 0 ? "monte" : "baisse"} de ${eur(Math.abs(k.ecart))}.`;
         return [
+          { texte: "Couper : l'économie l'emporte", juste: k.reponse === "passer-a-la-moitie", retour: `${k.reponse === "passer-a-la-moitie" ? "Oui" : "Non"} : ${faits}` },
           {
-            texte: "Passer à la moitié : le résultat de l'année monte",
-            juste: passer,
-            retour: `${passer ? "Oui" : "Non"} : ${faits}`,
+            texte: "Garder le budget actuel",
+            juste: k.reponse === "ne-rien-changer",
+            retour: `${k.reponse === "ne-rien-changer" ? "Oui" : "Non"} : ${faits} Les défauts en plus coûtent des retouches, des retours et des clients.`,
           },
-          {
-            texte: k.q.metUnBudget ? "Garder le budget du secteur : la moitié fait baisser le résultat" : "Ne rien changer : même la moitié fait baisser le résultat",
-            juste: !passer,
-            retour: `${passer ? "Non" : "Oui"} : ${faits}`,
-          },
-          {
-            texte: "Doubler plutôt le budget : plus de qualité fait toujours vendre assez pour se payer",
-            juste: false,
-            retour: `Non : une qualité de plus ne se paie que si la marge des ventes qu'elle fait gagner couvre son coût, et rien ne dit que ce soit toujours le cas. L'arène a rejoué la moitié du budget : ${faits}`,
-          },
+          { texte: "Couper : le contrôle final rattrapera tous les défauts", juste: false, retour: `Non : le contrôle ne trouve que ${pct(k.moitie.tauxDeDetection)} des défauts ; ${faits}` },
         ];
       },
     },

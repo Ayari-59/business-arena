@@ -419,8 +419,11 @@ describe("le laboratoire du label, refait à la main", () => {
     expect(e.leviers(cas).find((l) => l.code === "ordre")!.choix!.map((x) => x.valeur)).toEqual([0, 1]);
   });
 
-  it("au départ (le budget du cours sur trois trimestres) : 50,28 centièmes, pas de label, 46 115 €", () => {
+  it("au départ (le budget du cours sur trois trimestres) : 50,28 centièmes, pas de label, −7 792 €", () => {
     expect(lire(depart)).toEqual(attendu([E, E, E, 0]));
+    // 19 924 enceintes × 21 € − 374 196 € de fixes − 16 000 € de qualité − 36 000 € de RSE ; 11 156 € sans engagement.
+    expect(19_924 * 21 - 374_196 - 16_000 - 36_000).toBe(-7_792);
+    expect(-7_792 - 11_156).toBe(-18_948);
     expect(Object.values(attendu([E, E, E, 0]))).toEqual([50.28, 70, 0, 36_000, 19_924, -18_948, -7_792]);
   });
 
@@ -430,6 +433,7 @@ describe("le laboratoire du label, refait à la main", () => {
     expect([d.atteint(depart), d.atteint(d.solution)]).toEqual([false, true]);
     expect(lire({ ...d.solution })).toEqual(attendu([...PLAN_QUI_MONTE, 0]));
     expect(Object.values(attendu([...PLAN_QUI_MONTE, 0]))).toEqual([72.05, 70, 1, 56_000, 20_439, -28_133, -16_977]);
+    expect([20_439 * 21 - 390_196 - 56_000, -16_977 - 11_156]).toEqual([-16_977, -28_133]);
     // Les mêmes budgets dans l'autre ordre ratent le défi ; le budget constant au pas du laboratoire (19 500 €) le rate d'un euro.
     expect(d.atteint({ ...d.solution, ordre: 1 })).toBe(false);
     expect(lire({ ...d.solution, ordre: 1 })).toEqual(attendu([36_000, 16_000, 4_000, 0]));
@@ -462,9 +466,11 @@ describe("le laboratoire du label, refait à la main", () => {
 describe("l'année engagée : ce que l'engagement coûte et rapporte, refait à la main", () => {
   const ch = LA_RESPONSABILITE_SOCIETALE;
 
-  it("les ventes de chaque trimestre : 4 778 sans engagement ; 4 778, 5 590, 5 714, 5 793 au budget du cours", () => {
+  it("les ventes de chaque trimestre : 4 778 sans engagement ; 4 778, 4 952, 5 062, 5 132 au budget du cours", () => {
     expect(SANS.ventes).toEqual([4_778, 4_778, 4_778, 4_778]);
     expect(COURS.ventes).toEqual([4_778, 4_952, 5_062, 5_132]);
+    expect([SANS.total, COURS.total]).toEqual([4 * 4_778, 4_778 + 4_952 + 5_062 + 5_132]);
+    expect([SANS.resultat, COURS.resultat]).toEqual([19_112 * 21 - 390_196, 19_924 * 21 - 390_196 - 48_000]);
     expect([SANS.resultat, COURS.resultat]).toEqual([11_156, -19_792]);
     // La ligne de 7 000 enceintes par trimestre ne borne rien.
     expect(Math.max(...COURS.ventes, ...DU_T3.ventes, ...MONTE.ventes)).toBeLessThan(7_000);
@@ -489,7 +495,7 @@ describe("l'année engagée : ce que l'engagement coûte et rapporte, refait à 
     expect(MARGE * attendu - 48_000).toBe(6);
   });
 
-  it("l'année engagée : 915 enceintes, 19 215 € de marge, 34 115 €, −28 785 €", () => {
+  it("l'année engagée : 812 enceintes, 17 052 € de marge, −19 792 €, −30 948 €", () => {
     const gagnees = COURS.total - SANS.total;
     expect(attendus(ch, "l-annee-engagee")).toEqual({
       "Ventes gagnées sur l'année": gagnees,
@@ -497,47 +503,54 @@ describe("l'année engagée : ce que l'engagement coûte et rapporte, refait à 
       "Résultat de l'année engagée": COURS.resultat,
       "Écart de résultat avec l'année sans engagement": COURS.resultat - SANS.resultat,
     });
+    expect([gagnees, gagnees * MARGE, COURS.resultat - SANS.resultat]).toEqual([19_924 - 19_112, 812 * 21, -19_792 - 11_156]);
     expect([gagnees, gagnees * MARGE, COURS.resultat - SANS.resultat]).toEqual([812, 17_052, -30_948]);
     expect(COURS.resultat - SANS.resultat).toBe(gagnees * MARGE - 48_000);
   });
 
-  it("le coût complet : 56,08 € sans engagement, 57,48 € au budget du cours", () => {
+  it("le coût complet : 58,42 € sans engagement, 59,99 € au budget du cours", () => {
     expect(attendus(ch, "le-cout-complet")).toEqual({
       "Coût complet sans engagement": SANS.coutComplet,
       "Coût complet au budget du cours": COURS.coutComplet,
       "Hausse du coût complet": centime(COURS.coutComplet - SANS.coutComplet),
     });
-    expect([SANS.coutComplet, COURS.coutComplet, centime(COURS.coutComplet - SANS.coutComplet)]).toEqual([58.42, 59.99, 1.57]);
+    expect([SANS.coutComplet, COURS.coutComplet, centime(COURS.coutComplet - SANS.coutComplet)]).toEqual([centime(38 + 390_196 / 19_112), centime(38 + 438_196 / 19_924), centime(59.99 - 58.42)]);
+    expect([SANS.coutComplet, COURS.coutComplet]).toEqual([58.42, 59.99]);
   });
 
   it("le verdict de l'année : pas encore", () => {
     expect(juste(ch, "verdict")).toBe("Pas encore : la demande gagnée se vend, mais pas assez pour payer l'année");
   });
 
-  it("à budget du trimestre 4 égal : le plan qui monte paraît gagner 4 222 €, il perd 7 778 €", () => {
+  it("à budget du trimestre 4 égal : le plan qui monte paraît gagner 2 815 €, il perd 9 185 €", () => {
+    expect(20_439 * 21 - 390_196 - 56_000).toBe(-16_977);
     expect([MONTE.ventes, MONTE.resultat, COURS_SANS_T4.resultat]).toEqual([[4_778, 4_851, 5_035, 5_775], -16_977, -7_792]);
     expect(attendus(ch, "a-budget-du-t4-egal")).toEqual({
       "Écart du plan qui monte au budget du cours": MONTE.resultat - COURS.resultat,
       "Effet du budget du trimestre 4 sur le résultat de l'année": COURS.resultat - COURS_SANS_T4.resultat,
       "Écart du plan qui monte, à budget du trimestre 4 égal": MONTE.resultat - COURS_SANS_T4.resultat,
     });
-    expect([MONTE.resultat - COURS.resultat, COURS.resultat - COURS_SANS_T4.resultat, MONTE.resultat - COURS_SANS_T4.resultat]).toEqual([2_815, -12_000, -9_185]);
+    expect([MONTE.resultat - COURS.resultat, COURS.resultat - COURS_SANS_T4.resultat, MONTE.resultat - COURS_SANS_T4.resultat]).toEqual([-16_977 - -19_792, -12_000, -16_977 - -7_792]);
+    expect(MONTE.resultat - COURS.resultat).toBe(2_815);
+    expect(MONTE.resultat - COURS_SANS_T4.resultat).toBe(-9_185);
     // Le budget du trimestre 4 ne fait rien vendre dans l'année : les ventes sont les mêmes.
     expect(COURS_SANS_T4.ventes).toEqual(COURS.ventes);
   });
 
-  it("le label dès le trimestre 3 : les mêmes 56 000 € aux trimestres 1 et 2, 0,71, 2 trimestres de label, +9 316 € face au budget du cours, −7 469 € face à l'année sans engagement", () => {
+  it("le label dès le trimestre 3 : les mêmes 56 000 € aux trimestres 1 et 2, 0,71, 2 trimestres de label, +5 914 € face au budget du cours, −13 034 € face à l'année sans engagement", () => {
     expect(PLAN_DU_T3).toEqual([20_000, 36_000, 0]);
     expect(somme(PLAN_DU_T3)).toBe(somme(PLAN_QUI_MONTE));
     expect(DU_T3.label).toEqual([false, false, true, true]);
     expect(DU_T3.ventes).toEqual([4_778, 5_022, 5_766, 5_592]);
+    expect(DU_T3.resultat).toBe((4_778 + 5_022 + 5_766 + 5_592) * 21 - 390_196 - 56_000);
     expect(DU_T3.resultat).toBe(-1_878);
     expect(attendus(ch, "le-label-des-le-t3")).toEqual({
       "Capital à la fin du trimestre 2": centime(DU_T3.fins[1]!),
       "Écart au budget du cours sans le trimestre 4": DU_T3.resultat - COURS_SANS_T4.resultat,
       "Écart à l'année sans engagement": DU_T3.resultat - SANS.resultat,
     });
-    expect([centime(DU_T3.fins[1]!), DU_T3.resultat - COURS_SANS_T4.resultat, DU_T3.resultat - SANS.resultat]).toEqual([0.71, 5_914, -13_034]);
+    expect([centime(DU_T3.fins[1]!), DU_T3.resultat - COURS_SANS_T4.resultat, DU_T3.resultat - SANS.resultat]).toEqual([0.71, -1_878 - -7_792, -1_878 - 11_156]);
+    expect([DU_T3.resultat - COURS_SANS_T4.resultat, DU_T3.resultat - SANS.resultat]).toEqual([5_914, -13_034]);
     // Une marge sur le seuil que l'arrondi au centième ne menace pas.
     expect(DU_T3.fins[1]! - SEUIL).toBeGreaterThan(0.005);
   });
@@ -575,7 +588,7 @@ describe("le cas : viser le label avec 24 000 € par trimestre, refait à la ma
     expect(fins([19_500, 19_500, 19_500])[2]! - SEUIL).toBeLessThan(0.0001);
   });
 
-  it("l'année : 4 778, 5 702, 5 894, 6 578 enceintes ; 8 732 €, −54 168 € face à l'année sans engagement, −25 383 € face au budget du cours", () => {
+  it("l'année : 4 778, 5 051, 5 221, 5 827 enceintes ; −47 779 €, −58 935 € face à l'année sans engagement, −27 987 € face au budget du cours", () => {
     expect(PROPOSITION.ventes).toEqual([4_778, 5_051, 5_221, 5_827]);
     expect(PROPOSITION.label).toEqual([false, false, false, true]);
     expect(attendus(s, "l-annee")).toEqual({
@@ -583,14 +596,16 @@ describe("le cas : viser le label avec 24 000 € par trimestre, refait à la ma
       "Écart de résultat avec l'année sans engagement": PROPOSITION.resultat - SANS.resultat,
       "Écart de résultat avec le budget du cours": PROPOSITION.resultat - COURS.resultat,
     });
+    expect([PROPOSITION.marge - SANS.marge, PROPOSITION.resultat, PROPOSITION.resultat - SANS.resultat, PROPOSITION.resultat - COURS.resultat]).toEqual([(20_877 - 19_112) * 21, 20_877 * 21 - 390_196 - 96_000, -47_779 - 11_156, -47_779 - -19_792]);
     expect([PROPOSITION.marge - SANS.marge, PROPOSITION.resultat, PROPOSITION.resultat - SANS.resultat, PROPOSITION.resultat - COURS.resultat]).toEqual([37_065, -47_779, -58_935, -27_987]);
     expect(viserLeLabel(cas).verdict).toBe("pas-cette-annee");
   });
 
-  it("le curseur du cas : 2 286 enceintes de plus qu'au budget du cours paieraient les 48 000 € en plus ; la proposition en vend 1 077", () => {
+  it("le curseur du cas : 2 286 enceintes de plus qu'au budget du cours paieraient les 48 000 € en plus ; la proposition en vend 953", () => {
     const enPlus = 4 * B - 4 * E;
     const attendu = Math.ceil(enPlus / MARGE);
     expect(attendu).toBe(2_286);
+    expect(PROPOSITION.total - COURS.total).toBe(20_877 - 19_924);
     expect(PROPOSITION.total - COURS.total).toBe(953);
     expect(curseur(s, "ce-qu-il-faudrait-vendre")).toEqual({
       attendu,
@@ -600,20 +615,22 @@ describe("le cas : viser le label avec 24 000 € par trimestre, refait à la ma
     });
   });
 
-  it("le croisement : le plan qui monte suivi des mêmes 24 000 € au trimestre 4, le même label pour 16 000 € de moins, 5 605 € de mieux", () => {
+  it("le croisement : le plan qui monte suivi des mêmes 24 000 € au trimestre 4, le même label pour 16 000 € de moins, 6 802 € de mieux", () => {
     expect(CROISEMENT.label).toEqual(PROPOSITION.label);
     expect(CROISEMENT.ventes).toEqual(MONTE.ventes);
+    expect(CROISEMENT.resultat).toBe(20_439 * 21 - 390_196 - (56_000 + 24_000));
     expect(CROISEMENT.resultat).toBe(-40_977);
     expect(attendus(s, "le-plan-qui-monte")).toEqual({
       "Capital du plan qui monte à la fin du trimestre 3": centime(CROISEMENT.fins[2]!),
       "Économie sur les trimestres 1 à 3": 3 * B - somme(PLAN_QUI_MONTE),
       "Écart de résultat avec le budget proposé": CROISEMENT.resultat - PROPOSITION.resultat,
     });
-    expect([centime(CROISEMENT.fins[2]!), 3 * B - somme(PLAN_QUI_MONTE), CROISEMENT.resultat - PROPOSITION.resultat]).toEqual([0.72, 16_000, 6_802]);
+    expect([centime(CROISEMENT.fins[2]!), 3 * B - somme(PLAN_QUI_MONTE), CROISEMENT.resultat - PROPOSITION.resultat]).toEqual([0.72, 16_000, -40_977 - -47_779]);
     // Les deux plans gardent le label au début de l'année suivante : leur capital de fin d'année reste au-dessus du seuil.
     expect(CROISEMENT.fins[3]).toBeGreaterThan(SEUIL);
     expect(PROPOSITION.fins[3]).toBeGreaterThan(SEUIL);
     // Et l'année reste sous le budget du cours : le label ne se paie pas cette année.
+    expect(CROISEMENT.resultat - COURS.resultat).toBe(-40_977 - -19_792);
     expect(CROISEMENT.resultat - COURS.resultat).toBe(-21_185);
   });
 

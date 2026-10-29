@@ -28,14 +28,16 @@ import { AUTRES_COUTS_PAR_ENCEINTE, CAPACITE_DU_TRIMESTRE, COMPOSANTS_PAR_ENCEIN
  *     L'assurance se renouvelle le 1er octobre. Un opérateur payé sous le marché peut partir. NOVA
  *     envisage une machine de plus.
  *
- * CE QUI VIENT DE L'ARÈNE, ET CE QUI A ÉTÉ CHOISI. Viennent du scénario nova de l'arène : les heures
- * d'un opérateur (540 par trimestre) et d'une enceinte (0,3 h), le coût d'un recrutement (3 000 €),
+ * CE QUI VIENT DE L'ARÈNE, ET CE QUI A ÉTÉ CHOISI. Viennent du scénario nova de l'arène : le coût d'un recrutement (3 000 €),
  * le seuil de démission (95 % du salaire du marché), l'usure de l'outil sans entretien (5 points de
  * disponibilité par trimestre) et sa réparation à une fois et demie l'usure au budget de référence,
  * les noms et l'ordre des trois formules d'assurance et la prime de la « Basique » (1 500 € par
  * trimestre), les aléas (les pannes, la cyberattaque, le litige avec un fournisseur), le poste
  * manuel à 15 000 € sur 6 ans, le taux de l'emprunt (5 %) et celui de l'impôt (25 %). Le reste est
- * une hypothèse du cours, dite à sa place : la demande de N + 1, le budget de référence de
+ * une hypothèse du cours, dite à sa place : les heures d'un opérateur (151,67 payées par mois, la
+ * durée légale, dont 150 au montage ; l'arène en compte 540 par trimestre, plus que la durée légale
+ * pour ce brut, et le cours s'en tient aux 35 heures sans heures supplémentaires) et d'une enceinte
+ * (0,25 h, pour que l'opérateur monte toujours 600 enceintes par mois), la demande de N + 1, le budget de référence de
  * l'entretien (4 500 €), les primes et les franchises de l'« Étendue » et du « Tous risques », les
  * probabilités et les coûts des sinistres, les quatre points de la courbe de la qualité, les délais
  * du personnel, la ligne automatisée, le taux d'actualisation.
@@ -85,14 +87,20 @@ export const LIGNE_DE_MONTAGE = { postes: 4, valeurANeuf: 60_000, capaciteParTri
 /**
  * LES OPÉRATEURS, les 4 salariés de la paie d'exercice-de-nova.ts : 1 875 € bruts par mois chacun
  * (7 500 € à eux quatre), et 42 % de cotisations patronales, soit 2 662,50 € par mois pour NOVA
- * (31 950 € par an). Chacun travaille 180 heures par mois à la production (540 par trimestre, celles
- * de l'arène) ; une enceinte demande 0,3 heure : un opérateur en monte 600 par mois, 1 800 par
- * trimestre, et l'équipe 7 200. À effectif complet, l'équipe peut un peu plus que l'outil.
+ * (31 950 € par an). Chacun est à temps plein, 35 heures par semaine, soit 151,67 heures payées par
+ * mois (35 × 52 ÷ 12, la durée légale mensualisée) : 1 875 ÷ 151,67 = 12,36 € bruts de l'heure,
+ * au-dessus du SMIC horaire du cours (ressources-humaines-de-nova.ts). Pas d'heures supplémentaires.
+ * De ces heures, 150 vont au montage (le reste : la prise de poste, le rangement, le point d'équipe).
+ * Une enceinte demande 0,25 heure (15 minutes) : un opérateur en monte 150 ÷ 0,25 = 600 par mois,
+ * 1 800 par trimestre, et l'équipe 7 200. À effectif complet, l'équipe peut un peu plus que l'outil.
  */
 export const OPERATEURS = {
   nombre: 4,
-  heuresParMois: 180,
-  heuresParEnceinte: 0.3,
+  /** Les heures payées d'un mois, la durée légale : celles du salaire horaire et de l'absentéisme. */
+  heuresPayeesParMois: 151.67,
+  /** Les heures de montage d'un mois, celles de la capacité de l'équipe. */
+  heuresParMois: 150,
+  heuresParEnceinte: 0.25,
   salaireBrutMensuel: 1_875,
   tauxDesCotisationsPatronales: 0.42,
 } as const;
@@ -403,14 +411,14 @@ export interface MachineDuCatalogue {
  * LES DEUX MACHINES DU CATALOGUE (hypothèses du cours, inspirées du catalogue d'équipements de
  * l'arène).
  *   - Un cinquième poste manuel, le même que les quatre de la ligne : 15 000 €, 6 ans, 1 750 enceintes
- *     de plus par trimestre (le quart de la ligne). Il faut un opérateur de plus (0,3 h l'enceinte :
+ *     de plus par trimestre (le quart de la ligne). Il faut un opérateur de plus (0,25 h l'enceinte :
  *     1 800 enceintes par trimestre). Son entretien : le quart de celui de la ligne, 4 500 € par an.
  *   - Une ligne automatisée : 60 000 €, 6 ans, 3 500 enceintes de plus par trimestre. Un opérateur la
- *     pilote, et y monte une enceinte en 0,15 h (3 600 par trimestre). Son entretien : 6 000 € par an.
+ *     pilote, et y monte une enceinte en 0,125 h, deux fois plus vite qu'à la main (3 600 par trimestre). Son entretien : 6 000 € par an.
  */
 export const MACHINES: readonly MachineDuCatalogue[] = [
-  { code: "poste-manuel", nom: "Un cinquième poste manuel", prix: 15_000, capaciteEnPlus: 1_750, embauches: 1, heuresParEnceinte: 0.3, entretienParAn: 4_500, dureeEnAnnees: 6 },
-  { code: "ligne-automatisee", nom: "Une ligne automatisée", prix: 60_000, capaciteEnPlus: 3_500, embauches: 1, heuresParEnceinte: 0.15, entretienParAn: 6_000, dureeEnAnnees: 6 },
+  { code: "poste-manuel", nom: "Un cinquième poste manuel", prix: 15_000, capaciteEnPlus: 1_750, embauches: 1, heuresParEnceinte: 0.25, entretienParAn: 4_500, dureeEnAnnees: 6 },
+  { code: "ligne-automatisee", nom: "Une ligne automatisée", prix: 60_000, capaciteEnPlus: 3_500, embauches: 1, heuresParEnceinte: 0.125, entretienParAn: 6_000, dureeEnAnnees: 6 },
 ];
 
 /**
@@ -445,6 +453,7 @@ export interface FicheDeLaCapacite {
   ligne: { readonly postes: number; readonly valeurANeuf: number; readonly capaciteParTrimestre: number };
   operateurs: {
     readonly nombre: number;
+    readonly heuresPayeesParMois: number;
     readonly heuresParMois: number;
     readonly heuresParEnceinte: number;
     readonly salaireBrutMensuel: number;
