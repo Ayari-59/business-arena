@@ -6,7 +6,7 @@ import { envoyerDemandeDeDevisAction, type DevisFormState } from "@/app/devis/ac
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
 import { euros } from "@/config/catalogue";
 import type { AteliersDeLaClasse } from "@/config/ateliers-de-la-classe";
-import { parametrageRequisAuDevis } from "@/config/tarifs";
+import { parametrageRequisAuDevis } from "@/config/parametrage-du-devis";
 
 /**
  * LE FORMULAIRE DE DEMANDE DE DEVIS.
