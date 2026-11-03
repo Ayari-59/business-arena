@@ -271,6 +271,7 @@ describe("plan du site", () => {
       "Plateforme",
       "Inscrits",
       "Offres",
+      "Cours attribués",
       "Cohortes",
       "Moodle",
       "RENATER",

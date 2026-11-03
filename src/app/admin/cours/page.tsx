@@ -35,7 +35,7 @@ function CasesDesParcours({ coches, nom }: { coches: readonly string[]; nom: str
 /**
  * LES COURS ATTRIBUÉS (décision du propriétaire, novembre 2026 ; migration 0056).
  *
- * L'offre de l'établissement ouvre le cours ; ici, l'admin le RESTREINT à des parcours, pour
+ * La licence de l'établissement ouvre le cours ; ici, l'admin le RESTREINT à des parcours, pour
  * tout l'établissement ou pour un enseignant, dont la liste l'emporte. Une liste vide efface la
  * restriction. Une attribution n'ouvre jamais plus que l'offre, et le chapitre libre reste
  * ouvert à tous (la règle : services/chapitres-de-la-classe.ts).
@@ -55,7 +55,7 @@ async function AdminCoursPage({ searchParams }: { searchParams: Promise<{ fait?:
         </p>
       ) : null}
       <p className="max-w-3xl text-sm leading-relaxed text-slate-300">
-        L&apos;offre de l&apos;établissement ouvre le cours. Cochez des parcours pour le restreindre à ceux-là, pour tout
+        La licence de l&apos;établissement ouvre le cours. Cochez des parcours pour le restreindre à ceux-là, pour tout
         l&apos;établissement ou pour un enseignant : la liste de l&apos;enseignant l&apos;emporte. Sans case cochée, rien n&apos;est
         restreint. Une attribution n&apos;ouvre jamais plus que l&apos;offre, et le chapitre libre reste ouvert à tous.
       </p>
