@@ -95,14 +95,14 @@ describe("le menu, rangé par public", () => {
       expect((await groupe.innerText()).trim().startsWith(g.titre), `groupe « ${g.titre} »`).toBe(true);
       const boite = (await groupe.boundingBox())!;
       expect(boite.height, `groupe « ${g.titre} » trop bas`).toBeGreaterThanOrEqual(43); // min-h-11 = 44 px, au sous-pixel près (mesuré entre 43,4 et 43,7)
-      // Seul « Jouer » est déplié à l'ouverture ; les autres se déplient à la demande.
+      // Seul « Élèves » est déplié à l'ouverture ; les autres se déplient à la demande.
       expect(await groupe.getAttribute("aria-expanded"), `groupe « ${g.titre} »`).toBe(g.code === GROUPE_OUVERT ? "true" : "false");
     }
-    // « Jouer » est ouvert d'office : on joue sans chercher.
-    // Dans le menu : la barre d'action basse porte aussi « Jouer maintenant ».
+    // « Élèves » est ouvert d'office : on joue sans chercher.
+    // Dans le menu : la barre d'action basse porte aussi « Jouer en solo ».
     await page
       .locator("#plan-du-site")
-      .getByRole("link", { name: /Jouer maintenant/ })
+      .getByRole("link", { name: /Jouer en solo/ })
       .waitFor({ state: "visible" });
     await contexte.close();
   });

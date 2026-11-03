@@ -58,8 +58,8 @@ export interface PageABandes {
 export const PAGES_A_BANDES: readonly PageABandes[] = [
   { page: "/", nom: "Accueil" },
   { page: "/enseignants", nom: "Pour les enseignants" },
-  { page: "/ecoles", nom: "Écoles de commerce et universités" },
-  { page: "/entreprises", nom: "Entreprises" },
+  { page: "/ecoles", nom: "Établissements : écoles de commerce et universités" },
+  { page: "/entreprises", nom: "Les cas d'entreprise" },
   { page: "/fonctionnalites", nom: "Fonctionnalités" },
   { page: "/guide", nom: "Règles du jeu", partielle: true },
   { page: "/notions", nom: "Notions", partielle: true },
@@ -185,7 +185,7 @@ export const BANDES: readonly BandeDef[] = [
     nom: "L'appel final",
     contrasteParDefaut: true,
   },
-  // ── Écoles de commerce et universités ──
+  // ── Établissements : écoles de commerce et universités ──
   {
     id: "ecoles.accroche",
     page: "/ecoles",

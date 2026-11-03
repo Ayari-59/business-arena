@@ -12,7 +12,7 @@ import { examenParCode } from "@/services/examen.service";
  * Six pages prennent un code : /join (une partie de l'arène), /cours/rejoindre
  * (une classe du cours), /entreprises/episode/rejoindre (une cohorte
  * d'épisodes), /compete (un concours), /examen (un examen individuel) et
- * /reprendre. La barre du site n'en propose qu'une, « Rejoindre une partie »,
+ * /reprendre. La barre du site n'en propose qu'une, « J'ai un code »,
  * qui répondait « Code de partie inconnu » à un code de classe ou de cohorte :
  * l'élève restait bloqué devant la classe.
  *

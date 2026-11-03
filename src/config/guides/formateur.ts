@@ -188,7 +188,7 @@ export const GUIDE_FORMATEUR: Guide = {
     },
     {
       titre: "Pour les entreprises",
-      texte: "Les entreprises jouables de l'arène, si vous voulez prolonger la formation par une simulation en équipe.",
+      texte: "Les cas d'entreprise de l'arène, si vous voulez prolonger la formation par une simulation en équipe.",
       lien: { href: "/entreprises", libelle: "Voir les entreprises" },
     },
     {

@@ -30,12 +30,13 @@ import { getPlatformConfig } from "@/services/admin.service";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/entreprises" },
-  title: `${SCENARIO_CHOICES.length} entreprises jouables`,
+  title: `Les cas d'entreprise : ${SCENARIO_CHOICES.length} métiers à diriger`,
   description: `Un atelier, un hôtel, un bistrot, un chantier, une flotte de camions. ${SCENARIO_CHOICES.length} métiers, ${SCENARIO_CHOICES.length} contraintes, ${SCENARIO_CHOICES.length} façons de perdre de l'argent.`,
 };
 
 /**
- * LES ENTREPRISES.
+ * LES CAS D'ENTREPRISE (« Les entreprises jouables » jusqu'en novembre 2026 : le nom se
+ * confondait avec les entreprises clientes ; l'adresse /entreprises ne change pas).
  *
  * Le sélecteur de la page d'accueil réduisait autant d'économies à autant de
  * lignes d'une liste déroulante. Or ce qui distingue ces entreprises n'est pas leur

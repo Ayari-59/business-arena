@@ -66,10 +66,13 @@ describe("un nom par chose, et les bons comptes", () => {
 });
 
 describe("le menu range chaque page chez son public", () => {
-  it("le formulaire d'inscription à un concours est chez les élèves, l'explication chez les enseignants", () => {
+  it("l'élève a une seule porte pour tous les codes, concours compris ; l'explication est chez les enseignants", () => {
+    // Novembre 2026 : « J'ai un code » (/join) conduit un code de concours à /compete
+    // (services/rejoindre.service.ts) ; l'entrée séparée du concours quitte le menu.
     const groupe = (code: string) => NAVIGATION.find((g) => g.code === code)!.liens.map((l) => l.href);
-    expect(groupe("jouer")).toContain("/compete");
-    expect(groupe("enseignants")).not.toContain("/compete");
+    expect(groupe("eleves")).toContain("/join");
+    expect(NAVIGATION.flatMap((g) => g.liens.map((l) => l.href))).not.toContain("/compete");
+    expect(lire("src/services/rejoindre.service.ts")).toContain("`/compete?code=");
     expect(groupe("enseignants")).toContain("/guide#concours");
   });
 });

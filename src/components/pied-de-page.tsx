@@ -7,6 +7,7 @@ import { BrandMark } from "@/components/brand-mark";
 import {
   ACTION_PRINCIPALE,
   LIEN_GUIDES,
+  LIENS_TRANSVERSES,
   NAVIGATION,
   type GroupeDeMenu,
   type LienDeMenu,
@@ -27,8 +28,10 @@ import { VENDEUR } from "@/config/editeur";
  * carte du site, celle qu'on lit en bas d'une page quand on n'a pas trouvé.
  * Il LIT le plan (config/navigation.ts), groupe par groupe, sous les mêmes
  * titres que la barre et le menu : jamais une copie qui dérivera. Cinq
- * colonnes sur grand écran, Jouer / Enseignants / Écoles / Entreprises / Aide,
- * puis les offres et le contact sur une ligne ; empilées sur téléphone.
+ * colonnes sur grand écran, Élèves / Enseignants / Établissements / Entreprises /
+ * Aide, puis les offres sur une ligne, et ce qui sert à tous (choisir sa
+ * simulation, le rendez-vous, les mentions légales) sur une dernière ;
+ * empilées sur téléphone.
  *
  * IL SE POSE HORS DU `<main>`, en frère de celui-ci. C'est ce qui en fait un
  * repère « contentinfo » pour une synthèse vocale ; imbriqué dans le contenu,
@@ -63,8 +66,8 @@ export function PiedDePage() {
   // la deuxième empilait les trois publics : une colonne de trente lignes à
   // côté de trois colonnes de cinq, et un pied de page mal calibré, long d'un
   // côté, vide de l'autre. Les cinq premiers groupes prennent maintenant
-  // chacun leur colonne, dans l'ordre du plan : Jouer, Enseignants, Écoles,
-  // Entreprises, Aide. Le sixième, les offres et le contact, se lit sur une
+  // chacun leur colonne, dans l'ordre du plan : Élèves, Enseignants,
+  // Établissements, Entreprises, Aide. Le sixième, les offres, se lit sur une
   // seule ligne sous les cinq, comme la ligne de contact d'un courrier. Trois
   // colonnes sur tablette, une pile sur téléphone. Lus du plan par leur code :
   // un groupe ajouté demain prend sa colonne ici sans qu'on l'écrive.
@@ -74,9 +77,9 @@ export function PiedDePage() {
     return g;
   };
   const colonnes: GroupeDeMenu[] = [
-    groupe("jouer"),
+    groupe("eleves"),
     groupe("enseignants"),
-    groupe("ecoles"),
+    groupe("etablissements"),
     groupe("entreprises"),
     groupe("aide"),
   ];
@@ -141,6 +144,18 @@ export function PiedDePage() {
             </p>
             <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
               {ligne.liens.map((lien) => (
+                <li key={lien.href}>
+                  <Entree lien={lien} courant={chemin === lien.href.split("#")[0]} />
+                </li>
+              ))}
+            </ul>
+          </div>
+          {/* CE QUI SERT À TOUS (config/navigation.ts, LIENS_TRANSVERSES) : choisir sa
+              simulation, prendre rendez-vous, et les mentions légales, qui restent au pied
+              de page. Une dernière ligne, sous les offres. */}
+          <div data-liens-transverses="" className="sm:col-span-3 lg:col-span-5">
+            <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+              {LIENS_TRANSVERSES.map((lien) => (
                 <li key={lien.href}>
                   <Entree lien={lien} courant={chemin === lien.href.split("#")[0]} />
                 </li>

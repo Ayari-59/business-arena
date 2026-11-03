@@ -107,7 +107,7 @@ export function BarreDActionMobile() {
   const jouer = NAVIGATION.flatMap((g) => g.liens).find((l) => l.href === "/jouer");
   // LOT P6 : SUR LA VITRINE, LA BARRE REDIT LE BOUTON DU HÉROS. Elle prend le
   // relais de « Tester le simulateur » quand il quitte l'écran ; elle le dit
-  // donc avec ses mots, pas avec ceux du menu (« Jouer maintenant », qui reste
+  // donc avec ses mots, pas avec ceux du menu (« Jouer en solo », qui reste
   // le libellé des autres pages générales).
   const appel =
     quoi === "enseignant"

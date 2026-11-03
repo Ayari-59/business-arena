@@ -121,12 +121,12 @@ describe("plan du site", () => {
     expect(doubles, `une page, plusieurs noms :\n${doubles.join("\n")}`).toEqual([]);
   });
 
-  it("les entreprises jouables se rangent avec ce qu'on joue, pas chez les entreprises clientes (octobre 2026)", () => {
-    const jouer = NAVIGATION.find((g) => g.code === "jouer")!;
-    expect(jouer.liens.find((l) => l.href === "/entreprises")?.libelle).toBe("Les entreprises jouables");
+  it("les cas d'entreprise se rangent chez les élèves, pas chez les entreprises clientes (novembre 2026)", () => {
+    const eleves = NAVIGATION.find((g) => g.code === "eleves")!;
+    expect(eleves.liens.find((l) => l.href === "/entreprises")?.libelle).toBe("Les cas d'entreprise");
     const clientes = NAVIGATION.find((g) => g.code === "entreprises")!;
     expect(clientes.liens.map((l) => l.href)).not.toContain("/entreprises");
-    expect(clientes.entree).toBe("/entreprises/episode");
+    expect(clientes.entree).toBe("/entreprises/offre");
   });
 
   it("chaque entrée dit ce qu'on y trouve", () => {
@@ -169,8 +169,8 @@ describe("plan du site", () => {
     for (const g of groupesDEntree) {
       expect(g.liens.map((l) => l.href), `« ${g.titre} » : l'entrée ${g.entree} n'est pas dans le groupe`).toContain(g.entree);
     }
-    // Tous les groupes sauf « Jouer » sont dans la barre : ses portes sont les boutons.
-    expect(NAVIGATION.filter((g) => !g.entree).map((g) => g.code)).toEqual(["jouer"]);
+    // Tous les groupes sauf « Élèves » sont dans la barre : ses portes sont les boutons.
+    expect(NAVIGATION.filter((g) => !g.entree).map((g) => g.code)).toEqual(["eleves"]);
   });
 
   it("la barre ne remet pas tout le plan à plat", () => {

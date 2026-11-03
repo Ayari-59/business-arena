@@ -10,6 +10,8 @@ import { SiteLogo } from "@/components/site-logo";
 import {
   ACTION_PRINCIPALE,
   GROUPE_OUVERT,
+  LIEN_MENTIONS,
+  LIENS_TRANSVERSES,
   liensDAcces,
   liensDeTete,
   NAVIGATION,
@@ -47,7 +49,7 @@ import {
  * pour elle seule : ses classes, écrites pour un fond sombre, s'y lisent
  * telles quelles, et le logo y prend sa version blanche.
  *
- * LES LIENS À PLAT SONT LES PUBLICS DU PLAN : Enseignants · Écoles ·
+ * LES LIENS À PLAT SONT LES PUBLICS DU PLAN : Enseignants · Établissements ·
  * Entreprises · Aide · Offres, chacun vers la présentation de son public, et
  * chacun portant EXACTEMENT le titre du groupe que le menu déplie sous le même
  * mot. Un visiteur qui lit la barre sait donc ce qu'il trouvera dans le menu,
@@ -235,7 +237,7 @@ export function SiteHeader() {
                   // LOT P2 : UN SEUL CADRE D'ACTION DANS LA BARRE. Les deux
                   // portes étaient deux boutons secondaires côte à côte, plus
                   // le menu : trois cadres pour une barre. L'élève qui a un
-                  // code garde le filet (« Rejoindre une partie ») ; l'espace
+                  // code garde le filet (« J'ai un code ») ; l'espace
                   // enseignant devient un lien souligné, comme les rubriques à
                   // sa gauche. Le seul bouton plein du premier écran reste
                   // « Tester le simulateur » (lot P6), dans le héros.
@@ -317,6 +319,14 @@ export function SiteHeader() {
             aria-hidden
             className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent"
           />
+          {/* CE QUI SERT À TOUS, EN TÊTE DU PLAN : choisir sa simulation et prendre
+              rendez-vous n'appartiennent à aucun public (config/navigation.ts,
+              LIENS_TRANSVERSES). Les mentions légales ferment le plan, plus bas. */}
+          <div data-liens-transverses="" className="mb-2 space-y-0.5 border-b border-white/10 pb-2">
+            {LIENS_TRANSVERSES.filter((l) => l.href !== LIEN_MENTIONS.href).map((lien) => (
+              <Entree key={lien.href} lien={lien} courant={estCourant(lien.href)} />
+            ))}
+          </div>
           <div className="space-y-1">
             {NAVIGATION.map((groupe) => {
               const ouvertGroupe = groupesOuverts.has(groupe.code);
@@ -390,6 +400,16 @@ export function SiteHeader() {
           <div className="mt-3 border-t border-white/10 px-3 pt-3 empty:hidden">
             <InstallButton />
           </div>
+          <p className="mt-2 px-3 text-xs">
+            <Link
+              href={LIEN_MENTIONS.href}
+              title={LIEN_MENTIONS.aide}
+              aria-current={estCourant(LIEN_MENTIONS.href) ? "page" : undefined}
+              className="text-slate-400 underline-offset-4 hover:text-slate-200 hover:underline pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center"
+            >
+              {LIEN_MENTIONS.libelle}
+            </Link>
+          </p>
 
         </div>
       </div>

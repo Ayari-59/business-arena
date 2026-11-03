@@ -7,6 +7,7 @@ import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
 import { CHAPITRES, PARCOURS, PROGRAMME, chapitreParCode } from "../../src/config/cours/registre";
 import { CAS_DE_SYNTHESE, casDuChapitre, motsDuContenu } from "../../src/config/cours/situations";
 import { programmeDuDiplome } from "../../src/config/cours/programme";
+import { coursDuDiplome } from "../../src/config/cours/par-diplome";
 import { THEMES, themeDuChapitre } from "../../src/config/cours/themes";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
 import { chapitresDeLaNotion, suitesDuChapitre } from "../../src/pedagogy/cours/suites";
@@ -93,12 +94,12 @@ describe("/cours : le catalogue par thème et le chapitre libre", () => {
     await page.context().close();
   }, 60_000);
 
-  it("le diplôme choisi compile son programme : couverture, ateliers, chapitres et épisodes", async () => {
+  it("le diplôme choisi montre son parcours : couverture, blocs, chapitres dans l'ordre, ateliers et épisodes", async () => {
     const page = await nouvellePage(390, 844);
     await aller(page, "/cours");
-    // Le formulaire marche sans script : choisir, puis compiler.
-    await page.locator('[data-filtre-diplome] select[name="diplome"]').selectOption("bac-pro-mcv");
-    await page.locator("[data-filtre-diplome]").getByRole("button", { name: "Compiler le programme" }).click();
+    // « Votre formation ? » : une tuile par diplôme, du CAP au DSCG ; la tuile est un lien, sans script.
+    expect(await page.locator("[data-diplome-tuile]").first().getAttribute("data-diplome-tuile")).toBe("cap-epc");
+    await page.locator('[data-diplome-tuile="bac-pro-mcv"]').click();
     await page.waitForURL(/diplome=bac-pro-mcv/);
     const programme = page.locator('[data-programme="bac-pro-mcv"]');
     expect(await programme.count()).toBe(1);
@@ -111,6 +112,16 @@ describe("/cours : le catalogue par thème et le chapitre libre", () => {
     );
     expect(await programme.locator("[data-episode]").count()).toBe(attendu.episodes.length);
     expect(await programme.locator('a[href="/parcours/bac-pro-mcv"]').count()).toBeGreaterThan(0);
+    // Les chapitres, groupés par bloc du référentiel, numérotés dans l'ordre d'apprentissage.
+    const parcours = coursDuDiplome("bac-pro-mcv")!;
+    expect(await programme.locator("[data-bloc-du-diplome]").count()).toBe(parcours.blocs.length);
+    expect(await programme.locator("[data-chapitre] [data-objectifs]").count()).toBe(
+      parcours.blocs.reduce((n, b) => n + b.chapitres.length, 0),
+    );
+    // Un visiteur sans compte voit le cadenas des chapitres réservés.
+    expect(await programme.locator("[data-cadenas]").count()).toBe(
+      parcours.blocs.flatMap((b) => b.chapitres).filter((l) => !l.chapitre.libre).length,
+    );
     expect(await debordement(page)).toBeLessThanOrEqual(0);
     // Un diplôme qui a ses ateliers les propose.
     await aller(page, "/cours?diplome=bts-mco");
