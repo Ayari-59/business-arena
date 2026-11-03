@@ -137,8 +137,29 @@ export function formationParCode(code: string): Formation | undefined {
 }
 
 /** Les formations qu'un atelier sert, dans l'ordre du registre. */
+/**
+ * LES FORMATIONS RETIRÉES DU SITE PUBLIC : au lycée, le bac STMG seul (décision du
+ * propriétaire, novembre 2026). La règle et ce qu'elle retire : config/formations-proposees.ts.
+ * Elle s'écrit ici parce que les libellés des ateliers (`formationsDe`) la lisent déjà.
+ */
+export const FORMATIONS_RETIREES: ReadonlySet<string> = new Set([
+  "cap-epc",
+  "seconde-mg",
+  "seconde-ses",
+  "seconde-pro-rc",
+  "seconde-pro-gatl",
+  "bac-pro-agora",
+  "bac-pro-mcv",
+]);
+
+/** Une formation du registre est-elle proposée ? Une option suit son diplôme. */
+export function formationProposee(code: string): boolean {
+  return !FORMATIONS_RETIREES.has(formationParCode(code)?.optionDe ?? code);
+}
+
+/** Les formations proposées d'une liste de codes, dans l'ordre du registre. */
 export function formationsDe(codes: readonly string[]): Formation[] {
-  return FORMATIONS.filter((f) => codes.includes(f.code));
+  return FORMATIONS.filter((f) => codes.includes(f.code) && formationProposee(f.code));
 }
 
 /** « BTS CG, BTS MCO et STMG » : une énumération française finit par « et ». */

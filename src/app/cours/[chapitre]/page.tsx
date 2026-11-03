@@ -5,6 +5,7 @@ import { ChapitreGuide } from "@/components/cours/chapitre-guide";
 import { PiedDePage } from "@/components/pied-de-page";
 import { casDeLEntreprise } from "@/config/cours/cas";
 import { CHAPITRES, chapitreParCode } from "@/config/cours/registre";
+import { chapitrePropose } from "@/config/formations-proposees";
 import { motsDuContenu } from "@/config/cours/situations";
 import { missionAffichee } from "@/config/cours/jouez";
 import { getGuestUserId } from "@/lib/guest";
@@ -27,6 +28,9 @@ export async function generateMetadata({ params }: { params: Promise<{ chapitre:
     title: `${c.titre} · Le cours par la simulation`,
     description: c.accroche,
     alternates: { canonical: `/cours/${c.code}` },
+    // Un chapitre retiré (config/formations-proposees.ts) se joue encore pour la classe qui l'a,
+    // mais ne se propose plus : il sort des moteurs de recherche.
+    ...(chapitrePropose(c) ? {} : { robots: { index: false, follow: false } }),
   };
 }
 

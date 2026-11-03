@@ -1,4 +1,5 @@
 import { espacesOrdinaires, insecables } from "../../src/lib/typographie";
+import { FORMATIONS_RETIREES, chapitrePropose } from "../../src/config/formations-proposees";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Browser, Page } from "playwright-core";
 import { aller, ouvrirNavigateur } from "./helpers/browser";
@@ -63,8 +64,11 @@ describe("/cours : le catalogue par thème et le chapitre libre", () => {
     // Un tiroir par thème, fermés à l'arrivée : la page est un index, pas une carte à dérouler.
     expect(await page.locator("details[data-theme]").count()).toBe(THEMES.length);
     expect(await page.locator("details[data-theme][open]").count()).toBe(0);
-    // Chaque chapitre une fois dans le catalogue, sous son thème.
-    for (const c of CHAPITRES) {
+    // Chaque chapitre proposé une fois dans le catalogue, sous son thème ; un chapitre retiré
+    // (config/formations-proposees.ts) n'y est plus.
+    for (const c of CHAPITRES.filter((x) => !chapitrePropose(x)))
+      expect(await page.locator(`details[data-theme] [data-chapitre="${c.code}"]`).count(), c.code).toBe(0);
+    for (const c of CHAPITRES.filter(chapitrePropose)) {
       const lignes = page.locator(`details[data-theme] [data-chapitre="${c.code}"]`);
       expect(await lignes.count(), c.code).toBe(1);
       expect(
@@ -82,7 +86,7 @@ describe("/cours : le catalogue par thème et le chapitre libre", () => {
     expect(await page.locator("[data-a-venir]").count()).toBe(aVenir.length);
     // Chaque cas de synthèse paraît une fois, sous le thème des chapitres qu'il reprend.
     // Chaque chapitre porte son cas pratique dédié, sur sa ligne.
-    for (const c of CHAPITRES) {
+    for (const c of CHAPITRES.filter(chapitrePropose)) {
       expect(await page.locator(`details[data-theme] [data-chapitre="${c.code}"] [data-cas-du-chapitre="${casDuChapitre(c.code)!.code}"]`).count(), c.code).toBe(1);
     }
     for (const s of CAS_DE_SYNTHESE) {
@@ -98,13 +102,15 @@ describe("/cours : le catalogue par thème et le chapitre libre", () => {
   it("le diplôme choisi montre son parcours : couverture, blocs, chapitres dans l'ordre, ateliers et épisodes", async () => {
     const page = await nouvellePage(390, 844);
     await aller(page, "/cours");
-    // « Votre formation ? » : une tuile par diplôme, du CAP au DSCG ; la tuile est un lien, sans script.
-    expect(await page.locator("[data-diplome-tuile]").first().getAttribute("data-diplome-tuile")).toBe("cap-epc");
-    await page.locator('[data-diplome-tuile="bac-pro-mcv"]').click();
-    await page.waitForURL(/diplome=bac-pro-mcv/);
-    const programme = page.locator('[data-programme="bac-pro-mcv"]');
+    // « Votre formation ? » : une tuile par diplôme, du bac STMG au DSCG (config/formations-proposees.ts) ;
+    // la tuile est un lien, sans script.
+    expect(await page.locator("[data-diplome-tuile]").first().getAttribute("data-diplome-tuile")).toBe("stmg");
+    for (const code of FORMATIONS_RETIREES) expect(await page.locator(`[data-diplome-tuile="${code}"]`).count(), code).toBe(0);
+    await page.locator('[data-diplome-tuile="bts-mco"]').click();
+    await page.waitForURL(/diplome=bts-mco/);
+    const programme = page.locator('[data-programme="bts-mco"]');
     expect(await programme.count()).toBe(1);
-    const attendu = programmeDuDiplome("bac-pro-mcv")!;
+    const attendu = programmeDuDiplome("bts-mco")!;
     expect(await programme.locator("[data-couverture-du-programme]").innerText().then(espacesOrdinaires)).toContain(
       `${attendu.couverture.travaillees} entrées sur ${attendu.couverture.total}`,
     );
@@ -112,9 +118,9 @@ describe("/cours : le catalogue par thème et le chapitre libre", () => {
       attendu.themes.reduce((n, t) => n + t.chapitres.length, 0),
     );
     expect(await programme.locator("[data-episode]").count()).toBe(attendu.episodes.length);
-    expect(await programme.locator('a[href="/parcours/bac-pro-mcv"]').count()).toBeGreaterThan(0);
+    expect(await programme.locator('a[href="/parcours/bts-mco"]').count()).toBeGreaterThan(0);
     // Les chapitres, groupés par bloc du référentiel, numérotés dans l'ordre d'apprentissage.
-    const parcours = coursDuDiplome("bac-pro-mcv")!;
+    const parcours = coursDuDiplome("bts-mco")!;
     expect(await programme.locator("[data-bloc-du-diplome]").count()).toBe(parcours.blocs.length);
     expect(await programme.locator("[data-chapitre] [data-objectifs]").count()).toBe(
       parcours.blocs.reduce((n, b) => n + b.chapitres.length, 0),

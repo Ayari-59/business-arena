@@ -8,6 +8,7 @@ import { getStaffContext } from "@/services/admin.service";
 import { classeDeLEnseignant } from "@/services/cours.service";
 import { casDeLEntreprise } from "@/config/cours/cas";
 import { CHAPITRES, chapitreParCode } from "@/config/cours/registre";
+import { chapitrePropose } from "@/config/formations-proposees";
 import { chapitreDuCas } from "@/pedagogy/cours/deroule";
 import { vueDeLaClasse, type LigneDEleve } from "@/pedagogy/cours/suivi";
 import { SITE_URL } from "@/config/site";
@@ -19,7 +20,7 @@ import { Icone } from "@/components/icone";
 import { chapitreOuvertALaClasse, classeSansOffre, offreDuCoursDeLEnseignant } from "@/services/chapitres-de-la-classe";
 import { SubmitButton } from "@/components/submit-button";
 import { ENTREPRISES } from "@/app/cours/entreprises";
-import { PARCOURS_A_CHOISIR, titreDuParcours } from "@/config/cours/parcours-de-formation";
+import { PARCOURS_PROPOSES_A_CHOISIR, titreDuParcours } from "@/config/cours/parcours-de-formation";
 import { lienDuDevis, LIBELLE_DU_DEVIS, OFFRES } from "@/config/tarifs";
 import { calculatriceAction, cloreClasseAction, parcoursAction } from "../actions";
 
@@ -92,7 +93,10 @@ async function ClasseDuCoursPage({
   // CE QUE LA CLASSE OUVRE À SES ÉLÈVES (audit UX du 29 octobre 2026, P1-1) : un cadenas sur
   // chaque chapitre qui leur restera fermé, la règle de l'élève (services/chapitres-de-la-classe.ts).
   const ouvert = (c: (typeof CHAPITRES)[number]) => chapitreOuvertALaClasse(offre, classe, c);
-  const ouverts = CHAPITRES.filter(ouvert).length;
+  // Les chapitres proposés, et ceux du parcours de la classe même s'il a été retiré depuis
+  // (config/formations-proposees.ts) : une classe garde ce qu'elle avait.
+  const montres = CHAPITRES.filter((c) => chapitrePropose(c) || c.parcours === classe.parcours);
+  const ouverts = montres.filter(ouvert).length;
   const libre = CHAPITRES.find((c) => c.libre);
 
   return (
@@ -160,7 +164,7 @@ async function ClasseDuCoursPage({
                   </option>
                   {/* Les parcours du registre, puis les parcours de formation (le BUT), qui regroupent
                       des chapitres d'autres parcours (config/cours/parcours-de-formation.ts). */}
-                  {PARCOURS_A_CHOISIR.map((p) => (
+                  {PARCOURS_PROPOSES_A_CHOISIR.map((p) => (
                     <option key={p.code} value={p.code}>
                       {p.titre}
                     </option>
@@ -199,13 +203,13 @@ async function ClasseDuCoursPage({
         {/* LES CHAPITRES, REPLIÉS (audit UX, P1-9) : une cinquantaine de titres repoussaient le
             tableau des élèves tout en bas, sur téléphone surtout. Le chapitre suivi se lit dans
             le titre du tableau ; la liste s'ouvre pour en changer, un cadenas sur les fermés. */}
-        {CHAPITRES.length > 1 ? (
+        {montres.length > 1 ? (
           <details className="group" data-chapitres-de-la-classe="">
             <summary className="cursor-pointer text-sm text-slate-300 underline-offset-4 hover:underline">
-              Changer de chapitre ({compter(ouverts, "chapitre ouvert", "chapitres ouverts")} à vos élèves sur {CHAPITRES.length})
+              Changer de chapitre ({compter(ouverts, "chapitre ouvert", "chapitres ouverts")} à vos élèves sur {montres.length})
             </summary>
             <nav aria-label="Chapitres" className="mt-3 flex flex-wrap gap-2 text-sm">
-              {CHAPITRES.map((c) => (
+              {montres.map((c) => (
                 <Link
                   key={c.code}
                   href={`/teacher/cours/${classe.id}?chapitre=${c.code}`}

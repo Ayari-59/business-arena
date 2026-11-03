@@ -1196,7 +1196,7 @@ async function TeacherGamePage({
         >
           <label className="min-w-0 flex-1">
             <span className="block text-sm text-slate-400">
-              Le nom sous lequel vous la retrouverez, par exemple « Seconde 3 » ou « BTS MCO
+              Le nom sous lequel vous la retrouverez, par exemple « Terminale STMG 2 » ou « BTS MCO
               groupe B ». Videz le champ pour revenir au nom du scénario.
             </span>
             <input

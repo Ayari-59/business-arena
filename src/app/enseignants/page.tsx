@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/enseignants" },
   title: "Pour les enseignants",
   description:
-    "Le business game qui mesure une décision, pas un clic, et rend compte au référentiel sans mentir. Ateliers clés en main de la seconde au DCG, cours de gestion du CAP au DSCG, partie créée en 30 secondes.",
+    "Le business game qui mesure une décision, pas un clic, et rend compte au référentiel sans mentir. Ateliers clés en main du bac STMG au DCG, cours de gestion du bac STMG au DSCG, partie créée en 30 secondes.",
 };
 
 /** Les formations qui ont leur page (/parcours/…), et celles qu'un atelier sert. */
@@ -60,7 +60,7 @@ const HERO_STATS = [
     // Les deux nombres se lisent dans les registres, et le second dit ce que le premier couvre.
     value: `${FORMATIONS_SERVIES.length}`,
     label: "formations servies",
-    detail: `Du CAP au DSCG, chacune avec sa page de référentiel ; ${FORMATIONS_A_ATELIER.length} avec un atelier clé en main`,
+    detail: `Du bac STMG au DSCG, chacune avec sa page de référentiel ; ${FORMATIONS_A_ATELIER.length} avec un atelier clé en main`,
   },
 ];
 

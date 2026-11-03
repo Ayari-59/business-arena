@@ -1,7 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Browser, Page } from "playwright-core";
 import { REFUS_DE_LA_CLASSE } from "../../src/config/tarifs";
-import { aller, ouvrirNavigateur, texte, unique } from "./helpers/browser";
+import { aller, BASE, ouvrirNavigateur, texte, unique } from "./helpers/browser";
+import { FORMATIONS_RETIREES } from "../../src/config/formations-proposees";
 import { licenceDeLEnseignant } from "./helpers/licence";
 import { ATELIERS, dureeTotaleHeures } from "../../src/config/ateliers";
 import { adosseAUnReferentiel } from "../../src/config/ateliers/referentiels";
@@ -658,8 +659,9 @@ describe("parcours enseignant et élève", () => {
       const tiroirs = onglet.locator("details[data-diplome]");
       // Seuls les diplômes : la découverte, l'approfondissement et le tournoi
       // inter-filières n'ont pas de référentiel et ne sont pas sur cette page.
+      // Les formations retirées (config/formations-proposees.ts) n'ont pas de tiroir.
       const diplomes = new Set(
-        FORMATIONS.filter((f) =>
+        FORMATIONS.filter((f) => !FORMATIONS_RETIREES.has(f.code)).filter((f) =>
           ATELIERS.some(
             (a) =>
               a.formations.includes(f.code) && adosseAUnReferentiel(a.code),
@@ -752,37 +754,23 @@ describe("parcours enseignant et élève", () => {
 
     // UN DIPLÔME SANS ATELIER : sa page le dit et propose l'atelier sur
     // mesure, et la page des parcours le liste à part.
-    await aller(prof, "/parcours/bac-pro-mcv");
+    await aller(prof, "/parcours/dscg");
     expect(await prof.locator("[data-sans-atelier]").isVisible()).toBe(true);
     expect(await prof.locator("[data-sur-mesure-paragraphe]").isVisible()).toBe(true);
     await aller(prof, "/parcours/bts-mco");
     expect(await prof.locator("[data-sans-atelier]").count()).toBe(0);
-    // LES ÉPISODES NE S'ANNONCENT PAS AU LYCÉE (config/episodes/public-des-episodes.ts) :
-    // en seconde pro, l'entrée que seul un épisode touchait n'est plus couverte, et la page ne
-    // montre ni la colonne « En situation » ni la liste des épisodes.
-    await aller(prof, "/parcours/seconde-pro-rc");
-    const ligne = prof.locator('tr[data-bloc*="omnicanal"]');
-    expect(await ligne.getAttribute("data-couvert")).toBe("non");
-    expect(await prof.locator("[data-situation]").count()).toBe(0);
-    expect(await prof.locator("[data-situation-du-diplome]").count()).toBe(0);
-    expect(await prof.getByRole("columnheader", { name: "En situation" }).count()).toBe(0);
-
-    // CE QUI SORT DU CHAMP DE LA GESTION se dit, avec sa raison, au lieu de
-    // passer pour un manque : la sociologie et la science politique de la 2de SES.
-    await aller(prof, "/parcours/seconde-ses");
-    expect(await prof.locator('tr[data-couvert="hors-champ"]').count()).toBe(3);
-    expect(await prof.locator('tr[data-couvert="hors-champ"] [data-raison-hors-champ]').count()).toBe(3);
-
-    // La seconde option MG est servie par l'atelier STMG : sa page le propose.
-    await aller(prof, "/parcours/seconde-mg");
-    expect(await prof.locator("[data-sans-atelier]").count()).toBe(0);
-    expect(await prof.locator('a[href="/animations/stmg"]').count()).toBeGreaterThan(0);
     await aller(prof, "/parcours");
-    expect(
-      await prof
-        .locator('[data-diplome-sans-atelier="Bac pro MCV"] a[href="/parcours/bac-pro-mcv"]')
-        .isVisible(),
-    ).toBe(true);
+    expect(await prof.locator('[data-diplome-sans-atelier="DSCG"] a[href="/parcours/dscg"]').isVisible()).toBe(true);
+
+    // AU LYCÉE, LE BAC STMG SEUL (config/formations-proposees.ts) : les formations retirées
+    // n'ont plus de page, et la page des parcours ne les cite plus.
+    for (const code of FORMATIONS_RETIREES) {
+      const reponse = await prof.goto(`${BASE}/parcours/${code}`, { waitUntil: "domcontentloaded" });
+      expect(reponse?.status(), code).toBe(404);
+    }
+    await aller(prof, "/parcours");
+    for (const code of FORMATIONS_RETIREES) expect(await prof.locator(`a[href="/parcours/${code}"]`).count(), code).toBe(0);
+    expect(await prof.locator('a[href="/parcours/stmg"]').count()).toBeGreaterThan(0);
 
     // Et la page des parcours mène à celle du diplôme.
     await aller(prof, "/parcours");

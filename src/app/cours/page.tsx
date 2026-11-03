@@ -17,6 +17,7 @@ import {
 import { dureeDuChapitre, dureeEnClair } from "@/config/cours/duree";
 import { coursDuDiplome, rechercherChapitres, type ChapitreDuDiplome } from "@/config/cours/par-diplome";
 import { diplomesParNiveau, programmeDuDiplome } from "@/config/cours/programme";
+import { CHAPITRES_PROPOSES, PARCOURS_PROPOSES, chapitrePropose } from "@/config/formations-proposees";
 import { THEMES, episodesDuTheme, themeDuChapitre, type Theme } from "@/config/cours/themes";
 import type { Chapitre } from "@/config/cours/types";
 import { casDuChapitre, type Situation } from "@/config/cours/situations";
@@ -35,7 +36,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Le cours par la simulation : comptabilité, gestion, commerce et ressources humaines",
   description:
-    "Choisissez votre diplôme, du CAP au DSCG : ses chapitres dans l'ordre d'apprentissage, bloc par bloc du référentiel. Sur un cas d'entreprise simulé, l'élève passe lui-même les écritures et construit ses comptes.",
+    "Choisissez votre diplôme, du bac STMG au DSCG : ses chapitres dans l'ordre d'apprentissage, bloc par bloc du référentiel. Sur un cas d'entreprise simulé, l'élève passe lui-même les écritures et construit ses comptes.",
   alternates: { canonical: "/cours" },
 };
 
@@ -55,7 +56,7 @@ const CHAPITRES_PAR_DIPLOME = new Map(
  *
  * LE DIPLÔME D'ABORD (chantier approuvé par le propriétaire, novembre 2026). La page
  * entrait par le thème, et le diplôme n'était qu'un filtre sous le catalogue. Elle
- * demande désormais « Votre formation ? », du CAP au DSCG avec les BUT, en tuiles qui
+ * demande désormais « Votre formation ? », du bac STMG au DSCG avec les BUT, en tuiles qui
  * sont des liens (la page marche sans script) ; le diplôme choisi (`?diplome=`) montre
  * ses chapitres dans l'ordre d'apprentissage, groupés par bloc de son référentiel
  * (config/cours/par-diplome.ts), chacun avec ses objectifs repliés, sa durée, ses
@@ -147,7 +148,7 @@ async function CoursPage({
             </p>
           )}
 
-          {/* « VOTRE FORMATION ? » : l'entrée par le diplôme, du CAP au DSCG. Chaque tuile est
+          {/* « VOTRE FORMATION ? » : l'entrée par le diplôme, du bac STMG au DSCG. Chaque tuile est
               un lien : le parcours du diplôme se compile côté serveur, sans script. */}
           <section aria-labelledby="formation" className="grid gap-5" data-entree-par-diplome="">
             <div className="grid gap-2">
@@ -155,7 +156,7 @@ async function CoursPage({
                 Votre formation ?
               </h2>
               <p className="max-w-3xl text-base text-slate-300">
-                Du CAP au DSCG, avec les BUT : choisissez le diplôme, et lisez ses chapitres dans l&apos;ordre où ils
+                Du bac STMG au DSCG, avec les BUT : choisissez le diplôme, et lisez ses chapitres dans l&apos;ordre où ils
                 s&apos;apprennent, rangés sous les blocs de son référentiel.
               </p>
             </div>
@@ -422,7 +423,7 @@ async function CoursPage({
                 Le catalogue par thème
               </h2>
               <p className="max-w-3xl text-base text-slate-300">
-                {CHAPITRES.length} chapitres en {THEMES.length} thèmes, du CAP au DSCG, et, dans l&apos;enseignement supérieur, des
+                {CHAPITRES_PROPOSES.length} chapitres en {THEMES.length} thèmes, du bac STMG au DSCG, et, dans l&apos;enseignement supérieur, des
                 épisodes à jouer en situation. Chaque chapitre dit son palier, sa durée indicative et son accès : le premier est libre, avec son
                 cas pratique, la suite est réservée aux établissements sous licence.
               </p>
@@ -430,7 +431,8 @@ async function CoursPage({
 
             <div className="grid gap-3 md:grid-cols-2">
               {THEMES.map((theme) => {
-                const chapitres = theme.chapitres.map((code) => CHAPITRES.find((c) => c.code === code)!);
+                // Les chapitres retirés (config/formations-proposees.ts) ne se proposent plus.
+                const chapitres = theme.chapitres.map((code) => CHAPITRES.find((c) => c.code === code)!).filter(chapitrePropose);
                 const episodes = episodesDuTheme(theme);
                 const aVenir = enPreparationDuTheme(theme);
                 const situations = casDeSyntheseDuTheme(theme);
@@ -718,7 +720,7 @@ function ListeDEpisodes({ codes }: { codes: readonly string[] }) {
  * sont déjà écrits : le nombre se compte sur son programme, jamais à la main.
  */
 function enPreparationDuTheme(theme: Theme): { parcours: string; titre: string; nombre: number }[] {
-  return PARCOURS.filter((p) => p.enPreparation).flatMap((p) => {
+  return PARCOURS_PROPOSES.filter((p) => p.enPreparation).flatMap((p) => {
     const ecrits = CHAPITRES.filter((c) => c.parcours === p.code);
     if (ecrits.length === 0 || themeDuChapitre(ecrits[0]!.code)?.code !== theme.code) return [];
     const prevus = Object.values(PROGRAMME[p.code]).reduce((n, titres) => n + (titres?.length ?? 0), 0);

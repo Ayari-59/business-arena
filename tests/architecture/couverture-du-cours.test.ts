@@ -22,7 +22,8 @@ import {
   tableauDeCouverture,
 } from "@/config/couverture";
 import { CHAPITRES, PARCOURS } from "@/config/cours/registre";
-import { FORMATIONS, formationParCode } from "@/config/formations";
+import { FORMATIONS, formationParCode, formationProposee } from "@/config/formations";
+import { chapitrePropose } from "@/config/formations-proposees";
 
 /**
  * Ce test parcourt tout le catalogue, dans chaque entreprise : sa durée croît avec chaque
@@ -80,9 +81,10 @@ describe("la couverture par le cours", () => {
     }
   });
 
-  it("tout chapitre paraît sur la page d'au moins un diplôme", () => {
+  it("tout chapitre proposé paraît sur la page d'au moins un diplôme", () => {
     const pages = formationsAvecUnePage().map((f) => f.code);
-    for (const c of CHAPITRES) {
+    // Les chapitres retirés (config/formations-proposees.ts) n'ont plus de page de diplôme.
+    for (const c of CHAPITRES.filter(chapitrePropose)) {
       const chez = pages.filter((f) =>
         coursDeLaFormation(f).some((g) => g.chapitres.some((x) => x.code === c.code)),
       );
@@ -96,7 +98,9 @@ describe("la couverture par le cours", () => {
     const pages = new Set(formationsAvecUnePage().map((f) => f.code));
     for (const p of suivies) {
       expect(formationParCode(p.formation!), `${p.code} suit « ${p.formation} », qui n'existe pas`).toBeDefined();
-      expect(pages, `${p.formation} n'a pas de page`).toContain(p.formation);
+      // Une formation retirée (config/formations-proposees.ts) n'a plus de page.
+      if (formationProposee(p.formation!)) expect(pages, `${p.formation} n'a pas de page`).toContain(p.formation);
+      else expect(pages, `${p.formation} est retirée mais a sa page`).not.toContain(p.formation);
     }
   });
 
@@ -221,7 +225,7 @@ describe("la couverture par le cours", () => {
     expect(cles.length, "le registre par formation est vide").toBeGreaterThan(10);
     for (const cle of cles) {
       expect(codes, `« ${cle} » n'est le code d'aucune formation`).toContain(cle);
-      expect(pages, `${cle} a son texte au registre mais pas de page`).toContain(cle);
+      if (formationProposee(cle)) expect(pages, `${cle} a son texte au registre mais pas de page`).toContain(cle);
       expect(referentielDeLaFormation(cle)).toBe(REFERENTIELS_DES_FORMATIONS[cle]);
     }
     // Des diplômes sans atelier sont bien au registre : sinon la règle ne garde rien.
