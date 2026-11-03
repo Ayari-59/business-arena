@@ -171,7 +171,7 @@ describe("les épisodes, indexés (décision d'octobre 2026 : « indexer »)", (
 describe("espaces privés : titre pour l'onglet, rien pour les moteurs", () => {
   it("/join et /compete ont un titre et sont noindex", async () => {
     for (const [module, attendu] of [
-      ["/join/page", "Rejoindre une partie"],
+      ["/join/page", "J’ai un code"],
       ["/compete/page", "Rejoindre un concours"],
     ] as const) {
       const m = await meta(module);

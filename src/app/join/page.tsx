@@ -9,7 +9,7 @@ import { promesseDuCarton } from "@/services/game.service";
 
 /** Page d'entrée par code : un titre pour l'onglet, rien pour les moteurs. */
 export const metadata: Metadata = {
-  title: "Rejoindre une partie",
+  title: "J’ai un code",
   description: "Entrez le code de la partie donné par votre enseignant pour rejoindre votre équipe.",
   robots: { index: false, follow: false },
 };
@@ -41,7 +41,7 @@ export default async function JoinPage({
     <main id="main" className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
       <div className="text-center">
         <p className="text-xs uppercase tracking-annonce text-amber-400">Business Arena</p>
-        <h1 className="mt-2 text-3xl font-bold">Rejoindre une partie</h1>
+        <h1 className="mt-2 text-3xl font-bold">J’ai un code</h1>
         <p className="mt-2 max-w-md text-base text-slate-400">
           {carton?.deplacera
             ? "Le code est déjà rempli : entrez votre prénom pour rejoindre votre équipe."
