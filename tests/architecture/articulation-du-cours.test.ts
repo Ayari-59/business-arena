@@ -5,7 +5,7 @@ import { briques } from "@/config/articulation";
 import { ATELIERS } from "@/config/ateliers";
 import { CHAPITRES } from "@/config/cours/registre";
 import { SITUATIONS, motsDuContenu } from "@/config/cours/situations";
-import { NOMBRE_D_EPISODES } from "@/config/episodes/familles";
+import { FICHES_LISTEES } from "@/config/episodes/fiches";
 
 /**
  * L'ARTICULATION DIT LES QUATRE BRIQUES, AVEC LEURS VRAIS COMPTES.
@@ -23,7 +23,8 @@ describe("l'articulation du cours", () => {
     expect(b[0]!.compte).toBe(`${CHAPITRES.length} chapitres`);
     expect(b[1]!.compte).toBe(`${SITUATIONS.length} cas pratiques`);
     expect(b[2]!.compte).toBe(`${ATELIERS.length} ateliers prêts à animer`);
-    expect(b[3]!.compte).toBe(`${NOMBRE_D_EPISODES} épisodes`);
+    // Les épisodes en classe : ceux dont la fiche est listée (novembre 2026).
+    expect(b[3]!.compte).toBe(`${FICHES_LISTEES.length} épisodes`);
     for (const x of b) expect(x.texte, x.code).not.toMatch(/[\wÀ-ÿ] [—–] [\wÀ-ÿ]/);
   });
 

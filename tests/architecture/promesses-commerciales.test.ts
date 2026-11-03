@@ -53,8 +53,10 @@ describe("P0-1 : le guide de débrief des épisodes", () => {
     // La page de chaque fiche se lit par son code, et la liste les range toutes.
     const page = lire("app/enseignants/episodes/[code]/page.tsx");
     expect(page).toMatch(/ficheParCode\(code\)/);
-    expect(lire("app/enseignants/episodes/page.tsx")).toMatch(/FICHES\.map/);
-    expect(lire("app/sitemap.ts")).toMatch(/FICHES\.map/);
+    // La liste et le plan rangent les fiches listées (novembre 2026 : une fiche sans formation
+    // ouverte aux épisodes garde son adresse, hors de la liste et du plan).
+    expect(lire("app/enseignants/episodes/page.tsx")).toMatch(/FICHES_LISTEES\.map/);
+    expect(lire("app/sitemap.ts")).toMatch(/FICHES_LISTEES\.map/);
   });
 
   it("le nombre du guide vient du registre des fiches, pas de celui des épisodes", () => {
@@ -66,7 +68,7 @@ describe("P0-1 : le guide de débrief des épisodes", () => {
 
   it("/ecoles tire le nombre des fiches du registre et dit où les lire", () => {
     const ecoles = lire("app/ecoles/page.tsx");
-    expect(ecoles).toMatch(/chaque épisode a son guide de débrief[^`]*\$\{FICHES\.length\} fiches/);
+    expect(ecoles).toMatch(/chaque épisode a son guide de débrief[^`]*\$\{FICHES_LISTEES\.length\} fiches/);
     expect(ecoles).toMatch(/Épisodes en classe/);
   });
 });

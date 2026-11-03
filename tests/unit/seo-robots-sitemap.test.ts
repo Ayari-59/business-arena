@@ -6,7 +6,7 @@ import sitemap, { PAGES_PUBLIQUES } from "@/app/sitemap";
 import { ATELIERS } from "@/config/ateliers";
 import { formationsAvecUnePage } from "@/config/couverture";
 import { SITE_URL } from "@/config/site";
-import { FICHES } from "@/config/episodes/fiches";
+import { FICHES, FICHES_LISTEES } from "@/config/episodes/fiches";
 import { EPISODES } from "@/pedagogy/episodes/registre";
 
 // Le plan du site lit désormais les concours publiés en base : on la remplace
@@ -98,7 +98,12 @@ describe("sitemap.xml", () => {
     expect(urls).toContain(`${SITE_URL}/entreprises/episode`);
     expect(urls).toContain(`${SITE_URL}/enseignants/episodes`);
     for (const e of EPISODES) expect(urls, e.code).toContain(`${SITE_URL}/entreprises/episode/${e.code}`);
-    for (const f of FICHES) expect(urls, f.code).toContain(`${SITE_URL}/enseignants/episodes/${f.code}`);
+    // Les fiches listées seulement : une fiche sans formation ouverte aux épisodes garde son
+    // adresse, hors du plan (décision du propriétaire, novembre 2026).
+    for (const f of FICHES_LISTEES) expect(urls, f.code).toContain(`${SITE_URL}/enseignants/episodes/${f.code}`);
+    const retirees = FICHES.filter((f) => !FICHES_LISTEES.includes(f));
+    expect(retirees.length).toBeGreaterThan(0);
+    for (const f of retirees) expect(urls, f.code).not.toContain(`${SITE_URL}/enseignants/episodes/${f.code}`);
   });
 
   it("liste la page de chaque diplôme servi, son tableau de couverture", () => {

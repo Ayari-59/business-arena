@@ -4,7 +4,7 @@ import { ROLES } from "@/config/ateliers/roles";
 import { formationsAvecUnePage } from "@/config/couverture";
 import { GUIDES, cheminDuGuide } from "@/config/guides";
 import { SITE_URL } from "@/config/site";
-import { FICHES } from "@/config/episodes/fiches";
+import { FICHES_LISTEES } from "@/config/episodes/fiches";
 import { EPISODES } from "@/pedagogy/episodes/registre";
 import { getPublicCompetitionCodes } from "@/services/competition.service";
 
@@ -119,7 +119,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  // Chaque épisode manager (/entreprises/episode/<code>) et chaque fiche enseignant.
+  // Chaque épisode manager (/entreprises/episode/<code>) et chaque fiche enseignant listée : une
+  // fiche sans formation ouverte aux épisodes garde son adresse, hors du plan (`FICHES_LISTEES`).
   const episodes: MetadataRoute.Sitemap = [
     ...EPISODES.map((e) => ({
       url: `${SITE_URL}/entreprises/episode/${e.code}`,
@@ -127,7 +128,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly" as const,
       priority: 0.5,
     })),
-    ...FICHES.map((f) => ({
+    ...FICHES_LISTEES.map((f) => ({
       url: `${SITE_URL}/enseignants/episodes/${f.code}`,
       lastModified: DATE_DE_BUILD,
       changeFrequency: "monthly" as const,

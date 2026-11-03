@@ -4,8 +4,8 @@ import Link from "next/link";
 import { PiedDePage } from "@/components/pied-de-page";
 import { CatalogueDesEpisodes } from "@/components/catalogue-des-episodes";
 import { catalogueDesEpisodes } from "@/config/episodes/catalogue";
-import { FICHES, type FicheEnseignant } from "@/config/episodes/fiches";
-import { A_PARTIR_DE_BAC_3, PUBLIC_DES_EPISODES } from "@/config/episodes/public-des-episodes";
+import { FICHES_LISTEES, type FicheEnseignant } from "@/config/episodes/fiches";
+import { PUBLIC_DES_EPISODES } from "@/config/episodes/public-des-episodes";
 import { dureeEnClair } from "@/config/cours/duree";
 import { formationParCode } from "@/config/formations";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
@@ -27,9 +27,13 @@ export const metadata: Metadata = {
  * sans fiche ne s'affiche pas. Une fiche dit ce que
  * l'épisode enseigne, comment conduire la séance de deux heures, le corrigé
  * du calcul et les questions du débrief.
+ *
+ * Seules les fiches qui citent une formation ouverte aux épisodes sont rangées ici
+ * (`FICHES_LISTEES`, décision du propriétaire de novembre 2026) : les autres gardent leur
+ * adresse, hors du plan du site et de l'index.
  */
 function EpisodesEnClassePage() {
-  const avecFiche = new Map(FICHES.map((f) => [f.code, f]));
+  const avecFiche = new Map(FICHES_LISTEES.map((f) => [f.code, f]));
   const entreprises = catalogueDesEpisodes((code) => avecFiche.has(code));
   return (
     <>
@@ -81,10 +85,8 @@ function CarteFiche({ fiche, niveau }: { fiche: FicheEnseignant; niveau: 3 | 4 }
   if (!ep) return null;
   // Le niveau du titre suit le rangement (voir la page des épisodes).
   const Titre = niveau === 3 ? "h3" : "h4";
-  // Sans formation ouverte au registre, la fiche s'adresse aux publics de la règle.
-  const sigles = fiche.formations.length
-    ? fiche.formations.map((c) => formationParCode(c)?.sigle ?? c).join(" · ")
-    : A_PARTIR_DE_BAC_3;
+  // Une fiche listée cite toujours une formation ouverte (`FICHES_LISTEES`).
+  const sigles = fiche.formations.map((c) => formationParCode(c)?.sigle ?? c).join(" · ");
   return (
     <li className="carte flex flex-col gap-4 p-6">
       <div>

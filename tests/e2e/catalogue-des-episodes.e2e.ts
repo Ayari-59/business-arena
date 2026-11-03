@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { devices, type Browser, type Page } from "playwright-core";
 import { aller, ouvrirNavigateur } from "./helpers/browser";
 import { enseignantSousLicence } from "./helpers/licence";
-import { FICHES } from "../../src/config/episodes/fiches";
+import { FICHES_LISTEES } from "../../src/config/episodes/fiches";
 import { EPISODES } from "../../src/pedagogy/episodes/registre";
 
 /**
@@ -163,7 +163,7 @@ describe("le catalogue des fiches (/enseignants/episodes)", () => {
     expect(await ouverts(page)).toBe(0);
     expect(
       await page.getByRole("link", { name: /Lire la fiche de l'épisode/, includeHidden: true }).count(),
-    ).toBe(FICHES.length);
+    ).toBe(FICHES_LISTEES.length);
     const premier = page.locator("[data-tiroir-de-theme], [data-tiroir-de-metier]").first();
     await premier.locator("> details > summary").click();
     expect(await premier.getByRole("link", { name: /Lire la fiche/ }).count()).toBeGreaterThan(0);

@@ -22,7 +22,7 @@ import { COMPETENCES } from "@/config/episodes/competences";
 import { DECISIONS_PAR_EPISODE } from "@/config/episodes/familles";
 import { NIVEAUX as NIVEAUX_DES_EPISODES } from "@/config/episodes/niveaux";
 import { EPISODES } from "@/pedagogy/episodes/registre";
-import { FICHES } from "@/config/episodes/fiches";
+import { FICHES_LISTEES } from "@/config/episodes/fiches";
 import { bouton } from "@/components/bouton";
 import { Bande } from "@/components/bande";
 import { BandeDeChiffres } from "@/components/bande-de-chiffres";
@@ -150,7 +150,7 @@ const QUESTIONS = [
     // AUDIT P0-1 : vrai tant que le registre des fiches couvre tous les épisodes
     // (tests/architecture/promesses-commerciales.test.ts) ; les fiches se lisent sur
     // /enseignants/episodes.
-    r: `Une partie ou une cohorte se crée en quelques minutes ; chaque épisode a son guide de débrief, avec la décision qui fait débattre : les ${FICHES.length} fiches se lisent librement sur la page Épisodes en classe.`,
+    r: `Une partie ou une cohorte se crée en quelques minutes ; chaque épisode a son guide de débrief, avec la décision qui fait débattre : les ${FICHES_LISTEES.length} fiches se lisent librement sur la page Épisodes en classe.`,
   },
 ];
 
