@@ -6,7 +6,8 @@ import { servirLeChapitre } from "../../src/pedagogy/cours/chapitre-servi";
 import { montantEcrit } from "../../src/pedagogy/cours/correcteur";
 import { anneeDuMarche } from "../../src/config/cours/monde/attractivite";
 import { coefficientDeSaison, demandeAuPrix, marcheEtPart } from "../../src/config/cours/monde/economie-et-marketing";
-import { VENTES_AUX_PARTICULIERS } from "../../src/config/cours/monde/exercice-de-nova";
+import { CLOTURE_DE_LA_FICHE, COMPOSANTS_DE_DECEMBRE, VENTES_AUX_PARTICULIERS } from "../../src/config/cours/monde/exercice-de-nova";
+import { JEUX_REVENUS_SANS_BON, concordance } from "../../src/config/cours/monde/comptabilite-de-gestion";
 import { MARCHE_A_TROIS } from "../../src/config/cours/monde/marche-a-trois";
 import { MERCATIQUE_DE_NOVA } from "../../src/config/cours/monde/mercatique-de-nova";
 import { ANNEE_N } from "../../src/config/cours/monde/nova-capacite";
@@ -91,11 +92,11 @@ describe("une seule paie de NOVA, d'une fiche à l'autre", () => {
 });
 
 describe("aucun salaire horaire du monde sous le SMIC du cours", () => {
-  it("le SMIC du cours : 12,02 € de l'heure, 1 823,03 € pour 151,67 heures", () => {
-    expect(SMIC_HORAIRE_BRUT).toBe(12.02);
+  it("le SMIC du cours : 12,31 € de l'heure, 1 867,02 € pour 151,67 heures", () => {
+    expect(SMIC_HORAIRE_BRUT).toBe(12.31);
     expect(HEURES_LEGALES_PAR_MOIS).toBe(Math.round((35 * 52 * 100) / 12) / 100);
-    // 12,02 × 35 × 52 ÷ 12 (et non × 151,67 arrondi, qui donnerait 1 823,07 €).
-    expect(Math.round(((12.02 * 35 * 52) / 12) * 100) / 100).toBe(SMIC_MENSUEL_BRUT);
+    // 12,31 × 35 × 52 ÷ 12 (et non × 151,67 arrondi, qui donnerait 1 867,06 €).
+    expect(Math.round(((12.31 * 35 * 52) / 12) * 100) / 100).toBe(SMIC_MENSUEL_BRUT);
   });
 
   it("les opérateurs de NOVA : 1 875 € pour 151,67 heures payées, 12,36 € de l'heure, sans heures supplémentaires", () => {
@@ -104,9 +105,12 @@ describe("aucun salaire horaire du monde sous le SMIC du cours", () => {
     expect(o.heuresParMois).toBeLessThanOrEqual(o.heuresPayeesParMois);
     expect(o.salaireBrutMensuel / o.heuresPayeesParMois).toBeGreaterThanOrEqual(SMIC_HORAIRE_BRUT);
     expect(Math.round((1_875 / 151.67) * 100) / 100).toBe(12.36);
-    // Le salaire du marché et le seuil de démission (95 %) restent au-dessus du SMIC mensuel.
+    // Le salaire du marché reste au-dessus du SMIC mensuel, et le seuil de démission (95 %) aussi
+    // pour N + 1, l'année des décisions. En N, le seuil (1 852,50 €) passe sous le SMIC de juin 2026 :
+    // ce n'est qu'un repère de comportement, aucun salaire payé n'y descend (1 875 €, plus haut).
     const m = NOVA_CAPACITE.personnel.salaireDuMarche;
-    expect(Math.min(m.n, m.nPlus1) * 0.95).toBeGreaterThanOrEqual(SMIC_MENSUEL_BRUT);
+    expect(Math.min(m.n, m.nPlus1)).toBeGreaterThanOrEqual(SMIC_MENSUEL_BRUT);
+    expect(m.nPlus1 * 0.95).toBeGreaterThanOrEqual(SMIC_MENSUEL_BRUT);
   });
 
   it("l'équipe de Maille & Co : chaque salarié, au prorata de ses heures, au moins au SMIC", () => {
@@ -147,4 +151,41 @@ describe("une seule publicité de NOVA, d'un chapitre à l'autre (audit pédagog
       expect(JSON.stringify(servirLeChapitre(c, casDeLEntreprise("nova"))), c.code).not.toMatch(/NOVA ne fait (?:pas|aucune) (?:de )?publicité/);
     }
   }, 60_000);
+});
+
+/**
+ * UNE SEULE NOVA DANS LA COMPTABILITÉ DE GESTION (le coût complet pas à pas, la concordance) : les
+ * douze mois de la gestion lisent les livraisons, les achats, le chiffre d'affaires, le loyer et la
+ * paie de l'exercice ; la fiche de stock de décembre est celle de la clôture, au seul bon du 24 près ;
+ * et le tableau de passage retrouve le résultat net de la clôture, sans second jeu de chiffres.
+ */
+describe("une seule NOVA, de la comptabilité de gestion à la clôture", () => {
+  const k = concordance();
+  const s = k.cg.soldes;
+  it("les douze mois de la gestion font les achats, les ventes, les autres charges, le loyer et la paie des comptes", () => {
+    const mois = k.exercice.mois;
+    const somme = (f: (m: (typeof mois)[number]) => number) => Math.round(mois.reduce((t, m) => t + f(m), 0) * 100) / 100;
+    expect(somme((m) => m.achats)).toBe(s["601"]);
+    expect(somme((m) => m.chiffreDAffaires)).toBe(-s["701"]!);
+    expect(somme((m) => m.autres)).toBe(s["606"]);
+    expect(somme((m) => m.repartition.charges.loyer)).toBe(s["6132"]);
+    expect(somme((m) => m.repartition.charges.personnel)).toBe(s["641"]! + s["645"]!);
+    expect(somme((m) => m.repartition.charges.assurance)).toBe(s["616"]);
+    expect(mois.map((m) => m.repartition.charges.personnel)).toEqual(mois.map(() => CHARGES_FIXES_DU_MOIS.personnel));
+  });
+
+  it("la fiche de décembre de la gestion est celle de la clôture, au bon du 24 près, et l'inventaire compte le stock des comptes", () => {
+    const fiche = k.stockDeGestion.fiche;
+    const sorties = (f: typeof COMPOSANTS_DE_DECEMBRE) => f.mouvements.filter((m) => m.sens === "sortie").map((m) => m.quantite);
+    expect(sorties(fiche)).toEqual(sorties(COMPOSANTS_DE_DECEMBRE).map((q, i) => (i === 1 ? q + JEUX_REVENUS_SANS_BON : q)));
+    expect(fiche.mouvements.filter((m) => m.sens === "entree").map((m) => m.quantite)).toEqual(COMPOSANTS_DE_DECEMBRE.mouvements.filter((m) => m.sens === "entree").map((m) => m.quantite));
+    expect(k.stockGeneral).toBe(CLOTURE_DE_LA_FICHE.travaux.stockFinal);
+    expect(k.stockPhysique.quantite - k.stockDeGestion.final.quantite).toBe(JEUX_REVENUS_SANS_BON);
+  });
+
+  it("le tableau de passage retrouve le résultat net de la clôture, au centime", () => {
+    expect(k.resultatRetrouve).toBe(CLOTURE_DE_LA_FICHE.resultatNet);
+    expect(k.dotation).toBe(CLOTURE_DE_LA_FICHE.travaux.dotationAuxAmortissements);
+    expect(k.usureDeGestion).toBe(12 * CHARGES_FIXES_DU_MOIS.amortissement);
+  });
 });

@@ -109,9 +109,12 @@ describe("le pied de page", () => {
     expect(source).toMatch(/grid-cols-1 [^"]*sm:grid-cols-3 [^"]*lg:grid-cols-5/);
     expect(source, "la ligne traverse les cinq colonnes").toMatch(/sm:col-span-3 lg:col-span-5/);
     expect(source).toContain('const ligne = groupe("offres")');
-    for (const code of ["jouer", "enseignants", "ecoles", "entreprises", "aide", "offres"]) {
+    for (const code of ["eleves", "enseignants", "etablissements", "entreprises", "aide", "offres"]) {
       expect(source, `le groupe « ${code} » manque`).toContain(`groupe("${code}")`);
     }
+    // Ce qui sert à tous (orientation, rendez-vous, mentions légales) ferme le plan, sur une ligne.
+    expect(source).toContain("LIENS_TRANSVERSES.map(");
+    expect(source).toMatch(/data-liens-transverses="" className="sm:col-span-3 lg:col-span-5"/);
     // L'adresse de contact reste en texte, et l'année se lit au rendu.
     expect(source).toContain("VENDEUR.contact");
     expect(source).toContain("new Date().getFullYear()");

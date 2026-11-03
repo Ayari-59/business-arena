@@ -211,7 +211,7 @@ export const GUIDE_ETABLISSEMENT: Guide = {
     {
       titre: "Pour les écoles et les universités",
       texte: "L'arène, les épisodes manager et les compétences mesurées, à montrer à un jury d'accréditation.",
-      lien: { href: "/ecoles", libelle: "Écoles de commerce et universités" },
+      lien: { href: "/ecoles", libelle: "Établissements : écoles et universités" },
     },
     {
       titre: "Préparer le déploiement",

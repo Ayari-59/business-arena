@@ -84,6 +84,11 @@ function textesDeLEtape(ch: Chapitre, e: Etape, i: number, cas: Cas): string[] {
       t.push(...e.lecture(cas, cible.attendu).map((l) => l.libelle), ...e.explication(cas));
       break;
     }
+    case "a-completer": {
+      const g = e.grille(cas);
+      t.push(e.question(cas), g.titre, g.colonnes.join(" | "), ...g.lignes.flatMap((l) => [l.libelle, ...l.cellules.flatMap((x) => [x.texte ?? "", x.calcul ?? "", x.indice ?? ""])]), ...e.explication(cas));
+      break;
+    }
     case "simulation": {
       const leviers = e.leviers(cas);
       const depart = Object.fromEntries(leviers.map((l) => [l.code, l.depart]));

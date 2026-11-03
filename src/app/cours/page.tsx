@@ -1,3 +1,4 @@
+import { Icone } from "@/components/icone";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { bouton } from "@/components/bouton";
@@ -7,16 +8,23 @@ import { ArticulationDuCours } from "@/components/articulation-du-cours";
 import { OuvreLeTiroirVise } from "@/components/ouvre-le-tiroir-vise";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { CHAPITRES, PALIERS, PARCOURS, PROGRAMME } from "@/config/cours/registre";
-import { PARCOURS_DE_FORMATION, chapitresDuParcoursDeFormation } from "@/config/cours/parcours-de-formation";
+import {
+  PARCOURS_DE_FORMATION,
+  chapitresDuParcoursDeFormation,
+  parcoursQuiOuvrent,
+} from "@/config/cours/parcours-de-formation";
 import { dureeDuChapitre, dureeEnClair } from "@/config/cours/duree";
+import { coursDuDiplome, rechercherChapitres, type ChapitreDuDiplome } from "@/config/cours/par-diplome";
 import { diplomesParNiveau, programmeDuDiplome } from "@/config/cours/programme";
 import { THEMES, episodesDuTheme, themeDuChapitre, type Theme } from "@/config/cours/themes";
 import type { Chapitre } from "@/config/cours/types";
 import { casDuChapitre, type Situation } from "@/config/cours/situations";
+import { coursDeLaFormation } from "@/config/couverture";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
 import { casDeSyntheseDuTheme } from "@/pedagogy/cours/suites";
 import { getGuestUserId } from "@/lib/guest";
-import { classeDeLEleve } from "@/services/cours.service";
+import { getSession } from "@/lib/session";
+import { classeDeLEleve, coursOuvert } from "@/services/cours.service";
 import { ENTREPRISES } from "./entreprises";
 import { quitterClasseAction } from "./actions";
 
@@ -26,9 +34,16 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Le cours par la simulation : comptabilité, gestion, commerce et ressources humaines",
   description:
-    "Un cas d'entreprise simulé, guidé étape par étape : l'élève passe lui-même les écritures, répond aux questions et construit son compte de résultat et son bilan.",
+    "Choisissez votre diplôme, du CAP au DSCG : ses chapitres dans l'ordre d'apprentissage, bloc par bloc du référentiel. Sur un cas d'entreprise simulé, l'élève passe lui-même les écritures et construit ses comptes.",
   alternates: { canonical: "/cours" },
 };
+
+/** Le nombre de chapitres de chaque diplôme, pour ses tuiles : compté une fois, au chargement. */
+const CHAPITRES_PAR_DIPLOME = new Map(
+  diplomesParNiveau().flatMap((g) =>
+    g.formations.map((f) => [f.code, coursDeLaFormation(f.code).reduce((n, x) => n + x.chapitres.length, 0)] as const),
+  ),
+);
 
 /**
  * LE COURS PAR LA SIMULATION (décision du propriétaire, octobre 2026).
@@ -37,15 +52,16 @@ export const metadata: Metadata = {
  * écritures, répond, calcule, et la simulation lui montre ce que chaque opération
  * change dans les comptes de l'entreprise qu'il a choisie.
  *
- * LE THÈME D'ABORD (choix du propriétaire). La page rangeait les chapitres par
- * parcours, et un parcours mêlait une discipline et un diplôme : la carte faisait
- * cinq mille pixels, chaque palier écrivait ses titres deux fois (le programme,
- * puis les liens), et « sous licence » se répétait sur chaque lien. Elle se range
- * désormais par thème (config/cours/themes.ts), dans des tiroirs fermés à
- * l'arrivée, chaque chapitre sur une ligne avec son palier, sa durée indicative
- * et son accès, et les épisodes du thème à jouer en situation. Le diplôme est un
- * filtre : il compile le programme (config/cours/programme.ts), avec sa
- * couverture du référentiel, ses ateliers, ses chapitres et ses épisodes.
+ * LE DIPLÔME D'ABORD (chantier approuvé par le propriétaire, novembre 2026). La page
+ * entrait par le thème, et le diplôme n'était qu'un filtre sous le catalogue. Elle
+ * demande désormais « Votre formation ? », du CAP au DSCG avec les BUT, en tuiles qui
+ * sont des liens (la page marche sans script) ; le diplôme choisi (`?diplome=`) montre
+ * ses chapitres dans l'ordre d'apprentissage, groupés par bloc de son référentiel
+ * (config/cours/par-diplome.ts), chacun avec ses objectifs repliés, sa durée, ses
+ * prérequis, et un cadenas s'il est réservé POUR CE VISITEUR. Le catalogue par thème
+ * (config/cours/themes.ts) reste, en lien secondaire « Parcourir par thème », et les
+ * liens `/cours#theme-…` des fins de chapitre l'ouvrent toujours ; une recherche par
+ * mot-clé (`?q=`) le complète. Aucune adresse ne change.
  *
  * Le premier chapitre est libre ; la suite est réservée aux établissements sous
  * licence.
@@ -53,14 +69,23 @@ export const metadata: Metadata = {
 export default async function CoursPage({
   searchParams,
 }: {
-  searchParams: Promise<{ classe?: string; diplome?: string }>;
+  searchParams: Promise<{ classe?: string; diplome?: string; q?: string }>;
 }) {
   const pilote = CHAPITRES.find((c) => c.libre)!;
-  const [{ classe: annonce, diplome }, userId] = await Promise.all([searchParams, getGuestUserId()]);
+  const [{ classe: annonce, diplome, q }, userId, session] = await Promise.all([searchParams, getGuestUserId(), getSession()]);
   const programme = diplome ? programmeDuDiplome(diplome) : null;
+  const parcours = programme ? coursDuDiplome(programme.formation.code) : null;
   const parcoursDeFormation = programme ? PARCOURS_DE_FORMATION.find((p) => p.formation === programme.formation.code) : undefined;
   const classe = userId ? await classeDeLEleve(userId) : null;
   const imposee = classe?.entreprise ? ENTREPRISES.find((e) => e.code === classe.entreprise) : undefined;
+  const motCle = (q ?? "").trim().slice(0, 80);
+  const lignesDuParcours = parcours?.blocs.flatMap((b) => b.chapitres) ?? [];
+  const trouves = motCle ? rechercherChapitres(motCle, parcours ? lignesDuParcours.map((l) => l.chapitre) : undefined) : [];
+  const ouverts = await chapitresOuverts(
+    { enseignant: session?.userId ?? null, eleve: classe ? userId : null },
+    [...lignesDuParcours.map((l) => l.chapitre), ...trouves],
+  );
+  const vueParDefaut = !programme && !motCle;
   return (
     <>
       <main id="main">
@@ -70,8 +95,8 @@ export default async function CoursPage({
           chapeau={
             <>
               Un cas d&apos;entreprise simulé, guidé étape par étape. L&apos;élève passe lui-même les écritures,
-              répond aux questions, et voit à chaque fois ce que l&apos;opération change dans les comptes. Seul ou en
-              classe, dans l&apos;entreprise du jeu que vous choisissez.
+              répond aux questions, et voit à chaque fois ce que l&apos;opération change dans les comptes. Choisissez
+              votre formation : ses chapitres viennent dans l&apos;ordre où ils s&apos;apprennent, bloc par bloc.
             </>
           }
         />
@@ -120,13 +145,224 @@ export default async function CoursPage({
               </Link>
             </p>
           )}
-          {/* LE PREMIER CHAPITRE, EN BANDEAU. Il prenait la moitié de l'écran avec ses
-              entreprises en cartes ; il reste la porte d'entrée, mais le choix de
-              l'entreprise se replie, et le catalogue arrive plus tôt. */}
+
+          {/* « VOTRE FORMATION ? » : l'entrée par le diplôme, du CAP au DSCG. Chaque tuile est
+              un lien : le parcours du diplôme se compile côté serveur, sans script. */}
+          <section aria-labelledby="formation" className="grid gap-5" data-entree-par-diplome="">
+            <div className="grid gap-2">
+              <h2 id="formation" className="scroll-mt-24 text-2xl font-bold text-slate-50">
+                Votre formation ?
+              </h2>
+              <p className="max-w-3xl text-base text-slate-300">
+                Du CAP au DSCG, avec les BUT : choisissez le diplôme, et lisez ses chapitres dans l&apos;ordre où ils
+                s&apos;apprennent, rangés sous les blocs de son référentiel.
+              </p>
+            </div>
+            <div className="grid gap-4">
+              {diplomesParNiveau().map((g) => (
+                <div key={g.niveau} className="grid gap-2">
+                  <h3 className="text-xs font-semibold uppercase tracking-etiquette text-slate-400">{g.niveau}</h3>
+                  <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    {g.formations.map((f) => {
+                      const nombre = CHAPITRES_PAR_DIPLOME.get(f.code) ?? 0;
+                      const choisi = programme?.formation.code === f.code;
+                      return (
+                        <li key={f.code}>
+                          <Link
+                            href={`/cours?diplome=${f.code}#programme`}
+                            title={f.nom}
+                            data-diplome-tuile={f.code}
+                            aria-current={choisi ? "page" : undefined}
+                            className={`flex min-h-14 flex-col justify-center rounded-lg border px-3 py-2 transition hover:border-white/35 ${
+                              choisi ? "border-slate-300 bg-white/5" : "border-white/10"
+                            }`}
+                          >
+                            <span className="font-semibold text-slate-100">{f.sigle}</span>
+                            <span className="text-xs text-slate-400">
+                              {nombre > 0 ? `${nombre} chapitre${nombre > 1 ? "s" : ""}` : "Pas encore de chapitre"}
+                            </span>
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ))}
+            </div>
+            {/* LA RECHERCHE PAR MOT-CLÉ, et le catalogue par thème en lien secondaire. Dans la
+                vue d'un diplôme, la recherche reste dans ses chapitres. */}
+            <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
+              <form method="get" action="/cours#recherche" role="search" className="flex min-w-0 flex-1 flex-wrap items-end gap-2" data-recherche-du-cours="">
+                {programme ? <input type="hidden" name="diplome" value={programme.formation.code} /> : null}
+                <label className="grid min-w-0 flex-1 gap-1 text-sm">
+                  <span className="font-semibold text-slate-100">
+                    {programme ? `Chercher dans le ${programme.formation.sigle}` : "Chercher une notion"}
+                  </span>
+                  <input
+                    type="search"
+                    name="q"
+                    defaultValue={motCle}
+                    placeholder="seuil de rentabilité, TVA, paie…"
+                    className="min-w-0 rounded-lg border border-white/15 bg-slate-950 px-3 py-2 text-slate-100"
+                  />
+                </label>
+                <SubmitButton pendingLabel="Recherche…" className={bouton({ variante: "secondaire", taille: "m" })}>
+                  Chercher
+                </SubmitButton>
+              </form>
+              <Link
+                href={vueParDefaut ? "#catalogue" : "/cours#catalogue"}
+                className="text-sm text-slate-300 underline underline-offset-4 hover:text-slate-100"
+                data-parcourir-par-theme=""
+              >
+                Parcourir par thème
+              </Link>
+            </div>
+          </section>
+
+          {motCle ? (
+            <section aria-labelledby="recherche" className="grid gap-3" data-resultats-de-recherche="">
+              <h2 id="recherche" className="scroll-mt-24 text-xl font-bold text-slate-50">
+                « {motCle} » : {trouves.length > 0 ? `${trouves.length} chapitre${trouves.length > 1 ? "s" : ""}` : "aucun chapitre"}
+                {programme ? ` dans le ${programme.formation.sigle}` : ""}
+              </h2>
+              {trouves.length > 0 ? (
+                <ListeDeChapitres chapitres={trouves} imposee={imposee?.code} ouverts={ouverts} />
+              ) : (
+                <p className="text-sm text-slate-400">
+                  Essayez un autre mot, ou{" "}
+                  <Link href="/cours#catalogue" className="underline underline-offset-4 hover:text-slate-200">
+                    parcourez le catalogue par thème
+                  </Link>
+                  .
+                </p>
+              )}
+            </section>
+          ) : null}
+
+          {programme && parcours ? (
+            <section
+              aria-labelledby="programme-titre"
+              id="programme"
+              data-programme={programme.formation.code}
+              className="carte grid scroll-mt-24 gap-6 border-amber-400/30 p-5 sm:p-6"
+            >
+              <div className="grid gap-1">
+                <p className="text-sm font-semibold uppercase tracking-etiquette text-amber-300">Votre parcours</p>
+                <h2 id="programme-titre" className="text-2xl font-bold text-slate-50">
+                  {programme.formation.nom}
+                </h2>
+                <p className="text-sm text-slate-300" data-couverture-du-programme="">
+                  {programme.couverture.lu
+                    ? `${programme.couverture.travaillees} entrées sur ${programme.couverture.total} du référentiel travaillées par l'arène${
+                        programme.couverture.horsDuChamp > 0
+                          ? `, ${programme.couverture.horsDuChamp} hors du champ de la gestion`
+                          : ""
+                      }. `
+                    : "Le référentiel de ce diplôme n'a pas encore été confronté à son texte. "}
+                  <Link
+                    href={`/parcours/${programme.formation.code}`}
+                    className="text-amber-300 underline-offset-4 hover:underline"
+                  >
+                    Le tableau de couverture, entrée par entrée
+                  </Link>
+                </p>
+              </div>
+
+              {/* LE PARCOURS DE FORMATION (le BUT) : il regroupe des chapitres d'autres parcours, sans
+                  les dupliquer ; une classe qui le choisit les ouvre tous (config/cours/parcours-de-formation.ts). */}
+              {parcoursDeFormation ? (
+                <p className="text-sm text-slate-300" data-parcours-de-formation={parcoursDeFormation.code}>
+                  Pour une classe : le parcours « {parcoursDeFormation.titre} » regroupe{" "}
+                  {chapitresDuParcoursDeFormation(parcoursDeFormation.code).length} chapitres écrits pour d&apos;autres parcours.
+                  Choisi pour la classe, il les ouvre tous, avec leurs cas pratiques.
+                </p>
+              ) : null}
+
+              <div className="grid gap-5">
+                <h3 className="text-sm font-semibold uppercase tracking-etiquette text-slate-400">
+                  Les chapitres, dans l&apos;ordre d&apos;apprentissage
+                </h3>
+                {parcours.blocs.length > 0 ? (
+                  parcours.blocs.map((b) => (
+                    <section
+                      key={b.bloc ?? "autres"}
+                      data-bloc-du-diplome={b.bloc ?? "autres"}
+                      aria-label={b.bloc ?? "Autres chapitres du parcours"}
+                      className="grid gap-2"
+                    >
+                      <h4 className="text-base font-semibold text-slate-100">
+                        {b.bloc ?? "Autres chapitres du parcours"}
+                        {b.partie ? <span className="ml-2 text-xs font-normal text-slate-400">{b.partie}</span> : null}
+                      </h4>
+                      <ol className="grid gap-3">
+                        {b.chapitres.map((l) => (
+                          <ChapitreDuParcours key={l.chapitre.code} ligne={l} imposee={imposee?.code} ouvert={ouverts.has(l.chapitre.code)} />
+                        ))}
+                      </ol>
+                    </section>
+                  ))
+                ) : (
+                  <p className="text-sm text-slate-400">Aucun chapitre du cours ne travaille encore ce diplôme.</p>
+                )}
+              </div>
+
+              <div className="grid gap-2">
+                <h3 className="text-sm font-semibold uppercase tracking-etiquette text-slate-400">En classe</h3>
+                {programme.ateliers.length > 0 ? (
+                  <ul className="grid gap-1 text-sm">
+                    {programme.ateliers.map((a) => (
+                      <li key={a.code}>
+                        <Link
+                          href={`/animations/${a.code}`}
+                          className="font-medium text-slate-100 underline-offset-4 hover:text-amber-300 hover:underline"
+                        >
+                          {a.titre}
+                        </Link>{" "}
+                        <span className="text-slate-400">· atelier · {a.annee}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-slate-400">
+                    Pas encore d&apos;atelier écrit pour ce diplôme : un atelier se construit sur mesure, sur les blocs
+                    de son référentiel.{" "}
+                    <Link
+                      href={`/parcours/${programme.formation.code}`}
+                      className="text-amber-300 underline-offset-4 hover:underline"
+                    >
+                      Ce que nous demandons et ce que nous livrons
+                    </Link>
+                  </p>
+                )}
+              </div>
+
+              {programme.situations.length > 0 ? (
+                <div className="grid gap-2">
+                  <h3 className="text-sm font-semibold uppercase tracking-etiquette text-slate-400">Cas de synthèse</h3>
+                  <ListeDeSituations situations={programme.situations} imposee={imposee?.code} />
+                </div>
+              ) : null}
+
+              {programme.episodes.length > 0 ? (
+                <div className="grid gap-2">
+                  <h3 className="text-sm font-semibold uppercase tracking-etiquette text-slate-400">En situation</h3>
+                  <ListeDEpisodes codes={programme.episodes} />
+                </div>
+              ) : null}
+            </section>
+          ) : diplome ? (
+            <p className="text-sm text-slate-400" role="status">
+              Ce diplôme n&apos;est pas au catalogue : choisissez-en un ci-dessus.
+            </p>
+          ) : null}
+
+          {/* LE PREMIER CHAPITRE, EN BANDEAU : libre, pour essayer. Le choix de l'entreprise
+              se replie. */}
           <section aria-labelledby="pilote" className="carte grid gap-4 p-5 sm:p-6">
             <div className="grid gap-1">
               <p className="text-sm font-semibold uppercase tracking-etiquette text-amber-300">
-                Premier chapitre · libre d&apos;accès · {dureeEnClair(dureeDuChapitre(pilote))}
+                Pour essayer · premier chapitre · libre d&apos;accès · {dureeEnClair(dureeDuChapitre(pilote))}
               </p>
               <h2 id="pilote" className="text-2xl font-bold text-slate-50">
                 {pilote.titre}
@@ -176,6 +412,9 @@ export default async function CoursPage({
           {/* `/cours#theme-vente`, depuis la fin d'un chapitre ou le bilan d'un épisode : le tiroir s'ouvre. */}
           <OuvreLeTiroirVise />
 
+          {/* LE CATALOGUE PAR THÈME, l'entrée secondaire (« Parcourir par thème ») : sur la page
+              sans diplôme ni recherche, là où les liens `/cours#theme-…` l'attendent. */}
+          {vueParDefaut ? (
           <section aria-labelledby="catalogue" className="grid gap-6">
             <div className="grid gap-2">
               <h2 id="catalogue" className="scroll-mt-24 text-2xl font-bold text-slate-50">
@@ -187,134 +426,6 @@ export default async function CoursPage({
                 cas pratique, la suite est réservée aux établissements sous licence.
               </p>
             </div>
-
-            {/* LE DIPLÔME, EN FILTRE. Le formulaire marche sans script : il recharge la page
-                avec le diplôme dans l'adresse, et le programme se compile côté serveur. */}
-            <form method="get" action="/cours#programme" className="carte flex flex-wrap items-end gap-3 p-4" data-filtre-diplome="">
-              <label className="grid min-w-0 flex-1 gap-1 text-sm">
-                <span className="font-semibold text-slate-100">Votre diplôme</span>
-                <select
-                  name="diplome"
-                  defaultValue={programme?.formation.code ?? ""}
-                  className="min-w-0 rounded-lg border border-white/15 bg-slate-950 px-3 py-2 text-slate-100"
-                >
-                  <option value="">Tous les thèmes, sans filtre</option>
-                  {diplomesParNiveau().map((g) => (
-                    <optgroup key={g.niveau} label={g.niveau}>
-                      {g.formations.map((f) => (
-                        <option key={f.code} value={f.code}>
-                          {f.sigle}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </select>
-              </label>
-              <SubmitButton pendingLabel="Compilation…" className={bouton({ taille: "m" })}>
-                Compiler le programme
-              </SubmitButton>
-            </form>
-
-            {programme ? (
-              <section
-                aria-labelledby="programme-titre"
-                id="programme"
-                data-programme={programme.formation.code}
-                className="carte grid scroll-mt-24 gap-5 border-amber-400/30 p-5 sm:p-6"
-              >
-                <div className="grid gap-1">
-                  <p className="text-sm font-semibold uppercase tracking-etiquette text-amber-300">Votre programme</p>
-                  <h3 id="programme-titre" className="text-xl font-bold text-slate-50">
-                    {programme.formation.nom}
-                  </h3>
-                  <p className="text-sm text-slate-300" data-couverture-du-programme="">
-                    {programme.couverture.lu
-                      ? `${programme.couverture.travaillees} entrées sur ${programme.couverture.total} du référentiel travaillées par l'arène${
-                          programme.couverture.horsDuChamp > 0
-                            ? `, ${programme.couverture.horsDuChamp} hors du champ de la gestion`
-                            : ""
-                        }. `
-                      : "Le référentiel de ce diplôme n'a pas encore été confronté à son texte. "}
-                    <Link
-                      href={`/parcours/${programme.formation.code}`}
-                      className="text-amber-300 underline-offset-4 hover:underline"
-                    >
-                      Le tableau de couverture, entrée par entrée
-                    </Link>
-                  </p>
-                </div>
-
-                <div className="grid gap-2">
-                  <h4 className="text-sm font-semibold uppercase tracking-etiquette text-slate-400">En classe</h4>
-                  {programme.ateliers.length > 0 ? (
-                    <ul className="grid gap-1 text-sm">
-                      {programme.ateliers.map((a) => (
-                        <li key={a.code}>
-                          <Link
-                            href={`/animations/${a.code}`}
-                            className="font-medium text-slate-100 underline-offset-4 hover:text-amber-300 hover:underline"
-                          >
-                            {a.titre}
-                          </Link>{" "}
-                          <span className="text-slate-400">· atelier · {a.annee}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-sm text-slate-400">
-                      Pas encore d&apos;atelier écrit pour ce diplôme : un atelier se construit sur mesure, sur les blocs
-                      de son référentiel.{" "}
-                      <Link
-                        href={`/parcours/${programme.formation.code}`}
-                        className="text-amber-300 underline-offset-4 hover:underline"
-                      >
-                        Ce que nous demandons et ce que nous livrons
-                      </Link>
-                    </p>
-                  )}
-                </div>
-
-                {/* LE PARCOURS DE FORMATION (le BUT) : il regroupe des chapitres d'autres parcours, sans
-                    les dupliquer ; une classe qui le choisit les ouvre tous (config/cours/parcours-de-formation.ts). */}
-                {parcoursDeFormation ? (
-                  <p className="text-sm text-slate-300" data-parcours-de-formation={parcoursDeFormation.code}>
-                    Pour une classe : le parcours « {parcoursDeFormation.titre} » regroupe{" "}
-                    {chapitresDuParcoursDeFormation(parcoursDeFormation.code).length} chapitres écrits pour d&apos;autres parcours.
-                    Choisi pour la classe, il les ouvre tous, avec leurs cas pratiques.
-                  </p>
-                ) : null}
-
-                <div className="grid gap-3">
-                  <h4 className="text-sm font-semibold uppercase tracking-etiquette text-slate-400">Les chapitres</h4>
-                  {programme.themes.length > 0 ? (
-                    programme.themes.map(({ theme, chapitres }) => (
-                      <div key={theme.code} className="grid gap-1">
-                        <p className="text-sm font-semibold text-slate-200">{theme.titre}</p>
-                        <ListeDeChapitres chapitres={chapitres} imposee={imposee?.code} />
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-slate-400">Aucun chapitre du cours ne travaille encore ce diplôme.</p>
-                  )}
-                </div>
-
-                {programme.situations.length > 0 ? (
-                  <div className="grid gap-2">
-                    <h4 className="text-sm font-semibold uppercase tracking-etiquette text-slate-400">
-                      Cas de synthèse
-                    </h4>
-                    <ListeDeSituations situations={programme.situations} imposee={imposee?.code} />
-                  </div>
-                ) : null}
-
-                {programme.episodes.length > 0 ? (
-                  <div className="grid gap-2">
-                    <h4 className="text-sm font-semibold uppercase tracking-etiquette text-slate-400">En situation</h4>
-                    <ListeDEpisodes codes={programme.episodes} />
-                  </div>
-                ) : null}
-              </section>
-            ) : null}
 
             <div className="grid gap-3 md:grid-cols-2">
               {THEMES.map((theme) => {
@@ -381,10 +492,98 @@ export default async function CoursPage({
               })}
             </div>
           </section>
+          ) : null}
         </div>
       </main>
       <PiedDePage />
     </>
+  );
+}
+
+/**
+ * CE QUI EST OUVERT À CE VISITEUR, parmi les chapitres montrés : la règle d'accès du cours
+ * (services/cours.service.ts, `coursOuvert`), lue une fois par ensemble de parcours qui
+ * ouvrent un chapitre, et non une fois par chapitre. Un visiteur sans compte ni classe n'a
+ * que les chapitres libres : rien ne se lit en base.
+ */
+async function chapitresOuverts(
+  qui: { enseignant: string | null; eleve: string | null },
+  chapitres: readonly Chapitre[],
+): Promise<Set<string>> {
+  const ouverts = new Set(chapitres.filter((c) => c.libre).map((c) => c.code));
+  if (!qui.enseignant && !qui.eleve) return ouverts;
+  const parCle = new Map<string, Promise<boolean>>();
+  await Promise.all(
+    chapitres
+      .filter((c) => !c.libre)
+      .map(async (c) => {
+        const cle = parcoursQuiOuvrent(c).join(",");
+        if (!parCle.has(cle)) parCle.set(cle, coursOuvert(qui, c));
+        if (await parCle.get(cle)!) ouverts.add(c.code);
+      }),
+  );
+  return ouverts;
+}
+
+/** Le cadenas d'un chapitre réservé à ce visiteur, ou la mention du chapitre libre. */
+function Acces({ chapitre, ouvert }: { chapitre: Chapitre; ouvert?: boolean }) {
+  if (chapitre.libre) return <span className="font-semibold text-amber-300">libre</span>;
+  if (ouvert === undefined) return <>licence</>;
+  return ouvert ? (
+    <span data-ouvert="">ouvert</span>
+  ) : (
+    <span data-cadenas="" title="Réservé aux établissements sous licence">
+      <Icone nom="verrou" /> réservé
+    </span>
+  );
+}
+
+/**
+ * UN CHAPITRE DU PARCOURS D'UN DIPLÔME : son rang dans l'ordre d'apprentissage, son titre,
+ * son palier et son public, sa durée et son accès ; ses prérequis en une ligne, et ses
+ * objectifs repliés.
+ */
+function ChapitreDuParcours({ ligne, imposee, ouvert }: { ligne: ChapitreDuDiplome; imposee?: string; ouvert: boolean }) {
+  const c = ligne.chapitre;
+  return (
+    <li data-chapitre={c.code} data-rang={ligne.rang} className="grid gap-x-3 gap-y-1 sm:grid-cols-[2rem_1fr_auto] sm:items-baseline">
+      <span className="text-sm font-semibold tabular-nums text-slate-400">{ligne.rang}.</span>
+      <span className="grid min-w-0 gap-0.5">
+        <Link
+          href={lienDuChapitre(c, imposee)}
+          className="font-medium text-slate-100 underline-offset-4 hover:text-amber-300 hover:underline"
+        >
+          {c.titre}
+        </Link>
+        <span className="text-xs text-slate-400">
+          Palier {c.palier} · {publicDuChapitre(c)}
+        </span>
+        {ligne.prerequis.length > 0 ? (
+          <span className="text-xs text-slate-400" data-prerequis="">
+            Prérequis : {ligne.prerequis.map((p) => p.titre).join(", ")}
+          </span>
+        ) : null}
+        <CasDuChapitre chapitre={c.code} imposee={imposee} />
+        <details className="group text-xs" data-objectifs="">
+          <summary className="cursor-pointer list-none text-slate-300 [&::-webkit-details-marker]:hidden">
+            <span aria-hidden className="mr-1 inline-block transition-transform group-open:rotate-90">
+              ▸
+            </span>
+            Objectifs ({c.objectifs.length})
+          </summary>
+          <ul className="mt-1 list-disc space-y-0.5 pl-5 text-slate-300">
+            {c.objectifs.map((o) => (
+              <li key={o}>{o}</li>
+            ))}
+          </ul>
+        </details>
+      </span>
+      <span className="whitespace-nowrap text-xs tabular-nums text-slate-400">
+        {dureeEnClair(ligne.duree)}
+        {" · "}
+        <Acces chapitre={c} ouvert={ouvert} />
+      </span>
+    </li>
   );
 }
 
@@ -406,7 +605,16 @@ function lienDuChapitre(c: Chapitre, imposee?: string): string {
  * la durée, l'accès. « Sous licence » ne se répète plus sur chaque lien : un
  * cadenas le dit, et le chapitre libre se signale.
  */
-function ListeDeChapitres({ chapitres, imposee }: { chapitres: readonly Chapitre[]; imposee?: string }) {
+function ListeDeChapitres({
+  chapitres,
+  imposee,
+  ouverts,
+}: {
+  chapitres: readonly Chapitre[];
+  imposee?: string;
+  /** Ce qui est ouvert à ce visiteur ; absent (le catalogue entier), l'accès se dit « licence ». */
+  ouverts?: ReadonlySet<string>;
+}) {
   return (
     <ol className="grid gap-2.5">
       {chapitres.map((c) => (
@@ -425,7 +633,7 @@ function ListeDeChapitres({ chapitres, imposee }: { chapitres: readonly Chapitre
           <span className="whitespace-nowrap text-xs tabular-nums text-slate-400">
             {dureeEnClair(dureeDuChapitre(c))}
             {" · "}
-            {c.libre ? <span className="font-semibold text-amber-300">libre</span> : "licence"}
+            <Acces chapitre={c} ouvert={ouverts ? ouverts.has(c.code) : undefined} />
           </span>
         </li>
       ))}

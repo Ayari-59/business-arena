@@ -7,10 +7,12 @@ import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
 import { CHAPITRES, PARCOURS, PROGRAMME, chapitreParCode } from "../../src/config/cours/registre";
 import { CAS_DE_SYNTHESE, casDuChapitre, motsDuContenu } from "../../src/config/cours/situations";
 import { programmeDuDiplome } from "../../src/config/cours/programme";
+import { coursDuDiplome } from "../../src/config/cours/par-diplome";
 import { THEMES, themeDuChapitre } from "../../src/config/cours/themes";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
 import { chapitresDeLaNotion, suitesDuChapitre } from "../../src/pedagogy/cours/suites";
 import { enSaisie } from "../../src/pedagogy/cours/correcteur";
+import { cellulesASaisir, libelleDeCellule, valeurASaisir } from "../../src/pedagogy/cours/tableau-a-completer";
 import { chapitreDuCas, etatAvant, indexDeLEtape } from "../../src/pedagogy/cours/deroule";
 
 /**
@@ -92,12 +94,12 @@ describe("/cours : le catalogue par thème et le chapitre libre", () => {
     await page.context().close();
   }, 60_000);
 
-  it("le diplôme choisi compile son programme : couverture, ateliers, chapitres et épisodes", async () => {
+  it("le diplôme choisi montre son parcours : couverture, blocs, chapitres dans l'ordre, ateliers et épisodes", async () => {
     const page = await nouvellePage(390, 844);
     await aller(page, "/cours");
-    // Le formulaire marche sans script : choisir, puis compiler.
-    await page.locator('[data-filtre-diplome] select[name="diplome"]').selectOption("bac-pro-mcv");
-    await page.locator("[data-filtre-diplome]").getByRole("button", { name: "Compiler le programme" }).click();
+    // « Votre formation ? » : une tuile par diplôme, du CAP au DSCG ; la tuile est un lien, sans script.
+    expect(await page.locator("[data-diplome-tuile]").first().getAttribute("data-diplome-tuile")).toBe("cap-epc");
+    await page.locator('[data-diplome-tuile="bac-pro-mcv"]').click();
     await page.waitForURL(/diplome=bac-pro-mcv/);
     const programme = page.locator('[data-programme="bac-pro-mcv"]');
     expect(await programme.count()).toBe(1);
@@ -110,6 +112,16 @@ describe("/cours : le catalogue par thème et le chapitre libre", () => {
     );
     expect(await programme.locator("[data-episode]").count()).toBe(attendu.episodes.length);
     expect(await programme.locator('a[href="/parcours/bac-pro-mcv"]').count()).toBeGreaterThan(0);
+    // Les chapitres, groupés par bloc du référentiel, numérotés dans l'ordre d'apprentissage.
+    const parcours = coursDuDiplome("bac-pro-mcv")!;
+    expect(await programme.locator("[data-bloc-du-diplome]").count()).toBe(parcours.blocs.length);
+    expect(await programme.locator("[data-chapitre] [data-objectifs]").count()).toBe(
+      parcours.blocs.reduce((n, b) => n + b.chapitres.length, 0),
+    );
+    // Un visiteur sans compte voit le cadenas des chapitres réservés.
+    expect(await programme.locator("[data-cadenas]").count()).toBe(
+      parcours.blocs.flatMap((b) => b.chapitres).filter((l) => !l.chapitre.libre).length,
+    );
     expect(await debordement(page)).toBeLessThanOrEqual(0);
     // Un diplôme qui a ses ateliers les propose.
     await aller(page, "/cours?diplome=bts-mco");
@@ -447,6 +459,13 @@ describe.each([
   { code: "le-budget-flexible", entreprise: "nova", telephone: true },
   { code: "les-ecarts-sur-charges-directes", entreprise: "nova", telephone: true },
   { code: "les-ecarts-sur-charges-indirectes", entreprise: "nova" },
+  // Le coût complet pas à pas et la concordance des résultats : des tableaux à compléter, puis leurs cas.
+  { code: "le-cout-complet-pas-a-pas", entreprise: "nova" },
+  { code: "le-cout-complet-pas-a-pas", entreprise: "nova", telephone: true },
+  { code: "la-concordance-des-resultats", entreprise: "nova" },
+  { code: "la-concordance-des-resultats", entreprise: "nova", telephone: true },
+  { code: "le-depannage-du-grossiste", entreprise: "nova" },
+  { code: "si-la-gerante-se-payait", entreprise: "nova", telephone: true },
   { code: "les-ecarts-sur-ventes-et-marge", entreprise: "nova", telephone: true },
   { code: "analyse-des-ecarts", entreprise: "nova", telephone: true },
   { code: "les-ecarts-et-leurs-responsables", entreprise: "nova" },
@@ -883,7 +902,23 @@ describe.each([
       } else if (etape.type === "curseur") {
         const libelle = etape.grandeur?.(cas).libelle ?? "Ventes du mois";
         await page.getByLabel(`${libelle}, au clavier`, { exact: true }).fill(String(etape.cible(cas).attendu));
-        await page.getByRole("button", { name: "Valider cette position" }).click();      } else if (etape.type === "simulation") {
+        await page.getByRole("button", { name: "Valider cette position" }).click();
+      } else if (etape.type === "a-completer") {
+        // Le tableau à compléter : chaque case se nomme « ligne, colonne » ; au téléphone, les chiffres
+        // se tapent, puis le bouton de signe de la case touchée donne les négatifs.
+        const g = etape.grille(cas);
+        for (const { ligne, colonne, cellule } of cellulesASaisir(g)) {
+          const nom = libelleDeCellule(g, ligne, colonne);
+          const v = cellule.valeur!;
+          if (!telephone) {
+            await page.getByLabel(nom, { exact: true }).fill(valeurASaisir(v));
+            continue;
+          }
+          await page.getByLabel(nom, { exact: true }).pressSequentially(valeurASaisir(Math.abs(v)));
+          if (v < 0) await page.getByRole("button", { name: `Changer le signe : ${nom}`, exact: true }).tap();
+        }
+        await page.getByRole("button", { name: "Vérifier", exact: true }).click();
+      } else if (etape.type === "simulation") {
         const solution = etape.defi(cas).solution;
         for (const l of etape.leviers(cas)) {
           const choix = l.choix?.find((x) => x.valeur === solution[l.code]);
@@ -906,6 +941,7 @@ describe.each([
       page.locator(`[data-et-ensuite] [${attribut}]`).evaluateAll((xs, a) => xs.map((x) => x.getAttribute(a)), attribut);
     expect(await lus("data-suite-situation")).toEqual(suites.situations.map((l) => l.code));
     expect(await lus("data-chapitre-repris")).toEqual(suites.reprend.map((l) => l.code));
+    expect(await lus("data-chapitre-suivant")).toEqual(suites.ensuite.map((l) => l.code));
     expect(await lus("data-suite-episode")).toEqual(suites.episodes.map((l) => l.code));
     if (telephone) expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await ctx.close();

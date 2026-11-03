@@ -106,6 +106,8 @@ export const THEMES: readonly Theme[] = [
       "les-leviers-du-seuil",
       "cout-complet",
       "cout-par-produit",
+      "le-cout-complet-pas-a-pas",
+      "la-concordance-des-resultats",
       "budget-de-tresorerie",
       "le-cout-preetabli-et-les-budgets",
       "le-budget-flexible",

@@ -20,6 +20,7 @@ import type { MissionAffichee } from "@/config/cours/jouez";
 import type { Lien, SuitesDuChapitre } from "@/pedagogy/cours/suites";
 import type { OptionDeChoix, Piece } from "@/config/cours/types";
 import type {
+  ACompleterServi,
   ChapitreServi,
   ChoixServi,
   ComparaisonServie,
@@ -35,9 +36,11 @@ import type {
 } from "@/pedagogy/cours/chapitre-servi";
 import { champJuste, changerDeSigne, corriger, enSaisie, montantEcrit, type Correction } from "@/pedagogy/cours/correcteur";
 import { soldes, type Ecriture } from "@/pedagogy/cours/etats";
+import { corrigerLeTableau, remarquesDuTableau, solutionsDuTableau, type CorrectionDuTableau } from "@/pedagogy/cours/tableau-a-completer";
 import { Journal, TableauDuCas, VueBilan, VueDEtape, VueResultat } from "./etats-du-cours";
 import { Calculatrice } from "./calculatrice";
 import { SaisieEcriture } from "./saisie-ecriture";
+import { CalculsDuTableau, GrilleACompleter } from "./tableau-a-completer";
 import { enregistrerProgressionAction } from "@/app/cours/actions";
 
 /**
@@ -641,11 +644,68 @@ function EtapeDeTri({ etape, chapitre, index, suivi, classe, noter, suite }: Pro
       )}
       {verifie && !fait && (
         <p className="encadre-perte max-w-2xl rounded-lg px-4 py-2.5 text-sm" role="alert">
-          {verifie.filter((x) => !x).length === 1 ? "Un élément est mal rangé." : `${verifie.filter((x) => !x).length} éléments sont mal rangés.`} Demandez-vous : si les ventes doublaient, cette charge doublerait-elle ?
+          {verifie.filter((x) => !x).length === 1 ? "Un élément est mal rangé." : `${verifie.filter((x) => !x).length} éléments sont mal rangés.`}{" "}
+          {etape.relance ?? "Demandez-vous : si les ventes doublaient, cette charge doublerait-elle ?"}
         </p>
       )}
       {fait && (
         <>
+          <Paragraphes textes={etape.explication} />
+          <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} terminer={chapitre.mots.terminer} />
+        </>
+      )}
+    </>
+  );
+}
+
+/**
+ * LE TABLEAU À COMPLÉTER : l'élève remplit les cases, vérifie, et chaque case fausse dit pourquoi
+ * (tableau-a-completer.tsx). Après deux essais, la correction remplit le tableau, et l'étape compte
+ * comme aidée ; une fois réussie, le calcul de chaque case se lit, puis l'explication.
+ */
+function EtapeACompleter({ etape, chapitre, index, suivi, classe, noter, suite }: PropsDEtape<ACompleterServi>) {
+  const grille = etape.grille;
+  const [saisies, setSaisies] = useState<Record<string, string>>({});
+  const [correction, setCorrection] = useState<CorrectionDuTableau | null>(null);
+  const fait = suivi?.reussi ?? false;
+  const essais = suivi?.essais ?? 0;
+  const peutMontrer = classe || essais >= ESSAIS_AVANT_LA_CORRECTION;
+  return (
+    <>
+      {etape.tableau && <TableauDuCas tableau={etape.tableau} />}
+      <p className="max-w-2xl text-base leading-relaxed">{etape.question}</p>
+      <form
+        className="grid min-w-0 gap-3"
+        onSubmit={(ev) => {
+          ev.preventDefault();
+          const c = corrigerLeTableau(grille, saisies);
+          setCorrection(c);
+          noter({ essai: true, ...(c.juste ? { reussi: true } : { remarques: remarquesDuTableau(grille, c) }) });
+        }}
+      >
+        <GrilleACompleter
+          grille={grille}
+          saisies={fait ? solutionsDuTableau(grille) : saisies}
+          onSaisie={(cle, valeur) => setSaisies((s) => ({ ...s, [cle]: valeur }))}
+          correction={fait ? null : correction}
+          fait={fait}
+        />
+        {!fait && (
+          <div className="flex flex-wrap gap-3">
+            <button type="submit" className={bouton({ taille: "m" })}>
+              Vérifier
+            </button>
+            {peutMontrer && (
+              <button type="button" className={bouton({ variante: "secondaire", taille: "m" })} onClick={() => noter({ aide: true, reussi: true })}>
+                Voir la correction
+              </button>
+            )}
+          </div>
+        )}
+      </form>
+      {fait && (
+        <>
+          <CalculsDuTableau grille={grille} />
           <Paragraphes textes={etape.explication} />
           <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} terminer={chapitre.mots.terminer} />
         </>
@@ -1372,8 +1432,8 @@ function RappelDeLEnonce({ enonce }: { enonce: EtapeServie }) {
  * vide ne s'affiche pas.
  */
 function EtEnsuite({ suites, cas }: { suites: SuitesDuChapitre; cas: Cas }) {
-  const { theme, situations, reprend, episodes, episodesDuTheme } = suites;
-  if (situations.length === 0 && reprend.length === 0 && episodes.length === 0) return null;
+  const { theme, situations, reprend, ensuite, episodes, episodesDuTheme } = suites;
+  if (situations.length === 0 && reprend.length === 0 && episodes.length === 0 && ensuite.length === 0) return null;
   const lienDeCours = (l: Lien, attribut: string) => (
     <li key={l.code} {...{ [attribut]: l.code }}>
       <Link href={`/cours/${l.code}?entreprise=${cas.code}`} className="text-amber-300 underline-offset-4 hover:underline">
@@ -1390,6 +1450,12 @@ function EtEnsuite({ suites, cas }: { suites: SuitesDuChapitre; cas: Cas }) {
         <div className="grid gap-1" data-reprend="">
           <p className="text-sm font-semibold text-slate-100">Les chapitres où ces calculs s&apos;apprennent</p>
           <ul className="grid gap-0.5 text-sm">{reprend.map((l) => lienDeCours(l, "data-chapitre-repris"))}</ul>
+        </div>
+      )}
+      {ensuite.length > 0 && (
+        <div className="grid gap-1" data-suites-chapitres="">
+          <p className="text-sm font-semibold text-slate-100">Aller plus loin, dans le chapitre suivant</p>
+          <ul className="grid gap-0.5 text-sm">{ensuite.map((l) => lienDeCours(l, "data-chapitre-suivant"))}</ul>
         </div>
       )}
       {situations.length > 0 && (
@@ -1818,6 +1884,7 @@ export function ChapitreGuide({
             {etape.type === "tri" && <EtapeDeTri etape={etape} {...props} />}
             {etape.type === "curseur" && <EtapeDeCurseur etape={etape} {...props} />}
             {etape.type === "simulation" && <EtapeDeSimulation etape={etape} {...props} />}
+            {etape.type === "a-completer" && <EtapeACompleter etape={etape} {...props} />}
             <Notions codes={etape.notions} />
           </section>
           <aside className="grid gap-5 lg:sticky lg:top-24">

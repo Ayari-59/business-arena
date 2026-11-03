@@ -383,6 +383,20 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
         "Le tableau des références donne, pour chacune, la marge par unité et le volume vendu. Calculez la marge sur coût variable de chaque référence : laquelle couvre le plus de charges de structure ? Celle que vous avez touchée a-t-elle gagné ou perdu de la marge ?",
     };
   },
+  "le-cout-complet-pas-a-pas": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Jouez deux tours, sans toucher aux budgets de structure entre les deux.`,
+    lieux: ["analyse-des-couts"],
+    chercher:
+      "L'analyse des coûts ne découpe pas les charges de structure par centre. Rangez-les vous-même entre production et distribution, comme dans le chapitre, puis calculez le coût d'une unité aux deux tours : pourquoi a-t-il changé, alors que les charges de structure n'ont pas bougé ?",
+  }),
+  "la-concordance-des-resultats": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis comparez l'analyse des coûts et le compte de résultat.`,
+    lieux: ["analyse-des-couts", "compte-de-resultat"],
+    chercher:
+      "Le résultat de l'analyse des coûts est-il celui du compte de résultat ? Cherchez les lignes que l'analyse des coûts ne reprend pas, les intérêts, l'impôt, et refaites le passage de l'un à l'autre, signe compris.",
+  }),
   "budget-de-tresorerie": (c) => ({
     niveau: 1,
     faire: `${partie(c, 1)} Avant de valider le tour, estimez sur papier la trésorerie de clôture à partir de votre feuille de décision : ce qui entrera, ce qui sortira.`,

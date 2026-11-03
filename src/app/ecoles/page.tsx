@@ -33,13 +33,14 @@ import { getPlatformConfig } from "@/services/admin.service";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/ecoles" },
-  title: "Écoles de commerce et universités",
+  title: "Établissements : écoles de commerce et universités",
   description:
     "Une partie d'entreprise en équipes pour le bachelor, des épisodes manager pour le master et la formation continue, et dix compétences mesurées à verser au dossier d'accréditation.",
 };
 
 /**
- * LES ÉCOLES DE COMMERCE ET LES UNIVERSITÉS.
+ * LES ÉTABLISSEMENTS : LES ÉCOLES DE COMMERCE ET LES UNIVERSITÉS (rubrique
+ * « Établissements » du menu depuis novembre 2026 ; l'adresse /ecoles ne change pas).
  *
  * La page tient ensemble les deux produits : l'arène, pour qui apprend la
  * gestion d'une entreprise, et les épisodes, pour qui apprend à manager. Une
@@ -175,7 +176,7 @@ export default async function EcolesPage() {
         <BandeOuverture
           id="ecoles.accroche"
           contraste={c("ecoles.accroche")}
-          surtitre="Écoles de commerce et universités"
+          surtitre="Établissements · écoles de commerce et universités"
           titre={
             <>
               Former des managers qui <span>décident</span>, et le prouver

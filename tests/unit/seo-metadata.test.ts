@@ -92,7 +92,9 @@ describe("pages publiques : titre distinct, description, canonique", () => {
   const PUBLIQUES: [string, string, string][] = [
     ["/page", "Business Arena · Cours et simulation de gestion, du lycée au supérieur", "/"],
     ["/jouer/page", "Lancer une partie", "/jouer"],
-    ["/entreprises/page", "entreprises jouables", "/entreprises"],
+    ["/entreprises/page", "Les cas d'entreprise", "/entreprises"],
+    // Novembre 2026 : la rubrique « Écoles » devient « Établissements », sous la même adresse.
+    ["/ecoles/page", "Établissements", "/ecoles"],
     ["/notions/page", "Fiches notions de gestion", "/notions"],
     ["/guide/page", "Règles du jeu", "/guide"],
     ["/animations/page", "Ateliers", "/animations"],
@@ -169,7 +171,7 @@ describe("les épisodes, indexés (décision d'octobre 2026 : « indexer »)", (
 describe("espaces privés : titre pour l'onglet, rien pour les moteurs", () => {
   it("/join et /compete ont un titre et sont noindex", async () => {
     for (const [module, attendu] of [
-      ["/join/page", "Rejoindre une partie"],
+      ["/join/page", "J’ai un code"],
       ["/compete/page", "Rejoindre un concours"],
     ] as const) {
       const m = await meta(module);

@@ -76,20 +76,34 @@ export function programmeDuDiplome(code: string): ProgrammeDuDiplome | null {
 /**
  * LES DIPLÔMES DU SÉLECTEUR, rangés par niveau : ceux qui ont une page de
  * couverture, puisque le programme compilé y renvoie.
+ *
+ * DU CAP AU DSCG (novembre 2026, la page du cours entre par le diplôme) : la voie
+ * professionnelle d'abord, le CAP en tête, puis le lycée général et technologique, le BTS,
+ * le BUT et l'expertise comptable. Dans un niveau, l'ordre est celui de config/formations.ts.
  */
+const NIVEAUX = [
+  "CAP et voie professionnelle",
+  "Lycée général et technologique",
+  "BTS",
+  "BUT",
+  "Expertise comptable",
+] as const;
+
+function niveauDe(code: string): (typeof NIVEAUX)[number] {
+  if (code.startsWith("cap") || code.startsWith("seconde-pro") || code.startsWith("bac-pro")) return NIVEAUX[0];
+  if (code.startsWith("seconde") || code === "stmg") return NIVEAUX[1];
+  if (code.startsWith("bts")) return NIVEAUX[2];
+  if (code.startsWith("but")) return NIVEAUX[3];
+  return NIVEAUX[4];
+}
+
 export function diplomesParNiveau(): { niveau: string; formations: Formation[] }[] {
-  const niveau = (code: string) =>
-    code.startsWith("seconde") || code === "stmg" || code.startsWith("bac-pro") || code.startsWith("cap")
-      ? "Lycée et CAP"
-      : code.startsWith("bts")
-        ? "BTS"
-        : code.startsWith("but")
-          ? "BUT"
-          : "Expertise comptable";
-  const groupes = new Map<string, Formation[]>();
-  for (const f of formationsAvecUnePage()) {
-    const n = niveau(f.code);
-    groupes.set(n, [...(groupes.get(n) ?? []), f]);
-  }
-  return [...groupes].map(([n, formations]) => ({ niveau: n, formations }));
+  const formations = formationsAvecUnePage();
+  return NIVEAUX.map((niveau) => ({
+    niveau,
+    // Le CAP ouvre la voie professionnelle : c'est le premier diplôme du parcours.
+    formations: formations
+      .filter((f) => niveauDe(f.code) === niveau)
+      .sort((a, b) => Number(b.code.startsWith("cap")) - Number(a.code.startsWith("cap"))),
+  })).filter((g) => g.formations.length > 0);
 }

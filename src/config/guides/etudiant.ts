@@ -31,7 +31,7 @@ export const GUIDE_ETUDIANT: Guide = {
       id: "rejoindre",
       titre: "Rejoindre la partie avec le code",
       faire: [
-        "Ouvrez la page « Rejoindre une partie », depuis le bouton en haut du site ou en scannant le QR code projeté.",
+        "Ouvrez la page « Rejoindre une partie », depuis le bouton « J'ai un code » en haut du site ou en scannant le QR code projeté.",
         "Tapez le code donné par votre enseignant, puis votre prénom.",
         "Cliquez sur « Rejoindre la partie ».",
       ],

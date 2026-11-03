@@ -47,6 +47,17 @@ export function textesDe(ch: Chapitre, e: Etape, i: number, cas: Cas = NOVA): st
       t.push(e.question(cas), ...leviers.map((l) => l.libelle), d.consigne, d.indice(depart), ...e.lecture(cas, d.solution).map((l) => l.libelle), ...e.explication(cas, d.solution));
       break;
     }
+    case "a-completer": {
+      const g = e.grille(cas);
+      t.push(
+        e.question(cas),
+        g.titre,
+        ...g.colonnes,
+        ...g.lignes.flatMap((l) => [l.libelle, ...l.cellules.flatMap((x) => [x.texte ?? "", x.calcul ?? "", x.indice ?? ""])]),
+        ...e.explication(cas),
+      );
+      break;
+    }
     default:
       break;
   }

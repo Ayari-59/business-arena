@@ -1,5 +1,6 @@
 import type { EcritureAttendue } from "../../pedagogy/cours/correcteur";
 import type { Ecriture } from "../../pedagogy/cours/etats";
+import type { TableauACompleter } from "../../pedagogy/cours/tableau-a-completer";
 import type { Cas } from "./cas";
 
 /**
@@ -55,7 +56,7 @@ interface Base {
    * où il y a un stock) : `chapitreDuCas` retire les autres. Absent : partout.
    */
   si?: (c: Cas) => boolean;
-  /** Un tableau de chiffres du cas, montré avant la question (lecture, choix, montants, tri). */
+  /** Un tableau de chiffres du cas, montré avant la question (lecture, choix, montants, tri, tableau à compléter). */
   tableau?: (c: Cas) => TableauDeDonnees;
 }
 
@@ -137,6 +138,11 @@ export interface EtapeTri extends Base {
   categories: readonly { code: string; libelle: string }[];
   elements: (c: Cas) => { libelle: string; montant: number; categorie: string; pourquoi: string }[];
   explication: (c: Cas) => string[];
+  /**
+   * La question que l'élève lit après un rangement faux. Absent : celle des charges variables et
+   * fixes (« si les ventes doublaient… »), le premier tri du cours.
+   */
+  relance?: string;
 }
 
 /**
@@ -244,6 +250,22 @@ export interface EtapeSimulation extends Base {
   explication: (c: Cas, position: Readonly<Record<string, number>>) => string[];
 }
 
+/**
+ * LE TABLEAU À COMPLÉTER (demande du propriétaire, novembre 2026) : un tableau de lignes et de
+ * colonnes dont l'élève remplit les cellules à saisir, les autres étant données ; la correction se
+ * fait cellule par cellule, totaux de ligne et de colonne compris (pedagogy/cours/tableau-a-completer.ts).
+ * Le tableau de répartition des charges indirectes, la fiche de stock, le tableau de passage d'un
+ * résultat à l'autre se remplissent ainsi, comme à l'examen.
+ */
+export interface EtapeACompleter extends Base {
+  type: "a-completer";
+  question: (c: Cas) => string;
+  /** Le tableau, ses valeurs justes, ses totaux et le calcul de chaque cellule à saisir. */
+  grille: (c: Cas) => TableauACompleter;
+  /** Ce que l'élève a vu, une fois le tableau rempli. */
+  explication: (c: Cas) => string[];
+}
+
 export type Etape =
   | EtapeLecture
   | EtapeEcriture
@@ -252,7 +274,8 @@ export type Etape =
   | EtapeComparaison
   | EtapeTri
   | EtapeCurseur
-  | EtapeSimulation;
+  | EtapeSimulation
+  | EtapeACompleter;
 
 export interface Chapitre {
   code: string;
@@ -282,6 +305,11 @@ export interface Chapitre {
    * annonce à l'élève à la première étape, sans l'empêcher d'entrer. Absent : aucun.
    */
   prerequis?: readonly string[];
+  /**
+   * Les chapitres qui le prolongent, par leur code : la fin du chapitre les propose sous « Et
+   * ensuite » (pedagogy/cours/suites.ts). Absent : aucun.
+   */
+  ensuite?: readonly string[];
   /**
    * Les seules entreprises où le chapitre se joue, quand il ne vaut pas pour toutes (un
    * service ne se stocke pas), et pourquoi, en une phrase dite à l'élève qui en arrive

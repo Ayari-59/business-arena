@@ -12,7 +12,7 @@ import type { Etape } from "../../src/config/cours/types";
  * concurrents », un tri, l'a été jusqu'à ce que le tri montre le sien.
  */
 
-const AFFICHENT_LEUR_TABLEAU: readonly Etape["type"][] = ["lecture", "choix", "montants", "tri"];
+const AFFICHENT_LEUR_TABLEAU: readonly Etape["type"][] = ["lecture", "choix", "montants", "tri", "a-completer"];
 
 describe("le tableau d'une étape", () => {
   for (const ch of [...CHAPITRES, ...SITUATIONS]) {

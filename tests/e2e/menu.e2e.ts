@@ -129,7 +129,7 @@ describe("le menu du site", () => {
     await page.setViewportSize(LARGEURS[1]!.taille);
     await aller(page, "/entreprises");
     await page.getByRole("button", { name: "Menu" }).click();
-    // Seuls les groupes fermés : « Jouer », déplié à l'ouverture, se refermerait.
+    // Seuls les groupes fermés : « Élèves », déplié à l'ouverture, se refermerait.
     const groupes = page.locator('#plan-du-site button[aria-controls^="groupe-"][aria-expanded="false"]');
     while ((await groupes.count()) > 0) await groupes.first().click();
     await expect
@@ -175,7 +175,7 @@ describe("la barre, le menu et le pied de page lisent le même plan", () => {
     expect(titresDuMenu.filter((t) => liensDeTete().some((l) => l.libelle === t))).toEqual(
       liensDeTete().map((l) => l.libelle),
     );
-    // Seul « Jouer » est déplié à l'ouverture.
+    // Seul « Élèves » est déplié à l'ouverture.
     expect(await groupes.evaluateAll((b) => b.map((x) => x.getAttribute("aria-expanded")))).toEqual(
       NAVIGATION.map((g) => (g.code === GROUPE_OUVERT ? "true" : "false")),
     );
@@ -215,18 +215,19 @@ describe("la barre, le menu et le pied de page lisent le même plan", () => {
         expect(await a.innerText(), lien.href).toContain(lien.libelle);
       }
       expect(await pied.locator('a[href="/notions"]').count(), "le pied propose la page où l'on est").toBe(0);
-      // Cinq colonnes et une ligne sur grand écran, une pile sur téléphone.
+      // Cinq colonnes et deux lignes (les offres, puis ce qui sert à tous) sur grand écran,
+      // une pile sur téléphone.
       const cases = await pied.locator(":scope > div").evaluateAll((els) =>
         els.map((e) => {
           const r = e.getBoundingClientRect();
           return { gauche: Math.round(r.left), haut: Math.round(r.top) };
         }),
       );
-      expect(cases).toHaveLength(6);
+      expect(cases).toHaveLength(7);
       const colonnes = new Set(cases.map((c) => c.gauche)).size;
       const rangees = new Set(cases.map((c) => c.haut)).size;
       expect(colonnes, `colonnes à ${cases.map((c) => c.gauche).join(", ")}`).toBe(largeur.nom === "téléphone" ? 1 : 5);
-      expect(rangees, `rangées à ${cases.map((c) => c.haut).join(", ")}`).toBe(largeur.nom === "téléphone" ? 6 : 2);
+      expect(rangees, `rangées à ${cases.map((c) => c.haut).join(", ")}`).toBe(largeur.nom === "téléphone" ? 7 : 3);
       // L'adresse de contact, en texte, et aucun débordement.
       expect((await page.locator("footer [data-contact-pied]").innerText()).trim().length).toBeGreaterThan(3);
       const debord = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
