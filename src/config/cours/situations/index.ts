@@ -28,6 +28,8 @@ import { VENDRE_PLUS_FINANCER_PLUS } from "./par-chapitre/vendre-plus-financer-p
 import { LE_FOURNISSEUR_AUGMENTE } from "./par-chapitre/le-fournisseur-augmente";
 import { LE_LOYER_QUI_AUGMENTE } from "./par-chapitre/le-loyer-qui-augmente";
 import { UN_NOUVEAU_CLIENT_REGULIER } from "./par-chapitre/un-nouveau-client-regulier";
+import { LE_DEPANNAGE_DU_GROSSISTE } from "./par-chapitre/le-depannage-du-grossiste";
+import { SI_LA_GERANTE_SE_PAYAIT } from "./par-chapitre/si-la-gerante-se-payait";
 import { LA_CLE_CONTESTEE } from "./par-chapitre/la-cle-contestee";
 import { UN_TRIMESTRE_DE_CROISSANCE } from "./par-chapitre/un-trimestre-de-croissance";
 import { L_OBJECTIF_DU_COMMERCIAL } from "./par-chapitre/l-objectif-du-commercial";
@@ -181,6 +183,8 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LE_FOURNISSEUR_AUGMENTE,
   LE_LOYER_QUI_AUGMENTE,
   UN_NOUVEAU_CLIENT_REGULIER,
+  LE_DEPANNAGE_DU_GROSSISTE,
+  SI_LA_GERANTE_SE_PAYAIT,
   LA_CLE_CONTESTEE,
   UN_TRIMESTRE_DE_CROISSANCE,
   LE_BUDGET_DEPASSE,

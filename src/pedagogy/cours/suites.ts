@@ -30,6 +30,8 @@ export interface SuitesDuChapitre {
   situations: Lien[];
   /** Pour un cas pratique : les chapitres dont il reprend les calculs. */
   reprend: Lien[];
+  /** Les chapitres qui prolongent celui-ci (`ensuite` du chapitre), dans son ordre. */
+  ensuite: Lien[];
   /** Quelques épisodes du thème, et leur nombre total. */
   episodes: Lien[];
   episodesDuTheme: number;
@@ -59,6 +61,7 @@ export function suitesDuChapitre(code: string): SuitesDuChapitre {
     // Le cas dédié au chapitre d'abord, puis les cas de synthèse qui le reprennent.
     situations: [...CAS_PAR_CHAPITRE, ...CAS_DE_SYNTHESE].filter((s) => s.reprend.includes(code)).map((s) => lienDuChapitre(s.code)),
     reprend: situation ? situation.reprend.map(lienDuChapitre) : [],
+    ensuite: (situation ? [] : (CHAPITRES.find((c) => c.code === code)?.ensuite ?? [])).map(lienDuChapitre),
     episodes: episodes.slice(0, EPISODES_PROPOSES).map(lienDeLEpisode),
     episodesDuTheme: episodes.length,
   };

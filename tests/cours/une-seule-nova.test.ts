@@ -6,7 +6,8 @@ import { servirLeChapitre } from "../../src/pedagogy/cours/chapitre-servi";
 import { montantEcrit } from "../../src/pedagogy/cours/correcteur";
 import { anneeDuMarche } from "../../src/config/cours/monde/attractivite";
 import { coefficientDeSaison, demandeAuPrix, marcheEtPart } from "../../src/config/cours/monde/economie-et-marketing";
-import { VENTES_AUX_PARTICULIERS } from "../../src/config/cours/monde/exercice-de-nova";
+import { CLOTURE_DE_LA_FICHE, COMPOSANTS_DE_DECEMBRE, VENTES_AUX_PARTICULIERS } from "../../src/config/cours/monde/exercice-de-nova";
+import { JEUX_REVENUS_SANS_BON, concordance } from "../../src/config/cours/monde/comptabilite-de-gestion";
 import { MARCHE_A_TROIS } from "../../src/config/cours/monde/marche-a-trois";
 import { MERCATIQUE_DE_NOVA } from "../../src/config/cours/monde/mercatique-de-nova";
 import { ANNEE_N } from "../../src/config/cours/monde/nova-capacite";
@@ -147,4 +148,41 @@ describe("une seule publicité de NOVA, d'un chapitre à l'autre (audit pédagog
       expect(JSON.stringify(servirLeChapitre(c, casDeLEntreprise("nova"))), c.code).not.toMatch(/NOVA ne fait (?:pas|aucune) (?:de )?publicité/);
     }
   }, 60_000);
+});
+
+/**
+ * UNE SEULE NOVA DANS LA COMPTABILITÉ DE GESTION (le coût complet pas à pas, la concordance) : les
+ * douze mois de la gestion lisent les livraisons, les achats, le chiffre d'affaires, le loyer et la
+ * paie de l'exercice ; la fiche de stock de décembre est celle de la clôture, au seul bon du 24 près ;
+ * et le tableau de passage retrouve le résultat net de la clôture, sans second jeu de chiffres.
+ */
+describe("une seule NOVA, de la comptabilité de gestion à la clôture", () => {
+  const k = concordance();
+  const s = k.cg.soldes;
+  it("les douze mois de la gestion font les achats, les ventes, les autres charges, le loyer et la paie des comptes", () => {
+    const mois = k.exercice.mois;
+    const somme = (f: (m: (typeof mois)[number]) => number) => Math.round(mois.reduce((t, m) => t + f(m), 0) * 100) / 100;
+    expect(somme((m) => m.achats)).toBe(s["601"]);
+    expect(somme((m) => m.chiffreDAffaires)).toBe(-s["701"]!);
+    expect(somme((m) => m.autres)).toBe(s["606"]);
+    expect(somme((m) => m.repartition.charges.loyer)).toBe(s["6132"]);
+    expect(somme((m) => m.repartition.charges.personnel)).toBe(s["641"]! + s["645"]!);
+    expect(somme((m) => m.repartition.charges.assurance)).toBe(s["616"]);
+    expect(mois.map((m) => m.repartition.charges.personnel)).toEqual(mois.map(() => CHARGES_FIXES_DU_MOIS.personnel));
+  });
+
+  it("la fiche de décembre de la gestion est celle de la clôture, au bon du 24 près, et l'inventaire compte le stock des comptes", () => {
+    const fiche = k.stockDeGestion.fiche;
+    const sorties = (f: typeof COMPOSANTS_DE_DECEMBRE) => f.mouvements.filter((m) => m.sens === "sortie").map((m) => m.quantite);
+    expect(sorties(fiche)).toEqual(sorties(COMPOSANTS_DE_DECEMBRE).map((q, i) => (i === 1 ? q + JEUX_REVENUS_SANS_BON : q)));
+    expect(fiche.mouvements.filter((m) => m.sens === "entree").map((m) => m.quantite)).toEqual(COMPOSANTS_DE_DECEMBRE.mouvements.filter((m) => m.sens === "entree").map((m) => m.quantite));
+    expect(k.stockGeneral).toBe(CLOTURE_DE_LA_FICHE.travaux.stockFinal);
+    expect(k.stockPhysique.quantite - k.stockDeGestion.final.quantite).toBe(JEUX_REVENUS_SANS_BON);
+  });
+
+  it("le tableau de passage retrouve le résultat net de la clôture, au centime", () => {
+    expect(k.resultatRetrouve).toBe(CLOTURE_DE_LA_FICHE.resultatNet);
+    expect(k.dotation).toBe(CLOTURE_DE_LA_FICHE.travaux.dotationAuxAmortissements);
+    expect(k.usureDeGestion).toBe(12 * CHARGES_FIXES_DU_MOIS.amortissement);
+  });
 });

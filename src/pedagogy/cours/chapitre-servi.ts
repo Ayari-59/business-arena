@@ -17,6 +17,7 @@ import { enEcriture, type EcritureAttendue } from "./correcteur";
 import { chapitreDuCas, etatAvant, indexDeLEtape } from "./deroule";
 import type { Ecriture } from "./etats";
 import { cleDeLaQuestion, dansLOrdreAffiche } from "./ordre-des-options";
+import type { TableauACompleter } from "./tableau-a-completer";
 
 /**
  * LE CHAPITRE SERVI AU NAVIGATEUR : SES DONNÉES, PAS SON CODE (audit, P0).
@@ -94,6 +95,7 @@ export interface TriServi extends BaseServie {
   categories: readonly { code: string; libelle: string }[];
   elements: { libelle: string; montant: number; categorie: string; pourquoi: string }[];
   explication: string[];
+  relance?: string;
 }
 
 /** Ce que montre le curseur à une position : le tableau, et les deux droites à cette position. */
@@ -147,6 +149,17 @@ export interface SimulationServie extends BaseServie {
   lectureDeLaSolution: LectureDuLaboratoire;
 }
 
+/**
+ * Le tableau à compléter : de simples données (les valeurs, les totaux déclarés, les calculs), que
+ * le navigateur corrige cellule par cellule (tableau-a-completer.ts), comme les champs des montants.
+ */
+export interface ACompleterServi extends BaseServie {
+  type: "a-completer";
+  question: string;
+  grille: TableauACompleter;
+  explication: string[];
+}
+
 export type EtapeServie =
   | LectureServie
   | EcritureServie
@@ -155,7 +168,8 @@ export type EtapeServie =
   | ComparaisonServie
   | TriServi
   | CurseurServi
-  | SimulationServie;
+  | SimulationServie
+  | ACompleterServi;
 
 export interface ChapitreServi {
   code: string;
@@ -288,7 +302,15 @@ export function servirLeChapitre(source: Chapitre, cas: Cas): ChapitreServi {
         };
       }
       case "tri":
-        return { ...base, type: "tri", question: e.question(cas), categories: e.categories, elements: e.elements(cas), explication: e.explication(cas) };
+        return {
+          ...base,
+          type: "tri",
+          question: e.question(cas),
+          categories: e.categories,
+          elements: e.elements(cas),
+          explication: e.explication(cas),
+          ...(e.relance ? { relance: e.relance } : {}),
+        };
       case "curseur": {
         const { attendu, max, min = 0 } = e.cible(cas);
         const d = e.droites(cas);
@@ -310,6 +332,8 @@ export function servirLeChapitre(source: Chapitre, cas: Cas): ChapitreServi {
           explication: e.explication(cas),
         };
       }
+      case "a-completer":
+        return { ...base, type: "a-completer", question: e.question(cas), grille: e.grille(cas), explication: e.explication(cas) };
       case "simulation": {
         const leviers = [...e.leviers(cas)];
         const defi = e.defi(cas);

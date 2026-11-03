@@ -16,7 +16,9 @@ import type { Chapitre, Etape } from "./types";
  *     curseur : 4 minutes, le temps de lire l'énoncé, de calculer ou de saisir,
  *     et de lire la correction ;
  *   · relever le défi d'un laboratoire à plusieurs leviers : 6 minutes, le temps
- *     d'essayer plusieurs positions et de les comparer.
+ *     d'essayer plusieurs positions et de les comparer ;
+ *   · remplir un tableau à compléter (une répartition, une fiche de stock) : 8 minutes,
+ *     le temps de calculer chaque case, de vérifier les totaux et de reprendre une case fausse.
  *
  * Le total s'arrondit aux cinq minutes supérieures : la page dit « 25 min »,
  * pas « 23 min », pour ne pas prêter au chiffre une précision qu'il n'a pas.
@@ -30,6 +32,7 @@ export const MINUTES_PAR_ETAPE: Readonly<Record<Etape["type"], number>> = {
   tri: 4,
   curseur: 4,
   simulation: 6,
+  "a-completer": 8,
 };
 
 /** L'arrondi de la durée affichée, en minutes. */

@@ -11,6 +11,7 @@ import { THEMES, themeDuChapitre } from "../../src/config/cours/themes";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
 import { chapitresDeLaNotion, suitesDuChapitre } from "../../src/pedagogy/cours/suites";
 import { enSaisie } from "../../src/pedagogy/cours/correcteur";
+import { cellulesASaisir, libelleDeCellule, valeurASaisir } from "../../src/pedagogy/cours/tableau-a-completer";
 import { chapitreDuCas, etatAvant, indexDeLEtape } from "../../src/pedagogy/cours/deroule";
 
 /**
@@ -447,6 +448,13 @@ describe.each([
   { code: "le-budget-flexible", entreprise: "nova", telephone: true },
   { code: "les-ecarts-sur-charges-directes", entreprise: "nova", telephone: true },
   { code: "les-ecarts-sur-charges-indirectes", entreprise: "nova" },
+  // Le coût complet pas à pas et la concordance des résultats : des tableaux à compléter, puis leurs cas.
+  { code: "le-cout-complet-pas-a-pas", entreprise: "nova" },
+  { code: "le-cout-complet-pas-a-pas", entreprise: "nova", telephone: true },
+  { code: "la-concordance-des-resultats", entreprise: "nova" },
+  { code: "la-concordance-des-resultats", entreprise: "nova", telephone: true },
+  { code: "le-depannage-du-grossiste", entreprise: "nova" },
+  { code: "si-la-gerante-se-payait", entreprise: "nova", telephone: true },
   { code: "les-ecarts-sur-ventes-et-marge", entreprise: "nova", telephone: true },
   { code: "analyse-des-ecarts", entreprise: "nova", telephone: true },
   { code: "les-ecarts-et-leurs-responsables", entreprise: "nova" },
@@ -883,7 +891,23 @@ describe.each([
       } else if (etape.type === "curseur") {
         const libelle = etape.grandeur?.(cas).libelle ?? "Ventes du mois";
         await page.getByLabel(`${libelle}, au clavier`, { exact: true }).fill(String(etape.cible(cas).attendu));
-        await page.getByRole("button", { name: "Valider cette position" }).click();      } else if (etape.type === "simulation") {
+        await page.getByRole("button", { name: "Valider cette position" }).click();
+      } else if (etape.type === "a-completer") {
+        // Le tableau à compléter : chaque case se nomme « ligne, colonne » ; au téléphone, les chiffres
+        // se tapent, puis le bouton de signe de la case touchée donne les négatifs.
+        const g = etape.grille(cas);
+        for (const { ligne, colonne, cellule } of cellulesASaisir(g)) {
+          const nom = libelleDeCellule(g, ligne, colonne);
+          const v = cellule.valeur!;
+          if (!telephone) {
+            await page.getByLabel(nom, { exact: true }).fill(valeurASaisir(v));
+            continue;
+          }
+          await page.getByLabel(nom, { exact: true }).pressSequentially(valeurASaisir(Math.abs(v)));
+          if (v < 0) await page.getByRole("button", { name: `Changer le signe : ${nom}`, exact: true }).tap();
+        }
+        await page.getByRole("button", { name: "Vérifier", exact: true }).click();
+      } else if (etape.type === "simulation") {
         const solution = etape.defi(cas).solution;
         for (const l of etape.leviers(cas)) {
           const choix = l.choix?.find((x) => x.valeur === solution[l.code]);
@@ -906,6 +930,7 @@ describe.each([
       page.locator(`[data-et-ensuite] [${attribut}]`).evaluateAll((xs, a) => xs.map((x) => x.getAttribute(a)), attribut);
     expect(await lus("data-suite-situation")).toEqual(suites.situations.map((l) => l.code));
     expect(await lus("data-chapitre-repris")).toEqual(suites.reprend.map((l) => l.code));
+    expect(await lus("data-chapitre-suivant")).toEqual(suites.ensuite.map((l) => l.code));
     expect(await lus("data-suite-episode")).toEqual(suites.episodes.map((l) => l.code));
     if (telephone) expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await ctx.close();

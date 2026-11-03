@@ -46,6 +46,10 @@ function textesDe(e: Etape, cas: Cas): string[] {
         ...e.champs(cas, etat).flatMap((c) => [c.libelle, c.calcul, String(c.attendu)]),
         ...e.explication(cas, etat),
       ];
+    case "a-completer": {
+      const g = e.grille(cas);
+      return [e.question(cas), g.titre, ...g.lignes.flatMap((l) => [l.libelle, ...l.cellules.flatMap((x) => [x.calcul ?? "", String(x.valeur)])]), ...e.explication(cas)];
+    }
     default:
       return [];
   }

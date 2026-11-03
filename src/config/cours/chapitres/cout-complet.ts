@@ -272,6 +272,7 @@ export const COUT_COMPLET: Chapitre = {
     "Refaire un tableau de répartition complet, et remonter d'un coût de revient aux ventes",
   ],
   libre: false,
+  ensuite: ["le-cout-complet-pas-a-pas"],
   entreprises: {
     codes: ENTREPRISES_DU_COUT_COMPLET,
     pourquoi:
