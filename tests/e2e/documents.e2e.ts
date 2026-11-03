@@ -1,3 +1,4 @@
+import { espacesOrdinaires } from "../../src/lib/typographie";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Browser, Page } from "playwright-core";
 import { aller, BASE, ouvrirNavigateur } from "./helpers/browser";
@@ -38,7 +39,7 @@ describe("les documents d'un atelier", () => {
       // La page met les intitulés en capitales et les rubriques en majuscule
       // initiale : c'est de la typographie, elle ne change pas ce qui est
       // demandé. On compare donc ce qui est écrit, pas comment c'est dessiné.
-      const texte = (await page.locator("main").innerText()).toLowerCase();
+      const texte = (await page.locator("main").innerText().then(espacesOrdinaires)).toLowerCase();
       for (const f of formulairesAtelier(atelier)) {
         expect(texte, `${atelier.code}/S${f.seance} : la séance manque`).toContain(
           f.seanceTitre.toLowerCase(),
@@ -78,7 +79,7 @@ describe("les documents d'un atelier", () => {
       const prof = dossierEnseignant(atelier);
       for (const chemin of ["formulaires", "dossier"]) {
         await aller(page, `/animations/${atelier.code}/${chemin}`);
-        const texte = await page.locator("main").innerText();
+        const texte = await page.locator("main").innerText().then(espacesOrdinaires);
         for (const s of prof.situations) {
           for (const c of s.corriges) {
             expect(

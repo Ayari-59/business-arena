@@ -1,3 +1,4 @@
+import { espacesOrdinaires } from "../../src/lib/typographie";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Browser, Page } from "playwright-core";
 import { aller, ouvrirNavigateur } from "./helpers/browser";
@@ -104,7 +105,7 @@ describe("/cours : le catalogue par thème et le chapitre libre", () => {
     const programme = page.locator('[data-programme="bac-pro-mcv"]');
     expect(await programme.count()).toBe(1);
     const attendu = programmeDuDiplome("bac-pro-mcv")!;
-    expect(await programme.locator("[data-couverture-du-programme]").innerText()).toContain(
+    expect(await programme.locator("[data-couverture-du-programme]").innerText().then(espacesOrdinaires)).toContain(
       `${attendu.couverture.travaillees} entrées sur ${attendu.couverture.total}`,
     );
     expect(await programme.locator("[data-chapitre]").count()).toBe(
@@ -141,7 +142,7 @@ describe("le chapitre pilote, joué sans faute", () => {
     const chapitre = chapitreDuCas(CHAPITRES[0]!, cas);
     await aller(page, chemin(code));
     for (const [i, etape] of chapitre.etapes.entries()) {
-      await expect.poll(() => page.locator("h1").innerText(), { timeout: 15_000 }).toBe(etape.titre);
+      await expect.poll(() => page.locator("h1").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toBe(etape.titre);
       if (etape.tableau) expect(await tableauxDeLEtape(page)).toBe(1);
       const avant = etatAvant(chapitre, cas, i);
       if (etape.type === "ecriture") {
@@ -182,7 +183,7 @@ describe("le chapitre pilote, joué sans faute", () => {
     }
     const notees = chapitre.etapes.filter((e) => e.type !== "lecture").length;
     await expect
-      .poll(() => page.locator("main").innerText(), { timeout: 15_000 })
+      .poll(() => page.locator("main").innerText().then(espacesOrdinaires), { timeout: 15_000 })
       .toContain(`${notees} étapes réussies du premier coup sur ${notees}`);
     return cas;
   }
@@ -194,7 +195,7 @@ describe("le chapitre pilote, joué sans faute", () => {
 
     // Et maintenant, jouez-le : la partie s'ouvre chez la même entreprise, au niveau de la mission.
     const mission = page.locator("[data-jouez-le]");
-    expect(await mission.innerText()).toContain("Résultats › Finance › Bilan");
+    expect(await mission.innerText().then(espacesOrdinaires)).toContain("Résultats › Finance › Bilan");
     const jouer = mission.getByRole("link", { name: `Jouer ${cas.entreprise} au niveau 1` });
     expect(await jouer.getAttribute("href")).toBe(`/jouer?secteur=${code}&niveau=1`);
     await jouer.click();
@@ -215,7 +216,7 @@ describe("l'erreur, le mode classe, la reprise et le téléphone", () => {
   async function jusquALApport(page: Page, url: string) {
     await aller(page, url);
     await page.getByRole("button", { name: "Étape suivante" }).click();
-    await expect.poll(() => page.locator("h1").innerText()).toBe("Les apports des associés");
+    await expect.poll(() => page.locator("h1").innerText().then(espacesOrdinaires)).toBe("Les apports des associés");
   }
 
   it("une écriture à l'envers est corrigée point par point ; un indice, puis la correction après deux essais", async () => {
@@ -228,9 +229,9 @@ describe("l'erreur, le mode classe, la reprise et le téléphone", () => {
     await page.getByLabel("Compte, ligne 2", { exact: true }).fill("512");
     await page.getByLabel("Crédit, ligne 2", { exact: true }).fill(String(cas.capital));
     await page.getByRole("button", { name: "Valider l'écriture" }).click();
-    await expect.poll(() => page.locator("main").innerText()).toContain("L'argent reçu en banque se passe au débit.");
+    await expect.poll(() => page.locator("main").innerText().then(espacesOrdinaires)).toContain("L'argent reçu en banque se passe au débit.");
     await page.getByRole("button", { name: "Un indice" }).click();
-    expect(await page.locator("main").innerText()).toContain("compte de trésorerie, classe 5");
+    expect(await page.locator("main").innerText().then(espacesOrdinaires)).toContain("compte de trésorerie, classe 5");
     await page.getByRole("button", { name: "Valider l'écriture" }).click();
     await page.getByRole("button", { name: "Voir la correction" }).click();
     await expect.poll(() => page.getByLabel("Compte, ligne 1", { exact: true }).inputValue()).toBe("512");
@@ -245,7 +246,7 @@ describe("l'erreur, le mode classe, la reprise et le téléphone", () => {
     await page.getByRole("button", { name: "Voir la correction" }).click();
     await expect.poll(() => page.getByRole("button", { name: "Étape suivante" }).count()).toBe(1);
     await page.getByRole("button", { name: "Étape suivante" }).click();
-    expect(await page.locator("details[open]").innerText()).toContain("Apport en capital");
+    expect(await page.locator("details[open]").innerText().then(espacesOrdinaires)).toContain("Apport en capital");
     await page.context().close();
   }, 120_000);
 
@@ -253,7 +254,7 @@ describe("l'erreur, le mode classe, la reprise et le téléphone", () => {
     const page = await nouvellePage(390, 844);
     await jusquALApport(page, chemin("transport"));
     await page.reload();
-    await expect.poll(() => page.locator("h1").innerText()).toBe("Les apports des associés");
+    await expect.poll(() => page.locator("h1").innerText().then(espacesOrdinaires)).toBe("Les apports des associés");
     expect(await debordement(page)).toBeLessThanOrEqual(0);
     await page.context().close();
   }, 120_000);
@@ -271,7 +272,7 @@ describe("le cours en classe : l'enseignant crée, l'élève rejoint, l'erreur r
     await prof.getByLabel("Entreprise du cas").selectOption("hotel");
     await prof.getByRole("button", { name: "Créer la classe" }).click();
     await prof.waitForURL(/\/teacher\/cours\/[0-9a-f-]{36}/, { timeout: 60_000 });
-    const code = (await prof.locator("[data-code-de-classe]").innerText()).trim();
+    const code = (await prof.locator("[data-code-de-classe]").innerText().then(espacesOrdinaires)).trim();
     expect(code).toMatch(/^BTSCG1-/);
     const pageDeLaClasse = new URL(prof.url()).pathname;
     expect(await prof.locator("[data-calculatrice-de-la-classe]").getAttribute("data-calculatrice-de-la-classe")).toBe("permise");
@@ -286,12 +287,12 @@ describe("le cours en classe : l'enseignant crée, l'élève rejoint, l'erreur r
     await eleve.getByLabel("Prénom ou pseudonyme").fill("Camille");
     await eleve.getByRole("button", { name: "Rejoindre la classe" }).click();
     await eleve.waitForURL(/\/cours\?classe=rejointe/, { timeout: 60_000 });
-    expect(await eleve.locator("[data-classe-du-cours]").innerText()).toContain("BTS CG 1 e2e");
+    expect(await eleve.locator("[data-classe-du-cours]").innerText().then(espacesOrdinaires)).toContain("BTS CG 1 e2e");
 
     // L'entreprise imposée l'emporte sur celle de l'adresse.
     await aller(eleve, chemin("nova"));
-    await expect.poll(() => eleve.locator("[data-en-classe]").innerText()).toContain("Camille");
-    expect(await eleve.locator("main").innerText()).toContain("L'ESCALE");
+    await expect.poll(() => eleve.locator("[data-en-classe]").innerText().then(espacesOrdinaires)).toContain("Camille");
+    expect(await eleve.locator("main").innerText().then(espacesOrdinaires)).toContain("L'ESCALE");
     await eleve.getByRole("button", { name: "Étape suivante" }).click();
     const cas = casDeLEntreprise("hotel");
     await eleve.getByLabel("Compte, ligne 1", { exact: true }).fill("101");
@@ -306,13 +307,13 @@ describe("le cours en classe : l'enseignant crée, l'élève rejoint, l'erreur r
     await eleve.getByLabel("Compte, ligne 2", { exact: true }).fill("512");
     await eleve.getByLabel("Crédit, ligne 2", { exact: true }).fill(String(cas.capital));
     await eleve.getByRole("button", { name: "Valider l'écriture" }).click();
-    await expect.poll(() => eleve.locator("main").innerText()).toContain("se passe au débit");
+    await expect.poll(() => eleve.locator("main").innerText().then(espacesOrdinaires)).toContain("se passe au débit");
 
     await expect
       .poll(
         async () => {
           await prof.reload();
-          return prof.locator("[data-etape='apport']").innerText();
+          return prof.locator("[data-etape='apport']").innerText().then(espacesOrdinaires);
         },
         { timeout: 30_000 },
       )
@@ -322,9 +323,9 @@ describe("le cours en classe : l'enseignant crée, l'élève rejoint, l'erreur r
     // Au mur : l'étape projetée, la remarque comptée, aucun nom d'élève.
     await prof.getByRole("link", { name: "Projeter l'étape « Les apports des associés »" }).click();
     await prof.waitForURL(/\/projection\?/, { timeout: 60_000 });
-    await expect.poll(() => prof.locator("[data-remarques-projetees]").innerText()).toContain("L'argent reçu en banque se passe au débit.");
-    expect(await prof.locator("[data-remarques-projetees]").innerText()).toContain("1 élève");
-    expect(await prof.locator("main").innerText()).not.toContain("Camille");
+    await expect.poll(() => prof.locator("[data-remarques-projetees]").innerText().then(espacesOrdinaires)).toContain("L'argent reçu en banque se passe au débit.");
+    expect(await prof.locator("[data-remarques-projetees]").innerText().then(espacesOrdinaires)).toContain("1 élève");
+    expect(await prof.locator("main").innerText().then(espacesOrdinaires)).not.toContain("Camille");
 
     // L'élève corrige, avance, se trompe à la question à choix, puis trouve.
     await eleve.getByLabel("Compte, ligne 1", { exact: true }).fill("512");
@@ -367,7 +368,7 @@ describe("le cours en classe : l'enseignant crée, l'élève rejoint, l'erreur r
     await prof.getByRole("link", { name: "Montrer la réponse" }).click();
     await expect.poll(() => reponse(juste).getAttribute("data-juste")).toBe("true");
     expect(await reponse(fausse).getAttribute("data-juste")).toBe("false");
-    expect(await prof.locator("main").innerText()).not.toContain("Camille");
+    expect(await prof.locator("main").innerText().then(espacesOrdinaires)).not.toContain("Camille");
 
     // L'enseignant retire la calculatrice : l'élève ne la voit plus ; il la rend, elle revient.
     await aller(prof, pageDeLaClasse);
@@ -390,7 +391,7 @@ describe("le seuil de rentabilité, chapitre réservé", () => {
   it("sans licence, le chapitre dit qu'il est réservé ; sous licence, il se joue de bout en bout sans faute", async () => {
     const libre = await nouvellePage();
     await aller(libre, "/cours/seuil-de-rentabilite?entreprise=nova");
-    expect(await libre.locator("main").innerText()).toContain("réservé aux établissements sous licence");
+    expect(await libre.locator("main").innerText().then(espacesOrdinaires)).toContain("réservé aux établissements sous licence");
     await libre.context().close();
 
     const code = "nova";
@@ -402,7 +403,7 @@ describe("le seuil de rentabilité, chapitre réservé", () => {
     await aller(page, `/cours/${chapitre.code}?entreprise=${code}`);
     const etat = { soldes: {} };
     for (const [i, etape] of chapitre.etapes.entries()) {
-      await expect.poll(() => page.locator("h1").innerText(), { timeout: 15_000 }).toBe(etape.titre);
+      await expect.poll(() => page.locator("h1").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toBe(etape.titre);
       if (etape.type === "tri") {
         for (const el of etape.elements(cas)) {
           const libelle = etape.categories.find((k) => k.code === el.categorie)!.libelle;
@@ -427,7 +428,7 @@ describe("le seuil de rentabilité, chapitre réservé", () => {
     }
     const notees = chapitre.etapes.filter((e) => e.type !== "lecture").length;
     await expect
-      .poll(() => page.locator("main").innerText(), { timeout: 15_000 })
+      .poll(() => page.locator("main").innerText().then(espacesOrdinaires), { timeout: 15_000 })
       .toContain(`${notees} étapes réussies du premier coup sur ${notees}`);
     await ctx.close();
   }, 240_000);
@@ -834,7 +835,7 @@ describe.each([
     // Lu, puis la page fermée AVANT de vérifier : une assertion qui échoue ne laisse pas
     // un onglet ouvert. Sur 250 cas, les onglets laissés ouverts finissaient par saturer le
     // serveur, et la suite restait bloquée sans rien écrire (octobre 2026).
-    const texte = await libre.locator("main").innerText();
+    const texte = await libre.locator("main").innerText().then(espacesOrdinaires);
     const sorties = await libre.locator("main a").evaluateAll((xs) => xs.map((x) => x.getAttribute("href") ?? ""));
     await libre.context().close();
     if (libreDAcces) {
@@ -859,7 +860,7 @@ describe.each([
     const page = await ctx.newPage();
     await aller(page, `/cours/${chapitre.code}?entreprise=${code}`);
     for (const [i, etape] of chapitre.etapes.entries()) {
-      await expect.poll(() => page.locator("h1").innerText(), { timeout: 15_000 }).toBe(etape.titre);
+      await expect.poll(() => page.locator("h1").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toBe(etape.titre);
       if (etape.tableau) expect(await tableauxDeLEtape(page)).toBe(1);
       // Le rappel plié de l'énoncé, sur chaque étape notée d'un contenu qui s'ouvre sur un énoncé chiffré.
       const enonce = chapitre.etapes[0]!;
@@ -933,7 +934,7 @@ describe.each([
     }
     const notees = chapitre.etapes.filter((e) => e.type !== "lecture").length;
     await expect
-      .poll(() => page.locator("main").innerText(), { timeout: 15_000 })
+      .poll(() => page.locator("main").innerText().then(espacesOrdinaires), { timeout: 15_000 })
       .toContain(`${notees} étapes réussies du premier coup sur ${notees}`);
     // Et ensuite : les cas pratiques qui reprennent le chapitre, ou les chapitres que le cas reprend.
     const suites = suitesDuChapitre(chapitre.code);
@@ -984,10 +985,10 @@ describe("les liens dans les deux sens", () => {
     // L'ancre peut déjà avoir ouvert la fiche : on ne la referme pas.
     if (!(await fiche.evaluate((d) => (d as HTMLDetailsElement).open))) await fiche.locator("summary").click();
     const lien = fiche.locator(`[data-dans-le-cours] [data-chapitre-de-la-notion="${premier.code}"]`);
-    expect(await lien.innerText()).toBe(premier.titre);
+    expect(await lien.innerText().then(espacesOrdinaires)).toBe(premier.titre);
     await lien.click();
     await page.waitForURL(new RegExp(`/cours/${premier.code}`));
-    expect(await page.locator("main").innerText()).toContain(premier.titre);
+    expect(await page.locator("main").innerText().then(espacesOrdinaires)).toContain(premier.titre);
     expect(await debordement(page)).toBeLessThanOrEqual(0);
     await page.context().close();
   }, 60_000);
@@ -1002,10 +1003,10 @@ describe("un chapitre qui ne vaut pas pour toutes les entreprises", () => {
     await aller(page, "/cours/les-stocks?entreprise=hotel");
     const note = page.locator("[data-entreprise-remplacee]");
     await expect.poll(() => note.count()).toBe(1);
-    expect(await note.innerText()).toContain("ne joue pas ce chapitre");
+    expect(await note.innerText().then(espacesOrdinaires)).toContain("ne joue pas ce chapitre");
     const cas = casDeLEntreprise(chapitre.entreprises!.codes[0]!);
-    expect(await note.innerText()).toContain(cas.entreprise);
-    await expect.poll(() => page.locator("h1").innerText(), { timeout: 15_000 }).toBe(chapitre.etapes[0]!.titre);
+    expect(await note.innerText().then(espacesOrdinaires)).toContain(cas.entreprise);
+    await expect.poll(() => page.locator("h1").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toBe(chapitre.etapes[0]!.titre);
     expect(await debordement(page)).toBeLessThanOrEqual(0);
     await ctx.close();
   }, 120_000);
