@@ -5,6 +5,7 @@ import { CHAPITRES } from "@/config/cours/registre";
 import { CAS_DE_SYNTHESE, CAS_PAR_CHAPITRE, SITUATIONS } from "@/config/cours/situations";
 import { THEMES, episodesDuTheme, themeDeLEpisode, themeDuChapitre } from "@/config/cours/themes";
 import { CONCEPTS } from "@/config/pedagogy/concepts";
+import { chapitrePropose } from "@/config/formations-proposees";
 import { FAMILLES } from "@/config/episodes/familles";
 import {
   EPISODES_PROPOSES,
@@ -100,10 +101,11 @@ describe("le bilan d'un épisode", () => {
 });
 
 describe("la fiche d'une notion", () => {
-  it("nomme exactement les chapitres dont une étape la fait vivre", () => {
+  it("nomme exactement les chapitres proposés dont une étape la fait vivre", () => {
     const citees = new Set(CHAPITRES.flatMap((c) => c.etapes.flatMap((e) => e.notions ?? [])));
     for (const n of CONCEPTS) {
-      const attendus = CHAPITRES.filter((c) => c.etapes.some((e) => e.notions?.includes(n.code))).map((c) => c.code);
+      // Les chapitres retirés (config/formations-proposees.ts) ne se proposent plus.
+      const attendus = CHAPITRES.filter((c) => chapitrePropose(c) && c.etapes.some((e) => e.notions?.includes(n.code))).map((c) => c.code);
       expect(codes(chapitresDeLaNotion(n.code)), n.code).toEqual(attendus);
     }
     // Une notion citée par une étape existe dans le registre : sinon le lien du cours vers la fiche mène nulle part.

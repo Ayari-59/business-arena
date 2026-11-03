@@ -144,9 +144,11 @@ describe("4. un mot par sens", () => {
     expect(ens).not.toMatch(/label: "diplômes visés"/);
     expect(ens).toMatch(/formationsAvecUnePage\(\)/);
     expect(ens).toMatch(/label: "formations servies"/);
-    // « Du CAP au DSCG » : les deux bouts existent dans le registre des pages.
+    // « Du bac STMG au DSCG » : les deux bouts existent dans le registre des pages
+    // (au lycée, le bac STMG seul : config/formations-proposees.ts).
     const sigles = formationsAvecUnePage().map((f) => f.sigle);
-    expect(sigles.some((s) => s.startsWith("CAP"))).toBe(true);
+    expect(sigles).toContain("STMG");
+    expect(sigles.some((s) => s.startsWith("CAP"))).toBe(false);
     expect(sigles).toContain("DSCG");
     expect(lire("app/cours/page.tsx")).not.toMatch(/du lycée au DCG/);
     expect(lire("config/navigation.ts")).not.toMatch(/pour chaque diplôme qui a un atelier/);

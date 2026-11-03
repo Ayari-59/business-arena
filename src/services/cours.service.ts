@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { coursClasses, coursEleves, coursProgressions, organizationMembers, type SuiviDEtapeEnregistre } from "@/db/schema";
 import { ALPHABET_REPRISE } from "@/config/reprise";
 import { chapitreParCode } from "@/config/cours/registre";
-import { parcoursAChoisir, parcoursQuiOuvrent, type OuvrablePar } from "@/config/cours/parcours-de-formation";
+import { parcoursProposeAChoisir, parcoursQuiOuvrent, type OuvrablePar } from "@/config/cours/parcours-de-formation";
 import type { Chapitre } from "@/config/cours/types";
 import { ENTREPRISES_DU_COURS } from "@/config/cours/metiers";
 import type { ProgressionLue } from "@/pedagogy/cours/suivi";
@@ -50,8 +50,11 @@ export const normaliserCodeDeClasse = (saisi: string) =>
     .slice(0, 20);
 
 const entrepriseValide = (e: string | null | undefined) => (e && ENTREPRISES_DU_COURS.includes(e) ? e : null);
-/** Un parcours du registre, ou un parcours de formation (le BUT : config/cours/parcours-de-formation.ts). */
-const parcoursValide = (p: string | null | undefined) => (parcoursAChoisir(p) ? p : null);
+/**
+ * Un parcours du registre, ou un parcours de formation (le BUT : config/cours/parcours-de-formation.ts),
+ * qu'une classe peut choisir aujourd'hui : pas celui d'une formation retirée (config/formations-proposees.ts).
+ */
+const parcoursValide = (p: string | null | undefined) => (parcoursProposeAChoisir(p) ? p : null);
 
 export async function creerClasse(args: {
   enseignantId: string;

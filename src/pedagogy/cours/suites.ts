@@ -1,5 +1,6 @@
 import { referentielDeCitation } from "@/config/ateliers/referentiels";
 import { CHAPITRES, PARCOURS } from "@/config/cours/registre";
+import { chapitrePropose } from "@/config/formations-proposees";
 import { formationOuverteAuxEpisodes } from "@/config/episodes/public-des-episodes";
 import { CAS_DE_SYNTHESE, CAS_PAR_CHAPITRE, situationParCode, type Situation } from "@/config/cours/situations";
 import { episodesDuTheme, themeDeLEpisode, themeDuChapitre, type Theme } from "@/config/cours/themes";
@@ -131,9 +132,9 @@ export function casDeSyntheseDuTheme(theme: Theme): Situation[] {
   return CAS_DE_SYNTHESE.filter((s) => themeDuChapitre(s.reprend[0]!)?.code === theme.code);
 }
 
-/** Les chapitres dont une étape fait vivre la notion (`notions` de l'étape). */
+/** Les chapitres proposés dont une étape fait vivre la notion (`notions` de l'étape). */
 export function chapitresDeLaNotion(notion: string): Lien[] {
-  return CHAPITRES.filter((c) => c.etapes.some((e) => e.notions?.includes(notion))).map((c) => ({
+  return CHAPITRES.filter((c) => chapitrePropose(c) && c.etapes.some((e) => e.notions?.includes(notion))).map((c) => ({
     code: c.code,
     titre: c.titre,
   }));

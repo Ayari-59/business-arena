@@ -85,7 +85,8 @@ describe("le catalogue par thème", () => {
       }
       expect(p.couverture.travaillees, f.code).toBeLessThanOrEqual(p.couverture.total);
     }
-    expect(fermesAvecUnReleve, "aucune formation fermée n'a de relevé : la règle ne garde rien").toBeGreaterThan(3);
+    // Au lycée, seul le bac STMG a encore sa page (config/formations-proposees.ts) : c'est lui que la règle garde.
+    expect(fermesAvecUnReleve, "aucune formation fermée n'a de relevé : la règle ne garde rien").toBeGreaterThan(0);
     expect(programmeDuDiplome("diplome-inconnu")).toBeNull();
   });
 

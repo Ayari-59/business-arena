@@ -1,7 +1,7 @@
 import { ATELIERS } from "../ateliers";
 import { BLOCS_DES_EPISODES } from "../episodes/blocs";
 import { FAMILLES } from "../episodes/familles";
-import { formationParCode, type Formation } from "../formations";
+import { formationParCode, formationProposee, type Formation } from "../formations";
 import {
   blocsDeLEpisode,
   coursDeLaFormation,
@@ -40,7 +40,8 @@ export interface ProgrammeDuDiplome {
 
 export function programmeDuDiplome(code: string): ProgrammeDuDiplome | null {
   const formation = formationParCode(code);
-  if (!formation) return null;
+  // Une formation retirée (config/formations-proposees.ts) n'a plus de programme à montrer.
+  if (!formation || !formationProposee(code)) return null;
   const { referentiel, lignes } = tableauDeCouverture(code);
   const siens = new Set(coursDeLaFormation(code).flatMap((g) => g.chapitres.map((c) => c.code)));
   const chapitres = coursDeLaFormation(code).flatMap((g) => g.chapitres);

@@ -13,7 +13,7 @@ import { SubmitButton } from "@/components/submit-button";
 import { bouton, LIEN_A_L_ENCRE } from "@/components/bouton";
 import { ENTREPRISES } from "@/app/cours/entreprises";
 import { CHAPITRES } from "@/config/cours/registre";
-import { PARCOURS_A_CHOISIR, titreDuParcours } from "@/config/cours/parcours-de-formation";
+import { PARCOURS_PROPOSES_A_CHOISIR, titreDuParcours } from "@/config/cours/parcours-de-formation";
 import { classeSansOffre, offreDuCoursDeLEnseignant } from "@/services/chapitres-de-la-classe";
 import { lienDuDevis, LIBELLE_DU_DEVIS, OFFRES } from "@/config/tarifs";
 import { ArticulationDuCours } from "@/components/articulation-du-cours";
@@ -118,7 +118,7 @@ async function MesClassesDuCoursPage({ searchParams }: { searchParams: Promise<{
                   </option>
                   {/* Les parcours du registre, puis les parcours de formation (le BUT), qui regroupent
                       des chapitres d'autres parcours (config/cours/parcours-de-formation.ts). */}
-                  {PARCOURS_A_CHOISIR.map((p) => (
+                  {PARCOURS_PROPOSES_A_CHOISIR.map((p) => (
                     <option key={p.code} value={p.code}>
                       {p.titre}
                     </option>

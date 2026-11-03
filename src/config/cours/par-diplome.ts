@@ -1,5 +1,6 @@
 import { blocsDuChapitre, coursDeLaFormation, tableauDeCouverture } from "../couverture";
-import { formationParCode, type Formation } from "../formations";
+import { formationParCode, formationProposee, type Formation } from "../formations";
+import { CHAPITRES_PROPOSES } from "../formations-proposees";
 import { dureeDuChapitre } from "./duree";
 import { CHAPITRES } from "./registre";
 import { themeDuChapitre } from "./themes";
@@ -75,7 +76,7 @@ export function ordreDApprentissage(chapitres: readonly Chapitre[]): Chapitre[] 
 
 export function coursDuDiplome(code: string): CoursDuDiplome | null {
   const formation = formationParCode(code);
-  if (!formation) return null;
+  if (!formation || !formationProposee(code)) return null;
   const chapitres = coursDeLaFormation(code).flatMap((g) => g.chapitres);
   const ordre = ordreDApprentissage(chapitres);
   const lignes: ChapitreDuDiplome[] = ordre.map((chapitre, i) => ({
@@ -130,7 +131,7 @@ export function normaliser(texte: string): string {
 export function rechercherChapitres(motCle: string, parmi?: readonly Chapitre[]): Chapitre[] {
   const mots = normaliser(motCle).split(/[^a-z0-9]+/).filter((m) => m.length > 1);
   if (mots.length === 0) return [];
-  return (parmi ?? CHAPITRES).filter((c) => {
+  return (parmi ?? CHAPITRES_PROPOSES).filter((c) => {
     const texte = normaliser([c.titre, c.accroche, ...c.objectifs, themeDuChapitre(c.code)?.titre ?? ""].join(" "));
     return mots.every((m) => texte.includes(m));
   });

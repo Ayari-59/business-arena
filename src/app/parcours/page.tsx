@@ -10,7 +10,7 @@ import {
   coursDeLaFormation,
   referentielDeLaFormation,
 } from "@/config/couverture";
-import { FORMATIONS } from "@/config/formations";
+import { FORMATIONS_PROPOSEES } from "@/config/formations-proposees";
 import { scenariosServant } from "@/config/scenarios/formations-servies";
 import { SUR_MESURE } from "@/config/sur-mesure";
 import { LIBELLE_DU_DEVIS } from "@/config/tarifs";
@@ -73,7 +73,8 @@ const TOUTES_LES_FILIERES = (() => {
   // portait un champ `diplome` au singulier, donc il ne pouvait paraître que
   // sous une formation : un nom n'a qu'une valeur. Il déclare maintenant
   // celles qu'il sert, et le tournoi inter-filières paraît sous les quatre.
-  return FORMATIONS.map((formation) => {
+  // Les formations retirées (config/formations-proposees.ts) n'ont pas de section.
+  return FORMATIONS_PROPOSEES.map((formation) => {
     // UN ATELIER ENTRE PAR SON RATTACHEMENT, PLUS PAR SON RÉFÉRENTIEL PROPRE.
     // Le filtre exigeait aussi qu'il ait une entrée au registre des
     // référentiels, ce qui écartait le tournoi inter-filières : il n'en a pas,
@@ -134,10 +135,10 @@ const TOUTES_LES_FILIERES = (() => {
 const FILIERES = TOUTES_LES_FILIERES.filter((f) => f.ateliers.length > 0);
 
 /**
- * LES DIPLÔMES QUE LE COURS SERT SANS ATELIER. Un bac pro, une seconde ou le
- * DSCG ont leur texte au registre et une page de couverture, mais aucun
- * déroulé de séances : leur tiroir n'aurait ni réglages ni mise en œuvre. Ils
- * se listent à part, avec ce que leur page montre.
+ * LES DIPLÔMES QUE LE COURS SERT SANS ATELIER. Le DSCG a son texte au registre
+ * et une page de couverture, mais aucun déroulé de séances : son tiroir
+ * n'aurait ni réglages ni mise en œuvre. Ces diplômes se listent à part, avec
+ * ce que leur page montre.
  */
 const DIPLOMES_SANS_ATELIER = TOUTES_LES_FILIERES.filter(
   (f) => f.ateliers.length === 0 && f.entrees !== null,

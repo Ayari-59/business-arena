@@ -15,6 +15,7 @@ import { BLOCS_DES_EPISODES } from "./episodes/blocs";
 import { formationOuverteAuxEpisodes } from "./episodes/public-des-episodes";
 import { episodeParCode } from "../pedagogy/episodes/registre";
 import { FORMATIONS, type Formation } from "./formations";
+import { chapitrePropose, formationProposee } from "./formations-proposees";
 import { raisonHorsDuChamp } from "./hors-du-champ";
 
 /**
@@ -601,9 +602,11 @@ export function coursDeLaFormation(
 ): { parcours: ParcoursDuCours; chapitres: Chapitre[] }[] {
   return PARCOURS_DU_COURS.map((parcours) => ({
     parcours,
+    // Les chapitres des parcours retirés (config/formations-proposees.ts) ne se proposent plus.
     chapitres: CHAPITRES.filter(
       (c) =>
         c.parcours === parcours.code &&
+        chapitrePropose(c) &&
         (parcours.formation === formation ||
           blocsDuChapitre(c, formation).length > 0),
     ).sort((a, b) => a.palier - b.palier),
@@ -613,12 +616,14 @@ export function coursDeLaFormation(
 /**
  * Les formations qui ont leur page : celles qu'un atelier ou le cours sert, et celles dont le
  * référentiel est lu, même si rien ne les travaille encore : leur page dit alors ce qui manque.
+ * Une formation retirée (config/formations-proposees.ts) n'a pas de page.
  */
 export function formationsAvecUnePage(): Formation[] {
   return FORMATIONS.filter(
     (f) =>
-      ATELIERS.some((a) => a.formations.includes(f.code)) ||
+      formationProposee(f.code) &&
+      (ATELIERS.some((a) => a.formations.includes(f.code)) ||
       coursDeLaFormation(f.code).length > 0 ||
-      referentielDeLaFormation(f.code) !== null,
+      referentielDeLaFormation(f.code) !== null),
   );
 }

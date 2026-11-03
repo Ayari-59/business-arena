@@ -766,7 +766,7 @@ async function TeacherDashboard({
                       LE NOM QUE VOUS AVEZ DONNÉ, S'IL Y EN A UN. Six parties
                       s'appelaient « NOVA », avec la même icône et la même
                       allure : rien ne disait laquelle était celle de la
-                      seconde 3. Le scénario passe alors en sous-titre, où il
+                      terminale STMG 2. Le scénario passe alors en sous-titre, où il
                       reste lisible sans occuper la ligne qui distingue.
                     */}
                     <span className="flex min-w-0 items-center gap-2">

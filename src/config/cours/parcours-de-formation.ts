@@ -1,4 +1,5 @@
 import { blocOfficielDans, referentielDeCitation } from "../ateliers/referentiels";
+import { formationProposee } from "../formations";
 import { CHAPITRES, PARCOURS } from "./registre";
 import type { Chapitre } from "./types";
 
@@ -102,3 +103,17 @@ export const titreDuParcours = (code: string | null | undefined) => PARCOURS_A_C
 
 /** Le code est-il un parcours qu'une classe peut choisir ? */
 export const parcoursAChoisir = (code: string | null | undefined): code is string => PARCOURS_A_CHOISIR.some((p) => p.code === code);
+
+/**
+ * LES PARCOURS QU'UNE CLASSE PEUT CHOISIR AUJOURD'HUI : sans ceux des formations retirées
+ * (config/formations-proposees.ts). Une classe qui en a déjà un le garde : `titreDuParcours` et
+ * l'accès aux chapitres lisent la liste entière.
+ */
+export const PARCOURS_PROPOSES_A_CHOISIR = PARCOURS_A_CHOISIR.filter((p) => {
+  const formation = PARCOURS.find((x) => x.code === p.code)?.formation;
+  return !formation || formationProposee(formation);
+});
+
+/** Le code est-il un parcours qu'une classe peut choisir aujourd'hui ? */
+export const parcoursProposeAChoisir = (code: string | null | undefined): code is string =>
+  PARCOURS_PROPOSES_A_CHOISIR.some((p) => p.code === code);

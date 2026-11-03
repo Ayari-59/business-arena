@@ -9,7 +9,7 @@ import { blocsDuChapitre, coursDeLaFormation, formationsAvecUnePage, tableauDeCo
 /**
  * LA PAGE DU COURS ENTRE PAR LE DIPLÔME (chantier approuvé par le propriétaire, novembre 2026).
  *
- * « Votre formation ? » d'abord, du CAP au DSCG avec les BUT ; la vue d'un diplôme montre ses
+ * « Votre formation ? » d'abord, du bac STMG au DSCG avec les BUT ; la vue d'un diplôme montre ses
  * chapitres dans l'ordre d'apprentissage, groupés par bloc de son référentiel, chacun avec ses
  * objectifs, sa durée, ses prérequis et son cadenas. Le catalogue par thème reste, en lien
  * secondaire, avec une recherche par mot-clé. Le parcours se lit dans les registres existants
@@ -18,10 +18,11 @@ import { blocsDuChapitre, coursDeLaFormation, formationsAvecUnePage, tableauDeCo
 const PAGE = readFileSync(join(process.cwd(), "src/app/cours/page.tsx"), "utf8");
 
 describe("le cours par diplôme", () => {
-  it("les diplômes se proposent du CAP au DSCG, BUT compris, chacun une fois", () => {
+  it("les diplômes se proposent du bac STMG au DSCG, BUT compris, chacun une fois", () => {
     const groupes = diplomesParNiveau();
     const codes = groupes.flatMap((g) => g.formations.map((f) => f.code));
-    expect(codes[0]).toBe("cap-epc");
+    // Au lycée, le bac STMG seul (config/formations-proposees.ts).
+    expect(codes[0]).toBe("stmg");
     expect(codes.at(-1)).toBe("dscg");
     expect(codes).toEqual(expect.arrayContaining(["but-gea", "but-tc", "but-gaco"]));
     expect(new Set(codes)).toEqual(new Set(formationsAvecUnePage().map((f) => f.code)));
