@@ -250,7 +250,7 @@ export const FAMILLES: readonly Famille[] = [
     // famille vient en dernier du négoce : les fiches enseignant gardent les
     // numéros 31 à 48, et les décomptes du rapport les trente premiers.
     // Le texte ne nomme plus le lycée professionnel ni le CAP : les épisodes
-    // ne s'annoncent plus en dessous de bac + 3 (public-des-episodes.ts).
+    // ne s'annoncent pas au lycée (public-des-episodes.ts).
     code: "premier-poste",
     titre: "Le premier poste",
     secteur: "negoce",

@@ -34,7 +34,7 @@ export interface SuitesDuChapitre {
   reprend: Lien[];
   /** Les chapitres qui prolongent celui-ci (`ensuite` du chapitre), dans son ordre. */
   ensuite: Lien[];
-  /** Quelques épisodes du thème, et leur nombre total ; aucun en dessous de bac + 3 (`chapitreOuvertAuxEpisodes`). */
+  /** Quelques épisodes du thème, et leur nombre total ; aucun au lycée (`chapitreOuvertAuxEpisodes`). */
   episodes: Lien[];
   episodesDuTheme: number;
 }
@@ -75,7 +75,7 @@ export function formationsDuChapitre(code: string): string[] {
 }
 
 /**
- * LA FIN D'UN CHAPITRE PROPOSE-T-ELLE DES ÉPISODES ? Pas en dessous de bac + 3 (décision du
+ * LA FIN D'UN CHAPITRE PROPOSE-T-ELLE DES ÉPISODES ? Pas au lycée (décision du
  * propriétaire, novembre 2026, config/episodes/public-des-episodes.ts) : un chapitre écrit pour
  * les seules formations fermées (le CAP, le lycée, le BTS) n'en propose aucun. Un chapitre qui
  * sert aussi une formation ouverte, ou aucune formation en particulier, garde les siens.

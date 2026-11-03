@@ -79,7 +79,7 @@ async function PageDuDiplome({
   const entreprises = scenariosServant(code).map((s) => s.playerTeamName);
   const travailles = lignes.filter((l) => l.couverture).length;
   const horsDuChamp = lignes.filter((l) => !l.couverture && l.horsDuChamp).length;
-  // Les épisodes ne s'annoncent qu'à partir de bac + 3 (config/episodes/public-des-episodes.ts) :
+  // Les épisodes ne s'annoncent que dans l'enseignement supérieur (config/episodes/public-des-episodes.ts) :
   // sous ce niveau, ni la colonne « En situation », ni la section des épisodes.
   const avecEpisodes = formationOuverteAuxEpisodes(code);
   // Les épisodes qui servent ce diplôme, une fois chacun, avec les entrées

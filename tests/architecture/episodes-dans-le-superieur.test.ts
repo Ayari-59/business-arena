@@ -20,11 +20,11 @@ import { CATALOGUE_PAR_DEFAUT, LIBELLES_DU_DEVIS } from "@/config/tarifs";
 import { suitesDuChapitre } from "@/pedagogy/cours/suites";
 
 /**
- * LES ÉPISODES MANAGER À PARTIR DE BAC + 3 (décision du propriétaire, novembre 2026).
+ * LES ÉPISODES MANAGER DANS L'ENSEIGNEMENT SUPÉRIEUR, PAS AU LYCÉE (décision du propriétaire,
+ * novembre 2026).
  *
- * Aucune page, aucun registre ni aucune suite n'annonce un épisode pour une formation de niveau
- * inférieur à bac + 3 : ni le CAP, ni la seconde, ni le bac professionnel, ni le bac STMG, ni le
- * BTS. La règle vit dans config/episodes/public-des-episodes.ts ; cette garde la vérifie à
+ * Aucune page, aucun registre ni aucune suite n'annonce un épisode pour une formation du lycée :
+ * ni le CAP, ni la seconde, ni le bac professionnel, ni le bac STMG. Le BTS est ouvert. La règle vit dans config/episodes/public-des-episodes.ts ; cette garde la vérifie à
  * chaque endroit où un épisode rencontre une formation, et recalcule elle-même ce que chaque
  * chapitre sert, pour ne pas se contenter de relire la règle.
  */
@@ -37,13 +37,17 @@ const lire = (chemin: string) => readFileSync(join(process.cwd(), chemin), "utf8
  * scolaires, oui.
  */
 const NIVEAU_FERME =
-  /(?<!\p{L})(CAP|BTS|STMG|lycée|lycées|lycéens?|2de|seconde (?:professionnelle|générale|pro)|bac pro|baccalauréat professionnel|bac STMG|terminale STMG|première STMG)(?!\p{L})/iu;
+  /(?<!\p{L})(CAP|STMG|lycée|lycées|lycéens?|2de|seconde (?:professionnelle|générale|pro)|bac pro|baccalauréat professionnel|bac STMG|terminale STMG|première STMG)(?!\p{L})/iu;
 
-describe("la règle : à partir de bac + 3", () => {
-  it("ouvre exactement le BUT, le DCG et le DSCG parmi les formations du registre", () => {
-    expect(NIVEAU_MINIMUM_DES_EPISODES).toBe(3);
-    const ouvertes = FORMATIONS.filter((f) => formationOuverteAuxEpisodes(f.code)).map((f) => f.code);
-    expect(ouvertes).toEqual(["but-gea", "but-tc", "but-gaco", "dcg", "dscg"]);
+describe("la règle : dans l'enseignement supérieur", () => {
+  it("ouvre toutes les formations du supérieur du registre, et aucune du lycée", () => {
+    expect(NIVEAU_MINIMUM_DES_EPISODES).toBe(1);
+    for (const f of FORMATIONS) {
+      const niveau = ANNEES_APRES_LE_BAC[f.optionDe ?? f.code]!;
+      expect(formationOuverteAuxEpisodes(f.code), f.code).toBe(niveau >= 1);
+    }
+    expect(formationOuverteAuxEpisodes("bts-cg")).toBe(true);
+    expect(formationOuverteAuxEpisodes("stmg")).toBe(false);
   });
 
   it("donne un niveau à chaque formation du registre, une option comptant pour son diplôme", () => {
@@ -55,7 +59,7 @@ describe("la règle : à partir de bac + 3", () => {
   });
 
   it("se dit en clair, sans nommer un niveau fermé", () => {
-    expect(PUBLIC_DES_EPISODES).toMatch(/bac \+ 3/);
+    expect(PUBLIC_DES_EPISODES).toMatch(/^Dans l'enseignement supérieur : BTS, BUT/);
     expect(PUBLIC_DES_EPISODES).not.toMatch(NIVEAU_FERME);
   });
 });
@@ -71,7 +75,7 @@ describe("le registre des fiches enseignant", () => {
       for (const ligne of fiche.programme) {
         const code = formationDeLaLigne(ligne);
         if (code) expect(formationOuverteAuxEpisodes(code), `${fiche.code} : « ${ligne} »`).toBe(true);
-        expect(ligne, `${fiche.code} : « ${ligne} »`).not.toMatch(/^(CAP|BTS|STMG|2de|Bac pro|Seconde|Terminale|Première)\b/);
+        expect(ligne, `${fiche.code} : « ${ligne} »`).not.toMatch(/^(CAP|STMG|2de|Bac pro|Seconde|Terminale|Première)\b/);
       }
   });
 
@@ -156,7 +160,7 @@ describe("les textes qui présentent les épisodes", () => {
   it("les pages des épisodes en classe disent le public, et ne lisent que le registre filtré", () => {
     for (const chemin of ["src/app/enseignants/episodes/page.tsx", "src/app/enseignants/episodes/[code]/page.tsx"]) {
       const page = lire(chemin);
-      expect(page, chemin).toMatch(/PUBLIC_DES_EPISODES|A_PARTIR_DE_BAC_3/);
+      expect(page, chemin).toMatch(/PUBLIC_DES_EPISODES|DANS_LE_SUPERIEUR/);
       expect(page, chemin).not.toMatch(/FICHES_ECRITES/);
     }
   });

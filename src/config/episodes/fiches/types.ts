@@ -35,7 +35,7 @@ export interface FicheEnseignant {
   code: string;
   /**
    * Les formations servies, codes de src/config/formations.ts. Le registre (index.ts) n'annonce
-   * que celles que la règle des épisodes ouvre, à partir de bac + 3 (../public-des-episodes.ts),
+   * que celles que la règle des épisodes ouvre, dans l'enseignement supérieur (../public-des-episodes.ts),
    * et filtre de même les lignes de `programme`.
    */
   formations: readonly string[];

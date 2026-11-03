@@ -44,8 +44,8 @@ describe("la fin d'un chapitre", () => {
       const s = suitesDuChapitre(c.code);
       const theme = themeDuChapitre(c.code)!;
       expect(s.theme?.code, c.code).toBe(theme.code);
-      // Aucun épisode à la fin d'un chapitre écrit pour les seules formations en dessous de
-      // bac + 3 (config/episodes/public-des-episodes.ts ; garde : episodes-a-partir-de-bac-3).
+      // Aucun épisode à la fin d'un chapitre écrit pour les seules formations du lycée
+      // (config/episodes/public-des-episodes.ts ; garde : episodes-dans-le-superieur).
       const attendus = chapitreOuvertAuxEpisodes(c.code) ? episodesDuTheme(theme).length : 0;
       expect(s.episodesDuTheme, c.code).toBe(attendus);
       expect(s.episodes.length, c.code).toBe(Math.min(EPISODES_PROPOSES, s.episodesDuTheme));

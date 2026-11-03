@@ -31,11 +31,11 @@ describe("les fiches enseignant", () => {
   for (const fiche of FICHES) {
     const ep = episodeParCode(fiche.code)!;
     describe(ep.titre, () => {
-      it("vise des formations qui existent, à partir de bac + 3, avec au plus trois programmes", () => {
+      it("vise des formations qui existent, dans l'enseignement supérieur, avec au plus trois programmes", () => {
         // Le registre n'annonce que les formations ouvertes aux épisodes (décision du
         // propriétaire, novembre 2026, config/episodes/public-des-episodes.ts) : une fiche écrite
         // pour le seul lycée ou le seul BTS n'en annonce plus aucune, et s'adresse alors aux
-        // publics de la règle. Garde : tests/architecture/episodes-a-partir-de-bac-3.test.ts.
+        // publics de la règle. Garde : tests/architecture/episodes-dans-le-superieur.test.ts.
         for (const c of fiche.formations) {
           expect(formationParCode(c), c).toBeDefined();
           expect(formationOuverteAuxEpisodes(c), c).toBe(true);

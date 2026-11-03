@@ -38,7 +38,7 @@
  * répit, l'assistance aux ressources humaines qui recrute les saisonniers.
  *
  * UN RELEVÉ, PLUS UNE ANNONCE (décision du propriétaire, novembre 2026). Les
- * épisodes ne s'annoncent plus en dessous de bac + 3, et toutes les entrées
+ * épisodes ne s'annoncent pas au lycée, et toutes les entrées
  * ci-dessous sont celles de formations fermées (le lycée, le CAP) : la
  * couverture ne les lit plus (config/couverture.ts, `blocsDeLEpisode`, sur la
  * règle de public-des-episodes.ts). Le relevé reste, pour le jour où la règle

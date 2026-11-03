@@ -83,7 +83,7 @@ async function FichePage({ params }: { params: Promise<{ code: string }> }) {
             </p>
           ) : null}
           {/* Le public des épisodes (config/episodes/public-des-episodes.ts) : le registre des
-              fiches n'annonce que les formations à partir de bac + 3. */}
+              fiches n'annonce que les formations de l'enseignement supérieur. */}
           <p className="mt-2 text-sm text-slate-400" data-public-des-episodes="">
             {PUBLIC_DES_EPISODES}
           </p>

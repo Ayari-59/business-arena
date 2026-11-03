@@ -116,7 +116,7 @@ describe("la couverture par le cours", () => {
   it("le cours et les épisodes seuls ne font jamais d'un bloc le cœur du jeu", () => {
     // Seul le moteur rejoue un bloc à chaque tour ; un chapitre se fait une
     // fois, un épisode se joue sur un trimestre.
-    // Les épisodes ne s'annoncent qu'à partir de bac + 3 (décision du propriétaire, novembre
+    // Les épisodes ne s'annoncent que dans l'enseignement supérieur (décision du propriétaire, novembre
     // 2026, config/episodes/public-des-episodes.ts) : le relevé de blocs.ts ne cite que des
     // formations fermées, si bien qu'aucune ligne n'est aujourd'hui travaillée par un épisode.
     // La règle de l'adéquation reste écrite pour le jour où une formation ouverte en aura.

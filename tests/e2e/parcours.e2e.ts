@@ -757,7 +757,7 @@ describe("parcours enseignant et élève", () => {
     expect(await prof.locator("[data-sur-mesure-paragraphe]").isVisible()).toBe(true);
     await aller(prof, "/parcours/bts-mco");
     expect(await prof.locator("[data-sans-atelier]").count()).toBe(0);
-    // LES ÉPISODES NE S'ANNONCENT QU'À PARTIR DE BAC + 3 (config/episodes/public-des-episodes.ts) :
+    // LES ÉPISODES NE S'ANNONCENT PAS AU LYCÉE (config/episodes/public-des-episodes.ts) :
     // en seconde pro, l'entrée que seul un épisode touchait n'est plus couverte, et la page ne
     // montre ni la colonne « En situation » ni la liste des épisodes.
     await aller(prof, "/parcours/seconde-pro-rc");

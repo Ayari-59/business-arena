@@ -75,7 +75,7 @@ describe("le catalogue par thème", () => {
         Object.keys(BLOCS_DES_EPISODES).filter((e) => blocsDeLEpisode(e, f.code).length > 0),
       );
       expect(new Set(p.episodes), f.code).toEqual(episodes);
-      // À partir de bac + 3 seulement (décision du propriétaire, novembre 2026,
+      // Dans l'enseignement supérieur seulement (décision du propriétaire, novembre 2026,
       // config/episodes/public-des-episodes.ts) : une formation fermée n'a aucun épisode,
       // même quand le relevé de blocs.ts en cite pour elle.
       if (!formationOuverteAuxEpisodes(f.code)) {

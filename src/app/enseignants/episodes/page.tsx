@@ -5,7 +5,7 @@ import { PiedDePage } from "@/components/pied-de-page";
 import { CatalogueDesEpisodes } from "@/components/catalogue-des-episodes";
 import { catalogueDesEpisodes } from "@/config/episodes/catalogue";
 import { FICHES, type FicheEnseignant } from "@/config/episodes/fiches";
-import { A_PARTIR_DE_BAC_3, PUBLIC_DES_EPISODES } from "@/config/episodes/public-des-episodes";
+import { PUBLIC_DES_EPISODES } from "@/config/episodes/public-des-episodes";
 import { dureeEnClair } from "@/config/cours/duree";
 import { formationParCode } from "@/config/formations";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
@@ -84,7 +84,7 @@ function CarteFiche({ fiche, niveau }: { fiche: FicheEnseignant; niveau: 3 | 4 }
   // Sans formation ouverte au registre, la fiche s'adresse aux publics de la règle.
   const sigles = fiche.formations.length
     ? fiche.formations.map((c) => formationParCode(c)?.sigle ?? c).join(" · ")
-    : A_PARTIR_DE_BAC_3;
+    : "Enseignement supérieur";
   return (
     <li className="carte flex flex-col gap-4 p-6">
       <div>

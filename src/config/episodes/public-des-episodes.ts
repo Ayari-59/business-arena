@@ -2,14 +2,14 @@ import { referentielDeCitation } from "../ateliers/referentiels";
 import { FORMATIONS, formationParCode } from "../formations";
 
 /**
- * À QUI S'ADRESSENT LES ÉPISODES MANAGER : À PARTIR DE BAC + 3.
+ * À QUI S'ADRESSENT LES ÉPISODES MANAGER : À L'ENSEIGNEMENT SUPÉRIEUR, PAS AU LYCÉE.
  *
- * Décision du propriétaire (novembre 2026) : les épisodes manager ne s'annoncent plus pour un
- * niveau inférieur à bac + 3. Un épisode met une personne à la place d'un responsable qui
- * enquête, arbitre et rend des comptes : c'est le travail du BUT, de la licence et de la
- * licence professionnelle, du DCG, du DSCG, des masters, des écoles de commerce et de
- * management, de la formation continue et des entreprises. Le CAP, la seconde, le bac
- * professionnel, le bac STMG et le BTS (bac + 2) gardent l'arène, les ateliers et le cours.
+ * Décision du propriétaire (novembre 2026) : les épisodes manager s'annoncent dans tout
+ * l'enseignement supérieur (BTS, BUT, licence et licence professionnelle, DCG, DSCG, masters,
+ * écoles de commerce et de management), en formation continue et en entreprise ; ils ne
+ * s'annoncent pas au lycée. Le CAP, la seconde, le bac professionnel et le bac STMG gardent
+ * l'arène, les ateliers et le cours. Un premier seuil, à bac + 3, a été remplacé le même mois
+ * par celui-ci.
  *
  * LA RÈGLE NE S'ÉCRIT QU'ICI. Tout ce qui associe un épisode à une formation la lit :
  *   · le registre des fiches enseignant (config/episodes/fiches/index.ts), qui n'annonce que
@@ -19,7 +19,7 @@ import { FORMATIONS, formationParCode } from "../formations";
  *   · les suites d'un chapitre (pedagogy/cours/suites.ts), qui ne proposent pas d'épisode à
  *     la fin d'un chapitre écrit pour les seules formations fermées ;
  *   · les pages qui le disent en clair (`PUBLIC_DES_EPISODES`).
- * La garde tests/architecture/episodes-a-partir-de-bac-3.test.ts vérifie tous ces endroits.
+ * La garde tests/architecture/episodes-dans-le-superieur.test.ts vérifie tous ces endroits.
  *
  * RIEN N'EST SUPPRIMÉ. Les épisodes restent au registre, les fiches gardent la liste des
  * formations pour lesquelles elles ont été écrites, et le relevé des blocs que les épisodes
@@ -56,14 +56,15 @@ export const ANNEES_APRES_LE_BAC: Readonly<Record<string, number>> = {
   dscg: 5,
 };
 
-/** Le niveau à partir duquel un épisode s'annonce : bac + 3. */
-export const NIVEAU_MINIMUM_DES_EPISODES = 3;
+/** Le niveau à partir duquel un épisode s'annonce : la première année après le bac. */
+export const NIVEAU_MINIMUM_DES_EPISODES = 1;
 
 /**
  * Les publics des épisodes, en clair, pour les pages qui le disent. Les licences, les masters
  * et les écoles n'ont pas de code au registre des formations : ils se disent ici.
  */
 export const PUBLICS_DES_EPISODES: readonly string[] = [
+  "BTS",
   "BUT",
   "licence et licence professionnelle",
   "DCG et DSCG",
@@ -72,11 +73,11 @@ export const PUBLICS_DES_EPISODES: readonly string[] = [
   "formation continue et entreprises",
 ];
 
-/** « À partir de bac + 3 », avec des espaces insécables : la mention ne se coupe pas. */
-export const A_PARTIR_DE_BAC_3 = `À partir de bac + ${NIVEAU_MINIMUM_DES_EPISODES}`;
+/** « dans l'enseignement supérieur », pour une phrase qui le dit. */
+export const DANS_LE_SUPERIEUR = "dans l'enseignement supérieur";
 
 /** La phrase qui dit le public des épisodes, pour une page. */
-export const PUBLIC_DES_EPISODES = `${A_PARTIR_DE_BAC_3} : ${PUBLICS_DES_EPISODES.join(", ")}.`;
+export const PUBLIC_DES_EPISODES = `Dans l'enseignement supérieur : ${PUBLICS_DES_EPISODES.join(", ")}.`;
 
 /** Une formation du registre peut-elle se voir annoncer un épisode ? */
 export function formationOuverteAuxEpisodes(code: string): boolean {

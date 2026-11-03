@@ -536,7 +536,7 @@ export const LIBELLES_DU_DEVIS: Record<OffreDuDevis, LibellesDuDevis> = {
   episodes: {
     offre: `${OFFRES.episodes.nom}, en cours ou en école`,
     ...ENSEIGNEMENT,
-    // Pas de lycée : les épisodes s'annoncent à partir de bac + 3 (config/episodes/public-des-episodes.ts).
+    // Pas de lycée : les épisodes s'annoncent dans l'enseignement supérieur (config/episodes/public-des-episodes.ts).
     exempleOrganisation: "École de commerce, université, IUT",
   },
   entreprise: {
