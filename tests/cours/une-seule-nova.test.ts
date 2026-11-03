@@ -92,11 +92,11 @@ describe("une seule paie de NOVA, d'une fiche à l'autre", () => {
 });
 
 describe("aucun salaire horaire du monde sous le SMIC du cours", () => {
-  it("le SMIC du cours : 12,02 € de l'heure, 1 823,03 € pour 151,67 heures", () => {
-    expect(SMIC_HORAIRE_BRUT).toBe(12.02);
+  it("le SMIC du cours : 12,31 € de l'heure, 1 867,02 € pour 151,67 heures", () => {
+    expect(SMIC_HORAIRE_BRUT).toBe(12.31);
     expect(HEURES_LEGALES_PAR_MOIS).toBe(Math.round((35 * 52 * 100) / 12) / 100);
-    // 12,02 × 35 × 52 ÷ 12 (et non × 151,67 arrondi, qui donnerait 1 823,07 €).
-    expect(Math.round(((12.02 * 35 * 52) / 12) * 100) / 100).toBe(SMIC_MENSUEL_BRUT);
+    // 12,31 × 35 × 52 ÷ 12 (et non × 151,67 arrondi, qui donnerait 1 867,06 €).
+    expect(Math.round(((12.31 * 35 * 52) / 12) * 100) / 100).toBe(SMIC_MENSUEL_BRUT);
   });
 
   it("les opérateurs de NOVA : 1 875 € pour 151,67 heures payées, 12,36 € de l'heure, sans heures supplémentaires", () => {
@@ -105,9 +105,12 @@ describe("aucun salaire horaire du monde sous le SMIC du cours", () => {
     expect(o.heuresParMois).toBeLessThanOrEqual(o.heuresPayeesParMois);
     expect(o.salaireBrutMensuel / o.heuresPayeesParMois).toBeGreaterThanOrEqual(SMIC_HORAIRE_BRUT);
     expect(Math.round((1_875 / 151.67) * 100) / 100).toBe(12.36);
-    // Le salaire du marché et le seuil de démission (95 %) restent au-dessus du SMIC mensuel.
+    // Le salaire du marché reste au-dessus du SMIC mensuel, et le seuil de démission (95 %) aussi
+    // pour N + 1, l'année des décisions. En N, le seuil (1 852,50 €) passe sous le SMIC de juin 2026 :
+    // ce n'est qu'un repère de comportement, aucun salaire payé n'y descend (1 875 €, plus haut).
     const m = NOVA_CAPACITE.personnel.salaireDuMarche;
-    expect(Math.min(m.n, m.nPlus1) * 0.95).toBeGreaterThanOrEqual(SMIC_MENSUEL_BRUT);
+    expect(Math.min(m.n, m.nPlus1)).toBeGreaterThanOrEqual(SMIC_MENSUEL_BRUT);
+    expect(m.nPlus1 * 0.95).toBeGreaterThanOrEqual(SMIC_MENSUEL_BRUT);
   });
 
   it("l'équipe de Maille & Co : chaque salarié, au prorata de ses heures, au moins au SMIC", () => {

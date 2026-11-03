@@ -84,8 +84,8 @@ describe("le parcours ressources humaines du bac STMG, sur le monde du cours", (
     expect(k.personnel).toBe(balance("641") + balance("645"));
     expect(k.personnel).toBe(12 * 7_500 * 1.42);
     expect(1_875).toBeGreaterThan(SMIC_MENSUEL_BRUT);
-    // 12,02 € de l'heure, 35 heures par semaine, 52 semaines, sur 12 mois.
-    expect(SMIC_MENSUEL_BRUT).toBe(c2((12.02 * 35 * 52) / 12));
+    // 12,31 € de l'heure, 35 heures par semaine, 52 semaines, sur 12 mois.
+    expect(SMIC_MENSUEL_BRUT).toBe(c2((12.31 * 35 * 52) / 12));
   });
 });
 

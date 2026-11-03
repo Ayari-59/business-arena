@@ -51,21 +51,18 @@ const MOIS_PAR_AN = 12;
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * LE SMIC (droit du travail), HYPOTHÈSE DU COURS : 12,02 € bruts de l'heure au 1er janvier 2026,
- * soit 1 823,03 € bruts par mois pour 35 heures par semaine (12,02 × 35 × 52 ÷ 12 ; la durée
- * mensualisée s'écrit 151,67 heures). Ces deux valeurs sont celles que le cours retient ; elles n'ont
- * pas été
- * vérifiées contre le décret de revalorisation au moment de l'écrire : à confirmer, et à mettre à
- * jour à chaque revalorisation. Un salarié ne peut pas être payé moins de l'heure, et la garde
- * tests/cours/une-seule-nova.test.ts vérifie qu'aucun salaire horaire du monde n'y descend.
+ * LE SMIC (droit du travail), HYPOTHÈSE DU COURS : 12,31 € bruts de l'heure au 1er juin 2026, soit
+ * 1 867,02 € bruts par mois pour 35 heures par semaine (12,31 × 35 × 52 ÷ 12 ; la durée mensualisée
+ * s'écrit 151,67 heures). À mettre à jour à chaque revalorisation. Un salarié ne peut pas être payé
+ * moins de l'heure, et la garde tests/cours/une-seule-nova.test.ts vérifie qu'aucun salaire horaire
+ * du monde n'y descend.
  */
-// Décret n° 2025-1228 du 17 décembre 2025 (Légifrance) et urssaf.fr « Montant du Smic » : 12,02 € de
-// l'heure et 1 823,03 € par mois au 1er janvier 2026. Revalorisé depuis (arrêté du 22 mai 2026) à
-// 12,31 € et 1 867,02 € au 1er juin 2026 : le cours garde le montant du 1er janvier, hypothèse datée.
-export const SMIC_HORAIRE_BRUT = 12.02;
+// Arrêté du 22 mai 2026 (Légifrance) : 12,31 € de l'heure et 1 867,02 € par mois au 1er juin 2026
+// (avant : décret n° 2025-1228, 12,02 € et 1 823,03 € au 1er janvier 2026).
+export const SMIC_HORAIRE_BRUT = 12.31;
 /** La durée légale du travail mensualisée : 35 heures × 52 semaines ÷ 12 mois. */
 export const HEURES_LEGALES_PAR_MOIS = 151.67;
-export const SMIC_MENSUEL_BRUT = 1_823.03;
+export const SMIC_MENSUEL_BRUT = 1_867.02;
 
 /** La hausse du net que demande un opérateur (chapitre « Du salaire brut au coût ») : 100 € par mois. */
 export const HAUSSE_DU_NET_DEMANDEE = 100;
