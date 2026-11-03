@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
@@ -96,7 +97,7 @@ const CARTONS_AU_LARGE = 6;
 /** Au-delà, le nom passe au cran de taille en dessous pour tenir en deux lignes. */
 const NOM_COURT = 18;
 
-export default async function CartonsPage({
+async function CartonsPage({
   params,
 }: {
   params: Promise<{ gameId: string }>;
@@ -134,7 +135,7 @@ export default async function CartonsPage({
         </Link>
         <p className="ml-auto max-w-[95mm] text-xs text-slate-600">
           Imprimez (Ctrl+P), découpez, posez un carton par table. L&apos;élève qui le scanne
-          entre dans l&apos;équipe de sa table — même s&apos;il était déjà entré par le code,
+          entre dans l&apos;équipe de sa table, même s&apos;il était déjà entré par le code,
           tant que le premier tour n&apos;est pas clos.
         </p>
       </header>
@@ -185,3 +186,5 @@ export default async function CartonsPage({
     </main>
   );
 }
+
+export default avecTypographie(CartonsPage);

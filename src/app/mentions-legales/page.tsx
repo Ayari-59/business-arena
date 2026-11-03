@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import { DUREE_DU_JETON_DITE } from "@/config/mot-de-passe-oublie";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import Link from "next/link";
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/mentions-legales" },
   title: "Mentions légales & données personnelles",
   description:
-    "Éditeur, hébergement, cookies et protection des données : les élèves jouent sans compte, sans e-mail, sans traceur.",
+    "Éditeur, hébergement, cookies et protection des données : les élèves jouent sans compte, sans adresse électronique, sans traceur.",
 };
 
 /** Mentions légales & RGPD : page statique, sans base de données. */
@@ -61,7 +62,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-export default function MentionsLegalesPage() {
+function MentionsLegalesPage() {
   return (
     <main id="main" className="min-h-screen bg-slate-950 text-slate-100">
       {/*
@@ -72,7 +73,7 @@ export default function MentionsLegalesPage() {
       */}
       <EnTeteDePage
         surtitre="Mentions légales & données personnelles"
-        titre={"Vos élèves jouent sans compte, sans e\u2011mail, sans traceur"}
+        titre={"Vos élèves jouent sans compte, sans adresse électronique, sans traceur"}
         chapeau={
           <>
             Business Arena est conçu pour la classe : la protection des données n&apos;y est pas une
@@ -88,7 +89,7 @@ export default function MentionsLegalesPage() {
             <li>
               <strong className="text-slate-200">Aucun compte élève.</strong> Les élèves
               rejoignent une partie avec un code et un pseudo librement choisi (qui peut être
-              un prénom d&apos;emprunt). Ni e-mail ni date de naissance ne sont demandés. Deux
+              un prénom d&apos;emprunt). Ni adresse électronique ni date de naissance ne sont demandées. Deux
               exceptions, quand l&apos;enseignant les choisit : l&apos;examen individuel enregistre
               le nom et le numéro d&apos;étudiant du candidat, avec sa note ; une classe du cours
               enregistre le nom que l&apos;élève donne en la rejoignant.
@@ -215,7 +216,7 @@ export default function MentionsLegalesPage() {
                 <tr className="border-t border-white/5" data-ligne-enseignants="">
                   <td className="py-2 pr-3 font-medium text-slate-200">Enseignants / personnels</td>
                   <td className="py-2 pr-3">
-                    E-mail, nom affiché, mot de passe (haché, jamais stocké en clair),
+                    Adresse électronique, nom affiché, mot de passe (haché, jamais stocké en clair),
                     établissement de rattachement, date d&apos;inscription et de dernière connexion,
                     état du compte (actif ou désactivé) ;
                     si vous l&apos;acceptez, la date de votre accord aux nouveautés et la version du
@@ -225,12 +226,12 @@ export default function MentionsLegalesPage() {
                     Créer et piloter les parties, gérer l&apos;établissement, vous écrire les messages
                     de service (licence, incident) : exécution du service demandé, sans
                     consentement à donner. Envoi des nouveautés, seulement avec votre accord
-                    (révocable à tout moment, d&apos;un clic dans chaque e-mail ou depuis votre
+                    (révocable à tout moment, d&apos;un clic dans chaque courriel ou depuis votre
                     espace enseignant) : au plus une fois par mois
                   </td>
                   <td className="py-2">
                     Durée du compte. Un compte resté {DUREES.enseignants} sans connexion est supprimé,
-                    après un e-mail d&apos;avertissement un mois avant. Pour les nouveautés,
+                    après un courriel d&apos;avertissement un mois avant. Pour les nouveautés,
                     jusqu&apos;au retrait du consentement ou à la suppression du compte
                   </td>
                 </tr>
@@ -300,7 +301,7 @@ export default function MentionsLegalesPage() {
                 <tr className="border-t border-white/5">
                   <td className="py-2 pr-3 font-medium text-slate-200">Demandes de contact</td>
                   <td className="py-2 pr-3">
-                    Nom, établissement ou organisation, e-mail, téléphone (rendez-vous),
+                    Nom, établissement ou organisation, adresse électronique, téléphone (rendez-vous),
                     message, adresse IP (protection contre les envois abusifs)
                   </td>
                   <td className="py-2 pr-3">
@@ -311,7 +312,7 @@ export default function MentionsLegalesPage() {
                 <tr className="border-t border-white/5" data-ligne-tentatives="">
                   <td className="py-2 pr-3 font-medium text-slate-200">Tentatives de connexion</td>
                   <td className="py-2 pr-3">
-                    E-mail saisi et adresse IP d&apos;une tentative de connexion échouée
+                    Adresse électronique saisie et adresse IP d&apos;une tentative de connexion échouée
                   </td>
                   <td className="py-2 pr-3">Freiner les essais de mots de passe</td>
                   <td className="py-2">{DUREES.tentatives}</td>
@@ -319,7 +320,7 @@ export default function MentionsLegalesPage() {
                 <tr className="border-t border-white/5" data-ligne-reinitialisation="">
                   <td className="py-2 pr-3 font-medium text-slate-200">Mot de passe oublié</td>
                   <td className="py-2 pr-3">
-                    Empreinte du lien de réinitialisation envoyé par e-mail (le lien lui-même
+                    Empreinte du lien de réinitialisation envoyé par courriel (le lien lui-même
                     n&apos;est pas gardé), compte concerné, dates d&apos;envoi et d&apos;usage ;
                     adresse IP de la demande (protection contre les envois abusifs)
                   </td>
@@ -333,7 +334,7 @@ export default function MentionsLegalesPage() {
           </div>
           <p>
             Sous-traitants : Vercel (hébergement de l&apos;application), Neon (base de
-            données), Resend (envoi des e-mails), Google (agenda des rendez-vous) et, seulement
+            données), Resend (envoi des courriels), Google (agenda des rendez-vous) et, seulement
             si l&apos;assistant d&apos;IA est activé, Anthropic (réponses de l&apos;assistant).
           </p>
           <p data-assistant-ia="">
@@ -460,3 +461,5 @@ export default function MentionsLegalesPage() {
     </main>
   );
 }
+
+export default avecTypographie(MentionsLegalesPage);

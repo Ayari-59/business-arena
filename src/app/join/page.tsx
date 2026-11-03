@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { JoinForm } from "@/components/join-form";
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function JoinPage({
+async function JoinPage({
   searchParams,
 }: {
   searchParams: Promise<{ code?: string; equipe?: string }>;
@@ -96,3 +97,5 @@ export default async function JoinPage({
     </main>
   );
 }
+
+export default avecTypographie(JoinPage);

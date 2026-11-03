@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PiedDePage } from "@/components/pied-de-page";
@@ -47,7 +48,7 @@ function Adresse({ libelle, valeur }: { libelle: string; valeur: string }) {
   );
 }
 
-export default function IntegrationPage() {
+function IntegrationPage() {
   return (
     <>
       <main id="main" className="pb-16">
@@ -267,3 +268,5 @@ export default function IntegrationPage() {
     </>
   );
 }
+
+export default avecTypographie(IntegrationPage);

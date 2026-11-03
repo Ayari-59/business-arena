@@ -54,7 +54,7 @@ const schema = z.object({
     .trim()
     .regex(/^\d{0,6}$/, "Indiquez un nombre")
     .catch(""),
-  email: z.string().trim().email("E-mail invalide").max(200),
+  email: z.string().trim().email("Adresse électronique invalide").max(200),
   message: z.string().trim().max(1200, "Le message est limité à 1 200 caractères").catch(""),
   codePromo: z.string().trim().max(40, "Un code promo tient en 40 caractères").catch(""),
   /** Piège à robots : un champ invisible qu'un humain ne remplit pas. */

@@ -101,7 +101,7 @@ export function TeacherAuthForms({ suite = null }: { suite?: string | null }) {
           {suite ? <input type="hidden" name="suite" value={suite} /> : null}
           {/* L'E-MAIL GARDÉ après un mauvais mot de passe (audit UX, P1-5). */}
           <Input
-            label="E-mail"
+            label="Adresse électronique"
             name="email"
             type="email"
             required
@@ -159,7 +159,7 @@ export function TeacherAuthForms({ suite = null }: { suite?: string | null }) {
             defaultValue={registerState.values?.schoolName ?? ""}
           />
           <Input
-            label="E-mail"
+            label="Adresse électronique"
             name="email"
             type="email"
             required

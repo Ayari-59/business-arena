@@ -277,7 +277,7 @@ export function RendezVousForm({
             />
           </label>
           <label className="block">
-            <span className={etiquette}>Votre e-mail, pour la confirmation</span>
+            <span className={etiquette}>Votre adresse électronique, pour la confirmation</span>
             <input
               name="email"
               type="email"

@@ -168,7 +168,7 @@ export const L_ESCOMPTE_DEMANDE_PAR_LE_CLIENT: Situation = {
         const k = escompteDemande(c);
         return {
           date: date(c.venteCredit.date),
-          libelle: `Facture ${k.client}`,
+          libelle: `Facture ${deNom(k.client)}`,
           lignes: [
             { role: "la créance sur le client", compte: "411", sens: "debit", montant: k.ttc, indice: "le net à payer de la facture" },
             { role: "l'escompte accordé", compte: "665", sens: "debit", montant: k.escompte, indice: "l'escompte de la facture" },

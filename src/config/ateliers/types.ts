@@ -234,7 +234,7 @@ export interface AtelierDefinition {
  * échelle ; une garde vérifie que chacune l'emploie.
  */
 export const DIFFICULTES: Record<AtelierDefinition["difficulte"], string> = {
-  1: "Découverte",
+  1: "Premiers pas",
   2: "Initiation",
   3: "Approfondissement",
   4: "Avancé",

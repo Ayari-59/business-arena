@@ -1,9 +1,11 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PiedDePage } from "@/components/pied-de-page";
 import { CatalogueDesEpisodes } from "@/components/catalogue-des-episodes";
 import { catalogueDesEpisodes } from "@/config/episodes/catalogue";
 import { FICHES, type FicheEnseignant } from "@/config/episodes/fiches";
+import { PUBLIC_DES_EPISODES } from "@/config/episodes/public-des-episodes";
 import { dureeEnClair } from "@/config/cours/duree";
 import { formationParCode } from "@/config/formations";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
@@ -26,7 +28,7 @@ export const metadata: Metadata = {
  * l'épisode enseigne, comment conduire la séance de deux heures, le corrigé
  * du calcul et les questions du débrief.
  */
-export default function EpisodesEnClassePage() {
+function EpisodesEnClassePage() {
   const avecFiche = new Map(FICHES.map((f) => [f.code, f]));
   const entreprises = catalogueDesEpisodes((code) => avecFiche.has(code));
   return (
@@ -54,6 +56,11 @@ export default function EpisodesEnClassePage() {
             </Link>
             . Aucun résultat n&apos;y est noté : le bilan juge les décisions.
           </p>
+          {/* LE PUBLIC, DIT UNE FOIS (décision du propriétaire, novembre 2026) : la règle et sa
+              phrase vivent dans config/episodes/public-des-episodes.ts. */}
+          <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-300" data-public-des-episodes="">
+            {PUBLIC_DES_EPISODES}
+          </p>
           <CatalogueDesEpisodes
             entreprises={entreprises}
             unite={{ un: "fiche", plusieurs: "fiches" }}
@@ -74,7 +81,10 @@ function CarteFiche({ fiche, niveau }: { fiche: FicheEnseignant; niveau: 3 | 4 }
   if (!ep) return null;
   // Le niveau du titre suit le rangement (voir la page des épisodes).
   const Titre = niveau === 3 ? "h3" : "h4";
-  const sigles = fiche.formations.map((c) => formationParCode(c)?.sigle ?? c).join(" · ");
+  // Sans formation ouverte au registre, la fiche s'adresse aux publics de la règle.
+  const sigles = fiche.formations.length
+    ? fiche.formations.map((c) => formationParCode(c)?.sigle ?? c).join(" · ")
+    : "Enseignement supérieur";
   return (
     <li className="carte flex flex-col gap-4 p-6">
       <div>
@@ -85,7 +95,8 @@ function CarteFiche({ fiche, niveau }: { fiche: FicheEnseignant; niveau: 3 | 4 }
         <p className="mt-2 text-base leading-relaxed text-slate-300">{ep.resume}</p>
       </div>
       <p className="text-sm text-slate-400">
-        {dureeEnClair(fiche.dureeMinutes)} · {fiche.programme.join(" ; ")}
+        {dureeEnClair(fiche.dureeMinutes)}
+        {fiche.programme.length ? ` · ${fiche.programme.join(" ; ")}` : ""}
       </p>
       <Link
         href={`/enseignants/episodes/${fiche.code}`}
@@ -96,3 +107,5 @@ function CarteFiche({ fiche, niveau }: { fiche: FicheEnseignant; niveau: 3 | 4 }
     </li>
   );
 }
+
+export default avecTypographie(EpisodesEnClassePage);

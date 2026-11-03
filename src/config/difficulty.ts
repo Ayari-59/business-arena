@@ -149,7 +149,7 @@ export const DIFFICULTY_PRESETS: readonly DifficultyPreset[] = [
   {
     level: 1,
     code: "decouverte",
-    name: "Découverte",
+    name: "Premiers pas",
     tagline: "Prix, production, marketing : l'essentiel du métier, avec tous les indices.",
     hintMaxLevel: 5,
     decisions: { ...FERME },

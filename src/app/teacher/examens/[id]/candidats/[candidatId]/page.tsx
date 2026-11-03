@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -27,7 +28,7 @@ export const dynamic = "force-dynamic";
 const nombre = (v: number | undefined | null) => (v === undefined || v === null ? "—" : v.toLocaleString("fr-FR"));
 const euros = (v: number | undefined | null) => (v === undefined || v === null ? "—" : formatEuro(Math.round(v)));
 
-export default async function DecisionsDuCandidatPage({
+async function DecisionsDuCandidatPage({
   params,
 }: {
   params: Promise<{ id: string; candidatId: string }>;
@@ -143,3 +144,5 @@ export default async function DecisionsDuCandidatPage({
     </main>
   );
 }
+
+export default avecTypographie(DecisionsDuCandidatPage);

@@ -352,7 +352,7 @@ const SOURCES: SituationDef[] = [
     decisionLevers: [
       { field: "price", direction: "up", hint: "Répercuter la hausse du coût d'achat sur le prix de vente préserve la marge unitaire, mais l'élasticité-prix vous dit combien de volume cela coûte sur chaque segment." },
       { field: "productionPlan", direction: "review", hint: "Avec un coût d'achat plus élevé, chaque article invendu pèse davantage sur la trésorerie : ajustez les quantités commandées à la demande attendue après la hausse." },
-      { field: "marketingBudget", direction: "review", hint: "Si vous absorbez la hausse, la communication peut compenser en volume ce que la marge perd en unitaire — mais chiffrez l'élasticité avant d'investir." },
+      { field: "marketingBudget", direction: "review", hint: "Si vous absorbez la hausse, la communication peut compenser en volume ce que la marge perd en unitaire, mais chiffrez l'élasticité avant d'investir." },
     ],
   },
   {

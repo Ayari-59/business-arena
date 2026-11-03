@@ -214,7 +214,7 @@ describe("niveaux de difficulté et paramètres économiques", () => {
       .returning({ id: users.id });
     await joinGameByCode({ code: easy.joinCode, userId: pupil[0]!.id, pseudo: "Élève 2" });
     const view = await getGameView(easy.gameId, pupil[0]!.id);
-    expect(view!.difficulty.name).toBe("Découverte");
+    expect(view!.difficulty.name).toBe("Premiers pas");
     expect(view!.enabledDecisions).toEqual({
       quality: false,
       maintenance: false,

@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -48,7 +49,7 @@ export const dynamic = "force-dynamic";
  * est refusée par le serveur (services/cohortes.service.ts), avec le message et le lien vers les tarifs.
  * La page le dit avant, pour qu'on ne remplisse pas un formulaire pour rien.
  */
-export default async function MesCohortesPage({
+async function MesCohortesPage({
   searchParams,
 }: {
   searchParams: Promise<{ refus?: string; episode?: string }>;
@@ -232,3 +233,5 @@ export default async function MesCohortesPage({
     </main>
   );
 }
+
+export default avecTypographie(MesCohortesPage);

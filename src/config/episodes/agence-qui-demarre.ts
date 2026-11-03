@@ -17,7 +17,7 @@ import type { Etape } from "./types";
 export const DIAGNOSTICS = [
   {
     id: "service",
-    t: "Les artisans restent chez Rivoire pour le service — ouverture tôt, livraison sur chantier — pas pour le prix",
+    t: "Les artisans restent chez Rivoire pour le service (ouverture tôt, livraison sur chantier), pas pour le prix",
   },
   { id: "notoriete", t: "Les artisans du secteur ne connaissent pas encore l'agence" },
   { id: "prix", t: "Nos prix ne sont pas assez agressifs face à Rivoire" },

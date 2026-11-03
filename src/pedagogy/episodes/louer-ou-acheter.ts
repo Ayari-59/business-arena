@@ -114,7 +114,7 @@ export function comportements(p: PartieJouee, t: Trimestre): Constat[] {
   ].filter(Boolean).length;
   const ganivet = [
     t.phase2Reportee
-      ? "Pour Ganivet, vous avez acheté : le meilleur pari en moyenne, et le plus exposé à un report de la phase 2 — elle a été reportée."
+      ? "Pour Ganivet, vous avez acheté : le meilleur pari en moyenne, et le plus exposé à un report de la phase 2 : elle a été reportée."
       : "Pour Ganivet, vous avez acheté : le meilleur pari en moyenne, et le plus exposé à un report de la phase 2 ; cette fois, la phase 2 s'est faite.",
     "Pour Ganivet, vous avez loué au partenaire : un peu plus cher en moyenne, et à l'abri d'un report de la phase 2.",
     "Pour Ganivet, la location longue durée cumulait un loyer plus cher que l'achat et la rigidité d'un engagement de trois ans sur un chantier sous réserve.",

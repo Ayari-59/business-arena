@@ -248,7 +248,7 @@ export const ETAPES: readonly Etape[] = [
         titre: "Chiffrer la convention proposée",
         cout: 0.5,
         nature: "decisive",
-        resultat: `Cinq ans, exclusivité, prix garanti de ${FILIERE.prixGaranti} € par tonne : ${n0(DEMOLISSEURS.sartel)} t par an chez Sartel, ${n0(DEMOLISSEURS.grollier)} t chez Grollier, ${kE(FILIERE.bennes)} de bennes par démolisseur. Au plan — ${pct(ECOULEMENT.plan)} des matériaux revendus ${FILIERE.prix} € la tonne, collecte ${FILIERE.collecte} €, tri sous-traité ${FILIERE.triSousTraite} €, recyclage de l'invendu ${FILIERE.recyclage} € — une tonne collectée rapporte ${n0(margeParTonne(ECOULEMENT.plan))} € ; chaque point d'écoulement en moins en retire ${nombre(SENSIBILITE_ECOULEMENT, 1)} €. Un accord d'essai d'un an se fait sans prix garanti ; à son terme, le démolisseur demandera ${FILIERE.prixRenouvele} € la tonne, s'il est encore libre.`,
+        resultat: `Cinq ans, exclusivité, prix garanti de ${FILIERE.prixGaranti} € par tonne : ${n0(DEMOLISSEURS.sartel)} t par an chez Sartel, ${n0(DEMOLISSEURS.grollier)} t chez Grollier, ${kE(FILIERE.bennes)} de bennes par démolisseur. Au plan (${pct(ECOULEMENT.plan)} des matériaux revendus ${FILIERE.prix} € la tonne, collecte ${FILIERE.collecte} €, tri sous-traité ${FILIERE.triSousTraite} €, recyclage de l'invendu ${FILIERE.recyclage} €) une tonne collectée rapporte ${n0(margeParTonne(ECOULEMENT.plan))} € ; chaque point d'écoulement en moins en retire ${nombre(SENSIBILITE_ECOULEMENT, 1)} €. Un accord d'essai d'un an se fait sans prix garanti ; à son terme, le démolisseur demandera ${FILIERE.prixRenouvele} € la tonne, s'il est encore libre.`,
       },
       {
         id: "vercoran",

@@ -60,7 +60,7 @@ export function refusDuDomaine(
 ): string | null {
   const domaine = email.trim().toLowerCase().split("@")[1] ?? "";
   if (regles.domainesBloques.some((r) => couvre(domaine, r))) {
-    return "Les inscriptions avec cette adresse e-mail ne sont pas acceptées. Utilisez votre adresse professionnelle.";
+    return "Les inscriptions avec cette adresse électronique ne sont pas acceptées. Utilisez votre adresse professionnelle.";
   }
   if (options.parInvitation) return null;
   if (regles.domainesAutorises.length > 0 && !regles.domainesAutorises.some((r) => couvre(domaine, r))) {

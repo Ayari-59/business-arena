@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
+import { renderToStaticMarkup as rendreEnHtml } from "react-dom/server";
+import { espacesOrdinaires } from "@/lib/typographie";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/db", () => ({ db: {} }));
@@ -9,6 +10,9 @@ vi.mock("next/headers", () => ({ headers: vi.fn(), cookies: vi.fn() }));
 
 import { Courriel, Enveloppe, Lettre, Message, grilleDeCourriers } from "@/components/courrier";
 import { courrierParCode, referenceDuCourrier } from "@/config/courriers/registre";
+
+/** Le rendu, ses insécables (components/typographie.ts) ramenées à l'espace ordinaire pour comparer les textes. */
+const renderToStaticMarkup = (el: Parameters<typeof rendreEnHtml>[0]) => espacesOrdinaires(rendreEnHtml(el));
 
 /**
  * L'ENVELOPPE ET SA LETTRE SONT LE MÊME PAPIER.
@@ -75,7 +79,7 @@ describe("les trois plis se reconnaissent avant d'être lus", () => {
     expect(l).not.toContain("Madame, Monsieur,");
     expect(l).not.toContain("Veuillez agréer");
     expect(l).toContain("Le chef d&#x27;atelier");
-    expect(l).toContain("Note de service — diffusion interne");
+    expect(l).toContain("Note de service : diffusion interne");
   });
 });
 

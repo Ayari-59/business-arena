@@ -536,7 +536,8 @@ export const LIBELLES_DU_DEVIS: Record<OffreDuDevis, LibellesDuDevis> = {
   episodes: {
     offre: `${OFFRES.episodes.nom}, en cours ou en école`,
     ...ENSEIGNEMENT,
-    exempleOrganisation: "École de commerce, université, lycée",
+    // Pas de lycée : les épisodes s'annoncent dans l'enseignement supérieur (config/episodes/public-des-episodes.ts).
+    exempleOrganisation: "École de commerce, université, IUT",
   },
   entreprise: {
     offre: `${OFFRES.episodes.nom}, pour une entreprise ou un organisme de formation`,
@@ -613,7 +614,10 @@ export const SANS_LES_EPISODES = "Sans les épisodes manager, qui se proposent �
 /** Les niveaux de l'arène, « 1 à 6 ». */
 const TOUS_LES_NIVEAUX = `${PREMIER_NIVEAU} à ${DERNIER_NIVEAU}`;
 
-/** Ce que toute offre de l'arène ouvre en cours : la partie de classe et son suivi. */
+/**
+ * Ce que toute offre de l'arène ouvre en cours : la partie de classe et son suivi. Ce texte est
+ * aussi celui du catalogue en base (drizzle/0041, /admin/offres) : il change avec lui, pas seul.
+ */
 const LA_PARTIE_DE_CLASSE =
   "Les parties de classe : les étudiants rejoignent par un code, sans compte ni e-mail, en équipes, entreprises en concurrence.";
 const LE_SUIVI =
@@ -1062,7 +1066,7 @@ export const OPTIONS: readonly { nom: string; prix: string }[] = VUE_PAR_DEFAUT.
  */
 /** Ce que le relevé de l'arène contient vraiment (app/teacher/games/[gameId]/releve). */
 export const LE_RELEVE_DE_L_ARENE =
-  "Dans l'arène, le relevé s'exporte en tableur, une ligne par étudiant : note sur 20, diagnostic, questions, rang, indice de performance globale ; la maîtrise des notions se lit partie par partie.";
+  "Dans l'arène, le relevé s'exporte en tableur, une ligne par élève : note sur 20, diagnostic, questions, rang, indice de performance globale ; la maîtrise des notions se lit partie par partie.";
 
 export const ARGUMENTS_POUR_LES_ECOLES: readonly {
   titre: string;
@@ -1108,7 +1112,7 @@ export const CONDITIONS_DE_VENTE: readonly string[] = [
   `Les offres ${OFFRES.classe.nom} et ${OFFRES.programme.nom} se paramètrent à l'achat : l'entreprise, et pour ${OFFRES.classe.nom} le niveau, sont écrits sur le devis et ouverts pour l'année.`,
   "Pas de reconduction tacite : l'échéance s'affiche dans l'espace enseignant, et le renouvellement passe par un nouveau devis.",
   `À la fin de l'offre, les parties et les résultats restent consultables ${CONDITIONS.consultationApresMois} mois, relevé de notes compris.`,
-  "Les étudiants et les élèves jouent sans nom ni e-mail : un code suffit.",
+  "Les étudiants et les élèves jouent sans nom ni adresse électronique : un code suffit.",
 ];
 
 const QUESTION_DE_L_ESSAI = "Peut-on essayer avec un groupe ?";
@@ -1134,8 +1138,8 @@ export const questionsDesTarifs = (essai: { autorise: boolean; dureeMaxJours: nu
 /** Les questions qu'on nous pose avant d'acheter. */
 export const QUESTIONS_TARIFS: readonly { q: string; r: string }[] = [
   {
-    q: "Les étudiants paient-ils ?",
-    r: "Non, jamais. Ils rejoignent la partie de leur enseignant avec un code, sans compte ni e-mail.",
+    q: "Les élèves paient-ils ?",
+    r: "Non, jamais. Ils rejoignent la partie de leur enseignant avec un code, sans compte ni adresse électronique.",
   },
   {
     q: "Comment commander ?",
@@ -1186,8 +1190,8 @@ export const REPONSE_COMBIEN = reponseCombien(CATALOGUE_PAR_DEFAUT);
 /** La description de /tarifs pour les moteurs, lue au catalogue ; sans montant si les prix sont cachés. */
 export const descriptionDesTarifs = (c: Catalogue, prix = true): string =>
   !prix
-    ? `Gratuit pour découvrir le simulateur en solo. ${LES_OFFRES_DE_L_ARENE_EN_TETE} et les épisodes manager se construisent sur mesure : chaque offre aboutit à un devis écrit. L'étudiant ne paie jamais.`
-    : `Gratuit pour découvrir le simulateur en solo. ${nomDOffre("classe")} à ${prixAnnuelDe(c, "classe")}, offre ${OFFRES.programme.nom} à ${prixAnnuelDe(c, "programme")}, offre ${OFFRES.campus.nom} à ${prixAnnuelDe(c, "campus")}, épisodes manager à part : tout se vend sur devis. ${MENTION_TVA}. L'étudiant ne paie jamais.`;
+    ? `Gratuit pour découvrir le simulateur en solo. ${LES_OFFRES_DE_L_ARENE_EN_TETE} et les épisodes manager se construisent sur mesure : chaque offre aboutit à un devis écrit. L'élève ne paie jamais.`
+    : `Gratuit pour découvrir le simulateur en solo. ${nomDOffre("classe")} à ${prixAnnuelDe(c, "classe")}, offre ${OFFRES.programme.nom} à ${prixAnnuelDe(c, "programme")}, offre ${OFFRES.campus.nom} à ${prixAnnuelDe(c, "campus")}, épisodes manager à part : tout se vend sur devis. ${MENTION_TVA}. L'élève ne paie jamais.`;
 
 /** Les niveaux fermés, et ce qui les ouvre : « Les niveaux 4 à 6 sont inclus dans les offres Classe, Programme et Campus. » */
 export function messageNiveauxReserves(vitrine: VitrineSolo): string {
@@ -1222,7 +1226,7 @@ export const ceQuOuvrentLesEpisodes = (total: number): string =>
   `L'offre ${OFFRES.episodes.nom}, sur devis, ouvre les ${total} épisodes aux niveaux Standard et Expert, et le profil décisionnel qu'ils construisent.`;
 
 /** Le conseil de niveau sans licence épisodes : la démonstration ne se joue qu'en Découverte. */
-export const POURQUOI_LA_DECOUVERTE = `Sans licence, les démonstrations se jouent en Découverte, qui ne compte pas dans le profil. Les niveaux Standard et Expert, qui le construisent, sont inclus dans l'offre ${OFFRES.episodes.nom}, sur devis.`;
+export const POURQUOI_LA_DECOUVERTE = `Sans licence, les démonstrations se jouent au niveau Démonstration, qui ne compte pas dans le profil. Les niveaux Standard et Expert, qui le construisent, sont inclus dans l'offre ${OFFRES.episodes.nom}, sur devis.`;
 
 /**
  * Le niveau conseillé sans licence épisodes : la démonstration ne se joue qu'en

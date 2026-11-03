@@ -370,8 +370,8 @@ describe("6. lot P7 : le cadran du résultat estimé, l'enveloppe posée", () =>
 
   it("l'enveloppe, quand elle est là : rabat ancré, sans étiquette en pointillé, un décor", () => {
     const source = lire("src/components/courrier.tsx");
-    const env = code(source.slice(source.indexOf("export function EnveloppeOuverte")));
-    const corpsDe = env.slice(0, env.indexOf("\nexport function"));
+    const env = code(source.slice(source.indexOf("function EnveloppeOuverteBrut")));
+    const corpsDe = env.slice(0, env.indexOf("\nfunction "));
     expect(corpsDe).toContain("aria-hidden");
     expect(corpsDe).toContain('data-enveloppe-posee=""');
     // Un courriel n'a pas d'enveloppe.

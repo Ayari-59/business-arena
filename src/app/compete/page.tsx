@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CompetitionJoinForm } from "@/components/competition-join-form";
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function CompetePage({
+async function CompetePage({
   searchParams,
 }: {
   searchParams: Promise<{ code?: string }>;
@@ -81,3 +82,5 @@ export default async function CompetePage({
     </>
   );
 }
+
+export default avecTypographie(CompetePage);

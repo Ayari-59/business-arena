@@ -1,3 +1,5 @@
+import { avecTypographie } from "@/components/typographie";
+import { NIVEAUX_D_INDICE } from "@/config/scenarios/situation-kit";
 import Link from "next/link";
 import { LES_OFFRES_DE_L_ARENE } from "@/config/tarifs";
 import { LigneDePrix } from "@/components/ligne-de-prix";
@@ -19,7 +21,7 @@ import { LeCoursEnBref } from "@/components/le-cours-en-bref";
 export const metadata = {
   alternates: { canonical: "/fonctionnalites" },
   title: "Fonctionnalités",
-  description: `${SCENARIO_CHOICES.length} scénarios sectoriels, ${ALL_SITUATIONS.length} situations pédagogiques, ${DECISION_MODELS.length} modèles d'analyse : tout ce que la plateforme met entre les mains de vos étudiants.`,
+  description: `${SCENARIO_CHOICES.length} scénarios sectoriels, ${ALL_SITUATIONS.length} situations pédagogiques, ${DECISION_MODELS.length} modèles d'analyse : tout ce que la plateforme met entre les mains de vos élèves.`,
 };
 
 const HERO_STATS = [
@@ -41,7 +43,7 @@ const PILLARS = [
   },
   {
     title: "Apprentissage par la situation",
-    text: "Chaque tour déclenche une situation tirée du contexte de l'entreprise : l'étudiant identifie le modèle pertinent avant de décider, et le débriefing relie le résultat au raisonnement.",
+    text: "Chaque tour déclenche une situation tirée du contexte de l'entreprise : l'élève identifie le modèle pertinent avant de décider, et le débriefing relie le résultat au raisonnement.",
   },
   {
     title: "Tableau de bord en temps réel",
@@ -49,7 +51,7 @@ const PILLARS = [
   },
   {
     title: "Indices progressifs",
-    text: "Cinq niveaux d'aide, d'une observation à une méthode. Chaque indice coûte des points : l'autonomie est récompensée, le blocage n'existe pas.",
+    text: `Des indices en ${NIVEAUX_D_INDICE} niveaux, d'une observation à une méthode. Chaque indice coûte des points : l'autonomie est récompensée, le blocage n'existe pas.`,
   },
   {
     title: "Conçu pour la classe",
@@ -62,7 +64,7 @@ const PILLARS = [
 ];
 
 const DIFFERENTIATORS = [
-  { label: "Sans compte", desc: "Aucune inscription requise pour les étudiants" },
+  { label: "Sans compte", desc: "Aucune inscription requise pour les élèves" },
   { label: "Sans installation", desc: "Fonctionne dans le navigateur, sur tout appareil" },
   // « Essai gratuit » promettait tous les scénarios et toutes les fonctionnalités
   // sans engagement : la grille (config/tarifs.ts) ouvre le solo, pas la classe.
@@ -70,7 +72,7 @@ const DIFFERENTIATORS = [
   { label: "Testé", desc: "Moteur déterministe, tenu par sa suite de tests" },
 ];
 
-export default async function FonctionnalitesPage() {
+async function FonctionnalitesPage() {
   // Quelles bandes sont à contre-jour : le réglage de l'admin, ou l'état d'origine.
   const { theme } = await getPlatformConfig();
   const c = (id: string) => contrasteDeLaBande(theme, id);
@@ -93,7 +95,7 @@ export default async function FonctionnalitesPage() {
               <>
                 Un moteur économique réaliste, des situations pédagogiques contextuelles, des
                 modèles d&apos;analyse à mobiliser : Business Arena met la gestion d&apos;entreprise
-                entre les mains de vos étudiants.
+                entre les mains de vos élèves.
               </>
             }
           />
@@ -223,7 +225,7 @@ export default async function FonctionnalitesPage() {
             {DECISION_MODELS.length} modèles d&apos;analyse
           </h2>
           <p className="mx-auto mb-8 max-w-xl text-center text-base text-slate-400">
-            Chaque situation mobilise un ou plusieurs de ces modèles. L&apos;étudiant
+            Chaque situation mobilise un ou plusieurs de ces modèles. L&apos;élève
             doit identifier le bon cadre avant de trancher. Les notions qu&apos;ils
             emploient ont chacune{" "}
             <Link
@@ -287,3 +289,5 @@ export default async function FonctionnalitesPage() {
     </>
   );
 }
+
+export default avecTypographie(FonctionnalitesPage);

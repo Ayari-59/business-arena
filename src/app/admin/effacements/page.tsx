@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getStaffContext } from "@/services/admin.service";
@@ -29,7 +30,7 @@ const jour = (d: Date) =>
  * effacée. La purge automatique de chaque nuit, elle, applique les durées de
  * config/conservation.ts.
  */
-export default async function EffacementsAdminPage({
+async function EffacementsAdminPage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string; fait?: string }>;
@@ -138,3 +139,5 @@ export default async function EffacementsAdminPage({
     </main>
   );
 }
+
+export default avecTypographie(EffacementsAdminPage);

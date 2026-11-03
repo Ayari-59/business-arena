@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
@@ -19,7 +20,7 @@ export const dynamic = "force-dynamic";
  * décidés, ce que le marché en a fait, et le classement de l'essai. C'est la matière
  * du « qu'est-ce qui s'est passé ? » avant la vraie partie.
  */
-export default async function RevoirLEssaiPage({
+async function RevoirLEssaiPage({
   params,
 }: {
   params: Promise<{ gameId: string }>;
@@ -129,3 +130,5 @@ export default async function RevoirLEssaiPage({
     </main>
   );
 }
+
+export default avecTypographie(RevoirLEssaiPage);

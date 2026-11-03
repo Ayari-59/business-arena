@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import { SCENARIOS } from "@/config/scenarios/registry";
 import { PageDeLaLiasse, type SecteurDeLaLiasse } from "./liasse-a-imprimer";
 
@@ -10,7 +11,7 @@ import { PageDeLaLiasse, type SecteurDeLaLiasse } from "./liasse-a-imprimer";
  * liasse demande de chaque secteur, son titre et les codes de ses événements,
  * et le composant client ne reçoit que cela (audit, P1-2).
  */
-export default function Page() {
+function Page() {
   const secteurs: SecteurDeLaLiasse[] = SCENARIOS.map((d) => ({
     code: d.code,
     titre: d.title,
@@ -18,3 +19,5 @@ export default function Page() {
   }));
   return <PageDeLaLiasse secteurs={secteurs} />;
 }
+
+export default avecTypographie(Page);

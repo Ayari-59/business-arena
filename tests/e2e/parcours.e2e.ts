@@ -757,15 +757,15 @@ describe("parcours enseignant et élève", () => {
     expect(await prof.locator("[data-sur-mesure-paragraphe]").isVisible()).toBe(true);
     await aller(prof, "/parcours/bts-mco");
     expect(await prof.locator("[data-sans-atelier]").count()).toBe(0);
-    // UN ÉPISODE JOUÉ EN SITUATION couvre une entrée que rien d'autre ne
-    // touche : la ligne le cite, la section le liste, et le lien mène à l'épisode.
+    // LES ÉPISODES NE S'ANNONCENT PAS AU LYCÉE (config/episodes/public-des-episodes.ts) :
+    // en seconde pro, l'entrée que seul un épisode touchait n'est plus couverte, et la page ne
+    // montre ni la colonne « En situation » ni la liste des épisodes.
     await aller(prof, "/parcours/seconde-pro-rc");
     const ligne = prof.locator('tr[data-bloc*="omnicanal"]');
-    expect(await ligne.getAttribute("data-couvert")).toBe("oui");
-    expect(await ligne.locator('[data-situation="site-qui-ne-vend-pas"] a').getAttribute("href")).toBe(
-      "/entreprises/episode/site-qui-ne-vend-pas",
-    );
-    expect(await prof.locator('[data-situation-du-diplome="client-qui-s-en-va"]').count()).toBe(1);
+    expect(await ligne.getAttribute("data-couvert")).toBe("non");
+    expect(await prof.locator("[data-situation]").count()).toBe(0);
+    expect(await prof.locator("[data-situation-du-diplome]").count()).toBe(0);
+    expect(await prof.getByRole("columnheader", { name: "En situation" }).count()).toBe(0);
 
     // CE QUI SORT DU CHAMP DE LA GESTION se dit, avec sa raison, au lieu de
     // passer pour un manque : la sociologie et la science politique de la 2de SES.

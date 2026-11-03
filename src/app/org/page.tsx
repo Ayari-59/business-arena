@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import { nomDOffre, OFFRES, parametrageEnClair } from "@/config/tarifs";
 import { parametrageDe } from "@/services/licence.service";
 import { redirect } from "next/navigation";
@@ -13,7 +14,7 @@ import {
 
 export const dynamic = "force-dynamic";
 
-export default async function OrgAdminPage() {
+async function OrgAdminPage() {
   const session = await getSession();
   if (!session) redirect("/teacher/login");
   let dashboard;
@@ -164,7 +165,7 @@ export default async function OrgAdminPage() {
             <thead>
               <tr className="text-left text-xs uppercase tracking-wide text-slate-400">
                 <th className="pb-2 pr-3 font-medium">Nom</th>
-                <th className="pb-2 pr-3 font-medium">E-mail</th>
+                <th className="pb-2 pr-3 font-medium">Adresse électronique</th>
                 <th className="pb-2 pr-3 font-medium">Rôle</th>
                 <th className="pb-2 text-right font-medium">Parties créées</th>
               </tr>
@@ -248,3 +249,5 @@ export default async function OrgAdminPage() {
     </main>
   );
 }
+
+export default avecTypographie(OrgAdminPage);

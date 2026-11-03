@@ -193,7 +193,7 @@ export const EPISODE_APPEL_OFFRES: Episode<Trimestre> = {
   resume:
     "Un appel d'offres de trois ans, deux autres consultations, une équipe déjà pleine. Choisir ses combats, gagner les points là où ils coûtent le moins, et tenir son prix.",
   persona:
-    "Vous êtes Vincent Lambertin, responsable grands comptes d'Arvel Distribution, à Lyon. Votre équipe : Leïla Ouazzani et Maxence Tissot, chargés d'affaires, et Linh Pham, chargée d'études de prix. Ensemble, vous suivez quatorze grands comptes — entreprises générales, bailleurs, collectivités — et vous répondez à leurs consultations.",
+    "Vous êtes Vincent Lambertin, responsable grands comptes d'Arvel Distribution, à Lyon. Votre équipe : Leïla Ouazzani et Maxence Tissot, chargés d'affaires, et Linh Pham, chargée d'études de prix. Ensemble, vous suivez quatorze grands comptes (entreprises générales, bailleurs, collectivités) et vous répondez à leurs consultations.",
   mandat: [
     { fort: "2,4 M€", texte: "de chiffre d'affaires sur trois ans : le marché Balmes Habitat" },
     { fort: "4 semaines", texte: "pour répondre : remise le vendredi de la semaine 5" },
@@ -204,7 +204,7 @@ export const EPISODE_APPEL_OFFRES: Episode<Trimestre> = {
     { fort: kE(OBJECTIF), texte: "de marge nouvelle attendue, nette des frais de réponse" },
   ],
   jugement:
-    "Votre direction juge le trimestre sur la marge des marchés gagnés — sur toute leur durée, actualisée — moins le coût de préparation des réponses et ce que la surcharge a coûté aux clients en place, en écart à l'objectif.",
+    "Votre direction juge le trimestre sur la marge des marchés gagnés (sur toute leur durée, actualisée) moins le coût de préparation des réponses et ce que la surcharge a coûté aux clients en place, en écart à l'objectif.",
   duree: "une vingtaine de minutes",
   nomDuTableau: "Votre équipe",
 
@@ -409,7 +409,7 @@ export const EPISODE_APPEL_OFFRES: Episode<Trimestre> = {
     titre: (t) => `${ecartObjectif(t.objectif)}, pertes comprises`,
     formatObjectif: kE,
     noteDesBarres:
-      "Écart à l'objectif de la direction — marge des marchés gagnés sur leur durée, actualisée, moins le coût des réponses et ce que la surcharge a coûté aux clients en place — sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Écart à l'objectif de la direction (marge des marchés gagnés sur leur durée, actualisée, moins le coût des réponses et ce que la surcharge a coûté aux clients en place) sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const b = t.balmes;
       const net = t.signe - t.prepa - t.pertes;

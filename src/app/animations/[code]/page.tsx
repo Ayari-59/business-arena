@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import { NOMS_DES_MOIS } from "@/config/scenarios/calendrier-mensuel";
 import type { Metadata } from "next";
 import {
@@ -125,7 +126,7 @@ function periodiciteEnClair(atelier: { reglages: { periodicite: string; periodic
   return r.periodicite === "month" ? `${r.periodiciteLabel}, à partir de ${NOMS_DES_MOIS[(r.moisDeDepart ?? 1) - 1]}` : r.periodiciteLabel;
 }
 
-export default async function AtelierPage({
+async function AtelierPage({
   params,
 }: {
   params: Promise<{ code: string }>;
@@ -859,3 +860,5 @@ export default async function AtelierPage({
     </div>
   );
 }
+
+export default avecTypographie(AtelierPage);

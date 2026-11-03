@@ -33,7 +33,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 10,
       titre: "Lancement",
       detail:
-        "Vous envoyez le lien /entreprises/episode/client-qui-en-demande-plus?hasard=12 : toute la classe joue le même trimestre, sous les mêmes aléas. Les élèves jouent seuls ou en binôme. Sans licence, la démonstration se joue au niveau Découverte : un repère de méthode accompagne chaque étape, et chaque décision montre aussitôt ce qu'elle a changé par rapport à ne rien changer. Vous présentez la situation en deux phrases (un forfait signé, un client qui ajoute des demandes) sans prononcer le mot « périmètre », et vous demandez de noter sur papier le taux de réalisation calculé en semaine 1 et la réponse faite à Brieuc.",
+        "Vous envoyez le lien /entreprises/episode/client-qui-en-demande-plus?hasard=12 : toute la classe joue le même trimestre, sous les mêmes aléas. Les élèves jouent seuls ou en binôme. Sans licence, la démonstration se joue au niveau Démonstration : un repère de méthode accompagne chaque étape, et chaque décision montre aussitôt ce qu'elle a changé par rapport à ne rien changer. Vous présentez la situation en deux phrases (un forfait signé, un client qui ajoute des demandes) sans prononcer le mot « périmètre », et vous demandez de noter sur papier le taux de réalisation calculé en semaine 1 et la réponse faite à Brieuc.",
     },
     {
       minutes: 40,

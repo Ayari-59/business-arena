@@ -276,7 +276,7 @@ export function OrientationForm({
             />
           </label>
           <label className="block sm:col-span-2">
-            <span className={etiquette}>Votre e-mail, pour la réponse</span>
+            <span className={etiquette}>Votre adresse électronique, pour la réponse</span>
             <input
               name="email"
               type="email"

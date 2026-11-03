@@ -138,9 +138,9 @@ export const NATURES: Record<
 export const MENTION_DU_PLI: Record<TypeDePli, string> = {
   recommande: "Lettre recommandée avec accusé de réception",
   simple: "Pli simple",
-  interne: "Note de service — diffusion interne",
+  interne: "Note de service : diffusion interne",
   // Ce que le courriel NE porte pas est précisément ce qu'il faut lire.
-  email: "Courriel — sans accusé de réception",
+  email: "Courriel sans accusé de réception",
 };
 
 /** La bande de tranche : sa mention et sa couleur, ou rien pour un pli simple. */

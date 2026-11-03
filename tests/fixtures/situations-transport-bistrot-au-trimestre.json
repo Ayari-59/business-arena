@@ -65,7 +65,7 @@
     "Elle apparaît en stock au bilan",
     "",
     "Quelle est la limite de ce raisonnement sur les retours à vide ?",
-    "Vendre au coût marginal est juste sur la marge, faux sur la masse. À 52 € pour tout le trafic, les 27 € de marge multipliés par les sept mille quatre cents palettes du trimestre donnent 199 800 €, quand la structure et la flotte en réclament 212 000 : l'entreprise passerait juste en dessous, et ses chauffeurs avec elle.",
+    "Vendre au coût marginal est juste sur la marge, faux sur la masse. À 52 € pour tout le trafic, les 27 € de marge multipliés par les 7 400 palettes du trimestre donnent 199 800 €, quand la structure et la flotte en réclament 212 000 : l'entreprise passerait juste en dessous, et ses chauffeurs avec elle.",
     "Il ne vaut que pour le remplissage résiduel : appliqué à tout le trafic, il ne couvre plus la structure",
     "",
     "Il ne vaut que pour les lots alimentaires",
@@ -102,7 +102,7 @@
     "Il suffit de transporter plus de palettes pour compenser la hausse",
     "Les contrats signés protègent l'entreprise : le résultat ne bouge pas",
     "Avec une marge unitaire tombée à 45,76 €, quel devient le seuil de rentabilité décaissé du trimestre ?",
-    "186 000 ÷ 45,76 ≈ 4 065. Le seuil ne bouge que de deux cent cinquante palettes, et c'est le résultat qu'il faut regarder : 3,24 € multipliés par les sept mille palettes du trimestre, c'est près de la moitié du bénéfice trimestriel effacée par une ligne que personne n'a décidée.",
+    "186 000 ÷ 45,76 ≈ 4 065. Le seuil ne bouge que de 250 palettes, et c'est le résultat qu'il faut regarder : 3,24 € multipliés par les 7 000 palettes du trimestre, c'est près de la moitié du bénéfice trimestriel effacée par une ligne que personne n'a décidée.",
     "Environ 4 050 palettes, contre 3 800 auparavant",
     "",
     "Il ne change pas : le seuil dépend des charges fixes",
@@ -235,14 +235,14 @@
   ],
   "transport_t6_contrat_refuse": [
     "Le contrat qu'il faut savoir refuser",
-    "Un distributeur propose un contrat trimestriel de deux mille huit cents palettes à 57 €, à condition d'immobiliser deux porteurs à son service exclusif. Un porteur emmène mille quatre cents palettes par trimestre à pleine charge, et le contrat les remplirait donc entièrement. Vos autres clients paient en moyenne 78 €, et votre flotte tourne aujourd'hui à quatre-vingts pour cent.",
+    "Un distributeur propose un contrat trimestriel de 2 800 palettes à 57 €, à condition d'immobiliser deux porteurs à son service exclusif. Un porteur emmène 1 400 palettes par trimestre à pleine charge, et le contrat les remplirait donc entièrement. Vos autres clients paient en moyenne 78 €, et votre flotte tourne aujourd'hui à quatre-vingts pour cent.",
     "Que coûte réellement ce contrat, une fois la flotte prise en compte ?",
     "Deux porteurs immobilisés ne transportent plus le trafic à 78 € : c'est un coût d'opportunité",
     "La comparaison porte sur les marges par unité de capacité rare, pas sur les prix affichés",
     "Un camion rempli à cent pour cent vaut forcément mieux qu'un camion rempli aux quatre cinquièmes",
     "À 57 €, la marge sur coût variable reste positive : cela suffit à accepter",
     "Que rapporte un porteur sous ce contrat, comparé à ce qu'il rapporte aujourd'hui ?",
-    "Sous contrat, le porteur roule plein : mille quatre cents palettes à 32 € de marge, ce qui fait 44 800 €. Aujourd'hui il roule aux quatre cinquièmes : mille cent vingt palettes à 53 € de marge, ce qui fait 59 360 €. Le camion plein rapporte moins que le camion incomplet, parce que le prix a chuté davantage que le remplissage n'a monté.",
+    "Sous contrat, le porteur roule plein : 1 400 palettes à 32 € de marge, ce qui fait 44 800 €. Aujourd'hui il roule aux quatre cinquièmes : 1 120 palettes à 53 € de marge, ce qui fait 59 360 €. Le camion plein rapporte moins que le camion incomplet, parce que le prix a chuté davantage que le remplissage n'a monté.",
     "44 800 € contre 59 360 €, soit 14 560 € de moins par porteur et par trimestre",
     "",
     "Autant : ce que le prix perd, le remplissage le rattrape",
@@ -273,8 +273,8 @@
     "",
     "Demandez-vous ce que feraient ces deux porteurs sans ce contrat.",
     "Votre flotte est remplie à quatre-vingts pour cent : la capacité n'est pas libre.",
-    "Un porteur sous contrat emmène mille quatre cents palettes à 32 €, soit 57 − 25, de marge.",
-    "Sans le contrat, il en emmène mille cent vingt à 53 €, soit 78 − 25 : comparez les deux totaux, pas les deux prix.",
+    "Un porteur sous contrat emmène 1 400 palettes à 32 €, soit 57 − 25, de marge.",
+    "Sans le contrat, il en emmène 1 120 à 53 €, soit 78 − 25 : comparez les deux totaux, pas les deux prix.",
     "Et notez que la réponse s'inverserait sous soixante pour cent de remplissage : la même affaire n'a pas la même valeur selon le camion qu'elle occupe.",
     "Un contrat à 57 € semble rentable, mais il immobilise des porteurs qui transportent à 78 €. Comparez la marge par porteur, pas le prix affiché, avant de fixer vos tarifs.",
     "À quatre-vingts pour cent de remplissage, la capacité n'est pas libre. Réservez la flotte aux clients qui maximisent la marge par unité de capacité rare.",
@@ -463,7 +463,7 @@
     "Chiffrez le gain : 1,40 € par couvert, soit ~8 400 € par trimestre à 6 000 couverts. Comparez à ce que coûte une baisse de fréquentation du soir.",
     "N'oubliez pas la trésorerie : passer de 21 jours à comptant supprime une dette fournisseurs, donc augmente le BFR du montant de vos achats trimestriels.",
     "Le choix du fournisseur impacte directement la qualité perçue. Un budget qualité bien calibré protège la réputation, qui réagit vite en restauration.",
-    "Si le coût des denrées baisse avec le cash & carry, la marge par couvert augmente — mais une baisse de fréquentation peut annuler le gain."
+    "Si le coût des denrées baisse avec le cash & carry, la marge par couvert augmente, mais une baisse de fréquentation peut annuler le gain."
   ],
   "bistrot_t3_matieres": [
     "Le beurre a pris 24 %",
@@ -834,7 +834,7 @@
     "Chiffrez le gain : 1,40 € par couvert, soit ~8 400 € par trimestre à 6 000 couverts. Comparez à ce que coûte une baisse de fréquentation du soir.",
     "N'oubliez pas la trésorerie : passer de 21 jours à comptant supprime une dette fournisseurs, donc augmente le BFR du montant de vos achats trimestriels.",
     "Le choix du fournisseur impacte directement la qualité perçue. Un budget qualité bien calibré protège la réputation, qui réagit vite en restauration.",
-    "Si le coût des denrées baisse avec le cash & carry, la marge par couvert augmente — mais une baisse de fréquentation peut annuler le gain."
+    "Si le coût des denrées baisse avec le cash & carry, la marge par couvert augmente, mais une baisse de fréquentation peut annuler le gain."
   ],
   "bistrotg_t3_matieres": [
     "Le beurre a pris 24 %, sur quatre cartes",

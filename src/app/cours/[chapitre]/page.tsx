@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ChapitreGuide } from "@/components/cours/chapitre-guide";
@@ -43,7 +44,7 @@ export async function generateMetadata({ params }: { params: Promise<{ chapitre:
  * chapitre ouvert, réduit à ses données (pedagogy/cours/chapitre-servi.ts), et n'en
  * importe aucun (audit, P0 : le registre entier était dans les fichiers publics).
  */
-export default async function ChapitrePage({
+async function ChapitrePage({
   params,
   searchParams,
 }: {
@@ -108,3 +109,5 @@ export default async function ChapitrePage({
     </>
   );
 }
+
+export default avecTypographie(ChapitrePage);

@@ -178,7 +178,7 @@ const SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Vendre au coût marginal est juste sur la marge, faux sur la masse. À 52 € pour tout le trafic, les 27 € de marge multipliés par les {{lettres: dizaine(flux(7400))}} palettes {{du trimestre}} donnent {{entier: 27 * dizaine(flux(7400))}} €, quand la structure et la flotte en réclament {{entier: charges + amortissements}} : l'entreprise passerait juste en dessous, et ses chauffeurs avec elle.",
+          "Vendre au coût marginal est juste sur la marge, faux sur la masse. À 52 € pour tout le trafic, les 27 € de marge multipliés par les {{entier: dizaine(flux(7400))}} palettes {{du trimestre}} donnent {{entier: 27 * dizaine(flux(7400))}} €, quand la structure et la flotte en réclament {{entier: charges + amortissements}} : l'entreprise passerait juste en dessous, et ses chauffeurs avec elle.",
       },
     ],
     modelRelevance: {
@@ -261,7 +261,7 @@ const SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "{{entier: charges}} ÷ 45,76 ≈ {{entier: charges / 45.76}}. Le seuil ne bouge que de {{lettres: cinquantaine(charges / 45.76) - dizaine(charges / 49)}} palettes, et c'est le résultat qu'il faut regarder : 3,24 € multipliés par les {{lettres: centaine(flux(7000))}} palettes {{du trimestre}}, c'est près de la moitié du bénéfice {{trimestriel}} effacée par une ligne que personne n'a décidée.",
+          "{{entier: charges}} ÷ 45,76 ≈ {{entier: charges / 45.76}}. Le seuil ne bouge que de {{entier: cinquantaine(charges / 45.76) - dizaine(charges / 49)}} palettes, et c'est le résultat qu'il faut regarder : 3,24 € multipliés par les {{entier: centaine(flux(7000))}} palettes {{du trimestre}}, c'est près de la moitié du bénéfice {{trimestriel}} effacée par une ligne que personne n'a décidée.",
       },
       {
         id: "sensibilite",
@@ -517,7 +517,7 @@ const SOURCES: SituationDef[] = [
     category: "decision_strategique",
     title: "Le contrat qu'il faut savoir refuser",
     narrative:
-      "Un distributeur propose un contrat {{trimestriel}} de {{lettres: 2 * arrondi(capacite_porteur)}} palettes à 57 €, à condition d'immobiliser deux porteurs à son service exclusif. Un porteur emmène {{lettres: arrondi(capacite_porteur)}} palettes {{par trimestre}} à pleine charge, et le contrat les remplirait donc entièrement. Vos autres clients paient en moyenne 78 €, et votre flotte tourne aujourd'hui à quatre-vingts pour cent.",
+      "Un distributeur propose un contrat {{trimestriel}} de {{entier: 2 * arrondi(capacite_porteur)}} palettes à 57 €, à condition d'immobiliser deux porteurs à son service exclusif. Un porteur emmène {{entier: arrondi(capacite_porteur)}} palettes {{par trimestre}} à pleine charge, et le contrat les remplirait donc entièrement. Vos autres clients paient en moyenne 78 €, et votre flotte tourne aujourd'hui à quatre-vingts pour cent.",
     problem:
       "Que coûte réellement ce contrat, une fois la flotte prise en compte ?",
     diagnosticOptions: [
@@ -560,7 +560,7 @@ const SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Sous contrat, le porteur roule plein : {{lettres: arrondi(capacite_porteur)}} palettes à 32 € de marge, ce qui fait {{entier: 32 * arrondi(capacite_porteur)}} €. Aujourd'hui il roule aux quatre cinquièmes : {{lettres: arrondi(arrondi(capacite_porteur) * 4 / 5)}} palettes à 53 € de marge, ce qui fait {{entier: 53 * arrondi(arrondi(capacite_porteur) * 4 / 5)}} €. Le camion plein rapporte moins que le camion incomplet, parce que le prix a chuté davantage que le remplissage n'a monté.",
+          "Sous contrat, le porteur roule plein : {{entier: arrondi(capacite_porteur)}} palettes à 32 € de marge, ce qui fait {{entier: 32 * arrondi(capacite_porteur)}} €. Aujourd'hui il roule aux quatre cinquièmes : {{entier: arrondi(arrondi(capacite_porteur) * 4 / 5)}} palettes à 53 € de marge, ce qui fait {{entier: 53 * arrondi(arrondi(capacite_porteur) * 4 / 5)}} €. Le camion plein rapporte moins que le camion incomplet, parce que le prix a chuté davantage que le remplissage n'a monté.",
       },
       {
         id: "quand_accepter",
@@ -590,8 +590,8 @@ const SOURCES: SituationDef[] = [
     hints: hints([
       "Demandez-vous ce que feraient ces deux porteurs sans ce contrat.",
       "Votre flotte est remplie à quatre-vingts pour cent : la capacité n'est pas libre.",
-      "Un porteur sous contrat emmène {{lettres: arrondi(capacite_porteur)}} palettes à 32 €, soit 57 − 25, de marge.",
-      "Sans le contrat, il en emmène {{lettres: arrondi(arrondi(capacite_porteur) * 4 / 5)}} à 53 €, soit 78 − 25 : comparez les deux totaux, pas les deux prix.",
+      "Un porteur sous contrat emmène {{entier: arrondi(capacite_porteur)}} palettes à 32 €, soit 57 − 25, de marge.",
+      "Sans le contrat, il en emmène {{entier: arrondi(arrondi(capacite_porteur) * 4 / 5)}} à 53 €, soit 78 − 25 : comparez les deux totaux, pas les deux prix.",
       "Et notez que la réponse s'inverserait sous soixante pour cent de remplissage : la même affaire n'a pas la même valeur selon le camion qu'elle occupe.",
     ]),
     trigger: { round: 6 },

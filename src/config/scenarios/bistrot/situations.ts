@@ -196,7 +196,7 @@ export const BISTROT_SOURCES: SituationDef[] = [
       {
         field: "price",
         direction: "review",
-        hint: "Si le coût des denrées baisse avec le cash & carry, la marge par couvert augmente — mais une baisse de fréquentation peut annuler le gain.",
+        hint: "Si le coût des denrées baisse avec le cash & carry, la marge par couvert augmente, mais une baisse de fréquentation peut annuler le gain.",
       },
     ],
   },

@@ -86,7 +86,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "batiment_concurrent_liquide",
     expediteur: "Administrateur judiciaire Brunet",
-    objet: "Liquidation d'une entreprise du secteur — chantiers en cours",
+    objet: "Liquidation d'une entreprise du secteur : chantiers en cours",
     corps:
       "L'entreprise du bourg voisin est en liquidation. Ses chantiers en cours cherchent un repreneur pour achèvement. Les dossiers techniques sont consultables à l'étude ; la reprise emporte la responsabilité de l'ouvrage.",
     signataire: "L'administrateur judiciaire",
@@ -114,7 +114,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "batiment_sinistre_chantier",
     expediteur: "Assurances du Littoral · Service sinistres",
-    objet: "Déclaration de sinistre — dégât des eaux sur votre chantier",
+    objet: "Déclaration de sinistre : dégât des eaux sur votre chantier",
     corps:
       "Une canalisation percée lors des travaux a inondé deux niveaux. L'expertise contradictoire est fixée à demain. Les travaux sont suspendus jusqu'à ses conclusions et la reprise des ouvrages détériorés vous incombera.",
     signataire: "Le gestionnaire de sinistres",
@@ -128,7 +128,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "batiment_vol_materiel",
     expediteur: "Gendarmerie nationale · Brigade de proximité",
-    objet: "Récépissé de dépôt de plainte — vol d'outillage",
+    objet: "Récépissé de dépôt de plainte : vol d'outillage",
     corps:
       "Votre plainte pour effraction du fourgon et vol de perforateurs, scies et niveaux laser a été enregistrée. Aucune piste n'est ouverte à ce stade. Ce récépissé vous est délivré pour votre déclaration d'assurance.",
     signataire: "Le chef de brigade",
@@ -143,7 +143,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "batiment_malfacon",
     expediteur: "Syndic Berthier · Gestion de copropriété",
-    objet: "Mise en demeure de reprise — décollement du carrelage",
+    objet: "Mise en demeure de reprise : décollement du carrelage",
     corps:
       "Le carrelage posé lors de votre intervention se décolle sur l'ensemble des parties communes. Nous vous mettons en demeure de procéder à la dépose et à la repose intégrales à vos frais, au titre de la garantie de parfait achèvement.",
     signataire: "Le gestionnaire d'immeuble",
@@ -187,7 +187,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "batiment_chantier_surprise",
     expediteur: "Syndic Berthier · Gestion de copropriété",
-    objet: "Consultation en urgence — défaillance de l'entreprise retenue",
+    objet: "Consultation en urgence : défaillance de l'entreprise retenue",
     corps:
       "L'entreprise retenue pour notre ravalement s'est désistée la veille du démarrage. L'échafaudage est monté et la copropriété a voté les fonds. Nous cherchons une reprise immédiate du marché, aux conditions initiales.",
     signataire: "Le gestionnaire d'immeuble",
@@ -201,7 +201,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "batiment_major_breakdown",
     expediteur: "Levage Carpentier · Service après-vente",
-    objet: "Rapport d'intervention — avarie hydraulique de votre mini-grue",
+    objet: "Rapport d'intervention : avarie hydraulique de votre mini-grue",
     corps:
       "Le circuit hydraulique principal est hors d'usage et le vérin de flèche doit être remplacé. Les pièces sont à commander à l'étranger : deux {{trimestres}} avant remise en service. Le chantier est à l'arrêt.",
     signataire: "Le responsable technique",

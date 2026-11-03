@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { espacesOrdinaires } from "@/lib/typographie";
 import {
   BandeauCourriers,
   courriersQuiMeConcernent,
@@ -38,7 +39,7 @@ const POUR_UNE_AUTRE: CourrierAnnonce = {
 };
 
 function rendu(courriers: CourrierAnnonce[]): string {
-  return renderToStaticMarkup(createElement(BandeauCourriers, { courriers }));
+  return espacesOrdinaires(renderToStaticMarkup(createElement(BandeauCourriers, { courriers })));
 }
 
 describe("BandeauCourriers", () => {

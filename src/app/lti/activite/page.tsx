@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -89,7 +90,7 @@ function Carte({ titre, children }: { titre: string; children: React.ReactNode }
   );
 }
 
-export default async function ActiviteLtiPage({
+async function ActiviteLtiPage({
   searchParams,
 }: {
   searchParams: Promise<{ refus?: string }>;
@@ -467,3 +468,5 @@ export default async function ActiviteLtiPage({
     </main>
   );
 }
+
+export default avecTypographie(ActiviteLtiPage);

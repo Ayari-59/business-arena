@@ -192,6 +192,9 @@ export interface SituationDef {
  */
 const HINT_COSTS = [0.02, 0.03, 0.04, 0.05, 0.06] as const;
 
+/** Le nombre de niveaux d'indice d'une situation : ce que les pages annoncent (« 5 niveaux »). */
+export const NIVEAUX_D_INDICE = HINT_COSTS.length;
+
 export const hints = (
   texts: [string, string, string, string, string],
 ): SituationHintDef[] =>

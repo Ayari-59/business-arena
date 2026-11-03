@@ -1,3 +1,5 @@
+import { avecTypographie } from "@/components/typographie";
+import { NIVEAUX_D_INDICE } from "@/config/scenarios/situation-kit";
 import { redirect } from "next/navigation";
 import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import { getSession } from "@/lib/session";
@@ -24,7 +26,7 @@ function Empty({ children }: { children: React.ReactNode }) {
   return <p className="text-sm text-slate-400">{children}</p>;
 }
 
-export default async function UsagePage() {
+async function UsagePage() {
   const session = await getSession();
   if (!session) redirect(await connexionPourLaPageDemandee());
   const usage = await getTeacherUsageView(session.userId);
@@ -132,8 +134,9 @@ export default async function UsagePage() {
         <section className="carte p-4 sm:p-7">
           <h2 className="text-sm font-semibold text-slate-200">Jusqu&apos;où vont les indices</h2>
           <p className="mt-1 text-sm leading-relaxed text-slate-400">
-            Les cinq niveaux vont de l&apos;observation à la méthode détaillée. Beaucoup de
-            niveaux 4 et 5 signalent une marche trop haute, pas des élèves paresseux.
+            Les {NIVEAUX_D_INDICE} niveaux vont de l&apos;observation à la méthode détaillée. Beaucoup
+            d&apos;indices des deux derniers niveaux signalent une marche trop haute, pas des élèves
+            paresseux.
           </p>
           {usage.totals.hintsUnlocked === 0 ? (
             <div className="mt-4">
@@ -220,3 +223,5 @@ export default async function UsagePage() {
     </main>
   );
 }
+
+export default avecTypographie(UsagePage);

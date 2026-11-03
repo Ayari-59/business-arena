@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import { formationsEnToutesLettres } from "@/config/formations";
 import Link from "next/link";
@@ -57,7 +58,7 @@ function LigneAEcrire({ hauteur }: { hauteur: string }) {
   );
 }
 
-export default async function FormulairesPage({
+async function FormulairesPage({
   params,
 }: {
   params: Promise<{ code: string }>;
@@ -204,3 +205,5 @@ export default async function FormulairesPage({
     </main>
   );
 }
+
+export default avecTypographie(FormulairesPage);

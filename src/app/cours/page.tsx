@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import { Icone } from "@/components/icone";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -66,7 +67,7 @@ const CHAPITRES_PAR_DIPLOME = new Map(
  * Le premier chapitre est libre ; la suite est réservée aux établissements sous
  * licence.
  */
-export default async function CoursPage({
+async function CoursPage({
   searchParams,
 }: {
   searchParams: Promise<{ classe?: string; diplome?: string; q?: string }>;
@@ -421,8 +422,8 @@ export default async function CoursPage({
                 Le catalogue par thème
               </h2>
               <p className="max-w-3xl text-base text-slate-300">
-                {CHAPITRES.length} chapitres en {THEMES.length} thèmes, du CAP au DSCG, et des épisodes à jouer en
-                situation. Chaque chapitre dit son palier, sa durée indicative et son accès : le premier est libre, avec son
+                {CHAPITRES.length} chapitres en {THEMES.length} thèmes, du CAP au DSCG, et, dans l&apos;enseignement supérieur, des
+                épisodes à jouer en situation. Chaque chapitre dit son palier, sa durée indicative et son accès : le premier est libre, avec son
                 cas pratique, la suite est réservée aux établissements sous licence.
               </p>
             </div>
@@ -725,3 +726,5 @@ function enPreparationDuTheme(theme: Theme): { parcours: string; titre: string; 
     return nombre > 0 ? [{ parcours: p.code, titre: p.titre, nombre }] : [];
   });
 }
+
+export default avecTypographie(CoursPage);

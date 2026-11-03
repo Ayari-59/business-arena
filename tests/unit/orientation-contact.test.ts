@@ -47,7 +47,7 @@ describe("orientation : le formulaire recueille la demande", () => {
       createElement(OrientationForm, {
         vue,
         initial: {
-          error: "E-mail invalide",
+          error: "Adresse électronique invalide",
           ok: null,
           values: { nom: "M", etablissement: "L", email: "x", diplome: "cg1", semestre: "s2", objectif: "tresorerie", message: "" },
         },
@@ -87,13 +87,13 @@ describe("orientation : le formulaire recueille la demande", () => {
       createElement(OrientationForm, {
         vue,
         initial: {
-          error: "E-mail invalide",
+          error: "Adresse électronique invalide",
           ok: null,
           values: { nom: "Mme Martin", etablissement: "Lycée Pasteur", email: "x", diplome: "cg1", semestre: "s2", objectif: "tresorerie", message: "20 élèves" },
         },
       }),
     );
-    expect(rejoue).toContain("E-mail invalide");
+    expect(rejoue).toContain("Adresse électronique invalide");
     expect(rejoue).toContain('value="Mme Martin"');
     expect(rejoue).toContain('value="Lycée Pasteur"');
   });

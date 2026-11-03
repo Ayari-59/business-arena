@@ -134,9 +134,9 @@ export const FICHE: FicheEnseignant = {
       decision: 5,
       option: 1,
       pourquoi:
-        "Le comité veut des chiffres qui donnent envie : un e-mailing aux 9 000 artisans fera s'envoler les demandes de devis.",
+        "Le comité veut des chiffres qui donnent envie : une campagne de courriels aux 9 000 artisans fera s'envoler les demandes de devis.",
       ceQuiLeDejoue:
-        "Les devis s'envolent, mais « beaucoup demandent du matériel qu'on n'a pas, ou dans une agence qui ne loue pas ». La source sur les clients qui reviennent montrait la bonne cible : ceux qui reviennent achètent aussi un tiers de panier en plus en matériaux, et la moitié de ceux qui ne sont pas revenus n'ont jamais été rappelés, plusieurs avec un chantier en cours. Rejoué sur les trente tirages à la place des rappels avec le pack chantier, l'e-mailing perd 6,6 k€ en moyenne et ne fait jamais mieux.",
+        "Les devis s'envolent, mais « beaucoup demandent du matériel qu'on n'a pas, ou dans une agence qui ne loue pas ». La source sur les clients qui reviennent montrait la bonne cible : ceux qui reviennent achètent aussi un tiers de panier en plus en matériaux, et la moitié de ceux qui ne sont pas revenus n'ont jamais été rappelés, plusieurs avec un chantier en cours. Rejoué sur les trente tirages à la place des rappels avec le pack chantier, la campagne de courriels perd 6,6 k€ en moyenne et ne fait jamais mieux.",
     },
     {
       decision: 0,

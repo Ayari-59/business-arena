@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LIEN_A_L_ENCRE } from "@/components/bouton";
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/guides" },
   title: "Guides de prise en main",
   description:
-    "Quatre guides de prise en main, un par public : enseignant, étudiant, référent établissement et formateur en entreprise. Les étapes dans l'ordre, avec les écrans réels, et une version PDF.",
+    "Quatre guides de prise en main, un par public : enseignant, élève, référent établissement et formateur en entreprise. Les étapes dans l'ordre, avec les écrans réels, et une version PDF.",
 };
 
 /**
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
  * le fonctionnement de l'évaluation au manuel, l'intégration technique à /integration :
  * les guides y renvoient sans les recopier.
  */
-export default async function GuidesPage() {
+async function GuidesPage() {
   const valeurs = valeursDesJetons(await lireLeCatalogue());
   return (
     <>
@@ -108,3 +109,5 @@ export default async function GuidesPage() {
     </>
   );
 }
+
+export default avecTypographie(GuidesPage);

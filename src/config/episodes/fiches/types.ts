@@ -33,7 +33,11 @@ export interface ReflexeCommente {
 export interface FicheEnseignant {
   /** Le code de l'épisode du registre. */
   code: string;
-  /** Les formations servies, codes de src/config/formations.ts. */
+  /**
+   * Les formations servies, codes de src/config/formations.ts. Le registre (index.ts) n'annonce
+   * que celles que la règle des épisodes ouvre, dans l'enseignement supérieur (../public-des-episodes.ts),
+   * et filtre de même les lignes de `programme`.
+   */
   formations: readonly string[];
   /** Les enseignements visés, nommés comme le programme les nomme. */
   programme: readonly string[];

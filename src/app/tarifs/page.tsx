@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import { PageDesTarifs } from "@/components/page-des-tarifs";
 import { descriptionDesTarifs, variablesDuCatalogue } from "@/config/tarifs";
@@ -39,7 +40,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function TarifsPage() {
+async function TarifsPage() {
   const { catalogue, decouverte, essai, affichage } = await lireLEtatDuCatalogue();
   const prix = affichage.prixPublics;
   return (
@@ -51,3 +52,5 @@ export default async function TarifsPage() {
     />
   );
 }
+
+export default avecTypographie(TarifsPage);

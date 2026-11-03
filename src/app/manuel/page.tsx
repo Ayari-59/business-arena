@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import { ManuelImprimable } from "@/components/manuel-imprimable";
 
@@ -25,6 +26,8 @@ export const metadata: Metadata = {
     "Ce que fait Business Arena, comment il évalue et quoi faire quand une séance déraille : les six dimensions de l'indice IPG et leurs poids, les niveaux de difficulté et les leviers ouverts à chacun, les modes de questionnement, le barème des indices, la politique des situations manquées.",
 };
 
-export default async function ManuelPublicPage() {
+async function ManuelPublicPage() {
   return <ManuelImprimable retour={{ href: "/enseignants", label: "Enseignants" }} />;
 }
+
+export default avecTypographie(ManuelPublicPage);

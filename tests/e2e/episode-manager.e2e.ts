@@ -309,9 +309,9 @@ describe("les niveaux de difficulté", () => {
     const page = await navigateur.newPage({ viewport: { width: 1280, height: 900 } });
     await enseignantSousLicence(page.context(), { episodes: true });
     await page.goto(`${BASE}/entreprises/episode/trimestre-qui-derape?hasard=11`);
-    await choisir(page, "Découverte");
+    await choisir(page, "Démonstration");
     await bouton(page, "Commencer l'épisode").click();
-    expect(await page.getByText("Niveau Découverte", { exact: true }).count()).toBe(1);
+    expect(await page.getByText("Niveau Démonstration", { exact: true }).count()).toBe(1);
     expect(await page.getByText("Repère ·").count()).toBe(1);
     await bouton(page, "Enquêter").click();
     expect(await bouton(page, /Demander conseil/).count()).toBe(1);

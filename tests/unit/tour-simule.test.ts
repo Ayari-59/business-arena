@@ -1,10 +1,14 @@
 import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
+import { renderToStaticMarkup as rendreEnHtml } from "react-dom/server";
+import { espacesOrdinaires } from "@/lib/typographie";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { TourSimule } from "@/components/tour-simule";
 import { CourrierDuTour } from "@/components/courrier-du-tour";
+
+/** Le rendu, ses insécables (components/typographie.ts) ramenées à l'espace ordinaire pour comparer les textes. */
+const renderToStaticMarkup = (el: Parameters<typeof rendreEnHtml>[0]) => espacesOrdinaires(rendreEnHtml(el));
 
 /**
  * VIVRE LE COURRIER. En solo, le moteur tire à la clôture et le joueur ne

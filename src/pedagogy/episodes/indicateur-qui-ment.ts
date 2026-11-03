@@ -144,7 +144,7 @@ export function axe([information, diagnostic, reflexe, calibrage, regles]: reado
     return {
       titre: "Regarder le résultat, pas seulement le chiffre vert",
       texte:
-        "Quand un indicateur devient un objectif, l'équipe finit par le servir plutôt que le client. Avant de pousser un chiffre, mettez à côté un indicateur de résultat — ici, la commande prise au premier appel.",
+        "Quand un indicateur devient un objectif, l'équipe finit par le servir plutôt que le client. Avant de pousser un chiffre, mettez à côté un indicateur de résultat : ici, la commande prise au premier appel.",
     };
   }
   if (regles!.score === 0) {
@@ -196,7 +196,7 @@ export const EPISODE_INDICATEURS: Episode<Trimestre> = {
     { fort: kE(BUDGET), texte: "de contribution sur le trimestre, au budget" },
   ],
   jugement:
-    "Votre direction juge le trimestre sur la contribution des commandes à distance — leur marge, moins les primes, les renforts, le temps passé aux rappels et les clients perdus — en écart au budget.",
+    "Votre direction juge le trimestre sur la contribution des commandes à distance (leur marge, moins les primes, les renforts, le temps passé aux rappels et les clients perdus) en écart au budget.",
   duree: "une vingtaine de minutes",
   nomDuTableau: "Vos plateaux",
 
@@ -372,7 +372,7 @@ export const EPISODE_INDICATEURS: Episode<Trimestre> = {
     titre: (t) => `${ecartAuBudget(t.objectif)}, pertes comprises`,
     formatObjectif: kE,
     noteDesBarres:
-      "Écart au budget de contribution des commandes à distance — marge, moins primes, renforts, rappels et clients perdus — sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Écart au budget de contribution des commandes à distance (marge, moins primes, renforts, rappels et clients perdus) sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

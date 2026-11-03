@@ -345,20 +345,20 @@ function LiasseAImprimer({ secteurs }: { secteurs: readonly SecteurDeLaLiasse[] 
             <strong>A4</strong>, en portrait, en couleur de préférence, trois plis par feuille.
             Découpez chaque pli sur les <strong>traits pleins</strong>, puis pliez sur le{" "}
             <strong>trait pointillé</strong> : l&apos;enveloppe et la lettre se retrouvent dos à
-            dos, sans impression recto-verso — l&apos;élève tient une enveloppe qu&apos;il
+            dos, sans impression recto-verso : l&apos;élève tient une enveloppe qu&apos;il
             retourne pour lire.{" "}
             {choix === RETOUR ? (
               <>
                 Chacun répond à une décision : un licenciement, une hausse de prix, un entretien
                 non budgété. Lisez le récapitulatif des décisions d&apos;une équipe à la clôture,
-                et donnez-lui la lettre qui lui revient. Aucun compte n&apos;en dépend — la
+                et donnez-lui la lettre qui lui revient. Aucun compte n&apos;en dépend : la
                 conséquence chiffrée, la simulation l&apos;a déjà appliquée.
               </>
             ) : choix === MISSION ? (
               <>
                 Une lettre par niveau de difficulté : ne distribuez que celle de votre partie,
                 au premier tour, avant la première décision. Elle dit à l&apos;équipe ce que
-                vous lui confiez, et rien d&apos;autre — aucun compte n&apos;en dépend.
+                vous lui confiez, et rien d&apos;autre : aucun compte n&apos;en dépend.
               </>
             ) : routine ? (
               <>

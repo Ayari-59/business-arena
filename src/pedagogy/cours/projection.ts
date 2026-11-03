@@ -1,6 +1,7 @@
 import type { Cas } from "../../config/cours/cas";
 import type { Chapitre } from "../../config/cours/types";
 import { chapitreDuCas, etatAvant } from "./deroule";
+import { espacesOrdinaires } from "../../lib/typographie";
 import { cleDeLaQuestion, dansLOrdreAffiche } from "./ordre-des-options";
 import { duPremierCoup, REMARQUES_PAR_ETAPE, type ProgressionLue } from "./suivi";
 
@@ -47,7 +48,7 @@ export interface EtapeProjetee {
   remarques: { texte: string; eleves: number }[];
 }
 
-const A_REPONDU = /^A répondu : « (.*) »$/;
+const A_REPONDU = /^A répondu\s:\s«\s(.*)\s»$/;
 
 /**
  * L'étape `id` du chapitre, telle que la classe l'a vécue. La page la montre dans l'entreprise
@@ -96,7 +97,9 @@ export function projectionDeLEtape(args: {
       const siennes = sienne.options(sonCas, etatAvant(sien, sonCas, place));
       for (const r of p.erreurs[id] ?? []) {
         const texte = A_REPONDU.exec(r)?.[1];
-        const i = texte === undefined ? -1 : siennes.findIndex((o) => o.texte === texte);
+        // L'élève a lu l'option avec ses insécables (cours servi, lib/typographie.ts) : on compare sans elles.
+        const lue = texte === undefined ? undefined : espacesOrdinaires(texte);
+        const i = lue === undefined ? -1 : siennes.findIndex((o) => espacesOrdinaires(o.texte) === lue);
         if (i >= 0 && i < ecrites.length) compte[affichee(i)]!.add(k);
       }
       // La bonne réponse : celle qu'il a trouvée lui-même, sans la correction.

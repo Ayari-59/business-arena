@@ -96,7 +96,7 @@ const SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Chaque référence a sa clientèle : personne n'achète cinq pulls mérinos faute de bonnets. Un bonnet vendu rapporte 14 € que la boutique n'aurait pas eus. {{La marge par pièce ne tranche que lorsque les références se disputent une place limitée — la réserve à Noël, par exemple.}} C'est la logique de l'assortiment.",
+          "Chaque référence a sa clientèle : personne n'achète cinq pulls mérinos faute de bonnets. Un bonnet vendu rapporte 14 € que la boutique n'aurait pas eus. {{La marge par pièce ne tranche que lorsque les références se disputent une place limitée : la réserve à Noël, par exemple.}} C'est la logique de l'assortiment.",
       },
     ],
     modelRelevance: {
@@ -185,7 +185,7 @@ const SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "La segmentation sert exactement à cela : les fidèles arbitrent sur la qualité (élasticité-prix faible, sensibilité qualité forte), les passants sur le prix. Une décision d'achat n'a pas le même effet sur les deux — et ce sont les fidèles qui portent le cardigan et le pull mérinos, vos marges les plus fortes.",
+          "La segmentation sert exactement à cela : les fidèles arbitrent sur la qualité (élasticité-prix faible, sensibilité qualité forte), les passants sur le prix. Une décision d'achat n'a pas le même effet sur les deux, et ce sont les fidèles qui portent le cardigan et le pull mérinos, vos marges les plus fortes.",
       },
     ],
     modelRelevance: {
@@ -277,7 +277,7 @@ const SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Quand une ressource limite tout, on classe les références par marge rapportée à cette ressource — ici la place en réserve, une pièce en vaut une autre. Le mérinos passe en premier, mais seulement jusqu'à ce que sa clientèle en veuille : au-delà, chaque place qu'il occupe dort. Les accessoires font le volume avec la place qui reste. C'est l'arbitrage de l'assortiment sous contrainte.",
+          "Quand une ressource limite tout, on classe les références par marge rapportée à cette ressource : ici la place en réserve, une pièce en vaut une autre. Le mérinos passe en premier, mais seulement jusqu'à ce que sa clientèle en veuille : au-delà, chaque place qu'il occupe dort. Les accessoires font le volume avec la place qui reste. C'est l'arbitrage de l'assortiment sous contrainte.",
       },
     ],
     modelRelevance: {
@@ -375,14 +375,14 @@ const SOURCES: SituationDef[] = [
       "Votre marge sur coût variable unitaire se comprime de 4,50 € par pull col rond, et d'autant plus que la pièce est chère : près de 10 € sur un pull mérinos. Multipliez par vos volumes {{trimestriels}}.",
       "Le réflexe du métier est de tenir son coefficient : 29,50 € × 2,4 mène le pull près de 70 €. Regardez alors où ce prix vous mène sur chaque segment avant de l'afficher.",
       "Vos segments n'ont pas la même élasticité : −0,9 pour les fidèles, −2,1 pour les passants. Et les passants portent un seuil psychologique à 60 € sur le pull : tenir votre coefficient vous fait passer de 59 à près de 70 €, donc franchir ce seuil chez la clientèle qui y est déjà la plus sensible.",
-      "Chiffrez les deux branches : absorber porte le seuil de {{entier: charges / 30.5}} à ~{{entier: dizaine(charges / 26)}} pulls ; répercuter 5 % coûte ~10 % de volume chez les passants. Comparez les marges totales, pas les pourcentages — et référence par référence : le mérinos, vendu aux fidèles, supporte la hausse ; le bonnet, vendu aux passants, ne la supporte pas.",
+      "Chiffrez les deux branches : absorber porte le seuil de {{entier: charges / 30.5}} à ~{{entier: dizaine(charges / 26)}} pulls ; répercuter 5 % coûte ~10 % de volume chez les passants. Comparez les marges totales, pas les pourcentages, et référence par référence : le mérinos, vendu aux fidèles, supporte la hausse ; le bonnet, vendu aux passants, ne la supporte pas.",
     ]),
     trigger: { round: 5, supposeUnTourJoue: true },
     weight: 1.5,
     decisionLevers: [
       { field: "price", direction: "up", hint: "Répercuter la hausse du coût d'achat sur le prix de vente préserve la marge unitaire, mais l'élasticité-prix vous dit combien de volume cela coûte sur chaque segment : pas le même arbitrage sur le mérinos et sur le bonnet." },
       { field: "productionPlan", direction: "review", hint: "Avec un coût d'achat plus élevé, chaque pièce invendue pèse davantage sur la trésorerie : ajustez les quantités commandées de chaque référence à la demande attendue après la hausse." },
-      { field: "marketingBudget", direction: "review", hint: "Si vous absorbez la hausse, la communication peut compenser en volume ce que la marge perd en unitaire — mais chiffrez l'élasticité avant d'investir." },
+      { field: "marketingBudget", direction: "review", hint: "Si vous absorbez la hausse, la communication peut compenser en volume ce que la marge perd en unitaire, mais chiffrez l'élasticité avant d'investir." },
     ],
   },
   {
@@ -459,7 +459,7 @@ const SOURCES: SituationDef[] = [
     hints: hints([
       "Reprenez le compte de résultat du tour : de combien manquez-vous exactement pour équilibrer ?",
       "Divisez cet écart par votre marge sur coût variable unitaire moyenne : vous obtenez le nombre de pièces manquantes.",
-      "Le seuil s'écrit : charges de structure ÷ marge unitaire. Trois leviers, donc : le numérateur, le dénominateur, ou les quantités vendues — et le mix, qui change le dénominateur sans toucher aux étiquettes.",
+      "Le seuil s'écrit : charges de structure ÷ marge unitaire. Trois leviers, donc : le numérateur, le dénominateur, ou les quantités vendues, et le mix, qui change le dénominateur sans toucher aux étiquettes.",
       "Attention au levier prix : il agit sur la marge unitaire ET sur les volumes, en sens contraire. C'est l'élasticité qui arbitre.",
       "Avec {{entier: charges}} € de charges décaissées et 29,35 € de marge moyenne au mix de référence, le seuil est à ~{{entier: charges / 29.35}} pièces ; il monte si vous vendez surtout des bonnets, il descend si vous vendez des cardigans. Comparez à vos ventes réelles : l'écart en pièces vous dit quel levier est atteignable {{ce trimestre}}.",
     ]),
@@ -542,7 +542,7 @@ const SOURCES: SituationDef[] = [
       "Regardez ce qui a bougé au bilan entre l'ouverture et la clôture : le stock, les créances, les dettes fournisseurs.",
       "Le résultat est une opinion, la trésorerie est un fait. Entre les deux, il y a le besoin en fonds de roulement.",
       "TN = FRNG − BFR. Si le résultat monte mais que le BFR monte plus vite, la trésorerie baisse. Le réassort du pic, les cadeaux d'affaires à 60 jours et les comités d'entreprise à 45 jours travaillent dans le même sens.",
-      "Deux leviers immédiats : mobiliser le poste clients (escompte ou affacturage, à un coût) ou réduire le stock — en commençant par la référence qui tourne le moins. Le troisième, allonger le crédit façonnier, se négocie : il ne se décrète pas.",
+      "Deux leviers immédiats : mobiliser le poste clients (escompte ou affacturage, à un coût) ou réduire le stock, en commençant par la référence qui tourne le moins. Le troisième, allonger le crédit façonnier, se négocie : il ne se décrète pas.",
     ]),
     trigger: { detect: "profitable_illiquid" },
     weight: 1,
@@ -697,7 +697,7 @@ const SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Le même euro de stock sert plusieurs fois dans l'année au lieu d'une. La marge unitaire ne bouge pas, mais les capitaux nécessaires pour la dégager, si — et un bonnet tourne plus vite qu'un pull mérinos.",
+          "Le même euro de stock sert plusieurs fois dans l'année au lieu d'une. La marge unitaire ne bouge pas, mais les capitaux nécessaires pour la dégager, si. Et un bonnet tourne plus vite qu'un pull mérinos.",
       },
     ],
     modelRelevance: {
@@ -819,7 +819,7 @@ const MODEL_EXPLAIN: Record<string, string> = {
   boutique_t5_coton:
     "L'élasticité-prix dit ce que coûte en volume chaque point de hausse répercuté : c'est le seul outil qui arbitre entre marge unitaire et quantités, référence par référence.",
   boutique_detect_below_breakeven:
-    "Le seuil de rentabilité chiffre l'écart en pièces et désigne les leviers : marge unitaire, volumes, charges de structure — et le mix, qui déplace la marge moyenne.",
+    "Le seuil de rentabilité chiffre l'écart en pièces et désigne les leviers : marge unitaire, volumes, charges de structure, et le mix, qui déplace la marge moyenne.",
   boutique_detect_profitable_illiquid:
     "L'analyse FRNG / BFR est l'outil de ce diagnostic : TN = FRNG − BFR, et c'est le BFR qui a bougé, pas le résultat.",
 };

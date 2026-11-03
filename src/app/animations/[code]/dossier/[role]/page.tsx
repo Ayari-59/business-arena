@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -61,7 +62,7 @@ const CELLULE = "border border-white/15 px-2 py-1.5 text-slate-300 print:border-
 const BANDEAU =
   "border border-white/15 bg-white/5 px-2 py-1 text-xs font-semibold uppercase tracking-surtitre text-amber-300 print:border-black/40 print:bg-transparent print:text-black";
 
-export default async function DossierDuResponsablePage({
+async function DossierDuResponsablePage({
   params,
 }: {
   params: Promise<{ code: string; role: string }>;
@@ -567,3 +568,5 @@ function Indicateurs({ dossier }: { dossier: DossierDuResponsable }) {
     </section>
   );
 }
+
+export default avecTypographie(DossierDuResponsablePage);

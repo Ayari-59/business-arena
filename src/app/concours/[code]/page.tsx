@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -50,7 +51,7 @@ export async function generateMetadata({
   const description =
     concours.tagline ??
     concours.description?.slice(0, 160) ??
-    `Rejoignez le concours ${concours.name} sur Business Arena — simulation de gestion d'entreprise.`;
+    `Rejoignez le concours ${concours.name} sur Business Arena : simulation de gestion d'entreprise.`;
   return {
     title: concours.name,
     description,
@@ -64,7 +65,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function ConcoursPublicPage({
+async function ConcoursPublicPage({
   params,
 }: {
   params: Promise<{ code: string }>;
@@ -187,3 +188,5 @@ export default async function ConcoursPublicPage({
     </main>
   );
 }
+
+export default avecTypographie(ConcoursPublicPage);

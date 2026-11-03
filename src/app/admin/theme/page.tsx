@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { getPlatformConfig, getStaffContext } from "@/services/admin.service";
@@ -7,7 +8,7 @@ import { EnTeteAdmin } from "@/components/en-tete-admin";
 
 export const dynamic = "force-dynamic";
 
-export default async function ThemeAdminPage() {
+async function ThemeAdminPage() {
   const session = await getSession();
   if (!session) redirect("/teacher/login");
   const context = await getStaffContext(session.userId);
@@ -25,3 +26,5 @@ export default async function ThemeAdminPage() {
     </main>
   );
 }
+
+export default avecTypographie(ThemeAdminPage);

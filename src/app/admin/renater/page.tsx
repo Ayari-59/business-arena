@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -54,7 +55,7 @@ function Ligne({ libelle, valeur }: { libelle: string; valeur: React.ReactNode }
   );
 }
 
-export default async function AdminRenaterPage({
+async function AdminRenaterPage({
   searchParams,
 }: {
   searchParams: Promise<{ fait?: string; refus?: string; message?: string; q?: string; idp?: string }>;
@@ -264,3 +265,5 @@ export default async function AdminRenaterPage({
     </main>
   );
 }
+
+export default avecTypographie(AdminRenaterPage);

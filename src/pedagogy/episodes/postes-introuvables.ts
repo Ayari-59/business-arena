@@ -212,7 +212,7 @@ export const EPISODE_PENURIE: Episode<Trimestre> = {
     { fort: `${SAISON} semaines`, texte: "de saison, de mi-juin à début septembre" },
   ],
   jugement:
-    "Votre direction juge le trimestre sur l'été qu'il prépare : la marge de l'été préservée par les postes pourvus, moins tout ce que la campagne a engagé — logement, primes, organisation, annonces, intérim — et ce que coûtent les départs dans les équipes en place.",
+    "Votre direction juge le trimestre sur l'été qu'il prépare : la marge de l'été préservée par les postes pourvus, moins tout ce que la campagne a engagé (logement, primes, organisation, annonces, intérim) et ce que coûtent les départs dans les équipes en place.",
   duree: "une vingtaine de minutes",
   nomDuTableau: "Votre campagne d'été",
 

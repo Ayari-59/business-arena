@@ -53,7 +53,7 @@ export function MaCarteDeReprise({
           <BoutonCopierLeCode code={formaterCodeDeReprise(code)} />
           <p className="mt-1.5 max-w-prose text-sm leading-relaxed text-slate-400">
             Gardez-le pour vous : qui le lit peut jouer à votre place. Si quelqu&apos;un
-            l&apos;a vu, prenez-en un autre — l&apos;ancien cesse aussitôt de fonctionner.
+            l&apos;a vu, prenez-en un autre : l&apos;ancien cesse aussitôt de fonctionner.
           </p>
           <GuardedForm
             action={renouvelerSonCodeAction.bind(null, { error: null })}

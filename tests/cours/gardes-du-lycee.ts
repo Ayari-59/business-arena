@@ -4,6 +4,7 @@ import type { Chapitre, Etape, EtatDuCours } from "../../src/config/cours/types"
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
 import { lireLeCurseur, lireLeLaboratoire } from "../../src/pedagogy/cours/chapitre-servi";
 import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
+import { typographier } from "../../src/lib/typographie";
 
 /**
  * LES GARDES COMMUNES DES CHAPITRES ET DES CAS DE GESTION ET FINANCE DU BAC STMG, passés sur le
@@ -113,7 +114,7 @@ export function gardeDuCurseur(ch: Chapitre, id: string, attendu: number) {
   const pas = e.sens === "plus-grande" ? 1 : -1;
   expect(couvre(attendu), `${id} à ${attendu}`).toBe(true);
   expect(couvre(attendu + pas), `${id} à ${attendu + pas}`).toBe(false);
-  expect(lireLeCurseur(e, NOVA, attendu).lignes).toEqual(e.lecture(NOVA, attendu));
+  expect(lireLeCurseur(e, NOVA, attendu).lignes).toEqual(typographier(e.lecture(NOVA, attendu)));
   return e;
 }
 

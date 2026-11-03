@@ -36,6 +36,13 @@
  * se rangent sous un titre de leur secteur : l'administration des ventes de
  * la laiterie face à l'EDI, la personne qui porte un projet d'accueil de
  * répit, l'assistance aux ressources humaines qui recrute les saisonniers.
+ *
+ * UN RELEVÉ, PLUS UNE ANNONCE (décision du propriétaire, novembre 2026). Les
+ * épisodes ne s'annoncent pas au lycée, et toutes les entrées
+ * ci-dessous sont celles de formations fermées (le lycée, le CAP) : la
+ * couverture ne les lit plus (config/couverture.ts, `blocsDeLEpisode`, sur la
+ * règle de public-des-episodes.ts). Le relevé reste, pour le jour où la règle
+ * changerait.
  */
 
 // Les intitulés cités, une fois chacun : une faute de frappe se verrait

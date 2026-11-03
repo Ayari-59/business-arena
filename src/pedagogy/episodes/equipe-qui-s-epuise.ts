@@ -173,7 +173,7 @@ export const EPISODE_EQUIPE: Episode<Trimestre> = {
   resume:
     "Un service client dont les délais s'allongent et l'équipe se fatigue. Retirer du travail avant d'en demander plus.",
   persona:
-    "Vous êtes Nadia Haddad, responsable du service client d'Arvel Distribution, à Villeurbanne. Votre équipe : douze conseillers, qui répondent aux artisans et aux grands comptes par téléphone et par e-mail.",
+    "Vous êtes Nadia Haddad, responsable du service client d'Arvel Distribution, à Villeurbanne. Votre équipe : douze conseillers, qui répondent aux artisans et aux grands comptes par téléphone et par courriel.",
   mandat: [
     { fort: `${OBJECTIF_DELAI} jours`, texte: "de délai de réponse, au plus" },
     { fort: "85 %", texte: "de clients satisfaits au moins" },

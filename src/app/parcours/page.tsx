@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { PARCOURS } from "@/config/parcours";
@@ -26,7 +27,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/parcours" },
   title: "Référentiels par diplôme",
   description:
-    "La correspondance entre votre référentiel et ce que vos étudiants vivent dans l'arène, bloc par bloc, pour chaque diplôme servi.",
+    "La correspondance entre votre référentiel et ce que vos élèves vivent dans l'arène, bloc par bloc, pour chaque diplôme servi.",
 };
 
 /**
@@ -150,7 +151,7 @@ const DIPLOMES_SANS_ATELIER = TOUTES_LES_FILIERES.filter(
  * nom du diplôme se suffit ; il est d'ailleurs le seul repère qu'un enseignant
  * cherche ici.
  */
-export default async function ParcoursPage() {
+async function ParcoursPage() {
   // Quelles bandes sont à contre-jour : le réglage de l'admin, ou l'état d'origine.
   const { theme } = await getPlatformConfig();
   const c = (id: string) => contrasteDeLaBande(theme, id);
@@ -544,3 +545,5 @@ export default async function ParcoursPage() {
     </>
   );
 }
+
+export default avecTypographie(ParcoursPage);

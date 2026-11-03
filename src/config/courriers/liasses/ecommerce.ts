@@ -45,7 +45,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "ecom_transporteur",
     expediteur: "Transporteur Delahaye · Direction d'exploitation",
-    objet: "Mouvement social — blocage de nos dépôts",
+    objet: "Mouvement social : blocage de nos dépôts",
     corps:
       "Nos plateformes sont bloquées depuis lundi et le resteront une semaine au moins. Vos colis déjà enlevés attendent sur nos quais. Nous ne prenons plus d'enlèvement jusqu'à nouvel ordre.",
     signataire: "Le directeur d'exploitation",
@@ -102,7 +102,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "ecom_credit_resserre",
     expediteur: "Banque des Professions · Direction des engagements",
-    objet: "Révision de vos conditions — absence d'actif nantissable",
+    objet: "Révision de vos conditions : absence d'actif nantissable",
     corps:
       "Votre bilan ne présente ni immobilier ni équipement mobilisable en garantie ; votre stock constitue votre seul actif significatif. Les conditions de votre ligne de financement sont durcies pour deux {{trimestres}}.",
     signataire: "Le directeur des engagements",
@@ -116,7 +116,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "ecom_rupture_appro",
     expediteur: "Transitaire Vermeulen · Service clients",
-    objet: "Immobilisation de votre conteneur — contrôle douanier",
+    objet: "Immobilisation de votre conteneur : contrôle douanier",
     corps:
       "Après six semaines de mer, votre conteneur est retenu pour contrôle documentaire. Les trois références qui composent l'essentiel de vos ventes s'y trouvent. Nous ne pouvons pas nous engager sur une date de mise à disposition.",
     signataire: "Le responsable d'exploitation",
@@ -130,7 +130,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "ecom_cyberattaque",
     expediteur: "Hébergeur Axone · Cellule de sécurité",
-    objet: "Incident critique — boutique hors ligne et base clients chiffrée",
+    objet: "Incident critique : boutique hors ligne et base clients chiffrée",
     corps:
       "Un rançongiciel a chiffré votre boutique et votre base clients. Le site est retiré du réseau le temps de l'assainissement. Chaque heure d'indisponibilité se traduit par des commandes passées ailleurs.",
     signataire: "Le responsable de la sécurité",
@@ -144,7 +144,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "ecom_entrepot",
     expediteur: "Assurances du Littoral · Service sinistres",
-    objet: "Déclaration de sinistre — infiltration en toiture de votre entrepôt",
+    objet: "Déclaration de sinistre : infiltration en toiture de votre entrepôt",
     corps:
       "L'expert constate qu'un tiers de votre stock est impropre à la vente et que le reste présente des traces d'humidité. La garantie « marchandises stockées » s'applique selon les plafonds et franchises de votre contrat.",
     signataire: "La gestionnaire de sinistres",
@@ -186,9 +186,9 @@ const SOURCES: CourrierDef[] = [
   {
     code: "ecom_commande_b2b",
     expediteur: "Aménagements Carrel · Direction des achats",
-    objet: "Commande unique — équipement de trois plateaux de bureaux",
+    objet: "Commande unique : équipement de trois plateaux de bureaux",
     corps:
-      "Nous équipons trois plateaux et vous passons une commande ferme de {{lettres: commande_ecom_btob}} articles de votre catalogue. Nous réglons comptant à la livraison, dans la limite de ce que vous avez en stock.",
+      "Nous équipons trois plateaux et vous passons une commande ferme de {{entier: commande_ecom_btob}} articles de votre catalogue. Nous réglons comptant à la livraison, dans la limite de ce que vous avez en stock.",
     signataire: "Le directeur des achats",
     effet:
       "+{{entier: commande_ecom_btob}} commandes ({{échelle trimestre}}) vendues d'office ce tour, réglées comptant, dans la limite du stock",
@@ -216,7 +216,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "ecom_major_breakdown",
     expediteur: "Convoyeurs Lasalle · Service après-vente",
-    objet: "Rapport d'intervention — blocage du convoyeur de tri",
+    objet: "Rapport d'intervention : blocage du convoyeur de tri",
     corps:
       "Le moteur d'entraînement principal est grillé et le châssis a subi des contraintes. La remise en cadence nominale demandera deux {{trimestres}}. La préparation manuelle reste possible, à un rythme très inférieur.",
     signataire: "Le responsable après-vente",
@@ -244,7 +244,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "ecom_used_equipment_deal",
     expediteur: "Administrateur judiciaire Brunet",
-    objet: "Cession d'équipements logistiques — procédure de redressement",
+    objet: "Cession d'équipements logistiques : procédure de redressement",
     corps:
       "Dans le cadre du redressement d'un e-commerçant voisin, transpalettes électriques et convoyeur automatisé sont cédés en lot. Le matériel a trois ans et l'enlèvement doit intervenir sous dix jours.",
     signataire: "L'administrateur judiciaire",

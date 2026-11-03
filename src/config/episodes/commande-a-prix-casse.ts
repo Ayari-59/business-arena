@@ -132,7 +132,7 @@ export const ETAPES: readonly Etape[] = [
         titre: "Décomposer la fiche de coût avec Yuna",
         cout: 1,
         nature: "decisive",
-        resultat: `Les ${COUT_COMPLET} € du coût complet se décomposent en ${COUT_VARIABLE} € de coût variable — ${CV.panneau} € de panneau brut, ${centimes(CV.chants)} de chants et de consommables, ${centimes(CV.energie)} d'énergie et d'usure des lames — et ${PART_FIXE} € de charges fixes : les ${euros(CHARGES_FIXES)} par semaine de l'atelier (salaires de l'équipe et du chef d'atelier, amortissement de la scie et du centre d'usinage, loyer, entretien), répartis sur une activité normale de ${ACTIVITE_NORMALE} panneaux. Yuna : « Les salaires sont mensualisés, 35 heures : ils sont payés que la scie tourne ou non. »`,
+        resultat: `Les ${COUT_COMPLET} € du coût complet se décomposent en ${COUT_VARIABLE} € de coût variable (${CV.panneau} € de panneau brut, ${centimes(CV.chants)} de chants et de consommables, ${centimes(CV.energie)} d'énergie et d'usure des lames) et ${PART_FIXE} € de charges fixes : les ${euros(CHARGES_FIXES)} par semaine de l'atelier (salaires de l'équipe et du chef d'atelier, amortissement de la scie et du centre d'usinage, loyer, entretien), répartis sur une activité normale de ${ACTIVITE_NORMALE} panneaux. Yuna : « Les salaires sont mensualisés, 35 heures : ils sont payés que la scie tourne ou non. »`,
       },
       {
         id: "charge",

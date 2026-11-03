@@ -297,7 +297,7 @@ export const EPISODE_NOUVEAU_MARCHE: Episode<Trimestre> = {
     },
   ],
   jugement:
-    "Le comité juge le trimestre sur la valeur créée : le résultat du trimestre, plus la valeur sur trois ans, au taux de 10 %, du plan engagé pour l'an prochain, recalculée en semaine 13 avec ce que le trimestre a révélé — les aides, le rythme du marché, Solvéane —, pénalités et pertes comprises.",
+    "Le comité juge le trimestre sur la valeur créée : le résultat du trimestre, plus la valeur sur trois ans, au taux de 10 %, du plan engagé pour l'an prochain, recalculée en semaine 13 avec ce que le trimestre a révélé (les aides, le rythme du marché, Solvéane), pénalités et pertes comprises.",
   duree: "une vingtaine de minutes",
   nomDuTableau: "Votre lancement",
 

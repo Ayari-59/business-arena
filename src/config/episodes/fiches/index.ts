@@ -18,6 +18,7 @@
  * 102).
  */
 import type { FicheEnseignant } from "./types";
+import { formationsOuvertesAuxEpisodes, ligneDeProgrammeOuverte } from "../public-des-episodes";
 import { FICHE as TRIMESTRE_QUI_DERAPE } from "./trimestre-qui-derape";
 import { FICHE as AGENCE_QUI_DEMARRE } from "./agence-qui-demarre";
 import { FICHE as APPEL_D_OFFRES } from "./appel-d-offres";
@@ -134,7 +135,8 @@ import { FICHE as OFFRE_DE_RACHAT } from "./offre-de-rachat";
 
 export type { FicheEnseignant } from "./types";
 
-export const FICHES: readonly FicheEnseignant[] = [
+/** Les fiches telles qu'elles ont été écrites, formations et programme compris. */
+const FICHES_ECRITES: readonly FicheEnseignant[] = [
   TRIMESTRE_QUI_DERAPE,
   AGENCE_QUI_DEMARRE,
   APPEL_D_OFFRES,
@@ -249,6 +251,18 @@ export const FICHES: readonly FicheEnseignant[] = [
   GAMME_VEGETALE,
   OFFRE_DE_RACHAT,
 ];
+
+/**
+ * LE REGISTRE QUE LE SITE LIT : À PARTIR DE BAC + 3 (décision du propriétaire, novembre 2026).
+ * Une fiche n'annonce que les formations ouvertes aux épisodes, et les lignes de programme qui
+ * sont les leurs (config/episodes/public-des-episodes.ts). Elle reste au registre même si plus
+ * aucune de ses formations ne l'est : elle s'adresse alors aux publics que la règle nomme.
+ */
+export const FICHES: readonly FicheEnseignant[] = FICHES_ECRITES.map((f) => ({
+  ...f,
+  formations: formationsOuvertesAuxEpisodes(f.formations),
+  programme: f.programme.filter(ligneDeProgrammeOuverte),
+}));
 
 export const ficheParCode = (code: string): FicheEnseignant | undefined =>
   FICHES.find((f) => f.code === code);

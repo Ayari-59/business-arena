@@ -350,9 +350,9 @@ const MOTS: Record<string, { month: string; year: string; quarter?: string }> = 
     year: "Votre tour le plus creux : les décideurs lèvent le pied, les marchés publics ne se notifient plus, la stratégie s'arrête, l'audit tourne au ralenti.",
   },
   // Les DSI creusent le moins au tour 3 de la gamme (`dsi`) : c'est ce qui reste vrai de « ne connaît pas les congés ».
-  "Le creux de l'été est aussi le moment où une offre cyber-sécurité, qui ne connaît pas les congés, remplit le banc sans brader.": {
-    month: "La saison creuse est aussi le moment où une offre cyber-sécurité, que les DSI continuent d'acheter, remplit le banc sans brader.",
-    year: "Ce tour creux est aussi le moment où une offre cyber-sécurité, que les DSI continuent d'acheter, remplit le banc sans brader.",
+  "Le creux de l'été est aussi le moment où une offre cybersécurité, qui ne connaît pas les congés, remplit le banc sans brader.": {
+    month: "La saison creuse est aussi le moment où une offre cybersécurité, que les DSI continuent d'acheter, remplit le banc sans brader.",
+    year: "Ce tour creux est aussi le moment où une offre cybersécurité, que les DSI continuent d'acheter, remplit le banc sans brader.",
   },
   // --- fin hotel-bistrot-conseil -------------------------------------------
   // --- groupe boutique-ecommerce : le récit des saisons ---------------------
@@ -405,7 +405,7 @@ const MOTS: Record<string, { month: string; year: string; quarter?: string }> = 
       },
       // Le coefficient d'un mois se rapporte à un mois ordinaire, pas au mois d'avant.
       "vos ventes du tour précédent": { month: "vos ventes d'un mois ordinaire", year: "vos ventes du tour précédent" },
-      "La marge par pièce ne tranche que lorsque les références se disputent une place limitée — la réserve à Noël, par exemple.":
+      "La marge par pièce ne tranche que lorsque les références se disputent une place limitée : la réserve à Noël, par exemple.":
         "La marge par pièce ne tranche que lorsque les références se disputent une place limitée, comme la réserve au tour du pic.",
       "Combien commander pour Noël, de quelle référence, et à quel risque ?":
         "Combien commander pour ce pic, de quelle référence, et à quel risque ?",

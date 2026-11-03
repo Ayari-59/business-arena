@@ -4,6 +4,7 @@ import { CHAPITRES } from "../../src/config/cours/registre";
 import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
 import { projectionDeLEtape } from "../../src/pedagogy/cours/projection";
 import { REMARQUES_PAR_ETAPE, type ProgressionLue } from "../../src/pedagogy/cours/suivi";
+import { INSECABLE, insecables } from "../../src/lib/typographie";
 import type { EtapeChoix } from "../../src/config/cours/types";
 
 /**
@@ -92,5 +93,17 @@ describe("une écriture projetée", () => {
       { texte: "Le compte 512.", eleves: 2 },
     ]);
     expect(p.apresErreur).toBe(3);
+  });
+});
+
+describe("une réponse lue avec ses insécables", () => {
+  // Le cours servi pose les insécables (lib/typographie.ts) : l'élève renvoie le texte qu'il a lu.
+  it("se compte à sa place, comme la même réponse écrite avec des espaces ordinaires", () => {
+    const texte = optionsDe("nova")[fausse("nova")]!.texte;
+    const lue = `${insecables(texte)} ?`.replace(/ \?$/, "").replace(/ /g, INSECABLE);
+    expect(lue).not.toBe(texte);
+    const progressions = [eleve("Béa", "nova", { essais: 2, reussi: true, aide: false }, [`A répondu : « ${lue} »`])];
+    const p = projectionDeLEtape({ chapitre: pilote, cas: nova, id: etape.id, progressions, casDe: casDeLEntreprise })!;
+    expect(p.reponses!.find((r) => r.texte === texte)!.eleves).toBe(1);
   });
 });

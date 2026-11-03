@@ -300,7 +300,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
         const f = factureDeVente(c);
         return {
           date: date(f.date),
-          libelle: `Facture ${c.venteCredit.client}`,
+          libelle: `Facture ${deNom(nomDuClient(c.venteCredit.client))}`,
           lignes: [
             { role: "la créance sur le client", compte: "411", sens: "debit", montant: f.ttc, indice: "le net à payer de la facture" },
             { role: "l'escompte accordé", compte: "665", sens: "debit", montant: f.escompte, indice: "l'escompte de la facture" },
@@ -357,7 +357,7 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
         const f = factureDeVente(c);
         return {
           date: date(f.paiement),
-          libelle: `Règlement ${c.venteCredit.client}`,
+          libelle: `Règlement ${deNom(nomDuClient(c.venteCredit.client))}`,
           lignes: [
             { role: "l'argent reçu en banque", compte: "512", sens: "debit", montant: f.ttc, indice: "le net à payer de la facture" },
             { role: "la créance qui s'éteint", compte: "411", sens: "credit", montant: f.ttc, indice: "le net à payer de la facture" },

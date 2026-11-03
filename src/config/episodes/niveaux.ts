@@ -48,7 +48,7 @@ export interface Niveau {
 export const NIVEAUX: readonly Niveau[] = [
   {
     code: "decouverte",
-    nom: "Découverte",
+    nom: "Démonstration",
     resume:
       "Pour un premier épisode : des repères de méthode, et l'effet de chaque choix tout de suite.",
     details: [

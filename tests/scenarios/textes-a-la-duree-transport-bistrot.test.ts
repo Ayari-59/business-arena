@@ -72,13 +72,13 @@ const CORRECTIONS: { codes: string[]; avant: string; apres: string }[] = [
   // Le porteur du contrat refusé emmenait 1 400 palettes par trimestre ; la configuration
   // en donne 2 000 à un `porteur_12t` (`equipment.types`), et c'est sur elle que le
   // moteur compte la capacité de la flotte. Le récit lit désormais cette capacité, et
-  // toute l'arithmétique de la situation suit : un contrat de quatre mille palettes, un
+  // toute l'arithmétique de la situation suit : un contrat de 4 000 palettes, un
   // porteur qui rapporte 64 000 € sous contrat contre 84 800 € aujourd'hui.
   ...(
     [
-      ["deux mille huit cents palettes", "quatre mille palettes"],
-      ["mille quatre cents palettes", "deux mille palettes"],
-      ["mille cent vingt", "mille six cents"],
+      ["2 800 palettes", "4 000 palettes"],
+      ["1 400 palettes", "2 000 palettes"],
+      ["1 120", "1 600"],
       ["44 800 €", "64 000 €"],
       ["59 360 €", "84 800 €"],
       ["14 560 €", "20 800 €"],
@@ -173,6 +173,8 @@ function nombresAttendus(code: Code, periodicity: Periodicity): Set<string> {
     ajoute(cent(charges / (prix - gazole)), cent(charges / prix), capacite, trafic, dix(flux(4900)));
     ajoute((52 - route) * trafic, charges + amortissementsDuDepart(s));
     ajoute(flux(21000), flux(5500), flux(21000) - flux(5500));
+    // Les palettes d'un porteur et du contrat, et l'écart des seuils, que le récit écrit en chiffres.
+    ajoute(plein, 2 * plein, quatreCinquiemes, cent(flux(7000)), cinquante(seuilApres) - dix(seuil));
     ajoute((57 - route) * plein, (78 - route) * quatreCinquiemes);
     ajoute((78 - route) * quatreCinquiemes - (57 - route) * plein, ((57 - route) * plein) / (78 - route));
     // Ce que la durée ne change pas.
@@ -312,17 +314,17 @@ describe("ce que les énoncés disent au mois et à l'année, phrase par phrase"
     expect(t1.hints[4]!.text).toContain("Rapporté à 3 333 palettes de capacité");
     const t2 = rendue("transport", "transport_t2_retour_vide", "month");
     expect(t2.quiz[1]!.explain).toContain(
-      "les deux mille quatre cent soixante-dix palettes du mois donnent 66 690 €, quand la structure et la flotte en réclament 68 673",
+      "les 2 470 palettes du mois donnent 66 690 €, quand la structure et la flotte en réclament 68 673",
     );
   });
 
   it("ROUTE & CIE : le gazole déplace le seuil des seuls chiffres affichés", () => {
     const t3 = rendue("transport", "transport_t3_gazole", "month");
     expect(t3.quiz[0]!.options[0]!.label).toBe("Environ 1 350 palettes, contre 1 270 auparavant");
-    expect(t3.quiz[0]!.explain).toContain("ne bouge que de quatre-vingts palettes");
-    expect(t3.quiz[0]!.explain).toContain("les deux mille trois cents palettes du mois");
+    expect(t3.quiz[0]!.explain).toContain("ne bouge que de 80 palettes");
+    expect(t3.quiz[0]!.explain).toContain("les 2 300 palettes du mois");
     const an = rendue("transport", "transport_t3_gazole", "year");
-    expect(an.quiz[0]!.explain).toContain("ne bouge que de mille soixante-dix palettes");
+    expect(an.quiz[0]!.explain).toContain("ne bouge que de 1 070 palettes");
   });
 
   it("ROUTE & CIE : le contrat refusé se recalcule avec les palettes qu'il affiche", () => {
@@ -337,14 +339,14 @@ describe("ce que les énoncés disent au mois et à l'année, phrase par phrase"
       expect(Math.round(((32 * plein) / 53 / plein) * 100), periodicity).toBe(60);
     }
     const mois = rendue("transport", "transport_t6_contrat_refuse", "month");
-    expect(mois.narrative).toContain("un contrat mensuel de mille trois cent trente-quatre palettes à 57 €");
-    expect(mois.narrative).toContain("Un porteur emmène six cent soixante-sept palettes par mois");
+    expect(mois.narrative).toContain("un contrat mensuel de 1 334 palettes à 57 €");
+    expect(mois.narrative).toContain("Un porteur emmène 667 palettes par mois");
     // Le porteur du récit est celui du parc : 2 000 palettes au trimestre, et non 1 400.
     const trimestre = rendue("transport", "transport_t6_contrat_refuse", "quarter");
     expect(porteur(joue("transport", "quarter"))).toBe(2000);
-    expect(trimestre.narrative).toContain("Un porteur emmène deux mille palettes par trimestre");
+    expect(trimestre.narrative).toContain("Un porteur emmène 2 000 palettes par trimestre");
     expect(rendue("transport", "transport_t6_contrat_refuse", "year").narrative).toContain(
-      "Un porteur emmène huit mille palettes par an",
+      "Un porteur emmène 8 000 palettes par an",
     );
   });
 

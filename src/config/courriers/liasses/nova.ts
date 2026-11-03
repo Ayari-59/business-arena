@@ -72,7 +72,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "economic_downturn",
     expediteur: "Observatoire régional de la consommation",
-    objet: "Note de conjoncture — recul de la consommation des ménages",
+    objet: "Note de conjoncture : recul de la consommation des ménages",
     corps:
       "Le pouvoir d'achat recule pour le deuxième {{trimestre}} consécutif. Les achats d'équipement non indispensable sont les premiers reportés : notre panel enregistre une baisse de dix pour cent sur l'électronique de loisir.",
     signataire: "Le directeur d'études",
@@ -226,7 +226,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "bank_penalties",
     expediteur: "Banque Régionale du Nord · Service des incidents de paiement",
-    objet: "Mise en demeure — dépassements répétés de votre autorisation",
+    objet: "Mise en demeure : dépassements répétés de votre autorisation",
     corps:
       "Votre compte a présenté un solde débiteur non autorisé à cinq reprises {{ce trimestre}}. Nous vous mettons en demeure de régulariser ; dans l'intervalle, les commissions d'intervention et le taux majoré s'appliquent à l'ensemble de vos encours.",
     signataire: "Le responsable du service",
@@ -269,7 +269,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "cyberattack",
     expediteur: "Axone Informatique · Cellule de sécurité",
-    objet: "Incident de sécurité — chiffrement de votre gestion de production",
+    objet: "Incident de sécurité : chiffrement de votre gestion de production",
     corps:
       "Un rançongiciel a chiffré vos serveurs de production dans la nuit. Nous écartons toute négociation avec les attaquants et restaurons depuis les dernières sauvegardes. L'atelier fonctionnera en mode dégradé jusqu'au rétablissement.",
     signataire: "Le responsable de la sécurité",
@@ -283,9 +283,9 @@ const SOURCES: CourrierDef[] = [
   {
     code: "tight_order",
     expediteur: "Centrale d'achat Priméo · Approvisionnements",
-    objet: "Proposition de commande ferme — {{entier: commande_tight_order}} unités",
+    objet: "Proposition de commande ferme : {{entier: commande_tight_order}} unités",
     corps:
-      "Nous vous proposons {{lettres: commande_tight_order}} unités au prix unitaire de cinquante-cinq euros, livrables sur {{le trimestre}}. Ce prix est ferme et non négociable ; la même proposition est faite à deux autres fabricants. Votre réponse nous est acquise sous huitaine.",
+      "Nous vous proposons {{entier: commande_tight_order}} unités au prix unitaire de cinquante-cinq euros, livrables sur {{le trimestre}}. Ce prix est ferme et non négociable ; la même proposition est faite à deux autres fabricants. Votre réponse nous est acquise sous huitaine.",
     signataire: "Le directeur des approvisionnements",
     effet: "+{{entier: commande_tight_order}} unités à 55 €/u imposés ({{échelle trimestre}}), dans la limite du stock",
     enJeu: "55 € couvre-t-il votre coût variable ? Les coûts pertinents décident, pas l'habitude.",
@@ -299,7 +299,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Plateforme Vendora · Direction des achats",
     objet: "Commande ferme de {{entier: commande_xxl_order}} unités pour notre grande opération commerciale",
     corps:
-      "Notre grande opération commerciale portera sur {{lettres: commande_xxl_order}} de vos enceintes, au prix unitaire de soixante et un euros. Nous savons votre atelier plus petit que ce volume : la sous-traitance est admise, à la condition que la qualité et les délais soient tenus. La commande ferme sera signée dès réception de votre accord.",
+      "Notre grande opération commerciale portera sur {{entier: commande_xxl_order}} de vos enceintes, au prix unitaire de soixante et un euros. Nous savons votre atelier plus petit que ce volume : la sous-traitance est admise, à la condition que la qualité et les délais soient tenus. La commande ferme sera signée dès réception de votre accord.",
     signataire: "Le directeur des achats",
     effet: "+{{entier: commande_xxl_order}} unités à 61 €/u ({{échelle trimestre}}), sous-traitance possible à 52 €/u",
     enJeu: "Sous-traiter à 52 pour vendre à 61, ou investir en capacité ? L'arbitrage make or buy en vrai.",
@@ -311,9 +311,9 @@ const SOURCES: CourrierDef[] = [
   {
     code: "big_order",
     expediteur: "Groupe hôtelier Rivages · Direction des achats",
-    objet: "Équipement de nos chambres — commande ferme de {{entier: commande_big_order}} unités",
+    objet: "Équipement de nos chambres : commande ferme de {{entier: commande_big_order}} unités",
     corps:
-      "Nous équipons l'ensemble de nos chambres d'enceintes nomades et retenons votre modèle. La commande porte sur {{lettres: commande_big_order}} unités, réglées comptant à la livraison, dans la limite de ce que vous pourrez livrer sur {{le trimestre}}.",
+      "Nous équipons l'ensemble de nos chambres d'enceintes nomades et retenons votre modèle. La commande porte sur {{entier: commande_big_order}} unités, réglées comptant à la livraison, dans la limite de ce que vous pourrez livrer sur {{le trimestre}}.",
     signataire: "La directrice des achats",
     effet:
       "+{{entier: commande_big_order}} unités ({{échelle trimestre}}) vendues d'office ce tour, réglées comptant, dans la limite du stock",
@@ -327,13 +327,13 @@ const SOURCES: CourrierDef[] = [
   {
     code: "major_breakdown",
     expediteur: "Maintenance Legrand · Service après-vente",
-    objet: "Rapport d'intervention — avarie majeure sur votre chaîne",
+    objet: "Rapport d'intervention : avarie majeure sur votre chaîne",
     corps:
       "Le roulement principal a cédé et endommagé l'entraînement de la chaîne. La pièce est à fabriquer : comptez deux {{trimestres}} avant le retour à la cadence nominale. Notre rapport relève l'absence de graissage périodique depuis la mise en service.",
     signataire: "Le responsable technique",
     effet: "Disponibilité machine −30 % pendant 2 tours (une entreprise tirée au sort)",
     enJeu:
-      "La maintenance préventive coûte. Ne pas la faire coûte bien plus — en capacité perdue et en ventes manquées.",
+      "La maintenance préventive coûte. Ne pas la faire coûte bien plus, en capacité perdue et en ventes manquées.",
     nature: "internal",
     pli: "email",
     icone: "outil",
@@ -356,7 +356,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "used_equipment_deal",
     expediteur: "Étude Marchand · Commissaire-priseur judiciaire",
-    objet: "Vente aux enchères d'une ligne de montage — liquidation SONOR",
+    objet: "Vente aux enchères d'une ligne de montage : liquidation SONOR",
     corps:
       "Dans le cadre de la liquidation de la société SONOR, une ligne de montage de six ans, révisée, est mise en vente. La mise à prix représente le quart de sa valeur à neuf. La vente a lieu sous quinzaine, sur place et par voie électronique.",
     signataire: "Le commissaire-priseur",
@@ -400,7 +400,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "nova_campus_tender",
     expediteur: "CampusTech · Direction des achats",
-    objet: "Appel d'offres — renouvellement du référencement audio",
+    objet: "Appel d'offres : renouvellement du référencement audio",
     corps:
       "Notre enseigne renouvelle son rayon audio et consulte quatre fabricants. Le marché porte sur l'ensemble de nos magasins. Nous rappelons que notre commission de référencement s'applique à chaque unité vendue.",
     signataire: "Le directeur des achats",

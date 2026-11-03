@@ -148,7 +148,7 @@ export function axe([information, diagnostic, reflexe, calibrage, parole]: reado
     return {
       titre: "Retenir autrement que par l'argent",
       texte:
-        "Une augmentation de dernière minute retient parfois, rarement longtemps, et finit par se savoir. Cherchez ce qui manque à chacun — perspectives, charge, reconnaissance — et répondez à cela.",
+        "Une augmentation de dernière minute retient parfois, rarement longtemps, et finit par se savoir. Cherchez ce qui manque à chacun (perspectives, charge, reconnaissance) et répondez à cela.",
     };
   }
   if (parole!.score === 0) {

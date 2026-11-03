@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -53,7 +54,7 @@ function Ligne({ libelle, children }: { libelle: string; children: React.ReactNo
   );
 }
 
-export default async function FicheInscritPage({
+async function FicheInscritPage({
   params,
   searchParams,
 }: {
@@ -104,7 +105,7 @@ export default async function FicheInscritPage({
               ) : null}
             </span>
           </Ligne>
-          <Ligne libelle="E-mail">
+          <Ligne libelle="Adresse électronique">
             {i.email ? (
               <a href={`mailto:${i.email}`} className="break-all underline-offset-4 hover:underline">
                 {i.email}
@@ -182,7 +183,7 @@ export default async function FicheInscritPage({
           </div>
           <p className="text-xs text-slate-400">
             Le plafond d&apos;enseignants de la licence de l&apos;établissement s&apos;applique, comme pour un code
-            d&apos;invitation. Il n&apos;existe pas d&apos;invitation par e-mail à renvoyer : l&apos;établissement transmet son
+            d&apos;invitation. Il n&apos;existe pas d&apos;invitation par courriel à renvoyer : l&apos;établissement transmet son
             code, listé dans les réglages des inscriptions.
           </p>
         </GuardedForm>
@@ -242,3 +243,5 @@ export default async function FicheInscritPage({
     </main>
   );
 }
+
+export default avecTypographie(FicheInscritPage);

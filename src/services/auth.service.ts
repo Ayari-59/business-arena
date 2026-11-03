@@ -83,14 +83,14 @@ export async function registerTeacher(args: {
     userId = inserted[0].id;
   } else {
     const row = (await db.select().from(users).where(eq(users.email, email)))[0];
-    if (!row?.passwordHash) return { error: "Un compte existe déjà avec cet e-mail." };
+    if (!row?.passwordHash) return { error: "Un compte existe déjà avec cette adresse électronique." };
     const match = await bcrypt.compare(args.password, row.passwordHash);
-    if (!match) return { error: "Un compte existe déjà avec cet e-mail." };
+    if (!match) return { error: "Un compte existe déjà avec cette adresse électronique." };
     const membership = await db
       .select({ organizationId: organizationMembers.organizationId })
       .from(organizationMembers)
       .where(eq(organizationMembers.userId, row.id));
-    if (membership.length > 0) return { error: "Un compte existe déjà avec cet e-mail." };
+    if (membership.length > 0) return { error: "Un compte existe déjà avec cette adresse électronique." };
     userId = row.id;
   }
 

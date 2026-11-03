@@ -114,7 +114,7 @@ export const FICHE: FicheEnseignant = {
       option: 1,
       pourquoi: "La dernière campagne a fait monter les demandes de 25 % : des heures supplémentaires volontaires pour absorber le surplus.",
       ceQuiLeDejoue:
-        "Les demandes de la dernière campagne : deux sur trois portaient sur les conditions de l'offre, « les mêmes six questions, encore et encore ». Des réponses types et une page de questions fréquentes, avec le lien dans l'e-mail de la campagne, coûtent 600 € et évitent l'essentiel du surplus, quand les heures coûtent 2 000 € par semaine pendant trois semaines et fatiguent l'équipe. Rejouées sur les trente tirages, elles perdent 6,8 k€ en moyenne et ne font jamais mieux.",
+        "Les demandes de la dernière campagne : deux sur trois portaient sur les conditions de l'offre, « les mêmes six questions, encore et encore ». Des réponses types et une page de questions fréquentes, avec le lien dans le courriel de la campagne, coûtent 600 € et évitent l'essentiel du surplus, quand les heures coûtent 2 000 € par semaine pendant trois semaines et fatiguent l'équipe. Rejouées sur les trente tirages, elles perdent 6,8 k€ en moyenne et ne font jamais mieux.",
     },
     {
       decision: 5,

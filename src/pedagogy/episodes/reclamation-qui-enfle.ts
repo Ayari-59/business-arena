@@ -141,7 +141,7 @@ export function axe([information, diagnostic, reflexe, calibrage, domaine]: read
     return {
       titre: "Traiter la cause, pas chaque plainte",
       texte:
-        "Un geste commercial apaise un client et ne change rien au flux. Trouvez ce qui fabrique les pannes — un lot, un usage — et agissez là, de façon ciblée, plutôt que partout ou nulle part.",
+        "Un geste commercial apaise un client et ne change rien au flux. Trouvez ce qui fabrique les pannes (un lot, un usage) et agissez là, de façon ciblée, plutôt que partout ou nulle part.",
     };
   }
   if (domaine!.score === 0) {
@@ -370,7 +370,7 @@ export const EPISODE_QUALITE: Episode<Trimestre> = {
     titre: (t) => `${ecartAuBudget(t.objectif)}, remboursements du fournisseur compris`,
     formatObjectif: kE,
     noteDesBarres:
-      "Écart au budget de non-qualité — remplacements, avoirs, rappels, ventes et clients perdus, moins ce que le fournisseur rembourse — sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Écart au budget de non-qualité (remplacements, avoirs, rappels, ventes et clients perdus, moins ce que le fournisseur rembourse) sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

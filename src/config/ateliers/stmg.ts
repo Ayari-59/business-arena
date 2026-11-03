@@ -115,7 +115,7 @@ export const ATELIER_STMG: AtelierDefinition = {
   resume:
     "Une première rencontre avec la décision de gestion, du prix affiché au résultat de l'exercice, sur une année complète et sans prérequis.",
   difficulte: 1,
-  difficulteLabel: "Découverte",
+  difficulteLabel: "Premiers pas",
   format: "5 séances de 1 h 30",
   pourquoi:
     "En classe de première, la création de valeur s'énonce facilement et se comprend mal, parce que rien dans un cours ne fait sentir qu'une décision engage. Un élève à qui l'on demande si le prix doit monter répond au hasard, et le corrigé lui donne une réponse qu'il oublie. Ici l'équipe fixe son prix, et le trimestre suivant lui montre ses ventes, sa marge et sa place dans la classe. La discussion change de nature : elle ne porte plus sur ce qu'il fallait répondre, mais sur ce qui s'est passé. En terminale, la même trame sert d'entrée dans le programme du tronc commun, et le débriefing se déplace de la décision vers l'organisation qui la prend.",
@@ -124,7 +124,7 @@ export const ATELIER_STMG: AtelierDefinition = {
     periodicite: "quarter",
     periodiciteLabel: "Un trimestre par tour",
     niveau: 1,
-    niveauNom: "Découverte",
+    niveauNom: "Premiers pas",
     equipes: 8,
     bots: 0,
     tva: false,
@@ -134,7 +134,7 @@ export const ATELIER_STMG: AtelierDefinition = {
     tourDEssai: 1,
     effectifParEquipe: "trois ou quatre élèves",
     notes:
-      "NOVA fabrique et vend des enceintes : on y achète de la matière, on produit, on stocke ce qui ne part pas, et on encaisse plus tard qu'on ne paie. C'est le cycle le plus court à comprendre et le seul où les trois notions du début, le coût, la marge et le stock, se voient dans la même page. L'atelier ne fait travailler que le prix, le volume et la communication : trois décisions se relisent, dix se subissent. L'emprunt et l'investissement sont à l'écran et restent à zéro, et il faut décocher « Histoires d'investissement » à la création pour que le déroulé reste celui de l'atelier. La taxe sur la valeur ajoutée est laissée de côté en découverte, elle ferait porter la lecture du résultat sur une mécanique fiscale avant que le résultat lui-même ne soit lu. Toutes les équipes affrontent le même marché, et les aléas du niveau Découverte sont deux fois moins fréquents qu'ailleurs : ce qui distingue deux résultats est presque toujours une décision, et un événement, quand il tombe, se lit dans le journal du tour.",
+      "NOVA fabrique et vend des enceintes : on y achète de la matière, on produit, on stocke ce qui ne part pas, et on encaisse plus tard qu'on ne paie. C'est le cycle le plus court à comprendre et le seul où les trois notions du début, le coût, la marge et le stock, se voient dans la même page. L'atelier ne fait travailler que le prix, le volume et la communication : trois décisions se relisent, dix se subissent. L'emprunt et l'investissement sont à l'écran et restent à zéro, et il faut décocher « Histoires d'investissement » à la création pour que le déroulé reste celui de l'atelier. La taxe sur la valeur ajoutée est laissée de côté en découverte, elle ferait porter la lecture du résultat sur une mécanique fiscale avant que le résultat lui-même ne soit lu. Toutes les équipes affrontent le même marché, et les aléas du niveau Premiers pas sont deux fois moins fréquents qu'ailleurs : ce qui distingue deux résultats est presque toujours une décision, et un événement, quand il tombe, se lit dans le journal du tour.",
   },
   seances: [
     {
@@ -164,7 +164,7 @@ export const ATELIER_STMG: AtelierDefinition = {
         "décision et conséquence",
       ],
       preparation:
-        "Créez la partie depuis votre espace avec ces réglages : scénario nova, un trimestre par tour, niveau Découverte, quatre tours, huit équipes, zéro concurrent machine, TVA désactivée, monde variable décoché, questions de connaissances activées, décochez « Histoires d'investissement », et dans « Tour d'essai » un tour, sans cocher l'enchaînement automatique : c'est vous qui commencerez la vraie partie depuis l'ardoise en fin de séance. Notez le code d'invitation. Constituez les équipes à l'avance : trois ou quatre élèves par équipe. Aucun prérequis n'est nécessaire : la première décision se prend avant le premier cours.",
+        "Créez la partie depuis votre espace avec ces réglages : scénario nova, un trimestre par tour, niveau Premiers pas, quatre tours, huit équipes, zéro concurrent machine, TVA désactivée, monde variable décoché, questions de connaissances activées, décochez « Histoires d'investissement », et dans « Tour d'essai » un tour, sans cocher l'enchaînement automatique : c'est vous qui commencerez la vraie partie depuis l'ardoise en fin de séance. Notez le code d'invitation. Constituez les équipes à l'avance : trois ou quatre élèves par équipe. Aucun prérequis n'est nécessaire : la première décision se prend avant le premier cours.",
       deroule: [
         {
           minutes: 10,

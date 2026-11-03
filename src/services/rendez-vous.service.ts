@@ -308,7 +308,7 @@ function descriptionEvenement(d: DemandeRendezVous): string {
     "",
     `Appeler : ${d.name.trim()} · ${d.school.trim()}`,
     `Téléphone : ${d.phone.trim()}`,
-    `E-mail : ${d.email.trim()}`,
+    `Adresse électronique : ${d.email.trim()}`,
     "",
     "Sujet :",
     d.message.trim() || "(rien d'ajouté)",
@@ -324,7 +324,7 @@ export function texteNotification(d: DemandeRendezVous, rdv: RendezVousPris): { 
     `Quand : ${quand}`,
     `Appeler : ${d.name.trim()} · ${d.school.trim()}`,
     `Téléphone : ${d.phone.trim()}`,
-    `E-mail : ${d.email.trim()}`,
+    `Adresse électronique : ${d.email.trim()}`,
     "",
     rdv.dansAgenda
       ? "Le rendez-vous est posé dans votre agenda Google, avec l'enseignant en invité."

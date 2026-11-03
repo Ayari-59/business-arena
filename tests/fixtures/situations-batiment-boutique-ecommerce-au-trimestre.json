@@ -189,7 +189,7 @@
     ],
     "batiment_t5_sous_traiter": [
       "Embaucher, sous-traiter ou refuser",
-      "Le carnet déborde de six cents mètres carrés que vos équipes ne pourront pas absorber. Un confrère propose de les prendre en sous-traitance à 245 € le mètre carré. Embaucher deux compagnons coûterait 19 200 € par trimestre, plus 6 400 € de recrutement, et ils ne seraient opérationnels qu'au tour suivant.",
+      "Le carnet déborde de 600 mètres carrés que vos équipes ne pourront pas absorber. Un confrère propose de les prendre en sous-traitance à 245 € le mètre carré. Embaucher deux compagnons coûterait 19 200 € par trimestre, plus 6 400 € de recrutement, et ils ne seraient opérationnels qu'au tour suivant.",
       "Sous-traiter, embaucher ou laisser filer : que dit le calcul, et sur quel horizon ?",
       "Sous-traiter à 245 € laisse la différence avec le prix facturé, sans engager l'entreprise au-delà du chantier",
       "Embaucher est une charge de structure : elle pèsera aussi les trimestres où le carnet se videra",
@@ -229,7 +229,7 @@
       "Comparez chaque option à ce qui se passe si vous ne faites rien.",
       "Sous-traiter rapporte moins par mètre carré, mais sur une surface que vous ne pouviez pas traiter.",
       "L'embauche ne produit rien ce trimestre : le recrutement prend du temps.",
-      "127 € de marge sur six cents mètres carrés, contre zéro si vous refusez.",
+      "127 € de marge sur 600 mètres carrés, contre zéro si vous refusez.",
       "Et posez-vous la vraie question : ce carnet plein durera-t-il assez pour porter deux salaires trimestre après trimestre ?",
       "Six cents mètres carrés refusés rapportent zéro. Sous-traiter les livre à 127 € de marge unitaire sans engager l'entreprise au-delà du chantier.",
       "La marge baisse de 162 à 127 € par mètre carré sous-traité. Vérifiez que vos devis absorbent cet écart sans perdre de compétitivité.",
@@ -370,7 +370,7 @@
       "Le plus bas des deux est le seul qui décide de ce que vous pouvez livrer.",
       "Investir sur l'autre ne produira pas un mètre carré supplémentaire.",
       "Et rappelez-vous que le matériel acheté ce trimestre n'entre en service qu'au suivant : la décision se prend un tour à l'avance.",
-      "Identifiez le goulot — heures de compagnons ou matériel — avant de planifier plus de chantiers. Seul le plafond le plus bas commande.",
+      "Identifiez le goulot (heures de compagnons ou matériel) avant de planifier plus de chantiers. Seul le plafond le plus bas commande.",
       "Si le matériel est la contrainte active, investir en entretien ou en équipement neuf est le seul levier qui libère de la capacité.",
       "Quand la demande dépasse la capacité, c'est le moment de relever les devis : vous refusez déjà des chantiers, autant garder les mieux payés."
     ]
@@ -396,7 +396,7 @@
       "59,00 €",
       "",
       "Le bonnet laisse 14 € de marge sur coût variable, le pull mérinos 68 €. Faut-il ne vendre que des pulls mérinos ?",
-      "Chaque référence a sa clientèle : personne n'achète cinq pulls mérinos faute de bonnets. Un bonnet vendu rapporte 14 € que la boutique n'aurait pas eus. La marge par pièce ne tranche que lorsque les références se disputent une place limitée — la réserve à Noël, par exemple. C'est la logique de l'assortiment.",
+      "Chaque référence a sa clientèle : personne n'achète cinq pulls mérinos faute de bonnets. Un bonnet vendu rapporte 14 € que la boutique n'aurait pas eus. La marge par pièce ne tranche que lorsque les références se disputent une place limitée : la réserve à Noël, par exemple. C'est la logique de l'assortiment.",
       "Non : tant que la réserve n'est pas pleine, chaque pièce vendue au-dessus de son coût variable ajoute sa marge ; c'est seulement quand la capacité sature que la marge par pièce départage",
       "",
       "Oui : la référence la plus rentable doit remplacer toutes les autres",
@@ -442,7 +442,7 @@
       "Aucun effet : seul le prix d'achat compte",
       "",
       "Les fins de série permettent 18 % d'économie sur le coût d'achat mais dégradent la qualité perçue. Quel segment de votre clientèle le supportera le moins ?",
-      "La segmentation sert exactement à cela : les fidèles arbitrent sur la qualité (élasticité-prix faible, sensibilité qualité forte), les passants sur le prix. Une décision d'achat n'a pas le même effet sur les deux — et ce sont les fidèles qui portent le cardigan et le pull mérinos, vos marges les plus fortes.",
+      "La segmentation sert exactement à cela : les fidèles arbitrent sur la qualité (élasticité-prix faible, sensibilité qualité forte), les passants sur le prix. Une décision d'achat n'a pas le même effet sur les deux, et ce sont les fidèles qui portent le cardigan et le pull mérinos, vos marges les plus fortes.",
       "Les clientes fidèles, très sensibles à la qualité et peu au prix",
       "",
       "Les passants, très sensibles au prix",
@@ -490,7 +490,7 @@
       "Impossible à chiffrer : un client qui n'achète pas ne se compte pas",
       "",
       "Votre réserve traite 7 500 pièces par trimestre et la demande de Noël la dépasse. Le bonnet laisse 14 € par pièce, l'écharpe 19 €, le pull col rond 30,50 €, le cardigan 41 €, le pull mérinos 68 €. Comment répartir la commande ?",
-      "Quand une ressource limite tout, on classe les références par marge rapportée à cette ressource — ici la place en réserve, une pièce en vaut une autre. Le mérinos passe en premier, mais seulement jusqu'à ce que sa clientèle en veuille : au-delà, chaque place qu'il occupe dort. Les accessoires font le volume avec la place qui reste. C'est l'arbitrage de l'assortiment sous contrainte.",
+      "Quand une ressource limite tout, on classe les références par marge rapportée à cette ressource : ici la place en réserve, une pièce en vaut une autre. Le mérinos passe en premier, mais seulement jusqu'à ce que sa clientèle en veuille : au-delà, chaque place qu'il occupe dort. Les accessoires font le volume avec la place qui reste. C'est l'arbitrage de l'assortiment sous contrainte.",
       "Servir d'abord les plus fortes marges par pièce, chacune jusqu'à sa demande, puis les accessoires avec la place restante",
       "",
       "Répartir la place à parts égales entre les cinq références",
@@ -560,10 +560,10 @@
       "Votre marge sur coût variable unitaire se comprime de 4,50 € par pull col rond, et d'autant plus que la pièce est chère : près de 10 € sur un pull mérinos. Multipliez par vos volumes trimestriels.",
       "Le réflexe du métier est de tenir son coefficient : 29,50 € × 2,4 mène le pull près de 70 €. Regardez alors où ce prix vous mène sur chaque segment avant de l'afficher.",
       "Vos segments n'ont pas la même élasticité : −0,9 pour les fidèles, −2,1 pour les passants. Et les passants portent un seuil psychologique à 60 € sur le pull : tenir votre coefficient vous fait passer de 59 à près de 70 €, donc franchir ce seuil chez la clientèle qui y est déjà la plus sensible.",
-      "Chiffrez les deux branches : absorber porte le seuil de 2 754 à ~3 230 pulls ; répercuter 5 % coûte ~10 % de volume chez les passants. Comparez les marges totales, pas les pourcentages — et référence par référence : le mérinos, vendu aux fidèles, supporte la hausse ; le bonnet, vendu aux passants, ne la supporte pas.",
+      "Chiffrez les deux branches : absorber porte le seuil de 2 754 à ~3 230 pulls ; répercuter 5 % coûte ~10 % de volume chez les passants. Comparez les marges totales, pas les pourcentages, et référence par référence : le mérinos, vendu aux fidèles, supporte la hausse ; le bonnet, vendu aux passants, ne la supporte pas.",
       "Répercuter la hausse du coût d'achat sur le prix de vente préserve la marge unitaire, mais l'élasticité-prix vous dit combien de volume cela coûte sur chaque segment : pas le même arbitrage sur le mérinos et sur le bonnet.",
       "Avec un coût d'achat plus élevé, chaque pièce invendue pèse davantage sur la trésorerie : ajustez les quantités commandées de chaque référence à la demande attendue après la hausse.",
-      "Si vous absorbez la hausse, la communication peut compenser en volume ce que la marge perd en unitaire — mais chiffrez l'élasticité avant d'investir."
+      "Si vous absorbez la hausse, la communication peut compenser en volume ce que la marge perd en unitaire, mais chiffrez l'élasticité avant d'investir."
     ],
     "boutique_detect_below_breakeven": [
       "Le trimestre s'est terminé dans le rouge",
@@ -595,7 +595,7 @@
       "Aucun des deux : seul le volume compte",
       "",
       "Quel modèle d'analyse mobilisez-vous en priorité ici ?",
-      "Le seuil de rentabilité chiffre l'écart en pièces et désigne les leviers : marge unitaire, volumes, charges de structure — et le mix, qui déplace la marge moyenne.",
+      "Le seuil de rentabilité chiffre l'écart en pièces et désigne les leviers : marge unitaire, volumes, charges de structure, et le mix, qui déplace la marge moyenne.",
       "Seuil de rentabilité",
       "",
       "Analyse des écarts",
@@ -606,7 +606,7 @@
       "",
       "Reprenez le compte de résultat du tour : de combien manquez-vous exactement pour équilibrer ?",
       "Divisez cet écart par votre marge sur coût variable unitaire moyenne : vous obtenez le nombre de pièces manquantes.",
-      "Le seuil s'écrit : charges de structure ÷ marge unitaire. Trois leviers, donc : le numérateur, le dénominateur, ou les quantités vendues — et le mix, qui change le dénominateur sans toucher aux étiquettes.",
+      "Le seuil s'écrit : charges de structure ÷ marge unitaire. Trois leviers, donc : le numérateur, le dénominateur, ou les quantités vendues, et le mix, qui change le dénominateur sans toucher aux étiquettes.",
       "Attention au levier prix : il agit sur la marge unitaire ET sur les volumes, en sens contraire. C'est l'élasticité qui arbitre.",
       "Avec 84 000 € de charges décaissées et 29,35 € de marge moyenne au mix de référence, le seuil est à ~2 862 pièces ; il monte si vous vendez surtout des bonnets, il descend si vous vendez des cardigans. Comparez à vos ventes réelles : l'écart en pièces vous dit quel levier est atteignable ce trimestre.",
       "Augmenter le prix relève la marge unitaire et abaisse le seuil de rentabilité, à condition que l'élasticité ne fasse pas perdre plus de volume que la marge n'en gagne.",
@@ -655,7 +655,7 @@
       "Regardez ce qui a bougé au bilan entre l'ouverture et la clôture : le stock, les créances, les dettes fournisseurs.",
       "Le résultat est une opinion, la trésorerie est un fait. Entre les deux, il y a le besoin en fonds de roulement.",
       "TN = FRNG − BFR. Si le résultat monte mais que le BFR monte plus vite, la trésorerie baisse. Le réassort de Noël, les cadeaux d'affaires à 60 jours et les comités d'entreprise à 45 jours travaillent dans le même sens.",
-      "Deux leviers immédiats : mobiliser le poste clients (escompte ou affacturage, à un coût) ou réduire le stock — en commençant par la référence qui tourne le moins. Le troisième, allonger le crédit façonnier, se négocie : il ne se décrète pas.",
+      "Deux leviers immédiats : mobiliser le poste clients (escompte ou affacturage, à un coût) ou réduire le stock, en commençant par la référence qui tourne le moins. Le troisième, allonger le crédit façonnier, se négocie : il ne se décrète pas.",
       "Réduire le stock commandé libère de la trésorerie immédiatement : chaque pièce en moins en réserve, c'est son prix d'achat qui reste en caisse.",
       "Proposer un escompte pour paiement comptant aux comités d'entreprise accélère les encaissements et comprime le BFR, au prix d'une concession sur la marge.",
       "Les décaissements de structure pèsent sur la trésorerie au moment où ils tombent : étalez ou décalez ce qui peut l'être pour lisser les sorties de caisse."
@@ -726,7 +726,7 @@
       "Remplace le bilan prévisionnel",
       "",
       "Pour un commerce, accélérer la rotation du stock revient à…",
-      "Le même euro de stock sert plusieurs fois dans l'année au lieu d'une. La marge unitaire ne bouge pas, mais les capitaux nécessaires pour la dégager, si — et un bonnet tourne plus vite qu'un pull mérinos.",
+      "Le même euro de stock sert plusieurs fois dans l'année au lieu d'une. La marge unitaire ne bouge pas, mais les capitaux nécessaires pour la dégager, si. Et un bonnet tourne plus vite qu'un pull mérinos.",
       "Immobiliser moins d'argent pour un même chiffre d'affaires",
       "",
       "Augmenter la marge dégagée sur chaque pièce",
@@ -987,7 +987,7 @@
       "Chiffrez les deux branches : absorber porte le seuil de 3 575 à ~4 150 articles ; répercuter 5 % coûte ~10 % de volume chez les chalands. Comparez les marges totales, pas les pourcentages.",
       "Répercuter la hausse du coût d'achat sur le prix de vente préserve la marge unitaire, mais l'élasticité-prix vous dit combien de volume cela coûte sur chaque segment.",
       "Avec un coût d'achat plus élevé, chaque article invendu pèse davantage sur la trésorerie : ajustez les quantités commandées à la demande attendue après la hausse.",
-      "Si vous absorbez la hausse, la communication peut compenser en volume ce que la marge perd en unitaire — mais chiffrez l'élasticité avant d'investir."
+      "Si vous absorbez la hausse, la communication peut compenser en volume ce que la marge perd en unitaire, mais chiffrez l'élasticité avant d'investir."
     ],
     "bmono_detect_below_breakeven": [
       "Le trimestre s'est terminé dans le rouge",

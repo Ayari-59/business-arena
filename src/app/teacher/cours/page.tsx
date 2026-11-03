@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -37,7 +38,7 @@ const REFUS: Record<string, string> = {
  * reçoit un code. Ses élèves la rejoignent sur /cours/rejoindre, sous un prénom ou un
  * pseudonyme, et leur progression remonte ici, chapitre par chapitre.
  */
-export default async function MesClassesDuCoursPage({ searchParams }: { searchParams: Promise<{ refus?: string }> }) {
+async function MesClassesDuCoursPage({ searchParams }: { searchParams: Promise<{ refus?: string }> }) {
   const { refus } = await searchParams;
   const session = await getSession();
   if (!session) redirect(await connexionPourLaPageDemandee());
@@ -181,3 +182,5 @@ export default async function MesClassesDuCoursPage({ searchParams }: { searchPa
     </main>
   );
 }
+
+export default avecTypographie(MesClassesDuCoursPage);

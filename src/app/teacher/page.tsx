@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
@@ -77,6 +78,7 @@ import { Icone } from "@/components/icone";
 import { TOURS_MAX_AU_TRIMESTRE } from "@/config/scenarios/rounds";
 import { MOIS_MAX, MOIS_PAR_DEFAUT, NOMS_DES_MOIS } from "@/config/scenarios/calendrier-mensuel";
 import { ChampNombre } from "@/components/examen/champ-nombre";
+import { CHOIX_D_EQUIPES } from "@/config/equipes";
 
 export const dynamic = "force-dynamic";
 
@@ -90,7 +92,7 @@ function familleNote(code: string): string {
   return famille ? ` (${famille.monoLabel} jusqu'au niveau ${famille.gammeFromLevel - 1}, la gamme dès le niveau ${famille.gammeFromLevel})` : "";
 }
 
-export default async function TeacherDashboard({
+async function TeacherDashboard({
   searchParams,
 }: {
   searchParams: Promise<{ echec?: string; offre?: string; geste?: string }>;
@@ -411,7 +413,7 @@ export default async function TeacherDashboard({
               defaultValue={4}
               className="mt-1 w-full champ px-3 py-2 text-sm"
             >
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+              {CHOIX_D_EQUIPES.map((n) => (
                 <option key={n} value={n}>{n} équipe{n > 1 ? "s" : ""}</option>
               ))}
             </select>
@@ -636,7 +638,7 @@ export default async function TeacherDashboard({
                 Évaluation entre coéquipiers · à la fin de la partie
               </span>
               <span className="mt-0.5 block text-sm text-slate-400">
-                Chaque élève note la contribution de ses coéquipiers ; un facteur individuel module la
+                Chaque membre de l&apos;équipe note la contribution de ses coéquipiers ; un facteur individuel module la
                 note d&apos;équipe. Critères, moments et bornes se règlent ensuite depuis la partie.
               </span>
             </span>
@@ -966,3 +968,5 @@ export default async function TeacherDashboard({
     </main>
   );
 }
+
+export default avecTypographie(TeacherDashboard);

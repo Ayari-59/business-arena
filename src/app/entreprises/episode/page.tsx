@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PiedDePage } from "@/components/pied-de-page";
@@ -10,7 +11,9 @@ import {
   NIVEAU_DES_DEMOS,
 } from "@/config/episodes/demos";
 import { MARQUE_DES_EPISODES, OFFRES } from "@/config/tarifs";
-import { niveauParCode } from "@/config/episodes/niveaux";
+import { NIVEAUX as NIVEAUX_DES_EPISODES, niveauParCode } from "@/config/episodes/niveaux";
+import { DECISIONS_PAR_EPISODE } from "@/config/episodes/familles";
+import { GRAINES_DU_BILAN } from "@/engine/episodes/commun";
 import { LIEN_TARIFS } from "@/config/vitrine-solo";
 import { getGuestUserId } from "@/lib/guest";
 import { getSession } from "@/lib/session";
@@ -23,7 +26,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/entreprises/episode" },
   title: "Épisodes manager",
   description:
-    "Démonstration de la version pour les entreprises : un manager, un trimestre, six décisions, et un bilan qui sépare la qualité des décisions du hasard.",
+    `Démonstration de la version pour les entreprises : un manager, un trimestre, ${DECISIONS_PAR_EPISODE} décisions, et un bilan qui sépare la qualité des décisions du hasard.`,
 };
 
 /**
@@ -58,7 +61,7 @@ export const metadata: Metadata = {
  * cohorte. Ils se jouent comme sous licence et sont regroupés en tête (« Les épisodes
  * de votre cohorte ») ; les autres suivent la règle sans licence.
  */
-export default async function EpisodesPage() {
+async function EpisodesPage() {
   const entreprises = catalogueDesEpisodes();
   const [userId, session] = await Promise.all([getGuestUserId(), getSession()]);
   const acces = await accesAuxEpisodes({ userId, sessionUserId: session?.userId });
@@ -94,8 +97,9 @@ export default async function EpisodesPage() {
                   `${s.entreprise} (${s.nom.charAt(0).toLowerCase()}${s.nom.slice(1)})`,
               )
               .join(", ")}
-            . Six décisions, une vingtaine de minutes, trois niveaux de difficulté. À la fin, le
-            bilan rejoue chacune de vos décisions sous les mêmes trente tirages au hasard, pour
+            . Chacun tient en {DECISIONS_PAR_EPISODE} décisions et une vingtaine de minutes, à{" "}
+            {NIVEAUX_DES_EPISODES.length} niveaux de difficulté. À la fin, le bilan rejoue chacune
+            de vos décisions sous les mêmes {GRAINES_DU_BILAN.length} tirages au hasard, pour
             séparer ce qui relevait du choix de ce qui relevait de la chance. Données fictives.{" "}
             {/* AUDIT P0-2 : sans licence, une démonstration en Découverte ne compte pas dans le
                 profil (pedagogy/profil/profil.ts) ; son bilan en montre un aperçu. */}
@@ -341,3 +345,5 @@ function CarteFermee({
     </li>
   );
 }
+
+export default avecTypographie(EpisodesPage);

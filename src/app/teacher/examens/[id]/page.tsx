@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -65,7 +66,7 @@ function etatDeLaLigne(c: CopieSuivie): string {
   return ETATS_DE_LA_COPIE[c.etat];
 }
 
-export default async function ExamenPage({
+async function ExamenPage({
   params,
   searchParams,
 }: {
@@ -340,3 +341,5 @@ export default async function ExamenPage({
     </main>
   );
 }
+
+export default avecTypographie(ExamenPage);

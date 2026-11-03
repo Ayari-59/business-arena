@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 import { phraseDesOuvertures } from "@/config/tableau-des-niveaux";
 import Link from "next/link";
@@ -16,7 +17,9 @@ import {
   scoringWeightsV2,
   type BpiV2Dimension,
 } from "@/scoring/bpi";
-import { DEFAULT_SCENARIO_CODE, scenarioByCode } from "@/config/scenarios/registry";
+import { DEFAULT_SCENARIO_CODE, scenarioByCode, TOURS_D_UNE_PARTIE } from "@/config/scenarios/registry";
+import { NIVEAUX_D_INDICE } from "@/config/scenarios/situation-kit";
+import { EQUIPES_D_UNE_PARTIE } from "@/config/equipes";
 import { contrasteDeLaBande } from "@/config/theme-du-site";
 import { getPlatformConfig } from "@/services/admin.service";
 import { Icone } from "@/components/icone";
@@ -133,7 +136,7 @@ function Section({
   );
 }
 
-export default async function GuidePage() {
+async function GuidePage() {
   // Quelles bandes sont à contre-jour : le réglage de l'admin, ou l'état d'origine.
   const { theme } = await getPlatformConfig();
   // « Combien ça coûte ? » : le catalogue (/admin/offres), sans montant tant que
@@ -193,7 +196,7 @@ export default async function GuidePage() {
                   <strong className="text-slate-200">Lancer la partie</strong>. Au choix :
                   atelier, boutique, hôtel, restaurant, cabinet de conseil, boutique en ligne ou
                   salle de sport. Aucun compte requis : vous dirigez l&apos;entreprise
-                  immédiatement, en six tours, face à des concurrents pilotés par l&apos;ordinateur.
+                  immédiatement, en {TOURS_D_UNE_PARTIE} tours, face à des concurrents pilotés par l&apos;ordinateur.
                 </p>
               </div>
               <div className="rounded-xl border border-white/10 bg-slate-950 p-5">
@@ -225,8 +228,8 @@ export default async function GuidePage() {
                 c&apos;est la compétence que le jeu mesure. Correction expliquée au débriefing.
               </Step>
               <Step n={3} title="Besoin d'aide ? Débloquez des indices">
-                Cinq niveaux, dans l&apos;ordre, du simple recadrage jusqu&apos;à la méthode
-                détaillée. Chaque indice coûte une part du score pédagogique de la situation
+                Les indices viennent en {NIVEAUX_D_INDICE} niveaux, dans l&apos;ordre, du simple
+                recadrage jusqu&apos;à la méthode détaillée. Chaque indice coûte une part du score pédagogique de la situation
                 (jamais vos résultats économiques). Apprendre à demander juste ce qu&apos;il faut
                 fait partie du jeu.
               </Step>
@@ -267,21 +270,23 @@ export default async function GuidePage() {
             <ol className="space-y-5">
               <Step n={1} title="Créez votre compte">
                 Sur <Link href="/teacher/login" className="text-amber-300 underline decoration-1 underline-offset-4 hover:decoration-2">l&apos;espace enseignant</Link>,
-                inscrivez-vous avec votre e-mail, directement ou avec le code d&apos;invitation
+                inscrivez-vous avec votre adresse électronique, directement ou avec le code d&apos;invitation
                 fourni par votre établissement s&apos;il est déployé sur la plateforme.
               </Step>
               <Step n={2} title="Créez une partie de classe et réglez-la finement">
-                Choisissez la périodicité, le nombre d&apos;équipes (1 à 8), les concurrents
+                Choisissez la périodicité, le nombre d&apos;équipes ({EQUIPES_D_UNE_PARTIE.min} à {EQUIPES_D_UNE_PARTIE.max}), les concurrents
                 automatiques et le <strong className="text-slate-200">niveau de difficulté</strong> :
-                de Découverte (prix, production, marketing, tous les indices) à Executive
+                de {DIFFICULTY_PRESETS[0]!.name} (prix, production, marketing, tous les indices) à{" "}
+                {DIFFICULTY_PRESETS.at(-1)!.name}{" "}
                 (affectation du résultat, aucun indice, événements doublés). Le panneau{" "}
                 <strong className="text-slate-200">Paramètres économiques</strong> permet en plus
-                d&apos;activer le <strong className="text-slate-200">monde variable</strong>
+                d&apos;activer le <strong className="text-slate-200">monde variable</strong>{" "}
                 (chaque partie diffère : croissance, saisonnalité, événements et commandes
-                exceptionnelles changent. Décochez pour le scénario classique, identique à vos
-                supports imprimés), et de moduler l&apos;impôt, la TVA, les taux d&apos;emprunt et
+                exceptionnelles changent) et de moduler l&apos;impôt, la TVA, les taux d&apos;emprunt et
                 de découvert, les délais clients et fournisseurs, le plafond de découvert, les
-                charges de structure et les coûts unitaires, afin de coller à votre progression. La plateforme génère un{" "}
+                charges de structure et les coûts unitaires, afin de coller à votre progression. Décochez le
+                monde variable pour retrouver le scénario classique, identique à vos supports imprimés.
+                La plateforme génère un{" "}
                 <strong className="text-slate-200">code d&apos;invitation à 6 caractères</strong> :
                 affichez-le, vos élèves rejoignent sur /join.
               </Step>
@@ -530,7 +535,7 @@ export default async function GuidePage() {
           id="guide.finale"
           contraste={c("guide.finale")}
           titre="Prêt à entrer dans l'arène ?"
-          texte={`Lancez une partie solo pour vous faire la main. La partie de classe vient avec ${LES_OFFRES_DE_L_ARENE} : six tours suffisent pour que le BFR devienne inoubliable.`}
+          texte={`Lancez une partie solo pour vous faire la main. La partie de classe vient avec ${LES_OFFRES_DE_L_ARENE} : ${TOURS_D_UNE_PARTIE} tours suffisent pour que le BFR devienne inoubliable.`}
         >
           <Link href="/jouer" className={bouton({ taille: "l" })}>
             Jouer maintenant
@@ -547,3 +552,5 @@ export default async function GuidePage() {
     </>
   );
 }
+
+export default avecTypographie(GuidePage);

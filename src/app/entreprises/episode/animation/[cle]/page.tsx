@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
@@ -23,7 +24,7 @@ const pct = (v: number) => `${Math.round(v * 100)} %`;
  * sont répartis sur un épisode. Aucun nom, aucun profil individuel, et rien en
  * dessous de cinq personnes.
  */
-export default async function AnimationPage({ params }: { params: Promise<{ cle: string }> }) {
+async function AnimationPage({ params }: { params: Promise<{ cle: string }> }) {
   const { cle } = await params;
   const lue = await vueDeLAnimateur(cle);
   if (!lue) notFound();
@@ -151,7 +152,7 @@ export default async function AnimationPage({ params }: { params: Promise<{ cle:
                   Les choix du groupe, épisode par épisode
                 </h2>
                 <p className="max-w-2xl text-sm text-slate-400">
-                  Les premières parties seulement, hors Découverte. La répartition s&apos;affiche à
+                  Les premières parties seulement, hors niveau Démonstration. La répartition s&apos;affiche à
                   partir de {SEUIL_D_ANONYMAT} joueurs. Pour un débrief, faites jouer tout le groupe
                   sous les mêmes aléas avec le lien indiqué.
                 </p>
@@ -225,3 +226,5 @@ export default async function AnimationPage({ params }: { params: Promise<{ cle:
     </>
   );
 }
+
+export default avecTypographie(AnimationPage);

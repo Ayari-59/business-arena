@@ -231,9 +231,9 @@ describe("au mois et à l'année, les énoncés disent ce que le moteur fait", (
   it("MARTEL & FILS : le débord, la location et l'entretien du récit suivent la durée du tour", () => {
     const mois = situation("batiment", "batiment_t5_sous_traiter", "month");
     const an = situation("batiment", "batiment_t5_sous_traiter", "year");
-    expect(mois.narrative).toContain("déborde de deux cents mètres carrés");
+    expect(mois.narrative).toContain("déborde de 200 mètres carrés");
     expect(mois.narrative).toContain(`${milliers(2 * joue("batiment", "month").hr!.salaryPerEmployeePerRound)} € par mois`);
-    expect(an.narrative).toContain("déborde de deux mille quatre cents mètres carrés");
+    expect(an.narrative).toContain("déborde de 2 400 mètres carrés");
     expect(an.decisionLevers[0]!.hint).toMatch(/^Deux mille quatre cents mètres carrés/);
     const nacelle = situation("batiment", "batiment_t6_nacelle", "month");
     expect(nacelle.narrative).toContain("vingt jours par mois, pour 3 667 € à chaque fois");

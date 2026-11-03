@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
  * d'enseignants que couvre sa licence. Seul un ENSEIGNANT arrive ici (l'élève n'occupe
  * aucune place de la licence), d'où le lien vers les tarifs.
  */
-export default function RefusLtiPage() {
+function RefusLtiPage() {
   return (
     <main id="main" className="pb-16">
       <EnTeteDePage
@@ -30,3 +31,5 @@ export default function RefusLtiPage() {
     </main>
   );
 }
+
+export default avecTypographie(RefusLtiPage);

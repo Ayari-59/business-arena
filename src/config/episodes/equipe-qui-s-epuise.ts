@@ -383,7 +383,7 @@ export const ETAPES: readonly Etape[] = [
           de: "Marketing",
           role: "Siège",
           texte:
-            "La page de questions est en ligne et le lien figure dans l'e-mail de la campagne. Merci pour l'idée.",
+            "La page de questions est en ligne et le lien figure dans le courriel de la campagne. Merci pour l'idée.",
         },
       ],
       [

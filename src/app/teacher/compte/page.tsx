@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -61,7 +62,7 @@ const ROLES: Record<string, string> = { org_admin: "administrateur", teacher: "e
 const jour = (d: Date) =>
   d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Paris" });
 
-export default async function MonComptePage({
+async function MonComptePage({
   searchParams,
 }: {
   searchParams: Promise<{ fait?: string; lien?: string; minutes?: string }>;
@@ -106,7 +107,7 @@ export default async function MonComptePage({
             <dd className="text-slate-100">{staff.displayName}</dd>
           </div>
           <div className="grid gap-0.5 sm:grid-cols-[12rem_1fr] sm:gap-3">
-            <dt className="text-slate-400">Adresse e-mail</dt>
+            <dt className="text-slate-400">Adresse électronique</dt>
             <dd className="break-all text-slate-100">{adresse ?? "aucune (votre plateforme de cours ou votre établissement ne l'a pas transmise)"}</dd>
           </div>
           {etatAdresse?.confirmeLe ? (
@@ -237,3 +238,5 @@ export default async function MonComptePage({
     </main>
   );
 }
+
+export default avecTypographie(MonComptePage);

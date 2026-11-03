@@ -42,7 +42,7 @@
     "Il existe un volume de ventes précis à partir duquel vous cessez de perdre de l'argent.",
     "Une analyse du seuil de rentabilité donnerait un objectif chiffré à votre premier trimestre.",
     "Divisez les charges de structure par la marge sur coût variable unitaire (prix − 38 €) : c'est votre seuil en volume.",
-    "Le prix fixe la marge unitaire — et donc le nombre d'unités nécessaires pour couvrir les charges fixes.",
+    "Le prix fixe la marge unitaire, et donc le nombre d'unités nécessaires pour couvrir les charges fixes.",
     "Produire trop crée du stock mort ; produire trop peu fait perdre des ventes. Le seuil de rentabilité donne le plancher."
   ],
   "nova_t2_variance_decomposition": [
@@ -449,7 +449,7 @@
     "Traduisez l'écart en jours : (seuil en valeur ÷ chiffre d'affaires) × la durée du tour donne la date à laquelle vous auriez atteint l'équilibre. Au-delà de la fin du tour, vous ne l'avez jamais atteint.",
     "Une analyse coût-volume-profit montrerait quel levier (prix, volume, coûts) est le plus efficace.",
     "SR = fixes / (prix − coût variable unitaire) : jouez chaque levier dans la formule et comparez.",
-    "Augmenter le prix relève la marge unitaire et abaisse le seuil de rentabilité — si la demande suit.",
+    "Augmenter le prix relève la marge unitaire et abaisse le seuil de rentabilité, si la demande suit.",
     "Produire au-delà du volume vendable crée du stock et aggrave la perte : ajustez au volume réaliste.",
     "Le marketing pèse dans les charges fixes : chaque euro doit être comparé au volume de ventes supplémentaire qu'il génère."
   ],
@@ -495,7 +495,7 @@
     "L'investissement coûte aujourd'hui ; ses gains tombent sur plusieurs tours. Comment comparer des euros d'aujourd'hui et des euros de demain ?",
     "Un euro dans un an vaut moins qu'un euro aujourd'hui : c'est l'actualisation, et votre taux d'emprunt donne le taux de référence.",
     "La VAN actualise les flux futurs et les compare au capital investi ; le TRI est le taux qui l'annule ; les coûts pertinents comparent investir et sous-traiter.",
-    "VAN ≈ −40 000 + Σ (unités supplémentaires vendues × marge unitaire) / (1 + 1,25 %)^t sur 16 trimestres — la marge, c'est votre prix moins 38 € (21 € au prix usuel de 59 €). VAN > 0 ⇒ investissez ; sinon comparez à la sous-traitance : votre prix moins 52 € par unité sous-traitée (7 € à 59 €), sans immobiliser un euro.",
+    "VAN ≈ −40 000 + Σ (unités supplémentaires vendues × marge unitaire) / (1 + 1,25 %)^t sur 16 trimestres : la marge, c'est votre prix moins 38 € (21 € au prix usuel de 59 €). VAN > 0 ⇒ investissez ; sinon comparez à la sous-traitance : votre prix moins 52 € par unité sous-traitée (7 € à 59 €), sans immobiliser un euro.",
     "Poussez la production au plafond disponible pour ne pas laisser de marge sur la table.",
     "La maintenance augmente la disponibilité machine : chaque point gagné libère des unités supplémentaires.",
     "Si la demande dépasse durablement la capacité, un prix plus élevé rationalise les ventes et améliore la marge."
@@ -555,7 +555,7 @@
     "Le mérite revient à l'atelier : il a tourné à son maximum",
     "Un trimestre ajusté prouve à lui seul que la méthode de prévision est bonne",
     "Où lit-on qu'un plan de production a été bien dimensionné ?",
-    "Un atelier à 100 % peut refuser la moitié du marché, et un résultat net flatteur peut cacher un stock qui gonfle. Seuls les deux volumes — ce qui est reparti sans acheter, ce qui est resté — disent si le plan collait à la demande.",
+    "Un atelier à 100 % peut refuser la moitié du marché, et un résultat net flatteur peut cacher un stock qui gonfle. Seuls les deux volumes (ce qui est reparti sans acheter, ce qui est resté) disent si le plan collait à la demande.",
     "Dans les volumes : demande refusée et invendu, rapportés aux ventes",
     "",
     "Dans le résultat net du trimestre",
@@ -611,7 +611,7 @@
     "Non, uniquement si l'entreprise a distribué un dividende",
     "",
     "Qu'est-ce qui distingue une correction durable d'une embellie de circonstance ?",
-    "Un redressement dont on ne sait pas ce qui l'a produit ne se reproduit que par chance. Nommer le levier — prix, volume, charges, financement — et vérifier qu'il se lit dans les comptes, c'est la différence entre piloter et subir.",
+    "Un redressement dont on ne sait pas ce qui l'a produit ne se reproduit que par chance. Nommer le levier (prix, volume, charges, financement) et vérifier qu'il se lit dans les comptes, c'est la différence entre piloter et subir.",
     "Le fait de pouvoir nommer le levier actionné et de le retrouver dans les chiffres",
     "",
     "L'ampleur du redressement : plus il est fort, plus il est durable",
@@ -621,7 +621,7 @@
     "Le retour du résultat au-dessus du seuil de rentabilité",
     "",
     "Quel modèle d'analyse mobilisez-vous en priorité ici ?",
-    "L'analyse coût-volume-profit relie les trois leviers qui peuvent avoir produit le redressement — prix, volume, charges — et dit lequel a joué. Le budget de trésorerie et l'analyse FRNG / BFR complètent utilement si c'est la caisse qui s'est redressée, pas le résultat.",
+    "L'analyse coût-volume-profit relie les trois leviers qui peuvent avoir produit le redressement (prix, volume, charges) et dit lequel a joué. Le budget de trésorerie et l'analyse FRNG / BFR complètent utilement si c'est la caisse qui s'est redressée, pas le résultat.",
     "Prix psychologique",
     "",
     "Analyse FRNG / BFR",
@@ -678,7 +678,7 @@
     "",
     "Regardez vos charges : certaines tombent chaque trimestre, que vous vendiez des Go, des One ou rien du tout.",
     "Combien laisse une Go une fois ses composants et sa main-d'œuvre payés ? Et une Studio ?",
-    "Il existe un volume précis, toutes références confondues, à partir duquel vous cessez de perdre de l'argent — et il dépend de ce que vous vendez.",
+    "Il existe un volume précis, toutes références confondues, à partir duquel vous cessez de perdre de l'argent, et il dépend de ce que vous vendez.",
     "Une analyse du seuil de rentabilité à mix constant donnerait un objectif chiffré à votre premier trimestre.",
     "Calculez la marge moyenne d'une enceinte au mix prévu (15 € la Go, 21 € la One, 59 € la Studio une fois lancée), puis divisez les charges de structure par cette marge. Et comparez le coût de développement de la Studio aux marges qu'elle rapportera d'ici Noël : financée dès ce tour, elle se vend au suivant.",
     "Trois prix, trois marges unitaires : c'est le mix de ces marges qui fixe le nombre d'enceintes nécessaires pour couvrir les charges de structure.",
@@ -775,7 +775,7 @@
     "Quand l'atelier est le goulot, chaque enceinte produite en prend la place d'une autre : que rapporte cette place selon la référence ?",
     "Une analyse de capacité, croisée avec la marge de chaque référence et la saisonnalité, dirait quoi produire dès maintenant.",
     "Classez les références par marge par enceinte (59 € la Studio, 21 € la One, 15 € la Go), servez la demande dans cet ordre, et produisez au plafond dès ce tour pour stocker la Go et la One avant Noël.",
-    "Produire au plafond AVANT le pic constitue le stock qui servira la demande quand la capacité d'un tour ne suffira plus — en commençant par la référence qui rapporte le plus par enceinte.",
+    "Produire au plafond AVANT le pic constitue le stock qui servira la demande quand la capacité d'un tour ne suffira plus, en commençant par la référence qui rapporte le plus par enceinte.",
     "La disponibilité des lignes dépend de la maintenance : négliger l'entretien réduit la capacité réelle, pour toute la gamme à la fois."
   ],
   "novag_t4_paradoxe": [

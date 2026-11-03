@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -74,7 +75,7 @@ function Adresse({ libelle, valeur }: { libelle: string; valeur: string }) {
   );
 }
 
-export default async function AdminLtiPage({
+async function AdminLtiPage({
   searchParams,
 }: {
   searchParams: Promise<{ fait?: string; refus?: string }>;
@@ -308,3 +309,5 @@ export default async function AdminLtiPage({
     </main>
   );
 }
+
+export default avecTypographie(AdminLtiPage);

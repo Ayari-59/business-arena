@@ -1,4 +1,6 @@
-import { CHAPITRES } from "@/config/cours/registre";
+import { referentielDeCitation } from "@/config/ateliers/referentiels";
+import { CHAPITRES, PARCOURS } from "@/config/cours/registre";
+import { formationOuverteAuxEpisodes } from "@/config/episodes/public-des-episodes";
 import { CAS_DE_SYNTHESE, CAS_PAR_CHAPITRE, situationParCode, type Situation } from "@/config/cours/situations";
 import { episodesDuTheme, themeDeLEpisode, themeDuChapitre, type Theme } from "@/config/cours/themes";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
@@ -32,7 +34,7 @@ export interface SuitesDuChapitre {
   reprend: Lien[];
   /** Les chapitres qui prolongent celui-ci (`ensuite` du chapitre), dans son ordre. */
   ensuite: Lien[];
-  /** Quelques épisodes du thème, et leur nombre total. */
+  /** Quelques épisodes du thème, et leur nombre total ; aucun au lycée (`chapitreOuvertAuxEpisodes`). */
   episodes: Lien[];
   episodesDuTheme: number;
 }
@@ -52,10 +54,41 @@ const lienDuChapitre = (code: string): Lien => ({
 const lienDuTheme = (t: Theme | undefined): Lien | null => (t ? { code: t.code, titre: t.titre } : null);
 const lienDeLEpisode = (code: string): Lien => ({ code, titre: episodeParCode(code)?.titre ?? code });
 
+/**
+ * LES FORMATIONS QU'UN CHAPITRE SERT : celle que suit son parcours (registre.ts, `formation`),
+ * et celles dont il cite un bloc. Un cas pratique sert celles des chapitres qu'il reprend.
+ */
+export function formationsDuChapitre(code: string): string[] {
+  const situation = situationParCode(code);
+  const servies = new Set<string>();
+  for (const c of situation ? situation.reprend : [code]) {
+    const chapitre = CHAPITRES.find((x) => x.code === c);
+    if (!chapitre) continue;
+    const suivie = PARCOURS.find((p) => p.code === chapitre.parcours)?.formation;
+    if (suivie) servies.add(suivie);
+    for (const bloc of chapitre.blocs) {
+      const cite = referentielDeCitation(bloc);
+      if (cite) servies.add(cite.code);
+    }
+  }
+  return [...servies];
+}
+
+/**
+ * LA FIN D'UN CHAPITRE PROPOSE-T-ELLE DES ÉPISODES ? Pas au lycée (décision du
+ * propriétaire, novembre 2026, config/episodes/public-des-episodes.ts) : un chapitre écrit pour
+ * les seules formations fermées (le CAP, le lycée, le BTS) n'en propose aucun. Un chapitre qui
+ * sert aussi une formation ouverte, ou aucune formation en particulier, garde les siens.
+ */
+export function chapitreOuvertAuxEpisodes(code: string): boolean {
+  const servies = formationsDuChapitre(code);
+  return servies.length === 0 || servies.some(formationOuverteAuxEpisodes);
+}
+
 export function suitesDuChapitre(code: string): SuitesDuChapitre {
   const situation = situationParCode(code);
   const theme = themeDuChapitre(situation ? situation.reprend[0]! : code);
-  const episodes = theme ? episodesDuTheme(theme) : [];
+  const episodes = theme && chapitreOuvertAuxEpisodes(code) ? episodesDuTheme(theme) : [];
   return {
     theme: lienDuTheme(theme),
     // Le cas dédié au chapitre d'abord, puis les cas de synthèse qui le reprennent.

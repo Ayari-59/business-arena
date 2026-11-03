@@ -54,7 +54,7 @@ export function PageDesTarifs({
             chapeau="Gratuit pour découvrir. Sur devis pour faire cours ou former une équipe."
           >
             <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-400">
-              Le gratuit montre, le payant organise. L&apos;étudiant ne paie jamais. Toutes les offres
+              Le gratuit montre, le payant organise. L&apos;élève ne paie jamais. Toutes les offres
               se vendent sur devis, établi par {VENDEUR.nom}.{" "}
               <span data-mention-tva="">{MENTION_TVA}.</span>
             </p>
@@ -66,7 +66,7 @@ export function PageDesTarifs({
             chapeau="Construisons votre offre. Gratuit pour découvrir ; pour faire cours ou former une équipe, chaque offre se compose avec vous et aboutit à un devis."
           >
             <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-400">
-              Le gratuit montre, le payant organise. L&apos;étudiant ne paie jamais. Dites-nous pour
+              Le gratuit montre, le payant organise. L&apos;élève ne paie jamais. Dites-nous pour
               qui, et ce dont vous avez besoin : le devis écrit est établi par {VENDEUR.nom}.
             </p>
           </EnTeteDePage>

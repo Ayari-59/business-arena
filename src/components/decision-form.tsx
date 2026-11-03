@@ -636,7 +636,7 @@ function MarqueDeProposition({ source }: { source: string }) {
       data-proposition-de-ventes=""
       className="pastille-attente inline-flex flex-wrap items-baseline gap-x-1.5 rounded-full px-2.5 py-0.5 text-sm text-slate-100"
     >
-      <span className="font-semibold">Proposition — à ajuster</span>
+      <span className="font-semibold">Proposition à ajuster</span>
       <span className="text-slate-300">{source}</span>
     </span>
   );
@@ -4793,7 +4793,7 @@ export function DecisionForm({
                 label="Budget de marque"
                 defaultValue={Math.round(defaults.brandMarketingBudget ?? 0)}
                 suffix="€"
-                hint={`Notoriété de marque, toute la gamme, avec retard — ${Math.round(communicationOffer.brandAwareness * 100)} % à l'ouverture. Les budgets par référence agissent tout de suite.`}
+                hint={`Notoriété de marque, toute la gamme, avec retard : ${Math.round(communicationOffer.brandAwareness * 100)} % à l'ouverture. Les budgets par référence agissent tout de suite.`}
               />
             ) : null}
             <label className="block">

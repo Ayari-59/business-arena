@@ -5,9 +5,9 @@
       "nom": "Découverte",
       "pourQui": "Sans compte, pour voir le simulateur de près.",
       "inclus": [
-        "L'arène en solo sur les 9 entreprises, niveaux 1 à 3 (Découverte, Gestion et Pilotage), en partie complète de 6 tours.",
+        "L'arène en solo sur les 9 entreprises, niveaux 1 à 3 (Premiers pas, Gestion et Pilotage), en partie complète de 6 tours.",
         "Les fiches notions, le manuel et le guide.",
-        "Un épisode manager de démonstration par métier (5 sur 113), au niveau Découverte, avec son bilan.",
+        "Un épisode manager de démonstration par métier (5 sur 113), au niveau Démonstration, avec son bilan.",
         "Le premier chapitre du cours et son cas pratique, en libre accès."
       ],
       "precisions": [
@@ -182,12 +182,12 @@
     "Les offres Classe et Programme se paramètrent à l'achat : l'entreprise, et pour Classe le niveau, sont écrits sur le devis et ouverts pour l'année.",
     "Pas de reconduction tacite : l'échéance s'affiche dans l'espace enseignant, et le renouvellement passe par un nouveau devis.",
     "À la fin de l'offre, les parties et les résultats restent consultables 12 mois, relevé de notes compris.",
-    "Les étudiants et les élèves jouent sans nom ni e-mail : un code suffit."
+    "Les étudiants et les élèves jouent sans nom ni adresse électronique : un code suffit."
   ],
   "QUESTIONS_TARIFS": [
     {
-      "q": "Les étudiants paient-ils ?",
-      "r": "Non, jamais. Ils rejoignent la partie de leur enseignant avec un code, sans compte ni e-mail."
+      "q": "Les élèves paient-ils ?",
+      "r": "Non, jamais. Ils rejoignent la partie de leur enseignant avec un code, sans compte ni adresse électronique."
     },
     {
       "q": "Comment commander ?",
@@ -240,7 +240,7 @@
     "episodes": {
       "offre": "Épisodes manager, en cours ou en école",
       "organisation": "École ou établissement",
-      "exempleOrganisation": "École de commerce, université, lycée",
+      "exempleOrganisation": "École de commerce, université, IUT",
       "identifiant": "UAI (facultatif)",
       "effectif": "Nombre d'enseignants et d'intervenants"
     },
@@ -269,13 +269,13 @@
   "REFUS_DU_DOSSIER": "Le dossier enseignant des ateliers, avec ses corrigés, est inclus dans les offres Classe, Programme et Campus.",
   "REFUS_DU_RELEVE": "Le relevé de notes est inclus dans les offres Classe, Programme et Campus, et reste téléchargeable 12 mois après la fin de l'offre.",
   "REFUS_DES_COHORTES": "Créer une cohorte demande une offre qui inclut les épisodes manager (Épisodes manager · sur devis). Les offres Classe, Programme et Campus seules ne les ouvrent pas. Les 5 épisodes de démonstration se jouent sans cohorte, par leur lien.",
-  "POURQUOI_LA_DECOUVERTE": "Sans licence, les démonstrations se jouent en Découverte, qui ne compte pas dans le profil. Les niveaux Standard et Expert, qui le construisent, sont inclus dans l'offre Épisodes manager, sur devis.",
+  "POURQUOI_LA_DECOUVERTE": "Sans licence, les démonstrations se jouent au niveau Démonstration, qui ne compte pas dans le profil. Les niveaux Standard et Expert, qui le construisent, sont inclus dans l'offre Épisodes manager, sur devis.",
   "ceQuOuvrentLesEpisodes": "L'offre Épisodes manager, sur devis, ouvre les 60 épisodes aux niveaux Standard et Expert, et le profil décisionnel qu'ils construisent.",
   "messageNiveauxReserves": "Les niveaux 4 à 6 sont inclus dans les offres Classe, Programme et Campus.",
   "ARGUMENTS_POUR_LES_ECOLES": [
     {
       "titre": "Des traces pour l'accréditation",
-      "texte": "Pour l'assurance of learning (AACSB, EQUIS). Dans l'arène, le relevé s'exporte en tableur, une ligne par étudiant : note sur 20, diagnostic, questions, rang, indice de performance globale ; la maîtrise des notions se lit partie par partie. Le relevé ne suit pas la grille de compétences de votre école : il se reprend dans la vôtre. Les épisodes manager, eux, mesurent un profil de compétences."
+      "texte": "Pour l'assurance of learning (AACSB, EQUIS). Dans l'arène, le relevé s'exporte en tableur, une ligne par élève : note sur 20, diagnostic, questions, rang, indice de performance globale ; la maîtrise des notions se lit partie par partie. Le relevé ne suit pas la grille de compétences de votre école : il se reprend dans la vôtre. Les épisodes manager, eux, mesurent un profil de compétences."
     },
     {
       "titre": "Séminaires et compétitions",

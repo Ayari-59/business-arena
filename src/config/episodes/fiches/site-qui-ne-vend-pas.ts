@@ -120,7 +120,7 @@ export const FICHE: FicheEnseignant = {
       decision: 1,
       option: 2,
       pourquoi:
-        "Si les agences freinent, autant les contourner : un e-mailing direct aux artisans, avec 5 % de remise, amène des visites dès la semaine 4.",
+        "Si les agences freinent, autant les contourner : une campagne de courriels directe aux artisans, avec 5 % de remise, amène des visites dès la semaine 4.",
       ceQuiLeDejoue:
         "Les agences sont le canal qui amène les artisans : 85 % des commandes en ligne viennent de leurs clients. Les contourner les dresse contre le site, et la remise est payée sur des commandes que ces clients auraient passées. Attribuer chaque vente en ligne à l'agence du client coûte 2 % du chiffre d'affaires en ligne, et fait dire au directeur d'agence que ses vendeurs donneront l'adresse du site à chaque client. Rejoué sur les trente tirages à la place de l'attribution, le contournement perd 50,8 k€ en moyenne et ne fait jamais mieux.",
     },

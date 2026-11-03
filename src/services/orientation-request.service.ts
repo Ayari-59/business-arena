@@ -153,7 +153,7 @@ export function texteDuCourriel(d: DemandeOrientation, reco: Recommandation): { 
     `Demande de simulation reçue depuis business-arena.fr/orientation.`,
     "",
     `De : ${d.name.trim()} · ${d.school.trim()}`,
-    `E-mail : ${d.email.trim()}`,
+    `Adresse électronique : ${d.email.trim()}`,
     "",
     `Diplôme : ${diplome}`,
     `Moment de l'année : ${libelleSemestre(d.semestre).toLowerCase()}`,

@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getGuestUserId } from "@/lib/guest";
@@ -8,7 +9,7 @@ import { bouton } from "@/components/bouton";
 
 export const dynamic = "force-dynamic";
 
-export default async function PlayerCompetitionPage({
+async function PlayerCompetitionPage({
   params,
 }: {
   params: Promise<{ competitionId: string }>;
@@ -51,3 +52,5 @@ export default async function PlayerCompetitionPage({
     </main>
   );
 }
+
+export default avecTypographie(PlayerCompetitionPage);

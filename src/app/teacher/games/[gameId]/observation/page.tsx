@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
@@ -106,7 +107,7 @@ function Barre({
   );
 }
 
-export default async function ObservationPage({
+async function ObservationPage({
   params,
 }: {
   params: Promise<{ gameId: string }>;
@@ -161,7 +162,7 @@ export default async function ObservationPage({
       {clos.length === 0 ? (
         <p className="rounded-lg border border-white/5 bg-slate-950 px-3 py-4 text-sm text-slate-400">
           Aucun tour n&apos;est encore clos. Ces mesures apparaîtront dès la première
-          clôture — elles se lisent sur des tours terminés, jamais sur un tour en cours.
+          clôture : elles se lisent sur des tours terminés, jamais sur un tour en cours.
         </p>
       ) : (
         <>
@@ -284,7 +285,7 @@ export default async function ObservationPage({
             <strong className="text-slate-100">Par défaut</strong> est la mesure la plus dure
             du lot. Le prix et le volume arrivent pré-remplis : une équipe qui valide sans y
             toucher n&apos;a pas décidé, elle a cliqué. Au-delà d&apos;un quart des décisions,
-            l&apos;arène occupe la classe au lieu de lui apprendre quelque chose — et le
+            l&apos;arène occupe la classe au lieu de lui apprendre quelque chose, et le
             classement, lui, ne le dira jamais.
           </p>
           <p>
@@ -295,7 +296,7 @@ export default async function ObservationPage({
           <p>
             <strong className="text-slate-100">Minutes</strong> est une médiane, pas une
             moyenne : une seule équipe qui finit chez elle le soir décalerait une moyenne de
-            classe. Le premier tour coûte toujours plus cher que les suivants — c&apos;est le
+            classe. Le premier tour coûte toujours plus cher que les suivants : c&apos;est le
             prix de la mise en route, et c&apos;est lui qu&apos;il faut comparer d&apos;une
             classe à l&apos;autre.
           </p>
@@ -311,3 +312,5 @@ export default async function ObservationPage({
     </main>
   );
 }
+
+export default avecTypographie(ObservationPage);

@@ -2,7 +2,8 @@ import { ATELIERS } from "./ateliers";
 import { CHAPITRES } from "./cours/registre";
 import { dureeDuChapitre, dureeEnClair } from "./cours/duree";
 import { SITUATIONS } from "./cours/situations";
-import { NOMBRE_D_EPISODES } from "./episodes/familles";
+import { DECISIONS_PAR_EPISODE, NOMBRE_D_EPISODES } from "./episodes/familles";
+import { DANS_LE_SUPERIEUR } from "./episodes/public-des-episodes";
 import { coursDeLaFormation } from "./couverture";
 import { FORMATIONS } from "./formations";
 
@@ -83,8 +84,9 @@ export function briques(): readonly Brique[] {
       geste: "Agir en situation",
       nom: "Les épisodes manager",
       texte:
-        "Un rôle, un trimestre, six décisions : enquêter, juger, agir avec les autres, puis lire un bilan qui sépare la qualité de la décision de la part de chance.",
-      forme: "Seul ou en binôme, un trimestre en six décisions",
+        `Un rôle, un trimestre, ${DECISIONS_PAR_EPISODE} décisions : enquêter, juger, agir avec les autres, puis lire un bilan qui sépare la qualité de la décision de la part de chance.`,
+      // Le public, sur la règle de config/episodes/public-des-episodes.ts : dans l'enseignement supérieur.
+      forme: `Seul ou en binôme, un trimestre en ${DECISIONS_PAR_EPISODE} décisions, ${DANS_LE_SUPERIEUR}`,
       compte: `${NOMBRE_D_EPISODES} épisodes`,
       lien: { href: "/enseignants/episodes", libelle: "Les épisodes en classe" },
       essai: { href: "/entreprises/episode", libelle: "Les épisodes de démonstration" },

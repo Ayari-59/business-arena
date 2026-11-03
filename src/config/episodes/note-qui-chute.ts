@@ -149,7 +149,7 @@ export const ETAPES: readonly Etape[] = [
     options: [
       {
         t: "Répondre à chaque avis négatif avec un geste commercial, et relancer tous les clients pour qu'ils notent",
-        d: `Un avoir de ${euros(COUTS.gesteAvis)} par avis négatif, un e-mail aux clients des trois derniers mois et à chaque client au départ. Quelques centaines d'euros par semaine.`,
+        d: `Un avoir de ${euros(COUTS.gesteAvis)} par avis négatif, un courriel aux clients des trois derniers mois et à chaque client au départ. Quelques centaines d'euros par semaine.`,
       },
       {
         t: "Faire remettre en état les climatiseurs des chambres côté gare",
@@ -592,11 +592,11 @@ export const ETAPES: readonly Etape[] = [
     options: [
       {
         t: "Relancer tous les clients de l'été pour qu'ils laissent un avis",
-        d: `Un e-mail à chaque client depuis juin. ${euros(COUTS.relance)}.`,
+        d: `Un courriel à chaque client depuis juin. ${euros(COUTS.relance)}.`,
       },
       {
         t: "Demander un avis à chaque client au départ, à partir de maintenant",
-        d: "Un mot à la réception et un e-mail le lendemain du séjour, sans contrepartie. Aucun coût.",
+        d: "Un mot à la réception et un courriel le lendemain du séjour, sans contrepartie. Aucun coût.",
       },
       {
         t: "Lancer une promotion de fin d'été : 10 % sur toutes les nuits jusqu'à fin août",
@@ -619,7 +619,7 @@ export const ETAPES: readonly Etape[] = [
         {
           ...ILIAS,
           texte:
-            "À chaque départ, on demande un avis, et l'e-mail part le lendemain. Les clients côté cour sont ravis de le donner.",
+            "À chaque départ, on demande un avis, et le courriel part le lendemain. Les clients côté cour sont ravis de le donner.",
         },
       ],
       [

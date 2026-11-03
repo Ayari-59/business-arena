@@ -80,7 +80,7 @@ export function DilemmaCard({
           réponse à cocher. Le paragraphe qu'il remplace disait la même chose en
           trois fois plus de mots. */}
       <p className="mt-2.5 text-xs text-slate-400">
-        Aucune n&apos;est la bonne réponse — le marché tranchera au tour suivant.
+        Aucune n&apos;est la bonne réponse : le marché tranchera au tour suivant.
       </p>
     </div>
   );

@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -131,7 +132,7 @@ function etatDuCode(c: CodePromo, maintenant: Date): string {
 /** Le jour de fin d'un code (sa fin est exclusive : le lendemain à minuit). */
 const dernierJour = (fin: Date | null) => (fin ? utcToParisLocalInput(new Date(fin.getTime() - 1)).slice(0, 10) : "");
 
-export default async function AdminOffresPage({
+async function AdminOffresPage({
   searchParams,
 }: {
   searchParams: Promise<{ offre?: string; code?: string; fait?: string; erreur?: string; section?: string; cle?: string }>;
@@ -786,3 +787,5 @@ function resumeDuChangement(avant: unknown, apres: unknown): string {
     : "";
   return `${prix} · ${cles.filter((k) => k !== "prixCents").join(", ")}`.replace(/ · $/, "");
 }
+
+export default avecTypographie(AdminOffresPage);

@@ -10,7 +10,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
  * moteur passaient : la trace ne recopiait que des clés listées. Ce test
  * crée une partie NOVA · gamme au niveau qui ouvre la R&D, finance la Studio
  * avec un axe qualité, et vérifie ce que la vue rend ; puis une partie
- * ATLAS CONSEIL · gamme au même niveau, dont la cyber-sécurité se bâtit elle
+ * ATLAS CONSEIL · gamme au même niveau, dont la cybersécurité se bâtit elle
  * aussi à coups de R&D.
  */
 
@@ -41,7 +41,7 @@ beforeAll(async () => {
   // gardée par acces-sans-licence.test.ts).
   await placerSousLicence(userId);
   // Niveau 5 (Stratégie) : la R&D est ouverte (depuis octobre 2026). La Studio de
-  // NOVA y est le prototype à financer, comme la cyber-sécurité d'ATLAS CONSEIL.
+  // NOVA y est le prototype à financer, comme la cybersécurité d'ATLAS CONSEIL.
   gameId = await createSoloGame(userId, "quarter", 3, 5, false, "nova-gamme");
   conseilId = await createSoloGame(userId, "quarter", 3, 5, false, "conseil-gamme");
 });
@@ -117,7 +117,7 @@ describe("NOVA · gamme dans l'arène", () => {
 });
 
 describe("une référence à bâtir dans l'arène (ATLAS CONSEIL · gamme, niveau 5)", () => {
-  it("la vue expose la cyber-sécurité en développement, et le cockpit la prévoit", async () => {
+  it("la vue expose la cybersécurité en développement, et le cockpit la prévoit", async () => {
     const view = (await getGameView(conseilId, userId))!;
     const cyber = view.gamme!.find((p) => p.code === "cyber")!;
     expect(cyber.rd?.development).toEqual({
@@ -130,7 +130,7 @@ describe("une référence à bâtir dans l'arène (ATLAS CONSEIL · gamme, nivea
     expect(view.proposedDecisions.products!["cyber"]!.rdBudget).toBe(0);
     const cockpit = (await cockpitEquipe(view))!;
     const parametres = cockpit.feuilles[0]!;
-    expect(parametres.lignes.find((l) => l[0]?.v === "Déjà engagé avant le tour 1 · Cyber-sécurité")![1]!.v).toBe(0);
+    expect(parametres.lignes.find((l) => l[0]?.v === "Déjà engagé avant le tour 1 · Cybersécurité")![1]!.v).toBe(0);
     expect(JSON.stringify(cockpit)).toContain("Vendable ce tour");
   });
 

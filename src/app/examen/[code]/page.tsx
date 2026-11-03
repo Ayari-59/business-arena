@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -42,7 +43,7 @@ export const dynamic = "force-dynamic";
 const heure = (d: Date) =>
   d.toLocaleString("fr-FR", { timeZone: "Europe/Paris", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
 
-export default async function ExamenDuCandidatPage({
+async function ExamenDuCandidatPage({
   params,
   searchParams,
 }: {
@@ -191,3 +192,5 @@ export default async function ExamenDuCandidatPage({
     </main>
   );
 }
+
+export default avecTypographie(ExamenDuCandidatPage);

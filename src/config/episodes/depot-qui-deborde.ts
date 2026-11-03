@@ -544,7 +544,7 @@ export const ETAPES: readonly Etape[] = [
         cout: 0.5,
         nature: "decisive",
         resultat:
-          "La liste tient sur quatre pages : 140 références, presque toutes des A et des B — plaques, rails, fixations, isolants — avec les quantités semaine par semaine. Aucune référence C.",
+          "La liste tient sur quatre pages : 140 références, presque toutes des A et des B (plaques, rails, fixations, isolants) avec les quantités semaine par semaine. Aucune référence C.",
       },
     ],
     question: "Comment préparez-vous le dépôt ?",

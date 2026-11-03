@@ -47,7 +47,7 @@ const avecContrat = (ctx: Contexte) => ctx.statut === "signe" || ctx.statut === 
 export const DIAGNOSTICS = [
   {
     id: "dependance",
-    t: "Le volume a de la valeur, mais il crée une dépendance : il faut chiffrer ce qu'elle coûte — clients exclus, actifs dédiés, pouvoir de Sarlève à la revue des prix — et négocier les clauses qui la bornent",
+    t: "Le volume a de la valeur, mais il crée une dépendance : il faut chiffrer ce qu'elle coûte (clients exclus, actifs dédiés, pouvoir de Sarlève à la revue des prix) et négocier les clauses qui la bornent",
   },
   {
     id: "marge",
@@ -97,7 +97,7 @@ export const ETAPES: readonly Etape[] = [
         cout: 1,
         nature: "decisive",
         resultat:
-          "5 M€ HT d'achats par an pendant trois ans, aux prix du groupe : 8 % de marge sur coût variable, contre 11 % pour nos grands comptes. Une cellule dédiée — un chargé d'affaires, deux préparateurs, un camion-grue loué, une zone réservée au dépôt de Corbas — : 150 k€ par an, fixes. 400 k€ de stock dédié avant les premières livraisons. Paiement à 60 jours, contre 30 pour nos grands comptes. Exclusivité réciproque pendant toute la durée du contrat : Arvel ne livre plus Moulinier Construction ni Batival. Les prix sont révisés chaque année d'un commun accord ; à défaut d'accord, chaque partie peut résilier avec trois mois de préavis. Les volumes sont indicatifs.",
+          "5 M€ HT d'achats par an pendant trois ans, aux prix du groupe : 8 % de marge sur coût variable, contre 11 % pour nos grands comptes. Une cellule dédiée (un chargé d'affaires, deux préparateurs, un camion-grue loué, une zone réservée au dépôt de Corbas) : 150 k€ par an, fixes. 400 k€ de stock dédié avant les premières livraisons. Paiement à 60 jours, contre 30 pour nos grands comptes. Exclusivité réciproque pendant toute la durée du contrat : Arvel ne livre plus Moulinier Construction ni Batival. Les prix sont révisés chaque année d'un commun accord ; à défaut d'accord, chaque partie peut résilier avec trois mois de préavis. Les volumes sont indicatifs.",
       },
       {
         id: "chiffrage",

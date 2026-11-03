@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import {
   BANDE_DU_PLI,
   MENTION_DU_PLI,
@@ -94,7 +95,7 @@ function VisageDeLExpediteur({ expediteur, className }: { expediteur: string; cl
  * ce partage qui garantit que le pli distribué en classe est le même que celui
  * que l'élève ouvre dans l'arène.
  */
-export function Enveloppe({
+function EnveloppeBrut({
   code,
   liasse,
   destinataire,
@@ -224,7 +225,7 @@ export function Enveloppe({
  * sujet, pour dire quoi. Une note de service, elle, n'en porte aucune : on
  * n'écrit pas « Madame, Monsieur » à son propre atelier.
  */
-export function Lettre({
+function LettreBrut({
   code,
   annonce = false,
   destinataire,
@@ -405,7 +406,7 @@ export function Lettre({
  * Il porte l'heure plutôt qu'un cachet, parce qu'un courriel arrive dans la
  * journée quand une lettre arrive dans la semaine.
  */
-export function Courriel({
+function CourrielBrut({
   code,
   destinataire,
   adresse,
@@ -506,7 +507,7 @@ export function Courriel({
  * l'heure. À la place, l'en-tête à étiquettes qui fait reconnaître un courriel
  * de loin, et une mention qui est la vraie leçon du canal : il ne prouve rien.
  */
-export function Message({
+function MessageBrut({
   code,
   annonce = false,
   destinataire,
@@ -700,7 +701,7 @@ export function grilleDeCourriers(nombre: number, mise: "rangee" | "posee" = "ra
  * Elle ne se pose que si la place le permet (globals.css, « LOT P7 ») : sur
  * téléphone et à côté de deux plis, aucune.
  */
-export function EnveloppeOuverte({
+function EnveloppeOuverteBrut({
   code,
   destinataire,
   adresse,
@@ -785,7 +786,7 @@ export function EnveloppeOuverte({
 }
 
 /** Le pli distribué : l'enveloppe, puis la lettre qui en sort. */
-export function CourrierRecommande({
+function CourrierRecommandeBrut({
   code,
   delayMs = 0,
   annonce = false,
@@ -877,3 +878,10 @@ export function CourrierRecommande({
     </div>
   );
 }
+
+export const Enveloppe = avecTypographie(EnveloppeBrut);
+export const Lettre = avecTypographie(LettreBrut);
+export const Courriel = avecTypographie(CourrielBrut);
+export const Message = avecTypographie(MessageBrut);
+export const EnveloppeOuverte = avecTypographie(EnveloppeOuverteBrut);
+export const CourrierRecommande = avecTypographie(CourrierRecommandeBrut);

@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -62,7 +63,7 @@ const jour = (d: Date) =>
  *
  * Une cohorte qui n'est pas celle de l'enseignant connecté n'existe pas pour lui : 404.
  */
-export default async function MaCohortePage({
+async function MaCohortePage({
   params,
   searchParams,
 }: {
@@ -275,3 +276,5 @@ export default async function MaCohortePage({
     </main>
   );
 }
+
+export default avecTypographie(MaCohortePage);

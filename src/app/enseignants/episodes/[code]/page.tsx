@@ -1,8 +1,10 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PiedDePage } from "@/components/pied-de-page";
 import { ficheParCode, hasardDeLaClasse, lienDeLaClasse } from "@/config/episodes/fiches";
+import { PUBLIC_DES_EPISODES } from "@/config/episodes/public-des-episodes";
 import { dureeEnClair } from "@/config/cours/duree";
 import { formatNombre } from "@/lib/format";
 import { formationParCode } from "@/config/formations";
@@ -46,7 +48,7 @@ export async function generateMetadata({
  * font parler. Le corrigé et les réflexes sont ceux du modèle de l'épisode :
  * un test le vérifie.
  */
-export default async function FichePage({ params }: { params: Promise<{ code: string }> }) {
+async function FichePage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
   const fiche = ficheParCode(code);
   const ep = episodeParCode(code);
@@ -75,8 +77,15 @@ export default async function FichePage({ params }: { params: Promise<{ code: st
           <h1 className="mt-2 text-4xl font-bold leading-tight tracking-tight text-slate-50 sm:text-5xl">
             {ep.titre}
           </h1>
-          <p className="mt-4 text-base text-slate-400">
-            {fiche.formations.map((c) => formationParCode(c)?.nom ?? c).join(" · ")}
+          {fiche.formations.length > 0 ? (
+            <p className="mt-4 text-base text-slate-400">
+              {fiche.formations.map((c) => formationParCode(c)?.nom ?? c).join(" · ")}
+            </p>
+          ) : null}
+          {/* Le public des épisodes (config/episodes/public-des-episodes.ts) : le registre des
+              fiches n'annonce que les formations de l'enseignement supérieur. */}
+          <p className="mt-2 text-sm text-slate-400" data-public-des-episodes="">
+            {PUBLIC_DES_EPISODES}
           </p>
           <ul className="mt-2 text-sm text-slate-400">
             {fiche.programme.map((p) => (
@@ -273,3 +282,5 @@ function Section({ titre, children }: { titre: string; children: React.ReactNode
     </section>
   );
 }
+
+export default avecTypographie(FichePage);

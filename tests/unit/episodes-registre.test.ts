@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { EPISODES, episodeParCode } from "../../src/pedagogy/episodes/registre";
 import { GRAINES_DU_BILAN } from "../../src/engine/episodes/commun";
+import { DECISIONS_PAR_EPISODE } from "@/config/episodes/familles";
 
 /**
  * Le registre des épisodes : chacun doit pouvoir être joué par l'interface
@@ -22,7 +23,7 @@ describe("le registre des épisodes", () => {
   for (const ep of EPISODES) {
     describe(ep.titre, () => {
       it("a six décisions sur treize semaines, dans l'ordre", () => {
-        expect(ep.etapes).toHaveLength(6);
+        expect(ep.etapes).toHaveLength(DECISIONS_PAR_EPISODE);
         expect(ep.neutre).toHaveLength(ep.etapes.length);
         expect(ep.etapes.at(-1)!.jusqua).toBe(13);
         for (let i = 1; i < ep.etapes.length; i += 1) {

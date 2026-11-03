@@ -181,7 +181,7 @@ function recapitulatif(d: DemandeDeDevis, montants = true): string[] {
     d.effectif !== null ? `${l.effectif ?? "Effectif"} : ${d.effectif}` : null,
     ...(d.promo ? lignesDuCodePromo(d.promo, montants) : []),
     `Demandé par : ${d.nom.trim()}, ${d.fonction.trim()}`,
-    `E-mail : ${d.email.trim()}`,
+    `Adresse électronique : ${d.email.trim()}`,
     "",
     "Message :",
     d.message.trim() || "(rien d'ajouté)",

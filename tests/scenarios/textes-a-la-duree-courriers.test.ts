@@ -28,6 +28,7 @@ import { BandeauCourriers } from "@/components/bandeau-courriers";
 import { aleasDuTour } from "@/components/lecture-du-resultat";
 import type { CompanyRoundResult, EngineScenarioConfig } from "@/engine/types";
 import { corrigerLesDates } from "./corrections-des-dates";
+import { espacesOrdinaires } from "@/lib/typographie";
 
 /**
  * LE TEXTE D'UN COURRIER SUIT LA DURÉE DU TOUR DE SA PARTIE.
@@ -76,7 +77,7 @@ const CORRECTIONS: { code: string; avant: string; apres: string }[] = [
     avant:
       "Notre autocar est immobilisé sur l'autoroute à la suite d'une avarie. Quarante passagers doivent être logés ce soir. Nous réglons comptant à l'arrivée, dans la limite des chambres que vous pourrez libérer.",
     apres:
-      "L'hôtel qui accueillait nos circuits ferme ses portes après un dégât des eaux. Nos groupes doivent être relogés sans attendre : quatre cents nuitées ce trimestre, que nous réglons comptant à l'arrivée, dans la limite des chambres que vous pourrez libérer.",
+      "L'hôtel qui accueillait nos circuits ferme ses portes après un dégât des eaux. Nos groupes doivent être relogés sans attendre : 400 nuitées ce trimestre, que nous réglons comptant à l'arrivée, dans la limite des chambres que vous pourrez libérer.",
   },  // Le moteur applique la hausse de 24 % à toutes les denrées du bistrot
   // (`bistrot_matieres_premieres`) : la moitié des commandes n'en aurait fait que 12 %.
   {
@@ -119,31 +120,31 @@ const unites = (s: EngineScenarioConfig, code: string) =>
  * les mots ne sont pas recopiés d'une sortie, ils disent le nombre du moteur.
  */
 const COMMANDES: Record<string, Partial<Record<Periodicity, [number, string]>>> = {
-  tight_order: { month: [167, "cent soixante-sept unités"], quarter: [500, "cinq cents unités"], year: [2000, "deux mille unités"] },
+  tight_order: { month: [167, "167 unités"], quarter: [500, "500 unités"], year: [2000, "2 000 unités"] },
   xxl_order: {
-    month: [833, "huit cent trente-trois de vos enceintes"],
-    quarter: [2500, "deux mille cinq cents de vos enceintes"],
-    year: [10000, "dix mille de vos enceintes"],
+    month: [833, "833 de vos enceintes"],
+    quarter: [2500, "2 500 de vos enceintes"],
+    year: [10000, "10 000 de vos enceintes"],
   },
-  big_order: { month: [200, "deux cents unités"], quarter: [600, "six cents unités"], year: [2400, "deux mille quatre cents unités"] },
+  big_order: { month: [200, "200 unités"], quarter: [600, "600 unités"], year: [2400, "2 400 unités"] },
   boutique_commande_ce: {
-    month: [167, "cent soixante-sept salariés"],
-    quarter: [500, "cinq cents salariés"],
-    year: [2000, "deux mille salariés"],
+    month: [167, "167 salariés"],
+    quarter: [500, "500 salariés"],
+    year: [2000, "2 000 salariés"],
   },
   conseil_mission_urgente: { month: [23, ""], quarter: [70, ""], year: [280, ""] },
   hotel_groupe_impromptu: {
-    month: [133, "cent trente-trois nuitées ce mois-ci"],
-    quarter: [400, "quatre cents nuitées ce trimestre"],
-    year: [1600, "mille six cents nuitées cet exercice"],
+    month: [133, "133 nuitées ce mois-ci"],
+    quarter: [400, "400 nuitées ce trimestre"],
+    year: [1600, "1 600 nuitées cet exercice"],
   },
-  ecom_commande_b2b: { month: [233, "deux cent trente-trois articles"], quarter: [700, "sept cents articles"], year: [2800, "deux mille huit cents articles"] },
+  ecom_commande_b2b: { month: [233, "233 articles"], quarter: [700, "700 articles"], year: [2800, "2 800 articles"] },
   batiment_chantier_surprise: { month: [60, ""], quarter: [180, ""], year: [720, ""] },
   transport_lot_surprise: { month: [300, "Trois cents palettes"], quarter: [900, "Neuf cents palettes"], year: [3600, "Trois mille six cents palettes"] },
-  bistrot_banquet_surprise: { month: [73, "soixante-treize couverts"], quarter: [220, "deux cent vingt couverts"], year: [880, "huit cent quatre-vingts couverts"] },
+  bistrot_banquet_surprise: { month: [73, "73 couverts"], quarter: [220, "220 couverts"], year: [880, "880 couverts"] },
   // Par abonnement, les adhérents d'une commande ne dépendent pas de la durée du tour
   // (tests/engine/commande-par-abonnement.test.ts) : seul le prix d'un tour la suit.
-  fitness_contrat_surprise: { month: [200, "deux cents salariés"], quarter: [200, "deux cents salariés"], year: [200, "deux cents salariés"] },
+  fitness_contrat_surprise: { month: [200, "200 salariés"], quarter: [200, "200 salariés"], year: [200, "200 salariés"] },
 };
 
 describe("chaque courrier se rend à la durée du tour de sa partie", () => {
@@ -228,10 +229,10 @@ describe("chaque courrier se rend à la durée du tour de sa partie", () => {
   it("au mois, l'accord-cadre du récit est mis à la durée du tour, et les mots aussi", () => {
     // Un chiffre du seul récit, écrit par trimestre : `flux(…)`, comme le moteur met ses flux.
     expect(courrierDeLaPartie("conseil_inv_grand_compte", { jours: 30 })!.corps).toContain(
-      "pour les neuf mois à venir, réservé aux cabinets référencés de la région : environ soixante-sept jours d'audit et d'accompagnement par mois",
+      "pour les neuf mois à venir, réservé aux cabinets référencés de la région : environ 67 jours d'audit et d'accompagnement par mois",
     );
     expect(courrierDeLaPartie("conseil_inv_grand_compte", { jours: 360 })!.corps).toContain(
-      "environ huit cents jours d'audit et d'accompagnement par an",
+      "environ 800 jours d'audit et d'accompagnement par an",
     );
     expect(courrierDeLaPartie("routine_situation_comptable", { jours: 30 })!.objet).toBe(
       "Situation intermédiaire au terme du mois",
@@ -282,12 +283,12 @@ describe("chaque courrier se rend à la durée du tour de sa partie", () => {
 
 describe("chaque chemin d'affichage rend le courrier de SA partie", () => {
   const html = (el: ReturnType<typeof createElement>) =>
-    renderToStaticMarkup(el).replace(/&#x27;/g, "'").replace(/&amp;/g, "&");
+    espacesOrdinaires(renderToStaticMarkup(el).replace(/&#x27;/g, "'").replace(/&amp;/g, "&"));
 
   it("la lettre, le courriel, l'enveloppe posée et le pli distribué", () => {
     const lettre = html(createElement(Lettre, { code: "tight_order", jours: 30 }));
     expect(lettre).toContain("+167 unités à 55 €/u imposés (échelle mois)");
-    expect(lettre).toContain("Proposition de commande ferme — 167 unités");
+    expect(lettre).toContain("Proposition de commande ferme : 167 unités");
     expect(lettre).not.toMatch(/trimestr/i);
     // Sans durée, le texte au trimestre : un appelant oublié montre le texte d'hier.
     expect(html(createElement(Lettre, { code: "tight_order" }))).toContain("+500 unités à 55 €/u imposés (échelle trimestre)");

@@ -5,7 +5,7 @@
     "À l'issue de l'audit conduit dans vos locaux, le comité de labellisation a retenu votre candidature. Le label vous est attribué pour trois ans et peut être apposé sur vos supports commerciaux. Il sera réexaminé si vos engagements venaient à faiblir.",
     "La présidente du comité",
     "Attractivité renforcée pendant plusieurs tours",
-    "Un capital de marque se construit lentement — l'engagement RSE d'hier soutient la demande d'aujourd'hui."
+    "Un capital de marque se construit lentement : l'engagement RSE d'hier soutient la demande d'aujourd'hui."
   ],
   "rse_bad_buzz": [
     "Rédaction du quotidien régional · Service enquêtes",
@@ -20,7 +20,7 @@
     "Notification de sanction administrative",
     "Le contrôle inopiné du mois écoulé a établi un écart entre vos déclarations et la situation constatée sur site. Une amende administrative vous est notifiée, exigible sous trente jours. Les voies et délais de recours figurent au verso.",
     "L'inspectrice des installations classées",
-    "Amende — charge exceptionnelle ce tour",
+    "Amende : charge exceptionnelle ce tour",
     "Le risque RSE n'est pas que d'image : la réglementation a un coût, comptabilisé hors exploitation."
   ],
   "rse_subvention": [
@@ -28,7 +28,7 @@
     "Décision d'attribution d'une aide à l'investissement propre",
     "Votre dossier a été retenu au titre du soutien aux procédés sobres. L'aide sera versée en une fois, sur justification de la dépense engagée. Elle constitue une subvention d'exploitation et devra être comptabilisée comme telle.",
     "La directrice régionale",
-    "Aide — produit exceptionnel ce tour",
+    "Aide : produit exceptionnel ce tour",
     "L'investissement responsable peut être cofinancé : une subvention améliore le résultat hors exploitation."
   ],
   "raw_material_spike": [
@@ -65,7 +65,7 @@
   ],
   "economic_downturn": [
     "Observatoire régional de la consommation",
-    "Note de conjoncture — recul de la consommation des ménages",
+    "Note de conjoncture : recul de la consommation des ménages",
     "Le pouvoir d'achat recule pour le deuxième trimestre consécutif. Les achats d'équipement non indispensable sont les premiers reportés : notre panel enregistre une baisse de dix pour cent sur l'électronique de loisir.",
     "Le directeur d'études",
     "Demande globale −10 % pendant 2 tours",
@@ -121,7 +121,7 @@
   ],
   "cold_wave": [
     "Préfecture · Cellule de crise départementale",
-    "Épisode de grand froid — restrictions de circulation",
+    "Épisode de grand froid : restrictions de circulation",
     "Un épisode de froid intense frappe la région pour plusieurs jours. La circulation des poids lourds est restreinte, les livraisons sont retardées et les ateliers non chauffés doivent réduire leur activité.",
     "Le directeur de cabinet",
     "Disponibilité machine −10 % ce tour (tout le marché)",
@@ -153,7 +153,7 @@
   ],
   "bank_penalties": [
     "Banque Régionale du Nord · Service des incidents de paiement",
-    "Mise en demeure — dépassements répétés de votre autorisation",
+    "Mise en demeure : dépassements répétés de votre autorisation",
     "Votre compte a présenté un solde débiteur non autorisé à cinq reprises ce trimestre. Nous vous mettons en demeure de régulariser ; dans l'intervalle, les commissions d'intervention et le taux majoré s'appliquent à l'ensemble de vos encours.",
     "Le responsable du service",
     "Charges d'intérêts ×1,4 pendant 2 tours (équipe ciblée)",
@@ -185,7 +185,7 @@
   ],
   "cyberattack": [
     "Axone Informatique · Cellule de sécurité",
-    "Incident de sécurité — chiffrement de votre gestion de production",
+    "Incident de sécurité : chiffrement de votre gestion de production",
     "Un rançongiciel a chiffré vos serveurs de production dans la nuit. Nous écartons toute négociation avec les attaquants et restaurons depuis les dernières sauvegardes. L'atelier fonctionnera en mode dégradé jusqu'au rétablissement.",
     "Le responsable de la sécurité",
     "Disponibilité machine −12 % ce tour (équipe ciblée)",
@@ -193,8 +193,8 @@
   ],
   "tight_order": [
     "Centrale d'achat Priméo · Approvisionnements",
-    "Proposition de commande ferme — 500 unités",
-    "Nous vous proposons cinq cents unités au prix unitaire de cinquante-cinq euros, livrables sur le trimestre. Ce prix est ferme et non négociable ; la même proposition est faite à deux autres fabricants. Votre réponse nous est acquise sous huitaine.",
+    "Proposition de commande ferme : 500 unités",
+    "Nous vous proposons 500 unités au prix unitaire de cinquante-cinq euros, livrables sur le trimestre. Ce prix est ferme et non négociable ; la même proposition est faite à deux autres fabricants. Votre réponse nous est acquise sous huitaine.",
     "Le directeur des approvisionnements",
     "+500 unités à 55 €/u imposés (échelle trimestre), dans la limite du stock",
     "55 € couvre-t-il votre coût variable ? Les coûts pertinents décident, pas l'habitude."
@@ -202,26 +202,26 @@
   "xxl_order": [
     "Plateforme Vendora · Direction des achats",
     "Commande ferme de 2 500 unités pour notre opération de fin d'année",
-    "Notre opération de fin d'année portera sur deux mille cinq cents de vos enceintes, au prix unitaire de soixante et un euros. Nous savons votre atelier plus petit que ce volume : la sous-traitance est admise, à la condition que la qualité et les délais soient tenus. La commande ferme sera signée dès réception de votre accord.",
+    "Notre opération de fin d'année portera sur 2 500 de vos enceintes, au prix unitaire de soixante et un euros. Nous savons votre atelier plus petit que ce volume : la sous-traitance est admise, à la condition que la qualité et les délais soient tenus. La commande ferme sera signée dès réception de votre accord.",
     "Le directeur des achats",
     "+2 500 unités à 61 €/u (échelle trimestre), sous-traitance possible à 52 €/u",
     "Sous-traiter à 52 pour vendre à 61, ou investir en capacité ? L'arbitrage make or buy en vrai."
   ],
   "big_order": [
     "Groupe hôtelier Rivages · Direction des achats",
-    "Équipement de nos chambres — commande ferme de 600 unités",
-    "Nous équipons l'ensemble de nos chambres d'enceintes nomades et retenons votre modèle. La commande porte sur six cents unités, réglées comptant à la livraison, dans la limite de ce que vous pourrez livrer sur le trimestre.",
+    "Équipement de nos chambres : commande ferme de 600 unités",
+    "Nous équipons l'ensemble de nos chambres d'enceintes nomades et retenons votre modèle. La commande porte sur 600 unités, réglées comptant à la livraison, dans la limite de ce que vous pourrez livrer sur le trimestre.",
     "La directrice des achats",
     "+600 unités (échelle trimestre) vendues d'office ce tour, réglées comptant, dans la limite du stock",
     "Une opportunité ne se saisit qu'avec du stock ou de la capacité disponible : l'anticipation paie."
   ],
   "major_breakdown": [
     "Maintenance Legrand · Service après-vente",
-    "Rapport d'intervention — avarie majeure sur votre chaîne",
+    "Rapport d'intervention : avarie majeure sur votre chaîne",
     "Le roulement principal a cédé et endommagé l'entraînement de la chaîne. La pièce est à fabriquer : comptez deux trimestres avant le retour à la cadence nominale. Notre rapport relève l'absence de graissage périodique depuis la mise en service.",
     "Le responsable technique",
     "Disponibilité machine −30 % pendant 2 tours (une entreprise tirée au sort)",
-    "La maintenance préventive coûte. Ne pas la faire coûte bien plus — en capacité perdue et en ventes manquées."
+    "La maintenance préventive coûte. Ne pas la faire coûte bien plus, en capacité perdue et en ventes manquées."
   ],
   "tech_obsolescence": [
     "Électro-Composants Rhin · Direction technique",
@@ -233,7 +233,7 @@
   ],
   "used_equipment_deal": [
     "Étude Marchand · Commissaire-priseur judiciaire",
-    "Vente aux enchères d'une ligne de montage — liquidation SONOR",
+    "Vente aux enchères d'une ligne de montage : liquidation SONOR",
     "Dans le cadre de la liquidation de la société SONOR, une ligne de montage de six ans, révisée, est mise en vente. La mise à prix représente le quart de sa valeur à neuf. La vente a lieu sous quinzaine, sur place et par voie électronique.",
     "Le commissaire-priseur",
     "Disponibilité machine +12 % ce tour (équipe ciblée)",
@@ -257,7 +257,7 @@
   ],
   "nova_campus_tender": [
     "CampusTech · Direction des achats",
-    "Appel d'offres — référencement audio de la rentrée",
+    "Appel d'offres : référencement audio de la rentrée",
     "Notre enseigne renouvelle son rayon audio pour la rentrée et consulte quatre fabricants. Le marché porte sur l'ensemble de nos magasins. Nous rappelons que notre commission de référencement s'applique à chaque unité vendue.",
     "Le directeur des achats",
     "Demande du canal CampusTech +30 % ce tour",
@@ -321,7 +321,7 @@
   ],
   "boutique_travaux_voirie": [
     "Mairie · Direction de la voirie",
-    "Réfection de la chaussée — arrêté de circulation",
+    "Réfection de la chaussée : arrêté de circulation",
     "Les travaux de réfection débuteront lundi pour une durée de dix-huit mois. Les barrières de chantier seront installées au droit de votre vitrine et le stationnement supprimé sur toute la section.",
     "L'adjoint aux travaux",
     "Demande globale −18 % pendant 2 tours",
@@ -385,7 +385,7 @@
   ],
   "boutique_degat_des_eaux": [
     "Syndic Berthier · Gestion de copropriété",
-    "Déclaration de sinistre — dégât des eaux",
+    "Déclaration de sinistre : dégât des eaux",
     "Le chauffe-eau du logement situé au-dessus de votre local a fui durant la nuit. Le constat amiable est joint. La moitié de votre stock est déclarée impropre à la vente ; l'indemnisation dépendra de la garantie souscrite.",
     "Le gestionnaire d'immeuble",
     "Capacité −30 % et coût d'achat +10 % ce tour (une enseigne ciblée)",
@@ -393,7 +393,7 @@
   ],
   "boutique_degat_des_eaux (sans assurance)": [
     "Syndic Berthier · Gestion de copropriété",
-    "Déclaration de sinistre — dégât des eaux",
+    "Déclaration de sinistre : dégât des eaux",
     "Le chauffe-eau du logement situé au-dessus de votre local a fui durant la nuit. Le constat amiable est joint. La moitié de votre stock est déclarée impropre à la vente.",
     "Le gestionnaire d'immeuble",
     "Capacité −30 % et coût d'achat +10 % ce tour (une enseigne ciblée)",
@@ -417,8 +417,8 @@
   ],
   "boutique_commande_ce": [
     "CSE des Papeteries de la Lys",
-    "Commande ferme — 500 pulls pour notre arbre de Noël",
-    "Notre comité souhaite offrir un pull à chacun de nos cinq cents salariés. Nous retenons votre col rond et confirmons la commande ce jour, réglée comptant à l'enlèvement, dans la limite de ce que vous pourrez fournir.",
+    "Commande ferme : 500 pulls pour notre arbre de Noël",
+    "Notre comité souhaite offrir un pull à chacun de nos 500 salariés. Nous retenons votre col rond et confirmons la commande ce jour, réglée comptant à l'enlèvement, dans la limite de ce que vous pourrez fournir.",
     "Le secrétaire du comité",
     "+500 pulls col rond (échelle trimestre) vendus d'office ce tour, réglés comptant, dans la limite du stock",
     "L'opportunité ne se saisit qu'avec de la marchandise en réserve : le stock a un coût, et parfois une valeur."
@@ -481,7 +481,7 @@
   ],
   "boutique_greve_transporteur": [
     "Transporteur Delahaye · Direction",
-    "Mouvement social — suspension des livraisons",
+    "Mouvement social : suspension des livraisons",
     "Un mouvement social touche notre plateforme depuis lundi. Vos colis en provenance du façonnier restent à quai et seront livrés avec une semaine de retard au minimum. Nous vous prions de nous en excuser.",
     "Le directeur d'exploitation",
     "Mise en rayon −15 % ce tour",
@@ -561,7 +561,7 @@
   ],
   "hotel_greve_transports": [
     "Syndicat hôtelier départemental",
-    "Mouvement social dans les transports — conséquences sur nos réservations",
+    "Mouvement social dans les transports : conséquences sur nos réservations",
     "Le préavis couvre huit jours et concerne le rail comme l'aérien. Nos adhérents enregistrent déjà des annulations massives sur la clientèle affaires, qui ne peut plus rejoindre la ville.",
     "Le président du syndicat",
     "Demande de la clientèle affaires −28 % ce tour",
@@ -569,7 +569,7 @@
   ],
   "hotel_panne_chaudiere": [
     "Chauffage Delattre · Service d'urgence",
-    "Intervention sur votre chaudière — étage sans eau chaude",
+    "Intervention sur votre chaudière : étage sans eau chaude",
     "L'échangeur est percé et la pièce n'est pas en stock. L'étage desservi restera sans eau chaude trois jours au mieux. Nous vous confirmerons la date dès réception de la commande.",
     "Le responsable d'intervention",
     "Capacité −20 % ce tour (un établissement tiré au sort)",
@@ -577,7 +577,7 @@
   ],
   "hotel_meteo_radieuse": [
     "Office de tourisme · Observatoire des flux",
-    "Été indien — hausse des réservations de dernière minute",
+    "Été indien : hausse des réservations de dernière minute",
     "Trois semaines de beau temps hors saison sont annoncées sur toute la côte. Nos relevés montrent une poussée des réservations à moins de quarante-huit heures, à des prix supérieurs à la moyenne de saison.",
     "Le chargé d'observation",
     "Demande touristique +28 % ce tour",
@@ -601,7 +601,7 @@
   ],
   "hotel_degat_des_eaux": [
     "Assurances du Littoral · Service sinistres",
-    "Déclaration de sinistre — rupture de canalisation",
+    "Déclaration de sinistre : rupture de canalisation",
     "L'expert est passé : douze chambres sont hors service et les plafonds de l'étage inférieur sont à reprendre. La prise en charge de la perte d'exploitation dépend de la formule souscrite ; le détail figure à votre contrat.",
     "La gestionnaire de sinistres",
     "Capacité −32 % et coût variable +12 % ce tour (un établissement ciblé)",
@@ -609,7 +609,7 @@
   ],
   "hotel_degat_des_eaux (sans assurance)": [
     "Cabinet Ferrand · Expertise des dommages",
-    "Déclaration de sinistre — rupture de canalisation",
+    "Déclaration de sinistre : rupture de canalisation",
     "L'expert est passé : douze chambres sont hors service et les plafonds de l'étage inférieur sont à reprendre.",
     "L'expert",
     "Capacité −32 % et coût variable +12 % ce tour (un établissement ciblé)",
@@ -625,7 +625,7 @@
   ],
   "hotel_etoile_supplementaire": [
     "Commission de classement des hébergements touristiques",
-    "Décision de classement — attribution d'une étoile supplémentaire",
+    "Décision de classement : attribution d'une étoile supplémentaire",
     "À l'issue de la visite d'inspection, la commission relève la qualité des rénovations conduites et vous attribue une étoile supplémentaire. Le nouveau classement prend effet immédiatement et vaut pour cinq ans.",
     "La présidente de la commission",
     "Capacité commerciale +6 % pendant 2 tours (un établissement ciblé)",
@@ -697,7 +697,7 @@
   ],
   "hotel_congres": [
     "Société savante de cardiologie · Comité d'organisation",
-    "Congrès annuel — demande de contingent de chambres",
+    "Congrès annuel : demande de contingent de chambres",
     "Notre congrès réunira trois mille praticiens pendant quatre jours. Nous recherchons un contingent de chambres auprès de chaque établissement de la ville, la capacité disponible étant inférieure au besoin.",
     "La secrétaire générale",
     "Demande de la clientèle affaires +35 % ce tour",
@@ -713,7 +713,7 @@
   ],
   "hotel_legionelle": [
     "Agence régionale de santé · Service santé-environnement",
-    "Mise en demeure — présence de légionelles dans votre réseau d'eau",
+    "Mise en demeure : présence de légionelles dans votre réseau d'eau",
     "Les prélèvements effectués dépassent le seuil réglementaire. Nous vous mettons en demeure de fermer l'étage concerné et de procéder à la désinfection complète du réseau. Un contrôle de conformité sera diligenté avant toute réouverture.",
     "L'ingénieur sanitaire",
     "Chambres disponibles −40 % ce tour",
@@ -809,7 +809,7 @@
   ],
   "bistrot_matieres_premieres": [
     "Grossiste Vandamme · Direction commerciale",
-    "Révision de nos tarifs — beurre, crème et viande",
+    "Révision de nos tarifs : beurre, crème et viande",
     "La collecte laitière et les cours de la viande nous imposent une révision de vingt-quatre pour cent sur ces familles, qui représentent la moitié de vos commandes habituelles. Le nouveau barème court sur deux trimestres.",
     "Le directeur commercial",
     "Coût matières +24 % pendant 2 tours",
@@ -833,7 +833,7 @@
   ],
   "bistrot_degat_des_eaux": [
     "Assurances du Littoral · Service sinistres",
-    "Déclaration de sinistre — inondation de votre cuisine",
+    "Déclaration de sinistre : inondation de votre cuisine",
     "La canalisation située sous le passe a cédé. L'expert relève une cuisine inondée et une salle inexploitable le temps du séchage. La perte d'exploitation n'est indemnisée que si la garantie correspondante a été souscrite.",
     "Le gestionnaire de sinistres",
     "Capacité −35 % et coût matières +10 % ce tour (une table ciblée)",
@@ -841,7 +841,7 @@
   ],
   "bistrot_degat_des_eaux (sans assurance)": [
     "Cabinet Ferrand · Expertise des dommages",
-    "Déclaration de sinistre — inondation de votre cuisine",
+    "Déclaration de sinistre : inondation de votre cuisine",
     "La canalisation située sous le passe a cédé. Nous relevons une cuisine inondée et une salle inexploitable le temps du séchage.",
     "L'expert",
     "Capacité −35 % et coût matières +10 % ce tour (une table ciblée)",
@@ -849,7 +849,7 @@
   ],
   "bistrot_fermeture_administrative": [
     "Préfecture · Bureau de la police administrative",
-    "Arrêté de fermeture administrative — quinze jours",
+    "Arrêté de fermeture administrative : quinze jours",
     "À la suite du rapport de contrôle, la fermeture de votre établissement est prononcée pour quinze jours à compter de la notification. L'arrêté doit être affiché sur votre devanture pendant toute la durée de la mesure.",
     "Le chef de bureau",
     "Capacité −45 % ce tour (une table ciblée)",
@@ -873,15 +873,15 @@
   ],
   "bistrot_banquet_surprise": [
     "Famille Delporte · Repas de mariage",
-    "Demande urgente — repas de 220 couverts dans trois jours",
-    "Le traiteur retenu pour notre réception vient de déposer le bilan et ne livrera pas. Nous cherchons une table capable d'assurer deux cent vingt couverts samedi. Nous réglons comptant le jour même.",
+    "Demande urgente : repas de 220 couverts dans trois jours",
+    "Le traiteur retenu pour notre réception vient de déposer le bilan et ne livrera pas. Nous cherchons une table capable d'assurer 220 couverts samedi. Nous réglons comptant le jour même.",
     "Pour la famille, M. Delporte",
     "+220 couverts (échelle trimestre) servis d'office ce tour, réglés comptant, dans la limite de ce que vous pouvez produire",
     "Dire oui suppose des denrées, une brigade et de la place : trois contraintes, une seule opportunité."
   ],
   "bistrot_festival_ville": [
     "Mairie · Direction de l'animation",
-    "Programme de la fête de la ville — votre rue sur le parcours",
+    "Programme de la fête de la ville : votre rue sur le parcours",
     "Les festivités se tiendront sur trois jours et le parcours principal empruntera votre rue. Les éditions passées ont amené une affluence continue du midi à la fermeture, avec un pic le samedi soir.",
     "La directrice de l'animation",
     "Demande globale +25 % ce tour",
@@ -889,7 +889,7 @@
   ],
   "bistrot_major_breakdown": [
     "Cuisines Professionnelles Lheureux · Service après-vente",
-    "Rapport d'intervention — four principal hors service",
+    "Rapport d'intervention : four principal hors service",
     "La sole et la résistance principale sont hors d'usage. La pièce n'est plus référencée : le remplacement de l'appareil s'impose, avec un délai de deux trimestres. La moitié de votre carte est concernée.",
     "Le responsable après-vente",
     "Disponibilité −30 % pendant 2 tours (une entreprise tirée au sort)",
@@ -1073,7 +1073,7 @@
   ],
   "conseil_cyberattaque": [
     "Prestataire informatique Axone · Cellule de sécurité",
-    "Incident majeur — chiffrement de vos livrables et bases clients",
+    "Incident majeur : chiffrement de vos livrables et bases clients",
     "Un rançongiciel a chiffré l'ensemble de vos dossiers. La dernière sauvegarde exploitable remonte à trois semaines : les travaux postérieurs sont perdus et devront être refaits.",
     "Le responsable de la sécurité",
     "Capacité −28 % ce tour (un cabinet ciblé)",
@@ -1097,7 +1097,7 @@
   ],
   "conseil_mission_urgente": [
     "Groupe Sarrazin · Présidence",
-    "Demande de mission en urgence — direction financière par intérim",
+    "Demande de mission en urgence : direction financière par intérim",
     "Notre directeur financier a quitté ses fonctions à trois semaines de la clôture. Nous cherchons une équipe capable d'intervenir immédiatement et réglons comptant. Votre réponse nous est nécessaire sous quarante-huit heures.",
     "Le président",
     "+70 jours-conseil (échelle trimestre) vendus d'office ce tour, réglés comptant, dans la limite des jours disponibles",
@@ -1186,7 +1186,7 @@
   "conseil_inv_grand_compte": [
     "Groupe Delorme · Direction des achats",
     "Ouverture d'un accord-cadre de missions d'audit et d'accompagnement",
-    "Le groupe ouvre un accord-cadre pour les trois trimestres à venir, réservé aux cabinets référencés de la région : environ deux cents jours d'audit et d'accompagnement par trimestre, répartis entre nos sites de Saint-Aubin et de Valbonne. Les ordres de mission seront émis au fil de nos calendriers, dès le mois prochain.",
+    "Le groupe ouvre un accord-cadre pour les trois trimestres à venir, réservé aux cabinets référencés de la région : environ 200 jours d'audit et d'accompagnement par trimestre, répartis entre nos sites de Saint-Aubin et de Valbonne. Les ordres de mission seront émis au fil de nos calendriers, dès le mois prochain.",
     "Le directeur des achats",
     "Demande globale +30 % pendant 3 tours",
     "Pouvez-vous servir ce volume ? Recruter, sous-traiter ou vous équiper : lequel coûte le moins sur trois tours ?"
@@ -1233,7 +1233,7 @@
   ],
   "ecom_transporteur": [
     "Transporteur Delahaye · Direction d'exploitation",
-    "Mouvement social — blocage de nos dépôts",
+    "Mouvement social : blocage de nos dépôts",
     "Nos plateformes sont bloquées depuis lundi et le resteront une semaine au moins. Vos colis déjà enlevés attendent sur nos quais. Nous ne prenons plus d'enlèvement jusqu'à nouvel ordre.",
     "Le directeur d'exploitation",
     "Capacité d'expédition −20 % ce tour",
@@ -1265,7 +1265,7 @@
   ],
   "ecom_credit_resserre": [
     "Banque des Professions · Direction des engagements",
-    "Révision de vos conditions — absence d'actif nantissable",
+    "Révision de vos conditions : absence d'actif nantissable",
     "Votre bilan ne présente ni immobilier ni équipement mobilisable en garantie ; votre stock constitue votre seul actif significatif. Les conditions de votre ligne de financement sont durcies pour deux trimestres.",
     "Le directeur des engagements",
     "Taux d'intérêt ×1,5 pendant 2 tours",
@@ -1273,7 +1273,7 @@
   ],
   "ecom_rupture_appro": [
     "Transitaire Vermeulen · Service clients",
-    "Immobilisation de votre conteneur — contrôle douanier",
+    "Immobilisation de votre conteneur : contrôle douanier",
     "Après six semaines de mer, votre conteneur est retenu pour contrôle documentaire. Les trois références qui composent l'essentiel de vos ventes s'y trouvent. Nous ne pouvons pas nous engager sur une date de mise à disposition.",
     "Le responsable d'exploitation",
     "Capacité d'expédition −18 % ce tour (une enseigne tirée au sort)",
@@ -1281,7 +1281,7 @@
   ],
   "ecom_cyberattaque": [
     "Hébergeur Axone · Cellule de sécurité",
-    "Incident critique — boutique hors ligne et base clients chiffrée",
+    "Incident critique : boutique hors ligne et base clients chiffrée",
     "Un rançongiciel a chiffré votre boutique et votre base clients. Le site est retiré du réseau le temps de l'assainissement. Chaque heure d'indisponibilité se traduit par des commandes passées ailleurs.",
     "Le responsable de la sécurité",
     "Capacité −38 % ce tour (une enseigne ciblée)",
@@ -1289,7 +1289,7 @@
   ],
   "ecom_cyberattaque (sans assurance)": [
     "Hébergeur Axone · Cellule de sécurité",
-    "Incident critique — boutique hors ligne et base clients chiffrée",
+    "Incident critique : boutique hors ligne et base clients chiffrée",
     "Un rançongiciel a chiffré votre boutique et votre base clients. Le site est retiré du réseau le temps de l'assainissement. Chaque heure d'indisponibilité se traduit par des commandes passées ailleurs.",
     "Le responsable de la sécurité",
     "Capacité −38 % ce tour (une enseigne ciblée)",
@@ -1297,7 +1297,7 @@
   ],
   "ecom_entrepot": [
     "Assurances du Littoral · Service sinistres",
-    "Déclaration de sinistre — infiltration en toiture de votre entrepôt",
+    "Déclaration de sinistre : infiltration en toiture de votre entrepôt",
     "L'expert constate qu'un tiers de votre stock est impropre à la vente et que le reste présente des traces d'humidité. La garantie « marchandises stockées » s'applique selon les plafonds et franchises de votre contrat.",
     "La gestionnaire de sinistres",
     "Capacité −30 % et coût variable +12 % ce tour (une enseigne ciblée)",
@@ -1305,7 +1305,7 @@
   ],
   "ecom_entrepot (sans assurance)": [
     "Cabinet Ferrand · Expertise des dommages",
-    "Déclaration de sinistre — infiltration en toiture de votre entrepôt",
+    "Déclaration de sinistre : infiltration en toiture de votre entrepôt",
     "Nous constatons qu'un tiers de votre stock est impropre à la vente et que le reste présente des traces d'humidité.",
     "L'expert",
     "Capacité −30 % et coût variable +12 % ce tour (une enseigne ciblée)",
@@ -1329,8 +1329,8 @@
   ],
   "ecom_commande_b2b": [
     "Aménagements Carrel · Direction des achats",
-    "Commande unique — équipement de trois plateaux de bureaux",
-    "Nous équipons trois plateaux et vous passons une commande ferme de sept cents articles de votre catalogue. Nous réglons comptant à la livraison, dans la limite de ce que vous avez en stock.",
+    "Commande unique : équipement de trois plateaux de bureaux",
+    "Nous équipons trois plateaux et vous passons une commande ferme de 700 articles de votre catalogue. Nous réglons comptant à la livraison, dans la limite de ce que vous avez en stock.",
     "Le directeur des achats",
     "+700 commandes (échelle trimestre) vendues d'office ce tour, réglées comptant, dans la limite du stock",
     "Une commande B2B ne coûte rien en acquisition : la marge y est mécaniquement supérieure."
@@ -1345,7 +1345,7 @@
   ],
   "ecom_major_breakdown": [
     "Convoyeurs Lasalle · Service après-vente",
-    "Rapport d'intervention — blocage du convoyeur de tri",
+    "Rapport d'intervention : blocage du convoyeur de tri",
     "Le moteur d'entraînement principal est grillé et le châssis a subi des contraintes. La remise en cadence nominale demandera deux trimestres. La préparation manuelle reste possible, à un rythme très inférieur.",
     "Le responsable après-vente",
     "Disponibilité −30 % pendant 2 tours (une entreprise tirée au sort)",
@@ -1361,7 +1361,7 @@
   ],
   "ecom_used_equipment_deal": [
     "Administrateur judiciaire Brunet",
-    "Cession d'équipements logistiques — procédure de redressement",
+    "Cession d'équipements logistiques : procédure de redressement",
     "Dans le cadre du redressement d'un e-commerçant voisin, transpalettes électriques et convoyeur automatisé sont cédés en lot. Le matériel a trois ans et l'enlèvement doit intervenir sous dix jours.",
     "L'administrateur judiciaire",
     "Disponibilité +12 % ce tour (équipe ciblée)",
@@ -1465,7 +1465,7 @@
   ],
   "fitness_panne_parc": [
     "Cardio Équipements Rousseau · Service après-vente",
-    "Indisponibilité de pièces — six tapis et quatre vélos",
+    "Indisponibilité de pièces : six tapis et quatre vélos",
     "Les cartes électroniques de ces séries sont en rupture chez le constructeur. Nos délais d'approvisionnement sont de trois semaines. Les appareils concernés doivent être condamnés et signalés d'ici là.",
     "Le responsable après-vente",
     "Capacité d'accueil −20 % ce tour (une salle tirée au sort)",
@@ -1482,7 +1482,7 @@
   "fitness_energie": [
     "Fournisseur d'énergie Caloris · Service entreprises",
     "Régularisation et nouveau barème de votre contrat",
-    "Votre consommation trimestrielle — chauffage, eau chaude sanitaire, ventilation et alimentation des appareils — est facturée au nouveau barème, en hausse de vingt-huit pour cent. La régularisation figure sur la facture jointe.",
+    "Votre consommation trimestrielle (chauffage, eau chaude sanitaire, ventilation et alimentation des appareils) est facturée au nouveau barème, en hausse de vingt-huit pour cent. La régularisation figure sur la facture jointe.",
     "Le conseiller entreprises",
     "Coût variable par adhérent +28 % pendant 2 tours",
     "Une charge qui grimpe quand la salle est vide : l'été, elle tombe sans aucun abonnement pour la couvrir."
@@ -1505,7 +1505,7 @@
   ],
   "fitness_canicule": [
     "Préfecture · Cellule de veille sanitaire",
-    "Épisode caniculaire — recommandations aux établissements sportifs",
+    "Épisode caniculaire : recommandations aux établissements sportifs",
     "Le département est placé en vigilance canicule pour la semaine. Il est recommandé de limiter la fréquentation aux heures les plus chaudes et d'interrompre les activités si la température intérieure dépasse trente degrés.",
     "Le directeur de cabinet",
     "Capacité d'accueil −12 % ce tour",
@@ -1529,7 +1529,7 @@
   ],
   "fitness_degat_des_eaux": [
     "Assurances du Littoral · Service sinistres",
-    "Déclaration de sinistre — vestiaires et douches hors service",
+    "Déclaration de sinistre : vestiaires et douches hors service",
     "La rupture de la canalisation d'alimentation a inondé les vestiaires. L'expert prononce leur condamnation jusqu'à réfection complète. L'accès à la salle sans douche n'est pas envisageable en pratique.",
     "Le gestionnaire de sinistres",
     "Capacité −34 % ce tour (une salle ciblée)",
@@ -1537,7 +1537,7 @@
   ],
   "fitness_degat_des_eaux (sans assurance)": [
     "Cabinet Ferrand · Expertise des dommages",
-    "Déclaration de sinistre — vestiaires et douches hors service",
+    "Déclaration de sinistre : vestiaires et douches hors service",
     "La rupture de la canalisation d'alimentation a inondé les vestiaires. L'expert prononce leur condamnation jusqu'à réfection complète. L'accès à la salle sans douche n'est pas envisageable en pratique.",
     "L'expert",
     "Capacité −34 % ce tour (une salle ciblée)",
@@ -1562,14 +1562,14 @@
   "fitness_contrat_surprise": [
     "Fabrique Delorme · Direction des ressources humaines",
     "Convention de partenariat pour nos 200 salariés",
-    "Nous souhaitons offrir à nos deux cents salariés un accès à votre club à compter de janvier, réglé en une fois pour le trimestre. Nous attendons votre confirmation de capacité d'accueil avant signature.",
+    "Nous souhaitons offrir à nos 200 salariés un accès à votre club à compter de janvier, réglé en une fois pour le trimestre. Nous attendons votre confirmation de capacité d'accueil avant signature.",
     "Le directeur des ressources humaines",
     "+200 adhérents (échelle trimestre) inscrits d'office ce tour, réglés comptant, dans la limite de vos places",
     "Encore faut-il pouvoir les accueillir : sur-vendre sans encadrement fait fuir les adhérents en place."
   ],
   "fitness_marathon": [
     "Comité d'organisation du marathon de la ville",
-    "Ouverture des inscriptions — douze mille coureurs attendus",
+    "Ouverture des inscriptions : douze mille coureurs attendus",
     "Les inscriptions sont ouvertes pour l'édition de printemps, trois mois avant le départ. Les clubs partenaires constatent chaque année une hausse marquée des demandes de préparation sur cette période.",
     "Le président du comité",
     "Demande globale +28 % ce tour",
@@ -1609,7 +1609,7 @@
   ],
   "fitness_appli_gratuite": [
     "Observatoire des pratiques sportives",
-    "Note de tendance — essor des séances à domicile",
+    "Note de tendance : essor des séances à domicile",
     "Une application de séances guidées gratuites dépasse cinq millions d'utilisateurs. Notre enquête montre que les primo-pratiquants, ceux qui s'inscrivent en janvier, sont les premiers à préférer le domicile.",
     "Le directeur d'études",
     "Demande des bonnes résolutions −20 % pendant 2 tours",
@@ -1721,7 +1721,7 @@
   ],
   "batiment_concurrent_liquide": [
     "Administrateur judiciaire Brunet",
-    "Liquidation d'une entreprise du secteur — chantiers en cours",
+    "Liquidation d'une entreprise du secteur : chantiers en cours",
     "L'entreprise du bourg voisin est en liquidation. Ses chantiers en cours cherchent un repreneur pour achèvement. Les dossiers techniques sont consultables à l'étude ; la reprise emporte la responsabilité de l'ouvrage.",
     "L'administrateur judiciaire",
     "Demande globale +18 % pendant 2 tours",
@@ -1737,7 +1737,7 @@
   ],
   "batiment_sinistre_chantier": [
     "Assurances du Littoral · Service sinistres",
-    "Déclaration de sinistre — dégât des eaux sur votre chantier",
+    "Déclaration de sinistre : dégât des eaux sur votre chantier",
     "Une canalisation percée lors des travaux a inondé deux niveaux. L'expertise contradictoire est fixée à demain. Les travaux sont suspendus jusqu'à ses conclusions et la reprise des ouvrages détériorés vous incombera.",
     "Le gestionnaire de sinistres",
     "Disponibilité −26 % et coût des matériaux +16 % pendant 2 tours (une entreprise)",
@@ -1745,7 +1745,7 @@
   ],
   "batiment_sinistre_chantier (sans assurance)": [
     "Cabinet Ferrand · Expertise des dommages",
-    "Déclaration de sinistre — dégât des eaux sur votre chantier",
+    "Déclaration de sinistre : dégât des eaux sur votre chantier",
     "Une canalisation percée lors des travaux a inondé deux niveaux. L'expertise contradictoire est fixée à demain. Les travaux sont suspendus jusqu'à ses conclusions et la reprise des ouvrages détériorés vous incombera.",
     "L'expert",
     "Disponibilité −26 % et coût des matériaux +16 % pendant 2 tours (une entreprise)",
@@ -1753,7 +1753,7 @@
   ],
   "batiment_vol_materiel": [
     "Gendarmerie nationale · Brigade de proximité",
-    "Récépissé de dépôt de plainte — vol d'outillage",
+    "Récépissé de dépôt de plainte : vol d'outillage",
     "Votre plainte pour effraction du fourgon et vol de perforateurs, scies et niveaux laser a été enregistrée. Aucune piste n'est ouverte à ce stade. Ce récépissé vous est délivré pour votre déclaration d'assurance.",
     "Le chef de brigade",
     "Disponibilité −30 % ce tour (une entreprise tirée au sort)",
@@ -1761,7 +1761,7 @@
   ],
   "batiment_vol_materiel (sans assurance)": [
     "Gendarmerie nationale · Brigade de proximité",
-    "Récépissé de dépôt de plainte — vol d'outillage",
+    "Récépissé de dépôt de plainte : vol d'outillage",
     "Votre plainte pour effraction du fourgon et vol de perforateurs, scies et niveaux laser a été enregistrée. Aucune piste n'est ouverte à ce stade. Ce récépissé vous est délivré pour vos démarches.",
     "Le chef de brigade",
     "Disponibilité −30 % ce tour (une entreprise tirée au sort)",
@@ -1769,7 +1769,7 @@
   ],
   "batiment_malfacon": [
     "Syndic Berthier · Gestion de copropriété",
-    "Mise en demeure de reprise — décollement du carrelage",
+    "Mise en demeure de reprise : décollement du carrelage",
     "Le carrelage posé lors de votre intervention se décolle sur l'ensemble des parties communes. Nous vous mettons en demeure de procéder à la dépose et à la repose intégrales à vos frais, au titre de la garantie de parfait achèvement.",
     "Le gestionnaire d'immeuble",
     "Coût des matériaux +20 % pendant 2 tours (une entreprise tirée au sort)",
@@ -1793,7 +1793,7 @@
   ],
   "batiment_chantier_surprise": [
     "Syndic Berthier · Gestion de copropriété",
-    "Consultation en urgence — défaillance de l'entreprise retenue",
+    "Consultation en urgence : défaillance de l'entreprise retenue",
     "L'entreprise retenue pour notre ravalement s'est désistée la veille du démarrage. L'échafaudage est monté et la copropriété a voté les fonds. Nous cherchons une reprise immédiate du marché, aux conditions initiales.",
     "Le gestionnaire d'immeuble",
     "Commande ferme de 180 m² ce tour (une entreprise tirée au sort)",
@@ -1801,7 +1801,7 @@
   ],
   "batiment_major_breakdown": [
     "Levage Carpentier · Service après-vente",
-    "Rapport d'intervention — avarie hydraulique de votre mini-grue",
+    "Rapport d'intervention : avarie hydraulique de votre mini-grue",
     "Le circuit hydraulique principal est hors d'usage et le vérin de flèche doit être remplacé. Les pièces sont à commander à l'étranger : deux trimestres avant remise en service. Le chantier est à l'arrêt.",
     "Le responsable technique",
     "Disponibilité −30 % pendant 2 tours (une entreprise tirée au sort)",
@@ -1961,7 +1961,7 @@
   ],
   "transport_accident": [
     "Assurances du Littoral · Service sinistres",
-    "Déclaration de sinistre — accident de circulation",
+    "Déclaration de sinistre : accident de circulation",
     "Votre conducteur est indemne, le porteur est immobilisé et la marchandise transportée est endommagée. L'expertise est fixée à jeudi. La prise en charge des marchandises dépend de la garantie souscrite.",
     "Le gestionnaire de sinistres",
     "Disponibilité −24 % et coût variable +12 % pendant 2 tours (une entreprise)",
@@ -1969,7 +1969,7 @@
   ],
   "transport_accident (sans assurance)": [
     "Cabinet Ferrand · Expertise des dommages",
-    "Déclaration de sinistre — accident de circulation",
+    "Déclaration de sinistre : accident de circulation",
     "Votre conducteur est indemne, le porteur est immobilisé et la marchandise transportée est endommagée. L'expertise est fixée à jeudi.",
     "L'expert",
     "Disponibilité −24 % et coût variable +12 % pendant 2 tours (une entreprise)",
@@ -1977,7 +1977,7 @@
   ],
   "transport_panne_flotte": [
     "Garage Poirier Poids Lourds · Atelier",
-    "Immobilisation de trois porteurs — délai sur les pièces",
+    "Immobilisation de trois porteurs : délai sur les pièces",
     "Trois de vos porteurs sont entrés à l'atelier la même semaine, deux pour la transmission et un pour le circuit de freinage. Les pièces sont annoncées à quinze jours par le constructeur.",
     "Le chef d'atelier",
     "Disponibilité de la flotte −28 % ce tour (une entreprise tirée au sort)",
@@ -1985,7 +1985,7 @@
   ],
   "transport_vol_remorque": [
     "Gendarmerie nationale · Brigade de recherches",
-    "Récépissé de dépôt de plainte — vol d'une remorque chargée",
+    "Récépissé de dépôt de plainte : vol d'une remorque chargée",
     "Votre plainte pour le vol d'une remorque et de son chargement sur votre parking a été enregistrée. Les images de vidéoprotection sont en cours d'exploitation. Ce récépissé vous est délivré pour vos démarches d'assurance.",
     "Le commandant de brigade",
     "Disponibilité −20 % ce tour (une entreprise tirée au sort)",
@@ -1993,7 +1993,7 @@
   ],
   "transport_vol_remorque (sans assurance)": [
     "Gendarmerie nationale · Brigade de recherches",
-    "Récépissé de dépôt de plainte — vol d'une remorque chargée",
+    "Récépissé de dépôt de plainte : vol d'une remorque chargée",
     "Votre plainte pour le vol d'une remorque et de son chargement sur votre parking a été enregistrée. Les images de vidéoprotection sont en cours d'exploitation. Ce récépissé vous est délivré pour vos démarches.",
     "Le commandant de brigade",
     "Disponibilité −20 % ce tour (une entreprise tirée au sort)",
@@ -2001,7 +2001,7 @@
   ],
   "transport_label_qualite": [
     "Organisme certificateur Véritas Transport",
-    "Décision de certification — ponctualité des livraisons",
+    "Décision de certification : ponctualité des livraisons",
     "Votre taux de livraisons dans le créneau annoncé dépasse le seuil requis sur quatre trimestres consécutifs. La certification vous est accordée et pourra être produite dans vos réponses aux appels d'offres industriels.",
     "Le responsable de la certification",
     "Disponibilité commerciale +7 % pendant 2 tours (une entreprise)",
@@ -2025,7 +2025,7 @@
   ],
   "transport_major_breakdown": [
     "Garage Poirier Poids Lourds · Atelier",
-    "Rapport d'expertise — casse moteur sur autoroute",
+    "Rapport d'expertise : casse moteur sur autoroute",
     "Le moteur a cédé en pleine charge et l'expertise conclut à un défaut de suivi des vidanges. La réfection complète, moteur d'échange inclus, immobilisera le véhicule sur deux trimestres.",
     "Le chef d'atelier",
     "Disponibilité −30 % pendant 2 tours (une entreprise tirée au sort)",
@@ -2065,7 +2065,7 @@
   ],
   "transport_contrat_cadre": [
     "Aciéries Vandevelde · Direction des achats",
-    "Notification d'attribution — contrat-cadre de transport régional",
+    "Notification d'attribution : contrat-cadre de transport régional",
     "À l'issue de la consultation, nous vous attribuons l'ensemble de nos flux régionaux pour une durée de deux ans, reconductible. Le volume prévisionnel et les engagements de service figurent en annexe.",
     "Le directeur des achats",
     "Demande des industriels de votre entreprise +20 % pendant 2 tours",
@@ -2073,7 +2073,7 @@
   ],
   "transport_controle_routier": [
     "Direction régionale des contrôles des transports terrestres",
-    "Procès-verbal — immobilisation de trois véhicules",
+    "Procès-verbal : immobilisation de trois véhicules",
     "Le contrôle a relevé une usure des pneumatiques inférieure au minimum légal sur trois de vos véhicules. Leur immobilisation est prononcée jusqu'à remise en état constatée par un professionnel agréé.",
     "Le contrôleur des transports terrestres",
     "Disponibilité de la flotte −15 % ce tour",
@@ -2097,7 +2097,7 @@
   ],
   "transport_inv_grand_compte": [
     "Mérien Logistique · Direction des transports",
-    "Confirmation du flux régulier Valmont – littoral",
+    "Confirmation du flux régulier entre Valmont et le littoral",
     "Le pilote est concluant et notre direction valide le flux régulier au départ de Valmont : environ quatre-vingts palettes par jour ouvré, du lundi au samedi, pour les trois trimestres à venir. Les enlèvements se font à quai entre quatre et six heures du matin. Le volume est confirmé par écrit et le cahier des charges détaillé suit sous huitaine.",
     "Le directeur des transports",
     "Demande globale +30 % pendant 3 tours",
@@ -2177,7 +2177,7 @@
   ],
   "mission_niveau_1": [
     "Note interne · Les associés",
-    "Votre mandat — direction de l'entreprise",
+    "Votre mandat : direction de l'entreprise",
     "Nous vous confions la conduite de la maison à compter de ce tour. Vous décidez du prix auquel vous vendez, du volume que vous engagez et de ce que vous dépensez pour vous faire connaître ; le reste demeure de notre ressort.",
     "Les associés",
     "Aucun effet sur les comptes",
@@ -2185,7 +2185,7 @@
   ],
   "mission_niveau_2": [
     "Note interne · Les associés",
-    "Votre mandat — direction et moyens de production",
+    "Votre mandat : direction et moyens de production",
     "Nous vous confions la conduite de la maison, prix et volume compris. S'y ajoute ce que vous mettez dans le produit : la qualité se budgète, la maintenance aussi, et ces deux dépenses-là se paient au tour suivant.",
     "Les associés",
     "Aucun effet sur les comptes",
@@ -2193,7 +2193,7 @@
   ],
   "mission_niveau_3": [
     "Note interne · Les associés",
-    "Votre mandat — direction, production et finances",
+    "Votre mandat : direction, production et finances",
     "Nous vous confions l'offre, l'outil et désormais les finances : c'est vous qui décidez comment l'entreprise se finance et comment elle se couvre contre les coups durs. Notre banque et notre assureur s'adresseront à vous.",
     "Les associés",
     "Aucun effet sur les comptes",
@@ -2201,7 +2201,7 @@
   ],
   "mission_niveau_4": [
     "Note interne · Les associés",
-    "Votre mandat — direction générale",
+    "Votre mandat : direction générale",
     "Nous vous confions la direction générale : tout ce qui engage la maison relève de vous. Les femmes et les hommes que nous employons, les investissements qui nous porteront demain et nos engagements environnementaux y compris.",
     "Les associés",
     "Aucun effet sur les comptes",
@@ -2209,7 +2209,7 @@
   ],
   "mission_niveau_5": [
     "Note interne · Les associés",
-    "Votre mandat — direction générale et gestion de trésorerie",
+    "Votre mandat : direction générale et gestion de trésorerie",
     "Nous vous confions la direction générale, y compris l'emploi de nos excédents. Une trésorerie qui dort ne rapporte rien, une trésorerie placée ne se dépense plus : l'arbitrage vous revient.",
     "Les associés",
     "Aucun effet sur les comptes",
@@ -2217,7 +2217,7 @@
   ],
   "mission_niveau_6": [
     "Note interne · Les associés",
-    "Votre mandat — direction générale et affectation du résultat",
+    "Votre mandat : direction générale et affectation du résultat",
     "Nous vous confions la direction générale, et vous nous répondrez aussi sur nos parts. C'est vous qui proposerez ce qui nous est distribué et ce qui reste en réserve pour armer l'entreprise ; nous jugerons sur les comptes.",
     "Les associés",
     "Aucun effet sur les comptes",
@@ -2257,7 +2257,7 @@
   ],
   "retour_maintenance_coupee": [
     "Maintenance · Rapport de visite périodique",
-    "Report de l'entretien — état constaté de votre matériel",
+    "Report de l'entretien : état constaté de votre matériel",
     "Aucun entretien n'a été engagé sur la période écoulée. Nous relevons des jeux anormaux et une usure accélérée sur les organes les plus sollicités. En l'état, la prochaine avarie ne sera plus une réparation mais un remplacement.",
     "Le technicien de maintenance",
     "Aucun effet sur les comptes",

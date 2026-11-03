@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import { BandeauDesDefaillantes } from "@/components/bandeau-des-defaillantes";
 import { BoutonCopierLeMessage } from "@/components/bouton-copier-le-message";
 import { messageDeLaPartie } from "@/lib/message-cahier-de-textes";
@@ -75,7 +76,7 @@ const ROUND_STATUS_LABEL: Record<string, string> = {
 
 export const dynamic = "force-dynamic";
 
-export default async function TeacherGamePage({
+async function TeacherGamePage({
   params,
   searchParams,
 }: {
@@ -1372,3 +1373,5 @@ export default async function TeacherGamePage({
     </main>
   );
 }
+
+export default avecTypographie(TeacherGamePage);

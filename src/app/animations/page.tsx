@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import { publicDeLAtelier } from "@/config/formations";
 import Link from "next/link";
@@ -90,7 +91,7 @@ const MOTS_DES_REFERENTIELS = (() => {
 
 const ENTREPRISES = entreprisesEtFormations();
 
-export default function AteliersPage() {
+function AteliersPage() {
   return (
     <>
       <main id="main" className="relative overflow-hidden">
@@ -393,3 +394,5 @@ export default function AteliersPage() {
     </>
   );
 }
+
+export default avecTypographie(AteliersPage);

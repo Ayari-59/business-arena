@@ -32,7 +32,7 @@ export interface OrientationFormState {
 const schema = z.object({
   nom: z.string().trim().min(2, "Votre nom est requis").max(120),
   etablissement: z.string().trim().min(2, "Votre établissement est requis").max(160),
-  email: z.string().trim().email("E-mail invalide").max(200),
+  email: z.string().trim().email("Adresse électronique invalide").max(200),
   diplome: z.string().trim().min(1, "Choisissez le diplôme préparé"),
   semestre: z.enum(["s1", "s2"], { message: "Indiquez où vous en êtes dans l'année" }),
   objectif: z.string().trim().min(1, "Choisissez ce que vous voulez faire travailler"),

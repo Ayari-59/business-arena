@@ -15,7 +15,7 @@
 export const AI_MODELS = [
   { id: "claude-haiku-4-5", label: "Haiku 4.5 — économique (recommandé)" },
   { id: "claude-sonnet-5", label: "Sonnet 5 — équilibré" },
-  { id: "claude-opus-5", label: "Opus 5 — qualité maximale" },
+  { id: "claude-opus-5", label: "Opus 5 : qualité maximale" },
 ] as const;
 
 export type AiModelId = (typeof AI_MODELS)[number]["id"];

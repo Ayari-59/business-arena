@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -31,7 +32,7 @@ const RELECTURE = 5;
  * Pour les autres, les remarques du correcteur qui reviennent le plus. Aucun nom d'élève :
  * la page se lit devant tous. Rien ne se calcule ici : `pedagogy/cours/projection.ts` compte.
  */
-export default async function ProjectionDuCours({
+async function ProjectionDuCours({
   params,
   searchParams,
 }: {
@@ -206,3 +207,5 @@ export default async function ProjectionDuCours({
     </main>
   );
 }
+
+export default avecTypographie(ProjectionDuCours);

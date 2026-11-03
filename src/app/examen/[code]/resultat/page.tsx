@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -24,7 +25,7 @@ export const dynamic = "force-dynamic";
  * cookie invité, retrouvé au besoin par le code de reprise), jamais par un identifiant
  * d'adresse : personne ne lit la copie d'un autre.
  */
-export default async function ResultatDuCandidatPage({ params }: { params: Promise<{ code: string }> }) {
+async function ResultatDuCandidatPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
   const propre = normaliserCodeDExamen(code);
   const examen = await examenParCode(propre);
@@ -113,3 +114,5 @@ export default async function ResultatDuCandidatPage({ params }: { params: Promi
     </main>
   );
 }
+
+export default avecTypographie(ResultatDuCandidatPage);

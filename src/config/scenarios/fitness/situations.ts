@@ -188,7 +188,7 @@ const SOURCES: SituationDef[] = [
       {
         field: "qualityBudget",
         direction: "up",
-        hint: "Améliorer l'encadrement et les équipements réduit l'attrition. {{Points: attrition - perte(0.10)}} de rétention en plus {{accord: attrition - perte(0.10) | vaut | valent}} {{entier: arrondi(marge / perte(0.10)) - arrondi(marge / attrition)}} € par adhérent — bien plus qu'une campagne publicitaire.",
+        hint: "Améliorer l'encadrement et les équipements réduit l'attrition. {{Points: attrition - perte(0.10)}} de rétention en plus {{accord: attrition - perte(0.10) | vaut | valent}} {{entier: arrondi(marge / perte(0.10)) - arrondi(marge / attrition)}} € par adhérent, bien plus qu'une campagne publicitaire.",
       },
       {
         field: "maintenanceBudget",

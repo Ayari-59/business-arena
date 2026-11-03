@@ -23,8 +23,8 @@ import type { CourrierDef } from "./types";
  * et non un second : des jetons dans les chaînes, rendus par `rendreTexte`.
  * Les mots de durée s'écrivent tels qu'au trimestre (`{{trimestres}}`) ; une
  * quantité que le scénario porte se lit par sa grandeur
- * (`{{entier: commande_tight_order}}`, `{{lettres: …}}` quand la lettre l'écrit
- * en toutes lettres) ; un chiffre du seul récit passe par `flux(…)`. Le nombre
+ * (`{{entier: commande_tight_order}}`, en chiffres : un nombre calculé ne s'écrit
+ * pas en toutes lettres) ; un chiffre du seul récit passe par `flux(…)`. Le nombre
  * de tours d'un effet (« pendant 2 tours ») ne bouge pas au trimestre ni à l'année ;
  * au mois, sur le calendrier, un événement dure le temps réel et l'effet se dit en
  * mois (« pendant 6 mois », `enTempsReel`).

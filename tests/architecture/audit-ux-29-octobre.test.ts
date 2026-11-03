@@ -103,8 +103,8 @@ describe("P1-1 · la classe du cours sans offre, et l'élève devant un chapitre
   it("l'élève d'une classe ne voit ni « Voir les offres » ni « Demander un devis »", () => {
     const props = { titre: "Les flux", reserve: "Ce chapitre est réservé", chapitreLibre: "creation-premier-bilan" };
     const eleve = rendu(createElement(ChapitreReserve, { ...props, eleve: { classe: "BTS 1" } }));
-    expect(texte(eleve)).toContain("n'est pas encore ouvert pour ta classe, « BTS 1 »");
-    expect(texte(eleve)).toContain("ton enseignant");
+    expect(texte(eleve)).toContain("n'est pas encore ouvert pour votre classe, « BTS 1 »");
+    expect(texte(eleve)).toContain("votre enseignant");
     expect(texte(eleve)).not.toMatch(/Voir les offres|Demander un devis|licence/);
     expect(eleve).not.toContain("/devis");
     expect(eleve).not.toContain("/tarifs");

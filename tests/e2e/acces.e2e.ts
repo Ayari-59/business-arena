@@ -286,7 +286,7 @@ describe("les épisodes sans licence", () => {
       expect(fermes.map((t) => t.split("\n")[0])).toEqual(["Standard", "Expert"]);
       expect(await texte(page)).toContain("Les autres niveaux ne sont pas ouverts sur cet appareil.");
       await page.getByRole("button", { name: "Commencer l'épisode" }).click();
-      await page.getByText("Niveau Découverte", { exact: true }).waitFor({ state: "visible" });
+      await page.getByText("Niveau Démonstration", { exact: true }).waitFor({ state: "visible" });
       await jouerJusquAuBilan(page, ep.prevision.placeholder);
       // La suite : sans licence, ce que l'offre apporte, et des démos seulement.
       await expect

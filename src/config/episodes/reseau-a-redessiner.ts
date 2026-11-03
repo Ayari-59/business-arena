@@ -236,7 +236,7 @@ export const ETAPES: readonly Etape[] = [
         cout: 0.5,
         nature: "decisive",
         resultat: (ctx) =>
-          `Quand le réseau a fermé Oullins, Saint-Genis-Laval (5 km) a gardé 52 % de son chiffre ; à Neuville, Caluire (8 km), 44 %, et moins encore quand un concurrent a repris le local laissé vide ; à Rive-de-Gier, Givors (14 km), 31 %. À Bron, 55 % du chiffre se fait au comptoir, des artisans du quartier qui passent le matin : ce sont eux qui partent. Pour que la fermeture rapporte quelque chose au réseau, sur cinq ans et frais de fermeture compris, il faudrait que plus de ${ctx.seuilFermeture} du chiffre suive à Saint-Priest. Personne ne peut le dire d'avance. Un test de six semaines — livraisons faites par Saint-Priest, comptoir fermé l'après-midi, suivi compte par compte — le mesurerait, pour 25 k€ ; le préavis pourrait encore partir en semaine 8.`,
+          `Quand le réseau a fermé Oullins, Saint-Genis-Laval (5 km) a gardé 52 % de son chiffre ; à Neuville, Caluire (8 km), 44 %, et moins encore quand un concurrent a repris le local laissé vide ; à Rive-de-Gier, Givors (14 km), 31 %. À Bron, 55 % du chiffre se fait au comptoir, des artisans du quartier qui passent le matin : ce sont eux qui partent. Pour que la fermeture rapporte quelque chose au réseau, sur cinq ans et frais de fermeture compris, il faudrait que plus de ${ctx.seuilFermeture} du chiffre suive à Saint-Priest. Personne ne peut le dire d'avance. Un test de six semaines (livraisons faites par Saint-Priest, comptoir fermé l'après-midi, suivi compte par compte) le mesurerait, pour 25 k€ ; le préavis pourrait encore partir en semaine 8.`,
       },
     ],
     question: "Que proposez-vous pour Bron ?",

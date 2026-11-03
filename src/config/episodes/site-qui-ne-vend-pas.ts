@@ -69,7 +69,7 @@ export const ETAPES: readonly Etape[] = [
         cout: 0.5,
         nature: "decisive",
         resultat:
-          "8 100 visites, dont 5 600 de professionnels. 1 950 voient leurs prix pro : les autres n'ont pas de compte, ou attendent que leur agence valide leur demande — quatre jours en moyenne, et 62 % abandonnent avant. 195 paniers, 60 commandes : six paniers sur dix s'arrêtent à l'étape de livraison.",
+          "8 100 visites, dont 5 600 de professionnels. 1 950 voient leurs prix pro : les autres n'ont pas de compte, ou attendent que leur agence valide leur demande, quatre jours en moyenne, et 62 % abandonnent avant. 195 paniers, 60 commandes : six paniers sur dix s'arrêtent à l'étape de livraison.",
       },
       {
         id: "artisans",
@@ -214,7 +214,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Ne coûte rien. Bénédicte la signe lundi.",
       },
       {
-        t: "Contourner les agences qui freinent : un e-mailing direct aux artisans, avec 5 % de remise sur leurs commandes en ligne",
+        t: "Contourner les agences qui freinent : une campagne de courriels directe aux artisans, avec 5 % de remise sur leurs commandes en ligne",
         d: "1 500 € d'envoi, plus le coût de la remise. Des visites dès la semaine 4.",
       },
       {
@@ -244,7 +244,7 @@ export const ETAPES: readonly Etape[] = [
           de: "Valentin Chabert",
           role: "Prestataire publicitaire",
           texte:
-            "L'e-mailing part mardi à 3 000 artisans. Avec la remise, on attend un bon taux d'ouverture.",
+            "La campagne de courriels part mardi à 3 000 artisans. Avec la remise, on attend un bon taux d'ouverture.",
         },
       ],
       [

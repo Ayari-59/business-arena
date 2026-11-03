@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { RendezVousForm } from "@/components/rendez-vous-form";
@@ -37,7 +38,7 @@ const ETAPES = [
   },
 ];
 
-export default async function RendezVousPage() {
+async function RendezVousPage() {
   const { jours, periode, source } = await creneauxProposes();
   if (source === "local") {
     // Visible dans les journaux de l'hébergeur, pas pour le visiteur.
@@ -93,3 +94,5 @@ export default async function RendezVousPage() {
     </main>
   );
 }
+
+export default avecTypographie(RendezVousPage);

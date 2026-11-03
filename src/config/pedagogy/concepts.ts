@@ -130,7 +130,7 @@ export const CONCEPTS: ConceptDef[] = [
     intuition:
       "C'est le prix que vous vous étiez promis de payer. Sans cette promesse écrite, un dérapage ne se voit pas : tout coût passe pour « le » coût.",
     method:
-      "Fixez le coût attendu par unité — matière, main-d'œuvre — avant de produire, puis mesurez toujours le réel contre lui.",
+      "Fixez le coût attendu par unité (matière, main-d'œuvre) avant de produire, puis mesurez toujours le réel contre lui.",
     prerequisites: ["variable_costs"],
   },
   {
@@ -157,7 +157,7 @@ export const CONCEPTS: ConceptDef[] = [
     intuition:
       "Le fournisseur a changé son tarif : à quantité identique, la facture monte. Ce n'est pas l'atelier qui est en cause, c'est l'achat.",
     method:
-      "Mesurez l'écart de prix unitaire, puis multipliez-le par les quantités produites — jamais par les quantités vendues.",
+      "Mesurez l'écart de prix unitaire, puis multipliez-le par les quantités produites, jamais par les quantités vendues.",
     formula:
       "Écart de prix matière = (coût réel unitaire − coût standard unitaire) × quantité produite",
     prerequisites: ["cost_variance"],

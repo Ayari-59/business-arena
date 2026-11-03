@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Episode, Semaine } from "@/config/episodes/types";
 
 /**
@@ -31,7 +32,7 @@ export function reperesDesDecisions(ep: Pick<Episode, "etapes">, n: number): Rep
   }));
 }
 
-export function CourbeDesSemaines({
+function CourbeDesSemainesBrut({
   courbe,
   semaines,
   jouees,
@@ -221,3 +222,5 @@ export function CourbeDesSemaines({
     </figure>
   );
 }
+
+export const CourbeDesSemaines = avecTypographie(CourbeDesSemainesBrut);

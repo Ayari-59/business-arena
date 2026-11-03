@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import Link from "next/link";
 import { getGuestUserId } from "@/lib/guest";
 import { getPlayerProfile } from "@/services/profile.service";
@@ -56,7 +57,7 @@ function EncartProfilDecisionnel({ episodes }: { episodes: number }) {
  */
 const masteryTone = (_v: number) => "bg-[var(--donnee)]";
 
-export default async function ProfilePage() {
+async function ProfilePage() {
   const userId = await getGuestUserId();
   const [profile, parties] = userId
     ? await Promise.all([getPlayerProfile(userId), partiesDe(userId)])
@@ -187,3 +188,5 @@ export default async function ProfilePage() {
     </main>
   );
 }
+
+export default avecTypographie(ProfilePage);

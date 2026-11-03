@@ -31,7 +31,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 10,
       titre: "Lancement",
       detail:
-        "Vous envoyez le lien /entreprises/episode/client-qui-s-en-va?hasard=4 : toute la classe joue le même trimestre, sous les mêmes aléas. Les élèves jouent seuls ou en binôme. Sans licence, la démonstration se joue au niveau Découverte : un repère de méthode accompagne chaque étape, et chaque décision montre aussitôt ce qu'elle a changé par rapport à ne rien changer. Vous demandez de noter sur papier, avant de valider la semaine 1, l'estimation du nombre d'artisans actifs en fin de semaine 3, le calcul qui y mène et le choix fait à chacune des six décisions.",
+        "Vous envoyez le lien /entreprises/episode/client-qui-s-en-va?hasard=4 : toute la classe joue le même trimestre, sous les mêmes aléas. Les élèves jouent seuls ou en binôme. Sans licence, la démonstration se joue au niveau Démonstration : un repère de méthode accompagne chaque étape, et chaque décision montre aussitôt ce qu'elle a changé par rapport à ne rien changer. Vous demandez de noter sur papier, avant de valider la semaine 1, l'estimation du nombre d'artisans actifs en fin de semaine 3, le calcul qui y mène et le choix fait à chacune des six décisions.",
     },
     {
       minutes: 40,

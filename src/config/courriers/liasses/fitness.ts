@@ -44,7 +44,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "fitness_panne_parc",
     expediteur: "Cardio Équipements Rousseau · Service après-vente",
-    objet: "Indisponibilité de pièces — six tapis et quatre vélos",
+    objet: "Indisponibilité de pièces : six tapis et quatre vélos",
     corps:
       "Les cartes électroniques de ces séries sont en rupture chez le constructeur. Nos délais d'approvisionnement sont de trois semaines. Les appareils concernés doivent être condamnés et signalés d'ici là.",
     signataire: "Le responsable après-vente",
@@ -75,7 +75,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Fournisseur d'énergie Caloris · Service entreprises",
     objet: "Régularisation et nouveau barème de votre contrat",
     corps:
-      "Votre consommation {{trimestrielle}} — chauffage, eau chaude sanitaire, ventilation et alimentation des appareils — est facturée au nouveau barème, en hausse de vingt-huit pour cent. La régularisation figure sur la facture jointe.",
+      "Votre consommation {{trimestrielle}} (chauffage, eau chaude sanitaire, ventilation et alimentation des appareils) est facturée au nouveau barème, en hausse de vingt-huit pour cent. La régularisation figure sur la facture jointe.",
     signataire: "Le conseiller entreprises",
     effet: "Coût variable par adhérent +28 % pendant 2 tours",
     enJeu:
@@ -145,7 +145,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "fitness_degat_des_eaux",
     expediteur: "Assurances du Littoral · Service sinistres",
-    objet: "Déclaration de sinistre — vestiaires et douches hors service",
+    objet: "Déclaration de sinistre : vestiaires et douches hors service",
     corps:
       "La rupture de la canalisation d'alimentation a inondé les vestiaires. L'expert prononce leur condamnation jusqu'à réfection complète. L'accès à la salle sans douche n'est pas envisageable en pratique.",
     signataire: "Le gestionnaire de sinistres",
@@ -189,7 +189,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Fabrique Delorme · Direction des ressources humaines",
     objet: "Convention de partenariat pour nos {{entier: commande_fitness_contrat_surprise}} salariés",
     corps:
-      "Nous souhaitons offrir à nos {{lettres: commande_fitness_contrat_surprise}} salariés un accès à votre club dès à présent, réglé en une fois pour {{le trimestre}}. Nous attendons votre confirmation de capacité d'accueil avant signature.",
+      "Nous souhaitons offrir à nos {{entier: commande_fitness_contrat_surprise}} salariés un accès à votre club dès à présent, réglé en une fois pour {{le trimestre}}. Nous attendons votre confirmation de capacité d'accueil avant signature.",
     signataire: "Le directeur des ressources humaines",
     effet:
       "+{{entier: commande_fitness_contrat_surprise}} adhérents ({{échelle trimestre}}) inscrits d'office ce tour, réglés comptant, dans la limite de vos places",
@@ -202,7 +202,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "fitness_marathon",
     expediteur: "Comité d'organisation du marathon de la ville",
-    objet: "Ouverture des inscriptions — douze mille coureurs attendus",
+    objet: "Ouverture des inscriptions : douze mille coureurs attendus",
     corps:
       "Les inscriptions sont ouvertes pour la prochaine édition, trois mois avant le départ. Les clubs partenaires constatent chaque année une hausse marquée des demandes de préparation sur cette période.",
     signataire: "Le président du comité",
@@ -273,7 +273,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "fitness_appli_gratuite",
     expediteur: "Observatoire des pratiques sportives",
-    objet: "Note de tendance — essor des séances à domicile",
+    objet: "Note de tendance : essor des séances à domicile",
     corps:
       "Une application de séances guidées gratuites dépasse cinq millions d'utilisateurs. Notre enquête montre que les primo-pratiquants, ceux des bonnes résolutions, sont les premiers à préférer le domicile.",
     signataire: "Le directeur d'études",

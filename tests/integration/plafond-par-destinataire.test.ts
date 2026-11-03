@@ -41,7 +41,7 @@ describe("plafond par destinataire", () => {
       expect("id" in r, `demande ${i}`).toBe(true);
     }
     const trop = await deposerDemandeOrientation(demande(9), t0 + 5 * HEURE);
-    expect(trop).toMatchObject({ error: expect.stringContaining("cette adresse e-mail") });
+    expect(trop).toMatchObject({ error: expect.stringContaining("cette adresse électronique") });
     // Le lendemain, la porte se rouvre.
     const lendemain = await deposerDemandeOrientation(demande(8), t0 + 25 * HEURE);
     expect("id" in lendemain).toBe(true);
@@ -59,7 +59,7 @@ describe("plafond par destinataire", () => {
       expect("id" in r, `demande ${i}`).toBe(true);
     }
     const trop = await deposerDemandeDeDevis(demande(9), t0 + 5 * HEURE);
-    expect(trop).toMatchObject({ error: expect.stringContaining("cette adresse e-mail") });
+    expect(trop).toMatchObject({ error: expect.stringContaining("cette adresse électronique") });
   });
 
   it("rendez-vous téléphonique : même règle", async () => {
@@ -76,6 +76,6 @@ describe("plafond par destinataire", () => {
       expect("id" in r, `réservation ${i}`).toBe(true);
     }
     const trop = await reserverRendezVous(demande(PLAFOND_PAR_DESTINATAIRE_PAR_JOUR), now, sansAgenda);
-    expect(trop).toMatchObject({ error: expect.stringContaining("cette adresse e-mail") });
+    expect(trop).toMatchObject({ error: expect.stringContaining("cette adresse électronique") });
   });
 });

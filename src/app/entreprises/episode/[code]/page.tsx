@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -59,7 +60,7 @@ function secteurDe(code: string) {
  * seuls les épisodes de démonstration se lancent, en Découverte ; les autres montrent
  * leur titre, leur accroche et leur métier, ce qui les ouvre, et les démonstrations.
  */
-export default async function EpisodePage({
+async function EpisodePage({
   params,
   searchParams,
 }: {
@@ -161,7 +162,7 @@ function EpisodeFerme({
               <strong className="font-semibold text-slate-50">{MARQUE_DES_EPISODES}.</strong> Cet
               épisode est inclus dans l&apos;offre {OFFRES.episodes.nom}, qui se propose à part,
               sur devis. Sans elle, seuls les {demos.length} épisodes de démonstration
-              se jouent, en Découverte.
+              se jouent, au niveau Démonstration.
             </p>
             <p className="mt-2">
               <Link
@@ -201,3 +202,5 @@ function EpisodeFerme({
     </div>
   );
 }
+
+export default avecTypographie(EpisodePage);

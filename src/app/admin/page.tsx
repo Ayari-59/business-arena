@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
@@ -131,7 +132,7 @@ const RETOURS_AGENDA: Record<string, { ton: "bon" | "mauvais"; texte: string }> 
   echec: { ton: "mauvais", texte: "L'échange avec Google a échoué ; le détail est dans les journaux de l'hébergeur." },
 };
 
-export default async function AdminPage({
+async function AdminPage({
   searchParams,
 }: {
   searchParams: Promise<{ agenda?: string }>;
@@ -368,15 +369,15 @@ export default async function AdminPage({
             <div className="space-y-2">
               <label className="flex items-center gap-3 text-sm text-slate-300">
                 <input type="checkbox" name="aiCoach" defaultChecked={overview.config.ai.coach} className="h-4 w-4 accent-sky-400" />
-                Coach de tour (élève, solo) — un retour après chaque tour
+                Coach de tour (élève, solo) : un retour après chaque tour
               </label>
               <label className="flex items-center gap-3 text-sm text-slate-300">
                 <input type="checkbox" name="aiTutor" defaultChecked={overview.config.ai.tutor} className="h-4 w-4 accent-sky-400" />
-                Tuteur conversationnel (élève) — répond aux questions en cours de partie
+                Tuteur conversationnel (élève) : répond aux questions en cours de partie
               </label>
               <label className="flex items-center gap-3 text-sm text-slate-300">
                 <input type="checkbox" name="aiTeacherReview" defaultChecked={overview.config.ai.teacherReview} className="h-4 w-4 accent-sky-400" />
-                Synthèse des justifications (enseignant) — aide au débriefing
+                Synthèse des justifications (enseignant) : aide au débriefing
               </label>
             </div>
             <label className="mt-3 block">
@@ -951,3 +952,5 @@ export default async function AdminPage({
     </main>
   );
 }
+
+export default avecTypographie(AdminPage);

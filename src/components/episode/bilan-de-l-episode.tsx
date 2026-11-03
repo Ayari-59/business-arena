@@ -1,5 +1,6 @@
 "use client";
 
+import { avecTypographie } from "@/components/typographie";
 import Link from "next/link";
 import { useMemo } from "react";
 import { GRAINES_DU_BILAN, moyenne } from "@/engine/episodes/commun";
@@ -73,7 +74,7 @@ function Comparaison({
       <p className="max-w-2xl text-sm leading-relaxed text-slate-300">
         {memeHasard
           ? "Mêmes aléas pour les deux parties : l'écart de résultat vient entièrement de vos décisions."
-          : "Les deux parties n'ont pas eu les mêmes aléas : comparez plutôt la moyenne sur trente tirages, qui ne dépend que de vos décisions."}
+          : `Les deux parties n'ont pas eu les mêmes aléas : comparez plutôt la moyenne sur ${GRAINES_DU_BILAN.length} tirages, qui ne dépend que de vos décisions.`}
         {(avant.niveau ?? "standard") !== (apres.niveau ?? "standard") &&
           ` Niveau ${niveauParCode(avant.niveau).nom} pour la précédente, ${niveauParCode(apres.niveau).nom} pour celle-ci : le niveau change ce que vous saviez, pas le jugement des décisions.`}
       </p>
@@ -180,7 +181,7 @@ function Sommaire({ nombre }: { nombre: number }) {
   const liens = [
     ["#hasard-titre", "Les aléas"],
     ["#manieres-titre", "D'autres manières de décider"],
-    ["#decisions-titre", `Vos ${EN_LETTRES[nombre]} décisions`],
+    ["#decisions-titre", `Vos ${nombre} décisions`],
     ["#comportements-titre", "Comportements et axe de travail"],
     ["#robustesse-titre", "Vos choix tenaient-ils ?"],
     ["#observe-titre", "Ce que l'épisode a observé"],
@@ -204,9 +205,7 @@ function Sommaire({ nombre }: { nombre: number }) {
   );
 }
 
-const EN_LETTRES = ["zéro", "une", "deux", "trois", "quatre", "cinq", "six", "sept", "huit"];
-
-export function BilanDeLEpisode({
+function BilanDeLEpisodeBrut({
   ep,
   partie,
   cle,
@@ -257,7 +256,7 @@ export function BilanDeLEpisode({
           {ep.bilan.titre(t)}
         </h1>
         <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-300">
-          Avec vos choix, la moyenne sur trente tirages au hasard est de {kE(a.attendu)}. Ce
+          Avec vos choix, la moyenne sur {GRAINES_DU_BILAN.length} tirages au hasard est de {kE(a.attendu)}. Ce
           trimestre-ci, le hasard vous a {chance >= 0 ? "apporté" : "coûté"} {kE(Math.abs(chance))}.
           C&apos;est la qualité de vos décisions qui compte, pas ce hasard.
         </p>
@@ -355,7 +354,7 @@ export function BilanDeLEpisode({
 
       <section aria-labelledby="decisions-titre" className="carte grid scroll-mt-24 gap-4 p-5">
         <h2 id="decisions-titre" className="text-lg font-bold text-slate-50">
-          Vos {EN_LETTRES[ep.etapes.length]} décisions : ce qui relevait du choix, ce qui relevait
+          Vos {ep.etapes.length} décisions : ce qui relevait du choix, ce qui relevait
           du hasard
         </h2>
         <div
@@ -442,7 +441,7 @@ export function BilanDeLEpisode({
           </table>
         </div>
         <p className="max-w-2xl text-sm text-slate-400">
-          Chaque décision est rejouée sous trente tirages au hasard, vos autres choix inchangés. «
+          Chaque décision est rejouée sous {GRAINES_DU_BILAN.length} tirages au hasard, vos autres choix inchangés. «
           Pire cas » : le résultat du trimestre dans les 10 % de tirages les moins favorables,
           comparé à l&apos;option qui protège le mieux.
         </p>
@@ -552,3 +551,5 @@ function LeCoursDuTheme({ cours }: { cours: CoursDeLEpisode }) {
     </section>
   );
 }
+
+export const BilanDeLEpisode = avecTypographie(BilanDeLEpisodeBrut);

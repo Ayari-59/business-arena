@@ -27,7 +27,7 @@ export async function demanderUneReinitialisationAction(
   formData: FormData,
 ): Promise<EtatDeLaDemande> {
   const email = String(formData.get("email") ?? "").trim();
-  if (!email.includes("@")) return { message: null, error: "Saisissez l'adresse e-mail de votre compte." };
+  if (!email.includes("@")) return { message: null, error: "Saisissez l'adresse électronique de votre compte." };
   const garde = await garderLesTentatives({
     marqueur: MARQUEUR_MOT_DE_PASSE_OUBLIE,
     ip: await adresseDOrigine(),

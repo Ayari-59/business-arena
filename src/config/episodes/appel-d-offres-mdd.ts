@@ -103,7 +103,7 @@ export const REPORT_AU_PRIX_CIBLE = REPORT.sensibilites.map(
 export const DIAGNOSTICS = [
   {
     id: "marge",
-    t: "Le prix cible laisse une marge sur coût variable mince mais réelle : tout se joue sur ce qui peut la détruire — le lait, la capacité réelle de décembre, les frais que le contrat ajoute — et la MDD sortira, que nous la fabriquions ou non",
+    t: "Le prix cible laisse une marge sur coût variable mince mais réelle : tout se joue sur ce qui peut la détruire (le lait, la capacité réelle de décembre, les frais que le contrat ajoute) et la MDD sortira, que nous la fabriquions ou non",
   },
   {
     id: "capacite",
@@ -154,14 +154,14 @@ export const ETAPES: readonly Etape[] = [
         titre: "Décomposer avec Iwan Szymanski le coût d'un kilo de fromage blanc",
         cout: 1,
         nature: "decisive",
-        resultat: `Lait : ${nombre(LAIT.litresParKg)} litres par kilo, crème et lactosérum valorisés déduits, à ${LAIT.prix1000} € les 1 000 litres, soit ${prixKg(CV.lait)}. Ferments et ingrédients ${prixKg(CV.ferments)} ; seau ou pot, opercule et carton aux couleurs d'Opaline ${prixKg(CV.emballage)} ; énergie (froid, vapeur, nettoyage en place) ${prixKg(CV.energie)} ; transport Kerfroid jusqu'aux entrepôts d'Opaline ${prixKg(CV.transport)}. Coût variable livré : ${prixKg(CV_LIVRE)}. Les frais fixes de Pontivy — salaires mensualisés, amortissements, maintenance, structure : ${nombre(PONTIVY.fraisFixes / 1e6)} M€ par an — répartis sur ${nombre(PONTIVY.volume)} tonnes font ${prixKg(PART_FIXE)} par kilo : coût de revient complet ${prixKg(COUT_COMPLET)}. Iwan : « Ces frais fixes sont payés avec ou sans le contrat. Il n'en ajouterait qu'un : une cellule MDD — une technicienne qualité, un planificateur, les analyses du plan de contrôle d'Opaline —, ${kE(CONTRAT.cellule)} par an. »`,
+        resultat: `Lait : ${nombre(LAIT.litresParKg)} litres par kilo, crème et lactosérum valorisés déduits, à ${LAIT.prix1000} € les 1 000 litres, soit ${prixKg(CV.lait)}. Ferments et ingrédients ${prixKg(CV.ferments)} ; seau ou pot, opercule et carton aux couleurs d'Opaline ${prixKg(CV.emballage)} ; énergie (froid, vapeur, nettoyage en place) ${prixKg(CV.energie)} ; transport Kerfroid jusqu'aux entrepôts d'Opaline ${prixKg(CV.transport)}. Coût variable livré : ${prixKg(CV_LIVRE)}. Les frais fixes de Pontivy (salaires mensualisés, amortissements, maintenance, structure : ${nombre(PONTIVY.fraisFixes / 1e6)} M€ par an) répartis sur ${nombre(PONTIVY.volume)} tonnes font ${prixKg(PART_FIXE)} par kilo : coût de revient complet ${prixKg(COUT_COMPLET)}. Iwan : « Ces frais fixes sont payés avec ou sans le contrat. Il n'en ajouterait qu'un : une cellule MDD (une technicienne qualité, un planificateur, les analyses du plan de contrôle d'Opaline), ${kE(CONTRAT.cellule)} par an. »`,
       },
       {
         id: "capacite",
         titre: "Reprendre avec Fanchon Lozac'h la capacité réelle de la ligne de fromage frais",
         cout: 1,
         nature: "decisive",
-        resultat: `À pleine cadence, en 2×8, la ligne de fromage frais conditionne ${tonnes(LIGNE.theorique)} par mois. Le planning compte ${taux(LIGNE.trsAffiche, 0)} de TRS : ${tonnes(LIGNE.theorique * LIGNE.trsAffiche)}, dont ${nombre(LIGNE.marqueMoyenne)} pour Kerbrélan, soit ${nombre(LIBRE_AFFICHE)} de libres par mois — les ${nombre(LIBRE_AFFICHE_AN)} tonnes par an du directeur général. Le TRS réel des douze derniers mois est de ${taux(LIGNE.trsMoyen, 0)} : ${nombre(LIBRE_MOYEN)} tonnes libres par mois, et le contrat en demande ${nombre(BESOIN_MOIS)}. En décembre, les formats de fêtes multiplient les changements de format et les nettoyages : ${taux(LIGNE.trsDecembre, 0)} de TRS, quand Kerbrélan est à son pic (${tonnes(LIGNE.marqueDecembre)}) et la MDD aussi (+${taux(PIC_MDD - 1, 0)}, ${tonnes(BESOIN_DECEMBRE)}). Il resterait ${nombre(LIBRE_DECEMBRE)} tonnes de libres pour ${nombre(BESOIN_DECEMBRE)} demandées. Au-delà, Pontivy sert le contrat et Kerbrélan manque en rayon : environ ${euros(RUPTURE)} par tonne manquante, marge perdue et pénalités logistiques comprises.`,
+        resultat: `À pleine cadence, en 2×8, la ligne de fromage frais conditionne ${tonnes(LIGNE.theorique)} par mois. Le planning compte ${taux(LIGNE.trsAffiche, 0)} de TRS : ${tonnes(LIGNE.theorique * LIGNE.trsAffiche)}, dont ${nombre(LIGNE.marqueMoyenne)} pour Kerbrélan, soit ${nombre(LIBRE_AFFICHE)} de libres par mois, les ${nombre(LIBRE_AFFICHE_AN)} tonnes par an du directeur général. Le TRS réel des douze derniers mois est de ${taux(LIGNE.trsMoyen, 0)} : ${nombre(LIBRE_MOYEN)} tonnes libres par mois, et le contrat en demande ${nombre(BESOIN_MOIS)}. En décembre, les formats de fêtes multiplient les changements de format et les nettoyages : ${taux(LIGNE.trsDecembre, 0)} de TRS, quand Kerbrélan est à son pic (${tonnes(LIGNE.marqueDecembre)}) et la MDD aussi (+${taux(PIC_MDD - 1, 0)}, ${tonnes(BESOIN_DECEMBRE)}). Il resterait ${nombre(LIBRE_DECEMBRE)} tonnes de libres pour ${nombre(BESOIN_DECEMBRE)} demandées. Au-delà, Pontivy sert le contrat et Kerbrélan manque en rayon : environ ${euros(RUPTURE)} par tonne manquante, marge perdue et pénalités logistiques comprises.`,
       },
       {
         id: "lait",
@@ -281,7 +281,7 @@ export const ETAPES: readonly Etape[] = [
         titre: "Estimer le prix du Groupe Nordal avec Baptistin Haddadi",
         cout: 0.5,
         nature: "decisive",
-        resultat: `Nordal fait son fromage blanc dans son usine normande, à trois cents kilomètres des entrepôts d'Opaline de l'Ouest : son transport lui coûte 4 à 5 centimes de plus par kilo que le nôtre. Ses offres MDD connues chez Celtis, l'an dernier, allaient de 1,58 à 1,63 €. Sur ce fromage blanc, on peut l'attendre entre ${prixKg(NORDAL.min)} et ${prixKg(NORDAL.max)}, n'importe où dans la fourchette : il descend rarement sous le prix cible, et ne le peut guère plus que nous. Opaline retient le moins-disant, et compte une offre en variante — clause trimestrielle, plafond de décembre — un point plus cher qu'une offre au contrat type.`,
+        resultat: `Nordal fait son fromage blanc dans son usine normande, à trois cents kilomètres des entrepôts d'Opaline de l'Ouest : son transport lui coûte 4 à 5 centimes de plus par kilo que le nôtre. Ses offres MDD connues chez Celtis, l'an dernier, allaient de 1,58 à 1,63 €. Sur ce fromage blanc, on peut l'attendre entre ${prixKg(NORDAL.min)} et ${prixKg(NORDAL.max)}, n'importe où dans la fourchette : il descend rarement sous le prix cible, et ne le peut guère plus que nous. Opaline retient le moins-disant, et compte une offre en variante (clause trimestrielle, plafond de décembre) un point plus cher qu'une offre au contrat type.`,
       },
       {
         id: "acheteuse",
@@ -394,7 +394,7 @@ export const ETAPES: readonly Etape[] = [
         titre: "Demander à Ysée Bescond si l'on peut produire d'avance",
         cout: 0.5,
         nature: "utile",
-        resultat: `La DLC du fromage blanc est de 30 jours, et Opaline refuse un produit qui arrive avec moins des deux tiers de sa DLC : il doit partir dans les dix jours qui suivent sa fabrication. Sur ${tonnes(AVANCE.produit)} faites dans la deuxième quinzaine de novembre, une soixantaine seulement partiraient à temps ; le reste se déclasse — déstockage à ${prixKg(AVANCE.recuperation)} le kilo, ou dons aux associations —, une perte de ${prixKg(PERTE_DECLASSE)} par kilo, plus ${euros(AVANCE.stockage)} la tonne de chambre froide.`,
+        resultat: `La DLC du fromage blanc est de 30 jours, et Opaline refuse un produit qui arrive avec moins des deux tiers de sa DLC : il doit partir dans les dix jours qui suivent sa fabrication. Sur ${tonnes(AVANCE.produit)} faites dans la deuxième quinzaine de novembre, une soixantaine seulement partiraient à temps ; le reste se déclasse (déstockage à ${prixKg(AVANCE.recuperation)} le kilo, ou dons aux associations), une perte de ${prixKg(PERTE_DECLASSE)} par kilo, plus ${euros(AVANCE.stockage)} la tonne de chambre froide.`,
       },
       {
         id: "rh",

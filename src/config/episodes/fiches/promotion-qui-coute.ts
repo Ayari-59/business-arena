@@ -33,7 +33,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 10,
       titre: "Lancement",
       detail:
-        "Vous envoyez le lien /entreprises/episode/promotion-qui-coute?hasard=16 : toute la classe joue le même trimestre, sous les mêmes aléas. Les élèves jouent seuls ou en binôme. Sans licence, la démonstration se joue au niveau Découverte : un repère de méthode accompagne chaque étape, et chaque décision montre aussitôt ce qu'elle a changé par rapport à ne rien changer. Vous présentez la marque en deux phrases (des yaourts, des promotions qui font +180 %) sans parler de marge incrémentale, et vous demandez de noter sur papier le compte de l'opération de Celtis fait en semaine 1 et le plan proposé pour mai et juin.",
+        "Vous envoyez le lien /entreprises/episode/promotion-qui-coute?hasard=16 : toute la classe joue le même trimestre, sous les mêmes aléas. Les élèves jouent seuls ou en binôme. Sans licence, la démonstration se joue au niveau Démonstration : un repère de méthode accompagne chaque étape, et chaque décision montre aussitôt ce qu'elle a changé par rapport à ne rien changer. Vous présentez la marque en deux phrases (des yaourts, des promotions qui font +180 %) sans parler de marge incrémentale, et vous demandez de noter sur papier le compte de l'opération de Celtis fait en semaine 1 et le plan proposé pour mai et juin.",
     },
     {
       minutes: 40,

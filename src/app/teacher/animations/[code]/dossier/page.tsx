@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import { formationsEnToutesLettres } from "@/config/formations";
 import Link from "next/link";
@@ -44,7 +45,7 @@ export async function generateMetadata({
   return { title: atelier ? `Corrigés · ${atelier.titre}` : "Corrigés" };
 }
 
-export default async function DossierEnseignantPage({
+async function DossierEnseignantPage({
   params,
 }: {
   params: Promise<{ code: string }>;
@@ -221,3 +222,5 @@ export default async function DossierEnseignantPage({
     </main>
   );
 }
+
+export default avecTypographie(DossierEnseignantPage);

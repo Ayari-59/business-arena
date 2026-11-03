@@ -119,7 +119,7 @@ export function comportements(p: PartieJouee, t: Trimestre): Constat[] {
     score: tenus === 4 ? 1 : tenus >= 2 ? 0.6 : 0,
     texte: `${
       leviers[0]
-        ? "Vous avez répondu au retard par des restrictions — durée minimale sur les ponts, non remboursable en semaine — plutôt que par une baisse."
+        ? "Vous avez répondu au retard par des restrictions (durée minimale sur les ponts, non remboursable en semaine) plutôt que par une baisse."
         : "Vous n'avez pas posé de restrictions là où la demande dépassait les chambres."
     } ${
       leviers[1]
@@ -195,7 +195,7 @@ export const EPISODE_YIELD: Episode<Trimestre> = {
   resume:
     "Un hôtel au bord du lac d'Annecy, un pick-up en retard, et tout le monde veut baisser les prix sur les plateformes. Piloter le RevPAR et le revenu net, segment par segment et canal par canal.",
   persona:
-    "Vous êtes Romy Castellane, directrice de L'Escale Lac, l'hôtel 4 étoiles du Groupe Escale au bord du lac d'Annecy : 84 chambres, un restaurant, une clientèle de loisirs qui vient surtout l'été. Ludmila Ferrouillat est votre cheffe de réception, Clodomir Jolivet votre responsable des ventes ; vous travaillez avec Lucile Fabbri, revenue manager du siège. Votre trimestre : avril à juin, les vacances de printemps, quatre ponts en mai et l'avant-saison — et, pendant ce temps, une bonne part de juillet-août se réserve.",
+    "Vous êtes Romy Castellane, directrice de L'Escale Lac, l'hôtel 4 étoiles du Groupe Escale au bord du lac d'Annecy : 84 chambres, un restaurant, une clientèle de loisirs qui vient surtout l'été. Ludmila Ferrouillat est votre cheffe de réception, Clodomir Jolivet votre responsable des ventes ; vous travaillez avec Lucile Fabbri, revenue manager du siège. Votre trimestre : avril à juin, les vacances de printemps, quatre ponts en mai et l'avant-saison, et, pendant ce temps, une bonne part de juillet-août se réserve.",
   mandat: [
     {
       fort: kE(BUDGET_TRIMESTRE),
@@ -409,7 +409,7 @@ export const EPISODE_YIELD: Episode<Trimestre> = {
       `${kE(t.objectif)} de revenu hébergement net, été compris : ${kESigne(t.objectif - BUDGET)} sur le budget`,
     formatObjectif: kE,
     noteDesBarres:
-      "Revenu hébergement net de commissions — séjours d'avril à juin, plus l'été estimé fin juin, frais des actions déduits — sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Revenu hébergement net de commissions (séjours d'avril à juin, plus l'été estimé fin juin, frais des actions déduits) sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

@@ -203,7 +203,7 @@ export const EPISODE_NUMERIQUE: Episode<Trimestre> = {
     { fort: kE(BUDGET), texte: "de contribution du site sur le trimestre, au budget" },
   ],
   jugement:
-    "Votre direction juge le trimestre sur la contribution du site — la marge des ventes en ligne et des achats qu'elles ramènent au comptoir, moins la publicité, le développement, les remises et les primes — en écart au budget.",
+    "Votre direction juge le trimestre sur la contribution du site (la marge des ventes en ligne et des achats qu'elles ramènent au comptoir, moins la publicité, le développement, les remises et les primes) en écart au budget.",
   duree: "une vingtaine de minutes",
   nomDuTableau: "Votre site",
 
@@ -376,7 +376,7 @@ export const EPISODE_NUMERIQUE: Episode<Trimestre> = {
         heure: "sem. 7",
         alerte: true,
         texte:
-          "Verdict du test : sur téléphone, le nouveau tunnel fait chuter les commandes — le sélecteur de date ne s'ouvre pas sur certains appareils. On garde l'ancien tunnel, et on a perdu deux semaines sur la moitié des visiteurs seulement.",
+          "Verdict du test : sur téléphone, le nouveau tunnel fait chuter les commandes : le sélecteur de date ne s'ouvre pas sur certains appareils. On garde l'ancien tunnel, et on a perdu deux semaines sur la moitié des visiteurs seulement.",
       });
     }
     if (arrive.deploiementCasse) {
@@ -433,7 +433,7 @@ export const EPISODE_NUMERIQUE: Episode<Trimestre> = {
     titre: (t) => `${ecartAuBudget(t.objectif)}, coûts compris`,
     formatObjectif: kE,
     noteDesBarres:
-      "Écart au budget de contribution du site — marge des ventes en ligne et des achats d'appoint au comptoir, moins publicité, développement, remises et primes — sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Écart au budget de contribution du site (marge des ventes en ligne et des achats d'appoint au comptoir, moins publicité, développement, remises et primes) sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const conversionFinale = t.semaines[13]!.conversion;
       return [

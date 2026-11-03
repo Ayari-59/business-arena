@@ -59,7 +59,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "hotel_greve_transports",
     expediteur: "Syndicat hôtelier départemental",
-    objet: "Mouvement social dans les transports — conséquences sur nos réservations",
+    objet: "Mouvement social dans les transports : conséquences sur nos réservations",
     corps:
       "Le préavis couvre huit jours et concerne le rail comme l'aérien. Nos adhérents enregistrent déjà des annulations massives sur la clientèle affaires, qui ne peut plus rejoindre la ville.",
     signataire: "Le président du syndicat",
@@ -74,7 +74,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "hotel_panne_chaudiere",
     expediteur: "Chauffage Delattre · Service d'urgence",
-    objet: "Intervention sur votre chaudière — étage sans eau chaude",
+    objet: "Intervention sur votre chaudière : étage sans eau chaude",
     corps:
       "L'échangeur est percé et la pièce n'est pas en stock. L'étage desservi restera sans eau chaude trois jours au mieux. Nous vous confirmerons la date dès réception de la commande.",
     signataire: "Le responsable d'intervention",
@@ -131,7 +131,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "hotel_degat_des_eaux",
     expediteur: "Assurances du Littoral · Service sinistres",
-    objet: "Déclaration de sinistre — rupture de canalisation",
+    objet: "Déclaration de sinistre : rupture de canalisation",
     corps:
       "L'expert est passé : douze chambres sont hors service et les plafonds de l'étage inférieur sont à reprendre. La prise en charge de la perte d'exploitation dépend de la formule souscrite ; le détail figure à votre contrat.",
     signataire: "La gestionnaire de sinistres",
@@ -160,7 +160,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "hotel_etoile_supplementaire",
     expediteur: "Commission de classement des hébergements touristiques",
-    objet: "Décision de classement — attribution d'une étoile supplémentaire",
+    objet: "Décision de classement : attribution d'une étoile supplémentaire",
     corps:
       "À l'issue de la visite d'inspection, la commission relève la qualité des rénovations conduites et vous attribue une étoile supplémentaire. Le nouveau classement prend effet immédiatement et vaut pour cinq ans.",
     signataire: "La présidente de la commission",
@@ -191,7 +191,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Autocars Vasseur · Direction",
     objet: "Demande d'hébergement en urgence pour nos circuits",
     corps:
-      "L'hôtel qui accueillait nos circuits ferme ses portes après un dégât des eaux. Nos groupes doivent être relogés sans attendre : {{lettres: commande_hotel_groupe_impromptu}} nuitées {{ce trimestre}}, que nous réglons comptant à l'arrivée, dans la limite des chambres que vous pourrez libérer.",
+      "L'hôtel qui accueillait nos circuits ferme ses portes après un dégât des eaux. Nos groupes doivent être relogés sans attendre : {{entier: commande_hotel_groupe_impromptu}} nuitées {{ce trimestre}}, que nous réglons comptant à l'arrivée, dans la limite des chambres que vous pourrez libérer.",
     signataire: "Le responsable d'exploitation",
     effet:
       "+{{entier: commande_hotel_groupe_impromptu}} nuitées ({{échelle trimestre}}) vendues d'office ce tour, réglées comptant, dans la limite des chambres libres",
@@ -290,7 +290,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "hotel_congres",
     expediteur: "Société savante de cardiologie · Comité d'organisation",
-    objet: "Congrès annuel — demande de contingent de chambres",
+    objet: "Congrès annuel : demande de contingent de chambres",
     corps:
       "Notre congrès réunira trois mille praticiens pendant quatre jours. Nous recherchons un contingent de chambres auprès de chaque établissement de la ville, la capacité disponible étant inférieure au besoin.",
     signataire: "La secrétaire générale",
@@ -319,7 +319,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "hotel_legionelle",
     expediteur: "Agence régionale de santé · Service santé-environnement",
-    objet: "Mise en demeure — présence de légionelles dans votre réseau d'eau",
+    objet: "Mise en demeure : présence de légionelles dans votre réseau d'eau",
     corps:
       "Les prélèvements effectués dépassent le seuil réglementaire. Nous vous mettons en demeure de fermer l'étage concerné et de procéder à la désinfection complète du réseau. Un contrôle de conformité sera diligenté avant toute réouverture.",
     signataire: "L'ingénieur sanitaire",

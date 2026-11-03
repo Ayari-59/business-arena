@@ -81,7 +81,7 @@ const saisieSansMotDePasse = (formData: FormData, champs: readonly string[]): Re
 
 const registerSchema = z.object({
   displayName: z.string({ error: "Votre nom est requis" }).trim().min(1, "Votre nom est requis"),
-  email: z.string({ error: "E-mail invalide" }).email("E-mail invalide"),
+  email: z.string({ error: "Adresse électronique invalide" }).email("Adresse électronique invalide"),
   password: z.string({ error: "Mot de passe : 8 caractères minimum" }).min(8, "Mot de passe : 8 caractères minimum"),
   schoolName: z.string().catch(""),
   inviteCode: z.string().catch(""),

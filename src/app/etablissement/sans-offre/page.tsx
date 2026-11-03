@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
  * s'applique. Aucun compte n'est créé, rien n'est gardé : la page dit où en est
  * l'établissement et mène aux tarifs et à la demande de devis.
  */
-export default function SansOffrePage() {
+function SansOffrePage() {
   return (
     <main id="main" className="pb-16" data-etablissement-sans-offre="">
       <EnTeteDePage
@@ -55,3 +56,5 @@ export default function SansOffrePage() {
     </main>
   );
 }
+
+export default avecTypographie(SansOffrePage);

@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import { redirect } from "next/navigation";
 import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import type { Metadata } from "next";
@@ -14,8 +15,10 @@ export const metadata: Metadata = {
 };
 
 /** Le manuel pour l'enseignant connecté, qui y arrive par sa navigation. */
-export default async function ManuelPage() {
+async function ManuelPage() {
   const session = await getSession();
   if (!session) redirect(await connexionPourLaPageDemandee());
   return <ManuelImprimable retour={{ href: "/teacher", label: "Espace enseignant" }} />;
 }
+
+export default avecTypographie(ManuelPage);

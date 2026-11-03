@@ -140,7 +140,7 @@ export function comportements(p: PartieJouee, t: Trimestre): Constat[] {
         ? "Vous avez ajusté l'offre avec les clients du pilote : caution, contrôle au retour, forfait demi-journée."
         : t.locations === 0
           ? "Faute de pilote, rien ne vous a montré ce que le terrain réservait : retours en retard, casse, nettoyage."
-          : `Vous n'avez pas traité ce que le terrain montrait — retours en retard, casse, nettoyage : marge moyenne par location, ${euros(t.margeLocation)}${
+          : `Vous n'avez pas traité ce que le terrain montrait (retours en retard, casse, nettoyage) : marge moyenne par location, ${euros(t.margeLocation)}${
               t.incident
                 ? `, et un échafaudage reloué sans contrôle a cédé en semaine ${t.incident}`
                 : ""
@@ -222,7 +222,7 @@ export const EPISODE_INNOVATION: Episode<Trimestre> = {
   resume:
     "Une location de matériel que la direction veut dans douze agences au trimestre, sans savoir ce que les artisans loueront. Tester avant de généraliser.",
   persona:
-    "Vous êtes Chloé Renaud, cheffe de produit au siège d'Arvel Distribution, à Lyon. On vous a confié le lancement d'un service de location de matériel de chantier pour les artisans — échafaudages roulants, bétonnières, perforateurs, petit outillage — dans les douze agences de la région. Vous rendez compte à Idrissa Sangaré, directeur de l'offre.",
+    "Vous êtes Chloé Renaud, cheffe de produit au siège d'Arvel Distribution, à Lyon. On vous a confié le lancement d'un service de location de matériel de chantier pour les artisans (échafaudages roulants, bétonnières, perforateurs, petit outillage) dans les douze agences de la région. Vous rendez compte à Idrissa Sangaré, directeur de l'offre.",
   mandat: [
     { fort: `${AGENCES} agences`, texte: "équipées au trimestre, selon la direction" },
     {

@@ -10,4 +10,4 @@
 export const PLAFOND_PAR_DESTINATAIRE_PAR_JOUR = 3;
 export const FENETRE_PAR_DESTINATAIRE_MS = 24 * 60 * 60 * 1000;
 export const REFUS_PAR_DESTINATAIRE =
-  "Trop de demandes pour cette adresse e-mail aujourd'hui : réessayez demain, ou écrivez-nous.";
+  "Trop de demandes pour cette adresse électronique aujourd'hui : réessayez demain, ou écrivez-nous.";

@@ -45,7 +45,7 @@ export const LETTRES_DE_MISSION: CourrierDef[] = [
   {
     code: "mission_niveau_1",
     expediteur: EXPEDITEUR,
-    objet: "Votre mandat — direction de l'entreprise",
+    objet: "Votre mandat : direction de l'entreprise",
     corps:
       "Nous vous confions la conduite de la maison à compter de ce tour. Vous décidez du prix auquel vous vendez, du volume que vous engagez et de ce que vous dépensez pour vous faire connaître ; le reste demeure de notre ressort.",
     signataire: SIGNATURE,
@@ -60,7 +60,7 @@ export const LETTRES_DE_MISSION: CourrierDef[] = [
   {
     code: "mission_niveau_2",
     expediteur: EXPEDITEUR,
-    objet: "Votre mandat — direction et moyens de production",
+    objet: "Votre mandat : direction et moyens de production",
     corps:
       "Nous vous confions la conduite de la maison, prix et volume compris. S'y ajoute ce que vous mettez dans le produit : la qualité se budgète, la maintenance aussi, et ces deux dépenses-là se paient au tour suivant.",
     signataire: SIGNATURE,
@@ -75,7 +75,7 @@ export const LETTRES_DE_MISSION: CourrierDef[] = [
   {
     code: "mission_niveau_3",
     expediteur: EXPEDITEUR,
-    objet: "Votre mandat — direction, production et finances",
+    objet: "Votre mandat : direction, production et finances",
     corps:
       "Nous vous confions l'offre, l'outil et désormais les finances : c'est vous qui décidez comment l'entreprise se finance et comment elle se couvre contre les coups durs. Notre banque et notre assureur s'adresseront à vous.",
     signataire: SIGNATURE,
@@ -90,7 +90,7 @@ export const LETTRES_DE_MISSION: CourrierDef[] = [
   {
     code: "mission_niveau_4",
     expediteur: EXPEDITEUR,
-    objet: "Votre mandat — direction générale",
+    objet: "Votre mandat : direction générale",
     corps:
       "Nous vous confions la direction générale : tout ce qui engage la maison relève de vous. Les femmes et les hommes que nous employons, les investissements qui nous porteront demain et nos engagements environnementaux y compris.",
     signataire: SIGNATURE,
@@ -105,7 +105,7 @@ export const LETTRES_DE_MISSION: CourrierDef[] = [
   {
     code: "mission_niveau_5",
     expediteur: EXPEDITEUR,
-    objet: "Votre mandat — direction générale et gestion de trésorerie",
+    objet: "Votre mandat : direction générale et gestion de trésorerie",
     corps:
       "Nous vous confions la direction générale, y compris l'emploi de nos excédents. Une trésorerie qui dort ne rapporte rien, une trésorerie placée ne se dépense plus : l'arbitrage vous revient.",
     signataire: SIGNATURE,
@@ -120,7 +120,7 @@ export const LETTRES_DE_MISSION: CourrierDef[] = [
   {
     code: "mission_niveau_6",
     expediteur: EXPEDITEUR,
-    objet: "Votre mandat — direction générale et affectation du résultat",
+    objet: "Votre mandat : direction générale et affectation du résultat",
     corps:
       "Nous vous confions la direction générale, et vous nous répondrez aussi sur nos parts. C'est vous qui proposerez ce qui nous est distribué et ce qui reste en réserve pour armer l'entreprise ; nous jugerons sur les comptes.",
     signataire: SIGNATURE,

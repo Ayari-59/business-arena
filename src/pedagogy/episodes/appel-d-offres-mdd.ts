@@ -74,7 +74,7 @@ export function comportements(p: PartieJouee, t: Trimestre): Constat[] {
   const d = p.diagnostic;
   const lecture: Record<string, string> = {
     marge:
-      "Votre diagnostic de la semaine 1 était juste : au prix cible, chaque kilo laissait 10 centimes de marge sur coût variable, et tout se jouait sur ce qui pouvait les reprendre — le lait, décembre, les frais que le contrat ajoutait —, la MDD sortant de toute façon.",
+      "Votre diagnostic de la semaine 1 était juste : au prix cible, chaque kilo laissait 10 centimes de marge sur coût variable, et tout se jouait sur ce qui pouvait les reprendre (le lait, décembre, les frais que le contrat ajoutait), la MDD sortant de toute façon.",
     capacite:
       "En semaine 1, vous avez vu la capacité de décembre : un vrai risque, mais pas le seul. Le prix du lait pouvait reprendre toute la marge du contrat, et la MDD allait sortir, fabriquée par nous ou par Nordal.",
     perte:
@@ -178,7 +178,7 @@ export function axe([information, diagnostic, reflexe, calibrage, contrat]: read
     return {
       titre: "Écrire le contrat comme si le lait allait monter",
       texte:
-        "Une marge de 10 centimes par kilo ne résiste pas à une hausse du lait de 10 % sans clause indexée, ni à un mois de décembre où il manque 200 tonnes. Les clauses — révision du prix, volumes de pointe, reprise des emballages — sont la marge du contrat.",
+        "Une marge de 10 centimes par kilo ne résiste pas à une hausse du lait de 10 % sans clause indexée, ni à un mois de décembre où il manque 200 tonnes. Les clauses (révision du prix, volumes de pointe, reprise des emballages) sont la marge du contrat.",
     };
   }
   if (diagnostic!.score < 1) {
@@ -435,7 +435,7 @@ export const EPISODE_MDD: Episode<Trimestre> = {
     titre: (t) => `${valeurDite(t.objectif)} sur les deux ans, estimée en semaine 13`,
     formatObjectif: kE,
     noteDesBarres:
-      "Valeur du dossier estimée en semaine 13 sur les deux ans du contrat — marge du contrat, lait, décembre, emballages, marge perdue par Kerbrélan, Celtis, dépenses du trimestre —, sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Valeur du dossier estimée en semaine 13 sur les deux ans du contrat (marge du contrat, lait, décembre, emballages, marge perdue par Kerbrélan, Celtis, dépenses du trimestre), sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

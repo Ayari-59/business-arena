@@ -124,7 +124,7 @@ export function comportements(p: PartieJouee, t: Trimestre): Constat[] {
       p.chemin[D.commande] === 3
         ? `Le prix de ${COMMANDE.prix} € est parti chez Cévral sur le tarif catalogue, sans conditions qui le distinguent${t.prixEbruite ? " ; d'autres clients l'ont vu et ont obtenu des remises" : ""}.`
         : p.chemin[D.commande] === 2
-          ? "Vous avez attaché le prix de Cévral à des conditions — camions complets, référence de chantier — qui en font un prix de chantier, pas un prix catalogue."
+          ? "Vous avez attaché le prix de Cévral à des conditions (camions complets, référence de chantier) qui en font un prix de chantier, pas un prix catalogue."
           : "Vous n'avez pas fait circuler de prix de chantier."
     } ${
       p.chemin[D.rioult] === 0
@@ -166,7 +166,7 @@ export function axe([information, diagnostic, reflexe, calibrage, prix]: readonl
     return {
       titre: "Garder un prix de chantier pour le chantier",
       texte:
-        "Un prix marginal ne vaut que pour du volume qui n'existerait pas sans lui. Attachez-le à des conditions qui le distinguent — camions complets, référence à part, semaines creuses — et ne le donnez jamais sur ce que vos clients commanderaient de toute façon.",
+        "Un prix marginal ne vaut que pour du volume qui n'existerait pas sans lui. Attachez-le à des conditions qui le distinguent (camions complets, référence à part, semaines creuses) et ne le donnez jamais sur ce que vos clients commanderaient de toute façon.",
     };
   }
   if (diagnostic!.score < 1) {
@@ -206,7 +206,7 @@ export const EPISODE_COMMANDE_SPECIALE: Episode<Trimestre> = {
     { fort: `${COUT_COMPLET} €`, texte: "de coût complet par panneau, selon la fiche de coût" },
   ],
   jugement:
-    "Votre direction juge le trimestre sur la marge de l'atelier — marge sur coût variable, moins les charges fixes et les surcoûts de capacité — en écart à son budget.",
+    "Votre direction juge le trimestre sur la marge de l'atelier (marge sur coût variable, moins les charges fixes et les surcoûts de capacité) en écart à son budget.",
   duree: "une vingtaine de minutes",
   nomDuTableau: "Votre atelier",
 

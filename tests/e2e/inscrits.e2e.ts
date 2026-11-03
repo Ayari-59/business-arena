@@ -152,7 +152,7 @@ async function telecharger(p: Page, lien: string): Promise<{ nom: string; octets
 
 const COLONNES = [
   "Nom",
-  "E-mail",
+  "Adresse électronique",
   "Établissements et rôles",
   "Offre en cours",
   "Inscrit le",

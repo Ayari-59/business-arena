@@ -107,7 +107,7 @@ export function AlerteTresorerie({
         Crise de trésorerie
       </p>
       <p className="mt-1.5 text-sm leading-relaxed text-slate-200">
-        Votre découvert dépasse ce que la banque consent — elle a déjà cédé toutes vos
+        Votre découvert dépasse ce que la banque consent : elle a déjà cédé toutes vos
         créances à votre place. Trésorerie nette{" "}
         <strong className="tabular-nums">{formatEuro(alerte.tresorerieNette)}</strong> pour un
         découvert autorisé de{" "}

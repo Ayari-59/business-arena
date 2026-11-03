@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CONCEPTS } from "@/config/pedagogy/concepts";
@@ -71,7 +72,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/notions" },
 };
 
-export default async function ConceptsPage() {
+async function ConceptsPage() {
   // Quelles bandes sont à contre-jour : le réglage de l'admin, ou l'état d'origine.
   const { theme } = await getPlatformConfig();
   const c = (id: string) => contrasteDeLaBande(theme, id);
@@ -223,3 +224,5 @@ function DansLeCours({ chapitres }: { chapitres: readonly Lien[] }) {
     </p>
   );
 }
+
+export default avecTypographie(ConceptsPage);

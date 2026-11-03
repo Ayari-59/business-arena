@@ -72,17 +72,17 @@ export function etapesEleve(f: FaitsDeLaPartie): Etape[] {
     },
     {
       titre: "Lisez la situation",
-      texte: `Onglet « Situation » : l'entreprise${f.entreprise ? ` — ${f.entreprise} —` : ""} vous met devant un cas réel. Lisez-le en entier avant de toucher à quoi que ce soit : tout ce qu'il faut pour décider y est, et rien n'y est décoratif.`,
+      texte: `Onglet « Situation » : l'entreprise${f.entreprise ? ` (${f.entreprise})` : ""} vous met devant un cas réel. Lisez-le en entier avant de toucher à quoi que ce soit : tout ce qu'il faut pour décider y est, et rien n'y est décoratif.`,
     },
     {
       titre: "Analysez avant de décider",
       texte: f.avecQuiz
-        ? `Onglet « Analyser » : cochez votre diagnostic, choisissez le modèle d'analyse qui convient, répondez aux questions. Les indices existent et coûtent des points — cinq indices laissent tout de même 80 % du score. Chercher d'abord vaut mieux ; demander de l'aide ne disqualifie pas.`
-        : `Onglet « Analyser » : cochez le diagnostic qui vous paraît juste et choisissez le modèle d'analyse qui convient. Les indices existent et coûtent des points — cinq indices laissent tout de même 80 % du score.`,
+        ? `Onglet « Analyser » : cochez votre diagnostic, choisissez le modèle d'analyse qui convient, répondez aux questions. Les indices existent et coûtent des points : cinq indices laissent tout de même 80 % du score. Chercher d'abord vaut mieux ; demander de l'aide ne disqualifie pas.`
+        : `Onglet « Analyser » : cochez le diagnostic qui vous paraît juste et choisissez le modèle d'analyse qui convient. Les indices existent et coûtent des points : cinq indices laissent tout de même 80 % du score.`,
     },
     {
       titre: "Décidez",
-      texte: `Onglet « Décider » : ${f.champs} champs répartis en étapes. Chaque champ arrive avec une valeur proposée — la reconduire sans y toucher, c'est ne pas décider, et l'enseignant le voit. Votre saisie est gardée au fur et à mesure : un onglet fermé par erreur ne coûte rien.`,
+      texte: `Onglet « Décider » : ${f.champs} champs répartis en étapes. Chaque champ arrive avec une valeur proposée : la reconduire sans y toucher, c'est ne pas décider, et l'enseignant le voit. Votre saisie est gardée au fur et à mesure : un onglet fermé par erreur ne coûte rien.`,
     },
     {
       titre: "Écrivez ce que vous attendez",
@@ -122,11 +122,11 @@ export function etapesEnseignant(f: FaitsDeLaPartie): Etape[] {
     },
     {
       titre: "La clôture",
-      texte: `« Clore le tour et simuler » : l'écran dit combien d'équipes ont validé et ce que feront les autres — elles reconduisent leurs décisions du tour précédent. Le geste est irréversible et la simulation prend une quinzaine de secondes.`,
+      texte: `« Clore le tour et simuler » : l'écran dit combien d'équipes ont validé et ce que feront les autres : elles reconduisent leurs décisions du tour précédent. Le geste est irréversible et la simulation prend une quinzaine de secondes.`,
     },
     {
       titre: "Le débriefing",
-      texte: `Le classement reste le vôtre tant que vous ne l'avez pas révélé : les équipes voient leurs propres chiffres, pas leur place. Révélez-le, projetez le panneau « Classement », et partez des justifications écrites avant le résultat — elles sont dans le tableau des équipes, sous chaque validation.`,
+      texte: `Le classement reste le vôtre tant que vous ne l'avez pas révélé : les équipes voient leurs propres chiffres, pas leur place. Révélez-le, projetez le panneau « Classement », et partez des justifications écrites avant le résultat : elles sont dans le tableau des équipes, sous chaque validation.`,
     },
     {
       titre: "Après la séance",

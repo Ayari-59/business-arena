@@ -5,6 +5,7 @@ import { CHAPITRES } from "@/config/cours/registre";
 import { chapitreDuCas } from "@/pedagogy/cours/deroule";
 import { servirLeChapitre } from "@/pedagogy/cours/chapitre-servi";
 import { bilanDesObjectifs } from "@/pedagogy/cours/aides-du-guide";
+import { typographier } from "@/lib/typographie";
 
 /**
  * CHAQUE ÉTAPE DIT L'OBJECTIF QU'ELLE TRAVAILLE (demande du propriétaire, octobre 2026).
@@ -52,7 +53,7 @@ describe("les objectifs des étapes", () => {
   it("le chapitre servi porte les objectifs des étapes et les compétences du référentiel", () => {
     for (const c of CHAPITRES) {
       const servi = servirLeChapitre(c, casDeLEntreprise(c.entreprises?.codes[0] ?? ENTREPRISES_DU_COURS[0]!));
-      expect(servi.blocs, c.code).toEqual(c.blocs);
+      expect(servi.blocs, c.code).toEqual(typographier(c.blocs));
       for (const e of servi.etapes) expect(e.objectifs, `${c.code} ${e.id}`).toEqual(c.etapes.find((x) => x.id === e.id)!.objectifs);
     }
   }, 60_000);
