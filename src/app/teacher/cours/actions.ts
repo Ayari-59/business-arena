@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { choisirLeParcours, cloreClasse, creerClasse, permettreLaCalculatrice } from "@/services/cours.service";
+import { changerLaLiberation, libererLeChapitre } from "@/services/attributions.service";
+import { chapitreParCode } from "@/config/cours/registre";
 
 /**
  * LES GESTES DE L'ENSEIGNANT SUR SES CLASSES DU COURS. L'enseignant est celui de la
@@ -23,6 +25,7 @@ export async function creerClasseAction(formData: FormData): Promise<void> {
     nom: String(formData.get("nom") ?? ""),
     entreprise: String(formData.get("entreprise") ?? "") || null,
     parcours: String(formData.get("parcours") ?? "") || null,
+    liberation: formData.get("liberation") === "chapitre" ? "chapitre" : "tout",
   });
   if (!cree) redirect("/teacher/cours?refus=nom#nouvelle-classe"); // un nom et un parcours sont requis
   revalidatePath("/teacher/cours");
@@ -49,4 +52,21 @@ export async function parcoursAction(classeId: string, formData: FormData): Prom
   if (!(await choisirLeParcours({ enseignantId, classeId, parcours }))) redirect(`/teacher/cours/${classeId}?refus=parcours`);
   revalidatePath(`/teacher/cours/${classeId}`);
   redirect(`/teacher/cours/${classeId}?fait=parcours`);
+}
+
+/** Tout ouvrir aux élèves, ou libérer chapitre par chapitre (migration 0056). */
+export async function liberationAction(classeId: string, mode: "tout" | "chapitre"): Promise<void> {
+  const enseignantId = await enseignant();
+  if (!(await changerLaLiberation({ enseignantId, classeId, mode }))) redirect("/teacher/cours?refus=introuvable");
+  revalidatePath(`/teacher/cours/${classeId}`);
+  redirect(`/teacher/cours/${classeId}?fait=${mode === "tout" ? "tout-libere" : "chapitre-par-chapitre"}#liberation`);
+}
+
+/** Libérer ou refermer un chapitre de la classe. */
+export async function libererChapitreAction(classeId: string, chapitre: string, libere: boolean): Promise<void> {
+  const enseignantId = await enseignant();
+  if (!chapitreParCode(chapitre) || !(await libererLeChapitre({ enseignantId, classeId, chapitre, libere })))
+    redirect("/teacher/cours?refus=introuvable");
+  revalidatePath(`/teacher/cours/${classeId}`);
+  redirect(`/teacher/cours/${classeId}?chapitre=${chapitre}&fait=${libere ? "libere" : "referme"}#liberation`);
 }

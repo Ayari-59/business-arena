@@ -10,6 +10,8 @@ import { ENTREPRISES_DU_COURS } from "@/config/cours/metiers";
 import type { ProgressionLue } from "@/pedagogy/cours/suivi";
 import { offreDuCoursDe, plafondDElevesDesComptes, unCompteSousLicence } from "@/services/acces.service";
 import { getTeacherOrgId } from "@/services/auth.service";
+import { chapitresLiberes, parcoursAttribues } from "@/services/attributions.service";
+import { dansLesAttributions, libereALaClasse, parcoursAttribue, type ModeDeLiberation } from "@/services/chapitres-de-la-classe";
 
 /**
  * LES CLASSES DU COURS PAR LA SIMULATION.
@@ -62,15 +64,19 @@ export async function creerClasse(args: {
   entreprise?: string | null;
   /** Le parcours du cours (config/cours/registre.ts) : obligatoire ; inconnu ou absent, rien ne se crée. */
   parcours?: string | null;
+  /** Tout ouvrir aux élèves, ou libérer chapitre par chapitre (migration 0056) ; « tout » par défaut. */
+  liberation?: ModeDeLiberation;
 }): Promise<{ id: string; code: string } | null> {
   const nom = args.nom.trim().slice(0, NOM_DE_CLASSE_MAX);
-  // Le parcours est obligatoire à la création (migration 0052) : il ouvre les chapitres.
+  // Le parcours est obligatoire à la création (migration 0052) : il ouvre les chapitres. Quand
+  // l'admin a attribué des parcours (migration 0056), il est l'un d'eux.
   const parcours = parcoursValide(args.parcours);
-  if (!nom || !parcours) return null;
+  if (!nom || !parcours || !parcoursAttribue(await parcoursAttribues(args.enseignantId), parcours)) return null;
+  const liberation: ModeDeLiberation = args.liberation === "chapitre" ? "chapitre" : "tout";
   for (let essai = 0; essai < 8; essai += 1) {
     const [cree] = await db
       .insert(coursClasses)
-      .values({ code: codeDeClasse(nom), nom, creePar: args.enseignantId, entreprise: entrepriseValide(args.entreprise), parcours })
+      .values({ code: codeDeClasse(nom), nom, creePar: args.enseignantId, entreprise: entrepriseValide(args.entreprise), parcours, liberation })
       .onConflictDoNothing()
       .returning({ id: coursClasses.id, code: coursClasses.code });
     if (cree) return cree;
@@ -145,7 +151,7 @@ export async function cloreClasse(args: { enseignantId: string; classeId: string
  */
 export async function choisirLeParcours(args: { enseignantId: string; classeId: string; parcours: string }): Promise<boolean> {
   const parcours = parcoursValide(args.parcours);
-  if (!parcours) return false;
+  if (!parcours || !parcoursAttribue(await parcoursAttribues(args.enseignantId), parcours)) return false;
   const fait = await db
     .update(coursClasses)
     .set({ parcours })
@@ -326,18 +332,35 @@ export async function classeSousLicence(userId: string): Promise<boolean> {
 export async function coursOuvert(
   qui: { enseignant?: string | null; eleve?: string | null },
   chapitre: Pick<Chapitre, "libre"> & OuvrablePar,
+  /** Sans la libération de la classe : pour lire l'offre une fois par parcours (/cours). */
+  options: { sansLiberation?: boolean } = {},
 ): Promise<boolean> {
   if (chapitre.libre) return true;
-  const parcours = parcoursQuiOuvrent(chapitre);
-  if (qui.enseignant && (await ouvertALEnseignant(qui.enseignant, parcours))) return true;
-  if (qui.eleve && (await ouvertALEleve(qui.eleve, parcours))) return true;
+  if (qui.enseignant && (await ouvertALEnseignant(qui.enseignant, chapitre))) return true;
+  if (qui.eleve && (await ouvertALEleve(qui.eleve, chapitre, options.sansLiberation ?? false))) return true;
   return false;
 }
 
-async function ouvertALEnseignant(enseignant: string, parcours: readonly string[]): Promise<boolean> {
+/** La libération de la classe d'un élève : son mode et ses chapitres libérés ; null sans classe. */
+export async function liberationDeLEleve(eleve: string): Promise<{ mode: ModeDeLiberation; liberes: Set<string> } | null> {
+  const [m] = await db
+    .select({ classeId: coursClasses.id, liberation: coursClasses.liberation })
+    .from(coursEleves)
+    .innerJoin(coursClasses, eq(coursClasses.id, coursEleves.classeId))
+    .where(eq(coursEleves.userId, eleve));
+  if (!m) return null;
+  return { mode: m.liberation, liberes: m.liberation === "chapitre" ? await chapitresLiberes(m.classeId) : new Set() };
+}
+
+// L'ADMIN RESTREINT, L'ENSEIGNANT LIBÈRE (migration 0056 ; règles pures :
+// services/chapitres-de-la-classe.ts). Une liste d'attribution limite ce que l'offre ouvre ; une
+// classe en « chapitre » n'ouvre à ses élèves que les chapitres libérés.
+async function ouvertALEnseignant(enseignant: string, chapitre: OuvrablePar): Promise<boolean> {
   const org = await getTeacherOrgId(enseignant);
   const offre = org ? await offreDuCoursDe(org) : null;
   if (!offre) return false;
+  if (!dansLesAttributions(await parcoursAttribues(enseignant), chapitre)) return false;
+  const parcours = parcoursQuiOuvrent(chapitre);
   if (offre === "campus") return true;
   const qui = offre === "classe" ? eq(coursClasses.creePar, enseignant) : eq(organizationMembers.organizationId, org!);
   const condition = and(qui, or(inArray(coursClasses.parcours, [...parcours]), and(eq(coursClasses.heritee, true), isNull(coursClasses.parcours))));
@@ -350,9 +373,16 @@ async function ouvertALEnseignant(enseignant: string, parcours: readonly string[
   return Boolean(une);
 }
 
-async function ouvertALEleve(eleve: string, parcours: readonly string[]): Promise<boolean> {
+async function ouvertALEleve(eleve: string, chapitre: OuvrablePar, sansLiberation: boolean): Promise<boolean> {
+  const parcours = parcoursQuiOuvrent(chapitre);
   const [m] = await db
-    .select({ creePar: coursClasses.creePar, parcours: coursClasses.parcours, heritee: coursClasses.heritee })
+    .select({
+      classeId: coursClasses.id,
+      creePar: coursClasses.creePar,
+      parcours: coursClasses.parcours,
+      heritee: coursClasses.heritee,
+      liberation: coursClasses.liberation,
+    })
     .from(coursEleves)
     .innerJoin(coursClasses, eq(coursClasses.id, coursEleves.classeId))
     .where(eq(coursEleves.userId, eleve));
@@ -360,5 +390,9 @@ async function ouvertALEleve(eleve: string, parcours: readonly string[]): Promis
   const org = await getTeacherOrgId(m.creePar);
   const offre = org ? await offreDuCoursDe(org) : null;
   if (!offre) return false;
-  return offre === "campus" || (m.parcours !== null && parcours.includes(m.parcours)) || (m.heritee && m.parcours === null);
+  if (!dansLesAttributions(await parcoursAttribues(m.creePar), chapitre)) return false;
+  const parSonOffre = offre === "campus" || (m.parcours !== null && parcours.includes(m.parcours)) || (m.heritee && m.parcours === null);
+  if (!parSonOffre) return false;
+  if (sansLiberation || m.liberation === "tout") return true;
+  return libereALaClasse(m.liberation, await chapitresLiberes(m.classeId), { libre: false, code: chapitre.code ?? "", reprend: chapitre.reprend });
 }

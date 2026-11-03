@@ -13,6 +13,8 @@ import { SubmitButton } from "@/components/submit-button";
 import { bouton, LIEN_A_L_ENCRE } from "@/components/bouton";
 import { ENTREPRISES } from "@/app/cours/entreprises";
 import { CHAPITRES } from "@/config/cours/registre";
+import { parcoursAttribues } from "@/services/attributions.service";
+import { parcoursAttribue } from "@/services/chapitres-de-la-classe";
 import { PARCOURS_PROPOSES_A_CHOISIR, titreDuParcours } from "@/config/cours/parcours-de-formation";
 import { classeSansOffre, offreDuCoursDeLEnseignant } from "@/services/chapitres-de-la-classe";
 import { lienDuDevis, LIBELLE_DU_DEVIS, OFFRES } from "@/config/tarifs";
@@ -42,11 +44,14 @@ async function MesClassesDuCoursPage({ searchParams }: { searchParams: Promise<{
   const { refus } = await searchParams;
   const session = await getSession();
   if (!session) redirect(await connexionPourLaPageDemandee());
-  const [classes, staff, offre] = await Promise.all([
+  const [classes, staff, offre, attribues] = await Promise.all([
     classesDeLEnseignant(session.userId),
     getStaffContext(session.userId),
     offreDuCoursDeLEnseignant(session.userId),
+    parcoursAttribues(session.userId),
   ]);
+  // Les parcours que l'admin a attribués (migration 0056) : sans liste, tous ceux qu'on propose.
+  const aChoisir = PARCOURS_PROPOSES_A_CHOISIR.filter((p) => parcoursAttribue(attribues, p.code));
   const libre = CHAPITRES.find((c) => c.libre);
   const isOrgAdmin = staff?.organizations.some((o) => o.role === "org_admin") ?? false;
   const raison = refus && Object.hasOwn(REFUS, refus) ? REFUS[refus] : null;
@@ -118,7 +123,7 @@ async function MesClassesDuCoursPage({ searchParams }: { searchParams: Promise<{
                   </option>
                   {/* Les parcours du registre, puis les parcours de formation (le BUT), qui regroupent
                       des chapitres d'autres parcours (config/cours/parcours-de-formation.ts). */}
-                  {PARCOURS_PROPOSES_A_CHOISIR.map((p) => (
+                  {aChoisir.map((p) => (
                     <option key={p.code} value={p.code}>
                       {p.titre}
                     </option>
@@ -143,6 +148,19 @@ async function MesClassesDuCoursPage({ searchParams }: { searchParams: Promise<{
                   La même pour toute la classe, pour corriger ensemble ; ou au choix, pour comparer les métiers.
                 </span>
               </label>
+              {/* LA LIBÉRATION DES CHAPITRES (décision du propriétaire, novembre 2026 ; migration 0056). */}
+              <fieldset className="grid gap-2" data-liberation-a-la-creation="">
+                <legend className="text-sm font-semibold text-slate-200">Chapitres ouverts aux élèves</legend>
+                <label className="flex items-start gap-2 text-sm text-slate-200">
+                  <input type="radio" name="liberation" value="tout" defaultChecked className="mt-1" />
+                  <span>Tout ouvrir : les élèves voient tous les chapitres que votre offre permet.</span>
+                </label>
+                <label className="flex items-start gap-2 text-sm text-slate-200">
+                  <input type="radio" name="liberation" value="chapitre" className="mt-1" />
+                  <span>Libérer chapitre par chapitre : vous ouvrez chaque chapitre quand la classe y arrive.</span>
+                </label>
+                <span className="text-sm text-slate-400">Le chapitre libre reste toujours ouvert. Vous pourrez changer d&apos;avis sur la page de la classe.</span>
+              </fieldset>
               <div>
                 <SubmitButton pendingLabel="Création de la classe…" className={bouton()}>
                   Créer la classe

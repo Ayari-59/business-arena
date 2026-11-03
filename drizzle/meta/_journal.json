@@ -393,6 +393,13 @@
       "when": 1793544362176,
       "tag": "0054_mot_de_passe_oublie",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1793739474675,
+      "tag": "0056_cours_attribues_et_liberes",
+      "breakpoints": true
     }
   ]
 }

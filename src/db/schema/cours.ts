@@ -1,6 +1,6 @@
 import { boolean, index, integer, jsonb, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { id } from "./_shared";
-import { users } from "./identity";
+import { organizations, users } from "./identity";
 
 /**
  * LE COURS PAR LA SIMULATION, SUIVI EN CLASSE.
@@ -40,6 +40,13 @@ export const coursClasses = pgTable(
     closeLe: timestamp("close_le", { withTimezone: true }),
     /** La calculatrice retirée à la classe (une évaluation de calcul mental) ; permise par défaut. */
     sansCalculatrice: boolean("sans_calculatrice").notNull().default(false),
+    /**
+     * LA LIBÉRATION DES CHAPITRES (migration 0056, décision du propriétaire, novembre 2026) :
+     * « tout » ouvre aux élèves tous les chapitres que l'offre permet ; « chapitre » n'ouvre que
+     * ceux que l'enseignant a libérés (cours_liberations), avec le chapitre libre. Les classes
+     * d'avant la règle restent en « tout ». La règle : services/chapitres-de-la-classe.ts.
+     */
+    liberation: text("liberation").$type<"tout" | "chapitre">().notNull().default("tout"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("cours_classes_cree_par_idx").on(t.creePar)],
@@ -91,4 +98,52 @@ export const coursProgressions = pgTable(
     primaryKey({ columns: [t.userId, t.classeId, t.chapitre] }),
     index("cours_progressions_classe_idx").on(t.classeId, t.chapitre),
   ],
+);
+
+/**
+ * LES CHAPITRES QU'UN ENSEIGNANT A LIBÉRÉS À SA CLASSE (migration 0056), quand elle les libère
+ * un par un (`liberation` = « chapitre »). Un chapitre libéré ouvre aussi son cas pratique.
+ */
+export const coursLiberations = pgTable(
+  "cours_liberations",
+  {
+    classeId: uuid("classe_id")
+      .notNull()
+      .references(() => coursClasses.id, { onDelete: "cascade" }),
+    /** Le code d'un chapitre de config/cours/registre.ts. */
+    chapitre: text("chapitre").notNull(),
+    libereLe: timestamp("libere_le", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.classeId, t.chapitre] })],
+);
+
+/**
+ * LES PARCOURS QUE L'ADMIN ATTRIBUE (migration 0056, décision du propriétaire, novembre 2026).
+ * L'offre ouvre le cours ; une liste d'attribution le RESTREINT à ces parcours. La liste d'un
+ * enseignant l'emporte sur celle de son établissement ; sans liste, l'offre seule s'applique.
+ * La règle : services/chapitres-de-la-classe.ts (`parcoursAttribues`, `dansLesAttributions`).
+ */
+export const coursAttributionsEtablissement = pgTable(
+  "cours_attributions_etablissement",
+  {
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    /** Un code de PARCOURS_A_CHOISIR (config/cours/parcours-de-formation.ts). */
+    parcours: text("parcours").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.organizationId, t.parcours] })],
+);
+
+export const coursAttributionsEnseignant = pgTable(
+  "cours_attributions_enseignant",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    parcours: text("parcours").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.parcours] })],
 );
