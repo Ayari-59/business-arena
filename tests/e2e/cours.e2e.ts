@@ -1,5 +1,5 @@
 import { espacesOrdinaires, insecables } from "../../src/lib/typographie";
-import { FORMATIONS_RETIREES } from "../../src/config/formations-proposees";
+import { FORMATIONS_RETIREES, chapitrePropose } from "../../src/config/formations-proposees";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Browser, Page } from "playwright-core";
 import { aller, ouvrirNavigateur } from "./helpers/browser";
@@ -64,8 +64,11 @@ describe("/cours : le catalogue par thème et le chapitre libre", () => {
     // Un tiroir par thème, fermés à l'arrivée : la page est un index, pas une carte à dérouler.
     expect(await page.locator("details[data-theme]").count()).toBe(THEMES.length);
     expect(await page.locator("details[data-theme][open]").count()).toBe(0);
-    // Chaque chapitre une fois dans le catalogue, sous son thème.
-    for (const c of CHAPITRES) {
+    // Chaque chapitre proposé une fois dans le catalogue, sous son thème ; un chapitre retiré
+    // (config/formations-proposees.ts) n'y est plus.
+    for (const c of CHAPITRES.filter((x) => !chapitrePropose(x)))
+      expect(await page.locator(`details[data-theme] [data-chapitre="${c.code}"]`).count(), c.code).toBe(0);
+    for (const c of CHAPITRES.filter(chapitrePropose)) {
       const lignes = page.locator(`details[data-theme] [data-chapitre="${c.code}"]`);
       expect(await lignes.count(), c.code).toBe(1);
       expect(

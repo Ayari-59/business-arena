@@ -659,8 +659,9 @@ describe("parcours enseignant et élève", () => {
       const tiroirs = onglet.locator("details[data-diplome]");
       // Seuls les diplômes : la découverte, l'approfondissement et le tournoi
       // inter-filières n'ont pas de référentiel et ne sont pas sur cette page.
+      // Les formations retirées (config/formations-proposees.ts) n'ont pas de tiroir.
       const diplomes = new Set(
-        FORMATIONS.filter((f) =>
+        FORMATIONS.filter((f) => !FORMATIONS_RETIREES.has(f.code)).filter((f) =>
           ATELIERS.some(
             (a) =>
               a.formations.includes(f.code) && adosseAUnReferentiel(a.code),
