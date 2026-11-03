@@ -1,4 +1,4 @@
-import { espacesOrdinaires } from "../../src/lib/typographie";
+import { espacesOrdinaires, insecables } from "../../src/lib/typographie";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Browser, Page } from "playwright-core";
 import { aller, ouvrirNavigateur } from "./helpers/browser";
@@ -407,7 +407,7 @@ describe("le seuil de rentabilité, chapitre réservé", () => {
       if (etape.type === "tri") {
         for (const el of etape.elements(cas)) {
           const libelle = etape.categories.find((k) => k.code === el.categorie)!.libelle;
-          await page.locator(`[data-element="${el.libelle}"]`).getByRole("radio", { name: libelle, exact: true }).click();
+          await page.locator(`[data-element="${insecables(el.libelle)}"]`).getByRole("radio", { name: libelle, exact: true }).click();
         }
         await page.getByRole("button", { name: "Vérifier", exact: true }).click();
       } else if (etape.type === "montants") {
@@ -880,7 +880,7 @@ describe.each([
       } else if (etape.type === "tri") {
         for (const el of etape.elements(cas)) {
           const libelle = etape.categories.find((k) => k.code === el.categorie)!.libelle;
-          await page.locator(`[data-element="${el.libelle}"]`).getByRole("radio", { name: libelle, exact: true }).click();
+          await page.locator(`[data-element="${insecables(el.libelle)}"]`).getByRole("radio", { name: libelle, exact: true }).click();
         }
         await page.getByRole("button", { name: "Vérifier", exact: true }).click();
       } else if (etape.type === "montants") {
