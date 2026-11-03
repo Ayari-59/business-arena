@@ -86,7 +86,7 @@ describe("/cours : le catalogue par thème et le chapitre libre", () => {
     expect(await page.locator("[data-a-venir]").count()).toBe(aVenir.length);
     // Chaque cas de synthèse paraît une fois, sous le thème des chapitres qu'il reprend.
     // Chaque chapitre porte son cas pratique dédié, sur sa ligne.
-    for (const c of CHAPITRES) {
+    for (const c of CHAPITRES.filter(chapitrePropose)) {
       expect(await page.locator(`details[data-theme] [data-chapitre="${c.code}"] [data-cas-du-chapitre="${casDuChapitre(c.code)!.code}"]`).count(), c.code).toBe(1);
     }
     for (const s of CAS_DE_SYNTHESE) {
