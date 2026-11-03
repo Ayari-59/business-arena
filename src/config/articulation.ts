@@ -2,8 +2,7 @@ import { ATELIERS } from "./ateliers";
 import { CHAPITRES } from "./cours/registre";
 import { dureeDuChapitre, dureeEnClair } from "./cours/duree";
 import { SITUATIONS } from "./cours/situations";
-import { DECISIONS_PAR_EPISODE } from "./episodes/familles";
-import { FICHES_LISTEES } from "./episodes/fiches";
+import { DECISIONS_PAR_EPISODE, NOMBRE_D_EPISODES } from "./episodes/familles";
 import { A_PARTIR_DE_BAC_3 } from "./episodes/public-des-episodes";
 import { coursDeLaFormation } from "./couverture";
 import { FORMATIONS } from "./formations";
@@ -88,9 +87,7 @@ export function briques(): readonly Brique[] {
         `Un rôle, un trimestre, ${DECISIONS_PAR_EPISODE} décisions : enquêter, juger, agir avec les autres, puis lire un bilan qui sépare la qualité de la décision de la part de chance.`,
       // Le public, sur la règle de config/episodes/public-des-episodes.ts : à partir de bac + 3.
       forme: `Seul ou en binôme, un trimestre en ${DECISIONS_PAR_EPISODE} décisions, ${A_PARTIR_DE_BAC_3.toLowerCase()}`,
-      // Le compte des épisodes en classe : ceux dont la fiche est listée (`FICHES_LISTEES`). Les
-      // autres restent au catalogue des entreprises, sans s'annoncer à partir de bac + 3.
-      compte: `${FICHES_LISTEES.length} épisodes`,
+      compte: `${NOMBRE_D_EPISODES} épisodes`,
       lien: { href: "/enseignants/episodes", libelle: "Les épisodes en classe" },
       essai: { href: "/entreprises/episode", libelle: "Les épisodes de démonstration" },
     },

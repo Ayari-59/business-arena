@@ -1,19 +1,13 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { Metadata } from "next";
-import { createElement, type FC } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { referentielDeCitation } from "@/config/ateliers/referentiels";
 import { couvertureDeLaFormation, formationsAvecUnePage, tableauDeCouverture } from "@/config/couverture";
 import { programmeDuDiplome } from "@/config/cours/programme";
 import { CHAPITRES, PARCOURS } from "@/config/cours/registre";
 import { SITUATIONS } from "@/config/cours/situations";
 import { FAMILLES } from "@/config/episodes/familles";
-import { FICHES, FICHES_LISTEES } from "@/config/episodes/fiches";
-import { briques } from "@/config/articulation";
-import sitemap from "@/app/sitemap";
-import { SITE_URL } from "@/config/site";
+import { FICHES } from "@/config/episodes/fiches";
 import {
   ANNEES_APRES_LE_BAC,
   formationDeLaLigne,
@@ -165,78 +159,5 @@ describe("les textes qui présentent les épisodes", () => {
       expect(page, chemin).toMatch(/PUBLIC_DES_EPISODES|A_PARTIR_DE_BAC_3/);
       expect(page, chemin).not.toMatch(/FICHES_ECRITES/);
     }
-  });
-});
-
-/**
- * LES ÉPISODES SANS FORMATION OUVERTE NE SONT PLUS LISTÉS (décision du propriétaire, novembre
- * 2026). Une fiche qui ne cite plus aucune formation ouverte aux épisodes ne s'annonçait plus
- * que « À partir de bac + 3 » : elle quitte la page Épisodes en classe, ses tiroirs et ses
- * compteurs, le plan du site et l'index des moteurs. Son adresse reste valide, et l'épisode
- * reste au catalogue des entreprises (formation continue).
- */
-vi.mock("@/db", () => ({ db: {} }));
-vi.mock("@/lib/session", () => ({ getSession: async () => null }));
-vi.mock("@/services/acces.service", () => ({ unCompteAvecEpisodes: async () => false }));
-vi.mock("@/services/catalogue.service", async (original) => ({
-  ...(await original<object>()),
-  lireLaDecouverte: async () => ({ demos: [], niveauDesDemos: "decouverte" }),
-}));
-
-/** Les fiches sans formation ouverte, recalculées ici depuis les formations qu'elles citent. */
-const sansFormationOuverte = () => FICHES.filter((f) => !f.formations.some(formationOuverteAuxEpisodes)).map((f) => f.code);
-
-describe("les épisodes dont la fiche ne cite aucune formation ouverte", () => {
-  const listees = FICHES_LISTEES;
-  const retires = sansFormationOuverte();
-
-  it("existent, et restent au registre des fiches et des épisodes", () => {
-    expect(retires.length, "aucune fiche à retirer : la garde ne garde rien").toBeGreaterThan(0);
-    for (const code of retires) expect(FICHES.some((f) => f.code === code), code).toBe(true);
-  });
-
-  it("le registre que la page lit ne range que les fiches qui citent une formation ouverte", () => {
-    expect(listees.map((f) => f.code)).toEqual(FICHES.filter((f) => !retires.includes(f.code)).map((f) => f.code));
-  });
-
-  it("quittent la page Épisodes en classe, ses tiroirs et ses compteurs", async () => {
-    const Page = (await import("@/app/enseignants/episodes/page")).default as unknown as FC;
-    const html = renderToStaticMarkup(createElement(Page));
-    const fiches = html.match(/Lire la fiche de l(?:&#x27;|'|’)épisode/g) ?? [];
-    expect(fiches.length).toBe(FICHES.length - retires.length);
-    for (const code of retires) expect(html, code).not.toContain(`/enseignants/episodes/${code}"`);
-    // Plus aucune carte ne s'annonce pour le seul public de la règle.
-    expect(html).not.toMatch(/Épisode\s\d+\s·\s(?:À|à)\spartir\sde\sbac/);
-    // Les compteurs des tiroirs comptent ce qui est rangé.
-    const comptes = [...html.matchAll(/(\d+) fiches?</g)].map((m) => Number(m[1]));
-    expect(comptes.length).toBeGreaterThan(0);
-    for (const n of comptes) expect(n).toBeLessThanOrEqual(FICHES.length - retires.length);
-  });
-
-  it("quittent le plan du site, et leur fiche, toujours lisible, dit noindex", async () => {
-    const urls = (await sitemap()).map((e) => e.url);
-    const page = (await import("@/app/enseignants/episodes/[code]/page")) as {
-      generateMetadata: (p: { params: Promise<{ code: string }> }) => Promise<Metadata>;
-    };
-    for (const code of retires) {
-      expect(urls, code).not.toContain(`${SITE_URL}/enseignants/episodes/${code}`);
-      // L'épisode lui-même reste au catalogue des entreprises.
-      expect(urls, code).toContain(`${SITE_URL}/entreprises/episode/${code}`);
-      const m = await page.generateMetadata({ params: Promise.resolve({ code }) });
-      expect(m.title, code).not.toBe("Fiche introuvable");
-      expect(m.robots, code).toMatchObject({ index: false });
-    }
-    for (const f of listees) {
-      expect(urls, f.code).toContain(`${SITE_URL}/enseignants/episodes/${f.code}`);
-      expect((await page.generateMetadata({ params: Promise.resolve({ code: f.code }) })).robots, f.code).toBeUndefined();
-    }
-  });
-
-  it("aucune page publique ne les compte parmi les épisodes « à partir de bac + 3 »", () => {
-    const episodes = briques().find((b) => b.code === "episodes")!;
-    expect(episodes.forme).toMatch(/bac\s\+\s3/);
-    expect(episodes.compte).toBe(`${FICHES.length - retires.length} épisodes`);
-    // /ecoles dit combien de fiches se lisent sur la page Épisodes en classe : celles qui y sont.
-    expect(lire("src/app/ecoles/page.tsx")).toMatch(/\$\{FICHES_LISTEES\.length\} fiches se lisent/);
   });
 });

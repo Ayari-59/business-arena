@@ -267,16 +267,5 @@ export const FICHES: readonly FicheEnseignant[] = FICHES_ECRITES.map((f) => ({
 export const ficheParCode = (code: string): FicheEnseignant | undefined =>
   FICHES.find((f) => f.code === code);
 
-/**
- * LES FICHES LISTÉES (décision du propriétaire, novembre 2026) : celles qui citent au moins une
- * formation ouverte aux épisodes. Une fiche qui n'en cite plus aucune ne s'annonçait que
- * « À partir de bac + 3 » : elle quitte la page Épisodes en classe (ses tiroirs et ses
- * compteurs) et le plan du site, et sa page dit noindex. Elle reste au registre et son adresse
- * reste valide ; l'épisode reste au catalogue des entreprises (formation continue).
- */
-export const ficheListee = (fiche: FicheEnseignant): boolean => fiche.formations.length > 0;
-
-export const FICHES_LISTEES: readonly FicheEnseignant[] = FICHES.filter(ficheListee);
-
 /** Le hasard que toute la classe joue : le même que celui du débrief des entreprises. */
 export { hasardDuDebrief as hasardDeLaClasse, lienDuDebrief as lienDeLaClasse } from "../debrief";

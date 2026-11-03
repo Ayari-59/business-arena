@@ -166,15 +166,6 @@ describe("les épisodes, indexés (décision d'octobre 2026 : « indexer »)", (
       expect((await page.generateMetadata(params)).robots, chemin).toBeUndefined();
     }
   });
-
-  it("une fiche sans formation ouverte aux épisodes reste lisible mais dit noindex (novembre 2026)", async () => {
-    const page = (await import("@/app/enseignants/episodes/[code]/page")) as {
-      generateMetadata: (p: { params: Promise<{ code: string }> }) => Promise<Metadata>;
-    };
-    const m = await page.generateMetadata({ params: Promise.resolve({ code: "client-qui-s-en-va" }) });
-    expect(m.title).not.toBe("Fiche introuvable");
-    expect(m.robots).toMatchObject({ index: false, follow: true });
-  });
 });
 
 describe("espaces privés : titre pour l'onglet, rien pour les moteurs", () => {

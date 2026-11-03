@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PiedDePage } from "@/components/pied-de-page";
-import { ficheListee, ficheParCode, hasardDeLaClasse, lienDeLaClasse } from "@/config/episodes/fiches";
+import { ficheParCode, hasardDeLaClasse, lienDeLaClasse } from "@/config/episodes/fiches";
 import { PUBLIC_DES_EPISODES } from "@/config/episodes/public-des-episodes";
 import { dureeEnClair } from "@/config/cours/duree";
 import { formatNombre } from "@/lib/format";
@@ -30,13 +30,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { code } = await params;
   const ep = episodeParCode(code);
-  const fiche = ficheParCode(code);
-  if (!ep || !fiche) return { title: "Fiche introuvable" };
+  if (!ep || !ficheParCode(code)) return { title: "Fiche introuvable" };
   return {
     alternates: { canonical: `/enseignants/episodes/${code}` },
-    // Une fiche sans formation ouverte aux épisodes n'est plus listée (décision du propriétaire,
-    // novembre 2026) : son adresse reste valide, mais les moteurs ne l'indexent plus.
-    ...(ficheListee(fiche) ? {} : { robots: { index: false, follow: true } }),
     title: `Fiche enseignant · ${ep.titre}`,
     description: `Conduire l'épisode ${ep.numero} en classe : déroulé minuté, corrigé du calcul, réflexes attendus, questions de débrief.`,
   };
@@ -88,12 +84,9 @@ async function FichePage({ params }: { params: Promise<{ code: string }> }) {
           ) : null}
           {/* Le public des épisodes (config/episodes/public-des-episodes.ts) : le registre des
               fiches n'annonce que les formations à partir de bac + 3. */}
-          {/* Une fiche non listée (sans formation ouverte) ne s'annonce pas « à partir de bac + 3 ». */}
-          {ficheListee(fiche) ? (
-            <p className="mt-2 text-sm text-slate-400" data-public-des-episodes="">
-              {PUBLIC_DES_EPISODES}
-            </p>
-          ) : null}
+          <p className="mt-2 text-sm text-slate-400" data-public-des-episodes="">
+            {PUBLIC_DES_EPISODES}
+          </p>
           <ul className="mt-2 text-sm text-slate-400">
             {fiche.programme.map((p) => (
               <li key={p}>{p}</li>
