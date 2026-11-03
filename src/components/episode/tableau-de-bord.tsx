@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Indicateur, Lecture } from "@/config/episodes/types";
 
 /**
@@ -44,7 +45,7 @@ function Ecart({
   );
 }
 
-export function TableauDeBord({
+function TableauDeBordBrut({
   nom,
   indicateurs,
   semaine,
@@ -129,7 +130,7 @@ export function TableauDeBord({
  * rouge francs), qu'on fait glisser du doigt. Toucher la ligne déplie le
  * panneau entier, aides comprises.
  */
-export function LigneDuTableau({
+function LigneDuTableauBrut({
   nom,
   indicateurs,
   semaine,
@@ -195,3 +196,6 @@ export function LigneDuTableau({
     </details>
   );
 }
+
+export const TableauDeBord = avecTypographie(TableauDeBordBrut);
+export const LigneDuTableau = avecTypographie(LigneDuTableauBrut);

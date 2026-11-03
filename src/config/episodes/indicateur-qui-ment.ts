@@ -66,7 +66,7 @@ export const ETAPES: readonly Etape[] = [
         cout: 1,
         nature: "decisive",
         resultat:
-          "Sur vingt appels de commande, sept se terminent sans commande : « je vérifie le stock et je vous rappelle », un transfert vers un collègue déjà en ligne, un devis renvoyé par e-mail. La durée moyenne d'appel est passée de 6 min 30 à 5 min 05 en un an. Lucas, premier du plateau au décroché, raccroche en moyenne au bout de trois minutes.",
+          "Sur vingt appels de commande, sept se terminent sans commande : « je vérifie le stock et je vous rappelle », un transfert vers un collègue déjà en ligne, un devis renvoyé par courriel. La durée moyenne d'appel est passée de 6 min 30 à 5 min 05 en un an. Lucas, premier du plateau au décroché, raccroche en moyenne au bout de trois minutes.",
       },
       {
         id: "rappels",
@@ -167,7 +167,7 @@ export const ETAPES: readonly Etape[] = [
         heure: "15:00",
         alerte: true,
         texte:
-          "La prime d'équipe — 250 € par conseiller et par mois quand le décroché dépasse 90 % — est reconduite par défaut. Souhaitez-vous la modifier à partir du mois prochain ?",
+          "La prime d'équipe (250 € par conseiller et par mois quand le décroché dépasse 90 %) est reconduite par défaut. Souhaitez-vous la modifier à partir du mois prochain ?",
       },
       {
         de: "Tableau de bord des plateaux",

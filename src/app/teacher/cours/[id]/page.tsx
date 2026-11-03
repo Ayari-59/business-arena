@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -55,7 +56,7 @@ const CASES: Record<LigneDEleve["cases"][number], { classe: string; libelle: str
  * coup et les remarques du correcteur qui reviennent le plus : ce qu'il faut reprendre
  * au tableau. Rien ne se calcule ici : `pedagogy/cours/suivi.ts` agrège.
  */
-export default async function ClasseDuCoursPage({
+async function ClasseDuCoursPage({
   params,
   searchParams,
 }: {
@@ -350,3 +351,5 @@ export default async function ClasseDuCoursPage({
     </main>
   );
 }
+
+export default avecTypographie(ClasseDuCoursPage);

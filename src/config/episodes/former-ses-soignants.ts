@@ -585,7 +585,7 @@ export const ETAPES: readonly Etape[] = [
         role: "Siège",
         heure: "09:00",
         alerte: true,
-        texte: `Résultats du jury de VAE de novembre pour la cohorte pilote de l'an dernier : sur ${PILOTE.candidats} candidats, ${PILOTE.totale} validations totales — ils prendront un poste d'aide-soignant en semaine 12 — et ${PILOTE.partielle} validations partielles.`,
+        texte: `Résultats du jury de VAE de novembre pour la cohorte pilote de l'an dernier : sur ${PILOTE.candidats} candidats, ${PILOTE.totale} validations totales (ils prendront un poste d'aide-soignant en semaine 12) et ${PILOTE.partielle} validations partielles.`,
       },
       {
         ...GHJULIA,

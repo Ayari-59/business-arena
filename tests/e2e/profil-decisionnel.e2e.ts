@@ -126,7 +126,7 @@ describe("le profil décisionnel", () => {
       "Mon profil décisionnel",
     );
     expect(await page.getByText("Établi sur 2 épisodes").count()).toBe(1);
-    const lignes = section(page, "Dix compétences de décision").locator("li.carte");
+    const lignes = section(page, "compétences de décision").locator("li.carte");
     expect(await lignes.count()).toBe(10);
     // Deux épisodes : au mieux un score indicatif, jamais établi.
     expect(await page.getByText("Indicatif", { exact: true }).count()).toBeGreaterThan(0);
@@ -143,7 +143,7 @@ describe("le profil décisionnel", () => {
     expect(await page.locator("main").innerText()).not.toMatch(/undefined|NaN/);
 
     // Choisir soi-même la compétence à travailler : les épisodes proposés la suivent.
-    expect(await page.getByText(/Niveau conseillé : (Standard|Expert|Découverte)\./).count()).toBe(
+    expect(await page.getByText(/Niveau conseillé : (Standard|Expert|Démonstration)\./).count()).toBe(
       1,
     );
     await page
@@ -185,13 +185,13 @@ describe("une partie en Découverte", () => {
     const page = await contexte.newPage();
     await jouer(page, "tresorerie-qui-fond", "decouverte");
     await suiteRecue(page);
-    expect(await page.getByText("Partie jouée en Découverte").count()).toBe(1);
+    expect(await page.getByText("Partie jouée au niveau Démonstration").count()).toBe(1);
     const debord = await page.evaluate(
       () => document.documentElement.scrollWidth - window.innerWidth,
     );
     expect(debord).toBeLessThanOrEqual(0);
     await page.goto(`${BASE}/entreprises/episode/profil`);
-    expect(await page.getByText("en Découverte : ne compte pas").count()).toBe(1);
+    expect(await page.getByText("au niveau Démonstration : ne compte pas").count()).toBe(1);
     expect(await page.getByText("Aucun épisode ne compte encore").count()).toBe(1);
     await contexte.close();
   }, 120_000);

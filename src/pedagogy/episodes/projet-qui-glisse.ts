@@ -359,7 +359,7 @@ export const EPISODE_PROJET: Episode<Trimestre> = {
     titre: (t) => valeurNette(t.objectif),
     formatObjectif: kE,
     noteDesBarres:
-      "Valeur nette du projet — ce qui est mis en service, diminué du retard, moins les surcoûts, le travail restant, le lancement manqué et les défauts livrés — sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Valeur nette du projet (ce qui est mis en service, diminué du retard, moins les surcoûts, le travail restant, le lancement manqué et les défauts livrés) sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       const aLaDate = t.glissement === 0 && !t.report;
       return [

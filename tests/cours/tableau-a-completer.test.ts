@@ -10,6 +10,7 @@ import { SITUATIONS } from "../../src/config/cours/situations";
 import { CalculsDuTableau, GrilleACompleter, RemarquesDuTableau } from "../../src/components/cours/tableau-a-completer";
 import { servirLeChapitre } from "../../src/pedagogy/cours/chapitre-servi";
 import { chapitreDuCas } from "../../src/pedagogy/cours/deroule";
+import { typographier } from "@/lib/typographie";
 import {
   cleDeCellule,
   corrigerLeTableau,
@@ -155,7 +156,7 @@ describe("l'étape servie : des données, sans fonction", () => {
       expect(typeof e.question).toBe("string");
       expect(e.objectifs?.length).toBeGreaterThan(0);
       const source = chapitre.etapes.find((x) => x.id === e.id)!;
-      if (source.type === "a-completer") expect(e.grille).toEqual(source.grille(casDeLEntreprise("nova")));
+      if (source.type === "a-completer") expect(e.grille).toEqual(typographier(source.grille(casDeLEntreprise("nova"))));
     }
   });
 });

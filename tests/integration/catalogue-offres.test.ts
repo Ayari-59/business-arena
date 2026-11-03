@@ -442,7 +442,7 @@ describe("la Découverte, appliquée par services/acces.service.ts", () => {
     expect(episodeOuvert(acces, ANCIENNE)).toBe(false);
     // Le texte de la carte Découverte suit (variables).
     const decouverte = vueDesTarifs(await lireLeCatalogue(), variablesDuCatalogue((await lireLEtatSansCache()).decouverte)).cartes[0]!;
-    expect(decouverte.inclus[0]).toContain("niveaux 1 à 2 (Découverte et Gestion)");
+    expect(decouverte.inclus[0]).toContain("niveaux 1 à 2 (Premiers pas et Gestion)");
 
     // Un épisode inconnu est refusé ; le journal garde avant et après.
     await expect(enregistrerLaDecouverte(admin.userId, { ...DECOUVERTE_PAR_DEFAUT, demos: ["n-existe-pas"] })).rejects.toThrow(

@@ -1,5 +1,6 @@
 "use client";
 
+import { avecTypographie } from "@/components/typographie";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { niveauParCode } from "@/config/episodes/niveaux";
@@ -40,7 +41,7 @@ const SANS_SUITE: SuiteDeLaPartie = {
   offre: null,
 };
 
-export function RetourDeLEpisode({
+function RetourDeLEpisodeBrut({
   ep,
   partie,
   cle,
@@ -82,7 +83,7 @@ export function RetourDeLEpisode({
   const suite = envoi.etat === "fait" ? envoi.suite : null;
   const neComptePas =
     partie.niveau === "decouverte" || suite?.compte === "decouverte"
-      ? "Partie jouée en Découverte : l'effet immédiat de chaque choix aidait les suivants. Elle ne compte pas dans votre profil."
+      ? "Partie jouée au niveau Démonstration : l'effet immédiat de chaque choix aidait les suivants. Elle ne compte pas dans votre profil."
       : suite?.compte === "rejouee"
         ? "Vous aviez déjà joué cet épisode : seule votre première partie compte dans votre profil. Celle-ci sert à apprendre."
         : null;
@@ -128,8 +129,8 @@ export function RetourDeLEpisode({
             Aperçu de votre profil décisionnel
           </h2>
           <p className="max-w-3xl text-sm leading-relaxed text-slate-300">
-            Les axes du profil, calculés sur cet épisode seul. Une démonstration jouée en
-            Découverte ne compte pas dans le profil : cet aperçu n&apos;est gardé nulle part.
+            Les axes du profil, calculés sur cet épisode seul. Une démonstration jouée au
+            niveau Démonstration ne compte pas dans le profil : cet aperçu n&apos;est gardé nulle part.
           </p>
           <ul className="grid max-w-3xl gap-2 text-sm leading-relaxed text-slate-300">
             {apercu.competences.map((l) => (
@@ -255,3 +256,5 @@ export function RetourDeLEpisode({
     </>
   );
 }
+
+export const RetourDeLEpisode = avecTypographie(RetourDeLEpisodeBrut);

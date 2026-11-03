@@ -19,6 +19,7 @@ import { NOVA_CAPACITE } from "../../src/config/cours/monde/nova-capacite";
 import { EQUIPE as EQUIPE_DE_MAILLE } from "../../src/config/cours/monde/maille-et-co";
 import { L_USINE_DE_NOVA } from "../../src/config/cours/monde/nova-usine";
 import { HEURES_LEGALES_PAR_MOIS, paieDUnOperateur, SMIC_HORAIRE_BRUT, SMIC_MENSUEL_BRUT, TAUX_PATRONAL } from "../../src/config/cours/monde/ressources-humaines-de-nova";
+import { insecables } from "@/lib/typographie";
 
 /**
  * UNE SEULE NOVA DANS LE MONDE DU COURS (réconciliation d'octobre 2026). Les fiches qui disent la
@@ -142,7 +143,7 @@ describe("une seule publicité de NOVA, d'un chapitre à l'autre (audit pédagog
   it.each(["ce-que-rapporte-la-communication", "decider-avec-des-chiffres"])("%s dit la publicité de la gamme, et jamais que NOVA n'en fait pas", (code) => {
     const t = textes(code);
     expect(t).not.toMatch(/ne fait pas de publicité/);
-    expect(t).toContain(`${montantEcrit(PUB)} par mois`);
+    expect(t).toContain(insecables(`${montantEcrit(PUB)} par mois`));
   });
 
   it("aucun chapitre ni cas ne dit que NOVA ne fait pas de publicité", () => {

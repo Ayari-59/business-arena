@@ -18,7 +18,7 @@ export const RSE_COURRIERS: CourrierDef[] = [
     signataire: "La présidente du comité",
     effet: "Attractivité renforcée pendant plusieurs tours",
     enJeu:
-      "Un capital de marque se construit lentement — l'engagement RSE d'hier soutient la demande d'aujourd'hui.",
+      "Un capital de marque se construit lentement : l'engagement RSE d'hier soutient la demande d'aujourd'hui.",
     nature: "market",
     pli: "simple",
     icone: "trophee",
@@ -46,7 +46,7 @@ export const RSE_COURRIERS: CourrierDef[] = [
     corps:
       "Le contrôle inopiné du mois écoulé a établi un écart entre vos déclarations et la situation constatée sur site. Une amende administrative vous est notifiée, exigible sous trente jours. Les voies et délais de recours figurent au verso.",
     signataire: "L'inspectrice des installations classées",
-    effet: "Amende — charge exceptionnelle ce tour",
+    effet: "Amende : charge exceptionnelle ce tour",
     enJeu:
       "Le risque RSE n'est pas que d'image : la réglementation a un coût, comptabilisé hors exploitation.",
     nature: "macro",
@@ -61,7 +61,7 @@ export const RSE_COURRIERS: CourrierDef[] = [
     corps:
       "Votre dossier a été retenu au titre du soutien aux procédés sobres. L'aide sera versée en une fois, sur justification de la dépense engagée. Elle constitue une subvention d'exploitation et devra être comptabilisée comme telle.",
     signataire: "La directrice régionale",
-    effet: "Aide — produit exceptionnel ce tour",
+    effet: "Aide : produit exceptionnel ce tour",
     enJeu:
       "L'investissement responsable peut être cofinancé : une subvention améliore le résultat hors exploitation.",
     nature: "macro",

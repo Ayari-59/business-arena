@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PiedDePage } from "@/components/pied-de-page";
@@ -30,7 +31,7 @@ const REFUS: Record<string, string> = {
  * avant ce que l'enseignant verra : où il en est dans chaque chapitre, et les erreurs du
  * correcteur sur ses essais. Pas de compte, pas d'adresse.
  */
-export default async function RejoindreUneClassePage({
+async function RejoindreUneClassePage({
   searchParams,
 }: {
   searchParams: Promise<{ code?: string; refus?: string; attente?: string; nom?: string }>;
@@ -115,3 +116,5 @@ export default async function RejoindreUneClassePage({
     </>
   );
 }
+
+export default avecTypographie(RejoindreUneClassePage);

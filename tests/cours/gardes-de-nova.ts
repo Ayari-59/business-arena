@@ -6,6 +6,7 @@ import { CONCEPTS } from "../../src/config/pedagogy/concepts";
 import { lireLeCurseur, lireLeLaboratoire, servirLeChapitre } from "../../src/pedagogy/cours/chapitre-servi";
 import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
 import { NOVA, etape, textesDe } from "./gardes-du-lycee";
+import { typographier } from "../../src/lib/typographie";
 
 /**
  * LES GARDES COMMUNES DES CHAPITRES ET DES CAS DE LA GESTION DE BASE ET DE L'INFORMATION (lot M3),
@@ -98,7 +99,7 @@ export function gardeDuCurseur(source: Chapitre, id: string, attendu: number) {
   const pas = e.sens === "plus-grande" ? 1 : -1;
   expect(couvre(attendu), `${id} à ${attendu}`).toBe(true);
   expect(couvre(attendu + pas), `${id} à ${attendu + pas}`).toBe(false);
-  expect(lireLeCurseur(e, NOVA, attendu).lignes).toEqual(e.lecture(NOVA, attendu));
+  expect(lireLeCurseur(e, NOVA, attendu).lignes).toEqual(typographier(e.lecture(NOVA, attendu)));
   return e;
 }
 

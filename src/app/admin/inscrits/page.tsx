@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -86,7 +87,7 @@ function Nouveautes({ i }: { i: Inscrit }) {
   return <span className="text-slate-400">non</span>;
 }
 
-export default async function AdminInscritsPage({
+async function AdminInscritsPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -151,7 +152,7 @@ export default async function AdminInscritsPage({
       {/*
         LES RÉGLAGES DES INSCRIPTIONS, regroupés en tête (« la gestion des inscriptions ») :
         l'inscription libre (le réglage de la plateforme, déplacé ici depuis /admin), les
-        domaines d'e-mail autorisés ou bloqués, les codes d'invitation des établissements.
+        domaines d'adresse électronique autorisés ou bloqués, les codes d'invitation des établissements.
         Repliés derrière leur résumé : on vient ici d'abord pour la liste.
       */}
       <details id="reglages" className="carte group p-4" data-reglages-inscriptions="" open={fait !== undefined || refus !== null || undefined}>
@@ -194,7 +195,7 @@ export default async function AdminInscritsPage({
               </label>
             </fieldset>
             <label className="grid gap-1">
-              <span className="libelle">Domaines d&apos;e-mail autorisés (vide : tous), un par ligne</span>
+              <span className="libelle">Domaines d&apos;adresse électronique autorisés (vide : tous), un par ligne</span>
               <textarea
                 name="domainesAutorises"
                 rows={3}
@@ -204,7 +205,7 @@ export default async function AdminInscritsPage({
               />
             </label>
             <label className="grid gap-1">
-              <span className="libelle">Domaines d&apos;e-mail bloqués (prioritaires), un par ligne</span>
+              <span className="libelle">Domaines d&apos;adresse électronique bloqués (prioritaires), un par ligne</span>
               <textarea
                 name="domainesBloques"
                 rows={3}
@@ -301,7 +302,7 @@ export default async function AdminInscritsPage({
               </ul>
             )}
             <p className="text-xs text-slate-400">
-              Il n&apos;existe pas d&apos;invitation par e-mail : un établissement transmet son code à ses enseignants, qui le
+              Il n&apos;existe pas d&apos;invitation par courriel : un établissement transmet son code à ses enseignants, qui le
               saisissent à l&apos;inscription.
             </p>
           </section>
@@ -340,7 +341,7 @@ export default async function AdminInscritsPage({
               type="search"
               name="q"
               defaultValue={filtres.q}
-              placeholder="Nom, e-mail ou établissement"
+              placeholder="Nom, adresse électronique ou établissement"
               className="champ w-full px-3 py-2 text-sm"
             />
           </label>
@@ -587,3 +588,5 @@ export default async function AdminInscritsPage({
     </main>
   );
 }
+
+export default avecTypographie(AdminInscritsPage);

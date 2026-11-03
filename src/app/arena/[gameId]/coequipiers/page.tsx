@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -117,7 +118,7 @@ function BlocDeNotes({
   );
 }
 
-export default async function CoequipiersPage({
+async function CoequipiersPage({
   params,
   searchParams,
 }: {
@@ -272,3 +273,5 @@ export default async function CoequipiersPage({
     </main>
   );
 }
+
+export default avecTypographie(CoequipiersPage);

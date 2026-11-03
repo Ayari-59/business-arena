@@ -148,7 +148,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "conseil_cyberattaque",
     expediteur: "Prestataire informatique Axone · Cellule de sécurité",
-    objet: "Incident majeur — chiffrement de vos livrables et bases clients",
+    objet: "Incident majeur : chiffrement de vos livrables et bases clients",
     corps:
       "Un rançongiciel a chiffré l'ensemble de vos dossiers. La dernière sauvegarde exploitable remonte à trois semaines : les travaux postérieurs sont perdus et devront être refaits.",
     signataire: "Le responsable de la sécurité",
@@ -190,7 +190,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "conseil_mission_urgente",
     expediteur: "Groupe Sarrazin · Présidence",
-    objet: "Demande de mission en urgence — direction financière par intérim",
+    objet: "Demande de mission en urgence : direction financière par intérim",
     corps:
       "Notre directeur financier a quitté ses fonctions à trois semaines de la clôture. Nous cherchons une équipe capable d'intervenir immédiatement et réglons comptant. Votre réponse nous est nécessaire sous quarante-huit heures.",
     signataire: "Le président",
@@ -350,7 +350,7 @@ const SOURCES: CourrierDef[] = [
     expediteur: "Groupe Delorme · Direction des achats",
     objet: "Ouverture d'un accord-cadre de missions d'audit et d'accompagnement",
     corps:
-      "Le groupe ouvre un accord-cadre pour les trois {{trimestres}} à venir, réservé aux cabinets référencés de la région : environ {{lettres: flux(200)}} jours d'audit et d'accompagnement {{par trimestre}}, répartis entre nos sites de Saint-Aubin et de Valbonne. Les ordres de mission seront émis au fil de nos calendriers, dès le mois prochain.",
+      "Le groupe ouvre un accord-cadre pour les trois {{trimestres}} à venir, réservé aux cabinets référencés de la région : environ {{entier: flux(200)}} jours d'audit et d'accompagnement {{par trimestre}}, répartis entre nos sites de Saint-Aubin et de Valbonne. Les ordres de mission seront émis au fil de nos calendriers, dès le mois prochain.",
     signataire: "Le directeur des achats",
     effet: "Demande globale +30 % pendant 3 tours",
     enJeu:

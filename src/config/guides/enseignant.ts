@@ -33,7 +33,7 @@ export const GUIDE_ENSEIGNANT: Guide = {
       titre: "Créer votre compte enseignant",
       faire: [
         "Ouvrez « Espace enseignant » en haut à droite du site, puis « Créer un compte ».",
-        "Donnez votre nom, votre e-mail et un mot de passe.",
+        "Donnez votre nom, votre adresse électronique et un mot de passe.",
         "Si votre établissement vous a donné un code d'invitation, saisissez-le : votre compte rejoint l'établissement et sa licence. Sinon, écrivez le nom de votre établissement.",
         "Validez avec « Créer mon compte enseignant ».",
       ],
@@ -44,7 +44,7 @@ export const GUIDE_ENSEIGNANT: Guide = {
         fichier: "compte",
         largeur: 1280,
         hauteur: 800,
-        alt: "La page Espace enseignant, formulaire de création de compte ouvert : nom, code d'invitation, établissement, e-mail et mot de passe.",
+        alt: "La page Espace enseignant, formulaire de création de compte ouvert : nom, code d'invitation, établissement, adresse électronique et mot de passe.",
         reperes: [
           { cible: 'input[name="inviteCode"]', legende: "Le code d'invitation de votre établissement, s'il vous en a donné un." },
           { cible: 'role=button[name="Créer mon compte enseignant"]', legende: "Le bouton qui crée le compte." },
@@ -451,7 +451,7 @@ export const GUIDE_ENSEIGNANT: Guide = {
     {
       question: "Quelles données de mes élèves sont gardées ?",
       reponse:
-        "Un pseudo librement choisi et un identifiant technique. Aucun e-mail, aucun nom de famille, aucune date de naissance.",
+        "Un pseudo librement choisi et un identifiant technique. Aucune adresse électronique, aucun nom de famille, aucune date de naissance.",
       lien: { href: "/mentions-legales", libelle: "Lire les mentions légales" },
     },
   ],

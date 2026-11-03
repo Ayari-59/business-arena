@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
@@ -74,7 +75,7 @@ const VERDICT_UI: Record<string, { label: string; icone: NomDIcone | null; cls: 
   injouable: { label: "Injouable", icone: "alerte", cls: "pastille-perte text-red-200" },
 };
 
-export default async function ScenarioEditorPage({
+async function ScenarioEditorPage({
   params,
   searchParams,
 }: {
@@ -195,7 +196,7 @@ export default async function ScenarioEditorPage({
         label="enregistrement de l'habillage"
         className="space-y-5 carte p-4 sm:p-7"
       >
-        <h2 className="text-sm font-semibold text-slate-200">Habillage — ce que l&apos;élève lit</h2>
+        <h2 className="text-sm font-semibold text-slate-200">Habillage : ce que l&apos;élève lit</h2>
         <input type="hidden" name="scenarioId" value={id} />
         <label className={etiquette}>
           <span className={titre}>Titre</span>
@@ -422,3 +423,5 @@ export default async function ScenarioEditorPage({
     </main>
   );
 }
+
+export default avecTypographie(ScenarioEditorPage);

@@ -214,7 +214,7 @@ describe("le cockpit de NOVA · gamme : la R&D et la marque", () => {
     expect(bloc(rangStudio)).toContain("Vendable ce tour (1 = oui, 0 = pas encore)");
     expect(bloc(rangGo)).not.toContain("Vendable ce tour (1 = oui, 0 = pas encore)");
     // La R&D de la Studio est préremplie de quoi la lancer dès le premier tour, rien ensuite.
-    const rd = logistique.lignes.find((l) => String(l[0]?.v).startsWith("Recherche et développement (à saisir — préremplie"))!;
+    const rd = logistique.lignes.find((l) => String(l[0]?.v).startsWith("Recherche et développement (à saisir, préremplie"))!;
     expect(rd[1]!.f).toMatch(/^MAX\(0,'Paramètres'!B\d+-'Paramètres'!B\d+\)$/);
     expect(rd[2]!.v).toBe(0);
     // Vendable = R&D cumulée ≥ coût ET tour ≥ tour minimal ; ventes et mise en fabrication en dépendent.
@@ -232,7 +232,7 @@ describe("le cockpit de NOVA · gamme : la R&D et la marque", () => {
     // La R&D cumulée d'un tour est celle du précédent plus ce qu'on y a engagé.
     const cumul = references.filter((r) => r.intitule === "R&D cumulée à l'ouverture du tour");
     expect(cumul[0]!.cibles).toEqual(["Déjà engagé avant le tour 1 · NOVA Studio"]);
-    expect(cumul[1]!.cibles).toEqual(["R&D cumulée à l'ouverture du tour", "Recherche et développement (à saisir — préremplie : de quoi lancer la référence)"]);
+    expect(cumul[1]!.cibles).toEqual(["R&D cumulée à l'ouverture du tour", "Recherche et développement (à saisir, préremplie : de quoi lancer la référence)"]);
   });
 
   it("la R&D et la marque pèsent sur le résultat et sur la trésorerie", () => {

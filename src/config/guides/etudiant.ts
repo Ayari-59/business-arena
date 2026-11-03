@@ -11,12 +11,12 @@ import type { Guide } from "./types";
 export const GUIDE_ETUDIANT: Guide = {
   public: "etudiant",
   nomDuPublic: "Étudiant",
-  titre: "Guide de l'étudiant",
+  titre: "Guide de l'élève",
   surtitre: "Guide de prise en main",
   chapeau:
-    "Votre enseignant vous a donné un code. Ce guide vous mène de ce code à votre premier tour joué, puis jusqu'au bilan de la partie. Sans compte, sans e-mail.",
+    "Votre enseignant vous a donné un code. Ce guide vous mène de ce code à votre premier tour joué, puis jusqu'au bilan de la partie. Sans compte, sans adresse électronique.",
   description:
-    "Le guide de l'étudiant : rejoindre une partie avec un code, reprendre avec son code de reprise, lire le tableau de bord et la feuille de décision, décider en équipe, lire les résultats et le courrier, le bilan, mérite ou chance, l'examen et le téléphone.",
+    "Le guide de l'élève : rejoindre une partie avec un code, reprendre avec son code de reprise, lire le tableau de bord et la feuille de décision, décider en équipe, lire les résultats et le courrier, le bilan, mérite ou chance, l'examen et le téléphone.",
   pourQui: "Vous êtes élève ou étudiant, et votre enseignant vous a donné un code de partie ou d'examen.",
   resultat: "Vous savez rejoindre votre équipe, prendre et envoyer vos décisions, et lire ce que le marché vous répond.",
   version: "2026-10-16",
@@ -329,7 +329,7 @@ export const GUIDE_ETUDIANT: Guide = {
     {
       question: "Quelles données sont gardées sur moi ?",
       reponse:
-        "Votre pseudo et un identifiant technique, rien d'autre : ni e-mail, ni nom de famille, ni date de naissance. Pour un examen, le nom et le numéro que vous donnez servent à votre enseignant.",
+        "Votre pseudo et un identifiant technique, rien d'autre : ni adresse électronique, ni nom de famille, ni date de naissance. Pour un examen, le nom et le numéro que vous donnez servent à votre enseignant.",
       lien: { href: "/mentions-legales", libelle: "Lire les mentions légales" },
     },
   ],

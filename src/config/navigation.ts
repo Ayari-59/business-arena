@@ -27,7 +27,8 @@
  * LES ADRESSES NE CHANGENT PAS. Seuls les libellés et leur rangement bougent :
  * un lien partagé, un signet, un support imprimé restent justes.
  */
-import { NOMBRE_D_EPISODES } from "@/config/episodes/familles";
+import { DECISIONS_PAR_EPISODE, NOMBRE_D_EPISODES } from "@/config/episodes/familles";
+import { COMPETENCES } from "@/config/episodes/competences";
 
 export interface LienDeMenu {
   href: string;
@@ -118,7 +119,7 @@ export const LIEN_TARIFS_DU_MENU: LienDeMenu = {
 export const LIEN_GUIDES: LienDeMenu = {
   href: "/guides",
   libelle: "Guides de prise en main",
-  aide: "Un guide par public (enseignant, étudiant, référent établissement, formateur), les étapes dans l'ordre avec les écrans réels, et sa version PDF.",
+  aide: "Un guide par public (enseignant, élève, référent établissement, formateur), les étapes dans l'ordre avec les écrans réels, et sa version PDF.",
 };
 
 /**
@@ -267,7 +268,7 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
       {
         href: "/ecoles",
         libelle: "Présentation",
-        aide: "L'arène pour le bachelor, les épisodes manager pour le master et la formation continue, et dix compétences mesurées à montrer à un jury d'accréditation.",
+        aide: `L'arène pour le bachelor, les épisodes manager pour le master et la formation continue, et ${COMPETENCES.length} compétences mesurées à montrer à un jury d'accréditation.`,
       },
       {
         // La section « Évaluer et accréditer » de la page des établissements, qui présente
@@ -297,12 +298,12 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
       {
         href: "/entreprises/episode",
         libelle: "Épisodes manager",
-        aide: `${NOMBRE_D_EPISODES} trimestres dans la peau d'un manager, du terrain à la stratégie : six décisions, et un bilan qui sépare la qualité des décisions du hasard.`,
+        aide: `${NOMBRE_D_EPISODES} trimestres dans la peau d'un manager, du terrain à la stratégie : ${DECISIONS_PAR_EPISODE} décisions, et un bilan qui sépare la qualité des décisions du hasard.`,
       },
       {
         href: "/entreprises/episode/profil",
         libelle: "Mon profil décisionnel",
-        aide: "Ce que vos épisodes disent de votre façon de décider : dix compétences, leurs preuves, et les épisodes à jouer ensuite.",
+        aide: `Ce que vos épisodes disent de votre façon de décider : ${COMPETENCES.length} compétences, leurs preuves, et les épisodes à jouer ensuite.`,
       },
     ],
   },
@@ -488,7 +489,7 @@ export const NAVIGATION_ETUDIANT: readonly Pastille[] = [
  * « Quitter la partie » mène là d'où l'élève vient (components/menu-de-l-arene.tsx).
  */
 export const NAVIGATION_ARENE: readonly LienDeMenu[] = [
-  { href: "/guides/etudiant", libelle: "Guide de l'étudiant", aide: "Du code donné en classe au bilan de fin de partie, les étapes dans l'ordre avec les écrans réels." },
+  { href: "/guides/etudiant", libelle: "Guide de l'élève", aide: "Du code donné en classe au bilan de fin de partie, les étapes dans l'ordre avec les écrans réels." },
   lienDuPlan("/notions"),
   lienDuPlan("/profile"),
 ];

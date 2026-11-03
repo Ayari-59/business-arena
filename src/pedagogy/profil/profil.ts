@@ -188,7 +188,7 @@ export function conseillerUnNiveau(points: readonly PointDeProgression[]): Conse
   if (q <= SEUILS_DU_CONSEIL.decouverte) {
     return {
       niveau: "decouverte",
-      pourquoi: `${lu} Un épisode en Découverte, avec des repères de méthode et l'effet immédiat de chaque choix, aide à reprendre pied. C'est un entraînement : ni cette partie ni les suivantes de cet épisode ne compteront dans votre profil.`,
+      pourquoi: `${lu} Un épisode au niveau Démonstration, avec des repères de méthode et l'effet immédiat de chaque choix, aide à reprendre pied. C'est un entraînement : ni cette partie ni les suivantes de cet épisode ne compteront dans votre profil.`,
     };
   }
   return {

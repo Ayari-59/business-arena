@@ -27,7 +27,7 @@ export function DemandeDeReinitialisation() {
   return (
     <form action={action} noValidate className="w-full max-w-md carte space-y-4 p-4 sm:p-7">
       <label className="block">
-        <span className={LIBELLE}>E-mail de votre compte</span>
+        <span className={LIBELLE}>Adresse électronique de votre compte</span>
         <input name="email" type="email" required autoComplete="email" className={CHAMP} />
       </label>
       {etat.error ? (

@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
@@ -27,7 +28,7 @@ export const metadata: Metadata = {
     "Les épisodes manager pour une entreprise ou un organisme de formation : parcours en autonomie, cohorte animée, guide de débrief. Sur devis.",
 };
 
-export default async function OffreEntreprisesPage() {
+async function OffreEntreprisesPage() {
   const { catalogue, decouverte, affichage } = await lireLEtatDuCatalogue();
   const vue = vueDesTarifs(catalogue, variablesDuCatalogue(decouverte), { prix: affichage.prixPublics });
   const colonnes = vue.episodes?.colonnes.filter((c) => c.public === "entreprises") ?? [];
@@ -94,3 +95,5 @@ export default async function OffreEntreprisesPage() {
     </>
   );
 }
+
+export default avecTypographie(OffreEntreprisesPage);

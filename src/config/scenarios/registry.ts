@@ -726,11 +726,11 @@ export const CONSEIL_GAMME_DEFINITION: ScenarioDefinition = {
   title: "ATLAS CONSEIL · Composez l'offre",
   sector: "services",
   shortName: "ATLAS CONSEIL · gamme",
-  tagline: "Cabinet de conseil, 12 consultants : l'audit, la stratégie, et une pratique cyber-sécurité à bâtir.",
+  tagline: "Cabinet de conseil, 12 consultants : l'audit, la stratégie, et une pratique cybersécurité à bâtir.",
   briefing:
     "Une journée non facturée est perdue, et vos consultants sont payés que le carnet soit plein ou vide. Vous vendez trois offres à des taux différents, avec les mêmes équipes : ce qu'on vend compte autant que le remplissage.",
   context:
-    "Toutes les missions étaient facturées au même taux, l'audit d'une PME comme la stratégie d'un groupe, et les grands comptes paient à soixante jours. Une pratique cyber-sécurité reste à bâtir.",
+    "Toutes les missions étaient facturées au même taux, l'audit d'une PME comme la stratégie d'un groupe, et les grands comptes paient à soixante jours. Une pratique cybersécurité reste à bâtir.",
   dilemma: {
     question: "Douze consultants, trois offres. Vous remplissez le banc avec de l'audit, ou vous bâtissez la cyber ?",
     routes: [
@@ -740,7 +740,7 @@ export const CONSEIL_GAMME_DEFINITION: ScenarioDefinition = {
         risque: "Un taux moyen qui descend, et des journées qui manqueront à la stratégie.",
       },
       {
-        label: "Bâtir la cyber-sécurité",
+        label: "Bâtir la cybersécurité",
         gain: "Le tarif le plus haut du cabinet, sur des clients qui achètent encore au creux.",
         risque: "Un budget engagé avant la première mission, et des salaires qui tombent.",
       },
@@ -1136,11 +1136,11 @@ export const SCENARIO_FAMILIES: readonly ScenarioFamily[] = [
     head: CONSEIL_DEFINITION.code,
     mono: CONSEIL_DEFINITION.code,
     gamme: CONSEIL_GAMME_DEFINITION.code,
-    // La cyber-sécurité se bâtit au niveau qui ouvre la R&D.
+    // La cybersécurité se bâtit au niveau qui ouvre la R&D.
     gammeFromLevel: 4,
     monoLabel: "une seule journée à taux moyen",
-    gammeLabel: "les trois offres, audit, stratégie et cyber-sécurité",
-    aBatir: "la pratique cyber-sécurité à bâtir",
+    gammeLabel: "les trois offres, audit, stratégie et cybersécurité",
+    aBatir: "la pratique cybersécurité à bâtir",
   },
   {
     head: BISTROT_DEFINITION.code,
@@ -1186,6 +1186,12 @@ export const SCENARIO_CHOICES: ScenarioDefinition[] = SCENARIOS.filter((d) => {
   const family = familyOf(d.code);
   return !family || family.head === d.code;
 });
+
+/**
+ * Le nombre de tours d'une partie, que les pages annoncent : celui des scénarios proposés (tous
+ * en comptent autant aujourd'hui ; s'ils divergeaient, le plus petit reste vrai pour chacun).
+ */
+export const TOURS_D_UNE_PARTIE = Math.min(...SCENARIO_CHOICES.map((d) => d.scenario.roundsCount));
 
 const byCode = new Map(SCENARIOS.map((s) => [s.code, s]));
 

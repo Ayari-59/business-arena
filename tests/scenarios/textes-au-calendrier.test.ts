@@ -524,7 +524,7 @@ const AFFIRMATIONS: { ou: string[]; texte: string; vrai: (l: Lecture) => boolean
   },
   {
     ou: ["conseilg_t3_banc"],
-    texte: "La saison creuse est aussi le moment où une offre cyber-sécurité, que les DSI continuent d'acheter",
+    texte: "La saison creuse est aussi le moment où une offre cybersécurité, que les DSI continuent d'acheter",
     vrai: (l) => l.trimestreLePlusBas() && l.mois("dsi") > l.mois("public"),
     pourquoi: "le plus bas trimestre ; les DSI achètent plus que le public",
   },

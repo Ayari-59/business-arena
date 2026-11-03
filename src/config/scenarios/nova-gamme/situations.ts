@@ -71,7 +71,7 @@ const SOURCES: SituationDef[] = [
     hints: hints([
       "Regardez vos charges : certaines tombent chaque {{trimestre}}, que vous vendiez des Go, des One ou rien du tout.",
       "Combien laisse une Go une fois ses composants et sa main-d'œuvre payés ? Et une Studio ?",
-      "Il existe un volume précis, toutes références confondues, à partir duquel vous cessez de perdre de l'argent — et il dépend de ce que vous vendez.",
+      "Il existe un volume précis, toutes références confondues, à partir duquel vous cessez de perdre de l'argent, et il dépend de ce que vous vendez.",
       "Une analyse du seuil de rentabilité à mix constant donnerait un objectif chiffré à votre premier {{trimestre}}.",
       "Calculez la marge moyenne d'une enceinte au mix prévu (15 € la Go, 21 € la One, 59 € la Studio une fois lancée), puis divisez les charges de structure par cette marge. Et comparez le coût de développement de la Studio aux marges {{qu'elle rapportera d'ici Noël}} : financée dès ce tour, elle se vend {{au_tour: vente_studio}}.",
     ]),
@@ -208,7 +208,7 @@ const SOURCES: SituationDef[] = [
     trigger: { round: 3, supposeUnTourJoue: true },
     weight: 1,
     decisionLevers: [
-      { field: "productionPlan", direction: "up", hint: "Produire au plafond AVANT le pic constitue le stock qui servira la demande quand la capacité d'un tour ne suffira plus — en commençant par la référence qui rapporte le plus par enceinte." },
+      { field: "productionPlan", direction: "up", hint: "Produire au plafond AVANT le pic constitue le stock qui servira la demande quand la capacité d'un tour ne suffira plus, en commençant par la référence qui rapporte le plus par enceinte." },
       { field: "maintenanceBudget", direction: "review", hint: "La disponibilité des lignes dépend de la maintenance : négliger l'entretien réduit la capacité réelle, pour toute la gamme à la fois." },
     ],
   },

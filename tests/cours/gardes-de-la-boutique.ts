@@ -7,6 +7,7 @@ import { CONCEPTS } from "../../src/config/pedagogy/concepts";
 import { lireLeCurseur, lireLeLaboratoire } from "../../src/pedagogy/cours/chapitre-servi";
 import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
 import { etape, textesDe } from "./gardes-du-lycee";
+import { typographier } from "../../src/lib/typographie";
 
 /**
  * LES GARDES COMMUNES DES CHAPITRES ET DES CAS DE LA VENTE ET DE LA CAISSE (palier 1 : CAP EPC, bac
@@ -95,7 +96,7 @@ export function gardeDuCurseur(source: Chapitre, id: string, attendu: number) {
   const pas = e.sens === "plus-grande" ? 1 : -1;
   expect(couvre(attendu), `${id} à ${attendu}`).toBe(true);
   expect(couvre(attendu + pas), `${id} à ${attendu + pas}`).toBe(false);
-  expect(lireLeCurseur(e, BOUTIQUE, attendu).lignes).toEqual(e.lecture(BOUTIQUE, attendu));
+  expect(lireLeCurseur(e, BOUTIQUE, attendu).lignes).toEqual(typographier(e.lecture(BOUTIQUE, attendu)));
   return e;
 }
 

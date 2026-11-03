@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
@@ -37,7 +38,7 @@ const ECRANS = {
   },
 } as const;
 
-export default async function RefusPage({ searchParams }: { searchParams: Promise<{ motif?: string }> }) {
+async function RefusPage({ searchParams }: { searchParams: Promise<{ motif?: string }> }) {
   const { motif } = await searchParams;
   const cle = motif === "inconnu" || motif === "plafond" ? motif : "verification";
   const e = ECRANS[cle];
@@ -61,3 +62,5 @@ export default async function RefusPage({ searchParams }: { searchParams: Promis
     </main>
   );
 }
+
+export default avecTypographie(RefusPage);

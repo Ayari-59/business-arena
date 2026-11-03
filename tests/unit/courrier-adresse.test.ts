@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
+import { renderToStaticMarkup as rendreEnHtml } from "react-dom/server";
+import { espacesOrdinaires } from "@/lib/typographie";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/db", () => ({ db: {} }));
@@ -19,6 +20,9 @@ import { COURRIERS_DE_ROUTINE } from "@/config/courriers/routine";
 import { LETTRES_DE_MISSION } from "@/config/courriers/mission";
 import { destinataireDuCourrier } from "@/config/courriers/destinataire";
 import { SCENARIOS } from "@/config/scenarios/registry";
+
+/** Le rendu, ses insécables (components/typographie.ts) ramenées à l'espace ordinaire pour comparer les textes. */
+const renderToStaticMarkup = (el: Parameters<typeof rendreEnHtml>[0]) => espacesOrdinaires(rendreEnHtml(el));
 
 /**
  * LE NOM DE L'ENTREPRISE SUR LE COURRIER.

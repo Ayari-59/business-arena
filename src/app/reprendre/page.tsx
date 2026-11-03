@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FormulaireDeReprise } from "@/components/formulaire-de-reprise";
@@ -28,7 +29,7 @@ export const metadata: Metadata = {
  * codes existent. C'est l'arène qui annonce ensuite sous quel nom on joue,
  * avec son « ce n'est pas moi » à côté.
  */
-export default async function ReprendrePage({
+async function ReprendrePage({
   searchParams,
 }: {
   searchParams: Promise<{ code?: string }>;
@@ -68,3 +69,5 @@ export default async function ReprendrePage({
     </main>
   );
 }
+
+export default avecTypographie(ReprendrePage);

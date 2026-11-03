@@ -62,7 +62,7 @@ export const SURFACES_PAPIER: readonly SurfaceDeLecture[] = [
     cle: "situation-du-tour",
     role: "papier",
     porte: "components/situation-panel.tsx:SituationCard",
-    raison: "La situation du tour est une mise en scène narrative — de la prose avant tout.",
+    raison: "La situation du tour est une mise en scène narrative : de la prose avant tout.",
     preuve: {
       fichier: "components/situation-panel.tsx",
       motif: /<article className=\{dansTiroir \? "" : "papier rounded-xl/,

@@ -60,7 +60,7 @@ const conventionSignee = (ctx: Contexte) =>
 export const DIAGNOSTICS = [
   {
     id: "deplacement",
-    t: "Un groupe se juge sur sa contribution totale — chambres, salles, restauration — moins celle des clients individuels qu'il évince : en juin, le séminaire chasse presque autant qu'il rapporte, et ses chambres vides ne seront pas revendues sans clauses",
+    t: "Un groupe se juge sur sa contribution totale (chambres, salles, restauration) moins celle des clients individuels qu'il évince : en juin, le séminaire chasse presque autant qu'il rapporte, et ses chambres vides ne seront pas revendues sans clauses",
   },
   {
     id: "attrition",

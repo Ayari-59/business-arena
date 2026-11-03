@@ -43,7 +43,7 @@ export const DIAGNOSTICS = [
   },
   {
     id: "service",
-    t: "On ne gagne pas une guerre des prix contre huit points de frais de moins : il faut se battre sur le service — livraison, crédit, conseil — et laisser le prix à Tarval",
+    t: "On ne gagne pas une guerre des prix contre huit points de frais de moins : il faut se battre sur le service (livraison, crédit, conseil) et laisser le prix à Tarval",
   },
   {
     id: "prix",

@@ -531,7 +531,7 @@ export function cockpitSpec(source: CockpitSource): ClasseurSpec {
       enDeveloppement ? `(${formule})*${colonne(i)}${rangVendable}` : formule;
     poserLigne(
       "plan",
-      `${v.productionPlanLabel} (à saisir — préremplie : de quoi servir la demande)`,
+      `${v.productionPlanLabel} (à saisir, préremplie : de quoi servir la demande)`,
       tours.map((_, i) =>
         f(
           siVendable(
@@ -633,7 +633,7 @@ export function cockpitSpec(source: CockpitSource): ClasseurSpec {
       poserLigne(
         "rd",
         dev
-          ? "Recherche et développement (à saisir — préremplie : de quoi lancer la référence)"
+          ? "Recherche et développement (à saisir, préremplie : de quoi lancer la référence)"
           : "Recherche et développement (à saisir)",
         tours.map((_, i) =>
           dev && i === 0

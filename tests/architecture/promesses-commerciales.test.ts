@@ -141,7 +141,7 @@ describe("P0-2 : l'aperçu du profil d'une démonstration", () => {
     expect(liste).toMatch(/Avec une licence, chaque épisode enrichit votre profil\./);
     const intro = lire("components/episode/episode-joue.tsx");
     expect(intro).toMatch(/!licence && niveaux\.every\(\(n\) => n === "decouverte"\)/);
-    expect(intro).toMatch(/la Découverte ne compte pas dans le profil/);
+    expect(intro).toMatch(/une démonstration se joue au niveau Démonstration, qui ne compte pas dans le profil/i);
   });
 });
 

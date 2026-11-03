@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -75,7 +76,7 @@ const styles = `
 const pourcent = (x: number) => `${Math.round(x * 100)} %`;
 const date = (d: Date) => d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Paris" });
 
-export default async function RapportDAccreditationPage({ params }: { params: Promise<{ id: string }> }) {
+async function RapportDAccreditationPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await getSession();
   if (!session) redirect(await connexionPourLaPageDemandee());
@@ -215,3 +216,5 @@ export default async function RapportDAccreditationPage({ params }: { params: Pr
     </main>
   );
 }
+
+export default avecTypographie(RapportDAccreditationPage);

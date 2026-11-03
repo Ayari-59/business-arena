@@ -165,7 +165,7 @@ export function comportements(p: PartieJouee, t: Trimestre): Constat[] {
     : `Vercoran n'est pas venu cette fois : il avait ${pct(t.chanceVercoran)} de chances de le faire, au vu de ce que vous lui laissiez.`;
   let texte: string;
   if (pris && attendu) {
-    texte = `Vous avez pris tôt ce qui ne se signe qu'une fois — les deux grands démolisseurs, pour cinq ans — et laissé l'équipement attendre les volumes. ${issue}`;
+    texte = `Vous avez pris tôt ce qui ne se signe qu'une fois (les deux grands démolisseurs, pour cinq ans) et laissé l'équipement attendre les volumes. ${issue}`;
   } else if ((pris || enPartie) && !attendu) {
     texte = `Vous avez pris ${pris ? "les gisements" : "une partie des gisements"}, mais acheté la capacité avant les volumes : la plateforme se serait achetée aussi bien l'an prochain, subventionnée. ${issue}`;
   } else if (enPartie) {

@@ -1,3 +1,5 @@
+import { avecTypographie } from "@/components/typographie";
+import { COMPETENCES } from "@/config/episodes/competences";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { GuardedForm } from "@/components/guarded-action";
@@ -253,7 +255,7 @@ function phraseDeComparaison(quoi: string, c: Comparaison, n: number): string {
       : `${quoi} : ${chiffres}. L'écart reste dans le bruit des épisodes : pas de progression à conclure.`;
 }
 
-export default async function ProfilPage({
+async function ProfilPage({
   searchParams,
 }: {
   searchParams: Promise<{
@@ -372,7 +374,7 @@ export default async function ProfilPage({
               id="competences-titre"
               className="text-2xl font-semibold tracking-tight text-slate-50"
             >
-              Dix compétences de décision
+              Les {COMPETENCES.length} compétences de décision
             </h2>
             <p className="max-w-2xl text-sm text-slate-400">
               Ce qu&apos;on sait le mieux vient d&apos;abord. Un score indicatif est à confirmer par
@@ -576,7 +578,7 @@ export default async function ProfilPage({
                     {p.raison === "rejouee"
                       ? "rejouée : seule la première partie compte"
                       : p.raison === "decouverte"
-                        ? "en Découverte : ne compte pas"
+                        ? "au niveau Démonstration : ne compte pas"
                         : "épisode retiré"}
                   </li>
                 ))}
@@ -678,3 +680,5 @@ export default async function ProfilPage({
     </>
   );
 }
+
+export default avecTypographie(ProfilPage);

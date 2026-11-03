@@ -6,11 +6,14 @@ import { ENTREPRISES_DU_COURS } from "@/config/cours/metiers";
 import { chapitreDuCas, etatAvant, journalAvant } from "@/pedagogy/cours/deroule";
 import { lireLeCurseur, lireLeLaboratoire, positionValide, servirLeChapitre } from "@/pedagogy/cours/chapitre-servi";
 import { soldes } from "@/pedagogy/cours/etats";
+import { typographier } from "@/lib/typographie";
 
 /**
  * LE CHAPITRE SERVI (audit, P0) : ce que la page envoie au navigateur à la place du
  * code du chapitre. Il doit tout porter, sans une fonction, et dire la même chose que
- * le chapitre : le même journal, les mêmes états, les mêmes lectures.
+ * le chapitre : le même journal, les mêmes états, les mêmes lectures. Ses textes portent
+ * les insécables de la typographie française (lib/typographie.ts) : on compare au chapitre
+ * passé par la même fonction.
  */
 
 const fonctions = (x: unknown, chemin = ""): string[] =>
@@ -40,7 +43,7 @@ describe("le chapitre servi au navigateur", () => {
       expect(servi.etapes.map((e) => e.id)).toEqual(ordonne.etapes.map((e) => e.id));
       for (let i = 0; i <= ordonne.etapes.length; i++) {
         const journal = servi.journal.slice(0, servi.ecrituresAvant[i]);
-        expect(journal, `${c.code} ${i}`).toEqual(journalAvant(ordonne, cas, i));
+        expect(journal, `${c.code} ${i}`).toEqual(typographier(journalAvant(ordonne, cas, i)));
         expect(soldes(journal)).toEqual(etatAvant(ordonne, cas, i).soldes);
       }
     }
@@ -55,15 +58,15 @@ describe("le chapitre servi au navigateur", () => {
         if (e.type === "curseur") {
           curseurs++;
           const { attendu } = e.cible(cas);
-          expect(lireLeCurseur(e, cas, attendu).lignes).toEqual(e.lecture(cas, attendu));
+          expect(lireLeCurseur(e, cas, attendu).lignes).toEqual(typographier(e.lecture(cas, attendu)));
         }
         if (e.type === "simulation") {
           laboratoires++;
           const { solution } = e.defi(cas);
           const lu = lireLeLaboratoire(e, cas, solution);
           expect(lu.atteint, `${c.code} ${e.id}`).toBe(true);
-          expect(lu.explication).toEqual(e.explication(cas, solution));
-          expect(lu.lignes).toEqual(e.lecture(cas, solution));
+          expect(lu.explication).toEqual(typographier(e.explication(cas, solution)));
+          expect(lu.lignes).toEqual(typographier(e.lecture(cas, solution)));
         }
       }
     }

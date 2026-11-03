@@ -87,7 +87,7 @@ export function comportements(p: PartieJouee, t: Trimestre): Constat[] {
     texte:
       n === 0
         ? "Vous n'avez jamais répondu aux départs par des points ou des remises pour tous : vous avez cherché pourquoi les artisans partaient, et visé ceux qui allaient partir."
-        : `Face aux départs, vous avez payé tout le monde — points, remises, alignement — ${n} fois sur ${ETAPES.length} décisions. Ces gestes allaient surtout aux neuf artisans sur dix qui ne partaient pas : ${kE(t.couts)} d'actions sur le trimestre.`,
+        : `Face aux départs, vous avez payé tout le monde (points, remises, alignement) ${n} fois sur ${ETAPES.length} décisions. Ces gestes allaient surtout aux neuf artisans sur dix qui ne partaient pas : ${kE(t.couts)} d'actions sur le trimestre.`,
   };
 
   const calibrage = constatCalibrage(
@@ -194,7 +194,7 @@ export const EPISODE_FIDELISATION: Episode<Trimestre> = {
     { fort: kE(ENVELOPPE), texte: "d'enveloppe pour les actions de fidélisation" },
   ],
   jugement:
-    "Votre direction juge le trimestre sur la marge des artisans, plus la valeur des clients conservés en fin de trimestre, moins ce qu'ont coûté vos actions — points, remises, renforts, appels —, en écart au budget.",
+    "Votre direction juge le trimestre sur la marge des artisans, plus la valeur des clients conservés en fin de trimestre, moins ce qu'ont coûté vos actions (points, remises, renforts, appels), en écart au budget.",
   duree: "une vingtaine de minutes",
   nomDuTableau: "Vos artisans",
 
@@ -367,7 +367,7 @@ export const EPISODE_FIDELISATION: Episode<Trimestre> = {
     titre: (t) => `${ecartAuBudget(t.objectif)}, valeur des clients conservés comprise`,
     formatObjectif: kE,
     noteDesBarres:
-      "Écart au budget — marge des artisans, plus la valeur des clients conservés en fin de trimestre, moins le coût des actions — sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Écart au budget (marge des artisans, plus la valeur des clients conservés en fin de trimestre, moins le coût des actions) sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

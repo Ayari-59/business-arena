@@ -1,6 +1,7 @@
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 import { NOMBRE_D_EPISODES, SECTEURS } from "@/config/episodes/familles";
 import { NIVEAUX as NIVEAUX_DES_EPISODES } from "@/config/episodes/niveaux";
+import { insecables } from "@/lib/typographie";
 import { ouvreLExamen, ouvreLesEpisodes, parametresAreneDe, type Catalogue } from "@/config/catalogue";
 
 /**
@@ -71,10 +72,10 @@ export const jetonsDe = (texte: string): string[] => [...texte.matchAll(JETON)].
 
 /**
  * Les espaces insécables de la typographie française : un guillemet ne se sépare pas de
- * son mot, un deux-points ne commence pas une ligne.
+ * son mot, un deux-points ne commence pas une ligne, un montant ne se coupe pas avant « € ».
+ * La fonction est commune à tout le rendu (lib/typographie.ts).
  */
-export const insecables = (t: string): string =>
-  t.replace(/« /g, "«\u00a0").replace(/ ([»:;?!])/g, "\u00a0$1");
+export { insecables };
 
 /** Le texte, ses jetons remplacés. Un jeton inconnu est une faute de rédaction : on lève. */
 export function resoudre(texte: string, valeurs: ValeursDesJetons): string {

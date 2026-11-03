@@ -9,7 +9,7 @@ import { conseilGammeScenario } from "./index";
  *
  * Même dramaturgie que le cabinet d'origine (reprise, créances, banc,
  * recrutement, mission au rabais, résistance, et les trois situations
- * détectées), posée sur trois offres — Audit, Stratégie, Cyber-sécurité — qui se
+ * détectées), posée sur trois offres — Audit, Stratégie, Cybersécurité — qui se
  * partagent les mêmes consultants.
  * Ce que la gamme ajoute : le MIX des journées vendues, et une offre qui se
  * bâtit avant de se vendre. Les situations sont HÉRITÉES du cabinet : même
@@ -27,7 +27,7 @@ const PATCHES: Record<string, SituationTextPatch> = {
   conseil_t1_reprise: {
     title: "Douze consultants, trois offres et un projet",
     narrative:
-      "Vous prenez la direction d'ATLAS CONSEIL : douze consultants, 180 000 € de factures en attente et presque rien à l'actif immobilisé. Le cabinet vend deux offres, l'audit et la conformité pour les PME et le secteur public, la stratégie pour les grands comptes, et garde dans ses cartons un projet de pratique de cyber-sécurité : il faudra le financer avant de la vendre. {{Le trimestre}} offre {{entier: capacite}} jours-consultants, à répartir entre les offres.",
+      "Vous prenez la direction d'ATLAS CONSEIL : douze consultants, 180 000 € de factures en attente et presque rien à l'actif immobilisé. Le cabinet vend deux offres, l'audit et la conformité pour les PME et le secteur public, la stratégie pour les grands comptes, et garde dans ses cartons un projet de pratique de cybersécurité : il faudra le financer avant de la vendre. {{Le trimestre}} offre {{entier: capacite}} jours-consultants, à répartir entre les offres.",
     problem:
       "Dans un cabinet, qu'est-ce qui détermine le résultat, pourquoi le chiffre d'affaires ne suffit-il pas à le dire, et que vaut une offre qui n'existe pas encore ?",
     diagnosticLabels: [
@@ -38,10 +38,10 @@ const PATCHES: Record<string, SituationTextPatch> = {
     ],
     hintTexts: [
       "Comptez d'abord ce que le cabinet peut vendre : combien de consultants, combien de jours ouvrés chacun ? Une journée d'audit et une journée de stratégie consomment le même consultant.",
-      "Un jour de consultant non vendu ne se rattrape pas {{au trimestre}} suivant : il disparaît, et l'offre cyber-sécurité ne vend rien tant qu'elle n'est pas bâtie.",
+      "Un jour de consultant non vendu ne se rattrape pas {{au trimestre}} suivant : il disparaît, et l'offre cybersécurité ne vend rien tant qu'elle n'est pas bâtie.",
       "Vos charges de structure sont pour l'essentiel des SALAIRES : elles ne baissent pas quand le carnet se vide, et elles ne dépendent pas de l'offre vendue.",
-      "Marge par jour : audit 560 − 90 = 470 €, stratégie 780 − 115 = 665 €, cyber-sécurité 850 − 100 = 750 € une fois lancée. Charges de structure décaissées = {{entier: charges}} € {{par trimestre}}.",
-      "Le seuil se calcule à mix constant : {{entier: charges}} € divisés par la marge MOYENNE d'une journée vendue au mix prévu. Plus de stratégie dans le mix, moins de jours à vendre pour équilibrer ; et la R&D de la cyber-sécurité est une charge du tour, à horizon.",
+      "Marge par jour : audit 560 − 90 = 470 €, stratégie 780 − 115 = 665 €, cybersécurité 850 − 100 = 750 € une fois lancée. Charges de structure décaissées = {{entier: charges}} € {{par trimestre}}.",
+      "Le seuil se calcule à mix constant : {{entier: charges}} € divisés par la marge MOYENNE d'une journée vendue au mix prévu. Plus de stratégie dans le mix, moins de jours à vendre pour équilibrer ; et la R&D de la cybersécurité est une charge du tour, à horizon.",
     ],
     modelExplain:
       "Le seuil de rentabilité traduit la question du métier en taux d'occupation : combien de jours faut-il facturer pour couvrir des salaires qui tombent de toute façon ? Avec trois offres, il se calcule à mix constant, et le mix devient une décision.",
@@ -49,7 +49,7 @@ const PATCHES: Record<string, SituationTextPatch> = {
   conseil_t3_banc: {
     title: "Des consultants sur le banc, et trois offres pour les occuper",
     narrative:
-      "{{L'été : les décideurs sont en congés, les marchés publics ne se notifient plus, la stratégie s'arrête, l'audit tourne au ralenti.}} Quatre de vos douze consultants n'ont aucune mission {{ce trimestre}}. Leurs salaires, eux, tombent normalement, et seuls les DSI continuent d'acheter, si vous avez une offre cyber-sécurité à leur vendre.",
+      "{{L'été : les décideurs sont en congés, les marchés publics ne se notifient plus, la stratégie s'arrête, l'audit tourne au ralenti.}} Quatre de vos douze consultants n'ont aucune mission {{ce trimestre}}. Leurs salaires, eux, tombent normalement, et seuls les DSI continuent d'acheter, si vous avez une offre cybersécurité à leur vendre.",
     problem:
       "Faut-il baisser vos tarifs pour remplir le banc, sur quelle offre, ou tenir vos prix et accepter le creux ?",
     diagnosticLabels: [
@@ -62,8 +62,8 @@ const PATCHES: Record<string, SituationTextPatch> = {
       "Posez la question autrement : que rapporte un consultant qui reste sur le banc, quelle que soit l'offre qu'il aurait vendue ?",
       "Comparez deux scénarios pour chaque offre : mission à tarif réduit, ou aucune mission. Qu'est-ce qui change réellement dans vos charges ?",
       "Le salaire du consultant est engagé quoi qu'il arrive : c'est un coût non pertinent pour cette décision-ci.",
-      "Seuls les frais de mission varient, 90 € en audit, 115 € en stratégie, 100 € en cyber-sécurité. Toute mission au-dessus de ce seuil améliore le résultat du tour.",
-      "Mais attention au tarif de référence : brader une fois sauve un {{trimestre}}, brader systématiquement détruit le taux journalier moyen de l'offre, et d'abord celle qu'on brade. {{Le creux de l'été est aussi le moment où une offre cyber-sécurité, qui ne connaît pas les congés, remplit le banc sans brader.}}",
+      "Seuls les frais de mission varient, 90 € en audit, 115 € en stratégie, 100 € en cybersécurité. Toute mission au-dessus de ce seuil améliore le résultat du tour.",
+      "Mais attention au tarif de référence : brader une fois sauve un {{trimestre}}, brader systématiquement détruit le taux journalier moyen de l'offre, et d'abord celle qu'on brade. {{Le creux de l'été est aussi le moment où une offre cybersécurité, qui ne connaît pas les congés, remplit le banc sans brader.}}",
     ],
     modelExplain:
       "L'analyse des coûts pertinents isole ce que la décision change vraiment, les frais de mission de l'offre concernée, et écarte le salaire, engagé de toute façon. Elle se fait offre par offre : brader l'audit ne brade pas la stratégie.",
@@ -85,17 +85,17 @@ const PATCHES: Record<string, SituationTextPatch> = {
       "Les salaires de vos consultants sont-ils de ceux-là ? Ils tombent aussi quand le carnet est vide.",
       "Retranchez des 380 € les seuls frais que la mission engendre : ce qui reste va couvrir la structure.",
       "290 € de marge par jour valent mieux que zéro, TANT QUE le consultant n'avait rien d'autre à faire, sur aucune des trois offres.",
-      "Le raisonnement marginal s'arrête net dès que la capacité est prise : accepter, c'est alors renoncer à une journée de stratégie à 665 € de marge, ou de cyber-sécurité à 750 €. Le coût d'opportunité se lit dans le mix.",
+      "Le raisonnement marginal s'arrête net dès que la capacité est prise : accepter, c'est alors renoncer à une journée de stratégie à 665 € de marge, ou de cybersécurité à 750 €. Le coût d'opportunité se lit dans le mix.",
     ],
     modelExplain:
       "L'analyse marginale ne retient que ce que la décision change : les frais de mission, et, si les consultants sont pris, la marge de l'offre à laquelle on renonce. Le salaire, engagé de toute façon, n'a rien à y faire.",
   },
   conseil_detect_idle_cash: {
-    title: "Le compte se remplit, le carnet se vide, et la cyber-sécurité attend",
+    title: "Le compte se remplit, le carnet se vide, et la cybersécurité attend",
     narrative:
-      "Les grosses factures de fin de mission sont rentrées d'un coup : le compte affiche plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an, et facture le découvert 13 %. Le carnet d'audit et de stratégie, lui, est plus creux qu'il ne l'a été depuis longtemps, et la cyber-sécurité, qui vendrait à des DSI qui achètent en toute saison, n'est pas encore financée.",
+      "Les grosses factures de fin de mission sont rentrées d'un coup : le compte affiche plus d'un {{trimestre}} et demi de charges de structure, sans découvert. Votre banquier propose de bloquer une partie de ce solde jusqu'{{au trimestre}} suivant, à 2 % l'an, et facture le découvert 13 %. Le carnet d'audit et de stratégie, lui, est plus creux qu'il ne l'a été depuis longtemps, et la cybersécurité, qui vendrait à des DSI qui achètent en toute saison, n'est pas encore financée.",
     problem:
-      "Cet argent qui dort, faut-il le placer, le mettre dans l'offre cyber-sécurité, ou le garder, et jusqu'à quel montant ?",
+      "Cet argent qui dort, faut-il le placer, le mettre dans l'offre cybersécurité, ou le garder, et jusqu'à quel montant ?",
     diagnosticLabels: [
       "Une trésorerie qui dort ne coûte rien, mais ne rapporte rien non plus : c'est un manque à gagner, à 2 % en placement ou en marges futures dans une offre neuve",
       "Le montant bloqué ou investi ne pourra régler aucune facture {{du trimestre}} : il faut d'abord chiffrer ce qui va sortir, salaires compris",
@@ -104,13 +104,13 @@ const PATCHES: Record<string, SituationTextPatch> = {
     ],
     hintTexts: [
       "Comparez votre solde aux charges de structure d'un {{trimestre}} : combien {{de trimestres}} de salaires pourriez-vous payer sans facturer un seul jour ?",
-      "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro ; une offre cyber-sécurité lancée rapporte 750 € par journée vendue, mais seulement une fois bâtie.",
+      "Cet argent ne rapporte rien tant qu'il dort. Deux pour cent, c'est peu, mais c'est infiniment plus que zéro ; une offre cybersécurité lancée rapporte 750 € par journée vendue, mais seulement une fois bâtie.",
       "Attention : le placement est bloqué jusqu'au tour suivant, et la R&D est une charge du tour. Ni l'un ni l'autre ne réglera ce qui tombera d'ici là.",
       "Projetez {{le trimestre}} à venir avec le carnet TEL QU'IL EST, offre par offre : les salaires de vos consultants tomberont, les encaissements peut-être pas.",
       "Ne bloquez que l'excédent qui survit à cette projection, et gardez une marge. Le découvert coûte six fois et demie ce que le placement rapporte : l'erreur n'est pas symétrique.",
     ],
     modelExplain:
-      "Le budget de trésorerie confronte les encaissements attendus au carnet réel, offre par offre, aux salaires certains et à ce que coûte de bâtir l'offre cyber-sécurité. C'est le seul document qui empêche de prendre un solde de fin de mission pour un excédent durable.",
+      "Le budget de trésorerie confronte les encaissements attendus au carnet réel, offre par offre, aux salaires certains et à ce que coûte de bâtir l'offre cybersécurité. C'est le seul document qui empêche de prendre un solde de fin de mission pour un excédent durable.",
   },
 };
 

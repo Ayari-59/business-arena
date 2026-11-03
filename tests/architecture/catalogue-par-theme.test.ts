@@ -6,6 +6,8 @@ import { ARRONDI_EN_MINUTES, MINUTES_PAR_ETAPE, dureeDuChapitre, dureeEnClair } 
 import { programmeDuDiplome, diplomesParNiveau } from "@/config/cours/programme";
 import { THEMES, episodesDuTheme, themeDeLEpisode, themeDuChapitre } from "@/config/cours/themes";
 import { BLOCS_DES_EPISODES } from "@/config/episodes/blocs";
+import { formationOuverteAuxEpisodes } from "@/config/episodes/public-des-episodes";
+import { referentielDeCitation } from "@/config/ateliers/referentiels";
 import { FAMILLES } from "@/config/episodes/familles";
 import { blocsDeLEpisode, coursDeLaFormation, formationsAvecUnePage } from "@/config/couverture";
 
@@ -59,7 +61,7 @@ describe("le catalogue par thème", () => {
   });
 
   it("le programme compilé d'un diplôme reprend exactement ce qui le sert", () => {
-    let avecEpisodes = 0;
+    let fermesAvecUnReleve = 0;
     for (const f of formationsAvecUnePage()) {
       const p = programmeDuDiplome(f.code)!;
       const attendus = new Set(coursDeLaFormation(f.code).flatMap((g) => g.chapitres.map((c) => c.code)));
@@ -73,10 +75,17 @@ describe("le catalogue par thème", () => {
         Object.keys(BLOCS_DES_EPISODES).filter((e) => blocsDeLEpisode(e, f.code).length > 0),
       );
       expect(new Set(p.episodes), f.code).toEqual(episodes);
-      if (p.episodes.length > 0) avecEpisodes++;
+      // À partir de bac + 3 seulement (décision du propriétaire, novembre 2026,
+      // config/episodes/public-des-episodes.ts) : une formation fermée n'a aucun épisode,
+      // même quand le relevé de blocs.ts en cite pour elle.
+      if (!formationOuverteAuxEpisodes(f.code)) {
+        expect(p.episodes, f.code).toEqual([]);
+        if (Object.values(BLOCS_DES_EPISODES).some((b) => b.some((x) => referentielDeCitation(x)?.code === f.code)))
+          fermesAvecUnReleve++;
+      }
       expect(p.couverture.travaillees, f.code).toBeLessThanOrEqual(p.couverture.total);
     }
-    expect(avecEpisodes, "aucun programme ne compte d'épisode : la règle ne garde rien").toBeGreaterThan(3);
+    expect(fermesAvecUnReleve, "aucune formation fermée n'a de relevé : la règle ne garde rien").toBeGreaterThan(3);
     expect(programmeDuDiplome("diplome-inconnu")).toBeNull();
   });
 

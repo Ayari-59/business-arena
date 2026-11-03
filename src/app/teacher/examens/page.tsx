@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -54,7 +55,7 @@ const CHAMP = "champ mt-1 w-full px-3 py-2 text-base";
 const LIBELLE = "text-sm font-semibold text-slate-200";
 const AIDE = "mt-1 block text-xs text-slate-400";
 
-export default async function MesExamensPage({
+async function MesExamensPage({
   searchParams,
 }: {
   searchParams: Promise<{ refus?: string }>;
@@ -302,3 +303,5 @@ export default async function MesExamensPage({
     </main>
   );
 }
+
+export default avecTypographie(MesExamensPage);

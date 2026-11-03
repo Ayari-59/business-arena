@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import { ATELIERS_A_REFERENTIEL, LES_OFFRES_DE_L_ARENE } from "@/config/tarifs";
 import { LigneDePrix } from "@/components/ligne-de-prix";
@@ -176,7 +177,7 @@ const CONFIANCE = [
   },
 ];
 
-export default async function EnseignantsPage() {
+async function EnseignantsPage() {
   // Quelles bandes sont à contre-jour : le réglage de l'admin, ou l'état d'origine.
   const { theme } = await getPlatformConfig();
   const c = (id: string) => contrasteDeLaBande(theme, id);
@@ -512,3 +513,5 @@ export default async function EnseignantsPage() {
     </>
   );
 }
+
+export default avecTypographie(EnseignantsPage);

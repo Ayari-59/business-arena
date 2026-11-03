@@ -122,7 +122,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "retour_maintenance_coupee",
     expediteur: "Maintenance · Rapport de visite périodique",
-    objet: "Report de l'entretien — état constaté de votre matériel",
+    objet: "Report de l'entretien : état constaté de votre matériel",
     corps:
       "Aucun entretien n'a été engagé sur la période écoulée. Nous relevons des jeux anormaux et une usure accélérée sur les organes les plus sollicités. En l'état, la prochaine avarie ne sera plus une réparation mais un remplacement.",
     signataire: "Le technicien de maintenance",

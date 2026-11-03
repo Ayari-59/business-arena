@@ -62,7 +62,7 @@ export function comportements(p: PartieJouee, t: Trimestre): Constat[] {
   const d = p.diagnostic;
   const lecture: Record<string, string> = {
     organisation:
-      "Votre diagnostic de la semaine 1 était juste : la plupart des plaintes étaient fondées et venaient de l'organisation — six aides-soignantes de 7 h à 9 h le week-end, un linge que personne ne marquait — et les toilettes tardives de la semaine étaient un choix de la résidente, que sa fille ignorait.",
+      "Votre diagnostic de la semaine 1 était juste : la plupart des plaintes étaient fondées et venaient de l'organisation (six aides-soignantes de 7 h à 9 h le week-end, un linge que personne ne marquait) et les toilettes tardives de la semaine étaient un choix de la résidente, que sa fille ignorait.",
     matins:
       "En semaine 1, vous avez vu le manque de bras du week-end matin : la première cause, mais pas la seule. Le linge se perdait pour une autre raison, et une partie de la plainte tenait à un malentendu sur les levers.",
     famille:
@@ -197,7 +197,7 @@ export const EPISODE_FAMILLES: Episode<Trimestre> = {
     { fort: "aucun départ", texte: "de soignant à cause de l'affaire" },
   ],
   jugement:
-    "La directrice générale juge le trimestre sur ce que la réclamation et ses suites coûtent à l'EHPAD — renforts, linge, remplacements, départs, inspection — et sur l'effet attendu sur les admissions du trimestre suivant.",
+    "La directrice générale juge le trimestre sur ce que la réclamation et ses suites coûtent à l'EHPAD (renforts, linge, remplacements, départs, inspection) et sur l'effet attendu sur les admissions du trimestre suivant.",
   duree: "une vingtaine de minutes",
   nomDuTableau: "Votre EHPAD",
 
@@ -416,7 +416,7 @@ export const EPISODE_FAMILLES: Episode<Trimestre> = {
     titre: (t) => `La réclamation a coûté ${cout(t.objectif)}, admissions comprises`,
     formatObjectif: kE,
     noteDesBarres:
-      "Ce que la réclamation et ses suites ont coûté à l'EHPAD — renforts, linge, remplacements, départs, inspection, temps de cadre — et l'effet attendu sur les admissions du trimestre suivant, compté en négatif, sous les aléas que vous avez joués : plus la barre est proche de zéro, mieux c'est. L'échelle ne part pas de zéro.",
+      "Ce que la réclamation et ses suites ont coûté à l'EHPAD (renforts, linge, remplacements, départs, inspection, temps de cadre) et l'effet attendu sur les admissions du trimestre suivant, compté en négatif, sous les aléas que vous avez joués : plus la barre est proche de zéro, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

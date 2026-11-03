@@ -263,14 +263,14 @@ describe("les dossiers de service savent la R&D et la communication", () => {
   });
 
   it("une référence à bâtir s'annonce : ce qu'elle coûte, et quand elle se vend", () => {
-    // La cyber-sécurité d'ATLAS CONSEIL se bâtit au niveau qui ouvre la R&D.
+    // La cybersécurité d'ATLAS CONSEIL se bâtit au niveau qui ouvre la R&D.
     const services = dossiersDeService(scenarioByCode("conseil-gamme"), 4, { sansRd: false });
     const par = (code: string) => services.find((s) => s.code === code)!;
-    const aBatir = par("approvisionnement").lignes.find((l) => l.libelle === "À développer avant de vendre : Cyber-sécurité")!;
+    const aBatir = par("approvisionnement").lignes.find((l) => l.libelle === "À développer avant de vendre : Cybersécurité")!;
     expect(aBatir.valeur).toContain("30 000 €");
     expect(aBatir.valeur).toContain("au plus tôt au tour 2");
     expect(par("approvisionnement").lignes.filter((l) => l.libelle.startsWith("À développer avant de vendre"))).toHaveLength(1);
-    expect(par("financier").lignes.find((l) => l.libelle === "R&D à financer avant de vendre Cyber-sécurité")!.valeur).toContain("30 000 €");
+    expect(par("financier").lignes.find((l) => l.libelle === "R&D à financer avant de vendre Cybersécurité")!.valeur).toContain("30 000 €");
     expect(par("financier").questions).toHaveLength(4);
     // Et la Studio de NOVA, R&D ouverte, est à développer aux niveaux 5 et 6 comme
     // sans niveau (le scénario de base) ; au niveau 7 seulement elle est livrée prête,

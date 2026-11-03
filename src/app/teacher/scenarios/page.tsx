@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
@@ -42,7 +43,7 @@ function StatutForm({ id, to, label }: { id: string; to: string; label: string }
   );
 }
 
-export default async function TeacherScenariosPage({
+async function TeacherScenariosPage({
   searchParams,
 }: {
   searchParams: Promise<{ echec?: string }>;
@@ -142,7 +143,7 @@ export default async function TeacherScenariosPage({
           lancement d&apos;une partie, et visible des autres enseignants. Un{" "}
           <strong className="text-slate-400">brouillon</strong> reste privé. Un scénario{" "}
           <strong className="text-slate-400">retiré</strong> n&apos;est plus proposé ni partagé,
-          mais les parties déjà lancées avec lui continuent — et il se réactive à tout moment.
+          mais les parties déjà lancées avec lui continuent, et il se réactive à tout moment.
         </p>
       </section>
 
@@ -253,3 +254,5 @@ export default async function TeacherScenariosPage({
     </main>
   );
 }
+
+export default avecTypographie(TeacherScenariosPage);

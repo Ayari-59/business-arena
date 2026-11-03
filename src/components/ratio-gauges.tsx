@@ -96,13 +96,13 @@ export function RatioGauges({
       repere: "≥ 5 %",
     },
     {
-      label: "Re — Rentabilité économique (ROCE)",
+      label: "Re : Rentabilité économique (ROCE)",
       value: roce,
       hint: "Ce que l'outil de production rapporte, indépendamment de son financement.",
       repere: "≥ 8 %",
     },
     {
-      label: "Rf — Rentabilité financière (ROE)",
+      label: "Rf : Rentabilité financière (ROE)",
       value: roe,
       hint: "Ce que les capitaux propres rapportent aux associés.",
       repere: "≥ 10 %",

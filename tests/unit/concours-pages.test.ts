@@ -9,6 +9,7 @@ import {
   messageDejaInscrit,
 } from "@/config/concours";
 import { CompetitionSettings, CompetitionSteps } from "@/components/competition-steps";
+import { espacesOrdinaires } from "@/lib/typographie";
 
 /**
  * LE CONCOURS S'EXPLIQUE, ET SE RETROUVE.
@@ -136,7 +137,7 @@ describe("/compete explique le concours", () => {
     // Composant serveur asynchrone : on le résout (searchParams vide) avant de
     // rendre l'élément obtenu.
     const element = await CompetePage({ searchParams: Promise.resolve({}) });
-    const html = renderToStaticMarkup(element);
+    const html = espacesOrdinaires(renderToStaticMarkup(element));
     for (const ligne of EXPLICATIONS_CONCOURS) {
       expect(html).toContain(ligne.replace(/'/g, "&#x27;"));
     }

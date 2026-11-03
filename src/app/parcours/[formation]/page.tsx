@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import { Fragment } from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -12,6 +13,7 @@ import {
   formationsAvecUnePage,
   tableauDeCouverture,
 } from "@/config/couverture";
+import { formationOuverteAuxEpisodes } from "@/config/episodes/public-des-episodes";
 import { scenariosServant } from "@/config/scenarios/formations-servies";
 import { PASTILLE_D_ADEQUATION } from "@/components/adequation";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
@@ -62,7 +64,7 @@ function seancesEnClair(numeros: readonly number[]): string {
   return `séances ${numeros.slice(0, -1).join(", ")} et ${numeros[numeros.length - 1]}`;
 }
 
-export default async function PageDuDiplome({
+async function PageDuDiplome({
   params,
 }: {
   params: Promise<{ formation: string }>;
@@ -77,6 +79,9 @@ export default async function PageDuDiplome({
   const entreprises = scenariosServant(code).map((s) => s.playerTeamName);
   const travailles = lignes.filter((l) => l.couverture).length;
   const horsDuChamp = lignes.filter((l) => !l.couverture && l.horsDuChamp).length;
+  // Les épisodes ne s'annoncent qu'à partir de bac + 3 (config/episodes/public-des-episodes.ts) :
+  // sous ce niveau, ni la colonne « En situation », ni la section des épisodes.
+  const avecEpisodes = formationOuverteAuxEpisodes(code);
   // Les épisodes qui servent ce diplôme, une fois chacun, avec les entrées
   // qu'ils travaillent : la liste que l'enseignant distribue.
   const situations = [
@@ -118,8 +123,7 @@ export default async function PageDuDiplome({
               <>
                 {travailles} sur {lignes.length}{" "}
                 {referentiel.label.toLowerCase()} {referentiel.accord} par
-                l&apos;arène, en séance d&apos;atelier, dans un chapitre du
-                cours ou dans un épisode joué en situation. Le tableau suit le texte, entrée par entrée, et dit aussi
+                l&apos;arène, en séance d&apos;atelier{avecEpisodes ? ", dans un chapitre du cours ou dans un épisode joué en situation" : " ou dans un chapitre du cours"}. Le tableau suit le texte, entrée par entrée, et dit aussi
                 ce que rien ne travaille
                 {horsDuChamp > 0
                   ? `, et les ${horsDuChamp} entrées que l'arène laisse à d'autres outils parce qu'elles sortent du champ de la gestion`
@@ -173,9 +177,11 @@ export default async function PageDuDiplome({
                     <th scope="col" className="px-4 py-2 font-medium">
                       Dans le cours
                     </th>
-                    <th scope="col" className="px-4 py-2 font-medium">
-                      En situation
-                    </th>
+                    {avecEpisodes ? (
+                      <th scope="col" className="px-4 py-2 font-medium">
+                        En situation
+                      </th>
+                    ) : null}
                     <th scope="col" className="px-4 py-2 font-medium">
                       Adéquation
                     </th>
@@ -192,7 +198,7 @@ export default async function PageDuDiplome({
                           <tr className="grid border-t border-white/10 bg-slate-900/60 md:table-row">
                             <th
                               scope="colgroup"
-                              colSpan={5}
+                              colSpan={avecEpisodes ? 5 : 4}
                               className="block px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-amber-400 md:table-cell"
                             >
                               {l.partie}
@@ -273,6 +279,7 @@ export default async function PageDuDiplome({
                               </span>
                             )}
                           </td>
+                          {avecEpisodes ? (
                           <td className="min-w-0 text-slate-300 md:px-4 md:py-3 md:align-top">
                             <span className="text-xs uppercase tracking-wide text-slate-400 md:hidden">
                               En situation :{" "}
@@ -296,6 +303,7 @@ export default async function PageDuDiplome({
                               </span>
                             )}
                           </td>
+                          ) : null}
                           <td className="md:px-4 md:py-3 md:align-top">
                             {c ? (
                               <span
@@ -385,7 +393,7 @@ export default async function PageDuDiplome({
             </section>
           ) : null}
 
-          {situations.length > 0 ? (
+          {avecEpisodes && situations.length > 0 ? (
             <section aria-labelledby="situations" className="grid gap-4">
               <h2 id="situations" className="text-2xl font-bold text-slate-50">
                 Les épisodes à jouer en situation
@@ -488,3 +496,5 @@ export default async function PageDuDiplome({
     </>
   );
 }
+
+export default avecTypographie(PageDuDiplome);

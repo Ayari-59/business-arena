@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import { redirect } from "next/navigation";
 import { GuardedForm } from "@/components/guarded-action";
 import { SubmitButton } from "@/components/submit-button";
@@ -35,7 +36,7 @@ function ceQuOuvreLaCohorte(
       ? `Licence épisodes en cours : les membres jouent ${episodes.length > 1 ? `les ${episodes.length} épisodes` : "l'épisode"} de la cohorte, et les démonstrations.`
       : "Licence épisodes en cours : les membres jouent tous les épisodes.";
   }
-  return `Sans licence épisodes en cours : les membres ne jouent que les ${demos} démonstrations de la Découverte.`;
+  return `Sans licence épisodes en cours : les membres ne jouent que les ${demos} démonstrations de l'offre Découverte.`;
 }
 
 export const dynamic = "force-dynamic";
@@ -52,7 +53,7 @@ export const dynamic = "force-dynamic";
  * (/teacher/cohortes) : la page les montre toutes, avec leur créateur, les épisodes
  * qu'elles ouvrent et leur état (close ou non).
  */
-export default async function CohortesAdminPage({
+async function CohortesAdminPage({
   searchParams,
 }: {
   searchParams: Promise<{
@@ -225,3 +226,5 @@ export default async function CohortesAdminPage({
     </main>
   );
 }
+
+export default avecTypographie(CohortesAdminPage);

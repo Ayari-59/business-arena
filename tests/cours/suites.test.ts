@@ -8,6 +8,7 @@ import { CONCEPTS } from "@/config/pedagogy/concepts";
 import { FAMILLES } from "@/config/episodes/familles";
 import {
   EPISODES_PROPOSES,
+  chapitreOuvertAuxEpisodes,
   chapitresDeLaNotion,
   coursDeLEpisode,
   casDeSyntheseDuTheme,
@@ -43,7 +44,10 @@ describe("la fin d'un chapitre", () => {
       const s = suitesDuChapitre(c.code);
       const theme = themeDuChapitre(c.code)!;
       expect(s.theme?.code, c.code).toBe(theme.code);
-      expect(s.episodesDuTheme, c.code).toBe(episodesDuTheme(theme).length);
+      // Aucun épisode à la fin d'un chapitre écrit pour les seules formations en dessous de
+      // bac + 3 (config/episodes/public-des-episodes.ts ; garde : episodes-a-partir-de-bac-3).
+      const attendus = chapitreOuvertAuxEpisodes(c.code) ? episodesDuTheme(theme).length : 0;
+      expect(s.episodesDuTheme, c.code).toBe(attendus);
       expect(s.episodes.length, c.code).toBe(Math.min(EPISODES_PROPOSES, s.episodesDuTheme));
       for (const e of s.episodes) expect(themeDeLEpisode(e.code)?.code, e.code).toBe(theme.code);
       expect(s.reprend, c.code).toEqual([]);

@@ -200,7 +200,7 @@ export const EPISODE_PRIX: Episode<Trimestre> = {
     { fort: kE(BUDGET), texte: "de marge commerciale au budget du trimestre" },
   ],
   jugement:
-    "Votre direction juge le trimestre sur la marge commerciale de la région — remises, gestes aux clients et frais de vos actions déduits — en écart au budget.",
+    "Votre direction juge le trimestre sur la marge commerciale de la région (remises, gestes aux clients et frais de vos actions déduits) en écart au budget.",
   duree: "une vingtaine de minutes",
   nomDuTableau: "Votre région",
 
@@ -392,7 +392,7 @@ export const EPISODE_PRIX: Episode<Trimestre> = {
     titre: (t) => `${ecartAuBudget(t.objectif)}, frais compris`,
     formatObjectif: kE,
     noteDesBarres:
-      "Écart au budget de marge commerciale de la région — remises, gestes aux clients et frais des actions déduits — sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
+      "Écart au budget de marge commerciale de la région (remises, gestes aux clients et frais des actions déduits) sous les aléas que vous avez joués : plus la barre est longue, mieux c'est. L'échelle ne part pas de zéro.",
     tuiles(t) {
       return [
         {

@@ -1,6 +1,7 @@
 import { enEcriture, montantEcrit as eur } from "../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../pedagogy/cours/etats";
 import type { Cas } from "../cas";
+import { deNom, nomDuClient } from "../chapitres/creation-premier-bilan";
 import { factureDeVente } from "../chapitres/remises-et-reglements";
 import { dateDuCours as date } from "../dates";
 import { JOURS_D_ESCOMPTE, TAUX_D_ESCOMPTE, TAUX_DE_REMISE } from "../remises";
@@ -66,7 +67,7 @@ const ecritureEnvoyee = (c: Cas) => {
   const { envoyee, juste } = factureContestee(c);
   return {
     date: date(juste.date),
-    libelle: `Facture ${c.venteCredit.client}, envoyée sans la remise`,
+    libelle: `Facture ${deNom(nomDuClient(c.venteCredit.client))}, envoyée sans la remise`,
     lignes: [
       { role: "la créance sur le client", compte: "411", sens: "debit" as const, montant: envoyee.ttc, indice: "" },
       { role: "l'escompte accordé", compte: "665", sens: "debit" as const, montant: envoyee.escompte, indice: "" },
@@ -187,7 +188,7 @@ export const LA_FACTURE_CONTESTEE: Situation = {
         const { avoir, dateAvoir } = factureContestee(c);
         return {
           date: date(dateAvoir),
-          libelle: `Avoir ${c.venteCredit.client}`,
+          libelle: `Avoir ${deNom(nomDuClient(c.venteCredit.client))}`,
           lignes: [
             {
               role: "la réduction accordée sur la vente",
@@ -229,7 +230,7 @@ export const LA_FACTURE_CONTESTEE: Situation = {
         const { juste } = factureContestee(c);
         return {
           date: date(juste.paiement),
-          libelle: `Règlement ${c.venteCredit.client}`,
+          libelle: `Règlement ${deNom(nomDuClient(c.venteCredit.client))}`,
           lignes: [
             { role: "l'argent reçu en banque", compte: "512", sens: "debit", montant: juste.ttc, indice: "le net à payer de la facture juste" },
             { role: "la créance qui s'éteint", compte: "411", sens: "credit", montant: juste.ttc, indice: "ce que le client doit après l'avoir" },

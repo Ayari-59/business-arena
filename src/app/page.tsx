@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import { LES_OFFRES_DE_L_ARENE } from "@/config/tarifs";
 import Link from "next/link";
@@ -6,7 +7,7 @@ import { getPlatformConfig } from "@/services/admin.service";
 import { etendueDesDecisions } from "@/config/decisions";
 import { CONCEPTS } from "@/config/pedagogy/concepts";
 import { DECISION_MODELS } from "@/config/pedagogy/models";
-import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
+import { SCENARIO_CHOICES, TOURS_D_UNE_PARTIE } from "@/config/scenarios/registry";
 import { Icone } from "@/components/icone";
 import { DESCRIPTION_ACCUEIL, OPEN_GRAPH_DU_SITE, TITRE_ACCUEIL } from "@/config/seo";
 import { bouton, LIEN_A_L_ENCRE } from "@/components/bouton";
@@ -275,7 +276,7 @@ function TroisEcrans() {
   );
 }
 
-export default async function Home() {
+async function Home() {
   const config = await getPlatformConfig();
   // Quelles bandes sont à contre-jour : le réglage de l'admin, ou l'état d'origine.
   const c = (id: string) => contrasteDeLaBande(config.theme, id);
@@ -408,7 +409,7 @@ export default async function Home() {
               le reste est montré plus bas plutôt que promis ici.
             */}
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-300">
-            {SCENARIO_CHOICES.length} métiers, un marché qui répond, six tours pour comprendre. Vous
+            {SCENARIO_CHOICES.length} métiers, un marché qui répond, {TOURS_D_UNE_PARTIE} tours pour comprendre. Vous
             fixez les prix, la production et les budgets ; les résultats disent ce que ces choix
             valaient.
           </p>
@@ -811,3 +812,5 @@ export default async function Home() {
     </>
   );
 }
+
+export default avecTypographie(Home);

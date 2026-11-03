@@ -196,7 +196,7 @@ export const ETAPES: readonly Etape[] = [
           `${ctx.remises} du chiffre d'affaires cette semaine. 62 % des remises portent sur des fixations, de l'étanchéité et des livraisons, que personne ne fait chiffrer ailleurs ; un devis concurrent est joint dans un cas sur six. Cinq commerciaux sur vingt-deux accordent la moitié des dérogations. ${
             ctx.sansHausse
               ? "Le motif le plus fréquent : « client ancien »."
-              : "Le motif le plus fréquent : « hausse contestée » — y compris sur des familles où la hausse est passée sans un mot."
+              : "Le motif le plus fréquent : « hausse contestée », y compris sur des familles où la hausse est passée sans un mot."
           }`,
       },
       {

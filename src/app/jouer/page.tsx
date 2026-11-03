@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { startGameAction } from "../actions";
@@ -40,7 +41,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/jouer" },
 };
 
-export default async function JouerPage({
+async function JouerPage({
   searchParams,
 }: {
   searchParams: Promise<{ secteur?: string; niveau?: string; trop?: string; reserve?: string }>;
@@ -231,3 +232,5 @@ export default async function JouerPage({
     </>
   );
 }
+
+export default avecTypographie(JouerPage);

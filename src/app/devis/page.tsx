@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { DevisForm } from "@/components/devis-form";
@@ -27,7 +28,7 @@ export const metadata: Metadata = {
  * offre, ou avec une offre inconnue, pré-remplit la première de la liste (Classe).
  * Le rendez-vous téléphonique reste proposé, en second.
  */
-export default async function DevisPage({
+async function DevisPage({
   searchParams,
 }: {
   searchParams: Promise<{ offre?: string; entreprise?: string; niveau?: string }>;
@@ -81,3 +82,5 @@ export default async function DevisPage({
     </>
   );
 }
+
+export default avecTypographie(DevisPage);

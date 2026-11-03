@@ -435,7 +435,7 @@ export async function listerInscrits(
 
 export const COLONNES_DE_L_EXPORT = [
   "Nom",
-  "E-mail",
+  "Adresse électronique",
   "Établissements et rôles",
   "Offre en cours",
   "Inscrit le",

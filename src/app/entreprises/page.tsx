@@ -1,9 +1,11 @@
+import { avecTypographie } from "@/components/typographie";
 import { premierNiveauQuiOuvre } from "@/config/difficulty";
 import type { Metadata } from "next";
 import { Signe } from "@/components/signe";
 import Link from "next/link";
 import {
   SCENARIO_CHOICES,
+  TOURS_D_UNE_PARTIE,
   SECTOR_LABELS,
   familyOf,
   gammeEnClair,
@@ -291,7 +293,7 @@ function Fiche({ d }: { d: ScenarioDefinition }) {
   );
 }
 
-export default async function EntreprisesPage() {
+async function EntreprisesPage() {
   // Quelles bandes sont à contre-jour : le réglage de l'admin, ou l'état d'origine.
   const { theme } = await getPlatformConfig();
   const c = (id: string) => contrasteDeLaBande(theme, id);
@@ -400,7 +402,7 @@ export default async function EntreprisesPage() {
             Ce qui change d&apos;un métier à l&apos;autre
           </h2>
           <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-400">
-            Même moteur, mêmes états financiers, mêmes six tours. Ce sont les quatre colonnes
+            Même moteur, mêmes états financiers, mêmes {TOURS_D_UNE_PARTIE} tours. Ce sont les quatre colonnes
             ci-dessous qui font qu&apos;une décision juste dans un métier est une faute dans un
             autre.
           </p>
@@ -468,7 +470,7 @@ export default async function EntreprisesPage() {
           id="entreprises.finale"
           contraste={c("entreprises.finale")}
           titre="Choisissez votre métier"
-          texte="Six tours, des concurrents qui ne vous feront aucun cadeau, et une situation à traiter à chaque tour. Sans compte, sans installation."
+          texte={`Des concurrents qui ne vous feront aucun cadeau, ${TOURS_D_UNE_PARTIE} tours et une situation à traiter à chaque tour. Sans compte, sans installation.`}
         >
           <Link href="/jouer" className={bouton({ taille: "l" })}>
             Tester le simulateur
@@ -485,3 +487,5 @@ export default async function EntreprisesPage() {
     </>
   );
 }
+
+export default avecTypographie(EntreprisesPage);

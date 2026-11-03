@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
@@ -46,7 +47,7 @@ function jour(d: Date): string {
   return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Paris" });
 }
 
-export default async function DesinscriptionPage({ searchParams }: { searchParams: Promise<{ jeton?: string | string[] }> }) {
+async function DesinscriptionPage({ searchParams }: { searchParams: Promise<{ jeton?: string | string[] }> }) {
   const { jeton } = await searchParams;
   const resultat = await desinscrireParJeton(Array.isArray(jeton) ? jeton[0] : jeton);
   const texte = TEXTES[resultat.etat];
@@ -66,3 +67,5 @@ export default async function DesinscriptionPage({ searchParams }: { searchParam
     </main>
   );
 }
+
+export default avecTypographie(DesinscriptionPage);

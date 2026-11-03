@@ -288,7 +288,7 @@ describe("plan du site", () => {
   });
 
   it("l'arène cite les pages publiques sous leur nom du plan, et ferme sur « Quitter la partie »", () => {
-    expect(NAVIGATION_ARENE.map((l) => l.libelle)).toEqual(["Guide de l'étudiant", "Fiches notions", "Mon profil"]);
+    expect(NAVIGATION_ARENE.map((l) => l.libelle)).toEqual(["Guide de l'élève", "Fiches notions", "Mon profil"]);
     const menu = lire("src/components/menu-de-l-arene.tsx");
     expect(menu).toContain("LIBELLE_QUITTER_LA_PARTIE");
     expect(menu, "le lien vers le guide de l'étudiant garde sa prise (tests/e2e/guides.e2e.ts)").toContain(

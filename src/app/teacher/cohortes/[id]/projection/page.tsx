@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -24,7 +25,7 @@ export const dynamic = "force-dynamic";
  * ardoise, la même échelle (le code lisible du fond de la salle, le QR à côté, de même
  * rang), l'adresse de la page d'invitation, et le nombre de participants. Rien d'autre.
  */
-export default async function ProjectionDeLaCohorte({
+async function ProjectionDeLaCohorte({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -90,3 +91,5 @@ export default async function ProjectionDeLaCohorte({
     </main>
   );
 }
+
+export default avecTypographie(ProjectionDeLaCohorte);

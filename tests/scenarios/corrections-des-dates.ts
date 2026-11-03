@@ -327,8 +327,8 @@ export const CORRECTIONS_DES_DATES: CorrectionDeDate[] = [
   },
   {
     codes: ["nova_campus_tender"],
-    avant: "Appel d'offres — référencement audio de la rentrée",
-    apres: "Appel d'offres — renouvellement du référencement audio",
+    avant: "Appel d'offres : référencement audio de la rentrée",
+    apres: "Appel d'offres : renouvellement du référencement audio",
     pourquoi: TIRE,
   },
   {
@@ -369,7 +369,7 @@ export const CORRECTIONS_DES_DATES: CorrectionDeDate[] = [
   },
   {
     codes: ["hotel_meteo_radieuse"],
-    avant: "Été indien — hausse des réservations de dernière minute",
+    avant: "Été indien : hausse des réservations de dernière minute",
     apres: "Beau temps annoncé : hausse des réservations de dernière minute",
     pourquoi: `${TIRE} ; « hors saison », la forme d'hier au mois et à l'année, était faux au tour 3, le pic de L'ESCALE`,
   },
@@ -456,7 +456,7 @@ export const CORRECTIONS_DES_DATES: CorrectionDeDate[] = [
   // récit change, pour un temps possible en toute saison qui justifie le même effet.
   {
     codes: ["fitness_canicule"],
-    avant: "Épisode caniculaire — recommandations aux établissements sportifs",
+    avant: "Épisode caniculaire : recommandations aux établissements sportifs",
     apres: "Pollution de l'air : recommandations aux établissements sportifs",
     pourquoi: `${METEO} (dès le tour 2, donc au tour 5) ; un épisode de pollution de l'air réduit l'accueil de même, en toute saison`,
   },
@@ -476,7 +476,7 @@ export const CORRECTIONS_DES_DATES: CorrectionDeDate[] = [
   },
   {
     codes: ["cold_wave"],
-    avant: "Épisode de grand froid — restrictions de circulation",
+    avant: "Épisode de grand froid : restrictions de circulation",
     apres: "Vigilance intempéries : restrictions de circulation",
     pourquoi: `${METEO} (dès le tour 2, donc en plein été au trimestre) ; des intempéries arrêtent les poids lourds en toute saison`,
   },

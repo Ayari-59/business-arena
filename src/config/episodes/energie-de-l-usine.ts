@@ -520,7 +520,7 @@ export const ETAPES: readonly Etape[] = [
         nature: "decisive",
         resultat: (ctx) =>
           ctx.mesure
-            ? `Avec les réglages et les investissements déjà décidés, les relevés projettent ${ctx.volumeMesure} d'électricité sur les douze prochains mois, contre ${mwh(ELEC_AN)} sur les douze derniers. Le talon — le froid, les utilités, l'air comprimé — tourne jour et nuit : plus de la moitié du volume ne bouge pas avec la production.`
+            ? `Avec les réglages et les investissements déjà décidés, les relevés projettent ${ctx.volumeMesure} d'électricité sur les douze prochains mois, contre ${mwh(ELEC_AN)} sur les douze derniers. Le talon (le froid, les utilités, l'air comprimé) tourne jour et nuit : plus de la moitié du volume ne bouge pas avec la production.`
             : `Sans relevés par usage, on ne connaît que le volume des douze derniers mois : ${mwh(ELEC_AN)}. Ce que les économies en cours retireront, personne ne peut le dire : c'est ce volume qui servira de volume prévu.`,
       },
       {

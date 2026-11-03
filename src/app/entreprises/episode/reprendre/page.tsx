@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FormulaireRepriseProfil } from "@/components/episode/formulaire-reprise-profil";
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
  * Le profil est attaché au navigateur ; le code de reprise le rend à son
  * porteur sur un nouveau poste, un téléphone, ou après des cookies vidés.
  */
-export default function ReprendrePage() {
+function ReprendrePage() {
   return (
     <>
       <main id="main" className="relative overflow-x-clip">
@@ -39,3 +40,5 @@ export default function ReprendrePage() {
     </>
   );
 }
+
+export default avecTypographie(ReprendrePage);

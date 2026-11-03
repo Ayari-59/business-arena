@@ -121,7 +121,7 @@ export const FICHE: FicheEnseignant = {
       decision: 5,
       option: 0,
       pourquoi:
-        "Les directeurs le demandent par écrit, et plus aucun délogement soulagera les réceptions : on ne prend pas le risque pour quelques chambres.",
+        "Les directeurs le demandent par écrit, et plus aucun délogement ne soulagera les réceptions : on ne prend pas le risque pour quelques chambres.",
       ceQuiLeDejoue:
         "Les trois dernières semaines sont celles des salons de novembre : 18,5 % de défections à Chambéry-Gare avec la garantie en vigueur, contre 10 % en octobre, à 121 € la chambre vide. La source sur les avis montre que les clients délogés, prévenus et bien traités, écrivent peu ; les avis viennent des soirs où l'on déloge beaucoup à la fois. Rejouée sur les trente tirages à la place du maintien chiffres à l'appui, la suspension perd 13,1 k€ en moyenne et ne fait jamais mieux.",
     },

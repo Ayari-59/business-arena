@@ -357,7 +357,7 @@ export const ETAPES: readonly Etape[] = [
         cout: 0.5,
         nature: "decisive",
         resultat: (ctx) =>
-          `Sur les quatre dernières semaines, le reste à faire a baissé de ${ctx.rythme} par semaine en moyenne : au même rythme, tout finir demanderait ${ctx.semainesRestantes} semaines, pour six disponibles. Le cœur de l'outil — catalogue, prix remisés, panier, commande, suivi de livraison — représente ${ctx.partCoeur} du reste à faire, et l'essentiel de ce que les artisans attendent.`,
+          `Sur les quatre dernières semaines, le reste à faire a baissé de ${ctx.rythme} par semaine en moyenne : au même rythme, tout finir demanderait ${ctx.semainesRestantes} semaines, pour six disponibles. Le cœur de l'outil (catalogue, prix remisés, panier, commande, suivi de livraison) représente ${ctx.partCoeur} du reste à faire, et l'essentiel de ce que les artisans attendent.`,
       },
       {
         id: "dsi",

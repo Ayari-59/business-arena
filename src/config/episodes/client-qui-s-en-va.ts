@@ -292,7 +292,7 @@ export const ETAPES: readonly Etape[] = [
         role: "Chef de projet fidélisation, siège",
         heure: "14:40",
         texte:
-          "On peut envoyer dès lundi un e-mail « Vous nous manquez » avec un bon de 20 € aux artisans qui commandent moins. Le modèle est prêt.",
+          "On peut envoyer dès lundi un courriel « Vous nous manquez » avec un bon de 20 € aux artisans qui commandent moins. Le modèle est prêt.",
       },
       {
         de: "Tableau de bord clients",
@@ -311,7 +311,7 @@ export const ETAPES: readonly Etape[] = [
         nature: "decisive",
         resultat: (ctx) =>
           ctx.liste
-            ? `${ctx.enBaisse} artisans, dont Kaya Rénovation, notre premier client artisan. La moitié passent au comptoir avant 8 heures. L'an dernier, ceux qu'un commercial avait appelés dans la même situation sont restés deux fois plus souvent que les autres — à condition de pouvoir leur dire ce qui avait changé.`
+            ? `${ctx.enBaisse} artisans, dont Kaya Rénovation, notre premier client artisan. La moitié passent au comptoir avant 8 heures. L'an dernier, ceux qu'un commercial avait appelés dans la même situation sont restés deux fois plus souvent que les autres, à condition de pouvoir leur dire ce qui avait changé.`
             : "Sans liste, les commerciaux citent de mémoire une centaine de noms ; en vérifiant, la moitié commandent normalement. Kaya Rénovation, notre premier client artisan, dont les commandes ont baissé d'un tiers, n'est sur aucune des listes.",
       },
       {
@@ -331,10 +331,10 @@ export const ETAPES: readonly Etape[] = [
       },
       {
         t: "Leur accorder 6 % de remise pendant deux mois",
-        d: "Par e-mail, dès lundi, sans passer par les commerciaux. Environ 1 000 € par semaine.",
+        d: "Par courriel, dès lundi, sans passer par les commerciaux. Environ 1 000 € par semaine.",
       },
       {
-        t: "Envoyer l'e-mail « Vous nous manquez » avec un bon de 20 €",
+        t: "Envoyer le courriel « Vous nous manquez » avec un bon de 20 €",
         d: "Préparé par le marketing. 1 200 €.",
       },
       {
@@ -349,7 +349,7 @@ export const ETAPES: readonly Etape[] = [
           de: "Clément Aubry",
           role: "Chef de projet fidélisation, siège",
           texte:
-            "L'e-mail est parti. Un destinataire sur trois a déjà utilisé sa remise à son passage suivant.",
+            "Le courriel est parti. Un destinataire sur trois a déjà utilisé sa remise à son passage suivant.",
         },
       ],
       [

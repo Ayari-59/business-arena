@@ -175,7 +175,7 @@ export const ETAPES: readonly Etape[] = [
         cout: 0.5,
         nature: "utile",
         resultat:
-          "Sur les ponts de l'an dernier, des réservations d'une seule nuit — le samedi surtout — ont laissé des chambres vides le vendredi et le dimanche : des nuits orphelines, alors qu'on refusait du monde. En semaine, des clients demandent au téléphone un tarif moins cher, quitte à payer d'avance et à ne pas pouvoir annuler.",
+          "Sur les ponts de l'an dernier, des réservations d'une seule nuit (le samedi surtout) ont laissé des chambres vides le vendredi et le dimanche : des nuits orphelines, alors qu'on refusait du monde. En semaine, des clients demandent au téléphone un tarif moins cher, quitte à payer d'avance et à ne pas pouvoir annuler.",
       },
       {
         id: "conseil",
@@ -621,7 +621,7 @@ export const ETAPES: readonly Etape[] = [
         nature: "decisive",
         resultat: (ctx) =>
           ctx.tarifMembre
-            ? `${ctx.membres} clients se sont inscrits au tarif membre depuis fin avril. Une offre réservée aux inscrits — deux nuits en semaine à −15 %, non remboursable — ne se voit pas sur les plateformes et ne baisse aucun prix public. À Évian, elle a rempli une vingtaine de chambres de plus par semaine en juin dernier.`
+            ? `${ctx.membres} clients se sont inscrits au tarif membre depuis fin avril. Une offre réservée aux inscrits (deux nuits en semaine à −15 %, non remboursable) ne se voit pas sur les plateformes et ne baisse aucun prix public. À Évian, elle a rempli une vingtaine de chambres de plus par semaine en juin dernier.`
             : "Le fichier des 11 000 anciens clients n'a jamais été relancé, et beaucoup d'adresses sont anciennes. Sans clients inscrits, une offre envoyée à froid touche peu de monde : quelques chambres par semaine, au mieux.",
       },
       {

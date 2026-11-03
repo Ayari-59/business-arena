@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -65,7 +66,7 @@ export async function generateMetadata({ params }: { params: Promise<{ public: s
 /** Un texte entre guillemets pour une règle CSS `content`. */
 const enChaineCss = (t: string) => `"${t.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 
-export default async function GuidePage({ params }: { params: Promise<{ public: string }> }) {
+async function GuidePage({ params }: { params: Promise<{ public: string }> }) {
   const brut = guideDe((await params).public);
   if (!brut) notFound();
   const g = guideResolu(brut, valeursDesJetons(await lireLeCatalogue()));
@@ -195,3 +196,5 @@ export default async function GuidePage({ params }: { params: Promise<{ public: 
     </>
   );
 }
+
+export default avecTypographie(GuidePage);

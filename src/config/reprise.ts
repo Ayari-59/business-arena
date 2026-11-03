@@ -69,7 +69,7 @@ export const AIDE_CODE_DE_REPRISE_CLASSE =
  */
 export const AIDE_CODE_DE_REPRISE_SOLO =
   "Notez ce code : il vous rend cette partie, au tour où vous l'avez laissée, " +
-  "sur n'importe quel appareil — après avoir vidé vos cookies, ou en passant du " +
+  "sur n'importe quel appareil, après avoir vidé vos cookies ou en passant du " +
   "téléphone à l'ordinateur. Il se saisit sur la page « Reprendre ma partie ».";
 
 /**

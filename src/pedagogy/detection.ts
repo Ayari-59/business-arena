@@ -740,7 +740,7 @@ export const INTERPRETATION_METADATA: Record<DetectCode, InterpretationMeta> = {
         mechanism:
           "La trésorerie qui dépasse largement les besoins de fonctionnement représente un " +
           "coût d'opportunité : cet argent disponible ne produit aucun rendement alors " +
-          "qu'il pourrait être mobilisé — investissement, placement, remboursement anticipé.",
+          "qu'il pourrait être mobilisé : investissement, placement, remboursement anticipé.",
         explanation:
           direction === "positive"
             ? "La trésorerie disponible a diminué par rapport aux charges de structure, ce " +

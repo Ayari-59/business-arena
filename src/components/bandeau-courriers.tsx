@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import { courrierDeLaPartie } from "@/config/courriers/de-la-partie";
 import { Icone } from "@/components/icone";
 
@@ -33,7 +34,7 @@ export function courriersQuiMeConcernent(
   return courriers.filter((c) => c.teamId === null || c.isMyTeam);
 }
 
-export function BandeauCourriers({
+function BandeauCourriersBrut({
   courriers,
   detailHref = "#situation",
   jours,
@@ -97,3 +98,5 @@ export function BandeauCourriers({
     </aside>
   );
 }
+
+export const BandeauCourriers = avecTypographie(BandeauCourriersBrut);

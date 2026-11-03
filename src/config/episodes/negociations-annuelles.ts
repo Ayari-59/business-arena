@@ -191,7 +191,7 @@ export const ETAPES: readonly Etape[] = [
         titre: "Faire chiffrer la marge de chaque référence chez Celtis",
         cout: 1,
         nature: "decisive",
-        resultat: `Amadou Perrotte, contrôle de gestion : Kerbrélan chez Celtis l'an dernier, c'est ${MARQUE.references} références, ${millions(MARQUE.ca)} de chiffre d'affaires net et ${millions(MARQUE.mcv)} de marge sur coût variable (${taux(MARQUE.mcv / MARQUE.ca)}). Les douze références menacées : les trois où la marque est leader — le fromage blanc nature en seau d'un kilo, la crème fraîche épaisse de 50 cl, le riz au lait en quatre pots — font ${millions(LEADERS.ca)} de chiffre d'affaires et ${kE(LEADERS.mcv)} de marge sur coût variable ; les neuf autres (yaourts aromatisés, desserts lactés, fromages blancs aux fruits), ${millions(FAIBLES.ca)} et ${kE(FAIBLES.mcv)}. Sur toute la marque, chaque point de prix vaut ${kE(VALEUR_DU_POINT)} de marge par an.`,
+        resultat: `Amadou Perrotte, contrôle de gestion : Kerbrélan chez Celtis l'an dernier, c'est ${MARQUE.references} références, ${millions(MARQUE.ca)} de chiffre d'affaires net et ${millions(MARQUE.mcv)} de marge sur coût variable (${taux(MARQUE.mcv / MARQUE.ca)}). Les douze références menacées : les trois où la marque est leader (le fromage blanc nature en seau d'un kilo, la crème fraîche épaisse de 50 cl, le riz au lait en quatre pots) font ${millions(LEADERS.ca)} de chiffre d'affaires et ${kE(LEADERS.mcv)} de marge sur coût variable ; les neuf autres (yaourts aromatisés, desserts lactés, fromages blancs aux fruits), ${millions(FAIBLES.ca)} et ${kE(FAIBLES.mcv)}. Sur toute la marque, chaque point de prix vaut ${kE(VALEUR_DU_POINT)} de marge par an.`,
       },
       {
         id: "report",
@@ -205,7 +205,7 @@ export const ETAPES: readonly Etape[] = [
         titre: "Relire le contrat-cadre avec l'OP Lait du Méné",
         cout: 0.5,
         nature: "decisive",
-        resultat: `Hoel Quiniou : le prix de base suit trois indicateurs publiés — les ${productionInd.nom} des élevages (poids ${taux(productionInd.poids)}, +${taux(productionInd.hausse)} sur un an), la ${beurreInd.nom} (${taux(beurreInd.poids)}, +${taux(beurreInd.hausse)}), le ${nationalInd.nom} du lait (${taux(nationalInd.poids)}, +${taux(nationalInd.hausse)}). Moyenne pondérée : ${pct(HAUSSE_INDICATEURS)}, soit ${PRIX_LAIT.nouveau} € les 1 000 litres au lieu de ${PRIX_LAIT.ancien} €. Le lait pèse ${taux(PART_LAIT)} du tarif de nos produits de marque : la part agricole de la hausse est de ${points(PART_AGRICOLE)}. Les ${points(RESTE)} restants : emballages ${points(AUTRES_HAUSSES.emballages)}, énergie ${points(AUTRES_HAUSSES.energie)}, transport frigorifique ${points(AUTRES_HAUSSES.transport)}, salaires ${points(HAUSSE_FRAIS_FIXES)}. La loi impose d'afficher la part agricole dans les CGV et la met hors de la négociation.`,
+        resultat: `Hoel Quiniou : le prix de base suit trois indicateurs publiés : les ${productionInd.nom} des élevages (poids ${taux(productionInd.poids)}, +${taux(productionInd.hausse)} sur un an), la ${beurreInd.nom} (${taux(beurreInd.poids)}, +${taux(beurreInd.hausse)}), le ${nationalInd.nom} du lait (${taux(nationalInd.poids)}, +${taux(nationalInd.hausse)}). Moyenne pondérée : ${pct(HAUSSE_INDICATEURS)}, soit ${PRIX_LAIT.nouveau} € les 1 000 litres au lieu de ${PRIX_LAIT.ancien} €. Le lait pèse ${taux(PART_LAIT)} du tarif de nos produits de marque : la part agricole de la hausse est de ${points(PART_AGRICOLE)}. Les ${points(RESTE)} restants : emballages ${points(AUTRES_HAUSSES.emballages)}, énergie ${points(AUTRES_HAUSSES.energie)}, transport frigorifique ${points(AUTRES_HAUSSES.transport)}, salaires ${points(HAUSSE_FRAIS_FIXES)}. La loi impose d'afficher la part agricole dans les CGV et la met hors de la négociation.`,
       },
       {
         id: "presse",
@@ -405,7 +405,7 @@ export const ETAPES: readonly Etape[] = [
         titre: "Demander à Naïm ce que vaut une coopération commerciale",
         cout: 0.5,
         nature: "utile",
-        resultat: `Naïm Lefeuvre : une coopération commerciale doit rémunérer un service réel et identifié — une tête de gondole, un prospectus, une mise en avant. ${points(COOPERATION)} de coopération sans service, c'est ${kE(COOPERATION * MARQUE.ca)} par an rendus à Celtis, et la DGCCRF y voit un avantage sans contrepartie. L'an dernier, Nordal en a accordé deux points ; Celtis lui a quand même retiré trois références.`,
+        resultat: `Naïm Lefeuvre : une coopération commerciale doit rémunérer un service réel et identifié : une tête de gondole, un prospectus, une mise en avant. ${points(COOPERATION)} de coopération sans service, c'est ${kE(COOPERATION * MARQUE.ca)} par an rendus à Celtis, et la DGCCRF y voit un avantage sans contrepartie. L'an dernier, Nordal en a accordé deux points ; Celtis lui a quand même retiré trois références.`,
       },
     ],
     question: "Que proposez-vous contre la hausse hors part agricole ?",

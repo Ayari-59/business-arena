@@ -1,5 +1,6 @@
 import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
+import { renderToStaticMarkup as rendreEnHtml } from "react-dom/server";
+import { espacesOrdinaires } from "@/lib/typographie";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   CONSIGNE_DIAGNOSTIC_OUVERT,
@@ -18,6 +19,9 @@ import {
 import { AnnonceDuTour } from "@/components/annonce-du-tour";
 import { SituationDebrief } from "@/components/situation-panel";
 import type { SituationView } from "@/services/pedagogy.service";
+
+/** Le rendu, ses insécables (components/typographie.ts) ramenées à l'espace ordinaire pour comparer les textes. */
+const renderToStaticMarkup = (el: Parameters<typeof rendreEnHtml>[0]) => espacesOrdinaires(rendreEnHtml(el));
 
 /**
  * LA SITUATION SE REND EN UNE FOIS, OU PAS DU TOUT.

@@ -168,7 +168,7 @@ export const GUIDE_ETABLISSEMENT: Guide = {
       ],
       voir: "Le compte d'un enseignant se crée à sa première connexion.",
       erreur:
-        "Attendre un nom ou un e-mail d'étudiant. L'identifiant reçu est pseudonyme et propre à Business Arena : aucun nom ni e-mail d'étudiant n'est conservé.",
+        "Attendre un nom ou une adresse électronique d'étudiant. L'identifiant reçu est pseudonyme et propre à Business Arena : aucun nom ni aucune adresse électronique d'étudiant n'est conservé.",
       capture: {
         fichier: "renater",
         largeur: 1280,
@@ -183,10 +183,10 @@ export const GUIDE_ETABLISSEMENT: Guide = {
       id: "donnees",
       titre: "Les données personnelles et le RGPD",
       faire: [
-        "Côté élève, la plateforme garde un pseudo librement choisi et un identifiant technique aléatoire. Aucun compte, aucun e-mail, aucun nom de famille.",
+        "Côté élève, la plateforme garde un pseudo librement choisi et un identifiant technique aléatoire. Aucun compte, aucune adresse électronique, aucun nom de famille.",
         "Par la plateforme de cours, elle reçoit un identifiant dont elle ne garde qu'une empreinte chiffrée, le prénom s'il est envoyé, le rôle et le titre du cours. Quand la plateforme accorde le retour des notes, l'identifiant d'un élève est gardé chiffré : c'est l'adresse de sa note dans le carnet.",
         "Pour l'évaluation entre coéquipiers d'une partie de classe, les notes données et les commentaires ne sont lus que par l'enseignant ; chaque élève ne reçoit que ses moyennes, sans le nom de qui a noté.",
-        "Côté enseignant, le nom, l'e-mail et l'établissement servent au compte.",
+        "Côté enseignant, le nom, l'adresse électronique et l'établissement servent au compte.",
         "La finalité et la durée de conservation de chaque donnée sont écrites dans les mentions légales : c'est la page à transmettre à votre délégué à la protection des données.",
       ],
       voir: "Un tableau par catégorie de personnes : les données, leur finalité et leur durée.",
@@ -247,7 +247,7 @@ export const GUIDE_ETABLISSEMENT: Guide = {
       lien: { href: "/integration#notes", libelle: "Le retour des notes" },
     },
     {
-      question: "Les élèves doivent-ils donner une adresse e-mail ?",
+      question: "Les élèves doivent-ils donner une adresse électronique ?",
       reponse: "Non, jamais. Un code et un pseudo suffisent, ou un clic depuis la plateforme de cours.",
       lien: { href: "/mentions-legales", libelle: "Lire les mentions légales" },
     },

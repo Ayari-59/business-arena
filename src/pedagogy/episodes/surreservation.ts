@@ -199,7 +199,7 @@ export const EPISODE_SURRESERVATION: Episode<Trimestre> = {
     { fort: "nets", texte: "des délogements, des clients perdus et des avis" },
   ],
   jugement:
-    "Votre direction juge le trimestre sur la marge hébergement des soirs complets — nuitées vendues moins leur coût variable, défections encaissées comprises —, nette des coûts de délogement et de la marge des clients perdus.",
+    "Votre direction juge le trimestre sur la marge hébergement des soirs complets (nuitées vendues moins leur coût variable, défections encaissées comprises), nette des coûts de délogement et de la marge des clients perdus.",
   duree: "une vingtaine de minutes",
   nomDuTableau: "Votre revenue management",
 

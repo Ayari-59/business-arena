@@ -249,11 +249,13 @@ export const FAMILLES: readonly Famille[] = [
     // des gestes d'employé (voir « LE POINT DE VUE » dans blocs.ts). La
     // famille vient en dernier du négoce : les fiches enseignant gardent les
     // numéros 31 à 48, et les décomptes du rapport les trente premiers.
+    // Le texte ne nomme plus le lycée professionnel ni le CAP : les épisodes
+    // ne s'annoncent plus en dessous de bac + 3 (public-des-episodes.ts).
     code: "premier-poste",
     titre: "Le premier poste",
     secteur: "negoce",
     texte:
-      "Recevoir, ranger, conseiller, accueillir, travailler avec les autres : ces épisodes se jouent depuis un poste d'employé ou d'équipier, pour le lycée professionnel et le CAP, et non depuis celui du responsable.",
+      "Recevoir, ranger, conseiller, accueillir, travailler avec les autres : ces épisodes se jouent depuis un poste d'employé ou d'équipier, et non depuis celui du responsable.",
     episodes: ["libre-service-qui-perd", "bureau-qui-s-echauffe"],
   },
   {
@@ -435,6 +437,12 @@ export const estUnEpisodeDeDirection = (code: string): boolean =>
  * garantit que les familles rangent exactement les épisodes du registre.
  */
 export const NOMBRE_D_EPISODES = FAMILLES.reduce((n, f) => n + f.episodes.length, 0);
+
+/**
+ * Le nombre de décisions d'un épisode : chacun en compte autant (garde :
+ * tests/unit/episodes-registre.test.ts). Les pages le lisent ici plutôt que de l'écrire.
+ */
+export const DECISIONS_PAR_EPISODE = 6;
 
 /** La teinte à publier pour un épisode (`data-metier`, globals.css « LOT 5A »). */
 export function teinteDuMetierDeLEpisode(codeEpisode: string): string | undefined {

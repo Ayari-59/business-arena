@@ -114,7 +114,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "transport_accident",
     expediteur: "Assurances du Littoral · Service sinistres",
-    objet: "Déclaration de sinistre — accident de circulation",
+    objet: "Déclaration de sinistre : accident de circulation",
     corps:
       "Votre conducteur est indemne, le porteur est immobilisé et la marchandise transportée est endommagée. L'expertise est fixée à jeudi. La prise en charge des marchandises dépend de la garantie souscrite.",
     signataire: "Le gestionnaire de sinistres",
@@ -128,7 +128,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "transport_panne_flotte",
     expediteur: "Garage Poirier Poids Lourds · Atelier",
-    objet: "Immobilisation de trois porteurs — délai sur les pièces",
+    objet: "Immobilisation de trois porteurs : délai sur les pièces",
     corps:
       "Trois de vos porteurs sont entrés à l'atelier la même semaine, deux pour la transmission et un pour le circuit de freinage. Les pièces sont annoncées à six semaines par le constructeur.",
     signataire: "Le chef d'atelier",
@@ -142,7 +142,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "transport_vol_remorque",
     expediteur: "Gendarmerie nationale · Brigade de recherches",
-    objet: "Récépissé de dépôt de plainte — vol d'une remorque chargée",
+    objet: "Récépissé de dépôt de plainte : vol d'une remorque chargée",
     corps:
       "Votre plainte pour le vol d'une remorque et de son chargement sur votre parking a été enregistrée. Les images de vidéoprotection sont en cours d'exploitation. Ce récépissé vous est délivré pour vos démarches d'assurance.",
     signataire: "Le commandant de brigade",
@@ -156,7 +156,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "transport_label_qualite",
     expediteur: "Organisme certificateur Véritas Transport",
-    objet: "Décision de certification — ponctualité des livraisons",
+    objet: "Décision de certification : ponctualité des livraisons",
     corps:
       "Votre taux de livraisons dans le créneau annoncé dépasse le seuil requis sur quatre {{trimestres}} consécutifs. La certification vous est accordée et pourra être produite dans vos réponses aux appels d'offres industriels.",
     signataire: "Le responsable de la certification",
@@ -200,7 +200,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "transport_major_breakdown",
     expediteur: "Garage Poirier Poids Lourds · Atelier",
-    objet: "Rapport d'expertise — casse moteur sur autoroute",
+    objet: "Rapport d'expertise : casse moteur sur autoroute",
     corps:
       "Le moteur a cédé en pleine charge et l'expertise conclut à un défaut de suivi des vidanges. La réfection complète, moteur d'échange inclus, immobilisera le véhicule sur deux {{trimestres}}.",
     signataire: "Le chef d'atelier",
@@ -272,7 +272,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "transport_contrat_cadre",
     expediteur: "Aciéries Vandevelde · Direction des achats",
-    objet: "Notification d'attribution — contrat-cadre de transport régional",
+    objet: "Notification d'attribution : contrat-cadre de transport régional",
     corps:
       "À l'issue de la consultation, nous vous attribuons l'ensemble de nos flux régionaux pour une durée de deux ans, reconductible. Le volume prévisionnel et les engagements de service figurent en annexe.",
     signataire: "Le directeur des achats",
@@ -286,7 +286,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "transport_controle_routier",
     expediteur: "Direction régionale des contrôles des transports terrestres",
-    objet: "Procès-verbal — immobilisation de trois véhicules",
+    objet: "Procès-verbal : immobilisation de trois véhicules",
     corps:
       "Le contrôle a relevé une usure des pneumatiques inférieure au minimum légal sur trois de vos véhicules. Leur immobilisation est prononcée jusqu'à remise en état constatée par un professionnel agréé.",
     signataire: "Le contrôleur des transports terrestres",
@@ -329,7 +329,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "transport_inv_grand_compte",
     expediteur: "Mérien Logistique · Direction des transports",
-    objet: "Confirmation du flux régulier Valmont – littoral",
+    objet: "Confirmation du flux régulier entre Valmont et le littoral",
     corps:
       "Le pilote est concluant et notre direction valide le flux régulier au départ de Valmont : environ quatre-vingts palettes par jour ouvré, du lundi au samedi, pour les trois {{trimestres}} à venir. Les enlèvements se font à quai entre quatre et six heures du matin. Le volume est confirmé par écrit et le cahier des charges détaillé suit sous huitaine.",
     signataire: "Le directeur des transports",

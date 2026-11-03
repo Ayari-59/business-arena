@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import {
   ARGUMENTS_POUR_LES_ECOLES,
@@ -18,6 +19,8 @@ import { LigneDePrix } from "@/components/ligne-de-prix";
 import Link from "next/link";
 import { SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import { COMPETENCES } from "@/config/episodes/competences";
+import { DECISIONS_PAR_EPISODE } from "@/config/episodes/familles";
+import { NIVEAUX as NIVEAUX_DES_EPISODES } from "@/config/episodes/niveaux";
 import { EPISODES } from "@/pedagogy/episodes/registre";
 import { FICHES } from "@/config/episodes/fiches";
 import { bouton } from "@/components/bouton";
@@ -35,7 +38,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/ecoles" },
   title: "Établissements : écoles de commerce et universités",
   description:
-    "Une partie d'entreprise en équipes pour le bachelor, des épisodes manager pour le master et la formation continue, et dix compétences mesurées à verser au dossier d'accréditation.",
+    `Une partie d'entreprise en équipes pour le bachelor, des épisodes manager pour le master et la formation continue, et ${COMPETENCES.length} compétences mesurées à verser au dossier d'accréditation.`,
 };
 
 /**
@@ -69,8 +72,8 @@ const FORMATS = [
     nom: "Les épisodes manager",
     resume: "Chacun tient un poste de manager pendant un trimestre.",
     faits: [
-      "Six décisions, des imprévus, une vingtaine de minutes, trois niveaux de difficulté.",
-      "Le bilan rejoue chaque choix sous les mêmes trente tirages au hasard : ce qui relevait du choix, ce qui relevait de la chance.",
+      `Des imprévus, ${DECISIONS_PAR_EPISODE} décisions, une vingtaine de minutes et ${NIVEAUX_DES_EPISODES.length} niveaux de difficulté.`,
+      `Le bilan rejoue chaque choix sous les mêmes ${GRAINES_DU_BILAN.length} tirages au hasard : ce qui relevait du choix, ce qui relevait de la chance.`,
       "Un profil décisionnel qui se construit d'épisode en épisode, et recommande les suivants.",
       "En autonomie, ou en cohorte avec des débriefs collectifs.",
     ],
@@ -82,7 +85,7 @@ const PREUVES = [
   {
     titre: "Chaque décision est rattachée à ses compétences",
     texte:
-      "Une décision d'épisode mobilise une ou deux des dix compétences ; c'est elle, et non un questionnaire, qui nourrit le score.",
+      `Une décision d'épisode mobilise une ou deux des ${COMPETENCES.length} compétences ; c'est elle, et non un questionnaire, qui nourrit le score.`,
   },
   {
     titre: "Un score n'est donné qu'avec sa marge",
@@ -151,7 +154,7 @@ const QUESTIONS = [
   },
 ];
 
-export default async function EcolesPage() {
+async function EcolesPage() {
   // Quelles bandes sont à contre-jour : le réglage de l'admin, ou l'état d'origine.
   const { theme } = await getPlatformConfig();
   // Les offres de l'arène qui se vendent (pas la Découverte), lues au catalogue
@@ -185,7 +188,7 @@ export default async function EcolesPage() {
           chapeau={
             <>
               Une partie d&apos;entreprise en équipes pour le bachelor, des épisodes manager pour le
-              master et la formation continue. Chaque décision est rejouée sous trente tirages au
+              master et la formation continue. Chaque décision est rejouée sous {GRAINES_DU_BILAN.length} tirages au
               hasard, et chaque étudiant repart avec un profil de {COMPETENCES.length} compétences,
               preuves à l&apos;appui.
             </>
@@ -353,7 +356,7 @@ export default async function EcolesPage() {
             </div>
             <div className="carte self-start p-6">
               <p className="text-xs uppercase tracking-etiquette text-slate-400">
-                Les dix compétences du profil décisionnel
+                Les {COMPETENCES.length} compétences du profil décisionnel
               </p>
               <ol className="mt-4 grid gap-x-6 gap-y-3 sm:grid-cols-2">
                 {COMPETENCES.map((c, i) => (
@@ -507,3 +510,5 @@ export default async function EcolesPage() {
     </>
   );
 }
+
+export default avecTypographie(EcolesPage);

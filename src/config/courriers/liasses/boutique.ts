@@ -15,7 +15,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "boutique_travaux_voirie",
     expediteur: "Mairie · Direction de la voirie",
-    objet: "Réfection de la chaussée — arrêté de circulation",
+    objet: "Réfection de la chaussée : arrêté de circulation",
     corps:
       "Les travaux de réfection débuteront lundi pour une durée de dix-huit mois. Les barrières de chantier seront installées au droit de votre vitrine et le stationnement supprimé sur toute la section.",
     signataire: "L'adjoint aux travaux",
@@ -133,7 +133,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "boutique_degat_des_eaux",
     expediteur: "Syndic Berthier · Gestion de copropriété",
-    objet: "Déclaration de sinistre — dégât des eaux",
+    objet: "Déclaration de sinistre : dégât des eaux",
     corps:
       "Le chauffe-eau du logement situé au-dessus de votre local a fui durant la nuit. Le constat amiable est joint. La moitié de votre stock est déclarée impropre à la vente ; l'indemnisation dépendra de la garantie souscrite.",
     signataire: "Le gestionnaire d'immeuble",
@@ -175,9 +175,9 @@ const SOURCES: CourrierDef[] = [
   {
     code: "boutique_commande_ce",
     expediteur: "CSE des Papeteries de la Lys",
-    objet: "Commande ferme — {{entier: commande_boutique_commande_ce}} pulls pour la dotation de nos salariés",
+    objet: "Commande ferme : {{entier: commande_boutique_commande_ce}} pulls pour la dotation de nos salariés",
     corps:
-      "Notre comité souhaite offrir un pull à chacun de nos {{lettres: commande_boutique_commande_ce}} salariés. Nous retenons votre col rond et confirmons la commande ce jour, réglée comptant à l'enlèvement, dans la limite de ce que vous pourrez fournir.",
+      "Notre comité souhaite offrir un pull à chacun de nos {{entier: commande_boutique_commande_ce}} salariés. Nous retenons votre col rond et confirmons la commande ce jour, réglée comptant à l'enlèvement, dans la limite de ce que vous pourrez fournir.",
     signataire: "Le secrétaire du comité",
     effet:
       "+{{entier: commande_boutique_commande_ce}} pulls col rond ({{échelle trimestre}}) vendus d'office ce tour, réglés comptant, dans la limite du stock",
@@ -290,7 +290,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "boutique_greve_transporteur",
     expediteur: "Transporteur Delahaye · Direction",
-    objet: "Mouvement social — suspension des livraisons",
+    objet: "Mouvement social : suspension des livraisons",
     corps:
       "Un mouvement social touche notre plateforme depuis lundi. Vos colis en provenance du façonnier restent à quai et seront livrés avec une semaine de retard au minimum. Nous vous prions de nous en excuser.",
     signataire: "Le directeur d'exploitation",

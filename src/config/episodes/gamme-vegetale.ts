@@ -330,7 +330,7 @@ export const ETAPES: readonly Etape[] = [
         titre: "Étudier ce que le Groupe Nordal a fait face aux lancements récents",
         cout: 0.5,
         nature: "decisive",
-        resultat: `Sur les trois dernières années, face à un lancement annoncé à grand bruit — une campagne, un communiqué, une usine —, Nordal a riposté environ une fois sur deux, et presque à coup sûr quand le bruit s'ajoutait à une présence dans toutes les enseignes, par des promotions à −${pc(NORDAL.remise)} sur sa gamme, pendant ${NORDAL.semaines} semaines ; face à une promotion de lancement, deux fois sur cinq ; face à un test discret dans une seule enseigne, une fois sur sept. Pendant ses promotions, les ventes du concurrent baissent de ${pc(1 - NORDAL.rotation)} ; sa première année y perd ${pc(NORDAL.baisse)} de chiffre d'affaires. Nordal défend ses linéaires, pas les marchés qu'il ne voit pas.`,
+        resultat: `Sur les trois dernières années, face à un lancement annoncé à grand bruit (une campagne, un communiqué, une usine), Nordal a riposté environ une fois sur deux, et presque à coup sûr quand le bruit s'ajoutait à une présence dans toutes les enseignes, par des promotions à −${pc(NORDAL.remise)} sur sa gamme, pendant ${NORDAL.semaines} semaines ; face à une promotion de lancement, deux fois sur cinq ; face à un test discret dans une seule enseigne, une fois sur sept. Pendant ses promotions, les ventes du concurrent baissent de ${pc(1 - NORDAL.rotation)} ; sa première année y perd ${pc(NORDAL.baisse)} de chiffre d'affaires. Nordal défend ses linéaires, pas les marchés qu'il ne voit pas.`,
       },
       {
         id: "promo",

@@ -208,7 +208,7 @@ export function axe([
     return {
       titre: "Borner la dépendance par contrat",
       texte:
-        "Ni signer tel quel, ni refuser : négocier les clauses qui bornent la dépendance — une exclusivité limitée dans le temps, l'indexation des prix, un volume minimal, la reprise des actifs dédiés — puis réviser l'engagement au premier signal.",
+        "Ni signer tel quel, ni refuser : négocier les clauses qui bornent la dépendance (une exclusivité limitée dans le temps, l'indexation des prix, un volume minimal, la reprise des actifs dédiés) puis réviser l'engagement au premier signal.",
     };
   }
   if (diagnostic!.score < 1) {

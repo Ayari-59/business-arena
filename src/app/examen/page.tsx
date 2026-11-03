@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
  * la page de l'examen (ses règles, puis l'identification) ; rien ne commence ici. Le
  * formulaire est une simple requête GET : il ne fait rien, il mène.
  */
-export default async function EntreeDExamenPage({
+async function EntreeDExamenPage({
   searchParams,
 }: {
   searchParams: Promise<{ code?: string; refus?: string }>;
@@ -59,3 +60,5 @@ export default async function EntreeDExamenPage({
     </main>
   );
 }
+
+export default avecTypographie(EntreeDExamenPage);

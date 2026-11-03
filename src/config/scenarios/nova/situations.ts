@@ -95,7 +95,7 @@ const SOURCES: SituationDef[] = [
     trigger: { round: 1 },
     weight: 1,
     decisionLevers: [
-      { field: "price", direction: "review", hint: "Le prix fixe la marge unitaire — et donc le nombre d'unités nécessaires pour couvrir les charges fixes." },
+      { field: "price", direction: "review", hint: "Le prix fixe la marge unitaire, et donc le nombre d'unités nécessaires pour couvrir les charges fixes." },
       { field: "productionPlan", direction: "review", hint: "Produire trop crée du stock mort ; produire trop peu fait perdre des ventes. Le seuil de rentabilité donne le plancher." },
     ],
   },
@@ -668,7 +668,7 @@ const SOURCES: SituationDef[] = [
     trigger: { detect: "below_breakeven" },
     weight: 0.8,
     decisionLevers: [
-      { field: "price", direction: "up", hint: "Augmenter le prix relève la marge unitaire et abaisse le seuil de rentabilité — si la demande suit." },
+      { field: "price", direction: "up", hint: "Augmenter le prix relève la marge unitaire et abaisse le seuil de rentabilité, si la demande suit." },
       { field: "productionPlan", direction: "review", hint: "Produire au-delà du volume vendable crée du stock et aggrave la perte : ajustez au volume réaliste." },
       { field: "marketingBudget", direction: "review", hint: "Le marketing pèse dans les charges fixes : chaque euro doit être comparé au volume de ventes supplémentaire qu'il génère." },
     ],
@@ -728,7 +728,7 @@ const SOURCES: SituationDef[] = [
       "L'investissement coûte aujourd'hui ; ses gains tombent sur plusieurs tours. Comment comparer des euros d'aujourd'hui et des euros de demain ?",
       "Un euro dans un an vaut moins qu'un euro aujourd'hui : c'est l'actualisation, et votre taux d'emprunt donne le taux de référence.",
       "La VAN actualise les flux futurs et les compare au capital investi ; le TRI est le taux qui l'annule ; les coûts pertinents comparent investir et sous-traiter.",
-      "VAN ≈ −{{entier: investissement_max * cout_capacite}} + Σ (unités supplémentaires vendues × marge unitaire) / (1 + {{taux_centieme: actualisation_du_tour}} %)^t sur {{entier: amortissement_investissement}} {{trimestres}} — la marge, c'est votre prix moins 38 € (21 € au prix usuel de 59 €). VAN > 0 ⇒ investissez ; sinon comparez à la sous-traitance : votre prix moins 52 € par unité sous-traitée (7 € à 59 €), sans immobiliser un euro.",
+      "VAN ≈ −{{entier: investissement_max * cout_capacite}} + Σ (unités supplémentaires vendues × marge unitaire) / (1 + {{taux_centieme: actualisation_du_tour}} %)^t sur {{entier: amortissement_investissement}} {{trimestres}} : la marge, c'est votre prix moins 38 € (21 € au prix usuel de 59 €). VAN > 0 ⇒ investissez ; sinon comparez à la sous-traitance : votre prix moins 52 € par unité sous-traitée (7 € à 59 €), sans immobiliser un euro.",
     ]),
     trigger: { detect: "capacity_saturated" },
     weight: 1,
@@ -871,7 +871,7 @@ const SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Un atelier à 100 % peut refuser la moitié du marché, et un résultat net flatteur peut cacher un stock qui gonfle. Seuls les deux volumes — ce qui est reparti sans acheter, ce qui est resté — disent si le plan collait à la demande.",
+          "Un atelier à 100 % peut refuser la moitié du marché, et un résultat net flatteur peut cacher un stock qui gonfle. Seuls les deux volumes (ce qui est reparti sans acheter, ce qui est resté) disent si le plan collait à la demande.",
       },
       {
         id: "nova_cout_invendu",
@@ -967,7 +967,7 @@ const SOURCES: SituationDef[] = [
         ],
         correctOptionId: "a",
         explain:
-          "Un redressement dont on ne sait pas ce qui l'a produit ne se reproduit que par chance. Nommer le levier — prix, volume, charges, financement — et vérifier qu'il se lit dans les comptes, c'est la différence entre piloter et subir.",
+          "Un redressement dont on ne sait pas ce qui l'a produit ne se reproduit que par chance. Nommer le levier (prix, volume, charges, financement) et vérifier qu'il se lit dans les comptes, c'est la différence entre piloter et subir.",
       },
     ],
     modelRelevance: {
@@ -1003,7 +1003,7 @@ const MODEL_EXPLAIN: Record<string, string> = {
   detect_served_without_waste:
     "Le budget prévisionnel est le seul outil qui parte de la DEMANDE attendue pour en déduire un plan : c'est exactement ce qui a produit l'ajustement. L'analyse de capacité dit ce que l'atelier peut faire, ce qui est utile mais ne dimensionne rien ; le seuil de rentabilité, lui, ignore la question.",
   detect_recovered:
-    "L'analyse coût-volume-profit relie les trois leviers qui peuvent avoir produit le redressement — prix, volume, charges — et dit lequel a joué. Le budget de trésorerie et l'analyse FRNG / BFR complètent utilement si c'est la caisse qui s'est redressée, pas le résultat.",
+    "L'analyse coût-volume-profit relie les trois leviers qui peuvent avoir produit le redressement (prix, volume, charges) et dit lequel a joué. Le budget de trésorerie et l'analyse FRNG / BFR complètent utilement si c'est la caisse qui s'est redressée, pas le résultat.",
   detect_idle_cash:
     "Le budget de trésorerie projette les décaissements du tour à venir : il est le seul à dire quelle part du solde peut être bloquée sans risquer le découvert. Le seuil de rentabilité, lui, ne parle jamais de trésorerie.",
   nova_t1_takeover:

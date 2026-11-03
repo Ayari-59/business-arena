@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
@@ -26,7 +27,7 @@ export const dynamic = "force-dynamic";
  *
  * Un établissement sans offre le dit, sans mot de vente : l'étudiant joue comme invité.
  */
-export default async function PartiesDeLEtudiantPage({
+async function PartiesDeLEtudiantPage({
   searchParams,
 }: {
   searchParams: Promise<{ offre?: string; code?: string }>;
@@ -154,3 +155,5 @@ export default async function PartiesDeLEtudiantPage({
     </main>
   );
 }
+
+export default avecTypographie(PartiesDeLEtudiantPage);

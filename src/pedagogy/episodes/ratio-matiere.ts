@@ -159,7 +159,7 @@ export function axe([information, diagnostic, reflexe, calibrage, domaine]: read
     return {
       titre: "Décomposer l'écart au ratio théorique",
       texte:
-        "Entre le ratio des fiches techniques et le ratio réel, chiffrez la part de chaque cause — pertes, grammages, prix d'achat — avant de choisir où mettre l'effort. La plus visible n'est pas la plus lourde.",
+        "Entre le ratio des fiches techniques et le ratio réel, chiffrez la part de chaque cause (pertes, grammages, prix d'achat) avant de choisir où mettre l'effort. La plus visible n'est pas la plus lourde.",
     };
   }
   if (calibrage!.score < 1) {

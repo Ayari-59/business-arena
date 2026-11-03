@@ -157,15 +157,15 @@ describe("4. un mot par sens", () => {
     expect(lire("app/parcours/[formation]/page.tsx")).not.toMatch(/Parcours par diplôme/);
   });
 
-  it("« Découverte » : ses quatre sens recensés, chacun dans son registre, et aucun cinquième", () => {
-    // 1) l'offre gratuite ; 2) le niveau 1 de l'arène ; 3) l'exigence 1 d'un atelier ;
-    // 4) le niveau des épisodes de démonstration. Les renommer touche la grille figée et le
-    // catalogue en base : c'est une décision du propriétaire (voir le rapport). D'ici là,
-    // aucun texte neuf ne lui donne un cinquième sens : l'image de partage ne l'emploie plus.
+  it("« Découverte » n'a plus qu'un sens : l'offre gratuite", () => {
+    // Décision du propriétaire (audit de la langue, novembre 2026) : l'offre gratuite garde
+    // « Découverte » ; le niveau 1 de l'arène et l'exigence 1 d'un atelier deviennent « Premiers
+    // pas », le niveau des épisodes de démonstration « Démonstration ». Les codes ne changent pas.
     expect(OFFRES.decouverte.nom).toBe("Découverte");
-    expect(DIFFICULTY_PRESETS[0]!.name).toBe("Découverte");
-    expect(DIFFICULTES[1]).toBe("Découverte");
-    expect(NIVEAUX_DES_EPISODES.find((n) => n.code === "decouverte")?.nom).toBe("Découverte");
+    expect(DIFFICULTY_PRESETS[0]!.name).toBe("Premiers pas");
+    expect(DIFFICULTY_PRESETS[0]!.code).toBe("decouverte");
+    expect(DIFFICULTES[1]).toBe("Premiers pas");
+    expect(NIVEAUX_DES_EPISODES.find((n) => n.code === "decouverte")?.nom).toBe("Démonstration");
     expect(lire("app/opengraph-image.tsx")).not.toMatch(/Découverte/);
     expect(lire("components/le-cours-en-bref.tsx")).not.toMatch(/Découverte/);
   });

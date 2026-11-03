@@ -31,7 +31,7 @@ export const FICHE: FicheEnseignant = {
       minutes: 10,
       titre: "Lancement",
       detail:
-        "Vous envoyez le lien /entreprises/episode/lits-vides?hasard=12 : toute la classe joue le même trimestre, sous les mêmes aléas. Les élèves jouent seuls ou en binôme. Sans licence, la démonstration se joue au niveau Découverte : un repère de méthode accompagne chaque étape, et chaque décision montre aussitôt ce qu'elle a changé par rapport à ne rien changer. Vous présentez l'établissement en deux phrases (88 places, huit lits vides, soixante noms sur la liste) sans parler de délai, et vous demandez de noter sur papier le manque à gagner calculé en semaine 1 et la réponse faite au siège.",
+        "Vous envoyez le lien /entreprises/episode/lits-vides?hasard=12 : toute la classe joue le même trimestre, sous les mêmes aléas. Les élèves jouent seuls ou en binôme. Sans licence, la démonstration se joue au niveau Démonstration : un repère de méthode accompagne chaque étape, et chaque décision montre aussitôt ce qu'elle a changé par rapport à ne rien changer. Vous présentez l'établissement en deux phrases (88 places, huit lits vides, soixante noms sur la liste) sans parler de délai, et vous demandez de noter sur papier le manque à gagner calculé en semaine 1 et la réponse faite au siège.",
     },
     {
       minutes: 40,

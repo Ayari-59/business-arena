@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
@@ -40,7 +41,7 @@ function Ecran({ titre, chapeau, children }: { titre: string; chapeau: string; c
   );
 }
 
-export default async function EleveLtiPage({ searchParams }: { searchParams: Promise<{ refus?: string }> }) {
+async function EleveLtiPage({ searchParams }: { searchParams: Promise<{ refus?: string }> }) {
   const { refus } = await searchParams;
   const [ctx, invite] = await Promise.all([lireContexte(), getGuestUserId()]);
   const lien = ctx?.r === "eleve" && ctx.l && invite === ctx.u ? await lienParId(ctx.l) : null;
@@ -113,3 +114,5 @@ export default async function EleveLtiPage({ searchParams }: { searchParams: Pro
     </Ecran>
   );
 }
+
+export default avecTypographie(EleveLtiPage);

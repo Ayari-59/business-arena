@@ -183,9 +183,9 @@ const CORRECTIONS: Record<string, [string, string][]> = {
   // Le courrier de la panne, corrigé et justifié dans textes-a-la-duree-courriers.test.ts.
   transport_panne_flotte: [["Les pièces sont annoncées à quinze jours par le constructeur.", "Les pièces sont annoncées à six semaines par le constructeur."]],
   transport_t6_contrat_refuse: [
-    ["deux mille huit cents palettes", "quatre mille palettes"],
-    ["mille quatre cents palettes", "deux mille palettes"],
-    ["mille cent vingt", "mille six cents"],
+    ["2 800 palettes", "4 000 palettes"],
+    ["1 400 palettes", "2 000 palettes"],
+    ["1 120", "1 600"],
     ["44 800 €", "64 000 €"],
     ["59 360 €", "84 800 €"],
     ["14 560 €", "20 800 €"],

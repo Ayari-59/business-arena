@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { GuardedForm } from "@/components/guarded-action";
@@ -28,7 +29,7 @@ export const dynamic = "force-dynamic";
  * l'écrit au tableau (/teacher/cohortes), l'élève le tape ici. Une cohorte CLOSE le
  * dit, et n'offre pas de bouton.
  */
-export default async function RejoindrePage({
+async function RejoindrePage({
   searchParams,
 }: {
   searchParams: Promise<{ code?: string; inconnu?: string; close?: string }>;
@@ -151,3 +152,5 @@ export default async function RejoindrePage({
     </>
   );
 }
+
+export default avecTypographie(RejoindrePage);

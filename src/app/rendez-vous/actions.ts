@@ -38,7 +38,7 @@ const schema = z.object({
     .string()
     .trim()
     .regex(/^\+?[0-9 .()-]{8,20}$/, "Numéro de téléphone invalide"),
-  email: z.string().trim().email("E-mail invalide").max(200),
+  email: z.string().trim().email("Adresse électronique invalide").max(200),
   message: z.string().trim().max(800, "Le message est limité à 800 caractères").catch(""),
   /** Piège à robots : un champ invisible qu'un humain ne remplit pas. */
   site: z.string().max(0, "Formulaire invalide").catch("x"),

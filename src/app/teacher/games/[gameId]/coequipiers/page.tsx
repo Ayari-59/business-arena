@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -46,8 +47,8 @@ const FAITS: Record<string, string> = {
   regle: "Les réglages sont enregistrés.",
   figes:
     "Les réglages sont enregistrés, sauf les critères et l'auto-évaluation : des réponses sont déjà données, ils ne changent plus.",
-  publie: "C'est publié : les réponses sont closes et chaque étudiant voit ses moyennes.",
-  retire: "La publication est retirée : les réponses sont rouvertes, les étudiants ne voient plus leurs moyennes.",
+  publie: "C'est publié : les réponses sont closes et chaque membre de l'équipe voit ses moyennes.",
+  retire: "La publication est retirée : les réponses sont rouvertes, les membres des équipes ne voient plus leurs moyennes.",
   notes: "Les notes d'équipe sont enregistrées.",
 };
 const REFUS: Record<string, string> = {
@@ -89,7 +90,7 @@ function Reglages({
           <span>
             <span className="text-sm font-semibold text-slate-100">Évaluation activée</span>
             <span className="block text-sm text-slate-400">
-              Décochée, les étudiants ne voient plus rien ; les réponses déjà données sont gardées.
+              Décochée, les membres des équipes ne voient plus rien ; les réponses déjà données sont gardées.
             </span>
           </span>
         </label>
@@ -166,7 +167,7 @@ function Reglages({
       </fieldset>
 
       <fieldset className="grid gap-2">
-        <legend className="libelle mb-1 text-sm text-slate-300">Ce que l&apos;étudiant remplit en plus</legend>
+        <legend className="libelle mb-1 text-sm text-slate-300">Ce que chaque membre de l&apos;équipe remplit en plus</legend>
         {figes && r ? (
           <>
             <p className="text-sm text-slate-100">Auto-évaluation : {r.autoEvaluation ? "oui" : "non"}</p>
@@ -227,7 +228,7 @@ function Reglages({
       </fieldset>
 
       <p className="text-sm text-slate-400">
-        L&apos;anonymat entre étudiants est toujours tenu : aucun ne voit qui l&apos;a noté, ni ce que les autres ont reçu.
+        L&apos;anonymat entre coéquipiers est toujours tenu : aucun ne voit qui l&apos;a noté, ni ce que les autres ont reçu.
       </p>
       <div>
         <SubmitButton
@@ -264,18 +265,18 @@ function SectionDuMoment({
         <span className="pastille-etat rounded-full px-2.5 py-1 text-sm text-slate-200">{etatDuMoment(m)}</span>
       </div>
       {m.etat === "a-venir" ? (
-        <p className="text-sm text-slate-400">Les étudiants verront la carte « Évaluez vos coéquipiers » à ce moment-là.</p>
+        <p className="text-sm text-slate-400">Les membres des équipes verront la carte « Évaluez vos coéquipiers » à ce moment-là.</p>
       ) : (
         <>
           <p className="text-sm text-slate-300" data-taux-de-reponse="">
-            {repondants} sur {compter(etudiants, "étudiant")} ont rendu une évaluation complète.
+            {repondants} sur {compter(etudiants, "membre")} ont rendu une évaluation complète.
           </p>
           {m.equipes.map((e) => (
             <div key={e.teamId} className="carte grid gap-3 p-4 sm:p-5" data-equipe={e.nom}>
               <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                 <h3 className="titre-carte text-slate-50">{e.nom}</h3>
                 <span className="text-sm tabular-nums text-slate-300" data-reponses-equipe={`${e.repondants}/${e.membres}`}>
-                  {e.membres === 0 ? "aucun étudiant" : `${e.repondants} sur ${e.membres} ont répondu`}
+                  {e.membres === 0 ? "aucun membre" : `${e.repondants} sur ${e.membres} ont répondu`}
                 </span>
               </div>
               {e.enAttente.length > 0 && m.etat === "ouvert" ? (
@@ -391,7 +392,7 @@ function SectionDuMoment({
               <h3 id={`commentaires-${m.moment}`} className="titre-carte text-slate-50">
                 Commentaires
               </h3>
-              <p className="text-sm text-slate-400">Vous seul les lisez : les étudiants ne voient ni les commentaires, ni leurs auteurs.</p>
+              <p className="text-sm text-slate-400">Vous seul les lisez : les membres des équipes ne voient ni les commentaires, ni leurs auteurs.</p>
               <ul className="grid gap-3">
                 {m.commentaires.map((c, i) => (
                   <li key={i} className="border-t border-white/10 pt-2 text-sm">
@@ -421,8 +422,8 @@ function SectionDuMoment({
             )}
             <p className="text-sm text-slate-400">
               {m.etat === "ouvert"
-                ? "Publier clôt les réponses ; chaque étudiant voit alors ses moyennes, sans les auteurs."
-                : "Chaque étudiant voit ses moyennes. Retirer la publication rouvre les réponses."}
+                ? "Publier clôt les réponses ; chaque membre de l'équipe voit alors ses moyennes, sans les auteurs."
+                : "Chaque membre de l'équipe voit ses moyennes. Retirer la publication rouvre les réponses."}
             </p>
           </div>
         </>
@@ -431,7 +432,7 @@ function SectionDuMoment({
   );
 }
 
-export default async function CoequipiersEnseignantPage({
+async function CoequipiersEnseignantPage({
   params,
   searchParams,
 }: {
@@ -455,7 +456,7 @@ export default async function CoequipiersEnseignantPage({
       <EnTeteDePage
         surtitre={`Pilotage de partie · ${t.partie}`}
         titre="Évaluation entre coéquipiers"
-        chapeau="Chaque étudiant note la contribution de ses coéquipiers. Vous lisez les réponses et leurs auteurs ; vous publiez, et chacun voit ses moyennes sans savoir qui l'a noté. Un facteur individuel module la note d'équipe."
+        chapeau="Chaque membre de l'équipe note la contribution de ses coéquipiers. Vous lisez les réponses et leurs auteurs ; vous publiez, et chacun voit ses moyennes sans savoir qui l'a noté. Un facteur individuel module la note d'équipe."
       >
         <p className="mt-6 flex flex-wrap gap-x-6 gap-y-2">
           <Link href={`/teacher/games/${gameId}`} className={LIEN_A_L_ENCRE}>
@@ -482,7 +483,7 @@ export default async function CoequipiersEnseignantPage({
         ) : null}
         {r && !r.active ? (
           <p className="rounded-xl encadre-neutre px-3 py-2.5 text-sm text-slate-200 sm:px-4">
-            L&apos;évaluation est désactivée : les étudiants ne voient rien. Cochez « Évaluation activée » pour la reprendre.
+            L&apos;évaluation est désactivée : les membres des équipes ne voient rien. Cochez « Évaluation activée » pour la reprendre.
           </p>
         ) : null}
 
@@ -499,20 +500,20 @@ export default async function CoequipiersEnseignantPage({
         <section aria-label="Le calcul du facteur" className="grid gap-2 text-sm leading-relaxed text-slate-300">
           <p>
             Chaque répondant partage ses points entre ses coéquipiers : ce qu&apos;il donne à l&apos;un, rapporté à ce
-            qu&apos;il donne à tous, est la part qu&apos;il lui attribue. Le facteur d&apos;un étudiant est la part qu&apos;il
+            qu&apos;il donne à tous, est la part qu&apos;il lui attribue. Le facteur d&apos;un membre de l&apos;équipe est la part qu&apos;il
             reçoit rapportée à celle qu&apos;il recevrait si chacun notait tout le monde à égalité. Il est ramené entre{" "}
             {decimal(r?.bornes.basse ?? METHODE_DES_PAIRS.bornes.basse)} et {decimal(r?.bornes.haute ?? METHODE_DES_PAIRS.bornes.haute)}, puis arrondi au centième.
             Un évaluateur sévère avec tous ne déplace donc rien : seul compte l&apos;écart entre ses coéquipiers.
           </p>
           <ul className="grid gap-1 text-slate-400">
-            <li>Un étudiant qui n&apos;a pas répondu : ses notes données ne comptent pas, il reçoit celles des autres.</li>
+            <li>Un membre de l&apos;équipe qui n&apos;a pas répondu : ses notes données ne comptent pas, il reçoit celles des autres.</li>
             <li>{PHRASES_DES_REGLES["personne-n-a-repondu"]}</li>
             <li>{PHRASES_DES_REGLES["equipe-de-deux"]}</li>
             <li>L&apos;auto-évaluation est montrée à part et n&apos;entre pas dans le facteur.</li>
             <li>
               Signalés : un écart d&apos;au moins {decimal(seuils.ecartAuto)} point entre l&apos;auto-évaluation et les pairs ;
               des notes de {decimal(seuils.tresBas)} ou moins de la part de chaque évaluateur ; {decimal(seuils.desaccord)} points
-              d&apos;écart ou plus entre deux évaluateurs d&apos;un même étudiant.
+              d&apos;écart ou plus entre deux évaluateurs d&apos;un même membre de l&apos;équipe.
             </li>
           </ul>
         </section>
@@ -520,3 +521,5 @@ export default async function CoequipiersEnseignantPage({
     </main>
   );
 }
+
+export default avecTypographie(CoequipiersEnseignantPage);

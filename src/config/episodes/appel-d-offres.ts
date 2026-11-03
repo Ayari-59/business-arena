@@ -61,7 +61,7 @@ export const ETAPES: readonly Etape[] = [
         role: "Chargée d'affaires",
         heure: "09:20",
         texte:
-          "Il y a aussi Maisons Ardanel, remise en semaine 3 — 400 lignes de gros œuvre et des échantillons — et le Haut-Garon, outillage et équipements de protection, remise en semaine 4. Et Vauclair attend six devis. On fait comment ?",
+          "Il y a aussi Maisons Ardanel, remise en semaine 3 (400 lignes de gros œuvre et des échantillons), et le Haut-Garon, outillage et équipements de protection, remise en semaine 4. Et Vauclair attend six devis. On fait comment ?",
       },
     ],
     budget: 5,
@@ -72,7 +72,7 @@ export const ETAPES: readonly Etape[] = [
         cout: 1,
         nature: "decisive",
         resultat:
-          "Prix : 40 points. Valeur technique : 60 points, en quatre intitulés — logistique et livraisons, délais de réapprovisionnement, démarche environnementale, accompagnement des entreprises — dont le détail sera « précisé en réponse aux questions ». La note prix suit une formule linéaire : chaque pour cent au-dessus de l'offre la moins chère retire 0,8 point. Nos trois dernières réponses à des bailleurs ont obtenu entre 31 et 38 sur 60 en technique, avec le mémoire type.",
+          "Prix : 40 points. Valeur technique : 60 points, en quatre intitulés (logistique et livraisons, délais de réapprovisionnement, démarche environnementale, accompagnement des entreprises) dont le détail sera « précisé en réponse aux questions ». La note prix suit une formule linéaire : chaque pour cent au-dessus de l'offre la moins chère retire 0,8 point. Nos trois dernières réponses à des bailleurs ont obtenu entre 31 et 38 sur 60 en technique, avec le mémoire type.",
       },
       {
         id: "charge",
@@ -398,7 +398,7 @@ export const ETAPES: readonly Etape[] = [
         cout: 0.5,
         nature: "decisive",
         resultat: (ctx) =>
-          `Marge brute au tarif grands comptes : 15 %. Coût du service — livraisons, stock dédié, suivi, retours : 10 % du chiffre d'affaires${
+          `Marge brute au tarif grands comptes : 15 %. Coût du service (livraisons, stock dédié, suivi, retours) : 10 % du chiffre d'affaires${
             ctx.sites
               ? ", livraisons par logement comprises"
               : " ; deux points de plus si les logements sont occupés et qu'on ne l'a pas prévu"

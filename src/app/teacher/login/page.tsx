@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
  * `suite` : la page demandée avant la connexion (lib/connexion-enseignant.ts). Elle
  * n'est gardée que si c'est un chemin interne ; sinon on arrive sur l'espace.
  */
-export default async function TeacherLoginPage({
+async function TeacherLoginPage({
   searchParams,
 }: {
   searchParams: Promise<{ suite?: string | string[]; reinitialise?: string | string[] }>;
@@ -67,3 +68,5 @@ export default async function TeacherLoginPage({
     </main>
   );
 }
+
+export default avecTypographie(TeacherLoginPage);

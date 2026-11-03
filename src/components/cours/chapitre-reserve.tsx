@@ -33,8 +33,8 @@ export function ChapitreReserve({
         <p className="surtitre">Le cours par la simulation</p>
         <h1 className="text-3xl font-bold text-slate-50">{titre}</h1>
         <p className="text-base text-slate-300">
-          Ce chapitre n&apos;est pas encore ouvert pour ta classe, « {eleve.classe} ». Parles-en à ton enseignant :
-          c&apos;est lui qui peut l&apos;ouvrir. En attendant, le chapitre libre et son cas pratique restent à ta portée.
+          Ce chapitre n&apos;est pas encore ouvert pour votre classe, « {eleve.classe} ». Parlez-en à votre enseignant :
+          c&apos;est lui qui peut l&apos;ouvrir. En attendant, le chapitre libre et son cas pratique restent à votre portée.
         </p>
         <p className="flex flex-wrap gap-3">
           <Link href={`/cours/${chapitreLibre}`} className={bouton({ taille: "m" })}>

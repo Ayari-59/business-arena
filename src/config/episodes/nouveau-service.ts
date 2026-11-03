@@ -588,7 +588,7 @@ export const ETAPES: readonly Etape[] = [
         heure: "08:00",
         alerte: true,
         texte:
-          "Le comité se réunit en semaine 13 et décidera de la suite. Je veux des chiffres qui donnent envie. Romane propose un e-mailing à nos 9 000 artisans.",
+          "Le comité se réunit en semaine 13 et décidera de la suite. Je veux des chiffres qui donnent envie. Romane propose une campagne de courriels à nos 9 000 artisans.",
       },
       {
         ...SUIVI,
@@ -617,7 +617,7 @@ export const ETAPES: readonly Etape[] = [
         d: "Une demi-journée d'appels par agence, une remise sur les matériaux : 800 €.",
       },
       {
-        t: "Envoyer un e-mailing aux 9 000 artisans clients pour faire monter les chiffres avant le comité",
+        t: "Envoyer une campagne de courriels aux 9 000 artisans clients pour faire monter les chiffres avant le comité",
         d: "Conception et envoi : 4 500 €. Les demandes de devis vont s'envoler.",
       },
       {
@@ -638,7 +638,7 @@ export const ETAPES: readonly Etape[] = [
         {
           ...ROMANE,
           texte:
-            "L'e-mailing est parti : les devis explosent ! Bon, beaucoup demandent du matériel qu'on n'a pas, ou dans une agence qui ne loue pas.",
+            "La campagne de courriels est partie : les devis explosent ! Bon, beaucoup demandent du matériel qu'on n'a pas, ou dans une agence qui ne loue pas.",
         },
       ],
       [

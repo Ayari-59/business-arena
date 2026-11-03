@@ -60,6 +60,7 @@ import { premiereOuverture } from "@/engine/groupe";
 import type { CompanyState, EngineScenarioConfig } from "@/engine/types";
 import { ENGINE_VERSION } from "@/engine/simulation";
 import { PARTIE_AVEC_ELEVES, PARTIE_DEJA_JOUEE } from "@/services/archivage";
+import { EQUIPES_D_UNE_PARTIE } from "@/config/equipes";
 import {
   graineDEssai,
   lireLEssai,
@@ -744,8 +745,8 @@ export async function createClassGame(args: {
     scenarioCode: args.scenarioCode,
     licence: () => uneOrganisationSousLicence([args.organizationId]),
   });
-  const humanTeamsCount = Math.min(Math.max(args.humanTeamsCount, 1), 8);
-  const botCount = Math.min(Math.max(args.botCount, 0), 8 - humanTeamsCount);
+  const humanTeamsCount = Math.min(Math.max(args.humanTeamsCount, EQUIPES_D_UNE_PARTIE.min), EQUIPES_D_UNE_PARTIE.max);
+  const botCount = Math.min(Math.max(args.botCount, 0), EQUIPES_D_UNE_PARTIE.max - humanTeamsCount);
   const joinCode = makeJoinCode();
   const { gameId } = await createGameCore({
     organizationId: args.organizationId,

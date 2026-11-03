@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import { publicDeLAtelier } from "@/config/formations";
 import Link from "next/link";
@@ -79,7 +80,7 @@ function parObjectif() {
   });
 }
 
-export default function OrientationPage() {
+function OrientationPage() {
   return (
     <>
       <main id="main">
@@ -226,3 +227,5 @@ export default function OrientationPage() {
     </>
   );
 }
+
+export default avecTypographie(OrientationPage);

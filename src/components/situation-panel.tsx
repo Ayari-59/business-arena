@@ -1,5 +1,6 @@
 "use client";
 
+import { avecTypographie } from "@/components/typographie";
 import { bouton } from "@/components/bouton";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -81,7 +82,7 @@ interface BrouillonLocal {
  * (React le rétablit après la remise à zéro du formulaire) et, en plus, dans
  * le stockage local du navigateur pour survivre à un rechargement.
  */
-export function SituationCard({
+function SituationCardBrut({
   gameId,
   situation,
   dansTiroir = false,
@@ -328,7 +329,7 @@ export function SituationCard({
         {rendue ? (
           <section className="rounded-lg bg-slate-950 p-3 sm:p-5">
             <p className="text-sm text-emerald-300">
-              ✓ Analyse rendue — correction au débriefing.
+              ✓ Analyse rendue : correction au débriefing.
             </p>
           </section>
         ) : (
@@ -418,7 +419,7 @@ export function SituationCard({
                 </p>
                 {quizDone ? (
                   <p className="mt-2 text-sm text-emerald-300">
-                    ✓ Réponse validée — correction au débriefing.
+                    ✓ Réponse validée : correction au débriefing.
                   </p>
                 ) : (
                   <div className="mt-2 space-y-4">
@@ -521,7 +522,7 @@ export function SituationCard({
  * « rendue »), une seule est ouverte à la fois, et rendre l'une referme sur la suivante
  * restée à faire. Toutes restent dans la page : un tiroir fermé est masqué, pas retiré.
  */
-export function AnalyseDuTour({
+function AnalyseDuTourBrut({
   gameId,
   situations,
 }: {
@@ -601,7 +602,7 @@ export function AnalyseDuTour({
 }
 
 /** Débriefing d'une situation résolue : correction du diagnostic et du QCM + notions. */
-export function SituationDebrief({
+function SituationDebriefBrut({
   situation,
   gameId,
   retakeable = false,
@@ -1042,3 +1043,7 @@ function SituationRetake({
     </form>
   );
 }
+
+export const SituationCard = avecTypographie(SituationCardBrut);
+export const AnalyseDuTour = avecTypographie(AnalyseDuTourBrut);
+export const SituationDebrief = avecTypographie(SituationDebriefBrut);

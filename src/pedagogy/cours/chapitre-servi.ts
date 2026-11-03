@@ -13,6 +13,7 @@ import type {
   TableauDeDonnees,
   Vue,
 } from "../../config/cours/types";
+import { typographier } from "../../lib/typographie";
 import { enEcriture, type EcritureAttendue } from "./correcteur";
 import { chapitreDuCas, etatAvant, indexDeLEtape } from "./deroule";
 import type { Ecriture } from "./etats";
@@ -197,7 +198,7 @@ const RATES_DU_SEUIL = {
 
 export function lireLeCurseur(etape: EtapeCurseur, cas: Cas, quantite: number): LectureDuCurseur {
   const d = etape.droites(cas);
-  return { lignes: etape.lecture(cas, quantite), produit: d.produit(quantite), cout: d.cout(quantite) };
+  return typographier({ lignes: etape.lecture(cas, quantite), produit: d.produit(quantite), cout: d.cout(quantite) });
 }
 
 /** La position de départ du curseur : au quart de sa course. */
@@ -220,14 +221,14 @@ export function lireLeLaboratoire(etape: EtapeSimulation, cas: Cas, position: Re
       ici: g.courbes.map((c) => c.valeur(position)),
     };
   }
-  return {
+  return typographier({
     lignes,
     atteint,
     indice: atteint ? "" : defi.indice(position),
     explication: atteint ? etape.explication(cas, position) : null,
     plusGrandEffet: Math.max(0, ...lignes.filter((x) => x.effet).map((x) => Math.abs(x.montant))),
     graphique,
-  };
+  });
 }
 
 /** Une position reçue du navigateur, ramenée aux leviers de l'étape : null si elle n'en est pas une. */
@@ -242,8 +243,16 @@ export function positionValide(leviers: readonly LevierDeSimulation[], brute: un
   return p;
 }
 
-/** Le chapitre, dans l'ordre de cette entreprise, réduit à ses données pour le navigateur. */
+/**
+ * Le chapitre, dans l'ordre de cette entreprise, réduit à ses données pour le navigateur. Ses
+ * textes partent avec les espaces insécables de la typographie française (lib/typographie.ts) :
+ * les codes, eux, restent tels quels.
+ */
 export function servirLeChapitre(source: Chapitre, cas: Cas): ChapitreServi {
+  return typographier(servirSansTypographie(source, cas));
+}
+
+function servirSansTypographie(source: Chapitre, cas: Cas): ChapitreServi {
   const chapitre = chapitreDuCas(source, cas);
   const journal: Ecriture[] = chapitre.ouverture ? [chapitre.ouverture(cas)] : [];
   const ecrituresAvant: number[] = [];

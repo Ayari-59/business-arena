@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
@@ -40,7 +41,7 @@ const REL_OPTIONS: { value: string; label: string }[] = [
   { value: "irrelevant", label: "Hors sujet" },
 ];
 
-export default async function NewSituationPage({
+async function NewSituationPage({
   params,
   searchParams,
 }: {
@@ -233,3 +234,5 @@ export default async function NewSituationPage({
     </main>
   );
 }
+
+export default avecTypographie(NewSituationPage);

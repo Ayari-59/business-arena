@@ -325,7 +325,7 @@ export function DevisForm({
         </label>
       ) : null}
       <label className="block">
-        <span className={etiquette}>Votre e-mail, pour recevoir le devis</span>
+        <span className={etiquette}>Votre adresse électronique, pour recevoir le devis</span>
         <input
           name="email"
           type="email"

@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
@@ -15,7 +16,7 @@ import { Icone } from "@/components/icone";
 
 export const dynamic = "force-dynamic";
 
-export default async function TeacherCompetitionPage({
+async function TeacherCompetitionPage({
   params,
 }: {
   params: Promise<{ competitionId: string }>;
@@ -158,3 +159,5 @@ export default async function TeacherCompetitionPage({
     </main>
   );
 }
+
+export default avecTypographie(TeacherCompetitionPage);

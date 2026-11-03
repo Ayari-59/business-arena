@@ -12,6 +12,7 @@ import {
 } from "./cours/registre";
 import type { Chapitre } from "./cours/types";
 import { BLOCS_DES_EPISODES } from "./episodes/blocs";
+import { formationOuverteAuxEpisodes } from "./episodes/public-des-episodes";
 import { episodeParCode } from "../pedagogy/episodes/registre";
 import { FORMATIONS, type Formation } from "./formations";
 import { raisonHorsDuChamp } from "./hors-du-champ";
@@ -334,8 +335,14 @@ export function blocsDuChapitre(
 /**
  * LES BLOCS QU'UN ÉPISODE FAIT TRAVAILLER À UNE FORMATION, sur la même règle
  * que les chapitres : le préfixe trie, l'entrée officielle range.
+ *
+ * AUCUN EN DESSOUS DE BAC + 3 (décision du propriétaire, novembre 2026,
+ * config/episodes/public-des-episodes.ts) : une formation fermée aux épisodes
+ * n'en reçoit aucun, même si le relevé de blocs.ts en cite pour elle. Sa
+ * couverture, son tableau et son programme ne comptent donc plus d'épisode.
  */
 export function blocsDeLEpisode(code: string, formation: string): string[] {
+  if (!formationOuverteAuxEpisodes(formation)) return [];
   return blocsDuChapitre({ blocs: BLOCS_DES_EPISODES[code] ?? [] }, formation);
 }
 

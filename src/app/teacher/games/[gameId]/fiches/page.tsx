@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
@@ -72,7 +73,7 @@ const styles = `
   }
 `;
 
-export default async function FichesPage({
+async function FichesPage({
   params,
   searchParams,
 }: {
@@ -238,3 +239,5 @@ export default async function FichesPage({
     </main>
   );
 }
+
+export default avecTypographie(FichesPage);

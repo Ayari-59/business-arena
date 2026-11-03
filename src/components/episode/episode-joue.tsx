@@ -1,5 +1,7 @@
 "use client";
 
+import { avecTypographie } from "@/components/typographie";
+import { GRAINES_DU_BILAN } from "@/engine/episodes/commun";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type {
@@ -314,7 +316,7 @@ export interface OffreDesEpisodes {
   libelle: string;
 }
 
-export function EpisodeJoue({
+function EpisodeJoueBrut({
   code,
   niveaux = NIVEAUX.map((n) => n.code),
   offre = null,
@@ -663,10 +665,10 @@ function Intro({
       </div>
       <p className="max-w-2xl text-sm leading-relaxed text-slate-400">
         {ep.etapes.length} décisions, {ep.duree}. Les chiffres bougent avec vos choix ; à la fin, le
-        bilan rejoue chacune de vos décisions sous les mêmes trente tirages au hasard.{" "}
+        bilan rejoue chacune de vos décisions sous les mêmes {GRAINES_DU_BILAN.length} tirages au hasard.{" "}
         {!licence && niveaux.every((n) => n === "decouverte") ? (
           <>
-            Une démonstration se joue en Découverte, et la Découverte ne compte pas dans le profil
+            Une démonstration se joue au niveau Démonstration, qui ne compte pas dans le profil
             décisionnel : à la fin, le bilan en montre un aperçu, calculé sur cet épisode seul.
             Avec une licence, chaque épisode enrichit votre profil. Une démonstration n&apos;est
             pas enregistrée : la partie se joue et se juge dans votre navigateur, rien n&apos;est
@@ -676,7 +678,7 @@ function Intro({
           <>
             À la fin, vos choix sont gardés sur cet appareil pour votre profil décisionnel, sans
             votre nom ni aucun texte saisi ; vous pouvez les effacer depuis le profil. Une partie
-            en Découverte n&apos;y compte pas.
+            au niveau Démonstration n&apos;y compte pas.
           </>
         )}
       </p>
@@ -718,7 +720,7 @@ function Intro({
               ))}
             </ul>
             <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-400">
-              Démonstration gratuite : elle se joue en {NIVEAUX.find((n) => n.code === niveaux[0])?.nom ?? "Découverte"}.{" "}
+              Démonstration gratuite : elle se joue au niveau {NIVEAUX.find((n) => n.code === niveaux[0])?.nom ?? "Démonstration"}.{" "}
               {offre ? (
                 <>
                   Les autres niveaux, et tous les épisodes, sont inclus dans l&apos;offre{" "}
@@ -1232,3 +1234,5 @@ function verdictDesSemaines(
     ecart,
   };
 }
+
+export const EpisodeJoue = avecTypographie(EpisodeJoueBrut);

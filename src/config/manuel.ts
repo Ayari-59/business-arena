@@ -69,18 +69,18 @@ export function manuel(f: FaitsDuManuel): Chapitre[] {
         {
           type: "texte",
           texte:
-            "Une partie est une suite de tours. À chaque tour, l'équipe reçoit une situation — un fait de gestion daté, chiffré, qui appelle un arbitrage —, pose un diagnostic, puis prend ses décisions : un prix, un volume, des budgets. La simulation calcule le marché, la production, les comptes, et rend des résultats. L'équipe recommence avec ce qu'elle vient d'apprendre.",
+            "Une partie est une suite de tours. À chaque tour, l'équipe reçoit une situation (un fait de gestion daté, chiffré, qui appelle un arbitrage), pose un diagnostic, puis prend ses décisions : un prix, un volume, des budgets. La simulation calcule le marché, la production, les comptes, et rend des résultats. L'équipe recommence avec ce qu'elle vient d'apprendre.",
         },
         {
           type: "texte",
           texte:
-            "Ce n'est pas un exercice déguisé. L'application ne demande jamais « calculez le besoin en fonds de roulement » : elle met l'équipe devant une trésorerie qui se tend, et la notion arrive quand elle sert. C'est ce qui change la nature du travail, et aussi ce qui le rend exigeant — il n'y a pas de bonne réponse écrite quelque part.",
+            "Ce n'est pas un exercice déguisé. L'application ne demande jamais « calculez le besoin en fonds de roulement » : elle met l'équipe devant une trésorerie qui se tend, et la notion arrive quand elle sert. C'est ce qui change la nature du travail, et aussi ce qui le rend exigeant : il n'y a pas de bonne réponse écrite quelque part.",
         },
         {
           type: "encadre",
           titre: "La boucle en une phrase",
           texte:
-            "Lire la situation, poser un diagnostic, décider, subir le résultat, comprendre l'écart. C'est l'écart entre ce qu'on attendait et ce qui est arrivé qui enseigne, pas le résultat lui-même — d'où la phrase demandée au premier tour, qui revient au tour suivant en face du constat.",
+            "Lire la situation, poser un diagnostic, décider, subir le résultat, comprendre l'écart. C'est l'écart entre ce qu'on attendait et ce qui est arrivé qui enseigne, pas le résultat lui-même, d'où la phrase demandée au premier tour, qui revient au tour suivant en face du constat.",
         },
       ],
     },
@@ -157,14 +157,14 @@ export function manuel(f: FaitsDuManuel): Chapitre[] {
           type: "liste",
           titre: "Les trois onglets",
           items: [
-            "« Situation » — le fait de gestion du tour, chiffré et daté. Tout ce qu'il faut pour décider y est.",
-            "« Analyser » — le diagnostic à cocher, le modèle d'analyse à choisir, les questions de connaissances si vous les avez activées.",
-            "« Décider » — les champs de décision, répartis en étapes pour qu'on ne fasse jamais défiler quarante champs.",
+            "« Situation » : le fait de gestion du tour, chiffré et daté. Tout ce qu'il faut pour décider y est.",
+            "« Analyser » : le diagnostic à cocher, le modèle d'analyse à choisir, les questions de connaissances si vous les avez activées.",
+            "« Décider » : les champs de décision, répartis en étapes pour qu'on ne fasse jamais défiler quarante champs.",
           ],
         },
         {
           type: "texte",
-          texte: `Les INDICES sont à la main de l'élève, cinq niveaux par situation, et chacun coûte une part du score. Le barème laisse ${pourcent(f.scoreRestantParIndice[f.scoreRestantParIndice.length - 1] ?? 0.8)} du score à qui les ouvre tous : chercher seul vaut mieux, demander de l'aide ne disqualifie pas. Le coût s'annonce sur le bouton avant le clic.`,
+          texte: `Les INDICES sont à la main de l'élève, ${f.scoreRestantParIndice.length} niveaux par situation, et chacun coûte une part du score. Le barème laisse ${pourcent(f.scoreRestantParIndice[f.scoreRestantParIndice.length - 1] ?? 0.8)} du score à qui les ouvre tous : chercher seul vaut mieux, demander de l'aide ne disqualifie pas. Le coût s'annonce sur le bouton avant le clic.`,
         },
         {
           type: "texte",
@@ -188,10 +188,10 @@ export function manuel(f: FaitsDuManuel): Chapitre[] {
           type: "liste",
           titre: "Vos quatre gestes",
           items: [
-            "PROJETER — « Projeter pour la classe » : le code pendant qu'ils se connectent, l'état des validations pendant le tour, le classement après la clôture. Une chose à la fois, écrite assez grand pour le fond de la salle.",
-            "BORNER — « Planning des tours » : une ouverture et une échéance par tour. L'élève voit alors l'heure de fermeture et un décompte dans les dix dernières minutes. Sans bornes, le tour suit votre pilotage manuel.",
-            "DISTRIBUER — en mode apprentissage, une carte événement entre deux tours, à toute la classe ou à une entreprise. La liasse s'imprime aussi : un pli se découpe, se plie, et l'élève reçoit une enveloppe qu'il retourne pour lire.",
-            "ARBITRER — une équipe en cessation de paiements peut déposer une demande de subvention. C'est le seul geste du jeu qui vous appartienne entièrement : vous accordez, vous refusez, vous fixez le montant.",
+            "PROJETER avec « Projeter pour la classe » : le code pendant qu'ils se connectent, l'état des validations pendant le tour, le classement après la clôture. Une chose à la fois, écrite assez grand pour le fond de la salle.",
+            "BORNER avec « Planning des tours » : une ouverture et une échéance par tour. L'élève voit alors l'heure de fermeture et un décompte dans les dix dernières minutes. Sans bornes, le tour suit votre pilotage manuel.",
+            "DISTRIBUER : en mode apprentissage, une carte événement entre deux tours, à toute la classe ou à une entreprise. La liasse s'imprime aussi : un pli se découpe, se plie, et l'élève reçoit une enveloppe qu'il retourne pour lire.",
+            "ARBITRER : une équipe en cessation de paiements peut déposer une demande de subvention. C'est le seul geste du jeu qui vous appartienne entièrement : vous accordez, vous refusez, vous fixez le montant.",
           ],
         },
         {
@@ -208,7 +208,7 @@ export function manuel(f: FaitsDuManuel): Chapitre[] {
       blocs: [
         {
           type: "texte",
-          texte: `L'IPG — indice de performance globale — compose plusieurs dimensions. Une entreprise qui gagne de l'argent en cassant sa trésorerie ne monte pas : c'est tout l'intérêt d'un indice composite sur un jeu de gestion. Les poids ci-dessous sont ceux de ${f.scenarioDesPoids} ; ils se règlent par scénario.`,
+          texte: `L'IPG (indice de performance globale) compose plusieurs dimensions. Une entreprise qui gagne de l'argent en cassant sa trésorerie ne monte pas : c'est tout l'intérêt d'un indice composite sur un jeu de gestion. Les poids ci-dessous sont ceux de ${f.scenarioDesPoids} ; ils se règlent par scénario.`,
         },
         {
           type: "table",
@@ -249,7 +249,7 @@ export function manuel(f: FaitsDuManuel): Chapitre[] {
         {
           type: "texte",
           texte:
-            "Le MONDE VARIABLE, enfin, se choisit à la création : avec lui, la conjoncture bouge d'un tour à l'autre et deux parties du même scénario ne se ressemblent pas. Sans lui, le monde est figé et deux classes vivent exactement la même partie — utile quand on compare des groupes, ou qu'on refait la séance l'année suivante.",
+            "Le MONDE VARIABLE, enfin, se choisit à la création : avec lui, la conjoncture bouge d'un tour à l'autre et deux parties du même scénario ne se ressemblent pas. Sans lui, le monde est figé et deux classes vivent exactement la même partie, utile quand on compare des groupes, ou qu'on refait la séance l'année suivante.",
         },
       ],
     },
@@ -261,9 +261,9 @@ export function manuel(f: FaitsDuManuel): Chapitre[] {
         {
           type: "liste",
           items: [
-            "« Observation de séance » — la participation tour par tour, la part des équipes qui ont validé sans rien changer, le temps médian d'un tour. C'est l'écran de la première fois : il répond à « est-ce qu'ils ont joué ? », pas à « qui gagne ? ».",
-            "Le COCKPIT Excel — un classeur d'aide à la décision par équipe : marges par référence, mix, prévisions. À donner aux équipes qui veulent préparer leurs décisions hors séance.",
-            "Le DOSSIER d'équipe — le récapitulatif imprimable d'une partie, à distribuer en fin de séquence ou à joindre à un dossier d'examen.",
+            "« Observation de séance » : la participation tour par tour, la part des équipes qui ont validé sans rien changer, le temps médian d'un tour. C'est l'écran de la première fois : il répond à « est-ce qu'ils ont joué ? », pas à « qui gagne ? ».",
+            "Le COCKPIT Excel, un classeur d'aide à la décision par équipe : marges par référence, mix, prévisions. À donner aux équipes qui veulent préparer leurs décisions hors séance.",
+            "Le DOSSIER d'équipe : le récapitulatif imprimable d'une partie, à distribuer en fin de séquence ou à joindre à un dossier d'examen.",
           ],
         },
         {
@@ -282,13 +282,13 @@ export function manuel(f: FaitsDuManuel): Chapitre[] {
         {
           type: "liste",
           items: [
-            "UN ÉLÈVE VOIT LE PRÉNOM D'UN AUTRE — le poste porte encore l'identité du précédent. « Ce n'est pas moi » sur l'écran d'entrée, puis il saisit son code. S'il a déjà joué sous la mauvaise identité, déplacez-le dans la bonne équipe.",
-            "UN ÉLÈVE EST DANS LA MAUVAISE ÉQUIPE — « Composition des équipes ». Après un tour joué, il emportera le résultat économique de sa nouvelle équipe pour toute la partie.",
-            "UNE ÉQUIPE NE VALIDE PAS — clôturez quand même : elle reconduira ses décisions du tour précédent, et l'écran de confirmation vous le dit avant le clic. Ce n'est pas une sanction, c'est le seul moyen de ne pas bloquer la classe.",
-            "L'ÉQUIPE S'ÉCRASE ELLE-MÊME — plusieurs élèves d'une même équipe saisissent en parallèle ; le dernier qui valide remplace le précédent. L'écran affiche qui a validé et à quelle heure : faites-leur désigner une personne qui envoie.",
-            "UNE ENTREPRISE EST DÉFAILLANTE — elle a enchaîné les tours de cessation de paiements que la partie tolère. L'activité est gelée et la note financière tombe à zéro. Aux niveaux qui ouvrent le financement, un apport des associés qui ramène le découvert sous le plafond la fait repartir ; leur enveloppe épuisée, et à tous les niveaux qui ne l'ouvrent pas, seule une subvention exceptionnelle, que vous accordez sur sa demande, la remet en marche. Le formulaire de l'équipe propose le montant qui y suffit, impôt compris, plus un coussin qui lui évite de retomber au tour suivant ; le minimum y reste affiché. Le bandeau de pilotage dit lequel des deux vaut dans votre partie.",
-            "LA PARTIE DE CLASSE NE SE CRÉE PAS — sans licence de l'arène en cours, ou licence échue, ni partie de classe ni concours ne se créent ; les parties déjà créées vont jusqu'au bout. La ligne en tête de « Mes parties » dit l'offre et sa date de fin, et le chemin vers un devis.",
-            "LA PARTIE SORT DE L'OFFRE — une autre entreprise ou un autre niveau que ceux de la licence, un deuxième groupe en cours sous une offre qui n'en couvre qu'un, ou un enseignant de plus que le devis : le refus dit ce qui bloque et l'offre qui l'ouvre. Le formulaire part déjà des réglages de la licence, et marque les autres choix.",
+            "UN ÉLÈVE VOIT LE PRÉNOM D'UN AUTRE : le poste porte encore l'identité du précédent. « Ce n'est pas moi » sur l'écran d'entrée, puis il saisit son code. S'il a déjà joué sous la mauvaise identité, déplacez-le dans la bonne équipe.",
+            "UN ÉLÈVE EST DANS LA MAUVAISE ÉQUIPE : « Composition des équipes ». Après un tour joué, il emportera le résultat économique de sa nouvelle équipe pour toute la partie.",
+            "UNE ÉQUIPE NE VALIDE PAS : clôturez quand même, elle reconduira ses décisions du tour précédent, et l'écran de confirmation vous le dit avant le clic. Ce n'est pas une sanction, c'est le seul moyen de ne pas bloquer la classe.",
+            "L'ÉQUIPE S'ÉCRASE ELLE-MÊME : plusieurs élèves d'une même équipe saisissent en parallèle ; le dernier qui valide remplace le précédent. L'écran affiche qui a validé et à quelle heure : faites-leur désigner une personne qui envoie.",
+            "UNE ENTREPRISE EST DÉFAILLANTE : elle a enchaîné les tours de cessation de paiements que la partie tolère. L'activité est gelée et la note financière tombe à zéro. Aux niveaux qui ouvrent le financement, un apport des associés qui ramène le découvert sous le plafond la fait repartir ; leur enveloppe épuisée, et à tous les niveaux qui ne l'ouvrent pas, seule une subvention exceptionnelle, que vous accordez sur sa demande, la remet en marche. Le formulaire de l'équipe propose le montant qui y suffit, impôt compris, plus un coussin qui lui évite de retomber au tour suivant ; le minimum y reste affiché. Le bandeau de pilotage dit lequel des deux vaut dans votre partie.",
+            "LA PARTIE DE CLASSE NE SE CRÉE PAS : sans licence de l'arène en cours, ou licence échue, ni partie de classe ni concours ne se créent ; les parties déjà créées vont jusqu'au bout. La ligne en tête de « Mes parties » dit l'offre et sa date de fin, et le chemin vers un devis.",
+            "LA PARTIE SORT DE L'OFFRE : une autre entreprise ou un autre niveau que ceux de la licence, un deuxième groupe en cours sous une offre qui n'en couvre qu'un, ou un enseignant de plus que le devis : le refus dit ce qui bloque et l'offre qui l'ouvre. Le formulaire part déjà des réglages de la licence, et marque les autres choix.",
           ],
         },
       ],

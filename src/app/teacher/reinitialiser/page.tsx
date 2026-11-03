@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
@@ -19,7 +20,7 @@ export const dynamic = "force-dynamic";
  * LE LIEN REÇU PAR COURRIEL arrive ici. Le jeton est vérifié à l'affichage (sans être
  * consommé), puis de nouveau, et consommé, à l'envoi du formulaire.
  */
-export default async function ReinitialiserPage({
+async function ReinitialiserPage({
   searchParams,
 }: {
   searchParams: Promise<{ jeton?: string | string[] }>;
@@ -53,3 +54,5 @@ export default async function ReinitialiserPage({
     </main>
   );
 }
+
+export default avecTypographie(ReinitialiserPage);

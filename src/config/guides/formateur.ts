@@ -101,7 +101,7 @@ export const GUIDE_FORMATEUR: Guide = {
         "Les participants ouvrent le lien, ou tapent le code sur la page « Rejoindre une cohorte », puis cliquent sur « Rejoindre la cohorte ».",
         "Ils arrivent sur la liste de leurs épisodes et commencent quand vous le dites.",
       ],
-      voir: "Sans compte ni e-mail : la cohorte reconnaît l'appareil du participant.",
+      voir: "Sans compte ni adresse électronique : la cohorte reconnaît l'appareil du participant.",
       erreur:
         "Laisser la cohorte ouverte après la session. Fermez-la avec « Clore la cohorte » : un retardataire lit alors qu'elle est close.",
       capture: {

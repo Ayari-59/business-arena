@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
  * LA DEMANDE DE RÉINITIALISATION (services/mot-de-passe-oublie.service.ts) : une adresse,
  * et toujours la même réponse, que le compte existe ou non.
  */
-export default async function MotDePasseOubliePage() {
+async function MotDePasseOubliePage() {
   // Rendue à chaque requête : la zone /teacher porte une CSP à nonce (proxy.ts).
   await connection();
   return (
@@ -39,3 +40,5 @@ export default async function MotDePasseOubliePage() {
     </main>
   );
 }
+
+export default avecTypographie(MotDePasseOubliePage);

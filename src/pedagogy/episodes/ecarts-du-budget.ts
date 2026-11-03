@@ -158,7 +158,7 @@ export function axe([information, diagnostic, reflexe, calibrage, domaine]: read
     return {
       titre: "Décomposer avant de réagir",
       texte:
-        "L'écart qui se voit — le prix, le total, le taux — n'est pas celui qui coûte. Refaites le budget à la production réelle, séparez prix et quantités, taux et temps, puis agissez sur le plus gros.",
+        "L'écart qui se voit (le prix, le total, le taux) n'est pas celui qui coûte. Refaites le budget à la production réelle, séparez prix et quantités, taux et temps, puis agissez sur le plus gros.",
     };
   }
   if (domaine!.score < 0.5) {
@@ -172,7 +172,7 @@ export function axe([information, diagnostic, reflexe, calibrage, domaine]: read
     return {
       titre: "Remonter à la cause principale",
       texte:
-        "Plusieurs causes expliquent souvent un même écart. Chiffrez la part de chacune — la presse, les moules, le prix — avant de choisir où mettre l'argent.",
+        "Plusieurs causes expliquent souvent un même écart. Chiffrez la part de chacune (la presse, les moules, le prix) avant de choisir où mettre l'argent.",
     };
   }
   if (calibrage!.score < 1) {
@@ -205,7 +205,7 @@ export const EPISODE_ECARTS: Episode<Trimestre> = {
     { fort: kE(BUDGET_STATIQUE), texte: "de budget de production pour le trimestre" },
   ],
   jugement:
-    "Votre direction juge le trimestre sur l'écart au budget flexible — le coût préétabli de ce que l'atelier a réellement produit —, en comptant les pénalités de retard, les commandes perdues et les lots refusés.",
+    "Votre direction juge le trimestre sur l'écart au budget flexible (le coût préétabli de ce que l'atelier a réellement produit), en comptant les pénalités de retard, les commandes perdues et les lots refusés.",
   duree: "une vingtaine de minutes",
   nomDuTableau: "Votre atelier",
 

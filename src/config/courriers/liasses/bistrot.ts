@@ -86,7 +86,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "bistrot_matieres_premieres",
     expediteur: "Grossiste Vandamme · Direction commerciale",
-    objet: "Révision de nos tarifs — beurre, crème et viande",
+    objet: "Révision de nos tarifs : beurre, crème et viande",
     corps:
       "La collecte laitière et les cours de la viande nous imposent une révision de vingt-quatre pour cent sur l'ensemble de notre barème, ces familles en tête. Le nouveau barème court sur deux {{trimestres}}.",
     signataire: "Le directeur commercial",
@@ -129,7 +129,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "bistrot_degat_des_eaux",
     expediteur: "Assurances du Littoral · Service sinistres",
-    objet: "Déclaration de sinistre — inondation de votre cuisine",
+    objet: "Déclaration de sinistre : inondation de votre cuisine",
     corps:
       "La canalisation située sous le passe a cédé. L'expert relève une cuisine inondée et une salle inexploitable le temps du séchage. La perte d'exploitation n'est indemnisée que si la garantie correspondante a été souscrite.",
     signataire: "Le gestionnaire de sinistres",
@@ -143,7 +143,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "bistrot_fermeture_administrative",
     expediteur: "Préfecture · Bureau de la police administrative",
-    objet: "Arrêté de fermeture administrative — quinze jours",
+    objet: "Arrêté de fermeture administrative : quinze jours",
     corps:
       "À la suite du rapport de contrôle, la fermeture de votre établissement est prononcée pour quinze jours à compter de la notification. L'arrêté doit être affiché sur votre devanture pendant toute la durée de la mesure.",
     signataire: "Le chef de bureau",
@@ -186,9 +186,9 @@ const SOURCES: CourrierDef[] = [
   {
     code: "bistrot_banquet_surprise",
     expediteur: "Famille Delporte · Repas de mariage",
-    objet: "Demande urgente — repas de {{entier: commande_bistrot_banquet_surprise}} couverts dans trois jours",
+    objet: "Demande urgente : repas de {{entier: commande_bistrot_banquet_surprise}} couverts dans trois jours",
     corps:
-      "Le traiteur retenu pour notre réception vient de déposer le bilan et ne livrera pas. Nous cherchons une table capable d'assurer {{lettres: commande_bistrot_banquet_surprise}} couverts samedi. Nous réglons comptant le jour même.",
+      "Le traiteur retenu pour notre réception vient de déposer le bilan et ne livrera pas. Nous cherchons une table capable d'assurer {{entier: commande_bistrot_banquet_surprise}} couverts samedi. Nous réglons comptant le jour même.",
     signataire: "Pour la famille, M. Delporte",
     effet:
       "+{{entier: commande_bistrot_banquet_surprise}} couverts ({{échelle trimestre}}) servis d'office ce tour, réglés comptant, dans la limite de ce que vous pouvez produire",
@@ -201,7 +201,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "bistrot_festival_ville",
     expediteur: "Mairie · Direction de l'animation",
-    objet: "Programme de la fête de la ville — votre rue sur le parcours",
+    objet: "Programme de la fête de la ville : votre rue sur le parcours",
     corps:
       "Les festivités se tiendront sur trois jours et le parcours principal empruntera votre rue. Les éditions passées ont amené une affluence continue du midi à la fermeture, avec un pic le samedi soir.",
     signataire: "La directrice de l'animation",
@@ -216,7 +216,7 @@ const SOURCES: CourrierDef[] = [
   {
     code: "bistrot_major_breakdown",
     expediteur: "Cuisines Professionnelles Lheureux · Service après-vente",
-    objet: "Rapport d'intervention — four principal hors service",
+    objet: "Rapport d'intervention : four principal hors service",
     corps:
       "La sole et la résistance principale sont hors d'usage. La pièce n'est plus référencée : le remplacement de l'appareil s'impose, avec un délai de deux {{trimestres}}. La moitié de votre carte est concernée.",
     signataire: "Le responsable après-vente",

@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import { notFound, redirect } from "next/navigation";
 import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
 import type { Metadata } from "next";
@@ -54,7 +55,7 @@ export const metadata: Metadata = {
  * lui dit par le canal de la séance quand les deux onglets sont dans le même
  * navigateur (`EchoDeSeance`), et le sondeur l'y ramène sinon (`insistant`).
  */
-export default async function ProjectionPage({
+async function ProjectionPage({
   params,
 }: {
   params: Promise<{ gameId: string }>;
@@ -197,3 +198,5 @@ export default async function ProjectionPage({
     </main>
   );
 }
+
+export default avecTypographie(ProjectionPage);

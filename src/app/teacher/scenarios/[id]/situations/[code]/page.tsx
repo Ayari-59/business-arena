@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { connexionPourLaPageDemandee } from "@/lib/connexion-requise";
@@ -14,7 +15,7 @@ const champ =
   "mt-1 w-full champ px-3 py-2 text-sm text-slate-100 outline-none";
 const titre = "text-xs font-medium uppercase tracking-wide text-slate-400";
 
-export default async function SituationEditorPage({
+async function SituationEditorPage({
   params,
   searchParams,
 }: {
@@ -165,3 +166,5 @@ export default async function SituationEditorPage({
     </main>
   );
 }
+
+export default avecTypographie(SituationEditorPage);

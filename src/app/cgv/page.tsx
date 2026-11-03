@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
@@ -35,7 +36,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 const Manque = () => <strong className="text-amber-400">{A_COMPLETER}</strong>;
 
-export default function CgvPage() {
+function CgvPage() {
   const adresse = `${VENDEUR.adresse.rue}, ${VENDEUR.adresse.codePostal} ${VENDEUR.adresse.ville}`;
   return (
     <>
@@ -150,7 +151,7 @@ export default function CgvPage() {
               <Link href="/mentions-legales" className={LIEN_A_L_ENCRE}>
                 mentions légales et la page RGPD
               </Link>
-              . Les élèves et les étudiants jouent sans nom ni e-mail : un code suffit.
+              . Les élèves et les étudiants jouent sans nom ni adresse électronique : un code suffit.
             </p>
           </Section>
 
@@ -193,10 +194,12 @@ export default function CgvPage() {
             </p>
           </Section>
 
-          <p className="text-center text-xs text-slate-400">Version d&apos;octobre 2026, à compléter par le vendeur.</p>
+          <p className="text-center text-xs text-slate-400">Version d&apos;octobre 2026.</p>
         </div>
       </main>
       <PiedDePage />
     </>
   );
 }
+
+export default avecTypographie(CgvPage);

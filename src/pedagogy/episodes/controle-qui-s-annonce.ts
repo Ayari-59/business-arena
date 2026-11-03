@@ -124,7 +124,7 @@ export function comportements(p: PartieJouee, t: Trimestre): Constat[] {
       } ${
         causes
           ? "Et vous avez corrigé le circuit de validation, puis formé les équipes pour que la correction tienne."
-          : "Les causes — le circuit de validation, les habitudes en agence — n'ont pas été traitées jusqu'au bout."
+          : "Les causes (le circuit de validation, les habitudes en agence) n'ont pas été traitées jusqu'au bout."
       }`,
     };
   }

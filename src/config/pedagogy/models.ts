@@ -27,7 +27,7 @@ export const DECISION_MODELS: DecisionModelDef[] = [
     objective: "Savoir si un dérapage de coûts se règle chez le fournisseur ou à l'atelier.",
     conceptCodes: ["cost_variance", "material_price_variance", "efficiency_variance", "standard_costing"] },
   { code: "budgeting", name: "Budget prévisionnel", difficulty: 2,
-    description: "Chiffrer à l'avance ce qu'on attend d'une période — volumes, coûts, résultat — pour pouvoir comparer ensuite.",
+    description: "Chiffrer à l'avance ce qu'on attend d'une période (volumes, coûts, résultat) pour pouvoir comparer ensuite.",
     objective: "Se donner la référence sans laquelle aucun écart ne peut être mesuré.",
     conceptCodes: ["standard_costing", "fixed_costs", "variable_costs", "revenue"] },
   { code: "cvp_analysis", name: "Analyse coût-volume-profit", difficulty: 2,

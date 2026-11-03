@@ -9,6 +9,7 @@ import {
 } from "@/config/ateliers/referentiels";
 import { ATELIERS } from "@/config/ateliers";
 import { BLOCS_DES_EPISODES } from "@/config/episodes/blocs";
+import { formationOuverteAuxEpisodes } from "@/config/episodes/public-des-episodes";
 import { HORS_DU_CHAMP } from "@/config/hors-du-champ";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
 import {
@@ -115,21 +116,23 @@ describe("la couverture par le cours", () => {
   it("le cours et les épisodes seuls ne font jamais d'un bloc le cœur du jeu", () => {
     // Seul le moteur rejoue un bloc à chaque tour ; un chapitre se fait une
     // fois, un épisode se joue sur un trimestre.
+    // Les épisodes ne s'annoncent qu'à partir de bac + 3 (décision du propriétaire, novembre
+    // 2026, config/episodes/public-des-episodes.ts) : le relevé de blocs.ts ne cite que des
+    // formations fermées, si bien qu'aucune ligne n'est aujourd'hui travaillée par un épisode.
+    // La règle de l'adéquation reste écrite pour le jour où une formation ouverte en aura.
     let seuls = 0;
-    let parUnEpisode = 0;
     for (const f of formationsAvecUnePage()) {
       for (const b of couvertureDeLaFormation(f.code)) {
+        if (!formationOuverteAuxEpisodes(f.code)) expect(b.situations, `${f.code} / ${b.referentiel}`).toEqual([]);
         if (b.presences.length > 0) continue;
         seuls++;
         const n = b.chapitres.length + b.situations.length;
-        if (b.situations.length > 0) parUnEpisode++;
         expect(n, `${f.code} / ${b.referentiel} : ligne vide`).toBeGreaterThan(0);
         expect(b.adequation, `${f.code} / ${b.referentiel}`).not.toBe("coeur");
         expect(b.adequation, `${f.code} / ${b.referentiel}`).toBe(n >= 2 ? "couvert" : "partiel");
       }
     }
     expect(seuls, "aucun bloc travaillé par le seul cours : la règle ne garde rien").toBeGreaterThan(0);
-    expect(parUnEpisode, "aucun bloc travaillé par un épisode : la règle ne garde rien").toBeGreaterThan(0);
   });
 
   it("chaque épisode cité existe, et chaque bloc qu'il cite désigne une entrée du texte", () => {

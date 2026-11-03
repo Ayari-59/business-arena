@@ -1,3 +1,4 @@
+import { avecTypographie } from "@/components/typographie";
 import { valeurCreee } from "@/engine/groupe";
 import { tuteurActifPour } from "@/services/tuteur.service";
 import { premierNiveauQuiOuvre } from "@/config/difficulty";
@@ -145,7 +146,7 @@ function leMois(view: { moisDeDepart: number | null }, tour: number): string {
   return view.moisDeDepart === null ? "" : ` · ${nomDuMois(tour, view.moisDeDepart)}`;
 }
 
-export default async function ArenaPage({
+async function ArenaPage({
   params,
   searchParams,
 }: {
@@ -2045,3 +2046,5 @@ export default async function ArenaPage({
     </main>
   );
 }
+
+export default avecTypographie(ArenaPage);

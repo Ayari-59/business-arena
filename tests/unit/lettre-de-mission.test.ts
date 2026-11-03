@@ -9,6 +9,7 @@ import { CourrierRecommande } from "@/components/courrier";
 import { MandatDeLEquipe } from "@/components/mandat-de-lequipe";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 import { LETTRES_DE_MISSION, lettreDeMission } from "@/config/courriers/mission";
+import { espacesOrdinaires } from "@/lib/typographie";
 
 /**
  * LA LETTRE DE MISSION : qui vous a demandé de décider.
@@ -110,16 +111,16 @@ describe("un mandat se lit une fois et se range", () => {
 
   it("ouvert, il porte la lettre du niveau et de quoi en prendre note", () => {
     const html = mandat(true);
-    expect(html).toContain("Votre mandat — direction, production et finances");
+    expect(espacesOrdinaires(html)).toContain("Votre mandat : direction, production et finances");
     expect(html).toContain("J&#x27;ai pris note");
   });
 
   it("à l'arrivée, il n'est qu'une ligne : le premier écran en porte déjà trois", () => {
     const html = mandat(false);
     expect(html).toContain("Lire");
-    expect(html).toContain("Votre mandat — direction, production et finances");
+    expect(espacesOrdinaires(html)).toContain("Votre mandat : direction, production et finances");
     // L'objet porte déjà « Votre mandat » : le préfixer le répétait mot pour mot.
-    expect(html).not.toContain("Votre mandat : Votre mandat");
+    expect(espacesOrdinaires(html)).not.toContain("Votre mandat : Votre mandat");
     // « Lire » et non « Relire » : à l'arrivée, rien n'a encore été lu.
     expect(html).not.toContain("Relire");
     /*

@@ -6,25 +6,25 @@ import { conseilBots, conseilCompany, conseilScenario } from "../conseil";
 /**
  * Scénario SERVICES · GAMME — « ATLAS CONSEIL » en trois offres : l'audit et
  * la conformité, la stratégie et la transformation des grands comptes, et une
- * pratique de cyber-sécurité qui n'existe qu'à l'état de projet, 6 tours
+ * pratique de cybersécurité qui n'existe qu'à l'état de projet, 6 tours
  * trimestriels.
  *
  * Les codes du moteur restent ceux du premier jet (`audit`, `transformation`,
  * `cyber`) : ils sont écrits dans les décisions déjà jouées et dans le mapping
  * des commandes exceptionnelles. Ce que l'élève lit, ce sont les noms — Audit,
- * Stratégie, Cyber-sécurité.
+ * Stratégie, Cybersécurité.
  *
  * Le cabinet d'origine vend « la journée » à un taux moyen. Ici, chaque offre
  * a son taux, ses clients et ses frais, et toutes se partagent les mêmes
  * consultants : 12 personnes, 60 jours ouvrés, 720 jours à vendre par
  * trimestre, quelle que soit l'offre. Le MIX des journées vendues décide du
  * taux journalier moyen autant que le taux d'occupation, et une offre neuve
- * se bâtit avant de se vendre : la cyber-sécurité demande 30 000 € de
+ * se bâtit avant de se vendre : la cybersécurité demande 30 000 € de
  * méthodes, de certifications et de recrutement de compétences avant la
  * première mission, et pas avant le tour 2.
  *
  * Calibration (base trimestrielle) : 720 jours vendables ; audit 560 €
- * (marge 470 €), stratégie 780 € (marge 665 €), cyber-sécurité 850 € (marge
+ * (marge 470 €), stratégie 780 € (marge 665 €), cybersécurité 850 € (marge
  * 750 €) ; 198 000 € de structure décaissée → seuil ≈ 380 jours au mix
  * usuel (53 % d'occupation), contre 421 en un seul taux moyen.
  */
@@ -98,7 +98,7 @@ const GAMME: ProductDef[] = [
   },
   {
     code: "cyber",
-    name: "Cyber-sécurité",
+    name: "Cybersécurité",
     materialCostPerUnit: 60,
     otherVariableCostPerUnit: 40,
     hoursPerUnit: 1,
@@ -228,7 +228,7 @@ const rawConseilGamme = {
         code: "remunerations",
         label: "Politique de rémunération des concurrents",
         cost: 2800,
-        description: "Effectif et indice de salaire de chaque cabinet concurrent — clé de l'attractivité RH.",
+        description: "Effectif et indice de salaire de chaque cabinet concurrent : clé de l'attractivité RH.",
         revealsFields: ["headcount", "salaryIndex"],
       },
       {
