@@ -1,3 +1,4 @@
+import { Icone } from "@/components/icone";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { bouton } from "@/components/bouton";
@@ -532,7 +533,7 @@ function Acces({ chapitre, ouvert }: { chapitre: Chapitre; ouvert?: boolean }) {
     <span data-ouvert="">ouvert</span>
   ) : (
     <span data-cadenas="" title="Réservé aux établissements sous licence">
-      <span aria-hidden>🔒</span> réservé
+      <Icone nom="verrou" /> réservé
     </span>
   );
 }
