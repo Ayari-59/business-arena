@@ -88,9 +88,13 @@ export const PRIX_COUT_MARGE: Chapitre = {
   code: "prix-cout-et-marge",
   parcours: "controle-de-gestion",
   palier: 1,
+  // Le chapitre pose charges, coût et marge d'une unité : la base du BTS CG (5.1.2, notions de
+  // charges, de coûts et de marges) et du DCG UE11 (formation du résultat), au-delà du lycée.
   blocs: [
     "STMG Thème 3 · Création de valeur et performance",
     "STMG Thème 3 · Accompagner la prise de décision",
+    "BTS CG P5 · Analyse et prévision de l'activité",
+    "DCG UE11 · Contrôle de gestion",
   ],
   titre: "Prix, coût et marge",
   accroche:

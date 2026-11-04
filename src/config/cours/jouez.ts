@@ -1242,6 +1242,13 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Relevez les capitaux propres au bilan. Si l'entreprise émettait des actions nouvelles sous la valeur de ses actions anciennes, qui y perdrait, et qu'est-ce qui le compenserait ?",
   }),
+  "piloter-un-centre": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Jouez deux tours.`,
+    lieux: ["analyse-des-couts", "compte-de-resultat"],
+    chercher:
+      "Découpez votre entreprise en deux centres, la production et la vente. À partir de l'analyse des coûts, fixez le prix auquel la production céderait une unité au coût réel de chaque tour : pourquoi change-t-il d'un tour à l'autre, et quel centre porte ce changement ?",
+  }),
 };
 
 /**

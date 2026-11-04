@@ -118,6 +118,7 @@ export const THEMES: readonly Theme[] = [
       "les-ecarts-et-leurs-responsables",
       "tableau-de-bord",
       "decider-prix-fabriquer-acheter",
+      "piloter-un-centre",
     ],
     familles: ["chiffres", "controle", "hotel-couts", "conseil-marge", "sante-budget"],
   },

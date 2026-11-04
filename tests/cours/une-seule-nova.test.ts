@@ -20,6 +20,8 @@ import { EQUIPE as EQUIPE_DE_MAILLE } from "../../src/config/cours/monde/maille-
 import { L_USINE_DE_NOVA } from "../../src/config/cours/monde/nova-usine";
 import { HEURES_LEGALES_PAR_MOIS, paieDUnOperateur, SMIC_HORAIRE_BRUT, SMIC_MENSUEL_BRUT, TAUX_PATRONAL } from "../../src/config/cours/monde/ressources-humaines-de-nova";
 import { insecables } from "@/lib/typographie";
+import { PRIX_DE_MARCHE_DE_L_ENCEINTE, chargesDeLAtelier, coutCibleDeLaGo, coutStandardDeLEnceinte, extractionDuMois, fixesDesCentres, reportingDuTrimestre } from "../../src/config/cours/monde/centres-de-nova";
+import { coutCompletDuMois, coutCompletRationnel, tableauDeBord } from "../../src/config/cours/monde/couts-et-budgets";
 
 /**
  * UNE SEULE NOVA DANS LE MONDE DU COURS (réconciliation d'octobre 2026). Les fiches qui disent la
@@ -188,5 +190,37 @@ describe("une seule NOVA, de la comptabilité de gestion à la clôture", () => 
     expect(k.resultatRetrouve).toBe(CLOTURE_DE_LA_FICHE.resultatNet);
     expect(k.dotation).toBe(CLOTURE_DE_LA_FICHE.travaux.dotationAuxAmortissements);
     expect(k.usureDeGestion).toBe(12 * CHARGES_FIXES_DU_MOIS.amortissement);
+  });
+});
+
+/**
+ * UNE SEULE NOVA DANS SES DEUX CENTRES (piloter un centre) : l'atelier et le service commercial se
+ * partagent les charges fixes du mois et le coût complet de janvier ; leurs résultats refont, mois par
+ * mois, celui du tableau de bord ; le prix de marché est le sous-traitant de la fiche, et la Go du coût
+ * cible est celle de la gamme.
+ */
+describe("une seule NOVA, des deux centres au tableau de bord", () => {
+  it("les charges fixes des centres font celles du mois, et l'atelier porte le coût de production du coût complet", () => {
+    const k = fixesDesCentres(NOVA_GESTION);
+    expect(Math.round((k.atelier + k.commercial) * 100) / 100).toBe(CHARGES_FIXES_DU_MOIS.loyer + CHARGES_FIXES_DU_MOIS.personnel + CHARGES_FIXES_DU_MOIS.amortissement);
+    expect(chargesDeLAtelier(NOVA_GESTION, NOVA_GESTION.moisDeReference.quantite).total).toBe(coutCompletDuMois(NOVA_GESTION).coutDeProduction);
+    const rationnel = coutCompletRationnel(NOVA_GESTION);
+    expect(coutStandardDeLEnceinte(NOVA_GESTION)).toBe(Math.round((rationnel.coutDeProduction / rationnel.quantite) * 100) / 100);
+  });
+
+  it("chaque mois du trimestre, l'atelier et le service commercial refont le résultat et les ventes du tableau de bord", () => {
+    const bord = tableauDeBord(NOVA_GESTION).mois;
+    for (const m of reportingDuTrimestre(NOVA_GESTION).mois) {
+      expect(m.nova, m.nom).toBe(bord[m.indice]!.resultat);
+      expect(m.leviers.quantite, m.nom).toBe(bord[m.indice]!.quantite);
+    }
+    expect(extractionDuMois(NOVA_GESTION).quantite).toBe(bord[1]!.quantite);
+  });
+
+  it("le prix de marché est le sous-traitant de la fiche, et la Go du coût cible est celle de la gamme", () => {
+    expect(PRIX_DE_MARCHE_DE_L_ENCEINTE).toBe(NOVA_GESTION.decision.coutDuSousTraitant);
+    const go = GAMME_DE_NOVA.references.find((r) => r.code === "go")!;
+    const k = coutCibleDeLaGo();
+    expect([k.prix, k.coutRetenu, k.coutCible]).toEqual([go.prix, go.coutVariableUnitaire, go.coutVariableUnitaire]);
   });
 });

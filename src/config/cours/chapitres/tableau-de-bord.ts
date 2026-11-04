@@ -258,6 +258,7 @@ export const TABLEAU_DE_BORD: Chapitre = {
     "Choisir les indicateurs utiles au pilotage et dire les limites du tableau de bord",
   ],
   libre: false,
+  ensuite: ["piloter-un-centre"],
   entreprises: {
     codes: ENTREPRISES_DU_TABLEAU_DE_BORD,
     pourquoi: "le tableau de bord se lit ici sur le semestre de NOVA dans la simulation du cours, le même que son budget de trésorerie ; la méthode vaut pour toute entreprise.",

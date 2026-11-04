@@ -252,7 +252,8 @@ const juste = (ch: Chapitre, id: string) => (ch.etapes.find((x) => x.id === id) 
 
 const BLOCS = [
   ["BTS CG P5 · Analyse et prévision de l'activité", "bts-cg"],
-  ["DCG UE11 · Contrôle de gestion", "dcg"],
+  // Le budget de trésorerie relève au DCG de l'UE6, Finance d'entreprise, et non de l'UE11.
+  ["DCG UE6 · Finance d'entreprise", "dcg"],
   ["BUT GACO · Participer au pilotage interne de l'organisation", "but-gaco"],
   ["BUT GEA · Concevoir des outils de contrôle de gestion", "but-gea"],
 ] as const;
@@ -274,6 +275,7 @@ describe("le budget de trésorerie, chez NOVA dans le monde du cours", () => {
     expect(ch.libre).toBe(false);
     expect(ch.entreprises?.codes).toEqual(["nova"]);
     expect(ch.entreprises!.pourquoi).toMatch(/^[a-zé].*\.$/);
+    expect(ch.blocs).not.toContain("DCG UE11 · Contrôle de gestion");
     for (const [b, ref] of BLOCS) {
       expect(ch.blocs, b).toContain(b);
       expect(referentielDeCitation(b)?.code, b).toBe(ref);
