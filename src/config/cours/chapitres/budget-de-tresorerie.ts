@@ -5,7 +5,7 @@ import { DELAI_CONVENU_DE_CAMPUSTECH, GESTION_DU_COURS, type FicheDeGestion } fr
 import type { Chapitre, TableauDeDonnees } from "../types";
 
 /**
- * CHAPITRE : LE BUDGET DE TRÉSORERIE (contrôle de gestion, palier 4 ; BTS CG, DCG UE11, BUT GEA et
+ * CHAPITRE : LE BUDGET DE TRÉSORERIE (contrôle de gestion, palier 4 ; BTS CG, DCG UE6, BUT GEA et
  * GACO).
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS (src/config/cours/monde), pas dans l'arène : NOVA a une
@@ -280,7 +280,9 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
   palier: 4,
   blocs: [
     "BTS CG P5 · Analyse et prévision de l'activité",
-    "DCG UE11 · Contrôle de gestion",
+    // Le budget de trésorerie relève au DCG de l'UE6 (Finance d'entreprise), pas de l'UE11 : le
+    // programme 2025 de l'UE11 précise que les comptes financiers prévisionnels n'y sont pas abordés.
+    "DCG UE6 · Finance d'entreprise",
     "BUT GACO · Participer au pilotage interne de l'organisation",
     "BUT GEA · Concevoir des outils de contrôle de gestion",
     "BTS MHR Bloc 4 · Pilotage de la production de services en hôtellerie restauration",
@@ -296,6 +298,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
     "Retrouver à rebours un délai de paiement ou un minimum de ventes qui évite le découvert",
   ],
   libre: false,
+  ensuite: ["des-ventes-aux-achats"],
   entreprises: {
     codes: ENTREPRISES_DU_BUDGET,
     pourquoi: "le budget de trésorerie se bâtit ici sur le semestre de NOVA dans la simulation du cours, avec ses clientèles, ses délais et sa TVA ; la méthode vaut pour toute entreprise.",

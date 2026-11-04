@@ -217,8 +217,9 @@ export const LA_CONCORDANCE_DES_RESULTATS: Chapitre = {
   code: "la-concordance-des-resultats",
   parcours: "controle-de-gestion",
   palier: 4,
+  // Pas de BTS CG P5 : le référentiel du BTS exclut la concordance des résultats entre la
+  // comptabilité financière et la comptabilité de gestion (5.2.2, limites). Le DCG la demande (UE11).
   blocs: [
-    "BTS CG P5 · Analyse et prévision de l'activité",
     "DCG UE11 · Contrôle de gestion",
     "BUT GEA · Concevoir des outils de contrôle de gestion",
   ],

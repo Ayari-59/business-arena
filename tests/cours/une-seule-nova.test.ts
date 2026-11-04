@@ -7,11 +7,13 @@ import { montantEcrit } from "../../src/pedagogy/cours/correcteur";
 import { anneeDuMarche } from "../../src/config/cours/monde/attractivite";
 import { coefficientDeSaison, demandeAuPrix, marcheEtPart } from "../../src/config/cours/monde/economie-et-marketing";
 import { CLOTURE_DE_LA_FICHE, COMPOSANTS_DE_DECEMBRE, VENTES_AUX_PARTICULIERS } from "../../src/config/cours/monde/exercice-de-nova";
-import { JEUX_REVENUS_SANS_BON, concordance } from "../../src/config/cours/monde/comptabilite-de-gestion";
+import { JEUX_REVENUS_SANS_BON, concordance, moisDeGestion } from "../../src/config/cours/monde/comptabilite-de-gestion";
 import { MARCHE_A_TROIS } from "../../src/config/cours/monde/marche-a-trois";
 import { MERCATIQUE_DE_NOVA } from "../../src/config/cours/monde/mercatique-de-nova";
-import { ANNEE_N } from "../../src/config/cours/monde/nova-capacite";
-import { CHARGES_FIXES_DU_MOIS, GAMME_DE_NOVA, NOVA_GESTION, VENTES_A_CAMPUSTECH } from "../../src/config/cours/monde/nova-gestion";
+import { ANNEE_N, ANNEE_N_PLUS_1 } from "../../src/config/cours/monde/nova-capacite";
+import { novaEnN, previsionDeNPlus1 } from "../../src/config/cours/monde/prevision-des-ventes";
+import { methodeABC } from "../../src/config/cours/monde/couts-par-activites";
+import { CHARGES_FIXES_DU_MOIS, GAMME_DE_NOVA, MARCHE_DES_ENCEINTES, NOVA_GESTION, VENTES_A_CAMPUSTECH } from "../../src/config/cours/monde/nova-gestion";
 import { CAS_DES_ENTREPRISES } from "../../src/config/cours/monde/cas-des-entreprises";
 import { compteDuLycee, exerciceDe } from "../../src/config/cours/monde/comptes-du-lycee";
 import { PAIE_DU_MOIS, TAUX_DE_LA_PAIE } from "../../src/config/cours/monde/exercice-de-nova";
@@ -20,6 +22,12 @@ import { EQUIPE as EQUIPE_DE_MAILLE } from "../../src/config/cours/monde/maille-
 import { L_USINE_DE_NOVA } from "../../src/config/cours/monde/nova-usine";
 import { HEURES_LEGALES_PAR_MOIS, paieDUnOperateur, SMIC_HORAIRE_BRUT, SMIC_MENSUEL_BRUT, TAUX_PATRONAL } from "../../src/config/cours/monde/ressources-humaines-de-nova";
 import { insecables } from "@/lib/typographie";
+import { PRIX_DE_MARCHE_DE_L_ENCEINTE, chargesDeLAtelier, coutCibleDeLaGo, coutStandardDeLEnceinte, extractionDuMois, fixesDesCentres, reportingDuTrimestre } from "../../src/config/cours/monde/centres-de-nova";
+import { coutCompletDuMois, coutCompletRationnel, tableauDeBord } from "../../src/config/cours/monde/couts-et-budgets";
+import { SANS_STOCK, VENTES_PREVUES_APRES_JUIN, tresorerieAvecLeStock } from "../../src/config/cours/monde/budgets-operationnels";
+import { budgetDeTresorerie } from "../../src/config/cours/monde/couts-et-budgets";
+import { bilanDOuverture, realiseDuPlan } from "../../src/config/cours/monde/equilibre-de-tresorerie";
+import { EQUIPEMENT, LIVRAISONS_DU_MOIS, PLACEMENT } from "../../src/config/cours/monde/exercice-de-nova";
 
 /**
  * UNE SEULE NOVA DANS LE MONDE DU COURS (réconciliation d'octobre 2026). Les fiches qui disent la
@@ -188,5 +196,92 @@ describe("une seule NOVA, de la comptabilité de gestion à la clôture", () => 
     expect(k.resultatRetrouve).toBe(CLOTURE_DE_LA_FICHE.resultatNet);
     expect(k.dotation).toBe(CLOTURE_DE_LA_FICHE.travaux.dotationAuxAmortissements);
     expect(k.usureDeGestion).toBe(12 * CHARGES_FIXES_DU_MOIS.amortissement);
+  });
+});
+
+/**
+ * UNE SEULE NOVA DANS SES DEUX CENTRES (piloter un centre) : l'atelier et le service commercial se
+ * partagent les charges fixes du mois et le coût complet de janvier ; leurs résultats refont, mois par
+ * mois, celui du tableau de bord ; le prix de marché est le sous-traitant de la fiche, et la Go du coût
+ * cible est celle de la gamme.
+ */
+describe("une seule NOVA, des deux centres au tableau de bord", () => {
+  it("les charges fixes des centres font celles du mois, et l'atelier porte le coût de production du coût complet", () => {
+    const k = fixesDesCentres(NOVA_GESTION);
+    expect(Math.round((k.atelier + k.commercial) * 100) / 100).toBe(CHARGES_FIXES_DU_MOIS.loyer + CHARGES_FIXES_DU_MOIS.personnel + CHARGES_FIXES_DU_MOIS.amortissement);
+    expect(chargesDeLAtelier(NOVA_GESTION, NOVA_GESTION.moisDeReference.quantite).total).toBe(coutCompletDuMois(NOVA_GESTION).coutDeProduction);
+    const rationnel = coutCompletRationnel(NOVA_GESTION);
+    expect(coutStandardDeLEnceinte(NOVA_GESTION)).toBe(Math.round((rationnel.coutDeProduction / rationnel.quantite) * 100) / 100);
+  });
+
+  it("chaque mois du trimestre, l'atelier et le service commercial refont le résultat et les ventes du tableau de bord", () => {
+    const bord = tableauDeBord(NOVA_GESTION).mois;
+    for (const m of reportingDuTrimestre(NOVA_GESTION).mois) {
+      expect(m.nova, m.nom).toBe(bord[m.indice]!.resultat);
+      expect(m.leviers.quantite, m.nom).toBe(bord[m.indice]!.quantite);
+    }
+    expect(extractionDuMois(NOVA_GESTION).quantite).toBe(bord[1]!.quantite);
+  });
+
+  it("le prix de marché est le sous-traitant de la fiche, et la Go du coût cible est celle de la gamme", () => {
+    expect(PRIX_DE_MARCHE_DE_L_ENCEINTE).toBe(NOVA_GESTION.decision.coutDuSousTraitant);
+    const go = GAMME_DE_NOVA.references.find((r) => r.code === "go")!;
+    const k = coutCibleDeLaGo();
+    expect([k.prix, k.coutRetenu, k.coutCible]).toEqual([go.prix, go.coutVariableUnitaire, go.coutVariableUnitaire]);
+  });
+});
+
+/**
+ * UNE SEULE NOVA DANS LA PRÉVISION DES VENTES ET LA MÉTHODE ABC (BTS CG P5). La prévision de N + 1,
+ * arrondie à la centaine, est la demande de N + 1 des chapitres de la capacité ; elle part des ventes
+ * de N et du marché du semestre de nova-gestion.ts. La méthode ABC range les charges de janvier de la
+ * comptabilité de gestion, au centime, et la compare au coût des mêmes centres d'analyse.
+ */
+describe("une seule NOVA, de la prévision des ventes à la capacité, et de la méthode ABC aux centres d'analyse", () => {
+  it("la prévision de N + 1, à la centaine, est la demande de N + 1 de la capacité ; elle part des ventes et du marché de N", () => {
+    const p = previsionDeNPlus1();
+    expect(p.trimestres.map((t) => t.plan)).toEqual(ANNEE_N_PLUS_1.demande);
+    expect(novaEnN().ventes).toEqual(ANNEE_N.demande);
+    expect(novaEnN().marche.slice(0, 2)).toEqual([0, 3].map((m) => MARCHE_DES_ENCEINTES.slice(m, m + 3).reduce((t, x) => t + x, 0)));
+    expect(p.capacite).toBe(NOVA_GESTION.decision.capacite);
+  });
+
+  it("la méthode ABC range les 35 383 € de janvier des centres d'analyse, sur les enceintes livrées en janvier", () => {
+    const m = methodeABC();
+    const janvier = moisDeGestion(0);
+    expect(m.total).toBe(janvier.repartition.total);
+    expect(m.charges).toEqual(janvier.repartition.charges);
+    const produits = Object.values(m.produits);
+    expect(produits.reduce((t, p) => t + p.vente.enceintes, 0)).toBe(janvier.livrees);
+    expect(produits.reduce((t, p) => t + p.chiffreDAffaires, 0)).toBe(janvier.chiffreDAffaires);
+    for (const p of produits) expect(Math.round(p.centres.unitaire * 100) / 100).toBe(Math.round(janvier.coutDeRevientUnitaire * 100) / 100);
+    expect(m.activites.find((a) => a.code === "monter")!.volume).toBe(janvier.livrees * NOVA_CAPACITE.operateurs.heuresParEnceinte);
+  });
+});
+
+/**
+ * UNE SEULE NOVA DANS LES BUDGETS DU SEMESTRE (des ventes aux achats, équilibrer la trésorerie) : sans
+ * stock, les budgets opérationnels refont au centime le budget de trésorerie du chapitre « Le budget de
+ * trésorerie » ; les ventes prévues après juin sont les livraisons de l'exercice ; le bilan d'ouverture
+ * des états prévisionnels est celui de la création ; le relevé de janvier du suivi est le compte
+ * courant de l'exercice.
+ */
+describe("une seule NOVA, des budgets opérationnels aux états prévisionnels", () => {
+  it("sans stock, les budgets opérationnels retombent sur le budget de trésorerie, mois par mois", () => {
+    const sansStock = tresorerieAvecLeStock(NOVA_GESTION, SANS_STOCK);
+    const budget = budgetDeTresorerie(NOVA_GESTION);
+    expect(sansStock.mois).toEqual(budget.mois);
+    expect(sansStock.fin).toEqual(budget.fin);
+    expect(VENTES_PREVUES_APRES_JUIN).toEqual([LIVRAISONS_DU_MOIS[6], LIVRAISONS_DU_MOIS[7]]);
+  });
+
+  it("le bilan d'ouverture est la création : l'apport et le prêt font la ligne TTC, le placement et la trésorerie de départ", () => {
+    const o = bilanDOuverture(NOVA_GESTION);
+    expect(o.passif.capital + o.passif.emprunt).toBe(EQUIPEMENT.ttc + PLACEMENT.montant + NOVA_GESTION.semestre.tresorerieDeDepart);
+    expect(o.actif.ligne + o.actif.tvaDeLaLigne).toBe(EQUIPEMENT.ttc);
+  });
+
+  it("le relevé de janvier du suivi est le compte courant de l'exercice, 58 959,27 €", () => {
+    expect(realiseDuPlan(NOVA_GESTION).mois[0]!.realise).toBe(58_959.27);
   });
 });

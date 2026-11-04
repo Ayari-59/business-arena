@@ -1015,5 +1015,8 @@ export const LE_BUDGET_FLEXIBLE: Chapitre = partieDuChapitre(
     accroche: "Le centre de NOVA tourne plus que prévu : le budget flexible, l'écart sur activité, puis le standard qu'on retient et les écarts qui méritent qu'on s'y arrête.",
     prerequis: ["le-cout-preetabli-et-les-budgets"],
     ouverture: undefined,
+    // Pas de BTS CG P5 pour la suite : le référentiel du BTS exclut l'étude du budget flexible et la
+    // décomposition des charges indirectes en sous-écarts (5.3.2, limites), qui en sont le cœur.
+    blocs: LE_COUT_PREETABLI_ET_LES_BUDGETS_ENTIER.blocs.filter((b) => !b.startsWith("BTS CG P5 ")),
   },
 );
