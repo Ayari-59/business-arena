@@ -142,6 +142,9 @@ import { LES_JEUX_DU_PRINTEMPS } from "./par-chapitre/les-jeux-du-printemps";
 import { LA_REMISE_DE_SONORA } from "./par-chapitre/la-remise-de-sonora";
 import { SI_LE_FOURNISSEUR_FERMAIT_EN_MAI } from "./par-chapitre/si-le-fournisseur-fermait-en-mai";
 import { UN_BANC_PLUS_CHER } from "./par-chapitre/un-banc-plus-cher";
+import { LA_HAUSSE_AVANCEE_EN_JUILLET } from "./par-chapitre/la-hausse-avancee-en-juillet";
+import { LE_CONCURRENT_LANCE_UNE_NOMADE } from "./par-chapitre/le-concurrent-lance-une-nomade";
+import { LES_INDICATEURS_QUE_DEMANDE_CAMPUSTECH } from "./par-chapitre/les-indicateurs-que-demande-campustech";
 export type { Situation } from "./types";
 
 /**
@@ -299,6 +302,9 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LA_REMISE_DE_SONORA,
   SI_LE_FOURNISSEUR_FERMAIT_EN_MAI,
   UN_BANC_PLUS_CHER,
+  LA_HAUSSE_AVANCEE_EN_JUILLET,
+  LE_CONCURRENT_LANCE_UNE_NOMADE,
+  LES_INDICATEURS_QUE_DEMANDE_CAMPUSTECH,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

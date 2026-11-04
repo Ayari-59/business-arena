@@ -340,6 +340,14 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "chapitres/equilibrer-la-tresorerie.ts",
   "situations/par-chapitre/si-le-fournisseur-fermait-en-mai.ts",
   "situations/par-chapitre/un-banc-plus-cher.ts",
+  // La DCG UE11 2025 : la masse salariale (monde/masse-salariale-de-nova.ts), le coût cible et les coûts
+  // cachés (monde/valeur-et-couts-caches.ts), les indicateurs de durabilité (monde/tableau-de-bord-durable.ts).
+  "chapitres/la-masse-salariale-previsionnelle.ts",
+  "situations/par-chapitre/la-hausse-avancee-en-juillet.ts",
+  "chapitres/cout-cible-et-couts-caches.ts",
+  "situations/par-chapitre/le-concurrent-lance-une-nomade.ts",
+  "chapitres/les-indicateurs-de-durabilite.ts",
+  "situations/par-chapitre/les-indicateurs-que-demande-campustech.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
