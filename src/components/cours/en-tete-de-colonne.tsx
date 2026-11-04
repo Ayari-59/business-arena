@@ -49,7 +49,7 @@ export const classeDEmpilement = (n: number, aCompleter = false) =>
   n >= (aCompleter ? COLONNES_POUR_EMPILER_A_COMPLETER : COLONNES_POUR_EMPILER) ? "tableau-empilable" : "";
 
 /** Les classes d'un intitulé de colonne : il passe à la ligne, les capitales espacées seulement sur grand écran. */
-export const CLASSES_D_EN_TETE = "px-1.5 py-1.5 text-right align-bottom text-xs font-semibold leading-tight text-slate-400 text-balance hyphens-auto sm:px-2 sm:uppercase sm:tracking-etiquette";
+export const CLASSES_D_EN_TETE = "px-1 py-1.5 text-right align-bottom text-xs font-semibold leading-tight text-slate-400 text-balance hyphens-auto sm:px-2 sm:uppercase sm:tracking-etiquette";
 
 /** L'intitulé : entier pour un lecteur d'écran et sur grand écran, court sur téléphone s'il en a une forme courte. */
 export function IntituleDeColonne({ intitule }: { intitule: string }) {

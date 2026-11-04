@@ -57,6 +57,8 @@ const tableauxQuiDebordent = (p: Page) =>
       .map((t) => ({
         titre: (t.closest("figure")?.querySelector("figcaption")?.textContent ?? t.querySelector("th")?.textContent ?? "").trim().slice(0, 60),
         ecart: t.scrollWidth - (t.parentElement?.clientWidth ?? t.scrollWidth),
+        // La cellule la plus large, pour savoir quoi raccourcir.
+        plusLarge: [...t.querySelectorAll("th, td")].reduce<Element | null>((a, c) => (!a || c.scrollWidth > a.scrollWidth ? c : a), null)?.textContent?.trim().slice(0, 40) ?? "",
       }))
       .filter((x) => x.ecart > 1),
   );
@@ -181,7 +183,7 @@ describe("le chapitre pilote, joué sans faute", () => {
           etape.type === "choix"
             ? etape.options(cas, avant)
             : etape.options(cas, etatAvant(chapitre, cas, indexDeLEtape(chapitre, etape.avantLEtape)), avant);
-        await page.getByRole("radio", { name: options.find((o) => o.juste)!.texte }).click();
+        await page.getByRole("radio", { name: options.find((o) => o.juste)!.texte, exact: true }).click();
       } else if (etape.type === "montants") {
         for (const c of etape.champs(cas, avant)) {
           if (!telephone) {
@@ -436,7 +438,7 @@ describe("le seuil de rentabilité, chapitre réservé", () => {
         for (const c of etape.champs(cas, etat)) await page.getByLabel(c.libelle, { exact: true }).fill(virgule(c.attendu));
         await page.getByRole("button", { name: "Vérifier", exact: true }).click();
       } else if (etape.type === "choix") {
-        await page.getByRole("radio", { name: etape.options(cas, etat).find((o) => o.juste)!.texte }).click();
+        await page.getByRole("radio", { name: etape.options(cas, etat).find((o) => o.juste)!.texte, exact: true }).click();
       } else if (etape.type === "curseur") {
         await page.getByLabel(`${etape.grandeur?.(cas).libelle ?? "Ventes du mois"}, au clavier`, { exact: true }).fill(String(etape.cible(cas).attendu));
         await page.getByRole("button", { name: "Valider cette position" }).click();
@@ -970,12 +972,12 @@ describe.each([
         }
         await page.getByRole("button", { name: "Vérifier", exact: true }).click();
       } else if (etape.type === "choix") {
-        await page.getByRole("radio", { name: etape.options(cas, avant).find((o) => o.juste)!.texte }).click();
+        await page.getByRole("radio", { name: etape.options(cas, avant).find((o) => o.juste)!.texte, exact: true }).click();
       } else if (etape.type === "comparaison") {
         // La comparaison de deux moments du journal (la suite du chapitre pilote, découpé par
         // l'audit pédagogique) : l'état à l'étape repère, puis l'état courant.
         const repere = etatAvant(chapitre, cas, indexDeLEtape(chapitre, etape.avantLEtape));
-        await page.getByRole("radio", { name: etape.options(cas, repere, avant).find((o) => o.juste)!.texte }).click();
+        await page.getByRole("radio", { name: etape.options(cas, repere, avant).find((o) => o.juste)!.texte, exact: true }).click();
       } else if (etape.type === "curseur") {
         const libelle = etape.grandeur?.(cas).libelle ?? "Ventes du mois";
         await page.getByLabel(`${libelle}, au clavier`, { exact: true }).fill(String(etape.cible(cas).attendu));

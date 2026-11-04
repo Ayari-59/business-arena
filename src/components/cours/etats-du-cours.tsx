@@ -1,5 +1,6 @@
 import { montantEcrit } from "@/pedagogy/cours/correcteur";
 import { CLASSES_D_EN_TETE, classeDEmpilement, IntituleDeColonne } from "./en-tete-de-colonne";
+import { TableauQuiSEmpile } from "./tableau-qui-s-empile";
 import { bilan, compteDeResultat, mouvements, tvaNette, type Ecriture, type LigneDEtat } from "@/pedagogy/cours/etats";
 import { intituleDe } from "@/pedagogy/cours/plan-comptable";
 import type { TableauDeDonnees, Vue } from "@/config/cours/types";
@@ -62,13 +63,16 @@ function Colonne({
   );
 }
 
-/** Un tableau de chiffres du cas (`TableauDeDonnees`) : défile en largeur sur un téléphone, la page non. */
+/** Une valeur qui porte un mot (« incendie, panne ») et non un chiffre : elle passe à la ligne, un chiffre non. */
+const estUnTexte = (v: string) => /\p{L}{4,}/u.test(v);
+
+/** Un tableau de chiffres du cas (`TableauDeDonnees`) : s'empile sur un téléphone plutôt que de défiler en largeur. */
 export function TableauDuCas({ tableau }: { tableau: TableauDeDonnees }) {
   return (
     <figure className="grid max-w-3xl gap-2" data-tableau-du-cas="">
       <figcaption className="text-sm font-semibold">{tableau.titre}</figcaption>
       <div className="overflow-x-auto">
-        <table role="table" className={`w-full text-sm ${classeDEmpilement(tableau.colonnes.length)}`}>
+        <TableauQuiSEmpile className="w-full text-sm" empiler={classeDEmpilement(tableau.colonnes.length) !== ""}>
           <thead role="rowgroup">
             <tr role="row" className="border-b border-slate-300">
               <th role="columnheader" scope="col" className="py-1.5 pr-3 text-left text-xs font-semibold uppercase tracking-etiquette text-slate-400">
@@ -88,14 +92,14 @@ export function TableauDuCas({ tableau }: { tableau: TableauDeDonnees }) {
                   {l.libelle}
                 </th>
                 {l.valeurs.map((v, i) => (
-                  <td role="cell" key={i} className="whitespace-nowrap px-1 py-1.5 text-right tabular-nums sm:px-2" data-colonne={tableau.colonnes[i]}>
+                  <td role="cell" key={i} className={`${estUnTexte(v) ? "min-w-20 hyphens-auto" : "whitespace-nowrap"} px-1 py-1.5 text-right tabular-nums sm:px-2`} data-colonne={tableau.colonnes[i]}>
                     {v}
                   </td>
                 ))}
               </tr>
             ))}
           </tbody>
-        </table>
+        </TableauQuiSEmpile>
       </div>
     </figure>
   );

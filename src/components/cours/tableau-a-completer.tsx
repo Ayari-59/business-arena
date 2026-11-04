@@ -1,6 +1,7 @@
 "use client";
 
 import { CLASSES_D_EN_TETE, classeDEmpilement, IntituleDeColonne } from "./en-tete-de-colonne";
+import { TableauQuiSEmpile } from "./tableau-qui-s-empile";
 import { useId, useState } from "react";
 import { bouton } from "@/components/bouton";
 import { changerDeSigne } from "@/pedagogy/cours/correcteur";
@@ -68,7 +69,7 @@ export function GrilleACompleter({
         </figcaption>
         {/* Le tableau défile seul, de côté : sur téléphone, la page ne déborde pas. */}
         <div className="max-w-full overflow-x-auto overscroll-x-contain" role="region" aria-labelledby={titre} tabIndex={0} data-defilement-du-tableau="">
-          <table role="table" className={`w-full border-collapse text-sm ${classeDEmpilement(grille.colonnes.length, true)}`}>
+          <TableauQuiSEmpile className="w-full border-collapse text-sm" empiler={classeDEmpilement(grille.colonnes.length, true) !== ""}>
             <thead role="rowgroup">
               <tr role="row" className="border-b border-slate-300">
                 <th role="columnheader" scope="col" className="sticky left-0 z-10 bg-[var(--papier)] py-1.5 pr-3 text-left">
@@ -103,7 +104,7 @@ export function GrilleACompleter({
                       <td role="cell" key={j} className="px-1 py-1 text-right" data-cellule={cle} data-colonne={grille.colonnes[j]}>
                         <span className="inline-flex items-center justify-end">
                           <input
-                            className={`champ w-20 min-w-0 px-1.5 py-1.5 text-right tabular-nums sm:w-28 sm:px-2 ${etat && !etat.juste ? "border-red-400" : ""}`}
+                            className={`champ w-20 min-w-0 px-2 py-1.5 text-right tabular-nums sm:w-28 ${etat && !etat.juste ? "border-red-400" : ""}`}
                             inputMode="decimal"
                             autoComplete="off"
                             aria-label={nom}
@@ -123,7 +124,7 @@ export function GrilleACompleter({
                 </tr>
               ))}
             </tbody>
-          </table>
+          </TableauQuiSEmpile>
         </div>
       </figure>
       {!fait && (
