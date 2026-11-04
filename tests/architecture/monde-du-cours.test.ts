@@ -327,6 +327,9 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "situations/quel-prix-pour-la-saison.ts",
   "situations/suivre-la-baisse.ts",
   // L'UE10 du DCG, comptabilité approfondie : écrite sur le monde du cours (monde/comptabilite-approfondie.ts).
+  // Piloter un centre (BTS CG P5, 5.5) : écrit sur le monde du cours (monde/centres-de-nova.ts).
+  "chapitres/piloter-un-centre.ts",
+  "situations/par-chapitre/le-sous-traitant-baisse-son-prix.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */

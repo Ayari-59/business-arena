@@ -33,12 +33,12 @@ const sources = readdirSync(TESTS)
   .map((n) => readFileSync(join(TESTS, n), "utf8"));
 
 describe("chaque cas dédié a son test", () => {
-  it("les 129 cas dédiés sont tous importés par un test du cours", () => {
+  it("les 130 cas dédiés sont tous importés par un test du cours", () => {
     const sans = CAS_PAR_CHAPITRE.filter((s) => {
       const f = fichierDuCas.get(s.code) ?? s.code;
       return !sources.some((src) => src.includes(`situations/par-chapitre/${f}"`));
     }).map((s) => s.code);
-    expect(CAS_PAR_CHAPITRE.length).toBe(129);
+    expect(CAS_PAR_CHAPITRE.length).toBe(130);
     expect(sans).toEqual([]);
   });
 });

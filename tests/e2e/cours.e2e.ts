@@ -831,6 +831,10 @@ describe.each([
   { code: "une-information-a-temps", entreprise: "nova" },
   { code: "une-information-a-temps", entreprise: "nova", telephone: true },
   { code: "le-compte-rendu-en-retard", entreprise: "nova" },
+  // Piloter un centre : prix de cession, coût cible, PGI et reporting (tableaux à compléter, curseur, laboratoire), puis son cas.
+  { code: "piloter-un-centre", entreprise: "nova" },
+  { code: "piloter-un-centre", entreprise: "nova", telephone: true },
+  { code: "le-sous-traitant-baisse-son-prix", entreprise: "nova", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se

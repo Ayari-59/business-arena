@@ -205,7 +205,9 @@ describe("les deux chapitres et leurs cas, à l'usine du monde du cours", () => 
       expect(ch.palier).toBe(4);
       expect(ch.entreprises?.codes).toEqual(["nova"]);
       expect(ch.entreprises!.pourquoi).toMatch(/^[a-zé].*\.$/);
-      expect(ch.blocs).toEqual(BLOCS.map(([b]) => b));
+      // Le BTS CG exclut les écarts sur marges et la composition des ventes : le chapitre des ventes ne le cite pas.
+      const blocs = ch === LES_ECARTS_SUR_VENTES_ET_MARGE ? BLOCS.filter(([, ref]) => ref !== "bts-cg") : BLOCS;
+      expect(ch.blocs).toEqual(blocs.map(([b]) => b));
       for (const [b, ref] of BLOCS) {
         expect(referentielDeCitation(b)?.code, b).toBe(ref);
         expect(blocOfficiel(b, ref), b).not.toBeNull();

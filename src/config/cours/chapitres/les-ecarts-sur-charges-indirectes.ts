@@ -240,6 +240,9 @@ export const LES_ECARTS_SUR_CHARGES_INDIRECTES: Chapitre = {
   code: "les-ecarts-sur-charges-indirectes",
   parcours: "controle-de-gestion",
   palier: 4,
+  // BTS CG P5 gardé : le coût standard de l'unité d'œuvre, l'écart global d'un centre et l'imputation
+  // rationnelle sont au programme du BTS (5.3.1, 5.2.4). La décomposition en écarts sur budget, sur
+  // activité et sur rendement, elle, va au-delà (5.3.2 l'exclut) : c'est le niveau du DCG.
   blocs: [
     "BTS CG P5 · Analyse et prévision de l'activité",
     "DCG UE11 · Contrôle de gestion",

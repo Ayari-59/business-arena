@@ -247,8 +247,9 @@ export const LES_ECARTS_SUR_VENTES_ET_MARGE: Chapitre = {
   code: "les-ecarts-sur-ventes-et-marge",
   parcours: "controle-de-gestion",
   palier: 4,
+  // Pas de BTS CG P5 : le BTS exclut le calcul des écarts sur marges (5.3.1) et l'écart de
+  // composition des ventes (5.3.2) ; ses écarts ne portent que sur les charges. Le DCG les demande.
   blocs: [
-    "BTS CG P5 · Analyse et prévision de l'activité",
     "DCG UE11 · Contrôle de gestion",
     "BUT GACO · Participer au pilotage interne de l'organisation",
     "BUT GEA · Concevoir des outils de contrôle de gestion",

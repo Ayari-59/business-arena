@@ -100,7 +100,12 @@ describe("les huit suites", () => {
     const s = chapitre(code);
     const p = chapitre(premiere);
     expect(s.prerequis).toEqual([premiere]);
-    expect([s.parcours, s.palier, s.blocs, s.libre, s.entreprises?.codes]).toEqual([p.parcours, p.palier, p.blocs, p.libre, p.entreprises?.codes]);
+    expect([s.parcours, s.palier, s.libre, s.entreprises?.codes]).toEqual([p.parcours, p.palier, p.libre, p.entreprises?.codes]);
+    // Les blocs de la suite sont ceux de la première partie, sauf un bloc que la suite n'enseigne pas :
+    // le budget flexible est exclu du BTS CG (5.3.2), sa première partie ne l'est pas.
+    expect(p.blocs, code).toEqual(expect.arrayContaining([...s.blocs]));
+    expect(s.blocs.length, code).toBeGreaterThan(0);
+    if (code !== "le-budget-flexible") expect(s.blocs, code).toEqual(p.blocs);
     expect(s.titre).not.toBe(p.titre);
     expect(s.objectifs.length).toBeGreaterThan(0);
     // Chaque partie s'ouvre par une lecture et finit par sa synthèse, qui finit par l'arène.
