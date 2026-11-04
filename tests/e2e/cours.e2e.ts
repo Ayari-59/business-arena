@@ -941,6 +941,16 @@ describe.each([
   { code: "le-tableau-des-flux-de-tresorerie", entreprise: "nova", telephone: true },
   { code: "la-seconde-ligne-payee-en-decembre", entreprise: "nova" },
   { code: "le-dividende-de-l-associe", entreprise: "nova", telephone: true },
+  // La DCG UE6 2.1, 3.4 et 3.3 : la valeur et le temps, le marché financier, les coûts de financement, des tableaux à compléter, un curseur et un laboratoire chacun, puis leurs cas.
+  { code: "la-valeur-et-le-temps", entreprise: "nova" },
+  { code: "la-valeur-et-le-temps", entreprise: "nova", telephone: true },
+  { code: "le-marche-financier", entreprise: "nova" },
+  { code: "le-marche-financier", entreprise: "nova", telephone: true },
+  { code: "arbitrer-les-couts-de-financement", entreprise: "nova" },
+  { code: "arbitrer-les-couts-de-financement", entreprise: "nova", telephone: true },
+  { code: "le-compte-a-terme-progressif", entreprise: "nova" },
+  { code: "l-obligation-verte-a-980", entreprise: "nova", telephone: true },
+  { code: "l-associe-qui-prefere-la-dette", entreprise: "nova" },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se

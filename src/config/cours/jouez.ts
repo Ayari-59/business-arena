@@ -1429,6 +1429,26 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     lieux: ["compte-de-resultat", "bilan"],
     chercher:
       "De combien la trésorerie a-t-elle varié sur le second tour ? Séparez ce qui vient de l'activité (le résultat, plus la dotation aux amortissements, moins la hausse du besoin en fonds de roulement), de l'investissement et du financement. L'activité a-t-elle payé seule vos investissements ?",
+  }),  "la-valeur-et-le-temps": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relisez le bilan et le budget de trésorerie.`,
+    lieux: ["bilan", "budget-de-tresorerie"],
+    chercher:
+      "Relevez votre trésorerie à la fin du second tour. Si vous la placiez trois ans à 3 %, intérêts capitalisés, que vaudrait-elle ? Et si un équipement de votre bilan était à remplacer dans cinq ans, quelle somme faudrait-il mettre de côté chaque année ?",
+  }),
+  "le-marche-financier": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relisez le bilan et le compte de résultat.`,
+    lieux: ["bilan", "compte-de-resultat"],
+    chercher:
+      "Si votre entreprise était cotée et versait la moitié de son résultat en dividendes, en hausse de 2 % par an, que vaudraient ses capitaux propres pour des actionnaires qui exigent 9 % ? Que deviendrait cette valeur si les taux montaient d'un point ?",
+  }),
+  "arbitrer-les-couts-de-financement": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relisez le bilan et le compte de résultat.`,
+    lieux: ["bilan", "compte-de-resultat"],
+    chercher:
+      "Relevez vos capitaux propres, vos dettes financières et vos charges financières. Quel taux votre dette vous coûte-t-elle, après impôt ? Avec des actionnaires qui exigent 9 %, quel est votre coût moyen pondéré du capital ?",
   }),
 };
 
