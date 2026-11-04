@@ -14,6 +14,10 @@ import {
   NAVIGATION_ARENE,
   NAVIGATION_ENSEIGNANT,
 } from "../../src/config/navigation";
+import { CHAPITRES } from "../../src/config/cours/registre";
+
+/** Un chapitre réservé du parcours MCO : il ne s'ouvre à l'élève qu'une fois libéré. */
+const CHAPITRE_MCO = CHAPITRES.find((c) => c.parcours === "mco" && !c.libre)!;
 
 /**
  * LES MENUS DES ESPACES SOUS COMPTE ET DE L'ARÈNE, dans un vrai navigateur.
@@ -159,6 +163,54 @@ describe("l'administration générale", () => {
     expect(await admin.getAttribute("href")).toBe("/admin");
     await ctx.close();
   }, 120_000);
+
+  it("l'admin attribue un parcours ; l'enseignant ne crée que sur lui, et libère chapitre par chapitre", async () => {
+    // L'ADMIN RESTREINT, L'ENSEIGNANT LIBÈRE (migration 0056 ; services/chapitres-de-la-classe.ts).
+    const ctxProf = await ordinateur();
+    const { orgId } = await enseignantSousLicence(ctxProf);
+    const ctxAdmin = await ordinateur();
+    await connecter(ctxAdmin, adminId);
+    const admin = await ctxAdmin.newPage();
+    await aller(admin, "/admin/cours");
+    const bloc = admin.locator(`[data-attributions-etablissement="${orgId}"]`);
+    if ((await bloc.locator("details[open]").count()) === 0) await bloc.locator("summary").first().click();
+    await bloc.locator('form').first().locator('input[name="parcours"][value="mco"]').check();
+    await bloc.getByRole("button", { name: "Enregistrer pour l'établissement" }).click();
+    await admin.waitForURL(/fait=etablissement/, { timeout: 60_000 });
+    expect(await base((c) => c.query("select parcours from cours_attributions_etablissement where organization_id = $1", [orgId])).then((r) => r.rows.map((x) => x.parcours))).toEqual(["mco"]);
+    await ctxAdmin.close();
+
+    const prof = await ctxProf.newPage();
+    await aller(prof, "/teacher/cours");
+    const options = await prof.locator('select[name="parcours"] option:not([disabled])').evaluateAll((os) => os.map((o) => (o as HTMLOptionElement).value));
+    expect(options).toEqual(["mco"]);
+    await prof.getByLabel("Nom de la classe").fill("MCO pas à pas");
+    await prof.getByLabel("Parcours du cours").selectOption("mco");
+    await prof.getByLabel(/Libérer chapitre par chapitre/).check();
+    await prof.getByRole("button", { name: "Créer la classe" }).click();
+    await prof.waitForURL(/\/teacher\/cours\/[0-9a-f-]{36}/, { timeout: 60_000 });
+    expect(await prof.locator("[data-liberation]").getAttribute("data-liberation")).toBe("chapitre");
+    const code = (await prof.locator("[data-code-de-classe]").innerText()).trim();
+    const pageDeLaClasse = new URL(prof.url()).pathname;
+
+    const ctxEleve = await ordinateur();
+    const eleve = await ctxEleve.newPage();
+    await aller(eleve, `/cours/rejoindre?code=${code}`);
+    await eleve.getByLabel("Prénom ou pseudonyme").fill("Inès");
+    await eleve.getByRole("button", { name: "Rejoindre la classe" }).click();
+    await eleve.waitForURL(/\/cours\?classe=rejointe/, { timeout: 60_000 });
+    await aller(eleve, `/cours/${CHAPITRE_MCO.code}`);
+    expect(await eleve.locator("[data-chapitre-ferme-a-l-eleve]").count(), "fermé avant d'être libéré").toBe(1);
+
+    await aller(prof, `${pageDeLaClasse}?chapitre=${CHAPITRE_MCO.code}`);
+    await prof.locator(`[data-liberer-le-chapitre="${CHAPITRE_MCO.code}"] button`).click();
+    await prof.waitForURL(/fait=libere/, { timeout: 60_000 });
+    await aller(eleve, `/cours/${CHAPITRE_MCO.code}`);
+    expect(await eleve.locator("[data-chapitre-ferme-a-l-eleve]").count(), "ouvert une fois libéré").toBe(0);
+    expect(await eleve.locator("main").innerText(), "le chapitre se joue").not.toContain("pas encore ouvert");
+    await ctxEleve.close();
+    await ctxProf.close();
+  }, 180_000);
 
   it("sur téléphone, rien ne déborde", async () => {
     const ctx = await telephone();

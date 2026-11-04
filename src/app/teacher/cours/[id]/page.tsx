@@ -17,12 +17,13 @@ import { NavigationEnseignant, Rubrique } from "@/components/en-tete-enseignant"
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { bouton, LIEN_A_L_ENCRE } from "@/components/bouton";
 import { Icone } from "@/components/icone";
-import { chapitreOuvertALaClasse, classeSansOffre, offreDuCoursDeLEnseignant } from "@/services/chapitres-de-la-classe";
+import { chapitreOuvertALaClasse, classeSansOffre, libereALaClasse, offreDuCoursDeLEnseignant, parcoursAttribue } from "@/services/chapitres-de-la-classe";
+import { chapitresLiberes, parcoursAttribues } from "@/services/attributions.service";
 import { SubmitButton } from "@/components/submit-button";
 import { ENTREPRISES } from "@/app/cours/entreprises";
 import { PARCOURS_PROPOSES_A_CHOISIR, titreDuParcours } from "@/config/cours/parcours-de-formation";
 import { lienDuDevis, LIBELLE_DU_DEVIS, OFFRES } from "@/config/tarifs";
-import { calculatriceAction, cloreClasseAction, parcoursAction } from "../actions";
+import { calculatriceAction, cloreClasseAction, libererChapitreAction, liberationAction, parcoursAction } from "../actions";
 
 export const metadata: Metadata = {
   title: "Une classe du cours",
@@ -38,6 +39,10 @@ const MESSAGES_DU_GESTE: Record<string, string> = {
   calculatrice: "La calculatrice est rendue à vos élèves.",
   "sans-calculatrice": "La calculatrice est retirée à vos élèves.",
   parcours: "Le parcours de la classe est enregistré.",
+  libere: "Le chapitre est libéré : vos élèves peuvent l'ouvrir.",
+  referme: "Le chapitre est refermé à vos élèves.",
+  "tout-libere": "Tous les chapitres que votre offre permet sont ouverts à vos élèves.",
+  "chapitre-par-chapitre": "Vous libérez maintenant les chapitres un par un.",
 };
 
 /** Une case de la frise d'un élève : l'état d'une étape, en couleur et en mots. */
@@ -68,13 +73,16 @@ async function ClasseDuCoursPage({
   const session = await getSession();
   if (!session) redirect(await connexionPourLaPageDemandee());
   const choisi = chapitreParCode(demande ?? "") ?? CHAPITRES[0]!;
-  const [lu, staff, offre] = await Promise.all([
+  const [lu, staff, offre, attribues] = await Promise.all([
     /^[0-9a-f-]{36}$/.test(id) ? classeDeLEnseignant(session.userId, id, choisi.code) : null,
     getStaffContext(session.userId),
     offreDuCoursDeLEnseignant(session.userId),
+    parcoursAttribues(session.userId),
   ]);
   if (!lu) notFound();
   const { classe, progressions } = lu;
+  // LIBÉRER CHAPITRE PAR CHAPITRE (migration 0056) : les chapitres que l'enseignant a ouverts.
+  const liberes = classe.liberation === "chapitre" ? await chapitresLiberes(classe.id) : new Set<string>();
   // Une classe qui joue une seule entreprise voit le chapitre tel qu'il s'y joue : ses
   // étapes dans l'ordre et le nombre de cette entreprise (celle du chapitre, s'il ne vaut
   // pas pour l'entreprise imposée).
@@ -92,7 +100,9 @@ async function ClasseDuCoursPage({
   const close = classe.closeLe !== null;
   // CE QUE LA CLASSE OUVRE À SES ÉLÈVES (audit UX du 29 octobre 2026, P1-1) : un cadenas sur
   // chaque chapitre qui leur restera fermé, la règle de l'élève (services/chapitres-de-la-classe.ts).
-  const ouvert = (c: (typeof CHAPITRES)[number]) => chapitreOuvertALaClasse(offre, classe, c);
+  // L'offre et les parcours attribués par l'admin d'abord, puis la libération de la classe.
+  const permis = (c: (typeof CHAPITRES)[number]) => chapitreOuvertALaClasse(offre, classe, c, attribues);
+  const ouvert = (c: (typeof CHAPITRES)[number]) => permis(c) && libereALaClasse(classe.liberation, liberes, c);
   // Les chapitres proposés, et ceux du parcours de la classe même s'il a été retiré depuis
   // (config/formations-proposees.ts) : une classe garde ce qu'elle avait.
   const montres = CHAPITRES.filter((c) => chapitrePropose(c) || c.parcours === classe.parcours);
@@ -164,7 +174,7 @@ async function ClasseDuCoursPage({
                   </option>
                   {/* Les parcours du registre, puis les parcours de formation (le BUT), qui regroupent
                       des chapitres d'autres parcours (config/cours/parcours-de-formation.ts). */}
-                  {PARCOURS_PROPOSES_A_CHOISIR.map((p) => (
+                  {PARCOURS_PROPOSES_A_CHOISIR.filter((p) => parcoursAttribue(attribues, p.code)).map((p) => (
                     <option key={p.code} value={p.code}>
                       {p.titre}
                     </option>
@@ -196,6 +206,36 @@ async function ClasseDuCoursPage({
           <form action={calculatriceAction.bind(null, classe.id, classe.sansCalculatrice)}>
             <SubmitButton pendingLabel="Enregistrement…" className={bouton({ variante: "secondaire", taille: "s" })}>
               {classe.sansCalculatrice ? "Rendre la calculatrice" : "Retirer la calculatrice (calcul mental)"}
+            </SubmitButton>
+          </form>
+        </section>
+
+        {/* LA LIBÉRATION DES CHAPITRES (décision du propriétaire, novembre 2026 ; migration 0056) :
+            tout ouvrir, ou libérer chapitre par chapitre ; le chapitre suivi se libère ici. */}
+        <section id="liberation" className="carte scroll-mt-24 grid gap-3 p-5" data-liberation={classe.liberation}>
+          <h2 className="text-base font-semibold text-slate-100">Chapitres ouverts aux élèves</h2>
+          <p className="text-sm text-slate-300">
+            {classe.liberation === "tout"
+              ? "Tout est ouvert : vos élèves voient tous les chapitres que votre offre permet."
+              : `Vous libérez chapitre par chapitre : ${compter(montres.filter((c) => !c.libre && liberes.has(c.code)).length, "chapitre libéré", "chapitres libérés")}, en plus du chapitre libre.`}
+          </p>
+          {classe.liberation === "chapitre" && !chapitre.libre ? (
+            permis(choisi) ? (
+              <form action={libererChapitreAction.bind(null, classe.id, choisi.code, !liberes.has(choisi.code))} data-liberer-le-chapitre={choisi.code}>
+                <SubmitButton
+                  pendingLabel="Enregistrement…"
+                  className={bouton({ variante: liberes.has(choisi.code) ? "secondaire" : "principal", taille: "s" })}
+                >
+                  {liberes.has(choisi.code) ? `Refermer « ${choisi.titre} »` : `Libérer « ${choisi.titre} »`}
+                </SubmitButton>
+              </form>
+            ) : (
+              <p className="text-sm text-slate-400">« {choisi.titre} » n&apos;est pas dans votre offre : il ne peut pas être libéré.</p>
+            )
+          ) : null}
+          <form action={liberationAction.bind(null, classe.id, classe.liberation === "tout" ? "chapitre" : "tout")} data-mode-de-liberation="">
+            <SubmitButton pendingLabel="Enregistrement…" className={bouton({ variante: "secondaire", taille: "s" })}>
+              {classe.liberation === "tout" ? "Libérer chapitre par chapitre" : "Tout libérer"}
             </SubmitButton>
           </form>
         </section>

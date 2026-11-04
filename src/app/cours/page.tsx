@@ -26,7 +26,8 @@ import { episodeParCode } from "@/pedagogy/episodes/registre";
 import { casDeSyntheseDuTheme } from "@/pedagogy/cours/suites";
 import { getGuestUserId } from "@/lib/guest";
 import { getSession } from "@/lib/session";
-import { classeDeLEleve, coursOuvert } from "@/services/cours.service";
+import { classeDeLEleve, coursOuvert, liberationDeLEleve } from "@/services/cours.service";
+import { libereALaClasse } from "@/services/chapitres-de-la-classe";
 import { ENTREPRISES } from "./entreprises";
 import { quitterClasseAction } from "./actions";
 
@@ -515,14 +516,24 @@ async function chapitresOuverts(
 ): Promise<Set<string>> {
   const ouverts = new Set(chapitres.filter((c) => c.libre).map((c) => c.code));
   if (!qui.enseignant && !qui.eleve) return ouverts;
-  const parCle = new Map<string, Promise<boolean>>();
+  // L'offre et les attributions se lisent une fois par parcours ; la libération de la classe
+  // (un élève dont l'enseignant libère chapitre par chapitre) se lit une fois, puis s'applique
+  // chapitre par chapitre (services/chapitres-de-la-classe.ts, `libereALaClasse`).
+  const lu = new Map<string, Promise<boolean>>();
+  const unePar = (cle: string, lire: () => Promise<boolean>) => {
+    if (!lu.has(cle)) lu.set(cle, lire());
+    return lu.get(cle)!;
+  };
+  const liberation = qui.eleve ? await liberationDeLEleve(qui.eleve) : null;
   await Promise.all(
     chapitres
       .filter((c) => !c.libre)
       .map(async (c) => {
         const cle = parcoursQuiOuvrent(c).join(",");
-        if (!parCle.has(cle)) parCle.set(cle, coursOuvert(qui, c));
-        if (await parCle.get(cle)!) ouverts.add(c.code);
+        // L'enseignant n'est pas tenu par la libération de ses classes.
+        if (qui.enseignant && (await unePar(`e:${cle}`, () => coursOuvert({ enseignant: qui.enseignant }, c)))) return void ouverts.add(c.code);
+        if (!qui.eleve || !(await unePar(`l:${cle}`, () => coursOuvert({ eleve: qui.eleve }, c, { sansLiberation: true })))) return;
+        if (!liberation || libereALaClasse(liberation.mode, liberation.liberes, c)) ouverts.add(c.code);
       }),
   );
   return ouverts;

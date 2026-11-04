@@ -465,6 +465,7 @@ export const NAVIGATION_ADMIN: readonly Pastille[] = [
   { code: "plateforme", href: "/admin", libelle: "Plateforme" },
   { code: "inscrits", href: "/admin/inscrits", libelle: "Inscrits" },
   { code: "offres", href: "/admin/offres", libelle: "Offres" },
+  { code: "cours", href: "/admin/cours", libelle: "Cours attribués" },
   { code: "cohortes", href: "/admin/cohortes", libelle: "Cohortes" },
   { code: "lti", href: "/admin/lti", libelle: "Moodle" },
   { code: "renater", href: "/admin/renater", libelle: "RENATER" },
