@@ -1374,6 +1374,20 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Si vous deviez financer un nouvel équipement sans toucher à la trésorerie du bilan, quelle part demanderiez-vous à la banque, et quelle part à des sources qui ne se remboursent qu'à la fin ? Que deviendrait la part des capitaux propres ?",
   }),
+  "optimiser-la-tresorerie": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le bilan.`,
+    lieux: ["bilan"],
+    chercher:
+      "Votre trésorerie est-elle positive ou négative à la fin du tour ? Si elle l'est, quelle part pourriez-vous placer sans manquer d'argent pour vos dettes du moment ? Si elle ne l'est pas, ce manque vient-il d'un achat ponctuel ou de clients qui paient tard ?",
+  }),
+  "l-affectation-du-resultat": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le compte de résultat et le bilan.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "Retrouvez le résultat du tour. Si c'était la fin de l'année, combien iraient en réserve légale, et combien pourriez-vous verser aux associés tout en gardant de quoi investir ? Que deviendraient vos capitaux propres et votre trésorerie ?",
+  }),
 };
 
 /**

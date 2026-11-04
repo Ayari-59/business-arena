@@ -42,6 +42,12 @@ import { anneeAvec, ficheDeNova, kitsDuTrimestre } from "../../src/config/cours/
 import { ELECTRO_COMPOSANTS, FACTURES_DE_COMPOSANTS_HT } from "../../src/config/cours/monde/exercice-de-nova";
 import { VENTES_LISSEES, correlationBrute, serieCVS } from "../../src/config/cours/monde/correlation-et-lissage";
 import { ajustementLineaire, coefficientsSaisonniers } from "../../src/config/cours/monde/prevision-des-ventes";
+import { tresorerieAOptimiser } from "../../src/config/cours/monde/tresorerie-a-optimiser";
+import { affecter, beneficeAAffecter } from "../../src/config/cours/monde/affectation-du-resultat";
+import { augmentationDeCapital } from "../../src/config/cours/monde/comptabilite-approfondie";
+import { bilanDuLycee } from "../../src/config/cours/monde/comptes-du-lycee";
+import { financer } from "../../src/config/cours/chapitres/financer-l-entreprise";
+import { factureDeCampusTech, fondsDeRoulement } from "../../src/config/cours/chapitres/fonds-de-roulement-et-tresorerie";
 
 /**
  * UNE SEULE NOVA DANS LE MONDE DU COURS (réconciliation d'octobre 2026). Les fiches qui disent la
@@ -455,5 +461,38 @@ describe("une seule NOVA, de la programmation de la production aux approvisionne
     expect(VENTES_LISSEES).toEqual(VENTES_AUX_PARTICULIERS);
     expect(correlationBrute().r).toBe(ajustementLineaire().r);
     expect(serieCVS().slice(0, 4).map((x) => x.coefficient)).toEqual(coefficientsSaisonniers("lineaire").coefficients);
+  });
+});
+
+/**
+ * UNE SEULE NOVA, DE LA TRÉSORERIE À L'AFFECTATION DU RÉSULTAT (Bac STMG gestion et finance, 3.2 et
+ * 3.3) : la trésorerie à optimiser est celle du chapitre « Fonds de roulement », le compte à terme
+ * celui de la fiche, la facture escomptée une facture de CampusTech ; le bénéfice affecté est celui du
+ * compte de résultat du lycée, sa réserve légale celle de « L'augmentation de capital », et la
+ * deuxième ligne celle de « Financer l'entreprise ».
+ */
+describe("une seule NOVA, de la trésorerie du 31 décembre à l'affectation du bénéfice", () => {
+  const f = exerciceDe("nova");
+
+  it("la trésorerie à optimiser est celle du bilan du lycée, et le compte à terme celui de la fiche", () => {
+    const k = tresorerieAOptimiser(f);
+    const b = fondsDeRoulement({ code: "nova" });
+    expect(k.tresorerie).toBe(b.tresorerie);
+    expect(k.banque).toBe(b.poste("banque"));
+    expect(k.capitalPlace).toBe(PLACEMENT.montant);
+    expect(k.facture.ttc).toBe(factureDeCampusTech(b));
+    expect(k.besoinDeLAnnee).toBe(financer({ code: "nova" }).montant);
+  });
+
+  it("le bénéfice affecté est celui du lycée, la réserve légale celle de l'augmentation de capital", () => {
+    const k = beneficeAAffecter(f);
+    expect(k.benefice).toBe(compteDuLycee(f).resultatNet);
+    expect(k.benefice).toBe(CLOTURE_DE_LA_FICHE.resultatNet);
+    expect(k.reserveLegale).toBe(augmentationDeCapital().reserveLegale);
+    expect(k.caf).toBe(financer({ code: "nova" }).caf);
+    // Sans dividende, l'affectation de « L'augmentation de capital » : tout reste dans les capitaux propres.
+    const sans = affecter(k, { dividendeParAction: 0, reservesFacultatives: 0 });
+    expect(sans.capitauxPropres).toBe(augmentationDeCapital().capitauxPropres);
+    expect(affecter(k, { dividendeParAction: 2, reservesFacultatives: 0 }).capitauxPropres).toBe(bilanDuLycee(f, { dividende: 30_000 }).capitauxPropres);
   });
 });

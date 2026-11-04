@@ -92,6 +92,8 @@ export const THEMES: readonly Theme[] = [
       "la-creation-de-valeur",
       "capacite-de-remboursement",
       "financer-autrement",
+      "optimiser-la-tresorerie",
+      "l-affectation-du-resultat",
     ],
     familles: ["finance"],
   },

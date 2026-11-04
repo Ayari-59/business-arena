@@ -374,6 +374,11 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "chapitres/financer-autrement.ts",
   "situations/par-chapitre/la-banque-teste-une-annee-difficile.ts",
   "situations/par-chapitre/deux-facons-de-rembourser.ts",
+  // Le Bac STMG gestion et finance, 3.2 et 3.3 : optimiser la trésorerie (monde/tresorerie-a-optimiser.ts) et l'affectation du résultat (monde/affectation-du-resultat.ts), et leurs cas.
+  "chapitres/optimiser-la-tresorerie.ts",
+  "chapitres/l-affectation-du-resultat.ts",
+  "situations/par-chapitre/la-banque-propose-l-escompte.ts",
+  "situations/par-chapitre/l-associe-qui-veut-plus.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
@@ -514,6 +519,10 @@ const NE_LISENT_PLUS_L_ANNEE_FIGEE: readonly string[] = [
   "chapitres/financer-autrement.ts",
   "situations/par-chapitre/la-banque-teste-une-annee-difficile.ts",
   "situations/par-chapitre/deux-facons-de-rembourser.ts",
+  "chapitres/optimiser-la-tresorerie.ts",
+  "chapitres/l-affectation-du-resultat.ts",
+  "situations/par-chapitre/la-banque-propose-l-escompte.ts",
+  "situations/par-chapitre/l-associe-qui-veut-plus.ts",
 ];
 
 /** Le premier chemin d'imports qui atteint un fichier donné, ou rien. */

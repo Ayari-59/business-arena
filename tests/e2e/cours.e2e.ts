@@ -911,6 +911,13 @@ describe.each([
   { code: "capacite-de-remboursement", entreprise: "nova", telephone: true },
   { code: "financer-autrement", entreprise: "nova" },
   { code: "financer-autrement", entreprise: "nova", telephone: true },
+  // Le Bac STMG gestion et finance, 3.2 et 3.3 : optimiser la trésorerie et l'affectation du résultat, un curseur et un laboratoire chacun, puis leurs cas.
+  { code: "optimiser-la-tresorerie", entreprise: "nova" },
+  { code: "optimiser-la-tresorerie", entreprise: "nova", telephone: true },
+  { code: "l-affectation-du-resultat", entreprise: "nova" },
+  { code: "l-affectation-du-resultat", entreprise: "nova", telephone: true },
+  { code: "la-banque-propose-l-escompte", entreprise: "nova" },
+  { code: "l-associe-qui-veut-plus", entreprise: "nova", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se

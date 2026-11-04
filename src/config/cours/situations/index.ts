@@ -156,6 +156,8 @@ import { LA_BALANCE_QUI_NE_TOMBE_PAS_JUSTE } from "./par-chapitre/la-balance-qui
 import { LE_RELEVE_DU_FOURNISSEUR } from "./par-chapitre/le-releve-du-fournisseur";
 import { LA_BANQUE_TESTE_UNE_ANNEE_DIFFICILE } from "./par-chapitre/la-banque-teste-une-annee-difficile";
 import { DEUX_FACONS_DE_REMBOURSER } from "./par-chapitre/deux-facons-de-rembourser";
+import { LA_BANQUE_PROPOSE_L_ESCOMPTE } from "./par-chapitre/la-banque-propose-l-escompte";
+import { L_ASSOCIE_QUI_VEUT_PLUS } from "./par-chapitre/l-associe-qui-veut-plus";
 export type { Situation } from "./types";
 
 /**
@@ -327,6 +329,8 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LE_RELEVE_DU_FOURNISSEUR,
   LA_BANQUE_TESTE_UNE_ANNEE_DIFFICILE,
   DEUX_FACONS_DE_REMBOURSER,
+  LA_BANQUE_PROPOSE_L_ESCOMPTE,
+  L_ASSOCIE_QUI_VEUT_PLUS,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */
