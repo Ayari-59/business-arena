@@ -1290,6 +1290,27 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Sous les états financiers, relevez les rebuts de chaque tour et leur coût. Quelle part des unités produites représentent-ils ? Le budget qualité en plus a-t-il réduit cette part assez pour se payer ?",
   }),
+  "la-masse-salariale-previsionnelle": (c) => ({
+    niveau: 3,
+    faire: `${partie(c, 3)} Au premier tour, mettez 102 dans « Salaires (marché = 100) » et 1 dans « Embauches », puis jouez trois tours.`,
+    lieux: ["feuille", "rh-du-tour", "compte-de-resultat"],
+    chercher:
+      "Relevez à chaque tour ce que le personnel a coûté au compte de résultat, et l'effectif de la ligne « RH · effectif ». Quelle part de la hausse vient des salaires, quelle part de l'embauche ? Retrouvez-vous un effet de niveau, de masse et de report ?",
+  }),
+  "cout-cible-et-couts-caches": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Jouez deux tours.`,
+    lieux: ["marche-du-tour", "analyse-des-couts", "compte-de-resultat"],
+    chercher:
+      "Au prix moyen du marché du tour, et avec la marge que vous voulez garder, quel coût par unité vous faudrait-il ? Comparez-le à votre coût dans l'analyse des coûts. Puis cherchez au compte de résultat une charge qui cache un dysfonctionnement : que coûte-t-elle vraiment ?",
+  }),
+  "les-indicateurs-de-durabilite": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Jouez trois tours.`,
+    lieux: ["synthese", "indicateurs", "rh-du-tour"],
+    chercher:
+      "Choisissez trois indicateurs du tour qui ne sont pas en euros : un de la synthèse ou des indicateurs du métier, et l'effectif. Rapportez-les à votre volume : lequel vous en dit le plus sur la durabilité de votre entreprise, et lequel pourrait tromper ?",
+  }),
 };
 
 /**

@@ -856,6 +856,16 @@ describe.each([
   { code: "piloter-la-qualite", entreprise: "nova", telephone: true },
   { code: "une-campagne-au-succes-incertain", entreprise: "nova" },
   { code: "des-aimants-moins-chers", entreprise: "nova", telephone: true },
+  // La DCG UE11 2025 : la masse salariale, le coût cible et les coûts cachés, les indicateurs de durabilité, et leurs cas.
+  { code: "la-masse-salariale-previsionnelle", entreprise: "nova" },
+  { code: "la-masse-salariale-previsionnelle", entreprise: "nova", telephone: true },
+  { code: "cout-cible-et-couts-caches", entreprise: "nova" },
+  { code: "cout-cible-et-couts-caches", entreprise: "nova", telephone: true },
+  { code: "les-indicateurs-de-durabilite", entreprise: "nova" },
+  { code: "les-indicateurs-de-durabilite", entreprise: "nova", telephone: true },
+  { code: "la-hausse-avancee-en-juillet", entreprise: "nova" },
+  { code: "le-concurrent-lance-une-nomade", entreprise: "nova", telephone: true },
+  { code: "les-indicateurs-que-demande-campustech", entreprise: "nova" },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se

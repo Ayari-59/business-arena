@@ -313,3 +313,62 @@ describe("une seule NOVA, du seuil de rentabilité au seuil probabilisé, et de 
     expect(defautsDePoids(NOVA_CAPACITE).nombre).toBeLessThan(q.defauts);
   });
 });
+
+/**
+ * UNE SEULE NOVA DANS LA DCG UE11 2025 (la masse salariale, le coût cible et les coûts cachés, les
+ * indicateurs de durabilité) : la masse salariale de N est celle de la paie et des comptes ; le départ
+ * et le cinquième opérateur de N + 1 sont ceux des chapitres de ressources humaines ; aucun salaire ne
+ * descend sous le SMIC ; la Go et son coût cible sont ceux de « Piloter un centre » ; les coûts cachés
+ * relisent le départ, les absences et la qualité de N + 1 ; le tableau de bord durable porte, mois par
+ * mois, les ventes et le résultat du tableau de bord.
+ */
+describe("une seule NOVA, de la paie au budget de la masse salariale, du coût cible aux coûts cachés, du tableau de bord à la durabilité", async () => {
+  const M = await import("../../src/config/cours/monde/masse-salariale-de-nova");
+  const V = await import("../../src/config/cours/monde/valeur-et-couts-caches");
+  const D = await import("../../src/config/cours/monde/tableau-de-bord-durable");
+  const RH = await import("../../src/config/cours/monde/ressources-humaines-de-nova");
+  const K = await import("../../src/config/cours/monde/capacite");
+
+  it("la masse de N est la paie de l'exercice et les comptes 641 et 645 ; le départ et la recrue sont ceux des ressources humaines", () => {
+    expect(M.EFFECTIF_DE_DECEMBRE_N * M.SALAIRE_DE_DECEMBRE_N).toBe(PAIE_DU_MOIS.brut);
+    expect(M.budgetDeLaMasse().chargeeDeN).toBe(RH.masseSalarialeDeN().masseDuCompte);
+    expect(M.DEPART.dernierMois).toBe(K.departDeLaFiche(RH.FICHE_RH).dernierMois);
+    expect(M.DEPART.arriveeDuRemplacant).toBe(RH.indicateursDeNPlus1().arrivee);
+    expect(M.ARRIVEE_DU_CINQUIEME).toBe(RH.recrutementDeNPlus1().arrivee);
+    expect(M.SALAIRE_D_EMBAUCHE).toBe(Math.ceil(RH.FICHE_RH.personnel.salaireDuMarche.nPlus1 * RH.FICHE_RH.personnel.seuilDeDemission));
+  });
+
+  it("aucun salaire du budget ni du réalisé ne descend sous le SMIC horaire", () => {
+    for (const h of [M.HYPOTHESES_DU_BUDGET, M.HYPOTHESES_DU_REALISE]) expect(M.plusBasSalaireDeLAnnee(h) / HEURES_LEGALES_PAR_MOIS).toBeGreaterThanOrEqual(SMIC_HORAIRE_BRUT);
+  });
+
+  it("le coût cible est celui de « Piloter un centre », et l'enquête retrouve le prix de la Go de la gamme", () => {
+    expect(V.coutCibleDeLaGo()).toEqual(coutCibleDeLaGo());
+    const go = GAMME_DE_NOVA.references.find((r) => r.code === "go")!;
+    expect(V.acceptabiliteDesPrix().prix).toBe(go.prix);
+    expect(V.valeurDeLaGoLancee().total).toBe(go.coutVariableUnitaire);
+  });
+
+  it("les coûts cachés relisent le départ, les absences et la qualité de N + 1, et la masse chargée des comptes", () => {
+    const k = V.coutsCachesDeNPlus1();
+    expect(k.parDysfonctionnement.rotation).toBe(K.departDUnSalarie(RH.FICHE_RH).coutDuDepart);
+    const q = K.coutsDeLaQualite(RH.FICHE_RH);
+    expect(k.parDysfonctionnement.nonQualite).toBe(Math.round((q.nonQualite + q.margePerdue) * 100) / 100);
+    expect(k.rattrapees + k.perdues).toBe(RH.indicateursDeNPlus1().heuresDAbsence);
+    expect(k.masseChargee).toBe(RH.masseSalarialeDeN().masseDuCompte);
+    expect(V.chmcv().production).toBe(K.anneeDeProduction(RH.FICHE_RH).production);
+  });
+
+  it("le tableau de bord durable porte, mois par mois, les ventes, le chiffre d'affaires et le résultat du tableau de bord", () => {
+    const bord = tableauDeBord(NOVA_GESTION);
+    const t = D.tableauDeBordDurable(NOVA_GESTION);
+    for (const [i, m] of t.mois.entries()) {
+      expect(m.quantite, m.nom).toBe(bord.mois[i]!.quantite);
+      expect(m.financier.chiffreDAffaires, m.nom).toBe(bord.mois[i]!.chiffreDAffaires);
+      expect(m.resultat, m.nom).toBe(bord.mois[i]!.resultat);
+      expect(m.heuresPayees, m.nom).toBe(Math.round(PAIE_DU_MOIS.effectif * HEURES_LEGALES_PAR_MOIS * 100) / 100);
+      expect(m.valeurs.delaiFournisseurs, m.nom).toBe(NOVA_GESTION.semestre.fournisseur.delai);
+    }
+    expect(t.semestre.resultat).toBe(bord.semestre.resultat);
+  });
+});
