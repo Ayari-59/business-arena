@@ -47,6 +47,20 @@ const tableauxDeLEtape = (p: Page) =>
   p.evaluate(() => [...document.querySelectorAll("[data-tableau-du-cas]")].filter((t) => !t.closest("[data-rappel-enonce]")).length);
 const debordement = (p: Page) => p.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
 
+/**
+ * LES TABLEAUX QUI DÉFILENT EN LARGEUR (observation du propriétaire, novembre 2026) : chaque tableau du
+ * cours tient dans son cadre, sans défilement de côté ; on rend le tableau et l'écart, en pixels.
+ */
+const tableauxQuiDebordent = (p: Page) =>
+  p.evaluate(() =>
+    [...document.querySelectorAll("main table")]
+      .map((t) => ({
+        titre: (t.closest("figure")?.querySelector("figcaption")?.textContent ?? t.querySelector("th")?.textContent ?? "").trim().slice(0, 60),
+        ecart: t.scrollWidth - (t.parentElement?.clientWidth ?? t.scrollWidth),
+      }))
+      .filter((x) => x.ecart > 1),
+  );
+
 async function nouvellePage(largeur = 1280, hauteur = 900): Promise<Page> {
   const ctx = await navigateur.newContext({ viewport: { width: largeur, height: hauteur }, locale: "fr-FR" });
   return ctx.newPage();
@@ -150,6 +164,8 @@ describe("le chapitre pilote, joué sans faute", () => {
     for (const [i, etape] of chapitre.etapes.entries()) {
       await expect.poll(() => page.locator("h1").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toBe(etape.titre);
       if (etape.tableau) expect(await tableauxDeLEtape(page)).toBe(1);
+      // Sur téléphone, aucun tableau de l'étape ne défile en largeur.
+      if (telephone) expect(await tableauxQuiDebordent(page), etape.id).toEqual([]);
       const avant = etatAvant(chapitre, cas, i);
       if (etape.type === "ecriture") {
         const lignes = enSaisie(etape.ecriture(cas));
@@ -920,6 +936,8 @@ describe.each([
     for (const [i, etape] of chapitre.etapes.entries()) {
       await expect.poll(() => page.locator("h1").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toBe(etape.titre);
       if (etape.tableau) expect(await tableauxDeLEtape(page)).toBe(1);
+      // Sur téléphone, aucun tableau de l'étape ne défile en largeur.
+      if (telephone) expect(await tableauxQuiDebordent(page), etape.id).toEqual([]);
       // Le rappel plié de l'énoncé, sur chaque étape notée d'un contenu qui s'ouvre sur un énoncé chiffré.
       const enonce = chapitre.etapes[0]!;
       expect(await page.locator("[data-rappel-enonce]").count(), etape.id).toBe(
