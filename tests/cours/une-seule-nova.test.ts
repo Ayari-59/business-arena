@@ -51,9 +51,13 @@ import { factureDeCampusTech, fondsDeRoulement } from "../../src/config/cours/ch
 import { INVESTISSEMENT_DE_LA_GAMME, structureDeNova } from "../../src/config/cours/monde/structure-financiere";
 import { B, FACTURE_DE_DECEMBRE, garantieSurSonora } from "../../src/config/cours/monde/financer-et-placer";
 import { CONDITIONS_DE_LA_BANQUE } from "../../src/config/cours/monde/equilibre-de-tresorerie";
-import { CONTRAT_DE_PRET, EXERCICE_DE_NOVA } from "../../src/config/cours/monde/exercice-de-nova";
 import { cloture } from "../../src/config/cours/monde/cloture";
+import { BANC, EMPRUNT_DE_LA_LIGNE, LIGNE_A_FINANCER, RESERVE_DE_LA_GAMME, TAUX_DE_L_IMPOT, fluxDeLEmprunt, planDeFinancementDeLaGamme } from "../../src/config/cours/monde/financement-de-la-gamme";
+import { PRET_BANCAIRE, remboursements } from "../../src/config/cours/monde/financement-du-lycee";
+import { fluxDuProjet } from "../../src/config/cours/monde/finance";
 import { PROJET_LIGNE_SEMI_AUTOMATIQUE } from "../../src/config/cours/monde/projets-et-financement";
+import { CONTRAT_DE_PRET, EXERCICE_DE_NOVA, IMPOT_SUR_LES_SOCIETES } from "../../src/config/cours/monde/exercice-de-nova";
+import { INVESTISSEMENT_ENVISAGE } from "../../src/config/cours/monde/nova-gestion";
 
 /**
  * UNE SEULE NOVA DANS LE MONDE DU COURS (réconciliation d'octobre 2026). Les fiches qui disent la
@@ -532,5 +536,37 @@ describe("une seule NOVA, du bilan financier à la trésorerie de N+1", () => {
     expect(FACTURE_DE_DECEMBRE.echeance).toEqual({ jour: 10, mois: 3, exercice: 1 });
     expect(garantieSurSonora().perteHt).toBe(Math.round(28_025 * (1 - EXERCICE_DE_NOVA.suites.sonora.partEncaissee) * 100) / 100);
     expect(INVESTISSEMENT_DE_LA_GAMME).toBe(PROJET_LIGNE_SEMI_AUTOMATIQUE.actifs.reduce((t, a) => t + a.montant, 0));
+  });
+});
+
+/**
+ * UNE SEULE NOVA DANS LE FINANCEMENT DE LA GAMME (BTS CG P6, emprunt ou crédit-bail, le plan de
+ * financement) : la ligne à financer est la ligne semi-automatique du projet B, la banque prête au
+ * taux du prêt de l'exercice, l'impôt est le taux normal de la fiche, la réserve est le compte à
+ * terme ; le tableau de l'emprunt est celui du prêt bancaire de « Financer autrement » ; la CAF du
+ * plan sans emprunt et ses variations de BFR sont les flux de la gamme du chapitre « La VAN » ; le
+ * banc du cas est celui du contrôle de gestion.
+ */
+describe("une seule NOVA, du choix du projet au plan de financement", () => {
+  it("la ligne, la banque, l'impôt et la réserve sont ceux des autres chapitres de NOVA", () => {
+    expect(LIGNE_A_FINANCER).toBe(PROJET_LIGNE_SEMI_AUTOMATIQUE.actifs[0]);
+    expect([LIGNE_A_FINANCER.montant, LIGNE_A_FINANCER.dureeDAmortissement]).toEqual([150_000, 6]);
+    expect(EMPRUNT_DE_LA_LIGNE.taux).toBe(CONTRAT_DE_PRET.tauxAnnuel);
+    expect(TAUX_DE_L_IMPOT).toBe(IMPOT_SUR_LES_SOCIETES.tauxNormal);
+    expect(RESERVE_DE_LA_GAMME).toBe(PLACEMENT.montant);
+    expect([BANC.montant, BANC.dureeDAmortissement * 12]).toEqual([INVESTISSEMENT_ENVISAGE.montantHt, INVESTISSEMENT_ENVISAGE.dureeDAmortissementMois]);
+  });
+
+  it("le tableau de l'emprunt de la ligne est celui du prêt bancaire de « Financer autrement »", () => {
+    const pret = remboursements(PRET_BANCAIRE(EXERCICE_DE_NOVA), LIGNE_A_FINANCER.montant);
+    expect(fluxDeLEmprunt(EMPRUNT_DE_LA_LIGNE).annees.map((a) => [a.interets, a.amortissement, a.annuite])).toEqual(pret.map((r) => [r.interets, r.capital, r.total]));
+  });
+
+  it("sans emprunt, la CAF du plan est le flux d'exploitation de la gamme, et ses variations de BFR celles du projet", () => {
+    const projet = fluxDuProjet(PROJET_LIGNE_SEMI_AUTOMATIQUE);
+    const plan = planDeFinancementDeLaGamme();
+    expect(plan.annees.map((a) => a.caf)).toEqual(projet.annees.map((a) => a.fluxDExploitation));
+    expect(plan.annees.map((a) => a.augmentationDuBfr - a.diminutionDuBfr)).toEqual(projet.variationsDuBfr.slice(0, plan.annees.length));
+    expect(plan.annees[0]!.investissements).toBe(projet.investissement);
   });
 });

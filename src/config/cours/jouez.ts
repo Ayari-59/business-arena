@@ -1402,6 +1402,20 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Votre trésorerie manque-t-elle à un moment, ou dort-elle ? S'il faut financer un creux, chiffrez un crédit d'un mois et l'escompte d'une créance client, en euros et en taux réel. S'il faut placer, quelle part pourriez-vous bloquer sans risquer d'en avoir besoin ?",
   }),
+  "emprunt-ou-credit-bail": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez le compte de résultat.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "Relevez les charges financières et l'impôt du tour. De combien l'impôt baisserait-il si les charges financières montaient de 1 000 € ? Qu'en déduisez-vous du coût d'un emprunt après impôt ? Si un équipement du bilan était loué en crédit-bail, quelle charge le remplacerait au compte de résultat ?",
+  }),
+  "le-plan-de-financement": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez le budget de trésorerie et le bilan.`,
+    lieux: ["budget-de-tresorerie", "bilan"],
+    chercher:
+      "Recalculez la CAF du second tour : le résultat net plus les dotations aux amortissements. Si vous deviez acheter un équipement au tour suivant, la CAF, la trésorerie du bilan et un emprunt suffiraient-ils à le payer, remboursements compris ?",
+  }),
 };
 
 /**

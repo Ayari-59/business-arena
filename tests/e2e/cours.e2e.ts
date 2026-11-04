@@ -927,6 +927,13 @@ describe.each([
   { code: "financer-et-placer-la-tresorerie", entreprise: "nova", telephone: true },
   { code: "un-dividende-sous-condition", entreprise: "nova" },
   { code: "une-chaine-nouvelle-a-60-jours", entreprise: "nova", telephone: true },
+  // Le BTS CG P6 6.5.2 : emprunt ou crédit-bail et le plan de financement, des tableaux à compléter, un curseur et un laboratoire chacun, puis leurs cas.
+  { code: "emprunt-ou-credit-bail", entreprise: "nova" },
+  { code: "emprunt-ou-credit-bail", entreprise: "nova", telephone: true },
+  { code: "le-plan-de-financement", entreprise: "nova" },
+  { code: "le-plan-de-financement", entreprise: "nova", telephone: true },
+  { code: "le-banc-en-credit-bail", entreprise: "nova" },
+  { code: "la-banque-plafonne-son-pret", entreprise: "nova", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se
