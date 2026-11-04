@@ -406,6 +406,11 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "chapitres/les-acteurs-et-les-modes-de-financement.ts",
   "situations/par-chapitre/campustech-double-sa-commande.ts",
   "situations/par-chapitre/la-banque-demande-une-garantie.ts",
+  // Le DCG UE6 (programme 2025), 1.1, 1.6, 1.7 et 2.4 : le diagnostic sur trois exercices (monde/diagnostic-de-nova.ts) et l'investissement durable (monde/investissement-durable.ts), et leurs cas.
+  "chapitres/le-diagnostic-financier-et-extra-financier.ts",
+  "chapitres/evaluer-un-investissement-durable.ts",
+  "situations/par-chapitre/le-pret-indexe-sur-la-durabilite.ts",
+  "situations/par-chapitre/deux-devis-pour-chauffer-l-atelier.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
@@ -568,6 +573,10 @@ const NE_LISENT_PLUS_L_ANNEE_FIGEE: readonly string[] = [
   "chapitres/les-acteurs-et-les-modes-de-financement.ts",
   "situations/par-chapitre/campustech-double-sa-commande.ts",
   "situations/par-chapitre/la-banque-demande-une-garantie.ts",
+  "chapitres/le-diagnostic-financier-et-extra-financier.ts",
+  "chapitres/evaluer-un-investissement-durable.ts",
+  "situations/par-chapitre/le-pret-indexe-sur-la-durabilite.ts",
+  "situations/par-chapitre/deux-devis-pour-chauffer-l-atelier.ts",
 ];
 
 /** Le premier chemin d'imports qui atteint un fichier donné, ou rien. */

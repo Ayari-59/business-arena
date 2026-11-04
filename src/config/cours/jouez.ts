@@ -1464,6 +1464,20 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Relevez vos capitaux propres et vos dettes financières. Si vous deviez financer un nouvel équipement, qui le paierait : votre trésorerie, un emprunt, ou un apport des associés ? Que vous engagez-vous à rendre avec un emprunt, et que cédez-vous avec un apport ?",
   }),
+  "le-diagnostic-financier-et-extra-financier": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez trois tours, puis relisez le compte de résultat et le bilan de chacun.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "Calculez, tour par tour, la croissance du chiffre d'affaires, le taux de marge brute (EBE ÷ chiffre d'affaires), l'endettement et le délai des clients. Qu'est-ce qui s'améliore, qu'est-ce qui se dégrade ? Rédigez en trois lignes la conclusion que vous rendriez à votre banque.",
+  }),
+  "evaluer-un-investissement-durable": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Avant d'investir, notez l'investissement envisagé, puis jouez deux tours.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "Si l'énergie de votre activité coûtait 50 % de plus, de combien votre résultat baisserait-il ? Un équipement plus sobre, plus cher à l'achat, se rembourserait-il sur sa durée ? Quels critères non financiers feriez-vous valoir pour le choisir ?",
+  }),
 };
 
 /**

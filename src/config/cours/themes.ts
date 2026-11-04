@@ -105,6 +105,8 @@ export const THEMES: readonly Theme[] = [
       "arbitrer-les-couts-de-financement",
       "le-bfr-d-exploitation-normatif",
       "les-acteurs-et-les-modes-de-financement",
+      "le-diagnostic-financier-et-extra-financier",
+      "evaluer-un-investissement-durable",
     ],
     familles: ["finance"],
   },

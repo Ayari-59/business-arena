@@ -32,8 +32,9 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * solde (production, consommations en provenance des tiers, valeur ajoutée, excédent brut
  * d'exploitation, résultat d'exploitation, résultat financier, résultat courant avant impôt, résultat
  * net), la capacité d'autofinancement par ses deux méthodes, le partage de la valeur ajoutée, puis,
- * en expert, les retraitements de l'analyste (crédit-bail, personnel extérieur) et le coût d'un
- * emprunt gardé pour être placé à un taux plus bas.
+ * en expert, les retraitements de l'analyste (crédit-bail, personnel extérieur, participation des
+ * salariés, les trois que le programme du DCG UE6 retient, au niveau des SIG et de la CAF) et le coût
+ * d'un emprunt gardé pour être placé à un taux plus bas.
  *
  * LES TROIS TEMPS (demande du propriétaire, octobre 2026 : le niveau d'arrivée est celui du DCG) :
  *   · guidé : intro, production-et-consommations, valeur-ajoutee, ebe, caf (la formule au repère ou
@@ -48,8 +49,9 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *   · autonome : jusqu-au-resultat, caf-et-tresorerie, partage-de-la-valeur-ajoutee (ni formule ni
  *     chiffres donnés ; le calcul de la correction montre le chemin) ;
  *   · expert : les-retraitements (une variante chiffrée, le tableau à compléter avec et sans
- *     retraitements), pourquoi-retraiter (une critique), emprunter-pour-placer (quatre montants
- *     enchaînés) et garder-l-emprunt (un jugement).
+ *     retraitements), pourquoi-retraiter (une critique), la-participation (une seconde variante : la
+ *     participation des salariés rangée avec le personnel, aux soldes et à la CAF),
+ *     emprunter-pour-placer (quatre montants enchaînés) et garder-l-emprunt (un jugement).
  *
  * L'EXPORT DE COMPATIBILITÉ `soldesDeGestion(c)` lit encore l'année figée de l'arène
  * (monde/annee-du-cours.ts et `c.annee`), dans toutes les entreprises : « L'effectif et la masse
@@ -79,6 +81,14 @@ export const BAISSE_DU_DEFI = 10_000;
  */
 export const REDEVANCES_DE_CREDIT_BAIL = 13_000;
 export const SALARIES_REMPLACES_PAR_L_INTERIM = 1;
+
+/**
+ * LA PARTICIPATION DES SALARIÉS, hypothèse du cours : la même année de NOVA, le dirigeant signe un
+ * accord de participation volontaire (NOVA, moins de 50 salariés, n'y est pas tenue) qui attribue
+ * 8 000 € à l'équipe sur l'exercice (compte 691, dette envers les salariés au 4284). La participation
+ * est déductible : l'impôt est recalculé.
+ */
+export const PARTICIPATION_VOLONTAIRE = 8_000;
 
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
@@ -185,6 +195,25 @@ export function novaAutrementOrganisee(f: FicheDeLExercice) {
   return { ...a, interim, dotationEquivalente: dotation, partInterets: auCentime(REDEVANCES_DE_CREDIT_BAIL - dotation), placementGarde, retraite };
 }
 
+/**
+ * La même année de NOVA avec l'accord de participation : les soldes du plan comptable (la participation
+ * sous le résultat courant), puis retraités (la participation avec les charges de personnel), et la
+ * CAF par les deux méthodes, avec et sans retraitement.
+ */
+export function novaAvecLaParticipation(f: FicheDeLExercice) {
+  const k = cloture(f);
+  const a = avecLImpot(
+    f,
+    passer(avantImpot(k.soldes, k.impot.impot), [
+      { compte: "691", debit: PARTICIPATION_VOLONTAIRE, credit: 0 },
+      { compte: "4284", debit: 0, credit: PARTICIPATION_VOLONTAIRE },
+    ]),
+  );
+  const retraite = soldesIntermediaires(a.soldes, { participationEnPersonnel: true });
+  const cafRetraitee = capaciteDAutofinancement(a.soldes, { participationEnPersonnel: true });
+  return { ...a, retraite, cafRetraitee };
+}
+
 /** Les soldes de l'exercice et tout ce que le chapitre et son cas demandent. */
 export function soldesDeNova(c: Pick<Cas, "code">) {
   const f = ficheDe(c);
@@ -258,6 +287,7 @@ export function soldesDeNova(c: Pick<Cas, "code">) {
     louee,
     degressif,
     variante: novaAutrementOrganisee(f),
+    participation: novaAvecLaParticipation(f),
   };
 }
 
@@ -342,7 +372,7 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
     "Calculer la production, les consommations en provenance des tiers et la valeur ajoutée",
     "Calculer l'excédent brut d'exploitation, puis descendre jusqu'au résultat net",
     "Calculer la capacité d'autofinancement par ses deux méthodes, et la distinguer de la trésorerie",
-    "Lire le partage de la valeur ajoutée et retraiter le crédit-bail et le personnel extérieur",
+    "Lire le partage de la valeur ajoutée et retraiter le crédit-bail, le personnel extérieur et la participation",
     "Dire ce qu'un choix de financement, d'amortissement ou de location fait à chaque solde",
   ],
   libre: false,
@@ -865,6 +895,45 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
       ],
     },
     {
+      id: "la-participation",
+      objectifs: [3],
+      type: "montants",
+      titre: "La participation des salariés, retraitée",
+      notions: ["ebitda_margin", "payroll"],
+      question: (c) => {
+        const x = soldesDeNova(c);
+        return `Seconde variante : la même année, ${x.entreprise} signe un accord de participation volontaire qui attribue ${eur(PARTICIPATION_VOLONTAIRE)} à l'équipe (compte 691). Le plan comptable la place sous le résultat courant, avant l'impôt, qu'elle fait baisser. L'analyste la range avec les charges de personnel : c'est une rémunération du travail. Calculez, impôt recalculé, le résultat net de la variante, puis l'EBE et le résultat courant avant impôt retraités, et la CAF par les deux méthodes, la soustractive partant de l'EBE retraité.`;
+      },
+      champs: (c) => {
+        const x = soldesDeNova(c);
+        const p = x.participation;
+        const r = p.retraite;
+        return [
+          {
+            libelle: "Résultat net de la variante",
+            attendu: p.sig.resultatNet,
+            calcul: `${eur(p.sig.resultatCourantAvantImpot)} de résultat courant − ${eur(PARTICIPATION_VOLONTAIRE)} de participation − ${eur(p.impot)} d'impôt recalculé = ${eur(p.sig.resultatNet)}`,
+          },
+          { libelle: "EBE retraité", attendu: r.excedentBrutDExploitation, calcul: `${eur(p.sig.excedentBrutDExploitation)} − ${eur(PARTICIPATION_VOLONTAIRE)} = ${eur(r.excedentBrutDExploitation)}` },
+          { libelle: "Résultat courant avant impôt retraité", attendu: r.resultatCourantAvantImpot, calcul: `${eur(p.sig.resultatCourantAvantImpot)} − ${eur(PARTICIPATION_VOLONTAIRE)} = ${eur(r.resultatCourantAvantImpot)}` },
+          { libelle: "CAF, méthode additive", attendu: p.caf.additive, calcul: `${eur(p.sig.resultatNet)} + ${eur(p.caf.dotations)} de dotations = ${eur(p.caf.additive)}` },
+          {
+            libelle: "CAF soustractive, depuis l'EBE retraité",
+            attendu: p.cafRetraitee.soustractive,
+            calcul: `${eur(r.excedentBrutDExploitation)} + ${eur(x.interetsDuPlacement)} d'intérêts du placement − ${eur(r.chargesFinancieres)} de charges financières − ${eur(p.impot)} d'impôt = ${eur(p.cafRetraitee.soustractive)}`,
+          },
+        ];
+      },
+      explication: (c) => {
+        const x = soldesDeNova(c);
+        const p = x.participation;
+        return [
+          `Retraitée, la participation baisse l'EBE et le résultat courant de ${eur(PARTICIPATION_VOLONTAIRE)}, et ne se retranche plus à part : le résultat net, ${eur(p.sig.resultatNet)}, et la CAF, ${eur(p.caf.additive)}, ne changent pas. La méthode soustractive n'enlève plus la participation sous l'EBE, puisqu'elle y est déjà.`,
+          `L'accord coûte moins que ${eur(PARTICIPATION_VOLONTAIRE)} : l'impôt baisse de ${eur(auCentime(x.impot - p.impot))}. Rangée avec le personnel, la participation fait monter sa part de la valeur ajoutée : deux entreprises, l'une qui paie plus de salaires, l'autre qui verse une participation, se comparent ainsi sur la même base.`,
+        ];
+      },
+    },
+    {
       id: "emprunter-pour-placer",
       objectifs: [4],
       type: "montants",
@@ -949,7 +1018,7 @@ export const SOLDES_INTERMEDIAIRES: Chapitre = {
         return [
           `Vous avez lu l'exercice ${dE(x.entreprise)} étage par étage : ${eur(x.sig.valeurAjoutee)} de valeur ajoutée, ${eur(x.sig.excedentBrutDExploitation)} d'excédent brut d'exploitation, ${eur(x.sig.resultatDExploitation)} de résultat d'exploitation, ${eur(x.resultatNet)} de résultat net, et ${eur(x.caf.additive)} de capacité d'autofinancement, la même par les deux méthodes. Le personnel prend ${pct(x.partDuPersonnel)} de la valeur ajoutée.`,
           "Le curseur et le laboratoire l'ont montré : l'EBE ignore le financement, l'amortissement et les provisions, mais pas la location, qui est une consommation. Les dotations baissent le résultat et font monter la CAF par l'impôt économisé ; les intérêts baissent les deux.",
-          "Au niveau de l'examen, vous savez dresser le tableau des soldes intermédiaires de gestion sur des comptes régularisés, calculer la CAF par les deux méthodes et la distinguer de la trésorerie, lire le partage de la valeur ajoutée, retraiter le crédit-bail et le personnel extérieur, et chiffrer, impôt compris, ce que coûte un emprunt gardé pour être placé.",
+          "Au niveau de l'examen, vous savez dresser le tableau des soldes intermédiaires de gestion sur des comptes régularisés, calculer la CAF par les deux méthodes et la distinguer de la trésorerie, lire le partage de la valeur ajoutée, retraiter le crédit-bail, le personnel extérieur et la participation des salariés aux soldes comme à la CAF, et chiffrer, impôt compris, ce que coûte un emprunt gardé pour être placé.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
         ];
       },

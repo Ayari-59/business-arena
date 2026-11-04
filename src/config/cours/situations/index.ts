@@ -169,6 +169,8 @@ import { L_OBLIGATION_VERTE_A_980 } from "./par-chapitre/l-obligation-verte-a-98
 import { L_ASSOCIE_QUI_PREFERE_LA_DETTE } from "./par-chapitre/l-associe-qui-prefere-la-dette";
 import { CAMPUSTECH_DOUBLE_SA_COMMANDE } from "./par-chapitre/campustech-double-sa-commande";
 import { LA_BANQUE_DEMANDE_UNE_GARANTIE } from "./par-chapitre/la-banque-demande-une-garantie";
+import { LE_PRET_INDEXE_SUR_LA_DURABILITE } from "./par-chapitre/le-pret-indexe-sur-la-durabilite";
+import { DEUX_DEVIS_POUR_CHAUFFER_L_ATELIER } from "./par-chapitre/deux-devis-pour-chauffer-l-atelier";
 export type { Situation } from "./types";
 
 /**
@@ -353,6 +355,8 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   L_ASSOCIE_QUI_PREFERE_LA_DETTE,
   CAMPUSTECH_DOUBLE_SA_COMMANDE,
   LA_BANQUE_DEMANDE_UNE_GARANTIE,
+  LE_PRET_INDEXE_SUR_LA_DURABILITE,
+  DEUX_DEVIS_POUR_CHAUFFER_L_ATELIER,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

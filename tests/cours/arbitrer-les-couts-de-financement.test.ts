@@ -29,14 +29,16 @@ describe("arbitrer les coûts de financement : le chapitre", () => {
     gardesDeTexte(ch);
   });
 
-  it("est au registre, à la fin du programme de la comptabilité générale (palier 4), au thème de l'analyse financière, et cite la DCG UE6", () => {
+  it("est au registre, au programme de la comptabilité générale (palier 4), après le marché financier, au thème de l'analyse financière, et cite la DCG UE6", () => {
     expect(CHAPITRES).toContain(ch);
-    expect(CHAPITRES.at(-1)).toBe(ch);
+    expect(CHAPITRES[CHAPITRES.indexOf(ch) - 1]!.code).toBe("le-marche-financier");
     gardeDuProgramme(ch, PROGRAMME["comptabilite-generale"][4]!);
-    expect(PROGRAMME["comptabilite-generale"][4]!.at(-1)).toBe(ch.titre);
+    const p4 = PROGRAMME["comptabilite-generale"][4]!;
+    expect(p4[p4.indexOf(ch.titre) - 1]).toBe("Le marché financier : cours, taux et risque");
     expect([ch.parcours, ch.palier]).toEqual(["comptabilite-generale", 4]);
     expect(ch.blocs).toEqual(["DCG UE6 · Finance d'entreprise"]);
-    expect(THEMES.find((t) => t.code === "analyse-financiere")!.chapitres.at(-1)).toBe(ch.code);
+    const theme = THEMES.find((t) => t.code === "analyse-financiere")!.chapitres;
+    expect(theme[theme.indexOf(ch.code) - 1]).toBe("le-marche-financier");
     expect(ch.prerequis).toEqual(["la-valeur-et-le-temps", "emprunt-ou-credit-bail"]);
     for (const p of [...ch.prerequis!, ...ch.ensuite!]) expect(CHAPITRES.map((x) => x.code)).toContain(p);
     expect(ch.objectifs.length).toBeLessThanOrEqual(5);

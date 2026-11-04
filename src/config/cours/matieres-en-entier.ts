@@ -34,6 +34,11 @@ export const MATIERES_COUVERTES_EN_ENTIER: readonly MatiereEnEntier[] = [
   },
   {
     formation: "dcg",
+    bloc: "UE6 · Finance d'entreprise",
+    preuve: "Programme 2025 (sessions 2027 et suivantes) : les six chapitres du BTS CG P6 (PR #351), puis les sept chapitres et les deux compléments de la PR de l'UE6.",
+  },
+  {
+    formation: "dcg",
     bloc: "UE11 · Contrôle de gestion",
     preuve: "Programme 2025 (sessions 2027 et suivantes) : audit du contrôle de gestion, PR #347 et #348.",
   },
