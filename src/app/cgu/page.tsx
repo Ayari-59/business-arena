@@ -46,7 +46,7 @@ function CguPage() {
             <p>
               Les présentes conditions fixent les règles d&apos;utilisation de Business Arena (le simulateur, le cours, les
               épisodes manager et les pages du site), édité par <strong className="text-slate-200">{VENDEUR.nom}</strong>,
-              nom commercial de {VENDEUR.exploitant}, SIRET {VENDEUR.siret}, {adresse}, contact : {VENDEUR.contact}
+              nom commercial de {VENDEUR.exploitant}, SIRET {VENDEUR.siret}, {adresse}, contact : {VENDEUR.contact}{" "}
               (l&apos;éditeur). Utiliser le service vaut acceptation de ces conditions.
             </p>
             <p>
