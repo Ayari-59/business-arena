@@ -40,6 +40,7 @@ import { corrigerLeTableau, remarquesDuTableau, solutionsDuTableau, type Correct
 import { Journal, TableauDuCas, VueBilan, VueDEtape, VueResultat } from "./etats-du-cours";
 import { Calculatrice } from "./calculatrice";
 import { SaisieEcriture } from "./saisie-ecriture";
+import { TableauQuiSEmpile } from "./tableau-qui-s-empile";
 import { CalculsDuTableau, GrilleACompleter } from "./tableau-a-completer";
 import { enregistrerProgressionAction } from "@/app/cours/actions";
 
@@ -1160,13 +1161,13 @@ function EtapeDeSimulation({ etape, cas, chapitre, index, suivi, classe, noter, 
           <GraphiqueDuLaboratoire graphique={graphique} points={lecture.graphique} levier={leviers.find((l) => l.code === graphique.levier)!} position={affichee} />
         )}
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[22rem] text-sm">
+          <TableauQuiSEmpile className="w-full text-sm" empiler={false}>
             <thead>
-              <tr className="text-left text-xs uppercase tracking-etiquette">
-                <th className="py-1 pr-2 font-semibold">Ce que montre la simulation</th>
-                <th className="py-1 pr-2 text-right font-semibold">Au départ</th>
-                <th className="py-1 pr-2 text-right font-semibold">Maintenant</th>
-                <th className="w-[30%] py-1" aria-hidden />
+              <tr className="text-left text-xs leading-tight sm:uppercase sm:tracking-etiquette">
+                <th className="py-1 pr-2 align-bottom font-semibold text-balance">Ce que montre la simulation</th>
+                <th className="py-1 pr-2 text-right align-bottom font-semibold">Au départ</th>
+                <th className="py-1 pr-2 text-right align-bottom font-semibold">Maintenant</th>
+                <th className="w-[22%] py-1 sm:w-[30%]" aria-hidden />
               </tr>
             </thead>
             <tbody>
@@ -1175,8 +1176,8 @@ function EtapeDeSimulation({ etape, cas, chapitre, index, suivi, classe, noter, 
                 return (
                   <tr key={x.libelle} className={x.fort ? "border-t border-slate-300 font-semibold" : ""}>
                     <td className="py-1 pr-2">{x.libelle}</td>
-                    <td className="whitespace-nowrap py-1 pr-2 text-right tabular-nums opacity-70">{x.reference === undefined ? "" : valeurDeLigne(x.reference, x.unite)}</td>
-                    <td className="whitespace-nowrap py-1 pr-2 text-right tabular-nums" data-lecture={x.libelle}>
+                    <td className="whitespace-nowrap py-1 pr-2 text-right tabular-nums opacity-70" data-colonne="Au départ">{x.reference === undefined ? "" : valeurDeLigne(x.reference, x.unite)}</td>
+                    <td className="whitespace-nowrap py-1 pr-2 text-right tabular-nums" data-colonne="Maintenant" data-lecture={x.libelle}>
                       {valeurDeLigne(x.montant, x.unite)}
                     </td>
                     <td className="py-1" aria-hidden>
@@ -1198,7 +1199,7 @@ function EtapeDeSimulation({ etape, cas, chapitre, index, suivi, classe, noter, 
                 );
               })}
             </tbody>
-          </table>
+          </TableauQuiSEmpile>
         </div>
         {lecture.lignes.some((x) => x.effet) && <p className="text-xs opacity-80">Barre verte : favorable au résultat ; rouge : défavorable.</p>}
       </div>

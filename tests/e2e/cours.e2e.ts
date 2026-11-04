@@ -47,6 +47,22 @@ const tableauxDeLEtape = (p: Page) =>
   p.evaluate(() => [...document.querySelectorAll("[data-tableau-du-cas]")].filter((t) => !t.closest("[data-rappel-enonce]")).length);
 const debordement = (p: Page) => p.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
 
+/**
+ * LES TABLEAUX QUI DÉFILENT EN LARGEUR (observation du propriétaire, novembre 2026) : chaque tableau du
+ * cours tient dans son cadre, sans défilement de côté ; on rend le tableau et l'écart, en pixels.
+ */
+const tableauxQuiDebordent = (p: Page) =>
+  p.evaluate(() =>
+    [...document.querySelectorAll("main table")]
+      .map((t) => ({
+        titre: (t.closest("figure")?.querySelector("figcaption")?.textContent ?? t.querySelector("th")?.textContent ?? "").trim().slice(0, 60),
+        ecart: t.scrollWidth - (t.parentElement?.clientWidth ?? t.scrollWidth),
+        // La cellule la plus large, pour savoir quoi raccourcir.
+        plusLarge: [...t.querySelectorAll("th, td")].reduce<Element | null>((a, c) => (!a || c.scrollWidth > a.scrollWidth ? c : a), null)?.textContent?.trim().slice(0, 40) ?? "",
+      }))
+      .filter((x) => x.ecart > 1),
+  );
+
 async function nouvellePage(largeur = 1280, hauteur = 900): Promise<Page> {
   const ctx = await navigateur.newContext({ viewport: { width: largeur, height: hauteur }, locale: "fr-FR" });
   return ctx.newPage();
@@ -150,6 +166,8 @@ describe("le chapitre pilote, joué sans faute", () => {
     for (const [i, etape] of chapitre.etapes.entries()) {
       await expect.poll(() => page.locator("h1").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toBe(etape.titre);
       if (etape.tableau) expect(await tableauxDeLEtape(page)).toBe(1);
+      // Sur téléphone, aucun tableau de l'étape ne défile en largeur.
+      if (telephone) expect(await tableauxQuiDebordent(page), etape.id).toEqual([]);
       const avant = etatAvant(chapitre, cas, i);
       if (etape.type === "ecriture") {
         const lignes = enSaisie(etape.ecriture(cas));
@@ -165,7 +183,7 @@ describe("le chapitre pilote, joué sans faute", () => {
           etape.type === "choix"
             ? etape.options(cas, avant)
             : etape.options(cas, etatAvant(chapitre, cas, indexDeLEtape(chapitre, etape.avantLEtape)), avant);
-        await page.getByRole("radio", { name: options.find((o) => o.juste)!.texte }).click();
+        await page.getByRole("radio", { name: options.find((o) => o.juste)!.texte, exact: true }).click();
       } else if (etape.type === "montants") {
         for (const c of etape.champs(cas, avant)) {
           if (!telephone) {
@@ -420,7 +438,7 @@ describe("le seuil de rentabilité, chapitre réservé", () => {
         for (const c of etape.champs(cas, etat)) await page.getByLabel(c.libelle, { exact: true }).fill(virgule(c.attendu));
         await page.getByRole("button", { name: "Vérifier", exact: true }).click();
       } else if (etape.type === "choix") {
-        await page.getByRole("radio", { name: etape.options(cas, etat).find((o) => o.juste)!.texte }).click();
+        await page.getByRole("radio", { name: etape.options(cas, etat).find((o) => o.juste)!.texte, exact: true }).click();
       } else if (etape.type === "curseur") {
         await page.getByLabel(`${etape.grandeur?.(cas).libelle ?? "Ventes du mois"}, au clavier`, { exact: true }).fill(String(etape.cible(cas).attendu));
         await page.getByRole("button", { name: "Valider cette position" }).click();
@@ -849,6 +867,40 @@ describe.each([
   { code: "equilibrer-la-tresorerie", entreprise: "nova", telephone: true },
   { code: "si-le-fournisseur-fermait-en-mai", entreprise: "nova" },
   { code: "un-banc-plus-cher", entreprise: "nova", telephone: true },
+  // Le seuil de profitabilité en avenir aléatoire et le pilotage de la qualité (DCG UE 11) : un curseur, un laboratoire, un tableau à compléter, puis leurs cas.
+  { code: "le-seuil-en-avenir-aleatoire", entreprise: "nova" },
+  { code: "le-seuil-en-avenir-aleatoire", entreprise: "nova", telephone: true },
+  { code: "piloter-la-qualite", entreprise: "nova" },
+  { code: "piloter-la-qualite", entreprise: "nova", telephone: true },
+  { code: "une-campagne-au-succes-incertain", entreprise: "nova" },
+  { code: "des-aimants-moins-chers", entreprise: "nova", telephone: true },
+  // La DCG UE11 2025 : la masse salariale, le coût cible et les coûts cachés, les indicateurs de durabilité, et leurs cas.
+  { code: "la-masse-salariale-previsionnelle", entreprise: "nova" },
+  { code: "la-masse-salariale-previsionnelle", entreprise: "nova", telephone: true },
+  { code: "cout-cible-et-couts-caches", entreprise: "nova" },
+  { code: "cout-cible-et-couts-caches", entreprise: "nova", telephone: true },
+  { code: "les-indicateurs-de-durabilite", entreprise: "nova" },
+  { code: "les-indicateurs-de-durabilite", entreprise: "nova", telephone: true },
+  { code: "la-hausse-avancee-en-juillet", entreprise: "nova" },
+  { code: "le-concurrent-lance-une-nomade", entreprise: "nova", telephone: true },
+  { code: "les-indicateurs-que-demande-campustech", entreprise: "nova" },
+  // La DCG UE11 : le contrôle de gestion dans l'organisation et la démarche budgétaire (tris, curseurs, laboratoires), puis leurs cas.
+  { code: "le-controle-de-gestion-dans-l-organisation", entreprise: "nova" },
+  { code: "le-controle-de-gestion-dans-l-organisation", entreprise: "nova", telephone: true },
+  { code: "la-demarche-budgetaire", entreprise: "nova" },
+  { code: "la-demarche-budgetaire", entreprise: "nova", telephone: true },
+  { code: "un-mauvais-mois-pour-l-atelier", entreprise: "nova" },
+  { code: "la-publicite-ligne-par-ligne", entreprise: "nova", telephone: true },
+  // Les techniques prévisionnelles de la DCG UE11 : des laboratoires, des tableaux à compléter, puis leurs cas.
+  { code: "programmer-la-production", entreprise: "nova" },
+  { code: "programmer-la-production", entreprise: "nova", telephone: true },
+  { code: "approvisionner-au-moindre-cout", entreprise: "nova" },
+  { code: "approvisionner-au-moindre-cout", entreprise: "nova", telephone: true },
+  { code: "correlation-et-lissage", entreprise: "nova" },
+  { code: "correlation-et-lissage", entreprise: "nova", telephone: true },
+  { code: "le-banc-perd-une-journee", entreprise: "nova" },
+  { code: "deux-commandes-par-an", entreprise: "nova", telephone: true },
+  { code: "janvier-est-tombe", entreprise: "nova" },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se
@@ -886,6 +938,8 @@ describe.each([
     for (const [i, etape] of chapitre.etapes.entries()) {
       await expect.poll(() => page.locator("h1").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toBe(etape.titre);
       if (etape.tableau) expect(await tableauxDeLEtape(page)).toBe(1);
+      // Sur téléphone, aucun tableau de l'étape ne défile en largeur.
+      if (telephone) expect(await tableauxQuiDebordent(page), etape.id).toEqual([]);
       // Le rappel plié de l'énoncé, sur chaque étape notée d'un contenu qui s'ouvre sur un énoncé chiffré.
       const enonce = chapitre.etapes[0]!;
       expect(await page.locator("[data-rappel-enonce]").count(), etape.id).toBe(
@@ -918,12 +972,12 @@ describe.each([
         }
         await page.getByRole("button", { name: "Vérifier", exact: true }).click();
       } else if (etape.type === "choix") {
-        await page.getByRole("radio", { name: etape.options(cas, avant).find((o) => o.juste)!.texte }).click();
+        await page.getByRole("radio", { name: etape.options(cas, avant).find((o) => o.juste)!.texte, exact: true }).click();
       } else if (etape.type === "comparaison") {
         // La comparaison de deux moments du journal (la suite du chapitre pilote, découpé par
         // l'audit pédagogique) : l'état à l'étape repère, puis l'état courant.
         const repere = etatAvant(chapitre, cas, indexDeLEtape(chapitre, etape.avantLEtape));
-        await page.getByRole("radio", { name: etape.options(cas, repere, avant).find((o) => o.juste)!.texte }).click();
+        await page.getByRole("radio", { name: etape.options(cas, repere, avant).find((o) => o.juste)!.texte, exact: true }).click();
       } else if (etape.type === "curseur") {
         const libelle = etape.grandeur?.(cas).libelle ?? "Ventes du mois";
         await page.getByLabel(`${libelle}, au clavier`, { exact: true }).fill(String(etape.cible(cas).attendu));

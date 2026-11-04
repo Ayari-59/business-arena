@@ -1276,6 +1276,76 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "La trésorerie de votre budget passe-t-elle sous zéro à un moment ? Chiffrez ce que coûterait un découvert, puis un crédit d'un mois, et dites lequel vous retiendriez. Le bilan du tour aurait-il pu se prévoir à partir de vos budgets ?",
   }),
+  "le-seuil-en-avenir-aleatoire": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez trois tours sans changer vos décisions, et notez à chaque tour vos ventes et votre résultat.`,
+    lieux: ["analyse-des-couts", "compte-de-resultat"],
+    chercher:
+      "Vos ventes ont-elles varié d'un tour à l'autre à décisions égales ? Prenez leur moyenne comme espérance et leur écart à la moyenne comme ordre de grandeur de l'écart-type, puis estimez la probabilité de passer sous le seuil de rentabilité de l'analyse des coûts.",
+  }),
+  "piloter-la-qualite": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Jouez deux tours, le second avec un « Budget qualité » plus élevé.`,
+    lieux: ["feuille", "compte-de-resultat"],
+    chercher:
+      "Sous les états financiers, relevez les rebuts de chaque tour et leur coût. Quelle part des unités produites représentent-ils ? Le budget qualité en plus a-t-il réduit cette part assez pour se payer ?",
+  }),
+  "la-masse-salariale-previsionnelle": (c) => ({
+    niveau: 3,
+    faire: `${partie(c, 3)} Au premier tour, mettez 102 dans « Salaires (marché = 100) » et 1 dans « Embauches », puis jouez trois tours.`,
+    lieux: ["feuille", "rh-du-tour", "compte-de-resultat"],
+    chercher:
+      "Relevez à chaque tour ce que le personnel a coûté au compte de résultat, et l'effectif de la ligne « RH · effectif ». Quelle part de la hausse vient des salaires, quelle part de l'embauche ? Retrouvez-vous un effet de niveau, de masse et de report ?",
+  }),
+  "cout-cible-et-couts-caches": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Jouez deux tours.`,
+    lieux: ["marche-du-tour", "analyse-des-couts", "compte-de-resultat"],
+    chercher:
+      "Au prix moyen du marché du tour, et avec la marge que vous voulez garder, quel coût par unité vous faudrait-il ? Comparez-le à votre coût dans l'analyse des coûts. Puis cherchez au compte de résultat une charge qui cache un dysfonctionnement : que coûte-t-elle vraiment ?",
+  }),
+  "les-indicateurs-de-durabilite": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Jouez trois tours.`,
+    lieux: ["synthese", "indicateurs", "rh-du-tour"],
+    chercher:
+      "Choisissez trois indicateurs du tour qui ne sont pas en euros : un de la synthèse ou des indicateurs du métier, et l'effectif. Rapportez-les à votre volume : lequel vous en dit le plus sur la durabilité de votre entreprise, et lequel pourrait tromper ?",
+  }),
+  "le-controle-de-gestion-dans-l-organisation": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours.`,
+    lieux: ["analyse-des-couts", "compte-de-resultat"],
+    chercher:
+      "Découpez votre entreprise en centres de responsabilité : lequel serait un centre de coûts, lequel un centre de profit ? Sur quel indicateur de l'analyse des coûts jugeriez-vous chacun, et quelle charge ne lui imputeriez-vous pas ?",
+  }),
+  "la-demarche-budgetaire": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Avant de valider chaque tour, notez ce que vous prévoyez de vendre, ce que cela demande et ce que la trésorerie en dira.`,
+    lieux: ["plan-face-au-realise", "budget-de-tresorerie"],
+    chercher:
+      "Votre plan a-t-il tenu face au réalisé ? Si deux de vos décisions ne tenaient pas ensemble dans la trésorerie, laquelle auriez-vous différée, et pourquoi ?",
+  }),
+  "programmer-la-production": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, en notant à chacun la production décidée et la capacité de l'outil.`,
+    lieux: ["feuille", "analyse-des-couts"],
+    chercher:
+      "Votre capacité a-t-elle limité vos ventes ? Si une seconde ressource, l'équipe ou un poste de contrôle, bornait aussi la production, écrivez les deux contraintes et dites quel programme elles vous laisseraient.",
+  }),
+  "approvisionner-au-moindre-cout": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relisez vos achats dans le budget de trésorerie.`,
+    lieux: ["budget-de-tresorerie", "analyse-des-couts"],
+    chercher:
+      "Combien de fois par tour achetez-vous, et combien à la fois ? Chiffrez ce que coûterait de garder le stock d'un tour entier, puis de commander deux fois plus souvent, et dites où serait le moindre coût.",
+  }),
+  "correlation-et-lissage": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} À chaque tour, notez vos ventes. Avant le quatrième, prévoyez-les par un lissage exponentiel, la première prévision étant la vente du premier tour.`,
+    lieux: ["marche-du-tour", "plan-face-au-realise"],
+    chercher:
+      "Au quatrième tour, comparez votre prévision aux ventes avec deux constantes de lissage, une petite et une grande. Laquelle se serait le moins trompée, et pourquoi ?",
+  }),
 };
 
 /**

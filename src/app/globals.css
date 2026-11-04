@@ -4990,3 +4990,50 @@ details[open] > summary [data-deplier] {
     break-inside: avoid;
   }
 }
+
+/*
+ * LES TABLEAUX LARGES DU COURS, EMPILÉS SUR TÉLÉPHONE (observation du propriétaire, novembre 2026 : pas
+ * de défilement en largeur). À quatre colonnes de chiffres ou plus (components/cours/en-tete-de-colonne.tsx,
+ * COLONNES_POUR_EMPILER), chaque ligne devient un bloc ; chaque valeur porte le nom de sa colonne
+ * (data-colonne). Les rôles ARIA de la table (role="table", "row", "cell") gardent sa lecture par un lecteur d'écran malgré l'affichage en blocs.
+ */
+@media (max-width: 639px) {
+  .tableau-empilable thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .tableau-empilable,
+  .tableau-empilable tbody,
+  .tableau-empilable tr,
+  .tableau-empilable th[scope="row"],
+  .tableau-empilable td {
+    display: block;
+    width: 100%;
+    max-width: none;
+  }
+  .tableau-empilable tr {
+    padding-block: 0.5rem;
+  }
+  .tableau-empilable th[scope="row"] {
+    position: static;
+    padding-inline: 0;
+    font-weight: 600;
+  }
+  .tableau-empilable td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    padding-inline: 0;
+  }
+  .tableau-empilable td::before {
+    content: attr(data-colonne);
+    font-size: 0.75rem;
+    color: var(--color-slate-400);
+    text-align: left;
+    white-space: normal;
+  }
+}

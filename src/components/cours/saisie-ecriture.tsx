@@ -60,9 +60,9 @@ export function SaisieEcriture({
         ))}
       </datalist>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[20rem] text-sm">
+        <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-xs uppercase tracking-etiquette text-slate-400">
+            <tr className="text-left text-xs text-slate-400 sm:uppercase sm:tracking-etiquette">
               <th className="pb-1 pr-2 font-semibold">Compte</th>
               <th className="w-24 pb-1 pr-2 text-right font-semibold sm:w-32">Débit</th>
               <th className="w-24 pb-1 pr-2 text-right font-semibold sm:w-32">Crédit</th>

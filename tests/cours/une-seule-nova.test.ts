@@ -28,6 +28,20 @@ import { SANS_STOCK, VENTES_PREVUES_APRES_JUIN, tresorerieAvecLeStock } from "..
 import { budgetDeTresorerie } from "../../src/config/cours/monde/couts-et-budgets";
 import { bilanDOuverture, realiseDuPlan } from "../../src/config/cours/monde/equilibre-de-tresorerie";
 import { EQUIPEMENT, LIVRAISONS_DU_MOIS, PLACEMENT } from "../../src/config/cours/monde/exercice-de-nova";
+import { moisAleatoireDeLaFiche, seuilAleatoire } from "../../src/config/cours/monde/seuil-aleatoire";
+import { anneeDeProduction, coutsDeLaQualite } from "../../src/config/cours/monde/capacite";
+import { defautsDePoids, paretoDesDefauts } from "../../src/config/cours/monde/qualite-de-la-ligne";
+import { chaineDeValeur, chargesDeLAtelierParNature, durabiliteDuSalaire, trimestreAuPrix } from "../../src/config/cours/monde/organisation-du-controle";
+import { budgetDActivite, budgetsParCentre, commandesDuMois, navette, reseauDesBudgets } from "../../src/config/cours/monde/demarche-budgetaire";
+import { investissementDeLaFiche, repartitionDesCentres, trimestreDeDecision } from "../../src/config/cours/monde/couts-et-budgets";
+import { COMMANDES_DE_JANVIER } from "../../src/config/cours/monde/couts-par-activites";
+import { formeCanonique as formeDuProgramme, laGoServieDAbord, programmeOptimal, valeurDUneHeureDePlus } from "../../src/config/cours/monde/programmation-de-nova";
+import { planSousFacteurRare } from "../../src/config/cours/monde/couts-et-budgets";
+import { COMMANDES_D_AUJOURD_HUI, PRIX_DU_JEU, consommationDeNPlus1, consommationDuDelai } from "../../src/config/cours/monde/approvisionnement-de-nova";
+import { anneeAvec, ficheDeNova, kitsDuTrimestre } from "../../src/config/cours/monde/production-et-logistique";
+import { ELECTRO_COMPOSANTS, FACTURES_DE_COMPOSANTS_HT } from "../../src/config/cours/monde/exercice-de-nova";
+import { VENTES_LISSEES, correlationBrute, serieCVS } from "../../src/config/cours/monde/correlation-et-lissage";
+import { ajustementLineaire, coefficientsSaisonniers } from "../../src/config/cours/monde/prevision-des-ventes";
 
 /**
  * UNE SEULE NOVA DANS LE MONDE DU COURS (réconciliation d'octobre 2026). Les fiches qui disent la
@@ -283,5 +297,163 @@ describe("une seule NOVA, des budgets opérationnels aux états prévisionnels",
 
   it("le relevé de janvier du suivi est le compte courant de l'exercice, 58 959,27 €", () => {
     expect(realiseDuPlan(NOVA_GESTION).mois[0]!.realise).toBe(58_959.27);
+  });
+});
+
+/**
+ * UNE SEULE NOVA EN AVENIR ALÉATOIRE ET DANS LA QUALITÉ (DCG UE 11) : le seuil probabilisé est celui du
+ * mois de janvier du seuil de rentabilité, l'espérance des ventes est la vente du mois, et l'espérance
+ * du résultat est son résultat ; les défauts que pilote « Piloter la qualité » sont ceux de la fiche de
+ * capacité, au budget de prévention actuel, et le défaut de poids n'en est qu'une part.
+ */
+describe("une seule NOVA, du seuil de rentabilité au seuil probabilisé, et de la non-qualité au pilotage de la qualité", () => {
+  it("l'espérance des ventes est la vente de janvier, et l'espérance du résultat son résultat", () => {
+    const x = seuilAleatoire(moisAleatoireDeLaFiche(NOVA_GESTION));
+    const m = NOVA_GESTION.moisDeReference;
+    expect(x.moyenne).toBe(m.quantite);
+    expect(x.prix).toBe(m.prix);
+    expect(x.chargesFixes).toBe(m.chargesFixes.loyer + m.chargesFixes.personnel + m.chargesFixes.amortissement);
+    expect(x.resultat.esperance).toBe(tableauDeBord(NOVA_GESTION).mois[0]!.resultat);
+  });
+
+  it("les défauts du Pareto sont ceux de la fiche de capacité, et le défaut de poids en est une part", () => {
+    const q = coutsDeLaQualite(NOVA_CAPACITE, { volume: anneeDeProduction(NOVA_CAPACITE).production });
+    const p = paretoDesDefauts(NOVA_CAPACITE);
+    expect(p.total).toBe(q.defauts);
+    expect(p.causes.reduce((t, k) => t + k.nombre, 0)).toBe(q.defauts);
+    expect(defautsDePoids(NOVA_CAPACITE).nombre).toBeLessThan(q.defauts);
+  });
+});
+
+/**
+ * UNE SEULE NOVA DANS LA DCG UE11 2025 (la masse salariale, le coût cible et les coûts cachés, les
+ * indicateurs de durabilité) : la masse salariale de N est celle de la paie et des comptes ; le départ
+ * et le cinquième opérateur de N + 1 sont ceux des chapitres de ressources humaines ; aucun salaire ne
+ * descend sous le SMIC ; la Go et son coût cible sont ceux de « Piloter un centre » ; les coûts cachés
+ * relisent le départ, les absences et la qualité de N + 1 ; le tableau de bord durable porte, mois par
+ * mois, les ventes et le résultat du tableau de bord.
+ */
+describe("une seule NOVA, de la paie au budget de la masse salariale, du coût cible aux coûts cachés, du tableau de bord à la durabilité", async () => {
+  const M = await import("../../src/config/cours/monde/masse-salariale-de-nova");
+  const V = await import("../../src/config/cours/monde/valeur-et-couts-caches");
+  const D = await import("../../src/config/cours/monde/tableau-de-bord-durable");
+  const RH = await import("../../src/config/cours/monde/ressources-humaines-de-nova");
+  const K = await import("../../src/config/cours/monde/capacite");
+
+  it("la masse de N est la paie de l'exercice et les comptes 641 et 645 ; le départ et la recrue sont ceux des ressources humaines", () => {
+    expect(M.EFFECTIF_DE_DECEMBRE_N * M.SALAIRE_DE_DECEMBRE_N).toBe(PAIE_DU_MOIS.brut);
+    expect(M.budgetDeLaMasse().chargeeDeN).toBe(RH.masseSalarialeDeN().masseDuCompte);
+    expect(M.DEPART.dernierMois).toBe(K.departDeLaFiche(RH.FICHE_RH).dernierMois);
+    expect(M.DEPART.arriveeDuRemplacant).toBe(RH.indicateursDeNPlus1().arrivee);
+    expect(M.ARRIVEE_DU_CINQUIEME).toBe(RH.recrutementDeNPlus1().arrivee);
+    expect(M.SALAIRE_D_EMBAUCHE).toBe(Math.ceil(RH.FICHE_RH.personnel.salaireDuMarche.nPlus1 * RH.FICHE_RH.personnel.seuilDeDemission));
+  });
+
+  it("aucun salaire du budget ni du réalisé ne descend sous le SMIC horaire", () => {
+    for (const h of [M.HYPOTHESES_DU_BUDGET, M.HYPOTHESES_DU_REALISE]) expect(M.plusBasSalaireDeLAnnee(h) / HEURES_LEGALES_PAR_MOIS).toBeGreaterThanOrEqual(SMIC_HORAIRE_BRUT);
+  });
+
+  it("le coût cible est celui de « Piloter un centre », et l'enquête retrouve le prix de la Go de la gamme", () => {
+    expect(V.coutCibleDeLaGo()).toEqual(coutCibleDeLaGo());
+    const go = GAMME_DE_NOVA.references.find((r) => r.code === "go")!;
+    expect(V.acceptabiliteDesPrix().prix).toBe(go.prix);
+    expect(V.valeurDeLaGoLancee().total).toBe(go.coutVariableUnitaire);
+  });
+
+  it("les coûts cachés relisent le départ, les absences et la qualité de N + 1, et la masse chargée des comptes", () => {
+    const k = V.coutsCachesDeNPlus1();
+    expect(k.parDysfonctionnement.rotation).toBe(K.departDUnSalarie(RH.FICHE_RH).coutDuDepart);
+    const q = K.coutsDeLaQualite(RH.FICHE_RH);
+    expect(k.parDysfonctionnement.nonQualite).toBe(Math.round((q.nonQualite + q.margePerdue) * 100) / 100);
+    expect(k.rattrapees + k.perdues).toBe(RH.indicateursDeNPlus1().heuresDAbsence);
+    expect(k.masseChargee).toBe(RH.masseSalarialeDeN().masseDuCompte);
+    expect(V.chmcv().production).toBe(K.anneeDeProduction(RH.FICHE_RH).production);
+  });
+
+  it("le tableau de bord durable porte, mois par mois, les ventes, le chiffre d'affaires et le résultat du tableau de bord", () => {
+    const bord = tableauDeBord(NOVA_GESTION);
+    const t = D.tableauDeBordDurable(NOVA_GESTION);
+    for (const [i, m] of t.mois.entries()) {
+      expect(m.quantite, m.nom).toBe(bord.mois[i]!.quantite);
+      expect(m.financier.chiffreDAffaires, m.nom).toBe(bord.mois[i]!.chiffreDAffaires);
+      expect(m.resultat, m.nom).toBe(bord.mois[i]!.resultat);
+      expect(m.heuresPayees, m.nom).toBe(Math.round(PAIE_DU_MOIS.effectif * HEURES_LEGALES_PAR_MOIS * 100) / 100);
+      expect(m.valeurs.delaiFournisseurs, m.nom).toBe(NOVA_GESTION.semestre.fournisseur.delai);
+    }
+    expect(t.semestre.resultat).toBe(bord.semestre.resultat);
+  });
+});
+
+/**
+ * UNE SEULE NOVA DANS L'ORGANISATION DU CONTRÔLE ET LA DÉMARCHE BUDGÉTAIRE (DCG UE11) : le trimestre au
+ * prix de la fiche est le trimestre de décision ; les charges de l'atelier, rangées par nature, refont
+ * celles du chapitre « Piloter un centre » ; la chaîne de valeur range les charges fixes du coût complet ;
+ * la paie des opérateurs est le personnel des charges fixes ; le réseau des budgets est celui de « Des
+ * ventes aux achats » sans stock ; la navette sans demande est le budget de trésorerie ; le budget
+ * d'activité part des commandes de janvier de la méthode ABC.
+ */
+describe("une seule NOVA, de l'organisation du contrôle à la démarche budgétaire", () => {
+  it("le trimestre au prix de la fiche est le trimestre de décision, et les charges de l'atelier sont celles de « Piloter un centre »", () => {
+    expect(trimestreAuPrix(NOVA_GESTION).resultat).toBe(trimestreDeDecision(NOVA_GESTION).resultat);
+    expect(trimestreAuPrix(NOVA_GESTION).ventes).toBe(NOVA_GESTION.decision.production);
+    const a = chargesDeLAtelierParNature(NOVA_GESTION);
+    expect(a.nonMaitrisables).toBe(fixesDesCentres(NOVA_GESTION).atelier);
+    expect(a.total).toBe(chargesDeLAtelier(NOVA_GESTION, a.quantite).total);
+    expect(chaineDeValeur(NOVA_GESTION).total).toBe(repartitionDesCentres(NOVA_GESTION).total);
+    const s = durabiliteDuSalaire();
+    expect(s.salaire * s.operateurs * (1 + s.tauxPatronal)).toBe(CHARGES_FIXES_DU_MOIS.personnel);
+  });
+
+  it("le réseau des budgets est celui de « Des ventes aux achats », la navette du banc d'avril sans publicité le budget de trésorerie, le budget d'activité la méthode ABC", () => {
+    const r = reseauDesBudgets(NOVA_GESTION);
+    const sansStock = tresorerieAvecLeStock(NOVA_GESTION, SANS_STOCK);
+    expect(r.tresorerieFin).toBe(sansStock.tresorerieFin);
+    expect(r.plusBas).toEqual(sansStock.plusBas);
+    expect(navette(NOVA_GESTION, { moisDuBanc: 3, publicite: 0 }).tresorerieFin).toBe(budgetDeTresorerie(NOVA_GESTION, { investissement: investissementDeLaFiche(NOVA_GESTION) }).tresorerieFin);
+    expect(budgetsParCentre(NOVA_GESTION).total).toBe(6 * (CHARGES_FIXES_DU_MOIS.loyer + CHARGES_FIXES_DU_MOIS.personnel + CHARGES_FIXES_DU_MOIS.amortissement));
+    expect(commandesDuMois(NOVA_GESTION, 0).total).toBe(COMMANDES_DE_JANVIER["en-ligne"].commandes + COMMANDES_DE_JANVIER.campustech.commandes);
+    expect(budgetDActivite(NOVA_GESTION).coutDeJanvier).toBe(methodeABC().activites.find((x) => x.code === "commandes")!.cout);
+  });
+});
+
+/**
+ * UNE SEULE NOVA DANS LES TECHNIQUES PRÉVISIONNELLES DU DCG (programmer la production, approvisionner
+ * au moindre coût, corrélation et lissage). Le programme linéaire part de la gamme et de son mois de
+ * pointe, et retombe sans le banc sur le plan du facteur rare de « Coût par produit » ; les jeux achetés
+ * en N + 1 sont la production de N + 1 des chapitres de la capacité, au prix et au délai du
+ * fournisseur ; le lissage lit les ventes en ligne de l'exercice, la corrélation la droite de la
+ * prévision des ventes.
+ */
+describe("une seule NOVA, de la programmation de la production aux approvisionnements et au lissage", () => {
+  it("le programme linéaire part de la gamme ; sans le banc, il retombe sur le plan du facteur rare, la Go servie entière", () => {
+    const f = formeDuProgramme();
+    const ref = (code: string) => GAMME_DE_NOVA.references.find((r) => r.code === code)!;
+    expect(f.contraintes[0]!.c).toBeCloseTo(GAMME_DE_NOVA.capaciteHeuresMachine - ref("go").demandeDuMoisDePointe * ref("go").heuresMachineParUnite, 9);
+    expect(f.marge).toEqual({ x: ref("one").prix - ref("one").coutVariableUnitaire, y: ref("studio").prix - ref("studio").coutVariableUnitaire });
+    const plan = planSousFacteurRare(NOVA_GESTION).plan;
+    const quantite = (code: string) => plan.find((r) => r.code === code)!.quantite;
+    const sansLeBanc = programmeOptimal({}, false).optimal;
+    expect(sansLeBanc.y).toBe(quantite("studio"));
+    expect(Math.floor(sansLeBanc.x)).toBe(quantite("one"));
+    expect(laGoServieDAbord().unites).toBe(quantite("go"));
+    const go = ref("go");
+    expect((go.prix - go.coutVariableUnitaire) / go.heuresMachineParUnite).toBeGreaterThan(valeurDUneHeureDePlus("heures-machine").valeur);
+  });
+
+  it("les jeux de N + 1 sont la production de N + 1 de la capacité, au prix d'Électro-Composants, et la consommation du délai celle du stock de sécurité", () => {
+    const f = ficheDeNova({ code: "nova" });
+    const c = consommationDeNPlus1();
+    expect(c.trimestres).toEqual(anneeAvec(f).trimestres.map((t) => t.production));
+    expect(c.trimestres).toEqual(ANNEE_N_PLUS_1.demande.map((d) => Math.min(d, NOVA_GESTION.decision.capacite)));
+    expect(PRIX_DU_JEU).toBe(ELECTRO_COMPOSANTS.prixDuJeu);
+    expect(PRIX_DU_JEU).toBe(NOVA_GESTION.moisDeReference.coutVariable.composants);
+    expect(consommationDuDelai().moyenne).toBe(kitsDuTrimestre(f, 1).pendantLeDelai);
+    expect(COMMANDES_D_AUJOURD_HUI).toBe(FACTURES_DE_COMPOSANTS_HT.length);
+  });
+
+  it("le lissage lit les ventes en ligne de l'exercice ; la corrélation et la série CVS, la droite et les coefficients de la prévision des ventes", () => {
+    expect(VENTES_LISSEES).toEqual(VENTES_AUX_PARTICULIERS);
+    expect(correlationBrute().r).toBe(ajustementLineaire().r);
+    expect(serieCVS().slice(0, 4).map((x) => x.coefficient)).toEqual(coefficientsSaisonniers("lineaire").coefficients);
   });
 });

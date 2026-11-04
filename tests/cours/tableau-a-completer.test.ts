@@ -168,15 +168,15 @@ describe("le tableau à l'écran : lisible au clavier, au lecteur d'écran et au
   it("un vrai tableau, ses en-têtes, une case nommée « ligne, colonne », le clavier numérique, et le défilement du tableau seul", () => {
     const html = rendu(null);
     expect(html).toContain("<table");
-    expect(html).toMatch(/<th scope="col"[^>]*>Atelier<\/th>/);
-    expect(html).toMatch(/<th scope="row"[^>]*>.*Loyer/);
+    expect(html).toMatch(/<th[^>]*scope="col"[^>]*>Atelier<\/th>/);
+    expect(html).toMatch(/<th[^>]*scope="row"[^>]*>.*Loyer/);
     expect(html).toContain('aria-label="Loyer, Atelier"');
     expect(html).toContain('aria-label="Coût unitaire, Atelier"');
     expect(html.match(/inputMode="decimal"/g)?.length).toBe(8);
     // Le tableau défile seul, de côté ; la colonne des libellés reste en place ; la zone se prend au clavier.
     expect(html).toMatch(/data-defilement-du-tableau=""/);
     expect(html).toMatch(/class="max-w-full overflow-x-auto[^"]*"[^>]*role="region"[^>]*tabindex="0"/);
-    expect(html).toMatch(/<th scope="row" class="sticky left-0/);
+    expect(html).toMatch(/<th[^>]*scope="row" class="sticky left-0/);
     // Les cellules données s'écrivent, le texte d'une cellule donnée aussi.
     expect(html.replace(/\s/g, " ")).toContain("1 000 €");
     expect(html).toContain("sans objet");

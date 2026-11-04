@@ -340,6 +340,31 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "chapitres/equilibrer-la-tresorerie.ts",
   "situations/par-chapitre/si-le-fournisseur-fermait-en-mai.ts",
   "situations/par-chapitre/un-banc-plus-cher.ts",
+  // La DCG UE 11 : le seuil de profitabilité en avenir aléatoire et le pilotage de la qualité (monde/loi-normale.ts, seuil-aleatoire.ts, qualite-de-la-ligne.ts), et leurs cas.
+  "chapitres/le-seuil-en-avenir-aleatoire.ts",
+  "chapitres/piloter-la-qualite.ts",
+  "situations/par-chapitre/une-campagne-au-succes-incertain.ts",
+  "situations/par-chapitre/des-aimants-moins-chers.ts",
+  // La DCG UE11 2025 : la masse salariale (monde/masse-salariale-de-nova.ts), le coût cible et les coûts
+  // cachés (monde/valeur-et-couts-caches.ts), les indicateurs de durabilité (monde/tableau-de-bord-durable.ts).
+  "chapitres/la-masse-salariale-previsionnelle.ts",
+  "situations/par-chapitre/la-hausse-avancee-en-juillet.ts",
+  "chapitres/cout-cible-et-couts-caches.ts",
+  "situations/par-chapitre/le-concurrent-lance-une-nomade.ts",
+  "chapitres/les-indicateurs-de-durabilite.ts",
+  "situations/par-chapitre/les-indicateurs-que-demande-campustech.ts",
+  // La DCG UE11 : le contrôle de gestion dans l'organisation (monde/organisation-du-controle.ts) et la démarche budgétaire (monde/demarche-budgetaire.ts), et leurs cas.
+  "chapitres/le-controle-de-gestion-dans-l-organisation.ts",
+  "chapitres/la-demarche-budgetaire.ts",
+  "situations/par-chapitre/un-mauvais-mois-pour-l-atelier.ts",
+  "situations/par-chapitre/la-publicite-ligne-par-ligne.ts",
+  // La DCG UE11 § 3.2 : programmer la production, approvisionner au moindre coût, corrélation et lissage, et leurs cas.
+  "chapitres/programmer-la-production.ts",
+  "chapitres/approvisionner-au-moindre-cout.ts",
+  "chapitres/correlation-et-lissage.ts",
+  "situations/par-chapitre/le-banc-perd-une-journee.ts",
+  "situations/par-chapitre/deux-commandes-par-an.ts",
+  "situations/par-chapitre/janvier-est-tombe.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
