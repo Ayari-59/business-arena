@@ -401,6 +401,11 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "situations/par-chapitre/le-compte-a-terme-progressif.ts",
   "situations/par-chapitre/l-obligation-verte-a-980.ts",
   "situations/par-chapitre/l-associe-qui-prefere-la-dette.ts",
+  // La DCG UE6, 2.2, 3.1 et 3.2 : le BFR d'exploitation normatif (monde/bfr-normatif.ts), les acteurs et les modes de financement (monde/acteurs-du-financement.ts), et leurs cas.
+  "chapitres/le-bfr-d-exploitation-normatif.ts",
+  "chapitres/les-acteurs-et-les-modes-de-financement.ts",
+  "situations/par-chapitre/campustech-double-sa-commande.ts",
+  "situations/par-chapitre/la-banque-demande-une-garantie.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
@@ -559,6 +564,10 @@ const NE_LISENT_PLUS_L_ANNEE_FIGEE: readonly string[] = [
   "situations/par-chapitre/le-compte-a-terme-progressif.ts",
   "situations/par-chapitre/l-obligation-verte-a-980.ts",
   "situations/par-chapitre/l-associe-qui-prefere-la-dette.ts",
+  "chapitres/le-bfr-d-exploitation-normatif.ts",
+  "chapitres/les-acteurs-et-les-modes-de-financement.ts",
+  "situations/par-chapitre/campustech-double-sa-commande.ts",
+  "situations/par-chapitre/la-banque-demande-une-garantie.ts",
 ];
 
 /** Le premier chemin d'imports qui atteint un fichier donné, ou rien. */

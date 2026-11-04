@@ -103,6 +103,8 @@ export const THEMES: readonly Theme[] = [
       "la-valeur-et-le-temps",
       "le-marche-financier",
       "arbitrer-les-couts-de-financement",
+      "le-bfr-d-exploitation-normatif",
+      "les-acteurs-et-les-modes-de-financement",
     ],
     familles: ["finance"],
   },

@@ -167,6 +167,8 @@ import { LE_DIVIDENDE_DE_L_ASSOCIE } from "./par-chapitre/le-dividende-de-l-asso
 import { LE_COMPTE_A_TERME_PROGRESSIF } from "./par-chapitre/le-compte-a-terme-progressif";
 import { L_OBLIGATION_VERTE_A_980 } from "./par-chapitre/l-obligation-verte-a-980";
 import { L_ASSOCIE_QUI_PREFERE_LA_DETTE } from "./par-chapitre/l-associe-qui-prefere-la-dette";
+import { CAMPUSTECH_DOUBLE_SA_COMMANDE } from "./par-chapitre/campustech-double-sa-commande";
+import { LA_BANQUE_DEMANDE_UNE_GARANTIE } from "./par-chapitre/la-banque-demande-une-garantie";
 export type { Situation } from "./types";
 
 /**
@@ -349,6 +351,8 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LE_COMPTE_A_TERME_PROGRESSIF,
   L_OBLIGATION_VERTE_A_980,
   L_ASSOCIE_QUI_PREFERE_LA_DETTE,
+  CAMPUSTECH_DOUBLE_SA_COMMANDE,
+  LA_BANQUE_DEMANDE_UNE_GARANTIE,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

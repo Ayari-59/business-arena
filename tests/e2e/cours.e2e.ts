@@ -951,6 +951,13 @@ describe.each([
   { code: "le-compte-a-terme-progressif", entreprise: "nova" },
   { code: "l-obligation-verte-a-980", entreprise: "nova", telephone: true },
   { code: "l-associe-qui-prefere-la-dette", entreprise: "nova" },
+  // La DCG UE6, 2.2, 3.1 et 3.2 : le BFR d'exploitation normatif et les acteurs et les modes de financement, un tableau à compléter, des tris, un curseur et un laboratoire chacun, puis leurs cas.
+  { code: "le-bfr-d-exploitation-normatif", entreprise: "nova" },
+  { code: "le-bfr-d-exploitation-normatif", entreprise: "nova", telephone: true },
+  { code: "les-acteurs-et-les-modes-de-financement", entreprise: "nova" },
+  { code: "les-acteurs-et-les-modes-de-financement", entreprise: "nova", telephone: true },
+  { code: "campustech-double-sa-commande", entreprise: "nova" },
+  { code: "la-banque-demande-une-garantie", entreprise: "nova", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se

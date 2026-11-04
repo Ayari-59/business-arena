@@ -1450,6 +1450,20 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Relevez vos capitaux propres, vos dettes financières et vos charges financières. Quel taux votre dette vous coûte-t-elle, après impôt ? Avec des actionnaires qui exigent 9 %, quel est votre coût moyen pondéré du capital ?",
   }),
+  "le-bfr-d-exploitation-normatif": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez le compte de résultat et le bilan du second.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "Rapportez vos créances clients, votre stock et vos dettes fournisseurs au chiffre d'affaires du tour : combien de jours de chiffre d'affaires chacun représente-t-il ? Lequel pèse le plus dans votre besoin en fonds de roulement, et quel délai faudrait-il changer pour l'alléger ?",
+  }),
+  "les-acteurs-et-les-modes-de-financement": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez le bilan du second.`,
+    lieux: ["bilan"],
+    chercher:
+      "Relevez vos capitaux propres et vos dettes financières. Si vous deviez financer un nouvel équipement, qui le paierait : votre trésorerie, un emprunt, ou un apport des associés ? Que vous engagez-vous à rendre avec un emprunt, et que cédez-vous avec un apport ?",
+  }),
 };
 
 /**
