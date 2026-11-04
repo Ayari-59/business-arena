@@ -98,6 +98,8 @@ export const THEMES: readonly Theme[] = [
       "financer-et-placer-la-tresorerie",
       "emprunt-ou-credit-bail",
       "le-plan-de-financement",
+      "le-tableau-de-financement",
+      "le-tableau-des-flux-de-tresorerie",
     ],
     familles: ["finance"],
   },

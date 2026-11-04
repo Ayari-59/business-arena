@@ -934,6 +934,13 @@ describe.each([
   { code: "le-plan-de-financement", entreprise: "nova", telephone: true },
   { code: "le-banc-en-credit-bail", entreprise: "nova" },
   { code: "la-banque-plafonne-son-pret", entreprise: "nova", telephone: true },
+  // Le BTS CG P6, 6.6.1 et 6.6.2 : le tableau de financement et le tableau des flux de trésorerie, des tableaux à compléter et un laboratoire chacun, puis leurs cas.
+  { code: "le-tableau-de-financement", entreprise: "nova" },
+  { code: "le-tableau-de-financement", entreprise: "nova", telephone: true },
+  { code: "le-tableau-des-flux-de-tresorerie", entreprise: "nova" },
+  { code: "le-tableau-des-flux-de-tresorerie", entreprise: "nova", telephone: true },
+  { code: "la-seconde-ligne-payee-en-decembre", entreprise: "nova" },
+  { code: "le-dividende-de-l-associe", entreprise: "nova", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se

@@ -162,6 +162,8 @@ import { UN_DIVIDENDE_SOUS_CONDITION } from "./par-chapitre/un-dividende-sous-co
 import { UNE_CHAINE_NOUVELLE_A_60_JOURS } from "./par-chapitre/une-chaine-nouvelle-a-60-jours";
 import { LE_BANC_EN_CREDIT_BAIL } from "./par-chapitre/le-banc-en-credit-bail";
 import { LA_BANQUE_PLAFONNE_SON_PRET } from "./par-chapitre/la-banque-plafonne-son-pret";
+import { LA_SECONDE_LIGNE_PAYEE_EN_DECEMBRE } from "./par-chapitre/la-seconde-ligne-payee-en-decembre";
+import { LE_DIVIDENDE_DE_L_ASSOCIE } from "./par-chapitre/le-dividende-de-l-associe";
 export type { Situation } from "./types";
 
 /**
@@ -339,6 +341,8 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   UNE_CHAINE_NOUVELLE_A_60_JOURS,
   LE_BANC_EN_CREDIT_BAIL,
   LA_BANQUE_PLAFONNE_SON_PRET,
+  LA_SECONDE_LIGNE_PAYEE_EN_DECEMBRE,
+  LE_DIVIDENDE_DE_L_ASSOCIE,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

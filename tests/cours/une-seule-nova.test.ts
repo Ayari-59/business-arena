@@ -1,4 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { bilanDeLExercice } from "../../src/config/cours/chapitres/bilan-fonctionnel";
+import { SECONDE_LIGNE } from "../../src/config/cours/monde/comptabilite-approfondie";
+import { SECONDE_LIGNE_PAYEE_EN_DECEMBRE, tableauDeFinancement, tableauDesFlux } from "../../src/config/cours/monde/tableaux-de-flux";
+import { EXERCICE_DE_NOVA } from "../../src/config/cours/monde/exercice-de-nova";
 import { casDeLEntreprise } from "../../src/config/cours/cas";
 import { CHAPITRES } from "../../src/config/cours/registre";
 import { SITUATIONS } from "../../src/config/cours/situations";
@@ -56,7 +60,7 @@ import { BANC, EMPRUNT_DE_LA_LIGNE, LIGNE_A_FINANCER, RESERVE_DE_LA_GAMME, TAUX_
 import { PRET_BANCAIRE, remboursements } from "../../src/config/cours/monde/financement-du-lycee";
 import { fluxDuProjet } from "../../src/config/cours/monde/finance";
 import { PROJET_LIGNE_SEMI_AUTOMATIQUE } from "../../src/config/cours/monde/projets-et-financement";
-import { CONTRAT_DE_PRET, EXERCICE_DE_NOVA, IMPOT_SUR_LES_SOCIETES } from "../../src/config/cours/monde/exercice-de-nova";
+import { CONTRAT_DE_PRET, IMPOT_SUR_LES_SOCIETES } from "../../src/config/cours/monde/exercice-de-nova";
 import { INVESTISSEMENT_ENVISAGE } from "../../src/config/cours/monde/nova-gestion";
 
 /**
@@ -568,5 +572,39 @@ describe("une seule NOVA, du choix du projet au plan de financement", () => {
     expect(plan.annees.map((a) => a.caf)).toEqual(projet.annees.map((a) => a.fluxDExploitation));
     expect(plan.annees.map((a) => a.augmentationDuBfr - a.diminutionDuBfr)).toEqual(projet.variationsDuBfr.slice(0, plan.annees.length));
     expect(plan.annees[0]!.investissements).toBe(projet.investissement);
+  });
+});
+
+/**
+ * UNE SEULE NOVA DANS LES TABLEAUX DE FLUX (le tableau de financement, le tableau des flux de
+ * trésorerie) : la CAF est celle des soldes intermédiaires, le fonds de roulement, le besoin et la
+ * trésorerie ceux du bilan fonctionnel, les flux stables ceux de la fiche (l'apport, le prêt, la
+ * ligne) ; la seconde ligne payée en décembre est celle de N + 1.
+ */
+describe("une seule NOVA, du bilan fonctionnel aux tableaux de flux", () => {
+  it("la CAF, le fonds de roulement, le besoin et la trésorerie sont ceux de la clôture figée", () => {
+    const t = tableauDeFinancement(EXERCICE_DE_NOVA);
+    const fo = CLOTURE_DE_LA_FICHE.fonctionnel;
+    expect(t.ressources.caf).toBe(CLOTURE_DE_LA_FICHE.capaciteDAutofinancement);
+    expect(t.variationDuFondsDeRoulement).toBe(fo.fondsDeRoulement);
+    expect(t.partie2.variationDExploitation).toBe(fo.besoinDExploitation);
+    expect(t.partie2.variationHorsExploitation).toBe(fo.besoinHorsExploitation);
+    expect(t.partie2.variationDeTresorerie).toBe(fo.tresorerieNette);
+    expect(tableauDesFlux(EXERCICE_DE_NOVA).variationDeTresorerie).toBe(fo.tresorerieNette);
+  });
+
+  it("les flux stables sont ceux de la création et du prêt ; la variation du fonds de roulement depuis le 6 janvier, celle du chapitre du bilan fonctionnel", () => {
+    const t = tableauDeFinancement(EXERCICE_DE_NOVA);
+    const x = bilanDeLExercice({ code: "nova" });
+    expect(t.ressources.augmentationDeCapital).toBe(EXERCICE_DE_NOVA.apport.montant);
+    expect(t.ressources.nouveauxEmprunts).toBe(EXERCICE_DE_NOVA.pret.capital);
+    expect(t.emplois.acquisitions).toBe(EQUIPEMENT.ht);
+    expect(t.emplois.remboursements).toBe(x.rembourse);
+    expect(t.variationDuFondsDeRoulement - x.creation.fondsDeRoulement).toBeCloseTo(x.variationDuFondsDeRoulement, 2);
+  });
+
+  it("la seconde ligne payée en décembre est la seconde ligne de N + 1, au même prix", () => {
+    expect(SECONDE_LIGNE_PAYEE_EN_DECEMBRE.ht).toBe(SECONDE_LIGNE.ht);
+    expect(SECONDE_LIGNE_PAYEE_EN_DECEMBRE.ht + SECONDE_LIGNE_PAYEE_EN_DECEMBRE.tva).toBe(EQUIPEMENT.ttc);
   });
 });
