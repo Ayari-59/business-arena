@@ -7,11 +7,13 @@ import { montantEcrit } from "../../src/pedagogy/cours/correcteur";
 import { anneeDuMarche } from "../../src/config/cours/monde/attractivite";
 import { coefficientDeSaison, demandeAuPrix, marcheEtPart } from "../../src/config/cours/monde/economie-et-marketing";
 import { CLOTURE_DE_LA_FICHE, COMPOSANTS_DE_DECEMBRE, VENTES_AUX_PARTICULIERS } from "../../src/config/cours/monde/exercice-de-nova";
-import { JEUX_REVENUS_SANS_BON, concordance } from "../../src/config/cours/monde/comptabilite-de-gestion";
+import { JEUX_REVENUS_SANS_BON, concordance, moisDeGestion } from "../../src/config/cours/monde/comptabilite-de-gestion";
 import { MARCHE_A_TROIS } from "../../src/config/cours/monde/marche-a-trois";
 import { MERCATIQUE_DE_NOVA } from "../../src/config/cours/monde/mercatique-de-nova";
-import { ANNEE_N } from "../../src/config/cours/monde/nova-capacite";
-import { CHARGES_FIXES_DU_MOIS, GAMME_DE_NOVA, NOVA_GESTION, VENTES_A_CAMPUSTECH } from "../../src/config/cours/monde/nova-gestion";
+import { ANNEE_N, ANNEE_N_PLUS_1 } from "../../src/config/cours/monde/nova-capacite";
+import { novaEnN, previsionDeNPlus1 } from "../../src/config/cours/monde/prevision-des-ventes";
+import { methodeABC } from "../../src/config/cours/monde/couts-par-activites";
+import { CHARGES_FIXES_DU_MOIS, GAMME_DE_NOVA, MARCHE_DES_ENCEINTES, NOVA_GESTION, VENTES_A_CAMPUSTECH } from "../../src/config/cours/monde/nova-gestion";
 import { CAS_DES_ENTREPRISES } from "../../src/config/cours/monde/cas-des-entreprises";
 import { compteDuLycee, exerciceDe } from "../../src/config/cours/monde/comptes-du-lycee";
 import { PAIE_DU_MOIS, TAUX_DE_LA_PAIE } from "../../src/config/cours/monde/exercice-de-nova";
@@ -188,5 +190,33 @@ describe("une seule NOVA, de la comptabilité de gestion à la clôture", () => 
     expect(k.resultatRetrouve).toBe(CLOTURE_DE_LA_FICHE.resultatNet);
     expect(k.dotation).toBe(CLOTURE_DE_LA_FICHE.travaux.dotationAuxAmortissements);
     expect(k.usureDeGestion).toBe(12 * CHARGES_FIXES_DU_MOIS.amortissement);
+  });
+});
+
+/**
+ * UNE SEULE NOVA DANS LA PRÉVISION DES VENTES ET LA MÉTHODE ABC (BTS CG P5). La prévision de N + 1,
+ * arrondie à la centaine, est la demande de N + 1 des chapitres de la capacité ; elle part des ventes
+ * de N et du marché du semestre de nova-gestion.ts. La méthode ABC range les charges de janvier de la
+ * comptabilité de gestion, au centime, et la compare au coût des mêmes centres d'analyse.
+ */
+describe("une seule NOVA, de la prévision des ventes à la capacité, et de la méthode ABC aux centres d'analyse", () => {
+  it("la prévision de N + 1, à la centaine, est la demande de N + 1 de la capacité ; elle part des ventes et du marché de N", () => {
+    const p = previsionDeNPlus1();
+    expect(p.trimestres.map((t) => t.plan)).toEqual(ANNEE_N_PLUS_1.demande);
+    expect(novaEnN().ventes).toEqual(ANNEE_N.demande);
+    expect(novaEnN().marche.slice(0, 2)).toEqual([0, 3].map((m) => MARCHE_DES_ENCEINTES.slice(m, m + 3).reduce((t, x) => t + x, 0)));
+    expect(p.capacite).toBe(NOVA_GESTION.decision.capacite);
+  });
+
+  it("la méthode ABC range les 35 383 € de janvier des centres d'analyse, sur les enceintes livrées en janvier", () => {
+    const m = methodeABC();
+    const janvier = moisDeGestion(0);
+    expect(m.total).toBe(janvier.repartition.total);
+    expect(m.charges).toEqual(janvier.repartition.charges);
+    const produits = Object.values(m.produits);
+    expect(produits.reduce((t, p) => t + p.vente.enceintes, 0)).toBe(janvier.livrees);
+    expect(produits.reduce((t, p) => t + p.chiffreDAffaires, 0)).toBe(janvier.chiffreDAffaires);
+    for (const p of produits) expect(Math.round(p.centres.unitaire * 100) / 100).toBe(Math.round(janvier.coutDeRevientUnitaire * 100) / 100);
+    expect(m.activites.find((a) => a.code === "monter")!.volume).toBe(janvier.livrees * NOVA_CAPACITE.operateurs.heuresParEnceinte);
   });
 });

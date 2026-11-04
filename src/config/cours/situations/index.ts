@@ -137,6 +137,8 @@ import { LA_PRIME_DU_CHEF_D_ATELIER } from "./par-chapitre/la-prime-du-chef-d-at
 import { LE_CONCURRENT_SOLDE } from "./par-chapitre/le-concurrent-solde";
 import { UN_ENGAGEMENT_PLUS_MODESTE } from "./par-chapitre/un-engagement-plus-modeste";
 import { LES_ENTREPRISES_PAIENT_PLUS_VITE } from "./par-chapitre/les-entreprises-paient-plus-vite";
+import { LES_JEUX_DU_PRINTEMPS } from "./par-chapitre/les-jeux-du-printemps";
+import { LA_REMISE_DE_SONORA } from "./par-chapitre/la-remise-de-sonora";
 export type { Situation } from "./types";
 
 /**
@@ -289,6 +291,8 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LE_CONCURRENT_SOLDE,
   UN_ENGAGEMENT_PLUS_MODESTE,
   LES_ENTREPRISES_PAIENT_PLUS_VITE,
+  LES_JEUX_DU_PRINTEMPS,
+  LA_REMISE_DE_SONORA,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

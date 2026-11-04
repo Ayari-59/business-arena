@@ -327,6 +327,11 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "situations/quel-prix-pour-la-saison.ts",
   "situations/suivre-la-baisse.ts",
   // L'UE10 du DCG, comptabilité approfondie : écrite sur le monde du cours (monde/comptabilite-approfondie.ts).
+  // Le BTS CG P5 : la prévision des ventes (monde/prevision-des-ventes.ts) et la méthode ABC (monde/couts-par-activites.ts).
+  "chapitres/la-prevision-des-ventes.ts",
+  "situations/par-chapitre/les-jeux-du-printemps.ts",
+  "chapitres/les-couts-a-base-d-activites.ts",
+  "situations/par-chapitre/la-remise-de-sonora.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
