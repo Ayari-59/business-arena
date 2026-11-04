@@ -866,6 +866,13 @@ describe.each([
   { code: "la-hausse-avancee-en-juillet", entreprise: "nova" },
   { code: "le-concurrent-lance-une-nomade", entreprise: "nova", telephone: true },
   { code: "les-indicateurs-que-demande-campustech", entreprise: "nova" },
+  // La DCG UE11 : le contrôle de gestion dans l'organisation et la démarche budgétaire (tris, curseurs, laboratoires), puis leurs cas.
+  { code: "le-controle-de-gestion-dans-l-organisation", entreprise: "nova" },
+  { code: "le-controle-de-gestion-dans-l-organisation", entreprise: "nova", telephone: true },
+  { code: "la-demarche-budgetaire", entreprise: "nova" },
+  { code: "la-demarche-budgetaire", entreprise: "nova", telephone: true },
+  { code: "un-mauvais-mois-pour-l-atelier", entreprise: "nova" },
+  { code: "la-publicite-ligne-par-ligne", entreprise: "nova", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se

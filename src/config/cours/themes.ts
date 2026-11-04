@@ -128,6 +128,8 @@ export const THEMES: readonly Theme[] = [
       "la-masse-salariale-previsionnelle",
       "cout-cible-et-couts-caches",
       "les-indicateurs-de-durabilite",
+      "le-controle-de-gestion-dans-l-organisation",
+      "la-demarche-budgetaire",
     ],
     familles: ["chiffres", "controle", "hotel-couts", "conseil-marge", "sante-budget"],
   },

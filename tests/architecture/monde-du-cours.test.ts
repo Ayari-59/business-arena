@@ -353,6 +353,11 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "situations/par-chapitre/le-concurrent-lance-une-nomade.ts",
   "chapitres/les-indicateurs-de-durabilite.ts",
   "situations/par-chapitre/les-indicateurs-que-demande-campustech.ts",
+  // La DCG UE11 : le contrôle de gestion dans l'organisation (monde/organisation-du-controle.ts) et la démarche budgétaire (monde/demarche-budgetaire.ts), et leurs cas.
+  "chapitres/le-controle-de-gestion-dans-l-organisation.ts",
+  "chapitres/la-demarche-budgetaire.ts",
+  "situations/par-chapitre/un-mauvais-mois-pour-l-atelier.ts",
+  "situations/par-chapitre/la-publicite-ligne-par-ligne.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */

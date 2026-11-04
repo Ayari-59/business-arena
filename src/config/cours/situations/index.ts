@@ -147,6 +147,8 @@ import { DES_AIMANTS_MOINS_CHERS } from "./par-chapitre/des-aimants-moins-chers"
 import { LA_HAUSSE_AVANCEE_EN_JUILLET } from "./par-chapitre/la-hausse-avancee-en-juillet";
 import { LE_CONCURRENT_LANCE_UNE_NOMADE } from "./par-chapitre/le-concurrent-lance-une-nomade";
 import { LES_INDICATEURS_QUE_DEMANDE_CAMPUSTECH } from "./par-chapitre/les-indicateurs-que-demande-campustech";
+import { UN_MAUVAIS_MOIS_POUR_L_ATELIER } from "./par-chapitre/un-mauvais-mois-pour-l-atelier";
+import { LA_PUBLICITE_LIGNE_PAR_LIGNE } from "./par-chapitre/la-publicite-ligne-par-ligne";
 export type { Situation } from "./types";
 
 /**
@@ -309,6 +311,8 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LA_HAUSSE_AVANCEE_EN_JUILLET,
   LE_CONCURRENT_LANCE_UNE_NOMADE,
   LES_INDICATEURS_QUE_DEMANDE_CAMPUSTECH,
+  UN_MAUVAIS_MOIS_POUR_L_ATELIER,
+  LA_PUBLICITE_LIGNE_PAR_LIGNE,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */
