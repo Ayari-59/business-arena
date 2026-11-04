@@ -1346,6 +1346,20 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Au quatrième tour, comparez votre prévision aux ventes avec deux constantes de lissage, une petite et une grande. Laquelle se serait le moins trompée, et pourquoi ?",
   }),
+  "capacite-de-remboursement": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez le compte de résultat et le bilan.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "Divisez les emprunts du bilan par ce que l'activité a dégagé sur le tour (le résultat plus la dotation aux amortissements) : en combien de tours rembourseriez-vous vos dettes ? Quelle part de vos ressources durables vos associés apportent-ils ?",
+  }),
+  "financer-autrement": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le bilan.`,
+    lieux: ["bilan"],
+    chercher:
+      "Si vous deviez financer un nouvel équipement sans toucher à la trésorerie du bilan, quelle part demanderiez-vous à la banque, et quelle part à des sources qui ne se remboursent qu'à la fin ? Que deviendrait la part des capitaux propres ?",
+  }),
 };
 
 /**
