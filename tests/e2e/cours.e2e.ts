@@ -901,6 +901,12 @@ describe.each([
   { code: "le-banc-perd-une-journee", entreprise: "nova" },
   { code: "deux-commandes-par-an", entreprise: "nova", telephone: true },
   { code: "janvier-est-tombe", entreprise: "nova" },
+  { code: "le-systeme-d-information-comptable", entreprise: "nova" },
+  { code: "le-systeme-d-information-comptable", entreprise: "nova", telephone: true },
+  { code: "controler-les-comptes", entreprise: "nova" },
+  { code: "controler-les-comptes", entreprise: "nova", telephone: true },
+  { code: "la-balance-qui-ne-tombe-pas-juste", entreprise: "nova" },
+  { code: "le-releve-du-fournisseur", entreprise: "nova", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se
