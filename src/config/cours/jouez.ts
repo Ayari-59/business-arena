@@ -1388,6 +1388,20 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Retrouvez le résultat du tour. Si c'était la fin de l'année, combien iraient en réserve légale, et combien pourriez-vous verser aux associés tout en gardant de quoi investir ? Que deviendraient vos capitaux propres et votre trésorerie ?",
   }),
+  "emprunt-ou-credit-bail": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez le compte de résultat.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "Relevez les charges financières et l'impôt du tour. De combien l'impôt baisserait-il si les charges financières montaient de 1 000 € ? Qu'en déduisez-vous du coût d'un emprunt après impôt ? Si un équipement du bilan était loué en crédit-bail, quelle charge le remplacerait au compte de résultat ?",
+  }),
+  "le-plan-de-financement": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez le budget de trésorerie et le bilan.`,
+    lieux: ["budget-de-tresorerie", "bilan"],
+    chercher:
+      "Recalculez la CAF du second tour : le résultat net plus les dotations aux amortissements. Si vous deviez acheter un équipement au tour suivant, la CAF, la trésorerie du bilan et un emprunt suffiraient-ils à le payer, remboursements compris ?",
+  }),
 };
 
 /**

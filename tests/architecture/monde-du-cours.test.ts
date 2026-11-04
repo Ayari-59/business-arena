@@ -379,6 +379,11 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "chapitres/l-affectation-du-resultat.ts",
   "situations/par-chapitre/la-banque-propose-l-escompte.ts",
   "situations/par-chapitre/l-associe-qui-veut-plus.ts",
+  // Le BTS CG P6 6.5.2 : emprunt ou crédit-bail, puis le plan de financement (monde/financement-de-la-gamme.ts), et leurs cas.
+  "chapitres/emprunt-ou-credit-bail.ts",
+  "chapitres/le-plan-de-financement.ts",
+  "situations/par-chapitre/le-banc-en-credit-bail.ts",
+  "situations/par-chapitre/la-banque-plafonne-son-pret.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
@@ -523,6 +528,10 @@ const NE_LISENT_PLUS_L_ANNEE_FIGEE: readonly string[] = [
   "chapitres/l-affectation-du-resultat.ts",
   "situations/par-chapitre/la-banque-propose-l-escompte.ts",
   "situations/par-chapitre/l-associe-qui-veut-plus.ts",
+  "chapitres/emprunt-ou-credit-bail.ts",
+  "chapitres/le-plan-de-financement.ts",
+  "situations/par-chapitre/le-banc-en-credit-bail.ts",
+  "situations/par-chapitre/la-banque-plafonne-son-pret.ts",
 ];
 
 /** Le premier chemin d'imports qui atteint un fichier donné, ou rien. */

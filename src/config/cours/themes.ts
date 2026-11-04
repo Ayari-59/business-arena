@@ -94,6 +94,8 @@ export const THEMES: readonly Theme[] = [
       "financer-autrement",
       "optimiser-la-tresorerie",
       "l-affectation-du-resultat",
+      "emprunt-ou-credit-bail",
+      "le-plan-de-financement",
     ],
     familles: ["finance"],
   },
