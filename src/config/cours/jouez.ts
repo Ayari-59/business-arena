@@ -1276,6 +1276,20 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "La trésorerie de votre budget passe-t-elle sous zéro à un moment ? Chiffrez ce que coûterait un découvert, puis un crédit d'un mois, et dites lequel vous retiendriez. Le bilan du tour aurait-il pu se prévoir à partir de vos budgets ?",
   }),
+  "le-seuil-en-avenir-aleatoire": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez trois tours sans changer vos décisions, et notez à chaque tour vos ventes et votre résultat.`,
+    lieux: ["analyse-des-couts", "compte-de-resultat"],
+    chercher:
+      "Vos ventes ont-elles varié d'un tour à l'autre à décisions égales ? Prenez leur moyenne comme espérance et leur écart à la moyenne comme ordre de grandeur de l'écart-type, puis estimez la probabilité de passer sous le seuil de rentabilité de l'analyse des coûts.",
+  }),
+  "piloter-la-qualite": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Jouez deux tours, le second avec un « Budget qualité » plus élevé.`,
+    lieux: ["feuille", "compte-de-resultat"],
+    chercher:
+      "Sous les états financiers, relevez les rebuts de chaque tour et leur coût. Quelle part des unités produites représentent-ils ? Le budget qualité en plus a-t-il réduit cette part assez pour se payer ?",
+  }),
 };
 
 /**

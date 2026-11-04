@@ -849,6 +849,13 @@ describe.each([
   { code: "equilibrer-la-tresorerie", entreprise: "nova", telephone: true },
   { code: "si-le-fournisseur-fermait-en-mai", entreprise: "nova" },
   { code: "un-banc-plus-cher", entreprise: "nova", telephone: true },
+  // Le seuil de profitabilité en avenir aléatoire et le pilotage de la qualité (DCG UE 11) : un curseur, un laboratoire, un tableau à compléter, puis leurs cas.
+  { code: "le-seuil-en-avenir-aleatoire", entreprise: "nova" },
+  { code: "le-seuil-en-avenir-aleatoire", entreprise: "nova", telephone: true },
+  { code: "piloter-la-qualite", entreprise: "nova" },
+  { code: "piloter-la-qualite", entreprise: "nova", telephone: true },
+  { code: "une-campagne-au-succes-incertain", entreprise: "nova" },
+  { code: "des-aimants-moins-chers", entreprise: "nova", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se
