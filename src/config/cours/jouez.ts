@@ -1429,6 +1429,54 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     lieux: ["compte-de-resultat", "bilan"],
     chercher:
       "De combien la trésorerie a-t-elle varié sur le second tour ? Séparez ce qui vient de l'activité (le résultat, plus la dotation aux amortissements, moins la hausse du besoin en fonds de roulement), de l'investissement et du financement. L'activité a-t-elle payé seule vos investissements ?",
+  }),  "la-valeur-et-le-temps": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relisez le bilan et le budget de trésorerie.`,
+    lieux: ["bilan", "budget-de-tresorerie"],
+    chercher:
+      "Relevez votre trésorerie à la fin du second tour. Si vous la placiez trois ans à 3 %, intérêts capitalisés, que vaudrait-elle ? Et si un équipement de votre bilan était à remplacer dans cinq ans, quelle somme faudrait-il mettre de côté chaque année ?",
+  }),
+  "le-marche-financier": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relisez le bilan et le compte de résultat.`,
+    lieux: ["bilan", "compte-de-resultat"],
+    chercher:
+      "Si votre entreprise était cotée et versait la moitié de son résultat en dividendes, en hausse de 2 % par an, que vaudraient ses capitaux propres pour des actionnaires qui exigent 9 % ? Que deviendrait cette valeur si les taux montaient d'un point ?",
+  }),
+  "arbitrer-les-couts-de-financement": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relisez le bilan et le compte de résultat.`,
+    lieux: ["bilan", "compte-de-resultat"],
+    chercher:
+      "Relevez vos capitaux propres, vos dettes financières et vos charges financières. Quel taux votre dette vous coûte-t-elle, après impôt ? Avec des actionnaires qui exigent 9 %, quel est votre coût moyen pondéré du capital ?",
+  }),
+  "le-bfr-d-exploitation-normatif": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez le compte de résultat et le bilan du second.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "Rapportez vos créances clients, votre stock et vos dettes fournisseurs au chiffre d'affaires du tour : combien de jours de chiffre d'affaires chacun représente-t-il ? Lequel pèse le plus dans votre besoin en fonds de roulement, et quel délai faudrait-il changer pour l'alléger ?",
+  }),
+  "les-acteurs-et-les-modes-de-financement": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez le bilan du second.`,
+    lieux: ["bilan"],
+    chercher:
+      "Relevez vos capitaux propres et vos dettes financières. Si vous deviez financer un nouvel équipement, qui le paierait : votre trésorerie, un emprunt, ou un apport des associés ? Que vous engagez-vous à rendre avec un emprunt, et que cédez-vous avec un apport ?",
+  }),
+  "le-diagnostic-financier-et-extra-financier": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez trois tours, puis relisez le compte de résultat et le bilan de chacun.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "Calculez, tour par tour, la croissance du chiffre d'affaires, le taux de marge brute (EBE ÷ chiffre d'affaires), l'endettement et le délai des clients. Qu'est-ce qui s'améliore, qu'est-ce qui se dégrade ? Rédigez en trois lignes la conclusion que vous rendriez à votre banque.",
+  }),
+  "evaluer-un-investissement-durable": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Avant d'investir, notez l'investissement envisagé, puis jouez deux tours.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "Si l'énergie de votre activité coûtait 50 % de plus, de combien votre résultat baisserait-il ? Un équipement plus sobre, plus cher à l'achat, se rembourserait-il sur sa durée ? Quels critères non financiers feriez-vous valoir pour le choisir ?",
   }),
 };
 

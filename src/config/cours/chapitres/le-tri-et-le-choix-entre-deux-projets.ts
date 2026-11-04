@@ -316,6 +316,7 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
   ],
   libre: false,
   prerequis: ["la-valeur-actuelle-nette"],
+  ensuite: ["evaluer-un-investissement-durable"],
   entreprises: {
     codes: ENTREPRISES_DES_PROJETS,
     pourquoi:

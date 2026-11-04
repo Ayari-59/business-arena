@@ -394,6 +394,23 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "chapitres/le-tableau-des-flux-de-tresorerie.ts",
   "situations/par-chapitre/la-seconde-ligne-payee-en-decembre.ts",
   "situations/par-chapitre/le-dividende-de-l-associe.ts",
+  // La DCG UE6 2.1, 3.4 et 3.3 : la valeur et le temps, le marché financier, les coûts de financement (monde/valeur-et-temps.ts, marche-financier.ts, couts-de-financement.ts), et leurs cas.
+  "chapitres/la-valeur-et-le-temps.ts",
+  "chapitres/le-marche-financier.ts",
+  "chapitres/arbitrer-les-couts-de-financement.ts",
+  "situations/par-chapitre/le-compte-a-terme-progressif.ts",
+  "situations/par-chapitre/l-obligation-verte-a-980.ts",
+  "situations/par-chapitre/l-associe-qui-prefere-la-dette.ts",
+  // La DCG UE6, 2.2, 3.1 et 3.2 : le BFR d'exploitation normatif (monde/bfr-normatif.ts), les acteurs et les modes de financement (monde/acteurs-du-financement.ts), et leurs cas.
+  "chapitres/le-bfr-d-exploitation-normatif.ts",
+  "chapitres/les-acteurs-et-les-modes-de-financement.ts",
+  "situations/par-chapitre/campustech-double-sa-commande.ts",
+  "situations/par-chapitre/la-banque-demande-une-garantie.ts",
+  // Le DCG UE6 (programme 2025), 1.1, 1.6, 1.7 et 2.4 : le diagnostic sur trois exercices (monde/diagnostic-de-nova.ts) et l'investissement durable (monde/investissement-durable.ts), et leurs cas.
+  "chapitres/le-diagnostic-financier-et-extra-financier.ts",
+  "chapitres/evaluer-un-investissement-durable.ts",
+  "situations/par-chapitre/le-pret-indexe-sur-la-durabilite.ts",
+  "situations/par-chapitre/deux-devis-pour-chauffer-l-atelier.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
@@ -546,6 +563,20 @@ const NE_LISENT_PLUS_L_ANNEE_FIGEE: readonly string[] = [
   "chapitres/le-plan-de-financement.ts",
   "situations/par-chapitre/le-banc-en-credit-bail.ts",
   "situations/par-chapitre/la-banque-plafonne-son-pret.ts",
+  "chapitres/la-valeur-et-le-temps.ts",
+  "chapitres/le-marche-financier.ts",
+  "chapitres/arbitrer-les-couts-de-financement.ts",
+  "situations/par-chapitre/le-compte-a-terme-progressif.ts",
+  "situations/par-chapitre/l-obligation-verte-a-980.ts",
+  "situations/par-chapitre/l-associe-qui-prefere-la-dette.ts",
+  "chapitres/le-bfr-d-exploitation-normatif.ts",
+  "chapitres/les-acteurs-et-les-modes-de-financement.ts",
+  "situations/par-chapitre/campustech-double-sa-commande.ts",
+  "situations/par-chapitre/la-banque-demande-une-garantie.ts",
+  "chapitres/le-diagnostic-financier-et-extra-financier.ts",
+  "chapitres/evaluer-un-investissement-durable.ts",
+  "situations/par-chapitre/le-pret-indexe-sur-la-durabilite.ts",
+  "situations/par-chapitre/deux-devis-pour-chauffer-l-atelier.ts",
 ];
 
 /** Le premier chemin d'imports qui atteint un fichier donné, ou rien. */

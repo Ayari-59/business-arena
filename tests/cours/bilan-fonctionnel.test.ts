@@ -587,3 +587,37 @@ describe("l'export de compatibilité : l'année figée des neuf entreprises, que
     expect(bilanDeLExercice(cas).fondsDeRoulement).not.toBe(bilanFonctionnel(cas).apres.frng);
   });
 });
+
+/**
+ * LE RETRAITEMENT DU CRÉDIT-BAIL AU BILAN FONCTIONNEL (DCG UE6, 1.4 : « il est attendu de savoir faire
+ * le retraitement du crédit-bail »). La variante du chapitre des soldes, refaite à la main : la ligne
+ * en crédit-bail (13 000 € de redevances), ses 60 000 € placés au taux du compte à terme du 6 janvier au
+ * 31 décembre (355 jours : 1 775 €), plus de dotation, l'impôt recalculé.
+ */
+describe("la ligne en crédit-bail, retraitée au bilan fonctionnel", () => {
+  it("le résultat de la variante, et le bilan fonctionnel avant retraitement : plus d'emplois stables", async () => {
+    const { ligneEnCreditBail } = await import("../../src/config/cours/chapitres/bilan-fonctionnel");
+    const v = ligneEnCreditBail(casDeLEntreprise("nova"));
+    const c = (x: number) => Math.round(x * 100) / 100 + 0;
+    expect(v.placementGarde).toBe(c((60_000 * 0.03 * 355) / 360));
+    const avantImpot = c(99_967.96 + 9_861.11 - 13_000 + 1_775);
+    expect(v.impot).toBe(Math.round(42_500 * 0.15 + (avantImpot - 42_500) * 0.25));
+    expect(v.avant.emploisStables).toBe(0);
+    expect(v.capitauxPropres).toBe(c(150_000 + avantImpot - v.impot));
+  });
+
+  it("le retraitement : 60 000 € en emplois, 9 861,11 € en ressources propres, 50 138,89 € en dettes ; le fonds de roulement ne bouge pas", async () => {
+    const { BILAN_FONCTIONNEL, ligneEnCreditBail } = await import("../../src/config/cours/chapitres/bilan-fonctionnel");
+    const v = ligneEnCreditBail(casDeLEntreprise("nova"));
+    const c = (x: number) => Math.round(x * 100) / 100 + 0;
+    expect([v.ligne, v.amortissements, v.dettesEnPlus]).toEqual([60_000, 9_861.11, 50_138.89]);
+    expect(v.dettesFinancieres).toBe(68_000 + 50_138.89);
+    expect(v.ressourcesStables).toBe(c(v.avant.ressourcesStables.total + 60_000));
+    expect(v.fondsDeRoulement).toBe(v.avant.fondsDeRoulement);
+    const e = BILAN_FONCTIONNEL.etapes.find((x) => x.id === "le-credit-bail") as EtapeMontants;
+    expect(e.objectifs).toEqual([0]);
+    expect(BILAN_FONCTIONNEL.objectifs[0]).toMatch(/crédit-bail/);
+    expect(e.champs(casDeLEntreprise("nova"), { soldes: {} }).map((x) => x.attendu)).toEqual([60_000, 118_138.89, v.ressourcesStables, v.fondsDeRoulement]);
+    expect(BILAN_FONCTIONNEL.blocs).toContain("DCG UE6 · Finance d'entreprise");
+  });
+});

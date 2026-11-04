@@ -164,6 +164,13 @@ import { LE_BANC_EN_CREDIT_BAIL } from "./par-chapitre/le-banc-en-credit-bail";
 import { LA_BANQUE_PLAFONNE_SON_PRET } from "./par-chapitre/la-banque-plafonne-son-pret";
 import { LA_SECONDE_LIGNE_PAYEE_EN_DECEMBRE } from "./par-chapitre/la-seconde-ligne-payee-en-decembre";
 import { LE_DIVIDENDE_DE_L_ASSOCIE } from "./par-chapitre/le-dividende-de-l-associe";
+import { LE_COMPTE_A_TERME_PROGRESSIF } from "./par-chapitre/le-compte-a-terme-progressif";
+import { L_OBLIGATION_VERTE_A_980 } from "./par-chapitre/l-obligation-verte-a-980";
+import { L_ASSOCIE_QUI_PREFERE_LA_DETTE } from "./par-chapitre/l-associe-qui-prefere-la-dette";
+import { CAMPUSTECH_DOUBLE_SA_COMMANDE } from "./par-chapitre/campustech-double-sa-commande";
+import { LA_BANQUE_DEMANDE_UNE_GARANTIE } from "./par-chapitre/la-banque-demande-une-garantie";
+import { LE_PRET_INDEXE_SUR_LA_DURABILITE } from "./par-chapitre/le-pret-indexe-sur-la-durabilite";
+import { DEUX_DEVIS_POUR_CHAUFFER_L_ATELIER } from "./par-chapitre/deux-devis-pour-chauffer-l-atelier";
 export type { Situation } from "./types";
 
 /**
@@ -343,6 +350,13 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LA_BANQUE_PLAFONNE_SON_PRET,
   LA_SECONDE_LIGNE_PAYEE_EN_DECEMBRE,
   LE_DIVIDENDE_DE_L_ASSOCIE,
+  LE_COMPTE_A_TERME_PROGRESSIF,
+  L_OBLIGATION_VERTE_A_980,
+  L_ASSOCIE_QUI_PREFERE_LA_DETTE,
+  CAMPUSTECH_DOUBLE_SA_COMMANDE,
+  LA_BANQUE_DEMANDE_UNE_GARANTIE,
+  LE_PRET_INDEXE_SUR_LA_DURABILITE,
+  DEUX_DEVIS_POUR_CHAUFFER_L_ATELIER,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

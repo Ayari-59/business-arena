@@ -56,12 +56,22 @@ import { INVESTISSEMENT_DE_LA_GAMME, structureDeNova } from "../../src/config/co
 import { B, FACTURE_DE_DECEMBRE, garantieSurSonora } from "../../src/config/cours/monde/financer-et-placer";
 import { CONDITIONS_DE_LA_BANQUE } from "../../src/config/cours/monde/equilibre-de-tresorerie";
 import { cloture } from "../../src/config/cours/monde/cloture";
-import { BANC, EMPRUNT_DE_LA_LIGNE, LIGNE_A_FINANCER, RESERVE_DE_LA_GAMME, TAUX_DE_L_IMPOT, fluxDeLEmprunt, planDeFinancementDeLaGamme } from "../../src/config/cours/monde/financement-de-la-gamme";
+import { BANC, EMPRUNT_DE_LA_LIGNE, EMPRUNT_DU_PLAN_EQUILIBRE, LIGNE_A_FINANCER, RESERVE_DE_LA_GAMME, TAUX_DE_L_IMPOT, fluxDeLEmprunt, planDeFinancementDeLaGamme } from "../../src/config/cours/monde/financement-de-la-gamme";
 import { PRET_BANCAIRE, remboursements } from "../../src/config/cours/monde/financement-du-lycee";
 import { fluxDuProjet } from "../../src/config/cours/monde/finance";
 import { PROJET_LIGNE_SEMI_AUTOMATIQUE } from "../../src/config/cours/monde/projets-et-financement";
 import { CONTRAT_DE_PRET, IMPOT_SUR_LES_SOCIETES } from "../../src/config/cours/monde/exercice-de-nova";
 import { INVESTISSEMENT_ENVISAGE } from "../../src/config/cours/monde/nova-gestion";
+import { PAIEMENT_ECHELONNE, RENOUVELLEMENT, RESERVE_PLACEE, TAUX_DE_LA_BANQUE, interetsCourusDeLaReserve } from "../../src/config/cours/monde/valeur-et-temps";
+import { EMETTEUR, PLACEMENT_SANS_RISQUE, RENTABILITE_EXIGEE } from "../../src/config/cours/monde/marche-financier";
+import { DETTES_DU_31_DECEMBRE, EMPRUNT_DE_N_PLUS_1, PRIX_DE_L_ACTION, augmentationVueParLesActionnaires, coutDuCreditBail, coutParLeDividendeEnProgression, tableauDeLEmprunt } from "../../src/config/cours/monde/couts-de-financement";
+import { AUGMENTATION_DE_CAPITAL } from "../../src/config/cours/monde/comptabilite-approfondie";
+import { comparaison } from "../../src/config/cours/monde/financement-de-la-gamme";
+import { TAUX_D_ACTUALISATION_DE_NOVA } from "../../src/config/cours/monde/projets-et-financement";
+import { ANNEE_TYPE, DELAIS_DE_LA_FICHE, besoinAuBilan, bfrNormatif } from "../../src/config/cours/monde/bfr-normatif";
+import { APPORT_DE_LA_BUSINESS_ANGEL, BESOIN_EXTERNE, engagementBancaire, engagementsEnCours } from "../../src/config/cours/monde/acteurs-du-financement";
+import { BESOIN_DE_FONDS } from "../../src/config/cours/monde/comptabilite-approfondie";
+import { DELAI_DE_CAMPUSTECH } from "../../src/config/cours/monde/nova-gestion";
 
 /**
  * UNE SEULE NOVA DANS LE MONDE DU COURS (réconciliation d'octobre 2026). Les fiches qui disent la
@@ -606,5 +616,110 @@ describe("une seule NOVA, du bilan fonctionnel aux tableaux de flux", () => {
   it("la seconde ligne payée en décembre est la seconde ligne de N + 1, au même prix", () => {
     expect(SECONDE_LIGNE_PAYEE_EN_DECEMBRE.ht).toBe(SECONDE_LIGNE.ht);
     expect(SECONDE_LIGNE_PAYEE_EN_DECEMBRE.ht + SECONDE_LIGNE_PAYEE_EN_DECEMBRE.tva).toBe(EQUIPEMENT.ttc);
+  });
+});
+
+/**
+ * UNE SEULE NOVA DANS LA FINANCE DE LA DCG UE6 (la valeur et le temps, le marché financier, les coûts
+ * de financement) : la réserve est le compte à terme de l'exercice, et ses intérêts courus ceux de la
+ * clôture ; la ligne à remplacer est la première ligne ; le comptant du fournisseur est le prix de la
+ * ligne semi-automatique, la banque prête au taux du prêt de NOVA ; l'émetteur coté est le fournisseur
+ * de composants ; l'emprunt de N+1 est celui qui équilibre le plan de financement ; l'augmentation de
+ * capital est celle de juin N+1 ; le crédit-bail coûte ce que son chapitre calcule ; l'exigence des
+ * actionnaires par le dividende retombe sur le coût du capital de l'activité de NOVA.
+ */
+describe("une seule NOVA, de la valeur du temps au coût du capital", () => {
+  it("la réserve, la ligne à remplacer, l'offre du fournisseur et la banque sont celles des autres chapitres de NOVA", () => {
+    expect(RESERVE_PLACEE).toBe(PLACEMENT);
+    expect(interetsCourusDeLaReserve()).toBe(CLOTURE_DE_LA_FICHE.travaux.interetsDuPlacement);
+    expect([RENOUVELLEMENT.prixDAujourdHui, RENOUVELLEMENT.versements + 1]).toEqual([EQUIPEMENT.ht, EQUIPEMENT.dureeAns]);
+    expect(PAIEMENT_ECHELONNE.comptant).toBe(LIGNE_A_FINANCER.montant);
+    expect(TAUX_DE_LA_BANQUE).toBe(CONTRAT_DE_PRET.tauxAnnuel);
+  });
+
+  it("le marché se lit par le fournisseur de composants, au taux sans risque et à la prime de la fiche des projets", () => {
+    expect(EMETTEUR).toBe(NOVA_GESTION.semestre.fournisseur.nom);
+    expect(EMETTEUR).toBe(ELECTRO_COMPOSANTS.nom);
+    expect(RENTABILITE_EXIGEE).toBe(TAUX_D_ACTUALISATION_DE_NOVA);
+    expect(PLACEMENT_SANS_RISQUE).toBe(PLACEMENT.tauxAnnuel);
+  });
+
+  it("l'emprunt de N+1, les dettes, l'augmentation de capital et le crédit-bail sont ceux des autres chapitres", () => {
+    expect([EMPRUNT_DE_N_PLUS_1.montant, EMPRUNT_DE_N_PLUS_1.taux]).toEqual([EMPRUNT_DU_PLAN_EQUILIBRE, CONTRAT_DE_PRET.tauxAnnuel]);
+    const pret = remboursements(PRET_BANCAIRE(EXERCICE_DE_NOVA), EMPRUNT_DE_N_PLUS_1.montant);
+    expect(tableauDeLEmprunt("amortissement-constant").annees.map((a) => [a.interets, a.amortissement, a.annuite])).toEqual(pret.map((r) => [r.interets, r.capital, r.total]));
+    expect(DETTES_DU_31_DECEMBRE).toBe(CONTRAT_DE_PRET.capital - 3 * (CONTRAT_DE_PRET.capital / (CONTRAT_DE_PRET.dureeAns * CONTRAT_DE_PRET.echeancesParAn)));
+    const a = augmentationVueParLesActionnaires();
+    expect(a).toMatchObject(augmentationDeCapital());
+    expect(a.capitauxPropres).toBeCloseTo(beneficeAAffecter(EXERCICE_DE_NOVA).capital + CLOTURE_DE_LA_FICHE.resultatNet, 2);
+    expect(PRIX_DE_L_ACTION).toBe(AUGMENTATION_DE_CAPITAL.prixDEmission);
+    expect(coutDuCreditBail()).toBe(comparaison().tauxDuCreditBail);
+    expect(Math.round(coutParLeDividendeEnProgression() * 1e9) / 1e9).toBe(TAUX_D_ACTUALISATION_DE_NOVA);
+  });
+});
+
+/**
+ * UNE SEULE NOVA DANS LE BFR NORMATIF ET LES ACTEURS DU FINANCEMENT (DCG UE6 2.2, 3.1 et 3.2) : l'année
+ * type reprend les ventes de l'exercice (les particuliers, le contrat de CampusTech) et les délais de la
+ * fiche ; le besoin du bilan est celui de la clôture ; les 80 000 € à financer sont ceux qui équilibrent
+ * le plan de la gamme ; l'apport de la business angel est l'augmentation de capital de N+1 ; l'emprunt
+ * en cours est celui de la création.
+ */
+describe("une seule NOVA, du BFR normatif aux acteurs du financement", () => {
+  it("l'année type et ses délais sont ceux de la fiche ; le besoin du bilan, celui de la clôture", () => {
+    const f = EXERCICE_DE_NOVA;
+    expect(ANNEE_TYPE.particuliers).toBe(f.ventesAuxParticuliers.reduce((t, q) => t + q, 0));
+    expect(ANNEE_TYPE.campustech).toBe(12 * f.campustech.enceintesParFacture);
+    expect(DELAIS_DE_LA_FICHE.campustech).toBe(DELAI_DE_CAMPUSTECH);
+    expect(DELAIS_DE_LA_FICHE.campustech).toBe(f.campustech.delai);
+    expect(DELAIS_DE_LA_FICHE.fournisseur).toBe(f.fournisseur.delai);
+    expect(bfrNormatif().caHt).toBe((ANNEE_TYPE.particuliers + ANNEE_TYPE.campustech) * f.prixDeLEnceinte);
+    expect(besoinAuBilan()).toBe(cloture(f).fonctionnel.besoinDExploitation);
+    expect(besoinAuBilan()).toBe(CLOTURE_DE_LA_FICHE.fonctionnel.besoinDExploitation);
+  });
+
+  it("les 80 000 € équilibrent le plan de la gamme ; la business angel est l'augmentation de N+1 ; l'emprunt en cours, celui de la création", () => {
+    expect(BESOIN_EXTERNE).toBe(EMPRUNT_DU_PLAN_EQUILIBRE);
+    expect(planDeFinancementDeLaGamme({ emprunt: BESOIN_EXTERNE }).equilibre).toBe(true);
+    expect(engagementBancaire(BESOIN_EXTERNE).tableau).toEqual(planDeFinancementDeLaGamme({ emprunt: BESOIN_EXTERNE }).tableauDeLEmprunt);
+    expect(APPORT_DE_LA_BUSINESS_ANGEL.montant).toBe(BESOIN_DE_FONDS);
+    expect(APPORT_DE_LA_BUSINESS_ANGEL.prix).toBe(AUGMENTATION_DE_CAPITAL.prixDEmission);
+    expect(engagementsEnCours().capitalRestantDu).toBe(CONTRAT_DE_PRET.capital - 3 * 4_000);
+  });
+});
+
+/**
+ * UNE SEULE NOVA SUR TROIS EXERCICES (DCG UE6, le diagnostic et l'investissement durable) : N est la
+ * clôture du cours ; N + 1 lit la seconde ligne manuelle de la comptabilité approfondie (60 000 €, ses
+ * composants), l'augmentation de capital du 30 juin N + 1, le prêt de N échéance par échéance, la
+ * demande de One de nova-capacite.ts, la gamme du projet A et l'équipe qu'il demande, et les
+ * équipements d'efficacité du chapitre « Évaluer un investissement durable ».
+ */
+describe("une seule NOVA, de la clôture de N au diagnostic de trois exercices", () => {
+  it("N est la clôture : le même résultat, la même CAF, la même trésorerie nette", async () => {
+    const { exercicesDeNova } = await import("../../src/config/cours/monde/diagnostic-de-nova");
+    const [n] = exercicesDeNova();
+    const k = cloture(EXERCICE_DE_NOVA);
+    expect([n!.resultatNet, n!.caf, n!.tresorerieNette, n!.dettesFinancieres]).toEqual([CLOTURE_DE_LA_FICHE.resultatNet, k.caf.additive, k.fonctionnel.tresorerieNette, k.fonctionnel.ressourcesStables.dettesFinancieres]);
+  });
+
+  it("N + 1 et N + 2 lisent la seconde ligne, l'augmentation de capital, le prêt, la demande et la gamme des autres fiches", async () => {
+    const { exercicesDeNova, dotationsDesExercices, EFFECTIFS } = await import("../../src/config/cours/monde/diagnostic-de-nova");
+    const { composantsDeLaSecondeLigne, SECONDE_LIGNE } = await import("../../src/config/cours/monde/comptabilite-approfondie");
+    const { empruntALaCloture } = await import("../../src/config/cours/monde/emprunt");
+    const { ANNEE_N_PLUS_1 } = await import("../../src/config/cours/monde/nova-capacite");
+    const { VENTES_DE_GO, VENTES_DE_ONE_PERDUES, VENTES_DE_STUDIO, PROJET_LIGNE_MANUELLE, COUT_ANNUEL_D_UN_OPERATEUR } = await import("../../src/config/cours/monde/projets-et-financement");
+    const { EQUIPEMENTS_D_EFFICACITE } = await import("../../src/config/cours/monde/investissement-durable");
+    const [, n1, n2] = exercicesDeNova();
+    expect(n1!.investissements).toBe(SECONDE_LIGNE.ht + PROJET_LIGNE_MANUELLE.actifs[1]!.montant + EQUIPEMENTS_D_EFFICACITE.montant);
+    expect(PROJET_LIGNE_MANUELLE.actifs[0]!.montant).toBe(SECONDE_LIGNE.ht);
+    expect(dotationsDesExercices()["N+1"]).toBeGreaterThan(composantsDeLaSecondeLigne().total);
+    expect(n1!.apports).toBe(augmentationDeCapital().fonds);
+    expect([n1!.dettesFinancieres, n2!.dettesFinancieres]).toEqual([empruntALaCloture(CONTRAT_DE_PRET, 1).capitalRestantDu, empruntALaCloture(CONTRAT_DE_PRET, 2).capitalRestantDu]);
+    expect(n1!.enceintes).toBe(ANNEE_N_PLUS_1.demande.reduce((t, q) => t + q, 0) - VENTES_DE_ONE_PERDUES[0] + VENTES_DE_GO[0] + VENTES_DE_STUDIO[0]);
+    expect(n1!.personnel).toBe((PAIE_DU_MOIS.effectif + 2) * COUT_ANNUEL_D_UN_OPERATEUR);
+    expect(EFFECTIFS.N).toBe(PAIE_DU_MOIS.effectif);
+    // Le résultat de N est affecté sans dividende : aucun dividende en N + 1.
+    expect(n1!.dividendes).toBe(0);
   });
 });
