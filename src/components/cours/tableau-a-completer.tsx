@@ -68,7 +68,7 @@ export function GrilleACompleter({
         </figcaption>
         {/* Le tableau défile seul, de côté : sur téléphone, la page ne déborde pas. */}
         <div className="max-w-full overflow-x-auto overscroll-x-contain" role="region" aria-labelledby={titre} tabIndex={0} data-defilement-du-tableau="">
-          <table role="table" className={`w-full border-collapse text-sm ${classeDEmpilement(grille.colonnes.length, grille.lignes.some((l) => l.cellules.some((c) => c.texte !== undefined && !c.saisir)))}`}>
+          <table role="table" className={`w-full border-collapse text-sm ${classeDEmpilement(grille.colonnes.length, true)}`}>
             <thead role="rowgroup">
               <tr role="row" className="border-b border-slate-300">
                 <th role="columnheader" scope="col" className="sticky left-0 z-10 bg-[var(--papier)] py-1.5 pr-3 text-left">

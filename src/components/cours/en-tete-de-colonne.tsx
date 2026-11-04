@@ -39,14 +39,14 @@ export function intituleCourt(intitule: string): string {
 export const COLONNES_POUR_EMPILER = 4;
 
 /**
- * Un tableau dont une cellule porte du texte (la nature d'une unité d'œuvre) s'empile plus tôt : mesuré à
- * 390 px, trois colonnes de cases à remplir avec une ligne de texte dépassent encore de 46 px.
+ * Un tableau à compléter s'empile plus tôt : une case à remplir est plus large qu'un chiffre écrit. Mesuré
+ * à 390 px, trois colonnes de cases dépassent encore (de 10 px pour deux livraisons et leur total).
  */
-export const COLONNES_POUR_EMPILER_AVEC_TEXTE = 3;
+export const COLONNES_POUR_EMPILER_A_COMPLETER = 3;
 
 /** La classe d'un tableau de `n` colonnes : empilé sur téléphone s'il est trop large. */
-export const classeDEmpilement = (n: number, avecTexte = false) =>
-  n >= (avecTexte ? COLONNES_POUR_EMPILER_AVEC_TEXTE : COLONNES_POUR_EMPILER) ? "tableau-empilable" : "";
+export const classeDEmpilement = (n: number, aCompleter = false) =>
+  n >= (aCompleter ? COLONNES_POUR_EMPILER_A_COMPLETER : COLONNES_POUR_EMPILER) ? "tableau-empilable" : "";
 
 /** Les classes d'un intitulé de colonne : il passe à la ligne, les capitales espacées seulement sur grand écran. */
 export const CLASSES_D_EN_TETE = "px-1.5 py-1.5 text-right align-bottom text-xs font-semibold leading-tight text-slate-400 text-balance hyphens-auto sm:px-2 sm:uppercase sm:tracking-etiquette";
