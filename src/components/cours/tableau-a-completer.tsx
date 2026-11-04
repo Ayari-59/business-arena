@@ -91,7 +91,7 @@ export function GrilleACompleter({
                     const cle = cleDeCellule(i, j);
                     if (!c.saisir) {
                       return (
-                        <td role="cell" key={j} className="whitespace-nowrap px-1 py-1.5 text-right tabular-nums sm:px-2" data-colonne={grille.colonnes[j]}>
+                        <td role="cell" key={j} className={`${c.texte === undefined ? "whitespace-nowrap" : "min-w-20 hyphens-auto"} px-1 py-1.5 text-right tabular-nums sm:px-2`} data-colonne={grille.colonnes[j]}>
                           {valeurEcrite(c)}
                         </td>
                       );
