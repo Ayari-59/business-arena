@@ -698,6 +698,20 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Ajoutez au résultat du tour la dotation aux amortissements : c'est l'argent que l'activité a dégagé. Suffirait-il à payer un nouvel équipement ? Sinon, que pèsent les emprunts face aux capitaux propres ?",
   }),
+  "optimiser-la-tresorerie": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le bilan.`,
+    lieux: ["bilan"],
+    chercher:
+      "Votre trésorerie est-elle positive ou négative à la fin du tour ? Si elle l'est, quelle part pourriez-vous placer sans manquer d'argent pour vos dettes du moment ? Si elle ne l'est pas, ce manque vient-il d'un achat ponctuel ou de clients qui paient tard ?",
+  }),
+  "l-affectation-du-resultat": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le compte de résultat et le bilan.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "Retrouvez le résultat du tour. Si c'était la fin de l'année, combien iraient en réserve légale, et combien pourriez-vous verser aux associés tout en gardant de quoi investir ? Que deviendraient vos capitaux propres et votre trésorerie ?",
+  }),
   "effectif-et-masse-salariale": (c) => ({
     niveau: 1,
     faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le compte de résultat.`,

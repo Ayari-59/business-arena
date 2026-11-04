@@ -152,6 +152,8 @@ import { LA_PUBLICITE_LIGNE_PAR_LIGNE } from "./par-chapitre/la-publicite-ligne-
 import { LE_BANC_PERD_UNE_JOURNEE } from "./par-chapitre/le-banc-perd-une-journee";
 import { DEUX_COMMANDES_PAR_AN } from "./par-chapitre/deux-commandes-par-an";
 import { JANVIER_EST_TOMBE } from "./par-chapitre/janvier-est-tombe";
+import { LA_BANQUE_PROPOSE_L_ESCOMPTE } from "./par-chapitre/la-banque-propose-l-escompte";
+import { L_ASSOCIE_QUI_VEUT_PLUS } from "./par-chapitre/l-associe-qui-veut-plus";
 export type { Situation } from "./types";
 
 /**
@@ -319,6 +321,8 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LE_BANC_PERD_UNE_JOURNEE,
   DEUX_COMMANDES_PAR_AN,
   JANVIER_EST_TOMBE,
+  LA_BANQUE_PROPOSE_L_ESCOMPTE,
+  L_ASSOCIE_QUI_VEUT_PLUS,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */
