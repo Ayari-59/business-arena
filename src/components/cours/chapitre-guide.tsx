@@ -1160,13 +1160,13 @@ function EtapeDeSimulation({ etape, cas, chapitre, index, suivi, classe, noter, 
           <GraphiqueDuLaboratoire graphique={graphique} points={lecture.graphique} levier={leviers.find((l) => l.code === graphique.levier)!} position={affichee} />
         )}
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[22rem] text-sm">
+          <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs uppercase tracking-etiquette">
-                <th className="py-1 pr-2 font-semibold">Ce que montre la simulation</th>
-                <th className="py-1 pr-2 text-right font-semibold">Au départ</th>
-                <th className="py-1 pr-2 text-right font-semibold">Maintenant</th>
-                <th className="w-[30%] py-1" aria-hidden />
+              <tr className="text-left text-xs leading-tight sm:uppercase sm:tracking-etiquette">
+                <th className="py-1 pr-2 align-bottom font-semibold text-balance">Ce que montre la simulation</th>
+                <th className="py-1 pr-2 text-right align-bottom font-semibold">Au départ</th>
+                <th className="py-1 pr-2 text-right align-bottom font-semibold">Maintenant</th>
+                <th className="w-[22%] py-1 sm:w-[30%]" aria-hidden />
               </tr>
             </thead>
             <tbody>

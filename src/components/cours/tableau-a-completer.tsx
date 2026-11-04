@@ -1,5 +1,6 @@
 "use client";
 
+import { CLASSES_D_EN_TETE, IntituleDeColonne } from "./en-tete-de-colonne";
 import { useId, useState } from "react";
 import { bouton } from "@/components/bouton";
 import { changerDeSigne } from "@/pedagogy/cours/correcteur";
@@ -67,15 +68,15 @@ export function GrilleACompleter({
         </figcaption>
         {/* Le tableau défile seul, de côté : sur téléphone, la page ne déborde pas. */}
         <div className="max-w-full overflow-x-auto overscroll-x-contain" role="region" aria-labelledby={titre} tabIndex={0} data-defilement-du-tableau="">
-          <table className="min-w-max border-collapse text-sm">
+          <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="border-b border-slate-300">
                 <th scope="col" className="sticky left-0 z-10 bg-[var(--papier)] py-1.5 pr-3 text-left">
                   <span className="sr-only">Ligne</span>
                 </th>
                 {grille.colonnes.map((c) => (
-                  <th key={c} scope="col" className="whitespace-nowrap px-2 py-1.5 text-right text-xs font-semibold uppercase tracking-etiquette text-slate-400">
-                    {c}
+                  <th key={c} scope="col" className={CLASSES_D_EN_TETE}>
+                    <IntituleDeColonne intitule={c} />
                   </th>
                 ))}
               </tr>
@@ -83,14 +84,14 @@ export function GrilleACompleter({
             <tbody>
               {grille.lignes.map((l, i) => (
                 <tr key={l.libelle} className={`border-b border-slate-200 last:border-0 ${l.fort ? "border-t border-t-slate-400 font-semibold" : ""}`} data-ligne={l.libelle}>
-                  <th scope="row" className="sticky left-0 z-10 max-w-48 bg-[var(--papier)] py-1.5 pr-3 text-left font-normal sm:max-w-64">
+                  <th scope="row" className="sticky left-0 z-10 max-w-32 bg-[var(--papier)] py-1.5 pr-2 text-left font-normal hyphens-auto sm:max-w-64 sm:pr-3">
                     <span className={l.fort ? "font-semibold" : ""}>{l.libelle}</span>
                   </th>
                   {l.cellules.map((c, j) => {
                     const cle = cleDeCellule(i, j);
                     if (!c.saisir) {
                       return (
-                        <td key={j} className="whitespace-nowrap px-2 py-1.5 text-right tabular-nums">
+                        <td key={j} className="whitespace-nowrap px-1 py-1.5 text-right tabular-nums sm:px-2">
                           {valeurEcrite(c)}
                         </td>
                       );
@@ -102,7 +103,7 @@ export function GrilleACompleter({
                       <td key={j} className="px-1 py-1 text-right" data-cellule={cle}>
                         <span className="inline-flex items-center justify-end">
                           <input
-                            className={`champ w-28 min-w-0 px-2 py-1.5 text-right tabular-nums ${etat && !etat.juste ? "border-red-400" : ""}`}
+                            className={`champ w-20 min-w-0 px-1.5 py-1.5 text-right tabular-nums sm:w-28 sm:px-2 ${etat && !etat.juste ? "border-red-400" : ""}`}
                             inputMode="decimal"
                             autoComplete="off"
                             aria-label={nom}

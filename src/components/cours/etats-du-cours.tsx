@@ -1,4 +1,5 @@
 import { montantEcrit } from "@/pedagogy/cours/correcteur";
+import { CLASSES_D_EN_TETE, IntituleDeColonne } from "./en-tete-de-colonne";
 import { bilan, compteDeResultat, mouvements, tvaNette, type Ecriture, type LigneDEtat } from "@/pedagogy/cours/etats";
 import { intituleDe } from "@/pedagogy/cours/plan-comptable";
 import type { TableauDeDonnees, Vue } from "@/config/cours/types";
@@ -74,8 +75,8 @@ export function TableauDuCas({ tableau }: { tableau: TableauDeDonnees }) {
                 <span className="sr-only">Indicateur</span>
               </th>
               {tableau.colonnes.map((c) => (
-                <th key={c} scope="col" className="whitespace-nowrap px-2 py-1.5 text-right text-xs font-semibold uppercase tracking-etiquette text-slate-400">
-                  {c}
+                <th key={c} scope="col" className={CLASSES_D_EN_TETE}>
+                  <IntituleDeColonne intitule={c} />
                 </th>
               ))}
             </tr>
@@ -83,11 +84,11 @@ export function TableauDuCas({ tableau }: { tableau: TableauDeDonnees }) {
           <tbody>
             {tableau.lignes.map((l) => (
               <tr key={l.libelle} className="border-b border-slate-200 last:border-0">
-                <th scope="row" className="py-1.5 pr-3 text-left font-normal">
+                <th scope="row" className="py-1.5 pr-2 text-left font-normal hyphens-auto sm:pr-3">
                   {l.libelle}
                 </th>
                 {l.valeurs.map((v, i) => (
-                  <td key={i} className="whitespace-nowrap px-2 py-1.5 text-right tabular-nums">
+                  <td key={i} className="whitespace-nowrap px-1 py-1.5 text-right tabular-nums sm:px-2">
                     {v}
                   </td>
                 ))}
