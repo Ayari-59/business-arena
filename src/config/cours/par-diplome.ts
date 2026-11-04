@@ -2,6 +2,7 @@ import { blocsDuChapitre, coursDeLaFormation, tableauDeCouverture } from "../cou
 import { formationParCode, formationProposee, type Formation } from "../formations";
 import { CHAPITRES_PROPOSES } from "../formations-proposees";
 import { dureeDuChapitre } from "./duree";
+import { couverteEnEntier } from "./matieres-en-entier";
 import { CHAPITRES } from "./registre";
 import { themeDuChapitre } from "./themes";
 import type { Chapitre } from "./types";
@@ -42,6 +43,8 @@ export interface BlocDuParcours {
   bloc: string | null;
   /** Le programme dont l'entrée relève, quand le texte en réunit plusieurs. */
   partie?: string;
+  /** Vrai si la matière n'est pas encore couverte en entier (config/cours/matieres-en-entier.ts). */
+  enCours: boolean;
   chapitres: readonly ChapitreDuDiplome[];
 }
 
@@ -109,8 +112,13 @@ export function coursDuDiplome(code: string): CoursDuDiplome | null {
   }
   const blocs: BlocDuParcours[] = [...parEntree]
     .sort(([a], [b]) => a - b)
-    .map(([r, c]) => ({ bloc: entrees[r]!.bloc, partie: entrees[r]!.partie, chapitres: c }));
-  if (autres.length > 0) blocs.push({ bloc: null, chapitres: autres });
+    .map(([r, c]) => ({
+      bloc: entrees[r]!.bloc,
+      partie: entrees[r]!.partie,
+      enCours: !couverteEnEntier(code, entrees[r]!.bloc, entrees[r]!.partie),
+      chapitres: c,
+    }));
+  if (autres.length > 0) blocs.push({ bloc: null, enCours: false, chapitres: autres });
   return { formation, blocs, premier: lignes[0] ?? null };
 }
 

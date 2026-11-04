@@ -138,6 +138,8 @@ describe("/cours : le catalogue par thème et le chapitre libre", () => {
     // Les chapitres, groupés par bloc du référentiel, numérotés dans l'ordre d'apprentissage.
     const parcours = coursDuDiplome("bts-mco")!;
     expect(await programme.locator("[data-bloc-du-diplome]").count()).toBe(parcours.blocs.length);
+    // Une matière que le cours ne couvre pas encore en entier le dit (config/cours/matieres-en-entier.ts).
+    expect(await programme.locator("[data-en-cours]").count()).toBe(parcours.blocs.filter((b) => b.enCours).length);
     expect(await programme.locator("[data-chapitre] [data-objectifs]").count()).toBe(
       parcours.blocs.reduce((n, b) => n + b.chapitres.length, 0),
     );

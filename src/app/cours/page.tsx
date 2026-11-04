@@ -297,7 +297,20 @@ async function CoursPage({
                       <h4 className="text-base font-semibold text-slate-100">
                         {b.bloc ?? "Autres chapitres du parcours"}
                         {b.partie ? <span className="ml-2 text-xs font-normal text-slate-400">{b.partie}</span> : null}
+                        {b.enCours ? (
+                          <span
+                            data-en-cours=""
+                            className="ml-2 inline-block rounded-full border border-amber-400/40 px-2 py-0.5 align-middle text-xs font-medium text-amber-300"
+                          >
+                            en cours
+                          </span>
+                        ) : null}
                       </h4>
+                      {b.enCours ? (
+                        <p className="text-xs text-slate-400">
+                          Cette matière n&apos;est pas encore couverte en entier. D&apos;autres chapitres arriveront.
+                        </p>
+                      ) : null}
                       <ol className="grid gap-3">
                         {b.chapitres.map((l) => (
                           <ChapitreDuParcours key={l.chapitre.code} ligne={l} imposee={imposee?.code} ouvert={ouverts.has(l.chapitre.code)} />
