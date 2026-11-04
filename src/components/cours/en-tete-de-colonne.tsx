@@ -31,6 +31,16 @@ export function intituleCourt(intitule: string): string {
   return FORMES_COURTES.reduce((t, [motif, court]) => t.replace(motif, court), intitule);
 }
 
+/**
+ * À partir de ce nombre de colonnes de chiffres, un tableau s'empile sur téléphone : chaque ligne devient un
+ * bloc où chaque valeur porte le nom de sa colonne (globals.css, `.tableau-empilable`). Mesuré à 390 px :
+ * trois colonnes tiennent, une répartition sur cinq centres ou un semestre de six mois, non.
+ */
+export const COLONNES_POUR_EMPILER = 4;
+
+/** La classe d'un tableau de `n` colonnes de chiffres : empilé sur téléphone s'il est trop large. */
+export const classeDEmpilement = (n: number) => (n >= COLONNES_POUR_EMPILER ? "tableau-empilable" : "");
+
 /** Les classes d'un intitulé de colonne : il passe à la ligne, les capitales espacées seulement sur grand écran. */
 export const CLASSES_D_EN_TETE = "px-1.5 py-1.5 text-right align-bottom text-xs font-semibold leading-tight text-slate-400 text-balance hyphens-auto sm:px-2 sm:uppercase sm:tracking-etiquette";
 

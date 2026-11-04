@@ -1,5 +1,5 @@
 import { montantEcrit } from "@/pedagogy/cours/correcteur";
-import { CLASSES_D_EN_TETE, IntituleDeColonne } from "./en-tete-de-colonne";
+import { CLASSES_D_EN_TETE, classeDEmpilement, IntituleDeColonne } from "./en-tete-de-colonne";
 import { bilan, compteDeResultat, mouvements, tvaNette, type Ecriture, type LigneDEtat } from "@/pedagogy/cours/etats";
 import { intituleDe } from "@/pedagogy/cours/plan-comptable";
 import type { TableauDeDonnees, Vue } from "@/config/cours/types";
@@ -68,27 +68,27 @@ export function TableauDuCas({ tableau }: { tableau: TableauDeDonnees }) {
     <figure className="grid max-w-3xl gap-2" data-tableau-du-cas="">
       <figcaption className="text-sm font-semibold">{tableau.titre}</figcaption>
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-300">
-              <th scope="col" className="py-1.5 pr-3 text-left text-xs font-semibold uppercase tracking-etiquette text-slate-400">
+        <table role="table" className={`w-full text-sm ${classeDEmpilement(tableau.colonnes.length)}`}>
+          <thead role="rowgroup">
+            <tr role="row" className="border-b border-slate-300">
+              <th role="columnheader" scope="col" className="py-1.5 pr-3 text-left text-xs font-semibold uppercase tracking-etiquette text-slate-400">
                 <span className="sr-only">Indicateur</span>
               </th>
               {tableau.colonnes.map((c) => (
-                <th key={c} scope="col" className={CLASSES_D_EN_TETE}>
+                <th key={c} role="columnheader" scope="col" className={CLASSES_D_EN_TETE}>
                   <IntituleDeColonne intitule={c} />
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody>
+          <tbody role="rowgroup">
             {tableau.lignes.map((l) => (
-              <tr key={l.libelle} className="border-b border-slate-200 last:border-0">
-                <th scope="row" className="py-1.5 pr-2 text-left font-normal hyphens-auto sm:pr-3">
+              <tr role="row" key={l.libelle} className="border-b border-slate-200 last:border-0">
+                <th role="rowheader" scope="row" className="py-1.5 pr-2 text-left font-normal hyphens-auto sm:pr-3">
                   {l.libelle}
                 </th>
                 {l.valeurs.map((v, i) => (
-                  <td key={i} className="whitespace-nowrap px-1 py-1.5 text-right tabular-nums sm:px-2">
+                  <td role="cell" key={i} className="whitespace-nowrap px-1 py-1.5 text-right tabular-nums sm:px-2" data-colonne={tableau.colonnes[i]}>
                     {v}
                   </td>
                 ))}
@@ -142,7 +142,7 @@ export function VueTva({ soldes }: { soldes: Record<string, number> }) {
       <table className="w-full text-sm">
         <tbody>
           {comptes.map((c) => (
-            <tr key={c}>
+            <tr role="row" key={c}>
               <td className="py-1.5 pr-2">
                 {c} {intituleDe(c)}
               </td>
@@ -151,7 +151,7 @@ export function VueTva({ soldes }: { soldes: Record<string, number> }) {
           ))}
         </tbody>
         <tfoot>
-          <tr className="border-t border-slate-300 font-semibold">
+          <tr role="row" className="border-t border-slate-300 font-semibold">
             <td className="py-1.5 pr-2">{t >= 0 ? "TVA due à l'État" : "Crédit de TVA : l'État doit à l'entreprise"}</td>
             <td className="whitespace-nowrap py-1.5 text-right tabular-nums">{m(Math.abs(t))}</td>
           </tr>
@@ -270,7 +270,7 @@ export function Journal({ journal }: { journal: readonly Ecriture[] }) {
           <table className="w-full text-xs">
             <tbody>
               {e.lignes.map((l, j) => (
-                <tr key={j}>
+                <tr role="row" key={j}>
                   <td className={`py-0.5 pr-2 ${l.credit > 0 ? "pl-4" : ""}`}>
                     <span className="tabular-nums font-semibold">{l.compte}</span> {intituleDe(l.compte)}
                   </td>
