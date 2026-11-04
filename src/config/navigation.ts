@@ -141,6 +141,13 @@ export const LIEN_CGV: LienDeMenu = {
   aide: "La commande, les prix, le paiement, la durée, la responsabilité et le droit applicable.",
 };
 
+/** Les conditions générales d'utilisation (/cgu) : les règles qui valent pour tous les utilisateurs. */
+export const LIEN_CGU: LienDeMenu = {
+  href: "/cgu",
+  libelle: "Conditions générales d'utilisation",
+  aide: "Qui utilise le service, les comptes et les codes, le bon usage, la disponibilité et le droit applicable.",
+};
+
 /** Les mentions que la loi impose, discrètes mais jamais absentes. */
 export const LIEN_MENTIONS: LienDeMenu = {
   href: "/mentions-legales",
@@ -341,6 +348,7 @@ export const NAVIGATION: readonly GroupeDeMenu[] = [
         aide: "Les scénarios, les situations, les modèles d'analyse : tout ce que la plateforme met entre les mains de vos élèves et de vos étudiants.",
       },
       LIEN_CGV,
+      LIEN_CGU,
     ],
   },
 ];

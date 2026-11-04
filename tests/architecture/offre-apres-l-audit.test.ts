@@ -65,8 +65,10 @@ describe("les conditions générales de vente", () => {
     }
     expect(t).toMatch(/Chorus Pro/);
     expect(t).toMatch(/mandat administratif/);
-    expect(t).toMatch(/40 €/);
-    expect(t).toMatch(/\[à compléter\]/);
+    // L'indemnité de 40 € et les choix du propriétaire se lisent dans config/conditions-legales.ts
+    // (novembre 2026) : plus rien n'y est « à compléter » (tests/architecture/conditions-generales.test.ts).
+    expect(t).toMatch(/INDEMNITE_DE_RECOUVREMENT_EUROS/);
+    expect(t).not.toMatch(/\[à compléter\]/);
     expect(t).toMatch(/\/mentions-legales/);
   });
 

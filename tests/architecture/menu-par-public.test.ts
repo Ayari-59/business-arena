@@ -181,6 +181,7 @@ describe("le menu rangé par public", () => {
       ["Offres", "/tarifs"],
       ["Fonctionnalités", "/fonctionnalites"],
       ["Conditions générales de vente", "/cgv"],
+      ["Conditions générales d'utilisation", "/cgu"],
     ]);
     // Les mentions légales quittent les offres, et restent au pied de page.
     expect(LIENS_TRANSVERSES.map((l) => l.href)).toContain(LIEN_MENTIONS.href);

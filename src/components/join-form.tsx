@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { bouton } from "@/components/bouton";
 import { joinGameAction, type JoinState } from "@/app/join/actions";
 import { GuardError, useGuardedAction } from "@/components/guarded-action";
@@ -89,6 +90,13 @@ export function JoinForm({
       >
         {pending ? "Connexion…" : "Rejoindre la partie"}
       </button>
+      <p className="text-xs text-slate-400" data-mention-cgu="">
+            En rejoignant la partie, vous acceptez les{" "}
+            <Link href="/cgu" className="underline underline-offset-4">
+              conditions générales d&apos;utilisation
+            </Link>
+            .
+          </p>
     </form>
   );
 }
