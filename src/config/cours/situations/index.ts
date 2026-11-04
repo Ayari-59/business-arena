@@ -142,6 +142,8 @@ import { LES_JEUX_DU_PRINTEMPS } from "./par-chapitre/les-jeux-du-printemps";
 import { LA_REMISE_DE_SONORA } from "./par-chapitre/la-remise-de-sonora";
 import { SI_LE_FOURNISSEUR_FERMAIT_EN_MAI } from "./par-chapitre/si-le-fournisseur-fermait-en-mai";
 import { UN_BANC_PLUS_CHER } from "./par-chapitre/un-banc-plus-cher";
+import { UNE_CAMPAGNE_AU_SUCCES_INCERTAIN } from "./par-chapitre/une-campagne-au-succes-incertain";
+import { DES_AIMANTS_MOINS_CHERS } from "./par-chapitre/des-aimants-moins-chers";
 export type { Situation } from "./types";
 
 /**
@@ -299,6 +301,8 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LA_REMISE_DE_SONORA,
   SI_LE_FOURNISSEUR_FERMAIT_EN_MAI,
   UN_BANC_PLUS_CHER,
+  UNE_CAMPAGNE_AU_SUCCES_INCERTAIN,
+  DES_AIMANTS_MOINS_CHERS,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

@@ -340,6 +340,11 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "chapitres/equilibrer-la-tresorerie.ts",
   "situations/par-chapitre/si-le-fournisseur-fermait-en-mai.ts",
   "situations/par-chapitre/un-banc-plus-cher.ts",
+  // La DCG UE 11 : le seuil de profitabilité en avenir aléatoire et le pilotage de la qualité (monde/loi-normale.ts, seuil-aleatoire.ts, qualite-de-la-ligne.ts), et leurs cas.
+  "chapitres/le-seuil-en-avenir-aleatoire.ts",
+  "chapitres/piloter-la-qualite.ts",
+  "situations/par-chapitre/une-campagne-au-succes-incertain.ts",
+  "situations/par-chapitre/des-aimants-moins-chers.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */

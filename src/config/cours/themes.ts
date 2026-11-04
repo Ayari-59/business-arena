@@ -123,6 +123,8 @@ export const THEMES: readonly Theme[] = [
       "les-couts-a-base-d-activites",
       "des-ventes-aux-achats",
       "equilibrer-la-tresorerie",
+      "le-seuil-en-avenir-aleatoire",
+      "piloter-la-qualite",
     ],
     familles: ["chiffres", "controle", "hotel-couts", "conseil-marge", "sante-budget"],
   },

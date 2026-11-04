@@ -28,6 +28,9 @@ import { SANS_STOCK, VENTES_PREVUES_APRES_JUIN, tresorerieAvecLeStock } from "..
 import { budgetDeTresorerie } from "../../src/config/cours/monde/couts-et-budgets";
 import { bilanDOuverture, realiseDuPlan } from "../../src/config/cours/monde/equilibre-de-tresorerie";
 import { EQUIPEMENT, LIVRAISONS_DU_MOIS, PLACEMENT } from "../../src/config/cours/monde/exercice-de-nova";
+import { moisAleatoireDeLaFiche, seuilAleatoire } from "../../src/config/cours/monde/seuil-aleatoire";
+import { anneeDeProduction, coutsDeLaQualite } from "../../src/config/cours/monde/capacite";
+import { defautsDePoids, paretoDesDefauts } from "../../src/config/cours/monde/qualite-de-la-ligne";
 
 /**
  * UNE SEULE NOVA DANS LE MONDE DU COURS (réconciliation d'octobre 2026). Les fiches qui disent la
@@ -283,5 +286,30 @@ describe("une seule NOVA, des budgets opérationnels aux états prévisionnels",
 
   it("le relevé de janvier du suivi est le compte courant de l'exercice, 58 959,27 €", () => {
     expect(realiseDuPlan(NOVA_GESTION).mois[0]!.realise).toBe(58_959.27);
+  });
+});
+
+/**
+ * UNE SEULE NOVA EN AVENIR ALÉATOIRE ET DANS LA QUALITÉ (DCG UE 11) : le seuil probabilisé est celui du
+ * mois de janvier du seuil de rentabilité, l'espérance des ventes est la vente du mois, et l'espérance
+ * du résultat est son résultat ; les défauts que pilote « Piloter la qualité » sont ceux de la fiche de
+ * capacité, au budget de prévention actuel, et le défaut de poids n'en est qu'une part.
+ */
+describe("une seule NOVA, du seuil de rentabilité au seuil probabilisé, et de la non-qualité au pilotage de la qualité", () => {
+  it("l'espérance des ventes est la vente de janvier, et l'espérance du résultat son résultat", () => {
+    const x = seuilAleatoire(moisAleatoireDeLaFiche(NOVA_GESTION));
+    const m = NOVA_GESTION.moisDeReference;
+    expect(x.moyenne).toBe(m.quantite);
+    expect(x.prix).toBe(m.prix);
+    expect(x.chargesFixes).toBe(m.chargesFixes.loyer + m.chargesFixes.personnel + m.chargesFixes.amortissement);
+    expect(x.resultat.esperance).toBe(tableauDeBord(NOVA_GESTION).mois[0]!.resultat);
+  });
+
+  it("les défauts du Pareto sont ceux de la fiche de capacité, et le défaut de poids en est une part", () => {
+    const q = coutsDeLaQualite(NOVA_CAPACITE, { volume: anneeDeProduction(NOVA_CAPACITE).production });
+    const p = paretoDesDefauts(NOVA_CAPACITE);
+    expect(p.total).toBe(q.defauts);
+    expect(p.causes.reduce((t, k) => t + k.nombre, 0)).toBe(q.defauts);
+    expect(defautsDePoids(NOVA_CAPACITE).nombre).toBeLessThan(q.defauts);
   });
 });
