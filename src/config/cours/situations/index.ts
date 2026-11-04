@@ -142,6 +142,8 @@ import { LES_JEUX_DU_PRINTEMPS } from "./par-chapitre/les-jeux-du-printemps";
 import { LA_REMISE_DE_SONORA } from "./par-chapitre/la-remise-de-sonora";
 import { SI_LE_FOURNISSEUR_FERMAIT_EN_MAI } from "./par-chapitre/si-le-fournisseur-fermait-en-mai";
 import { UN_BANC_PLUS_CHER } from "./par-chapitre/un-banc-plus-cher";
+import { UN_MAUVAIS_MOIS_POUR_L_ATELIER } from "./par-chapitre/un-mauvais-mois-pour-l-atelier";
+import { LA_PUBLICITE_LIGNE_PAR_LIGNE } from "./par-chapitre/la-publicite-ligne-par-ligne";
 export type { Situation } from "./types";
 
 /**
@@ -299,6 +301,8 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LA_REMISE_DE_SONORA,
   SI_LE_FOURNISSEUR_FERMAIT_EN_MAI,
   UN_BANC_PLUS_CHER,
+  UN_MAUVAIS_MOIS_POUR_L_ATELIER,
+  LA_PUBLICITE_LIGNE_PAR_LIGNE,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

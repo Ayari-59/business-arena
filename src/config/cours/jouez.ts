@@ -1276,6 +1276,20 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "La trésorerie de votre budget passe-t-elle sous zéro à un moment ? Chiffrez ce que coûterait un découvert, puis un crédit d'un mois, et dites lequel vous retiendriez. Le bilan du tour aurait-il pu se prévoir à partir de vos budgets ?",
   }),
+  "le-controle-de-gestion-dans-l-organisation": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours.`,
+    lieux: ["analyse-des-couts", "compte-de-resultat"],
+    chercher:
+      "Découpez votre entreprise en centres de responsabilité : lequel serait un centre de coûts, lequel un centre de profit ? Sur quel indicateur de l'analyse des coûts jugeriez-vous chacun, et quelle charge ne lui imputeriez-vous pas ?",
+  }),
+  "la-demarche-budgetaire": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Avant de valider chaque tour, notez ce que vous prévoyez de vendre, ce que cela demande et ce que la trésorerie en dira.`,
+    lieux: ["plan-face-au-realise", "budget-de-tresorerie"],
+    chercher:
+      "Votre plan a-t-il tenu face au réalisé ? Si deux de vos décisions ne tenaient pas ensemble dans la trésorerie, laquelle auriez-vous différée, et pourquoi ?",
+  }),
 };
 
 /**

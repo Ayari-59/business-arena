@@ -28,6 +28,10 @@ import { SANS_STOCK, VENTES_PREVUES_APRES_JUIN, tresorerieAvecLeStock } from "..
 import { budgetDeTresorerie } from "../../src/config/cours/monde/couts-et-budgets";
 import { bilanDOuverture, realiseDuPlan } from "../../src/config/cours/monde/equilibre-de-tresorerie";
 import { EQUIPEMENT, LIVRAISONS_DU_MOIS, PLACEMENT } from "../../src/config/cours/monde/exercice-de-nova";
+import { chaineDeValeur, chargesDeLAtelierParNature, durabiliteDuSalaire, trimestreAuPrix } from "../../src/config/cours/monde/organisation-du-controle";
+import { budgetDActivite, budgetsParCentre, commandesDuMois, navette, reseauDesBudgets } from "../../src/config/cours/monde/demarche-budgetaire";
+import { investissementDeLaFiche, repartitionDesCentres, trimestreDeDecision } from "../../src/config/cours/monde/couts-et-budgets";
+import { COMMANDES_DE_JANVIER } from "../../src/config/cours/monde/couts-par-activites";
 
 /**
  * UNE SEULE NOVA DANS LE MONDE DU COURS (réconciliation d'octobre 2026). Les fiches qui disent la
@@ -283,5 +287,37 @@ describe("une seule NOVA, des budgets opérationnels aux états prévisionnels",
 
   it("le relevé de janvier du suivi est le compte courant de l'exercice, 58 959,27 €", () => {
     expect(realiseDuPlan(NOVA_GESTION).mois[0]!.realise).toBe(58_959.27);
+  });
+});
+
+/**
+ * UNE SEULE NOVA DANS L'ORGANISATION DU CONTRÔLE ET LA DÉMARCHE BUDGÉTAIRE (DCG UE11) : le trimestre au
+ * prix de la fiche est le trimestre de décision ; les charges de l'atelier, rangées par nature, refont
+ * celles du chapitre « Piloter un centre » ; la chaîne de valeur range les charges fixes du coût complet ;
+ * la paie des opérateurs est le personnel des charges fixes ; le réseau des budgets est celui de « Des
+ * ventes aux achats » sans stock ; la navette sans demande est le budget de trésorerie ; le budget
+ * d'activité part des commandes de janvier de la méthode ABC.
+ */
+describe("une seule NOVA, de l'organisation du contrôle à la démarche budgétaire", () => {
+  it("le trimestre au prix de la fiche est le trimestre de décision, et les charges de l'atelier sont celles de « Piloter un centre »", () => {
+    expect(trimestreAuPrix(NOVA_GESTION).resultat).toBe(trimestreDeDecision(NOVA_GESTION).resultat);
+    expect(trimestreAuPrix(NOVA_GESTION).ventes).toBe(NOVA_GESTION.decision.production);
+    const a = chargesDeLAtelierParNature(NOVA_GESTION);
+    expect(a.nonMaitrisables).toBe(fixesDesCentres(NOVA_GESTION).atelier);
+    expect(a.total).toBe(chargesDeLAtelier(NOVA_GESTION, a.quantite).total);
+    expect(chaineDeValeur(NOVA_GESTION).total).toBe(repartitionDesCentres(NOVA_GESTION).total);
+    const s = durabiliteDuSalaire();
+    expect(s.salaire * s.operateurs * (1 + s.tauxPatronal)).toBe(CHARGES_FIXES_DU_MOIS.personnel);
+  });
+
+  it("le réseau des budgets est celui de « Des ventes aux achats », la navette du banc d'avril sans publicité le budget de trésorerie, le budget d'activité la méthode ABC", () => {
+    const r = reseauDesBudgets(NOVA_GESTION);
+    const sansStock = tresorerieAvecLeStock(NOVA_GESTION, SANS_STOCK);
+    expect(r.tresorerieFin).toBe(sansStock.tresorerieFin);
+    expect(r.plusBas).toEqual(sansStock.plusBas);
+    expect(navette(NOVA_GESTION, { moisDuBanc: 3, publicite: 0 }).tresorerieFin).toBe(budgetDeTresorerie(NOVA_GESTION, { investissement: investissementDeLaFiche(NOVA_GESTION) }).tresorerieFin);
+    expect(budgetsParCentre(NOVA_GESTION).total).toBe(6 * (CHARGES_FIXES_DU_MOIS.loyer + CHARGES_FIXES_DU_MOIS.personnel + CHARGES_FIXES_DU_MOIS.amortissement));
+    expect(commandesDuMois(NOVA_GESTION, 0).total).toBe(COMMANDES_DE_JANVIER["en-ligne"].commandes + COMMANDES_DE_JANVIER.campustech.commandes);
+    expect(budgetDActivite(NOVA_GESTION).coutDeJanvier).toBe(methodeABC().activites.find((x) => x.code === "commandes")!.cout);
   });
 });
