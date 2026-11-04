@@ -920,6 +920,13 @@ describe.each([
   { code: "l-affectation-du-resultat", entreprise: "nova", telephone: true },
   { code: "la-banque-propose-l-escompte", entreprise: "nova" },
   { code: "l-associe-qui-veut-plus", entreprise: "nova", telephone: true },
+  // Les ratios de structure et le bilan financier, puis financer et placer la trésorerie : un tri, un tableau à compléter, des curseurs, des laboratoires, puis leurs cas.
+  { code: "ratios-de-structure-et-bilan-financier", entreprise: "nova" },
+  { code: "ratios-de-structure-et-bilan-financier", entreprise: "nova", telephone: true },
+  { code: "financer-et-placer-la-tresorerie", entreprise: "nova" },
+  { code: "financer-et-placer-la-tresorerie", entreprise: "nova", telephone: true },
+  { code: "un-dividende-sous-condition", entreprise: "nova" },
+  { code: "une-chaine-nouvelle-a-60-jours", entreprise: "nova", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se

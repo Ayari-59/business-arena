@@ -417,6 +417,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
     "Calculer et critiquer les ratios de rotation, et juger une trésorerie gardée grâce à un emprunt",
   ],
   libre: false,
+  ensuite: ["ratios-de-structure-et-bilan-financier"],
   entreprises: {
     codes: ENTREPRISES_DU_BILAN_FONCTIONNEL,
     pourquoi: "le bilan fonctionnel se lit sur un exercice tenu en comptabilité de la création à la clôture, celui de NOVA dans la simulation du cours.",

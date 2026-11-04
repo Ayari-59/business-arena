@@ -48,6 +48,12 @@ import { augmentationDeCapital } from "../../src/config/cours/monde/comptabilite
 import { bilanDuLycee } from "../../src/config/cours/monde/comptes-du-lycee";
 import { financer } from "../../src/config/cours/chapitres/financer-l-entreprise";
 import { factureDeCampusTech, fondsDeRoulement } from "../../src/config/cours/chapitres/fonds-de-roulement-et-tresorerie";
+import { INVESTISSEMENT_DE_LA_GAMME, structureDeNova } from "../../src/config/cours/monde/structure-financiere";
+import { B, FACTURE_DE_DECEMBRE, garantieSurSonora } from "../../src/config/cours/monde/financer-et-placer";
+import { CONDITIONS_DE_LA_BANQUE } from "../../src/config/cours/monde/equilibre-de-tresorerie";
+import { CONTRAT_DE_PRET, EXERCICE_DE_NOVA } from "../../src/config/cours/monde/exercice-de-nova";
+import { cloture } from "../../src/config/cours/monde/cloture";
+import { PROJET_LIGNE_SEMI_AUTOMATIQUE } from "../../src/config/cours/monde/projets-et-financement";
 
 /**
  * UNE SEULE NOVA DANS LE MONDE DU COURS (réconciliation d'octobre 2026). Les fiches qui disent la
@@ -494,5 +500,37 @@ describe("une seule NOVA, de la trésorerie du 31 décembre à l'affectation du 
     const sans = affecter(k, { dividendeParAction: 0, reservesFacultatives: 0 });
     expect(sans.capitauxPropres).toBe(augmentationDeCapital().capitauxPropres);
     expect(affecter(k, { dividendeParAction: 2, reservesFacultatives: 0 }).capitauxPropres).toBe(bilanDuLycee(f, { dividende: 30_000 }).capitauxPropres);
+  });
+});
+
+/**
+ * UNE SEULE NOVA DANS LA STRUCTURE FINANCIÈRE ET LA TRÉSORERIE DE N+1 (ratios de structure et bilan
+ * financier, financer et placer la trésorerie) : le bilan financier part du bilan comptable de la
+ * clôture et retombe sur son total, moins-value latente ôtée ; la CAF et les ressources stables sont
+ * celles des soldes intermédiaires et du bilan fonctionnel ; les échéances de l'année sont celles du
+ * contrat de prêt ; la banque est celle du chapitre « Équilibrer la trésorerie » ; l'effet escompté est
+ * la dernière facture de CampusTech du 31 décembre ; la perte de Sonora est celle que N+1 constate.
+ */
+describe("une seule NOVA, du bilan financier à la trésorerie de N+1", () => {
+  it("le bilan financier retombe sur le bilan comptable de la clôture, moins-value latente ôtée", () => {
+    const s = structureDeNova(EXERCICE_DE_NOVA);
+    const k = cloture(EXERCICE_DE_NOVA);
+    expect(s.financier.totalActif).toBe(Math.round((k.bilan.totalActif - s.financier.moinsValueLatente) * 100) / 100);
+    expect(s.financier.totalPassif).toBe(s.financier.totalActif);
+    expect(s.caf).toBe(k.caf.additive);
+    expect(s.caf).toBe(k.caf.soustractive);
+    expect(s.ressourcesStables).toBe(k.fonctionnel.ressourcesStables.total);
+    expect(s.postes.resultat).toBe(CLOTURE_DE_LA_FICHE.resultatNet);
+    expect(s.financier.echeancesAMoinsDUnAn).toBe(4 * (CONTRAT_DE_PRET.capital / (CONTRAT_DE_PRET.dureeAns * CONTRAT_DE_PRET.echeancesParAn)));
+    expect(s.postes.capitalRestantDu).toBe(68_000);
+  });
+
+  it("la trésorerie de N+1 : la banque du cours, la facture de CampusTech du 20 décembre, la perte de Sonora", () => {
+    expect(B).toBe(CONDITIONS_DE_LA_BANQUE);
+    const f = EXERCICE_DE_NOVA;
+    expect(FACTURE_DE_DECEMBRE.ttc).toBe(Math.round(f.campustech.enceintesParFacture * f.prixDeLEnceinte * (1 + f.tauxDeTva) * 100) / 100);
+    expect(FACTURE_DE_DECEMBRE.echeance).toEqual({ jour: 10, mois: 3, exercice: 1 });
+    expect(garantieSurSonora().perteHt).toBe(Math.round(28_025 * (1 - EXERCICE_DE_NOVA.suites.sonora.partEncaissee) * 100) / 100);
+    expect(INVESTISSEMENT_DE_LA_GAMME).toBe(PROJET_LIGNE_SEMI_AUTOMATIQUE.actifs.reduce((t, a) => t + a.montant, 0));
   });
 });

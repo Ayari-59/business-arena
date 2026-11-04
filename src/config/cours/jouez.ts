@@ -1388,6 +1388,20 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Retrouvez le résultat du tour. Si c'était la fin de l'année, combien iraient en réserve légale, et combien pourriez-vous verser aux associés tout en gardant de quoi investir ? Que deviendraient vos capitaux propres et votre trésorerie ?",
   }),
+  "ratios-de-structure-et-bilan-financier": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez le compte de résultat et le bilan du second.`,
+    lieux: ["bilan", "compte-de-resultat"],
+    chercher:
+      "Calculez l'indépendance financière, l'endettement et la capacité de remboursement de votre entreprise. Puis rangez ses dettes à plus ou à moins d'un an : votre actif à court terme paierait-il vos dettes de l'année ? Quelle règle de la banque bloquerait d'abord un nouvel emprunt ?",
+  }),
+  "financer-et-placer-la-tresorerie": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relisez le budget de trésorerie et le bilan du second.`,
+    lieux: ["budget-de-tresorerie", "bilan"],
+    chercher:
+      "Votre trésorerie manque-t-elle à un moment, ou dort-elle ? S'il faut financer un creux, chiffrez un crédit d'un mois et l'escompte d'une créance client, en euros et en taux réel. S'il faut placer, quelle part pourriez-vous bloquer sans risquer d'en avoir besoin ?",
+  }),
 };
 
 /**

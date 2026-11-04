@@ -379,6 +379,11 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "chapitres/l-affectation-du-resultat.ts",
   "situations/par-chapitre/la-banque-propose-l-escompte.ts",
   "situations/par-chapitre/l-associe-qui-veut-plus.ts",
+  // Le BTS CG P6 : ratios de structure et bilan financier (monde/structure-financiere.ts), financer et placer la trésorerie (monde/financer-et-placer.ts), et leurs cas.
+  "chapitres/ratios-de-structure-et-bilan-financier.ts",
+  "chapitres/financer-et-placer-la-tresorerie.ts",
+  "situations/par-chapitre/un-dividende-sous-condition.ts",
+  "situations/par-chapitre/une-chaine-nouvelle-a-60-jours.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
@@ -523,6 +528,10 @@ const NE_LISENT_PLUS_L_ANNEE_FIGEE: readonly string[] = [
   "chapitres/l-affectation-du-resultat.ts",
   "situations/par-chapitre/la-banque-propose-l-escompte.ts",
   "situations/par-chapitre/l-associe-qui-veut-plus.ts",
+  "chapitres/ratios-de-structure-et-bilan-financier.ts",
+  "chapitres/financer-et-placer-la-tresorerie.ts",
+  "situations/par-chapitre/un-dividende-sous-condition.ts",
+  "situations/par-chapitre/une-chaine-nouvelle-a-60-jours.ts",
 ];
 
 /** Le premier chemin d'imports qui atteint un fichier donné, ou rien. */
