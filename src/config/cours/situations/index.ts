@@ -154,6 +154,8 @@ import { DEUX_COMMANDES_PAR_AN } from "./par-chapitre/deux-commandes-par-an";
 import { JANVIER_EST_TOMBE } from "./par-chapitre/janvier-est-tombe";
 import { LA_BALANCE_QUI_NE_TOMBE_PAS_JUSTE } from "./par-chapitre/la-balance-qui-ne-tombe-pas-juste";
 import { LE_RELEVE_DU_FOURNISSEUR } from "./par-chapitre/le-releve-du-fournisseur";
+import { LA_BANQUE_TESTE_UNE_ANNEE_DIFFICILE } from "./par-chapitre/la-banque-teste-une-annee-difficile";
+import { DEUX_FACONS_DE_REMBOURSER } from "./par-chapitre/deux-facons-de-rembourser";
 export type { Situation } from "./types";
 
 /**
@@ -323,6 +325,8 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   JANVIER_EST_TOMBE,
   LA_BALANCE_QUI_NE_TOMBE_PAS_JUSTE,
   LE_RELEVE_DU_FOURNISSEUR,
+  LA_BANQUE_TESTE_UNE_ANNEE_DIFFICILE,
+  DEUX_FACONS_DE_REMBOURSER,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

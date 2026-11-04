@@ -369,6 +369,11 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "chapitres/controler-les-comptes.ts",
   "situations/par-chapitre/la-balance-qui-ne-tombe-pas-juste.ts",
   "situations/par-chapitre/le-releve-du-fournisseur.ts",
+  // Le Bac STMG gestion et finance, 2.2 et 3.1 : la capacité de remboursement et financer autrement (monde/financement-du-lycee.ts), et leurs cas.
+  "chapitres/capacite-de-remboursement.ts",
+  "chapitres/financer-autrement.ts",
+  "situations/par-chapitre/la-banque-teste-une-annee-difficile.ts",
+  "situations/par-chapitre/deux-facons-de-rembourser.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
@@ -505,6 +510,10 @@ const NE_LISENT_PLUS_L_ANNEE_FIGEE: readonly string[] = [
   "chapitres/controler-les-comptes.ts",
   "situations/par-chapitre/la-balance-qui-ne-tombe-pas-juste.ts",
   "situations/par-chapitre/le-releve-du-fournisseur.ts",
+  "chapitres/capacite-de-remboursement.ts",
+  "chapitres/financer-autrement.ts",
+  "situations/par-chapitre/la-banque-teste-une-annee-difficile.ts",
+  "situations/par-chapitre/deux-facons-de-rembourser.ts",
 ];
 
 /** Le premier chemin d'imports qui atteint un fichier donné, ou rien. */

@@ -90,6 +90,8 @@ export const THEMES: readonly Theme[] = [
       "le-tri-et-le-choix-entre-deux-projets",
       "l-effet-de-levier",
       "la-creation-de-valeur",
+      "capacite-de-remboursement",
+      "financer-autrement",
     ],
     familles: ["finance"],
   },
