@@ -1242,6 +1242,19 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Relevez les capitaux propres au bilan. Si l'entreprise émettait des actions nouvelles sous la valeur de ses actions anciennes, qui y perdrait, et qu'est-ce qui le compenserait ?",
   }),
+  "des-ventes-aux-achats": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Avant de valider le tour, notez sur papier les ventes que vous attendez, ce qu'il faut produire pour les servir et les achats que cela demande.`,
+    lieux: ["feuille", "budget-de-tresorerie"],
+    chercher: "Retrouvez vos achats dans les décaissements du budget de trésorerie du tour. Sont-ils ceux que vos ventes demandaient, et à quelle date sont-ils payés ?",
+  }),
+  "equilibrer-la-tresorerie": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relisez le budget de trésorerie et le bilan du second.`,
+    lieux: ["budget-de-tresorerie", "bilan", "compte-de-resultat"],
+    chercher:
+      "La trésorerie de votre budget passe-t-elle sous zéro à un moment ? Chiffrez ce que coûterait un découvert, puis un crédit d'un mois, et dites lequel vous retiendriez. Le bilan du tour aurait-il pu se prévoir à partir de vos budgets ?",
+  }),
 };
 
 /**

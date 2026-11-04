@@ -296,6 +296,7 @@ export const BUDGET_DE_TRESORERIE: Chapitre = {
     "Retrouver à rebours un délai de paiement ou un minimum de ventes qui évite le découvert",
   ],
   libre: false,
+  ensuite: ["des-ventes-aux-achats"],
   entreprises: {
     codes: ENTREPRISES_DU_BUDGET,
     pourquoi: "le budget de trésorerie se bâtit ici sur le semestre de NOVA dans la simulation du cours, avec ses clientèles, ses délais et sa TVA ; la méthode vaut pour toute entreprise.",

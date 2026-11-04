@@ -831,6 +831,13 @@ describe.each([
   { code: "une-information-a-temps", entreprise: "nova" },
   { code: "une-information-a-temps", entreprise: "nova", telephone: true },
   { code: "le-compte-rendu-en-retard", entreprise: "nova" },
+  // Des ventes aux achats et l'équilibre de la trésorerie : des tableaux à compléter, un curseur, un laboratoire, puis leurs cas.
+  { code: "des-ventes-aux-achats", entreprise: "nova" },
+  { code: "des-ventes-aux-achats", entreprise: "nova", telephone: true },
+  { code: "equilibrer-la-tresorerie", entreprise: "nova" },
+  { code: "equilibrer-la-tresorerie", entreprise: "nova", telephone: true },
+  { code: "si-le-fournisseur-fermait-en-mai", entreprise: "nova" },
+  { code: "un-banc-plus-cher", entreprise: "nova", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se

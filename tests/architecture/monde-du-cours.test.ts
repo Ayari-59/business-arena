@@ -327,6 +327,11 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "situations/quel-prix-pour-la-saison.ts",
   "situations/suivre-la-baisse.ts",
   // L'UE10 du DCG, comptabilité approfondie : écrite sur le monde du cours (monde/comptabilite-approfondie.ts).
+  // Le BTS CG P5 : des ventes aux achats, puis l'équilibre de la trésorerie, et leurs cas.
+  "chapitres/des-ventes-aux-achats.ts",
+  "chapitres/equilibrer-la-tresorerie.ts",
+  "situations/par-chapitre/si-le-fournisseur-fermait-en-mai.ts",
+  "situations/par-chapitre/un-banc-plus-cher.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
