@@ -199,6 +199,13 @@ export function TeacherAuthForms({ suite = null }: { suite?: string | null }) {
           >
             {registerPending ? "Création…" : "Créer mon compte enseignant"}
           </button>
+          <p className="text-xs text-slate-400" data-mention-cgu="">
+            En créant votre compte, vous acceptez les{" "}
+            <Link href="/cgu" className="underline underline-offset-4">
+              conditions générales d&apos;utilisation
+            </Link>
+            .
+          </p>
         </form>
       )}
     </div>

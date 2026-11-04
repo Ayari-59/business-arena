@@ -6,6 +6,16 @@ import { PiedDePage } from "@/components/pied-de-page";
 import { LIEN_A_L_ENCRE } from "@/components/bouton";
 import { VENDEUR } from "@/config/editeur";
 import { CONDITIONS, ELEVES_PAR_CLASSE, LE_COURS_PAR_OFFRE, MENTION_TVA, OFFRES } from "@/config/tarifs";
+import {
+  DELAI_DE_MISE_EN_DEMEURE_JOURS,
+  DISPONIBILITE_ENGAGEE_POURCENT,
+  INDEMNITE_DE_RECOUVREMENT_EUROS,
+  MULTIPLE_DU_TAUX_LEGAL,
+  PLAFOND_DE_RESPONSABILITE_MOIS,
+  TRIBUNAL_COMPETENT,
+  VALIDITE_DU_DEVIS_JOURS,
+  VERSION_DES_CONDITIONS,
+} from "@/config/conditions-legales";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/cgv" },
@@ -19,11 +29,10 @@ export const metadata: Metadata = {
  * tenaient en neuf phrases sur /tarifs). Page statique : elle lit le vendeur
  * (config/editeur.ts) et les règles de l'offre (config/tarifs.ts), jamais une copie.
  *
- * RIEN N'EST INVENTÉ. Ce que le propriétaire n'a pas donné (taux des pénalités, tribunal,
- * médiateur, plafond de responsabilité, identifiant Chorus Pro) est marqué « [à compléter] »,
- * à remplir ici avant d'en faire un document contractuel.
+ * RIEN N'EST INVENTÉ. Les choix du propriétaire (validité du devis, pénalités, résiliation,
+ * disponibilité, plafond de responsabilité, tribunal, novembre 2026) sont dans
+ * config/conditions-legales.ts. Garde : tests/architecture/conditions-generales.test.ts.
  */
-const A_COMPLETER = "[à compléter]";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -33,8 +42,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     </section>
   );
 }
-
-const Manque = () => <strong className="text-amber-400">{A_COMPLETER}</strong>;
 
 function CgvPage() {
   const adresse = `${VENDEUR.adresse.rue}, ${VENDEUR.adresse.codePostal} ${VENDEUR.adresse.ville}`;
@@ -100,13 +107,12 @@ function CgvPage() {
               <Link href="/devis" className={LIEN_A_L_ENCRE}>
                 la page de devis
               </Link>
-              . Le devis précise l&apos;offre, son paramétrage, la durée et le prix ; il est valable {A_COMPLETER} jours.
+              . Le devis précise l&apos;offre, son paramétrage, la durée et le prix ; il est valable {VALIDITE_DU_DEVIS_JOURS} jours.
             </p>
             <p>
               La commande est ferme à réception du devis signé, ou d&apos;un bon de commande qui le reprend. Un acheteur public
               peut émettre un bon de commande et payer par mandat administratif ; les factures aux entités publiques sont déposées
-              sur Chorus Pro (identifiant du vendeur sur Chorus Pro : <Manque />
-              ). La licence est ouverte après la commande ; la facture suit.
+              sur Chorus Pro, où le vendeur s&apos;identifie par son SIRET, {VENDEUR.siret}. La licence est ouverte après la commande ; la facture suit.
             </p>
           </Section>
 
@@ -122,9 +128,9 @@ function CgvPage() {
               administratif. Aucun escompte n&apos;est accordé pour paiement anticipé.
             </p>
             <p>
-              Entre professionnels, tout retard de paiement entraîne de plein droit des pénalités de retard au taux de <Manque />{" "}
-              (à défaut, le taux prévu à l&apos;article L. 441-10 du Code de commerce), et une indemnité forfaitaire pour frais de
-              recouvrement de 40 € (article D. 441-5 du Code de commerce). Pour un acheteur public, les intérêts moratoires et
+              Entre professionnels, tout retard de paiement entraîne de plein droit des pénalités de retard égales à {MULTIPLE_DU_TAUX_LEGAL} fois le taux d&apos;intérêt légal
+              (article L. 441-10 du Code de commerce), exigibles dès le lendemain de l&apos;échéance, et une indemnité forfaitaire
+              pour frais de recouvrement de {INDEMNITE_DE_RECOUVREMENT_EUROS} € (article D. 441-5 du Code de commerce). Pour un acheteur public, les intérêts moratoires et
               l&apos;indemnité forfaitaire sont ceux du Code de la commande publique.
             </p>
           </Section>
@@ -136,7 +142,10 @@ function CgvPage() {
               Pas de reconduction tacite : le renouvellement passe par un nouveau devis.
             </p>
             <p>
-              Résiliation en cours d&apos;offre (cas, préavis, remboursement) : <Manque />.
+              La licence est due pour toute sa durée : une résiliation en cours d&apos;offre ne donne pas lieu à remboursement.
+              Le client peut toutefois résilier sans frais, et être remboursé de la période restante, si le vendeur commet un
+              manquement grave qu&apos;il n&apos;a pas corrigé {DELAI_DE_MISE_EN_DEMEURE_JOURS} jours après une mise en demeure
+              écrite.
             </p>
             <p>
               À la fin de l&apos;offre, les parties et les résultats restent consultables {CONDITIONS.consultationApresMois} mois,
@@ -170,12 +179,14 @@ function CgvPage() {
           <Section title="Responsabilité">
             <p>
               Le service est fourni en ligne ; le vendeur met en œuvre les moyens raisonnables pour le rendre disponible, sans
-              garantir une disponibilité sans interruption (maintenance, incident d&apos;un hébergeur). Engagement de
-              disponibilité, s&apos;il en est un : <Manque />.
+              garantir une disponibilité sans interruption. Il s&apos;engage sur une disponibilité de {DISPONIBILITE_ENGAGEE_POURCENT} % du temps
+              sur l&apos;année de l&apos;offre, hors maintenances annoncées à l&apos;avance.
             </p>
             <p>
               Les entreprises, chiffres et résultats de la simulation sont fictifs et pédagogiques : ils ne constituent pas un
-              conseil de gestion. Limitation de responsabilité du vendeur : <Manque />.
+              conseil de gestion. La responsabilité du vendeur, toutes causes confondues, est limitée aux sommes payées par le
+              client au titre des {PLAFOND_DE_RESPONSABILITE_MOIS} derniers mois ; elle ne couvre pas les dommages indirects.
+              Ce plafond ne s&apos;applique ni à la faute lourde ou dolosive, ni aux dommages corporels.
             </p>
           </Section>
 
@@ -190,11 +201,18 @@ function CgvPage() {
           <Section title="Droit applicable">
             <p>
               Les présentes conditions sont soumises au droit français. En cas de litige, les parties recherchent d&apos;abord une
-              solution amiable. À défaut : tribunal compétent <Manque /> ; médiateur, le cas échéant : <Manque />.
+              solution amiable. À défaut, le litige entre professionnels est porté devant {TRIBUNAL_COMPETENT}, siège du vendeur.
+              Pour un acheteur public, la juridiction est celle que désigne le Code de justice administrative.
             </p>
           </Section>
 
-          <p className="text-center text-xs text-slate-400">Version d&apos;octobre 2026.</p>
+          <p className="text-center text-xs text-slate-400">
+            Version de {VERSION_DES_CONDITIONS}. Les conditions d&apos;utilisation du service sont sur la page{" "}
+            <Link href="/cgu" className={LIEN_A_L_ENCRE}>
+              CGU
+            </Link>
+            .
+          </p>
         </div>
       </main>
       <PiedDePage />

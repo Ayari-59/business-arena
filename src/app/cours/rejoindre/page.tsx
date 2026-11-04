@@ -108,6 +108,13 @@ async function RejoindreUneClassePage({
                   Rejoindre la classe
                 </SubmitButton>
               </div>
+              <p className="text-xs text-slate-400" data-mention-cgu="">
+            En rejoignant la classe, vous acceptez les{" "}
+            <Link href="/cgu" className="underline underline-offset-4">
+              conditions générales d&apos;utilisation
+            </Link>
+            .
+          </p>
             </form>
           )}
         </div>
