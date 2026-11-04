@@ -1276,6 +1276,27 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "La trésorerie de votre budget passe-t-elle sous zéro à un moment ? Chiffrez ce que coûterait un découvert, puis un crédit d'un mois, et dites lequel vous retiendriez. Le bilan du tour aurait-il pu se prévoir à partir de vos budgets ?",
   }),
+  "programmer-la-production": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, en notant à chacun la production décidée et la capacité de l'outil.`,
+    lieux: ["feuille", "analyse-des-couts"],
+    chercher:
+      "Votre capacité a-t-elle limité vos ventes ? Si une seconde ressource, l'équipe ou un poste de contrôle, bornait aussi la production, écrivez les deux contraintes et dites quel programme elles vous laisseraient.",
+  }),
+  "approvisionner-au-moindre-cout": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relisez vos achats dans le budget de trésorerie.`,
+    lieux: ["budget-de-tresorerie", "analyse-des-couts"],
+    chercher:
+      "Combien de fois par tour achetez-vous, et combien à la fois ? Chiffrez ce que coûterait de garder le stock d'un tour entier, puis de commander deux fois plus souvent, et dites où serait le moindre coût.",
+  }),
+  "correlation-et-lissage": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} À chaque tour, notez vos ventes. Avant le quatrième, prévoyez-les par un lissage exponentiel, la première prévision étant la vente du premier tour.`,
+    lieux: ["marche-du-tour", "plan-face-au-realise"],
+    chercher:
+      "Au quatrième tour, comparez votre prévision aux ventes avec deux constantes de lissage, une petite et une grande. Laquelle se serait le moins trompée, et pourquoi ?",
+  }),
 };
 
 /**
