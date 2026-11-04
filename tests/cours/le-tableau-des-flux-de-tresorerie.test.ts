@@ -40,7 +40,8 @@ describe("le tableau des flux : le chapitre", () => {
   it("est au registre, au programme de la comptabilité générale (palier 4), au thème, et cite le BTS CG P6 et le DCG UE6", () => {
     expect(CHAPITRES).toContain(ch);
     gardeDuProgramme(ch, PROGRAMME["comptabilite-generale"][4]!);
-    expect(PROGRAMME["comptabilite-generale"][4]!.at(-1)).toBe(ch.titre);
+    const p4 = PROGRAMME["comptabilite-generale"][4]!;
+    expect(p4[p4.indexOf(ch.titre) - 1]).toBe("Le tableau de financement");
     expect(ch.parcours).toBe("comptabilite-generale");
     expect(ch.palier).toBe(4);
     expect(ch.blocs).toEqual(["BTS CG P6 · Analyse de la situation financière", "DCG UE6 · Finance d'entreprise"]);

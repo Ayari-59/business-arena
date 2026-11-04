@@ -56,12 +56,16 @@ import { INVESTISSEMENT_DE_LA_GAMME, structureDeNova } from "../../src/config/co
 import { B, FACTURE_DE_DECEMBRE, garantieSurSonora } from "../../src/config/cours/monde/financer-et-placer";
 import { CONDITIONS_DE_LA_BANQUE } from "../../src/config/cours/monde/equilibre-de-tresorerie";
 import { cloture } from "../../src/config/cours/monde/cloture";
-import { BANC, EMPRUNT_DE_LA_LIGNE, LIGNE_A_FINANCER, RESERVE_DE_LA_GAMME, TAUX_DE_L_IMPOT, fluxDeLEmprunt, planDeFinancementDeLaGamme } from "../../src/config/cours/monde/financement-de-la-gamme";
+import { BANC, EMPRUNT_DE_LA_LIGNE, EMPRUNT_DU_PLAN_EQUILIBRE, LIGNE_A_FINANCER, RESERVE_DE_LA_GAMME, TAUX_DE_L_IMPOT, fluxDeLEmprunt, planDeFinancementDeLaGamme } from "../../src/config/cours/monde/financement-de-la-gamme";
 import { PRET_BANCAIRE, remboursements } from "../../src/config/cours/monde/financement-du-lycee";
 import { fluxDuProjet } from "../../src/config/cours/monde/finance";
 import { PROJET_LIGNE_SEMI_AUTOMATIQUE } from "../../src/config/cours/monde/projets-et-financement";
 import { CONTRAT_DE_PRET, IMPOT_SUR_LES_SOCIETES } from "../../src/config/cours/monde/exercice-de-nova";
 import { INVESTISSEMENT_ENVISAGE } from "../../src/config/cours/monde/nova-gestion";
+import { ANNEE_TYPE, DELAIS_DE_LA_FICHE, besoinAuBilan, bfrNormatif } from "../../src/config/cours/monde/bfr-normatif";
+import { APPORT_DE_LA_BUSINESS_ANGEL, BESOIN_EXTERNE, engagementBancaire, engagementsEnCours } from "../../src/config/cours/monde/acteurs-du-financement";
+import { AUGMENTATION_DE_CAPITAL, BESOIN_DE_FONDS } from "../../src/config/cours/monde/comptabilite-approfondie";
+import { DELAI_DE_CAMPUSTECH } from "../../src/config/cours/monde/nova-gestion";
 
 /**
  * UNE SEULE NOVA DANS LE MONDE DU COURS (réconciliation d'octobre 2026). Les fiches qui disent la
@@ -606,5 +610,35 @@ describe("une seule NOVA, du bilan fonctionnel aux tableaux de flux", () => {
   it("la seconde ligne payée en décembre est la seconde ligne de N + 1, au même prix", () => {
     expect(SECONDE_LIGNE_PAYEE_EN_DECEMBRE.ht).toBe(SECONDE_LIGNE.ht);
     expect(SECONDE_LIGNE_PAYEE_EN_DECEMBRE.ht + SECONDE_LIGNE_PAYEE_EN_DECEMBRE.tva).toBe(EQUIPEMENT.ttc);
+  });
+});
+
+/**
+ * UNE SEULE NOVA DANS LE BFR NORMATIF ET LES ACTEURS DU FINANCEMENT (DCG UE6 2.2, 3.1 et 3.2) : l'année
+ * type reprend les ventes de l'exercice (les particuliers, le contrat de CampusTech) et les délais de la
+ * fiche ; le besoin du bilan est celui de la clôture ; les 80 000 € à financer sont ceux qui équilibrent
+ * le plan de la gamme ; l'apport de la business angel est l'augmentation de capital de N+1 ; l'emprunt
+ * en cours est celui de la création.
+ */
+describe("une seule NOVA, du BFR normatif aux acteurs du financement", () => {
+  it("l'année type et ses délais sont ceux de la fiche ; le besoin du bilan, celui de la clôture", () => {
+    const f = EXERCICE_DE_NOVA;
+    expect(ANNEE_TYPE.particuliers).toBe(f.ventesAuxParticuliers.reduce((t, q) => t + q, 0));
+    expect(ANNEE_TYPE.campustech).toBe(12 * f.campustech.enceintesParFacture);
+    expect(DELAIS_DE_LA_FICHE.campustech).toBe(DELAI_DE_CAMPUSTECH);
+    expect(DELAIS_DE_LA_FICHE.campustech).toBe(f.campustech.delai);
+    expect(DELAIS_DE_LA_FICHE.fournisseur).toBe(f.fournisseur.delai);
+    expect(bfrNormatif().caHt).toBe((ANNEE_TYPE.particuliers + ANNEE_TYPE.campustech) * f.prixDeLEnceinte);
+    expect(besoinAuBilan()).toBe(cloture(f).fonctionnel.besoinDExploitation);
+    expect(besoinAuBilan()).toBe(CLOTURE_DE_LA_FICHE.fonctionnel.besoinDExploitation);
+  });
+
+  it("les 80 000 € équilibrent le plan de la gamme ; la business angel est l'augmentation de N+1 ; l'emprunt en cours, celui de la création", () => {
+    expect(BESOIN_EXTERNE).toBe(EMPRUNT_DU_PLAN_EQUILIBRE);
+    expect(planDeFinancementDeLaGamme({ emprunt: BESOIN_EXTERNE }).equilibre).toBe(true);
+    expect(engagementBancaire(BESOIN_EXTERNE).tableau).toEqual(planDeFinancementDeLaGamme({ emprunt: BESOIN_EXTERNE }).tableauDeLEmprunt);
+    expect(APPORT_DE_LA_BUSINESS_ANGEL.montant).toBe(BESOIN_DE_FONDS);
+    expect(APPORT_DE_LA_BUSINESS_ANGEL.prix).toBe(AUGMENTATION_DE_CAPITAL.prixDEmission);
+    expect(engagementsEnCours().capitalRestantDu).toBe(CONTRAT_DE_PRET.capital - 3 * 4_000);
   });
 });

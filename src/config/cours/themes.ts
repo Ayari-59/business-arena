@@ -100,6 +100,8 @@ export const THEMES: readonly Theme[] = [
       "le-plan-de-financement",
       "le-tableau-de-financement",
       "le-tableau-des-flux-de-tresorerie",
+      "le-bfr-d-exploitation-normatif",
+      "les-acteurs-et-les-modes-de-financement",
     ],
     familles: ["finance"],
   },

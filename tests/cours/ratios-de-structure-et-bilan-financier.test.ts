@@ -47,8 +47,8 @@ describe("ratios de structure et bilan financier : le chapitre", () => {
   });
 
   it("« Bilan fonctionnel et BFR » y mène, par « Et ensuite »", () => {
-    expect(BILAN_FONCTIONNEL.ensuite).toEqual([ch.code]);
-    expect(suitesDuChapitre(BILAN_FONCTIONNEL.code).ensuite).toEqual([{ code: ch.code, titre: ch.titre }]);
+    expect(BILAN_FONCTIONNEL.ensuite?.[0]).toBe(ch.code);
+    expect(suitesDuChapitre(BILAN_FONCTIONNEL.code).ensuite[0]).toEqual({ code: ch.code, titre: ch.titre });
   });
 
   it("la bonne réponse n'est jamais la plus longue", () => {

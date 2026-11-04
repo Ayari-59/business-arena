@@ -164,6 +164,8 @@ import { LE_BANC_EN_CREDIT_BAIL } from "./par-chapitre/le-banc-en-credit-bail";
 import { LA_BANQUE_PLAFONNE_SON_PRET } from "./par-chapitre/la-banque-plafonne-son-pret";
 import { LA_SECONDE_LIGNE_PAYEE_EN_DECEMBRE } from "./par-chapitre/la-seconde-ligne-payee-en-decembre";
 import { LE_DIVIDENDE_DE_L_ASSOCIE } from "./par-chapitre/le-dividende-de-l-associe";
+import { CAMPUSTECH_DOUBLE_SA_COMMANDE } from "./par-chapitre/campustech-double-sa-commande";
+import { LA_BANQUE_DEMANDE_UNE_GARANTIE } from "./par-chapitre/la-banque-demande-une-garantie";
 export type { Situation } from "./types";
 
 /**
@@ -343,6 +345,8 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LA_BANQUE_PLAFONNE_SON_PRET,
   LA_SECONDE_LIGNE_PAYEE_EN_DECEMBRE,
   LE_DIVIDENDE_DE_L_ASSOCIE,
+  CAMPUSTECH_DOUBLE_SA_COMMANDE,
+  LA_BANQUE_DEMANDE_UNE_GARANTIE,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */
