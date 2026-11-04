@@ -62,6 +62,12 @@ import { fluxDuProjet } from "../../src/config/cours/monde/finance";
 import { PROJET_LIGNE_SEMI_AUTOMATIQUE } from "../../src/config/cours/monde/projets-et-financement";
 import { CONTRAT_DE_PRET, IMPOT_SUR_LES_SOCIETES } from "../../src/config/cours/monde/exercice-de-nova";
 import { INVESTISSEMENT_ENVISAGE } from "../../src/config/cours/monde/nova-gestion";
+import { PAIEMENT_ECHELONNE, RENOUVELLEMENT, RESERVE_PLACEE, TAUX_DE_LA_BANQUE, interetsCourusDeLaReserve } from "../../src/config/cours/monde/valeur-et-temps";
+import { EMETTEUR, PLACEMENT_SANS_RISQUE, RENTABILITE_EXIGEE } from "../../src/config/cours/monde/marche-financier";
+import { DETTES_DU_31_DECEMBRE, EMPRUNT_DE_N_PLUS_1, PRIX_DE_L_ACTION, augmentationVueParLesActionnaires, coutDuCreditBail, coutParLeDividendeEnProgression, tableauDeLEmprunt } from "../../src/config/cours/monde/couts-de-financement";
+import { AUGMENTATION_DE_CAPITAL } from "../../src/config/cours/monde/comptabilite-approfondie";
+import { EMPRUNT_DU_PLAN_EQUILIBRE, comparaison } from "../../src/config/cours/monde/financement-de-la-gamme";
+import { TAUX_D_ACTUALISATION_DE_NOVA } from "../../src/config/cours/monde/projets-et-financement";
 
 /**
  * UNE SEULE NOVA DANS LE MONDE DU COURS (réconciliation d'octobre 2026). Les fiches qui disent la
@@ -606,5 +612,44 @@ describe("une seule NOVA, du bilan fonctionnel aux tableaux de flux", () => {
   it("la seconde ligne payée en décembre est la seconde ligne de N + 1, au même prix", () => {
     expect(SECONDE_LIGNE_PAYEE_EN_DECEMBRE.ht).toBe(SECONDE_LIGNE.ht);
     expect(SECONDE_LIGNE_PAYEE_EN_DECEMBRE.ht + SECONDE_LIGNE_PAYEE_EN_DECEMBRE.tva).toBe(EQUIPEMENT.ttc);
+  });
+});
+
+/**
+ * UNE SEULE NOVA DANS LA FINANCE DE LA DCG UE6 (la valeur et le temps, le marché financier, les coûts
+ * de financement) : la réserve est le compte à terme de l'exercice, et ses intérêts courus ceux de la
+ * clôture ; la ligne à remplacer est la première ligne ; le comptant du fournisseur est le prix de la
+ * ligne semi-automatique, la banque prête au taux du prêt de NOVA ; l'émetteur coté est le fournisseur
+ * de composants ; l'emprunt de N+1 est celui qui équilibre le plan de financement ; l'augmentation de
+ * capital est celle de juin N+1 ; le crédit-bail coûte ce que son chapitre calcule ; l'exigence des
+ * actionnaires par le dividende retombe sur le coût du capital de l'activité de NOVA.
+ */
+describe("une seule NOVA, de la valeur du temps au coût du capital", () => {
+  it("la réserve, la ligne à remplacer, l'offre du fournisseur et la banque sont celles des autres chapitres de NOVA", () => {
+    expect(RESERVE_PLACEE).toBe(PLACEMENT);
+    expect(interetsCourusDeLaReserve()).toBe(CLOTURE_DE_LA_FICHE.travaux.interetsDuPlacement);
+    expect([RENOUVELLEMENT.prixDAujourdHui, RENOUVELLEMENT.versements + 1]).toEqual([EQUIPEMENT.ht, EQUIPEMENT.dureeAns]);
+    expect(PAIEMENT_ECHELONNE.comptant).toBe(LIGNE_A_FINANCER.montant);
+    expect(TAUX_DE_LA_BANQUE).toBe(CONTRAT_DE_PRET.tauxAnnuel);
+  });
+
+  it("le marché se lit par le fournisseur de composants, au taux sans risque et à la prime de la fiche des projets", () => {
+    expect(EMETTEUR).toBe(NOVA_GESTION.semestre.fournisseur.nom);
+    expect(EMETTEUR).toBe(ELECTRO_COMPOSANTS.nom);
+    expect(RENTABILITE_EXIGEE).toBe(TAUX_D_ACTUALISATION_DE_NOVA);
+    expect(PLACEMENT_SANS_RISQUE).toBe(PLACEMENT.tauxAnnuel);
+  });
+
+  it("l'emprunt de N+1, les dettes, l'augmentation de capital et le crédit-bail sont ceux des autres chapitres", () => {
+    expect([EMPRUNT_DE_N_PLUS_1.montant, EMPRUNT_DE_N_PLUS_1.taux]).toEqual([EMPRUNT_DU_PLAN_EQUILIBRE, CONTRAT_DE_PRET.tauxAnnuel]);
+    const pret = remboursements(PRET_BANCAIRE(EXERCICE_DE_NOVA), EMPRUNT_DE_N_PLUS_1.montant);
+    expect(tableauDeLEmprunt("amortissement-constant").annees.map((a) => [a.interets, a.amortissement, a.annuite])).toEqual(pret.map((r) => [r.interets, r.capital, r.total]));
+    expect(DETTES_DU_31_DECEMBRE).toBe(CONTRAT_DE_PRET.capital - 3 * (CONTRAT_DE_PRET.capital / (CONTRAT_DE_PRET.dureeAns * CONTRAT_DE_PRET.echeancesParAn)));
+    const a = augmentationVueParLesActionnaires();
+    expect(a).toMatchObject(augmentationDeCapital());
+    expect(a.capitauxPropres).toBeCloseTo(beneficeAAffecter(EXERCICE_DE_NOVA).capital + CLOTURE_DE_LA_FICHE.resultatNet, 2);
+    expect(PRIX_DE_L_ACTION).toBe(AUGMENTATION_DE_CAPITAL.prixDEmission);
+    expect(coutDuCreditBail()).toBe(comparaison().tauxDuCreditBail);
+    expect(Math.round(coutParLeDividendeEnProgression() * 1e9) / 1e9).toBe(TAUX_D_ACTUALISATION_DE_NOVA);
   });
 });

@@ -394,6 +394,13 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "chapitres/le-tableau-des-flux-de-tresorerie.ts",
   "situations/par-chapitre/la-seconde-ligne-payee-en-decembre.ts",
   "situations/par-chapitre/le-dividende-de-l-associe.ts",
+  // La DCG UE6 2.1, 3.4 et 3.3 : la valeur et le temps, le marché financier, les coûts de financement (monde/valeur-et-temps.ts, marche-financier.ts, couts-de-financement.ts), et leurs cas.
+  "chapitres/la-valeur-et-le-temps.ts",
+  "chapitres/le-marche-financier.ts",
+  "chapitres/arbitrer-les-couts-de-financement.ts",
+  "situations/par-chapitre/le-compte-a-terme-progressif.ts",
+  "situations/par-chapitre/l-obligation-verte-a-980.ts",
+  "situations/par-chapitre/l-associe-qui-prefere-la-dette.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
@@ -546,6 +553,12 @@ const NE_LISENT_PLUS_L_ANNEE_FIGEE: readonly string[] = [
   "chapitres/le-plan-de-financement.ts",
   "situations/par-chapitre/le-banc-en-credit-bail.ts",
   "situations/par-chapitre/la-banque-plafonne-son-pret.ts",
+  "chapitres/la-valeur-et-le-temps.ts",
+  "chapitres/le-marche-financier.ts",
+  "chapitres/arbitrer-les-couts-de-financement.ts",
+  "situations/par-chapitre/le-compte-a-terme-progressif.ts",
+  "situations/par-chapitre/l-obligation-verte-a-980.ts",
+  "situations/par-chapitre/l-associe-qui-prefere-la-dette.ts",
 ];
 
 /** Le premier chemin d'imports qui atteint un fichier donné, ou rien. */
