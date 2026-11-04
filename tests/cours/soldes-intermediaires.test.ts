@@ -3,7 +3,7 @@ import { blocOfficiel, referentielDeCitation } from "../../src/config/ateliers/r
 import { UNITES_FEMININES } from "../../src/config/cours/accords";
 import { anneeJouee } from "../../src/config/cours/annee-de-l-arene";
 import { casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
-import { BAISSE_DU_DEFI, REDEVANCES_DE_CREDIT_BAIL, SOLDES_INTERMEDIAIRES, soldesDeGestion } from "../../src/config/cours/chapitres/soldes-intermediaires";
+import { BAISSE_DU_DEFI, PARTICIPATION_VOLONTAIRE, REDEVANCES_DE_CREDIT_BAIL, SOLDES_INTERMEDIAIRES, soldesDeGestion } from "../../src/config/cours/chapitres/soldes-intermediaires";
 import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
 import { CLOTURE_DE_LA_FICHE, EXERCICE_DE_NOVA as f } from "../../src/config/cours/monde/exercice-de-nova";
 import { CHAPITRES } from "../../src/config/cours/registre";
@@ -524,5 +524,47 @@ describe("l'export de compatibilité : soldesDeGestion redonne l'année figée d
     expect(soldesDeGestion(cas).resultatNet).toBe(74_416.67);
     expect(RN).toBe(79_225.96);
     expect(f.code).toBe("nova");
+  });
+});
+
+/**
+ * LA PARTICIPATION DES SALARIÉS, RETRAITÉE AUX SOLDES ET À LA CAF (DCG UE6, 1.2 : les retraitements
+ * sont limités au crédit-bail, au personnel intérimaire et à la participation, au niveau des SIG et de
+ * la CAF). Refaite à la main : 8 000 € de participation volontaire, déductible.
+ */
+describe("la participation des salariés, retraitée", () => {
+  const ch = chapitreDuCas(SOLDES_INTERMEDIAIRES, cas);
+  const e = ch.etapes.find((x) => x.id === "la-participation") as EtapeMontants;
+
+  it("l'étape existe, travaille l'objectif des retraitements, et l'objectif nomme la participation", () => {
+    expect(e.type).toBe("montants");
+    expect(e.objectifs).toEqual([3]);
+    expect(SOLDES_INTERMEDIAIRES.objectifs[3]).toMatch(/participation/);
+    expect(PARTICIPATION_VOLONTAIRE).toBe(8_000);
+  });
+
+  it("l'impôt baisse de 2 000 € ; le résultat net, 73 225,96 € ; l'EBE et le RCAI retraités, 118 234 € et 91 967,96 € ; la CAF, la même par les deux méthodes", () => {
+    const rcai = 99_967.96;
+    const impotAvec = impot(c2(rcai - 8_000));
+    expect(impotAvec).toBe(18_742);
+    const net = c2(rcai - 8_000 - impotAvec);
+    const caf = c2(net + 9_861.11 + 11_210 + 5_000);
+    // La soustractive depuis l'EBE retraité : il n'y a plus de participation à retrancher à part.
+    const soustractive = c2(126_234 - 8_000 + 3_934.58 - (3_681.11 + 448.4) - impotAvec);
+    expect(e.champs(cas, etatVide).map((x) => x.attendu)).toEqual([net, 118_234, c2(rcai - 8_000), caf, soustractive]);
+    expect(soustractive).toBe(caf);
+  });
+
+  it("le retraitement ne change ni le résultat net ni la CAF, et la participation non retraitée reste sous le résultat courant", async () => {
+    const { capaciteDAutofinancement, soldesIntermediaires } = await import("../../src/config/cours/monde/cloture");
+    const { novaAvecLaParticipation } = await import("../../src/config/cours/chapitres/soldes-intermediaires");
+    const p = novaAvecLaParticipation(f);
+    const brut = soldesIntermediaires(p.soldes);
+    const retraite = soldesIntermediaires(p.soldes, { participationEnPersonnel: true });
+    expect(brut.participation).toBe(8_000);
+    expect(retraite.participation).toBe(0);
+    expect(retraite.resultatNet).toBe(brut.resultatNet);
+    expect(c2(brut.excedentBrutDExploitation - retraite.excedentBrutDExploitation)).toBe(8_000);
+    expect(capaciteDAutofinancement(p.soldes).soustractive).toBe(capaciteDAutofinancement(p.soldes, { participationEnPersonnel: true }).soustractive);
   });
 });

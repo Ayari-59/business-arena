@@ -608,3 +608,39 @@ describe("une seule NOVA, du bilan fonctionnel aux tableaux de flux", () => {
     expect(SECONDE_LIGNE_PAYEE_EN_DECEMBRE.ht + SECONDE_LIGNE_PAYEE_EN_DECEMBRE.tva).toBe(EQUIPEMENT.ttc);
   });
 });
+
+/**
+ * UNE SEULE NOVA SUR TROIS EXERCICES (DCG UE6, le diagnostic et l'investissement durable) : N est la
+ * clôture du cours ; N + 1 lit la seconde ligne manuelle de la comptabilité approfondie (60 000 €, ses
+ * composants), l'augmentation de capital du 30 juin N + 1, le prêt de N échéance par échéance, la
+ * demande de One de nova-capacite.ts, la gamme du projet A et l'équipe qu'il demande, et les
+ * équipements d'efficacité du chapitre « Évaluer un investissement durable ».
+ */
+describe("une seule NOVA, de la clôture de N au diagnostic de trois exercices", () => {
+  it("N est la clôture : le même résultat, la même CAF, la même trésorerie nette", async () => {
+    const { exercicesDeNova } = await import("../../src/config/cours/monde/diagnostic-de-nova");
+    const [n] = exercicesDeNova();
+    const k = cloture(EXERCICE_DE_NOVA);
+    expect([n!.resultatNet, n!.caf, n!.tresorerieNette, n!.dettesFinancieres]).toEqual([CLOTURE_DE_LA_FICHE.resultatNet, k.caf.additive, k.fonctionnel.tresorerieNette, k.fonctionnel.ressourcesStables.dettesFinancieres]);
+  });
+
+  it("N + 1 et N + 2 lisent la seconde ligne, l'augmentation de capital, le prêt, la demande et la gamme des autres fiches", async () => {
+    const { exercicesDeNova, dotationsDesExercices, EFFECTIFS } = await import("../../src/config/cours/monde/diagnostic-de-nova");
+    const { composantsDeLaSecondeLigne, SECONDE_LIGNE } = await import("../../src/config/cours/monde/comptabilite-approfondie");
+    const { empruntALaCloture } = await import("../../src/config/cours/monde/emprunt");
+    const { ANNEE_N_PLUS_1 } = await import("../../src/config/cours/monde/nova-capacite");
+    const { VENTES_DE_GO, VENTES_DE_ONE_PERDUES, VENTES_DE_STUDIO, PROJET_LIGNE_MANUELLE, COUT_ANNUEL_D_UN_OPERATEUR } = await import("../../src/config/cours/monde/projets-et-financement");
+    const { EQUIPEMENTS_D_EFFICACITE } = await import("../../src/config/cours/monde/investissement-durable");
+    const [, n1, n2] = exercicesDeNova();
+    expect(n1!.investissements).toBe(SECONDE_LIGNE.ht + PROJET_LIGNE_MANUELLE.actifs[1]!.montant + EQUIPEMENTS_D_EFFICACITE.montant);
+    expect(PROJET_LIGNE_MANUELLE.actifs[0]!.montant).toBe(SECONDE_LIGNE.ht);
+    expect(dotationsDesExercices()["N+1"]).toBeGreaterThan(composantsDeLaSecondeLigne().total);
+    expect(n1!.apports).toBe(augmentationDeCapital().fonds);
+    expect([n1!.dettesFinancieres, n2!.dettesFinancieres]).toEqual([empruntALaCloture(CONTRAT_DE_PRET, 1).capitalRestantDu, empruntALaCloture(CONTRAT_DE_PRET, 2).capitalRestantDu]);
+    expect(n1!.enceintes).toBe(ANNEE_N_PLUS_1.demande.reduce((t, q) => t + q, 0) - VENTES_DE_ONE_PERDUES[0] + VENTES_DE_GO[0] + VENTES_DE_STUDIO[0]);
+    expect(n1!.personnel).toBe((PAIE_DU_MOIS.effectif + 2) * COUT_ANNUEL_D_UN_OPERATEUR);
+    expect(EFFECTIFS.N).toBe(PAIE_DU_MOIS.effectif);
+    // Le résultat de N est affecté sans dividende : aucun dividende en N + 1.
+    expect(n1!.dividendes).toBe(0);
+  });
+});

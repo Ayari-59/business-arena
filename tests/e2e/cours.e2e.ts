@@ -941,6 +941,13 @@ describe.each([
   { code: "le-tableau-des-flux-de-tresorerie", entreprise: "nova", telephone: true },
   { code: "la-seconde-ligne-payee-en-decembre", entreprise: "nova" },
   { code: "le-dividende-de-l-associe", entreprise: "nova", telephone: true },
+  // Le DCG UE6 (programme 2025) : le diagnostic financier et extra-financier sur trois exercices et l'investissement durable, un laboratoire chacun, puis leurs cas.
+  { code: "le-diagnostic-financier-et-extra-financier", entreprise: "nova" },
+  { code: "le-diagnostic-financier-et-extra-financier", entreprise: "nova", telephone: true },
+  { code: "evaluer-un-investissement-durable", entreprise: "nova" },
+  { code: "evaluer-un-investissement-durable", entreprise: "nova", telephone: true },
+  { code: "le-pret-indexe-sur-la-durabilite", entreprise: "nova" },
+  { code: "deux-devis-pour-chauffer-l-atelier", entreprise: "nova", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se

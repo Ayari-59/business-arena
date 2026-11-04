@@ -394,6 +394,11 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "chapitres/le-tableau-des-flux-de-tresorerie.ts",
   "situations/par-chapitre/la-seconde-ligne-payee-en-decembre.ts",
   "situations/par-chapitre/le-dividende-de-l-associe.ts",
+  // Le DCG UE6 (programme 2025), 1.1, 1.6, 1.7 et 2.4 : le diagnostic sur trois exercices (monde/diagnostic-de-nova.ts) et l'investissement durable (monde/investissement-durable.ts), et leurs cas.
+  "chapitres/le-diagnostic-financier-et-extra-financier.ts",
+  "chapitres/evaluer-un-investissement-durable.ts",
+  "situations/par-chapitre/le-pret-indexe-sur-la-durabilite.ts",
+  "situations/par-chapitre/deux-devis-pour-chauffer-l-atelier.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
@@ -546,6 +551,10 @@ const NE_LISENT_PLUS_L_ANNEE_FIGEE: readonly string[] = [
   "chapitres/le-plan-de-financement.ts",
   "situations/par-chapitre/le-banc-en-credit-bail.ts",
   "situations/par-chapitre/la-banque-plafonne-son-pret.ts",
+  "chapitres/le-diagnostic-financier-et-extra-financier.ts",
+  "chapitres/evaluer-un-investissement-durable.ts",
+  "situations/par-chapitre/le-pret-indexe-sur-la-durabilite.ts",
+  "situations/par-chapitre/deux-devis-pour-chauffer-l-atelier.ts",
 ];
 
 /** Le premier chemin d'imports qui atteint un fichier donné, ou rien. */

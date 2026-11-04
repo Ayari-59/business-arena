@@ -40,7 +40,7 @@ describe("le tableau de financement : le chapitre", () => {
   it("est au registre, au programme de la comptabilité générale (palier 4), au thème, et cite le BTS CG P6 et le DCG UE6", () => {
     expect(CHAPITRES).toContain(ch);
     gardeDuProgramme(ch, PROGRAMME["comptabilite-generale"][4]!);
-    expect(PROGRAMME["comptabilite-generale"][4]!.at(-2)).toBe(ch.titre);
+    expect(PROGRAMME["comptabilite-generale"][4]!).toContain(ch.titre);
     expect(ch.parcours).toBe("comptabilite-generale");
     expect(ch.palier).toBe(4);
     expect(ch.blocs).toEqual(["BTS CG P6 · Analyse de la situation financière", "DCG UE6 · Finance d'entreprise"]);

@@ -3,10 +3,11 @@ import { auCentime as auCentimeDeLArene } from "../../../pedagogy/cours/etats";
 import type { Cas } from "../cas";
 import { anneeDuCours } from "../monde/annee-du-cours";
 import { auCentime, joursCompris } from "../monde/amortissement";
-import { cloture, interetsDuPlacement, sommeDesComptes } from "../monde/cloture";
+import { bilanFonctionnel as bilanFonctionnelDesSoldes, cloture, impotSurLesSocietes, interetsDuPlacement, passer, resultatDesSoldes, sommeDesComptes } from "../monde/cloture";
 import { EXERCICES_DU_COURS, type FicheDeLExercice } from "../monde/exercice-de-nova";
 import { DELAI_CONVENU_DE_CAMPUSTECH } from "../monde/nova-gestion";
 import type { Chapitre, TableauDeDonnees } from "../types";
+import { REDEVANCES_DE_CREDIT_BAIL } from "./soldes-intermediaires";
 
 /**
  * CHAPITRE : BILAN FONCTIONNEL ET BFR (comptabilité générale, palier 4 ; BTS CG, DCG, BUT GEA).
@@ -24,7 +25,9 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * le besoin en fonds de roulement d'exploitation et hors exploitation, la trésorerie nette, et
  * l'égalité FRNG − BFR = TN. Puis ce que l'exercice a changé depuis la création (le fonds de
  * roulement a grandi de la CAF moins le capital remboursé), le BFR normatif en jours de chiffre
- * d'affaires, et ce que coûtent des délais.
+ * d'affaires, et ce que coûtent des délais. Et le retraitement du crédit-bail, que le programme du
+ * DCG UE6 attend : la ligne prise en crédit-bail revient au bilan fonctionnel comme si elle avait été
+ * achetée à crédit.
  *
  * LES TROIS TEMPS (demande du propriétaire, octobre 2026 : le niveau d'arrivée est celui de l'examen) :
  *   · guidé : intro, les-reclassements, les-interets-courus, frng, bfr-d-exploitation (la formule est
@@ -37,7 +40,10 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     le-bfr-normatif ; predire-le-stock puis le-laboratoire-du-besoin (délais de CampusTech et du
  *     fournisseur, stock, placement ; un graphique de la trésorerie nette selon le délai de
  *     CampusTech, en marches) avant les ratios ;
- *   · expert : les-ratios-de-rotation et le-ratio-et-le-contrat (trois ratios, et la critique d'une
+ *   · expert : le-credit-bail (la variante du chapitre « Soldes intermédiaires de gestion et CAF », la
+ *     ligne en crédit-bail, relue au bilan : la valeur d'origine en emplois stables, les amortissements
+ *     qu'elle aurait subis en ressources propres, le reste en dettes financières), les-ratios-de-rotation
+ *     et le-ratio-et-le-contrat (trois ratios, et la critique d'une
  *     photo du 31 décembre), la-croissance (une variante chiffrée : 20 % de ventes en plus), puis
  *     garder-la-tresorerie et emprunter-pour-garder (emprunter à 5 % pour garder une trésorerie placée
  *     à 3 % : le coût net, puis le jugement) ; et la synthèse.
@@ -245,6 +251,80 @@ export function bilanDeLExercice(c: Pick<Cas, "code">) {
 
 export type BilanDeLExercice = ReturnType<typeof bilanDeLExercice>;
 
+/**
+ * LA LIGNE EN CRÉDIT-BAIL, AU BILAN (la variante du chapitre « Soldes intermédiaires de gestion et
+ * CAF » : 13 000 € de redevances sur l'exercice, et les 60 000 € que la ligne n'a pas coûté placés au
+ * taux du compte à terme). La ligne sort de l'actif, ses amortissements et sa dotation aussi ; la
+ * redevance se paie ; l'argent gardé est placé ; l'impôt est recalculé. Puis le retraitement de
+ * l'analyste, avec ce que l'annexe donne (la valeur d'origine du bien, les amortissements que NOVA
+ * aurait pratiqués s'il était à elle) : la valeur d'origine en emplois stables, les amortissements en
+ * ressources propres, la différence en dettes financières.
+ */
+export function ligneEnCreditBail(c: Pick<Cas, "code">) {
+  const f = ficheDe(c);
+  const k = cloture(f);
+  const ligne = f.equipement.ht;
+  const amortissements = auCentime(-(k.soldes[f.equipement.compteDAmortissement] ?? 0));
+  const placementGarde = interetsDuPlacement(ligne, f.placement.tauxAnnuel, f.equipement.miseEnService, f.cloture);
+  const sansImpot = passer(k.soldes, [
+    { compte: "695", debit: 0, credit: k.impot.impot },
+    { compte: "444", debit: k.impot.impot, credit: 0 },
+    { compte: f.equipement.compte, debit: 0, credit: ligne },
+    { compte: f.equipement.compteDAmortissement, debit: amortissements, credit: 0 },
+    { compte: "6811", debit: 0, credit: amortissements },
+    { compte: f.placement.compte, debit: ligne, credit: 0 },
+    { compte: "612", debit: REDEVANCES_DE_CREDIT_BAIL, credit: 0 },
+    { compte: "512", debit: 0, credit: REDEVANCES_DE_CREDIT_BAIL },
+    { compte: f.placement.compteDesInteretsCourus, debit: placementGarde, credit: 0 },
+    { compte: f.placement.compteDeProduit, debit: 0, credit: placementGarde },
+  ]);
+  const impot = impotSurLesSocietes(resultatDesSoldes(sansImpot), f.impot).impot;
+  const soldes = passer(sansImpot, [
+    { compte: "695", debit: impot, credit: 0 },
+    { compte: "444", debit: 0, credit: impot },
+  ]);
+  const avant = bilanFonctionnelDesSoldes(soldes, resultatDesSoldes(soldes));
+  const dettesEnPlus = auCentime(ligne - amortissements);
+  const emploisStables = auCentime(avant.emploisStables + ligne);
+  const ressourcesPropres = auCentime(avant.ressourcesStables.capitauxPropres + avant.ressourcesStables.amortissementsEtDepreciations + avant.ressourcesStables.provisions + amortissements);
+  const dettesFinancieres = auCentime(avant.ressourcesStables.dettesFinancieres + dettesEnPlus);
+  const ressourcesStables = auCentime(ressourcesPropres + dettesFinancieres);
+  return {
+    ligne,
+    amortissements,
+    dettesEnPlus,
+    placementGarde,
+    impot,
+    avant,
+    emploisStables,
+    ressourcesPropres,
+    dettesFinancieres,
+    ressourcesStables,
+    fondsDeRoulement: auCentime(ressourcesStables - emploisStables),
+    capitauxPropres: avant.ressourcesStables.capitauxPropres,
+  };
+}
+
+/** La variante en crédit-bail, avant le retraitement, et ce que l'annexe donne. */
+function laLigneEnCreditBail(c: Pick<Cas, "code">): TableauDeDonnees {
+  const x = bilanDeLExercice(c);
+  const v = ligneEnCreditBail(c);
+  const a = v.avant;
+  return {
+    titre: `${x.entreprise}, la ligne en crédit-bail : le bilan fonctionnel avant retraitement`,
+    colonnes: ["Montant"],
+    lignes: [
+      { libelle: "Emplois stables (la ligne n'est plus à l'actif)", valeurs: [eur(a.emploisStables)] },
+      { libelle: "Capitaux propres", valeurs: [eur(a.ressourcesStables.capitauxPropres)] },
+      { libelle: "Dépréciation de Sonora et provision pour litige", valeurs: [eur(auCentime(a.ressourcesStables.amortissementsEtDepreciations + a.ressourcesStables.provisions))] },
+      { libelle: "Dettes financières (l'emprunt)", valeurs: [eur(a.ressourcesStables.dettesFinancieres)] },
+      { libelle: "Fonds de roulement net global", valeurs: [eur(a.fondsDeRoulement)] },
+      { libelle: "Annexe : valeur d'origine de la ligne en crédit-bail", valeurs: [eur(v.ligne)] },
+      { libelle: "Annexe : amortissements qu'elle aurait subis, achetée", valeurs: [eur(v.amortissements)] },
+    ],
+  };
+}
+
 /** La place de marché à d jours : sa créance, le besoin, la trésorerie nette et le compte courant. */
 export function placeDeMarche(x: BilanDeLExercice, delai: number) {
   const creance = auCentime((x.ventesAuxParticuliersTtc * delai) / 360);
@@ -410,7 +490,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
   accroche:
     "Le bilan de NOVA au 31 décembre relu par fonction : ce qui finance durablement l'entreprise, ce que son exploitation retient, ce qui reste en trésorerie. Pourquoi la trésorerie nette vaut toujours l'un moins l'autre, ce que coûtent des délais, et pourquoi une trésorerie nette n'est pas une trésorerie libre.",
   objectifs: [
-    "Reclasser un bilan par fonction : amortissements, dépréciations et provisions, intérêts courus, impôt dû, placements",
+    "Reclasser un bilan par fonction (amortissements, provisions, intérêts courus, impôt dû, placements) et retraiter le crédit-bail",
     "Calculer le fonds de roulement net global, le besoin en fonds de roulement d'exploitation et hors exploitation, la trésorerie nette",
     "Expliquer la variation du fonds de roulement depuis la création par la CAF et le remboursement de l'emprunt",
     "Exprimer le besoin en fonds de roulement en jours de chiffre d'affaires, et chiffrer l'effet d'un délai ou d'une croissance",
@@ -605,6 +685,46 @@ export const BILAN_FONCTIONNEL: Chapitre = {
         return [
           "Les deux calculs tombent sur le même chiffre, et c'est toujours le cas : le bilan s'équilibre, et la trésorerie est ce que le fonds de roulement laisse une fois le besoin financé.",
           `Le hors exploitation est une ressource de ${eur(-x.besoinHorsExploitation)} : l'impôt et les intérêts sont dus, pas encore payés. Une ressource à quelques semaines : en janvier et en mai, elle sortira de la trésorerie.`,
+        ];
+      },
+    },
+    {
+      id: "le-credit-bail",
+      objectifs: [0],
+      type: "montants",
+      titre: "Variante : la ligne en crédit-bail",
+      notions: ["balance_sheet", "frng"],
+      tableau: laLigneEnCreditBail,
+      question: (c) => {
+        const x = bilanDeLExercice(c);
+        return `Reprenez la variante du chapitre des soldes : ${x.entreprise} a pris sa ligne en crédit-bail (${eur(REDEVANCES_DE_CREDIT_BAIL)} de redevances sur l'exercice) et placé l'argent qu'elle n'a pas coûté. Au bilan, la ligne n'existe plus : elle appartient au crédit-bailleur. L'analyste la remet, comme si elle avait été achetée à crédit, avec ce que dit l'annexe : la valeur d'origine en emplois stables, les amortissements qu'elle aurait subis en ressources propres, le reste en dettes financières. Calculez les emplois stables, les dettes financières et les ressources stables retraités, puis le fonds de roulement retraité.`;
+      },
+      champs: (c) => {
+        const v = ligneEnCreditBail(c);
+        const a = v.avant;
+        return [
+          { libelle: "Emplois stables retraités", attendu: v.emploisStables, calcul: `${eur(a.emploisStables)} + ${eur(v.ligne)} de valeur d'origine = ${eur(v.emploisStables)}` },
+          {
+            libelle: "Dettes financières retraitées",
+            attendu: v.dettesFinancieres,
+            calcul: `${eur(a.ressourcesStables.dettesFinancieres)} + (${eur(v.ligne)} − ${eur(v.amortissements)}) = ${eur(v.dettesFinancieres)}`,
+          },
+          {
+            libelle: "Ressources stables retraitées",
+            attendu: v.ressourcesStables,
+            calcul: `${eur(a.ressourcesStables.total)} + ${eur(v.amortissements)} d'amortissements + ${eur(v.dettesEnPlus)} de dettes = ${eur(v.ressourcesStables)}`,
+          },
+          { libelle: "Fonds de roulement retraité", attendu: v.fondsDeRoulement, calcul: `${eur(v.ressourcesStables)} − ${eur(v.emploisStables)} = ${eur(v.fondsDeRoulement)}` },
+        ];
+      },
+      explication: (c) => {
+        const v = ligneEnCreditBail(c);
+        const a = v.avant;
+        const avant = auCentime(a.ressourcesStables.dettesFinancieres / a.ressourcesStables.capitauxPropres);
+        const apres = auCentime(v.dettesFinancieres / v.capitauxPropres);
+        return [
+          `Le fonds de roulement ne bouge pas, ${eur(v.fondsDeRoulement)} : le retraitement ajoute ${eur(v.ligne)} en haut à gauche et autant en haut à droite. Ce qui bouge, c'est la structure : les dettes financières passent de ${eur(a.ressourcesStables.dettesFinancieres)} à ${eur(v.dettesFinancieres)}, et l'endettement de ${qte(avant)} à ${qte(apres)} fois les capitaux propres.`,
+          "Sans retraitement, une entreprise qui loue son outil en crédit-bail paraît sans investissement et peu endettée. Retraitée, elle se compare à celle qui l'a acheté à crédit : c'est la réalité économique avant la forme juridique, comme aux soldes intermédiaires de gestion.",
         ];
       },
     },
@@ -1035,7 +1155,7 @@ export const BILAN_FONCTIONNEL: Chapitre = {
         return [
           `Vous avez relu le bilan ${dE(x.entreprise)} par fonction : un fonds de roulement de ${eur(x.fondsDeRoulement)}, un besoin de ${eur(x.besoin)} (${eur(x.besoinDExploitation)} d'exploitation, ${eur(x.besoinHorsExploitation)} hors exploitation), une trésorerie nette de ${eur(x.tresorerieNette)}. Depuis la création, le fonds de roulement a grandi de la CAF moins le capital remboursé.`,
           `Deux pièges. Une trésorerie nette positive n'est pas une trésorerie libre : ${eur(x.placement)} sont bloqués jusqu'au 6 janvier, et ${eur(x.postes.emprunt)} sont dus à la banque. Et un ratio lit une photo du 31 décembre : il se critique avant de se croire.`,
-          "Au niveau de l'examen, vous savez reclasser un bilan (valeurs brutes, amortissements, dépréciations et provisions, intérêts courus, impôt dû, placements), calculer le fonds de roulement, le besoin d'exploitation et hors exploitation et la trésorerie nette, expliquer leur variation, exprimer le besoin en jours de chiffre d'affaires et chiffrer l'effet d'un délai ou d'une croissance, calculer et critiquer les ratios de rotation, et juger le coût d'une trésorerie gardée.",
+          "Au niveau de l'examen, vous savez reclasser un bilan (valeurs brutes, amortissements, dépréciations et provisions, intérêts courus, impôt dû, placements) et retraiter le crédit-bail, calculer le fonds de roulement, le besoin d'exploitation et hors exploitation et la trésorerie nette, expliquer leur variation, exprimer le besoin en jours de chiffre d'affaires et chiffrer l'effet d'un délai ou d'une croissance, calculer et critiquer les ratios de rotation, et juger le coût d'une trésorerie gardée.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
         ];
       },

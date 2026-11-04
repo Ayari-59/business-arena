@@ -204,6 +204,7 @@ export const LE_TABLEAU_DES_FLUX_DE_TRESORERIE: Chapitre = {
   ],
   libre: false,
   prerequis: ["le-tableau-de-financement"],
+  ensuite: ["le-diagnostic-financier-et-extra-financier"],
   entreprises: {
     codes: ENTREPRISES_DU_TABLEAU_DES_FLUX,
     pourquoi: "le tableau des flux se lit sur un exercice tenu en comptabilité de la création à la clôture, celui de NOVA dans la simulation du cours.",

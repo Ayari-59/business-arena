@@ -494,6 +494,12 @@ export interface RetraitementsDesSoldes {
   personnelExterieur?: number;
   /** Le crédit-bail traité comme un achat financé par emprunt : les redevances sortent des consommations. */
   creditBail?: { redevances: number; dotationEquivalente: number };
+  /**
+   * La participation des salariés (compte 691) rangée avec les charges de personnel, au-dessus de
+   * l'excédent brut d'exploitation : une rémunération du travail, comme les salaires. Le résultat net
+   * ne change pas ; l'EBE, le résultat d'exploitation et le résultat courant baissent d'autant.
+   */
+  participationEnPersonnel?: boolean;
 }
 
 /** Les soldes intermédiaires de gestion, en cascade, avec leurs retraitements. */
@@ -512,7 +518,9 @@ export function soldesIntermediaires(s: Soldes, r: RetraitementsDesSoldes = {}) 
   const valeurAjoutee = auCentime(margeCommerciale + production - consommations);
   const subventions = auCentime(-sommeDesComptes(s, ["74"]));
   const impotsEtTaxes = sommeDesComptes(s, ["63"]);
-  const personnel = auCentime(sommeDesComptes(s, ["64"]) + personnelExterieur);
+  const participationDuCompte = sommeDesComptes(s, ["691"]);
+  const participationRetraitee = r.participationEnPersonnel ? participationDuCompte : 0;
+  const personnel = auCentime(sommeDesComptes(s, ["64"]) + personnelExterieur + participationRetraitee);
   const excedentBrutDExploitation = auCentime(valeurAjoutee + subventions - impotsEtTaxes - personnel);
   const reprisesEtTransferts = auCentime(-sommeDesComptes(s, ["781", "791"]));
   const autresProduits = auCentime(-sommeDesComptes(s, ["75"]));
@@ -526,7 +534,8 @@ export function soldesIntermediaires(s: Soldes, r: RetraitementsDesSoldes = {}) 
   const produitsExceptionnels = auCentime(-sommeDesComptes(s, ["77", "787", "797"]));
   const chargesExceptionnelles = sommeDesComptes(s, ["67", "687"]);
   const resultatExceptionnel = auCentime(produitsExceptionnels - chargesExceptionnelles);
-  const participation = sommeDesComptes(s, ["691"]);
+  // La participation qui reste sous le résultat courant : rien quand elle est rangée avec le personnel.
+  const participation = auCentime(participationDuCompte - participationRetraitee);
   const impot = sommeDesComptes(s, ["695", "696", "697", "698", "699"]);
   const resultatNet = auCentime(resultatCourantAvantImpot + resultatExceptionnel - participation - impot);
   const plusOuMoinsValues = auCentime(-sommeDesComptes(s, ["775"]) - sommeDesComptes(s, ["675"]));
@@ -574,9 +583,13 @@ export function partageDeLaValeurAjoutee(sig: ReturnType<typeof soldesIntermedia
   };
 }
 
-/** La capacité d'autofinancement, par la méthode additive et par la méthode soustractive. */
-export function capaciteDAutofinancement(s: Soldes) {
-  const sig = soldesIntermediaires(s);
+/**
+ * La capacité d'autofinancement, par la méthode additive et par la méthode soustractive. Avec la
+ * participation rangée avec le personnel, la méthode soustractive part de l'EBE retraité et ne la
+ * retranche plus à part : la CAF ne change pas.
+ */
+export function capaciteDAutofinancement(s: Soldes, r: Pick<RetraitementsDesSoldes, "participationEnPersonnel"> = {}) {
+  const sig = soldesIntermediaires(s, r);
   const dotations = sommeDesComptes(s, ["681", "686", "687"]);
   const reprises = auCentime(-sommeDesComptes(s, ["781", "786", "787"]));
   const produitsDeCession = auCentime(-sommeDesComptes(s, ["775"]));

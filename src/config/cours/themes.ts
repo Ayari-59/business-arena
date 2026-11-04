@@ -100,6 +100,8 @@ export const THEMES: readonly Theme[] = [
       "le-plan-de-financement",
       "le-tableau-de-financement",
       "le-tableau-des-flux-de-tresorerie",
+      "le-diagnostic-financier-et-extra-financier",
+      "evaluer-un-investissement-durable",
     ],
     familles: ["finance"],
   },
