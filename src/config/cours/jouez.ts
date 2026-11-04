@@ -698,6 +698,20 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Ajoutez au résultat du tour la dotation aux amortissements : c'est l'argent que l'activité a dégagé. Suffirait-il à payer un nouvel équipement ? Sinon, que pèsent les emprunts face aux capitaux propres ?",
   }),
+  "le-systeme-d-information-comptable": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le compte de résultat et le bilan.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "Chaque chiffre de ces deux tableaux est le solde d'un ou de plusieurs comptes. Retrouvez-en trois : les ventes (classe 7), les créances sur les clients (classe 4) et la trésorerie (classe 5). Lesquels vont au bilan, lequel au compte de résultat, et pourquoi ?",
+  }),
+  "controler-les-comptes": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le budget de trésorerie et le bilan.`,
+    lieux: ["budget-de-tresorerie", "bilan"],
+    chercher:
+      "Le budget de trésorerie part de la trésorerie d'ouverture, ajoute les encaissements et retranche les décaissements. Refaites l'addition : retombez-vous sur la trésorerie de clôture ? Retrouvez-la ensuite au bilan. Deux états qui doivent dire la même chose, et chaque écart à expliquer : c'est l'esprit du rapprochement.",
+  }),
   "effectif-et-masse-salariale": (c) => ({
     niveau: 1,
     faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le compte de résultat.`,
