@@ -28,6 +28,11 @@ export const MATIERES_COUVERTES_EN_ENTIER: readonly MatiereEnEntier[] = [
     preuve: "Audit du contrôle de gestion, puis les cinq chapitres de la PR #347.",
   },
   {
+    formation: "bts-cg",
+    bloc: "P6 · Analyse de la situation financière",
+    preuve: "Audit de la finance (section 3), puis les six chapitres de la PR du P6 et les étiquettes P6 de la VAN, du TRI et de « Croître en investissant ».",
+  },
+  {
     formation: "dcg",
     bloc: "UE11 · Contrôle de gestion",
     preuve: "Programme 2025 (sessions 2027 et suivantes) : audit du contrôle de gestion, PR #347 et #348.",

@@ -158,6 +158,12 @@ import { LA_BANQUE_TESTE_UNE_ANNEE_DIFFICILE } from "./par-chapitre/la-banque-te
 import { DEUX_FACONS_DE_REMBOURSER } from "./par-chapitre/deux-facons-de-rembourser";
 import { LA_BANQUE_PROPOSE_L_ESCOMPTE } from "./par-chapitre/la-banque-propose-l-escompte";
 import { L_ASSOCIE_QUI_VEUT_PLUS } from "./par-chapitre/l-associe-qui-veut-plus";
+import { UN_DIVIDENDE_SOUS_CONDITION } from "./par-chapitre/un-dividende-sous-condition";
+import { UNE_CHAINE_NOUVELLE_A_60_JOURS } from "./par-chapitre/une-chaine-nouvelle-a-60-jours";
+import { LE_BANC_EN_CREDIT_BAIL } from "./par-chapitre/le-banc-en-credit-bail";
+import { LA_BANQUE_PLAFONNE_SON_PRET } from "./par-chapitre/la-banque-plafonne-son-pret";
+import { LA_SECONDE_LIGNE_PAYEE_EN_DECEMBRE } from "./par-chapitre/la-seconde-ligne-payee-en-decembre";
+import { LE_DIVIDENDE_DE_L_ASSOCIE } from "./par-chapitre/le-dividende-de-l-associe";
 export type { Situation } from "./types";
 
 /**
@@ -331,6 +337,12 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   DEUX_FACONS_DE_REMBOURSER,
   LA_BANQUE_PROPOSE_L_ESCOMPTE,
   L_ASSOCIE_QUI_VEUT_PLUS,
+  UN_DIVIDENDE_SOUS_CONDITION,
+  UNE_CHAINE_NOUVELLE_A_60_JOURS,
+  LE_BANC_EN_CREDIT_BAIL,
+  LA_BANQUE_PLAFONNE_SON_PRET,
+  LA_SECONDE_LIGNE_PAYEE_EN_DECEMBRE,
+  LE_DIVIDENDE_DE_L_ASSOCIE,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

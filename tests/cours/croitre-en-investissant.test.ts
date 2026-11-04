@@ -240,7 +240,7 @@ describe("croître en investissant : la place dans le parcours, chez NOVA seule"
     expect(ch.palier).toBe(3);
     expect(PROGRAMME.strategie[3]).toContain(ch.titre);
     expect(ch.libre).toBe(false);
-    expect(ch.blocs).toEqual(["DCG UE6 · Finance d'entreprise", "DSCG UE3 · Contrôle de gestion et stratégie", "BUT GEA · Concevoir la stratégie de création de valeur"]);
+    expect(ch.blocs).toEqual(["BTS CG P6 · Analyse de la situation financière", "DCG UE6 · Finance d'entreprise", "DSCG UE3 · Contrôle de gestion et stratégie", "BUT GEA · Concevoir la stratégie de création de valeur"]);
     for (const b of ch.blocs) {
       const r = referentielDeCitation(b);
       expect(r, b).not.toBeNull();

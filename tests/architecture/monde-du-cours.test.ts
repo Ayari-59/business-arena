@@ -379,6 +379,21 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "chapitres/l-affectation-du-resultat.ts",
   "situations/par-chapitre/la-banque-propose-l-escompte.ts",
   "situations/par-chapitre/l-associe-qui-veut-plus.ts",
+  // Le BTS CG P6 : ratios de structure et bilan financier (monde/structure-financiere.ts), financer et placer la trésorerie (monde/financer-et-placer.ts), et leurs cas.
+  "chapitres/ratios-de-structure-et-bilan-financier.ts",
+  "chapitres/financer-et-placer-la-tresorerie.ts",
+  "situations/par-chapitre/un-dividende-sous-condition.ts",
+  "situations/par-chapitre/une-chaine-nouvelle-a-60-jours.ts",
+  // Le BTS CG P6 6.5.2 : emprunt ou crédit-bail, puis le plan de financement (monde/financement-de-la-gamme.ts), et leurs cas.
+  "chapitres/emprunt-ou-credit-bail.ts",
+  "chapitres/le-plan-de-financement.ts",
+  "situations/par-chapitre/le-banc-en-credit-bail.ts",
+  "situations/par-chapitre/la-banque-plafonne-son-pret.ts",
+  // Le BTS CG P6, 6.6.1 et 6.6.2 : le tableau de financement et le tableau des flux de trésorerie (monde/tableaux-de-flux.ts), et leurs cas.
+  "chapitres/le-tableau-de-financement.ts",
+  "chapitres/le-tableau-des-flux-de-tresorerie.ts",
+  "situations/par-chapitre/la-seconde-ligne-payee-en-decembre.ts",
+  "situations/par-chapitre/le-dividende-de-l-associe.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
@@ -523,6 +538,14 @@ const NE_LISENT_PLUS_L_ANNEE_FIGEE: readonly string[] = [
   "chapitres/l-affectation-du-resultat.ts",
   "situations/par-chapitre/la-banque-propose-l-escompte.ts",
   "situations/par-chapitre/l-associe-qui-veut-plus.ts",
+  "chapitres/ratios-de-structure-et-bilan-financier.ts",
+  "chapitres/financer-et-placer-la-tresorerie.ts",
+  "situations/par-chapitre/un-dividende-sous-condition.ts",
+  "situations/par-chapitre/une-chaine-nouvelle-a-60-jours.ts",
+  "chapitres/emprunt-ou-credit-bail.ts",
+  "chapitres/le-plan-de-financement.ts",
+  "situations/par-chapitre/le-banc-en-credit-bail.ts",
+  "situations/par-chapitre/la-banque-plafonne-son-pret.ts",
 ];
 
 /** Le premier chemin d'imports qui atteint un fichier donné, ou rien. */

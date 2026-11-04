@@ -1,4 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { bilanDeLExercice } from "../../src/config/cours/chapitres/bilan-fonctionnel";
+import { SECONDE_LIGNE } from "../../src/config/cours/monde/comptabilite-approfondie";
+import { SECONDE_LIGNE_PAYEE_EN_DECEMBRE, tableauDeFinancement, tableauDesFlux } from "../../src/config/cours/monde/tableaux-de-flux";
+import { EXERCICE_DE_NOVA } from "../../src/config/cours/monde/exercice-de-nova";
 import { casDeLEntreprise } from "../../src/config/cours/cas";
 import { CHAPITRES } from "../../src/config/cours/registre";
 import { SITUATIONS } from "../../src/config/cours/situations";
@@ -48,6 +52,16 @@ import { augmentationDeCapital } from "../../src/config/cours/monde/comptabilite
 import { bilanDuLycee } from "../../src/config/cours/monde/comptes-du-lycee";
 import { financer } from "../../src/config/cours/chapitres/financer-l-entreprise";
 import { factureDeCampusTech, fondsDeRoulement } from "../../src/config/cours/chapitres/fonds-de-roulement-et-tresorerie";
+import { INVESTISSEMENT_DE_LA_GAMME, structureDeNova } from "../../src/config/cours/monde/structure-financiere";
+import { B, FACTURE_DE_DECEMBRE, garantieSurSonora } from "../../src/config/cours/monde/financer-et-placer";
+import { CONDITIONS_DE_LA_BANQUE } from "../../src/config/cours/monde/equilibre-de-tresorerie";
+import { cloture } from "../../src/config/cours/monde/cloture";
+import { BANC, EMPRUNT_DE_LA_LIGNE, LIGNE_A_FINANCER, RESERVE_DE_LA_GAMME, TAUX_DE_L_IMPOT, fluxDeLEmprunt, planDeFinancementDeLaGamme } from "../../src/config/cours/monde/financement-de-la-gamme";
+import { PRET_BANCAIRE, remboursements } from "../../src/config/cours/monde/financement-du-lycee";
+import { fluxDuProjet } from "../../src/config/cours/monde/finance";
+import { PROJET_LIGNE_SEMI_AUTOMATIQUE } from "../../src/config/cours/monde/projets-et-financement";
+import { CONTRAT_DE_PRET, IMPOT_SUR_LES_SOCIETES } from "../../src/config/cours/monde/exercice-de-nova";
+import { INVESTISSEMENT_ENVISAGE } from "../../src/config/cours/monde/nova-gestion";
 
 /**
  * UNE SEULE NOVA DANS LE MONDE DU COURS (réconciliation d'octobre 2026). Les fiches qui disent la
@@ -494,5 +508,103 @@ describe("une seule NOVA, de la trésorerie du 31 décembre à l'affectation du 
     const sans = affecter(k, { dividendeParAction: 0, reservesFacultatives: 0 });
     expect(sans.capitauxPropres).toBe(augmentationDeCapital().capitauxPropres);
     expect(affecter(k, { dividendeParAction: 2, reservesFacultatives: 0 }).capitauxPropres).toBe(bilanDuLycee(f, { dividende: 30_000 }).capitauxPropres);
+  });
+});
+
+/**
+ * UNE SEULE NOVA DANS LA STRUCTURE FINANCIÈRE ET LA TRÉSORERIE DE N+1 (ratios de structure et bilan
+ * financier, financer et placer la trésorerie) : le bilan financier part du bilan comptable de la
+ * clôture et retombe sur son total, moins-value latente ôtée ; la CAF et les ressources stables sont
+ * celles des soldes intermédiaires et du bilan fonctionnel ; les échéances de l'année sont celles du
+ * contrat de prêt ; la banque est celle du chapitre « Équilibrer la trésorerie » ; l'effet escompté est
+ * la dernière facture de CampusTech du 31 décembre ; la perte de Sonora est celle que N+1 constate.
+ */
+describe("une seule NOVA, du bilan financier à la trésorerie de N+1", () => {
+  it("le bilan financier retombe sur le bilan comptable de la clôture, moins-value latente ôtée", () => {
+    const s = structureDeNova(EXERCICE_DE_NOVA);
+    const k = cloture(EXERCICE_DE_NOVA);
+    expect(s.financier.totalActif).toBe(Math.round((k.bilan.totalActif - s.financier.moinsValueLatente) * 100) / 100);
+    expect(s.financier.totalPassif).toBe(s.financier.totalActif);
+    expect(s.caf).toBe(k.caf.additive);
+    expect(s.caf).toBe(k.caf.soustractive);
+    expect(s.ressourcesStables).toBe(k.fonctionnel.ressourcesStables.total);
+    expect(s.postes.resultat).toBe(CLOTURE_DE_LA_FICHE.resultatNet);
+    expect(s.financier.echeancesAMoinsDUnAn).toBe(4 * (CONTRAT_DE_PRET.capital / (CONTRAT_DE_PRET.dureeAns * CONTRAT_DE_PRET.echeancesParAn)));
+    expect(s.postes.capitalRestantDu).toBe(68_000);
+  });
+
+  it("la trésorerie de N+1 : la banque du cours, la facture de CampusTech du 20 décembre, la perte de Sonora", () => {
+    expect(B).toBe(CONDITIONS_DE_LA_BANQUE);
+    const f = EXERCICE_DE_NOVA;
+    expect(FACTURE_DE_DECEMBRE.ttc).toBe(Math.round(f.campustech.enceintesParFacture * f.prixDeLEnceinte * (1 + f.tauxDeTva) * 100) / 100);
+    expect(FACTURE_DE_DECEMBRE.echeance).toEqual({ jour: 10, mois: 3, exercice: 1 });
+    expect(garantieSurSonora().perteHt).toBe(Math.round(28_025 * (1 - EXERCICE_DE_NOVA.suites.sonora.partEncaissee) * 100) / 100);
+    expect(INVESTISSEMENT_DE_LA_GAMME).toBe(PROJET_LIGNE_SEMI_AUTOMATIQUE.actifs.reduce((t, a) => t + a.montant, 0));
+  });
+});
+
+/**
+ * UNE SEULE NOVA DANS LE FINANCEMENT DE LA GAMME (BTS CG P6, emprunt ou crédit-bail, le plan de
+ * financement) : la ligne à financer est la ligne semi-automatique du projet B, la banque prête au
+ * taux du prêt de l'exercice, l'impôt est le taux normal de la fiche, la réserve est le compte à
+ * terme ; le tableau de l'emprunt est celui du prêt bancaire de « Financer autrement » ; la CAF du
+ * plan sans emprunt et ses variations de BFR sont les flux de la gamme du chapitre « La VAN » ; le
+ * banc du cas est celui du contrôle de gestion.
+ */
+describe("une seule NOVA, du choix du projet au plan de financement", () => {
+  it("la ligne, la banque, l'impôt et la réserve sont ceux des autres chapitres de NOVA", () => {
+    expect(LIGNE_A_FINANCER).toBe(PROJET_LIGNE_SEMI_AUTOMATIQUE.actifs[0]);
+    expect([LIGNE_A_FINANCER.montant, LIGNE_A_FINANCER.dureeDAmortissement]).toEqual([150_000, 6]);
+    expect(EMPRUNT_DE_LA_LIGNE.taux).toBe(CONTRAT_DE_PRET.tauxAnnuel);
+    expect(TAUX_DE_L_IMPOT).toBe(IMPOT_SUR_LES_SOCIETES.tauxNormal);
+    expect(RESERVE_DE_LA_GAMME).toBe(PLACEMENT.montant);
+    expect([BANC.montant, BANC.dureeDAmortissement * 12]).toEqual([INVESTISSEMENT_ENVISAGE.montantHt, INVESTISSEMENT_ENVISAGE.dureeDAmortissementMois]);
+  });
+
+  it("le tableau de l'emprunt de la ligne est celui du prêt bancaire de « Financer autrement »", () => {
+    const pret = remboursements(PRET_BANCAIRE(EXERCICE_DE_NOVA), LIGNE_A_FINANCER.montant);
+    expect(fluxDeLEmprunt(EMPRUNT_DE_LA_LIGNE).annees.map((a) => [a.interets, a.amortissement, a.annuite])).toEqual(pret.map((r) => [r.interets, r.capital, r.total]));
+  });
+
+  it("sans emprunt, la CAF du plan est le flux d'exploitation de la gamme, et ses variations de BFR celles du projet", () => {
+    const projet = fluxDuProjet(PROJET_LIGNE_SEMI_AUTOMATIQUE);
+    const plan = planDeFinancementDeLaGamme();
+    expect(plan.annees.map((a) => a.caf)).toEqual(projet.annees.map((a) => a.fluxDExploitation));
+    expect(plan.annees.map((a) => a.augmentationDuBfr - a.diminutionDuBfr)).toEqual(projet.variationsDuBfr.slice(0, plan.annees.length));
+    expect(plan.annees[0]!.investissements).toBe(projet.investissement);
+  });
+});
+
+/**
+ * UNE SEULE NOVA DANS LES TABLEAUX DE FLUX (le tableau de financement, le tableau des flux de
+ * trésorerie) : la CAF est celle des soldes intermédiaires, le fonds de roulement, le besoin et la
+ * trésorerie ceux du bilan fonctionnel, les flux stables ceux de la fiche (l'apport, le prêt, la
+ * ligne) ; la seconde ligne payée en décembre est celle de N + 1.
+ */
+describe("une seule NOVA, du bilan fonctionnel aux tableaux de flux", () => {
+  it("la CAF, le fonds de roulement, le besoin et la trésorerie sont ceux de la clôture figée", () => {
+    const t = tableauDeFinancement(EXERCICE_DE_NOVA);
+    const fo = CLOTURE_DE_LA_FICHE.fonctionnel;
+    expect(t.ressources.caf).toBe(CLOTURE_DE_LA_FICHE.capaciteDAutofinancement);
+    expect(t.variationDuFondsDeRoulement).toBe(fo.fondsDeRoulement);
+    expect(t.partie2.variationDExploitation).toBe(fo.besoinDExploitation);
+    expect(t.partie2.variationHorsExploitation).toBe(fo.besoinHorsExploitation);
+    expect(t.partie2.variationDeTresorerie).toBe(fo.tresorerieNette);
+    expect(tableauDesFlux(EXERCICE_DE_NOVA).variationDeTresorerie).toBe(fo.tresorerieNette);
+  });
+
+  it("les flux stables sont ceux de la création et du prêt ; la variation du fonds de roulement depuis le 6 janvier, celle du chapitre du bilan fonctionnel", () => {
+    const t = tableauDeFinancement(EXERCICE_DE_NOVA);
+    const x = bilanDeLExercice({ code: "nova" });
+    expect(t.ressources.augmentationDeCapital).toBe(EXERCICE_DE_NOVA.apport.montant);
+    expect(t.ressources.nouveauxEmprunts).toBe(EXERCICE_DE_NOVA.pret.capital);
+    expect(t.emplois.acquisitions).toBe(EQUIPEMENT.ht);
+    expect(t.emplois.remboursements).toBe(x.rembourse);
+    expect(t.variationDuFondsDeRoulement - x.creation.fondsDeRoulement).toBeCloseTo(x.variationDuFondsDeRoulement, 2);
+  });
+
+  it("la seconde ligne payée en décembre est la seconde ligne de N + 1, au même prix", () => {
+    expect(SECONDE_LIGNE_PAYEE_EN_DECEMBRE.ht).toBe(SECONDE_LIGNE.ht);
+    expect(SECONDE_LIGNE_PAYEE_EN_DECEMBRE.ht + SECONDE_LIGNE_PAYEE_EN_DECEMBRE.tva).toBe(EQUIPEMENT.ttc);
   });
 });

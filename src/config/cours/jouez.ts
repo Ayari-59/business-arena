@@ -1388,6 +1388,48 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Retrouvez le résultat du tour. Si c'était la fin de l'année, combien iraient en réserve légale, et combien pourriez-vous verser aux associés tout en gardant de quoi investir ? Que deviendraient vos capitaux propres et votre trésorerie ?",
   }),
+  "ratios-de-structure-et-bilan-financier": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez le compte de résultat et le bilan du second.`,
+    lieux: ["bilan", "compte-de-resultat"],
+    chercher:
+      "Calculez l'indépendance financière, l'endettement et la capacité de remboursement de votre entreprise. Puis rangez ses dettes à plus ou à moins d'un an : votre actif à court terme paierait-il vos dettes de l'année ? Quelle règle de la banque bloquerait d'abord un nouvel emprunt ?",
+  }),
+  "financer-et-placer-la-tresorerie": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relisez le budget de trésorerie et le bilan du second.`,
+    lieux: ["budget-de-tresorerie", "bilan"],
+    chercher:
+      "Votre trésorerie manque-t-elle à un moment, ou dort-elle ? S'il faut financer un creux, chiffrez un crédit d'un mois et l'escompte d'une créance client, en euros et en taux réel. S'il faut placer, quelle part pourriez-vous bloquer sans risquer d'en avoir besoin ?",
+  }),
+  "emprunt-ou-credit-bail": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez le compte de résultat.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "Relevez les charges financières et l'impôt du tour. De combien l'impôt baisserait-il si les charges financières montaient de 1 000 € ? Qu'en déduisez-vous du coût d'un emprunt après impôt ? Si un équipement du bilan était loué en crédit-bail, quelle charge le remplacerait au compte de résultat ?",
+  }),
+  "le-plan-de-financement": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez le budget de trésorerie et le bilan.`,
+    lieux: ["budget-de-tresorerie", "bilan"],
+    chercher:
+      "Recalculez la CAF du second tour : le résultat net plus les dotations aux amortissements. Si vous deviez acheter un équipement au tour suivant, la CAF, la trésorerie du bilan et un emprunt suffiraient-ils à le payer, remboursements compris ?",
+  }),
+  "le-tableau-de-financement": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relisez le bilan et l'écran du fonds de roulement de chacun.`,
+    lieux: ["bilan", "frng-bfr"],
+    chercher:
+      "Du premier tour au second, de combien le fonds de roulement a-t-il varié ? Retrouvez-le par les flux : le résultat plus la dotation aux amortissements, moins ce que vous avez investi et remboursé. Puis dites où cette variation est allée : le besoin en fonds de roulement, ou la trésorerie.",
+  }),
+  "le-tableau-des-flux-de-tresorerie": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relisez le compte de résultat et le bilan du second.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "De combien la trésorerie a-t-elle varié sur le second tour ? Séparez ce qui vient de l'activité (le résultat, plus la dotation aux amortissements, moins la hausse du besoin en fonds de roulement), de l'investissement et du financement. L'activité a-t-elle payé seule vos investissements ?",
+  }),
 };
 
 /**

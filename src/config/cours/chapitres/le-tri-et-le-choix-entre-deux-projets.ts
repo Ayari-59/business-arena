@@ -303,7 +303,7 @@ export const LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS: Chapitre = {
   code: "le-tri-et-le-choix-entre-deux-projets",
   parcours: "dscg-finance",
   palier: 4,
-  blocs: ["DSCG UE2 · Finance"],
+  blocs: ["BTS CG P6 · Analyse de la situation financière", "DSCG UE2 · Finance"],
   titre: "Le taux de rentabilité interne et le choix entre deux projets",
   accroche:
     "Deux lignes pour une seule place : la manuelle a le meilleur TRI, la semi-automatique la meilleure VAN. Le laboratoire fait monter le taux jusqu'à ce qu'elles s'égalent, le taux de Fisher dit pourquoi elles divergent, puis un budget limité et un troisième projet mettent l'indice de profitabilité et le TRI à l'épreuve.",
