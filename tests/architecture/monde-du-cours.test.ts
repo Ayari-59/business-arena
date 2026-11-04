@@ -358,6 +358,13 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "chapitres/la-demarche-budgetaire.ts",
   "situations/par-chapitre/un-mauvais-mois-pour-l-atelier.ts",
   "situations/par-chapitre/la-publicite-ligne-par-ligne.ts",
+  // La DCG UE11 § 3.2 : programmer la production, approvisionner au moindre coût, corrélation et lissage, et leurs cas.
+  "chapitres/programmer-la-production.ts",
+  "chapitres/approvisionner-au-moindre-cout.ts",
+  "chapitres/correlation-et-lissage.ts",
+  "situations/par-chapitre/le-banc-perd-une-journee.ts",
+  "situations/par-chapitre/deux-commandes-par-an.ts",
+  "situations/par-chapitre/janvier-est-tombe.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */

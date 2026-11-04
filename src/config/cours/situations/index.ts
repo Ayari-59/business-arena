@@ -149,6 +149,9 @@ import { LE_CONCURRENT_LANCE_UNE_NOMADE } from "./par-chapitre/le-concurrent-lan
 import { LES_INDICATEURS_QUE_DEMANDE_CAMPUSTECH } from "./par-chapitre/les-indicateurs-que-demande-campustech";
 import { UN_MAUVAIS_MOIS_POUR_L_ATELIER } from "./par-chapitre/un-mauvais-mois-pour-l-atelier";
 import { LA_PUBLICITE_LIGNE_PAR_LIGNE } from "./par-chapitre/la-publicite-ligne-par-ligne";
+import { LE_BANC_PERD_UNE_JOURNEE } from "./par-chapitre/le-banc-perd-une-journee";
+import { DEUX_COMMANDES_PAR_AN } from "./par-chapitre/deux-commandes-par-an";
+import { JANVIER_EST_TOMBE } from "./par-chapitre/janvier-est-tombe";
 export type { Situation } from "./types";
 
 /**
@@ -313,6 +316,9 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LES_INDICATEURS_QUE_DEMANDE_CAMPUSTECH,
   UN_MAUVAIS_MOIS_POUR_L_ATELIER,
   LA_PUBLICITE_LIGNE_PAR_LIGNE,
+  LE_BANC_PERD_UNE_JOURNEE,
+  DEUX_COMMANDES_PAR_AN,
+  JANVIER_EST_TOMBE,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

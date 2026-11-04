@@ -873,6 +873,16 @@ describe.each([
   { code: "la-demarche-budgetaire", entreprise: "nova", telephone: true },
   { code: "un-mauvais-mois-pour-l-atelier", entreprise: "nova" },
   { code: "la-publicite-ligne-par-ligne", entreprise: "nova", telephone: true },
+  // Les techniques prévisionnelles de la DCG UE11 : des laboratoires, des tableaux à compléter, puis leurs cas.
+  { code: "programmer-la-production", entreprise: "nova" },
+  { code: "programmer-la-production", entreprise: "nova", telephone: true },
+  { code: "approvisionner-au-moindre-cout", entreprise: "nova" },
+  { code: "approvisionner-au-moindre-cout", entreprise: "nova", telephone: true },
+  { code: "correlation-et-lissage", entreprise: "nova" },
+  { code: "correlation-et-lissage", entreprise: "nova", telephone: true },
+  { code: "le-banc-perd-une-journee", entreprise: "nova" },
+  { code: "deux-commandes-par-an", entreprise: "nova", telephone: true },
+  { code: "janvier-est-tombe", entreprise: "nova" },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se

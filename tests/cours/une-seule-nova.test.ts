@@ -35,6 +35,13 @@ import { chaineDeValeur, chargesDeLAtelierParNature, durabiliteDuSalaire, trimes
 import { budgetDActivite, budgetsParCentre, commandesDuMois, navette, reseauDesBudgets } from "../../src/config/cours/monde/demarche-budgetaire";
 import { investissementDeLaFiche, repartitionDesCentres, trimestreDeDecision } from "../../src/config/cours/monde/couts-et-budgets";
 import { COMMANDES_DE_JANVIER } from "../../src/config/cours/monde/couts-par-activites";
+import { formeCanonique as formeDuProgramme, laGoServieDAbord, programmeOptimal, valeurDUneHeureDePlus } from "../../src/config/cours/monde/programmation-de-nova";
+import { planSousFacteurRare } from "../../src/config/cours/monde/couts-et-budgets";
+import { COMMANDES_D_AUJOURD_HUI, PRIX_DU_JEU, consommationDeNPlus1, consommationDuDelai } from "../../src/config/cours/monde/approvisionnement-de-nova";
+import { anneeAvec, ficheDeNova, kitsDuTrimestre } from "../../src/config/cours/monde/production-et-logistique";
+import { ELECTRO_COMPOSANTS, FACTURES_DE_COMPOSANTS_HT } from "../../src/config/cours/monde/exercice-de-nova";
+import { VENTES_LISSEES, correlationBrute, serieCVS } from "../../src/config/cours/monde/correlation-et-lissage";
+import { ajustementLineaire, coefficientsSaisonniers } from "../../src/config/cours/monde/prevision-des-ventes";
 
 /**
  * UNE SEULE NOVA DANS LE MONDE DU COURS (réconciliation d'octobre 2026). Les fiches qui disent la
@@ -406,5 +413,47 @@ describe("une seule NOVA, de l'organisation du contrôle à la démarche budgét
     expect(budgetsParCentre(NOVA_GESTION).total).toBe(6 * (CHARGES_FIXES_DU_MOIS.loyer + CHARGES_FIXES_DU_MOIS.personnel + CHARGES_FIXES_DU_MOIS.amortissement));
     expect(commandesDuMois(NOVA_GESTION, 0).total).toBe(COMMANDES_DE_JANVIER["en-ligne"].commandes + COMMANDES_DE_JANVIER.campustech.commandes);
     expect(budgetDActivite(NOVA_GESTION).coutDeJanvier).toBe(methodeABC().activites.find((x) => x.code === "commandes")!.cout);
+  });
+});
+
+/**
+ * UNE SEULE NOVA DANS LES TECHNIQUES PRÉVISIONNELLES DU DCG (programmer la production, approvisionner
+ * au moindre coût, corrélation et lissage). Le programme linéaire part de la gamme et de son mois de
+ * pointe, et retombe sans le banc sur le plan du facteur rare de « Coût par produit » ; les jeux achetés
+ * en N + 1 sont la production de N + 1 des chapitres de la capacité, au prix et au délai du
+ * fournisseur ; le lissage lit les ventes en ligne de l'exercice, la corrélation la droite de la
+ * prévision des ventes.
+ */
+describe("une seule NOVA, de la programmation de la production aux approvisionnements et au lissage", () => {
+  it("le programme linéaire part de la gamme ; sans le banc, il retombe sur le plan du facteur rare, la Go servie entière", () => {
+    const f = formeDuProgramme();
+    const ref = (code: string) => GAMME_DE_NOVA.references.find((r) => r.code === code)!;
+    expect(f.contraintes[0]!.c).toBeCloseTo(GAMME_DE_NOVA.capaciteHeuresMachine - ref("go").demandeDuMoisDePointe * ref("go").heuresMachineParUnite, 9);
+    expect(f.marge).toEqual({ x: ref("one").prix - ref("one").coutVariableUnitaire, y: ref("studio").prix - ref("studio").coutVariableUnitaire });
+    const plan = planSousFacteurRare(NOVA_GESTION).plan;
+    const quantite = (code: string) => plan.find((r) => r.code === code)!.quantite;
+    const sansLeBanc = programmeOptimal({}, false).optimal;
+    expect(sansLeBanc.y).toBe(quantite("studio"));
+    expect(Math.floor(sansLeBanc.x)).toBe(quantite("one"));
+    expect(laGoServieDAbord().unites).toBe(quantite("go"));
+    const go = ref("go");
+    expect((go.prix - go.coutVariableUnitaire) / go.heuresMachineParUnite).toBeGreaterThan(valeurDUneHeureDePlus("heures-machine").valeur);
+  });
+
+  it("les jeux de N + 1 sont la production de N + 1 de la capacité, au prix d'Électro-Composants, et la consommation du délai celle du stock de sécurité", () => {
+    const f = ficheDeNova({ code: "nova" });
+    const c = consommationDeNPlus1();
+    expect(c.trimestres).toEqual(anneeAvec(f).trimestres.map((t) => t.production));
+    expect(c.trimestres).toEqual(ANNEE_N_PLUS_1.demande.map((d) => Math.min(d, NOVA_GESTION.decision.capacite)));
+    expect(PRIX_DU_JEU).toBe(ELECTRO_COMPOSANTS.prixDuJeu);
+    expect(PRIX_DU_JEU).toBe(NOVA_GESTION.moisDeReference.coutVariable.composants);
+    expect(consommationDuDelai().moyenne).toBe(kitsDuTrimestre(f, 1).pendantLeDelai);
+    expect(COMMANDES_D_AUJOURD_HUI).toBe(FACTURES_DE_COMPOSANTS_HT.length);
+  });
+
+  it("le lissage lit les ventes en ligne de l'exercice ; la corrélation et la série CVS, la droite et les coefficients de la prévision des ventes", () => {
+    expect(VENTES_LISSEES).toEqual(VENTES_AUX_PARTICULIERS);
+    expect(correlationBrute().r).toBe(ajustementLineaire().r);
+    expect(serieCVS().slice(0, 4).map((x) => x.coefficient)).toEqual(coefficientsSaisonniers("lineaire").coefficients);
   });
 });

@@ -258,7 +258,7 @@ export const LA_PREVISION_DES_VENTES: Chapitre = {
   ],
   libre: false,
   prerequis: ["marche-et-part-de-marche"],
-  ensuite: ["le-cout-preetabli-et-les-budgets", "croitre-en-investissant"],
+  ensuite: ["le-cout-preetabli-et-les-budgets", "croitre-en-investissant", "correlation-et-lissage"],
   entreprises: {
     codes: ENTREPRISES_DE_LA_PREVISION,
     pourquoi:
