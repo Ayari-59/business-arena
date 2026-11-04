@@ -8,6 +8,9 @@ import type { Etape } from "../../src/config/cours/types";
 import { SCENARIOS } from "../../src/config/scenarios/registry";
 import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
 
+/** Chaque entreprise relit tous les textes de tous les chapitres : près de 4 s seul, davantage en série complète. */
+const DELAI_DE_LECTURE_DE_TOUS_LES_TEXTES = 30_000;
+
 /**
  * LES TEXTES DU COURS S'ACCORDENT AVEC L'UNITÉ DE L'ENTREPRISE.
  *
@@ -65,5 +68,6 @@ describe("les accords avec l'unité", () => {
         });
       }
     },
+    DELAI_DE_LECTURE_DE_TOUS_LES_TEXTES,
   );
 });

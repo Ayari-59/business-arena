@@ -29,13 +29,16 @@ function fichiers(racine: string, extensions: string[]): string[] {
 
 const layout = readFileSync(join(SRC, "app", "layout.tsx"), "utf8");
 
+/** Importer la mise en page charge tout le site : plus de 9 s à froid. */
+const DELAI_DU_CHARGEMENT_DE_LA_MISE_EN_PAGE = 30_000;
+
 describe("zoom mobile", () => {
   it("le viewport ne bloque ni l'échelle ni le zoom", async () => {
     const { viewport } = await import("@/app/layout");
     expect(viewport.maximumScale).toBeUndefined();
     expect(viewport.userScalable).not.toBe(false);
     expect(layout).not.toMatch(/maximumScale|userScalable:\s*false|maximum-scale|user-scalable/);
-  });
+  }, DELAI_DU_CHARGEMENT_DE_LA_MISE_EN_PAGE);
 });
 
 describe("lien d'évitement", () => {
