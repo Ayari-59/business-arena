@@ -1249,6 +1249,20 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Découpez votre entreprise en deux centres, la production et la vente. À partir de l'analyse des coûts, fixez le prix auquel la production céderait une unité au coût réel de chaque tour : pourquoi change-t-il d'un tour à l'autre, et quel centre porte ce changement ?",
   }),
+  "la-prevision-des-ventes": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} À chaque tour, notez la demande du marché et la vôtre. Avant le quatrième tour, saisissez dans « Ventes estimées » la prévision que donnent la tendance des trois premiers tours et votre part de marché.`,
+    lieux: ["marche-du-tour", "plan-face-au-realise"],
+    chercher:
+      "Au quatrième tour, comparez votre prévision aux ventes. L'écart vient-il de la tendance, de la saison ou de votre part de marché ? Laquelle de ces trois lectures vous aurait évité l'erreur ?",
+  }),
+  "les-couts-a-base-d-activites": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour.`,
+    lieux: ["analyse-des-couts"],
+    chercher:
+      "L'analyse des coûts répartit les charges de structure au volume. Choisissez deux activités de votre entreprise que le volume ne mesure pas, des commandes, des livraisons, des réglages, et dites quel inducteur vous leur donneriez.",
+  }),
 };
 
 /**

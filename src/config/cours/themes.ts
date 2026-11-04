@@ -119,6 +119,8 @@ export const THEMES: readonly Theme[] = [
       "tableau-de-bord",
       "decider-prix-fabriquer-acheter",
       "piloter-un-centre",
+      "la-prevision-des-ventes",
+      "les-couts-a-base-d-activites",
     ],
     familles: ["chiffres", "controle", "hotel-couts", "conseil-marge", "sante-budget"],
   },

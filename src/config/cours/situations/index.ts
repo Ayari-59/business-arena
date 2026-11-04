@@ -138,6 +138,8 @@ import { LE_CONCURRENT_SOLDE } from "./par-chapitre/le-concurrent-solde";
 import { UN_ENGAGEMENT_PLUS_MODESTE } from "./par-chapitre/un-engagement-plus-modeste";
 import { LES_ENTREPRISES_PAIENT_PLUS_VITE } from "./par-chapitre/les-entreprises-paient-plus-vite";
 import { LE_SOUS_TRAITANT_BAISSE_SON_PRIX } from "./par-chapitre/le-sous-traitant-baisse-son-prix";
+import { LES_JEUX_DU_PRINTEMPS } from "./par-chapitre/les-jeux-du-printemps";
+import { LA_REMISE_DE_SONORA } from "./par-chapitre/la-remise-de-sonora";
 export type { Situation } from "./types";
 
 /**
@@ -291,6 +293,8 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   UN_ENGAGEMENT_PLUS_MODESTE,
   LES_ENTREPRISES_PAIENT_PLUS_VITE,
   LE_SOUS_TRAITANT_BAISSE_SON_PRIX,
+  LES_JEUX_DU_PRINTEMPS,
+  LA_REMISE_DE_SONORA,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

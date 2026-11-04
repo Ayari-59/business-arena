@@ -330,6 +330,11 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   // Piloter un centre (BTS CG P5, 5.5) : écrit sur le monde du cours (monde/centres-de-nova.ts).
   "chapitres/piloter-un-centre.ts",
   "situations/par-chapitre/le-sous-traitant-baisse-son-prix.ts",
+  // Le BTS CG P5 : la prévision des ventes (monde/prevision-des-ventes.ts) et la méthode ABC (monde/couts-par-activites.ts).
+  "chapitres/la-prevision-des-ventes.ts",
+  "situations/par-chapitre/les-jeux-du-printemps.ts",
+  "chapitres/les-couts-a-base-d-activites.ts",
+  "situations/par-chapitre/la-remise-de-sonora.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
