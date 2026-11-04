@@ -335,7 +335,7 @@ export const LA_VALEUR_ACTUELLE_NETTE: Chapitre = {
   code: "la-valeur-actuelle-nette",
   parcours: "dscg-finance",
   palier: 4,
-  blocs: ["DSCG UE2 · Finance"],
+  blocs: ["BTS CG P6 · Analyse de la situation financière", "DSCG UE2 · Finance"],
   titre: "La valeur actuelle nette d'un investissement",
   accroche:
     "NOVA lance sa gamme Go et Studio sur une seconde ligne : cinq ans de flux de trésorerie disponibles, impôt et BFR compris, une revente à la fin, et un taux qui donne un prix au temps. La VAN dit si le lancement crée de la valeur, et le laboratoire montre ce qui la fait basculer.",

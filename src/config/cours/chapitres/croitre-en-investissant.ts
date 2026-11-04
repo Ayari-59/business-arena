@@ -279,7 +279,7 @@ export const CROITRE_EN_INVESTISSANT: Chapitre = {
   code: "croitre-en-investissant",
   parcours: "strategie",
   palier: 3,
-  blocs: ["DCG UE6 · Finance d'entreprise", "DSCG UE3 · Contrôle de gestion et stratégie", "BUT GEA · Concevoir la stratégie de création de valeur"],
+  blocs: ["BTS CG P6 · Analyse de la situation financière", "DCG UE6 · Finance d'entreprise", "DSCG UE3 · Contrôle de gestion et stratégie", "BUT GEA · Concevoir la stratégie de création de valeur"],
   titre: "Croître en investissant : capacité, financement, rentabilité",
   accroche:
     "L'outil de NOVA refuse des ventes : une machine de plus les servirait, à condition d'embaucher. Ce qu'elle coûte sur l'année, les ventes qu'il lui faut, puis sa VAN et son délai de récupération, qui dépendent de la demande bien plus que de la machine.",

@@ -32,7 +32,8 @@ describe("emprunt ou crédit-bail : le chapitre", () => {
   it("est au registre, au programme de la comptabilité générale (palier 4), au thème de l'analyse financière, et cite le BTS CG P6 et le DCG UE6", () => {
     expect(CHAPITRES).toContain(ch);
     gardeDuProgramme(ch, PROGRAMME["comptabilite-generale"][4]!);
-    expect(PROGRAMME["comptabilite-generale"][4]!.slice(-2)).toEqual([ch.titre, LE_PLAN_DE_FINANCEMENT.titre]);
+    const programme = PROGRAMME["comptabilite-generale"][4]!;
+    expect(programme[programme.indexOf(ch.titre) + 1]).toBe(LE_PLAN_DE_FINANCEMENT.titre);
     expect(ch.parcours).toBe("comptabilite-generale");
     expect(ch.palier).toBe(4);
     expect(ch.blocs).toEqual(["BTS CG P6 · Analyse de la situation financière", "DCG UE6 · Finance d'entreprise"]);

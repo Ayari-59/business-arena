@@ -276,10 +276,11 @@ describe("les deux chapitres et leurs cas, chez NOVA, dans le monde du cours", (
       expect(ch.entreprises?.codes).toEqual(["nova"]);
       expect(ch.entreprises!.pourquoi).toMatch(/^[a-zé].*\.$/);
       expect(ch.entreprises!.pourquoi).toContain("NOVA");
-      expect(ch.blocs).toEqual(["DSCG UE2 · Finance"]);
-      const r = referentielDeCitation(ch.blocs[0]!)!;
+      // Le BTS CG P6 (6.2, le projet d'investissement) les cite aussi depuis qu'il est couvert en entier.
+      expect(ch.blocs).toEqual(["BTS CG P6 · Analyse de la situation financière", "DSCG UE2 · Finance"]);
+      const r = referentielDeCitation(ch.blocs[1]!)!;
       expect(r.code).toBe("dscg");
-      expect(blocOfficiel(ch.blocs[0]!, r.code)).toBe("UE2 · Finance");
+      expect(blocOfficiel(ch.blocs[1]!, r.code)).toBe("UE2 · Finance");
       expect(ch.etapes[0]!.type).toBe("lecture");
       expect(ch.etapes.at(-1)!.id).toBe("synthese");
       const fin = (ch.etapes.at(-1) as { texte: (c: Cas) => string[] }).texte(cas);

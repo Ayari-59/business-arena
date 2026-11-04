@@ -33,12 +33,13 @@ describe("le plan de financement : le chapitre", () => {
 
   it("est au registre, au programme de la comptabilité générale (palier 4), au thème de l'analyse financière, et cite le BTS CG P6 et le DCG UE6", () => {
     expect(CHAPITRES).toContain(ch);
-    expect(CHAPITRES.slice(-2)).toEqual([EMPRUNT_OU_CREDIT_BAIL, ch]);
+    expect(CHAPITRES[CHAPITRES.indexOf(ch) - 1]).toBe(EMPRUNT_OU_CREDIT_BAIL);
     gardeDuProgramme(ch, PROGRAMME["comptabilite-generale"][4]!);
     expect(ch.parcours).toBe("comptabilite-generale");
     expect(ch.palier).toBe(4);
     expect(ch.blocs).toEqual(["BTS CG P6 · Analyse de la situation financière", "DCG UE6 · Finance d'entreprise"]);
-    expect(THEMES.find((t) => t.code === "analyse-financiere")!.chapitres.slice(-2)).toEqual([EMPRUNT_OU_CREDIT_BAIL.code, ch.code]);
+    const duTheme = THEMES.find((t) => t.code === "analyse-financiere")!.chapitres;
+    expect(duTheme[duTheme.indexOf(ch.code) - 1]).toBe(EMPRUNT_OU_CREDIT_BAIL.code);
     expect(ch.prerequis).toEqual(["emprunt-ou-credit-bail", "soldes-intermediaires-de-gestion", "bilan-fonctionnel-et-bfr"]);
     for (const p of ch.prerequis!) expect(CHAPITRES.map((x) => x.code)).toContain(p);
     expect(ch.objectifs.length).toBeGreaterThanOrEqual(3);
