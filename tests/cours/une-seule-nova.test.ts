@@ -24,6 +24,10 @@ import { HEURES_LEGALES_PAR_MOIS, paieDUnOperateur, SMIC_HORAIRE_BRUT, SMIC_MENS
 import { insecables } from "@/lib/typographie";
 import { PRIX_DE_MARCHE_DE_L_ENCEINTE, chargesDeLAtelier, coutCibleDeLaGo, coutStandardDeLEnceinte, extractionDuMois, fixesDesCentres, reportingDuTrimestre } from "../../src/config/cours/monde/centres-de-nova";
 import { coutCompletDuMois, coutCompletRationnel, tableauDeBord } from "../../src/config/cours/monde/couts-et-budgets";
+import { SANS_STOCK, VENTES_PREVUES_APRES_JUIN, tresorerieAvecLeStock } from "../../src/config/cours/monde/budgets-operationnels";
+import { budgetDeTresorerie } from "../../src/config/cours/monde/couts-et-budgets";
+import { bilanDOuverture, realiseDuPlan } from "../../src/config/cours/monde/equilibre-de-tresorerie";
+import { EQUIPEMENT, LIVRAISONS_DU_MOIS, PLACEMENT } from "../../src/config/cours/monde/exercice-de-nova";
 
 /**
  * UNE SEULE NOVA DANS LE MONDE DU COURS (réconciliation d'octobre 2026). Les fiches qui disent la
@@ -252,5 +256,32 @@ describe("une seule NOVA, de la prévision des ventes à la capacité, et de la 
     expect(produits.reduce((t, p) => t + p.chiffreDAffaires, 0)).toBe(janvier.chiffreDAffaires);
     for (const p of produits) expect(Math.round(p.centres.unitaire * 100) / 100).toBe(Math.round(janvier.coutDeRevientUnitaire * 100) / 100);
     expect(m.activites.find((a) => a.code === "monter")!.volume).toBe(janvier.livrees * NOVA_CAPACITE.operateurs.heuresParEnceinte);
+  });
+});
+
+/**
+ * UNE SEULE NOVA DANS LES BUDGETS DU SEMESTRE (des ventes aux achats, équilibrer la trésorerie) : sans
+ * stock, les budgets opérationnels refont au centime le budget de trésorerie du chapitre « Le budget de
+ * trésorerie » ; les ventes prévues après juin sont les livraisons de l'exercice ; le bilan d'ouverture
+ * des états prévisionnels est celui de la création ; le relevé de janvier du suivi est le compte
+ * courant de l'exercice.
+ */
+describe("une seule NOVA, des budgets opérationnels aux états prévisionnels", () => {
+  it("sans stock, les budgets opérationnels retombent sur le budget de trésorerie, mois par mois", () => {
+    const sansStock = tresorerieAvecLeStock(NOVA_GESTION, SANS_STOCK);
+    const budget = budgetDeTresorerie(NOVA_GESTION);
+    expect(sansStock.mois).toEqual(budget.mois);
+    expect(sansStock.fin).toEqual(budget.fin);
+    expect(VENTES_PREVUES_APRES_JUIN).toEqual([LIVRAISONS_DU_MOIS[6], LIVRAISONS_DU_MOIS[7]]);
+  });
+
+  it("le bilan d'ouverture est la création : l'apport et le prêt font la ligne TTC, le placement et la trésorerie de départ", () => {
+    const o = bilanDOuverture(NOVA_GESTION);
+    expect(o.passif.capital + o.passif.emprunt).toBe(EQUIPEMENT.ttc + PLACEMENT.montant + NOVA_GESTION.semestre.tresorerieDeDepart);
+    expect(o.actif.ligne + o.actif.tvaDeLaLigne).toBe(EQUIPEMENT.ttc);
+  });
+
+  it("le relevé de janvier du suivi est le compte courant de l'exercice, 58 959,27 €", () => {
+    expect(realiseDuPlan(NOVA_GESTION).mois[0]!.realise).toBe(58_959.27);
   });
 });

@@ -335,6 +335,11 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "situations/par-chapitre/les-jeux-du-printemps.ts",
   "chapitres/les-couts-a-base-d-activites.ts",
   "situations/par-chapitre/la-remise-de-sonora.ts",
+  // Le BTS CG P5 : des ventes aux achats, puis l'équilibre de la trésorerie, et leurs cas.
+  "chapitres/des-ventes-aux-achats.ts",
+  "chapitres/equilibrer-la-tresorerie.ts",
+  "situations/par-chapitre/si-le-fournisseur-fermait-en-mai.ts",
+  "situations/par-chapitre/un-banc-plus-cher.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */

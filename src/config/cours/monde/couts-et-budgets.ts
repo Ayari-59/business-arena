@@ -536,6 +536,12 @@ export interface LeviersDuSemestre {
   investissement: { mois: number; montantHt: number } | null;
   /** Un budget de publicité, hors taxes, chaque mois (une charge fixe en plus). */
   budgetMarketing: number;
+  /**
+   * Les jeux de composants achetés chaque mois, quand NOVA tient un stock (le budget des
+   * approvisionnements, monde/budgets-operationnels.ts), ou null : la fiche, où NOVA achète chaque
+   * mois les jeux des enceintes qu'elle vend.
+   */
+  jeuxAchetes: readonly number[] | null;
 }
 
 /** Les leviers de la fiche : ventes, prix et délais du semestre, sans investissement ni publicité. */
@@ -547,6 +553,7 @@ export function leviersDeBase(f: FicheDeGestion): LeviersDuSemestre {
     delaiFournisseur: f.semestre.fournisseur.delai,
     investissement: null,
     budgetMarketing: 0,
+    jeuxAchetes: null,
   };
 }
 
@@ -573,7 +580,8 @@ function quantitesDuSemestre(f: FicheDeGestion, hausse: number) {
  *
  *   · Encaissements : chaque clientèle paie ses ventes TTC au mois de son échéance ; ce qui tombe
  *     après juin reste en créances clients.
- *   · Décaissements : les composants TTC au mois de l'échéance du fournisseur ; les autres coûts
+ *   · Décaissements : les composants TTC au mois de l'échéance du fournisseur (les jeux achetés : ceux
+ *     des enceintes vendues, ou ceux du budget des approvisionnements quand NOVA tient un stock) ; les autres coûts
  *     variables et la publicité TTC, le loyer (sans TVA) et les salaires nets dans le mois ; les
  *     cotisations du mois le mois suivant ; l'échéance de l'emprunt (capital et intérêts du
  *     trimestre) le dernier mois de chaque trimestre ; l'investissement TTC le mois de sa livraison.
@@ -590,6 +598,8 @@ export function budgetDeTresorerie(f: FicheDeGestion, leviers: Partial<LeviersDu
   const m = f.moisDeReference;
   const quantites = quantitesDuSemestre(f, l.hausseDesVentes);
   const total = (k: number) => quantites.reduce((t, c) => t + c.quantites[k]!, 0);
+  /** Les jeux achetés le mois k : ceux du budget des approvisionnements, sinon ceux des enceintes vendues. */
+  const jeux = (k: number) => l.jeuxAchetes?.[k] ?? total(k);
 
   const encaissements = Array.from({ length: n }, () => Object.fromEntries(s.clienteles.map((c) => [c.code, 0])) as Record<CodeDeClientele, number>);
   let creancesClients = 0;
@@ -607,7 +617,7 @@ export function budgetDeTresorerie(f: FicheDeGestion, leviers: Partial<LeviersDu
   const fournisseur = Array.from({ length: n }, () => 0);
   let dettesFournisseurs = 0;
   for (let k = 0; k < n; k++) {
-    const ttc = auCentime(total(k) * m.coutVariable.composants * (1 + tva));
+    const ttc = auCentime(jeux(k) * m.coutVariable.composants * (1 + tva));
     if (k + decalageFournisseur < n) fournisseur[k + decalageFournisseur] = auCentime(fournisseur[k + decalageFournisseur]! + ttc);
     else dettesFournisseurs = auCentime(dettesFournisseurs + ttc);
   }
@@ -622,7 +632,7 @@ export function budgetDeTresorerie(f: FicheDeGestion, leviers: Partial<LeviersDu
     const ventesHt = auCentime(quantite * l.prix);
     const tvaCollectee = auCentime(ventesHt * tva);
     const autresHt = auCentime(quantite * m.coutVariable.autres);
-    const achatsHt = auCentime(quantite * m.coutVariable.composants);
+    const achatsHt = auCentime(jeux(k) * m.coutVariable.composants);
     const investissementHt = l.investissement && l.investissement.mois === k ? l.investissement.montantHt : 0;
     const tvaDeductible = auCentime((achatsHt + autresHt + l.budgetMarketing + investissementHt) * tva);
     const solde = auCentime(tvaCollectee - tvaDeductible);
