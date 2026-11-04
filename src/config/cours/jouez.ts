@@ -698,6 +698,20 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Ajoutez au résultat du tour la dotation aux amortissements : c'est l'argent que l'activité a dégagé. Suffirait-il à payer un nouvel équipement ? Sinon, que pèsent les emprunts face aux capitaux propres ?",
   }),
+  "le-systeme-d-information-comptable": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le compte de résultat et le bilan.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "Chaque chiffre de ces deux tableaux est le solde d'un ou de plusieurs comptes. Retrouvez-en trois : les ventes (classe 7), les créances sur les clients (classe 4) et la trésorerie (classe 5). Lesquels vont au bilan, lequel au compte de résultat, et pourquoi ?",
+  }),
+  "controler-les-comptes": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le budget de trésorerie et le bilan.`,
+    lieux: ["budget-de-tresorerie", "bilan"],
+    chercher:
+      "Le budget de trésorerie part de la trésorerie d'ouverture, ajoute les encaissements et retranche les décaissements. Refaites l'addition : retombez-vous sur la trésorerie de clôture ? Retrouvez-la ensuite au bilan. Deux états qui doivent dire la même chose, et chaque écart à expliquer : c'est l'esprit du rapprochement.",
+  }),
   "effectif-et-masse-salariale": (c) => ({
     niveau: 1,
     faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le compte de résultat.`,
@@ -1345,6 +1359,34 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     lieux: ["marche-du-tour", "plan-face-au-realise"],
     chercher:
       "Au quatrième tour, comparez votre prévision aux ventes avec deux constantes de lissage, une petite et une grande. Laquelle se serait le moins trompée, et pourquoi ?",
+  }),
+  "capacite-de-remboursement": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez le compte de résultat et le bilan.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "Divisez les emprunts du bilan par ce que l'activité a dégagé sur le tour (le résultat plus la dotation aux amortissements) : en combien de tours rembourseriez-vous vos dettes ? Quelle part de vos ressources durables vos associés apportent-ils ?",
+  }),
+  "financer-autrement": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le bilan.`,
+    lieux: ["bilan"],
+    chercher:
+      "Si vous deviez financer un nouvel équipement sans toucher à la trésorerie du bilan, quelle part demanderiez-vous à la banque, et quelle part à des sources qui ne se remboursent qu'à la fin ? Que deviendrait la part des capitaux propres ?",
+  }),
+  "optimiser-la-tresorerie": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le bilan.`,
+    lieux: ["bilan"],
+    chercher:
+      "Votre trésorerie est-elle positive ou négative à la fin du tour ? Si elle l'est, quelle part pourriez-vous placer sans manquer d'argent pour vos dettes du moment ? Si elle ne l'est pas, ce manque vient-il d'un achat ponctuel ou de clients qui paient tard ?",
+  }),
+  "l-affectation-du-resultat": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le compte de résultat et le bilan.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "Retrouvez le résultat du tour. Si c'était la fin de l'année, combien iraient en réserve légale, et combien pourriez-vous verser aux associés tout en gardant de quoi investir ? Que deviendraient vos capitaux propres et votre trésorerie ?",
   }),
 };
 

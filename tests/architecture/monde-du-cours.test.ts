@@ -365,6 +365,20 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "situations/par-chapitre/le-banc-perd-une-journee.ts",
   "situations/par-chapitre/deux-commandes-par-an.ts",
   "situations/par-chapitre/janvier-est-tombe.ts",
+  "chapitres/le-systeme-d-information-comptable.ts",
+  "chapitres/controler-les-comptes.ts",
+  "situations/par-chapitre/la-balance-qui-ne-tombe-pas-juste.ts",
+  "situations/par-chapitre/le-releve-du-fournisseur.ts",
+  // Le Bac STMG gestion et finance, 2.2 et 3.1 : la capacité de remboursement et financer autrement (monde/financement-du-lycee.ts), et leurs cas.
+  "chapitres/capacite-de-remboursement.ts",
+  "chapitres/financer-autrement.ts",
+  "situations/par-chapitre/la-banque-teste-une-annee-difficile.ts",
+  "situations/par-chapitre/deux-facons-de-rembourser.ts",
+  // Le Bac STMG gestion et finance, 3.2 et 3.3 : optimiser la trésorerie (monde/tresorerie-a-optimiser.ts) et l'affectation du résultat (monde/affectation-du-resultat.ts), et leurs cas.
+  "chapitres/optimiser-la-tresorerie.ts",
+  "chapitres/l-affectation-du-resultat.ts",
+  "situations/par-chapitre/la-banque-propose-l-escompte.ts",
+  "situations/par-chapitre/l-associe-qui-veut-plus.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
@@ -497,6 +511,18 @@ const NE_LISENT_PLUS_L_ANNEE_FIGEE: readonly string[] = [
   "situations/par-chapitre/voir-plus-grand.ts",
   "situations/quel-prix-pour-la-saison.ts",
   "situations/suivre-la-baisse.ts",
+  "chapitres/le-systeme-d-information-comptable.ts",
+  "chapitres/controler-les-comptes.ts",
+  "situations/par-chapitre/la-balance-qui-ne-tombe-pas-juste.ts",
+  "situations/par-chapitre/le-releve-du-fournisseur.ts",
+  "chapitres/capacite-de-remboursement.ts",
+  "chapitres/financer-autrement.ts",
+  "situations/par-chapitre/la-banque-teste-une-annee-difficile.ts",
+  "situations/par-chapitre/deux-facons-de-rembourser.ts",
+  "chapitres/optimiser-la-tresorerie.ts",
+  "chapitres/l-affectation-du-resultat.ts",
+  "situations/par-chapitre/la-banque-propose-l-escompte.ts",
+  "situations/par-chapitre/l-associe-qui-veut-plus.ts",
 ];
 
 /** Le premier chemin d'imports qui atteint un fichier donné, ou rien. */
