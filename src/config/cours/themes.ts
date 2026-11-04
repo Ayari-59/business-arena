@@ -94,6 +94,8 @@ export const THEMES: readonly Theme[] = [
       "financer-autrement",
       "optimiser-la-tresorerie",
       "l-affectation-du-resultat",
+      "le-tableau-de-financement",
+      "le-tableau-des-flux-de-tresorerie",
     ],
     familles: ["finance"],
   },

@@ -379,6 +379,11 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "chapitres/l-affectation-du-resultat.ts",
   "situations/par-chapitre/la-banque-propose-l-escompte.ts",
   "situations/par-chapitre/l-associe-qui-veut-plus.ts",
+  // Le BTS CG P6, 6.6.1 et 6.6.2 : le tableau de financement et le tableau des flux de trésorerie (monde/tableaux-de-flux.ts), et leurs cas.
+  "chapitres/le-tableau-de-financement.ts",
+  "chapitres/le-tableau-des-flux-de-tresorerie.ts",
+  "situations/par-chapitre/la-seconde-ligne-payee-en-decembre.ts",
+  "situations/par-chapitre/le-dividende-de-l-associe.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */

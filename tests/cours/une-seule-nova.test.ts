@@ -1,4 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { bilanDeLExercice } from "../../src/config/cours/chapitres/bilan-fonctionnel";
+import { SECONDE_LIGNE } from "../../src/config/cours/monde/comptabilite-approfondie";
+import { SECONDE_LIGNE_PAYEE_EN_DECEMBRE, tableauDeFinancement, tableauDesFlux } from "../../src/config/cours/monde/tableaux-de-flux";
+import { EXERCICE_DE_NOVA } from "../../src/config/cours/monde/exercice-de-nova";
 import { casDeLEntreprise } from "../../src/config/cours/cas";
 import { CHAPITRES } from "../../src/config/cours/registre";
 import { SITUATIONS } from "../../src/config/cours/situations";
@@ -494,5 +498,39 @@ describe("une seule NOVA, de la trésorerie du 31 décembre à l'affectation du 
     const sans = affecter(k, { dividendeParAction: 0, reservesFacultatives: 0 });
     expect(sans.capitauxPropres).toBe(augmentationDeCapital().capitauxPropres);
     expect(affecter(k, { dividendeParAction: 2, reservesFacultatives: 0 }).capitauxPropres).toBe(bilanDuLycee(f, { dividende: 30_000 }).capitauxPropres);
+  });
+});
+
+/**
+ * UNE SEULE NOVA DANS LES TABLEAUX DE FLUX (le tableau de financement, le tableau des flux de
+ * trésorerie) : la CAF est celle des soldes intermédiaires, le fonds de roulement, le besoin et la
+ * trésorerie ceux du bilan fonctionnel, les flux stables ceux de la fiche (l'apport, le prêt, la
+ * ligne) ; la seconde ligne payée en décembre est celle de N + 1.
+ */
+describe("une seule NOVA, du bilan fonctionnel aux tableaux de flux", () => {
+  it("la CAF, le fonds de roulement, le besoin et la trésorerie sont ceux de la clôture figée", () => {
+    const t = tableauDeFinancement(EXERCICE_DE_NOVA);
+    const fo = CLOTURE_DE_LA_FICHE.fonctionnel;
+    expect(t.ressources.caf).toBe(CLOTURE_DE_LA_FICHE.capaciteDAutofinancement);
+    expect(t.variationDuFondsDeRoulement).toBe(fo.fondsDeRoulement);
+    expect(t.partie2.variationDExploitation).toBe(fo.besoinDExploitation);
+    expect(t.partie2.variationHorsExploitation).toBe(fo.besoinHorsExploitation);
+    expect(t.partie2.variationDeTresorerie).toBe(fo.tresorerieNette);
+    expect(tableauDesFlux(EXERCICE_DE_NOVA).variationDeTresorerie).toBe(fo.tresorerieNette);
+  });
+
+  it("les flux stables sont ceux de la création et du prêt ; la variation du fonds de roulement depuis le 6 janvier, celle du chapitre du bilan fonctionnel", () => {
+    const t = tableauDeFinancement(EXERCICE_DE_NOVA);
+    const x = bilanDeLExercice({ code: "nova" });
+    expect(t.ressources.augmentationDeCapital).toBe(EXERCICE_DE_NOVA.apport.montant);
+    expect(t.ressources.nouveauxEmprunts).toBe(EXERCICE_DE_NOVA.pret.capital);
+    expect(t.emplois.acquisitions).toBe(EQUIPEMENT.ht);
+    expect(t.emplois.remboursements).toBe(x.rembourse);
+    expect(t.variationDuFondsDeRoulement - x.creation.fondsDeRoulement).toBeCloseTo(x.variationDuFondsDeRoulement, 2);
+  });
+
+  it("la seconde ligne payée en décembre est la seconde ligne de N + 1, au même prix", () => {
+    expect(SECONDE_LIGNE_PAYEE_EN_DECEMBRE.ht).toBe(SECONDE_LIGNE.ht);
+    expect(SECONDE_LIGNE_PAYEE_EN_DECEMBRE.ht + SECONDE_LIGNE_PAYEE_EN_DECEMBRE.tva).toBe(EQUIPEMENT.ttc);
   });
 });

@@ -1388,6 +1388,20 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Retrouvez le résultat du tour. Si c'était la fin de l'année, combien iraient en réserve légale, et combien pourriez-vous verser aux associés tout en gardant de quoi investir ? Que deviendraient vos capitaux propres et votre trésorerie ?",
   }),
+  "le-tableau-de-financement": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relisez le bilan et l'écran du fonds de roulement de chacun.`,
+    lieux: ["bilan", "frng-bfr"],
+    chercher:
+      "Du premier tour au second, de combien le fonds de roulement a-t-il varié ? Retrouvez-le par les flux : le résultat plus la dotation aux amortissements, moins ce que vous avez investi et remboursé. Puis dites où cette variation est allée : le besoin en fonds de roulement, ou la trésorerie.",
+  }),
+  "le-tableau-des-flux-de-tresorerie": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relisez le compte de résultat et le bilan du second.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "De combien la trésorerie a-t-elle varié sur le second tour ? Séparez ce qui vient de l'activité (le résultat, plus la dotation aux amortissements, moins la hausse du besoin en fonds de roulement), de l'investissement et du financement. L'activité a-t-elle payé seule vos investissements ?",
+  }),
 };
 
 /**

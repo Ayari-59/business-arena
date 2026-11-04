@@ -158,6 +158,8 @@ import { LA_BANQUE_TESTE_UNE_ANNEE_DIFFICILE } from "./par-chapitre/la-banque-te
 import { DEUX_FACONS_DE_REMBOURSER } from "./par-chapitre/deux-facons-de-rembourser";
 import { LA_BANQUE_PROPOSE_L_ESCOMPTE } from "./par-chapitre/la-banque-propose-l-escompte";
 import { L_ASSOCIE_QUI_VEUT_PLUS } from "./par-chapitre/l-associe-qui-veut-plus";
+import { LA_SECONDE_LIGNE_PAYEE_EN_DECEMBRE } from "./par-chapitre/la-seconde-ligne-payee-en-decembre";
+import { LE_DIVIDENDE_DE_L_ASSOCIE } from "./par-chapitre/le-dividende-de-l-associe";
 export type { Situation } from "./types";
 
 /**
@@ -331,6 +333,8 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   DEUX_FACONS_DE_REMBOURSER,
   LA_BANQUE_PROPOSE_L_ESCOMPTE,
   L_ASSOCIE_QUI_VEUT_PLUS,
+  LA_SECONDE_LIGNE_PAYEE_EN_DECEMBRE,
+  LE_DIVIDENDE_DE_L_ASSOCIE,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */
