@@ -447,6 +447,13 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "situations/par-chapitre/un-apprenti-ou-un-temps-partiel.ts",
   "situations/par-chapitre/le-challenge-du-merinos.ts",
   "situations/par-chapitre/retenir-la-vendeuse.ts",
+  // Le BTS NDRC, bloc 1 terrain : le fichier et la cible, le secteur, l'événement commercial (monde/terrain-d-atlas.ts), et leurs cas.
+  "chapitres/le-fichier-et-la-cible.ts",
+  "chapitres/organiser-le-secteur.ts",
+  "chapitres/l-evenement-commercial.ts",
+  "situations/par-chapitre/un-fichier-a-acheter.ts",
+  "situations/par-chapitre/les-comptes-de-hugo.ts",
+  "situations/par-chapitre/un-invite-pour-la-matinale.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
@@ -637,6 +644,12 @@ const NE_LISENT_PLUS_L_ANNEE_FIGEE: readonly string[] = [
   "situations/par-chapitre/le-bail-revise.ts",
   "situations/par-chapitre/le-decouvert-demande-au-banquier.ts",
   "situations/par-chapitre/un-pret-sur-sept-ans.ts",
+  "chapitres/le-fichier-et-la-cible.ts",
+  "chapitres/organiser-le-secteur.ts",
+  "chapitres/l-evenement-commercial.ts",
+  "situations/par-chapitre/un-fichier-a-acheter.ts",
+  "situations/par-chapitre/les-comptes-de-hugo.ts",
+  "situations/par-chapitre/un-invite-pour-la-matinale.ts",
 ];
 
 /** Le premier chemin d'imports qui atteint un fichier donné, ou rien. */
