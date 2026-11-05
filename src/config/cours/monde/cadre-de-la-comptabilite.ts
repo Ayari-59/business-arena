@@ -126,10 +126,9 @@ export interface FormeDUneEntreprise {
   preuves: readonly { fichier: string; extrait: string }[];
 }
 
-/** Le vocabulaire des chapitres communs aux neuf entreprises : un gérant et des associés. */
+/** Le vocabulaire des chapitres communs aux neuf entreprises : des associés (leur dirigeant y est « le dirigeant », depuis que NOVA est une SAS). */
 const CHAPITRES_COMMUNS = [
   { fichier: "config/cours/chapitres/creation-premier-bilan.ts", extrait: "la somme versée par les associés" },
-  { fichier: "config/cours/chapitres/creation-premier-bilan.ts", extrait: "Le gérant veut le bilan de janvier" },
 ] as const;
 
 /**

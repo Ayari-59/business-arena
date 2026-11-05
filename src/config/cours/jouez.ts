@@ -1666,6 +1666,7 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     lieux: ["compte-de-resultat", "budget-de-tresorerie"],
     chercher:
       "Retrouvez vos ventes et vos achats du tour. Si votre plus gros client versait 30 % d'acompte à la commande, combien d'argent arriverait plus tôt, et combien de TVA serait due dès ce jour-là ? Si vous lui accordiez 1 % d'escompte pour payer comptant, combien vous coûterait-il ?",
+  }),
   "le-compte-client": (c) => ({
     niveau: 1,
     faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez le bilan et le budget de trésorerie du second.`,
@@ -1679,6 +1680,7 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     lieux: ["budget-de-tresorerie", "bilan"],
     chercher:
       "Quand vos fournisseurs sont-ils payés, et votre trésorerie passe-t-elle sous zéro avant que vos clients ne paient ? Retrouvez la trésorerie du budget au bilan : si elles différaient, quelles opérations chercheriez-vous d'abord, comme dans un rapprochement ?",
+  }),
   "securiser-les-processus": (c) => ({
     niveau: 1,
     faire: `${partie(c, 1)} Jouez un tour, puis relisez le compte de résultat et le bilan.`,
@@ -1692,6 +1694,7 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     lieux: ["compte-de-resultat", "bilan"],
     chercher:
       "Révisez le tour comme un dossier : quelles dettes envers le personnel l'arène ne montre-t-elle pas (congés acquis, participation) ? Supposez une provision pour garantie de 2 % du chiffre d'affaires : de combien baisseraient le résultat avant impôt, puis l'impôt ?",
+  }),
   "les-capitaux-propres": (c) => ({
     niveau: 1,
     faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le bilan et le compte de résultat.`,
@@ -1705,6 +1708,7 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     lieux: ["compte-de-resultat", "bilan"],
     chercher:
       "Le résultat du premier tour fait-il la moitié de celui des deux tours ensemble ? Dites pourquoi, comme pour une situation intermédiaire. Puis cherchez ce qu'une annexe devrait expliquer à votre banquier : vos amortissements, vos dettes à moins d'un an.",
+  }),
   "acquerir-et-financer-une-immobilisation": (c) => ({
     niveau: 1,
     faire: `${partie(c, 1)} Jouez deux tours, puis relevez la valeur nette des immobilisations au bilan et la dotation aux amortissements.`,

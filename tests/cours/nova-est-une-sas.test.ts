@@ -20,6 +20,14 @@ import { servirLeChapitre } from "@/pedagogy/cours/chapitre-servi";
 
 const VOCABULAIRE_DE_LA_SARL = /(?<!\p{L})(gérant(e|s|es)?|gérance|cogérant(e|s|es)?|parts?\s+sociales?|SARL|EURL)(?!\p{L})/iu;
 
+/**
+ * Les deux textes qui enseignent les formes juridiques elles-mêmes (la SARL, l'EURL, leur gérant et
+ * leurs parts sociales) : ils nomment ce vocabulaire pour le comparer à la SAS, ils ne l'appliquent
+ * pas à NOVA. Leur propre garde (tests/cours/le-cadre-de-la-comptabilite.test.ts) vérifie la forme de
+ * chaque entreprise.
+ */
+const COURS_SUR_LES_FORMES = new Set(["le-cadre-de-la-comptabilite", "creer-l-atelier-de-reparation"]);
+
 /** Les clés de code : pas du texte lu (les mêmes que la garde de la langue du cours servi). */
 const CODES = new Set(["code", "id", "type", "compte", "levier", "vue", "categorie", "cle", "unite_code", "montrer"]);
 
@@ -34,6 +42,7 @@ function textesChezNova() {
   const nova = casDeLEntreprise("nova");
   const sortie: { ou: string; texte: string }[] = [];
   for (const ch of [...CHAPITRES, ...SITUATIONS]) {
+    if (COURS_SUR_LES_FORMES.has(ch.code)) continue;
     if (!(ch.entreprises?.codes ?? ENTREPRISES_DU_COURS).includes("nova")) continue;
     const emettre = (chemin: string, texte: string) => sortie.push({ ou: `${ch.code} ${chemin}`, texte });
     emettre("titre", ch.titre);

@@ -770,6 +770,9 @@ describe("une seule NOVA, dans son compte client de N+1 (BTS CG P1, le compte cl
     const fa = m.bordereauDuFactor();
     expect(fa.cout).toBe(p6.affacturage(p6.factureDeLaChaine().ttc, p6.CHAINE_ONDES.jours).cout);
     expect(m.balanceAgee().lignes.find((l) => l.client === "Sonora")!.total).toBe(CREANCES_AU_31_DECEMBRE.find((k) => k.client === "Sonora")!.ttc);
+  });
+});
+
 /**
  * UNE SEULE NOVA DANS LES CONTRÔLES ET LA RÉVISION (BTS CG P1 et P2, agent C) : sécuriser les
  * processus relit l'exercice N sans le changer (la facture de décembre du fournisseur, les ventes et
@@ -796,6 +799,9 @@ describe("une seule NOVA, des contrôles de N au dossier de révision de N+1", (
     expect(d.impot).toBe(impotDeNova({ code: "nova" }).impot);
     expect(congesPayes().tauxPatronal).toBe(TAUX_PATRONAL);
     expect(garantie().defautsLivres).toBe(coutsDeLaQualite(NOVA_CAPACITE, { prevention: NOVA_CAPACITE.qualite.budgetActuel }).livres);
+  });
+});
+
 /**
  * UNE SEULE NOVA DANS LES CAPITAUX PROPRES ET LES COMPTES ANNUELS (BTS CG P2) : le capital est celui
  * de la fiche, en actions du DCG ; le bénéfice de N, celui de la clôture figée ; son affectation, la

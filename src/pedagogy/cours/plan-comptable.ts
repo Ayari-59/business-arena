@@ -94,7 +94,6 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "413", intitule: "Clients, effets à recevoir", nature: "actif" },
   { numero: "416", intitule: "Clients douteux ou litigieux", nature: "actif" },
   { numero: "418", intitule: "Clients, produits non encore facturés", nature: "actif" },
-  { numero: "4191", intitule: "Clients, avances et acomptes reçus sur commandes", nature: "passif" },
   { numero: "421", intitule: "Personnel, rémunérations dues", nature: "passif" },
   { numero: "425", intitule: "Personnel, avances et acomptes", nature: "actif" },
   { numero: "4282", intitule: "Dettes provisionnées pour congés à payer", nature: "passif" },
