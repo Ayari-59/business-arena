@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { HAUSSE_D_UN_ACCORD_D_ENTREPRISE } from "../../src/config/cours/situations/par-chapitre/l-accord-de-branche";
+import type { EtapeTri } from "../../src/config/cours/types";
 import { UNITES_FEMININES } from "../../src/config/cours/accords";
 import { casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
 import {
@@ -425,4 +427,30 @@ describe("l'équipe et son planning, à la boutique du monde du cours", () => {
 
   it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(ch));
   it("textes propres, une seule bonne réponse, notions existantes : le cas", () => verifierLesTextes(L_ACCORD_DE_BRANCHE));
+});
+
+describe("le droit du planning et les sources du droit (compléments C6 et C7)", () => {
+  it("le planning face au droit du travail : chaque proposition rangée selon la règle qui s'applique", () => {
+    const e = EQUIPE_ET_PLANNING.etapes.find((x) => x.id === "le-planning-et-le-droit") as EtapeTri;
+    expect(e.type).toBe("tri");
+    expect(EQUIPE_ET_PLANNING.etapes.at(-2)).toBe(e);
+    const el = e.elements(cas);
+    // 10 heures par jour, 48 par semaine, 11 heures de repos, 24 heures pour un temps partiel, un dixième d'heures complémentaires.
+    const regle = (x: (typeof el)[number], i: number) =>
+      [x.montant <= 10, x.montant <= 48, x.montant >= 11, x.montant <= 24 * 0.1, x.montant <= 24 * 0.1, x.montant >= 24, true][i];
+    expect(el.map((x, i) => (regle(x, i) ? "conforme" : "contraire"))).toEqual(el.map((x) => x.categorie));
+    expect(el.map((x) => x.categorie)).toEqual(["contraire", "conforme", "contraire", "conforme", "contraire", "contraire", "conforme"]);
+    expect(el.at(-1)!.montant).toBe(f.equipe.find((x) => x.code === "etudiante")!.heuresParSemaine);
+  });
+
+  it("le cas : la hiérarchie des sources, puis l'accord d'entreprise qui ne peut pas faire moins bien que la branche", () => {
+    const s = L_ACCORD_DE_BRANCHE;
+    const tri = s.etapes.find((x) => x.id === "les-sources-du-droit") as EtapeTri;
+    expect(tri.elements(cas).map((x) => x.categorie)).toEqual(["loi", "loi", "accord", "accord", "accord", "entreprise", "entreprise"]);
+    expect(tri.elements(cas)[3]!.montant).toBe(HAUSSE_DES_SALAIRES * 100);
+    expect(HAUSSE_D_UN_ACCORD_D_ENTREPRISE).toBeLessThan(HAUSSE_DES_SALAIRES);
+    expect(juste(s, "un-accord-d-entreprise")).toBe("Non : sur les salaires minima, la branche l'emporte");
+    expect(s.etapes.at(-1)!.id).toBe("reponse");
+    expect(s.etapes.map((x) => x.id).slice(-3)).toEqual(["les-sources-du-droit", "un-accord-d-entreprise", "reponse"]);
+  });
 });

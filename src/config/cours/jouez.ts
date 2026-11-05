@@ -554,6 +554,34 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Les charges de structure ont-elles monté du coût d'un salarié ? Les ventes, elles, ont-elles bougé ? Si l'équipe n'était pas ce qui limitait les ventes, l'embauche n'a fait qu'ajouter une charge.",
   }),
+  "l-inventaire-et-la-demarque": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relisez le bilan et le compte de résultat.`,
+    lieux: ["bilan", "compte-de-resultat"],
+    chercher:
+      "Relevez le stock de fin de tour au bilan et la variation de stock au compte de résultat. Si 1 % des articles disparaissaient sans être vendus, de combien la marge baisserait-elle ? Combien de ventes en plus faudrait-il pour le payer ?",
+  }),
+  "recruter-integrer-former": (c) => ({
+    niveau: 3,
+    faire: `${partie(c, 3)} Dans « Ressources humaines », embauchez une personne au tour où la demande monte, puis jouez deux tours.`,
+    lieux: ["rh-du-tour", "compte-de-resultat"],
+    chercher:
+      "L'embauche a-t-elle servi des clients que l'équipe ne servait pas ? Comparez ce qu'elle a coûté au tour avec la marge des ventes en plus : un renfort pour une saison se paie par la saison.",
+  }),
+  "remunerer-et-stimuler-les-vendeurs": (c) => ({
+    niveau: 3,
+    faire: `${partie(c, 3)} Jouez trois tours, puis relisez le compte de résultat et les indicateurs du métier.`,
+    lieux: ["compte-de-resultat", "indicateurs"],
+    chercher:
+      "Si vous versiez à l'équipe 2 % du chiffre d'affaires au-delà de celui du premier tour, combien cela coûterait-il, cotisations comprises ? La marge des ventes en plus l'aurait-elle payé ?",
+  }),
+  "le-climat-de-l-equipe": (c) => ({
+    niveau: 3,
+    faire: `${partie(c, 3)} Jouez trois tours sans changer les salaires, puis relevez la ligne de l'effectif.`,
+    lieux: ["rh-du-tour", "feuille"],
+    chercher:
+      "Combien de salariés sont partis en trois tours ? Calculez le taux de rotation, puis ce qu'un départ coûterait chez MAILLE & CO : un recrutement, des semaines vides, une remplaçante à former.",
+  }),
   "tableau-de-bord-du-manager": (c) => ({
     niveau: 2,
     faire: `${partie(c, 2)} Jouez quatre tours. À chaque tour, relevez les indicateurs de votre tableau de bord : chiffre d'affaires, panier, indicateur du métier, taux de marque, seuil, part du personnel.`,
