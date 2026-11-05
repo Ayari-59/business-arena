@@ -53,6 +53,21 @@ export const MATIERES_COUVERTES_EN_ENTIER: readonly MatiereEnEntier[] = [
     preuve: "Audit du référentiel (arrêté du 15 octobre 2018 modifié le 8 juillet 2024), savoir par savoir, puis les seize chapitres et les sept compléments de la PR du MCO.",
   },
   {
+    formation: "bts-ndrc",
+    bloc: "Bloc 1 · Relation client et négociation-vente",
+    preuve: "Audit du référentiel du BTS NDRC, savoir par savoir, puis les huit chapitres et les six compléments de la PR du NDRC.",
+  },
+  {
+    formation: "bts-ndrc",
+    bloc: "Bloc 2 · Relation client à distance et digitalisation",
+    preuve: "Audit du référentiel du BTS NDRC, savoir par savoir, puis les huit chapitres et les six compléments de la PR du NDRC.",
+  },
+  {
+    formation: "bts-ndrc",
+    bloc: "Bloc 3 · Relation client et animation de réseaux",
+    preuve: "Audit du référentiel du BTS NDRC, savoir par savoir, puis les huit chapitres et les six compléments de la PR du NDRC.",
+  },
+  {
     formation: "dcg",
     bloc: "UE6 · Finance d'entreprise",
     preuve: "Programme 2025 (sessions 2027 et suivantes) : les six chapitres du BTS CG P6 (PR #351), puis les sept chapitres et les deux compléments de la PR de l'UE6.",
