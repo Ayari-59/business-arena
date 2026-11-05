@@ -1,7 +1,7 @@
 import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DES_FOURNISSEURS } from "../../chapitres/fournisseurs-et-banque";
-import { CONDITIONS_DE_LA_BANQUE } from "../../monde/fournisseurs-et-banque-de-la-boutique";
+import { FIN_DE_FEVRIER, rapprochementDeFevrier } from "../../monde/fournisseurs-et-banque-de-la-boutique";
 import { MAILLE_ET_CO } from "../../monde/maille-et-co";
 import type { Situation } from "../types";
 
@@ -12,27 +12,19 @@ import type { Situation } from "../types";
  * LE CAS JOUE DANS LE MONDE DU COURS, comme son chapitre : MAILLE & CO, sa banque et ses conditions
  * (monde/fournisseurs-et-banque-de-la-boutique.ts), un mois plus tard.
  *
- * HYPOTHÈSES DU CAS (FIN_DE_FEVRIER) : au 28 février, le compte 512 porte 21 400 € ; le chèque de
- * l'entretien de février (le prix de la fiche, 920 € HT), émis le 26, n'est pas présenté ; la régie a
+ * HYPOTHÈSES DU CAS (FIN_DE_FEVRIER, dans le monde du cours, d'où le mois de mars repart) : au
+ * 28 février, le compte 512 porte 21 400 € ; le chèque de l'entretien de février (le prix de la fiche, 920 € HT), émis le 26, n'est pas présenté ; la régie a
  * prélevé la publicité du mois (le montant de la fiche, 1 500 € HT) le 25, sans avis ; la banque a pris la
  * tenue de compte. Le compte n'a jamais été débiteur en valeur : pas d'intérêts.
  */
-export const FIN_DE_FEVRIER = { compte: 21_400, jourDuCheque: 26, jourDeLaPublicite: 25 } as const;
+export { FIN_DE_FEVRIER };
 
 const f = MAILLE_ET_CO;
 const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
 
-/** Les chiffres du cas. */
+/** Les chiffres du cas : le rapprochement du 28 février, calculé dans le monde du cours. */
 export function chequeQuiNEstPasPasse(_c: Pick<Cas, "code">) {
-  const tva = f.gamme[0]!.tauxTva;
-  const cheque = auCentime(f.charges.entretien * (1 + tva));
-  const publicite = { ht: f.charges.publicite, tva: auCentime(f.charges.publicite * tva), ttc: auCentime(f.charges.publicite * (1 + tva)) };
-  const frais = { ht: CONDITIONS_DE_LA_BANQUE.tenueDeCompteHt, tva: auCentime(CONDITIONS_DE_LA_BANQUE.tenueDeCompteHt * CONDITIONS_DE_LA_BANQUE.tvaDesFrais) };
-  const fraisTtc = auCentime(frais.ht + frais.tva);
-  const compte = FIN_DE_FEVRIER.compte;
-  const releve = auCentime(compte + cheque - publicite.ttc - fraisTtc);
-  return { cheque, publicite, frais, fraisTtc, compte, releve, compteRectifie: auCentime(compte - publicite.ttc - fraisTtc), releveRectifie: auCentime(releve - cheque) };
+  return rapprochementDeFevrier(f);
 }
 
 export const LE_CHEQUE_QUI_N_EST_PAS_PASSE: Situation = {

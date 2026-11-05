@@ -321,3 +321,28 @@ export function virementQuiEviteLeDecouvert(f: FicheDeLaBoutique) {
   const jour = base.periodes.find((p) => p.solde < 0)!.du;
   return { montant, jour };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 3. LA FIN DE FÉVRIER : LE RAPPROCHEMENT DU 28 FÉVRIER
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * LA FIN DE FÉVRIER (hypothèses du cas « Le chèque qui n'est pas passé », qui les dit à l'élève ; elles
+ * vivent ici pour que le mois suivant, au bureau de la boutique, parte du même solde) : au 28 février, le
+ * compte 512 porte 21 400 € ; le chèque de l'entretien de février (le prix de la fiche, 920 € HT), émis le
+ * 26, n'est pas présenté ; la régie a prélevé la publicité du mois (le montant de la fiche, 1 500 € HT) le
+ * 25, sans avis ; la banque a pris la tenue de compte. Le compte n'a jamais été débiteur en valeur : pas
+ * d'intérêts.
+ */
+export const FIN_DE_FEVRIER = { compte: 21_400, jourDuCheque: 26, jourDeLaPublicite: 25 } as const;
+
+/** Le rapprochement du 28 février : le relevé, le compte, et les deux soldes rectifiés, égaux. */
+export function rapprochementDeFevrier(f: FicheDeLaBoutique) {
+  const cheque = auCentime(f.charges.entretien * (1 + tva(f)));
+  const publicite = { ht: f.charges.publicite, tva: auCentime(f.charges.publicite * tva(f)), ttc: auCentime(f.charges.publicite * (1 + tva(f))) };
+  const frais = { ht: CONDITIONS_DE_LA_BANQUE.tenueDeCompteHt, tva: auCentime(CONDITIONS_DE_LA_BANQUE.tenueDeCompteHt * CONDITIONS_DE_LA_BANQUE.tvaDesFrais) };
+  const fraisTtc = auCentime(frais.ht + frais.tva);
+  const compte = FIN_DE_FEVRIER.compte;
+  const releve = auCentime(compte + cheque - publicite.ttc - fraisTtc);
+  return { cheque, publicite, frais, fraisTtc, compte, releve, compteRectifie: auCentime(compte - publicite.ttc - fraisTtc), releveRectifie: auCentime(releve - cheque) };
+}
