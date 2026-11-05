@@ -1597,6 +1597,20 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
         "Dans le tableau des références, comparez la marge de chacune aux deux tours. La référence renforcée a-t-elle vendu plus, ou a-t-elle manqué de demande ? Le gain couvre-t-il ce que l'autre a perdu ?",
     };
   },
+  "le-site-qui-vend": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Jouez un premier tour sans rien changer, puis un second en augmentant « Budget marketing » de moitié.`,
+    lieux: ["marche-du-tour", "indicateurs", "compte-de-resultat"],
+    chercher:
+      "Votre chiffre d'affaires est-il monté par plus de clients, ou par plus de ventes à chacun ? Calculez ce que chaque euro de marketing ajouté a ramené de chiffre d'affaires, puis de marge : la dépense en plus s'est-elle payée ?",
+  }),
+  "contenus-communaute-et-e-reputation": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Jouez deux tours, puis ouvrez le marché du tour écoulé.`,
+    lieux: ["marche-du-tour", "indicateurs"],
+    chercher:
+      "Vos clients restent-ils d'un tour à l'autre ? Si une mauvaise réputation vous faisait perdre un client sur dix, combien de chiffre d'affaires et de marge perdriez-vous au tour suivant ? Combien pourriez-vous dépenser pour l'éviter ?",
+  }),
 };
 
 /**

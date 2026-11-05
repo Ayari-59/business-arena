@@ -191,6 +191,8 @@ export const THEMES: readonly Theme[] = [
       "commissions-des-partenaires",
       "portefeuille-abc",
       "tableau-de-bord-commercial",
+      "le-site-qui-vend",
+      "contenus-communaute-et-e-reputation",
     ],
     familles: ["vendre", "conseil-vendre", "agro-distribution", "sante-accueillir"],
   },

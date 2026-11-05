@@ -447,6 +447,11 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "situations/par-chapitre/un-apprenti-ou-un-temps-partiel.ts",
   "situations/par-chapitre/le-challenge-du-merinos.ts",
   "situations/par-chapitre/retenir-la-vendeuse.ts",
+  // Le BTS NDRC, bloc 2 : le site qui vend, contenus, communauté et e-réputation (monde/site-d-atlas.ts), et leurs cas.
+  "chapitres/le-site-qui-vend.ts",
+  "chapitres/contenus-communaute-et-e-reputation.ts",
+  "situations/par-chapitre/doubler-les-liens-sponsorises.ts",
+  "situations/par-chapitre/l-avis-a-une-etoile.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
