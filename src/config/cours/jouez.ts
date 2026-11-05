@@ -1478,6 +1478,34 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Si l'énergie de votre activité coûtait 50 % de plus, de combien votre résultat baisserait-il ? Un équipement plus sobre, plus cher à l'achat, se rembourserait-il sur sa durée ? Quels critères non financiers feriez-vous valoir pour le choisir ?",
   }),
+  "zone-de-chalandise": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez le marché du tour écoulé.`,
+    lieux: ["marche-du-tour"],
+    chercher:
+      "Relevez, clientèle par clientèle, la demande du marché et vos ventes : quelle part de marché prenez-vous dans chacune ? Laquelle vous laisse le plus à prendre, et laquelle un concurrent tient déjà ?",
+  }),
+  "interroger-les-clients": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le marché du tour écoulé.`,
+    lieux: ["marche-du-tour"],
+    chercher:
+      "Si vous deviez interroger vos clients, combien en prendriez-vous dans chaque clientèle pour que l'échantillon ressemble au marché ? Quelle question leur poseriez-vous avant de changer votre offre ?",
+  }),
+  "la-vente-conseil": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez les indicateurs du métier.`,
+    lieux: ["indicateurs"],
+    chercher:
+      "Calculez, à chaque tour, votre panier moyen et ce que chaque vente laisse de marge. Si chaque client achetait un article de plus, ou un article plus cher, laquelle des deux hausses rapporterait le plus ?",
+  }),
+  "fideliser-la-clientele": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez trois tours, puis ouvrez le marché du tour écoulé.`,
+    lieux: ["marche-du-tour"],
+    chercher:
+      "Vos clients restent-ils d'un tour à l'autre ? Estimez la part que vous perdez à chaque tour, puis ce que vaut un client fidèle sur sa durée de vie. Combien pourriez-vous lui rendre pour qu'il reste ?",
+  }),
 };
 
 /**

@@ -965,6 +965,19 @@ describe.each([
   { code: "evaluer-un-investissement-durable", entreprise: "nova", telephone: true },
   { code: "le-pret-indexe-sur-la-durabilite", entreprise: "nova" },
   { code: "deux-devis-pour-chauffer-l-atelier", entreprise: "nova", telephone: true },
+  // Le BTS MCO, bloc 1 : la zone de chalandise, interroger les clients, la vente conseil, fidéliser la clientèle (tris, curseurs, laboratoires), puis leurs cas.
+  { code: "zone-de-chalandise", entreprise: "boutique" },
+  { code: "zone-de-chalandise", entreprise: "boutique", telephone: true },
+  { code: "interroger-les-clients", entreprise: "boutique" },
+  { code: "interroger-les-clients", entreprise: "boutique", telephone: true },
+  { code: "la-vente-conseil", entreprise: "boutique" },
+  { code: "la-vente-conseil", entreprise: "boutique", telephone: true },
+  { code: "fideliser-la-clientele", entreprise: "boutique" },
+  { code: "fideliser-la-clientele", entreprise: "boutique", telephone: true },
+  { code: "un-tract-pour-quelle-zone", entreprise: "boutique" },
+  { code: "faut-il-livrer-a-domicile", entreprise: "boutique", telephone: true },
+  { code: "le-samedi-apres-la-formation", entreprise: "boutique" },
+  { code: "la-carte-du-prestataire", entreprise: "boutique", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se

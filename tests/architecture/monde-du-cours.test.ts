@@ -411,6 +411,15 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "chapitres/evaluer-un-investissement-durable.ts",
   "situations/par-chapitre/le-pret-indexe-sur-la-durabilite.ts",
   "situations/par-chapitre/deux-devis-pour-chauffer-l-atelier.ts",
+  // Le BTS MCO, bloc 1 : la zone de chalandise, interroger les clients, la vente conseil, fidéliser la clientèle (monde/clientele-de-la-boutique.ts), et leurs cas.
+  "chapitres/zone-de-chalandise.ts",
+  "chapitres/interroger-les-clients.ts",
+  "chapitres/la-vente-conseil.ts",
+  "chapitres/fideliser-la-clientele.ts",
+  "situations/par-chapitre/un-tract-pour-quelle-zone.ts",
+  "situations/par-chapitre/faut-il-livrer-a-domicile.ts",
+  "situations/par-chapitre/le-samedi-apres-la-formation.ts",
+  "situations/par-chapitre/la-carte-du-prestataire.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
@@ -577,6 +586,14 @@ const NE_LISENT_PLUS_L_ANNEE_FIGEE: readonly string[] = [
   "chapitres/evaluer-un-investissement-durable.ts",
   "situations/par-chapitre/le-pret-indexe-sur-la-durabilite.ts",
   "situations/par-chapitre/deux-devis-pour-chauffer-l-atelier.ts",
+  "chapitres/zone-de-chalandise.ts",
+  "chapitres/interroger-les-clients.ts",
+  "chapitres/la-vente-conseil.ts",
+  "chapitres/fideliser-la-clientele.ts",
+  "situations/par-chapitre/un-tract-pour-quelle-zone.ts",
+  "situations/par-chapitre/faut-il-livrer-a-domicile.ts",
+  "situations/par-chapitre/le-samedi-apres-la-formation.ts",
+  "situations/par-chapitre/la-carte-du-prestataire.ts",
 ];
 
 /** Le premier chemin d'imports qui atteint un fichier donné, ou rien. */
