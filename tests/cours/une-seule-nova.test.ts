@@ -5,6 +5,11 @@ import { EXERCICE_N1_DE_NOVA, MAJORATION_DE_RETARD } from "../../src/config/cour
 import { cadrageDeLaTva, controleDeLaPaie, fraudeEvitee } from "../../src/config/cours/monde/securite-des-processus";
 import { bilanDeLExercice } from "../../src/config/cours/chapitres/bilan-fonctionnel";
 import { SECONDE_LIGNE } from "../../src/config/cours/monde/comptabilite-approfondie";
+import { ACTIONS_DE_NOVA as ACTIONS_DU_DCG, AUGMENTATION_DE_CAPITAL as AUGMENTATION_DU_DCG } from "../../src/config/cours/monde/comptabilite-approfondie";
+import { affectationDeNova, augmentation as augmentationDuBts, perteDePixel } from "../../src/config/cours/monde/capitaux-propres";
+import { annexe as annexeDeN, comptesAnnuels } from "../../src/config/cours/monde/comptes-annuels";
+import { EXERCICES_DE_PIXEL } from "../../src/config/cours/monde/projets-et-financement";
+import { DIVIDENDE_DEMANDE_PAR_ACTION as DIVIDENDE_DU_BAC } from "../../src/config/cours/monde/affectation-du-resultat";
 import { SECONDE_LIGNE_PAYEE_EN_DECEMBRE, tableauDeFinancement, tableauDesFlux } from "../../src/config/cours/monde/tableaux-de-flux";
 import { EXERCICE_DE_NOVA } from "../../src/config/cours/monde/exercice-de-nova";
 import { casDeLEntreprise } from "../../src/config/cours/cas";
@@ -785,5 +790,37 @@ describe("une seule NOVA, des contrôles de N au dossier de révision de N+1", (
     expect(d.impot).toBe(impotDeNova({ code: "nova" }).impot);
     expect(congesPayes().tauxPatronal).toBe(TAUX_PATRONAL);
     expect(garantie().defautsLivres).toBe(coutsDeLaQualite(NOVA_CAPACITE, { prevention: NOVA_CAPACITE.qualite.budgetActuel }).livres);
+/**
+ * UNE SEULE NOVA DANS LES CAPITAUX PROPRES ET LES COMPTES ANNUELS (BTS CG P2) : le capital est celui
+ * de la fiche, en actions du DCG ; le bénéfice de N, celui de la clôture figée ; son affectation, la
+ * version unique du bac (décision D2) ; l'augmentation, celle du DCG ; la perte de PIXEL & CO, celle
+ * du déficit reporté ; le bilan, le compte de résultat et l'emprunt de l'annexe, ceux de la clôture.
+ */
+describe("une seule NOVA, de la constitution aux comptes annuels", () => {
+  it("le capital, le bénéfice, le dividende et l'augmentation sont ceux des chapitres qui les ont posés", () => {
+    const x = affectationDeNova();
+    expect(x.capital).toBe(EXERCICE_DE_NOVA.apport.montant);
+    expect(x.actions * ACTIONS_DU_DCG.nominal).toBe(EXERCICE_DE_NOVA.apport.montant);
+    expect(x.benefice).toBe(CLOTURE_DE_LA_FICHE.resultatNet);
+    expect(x.dividendes).toBe(DIVIDENDE_DU_BAC * ACTIONS_DU_DCG.nombre);
+    const a = augmentationDuBts();
+    expect(a.nouvelles * AUGMENTATION_DU_DCG.parite).toBe(ACTIONS_DU_DCG.nombre);
+    expect(a.prix).toBe(AUGMENTATION_DU_DCG.prixDEmission);
+  });
+
+  it("la perte de PIXEL & CO part de son exercice N en perte, et son capital de son cas", () => {
+    const p = perteDePixel();
+    expect(p.perteComptable).toBe(-EXERCICES_DE_PIXEL[1]!.resultatComptable);
+    expect(p.capital).toBe(CAS_DES_ENTREPRISES.ecommerce!.capital);
+  });
+
+  it("les comptes annuels sont ceux de la clôture figée, et l'annexe y retombe", () => {
+    const k = comptesAnnuels();
+    expect(k.resultat.resultatNet).toBe(CLOTURE_DE_LA_FICHE.resultatNet);
+    expect(k.bilan.totalActif).toBe(CLOTURE_DE_LA_FICHE.totalDuBilan);
+    expect(k.resultat.amortissements).toBe(CLOTURE_DE_LA_FICHE.travaux.dotationAuxAmortissements);
+    const x = annexeDeN();
+    expect(x.immobilisations.fin).toBe(EQUIPEMENT.ht);
+    expect(Math.round((x.empruntAUnAn + x.empruntAPlusDUnAn) * 100) / 100).toBe(k.bilan.passif.emprunts);
   });
 });

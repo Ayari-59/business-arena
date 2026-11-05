@@ -482,6 +482,11 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "chapitres/le-dossier-de-revision.ts",
   "situations/par-chapitre/la-facture-recue-deux-fois.ts",
   "situations/par-chapitre/la-garantie-de-deux-ans.ts",
+  // Le BTS CG P2 : les capitaux propres (monde/capitaux-propres.ts) et les comptes annuels (monde/comptes-annuels.ts), et leurs cas.
+  "chapitres/les-capitaux-propres.ts",
+  "chapitres/les-comptes-annuels.ts",
+  "situations/par-chapitre/un-dividende-plus-gros.ts",
+  "situations/par-chapitre/la-situation-de-septembre.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */

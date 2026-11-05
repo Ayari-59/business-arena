@@ -201,6 +201,8 @@ import { VIBRA_REPASSE_COMMANDE } from "./par-chapitre/vibra-repasse-commande";
 import { LE_CHEQUE_QUI_N_EST_PAS_PASSE } from "./par-chapitre/le-cheque-qui-n-est-pas-passe";
 import { LA_FACTURE_RECUE_DEUX_FOIS } from "./par-chapitre/la-facture-recue-deux-fois";
 import { LA_GARANTIE_DE_DEUX_ANS } from "./par-chapitre/la-garantie-de-deux-ans";
+import { UN_DIVIDENDE_PLUS_GROS } from "./par-chapitre/un-dividende-plus-gros";
+import { LA_SITUATION_DE_SEPTEMBRE } from "./par-chapitre/la-situation-de-septembre";
 export type { Situation } from "./types";
 
 /**
@@ -417,6 +419,8 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LE_CHEQUE_QUI_N_EST_PAS_PASSE,
   LA_FACTURE_RECUE_DEUX_FOIS,
   LA_GARANTIE_DE_DEUX_ANS,
+  UN_DIVIDENDE_PLUS_GROS,
+  LA_SITUATION_DE_SEPTEMBRE,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

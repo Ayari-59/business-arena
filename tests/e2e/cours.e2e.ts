@@ -1066,6 +1066,13 @@ describe.each([
   { code: "le-dossier-de-revision", entreprise: "nova", telephone: true },
   { code: "la-facture-recue-deux-fois", entreprise: "nova" },
   { code: "la-garantie-de-deux-ans", entreprise: "nova", telephone: true },
+  // Le BTS CG P2 : les capitaux propres (écritures, un curseur, un laboratoire) et les comptes annuels (tableaux à compléter, un laboratoire), puis leurs cas.
+  { code: "les-capitaux-propres", entreprise: "nova" },
+  { code: "les-capitaux-propres", entreprise: "nova", telephone: true },
+  { code: "les-comptes-annuels", entreprise: "nova" },
+  { code: "les-comptes-annuels", entreprise: "nova", telephone: true },
+  { code: "un-dividende-plus-gros", entreprise: "nova" },
+  { code: "la-situation-de-septembre", entreprise: "nova", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se

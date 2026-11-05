@@ -23,11 +23,20 @@ export interface Compte {
 export const PLAN_DU_COURS: readonly Compte[] = [
   // Classe 1 : capitaux
   { numero: "101", intitule: "Capital", nature: "passif" },
+  { numero: "1011", intitule: "Capital souscrit, non appelé", nature: "passif" },
+  { numero: "1012", intitule: "Capital souscrit, appelé, non versé", nature: "passif" },
   { numero: "1013", intitule: "Capital souscrit, appelé, versé", nature: "passif" },
   { numero: "1041", intitule: "Primes d'émission", nature: "passif" },
   { numero: "1061", intitule: "Réserve légale", nature: "passif" },
+  { numero: "1063", intitule: "Réserves statutaires ou contractuelles", nature: "passif" },
   { numero: "1068", intitule: "Autres réserves", nature: "passif" },
   { numero: "108", intitule: "Compte de l'exploitant", nature: "passif" },
+  // Les capitaux propres en BTS CG P2 : le capital non appelé, le report à nouveau et le résultat à affecter.
+  { numero: "109", intitule: "Actionnaires, capital souscrit non appelé", nature: "actif" },
+  { numero: "110", intitule: "Report à nouveau (solde créditeur)", nature: "passif" },
+  { numero: "119", intitule: "Report à nouveau (solde débiteur)", nature: "passif" },
+  { numero: "120", intitule: "Résultat de l'exercice (bénéfice)", nature: "passif" },
+  { numero: "129", intitule: "Résultat de l'exercice (perte)", nature: "passif" },
   // Les provisions réglementées (l'amortissement dérogatoire) : au passif, avec les capitaux propres.
   { numero: "145", intitule: "Amortissements dérogatoires", nature: "passif" },
   { numero: "151", intitule: "Provisions pour risques", nature: "passif" },
@@ -104,6 +113,9 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   // Le factor : un débiteur divers, la créance cédée et la retenue de garantie.
   { numero: "467", intitule: "Autres comptes débiteurs ou créditeurs (factor)", nature: "actif" },
   // Les écarts de conversion des créances et des dettes en devises, à la clôture.
+  { numero: "4561", intitule: "Associés, comptes d'apport en société", nature: "actif" },
+  { numero: "4562", intitule: "Apporteurs, capital appelé, non versé", nature: "actif" },
+  { numero: "457", intitule: "Associés, dividendes à payer", nature: "passif" },
   { numero: "476", intitule: "Différence de conversion, actif", nature: "actif" },
   { numero: "477", intitule: "Différence de conversion, passif", nature: "passif" },
   { numero: "471", intitule: "Compte d'attente", nature: "passif" },
@@ -139,6 +151,8 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "62", intitule: "Autres services extérieurs", nature: "charge" },
   { numero: "622", intitule: "Rémunérations d'intermédiaires et honoraires", nature: "charge" },
   { numero: "6225", intitule: "Rémunérations d'affacturage", nature: "charge" },
+  { numero: "6226", intitule: "Honoraires", nature: "charge" },
+  { numero: "6227", intitule: "Frais d'actes et de contentieux", nature: "charge" },
   { numero: "623", intitule: "Publicité, publications, relations publiques", nature: "charge" },
   { numero: "624", intitule: "Transports de biens et transports collectifs du personnel", nature: "charge" },
   { numero: "6241", intitule: "Transports sur achats", nature: "charge" },

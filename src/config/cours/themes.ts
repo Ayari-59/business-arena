@@ -72,6 +72,8 @@ export const THEMES: readonly Theme[] = [
       "fournisseurs-et-banque",
       "securiser-les-processus",
       "le-dossier-de-revision",
+      "les-capitaux-propres",
+      "les-comptes-annuels",
     ],
     familles: [],
   },
