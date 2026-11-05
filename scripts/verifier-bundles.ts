@@ -127,6 +127,23 @@ export function fuitesDuCours(dossierNext: string, marqueurs = marqueursDuCours(
   return fuites;
 }
 
+/**
+ * LE DIAPORAMA DE L'ENSEIGNANT NE PART PAS DANS LE NAVIGATEUR (novembre 2026). Son générateur
+ * (src/pedagogy/cours/diaporama.ts) porte les corrigés de chaque question ; il vit au serveur, et la
+ * page n'en montre qu'un lien. S'il entrait dans un bundle client, la bibliothèque qui écrit le fichier
+ * viendrait avec lui : ses noms se lisent encore après la minification.
+ */
+export const MARQUEURS_DU_DIAPORAMA = ["defineSlideMaster", "<dc:creator>PptxGenJS"];
+
+export function fuitesDuDiaporama(dossierNext: string, marqueurs = MARQUEURS_DU_DIAPORAMA): Fuite[] {
+  const statique = join(dossierNext, "static");
+  if (!existsSync(statique)) throw new Error(`aucun build dans ${dossierNext} : lancez d'abord next build`);
+  return fichiersJs(statique).flatMap((fichier) => {
+    const texte = readFileSync(fichier, "utf8");
+    return marqueurs.filter((m) => texte.includes(m)).map((marqueur) => ({ fichier, marqueur: `diaporama : ${marqueur}` }));
+  });
+}
+
 const estLancéDirectement = process.argv[1]?.endsWith("verifier-bundles.ts");
 if (estLancéDirectement) {
   const dossier = process.argv[2] ?? ".next";
@@ -146,5 +163,10 @@ if (estLancéDirectement) {
     );
     for (const f of fuitesDuContenu.slice(0, 20)) console.error(`  ${f.fichier} : ${f.marqueur}`);
   } else console.log(`Aucun chapitre réservé dans ${dossier}/static (${duCours.length} extraits cherchés).`);
-  if (fuites.length > 0 || fuitesDuContenu.length > 0) process.exit(1);
+  const fuitesDuGenerateur = fuitesDuDiaporama(dossier);
+  if (fuitesDuGenerateur.length > 0) {
+    console.error(`${fuitesDuGenerateur.length} trace(s) du générateur de diaporama dans ${dossier}/static :`);
+    for (const f of fuitesDuGenerateur.slice(0, 20)) console.error(`  ${f.fichier} : ${f.marqueur}`);
+  } else console.log(`Aucun générateur de diaporama dans ${dossier}/static (${MARQUEURS_DU_DIAPORAMA.length} marqueurs cherchés).`);
+  if (fuites.length > 0 || fuitesDuContenu.length > 0 || fuitesDuGenerateur.length > 0) process.exit(1);
 }

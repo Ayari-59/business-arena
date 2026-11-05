@@ -1,4 +1,5 @@
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join, normalize, relative } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -67,6 +68,9 @@ const INTERDITS = [
   /^src\/config\/cours\/scenarios\//,
   /^src\/config\/cours\/monde\/decouvert-de-nova\.ts$/,
   /^src\/pedagogy\/cours\/scenario-servi\.ts$/,
+  // Le diaporama de l'enseignant (décision du propriétaire, novembre 2026) : son générateur porte les
+  // corrigés de chaque question ; la page n'en montre qu'un lien, la route le fabrique au serveur.
+  /^src\/pedagogy\/cours\/diaporama\.ts$/,
 ];
 
 function fichiers(dossier: string): string[] {
@@ -201,6 +205,25 @@ describe("le build ne porte aucun corrigé", () => {
     const { fuitesDuBuild } = await import("../../scripts/verifier-bundles");
     const fuites = fuitesDuBuild(dossierNext);
     expect(fuites.map((f) => `${relative(RACINE, f.fichier)} : ${f.marqueur}`)).toEqual([]);
+  }, 60_000);
+
+  it("le marqueur du diaporama se trouve dans la bibliothèque qui l'écrit : la garde du build sait le voir", async () => {
+    const { fuitesDuDiaporama } = await import("../../scripts/verifier-bundles");
+    const faux = mkdtempSync(join(tmpdir(), "faux-build-"));
+    try {
+      mkdirSync(join(faux, "static", "chunks"), { recursive: true });
+      copyFileSync(join(RACINE, "node_modules/pptxgenjs/dist/pptxgen.es.js"), join(faux, "static", "chunks", "fuite.js"));
+      expect(fuitesDuDiaporama(faux).length).toBeGreaterThan(0);
+    } finally {
+      rmSync(faux, { recursive: true, force: true });
+    }
+  });
+
+  const recentPourLeDiaporama =
+    existsSync(buildId) && statSync(buildId).mtimeMs > statSync(join(RACINE, "src/pedagogy/cours/diaporama.ts")).mtimeMs;
+  it.skipIf(!recentPourLeDiaporama)("ni le générateur du diaporama ni sa bibliothèque dans .next/static", async () => {
+    const { fuitesDuDiaporama } = await import("../../scripts/verifier-bundles");
+    expect(fuitesDuDiaporama(dossierNext).map((f) => `${relative(RACINE, f.fichier)} : ${f.marqueur}`)).toEqual([]);
   }, 60_000);
 
   const recentPourLeCours =
