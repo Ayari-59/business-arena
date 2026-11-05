@@ -49,6 +49,7 @@ import {
   salonsDeN,
   segmentDuCompte,
 } from "../../src/config/cours/monde/terrain-d-atlas";
+import { ACHETEURS_DU_SITE, PERIODE_DU_SITE, PUBLICATIONS, SOURCES_DE_TRAFIC, conversionALaNote, noteDesAvis, traficDuSite, valeurDUnContact } from "../../src/config/cours/monde/site-d-atlas";
 
 /**
  * LA RELATION CLIENT DU COURS (monde/relation-client.ts sur monde/atlas-conseil.ts), REFAITE À LA MAIN.
@@ -662,5 +663,33 @@ describe("le terrain d'ATLAS retombe sur la fiche", () => {
     expect(MATINALES.tauxDeSignature).toBe(canal("salons").contrats / canal("salons").devis);
     expect(PIPELINE_DES_SALONS.opportunites.filter((o) => o.stade === "devis-remis").length + PIPELINE_DES_SALONS.devisPerdus + canal("salons").contrats).toBe(canal("salons").devis);
     expect(chargeDeVisites(f).rendezVousDAffaires).toBe(somme(commercial("entreprises").n.map((t) => t.rendezVous)));
+ * LE SITE D'ATLAS CONSEIL EN N + 1 (monde/site-d-atlas.ts), RACCORDÉ À LA FICHE. Les chapitres du bloc 2
+ * (« Le site qui vend », « Contenus, communauté et e-réputation ») et ceux qui les reprendront lisent ces
+ * chiffres : la garde dit qu'ils ne touchent pas l'année N, et qu'ils retombent sur elle là où ils s'y
+ * raccordent (l'entonnoir et la valeur vie d'un compte), et les uns sur les autres (les visites des
+ * réseaux sociaux, la conversion du site).
+ */
+describe("le site d'ATLAS CONSEIL en N + 1 se raccorde à la fiche, sans toucher l'année N", () => {
+  it("l'année N reste celle de la fiche : la boutique en ligne ouvre après elle", () => {
+    expect(PERIODE_DU_SITE).toBe("le premier trimestre de N + 1");
+    expect(somme(f.comptes.map((c) => c.chiffreDAffaires))).toBe(CA_DE_N);
+    expect(f.canaux.map((k) => k.code)).toEqual(["prospection", "salons", "digital", "apporteurs"]);
+  });
+
+  it("un contact entrant suit l'entonnoir de la campagne digitale de N, et vaut sa part de la valeur vie d'un compte", () => {
+    const d = canal("digital");
+    const v = valeurDUnContact(f);
+    expect(v.contactsParCompte).toBe(d.contacts / d.contrats);
+    expect(v.contactsParCompte).toBe(300);
+    expect([v.premiereAnnee, v.actualisee, v.simple]).toEqual([21_000 / 300, 60_000 / 300, 84_000 / 300]);
+    expect(v.simple * 300).toBe(valeurDUnClient(f).simple);
+  });
+
+  it("les visites des réseaux sociaux sont les clics des publications et les clics payés ; la note de 4,5 donne la conversion du site", () => {
+    const reseaux = SOURCES_DE_TRAFIC.find((s) => s.code === "reseaux")!;
+    const organiques = somme(PUBLICATIONS.map((p) => p.clics));
+    expect([organiques, reseaux.visites - organiques, reseaux.cout / (reseaux.visites - organiques)]).toEqual([1_000, 1_000, 1.8]);
+    expect(conversionALaNote(noteDesAvis().affichee).conversion).toBe(traficDuSite().conversion);
+    expect(traficDuSite().commandes).toBe(somme(ACHETEURS_DU_SITE.map((a) => a.commandes)));
   });
 });

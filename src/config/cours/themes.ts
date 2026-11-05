@@ -194,6 +194,8 @@ export const THEMES: readonly Theme[] = [
       "le-fichier-et-la-cible",
       "organiser-le-secteur",
       "l-evenement-commercial",
+      "le-site-qui-vend",
+      "contenus-communaute-et-e-reputation",
     ],
     familles: ["vendre", "conseil-vendre", "agro-distribution", "sante-accueillir"],
   },

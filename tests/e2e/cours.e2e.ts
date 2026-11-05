@@ -1027,6 +1027,13 @@ describe.each([
   { code: "un-fichier-a-acheter", entreprise: "conseil" },
   { code: "les-comptes-de-hugo", entreprise: "conseil", telephone: true },
   { code: "un-invite-pour-la-matinale", entreprise: "conseil" },
+  // Le BTS NDRC, bloc 2 : le site qui vend, contenus, communauté et e-réputation (tris, curseurs, laboratoires), puis leurs cas.
+  { code: "le-site-qui-vend", entreprise: "conseil" },
+  { code: "le-site-qui-vend", entreprise: "conseil", telephone: true },
+  { code: "contenus-communaute-et-e-reputation", entreprise: "conseil" },
+  { code: "contenus-communaute-et-e-reputation", entreprise: "conseil", telephone: true },
+  { code: "doubler-les-liens-sponsorises", entreprise: "conseil" },
+  { code: "l-avis-a-une-etoile", entreprise: "conseil", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se
