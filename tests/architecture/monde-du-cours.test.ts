@@ -467,6 +467,31 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   // Le BTS NDRC, bloc 2 : le plateau de téléacteurs (monde/plateau-d-atlas.ts), et son cas.
   "chapitres/le-plateau-de-teleacteurs.ts",
   "situations/par-chapitre/la-ligne-de-la-rentree.ts",
+  // Le BTS CG P1 : le cadre de la comptabilité (monde/cadre-de-la-comptabilite.ts), les ventes et achats au complet (monde/ventes-et-achats-de-nova.ts), et leurs cas.
+  "chapitres/le-cadre-de-la-comptabilite.ts",
+  "chapitres/ventes-et-achats-au-complet.ts",
+  "situations/par-chapitre/creer-l-atelier-de-reparation.ts",
+  "situations/par-chapitre/la-commande-de-noel-de-campustech.ts",
+  // Le BTS CG P1 : le compte client (NOVA, monde/compte-client-de-nova.ts), fournisseurs et banque (MAILLE & CO, monde/fournisseurs-et-banque-de-la-boutique.ts), et leurs cas.
+  "chapitres/le-compte-client.ts",
+  "chapitres/fournisseurs-et-banque.ts",
+  "situations/par-chapitre/vibra-repasse-commande.ts",
+  "situations/par-chapitre/le-cheque-qui-n-est-pas-passe.ts",
+  // Le BTS CG P1 et P2, agent C : sécuriser les processus (monde/securite-des-processus.ts) et le dossier de révision (monde/dossier-de-revision.ts), et leurs cas.
+  "chapitres/securiser-les-processus.ts",
+  "chapitres/le-dossier-de-revision.ts",
+  "situations/par-chapitre/la-facture-recue-deux-fois.ts",
+  "situations/par-chapitre/la-garantie-de-deux-ans.ts",
+  // Le BTS CG P2 : les capitaux propres (monde/capitaux-propres.ts) et les comptes annuels (monde/comptes-annuels.ts), et leurs cas.
+  "chapitres/les-capitaux-propres.ts",
+  "chapitres/les-comptes-annuels.ts",
+  "situations/par-chapitre/un-dividende-plus-gros.ts",
+  "situations/par-chapitre/la-situation-de-septembre.ts",
+  // Le BTS CG P1 et P2 : acquérir et financer une immobilisation (monde/acquisition-et-financement.ts), l'initiation à la consolidation (monde/groupe-nova.ts), et leurs cas.
+  "chapitres/acquerir-et-financer-une-immobilisation.ts",
+  "chapitres/initiation-a-la-consolidation.ts",
+  "situations/par-chapitre/la-cabine-subventionnee.ts",
+  "situations/par-chapitre/le-directeur-veut-plus-d-actions.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
@@ -667,6 +692,14 @@ const NE_LISENT_PLUS_L_ANNEE_FIGEE: readonly string[] = [
   "chapitres/le-reseau-de-vente-directe.ts",
   "situations/par-chapitre/la-centrale-demande-une-ristourne.ts",
   "situations/par-chapitre/un-pourcentage-pour-la-marraine.ts",
+  "chapitres/le-cadre-de-la-comptabilite.ts",
+  "chapitres/ventes-et-achats-au-complet.ts",
+  "situations/par-chapitre/creer-l-atelier-de-reparation.ts",
+  "situations/par-chapitre/la-commande-de-noel-de-campustech.ts",
+  "chapitres/le-compte-client.ts",
+  "chapitres/fournisseurs-et-banque.ts",
+  "situations/par-chapitre/vibra-repasse-commande.ts",
+  "situations/par-chapitre/le-cheque-qui-n-est-pas-passe.ts",
 ];
 
 /** Le premier chemin d'imports qui atteint un fichier donné, ou rien. */

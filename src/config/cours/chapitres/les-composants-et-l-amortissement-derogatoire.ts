@@ -28,7 +28,7 @@ export const LES_COMPOSANTS_ET_L_AMORTISSEMENT_DEROGATOIRE: Chapitre = {
   code: "les-composants-et-l-amortissement-derogatoire",
   parcours: "dcg-comptabilite-approfondie",
   palier: 4,
-  blocs: ["DCG UE10 · Comptabilité approfondie", "BUT GEA · Produire l'information comptable, fiscale et sociale de l'organisation"],
+  blocs: ["DCG UE10 · Comptabilité approfondie", "BUT GEA · Produire l'information comptable, fiscale et sociale de l'organisation", "BTS CG P2 · Contrôle et production de l'information financière"],
   titre: "L'approche par composants et l'amortissement dérogatoire",
   accroche:
     "Une ligne de montage dont les moteurs s'usent deux fois plus vite que le bâti : chaque composant s'amortit sur sa durée, et l'écart entre le plan comptable et le plan fiscal devient une provision réglementée.",

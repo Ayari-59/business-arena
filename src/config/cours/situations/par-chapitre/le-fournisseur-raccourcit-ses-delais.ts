@@ -10,7 +10,7 @@ import type { Situation } from "../types";
  * TRÉSORERIE » : LE FOURNISSEUR RACCOURCIT SES DÉLAIS (Bac STMG, gestion et finance,
  * palier 1).
  *
- * Le fournisseur annonce qu'il raccourcit le délai de paiement qu'il accorde. Le gérant veut
+ * Le fournisseur annonce qu'il raccourcit le délai de paiement qu'il accorde. Le président veut
  * savoir ce que cela ferait à la trésorerie, si cela avait déjà été le cas au 31 décembre.
  * L'élève refait seul le chemin du chapitre (le fonds de roulement, le besoin en fonds de
  * roulement, la trésorerie), puis le refait avec des dettes fournisseurs plus petites.
@@ -59,15 +59,15 @@ export const LE_FOURNISSEUR_RACCOURCIT_SES_DELAIS: Situation = {
   palier: 1,
   blocs: [],
   reprend: ["fonds-de-roulement-et-tresorerie"],
-  commanditaire: "Le gérant",
+  commanditaire: "Le président",
   titre: "Le fournisseur raccourcit ses délais",
   accroche:
-    "Le principal fournisseur veut être payé plus vite. Le gérant demande ce que cela ferait au besoin en fonds de roulement, et à la trésorerie.",
+    "Le principal fournisseur veut être payé plus vite. Le président demande ce que cela ferait au besoin en fonds de roulement, et à la trésorerie.",
   objectifs: [
     "Calculer le fonds de roulement, le besoin en fonds de roulement et la trésorerie",
     "Mesurer l'effet d'un délai fournisseur plus court sur le besoin en fonds de roulement",
     "Calculer la trésorerie qui en résulte",
-    "Rédiger une réponse chiffrée au gérant",
+    "Rédiger une réponse chiffrée au président",
   ],
   libre: false,
   entreprises: {
@@ -78,7 +78,7 @@ export const LE_FOURNISSEUR_RACCOURCIT_SES_DELAIS: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La demande du gérant",
+      titre: "La demande du président",
       texte: (c) => [
         `« Nos fournisseurs de composants réduisent de ${pct(BAISSE_DU_CREDIT_FOURNISSEUR * 100)} le délai de paiement qu'ils nous accordent : au 31 décembre, nous leur aurions donc dû ${pct(BAISSE_DU_CREDIT_FOURNISSEUR * 100)} de moins. Nos achats ne changent pas. Je veux savoir ce que cela aurait fait au besoin en fonds de roulement ${dE(fondsDeRoulement(c).entreprise)}, et surtout à notre trésorerie. »`,
         "Pas de cours cette fois : vous avez le bilan, et la méthode est celle du chapitre. À vous de l'enchaîner.",
@@ -152,8 +152,8 @@ export const LE_FOURNISSEUR_RACCOURCIT_SES_DELAIS: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse au gérant",
-      question: () => "Quelle phrase envoyez-vous au gérant ?",
+      titre: "Votre réponse au président",
+      question: () => "Quelle phrase envoyez-vous au président ?",
       options: (c) => {
         const k = fournisseurPresse(c);
         return [

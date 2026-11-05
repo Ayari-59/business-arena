@@ -24,6 +24,16 @@ export interface MatiereEnEntier {
 export const MATIERES_COUVERTES_EN_ENTIER: readonly MatiereEnEntier[] = [
   {
     formation: "bts-cg",
+    bloc: "P1 · Contrôle et traitement comptable des opérations commerciales",
+    preuve: "Audit des processus P1 à P4, sous-activité par sous-activité, puis les dix chapitres et les compléments de la PR du P1 et du P2.",
+  },
+  {
+    formation: "bts-cg",
+    bloc: "P2 · Contrôle et production de l'information financière",
+    preuve: "Audit des processus P1 à P4, sous-activité par sous-activité, puis les dix chapitres et les compléments de la PR du P1 et du P2.",
+  },
+  {
+    formation: "bts-cg",
     bloc: "P5 · Analyse et prévision de l'activité",
     preuve: "Audit du contrôle de gestion, puis les cinq chapitres de la PR #347.",
   },

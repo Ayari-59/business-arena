@@ -463,7 +463,7 @@ describe("s'assurer contre les aléas, chez NOVA", () => {
   it("le cas : la prime augmentée, le pire qui ne bouge pas, la prime plafond à rebours", () => {
     const s = L_ASSUREUR_AUGMENTE_LA_PRIME;
     casDedie(s, ch);
-    expect(s.commanditaire).toBe("La gérante");
+    expect(s.commanditaire).toBe("La présidente");
     expect(HAUSSE_DE_LA_PRIME).toBe(0.2);
     const nouvelle = B!.primeParTrimestre * 1.2;
     expect(attendus(s, "prime")).toEqual({
@@ -680,10 +680,10 @@ describe("le coût de la non-qualité, chez NOVA", () => {
     expect(cout!.valeur(a(24_000))).toBe(55_740);
   });
 
-  it("le cas : prévenir ou détecter, le délai de récupération face à l'horizon du gérant", () => {
+  it("le cas : prévenir ou détecter, le délai de récupération face à l'horizon du président", () => {
     const s = UNE_SEULE_DEMARCHE_QUALITE;
     casDedie(s, ch);
-    expect(s.commanditaire).toBe("Le gérant");
+    expect(s.commanditaire).toBe("Le président");
     expect(HORIZON_DU_GERANT_EN_ANNEES).toBe(3);
     const [stand, controle] = f.demarches;
     // La standardisation : 910 − 26 000 × 3 % = 130 défauts de moins ; 26 livrés de moins.

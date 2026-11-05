@@ -16,7 +16,7 @@ import { auCentime } from "../monde/amortissement";
  *
  * L'objet : expliquer, ligne par ligne, pourquoi les deux résultats diffèrent, et passer de l'un à
  * l'autre au centime. Les charges que la gestion n'incorpore pas (les risques, le financement,
- * l'impôt), la charge supplétive qu'elle ajoute (le travail de la gérante), les produits qu'elle
+ * l'impôt), la charge supplétive qu'elle ajoute (le travail de la présidente), les produits qu'elle
  * laisse de côté, la charge qu'elle substitue (l'usure de la ligne), les différences d'inventaire (le
  * boni des jeux revenus sans bon, l'évaluation du stock) et les différences d'arrondi.
  *
@@ -38,10 +38,10 @@ import { auCentime } from "../monde/amortissement";
 /** La concordance se calcule sur l'exercice N de NOVA. */
 export const ENTREPRISES_DE_LA_CONCORDANCE: readonly string[] = ["nova"];
 
-/** Les bornes du curseur de la rémunération de la gérante, en euros par mois. */
+/** Les bornes du curseur de la rémunération de la présidente, en euros par mois. */
 export const GERANTE_DU_CURSEUR = { min: 0, max: 12_000 } as const;
 
-/** Le levier de la gérante au laboratoire, et le levier à choix des charges de risque. */
+/** Le levier de la présidente au laboratoire, et le levier à choix des charges de risque. */
 export const GERANTE_DU_LABORATOIRE = { min: 0, max: 6_000, pas: 600 } as const;
 export const RISQUES = { nonIncorpores: 0, incorpores: 1 } as const;
 /** Les comptes des charges de risque, que le laboratoire peut faire incorporer. */
@@ -66,7 +66,7 @@ export function concordanceDeNova(c: Pick<Cas, "code">) {
   const solde = (compte: string) => auCentime(s[compte] ?? 0);
   const risques = auCentime(COMPTES_DES_RISQUES.reduce((t, x) => t + solde(x), 0));
   const totalNonIncorporees = auCentime(-k.lignes.chargesNonIncorporees);
-  /** Ce que la gestion aurait trouvé sans la rémunération de la gérante : le résultat analytique, supplétive remise. */
+  /** Ce que la gestion aurait trouvé sans la rémunération de la présidente : le résultat analytique, supplétive remise. */
   const avantLaGerante = auCentime(k.exercice.resultatAnalytique + k.lignes.supletives);
   return {
     f,
@@ -83,7 +83,7 @@ export function concordanceDeNova(c: Pick<Cas, "code">) {
 
 export type ConcordanceDeNova = ReturnType<typeof concordanceDeNova>;
 
-/** Le laboratoire : les deux résultats pour une rémunération de la gérante et un traitement des risques. */
+/** Le laboratoire : les deux résultats pour une rémunération de la présidente et un traitement des risques. */
 export function laboratoireDeLaConcordance(gerante: number, risques: number) {
   const k = concordance({ gerante });
   const risque = auCentime(COMPTES_DES_RISQUES.reduce((t, x) => t + (k.cg.soldes[x] ?? 0), 0));
@@ -196,7 +196,7 @@ function grilleDePassage(x: ConcordanceDeNova): TableauACompleter {
     colonnes: ["Montant"],
     lignes: [
       { libelle: "Résultat analytique de l'exercice", cellules: [donnee(k.exercice.resultatAnalytique)] },
-      { libelle: "Charges supplétives", cellules: [aSaisir(l.supletives, `12 × ${eur(REMUNERATION_DE_LA_GERANTE)} = ${eur(l.supletives)} : comptées par la gestion seule, elles ${signe(l.supletives)}nt`, { indice: "le travail de la gérante sur l'exercice, que la comptabilité générale ne compte pas" })] },
+      { libelle: "Charges supplétives", cellules: [aSaisir(l.supletives, `12 × ${eur(REMUNERATION_DE_LA_GERANTE)} = ${eur(l.supletives)} : comptées par la gestion seule, elles ${signe(l.supletives)}nt`, { indice: "le travail de la présidente sur l'exercice, que la comptabilité générale ne compte pas" })] },
       { libelle: "Produits non incorporés", cellules: [aSaisir(l.produitsNonIncorpores, `${eur(l.produitsNonIncorpores)} d'intérêts du placement, que seule la comptabilité générale compte : ils s'ajoutent`, { indice: "les produits que seule la comptabilité générale compte" })] },
       { libelle: "Charges non incorporées", cellules: [aSaisir(l.chargesNonIncorporees, `${k.nonIncorporees.map((n) => eur(n.montant)).join(" + ")} = ${eur(totalNonIncorporees)}, qui se retranchent : ${eur(l.chargesNonIncorporees)}`, { indice: "les charges que seule la comptabilité générale compte, qui la font plus basse" })] },
       { libelle: "Différence d'incorporation de l'usure", cellules: [aSaisir(l.differenceDIncorporation, `${eur(k.usureDeGestion)} − ${eur(k.dotation)} = ${eur(l.differenceDIncorporation)} : la gestion a compté plus, cela ${signe(l.differenceDIncorporation)}`, { indice: "l'usure de la gestion moins la dotation de la clôture" })] },
@@ -277,7 +277,7 @@ export const LA_CONCORDANCE_DES_RESULTATS: Chapitre = {
           { libelle: "Loyer du local", montant: solde("6132"), categorie: "incorporee", pourquoi: "Le local sert à produire et à vendre : la charge entre dans les centres, par les surfaces." },
           { libelle: "Dépréciation de la créance de Sonora", montant: montant("6817"), categorie: "non", pourquoi: "Un client en redressement judiciaire n'est pas l'activité normale : la gestion n'en charge pas ses coûts." },
           { libelle: "Salaires et cotisations des opérateurs", montant: auCentime(solde("641") + solde("645")), categorie: "incorporee", pourquoi: "Le travail de l'équipe fait les enceintes : il entre dans les centres." },
-          { libelle: "Travail de la gérante, non payé", montant: k.lignes.supletives, categorie: "supletive", pourquoi: "La comptabilité générale ne le connaît pas ; la gestion le compte pour que le coût ne dépende pas de ce que la gérante se verse." },
+          { libelle: "Travail de la présidente, non payé", montant: k.lignes.supletives, categorie: "supletive", pourquoi: "La comptabilité générale ne le connaît pas ; la gestion le compte pour que le coût ne dépende pas de ce que la présidente se verse." },
           { libelle: "Intérêts de l'emprunt", montant: montant("6611"), categorie: "non", pourquoi: "Le coût du financement : la gestion de NOVA mesure l'exploitation sans lui." },
           { libelle: "Prime d'assurance de l'exercice", montant: solde("616"), categorie: "incorporee", pourquoi: "L'assurance couvre la ligne et les marchandises : elle entre dans la production et la distribution." },
           { libelle: "Provision pour le litige", montant: montant("6815"), categorie: "non", pourquoi: "Un risque exceptionnel, sans rapport avec la fabrication du mois : non incorporé." },
@@ -296,15 +296,15 @@ export const LA_CONCORDANCE_DES_RESULTATS: Chapitre = {
       id: "pourquoi-la-gerante",
       objectifs: [0],
       type: "choix",
-      titre: "Pourquoi compter la gérante",
+      titre: "Pourquoi compter la présidente",
       notions: ["full_unit_cost"],
       question: () =>
-        `La gérante ne se verse rien : les comptes ne portent aucune charge pour son travail. La comptabilité de gestion en compte une, ${eur(REMUNERATION_DE_LA_GERANTE)} par mois. Pourquoi ?`,
+        `La présidente ne se verse rien : les comptes ne portent aucune charge pour son travail. La comptabilité de gestion en compte une, ${eur(REMUNERATION_DE_LA_GERANTE)} par mois. Pourquoi ?`,
       options: () => [
         {
           texte: "Pour que le coût ne dépende pas de sa paie",
           juste: true,
-          retour: "Oui. Un concurrent dont le gérant est salarié porte ce coût ; NOVA le porterait aussi le jour où sa gérante se paierait. Sans la charge supplétive, le coût d'une enceinte paraîtrait plus bas qu'il n'est, et un prix fixé sur lui serait trop bas.",
+          retour: "Oui. Un concurrent dont le dirigeant est salarié porte ce coût ; NOVA le porterait aussi le jour où sa présidente se paierait. Sans la charge supplétive, le coût d'une enceinte paraîtrait plus bas qu'il n'est, et un prix fixé sur lui serait trop bas.",
         },
         { texte: "Pour réduire l'impôt que NOVA doit sur l'exercice", juste: false, retour: "Non : une charge supplétive n'est jamais passée en comptabilité générale. Elle ne change ni le résultat des comptes ni l'impôt." },
         { texte: "Parce que la loi l'impose à toute société commerciale", juste: false, retour: "Non : la comptabilité de gestion est libre, aucune loi n'en fixe les règles. C'est un choix de l'entreprise, pour des coûts qui disent vrai." },
@@ -318,7 +318,7 @@ export const LA_CONCORDANCE_DES_RESULTATS: Chapitre = {
       notions: ["full_unit_cost", "income_statement"],
       tableau: (c) => tableauDesComptes(concordanceDeNova(c)),
       question: () =>
-        "Faites les trois totaux de l'exercice : les charges que la gestion n'incorpore pas, les produits qu'elle n'incorpore pas, et la charge supplétive qu'elle ajoute (12 mois du travail de la gérante).",
+        "Faites les trois totaux de l'exercice : les charges que la gestion n'incorpore pas, les produits qu'elle n'incorpore pas, et la charge supplétive qu'elle ajoute (12 mois du travail de la présidente).",
       champs: (c) => {
         const { k, totalNonIncorporees } = concordanceDeNova(c);
         return [
@@ -445,7 +445,7 @@ export const LA_CONCORDANCE_DES_RESULTATS: Chapitre = {
         return `${eur(k.exercice.resultatAnalytique)} pour la gestion, ${eur(k.resultatGeneral)} pour les comptes. Lequel des deux résultats dit vrai ?`;
       },
       options: () => [
-        { texte: "Les deux : ils ne mesurent pas la même chose", juste: true, retour: "Oui. Les comptes disent ce que l'exercice a rapporté aux associés, impôt et risques compris ; la gestion dit ce que rapporte l'exploitation courante, travail de la gérante compris. Le tableau de passage montre que l'un se déduit de l'autre." },
+        { texte: "Les deux : ils ne mesurent pas la même chose", juste: true, retour: "Oui. Les comptes disent ce que l'exercice a rapporté aux associés, impôt et risques compris ; la gestion dit ce que rapporte l'exploitation courante, travail de la présidente compris. Le tableau de passage montre que l'un se déduit de l'autre." },
         { texte: "Celui des comptes : c'est le seul que l'on publie", juste: false, retour: "Non : il est le seul publié, mais il mélange l'exploitation, le financement, les risques et l'impôt. Pour fixer un prix, c'est le coût de la gestion qu'il faut." },
         { texte: "Celui de la gestion : il compte toutes les charges", juste: false, retour: "Non : il en laisse de côté, l'impôt, les risques, le financement, et il en ajoute une que les comptes ignorent. Il n'est pas plus complet, il est autre." },
       ],
@@ -454,10 +454,10 @@ export const LA_CONCORDANCE_DES_RESULTATS: Chapitre = {
       id: "le-pari-de-la-gerante",
       objectifs: [3],
       type: "choix",
-      titre: "Pariez sur la gérante",
+      titre: "Pariez sur la présidente",
       notions: ["full_unit_cost"],
       question: () =>
-        `Avant de manipuler, pariez. Si la gestion comptait le travail de la gérante ${eur(GERANTE_DU_LABORATOIRE.max)} par mois au lieu de ${eur(REMUNERATION_DE_LA_GERANTE)}, le résultat de la comptabilité générale…`,
+        `Avant de manipuler, pariez. Si la gestion comptait le travail de la présidente ${eur(GERANTE_DU_LABORATOIRE.max)} par mois au lieu de ${eur(REMUNERATION_DE_LA_GERANTE)}, le résultat de la comptabilité générale…`,
       options: () => {
         const voir = "Faites varier sa rémunération aux deux étapes suivantes.";
         return [
@@ -471,13 +471,13 @@ export const LA_CONCORDANCE_DES_RESULTATS: Chapitre = {
       id: "jusqu-ou-la-gerante",
       objectifs: [3],
       type: "curseur",
-      titre: "Jusqu'où compter la gérante",
+      titre: "Jusqu'où compter la présidente",
       notions: ["full_unit_cost", "fixed_costs"],
       question: (c) => {
         const { avantLaGerante } = concordanceDeNova(c);
-        return `Sans le travail de la gérante, la gestion trouverait ${eur(avantLaGerante)} sur l'exercice. Faites varier ce que vaut son travail, par mois : une droite donne ce résultat, l'autre la charge supplétive de 12 mois. Placez le curseur sur la plus grande rémunération où le résultat analytique reste positif, puis validez.`;
+        return `Sans le travail de la présidente, la gestion trouverait ${eur(avantLaGerante)} sur l'exercice. Faites varier ce que vaut son travail, par mois : une droite donne ce résultat, l'autre la charge supplétive de 12 mois. Placez le curseur sur la plus grande rémunération où le résultat analytique reste positif, puis validez.`;
       },
-      grandeur: () => ({ libelle: "Travail de la gérante, par mois", unite: "€" }),
+      grandeur: () => ({ libelle: "Travail de la présidente, par mois", unite: "€" }),
       sens: "plus-grande",
       cible: (c) => ({ attendu: concordanceDeNova(c).gerantePlafond, min: GERANTE_DU_CURSEUR.min, max: GERANTE_DU_CURSEUR.max }),
       zones: ["Le résultat analytique reste positif", "Le résultat analytique devient une perte"],
@@ -489,7 +489,7 @@ export const LA_CONCORDANCE_DES_RESULTATS: Chapitre = {
       lecture: (c, g) => {
         const { avantLaGerante, k } = concordanceDeNova(c);
         return [
-          { libelle: "Résultat de la gestion, sans la gérante", montant: avantLaGerante },
+          { libelle: "Résultat de la gestion, sans la présidente", montant: avantLaGerante },
           { libelle: "Charge supplétive sur 12 mois", montant: auCentime(12 * g) },
           { libelle: "Résultat analytique de l'exercice", montant: auCentime(avantLaGerante - 12 * g), fort: true },
           { libelle: "Résultat de la comptabilité générale", montant: k.resultatGeneral },
@@ -497,13 +497,13 @@ export const LA_CONCORDANCE_DES_RESULTATS: Chapitre = {
       },
       droites: (c) => {
         const { avantLaGerante } = concordanceDeNova(c);
-        return { produit: () => avantLaGerante, cout: (g) => 12 * g, libelles: ["Résultat de la gestion, sans la gérante", "Charge supplétive sur 12 mois"] };
+        return { produit: () => avantLaGerante, cout: (g) => 12 * g, libelles: ["Résultat de la gestion, sans la présidente", "Charge supplétive sur 12 mois"] };
       },
       explication: (c) => {
         const { gerantePlafond, k } = concordanceDeNova(c);
         return [
-          `Au-delà de ${eur(gerantePlafond)} par mois, la gestion montrerait une perte, alors que les comptes affichent ${eur(k.resultatGeneral)} de bénéfice. Le travail de la gérante ne coûte rien à la trésorerie ; un concurrent qui paie son gérant le paie, lui.`,
-          "Une nuance que la droite ignore : en décembre, une petite part du travail de la gérante entre dans le coût d'achat des jeux et reste en stock. Le résultat analytique ne baisse donc pas tout à fait de 12 € par euro de rémunération mensuelle.",
+          `Au-delà de ${eur(gerantePlafond)} par mois, la gestion montrerait une perte, alors que les comptes affichent ${eur(k.resultatGeneral)} de bénéfice. Le travail de la présidente ne coûte rien à la trésorerie ; un concurrent qui paie son dirigeant le paie, lui.`,
+          "Une nuance que la droite ignore : en décembre, une petite part du travail de la présidente entre dans le coût d'achat des jeux et reste en stock. Le résultat analytique ne baisse donc pas tout à fait de 12 € par euro de rémunération mensuelle.",
         ];
       },
     },
@@ -514,9 +514,9 @@ export const LA_CONCORDANCE_DES_RESULTATS: Chapitre = {
       titre: "Le laboratoire de la concordance",
       notions: ["full_unit_cost", "income_statement"],
       question: () =>
-        "Faites varier ce que la gestion compte pour le travail de la gérante, et choisissez si elle incorpore les charges de risque (la dépréciation de Sonora et la provision pour le litige). Le tableau suit les deux résultats et leur écart. Relevez le défi.",
+        "Faites varier ce que la gestion compte pour le travail de la présidente, et choisissez si elle incorpore les charges de risque (la dépréciation de Sonora et la provision pour le litige). Le tableau suit les deux résultats et leur écart. Relevez le défi.",
       leviers: () => [
-        { code: "gerante", libelle: "Travail de la gérante, par mois", unite: "€", min: GERANTE_DU_LABORATOIRE.min, max: GERANTE_DU_LABORATOIRE.max, pas: GERANTE_DU_LABORATOIRE.pas, depart: REMUNERATION_DE_LA_GERANTE },
+        { code: "gerante", libelle: "Travail de la présidente, par mois", unite: "€", min: GERANTE_DU_LABORATOIRE.min, max: GERANTE_DU_LABORATOIRE.max, pas: GERANTE_DU_LABORATOIRE.pas, depart: REMUNERATION_DE_LA_GERANTE },
         {
           code: "risques",
           libelle: "Charges de risque",
@@ -557,7 +557,7 @@ export const LA_CONCORDANCE_DES_RESULTATS: Chapitre = {
       explication: (_, p) => {
         const l = laboratoireDeLaConcordance(p.gerante!, p.risques!);
         return [
-          `Avec ${eur(p.gerante!)} par mois pour la gérante et les charges de risque ${p.risques === RISQUES.incorpores ? "incorporées" : "non incorporées"}, la gestion trouve ${eur(l.resultatAnalytique)}, à ${eur(Math.abs(l.ecart))} du résultat des comptes. Une coïncidence : la charge supplétive et les charges de risque se compensent presque.`,
+          `Avec ${eur(p.gerante!)} par mois pour la présidente et les charges de risque ${p.risques === RISQUES.incorpores ? "incorporées" : "non incorporées"}, la gestion trouve ${eur(l.resultatAnalytique)}, à ${eur(Math.abs(l.ecart))} du résultat des comptes. Une coïncidence : la charge supplétive et les charges de risque se compensent presque.`,
           "Le résultat de la comptabilité générale n'a pas bougé d'un centime, quoi que vous ayez fait : ce sont les choix de la gestion qui déplacent son résultat, et le tableau de passage qui en rend compte. Deux résultats proches ne prouvent pas que la gestion compte juste ; deux résultats éloignés ne prouvent pas qu'elle se trompe.",
         ];
       },

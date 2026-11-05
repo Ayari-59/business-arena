@@ -220,7 +220,7 @@ export const REMUNERATION_ET_MOTIVATION: Chapitre = {
       titre: "Augmenter ou verser une prime",
       notions: ["pay_and_motivation"],
       question: (c) =>
-        `La gérante ${dE(c.entreprise)} hésite : une augmentation de chaque mois, ou une prime de fin d'année, versée une fois ? Une prime ne change pas le salaire que l'opérateur compare chaque mois aux offres du marché. Choisissez l'augmentation et la prime, et regardez ce que l'année coûte, départ compris si l'équipe n'est pas gardée.`,
+        `La présidente ${dE(c.entreprise)} hésite : une augmentation de chaque mois, ou une prime de fin d'année, versée une fois ? Une prime ne change pas le salaire que l'opérateur compare chaque mois aux offres du marché. Choisissez l'augmentation et la prime, et regardez ce que l'année coûte, départ compris si l'équipe n'est pas gardée.`,
       leviers: () => [
         { code: "augmentation", libelle: "Augmentation par opérateur et par mois", unite: "€", ...AUGMENTATIONS_ESSAYEES, depart: AUGMENTATIONS_ESSAYEES.min },
         {

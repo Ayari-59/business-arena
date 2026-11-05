@@ -8,7 +8,7 @@ import type { Situation } from "../types";
  * CAS PRATIQUE DU CHAPITRE « ENTRETENIR L'OUTIL » : ENTRETENIR AU SEUIL (BTS GPME, palier 3).
  *
  * LE CAS JOUE DANS LE MONDE DU COURS, comme son chapitre : la ligne de montage de NOVA en N + 1
- * (monde/nova-capacite.ts, monde/capacite.ts, `entretienAuSeuil`). Le gérant a retenu du chapitre
+ * (monde/nova-capacite.ts, monde/capacite.ts, `entretienAuSeuil`). Le président a retenu du chapitre
  * que la ligne ne s'use que sous 3 000 € : il propose d'entretenir au seuil chaque trimestre. La
  * ligne tient, aucune vente ne se perd par l'outil, 6 000 € s'économisent ; mais une ligne
  * entretenue sous la référence monte plus de défauts, et ils coûtent plus que toute l'économie.
@@ -69,15 +69,15 @@ export const ENTRETENIR_AU_SEUIL: Situation = {
   palier: 3,
   blocs: [],
   reprend: [ENTRETENIR_L_OUTIL.code],
-  commanditaire: "Le gérant",
+  commanditaire: "Le président",
   titre: "Entretenir au seuil",
   accroche:
-    "Le gérant veut entretenir la ligne juste au seuil sous lequel elle s'use, toute l'année, au lieu du budget de référence. La ligne tient ; reste à savoir ce que cette économie coûte en défauts.",
+    "Le président veut entretenir la ligne juste au seuil sous lequel elle s'use, toute l'année, au lieu du budget de référence. La ligne tient ; reste à savoir ce que cette économie coûte en défauts.",
   objectifs: [
     "Calculer le seuil d'entretien et l'économie d'une année au seuil",
     "Chiffrer les défauts qu'un entretien sous la référence ajoute, ventes perdues comprises",
     "Retrouver à rebours combien de défauts une économie peut payer",
-    "Répondre au gérant, chiffre à l'appui",
+    "Répondre au président, chiffre à l'appui",
   ],
   libre: false,
   entreprises: ENTRETENIR_L_OUTIL.entreprises,
@@ -85,7 +85,7 @@ export const ENTRETENIR_AU_SEUIL: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La proposition du gérant",
+      titre: "La proposition du président",
       texte: (c) => {
         const r = entretienAuSeuil(c);
         return [
@@ -132,7 +132,7 @@ export const ENTRETENIR_AU_SEUIL: Situation = {
       explication: (c) => {
         const r = entretienAuSeuil(c);
         return [
-          `Au seuil, la ligne ne s'use plus : partie à 100 %, elle y reste toute l'année, et aucune vente ne se perd par l'outil, pas même aux trimestres où il est le goulot. ${r.f.entreprise} économiserait ${eur(r.s.economie)}. Le gérant a raison sur la ligne. Reste la qualité.`,
+          `Au seuil, la ligne ne s'use plus : partie à 100 %, elle y reste toute l'année, et aucune vente ne se perd par l'outil, pas même aux trimestres où il est le goulot. ${r.f.entreprise} économiserait ${eur(r.s.economie)}. Le président a raison sur la ligne. Reste la qualité.`,
         ];
       },
     },
@@ -257,15 +257,15 @@ export const ENTRETENIR_AU_SEUIL: Situation = {
       explication: (c) => {
         const r = entretienAuSeuil(c);
         return [
-          `L'économie paierait ${qte(r.defautsQueLEconomiePaie)} défauts ; le seuil en ajoute ${qte(r.defautsEnPlus)}, plus du double. L'entretien au seuil fait baisser le résultat de ${eur(-r.s.ecartDeResultat)}. Sans compter les défauts, on trouverait ${eur(r.s.ecartParLaDisponibilite)} : c'est le calcul du gérant, juste sur la ligne, faux sur l'année.`,
+          `L'économie paierait ${qte(r.defautsQueLEconomiePaie)} défauts ; le seuil en ajoute ${qte(r.defautsEnPlus)}, plus du double. L'entretien au seuil fait baisser le résultat de ${eur(-r.s.ecartDeResultat)}. Sans compter les défauts, on trouverait ${eur(r.s.ecartParLaDisponibilite)} : c'est le calcul du président, juste sur la ligne, faux sur l'année.`,
         ];
       },
     },
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse au gérant",
-      question: () => "Quelle phrase envoyez-vous au gérant ?",
+      titre: "Votre réponse au président",
+      question: () => "Quelle phrase envoyez-vous au président ?",
       options: (c) => {
         const r = entretienAuSeuil(c);
         const v = r.verdict;

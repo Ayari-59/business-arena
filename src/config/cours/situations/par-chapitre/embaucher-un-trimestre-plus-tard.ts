@@ -10,7 +10,7 @@ import type { Situation } from "../types";
  * humaines, palier 1).
  *
  * Le laboratoire du chapitre l'a montré : pour servir toute la demande de N + 1, NOVA ajoute un
- * cinquième poste à sa ligne et recrute quelqu'un pour le tenir. Le gérant propose de lancer le
+ * cinquième poste à sa ligne et recrute quelqu'un pour le tenir. Le président propose de lancer le
  * recrutement un trimestre plus tard qu'au chapitre, en avril, pour payer moins de mois de salaire.
  * L'élève refait les calculs du chapitre pour les deux dates (le coût de l'embauche, les enceintes
  * qu'elle fait monter de plus que le poste seul), puis répond.
@@ -24,7 +24,7 @@ import type { Situation } from "../types";
  * 800 enceintes de plus.
  */
 
-/** Le mois où le gérant propose de lancer le recrutement : un trimestre après celui du chapitre. */
+/** Le mois où le président propose de lancer le recrutement : un trimestre après celui du chapitre. */
 export const MOIS_DU_RECRUTEMENT_DECALE = MOIS_DU_RECRUTEMENT + 3;
 
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
@@ -50,14 +50,14 @@ export const EMBAUCHER_UN_TRIMESTRE_PLUS_TARD: Situation = {
   palier: 1,
   blocs: [],
   reprend: ["recruter"],
-  commanditaire: "Le gérant",
+  commanditaire: "Le président",
   titre: "Embaucher un trimestre plus tard",
-  accroche: "Le gérant veut lancer le recrutement un trimestre plus tard, pour payer moins de mois de salaire. Ce que coûte l'embauche décalée, et ce qu'elle fait encore vendre.",
+  accroche: "Le président veut lancer le recrutement un trimestre plus tard, pour payer moins de mois de salaire. Ce que coûte l'embauche décalée, et ce qu'elle fait encore vendre.",
   objectifs: [
     "Calculer le coût d'une embauche selon le mois où on la lance",
     "Mesurer les ventes qu'une embauche fait gagner, selon sa date",
     "Comparer l'économie d'une attente aux ventes qu'elle fait perdre",
-    "Répondre au gérant, chiffre à l'appui",
+    "Répondre au président, chiffre à l'appui",
   ],
   libre: false,
   entreprises: {
@@ -68,11 +68,11 @@ export const EMBAUCHER_UN_TRIMESTRE_PLUS_TARD: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La demande du gérant",
+      titre: "La demande du président",
       texte: () => {
         const k = embaucheDecalee();
         return [
-          `« Le cinquième poste est commandé, et il faudra quelqu'un pour le tenir. Mais pourquoi lancer le recrutement dès ${mois(MOIS_DU_RECRUTEMENT)} ? En le lançant en ${mois(MOIS_DU_RECRUTEMENT_DECALE)}, la recrue arrive le 1er ${mois(k.tard.arrivee!)} au lieu du 1er ${mois(k.tot.arrivee!)}, et nous payons ${qte(k.tot.moisDeLaRecrue - k.tard.moisDeLaRecrue)} mois de salaire de moins. Dites-moi ce que nous y gagnons, et ce que nous y perdons. » Le gérant`,
+          `« Le cinquième poste est commandé, et il faudra quelqu'un pour le tenir. Mais pourquoi lancer le recrutement dès ${mois(MOIS_DU_RECRUTEMENT)} ? En le lançant en ${mois(MOIS_DU_RECRUTEMENT_DECALE)}, la recrue arrive le 1er ${mois(k.tard.arrivee!)} au lieu du 1er ${mois(k.tot.arrivee!)}, et nous payons ${qte(k.tot.moisDeLaRecrue - k.tard.moisDeLaRecrue)} mois de salaire de moins. Dites-moi ce que nous y gagnons, et ce que nous y perdons. » Le président`,
           "Pas de cours cette fois : les calculs sont ceux du chapitre. Les enceintes de la recrue se comptent face au cinquième poste tenu par l'équipe actuelle.",
         ];
       },
@@ -138,8 +138,8 @@ export const EMBAUCHER_UN_TRIMESTRE_PLUS_TARD: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse au gérant",
-      question: () => "Que répondez-vous au gérant ?",
+      titre: "Votre réponse au président",
+      question: () => "Que répondez-vous au président ?",
       options: () => {
         const k = embaucheDecalee();
         return [

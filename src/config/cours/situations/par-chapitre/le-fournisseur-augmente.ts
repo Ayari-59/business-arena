@@ -13,7 +13,7 @@ const que = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈÊ]/.test(nom) ? `qu'${no
  * CAS PRATIQUE DU CHAPITRE « PRIX, COÛT ET MARGE » : LE FOURNISSEUR AUGMENTE SES PRIX
  * (contrôle de gestion, palier 1).
  *
- * Le fournisseur annonce une hausse de ses tarifs. Le gérant veut garder le même taux de
+ * Le fournisseur annonce une hausse de ses tarifs. Le président veut garder le même taux de
  * marque, et demande à quel prix il faudra vendre. L'élève refait seul le chemin du
  * chapitre : le coût d'une unité, sa marge, le taux de marque, ce qu'ils deviennent si le
  * prix ne bouge pas, puis le prix qui rend le même taux de marque.
@@ -75,15 +75,15 @@ export const LE_FOURNISSEUR_AUGMENTE: Situation = {
   palier: 1,
   blocs: [],
   reprend: ["prix-cout-et-marge"],
-  commanditaire: "Le gérant",
+  commanditaire: "Le président",
   titre: "Le fournisseur augmente ses prix",
   accroche:
-    "Le fournisseur annonce une hausse de ses tarifs. Le gérant veut garder le même taux de marque : à quel prix faudra-t-il vendre ?",
+    "Le fournisseur annonce une hausse de ses tarifs. Le président veut garder le même taux de marque : à quel prix faudra-t-il vendre ?",
   objectifs: [
     "Calculer le coût d'une unité, sa marge et son taux de marque",
     "Mesurer ce qu'une hausse des achats retire à la marge quand le prix ne bouge pas",
     "Calculer le prix de vente qui garde le même taux de marque",
-    "Rédiger une réponse chiffrée au gérant",
+    "Rédiger une réponse chiffrée au président",
   ],
   libre: false,
   entreprises: { codes: ENTREPRISES_DE_LA_GESTION_DE_BASE, pourquoi: POURQUOI_PRIX_COUT_MARGE },
@@ -91,7 +91,7 @@ export const LE_FOURNISSEUR_AUGMENTE: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La demande du gérant",
+      titre: "La demande du président",
       texte: (c) => [
         `« Notre fournisseur augmente ses prix de ${pct(HAUSSE_DES_ACHATS * 100)} le mois prochain. Je ne veux pas ${que(c.entreprise)} y perde : je veux garder le même taux de marque qu'aujourd'hui. À quel prix de vente moyen, hors taxes, faudra-t-il passer ? »`,
         "Pas de cours cette fois : vous avez les chiffres du mois, et la méthode est celle du chapitre. À vous de l'enchaîner.",
@@ -130,7 +130,7 @@ export const LE_FOURNISSEUR_AUGMENTE: Situation = {
       explication: (c) => {
         const r = fournisseurQuiAugmente(c);
         return [
-          `Aujourd'hui, ${pct(r.tauxDeMarque)} du prix de vente restent à ${c.entreprise} une fois payé ce que coûte l'unité. C'est ce taux que le gérant veut garder.`,
+          `Aujourd'hui, ${pct(r.tauxDeMarque)} du prix de vente restent à ${c.entreprise} une fois payé ce que coûte l'unité. C'est ce taux que le président veut garder.`,
         ];
       },
     },
@@ -191,8 +191,8 @@ export const LE_FOURNISSEUR_AUGMENTE: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse au gérant",
-      question: () => "Quelle phrase envoyez-vous au gérant ?",
+      titre: "Votre réponse au président",
+      question: () => "Quelle phrase envoyez-vous au président ?",
       options: (c) => {
         const r = fournisseurQuiAugmente(c);
         return [
@@ -204,7 +204,7 @@ export const LE_FOURNISSEUR_AUGMENTE: Situation = {
           {
             texte: `Il suffira d'ajouter la hausse au prix : ${eur(r.prixPlusLaHausse)} hors taxes, pour la même marge`,
             juste: false,
-            retour: `Non : la marge d'une unité resterait de ${eur(r.marge)}, mais rapportée à un prix plus élevé. Le taux de marque tomberait sous ${pct(r.tauxDeMarque)}, et le gérant veut garder le taux.`,
+            retour: `Non : la marge d'une unité resterait de ${eur(r.marge)}, mais rapportée à un prix plus élevé. Le taux de marque tomberait sous ${pct(r.tauxDeMarque)}, et le président veut garder le taux.`,
           },
           {
             texte: `Il faudra monter le prix de ${pct(HAUSSE_DES_ACHATS * 100)}, comme les achats : ${eur(r.prixHausseDuTaux)} hors taxes`,

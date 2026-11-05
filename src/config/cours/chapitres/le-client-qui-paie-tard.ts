@@ -238,7 +238,10 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
   code: "le-client-qui-paie-tard",
   parcours: "gpme",
   palier: 2,
-  blocs: ["BTS GPME Bloc 1 · Gérer la relation avec les clients et les fournisseurs de la PME"],
+  blocs: [
+    "BTS GPME Bloc 1 · Gérer la relation avec les clients et les fournisseurs de la PME",
+    "BTS CG P1 · Contrôle et traitement comptable des opérations commerciales",
+  ],
   titre: "Le client qui paie tard : délai, escompte et affacturage",
   accroche:
     "Un client professionnel paie 20 jours après l'échéance convenue : c'est un retard, et la loi le sanctionne. Les créances facture par facture, le coût du crédit et du retard, ce que l'entreprise peut réclamer, puis le découvert, l'escompte et l'affacturage : ce qu'ils coûtent, et quand chacun vaut mieux.",

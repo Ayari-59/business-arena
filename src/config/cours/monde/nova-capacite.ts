@@ -370,9 +370,11 @@ export const FORMULES: readonly FormuleDAssurance[] = [
  *     de la gamme à venir, et le dirigeant n'y touche pas. Il garde un matelas de 10 000 € (le seuil
  *     d'alerte de la trésorerie de nova-gestion.ts).
  *   - LES CAPITAUX PROPRES : 229 225,96 €, le capital de 150 000 € et le résultat de N
- *     (79 225,96 €), qui reste dans l'entreprise. HYPOTHÈSE DU COURS : un sinistre qui les ferait
- *     tomber sous la moitié du capital social (75 000 €) met l'entreprise en danger ; c'est le seuil
- *     où la loi oblige les associés à décider s'ils continuent.
+ *     (79 225,96 €), qui reste dans l'entreprise jusqu'à l'assemblée de juin N + 1 (le dividende de
+ *     l'affectation unique du cours, comptabilite-approfondie.ts, ne sort qu'alors). HYPOTHÈSE DU
+ *     COURS : un sinistre qui les ferait tomber sous la moitié du capital social (75 000 €) met
+ *     l'entreprise en danger ; c'est le seuil où la loi oblige les actionnaires à décider s'ils
+ *     continuent.
  * Le cours compte un sinistre pour son coût entier, avant impôt.
  */
 export const CAPACITE_D_ABSORPTION = {

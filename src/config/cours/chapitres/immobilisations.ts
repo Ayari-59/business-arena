@@ -76,6 +76,12 @@ export const DATE_DE_REVENTE: DateDuCours = { jour: 30, mois: 6, exercice: 2 };
 /** La mise en service de l'équipement du calcul à rebours : un équipement identique, mis en service le 21 septembre. */
 export const MISE_EN_SERVICE_A_REBOURS: DateDuCours = { jour: 21, mois: 9 };
 
+/**
+ * LE TAUX DE TVA DE LA CESSION : la revente d'un bien d'équipement dont la TVA a été déduite est
+ * soumise à la TVA au taux normal, quel que soit le taux de l'activité. // À VÉRIFIER (taux et régime de la cession d'un bien meuble d'investissement)
+ */
+export const TAUX_DE_TVA_DE_LA_CESSION = 0.2;
+
 /** Le taux d'impôt sur les sociétés de la critique du dégressif : le taux normal, celui d'un bénéfice au-delà du taux réduit. */
 export const TAUX_D_IMPOT = 0.25;
 
@@ -187,6 +193,8 @@ export function planDAmortissement(c: Cas) {
     vncRevente: revente.valeurNette,
     prixRevente,
     resultatRevente: revente.resultat,
+    tvaRevente: auCentime(prixRevente * TAUX_DE_TVA_DE_LA_CESSION),
+    prixReventeTtc: auCentime(prixRevente * (1 + TAUX_DE_TVA_DE_LA_CESSION)),
     vncReventeDegressive: reventeDegressive.valeurNette,
     resultatReventeDegressive: reventeDegressive.resultat,
     coefficient,
@@ -607,6 +615,51 @@ export const IMMOBILISATIONS: Chapitre = {
         const sens = p.resultatRevente >= 0 ? `une plus-value de ${eur(p.resultatRevente)}` : `une moins-value de ${eur(-p.resultatRevente)}`;
         return [
           `Avant de sortir l'équipement des comptes, on l'amortit jusqu'au jour de la revente. Il vaut alors ${eur(p.vncRevente)} ; le repreneur en donne ${eur(p.prixRevente)} : ${sens}. Au journal, la valeur nette sort en charge (675, valeur comptable des éléments d'actif cédés) et le prix entre en produit (775, produits des cessions d'éléments d'actif).`,
+        ];
+      },
+    },
+    {
+      // K4 (BTS CG P2 2.3.2) : la cession au journal, la sortie de l'équipement et de ses amortissements.
+      // À VÉRIFIER : la place des comptes 675 et 775 après le règlement ANC 2022-06 (exercices ouverts depuis le 1er janvier 2025),
+      // et la phrase sur l'impôt (plus-values à court et long terme à l'impôt sur le revenu, taux normal à l'impôt sur les sociétés).
+      id: "la-cession-au-journal",
+      objectifs: [3],
+      type: "ecriture",
+      titre: "La cession, au journal",
+      notions: ["depreciation"],
+      evenement: (c) => {
+        const p = planDAmortissement(c);
+        return `Le ${dateDuPlan(DATE_DE_REVENTE)}, la dotation de l'année jusqu'à ce jour est passée (${eur(p.dotationRevente)}). ${c.entreprise} cède l'équipement au repreneur, ${eur(p.prixRevente)} hors taxes et ${eur(p.tvaRevente)} de TVA, payables à 30 jours. Passez en une écriture la sortie de l'équipement et de ses amortissements, et la cession.`;
+      },
+      ecriture: (c) => {
+        const p = planDAmortissement(c);
+        const i = c.immobilisation;
+        return {
+          date: dateDuPlan(DATE_DE_REVENTE),
+          libelle: `Cession : ${i.designation}`,
+          lignes: [
+            { role: "les amortissements cumulés, qui sortent", compte: p.compteAmortissement, acceptes: ["281"], sens: "debit", montant: p.cumulRevente, indice: "tout ce qui a été amorti, jusqu'au jour de la cession" },
+            { role: "la valeur nette comptable, en charge", compte: "675", sens: "debit", montant: p.vncRevente, indice: "la valeur brute moins les amortissements cumulés" },
+            { role: "l'équipement, qui sort à sa valeur brute", compte: i.compte, acceptes: i.acceptes, sens: "credit", montant: p.base, indice: "la valeur d'entrée de l'équipement" },
+            { role: "la créance sur le repreneur", compte: "462", sens: "debit", montant: p.prixReventeTtc, indice: "le prix, taxes comprises" },
+            { role: "la TVA collectée sur la cession", compte: "44571", sens: "credit", montant: p.tvaRevente, indice: "la TVA du prix de cession" },
+            { role: "le prix de cession, en produit", compte: "775", sens: "credit", montant: p.prixRevente, indice: "le prix hors taxes" },
+          ],
+        };
+      },
+      indices: (c) => {
+        const p = planDAmortissement(c);
+        return [
+          `L'équipement sort à sa valeur brute (${eur(p.base)}), ses amortissements avec lui (${eur(p.cumulRevente)}) : ce qui reste, la valeur nette, passe en charge au 675.`,
+          "Le prix se constate à part : en produit au 775, hors taxes ; la créance sur le repreneur au 462, taxes comprises ; la TVA collectée au 44571.",
+        ];
+      },
+      explication: (c) => {
+        const p = planDAmortissement(c);
+        const sens = p.resultatRevente >= 0 ? `une plus-value de ${eur(p.resultatRevente)}` : `une moins-value de ${eur(-p.resultatRevente)}`;
+        return [
+          `Le compte ${c.immobilisation.compte} et le compte ${p.compteAmortissement} sont soldés : l'équipement n'est plus à l'actif. Au compte de résultat, ${eur(p.prixRevente)} au 775 face à ${eur(p.vncRevente)} au 675 font ${sens}, celle que vous avez calculée.`,
+          "Pour l'impôt, une entreprise à l'impôt sur le revenu découpe ce résultat en plus ou moins-value à court et à long terme. Une société à l'impôt sur les sociétés le taxe avec son résultat, au taux normal (le chapitre « L'impôt sur les sociétés »).",
         ];
       },
     },

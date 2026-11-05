@@ -22,7 +22,7 @@ import type { Chapitre } from "../types";
  * CHAPITRE : UNE DONNÉE FAUSSE, UNE DÉCISION FAUSSE (Bac STMG, systèmes d'information de
  * gestion, palier 1).
  *
- * La qualité des données. À la fin du trimestre 3, le gérant de NOVA prépare le trimestre 4 : il
+ * La qualité des données. À la fin du trimestre 3, le président de NOVA prépare le trimestre 4 : il
  * cale son plan de production sur la moyenne des ventes des trimestres 1 à 3, lue dans un extrait
  * du tableur de gestion (les ventes, le prix, le chiffre d'affaires de chaque trimestre). Une
  * erreur de saisie s'y est glissée : la virgule des ventes du trimestre 3 a glissé d'un rang.
@@ -99,7 +99,7 @@ export const UNE_DONNEE_FAUSSE: Chapitre = {
       titre: "Un extrait du tableur à vérifier",
       notions: ["revenue", "dashboard"],
       texte: (c) => [
-        `À la fin du trimestre ${DERNIER}, le gérant ${dE(c.entreprise)} prépare le trimestre ${D}. Il cale son plan de production sur une prévision simple : la moyenne des ventes des trimestres ${PREMIER} à ${DERNIER}. Il la calcule sur un extrait du tableur de gestion.`,
+        `À la fin du trimestre ${DERNIER}, le président ${dE(c.entreprise)} prépare le trimestre ${D}. Il cale son plan de production sur une prévision simple : la moyenne des ventes des trimestres ${PREMIER} à ${DERNIER}. Il la calcule sur un extrait du tableur de gestion.`,
         "Une donnée de cet extrait est fausse : une erreur de saisie s'y est glissée. Avant de décider, il faut contrôler la qualité des données. Une donnée de qualité est exacte (elle dit la vraie valeur), complète (rien ne manque) et cohérente (elle s'accorde avec les autres).",
         `Les ventes sont celles de l'année N ${dE(c.entreprise)} ; le chiffre d'affaires vient des factures. Seule l'erreur est ajoutée par le cours.`,
       ],

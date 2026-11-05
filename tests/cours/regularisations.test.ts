@@ -437,7 +437,7 @@ describe("le cas : l'assurance sur plusieurs années", () => {
 
   it("tient la forme d'un cas dédié, et reprend la prime de la fiche", () => {
     casDedie(s, ch);
-    expect(s.commanditaire).toBe("La gérante");
+    expect(s.commanditaire).toBe("La présidente");
     expect([DUREE_DU_CONTRAT_EN_MOIS, REMISE_SUR_DEUX_ANS]).toEqual([24, 0.05]);
     expect(f.assurance).toEqual({ prime: PRIME, date: { jour: 1, mois: SOUSCRIPTION }, moisCouverts: MOIS_COUVERTS });
   });

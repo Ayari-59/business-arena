@@ -115,7 +115,7 @@ describe("les deux résultats, refaits à la main", () => {
   it("le tri et les bonnes réponses", () => {
     const t = triDe(ch, "trier-les-charges");
     expect(Object.values(t).filter((c) => c === "non")).toHaveLength(5);
-    expect(t["Travail de la gérante, non payé"]).toBe("supletive");
+    expect(t["Travail de la présidente, non payé"]).toBe("supletive");
     expect(t["Prime d'assurance de l'exercice"]).toBe("incorporee");
     expect(juste(ch, "le-sens-du-boni")).toEqual(["S'ajoute au résultat analytique"]);
     expect(juste(ch, "le-pari-de-la-gerante")).toEqual(["Ne bougerait pas"]);
@@ -124,7 +124,7 @@ describe("les deux résultats, refaits à la main", () => {
 });
 
 describe("le curseur et le laboratoire", () => {
-  it("le curseur : 117 105,05 € sans la gérante, positif jusqu'à 9 758 € par mois", () => {
+  it("le curseur : 117 105,05 € sans la présidente, positif jusqu'à 9 758 € par mois", () => {
     expect(cent(66_705.05 + 50_400)).toBe(117_105.05);
     expect(Math.floor(117_105.05 / 12)).toBe(9_758);
     gardeDuCurseur(ch, "jusqu-ou-la-gerante", 9_758);
@@ -140,7 +140,7 @@ describe("le curseur et le laboratoire", () => {
   });
 });
 
-describe("le cas dédié : si la gérante se payait", () => {
+describe("le cas dédié : si la présidente se payait", () => {
   it("est le cas du chapitre, et passe les gardes du cas", () => {
     expect(CAS_PAR_CHAPITRE).toContain(SI_LA_GERANTE_SE_PAYAIT);
     gardeDuCas(SI_LA_GERANTE_SE_PAYAIT, ch);

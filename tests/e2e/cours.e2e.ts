@@ -1045,6 +1045,41 @@ describe.each([
   { code: "le-plateau-de-teleacteurs", entreprise: "conseil" },
   { code: "le-plateau-de-teleacteurs", entreprise: "conseil", telephone: true },
   { code: "la-ligne-de-la-rentree", entreprise: "conseil", telephone: true },
+  // Le BTS CG P1 : le cadre de la comptabilité (des tris, un laboratoire à choix), les ventes et achats au complet (des écritures, un curseur, un laboratoire), puis leurs cas.
+  { code: "le-cadre-de-la-comptabilite", entreprise: "nova" },
+  { code: "le-cadre-de-la-comptabilite", entreprise: "nova", telephone: true },
+  { code: "ventes-et-achats-au-complet", entreprise: "nova" },
+  { code: "ventes-et-achats-au-complet", entreprise: "nova", telephone: true },
+  { code: "creer-l-atelier-de-reparation", entreprise: "nova" },
+  { code: "la-commande-de-noel-de-campustech", entreprise: "nova", telephone: true },
+  // Le BTS CG P1 : le compte client (NOVA) et fournisseurs et banque (MAILLE & CO) : des écritures, des tableaux à compléter, un curseur, des laboratoires, puis leurs cas.
+  { code: "le-compte-client", entreprise: "nova" },
+  { code: "le-compte-client", entreprise: "nova", telephone: true },
+  { code: "fournisseurs-et-banque", entreprise: "boutique" },
+  { code: "fournisseurs-et-banque", entreprise: "boutique", telephone: true },
+  { code: "vibra-repasse-commande", entreprise: "nova" },
+  { code: "le-cheque-qui-n-est-pas-passe", entreprise: "boutique", telephone: true },
+  // Le BTS CG P1 et P2, agent C : sécuriser les processus (un laboratoire à choix, deux tableaux à trier, un cadrage à compléter), le dossier de révision (sept écritures, un laboratoire, le dossier à compléter), puis leurs cas.
+  { code: "securiser-les-processus", entreprise: "nova" },
+  { code: "securiser-les-processus", entreprise: "nova", telephone: true },
+  { code: "le-dossier-de-revision", entreprise: "nova" },
+  { code: "le-dossier-de-revision", entreprise: "nova", telephone: true },
+  { code: "la-facture-recue-deux-fois", entreprise: "nova" },
+  { code: "la-garantie-de-deux-ans", entreprise: "nova", telephone: true },
+  // Le BTS CG P2 : les capitaux propres (écritures, un curseur, un laboratoire) et les comptes annuels (tableaux à compléter, un laboratoire), puis leurs cas.
+  { code: "les-capitaux-propres", entreprise: "nova" },
+  { code: "les-capitaux-propres", entreprise: "nova", telephone: true },
+  { code: "les-comptes-annuels", entreprise: "nova" },
+  { code: "les-comptes-annuels", entreprise: "nova", telephone: true },
+  { code: "un-dividende-plus-gros", entreprise: "nova" },
+  { code: "la-situation-de-septembre", entreprise: "nova", telephone: true },
+  // Le BTS CG P1 et P2 : acquérir et financer une immobilisation, l'initiation à la consolidation (un laboratoire chacun, un tableau à compléter pour la seconde), puis leurs cas.
+  { code: "acquerir-et-financer-une-immobilisation", entreprise: "nova" },
+  { code: "acquerir-et-financer-une-immobilisation", entreprise: "nova", telephone: true },
+  { code: "initiation-a-la-consolidation", entreprise: "nova" },
+  { code: "initiation-a-la-consolidation", entreprise: "nova", telephone: true },
+  { code: "la-cabine-subventionnee", entreprise: "nova" },
+  { code: "le-directeur-veut-plus-d-actions", entreprise: "nova", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se

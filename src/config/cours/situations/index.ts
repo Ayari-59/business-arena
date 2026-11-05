@@ -195,6 +195,16 @@ import { L_AVIS_A_UNE_ETOILE } from "./par-chapitre/l-avis-a-une-etoile";
 import { LA_CENTRALE_DEMANDE_UNE_RISTOURNE } from "./par-chapitre/la-centrale-demande-une-ristourne";
 import { UN_POURCENTAGE_POUR_LA_MARRAINE } from "./par-chapitre/un-pourcentage-pour-la-marraine";
 import { LA_LIGNE_DE_LA_RENTREE } from "./par-chapitre/la-ligne-de-la-rentree";
+import { CREER_L_ATELIER_DE_REPARATION } from "./par-chapitre/creer-l-atelier-de-reparation";
+import { LA_COMMANDE_DE_NOEL_DE_CAMPUSTECH } from "./par-chapitre/la-commande-de-noel-de-campustech";
+import { VIBRA_REPASSE_COMMANDE } from "./par-chapitre/vibra-repasse-commande";
+import { LE_CHEQUE_QUI_N_EST_PAS_PASSE } from "./par-chapitre/le-cheque-qui-n-est-pas-passe";
+import { LA_FACTURE_RECUE_DEUX_FOIS } from "./par-chapitre/la-facture-recue-deux-fois";
+import { LA_GARANTIE_DE_DEUX_ANS } from "./par-chapitre/la-garantie-de-deux-ans";
+import { UN_DIVIDENDE_PLUS_GROS } from "./par-chapitre/un-dividende-plus-gros";
+import { LA_SITUATION_DE_SEPTEMBRE } from "./par-chapitre/la-situation-de-septembre";
+import { LA_CABINE_SUBVENTIONNEE } from "./par-chapitre/la-cabine-subventionnee";
+import { LE_DIRECTEUR_VEUT_PLUS_D_ACTIONS } from "./par-chapitre/le-directeur-veut-plus-d-actions";
 export type { Situation } from "./types";
 
 /**
@@ -405,6 +415,16 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LA_CENTRALE_DEMANDE_UNE_RISTOURNE,
   UN_POURCENTAGE_POUR_LA_MARRAINE,
   LA_LIGNE_DE_LA_RENTREE,
+  CREER_L_ATELIER_DE_REPARATION,
+  LA_COMMANDE_DE_NOEL_DE_CAMPUSTECH,
+  VIBRA_REPASSE_COMMANDE,
+  LE_CHEQUE_QUI_N_EST_PAS_PASSE,
+  LA_FACTURE_RECUE_DEUX_FOIS,
+  LA_GARANTIE_DE_DEUX_ANS,
+  UN_DIVIDENDE_PLUS_GROS,
+  LA_SITUATION_DE_SEPTEMBRE,
+  LA_CABINE_SUBVENTIONNEE,
+  LE_DIRECTEUR_VEUT_PLUS_D_ACTIONS,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

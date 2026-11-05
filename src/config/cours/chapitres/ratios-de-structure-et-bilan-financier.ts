@@ -127,7 +127,7 @@ function bilanEtInformations(c: Pick<Cas, "code">): TableauDeDonnees {
       l("Emprunt : échéances des 12 mois à venir", eur(s.financier.echeancesAMoinsDUnAn)),
       l("Litige : jugement attendu", "en mai N+1"),
       l("Compte à terme : échéance", "le 6 janvier N+1"),
-      l("Dividende voté sur le résultat", "aucun"),
+      l("Dividende voté sur le résultat, à payer en juin N+1", eur(p.dividende)),
     ],
   };
 }
@@ -153,14 +153,15 @@ export function grilleDuBilanFinancier(c: Pick<Cas, "code">): TableauACompleter 
       { libelle: "Total de l'actif", fort: true, totalDe: { plus: [0, 5] }, cellules: [aSaisir(b.totalActif, `${eur(b.actifPlusDUnAn)} + ${eur(b.actifMoinsDUnAn)} = ${eur(b.totalActif)}`)] },
       {
         libelle: "Capitaux propres, moins-value latente déduite",
-        cellules: [aSaisir(b.capitauxPropres, `${eur(p.capital)} + ${eur(p.resultat)} − ${eur(b.moinsValueLatente)} = ${eur(b.capitauxPropres)}`, { indice: "la moins-value : la valeur nette de la ligne moins sa valeur de revente" })],
+        cellules: [aSaisir(b.capitauxPropres, `${eur(p.capital)} + ${eur(p.resultat)} − ${eur(p.dividende)} − ${eur(b.moinsValueLatente)} = ${eur(b.capitauxPropres)}`, { indice: "le dividende voté sort des capitaux propres ; la moins-value : la valeur nette de la ligne moins sa valeur de revente" })],
       },
       { libelle: "Dettes à plus d'un an : l'emprunt au-delà de 12 mois", cellules: [aSaisir(b.dettesPlusDUnAn, `${eur(p.capitalRestantDu)} − ${eur(b.echeancesAMoinsDUnAn)} = ${eur(b.dettesPlusDUnAn)}`, { indice: "le capital restant dû, moins les échéances de l'année" })] },
       { libelle: "Emprunt : échéances des 12 mois à venir", cellules: [aSaisir(b.echeancesAMoinsDUnAn, `les échéances de capital de l'année : ${eur(b.echeancesAMoinsDUnAn)}`)] },
       { libelle: "Provision pour litige, jugée en mai", cellules: [donnee(p.provision)] },
       { libelle: "Intérêts courus, fournisseurs, dettes fiscales et sociales, produit constaté d'avance", cellules: [donnee(b.autresDettesAMoinsDUnAn)] },
-      { libelle: "Dettes à moins d'un an", fort: true, totalDe: { plus: [9, 10, 11] }, cellules: [aSaisir(b.dettesMoinsDUnAn, `${eur(b.echeancesAMoinsDUnAn)} + ${eur(p.provision)} + ${eur(b.autresDettesAMoinsDUnAn)} = ${eur(b.dettesMoinsDUnAn)}`)] },
-      { libelle: "Total du passif", fort: true, totalDe: { plus: [7, 8, 12] }, cellules: [aSaisir(b.totalPassif, `${eur(b.capitauxPropres)} + ${eur(b.dettesPlusDUnAn)} + ${eur(b.dettesMoinsDUnAn)} = ${eur(b.totalPassif)}`)] },
+      { libelle: "Dividende voté, à payer en juin", cellules: [donnee(p.dividende)] },
+      { libelle: "Dettes à moins d'un an", fort: true, totalDe: { plus: [9, 10, 11, 12] }, cellules: [aSaisir(b.dettesMoinsDUnAn, `${eur(b.echeancesAMoinsDUnAn)} + ${eur(p.provision)} + ${eur(b.autresDettesAMoinsDUnAn)} + ${eur(p.dividende)} = ${eur(b.dettesMoinsDUnAn)}`)] },
+      { libelle: "Total du passif", fort: true, totalDe: { plus: [7, 8, 13] }, cellules: [aSaisir(b.totalPassif, `${eur(b.capitauxPropres)} + ${eur(b.dettesPlusDUnAn)} + ${eur(b.dettesMoinsDUnAn)} = ${eur(b.totalPassif)}`)] },
     ],
   };
 }
@@ -206,7 +207,7 @@ export const RATIOS_DE_STRUCTURE: Chapitre = {
           `Ce chapitre se joue dans la simulation du cours, sur le bilan de ${s.entreprise} au 31 décembre de son premier exercice : celui que vous avez relu par fonction, avec sa capacité d'autofinancement de ${eur(s.caf)}.`,
           `Le bilan fonctionnel répond à une question : le cycle d'investissement est-il financé durablement ? Les ratios de structure la chiffrent. La banque qui prête à ${DUREE_DU_NOUVEL_EMPRUNT} ans s'en sert.`,
           "Le bilan financier répond à une autre : si les choses tournent mal, l'entreprise paiera-t-elle ses dettes ? Il range l'actif selon sa liquidité et le passif selon son exigibilité, à plus ou à moins d'un an, à la valeur qu'on en tirerait.",
-          `La simulation suppose : aucun dividende sur ce premier exercice, un litige jugé en mai N+1, un compte à terme qui revient le 6 janvier, et une ligne qui se revendrait ${pct(PART_DU_PRIX_NEUF_A_LA_REVENTE * 100)} de son prix neuf. Le laboratoire ajoute les siennes, dites à chaque fois.`,
+          `La simulation suppose : un dividende de ${eur(s.postes.dividende)} voté en juin N+1, un litige jugé en mai N+1, un compte à terme qui revient le 6 janvier, et une ligne qui se revendrait ${pct(PART_DU_PRIX_NEUF_A_LA_REVENTE * 100)} de son prix neuf. Le laboratoire ajoute les siennes, dites à chaque fois.`,
         ];
       },
       repere: () =>
@@ -352,7 +353,8 @@ export const RATIOS_DE_STRUCTURE: Chapitre = {
           { libelle: "Stock de composants", montant: p.stock, categorie: "actif-moins", pourquoi: "Il sera monté et vendu dans les semaines qui viennent : un actif à moins d'un an." },
           { libelle: "Charge constatée d'avance", montant: p.chargesConstateesDAvance, categorie: "actif-moins", pourquoi: "L'assurance payée d'avance couvre les neuf prochains mois : à moins d'un an." },
           { libelle: "Compte à terme, échéance le 6 janvier", montant: p.placement, categorie: "actif-moins", pourquoi: "Il revient en banque dans quelques jours, intérêts compris : à moins d'un an." },
-          { libelle: "Résultat de l'exercice, sans dividende", montant: p.resultat, categorie: "propres", pourquoi: "Rien n'est distribué : tout le résultat reste aux capitaux propres. Un dividende voté, lui, serait une dette à moins d'un an." },
+          { libelle: "Résultat de l'exercice, dividende déduit", montant: auCentime(p.resultat - p.dividende), categorie: "propres", pourquoi: "Les réserves et le report à nouveau que vote l'assemblée restent dans l'entreprise : des capitaux propres." },
+          { libelle: "Dividende voté, à payer en juin", montant: p.dividende, categorie: "dettes-moins", pourquoi: "Après répartition, le dividende quitte les capitaux propres : NOVA le doit à ses actionnaires dans l'année, une dette à moins d'un an." },
           { libelle: "Moins-value latente sur la ligne", montant: b.moinsValueLatente, categorie: "propres", pourquoi: "La ligne vaut moins que sa valeur comptable : l'écart se retranche de l'actif et des capitaux propres." },
           { libelle: "Emprunt, capital dû au-delà de 12 mois", montant: b.dettesPlusDUnAn, categorie: "dettes-plus", pourquoi: "Ces échéances tombent après l'an prochain : des dettes à plus d'un an." },
           { libelle: "Emprunt, échéances des 12 mois à venir", montant: b.echeancesAMoinsDUnAn, categorie: "dettes-moins", pourquoi: "Les échéances de capital de l'année tombent dans les 12 mois : elles quittent les dettes à long terme pour les dettes à moins d'un an." },
@@ -365,7 +367,7 @@ export const RATIOS_DE_STRUCTURE: Chapitre = {
       explication: (c) => {
         const s = structureDuCas(c);
         return [
-          `Trois reclassements séparent le bilan financier du bilan fonctionnel. L'emprunt se coupe en deux, ${eur(s.financier.echeancesAMoinsDUnAn)} dus dans l'année. La provision devient une dette à court terme. La ligne se lit à sa valeur de revente : ${eur(s.financier.moinsValueLatente)} de moins-value latente, retranchés des capitaux propres.`,
+          `Quatre reclassements séparent le bilan financier du bilan fonctionnel. L'emprunt se coupe en deux, ${eur(s.financier.echeancesAMoinsDUnAn)} dus dans l'année. La provision devient une dette à court terme. Le résultat se lit après sa répartition : le dividende voté, ${eur(s.postes.dividende)}, passe aux dettes à moins d'un an. La ligne se lit à sa valeur de revente : ${eur(s.financier.moinsValueLatente)} de moins-value latente, retranchés des capitaux propres.`,
         ];
       },
     },

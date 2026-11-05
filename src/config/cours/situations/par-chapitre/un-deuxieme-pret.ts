@@ -15,7 +15,7 @@ import type { Situation } from "../types";
  *
  * L'entreprise veut un second équipement, identique au premier. La banque en finance une part, au
  * taux du premier prêt, sur la durée d'usage de l'équipement, et propose deux formules : amortissement
- * constant ou échéances constantes. Le gérant pose une limite : la trésorerie ne peut consacrer à ce
+ * constant ou échéances constantes. Le dirigeant pose une limite : la trésorerie ne peut consacrer à ce
  * prêt qu'un montant donné par trimestre. L'élève calcule les deux premières échéances, cherche au
  * curseur le plus gros prêt que la limite permet en amortissement constant (un calcul à rebours),
  * compare le coût des deux formules, choisit celle qui tient la limite, passe sa première échéance,
@@ -133,7 +133,7 @@ export const UN_DEUXIEME_PRET: Situation = {
   palier: 3,
   blocs: [],
   reprend: ["l-emprunt"],
-  commanditaire: "Le gérant",
+  commanditaire: "Le dirigeant",
   titre: "Un deuxième prêt pour s'équiper",
   accroche:
     "Pour un second équipement, la banque propose deux formules de prêt. La trésorerie ne peut lui consacrer qu'un montant fixé par trimestre : laquelle signer, et que coûtera-t-elle cette année ?",
@@ -149,7 +149,7 @@ export const UN_DEUXIEME_PRET: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La demande du gérant",
+      titre: "La demande du dirigeant",
       texte: (c) => {
         const p = deuxiemePret(c);
         return [
@@ -356,9 +356,9 @@ export const UN_DEUXIEME_PRET: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse au gérant",
+      titre: "Votre réponse au dirigeant",
       notions: ["loan_schedule", "income_statement"],
-      question: () => "Quelle phrase envoyez-vous au gérant ?",
+      question: () => "Quelle phrase envoyez-vous au dirigeant ?",
       options: (c) => {
         const p = deuxiemePret(c);
         const premiere = p.ec[0]!.interets;

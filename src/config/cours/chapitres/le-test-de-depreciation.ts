@@ -12,6 +12,11 @@ import type { Chapitre } from "../types";
  * valeur d'usage (les flux actualisés), passe la dépréciation et refait le plan. Le curseur cherche
  * le flux qui épargne la dépréciation ; le laboratoire montre ce que le taux d'actualisation y fait.
  *
+ * AU BTS CG (P2 2.3.2), l'actualisation des flux pour la valeur actuelle est exclue (décision D7 du
+ * propriétaire, novembre 2026) : la valeur actuelle y est donnée. Le chapitre porte l'étiquette P2 pour
+ * l'indice, la dépréciation, son écriture et le nouveau plan ; les étapes qui actualisent le disent
+ * dans leur titre, « au-delà du BTS ».
+ *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA seule : la ligne de N, 60 000 € sur 6 ans en
  * linéaire (exercice-de-nova.ts), et le test de monde/comptabilite-approfondie.ts.
  */
@@ -24,7 +29,7 @@ export const LE_TEST_DE_DEPRECIATION: Chapitre = {
   code: "le-test-de-depreciation",
   parcours: "dcg-comptabilite-approfondie",
   palier: 4,
-  blocs: ["DCG UE10 · Comptabilité approfondie", "BUT GEA · Produire l'information comptable, fiscale et sociale de l'organisation"],
+  blocs: ["DCG UE10 · Comptabilité approfondie", "BUT GEA · Produire l'information comptable, fiscale et sociale de l'organisation", "BTS CG P2 · Contrôle et production de l'information financière"],
   titre: "Le test de dépréciation d'une immobilisation",
   accroche:
     "Un concurrent technique fait chuter le prix des lignes d'occasion : ce que vaut encore la ligne de montage, à la revente et à l'usage, et ce que la comptabilité en retient.",
@@ -51,6 +56,7 @@ export const LE_TEST_DE_DEPRECIATION: Chapitre = {
         return [
           `La première ligne de ${c.entreprise} a coûté ${eur(t.brut)} ; amortie en linéaire, elle vaudra ${eur(t.valeurNette)} au 31 décembre N + 1. Mais en N + 1, les fabricants vendent une ligne automatique au prix d'une ligne manuelle, et le marché de l'occasion s'effondre.`,
           "À chaque clôture, l'entreprise cherche un indice de perte de valeur. S'il y en a un, elle compare la valeur nette comptable à la valeur actuelle, la plus haute de deux : la valeur vénale (ce qu'elle tirerait de la vente, net des frais) et la valeur d'usage (ce que l'actif lui rapportera encore, actualisé). Si la valeur actuelle est plus basse, l'écart est une dépréciation.",
+          "Au BTS CG, la valeur actuelle est donnée : le calcul de la valeur d'usage par l'actualisation des flux va au-delà du BTS. Les étapes qui le font (la valeur d'usage, le flux qui épargne la dépréciation, le taux d'actualisation) sont celles du DCG. La dépréciation, son écriture et le nouveau plan sont au programme des deux.",
         ];
       },
       repere: () => "Valeur actuelle = la plus haute de la valeur vénale et de la valeur d'usage. Dépréciation = valeur nette comptable − valeur actuelle, si elle est positive.",
@@ -84,7 +90,7 @@ export const LE_TEST_DE_DEPRECIATION: Chapitre = {
       id: "la-valeur-d-usage",
       objectifs: [1],
       type: "montants",
-      titre: "La valeur d'usage",
+      titre: "La valeur d'usage (au-delà du BTS)",
       notions: ["discounting", "depreciation"],
       tableau: () => {
         const t = testDeDepreciation();
@@ -101,7 +107,7 @@ export const LE_TEST_DE_DEPRECIATION: Chapitre = {
           ],
         };
       },
-      question: () => "Calculez la valeur nette comptable, le facteur d'actualisation des flux (au dix-millième), la valeur d'usage, puis la valeur actuelle.",
+      question: () => "Au-delà du BTS, où la valeur actuelle est donnée : calculez la valeur nette comptable, le facteur d'actualisation des flux (au dix-millième), la valeur d'usage, puis la valeur actuelle.",
       champs: () => {
         const t = testDeDepreciation();
         return [
@@ -124,7 +130,7 @@ export const LE_TEST_DE_DEPRECIATION: Chapitre = {
       type: "montants",
       titre: "La dépréciation",
       notions: ["depreciation"],
-      question: () => "Calculez la dépréciation de la ligne au 31 décembre N + 1.",
+      question: () => `Calculez la dépréciation de la ligne au 31 décembre N + 1. Au BTS CG, l'énoncé donnerait la valeur actuelle, ${eur(testDeDepreciation().valeurActuelle)} : le calcul part de là.`,
       champs: () => {
         const t = testDeDepreciation();
         return [{ libelle: "Dépréciation", attendu: t.depreciation, calcul: `${eur(t.valeurNette)} − ${eur(t.valeurActuelle)} = ${eur(t.depreciation)}` }];
@@ -185,7 +191,7 @@ export const LE_TEST_DE_DEPRECIATION: Chapitre = {
       id: "le-flux-qui-suffit",
       objectifs: [1, 2],
       type: "curseur",
-      titre: "Le flux qui épargne la dépréciation",
+      titre: "Le flux qui épargne la dépréciation (au-delà du BTS)",
       notions: ["discounting"],
       question: () =>
         "Faites varier le flux net annuel que la ligne rapporte : une droite donne sa valeur actuelle, l'autre sa valeur nette comptable. Placez le curseur sur le plus petit flux, à l'euro, pour lequel aucune dépréciation n'est à constater.",
@@ -217,7 +223,7 @@ export const LE_TEST_DE_DEPRECIATION: Chapitre = {
       id: "le-laboratoire-du-taux",
       objectifs: [1],
       type: "simulation",
-      titre: "Le taux d'actualisation",
+      titre: "Le taux d'actualisation (au-delà du BTS)",
       notions: ["discounting"],
       question: () => "Faites varier le taux d'actualisation des flux de la ligne : regardez la valeur d'usage et la dépréciation réagir.",
       leviers: () => [{ code: "taux", libelle: "Taux d'actualisation", unite: "%", ...TAUX_DU_LABORATOIRE, depart: Math.round(TEST_DE_LA_PREMIERE_LIGNE.taux * 100) }],

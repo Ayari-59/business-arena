@@ -56,7 +56,7 @@ export const ACOMPTE_MINIMAL = 100;
 export const ARRONDI_DE_L_ACOMPTE = 100;
 
 /**
- * LE PREMIER CURSEUR : le gérant promet à chaque salarié une prime de 500 € nets, prélèvement à la
+ * LE PREMIER CURSEUR : le dirigeant promet à chaque salarié une prime de 500 € nets, prélèvement à la
  * source retenu. Le curseur cherche la plus petite prime brute qui les verse.
  */
 export const NET_PROMIS = 500;
@@ -569,7 +569,7 @@ export const LA_PAIE: Chapitre = {
       titre: "Pariez sur la prime brute",
       notions: ["payroll"],
       question: () =>
-        `Le gérant veut que chaque salarié touche ${eur(NET_PROMIS)} nets de prime en février, prélèvement à la source retenu. Avant de calculer, pariez : la prime brute à prévoir pour un salarié est…`,
+        `Le dirigeant veut que chaque salarié touche ${eur(NET_PROMIS)} nets de prime en février, prélèvement à la source retenu. Avant de calculer, pariez : la prime brute à prévoir pour un salarié est…`,
       options: (c) => {
         const x = paieARebours(c);
         const voir = "Déplacez le curseur à l'étape suivante : il montre le net que touche le salarié pour chaque prime brute.";
@@ -663,7 +663,7 @@ export const LA_PAIE: Chapitre = {
         const x = paieARebours(c);
         return [
           `Remonter du net au brut, c'est diviser par ce qu'un euro brut laisse au salarié, ${qte(x.netPour100)} % ici, et non par ${pct(1 - x.tauxSalarial)} : le prélèvement à la source se prend aussi, et sur un net imposable un peu plus haut que le net. Le curseur, à l'euro, trouvait ${eur(x.primeAuCurseur)} ; au centime, ${eur(x.primeBrute)}.`,
-          `Pour ${eur(auCentime(NET_PROMIS * x.effectif))} nets promis à l'équipe, ${c.entreprise} engage ${eur(x.coutDesPrimes)} : ${qte(auCentime(x.coutDUnePrime / NET_PROMIS))} fois le net. C'est ce rapport qu'un gérant doit avoir en tête avant d'annoncer une prime en net.`,
+          `Pour ${eur(auCentime(NET_PROMIS * x.effectif))} nets promis à l'équipe, ${c.entreprise} engage ${eur(x.coutDesPrimes)} : ${qte(auCentime(x.coutDUnePrime / NET_PROMIS))} fois le net. C'est ce rapport qu'un dirigeant doit avoir en tête avant d'annoncer une prime en net.`,
         ];
       },
     },
@@ -773,7 +773,7 @@ export const LA_PAIE: Chapitre = {
       titre: "Le laboratoire de la prime",
       notions: ["payroll", "fixed_costs"],
       question: (c) =>
-        `Le gérant ${dE(c.entreprise)} prépare une autre prime. Faites varier la prime brute d'un salarié, le taux des cotisations patronales (un allègement le fait baisser) et le taux du prélèvement à la source. Le tableau suit, pour un salarié, ce qu'il touche et ce que la prime coûte, puis la charge pour l'équipe.`,
+        `Le dirigeant ${dE(c.entreprise)} prépare une autre prime. Faites varier la prime brute d'un salarié, le taux des cotisations patronales (un allègement le fait baisser) et le taux du prélèvement à la source. Le tableau suit, pour un salarié, ce qu'il touche et ce que la prime coûte, puis la charge pour l'équipe.`,
       leviers: () => [
         { code: "prime", libelle: "Prime brute par salarié", unite: "€", ...LEVIERS_DE_LA_PRIME.prime, depart: DEPART_DU_LABORATOIRE.prime },
         { code: "patronal", libelle: "Taux des cotisations patronales", unite: "%", ...LEVIERS_DE_LA_PRIME.patronal, depart: DEPART_DU_LABORATOIRE.patronal },
@@ -829,7 +829,7 @@ export const LA_PAIE: Chapitre = {
       question: (c) => {
         const x = paieARebours(c);
         const sansImpot = bulletinDePaie(x.brutMaximalDuDefi, tauxAvec(TAUX_PATRONAL_EN_POURCENT, 0)).netAPayer;
-        return `Au laboratoire, baisser le taux du prélèvement faisait toucher plus aux salariés : à ${pct(0)}, ${eur(sansImpot)} nets pour ${eur(x.brutMaximalDuDefi)} bruts, sans un euro de coût en plus. Le gérant propose d'appliquer un taux nul à toute l'équipe pour la prime. Que lui répondez-vous ?`;
+        return `Au laboratoire, baisser le taux du prélèvement faisait toucher plus aux salariés : à ${pct(0)}, ${eur(sansImpot)} nets pour ${eur(x.brutMaximalDuDefi)} bruts, sans un euro de coût en plus. Le dirigeant propose d'appliquer un taux nul à toute l'équipe pour la prime. Que lui répondez-vous ?`;
       },
       options: () => [
         {

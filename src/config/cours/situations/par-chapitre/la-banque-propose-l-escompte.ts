@@ -11,7 +11,7 @@ import type { Situation } from "../types";
  * gestion et finance, palier 1).
  *
  * Le 31 décembre, le conseiller de la banque propose à NOVA d'escompter la facture de décembre de
- * CampusTech. Le gérant veut savoir ce que cela coûterait, ce que NOVA recevrait, et s'il en a
+ * CampusTech. Le président veut savoir ce que cela coûterait, ce que NOVA recevrait, et s'il en a
  * besoin. L'élève refait seul le calcul du chapitre (des agios, montant × taux × jours ÷ 360), le
  * compare au découvert sur deux durées, puis répond.
  *
@@ -48,14 +48,14 @@ export const LA_BANQUE_PROPOSE_L_ESCOMPTE: Situation = {
   palier: 1,
   blocs: [],
   reprend: ["optimiser-la-tresorerie"],
-  commanditaire: "Le gérant",
+  commanditaire: "Le président",
   titre: "La banque propose l'escompte",
-  accroche: "Le conseiller de la banque propose d'avancer l'argent d'une facture de CampusTech. Le gérant demande ce que cela coûterait, et si l'entreprise en a besoin.",
+  accroche: "Le conseiller de la banque propose d'avancer l'argent d'une facture de CampusTech. Le président demande ce que cela coûterait, et si l'entreprise en a besoin.",
   objectifs: [
     "Calculer les agios d'un escompte et le montant reçu",
     "Comparer l'escompte et le découvert selon la durée du besoin",
     "Dire si l'entreprise a besoin d'un concours bancaire",
-    "Rédiger une réponse chiffrée au gérant",
+    "Rédiger une réponse chiffrée au président",
   ],
   libre: false,
   entreprises: {
@@ -66,7 +66,7 @@ export const LA_BANQUE_PROPOSE_L_ESCOMPTE: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La demande du gérant",
+      titre: "La demande du président",
       texte: (c) => {
         const k = escompteProposePar(c);
         return [
@@ -136,8 +136,8 @@ export const LA_BANQUE_PROPOSE_L_ESCOMPTE: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse au gérant",
-      question: () => "Quelle phrase envoyez-vous au gérant ?",
+      titre: "Votre réponse au président",
+      question: () => "Quelle phrase envoyez-vous au président ?",
       options: (c) => {
         const k = escompteProposePar(c);
         return [

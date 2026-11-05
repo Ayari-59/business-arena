@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
+import { impotDeNova } from "../../src/config/cours/chapitres/l-impot-sur-les-societes";
+import { congesPayes, dossierDeRevision, garantie } from "../../src/config/cours/monde/dossier-de-revision";
+import { EXERCICE_N1_DE_NOVA, MAJORATION_DE_RETARD } from "../../src/config/cours/monde/projets-et-financement";
+import { cadrageDeLaTva, controleDeLaPaie, fraudeEvitee } from "../../src/config/cours/monde/securite-des-processus";
 import { bilanDeLExercice } from "../../src/config/cours/chapitres/bilan-fonctionnel";
 import { SECONDE_LIGNE } from "../../src/config/cours/monde/comptabilite-approfondie";
+import { ACTIONS_DE_NOVA as ACTIONS_DU_DCG, AUGMENTATION_DE_CAPITAL as AUGMENTATION_DU_DCG } from "../../src/config/cours/monde/comptabilite-approfondie";
+import { affectationDeNova, augmentation as augmentationDuBts, perteDePixel } from "../../src/config/cours/monde/capitaux-propres";
+import { annexe as annexeDeN, comptesAnnuels } from "../../src/config/cours/monde/comptes-annuels";
+import { EXERCICES_DE_PIXEL } from "../../src/config/cours/monde/projets-et-financement";
+import { DIVIDENDE_DEMANDE_PAR_ACTION as DIVIDENDE_DU_BAC } from "../../src/config/cours/monde/affectation-du-resultat";
 import { SECONDE_LIGNE_PAYEE_EN_DECEMBRE, tableauDeFinancement, tableauDesFlux } from "../../src/config/cours/monde/tableaux-de-flux";
 import { EXERCICE_DE_NOVA } from "../../src/config/cours/monde/exercice-de-nova";
 import { casDeLEntreprise } from "../../src/config/cours/cas";
@@ -49,6 +58,7 @@ import { ajustementLineaire, coefficientsSaisonniers } from "../../src/config/co
 import { tresorerieAOptimiser } from "../../src/config/cours/monde/tresorerie-a-optimiser";
 import { affecter, beneficeAAffecter } from "../../src/config/cours/monde/affectation-du-resultat";
 import { augmentationDeCapital } from "../../src/config/cours/monde/comptabilite-approfondie";
+import { demandeDeLAssocie } from "../../src/config/cours/chapitres/l-affectation-du-resultat";
 import { bilanDuLycee } from "../../src/config/cours/monde/comptes-du-lycee";
 import { financer } from "../../src/config/cours/chapitres/financer-l-entreprise";
 import { factureDeCampusTech, fondsDeRoulement } from "../../src/config/cours/chapitres/fonds-de-roulement-et-tresorerie";
@@ -516,9 +526,12 @@ describe("une seule NOVA, de la trésorerie du 31 décembre à l'affectation du 
     expect(k.benefice).toBe(CLOTURE_DE_LA_FICHE.resultatNet);
     expect(k.reserveLegale).toBe(augmentationDeCapital().reserveLegale);
     expect(k.caf).toBe(financer({ code: "nova" }).caf);
-    // Sans dividende, l'affectation de « L'augmentation de capital » : tout reste dans les capitaux propres.
+    // Une seule affectation (décision D2) : celle du lycée est celle de « L'augmentation de capital ».
+    const d = demandeDeLAssocie({ code: "nova" });
+    const a = augmentationDeCapital();
+    expect([d.reserveLegale, d.dividendes, d.reservesFacultatives, d.reportANouveau, d.capitauxPropres]).toEqual([a.reserveLegale, a.dividendes, a.reservesFacultatives, a.reportANouveau, a.capitauxPropres]);
     const sans = affecter(k, { dividendeParAction: 0, reservesFacultatives: 0 });
-    expect(sans.capitauxPropres).toBe(augmentationDeCapital().capitauxPropres);
+    expect(sans.capitauxPropres).toBe(a.capitauxPropresAvant);
     expect(affecter(k, { dividendeParAction: 2, reservesFacultatives: 0 }).capitauxPropres).toBe(bilanDuLycee(f, { dividende: 30_000 }).capitauxPropres);
   });
 });
@@ -653,7 +666,7 @@ describe("une seule NOVA, de la valeur du temps au coût du capital", () => {
     expect(DETTES_DU_31_DECEMBRE).toBe(CONTRAT_DE_PRET.capital - 3 * (CONTRAT_DE_PRET.capital / (CONTRAT_DE_PRET.dureeAns * CONTRAT_DE_PRET.echeancesParAn)));
     const a = augmentationVueParLesActionnaires();
     expect(a).toMatchObject(augmentationDeCapital());
-    expect(a.capitauxPropres).toBeCloseTo(beneficeAAffecter(EXERCICE_DE_NOVA).capital + CLOTURE_DE_LA_FICHE.resultatNet, 2);
+    expect(a.capitauxPropres).toBeCloseTo(beneficeAAffecter(EXERCICE_DE_NOVA).capital + CLOTURE_DE_LA_FICHE.resultatNet - demandeDeLAssocie({ code: "nova" }).dividendes, 2);
     expect(PRIX_DE_L_ACTION).toBe(AUGMENTATION_DE_CAPITAL.prixDEmission);
     expect(coutDuCreditBail()).toBe(comparaison().tauxDuCreditBail);
     expect(Math.round(coutParLeDividendeEnProgression() * 1e9) / 1e9).toBe(TAUX_D_ACTUALISATION_DE_NOVA);
@@ -721,8 +734,10 @@ describe("une seule NOVA, de la clôture de N au diagnostic de trois exercices",
     expect(n1!.enceintes).toBe(ANNEE_N_PLUS_1.demande.reduce((t, q) => t + q, 0) - VENTES_DE_ONE_PERDUES[0] + VENTES_DE_GO[0] + VENTES_DE_STUDIO[0]);
     expect(n1!.personnel).toBe((PAIE_DU_MOIS.effectif + 2) * COUT_ANNUEL_D_UN_OPERATEUR);
     expect(EFFECTIFS.N).toBe(PAIE_DU_MOIS.effectif);
-    // Le résultat de N est affecté sans dividende : aucun dividende en N + 1.
-    expect(n1!.dividendes).toBe(0);
+    // Le résultat de N est affecté comme au lycée (décision D2) : son dividende sort en N + 1, et les
+    // capitaux propres de N + 1 partent de ceux de l'affectation.
+    expect(n1!.dividendes).toBe(demandeDeLAssocie({ code: "nova" }).dividendes);
+    expect(n1!.dividendes).toBe(augmentationDeCapital().dividendes);
   });
 });
 
@@ -737,5 +752,87 @@ describe("une seule NOVA, chez son distributeur CampusTech (BTS NDRC, se faire r
     expect([a.remise, a.cooperation, MERCATIQUE_DE_NOVA.canal.commission]).toEqual([0, 0, 0]);
     expect(a.margeDeNova).toBe(12 * 320 * (59 - 38));
     expect(CADRE_DE_LA_NEGOCIATION.delaiDePaiement).toBe(DELAI_CONVENU_DE_CAMPUSTECH);
+  });
+});
+
+describe("une seule NOVA, dans son compte client de N+1 (BTS CG P1, le compte client)", () => {
+  it("le compte client lit la facture de CampusTech, ses délais, la lettre de change et le factor de « Financer et placer », et la créance de Sonora", async () => {
+    const m = await import("../../src/config/cours/monde/compte-client-de-nova");
+    const p6 = await import("../../src/config/cours/monde/financer-et-placer");
+    const { CREANCES_AU_31_DECEMBRE } = await import("../../src/config/cours/monde/exercice-de-nova");
+    expect(m.FACTURE_DE_CAMPUSTECH.ht).toBe(VENTES_A_CAMPUSTECH[0] * PRIX_DE_L_ENCEINTE);
+    const f = m.facturesDeCampusTech();
+    // Les trois factures de N sont celles de la fiche figée, payées le 10 janvier, le 10 février et (en LCR) le 10 mars.
+    expect(f.slice(0, 3).map((x) => x.ttc)).toEqual(CREANCES_AU_31_DECEMBRE.filter((k) => k.client === "CampusTech").map((k) => k.ttc));
+    expect(f.slice(0, 3).map((x) => m.rang(x.paiement))).toEqual(CREANCES_AU_31_DECEMBRE.filter((k) => k.client === "CampusTech").map((k) => (k.echeance.mois - 1) * 30 + k.echeance.jour));
+    expect(m.rang(m.LCR_DE_DECEMBRE.echeance) - m.rang(m.LCR_DE_DECEMBRE.remise)).toBe(p6.FACTURE_DE_DECEMBRE.jours);
+    expect(m.bordereauDEscompte()).toEqual(p6.escompte(p6.FACTURE_DE_DECEMBRE.ttc, p6.FACTURE_DE_DECEMBRE.jours));
+    const fa = m.bordereauDuFactor();
+    expect(fa.cout).toBe(p6.affacturage(p6.factureDeLaChaine().ttc, p6.CHAINE_ONDES.jours).cout);
+    expect(m.balanceAgee().lignes.find((l) => l.client === "Sonora")!.total).toBe(CREANCES_AU_31_DECEMBRE.find((k) => k.client === "Sonora")!.ttc);
+  });
+});
+
+/**
+ * UNE SEULE NOVA DANS LES CONTRÔLES ET LA RÉVISION (BTS CG P1 et P2, agent C) : sécuriser les
+ * processus relit l'exercice N sans le changer (la facture de décembre du fournisseur, les ventes et
+ * la TVA, la paie de décembre) ; le dossier de révision de N+1 retombe sur le résultat que lit
+ * « L'impôt sur les sociétés », avec la même majoration, sur le réalisé de la masse salariale de N+1
+ * et la qualité de N+1.
+ */
+describe("une seule NOVA, des contrôles de N au dossier de révision de N+1", () => {
+  it("les contrôles lisent la fiche figée de N : la facture du 10 décembre, la balance, la paie", () => {
+    const fr = fraudeEvitee(EXERCICE_DE_NOVA);
+    const balance = Object.fromEntries(EXERCICE_DE_NOVA.balanceAvantInventaire.map((l) => [l.compte, l.credit - l.debit]));
+    expect(fr.facture).toBe(balance["401"]);
+    expect(fr.resultatNet).toBe(CLOTURE_DE_LA_FICHE.resultatNet);
+    expect(cadrageDeLaTva(EXERCICE_DE_NOVA).ventesComptabilisees).toBe(CLOTURE_DE_LA_FICHE.soldes.production);
+    const p = controleDeLaPaie(EXERCICE_DE_NOVA);
+    expect([p.comptes.urssaf, p.comptes.retraite, p.comptes.prelevement]).toEqual([balance["431"], balance["437"], balance["442"]]);
+    expect(p.brutDuMois).toBe(PAIE_DU_MOIS.brut);
+  });
+
+  it("le dossier de révision de N+1 retombe sur les 118 460 € du chapitre de l'impôt, et sur son impôt", () => {
+    const d = dossierDeRevision();
+    expect(d.resultatRevise).toBe(EXERCICE_N1_DE_NOVA.resultatComptable);
+    expect(d.travaux.amende).toBe(MAJORATION_DE_RETARD);
+    expect(d.impot).toBe(impotDeNova({ code: "nova" }).impot);
+    expect(congesPayes().tauxPatronal).toBe(TAUX_PATRONAL);
+    expect(garantie().defautsLivres).toBe(coutsDeLaQualite(NOVA_CAPACITE, { prevention: NOVA_CAPACITE.qualite.budgetActuel }).livres);
+  });
+});
+
+/**
+ * UNE SEULE NOVA DANS LES CAPITAUX PROPRES ET LES COMPTES ANNUELS (BTS CG P2) : le capital est celui
+ * de la fiche, en actions du DCG ; le bénéfice de N, celui de la clôture figée ; son affectation, la
+ * version unique du bac (décision D2) ; l'augmentation, celle du DCG ; la perte de PIXEL & CO, celle
+ * du déficit reporté ; le bilan, le compte de résultat et l'emprunt de l'annexe, ceux de la clôture.
+ */
+describe("une seule NOVA, de la constitution aux comptes annuels", () => {
+  it("le capital, le bénéfice, le dividende et l'augmentation sont ceux des chapitres qui les ont posés", () => {
+    const x = affectationDeNova();
+    expect(x.capital).toBe(EXERCICE_DE_NOVA.apport.montant);
+    expect(x.actions * ACTIONS_DU_DCG.nominal).toBe(EXERCICE_DE_NOVA.apport.montant);
+    expect(x.benefice).toBe(CLOTURE_DE_LA_FICHE.resultatNet);
+    expect(x.dividendes).toBe(DIVIDENDE_DU_BAC * ACTIONS_DU_DCG.nombre);
+    const a = augmentationDuBts();
+    expect(a.nouvelles * AUGMENTATION_DU_DCG.parite).toBe(ACTIONS_DU_DCG.nombre);
+    expect(a.prix).toBe(AUGMENTATION_DU_DCG.prixDEmission);
+  });
+
+  it("la perte de PIXEL & CO part de son exercice N en perte, et son capital de son cas", () => {
+    const p = perteDePixel();
+    expect(p.perteComptable).toBe(-EXERCICES_DE_PIXEL[1]!.resultatComptable);
+    expect(p.capital).toBe(CAS_DES_ENTREPRISES.ecommerce!.capital);
+  });
+
+  it("les comptes annuels sont ceux de la clôture figée, et l'annexe y retombe", () => {
+    const k = comptesAnnuels();
+    expect(k.resultat.resultatNet).toBe(CLOTURE_DE_LA_FICHE.resultatNet);
+    expect(k.bilan.totalActif).toBe(CLOTURE_DE_LA_FICHE.totalDuBilan);
+    expect(k.resultat.amortissements).toBe(CLOTURE_DE_LA_FICHE.travaux.dotationAuxAmortissements);
+    const x = annexeDeN();
+    expect(x.immobilisations.fin).toBe(EQUIPEMENT.ht);
+    expect(Math.round((x.empruntAUnAn + x.empruntAPlusDUnAn) * 100) / 100).toBe(k.bilan.passif.emprunts);
   });
 });

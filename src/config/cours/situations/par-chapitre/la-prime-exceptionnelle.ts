@@ -12,7 +12,7 @@ import type { Situation } from "../types";
  * (`c.personnel`), les taux ceux du cours (monde/exercice-de-nova.ts), et le bulletin se calcule par
  * le modèle du cours (monde/paie.ts).
  *
- * Le gérant a annoncé à l'équipe une prime de 400 € NETS par salarié, versée avec la paie de
+ * Le dirigeant a annoncé à l'équipe une prime de 400 € NETS par salarié, versée avec la paie de
  * février ; il avait mis de côté 740 € par salarié. L'élève remonte du net au brut et au coût
  * employeur (le calcul à rebours), passe les deux écritures de la prime, cherche au curseur le net
  * le plus haut que le budget aurait permis, puis répond : le budget n'est pas tenu, et la prochaine
@@ -22,11 +22,11 @@ import type { Situation } from "../types";
  * Ce qui a disparu : la prime donnée en brut (500 €), qui faisait refaire le bulletin du chapitre.
  */
 
-/** Le net promis à chaque salarié, prélèvement à la source retenu : ce que le gérant a annoncé. */
+/** Le net promis à chaque salarié, prélèvement à la source retenu : ce que le dirigeant a annoncé. */
 export const PRIME_NETTE_PROMISE = 400;
 
 /**
- * Le budget que le gérant avait mis de côté, par salarié, en coût employeur (la prime brute et ses
+ * Le budget que le dirigeant avait mis de côté, par salarié, en coût employeur (la prime brute et ses
  * cotisations patronales). Il est juste en dessous de ce que coûtent 400 € nets : c'est ce qui fait
  * la question.
  */
@@ -100,10 +100,10 @@ export const LA_PRIME_EXCEPTIONNELLE: Situation = {
   palier: 3,
   blocs: [],
   reprend: ["la-paie"],
-  commanditaire: "Le gérant",
+  commanditaire: "Le dirigeant",
   titre: "La prime exceptionnelle",
   accroche:
-    "Le gérant a promis à l'équipe une prime en net, avec la paie de février, sur un budget mis de côté en coût. Passez-la au journal, et dites-lui si son budget tenait.",
+    "Le dirigeant a promis à l'équipe une prime en net, avec la paie de février, sur un budget mis de côté en coût. Passez-la au journal, et dites-lui si son budget tenait.",
   objectifs: [
     "Remonter d'un net promis au brut, puis au coût employeur",
     "Enregistrer la prime et ses cotisations patronales",
@@ -115,7 +115,7 @@ export const LA_PRIME_EXCEPTIONNELLE: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La demande du gérant",
+      titre: "La demande du dirigeant",
       texte: (c) => {
         const k = primeExceptionnelle(c);
         return [
@@ -301,16 +301,16 @@ export const LA_PRIME_EXCEPTIONNELLE: Situation = {
       explication: (c) => {
         const k = primeExceptionnelle(c);
         return [
-          `Avec ${eur(BUDGET_PAR_SALARIE)} par salarié, le gérant pouvait promettre ${eur(k.netQueTientLeBudget)} nets : ${eur(k.brutDuNetTenu)} bruts, qui coûtent ${eur(k.coutDuNetTenu)}. Les ${eur(PRIME_NETTE_PROMISE)} promis coûtent ${eur(k.coutParSalarie)}, ${eur(k.depassement)} de plus par salarié.`,
+          `Avec ${eur(BUDGET_PAR_SALARIE)} par salarié, le dirigeant pouvait promettre ${eur(k.netQueTientLeBudget)} nets : ${eur(k.brutDuNetTenu)} bruts, qui coûtent ${eur(k.coutDuNetTenu)}. Les ${eur(PRIME_NETTE_PROMISE)} promis coûtent ${eur(k.coutParSalarie)}, ${eur(k.depassement)} de plus par salarié.`,
         ];
       },
     },
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse au gérant",
+      titre: "Votre réponse au dirigeant",
       notions: ["payroll", "fixed_costs", "income_statement"],
-      question: () => "Quelle phrase envoyez-vous au gérant ?",
+      question: () => "Quelle phrase envoyez-vous au dirigeant ?",
       options: (c) => {
         const k = primeExceptionnelle(c);
         return [

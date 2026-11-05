@@ -21,7 +21,7 @@ import type { Chapitre } from "../types";
  * CHAPITRE : CE QUE COÛTE ET RAPPORTE UN OUTIL NUMÉRIQUE (Bac STMG, systèmes d'information de
  * gestion, palier 1).
  *
- * Le gérant de NOVA hésite à s'abonner à un logiciel de gestion commerciale en ligne : les commandes
+ * Le président de NOVA hésite à s'abonner à un logiciel de gestion commerciale en ligne : les commandes
  * et la demande de chaque clientèle, suivies par toute l'équipe au même endroit, au jour le jour.
  * L'élève calcule ce que l'outil coûte la première année (l'abonnement de chaque utilisateur, la
  * mise en place, la formation), ce qu'il peut rapporter chaque année, son délai de récupération,
@@ -92,7 +92,7 @@ export const CE_QUE_COUTE_UN_OUTIL_NUMERIQUE: Chapitre = {
       texte: (c) => {
         const o = outilNumerique(c);
         return [
-          `Le gérant ${dE(c.entreprise)} hésite à s'abonner à un logiciel de gestion commerciale en ligne : les commandes de chaque clientèle, suivies par toute l'équipe au même endroit, au lieu d'un tableur consolidé une fois par trimestre. L'offre compte trois dépenses : un abonnement pour chacun des ${qte(o.utilisateurs)} salariés, une mise en place et une formation, payées une fois.`,
+          `Le président ${dE(c.entreprise)} hésite à s'abonner à un logiciel de gestion commerciale en ligne : les commandes de chaque clientèle, suivies par toute l'équipe au même endroit, au lieu d'un tableur consolidé une fois par trimestre. L'offre compte trois dépenses : un abonnement pour chacun des ${qte(o.utilisateurs)} salariés, une mise en place et une formation, payées une fois.`,
           `Aujourd'hui, les chiffres des ventes arrivent à ceux qui fixent la production avec un trimestre de retard. Dans l'année N, ce retard a laissé repartir ${qte(o.ventesManquees)} ${c.unites} ${accordPluriel(c, "demandé")} sans être ${accordPluriel(c, "servi")}.`,
           `Ce que l'outil ferait gagner est une hypothèse du cas : si toute l'équipe s'en sert, il fait retrouver ${PART} % de ces ventes manquées, et chacune rapporte sa marge sur coût variable, ${eur(o.marge)}.`,
         ];
@@ -204,7 +204,7 @@ export const CE_QUE_COUTE_UN_OUTIL_NUMERIQUE: Chapitre = {
       notions: ["irr_payback"],
       question: (c) => {
         const o = outilNumerique(c);
-        return `La première année, ${A} % de l'équipe ${dE(c.entreprise)} se sert de l'outil. Son gain est alors de ${eur(o.gainAdopte)}, pour un coût de ${eur(o.coutPremiereAnnee)} la première année. Que dire au gérant ?`;
+        return `La première année, ${A} % de l'équipe ${dE(c.entreprise)} se sert de l'outil. Son gain est alors de ${eur(o.gainAdopte)}, pour un coût de ${eur(o.coutPremiereAnnee)} la première année. Que dire au président ?`;
       },
       options: (c) => {
         const o = outilNumerique(c);

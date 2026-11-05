@@ -129,31 +129,31 @@ describe("les capitaux propres, refaits à la main", () => {
     expect(juste(ch, "predire-les-capitaux-propres")).toEqual(["Plus cher que l'emprunt"]);
   });
 
-  it("l'augmentation : 5 000 actions à 12 €, 60 000 € ; 15,28 € puis 14,46 € l'action ; un BPA de 5,28 € puis 3,96 €", () => {
-    expect(c(229_225.96 / 15_000)).toBe(15.28);
-    expect(c(289_225.96 / 20_000)).toBe(14.46);
+  it("l'augmentation : 5 000 actions à 12 €, 60 000 € ; 13,28 € puis 12,96 € l'action (après le dividende de N) ; un BPA de 5,28 € puis 3,96 €", () => {
+    expect(c(199_225.96 / 15_000)).toBe(13.28);
+    expect(c(259_225.96 / 20_000)).toBe(12.96);
     expect(c(79_225.96 / 20_000)).toBe(3.96);
-    expect(attendus(ch, "l-augmentation-de-capital")).toEqual([60_000, 15.28, 14.46, 3.96]);
+    expect(attendus(ch, "l-augmentation-de-capital")).toEqual([60_000, 13.28, 12.96, 3.96]);
   });
 
-  it("l'associé qui ne souscrit pas : de 20 % à 15 % du capital, 2 460 € de valeur perdue", () => {
+  it("l'associé qui ne souscrit pas : de 20 % à 15 % du capital, 960 € de valeur perdue", () => {
     expect(3_000 / 20_000).toBe(0.15);
-    expect(c(3_000 * (15.28 - 14.46))).toBe(2_460);
+    expect(c(3_000 * (13.28 - 12.96))).toBe(960);
     expect(juste(ch, "les-effets-pour-l-actionnaire")[0]).toMatch(/^Il pèse 15\s% des votes/);
   });
 });
 
 describe("le CMPC et le compromis, refaits à la main", () => {
-  it("289 225,96 € à 9,6 % et 148 000 € à 3,75 % : 66,15 % et 33,85 %, un CMPC de 7,62 %", () => {
+  it("259 225,96 € à 9,6 % et 148 000 € à 3,75 % : 63,66 % et 36,34 %, un CMPC de 7,47 %", () => {
     const g = grilleDuCmpc(NOVA);
     expect(incoherencesDuTableau(g)).toEqual([]);
-    const total = 289_225.96 + 68_000 + 80_000;
-    expect(c(total)).toBe(437_225.96);
-    const cmpc = (289_225.96 * 0.096 + 148_000 * 0.0375) / total;
-    expect(c(100 * cmpc)).toBe(7.62);
-    expect(g.lignes.map((l) => l.cellules[1]!.valeur)).toEqual([66.15, 33.85, 100]);
-    expect(g.lignes[2]!.cellules[3]!.valeur).toBe(c(6.35 + 1.27));
-    expect(c(100 * coutsDuChapitre(NOVA).cmpc.cmpc)).toBe(7.62);
+    const total = 259_225.96 + 68_000 + 80_000;
+    expect(c(total)).toBe(407_225.96);
+    const cmpc = (259_225.96 * 0.096 + 148_000 * 0.0375) / total;
+    expect(c(100 * cmpc)).toBe(7.47);
+    expect(g.lignes.map((l) => l.cellules[1]!.valeur)).toEqual([63.66, 36.34, 100]);
+    expect(g.lignes[2]!.cellules[3]!.valeur).toBe(c(c(63.66 * 0.096) + c(36.34 * 0.0375)));
+    expect(c(100 * coutsDuChapitre(NOVA).cmpc.cmpc)).toBe(7.47);
   });
 
   it("le compromis : 0,25 D − 150 000 × (D ÷ 500 000)² est le plus grand à 200 000 € (26 000 €), plus à 175 000 € ni à 225 000 €", () => {
@@ -179,16 +179,16 @@ describe("le cas dédié : l'associé qui préfère la dette", () => {
     gardeDuCas(L_ASSOCIE_QUI_PREFERE_LA_DETTE, ch);
   });
 
-  it("6 % × 0,75 = 4,5 % ; 3 % + 1,4 × 6 % = 11,4 % ; un CMPC de 7,86 % contre 7,62 %", () => {
+  it("6 % × 0,75 = 4,5 % ; 3 % + 1,4 × 6 % = 11,4 % ; un CMPC de 7,60 % contre 7,47 %", () => {
     const x = associeQuiPrefereLaDette();
-    const total = 437_225.96;
-    const avecLaDette = (229_225.96 * 0.114 + 148_000 * 0.0375 + 60_000 * 0.045) / total;
-    expect(c(100 * avecLaDette)).toBe(7.86);
+    const total = 407_225.96;
+    const avecLaDette = (199_225.96 * 0.114 + 148_000 * 0.0375 + 60_000 * 0.045) / total;
+    expect(c(100 * avecLaDette)).toBe(7.6);
     const montants = (id: string) => etape(chapitreDuCas(L_ASSOCIE_QUI_PREFERE_LA_DETTE, NOVA), id, "montants").champs(NOVA, VIDE).map((k) => k.attendu);
     expect(montants("les-couts")).toEqual([4.5, 11.4]);
-    expect(montants("les-cmpc")).toEqual([7.62, 7.86]);
+    expect(montants("les-cmpc")).toEqual([7.47, 7.6]);
     expect(x.avecLaDette.total).toBe(x.avecLeCapital.total);
     const r = etape(L_ASSOCIE_QUI_PREFERE_LA_DETTE, "reponse", "choix").options(NOVA, VIDE);
-    expect(r.filter((o) => o.juste).map((o) => o.texte.replace(/\s/g, " "))).toEqual(["L'augmentation de capital : un CMPC de 7,62 %"]);
+    expect(r.filter((o) => o.juste).map((o) => o.texte.replace(/\s/g, " "))).toEqual(["L'augmentation de capital : un CMPC de 7,47 %"]);
   });
 });

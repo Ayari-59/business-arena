@@ -13,7 +13,7 @@ import type { Situation } from "../types";
  * l'arrêté du chapitre (`arrete`). Il se joue chez MAILLE & CO et PIXEL & CO, comme le chapitre.
  *
  * Le comptable annonce, après l'inventaire de fin de trimestre, une marge commerciale plus faible que
- * ce que les achats et les ventes laissaient attendre. Le gérant demande s'il a perdu de la
+ * ce que les achats et les ventes laissaient attendre. Le dirigeant demande s'il a perdu de la
  * marchandise, combien, et si c'est normal. L'élève calcule le stock et la marge théoriques, puis
  * remonte À REBOURS de la marge annoncée au stock compté et aux unités manquantes ; il passe les deux
  * écritures d'inventaire avec le stock compté ; un curseur lui montre jusqu'où la démarque reste dans
@@ -31,7 +31,7 @@ import type { Situation } from "../types";
 export const TAUX_DE_DEMARQUE = 0.02;
 
 /**
- * La norme du secteur à laquelle le gérant se compare, hypothèse du cours : une démarque d'au plus 1 %
+ * La norme du secteur à laquelle le dirigeant se compare, hypothèse du cours : une démarque d'au plus 1 %
  * du chiffre d'affaires hors taxes, l'ordre de grandeur que publient les enquêtes du commerce de détail.
  */
 export const DEMARQUE_DU_SECTEUR = 0.01;
@@ -84,10 +84,10 @@ export const LE_STOCK_QUI_MANQUE: Situation = {
   palier: 3,
   blocs: [],
   reprend: ["les-stocks"],
-  commanditaire: "Le gérant",
+  commanditaire: "Le dirigeant",
   titre: "Le stock qui manque à l'inventaire",
   accroche:
-    "Après l'inventaire, le comptable annonce une marge plus faible que prévu. Le gérant veut savoir s'il manque de la marchandise, combien, et si c'est normal pour un commerce.",
+    "Après l'inventaire, le comptable annonce une marge plus faible que prévu. Le dirigeant veut savoir s'il manque de la marchandise, combien, et si c'est normal pour un commerce.",
   objectifs: [
     "Calculer le stock et la marge théoriques d'un trimestre au coût moyen pondéré",
     "Remonter à rebours d'une marge annoncée au stock compté et aux unités manquantes",
@@ -104,7 +104,7 @@ export const LE_STOCK_QUI_MANQUE: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La demande du gérant",
+      titre: "La demande du dirigeant",
       texte: (c) => {
         const r = stockQuiManque(c);
         return [
@@ -127,7 +127,7 @@ export const LE_STOCK_QUI_MANQUE: Situation = {
         };
       },
       repere: () =>
-        "À rendre : la marge que les chiffres laissaient attendre, le stock réellement compté et les unités manquantes, les deux écritures d'inventaire, et votre réponse au gérant, chiffrée et située face à la norme.",
+        "À rendre : la marge que les chiffres laissaient attendre, le stock réellement compté et les unités manquantes, les deux écritures d'inventaire, et votre réponse au dirigeant, chiffrée et située face à la norme.",
     },
     {
       id: "le-theorique",
@@ -274,8 +274,8 @@ export const LE_STOCK_QUI_MANQUE: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse au gérant",
-      question: () => "Quelle phrase envoyez-vous au gérant ?",
+      titre: "Votre réponse au dirigeant",
+      question: () => "Quelle phrase envoyez-vous au dirigeant ?",
       options: (c) => {
         const r = stockQuiManque(c);
         const verdict = r.dansLaNorme ? "dans la norme du secteur" : "au-delà de la norme du secteur";
