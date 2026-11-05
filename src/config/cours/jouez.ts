@@ -581,6 +581,7 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     lieux: ["compte-de-resultat", "bilan"],
     chercher:
       "Imaginez un nouvel équipement qui ferait vendre un peu plus chaque tour. Quel flux de trésorerie apporterait-il, impôt et amortissement compris ? Combien de tours pour le rembourser, et votre trésorerie le paierait-elle sans emprunter ?",
+  }),
   "l-inventaire-et-la-demarque": (c) => ({
     niveau: 1,
     faire: `${partie(c, 1)} Jouez deux tours, puis relisez le bilan et le compte de résultat.`,

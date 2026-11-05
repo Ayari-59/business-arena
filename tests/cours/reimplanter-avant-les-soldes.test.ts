@@ -28,7 +28,7 @@ describe("réimplanter avant les soldes : le chapitre et son cas", () => {
     expect([ch.parcours, ch.palier]).toEqual(["mco", 4]);
     expect(ch.blocs).toEqual(["BTS MCO Bloc 2 · Animer et dynamiser l'offre commerciale", "BTS MCO Bloc 4 · Manager l'équipe commerciale"]);
     gardeDuProgramme(ch, PROGRAMME.mco[4]!, () => "bts-mco", /^BTS MCO /);
-    expect(PROGRAMME.mco[4]!.at(-1)).toBe(ch.titre);
+    expect(PROGRAMME.mco[4]![PROGRAMME.mco[4]!.indexOf(ch.titre) - 1]).toBe("Communiquer et animer en local");
     expect([...ENTREPRISES_DE_LA_REIMPLANTATION]).toEqual(["boutique"]);
     expect(ch.etapes.length).toBeLessThanOrEqual(20);
     gardeDuCas(LE_RAYONNAGE_QUI_RESISTE, ch);

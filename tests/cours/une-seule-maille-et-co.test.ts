@@ -8,14 +8,13 @@ import { CHAPITRES } from "../../src/config/cours/registre";
 import { SITUATIONS } from "../../src/config/cours/situations";
 import { assortiment, chiffreDAffairesParLesIndicateurs, indicateursDuMois, margesDeLaGamme, seuilDuPointDeVente, tableauDeBordDuManager } from "../../src/config/cours/monde/boutique";
 import { MAILLE_ET_CO as f } from "../../src/config/cours/monde/maille-et-co";
-import { journeeEnCaisse, panierDuMois } from "../../src/config/cours/monde/vente-et-caisse";
+import { journeeEnCaisse, panierDuMois, passantsDeJanvier } from "../../src/config/cours/monde/vente-et-caisse";
 import { bilanDeLaBoutique, compteDeResultat, factureDuComite, projetDeRenovation } from "../../src/config/cours/monde/comptes-de-la-boutique";
 import { servirLeChapitre } from "../../src/pedagogy/cours/chapitre-servi";
 import { marcheLocal, moisSelonLaForme } from "../../src/config/cours/monde/reseau-de-la-boutique";
 import { cooperationCommerciale } from "../../src/config/cours/monde/fournisseurs-de-la-boutique";
 import { rendementDesEntrees } from "../../src/config/cours/monde/communication-locale";
 import { marchandisage, renfortDuLundi } from "../../src/config/cours/monde/reimplantation";
-import { passantsDeJanvier } from "../../src/config/cours/monde/vente-et-caisse";
 import { montantEcrit } from "../../src/pedagogy/cours/correcteur";
 
 /**
@@ -86,6 +85,8 @@ describe("une seule MAILLE & CO, d'une fiche à l'autre", () => {
     const m = marchandisage(f);
     expect([m.chiffreDAffaires, m.marge]).toEqual([87_450, 44_250]);
     expect(renfortDuLundi(f).salarie.brutMensuel).toBe(f.equipe.find((s) => s.code === "vendeuse-partiel")!.brutMensuel);
+  });
+
   it("les comptes de la boutique (facture, exercice, bilan, rénovation) lisent les mêmes prix, la même paie, le même stock et la même marge", () => {
     const fa = factureDuComite(f, { remise: 0 });
     for (const l of fa.lignes) expect(l.prixHt).toBe(f.gamme.find((r) => r.code === l.reference)!.prixHt);

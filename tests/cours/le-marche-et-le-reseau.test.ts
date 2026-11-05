@@ -30,7 +30,7 @@ describe("le marché et le réseau : le chapitre et son cas", () => {
     expect([LE_MARCHE_ET_LE_RESEAU.parcours, LE_MARCHE_ET_LE_RESEAU.palier]).toEqual(["mco", 4]);
     expect(LE_MARCHE_ET_LE_RESEAU.blocs).toEqual(["BTS MCO Bloc 2 · Animer et dynamiser l'offre commerciale"]);
     gardeDuProgramme(LE_MARCHE_ET_LE_RESEAU, PROGRAMME.mco[4]!, () => "bts-mco", /^BTS MCO /);
-    expect(PROGRAMME.mco[4]!.at(-3)).toBe(LE_MARCHE_ET_LE_RESEAU.titre);
+    expect(PROGRAMME.mco[4]![PROGRAMME.mco[4]!.indexOf(LE_MARCHE_ET_LE_RESEAU.titre) - 1]).toBe("Le tableau de bord du manager");
     expect([...ENTREPRISES_DU_RESEAU]).toEqual(["boutique"]);
     expect(LE_MARCHE_ET_LE_RESEAU.etapes.length).toBeLessThanOrEqual(20);
     gardeDuCas(UNE_SECONDE_ENSEIGNE, LE_MARCHE_ET_LE_RESEAU);

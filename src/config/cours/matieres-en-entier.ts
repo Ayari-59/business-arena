@@ -33,6 +33,26 @@ export const MATIERES_COUVERTES_EN_ENTIER: readonly MatiereEnEntier[] = [
     preuve: "Audit de la finance (section 3), puis les six chapitres de la PR du P6 et les étiquettes P6 de la VAN, du TRI et de « Croître en investissant ».",
   },
   {
+    formation: "bts-mco",
+    bloc: "Bloc 1 · Développer la relation client et assurer la vente conseil",
+    preuve: "Audit du référentiel (arrêté du 15 octobre 2018 modifié le 8 juillet 2024), savoir par savoir, puis les seize chapitres et les sept compléments de la PR du MCO.",
+  },
+  {
+    formation: "bts-mco",
+    bloc: "Bloc 2 · Animer et dynamiser l'offre commerciale",
+    preuve: "Audit du référentiel (arrêté du 15 octobre 2018 modifié le 8 juillet 2024), savoir par savoir, puis les seize chapitres et les sept compléments de la PR du MCO.",
+  },
+  {
+    formation: "bts-mco",
+    bloc: "Bloc 3 · Assurer la gestion opérationnelle",
+    preuve: "Audit du référentiel (arrêté du 15 octobre 2018 modifié le 8 juillet 2024), savoir par savoir, puis les seize chapitres et les sept compléments de la PR du MCO.",
+  },
+  {
+    formation: "bts-mco",
+    bloc: "Bloc 4 · Manager l'équipe commerciale",
+    preuve: "Audit du référentiel (arrêté du 15 octobre 2018 modifié le 8 juillet 2024), savoir par savoir, puis les seize chapitres et les sept compléments de la PR du MCO.",
+  },
+  {
     formation: "dcg",
     bloc: "UE6 · Finance d'entreprise",
     preuve: "Programme 2025 (sessions 2027 et suivantes) : les six chapitres du BTS CG P6 (PR #351), puis les sept chapitres et les deux compléments de la PR de l'UE6.",

@@ -24,7 +24,7 @@ describe("choisir et négocier avec le fournisseur : le chapitre et son cas", ()
     const ch = CHOISIR_ET_NEGOCIER_LE_FOURNISSEUR;
     expect([ch.parcours, ch.palier]).toEqual(["mco", 3]);
     gardeDuProgramme(ch, PROGRAMME.mco[3]!, () => "bts-mco", /^BTS MCO /);
-    expect(PROGRAMME.mco[3]!.at(-1)).toBe(ch.titre);
+    expect(PROGRAMME.mco[3]![PROGRAMME.mco[3]!.indexOf(ch.titre) - 1]).toBe("Fidéliser la clientèle");
     expect([...ENTREPRISES_DU_FOURNISSEUR]).toEqual(["boutique"]);
     expect(ch.etapes.length).toBeLessThanOrEqual(20);
     gardeDuCas(UN_QUATRIEME_FACONNIER, ch);
