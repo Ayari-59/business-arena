@@ -467,6 +467,11 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   // Le BTS NDRC, bloc 2 : le plateau de téléacteurs (monde/plateau-d-atlas.ts), et son cas.
   "chapitres/le-plateau-de-teleacteurs.ts",
   "situations/par-chapitre/la-ligne-de-la-rentree.ts",
+  // Le BTS CG P1 et P2, agent C : sécuriser les processus (monde/securite-des-processus.ts) et le dossier de révision (monde/dossier-de-revision.ts), et leurs cas.
+  "chapitres/securiser-les-processus.ts",
+  "chapitres/le-dossier-de-revision.ts",
+  "situations/par-chapitre/la-facture-recue-deux-fois.ts",
+  "situations/par-chapitre/la-garantie-de-deux-ans.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */

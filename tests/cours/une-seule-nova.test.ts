@@ -1,4 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { impotDeNova } from "../../src/config/cours/chapitres/l-impot-sur-les-societes";
+import { congesPayes, dossierDeRevision, garantie } from "../../src/config/cours/monde/dossier-de-revision";
+import { EXERCICE_N1_DE_NOVA, MAJORATION_DE_RETARD } from "../../src/config/cours/monde/projets-et-financement";
+import { cadrageDeLaTva, controleDeLaPaie, fraudeEvitee } from "../../src/config/cours/monde/securite-des-processus";
 import { bilanDeLExercice } from "../../src/config/cours/chapitres/bilan-fonctionnel";
 import { SECONDE_LIGNE } from "../../src/config/cours/monde/comptabilite-approfondie";
 import { SECONDE_LIGNE_PAYEE_EN_DECEMBRE, tableauDeFinancement, tableauDesFlux } from "../../src/config/cours/monde/tableaux-de-flux";
@@ -737,5 +741,34 @@ describe("une seule NOVA, chez son distributeur CampusTech (BTS NDRC, se faire r
     expect([a.remise, a.cooperation, MERCATIQUE_DE_NOVA.canal.commission]).toEqual([0, 0, 0]);
     expect(a.margeDeNova).toBe(12 * 320 * (59 - 38));
     expect(CADRE_DE_LA_NEGOCIATION.delaiDePaiement).toBe(DELAI_CONVENU_DE_CAMPUSTECH);
+  });
+});
+
+/**
+ * UNE SEULE NOVA DANS LES CONTRÔLES ET LA RÉVISION (BTS CG P1 et P2, agent C) : sécuriser les
+ * processus relit l'exercice N sans le changer (la facture de décembre du fournisseur, les ventes et
+ * la TVA, la paie de décembre) ; le dossier de révision de N+1 retombe sur le résultat que lit
+ * « L'impôt sur les sociétés », avec la même majoration, sur le réalisé de la masse salariale de N+1
+ * et la qualité de N+1.
+ */
+describe("une seule NOVA, des contrôles de N au dossier de révision de N+1", () => {
+  it("les contrôles lisent la fiche figée de N : la facture du 10 décembre, la balance, la paie", () => {
+    const fr = fraudeEvitee(EXERCICE_DE_NOVA);
+    const balance = Object.fromEntries(EXERCICE_DE_NOVA.balanceAvantInventaire.map((l) => [l.compte, l.credit - l.debit]));
+    expect(fr.facture).toBe(balance["401"]);
+    expect(fr.resultatNet).toBe(CLOTURE_DE_LA_FICHE.resultatNet);
+    expect(cadrageDeLaTva(EXERCICE_DE_NOVA).ventesComptabilisees).toBe(CLOTURE_DE_LA_FICHE.soldes.production);
+    const p = controleDeLaPaie(EXERCICE_DE_NOVA);
+    expect([p.comptes.urssaf, p.comptes.retraite, p.comptes.prelevement]).toEqual([balance["431"], balance["437"], balance["442"]]);
+    expect(p.brutDuMois).toBe(PAIE_DU_MOIS.brut);
+  });
+
+  it("le dossier de révision de N+1 retombe sur les 118 460 € du chapitre de l'impôt, et sur son impôt", () => {
+    const d = dossierDeRevision();
+    expect(d.resultatRevise).toBe(EXERCICE_N1_DE_NOVA.resultatComptable);
+    expect(d.travaux.amende).toBe(MAJORATION_DE_RETARD);
+    expect(d.impot).toBe(impotDeNova({ code: "nova" }).impot);
+    expect(congesPayes().tauxPatronal).toBe(TAUX_PATRONAL);
+    expect(garantie().defautsLivres).toBe(coutsDeLaQualite(NOVA_CAPACITE, { prevention: NOVA_CAPACITE.qualite.budgetActuel }).livres);
   });
 });

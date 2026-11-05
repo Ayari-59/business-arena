@@ -1045,6 +1045,13 @@ describe.each([
   { code: "le-plateau-de-teleacteurs", entreprise: "conseil" },
   { code: "le-plateau-de-teleacteurs", entreprise: "conseil", telephone: true },
   { code: "la-ligne-de-la-rentree", entreprise: "conseil", telephone: true },
+  // Le BTS CG P1 et P2, agent C : sécuriser les processus (un laboratoire à choix, deux tableaux à trier, un cadrage à compléter), le dossier de révision (sept écritures, un laboratoire, le dossier à compléter), puis leurs cas.
+  { code: "securiser-les-processus", entreprise: "nova" },
+  { code: "securiser-les-processus", entreprise: "nova", telephone: true },
+  { code: "le-dossier-de-revision", entreprise: "nova" },
+  { code: "le-dossier-de-revision", entreprise: "nova", telephone: true },
+  { code: "la-facture-recue-deux-fois", entreprise: "nova" },
+  { code: "la-garantie-de-deux-ans", entreprise: "nova", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se
