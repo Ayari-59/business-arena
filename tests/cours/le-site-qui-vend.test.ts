@@ -48,7 +48,10 @@ describe("le site qui vend, à la boutique en ligne d'ATLAS CONSEIL", () => {
     expect(SITUATIONS).toContain(DOUBLER_LES_LIENS_SPONSORISES);
     expect([ch.parcours, ch.palier]).toEqual(["ndrc", 3]);
     gardeDuProgramme(ch, PROGRAMME.ndrc[3]!);
-    expect(PROGRAMME.ndrc[3]!.at(-1)).toBe(ch.titre);
+    {
+      const liste = PROGRAMME.ndrc[3]!;
+      expect(liste[liste.indexOf(ch.titre) - 1]).toBe("L'événement commercial : budget, bilan et suivi des contacts");
+    }
     expect(ch.blocs).toEqual(["BTS NDRC Bloc 2 · Relation client à distance et digitalisation"]);
     for (const p of [...ch.prerequis!, ...ch.ensuite!]) expect(CHAPITRES.map((x) => x.code)).toContain(p);
     expect(casDuChapitre(ch.code)).toBe(DOUBLER_LES_LIENS_SPONSORISES);

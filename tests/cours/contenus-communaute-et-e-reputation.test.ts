@@ -33,7 +33,10 @@ describe("contenus, communauté et e-réputation, à la boutique en ligne d'ATLA
     expect(SITUATIONS).toContain(L_AVIS_A_UNE_ETOILE);
     expect([ch.parcours, ch.palier]).toEqual(["ndrc", 4]);
     gardeDuProgramme(ch, PROGRAMME.ndrc[4]!);
-    expect(PROGRAMME.ndrc[4]!.at(-1)).toBe(ch.titre);
+    {
+      const liste = PROGRAMME.ndrc[4]!;
+      expect(liste[liste.indexOf(ch.titre) - 1]).toBe("Organiser le secteur : visites, temps et tournées");
+    }
     expect(ch.prerequis).toContain("le-site-qui-vend");
     for (const p of [...ch.prerequis!, ...ch.ensuite!]) expect(CHAPITRES.map((x) => x.code)).toContain(p);
     expect(casDuChapitre(ch.code)).toBe(L_AVIS_A_UNE_ETOILE);
