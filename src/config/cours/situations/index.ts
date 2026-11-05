@@ -175,6 +175,10 @@ import { UN_TRACT_POUR_QUELLE_ZONE } from "./par-chapitre/un-tract-pour-quelle-z
 import { FAUT_IL_LIVRER_A_DOMICILE } from "./par-chapitre/faut-il-livrer-a-domicile";
 import { LE_SAMEDI_APRES_LA_FORMATION } from "./par-chapitre/le-samedi-apres-la-formation";
 import { LA_CARTE_DU_PRESTATAIRE } from "./par-chapitre/la-carte-du-prestataire";
+import { UNE_SECONDE_ENSEIGNE } from "./par-chapitre/une-seconde-enseigne";
+import { UN_QUATRIEME_FACONNIER } from "./par-chapitre/un-quatrieme-faconnier";
+import { MILLE_EUROS_POUR_COMMUNIQUER } from "./par-chapitre/mille-euros-pour-communiquer";
+import { LE_RAYONNAGE_QUI_RESISTE } from "./par-chapitre/le-rayonnage-qui-resiste";
 export type { Situation } from "./types";
 
 /**
@@ -365,6 +369,10 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   FAUT_IL_LIVRER_A_DOMICILE,
   LE_SAMEDI_APRES_LA_FORMATION,
   LA_CARTE_DU_PRESTATAIRE,
+  UNE_SECONDE_ENSEIGNE,
+  UN_QUATRIEME_FACONNIER,
+  MILLE_EUROS_POUR_COMMUNIQUER,
+  LE_RAYONNAGE_QUI_RESISTE,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

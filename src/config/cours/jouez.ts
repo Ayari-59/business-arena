@@ -1506,6 +1506,41 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Vos clients restent-ils d'un tour à l'autre ? Estimez la part que vous perdez à chaque tour, puis ce que vaut un client fidèle sur sa durée de vie. Combien pourriez-vous lui rendre pour qu'il reste ?",
   }),
+  "le-marche-et-le-reseau": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relisez le marché du tour et le compte de résultat.`,
+    lieux: ["marche-du-tour", "compte-de-resultat"],
+    chercher:
+      "Quelle part de la demande du marché avez-vous servie ? Si un groupement vous faisait acheter 5 % moins cher contre une cotisation fixe, de combien votre résultat changerait-il ? Et une franchise qui prend 6 % du chiffre d'affaires : quelle hausse des ventes lui faudrait-il pour vous laisser autant ?",
+  }),
+  "choisir-et-negocier-le-fournisseur": (c) => {
+    const f = fournisseursDe(scenarioCodeForLevel(c.code, 1));
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Avant de jouer, notez « ${f.reference.name} », « ${f.moinsCher.name} » et « ${f.plusCher.name} » sur le prix, le délai de paiement et la qualité, avec vos propres poids. Jouez un tour avec celui qui a la meilleure note.`,
+      lieux: ["analyse-des-couts", "budget-de-tresorerie"],
+      chercher:
+        "Votre classement aurait-il changé avec d'autres poids ? Dans l'analyse des coûts, retrouvez le coût d'achat d'une unité ; dans le budget de trésorerie, quand le fournisseur a été payé. Le fournisseur le mieux noté était-il le moins cher ?",
+    };
+  },
+  "communiquer-et-animer-en-local": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis un second où vous augmentez nettement votre budget de publicité, sans rien changer d'autre.`,
+    lieux: ["marche-du-tour", "compte-de-resultat"],
+    chercher:
+      "Combien de ventes en plus la publicité a-t-elle apportées ? Multipliez-les par la marge d'une vente et retranchez la dépense : la publicité en plus a-t-elle laissé quelque chose ? Quel retour sur investissement ?",
+  }),
+  "reimplanter-avant-les-soldes": (c) => {
+    // Le linéaire se partage entre références : la mission se joue au niveau où le commerce passe en gamme.
+    const niveau = niveauDeLaGamme(c.code) ?? 1;
+    return {
+      niveau,
+      faire: `${partie(c, niveau)} À ce niveau, ${c.entreprise} vend plusieurs références : jouez un tour, puis un second où vous donnez plus de volume à la référence qui marge le plus et moins à celle qui marge le moins.`,
+      lieux: ["references", "analyse-des-couts"],
+      chercher:
+        "Dans le tableau des références, comparez la marge de chacune aux deux tours. La référence renforcée a-t-elle vendu plus, ou a-t-elle manqué de demande ? Le gain couvre-t-il ce que l'autre a perdu ?",
+    };
+  },
 };
 
 /**

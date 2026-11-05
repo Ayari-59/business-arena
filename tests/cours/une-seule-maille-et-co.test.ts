@@ -10,6 +10,11 @@ import { assortiment, chiffreDAffairesParLesIndicateurs, indicateursDuMois, marg
 import { MAILLE_ET_CO as f } from "../../src/config/cours/monde/maille-et-co";
 import { journeeEnCaisse, panierDuMois } from "../../src/config/cours/monde/vente-et-caisse";
 import { servirLeChapitre } from "../../src/pedagogy/cours/chapitre-servi";
+import { marcheLocal, moisSelonLaForme } from "../../src/config/cours/monde/reseau-de-la-boutique";
+import { cooperationCommerciale } from "../../src/config/cours/monde/fournisseurs-de-la-boutique";
+import { rendementDesEntrees } from "../../src/config/cours/monde/communication-locale";
+import { marchandisage, renfortDuLundi } from "../../src/config/cours/monde/reimplantation";
+import { passantsDeJanvier } from "../../src/config/cours/monde/vente-et-caisse";
 import { montantEcrit } from "../../src/pedagogy/cours/correcteur";
 
 /**
@@ -68,6 +73,18 @@ describe("une seule MAILLE & CO, d'une fiche à l'autre", () => {
     expect([k.m.tickets, s.s.tickets, t.m.tickets, e.tickets]).toEqual([940, 940, 940, 940]);
     expect([k.m.chiffreDAffaires, s.s.chiffreDAffaires, t.ca, e.ca]).toEqual([87_450, 87_450, 87_450, 87_450]);
     expect([k.m.articles, s.m.articles, t.m.articles]).toEqual([1_530, 1_530, 1_530]);
+  });
+
+  it("les chapitres du bloc 2 (réseau, fournisseur, communication, réimplantation) lisent le même mois, le même passant, la même équipe", () => {
+    expect(marcheLocal(f).boutique.ventesDuMois).toBe(87_450);
+    expect(moisSelonLaForme(f, "independante").resultat).toBe(seuilDuPointDeVente(f).resultat);
+    expect(moisSelonLaForme(f, "independante").resultat).toBe(13_555);
+    const k = cooperationCommerciale(f);
+    expect([k.mise.margeUnitaire, k.deplacee.margeUnitaire]).toEqual([26.5, 74]);
+    expect(rendementDesEntrees(f, passantsDeJanvier(f).entrees).ventes).toBe(600);
+    const m = marchandisage(f);
+    expect([m.chiffreDAffaires, m.marge]).toEqual([87_450, 44_250]);
+    expect(renfortDuLundi(f).salarie.brutMensuel).toBe(f.equipe.find((s) => s.code === "vendeuse-partiel")!.brutMensuel);
   });
 
   it("aucun chapitre ni cas de la boutique ne donne l'ancien panier (92,25 €, 948 passages), sauf pour montrer l'erreur", () => {

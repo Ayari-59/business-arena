@@ -420,6 +420,15 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "situations/par-chapitre/faut-il-livrer-a-domicile.ts",
   "situations/par-chapitre/le-samedi-apres-la-formation.ts",
   "situations/par-chapitre/la-carte-du-prestataire.ts",
+  // Le BTS MCO, bloc 2 : le marché et le réseau, le fournisseur, la communication locale, la réimplantation (monde/reseau-de-la-boutique.ts, fournisseurs-de-la-boutique.ts, communication-locale.ts, reimplantation.ts), et leurs cas.
+  "chapitres/le-marche-et-le-reseau.ts",
+  "chapitres/choisir-et-negocier-le-fournisseur.ts",
+  "chapitres/communiquer-et-animer-en-local.ts",
+  "chapitres/reimplanter-avant-les-soldes.ts",
+  "situations/par-chapitre/une-seconde-enseigne.ts",
+  "situations/par-chapitre/un-quatrieme-faconnier.ts",
+  "situations/par-chapitre/mille-euros-pour-communiquer.ts",
+  "situations/par-chapitre/le-rayonnage-qui-resiste.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
@@ -594,6 +603,14 @@ const NE_LISENT_PLUS_L_ANNEE_FIGEE: readonly string[] = [
   "situations/par-chapitre/faut-il-livrer-a-domicile.ts",
   "situations/par-chapitre/le-samedi-apres-la-formation.ts",
   "situations/par-chapitre/la-carte-du-prestataire.ts",
+  "chapitres/le-marche-et-le-reseau.ts",
+  "chapitres/choisir-et-negocier-le-fournisseur.ts",
+  "chapitres/communiquer-et-animer-en-local.ts",
+  "chapitres/reimplanter-avant-les-soldes.ts",
+  "situations/par-chapitre/une-seconde-enseigne.ts",
+  "situations/par-chapitre/un-quatrieme-faconnier.ts",
+  "situations/par-chapitre/mille-euros-pour-communiquer.ts",
+  "situations/par-chapitre/le-rayonnage-qui-resiste.ts",
 ];
 
 /** Le premier chemin d'imports qui atteint un fichier donné, ou rien. */

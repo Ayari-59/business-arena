@@ -978,6 +978,19 @@ describe.each([
   { code: "faut-il-livrer-a-domicile", entreprise: "boutique", telephone: true },
   { code: "le-samedi-apres-la-formation", entreprise: "boutique" },
   { code: "la-carte-du-prestataire", entreprise: "boutique", telephone: true },
+  // Le BTS MCO, bloc 2 : le marché et le réseau, le fournisseur, la communication locale, la réimplantation (un tableau à compléter, un curseur et un laboratoire chacun), puis leurs cas ; et les compléments de l'assortiment, de la promotion et de « S'aligner sur le concurrent ».
+  { code: "le-marche-et-le-reseau", entreprise: "boutique" },
+  { code: "le-marche-et-le-reseau", entreprise: "boutique", telephone: true },
+  { code: "choisir-et-negocier-le-fournisseur", entreprise: "boutique" },
+  { code: "choisir-et-negocier-le-fournisseur", entreprise: "boutique", telephone: true },
+  { code: "communiquer-et-animer-en-local", entreprise: "boutique" },
+  { code: "communiquer-et-animer-en-local", entreprise: "boutique", telephone: true },
+  { code: "reimplanter-avant-les-soldes", entreprise: "boutique" },
+  { code: "reimplanter-avant-les-soldes", entreprise: "boutique", telephone: true },
+  { code: "une-seconde-enseigne", entreprise: "boutique" },
+  { code: "un-quatrieme-faconnier", entreprise: "boutique", telephone: true },
+  { code: "mille-euros-pour-communiquer", entreprise: "boutique" },
+  { code: "le-rayonnage-qui-resiste", entreprise: "boutique", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se
