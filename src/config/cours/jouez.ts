@@ -554,6 +554,34 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Les charges de structure ont-elles monté du coût d'un salarié ? Les ventes, elles, ont-elles bougé ? Si l'équipe n'était pas ce qui limitait les ventes, l'embauche n'a fait qu'ajouter une charge.",
   }),
+  "facturer-et-se-faire-payer": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relisez le budget de trésorerie et le bilan du second.`,
+    lieux: ["budget-de-tresorerie", "bilan"],
+    chercher:
+      "Retrouvez au bilan ce que vos clients professionnels vous doivent encore. Combien coûterait de financer ces créances au découvert jusqu'à leur échéance ? Un escompte de 2 % pour être payé comptant serait-il plus cher, une fois rapporté à l'année ?",
+  }),
+  "le-compte-de-resultat-de-la-boutique": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, le second avec un prix un peu plus bas, puis ouvrez le compte de résultat de chacun.`,
+    lieux: ["compte-de-resultat", "analyse-des-couts"],
+    chercher:
+      "Calculez la marge commerciale, la valeur ajoutée et l'excédent brut d'exploitation des deux tours. Le chiffre d'affaires a-t-il monté pendant que l'EBE baissait ? Quelle charge, ou quelle baisse de prix, l'explique ?",
+  }),
+  "le-bilan-et-le-bfr-de-la-boutique": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez le bilan et le fonds de roulement du second.`,
+    lieux: ["bilan", "frng-bfr"],
+    chercher:
+      "Votre BFR est-il un besoin ou une ressource ? Retrouvez le stock, les créances et les dettes fournisseurs qui le font, puis la trésorerie nette. De combien changerait-elle si vos fournisseurs vous payaient comptant ?",
+  }),
+  "renover-la-boutique": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le compte de résultat et le bilan.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "Imaginez un nouvel équipement qui ferait vendre un peu plus chaque tour. Quel flux de trésorerie apporterait-il, impôt et amortissement compris ? Combien de tours pour le rembourser, et votre trésorerie le paierait-elle sans emprunter ?",
+  }),
   "tableau-de-bord-du-manager": (c) => ({
     niveau: 2,
     faire: `${partie(c, 2)} Jouez quatre tours. À chaque tour, relevez les indicateurs de votre tableau de bord : chiffre d'affaires, panier, indicateur du métier, taux de marque, seuil, part du personnel.`,
