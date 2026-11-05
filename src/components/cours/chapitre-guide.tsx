@@ -590,7 +590,8 @@ function EtapeDeTri({ etape, chapitre, index, suivi, classe, noter, suite }: Pro
             <li key={el.libelle} className="grid gap-1.5 rounded-lg border border-slate-600 px-3 py-2.5" data-element={el.libelle}>
               <p className="flex flex-wrap items-baseline justify-between gap-x-3">
                 <span>{el.libelle}</span>
-                <span className="whitespace-nowrap tabular-nums text-slate-300">{montantAffiche(el.montant)}</span>
+                {/* Un élément sans montant (une source, une donnée, une situation) n'affiche pas « 0 € ». */}
+                {el.montant !== 0 && <span className="whitespace-nowrap tabular-nums text-slate-300">{montantAffiche(el.montant)}</span>}
               </p>
               <div className="flex flex-wrap items-center gap-2" role="radiogroup" aria-label={el.libelle}>
                 {etape.categories.map((k) => (
