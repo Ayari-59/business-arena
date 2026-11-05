@@ -52,6 +52,18 @@ import { equipeEtPlanning } from "./equipe-et-planning";
  */
 export const FEVRIER_A_REBOURS = { realisation: 0.97, entrees: 3_700, transformation: 0.25 } as const;
 
+/**
+ * LES SUPPORTS ET LES CANAUX DU REPORTING (BTS MCO, bloc 3, « le reporting » : complément C5 de l'audit
+ * de novembre 2026). Ce qui remonte du point de vente vers la direction : une note de synthèse, le
+ * tableau de bord sur un outil partagé, la réunion, le message instantané. Chacun a son usage.
+ */
+export const SUPPORTS_DU_REPORTING = [
+  { support: "Note de synthèse", pour: "dire l'essentiel, la cause et l'action ; garder une trace", limite: "lue seulement si elle est courte" },
+  { support: "Tableau de bord sur un outil partagé", pour: "des chiffres à jour, consultables à tout moment", limite: "des chiffres sans explication" },
+  { support: "Réunion", pour: "débattre et décider ensemble", limite: "rien d'écrit sans compte rendu" },
+  { support: "Message instantané", pour: "alerter vite sur un incident", limite: "trop court pour faire décider" },
+] as const;
+
 /** Les bornes du curseur des entrées du mois. */
 export const ENTREES_DU_CURSEUR = { min: 3_500, max: 4_500 } as const;
 
@@ -240,7 +252,7 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
   objectifs: [
     "Ranger les indicateurs du point de vente par ce qu'ils surveillent",
     "Comparer un mois à l'année précédente et à l'objectif : évolutions, écart, taux de réalisation",
-    "Lire les voyants d'un tableau de bord et remonter à leur cause",
+    "Lire les voyants d'un tableau de bord, remonter à leur cause et en rendre compte",
     "Décomposer l'écart de chiffre d'affaires en effet trafic, transformation et panier",
     "Retrouver un indicateur à rebours, et critiquer la façon dont un objectif est fixé",
   ],
@@ -681,6 +693,35 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
       },
     },
     {
+      id: "le-reporting",
+      objectifs: [2],
+      type: "choix",
+      titre: "Rendre compte à la direction",
+      notions: ["dashboard"],
+      tableau: () => ({
+        titre: "Les supports et les canaux du reporting",
+        colonnes: ["Ce qu'il fait bien", "Sa limite"],
+        lignes: SUPPORTS_DU_REPORTING.map((r) => ({ libelle: r.support, valeurs: [r.pour, r.limite] })),
+      }),
+      question: (c) => {
+        const x = tableauDeBordDuMois(c);
+        return `Le manager doit rendre compte de janvier à la direction, qui décidera s'il faut une campagne pour faire venir des clients. Deux voyants sont rouges : l'objectif (${pct(x.realisation)}) et le trafic (${pct(x.evolutionDuTrafic)} sur N − 1). Comment en rend-il compte ?`;
+      },
+      options: (c) => {
+        const x = tableauDeBordDuMois(c);
+        return [
+          {
+            texte: "Une note d'une page sur l'outil partagé : les deux voyants, leur cause, l'action proposée ; puis on en décide en réunion",
+            juste: true,
+            retour: `Oui. Le reporting sert une décision : il va à l'essentiel (deux voyants sur dix), dit la cause (le trafic, pas la transformation ni le panier), propose une action, et laisse une trace écrite que la direction lit avant d'en débattre. L'outil partagé garde les chiffres à jour ; la réunion tranche.`,
+          },
+          { texte: "Les dix indicateurs du tableau de bord, envoyés tels quels par courriel", juste: false, retour: "Les chiffres sont justes, mais rien n'est dit : la direction doit trouver seule les deux voyants qui comptent et leur cause. Un reporting choisit et explique." },
+          { texte: `Un message instantané au directeur : « chiffre d'affaires de ${eur(x.ca)}, objectif manqué »`, juste: false, retour: "Le canal convient à une alerte urgente, pas à une décision : sans la cause ni l'action proposée, le message inquiète sans permettre d'agir." },
+          { texte: "Rien avant la réunion de fin de trimestre, où tout sera présenté à l'oral", juste: false, retour: "Trop tard : le tableau de bord sert à corriger en cours de trimestre. Et l'oral seul ne laisse pas de trace à laquelle revenir." },
+        ];
+      },
+    },
+    {
       id: "synthese",
       type: "lecture",
       titre: "Le tableau de bord de votre point de vente",
@@ -702,7 +743,8 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
           `Le tableau de bord de ${x.f.entreprise} a deux voyants rouges en janvier : la réalisation de l'objectif, ${pct(x.realisation)}, et le trafic, ${pct(x.evolutionDuTrafic)} sur N − 1. Le second explique le premier : la transformation et le panier progressent, et l'écart sur N − 1 se décompose en ${eur(x.effetDuTrafic)} de trafic, ${eur(x.effetDeLaTransformation)} de transformation et ${eur(x.effetDuPanier)} de panier.`,
           `On peut éteindre le voyant de l'objectif sans un client de plus, avec ${pct(x.transformationNecessaire)} de transformation au lieu de ${pct(x.transformationN)} ; le voyant du trafic, lui, reste allumé, et la décision qu'il appelle aussi : faire venir.`,
           "Les limites : un voyant ne vaut que son seuil, et un objectif découpé en parts égales ignore la saison ; la décomposition de l'écart dépend de l'ordre des effets ; et un tableau de bord dit où regarder, pas pourquoi.",
-          "Au niveau de l'examen, vous savez ranger les indicateurs, comparer un mois à l'an passé et à l'objectif, décomposer un écart de chiffre d'affaires en trafic, transformation et panier, retrouver un indicateur à rebours, et dire ce que vaut un objectif.",
+          "Le reporting rend compte pour faire décider. Il choisit les voyants qui comptent, en dit la cause et propose une action ; il passe par un support qui garde une trace (une note, un outil partagé), lu avant la réunion où l'on tranche.",
+          "Au niveau de l'examen, vous savez ranger les indicateurs, comparer un mois à l'an passé et à l'objectif, décomposer un écart de chiffre d'affaires en trafic, transformation et panier, retrouver un indicateur à rebours, et dire ce que vaut un objectif. Vous savez aussi en rendre compte à la direction.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
         ];
       },

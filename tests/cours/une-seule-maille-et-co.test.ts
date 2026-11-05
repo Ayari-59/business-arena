@@ -9,6 +9,7 @@ import { SITUATIONS } from "../../src/config/cours/situations";
 import { assortiment, chiffreDAffairesParLesIndicateurs, indicateursDuMois, margesDeLaGamme, seuilDuPointDeVente, tableauDeBordDuManager } from "../../src/config/cours/monde/boutique";
 import { MAILLE_ET_CO as f } from "../../src/config/cours/monde/maille-et-co";
 import { journeeEnCaisse, panierDuMois } from "../../src/config/cours/monde/vente-et-caisse";
+import { bilanDeLaBoutique, compteDeResultat, factureDuComite, projetDeRenovation } from "../../src/config/cours/monde/comptes-de-la-boutique";
 import { servirLeChapitre } from "../../src/pedagogy/cours/chapitre-servi";
 import { montantEcrit } from "../../src/pedagogy/cours/correcteur";
 
@@ -68,6 +69,17 @@ describe("une seule MAILLE & CO, d'une fiche à l'autre", () => {
     expect([k.m.tickets, s.s.tickets, t.m.tickets, e.tickets]).toEqual([940, 940, 940, 940]);
     expect([k.m.chiffreDAffaires, s.s.chiffreDAffaires, t.ca, e.ca]).toEqual([87_450, 87_450, 87_450, 87_450]);
     expect([k.m.articles, s.m.articles, t.m.articles]).toEqual([1_530, 1_530, 1_530]);
+  });
+
+  it("les comptes de la boutique (facture, exercice, bilan, rénovation) lisent les mêmes prix, la même paie, le même stock et la même marge", () => {
+    const fa = factureDuComite(f, { remise: 0 });
+    for (const l of fa.lignes) expect(l.prixHt).toBe(f.gamme.find((r) => r.code === l.reference)!.prixHt);
+    const n1 = compteDeResultat(f, "N-1");
+    expect(n1.personnel).toBe(centime(12 * 14_342));
+    expect(n1.loyer + n1.taxesLocales).toBe(12 * 13_600);
+    expect(bilanDeLaBoutique(f).stock).toBe(f.gamme.reduce((t, r) => t + r.stockInitial * r.coutDAchat, 0));
+    // La marge perdue des travaux est celle du mois du seuil : 44 250 € × 5 ÷ 30.
+    expect(projetDeRenovation(f).margePerdue).toBe(centime((seuilDuPointDeVente(f).marge * 5) / 30));
   });
 
   it("aucun chapitre ni cas de la boutique ne donne l'ancien panier (92,25 €, 948 passages), sauf pour montrer l'erreur", () => {

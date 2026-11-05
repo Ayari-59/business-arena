@@ -411,6 +411,15 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "chapitres/evaluer-un-investissement-durable.ts",
   "situations/par-chapitre/le-pret-indexe-sur-la-durabilite.ts",
   "situations/par-chapitre/deux-devis-pour-chauffer-l-atelier.ts",
+  // Le BTS MCO, bloc 3, gestion et finance : facturer, le compte de résultat, le bilan et le BFR, la rénovation de la boutique (monde/comptes-de-la-boutique.ts), et leurs cas.
+  "chapitres/facturer-et-se-faire-payer.ts",
+  "chapitres/le-compte-de-resultat-de-la-boutique.ts",
+  "chapitres/le-bilan-et-le-bfr-de-la-boutique.ts",
+  "chapitres/renover-la-boutique.ts",
+  "situations/par-chapitre/le-comite-qui-paie-en-retard.ts",
+  "situations/par-chapitre/le-bail-revise.ts",
+  "situations/par-chapitre/le-decouvert-demande-au-banquier.ts",
+  "situations/par-chapitre/un-pret-sur-sept-ans.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
@@ -577,6 +586,14 @@ const NE_LISENT_PLUS_L_ANNEE_FIGEE: readonly string[] = [
   "chapitres/evaluer-un-investissement-durable.ts",
   "situations/par-chapitre/le-pret-indexe-sur-la-durabilite.ts",
   "situations/par-chapitre/deux-devis-pour-chauffer-l-atelier.ts",
+  "chapitres/facturer-et-se-faire-payer.ts",
+  "chapitres/le-compte-de-resultat-de-la-boutique.ts",
+  "chapitres/le-bilan-et-le-bfr-de-la-boutique.ts",
+  "chapitres/renover-la-boutique.ts",
+  "situations/par-chapitre/le-comite-qui-paie-en-retard.ts",
+  "situations/par-chapitre/le-bail-revise.ts",
+  "situations/par-chapitre/le-decouvert-demande-au-banquier.ts",
+  "situations/par-chapitre/un-pret-sur-sept-ans.ts",
 ];
 
 /** Le premier chemin d'imports qui atteint un fichier donné, ou rien. */

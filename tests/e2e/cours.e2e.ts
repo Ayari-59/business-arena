@@ -965,6 +965,19 @@ describe.each([
   { code: "evaluer-un-investissement-durable", entreprise: "nova", telephone: true },
   { code: "le-pret-indexe-sur-la-durabilite", entreprise: "nova" },
   { code: "deux-devis-pour-chauffer-l-atelier", entreprise: "nova", telephone: true },
+  // Le BTS MCO, bloc 3, gestion et finance de la boutique : facturer, le compte de résultat, le bilan et le BFR, la rénovation, puis leurs cas.
+  { code: "facturer-et-se-faire-payer", entreprise: "boutique" },
+  { code: "facturer-et-se-faire-payer", entreprise: "boutique", telephone: true },
+  { code: "le-compte-de-resultat-de-la-boutique", entreprise: "boutique" },
+  { code: "le-compte-de-resultat-de-la-boutique", entreprise: "boutique", telephone: true },
+  { code: "le-bilan-et-le-bfr-de-la-boutique", entreprise: "boutique" },
+  { code: "le-bilan-et-le-bfr-de-la-boutique", entreprise: "boutique", telephone: true },
+  { code: "renover-la-boutique", entreprise: "boutique" },
+  { code: "renover-la-boutique", entreprise: "boutique", telephone: true },
+  { code: "le-comite-qui-paie-en-retard", entreprise: "boutique" },
+  { code: "le-bail-revise", entreprise: "boutique", telephone: true },
+  { code: "le-decouvert-demande-au-banquier", entreprise: "boutique" },
+  { code: "un-pret-sur-sept-ans", entreprise: "boutique", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se

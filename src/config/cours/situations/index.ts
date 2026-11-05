@@ -171,6 +171,10 @@ import { CAMPUSTECH_DOUBLE_SA_COMMANDE } from "./par-chapitre/campustech-double-
 import { LA_BANQUE_DEMANDE_UNE_GARANTIE } from "./par-chapitre/la-banque-demande-une-garantie";
 import { LE_PRET_INDEXE_SUR_LA_DURABILITE } from "./par-chapitre/le-pret-indexe-sur-la-durabilite";
 import { DEUX_DEVIS_POUR_CHAUFFER_L_ATELIER } from "./par-chapitre/deux-devis-pour-chauffer-l-atelier";
+import { LE_COMITE_QUI_PAIE_EN_RETARD } from "./par-chapitre/le-comite-qui-paie-en-retard";
+import { LE_BAIL_REVISE } from "./par-chapitre/le-bail-revise";
+import { LE_DECOUVERT_DEMANDE_AU_BANQUIER } from "./par-chapitre/le-decouvert-demande-au-banquier";
+import { UN_PRET_SUR_SEPT_ANS } from "./par-chapitre/un-pret-sur-sept-ans";
 export type { Situation } from "./types";
 
 /**
@@ -357,6 +361,10 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LA_BANQUE_DEMANDE_UNE_GARANTIE,
   LE_PRET_INDEXE_SUR_LA_DURABILITE,
   DEUX_DEVIS_POUR_CHAUFFER_L_ATELIER,
+  LE_COMITE_QUI_PAIE_EN_RETARD,
+  LE_BAIL_REVISE,
+  LE_DECOUVERT_DEMANDE_AU_BANQUIER,
+  UN_PRET_SUR_SEPT_ANS,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */
