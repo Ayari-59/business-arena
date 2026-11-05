@@ -206,6 +206,7 @@ export const COUT_D_ACQUISITION: Chapitre = {
   parcours: "ndrc",
   palier: 3,
   blocs: [
+    "BTS NDRC Bloc 1 · Relation client et négociation-vente",
     "BTS NDRC Bloc 2 · Relation client à distance et digitalisation",
     "Bac pro MCV Bloc 4B · Prospecter et valoriser l'offre commerciale",
     "BUT TC · Gérer une activité digitale",

@@ -221,9 +221,12 @@ describe("prévoir les ventes, à la boutique du monde du cours", () => {
     expect([ch.parcours, ch.palier]).toEqual(["mco", 3]);
     expect(ch.entreprises?.codes).toEqual(["boutique"]);
     expect(ch.entreprises!.pourquoi).toMatch(/^[a-zé].*\.$/);
-    expect(ch.blocs).toEqual(["BTS MCO Bloc 3 · Assurer la gestion opérationnelle"]);
+    // Les techniques de prévision des ventes sont aussi un savoir du Bloc 1 du BTS NDRC (audit du NDRC, K6).
+    expect(ch.blocs).toEqual(["BTS MCO Bloc 3 · Assurer la gestion opérationnelle", "BTS NDRC Bloc 1 · Relation client et négociation-vente"]);
     expect(referentielDeCitation(ch.blocs[0]!)?.code).toBe("bts-mco");
     expect(blocOfficiel(ch.blocs[0]!, "bts-mco")).not.toBeNull();
+    expect(referentielDeCitation(ch.blocs[1]!)?.code).toBe("bts-ndrc");
+    expect(blocOfficiel(ch.blocs[1]!, "bts-ndrc")).not.toBeNull();
     expect(f.entreprise).toBe(cas.entreprise);
     expect(ch.etapes[0]!.type).toBe("lecture");
     expect(ch.etapes.at(-1)!.id).toBe("synthese");
