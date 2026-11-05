@@ -17,7 +17,7 @@ import type { Chapitre } from "../types";
  * Ce que coûte le personnel sur l'année, et ce qu'il pèse : dans les charges, dans le chiffre
  * d'affaires, et ce que chaque salarié fait vendre. Puis ce qu'une embauche retire au résultat quand
  * les ventes ne suivent pas (le personnel est une charge fixe), les ventes qu'il faudrait pour un
- * salarié de plus sous le plafond de la présidente (le curseur), et la plus forte hausse générale que ce
+ * salarié de plus sous le plafond du président (le curseur), et la plus forte hausse générale que ce
  * plafond permet (le laboratoire).
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA seule : l'effectif et le coût d'un opérateur
@@ -185,7 +185,7 @@ export const EFFECTIF_ET_MASSE_SALARIALE: Chapitre = {
       sens: "plus-petite",
       question: (c) => {
         const m = masseSalariale(c);
-        return `La présidente veut que le personnel ne coûte pas plus de ${pct(PLAFOND_DES_FRAIS_DE_PERSONNEL * 100)} des ventes. Avec ${EFFECTIF_ESSAYE} salariés, combien d'enceintes faudrait-il vendre dans l'année, à ${eur(m.prix)} ? Une droite donne ${pct(PLAFOND_DES_FRAIS_DE_PERSONNEL * 100)} des ventes, l'autre la masse salariale de ${EFFECTIF_ESSAYE} salariés. Placez le curseur sur le plus petit nombre d'enceintes qui tient le plafond.`;
+        return `Le président veut que le personnel ne coûte pas plus de ${pct(PLAFOND_DES_FRAIS_DE_PERSONNEL * 100)} des ventes. Avec ${EFFECTIF_ESSAYE} salariés, combien d'enceintes faudrait-il vendre dans l'année, à ${eur(m.prix)} ? Une droite donne ${pct(PLAFOND_DES_FRAIS_DE_PERSONNEL * 100)} des ventes, l'autre la masse salariale de ${EFFECTIF_ESSAYE} salariés. Placez le curseur sur le plus petit nombre d'enceintes qui tient le plafond.`;
       },
       grandeur: (c) => ({ libelle: "Enceintes vendues dans l'année", unite: c.unites }),
       cible: () => ({ attendu: enceintesPourLePlafond(EFFECTIF_ESSAYE), min: 20_000, max: 32_000 }),
@@ -228,7 +228,7 @@ export const EFFECTIF_ET_MASSE_SALARIALE: Chapitre = {
         return [
           { libelle: "Masse salariale de l'année", montant: m.masse, reference: d.masse },
           { libelle: "Taux de frais de personnel", montant: auDixieme(m.tauxDeFraisDePersonnel), unite: "%", reference: d.tauxDeFraisDePersonnel, fort: true },
-          { libelle: "Plafond de la présidente", montant: PLAFOND_DES_FRAIS_DE_PERSONNEL * 100, unite: "%" },
+          { libelle: "Plafond du président", montant: PLAFOND_DES_FRAIS_DE_PERSONNEL * 100, unite: "%" },
         ];
       },
       defi: () => {

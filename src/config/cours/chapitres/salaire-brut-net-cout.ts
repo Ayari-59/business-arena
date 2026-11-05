@@ -181,7 +181,7 @@ export const SALAIRE_BRUT_NET_COUT: Chapitre = {
       notions: ["payroll"],
       sens: "plus-grande",
       question: (c) =>
-        `${c.entreprise} envisage un cinquième opérateur, et la présidente fixe le coût du poste à ${eur(COUT_MAXIMAL_D_UN_POSTE)} par mois au plus, cotisations patronales comprises. Faites varier le salaire brut offert : une droite donne ce budget, l'autre le coût du poste. Placez le curseur sur le plus haut brut, à l'euro, que le budget permet.`,
+        `${c.entreprise} envisage un cinquième opérateur, et le président fixe le coût du poste à ${eur(COUT_MAXIMAL_D_UN_POSTE)} par mois au plus, cotisations patronales comprises. Faites varier le salaire brut offert : une droite donne ce budget, l'autre le coût du poste. Placez le curseur sur le plus haut brut, à l'euro, que le budget permet.`,
       grandeur: () => ({ libelle: "Salaire brut offert, par mois", unite: "€" }),
       cible: () => ({ attendu: salaire().brutMaximalDuPoste, min: FICHE_RH.operateurs.salaireBrutMensuel, max: BRUT_MAXIMAL_DU_CURSEUR }),
       zones: ["Le budget paie le poste", "Le poste dépasse le budget"],
@@ -209,7 +209,7 @@ export const SALAIRE_BRUT_NET_COUT: Chapitre = {
       titre: "Une hausse dans l'enveloppe",
       notions: ["payroll", "pay_and_motivation"],
       question: (c) =>
-        `La présidente ${dE(c.entreprise)} accepte qu'une hausse coûte au plus ${eur(ENVELOPPE_DE_LA_HAUSSE)} de plus par mois et par opérateur. Faites varier la hausse du net, et regardez ce qu'elle demande de brut et ce qu'elle coûte à l'entreprise.`,
+        `Le président ${dE(c.entreprise)} accepte qu'une hausse coûte au plus ${eur(ENVELOPPE_DE_LA_HAUSSE)} de plus par mois et par opérateur. Faites varier la hausse du net, et regardez ce qu'elle demande de brut et ce qu'elle coûte à l'entreprise.`,
       leviers: () => [{ code: "net", libelle: "Hausse du net, par mois", unite: "€", ...HAUSSES_DU_NET_ESSAYEES, depart: salaire().hausseDuNet }],
       lecture: (_c, p) => {
         const h = hausseDuNet(p.net!);

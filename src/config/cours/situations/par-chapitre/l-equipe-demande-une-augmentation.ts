@@ -9,7 +9,7 @@ import type { Situation } from "../types";
  * (Bac STMG, ressources humaines, palier 1).
  *
  * En janvier de N + 1, les opérateurs de NOVA demandent ensemble des salaires 10 % plus hauts : le
- * marché a monté, disent-ils, et ils le savent. La présidente veut savoir ce que la hausse coûterait sur
+ * marché a monté, disent-ils, et ils le savent. Le président veut savoir ce que la hausse coûterait sur
  * l'année, où elle placerait l'équipe face au marché, et si elle coûte moins que le départ qu'un
  * refus risque de provoquer. L'élève refait les calculs du chapitre pour la hausse demandée, puis
  * répond.
@@ -57,14 +57,14 @@ export const L_EQUIPE_DEMANDE_UNE_AUGMENTATION: Situation = {
   palier: 1,
   blocs: [],
   reprend: ["remuneration-et-motivation"],
-  commanditaire: "La présidente",
+  commanditaire: "Le président",
   titre: "L'équipe demande une augmentation",
   accroche: `Les opérateurs demandent des salaires ${pct(HAUSSE_DEMANDEE * 100)} plus hauts : le marché a monté. Ce que la hausse coûte sur l'année, où elle place l'équipe face au marché, et le départ qu'elle évite.`,
   objectifs: [
     "Calculer le coût d'une hausse de salaire sur l'année, cotisations comprises",
     "Situer le salaire augmenté face au marché",
     "Comparer le coût d'une hausse à celui d'un départ",
-    "Répondre à la présidente, chiffre à l'appui",
+    "Répondre au président, chiffre à l'appui",
   ],
   libre: false,
   entreprises: {
@@ -75,11 +75,11 @@ export const L_EQUIPE_DEMANDE_UNE_AUGMENTATION: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La demande de la présidente",
+      titre: "La demande du président",
       texte: () => {
         const k = hausseDemandee();
         return [
-          `« Les ${k.r.operateurs} opérateurs me demandent ensemble ${pct(HAUSSE_DEMANDEE * 100)} de plus sur leur salaire brut, dès janvier. Avant de leur répondre, je veux savoir ce que cela coûterait sur l'année, où cela nous placerait face au marché, et si c'est moins cher que de voir l'un d'eux partir. » La présidente`,
+          `« Les ${k.r.operateurs} opérateurs me demandent ensemble ${pct(HAUSSE_DEMANDEE * 100)} de plus sur leur salaire brut, dès janvier. Avant de leur répondre, je veux savoir ce que cela coûterait sur l'année, où cela nous placerait face au marché, et si c'est moins cher que de voir l'un d'eux partir. » Le président`,
           "Pas de cours cette fois : vous avez les chiffres du chapitre, et sa méthode.",
         ];
       },
@@ -124,8 +124,8 @@ export const L_EQUIPE_DEMANDE_UNE_AUGMENTATION: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse à la présidente",
-      question: () => "La hausse demandée coûte-t-elle moins qu'un départ ? Que répondez-vous à la présidente ?",
+      titre: "Votre réponse au président",
+      question: () => "La hausse demandée coûte-t-elle moins qu'un départ ? Que répondez-vous au président ?",
       options: () => {
         const k = hausseDemandee();
         const moins = k.r.coutDeLAugmentation < k.r0.coutDuDepart;

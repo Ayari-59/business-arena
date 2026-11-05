@@ -14,7 +14,7 @@ import { NOVA, VIDE, attendus, etape, gardeDuCas, gardeDuLaboratoire, gardeDuPro
 /**
  * LES COÛTS À BASE D'ACTIVITÉS : LA MÉTHODE ABC (janvier N chez NOVA) : chaque chiffre refait à la
  * main, à partir des charges de la comptabilité de gestion de janvier (loyer 19 700 €, personnel
- * 10 650 €, usure 833 €, présidente 4 200 €), des parts des 5 activités, et des ventes de janvier
+ * 10 650 €, usure 833 €, président 4 200 €), des parts des 5 activités, et des ventes de janvier
  * (1 270 enceintes en ligne, 1 270 commandes et 1 270 colis ; 320 à CampusTech, 1 commande et
  * 4 palettes ; 59 € l'enceinte, un quart d'heure de montage, 38 € de charges directes).
  */

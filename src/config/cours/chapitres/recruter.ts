@@ -82,7 +82,7 @@ export const RECRUTER: Chapitre = {
       texte: (c) => {
         const r = recrutement(c);
         return [
-          `Pour l'année N + 1, ${c.entreprise} prévoit ${qte(r.plan.demande)} ${c.unites} de demande, plus qu'en N. La présidente envisage un cinquième opérateur et lance le recrutement en ${mois(r.lancement)}. Le recrutement (l'annonce, les entretiens, les essais) coûte ${eur(r.recrutement)} et dure ${FICHE_RH.personnel.delaiDeRecrutementEnMois} mois : la recrue arrive ${leMois(r.arrivee!)}.`,
+          `Pour l'année N + 1, ${c.entreprise} prévoit ${qte(r.plan.demande)} ${c.unites} de demande, plus qu'en N. Le président envisage un cinquième opérateur et lance le recrutement en ${mois(r.lancement)}. Le recrutement (l'annonce, les entretiens, les essais) coûte ${eur(r.recrutement)} et dure ${FICHE_RH.personnel.delaiDeRecrutementEnMois} mois : la recrue arrive ${leMois(r.arrivee!)}.`,
           `Elle coûte alors ${eur(r.coutMensuel)} par mois, comme chaque opérateur, et monte son premier mois la moitié de ce que monte un opérateur formé. En échange, l'équipe peut monter davantage d'enceintes. Encore faut-il que ce soit l'équipe qui limite les ventes.`,
         ];
       },

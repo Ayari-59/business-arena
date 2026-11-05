@@ -6,7 +6,7 @@ import type { Situation } from "../types";
  * CAS PRATIQUE DU CHAPITRE « L'AUGMENTATION DE CAPITAL » (DCG · Comptabilité approfondie, palier 4).
  *
  * Avant l'assemblée de juin N + 1, une investisseuse propose de souscrire toute l'émission, mais à
- * `PRIX_DE_L_INVESTISSEUSE` l'action, sous le prix prévu. La présidente veut savoir ce que NOVA y
+ * `PRIX_DE_L_INVESTISSEUSE` l'action, sous le prix prévu. Le président veut savoir ce que NOVA y
  * perdrait, et ce que les anciens associés y perdraient. L'élève refait les calculs du chapitre
  * (`augmentationDeCapital`) au prix proposé.
  */
@@ -25,21 +25,21 @@ export const LE_PRIX_DE_L_INVESTISSEUSE: Situation = {
   palier: 4,
   blocs: [],
   reprend: ["l-augmentation-de-capital"],
-  commanditaire: "La présidente",
+  commanditaire: "Le président",
   titre: "Le prix de l'investisseuse",
   accroche: "Une investisseuse veut toute l'émission, à un euro de moins l'action : ce que NOVA lèverait, et ce que les anciens associés y perdraient.",
-  objectifs: ["Recalculer les fonds levés et la prime à un autre prix", "Recalculer le droit de souscription", "Répondre à la présidente, chiffre à l'appui"],
+  objectifs: ["Recalculer les fonds levés et la prime à un autre prix", "Recalculer le droit de souscription", "Répondre au président, chiffre à l'appui"],
   libre: false,
   entreprises: { codes: ["nova"], pourquoi: "ce cas reprend l'augmentation de capital de NOVA, celle du chapitre." },
   etapes: [
     {
       id: "demande",
       type: "lecture",
-      titre: "La question de la présidente",
+      titre: "La question du président",
       texte: () => {
         const k = prixDeLInvestisseuse();
         return [
-          `« L'investisseuse prendrait les ${k.prevu.nouvelles.toLocaleString("fr-FR")} actions nouvelles d'un coup, mais à ${eur(PRIX_DE_L_INVESTISSEUSE)} au lieu de ${eur(AUGMENTATION_DE_CAPITAL.prixDEmission)}. Il nous faut ${eur(BESOIN_DE_FONDS)} pour la seconde ligne. Que lèverions-nous, et que perdraient les associés qui ne suivent pas ? » La présidente`,
+          `« L'investisseuse prendrait les ${k.prevu.nouvelles.toLocaleString("fr-FR")} actions nouvelles d'un coup, mais à ${eur(PRIX_DE_L_INVESTISSEUSE)} au lieu de ${eur(AUGMENTATION_DE_CAPITAL.prixDEmission)}. Il nous faut ${eur(BESOIN_DE_FONDS)} pour la seconde ligne. Que lèverions-nous, et que perdraient les associés qui ne suivent pas ? » Le président`,
           "Pas de cours cette fois : la prime et le droit de souscription, vous savez les calculer.",
         ];
       },
@@ -67,8 +67,8 @@ export const LE_PRIX_DE_L_INVESTISSEUSE: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse à la présidente",
-      question: () => "Que répondez-vous à la présidente ?",
+      titre: "Votre réponse au président",
+      question: () => "Que répondez-vous au président ?",
       options: () => {
         const k = prixDeLInvestisseuse();
         return [

@@ -8,7 +8,7 @@ import type { Situation } from "../types";
  * P2 2.7.1 et 2.7.2).
  *
  * Le directeur de NOVA DIFFUSION demande à racheter des actions à NOVA, pour porter sa part à 30 %
- * (PART_DEMANDEE_PAR_LE_DIRECTEUR, hypothèse du cours). La présidente veut savoir ce qu'elle garde :
+ * (PART_DEMANDEE_PAR_LE_DIRECTEUR, hypothèse du cours). Le président veut savoir ce que NOVA garde :
  * le contrôle, la méthode, ses intérêts dans la boutique du projet, et ce qui irait aux minoritaires.
  * L'élève refait le chemin du chapitre (monde/groupe-nova.ts) avec une autre part.
  */
@@ -35,17 +35,17 @@ export const LE_DIRECTEUR_VEUT_PLUS_D_ACTIONS: Situation = {
   palier: 4,
   blocs: [],
   reprend: ["initiation-a-la-consolidation"],
-  commanditaire: "La présidente",
+  commanditaire: "Le président",
   titre: "Le directeur veut 30 %",
   accroche: "Le directeur de la filiale demande une plus grande part : ce que NOVA garderait du contrôle, de la méthode et des intérêts.",
-  objectifs: ["Calculer les pourcentages de contrôle et d'intérêts après une cession de titres", "Partager les capitaux propres de la filiale", "Répondre à la présidente, chiffre à l'appui"],
+  objectifs: ["Calculer les pourcentages de contrôle et d'intérêts après une cession de titres", "Partager les capitaux propres de la filiale", "Répondre au président, chiffre à l'appui"],
   libre: false,
   entreprises: { codes: ["nova"], pourquoi: "ce cas reprend la filiale de distribution de NOVA, celle du chapitre." },
   etapes: [
     {
       id: "demande",
       type: "lecture",
-      titre: "La question de la présidente",
+      titre: "La question du président",
       tableau: () => {
         const k = directeurAvecPlusDActions();
         return {
@@ -60,7 +60,7 @@ export const LE_DIRECTEUR_VEUT_PLUS_D_ACTIONS: Situation = {
         };
       },
       texte: () => [
-        `« Le directeur de ${F} veut nous racheter des actions pour en détenir ${pct(PART_DEMANDEE_PAR_LE_DIRECTEUR)}. Garderons-nous la main sur la filiale, et sur la boutique qu'elle veut acheter ? Et que perdrions-nous ? » La présidente`,
+        `« Le directeur de ${F} veut nous racheter des actions pour en détenir ${pct(PART_DEMANDEE_PAR_LE_DIRECTEUR)}. Garderons-nous la main sur la filiale, et sur la boutique qu'elle veut acheter ? Et que perdrions-nous ? » Le président`,
         "Pas de cours cette fois : le contrôle, les intérêts et le partage des capitaux propres, vous les connaissez.",
       ],
       repere: () => "À rendre : le contrôle et les intérêts de NOVA dans la boutique, la part des minoritaires, et votre réponse.",
@@ -89,8 +89,8 @@ export const LE_DIRECTEUR_VEUT_PLUS_D_ACTIONS: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse à la présidente",
-      question: () => "Que répondez-vous à la présidente ?",
+      titre: "Votre réponse au président",
+      question: () => "Que répondez-vous au président ?",
       options: () => {
         const k = directeurAvecPlusDActions();
         return [

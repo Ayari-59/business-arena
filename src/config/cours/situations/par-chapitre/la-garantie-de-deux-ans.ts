@@ -12,7 +12,7 @@ import type { Situation } from "../types";
  * LE CAS JOUE DANS LE MONDE DU COURS, comme son chapitre : le dossier de révision de N+1
  * (monde/dossier-de-revision.ts), sa provision pour garantie et l'impôt de N+1.
  *
- * HYPOTHÈSE DU CAS (PART_A_VENIR_AVEC_DEUX_ANS) : la présidente a vendu toute l'année N+1 avec une
+ * HYPOTHÈSE DU CAS (PART_A_VENIR_AVEC_DEUX_ANS) : le président a vendu toute l'année N+1 avec une
  * garantie de deux ans. Les défauts livrés de l'année sont les mêmes ; mais au 31 décembre, les trois
  * quarts de leurs retours sont encore à venir, au lieu de la moitié. L'élève refait la provision, en
  * mesure l'effet sur le résultat révisé et sur l'impôt, et répond.
@@ -41,7 +41,7 @@ export const LA_GARANTIE_DE_DEUX_ANS: Situation = {
   palier: 4,
   blocs: [],
   reprend: ["le-dossier-de-revision"],
-  commanditaire: "La présidente",
+  commanditaire: "Le président",
   titre: "La garantie de deux ans",
   accroche: "Les enceintes de N+1 ont été vendues avec une garantie de deux ans. Que devient la provision du dossier, et combien cela coûte-t-il vraiment cette année ?",
   objectifs: [
@@ -58,7 +58,7 @@ export const LA_GARANTIE_DE_DEUX_ANS: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La question de la présidente",
+      titre: "La question du président",
       texte: (c) => {
         const x = garantieDeDeuxAns(c);
         return [
@@ -125,11 +125,11 @@ export const LA_GARANTIE_DE_DEUX_ANS: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse à la présidente",
+      titre: "Votre réponse au président",
       notions: ["income_statement"],
       question: (c) => {
         const x = garantieDeDeuxAns(c);
-        return `La provision passe de ${eur(x.un.provision)} à ${eur(x.deux.provision)}. Que répondez-vous à la présidente ?`;
+        return `La provision passe de ${eur(x.un.provision)} à ${eur(x.deux.provision)}. Que répondez-vous au président ?`;
       },
       options: (c) => {
         const x = garantieDeDeuxAns(c);

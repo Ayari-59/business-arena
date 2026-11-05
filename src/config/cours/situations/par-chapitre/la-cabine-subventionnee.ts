@@ -9,7 +9,7 @@ import type { Situation } from "../types";
  *
  * Fin décembre N + 1, la région accorde à NOVA une aide à l'équipement des ateliers de contrôle :
  * TAUX_D_AIDE_A_LA_CABINE (hypothèse du cours) du coût de production de la cabine d'écoute, versée en
- * janvier N + 2. La présidente demande ce que l'aide rapporte au résultat de N + 1 et de N + 2.
+ * janvier N + 2. Le président demande ce que l'aide rapporte au résultat de N + 1 et de N + 2.
  * L'élève refait seul le chemin du chapitre : la subvention se reprend au rythme de l'amortissement de
  * la cabine, ici selon ses heures d'essai, et suit le plan modifié (monde/acquisition-et-financement.ts).
  */
@@ -36,17 +36,17 @@ export const LA_CABINE_SUBVENTIONNEE: Situation = {
   palier: 4,
   blocs: [],
   reprend: ["acquerir-et-financer-une-immobilisation"],
-  commanditaire: "La présidente",
+  commanditaire: "Le président",
   titre: "La cabine subventionnée",
   accroche: "La région prend en charge une part de la cabine d'écoute : ce que l'aide rapporte chaque année, au rythme des heures d'essai.",
-  objectifs: ["Enregistrer une subvention d'investissement", "Calculer sa reprise au rythme d'un amortissement en unités d'œuvre", "Répondre à la présidente, chiffre à l'appui"],
+  objectifs: ["Enregistrer une subvention d'investissement", "Calculer sa reprise au rythme d'un amortissement en unités d'œuvre", "Répondre au président, chiffre à l'appui"],
   libre: false,
   entreprises: { codes: ["nova"], pourquoi: "ce cas reprend la cabine d'écoute que NOVA a construite, celle du chapitre." },
   etapes: [
     {
       id: "demande",
       type: "lecture",
-      titre: "La question de la présidente",
+      titre: "La question du président",
       tableau: () => {
         const k = cabineSubventionnee();
         return {
@@ -62,7 +62,7 @@ export const LA_CABINE_SUBVENTIONNEE: Situation = {
         };
       },
       texte: () => [
-        `« La région nous accorde ${pct(TAUX_D_AIDE_A_LA_CABINE)} du coût de la cabine d'écoute, notifiés le 28 décembre N + 1 et versés en janvier. Combien cela rapporte-t-il à notre résultat cette année, et l'an prochain ? » La présidente`,
+        `« La région nous accorde ${pct(TAUX_D_AIDE_A_LA_CABINE)} du coût de la cabine d'écoute, notifiés le 28 décembre N + 1 et versés en janvier. Combien cela rapporte-t-il à notre résultat cette année, et l'an prochain ? » Le président`,
         "Pas de cours cette fois : la subvention et l'amortissement selon les unités d'œuvre, vous les connaissez.",
       ],
       repere: () => "À rendre : l'aide, l'écriture de son octroi, ses quotes-parts de N + 1 et de N + 2, et votre réponse.",
@@ -113,8 +113,8 @@ export const LA_CABINE_SUBVENTIONNEE: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse à la présidente",
-      question: () => "Que répondez-vous à la présidente ?",
+      titre: "Votre réponse au président",
+      question: () => "Que répondez-vous au président ?",
       options: () => {
         const k = cabineSubventionnee();
         return [

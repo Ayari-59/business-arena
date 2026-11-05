@@ -750,7 +750,7 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
       notions: ["fixed_costs"],
       question: (c) => {
         const a = assuranceDeNova(c);
-        return `L'année N + 1 se passe sans aucun sinistre. La présidente ${dE(a.f.entreprise)} regrette la ${a.basique.nom} : « Nous l'avons payée pour rien. » Que lui répondez-vous ?`;
+        return `L'année N + 1 se passe sans aucun sinistre. Le président ${dE(a.f.entreprise)} regrette la ${a.basique.nom} : « Nous l'avons payée pour rien. » Que lui répondez-vous ?`;
       },
       options: (c) => {
         const a = assuranceDeNova(c);
@@ -762,7 +762,7 @@ export const S_ASSURER_CONTRE_LES_ALEAS: Chapitre = {
             retour: `Oui. Une année sans sinistre coûte la prime, ${eur(b.prime)}, rien de plus. Ce que la ${b.nom} a acheté, c'est la certitude qu'un incendie, ${eur(a.incendie.cout)}, ne mettrait pas ${a.f.entreprise} en danger. Une année ne dit ni la moyenne ni le pire.`,
           },
           {
-            texte: "La présidente a raison : sans sinistre, mieux vaut ne pas la renouveler",
+            texte: "Le président a raison : sans sinistre, mieux vaut ne pas la renouveler",
             juste: false,
             retour: `Non : on décide sur ce qui peut arriver, pas sur ce que le hasard a donné une fois. L'incendie reste possible l'an prochain, et ${a.f.entreprise} ne l'encaisserait pas.`,
           },

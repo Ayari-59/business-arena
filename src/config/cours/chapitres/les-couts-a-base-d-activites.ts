@@ -57,7 +57,7 @@ const LIBELLES_DES_CHARGES: Readonly<Record<ChargeDeGestion, string>> = {
   personnel: "Personnel",
   amortissement: "Usure de la ligne",
   assurance: "Assurance",
-  gerante: "Travail de la présidente",
+  gerante: "Travail du président",
 };
 /** Les charges de janvier : l'assurance ne commence qu'en octobre, elle n'a pas de ligne. */
 const CHARGES_DE_JANVIER = CHARGES_DE_GESTION.filter((k) => k !== "assurance");
@@ -226,7 +226,7 @@ export const LES_COUTS_A_BASE_D_ACTIVITES: Chapitre = {
       texte: () => {
         const { m, centres } = janvierABC();
         return [
-          `Ce chapitre se joue dans la simulation du cours, chez NOVA, en janvier N : un mois sans stock, tout ce qui est monté est livré. Ses charges indirectes, ${eur(m.total)}, sont celles des centres d'analyse, travail de la présidente compris.`,
+          `Ce chapitre se joue dans la simulation du cours, chez NOVA, en janvier N : un mois sans stock, tout ce qui est monté est livré. Ses charges indirectes, ${eur(m.total)}, sont celles des centres d'analyse, travail du président compris.`,
           `NOVA vend la même enceinte de deux façons : en ligne, à des particuliers qui commandent une enceinte à la fois, et à CampusTech, qui passe ${qte(COMMANDES_DE_JANVIER.campustech.commandes)} commande par mois livrée en ${qte(COMMANDES_DE_JANVIER.campustech.envois)} palettes. Par les centres d'analyse, une enceinte revient à ${eur(auCentime(centres))}, qu'elle parte dans un colis ou sur une palette.`,
           "Les unités d'œuvre des centres comptent des euros d'achat, des enceintes, des euros de chiffre d'affaires : rien qui distingue un colis d'une palette. La méthode ABC part de ce que l'entreprise fait, ses activités, et de ce qui déclenche chacune, son inducteur.",
         ];
@@ -373,7 +373,7 @@ export const LES_COUTS_A_BASE_D_ACTIVITES: Chapitre = {
       titre: "Pariez sur les frais de port",
       notions: ["full_unit_cost", "margin_rates"],
       question: () =>
-        "La présidente veut facturer des frais de port à chaque commande en ligne, juste assez pour que la vente en ligne cesse de perdre de l'argent. Pariez : la méthode ABC demandera des frais…",
+        "Le président veut facturer des frais de port à chaque commande en ligne, juste assez pour que la vente en ligne cesse de perdre de l'argent. Pariez : la méthode ABC demandera des frais…",
       options: () => {
         const voir = "Le laboratoire suivant fait essayer les deux méthodes.";
         return [
@@ -470,7 +470,7 @@ export const LES_COUTS_A_BASE_D_ACTIVITES: Chapitre = {
         return `Une commande en ligne coûte ${eur(commandes.coutDeLInducteur)} et son colis ${eur(envois.coutDeLInducteur)}. Si NOVA perdait ${COMMANDES_PERDUES} commandes en ligne en février, ses charges baisseraient-elles de ${COMMANDES_PERDUES} × ${eur(auCentime(envois.coutDeLInducteur + commandes.coutDeLInducteur))} ?`;
       },
       options: () => [
-        { texte: "Non : le loyer et la paie restent", juste: true, retour: "Oui. Le coût d'un inducteur est une moyenne de charges fixes : le loyer, la paie, le travail de la présidente ne baissent pas avec une commande de moins. La méthode ABC dit ce que chaque produit consomme des ressources ; pour décider d'une commande de plus ou de moins, c'est le coût variable qui compte." },
+        { texte: "Non : le loyer et la paie restent", juste: true, retour: "Oui. Le coût d'un inducteur est une moyenne de charges fixes : le loyer, la paie, le travail du président ne baissent pas avec une commande de moins. La méthode ABC dit ce que chaque produit consomme des ressources ; pour décider d'une commande de plus ou de moins, c'est le coût variable qui compte." },
         { texte: "Oui : chaque commande perdue économise son coût d'inducteur", juste: false, retour: "Non : ce serait vrai si NOVA payait ses opérateurs à la commande. Ses charges indirectes sont fixes dans le mois : moins de commandes, c'est un coût d'inducteur plus élevé, pas une charge plus basse." },
         { texte: "Oui, mais seulement pour les colis, pas pour les commandes", juste: false, retour: "Non : les deux activités ont les mêmes ressources fixes, la surface et le temps des opérateurs. Aucune ne baisse dans le mois." },
       ],

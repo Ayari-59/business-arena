@@ -441,7 +441,7 @@ describe("le départ d'un salarié : l'équipe qui devient le goulot", () => {
   it("le cas : recruter dès l'annonce rapporte dès 5 827 enceintes demandées au trimestre 2", () => {
     const s = RECRUTER_DES_L_ANNONCE_DU_DEPART;
     casDedie(s, ch);
-    expect(s.commanditaire).toBe("La présidente");
+    expect(s.commanditaire).toBe("Le président");
     expect(attendus(s, "les-deux-dates")).toEqual({
       "Équipe du trimestre, lancé au départ": equipeT2(4),
       "Équipe du trimestre, lancé dès l'annonce": equipeT2(3),

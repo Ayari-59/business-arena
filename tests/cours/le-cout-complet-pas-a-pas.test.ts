@@ -17,7 +17,7 @@ import { NOVA, VIDE, attendus, etape, gardeDuCas, gardeDuCurseur, gardeDuLaborat
 
 /**
  * LE COÛT COMPLET PAS À PAS (décembre N chez NOVA) : chaque chiffre refait à la main, à partir de la
- * fiche (loyer 19 700 €, personnel 10 650 €, usure 833 €, assurance 500 €, présidente 4 200 € ; les clés
+ * fiche (loyer 19 700 €, personnel 10 650 €, usure 833 €, assurance 500 €, président 4 200 € ; les clés
  * de janvier ; 1 500 jeux à 22 € le 10 décembre, 1 500 à 23 € le 18 ; les bons de sortie 1 000 et
  * 1 410 jeux ; 2 400 enceintes livrées à 59 € ; 16 € d'autres charges directes par enceinte).
  */

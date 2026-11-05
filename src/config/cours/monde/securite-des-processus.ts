@@ -17,7 +17,7 @@ import { bulletinDePaie } from "./paie";
  * L'ORGANISATION COMPTABLE DE NOVA (HYPOTHÈSE DU COURS, posée ici pour tout le cours) : NOVA n'a pas
  * de service comptable. Ses salariés sont les opérateurs de l'atelier (la paie du cours). La
  * comptabilité se partage entre quatre acteurs, sans salarié de plus :
- *   · la présidente : elle commande, donne le bon à payer et signe seule les virements (elle seule a
+ *   · le président : il commande, donne le bon à payer et signe seul les virements (lui seul a
  *     la signature bancaire) ;
  *   · le chef d'équipe de l'atelier (l'opérateur promu en avril N + 1, masse-salariale-de-nova.ts ;
  *     avant lui, l'opérateur de permanence) : il reçoit les livraisons et signe le bon de réception ;
@@ -46,7 +46,7 @@ function cloture(f: FicheDeLExercice) {
 export type CodeDActeur = "presidente" | "chef-d-equipe" | "collaborateur" | "expert-comptable";
 
 export const ACTEURS_DE_NOVA: readonly { code: CodeDActeur; libelle: string; role: string }[] = [
-  { code: "presidente", libelle: "La présidente", role: "commande, bon à payer, signature des virements" },
+  { code: "presidente", libelle: "Le président", role: "commande, bon à payer, signature des virements" },
   { code: "chef-d-equipe", libelle: "Le chef d'équipe de l'atelier", role: "réception des livraisons, bon de réception" },
   { code: "collaborateur", libelle: "Le collaborateur du cabinet", role: "saisie, lettrage, rapprochements, TVA et DSN préparées" },
   { code: "expert-comptable", libelle: "L'expert-comptable", role: "révision, validation des déclarations, comptes annuels" },
@@ -57,7 +57,7 @@ export type FonctionDuControle = "autoriser" | "detenir" | "enregistrer" | "cont
 
 /** LES TÂCHES DU PROCESSUS ACHATS DE NOVA, de la commande au paiement : qui la fait, et quelle fonction elle remplit. */
 export const TACHES_DES_ACHATS: readonly { libelle: string; acteur: CodeDActeur; fonction: FonctionDuControle; pourquoi: string }[] = [
-  { libelle: "Signer le bon de commande des composants", acteur: "presidente", fonction: "autoriser", pourquoi: "Elle engage NOVA envers le fournisseur : c'est une décision." },
+  { libelle: "Signer le bon de commande des composants", acteur: "presidente", fonction: "autoriser", pourquoi: "La commande engage NOVA envers le fournisseur : c'est une décision." },
   { libelle: "Recevoir les jeux et signer le bon de réception", acteur: "chef-d-equipe", fonction: "detenir", pourquoi: "Il a les biens sous sa garde : la fonction de détention." },
   { libelle: "Saisir la facture d'achat dans le PGI", acteur: "collaborateur", fonction: "enregistrer", pourquoi: "C'est la fonction d'enregistrement, la comptabilité." },
   { libelle: "Rapprocher commande, bon de réception et facture", acteur: "collaborateur", fonction: "controler", pourquoi: "Trois pièces d'acteurs différents comparées : un contrôle." },
@@ -68,7 +68,7 @@ export const TACHES_DES_ACHATS: readonly { libelle: string; acteur: CodeDActeur;
 
 /** LES DROITS DANS LE PGI PARTAGÉ (hypothèse du cours) : chaque droit a un seul titulaire. */
 export const DROITS_DU_PGI: readonly { libelle: string; titulaire: CodeDActeur; pourquoi: string }[] = [
-  { libelle: "Valider une modification des coordonnées bancaires d'un fournisseur", titulaire: "presidente", pourquoi: "Celle qui paie valide, après un contre-appel : le collaborateur saisit la demande, il ne la valide pas." },
+  { libelle: "Valider une modification des coordonnées bancaires d'un fournisseur", titulaire: "presidente", pourquoi: "Celui qui paie valide, après un contre-appel : le collaborateur saisit la demande, il ne la valide pas." },
   { libelle: "Saisir et lettrer les factures et les règlements", titulaire: "collaborateur", pourquoi: "L'enregistrement, sans aucun droit de paiement." },
   { libelle: "Enregistrer une réception de marchandises", titulaire: "chef-d-equipe", pourquoi: "Celui qui reçoit déclare ce qu'il a reçu ; il ne touche ni aux factures ni aux paiements." },
   { libelle: "Émettre les virements depuis le PGI", titulaire: "presidente", pourquoi: "La seule signature bancaire de NOVA." },
@@ -84,7 +84,7 @@ export const DROITS_DU_PGI: readonly { libelle: string; titulaire: CodeDActeur; 
  * courriel qui imite Électro-Composants Lyon (son logo, sa signature, une adresse presque la même)
  * annonce un changement de banque et demande de virer la facture du 10 décembre, due le 1er janvier
  * N + 1, sur un nouvel IBAN. La procédure de NOVA l'arrête : aucune coordonnée ne change sans un
- * contre-appel au numéro déjà connu du fichier des fournisseurs, puis la validation de la présidente.
+ * contre-appel au numéro déjà connu du fichier des fournisseurs, puis la validation du président.
  * Le fournisseur, rappelé, n'a jamais changé de banque.
  */
 export const COURRIEL_FRAUDULEUX = { date: { jour: 28, mois: 12 }, echeance: "1er janvier N + 1" } as const;

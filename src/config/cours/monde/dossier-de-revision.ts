@@ -68,7 +68,7 @@ export const CONGES_DEJA_PRIS_SUR_LA_PERIODE = 0;
 
 /**
  * LA PARTICIPATION DE N + 1 (hypothèse du cours, montant donné comme le référentiel le veut) : NOVA,
- * moins de 50 salariés, n'y est pas tenue ; la présidente signe en N + 1 un accord de participation
+ * moins de 50 salariés, n'y est pas tenue ; le président signe en N + 1 un accord de participation
  * volontaire, et le cabinet calcule la réserve spéciale de l'exercice : 6 000 €, due aux salariés
  * (691, 4284).
  * LE FORFAIT SOCIAL : aucun chez NOVA, la participation des entreprises de moins de 50 salariés en est
