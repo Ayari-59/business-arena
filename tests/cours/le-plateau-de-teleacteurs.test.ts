@@ -42,7 +42,6 @@ const rdv = (creneaux: number, appelsParHeure = 10, joignabilite = 0.15) => cren
 describe("le plateau de téléacteurs, chez ATLAS CONSEIL", () => {
   it("se joue chez ATLAS CONSEIL seule, au palier 4 du BTS NDRC (blocs 2 et 1), et son cas aussi", () => {
     expect(CHAPITRES).toContain(ch);
-    expect(CHAPITRES.at(-1)).toBe(ch);
     expect(SITUATIONS).toContain(LA_LIGNE_DE_LA_RENTREE);
     expect(PROGRAMME.ndrc[4]!.at(-1)).toBe(ch.titre);
     expect(ch.parcours).toBe("ndrc");

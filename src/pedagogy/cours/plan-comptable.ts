@@ -71,6 +71,12 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "401", intitule: "Fournisseurs", nature: "passif" },
   { numero: "404", intitule: "Fournisseurs d'immobilisations", nature: "passif" },
   { numero: "408", intitule: "Fournisseurs, factures non parvenues", nature: "passif" },
+  // Les avances et acomptes sur commandes, et les emballages consignés (le chapitre « Ventes et achats au complet »).
+  { numero: "409", intitule: "Fournisseurs débiteurs", nature: "actif" },
+  { numero: "4091", intitule: "Fournisseurs, avances et acomptes versés sur commandes", nature: "actif" },
+  { numero: "419", intitule: "Clients créditeurs", nature: "passif" },
+  { numero: "4191", intitule: "Clients, avances et acomptes reçus sur commandes", nature: "passif" },
+  { numero: "4196", intitule: "Clients, dettes sur emballages et matériels consignés", nature: "passif" },
   { numero: "411", intitule: "Clients", nature: "actif" },
   { numero: "416", intitule: "Clients douteux ou litigieux", nature: "actif" },
   { numero: "418", intitule: "Clients, produits non encore facturés", nature: "actif" },
@@ -116,6 +122,10 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "62", intitule: "Autres services extérieurs", nature: "charge" },
   { numero: "622", intitule: "Rémunérations d'intermédiaires et honoraires", nature: "charge" },
   { numero: "623", intitule: "Publicité, publications, relations publiques", nature: "charge" },
+  { numero: "624", intitule: "Transports de biens et transports collectifs du personnel", nature: "charge" },
+  { numero: "6241", intitule: "Transports sur achats", nature: "charge" },
+  // Les rabais, remises et ristournes obtenus après la facture : un compte de charges qui se crédite, en moins des achats.
+  { numero: "609", intitule: "Rabais, remises et ristournes obtenus sur achats", nature: "charge" },
   { numero: "64", intitule: "Charges de personnel", nature: "charge" },
   { numero: "6132", intitule: "Locations immobilières", nature: "charge" },
   { numero: "641", intitule: "Rémunérations du personnel", nature: "charge" },
@@ -143,6 +153,9 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "704", intitule: "Travaux", nature: "produit" },
   { numero: "706", intitule: "Prestations de services", nature: "produit" },
   { numero: "707", intitule: "Ventes de marchandises", nature: "produit" },
+  { numero: "708", intitule: "Produits des activités annexes", nature: "produit" },
+  { numero: "7085", intitule: "Ports et frais accessoires facturés", nature: "produit" },
+  { numero: "7088", intitule: "Autres produits d'activités annexes (ventes d'emballages)", nature: "produit" },
   // Les réductions accordées après la facture (un avoir pour une remise oubliée, un rabais) :
   // un compte de produits qui se débite, et vient en moins des ventes.
   { numero: "709", intitule: "Rabais, remises et ristournes accordés par l'entreprise", nature: "produit" },

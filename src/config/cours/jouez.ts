@@ -1653,6 +1653,20 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Si une vendeuse indépendante vendait pour vous contre 25 % du chiffre d'affaires, que vous laisserait une vente de plus ? Combien de ventes lui faudrait-il pour payer sa formation ?",
   }),
+  "le-cadre-de-la-comptabilite": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le compte de résultat et le bilan.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "Quelle est la forme de votre entreprise dans le cours, et qui approuve ses comptes ? Au bilan, retrouvez son capital. Si une créance de vos clients risquait de ne pas être payée, quel principe vous ferait la déprécier, et de combien votre résultat baisserait-il ?",
+  }),
+  "ventes-et-achats-au-complet": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relisez le compte de résultat et le budget de trésorerie du second.`,
+    lieux: ["compte-de-resultat", "budget-de-tresorerie"],
+    chercher:
+      "Retrouvez vos ventes et vos achats du tour. Si votre plus gros client versait 30 % d'acompte à la commande, combien d'argent arriverait plus tôt, et combien de TVA serait due dès ce jour-là ? Si vous lui accordiez 1 % d'escompte pour payer comptant, combien vous coûterait-il ?",
+  }),
 };
 
 /**
