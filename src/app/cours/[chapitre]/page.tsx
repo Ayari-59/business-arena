@@ -16,6 +16,8 @@ import { ENTREPRISES } from "../entreprises";
 import { suitesDuChapitre } from "@/pedagogy/cours/suites";
 import { getSession } from "@/lib/session";
 import { ChapitreReserve } from "@/components/cours/chapitre-reserve";
+import Link from "next/link";
+import { bureauxDuChapitre, lienDuBureau } from "@/config/cours/bureaux";
 
 /** Le chapitre que tout le monde peut ouvrir (`libre: true`), lu dans le registre. */
 const CHAPITRE_LIBRE = CHAPITRES.find((c) => c.libre)!.code;
@@ -108,9 +110,32 @@ async function ChapitrePage({
           calculatrice={classeDeLEleveLue?.calculatrice ?? true}
           enClasse={classeDeLEleveLue ? { classe: classeDeLEleveLue.classe, eleve: classeDeLEleveLue.eleve } : null}
         />
+        <AuBureau chapitre={chapitre.code} />
       </main>
       <PiedDePage />
     </>
+  );
+}
+
+/**
+ * LE CHAPITRE SE PROLONGE AU BUREAU (config/cours/bureaux) : un lien, sous le guide, vers la pile du mois
+ * suivant. Il ne change rien aux étapes du chapitre.
+ */
+function AuBureau({ chapitre }: { chapitre: string }) {
+  const bureaux = bureauxDuChapitre(chapitre);
+  if (bureaux.length === 0) return null;
+  return (
+    <aside className="mx-auto grid max-w-6xl gap-1 px-4 pb-12 sm:px-6" aria-label="Au bureau" data-bureaux-du-chapitre="">
+      <p className="text-xs font-semibold uppercase tracking-etiquette text-slate-400">Et au bureau</p>
+      {bureaux.map((b) => (
+        <p key={b.code} className="text-sm text-slate-300">
+          <Link href={lienDuBureau(b)} data-bureau-du-chapitre={b.code} className="font-semibold text-amber-300 underline-offset-4 hover:underline">
+            {b.titre}
+          </Link>{" "}
+          · {b.accroche}
+        </p>
+      ))}
+    </aside>
   );
 }
 

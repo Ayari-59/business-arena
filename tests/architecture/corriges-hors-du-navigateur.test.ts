@@ -26,6 +26,10 @@ import { describe, expect, it } from "vitest";
  * seul chapitre ouvert, réduit à ses données (pedagogy/cours/chapitre-servi.ts) ;
  * aucun module client n'atteint plus les chapitres, les cas pratiques ni le registre,
  * et le script cherche dans le build des extraits des chapitres réservés.
+ *
+ * LES BUREAUX, PLUS STRICTS ENCORE (novembre 2026) : leurs réponses ne partent au navigateur ni par le
+ * code ni par la page ; aucun module client n'atteint leur configuration, leur monde ni leur service
+ * (tests/cours/bureau-de-la-boutique.test.ts vérifie ce que la page sert).
  */
 
 const RACINE = process.cwd();
@@ -43,6 +47,11 @@ const INTERDITS = [
   /^src\/config\/cours\/situations\//,
   /^src\/config\/cours\/registre\.ts$/,
   /^src\/pedagogy\/cours\/chapitre-servi\.ts$/,
+  // Le bureau (décision du propriétaire, novembre 2026) : ni sa pile ni son corrigé ne partent au
+  // navigateur ; la page sert sa pile sans réponses, l'action serveur corrige chaque geste.
+  /^src\/config\/cours\/bureaux\//,
+  /^src\/config\/cours\/monde\/bureau-de-la-boutique\.ts$/,
+  /^src\/pedagogy\/cours\/bureau-servi\.ts$/,
 ];
 
 function fichiers(dossier: string): string[] {

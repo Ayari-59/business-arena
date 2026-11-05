@@ -21,6 +21,7 @@ import { CHAPITRES_PROPOSES, PARCOURS_PROPOSES, chapitrePropose } from "@/config
 import { THEMES, episodesDuTheme, themeDuChapitre, type Theme } from "@/config/cours/themes";
 import type { Chapitre } from "@/config/cours/types";
 import { casDuChapitre, type Situation } from "@/config/cours/situations";
+import { bureauxDuChapitre, lienDuBureau } from "@/config/cours/bureaux";
 import { coursDeLaFormation } from "@/config/couverture";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
 import { casDeSyntheseDuTheme } from "@/pedagogy/cours/suites";
@@ -676,13 +677,26 @@ function CasDuChapitre({ chapitre, imposee }: { chapitre: string; imposee?: stri
   const cas = casDuChapitre(chapitre);
   if (!cas) return null;
   return (
-    <Link
-      href={lienDuChapitre(cas, imposee)}
-      data-cas-du-chapitre={cas.code}
-      className="text-xs text-amber-300/90 underline-offset-4 hover:text-amber-300 hover:underline"
-    >
-      Cas pratique : {cas.titre}
-    </Link>
+    <>
+      <Link
+        href={lienDuChapitre(cas, imposee)}
+        data-cas-du-chapitre={cas.code}
+        className="text-xs text-amber-300/90 underline-offset-4 hover:text-amber-300 hover:underline"
+      >
+        Cas pratique : {cas.titre}
+      </Link>
+      {/* Les bureaux du chapitre (config/cours/bureaux) : des cas pratiques d'un genre nouveau, la pile d'un mois. */}
+      {bureauxDuChapitre(chapitre).map((b) => (
+        <Link
+          key={b.code}
+          href={lienDuBureau(b)}
+          data-bureau-du-chapitre={b.code}
+          className="text-xs text-amber-300/90 underline-offset-4 hover:text-amber-300 hover:underline"
+        >
+          Cas pratique : {b.titre}
+        </Link>
+      ))}
+    </>
   );
 }
 

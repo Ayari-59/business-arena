@@ -4,6 +4,8 @@ import { ENTREPRISES_DU_COURS } from "@/config/cours/metiers";
 import { CHAPITRES } from "@/config/cours/registre";
 import { SITUATIONS } from "@/config/cours/situations";
 import { servirLeChapitre } from "@/pedagogy/cours/chapitre-servi";
+import { BUREAUX } from "@/config/cours/bureaux";
+import { corrigerAuBureau, servirLeBureau } from "@/pedagogy/cours/bureau-servi";
 import {
   espacesOrdinairesFautives,
   LEXIQUE_INTERDIT,
@@ -58,6 +60,16 @@ function textesDuCoursServi(): TexteServi[] {
       parcourir(reste, "", emettre);
       etapes.forEach((e, i) => parcourir(e, `e${i + 1}:${e.id}`, emettre));
     }
+  }
+  // Les bureaux (config/cours/bureaux) : ce que la page sert, la pile et les consignes, et ce que l'action
+  // serveur rend une fois la correction demandée, étape par étape (les corrigés se lisent aussi).
+  for (const b of BUREAUX) {
+    const ou = `${b.code} @${b.entreprise.code}`;
+    const emettre = (chemin: string, texte: string) => sortie.push({ ou, chemin, texte });
+    emettre("accroche", b.accroche);
+    parcourir(b.commanditaire, "commanditaire", emettre);
+    parcourir(servirLeBureau(b), "", emettre);
+    for (const e of b.etapes) parcourir(corrigerAuBureau(b, { etape: e.id, geste: "montrer" }), `corrige:${e.id}`, emettre);
   }
   releve = sortie;
   return sortie;
