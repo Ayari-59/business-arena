@@ -68,6 +68,8 @@ export const THEMES: readonly Theme[] = [
       "controler-les-comptes",
       "le-cadre-de-la-comptabilite",
       "ventes-et-achats-au-complet",
+      "le-compte-client",
+      "fournisseurs-et-banque",
     ],
     familles: [],
   },

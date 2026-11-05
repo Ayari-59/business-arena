@@ -1666,6 +1666,19 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     lieux: ["compte-de-resultat", "budget-de-tresorerie"],
     chercher:
       "Retrouvez vos ventes et vos achats du tour. Si votre plus gros client versait 30 % d'acompte à la commande, combien d'argent arriverait plus tôt, et combien de TVA serait due dès ce jour-là ? Si vous lui accordiez 1 % d'escompte pour payer comptant, combien vous coûterait-il ?",
+  "le-compte-client": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez le bilan et le budget de trésorerie du second.`,
+    lieux: ["bilan", "budget-de-tresorerie"],
+    chercher:
+      "Combien vos clients vous doivent-ils à la fin du tour, et depuis combien de temps ? Si l'un d'eux doublait sa commande, accepteriez-vous ce nouvel en-cours ? Et si vous escomptiez ses factures, votre risque baisserait-il, ou seulement votre besoin de trésorerie ?",
+  }),
+  "fournisseurs-et-banque": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez le budget de trésorerie et le bilan du second.`,
+    lieux: ["budget-de-tresorerie", "bilan"],
+    chercher:
+      "Quand vos fournisseurs sont-ils payés, et votre trésorerie passe-t-elle sous zéro avant que vos clients ne paient ? Retrouvez la trésorerie du budget au bilan : si elles différaient, quelles opérations chercheriez-vous d'abord, comme dans un rapprochement ?",
   }),
 };
 

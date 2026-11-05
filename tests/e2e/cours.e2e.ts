@@ -1052,6 +1052,13 @@ describe.each([
   { code: "ventes-et-achats-au-complet", entreprise: "nova", telephone: true },
   { code: "creer-l-atelier-de-reparation", entreprise: "nova" },
   { code: "la-commande-de-noel-de-campustech", entreprise: "nova", telephone: true },
+  // Le BTS CG P1 : le compte client (NOVA) et fournisseurs et banque (MAILLE & CO) : des écritures, des tableaux à compléter, un curseur, des laboratoires, puis leurs cas.
+  { code: "le-compte-client", entreprise: "nova" },
+  { code: "le-compte-client", entreprise: "nova", telephone: true },
+  { code: "fournisseurs-et-banque", entreprise: "boutique" },
+  { code: "fournisseurs-et-banque", entreprise: "boutique", telephone: true },
+  { code: "vibra-repasse-commande", entreprise: "nova" },
+  { code: "le-cheque-qui-n-est-pas-passe", entreprise: "boutique", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se

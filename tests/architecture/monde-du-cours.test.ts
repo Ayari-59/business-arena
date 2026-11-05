@@ -472,6 +472,11 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "chapitres/ventes-et-achats-au-complet.ts",
   "situations/par-chapitre/creer-l-atelier-de-reparation.ts",
   "situations/par-chapitre/la-commande-de-noel-de-campustech.ts",
+  // Le BTS CG P1 : le compte client (NOVA, monde/compte-client-de-nova.ts), fournisseurs et banque (MAILLE & CO, monde/fournisseurs-et-banque-de-la-boutique.ts), et leurs cas.
+  "chapitres/le-compte-client.ts",
+  "chapitres/fournisseurs-et-banque.ts",
+  "situations/par-chapitre/vibra-repasse-commande.ts",
+  "situations/par-chapitre/le-cheque-qui-n-est-pas-passe.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
@@ -676,6 +681,10 @@ const NE_LISENT_PLUS_L_ANNEE_FIGEE: readonly string[] = [
   "chapitres/ventes-et-achats-au-complet.ts",
   "situations/par-chapitre/creer-l-atelier-de-reparation.ts",
   "situations/par-chapitre/la-commande-de-noel-de-campustech.ts",
+  "chapitres/le-compte-client.ts",
+  "chapitres/fournisseurs-et-banque.ts",
+  "situations/par-chapitre/vibra-repasse-commande.ts",
+  "situations/par-chapitre/le-cheque-qui-n-est-pas-passe.ts",
 ];
 
 /** Le premier chemin d'imports qui atteint un fichier donné, ou rien. */

@@ -197,6 +197,8 @@ import { UN_POURCENTAGE_POUR_LA_MARRAINE } from "./par-chapitre/un-pourcentage-p
 import { LA_LIGNE_DE_LA_RENTREE } from "./par-chapitre/la-ligne-de-la-rentree";
 import { CREER_L_ATELIER_DE_REPARATION } from "./par-chapitre/creer-l-atelier-de-reparation";
 import { LA_COMMANDE_DE_NOEL_DE_CAMPUSTECH } from "./par-chapitre/la-commande-de-noel-de-campustech";
+import { VIBRA_REPASSE_COMMANDE } from "./par-chapitre/vibra-repasse-commande";
+import { LE_CHEQUE_QUI_N_EST_PAS_PASSE } from "./par-chapitre/le-cheque-qui-n-est-pas-passe";
 export type { Situation } from "./types";
 
 /**
@@ -409,6 +411,8 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LA_LIGNE_DE_LA_RENTREE,
   CREER_L_ATELIER_DE_REPARATION,
   LA_COMMANDE_DE_NOEL_DE_CAMPUSTECH,
+  VIBRA_REPASSE_COMMANDE,
+  LE_CHEQUE_QUI_N_EST_PAS_PASSE,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

@@ -142,3 +142,21 @@ describe("une seule MAILLE & CO, d'une fiche à l'autre", () => {
     expect(lus).toBeGreaterThanOrEqual(10);
   }, 60_000);
 });
+
+describe("une seule MAILLE & CO, chez ses fournisseurs et à sa banque (BTS CG P1, fournisseurs et banque)", () => {
+  it("les factures de janvier sont les livraisons de la fiche ; le délai, la dette, la TVA, la paie et le découvert sont ceux des comptes de la boutique", async () => {
+    const m = await import("../../src/config/cours/monde/fournisseurs-et-banque-de-la-boutique");
+    const { BANQUE_DE_LA_BOUTIQUE, FIN_D_ANNEE, plusDeJours } = await import("../../src/config/cours/monde/comptes-de-la-boutique");
+    const fj = m.facturesDeJanvier(f);
+    expect(fj.reduce((t, x) => t + x.ht, 0)).toBe(f.gamme.reduce((t, r) => t + r.livraisons.reduce((s, l) => s + l.quantite * r.coutDAchat, 0), 0));
+    const delai = f.fournisseurs.find((x) => x.code === "faconnier")!.delaiDePaiement;
+    for (const x of fj) expect(x.echeance).toEqual(plusDeJours(x.date, delai));
+    expect(m.delaiMoyenFournisseurs(f).dettes).toBe(bilanDeLaBoutique(f).dettesFournisseurs);
+    expect(m.delaiMoyenFournisseurs(f).achatsHt).toBe(compteDeResultat(f, "N-1").achats);
+    expect(m.operationsDeLaSemaine(f).find((o) => o.code === "tva")!.montant).toBe(-FIN_D_ANNEE.tvaADecaisser);
+    expect(m.salairesNets(f)).toBe(centime(f.equipe.reduce((t, s) => t + s.brutMensuel, 0) * (1 - FIN_D_ANNEE.tauxDesCotisationsSalariales)));
+    expect(m.CONDITIONS_DE_LA_BANQUE.tauxDuDecouvert).toBe(BANQUE_DE_LA_BOUTIQUE.decouvert.taux);
+    // Les achats de février ne touchent pas le mois de la fiche : janvier reste le mois des autres chapitres.
+    expect(m.facturesDeFevrier(f).every((x) => x.date.mois === 2)).toBe(true);
+  });
+});
