@@ -447,6 +447,9 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "situations/par-chapitre/un-apprenti-ou-un-temps-partiel.ts",
   "situations/par-chapitre/le-challenge-du-merinos.ts",
   "situations/par-chapitre/retenir-la-vendeuse.ts",
+  // Le BTS NDRC, bloc 2 : le plateau de téléacteurs (monde/plateau-d-atlas.ts), et son cas.
+  "chapitres/le-plateau-de-teleacteurs.ts",
+  "situations/par-chapitre/la-ligne-de-la-rentree.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */

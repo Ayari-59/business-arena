@@ -1275,6 +1275,13 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Quel indicateur a décroché le premier ? À quel tour le cabinet a-t-il refusé des journées faute de consultants, et à quel tour en a-t-il manqué faute de clients ? Quelle décision avez-vous prise ensuite, et a-t-elle remis l'indicateur dans le vert ?",
   }),
+  "le-plateau-de-teleacteurs": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Jouez trois tours. À chaque tour, relevez la demande adressée, les journées vendues et votre taux d'occupation.`,
+    lieux: ["marche-du-tour", "indicateurs"],
+    chercher:
+      "À quel tour l'occupation des consultants a-t-elle été la plus haute, et à quel tour la plus basse ? Comme sur une ligne clients, un effectif fixe face à une demande qui varie : combien de journées refusées au tour le plus chargé, combien de journées vides au tour le plus calme ?",
+  }),
   // L'UE10 DU DCG (comptabilité approfondie) : l'arène tient une comptabilité simplifiée ; la
   // mission fait chercher à l'écran ce que le chapitre approfondit.
   "les-composants-et-l-amortissement-derogatoire": (c) => ({

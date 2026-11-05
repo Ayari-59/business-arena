@@ -13,6 +13,7 @@ import {
   remiseDemandee,
   trimestresDeLAnnee,
 } from "../monde/relation-client";
+import { APPEL_D_OFFRES_DE_VALBRUNE, CENTRE_D_ACHAT_D_ORVANE, OBJECTION_DE_L_ACHETEUR, PRIX_ENVISAGE_POUR_VALBRUNE, VALIDITE_DE_LA_PROPOSITION_EN_JOURS, appelDOffres, compteDeValbrune } from "../monde/negociation-d-atlas";
 import type { Chapitre, TableauDeDonnees } from "../types";
 
 /**
@@ -31,6 +32,11 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * la place qu'il reste. Au T3 creux, elle rapporte 12 500 € ; au T4 plein, elle prend ses journées à
  * des clients au prix catalogue et fait perdre 20 000 € : son plancher remonte à 800 €. Enfin, une
  * baisse accordée à tous (plus de ventes, moins de marge) et les clientèles qui tiennent le prix.
+ *
+ * LES COMPLÉMENTS DU BTS NDRC EN ENTIER (novembre 2026, monde/negociation-d-atlas.ts) : K1, l'entretien
+ * (le-centre-d-achat, l-objection-du-prix : le diagnostic du client, l'objection traitée par une
+ * contrepartie, la proposition écrite) ; K2, le B to G (l-appel-d-offres, l-offre-a-remettre : la note
+ * pondérée du centre hospitalier de Valbrune, le prix le plus haut qui gagne, la marge à ce prix).
  *
  * LES TROIS TEMPS (demande du propriétaire, octobre 2026 : le niveau d'arrivée est celui de l'examen) :
  *   · guidé : intro, cout-complet, marge-de-manoeuvre (la formule est au repère ou dans la question,
@@ -428,6 +434,90 @@ export const NEGOCIER_LE_PRIX: Chapitre = {
         ];
       },
     },
+    // K1 · L'ENTRETIEN (BTS NDRC, bloc 1 : le diagnostic, la communication, l'objection, la proposition écrite).
+    {
+      id: "le-centre-d-achat",
+      objectifs: [2],
+      type: "choix",
+      titre: "Le centre d'achat du client",
+      notions: ["segmentation", "price_floor"],
+      tableau: (c) => {
+        const n = negociationDuCabinet(c);
+        return {
+          titre: `Qui pèse sur l'affaire, chez ${n.client}`,
+          colonnes: ["Qui", "Ce qu'il attend"],
+          lignes: CENTRE_D_ACHAT_D_ORVANE.map((m) => ({ libelle: m.libelle, valeurs: [m.qui, m.attente] })),
+        };
+      },
+      question: (c) => {
+        const n = negociationDuCabinet(c);
+        return `Avant l'entretien, le commercial fait le diagnostic du client : qui, chez ${n.client}, décide, prescrit, achète et utilise, et ce que chacun attend. L'acheteur exige ${pct(n.remiseDemandee)}. Sur quoi le commercial construit-il sa proposition ?`;
+      },
+      options: (c) => {
+        const n = negociationDuCabinet(c);
+        const [decideur, prescripteur, acheteur] = CENTRE_D_ACHAT_D_ORVANE;
+        return [
+          {
+            texte: "Sur le délai de la DRH, et la remise contre du volume",
+            juste: true,
+            retour: `Oui : ${prescripteur!.qui} veut ${prescripteur!.attente} ; c'est le besoin qui fait signer, et le cabinet peut s'y engager. ${majuscule(acheteur!.qui)} obtiendra sa remise, mais en échange de ${qte(n.contrepartie.journeesNecessaires ?? 0)} journées au lieu de ${qte(n.journeesDeLAffaire)} : chacun sort de l'entretien avec ce qu'il venait chercher.`,
+          },
+          {
+            texte: "Sur l'acheteur : c'est lui qui signe le bon de commande",
+            juste: false,
+            retour: `Non : ${acheteur!.qui} signe, mais il est évalué sur la remise. Négocier avec lui seul, c'est ne parler que du prix ; le besoin, et la valeur de l'offre, sont du côté de ${prescripteur!.qui}.`,
+          },
+          {
+            texte: "Sur le directeur général : lui seul décide",
+            juste: false,
+            retour: `Non : ${decideur!.qui} arbitre sur ${decideur!.attente}, mais il suit l'avis de ses services. Une proposition qui ne répond pas au besoin de la prescriptrice n'arrive pas jusqu'à lui.`,
+          },
+          {
+            texte: "Sur les managers : ce sont eux qui suivront la formation",
+            juste: false,
+            retour: "Non : les utilisateurs comptent pour la réussite de la formation, et leur avis viendra après. Mais ils ne choisissent ni le prestataire ni le prix.",
+          },
+        ];
+      },
+    },
+    {
+      id: "l-objection-du-prix",
+      objectifs: [2],
+      type: "choix",
+      titre: "L'objection de l'acheteur",
+      notions: ["price_floor", "contribution_margin"],
+      question: (c) => {
+        const n = negociationDuCabinet(c);
+        return `En fin d'entretien, l'acheteur se ferme : « ${OBJECTION_DE_L_ACHETEUR} » Le commercial écoute, reformule l'objection (« Vous voulez un prix qui tienne votre budget »), puis répond. Quelle phrase écrit-il ensuite dans sa proposition, valable ${qte(VALIDITE_DE_LA_PROPOSITION_EN_JOURS)} jours ? (Le cabinet ne descend pas sous ${eur(n.coutComplet)} la journée.)`;
+      },
+      options: (c) => {
+        const n = negociationDuCabinet(c);
+        const k = n.contrepartie;
+        const j = k.journeesNecessaires ?? 0;
+        return [
+          {
+            texte: `« ${pct(n.remiseDemandee)} sur ${qte(j)} journées, d'accord »`,
+            juste: true,
+            retour: `Oui : la remise est accordée, mais contre ${qte(j - k.journees)} journées de plus, qui rendent au cabinet sa marge (${eur(auCentime(j * k.margeParJourneeRemisee))} au lieu de ${eur(k.margeSansRemise)} au prix catalogue). La proposition écrite le dit : le prix remisé, ${eur(k.prixRemise)} HT, le volume, le calendrier avant septembre et la durée de validité. L'objection est traitée : écouter, reformuler, répondre par une contrepartie, faire valider.`,
+          },
+          {
+            texte: `« Entendu pour ${pct(n.remiseDemandee)} sur ${qte(k.journees)} journées »`,
+            juste: false,
+            retour: `Non : céder sous la menace, c'est perdre ${eur(n.coutDeLaRemise)} sans rien obtenir, et apprendre à l'acheteur que menacer paie. La prochaine affaire commencera à ${pct(n.remiseDemandee)}.`,
+          },
+          {
+            texte: `« Notre prix est notre prix : ${eur(n.prix)} la journée »`,
+            juste: false,
+            retour: `Non : la remise tient (le prix remisé reste au-dessus du coût complet de ${eur(n.coutComplet)}), et refuser net transforme une objection en conflit. On ne sort pas d'un rapport de force par un autre : on le déplace vers ce que le client y gagne.`,
+          },
+          {
+            texte: "« Je peux faire 10 %, pas plus »",
+            juste: false,
+            retour: "Non : couper la poire en deux, c'est encore une remise sans contrepartie. L'acheteur reviendra chercher le reste ; le commercial n'aura rien obtenu en échange de ce qu'il a cédé.",
+          },
+        ];
+      },
+    },
     {
       id: "predire-le-t4",
       objectifs: [3],
@@ -754,6 +844,97 @@ export const NEGOCIER_LE_PRIX: Chapitre = {
         }));
       },
     },
+    // K2 · B TO G (BTS NDRC, bloc 1 : la négociation avec un acheteur public, l'appel d'offres).
+    {
+      id: "l-appel-d-offres",
+      objectifs: [3],
+      type: "montants",
+      titre: "B to G : l'appel d'offres de Valbrune",
+      notions: ["price_floor", "price_elasticity"],
+      tableau: () => {
+        const x = appelDOffres(compteDeValbrune().prix);
+        const a = APPEL_D_OFFRES_DE_VALBRUNE;
+        return {
+          titre: "L'appel d'offres du centre hospitalier de Valbrune",
+          colonnes: ["Prix d'une journée", "Note technique, sur 20"],
+          lignes: [
+            { libelle: "ATLAS CONSEIL, au prix de N", valeurs: [eur(x.prixDAtlas), qte(a.noteTechniqueDAtlas)] },
+            ...a.concurrents.map((k) => ({ libelle: k.nom, valeurs: [eur(k.prix), qte(k.noteTechnique)] })),
+          ],
+        };
+      },
+      question: () => {
+        const v = compteDeValbrune();
+        const a = APPEL_D_OFFRES_DE_VALBRUNE;
+        return `Le marché de formation du centre hospitalier de Valbrune, que le cabinet tient à ${eur(v.prix)} la journée, se renouvelle par appel d'offres. Le règlement pondère la valeur technique à ${pct(a.ponderation.technique, 0)} et le prix à ${pct(a.ponderation.prix, 0)}, avec une note du prix de ${qte(a.noteMaximale)} × prix le plus bas ÷ prix du candidat. Au prix de N, calculez la note du prix ${dE("ATLAS CONSEIL")} et sa note globale, puis la note globale du concurrent le mieux placé (au centième), et le prix le plus haut, à l'euro, qui gagne encore.`;
+      },
+      champs: () => {
+        const v = compteDeValbrune();
+        const x = appelDOffres(v.prix);
+        const a = APPEL_D_OFFRES_DE_VALBRUNE;
+        const m = x.meilleur;
+        const t = a.ponderation.technique;
+        const p = a.ponderation.prix;
+        return [
+          { libelle: "Note du prix d'ATLAS CONSEIL", attendu: auCentime(x.atlas.noteDuPrix), calcul: `${qte(a.noteMaximale)} × ${eur(x.prixLePlusBas)} ÷ ${eur(x.prixDAtlas)} = ${qte(auCentime(x.atlas.noteDuPrix))}`, tolerance: 0.01 },
+          { libelle: "Note globale d'ATLAS CONSEIL", attendu: auCentime(x.atlas.note), calcul: `${qte(a.noteTechniqueDAtlas)} × ${qte(t)} + ${qte(auCentime(x.atlas.noteDuPrix))} × ${qte(p)} = ${qte(auCentime(x.atlas.note))}`, tolerance: 0.02 },
+          { libelle: `Note globale de ${m.nom}`, attendu: auCentime(m.note), calcul: `${qte(m.noteTechnique)} × ${qte(t)} + ${qte(auCentime(m.noteDuPrix))} × ${qte(p)} = ${qte(auCentime(m.note))}`, tolerance: 0.02 },
+          {
+            libelle: "Prix le plus haut qui gagne encore",
+            attendu: x.prixLePlusHautQuiGagne,
+            calcul: `${qte(a.noteTechniqueDAtlas)} × ${qte(t)} + ${qte(p)} × ${qte(a.noteMaximale)} × ${eur(x.prixLePlusBas)} ÷ prix > ${qte(auCentime(m.note))}, soit un prix sous ${eur(auCentime(x.prixLimite))} : ${eur(x.prixLePlusHautQuiGagne)}`,
+          },
+        ];
+      },
+      explication: () => {
+        const v = compteDeValbrune();
+        const x = appelDOffres(v.prix);
+        return [
+          `À ${eur(x.prixDAtlas)}, le cabinet gagne d'une courte tête (${qte(auCentime(x.atlas.note))} contre ${qte(auCentime(x.meilleur.note))} pour ${x.meilleur.nom}) ; il gagnerait encore jusqu'à ${eur(x.prixLePlusHautQuiGagne)}. Le mieux-disant n'est pas le moins-disant : ${x.concurrents[0]!.nom}, le moins cher, finit dernier sur sa valeur technique.`,
+          `Dans un appel d'offres, l'acheteur public ne négocie pas : le prix remis est le prix, jugé par une grille écrite d'avance. La négociation se fait avant, dans le mémoire technique, et une seule fois. Le marché laisse ${eur(x.margeParJournee)} de marge par journée à ${eur(x.prixDAtlas)}, une fois payés les ${eur(x.fraisParJournee)} de frais d'un site lointain et la journée du consultant.`,
+        ];
+      },
+    },
+    {
+      id: "l-offre-a-remettre",
+      objectifs: [3],
+      type: "choix",
+      titre: "Le prix à remettre au centre hospitalier",
+      notions: ["price_floor"],
+      question: () => {
+        const x = appelDOffres(compteDeValbrune().prix);
+        return `Le marché se renouvelle pour ${qte(APPEL_D_OFFRES_DE_VALBRUNE.dureeEnAnnees)} ans. À ${eur(x.prixDAtlas)}, il gagne, mais ne laisse que ${eur(x.margeParJournee)} par journée. Quel prix le commercial remet-il ?`;
+      },
+      options: () => {
+        const n = appelDOffres(compteDeValbrune().prix);
+        const e = appelDOffres(PRIX_ENVISAGE_POUR_VALBRUNE);
+        const bas = appelDOffres(n.prixLePlusBas);
+        const beta = n.concurrents.find((k) => k.code === "beta")!;
+        const auPrixDeBeta = appelDOffres(beta.prix);
+        return [
+          {
+            texte: `Viser ${eur(e.prixDAtlas)}, sous les ${eur(n.prixLePlusHautQuiGagne)} qui gagnent`,
+            juste: true,
+            retour: `Oui : à ${eur(e.prixDAtlas)}, la note globale (${qte(auCentime(e.atlas.note))}) passe encore celle de ${e.meilleur.nom} (${qte(auCentime(e.meilleur.note))}), et la journée laisse ${eur(e.margeParJournee)} au lieu de ${eur(n.margeParJournee)} : ${eur(e.margeDuMarche)} par an sur ${qte(e.journees)} journées, au lieu de ${eur(n.margeDuMarche)}. Les quelques euros sous la limite sont l'assurance d'une offre qu'on ne pourra plus corriger.`,
+          },
+          {
+            texte: `Garder ${eur(n.prixDAtlas)} : c'est le prix qui a gagné`,
+            juste: false,
+            retour: `Non : ${eur(n.prixDAtlas)} gagne, mais laisse ${eur(n.margeDuMarche)} par an. La grille dit que le cabinet gagne encore à ${eur(n.prixLePlusHautQuiGagne)} : il laisserait ${eur(auCentime(e.margeDuMarche - n.margeDuMarche))} de marge par an pour rien, ${qte(APPEL_D_OFFRES_DE_VALBRUNE.dureeEnAnnees)} ans durant.`,
+          },
+          {
+            texte: `Baisser à ${eur(bas.prixDAtlas)} pour être sûr de gagner`,
+            juste: false,
+            retour: `Non : à ${eur(bas.prixDAtlas)}, ${bas.margeParJournee < 0 ? `la journée fait perdre ${eur(-bas.margeParJournee)}` : `la journée ne laisse que ${eur(bas.margeParJournee)}`}, une fois les frais et le consultant payés. Gagner un marché qui fait perdre de l'argent ${qte(APPEL_D_OFFRES_DE_VALBRUNE.dureeEnAnnees)} ans durant n'est pas une victoire.`,
+          },
+          {
+            texte: `Remettre ${eur(beta.prix)}, puis négocier à la baisse`,
+            juste: false,
+            retour: `Non : un appel d'offres ne se négocie pas après la remise des offres. À ${eur(beta.prix)}, la note tomberait à ${qte(auCentime(auPrixDeBeta.atlas.note))}, sous celle de ${auPrixDeBeta.meilleur.nom} (${qte(auCentime(auPrixDeBeta.meilleur.note))}) : le marché serait perdu.`,
+          },
+        ];
+      },
+    },
     {
       id: "synthese",
       type: "lecture",
@@ -764,6 +945,7 @@ export const NEGOCIER_LE_PRIX: Chapitre = {
         return [
           `${n.entreprise} vend ${eur(n.prix)} une journée qui lui coûte ${eur(n.coutComplet)} tout compris : sa marge de manœuvre est de ${eur(n.margeDeManoeuvre)}, une remise de ${pct(n.remiseMaximale)} au plus pour un prix fait à tous les clients. La remise de ${pct(n.remiseDemandee)} ${du(n.client)} tient, à ${eur(n.ecartAuCoutComplet)} près, et se paie en volume : ${qte(n.contrepartie.journeesNecessaires ?? 0)} journées au lieu de ${qte(n.journeesDeLAffaire)} pour garder la marge.`,
           `Sous le coût complet, une affaire en plus ne se juge pas à son prix seul, mais à la place qu'il reste : ${eur(n.contreProposition.prix)} rapportent ${eur(n.auT3.gain)} au T3, où les jours libres abondent, et font perdre ${eur(-n.auT4.gain)} au T4, où le carnet est plein. Son plancher va du coût variable (${eur(n.coutVariable)}) au prix catalogue (${eur(n.prix)}), selon les journées qu'elle prend à d'autres clients. Une baisse accordée à tous fait vendre plus, mais laisse moins de marge ; les grands comptes, eux, tiennent le prix.`,
+          `L'entretien se prépare : le centre d'achat dit qui décide et ce que chacun attend, et une objection se traite par une contrepartie, écrite dans la proposition. Face à un acheteur public, toute la négociation tient dans l'offre remise : à Valbrune, le cabinet gagne encore à ${eur(appelDOffres(compteDeValbrune().prix).prixLePlusHautQuiGagne)}, quand ${eur(compteDeValbrune().prix)} ne lui laissent que ${eur(appelDOffres(compteDeValbrune().prix).margeParJournee)} par journée.`,
           "Au niveau de l'examen, vous savez calculer un coût complet, une marge de manœuvre et une remise maximale, chiffrer la contrepartie d'une remise, fixer le plancher d'une affaire en plus selon la capacité libre, juger une baisse de prix accordée à tous, et dire quelles clientèles tiennent le prix.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
         ];
