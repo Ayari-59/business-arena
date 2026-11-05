@@ -1,13 +1,14 @@
 import { margesDeLaGamme, seuilDuPointDeVente } from "./boutique";
+import { zoneDeChalandise } from "./clientele-de-la-boutique";
 import type { FicheDeLaBoutique } from "./maille-et-co";
 
 /**
  * LE MONDE DU COURS : LE MARCHÉ DE MAILLE & CO ET LE RÉSEAU QU'ELLE POURRAIT REJOINDRE (BTS MCO, bloc 2,
  * chapitre « Le marché et le réseau »).
  *
- * La boutique (monde/maille-et-co.ts) vend en janvier 87 450 € hors taxes. Ce module pose ce que la
- * fiche ne dit pas encore, chaque hypothèse nommée et commentée : le marché local de la maille en
- * janvier et ses acteurs, les marchés qui l'entourent, les conditions d'un groupement d'achat et d'une
+ * La boutique (monde/maille-et-co.ts) vend en janvier 87 450 € hors taxes, dont 77 250 € en caisse.
+ * Ce module pose ce que la fiche ne dit pas encore, chaque hypothèse nommée et commentée : le partage
+ * entre ses acteurs du marché local de la maille (sa taille est celle de la zone de chalandise), les marchés qui l'entourent, les conditions d'un groupement d'achat et d'une
  * franchise, et les seuils de l'urbanisme commercial et du contrat de franchise. Les chiffres de la
  * boutique (le chiffre d'affaires, la marge sur coût variable, les achats, les charges fixes, le
  * résultat du mois) ne sont jamais réécrits : ils se lisent dans le modèle (monde/boutique.ts).
@@ -36,47 +37,61 @@ export interface ActeurDuMarche {
   nom: string;
   /** La forme de commerce ou le canal. */
   forme: string;
-  /** Ce qu'il vend en maille aux ménages de l'agglomération en janvier, hors taxes (null : la boutique, lue sur la fiche). */
+  /**
+   * Ce qu'il vend en maille aux ménages de la zone en janvier, hors taxes. Null : la boutique (sa caisse,
+   * lue sur la fiche) ou les autres indépendants (le reste du marché, une fois les autres acteurs comptés).
+   */
   ventesDuMois: number | null;
 }
 
 /**
- * LE MARCHÉ LOCAL DE LA MAILLE EN JANVIER (hypothèse du cours, d'après une étude de la fédération de
- * l'habillement) : ce que les ménages de l'agglomération dépensent en pulls, cardigans, écharpes et
- * bonnets de maille, acteur par acteur, hors taxes. Le centre commercial de périphérie mène ; les
- * sites en ligne (dont la revente d'occasion) pèsent un cinquième. Avec la boutique, le marché fait
- * 875 000 € : MAILLE & CO en tient 10 %.
+ * LE MARCHÉ LOCAL DE LA MAILLE EN JANVIER : la dépense commercialisable des trois zones de chalandise
+ * (monde/clientele-de-la-boutique.ts, `zoneDeChalandise`), ramenée hors taxes. Un seul marché dans le
+ * cours : celui de la zone. La boutique y compte ses ventes EN CAISSE, comme la zone de chalandise :
+ * les commandes des comités d'entreprise ne sont pas des achats de ménages, elles restent hors du
+ * marché (elles comptent, en revanche, dans le chiffre d'affaires et le résultat du mois).
+ *
+ * LES AUTRES ACTEURS (hypothèse du cours, d'après une étude de la fédération de l'habillement) : la
+ * succursale de la rue, les enseignes du centre commercial de périphérie (le leader), les sites en
+ * ligne (dont la revente d'occasion, un cinquième du marché), le rayon textile des hypermarchés ; les
+ * autres indépendants font le reste.
  */
 export const MARCHE_LOCAL_DE_LA_MAILLE: readonly ActeurDuMarche[] = [
   { code: "boutique", nom: "MAILLE & CO", forme: "Commerce indépendant de centre-ville", ventesDuMois: null },
-  { code: "enseigne-de-la-rue", nom: "L'enseigne de prêt-à-porter de la rue", forme: "Succursale d'une chaîne intégrée", ventesDuMois: 140_000 },
-  { code: "centre-commercial", nom: "Les enseignes du centre commercial", forme: "Chaînes et franchises de périphérie", ventesDuMois: 310_000 },
-  { code: "sites-en-ligne", nom: "Les sites en ligne", forme: "Vente à distance et revente d'occasion", ventesDuMois: 180_000 },
-  { code: "grandes-surfaces", nom: "Les hypermarchés", forme: "Rayon textile de la grande distribution", ventesDuMois: 95_000 },
-  { code: "independants", nom: "Les autres indépendants", forme: "Merceries et boutiques de centre-ville", ventesDuMois: 62_550 },
+  { code: "enseigne-de-la-rue", nom: "L'enseigne de prêt-à-porter de la rue", forme: "Succursale d'une chaîne intégrée", ventesDuMois: 165_000 },
+  { code: "centre-commercial", nom: "Les enseignes du centre commercial", forme: "Chaînes et franchises de périphérie", ventesDuMois: 395_000 },
+  { code: "sites-en-ligne", nom: "Les sites en ligne", forme: "Vente à distance et revente d'occasion", ventesDuMois: 230_000 },
+  { code: "grandes-surfaces", nom: "Les hypermarchés", forme: "Rayon textile de la grande distribution", ventesDuMois: 125_000 },
+  { code: "independants", nom: "Les autres indépendants", forme: "Merceries et boutiques de centre-ville", ventesDuMois: null },
 ];
 
 export type CodeDeMarche = "principal" | "environnant" | "generique" | "support";
 
 /**
- * LES MARCHÉS AUTOUR DE LA MAILLE, EN JANVIER (hypothèse du cours) : la dépense des ménages de
- * l'agglomération, hors taxes. Le marché principal est celui de la maille (875 000 €, le marché local
- * ci-dessus) ; le marché environnant, ce qui répond au même besoin autrement ; le marché générique, le
- * besoin lui-même (s'habiller) ; le marché support, ce qu'il faut pour consommer la maille.
+ * LES MARCHÉS AUTOUR DE LA MAILLE, EN JANVIER (hypothèse du cours) : la dépense des ménages de la
+ * zone, hors taxes. Le marché principal est celui de la maille (le marché local ci-dessus, lu sur la
+ * zone : null ici) ; le marché environnant, ce qui répond au même besoin autrement ; le marché
+ * générique, le besoin lui-même (s'habiller, environ sept fois la maille) ; le marché support, ce qu'il
+ * faut pour consommer la maille.
  */
-export const MARCHES_AUTOUR_DE_LA_MAILLE: readonly { libelle: string; marche: CodeDeMarche; depenseDuMois: number; pourquoi: string }[] = [
-  { libelle: "Les pulls, cardigans, écharpes et bonnets en maille", marche: "principal", depenseDuMois: 875_000, pourquoi: "c'est ce que vend la boutique, et ce que vendent ses concurrents directs." },
-  { libelle: "Les sweat-shirts et les polaires", marche: "environnant", depenseDuMois: 410_000, pourquoi: "un autre produit qui tient chaud : un client peut le préférer à un pull." },
-  { libelle: "La laine à tricoter soi-même", marche: "environnant", depenseDuMois: 38_000, pourquoi: "le même besoin, satisfait autrement : on tricote son pull au lieu de l'acheter." },
-  { libelle: "L'habillement, tous vêtements confondus", marche: "generique", depenseDuMois: 6_200_000, pourquoi: "le besoin générique, s'habiller, dont la maille n'est qu'une réponse." },
-  { libelle: "Les lessives et les soins pour la laine", marche: "support", depenseDuMois: 21_000, pourquoi: "ce qu'il faut pour porter et entretenir un pull en maille." },
+export const MARCHES_AUTOUR_DE_LA_MAILLE: readonly { libelle: string; marche: CodeDeMarche; depenseDuMois: number | null; pourquoi: string }[] = [
+  { libelle: "Les pulls, cardigans, écharpes et bonnets en maille", marche: "principal", depenseDuMois: null, pourquoi: "c'est ce que vend la boutique, et ce que vendent ses concurrents directs." },
+  { libelle: "Les sweat-shirts et les polaires", marche: "environnant", depenseDuMois: 520_000, pourquoi: "un autre produit qui tient chaud : un client peut le préférer à un pull." },
+  { libelle: "La laine à tricoter soi-même", marche: "environnant", depenseDuMois: 48_000, pourquoi: "le même besoin, satisfait autrement : on tricote son pull au lieu de l'acheter." },
+  { libelle: "L'habillement, tous vêtements confondus", marche: "generique", depenseDuMois: 7_900_000, pourquoi: "le besoin générique, s'habiller, dont la maille n'est qu'une réponse." },
+  { libelle: "Les lessives et les soins pour la laine", marche: "support", depenseDuMois: 26_000, pourquoi: "ce qu'il faut pour porter et entretenir un pull en maille." },
 ];
 
-/** Le marché local, acteur par acteur, avec la boutique lue sur la fiche, et les parts de marché. */
+/** Le marché local, acteur par acteur : la taille lue sur la zone, la boutique sur sa caisse, et les parts de marché. */
 export function marcheLocal(f: FicheDeLaBoutique) {
-  const ventesDeLaBoutique = margesDeLaGamme(f).chiffreDAffaires;
-  const acteurs = MARCHE_LOCAL_DE_LA_MAILLE.map((a) => ({ ...a, ventesDuMois: a.ventesDuMois ?? ventesDeLaBoutique }));
-  const total = auCentime(somme(acteurs.map((a) => a.ventesDuMois)));
+  const z = zoneDeChalandise(f);
+  const tva = 1 + f.gamme[0]!.tauxTva;
+  const total = auCentime(z.depense / tva);
+  const ventesDeLaBoutique = auCentime(z.chiffreEnCaisse / tva);
+  const comptes = somme(MARCHE_LOCAL_DE_LA_MAILLE.map((a) => a.ventesDuMois ?? 0));
+  const reste = auCentime(total - ventesDeLaBoutique - comptes);
+  if (reste <= 0) throw new Error("Les acteurs du marché dépassent la dépense de la zone");
+  const acteurs = MARCHE_LOCAL_DE_LA_MAILLE.map((a) => ({ ...a, ventesDuMois: a.ventesDuMois ?? (a.code === "boutique" ? ventesDeLaBoutique : reste) }));
   const avecParts = acteurs.map((a) => ({ ...a, part: a.ventesDuMois / total }));
   const leader = [...avecParts].sort((a, b) => b.ventesDuMois - a.ventesDuMois)[0]!;
   const boutique = avecParts.find((a) => a.code === "boutique")!;
@@ -85,8 +100,12 @@ export function marcheLocal(f: FicheDeLaBoutique) {
     total,
     boutique,
     leader,
+    /** Les commandes des comités, hors du marché des ménages : le chiffre d'affaires du mois moins la caisse. */
+    horsMarche: auCentime(margesDeLaGamme(f).chiffreDAffaires - ventesDeLaBoutique),
     /** La part de marché relative : les ventes de la boutique rapportées à celles du leader. */
     partRelative: boutique.ventesDuMois / leader.ventesDuMois,
+    /** Les marchés autour de la maille, le principal lu sur la zone. */
+    marches: MARCHES_AUTOUR_DE_LA_MAILLE.map((m) => ({ ...m, depenseDuMois: m.depenseDuMois ?? total })),
   };
 }
 

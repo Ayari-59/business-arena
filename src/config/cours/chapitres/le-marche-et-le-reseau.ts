@@ -6,7 +6,6 @@ import {
   FORMES_DE_COMMERCE,
   FRANCHISE,
   GROUPEMENT_D_ACHAT,
-  MARCHES_AUTOUR_DE_LA_MAILLE,
   SECONDS_POINTS_DE_VENTE,
   SEUIL_DE_LA_CDAC_EN_M2,
   hausseQuiEgale,
@@ -143,7 +142,7 @@ export const LE_MARCHE_ET_LE_RESEAU: Chapitre = {
   blocs: ["BTS MCO Bloc 2 · Animer et dynamiser l'offre commerciale"],
   titre: TITRE_DU_RESEAU,
   accroche:
-    "La boutique tient 10 % de son marché local, face à un centre commercial trois fois plus gros et aux sites en ligne. Un groupement d'achat et une franchise lui font une offre : lequel rapporte le plus, et à quelle condition ?",
+    "La boutique tient 7 % de son marché local, face à un centre commercial cinq fois plus gros et aux sites en ligne. Un groupement d'achat et une franchise lui font une offre : lequel rapporte le plus, et à quelle condition ?",
   objectifs: [
     "Mesurer la taille d'un marché local, la part de marché de l'unité commerciale et sa part relative face au leader",
     "Distinguer les marchés autour du produit et les formes de commerce et de distribution",
@@ -166,7 +165,8 @@ export const LE_MARCHE_ET_LE_RESEAU: Chapitre = {
         const x = reseauDeLaBoutique(c);
         return [
           `Ce chapitre se joue dans la simulation du cours, à la boutique ${x.f.entreprise}, sur le mois de ${x.f.moisDeReference}. Elle vend ${eur(x.independante.chiffreDAffaires)} hors taxes et dégage un résultat de ${eur(x.independante.resultat)}, après ${eur(x.independante.chargesFixes)} de charges fixes.`,
-          "Le tableau donne ce que les ménages de l'agglomération ont acheté en maille ce mois-là, acteur par acteur : une étude de la fédération de l'habillement. La boutique y côtoie une succursale de chaîne, les enseignes du centre commercial de périphérie, les sites en ligne (revente d'occasion comprise), le rayon textile des hypermarchés et d'autres indépendants.",
+          `Le marché, lui, est celui des ménages de sa zone de chalandise : leur dépense commercialisable en maille, ramenée hors taxes. La boutique y compte ses ventes en caisse, ${eur(x.m.boutique.ventesDuMois)} ; les ${eur(x.m.horsMarche)} des commandes des comités d'entreprise, qui ne sont pas des ménages, restent hors du marché.`,
+          "Le tableau partage cette dépense entre les acteurs, d'après une étude de la fédération de l'habillement. La boutique y côtoie une succursale de chaîne, les enseignes du centre commercial de périphérie, les sites en ligne (revente d'occasion comprise), le rayon textile des hypermarchés et d'autres indépendants.",
           "Ce que la simulation suppose. Chaque forme de commerce se chiffre sur le mois de janvier. L'enseigne d'une franchise fait vendre plus : la hausse des ventes fait monter d'autant le chiffre d'affaires, la marge sur coût variable et les achats, pas les charges fixes.",
         ];
       },
@@ -210,7 +210,7 @@ export const LE_MARCHE_ET_LE_RESEAU: Chapitre = {
         { code: "generique", libelle: "Marché générique" },
         { code: "support", libelle: "Marché support" },
       ],
-      elements: () => MARCHES_AUTOUR_DE_LA_MAILLE.map((m) => ({ libelle: m.libelle, montant: m.depenseDuMois, categorie: m.marche, pourquoi: `Marché ${m.marche === "generique" ? "générique" : m.marche} : ${m.pourquoi}` })),
+      elements: (c) => reseauDeLaBoutique(c).m.marches.map((m) => ({ libelle: m.libelle, montant: m.depenseDuMois, categorie: m.marche, pourquoi: `Marché ${m.marche === "generique" ? "générique" : m.marche} : ${m.pourquoi}` })),
       relance: "Demandez-vous à quel besoin répond chaque dépense, et si elle remplace la maille ou l'accompagne.",
       explication: () => [
         "Le marché environnant est le plus dangereux pour la boutique : un client qui achète une polaire n'achète pas de pull. Le marché support est une occasion : vendre la lessive pour laine avec le mérinos fait un article de plus par passage.",

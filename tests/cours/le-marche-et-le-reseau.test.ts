@@ -36,14 +36,21 @@ describe("le marché et le réseau : le chapitre et son cas", () => {
     gardeDuCas(UNE_SECONDE_ENSEIGNE, LE_MARCHE_ET_LE_RESEAU);
   });
 
-  it("le marché local : 875 000 €, 10 % pour la boutique, 0,28 fois le leader", () => {
+  it("le marché local : la zone, 1 107 750 € hors taxes ; la caisse, 77 250 € ; 7 % ; 0,2 fois le leader", () => {
     const m = marcheLocal(f);
-    const autres = MARCHE_LOCAL_DE_LA_MAILLE.reduce((t, a) => t + (a.ventesDuMois ?? 0), 0);
-    expect(autres + CA).toBe(875_000);
-    expect(m.total).toBe(875_000);
-    expect(attendus(LE_MARCHE_ET_LE_RESEAU, "la-part-de-marche")).toEqual([875_000, 10, 0.28]);
+    // La dépense de la zone : (28 000 × 1,10 + 52 000 × 0,95 + 75 000 × 0,90) × 9 € TTC, ramenée hors taxes.
+    const zone = c(((28_000 * 1.1 + 52_000 * 0.95 + 75_000 * 0.9) * 9) / 1.2);
+    expect(zone).toBe(1_107_750);
+    expect(m.total).toBe(zone);
+    const caisse = 38_825 + 38_425;
+    expect(m.boutique.ventesDuMois).toBe(caisse);
+    const comptes = MARCHE_LOCAL_DE_LA_MAILLE.reduce((t, a) => t + (a.ventesDuMois ?? 0), 0);
+    expect(m.acteurs.find((a) => a.code === "independants")!.ventesDuMois).toBe(zone - caisse - comptes);
+    expect(m.horsMarche).toBe(CA - caisse);
+    expect(attendus(LE_MARCHE_ET_LE_RESEAU, "la-part-de-marche")).toEqual([zone, Math.round((caisse / zone) * 1000) / 10, c(caisse / 395_000)]);
+    expect([Math.round((caisse / zone) * 1000) / 10, c(caisse / 395_000)]).toEqual([7, 0.2]);
     expect(m.leader.code).toBe("centre-commercial");
-    expect(c(CA / 310_000)).toBe(0.28);
+    expect(m.marches.find((x) => x.marche === "principal")!.depenseDuMois).toBe(zone);
   });
 
   it("les trois formes : 13 555 €, 14 671,25 € au groupement, 14 339,52 € en franchise à 8 %", () => {
