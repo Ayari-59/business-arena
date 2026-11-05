@@ -1,5 +1,6 @@
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
-import { COURS_DU_DOLLAR, COURS_DU_LABORATOIRE, DETTE_EN_DOLLARS, HARBOR_AUDIO, PROVISION_CHERCHEE, coursSansPerte, operationsEnDevises } from "../monde/comptabilite-approfondie";
+import { COURS_A_TERME, COURS_DU_DOLLAR, COURS_DU_LABORATOIRE, DETTE_EN_DOLLARS, HARBOR_AUDIO, PROVISION_CHERCHEE, coursSansPerte, operationsEnDevises } from "../monde/comptabilite-approfondie";
+import { auCentime } from "../monde/amortissement";
 import type { Chapitre } from "../types";
 
 /**
@@ -12,6 +13,12 @@ import type { Chapitre } from "../types";
  * la provision pour perte de change à la position globale. Le curseur cherche le cours où la créance
  * ne perd rien ; le laboratoire, le cours qui fait une provision donnée.
  *
+ * AU BTS CG (P1 1.3.1 et 1.5.2, P2 2.3.1), la créance et la dette en devises, leurs écarts de
+ * conversion, la provision et la couverture de change sont au programme ; la limitation de la provision
+ * à la position globale en est exclue : l'étape qui la calcule le dit dans son titre, « au-delà du
+ * BTS ». L'étape la-couverture-a-terme reprend la vente à terme du cas « Couvrir la créance en
+ * dollars » (COURS_A_TERME) : couverte, la créance n'a plus de perte latente à provisionner.
+ *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA seule (monde/comptabilite-approfondie.ts).
  */
 
@@ -23,7 +30,7 @@ export const LES_OPERATIONS_EN_DEVISES: Chapitre = {
   code: "les-operations-en-devises",
   parcours: "dcg-comptabilite-approfondie",
   palier: 4,
-  blocs: ["DCG UE10 · Comptabilité approfondie", "BUT GEA · Produire l'information comptable, fiscale et sociale de l'organisation"],
+  blocs: ["DCG UE10 · Comptabilité approfondie", "BUT GEA · Produire l'information comptable, fiscale et sociale de l'organisation", "BTS CG P1 · Contrôle et traitement comptable des opérations commerciales", "BTS CG P2 · Contrôle et production de l'information financière"],
   titre: "Les opérations en devises : écarts de conversion et perte de change",
   accroche:
     "Une vente en dollars, payée après la clôture : ce que vaut la créance à la clôture quand le dollar a baissé, ce que la comptabilité constate, et ce qu'elle attend.",
@@ -32,6 +39,7 @@ export const LES_OPERATIONS_EN_DEVISES: Chapitre = {
     "Convertir une créance et une dette au cours de clôture et passer les écarts de conversion",
     "Calculer la provision pour perte de change, et la limiter à la position globale",
     "Distinguer une perte latente et une perte réalisée",
+    "Dire ce qu'une couverture de change à terme fige, et ce qu'elle change à la provision",
   ],
   libre: false,
   prerequis: ["creation-premier-bilan", "remises-et-reglements"],
@@ -163,10 +171,10 @@ export const LES_OPERATIONS_EN_DEVISES: Chapitre = {
       id: "la-position-globale",
       objectifs: [2],
       type: "montants",
-      titre: "La provision pour perte de change",
+      titre: "La provision pour perte de change (au-delà du BTS)",
       notions: ["currency_risk"],
       question: () =>
-        "La créance et la dette sont dans la même devise, à la même échéance : elles forment une position globale de change, et la provision peut se limiter à l'excédent des pertes latentes sur les gains latents. Calculez la provision qu'il faudrait pour la créance seule, puis celle de la position globale.",
+        "Au-delà du BTS, qui provisionne la perte latente de la créance sans la limiter. La créance et la dette sont dans la même devise, à la même échéance : elles forment une position globale de change, et la provision peut se limiter à l'excédent des pertes latentes sur les gains latents. Calculez la provision qu'il faudrait pour la créance seule, puis celle de la position globale.",
       champs: () => {
         const d = operationsEnDevises();
         return [
@@ -185,7 +193,7 @@ export const LES_OPERATIONS_EN_DEVISES: Chapitre = {
       type: "ecriture",
       titre: "La provision, au journal",
       notions: ["currency_risk"],
-      evenement: () => "Passez la provision pour perte de change de la position globale.",
+      evenement: () => `Passez la provision pour perte de change de la position globale. Au BTS, sans limitation, ce serait la perte latente de la créance seule, ${eur(operationsEnDevises().provisionSeule)}.`,
       ecriture: () => {
         const d = operationsEnDevises();
         return {
@@ -200,6 +208,33 @@ export const LES_OPERATIONS_EN_DEVISES: Chapitre = {
       indices: () => ["Une charge financière : les dotations aux provisions financières (6865).", "Au passif, une provision pour risques : pour pertes de change (1515)."],
       explication: () => ["La perte de change est probable mais pas réalisée : elle se provisionne. Au paiement, les écarts de conversion s'annulent, la provision se reprend, et seul le cours du jour du paiement fixe la perte ou le gain réel."],
       vue: "resultat",
+    },
+    {
+      // K1 (BTS CG P1 1.5.2) : la couverture à terme, reprise du cas « Couvrir la créance en dollars ».
+      id: "la-couverture-a-terme",
+      objectifs: [4],
+      type: "montants",
+      titre: "Et si NOVA s'était couverte ?",
+      notions: ["currency_risk"],
+      question: () => {
+        const d = operationsEnDevises();
+        return `Le 15 novembre, la banque proposait d'acheter à terme les ${usd(d.dollars)} de ${HARBOR_AUDIO.nom}, livrables le ${HARBOR_AUDIO.echeance}, au cours de ${cours(COURS_A_TERME)}. Si NOVA avait signé, combien encaisserait-elle en février, et quelle perte latente resterait-il à provisionner au 31 décembre, avec 1 $ à ${cours(COURS_DU_DOLLAR.cloture)} ?`;
+      },
+      champs: () => {
+        const d = operationsEnDevises();
+        const fige = auCentime(d.dollars * COURS_A_TERME);
+        return [
+          { libelle: "Encaissement figé par la couverture", attendu: fige, calcul: `${usd(d.dollars)} × ${cours(COURS_A_TERME)} = ${eur(fige)}` },
+          { libelle: "Perte latente à provisionner", attendu: 0, calcul: "les dollars sont déjà vendus au cours à terme : le cours de clôture ne change plus ce que NOVA encaissera" },
+        ];
+      },
+      explication: () => {
+        const d = operationsEnDevises();
+        const fige = auCentime(d.dollars * COURS_A_TERME);
+        return [
+          `Couverte, la créance rapporte ${eur(fige)} quoi que fasse le dollar : ${eur(auCentime(d.creanceALaFacture - fige))} de moins que la vente, le prix de la certitude, mais plus de risque, donc plus de provision. Une provision constate une perte probable ; seule la couverture l'empêche.`,
+        ];
+      },
     },
     {
       id: "le-cours-sans-perte",

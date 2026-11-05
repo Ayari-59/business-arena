@@ -8,6 +8,7 @@ import {
   MISE_EN_SERVICE_A_REBOURS,
   PRIX_DE_L_OCCASION,
   TAUX_D_IMPOT,
+  TAUX_DE_TVA_DE_LA_CESSION,
   compteDAmortissement,
   planDAmortissement,
 } from "../../src/config/cours/chapitres/immobilisations";
@@ -17,7 +18,7 @@ import { CHAPITRES } from "../../src/config/cours/registre";
 import { SITUATIONS, casDuChapitre } from "../../src/config/cours/situations";
 import { DATE_DE_REPRISE, JOUR_DE_MISE_EN_SERVICE, UN_SECOND_EQUIPEMENT } from "../../src/config/cours/situations/par-chapitre/un-second-equipement";
 import type { Situation } from "../../src/config/cours/situations/types";
-import type { Chapitre, Etape, EtapeChoix, EtapeCurseur, EtapeMontants, EtapeSimulation, EtapeTri, EtatDuCours } from "../../src/config/cours/types";
+import type { Chapitre, Etape, EtapeChoix, EtapeCurseur, EtapeEcriture, EtapeMontants, EtapeSimulation, EtapeTri, EtatDuCours } from "../../src/config/cours/types";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
 import { corriger, enEcriture, enSaisie } from "../../src/pedagogy/cours/correcteur";
 import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
@@ -287,7 +288,9 @@ describe("immobilisations : le chapitre, au monde du cours", () => {
     expect(fin.texte(cas).at(-1)).toBe("Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.");
   });
 
-  it("les hypothèses du chapitre sont des constantes nommées", () => {
+  it("les hypothèses du chapitre sont des constantes nommées, et le chapitre tient en 20 étapes", () => {
+    expect(TAUX_DE_TVA_DE_LA_CESSION).toBe(0.2);
+    expect(IMMOBILISATIONS.etapes.length).toBe(18);
     expect(DEVIS_DU_FOURNISSEUR).toEqual({ remise: 0.05, livraison: 0.02, installation: 0.04, formation: 0.015, entretien: 0.025 });
     expect(PRIX_DE_L_OCCASION).toBe(0.4);
     expect(DATE_DE_REVENTE).toEqual({ jour: 30, mois: 6, exercice: 2 });
@@ -395,6 +398,28 @@ describe.each(ENTREPRISES_DU_COURS)("immobilisations chez %s, refaites à la mai
       "Résultat de cession": centime(m.prix - m.vnc),
     });
     expect(m.dot3).toBe(centime(B / m.n / 2));
+  });
+
+  it("la cession au journal (K4) : l'équipement et ses amortissements sortent, la valeur nette au 675, le prix au 775, la TVA au taux normal", () => {
+    const e = etapeDe<EtapeEcriture>(ch, "la-cession-au-journal");
+    expect(e.type).toBe("ecriture");
+    const a = e.ecriture(cas);
+    const ligne = (compte: string) => a.lignes.find((l) => l.compte === compte)!;
+    const amort = compteDAmortissement(cas.immobilisation.compte);
+    expect(a.lignes.map((l) => [l.compte, l.sens, l.montant])).toEqual([
+      [amort, "debit", m.cumul],
+      ["675", "debit", m.vnc],
+      [cas.immobilisation.compte, "credit", B],
+      ["462", "debit", centime(m.prix * 1.2)],
+      ["44571", "credit", centime(m.prix * 0.2)],
+      ["775", "credit", m.prix],
+    ]);
+    // Le résultat de cession du calcul : le 775 moins le 675.
+    expect(centime(ligne("775").montant - ligne("675").montant)).toBe(centime(m.prix - m.vnc));
+    expect(equilibree(enEcriture(a))).toBe(true);
+    // Elle suit le calcul de la revente, et vient avant le dégressif.
+    const ids = ch.etapes.map((x) => x.id);
+    expect(ids.indexOf("la-cession-au-journal")).toBe(ids.indexOf("revente") + 1);
   });
 
   it("le curseur du prix de revente : la frontière à la valeur nette, arrondie à l'euro au-dessus", () => {

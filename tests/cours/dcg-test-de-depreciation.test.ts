@@ -13,6 +13,11 @@ import { reponseSansIndice } from "./gardes-de-l-ue10";
  * 4 flux de 10 000 € à 6 %, valeur vénale 26 000 €.
  */
 
+const etapeQuestion = (id: string) => {
+  const e = CH.etapes.find((x) => x.id === id)!;
+  if (e.type !== "montants") throw new Error("montants attendus");
+  return e.question(NOVA, { soldes: {} });
+};
 const r2 = (x: number) => Math.round(x * 100) / 100;
 const facteur = (t: number, n: number) => (1 - (1 + t) ** -n) / t;
 
@@ -22,6 +27,17 @@ describe("le chapitre et son cas, dans leur parcours", () => {
     expect(CH.blocs).toContain("DCG UE10 · Comptabilité approfondie");
     gardeDuCas(VENDRE_LA_LIGNE_OU_LA_GARDER, CH);
     reponseSansIndice(VENDRE_LA_LIGNE_OU_LA_GARDER);
+  });
+
+  it("K3 : étiqueté BTS CG P2 ; les étapes qui actualisent se disent au-delà du BTS, les autres non", () => {
+    expect(CH.blocs).toContain("BTS CG P2 · Contrôle et production de l'information financière");
+    expect(CH.blocs.some((b) => b.startsWith("BTS CG P3"))).toBe(false);
+    const auDela = CH.etapes.filter((e) => e.titre.includes("(au-delà du BTS)")).map((e) => e.id);
+    expect(auDela).toEqual(["la-valeur-d-usage", "le-flux-qui-suffit", "le-laboratoire-du-taux"]);
+    const intro = CH.etapes[0]!;
+    if (intro.type !== "lecture") throw new Error("lecture attendue");
+    expect(intro.texte(NOVA).join(" ")).toContain("Au BTS CG, la valeur actuelle est donnée");
+    expect(etapeQuestion("la-depreciation")).toContain("Au BTS CG, l'énoncé donnerait la valeur actuelle");
   });
 
   it("textes propres, une seule bonne réponse, notions existantes, servis par le serveur", () => {

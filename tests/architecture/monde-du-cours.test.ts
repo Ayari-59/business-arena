@@ -467,6 +467,11 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   // Le BTS NDRC, bloc 2 : le plateau de téléacteurs (monde/plateau-d-atlas.ts), et son cas.
   "chapitres/le-plateau-de-teleacteurs.ts",
   "situations/par-chapitre/la-ligne-de-la-rentree.ts",
+  // Le BTS CG P1 et P2 : acquérir et financer une immobilisation (monde/acquisition-et-financement.ts), l'initiation à la consolidation (monde/groupe-nova.ts), et leurs cas.
+  "chapitres/acquerir-et-financer-une-immobilisation.ts",
+  "chapitres/initiation-a-la-consolidation.ts",
+  "situations/par-chapitre/la-cabine-subventionnee.ts",
+  "situations/par-chapitre/le-directeur-veut-plus-d-actions.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */

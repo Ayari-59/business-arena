@@ -1653,6 +1653,20 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Si une vendeuse indépendante vendait pour vous contre 25 % du chiffre d'affaires, que vous laisserait une vente de plus ? Combien de ventes lui faudrait-il pour payer sa formation ?",
   }),
+  "acquerir-et-financer-une-immobilisation": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relevez la valeur nette des immobilisations au bilan et la dotation aux amortissements.`,
+    lieux: ["bilan", "compte-de-resultat"],
+    chercher:
+      "Si une aide publique avait payé 30 % de votre équipement, combien en serait revenu au résultat de chaque tour ? Et si vous l'aviez loué en crédit-bail, qu'est-ce qui aurait disparu de votre bilan ?",
+  }),
+  "initiation-a-la-consolidation": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis relevez votre chiffre d'affaires et vos dettes au bilan.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "Imaginez une filiale qui revendrait le quart de vos ventes, achetées à votre prix : quel serait le chiffre d'affaires du groupe ? Et si vous lui aviez prêté de quoi démarrer, que deviendraient ce prêt et son emprunt dans les comptes du groupe ?",
+  }),
 };
 
 /**

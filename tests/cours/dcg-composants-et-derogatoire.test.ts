@@ -20,6 +20,9 @@ describe("le chapitre et son cas, dans leur parcours", () => {
     gardeDuProgramme(CH, PROGRAMME["dcg-comptabilite-approfondie"][4]!);
     expect(CH.blocs).toContain("DCG UE10 · Comptabilité approfondie");
     expect(CH.prerequis).toEqual(["immobilisations"]);
+    // K2 : l'étiquette du BTS CG P2 (2.3.2, 2.3.4) ; celle du P3 viendra avec le chantier du P3.
+    expect(CH.blocs).toContain("BTS CG P2 · Contrôle et production de l'information financière");
+    expect(CH.blocs.some((b) => b.startsWith("BTS CG P3"))).toBe(false);
     gardeDuCas(LES_MOTEURS_QUI_S_USENT_PLUS_VITE, CH);
     reponseSansIndice(LES_MOTEURS_QUI_S_USENT_PLUS_VITE);
   });
