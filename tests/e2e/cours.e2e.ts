@@ -1017,6 +1017,34 @@ describe.each([
   { code: "un-apprenti-ou-un-temps-partiel", entreprise: "boutique", telephone: true },
   { code: "le-challenge-du-merinos", entreprise: "boutique" },
   { code: "retenir-la-vendeuse", entreprise: "boutique", telephone: true },
+  // Le BTS NDRC, bloc 1 terrain : le fichier et la cible, le secteur, l'événement commercial (tris, curseurs, laboratoires), puis leurs cas.
+  { code: "le-fichier-et-la-cible", entreprise: "conseil" },
+  { code: "le-fichier-et-la-cible", entreprise: "conseil", telephone: true },
+  { code: "organiser-le-secteur", entreprise: "conseil" },
+  { code: "organiser-le-secteur", entreprise: "conseil", telephone: true },
+  { code: "l-evenement-commercial", entreprise: "conseil" },
+  { code: "l-evenement-commercial", entreprise: "conseil", telephone: true },
+  { code: "un-fichier-a-acheter", entreprise: "conseil" },
+  { code: "les-comptes-de-hugo", entreprise: "conseil", telephone: true },
+  { code: "un-invite-pour-la-matinale", entreprise: "conseil" },
+  // Le BTS NDRC, bloc 2 : le site qui vend, contenus, communauté et e-réputation (tris, curseurs, laboratoires), puis leurs cas.
+  { code: "le-site-qui-vend", entreprise: "conseil" },
+  { code: "le-site-qui-vend", entreprise: "conseil", telephone: true },
+  { code: "contenus-communaute-et-e-reputation", entreprise: "conseil" },
+  { code: "contenus-communaute-et-e-reputation", entreprise: "conseil", telephone: true },
+  { code: "doubler-les-liens-sponsorises", entreprise: "conseil" },
+  { code: "l-avis-a-une-etoile", entreprise: "conseil", telephone: true },
+  // Le BTS NDRC, bloc 3 : se faire référencer chez un distributeur (NOVA), le réseau de vente directe (MAILLE & CO), un curseur et un laboratoire chacun, puis leurs cas.
+  { code: "se-faire-referencer", entreprise: "nova" },
+  { code: "se-faire-referencer", entreprise: "nova", telephone: true },
+  { code: "le-reseau-de-vente-directe", entreprise: "boutique" },
+  { code: "le-reseau-de-vente-directe", entreprise: "boutique", telephone: true },
+  { code: "la-centrale-demande-une-ristourne", entreprise: "nova" },
+  { code: "un-pourcentage-pour-la-marraine", entreprise: "boutique", telephone: true },
+  // Le BTS NDRC, bloc 2 : le plateau de téléacteurs (deux laboratoires et un curseur), puis son cas.
+  { code: "le-plateau-de-teleacteurs", entreprise: "conseil" },
+  { code: "le-plateau-de-teleacteurs", entreprise: "conseil", telephone: true },
+  { code: "la-ligne-de-la-rentree", entreprise: "conseil", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se

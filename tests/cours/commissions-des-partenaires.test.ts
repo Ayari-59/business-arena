@@ -387,6 +387,22 @@ describe("les commissions des partenaires, au cabinet du monde du cours", () => 
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(ch));
+
+  it("le complément K5 : la grille des prescripteurs, refaite à la main, puis les clauses et le suivi", () => {
+    const ids = ch.etapes.map((e) => e.id);
+    expect(ids.slice(-4)).toEqual(["choisir-un-partenaire", "les-clauses-du-contrat", "animer-et-suivre", "synthese"]);
+    expect(ids.length).toBeLessThanOrEqual(20);
+    // Σ note × poids ÷ 100, poids 35, 25, 20, 20.
+    const note = (n: readonly number[]) => centime((n[0]! * 35 + n[1]! * 25 + n[2]! * 20 + n[3]! * 20) / 100);
+    expect(attendus(ch, "choisir-un-partenaire")).toEqual({
+      "Note pondérée : Experts-comptables": note([16, 14, 18, 10]),
+      "Note pondérée : Éditeur RH": note([13, 10, 12, 14]),
+      "Note pondérée : Club local": note([10, 18, 14, 12]),
+    });
+    expect([note([16, 14, 18, 10]), note([13, 10, 12, 14]), note([10, 18, 14, 12])]).toEqual([14.7, 12.25, 13.2]);
+    expect(juste(ch, "les-clauses-du-contrat")).toBe("Une commission payée une fois, puis le compte signe en direct");
+    expect(juste(ch, "animer-et-suivre")).toBe("Les présentations, les comptes gagnés et leur coût");
+  });
 });
 
 describe("la mise en avant payante : sur la vie, la mise en avant paie ; sur la première année, elle perd", () => {

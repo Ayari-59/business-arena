@@ -227,7 +227,7 @@ export const PREVOIR_LES_VENTES: Chapitre = {
   code: "prevoir-les-ventes",
   parcours: "mco",
   palier: 3,
-  blocs: ["BTS MCO Bloc 3 · Assurer la gestion opérationnelle"],
+  blocs: ["BTS MCO Bloc 3 · Assurer la gestion opérationnelle", "BTS NDRC Bloc 1 · Relation client et négociation-vente"],
   titre: "Prévoir les ventes",
   accroche:
     "Trois années de demande, trimestre par trimestre : les moyennes mobiles effacent la saison, la droite des moindres carrés donne la tendance, les coefficients saisonniers la remettent. Puis la prévision de l'année, et la critique de la méthode.",

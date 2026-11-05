@@ -1275,6 +1275,13 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Quel indicateur a décroché le premier ? À quel tour le cabinet a-t-il refusé des journées faute de consultants, et à quel tour en a-t-il manqué faute de clients ? Quelle décision avez-vous prise ensuite, et a-t-elle remis l'indicateur dans le vert ?",
   }),
+  "le-plateau-de-teleacteurs": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Jouez trois tours. À chaque tour, relevez la demande adressée, les journées vendues et votre taux d'occupation.`,
+    lieux: ["marche-du-tour", "indicateurs"],
+    chercher:
+      "À quel tour l'occupation des consultants a-t-elle été la plus haute, et à quel tour la plus basse ? Comme sur une ligne clients, un effectif fixe face à une demande qui varie : combien de journées refusées au tour le plus chargé, combien de journées vides au tour le plus calme ?",
+  }),
   // L'UE10 DU DCG (comptabilité approfondie) : l'arène tient une comptabilité simplifiée ; la
   // mission fait chercher à l'écran ce que le chapitre approfondit.
   "les-composants-et-l-amortissement-derogatoire": (c) => ({
@@ -1597,6 +1604,55 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
         "Dans le tableau des références, comparez la marge de chacune aux deux tours. La référence renforcée a-t-elle vendu plus, ou a-t-elle manqué de demande ? Le gain couvre-t-il ce que l'autre a perdu ?",
     };
   },
+  "le-fichier-et-la-cible": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Jouez deux tours, puis relevez la demande adressée et les journées vendues de chaque clientèle.`,
+    lieux: ["marche-du-tour", "indicateurs"],
+    chercher:
+      "Quelle clientèle vous laisse le plus de demande à prendre, et laquelle vous laisse le plus de chiffre d'affaires par journée vendue ? Si vous ne pouviez prospecter qu'une clientèle au tour suivant, laquelle choisiriez-vous, et pourquoi ?",
+  }),
+  "organiser-le-secteur": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Jouez deux tours, puis relevez votre taux d'occupation et les journées refusées faute de consultants.`,
+    lieux: ["indicateurs", "marche-du-tour"],
+    chercher:
+      "Votre capacité est-elle pleine, ou vous reste-t-il des journées libres ? Si vos commerciaux passaient moins de temps chez les petits clients, à quelle clientèle donneriez-vous ce temps ?",
+  }),
+  "l-evenement-commercial": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Jouez un tour sans rien changer, puis un second en augmentant « Budget marketing » d'un quart.`,
+    lieux: ["marche-du-tour", "compte-de-resultat"],
+    chercher:
+      "Combien de journées le budget en plus a-t-il fait vendre ? Combien vous coûte chaque journée gagnée, et combien de ces journées faudrait-il pour payer le budget ajouté ?",
+  }),
+  "le-site-qui-vend": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Jouez un premier tour sans rien changer, puis un second en augmentant « Budget marketing » de moitié.`,
+    lieux: ["marche-du-tour", "indicateurs", "compte-de-resultat"],
+    chercher:
+      "Votre chiffre d'affaires est-il monté par plus de clients, ou par plus de ventes à chacun ? Calculez ce que chaque euro de marketing ajouté a ramené de chiffre d'affaires, puis de marge : la dépense en plus s'est-elle payée ?",
+  }),
+  "contenus-communaute-et-e-reputation": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Jouez deux tours, puis ouvrez le marché du tour écoulé.`,
+    lieux: ["marche-du-tour", "indicateurs"],
+    chercher:
+      "Vos clients restent-ils d'un tour à l'autre ? Si une mauvaise réputation vous faisait perdre un client sur dix, combien de chiffre d'affaires et de marge perdriez-vous au tour suivant ? Combien pourriez-vous dépenser pour l'éviter ?",
+  }),
+  "se-faire-referencer": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relevez les ventes de chaque clientèle, intermédiaire compris, et votre coût variable unitaire.`,
+    lieux: ["marche-du-tour", "analyse-des-couts"],
+    chercher:
+      "Combien vous laisse une unité vendue par l'intermédiaire, une fois payé le coût variable ? Si un distributeur vous demandait une remise d'un euro par unité pour garder votre place, combien de ventes en plus faudrait-il pour la payer ?",
+  }),
+  "le-reseau-de-vente-directe": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis relevez votre chiffre d'affaires, votre marge sur coût variable et vos ventes.`,
+    lieux: ["compte-de-resultat", "analyse-des-couts"],
+    chercher:
+      "Si une vendeuse indépendante vendait pour vous contre 25 % du chiffre d'affaires, que vous laisserait une vente de plus ? Combien de ventes lui faudrait-il pour payer sa formation ?",
+  }),
 };
 
 /**

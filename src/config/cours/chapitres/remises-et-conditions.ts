@@ -3,11 +3,12 @@ import { auCentime as auCentimeDeLArene } from "../../../pedagogy/cours/etats";
 import type { Cas } from "../cas";
 import { auCentime } from "../monde/amortissement";
 import { CABINETS_DU_COURS, type CompteClient } from "../monde/atlas-conseil";
-import { DELAIS_DU_COURS, DELAI_MAXIMAL_CONVENU, JOURS_DE_L_ANNEE_BANCAIRE, JOURS_DE_L_ANNEE_CIVILE, type FicheDeLAffaire } from "../monde/delais-et-tva";
+import { DELAIS_DU_COURS, DELAI_MAXIMAL_CONVENU, JOURS_DE_L_ANNEE_BANCAIRE, JOURS_DE_L_ANNEE_CIVILE, TAUX_D_INTERET_LEGAL, type FicheDeLAffaire } from "../monde/delais-et-tva";
 import { affaireAuxConditions } from "../monde/delais";
 import { coutDeLAvance, tauxAnnuelDeLEscompte } from "../monde/facture";
 import { JOURS_D_ESCOMPTE, JOURS_PAR_AN, TAUX_DE_REMISE, TAUX_D_ESCOMPTE } from "../remises";
 import { KERVAL_DISTRIBUTION, RELANCES, TAUX_DES_PENALITES, suivreUnMauvaisPayeur } from "../monde/mauvais-payeurs";
+import { PRIX_DE_L_ENTENTE_PROPOSEE, SANCTION_MAXIMALE_D_UNE_ENTENTE, penalitesSelonLesConditions } from "../monde/negociation-d-atlas";
 import type { Chapitre, TableauDeDonnees } from "../types";
 
 /**
@@ -36,6 +37,12 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * (`delaiOuLEscompteVautLeCredit` du modèle, 80 jours), n'est jamais employé : il oublie les 10 jours
  * de crédit qui restent et la base du net financier. Le chapitre ne calcule pas non plus le résultat
  * d'une affaire où le client prend l'escompte, dont le point d'égalité serait un troisième nombre.
+ *
+ * LE COMPLÉMENT K3 DU BTS NDRC EN ENTIER (novembre 2026, monde/negociation-d-atlas.ts) : le cadre
+ * juridique, après le client en retard. la-demande-de-kerval (les conditions générales, socle de la
+ * négociation, et le plafond légal du délai), les-penalites-des-cgv (la clause des pénalités chiffrée :
+ * le plancher légal face au taux de la BCE majoré) et une-entente-sur-les-prix (les règles de la
+ * concurrence).
  *
  * LES TROIS TEMPS (demande du propriétaire, octobre 2026 : le niveau d'arrivée est celui de l'examen) :
  *   · guidé : intro, facture, marge, le-credit (la formule est au repère ou dans la question, qui
@@ -532,6 +539,94 @@ export const REMISES_ET_CONDITIONS: Chapitre = {
           `${r.client} reste un client solvable : sa créance reste au compte 411, sans dépréciation. Réclamer les ${eur(r.reclamable)}, ou s'en servir pour obtenir le paiement à l'échéance, est une décision commerciale ; ne rien dire, c'est lui accorder un délai que la loi ne permet pas de convenir.`,
         ];
       },
+    },
+    // K3 · LE CADRE JURIDIQUE (BTS NDRC, bloc 1 : les relations contractuelles, le contrat de vente, la concurrence).
+    {
+      id: "la-demande-de-kerval",
+      objectifs: [2],
+      type: "choix",
+      titre: "Les conditions générales, socle de la négociation",
+      notions: ["payment_terms"],
+      question: (c) => {
+        const k = conditionsDeKerval(c);
+        const j = penalitesSelonLesConditions();
+        return `Hypothèse du cours : pour sa prochaine commande, ${k.client} propose de renoncer à sa remise de ${pct(k.remise)} si le cabinet accepte d'être payé à ${qte(j.delaiDemande)} jours date de facture. Le commercial veut l'écrire dans les conditions particulières de l'affaire, qui dérogent aux conditions générales de vente du cabinet. Que lui répondez-vous ?`;
+      },
+      options: (c) => {
+        const k = conditionsDeKerval(c);
+        const j = penalitesSelonLesConditions();
+        return [
+          {
+            texte: `Non : ${qte(j.delaiMaximal)} jours au plus, même contre la remise`,
+            juste: !j.demandeLicite,
+            retour: `Oui : entre professionnels, le délai convenu ne peut pas dépasser ${qte(j.delaiMaximal)} jours date de facture, ou 45 jours fin de mois (code de commerce, article L. 441-10). Aucune clause ne peut l'écarter, pas même en échange d'une remise, et un dépassement s'expose à une amende administrative. Les conditions particulières adaptent le prix, le volume, le calendrier ; pas la loi.`,
+          },
+          {
+            texte: "Oui : un délai se négocie librement entre professionnels",
+            juste: j.demandeLicite,
+            retour: `Non : le délai se négocie, mais sous un plafond. ${qte(j.delaiDemande)} jours dépassent de ${qte(j.joursDeTrop)} jours le maximum légal ; la remise de ${pct(k.remise)} n'y change rien.`,
+          },
+          {
+            texte: "Oui, si c'est écrit dans les conditions particulières",
+            juste: false,
+            retour: `Non : les conditions générales de vente sont le socle de la négociation commerciale (code de commerce, article L. 441-1), et le cabinet doit les communiquer à tout acheteur professionnel qui les demande. Les conditions particulières s'en écartent pour un client, avec une contrepartie ; elles ne s'écartent pas du plafond légal de ${qte(j.delaiMaximal)} jours.`,
+          },
+        ];
+      },
+    },
+    {
+      id: "les-penalites-des-cgv",
+      objectifs: [2],
+      type: "montants",
+      titre: "La clause des pénalités, chiffrée",
+      notions: ["payment_terms"],
+      question: () => {
+        const j = penalitesSelonLesConditions();
+        return `Les conditions générales de vente doivent dire le taux des pénalités de retard. Le cabinet hésite entre deux clauses : le taux de la BCE majoré de 10 points (${pct(j.tauxBce)}, celui qui s'applique aussi quand rien n'est écrit), ou le plancher légal, 3 fois le taux d'intérêt légal (${pct(TAUX_D_INTERET_LEGAL.professionnels)}). Sur le retard de ${j.client} (${eur(j.ttc)} TTC, ${qte(j.retard)} jours), calculez le plancher en pourcentage, les pénalités à ce plancher, puis ce que le cabinet perdrait en l'écrivant plutôt que le taux de la BCE majoré.`;
+      },
+      champs: () => {
+        const j = penalitesSelonLesConditions();
+        return [
+          { libelle: "Taux plancher des pénalités (%)", attendu: enPourcent(j.tauxPlancher), calcul: `3 × ${pct(TAUX_D_INTERET_LEGAL.professionnels)} = ${pct(j.tauxPlancher)}` },
+          { libelle: "Pénalités au taux plancher", attendu: j.auPlancher, calcul: `${eur(j.ttc)} × ${pct(j.tauxPlancher)} × ${qte(j.retard)} ÷ ${JOURS_DE_L_ANNEE_CIVILE} = ${eur(j.auPlancher)}` },
+          { libelle: "Ce que la clause plancher fait perdre", attendu: j.ecart, calcul: `${eur(j.auTauxBce)} − ${eur(j.auPlancher)} = ${eur(j.ecart)}` },
+        ];
+      },
+      explication: () => {
+        const j = penalitesSelonLesConditions();
+        return [
+          `Au plancher, les pénalités (${eur(j.auPlancher)}) couvrent à peine ce que le retard coûte au cabinet sur son découvert (${eur(j.coutDuRetard)}) ; au taux de la BCE majoré, ${eur(j.auTauxBce)}. Écrire le plancher dans ses conditions générales, c'est renoncer à ${eur(j.ecart)} sur un seul retard, et rendre le retard bon marché pour le client.`,
+          `Les pénalités courent de plein droit dès le lendemain de l'échéance, avec l'indemnité forfaitaire de ${eur(j.indemnite)} par facture. Une clause plus douce que la loi n'est pas permise ; une clause plus forte l'est. Le choix se fait une fois, dans les conditions générales, et vaut pour chaque client.`,
+        ];
+      },
+    },
+    {
+      id: "une-entente-sur-les-prix",
+      objectifs: [1],
+      type: "choix",
+      titre: "Les règles de la concurrence",
+      notions: ["price_floor"],
+      question: (c) => {
+        const k = conditionsDeKerval(c);
+        return `Un cabinet concurrent propose à ${k.entreprise} de ne plus descendre, ni l'un ni l'autre, sous ${eur(PRIX_DE_L_ENTENTE_PROPOSEE)} la journée dans la région : « Fini les remises qui nous ruinent. » Que fait le cabinet ?`;
+      },
+      options: () => [
+        {
+          texte: "Il refuse : c'est une entente sur les prix",
+          juste: true,
+          retour: `Oui : un accord entre concurrents sur un prix plancher est une entente, interdite (code de commerce, article L. 420-1), même orale, même sans écrit signé. L'Autorité de la concurrence peut la sanctionner jusqu'à ${pct(SANCTION_MAXIMALE_D_UNE_ENTENTE)} du chiffre d'affaires mondial. Chaque cabinet fixe seul son prix ; la remise se borne par la marge de manœuvre, pas par un accord avec ses concurrents.`,
+        },
+        {
+          texte: "Il accepte : chacun reste libre de ses remises au-dessus",
+          juste: false,
+          retour: "Non : c'est le plancher commun qui est interdit. Qu'il reste de la liberté au-dessus ne change rien : les clients perdent la concurrence par les prix.",
+        },
+        {
+          texte: "Il accepte, si l'accord reste oral",
+          juste: false,
+          retour: "Non : une entente n'a pas besoin d'écrit. Un échange de courriels, une réunion, un accord tacite suffisent à la caractériser.",
+        },
+      ],
     },
     {
       id: "predire-l-escompte",

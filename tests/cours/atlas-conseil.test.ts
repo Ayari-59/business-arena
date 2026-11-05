@@ -36,6 +36,24 @@ import {
   valeurVieAvecUnPartenaire,
   valeurVieClient,
 } from "../../src/config/cours/monde/relation-client";
+import {
+  BUDGET_DES_SALONS,
+  CARTE_DU_SECTEUR,
+  ENTONNOIR_PAR_SEGMENT,
+  FICHIER_DE_PROSPECTION,
+  MATINALES,
+  PIPELINE_DES_SALONS,
+  PME_MOYENNES_ET_ETI,
+  RECENCE_ET_COMMANDES,
+  chargeDeVisites,
+  salonsDeN,
+  segmentDuCompte,
+} from "../../src/config/cours/monde/terrain-d-atlas";
+import { ACHETEURS_DU_SITE, PERIODE_DU_SITE, PUBLICATIONS, SOURCES_DE_TRAFIC, conversionALaNote, noteDesAvis, traficDuSite, valeurDUnContact } from "../../src/config/cours/monde/site-d-atlas";
+import { CANDIDATS, CRITERES_DES_PARTENAIRES, grilleDesPartenaires } from "../../src/config/cours/monde/selection-des-partenaires";
+import { CONTRATS_DE_NADIA_AU_T4 } from "../../src/config/cours/monde/equipe-commerciale-d-atlas";
+import { APPEL_D_OFFRES_DE_VALBRUNE } from "../../src/config/cours/monde/negociation-d-atlas";
+import { COUT_D_UN_TELEACTEUR, CRENEAUX_DE_LA_LIGNE, DMT_DE_LA_LIGNE, TELEACTEURS } from "../../src/config/cours/monde/plateau-d-atlas";
 
 /**
  * LA RELATION CLIENT DU COURS (monde/relation-client.ts sur monde/atlas-conseil.ts), REFAITE À LA MAIN.
@@ -604,5 +622,132 @@ describe("la garde voit le modèle et la fiche", () => {
     expect(prixPlancher({ ...f, prixCatalogue: 900 }).margeDeManoeuvre).toBe(900 - 630);
     expect(prixPlancher({ ...f, chargesFixes: { ...f.chargesFixes, loyer: 66_000 + 19_200 } }).coutComplet).toBe(150 + 940_800 / 1_920);
     expect(valeurDUnClient({ ...f, tauxDActualisation: 0.05 }).actualisee).toBe(70_000);
+  });
+});
+
+/**
+ * LE TERRAIN D'ATLAS (monde/terrain-d-atlas.ts) RETOMBE SUR LA FICHE. Les chapitres du bloc 1 « terrain »
+ * (le fichier et la cible, organiser le secteur, l'événement commercial) ajoutent au cabinet un marché, un
+ * fichier, un score RFM, un calendrier, une carte, des salons et des matinales ; d'autres chapitres pourront
+ * les reprendre. Chaque donnée nouvelle doit refaire ce que la fiche dit déjà : les 32 comptes, les contacts
+ * et l'entonnoir des canaux, les contrats des commerciaux, les 17 200 € des stands.
+ */
+describe("le terrain d'ATLAS retombe sur la fiche", () => {
+  it("les segments rangent les 32 comptes, et les PME moyennes sont des PME de la fiche", () => {
+    expect(PME_MOYENNES_ET_ETI.every((code) => compte(code).clientele === "pme")).toBe(true);
+    const segments = f.comptes.map(segmentDuCompte);
+    expect(segments.filter((s) => s === "petites-pme" || s === "pme-moyennes")).toHaveLength(f.comptes.filter((c) => c.clientele === "pme").length);
+    expect(segments.filter((s) => s === "grands-comptes")).toHaveLength(f.comptes.filter((c) => c.clientele === "grands-comptes").length);
+  });
+
+  it("le fichier refait les contacts des trois canaux, et son entonnoir leurs rendez-vous, devis et contrats", () => {
+    const trois = (["prospection", "salons", "digital"] as const).map(canal);
+    expect(FICHIER_DE_PROSPECTION.lignesParCanal).toEqual({ prospection: canal("prospection").contacts, salons: canal("salons").contacts, digital: canal("digital").contacts });
+    const e = Object.values(ENTONNOIR_PAR_SEGMENT);
+    for (const k of ["contacts", "rendezVous", "devis", "contrats"] as const) expect(somme(e.map((x) => x[k])), k).toBe(somme(trois.map((x) => x[k])));
+    // Les contrats de chaque segment sont les comptes neufs de la fiche venus de ces canaux, dans ce segment.
+    for (const [s, x] of Object.entries(ENTONNOIR_PAR_SEGMENT))
+      expect(x.contrats, s).toBe(f.comptes.filter((c) => c.anciennete === 0 && c.origine !== null && c.origine !== "apporteurs" && segmentDuCompte(c) === s).length);
+  });
+
+  it("les commandes de l'année refont les contrats de chaque commercial, et chaque compte a acheté en N", () => {
+    for (const k of f.commerciaux)
+      expect(somme(f.comptes.filter((c) => c.commercial === k.code).map((c) => RECENCE_ET_COMMANDES[c.code]!.commandes)), k.prenom).toBe(somme(k.n.map((t) => t.contrats)));
+    for (const c of f.comptes) {
+      expect(RECENCE_ET_COMMANDES[c.code]!.recence, c.code).toBeLessThanOrEqual(11);
+      expect(RECENCE_ET_COMMANDES[c.code]!.commandes, c.code).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  it("les salons, les tournées et les matinales lisent la fiche : 17 200 € de stands, les comptes C de Nadia, le taux de signature des salons", () => {
+    expect(somme(BUDGET_DES_SALONS.map((l) => l.montant))).toBe(17_200);
+    expect(salonsDeN(f).comptes.map((c) => c.code)).toEqual(f.comptes.filter((c) => c.origine === "salons").map((c) => c.code));
+    expect(salonsDeN(f).temps).toBe(20_000);
+    expect(CARTE_DU_SECTEUR.agenda.every((code) => compte(code).commercial === "entreprises" && classementABC(f).comptes.find((c) => c.code === code)!.classe === "C")).toBe(true);
+    expect(MATINALES.tauxDeSignature).toBe(canal("salons").contrats / canal("salons").devis);
+    expect(PIPELINE_DES_SALONS.opportunites.filter((o) => o.stade === "devis-remis").length + PIPELINE_DES_SALONS.devisPerdus + canal("salons").contrats).toBe(canal("salons").devis);
+    expect(chargeDeVisites(f).rendezVousDAffaires).toBe(somme(commercial("entreprises").n.map((t) => t.rendezVous)));
+  });
+});
+
+/**
+ * LE SITE D'ATLAS CONSEIL EN N + 1 (monde/site-d-atlas.ts), RACCORDÉ À LA FICHE. Les chapitres du bloc 2
+ * (« Le site qui vend », « Contenus, communauté et e-réputation ») et ceux qui les reprendront lisent ces
+ * chiffres : la garde dit qu'ils ne touchent pas l'année N, et qu'ils retombent sur elle là où ils s'y
+ * raccordent (l'entonnoir et la valeur vie d'un compte), et les uns sur les autres (les visites des
+ * réseaux sociaux, la conversion du site).
+ */
+describe("le site d'ATLAS CONSEIL en N + 1 se raccorde à la fiche, sans toucher l'année N", () => {
+  it("l'année N reste celle de la fiche : la boutique en ligne ouvre après elle", () => {
+    expect(PERIODE_DU_SITE).toBe("le premier trimestre de N + 1");
+    expect(somme(f.comptes.map((c) => c.chiffreDAffaires))).toBe(CA_DE_N);
+    expect(f.canaux.map((k) => k.code)).toEqual(["prospection", "salons", "digital", "apporteurs"]);
+  });
+
+  it("un contact entrant suit l'entonnoir de la campagne digitale de N, et vaut sa part de la valeur vie d'un compte", () => {
+    const d = canal("digital");
+    const v = valeurDUnContact(f);
+    expect(v.contactsParCompte).toBe(d.contacts / d.contrats);
+    expect(v.contactsParCompte).toBe(300);
+    expect([v.premiereAnnee, v.actualisee, v.simple]).toEqual([21_000 / 300, 60_000 / 300, 84_000 / 300]);
+    expect(v.simple * 300).toBe(valeurDUnClient(f).simple);
+  });
+
+  it("les visites des réseaux sociaux sont les clics des publications et les clics payés ; la note de 4,5 donne la conversion du site", () => {
+    const reseaux = SOURCES_DE_TRAFIC.find((s) => s.code === "reseaux")!;
+    const organiques = somme(PUBLICATIONS.map((p) => p.clics));
+    expect([organiques, reseaux.visites - organiques, reseaux.cout / (reseaux.visites - organiques)]).toEqual([1_000, 1_000, 1.8]);
+    expect(conversionALaNote(noteDesAvis().affichee).conversion).toBe(traficDuSite().conversion);
+    expect(traficDuSite().commandes).toBe(somme(ACHETEURS_DU_SITE.map((a) => a.commandes)));
+  });
+});
+
+describe("8. la sélection des partenaires (complément K5)", () => {
+  it("la grille : des poids qui font 100, des notes sur 20, et le réseau d'experts-comptables en tête à 14,7", () => {
+    expect(somme(CRITERES_DES_PARTENAIRES.map((c) => c.poids))).toBe(100);
+    for (const k of CANDIDATS) for (const c of CRITERES_DES_PARTENAIRES) expect(k.notes[c.code] >= 0 && k.notes[c.code] <= 20, `${k.code} ${c.code}`).toBe(true);
+    // Refaite à la main : Σ note × poids ÷ 100.
+    const main = CANDIDATS.map((k) => auCentime(somme(CRITERES_DES_PARTENAIRES.map((c) => k.notes[c.code] * c.poids)) / 100));
+    expect(main).toEqual([14.7, 12.25, 13.2]);
+    const g = grilleDesPartenaires();
+    expect(g.notes.map((k) => k.note)).toEqual(main);
+    expect([g.retenu.code, g.poidsTotal]).toEqual(["experts-comptables", 100]);
+  });
+
+  it("le prescripteur s'ajoute aux partenaires de la fiche sans les changer : l'apporteur et la plateforme restent seuls", () => {
+    expect(f.partenaires.map((p) => p.code)).toEqual(["apporteur", "plateforme"]);
+  });
+});
+
+/**
+ * LES DONNÉES NOUVELLES DU BTS NDRC EN ENTIER (novembre 2026), QUE D'AUTRES CHAPITRES POURRAIENT REPRENDRE :
+ * le plateau de téléacteurs (monde/plateau-d-atlas.ts), les contrats de Nadia au T4
+ * (monde/equipe-commerciale-d-atlas.ts) et l'appel d'offres de Valbrune (monde/negociation-d-atlas.ts).
+ * Elles ne contredisent pas la fiche : refaites ici à la main, elles retombent sur ses chiffres.
+ */
+describe("le plateau, les contrats du T4 et l'appel d'offres tiennent avec la fiche", () => {
+  it("le plateau : 120 appels par jour, 2 160 décrochés et 12 960 minutes dans le mois, 12 rendez-vous au taux de la prospection de N", () => {
+    expect(CRENEAUX_DE_LA_LIGNE.map((k) => k.appelsRecus)).toEqual([32, 44, 28, 16]);
+    expect(CRENEAUX_DE_LA_LIGNE.map((k) => k.presents)).toEqual([2, 2, 2, 2]);
+    expect(somme(TELEACTEURS.map((t) => t.appelsDecroches))).toBe(somme([32, 32, 28, 16]) * 20);
+    expect(somme(TELEACTEURS.map((t) => t.minutesDeTraitement))).toBe(2_160 * DMT_DE_LA_LIGNE);
+    const p = canal("prospection");
+    expect(somme(TELEACTEURS.map((t) => t.contactsArgumentes)) * (p.rendezVous / p.contacts)).toBe(somme(TELEACTEURS.map((t) => t.rendezVousPris)));
+    expect((COUT_D_UN_TELEACTEUR.salaireCharge + COUT_D_UN_TELEACTEUR.posteEtLogiciel) / 120).toBe(24);
+  });
+
+  it("les 13 contrats de Nadia au T4 refont son trimestre, au prix de chaque compte", () => {
+    const t4 = commercial("entreprises").n[3]!;
+    const montant = (k: { compte: string; journees: number }) => (k.journees * compte(k.compte).chiffreDAffaires) / compte(k.compte).journees;
+    expect(CONTRATS_DE_NADIA_AU_T4.length).toBe(t4.contrats);
+    expect(somme(CONTRATS_DE_NADIA_AU_T4.map((k) => k.journees))).toBe(t4.journees);
+    expect(somme(CONTRATS_DE_NADIA_AU_T4.map(montant))).toBe(t4.chiffreDAffaires);
+    expect(CONTRATS_DE_NADIA_AU_T4.every((k) => compte(k.compte).commercial === "entreprises" && k.journees <= compte(k.compte).journees)).toBe(true);
+  });
+
+  it("l'appel d'offres de Valbrune reprend le compte : 560 € la journée, 290 € de frais, 50 € de marge", () => {
+    const v = compte(APPEL_D_OFFRES_DE_VALBRUNE.compte);
+    expect([v.chiffreDAffaires / v.journees, v.frais / v.journees, v.marge / v.journees]).toEqual([560, 290, 50]);
+    expect(v.clientele).toBe("public");
   });
 });

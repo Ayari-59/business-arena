@@ -212,6 +212,11 @@ describe("le coût d'acquisition, chez ATLAS CONSEIL", () => {
     expect(SITUATIONS).toContain(COUPER_LE_BUDGET_DE_CAMPAGNE);
     expect(ch.parcours).toBe("ndrc");
     expect(ch.palier).toBe(3);
+    // L'entonnoir de la prospection relève aussi du Bloc 1 du BTS NDRC (« démarches et techniques de prospection »).
+    expect(ch.blocs.slice(0, 2)).toEqual([
+      "BTS NDRC Bloc 1 · Relation client et négociation-vente",
+      "BTS NDRC Bloc 2 · Relation client à distance et digitalisation",
+    ]);
     expect(ch.entreprises?.codes).toEqual(["conseil"]);
     expect(ch.entreprises!.pourquoi).toMatch(/^[a-zé].*\.$/);
     expect(COUPER_LE_BUDGET_DE_CAMPAGNE.entreprises!.pourquoi).toMatch(/^[a-zé].*\.$/);

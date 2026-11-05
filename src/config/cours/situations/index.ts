@@ -187,6 +187,14 @@ import { LE_DEGAT_DES_EAUX_DANS_LA_RESERVE } from "./par-chapitre/le-degat-des-e
 import { UN_APPRENTI_OU_UN_TEMPS_PARTIEL } from "./par-chapitre/un-apprenti-ou-un-temps-partiel";
 import { LE_CHALLENGE_DU_MERINOS } from "./par-chapitre/le-challenge-du-merinos";
 import { RETENIR_LA_VENDEUSE } from "./par-chapitre/retenir-la-vendeuse";
+import { UN_FICHIER_A_ACHETER } from "./par-chapitre/un-fichier-a-acheter";
+import { LES_COMPTES_DE_HUGO } from "./par-chapitre/les-comptes-de-hugo";
+import { UN_INVITE_POUR_LA_MATINALE } from "./par-chapitre/un-invite-pour-la-matinale";
+import { DOUBLER_LES_LIENS_SPONSORISES } from "./par-chapitre/doubler-les-liens-sponsorises";
+import { L_AVIS_A_UNE_ETOILE } from "./par-chapitre/l-avis-a-une-etoile";
+import { LA_CENTRALE_DEMANDE_UNE_RISTOURNE } from "./par-chapitre/la-centrale-demande-une-ristourne";
+import { UN_POURCENTAGE_POUR_LA_MARRAINE } from "./par-chapitre/un-pourcentage-pour-la-marraine";
+import { LA_LIGNE_DE_LA_RENTREE } from "./par-chapitre/la-ligne-de-la-rentree";
 export type { Situation } from "./types";
 
 /**
@@ -389,6 +397,14 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   UN_APPRENTI_OU_UN_TEMPS_PARTIEL,
   LE_CHALLENGE_DU_MERINOS,
   RETENIR_LA_VENDEUSE,
+  UN_FICHIER_A_ACHETER,
+  LES_COMPTES_DE_HUGO,
+  UN_INVITE_POUR_LA_MATINALE,
+  DOUBLER_LES_LIENS_SPONSORISES,
+  L_AVIS_A_UNE_ETOILE,
+  LA_CENTRALE_DEMANDE_UNE_RISTOURNE,
+  UN_POURCENTAGE_POUR_LA_MARRAINE,
+  LA_LIGNE_DE_LA_RENTREE,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */
