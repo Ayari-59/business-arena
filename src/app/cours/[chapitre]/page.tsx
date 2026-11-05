@@ -11,7 +11,7 @@ import { missionAffichee } from "@/config/cours/jouez";
 import { getGuestUserId } from "@/lib/guest";
 import { classeDeLEleve } from "@/services/cours.service";
 import { servirLeChapitre } from "@/pedagogy/cours/chapitre-servi";
-import { chapitreOuvert } from "../acces";
+import { chapitreOuvert, diaporamaPermis } from "../acces";
 import { ENTREPRISES } from "../entreprises";
 import { suitesDuChapitre } from "@/pedagogy/cours/suites";
 import { getSession } from "@/lib/session";
@@ -19,6 +19,7 @@ import { ChapitreReserve } from "@/components/cours/chapitre-reserve";
 import Link from "next/link";
 import { bureauxDuChapitre, lienDuBureau } from "@/config/cours/bureaux";
 import { enquetesDuChapitre, lienDeLEnquete } from "@/config/cours/enquetes";
+import { aSonDiaporama, fichierDuDiaporama, lienDuDiaporama } from "@/config/cours/diaporamas";
 
 /** Le chapitre que tout le monde peut ouvrir (`libre: true`), lu dans le registre. */
 const CHAPITRE_LIBRE = CHAPITRES.find((c) => c.libre)!.code;
@@ -93,6 +94,7 @@ async function ChapitrePage({
   }
 
   const cas = casDeLEntreprise(choisie.code);
+  const diaporama = aSonDiaporama(chapitre.code) && (await diaporamaPermis(chapitre));
   return (
     <>
       <main id="main" data-metier={choisie.teinte} className="relative overflow-x-clip">
@@ -111,11 +113,35 @@ async function ChapitrePage({
           calculatrice={classeDeLEleveLue?.calculatrice ?? true}
           enClasse={classeDeLEleveLue ? { classe: classeDeLEleveLue.classe, eleve: classeDeLEleveLue.eleve } : null}
         />
+        {diaporama && <Diaporama chapitre={chapitre.code} entreprise={choisie.code} />}
         <AuBureau chapitre={chapitre.code} />
         <EnEnquete chapitre={chapitre.code} />
       </main>
       <PiedDePage />
     </>
+  );
+}
+
+/**
+ * LE DIAPORAMA DE L'ENSEIGNANT (config/cours/diaporamas.ts) : un lien de téléchargement, montré au seul
+ * enseignant sous licence (../acces.ts, `diaporamaPermis`). La route refait le contrôle.
+ */
+function Diaporama({ chapitre, entreprise }: { chapitre: string; entreprise: string }) {
+  return (
+    <aside className="mx-auto grid max-w-6xl gap-1 px-4 pb-12 sm:px-6" aria-label="Pour projeter en classe" data-diaporama-du-chapitre="">
+      <p className="text-xs font-semibold uppercase tracking-etiquette text-slate-400">Pour projeter en classe</p>
+      <p className="text-sm text-slate-300">
+        <a
+          href={`${lienDuDiaporama(chapitre)}?entreprise=${entreprise}`}
+          download={fichierDuDiaporama(chapitre)}
+          data-diaporama={chapitre}
+          className="font-semibold text-amber-300 underline-offset-4 hover:underline"
+        >
+          Télécharger le diaporama
+        </a>{" "}
+        · le chapitre étape par étape, chaque question suivie de sa correction, vos notes sous chaque diapositive.
+      </p>
+    </aside>
   );
 }
 
