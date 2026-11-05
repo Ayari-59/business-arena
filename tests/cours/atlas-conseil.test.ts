@@ -36,6 +36,19 @@ import {
   valeurVieAvecUnPartenaire,
   valeurVieClient,
 } from "../../src/config/cours/monde/relation-client";
+import {
+  BUDGET_DES_SALONS,
+  CARTE_DU_SECTEUR,
+  ENTONNOIR_PAR_SEGMENT,
+  FICHIER_DE_PROSPECTION,
+  MATINALES,
+  PIPELINE_DES_SALONS,
+  PME_MOYENNES_ET_ETI,
+  RECENCE_ET_COMMANDES,
+  chargeDeVisites,
+  salonsDeN,
+  segmentDuCompte,
+} from "../../src/config/cours/monde/terrain-d-atlas";
 
 /**
  * LA RELATION CLIENT DU COURS (monde/relation-client.ts sur monde/atlas-conseil.ts), REFAITE À LA MAIN.
@@ -604,5 +617,50 @@ describe("la garde voit le modèle et la fiche", () => {
     expect(prixPlancher({ ...f, prixCatalogue: 900 }).margeDeManoeuvre).toBe(900 - 630);
     expect(prixPlancher({ ...f, chargesFixes: { ...f.chargesFixes, loyer: 66_000 + 19_200 } }).coutComplet).toBe(150 + 940_800 / 1_920);
     expect(valeurDUnClient({ ...f, tauxDActualisation: 0.05 }).actualisee).toBe(70_000);
+  });
+});
+
+/**
+ * LE TERRAIN D'ATLAS (monde/terrain-d-atlas.ts) RETOMBE SUR LA FICHE. Les chapitres du bloc 1 « terrain »
+ * (le fichier et la cible, organiser le secteur, l'événement commercial) ajoutent au cabinet un marché, un
+ * fichier, un score RFM, un calendrier, une carte, des salons et des matinales ; d'autres chapitres pourront
+ * les reprendre. Chaque donnée nouvelle doit refaire ce que la fiche dit déjà : les 32 comptes, les contacts
+ * et l'entonnoir des canaux, les contrats des commerciaux, les 17 200 € des stands.
+ */
+describe("le terrain d'ATLAS retombe sur la fiche", () => {
+  it("les segments rangent les 32 comptes, et les PME moyennes sont des PME de la fiche", () => {
+    expect(PME_MOYENNES_ET_ETI.every((code) => compte(code).clientele === "pme")).toBe(true);
+    const segments = f.comptes.map(segmentDuCompte);
+    expect(segments.filter((s) => s === "petites-pme" || s === "pme-moyennes")).toHaveLength(f.comptes.filter((c) => c.clientele === "pme").length);
+    expect(segments.filter((s) => s === "grands-comptes")).toHaveLength(f.comptes.filter((c) => c.clientele === "grands-comptes").length);
+  });
+
+  it("le fichier refait les contacts des trois canaux, et son entonnoir leurs rendez-vous, devis et contrats", () => {
+    const trois = (["prospection", "salons", "digital"] as const).map(canal);
+    expect(FICHIER_DE_PROSPECTION.lignesParCanal).toEqual({ prospection: canal("prospection").contacts, salons: canal("salons").contacts, digital: canal("digital").contacts });
+    const e = Object.values(ENTONNOIR_PAR_SEGMENT);
+    for (const k of ["contacts", "rendezVous", "devis", "contrats"] as const) expect(somme(e.map((x) => x[k])), k).toBe(somme(trois.map((x) => x[k])));
+    // Les contrats de chaque segment sont les comptes neufs de la fiche venus de ces canaux, dans ce segment.
+    for (const [s, x] of Object.entries(ENTONNOIR_PAR_SEGMENT))
+      expect(x.contrats, s).toBe(f.comptes.filter((c) => c.anciennete === 0 && c.origine !== null && c.origine !== "apporteurs" && segmentDuCompte(c) === s).length);
+  });
+
+  it("les commandes de l'année refont les contrats de chaque commercial, et chaque compte a acheté en N", () => {
+    for (const k of f.commerciaux)
+      expect(somme(f.comptes.filter((c) => c.commercial === k.code).map((c) => RECENCE_ET_COMMANDES[c.code]!.commandes)), k.prenom).toBe(somme(k.n.map((t) => t.contrats)));
+    for (const c of f.comptes) {
+      expect(RECENCE_ET_COMMANDES[c.code]!.recence, c.code).toBeLessThanOrEqual(11);
+      expect(RECENCE_ET_COMMANDES[c.code]!.commandes, c.code).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  it("les salons, les tournées et les matinales lisent la fiche : 17 200 € de stands, les comptes C de Nadia, le taux de signature des salons", () => {
+    expect(somme(BUDGET_DES_SALONS.map((l) => l.montant))).toBe(17_200);
+    expect(salonsDeN(f).comptes.map((c) => c.code)).toEqual(f.comptes.filter((c) => c.origine === "salons").map((c) => c.code));
+    expect(salonsDeN(f).temps).toBe(20_000);
+    expect(CARTE_DU_SECTEUR.agenda.every((code) => compte(code).commercial === "entreprises" && classementABC(f).comptes.find((c) => c.code === code)!.classe === "C")).toBe(true);
+    expect(MATINALES.tauxDeSignature).toBe(canal("salons").contrats / canal("salons").devis);
+    expect(PIPELINE_DES_SALONS.opportunites.filter((o) => o.stade === "devis-remis").length + PIPELINE_DES_SALONS.devisPerdus + canal("salons").contrats).toBe(canal("salons").devis);
+    expect(chargeDeVisites(f).rendezVousDAffaires).toBe(somme(commercial("entreprises").n.map((t) => t.rendezVous)));
   });
 });

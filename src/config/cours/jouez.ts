@@ -1597,6 +1597,27 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
         "Dans le tableau des références, comparez la marge de chacune aux deux tours. La référence renforcée a-t-elle vendu plus, ou a-t-elle manqué de demande ? Le gain couvre-t-il ce que l'autre a perdu ?",
     };
   },
+  "le-fichier-et-la-cible": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Jouez deux tours, puis relevez la demande adressée et les journées vendues de chaque clientèle.`,
+    lieux: ["marche-du-tour", "indicateurs"],
+    chercher:
+      "Quelle clientèle vous laisse le plus de demande à prendre, et laquelle vous laisse le plus de chiffre d'affaires par journée vendue ? Si vous ne pouviez prospecter qu'une clientèle au tour suivant, laquelle choisiriez-vous, et pourquoi ?",
+  }),
+  "organiser-le-secteur": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Jouez deux tours, puis relevez votre taux d'occupation et les journées refusées faute de consultants.`,
+    lieux: ["indicateurs", "marche-du-tour"],
+    chercher:
+      "Votre capacité est-elle pleine, ou vous reste-t-il des journées libres ? Si vos commerciaux passaient moins de temps chez les petits clients, à quelle clientèle donneriez-vous ce temps ?",
+  }),
+  "l-evenement-commercial": (c) => ({
+    niveau: 2,
+    faire: `${partie(c, 2)} Jouez un tour sans rien changer, puis un second en augmentant « Budget marketing » d'un quart.`,
+    lieux: ["marche-du-tour", "compte-de-resultat"],
+    chercher:
+      "Combien de journées le budget en plus a-t-il fait vendre ? Combien vous coûte chaque journée gagnée, et combien de ces journées faudrait-il pour payer le budget ajouté ?",
+  }),
 };
 
 /**

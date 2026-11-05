@@ -1017,6 +1017,16 @@ describe.each([
   { code: "un-apprenti-ou-un-temps-partiel", entreprise: "boutique", telephone: true },
   { code: "le-challenge-du-merinos", entreprise: "boutique" },
   { code: "retenir-la-vendeuse", entreprise: "boutique", telephone: true },
+  // Le BTS NDRC, bloc 1 terrain : le fichier et la cible, le secteur, l'événement commercial (tris, curseurs, laboratoires), puis leurs cas.
+  { code: "le-fichier-et-la-cible", entreprise: "conseil" },
+  { code: "le-fichier-et-la-cible", entreprise: "conseil", telephone: true },
+  { code: "organiser-le-secteur", entreprise: "conseil" },
+  { code: "organiser-le-secteur", entreprise: "conseil", telephone: true },
+  { code: "l-evenement-commercial", entreprise: "conseil" },
+  { code: "l-evenement-commercial", entreprise: "conseil", telephone: true },
+  { code: "un-fichier-a-acheter", entreprise: "conseil" },
+  { code: "les-comptes-de-hugo", entreprise: "conseil", telephone: true },
+  { code: "un-invite-pour-la-matinale", entreprise: "conseil" },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se
