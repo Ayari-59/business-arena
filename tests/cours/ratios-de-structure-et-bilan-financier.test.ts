@@ -3,7 +3,7 @@ import { BILAN_FONCTIONNEL } from "../../src/config/cours/chapitres/bilan-foncti
 import { EMPRUNT_DEMANDE, RATIOS_DE_STRUCTURE, grilleDuBilanFinancier, structureDuCas } from "../../src/config/cours/chapitres/ratios-de-structure-et-bilan-financier";
 import { CHAPITRES, PROGRAMME } from "../../src/config/cours/registre";
 import { CAS_PAR_CHAPITRE } from "../../src/config/cours/situations";
-import { AUTONOMIE_EXIGEE, DIVIDENDE_DEMANDE, UN_DIVIDENDE_SOUS_CONDITION } from "../../src/config/cours/situations/par-chapitre/un-dividende-sous-condition";
+import { AUTONOMIE_EXIGEE, DIVIDENDE_DEMANDE, UN_DIVIDENDE_SOUS_CONDITION, dividendeSousCondition } from "../../src/config/cours/situations/par-chapitre/un-dividende-sous-condition";
 import { THEMES } from "../../src/config/cours/themes";
 import { INVESTISSEMENT_DE_LA_GAMME, MATELAS_DU_COMPTE_COURANT, empruntMinimalDeLaGamme, structureApres } from "../../src/config/cours/monde/structure-financiere";
 import { incoherencesDuTableau } from "../../src/pedagogy/cours/tableau-a-completer";
@@ -18,7 +18,7 @@ import { gardeDuLaboratoire } from "./gardes-du-lycee";
  * résultat 79 225,96 €, provision 5 000 €, emprunt 68 000 € et 831,11 € d'intérêts courus, ligne
  * 60 000 € amortie de 9 861,11 €, dépréciation de Sonora 11 210 €), de la CAF (105 297,07 €), de
  * l'échéancier de l'emprunt (4 000 € de capital par trimestre) et des hypothèses du chapitre (la ligne
- * revendue 75 % de son prix neuf, aucun dividende, le litige jugé en mai).
+ * revendue 75 % de son prix neuf, le dividende de 30 000 € de l'affectation unique, le litige jugé en mai).
  */
 
 const ch = RATIOS_DE_STRUCTURE;
@@ -93,36 +93,40 @@ describe("le bilan financier, refait à la main", () => {
     expect(t["Emprunt, capital dû au-delà de 12 mois"]).toBe("dettes-plus");
     expect(t["Moins-value latente sur la ligne"]).toBe("propres");
     expect(t["Compte à terme, échéance le 6 janvier"]).toBe("actif-moins");
+    // Après répartition (décision D2) : le dividende voté est une dette à moins d'un an.
+    expect(t["Dividende voté, à payer en juin"]).toBe("dettes-moins");
+    expect(t["Résultat de l'exercice, dividende déduit"]).toBe("propres");
   });
 
-  it("s'équilibre à 427 117,45 € : 45 000 € à plus d'un an, 382 117,45 € à moins d'un an ; 224 087,07 €, 52 000 € et 151 030,38 €", () => {
+  it("s'équilibre à 427 117,45 € : 45 000 € à plus d'un an, 382 117,45 € à moins d'un an ; 194 087,07 €, 52 000 € et 181 030,38 €, le dividende de 30 000 € compris", () => {
     const g = grilleDuBilanFinancier(NOVA);
     expect(incoherencesDuTableau(g)).toEqual([]);
     const moinsValue = c(60_000 - 9_861.11 - 0.75 * 60_000);
     expect(moinsValue).toBe(5_138.89);
     const actifCourt = c(13_500 + (104_548 + 6_900 + 4_500) + 136_934.58 + 115_734.87);
-    const dettesCourtes = c(16_000 + 5_000 + 831.11 + 81_000 + 41_119.27 + 7_080);
+    const dividende = 2 * 15_000;
+    const dettesCourtes = c(16_000 + 5_000 + 831.11 + 81_000 + 41_119.27 + 7_080 + dividende);
     const v = g.lignes.map((l) => l.cellules[0]!.valeur);
-    expect(v).toEqual([45_000, 13_500, 115_948, 136_934.58, 115_734.87, actifCourt, c(45_000 + actifCourt), c(229_225.96 - moinsValue), 52_000, 16_000, 5_000, c(dettesCourtes - 21_000), dettesCourtes, c(229_225.96 - moinsValue + 52_000 + dettesCourtes)]);
-    expect([actifCourt, dettesCourtes]).toEqual([382_117.45, 151_030.38]);
+    expect(v).toEqual([45_000, 13_500, 115_948, 136_934.58, 115_734.87, actifCourt, c(45_000 + actifCourt), c(229_225.96 - dividende - moinsValue), 52_000, 16_000, 5_000, c(dettesCourtes - 21_000 - dividende), dividende, dettesCourtes, c(229_225.96 - dividende - moinsValue + 52_000 + dettesCourtes)]);
+    expect([actifCourt, dettesCourtes]).toEqual([382_117.45, 181_030.38]);
     expect(c(45_000 + actifCourt)).toBe(427_117.45);
-    expect(c(224_087.07 + 52_000 + dettesCourtes)).toBe(427_117.45);
+    expect(c(194_087.07 + 52_000 + dettesCourtes)).toBe(427_117.45);
   });
 
-  it("le fonds de roulement financier, 231 087,07 € par le haut et par le bas ; liquidités 2,53, 2,44 et 0,77", () => {
-    expect(c(224_087.07 + 52_000 - 45_000)).toBe(c(382_117.45 - 151_030.38));
-    expect(attendus(ch, "le-fonds-de-roulement-financier")).toEqual([231_087.07, r2(382_117.45 / 151_030.38), r2((382_117.45 - 13_500) / 151_030.38), r2(115_734.87 / 151_030.38)]);
-    expect(attendus(ch, "le-fonds-de-roulement-financier")).toEqual([231_087.07, 2.53, 2.44, 0.77]);
-    expect(structureDuCas(NOVA).financier.liquiditeAuSixJanvier).toBe(r2((115_734.87 + 136_934.58) / 151_030.38));
+  it("le fonds de roulement financier, 201 087,07 € par le haut et par le bas ; liquidités 2,11, 2,04 et 0,64", () => {
+    expect(c(194_087.07 + 52_000 - 45_000)).toBe(c(382_117.45 - 181_030.38));
+    expect(attendus(ch, "le-fonds-de-roulement-financier")).toEqual([201_087.07, r2(382_117.45 / 181_030.38), r2((382_117.45 - 13_500) / 181_030.38), r2(115_734.87 / 181_030.38)]);
+    expect(attendus(ch, "le-fonds-de-roulement-financier")).toEqual([201_087.07, 2.11, 2.04, 0.64]);
+    expect(structureDuCas(NOVA).financier.liquiditeAuSixJanvier).toBe(r2((115_734.87 + 136_934.58) / 181_030.38));
   });
 
-  it("la solvabilité, 2,10 ; l'autonomie, 52,46 %", () => {
-    expect(attendus(ch, "solvabilite-et-autonomie")).toEqual([203_030.38, r2(427_117.45 / 203_030.38), r2((224_087.07 / 427_117.45) * 100)]);
-    expect(attendus(ch, "solvabilite-et-autonomie")).toEqual([203_030.38, 2.1, 52.46]);
+  it("la solvabilité, 1,83 ; l'autonomie, 45,44 %", () => {
+    expect(attendus(ch, "solvabilite-et-autonomie")).toEqual([233_030.38, r2(427_117.45 / 233_030.38), r2((194_087.07 / 427_117.45) * 100)]);
+    expect(attendus(ch, "solvabilite-et-autonomie")).toEqual([233_030.38, 1.83, 45.44]);
   });
 
-  it("le curseur : un investissement payé comptant de 231 milliers d'euros au plus ; le compte courant passe sous zéro dès 116", () => {
-    gardeDuCurseur(ch, "l-investissement-au-curseur", 231);
+  it("le curseur : un investissement payé comptant de 201 milliers d'euros au plus ; le compte courant passe sous zéro dès 116", () => {
+    gardeDuCurseur(ch, "l-investissement-au-curseur", 201);
     expect(115_734.87 - 116_000).toBeLessThan(0);
     expect(juste(ch, "predire-l-investissement")).toEqual(["Baisse de tout le prix"]);
     expect(juste(ch, "fonctionnel-ou-financier")).toEqual(["Le fournisseur"]);
@@ -139,7 +143,7 @@ describe("le laboratoire de la banque", () => {
     expect(c(105_297.07 * 0.4)).toBe(42_118.83);
     const p = (emprunt: number, apport = 0) => ({ investissement: 190_000, emprunt, apport, baisse: 60 });
     expect([80_000, 85_000, 100_000, 105_000].map((e) => structureApres(s, p(e)).dansLesRegles)).toEqual([false, true, true, false]);
-    expect(structureApres(s, p(85_000))).toMatchObject({ banque: 10_734.87, capacite: r2(153_000 / 42_118.83), liquiditeGenerale: r2((382_117.45 - 190_000 + 85_000) / (151_030.38 + 17_000)) });
+    expect(structureApres(s, p(85_000))).toMatchObject({ banque: 10_734.87, capacite: r2(153_000 / 42_118.83), liquiditeGenerale: r2((382_117.45 - 190_000 + 85_000) / (181_030.38 + 17_000)) });
     // L'emprunt fait monter la liquidité générale : l'argent entre en entier, la dette pour un cinquième.
     expect(structureApres(s, { investissement: 0, emprunt: 50_000, apport: 0, baisse: 0 }).liquiditeGenerale).toBeGreaterThan(s.financier.liquiditeGenerale);
     expect(juste(ch, "predire-l-emprunt")).toEqual(["Monte"]);
@@ -153,14 +157,17 @@ describe("le cas dédié : un dividende sous condition", () => {
     gardeDuCas(UN_DIVIDENDE_SOUS_CONDITION, ch);
   });
 
-  it("20 000 € de dividende font tomber l'autonomie à 47,78 % ; 10 528 € au plus la gardent à 50 %", () => {
-    expect([DIVIDENDE_DEMANDE, AUTONOMIE_EXIGEE]).toEqual([20_000, 0.5]);
+  it("45 000 € de dividende (3 € par action) font tomber l'autonomie à 41,93 % ; 31 884 € au plus la gardent à 45 %, et les 30 000 € du projet la tiennent", () => {
+    expect([DIVIDENDE_DEMANDE, AUTONOMIE_EXIGEE]).toEqual([3 * 15_000, 0.45]);
     const montants = (id: string) => etape(chapitreDuCas(UN_DIVIDENDE_SOUS_CONDITION, NOVA), id, "montants").champs(NOVA, VIDE).map((x) => x.attendu);
-    expect(montants("avec-le-dividende-demande")).toEqual([204_087.07, 171_030.38, r2((204_087.07 / 427_117.45) * 100), r2(382_117.45 / 171_030.38)]);
-    expect(montants("avec-le-dividende-demande")).toEqual([204_087.07, 171_030.38, 47.78, 2.23]);
-    expect(montants("le-dividende-maximal")).toEqual([Math.floor(224_087.07 - 0.5 * 427_117.45)]);
-    expect(montants("le-dividende-maximal")).toEqual([10_528]);
+    // Le bilan financier avant tout dividende : 224 087,07 € de capitaux propres, 151 030,38 € de dettes à moins d'un an.
+    expect(montants("avec-le-dividende-demande")).toEqual([179_087.07, 196_030.38, r2((179_087.07 / 427_117.45) * 100), r2(382_117.45 / 196_030.38)]);
+    expect(montants("avec-le-dividende-demande")).toEqual([179_087.07, 196_030.38, 41.93, 1.95]);
+    expect(montants("le-dividende-maximal")).toEqual([Math.floor(224_087.07 - 0.45 * 427_117.45)]);
+    expect(montants("le-dividende-maximal")).toEqual([31_884]);
+    expect(dividendeSousCondition(NOVA).dividendeDuProjet).toBe(30_000);
+    expect(30_000).toBeLessThanOrEqual(31_884);
     const r = etape(UN_DIVIDENDE_SOUS_CONDITION, "reponse", "choix").options(NOVA, VIDE);
-    expect(r.filter((o) => o.juste).map((o) => o.texte.replace(/\s/g, " "))).toEqual(["10 528 € au plus, pas 20 000 €"]);
+    expect(r.filter((o) => o.juste).map((o) => o.texte.replace(/\s/g, " "))).toEqual(["31 884 € au plus, pas 45 000 €"]);
   });
 });

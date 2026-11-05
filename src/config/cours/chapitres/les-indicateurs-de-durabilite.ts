@@ -409,7 +409,7 @@ export const LES_INDICATEURS_DE_DURABILITE: Chapitre = {
       notions: ["csr_index", "dashboard"],
       question: (c) => {
         const x = durabiliteDuChapitre(c);
-        return `Le taux de fréquence de mars, ${qte(x.mars.valeurs.tauxDeFrequence, 1)}, est des dizaines de fois celui d'une industrie ordinaire. La gérante s'alarme : « Notre atelier est le plus dangereux de France ? »`;
+        return `Le taux de fréquence de mars, ${qte(x.mars.valeurs.tauxDeFrequence, 1)}, est des dizaines de fois celui d'une industrie ordinaire. La présidente s'alarme : « Notre atelier est le plus dangereux de France ? »`;
       },
       options: (c) => {
         const x = durabiliteDuChapitre(c);
@@ -585,7 +585,7 @@ export const LES_INDICATEURS_DE_DURABILITE: Chapitre = {
       titre: "Le tableau de bord de juillet",
       notions: ["dashboard", "csr_index"],
       question: () =>
-        "La gérante veut un tableau de bord d'une page pour le second semestre, avec des indicateurs de durabilité. Lequel de ces principes retenez-vous ?",
+        "La présidente veut un tableau de bord d'une page pour le second semestre, avec des indicateurs de durabilité. Lequel de ces principes retenez-vous ?",
       options: () => [
         {
           texte: "Une dizaine d'indicateurs, chacun avec cible, seuil et responsable",

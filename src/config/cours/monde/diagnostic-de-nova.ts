@@ -1,6 +1,6 @@
 import { auCentime } from "./amortissement";
 import { cloture, impotSurLesSocietes } from "./cloture";
-import { AUGMENTATION_DE_CAPITAL, ACTIONS_DE_NOVA, SECONDE_LIGNE, augmentationDeCapital, composantsDeLaSecondeLigne } from "./comptabilite-approfondie";
+import { AUGMENTATION_DE_CAPITAL, ACTIONS_DE_NOVA, SECONDE_LIGNE, affectationDuBeneficeDeN, augmentationDeCapital, composantsDeLaSecondeLigne } from "./comptabilite-approfondie";
 import { empruntALaCloture } from "./emprunt";
 import { ASSURANCE, CAMPUSTECH, CLOTURE_DE_LA_FICHE, CONTRAT_DE_PRET, EQUIPEMENT, EXERCICE_DE_NOVA, IMPOT_SUR_LES_SOCIETES, LIVRAISONS_DU_MOIS, LOYER_DU_MOIS, MONTANTS_DES_FACTURES_SONORA, PLACEMENT, SUITES_EN_N_PLUS_1, type FicheDeLExercice } from "./exercice-de-nova";
 import { acomptes } from "./finance";
@@ -44,9 +44,11 @@ import { EQUIPEMENTS_D_EFFICACITE, SUBVENTION_DE_L_EFFICACITE, KWH_ECONOMISES_PA
  *     la demande de One de N + 1 (nova-capacite.ts, 27 200 enceintes), servie en entier grâce à la
  *     seconde ligne ; les suites de Sonora et du litige (exercice-de-nova.ts, SUITES_EN_N_PLUS_1) ;
  *     l'augmentation de capital du 30 juin N + 1 (comptabilite-approfondie.ts) ; le résultat de N
- *     affecté sans dividende ; le prêt de N, échéance par échéance (emprunt.ts) ;
+ *     affecté comme dans tout le cours, son dividende de 2 € par action mis en paiement en juin N + 1
+ *     (comptabilite-approfondie.ts, `affectationDuBeneficeDeN`) ; le prêt de N, échéance par échéance
+ *     (emprunt.ts) ;
  *   · N + 2 est une hypothèse du cours, nommée ci-dessous : la deuxième année de la gamme, une demande
- *     de One qui monte encore, le premier dividende.
+ *     de One qui monte encore, le dividende sur le résultat de N + 1.
  *
  * LES COMPTES RÉSUMÉS se tiennent en partie double : le bilan fonctionnel de chaque exercice part de
  * celui de l'exercice précédent et des flux de l'année (la CAF, les investissements, les
@@ -467,7 +469,8 @@ export function exercicesDeNova(f: FicheDeLExercice = EXERCICE_DE_NOVA): readonl
     investissements: investissementsDeN1,
     apports: augmentationDeCapital().fonds,
     subventionRecue: SUBVENTION_DE_L_EFFICACITE,
-    dividendes: 0,
+    // Le dividende sur le bénéfice de N, mis en paiement en juin N + 1 : l'affectation unique du cours.
+    dividendes: affectationDuBeneficeDeN().dividendes,
   });
   const n2 = exerciceSuivant(n1, poseDeNPlus2());
   const x = [n, n1, n2] as const;

@@ -10,7 +10,7 @@ import type { Situation } from "../types";
  * l'entreprise, palier 3).
  *
  * LE CAS JOUE DANS LE MONDE DU COURS, sur l'exercice N+1 de NOVA (monde/projets-et-financement.ts) :
- * le gérant veut doubler un entretien en décembre (DEPENSE_DE_FIN_D_ANNEE, 4 800 €) « pour payer
+ * le président veut doubler un entretien en décembre (DEPENSE_DE_FIN_D_ANNEE, 4 800 €) « pour payer
  * moins d'impôt », et compte sur le taux réduit. L'élève refait le calcul : la dépense ne fait
  * économiser que le taux marginal, 25 %. Puis il remonte le calcul (au curseur, puis à rebours) : pour
  * ne plus avoir de solde à payer en mai, il faudrait dépenser 22 512 €, qui coûteraient 16 884 € de
@@ -64,15 +64,15 @@ export const LA_DEPENSE_DE_FIN_D_ANNEE: Situation = {
   palier: 3,
   blocs: [],
   reprend: [L_IMPOT_SUR_LES_SOCIETES.code],
-  commanditaire: "Le gérant",
+  commanditaire: "Le président",
   titre: "La dépense de fin d'année",
   accroche:
-    "Le gérant veut doubler un entretien en décembre, pour payer moins d'impôt, et compte sur le taux réduit. Ce que la dépense fait vraiment économiser, ce qu'il faudrait dépenser pour ne plus avoir de solde en mai, et ce que cela coûterait.",
+    "Le président veut doubler un entretien en décembre, pour payer moins d'impôt, et compte sur le taux réduit. Ce que la dépense fait vraiment économiser, ce qu'il faudrait dépenser pour ne plus avoir de solde en mai, et ce que cela coûterait.",
   objectifs: [
     "Calculer l'impôt d'un exercice après une charge de plus, au taux marginal",
     "Calculer ce qu'une charge déductible coûte après impôt",
     "Remonter du solde à la dépense qui l'annulerait, et en chiffrer le coût",
-    "Répondre au gérant, chiffre à l'appui",
+    "Répondre au président, chiffre à l'appui",
   ],
   libre: false,
   entreprises: { codes: ENTREPRISES_DE_L_IMPOT, pourquoi: L_IMPOT_SUR_LES_SOCIETES.entreprises!.pourquoi },
@@ -80,7 +80,7 @@ export const LA_DEPENSE_DE_FIN_D_ANNEE: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La proposition du gérant",
+      titre: "La proposition du président",
       texte: (c) => {
         const r = depenseDeFinDAnnee(c);
         return [
@@ -139,7 +139,7 @@ export const LA_DEPENSE_DE_FIN_D_ANNEE: Situation = {
       notions: ["income_statement", "cash_budget"],
       question: (c) => {
         const r = depenseDeFinDAnnee(c);
-        return `Le gérant veut ne plus rien devoir le ${ACOMPTES.dateDuSolde}. Faites varier la dépense de décembre, de ${eur(DEPENSE_DU_CURSEUR.min)} à ${eur(DEPENSE_DU_CURSEUR.max)}. Une droite donne les acomptes déjà versés (${eur(r.x.totalVerse)}), l'autre l'impôt avec la dépense. Placez le curseur sur la plus petite dépense où les acomptes couvrent l'impôt, puis validez.`;
+        return `Le président veut ne plus rien devoir le ${ACOMPTES.dateDuSolde}. Faites varier la dépense de décembre, de ${eur(DEPENSE_DU_CURSEUR.min)} à ${eur(DEPENSE_DU_CURSEUR.max)}. Une droite donne les acomptes déjà versés (${eur(r.x.totalVerse)}), l'autre l'impôt avec la dépense. Placez le curseur sur la plus petite dépense où les acomptes couvrent l'impôt, puis validez.`;
       },
       grandeur: () => ({ libelle: "Dépense de décembre", unite: "€" }),
       cible: (c) => ({ attendu: depenseDeFinDAnnee(c).pourAnnulerLeSolde, min: DEPENSE_DU_CURSEUR.min, max: DEPENSE_DU_CURSEUR.max }),
@@ -198,8 +198,8 @@ export const LA_DEPENSE_DE_FIN_D_ANNEE: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse au gérant",
-      question: () => "Quelle phrase envoyez-vous au gérant ?",
+      titre: "Votre réponse au président",
+      question: () => "Quelle phrase envoyez-vous au président ?",
       options: (c) => {
         const r = depenseDeFinDAnnee(c);
         return [

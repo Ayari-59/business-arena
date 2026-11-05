@@ -58,8 +58,11 @@ export const TRESORERIE_A_GARDER = 230_000;
 /** Les bornes des leviers du laboratoire : le délai des clients de N + 2, en jours ; le dividende, en euros par action. */
 export const LEVIERS_DU_DIAGNOSTIC = { delai: { min: 25, max: 60, pas: 5 }, dividende: { min: 0, max: 8, pas: 1 } } as const;
 
-/** La position que montre la correction : le délai de la fiche, 3 € par action. */
-export const SOLUTION_DU_DIAGNOSTIC = { delaiClients: BESOIN_POSE["N+2"].delaiClients, dividende: 3 } as const;
+/**
+ * La position que montre la correction : le délai de la fiche, 2 € par action. À 3 €, la trésorerie
+ * nette tomberait sous ce qu'il faut garder, le dividende sur le bénéfice de N étant déjà sorti en N + 1.
+ */
+export const SOLUTION_DU_DIAGNOSTIC = { delaiClients: BESOIN_POSE["N+2"].delaiClients, dividende: 2 } as const;
 
 const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
 const qte = (n: number, decimales = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: decimales }).replace(/^-/, "−");
@@ -268,7 +271,7 @@ export const LE_DIAGNOSTIC_FINANCIER: Chapitre = {
       texte: (c) => {
         const x = diagnosticDuChapitre(c);
         return [
-          `Ce chapitre se joue dans la simulation du cours, sur trois exercices de NOVA. N est le premier, celui que vous avez clôturé : ${eur(x.n.production)} de chiffre d'affaires, ${eur(x.n.resultatNet)} de résultat net. En N + 1, la seconde ligne manuelle et la gamme Go et Studio arrivent, avec deux opérateurs, une augmentation de capital et les suites de Sonora et du litige. N + 2 est la deuxième année de la gamme, et celle du premier dividende.`,
+          `Ce chapitre se joue dans la simulation du cours, sur trois exercices de NOVA. N est le premier, celui que vous avez clôturé : ${eur(x.n.production)} de chiffre d'affaires, ${eur(x.n.resultatNet)} de résultat net. En N + 1, la seconde ligne manuelle et la gamme Go et Studio arrivent, avec deux opérateurs, une augmentation de capital, le dividende voté sur le bénéfice de N et les suites de Sonora et du litige. N + 2 est la deuxième année de la gamme, et celle du dividende sur le résultat de N + 1.`,
           "Un diagnostic financier juge la situation d'une entreprise à partir de ses comptes : son activité, sa rentabilité, ses risques, sa structure. Un diagnostic extra-financier y ajoute ses effets sur l'environnement, sur ses salariés, et la façon dont elle est dirigée (les critères ESG). Il est multidimensionnel : aucun chiffre seul ne conclut.",
           "La démarche commence par l'environnement : un marché des enceintes qui croît, une énergie dont le prix monte, des emballages que la réglementation surveille. Puis les états financiers : le bilan, le compte de résultat et l'annexe, qui les explique. Enfin les ratios, comparés dans le temps et au secteur, et une conclusion pour le lecteur qui a commandé le diagnostic.",
         ];

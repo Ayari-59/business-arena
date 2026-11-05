@@ -60,7 +60,7 @@ export const LE_DIVIDENDE_DE_L_ASSOCIE: Situation = {
         const n = dividendeDeLAssocie(c);
         const x = n.x;
         return [
-          `« ${eur(x.tresorerieDeCloture)} de trésorerie au 31 décembre ! Je demande ${eur(DIVIDENDE_DEMANDE_PAR_ACTION)} par action, ${eur(n.dividende)} pour nos ${qte(ACTIONS_DE_NOVA.nombre)} actions : c'est une goutte d'eau. » Le gérant vous demande de lui répondre avec le tableau des flux de l'année.`,
+          `« ${eur(x.tresorerieDeCloture)} de trésorerie au 31 décembre ! Je demande ${eur(DIVIDENDE_DEMANDE_PAR_ACTION)} par action, ${eur(n.dividende)} pour nos ${qte(ACTIONS_DE_NOVA.nombre)} actions : c'est une goutte d'eau. » Le président vous demande de lui répondre avec le tableau des flux de l'année.`,
           "Pas de cours cette fois : vous avez les chiffres de l'exercice, ceux du chapitre.",
         ];
       },

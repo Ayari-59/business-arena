@@ -12,7 +12,7 @@ import type { Situation } from "../types";
  *
  * Le journal de janvier est passé. Le dernier jour du mois, le client professionnel du cas repasse
  * commande, avec une enveloppe fixée toutes taxes comprises : autant d'unités que possible pour ce
- * budget. La commande est livrée le jour même. Le gérant veut savoir, avant de facturer, combien
+ * budget. La commande est livrée le jour même. Le dirigeant veut savoir, avant de facturer, combien
  * d'unités il peut livrer, et ce que cette vente change au résultat de janvier, à la TVA du mois et à
  * la banque. L'élève remonte de l'enveloppe TTC à la quantité (un calcul à rebours, au curseur),
  * établit la facture, la passe au journal, calcule ce qui bouge et ce qui ne bouge pas, juge le cas
@@ -98,15 +98,15 @@ export const LA_COMMANDE_DU_31_JANVIER: Situation = {
   palier: 2,
   blocs: [],
   reprend: ["creation-premier-bilan"],
-  commanditaire: "Le gérant",
+  commanditaire: "Le dirigeant",
   titre: "La commande du 31 janvier",
   accroche:
-    "Le dernier jour de janvier, le client professionnel repasse commande pour une enveloppe toutes taxes comprises. Avant de facturer, le gérant veut savoir combien livrer, et ce que cette vente change au résultat, à la TVA et à la banque du mois.",
+    "Le dernier jour de janvier, le client professionnel repasse commande pour une enveloppe toutes taxes comprises. Avant de facturer, le dirigeant veut savoir combien livrer, et ce que cette vente change au résultat, à la TVA et à la banque du mois.",
   objectifs: [
     "Remonter d'une enveloppe toutes taxes comprises à une quantité, sans confondre HT et TTC",
     "Établir une facture de vente et la passer en partie double",
     "Dire ce qu'une vente change au résultat, à la TVA du mois, aux créances et à la banque",
-    "Rattacher une vente au bon mois, et rédiger une réponse chiffrée au gérant",
+    "Rattacher une vente au bon mois, et rédiger une réponse chiffrée au dirigeant",
   ],
   // Libre comme le chapitre qu'il reprend (décision du propriétaire, octobre 2026 :
   // « cas pratique inclus ») : la démonstration va du chapitre à son cas pratique.
@@ -116,7 +116,7 @@ export const LA_COMMANDE_DU_31_JANVIER: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La demande du gérant",
+      titre: "La demande du dirigeant",
       texte: (c) => {
         const k = commandeDu31Janvier(c);
         const client = nomDuClient(c.venteCredit.client);
@@ -298,7 +298,7 @@ export const LA_COMMANDE_DU_31_JANVIER: Situation = {
       titre: "Et si la livraison glissait ?",
       notions: ["revenue", "income_statement"],
       question: () =>
-        `Le gérant ajoute : « Et si le transporteur ne livrait que le ${date(JOUR_DE_LA_LIVRAISON_DECALEE)} ? Je facturerais quand même ce soir, pour que la vente compte en janvier. » Que lui répondez-vous ?`,
+        `Le dirigeant ajoute : « Et si le transporteur ne livrait que le ${date(JOUR_DE_LA_LIVRAISON_DECALEE)} ? Je facturerais quand même ce soir, pour que la vente compte en janvier. » Que lui répondez-vous ?`,
       options: (c) => {
         const k = commandeDu31Janvier(c);
         return [
@@ -323,9 +323,9 @@ export const LA_COMMANDE_DU_31_JANVIER: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse au gérant",
+      titre: "Votre réponse au dirigeant",
       notions: ["income_statement", "net_treasury"],
-      question: () => "Quelle phrase envoyez-vous au gérant ?",
+      question: () => "Quelle phrase envoyez-vous au dirigeant ?",
       options: (c) => {
         const k = commandeDu31Janvier(c);
         const u = c.unites;

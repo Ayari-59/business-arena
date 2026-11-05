@@ -12,7 +12,7 @@ import type { Situation } from "../types";
  * (comptabilité générale, palier 1).
  *
  * Le client professionnel du cas a versé un acompte à la commande, avant d'être livré.
- * Le gérant attend le relevé de la banque de janvier et veut savoir d'avance ce qui a dû
+ * Le président attend le relevé de la banque de janvier et veut savoir d'avance ce qui a dû
  * entrer et sortir du compte, et ce que les partenaires doivent encore ou attendent.
  * L'élève refait seul le chemin du chapitre : les deux flux de chaque opération et leur
  * moment, les entrées et les sorties d'argent du mois, ce qui reste à venir, puis la
@@ -89,10 +89,10 @@ export const L_ACOMPTE_DU_CLIENT: Situation = {
   palier: 1,
   blocs: [],
   reprend: ["les-flux-de-l-entreprise"],
-  commanditaire: "Le gérant",
+  commanditaire: "Le président",
   titre: "L'acompte du client",
   accroche:
-    "Le client professionnel a payé une partie de sa commande avant d'être livré. Le gérant veut savoir ce que le relevé de janvier doit montrer, avant de l'ouvrir.",
+    "Le client professionnel a payé une partie de sa commande avant d'être livré. Le président veut savoir ce que le relevé de janvier doit montrer, avant de l'ouvrir.",
   objectifs: [
     "Dire, pour chaque opération, si l'argent arrive avant, avec ou après le flux réel",
     "Reconnaître un flux financier qui n'a pas de flux réel en face",
@@ -105,7 +105,7 @@ export const L_ACOMPTE_DU_CLIENT: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La demande du gérant",
+      titre: "La demande du président",
       texte: (c) => {
         const r = acompteDuClient(c);
         return [
@@ -247,9 +247,9 @@ export const L_ACOMPTE_DU_CLIENT: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse au gérant",
+      titre: "Votre réponse au président",
       notions: ["payment_terms", "cash_budget"],
-      question: () => "Quelle phrase envoyez-vous au gérant ?",
+      question: () => "Quelle phrase envoyez-vous au président ?",
       options: (c) => {
         const r = acompteDuClient(c);
         return [

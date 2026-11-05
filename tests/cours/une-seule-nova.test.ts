@@ -49,6 +49,7 @@ import { ajustementLineaire, coefficientsSaisonniers } from "../../src/config/co
 import { tresorerieAOptimiser } from "../../src/config/cours/monde/tresorerie-a-optimiser";
 import { affecter, beneficeAAffecter } from "../../src/config/cours/monde/affectation-du-resultat";
 import { augmentationDeCapital } from "../../src/config/cours/monde/comptabilite-approfondie";
+import { demandeDeLAssocie } from "../../src/config/cours/chapitres/l-affectation-du-resultat";
 import { bilanDuLycee } from "../../src/config/cours/monde/comptes-du-lycee";
 import { financer } from "../../src/config/cours/chapitres/financer-l-entreprise";
 import { factureDeCampusTech, fondsDeRoulement } from "../../src/config/cours/chapitres/fonds-de-roulement-et-tresorerie";
@@ -516,9 +517,12 @@ describe("une seule NOVA, de la trésorerie du 31 décembre à l'affectation du 
     expect(k.benefice).toBe(CLOTURE_DE_LA_FICHE.resultatNet);
     expect(k.reserveLegale).toBe(augmentationDeCapital().reserveLegale);
     expect(k.caf).toBe(financer({ code: "nova" }).caf);
-    // Sans dividende, l'affectation de « L'augmentation de capital » : tout reste dans les capitaux propres.
+    // Une seule affectation (décision D2) : celle du lycée est celle de « L'augmentation de capital ».
+    const d = demandeDeLAssocie({ code: "nova" });
+    const a = augmentationDeCapital();
+    expect([d.reserveLegale, d.dividendes, d.reservesFacultatives, d.reportANouveau, d.capitauxPropres]).toEqual([a.reserveLegale, a.dividendes, a.reservesFacultatives, a.reportANouveau, a.capitauxPropres]);
     const sans = affecter(k, { dividendeParAction: 0, reservesFacultatives: 0 });
-    expect(sans.capitauxPropres).toBe(augmentationDeCapital().capitauxPropres);
+    expect(sans.capitauxPropres).toBe(a.capitauxPropresAvant);
     expect(affecter(k, { dividendeParAction: 2, reservesFacultatives: 0 }).capitauxPropres).toBe(bilanDuLycee(f, { dividende: 30_000 }).capitauxPropres);
   });
 });
@@ -653,7 +657,7 @@ describe("une seule NOVA, de la valeur du temps au coût du capital", () => {
     expect(DETTES_DU_31_DECEMBRE).toBe(CONTRAT_DE_PRET.capital - 3 * (CONTRAT_DE_PRET.capital / (CONTRAT_DE_PRET.dureeAns * CONTRAT_DE_PRET.echeancesParAn)));
     const a = augmentationVueParLesActionnaires();
     expect(a).toMatchObject(augmentationDeCapital());
-    expect(a.capitauxPropres).toBeCloseTo(beneficeAAffecter(EXERCICE_DE_NOVA).capital + CLOTURE_DE_LA_FICHE.resultatNet, 2);
+    expect(a.capitauxPropres).toBeCloseTo(beneficeAAffecter(EXERCICE_DE_NOVA).capital + CLOTURE_DE_LA_FICHE.resultatNet - demandeDeLAssocie({ code: "nova" }).dividendes, 2);
     expect(PRIX_DE_L_ACTION).toBe(AUGMENTATION_DE_CAPITAL.prixDEmission);
     expect(coutDuCreditBail()).toBe(comparaison().tauxDuCreditBail);
     expect(Math.round(coutParLeDividendeEnProgression() * 1e9) / 1e9).toBe(TAUX_D_ACTUALISATION_DE_NOVA);
@@ -721,8 +725,10 @@ describe("une seule NOVA, de la clôture de N au diagnostic de trois exercices",
     expect(n1!.enceintes).toBe(ANNEE_N_PLUS_1.demande.reduce((t, q) => t + q, 0) - VENTES_DE_ONE_PERDUES[0] + VENTES_DE_GO[0] + VENTES_DE_STUDIO[0]);
     expect(n1!.personnel).toBe((PAIE_DU_MOIS.effectif + 2) * COUT_ANNUEL_D_UN_OPERATEUR);
     expect(EFFECTIFS.N).toBe(PAIE_DU_MOIS.effectif);
-    // Le résultat de N est affecté sans dividende : aucun dividende en N + 1.
-    expect(n1!.dividendes).toBe(0);
+    // Le résultat de N est affecté comme au lycée (décision D2) : son dividende sort en N + 1, et les
+    // capitaux propres de N + 1 partent de ceux de l'affectation.
+    expect(n1!.dividendes).toBe(demandeDeLAssocie({ code: "nova" }).dividendes);
+    expect(n1!.dividendes).toBe(augmentationDeCapital().dividendes);
   });
 });
 

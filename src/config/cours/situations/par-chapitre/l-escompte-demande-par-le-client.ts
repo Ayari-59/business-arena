@@ -12,7 +12,7 @@ import type { Situation } from "../types";
  * (comptabilité générale, palier 3).
  *
  * Le client professionnel du cas demande un escompte plus fort que celui des conditions du cours
- * pour payer sous dix jours. Le gérant l'a accepté pour cette commande et demande s'il faut
+ * pour payer sous dix jours. Le dirigeant l'a accepté pour cette commande et demande s'il faut
  * l'accorder à l'avenir. L'élève établit la facture avec la remise et ce nouvel escompte, la passe
  * au journal, ramène l'escompte à un taux annuel, du côté de l'entreprise qui l'accorde cette fois,
  * cherche au curseur l'escompte le plus fort que paierait le taux de l'emprunt, puis croise : combien
@@ -89,22 +89,22 @@ export const L_ESCOMPTE_DEMANDE_PAR_LE_CLIENT: Situation = {
   palier: 3,
   blocs: [],
   reprend: ["remises-et-reglements"],
-  commanditaire: "Le gérant",
+  commanditaire: "Le dirigeant",
   titre: "L'escompte demandé par le client",
   accroche:
-    "Le client professionnel veut un escompte plus fort pour payer vite. Le gérant l'a accepté une fois ; il veut savoir ce que cela coûte vraiment avant de le refaire.",
+    "Le client professionnel veut un escompte plus fort pour payer vite. Le dirigeant l'a accepté une fois ; il veut savoir ce que cela coûte vraiment avant de le refaire.",
   objectifs: [
     "Établir une facture avec remise et escompte : net commercial, net financier, TVA",
     "Passer la facture d'une vente avec escompte accordé",
     "Ramener à un taux annuel l'escompte qu'on accorde à un client, et trouver le plus fort que paie l'emprunt",
-    "Croiser l'escompte, les jours d'avance et le coût de l'emprunt, et répondre au gérant",
+    "Croiser l'escompte, les jours d'avance et le coût de l'emprunt, et répondre au dirigeant",
   ],
   libre: false,
   etapes: [
     {
       id: "demande",
       type: "lecture",
-      titre: "La demande du gérant",
+      titre: "La demande du dirigeant",
       texte: (c) => {
         const k = escompteDemande(c);
         return [
@@ -305,9 +305,9 @@ export const L_ESCOMPTE_DEMANDE_PAR_LE_CLIENT: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse au gérant",
+      titre: "Votre réponse au dirigeant",
       notions: ["payment_terms", "net_treasury"],
-      question: () => "Quelle phrase envoyez-vous au gérant ?",
+      question: () => "Quelle phrase envoyez-vous au dirigeant ?",
       options: (c) => {
         const k = escompteDemande(c);
         return [

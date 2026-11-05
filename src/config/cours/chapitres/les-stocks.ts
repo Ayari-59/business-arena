@@ -866,7 +866,7 @@ export const LES_STOCKS: Chapitre = {
       question: (c) => {
         const x = leMois(c);
         const ecart = auCentime(moisValorise(x, "peps").marge - moisValorise(x, "cmup-periode").marge);
-        return `En PEPS, la marge ${dE(x.nom)} serait plus forte de ${eur(ecart)} qu'au coût moyen de la période, la méthode de ${c.entreprise}. Le gérant veut changer de méthode. Qu'en dites-vous ?`;
+        return `En PEPS, la marge ${dE(x.nom)} serait plus forte de ${eur(ecart)} qu'au coût moyen de la période, la méthode de ${c.entreprise}. Le dirigeant veut changer de méthode. Qu'en dites-vous ?`;
       },
       options: (c) => {
         const x = leMois(c);

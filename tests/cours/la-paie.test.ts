@@ -428,7 +428,7 @@ describe("la prime exceptionnelle : 400 € nets promis, 740 € de budget par s
   it("le cas dédié tient la forme, et le calcul à rebours se refait à la main", () => {
     const cas = casDeLEntreprise("nova");
     casDedie(s, LA_PAIE, cas);
-    expect(s.commanditaire).toBe("Le gérant");
+    expect(s.commanditaire).toBe("Le dirigeant");
     expect([brut, cout, netTenu, brutTenu, bulletin(brutTenu).cout]).toEqual([523.68, 743.62, 398, 521.06, 739.9]);
     expect(attendus(s, "la-prime-a-rebours", cas)).toEqual({ "Net touché pour 100 € bruts": 76.38, "Prime brute par salarié": brut, "Coût employeur par salarié": cout });
     // Le piège : sans le prélèvement, 400 ÷ 78 % × 1,42 tiendrait dans le budget.

@@ -208,7 +208,7 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
           `Ce chapitre se joue dans la simulation du cours, à l'atelier de ${f.entreprise}, sur l'année N + 1 prévue, trimestre par trimestre, avec l'année N pour témoin. La ligne de montage monte ${qte(f.ligne.capaciteParTrimestre)} ${f.unites} par trimestre quand elle est disponible à 100 %. Chaque enceinte vendue laisse ${eur(x.marge)} de marge sur coût variable, et une demande qui n'est pas servie dans son trimestre est perdue. La demande de N + 1 est une prévision : aux trimestres 2 et 4, elle dépasse déjà la ligne.`,
           `Ce que la simulation suppose de l'entretien. Sans entretien, la ligne perd ${points(x.usure)} de disponibilité au trimestre suivant. L'entretien la répare en proportion de son budget, 1 point pour ${eur(x.unPoint)}, jusqu'à ${points(x.reparation)} au budget de référence, ${eur(x.reference)} par trimestre ; au-delà, un euro de plus ne répare rien, et la disponibilité ne dépasse jamais 100 %. La ligne entre dans N + 1 à 100 % : en N, sous garantie, c'est le fabricant qui l'entretenait.`,
           `Une ligne mal entretenue monte aussi mal : sans entretien, le taux de défaut du trimestre même gagne ${points(x.e.defautsEnPlusSansEntretien)}, d'autant moins que le budget approche la référence. Un défaut coûte en moyenne ${eur(x.coutMoyen)} : le contrôle en trouve ${pct(x.detection)}, retouchés à ${eur(f.qualite.coutDUnDefautDetecte)}, les autres reviennent du client sous garantie, ${eur(f.qualite.coutDUnDefautLivre)}. Chaque défaut livré fait perdre ${qte(x.ventesParDefautLivre)} ventes, et ces défauts sont des défauts attendus, en moyenne.`,
-          `Le gérant envisage de ne rien dépenser pour l'entretien au trimestre ${x.T}, pour faire une économie.`,
+          `Le président envisage de ne rien dépenser pour l'entretien au trimestre ${x.T}, pour faire une économie.`,
         ];
       },
       repere: (c) => {
@@ -671,7 +671,7 @@ export const ENTRETENIR_L_OUTIL: Chapitre = {
       notions: ["capacity", "contribution_margin", "variable_costs"],
       question: (c) => {
         const x = entretienDeLOutil(c);
-        return `Variante : le gérant saute l'entretien du trimestre ${TRIMESTRE_DE_LA_VARIANTE} au lieu du trimestre ${x.T}. Refaites le raisonnement : les ventes perdues au trimestre ${TRIMESTRE_DE_LA_VARIANTE + 2}, l'effet sur le résultat sans les défauts, les défauts en plus, puis l'effet défauts compris.`;
+        return `Variante : le président saute l'entretien du trimestre ${TRIMESTRE_DE_LA_VARIANTE} au lieu du trimestre ${x.T}. Refaites le raisonnement : les ventes perdues au trimestre ${TRIMESTRE_DE_LA_VARIANTE + 2}, l'effet sur le résultat sans les défauts, les défauts en plus, puis l'effet défauts compris.`;
       },
       champs: (c) => {
         const x = entretienDeLOutil(c);

@@ -1,6 +1,6 @@
 import { ENDETTEMENT_MAXIMAL } from "../financement";
 import { auCentime } from "./amortissement";
-import { ACTIONS_DE_NOVA, RESERVE_LEGALE } from "./comptabilite-approfondie";
+import { ACTIONS_DE_NOVA, DIVIDENDE_DEMANDE_PAR_ACTION, PLAFOND_DE_LA_RESERVE_LEGALE, RESERVE_LEGALE, RESERVES_FACULTATIVES_PROPOSEES } from "./comptabilite-approfondie";
 import { bilanDuLycee, compteDuLycee } from "./comptes-du-lycee";
 import type { FicheDeLExercice } from "./exercice-de-nova";
 
@@ -15,8 +15,8 @@ import type { FicheDeLExercice } from "./exercice-de-nova";
  *
  * LES RÈGLES (Code de commerce, articles L. 232-10 et L. 232-11) : la réserve légale reçoit 5 % du
  * bénéfice tant qu'elle n'atteint pas le dixième du capital ; le bénéfice distribuable est le
- * bénéfice, moins cette dotation, plus le report à nouveau des années passées ; l'assemblée des
- * associés le partage entre les dividendes, les réserves facultatives et le report à nouveau.
+ * bénéfice, moins cette dotation, plus le report à nouveau des années passées ; l'assemblée générale
+ * des actionnaires le partage entre les dividendes, les réserves facultatives et le report à nouveau.
  *
  * CE QUE LE CHOIX ENGAGE (HYPOTHÈSE DU COURS, celle du bilan du lycée) : le dividende est versé par
  * la banque comme s'il l'était au 31 décembre (`bilanDuLycee`, variante `dividende`) ; il fait
@@ -25,15 +25,12 @@ import type { FicheDeLExercice } from "./exercice-de-nova";
  * règle de prudence du cours (financement.ts : des emprunts au plus égaux aux capitaux propres).
  */
 
-/** La réserve légale cesse d'être dotée quand elle atteint ce dixième du capital. */
-export const PLAFOND_DE_LA_RESERVE_LEGALE = 0.1;
-
 /**
- * La demande d'un associé, que l'étape guidée chiffre (HYPOTHÈSE DU COURS) : un dividende de 2 €
- * par action ; et les réserves facultatives que le gérant propose pour la suite, un compte rond.
+ * Le plafond de la réserve légale, la demande d'un actionnaire (2 € par action) et les réserves
+ * facultatives que le président propose : posés une seule fois, avec l'affectation du bénéfice de N
+ * que tout le cours reprend (comptabilite-approfondie.ts, `affectationDuBeneficeDeN`).
  */
-export const DIVIDENDE_DEMANDE_PAR_ACTION = 2;
-export const RESERVES_FACULTATIVES_PROPOSEES = 45_000;
+export { DIVIDENDE_DEMANDE_PAR_ACTION, PLAFOND_DE_LA_RESERVE_LEGALE, RESERVES_FACULTATIVES_PROPOSEES };
 
 export interface Affectation {
   /** Le dividende versé pour une action, en euros. */

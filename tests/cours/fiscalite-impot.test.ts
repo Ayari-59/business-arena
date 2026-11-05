@@ -151,7 +151,7 @@ function verifierLesTextes(ch: Chapitre, cas: Cas) {
 }
 
 /** Ce qu'un cas dédié doit tenir (tests/cours/situations.test.ts), et sa réponse qui ne se devine pas. */
-function casDedie(s: Situation, ch: Chapitre, cas: Cas) {
+function casDedie(s: Situation, ch: Chapitre, cas: Cas, commanditaire: string) {
   expect(s.reprend).toEqual([ch.code]);
   expect(casDuChapitre(ch.code)).toBe(s);
   expect(SITUATIONS).toContain(s);
@@ -160,7 +160,7 @@ function casDedie(s: Situation, ch: Chapitre, cas: Cas) {
   expect(s.entreprises?.codes).toEqual(ch.entreprises?.codes);
   expect(s.libre).toBe(false);
   expect(s.blocs).toEqual([]);
-  expect(s.commanditaire).toBe("Le gérant");
+  expect(s.commanditaire).toBe(commanditaire);
   expect(s.etapes[0]!.type).toBe("lecture");
   expect(s.etapes[0]!.tableau).toBeDefined();
   expect(s.etapes.slice(1).filter((e) => e.type === "lecture")).toHaveLength(0);
@@ -409,7 +409,7 @@ describe("l'impôt sur les sociétés de NOVA en N+1", () => {
 
   it("le cas : la dépense de décembre ne fait économiser que le taux marginal", () => {
     const s = LA_DEPENSE_DE_FIN_D_ANNEE;
-    casDedie(s, ch, nova);
+    casDedie(s, ch, nova, "Le président");
     expect(DEPENSE_DE_FIN_D_ANNEE).toBe(4_800);
     const avec = rf - 4_800;
     expect(attendus(s, "economie", nova)).toEqual({
@@ -578,7 +578,7 @@ describe("le déficit reporté de PIXEL & CO", () => {
 
   it("le cas : faite cette année ou repoussée, la révision fait économiser 1 250 € en N+2", () => {
     const s = LA_DEPENSE_DE_L_ANNEE_EN_PERTE;
-    casDedie(s, ch, pixel);
+    casDedie(s, ch, pixel, "Le gérant");
     expect(DEPENSE_DE_L_ANNEE_EN_PERTE).toBe(5_000);
     const avec = deficit + 5_000;
     const restant = avec - rf[2]!;

@@ -415,7 +415,7 @@ export interface ExerciceFiscal {
 }
 
 /**
- * LA VOITURE DU GÉRANT DE NOVA (hypothèse du cours) : achetée le 2 janvier N+1, 36 000 € toutes
+ * LA VOITURE DU PRÉSIDENT DE NOVA (hypothèse du cours) : achetée le 2 janvier N+1, 36 000 € toutes
  * taxes comprises (la TVA d'une voiture de tourisme ne se récupère pas), amortie en linéaire sur
  * 5 ans, 7 200 € par an. Pour ses émissions de CO2 (entre 50 et 130 g/km), la loi ne déduit
  * l'amortissement que sur 18 300 € : 3 660 € par an. L'excédent, 3 540 €, se réintègre.
@@ -440,7 +440,7 @@ export const EXERCICE_N1_DE_NOVA: ExerciceFiscal = {
   exercice: "N+1",
   resultatComptable: 118_460,
   reintegrations: [
-    { libelle: "l'amortissement de la voiture du gérant au-delà du plafond", montant: AMORTISSEMENT_EXCEDENTAIRE },
+    { libelle: "l'amortissement de la voiture du président au-delà du plafond", montant: AMORTISSEMENT_EXCEDENTAIRE },
     { libelle: "la majoration de retard sur la TVA", montant: MAJORATION_DE_RETARD },
   ],
   deductions: [],

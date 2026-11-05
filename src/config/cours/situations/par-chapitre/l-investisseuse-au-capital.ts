@@ -10,7 +10,7 @@ import type { Situation } from "../types";
  * (Bac STMG, gestion et finance, palier 1).
  *
  * Une investisseuse propose d'entrer au capital en apportant de l'argent frais. La
- * gérante veut savoir, avant de la recevoir, ce que cet apport changerait au bilan du
+ * présidente veut savoir, avant de la recevoir, ce que cet apport changerait au bilan du
  * 31 décembre : ce qui bouge et ce qui ne bouge pas, le nouveau total, la part des
  * capitaux propres dans le financement, la trésorerie. L'élève refait seul les calculs
  * du chapitre (le total du bilan, la part des capitaux propres, l'argent disponible face
@@ -68,15 +68,15 @@ export const L_INVESTISSEUSE_AU_CAPITAL: Situation = {
   palier: 1,
   blocs: [],
   reprend: ["lire-le-bilan"],
-  commanditaire: "La gérante",
+  commanditaire: "La présidente",
   titre: "L'investisseuse au capital",
   accroche:
-    "Une investisseuse propose d'apporter de l'argent frais et d'entrer au capital. Avant de la recevoir, la gérante veut savoir ce que cet apport changerait au bilan.",
+    "Une investisseuse propose d'apporter de l'argent frais et d'entrer au capital. Avant de la recevoir, la présidente veut savoir ce que cet apport changerait au bilan.",
   objectifs: [
     "Calculer le total du bilan et la part des capitaux propres",
     "Dire quels postes un apport en argent fait bouger",
     "Refaire le bilan après l'apport : total, part des capitaux propres, trésorerie",
-    "Rédiger une réponse chiffrée à la gérante",
+    "Rédiger une réponse chiffrée à la présidente",
   ],
   libre: false,
   entreprises: {
@@ -87,7 +87,7 @@ export const L_INVESTISSEUSE_AU_CAPITAL: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La demande de la gérante",
+      titre: "La demande de la présidente",
       texte: (c) => {
         const r = investisseuseAuCapital(c);
         return [
@@ -191,8 +191,8 @@ export const L_INVESTISSEUSE_AU_CAPITAL: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse à la gérante",
-      question: () => "Quelle phrase envoyez-vous à la gérante ?",
+      titre: "Votre réponse à la présidente",
+      question: () => "Quelle phrase envoyez-vous à la présidente ?",
       options: (c) => {
         const r = investisseuseAuCapital(c);
         return [

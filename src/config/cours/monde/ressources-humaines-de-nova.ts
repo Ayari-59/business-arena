@@ -68,7 +68,7 @@ export const SMIC_MENSUEL_BRUT = 1_867.02;
 export const HAUSSE_DU_NET_DEMANDEE = 100;
 
 /**
- * L'ENVELOPPE D'UNE HAUSSE (hypothèse du laboratoire du salaire) : la gérante accepte qu'une hausse
+ * L'ENVELOPPE D'UNE HAUSSE (hypothèse du laboratoire du salaire) : la présidente accepte qu'une hausse
  * coûte à NOVA au plus 150 € de plus par mois et par salarié, cotisations patronales comprises.
  */
 export const ENVELOPPE_DE_LA_HAUSSE = 150;
@@ -77,14 +77,14 @@ export const ENVELOPPE_DE_LA_HAUSSE = 150;
 export const HAUSSES_DU_NET_ESSAYEES = { min: 0, max: 200, pas: 25 } as const;
 
 /**
- * LE BUDGET D'UN POSTE (hypothèse du curseur du salaire) : pour un cinquième opérateur, la gérante
+ * LE BUDGET D'UN POSTE (hypothèse du curseur du salaire) : pour un cinquième opérateur, la présidente
  * fixe un coût de 2 800 € par mois au plus, cotisations patronales comprises.
  */
 export const COUT_MAXIMAL_D_UN_POSTE = 2_800;
 
 /**
  * LE PLAFOND DES FRAIS DE PERSONNEL (hypothèse du chapitre « L'effectif et la masse salariale ») : la
- * gérante veut que le personnel ne coûte pas plus de 10 % des ventes de l'année.
+ * présidente veut que le personnel ne coûte pas plus de 10 % des ventes de l'année.
  */
 export const PLAFOND_DES_FRAIS_DE_PERSONNEL = 0.1;
 

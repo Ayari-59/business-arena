@@ -28,7 +28,7 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * `acomptes`, `solde`). Une évolution du moteur ne change rien ici.
  *
  * L'objet : du résultat comptable au résultat fiscal (deux réintégrations : l'amortissement de la
- * voiture du gérant au-delà du plafond, une majoration de retard), le barème du taux réduit et ses
+ * voiture du président au-delà du plafond, une majoration de retard), le barème du taux réduit et ses
  * conditions, le taux effectif face au taux marginal, les acomptes calculés sur l'impôt de N et le
  * solde du 15 mai N+2. Puis une critique : l'impôt qui pousse à dépenser en fin d'année.
  *
@@ -235,7 +235,7 @@ function tableauDeLExercice(x: ImpotDeNova): TableauDeDonnees {
     colonnes: ["Valeur"],
     lignes: [
       { libelle: "Résultat comptable avant impôt", valeurs: [eur(x.e.resultatComptable)] },
-      { libelle: "Voiture du gérant, prix toutes taxes comprises", valeurs: [eur(v.prixTtc)] },
+      { libelle: "Voiture du président, prix toutes taxes comprises", valeurs: [eur(v.prixTtc)] },
       { libelle: "Durée d'amortissement de la voiture", valeurs: [`${v.dureeDAmortissement} ans`] },
       { libelle: "Plafond de l'amortissement déductible", valeurs: [eur(v.plafondDeDeduction)] },
       { libelle: "Majoration de retard sur la TVA", valeurs: [eur(MAJORATION_DE_RETARD)] },
@@ -307,7 +307,7 @@ export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
         const x = impotDeNova(c);
         return [
           `Ce chapitre se joue dans la simulation du cours, chez ${x.entreprise}, la fabrique d'enceintes, sur son second exercice, ${x.e.exercice}. L'impôt sur les sociétés porte sur le bénéfice de l'exercice entier, mais pas sur le bénéfice comptable tel quel : la loi refuse de déduire certaines charges, qu'on réintègre, et exonère certains produits, qu'on déduit. On obtient le résultat fiscal, et c'est lui qu'on taxe.`,
-          `Les hypothèses de la simulation. ${x.entreprise} gagne ${eur(x.e.resultatComptable)} avant impôt en ${x.e.exercice}. Le gérant roule dans une voiture de tourisme achetée en janvier, dont la loi plafonne l'amortissement déductible ; une déclaration de TVA déposée en retard a coûté une majoration. ${x.entreprise} remplit les conditions du taux réduit : ${pct(TAUX_REDUIT * 100)} jusqu'à ${eur(PLAFOND_DU_TAUX_REDUIT)} de bénéfice, ${pct(TAUX_NORMAL * 100)} au-delà. L'impôt s'arrondit à l'euro.`,
+          `Les hypothèses de la simulation. ${x.entreprise} gagne ${eur(x.e.resultatComptable)} avant impôt en ${x.e.exercice}. Le président roule dans une voiture de tourisme achetée en janvier, dont la loi plafonne l'amortissement déductible ; une déclaration de TVA déposée en retard a coûté une majoration. ${x.entreprise} remplit les conditions du taux réduit : ${pct(TAUX_REDUIT * 100)} jusqu'à ${eur(PLAFOND_DU_TAUX_REDUIT)} de bénéfice, ${pct(TAUX_NORMAL * 100)} au-delà. L'impôt s'arrondit à l'euro.`,
           `L'impôt se paie en ${NB} acomptes, le ${ACOMPTES.dates.join(", le ")}, puis un solde le ${ACOMPTES.dateDuSolde} qui suit la clôture. Le cours simplifie : les ${NB} acomptes de ${x.e.exercice} se calculent tous sur l'impôt de N, ${eur(IMPOT_DE_NOVA_EN_N)} (le droit calcule celui du ${ACOMPTES.dates[0]} sur l'avant-dernier exercice quand le dernier n'est pas encore déclaré).`,
         ];
       },
@@ -322,7 +322,7 @@ export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
       question: (c) => {
         const x = impotDeNova(c);
         const v = VOITURE_DU_GERANT;
-        return `La voiture du gérant, ${eur(v.prixTtc)} toutes taxes comprises, s'amortit sur ${v.dureeDAmortissement} ans ; la loi ne déduit l'amortissement que sur ${eur(v.plafondDeDeduction)}, le plafond que ses émissions de CO2 lui donnent (il change selon le véhicule). Calculez l'amortissement déductible de l'année, puis l'amortissement à réintégrer (l'amortissement comptable, ${eur(x.amortissementComptable)}, moins le déductible), et enfin le résultat fiscal : ${eur(x.e.resultatComptable)}, plus cet amortissement, plus la majoration de retard de ${eur(MAJORATION_DE_RETARD)}.`;
+        return `La voiture du président, ${eur(v.prixTtc)} toutes taxes comprises, s'amortit sur ${v.dureeDAmortissement} ans ; la loi ne déduit l'amortissement que sur ${eur(v.plafondDeDeduction)}, le plafond que ses émissions de CO2 lui donnent (il change selon le véhicule). Calculez l'amortissement déductible de l'année, puis l'amortissement à réintégrer (l'amortissement comptable, ${eur(x.amortissementComptable)}, moins le déductible), et enfin le résultat fiscal : ${eur(x.e.resultatComptable)}, plus cet amortissement, plus la majoration de retard de ${eur(MAJORATION_DE_RETARD)}.`;
       },
       champs: (c) => {
         const x = impotDeNova(c);
@@ -777,7 +777,7 @@ export const L_IMPOT_SUR_LES_SOCIETES: Chapitre = {
       notions: ["income_statement"],
       question: (c) => {
         const x = impotDeNova(c);
-        return `En décembre ${x.e.exercice}, le gérant ${dE(x.entreprise)} veut « dépenser avant le 31 pour payer moins d'impôt ». Que vaut l'argument ?`;
+        return `En décembre ${x.e.exercice}, le président ${dE(x.entreprise)} veut « dépenser avant le 31 pour payer moins d'impôt ». Que vaut l'argument ?`;
       },
       options: (c) => {
         const x = impotDeNova(c);

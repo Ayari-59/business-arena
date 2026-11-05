@@ -8,14 +8,14 @@ import type { Situation } from "../types";
  * CAS PRATIQUE DU CHAPITRE « LE COÛT DE LA NON-QUALITÉ » : UNE SEULE DÉMARCHE QUALITÉ CETTE ANNÉE
  * (BTS GPME, gestion des risques, palier 3).
  *
- * Le gérant ne financera qu'une démarche qualité cette année, et hésite entre les deux du catalogue de
+ * Le président ne financera qu'une démarche qualité cette année, et hésite entre les deux du catalogue de
  * la fiche : la standardisation des postes, qui PRÉVIENT (moins de défauts), et le contrôle automatisé
  * en ligne, qui DÉTECTE plus tôt (autant de défauts, mais moins partent chez les clients). L'élève
  * CROISE les deux effets : le contrôle n'évite aucun défaut, il en fait retoucher à l'atelier qui
  * seraient revenus des clients, et il garde les ventes qu'un client déçu fait perdre. Un curseur sur la
  * part des défauts que trouve le contrôle montre, avant le calcul, où il se rembourse en un an. La
  * réponse demande un jugement : la standardisation se rembourse plus vite, le contrôle rapporte plus
- * sur l'horizon du gérant ; c'est l'horizon qui décide, et le délai de récupération ne dit pas ce qui
+ * sur l'horizon du président ; c'est l'horizon qui décide, et le délai de récupération ne dit pas ce qui
  * vient après.
  *
  * Comme son chapitre, le cas se joue dans la simulation du cours (src/config/cours/monde) : ses
@@ -24,7 +24,7 @@ import type { Situation } from "../types";
  * première. Le cas se jouait au bistrot de l'arène, sur deux démarches rejouées par le moteur.
  */
 
-/** L'horizon du plan du gérant : trois ans. Une hypothèse du cours. */
+/** L'horizon du plan du président : trois ans. Une hypothèse du cours. */
 export const HORIZON_DU_GERANT_EN_ANNEES = 3;
 
 /** Les bornes du curseur de la détection du contrôle en ligne, en %. */
@@ -39,7 +39,7 @@ const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` 
 
 export type Verdict = "standardisation" | "controle-en-ligne" | "aucune";
 
-/** Les deux démarches, leurs gains, leurs délais, et celle qui rapporte le plus sur l'horizon du gérant. */
+/** Les deux démarches, leurs gains, leurs délais, et celle qui rapporte le plus sur l'horizon du président. */
 export function deuxDemarches(c: Pick<Cas, "code">) {
   const x = qualiteDeNova(c);
   const horizon = HORIZON_DU_GERANT_EN_ANNEES;
@@ -76,15 +76,15 @@ export const UNE_SEULE_DEMARCHE_QUALITE: Situation = {
   palier: 3,
   blocs: [],
   reprend: ["le-cout-de-la-non-qualite"],
-  commanditaire: "Le gérant",
+  commanditaire: "Le président",
   titre: "Une seule démarche qualité cette année",
   accroche:
-    "Le gérant ne financera qu'une démarche qualité cette année, et hésite entre prévenir et détecter plus tôt. Ce que chacune fait gagner, le temps qu'elle met à se rembourser, ce qu'elle rapporte sur son plan, et le choix à lui rendre.",
+    "Le président ne financera qu'une démarche qualité cette année, et hésite entre prévenir et détecter plus tôt. Ce que chacune fait gagner, le temps qu'elle met à se rembourser, ce qu'elle rapporte sur son plan, et le choix à lui rendre.",
   objectifs: [
     "Chiffrer le gain d'une démarche qui prévient et d'une démarche qui détecte",
     "Compter les ventes que la qualité perçue fait perdre, en plus des coûts",
     "Comparer deux démarches par leur délai de récupération et par leur gain sur un horizon",
-    "Répondre au gérant en disant le critère qui décide",
+    "Répondre au président en disant le critère qui décide",
   ],
   libre: false,
   entreprises: {
@@ -95,7 +95,7 @@ export const UNE_SEULE_DEMARCHE_QUALITE: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La demande du gérant",
+      titre: "La demande du président",
       tableau: (c) => {
         const d = deuxDemarches(c);
         const x = d.x;
@@ -123,7 +123,7 @@ export const UNE_SEULE_DEMARCHE_QUALITE: Situation = {
         ];
       },
       repere: () =>
-        "À rendre : ce que chaque démarche fait gagner par an, sur les coûts puis ventes comprises, son délai de récupération, ce qu'elle rapporte sur l'horizon du gérant, et votre choix.",
+        "À rendre : ce que chaque démarche fait gagner par an, sur les coûts puis ventes comprises, son délai de récupération, ce qu'elle rapporte sur l'horizon du président, et votre choix.",
     },
     {
       id: "sur-les-couts",
@@ -234,7 +234,7 @@ export const UNE_SEULE_DEMARCHE_QUALITE: Situation = {
     {
       id: "sur-l-horizon",
       type: "montants",
-      titre: "Sur l'horizon du gérant",
+      titre: "Sur l'horizon du président",
       notions: ["irr_payback"],
       question: () =>
         `Calculez ce que chaque démarche rapporte net sur les ${HORIZON_DU_GERANT_EN_ANNEES} ans du plan, ventes comprises (le gain des ${HORIZON_DU_GERANT_EN_ANNEES} années moins le coût de la démarche), puis l'avance du contrôle en ligne sur la standardisation.`,
@@ -259,8 +259,8 @@ export const UNE_SEULE_DEMARCHE_QUALITE: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse au gérant",
-      question: () => "Quelle phrase envoyez-vous au gérant ?",
+      titre: "Votre réponse au président",
+      question: () => "Quelle phrase envoyez-vous au président ?",
       options: (c) => {
         const d = deuxDemarches(c);
         const s = d.standardisation;
@@ -272,7 +272,7 @@ export const UNE_SEULE_DEMARCHE_QUALITE: Situation = {
             juste: d.verdict === "controle-en-ligne",
             retour:
               d.verdict === "controle-en-ligne"
-                ? `Oui : ${eur(k.gainNet)} net sur le plan, contre ${eur(s.gainNet)} pour la standardisation. Il coûte plus et se rembourse moins vite (${ans(d.delais.controle.ventes)} contre ${ans(d.delais.standardisation.ventes)}), mais tous deux se remboursent dans l'année, et le gérant décide sur ${h} ans : c'est ce que chaque démarche rapporte sur l'horizon qui tranche.`
+                ? `Oui : ${eur(k.gainNet)} net sur le plan, contre ${eur(s.gainNet)} pour la standardisation. Il coûte plus et se rembourse moins vite (${ans(d.delais.controle.ventes)} contre ${ans(d.delais.standardisation.ventes)}), mais tous deux se remboursent dans l'année, et le président décide sur ${h} ans : c'est ce que chaque démarche rapporte sur l'horizon qui tranche.`
                 : `Non : sur ${h} ans, la standardisation rapporte plus (${eur(s.gainNet)} contre ${eur(k.gainNet)}).`,
           },
           {

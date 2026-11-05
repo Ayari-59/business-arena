@@ -584,7 +584,7 @@ export const LA_PREVISION_DES_VENTES: Chapitre = {
         const l = laboratoireDeLaPrevision(0, p.part!);
         return [
           `À ${pct(p.part!)} du marché, Noël prévoit ${qte(l.trimestres[3]!.nova)} enceintes : la ligne suffit. Pour y tenir, NOVA renoncerait à ${qte(auDixieme(n.part - p.part!), 1)} points de la part qu'elle a gagnée en N, soit ${qte(previsionDeNPlus1().nova - l.nova)} enceintes sur l'année.`,
-          "Avec l'exponentielle, la courbe du 4e trimestre est plus haute : la même ligne tiendrait une part plus faible encore. La prévision ne décide pas : elle dit à la gérante où est le goulot, avant qu'il ne coûte des ventes.",
+          "Avec l'exponentielle, la courbe du 4e trimestre est plus haute : la même ligne tiendrait une part plus faible encore. La prévision ne décide pas : elle dit à la présidente où est le goulot, avant qu'il ne coûte des ventes.",
         ];
       },
     },

@@ -7,7 +7,7 @@ import type { Situation } from "../types";
  * CAS PRATIQUE DU CHAPITRE « CE QUE COÛTE UNE LIVRAISON » : LE GAZOLE QUI AUGMENTE (2de pro GATL,
  * palier 1).
  *
- * Le gazole et les péages passent de 0,45 € à 0,60 € le kilomètre. Le gérant de NOVA demande s'il
+ * Le gazole et les péages passent de 0,45 € à 0,60 € le kilomètre. Le président de NOVA demande s'il
  * faut abandonner la tournée de CampusTech pour la messagerie. L'élève chiffre la route plus chère,
  * la nouvelle tournée, ce qui la sépare encore de la messagerie, et le prix du kilomètre où elle cesse
  * de l'emporter. Les chiffres sont ceux du chapitre (monde/production-et-logistique.ts) ; la hausse
@@ -30,17 +30,17 @@ export const LE_GAZOLE_QUI_AUGMENTE: Situation = {
   palier: 1,
   blocs: [],
   reprend: [CE_QUE_COUTE_UNE_LIVRAISON.code],
-  commanditaire: "Le gérant",
+  commanditaire: "Le président",
   titre: "Le gazole qui augmente",
   accroche: "Le gazole monte. Faut-il abandonner la tournée pour la messagerie ? Ce que la hausse ajoute, et jusqu'où la tournée tient.",
-  objectifs: ["Recalculer le coût d'une tournée quand un coût au kilomètre change", "Comparer la tournée et la messagerie après la hausse", "Répondre au gérant"],
+  objectifs: ["Recalculer le coût d'une tournée quand un coût au kilomètre change", "Comparer la tournée et la messagerie après la hausse", "Répondre au président"],
   libre: false,
   entreprises: CE_QUE_COUTE_UNE_LIVRAISON.entreprises,
   etapes: [
     {
       id: "demande",
       type: "lecture",
-      titre: "La demande du gérant",
+      titre: "La demande du président",
       texte: () => {
         const k = gazoleQuiAugmente();
         return [
@@ -101,8 +101,8 @@ export const LE_GAZOLE_QUI_AUGMENTE: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse au gérant",
-      question: () => "Que répondez-vous au gérant ?",
+      titre: "Votre réponse au président",
+      question: () => "Que répondez-vous au président ?",
       options: () => {
         const k = gazoleQuiAugmente();
         return [
