@@ -195,6 +195,8 @@ import { L_AVIS_A_UNE_ETOILE } from "./par-chapitre/l-avis-a-une-etoile";
 import { LA_CENTRALE_DEMANDE_UNE_RISTOURNE } from "./par-chapitre/la-centrale-demande-une-ristourne";
 import { UN_POURCENTAGE_POUR_LA_MARRAINE } from "./par-chapitre/un-pourcentage-pour-la-marraine";
 import { LA_LIGNE_DE_LA_RENTREE } from "./par-chapitre/la-ligne-de-la-rentree";
+import { CREER_L_ATELIER_DE_REPARATION } from "./par-chapitre/creer-l-atelier-de-reparation";
+import { LA_COMMANDE_DE_NOEL_DE_CAMPUSTECH } from "./par-chapitre/la-commande-de-noel-de-campustech";
 export type { Situation } from "./types";
 
 /**
@@ -405,6 +407,8 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LA_CENTRALE_DEMANDE_UNE_RISTOURNE,
   UN_POURCENTAGE_POUR_LA_MARRAINE,
   LA_LIGNE_DE_LA_RENTREE,
+  CREER_L_ATELIER_DE_REPARATION,
+  LA_COMMANDE_DE_NOEL_DE_CAMPUSTECH,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

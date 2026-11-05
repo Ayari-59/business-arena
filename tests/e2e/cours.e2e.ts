@@ -1045,6 +1045,13 @@ describe.each([
   { code: "le-plateau-de-teleacteurs", entreprise: "conseil" },
   { code: "le-plateau-de-teleacteurs", entreprise: "conseil", telephone: true },
   { code: "la-ligne-de-la-rentree", entreprise: "conseil", telephone: true },
+  // Le BTS CG P1 : le cadre de la comptabilité (des tris, un laboratoire à choix), les ventes et achats au complet (des écritures, un curseur, un laboratoire), puis leurs cas.
+  { code: "le-cadre-de-la-comptabilite", entreprise: "nova" },
+  { code: "le-cadre-de-la-comptabilite", entreprise: "nova", telephone: true },
+  { code: "ventes-et-achats-au-complet", entreprise: "nova" },
+  { code: "ventes-et-achats-au-complet", entreprise: "nova", telephone: true },
+  { code: "creer-l-atelier-de-reparation", entreprise: "nova" },
+  { code: "la-commande-de-noel-de-campustech", entreprise: "nova", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se

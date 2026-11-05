@@ -467,6 +467,11 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   // Le BTS NDRC, bloc 2 : le plateau de téléacteurs (monde/plateau-d-atlas.ts), et son cas.
   "chapitres/le-plateau-de-teleacteurs.ts",
   "situations/par-chapitre/la-ligne-de-la-rentree.ts",
+  // Le BTS CG P1 : le cadre de la comptabilité (monde/cadre-de-la-comptabilite.ts), les ventes et achats au complet (monde/ventes-et-achats-de-nova.ts), et leurs cas.
+  "chapitres/le-cadre-de-la-comptabilite.ts",
+  "chapitres/ventes-et-achats-au-complet.ts",
+  "situations/par-chapitre/creer-l-atelier-de-reparation.ts",
+  "situations/par-chapitre/la-commande-de-noel-de-campustech.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
@@ -667,6 +672,10 @@ const NE_LISENT_PLUS_L_ANNEE_FIGEE: readonly string[] = [
   "chapitres/le-reseau-de-vente-directe.ts",
   "situations/par-chapitre/la-centrale-demande-une-ristourne.ts",
   "situations/par-chapitre/un-pourcentage-pour-la-marraine.ts",
+  "chapitres/le-cadre-de-la-comptabilite.ts",
+  "chapitres/ventes-et-achats-au-complet.ts",
+  "situations/par-chapitre/creer-l-atelier-de-reparation.ts",
+  "situations/par-chapitre/la-commande-de-noel-de-campustech.ts",
 ];
 
 /** Le premier chemin d'imports qui atteint un fichier donné, ou rien. */
