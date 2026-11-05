@@ -739,3 +739,21 @@ describe("une seule NOVA, chez son distributeur CampusTech (BTS NDRC, se faire r
     expect(CADRE_DE_LA_NEGOCIATION.delaiDePaiement).toBe(DELAI_CONVENU_DE_CAMPUSTECH);
   });
 });
+
+describe("une seule NOVA, dans son compte client de N+1 (BTS CG P1, le compte client)", () => {
+  it("le compte client lit la facture de CampusTech, ses délais, la lettre de change et le factor de « Financer et placer », et la créance de Sonora", async () => {
+    const m = await import("../../src/config/cours/monde/compte-client-de-nova");
+    const p6 = await import("../../src/config/cours/monde/financer-et-placer");
+    const { CREANCES_AU_31_DECEMBRE } = await import("../../src/config/cours/monde/exercice-de-nova");
+    expect(m.FACTURE_DE_CAMPUSTECH.ht).toBe(VENTES_A_CAMPUSTECH[0] * PRIX_DE_L_ENCEINTE);
+    const f = m.facturesDeCampusTech();
+    // Les trois factures de N sont celles de la fiche figée, payées le 10 janvier, le 10 février et (en LCR) le 10 mars.
+    expect(f.slice(0, 3).map((x) => x.ttc)).toEqual(CREANCES_AU_31_DECEMBRE.filter((k) => k.client === "CampusTech").map((k) => k.ttc));
+    expect(f.slice(0, 3).map((x) => m.rang(x.paiement))).toEqual(CREANCES_AU_31_DECEMBRE.filter((k) => k.client === "CampusTech").map((k) => (k.echeance.mois - 1) * 30 + k.echeance.jour));
+    expect(m.rang(m.LCR_DE_DECEMBRE.echeance) - m.rang(m.LCR_DE_DECEMBRE.remise)).toBe(p6.FACTURE_DE_DECEMBRE.jours);
+    expect(m.bordereauDEscompte()).toEqual(p6.escompte(p6.FACTURE_DE_DECEMBRE.ttc, p6.FACTURE_DE_DECEMBRE.jours));
+    const fa = m.bordereauDuFactor();
+    expect(fa.cout).toBe(p6.affacturage(p6.factureDeLaChaine().ttc, p6.CHAINE_ONDES.jours).cout);
+    expect(m.balanceAgee().lignes.find((l) => l.client === "Sonora")!.total).toBe(CREANCES_AU_31_DECEMBRE.find((k) => k.client === "Sonora")!.ttc);
+  });
+});

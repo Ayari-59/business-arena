@@ -66,6 +66,8 @@ export const THEMES: readonly Theme[] = [
       "l-augmentation-de-capital",
       "le-systeme-d-information-comptable",
       "controler-les-comptes",
+      "le-compte-client",
+      "fournisseurs-et-banque",
     ],
     familles: [],
   },

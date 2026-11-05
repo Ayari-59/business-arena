@@ -1653,6 +1653,20 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Si une vendeuse indépendante vendait pour vous contre 25 % du chiffre d'affaires, que vous laisserait une vente de plus ? Combien de ventes lui faudrait-il pour payer sa formation ?",
   }),
+  "le-compte-client": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez le bilan et le budget de trésorerie du second.`,
+    lieux: ["bilan", "budget-de-tresorerie"],
+    chercher:
+      "Combien vos clients vous doivent-ils à la fin du tour, et depuis combien de temps ? Si l'un d'eux doublait sa commande, accepteriez-vous ce nouvel en-cours ? Et si vous escomptiez ses factures, votre risque baisserait-il, ou seulement votre besoin de trésorerie ?",
+  }),
+  "fournisseurs-et-banque": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez le budget de trésorerie et le bilan du second.`,
+    lieux: ["budget-de-tresorerie", "bilan"],
+    chercher:
+      "Quand vos fournisseurs sont-ils payés, et votre trésorerie passe-t-elle sous zéro avant que vos clients ne paient ? Retrouvez la trésorerie du budget au bilan : si elles différaient, quelles opérations chercheriez-vous d'abord, comme dans un rapprochement ?",
+  }),
 };
 
 /**

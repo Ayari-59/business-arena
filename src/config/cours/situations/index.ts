@@ -195,6 +195,8 @@ import { L_AVIS_A_UNE_ETOILE } from "./par-chapitre/l-avis-a-une-etoile";
 import { LA_CENTRALE_DEMANDE_UNE_RISTOURNE } from "./par-chapitre/la-centrale-demande-une-ristourne";
 import { UN_POURCENTAGE_POUR_LA_MARRAINE } from "./par-chapitre/un-pourcentage-pour-la-marraine";
 import { LA_LIGNE_DE_LA_RENTREE } from "./par-chapitre/la-ligne-de-la-rentree";
+import { VIBRA_REPASSE_COMMANDE } from "./par-chapitre/vibra-repasse-commande";
+import { LE_CHEQUE_QUI_N_EST_PAS_PASSE } from "./par-chapitre/le-cheque-qui-n-est-pas-passe";
 export type { Situation } from "./types";
 
 /**
@@ -405,6 +407,8 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LA_CENTRALE_DEMANDE_UNE_RISTOURNE,
   UN_POURCENTAGE_POUR_LA_MARRAINE,
   LA_LIGNE_DE_LA_RENTREE,
+  VIBRA_REPASSE_COMMANDE,
+  LE_CHEQUE_QUI_N_EST_PAS_PASSE,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

@@ -467,6 +467,11 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   // Le BTS NDRC, bloc 2 : le plateau de téléacteurs (monde/plateau-d-atlas.ts), et son cas.
   "chapitres/le-plateau-de-teleacteurs.ts",
   "situations/par-chapitre/la-ligne-de-la-rentree.ts",
+  // Le BTS CG P1 : le compte client (NOVA, monde/compte-client-de-nova.ts), fournisseurs et banque (MAILLE & CO, monde/fournisseurs-et-banque-de-la-boutique.ts), et leurs cas.
+  "chapitres/le-compte-client.ts",
+  "chapitres/fournisseurs-et-banque.ts",
+  "situations/par-chapitre/vibra-repasse-commande.ts",
+  "situations/par-chapitre/le-cheque-qui-n-est-pas-passe.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
@@ -667,6 +672,10 @@ const NE_LISENT_PLUS_L_ANNEE_FIGEE: readonly string[] = [
   "chapitres/le-reseau-de-vente-directe.ts",
   "situations/par-chapitre/la-centrale-demande-une-ristourne.ts",
   "situations/par-chapitre/un-pourcentage-pour-la-marraine.ts",
+  "chapitres/le-compte-client.ts",
+  "chapitres/fournisseurs-et-banque.ts",
+  "situations/par-chapitre/vibra-repasse-commande.ts",
+  "situations/par-chapitre/le-cheque-qui-n-est-pas-passe.ts",
 ];
 
 /** Le premier chemin d'imports qui atteint un fichier donné, ou rien. */

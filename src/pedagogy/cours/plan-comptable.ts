@@ -72,6 +72,7 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "404", intitule: "Fournisseurs d'immobilisations", nature: "passif" },
   { numero: "408", intitule: "Fournisseurs, factures non parvenues", nature: "passif" },
   { numero: "411", intitule: "Clients", nature: "actif" },
+  { numero: "413", intitule: "Clients, effets à recevoir", nature: "actif" },
   { numero: "416", intitule: "Clients douteux ou litigieux", nature: "actif" },
   { numero: "418", intitule: "Clients, produits non encore facturés", nature: "actif" },
   { numero: "421", intitule: "Personnel, rémunérations dues", nature: "passif" },
@@ -86,6 +87,8 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "44571", intitule: "TVA collectée", nature: "tva" },
   { numero: "44587", intitule: "TVA sur factures à établir", nature: "tva" },
   { numero: "44551", intitule: "TVA à décaisser", nature: "tva" },
+  // Le factor : un débiteur divers, la créance cédée et la retenue de garantie.
+  { numero: "467", intitule: "Autres comptes débiteurs ou créditeurs (factor)", nature: "actif" },
   // Les écarts de conversion des créances et des dettes en devises, à la clôture.
   { numero: "476", intitule: "Différence de conversion, actif", nature: "actif" },
   { numero: "477", intitule: "Différence de conversion, passif", nature: "passif" },
@@ -96,6 +99,9 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   // Classe 5 : trésorerie (les placements à un an au plus et leurs intérêts courus en sont, comme au bilan fonctionnel)
   { numero: "508", intitule: "Autres valeurs mobilières de placement et créances assimilées", nature: "tresorerie" },
   { numero: "5088", intitule: "Intérêts courus sur placements", nature: "tresorerie" },
+  // Les effets remis à la banque, en attendant leur paiement ou le bordereau d'escompte.
+  { numero: "5113", intitule: "Effets à l'encaissement", nature: "tresorerie" },
+  { numero: "5114", intitule: "Effets à l'escompte", nature: "tresorerie" },
   { numero: "512", intitule: "Banque", nature: "tresorerie" },
   { numero: "530", intitule: "Caisse", nature: "tresorerie" },
   // Classe 6 : charges
@@ -109,13 +115,17 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "6037", intitule: "Variation des stocks de marchandises", nature: "charge" },
   { numero: "6031", intitule: "Variation des stocks de matières premières et fournitures", nature: "charge" },
   { numero: "607", intitule: "Achats de marchandises", nature: "charge" },
+  // Les réductions obtenues après la facture (un avoir du fournisseur) : un compte de charges qui se crédite.
+  { numero: "6097", intitule: "Rabais, remises et ristournes obtenus sur achats de marchandises", nature: "charge" },
   { numero: "61", intitule: "Services extérieurs (loyer et frais de structure)", nature: "charge" },
   { numero: "613", intitule: "Locations", nature: "charge" },
   { numero: "615", intitule: "Entretien et réparations", nature: "charge" },
   { numero: "616", intitule: "Primes d'assurances", nature: "charge" },
   { numero: "62", intitule: "Autres services extérieurs", nature: "charge" },
   { numero: "622", intitule: "Rémunérations d'intermédiaires et honoraires", nature: "charge" },
+  { numero: "6225", intitule: "Rémunérations d'affacturage", nature: "charge" },
   { numero: "623", intitule: "Publicité, publications, relations publiques", nature: "charge" },
+  { numero: "627", intitule: "Services bancaires et assimilés", nature: "charge" },
   { numero: "64", intitule: "Charges de personnel", nature: "charge" },
   { numero: "6132", intitule: "Locations immobilières", nature: "charge" },
   { numero: "641", intitule: "Rémunérations du personnel", nature: "charge" },
@@ -125,6 +135,7 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "661", intitule: "Charges d'intérêts", nature: "charge" },
   { numero: "665", intitule: "Escomptes accordés", nature: "charge" },
   { numero: "6611", intitule: "Intérêts des emprunts et dettes", nature: "charge" },
+  { numero: "6616", intitule: "Intérêts bancaires et sur opérations de financement (escompte, découvert, affacturage)", nature: "charge" },
   { numero: "681", intitule: "Dotations aux amortissements, dépréciations et provisions", nature: "charge" },
   { numero: "695", intitule: "Impôts sur les bénéfices", nature: "charge" },
   { numero: "6811", intitule: "Dotations aux amortissements des immobilisations incorporelles et corporelles", nature: "charge" },
