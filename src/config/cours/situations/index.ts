@@ -195,6 +195,8 @@ import { L_AVIS_A_UNE_ETOILE } from "./par-chapitre/l-avis-a-une-etoile";
 import { LA_CENTRALE_DEMANDE_UNE_RISTOURNE } from "./par-chapitre/la-centrale-demande-une-ristourne";
 import { UN_POURCENTAGE_POUR_LA_MARRAINE } from "./par-chapitre/un-pourcentage-pour-la-marraine";
 import { LA_LIGNE_DE_LA_RENTREE } from "./par-chapitre/la-ligne-de-la-rentree";
+import { UN_DIVIDENDE_PLUS_GROS } from "./par-chapitre/un-dividende-plus-gros";
+import { LA_SITUATION_DE_SEPTEMBRE } from "./par-chapitre/la-situation-de-septembre";
 export type { Situation } from "./types";
 
 /**
@@ -405,6 +407,8 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LA_CENTRALE_DEMANDE_UNE_RISTOURNE,
   UN_POURCENTAGE_POUR_LA_MARRAINE,
   LA_LIGNE_DE_LA_RENTREE,
+  UN_DIVIDENDE_PLUS_GROS,
+  LA_SITUATION_DE_SEPTEMBRE,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

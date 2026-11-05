@@ -1653,6 +1653,20 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Si une vendeuse indépendante vendait pour vous contre 25 % du chiffre d'affaires, que vous laisserait une vente de plus ? Combien de ventes lui faudrait-il pour payer sa formation ?",
   }),
+  "les-capitaux-propres": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le bilan et le compte de résultat.`,
+    lieux: ["bilan", "compte-de-resultat"],
+    chercher:
+      "Relevez vos capitaux propres et le résultat du tour. Si l'assemblée affectait ce résultat, combien iraient à la réserve légale, et quel dividende par action laisserait encore de quoi investir ? Et si le tour était en perte, vos capitaux propres resteraient-ils au-dessus de la moitié de votre capital ?",
+  }),
+  "les-comptes-annuels": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relisez le compte de résultat et le bilan de chacun.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "Le résultat du premier tour fait-il la moitié de celui des deux tours ensemble ? Dites pourquoi, comme pour une situation intermédiaire. Puis cherchez ce qu'une annexe devrait expliquer à votre banquier : vos amortissements, vos dettes à moins d'un an.",
+  }),
 };
 
 /**

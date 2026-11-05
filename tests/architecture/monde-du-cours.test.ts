@@ -467,6 +467,11 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   // Le BTS NDRC, bloc 2 : le plateau de téléacteurs (monde/plateau-d-atlas.ts), et son cas.
   "chapitres/le-plateau-de-teleacteurs.ts",
   "situations/par-chapitre/la-ligne-de-la-rentree.ts",
+  // Le BTS CG P2 : les capitaux propres (monde/capitaux-propres.ts) et les comptes annuels (monde/comptes-annuels.ts), et leurs cas.
+  "chapitres/les-capitaux-propres.ts",
+  "chapitres/les-comptes-annuels.ts",
+  "situations/par-chapitre/un-dividende-plus-gros.ts",
+  "situations/par-chapitre/la-situation-de-septembre.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
