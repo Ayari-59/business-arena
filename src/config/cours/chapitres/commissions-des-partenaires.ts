@@ -12,6 +12,7 @@ import {
   portefeuilleDeLAnnee,
   valeurVieAvecUnPartenaire,
 } from "../monde/relation-client";
+import { CANDIDATS, CRITERES_DES_PARTENAIRES, grilleDesPartenaires } from "../monde/selection-des-partenaires";
 import type { Chapitre, TableauDeDonnees } from "../types";
 
 /**
@@ -52,6 +53,12 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     déplace le plafond), l-apporteur (une variante chiffrée : une commission payée une fois, où le
  *     calcul de la première année devient le bon), tout-par-l-apporteur (une critique de la méthode :
  *     le canal le moins cher n'est pas celui qui suffit) ; puis la synthèse.
+ *
+ * LE COMPLÉMENT K5 (BTS NDRC, bloc 3, novembre 2026) : sélectionner et animer les partenaires. Trois
+ * étapes avant la synthèse : choisir-un-partenaire (une grille multicritère pondérée, sur
+ * monde/selection-des-partenaires.ts), les-clauses-du-contrat (ce que le contrat de partenariat doit
+ * dire, à la lumière du piège de la plateforme) et animer-et-suivre (le plan d'animation, le suivi
+ * des partenaires et la veille).
  */
 
 /** Le chapitre se joue chez ATLAS CONSEIL seule : un cabinet qui gagne des comptes d'entreprise, un à un. */
@@ -215,6 +222,15 @@ function tableauDesCanaux(x: PartenairesDuCabinet): TableauDeDonnees {
   };
 }
 
+/** La grille de sélection des partenaires (complément K5) : les critères en lignes, les candidats en colonnes. */
+function tableauDeLaGrille(): TableauDeDonnees {
+  return {
+    titre: "Trois prescripteurs candidats, notés sur 20",
+    colonnes: ["Poids", ...CANDIDATS.map((k) => k.court)],
+    lignes: CRITERES_DES_PARTENAIRES.map((c) => ({ libelle: c.nom, valeurs: [qte(c.poids), ...CANDIDATS.map((k) => qte(k.notes[c.code]))] })),
+  };
+}
+
 export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
   code: "commissions-des-partenaires",
   parcours: "ndrc",
@@ -227,7 +243,7 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
     "Une plateforme amène des comptes sans prospection, et prélève sa part chaque année. Ce qu'elle coûte vraiment sur la vie d'un compte, comparée à la conquête en propre et à un apporteur d'affaires, et jusqu'où sa commission peut monter.",
   objectifs: [
     "Calculer la commission d'un partenaire et la part de la marge qu'elle prend",
-    "Comparer un canal partenaire à la conquête en propre, à valeur vie égale",
+    "Comparer un canal partenaire à la conquête en propre, à valeur vie égale, puis choisir un partenaire sur une grille",
     "Trouver la commission plafond d'un partenaire, et éviter le piège de la première année",
     "Chiffrer la part de comptes revenus en direct qui rend un partenaire rentable",
     "Refaire la comparaison à la valeur vie actualisée, et pour une commission payée une fois",
@@ -795,6 +811,68 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
       },
     },
     {
+      id: "choisir-un-partenaire",
+      objectifs: [1],
+      type: "montants",
+      titre: "Choisir un prescripteur sur une grille",
+      notions: ["distribution_commission", "customer_acquisition_cost"],
+      tableau: () => tableauDeLaGrille(),
+      question: (c) => {
+        const x = partenairesDuCabinet(c);
+        return `${x.f.entreprise} cherche un prescripteur de plus, qui lui présente des PME. Trois candidats sont notés sur 20 pour chaque critère, et chaque critère a son poids sur 100. Calculez la note pondérée de chaque candidat, sur 20, au centième.`;
+      },
+      champs: () =>
+        grilleDesPartenaires().notes.map((k) => ({
+          libelle: `Note pondérée : ${k.court}`,
+          attendu: k.note,
+          calcul: CRITERES_DES_PARTENAIRES.map((c) => `${qte(k.notes[c.code])} × ${qte(c.poids)}`).join(" + ") + ` = ${qte(k.note * 100)}, ÷ 100 = ${qte(k.note)}`,
+        })),
+      explication: () => {
+        const g = grilleDesPartenaires();
+        return [
+          `Le ${g.retenu.nom.toLowerCase()} l'emporte, à ${qte(g.retenu.note)} sur 20 : il ouvre la porte des PME de la cible, et il se paie une fois par compte présenté. Le club, le moins cher, reste loin de la cible.`,
+          "La grille rend le choix discutable : on peut changer un poids et voir si le classement tient. Le critère du coût se lit sur la vie du compte, comme le chapitre l'a fait pour la plateforme.",
+        ];
+      },
+    },
+    {
+      id: "les-clauses-du-contrat",
+      objectifs: [3],
+      type: "choix",
+      titre: "Ce que le contrat de partenariat doit dire",
+      notions: ["distribution_commission", "customer_lifetime_value"],
+      question: () => {
+        const g = grilleDesPartenaires();
+        return `Le cabinet rédige le contrat avec le ${g.retenu.nom.toLowerCase()}. Après le piège de la plateforme, quelle clause compte d'abord ?`;
+      },
+      options: () => [
+        {
+          texte: "Une commission payée une fois, puis le compte signe en direct",
+          juste: true,
+          retour: "Oui. C'est la forme de l'apporteur : la commission ne revient pas. Le contrat dit aussi sa durée, l'exclusivité ou non, les objectifs, la résiliation, la confidentialité et le sort des données des comptes présentés.",
+        },
+        { texte: "Une exclusivité sur toute la région, pour motiver le partenaire", juste: false, retour: "Non, pas d'abord. Une exclusivité ferme les autres canaux ; elle se négocie contre des objectifs chiffrés, et une sortie si le partenaire ne les tient pas." },
+        { texte: "Une commission sur chaque mission, chaque année", juste: false, retour: "Non. C'est la forme de la plateforme : sur la vie du compte, elle coûte bien plus que la première commission. Le chapitre l'a chiffré." },
+      ],
+    },
+    {
+      id: "animer-et-suivre",
+      objectifs: [1],
+      type: "choix",
+      titre: "Animer et suivre les partenaires",
+      notions: ["distribution_commission", "customer_acquisition_cost"],
+      question: () => "Le contrat est signé. Que faut-il suivre, partenaire par partenaire, chaque trimestre ?",
+      options: () => [
+        {
+          texte: "Les présentations, les comptes gagnés et leur coût",
+          juste: true,
+          retour: "Oui. Un tableau de bord par partenaire compare son coût par compte gagné à la conquête en propre. Le plan d'animation suit : une rencontre par trimestre, un kit de présentation, des retours sur chaque contact. La veille surveille les offres concurrentes et ce qu'on dit du partenaire en ligne.",
+        },
+        { texte: "Le nombre de messages échangés avec lui, pour mesurer la relation", juste: false, retour: "Non. Le volume d'échanges ne dit pas ce que rapporte le partenaire. Ce sont les comptes gagnés, et ce qu'ils coûtent, qui le jugent." },
+        { texte: "Rien avant la fin du contrat : il est payé au résultat", juste: false, retour: "Non. Un partenaire payé au résultat peut ne rien présenter, sans coût apparent, mais en prenant la place d'un meilleur. Il s'anime et se suit, comme une équipe." },
+      ],
+    },
+    {
       id: "synthese",
       type: "lecture",
       titre: "Ce qu'il faut retenir",
@@ -805,6 +883,7 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
           `Chez ${x.f.entreprise}, un compte moyen vaut ${eur(x.v.valeurVie)} de marge sur sa vie. Gagné en propre, il coûte ${eur(x.acq.cac)} une fois et laisse ${eur(x.v.enPropre)}. Par la plateforme, à ${pct(x.plateforme.commission * 100)}, il ne coûte que ${eur(x.v.commissionPremiereAnnee)} la première année, mais ${eur(x.v.commissionsSurLaVie)} sur sa vie, et laisse ${eur(x.v.avecLePartenaire)}. Sa commission plafond est de ${pct(auDixieme(x.plafond))}, pas de ${pct(auDixieme(x.plafondALaPremiereAnnee))} : le piège est de comparer la conquête à la seule première année.`,
           `Les retours en direct font le prix du partenaire : à ${pct(x.plateforme.commission * 100)}, il faudrait que ${pct(x.retoursEntiers ?? 100)} des comptes reviennent en direct ; sans aucun retour, le plafond tomberait à ${pct(auDixieme(x.plafondSansRetour))}. À la valeur vie actualisée, le plafond monte à ${pct(auDixieme(x.plafondActualise))}, car la plateforme se paie plus tard. L'apporteur, payé une fois (${eur(x.ap.commissionPremiereAnnee)}), est le canal le moins cher, mais il ne remplace pas la conquête.`,
           "Au niveau de l'examen, vous savez comparer un canal partenaire à la conquête en propre à valeur vie égale, simple ou actualisée, trouver sa commission plafond et la part de retours en direct qui le rend rentable, adapter le calcul à une commission payée une fois, et dire ce qu'un canal bon marché ne fait pas.",
+          "Un partenaire se choisit sur une grille pondérée. Son contrat dit comment il est payé, une fois ou chaque année, et il s'anime et se suit chaque trimestre, compte par compte.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
         ];
       },

@@ -36,6 +36,7 @@ import {
   valeurVieAvecUnPartenaire,
   valeurVieClient,
 } from "../../src/config/cours/monde/relation-client";
+import { CANDIDATS, CRITERES_DES_PARTENAIRES, grilleDesPartenaires } from "../../src/config/cours/monde/selection-des-partenaires";
 
 /**
  * LA RELATION CLIENT DU COURS (monde/relation-client.ts sur monde/atlas-conseil.ts), REFAITE À LA MAIN.
@@ -604,5 +605,22 @@ describe("la garde voit le modèle et la fiche", () => {
     expect(prixPlancher({ ...f, prixCatalogue: 900 }).margeDeManoeuvre).toBe(900 - 630);
     expect(prixPlancher({ ...f, chargesFixes: { ...f.chargesFixes, loyer: 66_000 + 19_200 } }).coutComplet).toBe(150 + 940_800 / 1_920);
     expect(valeurDUnClient({ ...f, tauxDActualisation: 0.05 }).actualisee).toBe(70_000);
+  });
+});
+
+describe("8. la sélection des partenaires (complément K5)", () => {
+  it("la grille : des poids qui font 100, des notes sur 20, et le réseau d'experts-comptables en tête à 14,7", () => {
+    expect(somme(CRITERES_DES_PARTENAIRES.map((c) => c.poids))).toBe(100);
+    for (const k of CANDIDATS) for (const c of CRITERES_DES_PARTENAIRES) expect(k.notes[c.code] >= 0 && k.notes[c.code] <= 20, `${k.code} ${c.code}`).toBe(true);
+    // Refaite à la main : Σ note × poids ÷ 100.
+    const main = CANDIDATS.map((k) => auCentime(somme(CRITERES_DES_PARTENAIRES.map((c) => k.notes[c.code] * c.poids)) / 100));
+    expect(main).toEqual([14.7, 12.25, 13.2]);
+    const g = grilleDesPartenaires();
+    expect(g.notes.map((k) => k.note)).toEqual(main);
+    expect([g.retenu.code, g.poidsTotal]).toEqual(["experts-comptables", 100]);
+  });
+
+  it("le prescripteur s'ajoute aux partenaires de la fiche sans les changer : l'apporteur et la plateforme restent seuls", () => {
+    expect(f.partenaires.map((p) => p.code)).toEqual(["apporteur", "plateforme"]);
   });
 });

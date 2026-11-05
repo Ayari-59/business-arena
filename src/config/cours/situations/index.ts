@@ -187,6 +187,8 @@ import { LE_DEGAT_DES_EAUX_DANS_LA_RESERVE } from "./par-chapitre/le-degat-des-e
 import { UN_APPRENTI_OU_UN_TEMPS_PARTIEL } from "./par-chapitre/un-apprenti-ou-un-temps-partiel";
 import { LE_CHALLENGE_DU_MERINOS } from "./par-chapitre/le-challenge-du-merinos";
 import { RETENIR_LA_VENDEUSE } from "./par-chapitre/retenir-la-vendeuse";
+import { LA_CENTRALE_DEMANDE_UNE_RISTOURNE } from "./par-chapitre/la-centrale-demande-une-ristourne";
+import { UN_POURCENTAGE_POUR_LA_MARRAINE } from "./par-chapitre/un-pourcentage-pour-la-marraine";
 export type { Situation } from "./types";
 
 /**
@@ -389,6 +391,8 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   UN_APPRENTI_OU_UN_TEMPS_PARTIEL,
   LE_CHALLENGE_DU_MERINOS,
   RETENIR_LA_VENDEUSE,
+  LA_CENTRALE_DEMANDE_UNE_RISTOURNE,
+  UN_POURCENTAGE_POUR_LA_MARRAINE,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

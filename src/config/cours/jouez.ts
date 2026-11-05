@@ -1597,6 +1597,20 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
         "Dans le tableau des références, comparez la marge de chacune aux deux tours. La référence renforcée a-t-elle vendu plus, ou a-t-elle manqué de demande ? Le gain couvre-t-il ce que l'autre a perdu ?",
     };
   },
+  "se-faire-referencer": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relevez les ventes de chaque clientèle, intermédiaire compris, et votre coût variable unitaire.`,
+    lieux: ["marche-du-tour", "analyse-des-couts"],
+    chercher:
+      "Combien vous laisse une unité vendue par l'intermédiaire, une fois payé le coût variable ? Si un distributeur vous demandait une remise d'un euro par unité pour garder votre place, combien de ventes en plus faudrait-il pour la payer ?",
+  }),
+  "le-reseau-de-vente-directe": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis relevez votre chiffre d'affaires, votre marge sur coût variable et vos ventes.`,
+    lieux: ["compte-de-resultat", "analyse-des-couts"],
+    chercher:
+      "Si une vendeuse indépendante vendait pour vous contre 25 % du chiffre d'affaires, que vous laisserait une vente de plus ? Combien de ventes lui faudrait-il pour payer sa formation ?",
+  }),
 };
 
 /**

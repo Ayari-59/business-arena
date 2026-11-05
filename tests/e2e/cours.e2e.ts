@@ -1017,6 +1017,13 @@ describe.each([
   { code: "un-apprenti-ou-un-temps-partiel", entreprise: "boutique", telephone: true },
   { code: "le-challenge-du-merinos", entreprise: "boutique" },
   { code: "retenir-la-vendeuse", entreprise: "boutique", telephone: true },
+  // Le BTS NDRC, bloc 3 : se faire référencer chez un distributeur (NOVA), le réseau de vente directe (MAILLE & CO), un curseur et un laboratoire chacun, puis leurs cas.
+  { code: "se-faire-referencer", entreprise: "nova" },
+  { code: "se-faire-referencer", entreprise: "nova", telephone: true },
+  { code: "le-reseau-de-vente-directe", entreprise: "boutique" },
+  { code: "le-reseau-de-vente-directe", entreprise: "boutique", telephone: true },
+  { code: "la-centrale-demande-une-ristourne", entreprise: "nova" },
+  { code: "un-pourcentage-pour-la-marraine", entreprise: "boutique", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se

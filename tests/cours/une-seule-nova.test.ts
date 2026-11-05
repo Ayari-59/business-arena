@@ -72,6 +72,8 @@ import { ANNEE_TYPE, DELAIS_DE_LA_FICHE, besoinAuBilan, bfrNormatif } from "../.
 import { APPORT_DE_LA_BUSINESS_ANGEL, BESOIN_EXTERNE, engagementBancaire, engagementsEnCours } from "../../src/config/cours/monde/acteurs-du-financement";
 import { BESOIN_DE_FONDS } from "../../src/config/cours/monde/comptabilite-approfondie";
 import { DELAI_DE_CAMPUSTECH } from "../../src/config/cours/monde/nova-gestion";
+import { AUTRES_COUTS_PAR_ENCEINTE, COMPOSANTS_PAR_ENCEINTE, DELAI_CONVENU_DE_CAMPUSTECH, PRIX_DE_L_ENCEINTE } from "../../src/config/cours/monde/nova-gestion";
+import { CADRE_DE_LA_NEGOCIATION, MAGASINS_DE_CAMPUSTECH, referencementDeNova } from "../../src/config/cours/monde/referencement-de-nova";
 
 /**
  * UNE SEULE NOVA DANS LE MONDE DU COURS (réconciliation d'octobre 2026). Les fiches qui disent la
@@ -721,5 +723,19 @@ describe("une seule NOVA, de la clôture de N au diagnostic de trois exercices",
     expect(EFFECTIFS.N).toBe(PAIE_DU_MOIS.effectif);
     // Le résultat de N est affecté sans dividende : aucun dividende en N + 1.
     expect(n1!.dividendes).toBe(0);
+  });
+});
+
+describe("une seule NOVA, chez son distributeur CampusTech (BTS NDRC, se faire référencer)", () => {
+  it("le référencement lit le prix de 59 €, le coût variable de 38 € et les 320 enceintes par mois de CampusTech", () => {
+    const r = referencementDeNova(NOVA_GESTION);
+    const a = r.aujourdHui;
+    expect([a.prixDAchat, a.coutVariable]).toEqual([PRIX_DE_L_ENCEINTE, COMPOSANTS_PAR_ENCEINTE + AUTRES_COUTS_PAR_ENCEINTE]);
+    expect(a.parMagasin * MAGASINS_DE_CAMPUSTECH).toBe(VENTES_A_CAMPUSTECH[0]);
+    expect(a.ventesDeLAnnee).toBe(12 * VENTES_A_CAMPUSTECH[0]);
+    // Aujourd'hui, ni remise ni commission : le canal indirect de la mercatique, au même délai convenu.
+    expect([a.remise, a.cooperation, MERCATIQUE_DE_NOVA.canal.commission]).toEqual([0, 0, 0]);
+    expect(a.margeDeNova).toBe(12 * 320 * (59 - 38));
+    expect(CADRE_DE_LA_NEGOCIATION.delaiDePaiement).toBe(DELAI_CONVENU_DE_CAMPUSTECH);
   });
 });
