@@ -199,6 +199,8 @@ import { CREER_L_ATELIER_DE_REPARATION } from "./par-chapitre/creer-l-atelier-de
 import { LA_COMMANDE_DE_NOEL_DE_CAMPUSTECH } from "./par-chapitre/la-commande-de-noel-de-campustech";
 import { VIBRA_REPASSE_COMMANDE } from "./par-chapitre/vibra-repasse-commande";
 import { LE_CHEQUE_QUI_N_EST_PAS_PASSE } from "./par-chapitre/le-cheque-qui-n-est-pas-passe";
+import { LA_FACTURE_RECUE_DEUX_FOIS } from "./par-chapitre/la-facture-recue-deux-fois";
+import { LA_GARANTIE_DE_DEUX_ANS } from "./par-chapitre/la-garantie-de-deux-ans";
 export type { Situation } from "./types";
 
 /**
@@ -413,6 +415,8 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LA_COMMANDE_DE_NOEL_DE_CAMPUSTECH,
   VIBRA_REPASSE_COMMANDE,
   LE_CHEQUE_QUI_N_EST_PAS_PASSE,
+  LA_FACTURE_RECUE_DEUX_FOIS,
+  LA_GARANTIE_DE_DEUX_ANS,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

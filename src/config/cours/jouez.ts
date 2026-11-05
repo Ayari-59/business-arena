@@ -1679,6 +1679,19 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     lieux: ["budget-de-tresorerie", "bilan"],
     chercher:
       "Quand vos fournisseurs sont-ils payés, et votre trésorerie passe-t-elle sous zéro avant que vos clients ne paient ? Retrouvez la trésorerie du budget au bilan : si elles différaient, quelles opérations chercheriez-vous d'abord, comme dans un rapprochement ?",
+  "securiser-les-processus": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis relisez le compte de résultat et le bilan.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "Faites un cadrage : la TVA collectée qu'aurait déclarée l'entreprise, au taux normal, sur le chiffre d'affaires du tour, et la dette de TVA au bilan. L'écart s'explique-t-il ? Puis nommez le paiement du tour qui, détourné, coûterait le plus, et la procédure qui l'aurait protégé.",
+  }),
+  "le-dossier-de-revision": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis relisez le compte de résultat et le bilan.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "Révisez le tour comme un dossier : quelles dettes envers le personnel l'arène ne montre-t-elle pas (congés acquis, participation) ? Supposez une provision pour garantie de 2 % du chiffre d'affaires : de combien baisseraient le résultat avant impôt, puis l'impôt ?",
   }),
 };
 

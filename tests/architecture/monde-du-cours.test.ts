@@ -477,6 +477,11 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "chapitres/fournisseurs-et-banque.ts",
   "situations/par-chapitre/vibra-repasse-commande.ts",
   "situations/par-chapitre/le-cheque-qui-n-est-pas-passe.ts",
+  // Le BTS CG P1 et P2, agent C : sécuriser les processus (monde/securite-des-processus.ts) et le dossier de révision (monde/dossier-de-revision.ts), et leurs cas.
+  "chapitres/securiser-les-processus.ts",
+  "chapitres/le-dossier-de-revision.ts",
+  "situations/par-chapitre/la-facture-recue-deux-fois.ts",
+  "situations/par-chapitre/la-garantie-de-deux-ans.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
