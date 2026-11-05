@@ -9,10 +9,10 @@ import type { Situation } from "../types";
 import { auCentime } from "../../monde/amortissement";
 
 /**
- * CAS PRATIQUE DU CHAPITRE « LA CONCORDANCE DES RÉSULTATS » : SI LA PRÉSIDENTE SE PAYAIT (contrôle de
+ * CAS PRATIQUE DU CHAPITRE « LA CONCORDANCE DES RÉSULTATS » : SI LE PRÉSIDENT SE PAYAIT (contrôle de
  * gestion, palier 4).
  *
- * La présidente envisage de se verser ce que la comptabilité de gestion compte pour son travail. Sur les
+ * Le président envisage de se verser ce que la comptabilité de gestion compte pour son travail. Sur les
  * chiffres de l'exercice N, l'expert-comptable demande ce que deviendraient le résultat des comptes,
  * l'impôt et le tableau de passage. L'élève voit la charge supplétive devenir une charge réelle : la
  * comptabilité générale la porte, l'impôt baisse avec le résultat (au barème de la fiche, 15 % puis
@@ -29,7 +29,7 @@ const enSuite = (x: number) => `${x < 0 ? "−" : "+"} ${eur(Math.abs(x))}`;
 const donnee = (valeur: number): CelluleACompleter => ({ valeur });
 const aSaisir = (valeur: number, calcul: string, autres: Partial<CelluleACompleter> = {}): CelluleACompleter => ({ valeur, saisir: true, calcul, ...autres });
 
-/** Les chiffres du cas : l'exercice tel qu'il a été, et l'exercice avec la paie de la présidente. */
+/** Les chiffres du cas : l'exercice tel qu'il a été, et l'exercice avec la paie du président. */
 export function siLaGeranteSePayait(c: Pick<Cas, "code">) {
   const x = concordanceDeNova(c);
   const { k } = x;
@@ -51,8 +51,8 @@ export const SI_LA_GERANTE_SE_PAYAIT: Situation = {
   blocs: [],
   reprend: ["la-concordance-des-resultats"],
   commanditaire: "L'expert-comptable",
-  titre: "Si la présidente se payait",
-  accroche: "La présidente pense se verser ce que la gestion compte pour son travail. Que deviendraient le résultat des comptes, l'impôt et le tableau de passage ?",
+  titre: "Si le président se payait",
+  accroche: "Le président pense se verser ce que la gestion compte pour son travail. Que deviendraient le résultat des comptes, l'impôt et le tableau de passage ?",
   objectifs: [
     "Distinguer une charge supplétive d'une charge réelle",
     "Recalculer un résultat de l'exercice et son impôt quand une charge change",
@@ -70,7 +70,7 @@ export const SI_LA_GERANTE_SE_PAYAIT: Situation = {
       type: "lecture",
       titre: "La question de l'expert-comptable",
       texte: () => [
-        `« La présidente pense se verser un salaire, ${eur(REMUNERATION_DE_LA_GERANTE)} par mois charges comprises, ce que votre comptabilité de gestion compte déjà pour son travail. Sur les chiffres de l'exercice N, que seraient devenus le résultat des comptes, l'impôt et votre tableau de passage ? »`,
+        `« Le président pense se verser un salaire, ${eur(REMUNERATION_DE_LA_GERANTE)} par mois charges comprises, ce que votre comptabilité de gestion compte déjà pour son travail. Sur les chiffres de l'exercice N, que seraient devenus le résultat des comptes, l'impôt et votre tableau de passage ? »`,
         "Pas de cours cette fois : vous avez les chiffres de la clôture, le barème de l'impôt et le tableau de passage de l'exercice. Le salaire serait déductible ; rien d'autre ne changerait.",
       ],
       tableau: (c) => {
@@ -85,7 +85,7 @@ export const SI_LA_GERANTE_SE_PAYAIT: Situation = {
             { libelle: `Impôt sur les sociétés (${b.tauxReduit * 100} % jusqu'à ${eur(b.plafondDuTauxReduit)}, ${b.tauxNormal * 100} % au-delà, à l'euro)`, valeurs: [eur(k.cg.impot.impot)] },
             { libelle: "Résultat net", valeurs: [eur(k.resultatGeneral)] },
             { libelle: "Résultat analytique de l'exercice", valeurs: [eur(k.exercice.resultatAnalytique)] },
-            { libelle: "Charges supplétives (le travail de la présidente)", valeurs: [eur(k.lignes.supletives)] },
+            { libelle: "Charges supplétives (le travail du président)", valeurs: [eur(k.lignes.supletives)] },
             { libelle: "Charges non incorporées, impôt compris", valeurs: [eur(x.totalNonIncorporees)] },
             { libelle: "Produits non incorporés", valeurs: [eur(k.lignes.produitsNonIncorpores)] },
             { libelle: "Différence d'incorporation, boni, évaluation du stock et arrondis", valeurs: [eur(auCentime(k.lignes.differenceDIncorporation + k.lignes.boniDInventaire + k.lignes.evaluationDuStock + k.lignes.arrondis))] },
@@ -99,7 +99,7 @@ export const SI_LA_GERANTE_SE_PAYAIT: Situation = {
       type: "montants",
       titre: "Le résultat avec le salaire",
       notions: ["income_statement"],
-      question: () => "Avec le salaire de la présidente sur les 12 mois, que deviennent le résultat avant impôt, l'impôt sur les sociétés et le résultat net de l'exercice ?",
+      question: () => "Avec le salaire du président sur les 12 mois, que deviennent le résultat avant impôt, l'impôt sur les sociétés et le résultat net de l'exercice ?",
       champs: (c) => {
         const n = siLaGeranteSePayait(c);
         const b = EXERCICE_DE_NOVA.impot;
@@ -127,17 +127,17 @@ export const SI_LA_GERANTE_SE_PAYAIT: Situation = {
       titre: "Le nouveau tableau de passage",
       notions: ["full_unit_cost", "income_statement"],
       question: () =>
-        "Refaites le tableau de passage de l'exercice avec le salaire de la présidente. Le résultat analytique ne change pas : la gestion comptait déjà ce travail. Écrivez chaque différence avec son signe.",
+        "Refaites le tableau de passage de l'exercice avec le salaire du président. Le résultat analytique ne change pas : la gestion comptait déjà ce travail. Écrivez chaque différence avec son signe.",
       grille: (c) => {
         const n = siLaGeranteSePayait(c);
         const { k } = n.x;
         const l = k.lignes;
         return {
-          titre: "Du résultat analytique au résultat des comptes, avec le salaire de la présidente",
+          titre: "Du résultat analytique au résultat des comptes, avec le salaire du président",
           colonnes: ["Montant"],
           lignes: [
             { libelle: "Résultat analytique de l'exercice", cellules: [donnee(k.exercice.resultatAnalytique)] },
-            { libelle: "Charges supplétives", cellules: [aSaisir(0, "le travail de la présidente est payé : il n'est plus supplétif, 0 €", { indice: "ce que seule la gestion compte, maintenant que la présidente est payée" })] },
+            { libelle: "Charges supplétives", cellules: [aSaisir(0, "le travail du président est payé : il n'est plus supplétif, 0 €", { indice: "ce que seule la gestion compte, maintenant que le président est payé" })] },
             { libelle: "Produits non incorporés", cellules: [aSaisir(l.produitsNonIncorpores, `inchangés : ${eur(l.produitsNonIncorpores)}`)] },
             { libelle: "Charges non incorporées", cellules: [aSaisir(n.nonIncorporees, `${eur(n.x.totalNonIncorporees)} − ${eur(n.impotDeLaFiche)} + ${eur(n.impot.impot)} = ${eur(-n.nonIncorporees)}, qui se retranchent : ${eur(n.nonIncorporees)}`, { indice: "les mêmes charges, avec le nouvel impôt" })] },
             { libelle: "Différence d'incorporation de l'usure", cellules: [aSaisir(l.differenceDIncorporation, `inchangée : ${eur(l.differenceDIncorporation)}`)] },
@@ -174,7 +174,7 @@ export const SI_LA_GERANTE_SE_PAYAIT: Situation = {
           },
           { texte: `Les deux résultats perdraient ${eur(n.salaire)}, le salaire de 12 mois`, juste: false, retour: "Non : la gestion comptait déjà ce travail, en charge supplétive. Le salaire ne change pas son coût, il ne change que les comptes." },
           { texte: `Les comptes perdraient ${eur(n.salaire)}, et la gestion ne bougerait pas`, juste: false, retour: `Non : le salaire est déductible, l'impôt baisse. Le résultat net ne perd que ${eur(n.baisseDuNet)}.` },
-          { texte: `La gestion perdrait ${eur(n.salaire)}, les comptes ${eur(n.baisseDuNet)}`, juste: false, retour: "Non : la gestion ne perd rien, le travail de la présidente y était déjà compté. Seuls les comptes découvrent la charge." },
+          { texte: `La gestion perdrait ${eur(n.salaire)}, les comptes ${eur(n.baisseDuNet)}`, juste: false, retour: "Non : la gestion ne perd rien, le travail du président y était déjà compté. Seuls les comptes découvrent la charge." },
         ];
       },
     },

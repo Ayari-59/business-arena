@@ -12,7 +12,7 @@ import { auCentime } from "../../monde/amortissement";
  * gestion, palier 4).
  *
  * En décembre, Électro-Composants fermait : NOVA a acheté 1 500 jeux à un grossiste, Composants
- * Express, un euro plus cher (monde/exercice-de-nova.ts). La présidente entend dire que ce dépannage a
+ * Express, un euro plus cher (monde/exercice-de-nova.ts). Le président entend dire que ce dépannage a
  * coûté 1 500 € au résultat du mois. L'élève refait seul la fiche de stock de décembre comme si le
  * grossiste avait vendu au prix habituel (le centre approvisionnement, imputé en euros d'achats, change
  * aussi), puis compare les deux résultats : une part du surcoût est sortie avec les jeux consommés,
@@ -47,13 +47,13 @@ export const LE_DEPANNAGE_DU_GROSSISTE: Situation = {
   palier: 4,
   blocs: [],
   reprend: ["le-cout-complet-pas-a-pas"],
-  commanditaire: "La présidente",
+  commanditaire: "Le président",
   titre: "Le dépannage du grossiste",
   accroche: "Le grossiste de décembre a vendu ses jeux un euro plus cher. Combien ce dépannage a-t-il vraiment coûté au résultat du mois ?",
   objectifs: [
     "Refaire le coût d'achat et la fiche de stock au coût moyen pondéré à un autre prix d'achat",
     "Distinguer ce qu'un surcoût d'achat retire au résultat du mois et ce qu'il laisse dans le stock",
-    "Rendre à la présidente une réponse chiffrée",
+    "Rendre au président une réponse chiffrée",
   ],
   libre: false,
   entreprises: {
@@ -64,7 +64,7 @@ export const LE_DEPANNAGE_DU_GROSSISTE: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La question de la présidente",
+      titre: "La question du président",
       texte: (c) => {
         const n = depannageDuGrossiste(c);
         return [
@@ -168,7 +168,7 @@ export const LE_DEPANNAGE_DU_GROSSISTE: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse à la présidente",
+      titre: "Votre réponse au président",
       notions: ["weighted_average_cost"],
       question: (c) => `Le dépannage a-t-il coûté ${eur(depannageDuGrossiste(c).surcoutDesAchats)} au résultat de décembre ? Quelle réponse lui rendez-vous ?`,
       options: (c) => {

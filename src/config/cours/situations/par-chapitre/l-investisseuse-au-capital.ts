@@ -9,8 +9,8 @@ import type { Situation } from "../types";
  * CAS PRATIQUE DU CHAPITRE « LE BILAN » : L'INVESTISSEUSE AU CAPITAL
  * (Bac STMG, gestion et finance, palier 1).
  *
- * Une investisseuse propose d'entrer au capital en apportant de l'argent frais. La
- * présidente veut savoir, avant de la recevoir, ce que cet apport changerait au bilan du
+ * Une investisseuse propose d'entrer au capital en apportant de l'argent frais. Le
+ * président veut savoir, avant de la recevoir, ce que cet apport changerait au bilan du
  * 31 décembre : ce qui bouge et ce qui ne bouge pas, le nouveau total, la part des
  * capitaux propres dans le financement, la trésorerie. L'élève refait seul les calculs
  * du chapitre (le total du bilan, la part des capitaux propres, l'argent disponible face
@@ -68,15 +68,15 @@ export const L_INVESTISSEUSE_AU_CAPITAL: Situation = {
   palier: 1,
   blocs: [],
   reprend: ["lire-le-bilan"],
-  commanditaire: "La présidente",
+  commanditaire: "Le président",
   titre: "L'investisseuse au capital",
   accroche:
-    "Une investisseuse propose d'apporter de l'argent frais et d'entrer au capital. Avant de la recevoir, la présidente veut savoir ce que cet apport changerait au bilan.",
+    "Une investisseuse propose d'apporter de l'argent frais et d'entrer au capital. Avant de la recevoir, le président veut savoir ce que cet apport changerait au bilan.",
   objectifs: [
     "Calculer le total du bilan et la part des capitaux propres",
     "Dire quels postes un apport en argent fait bouger",
     "Refaire le bilan après l'apport : total, part des capitaux propres, trésorerie",
-    "Rédiger une réponse chiffrée à la présidente",
+    "Rédiger une réponse chiffrée au président",
   ],
   libre: false,
   entreprises: {
@@ -87,7 +87,7 @@ export const L_INVESTISSEUSE_AU_CAPITAL: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La demande de la présidente",
+      titre: "La demande du président",
       texte: (c) => {
         const r = investisseuseAuCapital(c);
         return [
@@ -191,8 +191,8 @@ export const L_INVESTISSEUSE_AU_CAPITAL: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse à la présidente",
-      question: () => "Quelle phrase envoyez-vous à la présidente ?",
+      titre: "Votre réponse au président",
+      question: () => "Quelle phrase envoyez-vous au président ?",
       options: (c) => {
         const r = investisseuseAuCapital(c);
         return [

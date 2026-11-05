@@ -466,7 +466,7 @@ export const LE_DOSSIER_DE_REVISION: Chapitre = {
       notions: ["payroll", "income_statement"],
       evenement: (c) => {
         const x = revisionDuChapitre(c);
-        return `La présidente a signé cette année un accord de participation volontaire. Le cabinet a calculé la réserve spéciale de l'exercice : ${eur(x.participation)}, que les salariés recevront en N+2. Passez-la.`;
+        return `Le président a signé cette année un accord de participation volontaire. Le cabinet a calculé la réserve spéciale de l'exercice : ${eur(x.participation)}, que les salariés recevront en N+2. Passez-la.`;
       },
       ecriture: (c) => {
         const x = revisionDuChapitre(c);
@@ -723,7 +723,7 @@ export const LE_DOSSIER_DE_REVISION: Chapitre = {
       defi: () => {
         const depart = laboratoireDuDossier(departDuDossier());
         return {
-          consigne: `La présidente aimerait payer au moins ${eur(BAISSE_D_IMPOT_DU_DEFI)} d'impôt de moins que les ${eur(depart.impot)} du dossier. Trouvez des estimations qui y arrivent.`,
+          consigne: `Le président aimerait payer au moins ${eur(BAISSE_D_IMPOT_DU_DEFI)} d'impôt de moins que les ${eur(depart.impot)} du dossier. Trouvez des estimations qui y arrivent.`,
           atteint: (p) => depart.impot - laboratoireDuDossier(p).impot >= BAISSE_D_IMPOT_DU_DEFI,
           indice: (p) => {
             const l = laboratoireDuDossier(p);

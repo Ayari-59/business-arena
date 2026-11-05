@@ -197,7 +197,7 @@ export const SECURISER_LES_PROCESSUS: Chapitre = {
         const x = securiteDuChapitre(c);
         return [
           `Ce chapitre se joue dans la simulation du cours, chez ${x.entreprise}, en N+1. L'exercice N est clos : on n'en change aucun chiffre, on contrôle comment il a été produit.`,
-          `${x.entreprise} n'a pas de service comptable. Ses salariés travaillent à l'atelier. La comptabilité se partage entre la présidente, le chef d'équipe et le cabinet d'expertise comptable ; NOVA et le cabinet partagent un PGI en ligne.`,
+          `${x.entreprise} n'a pas de service comptable. Ses salariés travaillent à l'atelier. La comptabilité se partage entre le président, le chef d'équipe et le cabinet d'expertise comptable ; NOVA et le cabinet partagent un PGI en ligne.`,
           "Vous êtes le collaborateur du cabinet. Votre mission : décrire les processus, repérer leurs risques, faire les contrôles de cohérence, et rendre un compte rendu avec vos propositions.",
           "Le contrôle interne n'est pas une méfiance envers les personnes. Ce sont les règles qui font qu'une erreur ou une fraude se voit avant de coûter.",
         ];
@@ -232,23 +232,23 @@ export const SECURISER_LES_PROCESSUS: Chapitre = {
       titre: "Quand la séparation est impossible",
       notions: ["payment_terms"],
       question: () =>
-        "La présidente signe les commandes et signe aussi les virements : elle autorise et elle détient les fonds. Dans une entreprise de cette taille, impossible de faire autrement. Que fait le cabinet ?",
+        "Le président signe les commandes et signe aussi les virements : il autorise et il détient les fonds. Dans une entreprise de cette taille, impossible de faire autrement. Que fait le cabinet ?",
       options: () => [
         {
           texte: "Il compense : rapprochements faits par un autre qu'elle",
           juste: true,
           retour:
-            "Oui. Quand la séparation est impossible, un contrôle compensatoire la remplace : le cabinet rapproche commande, réception et facture avant le bon à payer, puis le relevé bancaire après. La présidente décide, un autre vérifie.",
+            "Oui. Quand la séparation est impossible, un contrôle compensatoire la remplace : le cabinet rapproche commande, réception et facture avant le bon à payer, puis le relevé bancaire après. Le président décide, un autre vérifie.",
         },
         {
-          texte: "Il retire la signature bancaire à la présidente et la confie au chef d'équipe de l'atelier",
+          texte: "Il retire la signature bancaire au président et la confie au chef d'équipe de l'atelier",
           juste: false,
-          retour: "Ce serait donner les fonds à celui qui reçoit les biens : un autre cumul, plus dangereux. La présidente garde la signature ; on contrôle autour d'elle.",
+          retour: "Ce serait donner les fonds à celui qui reçoit les biens : un autre cumul, plus dangereux. Le président garde la signature ; on contrôle autour de lui.",
         },
         {
           texte: "Rien : la dirigeante d'une petite entreprise est par nature au-dessus de tout contrôle",
           juste: false,
-          retour: "Le contrôle ne vise pas sa probité : il protège aussi la présidente contre ses propres erreurs, et contre ceux qui se font passer pour un fournisseur.",
+          retour: "Le contrôle ne vise pas sa probité : il protège aussi le président contre ses propres erreurs, et contre ceux qui se font passer pour un fournisseur.",
         },
       ],
     },
@@ -263,7 +263,7 @@ export const SECURISER_LES_PROCESSUS: Chapitre = {
         "Le PGI partagé donne à chaque utilisateur des droits. Attribuez chaque droit à un seul titulaire, de sorte que personne ne puisse à la fois créer une dette, la payer et en effacer la trace.",
       relance: "Celui qui saisit ne paie pas ; celui qui paie valide ce qui touche aux coordonnées bancaires ; celui qui reçoit déclare ce qu'il a reçu ; le contrôle final revient à qui ne saisit pas.",
       categories: [
-        { code: "presidente", libelle: "La présidente" },
+        { code: "presidente", libelle: "Le président" },
         { code: "chef-d-equipe", libelle: "Le chef d'équipe" },
         { code: "collaborateur", libelle: "Le collaborateur du cabinet" },
         { code: "expert-comptable", libelle: "L'expert-comptable" },
@@ -282,7 +282,7 @@ export const SECURISER_LES_PROCESSUS: Chapitre = {
       tableau: leCourriel,
       question: (c) => {
         const x = securiteDuChapitre(c);
-        return `Le ${COURRIEL_FRAUDULEUX.date.jour} décembre N, ce courriel arrive. Pariez : si la présidente vire la facture ${dE(x.fournisseur)} sur le nouvel IBAN et que le courriel est faux, que perd ${x.entreprise} ?`;
+        return `Le ${COURRIEL_FRAUDULEUX.date.jour} décembre N, ce courriel arrive. Pariez : si le président vire la facture ${dE(x.fournisseur)} sur le nouvel IBAN et que le courriel est faux, que perd ${x.entreprise} ?`;
       },
       options: () => {
         const voir = "L'étape suivante dit ce que la procédure fait de ce courriel, puis on chiffrera.";
@@ -307,7 +307,7 @@ export const SECURISER_LES_PROCESSUS: Chapitre = {
           {
             texte: "Un contre-appel au numéro déjà connu du fournisseur",
             juste: true,
-            retour: `Oui. Le numéro du fichier des fournisseurs, pas celui du courriel. ${x.fournisseur}, rappelé, n'a jamais changé de banque. La présidente ne valide la modification qu'après ce contre-appel, et le PGI garde la trace des deux.`,
+            retour: `Oui. Le numéro du fichier des fournisseurs, pas celui du courriel. ${x.fournisseur}, rappelé, n'a jamais changé de banque. Le président ne valide la modification qu'après ce contre-appel, et le PGI garde la trace des deux.`,
           },
           {
             texte: "Une réponse au courriel, pour demander au fournisseur de confirmer le nouvel IBAN par écrit",
@@ -524,7 +524,7 @@ export const SECURISER_LES_PROCESSUS: Chapitre = {
           retour: `Oui. Le fichier des écritures comptables, tiré du PGI, au format normé : journal, numéro et date de l'écriture, compte, pièce, libellé, débit, crédit, lettrage, date de validation. Ne pas le remettre coûte une amende de ${eur(CONTROLE_FISCAL.amendePourDefautDeFec)}.`,
         },
         {
-          texte: "Une copie papier du grand livre et de la balance, imprimée et signée par la présidente",
+          texte: "Une copie papier du grand livre et de la balance, imprimée et signée par le président",
           juste: false,
           retour: "Une comptabilité tenue sur un logiciel se remet sous forme de fichier, le FEC : le vérificateur le traite lui-même, avec ses propres outils.",
         },
@@ -566,7 +566,7 @@ export const SECURISER_LES_PROCESSUS: Chapitre = {
       id: "le-compte-rendu",
       objectifs: [4],
       type: "choix",
-      titre: "Le compte rendu à la présidente",
+      titre: "Le compte rendu au président",
       notions: ["payment_terms"],
       question: (c) => {
         const x = securiteDuChapitre(c);

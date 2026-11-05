@@ -13,7 +13,7 @@ import type { Situation } from "../types";
  * Le chapitre chiffrait une demande des salariés ; le cas chiffre celle d'un autre acteur, les
  * clients : un prix 5 % plus bas, toute l'année, contre la promesse de commander 5 % d'enceintes de
  * plus. L'élève reprend les calculs du chapitre (la part de chacun dans ce que paient les clients,
- * les écarts d'une année refaite) et répond à la présidente : qui gagnerait, qui paierait. La question
+ * les écarts d'une année refaite) et répond au président : qui gagnerait, qui paierait. La question
  * est neuve : une baisse de prix touche plus d'acteurs qu'une hausse de salaire (les clients paient
  * moins chaque enceinte mais en achètent davantage, les fournisseurs livrent plus).
  *
@@ -91,9 +91,9 @@ export const LES_CLIENTS_DEMANDENT_UNE_BAISSE: Situation = {
   palier: 1,
   blocs: [],
   reprend: ["les-acteurs-et-la-valeur"],
-  commanditaire: "La présidente",
+  commanditaire: "Le président",
   titre: "Les clients demandent une baisse",
-  accroche: `Les clients demandent un prix ${baisse} plus bas, et promettent de commander plus. Avant de répondre, la présidente veut savoir qui y gagnerait et qui la paierait.`,
+  accroche: `Les clients demandent un prix ${baisse} plus bas, et promettent de commander plus. Avant de répondre, le président veut savoir qui y gagnerait et qui la paierait.`,
   objectifs: [
     "Calculer la part de chaque acteur dans ce que paient les clients",
     "Chiffrer ce qu'une demande change pour chaque acteur",
@@ -163,9 +163,9 @@ export const LES_CLIENTS_DEMANDENT_UNE_BAISSE: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse à la présidente",
+      titre: "Votre réponse au président",
       notions: ["income_statement"],
-      question: () => "Quelle phrase envoyez-vous à la présidente ?",
+      question: () => "Quelle phrase envoyez-vous au président ?",
       options: (c) => {
         const k = baisseDemandee();
         const chiffres = `Le résultat net varie de ${eur(k.ecartDeResultat)}, l'impôt de ${eur(k.ecartDImpot)}, les achats et services de ${eur(k.ecartFournisseurs)}.`;

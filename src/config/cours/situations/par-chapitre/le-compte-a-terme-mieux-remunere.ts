@@ -8,7 +8,7 @@ import type { Situation } from "../types";
  * (comptabilité générale, palier 3).
  *
  * La banque propose à NOVA de placer au compte à terme, à `TAUX_PROPOSE_PAR_LA_BANQUE`, les fonds de
- * l'emprunt, du jour du dépôt au 31 décembre. La présidente demande si l'emprunt devient alors
+ * l'emprunt, du jour du dépôt au 31 décembre. Le président demande si l'emprunt devient alors
  * rentable. L'élève refait le calcul du chapitre (`clotureDeNova`, emprunter-pour-placer) à ce
  * taux : les intérêts du placement (année de 360 jours, comme au chapitre), le coût net de
  * l'opération avant impôt, puis après impôt au taux marginal.
@@ -35,21 +35,21 @@ export const LE_COMPTE_A_TERME_MIEUX_REMUNERE: Situation = {
   palier: 3,
   blocs: [],
   reprend: ["decider-apres-la-cloture"],
-  commanditaire: "La présidente",
+  commanditaire: "Le président",
   titre: "Le compte à terme mieux rémunéré",
   accroche: "La banque offre un meilleur taux au compte à terme : l'emprunt placé devient-il rentable, une fois l'impôt compté ?",
-  objectifs: ["Calculer les intérêts d'un placement à un autre taux", "Chiffrer le coût net d'emprunter pour placer, avant et après impôt", "Répondre à la présidente, au taux marginal de l'impôt"],
+  objectifs: ["Calculer les intérêts d'un placement à un autre taux", "Chiffrer le coût net d'emprunter pour placer, avant et après impôt", "Répondre au président, au taux marginal de l'impôt"],
   libre: false,
   entreprises: { codes: ENTREPRISES_DE_LA_CLOTURE, pourquoi: "ce cas reprend l'emprunt et le compte à terme du premier exercice de NOVA, ceux du chapitre." },
   etapes: [
     {
       id: "demande",
       type: "lecture",
-      titre: "La question de la présidente",
+      titre: "La question du président",
       texte: () => {
         const k = compteATermeMieuxRemunere();
         return [
-          `« La banque nous offrirait ${pct(TAUX_PROPOSE_PAR_LA_BANQUE)} au compte à terme. Si nous y avions placé les ${eur(k.x.f.pret.capital)} de l'emprunt, l'opération aurait-elle rapporté, une fois l'impôt payé ? » La présidente`,
+          `« La banque nous offrirait ${pct(TAUX_PROPOSE_PAR_LA_BANQUE)} au compte à terme. Si nous y avions placé les ${eur(k.x.f.pret.capital)} de l'emprunt, l'opération aurait-elle rapporté, une fois l'impôt payé ? » Le président`,
           `Pas de cours cette fois : l'emprunt a coûté ${eur(k.x.chargeDeLEmprunt)} d'intérêts sur l'exercice, et le placement court ${k.x.joursDuPlacement.toLocaleString("fr-FR")} jours, sur une année de 360 jours comme au chapitre.`,
         ];
       },
@@ -78,8 +78,8 @@ export const LE_COMPTE_A_TERME_MIEUX_REMUNERE: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse à la présidente",
-      question: () => "Que répondez-vous à la présidente ?",
+      titre: "Votre réponse au président",
+      question: () => "Que répondez-vous au président ?",
       options: () => {
         const k = compteATermeMieuxRemunere();
         return [

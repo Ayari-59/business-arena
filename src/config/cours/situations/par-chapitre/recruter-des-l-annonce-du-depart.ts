@@ -9,7 +9,7 @@ import type { Situation } from "../types";
  *
  * LE CAS JOUE DANS LE MONDE DU COURS, comme son chapitre : l'atelier de NOVA en N + 1, mois par mois
  * (monde/nova-capacite.ts, monde/capacite.ts). Le 1er mars, un opérateur annonce qu'il part le 31.
- * La présidente pensait lancer le recrutement à son départ, le 1er avril ; son adjoint veut le lancer
+ * Le président pensait lancer le recrutement à son départ, le 1er avril ; son adjoint veut le lancer
  * le jour même. L'élève compare les deux dates (l'équipe du trimestre 2, les ventes perdues, le coût
  * du départ), puis cherche à rebours la demande du trimestre 2 à partir de laquelle recruter dès
  * l'annonce rapporte : un remplaçant plus tôt coûte un mois de salaire de plus, et ne le rend que
@@ -55,7 +55,7 @@ export const RECRUTER_DES_L_ANNONCE_DU_DEPART: Situation = {
   palier: 3,
   blocs: [],
   reprend: [LE_DEPART_D_UN_SALARIE.code],
-  commanditaire: "La présidente",
+  commanditaire: "Le président",
   titre: "Recruter dès l'annonce du départ",
   accroche:
     "Un opérateur annonce qu'il part à la fin du mois. Lancer le recrutement tout de suite coûte un mois de salaire de plus ; attendre son départ laisse l'équipe devenir le goulot. Ce que chaque date coûte, et la demande à partir de laquelle il faut se presser.",
@@ -63,7 +63,7 @@ export const RECRUTER_DES_L_ANNONCE_DU_DEPART: Situation = {
     "Dérouler l'équipe d'un trimestre mois par mois selon la date du recrutement",
     "Calculer le coût complet d'un départ à chaque date de recrutement",
     "Retrouver à rebours la demande à partir de laquelle recruter tôt rapporte",
-    "Répondre à la présidente, chiffre à l'appui",
+    "Répondre au président, chiffre à l'appui",
   ],
   libre: false,
   entreprises: LE_DEPART_D_UN_SALARIE.entreprises,
@@ -71,7 +71,7 @@ export const RECRUTER_DES_L_ANNONCE_DU_DEPART: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La question de la présidente",
+      titre: "La question du président",
       texte: (c) => {
         const r = recruterDesLAnnonce(c);
         const f = r.x.f;
@@ -226,15 +226,15 @@ export const RECRUTER_DES_L_ANNONCE_DU_DEPART: Situation = {
         const r = recruterDesLAnnonce(c);
         const x = r.x;
         return [
-          `Avec ${qte(x.demandeDuTrimestre)} ${x.f.unites} demandées (la ligne en sert ${qte(x.outilDuTrimestre)}), ${x.f.entreprise} est loin au-dessus de ${qte(r.demandeQuiFaitPencher)} : recruter dès l'annonce rapporte ${eur(r.gain)}. Même sur la demande de N, ${qte(x.demandeDuTrimestreEnN)} au trimestre ${x.trimestre}, il rapporte encore ${eur(r.surN.gain)}. La règle ne dépend pas du goût de la présidente : elle dépend de la demande, face à l'équipe qui reste.`,
+          `Avec ${qte(x.demandeDuTrimestre)} ${x.f.unites} demandées (la ligne en sert ${qte(x.outilDuTrimestre)}), ${x.f.entreprise} est loin au-dessus de ${qte(r.demandeQuiFaitPencher)} : recruter dès l'annonce rapporte ${eur(r.gain)}. Même sur la demande de N, ${qte(x.demandeDuTrimestreEnN)} au trimestre ${x.trimestre}, il rapporte encore ${eur(r.surN.gain)}. La règle ne dépend pas du goût du président : elle dépend de la demande, face à l'équipe qui reste.`,
         ];
       },
     },
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse à la présidente",
-      question: () => "Quelle phrase envoyez-vous à la présidente ?",
+      titre: "Votre réponse au président",
+      question: () => "Quelle phrase envoyez-vous au président ?",
       options: (c) => {
         const r = recruterDesLAnnonce(c);
         const tot = r.verdict === "recruter-des-l-annonce";

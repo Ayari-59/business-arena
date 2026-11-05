@@ -463,7 +463,7 @@ describe("s'assurer contre les aléas, chez NOVA", () => {
   it("le cas : la prime augmentée, le pire qui ne bouge pas, la prime plafond à rebours", () => {
     const s = L_ASSUREUR_AUGMENTE_LA_PRIME;
     casDedie(s, ch);
-    expect(s.commanditaire).toBe("La présidente");
+    expect(s.commanditaire).toBe("Le président");
     expect(HAUSSE_DE_LA_PRIME).toBe(0.2);
     const nouvelle = B!.primeParTrimestre * 1.2;
     expect(attendus(s, "prime")).toEqual({

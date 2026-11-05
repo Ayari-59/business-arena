@@ -24,7 +24,7 @@ import { auCentime } from "../monde/amortissement";
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS : décembre N chez NOVA, le mois de la fiche de stock des
  * composants (monde/exercice-de-nova.ts), avec les centres d'analyse et les clés de janvier
  * (monde/nova-gestion.ts) et les choix de la comptabilité de gestion (monde/comptabilite-de-gestion.ts :
- * l'assurance, le travail de la présidente, le bon de sortie du 24 décembre, la variante). Le modèle
+ * l'assurance, le travail du président, le bon de sortie du 24 décembre, la variante). Le modèle
  * calcule tout : `decembreDeGestion`, `varianteDeDecembre`, `seuilDuSousProduit`.
  *
  * L'objet : refaire, tableau après tableau, tout le chemin d'un coût complet avec un stock, comme à
@@ -79,7 +79,7 @@ export const LIBELLES_DES_CHARGES: Readonly<Record<ChargeDeGestion, string>> = {
   personnel: "Personnel",
   amortissement: "Usure de la ligne",
   assurance: "Assurance",
-  gerante: "Travail de la présidente",
+  gerante: "Travail du président",
 };
 
 const donnee = (valeur: number, unite?: string): CelluleACompleter => ({ valeur, ...(unite ? { unite } : {}) });
@@ -528,7 +528,7 @@ export const LE_COUT_COMPLET_PAS_A_PAS: Chapitre = {
         const { f, d, sortie24 } = coutCompletDeDecembre(c);
         return [
           `Ce chapitre se joue dans la simulation du cours, chez ${f.entreprise}, en décembre. « Coût complet et centres d'analyse » calculait janvier, un mois sans stock ; décembre en a un : ${f.entreprise} a reçu deux livraisons de composants à deux prix, et il lui reste des jeux au 31 décembre. Le coût des jeux consommés passe donc par une fiche de stock.`,
-          `Les centres d'analyse, leurs clés et leurs unités d'œuvre sont ceux de janvier. Deux charges s'y ajoutent : l'assurance, souscrite en octobre, et le travail de la présidente, qui ne se verse rien. La comptabilité de gestion le compte quand même, ${eur(REMUNERATION_DE_LA_GERANTE)} par mois, ce que coûterait un dirigeant salarié : c'est une charge supplétive, que « La concordance des résultats » reprendra.`,
+          `Les centres d'analyse, leurs clés et leurs unités d'œuvre sont ceux de janvier. Deux charges s'y ajoutent : l'assurance, souscrite en octobre, et le travail du président, qui ne se verse rien. La comptabilité de gestion le compte quand même, ${eur(REMUNERATION_DE_LA_GERANTE)} par mois, ce que coûterait un dirigeant salarié : c'est une charge supplétive, que « La concordance des résultats » reprendra.`,
           `Les sorties de la fiche suivent les bons du magasin : ${qte(sortie24.quantite)} jeux le 24 décembre. ${qte(d.livrees)} enceintes ont été fabriquées et livrées dans le mois. Chaque étape est un tableau à compléter : remplissez les cases, vérifiez, et chaque case fausse vous dira pourquoi.`,
         ];
       },
@@ -548,7 +548,7 @@ export const LE_COUT_COMPLET_PAS_A_PAS: Chapitre = {
       explication: (c) => {
         const { r } = coutCompletDeDecembre(c);
         return [
-          `Les ${eur(r.total)} de charges indirectes sont tous rangés : la colonne du total le vérifie, ligne par ligne, et la dernière ligne, centre par centre. Le travail de la présidente va pour ${pct(CLES_DES_CHARGES.gerante.administration)} à l'administration : il passera par les prestations réciproques, comme tout ce que porte un centre auxiliaire.`,
+          `Les ${eur(r.total)} de charges indirectes sont tous rangés : la colonne du total le vérifie, ligne par ligne, et la dernière ligne, centre par centre. Le travail du président va pour ${pct(CLES_DES_CHARGES.gerante.administration)} à l'administration : il passera par les prestations réciproques, comme tout ce que porte un centre auxiliaire.`,
         ];
       },
     },
@@ -579,7 +579,7 @@ export const LE_COUT_COMPLET_PAS_A_PAS: Chapitre = {
       explication: (c) => {
         const { r, f } = coutCompletDeDecembre(c);
         return [
-          `En janvier, sans l'assurance ni la présidente, l'entretien répartissait ${eur(prestationsReciproques(f).entretien)} ; en décembre, ${eur(r.auxiliaires.entretien)}. L'assurance n'y est pour rien, elle ne touche pas les centres auxiliaires : c'est la part de la présidente posée à l'administration qui revient en partie à l'entretien.`,
+          `En janvier, sans l'assurance ni le président, l'entretien répartissait ${eur(prestationsReciproques(f).entretien)} ; en décembre, ${eur(r.auxiliaires.entretien)}. L'assurance n'y est pour rien, elle ne touche pas les centres auxiliaires : c'est la part du président posée à l'administration qui revient en partie à l'entretien.`,
         ];
       },
     },
@@ -705,7 +705,7 @@ export const LE_COUT_COMPLET_PAS_A_PAS: Chapitre = {
       explication: (c) => {
         const { d, f } = coutCompletDeDecembre(c);
         return [
-          `Chaque enceinte de décembre revient à ${eur(auCentime(d.coutDeRevientUnitaire))} et se vend ${eur(f.moisDeReference.prix)} : décembre laisse ${eur(d.resultat)} de résultat analytique, travail de la présidente compris.`,
+          `Chaque enceinte de décembre revient à ${eur(auCentime(d.coutDeRevientUnitaire))} et se vend ${eur(f.moisDeReference.prix)} : décembre laisse ${eur(d.resultat)} de résultat analytique, travail du président compris.`,
         ];
       },
     },

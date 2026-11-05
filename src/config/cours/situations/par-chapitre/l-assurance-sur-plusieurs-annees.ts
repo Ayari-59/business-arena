@@ -9,7 +9,7 @@ import type { Situation } from "../types";
  *
  * Le contrat d'assurance de NOVA, souscrit le 1er octobre N pour 12 mois (la fiche du monde du cours,
  * monde/exercice-de-nova.ts), arrive à son terme. Le courtier propose de le renouveler le 1er octobre
- * N+1 pour deux ans, payés d'avance, avec une remise. La présidente demande ce que la prime pèsera sur
+ * N+1 pour deux ans, payés d'avance, avec une remise. Le président demande ce que la prime pèsera sur
  * chaque exercice, et si l'offre vaut la peine. L'élève refait seul le chemin du chapitre (la prime,
  * la part de l'exercice, le paiement et la charge constatée d'avance, la part de chaque exercice
  * suivant) et le croise avec l'extourne : la charge de N+1 mêle l'ancienne prime, revenue le
@@ -92,10 +92,10 @@ export const L_ASSURANCE_SUR_PLUSIEURS_ANNEES: Situation = {
   palier: 4,
   blocs: [],
   reprend: ["regularisations-de-fin-d-exercice"],
-  commanditaire: "La présidente",
+  commanditaire: "Le président",
   titre: "L'assurance payée pour plusieurs années",
   accroche:
-    `Le courtier propose de renouveler l'assurance pour ${DUREE_DU_CONTRAT_EN_MOIS} mois, payés d'avance avec une remise. La présidente veut savoir ce que la prime pèsera sur chaque exercice, et si la remise paie vraiment l'argent avancé.`,
+    `Le courtier propose de renouveler l'assurance pour ${DUREE_DU_CONTRAT_EN_MOIS} mois, payés d'avance avec une remise. Le président veut savoir ce que la prime pèsera sur chaque exercice, et si la remise paie vraiment l'argent avancé.`,
   objectifs: [
     "Calculer la part d'une prime pluriannuelle qui appartient à l'exercice, extourne comprise",
     "Enregistrer le paiement et la charge constatée d'avance",
@@ -111,7 +111,7 @@ export const L_ASSURANCE_SUR_PLUSIEURS_ANNEES: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La demande de la présidente",
+      titre: "La demande du président",
       texte: (c) => {
         const r = assuranceSurPlusieursAnnees(c);
         return [
@@ -332,8 +332,8 @@ export const L_ASSURANCE_SUR_PLUSIEURS_ANNEES: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse à la présidente",
-      question: () => "Quelle phrase envoyez-vous à la présidente ?",
+      titre: "Votre réponse au président",
+      question: () => "Quelle phrase envoyez-vous au président ?",
       options: (c) => {
         const r = assuranceSurPlusieursAnnees(c);
         return [

@@ -92,7 +92,7 @@ export const LA_FACTURE_RECUE_DEUX_FOIS: Situation = {
       explication: (c) => {
         const x = factureEnDouble(c);
         return [
-          `Trois erreurs d'un coup : un résultat trop bas de ${eur(x.chargeEnTrop)}, une TVA déduite deux fois que le premier contrôle fiscal relèverait, et ${eur(x.detteEnTrop)} que la présidente pourrait payer deux fois.`,
+          `Trois erreurs d'un coup : un résultat trop bas de ${eur(x.chargeEnTrop)}, une TVA déduite deux fois que le premier contrôle fiscal relèverait, et ${eur(x.detteEnTrop)} que le président pourrait payer deux fois.`,
         ];
       },
     },

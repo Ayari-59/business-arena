@@ -49,8 +49,8 @@ import { valoriserLeStock, type FicheDeStock, type MethodeDeStock } from "./stoc
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * LA RÉMUNÉRATION DE LA PRÉSIDENTE, UNE CHARGE SUPPLÉTIVE (hypothèse du cours). Les quatre salariés de
- * la paie sont les opérateurs de la ligne (ressources-humaines-de-nova.ts) ; la présidente, actionnaire,
+ * LA RÉMUNÉRATION DU PRÉSIDENT, UNE CHARGE SUPPLÉTIVE (hypothèse du cours). Les quatre salariés de
+ * la paie sont les opérateurs de la ligne (ressources-humaines-de-nova.ts) ; le président, actionnaire,
  * ne se verse rien pendant ce premier exercice. La comptabilité générale ne connaît donc aucune
  * charge pour son travail ; la comptabilité de gestion en compte une, ce que coûterait un dirigeant
  * salarié pour le même travail, charges comprises : 4 200 € par mois. Sans elle, le coût d'une
@@ -166,7 +166,7 @@ export const CLES_DES_CHARGES: Readonly<Record<ChargeDeGestion, Cles>> = {
 /** L'assurance d'un mois (0 pour janvier) : la prime de l'année étalée sur ses mois couverts, à partir de son mois. */
 export const assuranceDuMois = (mois: number) => (mois >= ASSURANCE.date.mois - 1 ? auCentime(ASSURANCE.prime / ASSURANCE.moisCouverts) : 0);
 
-/** Les charges indirectes d'un mois, avec une rémunération de la présidente au choix (un levier). */
+/** Les charges indirectes d'un mois, avec une rémunération du président au choix (un levier). */
 export function chargesDuMois(mois: number, gerante = REMUNERATION_DE_LA_GERANTE): Record<ChargeDeGestion, number> {
   const f = NOVA_GESTION.moisDeReference.chargesFixes;
   return { loyer: f.loyer, personnel: f.personnel, amortissement: USURE_DE_GESTION_DU_MOIS, assurance: assuranceDuMois(mois), gerante };
@@ -192,7 +192,7 @@ interface Lot {
   prix: number;
 }
 
-/** Ce que le mois peut faire varier : la rémunération de la présidente, le prix du grossiste, la méthode du stock. */
+/** Ce que le mois peut faire varier : la rémunération du président, le prix du grossiste, la méthode du stock. */
 export interface LeviersDeGestion {
   gerante: number;
   /** Le prix d'un jeu chez Composants Express, le grossiste du 18 décembre. */
