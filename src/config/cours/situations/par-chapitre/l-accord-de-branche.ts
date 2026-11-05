@@ -1,6 +1,9 @@
 import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_POINT_DE_VENTE, equipeEtPlanning, tableauDeLEquipe } from "../../chapitres/equipe-et-planning";
+import { MINIMUM_DE_LA_BRANCHE_35_HEURES, PRIME_D_EQUIPE_PAR_HEURE, REGLES_DU_PLANNING } from "../../monde/equipe-de-la-boutique";
+import { SMIC_HORAIRE_BRUT } from "../../monde/ressources-humaines-de-nova";
+import { PLAFOND_DU_TIROIR } from "../../monde/vente-et-caisse";
 import type { Situation } from "../types";
 
 /**
@@ -15,6 +18,13 @@ import type { Situation } from "../types";
  * jugement : la bonne économie n'est pas la plus grosse. Un curseur sur les passages en caisse montre,
  * avant le calcul, combien de clients de plus paient la hausse.
  *
+ * LES SOURCES DU DROIT (complément, novembre 2026) : avant la réponse, l'élève range les textes qui
+ * fixent les règles de l'équipe (la directive européenne, la loi, la convention et l'accord de
+ * branche, l'accord d'entreprise, le règlement intérieur, le contrat de travail) et tranche une
+ * proposition du responsable, un accord d'entreprise à 2 % : sur les salaires minima, la branche
+ * l'emporte (Code du travail, art. L2253-1), et un texte inférieur ne déroge que s'il est plus
+ * favorable au salarié.
+ *
  * Comme son chapitre, le cas se joue dans la simulation du cours (src/config/cours/monde) : ses
  * chiffres sont ceux de `equipeEtPlanning`, sur la fiche de la boutique.
  */
@@ -28,6 +38,9 @@ export const HAUSSE_DES_SALAIRES = 0.03;
 
 /** Le contrat que le responsable propose de ne pas renouveler : le CDD de l'étudiante (hypothèse de l'histoire). */
 export const CONTRAT_NON_RENOUVELE = "etudiante";
+
+/** La proposition du responsable (hypothèse de l'histoire) : un accord d'entreprise qui limiterait la hausse à 2 %. */
+export const HAUSSE_D_UN_ACCORD_D_ENTREPRISE = 0.02;
 
 /** Les bornes du curseur des passages en caisse du mois. */
 export const PASSAGES_DU_CURSEUR = { min: 900, max: 1_100 } as const;
@@ -96,6 +109,7 @@ export const L_ACCORD_DE_BRANCHE: Situation = {
     "Chiffrer une revalorisation des salaires sur le coût horaire et la part du personnel",
     "Remonter de la hausse aux ventes, aux passages en caisse et au taux de transformation qui la paient",
     "Croiser une économie de personnel avec le besoin d'heures lu sur l'affluence",
+    "Situer un accord dans la hiérarchie des sources du droit, et appliquer le principe de faveur",
     "Répondre à la direction en raisonnant sur la marge et sur le planning",
   ],
   libre: false,
@@ -239,6 +253,66 @@ export const L_ACCORD_DE_BRANCHE: Situation = {
         const r = accordDeBranche(c);
         return [
           `L'économie, ${eur(r.economie)}, dépasse la hausse de ${eur(r.hausse)}. Mais sans l'étudiante, la boutique n'a plus que ${h(r.venteSansElle)} de vente pour ${h(r.x.besoin.heuresDeVente)} nécessaires : ${h(r.enManqueAuMieux)} manqueraient chaque semaine quel que soit le planning, sur les créneaux les plus chargés.`,
+        ];
+      },
+    },
+    {
+      id: "les-sources-du-droit",
+      type: "tri",
+      titre: "Qui fixe les règles de l'équipe ?",
+      notions: ["payroll"],
+      question: () =>
+        "Les règles qui s'appliquent à l'équipe viennent de plusieurs textes, rangés du plus haut au plus bas. Rangez chacun à son niveau : la norme européenne ou la loi, l'accord collectif, ou ce que l'entreprise écrit seule ou avec le salarié.",
+      categories: [
+        { code: "loi", libelle: "Norme européenne ou loi" },
+        { code: "accord", libelle: "Accord collectif : branche ou entreprise" },
+        { code: "entreprise", libelle: "Règlement intérieur ou contrat de travail" },
+      ],
+      elements: (c) => {
+        const x = equipeEtPlanning(c);
+        const vendeur = x.f.equipe.find((s) => s.code === "vendeur")!;
+        return [
+          { libelle: "Directive européenne : heures de travail par semaine, au plus", montant: REGLES_DU_PLANNING.heuresParSemaine, categorie: "loi", pourquoi: "Une directive européenne s'impose à la loi française, qui la reprend dans le Code du travail." },
+          { libelle: "Code du travail : SMIC horaire brut", montant: SMIC_HORAIRE_BRUT, categorie: "loi", pourquoi: "Le SMIC est fixé par l'État : aucun accord ni contrat ne peut descendre en dessous." },
+          { libelle: "Convention de la branche : minimum du vendeur pour 35 h", montant: MINIMUM_DE_LA_BRANCHE_35_HEURES, categorie: "accord", pourquoi: "La convention collective de la branche fixe les minima de salaire de chaque niveau." },
+          { libelle: "Accord de branche de cette année : hausse en %", montant: HAUSSE_DES_SALAIRES * 100, categorie: "accord", pourquoi: "Un accord de branche, signé par les syndicats et les organisations patronales, s'applique à toutes les boutiques de la branche une fois étendu." },
+          { libelle: "Accord d'entreprise : prime d'équipe par heure", montant: PRIME_D_EQUIPE_PAR_HEURE, categorie: "accord", pourquoi: "Un accord d'entreprise se négocie dans l'entreprise ; il ne fait pas moins bien que la branche sur les salaires minima." },
+          { libelle: "Règlement intérieur : la caisse vidée au coffre au-delà de", montant: PLAFOND_DU_TIROIR, categorie: "entreprise", pourquoi: "Le règlement intérieur fixe la discipline, l'hygiène et la sécurité ; l'employeur l'écrit seul, sous le contrôle de l'inspection du travail." },
+          { libelle: "Contrat de travail du vendeur : salaire brut du mois", montant: vendeur.brutMensuel, categorie: "entreprise", pourquoi: "Le contrat ne peut qu'améliorer ce que prévoient la loi et les accords : c'est le principe de faveur." },
+        ];
+      },
+      relance: "Demandez-vous qui écrit le texte : l'Europe ou l'État, les partenaires sociaux d'une branche ou d'une entreprise, ou l'employeur seul, avec le salarié.",
+      explication: () => [
+        "La règle du dessous respecte celle du dessus : un accord ne descend pas sous la loi, un contrat ne descend pas sous l'accord. Un texte inférieur peut toujours faire mieux pour le salarié : c'est le principe de faveur.",
+        "Depuis 2017, l'accord d'entreprise peut primer sur la branche dans bien des domaines, mais pas sur les salaires minima, qui restent l'affaire de la branche.",
+      ],
+    },
+    {
+      id: "un-accord-d-entreprise",
+      type: "choix",
+      titre: "Un accord d'entreprise à 2 % ?",
+      notions: ["payroll"],
+      question: () =>
+        `Le responsable propose de négocier un accord d'entreprise qui limiterait la hausse à ${pct(HAUSSE_D_UN_ACCORD_D_ENTREPRISE * 100)}, au lieu des ${pct(HAUSSE_DES_SALAIRES * 100)} de la branche. Que lui répondez-vous ?`,
+      options: (c) => {
+        const r = accordDeBranche(c);
+        const economie = auCentime(r.x.e.cout * (HAUSSE_DES_SALAIRES - HAUSSE_D_UN_ACCORD_D_ENTREPRISE));
+        return [
+          {
+            texte: "Non : sur les salaires minima, la branche l'emporte",
+            juste: true,
+            retour: `Oui : un accord d'entreprise ne peut pas faire moins bien que la branche sur les salaires minima. Il peut faire mieux, jamais moins. Les ${eur(economie)} qu'il ferait économiser chaque mois ne sont pas à la main de la boutique.`,
+          },
+          {
+            texte: "Oui : depuis 2017, l'accord d'entreprise prime sur la branche en tout",
+            juste: false,
+            retour: "Non : il prime dans bien des domaines (les primes d'ancienneté, l'organisation du temps de travail), mais pas sur les salaires minima de la branche.",
+          },
+          {
+            texte: "Oui, si chaque salarié l'accepte dans son contrat",
+            juste: false,
+            retour: "Non : un contrat de travail ne peut pas déroger à la branche au détriment du salarié, même avec son accord.",
+          },
         ];
       },
     },

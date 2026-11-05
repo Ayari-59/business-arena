@@ -171,6 +171,22 @@ import { CAMPUSTECH_DOUBLE_SA_COMMANDE } from "./par-chapitre/campustech-double-
 import { LA_BANQUE_DEMANDE_UNE_GARANTIE } from "./par-chapitre/la-banque-demande-une-garantie";
 import { LE_PRET_INDEXE_SUR_LA_DURABILITE } from "./par-chapitre/le-pret-indexe-sur-la-durabilite";
 import { DEUX_DEVIS_POUR_CHAUFFER_L_ATELIER } from "./par-chapitre/deux-devis-pour-chauffer-l-atelier";
+import { UN_TRACT_POUR_QUELLE_ZONE } from "./par-chapitre/un-tract-pour-quelle-zone";
+import { FAUT_IL_LIVRER_A_DOMICILE } from "./par-chapitre/faut-il-livrer-a-domicile";
+import { LE_SAMEDI_APRES_LA_FORMATION } from "./par-chapitre/le-samedi-apres-la-formation";
+import { LA_CARTE_DU_PRESTATAIRE } from "./par-chapitre/la-carte-du-prestataire";
+import { UNE_SECONDE_ENSEIGNE } from "./par-chapitre/une-seconde-enseigne";
+import { UN_QUATRIEME_FACONNIER } from "./par-chapitre/un-quatrieme-faconnier";
+import { MILLE_EUROS_POUR_COMMUNIQUER } from "./par-chapitre/mille-euros-pour-communiquer";
+import { LE_RAYONNAGE_QUI_RESISTE } from "./par-chapitre/le-rayonnage-qui-resiste";
+import { LE_COMITE_QUI_PAIE_EN_RETARD } from "./par-chapitre/le-comite-qui-paie-en-retard";
+import { LE_BAIL_REVISE } from "./par-chapitre/le-bail-revise";
+import { LE_DECOUVERT_DEMANDE_AU_BANQUIER } from "./par-chapitre/le-decouvert-demande-au-banquier";
+import { UN_PRET_SUR_SEPT_ANS } from "./par-chapitre/un-pret-sur-sept-ans";
+import { LE_DEGAT_DES_EAUX_DANS_LA_RESERVE } from "./par-chapitre/le-degat-des-eaux-dans-la-reserve";
+import { UN_APPRENTI_OU_UN_TEMPS_PARTIEL } from "./par-chapitre/un-apprenti-ou-un-temps-partiel";
+import { LE_CHALLENGE_DU_MERINOS } from "./par-chapitre/le-challenge-du-merinos";
+import { RETENIR_LA_VENDEUSE } from "./par-chapitre/retenir-la-vendeuse";
 export type { Situation } from "./types";
 
 /**
@@ -357,6 +373,22 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LA_BANQUE_DEMANDE_UNE_GARANTIE,
   LE_PRET_INDEXE_SUR_LA_DURABILITE,
   DEUX_DEVIS_POUR_CHAUFFER_L_ATELIER,
+  UN_TRACT_POUR_QUELLE_ZONE,
+  FAUT_IL_LIVRER_A_DOMICILE,
+  LE_SAMEDI_APRES_LA_FORMATION,
+  LA_CARTE_DU_PRESTATAIRE,
+  UNE_SECONDE_ENSEIGNE,
+  UN_QUATRIEME_FACONNIER,
+  MILLE_EUROS_POUR_COMMUNIQUER,
+  LE_RAYONNAGE_QUI_RESISTE,
+  LE_COMITE_QUI_PAIE_EN_RETARD,
+  LE_BAIL_REVISE,
+  LE_DECOUVERT_DEMANDE_AU_BANQUIER,
+  UN_PRET_SUR_SEPT_ANS,
+  LE_DEGAT_DES_EAUX_DANS_LA_RESERVE,
+  UN_APPRENTI_OU_UN_TEMPS_PARTIEL,
+  LE_CHALLENGE_DU_MERINOS,
+  RETENIR_LA_VENDEUSE,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

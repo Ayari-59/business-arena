@@ -2,6 +2,7 @@ import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import type { Cas } from "../cas";
 import { assortiment as assortimentDuMonde, retirerUneReference } from "../monde/boutique";
 import { BOUTIQUES_DU_COURS, type CodeDeReference, type FicheDeLaBoutique } from "../monde/maille-et-co";
+import { INDEMNITE_FORFAITAIRE_DE_RECOUVREMENT, MARQUE, RETOUCHE_OFFERTE, SAC_DE_CAISSE, coutDuDepot, serviceAssocie } from "../monde/offre-et-prix";
 import type { Chapitre, TableauDeDonnees } from "../types";
 
 /**
@@ -231,7 +232,7 @@ export const ASSORTIMENT: Chapitre = {
     "Comparer la part d'une référence dans le chiffre d'affaires et dans la marge",
     "Classer les références selon leurs ventes et leur marge par article, sur des moyennes pondérées",
     "Chiffrer le retrait d'une référence quand une part de ses ventes se reporte, et la part qui le compense",
-    "Remonter d'un effet observé à la part reportée, et décider du sort d'une référence",
+    "Remonter d'un effet observé à la part reportée, et décider du sort d'une référence avec ce qui la porte : la marque, les signes de qualité, l'emballage, les services et les conditions de vente",
   ],
   libre: false,
   entreprises: { codes: ENTREPRISES_DE_L_ASSORTIMENT, pourquoi: POURQUOI_LA_BOUTIQUE },
@@ -746,6 +747,117 @@ export const ASSORTIMENT: Chapitre = {
           },
         ];
       },
+    },
+    {
+      id: "la-marque-et-la-qualite",
+      objectifs: [4],
+      type: "choix",
+      titre: "La marque et les signes de qualité",
+      notions: ["assortment", "brand_capital"],
+      question: (c) => {
+        const x = assortimentDuPointDeVente(c);
+        return `${x.f.entreprise} se positionne sur la maille de qualité, au prix moyen haut : son mérinos est sa signature. Un concurrent ouvre une boutique sous un nom presque identique, et l'atelier local propose de coudre l'étiquette « Fabriqué en France » sur des pulls tricotés au Portugal. Que dit le droit ?`;
+      },
+      options: () => [
+        {
+          texte: "Déposer la marque à l'INPI ; afficher une origine vraie",
+          juste: true,
+          retour: `Oui. Un dépôt à l'INPI, dans les classes ${MARQUE.classes.join(" (les vêtements) et ")} (la vente au détail), protège le nom pour ${MARQUE.dureeEnAnnees} ans, renouvelables sans limite, pour ${montantEcrit(coutDuDepot())} environ : sans dépôt, la boutique peut difficilement s'opposer au nom voisin. Les signes de qualité (labels, certifications, origine) sont encadrés : une origine fausse est une pratique commerciale trompeuse, et la composition des textiles (« 100 % laine mérinos ») est une mention obligatoire et contrôlée.`,
+        },
+        {
+          texte: "Le premier qui utilise un nom en est propriétaire, sans formalité",
+          juste: false,
+          retour: "Non : en France, le droit sur une marque naît de son enregistrement. L'usage seul protège mal ; le dépôt à l'INPI est la règle.",
+        },
+        {
+          texte: "Une étiquette d'origine est libre : c'est un argument commercial",
+          juste: false,
+          retour: "Non : une origine affichée doit être exacte ; « Fabriqué en France » sur un pull tricoté ailleurs trompe le client, et la boutique qui le vend en répond.",
+        },
+      ],
+    },
+    {
+      id: "le-service-associe",
+      objectifs: [4],
+      type: "montants",
+      titre: "Un service associé : la retouche offerte",
+      notions: ["assortment", "contribution_margin"],
+      question: (c) => {
+        const s = serviceAssocie(assortimentDuPointDeVente(c).f);
+        return `La boutique pourrait offrir la retouche du ${s.r.nom.toLowerCase()} : ${montantEcrit(RETOUCHE_OFFERTE.coutParRetouche)} par pull retouché, demandée par ${pct(RETOUCHE_OFFERTE.partDesAcheteurs * 100, 0)} des acheteurs ; elle ferait demander ${pct(RETOUCHE_OFFERTE.hausseDeLaDemande * 100, 0)} de mérinos en plus. Le stock du mois en tient ${qte(s.stock)}. Calculez les ventes du mois avec le service (à l'unité inférieure), la marge qu'elles ajoutent, le coût des retouches (à l'unité la plus proche), puis l'effet sur la marge du mois.`;
+      },
+      champs: (c) => {
+        const s = serviceAssocie(assortimentDuPointDeVente(c).f);
+        return [
+          { libelle: "Ventes du mérinos avec le service", attendu: s.ventes, calcul: `${qte(s.r.demandeDuMois)} × ${qte(1 + RETOUCHE_OFFERTE.hausseDeLaDemande)} = ${qte(s.ventes)}, sous le stock de ${qte(s.stock)}` },
+          { libelle: "Marge ajoutée", attendu: s.margeEnPlus, calcul: `${qte(s.ventesEnPlus)} pulls de plus × ${eur(s.margeUnitaire)} = ${eur(s.margeEnPlus)}` },
+          { libelle: "Coût des retouches", attendu: s.coutDesRetouches, calcul: `${qte(s.ventes)} × ${pct(RETOUCHE_OFFERTE.partDesAcheteurs * 100, 0)} = ${qte(s.retouches)} retouches × ${eur(RETOUCHE_OFFERTE.coutParRetouche)} = ${eur(s.coutDesRetouches)}` },
+          { libelle: "Effet sur la marge du mois", attendu: s.effet, calcul: `${eur(s.margeEnPlus)} − ${eur(s.coutDesRetouches)} = ${eur(s.effet)}` },
+        ];
+      },
+      explication: (c) => {
+        const s = serviceAssocie(assortimentDuPointDeVente(c).f);
+        return [
+          `Le service laisse ${eur(s.effet)} de plus par mois : il se paie par les ventes qu'il fait faire, et il coûte sur toutes les ventes, pas seulement sur celles qu'il ajoute. Un service associé (retouche, paquet cadeau, réservation en ligne, reprise des pulls usagés) se chiffre comme une référence : ce qu'il fait vendre, moins ce qu'il coûte.`,
+        ];
+      },
+    },
+    {
+      id: "l-emballage",
+      objectifs: [4],
+      type: "choix",
+      titre: "L'emballage et la stylique",
+      notions: ["assortment"],
+      question: (c) => {
+        const x = assortimentDuPointDeVente(c);
+        return `Le vendeur propose de remplacer ${SAC_DE_CAISSE} par un sac plastique fin, moins cher. Les autres coûts variables d'un col rond font ${eur(x.f.gamme[0]!.autresCoutsVariables)}. Que répondez-vous ?`;
+      },
+      options: () => [
+        {
+          texte: "Non : le sac plastique de caisse est interdit",
+          juste: true,
+          retour: "Oui. Les sacs de caisse en plastique à usage unique sont interdits depuis 2016. L'emballage protège, informe et communique : le sac kraft au nom de la boutique est un support de sa marque dans la rue (la stylique), et son coût est déjà dans les autres coûts variables de chaque article.",
+        },
+        {
+          texte: "Oui : l'emballage n'a aucun rôle commercial ici",
+          juste: false,
+          retour: "Non : l'emballage fait partie de l'offre ; il porte la marque, l'image et l'information du produit.",
+        },
+        {
+          texte: "Oui, s'il est facturé au client",
+          juste: false,
+          retour: "Non : payant ou non, le sac de caisse en plastique à usage unique est interdit.",
+        },
+      ],
+    },
+    {
+      id: "les-conditions-de-vente",
+      objectifs: [4],
+      type: "choix",
+      titre: "Les conditions générales de vente",
+      notions: ["payment_terms"],
+      question: (c) => {
+        const x = assortimentDuPointDeVente(c);
+        const comites = x.f.clienteles.find((k) => k.code === "comites")!;
+        return `Les comités d'entreprise commandent à ${qte(comites.delaiDeReglement)} jours. L'un d'eux demande les conditions générales de vente de la boutique avant de passer commande. Que doivent-elles contenir ?`;
+      },
+      options: () => [
+        {
+          texte: `Le règlement, les pénalités et l'indemnité de ${INDEMNITE_FORFAITAIRE_DE_RECOUVREMENT} €`,
+          juste: true,
+          retour: `Oui. Entre professionnels, les conditions générales de vente se communiquent à l'acheteur qui les demande ; elles fixent les prix et réductions, le délai de règlement, le taux des pénalités de retard et l'indemnité forfaitaire de ${INDEMNITE_FORFAITAIRE_DE_RECOUVREMENT} € pour frais de recouvrement. Elles sont le socle de la négociation avec le comité.`,
+        },
+        {
+          texte: "Rien n'est obligatoire : une boutique n'a pas de conditions de vente",
+          juste: false,
+          retour: "Non : dès qu'elle vend à des professionnels, comme un comité d'entreprise, la boutique doit pouvoir lui communiquer ses conditions générales de vente.",
+        },
+        {
+          texte: "Seulement le prix toutes taxes comprises",
+          juste: false,
+          retour: "Non : le prix ne suffit pas ; les conditions de règlement et les pénalités de retard en font partie.",
+        },
+      ],
     },
     {
       id: "synthese",

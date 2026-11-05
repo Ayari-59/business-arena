@@ -2,6 +2,7 @@ import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import type { Cas } from "../cas";
 import { coutVariable, promotion as promotionDuMonde, referenceDe } from "../monde/boutique";
 import { BOUTIQUES_DU_COURS, type FicheDeLaBoutique } from "../monde/maille-et-co";
+import { COMMANDE_POUR_LES_SOLDES, JOURS_DU_PRIX_DE_REFERENCE, REDUCTION_DE_MARS, SOLDES, annonceDeReduction } from "../monde/offre-et-prix";
 import type { Chapitre, OptionDeChoix, TableauDeDonnees } from "../types";
 
 /**
@@ -254,7 +255,7 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
     "Calculer le volume nécessaire pour garder la marge d'un mois sans remise",
     "Distinguer une demande qui ne suit pas d'une offre qui bloque",
     "Trouver la remise qui rapporte le plus, et la remise la plus forte qu'un stock permet",
-    "Critiquer le calcul : ce qu'il ne voit pas, et ce qu'il faut vérifier avant de lancer",
+    "Critiquer le calcul et vérifier avant de lancer ce qu'il ne voit pas : le rayon, et ce que la réglementation des soldes et des réductions permet",
   ],
   libre: false,
   entreprises: { codes: ENTREPRISES_DE_LA_PROMOTION, pourquoi: POURQUOI_LA_BOUTIQUE },
@@ -708,6 +709,84 @@ export const PROMOTION_QUI_PAIE: Chapitre = {
           texte: "Vérifier que le chiffre d'affaires du mois augmentera",
           juste: false,
           retour: "Le chiffre d'affaires peut monter pendant que la marge baisse : c'est la marge qu'il faut regarder.",
+        },
+      ],
+    },
+    {
+      id: "le-prix-de-reference",
+      objectifs: [4],
+      type: "montants",
+      titre: "Annoncer une réduction : le prix de référence",
+      notions: ["markdown", "psych_price"],
+      question: (c) => {
+        const a = annonceDeReduction(ficheDe(c));
+        return `Après la promotion de février (le ${a.r.nom.toLowerCase()} à ${eur(a.prixDeFevrier)}), la boutique veut annoncer « −${pct(REDUCTION_DE_MARS * 100, 0)} » sur le col rond la première semaine de mars. Le prix de référence d'une réduction est le prix le plus bas pratiqué pendant les ${JOURS_DU_PRIX_DE_REFERENCE} jours qui précèdent. Calculez ce prix de référence, le prix que la boutique doit afficher pour annoncer « −${pct(REDUCTION_DE_MARS * 100, 0)} », puis la réduction réelle, en pourcentage au dixième, si elle calculait les ${pct(REDUCTION_DE_MARS * 100, 0)} sur l'étiquette de ${eur(a.r.prixTtc)}.`;
+      },
+      champs: (c) => {
+        const a = annonceDeReduction(ficheDe(c));
+        return [
+          { libelle: "Prix de référence", attendu: a.prixDeReference, calcul: `le plus bas de ${eur(a.r.prixTtc)} et ${eur(a.prixDeFevrier)}, pratiqué en février = ${eur(a.prixDeReference)}` },
+          { libelle: "Prix à afficher pour annoncer la réduction", attendu: a.prixAnnonce, calcul: `${eur(a.prixDeReference)} × (1 − ${pct(REDUCTION_DE_MARS * 100, 0)}) = ${eur(a.prixAnnonce)}` },
+          { libelle: "Réduction réelle sur l'étiquette (%)", attendu: auDixieme(a.reductionReelle * 100), tolerance: 0.1, calcul: `1 − ${eur(a.prixSurLEtiquette)} ÷ ${eur(a.prixDeReference)} = ${pct(auDixieme(a.reductionReelle * 100))}` },
+        ];
+      },
+      explication: (c) => {
+        const a = annonceDeReduction(ficheDe(c));
+        return [
+          `Calculer les ${pct(REDUCTION_DE_MARS * 100, 0)} sur l'étiquette, ${eur(a.prixSurLEtiquette)}, annoncerait une réduction que le client ne reçoit pas : par rapport au prix qu'il a vu en février, il ne gagne que ${pct(auDixieme(a.reductionReelle * 100))}. C'est une pratique commerciale trompeuse. Pour annoncer « −${pct(REDUCTION_DE_MARS * 100, 0)} », il faut descendre à ${eur(a.prixAnnonce)}, et refaire le calcul de la marge à ce prix.`,
+        ];
+      },
+    },
+    {
+      id: "les-soldes",
+      objectifs: [4],
+      type: "choix",
+      titre: "Ce que les soldes permettent",
+      notions: ["markdown", "stock"],
+      question: () =>
+        `Le façonnier propose ${COMMANDE_POUR_LES_SOLDES.articles} pulls col rond à prix réduit, livrés ${COMMANDE_POUR_LES_SOLDES.joursAvantLesSoldes} jours avant les soldes d'hiver, « pour les vendre en soldes ». Que dit la réglementation des soldes ?`,
+      options: () => [
+        {
+          texte: "Interdit : un article soldé est en magasin depuis un mois",
+          juste: true,
+          retour: `Oui. Les soldes ont lieu deux fois par an pendant ${SOLDES.semaines} semaines : l'hiver à partir du deuxième mercredi de janvier, l'été à partir du dernier mercredi de juin. Ils écoulent le stock de la saison : un article acheté pour l'occasion n'y a pas sa place, et le réassort en cours de soldes est interdit. En échange, la revente à perte y est permise, et l'annonce « soldes » est réservée à ces périodes.`,
+        },
+        {
+          texte: "Permis : pendant les soldes, la boutique vend ce qu'elle veut au prix qu'elle veut",
+          juste: false,
+          retour: `Non : le prix est libre, et peut même descendre sous le prix d'achat ; mais les articles doivent avoir été proposés à la vente et payés depuis au moins un mois.`,
+        },
+        {
+          texte: "Permis, à condition d'afficher le prix de référence",
+          juste: false,
+          retour: `Le prix de référence est obligatoire, mais il ne règle pas l'ancienneté des articles : des pulls livrés ${COMMANDE_POUR_LES_SOLDES.joursAvantLesSoldes} jours avant ne se soldent pas.`,
+        },
+      ],
+    },
+    {
+      id: "le-jeu-concours",
+      objectifs: [4],
+      type: "choix",
+      titre: "Un jeu en boutique et en ligne",
+      notions: ["markdown"],
+      question: () =>
+        "Pour animer le mois sans remise, la manager imagine un tirage au sort : un pull mérinos à gagner chaque semaine, parmi les clientes qui ont acheté, en boutique ou sur la vitrine en ligne. Est-ce permis ?",
+      options: () => [
+        {
+          texte: "Oui, avec un règlement clair et loyal",
+          juste: true,
+          retour:
+            "Oui. Une loterie publicitaire est permise si elle n'est pas déloyale : un règlement accessible (dates, dotations, modalités du tirage), une information exacte sur ce qu'on peut gagner. Les règles des animations et des réductions s'appliquent de la même façon à la vitrine en ligne. Le coût de la dotation se chiffre comme une remise : il doit se payer par les ventes qu'il fait faire.",
+        },
+        {
+          texte: "Non : tout jeu lié à un achat est interdit par la loi",
+          juste: false,
+          retour: "Non : l'obligation d'achat n'est plus interdite en soi ; c'est la loterie déloyale ou trompeuse qui l'est.",
+        },
+        {
+          texte: "Oui en boutique, mais jamais sur la vitrine en ligne",
+          juste: false,
+          retour: "Non : le canal ne change pas la règle ; un jeu en ligne suit les mêmes conditions de loyauté et d'information.",
         },
       ],
     },

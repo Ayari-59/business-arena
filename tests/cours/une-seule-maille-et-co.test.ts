@@ -8,8 +8,14 @@ import { CHAPITRES } from "../../src/config/cours/registre";
 import { SITUATIONS } from "../../src/config/cours/situations";
 import { assortiment, chiffreDAffairesParLesIndicateurs, indicateursDuMois, margesDeLaGamme, seuilDuPointDeVente, tableauDeBordDuManager } from "../../src/config/cours/monde/boutique";
 import { MAILLE_ET_CO as f } from "../../src/config/cours/monde/maille-et-co";
-import { journeeEnCaisse, panierDuMois } from "../../src/config/cours/monde/vente-et-caisse";
+import { journeeEnCaisse, panierDuMois, passantsDeJanvier } from "../../src/config/cours/monde/vente-et-caisse";
+import { bilanDeLaBoutique, compteDeResultat, factureDuComite, projetDeRenovation } from "../../src/config/cours/monde/comptes-de-la-boutique";
 import { servirLeChapitre } from "../../src/pedagogy/cours/chapitre-servi";
+import { marcheLocal, moisSelonLaForme } from "../../src/config/cours/monde/reseau-de-la-boutique";
+import { zoneDeChalandise } from "../../src/config/cours/monde/clientele-de-la-boutique";
+import { cooperationCommerciale } from "../../src/config/cours/monde/fournisseurs-de-la-boutique";
+import { rendementDesEntrees } from "../../src/config/cours/monde/communication-locale";
+import { marchandisage, renfortDuLundi } from "../../src/config/cours/monde/reimplantation";
 import { montantEcrit } from "../../src/pedagogy/cours/correcteur";
 
 /**
@@ -68,6 +74,39 @@ describe("une seule MAILLE & CO, d'une fiche à l'autre", () => {
     expect([k.m.tickets, s.s.tickets, t.m.tickets, e.tickets]).toEqual([940, 940, 940, 940]);
     expect([k.m.chiffreDAffaires, s.s.chiffreDAffaires, t.ca, e.ca]).toEqual([87_450, 87_450, 87_450, 87_450]);
     expect([k.m.articles, s.m.articles, t.m.articles]).toEqual([1_530, 1_530, 1_530]);
+  });
+
+  it("les chapitres du bloc 2 (réseau, fournisseur, communication, réimplantation) lisent le même mois, le même passant, la même équipe", () => {
+    expect(marcheLocal(f).boutique.ventesDuMois).toBe(77_250);
+    expect(moisSelonLaForme(f, "independante").resultat).toBe(seuilDuPointDeVente(f).resultat);
+    expect(moisSelonLaForme(f, "independante").resultat).toBe(13_555);
+    const k = cooperationCommerciale(f);
+    expect([k.mise.margeUnitaire, k.deplacee.margeUnitaire]).toEqual([26.5, 74]);
+    expect(rendementDesEntrees(f, passantsDeJanvier(f).entrees).ventes).toBe(600);
+    const m = marchandisage(f);
+    expect([m.chiffreDAffaires, m.marge]).toEqual([87_450, 44_250]);
+    expect(renfortDuLundi(f).salarie.brutMensuel).toBe(f.equipe.find((s) => s.code === "vendeuse-partiel")!.brutMensuel);
+  });
+
+  it("les comptes de la boutique (facture, exercice, bilan, rénovation) lisent les mêmes prix, la même paie, le même stock et la même marge", () => {
+    const fa = factureDuComite(f, { remise: 0 });
+    for (const l of fa.lignes) expect(l.prixHt).toBe(f.gamme.find((r) => r.code === l.reference)!.prixHt);
+    const n1 = compteDeResultat(f, "N-1");
+    expect(n1.personnel).toBe(centime(12 * 14_342));
+    expect(n1.loyer + n1.taxesLocales).toBe(12 * 13_600);
+    expect(bilanDeLaBoutique(f).stock).toBe(f.gamme.reduce((t, r) => t + r.stockInitial * r.coutDAchat, 0));
+    // La marge perdue des travaux est celle du mois du seuil : 44 250 € × 5 ÷ 30.
+    expect(projetDeRenovation(f).margePerdue).toBe(centime((seuilDuPointDeVente(f).marge * 5) / 30));
+  });
+
+  it("le marché local et la zone de chalandise donnent la même part de marché", () => {
+    const z = zoneDeChalandise(f);
+    const m = marcheLocal(f);
+    // Un seul marché : la dépense des ménages de la zone, ramenée hors taxes ; une seule base : la caisse.
+    expect(m.total).toBe(centime(z.depense / (1 + f.gamme[0]!.tauxTva)));
+    expect(m.boutique.ventesDuMois).toBe(centime(z.chiffreEnCaisse / (1 + f.gamme[0]!.tauxTva)));
+    expect(m.boutique.part).toBeCloseTo(z.chiffreEnCaisse / z.depense, 12);
+    expect(Math.round(m.boutique.part * 1000) / 10).toBe(7);
   });
 
   it("aucun chapitre ni cas de la boutique ne donne l'ancien panier (92,25 €, 948 passages), sauf pour montrer l'erreur", () => {

@@ -554,6 +554,62 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Les charges de structure ont-elles monté du coût d'un salarié ? Les ventes, elles, ont-elles bougé ? Si l'équipe n'était pas ce qui limitait les ventes, l'embauche n'a fait qu'ajouter une charge.",
   }),
+  "facturer-et-se-faire-payer": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relisez le budget de trésorerie et le bilan du second.`,
+    lieux: ["budget-de-tresorerie", "bilan"],
+    chercher:
+      "Retrouvez au bilan ce que vos clients professionnels vous doivent encore. Combien coûterait de financer ces créances au découvert jusqu'à leur échéance ? Un escompte de 2 % pour être payé comptant serait-il plus cher, une fois rapporté à l'année ?",
+  }),
+  "le-compte-de-resultat-de-la-boutique": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, le second avec un prix un peu plus bas, puis ouvrez le compte de résultat de chacun.`,
+    lieux: ["compte-de-resultat", "analyse-des-couts"],
+    chercher:
+      "Calculez la marge commerciale, la valeur ajoutée et l'excédent brut d'exploitation des deux tours. Le chiffre d'affaires a-t-il monté pendant que l'EBE baissait ? Quelle charge, ou quelle baisse de prix, l'explique ?",
+  }),
+  "le-bilan-et-le-bfr-de-la-boutique": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez le bilan et le fonds de roulement du second.`,
+    lieux: ["bilan", "frng-bfr"],
+    chercher:
+      "Votre BFR est-il un besoin ou une ressource ? Retrouvez le stock, les créances et les dettes fournisseurs qui le font, puis la trésorerie nette. De combien changerait-elle si vos fournisseurs vous payaient comptant ?",
+  }),
+  "renover-la-boutique": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le compte de résultat et le bilan.`,
+    lieux: ["compte-de-resultat", "bilan"],
+    chercher:
+      "Imaginez un nouvel équipement qui ferait vendre un peu plus chaque tour. Quel flux de trésorerie apporterait-il, impôt et amortissement compris ? Combien de tours pour le rembourser, et votre trésorerie le paierait-elle sans emprunter ?",
+  }),
+  "l-inventaire-et-la-demarque": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relisez le bilan et le compte de résultat.`,
+    lieux: ["bilan", "compte-de-resultat"],
+    chercher:
+      "Relevez le stock de fin de tour au bilan et la variation de stock au compte de résultat. Si 1 % des articles disparaissaient sans être vendus, de combien la marge baisserait-elle ? Combien de ventes en plus faudrait-il pour le payer ?",
+  }),
+  "recruter-integrer-former": (c) => ({
+    niveau: 3,
+    faire: `${partie(c, 3)} Dans « Ressources humaines », embauchez une personne au tour où la demande monte, puis jouez deux tours.`,
+    lieux: ["rh-du-tour", "compte-de-resultat"],
+    chercher:
+      "L'embauche a-t-elle servi des clients que l'équipe ne servait pas ? Comparez ce qu'elle a coûté au tour avec la marge des ventes en plus : un renfort pour une saison se paie par la saison.",
+  }),
+  "remunerer-et-stimuler-les-vendeurs": (c) => ({
+    niveau: 3,
+    faire: `${partie(c, 3)} Jouez trois tours, puis relisez le compte de résultat et les indicateurs du métier.`,
+    lieux: ["compte-de-resultat", "indicateurs"],
+    chercher:
+      "Si vous versiez à l'équipe 2 % du chiffre d'affaires au-delà de celui du premier tour, combien cela coûterait-il, cotisations comprises ? La marge des ventes en plus l'aurait-elle payé ?",
+  }),
+  "le-climat-de-l-equipe": (c) => ({
+    niveau: 3,
+    faire: `${partie(c, 3)} Jouez trois tours sans changer les salaires, puis relevez la ligne de l'effectif.`,
+    lieux: ["rh-du-tour", "feuille"],
+    chercher:
+      "Combien de salariés sont partis en trois tours ? Calculez le taux de rotation, puis ce qu'un départ coûterait chez MAILLE & CO : un recrutement, des semaines vides, une remplaçante à former.",
+  }),
   "tableau-de-bord-du-manager": (c) => ({
     niveau: 2,
     faire: `${partie(c, 2)} Jouez quatre tours. À chaque tour, relevez les indicateurs de votre tableau de bord : chiffre d'affaires, panier, indicateur du métier, taux de marque, seuil, part du personnel.`,
@@ -1478,6 +1534,69 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Si l'énergie de votre activité coûtait 50 % de plus, de combien votre résultat baisserait-il ? Un équipement plus sobre, plus cher à l'achat, se rembourserait-il sur sa durée ? Quels critères non financiers feriez-vous valoir pour le choisir ?",
   }),
+  "zone-de-chalandise": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez le marché du tour écoulé.`,
+    lieux: ["marche-du-tour"],
+    chercher:
+      "Relevez, clientèle par clientèle, la demande du marché et vos ventes : quelle part de marché prenez-vous dans chacune ? Laquelle vous laisse le plus à prendre, et laquelle un concurrent tient déjà ?",
+  }),
+  "interroger-les-clients": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le marché du tour écoulé.`,
+    lieux: ["marche-du-tour"],
+    chercher:
+      "Si vous deviez interroger vos clients, combien en prendriez-vous dans chaque clientèle pour que l'échantillon ressemble au marché ? Quelle question leur poseriez-vous avant de changer votre offre ?",
+  }),
+  "la-vente-conseil": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis ouvrez les indicateurs du métier.`,
+    lieux: ["indicateurs"],
+    chercher:
+      "Calculez, à chaque tour, votre panier moyen et ce que chaque vente laisse de marge. Si chaque client achetait un article de plus, ou un article plus cher, laquelle des deux hausses rapporterait le plus ?",
+  }),
+  "fideliser-la-clientele": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez trois tours, puis ouvrez le marché du tour écoulé.`,
+    lieux: ["marche-du-tour"],
+    chercher:
+      "Vos clients restent-ils d'un tour à l'autre ? Estimez la part que vous perdez à chaque tour, puis ce que vaut un client fidèle sur sa durée de vie. Combien pourriez-vous lui rendre pour qu'il reste ?",
+  }),
+  "le-marche-et-le-reseau": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relisez le marché du tour et le compte de résultat.`,
+    lieux: ["marche-du-tour", "compte-de-resultat"],
+    chercher:
+      "Quelle part de la demande du marché avez-vous servie ? Si un groupement vous faisait acheter 5 % moins cher contre une cotisation fixe, de combien votre résultat changerait-il ? Et une franchise qui prend 6 % du chiffre d'affaires : quelle hausse des ventes lui faudrait-il pour vous laisser autant ?",
+  }),
+  "choisir-et-negocier-le-fournisseur": (c) => {
+    const f = fournisseursDe(scenarioCodeForLevel(c.code, 1));
+    return {
+      niveau: 1,
+      faire: `${partie(c, 1)} Avant de jouer, notez « ${f.reference.name} », « ${f.moinsCher.name} » et « ${f.plusCher.name} » sur le prix, le délai de paiement et la qualité, avec vos propres poids. Jouez un tour avec celui qui a la meilleure note.`,
+      lieux: ["analyse-des-couts", "budget-de-tresorerie"],
+      chercher:
+        "Votre classement aurait-il changé avec d'autres poids ? Dans l'analyse des coûts, retrouvez le coût d'achat d'une unité ; dans le budget de trésorerie, quand le fournisseur a été payé. Le fournisseur le mieux noté était-il le moins cher ?",
+    };
+  },
+  "communiquer-et-animer-en-local": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis un second où vous augmentez nettement votre budget de publicité, sans rien changer d'autre.`,
+    lieux: ["marche-du-tour", "compte-de-resultat"],
+    chercher:
+      "Combien de ventes en plus la publicité a-t-elle apportées ? Multipliez-les par la marge d'une vente et retranchez la dépense : la publicité en plus a-t-elle laissé quelque chose ? Quel retour sur investissement ?",
+  }),
+  "reimplanter-avant-les-soldes": (c) => {
+    // Le linéaire se partage entre références : la mission se joue au niveau où le commerce passe en gamme.
+    const niveau = niveauDeLaGamme(c.code) ?? 1;
+    return {
+      niveau,
+      faire: `${partie(c, niveau)} À ce niveau, ${c.entreprise} vend plusieurs références : jouez un tour, puis un second où vous donnez plus de volume à la référence qui marge le plus et moins à celle qui marge le moins.`,
+      lieux: ["references", "analyse-des-couts"],
+      chercher:
+        "Dans le tableau des références, comparez la marge de chacune aux deux tours. La référence renforcée a-t-elle vendu plus, ou a-t-elle manqué de demande ? Le gain couvre-t-il ce que l'autre a perdu ?",
+    };
+  },
 };
 
 /**
