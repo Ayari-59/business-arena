@@ -23,6 +23,7 @@ import type { Chapitre } from "@/config/cours/types";
 import { casDuChapitre, type Situation } from "@/config/cours/situations";
 import { bureauxDuChapitre, lienDuBureau } from "@/config/cours/bureaux";
 import { enquetesDuChapitre, lienDeLEnquete } from "@/config/cours/enquetes";
+import { lienDuScenario, scenariosDuChapitre } from "@/config/cours/scenarios";
 import { coursDeLaFormation } from "@/config/couverture";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
 import { casDeSyntheseDuTheme } from "@/pedagogy/cours/suites";
@@ -706,6 +707,17 @@ function CasDuChapitre({ chapitre, imposee }: { chapitre: string; imposee?: stri
           className="text-xs text-amber-300/90 underline-offset-4 hover:text-amber-300 hover:underline"
         >
           Cas pratique : {e.titre}
+        </Link>
+      ))}
+      {/* Les scénarios du chapitre (config/cours/scenarios) : des décisions à la suite, une activité à part. */}
+      {scenariosDuChapitre(chapitre).map((x) => (
+        <Link
+          key={x.code}
+          href={lienDuScenario(x)}
+          data-scenario-du-chapitre={x.code}
+          className="text-xs text-amber-300/90 underline-offset-4 hover:text-amber-300 hover:underline"
+        >
+          {x.titre}
         </Link>
       ))}
     </>
