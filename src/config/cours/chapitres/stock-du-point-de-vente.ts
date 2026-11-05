@@ -12,6 +12,7 @@ import {
   type LeviersDuReassort,
 } from "../monde/boutique";
 import { BOUTIQUES_DU_COURS, JOURS_DU_TRIMESTRE, type FicheDeLaBoutique } from "../monde/maille-et-co";
+import { COMMANDES_PAR_AN_ESSAYEES, COUT_DE_PASSATION, MOIS_PAR_AN, TAUX_DE_POSSESSION, coutDuStock, quantiteEconomique } from "../monde/inventaire-de-la-boutique";
 import type { Chapitre, TableauDeDonnees } from "../types";
 
 /**
@@ -200,7 +201,7 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
     "Calculer la couverture du stock, référence par référence",
     "Calculer le stock de sécurité et le point de commande, et voir la rupture qu'ils évitent",
     "Comparer la durée de stockage au délai de paiement du fournisseur",
-    "Retrouver le stock à viser pour une durée de stockage donnée, et critiquer un délai plus court",
+    "Retrouver le stock à viser pour une durée de stockage donnée, critiquer un délai plus court, et chiffrer la quantité à commander au moindre coût",
   ],
   libre: false,
   entreprises: {
@@ -754,6 +755,92 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
       },
     },
     {
+      id: "le-cout-de-la-commande",
+      objectifs: [4],
+      type: "simulation",
+      titre: "Le coût de la commande",
+      notions: ["stock", "stock_rotation"],
+      question: (c) => {
+        const f = ficheDe(c);
+        const k = coutDuStock(f, MOIS_PAR_AN);
+        return `Commander coûte, et stocker aussi. Chaque commande au façonnier coûte ${eur(COUT_DE_PASSATION)} (la préparer, recevoir et contrôler la livraison, le transport). Garder un pull col rond un an en stock coûte ${pct(TAUX_DE_POSSESSION * 100)} de son coût d'achat, ${eur(k.possessionUnitaire)} : l'argent immobilisé, la place, l'assurance, la démarque. La boutique en vend ${qte(k.demande)} par an et commande une fois par mois. Faites varier le nombre de commandes de l'année.`;
+      },
+      leviers: () => [{ code: "commandes", libelle: "Commandes par an", unite: "commandes", ...COMMANDES_PAR_AN_ESSAYEES, depart: MOIS_PAR_AN }],
+      lecture: (c, p) => {
+        const f = ficheDe(c);
+        const k = coutDuStock(f, p.commandes!);
+        const d = coutDuStock(f, MOIS_PAR_AN);
+        return [
+          { libelle: "Quantité par commande", montant: Math.round(k.quantite), reference: Math.round(d.quantite), unite: "pulls" },
+          { libelle: "Coût de passation de l'année", montant: k.passation, reference: d.passation },
+          { libelle: "Coût de possession du stock moyen", montant: k.possession, reference: d.possession },
+          { libelle: "Coût du stock de l'année", montant: k.total, reference: d.total, fort: true },
+        ];
+      },
+      graphique: (c) => {
+        const f = ficheDe(c);
+        return {
+          levier: "commandes",
+          courbes: [
+            { libelle: "Coût de passation", valeur: (p) => coutDuStock(f, p.commandes!).passation },
+            { libelle: "Coût de possession", valeur: (p) => coutDuStock(f, p.commandes!).possession },
+            { libelle: "Coût du stock", valeur: (p) => coutDuStock(f, p.commandes!).total },
+          ],
+        };
+      },
+      defi: (c) => {
+        const q = quantiteEconomique(ficheDe(c));
+        return {
+          consigne: "Trouvez le nombre de commandes qui rend le coût du stock de l'année le plus bas.",
+          atteint: (p) => p.commandes === q.commandesEntieres,
+          indice: (p) => {
+            const k = coutDuStock(ficheDe(c), p.commandes!);
+            return k.passation > k.possession
+              ? `La passation (${eur(k.passation)}) pèse plus que la possession (${eur(k.possession)}) : commandez moins souvent.`
+              : `La possession (${eur(k.possession)}) pèse plus que la passation (${eur(k.passation)}) : commandez plus souvent, par plus petites quantités.`;
+          },
+          solution: { commandes: q.commandesEntieres },
+        };
+      },
+      explication: (c) => {
+        const f = ficheDe(c);
+        const q = quantiteEconomique(f);
+        const d = coutDuStock(f, MOIS_PAR_AN);
+        return [
+          `Le coût du stock est le plus bas à ${qte(q.commandesEntieres)} commandes par an, ${eur(q.coutAuMeilleurEntier)} au lieu de ${eur(d.total)} avec une commande par mois : là où la passation et la possession se rejoignent.`,
+          "Commander plus souvent baisse le stock moyen : le stock tourne plus vite, immobilise moins d'argent, et la rentabilité monte. Jusqu'au point où les commandes coûtent plus que le stock qu'elles évitent.",
+        ];
+      },
+    },
+    {
+      id: "la-quantite-economique",
+      objectifs: [4],
+      type: "montants",
+      titre: "La quantité économique",
+      notions: ["stock", "stock_rotation"],
+      question: (c) => {
+        const q = quantiteEconomique(ficheDe(c));
+        return `La quantité économique se calcule : Q* = √(2 × demande de l'année × coût d'une commande ÷ coût de possession d'un article). Calculez-la pour le pull col rond (${qte(q.demande)} par an, ${eur(COUT_DE_PASSATION)} la commande, ${eur(q.possessionUnitaire)} par article), à l'unité, puis le nombre de commandes de l'année (au dixième) et le coût du stock à Q* (au centime).`;
+      },
+      champs: (c) => {
+        const q = quantiteEconomique(ficheDe(c));
+        return [
+          { libelle: "Quantité économique", attendu: q.quantiteArrondie, tolerance: 1, calcul: `√(2 × ${qte(q.demande)} × ${qte(COUT_DE_PASSATION)} ÷ ${qte(q.possessionUnitaire)}) = ${qte(Math.round(q.quantite * 100) / 100)}, soit ${qte(q.quantiteArrondie)} pulls` },
+          { libelle: "Commandes de l'année", attendu: Math.round(q.commandes * 10) / 10, tolerance: 0.1, calcul: `${qte(q.demande)} ÷ ${qte(Math.round(q.quantite * 100) / 100)} = ${qte(Math.round(q.commandes * 10) / 10)}` },
+          { libelle: "Coût du stock à Q*", attendu: q.coutMinimal, tolerance: 1, calcul: `√(2 × ${qte(q.demande)} × ${qte(COUT_DE_PASSATION)} × ${qte(q.possessionUnitaire)}) = ${eur(q.coutMinimal)}, la passation et la possession à parts égales` },
+        ];
+      },
+      explication: (c) => {
+        const q = quantiteEconomique(ficheDe(c));
+        const f = ficheDe(c);
+        const facon = fournisseurDe(f, "faconnier");
+        return [
+          `Commander ${qte(q.quantiteArrondie)} pulls, ${qte(Math.round(q.commandes * 10) / 10)} fois par an, coûte ${eur(q.coutMinimal)}. La commande reste au-dessus du minimum du façonnier (${qte(facon.minimumDeCommande)} articles) et, avec le stock de sécurité, tient dans le rayon.`,
+          "Le modèle suppose une demande régulière et des prix fixes : un pic de Noël ou une remise sur quantité changent la réponse (chapitre « Approvisionner au moindre coût »).",
+        ];
+      },
+    },
+    {
       id: "synthese",
       type: "lecture",
       titre: "Ce qu'il faut retenir",
@@ -764,7 +851,8 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
         return [
           `En janvier, ${x.f.entreprise} a gardé en moyenne ${eur(x.s.stockMoyen)} de stock pour ${eur(x.s.coutDAchatDesVendues)} vendus au coût d'achat : une rotation de ${deux(x.rotation)} et ${qte(x.duree)} jours de stockage. Le façonnier, payé à ${qte(x.faconnier.delaiDePaiement)} jours, finance ce stock ; au comptant, la boutique le porterait seule.`,
           `Le stock se pilote référence par référence : la couverture face au délai de livraison, le stock de sécurité pour le retard, le point de commande pour savoir quand commander. Le cardigan, commandé trop tard, a coûté ${eur(x.caManqueDuCardigan)} de ventes. Un délai plus court baisse le point de commande ; c'est la taille des commandes qui baisse le stock moyen.`,
-          "Au niveau de l'examen, vous savez calculer un stock moyen, une rotation, une durée de stockage et une couverture, fixer un stock de sécurité et un point de commande, dire qui finance le stock selon le délai fournisseur, et retrouver à rebours le stock à viser.",
+          "Commander coûte, stocker aussi : la quantité économique égalise le coût de passation et le coût de possession, et une rotation plus rapide rend le stock plus rentable.",
+          "Au niveau de l'examen, vous savez calculer un stock moyen, une rotation, une durée de stockage et une couverture, fixer un stock de sécurité et un point de commande, dire qui finance le stock selon le délai fournisseur, retrouver à rebours le stock à viser, et chiffrer la quantité économique.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
         ];
       },

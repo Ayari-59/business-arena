@@ -2,6 +2,7 @@ import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import type { Cas } from "../cas";
 import { equipeDuMois, heuresDuMois, indicateursDuMois, planningFaceAuBesoin, seuilDuPointDeVente } from "../monde/boutique";
 import { BOUTIQUES_DU_COURS, OUVERTURE, type FicheDeLaBoutique, type JourDOuverture } from "../monde/maille-et-co";
+import { PROPOSITIONS_DE_LA_BRADERIE, REGLES_DU_PLANNING } from "../monde/equipe-de-la-boutique";
 import type { Chapitre, TableauDeDonnees } from "../types";
 
 /**
@@ -753,6 +754,40 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
           },
         ];
       },
+    },
+    {
+      id: "le-planning-et-le-droit",
+      objectifs: [2],
+      type: "tri",
+      titre: "Le planning et le droit du travail",
+      notions: ["capacity", "payroll"],
+      question: () =>
+        `Pour la semaine de la braderie, le responsable propose plusieurs façons de trouver des heures. Le droit du travail fixe ${qte(REGLES_DU_PLANNING.heuresParJour)} heures de travail par jour au plus, ${qte(REGLES_DU_PLANNING.heuresParSemaine)} par semaine, et ${qte(REGLES_DU_PLANNING.reposQuotidien)} heures de repos entre deux journées. Un temps partiel fait ${qte(REGLES_DU_PLANNING.tempsPartielMinimum)} heures au moins, sauf pour un étudiant ou sur demande écrite du salarié ; ses heures complémentaires ne dépassent pas le dixième du contrat. Rangez chaque proposition.`,
+      categories: [
+        { code: "conforme", libelle: "Conforme au droit du travail" },
+        { code: "contraire", libelle: "Contraire au droit du travail" },
+      ],
+      elements: (c) => {
+        const r = REGLES_DU_PLANNING;
+        const k = PROPOSITIONS_DE_LA_BRADERIE;
+        const etudiante = ficheDe(c).equipe.find((s) => s.code === "etudiante")!;
+        const partiel = r.tempsPartielMinimum;
+        const plafond = partiel * r.partDesHeuresComplementaires;
+        return [
+          { libelle: `Heures du vendeur le samedi, de 10 h à ${qte(10 + k.samediDuVendeur)} h`, montant: k.samediDuVendeur, categorie: "contraire", pourquoi: `Au-delà de ${qte(r.heuresParJour)} heures de travail dans la journée : c'est interdit, même payé en heures supplémentaires.` },
+          { libelle: "Heures de l'adjointe la semaine de la braderie", montant: k.semaineDeLAdjointe, categorie: "conforme", pourquoi: `Sous les ${qte(r.heuresParSemaine)} heures de la semaine : permis, les heures au-delà de 35 sont des heures supplémentaires, majorées.` },
+          { libelle: `Heures de repos entre la fermeture à 20 h et l'inventaire à ${qte(20 + k.reposAvantLInventaire - 24)} h`, montant: k.reposAvantLInventaire, categorie: "contraire", pourquoi: `Le repos entre deux journées est de ${qte(r.reposQuotidien)} heures consécutives au moins.` },
+          { libelle: `Heures complémentaires du vendeur de ${qte(partiel)} heures dans la semaine`, montant: k.complementairesDuVendeur, categorie: "conforme", pourquoi: `Sous le dixième de son contrat, ${qte(plafond)} heures : permis, majorées de 10 %.` },
+          { libelle: `Heures complémentaires de la vendeuse de ${qte(partiel)} heures, la même semaine`, montant: k.complementairesDeLaVendeuse, categorie: "contraire", pourquoi: `Au-delà du dixième de son contrat, ${qte(plafond)} heures, sans accord qui le permette.` },
+          { libelle: "Heures par semaine d'un nouveau contrat, sans demande écrite", montant: k.nouveauContrat, categorie: "contraire", pourquoi: `Un temps partiel ne descend pas sous ${qte(partiel)} heures, sauf demande écrite et motivée du salarié.` },
+          { libelle: "Heures par semaine de l'étudiante", montant: etudiante.heuresParSemaine, categorie: "conforme", pourquoi: `Un étudiant de moins de 26 ans peut travailler moins de ${qte(partiel)} heures : c'est une dérogation prévue par la loi.` },
+        ];
+      },
+      relance: "Lisez le nombre d'heures face à la règle qui s'applique : par jour, par semaine, entre deux journées, ou selon le contrat.",
+      explication: () => [
+        "Le planning a des contraintes commerciales (l'affluence), managériales (l'équité entre vendeurs) et légales. Un planning fixe se répète chaque semaine ; un planning par roulement fait tourner les samedis et les fermetures ; un planning modulé suit la saison. Le logiciel de planning ou un simple tableau partagé les rend visibles à tous.",
+        "Une heure de plus ne se trouve pas n'importe où : le droit plafonne la journée, la semaine et les heures complémentaires, et impose le repos. Au-delà, il faut un renfort.",
+      ],
     },
     {
       id: "synthese",

@@ -438,6 +438,15 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "situations/par-chapitre/le-bail-revise.ts",
   "situations/par-chapitre/le-decouvert-demande-au-banquier.ts",
   "situations/par-chapitre/un-pret-sur-sept-ans.ts",
+  // Le BTS MCO, blocs 3 et 4 : l'inventaire et la démarque (monde/inventaire-de-la-boutique.ts), recruter, rémunérer, le climat de l'équipe (monde/equipe-de-la-boutique.ts), et leurs cas.
+  "chapitres/l-inventaire-et-la-demarque.ts",
+  "chapitres/recruter-integrer-former.ts",
+  "chapitres/remunerer-et-stimuler-les-vendeurs.ts",
+  "chapitres/le-climat-de-l-equipe.ts",
+  "situations/par-chapitre/le-degat-des-eaux-dans-la-reserve.ts",
+  "situations/par-chapitre/un-apprenti-ou-un-temps-partiel.ts",
+  "situations/par-chapitre/le-challenge-du-merinos.ts",
+  "situations/par-chapitre/retenir-la-vendeuse.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */

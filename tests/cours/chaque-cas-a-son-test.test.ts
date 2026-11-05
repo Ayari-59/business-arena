@@ -38,7 +38,7 @@ describe("chaque cas dédié a son test", () => {
       const f = fichierDuCas.get(s.code) ?? s.code;
       return !sources.some((src) => src.includes(`situations/par-chapitre/${f}"`));
     }).map((s) => s.code);
-@@COMPTE@@    expect(CAS_PAR_CHAPITRE.length).toBe(171);
+@@COMPTE@@@@COMPTE@@    expect(CAS_PAR_CHAPITRE.length).toBe(171);
     expect(sans).toEqual([]);
   });
 });

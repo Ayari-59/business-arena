@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { coutDuStock, quantiteEconomique } from "../../src/config/cours/monde/inventaire-de-la-boutique";
+import { gardeDuLaboratoire, attendus as attendusDeLaBoutique, BOUTIQUE as LA_BOUTIQUE } from "./gardes-de-la-boutique";
 import { blocOfficiel, referentielDeCitation } from "../../src/config/ateliers/referentiels";
 import { casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
 import {
@@ -468,5 +470,27 @@ describe("l'export compatible du stock d'un trimestre, pour les chapitres qui le
     expect(st.camv).toBe(cas.stock!.coutDAchatDesVendues);
     expect(st.rotation).toBeCloseTo(st.camv / st.stockMoyen, 2);
     expect(stockDeLaBoutique(cas).s.stockMoyen).toBe(19_237.5);
+  });
+});
+
+describe("le stock du point de vente : le coût de passation, le coût de possession et la quantité économique (complément C4)", () => {
+  const ch = STOCK_DU_POINT_DE_VENTE;
+  it("le laboratoire : 17 commandes par an, et seulement elles, rendent le coût le plus bas", () => {
+    // 7 200 pulls par an (600 par mois), 60 € la commande, 20 % de 25 € pour garder un pull un an.
+    const total = (n: number) => Math.round((n * 60 + (7_200 / n / 2) * 5) * 100) / 100;
+    const essais = Array.from({ length: 33 }, (_, i) => 4 + i);
+    const meilleur = essais.reduce((a, b) => (total(b) < total(a) ? b : a));
+    expect([meilleur, total(meilleur), total(12)]).toEqual([17, 2_078.82, 2_220]);
+    expect(coutDuStock(f, 12).total).toBe(total(12));
+    gardeDuLaboratoire(ch, "le-cout-de-la-commande");
+  });
+
+  it("la quantité économique de Wilson, à la main", () => {
+    const q = Math.sqrt((2 * 7_200 * 60) / 5);
+    expect(attendusDeLaBoutique(ch, "la-quantite-economique")).toEqual([Math.round(q), Math.round((7_200 / q) * 10) / 10, Math.round(Math.sqrt(2 * 7_200 * 60 * 5) * 100) / 100]);
+    expect([Math.round(q), Math.round(Math.sqrt(2 * 7_200 * 60 * 5) * 100) / 100]).toEqual([416, 2_078.46]);
+    expect(quantiteEconomique(f).quantiteArrondie).toBeGreaterThanOrEqual(f.fournisseurs.find((x) => x.code === "faconnier")!.minimumDeCommande);
+    expect(ch.etapes.at(-1)!.id).toBe("synthese");
+    expect(LA_BOUTIQUE.code).toBe("boutique");
   });
 });

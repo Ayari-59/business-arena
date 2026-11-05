@@ -1004,6 +1004,19 @@ describe.each([
   { code: "le-bail-revise", entreprise: "boutique", telephone: true },
   { code: "le-decouvert-demande-au-banquier", entreprise: "boutique" },
   { code: "un-pret-sur-sept-ans", entreprise: "boutique", telephone: true },
+  // Le BTS MCO, blocs 3 et 4 : l'inventaire et la démarque, recruter, rémunérer, le climat de l'équipe, un tableau à compléter, des tris, un curseur et un laboratoire, puis leurs cas.
+  { code: "l-inventaire-et-la-demarque", entreprise: "boutique" },
+  { code: "l-inventaire-et-la-demarque", entreprise: "boutique", telephone: true },
+  { code: "recruter-integrer-former", entreprise: "boutique" },
+  { code: "recruter-integrer-former", entreprise: "boutique", telephone: true },
+  { code: "remunerer-et-stimuler-les-vendeurs", entreprise: "boutique" },
+  { code: "remunerer-et-stimuler-les-vendeurs", entreprise: "boutique", telephone: true },
+  { code: "le-climat-de-l-equipe", entreprise: "boutique" },
+  { code: "le-climat-de-l-equipe", entreprise: "boutique", telephone: true },
+  { code: "le-degat-des-eaux-dans-la-reserve", entreprise: "boutique" },
+  { code: "un-apprenti-ou-un-temps-partiel", entreprise: "boutique", telephone: true },
+  { code: "le-challenge-du-merinos", entreprise: "boutique" },
+  { code: "retenir-la-vendeuse", entreprise: "boutique", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se
