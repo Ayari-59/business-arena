@@ -1,4 +1,4 @@
-import type { Bureau, EtapeDeClassement, EtapeDeReponse, EtapeDEtat, EtapeDuBureau, EtapeDuJournal, PieceDuBureau } from "../../config/cours/bureaux/types";
+import type { Bureau, EtapeDeClassement, EtapeDeRectification, EtapeDeReponse, EtapeDEtat, EtapeDuBureau, EtapeDuJournal, PieceDuBureau } from "../../config/cours/bureaux/types";
 import { CHAPITRES, PALIERS, PARCOURS } from "../../config/cours/registre";
 import { typographier } from "../../lib/typographie";
 import { corriger, enSaisie, lireMontant, type Correction, type EcritureAttendue, type LigneSaisie } from "./correcteur";
@@ -15,6 +15,10 @@ import { corrigerLeTableau, solutionsDuTableau, type CorrectionDuTableau, type T
  * serveur (app/cours/bureau/actions.ts), qui contrôle l'accès puis appelle `corrigerAuBureau` : la
  * réponse ne porte que la correction de ce geste. Les explications et les calculs ne partent qu'une
  * fois l'étape réussie, ou quand l'élève demande la correction.
+ *
+ * LE MÊME MOTEUR SERT L'ENQUÊTE (config/cours/enquetes, app/cours/enquete/actions.ts) : un dossier dont
+ * l'élève trie les écritures, justes ou fausses, puis rectifie les fausses (l'étape « rectification ») ;
+ * la raison de chaque erreur et l'écriture juste restent ici, comme le reste des corrigés.
  *
  * Ce module est serveur : aucun composant « use client » ne doit l'importer
  * (tests/architecture/corriges-hors-du-navigateur.test.ts).
@@ -51,10 +55,19 @@ export interface ReponseServie extends BaseServie {
   questions: { id: string; question: string; options: { texte: string }[] }[];
 }
 
-export type EtapeDuBureauServie = ClassementServi | EtatServi | JournalServi | ReponseServie;
+/** Rectifier : l'étape de classement qui donne les écritures à rectifier, et les raisons à choisir. */
+export interface RectificationServie extends BaseServie {
+  type: "rectification";
+  depuis: { etape: string; dans: string };
+  raisons: readonly { code: string; libelle: string }[];
+}
+
+export type EtapeDuBureauServie = ClassementServi | EtatServi | JournalServi | ReponseServie | RectificationServie;
 
 export interface BureauServi {
   code: string;
+  /** Le format : un bureau ou une enquête, pour les mots de la page et l'action qui corrige. */
+  format: "bureau" | "enquete";
   titre: string;
   accroche: string;
   objectifs: readonly string[];
@@ -101,6 +114,8 @@ function servirLEtape(b: Bureau, e: EtapeDuBureau): EtapeDuBureauServie {
       return { ...base, type: "journal" };
     case "reponse":
       return { ...base, type: "reponse", questions: e.questions.map((q) => ({ id: q.id, question: q.question, options: ordreDesOptions(b, e.id, q).map((o) => ({ texte: o.texte })) })) };
+    case "rectification":
+      return { ...base, type: "rectification", depuis: e.depuis, raisons: e.raisons };
   }
 }
 
@@ -108,6 +123,7 @@ function servirLEtape(b: Bureau, e: EtapeDuBureau): EtapeDuBureauServie {
 export function servirLeBureau(b: Bureau): BureauServi {
   return typographier({
     code: b.code,
+    format: b.format ?? "bureau",
     titre: b.titre,
     accroche: b.accroche,
     objectifs: b.objectifs,
@@ -132,6 +148,7 @@ export type EnvoiAuBureau =
   | { etape: string; geste: "etat"; saisies: Record<string, string> }
   | { etape: string; geste: "ecriture"; saisie: LigneSaisie[]; faites: string[] }
   | { etape: string; geste: "repondre"; question: string; option: string; justes: string[] }
+  | { etape: string; geste: "rectifier"; ecriture: string; raison: string; saisie: LigneSaisie[]; faites: string[]; essais: number }
   | { etape: string; geste: "montrer" };
 
 /** Une écriture, pour l'afficher une fois passée : sa date, son libellé, ses lignes au débit ou au crédit. */
@@ -149,6 +166,20 @@ export type RetourDuBureau =
   | { geste: "ecriture"; juste: boolean; correction: Correction; passee?: EcritureMontree; deja?: boolean; fini: boolean; explication?: readonly string[] }
   | { geste: "repondre"; juste: boolean; retour: string; fini: boolean; explication?: readonly string[] }
   | {
+      geste: "rectifier";
+      juste: boolean;
+      /** La raison choisie est-elle celle de l'erreur ? */
+      raison: boolean;
+      correction: Correction;
+      /** Une piste, après un essai manqué. */
+      indice?: string;
+      passee?: EcritureMontree;
+      pourquoi?: string;
+      deja?: boolean;
+      fini: boolean;
+      explication?: readonly string[];
+    }
+  | {
       geste: "montrer";
       choix?: Record<string, string>;
       pourquoi?: Record<string, string>;
@@ -156,6 +187,8 @@ export type RetourDuBureau =
       saisies?: Record<string, string>;
       ecritures?: EcritureMontree[];
       reponses?: { question: string; texte: string; retour: string }[];
+      /** La rectification : la raison de chaque erreur, par écriture. */
+      raisons?: Record<string, string>;
       explication: readonly string[];
     };
 
@@ -184,6 +217,18 @@ export function envoiValide(x: unknown): EnvoiAuBureau | null {
     case "ecriture":
       return estSaisie(e.saisie) && estListeDeTextes(e.faites)
         ? { etape: e.etape, geste: "ecriture", saisie: e.saisie.map((l) => ({ compte: l.compte, debit: l.debit, credit: l.credit })), faites: e.faites }
+        : null;
+    case "rectifier":
+      return estTexte(e.ecriture) && estTexte(e.raison) && estSaisie(e.saisie) && estListeDeTextes(e.faites) && typeof e.essais === "number" && Number.isInteger(e.essais) && e.essais >= 0 && e.essais <= 1_000
+        ? {
+            etape: e.etape,
+            geste: "rectifier",
+            ecriture: e.ecriture,
+            raison: e.raison,
+            saisie: e.saisie.map((l) => ({ compte: l.compte, debit: l.debit, credit: l.credit })),
+            faites: e.faites,
+            essais: e.essais,
+          }
         : null;
     case "repondre":
       return estTexte(e.question) && typeof e.option === "string" && e.option.length <= 400 && estListeDeTextes(e.justes)
@@ -264,6 +309,32 @@ function repondre(e: EtapeDeReponse, question: string, option: string, justes: r
   return { geste: "repondre", juste: o.juste, retour: o.retour, fini, ...(fini ? { explication: e.explication } : {}) };
 }
 
+/**
+ * Rectifier une écriture : la raison de l'erreur ET l'écriture juste. Une écriture qui n'est pas à
+ * rectifier (une écriture juste du dossier) le dit, sans rien d'autre ; une piste vient après un essai
+ * manqué, la suivante après le second.
+ */
+function rectifier(b: Bureau, e: EtapeDeRectification, id: string, raison: string, saisie: LigneSaisie[], faites: readonly string[], essais: number): RetourDuBureau | null {
+  const connues = new Set(faites.filter((x) => e.ecritures.some((y) => y.id === x)));
+  const fini = (ids: ReadonlySet<string>) => e.ecritures.every((x) => ids.has(x.id));
+  const x = e.ecritures.find((y) => y.id === id);
+  if (!x) {
+    const tri = b.etapes.find((y) => y.id === e.depuis.etape);
+    if (tri?.type !== "classement" || !tri.elements.some((y) => y.code === id)) return null;
+    return { geste: "rectifier", juste: false, raison: false, fini: fini(connues), correction: { juste: false, remarques: ["Cette écriture est juste : elle n'a rien à rectifier."], notes: [] } };
+  }
+  if (connues.has(x.id)) return { geste: "rectifier", juste: false, raison: true, deja: true, fini: fini(connues), correction: { juste: false, remarques: ["Cette écriture est déjà rectifiée."], notes: [] } };
+  const raisonJuste = raison === x.raison;
+  const correction = corriger(saisie, x.ecriture);
+  if (raisonJuste && correction.juste) {
+    const apres = new Set([...connues, x.id]);
+    const termine = fini(apres);
+    return { geste: "rectifier", juste: true, raison: true, correction, passee: montree(x.id, x.ecriture), pourquoi: x.pourquoi, fini: termine, ...(termine ? { explication: e.explication } : {}) };
+  }
+  const indice = x.indices.length > 0 ? x.indices[Math.min(essais, x.indices.length - 1)] : undefined;
+  return { geste: "rectifier", juste: false, raison: raisonJuste, correction, ...(indice ? { indice } : {}), fini: fini(connues) };
+}
+
 /** La correction de l'étape, quand l'élève la demande : tout ce qu'elle attendait. */
 function montrer(e: EtapeDuBureau): RetourDuBureau {
   switch (e.type) {
@@ -287,6 +358,14 @@ function montrer(e: EtapeDuBureau): RetourDuBureau {
         }),
         explication: e.explication,
       };
+    case "rectification":
+      return {
+        geste: "montrer",
+        ecritures: e.ecritures.map((x) => montree(x.id, x.ecriture)),
+        raisons: Object.fromEntries(e.ecritures.map((x) => [x.id, x.raison])),
+        pourquoi: Object.fromEntries(e.ecritures.map((x) => [x.id, x.pourquoi])),
+        explication: e.explication,
+      };
   }
 }
 
@@ -302,5 +381,6 @@ export function corrigerAuBureau(b: Bureau, brut: unknown): RetourDuBureau {
   else if (envoi.geste === "etat" && e.type === "etat") retour = remplirLEtat(e, envoi.saisies);
   else if (envoi.geste === "ecriture" && e.type === "journal") retour = passerLEcriture(e, envoi.saisie, envoi.faites);
   else if (envoi.geste === "repondre" && e.type === "reponse") retour = repondre(e, envoi.question, envoi.option, envoi.justes);
+  else if (envoi.geste === "rectifier" && e.type === "rectification") retour = rectifier(b, e, envoi.ecriture, envoi.raison, envoi.saisie, envoi.faites, envoi.essais);
   return typographier(retour ?? { refus: "envoi" });
 }

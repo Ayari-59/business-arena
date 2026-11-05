@@ -5,6 +5,7 @@ import { CHAPITRES } from "@/config/cours/registre";
 import { SITUATIONS } from "@/config/cours/situations";
 import { servirLeChapitre } from "@/pedagogy/cours/chapitre-servi";
 import { BUREAUX } from "@/config/cours/bureaux";
+import { ENQUETES } from "@/config/cours/enquetes";
 import { corrigerAuBureau, servirLeBureau } from "@/pedagogy/cours/bureau-servi";
 import {
   espacesOrdinairesFautives,
@@ -63,7 +64,8 @@ function textesDuCoursServi(): TexteServi[] {
   }
   // Les bureaux (config/cours/bureaux) : ce que la page sert, la pile et les consignes, et ce que l'action
   // serveur rend une fois la correction demandée, étape par étape (les corrigés se lisent aussi).
-  for (const b of BUREAUX) {
+  // Les enquêtes (config/cours/enquetes) : le même moteur, la même relecture.
+  for (const b of [...BUREAUX, ...ENQUETES]) {
     const ou = `${b.code} @${b.entreprise.code}`;
     const emettre = (chemin: string, texte: string) => sortie.push({ ou, chemin, texte });
     emettre("accroche", b.accroche);

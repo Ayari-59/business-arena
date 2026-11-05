@@ -22,6 +22,7 @@ import { THEMES, episodesDuTheme, themeDuChapitre, type Theme } from "@/config/c
 import type { Chapitre } from "@/config/cours/types";
 import { casDuChapitre, type Situation } from "@/config/cours/situations";
 import { bureauxDuChapitre, lienDuBureau } from "@/config/cours/bureaux";
+import { enquetesDuChapitre, lienDeLEnquete } from "@/config/cours/enquetes";
 import { coursDeLaFormation } from "@/config/couverture";
 import { episodeParCode } from "@/pedagogy/episodes/registre";
 import { casDeSyntheseDuTheme } from "@/pedagogy/cours/suites";
@@ -694,6 +695,17 @@ function CasDuChapitre({ chapitre, imposee }: { chapitre: string; imposee?: stri
           className="text-xs text-amber-300/90 underline-offset-4 hover:text-amber-300 hover:underline"
         >
           Cas pratique : {b.titre}
+        </Link>
+      ))}
+      {/* Les enquêtes du chapitre (config/cours/enquetes) : un dossier qui cache des erreurs, à trouver et à rectifier. */}
+      {enquetesDuChapitre(chapitre).map((e) => (
+        <Link
+          key={e.code}
+          href={lienDeLEnquete(e)}
+          data-enquete-du-chapitre={e.code}
+          className="text-xs text-amber-300/90 underline-offset-4 hover:text-amber-300 hover:underline"
+        >
+          Cas pratique : {e.titre}
         </Link>
       ))}
     </>

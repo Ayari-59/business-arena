@@ -17,8 +17,19 @@ import type { Chapitre, OptionDeChoix } from "../types";
  * catalogue, ni dans la couverture, ni parmi les cas dédiés (un par chapitre, garde du catalogue).
  */
 
-/** La nature d'une pièce de la pile : ce qui décide de sa présentation. */
-export type NatureDePiece = "courriel" | "releve" | "extrait" | "talon" | "avis" | "lettre";
+/**
+ * La nature d'une pièce de la pile : ce qui décide de sa présentation. Une enquête (config/cours/enquetes)
+ * y ajoute la balance, la note et l'écriture d'un journal.
+ */
+export type NatureDePiece = "courriel" | "releve" | "extrait" | "talon" | "avis" | "lettre" | "balance" | "note" | "ecriture";
+
+/** Une ligne d'une balance ou d'une écriture : le compte, son intitulé, son débit ou son crédit. */
+export interface LigneDeCompte {
+  compte: string;
+  intitule: string;
+  debit: number;
+  credit: number;
+}
 
 /** Une ligne d'un document de banque : sa date, son libellé, son montant (débit négatif, crédit positif). */
 export interface LigneDeDocument {
@@ -42,6 +53,8 @@ export interface PieceDuBureau {
   paragraphes?: readonly string[];
   /** Les opérations d'un relevé ou d'un extrait de compte. */
   lignes?: readonly LigneDeDocument[];
+  /** Les lignes d'une balance ou d'une écriture, compte par compte. */
+  comptes?: readonly LigneDeCompte[];
   /** Les montants à part (un solde, le montant d'un chèque), le dernier en gras s'il est `fort`. */
   montants?: readonly { libelle: string; montant: number; fort?: boolean }[];
   /** Une mention en pied de pièce. */
@@ -94,9 +107,39 @@ export interface EtapeDeReponse extends BaseDuBureau {
   questions: readonly { id: string; question: string; options: readonly OptionDeChoix[] }[];
 }
 
-export type EtapeDuBureau = EtapeDeClassement | EtapeDEtat | EtapeDuJournal | EtapeDeReponse;
+/**
+ * RECTIFIER DES ÉCRITURES (le format « enquête ») : chaque écriture qu'une étape de classement a rangée
+ * dans une catégorie (« Fausse »), l'élève dit pourquoi elle est fausse, puis la passe juste. L'étape
+ * de classement en donne la liste au navigateur : celle-ci ne la sert pas, elle ne sert que les raisons.
+ */
+export interface EtapeDeRectification extends BaseDuBureau {
+  type: "rectification";
+  /** L'étape de classement qui trie les écritures, et la catégorie (`dans`) de celles qui sont à rectifier. */
+  depuis: { etape: string; dans: string };
+  /** Les raisons possibles d'une erreur, communes à toutes les écritures : les justes et des leurres. */
+  raisons: readonly { code: string; libelle: string }[];
+  ecritures: readonly {
+    /** Le code de l'élément de classement, qui est celui de l'écriture. */
+    id: string;
+    /** La raison de l'erreur, parmi `raisons`. */
+    raison: string;
+    /** L'écriture juste. */
+    ecriture: EcritureAttendue;
+    /** Ce que l'élève lit une fois l'écriture rectifiée : l'erreur, et ce qu'elle changeait. */
+    pourquoi: string;
+    /** Des pistes, données une à une après un essai manqué. */
+    indices: readonly string[];
+  }[];
+}
+
+export type EtapeDuBureau = EtapeDeClassement | EtapeDEtat | EtapeDuJournal | EtapeDeReponse | EtapeDeRectification;
 
 export interface Bureau extends Pick<Chapitre, "code" | "parcours" | "palier" | "blocs" | "titre" | "accroche" | "objectifs" | "libre"> {
+  /**
+   * Le format : un bureau (la pile d'un mois, par défaut) ou une enquête (un dossier qui cache des
+   * erreurs, config/cours/enquetes). Le moteur est le même ; l'adresse, l'action et les mots changent.
+   */
+  format?: "bureau" | "enquete";
   /** Les chapitres dont le bureau reprend les gestes : il s'ouvre avec eux, comme un cas dédié. */
   reprend: readonly string[];
   /** Qui attend le travail (« La gérante »). */
