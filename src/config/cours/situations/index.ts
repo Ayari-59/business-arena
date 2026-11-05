@@ -203,6 +203,8 @@ import { LA_FACTURE_RECUE_DEUX_FOIS } from "./par-chapitre/la-facture-recue-deux
 import { LA_GARANTIE_DE_DEUX_ANS } from "./par-chapitre/la-garantie-de-deux-ans";
 import { UN_DIVIDENDE_PLUS_GROS } from "./par-chapitre/un-dividende-plus-gros";
 import { LA_SITUATION_DE_SEPTEMBRE } from "./par-chapitre/la-situation-de-septembre";
+import { LA_CABINE_SUBVENTIONNEE } from "./par-chapitre/la-cabine-subventionnee";
+import { LE_DIRECTEUR_VEUT_PLUS_D_ACTIONS } from "./par-chapitre/le-directeur-veut-plus-d-actions";
 export type { Situation } from "./types";
 
 /**
@@ -421,6 +423,8 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LA_GARANTIE_DE_DEUX_ANS,
   UN_DIVIDENDE_PLUS_GROS,
   LA_SITUATION_DE_SEPTEMBRE,
+  LA_CABINE_SUBVENTIONNEE,
+  LE_DIRECTEUR_VEUT_PLUS_D_ACTIONS,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

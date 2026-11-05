@@ -1073,6 +1073,13 @@ describe.each([
   { code: "les-comptes-annuels", entreprise: "nova", telephone: true },
   { code: "un-dividende-plus-gros", entreprise: "nova" },
   { code: "la-situation-de-septembre", entreprise: "nova", telephone: true },
+  // Le BTS CG P1 et P2 : acquérir et financer une immobilisation, l'initiation à la consolidation (un laboratoire chacun, un tableau à compléter pour la seconde), puis leurs cas.
+  { code: "acquerir-et-financer-une-immobilisation", entreprise: "nova" },
+  { code: "acquerir-et-financer-une-immobilisation", entreprise: "nova", telephone: true },
+  { code: "initiation-a-la-consolidation", entreprise: "nova" },
+  { code: "initiation-a-la-consolidation", entreprise: "nova", telephone: true },
+  { code: "la-cabine-subventionnee", entreprise: "nova" },
+  { code: "le-directeur-veut-plus-d-actions", entreprise: "nova", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se

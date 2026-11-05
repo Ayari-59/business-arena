@@ -199,6 +199,20 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "781", intitule: "Reprises sur amortissements, dépréciations et provisions", nature: "produit" },
   { numero: "7815", intitule: "Reprises sur provisions d'exploitation", nature: "produit" },
   { numero: "7817", intitule: "Reprises sur dépréciations des actifs circulants", nature: "produit" },
+  // L'acquisition et le financement des immobilisations, et leur cession (BTS CG P1 1.5.2 et 1.5.6, P2 2.3.2).
+  { numero: "131", intitule: "Subventions d'équipement", nature: "passif" },
+  { numero: "139", intitule: "Subventions d'investissement inscrites au compte de résultat", nature: "passif" },
+  { numero: "1572", intitule: "Provisions pour gros entretien ou grandes révisions", nature: "passif" },
+  { numero: "238", intitule: "Avances et acomptes versés sur commandes d'immobilisations corporelles", nature: "actif" },
+  { numero: "441", intitule: "État, subventions à recevoir", nature: "actif" },
+  { numero: "462", intitule: "Créances sur cessions d'immobilisations", nature: "actif" },
+  { numero: "612", intitule: "Redevances de crédit-bail", nature: "charge" },
+  { numero: "6122", intitule: "Crédit-bail mobilier", nature: "charge" },
+  { numero: "675", intitule: "Valeurs comptables des éléments d'actif cédés", nature: "charge" },
+  { numero: "72", intitule: "Production immobilisée", nature: "produit" },
+  { numero: "722", intitule: "Production immobilisée, immobilisations corporelles", nature: "produit" },
+  { numero: "775", intitule: "Produits des cessions d'éléments d'actif", nature: "produit" },
+  { numero: "777", intitule: "Quote-part des subventions d'investissement virée au résultat de l'exercice", nature: "produit" },
 ];
 
 const PAR_NUMERO = new Map(PLAN_DU_COURS.map((c) => [c.numero, c]));

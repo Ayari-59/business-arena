@@ -74,6 +74,8 @@ export const THEMES: readonly Theme[] = [
       "le-dossier-de-revision",
       "les-capitaux-propres",
       "les-comptes-annuels",
+      "acquerir-et-financer-une-immobilisation",
+      "initiation-a-la-consolidation",
     ],
     familles: [],
   },

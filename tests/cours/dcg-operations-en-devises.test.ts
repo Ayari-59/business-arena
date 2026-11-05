@@ -54,6 +54,26 @@ describe("la créance et la dette en dollars", () => {
   });
 });
 
+describe("K1 : le chapitre au BTS CG", () => {
+  it("étiqueté P1 et P2 ; la position globale se dit au-delà du BTS, et le journal rappelle la provision du BTS", () => {
+    expect(CH.blocs).toContain("BTS CG P1 · Contrôle et traitement comptable des opérations commerciales");
+    expect(CH.blocs).toContain("BTS CG P2 · Contrôle et production de l'information financière");
+    expect(CH.etapes.filter((e) => e.titre.includes("(au-delà du BTS)")).map((e) => e.id)).toEqual(["la-position-globale"]);
+    const j = CH.etapes.find((e) => e.id === "la-provision-au-journal")!;
+    if (j.type !== "ecriture") throw new Error("écriture attendue");
+    expect(j.evenement(NOVA)).toContain(montantEcrit(2_800));
+  });
+
+  it("la couverture à terme à 0,90 € : 140 000 × 0,90 = 126 000 € figés, aucune perte latente à provisionner", () => {
+    expect(attendus(CH, "la-couverture-a-terme")).toEqual([126_000, 0]);
+    // Le même cours que le cas « Couvrir la créance en dollars ».
+    expect(creanceCouverte().fige).toBe(126_000);
+    const ids = CH.etapes.map((e) => e.id);
+    expect(ids.indexOf("la-couverture-a-terme")).toBe(ids.indexOf("la-provision-au-journal") + 1);
+    expect(CH.etapes.length).toBeLessThanOrEqual(20);
+  });
+});
+
 describe("le cas du chapitre", () => {
   it("couverte à 0,90 € : 126 000 € figés, 1 400 € de coût, aucune provision ; 2 800 € manqués au paiement", () => {
     const k = creanceCouverte();
