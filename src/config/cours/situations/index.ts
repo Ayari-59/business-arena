@@ -171,6 +171,10 @@ import { CAMPUSTECH_DOUBLE_SA_COMMANDE } from "./par-chapitre/campustech-double-
 import { LA_BANQUE_DEMANDE_UNE_GARANTIE } from "./par-chapitre/la-banque-demande-une-garantie";
 import { LE_PRET_INDEXE_SUR_LA_DURABILITE } from "./par-chapitre/le-pret-indexe-sur-la-durabilite";
 import { DEUX_DEVIS_POUR_CHAUFFER_L_ATELIER } from "./par-chapitre/deux-devis-pour-chauffer-l-atelier";
+import { UNE_SECONDE_ENSEIGNE } from "./par-chapitre/une-seconde-enseigne";
+import { UN_QUATRIEME_FACONNIER } from "./par-chapitre/un-quatrieme-faconnier";
+import { MILLE_EUROS_POUR_COMMUNIQUER } from "./par-chapitre/mille-euros-pour-communiquer";
+import { LE_RAYONNAGE_QUI_RESISTE } from "./par-chapitre/le-rayonnage-qui-resiste";
 export type { Situation } from "./types";
 
 /**
@@ -357,6 +361,10 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LA_BANQUE_DEMANDE_UNE_GARANTIE,
   LE_PRET_INDEXE_SUR_LA_DURABILITE,
   DEUX_DEVIS_POUR_CHAUFFER_L_ATELIER,
+  UNE_SECONDE_ENSEIGNE,
+  UN_QUATRIEME_FACONNIER,
+  MILLE_EUROS_POUR_COMMUNIQUER,
+  LE_RAYONNAGE_QUI_RESISTE,
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

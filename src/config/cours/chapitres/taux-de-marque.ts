@@ -2,6 +2,7 @@ import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import type { Cas } from "../cas";
 import { coutQuiGardeLeTauxDeMarque, fournisseurDe, margeDeLArticle, margeDuMois, margesDeLaGamme, prixQuiGardeLeTauxDeMarque, referenceDe } from "../monde/boutique";
 import { BOUTIQUES_DU_COURS, type CodeDeFournisseur, type FicheDeLaBoutique } from "../monde/maille-et-co";
+import { ENQUETE_DU_PRIX, acceptabilite, elasticiteLue } from "../monde/offre-et-prix";
 import type { Chapitre, TableauDeDonnees } from "../types";
 import { etapesAvant, etapesDepuis, partieDuChapitre } from "./decoupage";
 
@@ -97,6 +98,8 @@ const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits:
 const coef = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
 const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+/** Au centième, la moitié s'éloignant de zéro (−1,485 donne −1,49). */
+const auCentiemePres = (x: number) => (Math.sign(x) * Math.round(Math.abs(x) * 100 + 1e-9)) / 100 + 0;
 /** Un prix « au plus » : tronqué au centime, pour ne jamais dépasser la limite. */
 const auCentimeInferieur = (x: number) => Math.floor(x * 100 + 1e-6) / 100;
 
@@ -273,6 +276,7 @@ const TAUX_DE_MARQUE_ENTIER: Chapitre = {
     "Calculer le coefficient multiplicateur, hors taxes et toutes taxes comprises, et remonter d'une étiquette au prix d'achat",
     "Fixer le prix de vente qui garde le taux de marque quand le fournisseur change",
     "Distinguer le prix d'achat qui garde le taux de marque et celui qui garde la marge du mois face à un concurrent",
+    "Expliquer ce qui borne le prix : l'élasticité de la demande, le prix d'acceptabilité et le cadre légal des prix",
   ],
   libre: false,
   entreprises: {
@@ -876,6 +880,92 @@ const TAUX_DE_MARQUE_ENTIER: Chapitre = {
           `La courbe n'est pas une droite : à prix plus haut, chaque pull marque plus, mais il s'en vend moins. Avec le façonnier, elle culmine vers ${eur(m.meilleurFaconnier.prix)}, à ${eur(m.meilleurFaconnier.marge)}. Le taux de marque est un repère du rayon ; ce que la boutique encaisse, c'est la marge du mois.`,
         ];
       },
+    },
+    {
+      id: "l-elasticite-lue",
+      objectifs: [5],
+      type: "montants",
+      titre: "L'élasticité, lue sur deux prix",
+      notions: ["price_elasticity"],
+      question: (c) => {
+        const e = elasticiteLue(ficheDe(c));
+        return `Au prix de l'étiquette (${eur(e.r.prixHt)} hors taxes), les clientes demandent ${qte(e.r.demandeDuMois)} pulls col rond ; au prix du concurrent (${eur(e.prixHtDuConcurrent)}), la simulation en fait demander ${qte(e.demandeAuPrix)}. Calculez la variation du prix et celle de la demande, en pourcentage au dixième (négative si elle baisse), puis le coefficient d'élasticité de la demande au prix, au centième (négatif s'il est de signe contraire).`;
+      },
+      champs: (c) => {
+        const e = elasticiteLue(ficheDe(c));
+        const vp = auDixieme(e.variationDuPrix * 100);
+        const vd = auDixieme(e.variationDeLaDemande * 100);
+        return [
+          { libelle: "Variation du prix (%)", attendu: vp, tolerance: 0.1, calcul: `(${eur(e.prixHtDuConcurrent)} − ${eur(e.r.prixHt)}) ÷ ${eur(e.r.prixHt)} × 100 = ${pct(vp)}` },
+          { libelle: "Variation de la demande (%)", attendu: vd, tolerance: 0.1, calcul: `(${qte(e.demandeAuPrix)} − ${qte(e.r.demandeDuMois)}) ÷ ${qte(e.r.demandeDuMois)} × 100 = ${pct(vd)}` },
+          { libelle: "Coefficient d'élasticité", attendu: auCentiemePres(e.elasticite), tolerance: 0.02, calcul: `${pct(vd)} ÷ ${pct(vp)} = ${qte(auCentiemePres(e.elasticite))}` },
+        ];
+      },
+      explication: (c) => {
+        const e = elasticiteLue(ficheDe(c));
+        return [
+          `Une baisse de prix de 1 % fait demander environ ${qte(Math.round(-e.elasticite * 10) / 10)} % de pulls en plus : la demande est élastique (le coefficient dépasse 1 en valeur absolue). La simulation suppose ${qte(ficheDe(c).elasticiteAuPrix)} ; l'arrondi des pulls à l'unité donne ${qte(auCentiemePres(e.elasticite))}. Plus la demande est élastique, plus un écart de prix avec le concurrent pèse sur les ventes.`,
+        ];
+      },
+    },
+    {
+      id: "le-prix-d-acceptabilite",
+      objectifs: [5],
+      type: "montants",
+      titre: "Le prix d'acceptabilité",
+      notions: ["psych_price", "price_elasticity"],
+      tableau: () => ({
+        titre: "L'enquête à la porte : le pull col rond à cinq étiquettes",
+        colonnes: ["Trop cher", "Trop bon marché"],
+        lignes: ENQUETE_DU_PRIX.map((l) => ({ libelle: `${eur(l.prixTtc)} toutes taxes comprises`, valeurs: [pct(l.tropCher * 100), pct(l.tropBonMarche * 100)] })),
+      }),
+      question: () =>
+        "La boutique a demandé à des clientes, pour cinq étiquettes, si elles trouveraient le pull trop cher (elles n'achètent pas) ou trop bon marché (elles doutent de la qualité). Calculez le taux d'acceptation à l'étiquette actuelle et au prix du concurrent : la part qui ne le trouve ni trop cher, ni trop bon marché, en pourcentage.",
+      champs: (c) => {
+        const f = ficheDe(c);
+        const a = acceptabilite();
+        const de = (p: number) => a.lignes.find((l) => l.prixTtc === p)!;
+        return [f.gamme[0]!.prixTtc, f.concurrent.prixTtc].map((p) => {
+          const l = de(p);
+          const t = Math.round(l.acceptation * 1000) / 10;
+          return { libelle: `Taux d'acceptation à ${eur(p)} (%)`, attendu: t, tolerance: 0.1, calcul: `100 % − ${pct(l.tropCher * 100)} − ${pct(l.tropBonMarche * 100)} = ${pct(t)}` };
+        });
+      },
+      explication: () => {
+        const a = acceptabilite();
+        return [
+          `Le prix d'acceptabilité, celui qui satisfait le plus de clientes, est ${eur(a.meilleur.prixTtc)} (${pct(Math.round(a.meilleur.acceptation * 1000) / 10)}). Plus bas, des clientes doutent de la qualité ; plus haut, elles trouvent le pull trop cher. L'enquête ne dit pas le prix qui rapporte le plus : elle borne la zone où le chercher, que la marge du mois départage.`,
+        ];
+      },
+    },
+    {
+      id: "le-cadre-legal-du-prix",
+      objectifs: [5],
+      type: "choix",
+      titre: "Ce que la loi dit du prix",
+      notions: ["price_floor", "markup_coefficient"],
+      question: (c) => {
+        const f = ficheDe(c);
+        return `Pour s'aligner sur le concurrent à ${eur(f.concurrent.prixTtc)}, le vendeur propose d'afficher en vitrine « ${eur(f.concurrent.prixTtc / 1.2)} » sans préciser que c'est hors taxes, et le façonnier rappelle qu'il « conseille » de ne pas descendre sous ${eur(f.gamme[0]!.prixTtc)}. Qu'en dites-vous ?`;
+      },
+      options: () => [
+        {
+          texte: "Toutes taxes comprises ; le prix conseillé ne lie pas la boutique",
+          juste: true,
+          retour:
+            "Oui. Les prix sont libres, fixés par le commerçant ; ils s'affichent toutes taxes comprises, en euros, lisiblement, devant le client. Un fournisseur peut conseiller un prix, jamais l'imposer. Deux limites demeurent : la revente à perte, sous le prix d'achat effectif, est interdite hors des cas prévus (le chapitre « Choisir et négocier avec le fournisseur ») ; et une réduction s'annonce sur le prix le plus bas des 30 derniers jours.",
+        },
+        {
+          texte: "Afficher hors taxes est permis : c'est le prix que la boutique encaisse",
+          juste: false,
+          retour: "Non : face au consommateur, le prix s'affiche toutes taxes comprises. Le hors taxes sert aux comptes et aux ventes entre professionnels.",
+        },
+        {
+          texte: "Le façonnier peut exiger un prix minimum de revente",
+          juste: false,
+          retour: "Non : le prix de revente imposé est interdit. Le façonnier conseille ; la boutique décide.",
+        },
+      ],
     },
     {
       id: "la-critique-du-taux",
