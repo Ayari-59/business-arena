@@ -18,6 +18,7 @@ import { getSession } from "@/lib/session";
 import { ChapitreReserve } from "@/components/cours/chapitre-reserve";
 import Link from "next/link";
 import { bureauxDuChapitre, lienDuBureau } from "@/config/cours/bureaux";
+import { enquetesDuChapitre, lienDeLEnquete } from "@/config/cours/enquetes";
 
 /** Le chapitre que tout le monde peut ouvrir (`libre: true`), lu dans le registre. */
 const CHAPITRE_LIBRE = CHAPITRES.find((c) => c.libre)!.code;
@@ -111,6 +112,7 @@ async function ChapitrePage({
           enClasse={classeDeLEleveLue ? { classe: classeDeLEleveLue.classe, eleve: classeDeLEleveLue.eleve } : null}
         />
         <AuBureau chapitre={chapitre.code} />
+        <EnEnquete chapitre={chapitre.code} />
       </main>
       <PiedDePage />
     </>
@@ -133,6 +135,28 @@ function AuBureau({ chapitre }: { chapitre: string }) {
             {b.titre}
           </Link>{" "}
           · {b.accroche}
+        </p>
+      ))}
+    </aside>
+  );
+}
+
+/**
+ * LE CHAPITRE SE PROLONGE EN ENQUÊTE (config/cours/enquetes) : un lien, sous le guide, vers un dossier
+ * qui cache des erreurs. Une activité à part : il ne change rien aux étapes du chapitre.
+ */
+function EnEnquete({ chapitre }: { chapitre: string }) {
+  const enquetes = enquetesDuChapitre(chapitre);
+  if (enquetes.length === 0) return null;
+  return (
+    <aside className="mx-auto grid max-w-6xl gap-1 px-4 pb-12 sm:px-6" aria-label="En enquête" data-enquetes-du-chapitre="">
+      <p className="text-xs font-semibold uppercase tracking-etiquette text-slate-400">Et en enquête</p>
+      {enquetes.map((e) => (
+        <p key={e.code} className="text-sm text-slate-300">
+          <Link href={lienDeLEnquete(e)} data-enquete-du-chapitre={e.code} className="font-semibold text-amber-300 underline-offset-4 hover:underline">
+            {e.titre}
+          </Link>{" "}
+          · {e.accroche}
         </p>
       ))}
     </aside>

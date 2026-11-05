@@ -84,7 +84,7 @@ export function fuitesDuBuild(dossierNext: string, marqueurs = marqueursDesCorri
  * de ses textes. Un fichier qui se déclare libre (`libre: true`) n'en donne pas : il
  * peut rester public.
  */
-const DOSSIERS_DU_COURS = ["src/config/cours/chapitres", "src/config/cours/situations", "src/config/cours/bureaux"];
+const DOSSIERS_DU_COURS = ["src/config/cours/chapitres", "src/config/cours/situations", "src/config/cours/bureaux", "src/config/cours/enquetes"];
 
 function sources(dossier: string): string[] {
   if (!existsSync(dossier)) return [];

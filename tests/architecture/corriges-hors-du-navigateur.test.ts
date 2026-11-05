@@ -29,7 +29,8 @@ import { describe, expect, it } from "vitest";
  *
  * LES BUREAUX, PLUS STRICTS ENCORE (novembre 2026) : leurs réponses ne partent au navigateur ni par le
  * code ni par la page ; aucun module client n'atteint leur configuration, leur monde ni leur service
- * (tests/cours/bureau-de-la-boutique.test.ts vérifie ce que la page sert).
+ * (tests/cours/bureau-de-la-boutique.test.ts vérifie ce que la page sert). Les enquêtes, servies par le
+ * même moteur, de même (tests/cours/enquete-servie.test.ts).
  */
 
 const RACINE = process.cwd();
@@ -52,6 +53,10 @@ const INTERDITS = [
   /^src\/config\/cours\/bureaux\//,
   /^src\/config\/cours\/monde\/bureau-de-la-boutique\.ts$/,
   /^src\/pedagogy\/cours\/bureau-servi\.ts$/,
+  // L'enquête (décision du propriétaire, novembre 2026) : le moteur du bureau ; ni ses écritures justes,
+  // ni la raison de ses erreurs, ni les chiffres du stagiaire ne partent au navigateur.
+  /^src\/config\/cours\/enquetes\//,
+  /^src\/config\/cours\/monde\/cloture-du-stagiaire\.ts$/,
 ];
 
 function fichiers(dossier: string): string[] {
