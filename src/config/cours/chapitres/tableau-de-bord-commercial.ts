@@ -9,6 +9,7 @@ import {
   trimestresDeLAnnee,
   voyantAllume,
 } from "../monde/relation-client";
+import { GROS_CONTRATS, contratsDeNadia } from "../monde/equipe-commerciale-d-atlas";
 import type { Chapitre, TableauDeDonnees } from "../types";
 
 /**
@@ -34,6 +35,11 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * les devis, les contrats, les objectifs, les voyants et le seuil d'un commercial sont neufs. Le
  * diagnostic du trimestre qui décroche (une demande qui baisse ou une demande qu'on ne sert pas) et le
  * tri des indicateurs sont gardés, sur les chiffres du cabinet.
+ *
+ * LE COMPLÉMENT K4 DU BTS NDRC EN ENTIER (novembre 2026, monde/equipe-commerciale-d-atlas.ts) : avant la
+ * synthèse, la-dispersion-des-contrats (les 13 contrats de Nadia au T4 : moyenne, médiane, écart-type,
+ * part des plus gros ; puis ce que la dispersion dit d'un challenge pour animer l'équipe). Le chapitre
+ * tient ainsi en 20 étapes.
  *
  * LES TROIS TEMPS (demande du propriétaire, octobre 2026 : progressif, mais au niveau de l'examen) :
  *   · guidé : intro, le-cabinet, les-indicateurs-de-marc, le-seuil-d-hugo (la formule est au repère
@@ -88,6 +94,10 @@ const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
 const enPct = (x: number) => auDixieme(x * 100);
 /** Arrondi à l'entier supérieur, sans qu'un calcul en virgule flottante ne fasse monter un entier exact. */
 const plafond = (x: number) => Math.ceil(x - 1e-9);
+/** Une part en pourcentage, au dixième : 0,728 → 72,8. */
+const pctAuDixieme = (x: number) => auDixieme(x * 100);
+/** « d'Hugo », « de Nadia » : l'élision devant une voyelle. */
+const dE = (nom: string) => (/^[aeiouyéèêhAEIOUYÉÈH]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /** Le nom de chaque voyant, pour les textes. */
 const NOMS_DES_VOYANTS: Readonly<Record<CodeDIndicateurCommercial, string>> = {
@@ -962,6 +972,50 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
         ];
       },
     },
+    // K4 · LA DISPERSION ET L'ANIMATION DE L'ÉQUIPE (BTS NDRC, bloc 1 : position et dispersion, performance collective, communication managériale).
+    {
+      id: "la-dispersion-des-contrats",
+      objectifs: [1],
+      type: "montants",
+      titre: "Ce que cache le panier moyen",
+      notions: ["average_basket", "dashboard"],
+      tableau: () => {
+        const d = contratsDeNadia();
+        return {
+          titre: "Les contrats de Nadia au T4, du plus gros au plus petit",
+          colonnes: ["Journées", "Montant"],
+          lignes: d.contrats.map((k) => ({ libelle: k.nom, valeurs: [qte(k.journees), eur(k.montant)] })),
+        };
+      },
+      question: (c) => {
+        const x = tableauDuCabinet(c);
+        const d = contratsDeNadia();
+        return `Au T4, ${x.nadia.k.prenom} a signé ${qte(d.nombre)} contrats pour ${eur(d.total)} : le tableau de bord lit un panier moyen de ${eur(d.moyenne)}. Sur ses contrats un à un, calculez le montant médian (celui du milieu de la liste) et l'écart-type des montants, à l'euro près. Calculez ensuite la part du chiffre d'affaires que font ses ${qte(GROS_CONTRATS)} plus gros contrats, en pourcentage.`;
+      },
+      champs: () => {
+        const d = contratsDeNadia();
+        const gros = d.contrats.slice(0, GROS_CONTRATS);
+        return [
+          { libelle: "Montant médian d'un contrat", attendu: d.mediane, calcul: `le ${qte((d.nombre + 1) / 2)}e des ${qte(d.nombre)} montants rangés : ${eur(d.mediane)}` },
+          { libelle: "Dispersion des montants, en écart-type", attendu: Math.round(d.ecartType), calcul: `racine de la moyenne des (montant − ${eur(d.moyenne)})² = ${eur(Math.round(d.ecartType))}`, tolerance: 1 },
+          {
+            libelle: `Part des ${qte(GROS_CONTRATS)} plus gros contrats (%)`,
+            attendu: pctAuDixieme(d.partDesGros),
+            calcul: `(${gros.map((k) => eur(k.montant)).join(" + ")}) ÷ ${eur(d.total)} = ${pct(pctAuDixieme(d.partDesGros))}`,
+            tolerance: 0.05,
+          },
+        ];
+      },
+      explication: (c) => {
+        const x = tableauDuCabinet(c);
+        const d = contratsDeNadia();
+        return [
+          `Le panier moyen, ${eur(d.moyenne)}, ne décrit aucun contrat : ${qte(d.contratsSousLaMoyenne)} sur ${qte(d.nombre)} sont en dessous, et le contrat du milieu vaut ${eur(d.mediane)}. L'écart-type, ${eur(Math.round(d.ecartType))}, est presque aussi grand que la moyenne (un coefficient de variation de ${pct(pctAuDixieme(d.coefficientDeVariation))}) : la série est très dispersée.`,
+          `${qte(GROS_CONTRATS)} contrats font ${pct(pctAuDixieme(d.partDesGros))} du trimestre ${dE(x.nadia.k.prenom)}. Que l'un glisse au trimestre suivant, et le panier moyen chute sans que son travail ait changé. Une moyenne se lit avec sa médiane et sa dispersion ; un indicateur qui dépend de quelques gros contrats se suit compte par compte.`,
+          `Pour animer l'équipe, la leçon vaut aussi : un challenge sur le chiffre d'affaires ou le panier serait gagné d'avance par ${x.marc.k.prenom}, ou par le hasard d'un gros contrat. Un challenge qui mobilise porte sur ce que chacun peut améliorer, face à son propre N − 1 : le taux de transformation des devis, que ${x.nadia.k.prenom} a vu passer de ${pct(enPct(x.nadia.trimestres[3]!.nMoins1.tauxDeTransformation))} à ${pct(enPct(x.nadia.trimestres[3]!.tauxDeTransformation))} au T4. Sa règle s'annonce en réunion d'équipe ; les écarts de chacun se traitent en entretien individuel.`,
+        ];
+      },
+    },
     {
       id: "synthese",
       type: "lecture",
@@ -973,6 +1027,7 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
         return [
           `Le tableau de bord ${/^[AEIOUYÉ]/.test(x.f.entreprise) ? "d'" : "de "}${x.f.entreprise} compare chaque trimestre au même trimestre de N − 1, pour lire le travail et non la saison : le T${x.chute.q.trimestre} décroche de ${eur(x.chute.baisse)} sur le T${x.chute.avant.trimestre}, mais progresse de ${pct(enPct(x.chute.q.evolutionSurNMoins1))} sur N − 1. Il suit, pour chaque commercial, ses devis, son taux de transformation et son panier, dont le produit fait le chiffre d'affaires.`,
           `Le seuil de rentabilité d'un commercial est son coût divisé par le taux de marge de ce qu'il vend : ${eur(h.s.seuil)} par trimestre pour ${h.k.prenom}, ${eur(m.s.seuil)} pour ${m.k.prenom}, et ${eur(h.sv.seuil)} pour ${h.k.prenom} avec ${pct(COMMISSION_DE_LA_VARIANTE * 100)} de commission. Chez ${n.k.prenom}, l'objectif tenu cachait une transformation qui décroche : ${qte(x.devisEnTrop)} devis de trop au T4. Chez ${h.k.prenom}, ${qte(h.trimestres[0]!.voyants.length)} voyants au T1, et un résultat de ${eur(h.annee.resultat)} sur l'année : un voyant alerte, il ne juge pas seul.`,
+          `Une moyenne se lit avec sa dispersion : le panier moyen ${dE(n.k.prenom)} au T4, ${eur(contratsDeNadia().moyenne)}, cache une médiane de ${eur(contratsDeNadia().mediane)} et un écart-type de ${eur(Math.round(contratsDeNadia().ecartType))}. Et l'équipe s'anime sur ce que chacun peut améliorer, face à son propre N − 1 : un challenge sur la transformation, pas sur le chiffre d'affaires.`,
           "Au niveau de l'examen, vous savez lire un tableau de bord commercial face à N − 1 et aux objectifs, calculer un taux de transformation, un panier et le seuil de rentabilité d'un commercial, avec ou sans commission, croiser les indicateurs pour trouver celui qui décroche, et dire ce qu'un voyant ne dit pas.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
         ];

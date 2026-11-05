@@ -464,6 +464,9 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "chapitres/le-reseau-de-vente-directe.ts",
   "situations/par-chapitre/la-centrale-demande-une-ristourne.ts",
   "situations/par-chapitre/un-pourcentage-pour-la-marraine.ts",
+  // Le BTS NDRC, bloc 2 : le plateau de téléacteurs (monde/plateau-d-atlas.ts), et son cas.
+  "chapitres/le-plateau-de-teleacteurs.ts",
+  "situations/par-chapitre/la-ligne-de-la-rentree.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */

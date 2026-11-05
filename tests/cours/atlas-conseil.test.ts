@@ -51,6 +51,9 @@ import {
 } from "../../src/config/cours/monde/terrain-d-atlas";
 import { ACHETEURS_DU_SITE, PERIODE_DU_SITE, PUBLICATIONS, SOURCES_DE_TRAFIC, conversionALaNote, noteDesAvis, traficDuSite, valeurDUnContact } from "../../src/config/cours/monde/site-d-atlas";
 import { CANDIDATS, CRITERES_DES_PARTENAIRES, grilleDesPartenaires } from "../../src/config/cours/monde/selection-des-partenaires";
+import { CONTRATS_DE_NADIA_AU_T4 } from "../../src/config/cours/monde/equipe-commerciale-d-atlas";
+import { APPEL_D_OFFRES_DE_VALBRUNE } from "../../src/config/cours/monde/negociation-d-atlas";
+import { COUT_D_UN_TELEACTEUR, CRENEAUX_DE_LA_LIGNE, DMT_DE_LA_LIGNE, TELEACTEURS } from "../../src/config/cours/monde/plateau-d-atlas";
 
 /**
  * LA RELATION CLIENT DU COURS (monde/relation-client.ts sur monde/atlas-conseil.ts), REFAITE À LA MAIN.
@@ -713,5 +716,38 @@ describe("8. la sélection des partenaires (complément K5)", () => {
 
   it("le prescripteur s'ajoute aux partenaires de la fiche sans les changer : l'apporteur et la plateforme restent seuls", () => {
     expect(f.partenaires.map((p) => p.code)).toEqual(["apporteur", "plateforme"]);
+  });
+});
+
+/**
+ * LES DONNÉES NOUVELLES DU BTS NDRC EN ENTIER (novembre 2026), QUE D'AUTRES CHAPITRES POURRAIENT REPRENDRE :
+ * le plateau de téléacteurs (monde/plateau-d-atlas.ts), les contrats de Nadia au T4
+ * (monde/equipe-commerciale-d-atlas.ts) et l'appel d'offres de Valbrune (monde/negociation-d-atlas.ts).
+ * Elles ne contredisent pas la fiche : refaites ici à la main, elles retombent sur ses chiffres.
+ */
+describe("le plateau, les contrats du T4 et l'appel d'offres tiennent avec la fiche", () => {
+  it("le plateau : 120 appels par jour, 2 160 décrochés et 12 960 minutes dans le mois, 12 rendez-vous au taux de la prospection de N", () => {
+    expect(CRENEAUX_DE_LA_LIGNE.map((k) => k.appelsRecus)).toEqual([32, 44, 28, 16]);
+    expect(CRENEAUX_DE_LA_LIGNE.map((k) => k.presents)).toEqual([2, 2, 2, 2]);
+    expect(somme(TELEACTEURS.map((t) => t.appelsDecroches))).toBe(somme([32, 32, 28, 16]) * 20);
+    expect(somme(TELEACTEURS.map((t) => t.minutesDeTraitement))).toBe(2_160 * DMT_DE_LA_LIGNE);
+    const p = canal("prospection");
+    expect(somme(TELEACTEURS.map((t) => t.contactsArgumentes)) * (p.rendezVous / p.contacts)).toBe(somme(TELEACTEURS.map((t) => t.rendezVousPris)));
+    expect((COUT_D_UN_TELEACTEUR.salaireCharge + COUT_D_UN_TELEACTEUR.posteEtLogiciel) / 120).toBe(24);
+  });
+
+  it("les 13 contrats de Nadia au T4 refont son trimestre, au prix de chaque compte", () => {
+    const t4 = commercial("entreprises").n[3]!;
+    const montant = (k: { compte: string; journees: number }) => (k.journees * compte(k.compte).chiffreDAffaires) / compte(k.compte).journees;
+    expect(CONTRATS_DE_NADIA_AU_T4.length).toBe(t4.contrats);
+    expect(somme(CONTRATS_DE_NADIA_AU_T4.map((k) => k.journees))).toBe(t4.journees);
+    expect(somme(CONTRATS_DE_NADIA_AU_T4.map(montant))).toBe(t4.chiffreDAffaires);
+    expect(CONTRATS_DE_NADIA_AU_T4.every((k) => compte(k.compte).commercial === "entreprises" && k.journees <= compte(k.compte).journees)).toBe(true);
+  });
+
+  it("l'appel d'offres de Valbrune reprend le compte : 560 € la journée, 290 € de frais, 50 € de marge", () => {
+    const v = compte(APPEL_D_OFFRES_DE_VALBRUNE.compte);
+    expect([v.chiffreDAffaires / v.journees, v.frais / v.journees, v.marge / v.journees]).toEqual([560, 290, 50]);
+    expect(v.clientele).toBe("public");
   });
 });

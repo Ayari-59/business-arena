@@ -198,6 +198,7 @@ export const THEMES: readonly Theme[] = [
       "contenus-communaute-et-e-reputation",
       "se-faire-referencer",
       "le-reseau-de-vente-directe",
+      "le-plateau-de-teleacteurs",
     ],
     familles: ["vendre", "conseil-vendre", "agro-distribution", "sante-accueillir"],
   },

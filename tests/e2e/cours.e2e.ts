@@ -1041,6 +1041,10 @@ describe.each([
   { code: "le-reseau-de-vente-directe", entreprise: "boutique", telephone: true },
   { code: "la-centrale-demande-une-ristourne", entreprise: "nova" },
   { code: "un-pourcentage-pour-la-marraine", entreprise: "boutique", telephone: true },
+  // Le BTS NDRC, bloc 2 : le plateau de téléacteurs (deux laboratoires et un curseur), puis son cas.
+  { code: "le-plateau-de-teleacteurs", entreprise: "conseil" },
+  { code: "le-plateau-de-teleacteurs", entreprise: "conseil", telephone: true },
+  { code: "la-ligne-de-la-rentree", entreprise: "conseil", telephone: true },
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se
