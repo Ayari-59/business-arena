@@ -56,7 +56,10 @@ describe("le réseau de vente directe : le chapitre", () => {
     expect(ch.palier).toBe(4);
     expect(ch.blocs).toEqual(["BTS NDRC Bloc 3 · Relation client et animation de réseaux"]);
     for (const b of ch.blocs) expect(blocOfficiel(b, referentielDeCitation(b)!.code), b).toBeTruthy();
-    expect(PROGRAMME.ndrc[4]!.at(-1)).toBe(ch.titre);
+    {
+      const liste = PROGRAMME.ndrc[4]!;
+      expect(liste[liste.indexOf(ch.titre) - 1]).toBe("Contenus, communauté et e-réputation");
+    }
     expect(THEMES.find((t) => t.code === "vente")!.chapitres).toContain(ch.code);
     expect(ch.etapes.at(-1)!.id).toBe("synthese");
     for (const p of [...ch.prerequis!, ...ch.ensuite!]) expect(CHAPITRES.map((c) => c.code)).toContain(p);
