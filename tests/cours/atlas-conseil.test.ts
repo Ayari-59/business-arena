@@ -664,6 +664,10 @@ describe("le terrain d'ATLAS retombe sur la fiche", () => {
     expect(MATINALES.tauxDeSignature).toBe(canal("salons").contrats / canal("salons").devis);
     expect(PIPELINE_DES_SALONS.opportunites.filter((o) => o.stade === "devis-remis").length + PIPELINE_DES_SALONS.devisPerdus + canal("salons").contrats).toBe(canal("salons").devis);
     expect(chargeDeVisites(f).rendezVousDAffaires).toBe(somme(commercial("entreprises").n.map((t) => t.rendezVous)));
+  });
+});
+
+/**
  * LE SITE D'ATLAS CONSEIL EN N + 1 (monde/site-d-atlas.ts), RACCORDÉ À LA FICHE. Les chapitres du bloc 2
  * (« Le site qui vend », « Contenus, communauté et e-réputation ») et ceux qui les reprendront lisent ces
  * chiffres : la garde dit qu'ils ne touchent pas l'année N, et qu'ils retombent sur elle là où ils s'y
@@ -692,6 +696,9 @@ describe("le site d'ATLAS CONSEIL en N + 1 se raccorde à la fiche, sans toucher
     expect([organiques, reseaux.visites - organiques, reseaux.cout / (reseaux.visites - organiques)]).toEqual([1_000, 1_000, 1.8]);
     expect(conversionALaNote(noteDesAvis().affichee).conversion).toBe(traficDuSite().conversion);
     expect(traficDuSite().commandes).toBe(somme(ACHETEURS_DU_SITE.map((a) => a.commandes)));
+  });
+});
+
 describe("8. la sélection des partenaires (complément K5)", () => {
   it("la grille : des poids qui font 100, des notes sur 20, et le réseau d'experts-comptables en tête à 14,7", () => {
     expect(somme(CRITERES_DES_PARTENAIRES.map((c) => c.poids))).toBe(100);
