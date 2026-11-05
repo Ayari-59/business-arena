@@ -33,6 +33,9 @@ import { CalculsDuTableau, GrilleACompleter } from "./tableau-a-completer";
  * ne sait donc jamais ce qui est juste avant de l'avoir demandé ; il garde ce que le serveur lui a dit
  * (dans le navigateur de l'élève, pour reprendre où il en était) et l'affiche.
  *
+ * LE SCÉNARIO À EMBRANCHEMENTS (scenario.tsx) reprend d'ici ses questions à choix, le suivi d'une étape et
+ * les encadrés : ce sont les mêmes gestes, corrigés au serveur de la même façon.
+ *
  * LA PILE reste sous les yeux : les pièces de l'étape, ouvertes, puis toute la pile, repliée. Sur
  * téléphone, tout s'empile en une colonne ; aucune pièce n'a plus de deux colonnes (piece-du-bureau.tsx).
  *
@@ -44,8 +47,8 @@ import { CalculsDuTableau, GrilleACompleter } from "./tableau-a-completer";
 const ESSAIS_AVANT_LA_CORRECTION = 2;
 const montant = (x: number) => montantInsecable(montantEcrit(x)).replace(/^-/, "−");
 
-/** Ce que l'élève a obtenu à une étape, tel que le serveur l'a dit. */
-interface SuiviDEtape {
+/** Ce que l'élève a obtenu à une étape, tel que le serveur l'a dit. Le scénario s'en sert pour ses questions. */
+export interface SuiviDEtape {
   /** Les essais manqués : la correction se propose après deux. */
   essais: number;
   reussi: boolean;
@@ -71,7 +74,7 @@ interface Suivi {
 }
 
 const NEUF: Suivi = { index: 0, etapes: {} };
-const VIERGE: SuiviDEtape = { essais: 0, reussi: false, aide: false };
+export const VIERGE: SuiviDEtape = { essais: 0, reussi: false, aide: false };
 
 /** Le suivi, gardé dans ce navigateur : l'élève reprend où il en était. */
 function useSuivi(cle: string): [Suivi, (f: (s: Suivi) => Suivi) => void, boolean] {
@@ -128,14 +131,14 @@ const refus = (format: BureauServi["format"]): Record<string, string> => ({
   etape: "Cette étape n'existe plus : rechargez la page.",
 });
 
-interface PropsDEtape<E> {
+export interface PropsDEtape<E> {
   etape: E;
   suivi: SuiviDEtape;
   noter: (m: Partial<SuiviDEtape> & { essai?: boolean }) => void;
   envoyer: (envoi: EnvoiAuBureau) => Promise<RetourDuBureau | null>;
 }
 
-function Paragraphes({ textes }: { textes: readonly string[] }) {
+export function Paragraphes({ textes }: { textes: readonly string[] }) {
   return (
     <div className="grid max-w-2xl gap-3 text-base leading-relaxed">
       {textes.map((t) => (
@@ -145,7 +148,7 @@ function Paragraphes({ textes }: { textes: readonly string[] }) {
   );
 }
 
-function Explication({ textes }: { textes?: readonly string[] }) {
+export function Explication({ textes }: { textes?: readonly string[] }) {
   if (!textes?.length) return null;
   return (
     <div className="encadre-neutre grid max-w-2xl gap-2 rounded-lg px-4 py-3 text-sm leading-relaxed" data-explication-du-bureau="">
@@ -156,7 +159,7 @@ function Explication({ textes }: { textes?: readonly string[] }) {
   );
 }
 
-function Alerte({ texte }: { texte: string | null }) {
+export function Alerte({ texte }: { texte: string | null }) {
   if (!texte) return null;
   return (
     <p className="encadre-perte max-w-2xl rounded-lg px-4 py-3 text-sm" role="alert">
@@ -401,7 +404,7 @@ function EtapeDuJournal({ etape, suivi, noter, envoyer }: PropsDEtape<JournalSer
 // LA RÉPONSE
 // ─────────────────────────────────────────────────────────────────────────────
 
-function EtapeDeReponse({ etape, suivi, noter, envoyer }: PropsDEtape<ReponseServie>) {
+export function EtapeDeReponse({ etape, suivi, noter, envoyer }: PropsDEtape<ReponseServie>) {
   const reponses = suivi.reponses ?? {};
   const fait = suivi.reussi;
   const choisir = async (question: string, texte: string) => {

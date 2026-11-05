@@ -31,6 +31,10 @@ import { describe, expect, it } from "vitest";
  * code ni par la page ; aucun module client n'atteint leur configuration, leur monde ni leur service
  * (tests/cours/bureau-de-la-boutique.test.ts vérifie ce que la page sert). Les enquêtes, servies par le
  * même moteur, de même (tests/cours/enquete-servie.test.ts).
+ *
+ * LES SCÉNARIOS À EMBRANCHEMENTS, DE MÊME (novembre 2026) : aucun module client n'atteint leur
+ * configuration, leur monde ni leur service (tests/cours/scenario-servi.test.ts vérifie ce que la page
+ * sert et ce que chaque choix rend).
  */
 
 const RACINE = process.cwd();
@@ -57,6 +61,12 @@ const INTERDITS = [
   // ni la raison de ses erreurs, ni les chiffres du stagiaire ne partent au navigateur.
   /^src\/config\/cours\/enquetes\//,
   /^src\/config\/cours\/monde\/cloture-du-stagiaire\.ts$/,
+  // Le scénario à embranchements (décision du propriétaire, novembre 2026) : ni ses branches, ni la
+  // meilleure suite, ni ses corrigés ne partent au navigateur ; la page sert la première décision,
+  // l'action serveur calcule chaque choix.
+  /^src\/config\/cours\/scenarios\//,
+  /^src\/config\/cours\/monde\/decouvert-de-nova\.ts$/,
+  /^src\/pedagogy\/cours\/scenario-servi\.ts$/,
 ];
 
 function fichiers(dossier: string): string[] {

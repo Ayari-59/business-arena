@@ -10,8 +10,9 @@ import { montantEcrit } from "@/pedagogy/cours/correcteur";
  * LISIBLE SUR TÉLÉPHONE : aucune pièce n'a plus de deux colonnes. Une opération se lit sur une ligne, sa
  * date et son libellé à gauche, son montant à droite, suivi de son sens (débit ou crédit) ; le sens se lit
  * du côté de celui qui tient le document : au relevé, la banque débite ce qui sort ; au compte 512, la
- * boutique débite ce qui entre. Une balance ou une écriture se lit de même, compte par compte : le numéro
- * et l'intitulé à gauche, le montant et son côté à droite. La pièce ne dit jamais ce qu'il faut en faire.
+ * boutique débite ce qui entre ; au plan de trésorerie, l'entreprise lit ses entrées et ses sorties. Une
+ * balance ou une écriture se lit de même, compte par compte : le numéro et l'intitulé à gauche, le montant
+ * et son côté à droite. La pièce ne dit jamais ce qu'il faut en faire.
  */
 
 const montant = (x: number) => montantInsecable(montantEcrit(Math.abs(x)));
@@ -27,11 +28,15 @@ const NATURES: Readonly<Record<NatureDePiece, string>> = {
   balance: "Balance",
   note: "Note",
   ecriture: "Écriture du journal",
+  plan: "Plan de trésorerie",
+  facture: "Facture",
 };
 
 /** Le sens d'une opération, vu de celui qui tient le document (débit négatif : ce qui sort). */
 function sens(nature: NatureDePiece, x: number) {
   const sort = x < 0;
+  // Un plan de trésorerie parle en entrées et en sorties, du côté de l'entreprise.
+  if (nature === "plan") return sort ? "sortie" : "entrée";
   if (nature === "extrait") return sort ? "crédit" : "débit";
   return sort ? "débit" : "crédit";
 }

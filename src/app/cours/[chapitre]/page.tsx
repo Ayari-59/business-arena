@@ -19,6 +19,7 @@ import { ChapitreReserve } from "@/components/cours/chapitre-reserve";
 import Link from "next/link";
 import { bureauxDuChapitre, lienDuBureau } from "@/config/cours/bureaux";
 import { enquetesDuChapitre, lienDeLEnquete } from "@/config/cours/enquetes";
+import { lienDuScenario, scenariosDuChapitre } from "@/config/cours/scenarios";
 
 /** Le chapitre que tout le monde peut ouvrir (`libre: true`), lu dans le registre. */
 const CHAPITRE_LIBRE = CHAPITRES.find((c) => c.libre)!.code;
@@ -113,6 +114,7 @@ async function ChapitrePage({
         />
         <AuBureau chapitre={chapitre.code} />
         <EnEnquete chapitre={chapitre.code} />
+        <EnScenario chapitre={chapitre.code} />
       </main>
       <PiedDePage />
     </>
@@ -157,6 +159,28 @@ function EnEnquete({ chapitre }: { chapitre: string }) {
             {e.titre}
           </Link>{" "}
           · {e.accroche}
+        </p>
+      ))}
+    </aside>
+  );
+}
+
+/**
+ * LE CHAPITRE SE PROLONGE EN SCÉNARIO (config/cours/scenarios) : un lien, sous le guide, vers une activité
+ * à part, des décisions à la suite. Il ne change rien aux étapes du chapitre.
+ */
+function EnScenario({ chapitre }: { chapitre: string }) {
+  const scenarios = scenariosDuChapitre(chapitre);
+  if (scenarios.length === 0) return null;
+  return (
+    <aside className="mx-auto grid max-w-6xl gap-1 px-4 pb-12 sm:px-6" aria-label="En scénario" data-scenarios-du-chapitre="">
+      <p className="text-xs font-semibold uppercase tracking-etiquette text-slate-400">Et en décisions</p>
+      {scenarios.map((s) => (
+        <p key={s.code} className="text-sm text-slate-300">
+          <Link href={lienDuScenario(s)} data-scenario-du-chapitre={s.code} className="font-semibold text-amber-300 underline-offset-4 hover:underline">
+            {s.titre}
+          </Link>{" "}
+          · {s.accroche}
         </p>
       ))}
     </aside>

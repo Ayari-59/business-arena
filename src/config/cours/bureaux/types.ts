@@ -19,9 +19,10 @@ import type { Chapitre, OptionDeChoix } from "../types";
 
 /**
  * La nature d'une pièce de la pile : ce qui décide de sa présentation. Une enquête (config/cours/enquetes)
- * y ajoute la balance, la note et l'écriture d'un journal.
+ * y ajoute la balance, la note et l'écriture d'un journal ; un scénario à embranchements
+ * (config/cours/scenarios), le plan de trésorerie et la facture.
  */
-export type NatureDePiece = "courriel" | "releve" | "extrait" | "talon" | "avis" | "lettre" | "balance" | "note" | "ecriture";
+export type NatureDePiece = "courriel" | "releve" | "extrait" | "talon" | "avis" | "lettre" | "balance" | "note" | "ecriture" | "plan" | "facture";
 
 /** Une ligne d'une balance ou d'une écriture : le compte, son intitulé, son débit ou son crédit. */
 export interface LigneDeCompte {

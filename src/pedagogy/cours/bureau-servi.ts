@@ -95,8 +95,13 @@ export function grilleSansReponses(g: TableauACompleter): TableauACompleter {
   };
 }
 
-const ordreDesOptions = (b: Bureau, etape: string, question: { id: string; options: readonly { texte: string }[] }) =>
+/** Les options d'une question dans l'ordre affiché, stable : le bureau (ou le scénario), l'étape, l'entreprise. */
+export const ordreDesOptions = <T extends { texte: string }>(b: Pick<Bureau, "code" | "entreprise">, etape: string, question: { id: string; options: readonly T[] }) =>
   dansLOrdreAffiche(question.options, cleDeLaQuestion(b.code, `${etape}/${question.id}`, b.entreprise.code));
+
+/** Des questions à choix servies : les options dans l'ordre affiché, leur seul texte. Le scénario les sert ainsi. */
+export const questionsServies = (b: Pick<Bureau, "code" | "entreprise">, e: Pick<EtapeDeReponse, "id" | "questions">) =>
+  e.questions.map((q) => ({ id: q.id, question: q.question, options: ordreDesOptions(b, e.id, q).map((o) => ({ texte: o.texte })) }));
 
 function servirLEtape(b: Bureau, e: EtapeDuBureau): EtapeDuBureauServie {
   const base: BaseServie = { id: e.id, titre: e.titre, consigne: e.consigne, pieces: e.pieces };
@@ -113,7 +118,7 @@ function servirLEtape(b: Bureau, e: EtapeDuBureau): EtapeDuBureauServie {
     case "journal":
       return { ...base, type: "journal" };
     case "reponse":
-      return { ...base, type: "reponse", questions: e.questions.map((q) => ({ id: q.id, question: q.question, options: ordreDesOptions(b, e.id, q).map((o) => ({ texte: o.texte })) })) };
+      return { ...base, type: "reponse", questions: questionsServies(b, e) };
     case "rectification":
       return { ...base, type: "rectification", depuis: e.depuis, raisons: e.raisons };
   }
@@ -300,7 +305,8 @@ function passerLEcriture(e: EtapeDuJournal, saisie: LigneSaisie[], faites: reado
   return { geste: "ecriture", juste: false, fini: fini(connues), correction: corriger(saisie, proche.ecriture) };
 }
 
-function repondre(e: EtapeDeReponse, question: string, option: string, justes: readonly string[]): RetourDuBureau | null {
+/** Corrige la réponse à une question à choix ; null si la question ou l'option n'existe pas. Le scénario s'en sert aussi. */
+export function repondre(e: EtapeDeReponse, question: string, option: string, justes: readonly string[]): RetourDuBureau | null {
   const q = e.questions.find((x) => x.id === question);
   const o = q?.options.find((x) => memeTexte(x.texte, option));
   if (!q || !o) return null;
@@ -335,8 +341,8 @@ function rectifier(b: Bureau, e: EtapeDeRectification, id: string, raison: strin
   return { geste: "rectifier", juste: false, raison: raisonJuste, correction, ...(indice ? { indice } : {}), fini: fini(connues) };
 }
 
-/** La correction de l'étape, quand l'élève la demande : tout ce qu'elle attendait. */
-function montrer(e: EtapeDuBureau): RetourDuBureau {
+/** La correction de l'étape, quand l'élève la demande : tout ce qu'elle attendait. Le scénario s'en sert pour ses questions. */
+export function montrer(e: EtapeDuBureau): RetourDuBureau {
   switch (e.type) {
     case "classement":
       return {
