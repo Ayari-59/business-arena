@@ -17,6 +17,7 @@ import { cooperationCommerciale } from "../../src/config/cours/monde/fournisseur
 import { rendementDesEntrees } from "../../src/config/cours/monde/communication-locale";
 import { marchandisage, renfortDuLundi } from "../../src/config/cours/monde/reimplantation";
 import { montantEcrit } from "../../src/pedagogy/cours/correcteur";
+import { formationDUneRecrue, reunionADomicile } from "../../src/config/cours/monde/reseau-de-vente-directe";
 
 /**
  * UNE SEULE MAILLE & CO DANS LE MONDE DU COURS (comme une-seule-nova). Le bac pro (« Le panier
@@ -97,6 +98,20 @@ describe("une seule MAILLE & CO, d'une fiche à l'autre", () => {
     expect(bilanDeLaBoutique(f).stock).toBe(f.gamme.reduce((t, r) => t + r.stockInitial * r.coutDAchat, 0));
     // La marge perdue des travaux est celle du mois du seuil : 44 250 € × 5 ÷ 30.
     expect(projetDeRenovation(f).margePerdue).toBe(centime((seuilDuPointDeVente(f).marge * 5) / 30));
+  });
+
+  it("le réseau de vente directe vend les mêmes références, aux mêmes étiquettes et coûts, et forme avec l'adjointe de l'équipe", () => {
+    const r = reunionADomicile(f);
+    for (const l of r.lignes) {
+      const ref = f.gamme.find((x) => x.code === l.reference)!;
+      expect([l.prixTtc, l.prixHt, l.coutDAchat, l.autres]).toEqual([ref.prixTtc, ref.prixHt, ref.coutDAchat, ref.autresCoutsVariables]);
+    }
+    expect(r.chiffreHt).toBe(centime(r.chiffreTtc / (1 + f.gamme[0]!.tauxTva)));
+    const fo = formationDUneRecrue(f);
+    expect(fo.formatrice).toBe(f.equipe.find((s) => s.code === "adjointe"));
+    expect(fo.kit).toBe(f.gamme.reduce((t, x) => t + x.coutDAchat, 0));
+    // L'équipe ne change pas : six salariés, 165 heures, 14 342 € chargés.
+    expect([f.equipe.length, f.equipe.reduce((t, s) => t + s.heuresParSemaine, 0), centime(f.equipe.reduce((t, s) => t + s.brutMensuel, 0) * (1 + f.tauxPatronal))]).toEqual([6, 165, 14_342]);
   });
 
   it("le marché local et la zone de chalandise donnent la même part de marché", () => {

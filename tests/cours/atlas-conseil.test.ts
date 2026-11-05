@@ -50,6 +50,7 @@ import {
   segmentDuCompte,
 } from "../../src/config/cours/monde/terrain-d-atlas";
 import { ACHETEURS_DU_SITE, PERIODE_DU_SITE, PUBLICATIONS, SOURCES_DE_TRAFIC, conversionALaNote, noteDesAvis, traficDuSite, valeurDUnContact } from "../../src/config/cours/monde/site-d-atlas";
+import { CANDIDATS, CRITERES_DES_PARTENAIRES, grilleDesPartenaires } from "../../src/config/cours/monde/selection-des-partenaires";
 
 /**
  * LA RELATION CLIENT DU COURS (monde/relation-client.ts sur monde/atlas-conseil.ts), REFAITE À LA MAIN.
@@ -691,5 +692,19 @@ describe("le site d'ATLAS CONSEIL en N + 1 se raccorde à la fiche, sans toucher
     expect([organiques, reseaux.visites - organiques, reseaux.cout / (reseaux.visites - organiques)]).toEqual([1_000, 1_000, 1.8]);
     expect(conversionALaNote(noteDesAvis().affichee).conversion).toBe(traficDuSite().conversion);
     expect(traficDuSite().commandes).toBe(somme(ACHETEURS_DU_SITE.map((a) => a.commandes)));
+describe("8. la sélection des partenaires (complément K5)", () => {
+  it("la grille : des poids qui font 100, des notes sur 20, et le réseau d'experts-comptables en tête à 14,7", () => {
+    expect(somme(CRITERES_DES_PARTENAIRES.map((c) => c.poids))).toBe(100);
+    for (const k of CANDIDATS) for (const c of CRITERES_DES_PARTENAIRES) expect(k.notes[c.code] >= 0 && k.notes[c.code] <= 20, `${k.code} ${c.code}`).toBe(true);
+    // Refaite à la main : Σ note × poids ÷ 100.
+    const main = CANDIDATS.map((k) => auCentime(somme(CRITERES_DES_PARTENAIRES.map((c) => k.notes[c.code] * c.poids)) / 100));
+    expect(main).toEqual([14.7, 12.25, 13.2]);
+    const g = grilleDesPartenaires();
+    expect(g.notes.map((k) => k.note)).toEqual(main);
+    expect([g.retenu.code, g.poidsTotal]).toEqual(["experts-comptables", 100]);
+  });
+
+  it("le prescripteur s'ajoute aux partenaires de la fiche sans les changer : l'apporteur et la plateforme restent seuls", () => {
+    expect(f.partenaires.map((p) => p.code)).toEqual(["apporteur", "plateforme"]);
   });
 });

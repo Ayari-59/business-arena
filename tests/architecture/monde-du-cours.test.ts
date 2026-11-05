@@ -459,6 +459,11 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "chapitres/contenus-communaute-et-e-reputation.ts",
   "situations/par-chapitre/doubler-les-liens-sponsorises.ts",
   "situations/par-chapitre/l-avis-a-une-etoile.ts",
+  // Le BTS NDRC, bloc 3 : se faire référencer chez un distributeur (NOVA, monde/referencement-de-nova.ts), le réseau de vente directe (MAILLE & CO, monde/reseau-de-vente-directe.ts), et leurs cas.
+  "chapitres/se-faire-referencer.ts",
+  "chapitres/le-reseau-de-vente-directe.ts",
+  "situations/par-chapitre/la-centrale-demande-une-ristourne.ts",
+  "situations/par-chapitre/un-pourcentage-pour-la-marraine.ts",
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
@@ -655,6 +660,10 @@ const NE_LISENT_PLUS_L_ANNEE_FIGEE: readonly string[] = [
   "situations/par-chapitre/un-fichier-a-acheter.ts",
   "situations/par-chapitre/les-comptes-de-hugo.ts",
   "situations/par-chapitre/un-invite-pour-la-matinale.ts",
+  "chapitres/se-faire-referencer.ts",
+  "chapitres/le-reseau-de-vente-directe.ts",
+  "situations/par-chapitre/la-centrale-demande-une-ristourne.ts",
+  "situations/par-chapitre/un-pourcentage-pour-la-marraine.ts",
 ];
 
 /** Le premier chemin d'imports qui atteint un fichier donné, ou rien. */
