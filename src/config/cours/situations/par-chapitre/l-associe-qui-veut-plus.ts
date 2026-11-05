@@ -11,7 +11,7 @@ import type { Situation } from "../types";
  * gestion et finance, palier 1).
  *
  * Avant l'assemblée, un associé réclame un dividende deux fois plus gros que celui que chiffre le
- * chapitre. Le gérant veut savoir si la loi le permet, et ce qu'il coûterait à l'entreprise.
+ * chapitre. Le président veut savoir si la loi le permet, et ce qu'il coûterait à l'entreprise.
  * L'élève refait seul le chemin du chapitre (la réserve légale, le bénéfice distribuable, les
  * dividendes), puis mesure ce que la demande laisse pour la deuxième ligne.
  *
@@ -31,7 +31,7 @@ const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` 
 /** Les chiffres de la réponse, calculés une fois du cas. */
 export function demandeReclamee(c: Pick<Cas, "code">) {
   const k = affectation(c);
-  // Le gérant laisserait le reste du bénéfice distribuable en réserves facultatives : seul le dividende compte ici.
+  // Le président laisserait le reste du bénéfice distribuable en réserves facultatives : seul le dividende compte ici.
   const x = affecter(k, { dividendeParAction: DIVIDENDE_RECLAME_PAR_ACTION, reservesFacultatives: 0 });
   return { k, x };
 }
@@ -42,14 +42,14 @@ export const L_ASSOCIE_QUI_VEUT_PLUS: Situation = {
   palier: 1,
   blocs: [],
   reprend: ["l-affectation-du-resultat"],
-  commanditaire: "Le gérant",
+  commanditaire: "Le président",
   titre: "L'associé qui veut plus",
-  accroche: "Avant l'assemblée, un associé réclame un gros dividende. Le gérant demande si la loi le permet, et ce qu'il coûterait à l'avenir de l'entreprise.",
+  accroche: "Avant l'assemblée, un associé réclame un gros dividende. Le président demande si la loi le permet, et ce qu'il coûterait à l'avenir de l'entreprise.",
   objectifs: [
     "Calculer la réserve légale et le bénéfice distribuable",
     "Vérifier qu'un dividende reste dans le bénéfice distribuable",
     "Mesurer ce qu'il laisse pour autofinancer un investissement",
-    "Rédiger une réponse chiffrée au gérant",
+    "Rédiger une réponse chiffrée au président",
   ],
   libre: false,
   entreprises: {
@@ -60,7 +60,7 @@ export const L_ASSOCIE_QUI_VEUT_PLUS: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La demande du gérant",
+      titre: "La demande du président",
       texte: (c) => {
         const { k } = demandeReclamee(c);
         return [
@@ -133,8 +133,8 @@ export const L_ASSOCIE_QUI_VEUT_PLUS: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse au gérant",
-      question: () => "Quelle phrase envoyez-vous au gérant ?",
+      titre: "Votre réponse au président",
+      question: () => "Quelle phrase envoyez-vous au président ?",
       options: (c) => {
         const { k, x } = demandeReclamee(c);
         return [

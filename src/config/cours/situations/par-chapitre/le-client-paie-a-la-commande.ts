@@ -8,7 +8,7 @@ import type { Situation } from "../types";
  * CAS PRATIQUE DU CHAPITRE « DU RÉSULTAT À LA TRÉSORERIE » : LE CLIENT PAIE À LA COMMANDE
  * (comptabilité générale, palier 2).
  *
- * Le gérant se demande ce que janvier aurait donné si le client professionnel avait payé sa facture
+ * Le dirigeant se demande ce que janvier aurait donné si le client professionnel avait payé sa facture
  * à la commande, le jour même, au lieu d'attendre son délai. L'élève refait la banque et la créance
  * du 31 janvier dans ce cas, constate que le résultat ne bouge pas, refait la variation de la banque,
  * puis rend sa réponse. Le journal de janvier est celui du chapitre pilote, repris en une balance.
@@ -33,13 +33,13 @@ export const LE_CLIENT_PAIE_A_LA_COMMANDE: Situation = {
   palier: 2,
   blocs: [],
   reprend: ["du-resultat-a-la-tresorerie"],
-  commanditaire: "Le gérant",
+  commanditaire: "Le dirigeant",
   titre: "Le client paie à la commande",
-  accroche: "Et si le client professionnel avait payé sa facture à la commande ? Le gérant veut savoir ce que cela change à la banque et au résultat de janvier.",
+  accroche: "Et si le client professionnel avait payé sa facture à la commande ? Le dirigeant veut savoir ce que cela change à la banque et au résultat de janvier.",
   objectifs: [
     "Refaire la banque et la créance du 31 janvier quand un règlement change de date",
     "Montrer qu'un règlement ne change pas le résultat",
-    "Rédiger une réponse chiffrée au gérant",
+    "Rédiger une réponse chiffrée au dirigeant",
   ],
   libre: false,
   ouverture: ouvertureDeJanvier,
@@ -47,7 +47,7 @@ export const LE_CLIENT_PAIE_A_LA_COMMANDE: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La demande du gérant",
+      titre: "La demande du dirigeant",
       texte: (c) => {
         const client = nomDuClient(c.venteCredit.client);
         return [
@@ -105,9 +105,9 @@ export const LE_CLIENT_PAIE_A_LA_COMMANDE: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse au gérant",
+      titre: "Votre réponse au dirigeant",
       notions: ["net_treasury", "income_statement"],
-      question: () => "Quelle phrase envoyez-vous au gérant ?",
+      question: () => "Quelle phrase envoyez-vous au dirigeant ?",
       options: (c) => {
         const k = clientALaCommande(c);
         return [

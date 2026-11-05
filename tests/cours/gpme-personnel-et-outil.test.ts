@@ -441,7 +441,7 @@ describe("le départ d'un salarié : l'équipe qui devient le goulot", () => {
   it("le cas : recruter dès l'annonce rapporte dès 5 827 enceintes demandées au trimestre 2", () => {
     const s = RECRUTER_DES_L_ANNONCE_DU_DEPART;
     casDedie(s, ch);
-    expect(s.commanditaire).toBe("La gérante");
+    expect(s.commanditaire).toBe("La présidente");
     expect(attendus(s, "les-deux-dates")).toEqual({
       "Équipe du trimestre, lancé au départ": equipeT2(4),
       "Équipe du trimestre, lancé dès l'annonce": equipeT2(3),
@@ -678,7 +678,7 @@ describe("entretenir l'outil : la ligne, goulot en N + 1", () => {
   it("le cas : au seuil, la ligne tient, mais les défauts coûtent plus que l'économie", () => {
     const s = ENTRETENIR_AU_SEUIL;
     casDedie(s, ch);
-    expect(s.commanditaire).toBe("Le gérant");
+    expect(s.commanditaire).toBe("Le président");
     expect(attendus(s, "economie")).toEqual({ "Seuil d'entretien": seuil, "Économie par trimestre": ref - seuil, "Économie sur l'année": 4 * (ref - seuil) });
     const volume = auPlan.reduce((t, x) => t + x, 0);
     expect(volume).toBe(26_000);

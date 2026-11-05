@@ -60,7 +60,7 @@ export const SALAIRES_DU_CURSEUR = { min: 1_800, max: 2_000 } as const;
 export const AUGMENTATIONS_DU_CURSEUR = { min: 25, max: 500 } as const;
 
 /**
- * LA VARIANTE, hypothèse du cours : le gérant aurait lancé le recrutement le 1er février, avant même
+ * LA VARIANTE, hypothèse du cours : le président aurait lancé le recrutement le 1er février, avant même
  * l'annonce, pour que le remplaçant arrive le 1er avril, le jour où l'autre part.
  */
 export const MOIS_DE_LA_VARIANTE = 2;
@@ -390,7 +390,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
       question: (c) => {
         const x = departDUnOperateur(c);
         const [a, b, j] = x.moisDuTrimestre;
-        return `Le gérant lance le recrutement le jour du départ, le 1er ${nomDuMois(a!.mois)} : le remplaçant arrive ${qte(x.f.personnel.delaiDeRecrutementEnMois)} mois plus tard, le 1er ${nomDuMois(x.auDepart.arrivee!)}, et monte à ${pct(x.f.personnel.integration.productivite)} ce premier mois. Calculez la capacité de l'équipe en ${nomDuMois(a!.mois)}, en ${nomDuMois(b!.mois)} et en ${nomDuMois(j!.mois)} (les ${qte(x.operateurs - 1)} opérateurs restés × ${qte(x.parMois)}, plus le remplaçant), puis celle du trimestre ${x.trimestre}.`;
+        return `Le président lance le recrutement le jour du départ, le 1er ${nomDuMois(a!.mois)} : le remplaçant arrive ${qte(x.f.personnel.delaiDeRecrutementEnMois)} mois plus tard, le 1er ${nomDuMois(x.auDepart.arrivee!)}, et monte à ${pct(x.f.personnel.integration.productivite)} ce premier mois. Calculez la capacité de l'équipe en ${nomDuMois(a!.mois)}, en ${nomDuMois(b!.mois)} et en ${nomDuMois(j!.mois)} (les ${qte(x.operateurs - 1)} opérateurs restés × ${qte(x.parMois)}, plus le remplaçant), puis celle du trimestre ${x.trimestre}.`;
       },
       champs: (c) => {
         const x = departDUnOperateur(c);
@@ -712,7 +712,7 @@ export const LE_DEPART_D_UN_SALARIE: Chapitre = {
       notions: ["staff_turnover", "capacity", "payroll"],
       question: (c) => {
         const x = departDUnOperateur(c);
-        return `Variante : le gérant aurait lancé le recrutement le 1er ${nomDuMois(MOIS_DE_LA_VARIANTE)}. Refaites le raisonnement : la capacité de l'équipe au trimestre ${x.trimestre}, les ventes perdues, les salaires non versés, puis le coût du départ.`;
+        return `Variante : le président aurait lancé le recrutement le 1er ${nomDuMois(MOIS_DE_LA_VARIANTE)}. Refaites le raisonnement : la capacité de l'équipe au trimestre ${x.trimestre}, les ventes perdues, les salaires non versés, puis le coût du départ.`;
       },
       champs: (c) => {
         const x = departDUnOperateur(c);

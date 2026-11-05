@@ -448,8 +448,8 @@ export const PAS_DU_PRIX_DES_ACTEURS = 0.1;
  * Ce que chaque acteur reçoit dans le premier exercice, une hausse des salaires et un prix posés. Les
  * fournisseurs et prestataires reçoivent les consommations (composants, emballage, transport et
  * énergie, loyer, assurance) ; les salariés, les salaires et leurs cotisations ; les prêteurs, les
- * intérêts ; l'État, l'impôt sur les bénéfices ; les associés, le résultat net, que NOVA garde
- * (aucun dividende n'est versé). Un prix ou une quantité qui change fait varier les ventes et les
+ * intérêts ; l'État, l'impôt sur les bénéfices ; les actionnaires, le résultat net, que NOVA garde
+ * pendant l'exercice (aucun dividende n'est versé avant l'assemblée de juin N + 1). Un prix ou une quantité qui change fait varier les ventes et les
  * coûts variables, et rien d'autre (l'hypothèse de comptes-du-lycee.ts).
  */
 export function partsDesActeurs(hausseDesSalaires = 0, prix?: number, quantite?: number) {
@@ -811,7 +811,7 @@ export function commandePourGarderLaPart(f: FicheDeGestion = FICHE_DE_GESTION) {
 // 10. UNE DONNÉE FAUSSE : L'EXTRAIT DES TRIMESTRES 1 À 3 DE L'ANNÉE N
 // ═════════════════════════════════════════════════════════════════════════════
 
-/** Les trimestres de l'extrait, ceux dont le gérant fait la moyenne. */
+/** Les trimestres de l'extrait, ceux dont le président fait la moyenne. */
 export const TRIMESTRES_DE_L_EXTRAIT = [1, 2, 3] as const;
 
 /** Le trimestre de l'extrait où l'erreur de saisie est glissée (hypothèse du cours). */
@@ -829,7 +829,7 @@ export const TRIMESTRE_DECIDE = 4;
 
 /**
  * LES RÈGLES DE PRÉVISION que le laboratoire compare : la moyenne des trois trimestres de l'extrait
- * (celle du gérant), ou le dernier trimestre seul.
+ * (celle du président), ou le dernier trimestre seul.
  */
 export type RegleDePrevision = "moyenne" | "dernier";
 

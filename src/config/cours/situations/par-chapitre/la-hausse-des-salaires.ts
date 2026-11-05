@@ -9,7 +9,7 @@ import type { Situation } from "../types";
  * CAS PRATIQUE DU CHAPITRE « LE COMPTE DE RÉSULTAT » : LA HAUSSE DES SALAIRES
  * (Bac STMG, gestion et finance, palier 1).
  *
- * L'équipe demande une revalorisation des salaires. Avant de répondre, le gérant veut
+ * L'équipe demande une revalorisation des salaires. Avant de répondre, le président veut
  * savoir ce qu'elle aurait coûté sur l'année qui vient de se terminer, et ce qu'il serait
  * resté comme résultat. L'élève a le compte de résultat de l'année et refait seul le
  * chemin du chapitre : les charges de l'activité, le résultat de l'activité, le résultat
@@ -59,15 +59,15 @@ export const LA_HAUSSE_DES_SALAIRES: Situation = {
   palier: 1,
   blocs: [],
   reprend: ["lire-le-compte-de-resultat"],
-  commanditaire: "Le gérant",
+  commanditaire: "Le président",
   titre: "La hausse des salaires",
   accroche:
-    "L'équipe demande une revalorisation des salaires. Avant de répondre, le gérant veut savoir ce qu'elle aurait coûté sur l'année, et ce qu'il serait resté de résultat.",
+    "L'équipe demande une revalorisation des salaires. Avant de répondre, le président veut savoir ce qu'elle aurait coûté sur l'année, et ce qu'il serait resté de résultat.",
   objectifs: [
     "Calculer les charges de l'activité et le résultat de l'activité",
     "Calculer le résultat avant impôt",
     "Refaire le compte de résultat avec une charge de personnel plus lourde",
-    "Rédiger une réponse chiffrée au gérant",
+    "Rédiger une réponse chiffrée au président",
   ],
   libre: false,
   entreprises: {
@@ -78,7 +78,7 @@ export const LA_HAUSSE_DES_SALAIRES: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La demande du gérant",
+      titre: "La demande du président",
       texte: (c) => [
         `« L'équipe me demande une hausse générale des salaires de ${pct(HAUSSE_DES_SALAIRES * 100)}. Avant de répondre, je veux savoir ce qu'elle aurait coûté à ${hausseDesSalaires(c).entreprise} sur l'année qui vient de se terminer, et ce qu'il nous serait resté de résultat avant impôt. Le comptable recalculera l'impôt ensuite. »`,
         "Pas de cours cette fois : vous avez le compte de résultat de l'année, et la méthode est celle du chapitre. À vous de l'enchaîner.",
@@ -148,8 +148,8 @@ export const LA_HAUSSE_DES_SALAIRES: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse au gérant",
-      question: () => "Quelle phrase envoyez-vous au gérant ?",
+      titre: "Votre réponse au président",
+      question: () => "Quelle phrase envoyez-vous au président ?",
       options: (c) => {
         const k = hausseDesSalaires(c);
         return [

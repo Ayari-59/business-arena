@@ -12,19 +12,21 @@ import type { Situation } from "../types";
  * LE CAS JOUE DANS LE MONDE DU COURS, comme son chapitre : le bilan financier de NOVA au 31 décembre
  * (monde/structure-financiere.ts).
  *
- * HYPOTHÈSES DU CAS : un associé demande un dividende de DIVIDENDE_DEMANDE sur le résultat du premier
- * exercice. La banque qui finance la gamme a mis une condition au prêt : une autonomie financière
- * d'au moins AUTONOMIE_EXIGEE au bilan financier après répartition. Un dividende voté devient une
- * dette à moins d'un an et quitte les capitaux propres : le total du bilan ne change pas. L'élève
- * refait seul le chemin : l'autonomie avec le dividende demandé, puis le dividende le plus élevé qui
- * tient la condition, puis il répond.
+ * HYPOTHÈSES DU CAS : le projet d'affectation que votera l'assemblée de juin N+1 verse 2 € par action
+ * (l'affectation unique du cours, comptabilite-approfondie.ts). Un actionnaire le trouve maigre et
+ * demande DIVIDENDE_DEMANDE, 3 € par action. La banque qui finance la gamme a mis une condition au
+ * prêt : une autonomie financière d'au moins AUTONOMIE_EXIGEE au bilan financier après répartition.
+ * Un dividende voté devient une dette à moins d'un an et quitte les capitaux propres : le total du
+ * bilan ne change pas. L'élève part du bilan financier avant tout dividende, refait seul le chemin :
+ * l'autonomie avec le dividende demandé, puis le dividende le plus élevé qui tient la condition, puis
+ * il répond.
  */
 
-/** Le dividende que l'associé demande : hypothèse du cas. */
-export const DIVIDENDE_DEMANDE = 20_000;
+/** Le dividende que l'actionnaire demande, 3 € par action : hypothèse du cas. */
+export const DIVIDENDE_DEMANDE = 45_000;
 
 /** L'autonomie financière que la banque exige au bilan financier après répartition : hypothèse du cas. */
-export const AUTONOMIE_EXIGEE = 0.5;
+export const AUTONOMIE_EXIGEE = 0.45;
 
 const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
 const qte = (n: number) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
@@ -33,12 +35,20 @@ const pct = (t: number) => `${qte(t)} %`;
 /** Les chiffres du cas. */
 export function dividendeSousCondition(c: Pick<Cas, "code">) {
   const s = structureDuCas(c);
-  const b = s.financier;
+  const f = s.financier;
+  // Le bilan financier avant tout dividende : celui du chapitre, le dividende du projet remis aux capitaux propres.
+  const b = {
+    ...f,
+    capitauxPropres: auCentime(f.capitauxPropres + s.postes.dividende),
+    dettesMoinsDUnAn: auCentime(f.dettesMoinsDUnAn - s.postes.dividende),
+  };
   const capitauxPropres = auCentime(b.capitauxPropres - DIVIDENDE_DEMANDE);
   const dettesMoinsDUnAn = auCentime(b.dettesMoinsDUnAn + DIVIDENDE_DEMANDE);
   return {
     s,
     b,
+    /** Le dividende du projet d'affectation, 2 € par action. */
+    dividendeDuProjet: s.postes.dividende,
     capitauxPropres,
     dettesMoinsDUnAn,
     autonomie: auCentieme((capitauxPropres / b.totalPassif) * 100),
@@ -54,9 +64,9 @@ export const UN_DIVIDENDE_SOUS_CONDITION: Situation = {
   palier: 4,
   blocs: [],
   reprend: ["ratios-de-structure-et-bilan-financier"],
-  commanditaire: "Un associé",
+  commanditaire: "Un actionnaire",
   titre: "Un dividende sous condition",
-  accroche: "Un associé veut un dividende ; la banque qui finance la gamme exige une autonomie financière d'au moins la moitié. Combien peut-on verser ?",
+  accroche: "Un actionnaire veut plus que le dividende du projet d'affectation ; la banque qui finance la gamme exige une autonomie financière minimale. Combien peut-on verser ?",
   objectifs: [
     "Reporter un dividende voté au bilan financier après répartition",
     "Recalculer l'autonomie financière et la liquidité générale",
@@ -71,12 +81,12 @@ export const UN_DIVIDENDE_SOUS_CONDITION: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La question de l'associé",
+      titre: "La question de l'actionnaire",
       texte: (c) => {
         const n = dividendeSousCondition(c);
         return [
-          `« Le premier exercice a laissé ${eur(n.s.postes.resultat)} de bénéfice. Je demande un dividende de ${eur(DIVIDENDE_DEMANDE)}. La banque qui prête pour la gamme veut une autonomie financière d'au moins ${pct(AUTONOMIE_EXIGEE * 100)} au bilan financier après répartition : la tient-on encore ? Sinon, combien peut-on verser ? »`,
-          "Pas de cours cette fois : vous avez le bilan financier du chapitre. Un dividende voté est une dette à moins d'un an envers les associés.",
+          `« Le premier exercice a laissé ${eur(n.s.postes.resultat)} de bénéfice, et le projet d'affectation ne nous en verse que ${eur(n.dividendeDuProjet)}. Je demande un dividende de ${eur(DIVIDENDE_DEMANDE)}. La banque qui prête pour la gamme veut une autonomie financière d'au moins ${pct(AUTONOMIE_EXIGEE * 100)} au bilan financier après répartition : la tient-on encore ? Sinon, combien peut-on verser ? »`,
+          "Pas de cours cette fois : vous avez le bilan financier du chapitre, avant tout dividende. Un dividende voté est une dette à moins d'un an envers les actionnaires.",
         ];
       },
       tableau: (c) => {
@@ -140,15 +150,15 @@ export const UN_DIVIDENDE_SOUS_CONDITION: Situation = {
       },
       explication: (c) => {
         const n = dividendeSousCondition(c);
-        return [`Avec ${eur(n.dividendeMaximal)}, les capitaux propres font tout juste la moitié du bilan financier. Un euro de plus, et la condition du prêt tombe.`];
+        return [`Avec ${eur(n.dividendeMaximal)}, les capitaux propres font tout juste ${pct(AUTONOMIE_EXIGEE * 100)} du bilan financier. Un euro de plus, et la condition du prêt tombe. Le dividende du projet, ${eur(n.dividendeDuProjet)}, tient la condition.`];
       },
     },
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse à l'associé",
+      titre: "Votre réponse à l'actionnaire",
       notions: ["balance_sheet"],
-      question: () => "Quelle réponse rendez-vous à l'associé ?",
+      question: () => "Quelle réponse rendez-vous à l'actionnaire ?",
       options: (c) => {
         const n = dividendeSousCondition(c);
         return [
@@ -168,7 +178,7 @@ export const UN_DIVIDENDE_SOUS_CONDITION: Situation = {
             retour: `Non : jusqu'à ${eur(n.dividendeMaximal)}, l'autonomie reste d'au moins ${pct(AUTONOMIE_EXIGEE * 100)}. Refuser tout dividende est un choix possible, pas une obligation.`,
           },
           {
-            texte: `Tout le bénéfice, ${eur(n.s.postes.resultat)} : il appartient aux associés, la banque n'a pas à en juger`,
+            texte: `Tout le bénéfice, ${eur(n.s.postes.resultat)} : il appartient aux actionnaires, la banque n'a pas à en juger`,
             juste: false,
             retour: "Non : la condition du prêt engage NOVA. La rompre, c'est risquer le remboursement immédiat de l'emprunt.",
           },

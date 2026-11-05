@@ -206,6 +206,8 @@ function laboratoire(ch: Chapitre, id: string) {
 const juste = (ch: Chapitre, id: string) => (ch.etapes.find((x) => x.id === id) as EtapeChoix).options(cas, etatVide).find((o) => o.juste)!.texte;
 
 const BLOC_1 = `BTS GPME ${REFERENTIELS.gpme!.entrees[0]}`;
+/** K6 : la relance et le retard de paiement servent aussi le P1 du BTS CG. */
+const BLOC_P1_DU_BTS_CG = "BTS CG P1 · Contrôle et traitement comptable des opérations commerciales";
 
 describe("les deux chapitres et leurs cas, chez NOVA du monde du cours", () => {
   it("se jouent chez NOVA seule, au palier 2 du BTS GPME, avec le bloc 1 du référentiel", () => {
@@ -214,7 +216,7 @@ describe("les deux chapitres et leurs cas, chez NOVA du monde du cours", () => {
       expect(PROGRAMME.gpme[2], ch.code).toContain(ch.titre);
       expect(ch.parcours).toBe("gpme");
       expect(ch.palier).toBe(2);
-      expect(ch.blocs).toEqual([BLOC_1]);
+      expect(ch.blocs).toEqual(ch === LE_CLIENT_QUI_PAIE_TARD ? [BLOC_1, BLOC_P1_DU_BTS_CG] : [BLOC_1]);
       expect(ch.libre).toBe(false);
       expect(ch.entreprises?.codes).toEqual(["nova"]);
       expect(ch.entreprises!.pourquoi).toMatch(/^[a-zé].*\.$/);

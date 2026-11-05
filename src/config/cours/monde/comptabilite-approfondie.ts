@@ -260,17 +260,45 @@ export function contratALAvancement(coutsEngages: number = CHANTIER_ARPEGE.couts
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * LE CAPITAL DE NOVA (HYPOTHÈSE DU COURS sur sa division) : les 150 000 € apportés en janvier N sont
- * 15 000 actions de 10 € de nominal. L'assemblée de juin N + 1 affecte le bénéfice de N : 5 % à la
- * réserve légale, le reste aux autres réserves, sans dividende (NOVA garde ses moyens pour sa
- * seconde ligne).
+ * LE CAPITAL DE NOVA (HYPOTHÈSE DU COURS sur sa division) : NOVA est une SAS ; les 150 000 € apportés
+ * en janvier N sont 15 000 actions de 10 € de nominal.
+ *
+ * L'AFFECTATION DU BÉNÉFICE DE N, UNE SEULE DANS TOUT LE COURS (décision D2) : celle que chiffre le
+ * chapitre du lycée « L'affectation du résultat » (affectation-du-resultat.ts, qui reprend les deux
+ * constantes ci-dessous). L'assemblée générale des actionnaires de juin N + 1 dote la réserve légale
+ * de 5 % du bénéfice, verse le dividende que demande un actionnaire (2 € par action), met en réserves
+ * facultatives ce que propose le président, et laisse le reste en report à nouveau. Le dividende est
+ * mis en paiement en juin N + 1, avant l'augmentation de capital : il sort des capitaux propres et de
+ * la trésorerie de N + 1 (diagnostic-de-nova.ts), et le bilan financier du 31 décembre N, établi après
+ * répartition, le range aux dettes à moins d'un an (structure-financiere.ts).
  *
  * L'AUGMENTATION DE CAPITAL du 30 juin N + 1 : 1 action nouvelle pour 3 anciennes, émise à 12 €,
  * libérée en entier à la souscription. Le chapitre mesure les capitaux propres par ceux du
- * 31 décembre N, l'exercice N + 1 n'étant pas encore clos.
+ * 31 décembre N après l'affectation (le dividende déjà sorti), l'exercice N + 1 n'étant pas encore
+ * clos.
  */
 export const ACTIONS_DE_NOVA = { nombre: 15_000, nominal: 10 } as const;
 export const RESERVE_LEGALE = 0.05;
+/** La réserve légale cesse d'être dotée quand elle atteint ce dixième du capital. */
+export const PLAFOND_DE_LA_RESERVE_LEGALE = 0.1;
+
+/**
+ * La demande d'un actionnaire, que l'assemblée retient (HYPOTHÈSE DU COURS) : un dividende de 2 €
+ * par action ; et les réserves facultatives que le président propose pour la suite, un compte rond.
+ */
+export const DIVIDENDE_DEMANDE_PAR_ACTION = 2;
+export const RESERVES_FACULTATIVES_PROPOSEES = 45_000;
+
+/** L'affectation du bénéfice de N, la seule du cours : réserve légale, dividendes, réserves facultatives, report à nouveau. */
+export function affectationDuBeneficeDeN() {
+  const capital = APPORT_EN_CAPITAL.montant;
+  const benefice = CLOTURE_DE_LA_FICHE.resultatNet;
+  const reserveLegale = Math.min(auCentime(benefice * RESERVE_LEGALE), auCentime(capital * PLAFOND_DE_LA_RESERVE_LEGALE));
+  const dividendes = auCentime(DIVIDENDE_DEMANDE_PAR_ACTION * ACTIONS_DE_NOVA.nombre);
+  const reservesFacultatives = RESERVES_FACULTATIVES_PROPOSEES;
+  const reportANouveau = auCentime(benefice - reserveLegale - dividendes - reservesFacultatives);
+  return { capital, benefice, reserveLegale, dividendes, reservesFacultatives, reportANouveau, capitauxPropresAvant: auCentime(capital + benefice), capitauxPropres: auCentime(capital + benefice - dividendes) };
+}
 export const AUGMENTATION_DE_CAPITAL = { parite: 3, prixDEmission: 12, date: "30 juin N + 1" } as const;
 
 /** Ce que NOVA doit lever, et les parités du laboratoire (1 action nouvelle pour k anciennes). */
@@ -283,11 +311,7 @@ export const PRIX_DE_L_INVESTISSEUSE = 11;
 /** L'affectation, la valeur de l'action et l'augmentation, pour une parité et un prix donnés. */
 export function augmentationDeCapital(parite: number = AUGMENTATION_DE_CAPITAL.parite, prix: number = AUGMENTATION_DE_CAPITAL.prixDEmission) {
   const a = ACTIONS_DE_NOVA;
-  const capital = APPORT_EN_CAPITAL.montant;
-  const benefice = CLOTURE_DE_LA_FICHE.resultatNet;
-  const reserveLegale = auCentime(benefice * RESERVE_LEGALE);
-  const autresReserves = auCentime(benefice - reserveLegale);
-  const capitauxPropres = auCentime(capital + benefice);
+  const { capital, benefice, reserveLegale, dividendes, reservesFacultatives, reportANouveau, capitauxPropresAvant, capitauxPropres } = affectationDuBeneficeDeN();
   const valeurAvant = capitauxPropres / a.nombre;
   const nouvelles = a.nombre / parite;
   const fonds = auCentime(nouvelles * prix);
@@ -299,7 +323,10 @@ export function augmentationDeCapital(parite: number = AUGMENTATION_DE_CAPITAL.p
     capital,
     benefice,
     reserveLegale,
-    autresReserves,
+    dividendes,
+    reservesFacultatives,
+    reportANouveau,
+    capitauxPropresAvant,
     capitauxPropres,
     actions: a.nombre,
     nominal: a.nominal,

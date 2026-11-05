@@ -1270,7 +1270,7 @@ export const DU_RESULTAT_A_LA_TRESORERIE: Chapitre = {
       tableau: balanceDeJanvier,
       question: (c) => {
         const j = janvierDe(c);
-        return `Le gérant veut le bilan de janvier tel qu'un comptable l'arrêterait, et vous n'avez que la balance ci-dessus. Il y manque deux charges du mois : l'usure de l'équipement, mis en service le ${date(c.immobilisation.date)} et amorti en linéaire sur ${qte(j.dureeAns)} ans, et les intérêts de l'emprunt au taux de ${pct(c.pret.tauxAnnuel)}, nés depuis le ${date(c.dates.emprunt)} et payables à la première échéance. Comptez les jours en mois de 30 jours, jour de départ et jour d'arrivée compris, sur une année de 360 jours. Calculez ces deux charges, puis le résultat et le total du bilan du mois complet.`;
+        return `Le dirigeant veut le bilan de janvier tel qu'un comptable l'arrêterait, et vous n'avez que la balance ci-dessus. Il y manque deux charges du mois : l'usure de l'équipement, mis en service le ${date(c.immobilisation.date)} et amorti en linéaire sur ${qte(j.dureeAns)} ans, et les intérêts de l'emprunt au taux de ${pct(c.pret.tauxAnnuel)}, nés depuis le ${date(c.dates.emprunt)} et payables à la première échéance. Comptez les jours en mois de 30 jours, jour de départ et jour d'arrivée compris, sur une année de 360 jours. Calculez ces deux charges, puis le résultat et le total du bilan du mois complet.`;
       },
       champs: (c) => {
         const j = janvierDe(c);
@@ -1310,7 +1310,7 @@ export const DU_RESULTAT_A_LA_TRESORERIE: Chapitre = {
       notions: ["income_statement", "depreciation"],
       question: (c) => {
         const j = janvierDe(c);
-        return `Le gérant veut annoncer aux associés ${resultatDit(j.resultat)} pour janvier, le résultat de votre journal. Que lui répondez-vous ?`;
+        return `Le dirigeant veut annoncer aux associés ${resultatDit(j.resultat)} pour janvier, le résultat de votre journal. Que lui répondez-vous ?`;
       },
       options: (c) => {
         const j = janvierDe(c);

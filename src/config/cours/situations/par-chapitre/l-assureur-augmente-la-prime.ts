@@ -9,7 +9,7 @@ import type { Situation } from "../types";
  * gestion des risques, palier 3).
  *
  * Au renouvellement du 1er octobre, l'assureur augmente de 20 % la prime de la Basique, la formule de
- * NOVA. La gérante demande s'il faut renouveler à ce prix. L'élève refait la règle du chapitre sur la
+ * NOVA. La présidente demande s'il faut renouveler à ce prix. L'élève refait la règle du chapitre sur la
  * prime augmentée (le pire reste à charge s'encaisse-t-il toujours ? la Basique reste-t-elle la moins
  * chère en moyenne des options qui s'encaissent ?), cherche À REBOURS la prime au-delà de laquelle
  * l'Étendue passerait devant, et rend une réponse qui demande un jugement : la hausse dépasse
@@ -75,15 +75,15 @@ export const L_ASSUREUR_AUGMENTE_LA_PRIME: Situation = {
   palier: 3,
   blocs: [],
   reprend: ["s-assurer-contre-les-aleas"],
-  commanditaire: "La gérante",
+  commanditaire: "La présidente",
   titre: "L'assureur augmente la prime",
   accroche:
-    "Au renouvellement, l'assureur augmente la prime de la Basique. La gérante veut savoir s'il faut renouveler à ce prix : ce que la hausse coûte, jusqu'où la prime peut monter avant qu'une autre formule passe devant, et la réponse à lui rendre.",
+    "Au renouvellement, l'assureur augmente la prime de la Basique. La présidente veut savoir s'il faut renouveler à ce prix : ce que la hausse coûte, jusqu'où la prime peut monter avant qu'une autre formule passe devant, et la réponse à lui rendre.",
   objectifs: [
     "Calculer une prime augmentée et le coût moyen de l'année qu'elle donne",
     "Vérifier que le pire reste à charge s'encaisse toujours",
     "Retrouver à rebours la prime au-delà de laquelle une autre formule devient la meilleure",
-    "Répondre à la gérante, chiffres à l'appui, sans juger sur la moyenne seule",
+    "Répondre à la présidente, chiffres à l'appui, sans juger sur la moyenne seule",
   ],
   libre: false,
   entreprises: {
@@ -94,7 +94,7 @@ export const L_ASSUREUR_AUGMENTE_LA_PRIME: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La demande de la gérante",
+      titre: "La demande de la présidente",
       tableau: (c) => {
         const p = primeAugmentee(c);
         const a = p.a;
@@ -254,8 +254,8 @@ export const L_ASSUREUR_AUGMENTE_LA_PRIME: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse à la gérante",
-      question: () => "Quelle phrase envoyez-vous à la gérante ?",
+      titre: "Votre réponse à la présidente",
+      question: () => "Quelle phrase envoyez-vous à la présidente ?",
       options: (c) => {
         const p = primeAugmentee(c);
         const a = p.a;

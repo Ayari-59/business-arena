@@ -11,13 +11,13 @@ import type { Situation } from "../types";
  * CAS PRATIQUE DU CHAPITRE « CHARGES ET PRODUITS, ENCAISSEMENTS ET DÉCAISSEMENTS » :
  * REMBOURSER UNE PART DU PRÊT EN FÉVRIER (comptabilité générale, palier 1).
  *
- * Le gérant de NOVA veut rembourser une part de l'emprunt par avance, en février. Il craint que ce
+ * Le président de NOVA veut rembourser une part de l'emprunt par avance, en février. Il craint que ce
  * remboursement plombe le résultat du mois. L'élève a le programme de février et refait seul les
  * deux questions du chapitre pour chaque opération (le résultat, la banque), calcule le résultat de
  * février et la variation de la banque, puis rend sa réponse.
  *
  * Le cas est neuf par sa question : le mois n'est plus janvier, et il porte une opération que le
- * chapitre n'a pas, un remboursement d'emprunt décidé par le gérant.
+ * chapitre n'a pas, un remboursement d'emprunt décidé par le président.
  *
  * LE CAS JOUE DANS LE MONDE DU COURS, chez NOVA seule : le mois de février du semestre (le budget de
  * trésorerie et les charges du contrôle de gestion, moisDuBudget dans monde/gestion-et-information.ts).
@@ -26,7 +26,7 @@ import type { Situation } from "../types";
  */
 
 /**
- * La part de l'emprunt remboursée par avance : 10 %, ce que le gérant juge pouvoir prélever sur la
+ * La part de l'emprunt remboursée par avance : 10 %, ce que le président juge pouvoir prélever sur la
  * trésorerie du début d'année sans se priver du reste du prêt (hypothèse du cas).
  */
 export const PART_REMBOURSEE_PAR_AVANCE = 0.1;
@@ -74,14 +74,14 @@ export const REMBOURSER_UNE_PART_DU_PRET: Situation = {
   palier: 1,
   blocs: [],
   reprend: ["charges-produits-encaissements"],
-  commanditaire: "Le gérant",
+  commanditaire: "Le président",
   titre: "Rembourser une part du prêt en février",
-  accroche: "Le gérant veut rembourser une part de l'emprunt dès février, mais craint pour le résultat du mois. À vous de lui dire ce que ce remboursement change, et ce qu'il ne change pas.",
+  accroche: "Le président veut rembourser une part de l'emprunt dès février, mais craint pour le résultat du mois. À vous de lui dire ce que ce remboursement change, et ce qu'il ne change pas.",
   objectifs: [
     "Dire, pour chaque opération du mois, si elle touche le résultat, la banque, les deux ou aucun",
     "Calculer le résultat d'un mois : les produits moins les charges",
     "Calculer les encaissements, les décaissements et la variation de la banque du mois",
-    "Expliquer au gérant pourquoi un remboursement d'emprunt n'est pas une charge",
+    "Expliquer au président pourquoi un remboursement d'emprunt n'est pas une charge",
   ],
   libre: false,
   entreprises: { codes: ENTREPRISES_DE_LA_GESTION_DE_BASE, pourquoi: POURQUOI_LA_GESTION_DE_BASE },
@@ -89,12 +89,12 @@ export const REMBOURSER_UNE_PART_DU_PRET: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La demande du gérant",
+      titre: "La demande du président",
       texte: (c) => {
         const r = remboursementParAvance(c);
         return [
           `« La banque accepte que nous remboursions par avance ${pct(PART_REMBOURSEE_PAR_AVANCE)} de notre emprunt, soit ${eur(r.remboursement)}, en février. Je le ferais volontiers, mais j'ai peur que ce remboursement plombe le résultat du mois. Dites-moi quel résultat nous ferons en février, et ce que deviendra la banque. »`,
-          "Pas de cours cette fois : vous avez le programme de février, et la méthode est celle du chapitre. Les ventes et les achats sont donnés hors taxes et taxes comprises ; la TVA de février, que l'entreprise reversera en mars, le gérant la suit à part.",
+          "Pas de cours cette fois : vous avez le programme de février, et la méthode est celle du chapitre. Les ventes et les achats sont donnés hors taxes et taxes comprises ; la TVA de février, que l'entreprise reversera en mars, le président la suit à part.",
         ];
       },
       tableau: (c) => {
@@ -200,9 +200,9 @@ export const REMBOURSER_UNE_PART_DU_PRET: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse au gérant",
+      titre: "Votre réponse au président",
       notions: ["income_statement", "net_treasury"],
-      question: () => "Quelle phrase envoyez-vous au gérant ?",
+      question: () => "Quelle phrase envoyez-vous au président ?",
       options: (c) => {
         const r = remboursementParAvance(c);
         return [

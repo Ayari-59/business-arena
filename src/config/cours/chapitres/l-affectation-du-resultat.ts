@@ -45,7 +45,7 @@ export const LEVIERS_DE_L_AFFECTATION = {
 export const DIVIDENDE_MINIMAL_DU_DEFI = 2;
 export const REPORT_MAXIMAL_DU_DEFI = 1_000;
 
-/** La solution que montre la correction : la demande de l'associé, et les réserves que propose le gérant. */
+/** La solution que montre la correction : la demande de l'associé, et les réserves que propose le président. */
 export const SOLUTION_DE_L_AFFECTATION = { dividende: DIVIDENDE_DEMANDE_PAR_ACTION, reserves: RESERVES_FACULTATIVES_PROPOSEES } as const;
 
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
@@ -96,7 +96,7 @@ export const L_AFFECTATION_DU_RESULTAT: Chapitre = {
         const k = affectation(c);
         return [
           `${k.entreprise} a gagné ${eur(k.benefice)} pendant son premier exercice. Au bilan du 31 décembre, ce bénéfice est encore dans les capitaux propres, à côté des ${eur(k.capital)} de capital apportés par les associés, en ${qte(k.actions)} actions : il leur appartient.`,
-          "Dans les six mois qui suivent la clôture, l'assemblée des associés décide de son affectation. La loi prend d'abord sa part : la réserve légale, une épargne obligatoire qui protège les créanciers. Le reste, le bénéfice distribuable, peut aller en dividendes (versés aux associés), en réserves facultatives (gardées durablement dans l'entreprise) ou en report à nouveau (laissé en attente jusqu'à l'assemblée suivante).",
+          "Dans les six mois qui suivent la clôture, l'assemblée générale des actionnaires décide de son affectation. La loi prend d'abord sa part : la réserve légale, une épargne obligatoire qui protège les créanciers. Le reste, le bénéfice distribuable, peut aller en dividendes (versés aux associés), en réserves facultatives (gardées durablement dans l'entreprise) ou en report à nouveau (laissé en attente jusqu'à l'assemblée suivante).",
           "Le bénéfice n'est pas une somme d'argent posée à part : c'est ce que l'année a ajouté aux capitaux propres. Seul le dividende fait sortir de l'argent de l'entreprise.",
         ];
       },
@@ -175,7 +175,7 @@ export const L_AFFECTATION_DU_RESULTAT: Chapitre = {
       notions: ["income_statement", "balance_sheet"],
       question: (c) => {
         const k = affectation(c);
-        return `Un associé demande un dividende de ${eur(DIVIDENDE_DEMANDE_PAR_ACTION)} par action, pour les ${qte(k.actions)} actions. Le gérant propose de mettre ${eur(RESERVES_FACULTATIVES_PROPOSEES)} en réserves facultatives et de laisser le reste en report à nouveau. Calculez les dividendes, le report à nouveau, puis ce qui reste dans l'entreprise (tout le bénéfice, sauf les dividendes).`;
+        return `Un associé demande un dividende de ${eur(DIVIDENDE_DEMANDE_PAR_ACTION)} par action, pour les ${qte(k.actions)} actions. Le président propose de mettre ${eur(RESERVES_FACULTATIVES_PROPOSEES)} en réserves facultatives et de laisser le reste en report à nouveau. Calculez les dividendes, le report à nouveau, puis ce qui reste dans l'entreprise (tout le bénéfice, sauf les dividendes).`;
       },
       champs: (c) => {
         const k = affectation(c);

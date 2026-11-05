@@ -82,7 +82,11 @@ describe("une seule NOVA : N est la clôture du cours", () => {
     const r = ratiosDesExercices()[0]!;
     const s = structureDeNova(EXERCICE_DE_NOVA);
     const b = bilanDeLExercice(NOVA);
-    expect([r.endettement, r.capaciteDeRemboursement, r.liquiditeGenerale]).toEqual([s.ratios.endettement, s.ratios.capacite, s.financier.liquiditeGenerale]);
+    // Les comptes résumés de N sont arrêtés avant répartition : le dividende voté (décision D2) n'est payé
+    // qu'en N + 1. Le bilan financier du chapitre, après répartition, le compte en dettes à moins d'un an.
+    const avantRepartition = Math.round((s.financier.actifMoinsDUnAn / (s.financier.dettesMoinsDUnAn - s.postes.dividende)) * 100) / 100;
+    expect([r.endettement, r.capaciteDeRemboursement, r.liquiditeGenerale]).toEqual([s.ratios.endettement, s.ratios.capacite, avantRepartition]);
+    expect(s.postes.dividende).toBe(n1!.dividendes);
     expect(r.couverture).toBe(s.ratios.couverture);
     expect(c(r.independance * 100)).toBe(s.ratios.independance);
     expect([r.delaiClients, r.delaiFournisseurs, r.rotationDesStocks]).toEqual([b.delaiClients, b.delaiFournisseurs, b.rotationDuStock]);
@@ -121,12 +125,16 @@ describe("N + 1 et N + 2, refaits à la main", () => {
     expect(n2!.dividendes).toBe(20_000);
   });
 
-  it("les ratios de N + 2 : 13,36 % de marge brute, 54,25 % de rentabilité économique, 32,53 % de rentabilité financière, 0,07 d'endettement", () => {
+  it("les ratios de N + 2 : 13,36 % de marge brute, 54,25 % de rentabilité économique, 34,42 % de rentabilité financière, 0,07 d'endettement", () => {
     const r = ratiosDesExercices()[2]!;
     expect(attendus(ch, "les-ratios-d-activite")).toEqual([27.1, 13.11, 18.27, 20.18, 23.39]);
-    expect(attendus(ch, "profitabilite-et-rentabilite")).toEqual([13.36, 8.9, 322_054.42, 54.25, 32.53]);
+    expect(attendus(ch, "profitabilite-et-rentabilite")).toEqual([13.36, 8.9, 322_054.42, 54.25, c(100 * (177_849 / 516_658.93))]);
+    expect(attendus(ch, "profitabilite-et-rentabilite")[4]).toBe(34.42);
+    // Les capitaux propres de N + 2 portent le dividende de N, sorti en N + 1 (décision D2) : 30 000 € de moins.
+    expect(n1!.dividendes).toBe(30_000);
+    expect(n2!.capitauxPropres).toBe(c(546_658.93 - 30_000));
     expect(r.actifEconomique).toBe(c(180_000 - n2!.amortissements + n2!.besoinDExploitation));
-    expect(attendus(ch, "les-ratios-de-faillite")).toEqual([0.07, 3.97, 75.66, 0.17]);
+    expect(attendus(ch, "les-ratios-de-faillite")).toEqual([0.07, 3.78, 74.6, 0.17]);
     expect(attendus(ch, "rotation-et-investissement")).toEqual([40, 26.72, 31.41, 42.44]);
     expect(c((n2!.stocks * 360) / n2!.composantsConsommes)).toBe(26.72);
     expect(juste(ch, "predire-la-marge")).toEqual(["Reste à peu près le même"]);
@@ -151,13 +159,14 @@ describe("N + 1 et N + 2, refaits à la main", () => {
 });
 
 describe("le laboratoire : un ratio bouge quand son dénominateur bouge", () => {
-  it("à 3 € par action, la rentabilité financière passe 35 % et la trésorerie reste au-dessus de 230 000 € ; le résultat ne bouge pas", () => {
+  it("à 2 € par action, la rentabilité financière passe 35 % et la trésorerie reste au-dessus de 230 000 € ; à 3 €, elle passerait dessous ; le résultat ne bouge pas", () => {
     const s = laboratoireDuDiagnostic(SOLUTION_DU_DIAGNOSTIC);
     expect(s.exercice.resultatNet).toBe(n2!.resultatNet);
-    expect(s.ratios.rentabiliteFinanciere).toBe(Math.round((177_849 / (546_658.93 - 40_000)) * 10_000) / 10_000);
+    expect(s.ratios.rentabiliteFinanciere).toBe(Math.round((177_849 / (516_658.93 - 20_000)) * 10_000) / 10_000);
     expect(s.ratios.rentabiliteFinanciere).toBeGreaterThanOrEqual(RENTABILITE_DEMANDEE);
-    expect(s.exercice.tresorerieNette).toBe(c(287_934.51 - 40_000));
+    expect(s.exercice.tresorerieNette).toBe(c(287_934.51 - 30_000 - 20_000));
     expect(s.exercice.tresorerieNette).toBeGreaterThanOrEqual(TRESORERIE_A_GARDER);
+    expect(laboratoireDuDiagnostic({ ...SOLUTION_DU_DIAGNOSTIC, dividende: 3 }).exercice.tresorerieNette).toBeLessThan(TRESORERIE_A_GARDER);
     // Le délai des clients déplace la trésorerie vers les créances, sans toucher au résultat.
     const plusLent = laboratoireDuDiagnostic({ ...SOLUTION_DU_DIAGNOSTIC, delaiClients: 45 });
     expect(c(s.exercice.tresorerieNette - plusLent.exercice.tresorerieNette)).toBe(c((1_998_700 * 1.2 * 5) / 360));
@@ -173,11 +182,11 @@ describe("le cas dédié : le prêt indexé sur la durabilité", () => {
     gardeDuCas(LE_PRET_INDEXE_SUR_LA_DURABILITE, ch);
   });
 
-  it("336 000 € de dettes, 0,61 d'endettement, 1,59 an de CAF, 3,33 de liquidité ; 1,5 kWh et 92 % : le bonus est acquis", () => {
+  it("336 000 € de dettes, 0,65 d'endettement, 1,59 an de CAF, 3,17 de liquidité ; 1,5 kWh et 92 % : le bonus est acquis", () => {
     const x = pretIndexe(NOVA);
     const montants = (id: string) => etape(chapitreDuCas(LE_PRET_INDEXE_SUR_LA_DURABILITE, NOVA), id, "montants").champs(NOVA, VIDE).map((k) => k.attendu);
-    expect(montants("la-structure")).toEqual([336_000, c(336_000 / 546_658.93), c(336_000 / 211_344.56), c(x.b.actifCirculant / (x.b.dettesAMoinsDUnAn + 30_000))]);
-    expect(montants("la-structure")).toEqual([336_000, 0.61, 1.59, 3.33]);
+    expect(montants("la-structure")).toEqual([336_000, c(336_000 / 516_658.93), c(336_000 / 211_344.56), c(x.b.actifCirculant / (x.b.dettesAMoinsDUnAn + 30_000))]);
+    expect(montants("la-structure")).toEqual([336_000, 0.65, 1.59, 3.17]);
     expect(montants("les-indicateurs")).toEqual([1.5, 92, 600]);
     expect(x.bonusObtenu && x.conditionsTenues).toBe(true);
   });

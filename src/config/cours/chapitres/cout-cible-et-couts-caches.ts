@@ -607,7 +607,7 @@ export const COUT_CIBLE_ET_COUTS_CACHES: Chapitre = {
       notions: ["productivity", "staff_turnover"],
       question: (c) => {
         const k = valeurDuChapitre(c).caches;
-        return `La gérante veut s'attaquer à un dysfonctionnement en N + 2. Les coûts cachés de N + 1 font ${eur(k.total)}. Lequel lui proposez-vous d'abord ?`;
+        return `La présidente veut s'attaquer à un dysfonctionnement en N + 2. Les coûts cachés de N + 1 font ${eur(k.total)}. Lequel lui proposez-vous d'abord ?`;
       },
       options: (c) => {
         const k = valeurDuChapitre(c).caches;

@@ -1,12 +1,13 @@
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
-import { AUGMENTATION_DE_CAPITAL, BESOIN_DE_FONDS, PARITES_DU_LABORATOIRE, RESERVE_LEGALE, augmentationDeCapital, pariteJuste } from "../monde/comptabilite-approfondie";
+import { AUGMENTATION_DE_CAPITAL, BESOIN_DE_FONDS, DIVIDENDE_DEMANDE_PAR_ACTION, PARITES_DU_LABORATOIRE, RESERVE_LEGALE, augmentationDeCapital, pariteJuste } from "../monde/comptabilite-approfondie";
 import type { Chapitre } from "../types";
 
 /**
  * CHAPITRE : L'AUGMENTATION DE CAPITAL, PRIME D'ÉMISSION ET DROIT DE SOUSCRIPTION
  * (DCG UE10 · Comptabilité approfondie, palier 4 ; BUT GEA).
  *
- * En juin N + 1, l'assemblée de NOVA affecte le bénéfice de N, puis NOVA lève des fonds pour sa
+ * En juin N + 1, l'assemblée de NOVA affecte le bénéfice de N (l'affectation unique du cours, celle du
+ * chapitre « L'affectation du résultat », dividende compris), puis NOVA lève des fonds pour sa
  * seconde ligne : 1 action nouvelle pour 3 anciennes, à 12 €. L'élève affecte le résultat, calcule la
  * valeur mathématique de l'action, la prime d'émission et le droit préférentiel de souscription, et
  * passe la souscription. Le curseur cherche le prix d'émission le plus haut qui ne dépasse pas la
@@ -49,7 +50,7 @@ export const L_AUGMENTATION_DE_CAPITAL: Chapitre = {
       texte: (c) => {
         const a = augmentationDeCapital();
         return [
-          `Le capital de ${c.entreprise}, ${eur(a.capital)}, est fait de ${qte(a.actions)} actions de ${eur(a.nominal)} de nominal. En juin N + 1, l'assemblée affecte le bénéfice de N, ${eur(a.benefice)}, sans verser de dividende : ${c.entreprise} garde ses moyens pour sa seconde ligne.`,
+          `${c.entreprise} est une société par actions simplifiée : son capital, ${eur(a.capital)}, est fait de ${qte(a.actions)} actions de ${eur(a.nominal)} de nominal. En juin N + 1, l'assemblée générale des actionnaires affecte le bénéfice de N, ${eur(a.benefice)} : la réserve légale, un dividende de ${eur(DIVIDENDE_DEMANDE_PAR_ACTION)} par action, ${eur(a.reservesFacultatives)} de réserves facultatives, et le reste en report à nouveau. C'est l'affectation que chiffre le chapitre « L'affectation du résultat ».`,
           `Puis ${c.entreprise} augmente son capital : 1 action nouvelle pour ${AUGMENTATION_DE_CAPITAL.parite} anciennes, émise à ${eur(AUGMENTATION_DE_CAPITAL.prixDEmission)}, libérée en entier à la souscription. Le prix dépasse le nominal : l'excédent est une prime d'émission. Il reste sous la valeur des actions anciennes : les anciens associés y perdraient, sans le droit préférentiel de souscription.`,
         ];
       },
@@ -61,18 +62,24 @@ export const L_AUGMENTATION_DE_CAPITAL: Chapitre = {
       type: "montants",
       titre: "L'affectation du bénéfice de N",
       notions: ["balance_sheet"],
-      question: () => `La réserve légale reçoit ${pct(RESERVE_LEGALE)} du bénéfice ; le reste va aux autres réserves. Calculez la dotation à la réserve légale, les autres réserves, puis les capitaux propres après l'affectation.`,
+      question: () => {
+        const a = augmentationDeCapital();
+        return `La réserve légale reçoit ${pct(RESERVE_LEGALE)} du bénéfice. L'assemblée verse ${eur(DIVIDENDE_DEMANDE_PAR_ACTION)} par action et met ${eur(a.reservesFacultatives)} en réserves facultatives ; le reste va en report à nouveau. Calculez la dotation à la réserve légale, les dividendes, le report à nouveau, puis les capitaux propres après l'affectation.`;
+      },
       champs: () => {
         const a = augmentationDeCapital();
         return [
           { libelle: "Réserve légale", attendu: a.reserveLegale, calcul: `${eur(a.benefice)} × ${pct(RESERVE_LEGALE)} = ${eur(a.reserveLegale)}` },
-          { libelle: "Autres réserves", attendu: a.autresReserves, calcul: `${eur(a.benefice)} − ${eur(a.reserveLegale)} = ${eur(a.autresReserves)}` },
-          { libelle: "Capitaux propres", attendu: a.capitauxPropres, calcul: `${eur(a.capital)} + ${eur(a.reserveLegale)} + ${eur(a.autresReserves)} = ${eur(a.capitauxPropres)}` },
+          { libelle: "Dividendes", attendu: a.dividendes, calcul: `${eur(DIVIDENDE_DEMANDE_PAR_ACTION)} × ${qte(a.actions)} = ${eur(a.dividendes)}` },
+          { libelle: "Report à nouveau", attendu: a.reportANouveau, calcul: `${eur(a.benefice)} − ${eur(a.reserveLegale)} − ${eur(a.dividendes)} − ${eur(a.reservesFacultatives)} = ${eur(a.reportANouveau)}` },
+          { libelle: "Capitaux propres", attendu: a.capitauxPropres, calcul: `${eur(a.capital)} + ${eur(a.reserveLegale)} + ${eur(a.reservesFacultatives)} + ${eur(a.reportANouveau)} = ${eur(a.capitauxPropres)}` },
         ];
       },
       explication: () => {
         const a = augmentationDeCapital();
-        return [`Sans dividende, l'affectation ne change pas les capitaux propres, ${eur(a.capitauxPropres)} : le résultat devient des réserves (1061 et 1068), l'argent reste dans l'entreprise.`];
+        return [
+          `Les réserves et le report à nouveau restent dans les capitaux propres (1061 pour la réserve légale, 1068 pour les réserves facultatives, 110 pour le report à nouveau). Le dividende, lui, en sort : voté, il devient une dette envers les actionnaires (457) jusqu'à sa mise en paiement, en juin. Les capitaux propres passent de ${eur(a.capitauxPropresAvant)} à ${eur(a.capitauxPropres)}.`,
+        ];
       },
     },
     {
@@ -169,7 +176,7 @@ export const L_AUGMENTATION_DE_CAPITAL: Chapitre = {
       question: () =>
         "Une émission au-dessus de la valeur de l'action ferait payer aux nouveaux plus que ce qu'ils reçoivent. Faites varier le prix d'émission, à l'euro : une droite donne la valeur mathématique de l'action avant l'opération, l'autre le prix. Placez le curseur sur le plus haut prix qui ne la dépasse pas.",
       grandeur: () => ({ libelle: "Prix d'émission d'une action", unite: "€" }),
-      cible: () => ({ attendu: Math.floor(augmentationDeCapital().valeurAvant), min: 10, max: 20 }),
+      cible: () => ({ attendu: Math.floor(augmentationDeCapital().valeurAvant), min: 10, max: 18 }),
       zones: ["Le prix ne dépasse pas la valeur", "Le prix dépasse la valeur"],
       rates: () => ({
         dessous: "À ce prix, l'action vaut encore plus que son prix d'émission, et un prix plus élevé aussi : cherchez le plus haut.",

@@ -11,7 +11,7 @@ import { NOVA_GESTION, VENTES_A_CAMPUSTECH, VENTES_DES_PARTICULIERS } from "./no
  * `moisDeGestion(0)`) : un mois sans stock, comme le BTS le demande pour la méthode ABC (les jeux de
  * composants reçus sont tous montés, les enceintes montées toutes livrées). Ses charges indirectes
  * sont celles des centres d'analyse, au centime : le loyer, la paie, l'usure de la ligne, le travail
- * de la gérante (l'assurance ne commence qu'en octobre), 35 383 €. Ses charges directes aussi : 22 €
+ * de la présidente (l'assurance ne commence qu'en octobre), 35 383 €. Ses charges directes aussi : 22 €
  * de composants et 16 € d'autres coûts par enceinte (nova-gestion.ts). Le coût de revient par les
  * centres d'analyse est celui de ce mois, 60,25 € par enceinte, quel que soit le client.
  *
@@ -57,7 +57,7 @@ export interface ActiviteDeNova {
  * centres d'analyse : l'atelier, la réception, la zone d'expédition, le bureau des commandes, la
  * direction) ; celles de la paie, le temps des 4 opérateurs relevé sur une semaine type ; l'usure va
  * toute au montage ; l'assurance (nulle en janvier) suit le montage et les envois, comme au centre
- * production et au centre distribution ; le travail de la gérante va pour 30 % aux commandes (elle
+ * production et au centre distribution ; le travail de la présidente va pour 30 % aux commandes (elle
  * suit elle-même CampusTech, comme au centre distribution) et 70 % à la direction.
  */
 export const ACTIVITES_DE_NOVA: readonly ActiviteDeNova[] = [

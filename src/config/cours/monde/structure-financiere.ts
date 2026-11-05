@@ -1,6 +1,7 @@
 import { CAPACITE_DE_REMBOURSEMENT_MAXIMALE, ENDETTEMENT_MAXIMAL, INDEPENDANCE_MINIMALE } from "../financement";
 import { auCentime } from "./amortissement";
 import { cloture } from "./cloture";
+import { affectationDuBeneficeDeN } from "./comptabilite-approfondie";
 import { empruntALaCloture } from "./emprunt";
 import { EXERCICES_DU_COURS, type FicheDeLExercice } from "./exercice-de-nova";
 import { SEUILS_D_ALERTE } from "./nova-gestion";
@@ -34,8 +35,10 @@ import { PROJET_LIGNE_SEMI_AUTOMATIQUE } from "./projets-et-financement";
  *   · la provision pour litige est une dette à moins d'un an : le jugement est attendu en mai N+1
  *     (exercice-de-nova.ts, SUITES_EN_N_PLUS_1) ;
  *   · le compte à terme échoit le 6 janvier N+1 : actif à moins d'un an ;
- *   · le résultat reste en capitaux propres : NOVA ne distribue rien sur son premier exercice
- *     (comptabilite-approfondie.ts, l'affectation sans dividende) ;
+ *   · le résultat se lit après sa répartition, celle de l'affectation unique du cours
+ *     (comptabilite-approfondie.ts, `affectationDuBeneficeDeN`) : le dividende de 2 € par action que
+ *     votera l'assemblée de juin N+1 quitte les capitaux propres et devient une dette à moins d'un an ;
+ *     les réserves et le report à nouveau restent aux capitaux propres ;
  *   · la ligne de montage se lit à sa valeur de revente (VALEUR_DE_REVENTE_DE_LA_LIGNE) : la
  *     moins-value latente sort de l'actif et des capitaux propres.
  */
@@ -109,6 +112,8 @@ export function structureDeNova(f: FicheDeLExercice) {
     banque: b.actif.disponibilites,
     capital: b.passif.capitauxPropres.capital,
     resultat: b.passif.capitauxPropres.resultat,
+    /** Le dividende voté sur le résultat, à payer en juin N+1 : l'affectation unique du cours. */
+    dividende: affectationDuBeneficeDeN().dividendes,
     provision: b.passif.provisions,
     capitalRestantDu: e.capitalRestantDu,
     interetsCourus: auCentime(b.passif.emprunts - e.capitalRestantDu),
@@ -146,11 +151,12 @@ export function structureDeNova(f: FicheDeLExercice) {
   const actifMoinsDUnAn = auCentime(postes.stock + creances + postes.placement + postes.banque);
   const actifPlusDUnAn = valeurDeRevente;
   const totalActif = auCentime(actifPlusDUnAn + actifMoinsDUnAn);
-  const capitauxPropresFinanciers = auCentime(capitauxPropres - moinsValueLatente);
+  // Après répartition : le dividende voté sort des capitaux propres, la moins-value latente aussi.
+  const capitauxPropresFinanciers = auCentime(capitauxPropres - postes.dividende - moinsValueLatente);
   const echeancesAMoinsDUnAn = e.partAMoinsDUnAn;
   const dettesPlusDUnAn = auCentime(postes.capitalRestantDu - echeancesAMoinsDUnAn);
   const autresDettesAMoinsDUnAn = auCentime(postes.interetsCourus + postes.fournisseurs + postes.dettesFiscalesEtSociales + postes.produitConstateDAvance);
-  const dettesMoinsDUnAn = auCentime(echeancesAMoinsDUnAn + postes.provision + autresDettesAMoinsDUnAn);
+  const dettesMoinsDUnAn = auCentime(echeancesAMoinsDUnAn + postes.provision + autresDettesAMoinsDUnAn + postes.dividende);
   const totalPassif = auCentime(capitauxPropresFinanciers + dettesPlusDUnAn + dettesMoinsDUnAn);
   const capitauxPermanents = auCentime(capitauxPropresFinanciers + dettesPlusDUnAn);
   const dettesTotales = auCentime(dettesPlusDUnAn + dettesMoinsDUnAn);

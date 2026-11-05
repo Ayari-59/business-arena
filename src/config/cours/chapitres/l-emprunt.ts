@@ -767,7 +767,7 @@ export const L_EMPRUNT: Chapitre = {
       notions: ["loan_schedule"],
       question: (c) => {
         const x = empruntDuCas(c);
-        return `Pour un prochain prêt, au même taux, le gérant ${dE(c.entreprise)} hésite entre les deux modes. Les échéances constantes coûteraient ${eur(x.supplement)} d'intérêts de plus. Que lui dites-vous ?`;
+        return `Pour un prochain prêt, au même taux, le dirigeant ${dE(c.entreprise)} hésite entre les deux modes. Les échéances constantes coûteraient ${eur(x.supplement)} d'intérêts de plus. Que lui dites-vous ?`;
       },
       options: (c) => {
         const x = empruntDuCas(c);
