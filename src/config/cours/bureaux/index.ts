@@ -1,4 +1,21 @@
 import { RAPPROCHEMENT_DE_MARS } from "./rapprochement-de-mars";
+import { LE_MOIS_DE_MARS_DE_NOVA } from "./le-mois-de-mars-de-nova";
+import { LES_PARTENAIRES_AU_31_MARS } from "./les-partenaires-au-31-mars";
+import { LES_JEUX_DE_NOEL } from "./les-jeux-de-noel";
+import { LE_REMPLACEMENT_DE_LA_CUISINE } from "./le-remplacement-de-la-cuisine";
+import { LA_FICHE_DE_STOCK_D_AVRIL } from "./la-fiche-de-stock-d-avril";
+import { LES_PIECES_DE_JANVIER } from "./les-pieces-de-janvier";
+import { LA_PAIE_DE_JANVIER } from "./la-paie-de-janvier";
+import { L_ECHEANCE_DE_JANVIER } from "./l-echeance-de-janvier";
+import { LE_BESOIN_DE_L_ANNEE_TYPE } from "./le-besoin-de-l-annee-type";
+import { LA_PREMIERE_CONSOLIDATION } from "./la-premiere-consolidation";
+import { LE_PRET_DE_L_ANNEE } from "./le-pret-de-l-annee";
+import { LE_DOSSIER_DE_FINANCEMENT } from "./le-dossier-de-financement";
+import { L_ASSEMBLEE_DE_JUIN } from "./l-assemblee-de-juin";
+import { LES_SOLDES_POUR_LA_BANQUE } from "./les-soldes-pour-la-banque";
+import { LE_BILAN_FINANCIER_POUR_LA_BANQUE } from "./le-bilan-financier-pour-la-banque";
+import { LE_DIAGNOSTIC_POUR_L_ASSEMBLEE } from "./le-diagnostic-pour-l-assemblee";
+import { LE_TABLEAU_DE_FINANCEMENT_DE_NOVA } from "./le-tableau-de-financement-de-nova";
 import type { Bureau } from "./types";
 
 export type { Bureau } from "./types";
@@ -7,7 +24,31 @@ export type { Bureau } from "./types";
  * LES BUREAUX DU COURS (décision du propriétaire, novembre 2026) : des cas pratiques d'un genre
  * nouveau, servis sans corrigé et corrigés au serveur (bureaux/types.ts). Un prototype pour l'instant.
  */
-export const BUREAUX: readonly Bureau[] = [RAPPROCHEMENT_DE_MARS];
+export const BUREAUX: readonly Bureau[] = [
+  RAPPROCHEMENT_DE_MARS,
+  // Les activités des chapitres (novembre 2026), lot A.
+  LE_MOIS_DE_MARS_DE_NOVA,
+  LES_PARTENAIRES_AU_31_MARS,
+  LES_JEUX_DE_NOEL,
+  // Les activités des chapitres, lot B (novembre 2026).
+  LE_REMPLACEMENT_DE_LA_CUISINE,
+  LA_FICHE_DE_STOCK_D_AVRIL,
+  LES_PIECES_DE_JANVIER,
+  LA_PAIE_DE_JANVIER,
+  // Les activités des chapitres, lot E (novembre 2026).
+  L_ECHEANCE_DE_JANVIER,
+  LE_BESOIN_DE_L_ANNEE_TYPE,
+  LA_PREMIERE_CONSOLIDATION,
+  // Les activités des chapitres, lot C (novembre 2026).
+  LE_PRET_DE_L_ANNEE,
+  LE_DOSSIER_DE_FINANCEMENT,
+  L_ASSEMBLEE_DE_JUIN,
+  // Lot D (novembre 2026) : une activité par chapitre de la comptabilité générale.
+  LES_SOLDES_POUR_LA_BANQUE,
+  LE_BILAN_FINANCIER_POUR_LA_BANQUE,
+  LE_DIAGNOSTIC_POUR_L_ASSEMBLEE,
+  LE_TABLEAU_DE_FINANCEMENT_DE_NOVA,
+];
 
 export const bureauParCode = (code: string) => BUREAUX.find((b) => b.code === code);
 

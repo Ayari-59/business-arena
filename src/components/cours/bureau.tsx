@@ -4,8 +4,19 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { bouton } from "@/components/bouton";
 import { corrigerAuBureauAction } from "@/app/cours/bureau/actions";
-import type { Correction } from "@/pedagogy/cours/correcteur";
-import type { BureauServi, ClassementServi, EcritureMontree, EnvoiAuBureau, EtatServi, JournalServi, ReponseServie, RetourDuBureau } from "@/pedagogy/cours/bureau-servi";
+import { corrigerALEnqueteAction } from "@/app/cours/enquete/actions";
+import type { Correction, LigneSaisie } from "@/pedagogy/cours/correcteur";
+import type {
+  BureauServi,
+  ClassementServi,
+  EcritureMontree,
+  EnvoiAuBureau,
+  EtatServi,
+  JournalServi,
+  RectificationServie,
+  ReponseServie,
+  RetourDuBureau,
+} from "@/pedagogy/cours/bureau-servi";
 import type { CorrectionDuTableau, TableauACompleter } from "@/pedagogy/cours/tableau-a-completer";
 import { montantInsecable } from "@/pedagogy/cours/aides-du-guide";
 import { montantEcrit } from "@/pedagogy/cours/correcteur";
@@ -22,15 +33,22 @@ import { CalculsDuTableau, GrilleACompleter } from "./tableau-a-completer";
  * ne sait donc jamais ce qui est juste avant de l'avoir demandé ; il garde ce que le serveur lui a dit
  * (dans le navigateur de l'élève, pour reprendre où il en était) et l'affiche.
  *
+ * LE SCÉNARIO À EMBRANCHEMENTS (scenario.tsx) reprend d'ici ses questions à choix, le suivi d'une étape et
+ * les encadrés : ce sont les mêmes gestes, corrigés au serveur de la même façon.
+ *
  * LA PILE reste sous les yeux : les pièces de l'étape, ouvertes, puis toute la pile, repliée. Sur
  * téléphone, tout s'empile en une colonne ; aucune pièce n'a plus de deux colonnes (piece-du-bureau.tsx).
+ *
+ * L'ENQUÊTE (config/cours/enquetes) passe par le même écran : son dossier est une pile, ses étapes sont
+ * celles du bureau, plus la rectification des écritures que le tri a dites fausses. Seuls changent
+ * l'action qui corrige et quelques mots (`MOTS`).
  */
 
 const ESSAIS_AVANT_LA_CORRECTION = 2;
 const montant = (x: number) => montantInsecable(montantEcrit(x)).replace(/^-/, "−");
 
-/** Ce que l'élève a obtenu à une étape, tel que le serveur l'a dit. */
-interface SuiviDEtape {
+/** Ce que l'élève a obtenu à une étape, tel que le serveur l'a dit. Le scénario s'en sert pour ses questions. */
+export interface SuiviDEtape {
   /** Les essais manqués : la correction se propose après deux. */
   essais: number;
   reussi: boolean;
@@ -46,6 +64,8 @@ interface SuiviDEtape {
   passees?: EcritureMontree[];
   /** Les réponses : la dernière option choisie à chaque question, et ce que le serveur en a dit. */
   reponses?: Record<string, { texte: string; juste: boolean; retour: string }>;
+  /** La rectification : la raison de chaque écriture rectifiée, par son code. */
+  raisons?: Record<string, string>;
 }
 
 interface Suivi {
@@ -54,7 +74,7 @@ interface Suivi {
 }
 
 const NEUF: Suivi = { index: 0, etapes: {} };
-const VIERGE: SuiviDEtape = { essais: 0, reussi: false, aide: false };
+export const VIERGE: SuiviDEtape = { essais: 0, reussi: false, aide: false };
 
 /** Le suivi, gardé dans ce navigateur : l'élève reprend où il en était. */
 function useSuivi(cle: string): [Suivi, (f: (s: Suivi) => Suivi) => void, boolean] {
@@ -86,23 +106,39 @@ function useSuivi(cle: string): [Suivi, (f: (s: Suivi) => Suivi) => void, boolea
   return [suivi, changer, lu];
 }
 
+/** Les mots qui changent d'un format à l'autre, et l'action qui corrige. */
+const MOTS = {
+  bureau: {
+    action: corrigerAuBureauAction,
+    disparu: "Ce bureau n'existe plus : rechargez la page.",
+    recommencer: "Recommencer le bureau",
+    etatJuste: "Les deux soldes rectifiés sont égaux.",
+  },
+  enquete: {
+    action: corrigerALEnqueteAction,
+    disparu: "Cette enquête n'existe plus : rechargez la page.",
+    recommencer: "Recommencer l'enquête",
+    etatJuste: "Le résultat corrigé est juste.",
+  },
+} as const;
+
 /** Le message d'une correction qui n'a pas répondu, ou d'un accès refusé. */
 const PANNE = "La correction n'a pas répondu : vérifiez votre connexion, puis réessayez.";
-const REFUS: Record<string, string> = {
+const refus = (format: BureauServi["format"]): Record<string, string> => ({
   licence: "Ce cas pratique n'est plus ouvert pour vous : rechargez la page.",
-  bureau: "Ce bureau n'existe plus : rechargez la page.",
+  bureau: MOTS[format].disparu,
   envoi: "Votre réponse n'a pas pu être lue : réessayez.",
   etape: "Cette étape n'existe plus : rechargez la page.",
-};
+});
 
-interface PropsDEtape<E> {
+export interface PropsDEtape<E> {
   etape: E;
   suivi: SuiviDEtape;
   noter: (m: Partial<SuiviDEtape> & { essai?: boolean }) => void;
   envoyer: (envoi: EnvoiAuBureau) => Promise<RetourDuBureau | null>;
 }
 
-function Paragraphes({ textes }: { textes: readonly string[] }) {
+export function Paragraphes({ textes }: { textes: readonly string[] }) {
   return (
     <div className="grid max-w-2xl gap-3 text-base leading-relaxed">
       {textes.map((t) => (
@@ -112,7 +148,7 @@ function Paragraphes({ textes }: { textes: readonly string[] }) {
   );
 }
 
-function Explication({ textes }: { textes?: readonly string[] }) {
+export function Explication({ textes }: { textes?: readonly string[] }) {
   if (!textes?.length) return null;
   return (
     <div className="encadre-neutre grid max-w-2xl gap-2 rounded-lg px-4 py-3 text-sm leading-relaxed" data-explication-du-bureau="">
@@ -123,7 +159,7 @@ function Explication({ textes }: { textes?: readonly string[] }) {
   );
 }
 
-function Alerte({ texte }: { texte: string | null }) {
+export function Alerte({ texte }: { texte: string | null }) {
   if (!texte) return null;
   return (
     <p className="encadre-perte max-w-2xl rounded-lg px-4 py-3 text-sm" role="alert">
@@ -233,7 +269,7 @@ function EtapeDeClassement({ etape, suivi, noter, envoyer, pile }: PropsDEtape<C
 // L'ÉTAT DE RAPPROCHEMENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-function EtapeDEtat({ etape, suivi, noter, envoyer }: PropsDEtape<EtatServi>) {
+function EtapeDEtat({ etape, suivi, noter, envoyer, etatJuste }: PropsDEtape<EtatServi> & { etatJuste: string }) {
   const [saisies, setSaisies] = useState<Record<string, string>>(suivi.saisies ?? {});
   const [correction, setCorrection] = useState<CorrectionDuTableau | null>(null);
   const fait = suivi.reussi;
@@ -264,7 +300,7 @@ function EtapeDEtat({ etape, suivi, noter, envoyer }: PropsDEtape<EtatServi>) {
           <BoutonDeCorrection suivi={suivi} montrer={() => void montrer()} />
         </div>
       )}
-      {fait && <p className="encadre-gain max-w-2xl rounded-lg px-4 py-3 text-sm font-semibold" role="status" data-etat-juste="">Les deux soldes rectifiés sont égaux.</p>}
+      {fait && <p className="encadre-gain max-w-2xl rounded-lg px-4 py-3 text-sm font-semibold" role="status" data-etat-juste="">{etape.reussite ?? etatJuste}</p>}
       {fait && suivi.grille && <CalculsDuTableau grille={suivi.grille} />}
       {fait && <Explication textes={suivi.explication} />}
     </>
@@ -368,7 +404,7 @@ function EtapeDuJournal({ etape, suivi, noter, envoyer }: PropsDEtape<JournalSer
 // LA RÉPONSE
 // ─────────────────────────────────────────────────────────────────────────────
 
-function EtapeDeReponse({ etape, suivi, noter, envoyer }: PropsDEtape<ReponseServie>) {
+export function EtapeDeReponse({ etape, suivi, noter, envoyer }: PropsDEtape<ReponseServie>) {
   const reponses = suivi.reponses ?? {};
   const fait = suivi.reussi;
   const choisir = async (question: string, texte: string) => {
@@ -435,6 +471,171 @@ function EtapeDeReponse({ etape, suivi, noter, envoyer }: PropsDEtape<ReponseSer
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// LA RECTIFICATION (L'ENQUÊTE)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Une écriture d'une pièce, telle qu'on la saisit : le formulaire part de ce que le stagiaire a passé. */
+const enSaisieDeLaPiece = (piece: BureauServi["pile"][number] | undefined): LigneSaisie[] | undefined => {
+  const texte = (x: number) => x.toFixed(2).replace(".", ",").replace(/,00$/, "");
+  return piece?.comptes?.map((l) => ({ compte: l.compte, debit: l.debit ? texte(l.debit) : "", credit: l.credit ? texte(l.credit) : "" }));
+};
+
+/** Ce que le serveur a dit du dernier essai sur une écriture. */
+interface EssaiDeRectification {
+  raison: boolean;
+  correction: Correction;
+  indice?: string;
+}
+
+function EtapeDeRectification({
+  etape,
+  suivi,
+  noter,
+  envoyer,
+  pile,
+  tri,
+}: PropsDEtape<RectificationServie> & { pile: BureauServi["pile"]; tri: { elements: ClassementServi["elements"]; choix: Record<string, string> } }) {
+  const fait = suivi.reussi;
+  const passees = suivi.passees ?? [];
+  const faites = new Set(passees.map((e) => e.id));
+  const aRectifier = tri.elements.filter((x) => tri.choix[x.code] === etape.depuis.dans);
+  const [raisons, setRaisons] = useState<Record<string, string>>({});
+  const [essais, setEssais] = useState<Record<string, number>>({});
+  const [retours, setRetours] = useState<Record<string, EssaiDeRectification>>({});
+  const [message, setMessage] = useState<string | null>(null);
+  const [ouverte, setOuverte] = useState<string | null>(() => aRectifier.find((x) => !faites.has(x.code))?.code ?? null);
+  const libelleDeLaRaison = (code: string | undefined) => etape.raisons.find((x) => x.code === code)?.libelle;
+
+  const valider = async (id: string, saisie: LigneSaisie[]) => {
+    setMessage(null);
+    const raison = raisons[id];
+    if (!raison) {
+      setMessage("Choisissez d'abord la raison de l'erreur.");
+      return;
+    }
+    const r = await envoyer({ etape: etape.id, geste: "rectifier", ecriture: id, raison, saisie, faites: [...faites], essais: essais[id] ?? 0 });
+    if (!r || !("geste" in r) || r.geste !== "rectifier") return;
+    if (r.juste && r.passee) {
+      setRetours((x) => {
+        const { [id]: _, ...reste } = x;
+        return reste;
+      });
+      setOuverte(aRectifier.find((x) => x.code !== id && !faites.has(x.code))?.code ?? null);
+      noter({
+        passees: [...passees, r.passee],
+        raisons: { ...(suivi.raisons ?? {}), [id]: raison },
+        pourquoi: { ...(suivi.pourquoi ?? {}), ...(r.pourquoi ? { [id]: r.pourquoi } : {}) },
+        ...(r.fini ? { reussi: true, explication: r.explication } : {}),
+      });
+    } else {
+      setRetours((x) => ({ ...x, [id]: { raison: r.raison, correction: r.correction, ...(r.indice ? { indice: r.indice } : {}) } }));
+      setEssais((x) => ({ ...x, [id]: (x[id] ?? 0) + 1 }));
+      noter({ essai: true });
+    }
+  };
+  const montrer = async () => {
+    const r = await envoyer({ etape: etape.id, geste: "montrer" });
+    if (r && "geste" in r && r.geste === "montrer" && r.ecritures) {
+      setRetours({});
+      noter({ reussi: true, aide: true, passees: r.ecritures, raisons: r.raisons, pourquoi: r.pourquoi, explication: r.explication });
+    }
+  };
+
+  // Après la correction demandée, toutes les écritures fausses du dossier, même celles que le tri avait manquées.
+  const montrees = fait ? passees.map((e) => tri.elements.find((x) => x.code === e.id)).filter((x): x is ClassementServi["elements"][number] => Boolean(x)) : aRectifier;
+
+  return (
+    <>
+      <ul className="grid gap-4">
+        {montrees.map((x) => {
+          const piece = pile.find((p) => p.code === x.piece);
+          const passee = passees.find((e) => e.id === x.code);
+          const retour = retours[x.code];
+          const enCours = !passee && !fait && ouverte === x.code;
+          return (
+            <li key={x.code} className="carte grid min-w-0 gap-3 p-3" data-rectification={x.code}>
+              <p className="font-medium text-slate-100">{x.libelle}</p>
+              {piece && !passee && <PieceDeLaPile piece={piece} />}
+              {passee ? (
+                <div className="grid gap-2" data-rectifiee="">
+                  <p className="encadre-gain rounded-lg px-3 py-2 text-sm">
+                    <strong className="font-semibold">Rectifiée · </strong>
+                    {libelleDeLaRaison(suivi.raisons?.[x.code])}
+                  </p>
+                  <EcrituresPassees ecritures={[passee]} />
+                  {suivi.pourquoi?.[x.code] && <p className="max-w-2xl text-sm leading-relaxed">{suivi.pourquoi[x.code]}</p>}
+                </div>
+              ) : enCours ? (
+                <div className="grid gap-3">
+                  <fieldset className="grid gap-2">
+                    <legend className="mb-1 text-sm font-semibold">{"La raison de l'erreur"}</legend>
+                    <div className="grid gap-2" role="radiogroup" aria-label={`La raison de l'erreur : ${x.libelle}`}>
+                      {etape.raisons.map((k) => (
+                        <button
+                          key={k.code}
+                          type="button"
+                          role="radio"
+                          aria-checked={raisons[x.code] === k.code}
+                          onClick={() => setRaisons((c) => ({ ...c, [x.code]: k.code }))}
+                          className={`min-h-10 rounded-lg border px-3 py-2 text-left text-sm transition ${raisons[x.code] === k.code ? "border-amber-400 text-slate-50" : "border-slate-600 text-slate-300 hover:border-slate-400"}`}
+                        >
+                          {k.libelle}
+                        </button>
+                      ))}
+                    </div>
+                  </fieldset>
+                  <p className="text-sm font-semibold">{"L'écriture juste"}</p>
+                  <SaisieEcriture
+                    key={x.code}
+                    nombreDeLignes={piece?.comptes?.length ?? 2}
+                    depart={enSaisieDeLaPiece(piece)}
+                    verrouillee={false}
+                    onValider={(saisie) => void valider(x.code, saisie)}
+                  />
+                  {retour && (
+                    <div className="grid gap-2" data-retour-de-rectification="">
+                      {!retour.raison && (
+                        <p className="encadre-perte max-w-2xl rounded-lg px-4 py-2 text-sm" role="alert">
+                          {"Ce n'est pas la raison de cette erreur."}
+                        </p>
+                      )}
+                      {retour.correction.juste ? (
+                        <p className="encadre-neutre max-w-2xl rounded-lg px-4 py-2 text-sm">{"L'écriture est juste ; reste la raison."}</p>
+                      ) : (
+                        <RetourDEcriture c={retour.correction} />
+                      )}
+                      {retour.indice && (
+                        <p className="encadre-neutre max-w-2xl rounded-lg px-4 py-2 text-sm" data-indice="">
+                          <strong className="font-semibold">Piste · </strong>
+                          {retour.indice}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <button type="button" className={bouton({ variante: "secondaire", taille: "s" })} onClick={() => setOuverte(x.code)}>
+                    Rectifier cette écriture
+                  </button>
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      <Alerte texte={message} />
+      {!fait && (
+        <div className="flex flex-wrap gap-3">
+          <BoutonDeCorrection suivi={suivi} montrer={() => void montrer()} />
+        </div>
+      )}
+      {fait && <Explication textes={suivi.explication} />}
+    </>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // LE BUREAU
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -467,7 +668,8 @@ function LaPile({ pile, ouvertes }: { pile: BureauServi["pile"]; ouvertes: reado
 }
 
 export function BureauDuComptable({ bureau }: { bureau: BureauServi }) {
-  const [suivi, changer, lu] = useSuivi(`bureau:${bureau.code}`);
+  const mots = MOTS[bureau.format];
+  const [suivi, changer, lu] = useSuivi(`${bureau.format}:${bureau.code}`);
   const [panne, setPanne] = useState<string | null>(null);
   const n = bureau.etapes.length;
   const fini = suivi.index >= n;
@@ -493,9 +695,9 @@ export function BureauDuComptable({ bureau }: { bureau: BureauServi }) {
   const envoyer = async (envoi: EnvoiAuBureau): Promise<RetourDuBureau | null> => {
     setPanne(null);
     try {
-      const r = await corrigerAuBureauAction(bureau.code, envoi);
+      const r = await mots.action(bureau.code, envoi);
       if ("refus" in r) {
-        setPanne(REFUS[r.refus] ?? PANNE);
+        setPanne(refus(bureau.format)[r.refus] ?? PANNE);
         return null;
       }
       return r;
@@ -511,6 +713,11 @@ export function BureauDuComptable({ bureau }: { bureau: BureauServi }) {
   };
 
   const props = { suivi: etat, noter: noter(etape.id), envoyer };
+  /** Les écritures que l'étape de tri a rangées, et où : la rectification reprend celles qu'elle dit fausses. */
+  const triDe = (e: RectificationServie) => {
+    const tri = bureau.etapes.find((x) => x.id === e.depuis.etape);
+    return { elements: tri?.type === "classement" ? tri.elements : [], choix: suivi.etapes[e.depuis.etape]?.choix ?? {} };
+  };
   const premierCoup = bureau.etapes.filter((e) => {
     const x = suivi.etapes[e.id];
     return x?.reussi && !x.aide && x.essais === 0;
@@ -546,7 +753,7 @@ export function BureauDuComptable({ bureau }: { bureau: BureauServi }) {
               </Link>
             ))}
             <button type="button" className={bouton({ variante: "lien", taille: "m" })} onClick={() => changer(() => NEUF)}>
-              Recommencer le bureau
+              {mots.recommencer}
             </button>
           </p>
         </section>
@@ -559,9 +766,10 @@ export function BureauDuComptable({ bureau }: { bureau: BureauServi }) {
             </h2>
             <p className="max-w-2xl text-base leading-relaxed">{etape.consigne}</p>
             {etape.type === "classement" && <EtapeDeClassement {...props} etape={etape} pile={bureau.pile} />}
-            {etape.type === "etat" && <EtapeDEtat {...props} etape={etape} />}
+            {etape.type === "etat" && <EtapeDEtat {...props} etape={etape} etatJuste={mots.etatJuste} />}
             {etape.type === "journal" && <EtapeDuJournal {...props} etape={etape} />}
             {etape.type === "reponse" && <EtapeDeReponse {...props} etape={etape} />}
+            {etape.type === "rectification" && <EtapeDeRectification {...props} etape={etape} pile={bureau.pile} tri={triDe(etape)} />}
             <Alerte texte={panne} />
             {etat.reussi && (
               <div>

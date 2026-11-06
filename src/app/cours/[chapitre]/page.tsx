@@ -11,13 +11,16 @@ import { missionAffichee } from "@/config/cours/jouez";
 import { getGuestUserId } from "@/lib/guest";
 import { classeDeLEleve } from "@/services/cours.service";
 import { servirLeChapitre } from "@/pedagogy/cours/chapitre-servi";
-import { chapitreOuvert } from "../acces";
+import { chapitreOuvert, diaporamaPermis } from "../acces";
 import { ENTREPRISES } from "../entreprises";
 import { suitesDuChapitre } from "@/pedagogy/cours/suites";
 import { getSession } from "@/lib/session";
 import { ChapitreReserve } from "@/components/cours/chapitre-reserve";
 import Link from "next/link";
 import { bureauxDuChapitre, lienDuBureau } from "@/config/cours/bureaux";
+import { enquetesDuChapitre, lienDeLEnquete } from "@/config/cours/enquetes";
+import { lienDuScenario, scenariosDuChapitre } from "@/config/cours/scenarios";
+import { aSonDiaporama, fichierDuDiaporama, lienDuDiaporama } from "@/config/cours/diaporamas";
 
 /** Le chapitre que tout le monde peut ouvrir (`libre: true`), lu dans le registre. */
 const CHAPITRE_LIBRE = CHAPITRES.find((c) => c.libre)!.code;
@@ -92,6 +95,7 @@ async function ChapitrePage({
   }
 
   const cas = casDeLEntreprise(choisie.code);
+  const diaporama = aSonDiaporama(chapitre.code) && (await diaporamaPermis(chapitre));
   return (
     <>
       <main id="main" data-metier={choisie.teinte} className="relative overflow-x-clip">
@@ -110,10 +114,36 @@ async function ChapitrePage({
           calculatrice={classeDeLEleveLue?.calculatrice ?? true}
           enClasse={classeDeLEleveLue ? { classe: classeDeLEleveLue.classe, eleve: classeDeLEleveLue.eleve } : null}
         />
+        {diaporama && <Diaporama chapitre={chapitre.code} entreprise={choisie.code} />}
         <AuBureau chapitre={chapitre.code} />
+        <EnEnquete chapitre={chapitre.code} />
+        <EnScenario chapitre={chapitre.code} />
       </main>
       <PiedDePage />
     </>
+  );
+}
+
+/**
+ * LE DIAPORAMA DE L'ENSEIGNANT (config/cours/diaporamas.ts) : un lien de téléchargement, montré au seul
+ * enseignant sous licence (../acces.ts, `diaporamaPermis`). La route refait le contrôle.
+ */
+function Diaporama({ chapitre, entreprise }: { chapitre: string; entreprise: string }) {
+  return (
+    <aside className="mx-auto grid max-w-6xl gap-1 px-4 pb-12 sm:px-6" aria-label="Pour projeter en classe" data-diaporama-du-chapitre="">
+      <p className="text-xs font-semibold uppercase tracking-etiquette text-slate-400">Pour projeter en classe</p>
+      <p className="text-sm text-slate-300">
+        <a
+          href={`${lienDuDiaporama(chapitre)}?entreprise=${entreprise}`}
+          download={fichierDuDiaporama(chapitre)}
+          data-diaporama={chapitre}
+          className="font-semibold text-amber-300 underline-offset-4 hover:underline"
+        >
+          Télécharger le diaporama
+        </a>{" "}
+        · le chapitre étape par étape, chaque question suivie de sa correction, vos notes sous chaque diapositive.
+      </p>
+    </aside>
   );
 }
 
@@ -133,6 +163,50 @@ function AuBureau({ chapitre }: { chapitre: string }) {
             {b.titre}
           </Link>{" "}
           · {b.accroche}
+        </p>
+      ))}
+    </aside>
+  );
+}
+
+/**
+ * LE CHAPITRE SE PROLONGE EN ENQUÊTE (config/cours/enquetes) : un lien, sous le guide, vers un dossier
+ * qui cache des erreurs. Une activité à part : il ne change rien aux étapes du chapitre.
+ */
+function EnEnquete({ chapitre }: { chapitre: string }) {
+  const enquetes = enquetesDuChapitre(chapitre);
+  if (enquetes.length === 0) return null;
+  return (
+    <aside className="mx-auto grid max-w-6xl gap-1 px-4 pb-12 sm:px-6" aria-label="En enquête" data-enquetes-du-chapitre="">
+      <p className="text-xs font-semibold uppercase tracking-etiquette text-slate-400">Et en enquête</p>
+      {enquetes.map((e) => (
+        <p key={e.code} className="text-sm text-slate-300">
+          <Link href={lienDeLEnquete(e)} data-enquete-du-chapitre={e.code} className="font-semibold text-amber-300 underline-offset-4 hover:underline">
+            {e.titre}
+          </Link>{" "}
+          · {e.accroche}
+        </p>
+      ))}
+    </aside>
+  );
+}
+
+/**
+ * LE CHAPITRE SE PROLONGE EN SCÉNARIO (config/cours/scenarios) : un lien, sous le guide, vers une activité
+ * à part, des décisions à la suite. Il ne change rien aux étapes du chapitre.
+ */
+function EnScenario({ chapitre }: { chapitre: string }) {
+  const scenarios = scenariosDuChapitre(chapitre);
+  if (scenarios.length === 0) return null;
+  return (
+    <aside className="mx-auto grid max-w-6xl gap-1 px-4 pb-12 sm:px-6" aria-label="En scénario" data-scenarios-du-chapitre="">
+      <p className="text-xs font-semibold uppercase tracking-etiquette text-slate-400">Et en décisions</p>
+      {scenarios.map((s) => (
+        <p key={s.code} className="text-sm text-slate-300">
+          <Link href={lienDuScenario(s)} data-scenario-du-chapitre={s.code} className="font-semibold text-amber-300 underline-offset-4 hover:underline">
+            {s.titre}
+          </Link>{" "}
+          · {s.accroche}
         </p>
       ))}
     </aside>

@@ -20,3 +20,17 @@ export async function chapitreOuvert(chapitre: Pick<Chapitre, "libre"> & Ouvrabl
   const [session, invite] = await Promise.all([getSession(), getGuestUserId()]);
   return coursOuvert({ enseignant: session?.userId ?? null, eleve: invite }, chapitre);
 }
+
+/**
+ * LE DIAPORAMA D'UN CHAPITRE (décision du propriétaire, novembre 2026) : à l'enseignant seulement, ou à
+ * l'administrateur de son établissement, quand la licence de cet établissement lui ouvre ce chapitre. La
+ * règle est celle de la page (coursOuvert, du côté de l'enseignant) : jamais par la classe d'un élève,
+ * jamais sans compte. Le diaporama est un outil de la licence : un chapitre libre ne l'ouvre pas sans
+ * elle. La page s'en sert pour montrer le bouton, la route (./[chapitre]/diaporama/route.ts) pour
+ * servir le fichier : le bouton caché ne protège rien.
+ */
+export async function diaporamaPermis(chapitre: OuvrablePar): Promise<boolean> {
+  const session = await getSession();
+  if (!session) return false;
+  return coursOuvert({ enseignant: session.userId }, { ...chapitre, libre: false });
+}

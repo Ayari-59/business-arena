@@ -1,4 +1,5 @@
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join, normalize, relative } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -29,7 +30,12 @@ import { describe, expect, it } from "vitest";
  *
  * LES BUREAUX, PLUS STRICTS ENCORE (novembre 2026) : leurs réponses ne partent au navigateur ni par le
  * code ni par la page ; aucun module client n'atteint leur configuration, leur monde ni leur service
- * (tests/cours/bureau-de-la-boutique.test.ts vérifie ce que la page sert).
+ * (tests/cours/bureau-de-la-boutique.test.ts vérifie ce que la page sert). Les enquêtes, servies par le
+ * même moteur, de même (tests/cours/enquete-servie.test.ts).
+ *
+ * LES SCÉNARIOS À EMBRANCHEMENTS, DE MÊME (novembre 2026) : aucun module client n'atteint leur
+ * configuration, leur monde ni leur service (tests/cours/scenario-servi.test.ts vérifie ce que la page
+ * sert et ce que chaque choix rend).
  */
 
 const RACINE = process.cwd();
@@ -52,6 +58,37 @@ const INTERDITS = [
   /^src\/config\/cours\/bureaux\//,
   /^src\/config\/cours\/monde\/bureau-de-la-boutique\.ts$/,
   /^src\/pedagogy\/cours\/bureau-servi\.ts$/,
+  // L'enquête (décision du propriétaire, novembre 2026) : le moteur du bureau ; ni ses écritures justes,
+  // ni la raison de ses erreurs, ni les chiffres du stagiaire ne partent au navigateur.
+  /^src\/config\/cours\/enquetes\//,
+  /^src\/config\/cours\/monde\/cloture-du-stagiaire\.ts$/,
+  // Le scénario à embranchements (décision du propriétaire, novembre 2026) : ni ses branches, ni la
+  // meilleure suite, ni ses corrigés ne partent au navigateur ; la page sert la première décision,
+  // l'action serveur calcule chaque choix.
+  /^src\/config\/cours\/scenarios\//,
+  /^src\/config\/cours\/monde\/decouvert-de-nova\.ts$/,
+  /^src\/pedagogy\/cours\/scenario-servi\.ts$/,
+  // Le diaporama de l'enseignant (décision du propriétaire, novembre 2026) : son générateur porte les
+  // corrigés de chaque question ; la page n'en montre qu'un lien, la route le fabrique au serveur.
+  /^src\/pedagogy\/cours\/diaporama\.ts$/,
+  // Les activités des chapitres, lot B (novembre 2026) : leurs mondes portent les corrigés.
+  /^src\/config\/cours\/monde\/remplacement-de-la-cuisine\.ts$/,
+  /^src\/config\/cours\/monde\/fiche-d-avril-de-pixel\.ts$/,
+  /^src\/config\/cours\/monde\/janvier-de-nova\.ts$/,
+  /^src\/config\/cours\/monde\/paie-de-route-et-cie\.ts$/,
+  /^src\/config\/cours\/monde\/objectif-du-president\.ts$/,
+  /^src\/config\/cours\/monde\/controle-fiscal-de-nova\.ts$/,
+  /^src\/config\/cours\/monde\/revision-de-l-assistant\.ts$/,
+  // Les activités du lot E (novembre 2026) : les mondes de leurs scénarios, qui calculent les branches.
+  /^src\/config\/cours\/monde\/boucler-le-plan\.ts$/,
+  /^src\/config\/cours\/monde\/dossier-vert-de-nova\.ts$/,
+  // Les activités du lot C (novembre 2026) : les mondes de leurs bureaux, enquêtes et scénarios.
+  /^src\/config\/cours\/monde\/(pret-de-l-annee|dossier-de-financement|assemblee-de-juin|dossier-des-immobilisations|note-de-l-analyste|ligne-en-credit-bail|prix-des-ressources)\.ts$/,
+  // Lot D (novembre 2026) : les mondes des enquêtes du bilan fonctionnel, des comptes annuels et du
+  // tableau des flux (leurs bureaux et enquêtes sont couverts par leur dossier).
+  /^src\/config\/cours\/monde\/bilan-fonctionnel-de-l-alternant\.ts$/,
+  /^src\/config\/cours\/monde\/comptes-annuels-du-stagiaire\.ts$/,
+  /^src\/config\/cours\/monde\/flux-de-l-assistante\.ts$/,
 ];
 
 function fichiers(dossier: string): string[] {
@@ -186,6 +223,25 @@ describe("le build ne porte aucun corrigé", () => {
     const { fuitesDuBuild } = await import("../../scripts/verifier-bundles");
     const fuites = fuitesDuBuild(dossierNext);
     expect(fuites.map((f) => `${relative(RACINE, f.fichier)} : ${f.marqueur}`)).toEqual([]);
+  }, 60_000);
+
+  it("le marqueur du diaporama se trouve dans la bibliothèque qui l'écrit : la garde du build sait le voir", async () => {
+    const { fuitesDuDiaporama } = await import("../../scripts/verifier-bundles");
+    const faux = mkdtempSync(join(tmpdir(), "faux-build-"));
+    try {
+      mkdirSync(join(faux, "static", "chunks"), { recursive: true });
+      copyFileSync(join(RACINE, "node_modules/pptxgenjs/dist/pptxgen.es.js"), join(faux, "static", "chunks", "fuite.js"));
+      expect(fuitesDuDiaporama(faux).length).toBeGreaterThan(0);
+    } finally {
+      rmSync(faux, { recursive: true, force: true });
+    }
+  });
+
+  const recentPourLeDiaporama =
+    existsSync(buildId) && statSync(buildId).mtimeMs > statSync(join(RACINE, "src/pedagogy/cours/diaporama.ts")).mtimeMs;
+  it.skipIf(!recentPourLeDiaporama)("ni le générateur du diaporama ni sa bibliothèque dans .next/static", async () => {
+    const { fuitesDuDiaporama } = await import("../../scripts/verifier-bundles");
+    expect(fuitesDuDiaporama(dossierNext).map((f) => `${relative(RACINE, f.fichier)} : ${f.marqueur}`)).toEqual([]);
   }, 60_000);
 
   const recentPourLeCours =
