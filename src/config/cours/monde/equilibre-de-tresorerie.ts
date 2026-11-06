@@ -1,4 +1,5 @@
 import { auCentime, joursCompris, type DateDuCours } from "./amortissement";
+import { DECOUVERT_DE_NOVA } from "./banque-de-nova";
 import { budgetDeTresorerie, investissementDeLaFiche, moisDeDecalage, tableauDeBord, type LeviersDuSemestre } from "./couts-et-budgets";
 import { APPORT_EN_CAPITAL, CONTRAT_DE_PRET, EQUIPEMENT, PAIE_DU_MOIS, PLACEMENT, TAUX_DE_LA_PAIE } from "./exercice-de-nova";
 import type { FicheDeGestion } from "./nova-gestion";
@@ -34,8 +35,9 @@ export const JOURS_DU_MOIS_BANCAIRE = 30;
 
 /**
  * LES CONDITIONS DE LA BANQUE DE NOVA (hypothèse du cours, des taux de PME de 2026) :
- *   · LE DÉCOUVERT AUTORISÉ : jusqu'à 5 000 €, au taux de 12 % l'an sur le solde débiteur ; les agios
- *     d'un mois se prélèvent le mois suivant. Au-delà de l'autorisation, la banque rejette les paiements.
+ *   · LE DÉCOUVERT AUTORISÉ : jusqu'à 5 000 €, au taux de 12 % l'an sur le solde débiteur (banque-de-nova.ts,
+ *     DECOUVERT_DE_NOVA, le même dans tout le cours) ; les agios d'un mois se prélèvent le mois suivant.
+ *     Au-delà de l'autorisation, la banque rejette les paiements.
  *   · LE CRÉDIT DE TRÉSORERIE (un crédit « spot » d'un mois) : par tranches de 1 000 €, à 6 % l'an,
  *     versé le 1er du mois et remboursé le 1er du mois suivant avec ses intérêts ; 50 € de frais de
  *     dossier à chaque mise en place (des services bancaires, prélevés le jour du versement).
@@ -46,7 +48,7 @@ export const JOURS_DU_MOIS_BANCAIRE = 30;
  *     mois-là.
  */
 export const CONDITIONS_DE_LA_BANQUE = {
-  decouvert: { autorise: 5_000, tauxAnnuel: 0.12 },
+  decouvert: DECOUVERT_DE_NOVA,
   credit: { tauxAnnuel: 0.06, tranche: 1_000, frais: 50 },
   escompte: { tauxAnnuel: 0.09, commission: 20, jourDeRemise: 10 },
 } as const;

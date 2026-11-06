@@ -326,30 +326,30 @@ describe("choisir son fournisseur : trois offres de composants pour l'année N +
     expect([centime((achatsT4.asia * 60) / 90), centime((achatsT4.asia * 43) / 90)]).toEqual([97_680, 70_004]);
   });
 
-  it("le curseur de l'escompte : 1 % paie le découvert jusqu'à 40 jours d'avance ; il en faut 20", () => {
-    expect(juste(ch, "predire-l-escompte")).toBe("Rapporte : 1 % pour 20 jours, c'est bien plus que 9 % l'an");
+  it("le curseur de l'escompte : 1 % paie le découvert jusqu'à 30 jours d'avance ; il en faut 20", () => {
+    expect(juste(ch, "predire-l-escompte")).toBe("Rapporte : 1 % pour 20 jours, c'est bien plus que 12 % l'an");
     const escompte = 572_000 * 0.01;
     const avance = 572_000 - escompte;
-    const parJour = (avance * 0.09) / 360;
-    expect([escompte, avance, centime(parJour)]).toEqual([5_720, 566_280, 141.57]);
-    expect(Math.floor(escompte / parJour)).toBe(40);
+    const parJour = (avance * 0.12) / 360;
+    expect([escompte, avance, centime(parJour)]).toEqual([5_720, 566_280, 188.76]);
+    expect(Math.floor(escompte / parJour)).toBe(30);
     expect(curseur(ch, "l-escompte-au-curseur")).toEqual({
-      attendu: 40,
+      attendu: 30,
       bornes: [0, 60],
       droites: [5_720, 0, 5_720, centime(parJour * 60)],
-      lecture: { "Escompte gagné sur l'année": 5_720, "Coût du découvert pour payer plus tôt": centime(parJour * 40), "Gain net de l'escompte": centime(5_720 - parJour * 40) },
+      lecture: { "Escompte gagné sur l'année": 5_720, "Coût du découvert pour payer plus tôt": centime(parJour * 30), "Gain net de l'escompte": centime(5_720 - parJour * 30) },
     });
-    expect([centime(parJour * 60), centime(parJour * 40)]).toEqual([8_494.2, 5_662.8]);
+    expect([centime(parJour * 60), centime(parJour * 30)]).toEqual([11_325.6, 5_662.8]);
   });
 
   it("les étapes d'expert : l'escompte en taux annuel, le délai à rebours, le besoin financé, la qualité comptée", () => {
     // 1 % ÷ 99 % × 360 ÷ 20 ; le découvert de 20 jours sur les achats escompte déduit ; la dette payée à 10 jours.
     expect(attendus(ch, "l-escompte-en-taux-annuel")).toEqual({
       "Taux annuel de l'escompte (%)": centime((0.01 / 0.99) * (360 / 20) * 100),
-      "Gain net de l'escompte sur l'année": centime(5_720 - (566_280 * 0.09 * 20) / 360),
+      "Gain net de l'escompte sur l'année": centime(5_720 - (566_280 * 0.12 * 20) / 360),
       "Dette du 31 décembre qui disparaît (HT)": centime(detteEc - centime((154_000 * 10) / 90)),
     });
-    expect([centime((0.01 / 0.99) * (360 / 20) * 100), centime(5_720 - (566_280 * 0.09 * 20) / 360), centime(detteEc - centime((154_000 * 10) / 90))]).toEqual([18.18, 2_888.6, 34_222.22]);
+    expect([centime((0.01 / 0.99) * (360 / 20) * 100), centime(5_720 - (566_280 * 0.12 * 20) / 360), centime(detteEc - centime((154_000 * 10) / 90))]).toEqual([18.18, 1_944.8, 34_222.22]);
     expect(attendus(ch, "a-rebours")).toEqual({
       "Achats d'AsiaComponents au dernier trimestre (HT)": 146_520,
       "Délai qui annule l'écart de trésorerie (jours)": centime((69_929.33 * 90) / 146_520),
@@ -360,10 +360,10 @@ describe("choisir son fournisseur : trois offres de composants pour l'année N +
     const besoin = centime(stockAsia + detteEc);
     expect(attendus(ch, "le-besoin-a-financer")).toEqual({
       "Besoin de financement en plus": besoin,
-      "Coût du besoin sur un an": centime(besoin * 0.09),
-      "Écart de résultat après financement": centime(50_704 - centime(besoin * 0.09)),
+      "Coût du besoin sur un an": centime(besoin * 0.12),
+      "Écart de résultat après financement": centime(50_704 - centime(besoin * 0.12)),
     });
-    expect([besoin, centime(besoin * 0.09), centime(50_704 - centime(besoin * 0.09))]).toEqual([120_633.33, 10_857, 39_847]);
+    expect([besoin, centime(besoin * 0.12), centime(50_704 - centime(besoin * 0.12))]).toEqual([120_633.33, 14_476, 36_228]);
     // La qualité d'EuroParts (la fiche de capacité) : 26 000 × 0,5 % = 130 défauts de moins, à 36 € ; 26 livrés de moins, 3 ventes chacun, à 21 €.
     const gain = 130 * 36 + 26 * 3 * 21;
     expect(attendus(ch, "europarts-et-la-qualite")).toEqual({
@@ -387,7 +387,7 @@ describe("choisir son fournisseur : trois offres de composants pour l'année N +
       "Stock au 31 décembre (HT)": 69_300,
       "Dettes fournisseurs au 31 décembre (HT)": 0,
       "Écart de trésorerie au 31 décembre": -69_929.33,
-      "Écart de résultat après financement": 39_847,
+      "Écart de résultat après financement": 36_228,
     });
     // À 43 jours : 70 004 € de dettes ; le besoin tombe à 69 300 − (70 004 − 51 333,33).
     const besoin43 = centime(69_300 - (70_004 - detteEc));
@@ -400,9 +400,9 @@ describe("choisir son fournisseur : trois offres de composants pour l'année N +
       "Stock au 31 décembre (HT)": 69_300,
       "Dettes fournisseurs au 31 décembre (HT)": 70_004,
       "Écart de trésorerie au 31 décembre": 74.67,
-      "Écart de résultat après financement": centime(50_704 - centime(besoin43 * 0.09)),
+      "Écart de résultat après financement": centime(50_704 - centime(besoin43 * 0.12)),
     });
-    expect(centime(50_704 - centime(besoin43 * 0.09))).toBe(46_147.36);
+    expect(centime(50_704 - centime(besoin43 * 0.12))).toBe(44_628.48);
     // Ni l'offre habituelle allongée (le résultat ne bouge pas), ni EuroParts (son prix) ne relèvent le défi.
     expect(l.atteint({ offre: 0, delai: 60, stock: 0 })).toBe(false);
     expect(l.atteint({ offre: 2, delai: 60, stock: 0 })).toBe(false);
@@ -445,9 +445,9 @@ describe("le fournisseur allonge son délai : 60 jours face à AsiaComponents", 
     expect(attendus(s, "le-credit-en-plus")).toEqual({
       "Crédit fournisseur en plus (HT)": centime((154_000 * 30) / 90),
       "Crédit fournisseur en plus au bilan (TTC)": (154_000 * 1.2 * 30) / 90,
-      "Découvert évité sur un an": (572_000 * 30 * 0.09) / 360,
+      "Découvert évité sur un an": (572_000 * 30 * 0.12) / 360,
     });
-    expect([centime((154_000 * 30) / 90), (154_000 * 1.2 * 30) / 90, (572_000 * 30 * 0.09) / 360]).toEqual([51_333.33, 61_600, 4_290]);
+    expect([centime((154_000 * 30) / 90), (154_000 * 1.2 * 30) / 90, (572_000 * 30 * 0.12) / 360]).toEqual([51_333.33, 61_600, 5_720]);
   });
 
   it("le croisement face à AsiaComponents, et le délai qu'il lui faudrait", () => {
@@ -479,11 +479,11 @@ describe("le fournisseur allonge son délai : 60 jours face à AsiaComponents", 
     const capacite = centime(115_734.87 - 10_000);
     expect([CAPACITE_D_ABSORPTION.compteCourant, CAPACITE_D_ABSORPTION.matelas]).toEqual([115_734.87, 10_000]);
     expect(attendus(s, "ce-que-nova-peut-porter")).toEqual({
-      "Coût du besoin sur un an": centime(besoin * 0.09),
-      "Écart de résultat après financement": centime(50_704 - centime(besoin * 0.09)),
+      "Coût du besoin sur un an": centime(besoin * 0.12),
+      "Écart de résultat après financement": centime(50_704 - centime(besoin * 0.12)),
       "Besoin au-delà de ce que l'entreprise peut engager": centime(besoin - capacite),
     });
-    expect([centime(besoin * 0.09), centime(50_704 - centime(besoin * 0.09)), centime(besoin - capacite)]).toEqual([15_477, 35_227, 66_231.8]);
+    expect([centime(besoin * 0.12), centime(50_704 - centime(besoin * 0.12)), centime(besoin - capacite)]).toEqual([20_636, 30_068, 66_231.8]);
     expect(delaiAllonge(cas).verdict).toBe("le-delai");
     expect(juste(s, "reponse")).toBe("La contre-offre : le besoin de l'autre dépasse ce que l'entreprise peut porter");
   });
@@ -497,14 +497,14 @@ describe("le client qui paie tard : CampusTech, 60 jours convenus, payée à 80"
   const HT = 320 * 59;
   const TVA = HT * 0.2;
   const TTC = HT + TVA;
-  const parJour = (TTC * 0.09) / 360;
+  const parJour = (TTC * 0.12) / 360;
   const plancher = 3 * 0.0276;
   const loi = 0.0215 + 0.1;
 
   it("la fiche donne les chiffres de la consigne : un retard de 20 jours sur 60 convenus", () => {
     expect([HT, TVA, TTC]).toEqual([18_880, 3_776, 22_656]);
     expect([NOVA_DELAIS.campustech.delaiConvenu, NOVA_DELAIS.campustech.delaiReel]).toEqual([60, 80]);
-    expect(parJour).toBeCloseTo(5.664, 12);
+    expect(parJour).toBeCloseTo(7.552, 12);
   });
 
   it("les étapes guidées : les créances facture par facture, le délai moyen, le crédit convenu", () => {
@@ -520,37 +520,37 @@ describe("le client qui paie tard : CampusTech, 60 jours convenus, payée à 80"
     expect([caTTC, Math.round(((3 * TTC) / caTTC) * 90 * 10) / 10, centime(((3 * HT) / (7_000 * 59)) * 100)]).toEqual([495_600, 12.3, 13.71]);
     // NOVA vend des biens : elle finance le TTC, la TVA comprise.
     expect(attendus(ch, "le-cout-du-credit")).toEqual({
-      "Coût du crédit convenu d'une facture": centime((TTC * 0.09 * 60) / 360),
-      "Part qui finance la TVA": centime((TVA * 0.09 * 60) / 360),
-      "Coût du crédit convenu sur l'année": centime(12 * centime((TTC * 0.09 * 60) / 360)),
+      "Coût du crédit convenu d'une facture": centime((TTC * 0.12 * 60) / 360),
+      "Part qui finance la TVA": centime((TVA * 0.12 * 60) / 360),
+      "Coût du crédit convenu sur l'année": centime(12 * centime((TTC * 0.12 * 60) / 360)),
     });
-    expect([centime((TTC * 0.09 * 60) / 360), centime((TVA * 0.09 * 60) / 360), centime(12 * 339.84)]).toEqual([339.84, 56.64, 4_078.08]);
-    expect(clientQuiPaieTard(cas).creditHorsTaxes).toBe(centime((HT * 0.09 * 60) / 360));
+    expect([centime((TTC * 0.12 * 60) / 360), centime((TVA * 0.12 * 60) / 360), centime(12 * 453.12)]).toEqual([453.12, 75.52, 5_437.44]);
+    expect(clientQuiPaieTard(cas).creditHorsTaxes).toBe(centime((HT * 0.12 * 60) / 360));
   });
 
-  it("le curseur du retard : au plancher légal, l'indemnité couvre l'écart des taux jusqu'à 76 jours", () => {
+  it("le curseur du retard : au plancher légal, l'indemnité couvre l'écart des taux jusqu'à 16 jours", () => {
     expect(juste(ch, "predire-le-retard")).toBe("Jusqu'à un certain retard : l'indemnité comble l'écart des taux, puis s'épuise");
     const parJourPlancher = (TTC * plancher) / 365;
     const attendu = Math.floor(40 / (parJour - parJourPlancher));
-    expect(attendu).toBe(76);
+    expect(attendu).toBe(16);
     const reclame = (j: number, t: number) => centime((TTC * t * j) / 365 + 40);
     expect(curseur(ch, "le-retard-au-curseur")).toEqual({
-      attendu: 76,
+      attendu: 16,
       bornes: [1, 120],
       droites: [centime(parJourPlancher + 40), centime(parJour), centime(parJourPlancher * 120 + 40), centime(parJour * 120)],
       lecture: {
-        "Coût du retard au découvert": centime(parJour * 76),
-        "Réclamable au plancher légal": reclame(76, plancher),
-        "Réclamable au taux de la loi": reclame(76, loi),
-        "Ce que le plancher laisse à l'entreprise": centime(reclame(76, plancher) - centime(parJour * 76)),
+        "Coût du retard au découvert": centime(parJour * 16),
+        "Réclamable au plancher légal": reclame(16, plancher),
+        "Réclamable au taux de la loi": reclame(16, loi),
+        "Ce que le plancher laisse à l'entreprise": centime(reclame(16, plancher) - centime(parJour * 16)),
       },
     });
-    expect([centime(parJour * 76), reclame(76, plancher), reclame(76, loi)]).toEqual([430.46, 430.6, 613.17]);
+    expect([centime(parJour * 16), reclame(16, plancher), reclame(16, loi)]).toEqual([120.83, 122.23, 160.67]);
     // Un jour de plus, le découvert passe devant.
-    expect(reclame(77, plancher)).toBeLessThan(centime(parJour * 77));
+    expect(reclame(17, plancher)).toBeLessThan(centime(parJour * 17));
   });
 
-  it("le coût du retard et ce qui se réclame : 113,28 € contre 150,83 € et 40 € par facture", () => {
+  it("le coût du retard et ce qui se réclame : 151,04 € contre 150,83 € et 40 € par facture", () => {
     const penalites = centime((TTC * loi * 20) / 365);
     expect(attendus(ch, "le-cout-du-retard")).toEqual({
       "Coût du retard d'une facture": centime(parJour * 20),
@@ -558,26 +558,26 @@ describe("le client qui paie tard : CampusTech, 60 jours convenus, payée à 80"
       "Coût du retard sur l'année": centime(12 * centime(parJour * 20)),
       "Réclamable sur l'année": centime(12 * (penalites + 40)),
     });
-    expect([centime(parJour * 20), penalites, centime(12 * 113.28), centime(12 * (penalites + 40))]).toEqual([113.28, 150.83, 1_359.36, 2_289.96]);
+    expect([centime(parJour * 20), penalites, centime(12 * 151.04), centime(12 * (penalites + 40))]).toEqual([151.04, 150.83, 1_812.48, 2_289.96]);
     expect(juste(ch, "que-faire-du-retard")).toBe("Lui rappeler les pénalités et l'indemnité dues, pour obtenir le paiement à l'échéance");
     expect(juste(ch, "ce-que-cache-le-delai-moyen")).toBe("La moyenne cache le retard : les particuliers paient comptant, CampusTech paie en retard");
   });
 
-  it("le curseur de l'escompte : un escompte de 60 jours coûte autant que 40 jours de découvert", () => {
+  it("le curseur de l'escompte : un escompte de 60 jours coûte autant que 30 jours de découvert", () => {
     expect(juste(ch, "predire-l-escompte")).toBe("Non : il se paie sur tous ses jours, le découvert seulement les jours où le compte est débiteur");
     const escompte = centime((TTC * 0.06 * 60) / 360);
     expect(escompte).toBe(226.56);
-    expect((60 * 0.06) / 0.09).toBeCloseTo(40, 12);
+    expect((60 * 0.06) / 0.12).toBeCloseTo(30, 12);
     expect(curseur(ch, "l-escompte-ou-le-decouvert")).toEqual({
-      attendu: 40,
+      attendu: 30,
       bornes: [0, 90],
       droites: [escompte, 0, escompte, centime(parJour * 90)],
-      lecture: { "Coût de l'escompte jusqu'à l'échéance": escompte, "Coût du découvert de ces jours": centime(parJour * 40), "Ce que l'escompte coûte de plus": 0 },
+      lecture: { "Coût de l'escompte jusqu'à l'échéance": escompte, "Coût du découvert de ces jours": centime(parJour * 30), "Ce que l'escompte coûte de plus": 0 },
     });
-    expect(centime(parJour * 90)).toBe(509.76);
+    expect(centime(parJour * 90)).toBe(679.68);
   });
 
-  it("une facture mobilisée trois façons : l'escompte, puis le retard, reste le moins cher", () => {
+  it("une facture mobilisée trois façons : l'escompte, puis le retard, reste le moins cher ; le découvert seul passe derrière l'affacturage", () => {
     const escompte = centime((TTC * 0.06 * 60) / 360);
     expect(attendus(ch, "une-facture-mobilisee")).toEqual({
       "Escompte jusqu'à l'échéance": escompte,
@@ -585,9 +585,9 @@ describe("le client qui paie tard : CampusTech, 60 jours convenus, payée à 80"
       "Découvert seul jusqu'au paiement": centime(parJour * 80),
       "Affacturage jusqu'au paiement": centime(TTC * 0.01 + (TTC * 0.06 * 80) / 360),
     });
-    expect([centime(escompte + 113.28), centime(parJour * 80), centime(TTC * 0.01 + (TTC * 0.06 * 80) / 360)]).toEqual([339.84, 453.12, 528.64]);
+    expect([centime(escompte + 151.04), centime(parJour * 80), centime(TTC * 0.01 + (TTC * 0.06 * 80) / 360)]).toEqual([377.6, 604.16, 528.64]);
     expect(juste(ch, "le-prix-de-la-garantie")).toBe("Le factor achète la créance : il encaisse le client et garantit l'impayé");
-    expect(centime(528.64 - 339.84)).toBe(188.8);
+    expect(centime(528.64 - 377.6)).toBe(151.04);
   });
 
   it("les étapes d'expert : la variante à l'échéance, le retard retrouvé à rebours", () => {
@@ -598,9 +598,9 @@ describe("le client qui paie tard : CampusTech, 60 jours convenus, payée à 80"
       "Ce que le retard laisse en plus au bilan (TTC)": TTC,
     });
     expect([2 * TTC, Math.round(((2 * TTC) / 495_600) * 90 * 10) / 10]).toEqual([45_312, 8.2]);
-    // Le relevé : 396,48 € = 226,56 € d'escompte + j × 5,664 € de découvert.
-    expect(COUT_RELEVE_A_REBOURS).toBe(396.48);
-    const retard = (396.48 - 226.56) / parJour;
+    // Le relevé : 453,12 € = 226,56 € d'escompte + j × 7,552 € de découvert.
+    expect(COUT_RELEVE_A_REBOURS).toBe(453.12);
+    const retard = (453.12 - 226.56) / parJour;
     expect(retard).toBeCloseTo(30, 9);
     expect(attendus(ch, "a-rebours")).toEqual({
       "Jours de retard": 30,
@@ -612,19 +612,19 @@ describe("le client qui paie tard : CampusTech, 60 jours convenus, payée à 80"
 
   it("le laboratoire de la facture : au compte débiteur, l'escompte ; au compte créditeur, attendre", () => {
     const l = laboratoire(ch, "le-laboratoire-de-la-facture");
-    expect(l.depart).toEqual({ delai: 80, compte: 9, base: 1, outil: 0 });
-    expect(l.solution).toEqual({ delai: 80, compte: 9, base: 1, outil: 1 });
+    expect(l.depart).toEqual({ delai: 80, compte: 12, base: 1, outil: 0 });
+    expect(l.solution).toEqual({ delai: 80, compte: 12, base: 1, outil: 1 });
     expect(l.reussi).toEqual([false, true]);
     const auDepart = {
       "Jours de retard": 20,
       "Coût en attendant sur le compte": -centime(parJour * 80),
-      "Coût par l'escompte": -339.84,
+      "Coût par l'escompte": -377.6,
       "Coût par l'affacturage": -528.64,
       "Coût de la façon choisie": -centime(parJour * 80),
       "Pénalités et indemnité réclamables": centime(centime((TTC * loi * 20) / 365) + 40),
     };
     expect(l.auDepart).toEqual(auDepart);
-    expect(l.aLaSolution).toEqual({ ...auDepart, "Coût de la façon choisie": -339.84 });
+    expect(l.aLaSolution).toEqual({ ...auDepart, "Coût de la façon choisie": -377.6 });
     // Au compte créditeur (le placement, 3 %), attendre devient le moins cher, et relève le défi.
     const attendre3 = centime((TTC * 0.03 * 80) / 360);
     const escompte3 = centime(226.56 + (TTC * 0.03 * 20) / 360);
@@ -634,17 +634,17 @@ describe("le client qui paie tard : CampusTech, 60 jours convenus, payée à 80"
     expect(l.atteint({ delai: 80, compte: 3, base: 1, outil: 1 })).toBe(false);
     // Le graphique suit le jour du paiement : l'escompte est plat jusqu'à l'échéance, puis monte au taux du compte.
     expect(l.levier).toBe("delai");
-    const p = (delai: number) => ({ delai, compte: 9, base: 1, outil: 0 });
+    const p = (delai: number) => ({ delai, compte: 12, base: 1, outil: 0 });
     expect(l.courbes(p(30))).toEqual({ "Coût en attendant sur le compte": centime(parJour * 30), "Coût par l'escompte": 226.56, "Coût par l'affacturage": centime(226.56 + (TTC * 0.06 * 30) / 360) });
-    expect(l.courbes(p(60))).toEqual({ "Coût en attendant sur le compte": 339.84, "Coût par l'escompte": 226.56, "Coût par l'affacturage": centime(226.56 + (TTC * 0.06 * 60) / 360) });
+    expect(l.courbes(p(60))).toEqual({ "Coût en attendant sur le compte": 453.12, "Coût par l'escompte": 226.56, "Coût par l'affacturage": centime(226.56 + (TTC * 0.06 * 60) / 360) });
     expect(l.courbes(p(120))).toEqual({ "Coût en attendant sur le compte": centime(parJour * 120), "Coût par l'escompte": centime(226.56 + parJour * 60), "Coût par l'affacturage": centime(226.56 + (TTC * 0.06 * 120) / 360) });
-    expect([centime(parJour * 30), centime(226.56 + (TTC * 0.06 * 30) / 360), centime(226.56 + parJour * 60), centime(226.56 + (TTC * 0.06 * 120) / 360)]).toEqual([169.92, 339.84, 566.4, 679.68]);
+    expect([centime(parJour * 30), centime(226.56 + (TTC * 0.06 * 30) / 360), centime(226.56 + parJour * 60), centime(226.56 + (TTC * 0.06 * 120) / 360)]).toEqual([226.56, 339.84, 679.68, 679.68]);
     // Au plancher légal, seules les pénalités réclamables changent.
-    expect(l.atteint({ delai: 80, compte: 9, base: 2, outil: 1 })).toBe(true);
-    expect(financerUneFacture(NOVA_DELAIS, { delaiReel: 80, tauxDuCompte: 0.09, base: "taux-legal" }).reclamable).toBe(centime(centime((TTC * plancher * 20) / 365) + 40));
+    expect(l.atteint({ delai: 80, compte: 12, base: 2, outil: 1 })).toBe(true);
+    expect(financerUneFacture(NOVA_DELAIS, { delaiReel: 80, tauxDuCompte: 0.12, base: "taux-legal" }).reclamable).toBe(centime(centime((TTC * plancher * 20) / 365) + 40));
     // Au compte débiteur et au délai de la fiche, le laboratoire redonne la facture mobilisée du modèle.
     const m = mobiliserUneFacture(NOVA_DELAIS);
-    expect(financerUneFacture(NOVA_DELAIS, { delaiReel: 80, tauxDuCompte: 0.09, base: "bce" }).couts).toEqual({ attendre: m.decouvert, escompte: m.escompteEtRetard, affacturage: m.affacturage });
+    expect(financerUneFacture(NOVA_DELAIS, { delaiReel: 80, tauxDuCompte: 0.12, base: "bce" }).couts).toEqual({ attendre: m.decouvert, escompte: m.escompteEtRetard, affacturage: m.affacturage });
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(ch));

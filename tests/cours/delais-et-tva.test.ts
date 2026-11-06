@@ -14,6 +14,8 @@ import {
   MARTEL_ET_FILS,
   MULTIPLE_DU_TAUX_LEGAL,
   NOVA_DELAIS,
+  TAUX_DU_DECOUVERT,
+  TAUX_DU_DECOUVERT_DES_BESOINS_DE_N_PLUS_1,
   TAUX_D_INTERET_LEGAL,
   TAUX_DE_REFINANCEMENT_BCE,
   type FicheDeLAffaire,
@@ -47,6 +49,7 @@ import {
   ventesDuTrimestre,
   versementSuivant,
 } from "../../src/config/cours/monde/delais";
+import { CONDITIONS_DE_LA_BANQUE } from "../../src/config/cours/monde/equilibre-de-tresorerie";
 import { BALANCE_AVANT_INVENTAIRE, CAMPUSTECH, FACTURES_DE_COMPOSANTS_HT, PLACEMENT } from "../../src/config/cours/monde/exercice-de-nova";
 import { NOVA_CAPACITE } from "../../src/config/cours/monde/nova-capacite";
 import { AUTRES_COUTS_PAR_ENCEINTE, COMPOSANTS_PAR_ENCEINTE, JOURS_DU_MOIS_COMMERCIAL, PRIX_DE_L_ENCEINTE, TAUX_DE_TVA, VENTES_A_CAMPUSTECH } from "../../src/config/cours/monde/nova-gestion";
@@ -157,6 +160,20 @@ describe("la fiche tient debout, et c'est le monde des autres fiches", () => {
     expect(n.campustech.enceintesParFacture).toBe(VENTES_A_CAMPUSTECH[0]);
     expect(n.campustech.jourDeFacturation).toBe(CAMPUSTECH.jourDeFacturation);
     expect(n.banque.tauxDuPlacement).toBe(PLACEMENT.tauxAnnuel);
+  });
+
+  it("une seule banque de NOVA : son découvert, 12 % l'an et 5 000 € autorisés, est celui du chapitre « Équilibrer la trésorerie » ; MARTEL & FILS et ATLAS CONSEIL gardent 9 %", () => {
+    expect([n.banque.tauxDuDecouvert, n.banque.autorisationDeDecouvert]).toEqual([0.12, 5_000]);
+    expect({ tauxAnnuel: n.banque.tauxDuDecouvert, autorise: n.banque.autorisationDeDecouvert }).toEqual(CONDITIONS_DE_LA_BANQUE.decouvert);
+    // Le plafond d'escompte et les autres conditions ne changent pas.
+    expect(n.banque.escompte).toEqual({ taux: 0.06, plafondTTC: 50_000 });
+    expect(n.banque.affacturage).toEqual({ commission: 0.01, tauxDeFinancement: 0.06 });
+    expect(TAUX_DU_DECOUVERT).toBe(0.09);
+    expect(MARTEL_ET_FILS.tauxDuDecouvert).toBe(0.09);
+    expect(ATLAS_CONDITIONS.tauxDeFinancement).toBe(0.09);
+    // En attente d'une décision : les besoins de N + 1 dépassent l'autorisation ; leur cas garde 9 %.
+    expect(Math.max(...n.besoins.map((b) => b.montant))).toBeGreaterThan(n.banque.autorisationDeDecouvert);
+    expect(TAUX_DU_DECOUVERT_DES_BESOINS_DE_N_PLUS_1).toBe(0.09);
   });
 
   it("NOVA : les ventes de N + 1 sont celles du plan de nova-capacite.ts, 26 000 enceintes", () => {
@@ -431,7 +448,8 @@ describe("4. les fournisseurs (NOVA en N + 1)", () => {
     expect(c.ecartDeTresorerie).toBe(auCentime(50_704 - 69_300 - detteHabituelle));
     expect(c.ecartDeTresorerie).toBe(-69_929.33);
     expect(c.besoinEnPlus).toBe(auCentime(69_300 + detteHabituelle));
-    expect(c.coutDuBesoin).toBe(auCentime(c.besoinEnPlus * 0.09));
+    expect(c.coutDuBesoin).toBe(auCentime(c.besoinEnPlus * 0.12));
+    expect(c.coutDuBesoin).toBe(14_476);
     // Ses achats de l'année comptent le stock qu'il faut constituer.
     expect(c.offre.achatsHT).toBe(26_000 * 19.8 + 69_300);
   });
@@ -472,14 +490,14 @@ describe("4. les fournisseurs (NOVA en N + 1)", () => {
     expect(c.meilleureApresFinancement).toBe("asiacomponents");
   });
 
-  it("Électro-Composants allonge son délai de 30 jours, à 60 : 51 333,33 € HT de crédit en plus au 31 décembre, 4 290 € de découvert évité sur un an", () => {
+  it("Électro-Composants allonge son délai de 30 jours, à 60 : 51 333,33 € HT de crédit en plus au 31 décembre, 5 720 € de découvert évité sur un an", () => {
     const x = delaiFournisseurAllonge(n, 30);
     expect(x.nouveauDelai).toBe(60);
     expect(x.permis).toBe(true);
     expect(x.creditEnPlusHT).toBe(auCentime((COMPOSANTS_T4 * 22 * 30) / 90));
     expect(x.creditEnPlusTTC).toBe(61_600);
-    expect(x.coutEviteParAn).toBe(auCentime((572_000 * 0.09 * 30) / 360));
-    expect(x.coutEviteParAn).toBe(4_290);
+    expect(x.coutEviteParAn).toBe(auCentime((572_000 * 0.12 * 30) / 360));
+    expect(x.coutEviteParAn).toBe(5_720);
     expect(delaiFournisseurAllonge(n, 31).permis).toBe(false);
     // Face à AsiaComponents : l'offre allongée garde 121 262,67 € de plus en trésorerie, AsiaComponents gagne 50 704 € de résultat.
     const asia = comparerAvecLHabituelle(n, "asiacomponents", {}, { delaiDePaiement: 60 });
@@ -487,14 +505,15 @@ describe("4. les fournisseurs (NOVA en N + 1)", () => {
     expect(asia.ecartDeTresorerie).toBe(-121_262.67);
   });
 
-  it("l'escompte d'Électro-Composants, 1 % à 10 jours au lieu de 30 : 18,18 % l'an, plus que le découvert ; le prendre gagne 2 888,60 € par an", () => {
+  it("l'escompte d'Électro-Composants, 1 % à 10 jours au lieu de 30 : 18,18 % l'an, plus que le découvert ; le prendre gagne 1 944,80 € par an", () => {
     const x = escompteDuFournisseur(n, "electro-composants")!;
     expect(x.joursDAvance).toBe(20);
     expect(x.tauxAnnuel).toBeCloseTo((0.01 / 0.99) * (360 / 20), 12);
     expect(x.prendre).toBe(true);
     expect(x.escompteGagne).toBe(5_720);
-    expect(x.coutDeLAvance).toBe(auCentime((572_000 * 0.99 * 0.09 * 20) / 360));
-    expect(x.gainNet).toBe(auCentime(5_720 - 2_831.4));
+    expect(x.coutDeLAvance).toBe(auCentime((572_000 * 0.99 * 0.12 * 20) / 360));
+    expect(x.coutDeLAvance).toBe(3_775.2);
+    expect(x.gainNet).toBe(auCentime(5_720 - 3_775.2));
     expect(escompteDuFournisseur(n, "asiacomponents")).toBeNull();
   });
 });
@@ -519,17 +538,17 @@ describe("5. le crédit client et le retard (NOVA et CampusTech)", () => {
     expect(convenu.delaiMoyen).toBeCloseTo((45_312 / 495_600) * 90, 12);
   });
 
-  it("le retard de 20 jours coûte 113,28 € par facture au découvert ; NOVA pourrait réclamer 150,83 € de pénalités et 40 € d'indemnité", () => {
+  it("le retard de 20 jours coûte 151,04 € par facture au découvert ; NOVA pourrait réclamer 150,83 € de pénalités et 40 € d'indemnité", () => {
     const r = retardDeCampusTech(n);
     expect(r.joursDeRetard).toBe(20);
     expect(r.enRetard).toBe(true);
-    expect(r.coutDuCreditConvenuParFacture).toBe(auCentime((22_656 * 0.09 * 60) / 360));
-    expect(r.coutDuRetardParFacture).toBe(auCentime((22_656 * 0.09 * 20) / 360));
-    expect(r.coutDuRetardParFacture).toBe(113.28);
+    expect(r.coutDuCreditConvenuParFacture).toBe(auCentime((22_656 * 0.12 * 60) / 360));
+    expect(r.coutDuRetardParFacture).toBe(auCentime((22_656 * 0.12 * 20) / 360));
+    expect(r.coutDuRetardParFacture).toBe(151.04);
     expect(r.penalitesParFacture).toBe(auCentime((22_656 * 0.1215 * 20) / 365));
     expect(r.penalitesParFacture).toBe(150.83);
     expect(r.indemniteParFacture).toBe(40);
-    expect(r.coutDuRetardParAn).toBe(auCentime(12 * 113.28));
+    expect(r.coutDuRetardParAn).toBe(auCentime(12 * 151.04));
     expect(r.penalitesParAn).toBe(auCentime(12 * 150.83));
     expect(r.reclamableParAn).toBe(auCentime(12 * (150.83 + 40)));
     expect(r.reclamableParAn).toBe(2_289.96);
@@ -544,32 +563,34 @@ describe("5. le crédit client et le retard (NOVA et CampusTech)", () => {
     expect(aLHeure.enRetard).toBe(false);
     expect(aLHeure.reclamableParAn).toBe(0);
     expect(retardDeCampusTech(n, { delaiConvenu: 80 }).delaiConvenuPermis).toBe(false);
-    // Financé par l'argent qui dort (3 %), le retard coûte trois fois moins.
+    // Financé par l'argent qui dort (3 %), le retard coûte quatre fois moins.
     expect(retardDeCampusTech(n, { tauxDeFinancement: 0.03 }).coutDuRetardParFacture).toBe(auCentime((22_656 * 0.03 * 20) / 360));
   });
 });
 
 describe("6. l'escompte, l'affacturage et le découvert", () => {
-  it("une facture de CampusTech : escompte puis retard 339,84 €, découvert seul 453,12 €, affacturage 528,64 €", () => {
+  it("une facture de CampusTech : escompte puis retard 377,60 €, affacturage 528,64 €, découvert seul 604,16 €", () => {
     const x = mobiliserUneFacture(n);
     expect(x.escompte).toBe(auCentime((22_656 * 0.06 * 60) / 360));
-    expect(x.retardAuDecouvert).toBe(auCentime((22_656 * 0.09 * 20) / 360));
-    expect(x.escompteEtRetard).toBe(auCentime(226.56 + 113.28));
-    expect(x.decouvert).toBe(auCentime((22_656 * 0.09 * 80) / 360));
+    expect(x.retardAuDecouvert).toBe(auCentime((22_656 * 0.12 * 20) / 360));
+    expect(x.escompteEtRetard).toBe(auCentime(226.56 + 151.04));
+    expect(x.decouvert).toBe(auCentime((22_656 * 0.12 * 80) / 360));
+    expect(x.decouvert).toBe(604.16);
     expect(x.commission).toBe(226.56);
     expect(x.financement).toBe(auCentime((22_656 * 0.06 * 80) / 360));
     expect(x.affacturage).toBe(auCentime(226.56 + 302.08));
     expect(x.leMoinsCher).toBe("escompte");
-    expect(x.primeDeLAffacturage).toBe(auCentime(528.64 - 339.84));
+    expect(x.primeDeLAffacturage).toBe(auCentime(528.64 - 377.6));
     expect(coutDeLAffacturage(10_000, 0.01, 0.06, 90)).toBe(100 + 150);
   });
 
-  it("l'escompte coûte autant que 40 jours de découvert (60 × 6 % ÷ 9 %) : moins de jours de découvert, le découvert coûte moins", () => {
+  it("l'escompte coûte autant que 30 jours de découvert (60 × 6 % ÷ 12 %) : moins de jours de découvert, le découvert coûte moins", () => {
+    expect(joursDeDecouvertQuiValentLEscompte(60, 0.06, 0.12)).toBeCloseTo(30, 12);
     expect(joursDeDecouvertQuiValentLEscompte(60, 0.06, 0.09)).toBeCloseTo(40, 12);
   });
 
-  it("escompter chaque trimestre coûte 2 718,72 € pour 625 € de découvert évité : inutile ; au mieux, l'escompte au T4 seulement (578,12 €)", () => {
-    const x = escompterChaqueTrimestre(n);
+  it("escompter chaque trimestre (le cas, resté à 9 %) coûte 2 718,72 € pour 625 € de découvert évité : inutile ; au mieux, l'escompte au T4 seulement (578,12 €)", () => {
+    const x = escompterChaqueTrimestre(n, { tauxDuDecouvert: TAUX_DU_DECOUVERT_DES_BESOINS_DE_N_PLUS_1 });
     expect(x.parFacture).toBe(226.56);
     expect(x.encoursEscompte).toBe(2 * 22_656);
     expect(x.dansLePlafond).toBe(true);
@@ -581,6 +602,12 @@ describe("6. l'escompte, l'affacturage et le découvert", () => {
     expect(x.trimestres[3]!.escompteDuBesoin).toBe(2 * 226.56);
     expect(x.auMieux).toBe(auCentime(125 + 453.12));
     expect(x.joursQuiValentLEscompte).toBeCloseTo(40, 12);
+    // Au découvert de la banque de NOVA, 12 % : 833,34 € de découvert évité, l'escompte au T4 seulement toujours.
+    const y = escompterChaqueTrimestre(n);
+    // Chaque trimestre au centime : 166,67 € et 666,67 €.
+    expect(y.decouvertEvite).toBe(auCentime(auCentime((25_000 * 0.12 * 20) / 360) + auCentime((40_000 * 0.12 * 50) / 360)));
+    expect(y.decouvertEvite).toBe(833.34);
+    expect(y.trimestres.map((t) => t.mieux)).toEqual(["rien", "decouvert", "rien", "escompte"]);
   });
 });
 
@@ -660,7 +687,7 @@ describe("la garde voit le modèle et la fiche", () => {
     const ponctuel: FicheDesDelaisDeNova = { ...n, campustech: { ...n.campustech, delaiReel: 60 } };
     expect(retardDeCampusTech(ponctuel).coutDuRetardParAn).toBe(0);
     expect(creancesDuTrimestre(ponctuel, 4).creancesTTC).toBe(45_312);
-    // Une banque qui escompte à 9 % : l'escompte ne vaut plus que 60 jours de découvert, et ne sert plus au T4.
+    // Une banque qui escompte à 9 % : l'escompte ne vaut plus que 45 jours de découvert, et ne sert plus au T4.
     const escompteCher: FicheDesDelaisDeNova = { ...n, banque: { ...n.banque, escompte: { ...n.banque.escompte, taux: 0.09 } } };
     expect(escompterChaqueTrimestre(escompteCher).trimestres[3]!.mieux).toBe("decouvert");
     // ATLAS CONSEIL financé à 12 % : l'escompte vaut le crédit à 60 jours tout juste.

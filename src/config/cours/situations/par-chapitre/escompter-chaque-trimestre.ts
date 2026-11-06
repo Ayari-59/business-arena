@@ -2,7 +2,7 @@ import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_CLIENT_QUI_PAIE_TARD, clientQuiPaieTard } from "../../chapitres/le-client-qui-paie-tard";
 import { auCentime } from "../../monde/amortissement";
-import { JOURS_DE_L_ANNEE_BANCAIRE, JOURS_DU_TRIMESTRE } from "../../monde/delais-et-tva";
+import { JOURS_DE_L_ANNEE_BANCAIRE, JOURS_DU_TRIMESTRE, TAUX_DU_DECOUVERT_DES_BESOINS_DE_N_PLUS_1 } from "../../monde/delais-et-tva";
 import { coutDuDecouvert, escompterChaqueTrimestre } from "../../monde/delais";
 import type { Situation } from "../types";
 
@@ -45,8 +45,9 @@ export const TRIMESTRE_A_REBOURS = 2;
 export function escompteChaqueTrimestre(c: Pick<Cas, "code">) {
   const k = clientQuiPaieTard(c);
   const f = k.f;
-  const x = escompterChaqueTrimestre(f);
-  const taux = f.banque.tauxDuDecouvert;
+  // En attente d'une décision du propriétaire : le cas garde le découvert qu'il avait (monde/delais-et-tva.ts).
+  const taux = TAUX_DU_DECOUVERT_DES_BESOINS_DE_N_PLUS_1;
+  const x = escompterChaqueTrimestre(f, { tauxDuDecouvert: taux });
   const t = (n: number) => x.trimestres[n - 1]!;
   const curseur = t(TRIMESTRE_DU_CURSEUR);
   const parJour = (n: number) => (t(n).besoin * taux) / JOURS_DE_L_ANNEE_BANCAIRE;
@@ -223,7 +224,7 @@ export const ESCOMPTER_CHAQUE_TRIMESTRE: Situation = {
         const t = e.curseur;
         return [
           `Jusqu'à ${e.joursOuLeDecouvertCouteMoins} jours, le découvert coûte moins que l'escompte de ${qte(t.facturesNecessaires)} factures ; le ${ordinal(TRIMESTRE_DU_CURSEUR)} trimestre en compte ${t.joursDeDecouvert} : l'escompte gagne, ${eur(t.escompteDuBesoin)} contre ${eur(t.decouvert)}.`,
-          `Le seuil n'est pas les ${e.k.joursQuiValentLEscompte} jours du chapitre : on escompte des factures entières, ${eur(t.facturesNecessaires * e.k.fct.ttc)} pour un besoin de ${eur(t.besoin)}, et l'escompte de ce qui dépasse le besoin se paie aussi.`,
+          `Le seuil n'est pas les ${qte(e.x.joursQuiValentLEscompte)} jours du chapitre : on escompte des factures entières, ${eur(t.facturesNecessaires * e.k.fct.ttc)} pour un besoin de ${eur(t.besoin)}, et l'escompte de ce qui dépasse le besoin se paie aussi.`,
         ];
       },
     },

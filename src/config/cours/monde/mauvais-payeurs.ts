@@ -1,4 +1,5 @@
 import { auCentime } from "./amortissement";
+import { DECOUVERT_DE_NOVA } from "./banque-de-nova";
 import {
   AFFAIRE_AUX_CONDITIONS,
   CLIENTELES_DU_BATIMENT,
@@ -75,7 +76,10 @@ export interface MauvaisPayeur {
   statut: "fait-de-la-fiche" | "hypothese";
 }
 
-/** CAMPUSTECH, LE MAUVAIS PAYEUR DE NOVA (le fait de la fiche) : une facture mensuelle, 320 enceintes à 59 € HT. */
+/**
+ * CAMPUSTECH, LE MAUVAIS PAYEUR DE NOVA (le fait de la fiche) : une facture mensuelle, 320 enceintes à
+ * 59 € HT. NOVA finance l'attente au découvert de sa banque (banque-de-nova.ts).
+ */
 export const CAMPUSTECH_MAUVAIS_PAYEUR: MauvaisPayeur = {
   entreprise: "nova",
   client: "CampusTech",
@@ -85,7 +89,7 @@ export const CAMPUSTECH_MAUVAIS_PAYEUR: MauvaisPayeur = {
   exigibilite: "livraison",
   delaiConvenu: DELAI_CONVENU_DE_CAMPUSTECH,
   retard: RETARD_DE_CAMPUSTECH,
-  tauxDeFinancement: TAUX_DU_DECOUVERT,
+  tauxDeFinancement: DECOUVERT_DE_NOVA.tauxAnnuel,
   statut: "fait-de-la-fiche",
 };
 
