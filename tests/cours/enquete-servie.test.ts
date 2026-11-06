@@ -7,6 +7,9 @@ import { espacesOrdinaires } from "../../src/lib/typographie";
 import { corrigerAuBureau, servirLeBureau, type RetourDuBureau } from "../../src/pedagogy/cours/bureau-servi";
 import { enSaisie, montantEcrit } from "../../src/pedagogy/cours/correcteur";
 import { solutionsDuTableau } from "../../src/pedagogy/cours/tableau-a-completer";
+import { LE_DOSSIER_DES_IMMOBILISATIONS } from "../../src/config/cours/enquetes/le-dossier-des-immobilisations";
+import { LA_NOTE_DE_L_ANALYSTE } from "../../src/config/cours/enquetes/la-note-de-l-analyste";
+import { gardesDuBureauServi } from "../helpers/activites-du-lot-c-servies";
 
 /**
  * L'ENQUÊTE SERVIE : AUCUN CORRIGÉ DANS CE QUI PART AU NAVIGATEUR (pedagogy/cours/bureau-servi.ts, le
@@ -195,4 +198,12 @@ describe("ce que l'action serveur corrige", () => {
     acces.ouvert = true;
     expect(await corrigerALEnqueteAction("rapprochement-de-mars", envoi)).toEqual({ refus: "bureau" });
   });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LES ENQUÊTES DU LOT C (novembre 2026) : les mêmes gardes, pour chacune (tests/helpers/activites-du-lot-c-servies.ts).
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe.each([LE_DOSSIER_DES_IMMOBILISATIONS, LA_NOTE_DE_L_ANALYSTE])("l'enquête $code, servie et corrigée au serveur", (x) => {
+  gardesDuBureauServi(x, async () => (await import("../../src/app/cours/enquete/actions")).corrigerALEnqueteAction, acces);
 });

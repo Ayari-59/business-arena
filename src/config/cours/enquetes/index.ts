@@ -1,4 +1,6 @@
 import { LA_CLOTURE_DU_STAGIAIRE } from "./la-cloture-du-stagiaire";
+import { LE_DOSSIER_DES_IMMOBILISATIONS } from "./le-dossier-des-immobilisations";
+import { LA_NOTE_DE_L_ANALYSTE } from "./la-note-de-l-analyste";
 import type { Enquete } from "./types";
 
 export type { Enquete } from "./types";
@@ -7,7 +9,7 @@ export type { Enquete } from "./types";
  * LES ENQUÊTES DU COURS (décision du propriétaire, novembre 2026) : un dossier qui cache des erreurs,
  * servi sans corrigé et corrigé au serveur (enquetes/types.ts). Un prototype pour l'instant.
  */
-export const ENQUETES: readonly Enquete[] = [LA_CLOTURE_DU_STAGIAIRE];
+export const ENQUETES: readonly Enquete[] = [LA_CLOTURE_DU_STAGIAIRE, LE_DOSSIER_DES_IMMOBILISATIONS, LA_NOTE_DE_L_ANALYSTE];
 
 export const enqueteParCode = (code: string) => ENQUETES.find((e) => e.code === code);
 

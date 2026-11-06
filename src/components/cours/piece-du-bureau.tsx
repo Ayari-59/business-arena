@@ -30,6 +30,8 @@ const NATURES: Readonly<Record<NatureDePiece, string>> = {
   ecriture: "Écriture du journal",
   plan: "Plan de trésorerie",
   facture: "Facture",
+  contrat: "Contrat",
+  "proces-verbal": "Procès-verbal",
 };
 
 /** Le sens d'une opération, vu de celui qui tient le document (débit négatif : ce qui sort). */

@@ -67,6 +67,8 @@ const INTERDITS = [
   /^src\/config\/cours\/scenarios\//,
   /^src\/config\/cours\/monde\/decouvert-de-nova\.ts$/,
   /^src\/pedagogy\/cours\/scenario-servi\.ts$/,
+  // Les activités du lot C (novembre 2026) : les mondes de leurs bureaux, enquêtes et scénarios.
+  /^src\/config\/cours\/monde\/(pret-de-l-annee|dossier-de-financement|assemblee-de-juin|dossier-des-immobilisations|note-de-l-analyste|ligne-en-credit-bail|prix-des-ressources)\.ts$/,
 ];
 
 function fichiers(dossier: string): string[] {

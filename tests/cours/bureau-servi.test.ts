@@ -7,6 +7,10 @@ import { espacesOrdinaires } from "../../src/lib/typographie";
 import { corrigerAuBureau, servirLeBureau, type RetourDuBureau } from "../../src/pedagogy/cours/bureau-servi";
 import { enSaisie, montantEcrit } from "../../src/pedagogy/cours/correcteur";
 import { solutionsDuTableau } from "../../src/pedagogy/cours/tableau-a-completer";
+import { LE_PRET_DE_L_ANNEE } from "../../src/config/cours/bureaux/le-pret-de-l-annee";
+import { LE_DOSSIER_DE_FINANCEMENT } from "../../src/config/cours/bureaux/le-dossier-de-financement";
+import { L_ASSEMBLEE_DE_JUIN } from "../../src/config/cours/bureaux/l-assemblee-de-juin";
+import { gardesDuBureauServi } from "../helpers/activites-du-lot-c-servies";
 
 /**
  * LE BUREAU SERVI : AUCUN CORRIGÉ DANS CE QUI PART AU NAVIGATEUR (pedagogy/cours/bureau-servi.ts).
@@ -193,4 +197,12 @@ describe("ce que l'action serveur corrige", () => {
     expect(await corrigerAuBureauAction(b.code, envoi)).toEqual({ refus: "licence" });
     expect(await corrigerAuBureauAction("un-autre-bureau", envoi)).toEqual({ refus: "bureau" });
   });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LES BUREAUX DU LOT C (novembre 2026) : les mêmes gardes, pour chacun (tests/helpers/activites-du-lot-c-servies.ts).
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe.each([LE_PRET_DE_L_ANNEE, LE_DOSSIER_DE_FINANCEMENT, L_ASSEMBLEE_DE_JUIN])("le bureau $code, servi et corrigé au serveur", (x) => {
+  gardesDuBureauServi(x, async () => (await import("../../src/app/cours/bureau/actions")).corrigerAuBureauAction, acces);
 });
