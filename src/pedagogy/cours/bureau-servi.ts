@@ -45,6 +45,8 @@ export interface EtatServi extends BaseServie {
   type: "etat";
   /** La grille, ses cases à saisir vidées : ni valeur, ni calcul, ni indice. */
   grille: TableauACompleter;
+  /** Ce que l'écran dit une fois le tableau juste, s'il a ses propres mots (bureaux/types.ts). */
+  reussite?: string;
 }
 
 export type JournalServi = BaseServie & { type: "journal" };
@@ -114,7 +116,7 @@ function servirLEtape(b: Bureau, e: EtapeDuBureau): EtapeDuBureauServie {
         elements: e.elements.map((x) => ({ code: x.code, libelle: x.libelle, ...(x.montant !== undefined ? { montant: x.montant } : {}), ...(x.piece ? { piece: x.piece } : {}) })),
       };
     case "etat":
-      return { ...base, type: "etat", grille: grilleSansReponses(e.grille) };
+      return { ...base, type: "etat", grille: grilleSansReponses(e.grille), ...(e.reussite ? { reussite: e.reussite } : {}) };
     case "journal":
       return { ...base, type: "journal" };
     case "reponse":

@@ -12,6 +12,10 @@ import { LA_PREMIERE_CONSOLIDATION } from "./la-premiere-consolidation";
 import { LE_PRET_DE_L_ANNEE } from "./le-pret-de-l-annee";
 import { LE_DOSSIER_DE_FINANCEMENT } from "./le-dossier-de-financement";
 import { L_ASSEMBLEE_DE_JUIN } from "./l-assemblee-de-juin";
+import { LES_SOLDES_POUR_LA_BANQUE } from "./les-soldes-pour-la-banque";
+import { LE_BILAN_FINANCIER_POUR_LA_BANQUE } from "./le-bilan-financier-pour-la-banque";
+import { LE_DIAGNOSTIC_POUR_L_ASSEMBLEE } from "./le-diagnostic-pour-l-assemblee";
+import { LE_TABLEAU_DE_FINANCEMENT_DE_NOVA } from "./le-tableau-de-financement-de-nova";
 import type { Bureau } from "./types";
 
 export type { Bureau } from "./types";
@@ -39,6 +43,11 @@ export const BUREAUX: readonly Bureau[] = [
   LE_PRET_DE_L_ANNEE,
   LE_DOSSIER_DE_FINANCEMENT,
   L_ASSEMBLEE_DE_JUIN,
+  // Lot D (novembre 2026) : une activité par chapitre de la comptabilité générale.
+  LES_SOLDES_POUR_LA_BANQUE,
+  LE_BILAN_FINANCIER_POUR_LA_BANQUE,
+  LE_DIAGNOSTIC_POUR_L_ASSEMBLEE,
+  LE_TABLEAU_DE_FINANCEMENT_DE_NOVA,
 ];
 
 export const bureauParCode = (code: string) => BUREAUX.find((b) => b.code === code);

@@ -84,6 +84,11 @@ const INTERDITS = [
   /^src\/config\/cours\/monde\/dossier-vert-de-nova\.ts$/,
   // Les activités du lot C (novembre 2026) : les mondes de leurs bureaux, enquêtes et scénarios.
   /^src\/config\/cours\/monde\/(pret-de-l-annee|dossier-de-financement|assemblee-de-juin|dossier-des-immobilisations|note-de-l-analyste|ligne-en-credit-bail|prix-des-ressources)\.ts$/,
+  // Lot D (novembre 2026) : les mondes des enquêtes du bilan fonctionnel, des comptes annuels et du
+  // tableau des flux (leurs bureaux et enquêtes sont couverts par leur dossier).
+  /^src\/config\/cours\/monde\/bilan-fonctionnel-de-l-alternant\.ts$/,
+  /^src\/config\/cours\/monde\/comptes-annuels-du-stagiaire\.ts$/,
+  /^src\/config\/cours\/monde\/flux-de-l-assistante\.ts$/,
 ];
 
 function fichiers(dossier: string): string[] {

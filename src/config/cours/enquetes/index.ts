@@ -4,6 +4,9 @@ import { LES_EFFETS_DE_L_INTERIMAIRE } from "./les-effets-de-l-interimaire";
 import { LA_REVISION_DE_L_ASSISTANT } from "./la-revision-de-l-assistant";
 import { LE_DOSSIER_DES_IMMOBILISATIONS } from "./le-dossier-des-immobilisations";
 import { LA_NOTE_DE_L_ANALYSTE } from "./la-note-de-l-analyste";
+import { LE_BILAN_FONCTIONNEL_DE_L_ALTERNANT } from "./le-bilan-fonctionnel-de-l-alternant";
+import { LES_COMPTES_ANNUELS_DU_STAGIAIRE } from "./les-comptes-annuels-du-stagiaire";
+import { LE_TABLEAU_DES_FLUX_DE_L_ASSISTANTE } from "./le-tableau-des-flux-de-l-assistante";
 import type { Enquete } from "./types";
 
 export type { Enquete } from "./types";
@@ -22,6 +25,10 @@ export const ENQUETES: readonly Enquete[] = [
   // Les activités des chapitres, lot C (novembre 2026).
   LE_DOSSIER_DES_IMMOBILISATIONS,
   LA_NOTE_DE_L_ANALYSTE,
+  // Lot D (novembre 2026) : une activité par chapitre de la comptabilité générale.
+  LE_BILAN_FONCTIONNEL_DE_L_ALTERNANT,
+  LES_COMPTES_ANNUELS_DU_STAGIAIRE,
+  LE_TABLEAU_DES_FLUX_DE_L_ASSISTANTE,
 ];
 
 export const enqueteParCode = (code: string) => ENQUETES.find((e) => e.code === code);
