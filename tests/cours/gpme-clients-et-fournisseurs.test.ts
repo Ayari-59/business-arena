@@ -655,43 +655,64 @@ describe("escompter chaque trimestre : ni tout, ni rien", () => {
   const TTC = 320 * 59 * 1.2;
   const parFacture = centime((TTC * 0.06 * 60) / 360);
 
-  it("ce que coûterait l'escompte, et le découvert qu'il éviterait", () => {
+  it("ce que coûterait l'escompte, et le découvert qu'il éviterait (le crédit de trésorerie au-delà de 5 000 €, au même taux, 12 %)", () => {
     casDedie(s, LE_CLIENT_QUI_PAIE_TARD);
     expect(s.commanditaire).toBe("Le dirigeant");
     expect(attendus(s, "ce-que-coute-l-escompte")).toEqual({ "Escompte d'une facture": parFacture, "Effets escomptés au plus fort (TTC)": 2 * TTC, "Escompte de l'année": centime(12 * parFacture) });
     expect([parFacture, 2 * TTC, centime(12 * parFacture)]).toEqual([226.56, 45_312, 2_718.72]);
     expect(2 * TTC).toBeLessThanOrEqual(50_000);
     expect(attendus(s, "le-decouvert-evite")).toEqual({
-      "Découvert du 2e trimestre": (25_000 * 0.09 * 20) / 360,
-      "Découvert du 4e trimestre": (40_000 * 0.09 * 50) / 360,
-      "Surcoût de l'escompte de chaque facture": centime(2_718.72 - 625),
+      "Découvert du 2e trimestre": centime((25_000 * 0.12 * 20) / 360),
+      "Découvert du 4e trimestre": centime((40_000 * 0.12 * 50) / 360),
+      "Surcoût de l'escompte de chaque facture": centime(2_718.72 - 166.67 - 666.67),
     });
-    expect([(25_000 * 0.09 * 20) / 360, (40_000 * 0.09 * 50) / 360, centime(2_718.72 - 625)]).toEqual([125, 500, 2_093.72]);
+    expect([centime((25_000 * 0.12 * 20) / 360), centime((40_000 * 0.12 * 50) / 360), centime(2_718.72 - 166.67 - 666.67)]).toEqual([166.67, 666.67, 1_885.38]);
   });
 
-  it("le curseur du quatrième trimestre : le découvert de 40 000 € coûte moins que l'escompte de 2 factures jusqu'à 45 jours", () => {
-    // 40 000 € demandent 2 factures (45 312 €) ; 453,12 € face à 40 000 × 9 % × j ÷ 360 = 10 € par jour.
+  it("le curseur du quatrième trimestre : le découvert de 40 000 € coûte moins que l'escompte de 2 factures jusqu'à 33 jours", () => {
+    // 40 000 € demandent 2 factures (45 312 €) ; 453,12 € face à 40 000 × 12 % × j ÷ 360 = 13,33 € par jour.
     expect(Math.ceil(40_000 / TTC)).toBe(2);
-    expect(Math.floor((2 * parFacture) / ((40_000 * 0.09) / 360))).toBe(45);
+    expect(Math.floor((2 * parFacture) / ((40_000 * 0.12) / 360))).toBe(33);
     expect(curseur(s, "le-quatrieme-trimestre")).toEqual({
-      attendu: 45,
+      attendu: 33,
       bornes: [0, 90],
-      droites: [453.12, 0, 453.12, 900],
-      lecture: { "Escompte des factures qui couvrent le besoin": 453.12, "Découvert de ces jours": 450, "Ce que l'escompte coûte de plus": 3.12 },
+      droites: [453.12, 0, 453.12, 1_200],
+      lecture: { "Escompte des factures qui couvrent le besoin": 453.12, "Découvert de ces jours": 440, "Ce que l'escompte coûte de plus": 13.12 },
     });
   });
 
   it("au mieux : le découvert au deuxième trimestre, l'escompte au quatrième", () => {
     expect(attendus(s, "au-mieux")).toEqual({
-      "Jours de découvert qui valent l'escompte, au 2e trimestre": centime(453.12 / ((25_000 * 0.09) / 360)),
-      "Coût du 2e trimestre, au mieux": 125,
-      "Coût de l'année, au mieux": centime(125 + 453.12),
+      "Jours de découvert qui valent l'escompte, au 2e trimestre": centime(453.12 / ((25_000 * 0.12) / 360)),
+      "Coût du 2e trimestre, au mieux": 166.67,
+      "Coût de l'année, au mieux": centime(166.67 + 453.12),
     });
-    expect([centime(453.12 / ((25_000 * 0.09) / 360)), centime(125 + 453.12)]).toEqual([72.5, 578.12]);
+    expect([centime(453.12 / ((25_000 * 0.12) / 360)), centime(166.67 + 453.12)]).toEqual([54.37, 619.79]);
     expect(escompteChaqueTrimestre(cas).verdict).toBe("au-cas-par-cas");
-    expect(escompteChaqueTrimestre(cas).economie).toBe(centime(2_718.72 - 578.12));
+    expect(escompteChaqueTrimestre(cas).economie).toBe(centime(2_718.72 - 619.79));
     expect(juste(s, "reponse")).toBe("Escompter au 4e trimestre seulement, pas chaque trimestre");
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le cas", () => verifierLesTextes(s));
+});
+
+describe("au-delà du découvert autorisé : le crédit de trésorerie de la banque de NOVA, au même taux", () => {
+  const lecture = (x: { etapes: readonly Etape[] }, id: string) => {
+    const e = x.etapes.find((y) => y.id === id)!;
+    if (e.type !== "lecture") throw new Error(id);
+    return e.texte(cas).join(" ").replace(/\s/g, " ");
+  };
+
+  it("les deux chapitres le disent en une phrase, l'autorisation lue dans la fiche", () => {
+    for (const ch of [CHOISIR_SON_FOURNISSEUR, LE_CLIENT_QUI_PAIE_TARD]) {
+      expect(lecture(ch, "intro"), ch.code).toContain("Au-delà de l'autorisation de découvert, 5 000 €, la banque finance au même taux par un crédit de trésorerie.");
+    }
+  });
+
+  it("le cas le dit, et la banque n'y promet plus « plus de découvert »", () => {
+    const t = lecture(ESCOMPTER_CHAQUE_TRIMESTRE, "demande");
+    expect(t).toContain("Le découvert est autorisé jusqu'à 5 000 €, à 12 % l'an. Au-delà, pour ces périodes, la banque accorde un crédit de trésorerie au même taux");
+    expect(t).toContain("nous n'aurons plus besoin ni du découvert ni de son crédit de trésorerie");
+    expect(t).not.toContain("nous n'aurons plus de découvert");
+  });
 });

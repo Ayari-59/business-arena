@@ -10,10 +10,12 @@
  *   · delais-et-tva.ts (BANQUE_DE_NOVA), la banque des chapitres du BTS GPME sur l'année N + 1 ;
  *   · mauvais-payeurs.ts, pour le retard de CampusTech.
  *
+ * AU-DELÀ DE L'AUTORISATION (décision du propriétaire, novembre 2026) : quand un chapitre de N + 1
+ * finance plus de 5 000 €, la banque accorde à NOVA un crédit de trésorerie au même taux, 12 % l'an
+ * (les besoins de N + 1 de delais-et-tva.ts, un besoin de financement, une facture qui attend).
+ *
  * CE QUI N'EN DÉPEND PAS : le découvert des autres entreprises (delais-et-tva.ts, TAUX_DU_DECOUVERT,
- * 9 %) ; le cas « Escompter chaque trimestre », en attente d'une décision (delais-et-tva.ts,
- * TAUX_DU_DECOUVERT_DES_BESOINS_DE_N_PLUS_1) ; et deux hypothèses de chapitre qui ne sont pas l'année
- * N + 1 : le laboratoire de « Remises et règlements » (8 %, et le scénario « Les escomptes de janvier »,
+ * 9 %) ; et deux hypothèses de chapitre qui ne sont pas l'année N + 1 : le laboratoire de « Remises et règlements » (8 %, et le scénario « Les escomptes de janvier »,
  * en janvier N) et la trésorerie du 31 décembre N au lycée (tresorerie-a-optimiser.ts, 10 %).
  */
 export const DECOUVERT_DE_NOVA = { autorise: 5_000, tauxAnnuel: 0.12 } as const;

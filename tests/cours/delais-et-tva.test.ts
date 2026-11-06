@@ -15,7 +15,6 @@ import {
   MULTIPLE_DU_TAUX_LEGAL,
   NOVA_DELAIS,
   TAUX_DU_DECOUVERT,
-  TAUX_DU_DECOUVERT_DES_BESOINS_DE_N_PLUS_1,
   TAUX_D_INTERET_LEGAL,
   TAUX_DE_REFINANCEMENT_BCE,
   type FicheDeLAffaire,
@@ -171,9 +170,9 @@ describe("la fiche tient debout, et c'est le monde des autres fiches", () => {
     expect(TAUX_DU_DECOUVERT).toBe(0.09);
     expect(MARTEL_ET_FILS.tauxDuDecouvert).toBe(0.09);
     expect(ATLAS_CONDITIONS.tauxDeFinancement).toBe(0.09);
-    // En attente d'une décision : les besoins de N + 1 dépassent l'autorisation ; leur cas garde 9 %.
+    // Les besoins de N + 1 dépassent l'autorisation : la banque les finance par un crédit de trésorerie, au même taux.
+    expect(n.besoins.map((b) => b.montant)).toEqual([0, 25_000, 0, 40_000]);
     expect(Math.max(...n.besoins.map((b) => b.montant))).toBeGreaterThan(n.banque.autorisationDeDecouvert);
-    expect(TAUX_DU_DECOUVERT_DES_BESOINS_DE_N_PLUS_1).toBe(0.09);
   });
 
   it("NOVA : les ventes de N + 1 sont celles du plan de nova-capacite.ts, 26 000 enceintes", () => {
@@ -589,25 +588,23 @@ describe("6. l'escompte, l'affacturage et le découvert", () => {
     expect(joursDeDecouvertQuiValentLEscompte(60, 0.06, 0.09)).toBeCloseTo(40, 12);
   });
 
-  it("escompter chaque trimestre (le cas, resté à 9 %) coûte 2 718,72 € pour 625 € de découvert évité : inutile ; au mieux, l'escompte au T4 seulement (578,12 €)", () => {
-    const x = escompterChaqueTrimestre(n, { tauxDuDecouvert: TAUX_DU_DECOUVERT_DES_BESOINS_DE_N_PLUS_1 });
+  it("escompter chaque trimestre coûte 2 718,72 € pour 833,34 € de découvert et de crédit de trésorerie évités, à 12 % : inutile ; au mieux, l'escompte au T4 seulement (619,79 €)", () => {
+    const x = escompterChaqueTrimestre(n);
     expect(x.parFacture).toBe(226.56);
     expect(x.encoursEscompte).toBe(2 * 22_656);
     expect(x.dansLePlafond).toBe(true);
     expect(x.escompteDeLAnnee).toBe(auCentime(12 * 226.56));
-    expect(x.trimestres.map((t) => t.decouvert)).toEqual([0, (25_000 * 0.09 * 20) / 360, 0, (40_000 * 0.09 * 50) / 360]);
-    expect(x.decouvertEvite).toBe(125 + 500);
+    // Chaque trimestre au centime : 166,67 € et 666,67 €.
+    expect(x.trimestres.map((t) => t.decouvert)).toEqual([0, auCentime((25_000 * 0.12 * 20) / 360), 0, auCentime((40_000 * 0.12 * 50) / 360)]);
+    expect(x.trimestres.map((t) => t.decouvert)).toEqual([0, 166.67, 0, 666.67]);
+    expect(x.decouvertEvite).toBe(auCentime(166.67 + 666.67));
+    expect(x.decouvertEvite).toBe(833.34);
     expect(x.verdict).toBe("inutile");
     expect(x.trimestres.map((t) => t.mieux)).toEqual(["rien", "decouvert", "rien", "escompte"]);
     expect(x.trimestres[3]!.escompteDuBesoin).toBe(2 * 226.56);
-    expect(x.auMieux).toBe(auCentime(125 + 453.12));
-    expect(x.joursQuiValentLEscompte).toBeCloseTo(40, 12);
-    // Au découvert de la banque de NOVA, 12 % : 833,34 € de découvert évité, l'escompte au T4 seulement toujours.
-    const y = escompterChaqueTrimestre(n);
-    // Chaque trimestre au centime : 166,67 € et 666,67 €.
-    expect(y.decouvertEvite).toBe(auCentime(auCentime((25_000 * 0.12 * 20) / 360) + auCentime((40_000 * 0.12 * 50) / 360)));
-    expect(y.decouvertEvite).toBe(833.34);
-    expect(y.trimestres.map((t) => t.mieux)).toEqual(["rien", "decouvert", "rien", "escompte"]);
+    expect(x.auMieux).toBe(auCentime(166.67 + 453.12));
+    expect(x.auMieux).toBe(619.79);
+    expect(x.joursQuiValentLEscompte).toBeCloseTo(30, 12);
   });
 });
 

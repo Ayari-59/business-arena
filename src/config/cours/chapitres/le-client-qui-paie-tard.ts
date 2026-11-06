@@ -288,6 +288,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
           `Le délai convenu est de ${jours(k.ct.delaiConvenu)} après la facture, le maximum que la loi permet entre professionnels (code de commerce, article L. 441-10). ${k.ct.nom} paie à ${jours(k.ct.delaiReel)} : ce n'est pas son délai, c'est un retard de ${jours(k.r.joursDeRetard)}. La loi le sanctionne de plein droit : des pénalités de retard, au taux de refinancement de la BCE majoré de ${qte(MAJORATION_DU_TAUX_BCE * 100)} points quand les conditions de vente n'en fixent pas d'autre, et une indemnité forfaitaire de ${eur(k.f.penalites.indemnite)} par facture pour les frais de recouvrement.`,
           `${k.f.entreprise} vend des biens : la TVA d'une facture est due à la livraison, que le client ait payé ou non. En attendant d'être payée, ${k.f.entreprise} finance donc chaque facture toutes taxes comprises.`,
           `La simulation suppose des mois de 30 jours et des trimestres de ${JOURS_DU_TRIMESTRE} ; des intérêts (découvert, escompte, affacturage) comptés sur ${JOURS_DE_L_ANNEE_BANCAIRE} jours, des pénalités sur ${JOURS_DE_L_ANNEE_CIVILE} jours et sur le montant TTC ; un découvert à ${pct(k.taux)} l'an ; un taux de la BCE de ${pct(TAUX_DE_REFINANCEMENT_BCE.taux)}, valeur de référence du cours (celle du ${TAUX_DE_REFINANCEMENT_BCE.dateDeReference} : il change chaque semestre).`,
+          `Au-delà de l'autorisation de découvert, ${eur(k.b.autorisationDeDecouvert)}, la banque finance au même taux par un crédit de trésorerie.`,
         ];
       },
       repere: (c) => {

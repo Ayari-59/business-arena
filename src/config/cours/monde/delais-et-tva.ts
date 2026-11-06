@@ -395,7 +395,10 @@ export interface BesoinDeTresorerie {
  * détaillé ici ; c'est ce qu'il donne avant toute mobilisation des créances). Au deuxième trimestre,
  * le solde de l'impôt de N et les composants du printemps creusent le compte : 25 000 € de découvert
  * pendant 20 jours. Au quatrième, la production de Noël part avant d'être payée : 40 000 € pendant
- * 50 jours. Les trimestres 1 et 3 restent créditeurs.
+ * 50 jours. Les trimestres 1 et 3 restent créditeurs. Ces besoins dépassent le découvert autorisé de
+ * NOVA, 5 000 € (décision du propriétaire, novembre 2026) : pour ces périodes, la banque lui accorde un
+ * crédit de trésorerie au même taux, 12 % l'an. Le cas « Escompter chaque trimestre » compte les deux
+ * ensemble, comme du découvert.
  */
 export const BESOINS_DE_TRESORERIE_N_PLUS_1: readonly BesoinDeTresorerie[] = [
   { trimestre: 1, montant: 0, jours: 0 },
@@ -403,15 +406,6 @@ export const BESOINS_DE_TRESORERIE_N_PLUS_1: readonly BesoinDeTresorerie[] = [
   { trimestre: 3, montant: 0, jours: 0 },
   { trimestre: 4, montant: 40_000, jours: 50 },
 ];
-
-/**
- * EN ATTENTE D'UNE DÉCISION DU PROPRIÉTAIRE (novembre 2026). Les besoins ci-dessus mettent NOVA à
- * découvert de 25 000 € puis de 40 000 €, quand sa banque n'en autorise plus que 5 000 €
- * (banque-de-nova.ts). Le cas « Escompter chaque trimestre », qui finance ces besoins au découvert, n'a
- * donc pas été repris : il garde les conditions qu'il avait, un découvert à 9 % l'an, jusqu'à ce que son
- * histoire le soit.
- */
-export const TAUX_DU_DECOUVERT_DES_BESOINS_DE_N_PLUS_1 = TAUX_DU_DECOUVERT;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ATLAS CONSEIL : L'AFFAIRE AUX CONDITIONS
