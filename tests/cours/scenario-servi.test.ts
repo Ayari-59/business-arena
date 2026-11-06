@@ -4,6 +4,9 @@ import { meilleureSuite, resultatDeLaSuite, toutesLesSuites } from "../../src/co
 import { espacesOrdinaires } from "../../src/lib/typographie";
 import { montantEcrit } from "../../src/pedagogy/cours/correcteur";
 import { corrigerAuScenario, servirLeScenario, type RetourDuScenario } from "../../src/pedagogy/cours/scenario-servi";
+import { LA_LIGNE_EN_CREDIT_BAIL } from "../../src/config/cours/scenarios/la-ligne-en-credit-bail";
+import { LE_PRIX_DES_RESSOURCES } from "../../src/config/cours/scenarios/le-prix-des-ressources";
+import { gardesDuScenarioServi } from "../helpers/activites-du-lot-c-servies";
 
 /**
  * LE SCÉNARIO SERVI : RIEN DES BRANCHES NI DE LA CORRECTION DANS CE QUI PART AU NAVIGATEUR
@@ -185,4 +188,12 @@ describe("les scénarios du lot B, servis et calculés au serveur", async () => 
       expect(await corrigerAuScenarioAction(lot.code, envoi)).toEqual({ refus: "licence" });
     });
   }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LES SCÉNARIOS DU LOT C (novembre 2026) : les mêmes gardes, pour chacun (tests/helpers/activites-du-lot-c-servies.ts).
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe.each([LA_LIGNE_EN_CREDIT_BAIL, LE_PRIX_DES_RESSOURCES])("le scénario $code, servi et calculé au serveur", (x) => {
+  gardesDuScenarioServi(x, acces);
 });

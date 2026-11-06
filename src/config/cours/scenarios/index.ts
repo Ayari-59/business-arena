@@ -5,6 +5,8 @@ import { L_OBJECTIF_DU_PRESIDENT } from "./l-objectif-du-president";
 import { LE_CONTROLE_FISCAL } from "./le-controle-fiscal";
 import { BOUCLER_LE_PLAN_DE_LA_GAMME } from "./boucler-le-plan-de-la-gamme";
 import { LE_DOSSIER_VERT_DE_NOVA } from "./le-dossier-vert-de-nova";
+import { LA_LIGNE_EN_CREDIT_BAIL } from "./la-ligne-en-credit-bail";
+import { LE_PRIX_DES_RESSOURCES } from "./le-prix-des-ressources";
 import type { Scenario } from "./types";
 
 export type { Scenario } from "./types";
@@ -25,6 +27,9 @@ export const SCENARIOS: readonly Scenario[] = [
   // Les activités des chapitres, lot E (novembre 2026).
   BOUCLER_LE_PLAN_DE_LA_GAMME,
   LE_DOSSIER_VERT_DE_NOVA,
+  // Les activités des chapitres, lot C (novembre 2026).
+  LA_LIGNE_EN_CREDIT_BAIL,
+  LE_PRIX_DES_RESSOURCES,
 ];
 
 export const scenarioParCode = (code: string) => SCENARIOS.find((s) => s.code === code);

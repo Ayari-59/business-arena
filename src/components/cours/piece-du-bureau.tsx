@@ -35,6 +35,8 @@ const NATURES: Readonly<Record<NatureDePiece, string>> = {
   bordereau: "Bordereau",
   bon: "Bon",
   fiche: "Fiche",
+  contrat: "Contrat",
+  "proces-verbal": "Procès-verbal",
 };
 
 /** Le sens d'une opération, vu de celui qui tient le document (débit négatif : ce qui sort). */

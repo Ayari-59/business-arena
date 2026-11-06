@@ -2,6 +2,8 @@ import { LA_CLOTURE_DU_STAGIAIRE } from "./la-cloture-du-stagiaire";
 import { LE_JOURNAL_DE_L_APPRENTI } from "./le-journal-de-l-apprenti";
 import { LES_EFFETS_DE_L_INTERIMAIRE } from "./les-effets-de-l-interimaire";
 import { LA_REVISION_DE_L_ASSISTANT } from "./la-revision-de-l-assistant";
+import { LE_DOSSIER_DES_IMMOBILISATIONS } from "./le-dossier-des-immobilisations";
+import { LA_NOTE_DE_L_ANALYSTE } from "./la-note-de-l-analyste";
 import type { Enquete } from "./types";
 
 export type { Enquete } from "./types";
@@ -17,6 +19,9 @@ export const ENQUETES: readonly Enquete[] = [
   LES_EFFETS_DE_L_INTERIMAIRE,
   // Les activités des chapitres, lot B (novembre 2026).
   LA_REVISION_DE_L_ASSISTANT,
+  // Les activités des chapitres, lot C (novembre 2026).
+  LE_DOSSIER_DES_IMMOBILISATIONS,
+  LA_NOTE_DE_L_ANALYSTE,
 ];
 
 export const enqueteParCode = (code: string) => ENQUETES.find((e) => e.code === code);

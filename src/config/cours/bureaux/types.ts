@@ -24,7 +24,8 @@ import type { Chapitre, OptionDeChoix } from "../types";
  * (novembre 2026) y ajoutent le bon de commande, le bon de livraison et le bordereau (d'un organisme,
  * d'une banque), le bon sans précision (« bon ») et la fiche d'un registre de l'entreprise (« fiche » : la
  * fiche d'immobilisation, la fiche de stock, le journal de paie) : des natures génériques, que tout
- * bureau peut employer.
+ * bureau peut employer ; le lot C, le contrat (un prêt, un crédit-bail, une offre signée) et le
+ * procès-verbal (d'une assemblée).
  */
 export type NatureDePiece =
   | "courriel"
@@ -42,7 +43,9 @@ export type NatureDePiece =
   | "bon-de-livraison"
   | "bordereau"
   | "bon"
-  | "fiche";
+  | "fiche"
+  | "contrat"
+  | "proces-verbal";
 
 /** Une ligne d'une balance ou d'une écriture : le compte, son intitulé, son débit ou son crédit. */
 export interface LigneDeCompte {

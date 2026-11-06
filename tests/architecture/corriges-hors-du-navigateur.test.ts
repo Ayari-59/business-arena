@@ -82,6 +82,8 @@ const INTERDITS = [
   // Les activités du lot E (novembre 2026) : les mondes de leurs scénarios, qui calculent les branches.
   /^src\/config\/cours\/monde\/boucler-le-plan\.ts$/,
   /^src\/config\/cours\/monde\/dossier-vert-de-nova\.ts$/,
+  // Les activités du lot C (novembre 2026) : les mondes de leurs bureaux, enquêtes et scénarios.
+  /^src\/config\/cours\/monde\/(pret-de-l-annee|dossier-de-financement|assemblee-de-juin|dossier-des-immobilisations|note-de-l-analyste|ligne-en-credit-bail|prix-des-ressources)\.ts$/,
 ];
 
 function fichiers(dossier: string): string[] {
