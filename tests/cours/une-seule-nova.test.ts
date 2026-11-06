@@ -1,3 +1,5 @@
+import { readFileSync, readdirSync } from "node:fs";
+import { join, relative } from "node:path";
 import { describe, expect, it } from "vitest";
 import { impotDeNova } from "../../src/config/cours/chapitres/l-impot-sur-les-societes";
 import { congesPayes, dossierDeRevision, garantie } from "../../src/config/cours/monde/dossier-de-revision";
@@ -84,6 +86,11 @@ import { BESOIN_DE_FONDS } from "../../src/config/cours/monde/comptabilite-appro
 import { DELAI_DE_CAMPUSTECH } from "../../src/config/cours/monde/nova-gestion";
 import { AUTRES_COUTS_PAR_ENCEINTE, COMPOSANTS_PAR_ENCEINTE, DELAI_CONVENU_DE_CAMPUSTECH, PRIX_DE_L_ENCEINTE } from "../../src/config/cours/monde/nova-gestion";
 import { CADRE_DE_LA_NEGOCIATION, MAGASINS_DE_CAMPUSTECH, referencementDeNova } from "../../src/config/cours/monde/referencement-de-nova";
+import { DECOUVERT_DE_NOVA } from "../../src/config/cours/monde/banque-de-nova";
+import { TAUX_DU_DECOUVERT as DECOUVERT_DU_LYCEE } from "../../src/config/cours/monde/tresorerie-a-optimiser";
+import { TAUX_DU_DECOUVERT as DECOUVERT_DES_REMISES, escompteMaximalDuClient } from "../../src/config/cours/chapitres/remises-et-reglements";
+import { escompteProposePar } from "../../src/config/cours/situations/par-chapitre/la-banque-propose-l-escompte";
+import { escompteAccorde, reglementDuFournisseur } from "../../src/config/cours/scenarios/les-escomptes-de-janvier";
 
 /**
  * UNE SEULE NOVA DANS LE MONDE DU COURS (réconciliation d'octobre 2026). Les fiches qui disent la
@@ -834,5 +841,37 @@ describe("une seule NOVA, de la constitution aux comptes annuels", () => {
     const x = annexeDeN();
     expect(x.immobilisations.fin).toBe(EQUIPEMENT.ht);
     expect(Math.round((x.empruntAUnAn + x.empruntAPlusDUnAn) * 100) / 100).toBe(k.bilan.passif.emprunts);
+  });
+});
+
+/**
+ * UN SEUL DÉCOUVERT DE NOVA (décision du propriétaire, novembre 2026) : 5 000 € autorisés à 12 % l'an,
+ * et au-delà un crédit de trésorerie au même taux. La trésorerie du 31 décembre N au lycée, le
+ * laboratoire de « Remises et règlements » et le scénario « Les escomptes de janvier » le lisent dans
+ * banque-de-nova.ts ; aucune fiche du cours ne pose plus son propre taux de découvert, sauf celui des
+ * autres entreprises (delais-et-tva.ts, 9 %).
+ */
+describe("un seul découvert de NOVA, d'une fiche à l'autre", () => {
+  it("12 % l'an, 5 000 € autorisés", () => {
+    expect(DECOUVERT_DE_NOVA).toEqual({ autorise: 5_000, tauxAnnuel: 0.12 });
+  });
+
+  it("le lycée, le laboratoire des remises et le scénario de janvier lisent le taux de la banque de NOVA", () => {
+    expect(DECOUVERT_DU_LYCEE).toBe(DECOUVERT_DE_NOVA.tauxAnnuel);
+    expect(DECOUVERT_DES_REMISES).toBe(DECOUVERT_DE_NOVA.tauxAnnuel);
+    const r = escompteProposePar({ code: "nova" });
+    expect(r.decouvertLong).toBe(Math.round(r.montant * 0.12 * r.facture.jours * 100 / 360) / 100);
+    const nova = casDeLEntreprise("nova");
+    expect(escompteMaximalDuClient(nova).periode).toBeCloseTo((0.12 * 70) / 360, 12);
+    const x = reglementDuFournisseur("escompte");
+    expect(x.agios).toBe(Math.round(((Math.round(34_980 * 0.98 * 100) / 100) * 0.12 * 12 * 100) / 360) / 100);
+    expect(escompteAccorde(0.02).agiosEpargnes).toBe(Math.round(((Math.round(320 * 59 * 0.95 * 0.98 * 100) / 100) * 0.12 * 70 * 100) / 360) / 100);
+  });
+
+  it("aucune fiche du cours ne pose son propre taux de découvert, sauf les autres entreprises (delais-et-tva.ts)", () => {
+    const racine = join(process.cwd(), "src/config/cours");
+    const fichiers = (dossier: string): string[] => readdirSync(dossier, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? fichiers(join(dossier, e.name)) : e.name.endsWith(".ts") ? [join(dossier, e.name)] : []));
+    const poses = fichiers(racine).filter((f) => /(TAUX_DU_DECOUVERT|TAUX_DECOUVERT|tauxDuDecouvert)\s*[:=]\s*0\.\d/.test(readFileSync(f, "utf8"))).map((f) => relative(racine, f));
+    expect(poses).toEqual(["monde/delais-et-tva.ts"]);
   });
 });

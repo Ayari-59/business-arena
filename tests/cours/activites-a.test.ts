@@ -18,7 +18,7 @@ import * as E from "../../src/config/cours/scenarios/les-escomptes-de-janvier";
 import type { Scenario } from "../../src/config/cours/scenarios/types";
 import { CAS_PAR_CHAPITRE } from "../../src/config/cours/situations";
 import { servirLeBureau } from "../../src/pedagogy/cours/bureau-servi";
-import { corriger, enEcriture, enSaisie } from "../../src/pedagogy/cours/correcteur";
+import { corriger, enEcriture, enSaisie, montantEcrit } from "../../src/pedagogy/cours/correcteur";
 import { equilibree } from "../../src/pedagogy/cours/etats";
 import { compteDuPlan } from "../../src/pedagogy/cours/plan-comptable";
 import { corrigerAuScenario, servirLeScenario } from "../../src/pedagogy/cours/scenario-servi";
@@ -244,24 +244,25 @@ describe("les effets de l'intérimaire : chaque chiffre à la main", () => {
 });
 
 describe("les escomptes de janvier : chaque chiffre à la main", () => {
-  it("l'escompte accordé face au découvert à 8 %, 70 jours d'avance, sur le net commercial remisé de 5 %", () => {
+  it("l'escompte accordé face au découvert de la banque de NOVA à 12 %, 70 jours d'avance, sur le net commercial remisé de 5 %", () => {
     expect(E.JOURS_AVANCES).toBe(80 - 10);
     const net = c(320 * 59 * 0.95);
     const deux = E.escompteAccorde(0.02);
     expect(deux.escompte).toBe(c(net * 0.02));
-    expect(deux.agiosEpargnes).toBe(c((c(net * 0.98) * 0.08 * 70) / 360));
-    expect(deux.gain).toBe(-85.3);
-    expect(E.escompteAccorde(0.03).gain).toBe(-267.45);
-    // L'escompte maximal : x = 8 % × 70 ÷ 360 ; x ÷ (1 + x) = 1,53 %, au dixième inférieur 1,5 %.
-    expect(E.ESCOMPTE_MAXIMAL).toBe(0.015);
-    expect(E.escompteAccorde(0.015).gain).toBe(5.78);
+    expect(deux.agiosEpargnes).toBe(c((c(net * 0.98) * 0.12 * 70) / 360));
+    // À 12 %, les 2 % des conditions (10,5 % l'an pour 70 jours) rapportent ; les 3 % demandés coûtent encore.
+    expect(deux.gain).toBe(51.42);
+    expect(E.escompteAccorde(0.03).gain).toBe(-132.13);
+    // L'escompte maximal : x = 12 % × 70 ÷ 360 ; x ÷ (1 + x) = 2,28 %, au dixième inférieur 2,2 %.
+    expect(E.ESCOMPTE_MAXIMAL).toBe(0.022);
+    expect(E.escompteAccorde(0.022).gain).toBe(14.71);
   });
 
   it("l'escompte d'Électro-Composants : 2 % de 34 980 €, 12 jours de découvert sur le net financier", () => {
     const x = E.reglementDuFournisseur("escompte");
     expect(x.escompte).toBe(c(34_980 * 0.02));
-    expect(x.agios).toBe(c((c(34_980 * 0.98) * 0.08 * 12) / 360));
-    expect(x.gain).toBe(608.19);
+    expect(x.agios).toBe(c((c(34_980 * 0.98) * 0.12 * 12) / 360));
+    expect(x.gain).toBe(562.48);
     expect(E.reglementDuFournisseur("deduire")).toMatchObject({ gain: 0, abimee: true });
   });
 
@@ -270,11 +271,22 @@ describe("les escomptes de janvier : chaque chiffre à la main", () => {
     expect(toutes.length).toBe(27);
     expect(new Set(toutes.map((x) => x.fin))).toEqual(new Set(["fournisseur", "marge", "gagnant"]));
     const b = E.meilleureSuite();
-    expect(b.suite).toEqual({ client: "aucun", fournisseur: "escompte", suite: "maximal" });
+    // À 12 %, les 2 % des conditions rapportent sur la facture de janvier : la meilleure suite les offre (à 8 %, elle n'offrait rien).
+    expect(b.suite).toEqual({ client: "conditions", fournisseur: "escompte", suite: "maximal" });
     // Les factures suivantes de CampusTech dans le semestre : février à juin.
     expect(E.FACTURES_SUIVANTES).toBe(5);
-    expect(b.total).toBe(c(608.19 + 5 * 5.78));
+    expect(b.total).toBe(c(51.42 + 562.48 + 5 * 14.71));
     expect(toutes.filter((x) => x.fin !== "fournisseur" && x.total >= b.total - 0.005).length).toBe(1);
+  });
+
+  it("le bilan dit ce que valent les 2 % à 12 %, et la lettre de la banque dit le crédit de trésorerie au-delà des 5 000 €", () => {
+    const comparaison = E.LES_ESCOMPTES_DE_JANVIER.bilan(["aucun", "escompte", "maximal"]).comparaison;
+    expect(comparaison).toContain("Les 2 % des conditions coûtent 10,5 % l'an pour 70 jours d'avance, moins que le découvert : sur la facture de janvier, ils rapportent 51,42 €.");
+    const lettre = E.LES_ESCOMPTES_DE_JANVIER.situation([]).pieces.find((x) => x.code === "decouvert")!;
+    expect(lettre.paragraphes).toEqual([
+      "Découvert autorisé à 12 % l'an, sur le solde débiteur de chaque jour, l'année comptée pour 360 jours.",
+      `Au-delà de l'autorisation de découvert, ${montantEcrit(5_000)}, la banque finance au même taux par un crédit de trésorerie.`,
+    ]);
   });
 });
 

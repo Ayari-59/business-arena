@@ -3,6 +3,7 @@ import type { Cas } from "../cas";
 import { auCentime } from "../monde/amortissement";
 import { ENTREPRISES_DES_COMPTES_DU_LYCEE, exerciceDe } from "../monde/comptes-du-lycee";
 import {
+  DECOUVERT_AUTORISE,
   SOLUTIONS_DU_MANQUE,
   TAUX_DE_L_ESCOMPTE,
   TAUX_DU_COMPTE_COURANT,
@@ -63,6 +64,8 @@ const LIBELLES: Record<SolutionDuManque, string> = {
 
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
+/** La phrase de la banque de NOVA, quand le découvert dépasse ce qu'elle autorise. */
+const auDelaDeLAutorisation = `Au-delà de l'autorisation de découvert, ${eur(DECOUVERT_AUTORISE)}, la banque finance au même taux par un crédit de trésorerie.`;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /** La trésorerie de l'entreprise du cas, lue pour l'optimiser. */
@@ -288,7 +291,11 @@ export const OPTIMISER_LA_TRESORERIE: Chapitre = {
       question: (c) => {
         const k = optimiser(c);
         const x = couvrirLeManque(k, PRIX_DU_DEFI, "decouvert");
-        return `L'équipement coûte ${eur(PRIX_DU_DEFI)}. Calculez le manque en banque, puis ce que coûterait de le couvrir pendant les ${x.jours} jours où le compte à terme est bloqué : par un découvert à ${pct(TAUX_DU_DECOUVERT)} par an, par une avance des associés en compte courant à ${pct(TAUX_DU_COMPTE_COURANT)}. La banque compte une année de 360 jours : coût = montant × taux × jours ÷ 360.`;
+        return [
+          `L'équipement coûte ${eur(PRIX_DU_DEFI)}. Calculez le manque en banque, puis ce que coûterait de le couvrir pendant les ${x.jours} jours où le compte à terme est bloqué : par un découvert à ${pct(TAUX_DU_DECOUVERT)} par an, par une avance des associés en compte courant à ${pct(TAUX_DU_COMPTE_COURANT)}.`,
+          ...(x.manque > DECOUVERT_AUTORISE ? [auDelaDeLAutorisation] : []),
+          "La banque compte une année de 360 jours : coût = montant × taux × jours ÷ 360.",
+        ].join(" ");
       },
       champs: (c) => {
         const k = optimiser(c);

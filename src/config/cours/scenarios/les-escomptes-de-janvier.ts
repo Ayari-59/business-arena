@@ -4,6 +4,7 @@ import { casDeLEntreprise } from "../cas";
 import { delaiDuClient } from "../chapitres/creation-premier-bilan";
 import { TAUX_DU_DECOUVERT, escompteDuDefi, factureDAchat, laboratoireDeLEscompte } from "../chapitres/remises-et-reglements";
 import { dateDuCours as date } from "../dates";
+import { DECOUVERT_DE_NOVA } from "../monde/banque-de-nova";
 import { coutDeLAvance, escompteMaximal, facture, tauxAnnuelDeLEscompte } from "../monde/facture";
 import { JOURS_D_ESCOMPTE, TAUX_D_ESCOMPTE, TAUX_DE_REMISE } from "../remises";
 import { ESCOMPTE_DEMANDE } from "../situations/par-chapitre/l-escompte-demande-par-le-client";
@@ -26,9 +27,12 @@ import type { BilanDuScenario, ChiffreDuScenario, ConsequenceDuScenario, Scenari
  * TOUS LES CHIFFRES SE CALCULENT DANS LE MONDE DU COURS : la vente et l'achat de janvier du cas figé de
  * NOVA, les conditions du cours (remises.ts), le laboratoire de l'escompte et la facture d'achat du
  * chapitre (chapitres/remises-et-reglements.ts), l'escompte demandé du cas. LA SEULE HYPOTHÈSE DU
- * SCÉNARIO : le compte de NOVA est à découvert en janvier, au taux du découvert du chapitre (8 % l'an) ;
- * elle fixe le prix de l'argent avancé, dans un sens comme dans l'autre. Les factures suivantes de
- * CampusTech sont celles de janvier, chaque mois (CampusTech commande les mêmes enceintes).
+ * SCÉNARIO : le compte de NOVA est à découvert en janvier, au taux de la banque de NOVA
+ * (banque-de-nova.ts, 12 % l'an, que lit le chapitre ; au-delà des 5 000 € autorisés, la banque finance
+ * au même taux par un crédit de trésorerie) ; elle fixe le prix de l'argent avancé, dans un sens comme
+ * dans l'autre. Les factures suivantes de CampusTech sont celles de janvier, chaque mois (CampusTech
+ * commande les mêmes enceintes). À 12 %, les 2 % des conditions (10,5 % l'an pour 70 jours d'avance)
+ * coûtent moins que le découvert : la meilleure suite les offre en janvier.
  */
 
 const c = casDeLEntreprise("nova");
@@ -45,7 +49,7 @@ export const FACTURES_SUIVANTES = 5;
 export const JOURS_AVANCES = c.venteCredit.delai - JOURS_D_ESCOMPTE;
 
 /** L'escompte le plus fort que paie le découvert, au dixième de point (celui du défi du chapitre). */
-export const ESCOMPTE_MAXIMAL = escompteDuDefi(c) / 100;
+export const ESCOMPTE_MAXIMAL = Math.round(escompteDuDefi(c) * 10) / 1000;
 
 export const CHOIX = {
   client: ["aucun", "conditions", "demande"],
@@ -196,7 +200,12 @@ const RAPPEL_DU_DECOUVERT: PieceDuBureau = {
   de: "La banque de NOVA",
   a: "NOVA",
   date: "janvier N",
-  paragraphes: [`Découvert autorisé à ${pct(TAUX_DU_DECOUVERT)} l'an, sur le solde débiteur de chaque jour, l'année comptée pour 360 jours.`],
+  paragraphes: [
+    `Découvert autorisé à ${pct(TAUX_DU_DECOUVERT)} l'an, sur le solde débiteur de chaque jour, l'année comptée pour 360 jours.`,
+    ...(Math.max(achat.netFinancier, venteSansEscompte.netAPayer) > DECOUVERT_DE_NOVA.autorise
+      ? [`Au-delà de l'autorisation de découvert, ${eur(DECOUVERT_DE_NOVA.autorise)}, la banque finance au même taux par un crédit de trésorerie.`]
+      : []),
+  ],
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -369,7 +378,9 @@ function bilan(codes: readonly string[]): BilanDuScenario {
     reference: resumer(b),
     comparaison: [
       ...comparaison,
-      `Les ${pct(TAUX_D_ESCOMPTE)} des conditions coûtent ${pct(Math.round(conditions.coutAnnuel * 1000) / 1000)} l'an pour ${jours(JOURS_AVANCES)} d'avance, plus que le découvert : sur la facture de janvier, mieux vaut ne rien offrir.`,
+      conditions.coutAnnuel > TAUX_DU_DECOUVERT
+        ? `Les ${pct(TAUX_D_ESCOMPTE)} des conditions coûtent ${pct(Math.round(conditions.coutAnnuel * 1000) / 1000)} l'an pour ${jours(JOURS_AVANCES)} d'avance, plus que le découvert : sur la facture de janvier, mieux vaut ne rien offrir.`
+        : `Les ${pct(TAUX_D_ESCOMPTE)} des conditions coûtent ${pct(Math.round(conditions.coutAnnuel * 1000) / 1000)} l'an pour ${jours(JOURS_AVANCES)} d'avance, moins que le découvert : sur la facture de janvier, ils rapportent ${eur(conditions.gain)}.`,
       `L'escompte d'Électro-Composants rapporte ${pct(Math.round(achat.tauxAnnuel * 1000) / 1000)} l'an : le prendre au découvert gagne ${eur(reglementDuFournisseur("escompte").gain)}. Pour la suite, ${pct(ESCOMPTE_MAXIMAL)} est l'escompte le plus fort qui rapporte encore.`,
     ],
   };
