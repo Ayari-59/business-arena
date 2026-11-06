@@ -91,7 +91,7 @@ describe("le monde de mai N+1 : chaque chiffre à la main", () => {
 
   it("les hypothèses nommées du scénario", () => {
     expect(SOLDE_DU_30_AVRIL).toBe(50_000);
-    expect(FRAIS_DE_REJET).toBe(20);
+    expect(FRAIS_DE_REJET).toBe(30);
     expect(JOUR_DE_LA_RELANCE_PAYEE).toBe(5);
     expect(ELECTRO_COMPOSANTS_EN_MAI.jourDuRetard).toBe(11);
     // Le report au 1er juin : 51 jours après la facture du 10 avril, sous les 60 jours légaux.
@@ -115,12 +115,13 @@ describe("le compte de mai, jour par jour", () => {
     expect(p.fin).toBe(61_642.39);
   });
 
-  it("sans rien faire : le loyer est rejeté le 5 mai et repasse le 10 ; 6 jours à −2 800 €, 5,60 € d'agios et 20 € de frais", () => {
+  it("sans rien faire : le loyer est rejeté le 5 mai et repasse le 10 ; 6 jours à −2 800 €, 5,60 € d'agios et 30 € de frais", () => {
     const x = r("attendre", "payer", "decouvert");
     expect(x.compte.rejets.map((y) => [y.code, y.jourPrevu, y.jourPasse])).toEqual([["loyer", 5, 10]]);
     expect(x.compte.nombres).toBe(6 * 2_800);
     expect(x.couts.agios).toBe(c((16_800 * 0.12) / 360));
-    expect(x.cout).toBe(c(5.6 + 20));
+    expect(x.cout).toBe(c(5.6 + 30));
+    expect(x.cout).toBe(35.6);
     expect(x.fin).toBe("rejet");
     expect(x.relations.banque).toBe("abimee");
   });
