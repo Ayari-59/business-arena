@@ -71,6 +71,14 @@ const INTERDITS = [
   // Le diaporama de l'enseignant (décision du propriétaire, novembre 2026) : son générateur porte les
   // corrigés de chaque question ; la page n'en montre qu'un lien, la route le fabrique au serveur.
   /^src\/pedagogy\/cours\/diaporama\.ts$/,
+  // Les activités des chapitres, lot B (novembre 2026) : leurs mondes portent les corrigés.
+  /^src\/config\/cours\/monde\/remplacement-de-la-cuisine\.ts$/,
+  /^src\/config\/cours\/monde\/fiche-d-avril-de-pixel\.ts$/,
+  /^src\/config\/cours\/monde\/janvier-de-nova\.ts$/,
+  /^src\/config\/cours\/monde\/paie-de-route-et-cie\.ts$/,
+  /^src\/config\/cours\/monde\/objectif-du-president\.ts$/,
+  /^src\/config\/cours\/monde\/controle-fiscal-de-nova\.ts$/,
+  /^src\/config\/cours\/monde\/revision-de-l-assistant\.ts$/,
 ];
 
 function fichiers(dossier: string): string[] {

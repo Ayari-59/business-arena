@@ -196,3 +196,59 @@ describe("ce que l'action serveur corrige", () => {
     expect(await corrigerALEnqueteAction("rapprochement-de-mars", envoi)).toEqual({ refus: "bureau" });
   });
 });
+
+/**
+ * L'ENQUÊTE DU CHAPITRE « LE DOSSIER DE RÉVISION », LOT B (novembre 2026) : le même contrat. Rien du
+ * corrigé n'est servi ; le tri, chaque rectification (fausse raison, écriture de l'assistant repassée,
+ * puis juste) et le résultat se jouent au serveur ; l'action contrôle l'accès.
+ */
+describe("la révision de l'assistant, servie et corrigée au serveur", async () => {
+  const { LA_REVISION_DE_L_ASSISTANT: lot } = await import("../../src/config/cours/enquetes/la-revision-de-l-assistant");
+  const triB = lot.etapes.find((x) => x.id === "le-tri") as EtapeDeClassement;
+  const rectB = lot.etapes.find((x) => x.id === "les-rectifications") as EtapeDeRectification;
+  const saisieDe = (id: string) => {
+    const piece = lot.pile.find((p) => p.code === triB.elements.find((x) => x.code === id)!.piece)!;
+    const texte = (x: number) => x.toFixed(2).replace(".", ",").replace(/,00$/, "");
+    return piece.comptes!.map((l) => ({ compte: l.compte, debit: l.debit ? texte(l.debit) : "", credit: l.credit ? texte(l.credit) : "" }));
+  };
+  beforeEach(() => {
+    acces.ouvert = true;
+  });
+
+  it("rien du corrigé n'est servi", () => {
+    const t = espacesOrdinaires(JSON.stringify(servirLeBureau(lot)));
+    for (const cle of ["categorie", "pourquoi", "retour", "calcul", "indice", "indices", "ecritures", "ecriture", "raison", "explication"]) expect(t, cle).not.toContain(`"${cle}":`);
+    for (const x of rectB.ecritures) expect(t, x.pourquoi).not.toContain(espacesOrdinaires(x.pourquoi).slice(0, 40));
+    expect(t).not.toContain("118 460");
+  });
+
+  it("le tri, puis chaque rectification : une fausse raison, l'écriture de l'assistant, puis la bonne", () => {
+    const justes = Object.fromEntries(triB.elements.map((x) => [x.code, x.categorie]));
+    expect(retour(corrigerAuBureau(lot, { etape: "le-tri", geste: "classer", choix: { ...justes, frais: "fausse" } }), "classer").fausses).toEqual(["frais"]);
+    expect(retour(corrigerAuBureau(lot, { etape: "le-tri", geste: "classer", choix: justes }), "classer").juste).toBe(true);
+    const juste = retour(corrigerAuBureau(lot, { etape: "les-rectifications", geste: "rectifier", ecriture: "frais", raison: "compte", saisie: saisieDe("frais"), faites: [], essais: 0 }), "rectifier");
+    expect(juste.correction.remarques.join(" ")).toMatch(/juste/);
+    const faites: string[] = [];
+    for (const [i, x] of rectB.ecritures.entries()) {
+      const autre = rectB.raisons.find((k) => k.code !== x.raison)!.code;
+      const mauvaise = retour(corrigerAuBureau(lot, { etape: "les-rectifications", geste: "rectifier", ecriture: x.id, raison: autre, saisie: enSaisie(x.ecriture), faites, essais: 0 }), "rectifier");
+      expect([mauvaise.juste, mauvaise.raison, mauvaise.passee]).toEqual([false, false, undefined]);
+      const telle = retour(corrigerAuBureau(lot, { etape: "les-rectifications", geste: "rectifier", ecriture: x.id, raison: x.raison, saisie: saisieDe(x.id), faites, essais: 1 }), "rectifier");
+      expect([telle.juste, telle.raison, Boolean(telle.indice)]).toEqual([false, true, true]);
+      const bonne = retour(corrigerAuBureau(lot, { etape: "les-rectifications", geste: "rectifier", ecriture: x.id, raison: x.raison, saisie: enSaisie(x.ecriture), faites, essais: 2 }), "rectifier");
+      expect([bonne.juste, bonne.fini]).toEqual([true, i === rectB.ecritures.length - 1]);
+      faites.push(x.id);
+    }
+    const g = lot.etapes.find((x) => x.id === "le-resultat")!;
+    if (g.type !== "etat") throw new Error("le résultat");
+    expect(retour(corrigerAuBureau(lot, { etape: "le-resultat", geste: "etat", saisies: solutionsDuTableau(g.grille) }), "etat").juste).toBe(true);
+  });
+
+  it("l'action serveur contrôle l'accès", async () => {
+    const { corrigerALEnqueteAction } = await import("../../src/app/cours/enquete/actions");
+    const envoi = { etape: "le-tri", geste: "montrer" };
+    expect("geste" in (await corrigerALEnqueteAction(lot.code, envoi))).toBe(true);
+    acces.ouvert = false;
+    expect(await corrigerALEnqueteAction(lot.code, envoi)).toEqual({ refus: "licence" });
+  });
+});

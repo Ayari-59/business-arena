@@ -194,3 +194,76 @@ describe("ce que l'action serveur corrige", () => {
     expect(await corrigerAuBureauAction("un-autre-bureau", envoi)).toEqual({ refus: "bureau" });
   });
 });
+
+/**
+ * LES BUREAUX DES CHAPITRES, LOT B (novembre 2026) : le même contrat, bureau par bureau. Ce qui est servi
+ * ne porte aucun corrigé ; chaque geste juste est accepté, un geste faux refusé sans la réponse ; l'action
+ * serveur contrôle l'accès.
+ */
+describe("les bureaux du lot B, servis et corrigés au serveur", async () => {
+  const { LE_REMPLACEMENT_DE_LA_CUISINE } = await import("../../src/config/cours/bureaux/le-remplacement-de-la-cuisine");
+  const { LA_FICHE_DE_STOCK_D_AVRIL } = await import("../../src/config/cours/bureaux/la-fiche-de-stock-d-avril");
+  const { LES_PIECES_DE_JANVIER } = await import("../../src/config/cours/bureaux/les-pieces-de-janvier");
+  const { LA_PAIE_DE_JANVIER } = await import("../../src/config/cours/bureaux/la-paie-de-janvier");
+  beforeEach(() => {
+    acces.ouvert = true;
+  });
+
+  for (const lot of [LE_REMPLACEMENT_DE_LA_CUISINE, LA_FICHE_DE_STOCK_D_AVRIL, LES_PIECES_DE_JANVIER, LA_PAIE_DE_JANVIER]) {
+    it(`${lot.code} : rien du corrigé n'est servi`, () => {
+      const t = espacesOrdinaires(JSON.stringify(servirLeBureau(lot)));
+      for (const cle of ["categorie", "pourquoi", "juste", "retour", "calcul", "indice", "ecritures", "explication"]) expect(t, cle).not.toContain(`"${cle}":`);
+      for (const e of lot.etapes) for (const x of e.explication) expect(t, x).not.toContain(espacesOrdinaires(x).slice(0, 40));
+      for (const e of lot.etapes) if (e.type === "etat") for (const l of e.grille.lignes) for (const c of l.cellules) if (c.saisir) expect(t).not.toContain(`"valeur":${c.valeur},"saisir"`);
+    });
+
+    it(`${lot.code} : chaque étape se joue au serveur, juste et fausse`, () => {
+      for (const e of lot.etapes) {
+        if (e.type === "classement") {
+          const justes = Object.fromEntries(e.elements.map((x) => [x.code, x.categorie]));
+          const premier = e.elements[0]!;
+          const autre = e.categories.find((k) => k.code !== premier.categorie)!.code;
+          const faux = retour(corrigerAuBureau(lot, { etape: e.id, geste: "classer", choix: { ...justes, [premier.code]: autre } }), "classer");
+          expect([faux.juste, faux.fausses, faux.pourquoi]).toEqual([false, [premier.code], undefined]);
+          expect(retour(corrigerAuBureau(lot, { etape: e.id, geste: "classer", choix: justes }), "classer").juste).toBe(true);
+        }
+        if (e.type === "etat") {
+          const solutions = solutionsDuTableau(e.grille);
+          const cle = Object.keys(solutions).at(-1)!;
+          const faux = retour(corrigerAuBureau(lot, { etape: e.id, geste: "etat", saisies: { ...solutions, [cle]: "1" } }), "etat");
+          expect([faux.juste, faux.grille]).toEqual([false, undefined]);
+          expect(retour(corrigerAuBureau(lot, { etape: e.id, geste: "etat", saisies: solutions }), "etat").juste).toBe(true);
+        }
+        if (e.type === "journal") {
+          const faites: string[] = [];
+          for (const [i, x] of [...e.ecritures].reverse().entries()) {
+            const ok = retour(corrigerAuBureau(lot, { etape: e.id, geste: "ecriture", saisie: enSaisie(x.ecriture), faites }), "ecriture");
+            expect([ok.juste, ok.passee!.id, ok.fini], `${e.id} ${x.id}`).toEqual([true, x.id, i === e.ecritures.length - 1]);
+            faites.push(x.id);
+          }
+          const deja = retour(corrigerAuBureau(lot, { etape: e.id, geste: "ecriture", saisie: enSaisie(e.ecritures[0]!.ecriture), faites }), "ecriture");
+          expect(deja.deja).toBe(true);
+        }
+        if (e.type === "reponse") {
+          const justes: string[] = [];
+          for (const [i, q] of e.questions.entries()) {
+            const fausse = q.options.find((o) => !o.juste)!;
+            expect(retour(corrigerAuBureau(lot, { etape: e.id, geste: "repondre", question: q.id, option: fausse.texte, justes }), "repondre").juste).toBe(false);
+            const bonne = retour(corrigerAuBureau(lot, { etape: e.id, geste: "repondre", question: q.id, option: q.options.find((o) => o.juste)!.texte, justes }), "repondre");
+            expect([bonne.juste, bonne.fini]).toEqual([true, i === e.questions.length - 1]);
+            justes.push(q.id);
+          }
+        }
+        expect(retour(corrigerAuBureau(lot, { etape: e.id, geste: "montrer" }), "montrer").explication.map(espacesOrdinaires)).toEqual(e.explication.map(espacesOrdinaires));
+      }
+    });
+
+    it(`${lot.code} : l'action serveur contrôle l'accès`, async () => {
+      const { corrigerAuBureauAction } = await import("../../src/app/cours/bureau/actions");
+      const envoi = { etape: lot.etapes[0]!.id, geste: "montrer" };
+      expect("geste" in (await corrigerAuBureauAction(lot.code, envoi))).toBe(true);
+      acces.ouvert = false;
+      expect(await corrigerAuBureauAction(lot.code, envoi)).toEqual({ refus: "licence" });
+    });
+  }
+});

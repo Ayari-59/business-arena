@@ -22,7 +22,9 @@ import type { Chapitre, OptionDeChoix } from "../types";
  * y ajoute la balance, la note et l'écriture d'un journal ; un scénario à embranchements
  * (config/cours/scenarios), le plan de trésorerie et la facture. Les activités des chapitres
  * (novembre 2026) y ajoutent le bon de commande, le bon de livraison et le bordereau (d'un organisme,
- * d'une banque) : des natures génériques, que tout bureau peut employer.
+ * d'une banque), le bon sans précision (« bon ») et la fiche d'un registre de l'entreprise (« fiche » : la
+ * fiche d'immobilisation, la fiche de stock, le journal de paie) : des natures génériques, que tout
+ * bureau peut employer.
  */
 export type NatureDePiece =
   | "courriel"
@@ -38,7 +40,9 @@ export type NatureDePiece =
   | "facture"
   | "bon-de-commande"
   | "bon-de-livraison"
-  | "bordereau";
+  | "bordereau"
+  | "bon"
+  | "fiche";
 
 /** Une ligne d'une balance ou d'une écriture : le compte, son intitulé, son débit ou son crédit. */
 export interface LigneDeCompte {

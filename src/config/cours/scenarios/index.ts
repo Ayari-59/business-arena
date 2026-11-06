@@ -1,6 +1,8 @@
 import { LE_DECOUVERT_DE_NOVA } from "./le-decouvert-de-nova";
 import { LES_ESCOMPTES_DE_JANVIER } from "./les-escomptes-de-janvier";
 import { LES_COMPTES_QUE_VOULAIT_LE_PRESIDENT } from "./les-comptes-que-voulait-le-president";
+import { L_OBJECTIF_DU_PRESIDENT } from "./l-objectif-du-president";
+import { LE_CONTROLE_FISCAL } from "./le-controle-fiscal";
 import type { Scenario } from "./types";
 
 export type { Scenario } from "./types";
@@ -15,6 +17,9 @@ export const SCENARIOS: readonly Scenario[] = [
   // Les activités des chapitres (novembre 2026), lot A.
   LES_ESCOMPTES_DE_JANVIER,
   LES_COMPTES_QUE_VOULAIT_LE_PRESIDENT,
+  // Les activités des chapitres, lot B (novembre 2026).
+  L_OBJECTIF_DU_PRESIDENT,
+  LE_CONTROLE_FISCAL,
 ];
 
 export const scenarioParCode = (code: string) => SCENARIOS.find((s) => s.code === code);

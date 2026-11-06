@@ -2,6 +2,10 @@ import { RAPPROCHEMENT_DE_MARS } from "./rapprochement-de-mars";
 import { LE_MOIS_DE_MARS_DE_NOVA } from "./le-mois-de-mars-de-nova";
 import { LES_PARTENAIRES_AU_31_MARS } from "./les-partenaires-au-31-mars";
 import { LES_JEUX_DE_NOEL } from "./les-jeux-de-noel";
+import { LE_REMPLACEMENT_DE_LA_CUISINE } from "./le-remplacement-de-la-cuisine";
+import { LA_FICHE_DE_STOCK_D_AVRIL } from "./la-fiche-de-stock-d-avril";
+import { LES_PIECES_DE_JANVIER } from "./les-pieces-de-janvier";
+import { LA_PAIE_DE_JANVIER } from "./la-paie-de-janvier";
 import type { Bureau } from "./types";
 
 export type { Bureau } from "./types";
@@ -16,6 +20,11 @@ export const BUREAUX: readonly Bureau[] = [
   LE_MOIS_DE_MARS_DE_NOVA,
   LES_PARTENAIRES_AU_31_MARS,
   LES_JEUX_DE_NOEL,
+  // Les activités des chapitres, lot B (novembre 2026).
+  LE_REMPLACEMENT_DE_LA_CUISINE,
+  LA_FICHE_DE_STOCK_D_AVRIL,
+  LES_PIECES_DE_JANVIER,
+  LA_PAIE_DE_JANVIER,
 ];
 
 export const bureauParCode = (code: string) => BUREAUX.find((b) => b.code === code);

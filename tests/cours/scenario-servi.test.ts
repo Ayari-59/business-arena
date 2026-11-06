@@ -138,3 +138,51 @@ describe("ce que l'action serveur calcule", () => {
     expect(await corrigerAuScenarioAction("un-autre-scenario", envoi)).toEqual({ refus: "scenario" });
   });
 });
+
+/**
+ * LES SCÉNARIOS DES CHAPITRES, LOT B (novembre 2026) : le même contrat. La page sert la première
+ * décision seule ; chaque suite complète rend le bilan de son calcul et des questions sans corrigé ; les
+ * questions se corrigent au serveur ; l'action contrôle l'accès.
+ */
+describe("les scénarios du lot B, servis et calculés au serveur", async () => {
+  const { L_OBJECTIF_DU_PRESIDENT } = await import("../../src/config/cours/scenarios/l-objectif-du-president");
+  const { LE_CONTROLE_FISCAL } = await import("../../src/config/cours/scenarios/le-controle-fiscal");
+  beforeEach(() => {
+    acces.ouvert = true;
+  });
+
+  for (const lot of [L_OBJECTIF_DU_PRESIDENT, LE_CONTROLE_FISCAL]) {
+    it(`${lot.code} : la première décision seule, sans conséquence ni bilan`, () => {
+      const servi = servirLeScenario(lot);
+      const t = texte(servi);
+      expect(servi.premiere.index).toBe(0);
+      for (const cle of ["consequence", "bilan", "meilleure", "reference", "juste", "retour", "explication", "questions", "comparaison"]) expect(t, cle).not.toContain(`"${cle}":`);
+      expect(t).not.toContain(espacesOrdinaires(lot.situation([lot.decisions[0]!.options[0]!]).consigne));
+    });
+
+    it(`${lot.code} : chaque suite rend sa décision suivante, puis son bilan et des questions sans corrigé`, () => {
+      const suites = (n: number): string[][] => (n === 0 ? [[]] : suites(n - 1).flatMap((x) => lot.decisions[n - 1]!.options.map((o) => [...x, o])));
+      for (const suite of suites(lot.decisions.length)) {
+        for (let n = 1; n < suite.length; n++) {
+          const r = choix(corrigerAuScenario(lot, { geste: "choisir", suite: suite.slice(0, n) }));
+          expect([r.index, r.suivante!.index, r.bilan]).toEqual([n - 1, n, undefined]);
+        }
+        const fin = choix(corrigerAuScenario(lot, { geste: "choisir", suite }));
+        expect(fin.suivante).toBeUndefined();
+        const q = texte(fin.bilan!.questions);
+        for (const cle of ["juste", "retour", "explication"]) expect(q, cle).not.toContain(`"${cle}":`);
+      }
+      const [q1] = lot.questions.questions;
+      expect(corrigerAuScenario(lot, { etape: lot.questions.id, geste: "repondre", question: q1!.id, option: q1!.options.find((o) => o.juste)!.texte, justes: [] })).toMatchObject({ juste: true });
+      expect(corrigerAuScenario(lot, { geste: "choisir", suite: ["inconnu"] })).toEqual({ refus: "envoi" });
+    });
+
+    it(`${lot.code} : l'action serveur contrôle l'accès`, async () => {
+      const { corrigerAuScenarioAction } = await import("../../src/app/cours/scenario/actions");
+      const envoi = { geste: "choisir", suite: [lot.decisions[0]!.options[0]!] };
+      expect("geste" in (await corrigerAuScenarioAction(lot.code, envoi))).toBe(true);
+      acces.ouvert = false;
+      expect(await corrigerAuScenarioAction(lot.code, envoi)).toEqual({ refus: "licence" });
+    });
+  }
+});
