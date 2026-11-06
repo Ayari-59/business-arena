@@ -299,7 +299,7 @@ function passerLEcriture(e: EtapeDuJournal, saisie: LigneSaisie[], faites: reado
       geste: "ecriture",
       juste: false,
       fini: fini(connues),
-      correction: { juste: false, remarques: [...remarques, "Cette écriture ne correspond à aucune régularisation qui reste à passer : relisez l'état de rapprochement."], notes: [] },
+      correction: { juste: false, remarques: [...remarques, e.horsListe ?? "Cette écriture ne correspond à aucune régularisation qui reste à passer : relisez l'état de rapprochement."], notes: [] },
     };
   }
   return { geste: "ecriture", juste: false, fini: fini(connues), correction: corriger(saisie, proche.ecriture) };

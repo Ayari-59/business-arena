@@ -154,7 +154,7 @@ function facturePiece(args: { nature: string; de: string; a: string; quand: numb
 
 const cotisationsDe = (c: Cas) => auCentime(c.personnel.cotisationsSalariales + c.personnel.cotisationsPatronales);
 
-const ecritureDeLApport = (c: Cas): EcritureAttendue => ({
+export const ecritureDeLApport = (c: Cas): EcritureAttendue => ({
   date: date(c.dates.capital),
   libelle: "Apport en capital",
   lignes: [
@@ -163,7 +163,7 @@ const ecritureDeLApport = (c: Cas): EcritureAttendue => ({
   ],
 });
 
-const ecritureDeLEmprunt = (c: Cas): EcritureAttendue => ({
+export const ecritureDeLEmprunt = (c: Cas): EcritureAttendue => ({
   date: date(c.dates.emprunt),
   libelle: "Emprunt bancaire",
   lignes: [
@@ -172,7 +172,7 @@ const ecritureDeLEmprunt = (c: Cas): EcritureAttendue => ({
   ],
 });
 
-const ecritureDuLoyer = (c: Cas): EcritureAttendue => ({
+export const ecritureDuLoyer = (c: Cas): EcritureAttendue => ({
   date: date(c.loyer.date),
   libelle: "Loyer de janvier",
   lignes: [
@@ -181,7 +181,7 @@ const ecritureDuLoyer = (c: Cas): EcritureAttendue => ({
   ],
 });
 
-const ecritureDeLEquipement = (c: Cas): EcritureAttendue => ({
+export const ecritureDeLEquipement = (c: Cas): EcritureAttendue => ({
   date: date(c.immobilisation.date),
   libelle: `Achat : ${c.immobilisation.designation}`,
   lignes: [
@@ -191,7 +191,7 @@ const ecritureDeLEquipement = (c: Cas): EcritureAttendue => ({
   ],
 });
 
-const ecritureDeLAchat = (c: Cas): EcritureAttendue => ({
+export const ecritureDeLAchat = (c: Cas): EcritureAttendue => ({
   date: date(c.achat.date),
   libelle: `Facture ${c.achat.fournisseur}`,
   lignes: [
@@ -201,7 +201,7 @@ const ecritureDeLAchat = (c: Cas): EcritureAttendue => ({
   ],
 });
 
-const ecritureDeLaVenteACredit = (c: Cas): EcritureAttendue => ({
+export const ecritureDeLaVenteACredit = (c: Cas): EcritureAttendue => ({
   date: date(c.venteCredit.date),
   libelle: "Facture de vente à échéance",
   lignes: [
@@ -211,7 +211,7 @@ const ecritureDeLaVenteACredit = (c: Cas): EcritureAttendue => ({
   ],
 });
 
-const ecritureDeLaPaie = (c: Cas): EcritureAttendue => ({
+export const ecritureDeLaPaie = (c: Cas): EcritureAttendue => ({
   date: date(c.personnel.date),
   libelle: "Salaires de janvier",
   lignes: [
@@ -222,7 +222,7 @@ const ecritureDeLaPaie = (c: Cas): EcritureAttendue => ({
   ],
 });
 
-const ecritureDuVersementDesSalaires = (c: Cas): EcritureAttendue => ({
+export const ecritureDuVersementDesSalaires = (c: Cas): EcritureAttendue => ({
   date: date(c.personnel.date),
   libelle: "Virement des salaires nets",
   lignes: [
@@ -231,7 +231,7 @@ const ecritureDuVersementDesSalaires = (c: Cas): EcritureAttendue => ({
   ],
 });
 
-const ecritureDesVentesAuComptant = (c: Cas): EcritureAttendue => ({
+export const ecritureDesVentesAuComptant = (c: Cas): EcritureAttendue => ({
   date: date(c.venteComptant.date),
   libelle: "Ventes au comptant de janvier",
   lignes: [
@@ -242,7 +242,7 @@ const ecritureDesVentesAuComptant = (c: Cas): EcritureAttendue => ({
 });
 
 /** Les écritures du mois de janvier, dans l'ordre du chapitre, avant les échéances. */
-const ECRITURES_DE_JANVIER = [
+export const ECRITURES_DE_JANVIER = [
   ecritureDeLApport,
   ecritureDeLEmprunt,
   ecritureDuLoyer,
