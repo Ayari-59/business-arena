@@ -67,6 +67,11 @@ const INTERDITS = [
   /^src\/config\/cours\/scenarios\//,
   /^src\/config\/cours\/monde\/decouvert-de-nova\.ts$/,
   /^src\/pedagogy\/cours\/scenario-servi\.ts$/,
+  // Lot D (novembre 2026) : les mondes des enquêtes du bilan fonctionnel, des comptes annuels et du
+  // tableau des flux (leurs bureaux et enquêtes sont couverts par leur dossier).
+  /^src\/config\/cours\/monde\/bilan-fonctionnel-de-l-alternant\.ts$/,
+  /^src\/config\/cours\/monde\/comptes-annuels-du-stagiaire\.ts$/,
+  /^src\/config\/cours\/monde\/flux-de-l-assistante\.ts$/,
 ];
 
 function fichiers(dossier: string): string[] {

@@ -94,6 +94,11 @@ export interface EtapeDeClassement extends BaseDuBureau {
 export interface EtapeDEtat extends BaseDuBureau {
   type: "etat";
   grille: TableauACompleter;
+  /**
+   * Ce que l'écran dit une fois le tableau juste (« Le tableau de financement est juste. »). Absent : le
+   * mot du format (les deux soldes rectifiés d'un rapprochement, le résultat corrigé d'une enquête).
+   */
+  reussite?: string;
 }
 
 /** Passer les écritures que le contrôle demande, une à une, dans l'ordre que l'élève choisit. */

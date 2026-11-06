@@ -300,7 +300,7 @@ function EtapeDEtat({ etape, suivi, noter, envoyer, etatJuste }: PropsDEtape<Eta
           <BoutonDeCorrection suivi={suivi} montrer={() => void montrer()} />
         </div>
       )}
-      {fait && <p className="encadre-gain max-w-2xl rounded-lg px-4 py-3 text-sm font-semibold" role="status" data-etat-juste="">{etatJuste}</p>}
+      {fait && <p className="encadre-gain max-w-2xl rounded-lg px-4 py-3 text-sm font-semibold" role="status" data-etat-juste="">{etape.reussite ?? etatJuste}</p>}
       {fait && suivi.grille && <CalculsDuTableau grille={suivi.grille} />}
       {fait && <Explication textes={suivi.explication} />}
     </>
