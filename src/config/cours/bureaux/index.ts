@@ -6,6 +6,9 @@ import { LE_REMPLACEMENT_DE_LA_CUISINE } from "./le-remplacement-de-la-cuisine";
 import { LA_FICHE_DE_STOCK_D_AVRIL } from "./la-fiche-de-stock-d-avril";
 import { LES_PIECES_DE_JANVIER } from "./les-pieces-de-janvier";
 import { LA_PAIE_DE_JANVIER } from "./la-paie-de-janvier";
+import { L_ECHEANCE_DE_JANVIER } from "./l-echeance-de-janvier";
+import { LE_BESOIN_DE_L_ANNEE_TYPE } from "./le-besoin-de-l-annee-type";
+import { LA_PREMIERE_CONSOLIDATION } from "./la-premiere-consolidation";
 import type { Bureau } from "./types";
 
 export type { Bureau } from "./types";
@@ -25,6 +28,10 @@ export const BUREAUX: readonly Bureau[] = [
   LA_FICHE_DE_STOCK_D_AVRIL,
   LES_PIECES_DE_JANVIER,
   LA_PAIE_DE_JANVIER,
+  // Les activités des chapitres, lot E (novembre 2026).
+  L_ECHEANCE_DE_JANVIER,
+  LE_BESOIN_DE_L_ANNEE_TYPE,
+  LA_PREMIERE_CONSOLIDATION,
 ];
 
 export const bureauParCode = (code: string) => BUREAUX.find((b) => b.code === code);

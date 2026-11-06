@@ -79,6 +79,9 @@ const INTERDITS = [
   /^src\/config\/cours\/monde\/objectif-du-president\.ts$/,
   /^src\/config\/cours\/monde\/controle-fiscal-de-nova\.ts$/,
   /^src\/config\/cours\/monde\/revision-de-l-assistant\.ts$/,
+  // Les activités du lot E (novembre 2026) : les mondes de leurs scénarios, qui calculent les branches.
+  /^src\/config\/cours\/monde\/boucler-le-plan\.ts$/,
+  /^src\/config\/cours\/monde\/dossier-vert-de-nova\.ts$/,
 ];
 
 function fichiers(dossier: string): string[] {
