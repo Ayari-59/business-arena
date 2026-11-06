@@ -1,4 +1,5 @@
 import { auCentime, rangDuJour, type DateDuCours } from "./amortissement";
+import { DECOUVERT_DE_NOVA } from "./banque-de-nova";
 import { bilanDuLycee } from "./comptes-du-lycee";
 import type { FicheDeLExercice } from "./exercice-de-nova";
 
@@ -18,12 +19,21 @@ import type { FicheDeLExercice } from "./exercice-de-nova";
  *     une avance des associés en compte courant, ou casser le compte à terme.
  *
  * Les jours se comptent sur le calendrier commercial du cours (mois de 30 jours, année de 360
- * jours, amortissement.ts), comme les banques comptent leurs agios. Les taux ci-dessous sont des
- * HYPOTHÈSES DU COURS, des ordres de grandeur du marché pour une petite entreprise.
+ * jours, amortissement.ts), comme les banques comptent leurs agios. Le taux du découvert est celui de
+ * la banque de NOVA (banque-de-nova.ts) ; les autres taux ci-dessous sont des HYPOTHÈSES DU COURS, des
+ * ordres de grandeur du marché pour une petite entreprise.
  */
 
-/** Le taux annuel des agios d'un découvert (HYPOTHÈSE DU COURS) : le découvert est le concours le plus cher à l'année. */
-export const TAUX_DU_DECOUVERT = 0.1;
+/**
+ * Le taux annuel des agios d'un découvert : celui de la banque de NOVA (banque-de-nova.ts,
+ * DECOUVERT_DE_NOVA, 12 % l'an), le même dans tout le cours ; au-delà des 5 000 € autorisés, la
+ * banque finance au même taux par un crédit de trésorerie. Le découvert est le concours le plus cher
+ * à l'année.
+ */
+export const TAUX_DU_DECOUVERT = DECOUVERT_DE_NOVA.tauxAnnuel;
+
+/** Le découvert autorisé de NOVA, au-delà duquel la banque finance par un crédit de trésorerie. */
+export const DECOUVERT_AUTORISE = DECOUVERT_DE_NOVA.autorise;
 
 /** Le taux annuel de l'escompte d'une créance (HYPOTHÈSE DU COURS) : moins cher que le découvert, mais compté jusqu'à l'échéance de la créance. */
 export const TAUX_DE_L_ESCOMPTE = 0.06;

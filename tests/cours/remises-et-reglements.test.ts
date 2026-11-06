@@ -9,7 +9,7 @@ import { factureContestee } from "../../src/config/cours/situations/la-facture-c
 import { L_ESCOMPTE_DEMANDE_PAR_LE_CLIENT } from "../../src/config/cours/situations/par-chapitre/l-escompte-demande-par-le-client";
 import type { Chapitre, Etape, EtapeChoix, EtapeCurseur, EtapeEcriture, EtapeMontants, EtapeSimulation, EtatDuCours } from "../../src/config/cours/types";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
-import { corriger, enEcriture, enSaisie } from "../../src/pedagogy/cours/correcteur";
+import { corriger, enEcriture, enSaisie, montantEcrit } from "../../src/pedagogy/cours/correcteur";
 import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
 import { compteDeResultat, equilibree } from "../../src/pedagogy/cours/etats";
 import { compteDuPlan } from "../../src/pedagogy/cours/plan-comptable";
@@ -264,13 +264,13 @@ describe("remises et règlements : le chapitre, dans les neuf entreprises", () =
     const j = cas.venteCredit.delai - 10;
     const depart = Object.fromEntries(e.leviers(cas).map((l) => [l.code, l.depart]));
     expect(depart).toEqual({ remise: 5, escompte: 2, jours: j, taux: Math.round(cas.pret.tauxAnnuel * 1000) / 10 });
-    // L'escompte le plus fort au dixième de point qui ne coûte pas plus qu'un découvert à 8 % : t ÷ (1 − t) × 360 ÷ j ≤ 8 %.
-    const x = (0.08 * j) / 360;
+    // L'escompte le plus fort au dixième de point qui ne coûte pas plus que le découvert de la banque de NOVA, 12 % : t ÷ (1 − t) × 360 ÷ j ≤ 12 %.
+    const x = (0.12 * j) / 360;
     const meilleur = Math.floor((x / (1 + x)) * 1000 + 1e-9) / 10;
-    expect(d.solution).toEqual({ remise: 5, escompte: meilleur, jours: j, taux: 8 });
+    expect(d.solution).toEqual({ remise: 5, escompte: meilleur, jours: j, taux: 12 });
     const coute = (e100: number) => (e100 / 100 / (1 - e100 / 100)) * (360 / j);
-    expect(coute(meilleur)).toBeLessThanOrEqual(0.08);
-    expect(coute(meilleur + 0.1)).toBeGreaterThan(0.08);
+    expect(coute(meilleur)).toBeLessThanOrEqual(0.12);
+    expect(coute(meilleur + 0.1)).toBeGreaterThan(0.12);
     expect([d.atteint(depart), d.atteint(d.solution)]).toEqual([false, true]);
     // Un dixième de moins, un autre taux ou d'autres jours : le défi n'est pas relevé.
     expect(d.atteint({ ...d.solution, escompte: Math.round((meilleur - 0.1) * 10) / 10 })).toBe(false);
@@ -300,7 +300,7 @@ describe("remises et règlements : le chapitre, dans les neuf entreprises", () =
     expect(g.levier).toBe("jours");
     const [cout, decouvert] = g.courbes;
     expect([10, 45, 90].map((n) => cout!.valeur({ ...d.solution, jours: n }))).toEqual([10, 45, 90].map((n) => centime((meilleur / (100 - meilleur)) * (360 / n) * 100)));
-    expect([10, 90].map((n) => decouvert!.valeur({ ...d.solution, jours: n }))).toEqual([8, 8]);
+    expect([10, 90].map((n) => decouvert!.valeur({ ...d.solution, jours: n }))).toEqual([12, 12]);
   });
 
   it("le défi du laboratoire, épinglé, et le pari sur l'escompte à accorder", () => {
@@ -310,15 +310,25 @@ describe("remises et règlements : le chapitre, dans les neuf entreprises", () =
         return [code, e.defi(casDeLEntreprise(code)).solution.escompte];
       }),
     );
-    expect(defis).toEqual({ nova: 1.5, boutique: 0.7, hotel: 0.7, bistrot: 0.4, conseil: 1, ecommerce: 0.4, fitness: 0.7, batiment: 1.7, transport: 1 });
-    for (const code of CODES) expect(juste(ch, casDeLEntreprise(code), "predire-l-escompte-accorde"), code).toBe("Moins que les 2 % des conditions du cours");
+    expect(defis).toEqual({ nova: 2.2, boutique: 1.1, hotel: 1.1, bistrot: 0.6, conseil: 1.6, ecommerce: 0.6, fitness: 1.1, batiment: 2.5, transport: 1.6 });
+    // À 12 %, NOVA (70 jours d'avance) et le bâtiment (80 jours) peuvent accorder plus que les 2 % des
+    // conditions du cours (2,28 % et 2,6 %) ; les autres, moins.
+    const plus = ["nova", "batiment"];
+    for (const code of CODES) expect(juste(ch, casDeLEntreprise(code), "predire-l-escompte-accorde"), code).toBe(`${plus.includes(code) ? "Plus" : "Moins"} que les 2 % des conditions du cours`);
+    for (const code of CODES) {
+      const e = ch.etapes.find((x) => x.id === "predire-l-escompte-accorde") as EtapeChoix;
+      for (const o of e.options(casDeLEntreprise(code), etatVide)) if (o.texte.endsWith("des conditions du cours")) expect(o.retour.startsWith(o.juste ? "Bon pari." : "Pari à vérifier."), `${code} : ${o.texte}`).toBe(true);
+      const l = ch.etapes.find((x) => x.id === "le-laboratoire-de-l-escompte") as EtapeSimulation;
+      const cas = casDeLEntreprise(code);
+      expect(l.explication!(cas, l.defi(cas).solution)[0], code).toMatch(plus.includes(code) ? /moins que le découvert, une rapidité qui vaut son prix\.$/ : /une rapidité payée cher\.$/);
+    }
   });
 
   it.each(CODES)("chez %s : les étapes d'expert, refaites à la main", (code) => {
     const cas = casDeLEntreprise(code);
     const v = factureALaMain(cas, cas.venteCredit.quantite);
     const j = cas.venteCredit.delai - 10;
-    const x = (0.08 * j) / 360;
+    const x = (0.12 * j) / 360;
     const t = x / (1 + x);
     expect(attendus(ch, cas, "l-escompte-maximal")).toEqual({
       "Coût du découvert sur la période, en %": centime(x * 100),
@@ -355,11 +365,14 @@ describe("remises et règlements : le chapitre, dans les neuf entreprises", () =
     expect(factureDeVente(cas)).toEqual({ brut: 18_880, remise: 944, netCommercial: 17_936, escompte: 358.72, netFinancier: 17_577.28, tauxTva: 0.2, tva: 3_515.46, ttc: 21_092.74, date: 20, paiement: 30, joursAvances: 70 });
     const a = achatALaMain(cas);
     expect([a.esc, a.nf, a.jours, centime(a.taux * 100)]).toEqual([699.6, 34_280.4, 12, 61.22]);
-    expect(attendus(ch, cas, "l-escompte-maximal")).toEqual({ "Coût du découvert sur la période, en %": 1.56, "Escompte le plus fort, en %": 1.53, "Escompte sur la facture, à ce taux arrondi": 274.42 });
+    expect(attendus(ch, cas, "l-escompte-maximal")).toEqual({ "Coût du découvert sur la période, en %": 2.33, "Escompte le plus fort, en %": 2.28, "Escompte sur la facture, à ce taux arrondi": 408.94 });
     expect(attendus(ch, cas, "a-rebours")).toEqual({ "Net financier": 8_788.64, "Net commercial": 8_968, "Prix brut, hors taxes": 9_440, "Nombre d'enceintes": 160 });
     const intro = ch.etapes[0]!;
     if (intro.type !== "lecture") throw new Error("l'intro est une lecture");
     expect(intro.texte(cas)[0]).toContain("CampusTech achète au prix affiché et paie à 80 jours, 20 jours au-delà des 60 jours convenus.");
+    // Le découvert finance 17 577,28 € d'attente, plus que les 5 000 € autorisés : la phrase du crédit de trésorerie, chez NOVA seulement.
+    expect(intro.texte(cas).at(-1)).toBe(`Au-delà de l'autorisation de découvert, ${montantEcrit(5_000)}, la banque finance au même taux par un crédit de trésorerie.`);
+    for (const code of CODES.filter((x) => x !== "nova")) expect(intro.texte(casDeLEntreprise(code)).join(" ")).not.toContain("crédit de trésorerie");
     // La facture contestée lit toujours la facture juste du chapitre.
     expect(factureContestee(cas).juste.ttc).toBe(21_092.74);
   });

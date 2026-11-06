@@ -2,6 +2,7 @@ import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import { auCentime } from "../../../pedagogy/cours/etats";
 import type { Cas } from "../cas";
 import { dateDuCours as date } from "../dates";
+import { DECOUVERT_DE_NOVA } from "../monde/banque-de-nova";
 import { coutDeLAvance, escompteMaximal, facture, tauxAnnuelDeLEscompte } from "../monde/facture";
 import { JOURS_D_ESCOMPTE, JOURS_PAR_AN, TAUX_D_ESCOMPTE, TAUX_DE_REMISE } from "../remises";
 import type { Chapitre, TableauDeDonnees } from "../types";
@@ -51,8 +52,14 @@ import { aNom, dE, deNom, delaiDuClient, nomDuClient, paiementDuClient } from ".
 /** La borne haute du curseur des jours d'avance : au-delà de tout délai du cours. */
 export const JOURS_MAX_DU_CURSEUR = 240;
 
-/** Le taux du découvert du laboratoire, hypothèse du cours : 8 % l'an, plus cher que tous les emprunts du cours. */
-export const TAUX_DU_DECOUVERT = 0.08;
+/**
+ * Le taux du découvert du laboratoire : celui de la banque de NOVA (banque-de-nova.ts,
+ * DECOUVERT_DE_NOVA, 12 % l'an), plus cher que tous les emprunts du cours ; au-delà des 5 000 €
+ * autorisés, la banque finance au même taux par un crédit de trésorerie. Le laboratoire le prend dans
+ * les neuf entreprises du cours. À 12 %, NOVA (70 jours d'avance) et le bâtiment (80 jours) peuvent
+ * accorder plus que les 2 % des conditions du cours ; les autres, moins.
+ */
+export const TAUX_DU_DECOUVERT = DECOUVERT_DE_NOVA.tauxAnnuel;
 
 /** Les bornes et les pas des leviers du laboratoire, en points de pourcentage et en jours. */
 export const LEVIERS_DU_LABORATOIRE = {
@@ -252,6 +259,10 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
           `Ce chapitre se joue dans la simulation du cours, chez ${c.entreprise}, sur la vente et l'achat du premier chapitre. Dans le premier chapitre, ${client} achète au prix affiché et ${paiementDuClient(c)}. Entre professionnels, une facture se négocie souvent.`,
           `Deux sortes de réductions. Les réductions commerciales baissent le prix : la remise sur une grosse commande, le rabais pour un défaut ou un retard, la ristourne de fin d'année. La réduction financière, l'escompte, paie la rapidité : le client qui règle dans les ${qte(JOURS_D_ESCOMPTE)} jours paie un peu moins.`,
           `Ce que la simulation suppose : les montants avant réduction sont ceux du cas ; les conditions sont celles du cours, une remise de ${pct(TAUX_DE_REMISE)} et un escompte de ${pct(TAUX_D_ESCOMPTE)} pour un paiement sous ${qte(JOURS_D_ESCOMPTE)} jours ; l'année commerciale compte ${qte(JOURS_PAR_AN)} jours ; l'argent avancé se finance au taux de l'emprunt de l'entreprise, ${pct(c.pret.tauxAnnuel)}, ou par un découvert à ${pct(TAUX_DU_DECOUVERT)}.`,
+          // La banque de NOVA n'autorise que 5 000 € de découvert : au-delà, le même taux, par un crédit de trésorerie.
+          ...(c.code === "nova" && factureDeVente(c).netFinancier > DECOUVERT_DE_NOVA.autorise
+            ? [`Au-delà de l'autorisation de découvert, ${eur(DECOUVERT_DE_NOVA.autorise)}, la banque finance au même taux par un crédit de trésorerie.`]
+            : []),
         ];
       },
       repere: () =>
@@ -578,8 +589,8 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
         const t = escompteMaximalDuClient(c).maximal;
         const voir = "Faites jouer l'escompte, les jours et le taux au laboratoire, à l'étape suivante.";
         return [
-          { texte: `Moins que les ${pct(TAUX_D_ESCOMPTE)} des conditions du cours`, juste: t < TAUX_D_ESCOMPTE, retour: `Bon pari. ${voir}` },
-          { texte: `Plus que les ${pct(TAUX_D_ESCOMPTE)} des conditions du cours`, juste: t > TAUX_D_ESCOMPTE, retour: `Pari à vérifier. ${voir}` },
+          { texte: `Moins que les ${pct(TAUX_D_ESCOMPTE)} des conditions du cours`, juste: t < TAUX_D_ESCOMPTE, retour: `${t < TAUX_D_ESCOMPTE ? "Bon pari" : "Pari à vérifier"}. ${voir}` },
+          { texte: `Plus que les ${pct(TAUX_D_ESCOMPTE)} des conditions du cours`, juste: t > TAUX_D_ESCOMPTE, retour: `${t > TAUX_D_ESCOMPTE ? "Bon pari" : "Pari à vérifier"}. ${voir}` },
           { texte: `${pct(TAUX_DU_DECOUVERT)}, le taux du découvert lui-même`, juste: false, retour: `Non : ${pct(TAUX_DU_DECOUVERT)} est un taux pour une année, l'escompte un taux pour ${qte(factureDeVente(c).joursAvances)} jours. ${voir}` },
         ];
       },
@@ -649,8 +660,10 @@ export const REMISES_ET_REGLEMENTS: Chapitre = {
       },
       explication: (c, p) => {
         const l = laboratoireDeLEscompte(c, p as unknown as PositionDeLEscompte);
+        const conditions = laboratoireDeLEscompte(c, departDeLEscompte(c));
+        const jugement = conditions.coutAnnuelExact > TAUX_DU_DECOUVERT ? "une rapidité payée cher" : "moins que le découvert, une rapidité qui vaut son prix";
         return [
-          `À ${qte(aDixieme(p.escompte!))} %, l'escompte coûte ${qte(l.coutAnnuel)} % l'an : juste sous le découvert. Un dixième de plus, et se faire payer vite coûterait plus cher que d'attendre en découvert. Les ${pct(TAUX_D_ESCOMPTE)} des conditions du cours coûtent ${qte(laboratoireDeLEscompte(c, departDeLEscompte(c)).coutAnnuel)} % l'an : une rapidité payée cher.`,
+          `À ${qte(aDixieme(p.escompte!))} %, l'escompte coûte ${qte(l.coutAnnuel)} % l'an : juste sous le découvert. Un dixième de plus, et se faire payer vite coûterait plus cher que d'attendre en découvert. Les ${pct(TAUX_D_ESCOMPTE)} des conditions du cours coûtent ${qte(conditions.coutAnnuel)} % l'an : ${jugement}.`,
           "La remise n'y change rien : elle baisse le montant de l'escompte, pas son coût annuel, qui ne dépend que du taux et des jours. Le graphique le montre : plus le paiement est avancé de jours, moins un même escompte coûte à l'année.",
         ];
       },

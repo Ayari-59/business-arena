@@ -8,14 +8,18 @@
  *   · equilibre-de-tresorerie.ts (CONDITIONS_DE_LA_BANQUE), que reprennent financer-et-placer.ts et
  *     decouvert-de-nova.ts ;
  *   · delais-et-tva.ts (BANQUE_DE_NOVA), la banque des chapitres du BTS GPME sur l'année N + 1 ;
- *   · mauvais-payeurs.ts, pour le retard de CampusTech.
+ *   · mauvais-payeurs.ts, pour le retard de CampusTech ;
+ *   · tresorerie-a-optimiser.ts (TAUX_DU_DECOUVERT), la trésorerie du 31 décembre N au lycée, que lisent
+ *     le chapitre « Optimiser la trésorerie » et le cas « La banque propose l'escompte » ;
+ *   · remises-et-reglements.ts (TAUX_DU_DECOUVERT), le laboratoire de « Remises et règlements », que
+ *     lit le scénario « Les escomptes de janvier », en janvier N.
  *
- * AU-DELÀ DE L'AUTORISATION (décision du propriétaire, novembre 2026) : quand un chapitre de N + 1
- * finance plus de 5 000 €, la banque accorde à NOVA un crédit de trésorerie au même taux, 12 % l'an
- * (les besoins de N + 1 de delais-et-tva.ts, un besoin de financement, une facture qui attend).
+ * AU-DELÀ DE L'AUTORISATION (décision du propriétaire, novembre 2026) : quand un chapitre finance plus
+ * de 5 000 €, la banque accorde à NOVA un crédit de trésorerie au même taux, 12 % l'an (les besoins de
+ * N + 1 de delais-et-tva.ts, un besoin de financement, une facture qui attend, le manque du 31 décembre
+ * N, l'attente d'un client qui paie à 80 jours) ; le texte le dit en une phrase là où c'est le cas.
  *
  * CE QUI N'EN DÉPEND PAS : le découvert des autres entreprises (delais-et-tva.ts, TAUX_DU_DECOUVERT,
- * 9 %) ; et deux hypothèses de chapitre qui ne sont pas l'année N + 1 : le laboratoire de « Remises et règlements » (8 %, et le scénario « Les escomptes de janvier »,
- * en janvier N) et la trésorerie du 31 décembre N au lycée (tresorerie-a-optimiser.ts, 10 %).
+ * 9 %). Aucune autre fiche du cours ne pose son propre taux de découvert (tests/cours/une-seule-nova.test.ts).
  */
 export const DECOUVERT_DE_NOVA = { autorise: 5_000, tauxAnnuel: 0.12 } as const;

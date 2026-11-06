@@ -3,7 +3,7 @@ import type { Cas } from "../../cas";
 import { optimiser } from "../../chapitres/optimiser-la-tresorerie";
 import { auCentime } from "../../monde/amortissement";
 import { ENTREPRISES_DES_COMPTES_DU_LYCEE } from "../../monde/comptes-du-lycee";
-import { TAUX_DE_L_ESCOMPTE, TAUX_DU_DECOUVERT, agios } from "../../monde/tresorerie-a-optimiser";
+import { DECOUVERT_AUTORISE, TAUX_DE_L_ESCOMPTE, TAUX_DU_DECOUVERT, agios } from "../../monde/tresorerie-a-optimiser";
 import type { Situation } from "../types";
 
 /**
@@ -117,7 +117,11 @@ export const LA_BANQUE_PROPOSE_L_ESCOMPTE: Situation = {
       notions: ["net_treasury", "receivables_financing"],
       question: (c) => {
         const k = escompteProposePar(c);
-        return `Le conseiller compare avec un découvert de ${eur(k.montant)}. Calculez ce qu'il coûterait s'il durait ${k.joursDeBlocage} jours, jusqu'à l'échéance du compte à terme, puis s'il durait ${k.facture.jours} jours, jusqu'à l'échéance de la facture.`;
+        return [
+          `Le conseiller compare avec un découvert de ${eur(k.montant)}.`,
+          ...(k.montant > DECOUVERT_AUTORISE ? [`Au-delà de l'autorisation de découvert, ${eur(DECOUVERT_AUTORISE)}, la banque finance au même taux par un crédit de trésorerie.`] : []),
+          `Calculez ce qu'il coûterait s'il durait ${k.joursDeBlocage} jours, jusqu'à l'échéance du compte à terme, puis s'il durait ${k.facture.jours} jours, jusqu'à l'échéance de la facture.`,
+        ].join(" ");
       },
       champs: (c) => {
         const k = escompteProposePar(c);
