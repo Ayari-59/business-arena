@@ -303,7 +303,7 @@ export const LE_REMPLACEMENT_DE_LA_CUISINE: Bureau = {
             lignes: [
               { role: "la cuisine, à son coût d'acquisition", compte: a.compte, acceptes: a.acceptes, sens: "debit", montant: n.cout, indice: "le prix net de remise, la livraison et l'installation" },
               { role: "l'entretien de la première année", compte: "615", sens: "debit", montant: d.entretien, indice: "la ligne du contrat d'entretien" },
-              // À VÉRIFIER : le compte d'une formation achetée à un fournisseur (6228, divers ; 6333 vise la contribution légale, pas une facture).
+              // Le compte d'une formation achetée à un fournisseur (6228, divers ; 6333 vise la contribution légale, pas une facture).
               { role: "la formation de l'équipe", compte: "6228", acceptes: ["622"], sens: "debit", montant: d.formation, indice: "la ligne de la formation" },
               { role: "la TVA déductible sur la cuisine", compte: "44562", sens: "debit", montant: n.tvaDuCout, indice: "la TVA du coût d'acquisition" },
               { role: "la TVA déductible sur les charges", compte: "44566", sens: "debit", montant: n.tvaDesCharges, indice: "la TVA de la formation et de l'entretien" },

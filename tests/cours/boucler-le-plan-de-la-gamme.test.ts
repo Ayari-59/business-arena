@@ -17,14 +17,14 @@ import {
   resultatDuPlan,
   toutesLesSuitesDuPlan,
 } from "../../src/config/cours/monde/boucler-le-plan";
-import { EMPRUNT_DU_PLAN_EQUILIBRE, LIGNE_A_FINANCER } from "../../src/config/cours/monde/financement-de-la-gamme";
+import { CREDIT_BAIL_DE_LA_LIGNE, EMPRUNT_DU_PLAN_EQUILIBRE, LIGNE_A_FINANCER, MOULES } from "../../src/config/cours/monde/financement-de-la-gamme";
 import { LEVIERS_DU_PLAN } from "../../src/config/cours/chapitres/le-plan-de-financement";
 import { CAS_PAR_CHAPITRE, SITUATIONS } from "../../src/config/cours/situations";
 import { textesDuScenario, verifierLaLangue, verifierLesQuestions } from "../helpers/activites-du-lot-e";
 
 /**
  * LE SCÉNARIO : BOUCLER LE PLAN DE LA GAMME (monde/boucler-le-plan.ts, scenarios/boucler-le-plan-de-la-gamme.ts).
- * Chaque chiffre refait à la main depuis le plan du chapitre ; les neuf suites se calculent ; trois fins ;
+ * Chaque chiffre refait à la main depuis le plan du chapitre ; les douze suites se calculent ; trois fins ;
  * une meilleure suite unique ; les textes suivent les règles de la maison.
  */
 
@@ -77,17 +77,66 @@ describe("le monde du plan en décisions : chaque chiffre à la main", () => {
   });
 });
 
+describe("la ligne en crédit-bail, l'option chiffrée de la première décision", () => {
+  // Le cumul de l'ébauche fin N+5 : celui de la meilleure suite, plus ses intérêts après impôt (12 000 € × 75 %).
+  const ebaucheFinN5 = c(246_192.5 + 12_000 * (1 - t));
+
+  it("l'offre du chapitre, sans donnée nouvelle : 5 redevances de 33 000 €, une option de 15 000 €, aucun dépôt ; l'emprunt des moules, 40 000 €", () => {
+    expect(CREDIT_BAIL_DE_LA_LIGNE).toMatchObject({ valeur: 150_000, redevance: 33_000, dureeAns: 5, option: 15_000, depot: 0 });
+    expect(MOULES.montant).toBe(40_000);
+    expect(ebaucheDuPlan().cumulFinal).toBe(ebaucheFinN5);
+    for (const duree of ["courte", "habituelle", "longue"]) {
+      const x = r("credit-bail", duree);
+      expect(x.creditBail).toBe(true);
+      expect(x.emprunt).toBe(MOULES.montant);
+      expect(x.plan.leviers.creditBail).toBe(true);
+      expect(x.loyers).toBe(5 * 33_000 + 15_000);
+      expect(x.equilibre).toBe(true);
+    }
+  });
+
+  it("ce que le crédit-bail coûte au plan, après impôt : 30 000 € de plus que le prix, moins 25 % de 40 000 € de charges déductibles en plus, 20 000 €", () => {
+    // Les redevances (165 000 €) remplacent 5 dotations de la ligne (125 000 €) ; l'option s'amortit après le plan.
+    const cout = c(5 * 33_000 + 15_000 - 150_000 - t * (5 * 33_000 - 5 * (150_000 / 6)));
+    expect(cout).toBe(20_000);
+    expect(planEnCreditBail().cumulFinal).toBe(c(ebaucheFinN5 - cout));
+    expect(planEnCreditBail().cumulFinal).toBe(235_192.5);
+    // Avec l'emprunt des moules : ses intérêts après impôt en plus, capital remboursé dans le plan.
+    expect(r("credit-bail", "habituelle").laisse).toBe(c(ebaucheFinN5 - cout - 0.05 * 8_000 * 15 * (1 - t)));
+    expect(r("credit-bail", "habituelle").laisse).toBe(230_692.5);
+    expect(r("credit-bail", "courte").laisse).toBe(c(ebaucheFinN5 - cout - 0.05 * (40_000 / 3) * 6 * (1 - t)));
+    // Sur 7 ans : les intérêts des 5 années du plan, et 2 septièmes du capital encore dus.
+    const interets7 = 0.05 * (40_000 / 7) * (7 + 6 + 5 + 4 + 3);
+    expect(r("credit-bail", "longue").restantDu).toBeCloseTo((40_000 * 2) / 7, 1);
+    expect(r("credit-bail", "longue").laisse).toBeCloseTo(ebaucheFinN5 - cout - interets7 * (1 - t), 1);
+  });
+
+  it("le plan laissé fin N+5 : le cumul moins le capital encore dû, pour chaque suite", () => {
+    for (const x of toutesLesSuitesDuPlan()) {
+      const y = resultatDuPlan(x);
+      expect(y.laisse, `${x.montant}/${x.duree}`).toBe(c(y.plan.cumulFinal - y.restantDu));
+    }
+    expect(r("equilibre", "habituelle").laisse).toBe(246_192.5);
+  });
+});
+
 describe("les branches", () => {
   it("le manque de l'ébauche ne tient jamais, 80 000 € sur 3 ans non plus ; tout le reste tient", () => {
     const ne = toutesLesSuitesDuPlan().filter((x) => !resultatDuPlan(x).equilibre).map((x) => `${x.montant}/${x.duree}`);
     expect(ne).toEqual(["manque/courte", "manque/habituelle", "manque/longue", "equilibre/courte"]);
   });
 
-  it("une meilleure suite unique : 80 000 € sur 5 ans, le moins d'intérêts parmi les plans qui tiennent", () => {
+  it("une meilleure suite unique : 80 000 € sur 5 ans, le plan qui tient et laisse le plus fin N+5, capital dû déduit", () => {
     const b = meilleureSuiteDuPlan();
     expect(b.suite).toEqual({ montant: "equilibre", duree: "habituelle" });
     const tenus = toutesLesSuitesDuPlan().map(resultatDuPlan).filter((x) => x.equilibre);
-    expect(tenus.filter((x) => Math.abs(x.interetsDeLEmprunt - b.interetsDeLEmprunt) < 0.005)).toHaveLength(1);
+    expect(tenus.filter((x) => Math.abs(x.laisse - b.laisse) < 0.005)).toHaveLength(1);
+    // Parmi les emprunts seuls, c'est aussi celui qui coûte le moins d'intérêts.
+    const emprunts = tenus.filter((x) => !x.creditBail);
+    expect(Math.min(...emprunts.map((x) => x.interetsDeLEmprunt))).toBe(b.interetsDeLEmprunt);
+    // Le crédit-bail ne coûte presque rien en intérêts, mais laisse moins : la règle ne compte pas que les intérêts.
+    expect(r("credit-bail", "courte").interetsDeLEmprunt).toBeLessThan(b.interetsDeLEmprunt);
+    expect(Math.max(...tenus.filter((x) => x.creditBail).map((x) => x.laisse))).toBeLessThan(b.laisse);
   });
 
   it("trois fins, chacune atteinte", () => {
@@ -114,10 +163,14 @@ describe("le scénario du plan", () => {
     expect(SITUATIONS.map((x) => x.code)).not.toContain(s.code);
   });
 
-  it("deux décisions de trois options, les codes du monde, et chaque bilan se dit chiffres à l'appui", () => {
+  it("deux décisions, de quatre puis de trois options, les codes du monde, et chaque bilan se dit chiffres à l'appui", () => {
     expect(s.decisions.map((d) => d.options)).toEqual(CHOIX_DU_PLAN);
+    expect(CHOIX_DU_PLAN.map((x) => x.length)).toEqual([4, 3]);
     expect(s.situation([]).options.map((o) => o.code)).toEqual(CHOIX_DU_PLAN[0]);
-    expect(s.situation(["manque"]).options.map((o) => o.code)).toEqual(CHOIX_DU_PLAN[1]);
+    expect(s.situation([]).options.find((o) => o.code === "credit-bail")!.texte).toMatch(/crédit-bail.*40\s000\s€/u);
+    expect(s.situation([]).pieces.map((x) => x.code)).toContain("credit-bail");
+    for (const m of CHOIX_DU_PLAN[0]!) expect(s.situation([m]).options.map((o) => o.code)).toEqual(CHOIX_DU_PLAN[1]);
+    expect(toutesLesSuitesDuPlan()).toHaveLength(12);
     for (const x of toutesLesSuitesDuPlan()) {
       const bl = s.bilan([x.montant, x.duree]);
       expect(bl.fin.code).toBe(finDuPlan(resultatDuPlan(x)));

@@ -57,7 +57,7 @@ import type { Chapitre } from "../types";
  *   · l'expérience avant la formule (prédire, manipuler, constater, formaliser) : predire-le-retard
  *     puis le-retard-au-curseur (jusqu'où, au plancher légal, ce que NOVA peut réclamer couvre le coût
  *     du retard) avant le-cout-du-retard ; predire-l-escompte puis l-escompte-ou-le-decouvert (un
- *     escompte de 60 jours coûte autant que 40 jours de découvert) avant une-facture-mobilisee ;
+ *     escompte de 60 jours coûte autant que 30 jours de découvert) avant une-facture-mobilisee ;
  *   · autonome : le-cout-du-retard, que-faire-du-retard, les-relances (les dates de la procédure de
  *     recouvrement, monde/mauvais-payeurs.ts), ce-que-cache-le-delai-moyen,
  *     une-facture-mobilisee (ni formule ni chiffres donnés ; la correction montre le chemin) ;
@@ -69,10 +69,12 @@ import type { Chapitre } from "../types";
 
 /**
  * LE CALCUL À REBOURS, hypothèse du cours : au trimestre suivant, le relevé de la banque montre
- * qu'une facture de CampusTech escomptée a coûté 396,48 € à NOVA en tout (l'escompte jusqu'à
- * l'échéance convenue, puis le retard sur son découvert, la banque ayant repris la facture impayée).
+ * qu'une facture de CampusTech escomptée a coûté 453,12 € à NOVA en tout (l'escompte jusqu'à
+ * l'échéance convenue, puis le retard sur son découvert, la banque ayant repris la facture impayée) :
+ * celui d'un retard de 30 jours, au découvert de 12 % de la banque de NOVA (396,48 € quand ce
+ * découvert était compté à 9 %).
  */
-export const COUT_RELEVE_A_REBOURS = 396.48;
+export const COUT_RELEVE_A_REBOURS = 453.12;
 
 /**
  * LE MOIS DE LA FACTURE SUIVIE PAR LES RELANCES, hypothèse du cours : celle du 20 janvier N + 1
@@ -113,7 +115,7 @@ const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 
 const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
 const jours = (n: number) => `${n.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} jours`;
 const auDixieme = (x: number) => Math.round(x * 10) / 10;
-/** Le coût d'un jour de découvert sur une facture, au millième : 5,664 € (un arrondi au centime fausserait la division). */
+/** Le coût d'un jour de découvert sur une facture, au millième : 7,552 € (un arrondi au centime fausserait la division). */
 const parJourExact = (k: { fct: { ttc: number }; taux: number }) => `${((k.fct.ttc * k.taux) / JOURS_DE_L_ANNEE_BANCAIRE).toLocaleString("fr-FR", { maximumFractionDigits: 3 })} €`;
 
 const FICHES: Readonly<Record<string, FicheDesDelaisDeNova>> = { [NOVA_DELAIS.code]: NOVA_DELAIS };
@@ -286,6 +288,7 @@ export const LE_CLIENT_QUI_PAIE_TARD: Chapitre = {
           `Le délai convenu est de ${jours(k.ct.delaiConvenu)} après la facture, le maximum que la loi permet entre professionnels (code de commerce, article L. 441-10). ${k.ct.nom} paie à ${jours(k.ct.delaiReel)} : ce n'est pas son délai, c'est un retard de ${jours(k.r.joursDeRetard)}. La loi le sanctionne de plein droit : des pénalités de retard, au taux de refinancement de la BCE majoré de ${qte(MAJORATION_DU_TAUX_BCE * 100)} points quand les conditions de vente n'en fixent pas d'autre, et une indemnité forfaitaire de ${eur(k.f.penalites.indemnite)} par facture pour les frais de recouvrement.`,
           `${k.f.entreprise} vend des biens : la TVA d'une facture est due à la livraison, que le client ait payé ou non. En attendant d'être payée, ${k.f.entreprise} finance donc chaque facture toutes taxes comprises.`,
           `La simulation suppose des mois de 30 jours et des trimestres de ${JOURS_DU_TRIMESTRE} ; des intérêts (découvert, escompte, affacturage) comptés sur ${JOURS_DE_L_ANNEE_BANCAIRE} jours, des pénalités sur ${JOURS_DE_L_ANNEE_CIVILE} jours et sur le montant TTC ; un découvert à ${pct(k.taux)} l'an ; un taux de la BCE de ${pct(TAUX_DE_REFINANCEMENT_BCE.taux)}, valeur de référence du cours (celle du ${TAUX_DE_REFINANCEMENT_BCE.dateDeReference} : il change chaque semestre).`,
+          `Au-delà de l'autorisation de découvert, ${eur(k.b.autorisationDeDecouvert)}, la banque finance au même taux par un crédit de trésorerie.`,
         ];
       },
       repere: (c) => {

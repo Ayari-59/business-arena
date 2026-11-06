@@ -117,10 +117,11 @@ export const joursDuReport = () => rang(ELECTRO_COMPOSANTS_EN_MAI.reportAu) - ra
 export const JOUR_DU_FINANCEMENT = 1;
 
 /**
- * LES FRAIS D'UN PRÉLÈVEMENT REJETÉ (hypothèse du scénario) : 20 € par rejet, au tarif de la banque.
+ * LES FRAIS D'UN PRÉLÈVEMENT REJETÉ (hypothèse du scénario, décision du propriétaire, novembre 2026) :
+ * 30 € par rejet, au tarif de la banque (pour un professionnel, chaque banque fixe le sien, sans plafond
+ * légal).
  */
-// À VÉRIFIER : les frais de rejet d'un prélèvement pour une entreprise (tarif de chaque banque, sans plafond légal pour un professionnel).
-export const FRAIS_DE_REJET = 20;
+export const FRAIS_DE_REJET = 30;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 2. LES MONTANTS DU MOIS

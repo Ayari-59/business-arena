@@ -11,7 +11,7 @@ import type { Situation } from "../types";
  * palier 2).
  *
  * La banque propose au dirigeant de NOVA d'escompter toutes les factures de CampusTech, chaque mois,
- * jusqu'à leur échéance convenue : « vous n'aurez plus de découvert ». Il demande ce que cela
+ * jusqu'à leur échéance convenue : « vous n'aurez plus besoin de nos concours ». Il demande ce que cela
  * coûterait sur l'année, ce que cela éviterait, et s'il faut signer.
  *
  * L'élève chiffre l'escompte de l'année (12 factures, dans le plafond de la banque), le découvert
@@ -23,7 +23,9 @@ import type { Situation } from "../types";
  *
  * Comme son chapitre, le cas se joue dans la simulation du cours (src/config/cours/monde) : ses
  * chiffres sont ceux de monde/delais.ts (`escompterChaqueTrimestre`). Les besoins de trésorerie de
- * N + 1 sont une hypothèse de la fiche, pas un budget calculé.
+ * N + 1 sont une hypothèse de la fiche, pas un budget calculé. Ils dépassent le découvert autorisé de
+ * NOVA (5 000 €) : décision du propriétaire (novembre 2026), la banque accorde pour ces périodes un
+ * crédit de trésorerie au même taux, 12 % ; le cas les compte ensemble, comme du découvert.
  */
 
 const eur = (x: number) => montantEcrit(auCentime(x)).replace(/^-/, "−");
@@ -45,8 +47,9 @@ export const TRIMESTRE_A_REBOURS = 2;
 export function escompteChaqueTrimestre(c: Pick<Cas, "code">) {
   const k = clientQuiPaieTard(c);
   const f = k.f;
-  const x = escompterChaqueTrimestre(f);
+  // Au-delà du découvert autorisé, la banque accorde un crédit de trésorerie au même taux (décision du propriétaire).
   const taux = f.banque.tauxDuDecouvert;
+  const x = escompterChaqueTrimestre(f);
   const t = (n: number) => x.trimestres[n - 1]!;
   const curseur = t(TRIMESTRE_DU_CURSEUR);
   const parJour = (n: number) => (t(n).besoin * taux) / JOURS_DE_L_ANNEE_BANCAIRE;
@@ -98,8 +101,8 @@ export const ESCOMPTER_CHAQUE_TRIMESTRE: Situation = {
         const e = escompteChaqueTrimestre(c);
         const k = e.k;
         return [
-          `« La banque nous propose d'escompter chaque facture de ${k.ct.nom}, dès qu'elle part, jusqu'à son échéance convenue de ${k.ct.delaiConvenu} jours, à ${pct(k.b.escompte.taux)} l'an, sauf bonne fin. Elle accepte ${eur(k.b.escompte.plafondTTC)} d'effets escomptés à la fois. Elle dit que nous n'aurons plus de découvert. Combien cela coûterait-il sur l'année, qu'est-ce que cela nous éviterait, et faut-il signer ? »`,
-          `Pas de cours cette fois : les calculs sont ceux du chapitre, à vous d'en trouver l'ordre. Les besoins de trésorerie de l'année sont ceux du tableau, avant toute mobilisation : la simulation les pose, sans détailler le budget qui les donne. Le découvert coûte ${pct(e.taux)} l'an.`,
+          `« La banque nous propose d'escompter chaque facture de ${k.ct.nom}, dès qu'elle part, jusqu'à son échéance convenue de ${k.ct.delaiConvenu} jours, à ${pct(k.b.escompte.taux)} l'an, sauf bonne fin. Elle accepte ${eur(k.b.escompte.plafondTTC)} d'effets escomptés à la fois. Elle dit que nous n'aurons plus besoin ni du découvert ni de son crédit de trésorerie. Combien cela coûterait-il sur l'année, qu'est-ce que cela nous éviterait, et faut-il signer ? »`,
+          `Pas de cours cette fois : les calculs sont ceux du chapitre, à vous d'en trouver l'ordre. Les besoins de trésorerie de l'année sont ceux du tableau, avant toute mobilisation : la simulation les pose, sans détailler le budget qui les donne. Le découvert est autorisé jusqu'à ${eur(k.b.autorisationDeDecouvert)}, à ${pct(e.taux)} l'an. Au-delà, pour ces périodes, la banque accorde un crédit de trésorerie au même taux : comptez les deux ensemble, comme du découvert.`,
         ];
       },
       tableau: (c) => {
@@ -190,7 +193,7 @@ export const ESCOMPTER_CHAQUE_TRIMESTRE: Situation = {
       question: (c) => {
         const e = escompteChaqueTrimestre(c);
         const t = e.curseur;
-        return `Au ${ordinal(TRIMESTRE_DU_CURSEUR)} trimestre, le compte est à découvert de ${eur(t.besoin)} en moyenne. Pour le couvrir, il faut escompter ${qte(t.facturesNecessaires)} factures (${eur(t.escompteDuBesoin)}). Faites varier les jours où le compte est débiteur, de 0 à ${JOURS_DU_TRIMESTRE} : une droite donne le coût de cet escompte, l'autre celui du découvert. Placez le curseur sur le plus grand nombre de jours où le découvert coûte encore moins, puis validez.`;
+        return `Au ${ordinal(TRIMESTRE_DU_CURSEUR)} trimestre, le compte est débiteur de ${eur(t.besoin)} en moyenne, crédit de trésorerie compris. Pour le couvrir, il faut escompter ${qte(t.facturesNecessaires)} factures (${eur(t.escompteDuBesoin)}). Faites varier les jours où le compte est débiteur, de 0 à ${JOURS_DU_TRIMESTRE} : une droite donne le coût de cet escompte, l'autre celui du découvert. Placez le curseur sur le plus grand nombre de jours où le découvert coûte encore moins, puis validez.`;
       },
       grandeur: () => ({ libelle: "Jours où le compte est débiteur", unite: "jours" }),
       sens: "plus-grande",
@@ -223,7 +226,7 @@ export const ESCOMPTER_CHAQUE_TRIMESTRE: Situation = {
         const t = e.curseur;
         return [
           `Jusqu'à ${e.joursOuLeDecouvertCouteMoins} jours, le découvert coûte moins que l'escompte de ${qte(t.facturesNecessaires)} factures ; le ${ordinal(TRIMESTRE_DU_CURSEUR)} trimestre en compte ${t.joursDeDecouvert} : l'escompte gagne, ${eur(t.escompteDuBesoin)} contre ${eur(t.decouvert)}.`,
-          `Le seuil n'est pas les ${e.k.joursQuiValentLEscompte} jours du chapitre : on escompte des factures entières, ${eur(t.facturesNecessaires * e.k.fct.ttc)} pour un besoin de ${eur(t.besoin)}, et l'escompte de ce qui dépasse le besoin se paie aussi.`,
+          `Le seuil n'est pas les ${qte(e.x.joursQuiValentLEscompte)} jours du chapitre : on escompte des factures entières, ${eur(t.facturesNecessaires * e.k.fct.ttc)} pour un besoin de ${eur(t.besoin)}, et l'escompte de ce qui dépasse le besoin se paie aussi.`,
         ];
       },
     },

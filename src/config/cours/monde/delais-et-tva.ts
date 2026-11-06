@@ -1,5 +1,6 @@
 import { JOURS_DE_L_ANNEE } from "./amortissement";
 import { COUT_VARIABLE_D_UNE_JOURNEE, PRIX_CATALOGUE } from "./atlas-conseil";
+import { DECOUVERT_DE_NOVA } from "./banque-de-nova";
 import { CAMPUSTECH, ELECTRO_COMPOSANTS, PLACEMENT } from "./exercice-de-nova";
 import { AUTRES_COUTS_PAR_ENCEINTE, DELAI_CONVENU_DE_CAMPUSTECH, JOURS_DU_MOIS_COMMERCIAL, PRIX_DE_L_ENCEINTE, RETARD_DE_CAMPUSTECH, TAUX_DE_TVA, VENTES_A_CAMPUSTECH } from "./nova-gestion";
 
@@ -102,9 +103,11 @@ export const EXIGIBILITE_DE_DROIT_COMMUN: Readonly<Record<NatureDesOperations, R
 };
 
 /**
- * LE TAUX DU DÉCOUVERT (hypothèse du cours) : 9 % l'an, celui des trois entreprises de la fiche.
- * C'est ce que coûte l'argent qu'il faut attendre : une créance, une TVA avancée, un stock. Un taux
- * rond pour que 30 jours fassent 0,75 % (9 % × 30 ÷ 360).
+ * LE TAUX DU DÉCOUVERT (hypothèse du cours) : 9 % l'an, celui de MARTEL & FILS et d'ATLAS CONSEIL, et
+ * celui que le cours prête aux entreprises qui n'ont pas de banque à elles (mauvais-payeurs.ts). NOVA
+ * n'en est pas : son découvert est celui de sa banque, 12 % l'an (banque-de-nova.ts, BANQUE_DE_NOVA
+ * ci-dessous). C'est ce que coûte l'argent qu'il faut attendre : une créance, une TVA avancée, un
+ * stock. Un taux rond pour que 30 jours fassent 0,75 % (9 % × 30 ÷ 360).
  */
 export const TAUX_DU_DECOUVERT = 0.09;
 
@@ -358,7 +361,10 @@ export const PARTICULIERS = { nom: "Les particuliers, en ligne", delai: 0 } as c
 /**
  * LES CONDITIONS DE LA BANQUE DE NOVA EN N + 1 (hypothèses du cours, les ordres de grandeur de
  * l'arène pour l'escompte).
- *   - LE DÉCOUVERT : 9 % l'an sur les jours où le compte est débiteur, autorisé jusqu'à 50 000 €.
+ *   - LE DÉCOUVERT : celui de la banque de NOVA dans tout le cours (banque-de-nova.ts,
+ *     DECOUVERT_DE_NOVA) : 12 % l'an sur les jours où le compte est débiteur, autorisé jusqu'à 5 000 €.
+ *     Les chapitres s'en servent aussi comme du prix de l'argent qu'il faut attendre : un besoin de
+ *     financement en plus, une facture qui attend son paiement, se comptent à ce taux.
  *   - L'ESCOMPTE (« sauf bonne fin ») : la banque avance une facture toutes taxes comprises jusqu'à
  *     son échéance convenue, contre des intérêts à 6 % l'an pour les jours qui restent. Elle garde un
  *     recours : si le client ne paie pas à l'échéance, elle reprend la somme à NOVA. Les factures
@@ -369,8 +375,8 @@ export const PARTICULIERS = { nom: "Les particuliers, en ligne", delai: 0 } as c
  *   - LE PLACEMENT : l'argent qui dort rapporte 3 % l'an (le compte à terme d'exercice-de-nova.ts).
  */
 export const BANQUE_DE_NOVA = {
-  tauxDuDecouvert: TAUX_DU_DECOUVERT,
-  autorisationDeDecouvert: 50_000,
+  tauxDuDecouvert: DECOUVERT_DE_NOVA.tauxAnnuel,
+  autorisationDeDecouvert: DECOUVERT_DE_NOVA.autorise,
   escompte: { taux: 0.06, plafondTTC: 50_000 },
   affacturage: { commission: 0.01, tauxDeFinancement: 0.06 },
   tauxDuPlacement: PLACEMENT.tauxAnnuel,
@@ -389,7 +395,10 @@ export interface BesoinDeTresorerie {
  * détaillé ici ; c'est ce qu'il donne avant toute mobilisation des créances). Au deuxième trimestre,
  * le solde de l'impôt de N et les composants du printemps creusent le compte : 25 000 € de découvert
  * pendant 20 jours. Au quatrième, la production de Noël part avant d'être payée : 40 000 € pendant
- * 50 jours. Les trimestres 1 et 3 restent créditeurs.
+ * 50 jours. Les trimestres 1 et 3 restent créditeurs. Ces besoins dépassent le découvert autorisé de
+ * NOVA, 5 000 € (décision du propriétaire, novembre 2026) : pour ces périodes, la banque lui accorde un
+ * crédit de trésorerie au même taux, 12 % l'an. Le cas « Escompter chaque trimestre » compte les deux
+ * ensemble, comme du découvert.
  */
 export const BESOINS_DE_TRESORERIE_N_PLUS_1: readonly BesoinDeTresorerie[] = [
   { trimestre: 1, montant: 0, jours: 0 },

@@ -60,10 +60,11 @@ describe("CampusTech, le mauvais payeur de base de NOVA", () => {
     expect(cl.soldes["416"]).toBe(sonora.ttc);
   });
 
-  it("le retard de base : 113,28 € de découvert et 150,83 € de pénalités par facture, une facture de plus au bilan", () => {
+  it("le retard de base : 151,04 € de découvert (12 %, la banque de NOVA) et 150,83 € de pénalités par facture, une facture de plus au bilan", () => {
     const r = retardDeCampusTech(NOVA_DELAIS);
     expect(r.joursDeRetard).toBe(20);
-    expect(r.coutDuRetardParFacture).toBe(113.28);
+    expect(r.coutDuRetardParFacture).toBe(Math.round(22_656 * 0.12 * 20 / 360 * 100) / 100);
+    expect(r.coutDuRetardParFacture).toBe(151.04);
     expect(r.penalitesParFacture).toBe(150.83);
     expect(r.creanceEnPlusTTC).toBe(22_656);
     expect(creancesDuTrimestre(NOVA_DELAIS, 4).creancesTTC).toBe(3 * 22_656);
@@ -88,7 +89,8 @@ describe("les mauvais payeurs des autres entreprises, en hypothèses", () => {
     expect([s.echeance, s.relanceAmiable, s.miseEnDemeure, s.paiement]).toEqual([60, 60 + RELANCES.relanceAmiable, 60 + RELANCES.miseEnDemeure, 80]);
     expect(s.finance).toBe(22_656);
     expect(s.tvaAvanceeALEtat).toBe(3_776);
-    expect(s.coutDuRetard).toBe(113.28);
+    expect(CAMPUSTECH_MAUVAIS_PAYEUR.tauxDeFinancement).toBe(0.12);
+    expect(s.coutDuRetard).toBe(151.04);
     expect(s.reclamable).toBe(190.83);
   });
 
