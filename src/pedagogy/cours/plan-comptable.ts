@@ -152,6 +152,8 @@ export const PLAN_DU_COURS: readonly Compte[] = [
   { numero: "6225", intitule: "Rémunérations d'affacturage", nature: "charge" },
   { numero: "6226", intitule: "Honoraires", nature: "charge" },
   { numero: "6227", intitule: "Frais d'actes et de contentieux", nature: "charge" },
+  // La formation achetée à un fournisseur (le bureau du remplacement de la cuisine, novembre 2026). // À VÉRIFIER
+  { numero: "6228", intitule: "Rémunérations d'intermédiaires et honoraires, divers", nature: "charge" },
   { numero: "623", intitule: "Publicité, publications, relations publiques", nature: "charge" },
   { numero: "624", intitule: "Transports de biens et transports collectifs du personnel", nature: "charge" },
   { numero: "6241", intitule: "Transports sur achats", nature: "charge" },
