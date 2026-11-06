@@ -1,4 +1,6 @@
 import { LE_DECOUVERT_DE_NOVA } from "./le-decouvert-de-nova";
+import { BOUCLER_LE_PLAN_DE_LA_GAMME } from "./boucler-le-plan-de-la-gamme";
+import { LE_DOSSIER_VERT_DE_NOVA } from "./le-dossier-vert-de-nova";
 import type { Scenario } from "./types";
 
 export type { Scenario } from "./types";
@@ -8,7 +10,7 @@ export type { Scenario } from "./types";
  * part, servies une décision à la fois et calculées au serveur (scenarios/types.ts). Un prototype pour
  * l'instant.
  */
-export const SCENARIOS: readonly Scenario[] = [LE_DECOUVERT_DE_NOVA];
+export const SCENARIOS: readonly Scenario[] = [LE_DECOUVERT_DE_NOVA, BOUCLER_LE_PLAN_DE_LA_GAMME, LE_DOSSIER_VERT_DE_NOVA];
 
 export const scenarioParCode = (code: string) => SCENARIOS.find((s) => s.code === code);
 

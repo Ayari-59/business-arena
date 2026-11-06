@@ -67,6 +67,9 @@ const INTERDITS = [
   /^src\/config\/cours\/scenarios\//,
   /^src\/config\/cours\/monde\/decouvert-de-nova\.ts$/,
   /^src\/pedagogy\/cours\/scenario-servi\.ts$/,
+  // Les activités du lot E (novembre 2026) : les mondes de leurs scénarios, qui calculent les branches.
+  /^src\/config\/cours\/monde\/boucler-le-plan\.ts$/,
+  /^src\/config\/cours\/monde\/dossier-vert-de-nova\.ts$/,
 ];
 
 function fichiers(dossier: string): string[] {
