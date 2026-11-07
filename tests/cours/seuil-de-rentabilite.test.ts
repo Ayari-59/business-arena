@@ -228,12 +228,16 @@ describe("le seuil de rentabilité, au mois de janvier de NOVA", () => {
     expect(SITUATIONS).toContain(LE_LOYER_QUI_AUGMENTE);
   });
 
-  it("le gabarit de l'étalon : deux paris, deux curseurs, un laboratoire, au moins deux étapes d'expert à trois champs", () => {
+  it("le gabarit de l'étalon : deux paris, deux curseurs, un laboratoire par partie, au moins deux étapes d'expert à trois champs", () => {
     // Découpé en deux (aucun chapitre de plus de 20 étapes) : le gabarit se lit sur les deux parties.
     const etapes = [...ch.etapes, ...LES_LEVIERS_DU_SEUIL.etapes];
     expect(etapes.filter((e) => e.type === "choix" && e.titre.startsWith("Pariez"))).toHaveLength(2);
     expect(etapes.filter((e) => e.type === "curseur")).toHaveLength(2);
-    expect(etapes.filter((e) => e.type === "simulation")).toHaveLength(1);
+    expect(ch.etapes.filter((e) => e.type === "simulation").map((e) => e.id)).toEqual(["le-laboratoire-de-la-securite"]);
+    expect(LES_LEVIERS_DU_SEUIL.etapes.filter((e) => e.type === "simulation").map((e) => e.id)).toEqual(["le-laboratoire-du-seuil"]);
+    expect([ch.etapes.length, LES_LEVIERS_DU_SEUIL.etapes.length]).toEqual([14, 11]);
+    // Le laboratoire de la première partie vient après les charges fixes tenables, juste avant la synthèse.
+    expect(ch.etapes.at(-2)!.id).toBe("le-laboratoire-de-la-securite");
     for (const id of ["baisse-de-prix", "le-levier-operationnel", "seuil-de-la-gamme", "charges-fixes-par-paliers"]) {
       expect(Object.keys(attendus(LES_LEVIERS_DU_SEUIL, id)).length, id).toBeGreaterThanOrEqual(3);
     }
@@ -417,6 +421,50 @@ describe("le seuil de rentabilité, au mois de janvier de NOVA", () => {
     expect(l.d.atteint({ prix: 53.1, coutVariable: 32.2, chargesFixes: cf, ventes: q })).toBe(false);
     // Les ventes ne déplacent pas le seuil : à 2 500 enceintes, le défi n'est toujours pas relevé.
     expect(l.d.atteint({ prix: 53.1, coutVariable: 38, chargesFixes: cf, ventes: 2_500 })).toBe(false);
+  });
+
+  it("le laboratoire de la sécurité : 10 % d'indice sans vendre plus qu'en janvier, par les seules charges fixes", () => {
+    const l = laboratoire(ch, "le-laboratoire-de-la-securite");
+    // Les ventes de janvier : l'indice vaut résultat ÷ marge, il faut des fixes d'au plus 90 % de 33 390 €.
+    const plafond = Math.floor(0.9 * mcv);
+    expect(plafond).toBe(30_051);
+    expect(l.depart).toEqual({ ventes: q, chargesFixes: cf });
+    expect(l.solution).toEqual({ ventes: q, chargesFixes: plafond });
+    expect(l.reussi).toEqual([false, true]);
+    const lire = (ventes: number, fixes: number) => {
+      const sv = c((fixes * p) / mu);
+      return {
+        "Chiffre d'affaires du mois": ventes * p,
+        "Seuil de rentabilité": Math.ceil(fixes / mu - 1e-9),
+        "Seuil en chiffre d'affaires": sv,
+        "Marge de sécurité": c(ventes * p - sv),
+        "Indice de sécurité": c(((ventes * p - sv) / (ventes * p)) * 100),
+        "Résultat du mois": ventes * mu - fixes,
+      };
+    };
+    expect(l.auDepart).toEqual(lire(q, cf));
+    expect(Object.values(l.auDepart)).toEqual([93_810, 1_485, 87_609.38, 6_200.62, 6.61, 2_207]);
+    expect(l.aLaSolution).toEqual(lire(q, plafond));
+    expect(Object.values(l.aLaSolution)).toEqual([93_810, 1_431, 84_429, 9_381, 10, 3_339]);
+    // Un euro de charges fixes de plus, et l'indice retombe sous 10 % ; vendre plus qu'en janvier ne compte pas.
+    expect(l.d.atteint({ ventes: q, chargesFixes: plafond + 1 })).toBe(false);
+    expect(l.d.atteint({ ventes: 2_500, chargesFixes: cf })).toBe(false);
+    expect(l.d.atteint({ ventes: q + 10, chargesFixes: plafond })).toBe(false);
+    // Vendre moins demande de couper davantage : à 1 500 enceintes, 28 350 € au plus.
+    expect(l.d.atteint({ ventes: 1_500, chargesFixes: 0.9 * 1_500 * mu })).toBe(true);
+    expect(l.d.atteint({ ventes: 1_500, chargesFixes: 0.9 * 1_500 * mu + 1 })).toBe(false);
+    // Le graphique : le résultat et la marge de sécurité selon les ventes, nuls ensemble au seuil.
+    const g = l.e.graphique!(cas);
+    expect(g.levier).toBe("ventes");
+    const [res, marge] = g.courbes;
+    expect([res!.libelle, marge!.libelle]).toEqual(["Résultat du mois", "Marge de sécurité"]);
+    const au = (ventes: number) => ({ ...l.depart, ventes });
+    expect([res!.valeur(au(1_000)), res!.valeur(au(2_500))]).toEqual([1_000 * mu - cf, 2_500 * mu - cf]);
+    expect(marge!.valeur(au(2_500))).toBe(c(2_500 * p - seuilValeur));
+    for (const k of [res!, marge!]) {
+      expect(k.valeur(au(1_480)), k.libelle).toBeLessThan(0);
+      expect(k.valeur(au(1_490)), k.libelle).toBeGreaterThan(0);
+    }
   });
 
   it("le graphique du laboratoire : le seuil selon le prix n'est pas une droite, les ventes sont plates", () => {
