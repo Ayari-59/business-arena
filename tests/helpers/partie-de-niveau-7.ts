@@ -86,7 +86,9 @@ export function rejouerLaPartieDeNiveau7(temoin: TemoinDuNiveau7): unknown[] {
                 balanceSheet: res.balanceSheet,
                 cashFlow: res.cashFlow,
                 production: res.production,
-                breakeven: res.breakeven,
+                // Les matières du tour (`materialCostPerUnit`, novembre 2026) sont un champ
+                // d'affichage ajouté après le relevé du témoin : le seuil reste comparé tel quel.
+                breakeven: (({ materialCostPerUnit: _m, ...seuil }) => (void _m, seuil))(res.breakeven),
                 totalShare: res.market.totalShare,
                 // Ce sur quoi le niveau 7 juge l'équipe, et ce que ses leviers font.
                 groupe: res.groupe ?? null,

@@ -279,6 +279,8 @@ export async function lirePartieARejouer(gameId: string): Promise<PartieLue | Ra
           impotSurLExercice: snapshot.impotSurLExercice === true,
           // La proposition de la partie et son bon gestionnaire, tels qu'elle les a figés.
           propositionALaDemande: snapshot.propositionALaDemande === true,
+          // L'équilibre de la partie, tel qu'elle l'a figé : 0.2.0, ou celui d'avant.
+          equilibre: snapshot.equilibre !== undefined,
         }),
       ),
     );

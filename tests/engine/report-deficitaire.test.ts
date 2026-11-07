@@ -86,6 +86,24 @@ describe("report déficitaire", () => {
     expect(out.taxLossCarryforward).toBe(0);
   });
 
+  it("sur l'exercice, la somme des déficits imputés affichés égale l'imputé réel", () => {
+    // Report de 100 000 € ; tours : bénéfice, bénéfice, perte, bénéfice (59 100, 59 100,
+    // −40 900, 59 100). L'exercice finit à 136 400 € avant impôt : 100 000 € imputés.
+    // Borné à zéro, l'imputé du tour en affichait 59 100 + 40 900 + 0 + 22 700 = 122 700.
+    let exercice = { avantImpot: 0, impot: 0, report: 100_000 };
+    const affiches: number[] = [];
+    for (const tour of [profit, profit, loss, profit]) {
+      const out = computeFinance({ ...tour, exercice });
+      affiches.push(out.incomeStatement.taxLossUsed ?? 0);
+      exercice = out.exercice!;
+    }
+    const reel = Math.min(exercice.report, Math.max(0, exercice.avantImpot));
+    expect(reel).toBe(100_000);
+    expect(affiches.reduce((s, x) => s + x, 0)).toBeCloseTo(reel, 6);
+    // Le tour de perte rend au report ce que le bon tour avait imputé de trop.
+    expect(affiches[2]).toBeCloseTo(-22_700, 6);
+  });
+
   it("un tour déficitaire cumule l'ancien déficit et la perte du tour", () => {
     const out = computeFinance({ ...loss, openingTaxLossCarryforward: 10000 });
     expect(out.incomeStatement.tax).toBe(0);

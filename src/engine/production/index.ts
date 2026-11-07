@@ -109,13 +109,20 @@ export const RETABLISSEMENT_PAR_ENTRETIEN = 0.5;
  * L'aide du champ d'entretien annonçait la référence du scénario comme seuil :
  * chez NOVA 4 000 €, quand le vrai seuil était 3 124 €.
  */
-export function seuilDEntretien(referenceEffective: number): number {
-  return referenceEffective / (1 + RETABLISSEMENT_PAR_ENTRETIEN);
+export function seuilDEntretien(referenceEffective: number, aLaReference = false): number {
+  return aLaReference ? referenceEffective : referenceEffective / (1 + RETABLISSEMENT_PAR_ENTRETIEN);
 }
 
 /**
  * Disponibilité machine : se dégrade si la maintenance est sous le seuil
  * (`seuilDEntretien`), se rétablit (vers 1) au-dessus (doc 02 §4).
+ *
+ * À L'ÉQUILIBRE 0.2.0 (`aLaReference`), le seuil EST la référence : sous elle, la
+ * disponibilité baisse de usure × (1 − r) ; au-dessus, elle remonte de usure × (r − 1),
+ * jusqu'à 1. Mesuré dans l'arène du cours (relevé de novembre 2026) : l'ancien
+ * rétablissement rendait la moitié de l'usure à chaque euro, si bien que l'équilibre
+ * tombait aux deux tiers de la référence, et que dans quatre secteurs ne rien entretenir
+ * rapportait sur un an.
  */
 export function updateAvailability(args: {
   current: number;
@@ -123,8 +130,13 @@ export function updateAvailability(args: {
   maintenanceReference: number;
   availabilityDecay: number;
   availabilityFloor?: number;
+  aLaReference?: boolean;
 }): number {
   const floor = args.availabilityFloor ?? 0.3;
+  if (args.aLaReference) {
+    const r = args.maintenanceReference > 0 ? args.maintenanceBudget / args.maintenanceReference : 1;
+    return Math.min(1, Math.max(floor, args.current - args.availabilityDecay * (1 - r)));
+  }
   const ratio =
     args.maintenanceReference > 0
       ? Math.min(1, args.maintenanceBudget / args.maintenanceReference)

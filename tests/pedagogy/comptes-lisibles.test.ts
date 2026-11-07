@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { CONCEPTS, conceptByCode } from "../../src/config/pedagogy/concepts";
 import { libelleDeLEbeRetenu } from "../../src/engine/groupe/valorisation";
 import { LIBELLES_DES_STOCKS } from "../../src/config/scenarios/libelles-des-stocks";
+import { libelleDuDeficitImpute } from "../../src/components/lecture-des-comptes";
 
 /** Les libellés du stock et de sa variation, un par métier (voir `libelles-des-stocks`). */
 const STOCKS = [...new Set(Object.values(LIBELLES_DES_STOCKS).map((l) => l.stock))];
@@ -118,6 +119,7 @@ const SANS_FICHE: string[] = [
   // Sur l'exercice, l'acompte rendu d'un tour de perte : la même notion que la ligne d'impôt.
   "+ Impôt rendu (acomptes de l'exercice en trop)",
   "dont déficit antérieur imputé (report)",
+  "dont déficit antérieur rendu au report (perte du tour)",
   "− Charges financières (intérêts, agios, mobilisations)",
   "+ Produits financiers (placement)",
   "− Charges exceptionnelles",
@@ -145,6 +147,8 @@ const libelles = () => {
   // Le stock et sa variation se nomment selon le métier : la garde lit ceux de chaque secteur.
   if (src.includes("label={libellesDesStocks.stock}")) calcules.push(...STOCKS);
   if (src.includes("label={libellesDesStocks.variation}")) calcules.push(...VARIATIONS);
+  // Le déficit imputé se nomme selon son sens : imputé, ou rendu au report par une perte.
+  if (src.includes("label={libelleDuDeficitImpute(")) calcules.push(libelleDuDeficitImpute(1), libelleDuDeficitImpute(-1));
   return [...new Set([...[...src.matchAll(/label="([^"]+)"/g)].map((m) => m[1]!), ...calcules])];
 };
 

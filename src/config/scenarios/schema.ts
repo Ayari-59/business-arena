@@ -153,6 +153,9 @@ export const engineScenarioConfigSchema = z.object({
   // Posé de même par le scénario joué d'une partie créée avec la proposition à la
   // demande (engine/types.ts) ; jamais écrit à la main dans un secteur.
   propositionALaDemande: z.boolean().optional(),
+  // L'équilibre du moteur 0.2.0 (engine/types.ts), posé par le scénario joué d'une
+  // partie créée avec lui ; jamais écrit à la main dans un secteur.
+  equilibre: z.literal("0.2.0").optional(),
   production: z.object({
     qualitySensitivity: z.number().nonnegative(),
     qualityScale: z.number().positive(),
@@ -272,6 +275,9 @@ export const engineScenarioConfigSchema = z.object({
             wearRatePerRound: z.number().min(0).max(1).optional(),
             breakdownThreshold: z.number().min(0).max(1).optional(),
             maintenanceRepairRate: z.number().min(0).max(1).optional(),
+            // Posés par l'équilibre 0.2.0 (config/scenarios/equilibre.ts).
+            chargeFixeParTour: z.number().nonnegative().optional(),
+            prixDuParcDeDepart: z.number().positive().optional(),
           }),
         )
         .min(1),

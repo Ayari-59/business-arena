@@ -16,6 +16,9 @@ describe("le lot de l'examen compose le monde avec les correctifs des parties no
   it("la liste des correctifs est celle qu'on attend (un ajout se voit ici)", () => {
     expect(Object.keys(CORRECTIFS_DES_PARTIES_NOUVELLES).sort()).toEqual([
       "concurrentsAssainis",
+      // L'équilibre du moteur 0.2.0 (config/scenarios/equilibre.ts) : le lot mesure le jeu
+      // que la partie du candidat joue.
+      "equilibre",
       "impotSurLExercice",
       "parcSansDoublon",
       "propositionALaDemande",
@@ -32,6 +35,7 @@ describe("le lot de l'examen compose le monde avec les correctifs des parties no
       expect(s.parcSansDoublon).toBe(true);
       expect(s.impotSurLExercice).toBe(true);
       expect(s.propositionALaDemande).toBe(true);
+      expect(s.equilibre).toBe("0.2.0");
     });
   }
 });

@@ -45,7 +45,7 @@ import { subventionQuiDegele } from "@/engine/estimation/degel";
 import { marcheSansAdoption, segmentsDAdoptionCaches } from "@/services/adoption-cachee";
 import { isMultiProduct, isProductAvailable, rdOpeningOf, suppliersOf, toGamme, offerProductIndex } from "@/engine/gamme";
 import { COMMUNICATION_AXIS_LABELS, axesProposables } from "@/engine/market/communication";
-import { computeRatios } from "@/engine/finance/ratios";
+import { computeRatios, ratiosDeLAnnee, type RatiosDeLAnnee } from "@/engine/finance/ratios";
 import { conditionsBancaires, confianceServie } from "@/engine/finance/bank";
 import { irr, npv, paybackPeriod } from "@/engine/investment";
 import { roundBriefing, type RoundBriefing } from "@/pedagogy/round-briefing";
@@ -242,6 +242,8 @@ export interface GameView {
   periods: {
     round: number;
     result: CompanyRoundResult;
+    /** Les ratios affichés, sur l'année glissante jusqu'à ce tour (`ratiosDeLAnnee`). */
+    ratiosDeLAnnee: RatiosDeLAnnee;
     events: string[];
     decisions: RoundDecisions | null;
     /**
@@ -702,9 +704,13 @@ export interface GameView {
       maintenanceMultiplier: number;
       maxPerRound: number;
       resaleRatio: number;
+      /** La charge fixe d'une machine au parc, par tour (équilibre 0.2.0) ; absente, aucune. */
+      chargeFixeParTour?: number;
     }[];
     fleet: { typeCode: string; count: number; bookValue: number }[];
     pendingFleet: { typeCode: string; count: number }[];
+    /** La trésorerie disponible à l'ouverture du tour (disponibilités moins découvert). */
+    tresorerieDisponible?: number;
   } | null;
   /** Échéance d'emprunt obligatoire du prochain tour et dette restante. */
   debtSchedule: { nextMandatory: number; outstanding: number } | null;
@@ -1230,6 +1236,8 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
   // reconstitue le résultat, la prévision, les indicateurs métier et le
   // benchmark tour par tour, sans se limiter au dernier.
   const periods: GameView["periods"] = [];
+  // Les comptes des tours déjà lus : les ratios se lisent sur l'année glissante.
+  const comptesLus: { incomeStatement: CompanyRoundResult["incomeStatement"]; balanceSheet: CompanyRoundResult["balanceSheet"] }[] = [];
   for (let i = 0; i < resolved.length; i++) {
     const rnd = resolved[i];
     if (!rnd) continue;
@@ -1245,9 +1253,11 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       : undefined;
     const prevSegments = prevRow?.marketDetail ?? null;
     const rowsOfRound = gameResults.filter((g) => g.roundId === rnd.id);
+    comptesLus.push({ incomeStatement: result.incomeStatement, balanceSheet: result.balanceSheet });
     periods.push({
       round: idx,
       result,
+      ratiosDeLAnnee: ratiosDeLAnnee(comptesLus, taxRate, snapshot.roundDays),
       events,
       decisions: dec,
       justification: decisionRowOfRound?.justification ?? null,
@@ -2308,6 +2318,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
             parcActifDuTour(snapshot, state, game.currentRound),
             state,
           ),
+          snapshot.equilibre !== undefined,
         ),
         laborCapacity: Math.round(lc),
         bottleneck,
@@ -2398,6 +2409,8 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
           maintenanceMultiplier: t.maintenanceMultiplier,
           maxPerRound: t.maxPerRound,
           resaleRatio: t.resaleRatio ?? 0.3,
+          // Équilibre 0.2.0 : la charge fixe d'une machine au parc, par tour.
+          ...(t.chargeFixeParTour !== undefined ? { chargeFixeParTour: t.chargeFixeParTour } : {}),
         })),
         fleet: snapshot.equipment.types.map((t) => ({
           typeCode: t.code,
@@ -2408,6 +2421,8 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
           typeCode: t.code,
           count: pendingByType.get(t.code) ?? 0,
         })),
+        // L'achat qui dépasse la trésorerie est signalé avant validation (`avertissementDAchat`).
+        ...(state ? { tresorerieDisponible: state.finance.cash - state.finance.overdraft } : {}),
       };
     })(),
     debtSchedule: (() => {

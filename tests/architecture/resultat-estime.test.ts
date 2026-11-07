@@ -264,6 +264,19 @@ describe("la cascade du compte estimé est celle du compte réel", () => {
     }
   });
 
+  it("en additionnant ce qu'on voit, la cascade retombe sur le résultat net", () => {
+    // Le déficit imputé est un détail de l'impôt (« dont »), pas une charge de plus :
+    // déduit entre le résultat avant impôt et l'impôt, il faisait lire 15 − 2 − 3 = 10
+    // pour un résultat net de 12.
+    const lignes = lignesDuCompte(compteComplet, "industrie");
+    const apres = lignes.slice(lignes.findIndex((l) => l.cle === "pretaxIncome") + 1);
+    const lu = apres.filter((l) => !l.dont && !l.fort).reduce((s, l) => s + l.valeur, compteComplet.pretaxIncome);
+    expect(lu).toBeCloseTo(compteComplet.netIncome, 9);
+    const impute = lignes.find((l) => l.cle === "taxLossUsed")!;
+    expect(impute.valeur).toBe(2);
+    expect(impute.label).toBe("dont déficit antérieur imputé (report)");
+  });
+
   it("une ligne que le tour n'a pas servie ne s'écrit pas", () => {
     const sobre: IncomeStatement = {
       ...compteComplet,

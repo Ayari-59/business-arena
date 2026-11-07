@@ -51,7 +51,7 @@ import {
   updatePerceivedQuality,
 } from "../production";
 import { addToStock, removeFromStock, stockValue } from "../inventory/cump";
-import { computeHr } from "../hr";
+import { computeHr, PRODUCTIVITE_DU_REMPLACANT } from "../hr";
 import { subscriptionChurnRate } from "../subscription";
 import { unitVariableCost } from "../costs";
 import { computeBreakeven } from "../costs/breakeven";
@@ -104,6 +104,14 @@ import {
 import type { ResultatDUneNouveaute } from "../groupe/types";
 
 // --- Helpers pour le parc d'équipements typés ---
+
+/** L'état sans ses remplaçants en rodage : ils ne le sont qu'un tour. */
+function sansLesRemplacantsDuTour<T extends { remplacantsEnRodage?: number }>(etat: T): Omit<T, "remplacantsEnRodage"> {
+  if (etat.remplacantsEnRodage === undefined) return etat;
+  const { remplacantsEnRodage: _r, ...reste } = etat;
+  void _r;
+  return reste;
+}
 
 function mergeFleet(active: EquipmentItem[], pending: EquipmentItem[]): EquipmentItem[] {
   return [...active, ...pending];
@@ -281,7 +289,7 @@ function allocateProduction(args: {
   };
 }
 
-export const ENGINE_VERSION = "0.1.0";
+export const ENGINE_VERSION = "0.2.0";
 
 /**
  * Commande exceptionnelle proposée pour un tour. L'ALTERNANCE des archétypes
@@ -652,6 +660,8 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
     /** Machines achetées ce tour, en attente de mise en service. */
     nextPendingMachineFleet: MachineRecord[] | null;
     equipDepreciation: number;
+    /** Charges fixes des machines au parc ce tour (équilibre 0.2.0 ; zéro sinon). */
+    chargesDuParc: number;
     chosenFormula: import("../types").InsuranceFormulaDef | null;
     supplier: import("../types").SupplierDef | null;
     supplyDisruption: boolean;
@@ -803,6 +813,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       decisions: raw.hr,
       headcount: state.headcount,
       productivity: state.productivity,
+      remplacerLesDemissions: scenario.equilibre !== undefined,
     });
     const hrRelevant =
       scenario.hr !== undefined &&
@@ -948,7 +959,10 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       machineCapacity: effectiveMachineCapacity,
       availability:
         state.availability * mods.availabilityMultiplier * (multi ? 1 : supplyAvailabilityHit),
-      headcount: state.headcount,
+      // Équilibre 0.2.0 : les remplaçants des démissions du tour passé apprennent le
+      // métier, à `PRODUCTIVITE_DU_REMPLACANT` d'un poste. Sans eux, l'effectif entier.
+      headcount:
+        state.headcount - (1 - PRODUCTIVITE_DU_REMPLACANT) * Math.min(state.headcount, state.remplacantsEnRodage ?? 0),
       hoursPerEmployee: state.hoursPerEmployee,
       productivity: state.productivity * hr.morale,
     });
@@ -1234,6 +1248,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
     let equipNewFleet: EquipmentItem[] = [];
     let equipPendingFleet: EquipmentItem[] = [];
     let equipDepreciation = 0;
+    let chargesDuParc = 0;
 
     if (equip) {
       const typeMap = new Map(equip.types.map((t) => [t.code, t]));
@@ -1256,6 +1271,10 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
           const take = Math.min(toSell, item.count);
           const bvPerUnit = item.count > 0 ? item.bookValue / item.count : 0;
           soldBookValue += take * bvPerUnit;
+          // Le coût d'acquisition (équilibre 0.2.0) suit le lot : la part vendue en sort.
+          if (item.coutDAcquisition !== undefined && item.count > 0) {
+            item.coutDAcquisition -= (take * item.coutDAcquisition) / item.count;
+          }
           item.count -= take;
           item.bookValue -= take * bvPerUnit;
           soldCount += take;
@@ -1289,6 +1308,9 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
           count: qty,
           acquiredRound: roundIndex,
           bookValue: cost,
+          // Équilibre 0.2.0 : le lot s'amortit sur ce qu'il a coûté, pas sur le prix
+          // du parc de départ de son type.
+          ...(scenario.equilibre !== undefined ? { coutDAcquisition: cost } : {}),
         });
         equipBought.push({
           typeCode: req.typeCode,
@@ -1297,17 +1319,30 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
           unitCost: typ.costPerUnit,
         });
       }
-      // Amortissement du parc actif (chaque lot s'amortit linéairement)
+      // Amortissement du parc actif (chaque lot s'amortit linéairement), sur son coût
+      // d'acquisition : celui de l'achat (équilibre 0.2.0), sinon le prix de son type.
       for (const item of fleet) {
         const typ = typeMap.get(item.typeCode);
         if (!typ || item.bookValue <= 0) continue;
-        const originalCost = item.count * typ.costPerUnit;
+        const originalCost = item.coutDAcquisition ?? item.count * (typ.prixDuParcDeDepart ?? typ.costPerUnit);
         const depPerRound = originalCost / typ.depreciationRounds;
         const dep = Math.min(depPerRound, item.bookValue);
         equipDepreciation += dep;
         item.bookValue = Math.max(0, item.bookValue - dep);
       }
       equipNewFleet = fleet.filter((f) => f.count > 0);
+      // Équilibre 0.2.0 : chaque machine au parc paie sa charge fixe du tour (entretien
+      // courant, assurance), qu'elle tourne ou non. Une machine achetée ce tour entre au
+      // parc au tour suivant, et paie à partir de là. Celles du parc de départ sont déjà
+      // dans les charges de structure du métier (`fixedCostsPerRound`, que la gestion des
+      // concurrents et les écrans lisent) : seul l'écart au parc de départ s'y ajoute, et
+      // une machine vendue rend sa charge.
+      for (const item of equipNewFleet) {
+        chargesDuParc += item.count * (typeMap.get(item.typeCode)?.chargeFixeParTour ?? 0);
+      }
+      for (const lot of equip.initialFleet) {
+        chargesDuParc -= lot.count * (typeMap.get(lot.typeCode)?.chargeFixeParTour ?? 0);
+      }
       equipPendingFleet = newPending;
     } else if (scenario.investment) {
       investUnits = Math.min(
@@ -1415,6 +1450,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       equipNewFleet,
       equipPendingFleet,
       equipDepreciation,
+      chargesDuParc,
       activeMachineFleet,
       nextMachineFleet,
       nextPendingMachineFleet,
@@ -2169,7 +2205,9 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       // à rester à l'arrêt pour toujours. Comme l'emprunt et l'apport en
       // capital, l'argent entre quel que soit l'état de l'entreprise.
       ...(subventionSauvetage > 0 ? { rescueSubsidy: subventionSauvetage } : {}),
-      fixedCosts: gelee ? 0 : scenario.fixedCostsPerRound + insurancePremium + hrCost + studiesCost + plateformeDuTour,
+      fixedCosts: gelee
+        ? 0
+        : scenario.fixedCostsPerRound + insurancePremium + hrCost + studiesCost + plateformeDuTour + w.chargesDuParc,
       // amortissements : base du scénario + investissements en service
       // (y compris celui mis en service ce tour) OU amortissement du parc typé
       depreciation: gelee
@@ -2389,6 +2427,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       hrCost +
       studiesCost +
       plateformeDuTour +
+      w.chargesDuParc +
       finance.incomeStatement.depreciation +
       marketingTotal +
       w.qualityTotal +
@@ -2410,6 +2449,14 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
         : weightedAverage(w.unitCosts, w.producedPerProduct),
       revenue,
     });
+    // LES MATIÈRES DU TOUR, à l'unité : le coût catalogue corrigé de tout ce qui le
+    // déplace (hausse des denrées, fournisseur choisi, programmes R&D), pondéré comme
+    // le coût variable du seuil. Le ratio matières le lit (`sector-kpis.ts`) : relu du
+    // catalogue, il ignorait la hausse du tour.
+    const materialCostPerUnit = weightedAverage(
+      w.gamme.map((_, k) => gamme[k]!.materialCostPerUnit * w.materialMultipliers[k]!),
+      w.producedPerProduct,
+    );
 
     // Part de marché : ventes sur le marché adressable uniquement (les
     // commandes fermes s'ajoutent au CA sans gonfler la part de marché).
@@ -2639,7 +2686,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
         utilizationRate: w.utilizationRate,
         producedQuality: w.producedQuality,
       },
-      breakeven,
+      breakeven: { ...breakeven, materialCostPerUnit },
       // Gamme : détail par produit, émis SEULEMENT en multi-produits — le
       // résultat sérialisé d'une partie mono-produit ne change pas.
       ...(multi
@@ -2933,6 +2980,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
               hired: w.hr.hired,
               fired: w.hr.fired,
               departed: w.hr.departed,
+              ...(w.hr.remplaces > 0 ? { remplaces: w.hr.remplaces } : {}),
               trainingBudget: w.hr.trainingBudget,
               salaryIndex: w.hr.salaryIndex,
               cost: hrCost,
@@ -3032,7 +3080,8 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
     nextCompanies.push({
       // Les champs des modules retirés (partie créée avant leur retrait) ne
       // passent pas au tour suivant : ils ne coûtent ni ne font plus rien.
-      ...sansLesModulesRetires(w.state),
+      ...sansLesRemplacantsDuTour(sansLesModulesRetires(w.state)),
+      ...(w.hr.remplaces > 0 ? { remplacantsEnRodage: w.hr.remplaces } : {}),
       headcount: w.hr.nextHeadcount,
       productivity: w.hr.nextProductivity,
       ...nextFleetState,
@@ -3122,6 +3171,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
         maintenanceReference: referenceDEntretien(scenario, w.activeMachineFleet, w.state),
         availabilityDecay: scenario.production.availabilityDecay,
         availabilityFloor: scenario.production.availabilityFloor,
+        aLaReference: scenario.equilibre !== undefined,
       }),
       finishedGoods: finalStock,
       // Gamme : stocks par produit, émis SEULEMENT en multi-produits.
