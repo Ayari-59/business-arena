@@ -498,6 +498,58 @@ describe("l'expérience : prédire, manipuler, constater, puis formaliser", () =
     expect([composition(4_636), composition(3_900), composition(qS)]).toEqual([12_512, 0, 11_900]);
   });
 
+  it("le laboratoire des ventes : 11 600 Nomade à 57 € pour que le volume compense le prix ; le résultat reste sous le budget", () => {
+    const e = laboratoire(ANALYSE_DES_ECARTS, "le-laboratoire-des-ventes");
+    expect(ANALYSE_DES_ECARTS.etapes.filter((x) => x.type === "simulation").map((x) => x.id)).toEqual(["le-laboratoire-des-ventes"]);
+    expect([ANALYSE_DES_ECARTS.etapes.length, LES_ECARTS_ET_LEURS_RESPONSABLES.etapes.length]).toEqual([14, 10]);
+    const ids = ANALYSE_DES_ECARTS.etapes.map((x) => x.id);
+    expect(ids.indexOf("le-laboratoire-des-ventes")).toBe(ids.indexOf("se-compensent") + 1);
+    const leviers = e.leviers(cas);
+    const depart = Object.fromEntries(leviers.map((l) => [l.code, l.depart]));
+    expect(depart).toEqual({ quantite: qN, prix: r.ventes.nomade.prix });
+    expect(leviers.map((l) => [l.min, l.max, l.pas])).toEqual([
+      [9_000, 15_000, 100],
+      [50, 62, 0.5],
+    ]);
+    // Les lignes des ventes du passage, refaites à la main : la Salon telle que vendue, la Nomade à (q, p).
+    const autres = sommeDe([...PRODUCTION, "Distribution"]);
+    expect(autres).toBe(-33_700);
+    const ventesA = (q: number, p: number) => {
+      const total = q + qS;
+      const prix = (p - N.prixPrevu) * q + (r.ventes.salon.prix - S.prixPrevu) * qS;
+      const volume = (q - N.quantitePrevue) * margeDe(N) + (qS - S.quantitePrevue) * margeDe(S);
+      const quantiteGlobale = centime((total - qPrevue) * margeMoyenne);
+      return {
+        "Chiffre d'affaires réel": q * p + qS * r.ventes.salon.prix,
+        "Écart sur prix de vente": prix,
+        "Écart sur volume": volume,
+        "Volume : écart sur quantité globale": quantiteGlobale,
+        "Volume : écart sur composition": centime((q - (total * N.quantitePrevue) / qPrevue) * margeDe(N) + (qS - (total * S.quantitePrevue) / qPrevue) * margeDe(S)),
+        "Effet des ventes sur le résultat": prix + volume,
+        "Production et distribution": autres,
+        "Résultat de l'usine": resultatPrevu + prix + volume + autres,
+        "Résultat prévu": resultatPrevu,
+      };
+    };
+    expect(lu(e.lecture(cas, depart))).toEqual(ventesA(qN, 57));
+    expect(ventesA(qN, 57)["Résultat de l'usine"]).toBe(resultatReel);
+    // À 57 €, chaque Nomade de plus rapporte 57 − 32 = 25 € : 13 400 € ÷ 25 = 536, soit 11 600 au pas de 100.
+    expect([ventesA(11_500, 57)["Effet des ventes sur le résultat"], ventesA(11_600, 57)["Effet des ventes sur le résultat"]]).toEqual([-900, 1_600]);
+    const d = e.defi(cas);
+    expect(d.solution).toEqual({ quantite: 11_600, prix: 57 });
+    expect(lu(e.lecture(cas, d.solution))).toEqual(ventesA(11_600, 57));
+    expect(ventesA(11_600, 57)["Résultat de l'usine"]).toBe(317_900);
+    expect(d.atteint(d.solution)).toBe(true);
+    expect(d.atteint(depart)).toBe(false);
+    expect(d.atteint({ quantite: 11_500, prix: 57 })).toBe(false);
+    // Plus cher que le prix réel ne compte pas, même si les ventes compensent ; moins cher, il en faut plus.
+    expect(d.atteint({ quantite: 11_600, prix: 57.5 })).toBe(false);
+    // À 56 €, une Nomade de plus ne rapporte que 24 € : il en faut 12 017, soit 12 100 au pas.
+    expect(d.atteint({ quantite: 12_000, prix: 56 })).toBe(false);
+    expect(d.atteint({ quantite: 12_100, prix: 56 })).toBe(true);
+    expect(e.explication(cas, d.solution).join(" ")).toContain(`il fallait donc 536 Nomade de plus à 57 €, et non 236`);
+  });
+
   it("le laboratoire : au départ le trimestre réel, au standard 343 800 €, et la solution à 17 500 kg qui rattrape le budget", () => {
     const e = laboratoire(LES_ECARTS_ET_LEURS_RESPONSABLES, "le-laboratoire");
     const leviers = e.leviers(cas);

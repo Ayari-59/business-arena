@@ -494,6 +494,63 @@ describe("la déclaration de TVA", () => {
     expect(l.courbes(l.solution, [0, 90])).toEqual({ "TVA à payer du printemps": [10_800, 10_800], "Crédit reporté sur l'été": [0, 0], "TVA à payer de l'été, crédit imputé": [36_000, 36_000] });
   });
 
+  it("le laboratoire du crédit : le plus gros investissement dont le crédit s'éteint à l'été, à son régime", () => {
+    const l = laboratoire(ch, "le-laboratoire-du-credit");
+    const e = ch.etapes.find((x) => x.id === "le-laboratoire-du-credit") as EtapeSimulation;
+    const d = e.defi(cas);
+    expect(l.depart).toEqual({ regime: 0, investissement: 210 });
+    expect(l.solution).toEqual({ regime: 0, investissement: 399 });
+    expect(l.reussi).toEqual([false, true]);
+    expect(l.leviers.filter((x) => x.choix).map((x) => x.code)).toEqual(["regime"]);
+    // Le printemps et l'été, refaits à la main, pour un régime et un investissement en milliers d'euros HT.
+    const lire = (regime: number, milliers: number) => {
+      const base = (r: number) => (regime === 1 ? ventes(r) : encaisse(r));
+      const nette = centime(base(2) * T - (ACHATS[ix(2)]! + milliers * 1_000) * T);
+      const credit = Math.max(0, -nette);
+      const netteEte = centime(base(3) * T - ACHATS[ix(3)]! * T);
+      const aPayerEte = Math.max(0, centime(netteEte - credit));
+      return {
+        "TVA collectée du printemps": centime(base(2) * T),
+        "TVA déductible du printemps": centime((ACHATS[ix(2)]! + milliers * 1_000) * T),
+        "TVA nette du printemps": nette,
+        "Crédit reporté sur l'été": credit,
+        "TVA nette de l'été": netteEte,
+        "TVA à payer de l'été, crédit imputé": aPayerEte,
+        "Crédit reporté sur l'automne": Math.max(0, centime(credit - netteEte)),
+        "TVA à payer du printemps et de l'été, réunies": centime(Math.max(0, nette) + aPayerEte),
+      };
+    };
+    expect(l.auDepart).toEqual(lire(0, 210));
+    expect(l.aLaSolution).toEqual(lire(0, 399));
+    expect(Object.values(l.auDepart)).toEqual([74_000, 85_200, -11_200, 11_200, 49_000, 37_800, 0, 37_800]);
+    // Aux encaissements, le crédit du printemps égale juste la TVA nette de l'été à 399 milliers ; un millier de plus, et 200 € passent à l'automne.
+    expect(lire(0, 399)["Crédit reporté sur l'été"]).toBe(49_000);
+    expect(lire(0, 400)["Crédit reporté sur l'automne"]).toBe(200);
+    // Une seule position relève le défi ; aux débits, la limite serait de 444 milliers, et elle ne compte pas.
+    const reussies: string[] = [];
+    for (const regime of [0, 1])
+      for (let m = 0; m <= 600; m++) {
+        if (m % 50 === 0 || [398, 399, 400, 444, 445].includes(m))
+          expect(Object.fromEntries(e.lecture(cas, { regime, investissement: m }).map((x) => [x.libelle, x.montant])), `${regime}/${m}`).toEqual(lire(regime, m));
+        if (d.atteint({ regime, investissement: m })) reussies.push(`${regime}/${m}`);
+      }
+    expect(reussies).toEqual(["0/399"]);
+    expect([lire(1, 444)["Crédit reporté sur l'automne"], lire(1, 445)["Crédit reporté sur l'automne"]]).toEqual([0, 200]);
+    expect(e.explication(cas, l.solution).join(" ")).toContain(`444${NNBSP}000 € HT`);
+    // L'indice dit de quel côté chercher, et rappelle le régime de l'entreprise.
+    expect(d.indice(l.depart)).toMatch(/Cherchez plus haut\.$/);
+    expect(d.indice({ regime: 0, investissement: 400 })).toMatch(/Cherchez plus bas\.$/);
+    expect(d.indice({ regime: 1, investissement: 399 })).toMatch(/n'a pas opté pour les débits/);
+    // Le graphique : le crédit naît au printemps, l'été l'absorbe, l'automne reçoit le reste.
+    const g = e.graphique!(cas);
+    expect(g.levier).toBe("investissement");
+    expect(g.courbes.map((x) => [0, 154, 399, 600].map((v) => x.valeur({ regime: 0, investissement: v })))).toEqual([
+      [0, 0, 49_000, 89_200],
+      [49_000, 49_000, 0, 0],
+      [0, 0, 0, 40_200],
+    ]);
+  });
+
   it("textes propres, une seule bonne réponse, notions existantes, une écriture juste", () => verifierLesTextes(ch));
 });
 

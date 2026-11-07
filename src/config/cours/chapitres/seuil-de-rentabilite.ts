@@ -3,7 +3,7 @@ import { accord } from "../accords";
 import type { Cas } from "../cas";
 import { coutsDeLaGamme, donneesDuMois, seuilDeRentabilite } from "../monde/couts-et-budgets";
 import { GESTION_DU_COURS, type FicheDeGestion } from "../monde/nova-gestion";
-import type { Chapitre, TableauDeDonnees } from "../types";
+import type { Chapitre, EtapeSimulation, TableauDeDonnees } from "../types";
 import { etapesAvant, etapesDepuis, partieDuChapitre } from "./decoupage";
 
 /**
@@ -988,9 +988,102 @@ const SEUIL_DE_RENTABILITE_ENTIER: Chapitre = {
 export const CODE_DE_LA_SUITE = "les-leviers-du-seuil";
 export const TITRE_DE_LA_SUITE = "Les leviers du seuil : le prix, le levier opérationnel, la gamme";
 
-/** PREMIÈRE PARTIE : les étapes du chapitre d'origine jusqu'à `baisse-de-prix` exclue, puis sa propre synthèse. */
+/**
+ * LE LABORATOIRE DE LA SÉCURITÉ (première partie) : les ventes du mois et les charges fixes varient,
+ * le prix et le coût variable restent ceux de janvier. Le défi : un indice de sécurité d'au moins
+ * `INDICE_DE_SECURITE_VISE`, sans vendre plus qu'en janvier. La suite a son propre laboratoire, où
+ * le prix et le coût variable jouent aussi, sur un autre défi (baisser le prix sans monter le seuil).
+ */
+export const INDICE_DE_SECURITE_VISE = 0.1;
+
+/** Une position du laboratoire de la sécurité : les ventes du mois et les charges fixes, au modèle du cours. */
+export function securiteALaPosition(x: SeuilDuMois, p: Readonly<Record<string, number>>) {
+  const s = seuilDeRentabilite(donneesDuMois(x.f, { quantite: p.ventes ?? x.m.quantite, chargesFixes: p.chargesFixes ?? x.s.chargesFixes }));
+  const indice = s.indiceDeSecurite ?? 0;
+  return {
+    s,
+    /** L'indice de sécurité, en pour cent au centième, tel que la lecture le montre. */
+    indicePct: auCentime(indice * 100),
+    reussi: s.quantite <= x.m.quantite && indice >= INDICE_DE_SECURITE_VISE - 1e-9,
+  };
+}
+
+/** Les charges fixes les plus hautes, à l'euro, qui donnent l'indice visé à des ventes données : (1 − indice) × marge. */
+const fixesPourLIndice = (x: SeuilDuMois, ventes: number) => Math.floor((1 - INDICE_DE_SECURITE_VISE) * ventes * x.s.margeUnitaire + 1e-9);
+
+const LABORATOIRE_DE_LA_SECURITE: EtapeSimulation = {
+  id: "le-laboratoire-de-la-securite",
+  objectifs: [2],
+  type: "simulation",
+  titre: "Le laboratoire de la sécurité",
+  notions: ["safety_margin", "breakeven", "fixed_costs"],
+  question: (c) => {
+    const { f, s } = seuilDuMois(c);
+    return `Faites varier les ventes du mois et les charges fixes, le prix (${eur(s.prix)}) et le coût variable d'une ${f.unite} (${eur(s.coutVariableUnitaire)}) restant ceux de janvier. Le tableau suit le résultat, le seuil, la marge et l'indice de sécurité ; le graphique montre le résultat et la marge de sécurité selon les ventes.`;
+  },
+  leviers: (c) => {
+    const { f, m, s } = seuilDuMois(c);
+    const l = LEVIERS_DU_LABORATOIRE;
+    return [
+      { code: "ventes", libelle: "Ventes du mois", unite: f.unites, ...l.ventes, depart: m.quantite },
+      { code: "chargesFixes", libelle: "Charges fixes du mois", unite: "€", ...l.chargesFixes, depart: s.chargesFixes },
+    ];
+  },
+  lecture: (c, p) => {
+    const x = seuilDuMois(c);
+    const ici = securiteALaPosition(x, p);
+    const l = ici.s;
+    const d = x.s;
+    const ligne = (libelle: string, montant: number, reference: number, plus: { unite?: string; effet?: boolean; fort?: boolean } = {}) => ({ libelle, montant, reference, ...plus });
+    return [
+      ligne("Chiffre d'affaires du mois", l.chiffreDAffaires, d.chiffreDAffaires),
+      ligne("Seuil de rentabilité", l.seuilQuantite ?? 0, d.seuilQuantite ?? 0, { unite: x.f.unites }),
+      ligne("Seuil en chiffre d'affaires", l.seuilValeur ?? 0, d.seuilValeur ?? 0),
+      ligne("Marge de sécurité", l.margeDeSecurite ?? 0, d.margeDeSecurite ?? 0),
+      ligne("Indice de sécurité", ici.indicePct, auCentime((d.indiceDeSecurite ?? 0) * 100), { unite: "%", fort: true }),
+      ligne("Résultat du mois", l.resultat, d.resultat, { effet: true, fort: true }),
+    ];
+  },
+  // Le résultat et la marge de sécurité selon les ventes : deux droites qui passent par zéro au même point, le seuil.
+  graphique: (c) => {
+    const x = seuilDuMois(c);
+    return {
+      levier: "ventes",
+      courbes: [
+        { libelle: "Résultat du mois", valeur: (p) => securiteALaPosition(x, p).s.resultat },
+        { libelle: "Marge de sécurité", valeur: (p) => securiteALaPosition(x, p).s.margeDeSecurite ?? 0 },
+      ],
+    };
+  },
+  defi: (c) => {
+    const x = seuilDuMois(c);
+    return {
+      consigne: `Défi : portez l'indice de sécurité à ${pct(INDICE_DE_SECURITE_VISE, 0)} au moins, sans vendre plus qu'en janvier (${qte(x.m.quantite)} ${x.f.unites}).`,
+      atteint: (p) => securiteALaPosition(x, p).reussi,
+      indice: (p) => {
+        const v = p.ventes ?? x.m.quantite;
+        if (v > x.m.quantite) return `${qte(v)} ${x.f.unites}, c'est plus qu'en janvier : le défi suppose des ventes qui ne montent pas. Revenez à ${qte(x.m.quantite)} au plus.`;
+        return `L'indice de sécurité n'est que de ${pct(securiteALaPosition(x, p).indicePct / 100)}. À ces ventes, la marge du mois est fixée : seules des charges fixes plus basses abaissent le seuil, et éloignent les ventes de la perte.`;
+      },
+      solution: { ventes: x.m.quantite, chargesFixes: fixesPourLIndice(x, x.m.quantite) },
+    };
+  },
+  montrer: "Montrer des charges fixes qui suffisent",
+  explication: (c, p) => {
+    const x = seuilDuMois(c);
+    const { s, indicePct } = securiteALaPosition(x, p);
+    const plafond = fixesPourLIndice(x, x.m.quantite);
+    return [
+      `À ${qte(s.quantite)} ${x.f.unites} et ${eur(s.chargesFixes)} de charges fixes, le seuil tombe à ${qte(s.seuilQuantite ?? 0)} ${x.f.unites} : la marge de sécurité est de ${eur(s.margeDeSecurite ?? 0)}, ${pct(indicePct / 100)} du chiffre d'affaires. C'est aussi le résultat divisé par la marge sur coût variable : ${eur(s.resultat)} ÷ ${eur(s.marge)}.`,
+      `Avec les ventes de janvier, la marge du mois reste de ${eur(x.s.marge)} : l'indice ne monte à ${pct(INDICE_DE_SECURITE_VISE, 0)} que si les charges fixes descendent à ${eur(plafond)} au plus, ${eur(auCentime(x.s.chargesFixes - plafond))} de moins qu'en janvier. Vendre moins demande de couper davantage ; vendre plus éloignerait aussi du seuil, mais c'est la seule chose que l'entreprise ne décide pas seule.`,
+    ];
+  },
+};
+
+/** PREMIÈRE PARTIE : les étapes du chapitre d'origine jusqu'à `baisse-de-prix` exclue, son laboratoire, puis sa propre synthèse. */
 export const SEUIL_DE_RENTABILITE: Chapitre = partieDuChapitre(SEUIL_DE_RENTABILITE_ENTIER, [
   ...etapesAvant(SEUIL_DE_RENTABILITE_ENTIER, "baisse-de-prix"),
+  LABORATOIRE_DE_LA_SECURITE,
   {
     id: "synthese",
     type: "lecture",

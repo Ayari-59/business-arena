@@ -2,7 +2,7 @@ import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import type { Cas } from "../cas";
 import { controleBudgetaire, coutPreetabli, coutStandardDeLHeureMachine } from "../monde/ecarts";
 import { USINES_DU_COURS, type FicheDeLUsine } from "../monde/nova-usine";
-import type { Chapitre, TableauDeDonnees } from "../types";
+import type { Chapitre, EtapeSimulation, TableauDeDonnees } from "../types";
 import { etapesAvant, etapesDepuis, partieDuChapitre } from "./decoupage";
 
 /**
@@ -1139,9 +1139,108 @@ const ANALYSE_DES_ECARTS_ENTIERE: Chapitre = {
 export const CODE_DE_LA_SUITE = "les-ecarts-et-leurs-responsables";
 export const TITRE_DE_LA_SUITE = "Les écarts et leurs responsables";
 
-/** PREMIÈRE PARTIE : les étapes du chapitre d'origine jusqu'à `le-levier-des-heures` exclue, puis sa propre synthèse. */
+/**
+ * LE LABORATOIRE DES VENTES (première partie) : les Nomade vendues et leur prix varient, la Salon
+ * restant telle que vendue au trimestre. Hypothèse du cours : chaque Nomade de plus ou de moins est
+ * fabriquée au coût préétabli, si bien que les écarts de la production et de la distribution restent
+ * ceux du trimestre ; seules les lignes des ventes du tableau de passage bougent, calculées par le
+ * modèle (`controleBudgetaire`) sur la fiche, les ventes de la Nomade remplacées. Le défi : sans
+ * vendre la Nomade plus cher qu'au trimestre, que les ventes ne coûtent plus rien au résultat (le
+ * volume compense le prix). La suite a son laboratoire, sur le prix, la matière, le taux horaire et
+ * les heures-machine, pour retrouver le résultat prévu.
+ */
+export const LEVIERS_DES_VENTES = { quantite: { min: 9_000, max: 15_000, pas: 100 }, prix: { min: 50, max: 62, pas: 0.5 } } as const;
+
+/** Les ventes, et le tableau de passage, à une position des leviers (`quantite` et `prix` de la Nomade). */
+export function ventesALaPosition(c: Pick<Cas, "code">, p: Readonly<Record<string, number>>) {
+  const s = syntheseDesEcarts(c);
+  const f = s.f;
+  const r = f.realise;
+  const nomade = { quantite: p.quantite ?? r.ventes.nomade.quantite, prix: p.prix ?? r.ventes.nomade.prix };
+  const v = controleBudgetaire({ ...f, realise: { ...r, ventes: { ...r.ventes, nomade } } }).ventes;
+  const ventes = auCentime(v.prix + v.volume);
+  /** Les autres lignes du passage, production et distribution : celles du trimestre. */
+  const autres = auCentime(s.lignes.filter((l) => !estUneVente(l.poste)).reduce((t, l) => t + l.effet, 0));
+  const ecart = auCentime(ventes + autres);
+  return { s, nomade, v, ventes, autres, ecart, resultat: auCentime(s.e.resultatPrevu + ecart), reussi: nomade.prix <= r.ventes.nomade.prix && ventes >= 0 };
+}
+
+/** La plus petite quantité de Nomade, sur le pas du levier, où les ventes ne coûtent plus rien au résultat, à un prix donné. */
+function nomadesQuiCompensent(c: Pick<Cas, "code">, prix: number) {
+  const { min, max, pas } = LEVIERS_DES_VENTES.quantite;
+  for (let q = min; q <= max; q += pas) if (ventesALaPosition(c, { quantite: q, prix }).ventes >= 0) return q;
+  return max;
+}
+
+const LABORATOIRE_DES_VENTES: EtapeSimulation = {
+  id: "le-laboratoire-des-ventes",
+  objectifs: [3],
+  type: "simulation",
+  titre: "Le laboratoire des ventes",
+  notions: ["volume_price_variance", "contribution_margin", "income_statement"],
+  question: (c) => {
+    const s = syntheseDesEcarts(c);
+    return `Faites varier les ${s.nomade.nom} vendues et leur prix, les ${qte(s.f.realise.ventes.salon.quantite)} ${s.salon.nom} restant telles que vendues. Chaque ${s.nomade.nom} de plus est fabriquée au coût préétabli (${eur(s.cNomade.total)}) : la production et la distribution gardent les écarts du trimestre. Le tableau suit les lignes des ventes du tableau de passage, et le résultat de l'usine.`;
+  },
+  leviers: (c) => {
+    const s = syntheseDesEcarts(c);
+    const r = s.f.realise;
+    const l = LEVIERS_DES_VENTES;
+    return [
+      { code: "quantite", libelle: `${s.nomade.nom} vendues`, unite: "enceintes", ...l.quantite, depart: r.ventes.nomade.quantite },
+      { code: "prix", libelle: `Prix de vente de la ${s.nomade.nom}`, unite: "€", ...l.prix, depart: r.ventes.nomade.prix },
+    ];
+  },
+  lecture: (c, p) => {
+    const x = ventesALaPosition(c, p);
+    const d = ventesALaPosition(c, {});
+    const ligne = (libelle: string, g: (y: typeof x) => number, plus: { effet?: boolean; fort?: boolean } = {}) => ({ libelle, montant: g(x), reference: g(d), ...plus });
+    return [
+      ligne("Chiffre d'affaires réel", (y) => y.v.chiffreDAffairesReel),
+      ligne("Écart sur prix de vente", (y) => y.v.prix, { effet: true }),
+      ligne("Écart sur volume", (y) => y.v.volume, { effet: true }),
+      ligne("Volume : écart sur quantité globale", (y) => y.v.quantiteGlobale),
+      ligne("Volume : écart sur composition", (y) => y.v.composition),
+      ligne("Effet des ventes sur le résultat", (y) => y.ventes, { effet: true, fort: true }),
+      ligne("Production et distribution", (y) => y.autres, { effet: true }),
+      ligne("Résultat de l'usine", (y) => y.resultat, { fort: true }),
+      ligne("Résultat prévu", (y) => y.s.e.resultatPrevu),
+    ];
+  },
+  defi: (c) => {
+    const s = syntheseDesEcarts(c);
+    const prixReel = s.f.realise.ventes.nomade.prix;
+    return {
+      consigne: `Défi : sans vendre la ${s.nomade.nom} plus cher que ses ${eur(prixReel)} du trimestre, trouvez des ventes qui ne coûtent plus rien au résultat : l'écart sur volume compense l'écart sur prix.`,
+      atteint: (p) => ventesALaPosition(c, p).reussi,
+      indice: (p) => {
+        const x = ventesALaPosition(c, p);
+        if (x.nomade.prix > prixReel) return `À ${eur(x.nomade.prix)}, la ${s.nomade.nom} est vendue plus cher qu'au trimestre : redescendez à ${eur(prixReel)} au plus.`;
+        return `Les ventes coûtent encore ${eur(-x.ventes)} au résultat. Une ${s.nomade.nom} de plus n'y apporte pas son prix : sa marge préétablie, moins ce que le prix cède sur le prix prévu.`;
+      },
+      solution: { quantite: nomadesQuiCompensent(c, prixReel), prix: prixReel },
+    };
+  },
+  montrer: "Montrer des ventes qui compensent",
+  explication: (c, p) => {
+    const x = ventesALaPosition(c, p);
+    const s = x.s;
+    const r = s.f.realise;
+    const parNomade = auCentime(x.nomade.prix - s.cNomade.total);
+    const auPrixReel = auCentime(r.ventes.nomade.prix - s.cNomade.total);
+    const manque = -ventesALaPosition(c, {}).ventes;
+    return [
+      `À ${eur(x.nomade.prix)}, ${qte(x.nomade.quantite)} ${s.nomade.nom} : l'écart sur prix de vente, ${eur(x.v.prix)}, est compensé par l'écart sur volume, ${signe(x.v.volume)}, et les ventes rapportent ${signe(x.ventes)} au résultat. Chaque ${s.nomade.nom} de plus n'apporte pas son prix, mais sa marge préétablie (${eur(s.cNomade.marge)}) moins les ${eur(auCentime(s.nomade.prixPrevu - x.nomade.prix))} cédés sur le prix prévu : ${eur(parNomade)}.`,
+      `Pour effacer les ${eur(manque)} que les ventes coûtaient au trimestre, il fallait donc ${qte(Math.ceil(manque / auPrixReel - 1e-9))} ${s.nomade.nom} de plus à ${eur(r.ventes.nomade.prix)}, et non ${qte(Math.ceil(manque / r.ventes.nomade.prix - 1e-9))} comme si chacune rapportait son prix.`,
+      `Les ventes compensées, le résultat de l'usine reste de ${eur(x.resultat)}, sous les ${eur(s.e.resultatPrevu)} prévus : la production et la distribution lui retirent encore ${eur(-x.autres)}, et les ventes n'y peuvent rien. Des ventes qui se compensent cachent deux écarts de sens contraire, et ne disent rien du reste du tableau de passage.`,
+    ];
+  },
+};
+
+/** PREMIÈRE PARTIE : les étapes du chapitre d'origine jusqu'à `le-levier-des-heures` exclue, son laboratoire, puis sa propre synthèse. */
 export const ANALYSE_DES_ECARTS: Chapitre = partieDuChapitre(ANALYSE_DES_ECARTS_ENTIERE, [
   ...etapesAvant(ANALYSE_DES_ECARTS_ENTIERE, "le-levier-des-heures"),
+  LABORATOIRE_DES_VENTES,
   {
     id: "fin",
     type: "lecture",

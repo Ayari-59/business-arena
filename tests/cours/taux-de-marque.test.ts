@@ -4,6 +4,7 @@ import { casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
 import {
   COEFFICIENT_TTC_DU_CONCURRENT,
   COMMERCES,
+  HAUSSE_DU_FACONNIER,
   ENTREPRISES_DU_POINT_DE_VENTE,
   MARGE_VISEE_DU_LABORATOIRE,
   TAUX_DE_MARQUE,
@@ -311,6 +312,55 @@ describe("taux de marque, taux de marge, coefficient : le pull col rond", () => 
     expect(champJuste("76,25", champ("Prix de vente HT qui garde le taux de marque"))).toBe(false);
     // L'étiquette monte exactement comme le prix d'achat.
     expect(centime(80.52 / 66)).toBe(1.22);
+  });
+
+  it("le laboratoire de l'étiquette : le façonnier monte de 10 %, la plus petite étiquette ronde qui garde 54,5 % de marque est 73 €", () => {
+    // Découpé en deux : chaque partie a son laboratoire, et celui-ci ne regarde que le pull, sans la demande du mois.
+    expect(ch.etapes.filter((e) => e.type === "simulation").map((e) => e.id)).toEqual(["le-laboratoire-de-l-etiquette"]);
+    expect(ch.etapes).toHaveLength(15);
+    expect(ch.etapes.at(-2)!.id).toBe("le-laboratoire-de-l-etiquette");
+    const l = laboratoire(ch, "le-laboratoire-de-l-etiquette");
+    expect(HAUSSE_DU_FACONNIER).toBe(0.1);
+    const achat = centime(25 * 1.1);
+    expect(achat).toBe(27.5);
+    expect(l.e.leviers(cas).map((x) => [x.code, x.min, x.max, x.pas, x.depart])).toEqual([
+      ["achat", 20, 32, 0.5, 25],
+      ["etiquette", 54, 96, 1, 66],
+    ]);
+    // Le taux de janvier, 30 ÷ 55 : à 27,50 €, il faut 27,50 ÷ (25 ÷ 55) = 60,50 € HT, soit 72,60 € TTC ; l'étiquette ronde est 73 €.
+    expect([centime(achat / (25 / 55)), centime((achat / (25 / 55)) * 1.2)]).toEqual([60.5, 72.6]);
+    expect(l.solution).toEqual({ achat: 27.5, etiquette: 73 });
+    expect(l.reussi).toEqual([false, true]);
+    expect(l.auDepart).toEqual({
+      "Prix de vente hors taxes": 55,
+      "Marge commerciale d'un pull": 30,
+      "Taux de marque": 54.5,
+      "Taux de marge": 120,
+      "Coefficient multiplicateur TTC": 2.64,
+      "Écart au taux de marque de janvier": 0,
+    });
+    const ht = centime(73 / 1.2);
+    expect(l.aLaSolution).toEqual({
+      "Prix de vente hors taxes": ht,
+      "Marge commerciale d'un pull": centime(ht - 27.5),
+      "Taux de marque": dixieme(((ht - 27.5) / ht) * 100),
+      "Taux de marge": dixieme(((ht - 27.5) / 27.5) * 100),
+      "Coefficient multiplicateur TTC": centime(73 / 27.5),
+      "Écart au taux de marque de janvier": dixieme(((ht - 27.5) / ht - 30 / 55) * 100),
+    });
+    expect([ht, centime(ht - 27.5), dixieme(((ht - 27.5) / ht) * 100), dixieme(((ht - 27.5) / 27.5) * 100), centime(73 / 27.5)]).toEqual([60.83, 33.33, 54.8, 121.2, 2.65]);
+    // 72 € rate le taux (54,2 %) ; répercuter la hausse en euros (66 + 2,50 × 1,2 = 69 €) garde la marge, 30 €, pas le taux (52,2 %) ;
+    // 74 € le garde, mais n'est pas la plus petite ; 73 € au prix d'achat de janvier ne répond pas à la hausse.
+    expect([dixieme((32.5 / 60) * 100), dixieme((30 / 57.5) * 100)]).toEqual([54.2, 52.2]);
+    for (const p of [{ achat: 27.5, etiquette: 72 }, { achat: 27.5, etiquette: 69 }, { achat: 27.5, etiquette: 74 }, { achat: 25, etiquette: 73 }]) expect(l.d.atteint(p), JSON.stringify(p)).toBe(false);
+    expect(l.d.indice({ achat: 27.5, etiquette: 69 })).toMatch(/vaut 30 €.*52,2 %/);
+    // La courbe : le taux de marque selon l'étiquette, au prix d'achat choisi, et le taux de janvier en repère.
+    const g = l.e.graphique!(cas);
+    expect([g.levier, g.unite]).toEqual(["etiquette", "%"]);
+    const [taux, repere] = g.courbes;
+    expect([taux!.valeur({ achat: 25, etiquette: 66 }), taux!.valeur({ achat: 27.5, etiquette: 73 }), taux!.valeur({ achat: 27.5, etiquette: 54 }), repere!.valeur({ achat: 32, etiquette: 96 })]).toEqual([
+      54.5, 54.8, dixieme(((45 - 27.5) / 45) * 100), 54.5,
+    ]);
   });
 
   it("l'expert : le coefficient du concurrent, à rebours", () => {
