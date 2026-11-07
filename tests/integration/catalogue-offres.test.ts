@@ -139,13 +139,31 @@ const vente = (patch: Partial<SaisieDeLicence> & { offre: string }): SaisieDeLic
   ...patch,
 });
 
+/**
+ * CE QUE LA GRILLE DU CODE A CHANGÉ SANS MIGRATION (novembre 2026). Décision du propriétaire :
+ * la base de production ne se modifie pas depuis le dépôt pour ces textes ; ils se corrigent
+ * dans /admin/offres. La base migrée garde donc l'ancien texte, et la garde le sait : texte
+ * du code → texte encore en base. Une migration ou une modification dans /admin/offres qui
+ * les aligne retire la ligne d'ici.
+ */
+const TEXTES_ENCORE_EN_BASE: Record<string, string> = {
+  "Les ateliers clés en main écrits pour cette entreprise et ce niveau, ou à un niveau près, avec déroulé, corrigés et dossier enseignant. Certaines combinaisons n'en ont aucun : le formulaire de devis dit lesquels votre choix comprend.":
+    "Les ateliers clés en main qui se jouent avec cette entreprise et ce niveau, avec déroulé, corrigés et dossier enseignant.",
+};
+const telleQueMigree = (o: OffreDuCatalogue): OffreDuCatalogue => ({
+  ...o,
+  nom: TEXTES_ENCORE_EN_BASE[o.nom] ?? o.nom,
+  inclus: o.inclus.map((l) => TEXTES_ENCORE_EN_BASE[l] ?? l),
+});
+const GRILLE_TELLE_QUE_MIGREE = { ...CATALOGUE_PAR_DEFAUT, offres: CATALOGUE_PAR_DEFAUT.offres.map(telleQueMigree) };
+
 describe("le catalogue migré", () => {
   it("est, offre pour offre et module pour module, la grille de config/tarifs.ts", async () => {
     const lignes = await db.select({ n: sql<number>`count(*)::int` }).from(catalogueOffres);
     expect(lignes[0]!.n).toBe(CATALOGUE_PAR_DEFAUT.offres.length);
     const etat = await lireLEtatSansCache();
     const parCode = <T extends { code: string }>(l: readonly T[]) => [...l].sort((a, b) => a.code.localeCompare(b.code));
-    expect(parCode(etat.catalogue.offres)).toEqual(parCode(CATALOGUE_PAR_DEFAUT.offres));
+    expect(parCode(etat.catalogue.offres)).toEqual(parCode(GRILLE_TELLE_QUE_MIGREE.offres));
     expect(parCode(etat.catalogue.modules)).toEqual(parCode(CATALOGUE_PAR_DEFAUT.modules));
     expect(etat.decouverte).toEqual(DECOUVERTE_PAR_DEFAUT);
     expect(etat.essai).toEqual({ autorise: false, dureeMaxJours: 30 });
@@ -154,8 +172,11 @@ describe("le catalogue migré", () => {
     expect(etat.promotion).toBeNull();
     // Et ce que /tarifs en rend est la grille par défaut.
     expect(vueDesTarifs(etat.catalogue, variablesDuCatalogue(etat.decouverte))).toEqual(
-      vueDesTarifs(CATALOGUE_PAR_DEFAUT, variablesDuCatalogue()),
+      vueDesTarifs(GRILLE_TELLE_QUE_MIGREE, variablesDuCatalogue()),
     );
+    // Et chaque texte en attente est bien encore en base : sinon, la ligne n'a plus lieu d'être.
+    const enBase = JSON.stringify(etat.catalogue.offres);
+    for (const ancien of Object.values(TEXTES_ENCORE_EN_BASE)) expect(enBase).toContain(JSON.stringify(ancien).slice(1, -1));
   });
 });
 

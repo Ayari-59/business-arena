@@ -5,9 +5,9 @@ import { ENTREPRISES, entrepriseDuScenario, NIVEAUX_DE_L_ARENE } from "./tarifs"
  * LES ATELIERS QU'OUVRE UNE OFFRE CLASSE, POUR UNE ENTREPRISE ET UN NIVEAU (audit produit du
  * 28 octobre 2026, P1-4).
  *
- * L'offre Classe se paramètre à l'achat : une entreprise, un niveau. Sa carte promet « les
- * ateliers clés en main qui se jouent avec cette entreprise et ce niveau », et pour près d'une
- * combinaison sur deux il n'y en a aucun, même en adaptant un atelier d'un niveau (chaque fiche
+ * L'offre Classe se paramètre à l'achat : une entreprise, un niveau. Sa carte promettait « les
+ * ateliers clés en main qui se jouent avec cette entreprise et ce niveau » (elle dit désormais
+ * que certaines combinaisons n'en ont aucun), et pour près d'une combinaison sur deux il n'y en a aucun, même en adaptant un atelier d'un niveau (chaque fiche
  * a sa section « Adapter le niveau »). Le formulaire de devis le dit au moment du choix : les
  * ateliers écrits pour ce niveau, ceux qu'on adapte d'un niveau, ou aucun, et alors ce que la
  * classe a quand même (le cours, les parties de l'arène).

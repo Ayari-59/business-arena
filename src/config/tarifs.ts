@@ -822,7 +822,7 @@ export const OFFRES_PAR_DEFAUT: readonly OffreDuCatalogue[] = [
       LA_PARTIE_DE_CLASSE,
       LE_SUIVI,
       LE_COURS_PAR_OFFRE.classe,
-      "Les ateliers clés en main qui se jouent avec cette entreprise et ce niveau, avec déroulé, corrigés et dossier enseignant.",
+      "Les ateliers clés en main écrits pour cette entreprise et ce niveau, ou à un niveau près, avec déroulé, corrigés et dossier enseignant. Certaines combinaisons n'en ont aucun : le formulaire de devis dit lesquels votre choix comprend.",
       "Un concours à la place d'une partie, si l'entreprise choisie est {entrepriseDesConcours} : les concours se jouent avec elle.",
     ],
     precisions: [SANS_LES_EPISODES, "À l'année, pour un enseignant."],

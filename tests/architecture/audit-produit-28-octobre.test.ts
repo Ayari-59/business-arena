@@ -14,7 +14,7 @@ import { ATELIERS } from "@/config/ateliers";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 import { DIFFICULTES } from "@/config/ateliers/types";
 import { NIVEAUX as NIVEAUX_DES_EPISODES } from "@/config/episodes/niveaux";
-import { ENTREPRISES, NIVEAUX_DE_L_ARENE, OFFRES } from "@/config/tarifs";
+import { CATALOGUE_PAR_DEFAUT, ENTREPRISES, NIVEAUX_DE_L_ARENE, OFFRES } from "@/config/tarifs";
 import { leCoursEnChiffres } from "@/config/articulation";
 import { ateliersDeLaClasse, ateliersParCombinaison } from "@/config/ateliers-de-la-classe";
 import { LeCoursEnBref } from "@/components/le-cours-en-bref";
@@ -174,6 +174,18 @@ describe("4. un mot par sens", () => {
 });
 
 describe("5. l'offre Classe dit ce qu'ouvre chaque combinaison", () => {
+  it("la carte Classe (/tarifs, aperçu de /admin/offres) ne promet pas d'atelier à toute combinaison", () => {
+    const sansAtelier = Object.values(ateliersParCombinaison()).filter((v) => v.exacts.length + v.adaptables.length === 0);
+    const ligne = CATALOGUE_PAR_DEFAUT.offres.find((o) => o.code === "classe")!.inclus.find((l) => /atelier/i.test(l));
+    expect(ligne, "la carte Classe ne parle plus des ateliers").toBeDefined();
+    if (sansAtelier.length > 0) {
+      // Des combinaisons sans atelier : la carte le dit, comme le formulaire de devis.
+      expect(ligne).not.toMatch(/^Les ateliers clés en main qui se jouent avec cette entreprise et ce niveau/);
+      expect(ligne).toMatch(/n'en ont aucun/);
+      expect(ligne).toMatch(/formulaire de devis/);
+    }
+  });
+
   it("les combinaisons couvrent toutes les entreprises et tous les niveaux", () => {
     const t = ateliersParCombinaison();
     expect(Object.keys(t)).toHaveLength(ENTREPRISES.length * NIVEAUX_DE_L_ARENE.length);
