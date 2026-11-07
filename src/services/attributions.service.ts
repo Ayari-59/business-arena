@@ -1,5 +1,6 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
+import { ecrireEnUnBloc } from "@/db/en-un-bloc";
 import {
   coursAttributionsEnseignant,
   coursAttributionsEtablissement,
@@ -41,19 +42,19 @@ const parcoursConnus = (codes: readonly string[]) => [...new Set(codes.filter((c
 /** Remplace la liste d'un établissement ; une liste vide l'efface (l'offre seule décide). */
 export async function attribuerALEtablissement(organizationId: string, codes: readonly string[]): Promise<void> {
   const parcours = parcoursConnus(codes);
-  await db.transaction(async (tx) => {
-    await tx.delete(coursAttributionsEtablissement).where(eq(coursAttributionsEtablissement.organizationId, organizationId));
-    if (parcours.length > 0) await tx.insert(coursAttributionsEtablissement).values(parcours.map((p) => ({ organizationId, parcours: p })));
-  });
+  await ecrireEnUnBloc((client) => [
+    client.delete(coursAttributionsEtablissement).where(eq(coursAttributionsEtablissement.organizationId, organizationId)),
+    ...(parcours.length > 0 ? [client.insert(coursAttributionsEtablissement).values(parcours.map((p) => ({ organizationId, parcours: p })))] : []),
+  ]);
 }
 
 /** Remplace la liste d'un enseignant ; une liste vide l'efface (celle de l'établissement reprend). */
 export async function attribuerALEnseignant(userId: string, codes: readonly string[]): Promise<void> {
   const parcours = parcoursConnus(codes);
-  await db.transaction(async (tx) => {
-    await tx.delete(coursAttributionsEnseignant).where(eq(coursAttributionsEnseignant.userId, userId));
-    if (parcours.length > 0) await tx.insert(coursAttributionsEnseignant).values(parcours.map((p) => ({ userId, parcours: p })));
-  });
+  await ecrireEnUnBloc((client) => [
+    client.delete(coursAttributionsEnseignant).where(eq(coursAttributionsEnseignant.userId, userId)),
+    ...(parcours.length > 0 ? [client.insert(coursAttributionsEnseignant).values(parcours.map((p) => ({ userId, parcours: p })))] : []),
+  ]);
 }
 
 /** Pour /admin/cours : chaque établissement, sa liste, et ses enseignants avec la leur. */

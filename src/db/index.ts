@@ -28,8 +28,9 @@ const estNeon = /\.neon\.tech|neon\.build|localtest\.me/.test(url);
  * des détails de surcharge. Les services sont écrits contre un seul type, celui
  * de la production : le pilote standard s'y conforme à l'exécution.
  */
-type Db = ReturnType<typeof drizzleNeon<typeof schema>>;
+export type Db = ReturnType<typeof drizzleNeon<typeof schema>>;
 
 export const db: Db = estNeon
   ? drizzleNeon(neon(url), { schema })
   : (drizzlePg(url, { schema }) as unknown as Db);
+
