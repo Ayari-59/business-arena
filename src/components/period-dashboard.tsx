@@ -805,15 +805,8 @@ export function PeriodDashboard({
               vocabulary={view.vocabulary}
             />
 
-            {r.ratios && r.ratios.profitability !== undefined ? (
-              <RatioGauges
-                profitability={r.ratios.profitability}
-                roce={r.ratios.returnOnCapitalEmployed}
-                roe={r.ratios.returnOnEquity}
-                leverage={r.ratios.leverage}
-                debtToEquity={r.ratios.debtToEquity}
-                assetTurnover={r.ratios.assetTurnover}
-              />
+            {period.ratiosDeLAnnee && period.ratiosDeLAnnee.toursLus > 0 ? (
+              <RatioGauges ratios={period.ratiosDeLAnnee} />
             ) : null}
 
             {r.bank && r.bank.loanRequested > 0 && r.bank.loanGranted === 0 ? (

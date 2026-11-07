@@ -36,6 +36,9 @@ import { eq } from "drizzle-orm";
 import { createSoloGame } from "@/services/game.service";
 import { getGameView } from "@/services/game-view.service";
 import { placerSousLicence } from "./helpers/licence";
+import { scenarioByCode } from "@/config/scenarios/registry";
+import { composerLeScenarioJoue, CORRECTIFS_DES_PARTIES_NOUVELLES } from "@/config/scenarios/scenario-joue";
+import type { EngineScenarioConfig } from "@/engine/types";
 
 const { playRoundAction } = await import("@/app/arena/[gameId]/actions");
 
@@ -47,13 +50,32 @@ beforeAll(async () => {
   await placerSousLicence(invite);
 });
 
-/** Une partie créée avant la répartition d'octobre 2026 : son profil ne figeait que le niveau. */
+/**
+ * Une partie créée avant la répartition d'octobre 2026 : son profil ne figeait que le niveau,
+ * et son instantané l'équilibre d'avant le 0.2.0 (`config/scenarios/equilibre.ts`), sous
+ * lequel l'équipe de L'ESCALE servait plus de nuitées que ses chambres n'en offraient.
+ */
 async function commeAvantLaRepartition(gameId: string) {
   const row = (await db.select().from(games).where(eq(games.id, gameId)))[0]!;
   const profil = row.difficultyProfile as { difficulty: { level: number; name: string } } & Record<string, unknown>;
+  const snapshot = row.scenarioSnapshot as EngineScenarioConfig;
+  const avant = composerLeScenarioJoue({
+    scenario: scenarioByCode(snapshot.code).scenario,
+    seed: Number(row.seed),
+    level: profil.difficulty.level,
+    concurrents: 3,
+    periodicity: "quarter",
+    investmentStories: true,
+    ...CORRECTIFS_DES_PARTIES_NOUVELLES,
+    equilibre: false,
+  });
   await db
     .update(games)
-    .set({ difficultyProfile: { ...profil, difficulty: { level: profil.difficulty.level, name: profil.difficulty.name } } })
+    .set({
+      difficultyProfile: { ...profil, difficulty: { level: profil.difficulty.level, name: profil.difficulty.name } },
+      scenarioSnapshot: avant,
+      engineVersion: "0.1.0",
+    })
     .where(eq(games.id, gameId));
 }
 

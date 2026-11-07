@@ -9,6 +9,7 @@ import {
   lectureDeLaTresorerie,
   lectureDuBilan,
   lectureDuResultat,
+  libelleDuDeficitImpute,
   type Lecture,
 } from "@/components/lecture-des-comptes";
 import { Icone } from "@/components/icone";
@@ -503,9 +504,9 @@ export function FinancialStatements({
               decalee
             />
           ) : null}
-          {(cr.taxLossUsed ?? 0) > 0.5 ? (
+          {Math.abs(cr.taxLossUsed ?? 0) > 0.5 ? (
             <Ligne
-              label="dont déficit antérieur imputé (report)"
+              label={libelleDuDeficitImpute(cr.taxLossUsed ?? 0)}
               valeur={cr.taxLossUsed ?? 0}
               avant={pcr?.taxLossUsed ?? null}
               decalee

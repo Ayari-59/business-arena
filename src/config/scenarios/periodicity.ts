@@ -367,6 +367,8 @@ export function applyPeriodicity(
               capacityPerUnit: abonnement ? t.capacityPerUnit : t.capacityPerUnit * k,
               depreciationRounds: t.depreciationRounds / k,
               maxPerRound: Math.max(1, Math.round(t.maxPerRound * k)),
+              // La charge fixe d'une machine au parc est un flux par tour (équilibre 0.2.0).
+              ...(t.chargeFixeParTour !== undefined ? { chargeFixeParTour: t.chargeFixeParTour * k } : {}),
             })),
             initialFleet: scenario.equipment.initialFleet,
           },

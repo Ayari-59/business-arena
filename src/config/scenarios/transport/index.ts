@@ -14,7 +14,8 @@ import { evenementsDInvestissement } from "../../investissement-par-niveau";
  * - le coût variable est dominé par une matière dont le prix ne se négocie
  *   pas. Une hausse du gazole traverse le compte de résultat sans que
  *   personne dans l'entreprise n'ait rien décidé ;
- * - la flotte pèse plus de sept cent mille euros au bilan et s'amortit vite.
+ * - les immobilisations pèsent 720 000 € au bilan, dont 314 000 € de flotte, qui
+ *   s'amortit vite.
  *   C'est le seul scénario où l'immobilisation écrase tout le reste, et où la
  *   question « renouveler ou réparer » se pose vraiment.
  *
@@ -594,7 +595,7 @@ export function transportCompany(
     productivity: 1,
     finishedGoods: { quantity: 0, unitCost: 0 },
     // Parc initial : 1 fourgon (45 000 €) + 3 porteurs (285 000 €) + 1 semi (165 000 €) = 495 000 €
-    // (amorti à ~63 % → ~314 000 € de VNC)
+    // (amorti à ~37 %, ~314 000 € de VNC)
     fleet: [
       { typeCode: "fourgon_urbain", count: 1, acquiredRound: 0, bookValue: 24000 },
       { typeCode: "porteur_12t", count: 3, acquiredRound: 0, bookValue: 180000 },

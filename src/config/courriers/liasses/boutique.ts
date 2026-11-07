@@ -88,11 +88,13 @@ const SOURCES: CourrierDef[] = [
   },
   {
     code: "boutique_coton",
-    expediteur: "Atelier Lemaire · Façonnier maille",
-    objet: "Nouveau barème pour la prochaine collection",
+    // La hausse touche tous les fournisseurs de la boutique : la lettre vient du marché,
+    // comme la note de tendance de la même centrale, pas d'un façonnier.
+    expediteur: "Centrale de la maille · Note de marché",
+    objet: "Nouveaux barèmes des façonniers pour la prochaine collection",
     corps:
-      "La laine mérinos et le coton ont fortement progressé, le fret également. Nous ne pouvons plus tenir nos prix et vous transmettons le barème applicable à votre prochaine collection, valable deux {{trimestres}}.",
-    signataire: "La gérante",
+      "La laine mérinos et le coton ont fortement progressé, le fret également. Les façonniers ne peuvent plus tenir leurs prix : nos adhérents reçoivent des barèmes en hausse pour la prochaine collection, valables deux {{trimestres}}.",
+    signataire: "Le service des achats",
     effet: "Coût d'achat +18 % pendant 2 tours",
     enJeu:
       "Le coefficient multiplicateur se comprime : répercuter sur le prix de vente, ou accepter de vendre moins cher que prévu ?",

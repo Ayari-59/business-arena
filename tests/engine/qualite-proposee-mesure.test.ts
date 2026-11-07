@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { SCENARIOS, SCENARIO_FAMILIES, scenarioByCode } from "@/config/scenarios/registry";
-import { composerLeScenarioJoue } from "@/config/scenarios/scenario-joue";
+import { composerLeScenarioJoue, CORRECTIFS_DES_PARTIES_NOUVELLES } from "@/config/scenarios/scenario-joue";
 import { applyPeriodicityToCompany } from "@/config/scenarios/periodicity";
 import { leviersFigesDuProfil, presetByLevel, profilDuNiveau, type DifficultyPreset } from "@/config/difficulty";
 import { botDecisions, botPersonalityFromSeed, PART_DE_QUALITE_NEUTRE, soldByProduct, type BotProfile } from "@/engine/bots";
@@ -48,16 +48,27 @@ import type { CompanyRoundResult, CompanyState, EventInstance, RoundDecisions } 
  * le second cas limite ; il y garde zéro. Ailleurs, rien ne change de sens. La
  * qualité proposée attendue est celle que le scénario joué porte vraiment, lue de
  * `composerLeScenarioJoue`.
+ *
+ * LA MÊME MESURE À L'ÉQUILIBRE 0.2.0 (relevé du moteur, novembre 2026 :
+ * `config/scenarios/equilibre.ts`), dans une partie créée aujourd'hui. L'effet du budget
+ * qualité doublé et les retours clients ouverts chez NOVA, au conseil et au bâtiment
+ * retournent le verdict dans sept scénarios sur quinze, et il ne change pas au bistrot ni
+ * au transport : la part neutre y fait mieux que zéro, et le formulaire la propose
+ * (`QUALITE_PROPOSEE`). Elle reste derrière zéro chez NOVA en gamme, à la boutique, à
+ * l'hôtel en gamme et au conseil.
  */
 
 const GRAINES = [11, 2_027, 90_001, 424_242, 777_777, 31_415];
+
+/** La partie mesurée : d'avant les drapeaux, à la demande, ou créée aujourd'hui (correctifs et équilibre 0.2.0). */
+type Drapeau = "aucun" | "demande" | "equilibre";
 
 const niveauDe = (code: string) => SCENARIO_FAMILIES.find((f) => f.gamme === code && f.mono !== code)?.gammeFromLevel ?? 2;
 const vendu = (r: CompanyRoundResult) =>
   Object.values(r.market.bySegment).reduce((t, x) => t + x.sold, 0) + (r.subscription?.retained ?? 0);
 
 /** Le résultat net cumulé de l'équipe qui valide la proposition, sous une qualité proposée donnée. */
-function partieSolo(code: string, graine: number, qualiteProposee: number, drapeau: boolean): number {
+function partieSolo(code: string, graine: number, qualiteProposee: number, drapeau: Drapeau): number {
   const def = scenarioByCode(code);
   const niveau = niveauDe(code);
   const preset = presetByLevel.get(niveau as DifficultyPreset["level"])!;
@@ -72,8 +83,12 @@ function partieSolo(code: string, graine: number, qualiteProposee: number, drape
       concurrents: 3,
       periodicity: "quarter",
       investmentStories: true,
+      ...(drapeau === "equilibre"
+        ? CORRECTIFS_DES_PARTIES_NOUVELLES
+        : drapeau === "demande"
+          ? { parcSansDoublon: true, propositionALaDemande: true }
+          : {}),
       concurrentsAssainis: true,
-      ...(drapeau ? { parcSansDoublon: true, propositionALaDemande: true } : {}),
     }),
     qualiteProposee,
   };
@@ -128,20 +143,22 @@ function partieSolo(code: string, graine: number, qualiteProposee: number, drape
   return cumul;
 }
 
-const moyenne = (code: string, qualite: number, drapeau: boolean) =>
+const moyenne = (code: string, qualite: number, drapeau: Drapeau) =>
   GRAINES.reduce((t, g) => t + partieSolo(code, g, qualite, drapeau), 0) / GRAINES.length;
 
 /** Négligeable : sous un centième du résultat cumulé à qualité nulle (voir l'en-tête). */
 const NEGLIGEABLE = 0.01;
 
-/** Les deux parties : sans le drapeau, et avec, chacune avec ses cas limites, où la garde porte sur la taille de l'écart et non sur son signe. */
-const VARIANTES = [
-  { drapeau: false, nom: "sans le drapeau", casLimites: new Set(["fitness"]) },
-  { drapeau: true, nom: "avec la proposition à la demande", casLimites: new Set(["fitness", "hotel"]) },
+/** Les trois parties : sans drapeau, à la demande, et créée aujourd'hui, chacune avec ses cas limites, où la garde porte sur la taille de l'écart et non sur son signe. */
+const VARIANTES: { drapeau: Drapeau; nom: string; casLimites: Set<string> }[] = [
+  { drapeau: "aucun", nom: "sans le drapeau", casLimites: new Set(["fitness"]) },
+  { drapeau: "demande", nom: "avec la proposition à la demande", casLimites: new Set(["fitness", "hotel"]) },
+  // L'équilibre 0.2.0 (config/scenarios/equilibre.ts) : aucun cas limite.
+  { drapeau: "equilibre", nom: "à l'équilibre 0.2.0", casLimites: new Set<string>() },
 ];
 
 /** La qualité que le scénario joué propose vraiment, avec ou sans le drapeau. */
-const qualiteDuJeu = (code: string, drapeau: boolean) =>
+const qualiteDuJeu = (code: string, drapeau: Drapeau) =>
   composerLeScenarioJoue({
     scenario: scenarioByCode(code).scenario,
     seed: GRAINES[0]!,
@@ -149,7 +166,11 @@ const qualiteDuJeu = (code: string, drapeau: boolean) =>
     level: niveauDe(code),
     concurrents: 3,
     periodicity: "quarter",
-    ...(drapeau ? { propositionALaDemande: true } : {}),
+    ...(drapeau === "equilibre"
+      ? CORRECTIFS_DES_PARTIES_NOUVELLES
+      : drapeau === "demande"
+        ? { propositionALaDemande: true }
+        : {}),
   }).qualiteProposee!;
 
 describe.each(VARIANTES)("la qualité proposée, mesurée en partie solo fidèle, $nom", ({ drapeau, casLimites }) => {

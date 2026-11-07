@@ -195,7 +195,40 @@ const CORRECTIONS: { cles: string[]; avant: string; apres: string; garde: string
     garde: "textes-a-la-duree-courriers.test.ts",
     cles: ["bistrot_matieres_premieres"],
     avant: "une révision de vingt-quatre pour cent sur ces familles, qui représentent la moitié de vos commandes habituelles.",
-    apres: "une révision de vingt-quatre pour cent sur l'ensemble de notre barème, ces familles en tête.",
+    apres:
+      "une révision de vingt-quatre pour cent sur l'ensemble de leurs barèmes, ces familles en tête. Grossistes, cash & carry et producteurs en circuit court l'appliquent.",
+  },
+  // La hausse touche les trois fournisseurs du bistrot : la lettre vient du marché, pas
+  // du grossiste (relevé du moteur, novembre 2026).
+  {
+    garde: "textes-a-la-duree-courriers.test.ts",
+    cles: ["bistrot_matieres_premieres"],
+    avant: "Grossiste Vandamme · Direction commerciale",
+    apres: "Observatoire régional des prix alimentaires · Note de conjoncture",
+  },
+  {
+    garde: "textes-a-la-duree-courriers.test.ts",
+    cles: ["bistrot_matieres_premieres"],
+    avant: "Révision de nos tarifs : beurre, crème et viande",
+    apres: "Révision des tarifs de vos fournisseurs : beurre, crème et viande",
+  },
+  {
+    garde: "textes-a-la-duree-courriers.test.ts",
+    cles: ["bistrot_matieres_premieres"],
+    avant: "La collecte laitière et les cours de la viande nous imposent une révision",
+    apres: "La collecte laitière et les cours de la viande imposent à tous les fournisseurs de la restauration une révision",
+  },
+  {
+    garde: "textes-a-la-duree-courriers.test.ts",
+    cles: ["bistrot_matieres_premieres"],
+    avant: "Le directeur commercial",
+    apres: "La cellule de conjoncture",
+  },
+  {
+    garde: "textes-a-la-duree-courriers.test.ts",
+    cles: ["bistrot_matieres_premieres"],
+    avant: "Le nouveau barème court sur deux trimestres.",
+    apres: "Les nouveaux barèmes courent sur deux trimestres.",
   },
 ];
 

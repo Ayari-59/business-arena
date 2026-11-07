@@ -19,6 +19,8 @@ export function amortissementsDuDepart(s: EngineScenarioConfig): number {
   return s.equipment.initialFleet.reduce((total, lot) => {
     const type = types.get(lot.typeCode);
     if (!type) throw new Error(`Amortissements : type d'équipement inconnu « ${lot.typeCode} »`);
-    return total + (lot.count * type.costPerUnit) / type.depreciationRounds;
+    // Le parc de départ s'amortit au prix où il a été acheté : à l'équilibre 0.2.0, une
+    // machine neuve coûte davantage (`prixDuParcDeDepart`, engine/types.ts).
+    return total + (lot.count * (type.prixDuParcDeDepart ?? type.costPerUnit)) / type.depreciationRounds;
   }, 0);
 }

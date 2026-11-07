@@ -142,7 +142,7 @@ const FACONNIER_REFERENCE: SupplierDef = {
   code: "grossiste",
   name: "Façonnier de référence",
   narrative:
-    "Le tricoteur historique de la marque : qualité constante, réassort en six semaines, règlement à 45 jours. Aucune surprise, aucune envolée.",
+    "Le tricoteur historique de la marque : qualité constante, réassort en 21 jours, règlement à 45 jours. Aucune surprise, aucune envolée.",
   costMultiplier: 1,
   qualityBonus: 0,
   paymentDelayDays: 45,
@@ -437,7 +437,7 @@ const rawBoutique = {
       code: "grossiste",
       name: "Façonnier de référence",
       narrative:
-        "Le tricoteur historique de la marque : qualité constante, réassort en six semaines, règlement à 45 jours. Aucune surprise, aucune envolée.",
+        "Le tricoteur historique de la marque : qualité constante, réassort en 21 jours, règlement à 45 jours. Aucune surprise, aucune envolée.",
       costMultiplier: 1,
       qualityBonus: 0,
       paymentDelayDays: 45,

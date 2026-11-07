@@ -83,7 +83,57 @@ const CORRECTIONS: { code: string; avant: string; apres: string }[] = [
   {
     code: "bistrot_matieres_premieres",
     avant: "une révision de vingt-quatre pour cent sur ces familles, qui représentent la moitié de vos commandes habituelles.",
-    apres: "une révision de vingt-quatre pour cent sur l'ensemble de notre barème, ces familles en tête.",
+    apres:
+      "une révision de vingt-quatre pour cent sur l'ensemble de leurs barèmes, ces familles en tête. Grossistes, cash & carry et producteurs en circuit court l'appliquent.",
+  },
+  // La hausse touche les trois fournisseurs du bistrot : la lettre vient du marché, pas
+  // du grossiste (relevé du moteur, novembre 2026).
+  {
+    code: "bistrot_matieres_premieres",
+    avant: "Grossiste Vandamme · Direction commerciale",
+    apres: "Observatoire régional des prix alimentaires · Note de conjoncture",
+  },
+  {
+    code: "bistrot_matieres_premieres",
+    avant: "Révision de nos tarifs : beurre, crème et viande",
+    apres: "Révision des tarifs de vos fournisseurs : beurre, crème et viande",
+  },
+  {
+    code: "bistrot_matieres_premieres",
+    avant: "La collecte laitière et les cours de la viande nous imposent une révision",
+    apres: "La collecte laitière et les cours de la viande imposent à tous les fournisseurs de la restauration une révision",
+  },
+  {
+    code: "bistrot_matieres_premieres",
+    avant: "Le directeur commercial",
+    apres: "La cellule de conjoncture",
+  },
+  {
+    code: "bistrot_matieres_premieres",
+    avant: "Le nouveau barème court sur deux trimestres.",
+    apres: "Les nouveaux barèmes courent sur deux trimestres.",
+  },
+  // La hausse des matières touche tous les fournisseurs de la boutique : la lettre vient
+  // de la centrale, pas d'un façonnier (relevé du moteur, novembre 2026).
+  {
+    code: "boutique_coton",
+    avant: "Atelier Lemaire · Façonnier maille",
+    apres: "Centrale de la maille · Note de marché",
+  },
+  {
+    code: "boutique_coton",
+    avant: "Nouveau barème pour la prochaine collection",
+    apres: "Nouveaux barèmes des façonniers pour la prochaine collection",
+  },
+  {
+    code: "boutique_coton",
+    avant: "Nous ne pouvons plus tenir nos prix et vous transmettons le barème applicable à votre prochaine collection, valable deux trimestres.",
+    apres: "Les façonniers ne peuvent plus tenir leurs prix : nos adhérents reçoivent des barèmes en hausse pour la prochaine collection, valables deux trimestres.",
+  },
+  {
+    code: "boutique_coton",
+    avant: "La gérante",
+    apres: "Le service des achats",
   },
   // La panne retire 28 % de la flotte au trimestre (`transport_panne_flotte`) : trois
   // porteurs sur dix mille palettes de capacité, quinze jours, n'en retiraient que 10 %.

@@ -12,6 +12,10 @@ import { eq } from "drizzle-orm";
  * équilibre l'usure en dessous. Le vrai seuil était 3 124 €, la valeur
  * pré-remplie 4 686 €, et à 4 000 € rien ne se dégradait.
  *
+ * Une partie créée aujourd'hui joue l'équilibre 0.2.0 (`config/scenarios/equilibre.ts`) :
+ * la disponibilité s'y équilibre à la référence effective elle-même, et la phrase dit
+ * 4 686 €. Une partie d'avant garde son seuil aux deux tiers.
+ *
  * Ce test n'emprunte pas le calcul qu'il garde : il demande au moteur
  * lui-même, par dichotomie sur `updateAvailability`, le plus petit budget qui
  * ne dégrade pas un atelier entamé, et exige que la phrase servie à l'écran le
@@ -61,6 +65,8 @@ const seuilSelonLeMoteur = (referenceEffective: number): number => {
       maintenanceReference: referenceEffective,
       availabilityDecay: scenario.production.availabilityDecay,
       availabilityFloor: scenario.production.availabilityFloor,
+      // La règle de la partie : à l'équilibre 0.2.0, le seuil est la référence effective.
+      aLaReference: scenario.equilibre !== undefined,
     }) >= 0.9;
   let bas = 0;
   let haut = referenceEffective;

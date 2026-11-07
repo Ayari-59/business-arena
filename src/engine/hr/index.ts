@@ -30,7 +30,28 @@ export interface HrOutcome {
   salaryIndex: number;
   nextHeadcount: number;
   nextProductivity: number;
+  /**
+   * Les démissions du tour remplacées par un recrutement (équilibre 0.2.0) : elles ne
+   * baissent pas l'effectif, coûtent un recrutement, et leurs remplaçants travaillent
+   * le tour suivant à `PRODUCTIVITE_DU_REMPLACANT`. Zéro sans remplacement.
+   */
+  remplaces: number;
 }
+
+/**
+ * LE REMPLAÇANT D'UNE DÉMISSION, DANS SON PREMIER TOUR : la moitié d'un poste. Il
+ * apprend le métier pendant que l'équipe le forme (équilibre 0.2.0).
+ */
+export const PRODUCTIVITE_DU_REMPLACANT = 0.5;
+
+/**
+ * LES DÉPARTS D'UNE ÉQUIPE SOUS-PAYÉE (équilibre 0.2.0) : par point d'indice sous le seuil
+ * d'attrition, la part de l'équipe qui démissionne dans le tour, arrondie au salarié
+ * supérieur et plafonnée à `PART_MAXIMALE_DES_DEPARTS`. Mesuré dans l'arène du cours
+ * (`tests/engine/equilibre.test.ts`).
+ */
+export const DEPARTS_PAR_POINT_SOUS_LE_SEUIL = 4;
+export const PART_MAXIMALE_DES_DEPARTS = 0.5;
 
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
 
@@ -39,6 +60,13 @@ export function computeHr(args: {
   decisions: HrDecisions | undefined;
   headcount: number;
   productivity: number;
+  /**
+   * Équilibre 0.2.0 : une démission est remplacée. Sous-payer ne dégraisse plus
+   * l'équipe sans rien coûter : relevé de novembre 2026, sous-payer de 10 %
+   * rapportait jusqu'à 225 000 € sur deux ans à l'hôtel, l'équipe fondant d'un
+   * salarié par tour.
+   */
+  remplacerLesDemissions?: boolean;
 }): HrOutcome {
   const neutral: HrOutcome = {
     morale: 1,
@@ -50,6 +78,7 @@ export function computeHr(args: {
     salaryIndex: 1,
     nextHeadcount: args.headcount,
     nextProductivity: args.productivity,
+    remplaces: 0,
   };
   const c = args.config;
   if (!c) return neutral;
@@ -67,8 +96,22 @@ export function computeHr(args: {
 
   // Démission : sous le seuil d'attrition, un salarié part chaque tour
   // (jamais en dessous d'un salarié restant, licenciements compris).
-  const departed =
-    salaryIndex < c.attritionThreshold && args.headcount - fired - 1 >= 1 ? 1 : 0;
+  // Équilibre 0.2.0 : les départs sont PROPORTIONNELS à l'équipe et à l'écart au
+  // marché (`DEPARTS_PAR_POINT_SOUS_LE_SEUIL`), et chacun est remplacé. Un seul départ
+  // par tour, quelle que soit la taille de l'équipe, laissait sous-payer rapporter dans
+  // les grandes équipes (relevé de novembre 2026, gammes).
+  const restants = args.headcount - fired;
+  const departed = args.remplacerLesDemissions
+    ? salaryIndex < c.attritionThreshold && restants >= 2
+      ? Math.min(
+          restants - 1,
+          Math.ceil(restants * Math.min(PART_MAXIMALE_DES_DEPARTS, DEPARTS_PAR_POINT_SOUS_LE_SEUIL * (c.attritionThreshold - salaryIndex))),
+        )
+      : 0
+    : salaryIndex < c.attritionThreshold && restants - 1 >= 1
+      ? 1
+      : 0;
+  const remplaces = args.remplacerLesDemissions ? departed : 0;
 
   // Masse salariale du tour : écart vs ce que les coûts fixes couvrent déjà.
   const payrollExtra =
@@ -76,7 +119,7 @@ export function computeHr(args: {
     c.includedHeadcount * c.salaryPerEmployeePerRound;
 
   const cost =
-    payrollExtra + hired * c.hiringCost + fired * c.firingCost + trainingBudget;
+    payrollExtra + (hired + remplaces) * c.hiringCost + fired * c.firingCost + trainingBudget;
 
   const [mMin, mMax] = c.moraleBounds ?? [0.85, 1.12];
   const morale = clamp(1 + c.moraleSensitivity * (salaryIndex - 1), mMin, mMax);
@@ -94,7 +137,8 @@ export function computeHr(args: {
     departed,
     trainingBudget,
     salaryIndex,
-    nextHeadcount: Math.max(1, args.headcount + hired - fired - departed),
+    nextHeadcount: Math.max(1, args.headcount + hired - fired - departed + remplaces),
     nextProductivity,
+    remplaces,
   };
 }
