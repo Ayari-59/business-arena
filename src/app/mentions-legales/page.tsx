@@ -393,6 +393,10 @@ function MentionsLegalesPage() {
               l&apos;établissement et chaque enseignant reste libre de supprimer le sien.
             </li>
           </ul>
+          <p data-pas-de-dpo="">
+            Aucun délégué à la protection des données (DPO) n&apos;est désigné. Pour exercer
+            vos droits ou pour toute question sur vos données, écrivez à {EDITEUR.contact}.
+          </p>
           <p>
             Si vous estimez que vos droits ne sont pas respectés, vous pouvez adresser une
             réclamation à la CNIL (cnil.fr).
