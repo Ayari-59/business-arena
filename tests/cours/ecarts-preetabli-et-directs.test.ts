@@ -246,7 +246,8 @@ describe("le coût préétabli, le budget standard et le budget flexible", () =>
     expect(CHAPITRES).toContain(LE_BUDGET_FLEXIBLE);
     expect(LE_BUDGET_FLEXIBLE.prerequis).toEqual([ch.code]);
     aSesEtapes(ch, ["predire-la-production", "experience-production", "laboratoire-production", "heure-machine", "fiche", "budget-standard", "cout-reel", "a-quoi-comparer", "ecart-global", "synthese"]);
-    aSesEtapes(LE_BUDGET_FLEXIBLE, ["intro", "predire-l-activite", "experience-activite", "budget-flexible", "flexible-ou-preetabli", "variante-activite", "standard-courant", "quel-standard", "seuil", "gestion-par-exception", "synthese"]);
+    aSesEtapes(LE_BUDGET_FLEXIBLE, ["intro", "predire-l-activite", "experience-activite", "budget-flexible", "flexible-ou-preetabli", "variante-activite", "standard-courant", "quel-standard", "laboratoire-du-centre", "seuil", "gestion-par-exception", "synthese"]);
+    expect([ch.etapes.length, LE_BUDGET_FLEXIBLE.etapes.length]).toEqual([12, 12]);
     for (const partie of [ch, LE_BUDGET_FLEXIBLE]) {
       expect(partie.etapes[0]!.type).toBe("lecture");
       const synthese = partie.etapes.at(-1)!;
@@ -384,6 +385,57 @@ describe("le coût préétabli, le budget standard et le budget flexible", () =>
     ]);
     expect(rang(ch, "laboratoire-production")).toBeGreaterThan(rang(ch, "ecart-global"));
   });
+
+  it("le laboratoire du centre : les heures-machine et le standard retenu, l'écart sur activité qui s'annule à l'activité du standard", () => {
+    // Le centre refait à la main : coût réel qui suit le budget flexible, fixes répartis sur l'activité du standard.
+    const centre = (h: number, reference: number) => {
+      const cHm = 16 + 120_000 / reference;
+      const flexible = 120_000 + 16 * h;
+      const reel = 213_000 + (h - 5_200) * 16;
+      return {
+        "Coût standard de l'heure-machine": cHm,
+        "Budget flexible": flexible,
+        "Coût réel du centre": reel,
+        "Écart sur budget": reel - flexible,
+        "Charges fixes imputées": (120_000 * h) / reference,
+        "Coût imputé des heures": cHm * h,
+        "Écart sur activité": flexible - cHm * h,
+      };
+    };
+    const { e, d } = laboratoire(LE_BUDGET_FLEXIBLE, "laboratoire-du-centre", {
+      depart: { heures: 5_200, standard: 5_000 },
+      solution: { heures: 4_800, standard: 4_800 },
+      auDepart: centre(5_200, 5_000),
+      aLaSolution: centre(4_800, 4_800),
+    });
+    expect(Object.values(centre(5_200, 5_000))).toEqual([40, 203_200, 213_000, 9_800, 124_800, 208_000, -4_800]);
+    expect(Object.values(centre(4_800, 4_800))).toEqual([41, 196_800, 206_600, 9_800, 120_000, 196_800, 0]);
+    // Le levier à choix : idéal 6 000 h, normal 5 000 h, courant 4 800 h.
+    const [heures, standard] = e.leviers(cas);
+    expect([heures!.min, heures!.max, heures!.pas]).toEqual([4_000, 6_500, 50]);
+    expect(standard!.choix).toEqual([
+      { valeur: 6_000, libelle: `Idéal, ${n(6_000)} h` },
+      { valeur: 5_000, libelle: `Normal, ${n(5_000)} h` },
+      { valeur: 4_800, libelle: `Courant, ${n(4_800)} h` },
+    ]);
+    // L'autre solution, au standard idéal ; l'activité normale au standard normal ne compte pas, ni une heure à côté.
+    expect(d.atteint({ heures: 6_000, standard: 6_000 })).toBe(true);
+    expect(d.atteint({ heures: 5_000, standard: 5_000 })).toBe(false);
+    expect(d.atteint({ heures: 4_850, standard: 4_800 })).toBe(false);
+    // Aux 5 200 heures réelles, le standard seul change le sens de l'écart sur activité ; l'écart sur budget ne bouge pas.
+    const lu = (p: Record<string, number>) => Object.fromEntries(e.lecture(cas, p).map((l) => [l.libelle, l.montant]));
+    expect([6_000, 5_000, 4_800].map((s) => lu({ heures: 5_200, standard: s })["Écart sur activité"])).toEqual([16_000, -4_800, -10_000]);
+    expect([6_000, 5_000, 4_800].map((s) => lu({ heures: 5_200, standard: s })["Écart sur budget"])).toEqual([9_800, 9_800, 9_800]);
+    // Le graphique : le budget flexible et le coût imputé selon les heures, qui se croisent à l'activité du standard.
+    const g = e.graphique!(cas);
+    expect(g.levier).toBe("heures");
+    const [flexible, impute] = g.courbes;
+    expect([flexible!.valeur({ heures: 6_000, standard: 6_000 }), impute!.valeur({ heures: 6_000, standard: 6_000 })]).toEqual([216_000, 216_000]);
+    expect(impute!.valeur({ heures: 4_000, standard: 6_000 })).toBe(36 * 4_000);
+    expect(rang(LE_BUDGET_FLEXIBLE, "laboratoire-du-centre")).toBe(rang(LE_BUDGET_FLEXIBLE, "quel-standard") + 1);
+  });
+
+  it("textes propres, une seule bonne réponse, notions existantes : la suite", () => verifierLesTextes(LE_BUDGET_FLEXIBLE));
 
   it("textes propres, une seule bonne réponse, notions existantes", () => verifierLesTextes(ch));
 });

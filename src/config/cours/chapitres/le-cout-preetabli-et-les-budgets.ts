@@ -988,7 +988,126 @@ export const LE_COUT_PREETABLI_ET_LES_BUDGETS: Chapitre = partieDuChapitre(LE_CO
   },
 ]);
 
-/** SUITE : sa propre introduction, puis les étapes du chapitre d'origine depuis `predire-l-activite`, synthèse comprise. */
+/**
+ * LE LABORATOIRE DU CENTRE (la suite) : les heures-machine réelles du centre et le standard retenu
+ * pour son heure-machine varient. Hypothèses du cours :
+ *   · le standard fixe l'activité sur laquelle se répartissent les charges fixes : idéal, la
+ *     capacité du centre sans panne ni arrêt (`ACTIVITES_DES_STANDARDS.ideal`) ; normal, l'activité
+ *     normale de la fiche ; courant, l'activité que le centre tient d'ordinaire, arrêts habituels
+ *     compris (`ACTIVITES_DES_STANDARDS.courant`). Le coût variable par heure ne change pas ;
+ *   · le coût réel du centre suit son budget flexible quand les heures bougent (son coût variable
+ *     par heure) : l'écart sur budget reste celui du trimestre.
+ * Tout se calcule par le modèle (`controleBudgetaire`) sur la fiche, l'activité de référence et les
+ * heures réelles remplacées. Le défi : avec un autre standard que le normal, l'activité où le coût
+ * imputé couvre tout juste le budget flexible.
+ */
+export const ACTIVITES_DES_STANDARDS = { ideal: 6_000, courant: 4_800 } as const;
+
+/** Les bornes du levier des heures-machine. */
+export const HEURES_DU_LABORATOIRE = { min: 4_000, max: 6_500, pas: 50 } as const;
+
+/** Le centre à une position du laboratoire : `heures` réelles, `standard` (l'activité de référence du standard retenu). */
+export function centreALaPosition(c: Pick<Cas, "code">, p: Readonly<Record<string, number>>) {
+  const f = ficheDe(c);
+  const r = f.realise;
+  const heures = p.heures ?? r.centre.heuresMachine;
+  const reference = p.standard ?? f.centre.activiteNormale;
+  const cout = auCentime(r.centre.cout + (heures - r.centre.heuresMachine) * f.centre.coutVariableParHeure);
+  const e = controleBudgetaire({ ...f, centre: { ...f.centre, activiteNormale: reference }, realise: { ...r, centre: { heuresMachine: heures, cout } } });
+  return {
+    heures,
+    reference,
+    cHm: e.coutStandardDeLHeureMachine,
+    cout,
+    budgetFlexible: e.centre.budgetFlexible,
+    budget: e.centre.budget,
+    activite: e.centre.activite,
+    fixesImputes: e.centre.fixesImputes,
+    impute: auCentime(e.coutStandardDeLHeureMachine * heures),
+  };
+}
+
+/** Les standards du levier à choix, chacun codé par son activité de référence. */
+function standardsDuCentre(c: Pick<Cas, "code">) {
+  const f = ficheDe(c);
+  return [
+    { valeur: ACTIVITES_DES_STANDARDS.ideal, nom: "idéal", libelle: `Idéal, ${qte(ACTIVITES_DES_STANDARDS.ideal)} h` },
+    { valeur: f.centre.activiteNormale, nom: "normal", libelle: `Normal, ${qte(f.centre.activiteNormale)} h` },
+    { valeur: ACTIVITES_DES_STANDARDS.courant, nom: "courant", libelle: `Courant, ${qte(ACTIVITES_DES_STANDARDS.courant)} h` },
+  ];
+}
+
+const LABORATOIRE_DU_CENTRE: EtapeSimulation = {
+  id: "laboratoire-du-centre",
+  objectifs: [3],
+  type: "simulation",
+  titre: "Le laboratoire du centre",
+  notions: ["standard_costing", "fixed_costs", "cost_variance"],
+  question: (c) => {
+    const f = ficheDe(c);
+    return `Faites tourner le centre de ${f.centre.nom.toLowerCase()} et changez le standard de son heure-machine : idéal (la capacité sans panne ni arrêt), normal (l'activité normale) ou courant (l'activité habituelle, arrêts compris). Les ${eur(f.centre.chargesFixes)} de charges fixes se répartissent sur l'activité du standard retenu ; le coût réel suit le budget flexible. Un écart est le réel moins le prévu : positif, il est défavorable.`;
+  },
+  leviers: (c) => {
+    const f = ficheDe(c);
+    const choix = standardsDuCentre(c).map(({ valeur, libelle }) => ({ valeur, libelle }));
+    const valeurs = choix.map((x) => x.valeur);
+    return [
+      { code: "heures", libelle: "Heures-machine du centre", unite: "heures-machine", ...HEURES_DU_LABORATOIRE, depart: f.realise.centre.heuresMachine },
+      { code: "standard", libelle: "Standard retenu", unite: "heures-machine d'activité de référence", min: Math.min(...valeurs), max: Math.max(...valeurs), pas: 1, depart: f.centre.activiteNormale, choix },
+    ];
+  },
+  lecture: (c, p) => {
+    const x = centreALaPosition(c, p);
+    const d = centreALaPosition(c, {});
+    const ligne = (libelle: string, g: (y: typeof x) => number, fort?: boolean) => ({ libelle, montant: g(x), reference: g(d), ...(fort ? { fort } : {}) });
+    return [
+      ligne("Coût standard de l'heure-machine", (y) => y.cHm),
+      ligne("Budget flexible", (y) => y.budgetFlexible),
+      ligne("Coût réel du centre", (y) => y.cout),
+      ligne("Écart sur budget", (y) => y.budget),
+      ligne("Charges fixes imputées", (y) => y.fixesImputes),
+      ligne("Coût imputé des heures", (y) => y.impute),
+      ligne("Écart sur activité", (y) => y.activite, true),
+    ];
+  },
+  graphique: (c) => ({
+    levier: "heures",
+    courbes: [
+      { libelle: "Budget flexible", valeur: (p) => centreALaPosition(c, p).budgetFlexible },
+      { libelle: "Coût imputé des heures", valeur: (p) => centreALaPosition(c, p).impute },
+    ],
+  }),
+  defi: (c) => {
+    const f = ficheDe(c);
+    const normal = f.centre.activiteNormale;
+    return {
+      consigne: "Défi : avec un autre standard que le normal, trouvez l'activité du centre où le coût imputé couvre tout juste le budget flexible, sans aucun écart sur activité.",
+      atteint: (p) => (p.standard ?? normal) !== normal && Math.abs(centreALaPosition(c, p).activite) < 0.005,
+      indice: (p) => {
+        const x = centreALaPosition(c, p);
+        if (x.reference === normal) return "Au standard normal, l'écart sur activité s'annule à l'activité normale, que vous connaissez déjà : changez de standard.";
+        return x.activite > 0
+          ? `Le coût imputé reste ${eur(x.activite)} sous le budget flexible : des charges fixes restent sans imputer. Faites tourner le centre davantage.`
+          : `Le coût imputé dépasse le budget flexible de ${eur(-x.activite)} : il impute plus de charges fixes qu'il n'y en a. Faites tourner le centre moins.`;
+      },
+      solution: { heures: ACTIVITES_DES_STANDARDS.courant, standard: ACTIVITES_DES_STANDARDS.courant },
+    };
+  },
+  montrer: "Montrer une activité",
+  explication: (c, p) => {
+    const f = ficheDe(c);
+    const x = centreALaPosition(c, p);
+    const nom = standardsDuCentre(c).find((s) => s.valeur === x.reference)?.nom ?? "retenu";
+    const reel = f.realise.centre.heuresMachine;
+    const aLActiviteReelle = standardsDuCentre(c).map((s) => ({ ...s, ecart: centreALaPosition(c, { heures: reel, standard: s.valeur }).activite }));
+    return [
+      `Au standard ${nom}, l'heure-machine coûte ${eur(x.cHm)} : les ${eur(f.centre.chargesFixes)} de charges fixes s'y répartissent sur ${qte(x.reference)} heures. À ${qte(x.heures)} heures-machine, le coût imputé (${eur(x.impute)}) rejoint le budget flexible : l'écart sur activité ne mesure que la distance à l'activité du standard, charges fixes × (1 − heures ÷ activité de référence).`,
+      `Aux ${qte(reel)} heures réelles, le même centre montre un écart sur activité de ${aLActiviteReelle.map((s) => `${ecartDit(s.ecart)} au standard ${s.nom}`).join(", ")}. Seul le standard décide s'il paraît en suractivité ou en sous-activité. L'écart sur budget, ${ecartDit(x.budget)}, ne bouge pas : il juge la dépense du responsable, pas l'activité.`,
+    ];
+  },
+};
+
+/** SUITE : sa propre introduction, puis les étapes du chapitre d'origine depuis `predire-l-activite`, son laboratoire après le choix du standard, synthèse comprise. */
 export const LE_BUDGET_FLEXIBLE: Chapitre = partieDuChapitre(
   LE_COUT_PREETABLI_ET_LES_BUDGETS_ENTIER,
   [
@@ -1007,7 +1126,9 @@ export const LE_BUDGET_FLEXIBLE: Chapitre = partieDuChapitre(
       },
       repere: () => "Budget flexible = charges variables standard à l'activité réelle + charges fixes budgétées, inchangées.",
     },
-    ...etapesDepuis(LE_COUT_PREETABLI_ET_LES_BUDGETS_ENTIER, "predire-l-activite"),
+    ...etapesDepuis(LE_COUT_PREETABLI_ET_LES_BUDGETS_ENTIER, "predire-l-activite", "seuil"),
+    LABORATOIRE_DU_CENTRE,
+    ...etapesDepuis(LE_COUT_PREETABLI_ET_LES_BUDGETS_ENTIER, "seuil"),
   ],
   {
     code: CODE_DE_LA_SUITE,
