@@ -25,6 +25,10 @@ import { gardesDuBureauServi } from "../helpers/activites-du-lot-c-servies";
 const acces = vi.hoisted(() => ({ ouvert: true }));
 vi.mock("../../src/app/cours/acces", () => ({ chapitreOuvert: vi.fn(async () => acces.ouvert) }));
 vi.mock("@/app/cours/acces", () => ({ chapitreOuvert: vi.fn(async () => acces.ouvert) }));
+// Le suivi de la classe (migration 0057) écrit en base : ici, seule la correction compte
+// (tests/unit/suivi-des-activites-actions.test.ts vérifie ce que l'action y envoie).
+vi.mock("../../src/app/cours/suivi-des-activites", () => ({ noterDansLaClasse: vi.fn(async () => undefined) }));
+vi.mock("@/app/cours/suivi-des-activites", () => ({ noterDansLaClasse: vi.fn(async () => undefined) }));
 
 const etape = <T>(id: string) => b.etapes.find((e) => e.id === id) as T;
 const pile = etape<EtapeDeClassement>("la-pile");

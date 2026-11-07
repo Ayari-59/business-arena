@@ -100,6 +100,53 @@ export const coursProgressions = pgTable(
   ],
 );
 
+/** Une étape d'une activité suivie : ce que la correction au serveur en a dit (pedagogy/cours/suivi-des-activites.ts). */
+export interface EtapeDActiviteEnregistree {
+  essais: number;
+  manques: number;
+  reussi: boolean;
+  aide: boolean;
+  faites?: string[];
+}
+
+/**
+ * OÙ L'ÉLÈVE EN EST DANS UNE ACTIVITÉ : UN BUREAU, UNE ENQUÊTE, UN SCÉNARIO (migration 0057, décision
+ * du propriétaire, novembre 2026). Une activité est corrigée au serveur : c'est l'action serveur qui
+ * écrit cette ligne, d'après sa propre correction, jamais d'après ce que dit le navigateur. Sans ligne,
+ * l'élève n'a pas commencé. Rien de plus que le suivi des chapitres : l'élève est celui de sa classe,
+ * sous le prénom ou le pseudonyme qu'il y a donné (cours_eleves).
+ */
+export const coursActivites = pgTable(
+  "cours_activites",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    classeId: uuid("classe_id")
+      .notNull()
+      .references(() => coursClasses.id, { onDelete: "cascade" }),
+    /** « bureau », « enquete » ou « scenario ». */
+    nature: text("nature").$type<"bureau" | "enquete" | "scenario">().notNull(),
+    /** Le code de l'activité dans config/cours/{bureaux,enquetes,scenarios}. */
+    code: text("code").notNull(),
+    /** « en-cours », « reussi », « termine » (avec la correction) ou « fini » (un scénario). */
+    etat: text("etat").$type<"en-cours" | "reussi" | "termine" | "fini">().notNull().default("en-cours"),
+    /** Les gestes corrigés (bureau, enquête) ; les parties commencées (scénario). */
+    essais: integer("essais").notNull().default(0),
+    etapes: jsonb("etapes").$type<Record<string, EtapeDActiviteEnregistree>>().notNull().default({}),
+    /** Les remarques du correcteur sur les essais manqués, par étape, bornées. */
+    erreurs: jsonb("erreurs").$type<Record<string, string[]>>().notNull().default({}),
+    /** Le scénario : la fin retenue, et si c'est celle de la meilleure suite. */
+    fin: text("fin"),
+    meilleure: boolean("meilleure"),
+    majLe: timestamp("maj_le", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.classeId, t.nature, t.code] }),
+    index("cours_activites_classe_idx").on(t.classeId),
+  ],
+);
+
 /**
  * LES CHAPITRES QU'UN ENSEIGNANT A LIBÉRÉS À SA CLASSE (migration 0056), quand elle les libère
  * un par un (`liberation` = « chapitre »). Un chapitre libéré ouvre aussi son cas pratique.

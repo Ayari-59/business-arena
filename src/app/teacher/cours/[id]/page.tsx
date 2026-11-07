@@ -23,6 +23,8 @@ import { SubmitButton } from "@/components/submit-button";
 import { ENTREPRISES } from "@/app/cours/entreprises";
 import { PARCOURS_PROPOSES_A_CHOISIR, titreDuParcours } from "@/config/cours/parcours-de-formation";
 import { lienDuDevis, LIBELLE_DU_DEVIS, OFFRES } from "@/config/tarifs";
+import { activitesDeLaClasse } from "@/services/activites.service";
+import { ActivitesDeLaClasse } from "./activites";
 import { calculatriceAction, cloreClasseAction, libererChapitreAction, liberationAction, parcoursAction } from "../actions";
 
 export const metadata: Metadata = {
@@ -60,7 +62,8 @@ const CASES: Record<LigneDEleve["cases"][number], { classe: string; libelle: str
  * Le code à projeter et le lien d'invitation ; puis, pour le chapitre choisi, où en est
  * chaque élève (une case par étape) et, étape par étape, combien l'ont réussie du premier
  * coup et les remarques du correcteur qui reviennent le plus : ce qu'il faut reprendre
- * au tableau. Rien ne se calcule ici : `pedagogy/cours/suivi.ts` agrège.
+ * au tableau. Rien ne se calcule ici : `pedagogy/cours/suivi.ts` agrège. En bas, les activités
+ * (bureaux, enquêtes, scénarios) de la classe, élève par élève (./activites.tsx).
  */
 async function ClasseDuCoursPage({
   params,
@@ -81,6 +84,8 @@ async function ClasseDuCoursPage({
   ]);
   if (!lu) notFound();
   const { classe, progressions } = lu;
+  // LES ACTIVITÉS (migration 0057) : bureaux, enquêtes et scénarios, avec le même contrôle d'accès.
+  const activites = (await activitesDeLaClasse(session.userId, classe.id)) ?? [];
   // LIBÉRER CHAPITRE PAR CHAPITRE (migration 0056) : les chapitres que l'enseignant a ouverts.
   const liberes = classe.liberation === "chapitre" ? await chapitresLiberes(classe.id) : new Set<string>();
   // Une classe qui joue une seule entreprise voit le chapitre tel qu'il s'y joue : ses
@@ -270,6 +275,15 @@ async function ClasseDuCoursPage({
           </details>
         ) : null}
 
+        {activites.length > 0 ? (
+          <p className="text-sm text-slate-300">
+            <Link href="#activites" className={LIEN_A_L_ENCRE} data-lien-vers-les-activites="">
+              Les activités de la classe
+            </Link>{" "}
+            : {compter(activites.length, "bureau, enquête ou scénario", "bureaux, enquêtes ou scénarios")}, élève par élève, plus bas.
+          </p>
+        ) : null}
+
         <Rubrique note={`${compter(progressions.length, "élève")} · ${compter(vue.finis, "chapitre fini", "chapitres finis")}`}>
           {chapitre.titre} · où en est chaque élève
         </Rubrique>
@@ -391,6 +405,8 @@ async function ClasseDuCoursPage({
               </li>
             ))}
         </ol>
+
+        <ActivitesDeLaClasse activites={activites} eleves={progressions.length} />
       </div>
     </main>
   );

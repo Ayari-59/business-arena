@@ -68,6 +68,8 @@ const INTERDITS = [
   /^src\/config\/cours\/scenarios\//,
   /^src\/config\/cours\/monde\/decouvert-de-nova\.ts$/,
   /^src\/pedagogy\/cours\/scenario-servi\.ts$/,
+  // Le suivi des activités en classe (migration 0057) : il lit les corrigés du bureau et du scénario.
+  /^src\/pedagogy\/cours\/suivi-des-activites\.ts$/,
   // Le diaporama de l'enseignant (décision du propriétaire, novembre 2026) : son générateur porte les
   // corrigés de chaque question ; la page n'en montre qu'un lien, la route le fabrique au serveur.
   /^src\/pedagogy\/cours\/diaporama\.ts$/,

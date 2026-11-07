@@ -400,6 +400,13 @@
       "when": 1793739474675,
       "tag": "0056_cours_attribues_et_liberes",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1794037496529,
+      "tag": "0057_suivi_des_activites",
+      "breakpoints": true
     }
   ]
 }

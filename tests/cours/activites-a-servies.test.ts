@@ -25,6 +25,10 @@ import { solutionsDuTableau } from "../../src/pedagogy/cours/tableau-a-completer
 const acces = vi.hoisted(() => ({ ouvert: true }));
 vi.mock("../../src/app/cours/acces", () => ({ chapitreOuvert: vi.fn(async () => acces.ouvert) }));
 vi.mock("@/app/cours/acces", () => ({ chapitreOuvert: vi.fn(async () => acces.ouvert) }));
+// Le suivi de la classe (migration 0057) écrit en base : ici, seule la correction compte
+// (tests/unit/suivi-des-activites-actions.test.ts vérifie ce que l'action y envoie).
+vi.mock("../../src/app/cours/suivi-des-activites", () => ({ noterDansLaClasse: vi.fn(async () => undefined) }));
+vi.mock("@/app/cours/suivi-des-activites", () => ({ noterDansLaClasse: vi.fn(async () => undefined) }));
 
 const BUREAUX: readonly Bureau[] = [LE_MOIS_DE_MARS_DE_NOVA, LES_PARTENAIRES_AU_31_MARS, LES_JEUX_DE_NOEL, LE_JOURNAL_DE_L_APPRENTI, LES_EFFETS_DE_L_INTERIMAIRE];
 const SCENARIOS: readonly { s: Scenario; meilleure: () => readonly string[] }[] = [
