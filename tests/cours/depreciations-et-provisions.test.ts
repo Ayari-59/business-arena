@@ -366,6 +366,42 @@ describe("dépréciations et provisions : les étapes", () => {
     expect(juste(ch, "predire-le-liquidateur")).toBe("60 % de la créance : le complément de la perte estimée");
   });
 
+  it("le laboratoire de la prudence : du tout au pire à l'estimation probable, sans viser de résultat", () => {
+    const l = laboratoire(ch, "le-laboratoire-de-la-prudence");
+    // Le départ : la créance dépréciée en entier, le litige à ce que le particulier réclame.
+    expect(l.depart).toEqual({ taux: 100, provision: 12_000 });
+    expect(l.solution).toEqual({ taux: 40, provision: 5_000 });
+    expect(l.reussi).toEqual([false, true]);
+    const impotDe = (r: number) => Math.round(c(6_375 + c(r - 42_500) * 0.25));
+    const lire = (t: number, p: number) => {
+      const r = c(raiDeLaCloture - c(ht * (t / 100)) - p);
+      return {
+        "Dépréciation de la créance": -c(ht * (t / 100)) + 0,
+        "Provision pour le litige": -p + 0,
+        "Résultat avant impôt": r,
+        "Impôt sur les sociétés": impotDe(r),
+        "Résultat net": c(r - impotDe(r)),
+        "Créance de Sonora au bilan, nette de sa dépréciation": c(ttc - c(ht * (t / 100))),
+      };
+    };
+    expect(l.auDepart).toEqual(lire(100, 12_000));
+    expect(l.aLaSolution).toEqual(lire(40, 5_000));
+    // Au pire, il ne reste de la créance que sa TVA, que l'État rendrait ; à l'estimation probable, le résultat de l'étape d'avant.
+    expect(Object.values(l.auDepart)).toEqual([-28_025, -12_000, 66_932.96, 12_483, 54_449.96, tva]);
+    expect(Object.values(l.aLaSolution)).toEqual([-11_210, -5_000, rai, isDe(rai), c(rai - isDe(rai)), 22_420]);
+    // Une seule position relève le défi, et ce n'est ni celle qui tient l'objectif de la banque au plus juste, ni celle de l'impôt le plus bas.
+    const reussies: string[] = [];
+    for (let t = 0; t <= 100; t++) for (let p = 0; p <= 12_000; p += 500) if (l.d.atteint({ taux: t, provision: p })) reussies.push(`${t}/${p}`);
+    expect(reussies).toEqual(["40/5000"]);
+    for (const t of [0, 20, 39, 41, 75]) for (const p of [0, 4_500, 5_500, 12_000]) expect(Object.fromEntries(l.e.lecture(cas, { taux: t, provision: p }).map((x) => [x.libelle, x.montant])), `${t}/${p}`).toEqual(lire(t, p));
+    // L'indice dit de quel côté l'estimation s'écarte de ce qui est probable.
+    expect(l.d.indice(l.depart)).toMatch(/^Le mandataire craint 40 % de perte, pas 100 %/);
+    expect(l.d.indice({ taux: 30, provision: 5_000 })).toMatch(/plus beau qu'il n'est/);
+    expect(l.d.indice({ taux: 40, provision: 12_000 })).toMatch(/pas à ce que l'adversaire demande/);
+    expect(l.d.indice({ taux: 40, provision: 2_000 })).toMatch(/n'en constate qu'une part/);
+    expect(l.e.explication(cas, l.solution)[0]).toContain(`${new Intl.NumberFormat("fr-FR").format(isDe(rai) - 12_483)} € d'impôt en moins`);
+  }, 30_000);
+
   it("le laboratoire des deux exercices : N+1 sans charge nette, et un total qui ne bouge pas", () => {
     const l = laboratoire(LE_DENOUEMENT_DES_RISQUES, "le-laboratoire-des-deux-exercices");
     expect(l.depart).toEqual({ taux: 40, provision: 5_000 });

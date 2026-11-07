@@ -158,7 +158,7 @@ describe("/cours : le catalogue par thème et le chapitre libre", () => {
 describe("le chapitre pilote, joué sans faute", () => {
   /**
    * Le chapitre pilote, de bout en bout, comme un élève qui ne se trompe pas : chaque écriture, chaque
-   * question, chaque calcul, le curseur de la TVA et le laboratoire de la trésorerie. Au téléphone, les
+   * question, chaque calcul, le curseur de la TVA et le laboratoire du premier bilan. Au téléphone, les
    * montants se tapent chiffre à chiffre, et le bouton de signe donne les négatifs.
    */
   async function jouerLePilote(page: Page, code: string, telephone = false) {

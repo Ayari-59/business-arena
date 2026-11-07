@@ -31,7 +31,9 @@ import { etapesAvant, etapesDepuis, partieDuChapitre } from "./decoupage";
  *     au repère ou dans la question, qui nomme les chiffres) ;
  *   · l'expérience avant la formule (prédire, manipuler, constater, formaliser) : predire-le-credit puis
  *     jusqu-ou-investir (un curseur sur l'investissement du printemps, la TVA collectée face à la
- *     déductible : le crédit naît au-delà de 154 milliers d'euros) avant le-credit ;
+ *     déductible : le crédit naît au-delà de 154 milliers d'euros) avant le-credit ; après
+ *     lire-le-credit, le-laboratoire-du-credit (le régime et l'investissement du printemps : le défi
+ *     cherche le plus gros investissement dont le crédit s'éteint sur la déclaration de l'été) ;
  *     predire-le-delai puis le-delai-qui-fait-le-credit (un curseur sur le délai des entreprises, aux
  *     encaissements : au-delà de 18 jours, le printemps se déclare en crédit) ; predire-l-option puis
  *     le-laboratoire-de-la-declaration (régime, délai des entreprises, investissement, taux ; le
@@ -182,6 +184,46 @@ export function departDuLaboratoire(f: FicheDuBatiment): PositionDeLaDeclaration
     investissement: f.investissements.length > 0 ? 1 : 0,
     taux: Math.round(f.tauxDeTva * 100),
   };
+}
+
+/** Les bornes de l'investissement du printemps au laboratoire du crédit, en milliers d'euros hors taxes. */
+export const INVESTISSEMENT_DU_LABORATOIRE = { min: 0, max: 600 } as const;
+
+/** La fiche avec un autre investissement au printemps, en milliers d'euros hors taxes. */
+export function ficheAvecLInvestissement(f: FicheDuBatiment, milliers: number): FicheDuBatiment {
+  return { ...f, investissements: f.investissements.map((x) => (x.rang === TRIMESTRE_DU_CREDIT ? { ...x, montantHT: milliers * 1_000 } : x)) };
+}
+
+/** Une position du laboratoire du crédit : le régime (0 encaissements, 1 débits) et l'investissement du printemps, en milliers d'euros HT. */
+export interface PositionDuCredit {
+  regime: number;
+  investissement: number;
+}
+
+/** Le printemps, son crédit, et ce que l'été et l'automne en reçoivent, pour une position du laboratoire du crédit. */
+export function laboratoireDuCredit(f: FicheDuBatiment, p: PositionDuCredit) {
+  const g = ficheAvecLInvestissement(f, p.investissement);
+  const leviers: Partial<LeviersDeLaTva> = { regime: p.regime === 1 ? "debits" : "encaissements" };
+  const printemps = declarationDuTrimestre(g, TRIMESTRE_DU_CREDIT, leviers);
+  const ete = declarationDuTrimestre(g, TRIMESTRE_DU_CREDIT + 1, leviers);
+  return {
+    collectee: printemps.collectee,
+    deductible: printemps.deductible,
+    nette: printemps.nette,
+    aPayerDuPrintemps: printemps.aPayer,
+    creditDuPrintemps: printemps.creditAReporter,
+    netteDeLEte: ete.nette,
+    aPayerDeLEte: ete.aPayer,
+    creditDeLEte: ete.creditAReporter,
+    aPayerDesDeux: auCentime(printemps.aPayer + ete.aPayer),
+  };
+}
+
+/** Le plus gros investissement du printemps, en milliers d'euros HT, dont le crédit s'éteint sur la déclaration de l'été, au régime donné. */
+export function investissementQuiSEteintALEte(f: FicheDuBatiment, regime: number) {
+  let limite = INVESTISSEMENT_DU_LABORATOIRE.min;
+  for (let m = INVESTISSEMENT_DU_LABORATOIRE.min; m <= INVESTISSEMENT_DU_LABORATOIRE.max; m++) if (laboratoireDuCredit(f, { regime, investissement: m }).creditDeLEte === 0) limite = m;
+  return limite;
 }
 
 /** Tout ce que le chapitre et son cas demandent de la déclaration de MARTEL & FILS. */
@@ -1071,6 +1113,102 @@ export const TITRE_DE_LA_SUITE = "Encaissements ou débits : le régime qui déc
 /** PREMIÈRE PARTIE : les étapes du chapitre d'origine jusqu'à `predire-le-delai` exclue, puis sa propre synthèse. */
 export const LA_DECLARATION_DE_TVA: Chapitre = partieDuChapitre(LA_DECLARATION_DE_TVA_ENTIERE, [
   ...etapesAvant(LA_DECLARATION_DE_TVA_ENTIERE, "predire-le-delai"),
+  {
+    id: "le-laboratoire-du-credit",
+    objectifs: [2],
+    type: "simulation",
+    titre: "Le laboratoire du crédit",
+    notions: ["vat_payable", "balance_sheet"],
+    question: (c) => {
+      const x = declarationDeTva(c);
+      return `Faites varier le régime de ${x.f.entreprise} (les encaissements, le sien, ou les débits, sur option) et son investissement du ${nomDuTrimestre(TRIMESTRE_DU_CREDIT)}, en milliers d'euros hors taxes. Le tableau suit la déclaration du printemps, TVA à payer ou crédit de TVA, puis celle de l'été qui reçoit ce crédit, et ce qui passerait encore à l'automne.`;
+    },
+    leviers: (c) => {
+      const x = declarationDeTva(c);
+      return [
+        {
+          code: "regime",
+          libelle: "Régime de la TVA",
+          unite: "",
+          min: 0,
+          max: 1,
+          pas: 1,
+          depart: x.depart.regime,
+          choix: [
+            { valeur: 0, libelle: "Encaissements, son régime" },
+            { valeur: 1, libelle: "Débits, sur option" },
+          ],
+        },
+        {
+          code: "investissement",
+          libelle: "Investissement du printemps",
+          unite: "milliers d'euros (HT)",
+          min: INVESTISSEMENT_DU_LABORATOIRE.min,
+          max: INVESTISSEMENT_DU_LABORATOIRE.max,
+          pas: 1,
+          depart: x.investissement.montantHT / 1_000,
+        },
+      ];
+    },
+    lecture: (c, p) => {
+      const x = declarationDeTva(c);
+      const l = laboratoireDuCredit(x.f, p as unknown as PositionDuCredit);
+      const d = laboratoireDuCredit(x.f, { regime: x.depart.regime, investissement: x.investissement.montantHT / 1_000 });
+      return [
+        { libelle: "TVA collectée du printemps", montant: l.collectee, reference: d.collectee },
+        { libelle: "TVA déductible du printemps", montant: l.deductible, reference: d.deductible },
+        { libelle: "TVA nette du printemps", montant: l.nette, reference: d.nette },
+        { libelle: "Crédit reporté sur l'été", montant: l.creditDuPrintemps, reference: d.creditDuPrintemps },
+        { libelle: "TVA nette de l'été", montant: l.netteDeLEte, reference: d.netteDeLEte },
+        { libelle: "TVA à payer de l'été, crédit imputé", montant: l.aPayerDeLEte, reference: d.aPayerDeLEte },
+        { libelle: "Crédit reporté sur l'automne", montant: l.creditDeLEte, reference: d.creditDeLEte, fort: true },
+        { libelle: "TVA à payer du printemps et de l'été, réunies", montant: l.aPayerDesDeux, reference: d.aPayerDesDeux },
+      ];
+    },
+    // Le crédit selon l'investissement : il naît au printemps, l'été l'absorbe, puis l'automne reçoit le reste.
+    graphique: (c) => {
+      const f = declarationDeTva(c).f;
+      const lire = (p: Readonly<Record<string, number>>) => laboratoireDuCredit(f, p as unknown as PositionDuCredit);
+      return {
+        levier: "investissement",
+        courbes: [
+          { libelle: "Crédit reporté sur l'été", valeur: (p) => lire(p).creditDuPrintemps },
+          { libelle: "TVA à payer de l'été, crédit imputé", valeur: (p) => lire(p).aPayerDeLEte },
+          { libelle: "Crédit reporté sur l'automne", valeur: (p) => lire(p).creditDeLEte },
+        ],
+      };
+    },
+    defi: (c) => {
+      const x = declarationDeTva(c);
+      const limite = investissementQuiSEteintALEte(x.f, 0);
+      return {
+        consigne: `${x.f.entreprise} envisage un parc de matériel plus gros au printemps. À son régime, les encaissements, trouvez le plus gros investissement dont le crédit de TVA s'impute en entier sur la déclaration de l'été, sans rien reporter à l'automne.`,
+        atteint: (p) => p.regime === 0 && p.investissement === limite,
+        indice: (p) => {
+          if (p.regime !== 0) return `Le défi se joue au régime de ${x.f.entreprise}, les encaissements : elle n'a pas opté pour les débits.`;
+          const l = laboratoireDuCredit(x.f, p as unknown as PositionDuCredit);
+          if (l.creditDeLEte > 0)
+            return `À ${eur(p.investissement! * 1_000)} HT, le crédit du printemps (${eur(l.creditDuPrintemps)}) dépasse la TVA nette de l'été (${eur(l.netteDeLEte)}) : ${eur(l.creditDeLEte)} passent encore à l'automne. Cherchez plus bas.`;
+          return l.creditDuPrintemps === 0
+            ? `À ${eur(p.investissement! * 1_000)} HT, le printemps ne fait pas encore de crédit : la TVA collectée couvre la TVA déductible. Cherchez plus haut.`
+            : `À ${eur(p.investissement! * 1_000)} HT, l'été absorbe le crédit du printemps (${eur(l.creditDuPrintemps)}) et paie encore ${eur(l.aPayerDeLEte)} : un investissement plus gros s'y imputerait aussi. Cherchez plus haut.`;
+        },
+        solution: { regime: 0, investissement: limite },
+      };
+    },
+    explication: (c, p) => {
+      const x = declarationDeTva(c);
+      const l = laboratoireDuCredit(x.f, p as unknown as PositionDuCredit);
+      const d = laboratoireDuCredit(x.f, { regime: x.depart.regime, investissement: x.investissement.montantHT / 1_000 });
+      const auxDebits = investissementQuiSEteintALEte(x.f, 1);
+      const reste = l.aPayerDeLEte === 0 ? "l'été ne paie plus rien" : `l'été paie encore ${eur(l.aPayerDeLEte)}`;
+      const reunis = l.aPayerDesDeux === 0 ? "plus rien" : eur(l.aPayerDesDeux);
+      return [
+        `Jusqu'à ${eur(p.investissement! * 1_000)} HT, le crédit du printemps s'éteint sur la déclaration de l'été, qui porte ${eur(l.netteDeLEte)} de TVA nette : à cette position, le crédit est de ${eur(l.creditDuPrintemps)}, et ${reste}. Au-delà, le reste passe à l'automne : un crédit s'impute de déclaration en déclaration jusqu'à s'éteindre, à moins que l'entreprise n'en demande le remboursement.`,
+        `Avec le matériel de ${eur(x.investissement.montantHT)}, le printemps et l'été réunis faisaient payer ${eur(d.aPayerDesDeux)} ; ici, ${reunis} : chaque euro de TVA déductible en plus vient en moins de ce que ${x.f.entreprise} verse, au printemps ou à l'été. Le crédit ne fait rien perdre, il décale. Aux débits, la limite serait de ${eur(auxDebits * 1_000)} HT : la TVA collectée y suit les factures, au printemps comme à l'été.`,
+      ];
+    },
+  },
   {
     id: "synthese",
     type: "lecture",
