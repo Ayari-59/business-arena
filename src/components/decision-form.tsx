@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { bouton } from "@/components/bouton";
 import {
   createContext,
@@ -732,7 +734,10 @@ export function EquipmentPanel({
         <p className="mt-3 text-sm leading-relaxed text-slate-400">
           Une machine en crédit-bail entre aussi en service au tour suivant. Vous payez un loyer chaque tour, une
           charge de l&apos;exercice : la machine n&apos;est pas à votre bilan et ne se vend pas. En fin de contrat,
-          vous la rachetez pour le prix de l&apos;option, ou vous la rendez.
+          vous la rachetez pour le prix de l&apos;option, ou vous la rendez.{" "}
+          <Link href="/notions#credit_bail" className="underline underline-offset-4 hover:text-slate-200">
+            La fiche du crédit-bail
+          </Link>
         </p>
       ) : null}
       {enCarte ? (

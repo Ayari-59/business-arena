@@ -378,6 +378,20 @@ export const CONCEPTS: ConceptDef[] = [
       "Amortissement constant : échéance t = capital/durée + restant dû × taux",
   },
   {
+    code: "credit_bail",
+    name: "Crédit-bail",
+    domain: "finance",
+    axis: "decision",
+    definition:
+      "Une société de crédit-bail achète la machine et vous la loue pour une durée ferme ; vous payez un loyer chaque période, puis vous la rachetez pour le prix de l'option ou vous la rendez.",
+    intuition:
+      "Vous avez la machine sans sortir son prix : la trésorerie est préservée, il n'y a pas d'apport, et le crédit-bail s'obtient plus facilement qu'un prêt, la machine restant au bailleur. En contrepartie, il coûte un peu plus cher qu'un emprunt, l'engagement est ferme et une rupture fait payer tous les loyers restants. Chez NOVA, la ligne manuelle coûte 140 000 € : en crédit-bail, 12 loyers de 12 829 € par trimestre (153 945 € en tout) puis une option à 1 400 €, rien au départ. Actualisés au taux de la banque, ces paiements coûtent environ 2,4 % de plus qu'un emprunt.",
+    method:
+      "En plan comptable général, chaque loyer est une charge externe (612 Redevances de crédit-bail, au débit ; 512 Banque, au crédit). Pendant le contrat, la machine n'est pas à l'actif et ne s'amortit pas ; les loyers restant à payer et le prix de l'option se lisent en annexe, dans les engagements, pas en dettes au bilan. À la levée de l'option, la machine entre à l'actif pour son prix (2154 au débit, 512 au crédit) et s'amortit sur sa durée restante. Comparez le total des loyers et de l'option au prix, plus les intérêts d'un emprunt de même durée.",
+    formula: "Coût du crédit-bail = Σ loyers + option − prix de la machine",
+    prerequisites: ["fixed_costs", "depreciation"],
+  },
+  {
     code: "receivables_financing",
     name: "Escompte et affacturage",
     domain: "finance",
@@ -1108,6 +1122,7 @@ export const CONCEPT_PREREQUISITES: Record<string, readonly string[]> = {
   receivables_financing: ["bfr"],
   profitability_vs_return: ["margin_rates", "breakeven"],
   loan_schedule: ["net_treasury"],
+  credit_bail: ["fixed_costs", "depreciation"],
 
   // Niveau 6 — Investissement
   discounting: ["net_treasury", "profitability_vs_return"],
@@ -1214,6 +1229,8 @@ export const CONCEPT_LEVEL: Record<string, ConceptLevel> = {
   receivables_financing: 5,
   profitability_vs_return: 5,
   loan_schedule: 5,
+  // Le crédit-bail s'ouvre avec l'emprunt et l'investissement (niveau 4 « Arbitrage »).
+  credit_bail: 4,
   // 6 — Investissement
   discounting: 6,
   irr_payback: 6,

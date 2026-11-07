@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { CompanyRoundResult } from "@/engine/types";
 import type { ResultatDeGroupe } from "@/engine/groupe/types";
 import { libelleDeLEbeRetenu } from "@/engine/groupe/valorisation";
@@ -224,6 +225,7 @@ function Ligne({
   decalee,
   tone,
   avecEcart = true,
+  ecartNeutre = false,
 }: {
   label: string;
   valeur: number;
@@ -236,12 +238,17 @@ function Ligne({
   decalee?: boolean;
   tone?: "good" | "bad";
   avecEcart?: boolean;
+  /**
+   * L'écart s'écrit à l'encre, sans vert ni rouge : un engagement de crédit-bail qui baisse
+   * n'est ni un gain ni une perte, c'est un loyer payé.
+   */
+  ecartNeutre?: boolean;
 }) {
   const ecart = avecEcart ? ecartAuTourPrecedent(valeur, avant) : null;
   // Un écart EST un résultat : il porte le vert ou le rouge francs. Un écart nul
   // ne dit ni gain ni perte — il reste à l'encre.
   const teinteEcart =
-    ecart === null || Math.round(ecart.montant) === 0
+    ecart === null || Math.round(ecart.montant) === 0 || ecartNeutre
       ? "text-slate-400"
       : ecart.montant > 0
         ? "text-emerald-300"
@@ -633,16 +640,21 @@ export function FinancialStatements({
                 label="Redevances restant à payer"
                 valeur={result.creditBail.engagement}
                 avant={precedent?.creditBail?.engagement ?? null}
+                ecartNeutre
               />
               <Ligne
                 label="Prix d'achat résiduel (options)"
                 valeur={result.creditBail.options}
                 avant={precedent?.creditBail?.options ?? null}
+                ecartNeutre
               />
             </Etat>
             <p className="mt-1 text-xs text-slate-400">
               Les machines en crédit-bail ne sont pas à l&apos;actif et leurs loyers à venir ne sont pas une dette
-              du bilan : en plan comptable général, ils se lisent ici, en annexe.
+              du bilan : en plan comptable général, ils se lisent ici, en annexe.{" "}
+              <Link href="/notions#credit_bail" className="underline underline-offset-4 hover:text-slate-200">
+                La fiche du crédit-bail
+              </Link>
             </p>
           </div>
         ) : null}

@@ -96,6 +96,10 @@ const FICHE_DE_LA_LIGNE: Record<string, string> = {
   "EBE consolidé": "consolidation",
   "Résultat net consolidé": "consolidation",
   "dont part des minoritaires": "minority_translation",
+  // Le crédit-bail (engine/credit-bail) : la redevance du compte de résultat et l'annexe.
+  "− Redevances de crédit-bail": "credit_bail",
+  "Redevances restant à payer": "credit_bail",
+  "Prix d'achat résiduel (options)": "credit_bail",
 };
 
 /**
@@ -137,11 +141,6 @@ const SANS_FICHE: string[] = [
   "Frais de transaction",
   "Stocks",
   "Dettes fournisseurs et TVA",
-  // Le crédit-bail (engine/credit-bail) : le registre des notions n'a pas encore de fiche
-  // du crédit-bail ; le parc machines et l'annexe disent ce qu'il est (point ouvert).
-  "− Redevances de crédit-bail",
-  "Redevances restant à payer",
-  "Prix d'achat résiduel (options)",
 ];
 
 const libelles = () => {

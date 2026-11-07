@@ -487,6 +487,7 @@ export const NOTIONS_PAR_ROLE: Record<string, CodeDeResponsable | "tous"> = {
   discounting: "financier",
   irr_payback: "financier",
   loan_schedule: "financier",
+  credit_bail: "financier",
   receivables_financing: "financier",
   ebitda_margin: "financier",
   depreciation: "financier",
