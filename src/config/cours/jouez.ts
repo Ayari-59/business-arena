@@ -231,7 +231,7 @@ const TVA_DE_L_ARENE = (c: Cas) =>
 
 /**
  * Un équipement du catalogue de l'arène, par son nom, tel qu'une partie créée aujourd'hui le
- * vend : à l'équilibre 0.2.0, une machine coûte dix fois son prix du registre
+ * vend : à l'équilibre 0.2.0, une machine coûte plusieurs fois son prix du registre
  * (`config/scenarios/equilibre.ts`). Le registre seul donnait à l'élève le prix d'avant.
  */
 const machineDansLArene = (c: Cas, nom: string) => avecLEquilibre(scenarioByCode(c.code).scenario).equipment?.types.find((t) => t.name === nom);

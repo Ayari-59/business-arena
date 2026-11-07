@@ -967,7 +967,7 @@ export interface EquipmentTypeDef {
   chargeFixeParTour?: number;
   /**
    * Le prix d'achat des machines du parc de départ, quand il diffère du prix d'une
-   * machine achetée en cours de partie (`costPerUnit`) : l'équilibre 0.2.0 décuple le
+   * machine achetée en cours de partie (`costPerUnit`) : l'équilibre 0.2.0 multiplie le
    * second sans revaloriser le parc d'ouverture, dont les valeurs nettes et les
    * amortissements restent ceux du bilan de départ. Absent : `costPerUnit`.
    */

@@ -52,10 +52,10 @@ import type { CompanyRoundResult, CompanyState, EventInstance, RoundDecisions } 
  * LA MÊME MESURE À L'ÉQUILIBRE 0.2.0 (relevé du moteur, novembre 2026 :
  * `config/scenarios/equilibre.ts`), dans une partie créée aujourd'hui. L'effet du budget
  * qualité doublé et les retours clients ouverts chez NOVA, au conseil et au bâtiment
- * retournent le verdict dans six scénarios sur quinze, et il ne change pas au bistrot ni
+ * retournent le verdict dans sept scénarios sur quinze, et il ne change pas au bistrot ni
  * au transport : la part neutre y fait mieux que zéro, et le formulaire la propose
  * (`QUALITE_PROPOSEE`). Elle reste derrière zéro chez NOVA en gamme, à la boutique, à
- * l'hôtel en gamme et au conseil ; l'hôtel est le cas limite.
+ * l'hôtel en gamme et au conseil.
  */
 
 const GRAINES = [11, 2_027, 90_001, 424_242, 777_777, 31_415];
@@ -153,8 +153,8 @@ const NEGLIGEABLE = 0.01;
 const VARIANTES: { drapeau: Drapeau; nom: string; casLimites: Set<string> }[] = [
   { drapeau: "aucun", nom: "sans le drapeau", casLimites: new Set(["fitness"]) },
   { drapeau: "demande", nom: "avec la proposition à la demande", casLimites: new Set(["fitness", "hotel"]) },
-  // L'équilibre 0.2.0 (config/scenarios/equilibre.ts) : l'hôtel y est le seul cas limite.
-  { drapeau: "equilibre", nom: "à l'équilibre 0.2.0", casLimites: new Set(["hotel"]) },
+  // L'équilibre 0.2.0 (config/scenarios/equilibre.ts) : aucun cas limite.
+  { drapeau: "equilibre", nom: "à l'équilibre 0.2.0", casLimites: new Set<string>() },
 ];
 
 /** La qualité que le scénario joué propose vraiment, avec ou sans le drapeau. */

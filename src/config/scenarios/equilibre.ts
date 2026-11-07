@@ -24,11 +24,44 @@ export const VERSION_DE_L_EQUILIBRE = "0.2.0" as const;
 /**
  * LES MACHINES. Le relevé mesurait, pour une machine pleinement vendue, un retour de 5 à
  * plus de 1 000 fois sa mise par an (NOVA : la ligne manuelle se payait en 0,71
- * trimestre). Le prix est décuplé ; une machine au parc paie en plus chaque trimestre
- * une charge d'entretien courant et d'assurance, part de son prix, qui fait coûter une
- * capacité vide.
+ * trimestre). Le prix est multiplié, SECTEUR PAR SECTEUR, pour que la plus petite machine
+ * du catalogue, pleinement vendue, rapporte environ 65 % par an (décision du
+ * propriétaire) ; une machine au parc paie en plus chaque trimestre une charge
+ * d'entretien courant et d'assurance, part de son prix, qui fait coûter une capacité
+ * vide. Les machines plus grandes rapportent moins à capacité pleine.
+ *
+ * Le calcul (refait par `tests/engine/equilibre.test.ts`) : la marge sur coût variable
+ * d'une unité vendue au premier trimestre de l'arène du cours, fois la capacité de la
+ * machine, moins sa charge fixe, chaque trimestre de son amortissement ; le prix est
+ * celui qui actualise ces flux à 65 % l'an, arrondi au millier d'euros.
+ *
+ * AU CONSEIL, c'est l'équipe qui borne : un poste de plus ne se facture qu'avec les
+ * consultants qui l'occupent. Le flux d'une machine y retranche donc, de chaque jour
+ * vendu, le salaire d'un consultant rapporté à ses jours facturables (12 600 € pour
+ * 60 jours, 210 € le jour), et sa mise compte les recrutements qu'il faut pour la
+ * remplir. Sans l'équipe, le poste junior rapportait plus de 3 500 % l'an au prix
+ * décuplé : un chiffre qu'aucun cabinet ne verrait.
+ *
+ * Un scénario d'enseignant, absent de la table, garde le facteur dix.
  */
-export const MULTIPLICATEUR_DU_PRIX_DES_MACHINES = 10;
+export const MULTIPLICATEUR_DU_PRIX_DES_MACHINES: Readonly<Record<string, number>> = {
+  nova: 9.31,
+  "nova-gamme": 8.93,
+  "boutique-mono": 11.71,
+  boutique: 16.75,
+  hotel: 5.17,
+  "hotel-gamme": 6.49,
+  bistrot: 13.53,
+  "bistrot-gamme": 13.23,
+  conseil: 40.03,
+  "conseil-gamme": 53.53,
+  ecommerce: 26.44,
+  "ecommerce-gamme": 33.65,
+  fitness: 38.44,
+  batiment: 9.2,
+  transport: 6.16,
+};
+export const MULTIPLICATEUR_PAR_DEFAUT = 10;
 export const CHARGE_FIXE_DES_MACHINES = 0.01;
 
 /**
@@ -78,11 +111,11 @@ export const SATISFACTION_N1 = { cout: 2, image: 0.5 } as const;
  * (`tests/engine/qualite-proposee-mesure.test.ts` : partie solo fidèle, six graines,
  * l'horizon du scénario), refaite à l'équilibre : la part de la gestion neutre y fait
  * mieux que zéro chez NOVA, au commerce en ligne (en un produit et en gamme), au
- * transport, à la salle de sport, au bâtiment et au bistrot (en un produit et en gamme) ;
+ * transport, à la salle de sport, au bâtiment, à l'hôtel (son équipe calée sur la pointe
+ * sert la clientèle que la qualité attire) et au bistrot (en un produit et en gamme) ;
  * elle reste derrière zéro chez NOVA en gamme, à la boutique, à l'hôtel en gamme et au
- * conseil, et l'écart est négligeable à l'hôtel. Le formulaire propose donc la part
- * neutre là où elle paie, et zéro ailleurs ; le bon gestionnaire, qui part du
- * formulaire, la joue.
+ * conseil. Le formulaire propose donc la part neutre là où elle paie, et zéro ailleurs ;
+ * le bon gestionnaire, qui part du formulaire, la joue.
  */
 export const QUALITE_PROPOSEE: Readonly<Record<string, number>> = {
   nova: 0.5,
@@ -93,10 +126,10 @@ export const QUALITE_PROPOSEE: Readonly<Record<string, number>> = {
   fitness: 0.5,
   transport: 0.5,
   batiment: 0.5,
+  hotel: 0.5,
   "nova-gamme": 0,
   boutique: 0,
   "boutique-mono": 0,
-  hotel: 0,
   "hotel-gamme": 0,
   conseil: 0,
   "conseil-gamme": 0,
@@ -109,37 +142,41 @@ export const QUALITE_PROPOSEE: Readonly<Record<string, number>> = {
  * deux ans à l'hôtel). Un facteur sur `hoursPerUnit` : la capacité de l'équipe au premier
  * trimestre de l'arène du cours, divisée par 1,05 fois le besoin.
  *
- * Le besoin est l'atelier, ou la demande moyenne de l'année là où les places ne sont
- * jamais toutes prises (l'hôtel, comme le propriétaire l'a demandé) et là où la mesure le
- * montre : au bistrot, au bâtiment et au transport, calée sur l'atelier, l'équipe gardait
- * assez de marge pour que sous-payer rapporte encore. Au commerce en ligne, à la salle de
- * sport et à la boutique en gamme, la pointe de l'année dépasse de loin la moyenne :
- * calée sur la moyenne, l'équipe perdait la pointe et le résultat de l'année (au commerce
- * en ligne, 93 000 € devenaient une perte sur deux ans) ; elles restent sur l'atelier.
+ * Le besoin est, selon la mesure :
+ *  · l'atelier, là où la demande le dépasse ;
+ *  · la POINTE de la demande, à l'hôtel (décision du propriétaire : l'équipe sert la
+ *    haute saison, et licencier peut rapporter un peu hors saison, écart nommé dans la
+ *    garde) et au commerce en ligne en gamme, dont l'atelier n'est jamais plein ;
+ *  · la demande moyenne de l'année, au bistrot, au bâtiment et au transport, où l'équipe
+ *    calée sur l'atelier gardait assez de marge pour que sous-payer rapporte encore ; au
+ *    bistrot en gamme, à mi-chemin, la moyenne coûtant un cinquième du résultat.
+ * Au commerce en ligne et à la salle de sport, calée sur la moyenne, l'équipe perdait la
+ * pointe et le résultat de l'année : elles restent sur l'atelier.
  *
- * Absents : NOVA et le bistrot en gamme, déjà à moins de 4 % de l'atelier, et le conseil,
- * où l'équipe est le goulot voulu du métier (elle couvre la moitié des postes, et le bon
- * gestionnaire embauche) : la porter à 1,05 fois les postes doublerait ses jours
- * facturables et son résultat.
+ * Absents : NOVA, déjà à moins de 4 % de l'atelier, et le conseil (en un produit comme en
+ * gamme), où l'équipe est le goulot voulu du métier et où le bon gestionnaire embauche :
+ * la porter à 1,05 fois les postes doublerait ses jours facturables et son résultat.
  */
 export const HEURES_PAR_UNITE: Readonly<Record<string, number>> = {
   // Sur l'atelier.
   "nova-gamme": 1.039,
   boutique: 3.36,
   ecommerce: 1.238,
-  "ecommerce-gamme": 1.097,
   fitness: 1.05,
+  // Sur la pointe de la demande.
+  hotel: 1.73,
+  "hotel-gamme": 1.646,
+  "ecommerce-gamme": 1.387,
   // Sur la demande moyenne de l'année.
   "boutique-mono": 2.93,
-  hotel: 1.973,
-  "hotel-gamme": 1.889,
   bistrot: 1.037,
+  "bistrot-gamme": 1.06,
   batiment: 1.039,
   transport: 1.064,
-};
+}
 
-const auPrixDeLEquilibre = (t: EquipmentTypeDef): EquipmentTypeDef => {
-  const prix = t.costPerUnit * MULTIPLICATEUR_DU_PRIX_DES_MACHINES;
+const auPrixDeLEquilibre = (multiplicateur: number) => (t: EquipmentTypeDef): EquipmentTypeDef => {
+  const prix = Math.round((t.costPerUnit * multiplicateur) / 1000) * 1000;
   return {
     ...t,
     costPerUnit: prix,
@@ -154,13 +191,13 @@ export function avecLEquilibre(scenario: EngineScenarioConfig): EngineScenarioCo
   const code = scenario.code;
   let s: EngineScenarioConfig = { ...scenario, equilibre: VERSION_DE_L_EQUILIBRE };
 
-  // Machines : prix décuplé, charge fixe au parc. Le parc de départ garde son prix
+  // Machines : prix multiplié selon le secteur, charge fixe au parc. Le parc de départ garde son prix
   // d'achat (valeurs nettes et amortissements du bilan d'ouverture) ; ses charges fixes
   // sont déjà comptées dans les charges de structure du métier : le moteur n'ajoute que
   // l'écart au parc de départ. Le compte du premier tour ne bouge pas, mais une machine
   // vendue rend sa charge, une machine achetée ajoute la sienne.
   if (s.equipment) {
-    s = { ...s, equipment: { ...s.equipment, types: s.equipment.types.map(auPrixDeLEquilibre) } };
+    s = { ...s, equipment: { ...s.equipment, types: s.equipment.types.map(auPrixDeLEquilibre(MULTIPLICATEUR_DU_PRIX_DES_MACHINES[code] ?? MULTIPLICATEUR_PAR_DEFAUT)) } };
   }
 
   // Entretien et prévention.

@@ -14,7 +14,7 @@ import { amortissementsDuDepart } from "@/config/scenarios/amortissements-du-dep
 import { runGame } from "@/engine/simulation/runGame";
 import { ENGINE_VERSION, simulateRound } from "@/engine/simulation";
 import { seuilDEntretien, updateAvailability } from "@/engine/production";
-import { computeHr, PRODUCTIVITE_DU_REMPLACANT } from "@/engine/hr";
+import { computeHr, DEPARTS_PAR_POINT_SOUS_LE_SEUIL, PRODUCTIVITE_DU_REMPLACANT } from "@/engine/hr";
 import { neutralDecisions } from "@/engine/bots";
 import type { CompanyRoundResult, EngineScenarioConfig, RoundDecisions } from "@/engine/types";
 
@@ -249,17 +249,25 @@ describe("9. l'action « satisfaction », niveau 1 : coût doublé, bonus d'imag
 /**
  * Relevé (0.1.0), sur huit trimestres : licencier un salarié au premier rapportait
  * dans six entreprises sur neuf (jusqu'à 54 000 € au transport), sous-payer de 10 %
- * aussi (jusqu'à 225 000 € à l'hôtel). À l'équilibre 0.2.0, ils perdent partout, à
- * trois écarts près, petits devant le résultat : au bistrot, licencier rend 500 € sur
- * deux ans (l'équipe réembauche au tour suivant) ; au commerce en ligne, il en rend
- * 5 900 sur 93 000 (la pointe de Noël garde l'équipe calée sur l'atelier) ; au bâtiment,
- * sous-payer en rend 5 700 sur 247 000. La tolérance est la part du résultat cumulé du
- * bon gestionnaire.
+ * aussi (jusqu'à 225 000 € à l'hôtel) ; en gamme, dans cinq sur six. À l'équilibre
+ * 0.2.0, sous-payer perd partout (les démissions sont proportionnelles à l'équipe), et
+ * licencier aussi, à quelques écarts près, nommés et petits devant le résultat :
+ *  · à l'hôtel, l'équipe est calée sur la pointe (décision du propriétaire) : licencier
+ *    y rend 1 200 € sur deux ans hors saison ; 6 100 € à l'hôtel en gamme ;
+ *  · au bistrot, 500 € (900 € en gamme), et chez NOVA en gamme 400 € : l'équipe
+ *    réembauche au tour suivant ;
+ *  · au commerce en ligne, 5 900 €, en un produit comme en gamme, sur 93 000 € et
+ *    108 000 € : un gain du seul premier tour, qui ne grandit pas avec la partie.
+ * La tolérance est la part du résultat cumulé du bon gestionnaire.
  */
 const RESTES: Record<string, { licencier?: number; sousPayer?: number }> = {
+  hotel: { licencier: 0.01 },
+  "hotel-gamme": { licencier: 0.02 },
   bistrot: { licencier: 0.01 },
+  "bistrot-gamme": { licencier: 0.01 },
+  "nova-gamme": { licencier: 0.01 },
   ecommerce: { licencier: 0.07 },
-  batiment: { sousPayer: 0.03 },
+  "ecommerce-gamme": { licencier: 0.06 },
 };
 
 // ---------------------------------------------------------------------------
@@ -273,8 +281,13 @@ describe("10. licencier ou sous-payer ne rapporte plus", () => {
     const apres = computeHr({ config: hr, decisions: { salaryIndex: 0.9 }, headcount: 14, productivity: 1, remplacerLesDemissions: true });
     expect(avant.nextHeadcount).toBe(13);
     expect(apres.nextHeadcount).toBe(14);
-    expect(apres.remplaces).toBe(1);
-    expect(apres.cost - avant.cost).toBe(hr.hiringCost);
+    // Proportionnels à l'équipe et à l'écart au seuil : 14 × 4 × (0,95 − 0,9), au salarié supérieur.
+    expect(apres.remplaces).toBe(Math.ceil(14 * DEPARTS_PAR_POINT_SOUS_LE_SEUIL * (hr.attritionThreshold - 0.9)));
+    expect(apres.remplaces).toBe(3);
+    expect(apres.cost - avant.cost).toBe(3 * hr.hiringCost);
+    // Au seuil, personne ne part ; jamais plus de la moitié de l'équipe.
+    expect(computeHr({ config: hr, decisions: { salaryIndex: hr.attritionThreshold }, headcount: 14, productivity: 1, remplacerLesDemissions: true }).remplaces).toBe(0);
+    expect(computeHr({ config: hr, decisions: { salaryIndex: 0.8 }, headcount: 14, productivity: 1, remplacerLesDemissions: true }).remplaces).toBeLessThanOrEqual(7);
     // Au tour suivant, le remplaçant ne vaut qu'une part d'un poste.
     const s = composer("hotel", 2, true);
     const e = scenarioByCode("hotel").company("a", "A", "bot", "balanced");
@@ -294,9 +307,14 @@ describe("10. licencier ou sous-payer ne rapporte plus", () => {
     // La boutique couvrait trois fois son atelier : 1,05 désormais, au premier trimestre.
     const r = partie("boutique-mono", 1, true).res[0]!;
     expect(r.production.laborCapacity / r.production.machineCapacity).toBeCloseTo(1.05, 1);
+    // L'hôtel : son équipe sert 1,05 fois la pointe de la demande de l'année, pas la moyenne.
+    const h = partie("hotel", 4, false).res;
+    const pointe = Math.max(...h.map((x) => Object.values(x.market.bySegment).reduce((t, y) => t + y.sold + y.lost, 0)));
+    const equipe = partie("hotel", 1, true).res[0]!.production.laborCapacity;
+    expect(equipe / pointe).toBeCloseTo(1.05, 1);
   });
 
-  for (const code of NEUF) {
+  for (const code of [...NEUF, ...GAMMES]) {
     it(`${code} : sur huit trimestres, licencier et sous-payer font moins bien que le bon gestionnaire`, () => {
       const base = resultat(partie(code, 8, true).res);
       const licencier = ecart(code, 8, true, LICENCIER);
@@ -328,12 +346,12 @@ function triAnnuel(prix: number, flux: number, trimestres: number): number {
 }
 
 describe("11. une machine coûte ce qu'elle rapporte, et une capacité vide coûte", () => {
-  it("prix décuplé, charge fixe au parc ; le parc de départ garde son prix d'achat", () => {
+  it("prix multiplié selon le secteur, charge fixe au parc ; le parc de départ garde son prix d'achat", () => {
     for (const code of [...NEUF, ...GAMMES]) {
       const avant = composer(code, 4, false).equipment!;
       const apres = composer(code, 4, true).equipment!;
       for (const [i, t] of apres.types.entries()) {
-        expect(t.costPerUnit).toBe(avant.types[i]!.costPerUnit * MULTIPLICATEUR_DU_PRIX_DES_MACHINES);
+        expect(t.costPerUnit).toBe(Math.round((avant.types[i]!.costPerUnit * MULTIPLICATEUR_DU_PRIX_DES_MACHINES[code]!) / 1000) * 1000);
         expect(t.chargeFixeParTour).toBe(Math.round(t.costPerUnit * CHARGE_FIXE_DES_MACHINES));
         expect(t.prixDuParcDeDepart).toBe(avant.types[i]!.costPerUnit);
       }
@@ -359,20 +377,30 @@ describe("11. une machine coûte ce qu'elle rapporte, et une capacité vide coû
   });
 
   /**
-   * Relevé (0.1.0) : la ligne manuelle de NOVA, pleinement vendue, rapportait 3 218 % par
-   * an (elle se payait en 0,71 trimestre). Décuplée et chargée, environ 58 %. Les
-   * autres entreprises s'écartent de la cible : voir le rapport du relevé.
+   * Relevé (0.1.0) : pleinement vendue, la plus petite machine rapportait de 846 % par an
+   * (chambre de L'ESCALE) à plus d'un million de pour cent (poste junior du conseil) ; au
+   * prix décuplé partout, de 23 % (hôtel) à plus de 3 500 % (conseil). Au prix de son
+   * secteur, environ 65 % partout. Au conseil, la capacité ne se vend qu'avec l'équipe :
+   * chaque jour vendu paie le consultant qui le facture, et la mise compte ses recrutements.
    */
-  it("NOVA : la ligne manuelle pleinement vendue rapporte environ 65 % par an", () => {
-    const s = composer("nova", 4, true);
-    const r = partie("nova", 1, true).res[0]!;
-    const vendu = Object.values(r.market.bySegment).reduce((t, x) => t + x.sold, 0);
-    const marge = r.incomeStatement.revenue / vendu - r.breakeven.unitVariableCost;
-    const t = s.equipment!.types.find((x) => x.code === "manual")!;
-    const tri = triAnnuel(t.costPerUnit, t.capacityPerUnit * marge - t.chargeFixeParTour!, t.depreciationRounds);
-    expect(tri).toBeGreaterThan(0.45);
-    expect(tri).toBeLessThan(0.85);
-  });
+  for (const code of [...NEUF, ...GAMMES]) {
+    it(`${code} : la plus petite machine, pleinement vendue, rapporte environ 65 % par an`, () => {
+      const s = composer(code, 4, true);
+      const { res, rounds } = partie(code, 1, true);
+      const r = res[0]!;
+      const vendu = Object.values(r.market.bySegment).reduce((t, x) => t + x.sold, 0);
+      const marge = r.incomeStatement.revenue / vendu - r.breakeven.unitVariableCost;
+      const t = [...s.equipment!.types].sort((a, b) => a.costPerUnit - b.costPerUnit)[0]!;
+      const equipe = code.startsWith("conseil");
+      const heures = (s.products?.[0] ?? s.product).hoursPerUnit;
+      const joursParSalarie = rounds[0]!.companies.find((c) => c.id === "joueur")!.hoursPerEmployee / heures;
+      const salaireParUnite = equipe ? s.hr!.salaryPerEmployeePerRound / joursParSalarie : 0;
+      const recrutements = equipe ? Math.ceil(t.capacityPerUnit / joursParSalarie) * s.hr!.hiringCost : 0;
+      const tri = triAnnuel(t.costPerUnit + recrutements, t.capacityPerUnit * (marge - salaireParUnite) - t.chargeFixeParTour!, t.depreciationRounds);
+      expect(tri).toBeGreaterThan(0.6);
+      expect(tri).toBeLessThan(0.7);
+    });
+  }
 
   /**
    * Relevé (0.1.0) : là où la demande ne manque pas (aucune vente perdue au premier
@@ -418,13 +446,13 @@ describe("le bon gestionnaire reste nettement meilleur que les stratégies naïv
     expect(depassements).toEqual([]);
   });
 
-  it("à l'équilibre d'avant, licencier ou sous-payer battait le bon gestionnaire dans six entreprises sur neuf au moins", () => {
-    const depassements = NEUF.filter((code) => ecart(code, 8, false, SOUS_PAYER) > 0 || ecart(code, 8, false, LICENCIER) > 0);
-    expect(depassements.length).toBeGreaterThanOrEqual(6);
+  it("à l'équilibre d'avant, licencier ou sous-payer battait le bon gestionnaire dans onze entreprises sur quinze au moins", () => {
+    const depassements = [...NEUF, ...GAMMES].filter((code) => ecart(code, 8, false, SOUS_PAYER) > 0 || ecart(code, 8, false, LICENCIER) > 0);
+    expect(depassements.length).toBeGreaterThanOrEqual(11);
   });
 });
 
-// La machine du bon gestionnaire suit le même prix : le parc ne s'achète qu'au prix décuplé.
+// La machine du bon gestionnaire suit le même prix : le parc ne s'achète qu'au prix de l'équilibre.
 it("le catalogue de l'arène, lu hors d'une partie, donne le prix d'une partie créée aujourd'hui", () => {
-  expect(avecLEquilibre(scenarioByCode("nova").scenario).equipment!.types.find((t) => t.code === "manual")!.costPerUnit).toBe(150_000);
+  expect(avecLEquilibre(scenarioByCode("nova").scenario).equipment!.types.find((t) => t.code === "manual")!.costPerUnit).toBe(140_000);
 });
