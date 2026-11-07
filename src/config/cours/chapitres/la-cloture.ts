@@ -41,7 +41,9 @@ import { etapesAvant, etapesDepuis, partieDuChapitre } from "./decoupage";
  *     le chemin) ;
  *   · expert : emprunter-pour-placer (une critique chiffrée de la trésorerie, au taux marginal),
  *     variante-degressive (une variante chiffrée : le résultat et l'impôt en dégressif),
- *     le-degressif-differe (la critique : l'impôt n'est que décalé), a-rebours (retrouver le stock
+ *     le-degressif-differe (la critique : l'impôt n'est que décalé), puis, dans la suite,
+ *     le-laboratoire-de-la-decision (le taux du placement, celui de l'emprunt, le mode
+ *     d'amortissement : le défi demande un gain après impôt, que le mode ne change pas), a-rebours (retrouver le stock
  *     et son coût unitaire à partir d'un autre résultat) ; puis la synthèse.
  *
  * Ce qui a disparu : la lecture de l'année de l'arène (c.annee, ses quatre trimestres), l'étape « Et
@@ -242,6 +244,55 @@ export function laboratoireDesTravaux(x: ClotureDeNova, p: Readonly<Record<strin
 
 /** Le départ du laboratoire : les trois travaux oubliés, le linéaire du plan. */
 export const DEPART_DU_LABORATOIRE = { stock: CHOIX_DU_STOCK.oublie, facture: CHOIX_DE_LA_FACTURE.oubliee, interets: CHOIX_DES_INTERETS.oublies, mode: MODES_D_AMORTISSEMENT.lineaire } as const;
+
+/** Les taux du laboratoire de la décision, en points de base : le pas, et les bornes du taux de l'emprunt. */
+export const TAUX_DE_LA_DECISION = { pas: 25, empruntMin: 100, empruntMax: 800 } as const;
+
+/** Ce que le défi de la décision demande à l'emprunt gardé : un gain rond, après impôt. */
+export const GAIN_APRES_IMPOT_DEMANDE = 750;
+
+/** Le départ du laboratoire de la décision : les taux de la fiche, le linéaire du plan. */
+export function departDeLaDecision(x: ClotureDeNova) {
+  return { placement: Math.round(x.f.placement.tauxAnnuel * POINTS_DE_BASE), emprunt: Math.round(x.f.pret.tauxAnnuel * POINTS_DE_BASE), mode: MODES_D_AMORTISSEMENT.lineaire };
+}
+
+/**
+ * LE LABORATOIRE DE LA DÉCISION, après la clôture : le taux du compte à terme, celui de l'emprunt (en
+ * points de base) et le mode d'amortissement. Le résultat est celui de la clôture du modèle, au taux
+ * de placement et au mode choisis, l'emprunt à son nouveau taux ; ce que l'emprunt gardé rapporte
+ * après impôt est l'écart de résultat net avec la même clôture sans lui (ni sa charge, ni ses fonds
+ * placés).
+ */
+export function laboratoireDeLaDecision(x: ClotureDeNova, p: Readonly<Record<string, number>>) {
+  const f = x.f;
+  const tauxDuPlacement = p.placement! / POINTS_DE_BASE;
+  const modeDAmortissement = p.mode === MODES_D_AMORTISSEMENT.degressif ? "degressif" : "lineaire";
+  const chargeDeLEmprunt = empruntALaCloture({ ...f.pret, tauxAnnuel: p.emprunt! / POINTS_DE_BASE }).chargeDInterets;
+  const produitDesFonds = interetsDuPlacement(f.pret.capital, tauxDuPlacement, f.placement.date, f.cloture);
+  const interetsNets = auCentime(produitDesFonds - chargeDeLEmprunt);
+  const k = clotureDuMonde(f, { travauxOublies: TRAVAUX_DU_PALIER_SUIVANT, modeDAmortissement, tauxDuPlacement });
+  // La clôture du modèle porte l'emprunt au taux de la fiche : sa charge fait place à celle du levier.
+  const resultatAvantImpot = auCentime(k.resultatAvantImpot + x.chargeDeLEmprunt - chargeDeLEmprunt);
+  const impot = impotSurLesSocietes(resultatAvantImpot, f.impot);
+  // L'impôt que l'emprunt gardé ajoute, avant l'arrondi à l'euro : ses intérêts nets au taux marginal,
+  // le taux normal quand le résultat, avec et sans l'emprunt, dépasse le plafond du taux réduit.
+  const sansLEmprunt = auCentime(resultatAvantImpot - interetsNets);
+  const impotEnPlus =
+    Math.min(resultatAvantImpot, sansLEmprunt) > f.impot.plafondDuTauxReduit
+      ? auCentime(interetsNets * f.impot.tauxNormal)
+      : auCentime(impot.exact - impotSurLesSocietes(sansLEmprunt, f.impot).exact);
+  return {
+    produitDesFonds,
+    chargeDeLEmprunt,
+    interetsNets,
+    dotation: k.travaux.find((t) => t.code === "dotation")!.montant,
+    resultatAvantImpot,
+    impot: impot.impot,
+    resultatNet: auCentime(resultatAvantImpot - impot.impot),
+    impotEnPlus,
+    gainApresImpot: auCentime(interetsNets - impotEnPlus),
+  };
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // LE JOURNAL : LA BALANCE D'OUVERTURE, ET CE QUE LE CHAPITRE Y AJOUTE
@@ -1212,7 +1263,92 @@ export const DECIDER_APRES_LA_CLOTURE: Chapitre = partieDuChapitre(
       },
       repere: () => "Une décision se juge au taux marginal de l'impôt : celui que paie le dernier euro de résultat, pas le taux moyen.",
     },
-    ...etapesDepuis(LA_CLOTURE_ENTIERE, "predire-le-placement"),
+    ...etapesDepuis(LA_CLOTURE_ENTIERE, "predire-le-placement", "a-rebours"),
+    {
+      id: "le-laboratoire-de-la-decision",
+      objectifs: [4, 2],
+      type: "simulation",
+      titre: "Le laboratoire de la décision",
+      notions: ["loan_schedule", "depreciation", "income_statement"],
+      question: (c) => {
+        const x = clotureDeNova(c);
+        return `Le banquier de ${x.f.entreprise} propose de renégocier l'emprunt, une autre banque offre un compte à terme mieux rémunéré, et le dirigeant hésite encore sur le mode d'amortissement de la ligne. Faites varier les trois, les taux en points de base (100 points de base font 1 %). Le tableau suit les intérêts des ${eur(x.f.pret.capital)} empruntés et placés, la charge de l'emprunt, le résultat, l'impôt, et ce que garder l'emprunt rapporte à ${x.f.entreprise} une fois l'impôt payé.`;
+      },
+      leviers: (c) => {
+        const d = departDeLaDecision(clotureDeNova(c));
+        return [
+          { code: "placement", libelle: "Taux du compte à terme", unite: "points de base", min: 0, max: TAUX_MAXIMAL_DU_CURSEUR, pas: TAUX_DE_LA_DECISION.pas, depart: d.placement },
+          { code: "emprunt", libelle: "Taux de l'emprunt", unite: "points de base", min: TAUX_DE_LA_DECISION.empruntMin, max: TAUX_DE_LA_DECISION.empruntMax, pas: TAUX_DE_LA_DECISION.pas, depart: d.emprunt },
+          {
+            code: "mode",
+            libelle: "L'amortissement de la ligne",
+            unite: "",
+            min: MODES_D_AMORTISSEMENT.lineaire,
+            max: MODES_D_AMORTISSEMENT.degressif,
+            pas: 1,
+            depart: d.mode,
+            choix: [
+              { valeur: MODES_D_AMORTISSEMENT.lineaire, libelle: "Linéaire" },
+              { valeur: MODES_D_AMORTISSEMENT.degressif, libelle: "Dégressif" },
+            ],
+          },
+        ];
+      },
+      lecture: (c, p) => {
+        const x = clotureDeNova(c);
+        const l = laboratoireDeLaDecision(x, p);
+        const d = laboratoireDeLaDecision(x, departDeLaDecision(x));
+        return [
+          { libelle: "Intérêts des fonds empruntés, placés", montant: l.produitDesFonds, reference: d.produitDesFonds, effet: true },
+          { libelle: "Charge de l'emprunt sur l'exercice", montant: -l.chargeDeLEmprunt, reference: -d.chargeDeLEmprunt, effet: true },
+          { libelle: "Intérêts nets de l'emprunt gardé", montant: l.interetsNets, reference: d.interetsNets, fort: true },
+          { libelle: "Dotation aux amortissements", montant: -l.dotation, reference: -d.dotation, effet: true },
+          { libelle: "Résultat avant impôt", montant: l.resultatAvantImpot, reference: d.resultatAvantImpot },
+          { libelle: "Impôt sur les sociétés", montant: l.impot, reference: d.impot },
+          { libelle: "Résultat net", montant: l.resultatNet, reference: d.resultatNet },
+          { libelle: "Ce que l'emprunt gardé rapporte, après impôt", montant: l.gainApresImpot, reference: d.gainApresImpot, fort: true },
+        ].map((y) => ({ ...y, montant: y.montant + 0, reference: y.reference + 0 }));
+      },
+      // Ce que l'emprunt gardé rapporte selon le taux du placement : avant impôt, et ce que l'impôt en laisse.
+      graphique: (c) => {
+        const x = clotureDeNova(c);
+        return {
+          levier: "placement",
+          courbes: [
+            { libelle: "Intérêts nets de l'emprunt gardé", valeur: (p) => laboratoireDeLaDecision(x, p).interetsNets },
+            { libelle: "Ce qu'il rapporte, après impôt", valeur: (p) => laboratoireDeLaDecision(x, p).gainApresImpot },
+          ],
+        };
+      },
+      defi: (c) => {
+        const x = clotureDeNova(c);
+        const t = x.f.impot.tauxNormal;
+        return {
+          consigne: `Trouvez des taux où garder l'emprunt rapporte à ${x.f.entreprise} au moins ${eur(GAIN_APRES_IMPOT_DEMANDE)}, une fois l'impôt payé, dans le mode d'amortissement de votre choix.`,
+          atteint: (p) => laboratoireDeLaDecision(x, p).gainApresImpot >= GAIN_APRES_IMPOT_DEMANDE,
+          indice: (p) => {
+            const l = laboratoireDeLaDecision(x, p);
+            const debut =
+              l.interetsNets <= 0
+                ? `Garder l'emprunt coûte encore ${eur(-l.interetsNets)} avant impôt : les fonds placés rapportent moins que l'emprunt ne coûte.`
+                : `Garder l'emprunt rapporte ${eur(l.interetsNets)} avant impôt, mais l'impôt en prend ${eur(l.impotEnPlus)} : il n'en reste que ${eur(l.gainApresImpot)}.`;
+            return `${debut} Au taux marginal de ${pct(t)}, ${eur(GAIN_APRES_IMPOT_DEMANDE)} après impôt demandent ${eur(auCentime(GAIN_APRES_IMPOT_DEMANDE / (1 - t)))} d'intérêts nets. Le mode d'amortissement, lui, n'y change rien.`;
+          },
+          solution: { placement: 500, emprunt: 375, mode: MODES_D_AMORTISSEMENT.lineaire },
+        };
+      },
+      explication: (c, p) => {
+        const x = clotureDeNova(c);
+        const l = laboratoireDeLaDecision(x, p);
+        const autre = laboratoireDeLaDecision(x, { ...p, mode: p.mode === MODES_D_AMORTISSEMENT.degressif ? MODES_D_AMORTISSEMENT.lineaire : MODES_D_AMORTISSEMENT.degressif });
+        const [lin, deg] = p.mode === MODES_D_AMORTISSEMENT.degressif ? [autre, l] : [l, autre];
+        return [
+          `À ${pct(p.placement! / POINTS_DE_BASE)} pour le placement et ${pct(p.emprunt! / POINTS_DE_BASE)} pour l'emprunt, les fonds empruntés rapportent ${eur(l.produitDesFonds)} et l'emprunt coûte ${eur(l.chargeDeLEmprunt)} : ${eur(l.interetsNets)} d'intérêts nets, dont l'impôt prend ${eur(l.impotEnPlus)}, au taux marginal. Il reste ${eur(l.gainApresImpot)} à ${x.f.entreprise}.`,
+          `Passez d'un mode à l'autre : le résultat net va de ${eur(lin.resultatNet)} en linéaire à ${eur(deg.resultatNet)} en dégressif, l'impôt de ${eur(lin.impot)} à ${eur(deg.impot)}, mais ce que l'emprunt rapporte reste ${eur(l.gainApresImpot)}. Le mode d'amortissement déplace le résultat d'un exercice à l'autre ; une décision de trésorerie se juge sur ce qu'elle change, après impôt, et ce chiffre-là ne dépend pas de lui.`,
+        ];
+      },
+    },
+    ...etapesDepuis(LA_CLOTURE_ENTIERE, "a-rebours"),
   ],
   {
     code: CODE_DE_LA_SUITE_DE_LA_CLOTURE,

@@ -427,6 +427,79 @@ describe("la clôture : les étapes", () => {
     expect((DECIDER_APRES_LA_CLOTURE.etapes.find((e) => e.id === "a-rebours") as EtapeMontants).question(cas, etatVide)).toContain("107\u202f257,96 €");
   });
 
+  it("le laboratoire de la décision : un gain après impôt que le mode d'amortissement ne change pas", () => {
+    const l = laboratoire(DECIDER_APRES_LA_CLOTURE, "le-laboratoire-de-la-decision");
+    expect(l.depart).toEqual({ placement: 300, emprunt: 500, mode: 0 });
+    expect(l.solution).toEqual({ placement: 500, emprunt: 375, mode: 0 });
+    expect(l.reussi).toEqual([false, true]);
+    // La charge de l'emprunt à un autre taux, à la main : trois échéances payées sur 80 000, 76 000 et
+    // 72 000 €, puis 88 jours sur 90 de l'échéance de janvier, sur 68 000 €.
+    const chargeA = (bp: number) => {
+      const t = bp / 10_000 / 4;
+      return c(c(c(80_000 * t) + c(76_000 * t) + c(72_000 * t)) + c((c(68_000 * t) * 88) / 90));
+    };
+    const placeA = (montant: number, bp: number) => c((montant * (bp / 10_000) * 355) / 360);
+    const degressive = c(60_000 * (1.75 / 6));
+    // L'impôt au barème, calculé au centime puis arrondi à l'euro (un demi-euro exact monte).
+    const impotDe = (r: number) => Math.round(c(6_375 + c(r - 42_500) * 0.25));
+    const lire = (p: Record<string, number>) => {
+      const produit = placeA(80_000, p.placement!);
+      const charge = chargeA(p.emprunt!);
+      const nets = c(produit - charge);
+      const dot = p.mode === 1 ? degressive : dotation;
+      const r = c(rai - placement + placeA(133_000, p.placement!) + chargeA(500) - charge + dotation - dot);
+      return {
+        "Intérêts des fonds empruntés, placés": produit,
+        "Charge de l'emprunt sur l'exercice": -charge,
+        "Intérêts nets de l'emprunt gardé": nets,
+        "Dotation aux amortissements": -dot,
+        "Résultat avant impôt": r,
+        "Impôt sur les sociétés": impotDe(r),
+        "Résultat net": c(r - impotDe(r)),
+        "Ce que l'emprunt gardé rapporte, après impôt": c(nets - c(nets * 0.25)),
+      };
+    };
+    expect(chargeA(500)).toBe(c(2_850 + icne));
+    expect(l.auDepart).toEqual(lire(l.depart));
+    expect(l.auDepart["Ce que l'emprunt gardé rapporte, après impôt"]).toBe(-985.83);
+    expect(l.aLaSolution).toEqual(lire(l.solution));
+    expect(l.aLaSolution["Ce que l'emprunt gardé rapporte, après impôt"]).toBe(887.71);
+    // Sur la grille des taux, le défi se relève exactement quand l'emprunt gardé laisse 750 € après
+    // impôt, et ce gain est le même dans les deux modes ; aux bornes et autour du seuil, la lecture suit la main.
+    const reussies = new Set<string>();
+    for (let placement = 0; placement <= 600; placement += 50)
+      for (let emprunt = 100; emprunt <= 800; emprunt += 50)
+        for (const mode of [0, 1]) {
+          const p = { placement, emprunt, mode };
+          const gain = lire(p)["Ce que l'emprunt gardé rapporte, après impôt"];
+          expect(l.d.atteint(p), JSON.stringify(p)).toBe(gain >= 750);
+          if (l.d.atteint(p)) reussies.add(`${placement}/${emprunt}`);
+          expect(lire({ ...p, mode: 1 - mode })["Ce que l'emprunt gardé rapporte, après impôt"]).toBe(gain);
+        }
+    for (const p of [
+      { placement: 0, emprunt: 800, mode: 1 },
+      { placement: 600, emprunt: 100, mode: 0 },
+      { placement: 200, emprunt: 700, mode: 0 },
+      { placement: 600, emprunt: 500, mode: 1 },
+      { placement: 575, emprunt: 500, mode: 0 },
+    ])
+      expect(Object.fromEntries(l.e.lecture(cas, p).map((x) => [x.libelle, x.montant])), JSON.stringify(p)).toEqual(lire(p));
+    // Au taux de l'emprunt de la fiche, il faut placer à 6 % ; au taux du placement, emprunter à 1,5 % au plus.
+    expect([...reussies].filter((x) => x.endsWith("/500"))).toEqual(["600/500"]);
+    expect([...reussies].filter((x) => x.startsWith("300/"))).toEqual(["300/100", "300/150"]);
+    // L'indice part de ce que coûte l'emprunt, et rappelle le taux marginal.
+    expect(l.d.indice(l.depart)).toMatch(/^Garder l'emprunt coûte encore 1\u202f314,44 € avant impôt/);
+    expect(l.d.indice(l.depart)).toContain("1\u202f000 € d'intérêts nets");
+    // Le graphique suit le taux du placement : les intérêts nets, et ce que l'impôt en laisse.
+    const g = l.e.graphique!(cas);
+    expect(g.levier).toBe("placement");
+    const nets = c(placeA(80_000, 600) - chargeA(500));
+    expect(g.courbes.map((x) => x.valeur({ ...l.depart, placement: 600 }))).toEqual([nets, c(nets - c(nets * 0.25))]);
+    expect(nets).toBe(1_052.22);
+  }, 30_000);
+
+  it("textes propres, une seule bonne réponse, notions existantes : la suite", () => verifierLesTextes(DECIDER_APRES_LA_CLOTURE));
+
   it("les verdicts : le pari du stock, le pari du placement, le dégressif ne fait que décaler l'impôt", () => {
     expect(juste(ch, "predire-le-stock")).toBe("Monter le résultat : ces jeux sortent des charges de l'exercice");
     expect(juste(DECIDER_APRES_LA_CLOTURE, "predire-le-placement")).toBe("Coûte : la même somme placée rapporte moins que l'emprunt ne coûte");

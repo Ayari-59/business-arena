@@ -33,7 +33,9 @@ import type { Chapitre, EtatDuCours, Piece, TableauDeDonnees } from "../types";
  *     déductible, TVA due ou crédit de TVA) avant tva-nette ; predire-la-banque puis
  *     le-laboratoire-de-la-tresorerie (le délai du client, ses ventes à crédit, le délai du
  *     fournisseur et le jour du règlement de l'URSSAF : la banque bouge, le résultat jamais) avant
- *     du-resultat-a-la-banque ;
+ *     du-resultat-a-la-banque ; après le bilan, le-laboratoire-du-premier-bilan (l'apport, l'emprunt et
+ *     le prix de l'équipement : la banque, les capitaux propres et le total du bilan bougent, le
+ *     résultat jamais ; le défi finance un équipement plus cher sans entamer la banque) ;
  *   · autonome : tva-nette, resultat, bilan, du-resultat-a-la-banque, les trois règlements des
  *     échéances (ni formule ni chiffres à prendre ; le calcul de la correction montre le chemin) ;
  *   · expert : a-rebours (retrouver les ventes au comptant à partir du seul relevé de banque),
@@ -42,8 +44,8 @@ import type { Chapitre, EtatDuCours, Piece, TableauDeDonnees } from "../types";
  *     puis la synthèse.
  *
  * AUDIT PÉDAGOGIQUE (P1-4, P1-8) : le chapitre faisait trente étapes, et c'est la démonstration
- * libre du cours. Il s'arrête maintenant au bilan du 31 janvier (dix-neuf étapes, avec la synthèse) ;
- * la trésorerie, les échéances et le niveau de l'examen forment la suite, DU_RESULTAT_A_LA_TRESORERIE
+ * libre du cours. Il s'arrête maintenant au bilan du 31 janvier et à son laboratoire (vingt étapes,
+ * avec la synthèse) ; la trésorerie, les échéances et le niveau de l'examen forment la suite, DU_RESULTAT_A_LA_TRESORERIE
  * (plus bas), qui repart de la balance du 31 janvier. Les étapes, leurs textes et leurs chiffres
  * n'ont pas changé.
  *
@@ -380,6 +382,54 @@ export function tresorerieDeJanvier(c: Cas, p: PositionDeLaTresorerie) {
 export function seuilDuDefi(c: Cas) {
   const d = tresorerieDeJanvier(c, departDeLaTresorerie(c));
   return Math.floor((d.banque + c.venteCredit.ttc) / ARRONDI_DU_DEFI) * ARRONDI_DU_DEFI;
+}
+
+/** Une position du laboratoire du premier bilan : ce qui finance l'entreprise, et ce que coûte son équipement. */
+export interface PositionDuPremierBilan {
+  /** L'apport des associés en capital. */
+  apport: number;
+  /** Les fonds prêtés par la banque. */
+  emprunt: number;
+  /** Le prix hors taxes de l'équipement. */
+  equipement: number;
+}
+
+/** La position du cas : celle d'où part le laboratoire du premier bilan. */
+export const departDuPremierBilan = (c: Cas): PositionDuPremierBilan => ({ apport: c.capital, emprunt: c.emprunt, equipement: c.immobilisation.ht });
+
+/**
+ * LE LABORATOIRE DU PREMIER BILAN : le même mois, passé au journal avec un autre apport, un autre
+ * emprunt ou un autre équipement (sa TVA au taux de la facture), puis le compte de résultat et le
+ * bilan du 31 janvier tirés de ce journal. Le résultat ne dépend d'aucun levier : ni l'apport, ni
+ * l'emprunt, ni l'équipement ne sont des charges.
+ */
+export function premierBilanAvec(c: Cas, p: PositionDuPremierBilan) {
+  const tva = auCentime(p.equipement * c.immobilisation.tauxTva);
+  const autre: Cas = { ...c, capital: p.apport, emprunt: p.emprunt, immobilisation: { ...c.immobilisation, ht: p.equipement, tva, ttc: auCentime(p.equipement + tva) } };
+  const s = soldesDeJanvier(autre);
+  const resultat = compteDeResultat(s).resultat;
+  return {
+    resultat,
+    capitauxPropres: auCentime(p.apport + resultat),
+    emprunts: p.emprunt,
+    tva: tvaNette(s),
+    banque: s["512"] ?? 0,
+    total: bilan(s).totalActif,
+  };
+}
+
+/** Le prix de l'équipement que vise le défi du laboratoire : le double de celui du cas. */
+export const MULTIPLE_DE_L_EQUIPEMENT = 2;
+export const equipementVise = (c: Cas) => MULTIPLE_DE_L_EQUIPEMENT * c.immobilisation.ht;
+
+/** Le pas des leviers du laboratoire du premier bilan, en euros : l'apport de chaque cas tombe dessus. */
+export const PAS_DU_PREMIER_BILAN = 10;
+
+/** Les bornes hautes du laboratoire : l'apport et l'emprunt du cas plus l'équipement visé, l'équipement deux fois visé, arrondis. */
+export function bornesDuPremierBilan(c: Cas) {
+  const arrondi = (x: number) => Math.ceil(x / ARRONDI_DU_CURSEUR) * ARRONDI_DU_CURSEUR;
+  const vise = equipementVise(c);
+  return { financement: arrondi(c.capital + c.emprunt + vise * (1 + c.immobilisation.tauxTva)), equipement: arrondi(2 * vise) };
 }
 
 /** La balance du 31 janvier, compte par compte, telle qu'un examinateur la donne. */
@@ -924,6 +974,74 @@ export const CREATION_PREMIER_BILAN: Chapitre = {
         ];
       },
       vue: "bilan",
+    },
+    {
+      id: "le-laboratoire-du-premier-bilan",
+      objectifs: [1, 4],
+      type: "simulation",
+      titre: "Le laboratoire du premier bilan",
+      notions: ["balance_sheet", "loan_schedule", "income_statement"],
+      question: (c) =>
+        `Le bilan du 31 janvier est dressé. Refaites le mois avec un autre financement ou un autre équipement : l'apport des associés, l'emprunt bancaire, le prix hors taxes de l'équipement (sa TVA suit, au même taux). Le reste du mois ne change pas. Le tableau suit le résultat, les capitaux propres, les emprunts, la TVA du mois, la banque et le total du bilan ${dE(c.entreprise)}.`,
+      leviers: (c) => {
+        const d = departDuPremierBilan(c);
+        const b = bornesDuPremierBilan(c);
+        return [
+          { code: "apport", libelle: "Apport des associés", unite: "€", min: 0, max: b.financement, pas: PAS_DU_PREMIER_BILAN, depart: d.apport },
+          { code: "emprunt", libelle: "Emprunt bancaire", unite: "€", min: 0, max: b.financement, pas: PAS_DU_PREMIER_BILAN, depart: d.emprunt },
+          { code: "equipement", libelle: "Prix de l'équipement, hors taxes", unite: "€", min: 0, max: b.equipement, pas: PAS_DU_PREMIER_BILAN, depart: d.equipement },
+        ];
+      },
+      lecture: (c, p) => {
+        const l = premierBilanAvec(c, p as unknown as PositionDuPremierBilan);
+        const d = premierBilanAvec(c, departDuPremierBilan(c));
+        return [
+          { libelle: "Résultat de janvier", montant: l.resultat, reference: d.resultat, fort: true },
+          { libelle: "Capitaux propres, capital et résultat", montant: l.capitauxPropres, reference: d.capitauxPropres },
+          { libelle: "Emprunts", montant: l.emprunts, reference: d.emprunts },
+          { libelle: "TVA du mois : due si positive, crédit si négative", montant: l.tva, reference: d.tva },
+          { libelle: "Banque au 31 janvier", montant: l.banque, reference: d.banque, fort: true },
+          { libelle: "Total du bilan", montant: l.total, reference: d.total, fort: true },
+        ];
+      },
+      // Selon le prix de l'équipement : la banque baisse du prix TVA comprise, le total du bilan bouge
+      // moins (l'équipement entre à l'actif), le résultat ne bouge pas.
+      graphique: (c) => ({
+        levier: "equipement",
+        courbes: [
+          { libelle: "Banque au 31 janvier", valeur: (p) => premierBilanAvec(c, p as unknown as PositionDuPremierBilan).banque },
+          { libelle: "Total du bilan", valeur: (p) => premierBilanAvec(c, p as unknown as PositionDuPremierBilan).total },
+          { libelle: "Résultat de janvier", valeur: (p) => premierBilanAvec(c, p as unknown as PositionDuPremierBilan).resultat },
+        ],
+      }),
+      defi: (c) => {
+        const vise = equipementVise(c);
+        const d = departDuPremierBilan(c);
+        const seuil = premierBilanAvec(c, d).banque;
+        const enPlus = auCentime((vise - c.immobilisation.ht) * (1 + c.immobilisation.tauxTva));
+        return {
+          consigne: `Le dirigeant voudrait un équipement de ${eur(vise)} hors taxes au lieu de ${eur(c.immobilisation.ht)}. Financez-le, sans que la banque du 31 janvier descende sous ${eur(seuil)}, celle du mois tel qu'il a été.`,
+          atteint: (p) => p.equipement! >= vise && premierBilanAvec(c, p as unknown as PositionDuPremierBilan).banque >= seuil,
+          indice: (p) => {
+            const l = premierBilanAvec(c, p as unknown as PositionDuPremierBilan);
+            const resultat = `Le résultat, lui, reste à ${eur(l.resultat)} quoi que vous fassiez.`;
+            if (p.equipement! < vise) return `L'équipement coûte ${eur(p.equipement!)} hors taxes ; le dirigeant en veut un de ${eur(vise)}. ${resultat}`;
+            return `L'équipement se paie toutes taxes comprises, et la banque tombe à ${eur(l.banque)} : il manque ${eur(auCentime(seuil - l.banque))}. Qui peut apporter cet argent à l'entreprise ? ${resultat}`;
+          },
+          solution: { apport: d.apport, emprunt: d.emprunt + Math.ceil(enPlus / PAS_DU_PREMIER_BILAN) * PAS_DU_PREMIER_BILAN, equipement: vise },
+        };
+      },
+      explication: (c, p) => {
+        const l = premierBilanAvec(c, p as unknown as PositionDuPremierBilan);
+        const d = premierBilanAvec(c, departDuPremierBilan(c));
+        const tva = auCentime(p.equipement! * c.immobilisation.tauxTva);
+        const ligne = (nom: string, avant: number, apres: number) => (avant === apres ? `${nom} restent à ${eur(apres)}` : `${nom} passent de ${eur(avant)} à ${eur(apres)}`);
+        return [
+          `Le résultat est resté à ${eur(l.resultat)} dans toutes les positions : l'apport et l'emprunt sont des ressources, l'équipement une immobilisation, et aucun n'est une charge. L'emprunt ne coûtera que ses intérêts, l'équipement que son usure, au fil des mois.`,
+          `Ce qui a bougé, c'est le bilan. ${ligne("Les capitaux propres", d.capitauxPropres, l.capitauxPropres)}, ${ligne("les emprunts", d.emprunts, l.emprunts)} : un apport fait monter les capitaux propres, un emprunt les dettes. La banque finit à ${eur(l.banque)}, le total du bilan à ${eur(l.total)} au lieu de ${eur(d.total)}.`,
+          `La TVA de l'équipement, ${eur(tva)}, ne passe pas non plus par le résultat : elle se déduit, et janvier finit sur ${tvaDite(l.tva)}.`,
+        ];
+      },
     },
     {
       id: "fin",

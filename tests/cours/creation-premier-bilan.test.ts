@@ -22,7 +22,8 @@ import { compteDuPlan } from "../../src/pedagogy/cours/plan-comptable";
  * Chaque chiffre attendu est refait ici à la main sur le cas figé de chaque entreprise
  * (monde/cas-des-entreprises.ts), sans les fonctions du chapitre : le résultat, la TVA, la banque et
  * le bilan de janvier, le curseur de l'équipement (attendu, voisin, droites aux bornes, lecture), le
- * laboratoire de la trésorerie (lecture au départ et à la solution, courbes du graphique), le calcul
+ * laboratoire du premier bilan et celui de la trésorerie (lecture au départ et à la solution, courbes
+ * du graphique), le calcul
  * à rebours, le mois complet ; les valeurs de NOVA sont épinglées, et les verdicts aussi. Puis les
  * gardes de texte de l'étalon : rien d'indéfini, pas de « de le », pas de tiret au milieu d'une
  * phrase, des élisions faites, le signe moins, une seule bonne réponse, aucune option qui en contient
@@ -216,8 +217,8 @@ function juste(ch: Chapitre, cas: Cas, id: string) {
 /**
  * LE MOIS EN ENTIER (audit pédagogique, P1-4 et P1-8) : le chapitre pilote s'arrête au bilan du 31
  * janvier, sa suite repart de la balance de ce jour. Les gardes de chiffres lisent le mois en entier,
- * le premier chapitre sans sa synthèse puis la suite sans son introduction : les mêmes étapes que
- * l'ancien chapitre de trente étapes.
+ * le premier chapitre sans sa synthèse puis la suite sans son introduction : les étapes de l'ancien
+ * chapitre de trente étapes, et le laboratoire du premier bilan.
  */
 const ch: Chapitre = {
   ...CREATION_PREMIER_BILAN,
@@ -230,9 +231,10 @@ describe("de la création au premier bilan : le chapitre pilote, dans les neuf e
     expect(CHAPITRES[1]).toBe(DU_RESULTAT_A_LA_TRESORERIE);
     expect(ch.libre).toBe(true);
     expect([DU_RESULTAT_A_LA_TRESORERIE.libre, DU_RESULTAT_A_LA_TRESORERIE.palier, DU_RESULTAT_A_LA_TRESORERIE.parcours]).toEqual([false, 2, "comptabilite-generale"]);
-    // Le découpage : dix-neuf étapes jusqu'au bilan, treize pour la trésorerie et les échéances.
-    expect([CREATION_PREMIER_BILAN.etapes.length, DU_RESULTAT_A_LA_TRESORERIE.etapes.length]).toEqual([19, 13]);
-    expect(CREATION_PREMIER_BILAN.etapes.at(-2)!.id).toBe("bilan");
+    // Le découpage : vingt étapes jusqu'au bilan et son laboratoire, treize pour la trésorerie et les échéances.
+    expect([CREATION_PREMIER_BILAN.etapes.length, DU_RESULTAT_A_LA_TRESORERIE.etapes.length]).toEqual([20, 13]);
+    expect(CREATION_PREMIER_BILAN.etapes.at(-3)!.id).toBe("bilan");
+    expect(CREATION_PREMIER_BILAN.etapes.at(-2)!.id).toBe("le-laboratoire-du-premier-bilan");
     expect(DU_RESULTAT_A_LA_TRESORERIE.etapes[1]!.id).toBe("predire-la-banque");
     for (const code of CODES) {
       const cas = casDeLEntreprise(code);
@@ -249,16 +251,16 @@ describe("de la création au premier bilan : le chapitre pilote, dans les neuf e
       ["Non : c'est une ressource, une dette qu'il faudra rembourser.", true],
       ["Non : c'est un produit, l'entreprise s'enrichit.", false],
     ]);
-    // Le gabarit : deux paris, un curseur, un laboratoire, trois étapes d'expert, la synthèse.
+    // Le gabarit : deux paris, un curseur, deux laboratoires, trois étapes d'expert, la synthèse.
     const types = Object.fromEntries(["curseur", "simulation"].map((t) => [t, ch.etapes.filter((e) => e.type === t).map((e) => e.id)]));
-    expect(types).toEqual({ curseur: ["la-tva-de-l-equipement"], simulation: ["le-laboratoire-de-la-tresorerie"] });
+    expect(types).toEqual({ curseur: ["la-tva-de-l-equipement"], simulation: ["le-laboratoire-du-premier-bilan", "le-laboratoire-de-la-tresorerie"] });
     const ordre = (id: string) => ch.etapes.findIndex((e) => e.id === id);
     expect(ordre("predire-la-tva")).toBe(ordre("la-tva-de-l-equipement") - 1);
     expect(ordre("la-tva-de-l-equipement")).toBe(ordre("tva-nette") - 1);
     expect(ordre("predire-la-banque")).toBe(ordre("le-laboratoire-de-la-tresorerie") - 1);
     expect(ordre("le-laboratoire-de-la-tresorerie")).toBe(ordre("du-resultat-a-la-banque") - 1);
     for (const id of ["a-rebours", "le-mois-complet"]) expect((ch.etapes.find((e) => e.id === id) as EtapeMontants).champs(casDeLEntreprise("nova"), { soldes: {} }).length, id).toBeGreaterThanOrEqual(3);
-    expect(ch.etapes.length).toBe(30);
+    expect(ch.etapes.length).toBe(31);
     expect(ch.etapes.at(-1)!.id).toBe("fin");
   });
 
@@ -409,6 +411,65 @@ describe("de la création au premier bilan : le chapitre pilote, dans les neuf e
       m.banque,
     ]);
     expect([0, 45, 90].map((d) => resultat!.valeur({ ...l.depart, delaiClient: d }))).toEqual([m.resultat, m.resultat, m.resultat]);
+  });
+
+  it.each(CODES)("chez %s : le laboratoire du premier bilan, refait à la main ; ni l'apport, ni l'emprunt, ni l'équipement ne touchent au résultat", (code) => {
+    const cas = casDeLEntreprise(code);
+    const m = aLaMain(cas);
+    const l = laboratoire(ch, cas, "le-laboratoire-du-premier-bilan");
+    // Le mois refait à la main avec un autre apport, un autre emprunt, un autre équipement (sa TVA au même taux).
+    const avec = (p: Record<string, number>) => {
+      const tva = centime(p.equipement! * cas.immobilisation.tauxTva);
+      const x = aLaMain({ ...cas, capital: p.apport!, emprunt: p.emprunt!, immobilisation: { ...cas.immobilisation, ht: p.equipement!, tva, ttc: centime(p.equipement! + tva) } });
+      return {
+        "Résultat de janvier": x.resultat,
+        "Capitaux propres, capital et résultat": centime(p.apport! + x.resultat),
+        Emprunts: p.emprunt!,
+        "TVA du mois : due si positive, crédit si négative": x.tva,
+        "Banque au 31 janvier": x.banque,
+        // À découvert, la banque passe au passif : l'actif ne la compte plus.
+        "Total du bilan": x.banque < 0 ? centime(x.actif - x.banque) : x.actif,
+      };
+    };
+    const vise = 2 * cas.immobilisation.ht;
+    const enPlus = centime(cas.immobilisation.ht * 1.2);
+    expect(l.depart).toEqual({ apport: cas.capital, emprunt: cas.emprunt, equipement: cas.immobilisation.ht });
+    expect(l.solution).toEqual({ apport: cas.capital, emprunt: cas.emprunt + enPlus, equipement: vise });
+    expect(l.reussi).toEqual([false, true]);
+    expect(l.auDepart).toEqual({
+      "Résultat de janvier": m.resultat,
+      "Capitaux propres, capital et résultat": centime(cas.capital + m.resultat),
+      Emprunts: cas.emprunt,
+      "TVA du mois : due si positive, crédit si négative": m.tva,
+      "Banque au 31 janvier": m.banque,
+      "Total du bilan": m.actif,
+    });
+    expect(l.aLaSolution).toEqual(avec(l.solution));
+    // À la solution : l'emprunt paie l'équipement TVA comprise, la banque retombe sur celle du cas.
+    expect(l.aLaSolution["Banque au 31 janvier"]).toBe(m.banque);
+    // Le total du bilan monte de l'équipement hors taxes, plus la part de sa TVA qui devient une créance sur l'État.
+    const tvaALaSolution = l.aLaSolution["TVA du mois : due si positive, crédit si négative"]!;
+    expect(l.aLaSolution["Total du bilan"]).toBe(centime(m.actif + cas.immobilisation.ht + Math.max(0, -tvaALaSolution) - Math.max(0, -m.tva)));
+    // Un apport relève aussi le défi ; dix euros de moins, ou un équipement plus petit, ne le relèvent pas.
+    expect(l.atteint({ ...l.solution, apport: cas.capital + enPlus, emprunt: cas.emprunt })).toBe(true);
+    expect(l.atteint({ ...l.solution, emprunt: l.solution.emprunt! - 10 })).toBe(false);
+    expect(l.atteint({ ...l.solution, equipement: vise - 10 })).toBe(false);
+    // Le résultat ne dépend d'aucun levier, aux bornes comme ailleurs ; le reste suit la main.
+    const [apport, emprunt, equipement] = l.e.leviers(cas);
+    for (const p of [l.depart, l.solution, { apport: 0, emprunt: 0, equipement: 0 }, { apport: apport!.max, emprunt: emprunt!.max, equipement: equipement!.max }, { apport: 0, emprunt: 0, equipement: equipement!.max }]) {
+      const lu = Object.fromEntries(l.e.lecture(cas, p).map((x) => [x.libelle, x.montant]));
+      expect(lu["Résultat de janvier"], JSON.stringify(p)).toBe(m.resultat);
+      expect(lu, JSON.stringify(p)).toEqual(avec(p));
+    }
+    // Le graphique : la banque perd le prix TVA comprise, le total du bilan moins, le résultat ne bouge pas.
+    const g = l.e.graphique!(cas);
+    expect(g.levier).toBe("equipement");
+    const [banque, total, resultat] = g.courbes;
+    expect(centime(banque!.valeur({ ...l.depart, equipement: 0 }) - banque!.valeur(l.depart))).toBe(cas.immobilisation.ttc);
+    for (const e of [0, cas.immobilisation.ht, vise]) {
+      expect(total!.valeur({ ...l.depart, equipement: e })).toBe(avec({ ...l.depart, equipement: e })["Total du bilan"]);
+      expect(resultat!.valeur({ ...l.depart, equipement: e })).toBe(m.resultat);
+    }
   });
 
   it("le seuil du défi, épinglé", () => {

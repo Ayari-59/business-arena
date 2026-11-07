@@ -30,7 +30,9 @@ import { ENTREPRISES_DE_LA_CLOTURE, balanceApresLaCloture, clotureDeNova, dateDe
  *     chiffres sont dans la question) ;
  *   · l'expérience avant la formule (prédire, manipuler, constater, formaliser) : predire-l-objectif
  *     puis le-taux-de-perte (un curseur sur la perte estimée : jusqu'où l'objectif annoncé à la banque
- *     tient-il ?) avant resultat ; predire-le-liquidateur puis l-encaissement-qui-suffit (un curseur
+ *     tient-il ?) avant resultat ; après resultat, le-laboratoire-de-la-prudence (la perte estimée et la
+ *     provision, au départ tout au pire : le défi constate ce que les risques justifient, ni plus ni
+ *     moins, sans viser de résultat) ; predire-le-liquidateur puis l-encaissement-qui-suffit (un curseur
  *     sur la part que versera le liquidateur) avant les écritures de N+1 ; puis le laboratoire des deux
  *     exercices (la perte estimée et la provision, le défi « N+1 sans charge nette », un graphique où
  *     le total des deux exercices ne bouge pas) ;
@@ -176,6 +178,26 @@ export function laboratoireDesDeuxExercices(y: PrudenceDeNova, tauxEstime: numbe
     total: auCentime(-(depreciation + provision) + effetDuJugement - chargeNetteCreance),
   };
 }
+
+/**
+ * LE LABORATOIRE DE LA PRUDENCE, au 31 décembre N : la clôture du modèle pour une perte estimée sur la
+ * créance (en %) et une provision pour le litige, les régularisations laissées au chapitre suivant.
+ */
+export function laboratoireDeLaPrudence(y: PrudenceDeNova, tauxEstime: number, provision: number) {
+  const k = clotureDuMonde(y.f, { travauxOublies: TRAVAUX_DES_REGULARISATIONS, tauxDePerteProbable: tauxEstime / 100, provisionPourLitige: provision });
+  const depreciation = k.travaux.find((t) => t.code === "creanceDouteuse")!.montant;
+  return {
+    depreciation,
+    provision,
+    resultat: k.resultatAvantImpot,
+    impot: k.impot.impot,
+    resultatNet: k.resultatNet,
+    valeurNette: auCentime(y.creance.ttc - depreciation),
+  };
+}
+
+/** Le départ du laboratoire de la prudence : tout au pire, la créance dépréciée en entier, le litige à ce que le particulier réclame. */
+export const departDeLaPrudence = (y: PrudenceDeNova) => ({ taux: 100, provision: y.demande });
 
 /** Le journal en ouvrant le chapitre : la balance que « La clôture » a laissée, ses travaux passés, sans l'impôt. */
 function ouverture(c: Pick<Cas, "code">): Ecriture {
@@ -1041,7 +1063,69 @@ export const TITRE_DE_L_ANNEE_SUIVANTE = "Le dénouement des risques : reprendre
  * liquidateur, puis sa propre synthèse.
  */
 export const DEPRECIATIONS_ET_PROVISIONS: Chapitre = partieDuChapitre(DEPRECIATIONS_ET_PROVISIONS_ENTIER, [
-  ...etapesAvant(DEPRECIATIONS_ET_PROVISIONS_ENTIER, "annee-suivante"),
+  ...etapesAvant(DEPRECIATIONS_ET_PROVISIONS_ENTIER, "predire-le-liquidateur"),
+  {
+    id: "le-laboratoire-de-la-prudence",
+    objectifs: [0, 2],
+    type: "simulation",
+    titre: "Le laboratoire de la prudence",
+    notions: ["payment_terms", "income_statement"],
+    question: (c) => {
+      const y = prudenceDeNova(c);
+      return `Un stagiaire du cabinet comptable a tout pris au pire : la créance de ${y.f.sonora.nom} dépréciée en entier, le litige provisionné pour les ${eur(y.demande)} que réclame le particulier. « On ne risque rien, et l'impôt baisse. » Reprenez les deux estimations au 31 décembre N, avec ce que le mandataire et l'avocat savent ce jour-là. Le tableau suit la dépréciation, la provision, le résultat, l'impôt, et ce que la créance vaut au bilan.`;
+    },
+    leviers: (c) => {
+      const y = prudenceDeNova(c);
+      const d = departDeLaPrudence(y);
+      const pas = PROVISION_DU_LABORATOIRE.pas;
+      return [
+        { code: "taux", libelle: "Perte estimée sur la créance", unite: "%", min: 0, max: 100, pas: 1, depart: d.taux },
+        { code: "provision", libelle: "Provision pour le litige", unite: "€", min: 0, max: Math.ceil(y.demande / pas) * pas, pas, depart: d.provision },
+      ];
+    },
+    lecture: (c, p) => {
+      const y = prudenceDeNova(c);
+      const l = laboratoireDeLaPrudence(y, p.taux!, p.provision!);
+      const d0 = departDeLaPrudence(y);
+      const d = laboratoireDeLaPrudence(y, d0.taux, d0.provision);
+      return [
+        { libelle: "Dépréciation de la créance", montant: -l.depreciation, reference: -d.depreciation, effet: true },
+        { libelle: "Provision pour le litige", montant: -l.provision, reference: -d.provision, effet: true },
+        { libelle: "Résultat avant impôt", montant: l.resultat, reference: d.resultat, fort: true },
+        { libelle: "Impôt sur les sociétés", montant: l.impot, reference: d.impot },
+        { libelle: "Résultat net", montant: l.resultatNet, reference: d.resultatNet },
+        { libelle: `Créance de ${y.f.sonora.nom} au bilan, nette de sa dépréciation`, montant: l.valeurNette, reference: d.valeurNette },
+      ].map((x) => ({ ...x, montant: x.montant + 0, reference: x.reference + 0 }));
+    },
+    defi: (c) => {
+      const y = prudenceDeNova(c);
+      const taux = Math.round(y.taux * 100);
+      return {
+        consigne: "Constatez ce que les risques justifient au 31 décembre, ni plus ni moins : ni ce que l'on redoute, ni ce qui arrangerait le résultat.",
+        atteint: (p) => p.taux === taux && p.provision === y.provision,
+        indice: (p) => {
+          if (p.taux! > taux)
+            return `Le mandataire craint ${pct(y.taux)} de perte, pas ${qte(p.taux!)} % : déprécier davantage, c'est constater une perte que rien ne rend probable. Le résultat paraît plus bas qu'il n'est, et l'impôt baisse sans raison.`;
+          if (p.taux! < taux) return `Le mandataire craint ${pct(y.taux)} de perte : à ${qte(p.taux!)} %, une part de la perte probable manque, et le résultat paraît plus beau qu'il n'est.`;
+          if (p.provision! > y.provision)
+            return `Le particulier réclame ${eur(y.demande)}, mais l'avocat juge probable une condamnation de ${eur(y.provision)} : une provision se mesure à ce qui est probable, pas à ce que l'adversaire demande.`;
+          return `L'avocat juge probable une condamnation de ${eur(y.provision)} : la provision n'en constate qu'une part.`;
+        },
+        solution: { taux, provision: y.provision },
+      };
+    },
+    explication: (c, p) => {
+      const y = prudenceDeNova(c);
+      const l = laboratoireDeLaPrudence(y, p.taux!, p.provision!);
+      const d0 = departDeLaPrudence(y);
+      const d = laboratoireDeLaPrudence(y, d0.taux, d0.provision);
+      return [
+        `Au taux du mandataire et au montant de l'avocat, la prudence coûte ${eur(auCentime(l.depreciation + l.provision))} au résultat de N. Le stagiaire en passait ${eur(auCentime(d.depreciation + d.provision))} : ${eur(auCentime(d.depreciation + d.provision - l.depreciation - l.provision))} de charges que rien ne justifiait, et ${eur(l.impot - d.impot)} d'impôt en moins.`,
+        "Trop de prudence n'est pas plus prudent : c'est un résultat caché, qui reviendra en N+1 par une reprise, et l'administration fiscale ne déduit que la perte probable, chiffrée avec ce que l'on sait. La prudence demande la meilleure estimation au 31 décembre : ni la pire, ni la plus commode.",
+      ];
+    },
+  },
+  ...etapesDepuis(DEPRECIATIONS_ET_PROVISIONS_ENTIER, "predire-le-liquidateur", "annee-suivante"),
   {
     id: "synthese",
     type: "lecture",
