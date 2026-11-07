@@ -3,6 +3,7 @@
 import { bureauParCode } from "@/config/cours/bureaux";
 import { corrigerAuBureau, type RetourDuBureau } from "@/pedagogy/cours/bureau-servi";
 import { chapitreOuvert } from "../acces";
+import { noterDansLaClasse } from "../suivi-des-activites";
 
 /**
  * LA CORRECTION D'UN GESTE AU BUREAU (pedagogy/cours/bureau-servi.ts).
@@ -16,5 +17,8 @@ export async function corrigerAuBureauAction(code: unknown, envoi: unknown): Pro
   const bureau = typeof code === "string" ? bureauParCode(code) : undefined;
   if (!bureau) return { refus: "bureau" };
   if (!(await chapitreOuvert(bureau))) return { refus: "licence" };
-  return corrigerAuBureau(bureau, envoi);
+  const retour = corrigerAuBureau(bureau, envoi);
+  // LE SUIVI DE LA CLASSE (migration 0057) : d'après cette correction, jamais d'après le navigateur.
+  await noterDansLaClasse({ nature: "bureau", activite: bureau, envoi, retour });
+  return retour;
 }

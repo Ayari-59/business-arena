@@ -148,3 +148,69 @@ describe("/cours/bureau : le rapprochement de mars", () => {
     }
   });
 });
+
+/**
+ * LE SUIVI DES ACTIVITÉS EN CLASSE (migration 0057) : un élève de classe se trompe en classant la pile,
+ * puis la classe juste ; son enseignant voit, sur téléphone, le bureau en cours, ses essais et la
+ * remarque du correcteur, sans que la page déborde.
+ */
+describe("/cours/bureau en classe : l'enseignant voit où en est l'élève", () => {
+  it("l'élève se trompe puis réussit la première étape ; l'enseignant voit l'état, les essais et l'erreur", async () => {
+    const ctxProf = await navigateur.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, locale: "fr-FR" });
+    await enseignantSousLicence(ctxProf);
+    const prof = await ctxProf.newPage();
+    const ctxEleve = await navigateur.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, locale: "fr-FR" });
+    const eleve = await ctxEleve.newPage();
+    try {
+      await aller(prof, "/teacher/cours");
+      await prof.getByLabel("Nom de la classe").fill("BTS CG activités e2e");
+      await prof.getByLabel("Parcours du cours").selectOption(b.parcours);
+      await prof.getByRole("button", { name: "Créer la classe" }).click();
+      await prof.waitForURL(/\/teacher\/cours\/[0-9a-f-]{36}/, { timeout: 60_000 });
+      const code = (await prof.locator("[data-code-de-classe]").innerText().then(espacesOrdinaires)).trim();
+      const pageDeLaClasse = new URL(prof.url()).pathname;
+
+      // Avant tout élève, la section des activités le dit.
+      expect(espacesOrdinaires(await prof.locator("[data-activites-de-la-classe]").innerText())).toContain("Aucun élève n'a encore rejoint la classe.");
+
+      await aller(eleve, `/cours/rejoindre?code=${code}`);
+      await eleve.getByLabel("Prénom ou pseudonyme").fill("Inès");
+      await eleve.getByRole("button", { name: "Rejoindre la classe" }).click();
+      await eleve.waitForURL(/\/cours\?classe=rejointe/, { timeout: 60_000 });
+
+      await aller(eleve, CHEMIN);
+      await attendre(() => titreDeLEtape(eleve)).toBe("Classer la pile");
+      const pile = etape<EtapeDeClassement>("la-pile");
+      // Tout dans la première catégorie : au moins une pièce est mal classée.
+      const premiere = pile.categories[0]!;
+      // La dernière pièce mal classée : l'enseignant lit les dernières remarques de chaque étape.
+      const malClassee = pile.elements.findLast((x) => x.categorie !== premiere.code)!;
+      for (const x of pile.elements) await eleve.locator(`[data-element="${x.code}"]`).getByRole("radio", { name: premiere.libelle, exact: true }).click();
+      await eleve.getByRole("button", { name: "Vérifier", exact: true }).click();
+      await attendre(() => eleve.locator("[data-element] .encadre-gain").count()).toBe(0);
+      for (const x of pile.elements) {
+        await eleve.locator(`[data-element="${x.code}"]`).getByRole("radio", { name: pile.categories.find((k) => k.code === x.categorie)!.libelle, exact: true }).click();
+      }
+      await eleve.getByRole("button", { name: "Vérifier", exact: true }).click();
+      await attendre(() => eleve.locator("[data-element] .encadre-gain").count()).toBe(pile.elements.length);
+
+      await aller(prof, pageDeLaClasse);
+      const activite = prof.locator(`[data-activite="bureau:${b.code}"]`);
+      await activite.locator("summary").click();
+      const ligne = activite.locator(`[data-eleve-de-l-activite="Inès"]`);
+      expect(await ligne.locator("[data-etat]").getAttribute("data-etat")).toBe("en-cours");
+      expect(await ligne.locator("[data-essais]").getAttribute("data-essais")).toBe("2");
+      const erreurs = espacesOrdinaires(await ligne.locator("[data-erreurs-de-l-eleve]").innerText());
+      expect(erreurs).toContain(pile.titre);
+      expect(erreurs).toContain(`Mal classé : ${espacesOrdinaires(malClassee.libelle)}.`);
+      expect(espacesOrdinaires(await activite.locator("[data-erreurs-frequentes]").innerText())).toContain("1 élève");
+      // Le tableau défile dans son conteneur : la page, elle, ne déborde pas.
+      expect(await debordement(prof)).toBeLessThanOrEqual(1);
+      // Aucun corrigé dans la page de l'élève, toujours.
+      expect(espacesOrdinaires(await eleve.content())).not.toMatch(/categorie\\?"/);
+    } finally {
+      await ctxProf.close();
+      await ctxEleve.close();
+    }
+  });
+});

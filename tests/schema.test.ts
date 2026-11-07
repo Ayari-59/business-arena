@@ -26,6 +26,8 @@ const EXPECTED_TABLES = [
   "cours_classes", "cours_eleves", "cours_progressions",
   // Les cours attribués par l'admin et libérés chapitre par chapitre (migration 0056).
   "cours_attributions_etablissement", "cours_attributions_enseignant", "cours_liberations",
+  // Le suivi des activités en classe : bureau, enquête, scénario (migration 0057).
+  "cours_activites",
   "lti_plateformes", "lti_jetons_inscription", "lti_nonces", "lti_tickets", "lti_liens",
   "lti_comptes", "lti_refus",
   // Le retour des notes dans le carnet de la plateforme (migration 0043, lti/ags).

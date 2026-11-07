@@ -23,6 +23,10 @@ import { suitesDe } from "../helpers/activites-du-lot-e";
 const acces = vi.hoisted(() => ({ ouvert: true }));
 vi.mock("../../src/app/cours/acces", () => ({ chapitreOuvert: vi.fn(async () => acces.ouvert) }));
 vi.mock("@/app/cours/acces", () => ({ chapitreOuvert: vi.fn(async () => acces.ouvert) }));
+// Le suivi de la classe (migration 0057) écrit en base : ici, seule la correction compte
+// (tests/unit/suivi-des-activites-actions.test.ts vérifie ce que l'action y envoie).
+vi.mock("../../src/app/cours/suivi-des-activites", () => ({ noterDansLaClasse: vi.fn(async () => undefined) }));
+vi.mock("@/app/cours/suivi-des-activites", () => ({ noterDansLaClasse: vi.fn(async () => undefined) }));
 
 const texte = (x: unknown) => espacesOrdinaires(JSON.stringify(x));
 const BUREAUX_DU_LOT: readonly Bureau[] = [L_ECHEANCE_DE_JANVIER, LE_BESOIN_DE_L_ANNEE_TYPE, LA_PREMIERE_CONSOLIDATION];
