@@ -182,6 +182,21 @@ export interface LigneDeCompte {
   fort?: boolean;
   /** Un détail, décalé sous le solde qu'il construit. */
   decalee?: boolean;
+  /**
+   * Une ligne « dont » : elle détaille un poste voisin et ne s'additionne pas. La
+   * cascade se lit en additionnant toutes les autres.
+   */
+  dont?: boolean;
+}
+
+/**
+ * Le libellé du déficit imputé, selon son sens : imputé sur le bénéfice, ou rendu au
+ * report par une perte du tour (l'imputé de l'exercice redescend).
+ */
+export function libelleDuDeficitImpute(taxLossUsed: number): string {
+  return taxLossUsed < 0
+    ? "dont déficit antérieur rendu au report (perte du tour)"
+    : "dont déficit antérieur imputé (report)";
 }
 
 /** `secteur` : la variation du stock se nomme selon le métier (`config/scenarios/libelles-des-stocks`), comme dans les états. */
@@ -253,10 +268,15 @@ export function lignesDuCompte(cr: IncomeStatement, secteur: Sector): LigneDeCom
     decalee: true,
   });
   poser({ cle: "pretaxIncome", label: "= Résultat avant impôt", valeur: cr.pretaxIncome, fort: true });
-  siServie(cr.taxLossUsed === undefined ? undefined : moins(cr.taxLossUsed), {
+  // Un DÉTAIL de l'impôt, pas une charge de plus : l'impôt le compte déjà. Déduit
+  // entre le résultat avant impôt et l'impôt, il faisait retomber la cascade sous le
+  // résultat net. Positif, sans signe, comme dans les comptes du tour
+  // (`financial-statements.tsx`) ; négatif quand une perte en rend une part au report.
+  siServie(cr.taxLossUsed, {
     cle: "taxLossUsed",
-    label: "− Déficit reporté imputé",
+    label: libelleDuDeficitImpute(cr.taxLossUsed ?? 0),
     decalee: true,
+    dont: true,
   });
   // Sur l'exercice, un acompte peut être rendu : un tour de perte après un bon tour.
   poser({

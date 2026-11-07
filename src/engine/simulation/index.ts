@@ -2410,6 +2410,14 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
         : weightedAverage(w.unitCosts, w.producedPerProduct),
       revenue,
     });
+    // LES MATIÈRES DU TOUR, à l'unité : le coût catalogue corrigé de tout ce qui le
+    // déplace (hausse des denrées, fournisseur choisi, programmes R&D), pondéré comme
+    // le coût variable du seuil. Le ratio matières le lit (`sector-kpis.ts`) : relu du
+    // catalogue, il ignorait la hausse du tour.
+    const materialCostPerUnit = weightedAverage(
+      w.gamme.map((_, k) => gamme[k]!.materialCostPerUnit * w.materialMultipliers[k]!),
+      w.producedPerProduct,
+    );
 
     // Part de marché : ventes sur le marché adressable uniquement (les
     // commandes fermes s'ajoutent au CA sans gonfler la part de marché).
@@ -2639,7 +2647,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
         utilizationRate: w.utilizationRate,
         producedQuality: w.producedQuality,
       },
-      breakeven,
+      breakeven: { ...breakeven, materialCostPerUnit },
       // Gamme : détail par produit, émis SEULEMENT en multi-produits — le
       // résultat sérialisé d'une partie mono-produit ne change pas.
       ...(multi

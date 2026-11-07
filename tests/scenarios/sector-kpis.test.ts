@@ -10,7 +10,9 @@ import {
   ABONNEMENT_KPIS,
 } from "../../src/config/scenarios/sector-kpis";
 import { SCENARIOS, scenarioByCode } from "../../src/config/scenarios/registry";
-import type { CompanyRoundResult, SegmentSalesDetail } from "../../src/engine/types";
+import type { CompanyRoundResult, EventInstance, SegmentSalesDetail } from "../../src/engine/types";
+import { simulateRound } from "../../src/engine/simulation";
+import { neutralDecisions } from "../../src/engine/bots";
 
 /**
  * Les indicateurs métier sont lus par des élèves et repris en cours : une
@@ -191,6 +193,43 @@ describe("indicateurs de la restauration", () => {
     // et l'ordre de grandeur reste celui du métier
     expect(valueOf(RESTAURATION_KPIS, "ratio_matieres", c)!).toBeGreaterThan(0.25);
     expect(valueOf(RESTAURATION_KPIS, "ratio_matieres", c)!).toBeLessThan(0.35);
+  });
+
+  it("le ratio matières lit les matières du tour, hausse des denrées comprise", () => {
+    // Les denrées montent de 24 % : 12,40 € de matières sur 15,40 € de coût variable.
+    const bistrot = scenarioByCode("bistrot").scenario;
+    const base = result({ revenue: 198_000, cogs: 78_000 });
+    const avecLeMoteur = ctx({
+      result: { ...base, breakeven: { ...base.breakeven, unitVariableCost: 15.4, materialCostPerUnit: 12.4 } },
+      scenario: bistrot,
+    });
+    expect(valueOf(RESTAURATION_KPIS, "ratio_matieres", avecLeMoteur)).toBeCloseTo((78_000 * 12.4) / 15.4 / 198_000, 9);
+    // Un résultat d'avant le champ : le coût variable réel du tour, moins les autres charges du catalogue.
+    const avant = ctx({
+      result: { ...base, breakeven: { ...base.breakeven, unitVariableCost: 15.4 } },
+      scenario: bistrot,
+    });
+    expect(valueOf(RESTAURATION_KPIS, "ratio_matieres", avant)).toBeCloseTo((78_000 * 12.4) / 15.4 / 198_000, 9);
+  });
+
+  it("dans un vrai tour du bistrot, la hausse des denrées passe au ratio matières", () => {
+    // Le défaut relevé : le ratio relisait le catalogue (10 € sur 13 €) et ignorait
+    // la hausse des denrées, le coefficient du fournisseur et la R&D.
+    const def = scenarioByCode("bistrot");
+    const s = def.scenario;
+    const e = def.company("a", "A", "bot", "balanced");
+    const decisions = { a: neutralDecisions({ scenario: s, state: e, roundIndex: 1 }) };
+    const hausse = s.events.find((x) => x.code === "bistrot_matieres_premieres")!;
+    const tour = (activeEvents: EventInstance[]) =>
+      simulateRound({ scenario: s, roundIndex: 1, companies: [e], decisions, activeEvents, seed: 1 }).results.a!;
+    const part = (r: CompanyRoundResult) => valueOf(RESTAURATION_KPIS, "ratio_matieres", ctx({ result: r, scenario: s }))! * r.incomeStatement.revenue / r.incomeStatement.cogs;
+    const sans = tour([]);
+    const avec = tour([{ code: hausse.code, scope: "market", roundsLeft: 2, modifiers: hausse.modifiers }]);
+    const fournisseur = sans.breakeven.materialCostPerUnit! / def.scenario.product.materialCostPerUnit;
+    const autres = def.scenario.product.otherVariableCostPerUnit;
+    expect(part(sans)).toBeCloseTo((10 * fournisseur) / (10 * fournisseur + autres), 9);
+    expect(part(avec)).toBeCloseTo((12.4 * fournisseur) / (12.4 * fournisseur + autres), 9);
+    expect(part(avec)).toBeGreaterThan(part(sans));
   });
 
   it("le ticket moyen rapporte le CA aux couverts servis", () => {

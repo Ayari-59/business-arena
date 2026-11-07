@@ -1718,6 +1718,9 @@ export interface IncomeStatement {
    * Déficit reporté imputé sur le bénéfice de ce tour (report en avant des
    * pertes). Présent seulement quand une perte antérieure a réduit l'impôt :
    * le lecteur voit alors pourquoi l'IS est plus faible que `taxRate × résultat`.
+   * Sur l'exercice (`impotSurLExercice`), c'est la variation du déficit imputé depuis
+   * l'ouverture : NÉGATIVE quand un tour de perte en rend une part au report, si bien
+   * que la somme des tours de l'exercice égale l'imputé réel.
    */
   taxLossUsed?: number;
   tax: number;
@@ -1910,6 +1913,12 @@ export interface CompanyRoundResult {
      * la marge sur coût variable.
      */
     unitVariableCost: number;
+    /**
+     * Les matières du tour, à l'unité, pondérées comme `unitVariableCost` : le coût
+     * catalogue corrigé de la hausse des denrées, du fournisseur et des programmes R&D.
+     * Absent d'un résultat d'avant ce champ.
+     */
+    materialCostPerUnit?: number;
     // `null` quand la marge sur coût variable est nulle ou négative : le seuil
     // de rentabilité n'existe pas (aucun volume ne le couvre).
     breakEvenUnits: number | null;

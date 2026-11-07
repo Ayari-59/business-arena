@@ -260,9 +260,14 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
     const ex = input.exercice;
     const cumul = ex ? ex.avantImpot + pretaxIncome : 0;
     const impotDuCumul = ex ? input.taxRate * Math.max(0, cumul - ex.report) : 0;
+    // L'IMPUTÉ DU TOUR, SUR L'EXERCICE : ce que le tour ajoute au déficit imputé depuis
+    // l'ouverture, min(report, cumul positif). Un tour de perte après un bon tour le fait
+    // REDESCENDRE : l'imputé du tour est alors négatif (une reprise), et la somme des
+    // tours de l'exercice égale l'imputé réel. Borné à zéro, il comptait deux fois la
+    // même part du report (130 000 € affichés pour un report de 100 000 €).
     const imputeAvant = ex ? Math.min(ex.report, Math.max(0, ex.avantImpot)) : 0;
     const taxLossUsed = ex
-      ? Math.max(0, Math.min(ex.report, Math.max(0, cumul)) - imputeAvant)
+      ? Math.min(ex.report, Math.max(0, cumul)) - imputeAvant
       : Math.min(openingLossCarryforward, Math.max(0, pretaxIncome));
     const taxableIncome = Math.max(0, pretaxIncome - openingLossCarryforward);
     const closingLossCarryforward = ex
@@ -295,7 +300,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       ...(rescueSubsidy > 0 ? { rescueSubsidy } : {}),
       ...((input.chargesDeRachat ?? 0) > 0 ? { chargesDeRachat: input.chargesDeRachat } : {}),
       pretaxIncome,
-      ...(taxLossUsed > 0 ? { taxLossUsed } : {}),
+      ...(taxLossUsed !== 0 ? { taxLossUsed } : {}),
       tax,
       netIncome,
       ...(sousTraitance > 0 ? { sousTraitance } : {}),

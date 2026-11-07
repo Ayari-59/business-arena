@@ -47,25 +47,34 @@ const ratio = (numerator: number, denominator: number): number | null =>
 const offered = (ctx: SectorKpiContext) => ctx.result.production.machineCapacity;
 
 /**
- * Part des matières dans le coût variable, d'après le scénario joué. En gamme,
- * pondérée par les volumes produits de chaque référence (à défaut, parts
- * égales) ; en mono-produit, la formule historique, inchangée.
+ * Part des matières dans le coût variable DU TOUR. Le catalogue ne suffit pas :
+ * la hausse des denrées, le fournisseur choisi et les programmes R&D déplacent le
+ * coût des matières, et le ratio relu du catalogue affichait au bistrot 18,5 % de
+ * hausse quand le compte en portait 24 %. Le moteur expose les matières du tour
+ * (`breakeven.materialCostPerUnit`) ; un résultat d'avant ce champ se lit sur le
+ * coût variable réel du tour, moins les autres charges variables du catalogue.
  */
 const materialShare = (ctx: SectorKpiContext) => {
+  const be = ctx.result.breakeven as CompanyRoundResult["breakeven"] | undefined;
+  if (be?.materialCostPerUnit !== undefined) {
+    return be.unitVariableCost > 0 ? be.materialCostPerUnit / be.unitVariableCost : 0;
+  }
   const gamme = ctx.scenario.products;
   if (gamme && gamme.length > 1) {
     let material = 0;
     let total = 0;
     for (const p of gamme) {
-      const weight = ctx.result.products?.[p.code]?.produced ?? 1;
-      material += p.materialCostPerUnit * weight;
-      total += (p.materialCostPerUnit + p.otherVariableCostPerUnit) * weight;
+      const r = ctx.result.products?.[p.code];
+      const weight = r?.produced ?? 1;
+      const u = r?.unitVariableCost ?? p.materialCostPerUnit + p.otherVariableCostPerUnit;
+      material += Math.max(0, u - p.otherVariableCostPerUnit) * weight;
+      total += u * weight;
     }
     return total > 0 ? material / total : 0;
   }
   const { materialCostPerUnit, otherVariableCostPerUnit } = ctx.scenario.product;
-  const total = materialCostPerUnit + otherVariableCostPerUnit;
-  return total > 0 ? materialCostPerUnit / total : 0;
+  const u = be?.unitVariableCost ?? materialCostPerUnit + otherVariableCostPerUnit;
+  return u > 0 ? Math.max(0, u - otherVariableCostPerUnit) / u : 0;
 };
 
 /** Part de marché agrégée d'un jeu de segments, pondérée par le potentiel. */
