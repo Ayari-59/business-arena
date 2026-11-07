@@ -109,14 +109,24 @@ function textesDe(e: Etape, c: Cas, etat: EtatDuCours): string[] {
       const d = e.defi(c);
       const depart = Object.fromEntries(e.leviers(c).map((l) => [l.code, l.depart]));
       const g = e.graphique?.(c);
+      // D'autres positions que le départ et la solution : chaque indice et chaque explication s'y lisent.
+      const ailleurs =
+        e.id === "le-laboratoire-du-label"
+          ? [d.indice({ ...d.solution, ordre: 1 }), ...e.explication(c, { t1: PLAN_DU_T3[0]!, t2: PLAN_DU_T3[1]!, t3: PLAN_DU_T3[2]!, ordre: 0 })]
+          : [
+              d.indice({ budget: 28_500, trimestres: 3 }),
+              d.indice({ budget: 28_500, trimestres: 4 }),
+              d.indice({ budget: 40_000, trimestres: 2 }),
+              d.indice({ budget: 0, trimestres: 2 }),
+              ...e.explication(c, { budget: 32_000, trimestres: 2 }),
+            ];
       return [
         e.titre,
         e.question(c),
         d.consigne,
         d.indice(depart),
-        d.indice({ ...d.solution, ordre: 1 }),
+        ...ailleurs,
         ...e.explication(c, d.solution),
-        ...e.explication(c, { t1: PLAN_DU_T3[0]!, t2: PLAN_DU_T3[1]!, t3: PLAN_DU_T3[2]!, ordre: 0 }),
         ...e.lecture(c, d.solution).map((l) => l.libelle),
         ...e.leviers(c).flatMap((l) => [l.libelle, l.unite, ...(l.choix ?? []).map((x) => x.libelle)]),
         ...(g?.courbes.map((x) => x.libelle) ?? []),
@@ -565,6 +575,91 @@ describe("l'année engagée : ce que l'engagement coûte et rapporte, refait à 
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(ch));
+});
+
+describe("le laboratoire de l'année engagée, refait à la main", () => {
+  const ch = CE_QUE_RAPPORTE_L_ENGAGEMENT;
+  const labo = () => ch.etapes.find((x) => x.id === "le-laboratoire-de-l-annee") as EtapeSimulation;
+  const plan = (b: number, n: number) => [0, 1, 2, 3].map((i) => (i < n ? b : 0));
+  const lire = (p: Record<string, number>) => Object.fromEntries(labo().lecture(cas, p).map((l) => [l.libelle, l.montant]));
+  const attendu = (b: number, n: number) => {
+    const a = annee(plan(b, n));
+    return {
+      "Budget RSE de l'année": b * n,
+      "Trimestres sous label dans l'année": a.label.filter(Boolean).length,
+      "Enceintes vendues en plus": a.total - SANS.total,
+      "Marge gagnée sur l'année": (a.total - SANS.total) * MARGE,
+      "Coût complet d'une enceinte": a.coutComplet,
+      "Résultat de l'année": a.resultat,
+      "Écart face à l'année sans engagement": a.resultat - SANS.resultat,
+      "Écart face au budget du cours sans le trimestre 4": a.resultat - COURS_SANS_T4.resultat,
+    };
+  };
+
+  it("la seconde partie a son laboratoire, entre la comparaison à budget du trimestre 4 égal et le label dès le trimestre 3 ; 12 étapes", () => {
+    expect(ch.etapes.filter((x) => x.type === "simulation").map((x) => x.id)).toEqual(["le-laboratoire-de-l-annee"]);
+    expect(ch.etapes).toHaveLength(12);
+    const ids = ch.etapes.map((x) => x.id);
+    expect(ids.indexOf("le-laboratoire-de-l-annee")).toBe(ids.indexOf("a-budget-du-t4-egal") + 1);
+    expect(ids.indexOf("le-label-des-le-t3")).toBe(ids.indexOf("le-laboratoire-de-l-annee") + 1);
+    // La première partie garde le sien : ce laboratoire ne la touche pas.
+    expect(LA_RESPONSABILITE_SOCIETALE.etapes.filter((x) => x.type === "simulation").map((x) => x.id)).toEqual(["le-laboratoire-du-label"]);
+  });
+
+  it("les leviers : un budget par trimestre de 0 à 40 000 € par 500 €, et les trimestres où il se dépense, un levier à choix", () => {
+    expect(labo().leviers(cas).map((l) => [l.code, l.min, l.max, l.pas, l.depart])).toEqual([
+      ["budget", 0, 40_000, 500, E],
+      ["trimestres", 2, 4, 1, 4],
+    ]);
+    expect(labo().leviers(cas).find((l) => l.code === "trimestres")!.choix!.map((x) => x.valeur)).toEqual([4, 3, 2]);
+  });
+
+  it("au départ (le budget du cours chaque trimestre) : 48 000 €, pas de label, −30 948 € face à l'année sans engagement", () => {
+    expect(lire({ budget: E, trimestres: 4 })).toEqual(attendu(E, 4));
+    expect(Object.values(attendu(E, 4))).toEqual([48_000, 0, 812, 17_052, 59.99, -19_792, -30_948, -12_000]);
+    expect(labo().defi(cas).atteint({ budget: E, trimestres: 4 })).toBe(false);
+  });
+
+  it("la solution : 28 500 € aux trimestres 1 et 2, le label dès le trimestre 3, 5 985 € de mieux que le budget du cours sans le trimestre 4", () => {
+    const d = labo().defi(cas);
+    expect(d.solution).toEqual({ budget: 28_500, trimestres: 2 });
+    expect(d.atteint(d.solution)).toBe(true);
+    const a = annee(plan(28_500, 2));
+    // Le capital de la fin du trimestre 2 passe le seuil à 28 500 €, pas à 28 000 € (le pas d'avant).
+    expect([a.fins[1]! >= SEUIL, annee(plan(28_000, 2)).fins[1]! >= SEUIL]).toEqual([true, false]);
+    expect(a.label).toEqual([false, false, true, true]);
+    expect(lire({ ...d.solution })).toEqual(attendu(28_500, 2));
+    expect(Object.values(attendu(28_500, 2))).toEqual([57_000, 2, a.total - 19_112, (a.total - 19_112) * 21, a.coutComplet, a.resultat, a.resultat - 11_156, a.resultat + 7_792]);
+    expect([a.resultat, a.resultat - SANS.resultat, a.resultat - COURS_SANS_T4.resultat]).toEqual([-1_807, -12_963, 5_985]);
+    // Sous le seuil, au-delà du budget utile, ou en dépensant encore aux trimestres 3 et 4 : le défi n'est pas relevé.
+    for (const p of [
+      { budget: 28_000, trimestres: 2 },
+      { budget: 32_500, trimestres: 2 },
+      { budget: 28_500, trimestres: 3 },
+      { budget: 28_500, trimestres: 4 },
+    ])
+      expect(d.atteint(p), JSON.stringify(p)).toBe(false);
+    expect(d.atteint({ budget: 32_000, trimestres: 2 })).toBe(true);
+    expect([annee(plan(32_000, 2)).resultat - COURS_SANS_T4.resultat, annee(plan(32_500, 2)).resultat - COURS_SANS_T4.resultat]).toEqual([560, -209]);
+    // Le plan du trimestre 3 (20 000 puis 36 000 €) n'est pas à budget constant : le laboratoire ne le joue pas, et fait un peu mieux pour 1 000 € de plus.
+    expect(a.resultat - DU_T3.resultat).toBe(71);
+  });
+
+  it("le graphique : le résultat de l'année selon le budget, et deux repères, le budget du cours sans le trimestre 4 et l'année sans engagement", () => {
+    const g = labo().graphique!(cas);
+    expect(g.levier).toBe("budget");
+    const [resultat, sansT4, sans] = g.courbes;
+    for (const b of [0, 12_000, 28_000, 28_500, 40_000]) {
+      expect(resultat!.valeur({ budget: b, trimestres: 2 }), `${b}`).toBe(annee(plan(b, 2)).resultat);
+      expect(resultat!.valeur({ budget: b, trimestres: 4 }), `${b}`).toBe(annee(plan(b, 4)).resultat);
+      expect(sansT4!.valeur({ budget: b, trimestres: 3 })).toBe(-7_792);
+      expect(sans!.valeur({ budget: b, trimestres: 3 })).toBe(11_156);
+    }
+    // Le saut du label : 500 € de plus aux trimestres 1 et 2 font gagner 19 937 € dans l'année.
+    expect(annee(plan(28_500, 2)).resultat - annee(plan(28_000, 2)).resultat).toBe(19_937);
+  });
+
+  it("textes propres, une seule bonne réponse, notions existantes : la seconde partie", () => verifierLesTextes(ch));
 });
 
 describe("le cas : viser le label avec 24 000 € par trimestre, refait à la main", () => {

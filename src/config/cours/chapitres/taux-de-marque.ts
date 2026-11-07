@@ -1071,7 +1071,7 @@ export const TAUX_DE_MARQUE: Chapitre = partieDuChapitre(TAUX_DE_MARQUE_ENTIER, 
     notions: ["margin_rates", "markup_coefficient", "vat_payable"],
     question: (c) => {
       const m = margesDuRayon(c);
-      return `Le « ${m.faconnier.nom} » annonce une hausse de ${pct(HAUSSE_DU_FACONNIER * 100)} sur le ${m.r.nom.toLowerCase()}. Déplacez le prix d'achat hors taxes et l'étiquette toutes taxes comprises : le tableau suit le prix hors taxes, la marge d'un pull, ses deux taux et le coefficient, face à ${m.f.moisDeReference} ; la courbe montre le taux de marque selon l'étiquette, au prix d'achat choisi. Relevez le défi, puis comparez avec l'étiquette qui répercute la hausse en euros.`;
+      return `Le « ${m.faconnier.nom} » annonce une hausse de ${pct(HAUSSE_DU_FACONNIER * 100)} sur le ${m.r.nom.toLowerCase()}. Déplacez le prix d'achat hors taxes et l'étiquette toutes taxes comprises. Le tableau suit le prix hors taxes, la marge d'un pull, ses deux taux et le coefficient, face à ${m.f.moisDeReference}. La courbe montre le taux de marque selon l'étiquette, au prix d'achat choisi. Relevez le défi, puis comparez avec l'étiquette qui répercute la hausse en euros.`;
     },
     leviers: (c) => {
       const m = margesDuRayon(c);

@@ -108,6 +108,18 @@ export const ORDRES_DU_LABORATOIRE: readonly { valeur: number; libelle: string }
   { valeur: 1, libelle: "Inversé (trimestres 1 et 3 échangés)" },
 ];
 
+/**
+ * LE LABORATOIRE DE L'ANNÉE ENGAGÉE (la suite) : un budget RSE par trimestre, aux bornes et au pas du
+ * laboratoire du label, et les trimestres où il se dépense, à partir du premier (un levier à choix).
+ * Le défi : le label dès le trimestre 3, et une année qui finit au-dessus du budget du cours sans son
+ * trimestre 4, à budget du trimestre 4 égal (nul des deux côtés).
+ */
+export const TRIMESTRES_DE_L_ANNEE_ENGAGEE: readonly { valeur: number; libelle: string }[] = [
+  { valeur: 4, libelle: "Chaque trimestre de l'année" },
+  { valeur: 3, libelle: "Les trimestres 1 à 3" },
+  { valeur: 2, libelle: "Les trimestres 1 et 2" },
+];
+
 /** Les bornes du curseur de l'effort, en centièmes : de rien à 1,50. */
 export const EFFORT_DU_CURSEUR = { min: 0, max: 150 } as const;
 
@@ -305,6 +317,12 @@ export function laboratoireDuLabel(x: Pick<Responsabilite, "f">, plan: readonly 
     resultat: e.avec.resultat,
   };
 }
+
+/** Le plan du laboratoire de l'année engagée : le même budget du trimestre 1 au dernier trimestre choisi, rien ensuite. */
+export const planDeLAnneeEngagee = (p: Readonly<Record<string, number>>): number[] => [1, 2, 3, 4].map((t) => (t <= p.trimestres! ? p.budget! : 0));
+
+/** Ce que le laboratoire de l'année engagée lit d'une position : l'année jouée face à l'année sans engagement. */
+export const anneeEngagee = (x: Pick<Responsabilite, "f">, p: Readonly<Record<string, number>>) => engagementRse(x.f, planDeLAnneeEngagee(p));
 
 /** Le capital et le label, et l'année sans engagement : le document de départ. */
 export function tableauDesReglages(c: Pick<Cas, "code">): TableauDeDonnees {
@@ -1208,7 +1226,10 @@ export const LA_RESPONSABILITE_SOCIETALE: Chapitre = partieDuChapitre(LA_RESPONS
   },
 ]);
 
-/** SUITE : sa propre introduction, puis les étapes du chapitre d'origine depuis `predire-les-ventes`, synthèse comprise. */
+/**
+ * SUITE : sa propre introduction, puis les étapes du chapitre d'origine depuis `predire-les-ventes`, synthèse comprise,
+ * et son propre laboratoire (l'année engagée, entre `a-budget-du-t4-egal` et `le-label-des-le-t3`).
+ */
 export const CE_QUE_RAPPORTE_L_ENGAGEMENT: Chapitre = partieDuChapitre(
   LA_RESPONSABILITE_SOCIETALE_ENTIERE,
   [
@@ -1227,7 +1248,95 @@ export const CE_QUE_RAPPORTE_L_ENGAGEMENT: Chapitre = partieDuChapitre(
       },
       repere: () => "Un engagement se juge comme un investissement : ce qu'il coûte maintenant, ce qu'il rapporte ensuite, tout le reste égal.",
     },
-    ...etapesDepuis(LA_RESPONSABILITE_SOCIETALE_ENTIERE, "predire-les-ventes"),
+    ...etapesDepuis(LA_RESPONSABILITE_SOCIETALE_ENTIERE, "predire-les-ventes", "le-label-des-le-t3"),
+    {
+      id: "le-laboratoire-de-l-annee",
+      objectifs: [3, 4],
+      type: "simulation",
+      titre: "Le laboratoire de l'année engagée",
+      notions: ["csr_index", "brand_capital", "full_unit_cost"],
+      question: (c) => {
+        const x = responsabilite(c);
+        return `Choisissez le budget RSE d'un trimestre et les trimestres où ${x.f.entreprise} le dépense, à partir du premier. Le tableau suit l'année : le budget, le label, les ${x.f.unites} vendues en plus, le coût complet d'une ${x.f.unite} et le résultat. Il les compare à l'année sans engagement et au budget du cours sans le trimestre ${TRIMESTRE_DU_LABEL_VISE}. La courbe montre le résultat de l'année selon le budget. Relevez le défi.`;
+      },
+      leviers: (c) => {
+        const x = responsabilite(c);
+        const l = BUDGETS_DU_LABORATOIRE;
+        const valeurs = TRIMESTRES_DE_L_ANNEE_ENGAGEE.map((o) => o.valeur);
+        return [
+          { code: "budget", libelle: "Budget RSE d'un trimestre", unite: "€", min: l.min, max: l.max, pas: l.pas, depart: x.b },
+          { code: "trimestres", libelle: "Trimestres engagés", unite: "", min: Math.min(...valeurs), max: Math.max(...valeurs), pas: 1, depart: valeurs[0]!, choix: TRIMESTRES_DE_L_ANNEE_ENGAGEE },
+        ];
+      },
+      lecture: (c, p) => {
+        const x = responsabilite(c);
+        const e = anneeEngagee(x, p);
+        const d = x.annee;
+        const vendues = `${x.f.unites.charAt(0).toUpperCase()}${x.f.unites.slice(1)} vendues en plus`;
+        return [
+          { libelle: "Budget RSE de l'année", montant: e.cout, reference: d.cout },
+          { libelle: "Trimestres sous label dans l'année", montant: e.labels.actifs.filter(Boolean).length, unite: "sur 4", reference: d.labels.actifs.filter(Boolean).length },
+          { libelle: vendues, montant: e.ventesGagnees, unite: x.f.unites, reference: d.ventesGagnees },
+          { libelle: "Marge gagnée sur l'année", montant: e.margeGagnee, reference: d.margeGagnee },
+          { libelle: `Coût complet d'une ${x.f.unite}`, montant: e.avec.coutComplet, reference: d.avec.coutComplet },
+          { libelle: "Résultat de l'année", montant: e.avec.resultat, reference: d.avec.resultat, fort: true },
+          { libelle: "Écart face à l'année sans engagement", montant: e.ecart, reference: d.ecart, effet: true },
+          { libelle: `Écart face au budget du cours sans le trimestre ${TRIMESTRE_DU_LABEL_VISE}`, montant: auCentime(e.avec.resultat - x.sansT4.avec.resultat), reference: x.effetDuT4, effet: true },
+        ];
+      },
+      // Le résultat de l'année n'est pas une droite du budget : il saute quand le label vient.
+      graphique: (c) => {
+        const x = responsabilite(c);
+        return {
+          levier: "budget",
+          courbes: [
+            { libelle: "Résultat de l'année, au plan choisi", valeur: (p) => anneeEngagee(x, p).avec.resultat },
+            { libelle: `Budget du cours sans le trimestre ${TRIMESTRE_DU_LABEL_VISE}`, valeur: () => x.sansT4.avec.resultat },
+            { libelle: "Année sans engagement", valeur: () => x.annee.sans.resultat },
+          ],
+        };
+      },
+      defi: (c) => {
+        const x = responsabilite(c);
+        const premier = x.r.premierTrimestreDuLabel;
+        const releve = (p: Readonly<Record<string, number>>) => {
+          const e = anneeEngagee(x, p);
+          return e.labels.premier === premier && e.avec.resultat > x.sansT4.avec.resultat;
+        };
+        // La solution montrée : le plus petit budget du laboratoire qui relève le défi, dépensé le moins longtemps.
+        const l = BUDGETS_DU_LABORATOIRE;
+        const budgets = Array.from({ length: Math.round((l.max - l.min) / l.pas) + 1 }, (_, i) => l.min + i * l.pas);
+        const courts = [...TRIMESTRES_DE_L_ANNEE_ENGAGEE].sort((a, b) => a.valeur - b.valeur);
+        const solution = courts.flatMap((t) => budgets.map((budget) => ({ budget, trimestres: t.valeur }))).find(releve) ?? { budget: l.max, trimestres: courts[0]!.valeur };
+        return {
+          consigne: `Obtenez le label dès le trimestre ${premier}, et finissez l'année au-dessus du budget du cours sans le trimestre ${TRIMESTRE_DU_LABEL_VISE}, ${eur(x.sansT4.avec.resultat)}.`,
+          atteint: releve,
+          indice: (p) => {
+            const e = anneeEngagee(x, p);
+            if (e.labels.premier !== premier) {
+              const capital = auCentime(e.capital.fins[premier - 2]! * 100);
+              return `À ${eur(p.budget!)} par trimestre, le capital de la fin du trimestre ${premier - 1} vaut ${qte(capital)} centièmes, sous les ${qte(x.seuilEnCentiemes)} du seuil : le label ne vient pas au trimestre ${premier}. Montez le budget des premiers trimestres.`;
+            }
+            const sous = `Le label vient dès le trimestre ${premier}, mais l'année finit à ${eur(e.avec.resultat)}, sous les ${eur(x.sansT4.avec.resultat)} du budget du cours sans le trimestre ${TRIMESTRE_DU_LABEL_VISE}.`;
+            const apres = Array.from({ length: Math.max(0, p.trimestres! - (premier - 1)) }, (_, i) => premier + i);
+            if (apres.length === 0) return `${sous} ${eur(e.cout)}, c'est plus que le seuil ne demande : baissez le budget, au plus juste.`;
+            const lesquels = apres.length === 1 ? `du trimestre ${apres[0]}` : `des trimestres ${apres.slice(0, -1).join(", ")} et ${apres.at(-1)}`;
+            return `${sous} Le budget ${lesquels} se paie dans l'année sans faire venir le label plus tôt : arrêtez la dépense une fois le seuil passé.`;
+          },
+          solution,
+        };
+      },
+      explication: (c, p) => {
+        const x = responsabilite(c);
+        const e = anneeEngagee(x, p);
+        const ecartAuCours = auCentime(e.avec.resultat - x.sansT4.avec.resultat);
+        return [
+          `Votre plan dépense ${eur(e.cout)} : le label vient dès le trimestre ${e.labels.premier ?? x.r.premierTrimestreDuLabel} et joue ${qte(e.labels.actifs.filter(Boolean).length)} trimestres dans l'année. ${x.f.entreprise} vend ${qte(e.ventesGagnees)} ${x.f.unites} de plus, ${eur(e.margeGagnee)} de marge gagnée, et le coût complet d'une ${x.f.unite} passe de ${eur(e.sans.coutComplet)} à ${eur(e.avec.coutComplet)}. L'année finit à ${eur(e.avec.resultat)} : ${sensDuResultat(ecartAuCours)} que le budget du cours sans le trimestre ${TRIMESTRE_DU_LABEL_VISE}, mais ${sensDuResultat(e.ecart)} que l'année sans engagement.`,
+          `Le résultat saute quand le label vient : c'est un seuil, pas une pente. Passé le seuil, un euro de plus ne fait presque plus vendre dans l'année, et le budget des trimestres suivants se paie sans faire venir le label plus tôt. Mais le capital de la fin de l'année, ${dec(e.capital.fins[3]!)}, est plus bas qu'au budget du cours (${dec(x.annee.capital.fins[3]!)}) : l'année suivante commence moins bien, et l'engagement se juge sur plusieurs années.`,
+        ];
+      },
+    },
+    ...etapesDepuis(LA_RESPONSABILITE_SOCIETALE_ENTIERE, "le-label-des-le-t3"),
   ],
   {
     code: CODE_DE_LA_SUITE,
