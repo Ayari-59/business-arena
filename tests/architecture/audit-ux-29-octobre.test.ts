@@ -35,9 +35,9 @@ const texte = (html: string) =>
 const rendu = (el: Parameters<typeof renderToStaticMarkup>[0]) => renderToStaticMarkup(el);
 
 describe("P0-1 · l'enseignant sans offre sait d'emblée ce qu'il peut faire", () => {
-  it("l'accueil de la Découverte dit le solo, la classe du cours, les démonstrations, et le devis", () => {
+  it("l'accueil de l'offre gratuite dit le solo, la classe du cours, les démonstrations, et le devis", () => {
     const t = texte(rendu(createElement(AccueilDeLaDecouverte, { essai: { autorise: false, dureeMaxJours: 30 }, niveauMax: 3 })));
-    expect(t).toContain("Votre compte est en Découverte");
+    expect(t).toContain("Votre compte est sur l'offre Premiers pas");
     expect(t).toContain("aux niveaux 1 à 3");
     expect(t).toContain("Ouvrir une classe du cours");
     expect(t).toContain("épisodes de démonstration");

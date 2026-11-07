@@ -56,7 +56,7 @@ async function vitrineDeLaDecouverte(ancienne: unknown): Promise<VitrineSolo> {
     const solo = (r?.valeur as { solo?: unknown } | undefined)?.solo;
     if (solo !== undefined) return normaliserSolo(solo);
   } catch (e) {
-    console.error("[getPlatformConfig] lecture de la Découverte échouée :", e);
+    console.error("[getPlatformConfig] lecture du réglage de l'offre Premiers pas échouée :", e);
   }
   return normaliserVitrine(ancienne);
 }

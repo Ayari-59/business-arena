@@ -12,7 +12,8 @@ import { VENDEUR } from "@/config/editeur";
  * devis, et rien ne se commande en ligne. Les anciens noms vivaient dans une dizaine de
  * fichiers (murs de licence, messages du serveur, /admin, métadonnées) ; une offre qui
  * n'existait pas (« Offre Entreprise ») s'affichait cent fois. Cette garde refuse :
- *  · les anciens noms d'offre, partout dans src/ ;
+ *  · les anciens noms d'offre, partout dans src/, dont « Découverte », devenue « Premiers
+ *    pas » en novembre 2026 ;
  *  · « Commander » et « carte bancaire » hors des contenus de jeu (un épisode peut faire
  *    « commander un audit » ; un écran de vente, non) ;
  *  · les noms composés de la grille écrits à la main ailleurs que dans config/tarifs.ts :
@@ -52,6 +53,26 @@ describe("les noms des offres", () => {
   it("aucun ancien nom d'offre dans src/", () => {
     const fautes = TOUS.flatMap(({ chemin, texte }) =>
       ANCIENS_NOMS.filter(({ motif }) => motif.test(texte)).map(({ quoi }) => `${chemin} : « ${quoi} »`),
+    );
+    expect(fautes, fautes.join("\n")).toEqual([]);
+  });
+
+  it("l'offre gratuite s'appelle « Premiers pas », et « Découverte » ne la nomme plus nulle part", () => {
+    // Décision du propriétaire (novembre 2026) : l'offre « Découverte » devient « Premiers pas ».
+    // Seuls les libellés changent : le code `decouverte`, les clés et les valeurs en base restent.
+    expect(OFFRES.decouverte).toEqual({ code: "decouverte", nom: "Premiers pas" });
+    // Le code seul : les commentaires racontent l'histoire et peuvent citer l'ancien nom.
+    const code = (t: string) =>
+      t
+        .replace(/\{\/\*[\s\S]*?\*\/\}/g, "")
+        .replace(/\/\*[\s\S]*?\*\//g, "")
+        .replace(/^\s*\/\/.*$/gm, "");
+    // « Découverte du besoin » est une étape de la vente, dans le cours : un autre sens.
+    const fautes = TOUS.flatMap(({ chemin, texte }) =>
+      code(texte)
+        .split("\n")
+        .filter((l) => /Découverte(?! du besoin)/.test(l))
+        .map((l) => `${chemin} : ${l.trim()}`),
     );
     expect(fautes, fautes.join("\n")).toEqual([]);
   });

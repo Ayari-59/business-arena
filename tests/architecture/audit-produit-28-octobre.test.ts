@@ -159,11 +159,13 @@ describe("4. un mot par sens", () => {
     expect(lire("app/parcours/[formation]/page.tsx")).not.toMatch(/Parcours par diplôme/);
   });
 
-  it("« Découverte » n'a plus qu'un sens : l'offre gratuite", () => {
-    // Décision du propriétaire (audit de la langue, novembre 2026) : l'offre gratuite garde
-    // « Découverte » ; le niveau 1 de l'arène et l'exigence 1 d'un atelier deviennent « Premiers
-    // pas », le niveau des épisodes de démonstration « Démonstration ». Les codes ne changent pas.
-    expect(OFFRES.decouverte.nom).toBe("Découverte");
+  it("« Découverte » ne nomme plus ni l'offre gratuite ni un niveau", () => {
+    // Décision du propriétaire (audit de la langue, novembre 2026) : le niveau 1 de l'arène et
+    // l'exigence 1 d'un atelier deviennent « Premiers pas », le niveau des épisodes de
+    // démonstration « Démonstration ». Puis (novembre 2026, seconde décision) l'offre gratuite
+    // devient elle aussi « Premiers pas » : le nom est désormais partagé avec le niveau 1.
+    // Les codes ne changent pas.
+    expect(OFFRES.decouverte.nom).toBe("Premiers pas");
     expect(DIFFICULTY_PRESETS[0]!.name).toBe("Premiers pas");
     expect(DIFFICULTY_PRESETS[0]!.code).toBe("decouverte");
     expect(DIFFICULTES[1]).toBe("Premiers pas");

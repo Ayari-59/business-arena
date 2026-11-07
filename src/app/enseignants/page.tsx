@@ -1,6 +1,6 @@
 import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
-import { ATELIERS_A_REFERENTIEL, LES_OFFRES_DE_L_ARENE } from "@/config/tarifs";
+import { ATELIERS_A_REFERENTIEL, LES_OFFRES_DE_L_ARENE, nomDOffre } from "@/config/tarifs";
 import { LigneDePrix } from "@/components/ligne-de-prix";
 import { publicDeLAtelier } from "@/config/formations";
 import { formationsAvecUnePage } from "@/config/couverture";
@@ -161,7 +161,7 @@ const CONFIANCE = [
     // « Essai gratuit » promettait de prendre en main ateliers et concours
     // sans engagement : la grille (config/tarifs.ts) n'a pas d'essai en
     // classe. Ce qui est gratuit, c'est le simulateur en solo.
-    label: "Découverte gratuite",
+    label: `${nomDOffre("decouverte")} gratuite`,
     desc: `Le simulateur en solo, sans compte ; la classe avec ${LES_OFFRES_DE_L_ARENE}`,
   },
   {

@@ -86,7 +86,7 @@ const CONTRACTS: FormContract[] = [
     sources: ["src/app/admin/offres/page.tsx"],
   },
   {
-    nom: "la Découverte (/admin/offres, gratuités)",
+    nom: "l'offre Premiers pas (/admin/offres, gratuités)",
     action: { file: "src/app/admin/offres/actions.ts", fn: "enregistrerDecouverteAction" },
     sources: ["src/app/admin/offres/page.tsx"],
   },

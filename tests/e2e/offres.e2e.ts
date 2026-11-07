@@ -55,14 +55,14 @@ async function enBase<T>(f: (c: Client) => Promise<T>): Promise<T> {
 }
 
 describe("l'espace enseignant dit l'offre, et la classe ne s'ouvre pas sans elle", () => {
-  it("sans licence : « Découverte », la règle avant l'envoi, puis le refus du serveur avec le lien", async () => {
+  it("sans licence : « Premiers pas », la règle avant l'envoi, puis le refus du serveur avec le lien", async () => {
     const c = await contexte();
     await enseignantSousLicence(c, { licence: false });
     const page = await c.newPage();
     await aller(page, "/teacher");
     const etat = page.locator("[data-etat-offre]");
     expect(await etat.getAttribute("data-etat-offre")).toBe("decouverte");
-    expect(await etat.innerText()).toContain("Découverte : solo, niveaux 1 à 3");
+    expect(await etat.innerText()).toContain("Premiers pas : solo, niveaux 1 à 3");
     expect(await etat.getByRole("link", { name: "Demander un devis" }).getAttribute("href")).toBe(
       "/devis?offre=classe",
     );
