@@ -25,8 +25,10 @@ const champsDuFormulaire = new Set(
     // modèle d'analyse, l'autre le champ technique du bouton de validation.
     // LOT P4 : `propositionDeVentes` non plus — c'est le témoin caché d'une
     // proposition de ventes estimées que le joueur n'a pas touchée ; le moteur
-    // ne le lit pas, pas plus que les ventes estimées elles-mêmes.
-    .filter((n) => !["quiz_model_choice", "options", "justification", "equipmentBuyJson", "equipmentSellJson", "propositionDeVentes"].includes(n)),
+    // ne le lit pas, pas plus que les ventes estimées elles-mêmes. Le parc machines
+    // (achat, vente, crédit-bail et ses contrats) passe par des JSON cachés, comptés
+    // par le levier de l'investissement.
+    .filter((n) => !["quiz_model_choice", "options", "justification", "equipmentBuyJson", "equipmentSellJson", "equipmentLeaseJson", "leaseDecisionsJson", "propositionDeVentes"].includes(n)),
 );
 
 describe("leviers de décision", () => {

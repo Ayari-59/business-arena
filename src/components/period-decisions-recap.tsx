@@ -90,6 +90,12 @@ export function PeriodDecisionsRecap({
     const sold = (d.investment.equipmentSell ?? []).reduce((s, e) => s + e.quantity, 0);
     if (bought > 0) chips.push({ icone: "usine", texte: `Achat de ${bought} équipement${bought > 1 ? "s" : ""}` });
     if (sold > 0) chips.push({ icone: "usine", texte: `Cession de ${sold} équipement${sold > 1 ? "s" : ""}` });
+    const loues = (d.investment.equipmentLease ?? []).reduce((s, e) => s + e.quantity, 0);
+    if (loues > 0) chips.push({ icone: "usine", texte: `Crédit-bail de ${loues} équipement${loues > 1 ? "s" : ""}` });
+    for (const l of d.investment.leaseDecisions ?? []) {
+      const texte = l.choice === "lever" ? "Option d'achat levée" : l.choice === "rendre" ? "Machine rendue" : "Crédit-bail rompu";
+      chips.push({ icone: "usine", texte });
+    }
   }
   if (d.finance) {
     if (d.finance.newLoan) chips.push({ icone: "banque", texte: `Emprunt ${formatEuro(d.finance.newLoan)}` });

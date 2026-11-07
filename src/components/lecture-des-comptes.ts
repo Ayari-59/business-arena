@@ -58,7 +58,8 @@ const structureDuTour = (cr: IncomeStatement): number =>
   cr.maintenanceCost +
   (cr.rdCost ?? 0) +
   (cr.engagementRse ?? 0) +
-  cr.fixedCosts;
+  cr.fixedCosts +
+  (cr.redevancesCreditBail ?? 0);
 
 export function lectureDuResultat(cr: IncomeStatement): Lecture {
   const structure = structureDuTour(cr);
@@ -238,6 +239,11 @@ export function lignesDuCompte(cr: IncomeStatement, secteur: Sector): LigneDeCom
     decalee: true,
   });
   poser({ cle: "fixedCosts", label: "− Charges de structure", valeur: moins(cr.fixedCosts), decalee: true });
+  siServie(cr.redevancesCreditBail === undefined ? undefined : moins(cr.redevancesCreditBail), {
+    cle: "redevancesCreditBail",
+    label: "− Redevances de crédit-bail",
+    decalee: true,
+  });
   poser({ cle: "ebitda", label: "= Excédent brut d'exploitation (EBE)", valeur: cr.ebitda, fort: true });
   poser({ cle: "depreciation", label: "− Amortissements", valeur: moins(cr.depreciation), decalee: true });
   poser({

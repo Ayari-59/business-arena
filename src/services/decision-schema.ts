@@ -111,6 +111,14 @@ export const roundDecisionsSchema = z.object({
       equipmentSell: z
         .array(z.object({ typeCode: z.string().min(1), quantity: z.coerce.number().int().min(0).max(100) }))
         .optional(),
+      // Le crédit-bail (`creditBail`) : le moteur ne le lit que dans une partie qui le porte.
+      equipmentLease: z
+        .array(z.object({ typeCode: z.string().min(1), quantity: z.coerce.number().int().min(0).max(100) }))
+        .optional(),
+      leaseDecisions: z
+        .array(z.object({ contractId: identifiant, choice: z.enum(["lever", "rendre", "rompre"]) }))
+        .max(MODULES_MAX * 5)
+        .optional(),
     })
     .optional(),
   finance: z
@@ -225,7 +233,7 @@ export function refusDuPlafondDInvestissement(
   return refusDuPlafond({
     plafond,
     depasse: depasseLePlafond(plafond, decisions.investment),
-    typesAchetes: (decisions.investment?.equipmentBuy ?? [])
+    typesAchetes: [...(decisions.investment?.equipmentBuy ?? []), ...(decisions.investment?.equipmentLease ?? [])]
       .filter((l) => l.quantity > 0)
       .map((l) => l.typeCode),
     vocabulaire,

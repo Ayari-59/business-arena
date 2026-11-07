@@ -137,6 +137,11 @@ const SANS_FICHE: string[] = [
   "Frais de transaction",
   "Stocks",
   "Dettes fournisseurs et TVA",
+  // Le crédit-bail (engine/credit-bail) : le registre des notions n'a pas encore de fiche
+  // du crédit-bail ; le parc machines et l'annexe disent ce qu'il est (point ouvert).
+  "− Redevances de crédit-bail",
+  "Redevances restant à payer",
+  "Prix d'achat résiduel (options)",
 ];
 
 const libelles = () => {

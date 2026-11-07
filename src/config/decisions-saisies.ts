@@ -172,6 +172,8 @@ export function decisionsSaisies(formData: FormData): DecisionsSaisies {
   const fournisseur = scalars?.supplierChoice ?? (formData.get("supplierChoice") || undefined);
   const equipBuy = tableauJson(formData, "equipmentBuyJson");
   const equipSell = tableauJson(formData, "equipmentSellJson");
+  const equipLease = tableauJson(formData, "equipmentLeaseJson");
+  const leaseDecisions = tableauJson(formData, "leaseDecisionsJson");
   const etudes = {
     market: formData.get("studyMarket") === "on",
     price: formData.get("studyPrice") === "on",
@@ -214,7 +216,11 @@ export function decisionsSaisies(formData: FormData): DecisionsSaisies {
       // Champs cachés alimentés par l'îlot d'équipement : un contenu illisible
       // devient « pas d'équipement » plutôt qu'une erreur.
       const avecMachine = formData.has("machineCapacityUnits");
-      const avecParc = (equipBuy?.length ?? 0) > 0 || (equipSell?.length ?? 0) > 0;
+      const avecParc =
+        (equipBuy?.length ?? 0) > 0 ||
+        (equipSell?.length ?? 0) > 0 ||
+        (equipLease?.length ?? 0) > 0 ||
+        (leaseDecisions?.length ?? 0) > 0;
       if (!avecMachine && !avecParc) return {};
       return {
         investment: {
@@ -232,6 +238,12 @@ export function decisionsSaisies(formData: FormData): DecisionsSaisies {
                   RoundDecisions["investment"]
                 >["equipmentSell"],
               }
+            : {}),
+          ...(equipLease && equipLease.length > 0
+            ? { equipmentLease: equipLease as NonNullable<RoundDecisions["investment"]>["equipmentLease"] }
+            : {}),
+          ...(leaseDecisions && leaseDecisions.length > 0
+            ? { leaseDecisions: leaseDecisions as NonNullable<RoundDecisions["investment"]>["leaseDecisions"] }
             : {}),
         },
       };

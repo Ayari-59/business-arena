@@ -100,6 +100,11 @@ export interface ReglagesDuScenarioJoue {
    * vrai pour une partie créée avec lui ; absent, l'équilibre d'avant, au bit près.
    */
   equilibre?: boolean;
+  /**
+   * LE CRÉDIT-BAIL DES MACHINES (`creditBail`, engine/types.ts ; `engine/credit-bail`) :
+   * vrai pour une partie créée avec lui ; absent, le moteur d'avant, au bit près.
+   */
+  creditBail?: boolean;
 }
 
 /**
@@ -116,6 +121,7 @@ export const CORRECTIFS_DES_PARTIES_NOUVELLES = {
   impotSurLExercice: true,
   propositionALaDemande: true,
   equilibre: true,
+  creditBail: true,
 } as const satisfies Partial<ReglagesDuScenarioJoue>;
 
 /**
@@ -195,9 +201,10 @@ export function composerLeScenarioJoue(r: ReglagesDuScenarioJoue): EngineScenari
   // identique au bit près, comme pour les concurrents.
   const avecLeParcSeul = r.parcSansDoublon === true ? { ...joue, parcSansDoublon: true } : joue;
   const avecLeParc = r.impotSurLExercice === true ? { ...avecLeParcSeul, impotSurLExercice: true } : avecLeParcSeul;
+  const avecLeCreditBail = r.creditBail === true && avecLeParc.equipment ? { ...avecLeParc, creditBail: true } : avecLeParc;
   return r.propositionALaDemande === true
-    ? { ...laQualiteProposeeDuJeu(avecLeParc, true), propositionALaDemande: true }
-    : laQualiteProposeeDuJeu(avecLeParc, false);
+    ? { ...laQualiteProposeeDuJeu(avecLeCreditBail, true), propositionALaDemande: true }
+    : laQualiteProposeeDuJeu(avecLeCreditBail, false);
 }
 
 /**

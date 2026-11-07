@@ -156,6 +156,8 @@ export const engineScenarioConfigSchema = z.object({
   // L'équilibre du moteur 0.2.0 (engine/types.ts), posé par le scénario joué d'une
   // partie créée avec lui ; jamais écrit à la main dans un secteur.
   equilibre: z.literal("0.2.0").optional(),
+  // Le crédit-bail des machines (engine/types.ts), posé de même ; jamais écrit à la main.
+  creditBail: z.boolean().optional(),
   production: z.object({
     qualitySensitivity: z.number().nonnegative(),
     qualityScale: z.number().positive(),

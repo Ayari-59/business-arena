@@ -16,6 +16,8 @@ describe("le lot de l'examen compose le monde avec les correctifs des parties no
   it("la liste des correctifs est celle qu'on attend (un ajout se voit ici)", () => {
     expect(Object.keys(CORRECTIFS_DES_PARTIES_NOUVELLES).sort()).toEqual([
       "concurrentsAssainis",
+      // Le crédit-bail des machines (engine/credit-bail) : la partie du candidat le porte.
+      "creditBail",
       // L'équilibre du moteur 0.2.0 (config/scenarios/equilibre.ts) : le lot mesure le jeu
       // que la partie du candidat joue.
       "equilibre",

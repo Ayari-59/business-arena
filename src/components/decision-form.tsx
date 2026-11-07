@@ -61,7 +61,7 @@ import {
 import { aideDuBudgetEntretien } from "@/config/entretien";
 import { AIDE_DU_BUDGET_QUALITE } from "@/config/qualite";
 import type { ScenarioVocabulary, Sector } from "@/config/scenarios/registry";
-import type { GameView } from "@/services/game-view.service";
+import type { GameView, OffreDeCreditBail } from "@/services/game-view.service";
 import { formatEuro, formatEuroCents, formatUnits } from "@/lib/format";
 import {
   bloqueLaValidation,
@@ -283,6 +283,128 @@ function quantitesDepuisJson(json: string | undefined): Record<string, number> {
   }
 }
 
+/** Le choix d'acquisition d'une machine, quand la partie ouvre le crédit-bail. */
+export type ModeDAcquisition = "achat" | "credit-bail";
+/** Ce que l'équipe décide d'un contrat en cours (`investment.leaseDecisions`). */
+export type ChoixDUnContrat = "lever" | "rendre" | "rompre";
+
+/** L'état du crédit-bail dans la feuille : les quantités prises, le mode de chaque type, les choix. */
+export interface SaisieDuCreditBail {
+  leaseQty: Record<string, number>;
+  setLeaseQty: React.Dispatch<React.SetStateAction<Record<string, number>>>;
+  modes: Record<string, ModeDAcquisition>;
+  setModes: React.Dispatch<React.SetStateAction<Record<string, ModeDAcquisition>>>;
+  choix: Record<string, ChoixDUnContrat>;
+  setChoix: React.Dispatch<React.SetStateAction<Record<string, ChoixDUnContrat>>>;
+}
+
+/**
+ * Ce que la feuille envoie des contrats : à l'échéance, le choix affiché (lever l'option par
+ * défaut) ; avant, la seule rupture cochée.
+ */
+export function decisionsDesContrats(
+  offre: OffreDeCreditBail | undefined,
+  choix: Record<string, ChoixDUnContrat>,
+): { contractId: string; choice: ChoixDUnContrat }[] {
+  return (offre?.contrats ?? []).flatMap((c): { contractId: string; choice: ChoixDUnContrat }[] => {
+    const x = choix[c.id];
+    if (c.aEcheance) return [{ contractId: c.id, choice: x === "rendre" ? "rendre" : "lever" }];
+    return x === "rompre" ? [{ contractId: c.id, choice: "rompre" }] : [];
+  });
+}
+
+/** Relit les choix des contrats depuis leur champ caché en JSON. */
+function choixDepuisJson(json: string | undefined): Record<string, ChoixDUnContrat> {
+  if (!json) return {};
+  try {
+    const lu: unknown = JSON.parse(json);
+    if (!Array.isArray(lu)) return {};
+    const c: Record<string, ChoixDUnContrat> = {};
+    for (const ligne of lu) {
+      const { contractId, choice } = (ligne ?? {}) as { contractId?: unknown; choice?: unknown };
+      if (typeof contractId === "string" && (choice === "lever" || choice === "rendre" || choice === "rompre")) c[contractId] = choice;
+    }
+    return c;
+  } catch {
+    return {};
+  }
+}
+
+const eurosArrondis = (x: number) => `${Math.round(x).toLocaleString("fr-FR")} €`;
+
+/**
+ * LES CONTRATS DE CRÉDIT-BAIL EN COURS, une ligne chacun : les loyers restants, le tour du
+ * dernier loyer, l'option. Au dernier loyer, le choix entre lever l'option et rendre la
+ * machine ; avant, la rupture, qui paie ce tour les loyers restants.
+ */
+export function ContratsDeCreditBail({
+  offre,
+  choix,
+  setChoix,
+}: {
+  offre: OffreDeCreditBail;
+  choix: Record<string, ChoixDUnContrat>;
+  setChoix: React.Dispatch<React.SetStateAction<Record<string, ChoixDUnContrat>>>;
+}) {
+  const poser = (id: string, c: ChoixDUnContrat | null) =>
+    setChoix((prev) => {
+      const { [id]: _avant, ...reste } = prev;
+      void _avant;
+      return c ? { ...reste, [id]: c } : reste;
+    });
+  return (
+    <div className="mt-3 space-y-2" data-contrats-de-credit-bail="">
+      <p className="text-sm font-medium text-slate-200">Vos contrats de crédit-bail</p>
+      {offre.contrats.map((c) => {
+        const x = choix[c.id];
+        return (
+          <div key={c.id} className="rounded-lg bg-slate-950/40 px-2.5 py-2 text-xs text-slate-300" data-contrat={c.id}>
+            <p className="text-sm text-slate-200">
+              {c.typeName} × {c.quantite} · loyer {eurosArrondis(c.loyer)} par tour
+            </p>
+            <p className="mt-0.5">
+              {c.loyersRestants} loyer{c.loyersRestants > 1 ? "s" : ""} restant{c.loyersRestants > 1 ? "s" : ""} (
+              {eurosArrondis(c.loyer * c.loyersRestants)}), dernier au tour {c.dernierTour} · option {eurosArrondis(c.option)}
+            </p>
+            {c.aEcheance ? (
+              <div role="group" aria-label={`Fin du contrat · ${c.typeName}`} className="mt-1.5 flex flex-wrap gap-1.5">
+                {(["lever", "rendre"] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    aria-pressed={(x === "rendre" ? "rendre" : "lever") === m}
+                    onClick={() => poser(c.id, m)}
+                    className={`rounded-full border px-2.5 py-0.5 text-xs pointer-coarse:min-h-9 ${
+                      (x === "rendre" ? "rendre" : "lever") === m
+                        ? "border-slate-200/70 bg-white/10 text-slate-100"
+                        : "border-white/10 text-slate-300"
+                    }`}
+                  >
+                    {m === "lever" ? `Lever l'option (${eurosArrondis(c.option)})` : "Rendre la machine"}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <label className="mt-1.5 flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  checked={x === "rompre"}
+                  onChange={(e) => poser(c.id, e.target.checked ? "rompre" : null)}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-amber-400"
+                />
+                <span>
+                  Rompre le contrat : vous payez ce tour les {c.loyersRestants} loyers restants (
+                  {eurosArrondis(c.loyer * c.loyersRestants)}) et rendez la machine.
+                </span>
+              </label>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function EquipmentPanel({
   offer,
   vocabulary,
@@ -293,7 +415,14 @@ export function EquipmentPanel({
   simple = false,
   plafond = null,
   empruntOuvert = false,
+  creditBail = null,
 }: {
+  /**
+   * LE CRÉDIT-BAIL (`creditBail`, engine/credit-bail), quand le niveau ouvre l'emprunt et
+   * l'investissement et que la partie le porte (`offer.creditBail`) : chaque machine se prend
+   * au choix à l'achat ou en crédit-bail, et les contrats en cours se lisent sous le parc.
+   */
+  creditBail?: SaisieDuCreditBail | null;
   /** Le niveau ouvre-t-il l'emprunt ? L'avertissement d'un achat trop cher le propose alors. */
   empruntOuvert?: boolean;
   /**
@@ -315,15 +444,21 @@ export function EquipmentPanel({
   sellQty: Record<string, number>;
   setSellQty: React.Dispatch<React.SetStateAction<Record<string, number>>>;
 }) {
+  const cb = creditBail && offer.creditBail ? { ...creditBail, offre: offer.creditBail } : null;
+  const enCreditBail = (code: string) => cb?.offre.enService.find((e) => e.typeCode === code)?.count ?? 0;
+  const conditionsDe = (code: string) => cb?.offre.conditions.find((c) => c.typeCode === code);
+  const modeDe = (code: string): ModeDAcquisition => cb?.modes[code] ?? "achat";
+  const loue = (code: string) => (cb ? (cb.leaseQty[code] ?? 0) : 0);
   const totalCapacity = offer.fleet.reduce((sum, f) => {
     const typ = offer.types.find((t) => t.code === f.typeCode);
-    return sum + (typ ? f.count * typ.capacityPerUnit : 0);
+    return sum + (typ ? (f.count + enCreditBail(f.typeCode)) * typ.capacityPerUnit : 0);
   }, 0);
   const totalPending = offer.pendingFleet.reduce((sum, f) => {
     const typ = offer.types.find((t) => t.code === f.typeCode);
     return sum + (typ ? f.count * typ.capacityPerUnit : 0);
   }, 0);
-  const buyImpact = offer.types.reduce((sum, t) => sum + (buyQty[t.code] ?? 0) * t.capacityPerUnit, 0);
+  const buyImpact = offer.types.reduce((sum, t) => sum + ((buyQty[t.code] ?? 0) + loue(t.code)) * t.capacityPerUnit, 0);
+  const loyersAjoutes = offer.types.reduce((sum, t) => sum + loue(t.code) * (conditionsDe(t.code)?.loyer ?? 0), 0);
   const sellImpact = offer.types.reduce((sum, t) => sum + (sellQty[t.code] ?? 0) * t.capacityPerUnit, 0);
   const totalCost = offer.types.reduce((sum, t) => sum + (buyQty[t.code] ?? 0) * t.costPerUnit, 0);
   const totalSale = offer.types.reduce((sum, t) => {
@@ -339,7 +474,10 @@ export function EquipmentPanel({
   // est ce qu'il reste de la marge, cessions comprises, en machines entières.
   const engageHors = (code: string) =>
     offer.types.reduce(
-      (s, t) => s + (t.code === code ? 0 : (buyQty[t.code] ?? 0) * t.capacityPerUnit) - (sellQty[t.code] ?? 0) * t.capacityPerUnit,
+      (s, t) =>
+        s +
+        (t.code === code ? 0 : ((buyQty[t.code] ?? 0) + loue(t.code)) * t.capacityPerUnit) -
+        (sellQty[t.code] ?? 0) * t.capacityPerUnit,
       0,
     );
   const borneDAchat = (t: (typeof offer.types)[number]) =>
@@ -378,8 +516,26 @@ export function EquipmentPanel({
           const pend = offer.pendingFleet.find((f) => f.typeCode === t.code);
           const owned = fl?.count ?? 0;
           const pendCount = pend?.count ?? 0;
-          const buy = buyQty[t.code] ?? 0;
+          const mode = modeDe(t.code);
+          const enCB = mode === "credit-bail";
+          const buy = enCB ? loue(t.code) : (buyQty[t.code] ?? 0);
+          const setQuantite = enCB && cb ? cb.setLeaseQty : setBuyQty;
           const sell = sellQty[t.code] ?? 0;
+          const loues = enCreditBail(t.code);
+          const cond = conditionsDe(t.code);
+          // Changer de mode garde la quantité saisie : elle passe d'une colonne à l'autre.
+          const choisir = (m: ModeDAcquisition) => {
+            if (!cb || m === mode) return;
+            const q = buy;
+            cb.setModes((prev) => ({ ...prev, [t.code]: m }));
+            if (m === "credit-bail") {
+              setBuyQty((prev) => ({ ...prev, [t.code]: 0 }));
+              cb.setLeaseQty((prev) => ({ ...prev, [t.code]: q }));
+            } else {
+              cb.setLeaseQty((prev) => ({ ...prev, [t.code]: 0 }));
+              setBuyQty((prev) => ({ ...prev, [t.code]: q }));
+            }
+          };
           const avgBook = owned > 0 ? (fl?.bookValue ?? 0) / owned : 0;
           const champAchat = champDAchatDeMachine(t.code);
           const refus = refusPour(refusDuParc, champAchat);
@@ -394,7 +550,8 @@ export function EquipmentPanel({
                   </span>
                 </div>
                 <span className="shrink-0 text-xs tabular-nums text-slate-400">
-                  {owned} en service{pendCount > 0 ? ` + ${pendCount} en attente` : ""}
+                  {owned + loues} en service{loues > 0 ? ` dont ${loues} en crédit-bail` : ""}
+                  {pendCount > 0 ? ` + ${pendCount} en attente` : ""}
                 </span>
               </div>
               <div className="mt-2 flex flex-wrap gap-x-3 gap-y-0 text-xs text-slate-400 max-sm:mt-1">
@@ -416,16 +573,39 @@ export function EquipmentPanel({
                   </>
                 )}
               </div>
+              {cb && cond ? (
+                <div role="group" aria-label={`Acquisition · ${t.name}`} className="mt-2 flex gap-1.5 max-sm:mt-1" data-mode-d-acquisition={t.code}>
+                  {(["achat", "credit-bail"] as const).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      aria-pressed={mode === m}
+                      onClick={() => choisir(m)}
+                      className={`rounded-full border px-2.5 py-0.5 text-xs pointer-coarse:min-h-9 ${
+                        mode === m ? "border-slate-200/70 bg-white/10 text-slate-100" : "border-white/10 text-slate-300"
+                      }`}
+                    >
+                      {m === "achat" ? "Acheter" : "Crédit-bail"}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+              {cb && cond && enCB ? (
+                <p className="mt-1 text-sm text-slate-300" data-loyer-du-credit-bail={t.code}>
+                  Loyer {eurosArrondis(cond.loyer)} par tour et par machine, pendant {cb.offre.duree} tours ; rien à
+                  payer à la signature. Option d&apos;achat {eurosArrondis(cond.option)} en fin de contrat.
+                </p>
+              ) : null}
               {/* ACHETER ET VENDRE NE SONT NI UN GAIN NI UNE PERTE : l'encre et
                   un signe, plus le vert et le rouge des résultats. */}
               <div className="mt-2 grid grid-cols-2 gap-3 max-sm:mt-1">
                 <label className="block">
                   <span className="libelle text-slate-300 max-sm:hidden">
-                    <span aria-hidden>+ </span>Acheter
+                    <span aria-hidden>+ </span>{enCB ? "Prendre" : "Acheter"}
                   </span>
                   <span className="mt-0.5 flex items-center gap-1.5 champ px-2 py-1 max-sm:mt-0">
                     <span className="libelle shrink-0 text-slate-300 sm:hidden">
-                      <span aria-hidden>+ </span>Acheter
+                      <span aria-hidden>+ </span>{enCB ? "Prendre" : "Acheter"}
                     </span>
                     <input
                       type="number"
@@ -435,12 +615,12 @@ export function EquipmentPanel({
                       name={champAchat}
                       id={refus.id}
                       {...refus.attributs}
-                      aria-label={`Acheter · ${t.name}`}
+                      aria-label={enCB ? `Crédit-bail · ${t.name}` : `Acheter · ${t.name}`}
                       min={0}
                       max={borne}
                       value={buy}
                       onChange={(e) =>
-                        setBuyQty((prev) => ({
+                        setQuantite((prev) => ({
                           ...prev,
                           [t.code]: Math.min(t.maxPerRound, Math.max(0, parseInt(e.target.value) || 0)),
                         }))
@@ -451,7 +631,9 @@ export function EquipmentPanel({
                   </span>
                   {buy > 0 ? (
                     <span className="mt-0.5 block text-xs text-slate-300">
-                      = {(buy * t.costPerUnit).toLocaleString("fr-FR")} €
+                      {enCB && cond
+                        ? `= ${eurosArrondis(buy * cond.loyer)} par tour`
+                        : `= ${(buy * t.costPerUnit).toLocaleString("fr-FR")} €`}
                     </span>
                   ) : null}
                   {refus.message}
@@ -495,7 +677,7 @@ export function EquipmentPanel({
       {(() => {
         const avertissement =
           offer.tresorerieDisponible !== undefined
-            ? avertissementDAchat({ cout: totalCost, tresorerie: offer.tresorerieDisponible, empruntOuvert })
+            ? avertissementDAchat({ cout: totalCost, tresorerie: offer.tresorerieDisponible, empruntOuvert, creditBailOuvert: cb !== null })
             : null;
         return avertissement ? (
           <p role="status" className="mt-3 rounded-lg encadre-perte px-3 py-2 text-sm leading-relaxed text-slate-100">
@@ -512,10 +694,22 @@ export function EquipmentPanel({
                 <span className="text-right tabular-nums text-emerald-300">
                   +{Math.round(buyImpact).toLocaleString("fr-FR")} {vocabulary.perRoundLabel}
                 </span>
-                <span className="text-slate-400">Investissement</span>
-                <span className="text-right tabular-nums text-slate-200">
-                  {totalCost.toLocaleString("fr-FR")} €
-                </span>
+                {totalCost > 0 || loyersAjoutes === 0 ? (
+                  <>
+                    <span className="text-slate-400">Investissement</span>
+                    <span className="text-right tabular-nums text-slate-200">
+                      {totalCost.toLocaleString("fr-FR")} €
+                    </span>
+                  </>
+                ) : null}
+                {loyersAjoutes > 0 ? (
+                  <>
+                    <span className="text-slate-400">Loyers de crédit-bail ajoutés</span>
+                    <span className="text-right tabular-nums text-slate-200">
+                      {eurosArrondis(loyersAjoutes)} par tour
+                    </span>
+                  </>
+                ) : null}
               </>
             ) : null}
             {sellImpact > 0 ? (
@@ -532,6 +726,14 @@ export function EquipmentPanel({
             ) : null}
           </div>
         </div>
+      ) : null}
+      {cb && cb.offre.contrats.length > 0 ? <ContratsDeCreditBail offre={cb.offre} choix={cb.choix} setChoix={cb.setChoix} /> : null}
+      {cb ? (
+        <p className="mt-3 text-sm leading-relaxed text-slate-400">
+          Une machine en crédit-bail entre aussi en service au tour suivant. Vous payez un loyer chaque tour, une
+          charge de l&apos;exercice : la machine n&apos;est pas à votre bilan et ne se vend pas. En fin de contrat,
+          vous la rachetez pour le prix de l&apos;option, ou vous la rendez.
+        </p>
       ) : null}
       {enCarte ? (
         <div className="mt-2">
@@ -2562,7 +2764,7 @@ export function DecisionForm({
   /** Enveloppe d'augmentation de capital restante (null = illimitée). */
   capitalAllowance?: { total: number; remaining: number } | null;
   /** Ce que la banque peut encore prêter : `null` sans plafond déclaré. */
-  loanCapacity?: { remaining: number; ratio: number; equity: number; debt: number } | null;
+  loanCapacity?: { remaining: number; ratio: number; equity: number; debt: number; engagementDeCreditBail?: number } | null;
   /** Conditions du crédit, pour chiffrer l'emprunt avant la validation. */
   financeOffer?: {
     loanAnnualRate: number;
@@ -2604,6 +2806,8 @@ export function DecisionForm({
     pendingFleet: { typeCode: string; count: number }[];
     /** La trésorerie disponible à l'ouverture du tour : l'achat qui la dépasse est signalé. */
     tresorerieDisponible?: number;
+    /** Le crédit-bail, dans une partie qui le porte. */
+    creditBail?: OffreDeCreditBail;
   } | null;
   /** Le niveau qui ouvre l'emprunt, quand celui de la partie ne l'ouvre pas : dit en lecture seule. */
   niveauDuFinancement?: number | null;
@@ -2906,6 +3110,9 @@ export function DecisionForm({
   };
   const [equipBuyQty, setEquipBuyQty] = useState<Record<string, number>>({});
   const [equipSellQty, setEquipSellQty] = useState<Record<string, number>>({});
+  const [equipLeaseQty, setEquipLeaseQty] = useState<Record<string, number>>({});
+  const [modesDAcquisition, setModesDAcquisition] = useState<Record<string, ModeDAcquisition>>({});
+  const [choixDesContrats, setChoixDesContrats] = useState<Record<string, ChoixDUnContrat>>({});
   // L'étape affichée de l'assistant de décision (voir plus bas). Les étapes
   // inactives restent MONTÉES (attribut `hidden`, jamais démontées) : le
   // formulaire se soumet toujours en entier, quelle que soit l'étape à l'écran.
@@ -3507,6 +3714,7 @@ export function DecisionForm({
                   const lignes = [
                     d.get("equipmentBuyJson") && d.get("equipmentBuyJson") !== "[]" ? "achat de machines" : null,
                     d.get("equipmentSellJson") && d.get("equipmentSellJson") !== "[]" ? "vente de machines" : null,
+                    d.get("equipmentLeaseJson") && d.get("equipmentLeaseJson") !== "[]" ? "crédit-bail" : null,
                   ].filter(Boolean);
                   return lignes.length > 0 ? lignes.join(", ") : "Aucun";
                 },
@@ -3956,6 +4164,10 @@ export function DecisionForm({
     // vivent dans un état React et ressortent en JSON caché. On les relit là.
     setEquipBuyQty(quantitesDepuisJson(b.equipmentBuyJson));
     setEquipSellQty(quantitesDepuisJson(b.equipmentSellJson));
+    const loues = quantitesDepuisJson(b.equipmentLeaseJson);
+    setEquipLeaseQty(loues);
+    setModesDAcquisition(Object.fromEntries(Object.keys(loues).map((code) => [code, "credit-bail" as const])));
+    setChoixDesContrats(choixDepuisJson(b.leaseDecisionsJson));
   }, [cle, gameId, alreadySubmitted, formRef]);
 
   // Le tour est parti : le filet n'a plus lieu d'être.
@@ -4921,7 +5133,11 @@ export function DecisionForm({
                     suffix="€"
                     legendePlafond="ce que la banque prête encore"
                     onValueChange={(v) => setRenfort((r) => ({ ...r, emprunt: v }))}
-                    hint={`${tauxEmprunt}. La banque prête jusqu'à ${loanCapacity.ratio} × vos capitaux propres.`}
+                    hint={
+                      loanCapacity.engagementDeCreditBail
+                        ? `${tauxEmprunt}. La banque prête jusqu'à ${loanCapacity.ratio} × vos capitaux propres, moins vos dettes et la moitié de vos loyers de crédit-bail restants (${eurosArrondis(loanCapacity.engagementDeCreditBail)}).`
+                        : `${tauxEmprunt}. La banque prête jusqu'à ${loanCapacity.ratio} × vos capitaux propres.`
+                    }
                   />
                 ) : (
                   <Field name="newLoan" label="Nouvel emprunt" defaultValue={0} suffix="€"
@@ -5018,6 +5234,20 @@ export function DecisionForm({
             simple={!on.creances}
             plafond={plafondInvestissement}
             empruntOuvert={on.finance}
+            // Le crédit-bail s'ouvre avec l'emprunt et l'investissement (niveau 4), dans une
+            // partie qui le porte.
+            creditBail={
+              on.finance && equipmentOffer.creditBail
+                ? {
+                    leaseQty: equipLeaseQty,
+                    setLeaseQty: setEquipLeaseQty,
+                    modes: modesDAcquisition,
+                    setModes: setModesDAcquisition,
+                    choix: choixDesContrats,
+                    setChoix: setChoixDesContrats,
+                  }
+                : null
+            }
           />
           <input type="hidden" name="equipmentBuyJson" value={JSON.stringify(
             equipmentOffer.types
@@ -5029,6 +5259,18 @@ export function DecisionForm({
               .filter((t) => (equipSellQty[t.code] ?? 0) > 0)
               .map((t) => ({ typeCode: t.code, quantity: equipSellQty[t.code] ?? 0 }))
           )} />
+          {on.finance && equipmentOffer.creditBail ? (
+            <>
+              <input type="hidden" name="equipmentLeaseJson" value={JSON.stringify(
+                equipmentOffer.types
+                  .filter((t) => (equipLeaseQty[t.code] ?? 0) > 0)
+                  .map((t) => ({ typeCode: t.code, quantity: equipLeaseQty[t.code] ?? 0 }))
+              )} />
+              <input type="hidden" name="leaseDecisionsJson" value={JSON.stringify(
+                decisionsDesContrats(equipmentOffer.creditBail, choixDesContrats)
+              )} />
+            </>
+          ) : null}
         </Carte>
       ) : null}
       {croissanceExterne && groupe ? (

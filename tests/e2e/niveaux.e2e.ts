@@ -473,3 +473,92 @@ describe("niveau 2 : une crise de trésorerie se traverse sans verrou", () => {
     await ctx.close();
   }, 400_000);
 });
+
+describe("niveau 4 : une machine en crédit-bail", () => {
+  it("à 1280 : le choix « Crédit-bail » et son loyer, le tour validé, le contrat au tour 2, la redevance au compte de résultat", async () => {
+    const ctx = await ordinateur();
+    await enseignantSousLicence(ctx);
+    const p = await ctx.newPage();
+    await p.goto(`${BASE}/jouer`, { waitUntil: "networkidle" });
+    await p.getByRole("button", { name: /NOVA/ }).first().click();
+    await choisirLeNiveau(p, 4);
+    await p.getByRole("button", { name: "Lancer la partie" }).click();
+    await p.waitForURL(/\/arena\/|trop=1/, { timeout: 90_000 });
+    if (p.url().includes("trop=1")) throw new Error("Plafond de parties par heure atteint : relancer sur une base neuve.");
+    const url = p.url().split("?")[0]!.split("#")[0]!;
+
+    const auxDecisions = async () => {
+      await p.goto(`${url}#decisions`, { waitUntil: "networkidle" });
+      await p.waitForTimeout(900);
+      const passer = p.getByRole("button", { name: /Passer au |Prendre mes décisions/i }).first();
+      if (await passer.isVisible().catch(() => false)) {
+        await passer.click();
+        await p.waitForTimeout(500);
+        await p.evaluate(() => (location.hash = "decisions"));
+        await p.waitForTimeout(800);
+      }
+      const ouvrir = p.getByRole("button", { name: /Ouvrir le courrier/ }).first();
+      if (await ouvrir.isVisible().catch(() => false)) {
+        await ouvrir.click();
+        await p.waitForTimeout(1_500);
+      }
+      const note = p.getByRole("button", { name: /pris note/ }).first();
+      if (await note.isVisible().catch(() => false)) await note.click();
+      await p.waitForTimeout(400);
+      await p.getByRole("button", { name: /^Financer & investir/ }).first().click();
+      await p.waitForTimeout(400);
+    };
+
+    // Tour 1 : la ligne manuelle, prise en crédit-bail ; le loyer se lit avant la validation.
+    await auxDecisions();
+    const groupe = p.locator('[data-mode-d-acquisition="manual"]');
+    await groupe.scrollIntoViewIfNeeded();
+    await groupe.getByRole("button", { name: "Crédit-bail" }).click();
+    await p.waitForTimeout(200);
+    expect(await groupe.getByRole("button", { name: "Crédit-bail" }).getAttribute("aria-pressed")).toBe("true");
+    const loyer = espaces(await p.locator('[data-loyer-du-credit-bail="manual"]').textContent());
+    expect(loyer).toMatch(/^Loyer \d[\d ]* € par tour et par machine, pendant 12 tours ; rien à payer à la signature\. Option d'achat \d[\d ]* € en fin de contrat\.$/);
+    const montantDuLoyer = loyer.match(/^Loyer (\d[\d ]*) €/)![1]!;
+    await p.getByLabel("Crédit-bail · Ligne manuelle").fill("1");
+    await p.waitForTimeout(200);
+    expect(espaces(await p.locator("body").innerText())).toContain(`= ${montantDuLoyer} € par tour`);
+    if (CAPTURES) {
+      await groupe.evaluate((e) => e.scrollIntoView({ block: "center" }));
+      await p.screenshot({ path: `${CAPTURES}/arene-n4-credit-bail-choix-1280.png` });
+    }
+    await allerAValider(p);
+    await valider(p);
+    await p.waitForURL(/simule/, { timeout: 180_000 });
+
+    // Tour 2 : le contrat a sa ligne ; la machine sert, le premier loyer se paie ce tour.
+    await auxDecisions();
+    const contrat = p.locator('[data-contrat="cb-manual-r1"]');
+    await contrat.scrollIntoViewIfNeeded();
+    const ligne = espaces(await contrat.textContent());
+    expect(ligne).toContain(`Ligne manuelle × 1 · loyer ${montantDuLoyer} € par tour`);
+    expect(ligne).toContain("12 loyers restants");
+    expect(ligne).toContain("dernier au tour 13");
+    expect(ligne).toContain("Rompre le contrat");
+    if (CAPTURES) await p.screenshot({ path: `${CAPTURES}/arene-n4-credit-bail-contrat-1280.png` });
+    await allerAValider(p);
+    await valider(p);
+    await p.waitForURL(/simule/, { timeout: 180_000 });
+
+    // Le compte de résultat du tour 2 porte la redevance ; le bilan, l'engagement en annexe.
+    await p.goto(url, { waitUntil: "networkidle" });
+    await p.waitForTimeout(1_200);
+    const comptes = p.locator('section[aria-label="Vos comptes du tour"]').first();
+    await comptes.waitFor({ timeout: 30_000 });
+    const lu = espaces(await comptes.innerText());
+    expect(lu).toContain("Redevances de crédit-bail");
+    expect(lu).toMatch(new RegExp(`Redevances de crédit-bail\\s+−${montantDuLoyer} €`));
+    await comptes.getByText("Bilan", { exact: true }).first().click();
+    await p.waitForTimeout(400);
+    expect(espaces(await comptes.innerText())).toContain("Engagements de crédit-bail (annexe, hors bilan)");
+    if (CAPTURES) {
+      await comptes.evaluate((e) => e.scrollIntoView({ block: "start" }));
+      await p.screenshot({ path: `${CAPTURES}/arene-n4-credit-bail-comptes-1280.png` });
+    }
+    await ctx.close();
+  }, 500_000);
+});

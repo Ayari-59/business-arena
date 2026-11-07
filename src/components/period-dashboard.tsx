@@ -806,7 +806,7 @@ export function PeriodDashboard({
             />
 
             {period.ratiosDeLAnnee && period.ratiosDeLAnnee.toursLus > 0 ? (
-              <RatioGauges ratios={period.ratiosDeLAnnee} />
+              <RatioGauges ratios={period.ratiosDeLAnnee} engagementDeCreditBail={r.creditBail?.engagement ?? 0} />
             ) : null}
 
             {r.bank && r.bank.loanRequested > 0 && r.bank.loanGranted === 0 ? (

@@ -177,7 +177,8 @@ export function capaciteAjoutee(
     const capacite = new Map(unite.machines.map((m) => [m.code, m.capacite]));
     const somme = (lignes: { typeCode: string; quantity: number }[] | undefined) =>
       (lignes ?? []).reduce((s, l) => s + Math.max(0, l.quantity) * (capacite.get(l.typeCode) ?? 0), 0);
-    return somme(investissement.equipmentBuy) - somme(investissement.equipmentSell);
+    // Une machine en crédit-bail ajoute sa capacité comme une machine achetée.
+    return somme(investissement.equipmentBuy) + somme(investissement.equipmentLease) - somme(investissement.equipmentSell);
   }
   return Math.max(0, investissement.machineCapacityUnits ?? 0);
 }
