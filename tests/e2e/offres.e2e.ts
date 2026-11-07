@@ -62,7 +62,8 @@ describe("l'espace enseignant dit l'offre, et la classe ne s'ouvre pas sans elle
     await aller(page, "/teacher");
     const etat = page.locator("[data-etat-offre]");
     expect(await etat.getAttribute("data-etat-offre")).toBe("decouverte");
-    expect(await etat.innerText()).toContain("Premiers pas : solo, niveaux 1 à 3");
+    // Les insécables de la typographie (avant « : », entre « 1 à 3 ») : \s les couvre.
+    expect(await etat.innerText()).toMatch(/Premiers pas\s:\ssolo, niveaux 1\sà\s3/);
     expect(await etat.getByRole("link", { name: "Demander un devis" }).getAttribute("href")).toBe(
       "/devis?offre=classe",
     );
