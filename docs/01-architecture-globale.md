@@ -166,7 +166,7 @@ Choix structurants :
 
 - **Server Actions** pour les mutations liées à l'UI (soumettre décisions, débloquer indice) ;
   **Route handlers** pour ce qui doit être appelable hors UI : cron d'échéance
-  (`/api/cron/close-rounds`, protégé par `CRON_SECRET`), proxy LLM (étape 12), export enseignant.
+  (`/api/cron/purge`, la purge RGPD des données au terme de leur conservation, protégée par `CRON_SECRET`), proxy LLM (étape 12), export enseignant.
 - **zod à toutes les frontières** : entrées d'actions, config de scénario, payloads JSONB relus
   depuis la base (parse au chargement, jamais de `as`).
 - Autorisations centralisées dans `services/auth` : chaque use-case vérifie
