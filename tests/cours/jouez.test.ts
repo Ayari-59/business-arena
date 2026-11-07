@@ -147,8 +147,13 @@ describe("la mission dit où l'arène s'écarte du chapitre", () => {
 
   it("les machines de l'arène ne sont pas les projets du chapitre : la mission donne les deux échelles", () => {
     expect(texte("le-tri-et-le-choix-entre-deux-projets", "nova")).not.toMatch(/la machine du projet B/);
-    expect(texte("le-tri-et-le-choix-entre-deux-projets", "nova")).toMatch(/30 000 € dans l'arène, 150 000 €/);
-    expect(texte("la-valeur-actuelle-nette", "nova")).toMatch(/15 000 €.*60 000 €.*40 000 €/);
+    // À l'équilibre 0.2.0, une machine de l'arène coûte dix fois son prix du registre
+    // (config/scenarios/equilibre.ts) : la mission dit le prix qu'une partie créée
+    // aujourd'hui fait payer, et fait emprunter ce prix.
+    expect(texte("le-tri-et-le-choix-entre-deux-projets", "nova")).toMatch(/300 000 € dans l'arène, 150 000 €/);
+    expect(texte("la-valeur-actuelle-nette", "nova")).toMatch(/150 000 €.*60 000 €.*40 000 €/);
+    expect(texte("la-valeur-actuelle-nette", "nova")).toMatch(/empruntez son prix, 150 000 €/);
+    expect(texte("croitre-en-investissant", "nova")).toMatch(/empruntez 150 000 €/);
   });
 
   it("le BFR de l'arène retranche la TVA à décaisser, et la mission le fait recalculer", () => {

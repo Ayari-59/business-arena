@@ -704,6 +704,8 @@ export interface GameView {
       maintenanceMultiplier: number;
       maxPerRound: number;
       resaleRatio: number;
+      /** La charge fixe d'une machine au parc, par tour (équilibre 0.2.0) ; absente, aucune. */
+      chargeFixeParTour?: number;
     }[];
     fleet: { typeCode: string; count: number; bookValue: number }[];
     pendingFleet: { typeCode: string; count: number }[];
@@ -2314,6 +2316,7 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
             parcActifDuTour(snapshot, state, game.currentRound),
             state,
           ),
+          snapshot.equilibre !== undefined,
         ),
         laborCapacity: Math.round(lc),
         bottleneck,
@@ -2404,6 +2407,8 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
           maintenanceMultiplier: t.maintenanceMultiplier,
           maxPerRound: t.maxPerRound,
           resaleRatio: t.resaleRatio ?? 0.3,
+          // Équilibre 0.2.0 : la charge fixe d'une machine au parc, par tour.
+          ...(t.chargeFixeParTour !== undefined ? { chargeFixeParTour: t.chargeFixeParTour } : {}),
         })),
         fleet: snapshot.equipment.types.map((t) => ({
           typeCode: t.code,

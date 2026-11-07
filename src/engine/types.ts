@@ -390,6 +390,23 @@ export interface EngineScenarioConfig {
    */
   parcSansDoublon?: boolean;
   /**
+   * L'ÉQUILIBRE DU MOTEUR 0.2.0 (relevé du moteur, novembre 2026), posé par
+   * `composerLeScenarioJoue` à la création d'une partie (donc figé dans son instantané,
+   * avec les données qu'il recalibre : `config/scenarios/equilibre.ts`). Le moteur en lit
+   * trois règles :
+   *  · l'entretien s'équilibre à la référence : sous elle, la disponibilité baisse de
+   *    usure × (1 − r) ; au-dessus, elle remonte de usure × (r − 1), jusqu'à 1 (r = budget
+   *    ÷ référence). Sans le drapeau, l'équilibre tombait aux deux tiers de la référence ;
+   *  · une démission est REMPLACÉE : l'effectif ne baisse pas, l'entreprise paie son coût
+   *    de recrutement, et le remplaçant travaille un tour à productivité réduite
+   *    (`PRODUCTIVITE_DU_REMPLACANT`). Sans le drapeau, un salarié parti n'était pas
+   *    remplacé et sous-payer dégraissait l'équipe sans rien coûter ;
+   *  · une machine coûte sa charge fixe à chaque tour où elle est au parc
+   *    (`chargeFixeParTour`), et s'amortit sur son coût d'acquisition.
+   * Absent : l'équilibre d'avant au bit près, pour les parties créées en 0.1.0.
+   */
+  equilibre?: "0.2.0";
+  /**
    * L'IMPÔT SUR L'EXERCICE, posé par `composerLeScenarioJoue` à la création d'une partie
    * (donc figé dans son instantané). L'impôt sur les sociétés se calcule sur l'année ;
    * l'arène le prenait trimestre par trimestre, si bien qu'une entreprise en perte sur
@@ -942,6 +959,19 @@ export interface EquipmentTypeDef {
    * défaut 0.1). La maintenance réduit l'usure d'autant chaque tour.
    */
   maintenanceRepairRate?: number;
+  /**
+   * La charge fixe d'une machine au parc, par tour : entretien courant et assurance. Une
+   * capacité vide la paie aussi. Posée par l'équilibre 0.2.0 (`equilibre`) ; absente,
+   * aucune charge, le calcul d'avant.
+   */
+  chargeFixeParTour?: number;
+  /**
+   * Le prix d'achat des machines du parc de départ, quand il diffère du prix d'une
+   * machine achetée en cours de partie (`costPerUnit`) : l'équilibre 0.2.0 décuple le
+   * second sans revaloriser le parc d'ouverture, dont les valeurs nettes et les
+   * amortissements restent ceux du bilan de départ. Absent : `costPerUnit`.
+   */
+  prixDuParcDeDepart?: number;
 }
 
 /**
@@ -976,6 +1006,12 @@ export interface EquipmentItem {
   acquiredRound: number;
   /** Valeur nette comptable totale restante (pour l'amortissement). */
   bookValue: number;
+  /**
+   * Le coût d'acquisition du lot, base de son amortissement. Posé à l'achat dans une
+   * partie à l'équilibre 0.2.0 ; absent, le lot s'amortit sur le prix de son type
+   * (`prixDuParcDeDepart`, sinon `costPerUnit`), le calcul d'avant.
+   */
+  coutDAcquisition?: number;
 }
 
 export interface ScoringConfig {
@@ -1323,6 +1359,11 @@ export interface CompanyState {
   headcount: number;
   hoursPerEmployee: number;
   productivity: number;
+  /**
+   * Les remplaçants des démissions du tour passé, dans leur premier tour : ils
+   * travaillent à `PRODUCTIVITE_DU_REMPLACANT` (équilibre 0.2.0). Absent : aucun.
+   */
+  remplacantsEnRodage?: number;
   /** Stock de produits finis : quantité et coût unitaire moyen pondéré. */
   finishedGoods: { quantity: number; unitCost: number };
   /**
@@ -2144,6 +2185,8 @@ export interface CompanyRoundResult {
     fired: number;
     /** Démission (indice de salaire sous le seuil d'attrition). */
     departed: number;
+    /** Démissions remplacées par un recrutement (équilibre 0.2.0) ; absent : aucune. */
+    remplaces?: number;
     trainingBudget: number;
     salaryIndex: number;
     /** Charge de structure RH du tour (négatif = économie de masse salariale). */

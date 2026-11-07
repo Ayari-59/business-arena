@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { blocOfficiel, referentielDeCitation } from "../../src/config/ateliers/referentiels";
 import { UNITES_FEMININES } from "../../src/config/cours/accords";
-import { anneeJouee } from "../../src/config/cours/annee-de-l-arene";
+import { anneeDuCours } from "../../src/config/cours/monde/annee-du-cours";
 import { casDeLEntreprise, type Cas } from "../../src/config/cours/cas";
 import { BAISSE_DU_DEFI, PARTICIPATION_VOLONTAIRE, REDEVANCES_DE_CREDIT_BAIL, SOLDES_INTERMEDIAIRES, soldesDeGestion } from "../../src/config/cours/chapitres/soldes-intermediaires";
 import { ENTREPRISES_DU_COURS } from "../../src/config/cours/metiers";
@@ -515,7 +515,10 @@ describe("l'export de compatibilité : soldesDeGestion redonne l'année figée d
     expect(Math.abs(s.rcai - s.arene.resultatAvantImpot)).toBeLessThan(2);
     expect(s.cafAdditive).toBeCloseTo(s.cafSoustractive, 2);
     expect(s.cafAdditive).toBeCloseTo(s.resultatNet + s.dotation, 2);
-    const tours = anneeJouee(code).partie.rounds;
+    // L'année FIGÉE (monde/annee-du-cours.ts), pas l'arène d'aujourd'hui : depuis l'équilibre
+    // du moteur 0.2.0 (novembre 2026), l'arène rejouée ne redonne plus l'année figée, et le
+    // chapitre ne la lit pas.
+    const tours = anneeDuCours(code).partie.rounds;
     expect(s.tresorerie.debut).toBeCloseTo(tours[0]!.results["joueur"]!.cashFlow.opening, 1);
     expect(s.tresorerie.fin).toBeCloseTo(tours[tours.length - 1]!.results["joueur"]!.cashFlow.closing, 1);
   });

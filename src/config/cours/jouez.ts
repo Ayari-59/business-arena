@@ -7,6 +7,7 @@ import { TRIMESTRE_SANS_ENTRETIEN } from "./chapitres/entretenir-l-outil";
 import { TAUX_DE_CAPACITE_VISE } from "./chapitres/se-fixer-des-objectifs";
 import { STRATEGIE_DE_COUTS, STRATEGIE_DE_DIFFERENCIATION } from "./chapitres/couts-ou-differenciation";
 import { TRIMESTRE_DE_L_ACHAT, machineDuChapitre } from "./chapitres/croitre-en-investissant";
+import { avecLEquilibre } from "../scenarios/equilibre";
 import { budgetRse } from "./chapitres/la-responsabilite-societale";
 import { FACTEUR_DE_LA_VIRGULE, TRIMESTRE_DECIDE, TRIMESTRES_DE_L_EXTRAIT } from "./chapitres/une-donnee-fausse";
 import { ABONNEMENT_PAR_UTILISATEUR_ET_PAR_MOIS, PART_DES_VENTES_RETROUVEES } from "./chapitres/ce-que-coute-un-outil-numerique";
@@ -228,8 +229,19 @@ const budgetDuSecteur = (code: string) => Math.round(PART_DE_QUALITE_NEUTRE * sc
 const TVA_DE_L_ARENE = (c: Cas) =>
   `L'arène compte la TVA de ${c.entreprise} à la facture, comme si l'entreprise avait opté pour les débits ; le chapitre, lui, la compte aux encaissements, le régime de droit commun des travaux. Lisez donc l'écran comme la variante aux débits du chapitre.`;
 
+/**
+ * Un équipement du catalogue de l'arène, par son nom, tel qu'une partie créée aujourd'hui le
+ * vend : à l'équilibre 0.2.0, une machine coûte dix fois son prix du registre
+ * (`config/scenarios/equilibre.ts`). Le registre seul donnait à l'élève le prix d'avant.
+ */
+const machineDansLArene = (c: Cas, nom: string) => avecLEquilibre(scenarioByCode(c.code).scenario).equipment?.types.find((t) => t.name === nom);
 /** Le prix d'un équipement dans le catalogue de l'arène, par son nom. */
-const prixDansLArene = (c: Cas, nom: string) => scenarioByCode(c.code).scenario.equipment?.types.find((t) => t.name === nom)?.costPerUnit;
+const prixDansLArene = (c: Cas, nom: string) => machineDansLArene(c, nom)?.costPerUnit;
+/** Le prix et la durée d'amortissement du poste du chapitre dans l'arène ; à défaut, ceux de la fiche. */
+const posteDansLArene = (c: Cas, m: { name: string; costPerUnit: number; depreciationRounds: number }) => {
+  const t = machineDansLArene(c, m.name);
+  return t ? { name: m.name, costPerUnit: t.costPerUnit, depreciationRounds: t.depreciationRounds } : m;
+};
 const euros = (x: number) => `${x.toLocaleString("fr-FR")} €`;
 
 const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
@@ -892,7 +904,7 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
       "Sous le marché du tour écoulé, le benchmark concurrentiel donne le prix moyen et la part de marché de chaque entreprise, et le caractère de chaque concurrent. Calculez l'indice de prix de chacun (son prix ÷ la moyenne du marché × 100) : l'arène affiche l'inverse pour vous, son indice de compétitivité-prix. Le caractère lu dit-il la même stratégie que votre indice ?",
   }),
   "croitre-en-investissant": (c) => {
-    const m = machineDuChapitre(c.code);
+    const m = posteDansLArene(c, machineDuChapitre(c.code));
     return {
       niveau: NIVEAU_DE_L_INVESTISSEMENT,
       faire: `${partie(c, NIVEAU_DE_L_INVESTISSEMENT)} Au tour ${TRIMESTRE_DE_L_ACHAT}, dans « Parc machines · investir ou céder », achetez un équipement de plus, ${m.name}, et dans « Nouvel emprunt », empruntez ${m.costPerUnit.toLocaleString("fr-FR")} €. Puis jouez quatre tours.`,
@@ -1081,13 +1093,13 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     };
   },
   "la-valeur-actuelle-nette": (c) => {
-    const m = machineDuChapitre(c.code);
+    const m = posteDansLArene(c, machineDuChapitre(c.code));
     const a = projetsDe(c).a;
     return {
       niveau: NIVEAU_DE_L_INVESTISSEMENT,
-      faire: `${partie(c, NIVEAU_DE_L_INVESTISSEMENT)} Au tour ${TRIMESTRE_DE_L_ACHAT}, dans « Parc machines · investir ou céder », achetez un équipement de plus, ${m.name}, sans emprunter : la trésorerie le paie. Puis jouez la partie jusqu'au bout.`,
+      faire: `${partie(c, NIVEAU_DE_L_INVESTISSEMENT)} Au tour ${TRIMESTRE_DE_L_ACHAT}, dans « Parc machines · investir ou céder », achetez un équipement de plus, ${m.name}, et dans « Nouvel emprunt », empruntez son prix, ${euros(m.costPerUnit)} : la trésorerie seule ne le paie pas. Puis jouez la partie jusqu'au bout.`,
       lieux: ["budget-de-tresorerie", "compte-de-resultat"],
-      chercher: `Dans l'arène, cet équipement est un seul poste, à ${euros(m.costPerUnit)} : le projet A du chapitre est plus grand (${a.actifs.map((x) => `${x.libelle}, ${euros(x.montant)}`).join(" ; ")}). L'échelle change, la méthode reste. Au budget de trésorerie du tour ${TRIMESTRE_DE_L_ACHAT}, retrouvez l'investissement décaissé. Au compte de résultat, les dotations aux amortissements montent-elles de ${(m.costPerUnit / m.depreciationRounds).toLocaleString("fr-FR")} € par tour à partir du tour suivant ? Relevez à chaque tour l'excédent brut d'exploitation : rapprochez sa hausse des flux que le chapitre a actualisés.`,
+      chercher: `Dans l'arène, cet équipement est un seul poste, à ${euros(m.costPerUnit)} : le projet A du chapitre est d'une autre taille (${a.actifs.map((x) => `${x.libelle}, ${euros(x.montant)}`).join(" ; ")}). L'échelle change, la méthode reste. Au budget de trésorerie du tour ${TRIMESTRE_DE_L_ACHAT}, retrouvez l'investissement décaissé et l'emprunt encaissé. Au compte de résultat, les dotations aux amortissements montent-elles de ${(m.costPerUnit / m.depreciationRounds).toLocaleString("fr-FR")} € par tour à partir du tour suivant ? Relevez à chaque tour l'excédent brut d'exploitation : rapprochez sa hausse des flux que le chapitre a actualisés.`,
     };
   },
   "le-tri-et-le-choix-entre-deux-projets": (c) => {
@@ -1096,7 +1108,7 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     const prix = prixDansLArene(c, m.name);
     return {
       niveau: NIVEAU_DE_L_INVESTISSEMENT,
-      faire: `${partie(c, NIVEAU_DE_L_INVESTISSEMENT)} Au tour ${TRIMESTRE_DE_L_ACHAT}, dans « Parc machines · investir ou céder », achetez un équipement de plus, ${m.name}, sans emprunter. Puis jouez la partie jusqu'au bout.`,
+      faire: `${partie(c, NIVEAU_DE_L_INVESTISSEMENT)} Au tour ${TRIMESTRE_DE_L_ACHAT}, dans « Parc machines · investir ou céder », achetez un équipement de plus, ${m.name}, et dans « Nouvel emprunt », empruntez son prix${prix ? `, ${euros(prix)}` : ""}. Puis jouez la partie jusqu'au bout.`,
       lieux: ["feuille", "compte-de-resultat", "budget-de-tresorerie"],
       chercher:
         `C'est le même genre de machine que le projet B du chapitre, à une autre échelle : ${prix ? `${euros(prix)} dans l'arène` : "son prix dans l'arène"}, ${euros(b.montant)} pour ${b.libelle} du chapitre. Au tour suivant, la capacité en service a-t-elle monté de ce que le catalogue promet ? Relevez à chaque tour l'excédent brut d'exploitation et le résultat d'exploitation : la machine rapporte-t-elle assez vite pour que son TRI dépasse le coût du capital du chapitre ?`,

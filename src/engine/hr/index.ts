@@ -30,7 +30,19 @@ export interface HrOutcome {
   salaryIndex: number;
   nextHeadcount: number;
   nextProductivity: number;
+  /**
+   * Les démissions du tour remplacées par un recrutement (équilibre 0.2.0) : elles ne
+   * baissent pas l'effectif, coûtent un recrutement, et leurs remplaçants travaillent
+   * le tour suivant à `PRODUCTIVITE_DU_REMPLACANT`. Zéro sans remplacement.
+   */
+  remplaces: number;
 }
+
+/**
+ * LE REMPLAÇANT D'UNE DÉMISSION, DANS SON PREMIER TOUR : la moitié d'un poste. Il
+ * apprend le métier pendant que l'équipe le forme (équilibre 0.2.0).
+ */
+export const PRODUCTIVITE_DU_REMPLACANT = 0.5;
 
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
 
@@ -39,6 +51,13 @@ export function computeHr(args: {
   decisions: HrDecisions | undefined;
   headcount: number;
   productivity: number;
+  /**
+   * Équilibre 0.2.0 : une démission est remplacée. Sous-payer ne dégraisse plus
+   * l'équipe sans rien coûter : relevé de novembre 2026, sous-payer de 10 %
+   * rapportait jusqu'à 225 000 € sur deux ans à l'hôtel, l'équipe fondant d'un
+   * salarié par tour.
+   */
+  remplacerLesDemissions?: boolean;
 }): HrOutcome {
   const neutral: HrOutcome = {
     morale: 1,
@@ -50,6 +69,7 @@ export function computeHr(args: {
     salaryIndex: 1,
     nextHeadcount: args.headcount,
     nextProductivity: args.productivity,
+    remplaces: 0,
   };
   const c = args.config;
   if (!c) return neutral;
@@ -69,6 +89,7 @@ export function computeHr(args: {
   // (jamais en dessous d'un salarié restant, licenciements compris).
   const departed =
     salaryIndex < c.attritionThreshold && args.headcount - fired - 1 >= 1 ? 1 : 0;
+  const remplaces = args.remplacerLesDemissions ? departed : 0;
 
   // Masse salariale du tour : écart vs ce que les coûts fixes couvrent déjà.
   const payrollExtra =
@@ -76,7 +97,7 @@ export function computeHr(args: {
     c.includedHeadcount * c.salaryPerEmployeePerRound;
 
   const cost =
-    payrollExtra + hired * c.hiringCost + fired * c.firingCost + trainingBudget;
+    payrollExtra + (hired + remplaces) * c.hiringCost + fired * c.firingCost + trainingBudget;
 
   const [mMin, mMax] = c.moraleBounds ?? [0.85, 1.12];
   const morale = clamp(1 + c.moraleSensitivity * (salaryIndex - 1), mMin, mMax);
@@ -94,7 +115,8 @@ export function computeHr(args: {
     departed,
     trainingBudget,
     salaryIndex,
-    nextHeadcount: Math.max(1, args.headcount + hired - fired - departed),
+    nextHeadcount: Math.max(1, args.headcount + hired - fired - departed + remplaces),
     nextProductivity,
+    remplaces,
   };
 }

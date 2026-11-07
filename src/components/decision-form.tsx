@@ -395,6 +395,11 @@ function EquipmentPanel({
               </div>
               <div className="mt-2 flex flex-wrap gap-x-3 gap-y-0 text-xs text-slate-400 max-sm:mt-1">
                 <span>{t.costPerUnit.toLocaleString("fr-FR")} €/u</span>
+                {t.chargeFixeParTour ? (
+                  <span>
+                    Charge fixe {t.chargeFixeParTour.toLocaleString("fr-FR")} € par tour au parc, en service ou à l&apos;arrêt
+                  </span>
+                ) : null}
                 {simple ? (
                   <span>en service au tour suivant</span>
                 ) : (
@@ -2578,6 +2583,7 @@ export function DecisionForm({
       maintenanceMultiplier: number;
       maxPerRound: number;
       resaleRatio: number;
+      chargeFixeParTour?: number;
     }[];
     fleet: { typeCode: string; count: number; bookValue: number }[];
     pendingFleet: { typeCode: string; count: number }[];

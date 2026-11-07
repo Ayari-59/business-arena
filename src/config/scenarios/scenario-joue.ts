@@ -21,6 +21,7 @@ import { applyPeriodicity, type Periodicity } from "@/config/scenarios/periodici
 import { applyRoundsCount, toursDeLaPartie } from "@/config/scenarios/rounds";
 import { auCalendrierMensuel, trimestresDeLaPartie } from "@/config/scenarios/calendrier-mensuel";
 import { applyScenarioVariability } from "@/config/scenarios/variability";
+import { avecLEquilibre } from "@/config/scenarios/equilibre";
 
 /**
  * LE SCÉNARIO JOUÉ : ce qu'une partie fige dans son snapshot à la création.
@@ -94,6 +95,11 @@ export interface ReglagesDuScenarioJoue {
    * au bit près.
    */
   propositionALaDemande?: boolean;
+  /**
+   * L'ÉQUILIBRE DU MOTEUR 0.2.0 (`equilibre`, engine/types.ts ; `config/scenarios/equilibre.ts`) :
+   * vrai pour une partie créée avec lui ; absent, l'équilibre d'avant, au bit près.
+   */
+  equilibre?: boolean;
 }
 
 /**
@@ -109,6 +115,7 @@ export const CORRECTIFS_DES_PARTIES_NOUVELLES = {
   parcSansDoublon: true,
   impotSurLExercice: true,
   propositionALaDemande: true,
+  equilibre: true,
 } as const satisfies Partial<ReglagesDuScenarioJoue>;
 
 /**
@@ -161,7 +168,7 @@ export function composerLeScenarioJoue(r: ReglagesDuScenarioJoue): EngineScenari
       applyRoundsCount(
         applyMarketScale(
           applyScoringWeightOverrides(
-            applyEconomicOverrides(base, r.economicOverrides),
+            avecLEquilibreSi(applyEconomicOverrides(base, r.economicOverrides), r.equilibre),
             r.scoringWeightOverrides,
           ),
           r.concurrents,
@@ -191,6 +198,14 @@ export function composerLeScenarioJoue(r: ReglagesDuScenarioJoue): EngineScenari
   return r.propositionALaDemande === true
     ? { ...laQualiteProposeeDuJeu(avecLeParc, true), propositionALaDemande: true }
     : laQualiteProposeeDuJeu(avecLeParc, false);
+}
+
+/**
+ * L'équilibre 0.2.0, sur la base trimestrielle après les réglages de l'enseignant
+ * (`config/scenarios/equilibre.ts`). Absent, l'objet est rendu tel quel.
+ */
+function avecLEquilibreSi(scenario: EngineScenarioConfig, equilibre: boolean | undefined): EngineScenarioConfig {
+  return equilibre === true ? avecLEquilibre(scenario) : scenario;
 }
 
 /**
