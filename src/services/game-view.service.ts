@@ -709,6 +709,8 @@ export interface GameView {
     }[];
     fleet: { typeCode: string; count: number; bookValue: number }[];
     pendingFleet: { typeCode: string; count: number }[];
+    /** La trésorerie disponible à l'ouverture du tour (disponibilités moins découvert). */
+    tresorerieDisponible?: number;
   } | null;
   /** Échéance d'emprunt obligatoire du prochain tour et dette restante. */
   debtSchedule: { nextMandatory: number; outstanding: number } | null;
@@ -2419,6 +2421,8 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
           typeCode: t.code,
           count: pendingByType.get(t.code) ?? 0,
         })),
+        // L'achat qui dépasse la trésorerie est signalé avant validation (`avertissementDAchat`).
+        ...(state ? { tresorerieDisponible: state.finance.cash - state.finance.overdraft } : {}),
       };
     })(),
     debtSchedule: (() => {

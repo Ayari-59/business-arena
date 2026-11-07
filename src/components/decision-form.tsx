@@ -76,6 +76,7 @@ import { SimulationProgress } from "@/components/simulation-progress";
 import { NomReference } from "@/components/nom-reference";
 import { Aide, PanneauConsulte, TelephoneContexte } from "@/components/aide-repliable";
 import { Icone, type NomDIcone } from "@/components/icone";
+import { avertissementDAchat } from "@/config/avertissement-d-achat";
 import { Tiroir } from "@/components/tiroir";
 import { useParcours } from "@/components/parcours-mobile";
 import { allerAuDebutDEtape } from "@/lib/debut-d-etape";
@@ -282,7 +283,7 @@ function quantitesDepuisJson(json: string | undefined): Record<string, number> {
   }
 }
 
-function EquipmentPanel({
+export function EquipmentPanel({
   offer,
   vocabulary,
   buyQty,
@@ -291,7 +292,10 @@ function EquipmentPanel({
   setSellQty,
   simple = false,
   plafond = null,
+  empruntOuvert = false,
 }: {
+  /** Le niveau ouvre-t-il l'emprunt ? L'avertissement d'un achat trop cher le propose alors. */
+  empruntOuvert?: boolean;
   /**
    * LE PLAFOND D'INVESTISSEMENT DU TOUR (`engine/investment/plafond`). Son aide
    * se lit sous la capacité, avant toute erreur ; aux niveaux sans embauches, il
@@ -488,6 +492,17 @@ function EquipmentPanel({
           );
         })}
       </div>
+      {(() => {
+        const avertissement =
+          offer.tresorerieDisponible !== undefined
+            ? avertissementDAchat({ cout: totalCost, tresorerie: offer.tresorerieDisponible, empruntOuvert })
+            : null;
+        return avertissement ? (
+          <p role="status" className="mt-3 rounded-lg encadre-perte px-3 py-2 text-sm leading-relaxed text-slate-100">
+            {avertissement}
+          </p>
+        ) : null;
+      })()}
       {(buyImpact > 0 || sellImpact > 0) ? (
         <div className="mt-3 rounded-lg bg-slate-950/40 px-3 py-2 text-xs">
           <div className="grid grid-cols-2 gap-x-4 gap-y-1">
@@ -2587,6 +2602,8 @@ export function DecisionForm({
     }[];
     fleet: { typeCode: string; count: number; bookValue: number }[];
     pendingFleet: { typeCode: string; count: number }[];
+    /** La trésorerie disponible à l'ouverture du tour : l'achat qui la dépasse est signalé. */
+    tresorerieDisponible?: number;
   } | null;
   /** Le niveau qui ouvre l'emprunt, quand celui de la partie ne l'ouvre pas : dit en lecture seule. */
   niveauDuFinancement?: number | null;
@@ -5000,6 +5017,7 @@ export function DecisionForm({
             // Les niveaux qui n'ouvrent pas encore les créances sont ceux qui débutent.
             simple={!on.creances}
             plafond={plafondInvestissement}
+            empruntOuvert={on.finance}
           />
           <input type="hidden" name="equipmentBuyJson" value={JSON.stringify(
             equipmentOffer.types
