@@ -146,9 +146,9 @@ const rawBoutique = {
   suppliers: [
     {
       code: "grossiste",
-      name: "Grossiste de la place",
+      name: "Façonnier de référence",
       narrative:
-        "Le circuit classique : catalogue large, qualité constante, règlement à 45 jours. Aucune surprise, aucune envolée.",
+        "Le tricoteur historique de la marque : qualité constante, réassort en 21 jours, règlement à 45 jours. Aucune surprise, aucune envolée.",
       costMultiplier: 1,
       qualityBonus: 0,
       paymentDelayDays: 45,
@@ -157,7 +157,7 @@ const rawBoutique = {
     },
     {
       code: "destockeur",
-      name: "Déstockeur (fins de série)",
+      name: "Fins de série d'un tricoteur portugais",
       narrative:
         "Des fins de série à −18 % sur le prix d'achat, mais payées comptant à l'enlèvement et sans garantie de réassort : ce qui part est parti.",
       costMultiplier: 0.82,
@@ -168,7 +168,7 @@ const rawBoutique = {
     },
     {
       code: "createur",
-      name: "Créateurs en direct",
+      name: "Atelier de tricotage local",
       narrative:
         "Des pièces exclusives payées 22 % plus cher, réglées à 30 jours. Elles font la réputation de la boutique et la fidélité des clientes.",
       costMultiplier: 1.22,

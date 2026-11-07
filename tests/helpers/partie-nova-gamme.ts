@@ -93,7 +93,9 @@ export function jouerNovaGamme(r: { niveau: number; periodicity: "quarter" | "mo
                 balanceSheet: res.balanceSheet,
                 cashFlow: res.cashFlow,
                 production: res.production,
-                breakeven: res.breakeven,
+                // Les matières du tour (`materialCostPerUnit`, novembre 2026) sont un champ
+                // d'affichage ajouté après le relevé du témoin : le seuil reste comparé tel quel.
+                breakeven: (({ materialCostPerUnit: _m, ...seuil }) => (void _m, seuil))(res.breakeven),
                 totalShare: res.market.totalShare,
                 events: sortie.newEvents.map((x) => x.code),
               },

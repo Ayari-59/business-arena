@@ -85,11 +85,13 @@ const SOURCES: CourrierDef[] = [
   },
   {
     code: "bistrot_matieres_premieres",
-    expediteur: "Grossiste Vandamme · Direction commerciale",
-    objet: "Révision de nos tarifs : beurre, crème et viande",
+    // La hausse touche les trois fournisseurs du bistrot (grossiste, cash & carry,
+    // circuit court) : la lettre vient du marché, pas de l'un d'eux.
+    expediteur: "Observatoire régional des prix alimentaires · Note de conjoncture",
+    objet: "Révision des tarifs de vos fournisseurs : beurre, crème et viande",
     corps:
-      "La collecte laitière et les cours de la viande nous imposent une révision de vingt-quatre pour cent sur l'ensemble de notre barème, ces familles en tête. Le nouveau barème court sur deux {{trimestres}}.",
-    signataire: "Le directeur commercial",
+      "La collecte laitière et les cours de la viande imposent à tous les fournisseurs de la restauration une révision de vingt-quatre pour cent sur l'ensemble de leurs barèmes, ces familles en tête. Grossistes, cash & carry et producteurs en circuit court l'appliquent. Les nouveaux barèmes courent sur deux {{trimestres}}.",
+    signataire: "La cellule de conjoncture",
     effet: "Coût matières +24 % pendant 2 tours",
     enJeu:
       "Le ratio matières dérape : augmenter le ticket, réduire les portions ou changer la carte : il faut choisir.",

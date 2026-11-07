@@ -71,6 +71,21 @@ const COURRIERS_AVANT = JSON.parse(
   readFileSync(new URL("../fixtures/courriers-au-trimestre.json", import.meta.url), "utf-8"),
 ) as Record<string, string[]>;
 
+/**
+ * La hausse des matières de la boutique (`boutique_coton`) touche tous ses fournisseurs :
+ * la lettre vient de la centrale, pas d'un façonnier (relevé du moteur, novembre 2026).
+ */
+const CORRECTIONS_DES_COURRIERS: Record<string, [string, string][]> = {
+  boutique_coton: [
+    ["Atelier Lemaire · Façonnier maille", "Centrale de la maille · Note de marché"],
+    ["Nouveau barème pour la prochaine collection", "Nouveaux barèmes des façonniers pour la prochaine collection"],
+    ["Nous ne pouvons plus tenir nos prix et vous transmettons le barème applicable à votre prochaine collection, valable deux trimestres.", "Les façonniers ne peuvent plus tenir leurs prix : nos adhérents reçoivent des barèmes en hausse pour la prochaine collection, valables deux trimestres."],
+    ["La gérante", "Le service des achats"],
+  ],
+};
+const corrigeLeCourrier = (code: string, textes: string[]) =>
+  textes.map((t) => (CORRECTIONS_DES_COURRIERS[code] ?? []).reduce((acc, [avant, apres]) => acc.split(avant).join(apres), t));
+
 const courriersDe = (liasse: string) => LIASSES.find((l) => l.code === liasse)!.courriers;
 
 /** Les textes d'un courrier à cette durée, avec et sans assurance (la variante n'existe que pour quelques-uns). */
@@ -148,10 +163,10 @@ describe("au trimestre, le texte est celui des relevés, octet pour octet", () =
         for (const [cle, textes] of Object.entries(lettres(c.code, PERIODICITY_DAYS.quarter))) {
           // La variante sans assurance n'est relevée que là où elle existe.
           if (!COURRIERS_AVANT[cle] && cle.endsWith("(sans assurance)")) {
-            expect(textes, cle).toEqual(corrigerLesDates(c.code, COURRIERS_AVANT[c.code]!));
+            expect(textes, cle).toEqual(corrigerLesDates(c.code, corrigeLeCourrier(c.code, COURRIERS_AVANT[c.code]!)));
             continue;
           }
-          expect(textes, cle).toEqual(corrigerLesDates(cle, COURRIERS_AVANT[cle]!));
+          expect(textes, cle).toEqual(corrigerLesDates(cle, corrigeLeCourrier(c.code, COURRIERS_AVANT[cle]!)));
         }
       }
     });

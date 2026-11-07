@@ -45,7 +45,7 @@ import { subventionQuiDegele } from "@/engine/estimation/degel";
 import { marcheSansAdoption, segmentsDAdoptionCaches } from "@/services/adoption-cachee";
 import { isMultiProduct, isProductAvailable, rdOpeningOf, suppliersOf, toGamme, offerProductIndex } from "@/engine/gamme";
 import { COMMUNICATION_AXIS_LABELS, axesProposables } from "@/engine/market/communication";
-import { computeRatios } from "@/engine/finance/ratios";
+import { computeRatios, ratiosDeLAnnee, type RatiosDeLAnnee } from "@/engine/finance/ratios";
 import { conditionsBancaires, confianceServie } from "@/engine/finance/bank";
 import { irr, npv, paybackPeriod } from "@/engine/investment";
 import { roundBriefing, type RoundBriefing } from "@/pedagogy/round-briefing";
@@ -242,6 +242,8 @@ export interface GameView {
   periods: {
     round: number;
     result: CompanyRoundResult;
+    /** Les ratios affichés, sur l'année glissante jusqu'à ce tour (`ratiosDeLAnnee`). */
+    ratiosDeLAnnee: RatiosDeLAnnee;
     events: string[];
     decisions: RoundDecisions | null;
     /**
@@ -1230,6 +1232,8 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
   // reconstitue le résultat, la prévision, les indicateurs métier et le
   // benchmark tour par tour, sans se limiter au dernier.
   const periods: GameView["periods"] = [];
+  // Les comptes des tours déjà lus : les ratios se lisent sur l'année glissante.
+  const comptesLus: { incomeStatement: CompanyRoundResult["incomeStatement"]; balanceSheet: CompanyRoundResult["balanceSheet"] }[] = [];
   for (let i = 0; i < resolved.length; i++) {
     const rnd = resolved[i];
     if (!rnd) continue;
@@ -1245,9 +1249,11 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       : undefined;
     const prevSegments = prevRow?.marketDetail ?? null;
     const rowsOfRound = gameResults.filter((g) => g.roundId === rnd.id);
+    comptesLus.push({ incomeStatement: result.incomeStatement, balanceSheet: result.balanceSheet });
     periods.push({
       round: idx,
       result,
+      ratiosDeLAnnee: ratiosDeLAnnee(comptesLus, taxRate, snapshot.roundDays),
       events,
       decisions: dec,
       justification: decisionRowOfRound?.justification ?? null,

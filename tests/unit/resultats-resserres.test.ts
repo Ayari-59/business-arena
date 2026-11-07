@@ -38,12 +38,19 @@ describe("les parts de marché se lisent à toute largeur", () => {
 describe("les ratios sont un tiroir fermé de l'accordéon des comptes", () => {
   const html = renderToStaticMarkup(
     createElement(RatioGauges, {
-      profitability: 0.003,
-      roce: 0.007,
-      roe: 0.005,
-      leverage: -0.002,
-      debtToEquity: 0.5,
-      assetTurnover: 1.17,
+      ratios: {
+        profitability: 0.003,
+        returnOnCapitalEmployed: 0.007,
+        returnOnEquity: 0.005,
+        leverage: -0.002,
+        debtToEquity: 0.5,
+        assetTurnover: 1.17,
+        toursLus: 2,
+        toursParAn: 4,
+        annualise: true,
+        coutDeLaDette: 0.004,
+        laDettePese: false,
+      },
     }),
   );
 
@@ -51,6 +58,10 @@ describe("les ratios sont un tiroir fermé de l'accordéon des comptes", () => {
     expect(html).toContain('name="comptes-du-tour"');
     expect(html).not.toMatch(/<details[^>]*\sopen(=|\s|>)/);
     expect(html).toContain("6 ratios");
+  });
+
+  it("il dit sur quelle durée les ratios sont lus", () => {
+    expect(html).toContain("ramenés à l&#x27;année");
   });
 
   it("la valeur d'un ratio ne se coupe pas en deux lignes", () => {

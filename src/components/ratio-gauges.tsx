@@ -1,4 +1,6 @@
 import { Tiroir } from "@/components/tiroir";
+import { commentaireDuLevier, fenetreDesRatios } from "@/components/lecture-des-ratios";
+import type { RatiosDeLAnnee } from "@/engine/finance/ratios";
 
 const pct = (v: number) => `${(v * 100).toFixed(1).replace(".", ",")} %`;
 /** Un ratio signé : le moins est un vrai moins, pas un trait d'union. */
@@ -33,7 +35,7 @@ function TableauDesRatios({ ratios }: { ratios: RatioDef[] }) {
     <div className="tableau-financier">
       <table className="text-sm">
         <caption className="sr-only">
-          Ratios financiers du tour, avec le repère usuel de chacun.
+          Ratios financiers sur l&apos;année, avec le repère usuel de chacun.
         </caption>
         <thead>
           <tr className="libelle border-b border-white/10">
@@ -41,7 +43,7 @@ function TableauDesRatios({ ratios }: { ratios: RatioDef[] }) {
               Ratio
             </th>
             <th scope="col" className="py-1 pl-3 text-right font-medium">
-              Ce tour
+              Sur l&apos;année
             </th>
             <th scope="col" className="py-1 pl-3 text-right font-medium">
               Repère
@@ -73,21 +75,8 @@ function TableauDesRatios({ ratios }: { ratios: RatioDef[] }) {
   );
 }
 
-export function RatioGauges({
-  profitability,
-  roce,
-  roe,
-  leverage,
-  debtToEquity,
-  assetTurnover,
-}: {
-  profitability: number;
-  roce: number;
-  roe: number;
-  leverage: number;
-  debtToEquity: number;
-  assetTurnover: number;
-}) {
+export function RatioGauges({ ratios: r }: { ratios: RatiosDeLAnnee }) {
+  const { profitability, returnOnCapitalEmployed: roce, returnOnEquity: roe, leverage, debtToEquity, assetTurnover } = r;
   const ratios: RatioDef[] = [
     {
       label: "Rentabilité nette (RN / CA)",
@@ -110,10 +99,7 @@ export function RatioGauges({
     {
       label: "Effet de levier (Rf − Re)",
       value: leverage,
-      hint:
-        leverage >= 0
-          ? "La dette amplifie la rentabilité des associés."
-          : "La dette pèse : elle coûte plus qu'elle ne rapporte.",
+      hint: commentaireDuLevier(r),
       repere: "> 0",
     },
     {
@@ -128,7 +114,7 @@ export function RatioGauges({
     {
       label: "Rotation de l'actif (CA / Actif)",
       value: assetTurnover,
-      hint: "Le nombre de fois que l'actif « tourne » sur la période.",
+      hint: "Le nombre de fois que l'actif « tourne » dans l'année.",
       repere: "≥ 50 %",
     },
   ];
@@ -143,6 +129,7 @@ export function RatioGauges({
       groupe="comptes-du-tour"
     >
       <TableauDesRatios ratios={ratios} />
+      <p className="mt-3 text-sm leading-relaxed text-slate-400">{fenetreDesRatios(r)}</p>
       <p className="mt-3 text-sm leading-relaxed text-slate-400">
         Un ratio seul ne dit rien : c&apos;est l&apos;ensemble qui raconte la stratégie financière.
         L&apos;effet de levier montre si la dette sert la rentabilité ou la fragilise. Les repères
