@@ -281,6 +281,8 @@ export async function lirePartieARejouer(gameId: string): Promise<PartieLue | Ra
           propositionALaDemande: snapshot.propositionALaDemande === true,
           // L'équilibre de la partie, tel qu'elle l'a figé : 0.2.0, ou celui d'avant.
           equilibre: snapshot.equilibre !== undefined,
+          // Le crédit-bail de la partie, tel qu'elle l'a figé (`creditBail`).
+          creditBail: snapshot.creditBail === true,
         }),
       ),
     );

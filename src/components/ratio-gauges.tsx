@@ -75,7 +75,18 @@ function TableauDesRatios({ ratios }: { ratios: RatioDef[] }) {
   );
 }
 
-export function RatioGauges({ ratios: r }: { ratios: RatiosDeLAnnee }) {
+export function RatioGauges({
+  ratios: r,
+  engagementDeCreditBail = 0,
+}: {
+  ratios: RatiosDeLAnnee;
+  /**
+   * Les loyers de crédit-bail restant à payer à la clôture (`creditBail`). Ils ne sont pas
+   * une dette au bilan, en plan comptable général : le ratio d'endettement ne les compte
+   * pas, et l'aide le dit.
+   */
+  engagementDeCreditBail?: number;
+}) {
   const { profitability, returnOnCapitalEmployed: roce, returnOnEquity: roe, leverage, debtToEquity, assetTurnover } = r;
   const ratios: RatioDef[] = [
     {
@@ -106,9 +117,12 @@ export function RatioGauges({ ratios: r }: { ratios: RatiosDeLAnnee }) {
       label: "Endettement (Dettes / CP)",
       value: debtToEquity,
       hint:
-        debtToEquity > 1
+        (debtToEquity > 1
           ? "L'entreprise doit plus à ses prêteurs qu'à ses associés."
-          : "L'endettement reste contenu.",
+          : "L'endettement reste contenu.") +
+        (engagementDeCreditBail > 0.5
+          ? ` Le crédit-bail n'y figure pas : en plan comptable général, ses loyers à venir (${Math.round(engagementDeCreditBail).toLocaleString("fr-FR")} €) ne sont pas une dette du bilan, ils se lisent en annexe. La banque, elle, en compte la moitié.`
+          : ""),
       repere: "≤ 50 %",
     },
     {

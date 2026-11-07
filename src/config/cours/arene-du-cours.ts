@@ -84,6 +84,9 @@ export function scenarioDuCours(scenario: EngineScenarioConfig, tours: number): 
     roundsCount: tours,
     periodicity: "quarter",
     ...CORRECTIFS_DES_PARTIES_NOUVELLES,
+    // Le crédit-bail n'entre pas au monde figé du cours : l'élève du cours n'investit pas
+    // (`LEVIERS_DE_L_ELEVE`), et son scénario reste celui d'avant, clé comprise.
+    creditBail: false,
   });
 }
 

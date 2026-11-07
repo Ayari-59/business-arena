@@ -43,6 +43,8 @@ export interface FinanceInput {
    */
   rdCost?: number;
   fixedCosts: number;
+  /** Redevances de crédit-bail du tour (612), décaissées et retranchées avant l'EBE. Absentes = 0. */
+  redevancesCreditBail?: number;
   depreciation: number;
   loanAnnualRate: number;
   overdraftAnnualRate: number;
@@ -210,7 +212,8 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
     const grossMargin = input.revenue - input.cogs - commissionCost;
     const rseCost = input.rseCost ?? 0;
     const rdCost = input.rdCost ?? 0;
-    const ebitda =
+    const redevances = input.redevancesCreditBail ?? 0;
+    const ebitdaAvantCreditBail =
       grossMargin -
       input.marketingCost -
       input.qualityCost -
@@ -218,6 +221,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       rseCost -
       rdCost -
       input.fixedCosts;
+    const ebitda = redevances > 0 ? ebitdaAvantCreditBail - redevances : ebitdaAvantCreditBail;
     const depreciation = Math.min(input.depreciation, o.fixedAssetsNet);
     const disposalLoss = input.disposalLoss ?? 0;
     const operatingIncome = ebitda - depreciation - disposalLoss;
@@ -290,6 +294,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
       ...(rseCost > 0 ? { engagementRse: rseCost } : {}),
       ...(rdCost > 0 ? { rdCost } : {}),
       fixedCosts: input.fixedCosts,
+      ...(redevances > 0 ? { redevancesCreditBail: redevances } : {}),
       ebitda,
       depreciation,
       operatingIncome,
@@ -335,6 +340,7 @@ export function computeFinance(input: FinanceInput): FinanceOutput {
         ? [{ label: "commissions_partenaires", amount: -commissionCost }]
         : []),
       { label: "couts_fixes", amount: -input.fixedCosts },
+      ...(redevances > 0 ? [{ label: "redevances_credit_bail", amount: -redevances }] : []),
       { label: "marketing", amount: -input.marketingCost },
       { label: "qualite", amount: -input.qualityCost },
       { label: "maintenance", amount: -input.maintenanceCost },

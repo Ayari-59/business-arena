@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { CompanyRoundResult } from "@/engine/types";
 import type { ResultatDeGroupe } from "@/engine/groupe/types";
 import { libelleDeLEbeRetenu } from "@/engine/groupe/valorisation";
@@ -53,6 +54,7 @@ const CASH_LABELS: Record<string, string> = {
   couts_variables_decaisses: "Coûts variables décaissés",
   commissions_partenaires: "Commissions des canaux partenaires",
   couts_fixes: "Charges de structure décaissées",
+  redevances_credit_bail: "Redevances de crédit-bail",
   marketing: "Budget marketing",
   qualite: "Budget qualité",
   maintenance: "Budget maintenance",
@@ -223,6 +225,7 @@ function Ligne({
   decalee,
   tone,
   avecEcart = true,
+  ecartNeutre = false,
 }: {
   label: string;
   valeur: number;
@@ -235,12 +238,17 @@ function Ligne({
   decalee?: boolean;
   tone?: "good" | "bad";
   avecEcart?: boolean;
+  /**
+   * L'écart s'écrit à l'encre, sans vert ni rouge : un engagement de crédit-bail qui baisse
+   * n'est ni un gain ni une perte, c'est un loyer payé.
+   */
+  ecartNeutre?: boolean;
 }) {
   const ecart = avecEcart ? ecartAuTourPrecedent(valeur, avant) : null;
   // Un écart EST un résultat : il porte le vert ou le rouge francs. Un écart nul
   // ne dit ni gain ni perte — il reste à l'encre.
   const teinteEcart =
-    ecart === null || Math.round(ecart.montant) === 0
+    ecart === null || Math.round(ecart.montant) === 0 || ecartNeutre
       ? "text-slate-400"
       : ecart.montant > 0
         ? "text-emerald-300"
@@ -339,6 +347,7 @@ export function FinancialStatements({
   const soldUnits = vendues(result);
   const structureDe = (c: typeof cr) =>
     c.fixedCosts +
+    (c.redevancesCreditBail ?? 0) +
     c.marketingCost +
     c.qualityCost +
     c.maintenanceCost +
@@ -448,6 +457,15 @@ export function FinancialStatements({
             avant={pcr ? -pcr.fixedCosts : null}
             decalee
           />
+          {/* Le crédit-bail : une charge externe (612), avant l'EBE ; la machine n'est pas au bilan. */}
+          {(cr.redevancesCreditBail ?? 0) > 0.5 || (pcr?.redevancesCreditBail ?? 0) > 0.5 ? (
+            <Ligne
+              label="− Redevances de crédit-bail"
+              valeur={-(cr.redevancesCreditBail ?? 0)}
+              avant={pcr ? -(pcr.redevancesCreditBail ?? 0) : null}
+              decalee
+            />
+          ) : null}
           <Ligne
             label="= Excédent brut d'exploitation (EBE)"
             valeur={cr.ebitda}
@@ -614,6 +632,32 @@ export function FinancialStatements({
           {euro(result.functionalBalance.frng)} − BFR {euro(result.functionalBalance.bfr)} ={" "}
           trésorerie nette {euro(result.functionalBalance.netTreasury)}.
         </p>
+        {result.creditBail && (result.creditBail.engagement > 0.5 || result.creditBail.options > 0.5) ? (
+          <div className="mt-3 rounded-lg bg-slate-950/40 px-3 py-2" data-engagements-de-credit-bail="">
+            <p className="text-sm font-semibold text-slate-200">Engagements de crédit-bail (annexe, hors bilan)</p>
+            <Etat periode={periode} legende="Engagements de crédit-bail à la clôture, hors bilan.">
+              <Ligne
+                label="Redevances restant à payer"
+                valeur={result.creditBail.engagement}
+                avant={precedent?.creditBail?.engagement ?? null}
+                ecartNeutre
+              />
+              <Ligne
+                label="Prix d'achat résiduel (options)"
+                valeur={result.creditBail.options}
+                avant={precedent?.creditBail?.options ?? null}
+                ecartNeutre
+              />
+            </Etat>
+            <p className="mt-1 text-xs text-slate-400">
+              Les machines en crédit-bail ne sont pas à l&apos;actif et leurs loyers à venir ne sont pas une dette
+              du bilan : en plan comptable général, ils se lisent ici, en annexe.{" "}
+              <Link href="/notions#credit_bail" className="underline underline-offset-4 hover:text-slate-200">
+                La fiche du crédit-bail
+              </Link>
+            </p>
+          </div>
+        ) : null}
       </Panel>
 
       {result.groupe ? (

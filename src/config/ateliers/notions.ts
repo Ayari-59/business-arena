@@ -114,6 +114,7 @@ const ALIAS: readonly [string, string][] = [
   ["mobilisation", "receivables_financing"],
   ["decouvert", "net_treasury"],
   ["tresorerie", "net_treasury"],
+  ["credit bail", "credit_bail"],
   ["tableau d amortissement", "loan_schedule"],
   ["emprunt", "loan_schedule"],
   ["financement", "loan_schedule"],

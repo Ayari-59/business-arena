@@ -2,6 +2,7 @@ import type {
   CompanyRoundResult,
   CompanyState,
   EngineScenarioConfig,
+  ContratDeCreditBail,
   EquipmentItem,
   EquipmentTypeDef,
   EventInstance,
@@ -23,6 +24,18 @@ import {
   updateMachineFleet,
 } from "../equipment";
 import { createRng, deriveRoundSeed } from "../random";
+import {
+  PART_DE_L_ENGAGEMENT_DANS_L_ENDETTEMENT,
+  conditionsDuCreditBail,
+  creditBailOuvert,
+  dureeResiduelle,
+  engagementDeCreditBail,
+  identifiantDuContrat,
+  loyersRestants,
+  machineDuContrat,
+  machineEnCreditBail,
+  optionsDeCreditBail,
+} from "../credit-bail";
 import { retirerLesArrets } from "../modules/arret";
 import { sansLesModulesRetires } from "../modules/retires";
 import * as M from "../modules/effets";
@@ -186,7 +199,7 @@ export function referenceDEntretien(
 }
 
 function fleetCountOf(fleet: EquipmentItem[], typeCode: string): number {
-  return fleet.reduce((s, f) => s + (f.typeCode === typeCode ? f.count : 0), 0);
+  return fleet.reduce((s, f) => s + (f.typeCode === typeCode && f.creditBail === undefined ? f.count : 0), 0);
 }
 
 // --- Helpers de la gamme (multi-produits) ---
@@ -662,6 +675,16 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
     equipDepreciation: number;
     /** Charges fixes des machines au parc ce tour (équilibre 0.2.0 ; zéro sinon). */
     chargesDuParc: number;
+    /** Le crédit-bail du tour (`creditBail`) ; `null` sans contrat ni signature. */
+    creditBail: {
+      redevances: number;
+      leveeDOptions: number;
+      signes: NonNullable<CompanyRoundResult["creditBail"]>["signes"];
+      leves: { id: string; option: number }[];
+      rendus: string[];
+      rompus: { id: string; montant: number }[];
+      contrats: ContratDeCreditBail[];
+    } | null;
     chosenFormula: import("../types").InsuranceFormulaDef | null;
     supplier: import("../types").SupplierDef | null;
     supplyDisruption: boolean;
@@ -1249,6 +1272,11 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
     let equipPendingFleet: EquipmentItem[] = [];
     let equipDepreciation = 0;
     let chargesDuParc = 0;
+    // LE CRÉDIT-BAIL (`creditBail`, engine/credit-bail) : `null` tant que la partie n'en
+    // porte aucun contrat, et le parc suit alors le chemin d'avant au bit près.
+    let creditBail: Working["creditBail"] = null;
+    const contratsRendus = new Set<string>();
+    const contratsLeves = new Map<string, ContratDeCreditBail>();
 
     if (equip) {
       const typeMap = new Map(equip.types.map((t) => [t.code, t]));
@@ -1265,9 +1293,10 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
         const resaleRatio = typ.resaleRatio ?? 0.5;
         let soldBookValue = 0;
         let soldCount = 0;
-        // Vendre en commençant par les plus anciens (FIFO)
+        // Vendre en commençant par les plus anciens (FIFO). Une machine en crédit-bail
+        // n'appartient pas à l'entreprise : elle ne se vend pas.
         for (const item of fleet) {
-          if (item.typeCode !== req.typeCode || item.count <= 0) continue;
+          if (item.typeCode !== req.typeCode || item.count <= 0 || item.creditBail !== undefined) continue;
           const take = Math.min(toSell, item.count);
           const bvPerUnit = item.count > 0 ? item.bookValue / item.count : 0;
           soldBookValue += take * bvPerUnit;
@@ -1319,13 +1348,53 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
           unitCost: typ.costPerUnit,
         });
       }
+      // LE CRÉDIT-BAIL : les machines prises ce tour entrent en service au tour suivant,
+      // comme un achat, sans rien décaisser à la signature ; leur lot porte le contrat et
+      // reste hors bilan (valeur nette nulle, aucun amortissement).
+      const signes: NonNullable<Working["creditBail"]>["signes"] = [];
+      const nouveauxContrats: ContratDeCreditBail[] = [];
+      if (creditBailOuvert(scenario) && state.status !== "defaillant") {
+        for (const req of raw.investment?.equipmentLease ?? []) {
+          const typ = typeMap.get(req.typeCode);
+          if (!typ || !(req.quantity > 0)) continue;
+          const id = identifiantDuContrat(req.typeCode, roundIndex);
+          if (nouveauxContrats.some((c) => c.id === id)) continue;
+          const achetees = equipBought.reduce((n, b) => n + (b.typeCode === req.typeCode ? b.quantity : 0), 0);
+          const qty = Math.min(Math.floor(req.quantity), typ.maxPerRound - achetees);
+          if (qty <= 0) continue;
+          const c = conditionsDuCreditBail(scenario, typ);
+          nouveauxContrats.push({
+            id,
+            typeCode: req.typeCode,
+            quantite: qty,
+            signeAuTour: roundIndex,
+            valeurFinancee: c.valeurFinancee * qty,
+            loyer: c.loyer * qty,
+            duree: c.duree,
+            loyersPayes: 0,
+            option: c.option * qty,
+          });
+          newPending.push({ typeCode: req.typeCode, count: qty, acquiredRound: roundIndex, bookValue: 0, creditBail: id });
+          signes.push({
+            id,
+            typeCode: req.typeCode,
+            typeName: typ.name,
+            quantite: qty,
+            loyer: c.loyer * qty,
+            duree: c.duree,
+            option: c.option * qty,
+          });
+        }
+      }
       // Amortissement du parc actif (chaque lot s'amortit linéairement), sur son coût
-      // d'acquisition : celui de l'achat (équilibre 0.2.0), sinon le prix de son type.
+      // d'acquisition : celui de l'achat (équilibre 0.2.0), sinon le prix de son type ; et
+      // sur la durée de son type, sauf une machine dont l'option a été levée (sa durée
+      // résiduelle). Un lot en crédit-bail, à valeur nulle, ne s'amortit pas.
       for (const item of fleet) {
         const typ = typeMap.get(item.typeCode);
         if (!typ || item.bookValue <= 0) continue;
         const originalCost = item.coutDAcquisition ?? item.count * (typ.prixDuParcDeDepart ?? typ.costPerUnit);
-        const depPerRound = originalCost / typ.depreciationRounds;
+        const depPerRound = originalCost / (item.dureeDAmortissement ?? typ.depreciationRounds);
         const dep = Math.min(depPerRound, item.bookValue);
         equipDepreciation += dep;
         item.bookValue = Math.max(0, item.bookValue - dep);
@@ -1343,6 +1412,74 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       for (const lot of equip.initialFleet) {
         chargesDuParc -= lot.count * (typeMap.get(lot.typeCode)?.chargeFixeParTour ?? 0);
       }
+      // Les contrats en cours : le loyer du tour, à terme échu. Au dernier loyer, l'option
+      // est levée (le choix retenu sans décision) ou la machine rendue ; un contrat rompu
+      // paie ce tour tous ses loyers restants. La machine rendue sert jusqu'à la fin du
+      // tour et quitte le parc au suivant. Une entreprise défaillante, gelée, ne paie rien
+      // et son contrat attend.
+      const enCours = creditBailOuvert(scenario) ? (state.creditBail ?? []) : [];
+      if (enCours.length > 0 || nouveauxContrats.length > 0) {
+        const choix = new Map((raw.investment?.leaseDecisions ?? []).map((d) => [d.contractId, d.choice]));
+        let redevances = 0;
+        let leveeDOptions = 0;
+        const leves: { id: string; option: number }[] = [];
+        const rendus: string[] = [];
+        const rompus: { id: string; montant: number }[] = [];
+        const suivants: ContratDeCreditBail[] = [];
+        for (const c of enCours) {
+          if (state.status === "defaillant") {
+            suivants.push(c);
+            continue;
+          }
+          const restants = loyersRestants(c);
+          const decision = choix.get(c.id);
+          if (decision === "rompre" && restants > 1) {
+            const montant = c.loyer * restants;
+            redevances += montant;
+            rompus.push({ id: c.id, montant });
+            contratsRendus.add(c.id);
+            continue;
+          }
+          redevances += c.loyer;
+          const payes = c.loyersPayes + 1;
+          if (payes < c.duree) {
+            suivants.push({ ...c, loyersPayes: payes });
+          } else if (decision === "rendre" || decision === "rompre") {
+            rendus.push(c.id);
+            contratsRendus.add(c.id);
+          } else {
+            leves.push({ id: c.id, option: c.option });
+            leveeDOptions += c.option;
+            contratsLeves.set(c.id, c);
+          }
+        }
+        // En fin de tour : la machine rendue quitte le parc, celle dont l'option est levée
+        // entre à l'actif pour le prix de l'option, amortie sur sa durée résiduelle.
+        equipNewFleet = equipNewFleet
+          .filter((l) => l.creditBail === undefined || !contratsRendus.has(l.creditBail))
+          .map((l) => {
+            const c = l.creditBail !== undefined ? contratsLeves.get(l.creditBail) : undefined;
+            if (!c) return l;
+            const typ = typeMap.get(l.typeCode);
+            const { creditBail: _contrat, ...lot } = l;
+            void _contrat;
+            return {
+              ...lot,
+              bookValue: c.option,
+              coutDAcquisition: c.option,
+              dureeDAmortissement: typ ? dureeResiduelle(typ, c.duree, scenario.roundDays) : c.duree,
+            };
+          });
+        creditBail = {
+          redevances,
+          leveeDOptions,
+          signes,
+          leves,
+          rendus,
+          rompus,
+          contrats: [...suivants, ...nouveauxContrats],
+        };
+      }
       equipPendingFleet = newPending;
     } else if (scenario.investment) {
       investUnits = Math.min(
@@ -1357,10 +1494,14 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
     let nextPendingMachineFleet: MachineRecord[] | null = null;
     if (scenario.equipment && typeMap) {
       // 1. Retirer les machines vendues ce tour (FIFO par type, plus anciennes d'abord).
+      // Celles en crédit-bail ne se vendent pas : elles restent à part.
       let updatedFleet = activeMachineFleet ?? [];
+      const enCreditBail = creditBail ? updatedFleet.filter((m) => machineEnCreditBail(m.id)) : [];
+      if (creditBail) updatedFleet = updatedFleet.filter((m) => !machineEnCreditBail(m.id));
       for (const sold of equipSold) {
         updatedFleet = removeMachinesFromFleet(updatedFleet, sold.typeCode, sold.quantity);
       }
+      if (creditBail) updatedFleet = [...updatedFleet, ...enCreditBail];
       // 2. Vieillissement, usure, pannes aléatoires selon budget maintenance.
       updatedFleet = updateMachineFleet({
         fleet: updatedFleet,
@@ -1374,6 +1515,16 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
         rng: () => rng.next(),
         roundIndex,
       });
+      // Crédit-bail : la machine rendue quitte le parc ; celle dont l'option est levée
+      // perd la marque du contrat et se vend désormais comme les autres.
+      if (creditBail) {
+        updatedFleet = updatedFleet
+          .filter((m) => ![...contratsRendus].some((id) => machineDuContrat(m.id, id)))
+          .map((m) => {
+            const id = [...contratsLeves.keys()].find((c) => machineDuContrat(m.id, c));
+            return id ? { ...m, id: `lv-${m.id}` } : m;
+          });
+      }
       nextMachineFleet = updatedFleet;
       // 3. Créer les nouvelles machines achetées ce tour (disponibles au tour+1).
       let pending: MachineRecord[] = [];
@@ -1381,6 +1532,12 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
         const existingSize = updatedFleet.filter((m) => m.typeCode === bought.typeCode).length;
         pending = pending.concat(
           createNewMachines(bought.typeCode, bought.quantity, roundIndex, existingSize),
+        );
+      }
+      // Et celles prises en crédit-bail, marquées de leur contrat.
+      for (const signe of creditBail?.signes ?? []) {
+        pending = pending.concat(
+          createNewMachines(signe.typeCode, signe.quantite, roundIndex, 0).map((m, i) => ({ ...m, id: `${signe.id}-${i}` })),
         );
       }
       nextPendingMachineFleet = pending.length > 0 ? pending : null;
@@ -1451,6 +1608,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       equipPendingFleet,
       equipDepreciation,
       chargesDuParc,
+      creditBail,
       activeMachineFleet,
       nextMachineFleet,
       nextPendingMachineFleet,
@@ -2056,10 +2214,22 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
     // où elle voudrait emprunter davantage. Capitaux propres à zéro ou
     // négatifs : plus un euro. Sans plafond déclaré : comportement historique.
     const ratioMax = scenario.finance.maxDebtToEquity;
+    //
+    // LE CRÉDIT-BAIL (`creditBail`) n'est pas au bilan, mais la banque le lit : les loyers
+    // restant à payer à l'ouverture comptent POUR MOITIÉ dans la dette qu'elle met en face
+    // des capitaux propres. Sans contrat, rien ne change.
+    const engagementLu = creditBailOuvert(scenario) ? engagementDeCreditBail(w.state.creditBail) : 0;
     const loanCeiling =
       ratioMax === undefined
         ? Infinity
-        : Math.max(0, ratioMax * w.state.finance.equity - w.state.finance.financialDebt);
+        : engagementLu > 0
+          ? Math.max(
+              0,
+              ratioMax * w.state.finance.equity -
+                w.state.finance.financialDebt -
+                PART_DE_L_ENGAGEMENT_DANS_L_ENDETTEMENT * engagementLu,
+            )
+          : Math.max(0, ratioMax * w.state.finance.equity - w.state.finance.financialDebt);
     const newLoan = Math.min(loanRequested, loanCeiling);
     // LIGNES À TAUX PROPRE : les tirages faits sur les options de financement,
     // avant que ce module ne soit retiré, restent au tableau d'emprunts d'une
@@ -2208,6 +2378,8 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       fixedCosts: gelee
         ? 0
         : scenario.fixedCostsPerRound + insurancePremium + hrCost + studiesCost + plateformeDuTour + w.chargesDuParc,
+      // Le crédit-bail : ses redevances, une charge externe (612) avant l'EBE.
+      ...((w.creditBail?.redevances ?? 0) > 0 ? { redevancesCreditBail: w.creditBail!.redevances } : {}),
       // amortissements : base du scénario + investissements en service
       // (y compris celui mis en service ce tour) OU amortissement du parc typé
       depreciation: gelee
@@ -2229,7 +2401,11 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       loanRepayment: gelee ? 0 : mandatoryRepayment + earlyRepayment,
       capitalIncrease,
       dividend,
-      investmentOutlay: w.investOutlay - w.equipSaleProceeds + immobiliseDuTour,
+      // L'option levée d'un crédit-bail entre à l'actif pour son prix, décaissé ce tour.
+      investmentOutlay:
+        (w.creditBail?.leveeDOptions ?? 0) > 0
+          ? w.investOutlay - w.equipSaleProceeds + immobiliseDuTour + w.creditBail!.leveeDOptions
+          : w.investOutlay - w.equipSaleProceeds + immobiliseDuTour,
       disposalLoss: w.equipDisposalLoss,
       // Niveau 7 : les produits finis achetés au sous-traitant, payés à la livraison.
       ...(w.commandeST ? { sousTraitance: w.commandeST.total } : {}),
@@ -2305,6 +2481,32 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
         creditAccount: "2185",
         creditLabel: "Amortissements des installations, machines et outillage",
         amount: depreciationAmount,
+      });
+    }
+
+    // Le crédit-bail : les redevances (612 / 512) et l'option levée (2154 / 512).
+    if (multi && (w.creditBail?.redevances ?? 0) > 0) {
+      journalByCompany.get(w.state.id)!.record({
+        day: 1,
+        label: "Redevances de crédit-bail",
+        category: "other",
+        debitAccount: "612",
+        debitLabel: "Redevances de crédit-bail",
+        creditAccount: "512",
+        creditLabel: "Banque",
+        amount: w.creditBail!.redevances,
+      });
+    }
+    if (multi && (w.creditBail?.leveeDOptions ?? 0) > 0) {
+      journalByCompany.get(w.state.id)!.record({
+        day: 1,
+        label: "Levée de l'option d'achat (crédit-bail)",
+        category: "other",
+        debitAccount: "2154",
+        debitLabel: "Matériel industriel",
+        creditAccount: "512",
+        creditLabel: "Banque",
+        amount: w.creditBail!.leveeDOptions,
       });
     }
 
@@ -2428,6 +2630,7 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       studiesCost +
       plateformeDuTour +
       w.chargesDuParc +
+      (finance.incomeStatement.redevancesCreditBail ?? 0) +
       finance.incomeStatement.depreciation +
       marketingTotal +
       w.qualityTotal +
@@ -2816,6 +3019,20 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
             },
           }
         : {}),
+      ...(w.creditBail
+        ? {
+            creditBail: {
+              redevances: w.creditBail.redevances,
+              signes: w.creditBail.signes,
+              leves: w.creditBail.leves,
+              rendus: w.creditBail.rendus,
+              rompus: w.creditBail.rompus,
+              engagement: engagementDeCreditBail(w.creditBail.contrats),
+              options: optionsDeCreditBail(w.creditBail.contrats),
+              contrats: w.creditBail.contrats,
+            },
+          }
+        : {}),
       ...(w.investOutlay > 0 || w.equipSold.length > 0
         ? {
             investment: {
@@ -3186,6 +3403,10 @@ function simulerLeTour(input: SimulationInput): SimulationOutput {
       lastMarketShare,
       // Abonnement : le portefeuille de clôture, émis SEULEMENT avec le modèle.
       ...(scenario.subscription ? { members: subClosing } : {}),
+      // Crédit-bail : les contrats en cours, émis dès le premier signé (puis maintenus).
+      ...(w.creditBail || w.state.creditBail !== undefined
+        ? { creditBail: w.creditBail ? w.creditBail.contrats : w.state.creditBail }
+        : {}),
       // Programmes R&D : en cours et achevés, mis à jour sur w.state plus haut et
       // portés ici par la recopie de l'état au début du push.
     });

@@ -1,3 +1,12 @@
+import {
+  MAJORATION_DU_TAUX_DE_CREDIT_BAIL,
+  PART_DE_L_ENGAGEMENT_DANS_L_ENDETTEMENT,
+  conditionsDuCreditBail,
+  engagementDeCreditBail,
+  creditBailOuvert,
+  dureeDuCreditBail,
+  loyersRestants,
+} from "@/engine/credit-bail";
 import { aleasDuTour, type AleaDuTour } from "@/components/lecture-du-resultat";
 import { seuilDEntretien } from "@/engine/production";
 import { parcActifDuTour, referenceDEntretien } from "@/engine/simulation";
@@ -126,6 +135,31 @@ function formatAccountingData(ledger?: {
 // ---------------------------------------------------------------------------
 // Lecture : vue joueur
 // ---------------------------------------------------------------------------
+
+/** Le crédit-bail que le parc machines propose (`equipmentOffer.creditBail`). */
+export interface OffreDeCreditBail {
+  /** Le nombre de loyers du contrat type. */
+  duree: number;
+  /** Le taux implicite annuel. */
+  tauxAnnuel: number;
+  /** Par type de machine : le loyer d'un tour et le prix de l'option, pour une machine. */
+  conditions: { typeCode: string; loyer: number; option: number }[];
+  /** Les machines en crédit-bail en service, par type (celles en attente sont dans `pendingFleet`). */
+  enService: { typeCode: string; count: number }[];
+  contrats: {
+    id: string;
+    typeCode: string;
+    typeName: string;
+    quantite: number;
+    loyer: number;
+    loyersRestants: number;
+    /** Le tour du dernier loyer. */
+    dernierTour: number;
+    option: number;
+    /** Le tour à jouer paie le dernier loyer : lever l'option ou rendre la machine. */
+    aEcheance: boolean;
+  }[];
+}
 
 export interface GameView {
   gameId: string;
@@ -707,10 +741,16 @@ export interface GameView {
       /** La charge fixe d'une machine au parc, par tour (équilibre 0.2.0) ; absente, aucune. */
       chargeFixeParTour?: number;
     }[];
+    /** Les machines que l'entreprise possède (celles en crédit-bail n'y sont pas). */
     fleet: { typeCode: string; count: number; bookValue: number }[];
     pendingFleet: { typeCode: string; count: number }[];
     /** La trésorerie disponible à l'ouverture du tour (disponibilités moins découvert). */
     tresorerieDisponible?: number;
+    /**
+     * LE CRÉDIT-BAIL (`creditBail`, engine/credit-bail), dans une partie qui le porte : le
+     * contrat type de chaque machine, et les contrats en cours. Absent sinon.
+     */
+    creditBail?: OffreDeCreditBail;
   } | null;
   /** Échéance d'emprunt obligatoire du prochain tour et dette restante. */
   debtSchedule: { nextMandatory: number; outstanding: number } | null;
@@ -769,7 +809,14 @@ export interface GameView {
    * le scénario ne déclare aucun plafond. Une capacité à zéro n'est pas une
    * anomalie : c'est le mur, et c'est ce qui ouvre la subvention.
    */
-  loanCapacity: { remaining: number; ratio: number; equity: number; debt: number } | null;
+  loanCapacity: {
+    remaining: number;
+    ratio: number;
+    equity: number;
+    debt: number;
+    /** Les loyers de crédit-bail restant à payer, dont la banque compte la moitié. Absent sans contrat. */
+    engagementDeCreditBail?: number;
+  } | null;
   /**
    * LES CONDITIONS DU CRÉDIT, POUR LES CHIFFRER À L'ÉCRAN.
    *
@@ -1047,6 +1094,8 @@ function reconstructResult(
     ...(trace.stoppedModuleItems != null ? { stoppedModuleItems: trace.stoppedModuleItems } : {}),
     // Niveau 7 : valeur, rachat, audit, consolidation ; clé émise seulement si portée.
     ...(trace.groupe ? { groupe: trace.groupe } : {}),
+    // Le crédit-bail : clé émise seulement si portée.
+    ...(trace.creditBail ? { creditBail: trace.creditBail } : {}),
   };
   return { result, events: trace.events ?? [] };
 }
@@ -1664,7 +1713,18 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
     const finance = currentState?.finance;
     const equity = finance?.equity ?? 0;
     const debt = finance?.financialDebt ?? 0;
-    return { remaining: Math.max(0, ratio * equity - debt), ratio, equity, debt };
+    // Le crédit-bail (`creditBail`) : la banque compte la moitié des loyers restant à payer.
+    const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
+    const engagement = creditBailOuvert(snapshot) ? engagementDeCreditBail((currentState as Pick<CompanyState, "creditBail"> | undefined)?.creditBail) : 0;
+    return engagement > 0
+      ? {
+          remaining: Math.max(0, ratio * equity - debt - PART_DE_L_ENGAGEMENT_DANS_L_ENDETTEMENT * engagement),
+          ratio,
+          equity,
+          debt,
+          engagementDeCreditBail: engagement,
+        }
+      : { remaining: Math.max(0, ratio * equity - debt), ratio, equity, debt };
   })();
 
   const capitalAllowanceView = (() => {
@@ -2383,7 +2443,9 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       const snapshot = game.scenarioSnapshot as EngineScenarioConfig;
       if (!snapshot.equipment) return null;
       const state = stateRow?.state as CompanyState | undefined;
-      const activeFleet = (state?.fleet ?? []) as { typeCode: string; count: number; bookValue: number }[];
+      // Les machines en crédit-bail ne sont pas à l'entreprise : elles se lisent à part.
+      const tousLesLots = (state?.fleet ?? []) as { typeCode: string; count: number; bookValue: number; creditBail?: string }[];
+      const activeFleet = tousLesLots.filter((l) => l.creditBail === undefined);
       const pending = (state?.pendingFleet ?? []) as { typeCode: string; count: number }[];
       const fleetByType = new Map<string, { count: number; bookValue: number }>();
       for (const item of activeFleet) {
@@ -2423,6 +2485,9 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
         })),
         // L'achat qui dépasse la trésorerie est signalé avant validation (`avertissementDAchat`).
         ...(state ? { tresorerieDisponible: state.finance.cash - state.finance.overdraft } : {}),
+        ...(creditBailOuvert(snapshot)
+          ? { creditBail: offreDeCreditBail(snapshot, state, tousLesLots) }
+          : {}),
       };
     })(),
     debtSchedule: (() => {
@@ -2561,5 +2626,36 @@ export async function getGameView(gameId: string, userId: string): Promise<GameV
       return notes;
     })(),
     accounting: formatAccountingData(lastResult?.accounting),
+  };
+}
+
+/** Le crédit-bail du parc machines : le contrat type de chaque machine, et les contrats en cours. */
+function offreDeCreditBail(
+  snapshot: EngineScenarioConfig,
+  state: CompanyState | undefined,
+  lots: { typeCode: string; count: number; creditBail?: string }[],
+): OffreDeCreditBail {
+  const types = snapshot.equipment?.types ?? [];
+  const enService = new Map<string, number>();
+  for (const l of lots) if (l.creditBail !== undefined) enService.set(l.typeCode, (enService.get(l.typeCode) ?? 0) + l.count);
+  return {
+    duree: dureeDuCreditBail(snapshot.roundDays),
+    tauxAnnuel: snapshot.finance.loanAnnualRate + MAJORATION_DU_TAUX_DE_CREDIT_BAIL,
+    conditions: types.map((t) => {
+      const c = conditionsDuCreditBail(snapshot, t);
+      return { typeCode: t.code, loyer: c.loyer, option: c.option };
+    }),
+    enService: types.map((t) => ({ typeCode: t.code, count: enService.get(t.code) ?? 0 })),
+    contrats: (state?.creditBail ?? []).map((c) => ({
+      id: c.id,
+      typeCode: c.typeCode,
+      typeName: types.find((t) => t.code === c.typeCode)?.name ?? c.typeCode,
+      quantite: c.quantite,
+      loyer: c.loyer,
+      loyersRestants: loyersRestants(c),
+      dernierTour: c.signeAuTour + c.duree,
+      option: c.option,
+      aEcheance: loyersRestants(c) === 1,
+    })),
   };
 }

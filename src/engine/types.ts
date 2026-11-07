@@ -407,6 +407,18 @@ export interface EngineScenarioConfig {
    */
   equilibre?: "0.2.0";
   /**
+   * LE CRÉDIT-BAIL DES MACHINES, posé par `composerLeScenarioJoue` à la création d'une
+   * partie (donc figé dans son instantané). Chaque machine du catalogue peut alors se
+   * prendre en crédit-bail (`investment.equipmentLease`) : douze loyers trimestriels
+   * constants (trois ans, exprimés en tours), au taux d'emprunt du scénario plus
+   * `MAJORATION_DU_TAUX_DE_CREDIT_BAIL`, sans apport, sur le prix de la machine, et une
+   * option d'achat à 1 % du prix (`engine/credit-bail`). Le loyer est une charge externe
+   * (compte 612), la machine n'est pas à l'actif pendant le contrat, et l'engagement
+   * restant compte pour moitié dans ce que la banque prête. Absent : le moteur d'avant, au
+   * bit près, pour les parties créées sans lui.
+   */
+  creditBail?: boolean;
+  /**
    * L'IMPÔT SUR L'EXERCICE, posé par `composerLeScenarioJoue` à la création d'une partie
    * (donc figé dans son instantané). L'impôt sur les sociétés se calcule sur l'année ;
    * l'arène le prenait trimestre par trimestre, si bien qu'une entreprise en perte sur
@@ -1012,6 +1024,44 @@ export interface EquipmentItem {
    * (`prixDuParcDeDepart`, sinon `costPerUnit`), le calcul d'avant.
    */
   coutDAcquisition?: number;
+  /**
+   * Le contrat de crédit-bail qui porte le lot (`ContratDeCreditBail.id`). Une machine en
+   * crédit-bail est au parc (elle produit, elle paie sa charge fixe) mais pas au bilan : sa
+   * valeur nette reste à zéro, elle ne s'amortit pas et ne se vend pas. Absent : le lot
+   * appartient à l'entreprise.
+   */
+  creditBail?: string;
+  /**
+   * La durée d'amortissement du lot, en tours, quand elle diffère de celle de son type :
+   * une machine dont l'option d'achat a été levée s'amortit sur sa durée résiduelle
+   * (`dureeResiduelle`, engine/credit-bail). Absente : celle du type.
+   */
+  dureeDAmortissement?: number;
+}
+
+/**
+ * UN CONTRAT DE CRÉDIT-BAIL (`creditBail`, engine/credit-bail). Signé au tour
+ * `signeAuTour`, la machine entre en service au tour suivant et le premier loyer s'y
+ * paie ; le dernier loyer se paie au tour `signeAuTour + duree`, où l'élève lève l'option
+ * ou rend la machine.
+ */
+export interface ContratDeCreditBail {
+  /** Identifiant du contrat dans la partie, ex. « cb-manual-r3 ». */
+  id: string;
+  typeCode: string;
+  /** Machines du contrat. */
+  quantite: number;
+  signeAuTour: number;
+  /** La valeur financée : le prix des machines au catalogue, sans apport. */
+  valeurFinancee: number;
+  /** Le loyer d'un tour, pour tout le contrat (constant). */
+  loyer: number;
+  /** Le nombre de loyers du contrat. */
+  duree: number;
+  /** Les loyers déjà payés. */
+  loyersPayes: number;
+  /** Le prix de l'option d'achat, pour tout le contrat. */
+  option: number;
 }
 
 export interface ScoringConfig {
@@ -1469,6 +1519,11 @@ export interface CompanyState {
   groupe?: EtatDeGroupe;
   /** Tours de crise consécutifs, pour le seuil de défaillance. Absent = 0. */
   crisisStreak?: number;
+  /**
+   * Les contrats de crédit-bail en cours (`creditBail`). Absent tant qu'aucun contrat n'a
+   * été signé : l'instantané d'une partie sans crédit-bail ne change pas.
+   */
+  creditBail?: ContratDeCreditBail[];
 }
 
 /**
@@ -1589,6 +1644,18 @@ export interface RoundDecisions {
     machineCapacityUnits?: number;
     equipmentBuy?: { typeCode: string; quantity: number }[];
     equipmentSell?: { typeCode: string; quantity: number }[];
+    /**
+     * Machines prises en crédit-bail ce tour (`creditBail`) : en service au tour suivant,
+     * comme un achat, mais rien n'est décaissé à la signature.
+     */
+    equipmentLease?: { typeCode: string; quantity: number }[];
+    /**
+     * Ce que l'équipe décide d'un contrat en cours : à son dernier loyer, lever l'option
+     * (« lever », le choix retenu sans décision) ou rendre la machine (« rendre ») ; avant,
+     * le rompre (« rompre ») : les loyers restants se paient ce tour et la machine est
+     * rendue en fin de tour.
+     */
+    leaseDecisions?: { contractId: string; choice: "lever" | "rendre" | "rompre" }[];
   };
   /**
    * Financement. Avec échéancier (finance.loanDurationRounds) : les échéances
@@ -1735,6 +1802,11 @@ export interface IncomeStatement {
    */
   rdCost?: number;
   fixedCosts: number;
+  /**
+   * Redevances de crédit-bail du tour (compte 612, une charge externe retranchée avant
+   * l'EBE), loyers restants d'un contrat rompu compris. Absentes si nulles.
+   */
+  redevancesCreditBail?: number;
   ebitda: number;
   depreciation: number;
   operatingIncome: number;
@@ -1997,6 +2069,26 @@ export interface CompanyRoundResult {
     onCredit: number;
     /** En gamme : la référence servie (absent en mono-produit). */
     productCode?: string;
+  };
+  /**
+   * LE CRÉDIT-BAIL DU TOUR (`creditBail`) : les redevances payées, les contrats signés,
+   * levés, rendus ou rompus, et l'engagement qui reste à la clôture, celui de l'annexe
+   * (« Engagements de crédit-bail »), hors bilan. Absent sans contrat.
+   */
+  creditBail?: {
+    redevances: number;
+    signes: { id: string; typeCode: string; typeName: string; quantite: number; loyer: number; duree: number; option: number }[];
+    /** Options levées ce tour : la machine entre à l'actif pour ce prix. */
+    leves: { id: string; option: number }[];
+    rendus: string[];
+    /** Contrats rompus : les loyers restants, payés ce tour. */
+    rompus: { id: string; montant: number }[];
+    /** Les loyers restant à payer à la clôture, tous contrats. */
+    engagement: number;
+    /** Le prix des options d'achat des contrats en cours. */
+    options: number;
+    /** Les contrats en cours à la clôture. */
+    contrats: ContratDeCreditBail[];
   };
   /** Investissement du tour : capacité achetée (en service à t+1) et montant. */
   investment?: {
@@ -2281,6 +2373,8 @@ export interface EngineTrace {
   rdActionsEffects?: CompanyRoundResult["rdActionsEffects"] | null;
   stoppedModuleItems?: CompanyRoundResult["stoppedModuleItems"] | null;
   groupe?: CompanyRoundResult["groupe"] | null;
+  /** Le crédit-bail du tour (`creditBail`) : redevances, contrats, engagement de l'annexe. */
+  creditBail?: CompanyRoundResult["creditBail"] | null;
 }
 
 export interface EventInstance {

@@ -606,6 +606,8 @@ async function resolveGameRound(
               stoppedModuleItems: r.stoppedModuleItems ?? null,
               // Niveau 7 : valeur, rachat, écart d'acquisition, sous-traitance.
               groupe: r.groupe ?? null,
+              // Le crédit-bail : redevances, contrats et engagement de l'annexe.
+              creditBail: r.creditBail ?? null,
             },
             revenue: toMoney(r.incomeStatement.revenue),
             netIncome: toMoney(r.incomeStatement.netIncome),

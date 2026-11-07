@@ -37,8 +37,10 @@ describe("l'arène du cours", () => {
   it("porte chaque correctif des parties nouvelles", () => {
     const s = scenarioDuCours(scenarioByCode("nova").scenario, 4);
     expect(Object.keys(CORRECTIFS_DES_PARTIES_NOUVELLES).sort()).toEqual(
-      ["concurrentsAssainis", "equilibre", "impotSurLExercice", "parcSansDoublon", "propositionALaDemande"],
+      ["concurrentsAssainis", "creditBail", "equilibre", "impotSurLExercice", "parcSansDoublon", "propositionALaDemande"],
     );
+    // Sauf le crédit-bail (engine/credit-bail), hors du monde figé du cours.
+    expect(s.creditBail).toBeUndefined();
     // L'équilibre du moteur 0.2.0 (config/scenarios/equilibre.ts), relevé de novembre 2026.
     expect(s.equilibre).toBe("0.2.0");
     expect(s.bots?.concurrentsAssainis).toBe(true);

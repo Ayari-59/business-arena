@@ -154,6 +154,8 @@ const LIBELLES: Readonly<Record<string, string>> = {
   acceptOrder: "Commande exceptionnelle",
   equipmentBuyJson: "Achat de machines",
   equipmentSellJson: "Vente de machines",
+  equipmentLeaseJson: "Crédit-bail de machines",
+  leaseDecisionsJson: "Contrats de crédit-bail",
   justification: "Votre note",
   expectedUnits: "Ventes prévues",
   expectedCash: "Trésorerie prévue",
@@ -405,6 +407,8 @@ export function champDuChemin(
       if (deux === "machineCapacityUnits") return "machineCapacityUnits";
       if (deux === "equipmentBuy") return "equipmentBuyJson";
       if (deux === "equipmentSell") return "equipmentSellJson";
+      if (deux === "equipmentLease") return "equipmentLeaseJson";
+      if (deux === "leaseDecisions") return "leaseDecisionsJson";
       return null;
     case "salesEstimate":
       return deux === "byProduct" && trois ? `${PREFIXE_VENTES_ESTIMEES}${trois}` : null;
@@ -441,7 +445,7 @@ const CHAMPS_DU_RACHAT: Readonly<Record<string, string>> = {
 };
 
 /** Les champs qui n'ont pas de case à l'écran : leur refus se lit au récapitulatif. */
-const SANS_CASE = new Set(["equipmentBuyJson", "equipmentSellJson"]);
+const SANS_CASE = new Set(["equipmentBuyJson", "equipmentSellJson", "equipmentLeaseJson", "leaseDecisionsJson"]);
 
 function valeurAuChemin(entree: unknown, path: readonly PropertyKey[]): unknown {
   let x: unknown = entree;
