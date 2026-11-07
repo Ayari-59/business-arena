@@ -1094,6 +1094,8 @@ function reconstructResult(
     ...(trace.stoppedModuleItems != null ? { stoppedModuleItems: trace.stoppedModuleItems } : {}),
     // Niveau 7 : valeur, rachat, audit, consolidation ; clé émise seulement si portée.
     ...(trace.groupe ? { groupe: trace.groupe } : {}),
+    // Le crédit-bail : clé émise seulement si portée.
+    ...(trace.creditBail ? { creditBail: trace.creditBail } : {}),
   };
   return { result, events: trace.events ?? [] };
 }

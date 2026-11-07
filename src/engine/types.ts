@@ -2373,6 +2373,8 @@ export interface EngineTrace {
   rdActionsEffects?: CompanyRoundResult["rdActionsEffects"] | null;
   stoppedModuleItems?: CompanyRoundResult["stoppedModuleItems"] | null;
   groupe?: CompanyRoundResult["groupe"] | null;
+  /** Le crédit-bail du tour (`creditBail`) : redevances, contrats, engagement de l'annexe. */
+  creditBail?: CompanyRoundResult["creditBail"] | null;
 }
 
 export interface EventInstance {
