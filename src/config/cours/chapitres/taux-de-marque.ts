@@ -1,6 +1,6 @@
 import { montantEcrit } from "../../../pedagogy/cours/correcteur";
 import type { Cas } from "../cas";
-import { coutQuiGardeLeTauxDeMarque, fournisseurDe, margeDeLArticle, margeDuMois, margesDeLaGamme, prixQuiGardeLeTauxDeMarque, referenceDe } from "../monde/boutique";
+import { coutQuiGardeLeTauxDeMarque, fournisseurDe, margeDeLArticle, margeDuMois, margesDeLaGamme, prixHtDuTtc, prixQuiGardeLeTauxDeMarque, referenceDe } from "../monde/boutique";
 import { BOUTIQUES_DU_COURS, type CodeDeFournisseur, type FicheDeLaBoutique } from "../monde/maille-et-co";
 import { ENQUETE_DU_PRIX, acceptabilite, elasticiteLue } from "../monde/offre-et-prix";
 import type { Chapitre, TableauDeDonnees } from "../types";
@@ -92,6 +92,18 @@ export const FOURNISSEURS_DU_LABORATOIRE: readonly { valeur: number; code: CodeD
   { valeur: 3, code: "atelier-local", libelle: "Atelier local" },
 ];
 
+/**
+ * LE LABORATOIRE DE L'ÉTIQUETTE (première partie), hypothèse du cours : le façonnier de référence
+ * annonce une hausse de 10 % de son prix d'achat. L'élève déplace le prix d'achat et l'étiquette, et
+ * lit le taux de marque, le taux de marge, la marge et le coefficient d'un pull, sans la demande du
+ * mois (elle vient à la suite, avec le concurrent). Le défi : la plus petite étiquette ronde qui garde
+ * le taux de marque de janvier une fois la hausse passée.
+ */
+export const HAUSSE_DU_FACONNIER = 0.1;
+
+/** Les leviers du laboratoire de l'étiquette : le prix d'achat HT et l'étiquette TTC, en euros. */
+export const LEVIERS_DE_L_ETIQUETTE = { achat: { min: 20, max: 32, pas: 0.5 }, etiquette: { min: 54, max: 96, pas: 1 } } as const;
+
 const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
 const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
@@ -112,6 +124,12 @@ export function margeAuPrix(f: FicheDeLaBoutique, prixHt: number, valeurDuFourni
   const r = referenceDe(f, REFERENCE_DU_CHAPITRE);
   const coutDAchat = auCentime(r.coutDAchat * fournisseurDe(f, fo.code).multiplicateur);
   return { fournisseur: fo, ...margeDuMois(f, { reference: REFERENCE_DU_CHAPITRE, prixHt: auCentime(prixHt), coutDAchat }) };
+}
+
+/** Un pull au laboratoire de l'étiquette : l'étiquette TTC ramenée hors taxes, face au prix d'achat choisi. */
+export function pullALEtiquette(f: FicheDeLaBoutique, achat: number, etiquette: number) {
+  const r = referenceDe(f, REFERENCE_DU_CHAPITRE);
+  return margeDeLArticle({ prixHt: prixHtDuTtc(etiquette, r.tauxTva), coutDAchat: auCentime(achat), tauxTva: r.tauxTva });
 }
 
 /** Tout ce que le chapitre et son cas demandent sur le pull col rond et la gamme. */
@@ -166,6 +184,14 @@ export function margesDuRayon(c: Pick<Cas, "code">) {
       },
       { prix: grille[0]!, marge: -Infinity },
     );
+  // Le laboratoire de l'étiquette : le prix d'achat après la hausse du façonnier, et la plus petite
+  // étiquette ronde du curseur qui garde le taux de marque de janvier (le hors taxes au centime, comme
+  // le lit l'élève).
+  const achatEnHausse = auCentime(r.coutDAchat * (1 + HAUSSE_DU_FACONNIER));
+  const e = LEVIERS_DE_L_ETIQUETTE.etiquette;
+  const etiquettes = Array.from({ length: Math.round((e.max - e.min) / e.pas) + 1 }, (_, i) => e.min + i * e.pas);
+  const etiquetteApresHausse = etiquettes.find((p) => pullALEtiquette(f, achatEnHausse, p).tauxDeMarque >= tauxDeMarqueExact - 1e-12) ?? e.max;
+  const etiquetteQuiGardeLaMarge = auCentime(r.prixTtc + (achatEnHausse - r.coutDAchat) * (1 + r.tauxTva));
   const auPrixQuiGarde = margeAuPrix(f, prixAtelier, 3);
   const auPrixDeJanvier = margeAuPrix(f, r.prixHt, 3);
 
@@ -224,6 +250,9 @@ export function margesDuRayon(c: Pick<Cas, "code">) {
     ventesQuiGardentLaMarge,
     baisseQuiGardeLaMarque: auDixieme(((r.coutDAchat - achatQuiGardeLaMarque) / r.coutDAchat) * 100),
     baisseQuiGardeLaMarge: auDixieme(((r.coutDAchat - achatQuiGardeLaMarge) / r.coutDAchat) * 100),
+    achatEnHausse,
+    etiquetteApresHausse,
+    etiquetteQuiGardeLaMarge,
     meilleurFaconnier: meilleurPrix(1),
     meilleurAtelier: meilleurPrix(3),
     auPrixQuiGarde,
@@ -1031,9 +1060,84 @@ const TAUX_DE_MARQUE_ENTIER: Chapitre = {
 export const CODE_DE_LA_SUITE = "s-aligner-sur-le-concurrent";
 export const TITRE_DE_LA_SUITE = "S'aligner sur le concurrent : garder la marque ou la marge";
 
-/** PREMIÈRE PARTIE : les étapes du chapitre d'origine jusqu'à `le-coefficient-du-concurrent` exclue, puis sa propre synthèse. */
+/** PREMIÈRE PARTIE : les étapes du chapitre d'origine jusqu'à `le-coefficient-du-concurrent` exclue, son propre laboratoire (l'étiquette après la hausse du façonnier, le pull seul), puis sa propre synthèse. */
 export const TAUX_DE_MARQUE: Chapitre = partieDuChapitre(TAUX_DE_MARQUE_ENTIER, [
   ...etapesAvant(TAUX_DE_MARQUE_ENTIER, "le-coefficient-du-concurrent"),
+  {
+    id: "le-laboratoire-de-l-etiquette",
+    objectifs: [1, 2, 3],
+    type: "simulation",
+    titre: "Le laboratoire de l'étiquette",
+    notions: ["margin_rates", "markup_coefficient", "vat_payable"],
+    question: (c) => {
+      const m = margesDuRayon(c);
+      return `Le « ${m.faconnier.nom} » annonce une hausse de ${pct(HAUSSE_DU_FACONNIER * 100)} sur le ${m.r.nom.toLowerCase()}. Déplacez le prix d'achat hors taxes et l'étiquette toutes taxes comprises : le tableau suit le prix hors taxes, la marge d'un pull, ses deux taux et le coefficient, face à ${m.f.moisDeReference} ; la courbe montre le taux de marque selon l'étiquette, au prix d'achat choisi. Relevez le défi, puis comparez avec l'étiquette qui répercute la hausse en euros.`;
+    },
+    leviers: (c) => {
+      const m = margesDuRayon(c);
+      const { achat, etiquette } = LEVIERS_DE_L_ETIQUETTE;
+      return [
+        { code: "achat", libelle: "Prix d'achat hors taxes", unite: "€", min: achat.min, max: achat.max, pas: achat.pas, depart: m.r.coutDAchat },
+        { code: "etiquette", libelle: "Étiquette toutes taxes comprises", unite: "€", min: etiquette.min, max: etiquette.max, pas: etiquette.pas, depart: m.r.prixTtc },
+      ];
+    },
+    lecture: (c, p) => {
+      const m = margesDuRayon(c);
+      const x = pullALEtiquette(m.f, p.achat!, p.etiquette!);
+      const d = pullALEtiquette(m.f, m.r.coutDAchat, m.r.prixTtc);
+      return [
+        { libelle: "Prix de vente hors taxes", montant: x.prixHt, reference: d.prixHt },
+        { libelle: "Marge commerciale d'un pull", montant: x.margeCommerciale, reference: d.margeCommerciale, fort: true },
+        { libelle: "Taux de marque", montant: auDixieme(x.tauxDeMarque * 100), reference: auDixieme(d.tauxDeMarque * 100), unite: "%" },
+        { libelle: "Taux de marge", montant: auDixieme(x.tauxDeMarge * 100), reference: auDixieme(d.tauxDeMarge * 100), unite: "%" },
+        { libelle: "Coefficient multiplicateur TTC", montant: auCentime(x.coefficientTtc), reference: auCentime(d.coefficientTtc), unite: "fois" },
+        { libelle: `Écart au taux de marque de ${m.f.moisDeReference}`, montant: auDixieme((x.tauxDeMarque - m.tauxDeMarqueExact) * 100), reference: 0, unite: "points", effet: true },
+      ];
+    },
+    graphique: (c) => {
+      const m = margesDuRayon(c);
+      return {
+        levier: "etiquette",
+        unite: "%",
+        courbes: [
+          { libelle: "Taux de marque à cette étiquette", valeur: (p) => auDixieme(pullALEtiquette(m.f, p.achat!, p.etiquette!).tauxDeMarque * 100) },
+          { libelle: `Taux de marque de ${m.f.moisDeReference}`, valeur: () => m.tMarque },
+        ],
+      };
+    },
+    defi: (c) => {
+      const m = margesDuRayon(c);
+      const garde = (p: Readonly<Record<string, number>>) => pullALEtiquette(m.f, p.achat!, p.etiquette!).tauxDeMarque >= m.tauxDeMarqueExact - 1e-12;
+      const aLaHausse = (p: Readonly<Record<string, number>>) => Math.abs(p.achat! - m.achatEnHausse) < 0.005;
+      return {
+        consigne: `Le prix d'achat passé à ${eur(m.achatEnHausse)} HT, trouvez la plus petite étiquette ronde qui garde au moins le taux de marque de ${m.f.moisDeReference}, ${pct(m.tMarque)}.`,
+        atteint: (p) => aLaHausse(p) && garde(p) && p.etiquette === m.etiquetteApresHausse,
+        indice: (p) => {
+          if (!aLaHausse(p)) return `Placez d'abord le prix d'achat sur celui qu'annonce le façonnier : ${eur(m.r.coutDAchat)} plus ${pct(HAUSSE_DU_FACONNIER * 100)}, soit ${eur(m.achatEnHausse)} HT.`;
+          const x = pullALEtiquette(m.f, p.achat!, p.etiquette!);
+          if (!garde(p)) {
+            const enEuros =
+              x.margeCommerciale >= m.a.margeCommerciale
+                ? `la marge d'un pull vaut ${eur(x.margeCommerciale)}, autant ou plus qu'en ${m.f.moisDeReference}, mais le taux de marque n'est que de ${pct(auDixieme(x.tauxDeMarque * 100))} : garder la marge en euros ne garde pas le taux.`
+                : `la marge d'un pull tombe à ${eur(x.margeCommerciale)}, et le taux de marque à ${pct(auDixieme(x.tauxDeMarque * 100))}.`;
+            return `À ${eur(p.etiquette!)}, ${enEuros} Montez l'étiquette.`;
+          }
+          return `À ${eur(p.etiquette!)}, le taux de marque est gardé (${pct(auDixieme(x.tauxDeMarque * 100))}), mais une étiquette plus basse le garde encore : cherchez la plus petite.`;
+        },
+        solution: { achat: m.achatEnHausse, etiquette: m.etiquetteApresHausse },
+      };
+    },
+    explication: (c, p) => {
+      const m = margesDuRayon(c);
+      const x = pullALEtiquette(m.f, p.achat!, p.etiquette!);
+      const enEuros = pullALEtiquette(m.f, m.achatEnHausse, m.etiquetteQuiGardeLaMarge);
+      const hausse = auCentime(m.achatEnHausse - m.r.coutDAchat);
+      return [
+        `À ${eur(p.etiquette!)}, soit ${eur(x.prixHt)} HT, le pull marque ${pct(auDixieme(x.tauxDeMarque * 100))} et laisse ${eur(x.margeCommerciale)}, au lieu de ${eur(m.a.margeCommerciale)} : la marge monte de ${eur(auCentime(x.margeCommerciale - m.a.margeCommerciale))} pour une hausse du prix d'achat de ${eur(hausse)}. Garder le taux, c'est garder le coefficient, ${coef(m.coefTtc)} toutes taxes comprises (${coef(auCentime(x.coefficientTtc))} à l'arrondi de l'étiquette près) : le client paie la hausse multipliée par le coefficient.`,
+        `Répercuter la hausse en euros, ${eur(hausse)} HT soit ${eur(auCentime(hausse * (1 + m.r.tauxTva)))} TTC, donne ${eur(m.etiquetteQuiGardeLaMarge)} : la marge reste ${eur(enEuros.margeCommerciale)}, mais le taux de marque tombe à ${pct(auDixieme(enEuros.tauxDeMarque * 100))} et le taux de marge à ${pct(auDixieme(enEuros.tauxDeMarge * 100))}. Quand le prix d'achat change, la marge en euros et le taux ne se gardent pas ensemble : le commerçant choisit ce qu'il garde.`,
+      ];
+    },
+  },
   {
     id: "synthese",
     type: "lecture",
