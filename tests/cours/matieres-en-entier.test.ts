@@ -3,7 +3,8 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { MATIERES_COUVERTES_EN_ENTIER } from "@/config/cours/matieres-en-entier";
 import { coursDuDiplome } from "@/config/cours/par-diplome";
-import { formationsAvecUnePage } from "@/config/couverture";
+import { formationsAvecUnePage, tableauDeCouverture } from "@/config/couverture";
+import { REFERENTIELS_DES_FORMATIONS } from "@/config/ateliers/referentiels";
 
 /**
  * LE REPÈRE « EN COURS » (chantier approuvé par le propriétaire, novembre 2026) : sur la page du
@@ -57,9 +58,31 @@ describe("les matières couvertes en entier et le repère « en cours »", () =>
     expect(mercatique.every((b) => b.enCours)).toBe(true);
   });
 
+  it("tous les thèmes officiels du bac STMG sont sur la page, vides compris, et un thème vide est « en cours »", () => {
+    const officiels = REFERENTIELS_DES_FORMATIONS.stmg!.entrees;
+    expect(officiels.length).toBe(23);
+    const blocs = coursDuDiplome("stmg")!.blocs.filter((b) => b.bloc !== null);
+    expect(blocs.map((b) => b.bloc)).toEqual([...officiels]);
+    const rh = blocs.filter((b) => b.partie === "Terminale, ressources humaines et communication");
+    expect(rh.length).toBe(3);
+    expect(blocs.some((b) => b.partie === "Terminale, systèmes d'information de gestion" && b.bloc === "Thème 4 · Système d'information et échange")).toBe(true);
+    for (const b of blocs) if (b.chapitres.length === 0) expect(b.enCours, b.bloc!).toBe(true);
+  });
+
+  it("chaque diplôme montre toutes les entrées de son référentiel, sauf celles hors du champ restées sans chapitre", () => {
+    for (const f of formationsAvecUnePage()) {
+      const attendues = tableauDeCouverture(f.code)
+        .lignes.filter((l) => !l.horsDuChamp)
+        .map((l) => `${l.couverture?.officiel ?? l.bloc}|${l.partie ?? ""}`);
+      const montrees = new Set(coursDuDiplome(f.code)!.blocs.filter((b) => b.bloc !== null).map((b) => `${b.bloc}|${b.partie ?? ""}`));
+      for (const e of attendues) expect(montrees.has(e), `${f.code} : ${e}`).toBe(true);
+    }
+  });
+
   it("la page affiche le repère et sa phrase sur les blocs en cours", () => {
     expect(PAGE).toMatch(/\{b\.enCours \? \(\s*<span\s+data-en-cours=""/);
     expect(PAGE).toContain("en cours");
     expect(PAGE).toContain("Cette matière n&apos;est pas encore couverte en entier. D&apos;autres chapitres arriveront.");
+    expect(PAGE).toContain("Chapitres en préparation.");
   });
 });

@@ -18,7 +18,8 @@ import type { Chapitre } from "./types";
  *
  *  · LES BLOCS DU RÉFÉRENTIEL, dans l'ordre du texte (config/couverture.ts,
  *    `tableauDeCouverture`). Un chapitre qui cite plusieurs blocs du diplôme se range sous le
- *    premier que le texte nomme : il ne paraît qu'une fois. Un chapitre qui sert le diplôme
+ *    premier que le texte nomme : il ne paraît qu'une fois. Une entrée sans chapitre paraît
+ *    aussi, vide et « en cours ». Un chapitre qui sert le diplôme
  *    par son parcours sans citer de bloc ferme la liste, sous « Autres chapitres ».
  *  · L'ORDRE D'APPRENTISSAGE : les prérequis des chapitres (`Chapitre.prerequis`) d'abord, puis
  *    le palier, puis l'ordre du registre. Le rang est celui du parcours entier : un bloc peut
@@ -97,6 +98,7 @@ export function coursDuDiplome(code: string): CoursDuDiplome | null {
     bloc: l.couverture?.officiel ?? l.bloc,
     libelle: l.bloc,
     partie: l.partie,
+    horsDuChamp: Boolean(l.horsDuChamp),
   }));
   const parEntree = new Map<number, ChapitreDuDiplome[]>();
   const autres: ChapitreDuDiplome[] = [];
@@ -110,14 +112,15 @@ export function coursDuDiplome(code: string): CoursDuDiplome | null {
     const premier = Math.min(...rangs);
     parEntree.set(premier, [...(parEntree.get(premier) ?? []), ligne]);
   }
-  const blocs: BlocDuParcours[] = [...parEntree]
-    .sort(([a], [b]) => a - b)
-    .map(([r, c]) => ({
-      bloc: entrees[r]!.bloc,
-      partie: entrees[r]!.partie,
-      enCours: !couverteEnEntier(code, entrees[r]!.bloc, entrees[r]!.partie),
-      chapitres: c,
-    }));
+  // Toutes les entrées du texte paraissent, vides comprises (décision du propriétaire, novembre
+  // 2026) : un thème sans chapitre se lit « en cours » au lieu de disparaître et de passer pour
+  // couvert. Seule une entrée dite hors du champ (config/hors-du-champ.ts) reste absente quand
+  // aucun chapitre ne la cite.
+  const blocs: BlocDuParcours[] = entrees.flatMap((e, r) => {
+    const c = parEntree.get(r) ?? [];
+    if (c.length === 0 && e.horsDuChamp) return [];
+    return [{ bloc: e.bloc, partie: e.partie, enCours: !couverteEnEntier(code, e.bloc, e.partie), chapitres: c }];
+  });
   if (autres.length > 0) blocs.push({ bloc: null, enCours: false, chapitres: autres });
   return { formation, blocs, premier: lignes[0] ?? null };
 }

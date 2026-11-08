@@ -309,16 +309,24 @@ async function CoursPage({
                           </span>
                         ) : null}
                       </h4>
-                      {b.enCours ? (
-                        <p className="text-xs text-slate-400">
-                          Cette matière n&apos;est pas encore couverte en entier. D&apos;autres chapitres arriveront.
+                      {b.chapitres.length === 0 ? (
+                        <p data-theme-vide="" className="text-sm text-slate-400">
+                          Chapitres en préparation.
                         </p>
-                      ) : null}
-                      <ol className="grid gap-3">
-                        {b.chapitres.map((l) => (
-                          <ChapitreDuParcours key={l.chapitre.code} ligne={l} imposee={imposee?.code} ouvert={ouverts.has(l.chapitre.code)} />
-                        ))}
-                      </ol>
+                      ) : (
+                        <>
+                          {b.enCours ? (
+                            <p className="text-xs text-slate-400">
+                              Cette matière n&apos;est pas encore couverte en entier. D&apos;autres chapitres arriveront.
+                            </p>
+                          ) : null}
+                          <ol className="grid gap-3">
+                            {b.chapitres.map((l) => (
+                              <ChapitreDuParcours key={l.chapitre.code} ligne={l} imposee={imposee?.code} ouvert={ouverts.has(l.chapitre.code)} />
+                            ))}
+                          </ol>
+                        </>
+                      )}
                     </section>
                   ))
                 ) : (
