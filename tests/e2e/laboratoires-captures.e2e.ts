@@ -16,6 +16,12 @@ import { CHAPITRES } from "../../src/config/cours/registre";
  * laboratoire à quatre leviers, et celui des ventes. Chaque fois, le graphique est là s'il est
  * déclaré, et rien ne déborde en largeur. Avec CAPTURES_LABORATOIRES (un dossier), le test laisse
  * les captures, en double densité.
+ *
+ * SUR TÉLÉPHONE, DEUX DÉFAUTS RELEVÉS SUR CES CAPTURES (novembre 2026) : les libellés du graphique,
+ * dessinés en 11 à 12 unités sur une largeur de 560, tombaient vers 6 px à 390 px de large ; et le
+ * bouton de la calculatrice mordait sur le bord droit de la carte du laboratoire. Deux gardes : tout
+ * texte du graphique mesure au moins 11 px réels à l'écran, et le bouton ne touche ni la carte ni ses
+ * leviers, où que la page soit défilée.
  */
 
 const CAPTURES = process.env.CAPTURES_LABORATOIRES;
@@ -77,6 +83,38 @@ describe.each(LABORATOIRES)("le laboratoire $etape ($chapitre)", ({ chapitre: co
     expect(debords, "éléments hors de l'écran").toEqual([]);
     const tableaux = await page.evaluate(() => [...document.querySelectorAll("[data-laboratoire] table")].map((t) => t.scrollWidth - (t.parentElement?.clientWidth ?? t.scrollWidth)).filter((e) => e > 1));
     expect(tableaux, "tableaux qui défilent").toEqual([]);
+    if (largeur < 600) {
+      // Les libellés du graphique, à leur taille réelle : un texte du SVG compte à l'échelle du dessin.
+      const petits = await page.evaluate(() =>
+        [...document.querySelectorAll("[data-graphique-du-laboratoire] *")]
+          .filter((x) => [...x.childNodes].some((n) => n.nodeType === Node.TEXT_NODE && (n.textContent ?? "").trim() !== ""))
+          .map((x) => {
+            const svg = x.closest("svg");
+            const echelle = svg ? svg.getBoundingClientRect().width / svg.viewBox.baseVal.width : 1;
+            return { texte: (x.textContent ?? "").trim(), px: parseFloat(getComputedStyle(x).fontSize) * echelle };
+          })
+          .filter((t) => t.px < 11)
+          .map((t) => `${t.texte} (${t.px.toFixed(1)} px)`),
+      );
+      expect(petits, "libellés du graphique sous 11 px").toEqual([]);
+      // Le bouton de la calculatrice ne recouvre ni la carte ni ses leviers, de haut en bas de la carte.
+      const hauteur = await page.evaluate(() => document.documentElement.scrollHeight);
+      for (let y = 0; y <= hauteur; y += 200) {
+        const chevauchements = await page.evaluate((y) => {
+          window.scrollTo(0, y);
+          const bouton = document.querySelector("[data-bouton-calculatrice]")?.getBoundingClientRect();
+          if (!bouton) return ["pas de bouton"];
+          return [...document.querySelectorAll("[data-laboratoire], [data-laboratoire] input, [data-laboratoire] button, [data-laboratoire] label, [data-laboratoire] fieldset")]
+            .filter((x) => {
+              const r = x.getBoundingClientRect();
+              return Math.max(0, Math.min(r.right, bouton.right) - Math.max(r.left, bouton.left)) * Math.max(0, Math.min(r.bottom, bouton.bottom) - Math.max(r.top, bouton.top)) > 0;
+            })
+            .map((x) => `${x.tagName.toLowerCase()} ${(x.textContent ?? x.getAttribute("aria-label") ?? "").trim().slice(0, 30)}`);
+        }, y);
+        expect(chevauchements, `calculatrice sur le laboratoire (défilement ${y})`).toEqual([]);
+      }
+      await page.evaluate(() => window.scrollTo(0, 0));
+    }
     if (CAPTURES) await page.screenshot({ path: `${CAPTURES}/${nom}-${largeur}-${theme === "light" ? "clair" : "sombre"}.png`, fullPage: true });
     await ctx.close();
   });
