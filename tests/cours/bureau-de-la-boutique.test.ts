@@ -128,7 +128,7 @@ describe("le bureau du rapprochement de mars", () => {
     expect(b.reprend).toEqual(["fournisseurs-et-banque"]);
     const ch = CHAPITRES.find((x) => x.code === "fournisseurs-et-banque")!;
     expect([b.parcours, b.palier]).toEqual([ch.parcours, ch.palier]);
-    expect(CAS_PAR_CHAPITRE.length).toBe(197);
+    expect(CAS_PAR_CHAPITRE.length).toBe(205);
     expect(b.entreprise.nom).toBe(f.entreprise);
   });
 

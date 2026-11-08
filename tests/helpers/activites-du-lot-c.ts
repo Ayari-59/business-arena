@@ -70,7 +70,7 @@ export function gardesDuBureau(b: Bureau, chapitre: string) {
     expect(b.palier).toBe(ch.palier);
     expect(b.entreprise).toEqual({ code: "nova", nom: "NOVA" });
     expect(b.commanditaire).toBe("Le président");
-    expect(CAS_PAR_CHAPITRE.length).toBe(197);
+    expect(CAS_PAR_CHAPITRE.length).toBe(205);
     expect(CAS_PAR_CHAPITRE.some((s) => s.code === b.code)).toBe(false);
   });
 
@@ -128,7 +128,7 @@ export function gardesDuScenario(sc: Scenario, chapitre: string) {
     const ch = CHAPITRES.find((x) => x.code === chapitre)!;
     expect([sc.parcours, sc.palier]).toEqual([ch.parcours, ch.palier]);
     expect(sc.entreprise).toEqual({ code: "nova", nom: "NOVA" });
-    expect(CAS_PAR_CHAPITRE.length).toBe(197);
+    expect(CAS_PAR_CHAPITRE.length).toBe(205);
   });
 
   it("deux ou trois décisions à trois options ; au moins deux fins ; une seule meilleure suite", () => {

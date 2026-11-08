@@ -52,7 +52,7 @@ describe("le bureau de l'échéance", () => {
     expect(b.libre).toBe(false);
     const ch = CHAPITRES.find((y) => y.code === "la-valeur-et-le-temps")!;
     expect([b.parcours, b.palier]).toEqual([ch.parcours, ch.palier]);
-    expect(CAS_PAR_CHAPITRE.length).toBe(197);
+    expect(CAS_PAR_CHAPITRE.length).toBe(205);
   });
 
   it("une pile de 5 à 9 pièces, 3 à 6 étapes, et chaque pièce que montre une étape existe", () => {

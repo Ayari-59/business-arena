@@ -492,6 +492,24 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "chapitres/initiation-a-la-consolidation.ts",
   "situations/par-chapitre/la-cabine-subventionnee.ts",
   "situations/par-chapitre/le-directeur-veut-plus-d-actions.ts",
+  // lot D STMG : mercatique de terminale (début)
+  "chapitres/positionner-l-offre.ts",
+  "situations/par-chapitre/campustech-veut-son-logo.ts",
+  "chapitres/l-experience-client.ts",
+  "situations/par-chapitre/une-soiree-le-mardi.ts",
+  "chapitres/les-politiques-tarifaires.ts",
+  "situations/par-chapitre/le-congres-de-juillet.ts",
+  "chapitres/le-parcours-client.ts",
+  "situations/par-chapitre/le-module-augmente.ts",
+  "chapitres/vendre-en-ligne.ts",
+  "situations/par-chapitre/la-place-de-marche-negocie.ts",
+  "chapitres/le-plan-de-communication.ts",
+  "situations/par-chapitre/toute-la-campagne-a-la-radio.ts",
+  "chapitres/fideliser-grace-au-numerique.ts",
+  "situations/par-chapitre/relancer-les-dormantes.ts",
+  "chapitres/influence-communaute-et-e-reputation.ts",
+  "situations/par-chapitre/l-influenceuse-du-haut-verdasse.ts",
+  // lot D STMG (fin)
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
@@ -700,6 +718,24 @@ const NE_LISENT_PLUS_L_ANNEE_FIGEE: readonly string[] = [
   "chapitres/fournisseurs-et-banque.ts",
   "situations/par-chapitre/vibra-repasse-commande.ts",
   "situations/par-chapitre/le-cheque-qui-n-est-pas-passe.ts",
+  // lot D STMG : mercatique de terminale (début)
+  "chapitres/positionner-l-offre.ts",
+  "situations/par-chapitre/campustech-veut-son-logo.ts",
+  "chapitres/l-experience-client.ts",
+  "situations/par-chapitre/une-soiree-le-mardi.ts",
+  "chapitres/les-politiques-tarifaires.ts",
+  "situations/par-chapitre/le-congres-de-juillet.ts",
+  "chapitres/le-parcours-client.ts",
+  "situations/par-chapitre/le-module-augmente.ts",
+  "chapitres/vendre-en-ligne.ts",
+  "situations/par-chapitre/la-place-de-marche-negocie.ts",
+  "chapitres/le-plan-de-communication.ts",
+  "situations/par-chapitre/toute-la-campagne-a-la-radio.ts",
+  "chapitres/fideliser-grace-au-numerique.ts",
+  "situations/par-chapitre/relancer-les-dormantes.ts",
+  "chapitres/influence-communaute-et-e-reputation.ts",
+  "situations/par-chapitre/l-influenceuse-du-haut-verdasse.ts",
+  // lot D STMG (fin)
 ];
 
 /** Le premier chemin d'imports qui atteint un fichier donné, ou rien. */

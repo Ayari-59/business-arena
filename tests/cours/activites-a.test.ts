@@ -70,8 +70,8 @@ describe("le registre : une activité par chapitre, hors des cas dédiés", () =
     expect(lienDuBureau(LE_MOIS_DE_MARS_DE_NOVA)).toBe("/cours/bureau/le-mois-de-mars-de-nova");
   });
 
-  it("aucune activité n'entre dans les cas dédiés : le compte reste 197", () => {
-    expect(CAS_PAR_CHAPITRE.length).toBe(197);
+  it("aucune activité n'entre dans les cas dédiés : le compte reste 205", () => {
+    expect(CAS_PAR_CHAPITRE.length).toBe(205);
     const codes = new Set(CAS_PAR_CHAPITRE.map((x) => x.code));
     for (const code of Object.values(CHAPITRES_DU_LOT)) expect(codes.has(code), code).toBe(false);
   });

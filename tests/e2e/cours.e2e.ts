@@ -1115,6 +1115,32 @@ describe.each([
   { code: "initiation-a-la-consolidation", entreprise: "nova", telephone: true },
   { code: "la-cabine-subventionnee", entreprise: "nova" },
   { code: "le-directeur-veut-plus-d-actions", entreprise: "nova", telephone: true },
+  // lot D STMG : les chapitres de mercatique de terminale et leurs cas, au bureau et sur téléphone (début) ; le complément des canaux de distribution se joue plus haut
+  { code: "positionner-l-offre", entreprise: "nova" },
+  { code: "positionner-l-offre", entreprise: "nova", telephone: true },
+  { code: "campustech-veut-son-logo", entreprise: "nova", telephone: true },
+  { code: "l-experience-client", entreprise: "bistrot" },
+  { code: "l-experience-client", entreprise: "bistrot", telephone: true },
+  { code: "une-soiree-le-mardi", entreprise: "bistrot", telephone: true },
+  { code: "les-politiques-tarifaires", entreprise: "hotel" },
+  { code: "les-politiques-tarifaires", entreprise: "hotel", telephone: true },
+  { code: "le-congres-de-juillet", entreprise: "hotel", telephone: true },
+  { code: "le-parcours-client", entreprise: "boutique" },
+  { code: "le-parcours-client", entreprise: "boutique", telephone: true },
+  { code: "le-module-augmente", entreprise: "boutique", telephone: true },
+  { code: "vendre-en-ligne", entreprise: "nova" },
+  { code: "vendre-en-ligne", entreprise: "nova", telephone: true },
+  { code: "la-place-de-marche-negocie", entreprise: "nova", telephone: true },
+  { code: "le-plan-de-communication", entreprise: "fitness" },
+  { code: "le-plan-de-communication", entreprise: "fitness", telephone: true },
+  { code: "toute-la-campagne-a-la-radio", entreprise: "fitness", telephone: true },
+  { code: "fideliser-grace-au-numerique", entreprise: "boutique" },
+  { code: "fideliser-grace-au-numerique", entreprise: "boutique", telephone: true },
+  { code: "relancer-les-dormantes", entreprise: "boutique", telephone: true },
+  { code: "influence-communaute-et-e-reputation", entreprise: "fitness" },
+  { code: "influence-communaute-et-e-reputation", entreprise: "fitness", telephone: true },
+  { code: "l-influenceuse-du-haut-verdasse", entreprise: "fitness", telephone: true },
+  // lot D STMG (fin)
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se

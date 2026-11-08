@@ -181,6 +181,16 @@ export const THEMES: readonly Theme[] = [
       "le-prix-selon-la-saison",
       "ce-que-rapporte-la-communication",
       "canaux-de-distribution",
+      // lot D STMG : mercatique de terminale (début)
+      "positionner-l-offre",
+      "l-experience-client",
+      "les-politiques-tarifaires",
+      "le-parcours-client",
+      "vendre-en-ligne",
+      "le-plan-de-communication",
+      "fideliser-grace-au-numerique",
+      "influence-communaute-et-e-reputation",
+      // lot D STMG (fin)
     ],
     familles: ["hotel-remplir"],
   },

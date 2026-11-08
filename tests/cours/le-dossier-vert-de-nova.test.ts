@@ -77,7 +77,7 @@ describe("le scénario du dossier vert", () => {
     expect(s.libre).toBe(false);
     const ch = CHAPITRES.find((x) => x.code === "evaluer-un-investissement-durable")!;
     expect([s.parcours, s.palier]).toEqual([ch.parcours, ch.palier]);
-    expect(CAS_PAR_CHAPITRE.length).toBe(197);
+    expect(CAS_PAR_CHAPITRE.length).toBe(205);
     expect(SITUATIONS.map((x) => x.code)).not.toContain(s.code);
   });
 

@@ -166,7 +166,7 @@ describe("l'enquête de la clôture du stagiaire", () => {
     expect(e.parcours).toBe(CHAPITRES.find((x) => x.code === "la-cloture")!.parcours);
     // Le palier des travaux de prudence et des régularisations, que l'enquête demande aussi.
     expect(e.palier).toBe(CHAPITRES.find((x) => x.code === "depreciations-et-provisions")!.palier);
-    expect(CAS_PAR_CHAPITRE.length).toBe(197);
+    expect(CAS_PAR_CHAPITRE.length).toBe(205);
     expect(CAS_PAR_CHAPITRE.some((x) => (x as { code?: string }).code === e.code)).toBe(false);
     expect([e.entreprise.code, e.entreprise.nom]).toEqual([f.code, f.entreprise]);
   });
