@@ -31,7 +31,7 @@ export function AccueilDeLaDecouverte({
       className="carte grid gap-3 p-4 sm:p-6"
     >
       <h2 id="decouverte-titre" className="titre-carte text-slate-100">
-        Votre compte est en Découverte : voici ce que vous pouvez faire tout de suite
+        Votre compte est en {OFFRES.decouverte.nom.toLowerCase()} : voici ce que vous pouvez faire tout de suite
       </h2>
       <ul className="grid gap-2 text-sm leading-relaxed text-slate-300">
         <li>

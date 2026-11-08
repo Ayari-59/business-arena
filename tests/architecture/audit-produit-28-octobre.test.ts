@@ -14,7 +14,7 @@ import { ATELIERS } from "@/config/ateliers";
 import { DIFFICULTY_PRESETS } from "@/config/difficulty";
 import { DIFFICULTES } from "@/config/ateliers/types";
 import { NIVEAUX as NIVEAUX_DES_EPISODES } from "@/config/episodes/niveaux";
-import { ENTREPRISES, NIVEAUX_DE_L_ARENE, OFFRES } from "@/config/tarifs";
+import { CATALOGUE_PAR_DEFAUT, ENTREPRISES, NIVEAUX_DE_L_ARENE, OFFRES } from "@/config/tarifs";
 import { leCoursEnChiffres } from "@/config/articulation";
 import { ateliersDeLaClasse, ateliersParCombinaison } from "@/config/ateliers-de-la-classe";
 import { LeCoursEnBref } from "@/components/le-cours-en-bref";
@@ -159,11 +159,19 @@ describe("4. un mot par sens", () => {
     expect(lire("app/parcours/[formation]/page.tsx")).not.toMatch(/Parcours par diplôme/);
   });
 
-  it("« Découverte » n'a plus qu'un sens : l'offre gratuite", () => {
-    // Décision du propriétaire (audit de la langue, novembre 2026) : l'offre gratuite garde
-    // « Découverte » ; le niveau 1 de l'arène et l'exigence 1 d'un atelier deviennent « Premiers
-    // pas », le niveau des épisodes de démonstration « Démonstration ». Les codes ne changent pas.
-    expect(OFFRES.decouverte.nom).toBe("Découverte");
+  it("un nom d'offre n'est pas un nom de niveau : « Essai gratuit » pour l'offre, « Premiers pas » pour le niveau 1", () => {
+    // Décision du propriétaire (audit de la langue, novembre 2026) : le niveau 1 de l'arène et
+    // l'exigence 1 d'un atelier deviennent « Premiers pas », le niveau des épisodes de
+    // démonstration « Démonstration ». L'offre gratuite a quitté « Découverte » pour « Premiers
+    // pas », ce qui la confondait avec le niveau 1 : elle s'appelle « Essai gratuit ».
+    // Les codes ne changent pas.
+    expect(OFFRES.decouverte.nom).toBe("Essai gratuit");
+    const niveaux = [
+      ...DIFFICULTY_PRESETS.map((p) => p.name),
+      ...Object.values(DIFFICULTES),
+      ...NIVEAUX_DES_EPISODES.map((n) => n.nom),
+    ];
+    expect(niveaux).not.toContain(OFFRES.decouverte.nom);
     expect(DIFFICULTY_PRESETS[0]!.name).toBe("Premiers pas");
     expect(DIFFICULTY_PRESETS[0]!.code).toBe("decouverte");
     expect(DIFFICULTES[1]).toBe("Premiers pas");
@@ -174,6 +182,18 @@ describe("4. un mot par sens", () => {
 });
 
 describe("5. l'offre Classe dit ce qu'ouvre chaque combinaison", () => {
+  it("la carte Classe (/tarifs, aperçu de /admin/offres) ne promet pas d'atelier à toute combinaison", () => {
+    const sansAtelier = Object.values(ateliersParCombinaison()).filter((v) => v.exacts.length + v.adaptables.length === 0);
+    const ligne = CATALOGUE_PAR_DEFAUT.offres.find((o) => o.code === "classe")!.inclus.find((l) => /atelier/i.test(l));
+    expect(ligne, "la carte Classe ne parle plus des ateliers").toBeDefined();
+    if (sansAtelier.length > 0) {
+      // Des combinaisons sans atelier : la carte le dit, comme le formulaire de devis.
+      expect(ligne).not.toMatch(/^Les ateliers clés en main qui se jouent avec cette entreprise et ce niveau/);
+      expect(ligne).toMatch(/n'en ont aucun/);
+      expect(ligne).toMatch(/formulaire de devis/);
+    }
+  });
+
   it("les combinaisons couvrent toutes les entreprises et tous les niveaux", () => {
     const t = ateliersParCombinaison();
     expect(Object.keys(t)).toHaveLength(ENTREPRISES.length * NIVEAUX_DE_L_ARENE.length);

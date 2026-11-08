@@ -1,6 +1,6 @@
 import { avecTypographie } from "@/components/typographie";
 import type { Metadata } from "next";
-import { ATELIERS_A_REFERENTIEL, LES_OFFRES_DE_L_ARENE } from "@/config/tarifs";
+import { ATELIERS_A_REFERENTIEL, LES_OFFRES_DE_L_ARENE, OFFRES } from "@/config/tarifs";
 import { LigneDePrix } from "@/components/ligne-de-prix";
 import { publicDeLAtelier } from "@/config/formations";
 import { formationsAvecUnePage } from "@/config/couverture";
@@ -158,10 +158,11 @@ const CONFIANCE = [
     desc: "Rien à installer, sur ordinateur comme sur téléphone",
   },
   {
-    // « Essai gratuit » promettait de prendre en main ateliers et concours
-    // sans engagement : la grille (config/tarifs.ts) n'a pas d'essai en
-    // classe. Ce qui est gratuit, c'est le simulateur en solo.
-    label: "Découverte gratuite",
+    // L'ancien « Essai gratuit » promettait de prendre en main ateliers et
+    // concours sans engagement : la grille (config/tarifs.ts) n'a pas d'essai
+    // en classe. Ce qui est gratuit, c'est le simulateur en solo ; l'offre qui
+    // l'ouvre s'appelle « Essai gratuit » depuis novembre 2026, et dit ce qu'elle ouvre.
+    label: OFFRES.decouverte.nom,
     desc: `Le simulateur en solo, sans compte ; la classe avec ${LES_OFFRES_DE_L_ARENE}`,
   },
   {

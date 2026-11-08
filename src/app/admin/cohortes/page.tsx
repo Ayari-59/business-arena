@@ -36,7 +36,7 @@ function ceQuOuvreLaCohorte(
       ? `Licence épisodes en cours : les membres jouent ${episodes.length > 1 ? `les ${episodes.length} épisodes` : "l'épisode"} de la cohorte, et les démonstrations.`
       : "Licence épisodes en cours : les membres jouent tous les épisodes.";
   }
-  return `Sans licence épisodes en cours : les membres ne jouent que les ${demos} démonstrations de l'offre Découverte.`;
+  return `Sans licence épisodes en cours : les membres ne jouent que les ${demos} démonstrations de l'${OFFRES.decouverte.nom.toLowerCase()}.`;
 }
 
 export const dynamic = "force-dynamic";

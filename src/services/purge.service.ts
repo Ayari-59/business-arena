@@ -149,21 +149,54 @@ export function courrielDAvertissement(args: { nom: string; suppressionLe: Date 
   };
 }
 
+/** Les étapes de la purge, nommées comme les compteurs du bilan qu'elles remplissent. */
+export type CategorieDePurge = keyof BilanDePurge;
+
+/**
+ * UNE PURGE INTERROMPUE : l'étape en cours et l'erreur d'origine. La route du cron
+ * l'écrit dans le journal (sans donnée personnelle) et répond 500 ; les étapes déjà
+ * faites restent faites, la suite reprend la nuit suivante.
+ */
+export class ErreurDePurge extends Error {
+  constructor(
+    readonly categorie: CategorieDePurge,
+    cause: unknown,
+  ) {
+    super(`purge interrompue à l'étape « ${categorie} »`, { cause });
+    this.name = "ErreurDePurge";
+  }
+}
+
 export async function purger(
   options: { maintenant?: Date; envoyer?: typeof envoyerCourriel } = {},
+): Promise<BilanDePurge> {
+  const suivi: { etape: CategorieDePurge } = { etape: "tentatives" };
+  try {
+    return await purgerEnSuivant(options, suivi);
+  } catch (e) {
+    throw new ErreurDePurge(suivi.etape, e);
+  }
+}
+
+async function purgerEnSuivant(
+  options: { maintenant?: Date; envoyer?: typeof envoyerCourriel },
+  suivi: { etape: CategorieDePurge },
 ): Promise<BilanDePurge> {
   const maintenant = options.maintenant ?? new Date();
   const envoyer = options.envoyer ?? envoyerCourriel;
   const s = seuilsDePurge(maintenant);
 
+  suivi.etape = "tentatives";
   // 1. Les tentatives de connexion (e-mail et adresse IP).
   const tentatives = (
     await db.delete(loginAttempts).where(lt(loginAttempts.createdAt, s.tentatives)).returning({ id: loginAttempts.id })
   ).length;
 
+  suivi.etape = "jetonsDeReinitialisation";
   // 1 bis. Les jetons de « mot de passe oublié » expirés : passé leur heure, ils ne servent plus.
   const jetonsDeReinitialisation = await purgerLesJetonsExpires(maintenant);
 
+  suivi.etape = "ipEffacees";
   // 2. L'adresse IP des parties solo : seule l'adresse part, la partie reste.
   const ipEffacees = (
     await db
@@ -173,6 +206,7 @@ export async function purger(
       .returning({ id: games.id })
   ).length;
 
+  suivi.etape = "demandes";
   // 3. Les demandes de devis, de rendez-vous et d'orientation, 3 ans après le dernier contact.
   const devis = await db
     .delete(demandesDeDevis)
@@ -193,6 +227,7 @@ export async function purger(
     )
     .returning({ id: orientationRequests.id });
 
+  suivi.etape = "examens";
   // 4. Les examens, 1 an après l'examen (fermeture, clôture ou dernière copie remise).
   const examensPerimes = lignes<{ id: string }>(
     await db.execute(sql`
@@ -204,6 +239,7 @@ export async function purger(
   ).map((r) => r.id);
   const examensFaits = await supprimerDesExamens(examensPerimes);
 
+  suivi.etape = "parties";
   // 5. Les parties et leurs résultats, 1 an après leur dernière activité. Les parties des
   //    comptes de démonstration restent ; une archive de tour d'essai part avec sa partie.
   const partiesPerimees = lignes<{ id: string }>(
@@ -215,6 +251,7 @@ export async function purger(
         and ${activiteDeLaPartie} < ${ts(s.parties)}`),
   ).map((r) => r.id);
   const parties = examensFaits.parties + (await supprimerDesParties(partiesPerimees));
+  suivi.etape = "partiesDEpisodes";
   const partiesDEpisodes = (
     await db
       .delete(episodeParties)
@@ -222,6 +259,7 @@ export async function purger(
       .returning({ id: episodeParties.id })
   ).length;
 
+  suivi.etape = "invites";
   // 6. Les élèves sans compte, après 12 mois sans aucune activité.
   const seuil = ts(s.invites);
   const invitesInactifs = lignes<{ id: string }>(
@@ -247,6 +285,7 @@ export async function purger(
   ).map((r) => r.id);
   const invites = await supprimerDesEleves(invitesInactifs);
 
+  suivi.etape = "enseignantsSupprimes";
   // 7. Les comptes enseignants sans connexion depuis 3 ans : supprimés s'ils ont été
   //    avertis il y a au moins un mois et ne se sont pas connectés depuis…
   const derniereActivite = sql`greatest(${users.createdAt}, coalesce(${users.derniereConnexionLe}, ${users.createdAt}))`;
@@ -276,6 +315,7 @@ export async function purger(
     }
   }
 
+  suivi.etape = "enseignantsAvertis";
   //    … et avertis un mois avant. Un compte sans adresse joignable (LTI, RENATER sans
   //    courriel) est noté averti : le délai d'un mois court quand même.
   const aAvertir = await db

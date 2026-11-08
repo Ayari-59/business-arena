@@ -443,7 +443,7 @@ export function erreursDeLOffre(
     e.push("« Inclus » et « à l'étude » ne valent que pour une option.");
   }
   if (o.tarif === "gratuit" && o.modules.length > 0 && o.rubrique !== "option") {
-    e.push("Une offre gratuite n'ouvre aucun module : la Découverte se règle dans les gratuités.");
+    e.push("Une offre gratuite n'ouvre aucun module : l'essai gratuit se règle dans les gratuités.");
   }
   for (const m of o.modules) {
     const mod = catalogue.modules.find((x) => x.code === m.module);

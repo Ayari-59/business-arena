@@ -75,7 +75,7 @@ const FAITS: Record<string, string> = {
   "en-avant": "Mise en avant déplacée : c'est désormais le seul bouton plein de /tarifs.",
   suppression: "Offre supprimée.",
   module: "Module enregistré.",
-  decouverte: "Découverte enregistrée : la règle serveur l'applique dès maintenant.",
+  decouverte: `Réglage de l'${OFFRES.decouverte.nom.toLowerCase()} enregistré : la règle serveur l'applique dès maintenant.`,
   essai: "Réglage de l'essai enregistré.",
   code: "Code promo enregistré.",
   affichage: "Affichage des prix enregistré : les pages publiques le suivent dès maintenant.",
@@ -424,7 +424,7 @@ async function AdminOffresPage({
             {` ${OFFRES.decouverte.nom}`} de /tarifs le dit d&apos;elle-même (variables{" "}
             <code className="font-mono">{"{niveauxDecouverte}"}</code>, <code className="font-mono">{"{demos}"}</code>).
           </p>
-          <GuardedForm action={enregistrerDecouverteAction} label="réglage de la Découverte" className="mt-3 grid gap-4">
+          <GuardedForm action={enregistrerDecouverteAction} label={`réglage de l'${OFFRES.decouverte.nom.toLowerCase()}`} className="mt-3 grid gap-4">
             <label className="flex items-center gap-3 text-sm text-slate-300">
               <input type="checkbox" name="soloActive" defaultChecked={decouverte.solo.active} className="h-4 w-4 accent-amber-400" />
               Fermer les niveaux au-delà du maximum à qui n&apos;a pas de licence de l&apos;arène en cours
@@ -503,7 +503,7 @@ async function AdminOffresPage({
             </fieldset>
             <div>
               <SubmitButton pendingLabel="Enregistrement…" className={bouton({ variante: "secondaire", taille: "s" })}>
-                Enregistrer la Découverte
+                Enregistrer l&apos;{OFFRES.decouverte.nom.toLowerCase()}
               </SubmitButton>
             </div>
           </GuardedForm>

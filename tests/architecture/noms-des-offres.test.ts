@@ -3,6 +3,9 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { MARQUE_DE_L_ARENE, MARQUE_DES_EPISODES, nomDOffre, OFFRES } from "@/config/tarifs";
 import { VENDEUR } from "@/config/editeur";
+import { DIFFICULTY_PRESETS } from "@/config/difficulty";
+import { DIFFICULTES } from "@/config/ateliers/types";
+import { NIVEAUX as NIVEAUX_DES_EPISODES } from "@/config/episodes/niveaux";
 
 /**
  * LES NOMS DES OFFRES ONT UNE SOURCE : config/tarifs.ts.
@@ -12,7 +15,9 @@ import { VENDEUR } from "@/config/editeur";
  * devis, et rien ne se commande en ligne. Les anciens noms vivaient dans une dizaine de
  * fichiers (murs de licence, messages du serveur, /admin, métadonnées) ; une offre qui
  * n'existait pas (« Offre Entreprise ») s'affichait cent fois. Cette garde refuse :
- *  · les anciens noms d'offre, partout dans src/ ;
+ *  · les anciens noms d'offre, partout dans src/, dont « Découverte », devenue « Essai
+ *    gratuit » en novembre 2026 ;
+ *  · un nom d'offre égal à un nom de niveau ou d'exigence ;
  *  · « Commander » et « carte bancaire » hors des contenus de jeu (un épisode peut faire
  *    « commander un audit » ; un écran de vente, non) ;
  *  · les noms composés de la grille écrits à la main ailleurs que dans config/tarifs.ts :
@@ -53,6 +58,39 @@ describe("les noms des offres", () => {
     const fautes = TOUS.flatMap(({ chemin, texte }) =>
       ANCIENS_NOMS.filter(({ motif }) => motif.test(texte)).map(({ quoi }) => `${chemin} : « ${quoi} »`),
     );
+    expect(fautes, fautes.join("\n")).toEqual([]);
+  });
+
+  it("l'offre gratuite s'appelle « Essai gratuit », et « Découverte » ne la nomme plus nulle part", () => {
+    // Décision du propriétaire (novembre 2026) : l'offre « Découverte » devient « Essai gratuit »
+    // (« Premiers pas », un temps retenu, est le nom du niveau 1 et de l'exigence 1).
+    // Seuls les libellés changent : le code `decouverte`, les clés et les valeurs en base restent.
+    expect(OFFRES.decouverte).toEqual({ code: "decouverte", nom: "Essai gratuit" });
+    // Le code seul : les commentaires racontent l'histoire et peuvent citer l'ancien nom.
+    const code = (t: string) =>
+      t
+        .replace(/\{\/\*[\s\S]*?\*\/\}/g, "")
+        .replace(/\/\*[\s\S]*?\*\//g, "")
+        .replace(/^\s*\/\/.*$/gm, "");
+    // « Découverte du besoin » est une étape de la vente, dans le cours : un autre sens.
+    const fautes = TOUS.flatMap(({ chemin, texte }) =>
+      code(texte)
+        .split("\n")
+        .filter((l) => /Découverte(?! du besoin)/.test(l))
+        .map((l) => `${chemin} : ${l.trim()}`),
+    );
+    expect(fautes, fautes.join("\n")).toEqual([]);
+  });
+
+  it("aucun nom d'offre n'est un nom de niveau ni d'exigence", () => {
+    const niveaux = new Set([
+      ...DIFFICULTY_PRESETS.map((p) => p.name),
+      ...Object.values(DIFFICULTES),
+      ...NIVEAUX_DES_EPISODES.map((n) => n.nom),
+    ]);
+    const fautes = Object.values(OFFRES)
+      .filter((o) => niveaux.has(o.nom))
+      .map((o) => `offre ${o.code} : « ${o.nom} » est aussi un nom de niveau ou d'exigence`);
     expect(fautes, fautes.join("\n")).toEqual([]);
   });
 
