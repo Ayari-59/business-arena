@@ -6,13 +6,14 @@ import { enseignantSousLicence } from "./helpers/licence";
 import { EPISODES_DE_DEMO } from "../../src/config/episodes/demos";
 import { EPISODES } from "../../src/pedagogy/episodes/registre";
 import { EPISODE_FERME_POUR_L_ELEVE, REFUS_DE_LA_CLASSE } from "../../src/config/tarifs";
+import { insecables } from "../../src/lib/typographie";
 
 /**
  * LA GRILLE DANS UN VRAI NAVIGATEUR : CLASSE, CAMPUS, ÉPISODES À PART.
  *
  * Ce que l'intégration (`tests/integration/offres.test.ts`) ne voit pas :
- *  · l'enseignant sans licence lit la règle AVANT d'envoyer, puis le refus du serveur,
- *    avec le lien vers les tarifs ;
+ *  · l'enseignant sans licence lit la règle AVANT d'envoyer, devant un formulaire grisé, puis,
+ *    le formulaire forcé, le refus du serveur avec le lien vers les tarifs ;
  *  · la ligne d'état de l'offre en tête de /teacher : Découverte, Classe, Campus avec
  *    son établissement et « + Épisodes manager » ;
  *  · un épisode non démo reste fermé à l'enseignant sous licence Classe, s'ouvre avec
@@ -74,9 +75,18 @@ describe("l'espace enseignant dit l'offre, et la classe ne s'ouvre pas sans elle
     }
     const avant = page.locator("[data-classe-sans-licence]");
     expect(await avant.innerText()).toContain(REFUS_DE_LA_CLASSE);
-    // Même au niveau 1 : pas d'essai en classe.
+    // Sans offre, le formulaire est grisé AVANT la saisie (audit UX du 29 octobre 2026, P0-1) :
+    // ni le niveau ni l'envoi ne se choisissent.
+    const formulaire = page.locator("#nouvelle-partie fieldset[data-formulaire-sans-offre]");
+    expect(await formulaire.count()).toBe(1);
+    expect(await page.locator('select[name="level"]').isDisabled()).toBe(true);
+    const creer = page.getByRole("button", { name: /Créer la partie/ });
+    expect(await creer.isDisabled()).toBe(true);
+    // Le serveur refuse de toute façon (une page restée ouverte, un formulaire forcé) :
+    // le formulaire dégrisé à la main, même au niveau 1, pas d'essai en classe.
+    await formulaire.evaluate((f) => f.removeAttribute("disabled"));
     await page.selectOption('select[name="level"]', "1");
-    await page.getByRole("button", { name: /Créer la partie/ }).click();
+    await creer.click();
     await page.waitForSelector("text=/La partie n'a pas été créée/", { timeout: 30_000 });
     const alerte = page.locator("[role=alert]", { hasText: "La partie n'a pas été créée" });
     expect(await alerte.innerText()).toContain(REFUS_DE_LA_CLASSE);
@@ -87,8 +97,13 @@ describe("l'espace enseignant dit l'offre, et la classe ne s'ouvre pas sans elle
     const tiroir = page.locator("details", { hasText: "Organiser un concours" }).first();
     if (!(await tiroir.evaluate((d: HTMLDetailsElement) => d.open))) await tiroir.locator("summary").first().click();
     expect(await page.locator("[data-concours-sans-licence]").innerText()).toContain(REFUS_DE_LA_CLASSE);
+    const creerConcours = page.getByRole("button", { name: /Créer le concours/ });
+    expect(await page.locator('input[name="name"]').isDisabled()).toBe(true);
+    expect(await creerConcours.isDisabled()).toBe(true);
+    const formulaireConcours = page.locator("fieldset[data-formulaire-sans-offre]", { has: creerConcours });
+    await formulaireConcours.evaluate((f) => f.removeAttribute("disabled"));
     await page.fill('input[name="name"]', "Coupe sans licence");
-    await page.getByRole("button", { name: /Créer le concours/ }).click();
+    await creerConcours.click();
     const refusConcours = page.locator("[role=alert]", { hasText: "Le concours n'a pas été créé" });
     await refusConcours.waitFor({ state: "visible", timeout: 30_000 });
     expect(await refusConcours.innerText()).toContain(REFUS_DE_LA_CLASSE);
@@ -158,7 +173,8 @@ describe("les épisodes non démo suivent la licence épisodes, pas la licence d
     const page = await c.newPage();
     await aller(page, `/entreprises/episode/${NON_DEMO.code}?hasard=12`);
     const neutre = page.locator("[data-episode-ferme-eleve]");
-    expect(await neutre.innerText()).toBe(EPISODE_FERME_POUR_L_ELEVE);
+    // Le texte tel que la typographie le pose au rendu (lib/typographie.ts) : insécable avant « ; ».
+    expect(await neutre.innerText()).toBe(insecables(EPISODE_FERME_POUR_L_ELEVE));
     const lu = await texte(page);
     expect(lu).not.toMatch(/sur devis|Demander un devis|Voir les offres/);
     await capture(page, "episode-ferme-eleve-390", { fullPage: true });
