@@ -4,7 +4,7 @@ import { bureauxDuChapitre } from "../../config/cours/bureaux";
 import { casDuChapitre } from "../../config/cours/situations";
 import type { Chapitre, OptionDeChoix, TableauDeDonnees } from "../../config/cours/types";
 import { montantEcrit } from "./correcteur";
-import { servirLeChapitre, type EtapeServie } from "./chapitre-servi";
+import { servirLeChapitre, solutionDuLaboratoire, type EtapeServie, type LectureDuLaboratoire } from "./chapitre-servi";
 import { nombreEcrit, valeurEcrite, type TableauACompleter } from "./tableau-a-completer";
 
 /**
@@ -106,7 +106,14 @@ interface Brouillon {
 }
 
 /** Les diapositives d'une étape : ses données, sa question et sa correction, ou sa lecture. */
-function diapositivesDeLEtape(e: EtapeServie, rang: string, objectifs: readonly string[], suite: string[]): Brouillon[] {
+function diapositivesDeLEtape(
+  e: EtapeServie,
+  rang: string,
+  objectifs: readonly string[],
+  suite: string[],
+  /** La solution d'un laboratoire, que le chapitre servi ne porte plus (chapitre-servi.ts). */
+  aLaSolution: { solution: Record<string, number>; lecture: LectureDuLaboratoire } | null,
+): Brouillon[] {
   const travailles = (e.objectifs ?? []).map((i) => `Objectif travaillé : ${objectifs[i]}`);
   const enTete = [`${rang} · ${e.titre}`, ...travailles];
   const donnees: Brouillon[] =
@@ -208,8 +215,8 @@ function diapositivesDeLEtape(e: EtapeServie, rang: string, objectifs: readonly 
       ];
     }
     case "simulation": {
-      const solution = e.leviers.map((l) => `${l.libelle} : ${avecUnite(e.solution[l.code] ?? l.depart, l.unite)}`);
-      const lue = e.lectureDeLaSolution;
+      const solution = e.leviers.map((l) => `${l.libelle} : ${avecUnite(aLaSolution?.solution[l.code] ?? l.depart, l.unite)}`);
+      const lue = aLaSolution?.lecture ?? e.lectureDeDepart;
       return [
         ...donnees,
         question(
@@ -279,7 +286,7 @@ export function planDuDiaporama(chapitre: Chapitre, cas: Cas): Diapositive[] {
         return `${o} : ${etapes.join(" ; ")}.`;
       }),
     },
-    ...servi.etapes.flatMap((e, i) => diapositivesDeLEtape(e, `Étape ${i + 1} sur ${n}`, servi.objectifs, suite)),
+    ...servi.etapes.flatMap((e, i) => diapositivesDeLEtape(e, `Étape ${i + 1} sur ${n}`, servi.objectifs, suite, e.type === "simulation" ? solutionDuLaboratoire(chapitre, cas, e.id) : null)),
   ];
   if (pratique || bureaux.length > 0) {
     brouillons.push({

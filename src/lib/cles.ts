@@ -16,6 +16,7 @@ import { authSecret } from "@/lib/auth-secret";
 export const USAGES_DES_CLES = {
   session: "business-arena/session-enseignant/v1",
   invite: "business-arena/cookie-invite/v1",
+  laboratoire: "business-arena/essais-du-laboratoire/v1",
 } as const;
 
 export type UsageDeCle = keyof typeof USAGES_DES_CLES;
