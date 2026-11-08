@@ -21,6 +21,7 @@ import { CREDIT_BAIL_DE_LA_LIGNE, EMPRUNT_DU_PLAN_EQUILIBRE, LIGNE_A_FINANCER, M
 import { LEVIERS_DU_PLAN } from "../../src/config/cours/chapitres/le-plan-de-financement";
 import { CAS_PAR_CHAPITRE, SITUATIONS } from "../../src/config/cours/situations";
 import { textesDuScenario, verifierLaLangue, verifierLesQuestions } from "../helpers/activites-du-lot-e";
+import { NOMBRE_DE_CAS_DEDIES } from "../helpers/nombre-de-cas-dedies";
 
 /**
  * LE SCÉNARIO : BOUCLER LE PLAN DE LA GAMME (monde/boucler-le-plan.ts, scenarios/boucler-le-plan-de-la-gamme.ts).
@@ -159,7 +160,7 @@ describe("le scénario du plan", () => {
     expect(s.libre).toBe(false);
     const ch = CHAPITRES.find((x) => x.code === "le-plan-de-financement")!;
     expect([s.parcours, s.palier]).toEqual([ch.parcours, ch.palier]);
-    expect(CAS_PAR_CHAPITRE.length).toBe(197);
+    expect(CAS_PAR_CHAPITRE.length).toBe(NOMBRE_DE_CAS_DEDIES);
     expect(SITUATIONS.map((x) => x.code)).not.toContain(s.code);
   });
 

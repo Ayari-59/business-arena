@@ -25,7 +25,7 @@ export { NOVA, etape };
 export const VIDE: EtatDuCours = { soldes: {} };
 
 /** Les fautes que la composition des textes produit. */
-const FAUTES: [string, RegExp][] = [
+export const FAUTES: [string, RegExp][] = [
   ["valeur absente", /undefined|NaN|Infinity|\[object|\bnull\b/],
   ["contraction manquée", /(?<!\p{L})(?:de|à) [Ll]es? (?!\p{L}+(?:er|ir|re)\b)\p{L}/u],
   ["tiret au milieu d'une phrase", / [-–—] /],

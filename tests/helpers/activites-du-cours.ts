@@ -10,6 +10,7 @@ import { compteDuPlan } from "../../src/pedagogy/cours/plan-comptable";
 import { corrigerAuScenario, servirLeScenario } from "../../src/pedagogy/cours/scenario-servi";
 import { corrigerLeTableau, incoherencesDuTableau, solutionsDuTableau } from "../../src/pedagogy/cours/tableau-a-completer";
 import { LEXIQUE_INTERDIT, espacesOrdinairesFautives, phrasesLongues, tiretsAuMilieu, tutoiements } from "./textes-du-depot";
+import { NOMBRE_DE_CAS_DEDIES } from "./nombre-de-cas-dedies";
 
 /**
  * LES GARDES COMMUNES DES ACTIVITÉS DES CHAPITRES (décision du propriétaire, novembre 2026) : ce que toute
@@ -76,7 +77,7 @@ export function verifierLeChapitre(a: Pick<Bureau, "code" | "reprend" | "parcour
   expect(a.palier).toBe(ch!.palier);
   expect(a.libre).toBe(false);
   expect(CAS_PAR_CHAPITRE.map((c) => c.code)).not.toContain(a.code);
-  expect(CAS_PAR_CHAPITRE.length).toBe(197);
+  expect(CAS_PAR_CHAPITRE.length).toBe(NOMBRE_DE_CAS_DEDIES);
 }
 
 /** Un bureau ou une enquête : sa forme, ses tableaux, ses écritures, ses questions, son service, sa langue. */

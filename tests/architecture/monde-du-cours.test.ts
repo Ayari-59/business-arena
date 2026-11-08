@@ -492,6 +492,30 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "chapitres/initiation-a-la-consolidation.ts",
   "situations/par-chapitre/la-cabine-subventionnee.ts",
   "situations/par-chapitre/le-directeur-veut-plus-d-actions.ts",
+  // lot A STMG : sciences de gestion et numérique de première (début)
+  "chapitres/de-l-individu-a-l-acteur.ts",
+  "situations/par-chapitre/un-tuteur-pour-l-ete.ts",
+  "chapitres/la-diversite-des-organisations.ts",
+  "situations/par-chapitre/le-gymnase-devient-payant.ts",
+  "chapitres/qualification-competences-et-liens-de-travail.ts",
+  "situations/par-chapitre/un-contrat-de-150-journees.ts",
+  "chapitres/donnees-personnelles-et-donnees-ouvertes.ts",
+  "situations/par-chapitre/ecrire-a-toutes-les-clientes.ts",
+  "chapitres/le-processus-et-le-pgi.ts",
+  "situations/par-chapitre/deux-postes-de-plus.ts",
+  "chapitres/les-formes-de-la-valeur.ts",
+  "situations/par-chapitre/le-comptoir-baisse-son-prix.ts",
+  "chapitres/la-performance-globale.ts",
+  "situations/par-chapitre/les-associes-demandent-plus.ts",
+  "chapitres/assez-vendre-pour-ne-rien-perdre.ts",
+  "situations/par-chapitre/le-loyer-augmente.ts",
+  "chapitres/prevoir-sa-tresorerie.ts",
+  "situations/par-chapitre/etaler-ou-decouvert.ts",
+  "chapitres/le-temps-de-l-organisation.ts",
+  "situations/par-chapitre/bloquer-l-argent-de-l-ete.ts",
+  "chapitres/les-risques-de-la-performance.ts",
+  "situations/par-chapitre/deux-mois-sans-composants.ts",
+  // lot A STMG (fin)
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
@@ -700,6 +724,30 @@ const NE_LISENT_PLUS_L_ANNEE_FIGEE: readonly string[] = [
   "chapitres/fournisseurs-et-banque.ts",
   "situations/par-chapitre/vibra-repasse-commande.ts",
   "situations/par-chapitre/le-cheque-qui-n-est-pas-passe.ts",
+  // lot A STMG : sciences de gestion et numérique de première (début)
+  "chapitres/de-l-individu-a-l-acteur.ts",
+  "situations/par-chapitre/un-tuteur-pour-l-ete.ts",
+  "chapitres/la-diversite-des-organisations.ts",
+  "situations/par-chapitre/le-gymnase-devient-payant.ts",
+  "chapitres/qualification-competences-et-liens-de-travail.ts",
+  "situations/par-chapitre/un-contrat-de-150-journees.ts",
+  "chapitres/donnees-personnelles-et-donnees-ouvertes.ts",
+  "situations/par-chapitre/ecrire-a-toutes-les-clientes.ts",
+  "chapitres/le-processus-et-le-pgi.ts",
+  "situations/par-chapitre/deux-postes-de-plus.ts",
+  "chapitres/les-formes-de-la-valeur.ts",
+  "situations/par-chapitre/le-comptoir-baisse-son-prix.ts",
+  "chapitres/la-performance-globale.ts",
+  "situations/par-chapitre/les-associes-demandent-plus.ts",
+  "chapitres/assez-vendre-pour-ne-rien-perdre.ts",
+  "situations/par-chapitre/le-loyer-augmente.ts",
+  "chapitres/prevoir-sa-tresorerie.ts",
+  "situations/par-chapitre/etaler-ou-decouvert.ts",
+  "chapitres/le-temps-de-l-organisation.ts",
+  "situations/par-chapitre/bloquer-l-argent-de-l-ete.ts",
+  "chapitres/les-risques-de-la-performance.ts",
+  "situations/par-chapitre/deux-mois-sans-composants.ts",
+  // lot A STMG (fin)
 ];
 
 /** Le premier chemin d'imports qui atteint un fichier donné, ou rien. */

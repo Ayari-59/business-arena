@@ -12,6 +12,7 @@ import { compteDuPlan } from "../../src/pedagogy/cours/plan-comptable";
 import { corrigerAuScenario, servirLeScenario } from "../../src/pedagogy/cours/scenario-servi";
 import { corrigerLeTableau, incoherencesDuTableau, solutionsDuTableau } from "../../src/pedagogy/cours/tableau-a-completer";
 import { LEXIQUE_INTERDIT, espacesOrdinairesFautives, phrasesLongues, tiretsAuMilieu, tutoiements } from "./textes-du-depot";
+import { NOMBRE_DE_CAS_DEDIES } from "./nombre-de-cas-dedies";
 
 /**
  * LES GARDES COMMUNES DES ACTIVITÉS DU LOT C (novembre 2026) : un bureau, une enquête ou un scénario par
@@ -70,7 +71,7 @@ export function gardesDuBureau(b: Bureau, chapitre: string) {
     expect(b.palier).toBe(ch.palier);
     expect(b.entreprise).toEqual({ code: "nova", nom: "NOVA" });
     expect(b.commanditaire).toBe("Le président");
-    expect(CAS_PAR_CHAPITRE.length).toBe(197);
+    expect(CAS_PAR_CHAPITRE.length).toBe(NOMBRE_DE_CAS_DEDIES);
     expect(CAS_PAR_CHAPITRE.some((s) => s.code === b.code)).toBe(false);
   });
 
@@ -128,7 +129,7 @@ export function gardesDuScenario(sc: Scenario, chapitre: string) {
     const ch = CHAPITRES.find((x) => x.code === chapitre)!;
     expect([sc.parcours, sc.palier]).toEqual([ch.parcours, ch.palier]);
     expect(sc.entreprise).toEqual({ code: "nova", nom: "NOVA" });
-    expect(CAS_PAR_CHAPITRE.length).toBe(197);
+    expect(CAS_PAR_CHAPITRE.length).toBe(NOMBRE_DE_CAS_DEDIES);
   });
 
   it("deux ou trois décisions à trois options ; au moins deux fins ; une seule meilleure suite", () => {

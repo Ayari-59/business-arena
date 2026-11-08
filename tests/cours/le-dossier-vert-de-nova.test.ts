@@ -7,6 +7,7 @@ import { deuxProjetsDurables } from "../../src/config/cours/monde/investissement
 import { van } from "../../src/config/cours/monde/finance";
 import { CAS_PAR_CHAPITRE, SITUATIONS } from "../../src/config/cours/situations";
 import { textesDuScenario, verifierLaLangue, verifierLesQuestions } from "../helpers/activites-du-lot-e";
+import { NOMBRE_DE_CAS_DEDIES } from "../helpers/nombre-de-cas-dedies";
 
 /**
  * LE SCÉNARIO : LE DOSSIER VERT DE NOVA (monde/dossier-vert-de-nova.ts, scenarios/le-dossier-vert-de-nova.ts).
@@ -77,7 +78,7 @@ describe("le scénario du dossier vert", () => {
     expect(s.libre).toBe(false);
     const ch = CHAPITRES.find((x) => x.code === "evaluer-un-investissement-durable")!;
     expect([s.parcours, s.palier]).toEqual([ch.parcours, ch.palier]);
-    expect(CAS_PAR_CHAPITRE.length).toBe(197);
+    expect(CAS_PAR_CHAPITRE.length).toBe(NOMBRE_DE_CAS_DEDIES);
     expect(SITUATIONS.map((x) => x.code)).not.toContain(s.code);
   });
 

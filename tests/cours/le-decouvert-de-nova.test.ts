@@ -28,6 +28,7 @@ import { CAS_PAR_CHAPITRE, SITUATIONS } from "../../src/config/cours/situations"
 import { espacesOrdinaires } from "../../src/lib/typographie";
 import { corrigerAuScenario, servirLeScenario } from "../../src/pedagogy/cours/scenario-servi";
 import { LEXIQUE_INTERDIT, espacesOrdinairesFautives, phrasesLongues, tiretsAuMilieu, tutoiements } from "../helpers/textes-du-depot";
+import { NOMBRE_DE_CAS_DEDIES } from "../helpers/nombre-de-cas-dedies";
 
 /**
  * LE SCÉNARIO À EMBRANCHEMENTS : LE DÉCOUVERT DE NOVA (monde/decouvert-de-nova.ts,
@@ -219,7 +220,7 @@ describe("le scénario du découvert", () => {
     expect(s.libre).toBe(false);
     const ch = CHAPITRES.find((x) => x.code === "financer-et-placer-la-tresorerie")!;
     expect([s.parcours, s.palier]).toEqual([ch.parcours, ch.palier]);
-    expect(CAS_PAR_CHAPITRE.length).toBe(197);
+    expect(CAS_PAR_CHAPITRE.length).toBe(NOMBRE_DE_CAS_DEDIES);
     expect(SITUATIONS.map((x) => x.code)).not.toContain(s.code);
   });
 

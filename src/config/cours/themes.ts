@@ -117,6 +117,9 @@ export const THEMES: readonly Theme[] = [
       "les-acteurs-et-les-modes-de-financement",
       "le-diagnostic-financier-et-extra-financier",
       "evaluer-un-investissement-durable",
+      // lot A STMG : sciences de gestion et numérique de première (début)
+      "les-formes-de-la-valeur",
+      // lot A STMG (fin)
     ],
     familles: ["finance"],
   },
@@ -162,6 +165,11 @@ export const THEMES: readonly Theme[] = [
       "programmer-la-production",
       "approvisionner-au-moindre-cout",
       "correlation-et-lissage",
+      // lot A STMG : sciences de gestion et numérique de première (début)
+      "la-performance-globale",
+      "assez-vendre-pour-ne-rien-perdre",
+      "prevoir-sa-tresorerie",
+      // lot A STMG (fin)
     ],
     familles: ["chiffres", "controle", "hotel-couts", "conseil-marge", "sante-budget"],
   },
@@ -266,6 +274,10 @@ export const THEMES: readonly Theme[] = [
       "indicateurs-sociaux",
       "le-depart-d-un-salarie",
       "la-productivite-du-service",
+      // lot A STMG : sciences de gestion et numérique de première (début)
+      "de-l-individu-a-l-acteur",
+      "qualification-competences-et-liens-de-travail",
+      // lot A STMG (fin)
     ],
     familles: [
       "equipe",
@@ -301,6 +313,12 @@ export const THEMES: readonly Theme[] = [
       "ce-que-coute-un-outil-numerique",
       "une-information-a-temps",
       "decider-ensemble",
+      // lot A STMG : sciences de gestion et numérique de première (début)
+      "la-diversite-des-organisations",
+      "donnees-personnelles-et-donnees-ouvertes",
+      "le-processus-et-le-pgi",
+      "le-temps-de-l-organisation",
+      // lot A STMG (fin)
     ],
     familles: ["operations", "premier-poste", "hotel-service", "sante-soins", "agro-produire", "agro-amont"],
   },
@@ -318,6 +336,9 @@ export const THEMES: readonly Theme[] = [
       "la-responsabilite-societale",
       "ce-que-rapporte-l-engagement",
       "les-acteurs-et-la-valeur",
+      // lot A STMG : sciences de gestion et numérique de première (début)
+      "les-risques-de-la-performance",
+      // lot A STMG (fin)
     ],
     familles: ["strategie", "hotel-strategie", "conseil-strategie", "sante-strategie", "agro-strategie"],
   },

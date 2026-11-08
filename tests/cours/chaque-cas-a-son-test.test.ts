@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { CAS_PAR_CHAPITRE } from "../../src/config/cours/situations";
+import { NOMBRE_DE_CAS_DEDIES } from "../helpers/nombre-de-cas-dedies";
 
 /**
  * CHAQUE CAS DÉDIÉ A SON TEST PROPRE (audit d'octobre 2026, contenu § 1.5).
@@ -38,7 +39,7 @@ describe("chaque cas dédié a son test", () => {
       const f = fichierDuCas.get(s.code) ?? s.code;
       return !sources.some((src) => src.includes(`situations/par-chapitre/${f}"`));
     }).map((s) => s.code);
-    expect(CAS_PAR_CHAPITRE.length).toBe(197);
+    expect(CAS_PAR_CHAPITRE.length).toBe(NOMBRE_DE_CAS_DEDIES);
     expect(sans).toEqual([]);
   });
 });

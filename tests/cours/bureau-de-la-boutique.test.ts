@@ -24,6 +24,7 @@ import { equilibree } from "../../src/pedagogy/cours/etats";
 import { compteDuPlan } from "../../src/pedagogy/cours/plan-comptable";
 import { corrigerLeTableau, incoherencesDuTableau, solutionsDuTableau } from "../../src/pedagogy/cours/tableau-a-completer";
 import { LEXIQUE_INTERDIT, espacesOrdinairesFautives, phrasesLongues, tiretsAuMilieu, tutoiements } from "../helpers/textes-du-depot";
+import { NOMBRE_DE_CAS_DEDIES } from "../helpers/nombre-de-cas-dedies";
 
 /**
  * LE BUREAU DE LA BOUTIQUE : LE RAPPROCHEMENT DE MARS (monde/bureau-de-la-boutique.ts,
@@ -128,7 +129,7 @@ describe("le bureau du rapprochement de mars", () => {
     expect(b.reprend).toEqual(["fournisseurs-et-banque"]);
     const ch = CHAPITRES.find((x) => x.code === "fournisseurs-et-banque")!;
     expect([b.parcours, b.palier]).toEqual([ch.parcours, ch.palier]);
-    expect(CAS_PAR_CHAPITRE.length).toBe(197);
+    expect(CAS_PAR_CHAPITRE.length).toBe(NOMBRE_DE_CAS_DEDIES);
     expect(b.entreprise.nom).toBe(f.entreprise);
   });
 

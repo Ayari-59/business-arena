@@ -7,6 +7,7 @@ import { CHAPITRES } from "../../src/config/cours/registre";
 import { CAS_PAR_CHAPITRE } from "../../src/config/cours/situations";
 import { corrigerLeTableau, incoherencesDuTableau, solutionsDuTableau } from "../../src/pedagogy/cours/tableau-a-completer";
 import { textesDuBureau, verifierLaLangue, verifierLesQuestions } from "../helpers/activites-du-lot-e";
+import { NOMBRE_DE_CAS_DEDIES } from "../helpers/nombre-de-cas-dedies";
 
 /**
  * LE BUREAU : LE BESOIN DE L'ANNÉE TYPE (bureaux/le-besoin-de-l-annee-type.ts, monde/bfr-normatif.ts).
@@ -51,7 +52,7 @@ describe("le bureau du besoin", () => {
     expect(b.libre).toBe(false);
     const ch = CHAPITRES.find((y) => y.code === "le-bfr-d-exploitation-normatif")!;
     expect([b.parcours, b.palier]).toEqual([ch.parcours, ch.palier]);
-    expect(CAS_PAR_CHAPITRE.length).toBe(197);
+    expect(CAS_PAR_CHAPITRE.length).toBe(NOMBRE_DE_CAS_DEDIES);
   });
 
   it("une pile de 5 à 9 pièces, 3 à 6 étapes, et chaque pièce que montre une étape existe", () => {
