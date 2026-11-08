@@ -1150,6 +1150,29 @@ describe.each([
   { code: "les-risques-de-la-performance", entreprise: "nova", telephone: true },
   { code: "deux-mois-sans-composants", entreprise: "nova", telephone: true },
   // lot A STMG (fin)
+  // lot B STMG : le management de première, sept chapitres (tris, curseurs, laboratoires), leurs cas, et les deux compléments.
+  { code: "organiser-l-action-collective", entreprise: "nova" },
+  { code: "organiser-l-action-collective", entreprise: "nova", telephone: true },
+  { code: "manager-fonctions-et-decisions", entreprise: "nova" },
+  { code: "manager-fonctions-et-decisions", entreprise: "nova", telephone: true },
+  { code: "le-management-face-au-changement", entreprise: "nova" },
+  { code: "le-management-face-au-changement", entreprise: "nova", telephone: true },
+  { code: "domaines-d-activite", entreprise: "nova" },
+  { code: "domaines-d-activite", entreprise: "nova", telephone: true },
+  { code: "integrer-externaliser-croitre", entreprise: "nova" },
+  { code: "integrer-externaliser-croitre", entreprise: "nova", telephone: true },
+  { code: "la-strategie-d-une-organisation-publique", entreprise: "nova" },
+  { code: "la-strategie-d-une-organisation-publique", entreprise: "nova", telephone: true },
+  { code: "la-strategie-d-une-association", entreprise: "nova" },
+  { code: "la-strategie-d-une-association", entreprise: "nova", telephone: true },
+  { code: "deux-ateliers-ou-un-seul", entreprise: "nova" },
+  { code: "qui-decide-de-quoi", entreprise: "nova", telephone: true },
+  { code: "proteger-le-site-de-vente", entreprise: "nova" },
+  { code: "abandonner-l-enceinte-nomade", entreprise: "nova", telephone: true },
+  { code: "le-distributeur-belge", entreprise: "nova" },
+  { code: "la-mediatheque-le-dimanche", entreprise: "nova", telephone: true },
+  { code: "le-parrain-qui-veut-choisir-l-entraineur", entreprise: "nova" },
+  // fin du lot B STMG.
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se

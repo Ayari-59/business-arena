@@ -319,6 +319,10 @@ export const THEMES: readonly Theme[] = [
       "le-processus-et-le-pgi",
       "le-temps-de-l-organisation",
       // lot A STMG (fin)
+      // lot B STMG.
+      "organiser-l-action-collective",
+      "manager-fonctions-et-decisions",
+      // fin du lot B STMG.
     ],
     familles: ["operations", "premier-poste", "hotel-service", "sante-soins", "agro-produire", "agro-amont"],
   },
@@ -339,6 +343,13 @@ export const THEMES: readonly Theme[] = [
       // lot A STMG : sciences de gestion et numérique de première (début)
       "les-risques-de-la-performance",
       // lot A STMG (fin)
+      // lot B STMG.
+      "le-management-face-au-changement",
+      "domaines-d-activite",
+      "integrer-externaliser-croitre",
+      "la-strategie-d-une-organisation-publique",
+      "la-strategie-d-une-association",
+      // fin du lot B STMG.
     ],
     familles: ["strategie", "hotel-strategie", "conseil-strategie", "sante-strategie", "agro-strategie"],
   },

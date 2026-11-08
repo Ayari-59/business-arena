@@ -8,4 +8,6 @@
 export const NOMBRE_DE_CAS_DEDIES =
   197 +
   // lot A STMG : les cas des chapitres de sciences de gestion et numérique de première.
-  11;
+  11 +
+  // lot B STMG : les cas des chapitres de management de première.
+  7;

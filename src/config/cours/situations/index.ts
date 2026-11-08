@@ -218,6 +218,15 @@ import { ETALER_OU_DECOUVERT } from "./par-chapitre/etaler-ou-decouvert";
 import { BLOQUER_L_ARGENT_DE_L_ETE } from "./par-chapitre/bloquer-l-argent-de-l-ete";
 import { DEUX_MOIS_SANS_COMPOSANTS } from "./par-chapitre/deux-mois-sans-composants";
 // lot A STMG (fin des imports)
+// lot B STMG : les cas du management de première.
+import { DEUX_ATELIERS_OU_UN_SEUL } from "./par-chapitre/deux-ateliers-ou-un-seul";
+import { QUI_DECIDE_DE_QUOI } from "./par-chapitre/qui-decide-de-quoi";
+import { PROTEGER_LE_SITE_DE_VENTE } from "./par-chapitre/proteger-le-site-de-vente";
+import { ABANDONNER_L_ENCEINTE_NOMADE } from "./par-chapitre/abandonner-l-enceinte-nomade";
+import { LE_DISTRIBUTEUR_BELGE } from "./par-chapitre/le-distributeur-belge";
+import { LA_MEDIATHEQUE_LE_DIMANCHE } from "./par-chapitre/la-mediatheque-le-dimanche";
+import { LE_PARRAIN_QUI_VEUT_CHOISIR_L_ENTRAINEUR } from "./par-chapitre/le-parrain-qui-veut-choisir-l-entraineur";
+// fin du lot B STMG.
 export type { Situation } from "./types";
 
 /**
@@ -451,6 +460,15 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   BLOQUER_L_ARGENT_DE_L_ETE,
   DEUX_MOIS_SANS_COMPOSANTS,
   // lot A STMG (fin)
+  // lot B STMG.
+  DEUX_ATELIERS_OU_UN_SEUL,
+  QUI_DECIDE_DE_QUOI,
+  PROTEGER_LE_SITE_DE_VENTE,
+  ABANDONNER_L_ENCEINTE_NOMADE,
+  LE_DISTRIBUTEUR_BELGE,
+  LA_MEDIATHEQUE_LE_DIMANCHE,
+  LE_PARRAIN_QUI_VEUT_CHOISIR_L_ENTRAINEUR,
+  // fin du lot B STMG.
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */
