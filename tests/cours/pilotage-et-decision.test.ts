@@ -7,7 +7,8 @@ import { PROGRAMME } from "../../src/config/cours/registre";
 import { DOUBLER_LA_PUBLICITE } from "../../src/config/cours/situations/par-chapitre/doubler-la-publicite";
 import { LE_SECOND_SEMESTRE } from "../../src/config/cours/situations/par-chapitre/le-second-semestre";
 import { TAUX_AMBITIEUX, UN_OBJECTIF_PLUS_AMBITIEUX } from "../../src/config/cours/situations/par-chapitre/un-objectif-plus-ambitieux";
-import { NOVA, attendus, gardeDuCas, gardeDuCurseur, gardeDuLaboratoire, gardeDuProgramme, gardesDeTexte, juste } from "./gardes-de-nova";
+import { NOVA, attendus, gardeDuCas, gardeDuCurseur, gardeDuLaboratoire, gardeDuProgramme, gardesDeTexte, juste, triDe } from "./gardes-de-nova";
+import { bonneReponseJamaisLaPlusLongue } from "./gardes-du-management";
 
 /**
  * PILOTER ET DÉCIDER SUR LE MONDE DU COURS (lot M3) : ÉVALUER SON ACTIVITÉ, DÉCIDER AVEC DES
@@ -152,3 +153,19 @@ describe("se fixer des objectifs et les suivre", () => {
     expect(juste(UN_OBJECTIF_PLUS_AMBITIEUX, "reponse")).toEqual(["Hors de portée : la demande de cette année n'y suffisait pas"]);
   });
 });
+
+// lot B STMG : le complément du management de première (2.3 et 2.4) : la finalité et la RSE dans les
+// objectifs, le conflit et le consensus, la variété et l'appropriation des indicateurs.
+describe("le complément : finalité, consensus, indicateurs", () => {
+  it("les objectifs servent trois finalités : deux économiques, deux sociaux, un environnemental", () => {
+    expect(Object.values(triDe(SE_FIXER_DES_OBJECTIFS, "finalite-et-objectifs"))).toEqual(["economique", "economique", "sociale", "sociale", "environnementale"]);
+    expect(Object.keys(triDe(SE_FIXER_DES_OBJECTIFS, "finalite-et-objectifs"))[0]).toBe(`Vendre au moins ${(4_900).toLocaleString("fr-FR")} enceintes chaque trimestre`);
+  });
+
+  it("le consensus et la variété des indicateurs", () => {
+    expect(juste(SE_FIXER_DES_OBJECTIFS, "conflit-et-consensus")).toEqual(["Il l'explique, écoute l'équipe, partage le gain si l'objectif est tenu"]);
+    expect(juste(SE_FIXER_DES_OBJECTIFS, "variete-des-indicateurs")).toEqual(["D'autres indicateurs : clients refusés, défauts, départs, comparés dans le temps"]);
+    bonneReponseJamaisLaPlusLongue(SE_FIXER_DES_OBJECTIFS);
+  });
+});
+// fin du lot B STMG.

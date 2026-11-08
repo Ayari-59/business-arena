@@ -301,6 +301,10 @@ export const THEMES: readonly Theme[] = [
       "ce-que-coute-un-outil-numerique",
       "une-information-a-temps",
       "decider-ensemble",
+      // lot B STMG.
+      "organiser-l-action-collective",
+      "manager-fonctions-et-decisions",
+      // fin du lot B STMG.
     ],
     familles: ["operations", "premier-poste", "hotel-service", "sante-soins", "agro-produire", "agro-amont"],
   },
@@ -318,6 +322,13 @@ export const THEMES: readonly Theme[] = [
       "la-responsabilite-societale",
       "ce-que-rapporte-l-engagement",
       "les-acteurs-et-la-valeur",
+      // lot B STMG.
+      "le-management-face-au-changement",
+      "domaines-d-activite",
+      "integrer-externaliser-croitre",
+      "la-strategie-d-une-organisation-publique",
+      "la-strategie-d-une-association",
+      // fin du lot B STMG.
     ],
     familles: ["strategie", "hotel-strategie", "conseil-strategie", "sante-strategie", "agro-strategie"],
   },

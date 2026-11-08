@@ -38,7 +38,8 @@ describe("chaque cas dédié a son test", () => {
       const f = fichierDuCas.get(s.code) ?? s.code;
       return !sources.some((src) => src.includes(`situations/par-chapitre/${f}"`));
     }).map((s) => s.code);
-    expect(CAS_PAR_CHAPITRE.length).toBe(197);
+    // lot B STMG : sept cas de plus (197 avant le lot).
+    expect(CAS_PAR_CHAPITRE.length).toBe(204);
     expect(sans).toEqual([]);
   });
 });

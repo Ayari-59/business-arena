@@ -6,6 +6,7 @@ import { DES_CLIENTS_REPARTIS_SANS_ETRE_SERVIS, clientsRepartis } from "../../sr
 import type { Situation } from "../../src/config/cours/situations/types";
 import { chapitreDuCas } from "../../src/pedagogy/cours/deroule";
 import { NOVA, VIDE, attendus, etape, gardeDuCas, gardeDuCurseur, gardeDuLaboratoire, gardeDuProgramme, gardesDeTexte, juste, triDe } from "./gardes-de-nova";
+import { bonneReponseJamaisLaPlusLongue } from "./gardes-du-management";
 
 /**
  * LE DIAGNOSTIC STRATÉGIQUE SUR LE MONDE DU COURS (lot M6), ET SON CAS, CHEZ NOVA.
@@ -85,3 +86,25 @@ describe("le cas du chapitre", () => {
     expect([k.trimestre, k.production, k.refusees, k.margePerdue, k.goulot, k.jeuDeLEquipe, k.verdict]).toEqual([4, 7_000, 7_800 - 7_000, 800 * 21, "outil", 7_200 - 7_000, "capacite"]);
   });
 });
+
+// lot B STMG : le complément du management de première (2.1 et 2.2) : la stratégie et sa démarche, la
+// veille, les facteurs clés de succès et les compétences distinctives.
+describe("le complément : la démarche, la veille, les facteurs clés de succès, les compétences distinctives", () => {
+  it("la démarche et la veille : les objectifs suivent le diagnostic ; quatre veilles", () => {
+    expect(juste(LE_DIAGNOSTIC_STRATEGIQUE, "la-demarche")).toEqual(["En tirer des objectifs, avant de choisir comment les atteindre"]);
+    expect(Object.values(triDe(LE_DIAGNOSTIC_STRATEGIQUE, "la-veille"))).toEqual(["concurrentielle", "technologique", "commerciale", "reglementaire"]);
+  });
+
+  it("le facteur clé de la plus grande clientèle : les étudiants (9 000 enceintes), qui perdent 140 clients par euro, le prix", () => {
+    expect(juste(LE_DIAGNOSTIC_STRATEGIQUE, "facteurs-cles-de-succes")).toEqual(["Un prix bas"]);
+    expect(Math.max(9_000, 5_600, 3_500)).toBe(9_000);
+    expect(Math.max(140, 55, 8)).toBe(140);
+  });
+
+  it("face aux concurrents : 21 € de marge chez NOVA, 23 € chez SoundBox, 10 € d'écart de coût ; pas encore de compétence distinctive", () => {
+    expect(attendus(LE_DIAGNOSTIC_STRATEGIQUE, "face-aux-concurrents")).toEqual([59 - 38, 51 - 28, 38 - 28]);
+    expect(juste(LE_DIAGNOSTIC_STRATEGIQUE, "competence-distinctive")).toEqual(["Pas encore : elle n'est la meilleure ni en coût ni en qualité"]);
+    bonneReponseJamaisLaPlusLongue(LE_DIAGNOSTIC_STRATEGIQUE);
+  });
+});
+// fin du lot B STMG.

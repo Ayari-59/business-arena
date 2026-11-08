@@ -30,7 +30,7 @@ export function verifierLEnregistrement(b: Bureau, chapitre: string, registre: r
   const ch = CHAPITRES.find((x) => x.code === chapitre)!;
   expect(ch, chapitre).toBeDefined();
   expect([b.parcours, b.palier]).toEqual([ch.parcours, ch.palier]);
-  expect(CAS_PAR_CHAPITRE.length).toBe(197);
+  expect(CAS_PAR_CHAPITRE.length).toBe(204);
   expect(CAS_PAR_CHAPITRE.some((c) => c.code === b.code)).toBe(false);
   expect(b.entreprise.nom).toBe("NOVA");
   expect(b.commanditaire.length).toBeGreaterThan(3);

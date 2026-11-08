@@ -1254,6 +1254,58 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
     chercher:
       "Vos ventes ont-elles monté dès le premier tour, ou seulement ensuite, quand les clients ont vu la qualité ? Au compte de résultat, la marge des ventes gagnées paie-t-elle le budget qualité ? Si la feuille proposait déjà ce budget, rejouez trois tours à 0 € et comparez le résultat.",
   }),
+  // lot B STMG : le management de première. Ces missions se jouent au niveau 1 : la gamme de NOVA ne
+  // s'ouvre qu'au-delà de ce qu'un élève joue sans licence, et l'arène ne joue que des entreprises.
+  "organiser-l-action-collective": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Avant le premier tour, lisez toute la feuille de décision ; puis jouez un tour.`,
+    lieux: ["feuille", "synthese"],
+    chercher:
+      "Quelles ressources de votre entreprise la feuille de décision vous fait-elle régler : humaines, financières, matérielles, immatérielles ou technologiques ? Si vous jouez à plusieurs, qui décide de quoi, et que se passe-t-il quand vous n'êtes pas d'accord ?",
+  }),
+  "manager-fonctions-et-decisions": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Avant le premier tour, écrivez un objectif de ventes pour chaque tour ; puis jouez deux tours.`,
+    lieux: ["feuille", "plan-face-au-realise"],
+    chercher:
+      "Lesquelles de vos décisions engagent les tours suivants, lesquelles ne valent que pour ce tour ? Après chaque tour, votre objectif est-il atteint, et qu'avez-vous changé pour le tour suivant : fixer, organiser, contrôler, évaluer ?",
+  }),
+  "le-management-face-au-changement": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez trois tours, en relisant avant chaque tour le marché du tour écoulé.`,
+    lieux: ["marche-du-tour", "compte-de-resultat"],
+    chercher:
+      "Qu'est-ce qui a changé autour de votre entreprise d'un tour à l'autre : la demande, les prix des concurrents ? Quelle décision avez-vous ajustée en réponse, et laquelle de vos parties prenantes en a profité ou en a payé le prix ?",
+  }),
+  "domaines-d-activite": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relisez le marché du tour écoulé.`,
+    lieux: ["marche-du-tour", "compte-de-resultat"],
+    chercher:
+      "Vos concurrents vendent-ils moins cher ou plus cher que vous ? Lequel tient l'avantage par les coûts, lequel par la différenciation, et où se place votre entreprise ? Quelle stratégie de domaine vous donnerait un avantage ?",
+  }),
+  "integrer-externaliser-croitre": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours, puis relisez le marché du tour écoulé et le compte de résultat.`,
+    lieux: ["marche-du-tour", "compte-de-resultat"],
+    chercher:
+      "Avez-vous manqué des ventes faute de pouvoir produire ? Si oui, combien de marge auriez-vous gagnée en faisant produire ce surplus par un autre ? Dans le compte de résultat, quelles charges payent ce que vous faites vous-même, et lesquelles ce que vous achetez à d'autres ?",
+  }),
+  "la-strategie-d-une-organisation-publique": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le compte de résultat.`,
+    lieux: ["compte-de-resultat"],
+    chercher:
+      "Retrouvez l'impôt que paie votre entreprise. À quoi sert-il, et quels services publics votre entreprise utilise-t-elle sans les payer directement ? En quoi la décision d'un élu diffère-t-elle de celle que vous venez de prendre ?",
+  }),
+  "la-strategie-d-une-association": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez le compte de résultat.`,
+    lieux: ["compte-de-resultat"],
+    chercher:
+      "Votre résultat irait-il aux associés si votre entreprise était une association ? Que deviendrait-il ? Quelles ressources de votre entreprise une association obtiendrait-elle autrement : des bénévoles, des cotisations, une subvention ?",
+  }),
+  // fin du lot B STMG.
   "les-acteurs-et-la-valeur": (c) => ({
     niveau: 3,
     faire: `${partie(c, 3)} Au premier tour, mettez ${Math.round(INDICE_DE_LA_HAUSSE * 100)} dans « Salaires (marché = 100) », sans rien changer d'autre, puis jouez le tour.`,

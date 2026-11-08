@@ -76,7 +76,7 @@ export function verifierLeChapitre(a: Pick<Bureau, "code" | "reprend" | "parcour
   expect(a.palier).toBe(ch!.palier);
   expect(a.libre).toBe(false);
   expect(CAS_PAR_CHAPITRE.map((c) => c.code)).not.toContain(a.code);
-  expect(CAS_PAR_CHAPITRE.length).toBe(197);
+  expect(CAS_PAR_CHAPITRE.length).toBe(204);
 }
 
 /** Un bureau ou une enquête : sa forme, ses tableaux, ses écritures, ses questions, son service, sa langue. */

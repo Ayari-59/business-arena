@@ -51,7 +51,7 @@ describe("le bureau du besoin", () => {
     expect(b.libre).toBe(false);
     const ch = CHAPITRES.find((y) => y.code === "le-bfr-d-exploitation-normatif")!;
     expect([b.parcours, b.palier]).toEqual([ch.parcours, ch.palier]);
-    expect(CAS_PAR_CHAPITRE.length).toBe(197);
+    expect(CAS_PAR_CHAPITRE.length).toBe(204);
   });
 
   it("une pile de 5 à 9 pièces, 3 à 6 étapes, et chaque pièce que montre une étape existe", () => {

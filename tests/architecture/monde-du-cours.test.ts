@@ -492,6 +492,22 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "chapitres/initiation-a-la-consolidation.ts",
   "situations/par-chapitre/la-cabine-subventionnee.ts",
   "situations/par-chapitre/le-directeur-veut-plus-d-actions.ts",
+  // lot B STMG : le management de première (monde/action-collective-de-nova.ts, management-de-nova.ts, changements-de-l-environnement.ts, domaines-d-activite-de-nova.ts, chaine-de-valeur-de-nova.ts, strategie-du-haut-verdasse.ts, strategie-du-club.ts), et leurs cas.
+  "chapitres/organiser-l-action-collective.ts",
+  "chapitres/manager-fonctions-et-decisions.ts",
+  "chapitres/le-management-face-au-changement.ts",
+  "chapitres/domaines-d-activite.ts",
+  "chapitres/integrer-externaliser-croitre.ts",
+  "chapitres/la-strategie-d-une-organisation-publique.ts",
+  "chapitres/la-strategie-d-une-association.ts",
+  "situations/par-chapitre/deux-ateliers-ou-un-seul.ts",
+  "situations/par-chapitre/qui-decide-de-quoi.ts",
+  "situations/par-chapitre/proteger-le-site-de-vente.ts",
+  "situations/par-chapitre/abandonner-l-enceinte-nomade.ts",
+  "situations/par-chapitre/le-distributeur-belge.ts",
+  "situations/par-chapitre/la-mediatheque-le-dimanche.ts",
+  "situations/par-chapitre/le-parrain-qui-veut-choisir-l-entraineur.ts",
+  // fin du lot B STMG.
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
@@ -700,6 +716,22 @@ const NE_LISENT_PLUS_L_ANNEE_FIGEE: readonly string[] = [
   "chapitres/fournisseurs-et-banque.ts",
   "situations/par-chapitre/vibra-repasse-commande.ts",
   "situations/par-chapitre/le-cheque-qui-n-est-pas-passe.ts",
+  // lot B STMG : le management de première, et ses cas.
+  "chapitres/organiser-l-action-collective.ts",
+  "chapitres/manager-fonctions-et-decisions.ts",
+  "chapitres/le-management-face-au-changement.ts",
+  "chapitres/domaines-d-activite.ts",
+  "chapitres/integrer-externaliser-croitre.ts",
+  "chapitres/la-strategie-d-une-organisation-publique.ts",
+  "chapitres/la-strategie-d-une-association.ts",
+  "situations/par-chapitre/deux-ateliers-ou-un-seul.ts",
+  "situations/par-chapitre/qui-decide-de-quoi.ts",
+  "situations/par-chapitre/proteger-le-site-de-vente.ts",
+  "situations/par-chapitre/abandonner-l-enceinte-nomade.ts",
+  "situations/par-chapitre/le-distributeur-belge.ts",
+  "situations/par-chapitre/la-mediatheque-le-dimanche.ts",
+  "situations/par-chapitre/le-parrain-qui-veut-choisir-l-entraineur.ts",
+  // fin du lot B STMG.
 ];
 
 /** Le premier chemin d'imports qui atteint un fichier donné, ou rien. */

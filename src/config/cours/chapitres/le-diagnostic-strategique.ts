@@ -10,6 +10,7 @@ import {
   type Categorie,
   type Verdict,
 } from "../monde/direction-de-nova";
+import { LIBELLES_DES_FACTEURS, faceAuxConcurrents, facteursClesDuMarche, type TypeDeVeille } from "../monde/veille-et-facteurs-cles";
 import type { Chapitre } from "../types";
 
 /**
@@ -71,6 +72,13 @@ const LIBELLES_DU_VERDICT: Record<Verdict, string> = {
   "se-proteger": "Se protéger des menaces : le marché n'offre aucune opportunité",
 };
 
+export const TYPES_DE_VEILLE: readonly { code: TypeDeVeille; libelle: string }[] = [
+  { code: "concurrentielle", libelle: "Veille concurrentielle" },
+  { code: "technologique", libelle: "Veille technologique" },
+  { code: "commerciale", libelle: "Veille commerciale" },
+  { code: "reglementaire", libelle: "Veille réglementaire" },
+];
+
 const ecrit = (montant: number, unite: "€" | "%" | "enceintes") => (unite === "€" ? eur(montant) : unite === "%" ? pct(montant) : `${qte(montant)} enceintes`);
 
 export const LE_DIAGNOSTIC_STRATEGIQUE: Chapitre = {
@@ -89,6 +97,9 @@ export const LE_DIAGNOSTIC_STRATEGIQUE: Chapitre = {
     "Calculer les chiffres d'un diagnostic : évolution de la demande, demande servie, salaire face au marché",
     "Ranger des constats chiffrés en forces, faiblesses, opportunités et menaces",
     "Tirer une conclusion du diagnostic",
+    "Définir la stratégie et suivre sa démarche, de la veille au plan d'actions",
+    "Conduire une veille stratégique",
+    "Identifier les facteurs clés de succès et les compétences distinctives",
   ],
   libre: false,
   entreprises: {
@@ -109,6 +120,56 @@ export const LE_DIAGNOSTIC_STRATEGIQUE: Chapitre = {
         ];
       },
       repere: () => "Interne : forces et faiblesses, ce qui dépend de l'entreprise. Externe : opportunités et menaces, ce qui vient de son environnement.",
+    },
+    {
+      id: "la-strategie",
+      type: "lecture",
+      titre: "Qu'est-ce que la stratégie ?",
+      texte: (c) => [
+        `La stratégie est l'ensemble des décisions qui engagent le devenir d'une organisation : ce qu'elle vend, à qui, avec quels moyens, face à quels concurrents. Elle a une histoire : ${c.entreprise} est née d'un choix, fabriquer des enceintes au prix du milieu du marché, et chaque année la remet en question.`,
+        "Elle suit une démarche. L'organisation observe son environnement (la veille), fait son diagnostic, interne et externe, en tire des objectifs, choisit ses options, les traduit en un plan d'actions coordonnées, puis évalue et ajuste. Longtemps planifiée pour des années, la stratégie s'ajuste aujourd'hui sans cesse, dans un environnement incertain.",
+      ],
+      repere: () => "Démarche stratégique : veille, diagnostic, objectifs, choix stratégiques, plan d'actions, évaluation et ajustement.",
+    },
+    {
+      id: "la-demarche",
+      objectifs: [4],
+      type: "choix",
+      titre: "Dans quel ordre ?",
+      question: (c) => `La direction ${dE(c.entreprise)} vient de finir son diagnostic. Quelle est l'étape suivante de la démarche stratégique ?`,
+      options: () => [
+        {
+          texte: "En tirer des objectifs, avant de choisir comment les atteindre",
+          juste: true,
+          retour: "Oui : le diagnostic dit où en est l'entreprise ; les objectifs disent où elle veut aller ; les choix stratégiques et le plan d'actions disent comment. L'évaluation, à la fin, relance la démarche.",
+        },
+        {
+          texte: "Lancer tout de suite le plan d'actions, puisque le diagnostic montre ce qui ne va pas",
+          juste: false,
+          retour: "Non : agir sans objectif, c'est ne pas savoir si l'on réussit. Les objectifs viennent d'abord, puis les choix et le plan d'actions.",
+        },
+        {
+          texte: "Arrêter la veille : une fois le diagnostic fait, l'environnement est connu",
+          juste: false,
+          retour: "Non : l'environnement change sans cesse. La veille continue, et c'est elle qui fera ajuster la stratégie.",
+        },
+      ],
+    },
+    {
+      id: "la-veille",
+      objectifs: [5],
+      type: "tri",
+      titre: "La veille stratégique",
+      question: (c) => `Pour son diagnostic, ${c.entreprise} surveille son environnement. Rangez chaque information selon la veille qui l'a trouvée.`,
+      categories: TYPES_DE_VEILLE,
+      elements: () => [
+        { libelle: "SoundBox prépare une enceinte encore moins chère", montant: 0, categorie: "concurrentielle", pourquoi: "Ce que font les concurrents : la veille concurrentielle." },
+        { libelle: "Une batterie nouvelle double l'autonomie des enceintes nomades", montant: 0, categorie: "technologique", pourquoi: "Une technique qui change le produit : la veille technologique." },
+        { libelle: "Les étudiants achètent de plus en plus leurs enceintes en ligne", montant: 0, categorie: "commerciale", pourquoi: "Ce que font les clients : la veille commerciale." },
+        { libelle: "Une règle européenne impose un même chargeur pour les petits appareils", montant: 0, categorie: "reglementaire", pourquoi: "Une règle qui s'imposera à NOVA : la veille réglementaire." },
+      ],
+      relance: "L'information parle-t-elle des concurrents, d'une technique, des clients, ou d'une règle ?",
+      explication: () => ["La veille stratégique observe en continu l'environnement pour en comprendre les fluctuations : elle nourrit le diagnostic externe, ses opportunités et ses menaces, et fait ajuster la stratégie à temps."],
     },
     {
       id: "interne-ou-externe",
@@ -191,6 +252,93 @@ export const LE_DIAGNOSTIC_STRATEGIQUE: Chapitre = {
         };
         return [
           `${c.entreprise} a ${n("force", "force")}, ${n("faiblesse", "faiblesse")}, ${n("opportunite", "opportunité")} et ${n("menace", "menace")}. Un constat se range selon qui le décide : l'entreprise (interne) ou son environnement (externe) ; puis selon qu'il l'aide ou la gêne.`,
+        ];
+      },
+    },
+    {
+      id: "facteurs-cles-de-succes",
+      objectifs: [6],
+      type: "choix",
+      titre: "Les facteurs clés de succès",
+      tableau: () => {
+        const f = facteursClesDuMarche();
+        return {
+          titre: "Les clientèles du marché des enceintes, au premier trimestre",
+          colonnes: ["Enceintes achetées", "Clients perdus par euro de hausse", "Sensibilité à la qualité"],
+          lignes: f.lignes.map((x) => ({ libelle: x.nom, valeurs: [qte(x.taille), qte(x.perdueParEuro), x.qualite] })),
+        };
+      },
+      question: () => "Un facteur clé de succès est ce qu'il faut maîtriser pour réussir sur un marché, ce qui fait acheter ses clients. Sur ce marché, quel est celui de la plus grande clientèle ?",
+      options: () => {
+        const f = facteursClesDuMarche();
+        const p = f.plusGrande;
+        return (["prix", "qualite", "notoriete"] as const).map((k) => ({
+          texte: LIBELLES_DES_FACTEURS[k],
+          juste: k === p.facteur,
+          retour:
+            k === p.facteur
+              ? `Oui : les ${p.nom.toLowerCase()} sont la plus grande clientèle, ${qte(p.taille)} enceintes achetées au trimestre, et ce sont eux qui partent le plus vite quand le prix monte. Pour réussir auprès d'eux, il faut savoir vendre bon marché.`
+              : `Non : c'est ce qui compte pour une autre clientèle. Les ${p.nom.toLowerCase()}, la plus grande, comparent d'abord les prix.`,
+        }));
+      },
+    },
+    {
+      id: "face-aux-concurrents",
+      objectifs: [6],
+      type: "montants",
+      titre: "NOVA face à ses concurrents",
+      tableau: () => {
+        const k = faceAuxConcurrents();
+        return {
+          titre: "Une enceinte de chaque enseigne",
+          colonnes: [k.nova.nom, k.soundbox.nom, k.auris.nom],
+          lignes: [
+            { libelle: "Prix", valeurs: [eur(k.nova.prix), eur(k.soundbox.prix), eur(k.auris.prix)] },
+            { libelle: "Coût variable", valeurs: [eur(k.nova.coutVariable), eur(k.soundbox.coutVariable), eur(k.auris.coutVariable)] },
+            { libelle: "Qualité de conception", valeurs: [qte(k.nova.qualite), qte(k.soundbox.qualite), qte(k.auris.qualite)] },
+          ],
+        };
+      },
+      question: () => "Calculez la marge d'une enceinte chez NOVA et chez SoundBox (prix moins coût variable), puis l'écart de coût variable entre NOVA et SoundBox.",
+      champs: () => {
+        const k = faceAuxConcurrents();
+        return [
+          { libelle: "Marge d'une enceinte NOVA", attendu: k.nova.marge, calcul: `${eur(k.nova.prix)} − ${eur(k.nova.coutVariable)} = ${eur(k.nova.marge)}`, tolerance: 0 },
+          { libelle: "Marge d'une enceinte SoundBox", attendu: k.soundbox.marge, calcul: `${eur(k.soundbox.prix)} − ${eur(k.soundbox.coutVariable)} = ${eur(k.soundbox.marge)}`, tolerance: 0 },
+          { libelle: "Écart de coût variable", attendu: k.ecartDeCout, calcul: `${eur(k.nova.coutVariable)} − ${eur(k.soundbox.coutVariable)} = ${eur(k.ecartDeCout)}`, tolerance: 0 },
+        ];
+      },
+      explication: () => {
+        const k = faceAuxConcurrents();
+        return [
+          `SoundBox vend ${eur(k.nova.prix - k.soundbox.prix)} moins cher que NOVA et gagne pourtant plus par enceinte : elle produit ${eur(k.ecartDeCout)} moins cher. Sur le prix, le facteur clé du plus grand segment, c'est elle qui a la compétence.`,
+        ];
+      },
+    },
+    {
+      id: "competence-distinctive",
+      objectifs: [6],
+      type: "choix",
+      titre: "Une compétence distinctive ?",
+      question: (c) => `Une compétence distinctive est ce qu'une organisation maîtrise mieux que ses concurrents, et qui est difficile à copier. ${c.entreprise} en a-t-elle une sur ce marché ?`,
+      options: () => {
+        const k = faceAuxConcurrents();
+        return [
+          {
+            texte: "Pas encore : elle n'est la meilleure ni en coût ni en qualité",
+            juste: true,
+            retour: `Oui : SoundBox produit moins cher (${eur(k.soundbox.coutVariable)} contre ${eur(k.nova.coutVariable)}), Auris conçoit mieux (une qualité de ${qte(k.auris.qualite)} contre ${qte(k.nova.qualite)}). Pour réussir, NOVA doit construire une compétence distinctive qui réponde à un facteur clé de succès : c'est l'articulation des deux diagnostics.`,
+          },
+          {
+            texte: "Oui, le prix : elle vend moins cher que ses deux concurrents",
+            juste: false,
+            retour: `Non : SoundBox vend ${eur(k.soundbox.prix)}, moins cher qu'elle, et produit moins cher.`,
+          },
+          {
+            texte: "Oui, la qualité : elle a la meilleure qualité de conception des trois",
+            juste: false,
+            retour: `Non : Auris la dépasse nettement, à ${qte(k.auris.qualite)}.`,
+          },
         ];
       },
     },
@@ -308,7 +456,7 @@ export const LE_DIAGNOSTIC_STRATEGIQUE: Chapitre = {
           "Le diagnostic ne décide pas à la place de la direction : il range ce qu'elle sait, pour qu'elle voie où porter l'effort. Dans l'arène, chaque partie s'ouvre sur ce même tri.",
         ];
       },
-      repere: () => "Diagnostic interne : forces et faiblesses. Diagnostic externe : opportunités et menaces. On s'appuie sur les forces, on corrige les faiblesses, on saisit les opportunités, on se protège des menaces.",
+      repere: () => "Veille, puis diagnostic. Interne : forces, faiblesses, ressources et compétences distinctives. Externe : opportunités, menaces et facteurs clés de succès. La stratégie réussit quand une compétence distinctive répond à un facteur clé.",
     },
   ],
 };

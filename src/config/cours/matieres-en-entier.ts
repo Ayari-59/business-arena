@@ -105,6 +105,29 @@ export const MATIERES_COUVERTES_EN_ENTIER: readonly MatiereEnEntier[] = [
     partie: "Terminale, gestion et finance",
     preuve: "Audit de la finance (BO spécial n° 8 du 25 juillet 2019), puis la PR #349.",
   },
+  // lot B STMG : le management de première, ses trois thèmes et ses onze questions.
+  {
+    formation: "stmg",
+    bloc: "Thème 1 · À la rencontre du management des organisations",
+    partie: "Première, management",
+    preuve:
+      "Audit du management de première (annexe 2 du BO spécial n° 1 du 22 janvier 2019, section 2). 1.1 : « Organiser l'action collective » et « Produire ». 1.3 : « Manager : fonctions et décisions ». 1.4 : « Le management face au changement ». 1.2 : le chapitre partagé sur la diversité des organisations, écrit par le lot A (à vérifier à la fusion).",
+  },
+  {
+    formation: "stmg",
+    bloc: "Thème 2 · Le management stratégique, du diagnostic à la fixation des objectifs",
+    partie: "Première, management",
+    preuve:
+      "Audit du management de première (section 2). 2.1 et 2.2 : le complément du « Diagnostic stratégique » (définition et démarche, veille, facteurs clés de succès, compétences distinctives). 2.3 et 2.4 : le complément de « Se fixer des objectifs et les suivre » (finalité et RSE, conflit et consensus, variété et appropriation des indicateurs), et « Construire un indicateur juste ».",
+  },
+  {
+    formation: "stmg",
+    bloc: "Thème 3 · Les choix stratégiques des organisations",
+    partie: "Première, management",
+    preuve:
+      "Audit du management de première (section 2) : 3.1 par « Domaines d'activité : se spécialiser ou se diversifier » et « Intégrer, externaliser, croître », 3.2 par « La stratégie d'une organisation publique », 3.3 par « La stratégie d'une association ».",
+  },
+  // fin du lot B STMG.
 ];
 
 /** Vrai si le bloc du diplôme est une matière couverte en entier. */
