@@ -1038,9 +1038,28 @@ function GraphiqueDuLaboratoire({
 const memePosition = (a: Readonly<Record<string, number>>, b: Readonly<Record<string, number>>) =>
   Object.keys(a).length === Object.keys(b).length && Object.keys(a).every((k) => a[k] === b[k]);
 
+/**
+ * Ce que le navigateur garde d'un laboratoire, à part de la progression : le jeton signé qui compte
+ * ses validations (le serveur le demande pour montrer la solution), et la position où le défi a été
+ * relevé ou montré, pour la relire après un rechargement.
+ */
+interface MemoireDuLaboratoire {
+  jeton?: string;
+  position?: Record<string, number>;
+}
+
+function lireLaMemoire(cle: string): MemoireDuLaboratoire {
+  try {
+    const brut = window.localStorage.getItem(cle);
+    const m = brut ? (JSON.parse(brut) as MemoireDuLaboratoire) : null;
+    return m && typeof m === "object" ? m : {};
+  } catch {
+    return {};
+  }
+}
+
 function EtapeDeSimulation({ etape, cas, chapitre, index, suivi, classe, noter, suite }: PropsDEtape<SimulationServie>) {
   const { leviers } = etape;
-  const defi = { consigne: etape.consigne, solution: etape.solution };
   const depart = useMemo(() => Object.fromEntries(leviers.map((l) => [l.code, l.depart])), [leviers]);
   const fait = suivi?.reussi ?? false;
   const essais = suivi?.essais ?? 0;
@@ -1050,23 +1069,57 @@ function EtapeDeSimulation({ etape, cas, chapitre, index, suivi, classe, noter, 
   const [traces, setTraces] = useState<{ position: Record<string, number>; atteint: boolean }[]>([]);
   const [reussie, setReussie] = useState<{ position: Record<string, number>; lecture: LectureDuLaboratoire } | null>(null);
   const [verification, setVerification] = useState(false);
-  const affichee = fait ? (reussie?.position ?? defi.solution) : position;
-  // Le départ et la solution sont servis avec l'étape ; les autres positions se lisent au serveur.
-  const connue = fait
-    ? (reussie?.lecture ?? etape.lectureDeLaSolution)
-    : memePosition(position, depart)
-      ? etape.lectureDeDepart
-      : memePosition(position, defi.solution)
-        ? etape.lectureDeLaSolution
-        : null;
+  // LA SOLUTION NE VIENT PAS AVEC LA PAGE (décision du propriétaire, novembre 2026) : la validation et
+  // « Montrer une solution » passent par le serveur, qui compte les essais par un jeton signé.
+  const cleDeLaMemoire = `cours:${chapitre.code}:${cas.code}:laboratoire:${etape.id}`;
+  const [memoire, setMemoire] = useState<MemoireDuLaboratoire>(() => (typeof window === "undefined" ? {} : lireLaMemoire(cleDeLaMemoire)));
+  const retenir = (m: MemoireDuLaboratoire) =>
+    setMemoire((avant) => {
+      const n = { ...avant, ...m };
+      try {
+        window.localStorage.setItem(cleDeLaMemoire, JSON.stringify(n));
+      } catch {
+        // Stockage refusé : le jeton vit le temps de la page.
+      }
+      return n;
+    });
+  // Après un rechargement, le défi relevé se relit à la position gardée.
+  const relevee = fait ? (reussie?.position ?? memoire.position ?? null) : null;
+  const affichee = fait ? (relevee ?? depart) : position;
+  // Le départ est servi avec l'étape ; les autres positions se lisent au serveur.
+  const connue = fait ? (reussie?.lecture ?? (relevee ? null : etape.lectureDeDepart)) : memePosition(position, depart) ? etape.lectureDeDepart : null;
   const demande = { chapitre: chapitre.code, entreprise: cas.code, etape: etape.id };
-  const lue = useLectureAuServeur<LectureDuLaboratoire>(connue ? null : { ...demande, position });
+  const lue = useLectureAuServeur<LectureDuLaboratoire>(connue ? null : { ...demande, position: affichee });
   const lecture = connue ?? lue ?? etape.lectureDeDepart;
   const graphique = etape.graphique;
   const peutMontrer = classe || essais >= ESSAIS_AVANT_LA_CORRECTION;
-  // L'échelle des barres : le plus grand effet au départ, à la solution ou à la position du moment.
-  // Elle suit l'élève : une barre se compare toujours à ce qu'il a sous les yeux.
-  const echelle = Math.max(1, etape.lectureDeDepart.plusGrandEffet, etape.lectureDeLaSolution.plusGrandEffet, lecture.plusGrandEffet);
+  // L'échelle des barres : le plus grand effet au départ, et le plus grand vu depuis. Elle suit
+  // l'élève : une barre se compare toujours à ce qu'il a déjà eu sous les yeux.
+  const [plusGrandVu, setPlusGrandVu] = useState(etape.lectureDeDepart.plusGrandEffet);
+  if (lecture.plusGrandEffet > plusGrandVu) setPlusGrandVu(lecture.plusGrandEffet);
+  const echelle = Math.max(1, plusGrandVu);
+  const montrer = async () => {
+    setVerification(true);
+    const r = await lireAuServeur<{ solution: Record<string, number>; lecture: LectureDuLaboratoire }>({
+      ...demande,
+      geste: "montrer",
+      ...(memoire.jeton ? { jeton: memoire.jeton } : {}),
+      ...(classe ? { classe: true } : {}),
+    });
+    setVerification(false);
+    if (!r) {
+      setIndice(
+        classe
+          ? "La solution ne se montre tout de suite qu'à l'enseignant connecté ; sinon, après deux positions validées."
+          : "La solution se montre après deux positions validées : validez de nouveau, puis redemandez-la.",
+      );
+      return;
+    }
+    setReussie({ position: r.solution, lecture: r.lecture });
+    retenir({ position: r.solution });
+    setIndice(null);
+    noter({ aide: true, reussi: true });
+  };
   const placer = (code: string, n: number) => {
     const l = leviers.find((x) => x.code === code)!;
     const v = surLePas(l, n);
@@ -1078,7 +1131,7 @@ function EtapeDeSimulation({ etape, cas, chapitre, index, suivi, classe, noter, 
     <>
       <p className="max-w-2xl text-base leading-relaxed">{etape.question}</p>
       <p className="encadre-distinction max-w-2xl rounded-lg px-4 py-2.5 text-sm font-semibold" data-defi="">
-        {defi.consigne}
+        {etape.consigne}
       </p>
       <div className="papier grid gap-5 rounded-xl p-4 sm:p-5" data-laboratoire="">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -1211,11 +1264,15 @@ function EtapeDeSimulation({ etape, cas, chapitre, index, suivi, classe, noter, 
             className={bouton({ taille: "m" })}
             disabled={verification}
             onClick={async () => {
-              // La position se vérifie au serveur : le défi fait partie du chapitre.
+              // La position se vérifie au serveur : le défi fait partie du chapitre. Le serveur compte
+              // l'essai et rend le jeton qui le dit.
               setVerification(true);
-              const lu = memePosition(position, depart)
-                ? etape.lectureDeDepart
-                : await lireAuServeur<LectureDuLaboratoire>({ ...demande, position });
+              const lu = await lireAuServeur<LectureDuLaboratoire & { jeton?: string }>({
+                ...demande,
+                geste: "valider",
+                position,
+                ...(memoire.jeton ? { jeton: memoire.jeton } : {}),
+              });
               setVerification(false);
               if (!lu) {
                 setIndice("La simulation ne répond pas : vérifiez la connexion, puis validez de nouveau.");
@@ -1225,6 +1282,7 @@ function EtapeDeSimulation({ etape, cas, chapitre, index, suivi, classe, noter, 
               setTraces((t) => [...t, { position, atteint: juste }].slice(-5));
               setIndice(juste ? null : lu.indice);
               if (juste) setReussie({ position, lecture: lu });
+              retenir({ ...(lu.jeton ? { jeton: lu.jeton } : {}), ...(juste ? { position } : {}) });
               const ou = leviers.map((l) => `${l.libelle} ${position[l.code]!.toLocaleString("fr-FR")} ${l.unite}`).join(", ");
               noter({ essai: true, ...(juste ? { reussi: true } : { remarques: [`A essayé : ${ou}`] }) });
             }}
@@ -1243,7 +1301,7 @@ function EtapeDeSimulation({ etape, cas, chapitre, index, suivi, classe, noter, 
             Revenir au départ
           </button>
           {peutMontrer && (
-            <button type="button" className={bouton({ variante: "secondaire", taille: "m" })} onClick={() => noter({ aide: true, reussi: true })}>
+            <button type="button" className={bouton({ variante: "secondaire", taille: "m" })} disabled={verification} onClick={() => void montrer()}>
               {etape.montrer ?? "Montrer une solution"}
             </button>
           )}
@@ -1270,7 +1328,7 @@ function EtapeDeSimulation({ etape, cas, chapitre, index, suivi, classe, noter, 
         <>
           {/* Le résultat du laboratoire, seul à parler : la région vivante est ici, pas sur l'étape. */}
           <div role="status" data-resultat-du-laboratoire="">
-            <Paragraphes textes={lecture.explication ?? etape.lectureDeLaSolution.explication ?? []} />
+            <Paragraphes textes={lecture.explication ?? []} />
           </div>
           <BoutonSuite suite={suite} dernier={index === chapitre.etapes.length - 1} terminer={chapitre.mots.terminer} />
         </>

@@ -138,16 +138,22 @@ export interface LectureDuLaboratoire {
   graphique: { xs: number[]; series: number[][]; ici: number[] } | null;
 }
 
+/**
+ * LE LABORATOIRE SERVI NE PORTE PAS SA SOLUTION (décision du propriétaire, novembre 2026). Comme les
+ * bureaux, les enquêtes et les scénarios, il ne sert que l'état de départ : ni la solution du défi, ni
+ * la lecture à cette solution, ni son explication. La validation et « Montrer une solution » passent
+ * par le serveur (route /api/cours/lecture, `solutionDuLaboratoire`), qui ne rend la solution qu'une
+ * fois la règle remplie.
+ */
 export interface SimulationServie extends BaseServie {
   type: "simulation";
   question: string;
   leviers: LevierDeSimulation[];
   consigne: string;
-  solution: Record<string, number>;
   montrer?: string;
   graphique: { levier: string; libelles: string[]; unite?: string } | null;
+  /** La lecture au départ, sans explication : l'état que l'élève déplace. */
   lectureDeDepart: LectureDuLaboratoire;
-  lectureDeLaSolution: LectureDuLaboratoire;
 }
 
 /**
@@ -241,6 +247,22 @@ export function positionValide(leviers: readonly LevierDeSimulation[], brute: un
     p[l.code] = v;
   }
   return p;
+}
+
+/**
+ * La solution d'un laboratoire et sa lecture, explication comprise : pour le serveur seul (la route qui
+ * la rend quand la règle est remplie, le diaporama de l'enseignant). null si l'étape n'est pas un
+ * laboratoire du chapitre.
+ */
+export function solutionDuLaboratoire(
+  source: Chapitre,
+  cas: Cas,
+  etape: string,
+): { solution: Record<string, number>; lecture: LectureDuLaboratoire } | null {
+  const e = chapitreDuCas(source, cas).etapes.find((x) => x.id === etape);
+  if (e?.type !== "simulation") return null;
+  const solution = { ...e.defi(cas).solution };
+  return { solution, lecture: lireLeLaboratoire(e, cas, solution) };
 }
 
 /**
@@ -345,7 +367,6 @@ function servirSansTypographie(source: Chapitre, cas: Cas): ChapitreServi {
         return { ...base, type: "a-completer", question: e.question(cas), grille: e.grille(cas), explication: e.explication(cas) };
       case "simulation": {
         const leviers = [...e.leviers(cas)];
-        const defi = e.defi(cas);
         const g = e.graphique?.(cas);
         const depart = Object.fromEntries(leviers.map((l) => [l.code, l.depart]));
         return {
@@ -353,12 +374,11 @@ function servirSansTypographie(source: Chapitre, cas: Cas): ChapitreServi {
           type: "simulation",
           question: e.question(cas),
           leviers,
-          consigne: defi.consigne,
-          solution: { ...defi.solution },
+          consigne: e.defi(cas).consigne,
           ...(e.montrer ? { montrer: e.montrer } : {}),
           graphique: g ? { levier: g.levier, libelles: g.courbes.map((c) => c.libelle), ...(g.unite ? { unite: g.unite } : {}) } : null,
-          lectureDeDepart: lireLeLaboratoire(e, cas, depart),
-          lectureDeLaSolution: lireLeLaboratoire(e, cas, defi.solution),
+          // L'explication ne part qu'avec la réussite, rendue par le serveur à la validation.
+          lectureDeDepart: { ...lireLeLaboratoire(e, cas, depart), explication: null },
         };
       }
     }

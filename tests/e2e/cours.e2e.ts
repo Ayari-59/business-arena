@@ -276,6 +276,41 @@ describe("l'erreur, le mode classe, la reprise et le téléphone", () => {
     await page.context().close();
   }, 120_000);
 
+  it("le laboratoire ne porte pas sa solution : elle se demande au serveur après deux essais, et revient au rechargement", async () => {
+    const code = "nova";
+    const cas = casDeLEntreprise(code);
+    const ordonne = chapitreDuCas(chapitre, cas);
+    const index = ordonne.etapes.findIndex((e) => e.type === "simulation");
+    const labo = ordonne.etapes[index]!;
+    if (labo.type !== "simulation") throw new Error("pas de laboratoire dans le chapitre pilote");
+    const { solution } = labo.defi(cas);
+    const explication = labo.explication(cas, solution).map((p) => insecables(p));
+    const ctx = await navigateur.newContext({ viewport: { width: 1280, height: 900 }, locale: "fr-FR" });
+    await ctx.addInitScript(([cle, i]) => {
+      if (!window.localStorage.getItem(cle as string)) window.localStorage.setItem(cle as string, JSON.stringify({ index: i, etapes: {} }));
+    }, [`cours:${chapitre.code}:${code}`, index] as const);
+    const page = await ctx.newPage();
+    await aller(page, chemin(code));
+    await expect.poll(() => page.locator("h1").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toBe(labo.titre);
+    // Ni l'explication à la solution ni la solution dans ce que la page a reçu (le HTML et ses données).
+    const recu = await page.content();
+    for (const p of explication) expect(recu, p).not.toContain(p.slice(0, 60));
+    expect(recu).not.toContain("lectureDeLaSolution");
+    const montrer = page.getByRole("button", { name: labo.montrer ?? "Montrer une solution" });
+    expect(await montrer.count()).toBe(0);
+    for (let n = 1; n <= 2; n++) {
+      await page.getByRole("button", { name: "Valider cette position" }).click();
+      await expect.poll(() => page.locator("details", { hasText: "Vos essais" }).locator("li").count()).toBe(n);
+    }
+    await montrer.click();
+    await expect.poll(() => page.locator("[data-resultat-du-laboratoire]").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toContain(espacesOrdinaires(explication[0]!).slice(0, 40));
+    for (const l of labo.leviers(cas).filter((x) => !x.choix)) expect(await page.getByLabel(l.libelle, { exact: true }).inputValue()).toBe(String(solution[l.code]));
+    // Au rechargement, la position montrée se relit au serveur, explication comprise.
+    await page.reload();
+    await expect.poll(() => page.locator("[data-resultat-du-laboratoire]").innerText().then(espacesOrdinaires), { timeout: 15_000 }).toContain(espacesOrdinaires(explication[0]!).slice(0, 40));
+    await ctx.close();
+  }, 120_000);
+
   it("la progression survit à un rechargement, et la page tient sur un téléphone", async () => {
     const page = await nouvellePage(390, 844);
     await jusquALApport(page, chemin("transport"));

@@ -254,3 +254,57 @@ describe("le build ne porte aucun corrigé", () => {
     expect(fuites.map((f) => `${relative(RACINE, f.fichier)} : ${f.marqueur}`)).toEqual([]);
   }, 60_000);
 });
+
+/**
+ * LES LABORATOIRES NE SERVENT PAS LEUR SOLUTION (décision du propriétaire, novembre 2026).
+ *
+ * La page d'un chapitre envoyait au navigateur, avec chaque laboratoire, la solution de son défi et la
+ * lecture à cette solution, explication comprise : il suffisait de lire la page. Comme les bureaux, les
+ * enquêtes et les scénarios, le laboratoire ne la rend plus qu'à la demande, quand la règle est remplie,
+ * vérifiée au serveur (app/api/cours/lecture/route.ts). On sert chaque chapitre à laboratoire dans
+ * chacune de ses entreprises, et l'on cherche dans ce que la page reçoit la solution (la position
+ * entière), la lecture à la solution (ses lignes) et les paragraphes de son explication.
+ */
+describe("les laboratoires ne servent ni leur solution ni la lecture à la solution", () => {
+  const cles = (x: unknown): string[] =>
+    Array.isArray(x) ? x.flatMap(cles) : x && typeof x === "object" ? Object.entries(x).flatMap(([k, v]) => [k, ...cles(v)]) : [];
+  const positions = (x: unknown): Record<string, unknown>[] =>
+    Array.isArray(x) ? x.flatMap(positions) : x && typeof x === "object" ? [x as Record<string, unknown>, ...Object.values(x).flatMap(positions)] : [];
+
+  it("ni la solution, ni ses lignes, ni son explication dans le chapitre servi", async () => {
+    const { CHAPITRES: chapitres } = await import("../../src/config/cours/registre");
+    const { SITUATIONS } = await import("../../src/config/cours/situations");
+    const { ENTREPRISES_DU_COURS } = await import("../../src/config/cours/metiers");
+    const { casDeLEntreprise } = await import("../../src/config/cours/cas");
+    const { chapitreDuCas } = await import("../../src/pedagogy/cours/deroule");
+    const { lireLeLaboratoire, servirLeChapitre } = await import("../../src/pedagogy/cours/chapitre-servi");
+    let laboratoires = 0;
+    const fautes: string[] = [];
+    for (const c of [...chapitres, ...SITUATIONS]) {
+      if (!c.etapes.some((e) => e.type === "simulation")) continue;
+      for (const entreprise of c.entreprises?.codes ?? ENTREPRISES_DU_COURS) {
+        const cas = casDeLEntreprise(entreprise);
+        const servi = servirLeChapitre(c, cas);
+        const page = JSON.stringify(servi);
+        for (const e of chapitreDuCas(c, cas).etapes) {
+          if (e.type !== "simulation") continue;
+          laboratoires++;
+          const ou = `${c.code} ${entreprise} ${e.id}`;
+          const etape = servi.etapes.find((x) => x.id === e.id)!;
+          const interdites = cles(etape).filter((k) => k === "solution" || k === "lectureDeLaSolution");
+          if (interdites.length > 0) fautes.push(`${ou} : ${[...new Set(interdites)].join(", ")}`);
+          const { solution } = e.defi(cas);
+          const depart = Object.fromEntries(e.leviers(cas).map((l) => [l.code, l.depart]));
+          const memeQueLeDepart = Object.keys(solution).every((k) => solution[k] === depart[k]);
+          const codes = Object.keys(solution);
+          if (!memeQueLeDepart && positions(etape).some((p) => codes.every((k) => p[k] === solution[k]))) fautes.push(`${ou} : la position de la solution`);
+          const aLaSolution = lireLeLaboratoire(e, cas, solution);
+          if (page.includes(JSON.stringify(aLaSolution.lignes)) && !memeQueLeDepart) fautes.push(`${ou} : les lignes à la solution`);
+          for (const p of aLaSolution.explication ?? []) if (p.length >= 40 && page.includes(JSON.stringify(p))) fautes.push(`${ou} : l'explication « ${p.slice(0, 50)}… »`);
+        }
+      }
+    }
+    expect(laboratoires).toBeGreaterThan(100);
+    expect(fautes.slice(0, 20), `${fautes.length} fautes`).toEqual([]);
+  }, 300_000);
+});
