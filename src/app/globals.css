@@ -2741,6 +2741,20 @@ a.carte {
   }
 }
 
+/* ---------------------------------------------------------------------------
+   LA BANDE DE LA CALCULATRICE, SUR TÉLÉPHONE (novembre 2026). Fermée, la
+   calculatrice du cours est un onglet de 32 px collé au bord droit de l'écran
+   (components/cours/calculatrice.tsx). Le rond qu'elle était mordait sur le
+   bord droit des cartes, celle du laboratoire comprise : la page, et son pied
+   qui défile sous l'onglet, lui laissent donc 24 px de plus à droite (zone sûre
+   comprise). Avec la marge de 16 px des contenus, rien ne passe plus dessous. */
+@media (max-width: 639px) {
+  main:has([data-calculatrice]),
+  main:has([data-calculatrice]) ~ footer {
+    padding-right: calc(1.5rem + env(safe-area-inset-right, 0px));
+  }
+}
+
 /* ===========================================================================
  * LOT 3A : LES MOMENTS CLÉS DE L'ARÈNE ET DES ÉPISODES.
  * Ardoise du dirigeant, rituel « le marché répond », clôture de l'exercice,

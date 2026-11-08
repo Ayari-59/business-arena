@@ -96,17 +96,18 @@ export function Calculatrice() {
   const visee = ouverte ? caseVisee() : null;
 
   return (
-    // SUR TÉLÉPHONE, UN ROND DANS LE COIN (audit d'octobre 2026). À 390 px, la
-    // pastille « Calculatrice » (près de 110 px de large, à 16 px du bord) couvrait
-    // la fin des lignes du texte, l'encadré « À retenir » compris. Fermée, elle
-    // devient un rond de 44 px, posé à 8 px du coin : il ne couvre plus que la
-    // marge et deux ou trois lettres. Son nom accessible reste « Calculatrice ».
-    <div data-calculatrice="" className="fixed bottom-[calc(0.5rem+env(safe-area-inset-bottom,0px))] right-2 z-40 grid justify-items-end gap-2 sm:bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:right-4">
+    // SUR TÉLÉPHONE, UN ONGLET DANS LA MARGE (novembre 2026). Le rond de 44 px posé à
+    // 8 px du coin (audit d'octobre) mordait encore sur le bord droit des cartes, celle du
+    // laboratoire comprise : à 390 px, aucune marge ne loge un rond. Fermée, la calculatrice
+    // devient un onglet de 32 × 56 px collé au bord droit de l'écran (zone sûre comprise), et
+    // la page lui laisse cette bande (`main:has([data-calculatrice])`, globals.css) : il ne
+    // recouvre plus rien, où que l'on soit dans la page. Son nom accessible reste « Calculatrice ».
+    <div data-calculatrice="" className="fixed bottom-[calc(0.5rem+env(safe-area-inset-bottom,0px))] right-[env(safe-area-inset-right,0px)] z-40 grid justify-items-end gap-2 sm:bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:right-4">
       {ouverte && (
         <section
           id={id}
           aria-label="Calculatrice"
-          className="carte grid w-[min(20rem,calc(100vw-2rem))] gap-3 bg-slate-950 p-3 shadow-xl"
+          className="carte grid w-[min(20rem,calc(100vw-2rem))] gap-3 max-sm:mr-2 bg-slate-950 p-3 shadow-xl"
         >
           {historique.length > 0 && (
             <ol className="grid gap-0.5 text-right text-xs tabular-nums text-slate-400" aria-label="Derniers calculs">
@@ -176,8 +177,10 @@ export function Calculatrice() {
         aria-expanded={ouverte}
         aria-controls={id}
         data-bouton-calculatrice=""
-        className={`rounded-full border border-white/15 bg-slate-900 text-sm font-semibold text-slate-100 shadow-lg hover:border-amber-400/50 ${
-          ouverte ? "px-4 py-2.5" : "grid h-11 w-11 place-items-center sm:h-auto sm:w-auto sm:px-4 sm:py-2.5"
+        className={`border border-white/15 bg-slate-900 text-sm font-semibold text-slate-100 shadow-lg hover:border-amber-400/50 ${
+          ouverte
+            ? "rounded-full px-4 py-2.5 max-sm:mr-2"
+            : "grid h-14 w-8 place-items-center rounded-l-xl border-r-0 sm:h-auto sm:w-auto sm:rounded-full sm:border-r sm:px-4 sm:py-2.5"
         }`}
         onClick={() => setOuverte((o) => !o)}
       >

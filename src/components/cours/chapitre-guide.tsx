@@ -741,7 +741,7 @@ function GraphiqueDuSeuil({
 }) {
   const L = 560;
   const H = 260;
-  const marge = { g: 8, d: 8, h: 12, b: 26 };
+  const marge = { g: 8, d: 8, h: 12, b: 8 };
   // L'axe des montants va de zéro (ou du plus bas des deux droites, s'il est négatif) au plus haut.
   const valeurs = [...produit, ...cout];
   const hautMax = Math.max(...valeurs, 0) * 1.05 || 1;
@@ -984,38 +984,48 @@ function GraphiqueDuLaboratoire({
   const unite = graphique.unite ?? "€";
   return (
     <figure className="grid gap-2" data-graphique-du-laboratoire="">
-      <svg viewBox={`0 0 ${L} ${H}`} className="h-auto w-full max-w-2xl" role="img" aria-label={`${courbes.join(", ")} selon ${levier.libelle.toLowerCase()}`}>
-        {!loinDeZero && <line x1={x(levier.min)} y1={y(0)} x2={x(levier.max)} y2={y(0)} stroke="currentColor" strokeOpacity="0.4" />}
-        {loinDeZero && (
-          <>
-            <text x={x(levier.min)} y={marge.h + 10} fontSize="11" fill="currentColor" opacity="0.7">
-              {valeurDeLigne(haut, unite === "€" ? undefined : unite)}
-            </text>
-            <text x={x(levier.min)} y={H - marge.b - 4} fontSize="11" fill="currentColor" opacity="0.7">
-              {valeurDeLigne(bas, unite === "€" ? undefined : unite)}
-            </text>
-          </>
-        )}
-        {series.map((pts, k) => (
-          <polyline
-            key={courbes[k]}
-            points={pts.map((v, i) => `${x(xs[i]!)},${y(v)}`).join(" ")}
-            fill="none"
-            stroke={COULEURS_DES_COURBES[k % COULEURS_DES_COURBES.length]}
-            strokeWidth="2.5"
-          />
-        ))}
-        <line x1={x(ici)} y1={H - marge.b} x2={x(ici)} y2={marge.h} stroke="currentColor" strokeDasharray="4 4" strokeOpacity="0.6" />
-        {courbes.map((c, k) => (
-          <circle key={c} cx={x(ici)} cy={y(points.ici[k]!)} r="5" fill={COULEURS_DES_COURBES[k % COULEURS_DES_COURBES.length]} />
-        ))}
-        <text x={x(levier.min)} y={H - 6} fontSize="12" fill="currentColor">
-          {levier.min.toLocaleString("fr-FR")} {levier.unite}
-        </text>
-        <text x={x(levier.max)} y={H - 6} fontSize="12" fill="currentColor" textAnchor="end">
-          {levier.max.toLocaleString("fr-FR")} {levier.unite}
-        </text>
-      </svg>
+      {/* LES LIBELLÉS SONT DU TEXTE DE LA PAGE, PAS DU DESSIN (novembre 2026). Écrits dans le SVG en
+          11 à 12 unités sur 560, ils suivaient l'échelle du graphique : à 390 px de large, vers 6 px,
+          illisibles. Posés en HTML autour du dessin, ils gardent leur taille à toutes les largeurs. Le
+          dessin garde sa description ; ces libellés la doublent, ils restent hors des lecteurs d'écran. */}
+      <div className="grid max-w-2xl gap-1">
+        <div className="relative">
+          <svg viewBox={`0 0 ${L} ${H}`} className="block h-auto w-full" role="img" aria-label={`${courbes.join(", ")} selon ${levier.libelle.toLowerCase()}`}>
+            {!loinDeZero && <line x1={x(levier.min)} y1={y(0)} x2={x(levier.max)} y2={y(0)} stroke="currentColor" strokeOpacity="0.4" />}
+            {series.map((pts, k) => (
+              <polyline
+                key={courbes[k]}
+                points={pts.map((v, i) => `${x(xs[i]!)},${y(v)}`).join(" ")}
+                fill="none"
+                stroke={COULEURS_DES_COURBES[k % COULEURS_DES_COURBES.length]}
+                strokeWidth="2.5"
+              />
+            ))}
+            <line x1={x(ici)} y1={H - marge.b} x2={x(ici)} y2={marge.h} stroke="currentColor" strokeDasharray="4 4" strokeOpacity="0.6" />
+            {courbes.map((c, k) => (
+              <circle key={c} cx={x(ici)} cy={y(points.ici[k]!)} r="5" fill={COULEURS_DES_COURBES[k % COULEURS_DES_COURBES.length]} />
+            ))}
+          </svg>
+          {loinDeZero && (
+            <>
+              <span aria-hidden className="absolute left-0 top-0 text-xs leading-none tabular-nums opacity-70">
+                {valeurDeLigne(haut, unite === "€" ? undefined : unite)}
+              </span>
+              <span aria-hidden className="absolute bottom-0 left-0 text-xs leading-none tabular-nums opacity-70">
+                {valeurDeLigne(bas, unite === "€" ? undefined : unite)}
+              </span>
+            </>
+          )}
+        </div>
+        <p aria-hidden className="flex justify-between gap-3 text-xs tabular-nums">
+          <span>
+            {levier.min.toLocaleString("fr-FR")} {levier.unite}
+          </span>
+          <span className="text-right">
+            {levier.max.toLocaleString("fr-FR")} {levier.unite}
+          </span>
+        </p>
+      </div>
       <figcaption className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
         {courbes.map((c, k) => (
           <span key={c} className="flex items-center gap-1.5">
