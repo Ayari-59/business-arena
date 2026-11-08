@@ -68,7 +68,7 @@ function CgvPage() {
           <Section title="Les offres">
             <ul className="list-disc space-y-2 pl-5">
               <li>
-                <strong className="text-slate-200">{OFFRES.decouverte.nom}</strong> : offre gratuite, sans compte, l&apos;arène en solo.{" "}
+                <strong className="text-slate-200">{OFFRES.decouverte.nom}</strong> : sans compte, l&apos;arène en solo.{" "}
                 {LE_COURS_PAR_OFFRE.decouverte}
               </li>
               <li>

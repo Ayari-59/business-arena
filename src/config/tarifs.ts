@@ -83,7 +83,7 @@ import { DECOUVERTE_PAR_DEFAUT, niveauMaxSansLicence, type ReglageDeLaDecouverte
 
 /** Les offres de la grille, par code. Le code est celui des adresses (`?offre=`). */
 export const OFFRES = {
-  decouverte: { code: "decouverte", nom: "Premiers pas" },
+  decouverte: { code: "decouverte", nom: "Essai gratuit" },
   classe: { code: "classe", nom: "Classe" },
   programme: { code: "programme", nom: "Programme" },
   campus: { code: "campus", nom: "Campus" },

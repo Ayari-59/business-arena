@@ -304,7 +304,7 @@ describe("/admin/offres", () => {
       }
       await choix.locator(`input[name="demos"][value="${cocher}"]`).check();
       await choix.locator(`input[name="demos"][value="${decocher}"]`).uncheck();
-      await page.getByRole("button", { name: "Enregistrer l'offre Premiers pas" }).click();
+      await page.getByRole("button", { name: "Enregistrer l'essai gratuit" }).click();
       await page.waitForURL(/fait=decouverte/);
     };
     await demos(ajoutee.code, retiree);

@@ -147,8 +147,8 @@ const vente = (patch: Partial<SaisieDeLicence> & { offre: string }): SaisieDeLic
  * les aligne retire la ligne d'ici.
  */
 const TEXTES_ENCORE_EN_BASE: Record<string, string> = {
-  // Le nom de l'offre gratuite : « Premiers pas » dans le code, « Découverte » en base.
-  "Premiers pas": "Découverte",
+  // Le nom de l'offre gratuite : « Essai gratuit » dans le code, « Découverte » en base.
+  "Essai gratuit": "Découverte",
   "Les ateliers clés en main écrits pour cette entreprise et ce niveau, ou à un niveau près, avec déroulé, corrigés et dossier enseignant. Certaines combinaisons n'en ont aucun : le formulaire de devis dit lesquels votre choix comprend.":
     "Les ateliers clés en main qui se jouent avec cette entreprise et ce niveau, avec déroulé, corrigés et dossier enseignant.",
 };

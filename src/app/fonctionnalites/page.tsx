@@ -1,7 +1,7 @@
 import { avecTypographie } from "@/components/typographie";
 import { NIVEAUX_D_INDICE } from "@/config/scenarios/situation-kit";
 import Link from "next/link";
-import { LES_OFFRES_DE_L_ARENE, nomDOffre } from "@/config/tarifs";
+import { LES_OFFRES_DE_L_ARENE, OFFRES } from "@/config/tarifs";
 import { LigneDePrix } from "@/components/ligne-de-prix";
 import { ALL_SITUATIONS, SCENARIO_CHOICES } from "@/config/scenarios/registry";
 import { DECISION_MODELS } from "@/config/pedagogy/models";
@@ -66,9 +66,10 @@ const PILLARS = [
 const DIFFERENTIATORS = [
   { label: "Sans compte", desc: "Aucune inscription requise pour les élèves" },
   { label: "Sans installation", desc: "Fonctionne dans le navigateur, sur tout appareil" },
-  // « Essai gratuit » promettait tous les scénarios et toutes les fonctionnalités
-  // sans engagement : la grille (config/tarifs.ts) ouvre le solo, pas la classe.
-  { label: `${nomDOffre("decouverte")} gratuite`, desc: `Le simulateur en solo, sans compte ; la classe avec ${LES_OFFRES_DE_L_ARENE}` },
+  // L'ancien « Essai gratuit » promettait tous les scénarios et toutes les fonctionnalités
+  // sans engagement : la grille (config/tarifs.ts) ouvre le solo, pas la classe. L'offre
+  // gratuite s'appelle « Essai gratuit » depuis novembre 2026, et dit ce qu'elle ouvre.
+  { label: OFFRES.decouverte.nom, desc: `Le simulateur en solo, sans compte ; la classe avec ${LES_OFFRES_DE_L_ARENE}` },
   { label: "Testé", desc: "Moteur déterministe, tenu par sa suite de tests" },
 ];
 
