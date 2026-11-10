@@ -48,15 +48,15 @@ describe("les matières couvertes en entier et le repère « en cours »", () =>
     expect(enCours).toBeGreaterThan(0);
   });
 
-  it("le même thème d'un autre programme du bac STMG reste « en cours »", () => {
-    const stmg = coursDuDiplome("stmg")!.blocs;
-    const gf = stmg.filter((b) => b.partie === "Terminale, gestion et finance");
-    expect(gf.length).toBe(3);
-    expect(gf.every((b) => !b.enCours)).toBe(true);
-    // lots C, D et E STMG : la partie commune, la mercatique et les ressources humaines sont couvertes en entier ; les systèmes d'information de gestion, pas encore.
+  it("plus aucun thème du bac STMG n'est « en cours »", () => {
+    // lot F STMG : les systèmes d'information de gestion, le dernier programme, sont couverts en entier (début)
+    const stmg = coursDuDiplome("stmg")!.blocs.filter((b) => b.bloc !== null);
+    expect(stmg.length).toBe(23);
+    expect(stmg.filter((b) => b.enCours).map((b) => `${b.partie} / ${b.bloc}`)).toEqual([]);
     const sig = stmg.filter((b) => b.partie === "Terminale, systèmes d'information de gestion");
-    expect(sig.length).toBeGreaterThan(0);
-    expect(sig.every((b) => b.enCours)).toBe(true);
+    expect(sig.length).toBe(4);
+    for (const b of stmg) expect(MATIERES_COUVERTES_EN_ENTIER.some((m) => m.formation === "stmg" && m.bloc === b.bloc && m.partie === b.partie), `${b.partie} / ${b.bloc}`).toBe(true);
+    // lot F STMG (fin)
   });
 
   it("tous les thèmes officiels du bac STMG sont sur la page, vides compris, et un thème vide est « en cours »", () => {

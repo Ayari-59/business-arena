@@ -264,6 +264,17 @@ import { SORTIR_DE_LA_GREVE } from "./par-chapitre/sortir-de-la-greve";
 import { UN_ACCORD_SANS_DELEGUE_SYNDICAL } from "./par-chapitre/un-accord-sans-delegue-syndical";
 import { UNE_REUNION_PAR_MOIS_OU_UN_OUTIL } from "./par-chapitre/une-reunion-par-mois-ou-un-outil";
 // lot E STMG (fin des imports)
+// lot F STMG : les systèmes d'information de gestion de terminale (début des imports)
+import { CONTROLER_LES_ADRESSES_A_LA_SAISIE } from "./par-chapitre/controler-les-adresses-a-la-saisie";
+import { PAYER_LA_RANCON } from "./par-chapitre/payer-la-rancon";
+import { RENOUVELER_L_INFOGERANCE } from "./par-chapitre/renouveler-l-infogerance";
+import { DEMARRER_LE_PGI_A_LA_DATE_PREVUE } from "./par-chapitre/demarrer-le-pgi-a-la-date-prevue";
+import { RANGER_LES_AVIS_DES_CLIENTS } from "./par-chapitre/ranger-les-avis-des-clients";
+import { OU_OUVRIR_UN_POINT_DE_RETRAIT } from "./par-chapitre/ou-ouvrir-un-point-de-retrait";
+import { UN_BON_DES_80_POINTS } from "./par-chapitre/un-bon-des-80-points";
+import { NUMERISER_LES_ARCHIVES } from "./par-chapitre/numeriser-les-archives";
+import { PASSER_A_LA_FIBRE } from "./par-chapitre/passer-a-la-fibre";
+// lot F STMG (fin des imports)
 export type { Situation } from "./types";
 
 /**
@@ -543,6 +554,17 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   UN_ACCORD_SANS_DELEGUE_SYNDICAL,
   UNE_REUNION_PAR_MOIS_OU_UN_OUTIL,
   // lot E STMG (fin)
+  // lot F STMG : les systèmes d'information de gestion de terminale (début)
+  CONTROLER_LES_ADRESSES_A_LA_SAISIE,
+  PAYER_LA_RANCON,
+  RENOUVELER_L_INFOGERANCE,
+  DEMARRER_LE_PGI_A_LA_DATE_PREVUE,
+  RANGER_LES_AVIS_DES_CLIENTS,
+  OU_OUVRIR_UN_POINT_DE_RETRAIT,
+  UN_BON_DES_80_POINTS,
+  NUMERISER_LES_ARCHIVES,
+  PASSER_A_LA_FIBRE,
+  // lot F STMG (fin)
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */

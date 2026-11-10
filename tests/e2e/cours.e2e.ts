@@ -1272,6 +1272,35 @@ describe.each([
   { code: "un-accord-sans-delegue-syndical", entreprise: "hotel", telephone: true },
   { code: "une-reunion-par-mois-ou-un-outil", entreprise: "conseil" },
   // lot E STMG (fin)
+  // lot F STMG : les systèmes d'information de gestion de terminale (9 chapitres), sur ordinateur et sur téléphone, et leurs cas (début)
+  { code: "le-systeme-d-information-de-nova", entreprise: "nova" },
+  { code: "le-systeme-d-information-de-nova", entreprise: "nova", telephone: true },
+  { code: "securiser-le-systeme-d-information", entreprise: "nova" },
+  { code: "securiser-le-systeme-d-information", entreprise: "nova", telephone: true },
+  { code: "la-fonction-systeme-d-information", entreprise: "nova" },
+  { code: "la-fonction-systeme-d-information", entreprise: "nova", telephone: true },
+  { code: "conduire-un-projet-de-si", entreprise: "nova" },
+  { code: "conduire-un-projet-de-si", entreprise: "nova", telephone: true },
+  { code: "la-base-de-donnees-relationnelle", entreprise: "nova" },
+  { code: "la-base-de-donnees-relationnelle", entreprise: "nova", telephone: true },
+  { code: "interroger-la-base-en-sql", entreprise: "nova" },
+  { code: "interroger-la-base-en-sql", entreprise: "nova", telephone: true },
+  { code: "automatiser-un-traitement", entreprise: "boutique" },
+  { code: "automatiser-un-traitement", entreprise: "boutique", telephone: true },
+  { code: "documents-structures-et-metadonnees", entreprise: "boutique" },
+  { code: "documents-structures-et-metadonnees", entreprise: "boutique", telephone: true },
+  { code: "reseaux-et-informatique-en-nuage", entreprise: "conseil" },
+  { code: "reseaux-et-informatique-en-nuage", entreprise: "conseil", telephone: true },
+  { code: "controler-les-adresses-a-la-saisie", entreprise: "nova" },
+  { code: "payer-la-rancon", entreprise: "nova", telephone: true },
+  { code: "renouveler-l-infogerance", entreprise: "nova" },
+  { code: "demarrer-le-pgi-a-la-date-prevue", entreprise: "nova", telephone: true },
+  { code: "ranger-les-avis-des-clients", entreprise: "nova" },
+  { code: "ou-ouvrir-un-point-de-retrait", entreprise: "nova", telephone: true },
+  { code: "un-bon-des-80-points", entreprise: "boutique" },
+  { code: "numeriser-les-archives", entreprise: "boutique", telephone: true },
+  { code: "passer-a-la-fibre", entreprise: "conseil" },
+  // lot F STMG (fin)
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se

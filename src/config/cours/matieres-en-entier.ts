@@ -225,6 +225,36 @@ export const MATIERES_COUVERTES_EN_ENTIER: readonly MatiereEnEntier[] = [
       "Audit du chantier STMG, section 5, puis le lot E. 3.1 : « Le climat social et le conflit » (relations professionnelles, climat social et ses signaux, conflits individuels et collectifs, droit de grève, coût du conflit, négociation, conciliation, médiation, arbitrage, compromis et dépassement). 3.2 : « Le dialogue social » (acteurs, comité social et économique, information, consultation, concertation et négociation, niveaux de la négociation collective, BDESE, que le texte de 2019 nomme BDES, bilan social, accord d'entreprise sans délégué syndical). 3.3 : « Communication interne et marque employeur » (finalités, intranet, réseau social d'entreprise, outils collaboratifs, droit à la déconnexion, marque employeur interne et externe, avis en ligne). S'y ajoute « Communiquer avec chaque acteur », qui cite ce thème en second (communication externe et financière, e-réputation).",
   },
   // lot E STMG (fin)
+  // lot F STMG : les systèmes d'information de gestion de terminale, leurs quatre thèmes et leurs huit questions (début)
+  {
+    formation: "stmg",
+    bloc: "Thème 1 · Organisation et numérisation",
+    partie: "Terminale, systèmes d'information de gestion",
+    preuve:
+      "Audit du chantier STMG, section 6 (annexe 2 de l'arrêté du 19 juillet 2019), puis le lot F. 1.1 : « Le système d'information de NOVA » (histoire, dimensions, ressources, objectifs et niveaux ; acquisition, traitement, stockage et diffusion ; systèmes d'information fonctionnels). Il traite aussi la gestion centralisée et la qualité des données, la modélisation d'un processus, le système informatique et la transformation organisationnelle. S'y ajoute « Ce que coûte et rapporte un outil numérique ». 1.2 : « Sécuriser le système d'information » (numérique et responsabilités sociales et environnementales, risques informatiques et pour les personnes, disponibilité, intégrité, confidentialité et traçabilité, démarche de sécurisation et criticité, outils et sauvegarde, RGPD, cybersécurité, hameçonnage et rançongiciel).",
+  },
+  {
+    formation: "stmg",
+    bloc: "Thème 2 · Management du système d'information et performance",
+    partie: "Terminale, systèmes d'information de gestion",
+    preuve:
+      "Audit du chantier STMG, section 6, puis le lot F. 2.1 : « La fonction système d'information » (métiers et nouveaux métiers, gestion des compétences, externalisation et infogérance, leurs raisons et leurs limites, veille technologique, budget, tableau de bord opérationnel, indicateurs et critères, alignement sur la stratégie). S'y ajoute « Une donnée fausse, une décision fausse », qui cite ce thème en premier (la qualité des données). 2.2 : « Conduire un projet de système d'information » (maîtrise d'ouvrage et maîtrise d'œuvre, phases et jalons, planification, tâches critiques et marge, pilotage du coût, délai, coût et qualité, conduite classique et agile, synchronisation et coopération, recette).",
+  },
+  {
+    formation: "stmg",
+    bloc: "Thème 3 · Information, action et décision",
+    partie: "Terminale, systèmes d'information de gestion",
+    preuve:
+      "Audit du chantier STMG, section 6, puis le lot F. 3.1 : « La base de données relationnelle » (sources de données, base de données, relation, attribut, domaine, clés primaire et étrangère, schéma relationnel, dépendance fonctionnelle, contraintes de clé, de domaine et référentielle, données massives et lacs de données). Puis « Interroger la base en SQL » (sélection, opérateurs relationnels et logiques, jointure, fonctions d'agrégat, regroupement et tri, traces numériques), par des étapes guidées corrigées au serveur. S'y ajoutent « Des données à l'information » et « Construire un indicateur juste ». 3.2 : « Automatiser un traitement » (constantes, variables, paramètres et types, séquence, tests, boucles et fonctions, jeu d'essai et mise au point, API et bibliothèque, intelligence artificielle).",
+  },
+  {
+    formation: "stmg",
+    bloc: "Thème 4 · Système d'information et échange",
+    partie: "Terminale, systèmes d'information de gestion",
+    preuve:
+      "Audit du chantier STMG, section 6, puis le lot F. 4.1 : « Documents structurés » (numérisation, structuration et indexation, langage de balisage et de définition de documents, contenu, présentation et métadonnées, hyperlien, syndication et référencement, gestion électronique des documents et moteur de recherche, standardisation des échanges). 4.2 : « Réseaux et informatique en nuage » (protocoles et services, codage des données et débit, supports de transmission, adressage et configuration d'un hôte, accès à une ressource). Il traite aussi l'architecture et sa sécurisation, la centralisation, la chaîne de blocs et les services du nuage.",
+  },
+  // lot F STMG (fin)
 ];
 
 /** Vrai si le bloc du diplôme est une matière couverte en entier. */
