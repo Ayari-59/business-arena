@@ -50,8 +50,9 @@ export const REMUNERATION_ET_MOTIVATION: Chapitre = {
   code: "remuneration-et-motivation",
   parcours: "stmg-rh",
   palier: 1,
+  // lot E STMG : le chapitre ne cite plus que son thème de ressources humaines, pour s'afficher sous lui
+  // (il se rangeait sous le thème 1 de la SGN, que le référentiel nomme avant).
   blocs: [
-    "STMG Thème 1 · De l'individu à l'acteur",
     "STMG Thème 2 · Des facteurs de motivation et de satisfaction : qualité de vie au travail et rémunération",
   ],
   titre: "Rémunération et motivation",

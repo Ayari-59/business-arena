@@ -580,6 +580,26 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "chapitres/influence-communaute-et-e-reputation.ts",
   "situations/par-chapitre/l-influenceuse-du-haut-verdasse.ts",
   // lot D STMG (fin)
+  // lot E STMG : les ressources humaines et la communication de terminale, et leurs cas.
+  "chapitres/recruter-et-integrer.ts",
+  "chapitres/evaluer-le-travail.ts",
+  "chapitres/developper-les-competences.ts",
+  "chapitres/qualite-de-vie-et-conditions-de-travail.ts",
+  "chapitres/sante-et-securite-au-travail.ts",
+  "chapitres/au-dela-du-salaire.ts",
+  "chapitres/le-climat-social-et-le-conflit.ts",
+  "chapitres/le-dialogue-social.ts",
+  "chapitres/communication-interne-et-marque-employeur.ts",
+  "situations/par-chapitre/un-saisonnier-ou-un-interimaire.ts",
+  "situations/par-chapitre/une-prime-sur-les-desserts.ts",
+  "situations/par-chapitre/abonder-le-compte-de-mehdi.ts",
+  "situations/par-chapitre/supprimer-le-service-coupe.ts",
+  "situations/par-chapitre/equiper-les-postes-de-vissage.ts",
+  "situations/par-chapitre/placer-son-interessement.ts",
+  "situations/par-chapitre/sortir-de-la-greve.ts",
+  "situations/par-chapitre/un-accord-sans-delegue-syndical.ts",
+  "situations/par-chapitre/une-reunion-par-mois-ou-un-outil.ts",
+  // lot E STMG (fin)
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
@@ -876,6 +896,26 @@ const NE_LISENT_PLUS_L_ANNEE_FIGEE: readonly string[] = [
   "chapitres/influence-communaute-et-e-reputation.ts",
   "situations/par-chapitre/l-influenceuse-du-haut-verdasse.ts",
   // lot D STMG (fin)
+  // lot E STMG : les ressources humaines et la communication de terminale, et leurs cas.
+  "chapitres/recruter-et-integrer.ts",
+  "chapitres/evaluer-le-travail.ts",
+  "chapitres/developper-les-competences.ts",
+  "chapitres/qualite-de-vie-et-conditions-de-travail.ts",
+  "chapitres/sante-et-securite-au-travail.ts",
+  "chapitres/au-dela-du-salaire.ts",
+  "chapitres/le-climat-social-et-le-conflit.ts",
+  "chapitres/le-dialogue-social.ts",
+  "chapitres/communication-interne-et-marque-employeur.ts",
+  "situations/par-chapitre/un-saisonnier-ou-un-interimaire.ts",
+  "situations/par-chapitre/une-prime-sur-les-desserts.ts",
+  "situations/par-chapitre/abonder-le-compte-de-mehdi.ts",
+  "situations/par-chapitre/supprimer-le-service-coupe.ts",
+  "situations/par-chapitre/equiper-les-postes-de-vissage.ts",
+  "situations/par-chapitre/placer-son-interessement.ts",
+  "situations/par-chapitre/sortir-de-la-greve.ts",
+  "situations/par-chapitre/un-accord-sans-delegue-syndical.ts",
+  "situations/par-chapitre/une-reunion-par-mois-ou-un-outil.ts",
+  // lot E STMG (fin)
 ];
 
 /** Le premier chemin d'imports qui atteint un fichier donné, ou rien. */

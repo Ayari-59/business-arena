@@ -62,8 +62,9 @@ export const FORMER: Chapitre = {
   code: "former",
   parcours: "stmg-rh",
   palier: 1,
+  // lot E STMG : le chapitre ne cite plus que son thème de ressources humaines, pour s'afficher sous lui
+  // (il se rangeait sous le thème 1 de la SGN, que le référentiel nomme avant).
   blocs: [
-    "STMG Thème 1 · De l'individu à l'acteur",
     "STMG Thème 1 · Les compétences au service de l'organisation et l'organisation au service du développement des compétences",
   ],
   titre: "Former pour être plus efficace",

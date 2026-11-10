@@ -12,7 +12,10 @@ import { coursDuDiplome } from "../../src/config/cours/par-diplome";
 const PARTIE = "Première, sciences de gestion et numérique";
 
 const ATTENDUS: Record<string, readonly string[]> = {
-  "Thème 1 · De l'individu à l'acteur": ["de-l-individu-a-l-acteur", "la-diversite-des-organisations", "qualification-competences-et-liens-de-travail", "salaire-brut-net-cout", "recruter", "remuneration-et-motivation", "former", "indicateurs-sociaux", "effectif-et-masse-salariale"],
+  // lot E STMG : « Recruter », « Former » et « Rémunération et motivation » s'affichent désormais sous les thèmes de
+  // ressources humaines (tests/cours/ressources-humaines-en-entier.test.ts) ; le coût du travail et le tableau de bord
+  // social de T1.3 restent ici, par le salaire, la masse salariale et les indicateurs sociaux.
+  "Thème 1 · De l'individu à l'acteur": ["de-l-individu-a-l-acteur", "la-diversite-des-organisations", "qualification-competences-et-liens-de-travail", "salaire-brut-net-cout", "indicateurs-sociaux", "effectif-et-masse-salariale"],
   "Thème 2 · Numérique et intelligence collective": ["donnees-personnelles-et-donnees-ouvertes", "decider-ensemble", "une-information-a-temps", "le-processus-et-le-pgi"],
   "Thème 3 · Création de valeur et performance": ["les-formes-de-la-valeur", "la-performance-globale", "valeur-ajoutee-et-partage", "lire-le-compte-de-resultat", "rentabilite", "marche-et-part-de-marche"],
   "Thème 4 · Temps et risque": ["assez-vendre-pour-ne-rien-perdre", "prevoir-sa-tresorerie", "le-temps-de-l-organisation", "les-risques-de-la-performance", "fonds-de-roulement-et-tresorerie", "financer-l-entreprise"],
