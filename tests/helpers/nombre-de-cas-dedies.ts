@@ -14,4 +14,6 @@ export const NOMBRE_DE_CAS_DEDIES =
   // lot C STMG : les cas des chapitres de la partie commune de terminale et de la gestion et finance.
   14 +
   // lot D STMG : les cas des chapitres de mercatique de terminale.
-  8;
+  8 +
+  // lot E STMG : les cas des chapitres de ressources humaines et communication de terminale.
+  9;

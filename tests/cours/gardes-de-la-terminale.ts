@@ -28,7 +28,19 @@ export const THEMES_DE_GESTION_ET_FINANCE = [
   "STMG Thème 3 · Accompagner la prise de décision",
 ] as const;
 
-type Premier = (typeof THEMES_DE_LA_PARTIE_COMMUNE)[number] | (typeof THEMES_DE_GESTION_ET_FINANCE)[number];
+// lot E STMG : les thèmes de ressources humaines et communication, sous lesquels les chapitres du lot s'affichent (début)
+export const THEMES_DES_RESSOURCES_HUMAINES = [
+  "STMG Thème 1 · Les compétences au service de l'organisation et l'organisation au service du développement des compétences",
+  "STMG Thème 2 · Des facteurs de motivation et de satisfaction : qualité de vie au travail et rémunération",
+  "STMG Thème 3 · La recherche de cohésion, un levier d'amélioration des relations de travail et du climat social",
+] as const;
+// lot E STMG (fin)
+
+type Premier =
+  | (typeof THEMES_DE_LA_PARTIE_COMMUNE)[number]
+  | (typeof THEMES_DE_GESTION_ET_FINANCE)[number]
+  // lot E STMG
+  | (typeof THEMES_DES_RESSOURCES_HUMAINES)[number];
 
 /** Le chapitre est au programme de son parcours, au palier 1, cite d'abord son thème, se résout dans le référentiel et a un thème du catalogue. */
 export function gardeDuProgrammeT(ch: Chapitre, premier: Premier, ensuite: readonly string[] = []) {

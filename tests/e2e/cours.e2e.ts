@@ -1243,6 +1243,35 @@ describe.each([
   { code: "influence-communaute-et-e-reputation", entreprise: "fitness", telephone: true },
   { code: "l-influenceuse-du-haut-verdasse", entreprise: "fitness", telephone: true },
   // lot D STMG (fin)
+  // lot E STMG : les ressources humaines et la communication de terminale (9 chapitres), sur ordinateur et sur téléphone, et leurs cas.
+  { code: "recruter-et-integrer", entreprise: "hotel" },
+  { code: "recruter-et-integrer", entreprise: "hotel", telephone: true },
+  { code: "evaluer-le-travail", entreprise: "bistrot" },
+  { code: "evaluer-le-travail", entreprise: "bistrot", telephone: true },
+  { code: "developper-les-competences", entreprise: "nova" },
+  { code: "developper-les-competences", entreprise: "nova", telephone: true },
+  { code: "qualite-de-vie-et-conditions-de-travail", entreprise: "bistrot" },
+  { code: "qualite-de-vie-et-conditions-de-travail", entreprise: "bistrot", telephone: true },
+  { code: "sante-et-securite-au-travail", entreprise: "nova" },
+  { code: "sante-et-securite-au-travail", entreprise: "nova", telephone: true },
+  { code: "au-dela-du-salaire", entreprise: "nova" },
+  { code: "au-dela-du-salaire", entreprise: "nova", telephone: true },
+  { code: "le-climat-social-et-le-conflit", entreprise: "nova" },
+  { code: "le-climat-social-et-le-conflit", entreprise: "nova", telephone: true },
+  { code: "le-dialogue-social", entreprise: "hotel" },
+  { code: "le-dialogue-social", entreprise: "hotel", telephone: true },
+  { code: "communication-interne-et-marque-employeur", entreprise: "conseil" },
+  { code: "communication-interne-et-marque-employeur", entreprise: "conseil", telephone: true },
+  { code: "un-saisonnier-ou-un-interimaire", entreprise: "hotel" },
+  { code: "une-prime-sur-les-desserts", entreprise: "bistrot", telephone: true },
+  { code: "abonder-le-compte-de-mehdi", entreprise: "nova" },
+  { code: "supprimer-le-service-coupe", entreprise: "bistrot", telephone: true },
+  { code: "equiper-les-postes-de-vissage", entreprise: "nova" },
+  { code: "placer-son-interessement", entreprise: "nova", telephone: true },
+  { code: "sortir-de-la-greve", entreprise: "nova" },
+  { code: "un-accord-sans-delegue-syndical", entreprise: "hotel", telephone: true },
+  { code: "une-reunion-par-mois-ou-un-outil", entreprise: "conseil" },
+  // lot E STMG (fin)
 ] as { code: string; entreprise: string; telephone?: boolean }[])("le chapitre réservé $code chez $entreprise", ({ code: chapitreCode, entreprise, telephone }) => {
   it("sans licence, il dit qu'il est réservé (le cas du chapitre libre s'ouvre) ; sous licence, il se joue sans faute", async () => {
     // Le cas pratique du chapitre libre est libre lui aussi (décision d'octobre 2026) : il se

@@ -58,7 +58,8 @@ function reponseSansIndice(s: Situation) {
 }
 
 describe("le parcours ressources humaines du bac STMG, sur le monde du cours", () => {
-  it("a ses six chapitres dans l'ordre de sa carte, au palier 1, chez NOVA seule, et ses cas leur sont dédiés", () => {
+  // lot E STMG : la carte compte aussi les neuf chapitres du lot (tests/cours/ressources-humaines-en-entier.test.ts) ; les six du lot M6 restent chez NOVA.
+  it("a ses chapitres dans l'ordre de sa carte, au palier 1, les six du lot M6 chez NOVA seule, et leurs cas leur sont dédiés", () => {
     expect(CHAPITRES.filter((c) => c.parcours === "stmg-rh").map((c) => c.titre)).toEqual(PROGRAMME["stmg-rh"][1]);
     expect(PARCOURS.find((p) => p.code === "stmg-rh")!.resume).not.toMatch(/arène/);
     for (const ch of SIX) gardeDuProgramme(ch, PROGRAMME["stmg-rh"][1]!);
