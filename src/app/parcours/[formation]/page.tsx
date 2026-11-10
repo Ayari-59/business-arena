@@ -18,6 +18,7 @@ import { scenariosServant } from "@/config/scenarios/formations-servies";
 import { PASTILLE_D_ADEQUATION } from "@/components/adequation";
 import { COLONNE_DE_PAGE, EnTeteDePage } from "@/components/en-tete-de-page";
 import { PiedDePage } from "@/components/pied-de-page";
+import { LIBELLE_POUR_ALLER_PLUS_LOIN, approfondissementsALaFin, pourAllerPlusLoin } from "@/config/cours/pour-aller-plus-loin";
 
 /**
  * LA PAGE D'UN DIPLÔME : SON RÉFÉRENTIEL ENTIER, ET CE QUI LE TRAVAILLE.
@@ -262,7 +263,7 @@ async function PageDuDiplome({
                             </span>
                             {c && c.chapitres.length > 0 ? (
                               <ul className="grid gap-1">
-                                {c.chapitres.map((ch) => (
+                                {approfondissementsALaFin(code, c.chapitres, (ch) => ch.code).map((ch) => (
                                   <li key={ch.code}>
                                     <Link
                                       href={`/cours/${ch.code}`}
@@ -270,6 +271,11 @@ async function PageDuDiplome({
                                     >
                                       {ch.titre}
                                     </Link>
+                                    {pourAllerPlusLoin(code, ch.code) ? (
+                                      <span data-pour-aller-plus-loin="" className="ml-2 text-xs text-sky-300">
+                                        {LIBELLE_POUR_ALLER_PLUS_LOIN}
+                                      </span>
+                                    ) : null}
                                   </li>
                                 ))}
                               </ul>
@@ -371,7 +377,7 @@ async function PageDuDiplome({
                     {g.parcours.titre}
                   </h3>
                   <ul className="grid gap-1 text-sm">
-                    {g.chapitres.map((ch) => (
+                    {approfondissementsALaFin(code, g.chapitres, (ch) => ch.code).map((ch) => (
                       <li
                         key={ch.code}
                         className="flex flex-wrap items-baseline gap-x-2"
@@ -385,6 +391,11 @@ async function PageDuDiplome({
                         >
                           {ch.titre}
                         </Link>
+                        {pourAllerPlusLoin(code, ch.code) ? (
+                          <span data-pour-aller-plus-loin="" className="text-xs text-sky-300">
+                            {LIBELLE_POUR_ALLER_PLUS_LOIN}
+                          </span>
+                        ) : null}
                       </li>
                     ))}
                   </ul>

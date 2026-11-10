@@ -209,6 +209,22 @@ import { INTEGRER_EXTERNALISER_CROITRE } from "./chapitres/integrer-externaliser
 import { LA_STRATEGIE_D_UNE_ORGANISATION_PUBLIQUE } from "./chapitres/la-strategie-d-une-organisation-publique";
 import { LA_STRATEGIE_D_UNE_ASSOCIATION } from "./chapitres/la-strategie-d-une-association";
 // fin du lot B STMG.
+// lot C STMG : la partie commune de terminale et les versions lycée de la gestion et finance (début des imports)
+import { UNE_OFFRE_POUR_UN_BESOIN } from "./chapitres/une-offre-pour-un-besoin";
+import { LES_RESSOURCES_POUR_PRODUIRE } from "./chapitres/les-ressources-pour-produire";
+import { ORGANISER_LA_PRODUCTION } from "./chapitres/organiser-la-production";
+import { COUT_COMPLET_OU_COUT_SPECIFIQUE } from "./chapitres/cout-complet-ou-cout-specifique";
+import { LE_NUMERIQUE_DANS_LA_PRODUCTION } from "./chapitres/le-numerique-dans-la-production";
+import { ORGANISER_LE_TRAVAIL_ET_COORDONNER } from "./chapitres/organiser-le-travail-et-coordonner";
+import { FEDERER_LES_ACTEURS } from "./chapitres/federer-les-acteurs";
+import { LE_CLIENT_A_L_ERE_NUMERIQUE } from "./chapitres/le-client-a-l-ere-numerique";
+import { COMMUNIQUER_AVEC_CHAQUE_ACTEUR } from "./chapitres/communiquer-avec-chaque-acteur";
+import { ETHIQUE_TRANSPARENCE_ET_EGALITE } from "./chapitres/ethique-transparence-et-egalite";
+import { LES_MODES_DE_VIE_CHANGENT } from "./chapitres/les-modes-de-vie-changent";
+import { DONNEES_ET_ALGORITHMES } from "./chapitres/donnees-et-algorithmes";
+import { S_IMPLANTER_SUR_UN_TERRITOIRE } from "./chapitres/s-implanter-sur-un-territoire";
+import { INVESTIR_AMORTIR_CLOTURER } from "./chapitres/investir-amortir-cloturer";
+// lot C STMG (fin des imports)
 // lot D STMG : mercatique de terminale (début des imports)
 import { POSITIONNER_L_OFFRE } from "./chapitres/positionner-l-offre";
 import { L_EXPERIENCE_CLIENT } from "./chapitres/l-experience-client";
@@ -501,6 +517,10 @@ export const PROGRAMME: Record<CodeParcours, Partial<Record<Chapitre["palier"], 
       "Financer autrement : subvention, compte courant et financement participatif",
       "Optimiser la trésorerie : placer l'excédent, couvrir le manque",
       "L'affectation du résultat : réserves, dividendes, report à nouveau",
+      // lot C STMG : terminale, gestion et finance (début)
+      "Coût complet ou coût spécifique : ce que coûte chaque produit",
+      "Investir, amortir, clôturer : une image fidèle des comptes",
+      // lot C STMG (fin)
     ],
   },
   "stmg-rh": {
@@ -630,6 +650,20 @@ export const PROGRAMME: Record<CodeParcours, Partial<Record<Chapitre["palier"], 
       "Produire : capacité, équipe et productivité",
       "Produire bien : la qualité et ce qu'elle coûte",
       "Les acteurs de l'organisation et le partage de la valeur",
+      // lot C STMG : terminale, enseignement commun (début)
+      "Une offre pour un besoin : étude de marché et modèle économique",
+      "Les ressources pour produire : financement et gestion des compétences",
+      "Organiser la production : modes, flux et logistique",
+      "Le numérique dans la production : données, flux de travaux et objets connectés",
+      "Organiser le travail et coordonner : spécialisation, polyvalence, délégation",
+      "Fédérer les acteurs : culture, style de direction et dynamique de groupe",
+      "Le client à l'ère numérique : parcours d'achat, traces et relation",
+      "Communiquer avec chaque acteur : interne, externe, financière",
+      "Éthique, transparence et égalité",
+      "Les modes de vie changent : travail et consommation",
+      "Données et algorithmes : les responsabilités du numérique",
+      "S'implanter sur un territoire : écosystème, cluster et innovation",
+      // lot C STMG (fin)
     ],
   },
   "dcg-comptabilite-approfondie": {
@@ -662,6 +696,24 @@ const CHAPITRES_DU_LOT_A_STMG: readonly Chapitre[] = [
 ];
 // lot A STMG (fin)
 
+// lot C STMG : la partie commune de terminale, dans l'ordre du programme, puis la gestion et finance.
+const CHAPITRES_DU_LOT_C_STMG: readonly Chapitre[] = [
+  UNE_OFFRE_POUR_UN_BESOIN,
+  LES_RESSOURCES_POUR_PRODUIRE,
+  ORGANISER_LA_PRODUCTION,
+  COUT_COMPLET_OU_COUT_SPECIFIQUE,
+  LE_NUMERIQUE_DANS_LA_PRODUCTION,
+  ORGANISER_LE_TRAVAIL_ET_COORDONNER,
+  FEDERER_LES_ACTEURS,
+  LE_CLIENT_A_L_ERE_NUMERIQUE,
+  COMMUNIQUER_AVEC_CHAQUE_ACTEUR,
+  ETHIQUE_TRANSPARENCE_ET_EGALITE,
+  LES_MODES_DE_VIE_CHANGENT,
+  DONNEES_ET_ALGORITHMES,
+  S_IMPLANTER_SUR_UN_TERRITOIRE,
+  INVESTIR_AMORTIR_CLOTURER,
+];
+// lot C STMG (fin)
 // lot D STMG : les chapitres de mercatique de terminale, dans l'ordre du programme.
 const CHAPITRES_DU_LOT_D_STMG: readonly Chapitre[] = [
   POSITIONNER_L_OFFRE,
@@ -679,6 +731,9 @@ export const CHAPITRES: readonly Chapitre[] = [CREATION_PREMIER_BILAN, DU_RESULT
   // lot B STMG : le management de première.
   ORGANISER_L_ACTION_COLLECTIVE, MANAGER_FONCTIONS_ET_DECISIONS, LE_MANAGEMENT_FACE_AU_CHANGEMENT, DOMAINES_D_ACTIVITE, INTEGRER_EXTERNALISER_CROITRE, LA_STRATEGIE_D_UNE_ORGANISATION_PUBLIQUE, LA_STRATEGIE_D_UNE_ASSOCIATION,
   // fin du lot B STMG.
+  // lot C STMG : la partie commune de terminale, puis les versions lycée de la gestion et finance.
+  ...CHAPITRES_DU_LOT_C_STMG,
+  // lot C STMG (fin)
   // lot D STMG : la mercatique de terminale.
   ...CHAPITRES_DU_LOT_D_STMG,
   // fin du lot D STMG.

@@ -3,6 +3,7 @@ import { formationParCode, formationProposee, type Formation } from "../formatio
 import { CHAPITRES_PROPOSES } from "../formations-proposees";
 import { dureeDuChapitre } from "./duree";
 import { couverteEnEntier } from "./matieres-en-entier";
+import { approfondissementsALaFin, pourAllerPlusLoin } from "./pour-aller-plus-loin";
 import { CHAPITRES } from "./registre";
 import { themeDuChapitre } from "./themes";
 import type { Chapitre } from "./types";
@@ -23,7 +24,9 @@ import type { Chapitre } from "./types";
  *    par son parcours sans citer de bloc ferme la liste, sous « Autres chapitres ».
  *  · L'ORDRE D'APPRENTISSAGE : les prérequis des chapitres (`Chapitre.prerequis`) d'abord, puis
  *    le palier, puis l'ordre du registre. Le rang est celui du parcours entier : un bloc peut
- *    commencer au rang 7, si ses chapitres demandent ceux d'un autre bloc.
+ *    commencer au rang 7, si ses chapitres demandent ceux d'un autre bloc. Les chapitres « pour
+ *    aller plus loin » du diplôme (config/cours/pour-aller-plus-loin.ts) viennent après tous les
+ *    autres : dans chaque bloc, ils ferment la liste.
  *
  * Rien ne s'y écrit à la main : la liste est celle de la couverture (`coursDeLaFormation`),
  * qui est aussi celle du programme compilé (config/cours/programme.ts).
@@ -37,6 +40,11 @@ export interface ChapitreDuDiplome {
   duree: number;
   /** Les chapitres à avoir vus avant, dans l'ordre où le chapitre les cite. */
   prerequis: readonly { code: string; titre: string; dansLeDiplome: boolean }[];
+  /**
+   * Un chapitre de niveau supérieur, gardé pour ce diplôme comme un approfondissement (« pour aller plus
+   * loin », config/cours/pour-aller-plus-loin.ts) : la page le marque et le range après les autres.
+   */
+  approfondissement: boolean;
 }
 
 export interface BlocDuParcours {
@@ -82,11 +90,12 @@ export function coursDuDiplome(code: string): CoursDuDiplome | null {
   const formation = formationParCode(code);
   if (!formation || !formationProposee(code)) return null;
   const chapitres = coursDeLaFormation(code).flatMap((g) => g.chapitres);
-  const ordre = ordreDApprentissage(chapitres);
+  const ordre = approfondissementsALaFin(code, ordreDApprentissage(chapitres), (c) => c.code);
   const lignes: ChapitreDuDiplome[] = ordre.map((chapitre, i) => ({
     chapitre,
     rang: i + 1,
     duree: dureeDuChapitre(chapitre),
+    approfondissement: pourAllerPlusLoin(code, chapitre.code),
     prerequis: (chapitre.prerequis ?? []).flatMap((p) => {
       const vu = CHAPITRES.find((c) => c.code === p);
       return vu ? [{ code: p, titre: vu.titre, dansLeDiplome: chapitres.some((c) => c.code === p) }] : [];

@@ -91,7 +91,9 @@ export const MATIERES_COUVERTES_EN_ENTIER: readonly MatiereEnEntier[] = [
     formation: "stmg",
     bloc: "Thème 1 · Appliquer les règles comptables",
     partie: "Terminale, gestion et finance",
-    preuve: "Audit de la finance (BO spécial n° 8 du 25 juillet 2019), puis la PR #349.",
+    // lot C STMG : 1.3 et 1.4 ont désormais leur version lycée.
+    preuve:
+      "Audit de la finance (BO spécial n° 8 du 25 juillet 2019), puis la PR #349 (1.1 et 1.2). 1.3 et 1.4, au niveau du lycée (décision du propriétaire, novembre 2026 ; lot C STMG) : « Investir, amortir, clôturer : une image fidèle des comptes ». Il traite le processus d'investissement, l'actif et la charge, le coût d'acquisition, le plan d'amortissement linéaire, l'exercice et l'inventaire, les quatre principes, le stock final, la créance dépréciée, la cession et son résultat, l'annexe. Les chapitres de BTS qui les couvraient restent hors de la page STMG.",
   },
   {
     formation: "stmg",
@@ -103,7 +105,9 @@ export const MATIERES_COUVERTES_EN_ENTIER: readonly MatiereEnEntier[] = [
     formation: "stmg",
     bloc: "Thème 3 · Accompagner la prise de décision",
     partie: "Terminale, gestion et finance",
-    preuve: "Audit de la finance (BO spécial n° 8 du 25 juillet 2019), puis la PR #349.",
+    // lot C STMG : 3.4 a désormais sa version lycée.
+    preuve:
+      "Audit de la finance (BO spécial n° 8 du 25 juillet 2019), puis la PR #349 (3.1 à 3.3). 3.4, au niveau du lycée (décision du propriétaire, novembre 2026 ; lot C STMG) : « Coût complet ou coût spécifique : ce que coûte chaque produit ». Il traite les charges directes et indirectes, coût complet, coût partiel et marge sur coût variable, coût spécifique et marge sur coûts spécifiques, coût marginal et commande supplémentaire, intérêts et limites des méthodes. Le seuil de rentabilité s'y ajoute par « Assez vendre pour ne rien perdre » (le seuil de rentabilité, lot A), qui cite ce thème en second.",
   },
   // lot A STMG : sciences de gestion et numérique de première, les quatre thèmes (début)
   {
@@ -154,6 +158,29 @@ export const MATIERES_COUVERTES_EN_ENTIER: readonly MatiereEnEntier[] = [
       "Audit du management de première (section 2) : 3.1 par « Domaines d'activité : se spécialiser ou se diversifier » et « Intégrer, externaliser, croître », 3.2 par « La stratégie d'une organisation publique », 3.3 par « La stratégie d'une association ».",
   },
   // fin du lot B STMG.
+  // lot C STMG : la partie commune de terminale (management, sciences de gestion et numérique), ses trois thèmes et ses douze questions (début)
+  {
+    formation: "stmg",
+    bloc: "Thème 1 · Les organisations et l'activité de production de biens et de services",
+    partie: "Terminale, enseignement commun",
+    preuve:
+      "Audit du chantier STMG, section 3 (annexe 2 de l'arrêté du 19 juillet 2019), puis le lot C. 1.1 : « Une offre pour un besoin » (démarche et approches marketing, étude de marché et veille, valeur ajoutée, valeur d'une organisation publique, innovation de produits, modèles économiques). 1.2 : « Les ressources pour produire » (tangibles et intangibles, financement de l'investissement et de l'exploitation, FRNG, BFR et trésorerie nette, GPEC, recrutement et formation, formes de la relation de travail). 1.3 : « Organiser la production » (modes de production, productivité, flux, logistique, qualité, cycle de vie). Le contrôle des coûts de 1.3 : « Coût complet ou coût spécifique », qui cite ce thème en second. Avec « Produire » et « Produire bien ». 1.4 : « Le numérique dans la production » (dématérialisation, automatisation, workflow, PGI, nuage, objets connectés, intelligence artificielle, données ouvertes, diagramme des flux). 1.5 : « Organiser le travail et coordonner » (organisation rigide ou souple, polyvalence, enrichissement, spécialisation, taylorisme et toyotisme, modes de coordination, centralisation, délégation et reporting, lean, performance sociale).",
+  },
+  {
+    formation: "stmg",
+    bloc: "Thème 2 · Les organisations et les acteurs",
+    partie: "Terminale, enseignement commun",
+    preuve:
+      "Audit du chantier STMG, section 3, puis le lot C. 2.1 : « Fédérer les acteurs » (intérêts convergents et divergents, statuts, culture, styles de direction, dynamique de groupe, coopération et outils collaboratifs, facteurs de motivation, qualité de vie au travail), avec « Les acteurs de l'organisation et le partage de la valeur ». 2.2 : « Le client à l'ère numérique » (processus d'achat et facteurs, relation client digitalisée et Customer Relationship Management, traces numériques, réseaux sociaux, administration électronique). 2.3 : « Communiquer avec chaque acteur » (stratégie et formes de communication, communication globale, interne et externe, institutionnelle et commerciale, marque employeur, e-réputation, identité numérique, communication financière, normalisation, plan d'affaires), qui cite aussi le thème 3 de ressources humaines.",
+  },
+  {
+    formation: "stmg",
+    bloc: "Thème 3 · Les organisations et la société",
+    partie: "Terminale, enseignement commun",
+    preuve:
+      "Audit du chantier STMG, section 3, puis le lot C, au niveau du lycée. 3.1 : « Éthique, transparence et égalité » (éthique et déontologie, éthique des affaires et des organisations publiques, lobbying, greenwashing et social washing, normalisation comptable et transparence, discriminations et égalité entre les femmes et les hommes, mécénat, démocratie participative). 3.2 : « Les modes de vie changent » (temps, lieu et organisation du travail, déconnexion, modes de consommation). 3.3 : « Données et algorithmes » (données personnelles et stratégiques, transparence des algorithmes, chaîne de blocs). 3.4 : « S'implanter sur un territoire » (implantation, délocalisation, relocalisation, écosystème d'affaires, cluster, écosystème d'innovation, pouvoirs publics locaux). « La responsabilité sociétale » et « Ce que rapporte l'engagement » restent sous ce thème, pour aller plus loin.",
+  },
+  // lot C STMG (fin)
   // lot D STMG : mercatique de terminale, les trois thèmes (début)
   {
     formation: "stmg",

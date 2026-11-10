@@ -53,7 +53,7 @@ describe("les matières couvertes en entier et le repère « en cours »", () =>
     const gf = stmg.filter((b) => b.partie === "Terminale, gestion et finance");
     expect(gf.length).toBe(3);
     expect(gf.every((b) => !b.enCours)).toBe(true);
-    // lot D STMG : la mercatique est couverte en entier ; les ressources humaines, pas encore.
+    // lots C et D STMG : la partie commune et la mercatique sont couvertes en entier ; les ressources humaines, pas encore.
     const rh = stmg.filter((b) => b.partie === "Terminale, ressources humaines et communication");
     expect(rh.length).toBeGreaterThan(0);
     expect(rh.every((b) => b.enCours)).toBe(true);

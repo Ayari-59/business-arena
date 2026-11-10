@@ -76,6 +76,9 @@ export const THEMES: readonly Theme[] = [
       "les-comptes-annuels",
       "acquerir-et-financer-une-immobilisation",
       "initiation-a-la-consolidation",
+      // lot C STMG : la partie commune de terminale (début)
+      "investir-amortir-cloturer",
+      // lot C STMG (fin)
     ],
     familles: [],
   },
@@ -170,6 +173,9 @@ export const THEMES: readonly Theme[] = [
       "assez-vendre-pour-ne-rien-perdre",
       "prevoir-sa-tresorerie",
       // lot A STMG (fin)
+      // lot C STMG : la partie commune de terminale (début)
+      "cout-complet-ou-cout-specifique",
+      // lot C STMG (fin)
     ],
     familles: ["chiffres", "controle", "hotel-couts", "conseil-marge", "sante-budget"],
   },
@@ -189,6 +195,10 @@ export const THEMES: readonly Theme[] = [
       "le-prix-selon-la-saison",
       "ce-que-rapporte-la-communication",
       "canaux-de-distribution",
+      // lot C STMG : la partie commune de terminale (début)
+      "une-offre-pour-un-besoin",
+      "le-client-a-l-ere-numerique",
+      // lot C STMG (fin)
       // lot D STMG : mercatique de terminale (début)
       "positionner-l-offre",
       "l-experience-client",
@@ -288,6 +298,11 @@ export const THEMES: readonly Theme[] = [
       "de-l-individu-a-l-acteur",
       "qualification-competences-et-liens-de-travail",
       // lot A STMG (fin)
+      // lot C STMG : la partie commune de terminale (début)
+      "les-ressources-pour-produire",
+      "federer-les-acteurs",
+      "communiquer-avec-chaque-acteur",
+      // lot C STMG (fin)
     ],
     familles: [
       "equipe",
@@ -333,6 +348,12 @@ export const THEMES: readonly Theme[] = [
       "organiser-l-action-collective",
       "manager-fonctions-et-decisions",
       // fin du lot B STMG.
+      // lot C STMG : la partie commune de terminale (début)
+      "organiser-la-production",
+      "le-numerique-dans-la-production",
+      "organiser-le-travail-et-coordonner",
+      "donnees-et-algorithmes",
+      // lot C STMG (fin)
     ],
     familles: ["operations", "premier-poste", "hotel-service", "sante-soins", "agro-produire", "agro-amont"],
   },
@@ -360,6 +381,11 @@ export const THEMES: readonly Theme[] = [
       "la-strategie-d-une-organisation-publique",
       "la-strategie-d-une-association",
       // fin du lot B STMG.
+      // lot C STMG : la partie commune de terminale (début)
+      "ethique-transparence-et-egalite",
+      "les-modes-de-vie-changent",
+      "s-implanter-sur-un-territoire",
+      // lot C STMG (fin)
     ],
     familles: ["strategie", "hotel-strategie", "conseil-strategie", "sante-strategie", "agro-strategie"],
   },

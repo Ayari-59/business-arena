@@ -16,6 +16,7 @@ import {
 } from "@/config/cours/parcours-de-formation";
 import { dureeDuChapitre, dureeEnClair } from "@/config/cours/duree";
 import { coursDuDiplome, rechercherChapitres, type ChapitreDuDiplome } from "@/config/cours/par-diplome";
+import { LIBELLE_POUR_ALLER_PLUS_LOIN } from "@/config/cours/pour-aller-plus-loin";
 import { diplomesParNiveau, programmeDuDiplome } from "@/config/cours/programme";
 import { CHAPITRES_PROPOSES, PARCOURS_PROPOSES, chapitrePropose } from "@/config/formations-proposees";
 import { THEMES, episodesDuTheme, themeDuChapitre, type Theme } from "@/config/cours/themes";
@@ -584,7 +585,7 @@ function Acces({ chapitre, ouvert }: { chapitre: Chapitre; ouvert?: boolean }) {
 function ChapitreDuParcours({ ligne, imposee, ouvert }: { ligne: ChapitreDuDiplome; imposee?: string; ouvert: boolean }) {
   const c = ligne.chapitre;
   return (
-    <li data-chapitre={c.code} data-rang={ligne.rang} className="grid gap-x-3 gap-y-1 sm:grid-cols-[2rem_1fr_auto] sm:items-baseline">
+    <li data-chapitre={c.code} data-rang={ligne.rang} data-approfondissement={ligne.approfondissement ? "" : undefined} className="grid gap-x-3 gap-y-1 sm:grid-cols-[2rem_1fr_auto] sm:items-baseline">
       <span className="text-sm font-semibold tabular-nums text-slate-400">{ligne.rang}.</span>
       <span className="grid min-w-0 gap-0.5">
         <Link
@@ -595,6 +596,15 @@ function ChapitreDuParcours({ ligne, imposee, ouvert }: { ligne: ChapitreDuDiplo
         </Link>
         <span className="text-xs text-slate-400">
           Palier {c.palier} · {publicDuChapitre(c)}
+          {/* Un chapitre de niveau supérieur gardé pour ce diplôme (config/cours/pour-aller-plus-loin.ts). */}
+          {ligne.approfondissement ? (
+            <span
+              data-pour-aller-plus-loin=""
+              className="ml-2 inline-block rounded-full border border-sky-400/40 px-2 py-0.5 align-middle font-medium text-sky-300"
+            >
+              {LIBELLE_POUR_ALLER_PLUS_LOIN}
+            </span>
+          ) : null}
         </span>
         {ligne.prerequis.length > 0 ? (
           <span className="text-xs text-slate-400" data-prerequis="">
