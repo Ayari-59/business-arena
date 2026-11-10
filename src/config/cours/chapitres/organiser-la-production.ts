@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import { AVANCES_ESSAYEES, ENTREPRISES_DE_L_ORGANISATION_DE_LA_PRODUCTION, avancePourNoel, avanceQuiServitNoel, productivite } from "../monde/organisation-de-la-production";
 import { HAUT_VERDASSE } from "../monde/haut-verdasse";
 import { LIGNE_DE_MONTAGE } from "../monde/nova-capacite";
@@ -18,12 +18,13 @@ import type { Chapitre } from "../types";
  * « Coût complet ou coût spécifique ».
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA : monde/organisation-de-la-production.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux d'utilisation de la ligne se donnait au dixième, il
+ * est à deux décimales (monde/organisation-de-la-production.ts) ; les enceintes par heure sont une
+ * grandeur, celles d'un opérateur une quantité.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const dec = (x: number) => x.toLocaleString("fr-FR");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
 
 export const ORGANISER_LA_PRODUCTION: Chapitre = {
   code: "organiser-la-production",
@@ -106,14 +107,14 @@ export const ORGANISER_LA_PRODUCTION: Chapitre = {
       titre: "La productivité de la ligne",
       question: () => {
         const p = productivite(1);
-        return `Une enceinte demande ${dec(p.heuresParEnceinte)} heure de montage ; un opérateur monte ${qte(p.heuresParMois)} heures par mois. La ligne peut monter ${qte(p.capacite)} enceintes par trimestre, et les clients en demandent ${qte(p.demande)} au 1er trimestre de N + 1. Calculez les enceintes montées par heure, par opérateur sur un trimestre, et le taux d'utilisation de la ligne au 1er trimestre (au dixième).`;
+        return `Une enceinte demande ${nombreAuCentieme(p.heuresParEnceinte)} heure de montage ; un opérateur monte ${qte(p.heuresParMois)} heures par mois. La ligne peut monter ${qte(p.capacite)} enceintes par trimestre, et les clients en demandent ${qte(p.demande)} au 1er trimestre de N + 1. Calculez les enceintes montées par heure, par opérateur sur un trimestre, et le taux d'utilisation de la ligne au 1er trimestre (au dixième).`;
       },
       champs: () => {
         const p = productivite(1);
         return [
-          { libelle: "Enceintes par heure de montage", attendu: p.parHeure, calcul: `1 ÷ ${dec(p.heuresParEnceinte)} = ${qte(p.parHeure)}` },
-          { libelle: "Enceintes par opérateur sur un trimestre", attendu: p.parOperateur, calcul: `${qte(p.heuresParMois)} × 3 × ${qte(p.parHeure)} = ${qte(p.parOperateur)}`, tolerance: 0 },
-          { libelle: "Taux d'utilisation de la ligne (%)", attendu: p.utilisationPct, calcul: `${qte(p.demande)} ÷ ${qte(p.capacite)} × 100 = ${pct(p.utilisationPct)}`, tolerance: 0.1 },
+          { libelle: "Enceintes par heure de montage", nature: "grandeur", attendu: p.parHeure, calcul: `1 ÷ ${nombreAuCentieme(p.heuresParEnceinte)} = ${nombreAuCentieme(p.parHeure)}` },
+          { libelle: "Enceintes par opérateur sur un trimestre", nature: "quantite", attendu: p.parOperateur, calcul: `${qte(p.heuresParMois)} × 3 × ${nombreAuCentieme(p.parHeure)} = ${qte(p.parOperateur)}` },
+          { libelle: "Taux d'utilisation de la ligne (%)", attendu: p.utilisationPct, calcul: `${qte(p.demande)} ÷ ${qte(p.capacite)} × 100 = ${pct(p.utilisationPct)}` },
         ];
       },
       explication: () => {

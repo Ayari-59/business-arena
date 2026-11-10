@@ -83,12 +83,12 @@ describe("les chapitres du lot et leurs cas, dans leurs parcours", () => {
 describe("produire", () => {
   it("les textes sont propres, une seule bonne réponse, les notions existent", () => gardesDeTexte(PRODUIRE));
 
-  it("la capacité de N + 1 : 7 000 par trimestre, 28 000 sur l'année, 26 000 montées, 92,9 %", () => {
+  it("la capacité de N + 1 : 7 000 par trimestre, 28 000 sur l'année, 26 000 montées, 92,86 %", () => {
     const outil = 4 * 1_750;
     const equipe = (4 * 540) / 0.3;
     expect([outil, equipe]).toEqual([7_000, 7_200]);
     const production = [5_800, 7_400, 6_200, 7_800].reduce((t, d) => t + Math.min(d, outil, equipe), 0);
-    expect(attendus(PRODUIRE, "capacite")).toEqual([4 * 7_000, production, Math.round((production / 28_000) * 1000) / 10]);
+    expect(attendus(PRODUIRE, "capacite")).toEqual([4 * 7_000, production, c2((production / 28_000) * 100)]);
     expect(production).toBe(26_000);
     expect(juste(PRODUIRE, "ce-qui-bride")).toEqual(["Les postes de la ligne"]);
   });
@@ -169,10 +169,10 @@ describe("produire bien", () => {
 describe("organiser l'activité", () => {
   it("les textes sont propres, une seule bonne réponse, les notions existent", () => gardesDeTexte(ORGANISER_L_ACTIVITE));
 
-  it("au 1er trimestre de N : 7 000 et 7 200, la ligne à 68,3 %, 2 222 enceintes libres, les clients limitent", () => {
+  it("au 1er trimestre de N : 7 000 et 7 200, la ligne à 68,26 %, 2 222 enceintes libres, les clients limitent", () => {
     expect(attendus(ORGANISER_L_ACTIVITE, "les-capacites")).toEqual([7_000, 7_200, 7_000]);
-    expect(attendus(ORGANISER_L_ACTIVITE, "l-occupation")).toEqual([Math.round((4_778 / 7_000) * 1000) / 10, 7_000 - 4_778]);
-    expect(attendus(ORGANISER_L_ACTIVITE, "l-occupation")[0]).toBe(68.3);
+    expect(attendus(ORGANISER_L_ACTIVITE, "l-occupation")).toEqual([c2((4_778 / 7_000) * 100), 7_000 - 4_778]);
+    expect(attendus(ORGANISER_L_ACTIVITE, "l-occupation")[0]).toBe(68.26);
     expect(juste(ORGANISER_L_ACTIVITE, "ce-qui-limite")).toEqual(["Les clients"]);
   });
 
@@ -259,8 +259,8 @@ describe("ce que coûte une livraison", () => {
 describe("le taux de remplissage", () => {
   it("les textes sont propres, une seule bonne réponse, les notions existent", () => gardesDeTexte(LE_TAUX_DE_REMPLISSAGE));
 
-  it("7 palettes pour 12 places : 58,3 %, 5 places vides ; 72,57 € la palette, 42,33 € porteur plein", () => {
-    expect(attendus(LE_TAUX_DE_REMPLISSAGE, "le-remplissage")).toEqual([7, Math.round((7 / 12) * 1000) / 10, 5]);
+  it("7 palettes pour 12 places : 58,33 %, 5 places vides ; 72,57 € la palette, 42,33 € porteur plein", () => {
+    expect(attendus(LE_TAUX_DE_REMPLISSAGE, "le-remplissage")).toEqual([7, c2((7 / 12) * 100), 5]);
     expect(attendus(LE_TAUX_DE_REMPLISSAGE, "la-place-vide")).toEqual([c2(508 / 7), c2(508 / 12), c2(5 * c2(508 / 12))]);
     expect(juste(LE_TAUX_DE_REMPLISSAGE, "pourquoi")).toEqual(["La tournée coûte pareil, pleine ou vide"]);
   });
@@ -289,8 +289,8 @@ describe("le taux de remplissage", () => {
 describe("livrer à temps", () => {
   it("les textes sont propres, une seule bonne réponse, les notions existent", () => gardesDeTexte(LIVRER_A_TEMPS));
 
-  it("27 200 demandées, 26 000 livrées, 1 200 perdues, 95,6 % ; 25 200 € de marge perdue", () => {
-    expect(attendus(LIVRER_A_TEMPS, "le-taux-de-service")).toEqual([27_200, 26_000, 1_200, Math.round((26_000 / 27_200) * 1000) / 10]);
+  it("27 200 demandées, 26 000 livrées, 1 200 perdues, 95,59 % ; 25 200 € de marge perdue", () => {
+    expect(attendus(LIVRER_A_TEMPS, "le-taux-de-service")).toEqual([27_200, 26_000, 1_200, c2((26_000 / 27_200) * 100)]);
     expect(attendus(LIVRER_A_TEMPS, "ce-que-coute-une-commande-perdue")).toEqual([1_200 * 21]);
     expect(juste(LIVRER_A_TEMPS, "quand")).toEqual(["La ligne est pleine au printemps et à Noël"]);
   });

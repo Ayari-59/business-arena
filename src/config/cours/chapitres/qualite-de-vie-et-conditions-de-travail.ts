@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import {
   COUT_D_UNE_HEURE_SUPPLEMENTAIRE,
   COUT_HORAIRE_DE_LA_TABLE,
@@ -25,11 +25,14 @@ import type { Chapitre } from "../types";
  * qualité de vie chez NOVA.
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez LA TABLE D'AUGUSTIN : monde/conditions-de-travail-de-la-table.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les heures supplémentaires sont une quantité, les heures
+ * payées (majorées) une grandeur au centième ; le coût de la semaine au centime.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR")} %`;
+const qte = nombreAuCentieme;
+const pct = (t: number) => pourcent(t * 100);
 const heure = (h: number) => `${Math.floor(h)} h ${String(Math.round((h % 1) * 60)).padStart(2, "0")}`;
 
 export const QUALITE_DE_VIE_ET_CONDITIONS_DE_TRAVAIL: Chapitre = {
@@ -171,9 +174,9 @@ export const QUALITE_DE_VIE_ET_CONDITIONS_DE_TRAVAIL: Chapitre = {
         const k = semaineDeSarah();
         const d = DROIT_DU_TEMPS;
         return [
-          { libelle: "Heures supplémentaires", attendu: k.supplementaires, calcul: `${qte(SEMAINE_DE_SARAH.heures)} − ${qte(d.dureeLegale)} = ${qte(k.supplementaires)}` },
-          { libelle: "Heures payées", attendu: k.payees, calcul: `${qte(d.dureeLegale)} + ${qte(k.supplementaires)} × ${(1 + d.majoration).toLocaleString("fr-FR")} = ${qte(k.payees)}` },
-          { libelle: "Coût de la semaine", attendu: k.cout, calcul: `${qte(k.payees)} × ${eur(COUT_HORAIRE_DE_LA_TABLE)} = ${eur(k.cout)}` },
+          { libelle: "Heures supplémentaires", nature: "quantite", attendu: k.supplementaires, calcul: `${qte(SEMAINE_DE_SARAH.heures)} − ${qte(d.dureeLegale)} = ${qte(k.supplementaires)}` },
+          { libelle: "Heures payées", nature: "grandeur", attendu: k.payees, calcul: `${qte(d.dureeLegale)} + ${qte(k.supplementaires)} × ${nombreAuCentieme(1 + d.majoration)} = ${nombreAuCentieme(k.payees)}` },
+          { libelle: "Coût de la semaine", attendu: k.cout, calcul: `${nombreAuCentieme(k.payees)} × ${eur(COUT_HORAIRE_DE_LA_TABLE)} = ${eur(k.cout)}` },
         ];
       },
       explication: () => [`Les ${qte(semaineDeSarah().supplementaires)} heures supplémentaires coûtent comme ${qte(semaineDeSarah().payees - DROIT_DU_TEMPS.dureeLegale)} heures normales : faire durer les journées se paie, en argent et en fatigue.`],

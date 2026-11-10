@@ -1,3 +1,4 @@
+import { pct, qte } from "../../../../pedagogy/cours/deux-decimales";
 import { DESSERTS, ENTREPRISES_DE_L_EVALUATION, tauxDesDesserts } from "../../monde/evaluation-a-la-table";
 import type { Situation } from "../types";
 
@@ -7,10 +8,12 @@ import type { Situation } from "../types";
  *
  * Le chapitre construisait une grille ; le cas met à l'épreuve un indicateur seul, qui dépend du service
  * plus que du serveur. Hypothèses : monde/evaluation-a-la-table.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux de desserts de chaque serveur, déclaré pourcentage,
+ * se donnait au dixième ; il est à deux décimales (monde/evaluation-a-la-table.ts).
  */
 
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 
 export const UNE_PRIME_SUR_LES_DESSERTS: Situation = {
   code: "une-prime-sur-les-desserts",
@@ -42,13 +45,13 @@ export const UNE_PRIME_SUR_LES_DESSERTS: Situation = {
       id: "le-calcul",
       type: "montants",
       titre: "Le taux de desserts",
-      question: () => "Calculez, pour chacun, la part des couverts qui ont pris un dessert (en %, au dixième).",
+      question: () => "Calculez, pour chacun, la part des couverts qui ont pris un dessert (en %, à deux décimales).",
       champs: () => {
         const d = DESSERTS;
         const k = tauxDesDesserts();
         return [
-          { libelle: `Taux de ${d.hugo.prenom}`, attendu: k.hugo, calcul: `${qte(d.hugo.desserts)} ÷ ${qte(d.hugo.couverts)} × 100 = ${pct(k.hugo)}` },
-          { libelle: `Taux de ${d.sarah.prenom}`, attendu: k.sarah, calcul: `${qte(d.sarah.desserts)} ÷ ${qte(d.sarah.couverts)} × 100 = ${pct(k.sarah)}` },
+          { libelle: `Taux de ${d.hugo.prenom}`, nature: "pourcentage", attendu: k.hugo, calcul: `${qte(d.hugo.desserts)} ÷ ${qte(d.hugo.couverts)} × 100 = ${pct(k.hugo)}` },
+          { libelle: `Taux de ${d.sarah.prenom}`, nature: "pourcentage", attendu: k.sarah, calcul: `${qte(d.sarah.desserts)} ÷ ${qte(d.sarah.couverts)} × 100 = ${pct(k.sarah)}` },
         ];
       },
       explication: () => {

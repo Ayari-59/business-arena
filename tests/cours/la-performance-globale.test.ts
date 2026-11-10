@@ -27,10 +27,10 @@ describe("les quatre performances", () => {
   it("efficacité, rentabilité, profitabilité, émissions", () => {
     const p = performanceDeNova();
     expect([p.enceintes, p.chiffreDAffaires, p.resultatNet, p.capitauxPropres, p.caf]).toEqual([23_564, 1_390_276, 79_225.96, 229_225.96, 105_297.07]);
-    expect(attendusSgn(CH, "efficacite-et-efficience")).toEqual([94.3, 59]);
-    expect(attendusSgn(CH, "rentabilite-et-profitabilite")).toEqual([34.6, 5.7]);
+    expect(attendusSgn(CH, "efficacite-et-efficience")).toEqual([94.26, 59]);
+    expect(attendusSgn(CH, "rentabilite-et-profitabilite")).toEqual([34.56, 5.7]);
     expect(p.kwh).toBe(1.2 * 23_564 + 1_500 * 12);
-    expect(attendusSgn(CH, "l-indicateur-environnemental")).toEqual([2_406.39, 102]);
+    expect(attendusSgn(CH, "l-indicateur-environnemental")).toEqual([2_406.39, 102.12]);
   });
 
   it("le laboratoire : 25 000 € de dividendes, seule solution ; les 30 000 € retenus laissent 75 297,07 €", () => {
@@ -48,9 +48,9 @@ describe("les quatre performances", () => {
 });
 
 describe("le cas du chapitre", () => {
-  it("40 000 € de dividendes : 50,5 % du bénéfice, 65 297,07 € d'autofinancement, 14 702,93 € à emprunter", () => {
+  it("40 000 € de dividendes : 50,49 % du bénéfice, 65 297,07 € d'autofinancement, 14 702,93 € à emprunter", () => {
     gardeDuCasSgn(LES_ASSOCIES_DEMANDENT_PLUS, CH);
     const k = lesAssociesDemandentPlus();
-    expect([k.partDistribueePct, k.autofinancement, k.manque]).toEqual([50.5, 65_297.07, 14_702.93]);
+    expect([k.partDistribueePct, k.autofinancement, k.manque]).toEqual([50.49, 65_297.07, 14_702.93]);
   });
 });

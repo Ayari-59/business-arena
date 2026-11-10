@@ -9,7 +9,7 @@ import { attendusT, gardeDuCasT, gardeDuLaboratoireT, gardeDuProgrammeT, gardesD
  * « LE CLIENT À L'ÈRE NUMÉRIQUE » (enseignement commun de terminale, 2.2, lot C STMG), ET SON CAS, CHEZ
  * MAILLE & CO.
  *
- * Refait à la main : 120 ÷ 6 000 = 2 % ; 360 − 120 = 240 paniers abandonnés, 66,7 %. Une fidèle laisse
+ * Refait à la main : 120 ÷ 6 000 = 2 % ; 360 − 120 = 240 paniers abandonnés, 66,67 %. Une fidèle laisse
  * 57,76 € par passage. Les relances : 18 × 57,76 − 1 × 2 × 57,76 = 924,16 € ; 27 × 57,76 − 3 × 115,52 =
  * 1 212,96 € ; 30 × 57,76 − 9 × 115,52 = 693,12 €. Le cas : 15 × 57,76 − 450 = 416,40 €.
  */
@@ -27,8 +27,8 @@ describe("le chapitre, dans son parcours", () => {
 });
 
 describe("le tunnel et les relances", () => {
-  it("le tunnel : 2 %, 240 paniers abandonnés, 66,7 %", () => {
-    expect(attendusT(CH, "le-tunnel")).toEqual([2, 240, 66.7]);
+  it("le tunnel : 2 %, 240 paniers abandonnés, 66,67 %", () => {
+    expect(attendusT(CH, "le-tunnel")).toEqual([2, 240, 66.67]);
   });
 
   it("le laboratoire : 2 relances", () => {

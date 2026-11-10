@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { auCentime } from "./amortissement";
 import { ENTREPRISES_DE_LA_DIRECTION } from "./direction-de-nova";
 import { AURIS, NOVA as NOVA_SUR_LE_MARCHE, SOUNDBOX } from "./marche-a-trois";
@@ -18,6 +19,10 @@ import { GAMME_DE_NOVA, type CodeDeReference } from "./nova-gestion";
  * sa publicité, une charge fixe qui lui est propre. Le laboratoire fait varier les ventes de Studio,
  * de celles du mois en gamme à la demande du mois de pointe, sans dépasser les heures-machine des
  * deux lignes (il en reste assez).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la part de la One se donnait au dixième, elle est à deux
+ * décimales ; les heures-machine sont des grandeurs, au centième.
  */
 
 export const ENTREPRISES_DES_DOMAINES = ENTREPRISES_DE_LA_DIRECTION;
@@ -50,8 +55,8 @@ export function gammeDuMois(ventesDeStudio: number = reference("studio").quantit
     one,
     studio,
     total,
-    /** La part de One dans les contributions du mois, en pour cent au dixième. */
-    partDeOne: Math.round((one.contribution / total) * 1000) / 10,
+    /** La part de One dans les contributions du mois, en pour cent à deux décimales. */
+    partDeOne: arrondi2((one.contribution / total) * 100),
     heures,
     capaciteHeures: GAMME_DE_NOVA.capaciteHeuresMachine,
   };

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, qte } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_LA_DECISION } from "../../chapitres/decider-ensemble";
 import { BAISSE_DE_PRIX_DU_COMMERCIAL, COUPE_DU_FINANCIER, LEVIERS_DES_FACONS, anneeDecidee } from "../../monde/direction-de-nova";
@@ -7,7 +7,7 @@ import type { Situation } from "../types";
 /**
  * CAS PRATIQUE DU CHAPITRE « DÉCIDER ENSEMBLE » : CHACUN SON LEVIER (Bac STMG, management, palier 1).
  *
- * Pour éviter les disputes, la directrice de NOVA propose un partage : le commercial fixe le prix, le
+ * Pour éviter les disputes, le président de NOVA propose un partage : le commercial fixe le prix, le
  * financier fixe les budgets d'entretien et de prévention, chacun de son côté, sans croiser les
  * écrans. Le cas est neuf par sa question : le chapitre comparait chaque rôle décidant de tout ; ici,
  * les deux rôles décident ensemble, mais chacun son levier. L'élève reprend les calculs du chapitre
@@ -19,11 +19,12 @@ import type { Situation } from "../types";
  *
  * CE QUI A CHANGÉ. Le cas rejouait l'année de l'arène dans les neuf entreprises ; il se joue chez
  * NOVA : le partage fait 329 958,48 € de résultat des choix et refuse 6 540 enceintes.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les écarts de ventes et de clients refusés sont des quantités
+ * ; l'écart de résultat attend le centime (à l'euro près, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
 
 /** L'année du partage : le prix du commercial, les budgets du financier. */
 export const anneeDuPartage = () => anneeDecidee({ prix: LEVIERS_DES_FACONS.commercial.prix, budgets: LEVIERS_DES_FACONS.financier.budgets });
@@ -34,7 +35,7 @@ export type Verdict = "le-partage" | "l-equipe";
 export function chacunSonLevier(_c?: Cas) {
   const p = anneeDuPartage();
   const e = anneeDecidee(LEVIERS_DES_FACONS.equipe);
-  const ecartDeResultat = auCentime(p.resultat - e.resultat);
+  const ecartDeResultat = arrondi2(p.resultat - e.resultat);
   return {
     p,
     e,
@@ -51,10 +52,10 @@ export const CHACUN_SON_LEVIER: Situation = {
   palier: 1,
   blocs: [],
   reprend: ["decider-ensemble"],
-  commanditaire: "La directrice générale",
+  commanditaire: "Le président",
   titre: "Chacun son levier ?",
-  accroche: "Pour éviter les disputes, la directrice propose que le commercial fixe seul le prix et le financier seul les budgets. Ce partage vaut-il une décision d'équipe ?",
-  objectifs: ["Chiffrer les écarts entre deux façons de décider", "Comparer deux décisions sur plusieurs critères", "Répondre à la directrice, chiffres à l'appui"],
+  accroche: "Pour éviter les disputes, le président propose que le commercial fixe seul le prix et le financier seul les budgets. Ce partage vaut-il une décision d'équipe ?",
+  objectifs: ["Chiffrer les écarts entre deux façons de décider", "Comparer deux décisions sur plusieurs critères", "Répondre au président, chiffres à l'appui"],
   libre: false,
   entreprises: {
     codes: ENTREPRISES_DE_LA_DECISION,
@@ -64,9 +65,9 @@ export const CHACUN_SON_LEVIER: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La proposition de la directrice",
+      titre: "La proposition du président",
       texte: () => [
-        `« Nos réunions tournent à la dispute. Je propose un partage : le commercial fixe le prix, seul, et il veut le baisser de ${Math.round(BAISSE_DE_PRIX_DU_COMMERCIAL * 100)} % ; le financier fixe les budgets d'entretien et de prévention, seul, et il veut les diviser par ${Math.round(1 / COUPE_DU_FINANCIER)}. Chacun son levier, plus de dispute. Dites-moi ce que ce partage donnerait sur l'année, face à la décision d'équipe. » La directrice générale`,
+        `« Nos réunions tournent à la dispute. Je propose un partage : le commercial fixe le prix, seul, et il veut le baisser de ${Math.round(BAISSE_DE_PRIX_DU_COMMERCIAL * 100)} % ; le financier fixe les budgets d'entretien et de prévention, seul, et il veut les diviser par ${Math.round(1 / COUPE_DU_FINANCIER)}. Chacun son levier, plus de dispute. Dites-moi ce que ce partage donnerait sur l'année, face à la décision d'équipe. » Le président`,
         "Pas de cours cette fois : les calculs sont ceux du chapitre.",
       ],
       tableau: () => {
@@ -94,9 +95,9 @@ export const CHACUN_SON_LEVIER: Situation = {
       champs: () => {
         const k = chacunSonLevier();
         return [
-          { libelle: "Écart de ventes (enceintes)", attendu: k.ecartDeVentes, calcul: `${qte(k.p.production)} − ${qte(k.e.production)} = ${qte(k.ecartDeVentes)}`, tolerance: 0 },
-          { libelle: "Écart de clients refusés (enceintes)", attendu: k.ecartDeRefusees, calcul: `${qte(k.p.refusees)} − ${qte(k.e.refusees)} = ${qte(k.ecartDeRefusees)}`, tolerance: 0 },
-          { libelle: "Écart de résultat des choix", attendu: k.ecartDeResultat, calcul: `${eur(k.p.resultat)} − ${eur(k.e.resultat)} = ${eur(k.ecartDeResultat)}`, tolerance: 1 },
+          { libelle: "Écart de ventes (enceintes)", nature: "quantite", attendu: k.ecartDeVentes, calcul: `${qte(k.p.production)} − ${qte(k.e.production)} = ${qte(k.ecartDeVentes)}` },
+          { libelle: "Écart de clients refusés (enceintes)", nature: "quantite", attendu: k.ecartDeRefusees, calcul: `${qte(k.p.refusees)} − ${qte(k.e.refusees)} = ${qte(k.ecartDeRefusees)}` },
+          { libelle: "Écart de résultat des choix", attendu: k.ecartDeResultat, calcul: `${eur(k.p.resultat)} − ${eur(k.e.resultat)} = ${eur(k.ecartDeResultat)}` },
         ];
       },
       explication: () => {
@@ -109,8 +110,8 @@ export const CHACUN_SON_LEVIER: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse à la directrice",
-      question: () => "Que répondez-vous à la directrice ?",
+      titre: "Votre réponse au président",
+      question: () => "Que répondez-vous au président ?",
       options: () => {
         const k = chacunSonLevier();
         return [

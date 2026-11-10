@@ -39,7 +39,7 @@ describe("le chapitre et son cas, dans leur parcours", () => {
 });
 
 describe("le projet d'entreprise", () => {
-  it("230 000 € de besoins et de ressources ; 65,2 % des associés, 34,8 % de la banque, 20 trimestres de remboursement", () => {
+  it("230 000 € de besoins et de ressources ; 65,22 % des associés, 34,78 % de la banque, 20 trimestres de remboursement", () => {
     expect(triDe(LE_PROJET_D_ENTREPRISE, "ranger")).toEqual({
       "Ligne de montage, hors taxes": "besoin",
       "TVA payée sur la ligne, que l'État rendra": "besoin",
@@ -49,12 +49,12 @@ describe("le projet d'entreprise", () => {
       "Emprunt bancaire": "ressource",
     });
     expect(attendus(LE_PROJET_D_ENTREPRISE, "equilibre")).toEqual([60_000 + 12_000 + 133_000 + (230_000 - 72_000 - 133_000), 150_000 + 80_000]);
-    expect(attendus(LE_PROJET_D_ENTREPRISE, "qui-paie")).toEqual([65.2, 34.8, 80_000 / 4_000]);
+    expect(attendus(LE_PROJET_D_ENTREPRISE, "qui-paie")).toEqual([65.22, 34.78, 80_000 / 4_000]);
   });
 
   it("la trésorerie : 30 350 € de charges par mois, 1 011,67 € par jour, 156 jours ; le compte courant seul, 24", () => {
-    expect(attendus(LE_PROJET_D_ENTREPRISE, "tresorerie")).toEqual([19_700 + 10_650, c2(30_350 / 30), Math.floor(158_000 / (30_350 / 30))]);
-    expect(Math.floor(25_000 / (30_350 / 30))).toBe(24);
+    expect(attendus(LE_PROJET_D_ENTREPRISE, "tresorerie")).toEqual([19_700 + 10_650, c2(30_350 / 30), Math.floor(158_000 / c2(30_350 / 30))]);
+    expect(Math.floor(25_000 / c2(30_350 / 30))).toBe(24);
   });
 
   it("le curseur : 83 050 € d'apport gardent les trois mois de charges, 91 050 €", () => {
@@ -69,12 +69,12 @@ describe("le projet d'entreprise", () => {
 });
 
 describe("le cas du chapitre", () => {
-  it("un équipement de plus au départ : 18 000 € comptant laissent 140 000 €, 138 jours ; emprunté, 60,5 % des associés, 1 125 € la première échéance", () => {
+  it("un équipement de plus au départ : 18 000 € comptant laissent 140 000 €, 138 jours ; emprunté, 60,48 % des associés, 1 125 € la première échéance", () => {
     const k = equipementDePlus();
     expect([k.comptant.tresorerie, k.comptant.jours, k.partApres, k.premiereEcheance, k.verdict]).toEqual([
       158_000 - 15_000 * 1.2,
-      Math.floor(140_000 / (30_350 / 30)),
-      Math.round((150_000 / 248_000) * 1000) / 10,
+      Math.floor(140_000 / c2(30_350 / 30)),
+      c2((150_000 / 248_000) * 100),
       18_000 / 20 + (18_000 * 0.05) / 4,
       "comptant",
     ]);

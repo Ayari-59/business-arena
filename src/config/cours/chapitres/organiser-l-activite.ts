@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   ENTREPRISES_DE_LA_PRODUCTION_DE_NOVA,
@@ -7,7 +7,6 @@ import {
   embaucheDuPremierJanvier,
   enceintesParOperateur,
   ficheDeNova,
-  heuresParTrimestre,
   trimestreAvecDesRessources,
   trimestreDeN,
 } from "../monde/production-et-logistique";
@@ -32,6 +31,12 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * « Produire » (bac STMG) suit l'année entière et la productivité ; ici, un trimestre et ses
  * ressources. CE QUI A CHANGÉ : le chapitre se jouait dans sept entreprises de l'arène ; il se joue
  * chez NOVA seule.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux d'occupation se donnait au dixième, il est à deux
+ * décimales ; les capacités, les mois et la capacité libre sont des quantités. La capacité de
+ * l'équipe se calcule sur les 150 heures de montage d'un mois (450 par trimestre), celles de la
+ * fiche : le tableau donnait les 151,67 heures payées, dont le calcul ne retombait pas sur 7 200.
  */
 
 /** Les entreprises du chapitre : NOVA seule. */
@@ -46,11 +51,11 @@ const COMMANDE_DU_CURSEUR = { min: 0, max: 4_000 } as const;
 const POSTES_DU_LABORATOIRE = { min: 4, max: 6, pas: 1 } as const;
 const OPERATEURS_DU_LABORATOIRE = { min: 3, max: 6, pas: 1 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${(Math.round(t * 10) / 10).toLocaleString("fr-FR")} %`;
+const qte = nombreAuCentieme;
 
 const f = (c: Pick<Cas, "code">) => ficheDeNova(c);
+/** Les heures de montage d'un opérateur en un trimestre (150 par mois), celles de la capacité de l'équipe ; les heures payées (151,67 par mois) comprennent la prise de poste. */
+const heuresDeMontage = (x: ReturnType<typeof f>) => x.operateurs.heuresParMois * 3;
 
 /** Le trimestre du chapitre : les capacités, la demande, l'occupation, ce qui a limité. */
 export const activiteDuTrimestre = (c: Pick<Cas, "code">) => trimestreDeN(f(c), TRIMESTRE_DU_CHAPITRE);
@@ -75,7 +80,7 @@ function tableauDuTrimestre(c: Cas): TableauDeDonnees {
       { libelle: "Postes de montage", valeurs: [qte(x.ligne.postes)] },
       { libelle: `Ce que monte un poste en un trimestre (${c.unites})`, valeurs: [qte(capaciteDUnPoste(x))] },
       { libelle: "Opérateurs", valeurs: [qte(x.plan.operateurs)] },
-      { libelle: "Heures d'un opérateur en un trimestre", valeurs: [qte(heuresParTrimestre(x))] },
+      { libelle: "Heures de montage d'un opérateur en un trimestre", valeurs: [qte(heuresDeMontage(x))] },
       { libelle: `Temps de montage d'une ${c.unite} (heure)`, valeurs: [qte(x.operateurs.heuresParEnceinte)] },
       { libelle: `Demande des clients (${c.unites})`, valeurs: [qte(t.demande)] },
     ],
@@ -124,14 +129,14 @@ export const ORGANISER_L_ACTIVITE: Chapitre = {
         const x = f(c);
         const t = activiteDuTrimestre(c);
         return [
-          { libelle: "Capacité des postes", attendu: t.capaciteOutil, calcul: `${qte(x.ligne.postes)} × ${qte(capaciteDUnPoste(x))} = ${qte(t.capaciteOutil)}`, tolerance: 0 },
+          { libelle: "Capacité des postes", nature: "quantite", attendu: t.capaciteOutil, calcul: `${qte(x.ligne.postes)} × ${qte(capaciteDUnPoste(x))} = ${qte(t.capaciteOutil)}` },
           {
             libelle: "Capacité de l'équipe",
+            nature: "quantite",
             attendu: t.capaciteEquipe,
-            calcul: `${qte(x.plan.operateurs)} × ${qte(heuresParTrimestre(x))} ÷ ${qte(x.operateurs.heuresParEnceinte)} = ${qte(t.capaciteEquipe)}`,
-            tolerance: 0,
+            calcul: `${qte(x.plan.operateurs)} × ${qte(heuresDeMontage(x))} ÷ ${qte(x.operateurs.heuresParEnceinte)} = ${qte(t.capaciteEquipe)}`,
           },
-          { libelle: "Capacité de l'entreprise", attendu: t.capacite, calcul: `la plus petite de ${qte(t.capaciteOutil)} et ${qte(t.capaciteEquipe)} : ${qte(t.capacite)}`, tolerance: 0 },
+          { libelle: "Capacité de l'entreprise", nature: "quantite", attendu: t.capacite, calcul: `la plus petite de ${qte(t.capaciteOutil)} et ${qte(t.capaciteEquipe)} : ${qte(t.capacite)}` },
         ];
       },
       explication: (c) => {
@@ -147,12 +152,12 @@ export const ORGANISER_L_ACTIVITE: Chapitre = {
       notions: ["capacity"],
       tableau: tableauDuTrimestre,
       question: (c) =>
-        `Au 1er trimestre de N, ${c.entreprise} a monté et vendu ce que ses clients lui ont demandé. Calculez le taux d'occupation de la ligne (production ÷ capacité des postes × 100, au dixième), puis ce qui restait de capacité libre.`,
+        `Au 1er trimestre de N, ${c.entreprise} a monté et vendu ce que ses clients lui ont demandé. Calculez le taux d'occupation de la ligne (production ÷ capacité des postes × 100, à deux décimales), puis ce qui restait de capacité libre.`,
       champs: (c) => {
         const t = activiteDuTrimestre(c);
         return [
-          { libelle: "Taux d'occupation de la ligne (%)", attendu: Math.round(t.occupation * 10) / 10, calcul: `${qte(t.production)} ÷ ${qte(t.capaciteOutil)} × 100 = ${pct(t.occupation)}`, tolerance: 0.1 },
-          { libelle: "Capacité libre", attendu: t.libre, calcul: `${qte(t.capacite)} − ${qte(t.production)} = ${qte(t.libre)}`, tolerance: 0 },
+          { libelle: "Taux d'occupation de la ligne (%)", attendu: t.occupation, calcul: `${qte(t.production)} ÷ ${qte(t.capaciteOutil)} × 100 = ${pct(t.occupation)}` },
+          { libelle: "Capacité libre", nature: "quantite", attendu: t.libre, calcul: `${qte(t.capacite)} − ${qte(t.production)} = ${qte(t.libre)}` },
         ];
       },
       explication: (c) => {
@@ -193,9 +198,9 @@ export const ORGANISER_L_ACTIVITE: Chapitre = {
       champs: (c) => {
         const e = embaucheDuPremierJanvier(f(c));
         return [
-          { libelle: "Mois de travail au 1er trimestre", attendu: e.moisAuPremier, calcul: `3 − ${qte(e.delai)} = ${qte(e.moisAuPremier)}`, tolerance: 0 },
-          { libelle: "Capacité ajoutée au 1er trimestre", attendu: e.enPlusAuPremier, calcul: `${qte(e.moisAuPremier)} × ${qte(e.enPlusAuDeuxieme / 3)} = ${qte(e.enPlusAuPremier)}`, tolerance: 0 },
-          { libelle: "Capacité ajoutée au 2e trimestre", attendu: e.enPlusAuDeuxieme, calcul: `3 × ${qte(e.enPlusAuDeuxieme / 3)} = ${qte(e.enPlusAuDeuxieme)}`, tolerance: 0 },
+          { libelle: "Mois de travail au 1er trimestre", nature: "quantite", attendu: e.moisAuPremier, calcul: `3 − ${qte(e.delai)} = ${qte(e.moisAuPremier)}` },
+          { libelle: "Capacité ajoutée au 1er trimestre", nature: "quantite", attendu: e.enPlusAuPremier, calcul: `${qte(e.moisAuPremier)} × ${qte(e.enPlusAuDeuxieme / 3)} = ${qte(e.enPlusAuPremier)}` },
+          { libelle: "Capacité ajoutée au 2e trimestre", nature: "quantite", attendu: e.enPlusAuDeuxieme, calcul: `3 × ${qte(e.enPlusAuDeuxieme / 3)} = ${qte(e.enPlusAuDeuxieme)}` },
         ];
       },
       explication: (c) => [

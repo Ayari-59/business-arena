@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct, quotient2 } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { HYPOTHESES_DE_LA_PERFORMANCE, partageDuBenefice, performanceDeNova } from "../monde/performance-de-nova";
 import { KG_CO2_PAR_KWH } from "../monde/tableau-de-bord-durable";
@@ -21,13 +21,16 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * l'absentéisme viennent des fiches (monde/performance-de-nova.ts les rassemble) ; l'objectif de ventes,
  * les clients qui rachètent et les vœux des associés et du président sont des hypothèses du cours,
  * nommées là-bas.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les taux se donnaient au dixième de point, ils sont à deux
+ * décimales (monde/performance-de-nova.ts) ; les émissions de l'année et par enceinte sont des
+ * grandeurs, au centième (au demi-kilo et au gramme près, avant).
  */
 
 export const ENTREPRISES_DE_LA_PERFORMANCE = ["nova"] as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
+const qte = nombreAuCentieme;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 function leTableauDeBord(c: Cas): TableauDeDonnees {
@@ -89,13 +92,13 @@ export const LA_PERFORMANCE_GLOBALE: Chapitre = {
       notions: ["productivity"],
       question: (c) => {
         const p = performanceDeNova();
-        return `Le président s'était fixé ${qte(HYPOTHESES_DE_LA_PERFORMANCE.objectifDeVentes)} enceintes à vendre en N ; ${c.entreprise} en a vendu ${qte(p.enceintes)}. Calculez le taux de réalisation de l'objectif (au dixième de point), puis le chiffre d'affaires par enceinte vendue.`;
+        return `Le président s'était fixé ${qte(HYPOTHESES_DE_LA_PERFORMANCE.objectifDeVentes)} enceintes à vendre en N ; ${c.entreprise} en a vendu ${qte(p.enceintes)}. Calculez le taux de réalisation de l'objectif (à deux décimales), puis le chiffre d'affaires par enceinte vendue.`;
       },
       champs: () => {
         const p = performanceDeNova();
         return [
-          { libelle: "Réalisation de l'objectif (%)", attendu: p.efficacitePct, calcul: `${qte(p.enceintes)} ÷ ${qte(HYPOTHESES_DE_LA_PERFORMANCE.objectifDeVentes)} × 100 = ${pct(p.efficacitePct)}`, tolerance: 0.1 },
-          { libelle: "Chiffre d'affaires par enceinte", attendu: Math.round((p.chiffreDAffaires / p.enceintes) * 100) / 100, calcul: `${eur(p.chiffreDAffaires)} ÷ ${qte(p.enceintes)} = ${eur(Math.round((p.chiffreDAffaires / p.enceintes) * 100) / 100)}` },
+          { libelle: "Réalisation de l'objectif (%)", attendu: p.efficacitePct, calcul: `${qte(p.enceintes)} ÷ ${qte(HYPOTHESES_DE_LA_PERFORMANCE.objectifDeVentes)} × 100 = ${pct(p.efficacitePct)}` },
+          { libelle: "Chiffre d'affaires par enceinte", attendu: quotient2(p.chiffreDAffaires, p.enceintes), calcul: `${eur(p.chiffreDAffaires)} ÷ ${qte(p.enceintes)} = ${eur(quotient2(p.chiffreDAffaires, p.enceintes))}` },
         ];
       },
       explication: () => {
@@ -151,12 +154,12 @@ export const LA_PERFORMANCE_GLOBALE: Chapitre = {
       titre: "Rentabilité et profitabilité",
       notions: ["profitability_vs_return"],
       tableau: leTableauDeBord,
-      question: () => "Calculez, au dixième de point, la rentabilité (le résultat net rapporté aux capitaux propres) et la profitabilité (le résultat net rapporté au chiffre d'affaires).",
+      question: () => "Calculez, à deux décimales, la rentabilité (le résultat net rapporté aux capitaux propres) et la profitabilité (le résultat net rapporté au chiffre d'affaires).",
       champs: () => {
         const p = performanceDeNova();
         return [
-          { libelle: "Rentabilité (%)", attendu: p.rentabilitePct, calcul: `${eur(p.resultatNet)} ÷ ${eur(p.capitauxPropres)} × 100 = ${pct(p.rentabilitePct)}`, tolerance: 0.1 },
-          { libelle: "Profitabilité (%)", attendu: p.profitabilitePct, calcul: `${eur(p.resultatNet)} ÷ ${eur(p.chiffreDAffaires)} × 100 = ${pct(p.profitabilitePct)}`, tolerance: 0.1 },
+          { libelle: "Rentabilité (%)", attendu: p.rentabilitePct, calcul: `${eur(p.resultatNet)} ÷ ${eur(p.capitauxPropres)} × 100 = ${pct(p.rentabilitePct)}` },
+          { libelle: "Profitabilité (%)", attendu: p.profitabilitePct, calcul: `${eur(p.resultatNet)} ÷ ${eur(p.chiffreDAffaires)} × 100 = ${pct(p.profitabilitePct)}` },
         ];
       },
       explication: () => {
@@ -174,13 +177,13 @@ export const LA_PERFORMANCE_GLOBALE: Chapitre = {
       notions: ["csr_index"],
       question: () => {
         const p = performanceDeNova();
-        return `En N, la chaîne et le bâtiment ont consommé ${qte(p.kwh)} kWh d'électricité ; chaque kWh émet ${KG_CO2_PAR_KWH.toLocaleString("fr-FR")} kg de CO2. Calculez les émissions de l'année (en kg) et les grammes de CO2 émis par enceinte vendue, à l'unité.`;
+        return `En N, la chaîne et le bâtiment ont consommé ${qte(p.kwh)} kWh d'électricité ; chaque kWh émet ${KG_CO2_PAR_KWH.toLocaleString("fr-FR")} kg de CO2. Calculez les émissions de l'année (en kg) et les grammes de CO2 émis par enceinte vendue, au centième.`;
       },
       champs: () => {
         const p = performanceDeNova();
         return [
-          { libelle: "Émissions de l'année (kg de CO2)", attendu: p.co2, calcul: `${qte(p.kwh)} × ${KG_CO2_PAR_KWH.toLocaleString("fr-FR")} = ${qte(p.co2)} kg`, tolerance: 0.5 },
-          { libelle: "Émissions par enceinte (g de CO2)", attendu: p.co2ParEnceinteGrammes, calcul: `${qte(p.co2)} kg ÷ ${qte(p.enceintes)} × 1 000 = ${qte(p.co2ParEnceinteGrammes)} g`, tolerance: 1 },
+          { libelle: "Émissions de l'année (kg de CO2)", nature: "grandeur", attendu: p.co2, calcul: `${qte(p.kwh)} × ${KG_CO2_PAR_KWH.toLocaleString("fr-FR")} = ${qte(p.co2)} kg` },
+          { libelle: "Émissions par enceinte (g de CO2)", nature: "grandeur", attendu: p.co2ParEnceinteGrammes, calcul: `${qte(p.co2)} kg ÷ ${qte(p.enceintes)} × 1 000 = ${qte(p.co2ParEnceinteGrammes)} g` },
         ];
       },
       explication: () => {

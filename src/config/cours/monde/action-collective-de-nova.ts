@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { auCentime } from "./amortissement";
 import { ENTREPRISES_DE_LA_DIRECTION, FICHE_DE_DIRECTION } from "./direction-de-nova";
 import { APPORT_EN_CAPITAL, CONTRAT_DE_PRET, EQUIPEMENT } from "./exercice-de-nova";
@@ -11,6 +12,10 @@ import { MOIS_PAR_TRIMESTRE } from "./nova-capacite";
  * banque, une ligne de montage et quatre opérateurs autour d'un objectif commun. Ce fichier ne recopie
  * aucun chiffre de NOVA : l'apport, l'emprunt et la ligne viennent d'exercice-de-nova.ts, l'équipe et
  * le temps de montage de nova-capacite.ts (lus par direction-de-nova.ts).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le rapport entre l'opérateur et la personne seule et la part
+ * des associés se donnaient au dixième, ils sont au centième.
  *
  * HYPOTHÈSES DU COURS (le fondateur seul, avant NOVA) :
  *   · seul, il ne monte que la moitié de ses heures de travail du mois, 75 heures : l'autre moitié
@@ -45,8 +50,8 @@ export function seulOuOrganise() {
     seulParTrimestre,
     operateurParMois,
     operateurParTrimestre,
-    /** Combien de fois plus monte un opérateur de la ligne qu'une personne seule, au dixième. */
-    rapport: Math.round((operateurParMois / seulParMois) * 10) / 10,
+    /** Combien de fois plus monte un opérateur de la ligne qu'une personne seule, au centième. */
+    rapport: arrondi2(operateurParMois / seulParMois),
     operateurs: f.operateurs.nombre,
     /** Ce que l'équipe organisée monte par trimestre : la plus petite de l'équipe et de la ligne. */
     equipe,
@@ -68,8 +73,8 @@ export function ressourcesDeLaCreation() {
     ligne: EQUIPEMENT.ht,
     postes: f.ligne.postes,
     operateurs: f.operateurs.nombre,
-    /** La part de l'argent de départ apportée par les associés, en pour cent au dixième. */
-    partDesAssocies: Math.round((apport / (apport + emprunt)) * 1000) / 10,
+    /** La part de l'argent de départ apportée par les associés, en pour cent à deux décimales. */
+    partDesAssocies: arrondi2((apport / (apport + emprunt)) * 100),
   };
 }
 

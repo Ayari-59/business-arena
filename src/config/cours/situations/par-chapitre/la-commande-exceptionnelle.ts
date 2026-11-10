@@ -1,3 +1,4 @@
+import { qte } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ORGANISER_L_ACTIVITE } from "../../chapitres/organiser-l-activite";
 import { commandeExceptionnelle as commandeDeNova, embaucheDuPremierJanvier, ficheDeNova } from "../../monde/production-et-logistique";
@@ -13,9 +14,11 @@ import type { Situation } from "../types";
  * capacité de l'entreprise, ce qu'il faudrait monter, ce qui reste pour la commande ; puis il répond,
  * en tenant compte de ce qui limite. La commande est l'hypothèse du cas
  * (monde/production-et-logistique.ts, COMMANDE_EXCEPTIONNELLE).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les capacités et les commandes sont des quantités, entières.
  */
 
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 export type Verdict = "en-entier" | "pas-en-entier";
 
@@ -81,9 +84,9 @@ export const LA_COMMANDE_EXCEPTIONNELLE: Situation = {
       champs: (c) => {
         const k = commandeExceptionnelle(c);
         return [
-          { libelle: "Capacité de l'entreprise", attendu: k.t.capacite, calcul: `la plus petite de ${qte(k.t.capaciteOutil)} et ${qte(k.t.capaciteEquipe)} : ${qte(k.t.capacite)}`, tolerance: 0 },
-          { libelle: "À monter pour servir tout le monde", attendu: k.aMonter, calcul: `${qte(k.t.demande)} + ${qte(k.enceintes)} = ${qte(k.aMonter)}`, tolerance: 0 },
-          { libelle: "Commande que la ligne peut monter", attendu: k.livrable, calcul: `${qte(k.t.capacite)} − ${qte(k.t.demande)} = ${qte(k.livrable)}`, tolerance: 0 },
+          { libelle: "Capacité de l'entreprise", nature: "quantite", attendu: k.t.capacite, calcul: `la plus petite de ${qte(k.t.capaciteOutil)} et ${qte(k.t.capaciteEquipe)} : ${qte(k.t.capacite)}` },
+          { libelle: "À monter pour servir tout le monde", nature: "quantite", attendu: k.aMonter, calcul: `${qte(k.t.demande)} + ${qte(k.enceintes)} = ${qte(k.aMonter)}` },
+          { libelle: "Commande que la ligne peut monter", nature: "quantite", attendu: k.livrable, calcul: `${qte(k.t.capacite)} − ${qte(k.t.demande)} = ${qte(k.livrable)}` },
         ];
       },
       explication: (c) => {

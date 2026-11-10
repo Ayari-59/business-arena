@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme } from "../../../pedagogy/cours/deux-decimales";
 import { CAPTEURS, ENTREPRISES_DU_NUMERIQUE, POSTES_DE_LA_LIGNE, capteurs, jourDArret, postesQuiRapportentLePlus } from "../monde/numerique-de-la-ligne";
 import { HAUT_VERDASSE } from "../monde/haut-verdasse";
 import type { Chapitre } from "../types";
@@ -16,10 +16,14 @@ import type { Chapitre } from "../types";
  * PGI ») : ici, ce que le numérique change à la production.
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA : monde/numerique-de-la-ligne.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les enceintes d'un poste en un jour sont une quantité : le
+ * quotient à deux décimales, puis l'unité inférieure, que le corrigé nomme ; la marge perdue au
+ * centime.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 
 export const LE_NUMERIQUE_DANS_LA_PRODUCTION: Chapitre = {
   code: "le-numerique-dans-la-production",
@@ -150,7 +154,7 @@ export const LE_NUMERIQUE_DANS_LA_PRODUCTION: Chapitre = {
       champs: () => {
         const j = jourDArret();
         return [
-          { libelle: "Enceintes d'un poste en un jour", attendu: j.parJour, calcul: `${qte(j.capacite)} ÷ ${qte(j.postes)} ÷ ${qte(j.jours)} = ${qte(Math.round((j.capacite / j.postes / j.jours) * 100) / 100)}, soit ${qte(j.parJour)}`, tolerance: 0 },
+          { libelle: "Enceintes d'un poste en un jour", nature: "quantite", attendu: j.parJour, calcul: `${qte(j.capacite)} ÷ ${qte(j.postes)} ÷ ${qte(j.jours)} = ${qte(arrondi2(j.capacite / j.postes / j.jours))}, soit ${qte(j.parJour)} enceintes entières : la dernière, entamée, n'est pas montée` },
           { libelle: "Marge perdue par jour d'arrêt", attendu: j.margePerdue, calcul: `${qte(j.parJour)} × ${eur(j.marge)} = ${eur(j.margePerdue)}` },
         ];
       },

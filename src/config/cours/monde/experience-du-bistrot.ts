@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { LA_TABLE_D_AUGUSTIN } from "./la-table-d-augustin";
 
 /**
@@ -18,10 +19,13 @@ import { LA_TABLE_D_AUGUSTIN } from "./la-table-d-augustin";
  *     dîners ;
  *   · LE CAS « UNE SOIRÉE LE MARDI ? » : un mardi soir ordinaire sert 25 dîners, et 38 clients ont déjà
  *     réservé la soirée du chef si elle a lieu.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les écarts entre le perçu et l'attendu et le taux de clients
+ * satisfaits se donnaient au dixième, ils sont au centième.
  */
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const auCentime = arrondi2;
 
 /** Un critère de l'enquête : la note attendue et la note perçue, sur 10. */
 export interface CritereDeSatisfaction {
@@ -67,7 +71,7 @@ export const MOMENTS_DE_LA_SOIREE: readonly { libelle: string; dimension: CodeDe
 
 /** L'enquête : l'écart de chaque critère (perçu − attendu), le critère le plus en retard, le taux de satisfaits. */
 export function satisfactionDuBistrot() {
-  const criteres = ENQUETE_DU_BISTROT.criteres.map((k) => ({ ...k, ecart: auDixieme(k.percu - k.attendu) }));
+  const criteres = ENQUETE_DU_BISTROT.criteres.map((k) => ({ ...k, ecart: arrondi2(k.percu - k.attendu) }));
   const pire = criteres.reduce((a, b) => (b.ecart < a.ecart ? b : a));
   const meilleur = criteres.reduce((a, b) => (b.ecart > a.ecart ? b : a));
   return {
@@ -76,7 +80,7 @@ export function satisfactionDuBistrot() {
     meilleur,
     repondants: ENQUETE_DU_BISTROT.repondants,
     satisfaits: ENQUETE_DU_BISTROT.satisfaits,
-    tauxDeSatisfaits: auDixieme((ENQUETE_DU_BISTROT.satisfaits / ENQUETE_DU_BISTROT.repondants) * 100),
+    tauxDeSatisfaits: arrondi2((ENQUETE_DU_BISTROT.satisfaits / ENQUETE_DU_BISTROT.repondants) * 100),
   };
 }
 

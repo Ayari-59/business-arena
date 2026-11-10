@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { auCentime } from "./amortissement";
 import { ENTREPRISES_DE_LA_DIRECTION } from "./direction-de-nova";
 import { SOUTIEN_AU_HANDBALL, totalDe } from "./haut-verdasse";
@@ -24,6 +25,10 @@ import { SMIC_HORAIRE_BRUT } from "./ressources-humaines-de-nova";
  *     saison suivante, ses propres charges ayant monté ; les dépenses du club ne changent pas ;
  *   · LE CAS : un garage du territoire propose 6 000 € de parrainage par saison, son nom sur les
  *     maillots de l'équipe senior, et demande en plus à choisir l'entraîneur de cette équipe.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts de la subvention, du bénévolat et des sponsors se
+ * donnaient au dixième, elles sont à deux décimales.
  */
 
 export const ENTREPRISES_DE_LA_STRATEGIE_DU_CLUB = ENTREPRISES_DE_LA_DIRECTION;
@@ -45,7 +50,7 @@ export function budgetDuClub() {
     depenses,
     excedent: recettes - depenses,
     subvention,
-    partDeLaSubvention: Math.round((subvention / recettes) * 1000) / 10,
+    partDeLaSubvention: arrondi2((subvention / recettes) * 100),
     adherents: club.categories.reduce((t, c) => t + c.adherents, 0),
   };
 }
@@ -64,7 +69,7 @@ export function ressourcesEnNature() {
     benevolat,
     argent: b.recettes,
     total,
-    partDuBenevolat: Math.round((benevolat / total) * 1000) / 10,
+    partDuBenevolat: arrondi2((benevolat / total) * 100),
   };
 }
 
@@ -88,8 +93,8 @@ export function parrainageDuGarage() {
     sponsorsAvant: sponsors,
     sponsorsApres: sponsors + PARRAINAGE_DU_GARAGE,
     recettesApres: recettes,
-    partDesSponsorsAvant: Math.round((sponsors / b.recettes) * 1000) / 10,
-    partDesSponsorsApres: Math.round(((sponsors + PARRAINAGE_DU_GARAGE) / recettes) * 1000) / 10,
+    partDesSponsorsAvant: arrondi2((sponsors / b.recettes) * 100),
+    partDesSponsorsApres: arrondi2(((sponsors + PARRAINAGE_DU_GARAGE) / recettes) * 100),
     excedentApres: recettes - b.depenses,
   };
 }

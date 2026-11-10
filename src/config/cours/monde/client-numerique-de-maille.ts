@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { clienteleDeJanvier } from "./fichier-de-maille";
 import { MAILLE_ET_CO } from "./maille-et-co";
 
@@ -21,6 +22,10 @@ import { MAILLE_ET_CO } from "./maille-et-co";
  *     caisse dans l'année ;
  *   · LE CAS : MAILLE & CO envisage un service de discussion en ligne (un conseiller répond aux
  *     questions sur les tailles) pour 450 € par mois ; il ferait passer les commandes de 120 à 135.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les taux de transformation et d'abandon se donnaient au
+ * dixième, ils sont à deux décimales.
  */
 
 export const ENTREPRISES_DU_CLIENT_NUMERIQUE = [MAILLE_ET_CO.code] as const;
@@ -35,8 +40,7 @@ export const PANIERS_ABANDONNES_DES_INSCRITES = 90;
 export const PASSAGES_PERDUS_PAR_DESINSCRIPTION = 2;
 export const DISCUSSION_EN_LIGNE = { coutParMois: 450, commandesApres: 135 } as const;
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const auCentime = arrondi2;
 
 /** La marge d'un panier repris : celle d'un passage en caisse d'une cliente fidèle. */
 export const margeDUnPanier = () => clienteleDeJanvier("fideles").margeParTicket;
@@ -44,7 +48,7 @@ export const margeDUnPanier = () => clienteleDeJanvier("fideles").margeParTicket
 /** Le tunnel du site : le taux de transformation (commandes sur visites) et le taux d'abandon de panier. */
 export function tunnelDuSite() {
   const s = SITE_DE_MAILLE;
-  return { ...s, transformationPct: auDixieme((s.commandes / s.visites) * 100), abandons: s.paniers - s.commandes, abandonPct: auDixieme(((s.paniers - s.commandes) / s.paniers) * 100) };
+  return { ...s, transformationPct: arrondi2((s.commandes / s.visites) * 100), abandons: s.paniers - s.commandes, abandonPct: arrondi2(((s.paniers - s.commandes) / s.paniers) * 100) };
 }
 
 /** Les k premières relances : paniers repris, désinscriptions, ce qu'elles rapportent et ce qu'elles coûtent. */
@@ -70,5 +74,5 @@ export function discussionEnLigne() {
   const d = DISCUSSION_EN_LIGNE;
   const enPlus = d.commandesApres - SITE_DE_MAILLE.commandes;
   const marge = auCentime(enPlus * margeDUnPanier());
-  return { ...d, avant: SITE_DE_MAILLE.commandes, enPlus, marge, gain: auCentime(marge - d.coutParMois), transformationApresPct: auDixieme((d.commandesApres / SITE_DE_MAILLE.visites) * 100) };
+  return { ...d, avant: SITE_DE_MAILLE.commandes, enPlus, marge, gain: auCentime(marge - d.coutParMois), transformationApresPct: arrondi2((d.commandesApres / SITE_DE_MAILLE.visites) * 100) };
 }

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, pct, qte } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DU_CLIENT_NUMERIQUE, SITE_DE_MAILLE, discussionEnLigne, margeDUnPanier } from "../../monde/client-numerique-de-maille";
 import type { Situation } from "../types";
 
@@ -9,11 +9,12 @@ import type { Situation } from "../types";
  * Le chapitre relançait les paniers abandonnés ; le cas lève un frein (la peur de se tromper de taille)
  * par un outil de la relation digitalisée, la discussion en ligne. Hypothèses :
  * monde/client-numerique-de-maille.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les commandes en plus sont une quantité ; la marge et le gain
+ * au centime ; le taux de transformation à deux décimales.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 
 export const UN_CONSEILLER_EN_LIGNE: Situation = {
   code: "un-conseiller-en-ligne",
@@ -49,7 +50,7 @@ export const UN_CONSEILLER_EN_LIGNE: Situation = {
       champs: () => {
         const d = discussionEnLigne();
         return [
-          { libelle: "Commandes en plus", attendu: d.enPlus, calcul: `${qte(d.commandesApres)} − ${qte(d.avant)} = ${qte(d.enPlus)}`, tolerance: 0 },
+          { libelle: "Commandes en plus", nature: "quantite", attendu: d.enPlus, calcul: `${qte(d.commandesApres)} − ${qte(d.avant)} = ${qte(d.enPlus)}` },
           { libelle: "Marge des commandes en plus", attendu: d.marge, calcul: `${qte(d.enPlus)} × ${eur(margeDUnPanier())} = ${eur(d.marge)}` },
           { libelle: "Gain du mois", attendu: d.gain, calcul: `${eur(d.marge)} − ${eur(d.coutParMois)} = ${eur(d.gain)}` },
         ];

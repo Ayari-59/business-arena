@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, qte, quotient2 } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DE_L_EXPERIENCE } from "../../chapitres/l-experience-client";
 import { SOIREE_DU_CHEF, couvertsQuiPaient, margeDUnCouvert, margeDUnCouvertDeLaSoiree, margeDUnSoirOrdinaire, soireeDuChef } from "../../monde/experience-du-bistrot";
 import type { Situation } from "../types";
@@ -11,10 +11,12 @@ import type { Situation } from "../types";
  * ordinaires), et 38 clients ont déjà réservé. Les calculs sont ceux du chapitre : la marge du soir
  * ordinaire remplacé, le nombre de couverts qui paient la soirée, ce qu'elle rapporte avec les
  * réservations. Le piège : reprendre le seuil du jeudi, calculé sur un soir ordinaire plus rempli.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les couverts qui paient la soirée sont une quantité : le
+ * quotient à deux décimales, puis le couvert supérieur, que le corrigé nomme.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 /** Les chiffres de la réponse, calculés une fois. */
 export function uneSoireeLeMardi() {
@@ -71,7 +73,12 @@ export const UNE_SOIREE_LE_MARDI: Situation = {
         return [
           { libelle: "Marge d'un mardi soir ordinaire", attendu: r.margeDuMardi, calcul: `${qte(r.diners)} × ${eur(margeDUnCouvert())} = ${eur(r.margeDuMardi)}` },
           { libelle: "Ce que la soirée doit couvrir", attendu: r.aCouvrir, calcul: `${eur(r.margeDuMardi)} + ${eur(SOIREE_DU_CHEF.animation)} = ${eur(r.aCouvrir)}` },
-          { libelle: "Couverts qui paient la soirée", attendu: r.seuil, calcul: `${eur(r.aCouvrir)} ÷ ${eur(margeDUnCouvertDeLaSoiree())}, arrondi au couvert supérieur = ${qte(r.seuil)}` },
+          {
+            libelle: "Couverts qui paient la soirée",
+            nature: "quantite",
+            attendu: r.seuil,
+            calcul: `${eur(r.aCouvrir)} ÷ ${eur(margeDUnCouvertDeLaSoiree())} = ${nombreAuCentieme(quotient2(r.aCouvrir, margeDUnCouvertDeLaSoiree()))}, soit ${qte(r.seuil)} au couvert supérieur : un de moins ne paierait pas la soirée`,
+          },
         ];
       },
       explication: () => {

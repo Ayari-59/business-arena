@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, qte } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DES_DONNEES } from "../../chapitres/donnees-personnelles-et-donnees-ouvertes";
 import { FICHIER_DE_MAILLE, campagne } from "../../monde/fichier-de-maille";
 import type { Situation } from "../types";
@@ -11,10 +11,11 @@ import type { Situation } from "../types";
  * fichier, pas seulement aux 540 qui ont consenti. La vendeuse propose plutôt de demander l'accord en
  * caisse pendant un mois : elle pense atteindre 800 consentantes (hypothèse du cas). Les calculs sont
  * ceux du chapitre (ce qu'une campagne rapporte selon ses destinataires), la règle aussi.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les gains attendent le centime (à l'euro près, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 /** Les consentantes que la vendeuse pense réunir en demandant l'accord en caisse (hypothèse du cas). */
 export const CONSENTANTES_APRES_LA_CAISSE = 800;
@@ -59,8 +60,8 @@ export const ECRIRE_A_TOUTES_LES_CLIENTES: Situation = {
       champs: () => {
         const k = ecrireAToutes();
         return [
-          { libelle: "Gain avec les consentantes d'aujourd'hui", attendu: k.aujourdhui.gain, calcul: `${qte(k.aujourdhui.destinataires)} × ${eur(k.aujourdhui.parDestinataire)} − ${eur(k.aujourdhui.cout)} = ${eur(k.aujourdhui.gain)}`, tolerance: 1 },
-          { libelle: "Gain après la demande en caisse", attendu: k.apres.gain, calcul: `${qte(k.apres.destinataires)} × ${eur(k.apres.parDestinataire)} − ${eur(k.apres.cout)} = ${eur(k.apres.gain)}`, tolerance: 1 },
+          { libelle: "Gain avec les consentantes d'aujourd'hui", attendu: k.aujourdhui.gain, calcul: `${qte(k.aujourdhui.destinataires)} × ${eur(k.aujourdhui.parDestinataire)} − ${eur(k.aujourdhui.cout)} = ${eur(k.aujourdhui.gain)}` },
+          { libelle: "Gain après la demande en caisse", attendu: k.apres.gain, calcul: `${qte(k.apres.destinataires)} × ${eur(k.apres.parDestinataire)} − ${eur(k.apres.cout)} = ${eur(k.apres.gain)}` },
         ];
       },
       explication: () => {

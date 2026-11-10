@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { aLUnite, eur, nombreAuCentieme, qte, quotient2 } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DE_LA_SALLE } from "../../chapitres/le-plan-de-communication";
 import { CAMPAGNE_DE_LA_RENTREE, adhesionsQuiPaient, meilleurSupport, supportsLus } from "../../monde/volt-fitness";
 import type { Situation } from "../types";
@@ -11,10 +11,13 @@ import type { Situation } from "../types";
  * L'élève refait les calculs du chapitre : le coût pour mille contacts dans la cible de chaque support,
  * puis les contacts dans la cible que le budget entier achète sur chacun (à prix proportionnel au
  * volume acheté, hypothèse du cas). La radio a le coût pour mille le plus bas, mais touche peu la cible.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les contacts dans la cible sont des quantités : les
+ * insertions que paie le budget au centième, puis leurs contacts, à l'unité (à un contact près,
+ * avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 /** Les chiffres de la réponse, calculés une fois. */
 export function touteLaCampagneALaRadio() {
@@ -22,7 +25,8 @@ export function touteLaCampagneALaRadio() {
   const radio = s.find((x) => x.code === "radio")!;
   const meilleur = meilleurSupport();
   const budget = CAMPAGNE_DE_LA_RENTREE.budget;
-  const pour = (x: typeof radio) => Math.round((budget / x.prix) * x.utiles);
+  // Les insertions que paie le budget, au centième, puis leurs contacts dans la cible, à l'unité.
+  const pour = (x: typeof radio) => aLUnite(quotient2(budget, x.prix) * x.utiles);
   return { budget, radio, meilleur, utilesRadio: pour(radio), utilesMeilleur: pour(meilleur), adhesions: adhesionsQuiPaient() };
 }
 
@@ -87,8 +91,8 @@ export const TOUTE_LA_CAMPAGNE_A_LA_RADIO: Situation = {
       champs: () => {
         const r = touteLaCampagneALaRadio();
         return [
-          { libelle: "Contacts dans la cible, radio", attendu: r.utilesRadio, tolerance: 1, calcul: `${eur(r.budget)} ÷ ${eur(r.radio.prix)} × ${qte(r.radio.utiles)} = ${qte(r.utilesRadio)}` },
-          { libelle: "Contacts dans la cible, meilleur support", attendu: r.utilesMeilleur, tolerance: 1, calcul: `${eur(r.budget)} ÷ ${eur(r.meilleur.prix)} × ${qte(r.meilleur.utiles)} = ${qte(r.utilesMeilleur)}` },
+          { libelle: "Contacts dans la cible, radio", nature: "quantite", attendu: r.utilesRadio, calcul: `${eur(r.budget)} ÷ ${eur(r.radio.prix)} = ${nombreAuCentieme(quotient2(r.budget, r.radio.prix))} ; ${nombreAuCentieme(quotient2(r.budget, r.radio.prix))} × ${qte(r.radio.utiles)} = ${qte(r.utilesRadio)}` },
+          { libelle: "Contacts dans la cible, meilleur support", nature: "quantite", attendu: r.utilesMeilleur, calcul: `${eur(r.budget)} ÷ ${eur(r.meilleur.prix)} = ${nombreAuCentieme(quotient2(r.budget, r.meilleur.prix))} ; ${nombreAuCentieme(quotient2(r.budget, r.meilleur.prix))} × ${qte(r.meilleur.utiles)} = ${qte(r.utilesMeilleur)}` },
         ];
       },
       explication: () => {

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct, qte, quotient2 } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { ENTREPRISES_DE_LA_DIRECTION, MOIS_DE_CHARGES_A_COUVRIR, PLACEMENTS_ESSAYES, projetDeNova, type Cote } from "../monde/direction-de-nova";
 import type { Chapitre } from "../types";
@@ -26,12 +26,15 @@ import type { Chapitre } from "../types";
  * CE QUI A CHANGÉ. Le chapitre lisait le bilan d'ouverture de chaque entreprise de l'arène ; il lit
  * la création de NOVA : 230 000 € de besoins et de ressources, 65,2 % apportés par les associés,
  * 156 jours de charges fixes en trésorerie.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts des associés et de la banque se donnaient au
+ * dixième, elles sont à deux décimales ; les totaux attendent le centime (à l'euro près, avant).
+ * Les jours que paie la trésorerie se comptent sur les charges d'une journée au centime
+ * (monde/direction-de-nova.ts), comme l'élève : le quotient à deux décimales, puis les jours
+ * entiers, que le corrigé nomme. Les trimestres de l'emprunt sont une quantité.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 export interface LigneDuProjet {
@@ -61,10 +64,10 @@ export function moyensDeDepart(_c?: Cas, v: Parameters<typeof projetDeNova>[0] =
     lignes,
     besoinsDuProjet,
     ressourcesDuProjet,
-    partDesAssociesPct: auDixieme(p.partDesAssocies * 100),
-    partDeLaBanquePct: auDixieme((p.emprunt / p.ressources) * 100),
-    remboursementParTrimestre: Math.round((p.emprunt / p.trimestresDuPret) * 100) / 100,
-    chargesParJourAuCentime: Math.round(p.chargesParJour * 100) / 100,
+    partDesAssociesPct: arrondi2(p.partDesAssocies * 100),
+    partDeLaBanquePct: arrondi2((p.emprunt / p.ressources) * 100),
+    remboursementParTrimestre: arrondi2(p.emprunt / p.trimestresDuPret),
+    chargesParJourAuCentime: p.chargesParJour,
   };
 }
 
@@ -135,8 +138,8 @@ export const LE_PROJET_D_ENTREPRISE: Chapitre = {
       champs: (c) => {
         const m = moyensDeDepart(c);
         return [
-          { libelle: "Total des besoins", attendu: m.besoins, calcul: `${additionne(m.besoinsDuProjet)} = ${eur(m.besoins)}`, tolerance: 1 },
-          { libelle: "Total des ressources", attendu: m.ressources, calcul: `${additionne(m.ressourcesDuProjet)} = ${eur(m.ressources)}`, tolerance: 1 },
+          { libelle: "Total des besoins", attendu: m.besoins, calcul: `${additionne(m.besoinsDuProjet)} = ${eur(m.besoins)}` },
+          { libelle: "Total des ressources", attendu: m.ressources, calcul: `${additionne(m.ressourcesDuProjet)} = ${eur(m.ressources)}` },
         ];
       },
       explication: (c) => {
@@ -154,14 +157,14 @@ export const LE_PROJET_D_ENTREPRISE: Chapitre = {
       notions: ["balance_sheet", "loan_schedule"],
       question: (c) => {
         const m = moyensDeDepart(c);
-        return `Calculez la part des ressources apportée par les associés, puis celle prêtée par la banque, en pourcentage au dixième. ${c.entreprise} rembourse ${eur(m.remboursementParTrimestre)} de son emprunt chaque trimestre : calculez en combien de trimestres il sera remboursé.`;
+        return `Calculez la part des ressources apportée par les associés, puis celle prêtée par la banque, en pourcentage à deux décimales. ${c.entreprise} rembourse ${eur(m.remboursementParTrimestre)} de son emprunt chaque trimestre : calculez en combien de trimestres il sera remboursé.`;
       },
       champs: (c) => {
         const m = moyensDeDepart(c);
         return [
-          { libelle: "Part apportée par les associés (%)", attendu: m.partDesAssociesPct, calcul: `${eur(m.apport)} ÷ ${eur(m.ressources)} × 100 = ${pct(m.partDesAssociesPct)}`, tolerance: 0.1 },
-          { libelle: "Part prêtée par la banque (%)", attendu: m.partDeLaBanquePct, calcul: `${eur(m.emprunt)} ÷ ${eur(m.ressources)} × 100 = ${pct(m.partDeLaBanquePct)}`, tolerance: 0.1 },
-          { libelle: "Trimestres pour rembourser l'emprunt", attendu: m.trimestresDuPret, calcul: `${eur(m.emprunt)} ÷ ${eur(m.remboursementParTrimestre)} = ${qte(m.trimestresDuPret)}` },
+          { libelle: "Part apportée par les associés (%)", attendu: m.partDesAssociesPct, calcul: `${eur(m.apport)} ÷ ${eur(m.ressources)} × 100 = ${pct(m.partDesAssociesPct)}` },
+          { libelle: "Part prêtée par la banque (%)", attendu: m.partDeLaBanquePct, calcul: `${eur(m.emprunt)} ÷ ${eur(m.ressources)} × 100 = ${pct(m.partDeLaBanquePct)}` },
+          { libelle: "Trimestres pour rembourser l'emprunt", nature: "quantite", attendu: m.trimestresDuPret, calcul: `${eur(m.emprunt)} ÷ ${eur(m.remboursementParTrimestre)} = ${qte(m.trimestresDuPret)}` },
         ];
       },
       explication: (c) => {
@@ -170,7 +173,7 @@ export const LE_PROJET_D_ENTREPRISE: Chapitre = {
           m.partDesAssociesPct >= m.partDeLaBanquePct
             ? `Les associés apportent ${pct(m.partDesAssociesPct)} des ressources, plus que la banque : ce sont eux qui portent d'abord le projet.`
             : `La banque prête ${pct(m.partDeLaBanquePct)} des ressources, plus que ce qu'apportent les associés : le projet dépend beaucoup de son prêteur.`,
-          `L'emprunt se rembourse en ${qte(m.trimestresDuPret)} trimestres, soit ${qte(m.trimestresDuPret / m.echeancesParAn)} ans, et la banque demande en plus des intérêts : ${pct(auDixieme(m.tauxDuPret * 100))} par an. Les apports, eux, ne se remboursent pas : les associés espèrent en retour une part des bénéfices.`,
+          `L'emprunt se rembourse en ${qte(m.trimestresDuPret)} trimestres, soit ${qte(m.trimestresDuPret / m.echeancesParAn)} ans, et la banque demande en plus des intérêts : ${pct(arrondi2(m.tauxDuPret * 100))} par an. Les apports, eux, ne se remboursent pas : les associés espèrent en retour une part des bénéfices.`,
         ];
       },
     },
@@ -188,8 +191,13 @@ export const LE_PROJET_D_ENTREPRISE: Chapitre = {
         const m = moyensDeDepart(c);
         return [
           { libelle: "Charges fixes du mois", attendu: m.chargesDuMois, calcul: `${eur(m.loyer)} + ${eur(m.personnel)} = ${eur(m.chargesDuMois)}` },
-          { libelle: "Charges fixes d'une journée", attendu: m.chargesParJourAuCentime, calcul: `${eur(m.chargesDuMois)} ÷ ${qte(m.joursParMois)} = ${eur(m.chargesParJourAuCentime)}`, tolerance: 0.01 },
-          { libelle: "Jours payés par la trésorerie de départ", attendu: m.jours, calcul: `${eur(m.tresorerie)} ÷ ${eur(m.chargesParJourAuCentime)} = ${qte(m.jours)} jours`, tolerance: 1 },
+          { libelle: "Charges fixes d'une journée", attendu: m.chargesParJourAuCentime, calcul: `${eur(m.chargesDuMois)} ÷ ${qte(m.joursParMois)} = ${eur(m.chargesParJourAuCentime)}` },
+          {
+            libelle: "Jours payés par la trésorerie de départ",
+            nature: "quantite",
+            attendu: m.jours,
+            calcul: `${eur(m.tresorerie)} ÷ ${eur(m.chargesParJourAuCentime)} = ${nombreAuCentieme(quotient2(m.tresorerie, m.chargesParJourAuCentime))}, soit ${qte(m.jours)} jours entiers : le dernier jour entamé n'est pas payé`,
+          },
         ];
       },
       explication: (c) => {

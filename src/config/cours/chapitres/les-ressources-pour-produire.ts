@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, qte } from "../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DES_RESSOURCES, PREVISION_DE_N_PLUS_2, enceintesParOperateurEtParAn, equilibreDuBilan, gpecDeN2 } from "../monde/ressources-et-gpec-de-nova";
 import type { Chapitre } from "../types";
 
@@ -15,10 +15,12 @@ import type { Chapitre } from "../types";
  * formes de la relation de travail qui donnent de la flexibilité.
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA : monde/ressources-et-gpec-de-nova.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les opérateurs présents et les recrutements sont des
+ * quantités ; les montants au centime.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 export const LES_RESSOURCES_POUR_PRODUIRE: Chapitre = {
   code: "les-ressources-pour-produire",
@@ -232,8 +234,8 @@ export const LES_RESSOURCES_POUR_PRODUIRE: Chapitre = {
       champs: () => {
         const g = gpecDeN2();
         return [
-          { libelle: "Opérateurs présents en N + 2", attendu: g.presents, calcul: `${qte(g.effectif)} − ${qte(g.departs)} = ${qte(g.presents)}`, tolerance: 0 },
-          { libelle: "Recrutements à prévoir", attendu: g.recrutements, calcul: `${qte(g.besoin)} − ${qte(g.presents)} = ${qte(g.recrutements)}`, tolerance: 0 },
+          { libelle: "Opérateurs présents en N + 2", nature: "quantite", attendu: g.presents, calcul: `${qte(g.effectif)} − ${qte(g.departs)} = ${qte(g.presents)}` },
+          { libelle: "Recrutements à prévoir", nature: "quantite", attendu: g.recrutements, calcul: `${qte(g.besoin)} − ${qte(g.presents)} = ${qte(g.recrutements)}` },
         ];
       },
       explication: () => {

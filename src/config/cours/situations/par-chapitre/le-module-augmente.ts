@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, qte, quotient2 } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DU_PARCOURS } from "../../chapitres/le-parcours-client";
 import { MODULE_DE_RESERVATION, margeDUneReservation, moisDuModule, reservationsQuiPaient } from "../../monde/parcours-client-de-la-boutique";
 import type { Situation } from "../types";
@@ -12,10 +12,13 @@ import type { Situation } from "../types";
  * calculs du chapitre au nouveau loyer : le gain du mois, le nombre de réservations qui paie le module.
  * La réponse n'est pas de fermer le service par principe : elle compare le nombre attendu au nombre
  * qui paie, et cherche ce qui ferait réserver plus de clientes.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le gain du mois attend le centime (à 0,05 € près, avant) ;
+ * les réservations qui paient le loyer sont une quantité : le quotient à deux décimales, puis
+ * l'unité supérieure, que le corrigé nomme.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 /** Les chiffres de la réponse, calculés une fois. */
 export function leModuleAugmente() {
@@ -69,8 +72,13 @@ export const LE_MODULE_AUGMENTE: Situation = {
       champs: () => {
         const r = leModuleAugmente();
         return [
-          { libelle: "Gain du mois au nouveau loyer", attendu: r.gain, tolerance: 0.05, calcul: `${qte(r.attendues)} × ${eur(r.parReservation)} − ${eur(r.loyer)} = ${eur(r.gain)}` },
-          { libelle: "Réservations qui paient le loyer", attendu: r.seuil, calcul: `${eur(r.loyer)} ÷ ${eur(r.parReservation)}, arrondi à la réservation supérieure = ${qte(r.seuil)}` },
+          { libelle: "Gain du mois au nouveau loyer", attendu: r.gain, calcul: `${qte(r.attendues)} × ${eur(r.parReservation)} − ${eur(r.loyer)} = ${eur(r.gain)}` },
+          {
+            libelle: "Réservations qui paient le loyer",
+            nature: "quantite",
+            attendu: r.seuil,
+            calcul: `${eur(r.loyer)} ÷ ${eur(r.parReservation)} = ${nombreAuCentieme(quotient2(r.loyer, r.parReservation))}, soit ${qte(r.seuil)} à la réservation supérieure : une de moins ne paierait pas le loyer`,
+          },
         ];
       },
       explication: () => {

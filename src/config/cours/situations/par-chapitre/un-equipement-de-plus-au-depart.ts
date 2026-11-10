@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct, qte, quotient2 } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { moyensDeDepart } from "../../chapitres/le-projet-d-entreprise";
 import { ENTREPRISES_DE_LA_DIRECTION, MOIS_DE_CHARGES_A_COUVRIR, posteDePlusAuDepart } from "../../monde/direction-de-nova";
@@ -21,12 +21,14 @@ import type { Situation } from "../types";
  *
  * CE QUI A CHANGÉ. Le cas lisait le catalogue d'équipements et les règles d'endettement de l'arène ;
  * il se joue chez NOVA : payé comptant, le poste laisse 140 000 € de trésorerie, 138 jours de charges.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la part des associés se donnait au dixième, elle est à deux
+ * décimales ; la trésorerie et les ressources attendent le centime (à l'euro près, avant) ; les
+ * jours de charges se comptent sur les charges d'une journée au centime, le quotient à deux
+ * décimales puis les jours entiers.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 
 export type Verdict = "comptant" | "emprunter";
 
@@ -36,7 +38,7 @@ export function equipementDePlus(_c?: Cas) {
   const m = moyensDeDepart();
   const joursACouvrir = MOIS_DE_CHARGES_A_COUVRIR * m.joursParMois;
   const verdict: Verdict = k.comptant.jours >= joursACouvrir ? "comptant" : "emprunter";
-  return { ...k, m, joursACouvrir, partApres: auDixieme(k.emprunte.partDesAssocies * 100), verdict };
+  return { ...k, m, joursACouvrir, partApres: arrondi2(k.emprunte.partDesAssocies * 100), verdict };
 }
 
 export const UN_EQUIPEMENT_DE_PLUS_AU_DEPART: Situation = {
@@ -97,8 +99,13 @@ export const UN_EQUIPEMENT_DE_PLUS_AU_DEPART: Situation = {
       champs: () => {
         const k = equipementDePlus();
         return [
-          { libelle: "Trésorerie après l'achat", attendu: k.comptant.tresorerie, calcul: `${eur(k.sans.tresorerie)} − ${eur(k.capital)} = ${eur(k.comptant.tresorerie)}`, tolerance: 1 },
-          { libelle: "Jours de charges fixes", attendu: k.comptant.jours, calcul: `${eur(k.comptant.tresorerie)} ÷ ${eur(k.m.chargesParJourAuCentime)} = ${qte(k.comptant.jours)} jours`, tolerance: 1 },
+          { libelle: "Trésorerie après l'achat", attendu: k.comptant.tresorerie, calcul: `${eur(k.sans.tresorerie)} − ${eur(k.capital)} = ${eur(k.comptant.tresorerie)}` },
+          {
+            libelle: "Jours de charges fixes",
+            nature: "quantite",
+            attendu: k.comptant.jours,
+            calcul: `${eur(k.comptant.tresorerie)} ÷ ${eur(k.m.chargesParJourAuCentime)} = ${nombreAuCentieme(quotient2(k.comptant.tresorerie, k.m.chargesParJourAuCentime))}, soit ${qte(k.comptant.jours)} jours entiers : le dernier jour entamé n'est pas payé`,
+          },
         ];
       },
       explication: () => {
@@ -111,13 +118,13 @@ export const UN_EQUIPEMENT_DE_PLUS_AU_DEPART: Situation = {
       type: "montants",
       titre: "L'emprunter",
       notions: ["balance_sheet", "loan_schedule"],
-      question: () => "Si NOVA emprunte le prix du poste, calculez le total des ressources, la part des associés (au dixième), puis la première échéance trimestrielle : le capital remboursé chaque trimestre et les intérêts du trimestre.",
+      question: () => "Si NOVA emprunte le prix du poste, calculez le total des ressources, la part des associés (à deux décimales), puis la première échéance trimestrielle : le capital remboursé chaque trimestre et les intérêts du trimestre.",
       champs: () => {
         const k = equipementDePlus();
         return [
-          { libelle: "Total des ressources", attendu: k.emprunte.ressources, calcul: `${eur(k.sans.ressources)} + ${eur(k.capital)} = ${eur(k.emprunte.ressources)}`, tolerance: 1 },
-          { libelle: "Part des associés (%)", attendu: k.partApres, calcul: `${eur(k.sans.apport)} ÷ ${eur(k.emprunte.ressources)} × 100 = ${pct(k.partApres)}`, tolerance: 0.1 },
-          { libelle: "Première échéance", attendu: k.premiereEcheance, calcul: `${eur(k.capital)} ÷ ${qte(k.sans.trimestresDuPret)} + ${eur(k.capital)} × ${pct(k.sans.tauxDuPret * 100)} ÷ ${k.sans.echeancesParAn} = ${eur(k.capitalParEcheance)} + ${eur(k.interets)} = ${eur(k.premiereEcheance)}`, tolerance: 1 },
+          { libelle: "Total des ressources", attendu: k.emprunte.ressources, calcul: `${eur(k.sans.ressources)} + ${eur(k.capital)} = ${eur(k.emprunte.ressources)}` },
+          { libelle: "Part des associés (%)", attendu: k.partApres, calcul: `${eur(k.sans.apport)} ÷ ${eur(k.emprunte.ressources)} × 100 = ${pct(k.partApres)}` },
+          { libelle: "Première échéance", attendu: k.premiereEcheance, calcul: `${eur(k.capital)} ÷ ${qte(k.sans.trimestresDuPret)} + ${eur(k.capital)} × ${pct(k.sans.tauxDuPret * 100)} ÷ ${k.sans.echeancesParAn} = ${eur(k.capitalParEcheance)} + ${eur(k.interets)} = ${eur(k.premiereEcheance)}` },
         ];
       },
       explication: () => {

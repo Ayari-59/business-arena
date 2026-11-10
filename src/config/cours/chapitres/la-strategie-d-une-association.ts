@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import {
   BAISSE_DE_LA_SUBVENTION,
   BUREAU_DU_CLUB,
@@ -26,11 +26,13 @@ import type { Chapitre } from "../types";
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA, l'entreprise du cas, face à l'association du
  * cours : monde/strategie-du-club.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts de la subvention et du bénévolat se donnaient au
+ * dixième, elles sont à deux décimales (monde/strategie-du-club.ts) ; les montants attendent le
+ * centime (à l'euro près, ou sans tolérance, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 
 export const ORIGINES: readonly { code: OrigineDeLaRessource; libelle: string }[] = [
   { code: "privee", libelle: "Ressource privée" },
@@ -116,14 +118,14 @@ export const LA_STRATEGIE_D_UNE_ASSOCIATION: Chapitre = {
         colonnes: ["Montant"],
         lignes: [...LE_CLUB.budget.recettes.map((l) => ({ libelle: `Recette : ${l.libelle}`, valeurs: [eur(l.montant)] })), ...LE_CLUB.budget.depenses.map((l) => ({ libelle: `Dépense : ${l.libelle}`, valeurs: [eur(l.montant)] }))],
       }),
-      question: () => "Calculez les recettes de la saison, ses dépenses, son excédent, puis la part de la subvention dans les recettes, en pourcentage au dixième.",
+      question: () => "Calculez les recettes de la saison, ses dépenses, son excédent, puis la part de la subvention dans les recettes, en pourcentage à deux décimales.",
       champs: () => {
         const b = budgetDuClub();
         return [
-          { libelle: "Recettes de la saison", attendu: b.recettes, calcul: `${LE_CLUB.budget.recettes.map((l) => eur(l.montant)).join(" + ")} = ${eur(b.recettes)}`, tolerance: 0 },
-          { libelle: "Dépenses de la saison", attendu: b.depenses, calcul: `${LE_CLUB.budget.depenses.map((l) => eur(l.montant)).join(" + ")} = ${eur(b.depenses)}`, tolerance: 0 },
-          { libelle: "Excédent", attendu: b.excedent, calcul: `${eur(b.recettes)} − ${eur(b.depenses)} = ${eur(b.excedent)}`, tolerance: 0 },
-          { libelle: "Part de la subvention (%)", attendu: b.partDeLaSubvention, calcul: `${eur(b.subvention)} ÷ ${eur(b.recettes)} × 100 = ${pct(b.partDeLaSubvention)}`, tolerance: 0.1 },
+          { libelle: "Recettes de la saison", attendu: b.recettes, calcul: `${LE_CLUB.budget.recettes.map((l) => eur(l.montant)).join(" + ")} = ${eur(b.recettes)}` },
+          { libelle: "Dépenses de la saison", attendu: b.depenses, calcul: `${LE_CLUB.budget.depenses.map((l) => eur(l.montant)).join(" + ")} = ${eur(b.depenses)}` },
+          { libelle: "Excédent", attendu: b.excedent, calcul: `${eur(b.recettes)} − ${eur(b.depenses)} = ${eur(b.excedent)}` },
+          { libelle: "Part de la subvention (%)", attendu: b.partDeLaSubvention, calcul: `${eur(b.subvention)} ÷ ${eur(b.recettes)} × 100 = ${pct(b.partDeLaSubvention)}` },
         ];
       },
       explication: () => {
@@ -157,14 +159,14 @@ export const LA_STRATEGIE_D_UNE_ASSOCIATION: Chapitre = {
       titre: "Ce qui ne passe pas par la caisse",
       question: () => {
         const r = ressourcesEnNature();
-        return `Les ${qte(r.benevoles)} bénévoles donnent ${qte(r.heures)} heures dans la saison ; on les valorise au SMIC horaire brut, ${eur(r.smic)}. Le gymnase prêté vaut ${eur(r.gymnase)}. Calculez la valeur du bénévolat, les ressources de la saison en argent et en nature, puis la part du bénévolat dans ce total, en pourcentage au dixième.`;
+        return `Les ${qte(r.benevoles)} bénévoles donnent ${qte(r.heures)} heures dans la saison ; on les valorise au SMIC horaire brut, ${eur(r.smic)}. Le gymnase prêté vaut ${eur(r.gymnase)}. Calculez la valeur du bénévolat, les ressources de la saison en argent et en nature, puis la part du bénévolat dans ce total, en pourcentage à deux décimales.`;
       },
       champs: () => {
         const r = ressourcesEnNature();
         return [
-          { libelle: "Valeur du bénévolat", attendu: r.benevolat, calcul: `${qte(r.heures)} × ${eur(r.smic)} = ${eur(r.benevolat)}`, tolerance: 1 },
-          { libelle: "Ressources en argent et en nature", attendu: r.total, calcul: `${eur(r.argent)} + ${eur(r.gymnase)} + ${eur(r.benevolat)} = ${eur(r.total)}`, tolerance: 1 },
-          { libelle: "Part du bénévolat (%)", attendu: r.partDuBenevolat, calcul: `${eur(r.benevolat)} ÷ ${eur(r.total)} × 100 = ${pct(r.partDuBenevolat)}`, tolerance: 0.1 },
+          { libelle: "Valeur du bénévolat", attendu: r.benevolat, calcul: `${qte(r.heures)} × ${eur(r.smic)} = ${eur(r.benevolat)}` },
+          { libelle: "Ressources en argent et en nature", attendu: r.total, calcul: `${eur(r.argent)} + ${eur(r.gymnase)} + ${eur(r.benevolat)} = ${eur(r.total)}` },
+          { libelle: "Part du bénévolat (%)", attendu: r.partDuBenevolat, calcul: `${eur(r.benevolat)} ÷ ${eur(r.total)} × 100 = ${pct(r.partDuBenevolat)}` },
         ];
       },
       explication: () => {

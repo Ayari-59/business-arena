@@ -1,3 +1,4 @@
+import { arrondi2, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import {
   CRITERES,
   ENTREPRISES_DE_L_EVALUATION,
@@ -25,16 +26,19 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * octobre 2025 l'a renommé et l'a espacé), son état des lieux, et le bilan de compétences.
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez LA TABLE D'AUGUSTIN : monde/evaluation-a-la-table.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les points et la note globale sont des grandeurs, au centième
+ * ; les poids s'écrivent à deux décimales.
  */
 
-const note = (x: number) => x.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR")} %`;
+const pct = (t: number) => pourcent(t * 100);
 
 function grille(c: Cas): TableauDeDonnees {
   return {
     titre: `La grille d'évaluation des serveurs de ${c.entreprise}`,
     colonnes: ["Poids", "Sarah", "Hugo"],
-    lignes: CRITERES.map((k, i) => ({ libelle: k.libelle, valeurs: [pct(k.poids), note(NOTES_DE_SARAH[i]!), i < NOTES_DE_HUGO_SANS_L_ENTRAIDE.length ? note(NOTES_DE_HUGO_SANS_L_ENTRAIDE[i]!) : "à fixer"] })),
+    lignes: CRITERES.map((k, i) => ({ libelle: k.libelle, valeurs: [pct(k.poids), nombreAuCentieme(NOTES_DE_SARAH[i]!), i < NOTES_DE_HUGO_SANS_L_ENTRAIDE.length ? nombreAuCentieme(NOTES_DE_HUGO_SANS_L_ENTRAIDE[i]!) : "à fixer"] })),
   };
 }
 
@@ -124,38 +128,38 @@ export const EVALUER_LE_TRAVAIL: Chapitre = {
       type: "montants",
       titre: "La note globale de Sarah",
       tableau: grille,
-      question: () => `Calculez les points que Sarah obtient sur l'accueil et la rapidité, puis sur les ventes et l'entraide (chaque note × son poids), et sa note globale sur ${note(NOTE_MAXIMALE)}.`,
+      question: () => `Calculez les points que Sarah obtient sur l'accueil et la rapidité, puis sur les ventes et l'entraide (chaque note × son poids), et sa note globale sur ${nombreAuCentieme(NOTE_MAXIMALE)}.`,
       champs: () => {
         const k = evaluationDeSarah();
         const n = NOTES_DE_SARAH;
         const c = CRITERES;
         return [
-          { libelle: "Points de l'accueil et de la rapidité", attendu: k.premiers, calcul: `${note(n[0])} × ${note(c[0].poids)} + ${note(n[1])} × ${note(c[1].poids)} = ${note(k.premiers)}` },
-          { libelle: "Points des ventes et de l'entraide", attendu: k.derniers, calcul: `${note(n[2])} × ${note(c[2].poids)} + ${note(n[3])} × ${note(c[3].poids)} = ${note(k.derniers)}` },
-          { libelle: "Note globale", attendu: k.globale, calcul: `${note(k.premiers)} + ${note(k.derniers)} = ${note(k.globale)}` },
+          { libelle: "Points de l'accueil et de la rapidité", nature: "grandeur", attendu: k.premiers, calcul: `${nombreAuCentieme(n[0])} × ${nombreAuCentieme(c[0].poids)} + ${nombreAuCentieme(n[1])} × ${nombreAuCentieme(c[1].poids)} = ${nombreAuCentieme(k.premiers)}` },
+          { libelle: "Points des ventes et de l'entraide", nature: "grandeur", attendu: k.derniers, calcul: `${nombreAuCentieme(n[2])} × ${nombreAuCentieme(c[2].poids)} + ${nombreAuCentieme(n[3])} × ${nombreAuCentieme(c[3].poids)} = ${nombreAuCentieme(k.derniers)}` },
+          { libelle: "Note globale", nature: "grandeur", attendu: k.globale, calcul: `${nombreAuCentieme(k.premiers)} + ${nombreAuCentieme(k.derniers)} = ${nombreAuCentieme(k.globale)}` },
         ];
       },
-      explication: () => [`Sarah atteint ${note(evaluationDeSarah().globale)} sur ${note(NOTE_MAXIMALE)} : l'objectif de ${note(NOTE_DE_L_OBJECTIF)} est tenu, malgré des ventes additionnelles faibles. La pondération dit ce que le bistrot juge important.`],
+      explication: () => [`Sarah atteint ${nombreAuCentieme(evaluationDeSarah().globale)} sur ${nombreAuCentieme(NOTE_MAXIMALE)} : l'objectif de ${nombreAuCentieme(NOTE_DE_L_OBJECTIF)} est tenu, malgré des ventes additionnelles faibles. La pondération dit ce que le bistrot juge important.`],
     },
     {
       id: "le-curseur-de-l-entraide",
       objectifs: [2],
       type: "curseur",
       titre: "La note d'entraide de Hugo",
-      question: () => `Sur les trois premiers critères, Hugo a ${note(pointsDeHugoSansLEntraide())} points. L'entraide compte pour ${pct(CRITERES[3].poids)}. Faites varier sa note d'entraide : une droite donne sa note globale, l'autre l'objectif de ${note(NOTE_DE_L_OBJECTIF)}. Placez le curseur sur la plus petite note d'entraide qui le fait atteindre.`,
+      question: () => `Sur les trois premiers critères, Hugo a ${nombreAuCentieme(pointsDeHugoSansLEntraide())} points. L'entraide compte pour ${pct(CRITERES[3].poids)}. Faites varier sa note d'entraide : une droite donne sa note globale, l'autre l'objectif de ${nombreAuCentieme(NOTE_DE_L_OBJECTIF)}. Placez le curseur sur la plus petite note d'entraide qui le fait atteindre.`,
       cible: () => ({ attendu: entraideNecessaire(), max: NOTE_MAXIMALE }),
-      grandeur: () => ({ libelle: "Note d'entraide", unite: `sur ${note(NOTE_MAXIMALE)}` }),
+      grandeur: () => ({ libelle: "Note d'entraide", unite: `sur ${nombreAuCentieme(NOTE_MAXIMALE)}` }),
       rates: () => ({ dessous: "Pas encore : la note globale reste sous l'objectif.", dessus: "L'objectif est atteint, mais un point de moins suffirait-il encore ?" }),
       zones: ["Objectif atteint", "Objectif manqué"],
       montrer: "Montrer la note",
       lecture: (_c, n) => [
-        { libelle: "Points de l'entraide", montant: Math.round(n * CRITERES[3].poids * 100) / 100 },
+        { libelle: "Points de l'entraide", montant: arrondi2(n * CRITERES[3].poids) },
         { libelle: "Note globale", montant: noteGlobale([...NOTES_DE_HUGO_SANS_L_ENTRAIDE, n]), fort: true },
       ],
       droites: () => ({ produit: (n) => pointsDeHugoSansLEntraide() + n * CRITERES[3].poids, cout: () => NOTE_DE_L_OBJECTIF, libelles: ["Note globale", "Objectif"] }),
       explication: () => {
         const n = entraideNecessaire();
-        return [`Il faut ${note(n)} en entraide pour que Hugo atteigne l'objectif : un critère difficile à observer décide de la prime. Plus un critère pèse, plus sa note doit reposer sur des faits que l'on peut citer.`];
+        return [`Il faut ${nombreAuCentieme(n)} en entraide pour que Hugo atteigne l'objectif : un critère difficile à observer décide de la prime. Plus un critère pèse, plus sa note doit reposer sur des faits que l'on peut citer.`];
       },
     },
     {
@@ -240,7 +244,7 @@ export const EVALUER_LE_TRAVAIL: Chapitre = {
       type: "lecture",
       titre: "Ce qu'il faut retenir",
       texte: (c) => [
-        `${c.entreprise} évalue ses serveurs sur une grille pondérée annoncée à l'avance : Sarah atteint ${note(evaluationDeSarah().globale)}, Hugo doit obtenir ${note(entraideNecessaire())} en entraide. Mais tout ne s'évalue pas : le travail invisible échappe à la grille, et un évaluateur a ses biais. L'entretien d'évaluation juge l'année ; l'entretien de parcours professionnel, obligatoire, prépare l'avenir ; le bilan de compétences appartient au salarié.`,
+        `${c.entreprise} évalue ses serveurs sur une grille pondérée annoncée à l'avance : Sarah atteint ${nombreAuCentieme(evaluationDeSarah().globale)}, Hugo doit obtenir ${nombreAuCentieme(entraideNecessaire())} en entraide. Mais tout ne s'évalue pas : le travail invisible échappe à la grille, et un évaluateur a ses biais. L'entretien d'évaluation juge l'année ; l'entretien de parcours professionnel, obligatoire, prépare l'avenir ; le bilan de compétences appartient au salarié.`,
         "Dans l'arène, la productivité de l'équipe se lit tour après tour : ce que le chiffre ne montre pas reste à observer.",
       ],
       repere: () => "Résultats et compétences · travail invisible · supérieur, auto-évaluation, 360° · biais · grille pondérée · entretien d'évaluation · entretien de parcours professionnel · bilan de compétences.",

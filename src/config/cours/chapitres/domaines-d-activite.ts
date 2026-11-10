@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import {
   DOMAINES,
   ENTREPRISES_DES_DOMAINES,
@@ -24,11 +24,14 @@ import type { Chapitre } from "../types";
  * différenciation) et son caractère éphémère, puis pèse le numérique, la transparence et le secret.
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA seule : monde/domaines-d-activite-de-nova.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la part de la One se donnait au dixième, elle est à deux
+ * décimales (monde/domaines-d-activite-de-nova.ts) ; les contributions attendent le centime (à
+ * l'euro près, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
+const qte = nombreAuCentieme;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 export const NIVEAUX_DE_STRATEGIE = [
@@ -146,20 +149,19 @@ export const DOMAINES_D_ACTIVITE: Chapitre = {
         };
       },
       question: () =>
-        "Calculez la contribution de chaque domaine sur le mois (la marge sur coût variable, moins sa publicité), puis la part de la One dans le total des contributions, en pourcentage au dixième.",
+        "Calculez la contribution de chaque domaine sur le mois (la marge sur coût variable, moins sa publicité), puis la part de la One dans le total des contributions, en pourcentage à deux décimales.",
       champs: () => {
         const g = gammeDuMois();
         const ligne = (r: typeof g.go) => ({
           libelle: `Contribution de ${r.nom}`,
           attendu: r.contribution,
           calcul: `(${eur(r.prix)} − ${eur(r.coutVariableUnitaire)}) × ${qte(r.quantite)} − ${eur(r.publicite)} = ${eur(r.contribution)}`,
-          tolerance: 1,
         });
         return [
           ligne(g.go),
           ligne(g.one),
           ligne(g.studio),
-          { libelle: "Part de la One dans les contributions (%)", attendu: g.partDeOne, calcul: `${eur(g.one.contribution)} ÷ ${eur(g.total)} × 100 = ${pct(g.partDeOne)}`, tolerance: 0.1 },
+          { libelle: "Part de la One dans les contributions (%)", attendu: g.partDeOne, calcul: `${eur(g.one.contribution)} ÷ ${eur(g.total)} × 100 = ${pct(g.partDeOne)}` },
         ];
       },
       explication: (c) => {

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import {
   ENTREPRISES_DU_CHANGEMENT,
   PARTIES_PRENANTES,
@@ -24,11 +24,15 @@ import type { Chapitre } from "../types";
  * puis distingue ce que la loi impose de ce que la responsabilité sociétale ajoute.
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA seule : monde/changements-de-l-environnement.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les marges et les coûts de la cyberattaque attendent le
+ * centime (à l'euro près, avant) ; l'emballage de l'année et sa part non valorisée sont des
+ * grandeurs, au centième de kilo (au kilo près, avant) ; les taux s'écrivent à deux décimales.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
+const qte = nombreAuCentieme;
+const pct = (t: number) => pourcent(t * 100);
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 export const COTES_DES_PARTIES_PRENANTES = [
@@ -115,9 +119,9 @@ export const LE_MANAGEMENT_FACE_AU_CHANGEMENT: Chapitre = {
       champs: () => {
         const h = hausseDesComposants();
         return [
-          { libelle: "Coût variable d'une enceinte, après", attendu: h.apres.coutVariable, calcul: `${eur(h.apres.composants)} + ${eur(h.apres.coutVariable - h.apres.composants)} = ${eur(h.apres.coutVariable)}`, tolerance: 0.01 },
-          { libelle: "Marge par enceinte, après", attendu: h.apres.margeUnitaire, calcul: `${eur(h.apres.prix)} − ${eur(h.apres.coutVariable)} = ${eur(h.apres.margeUnitaire)}`, tolerance: 0.01 },
-          { libelle: "Marge perdue sur le trimestre", attendu: h.margePerdue, calcul: `${eur(h.avant.marge)} − ${eur(h.apres.marge)} = ${eur(h.margePerdue)}`, tolerance: 1 },
+          { libelle: "Coût variable d'une enceinte, après", attendu: h.apres.coutVariable, calcul: `${eur(h.apres.composants)} + ${eur(h.apres.coutVariable - h.apres.composants)} = ${eur(h.apres.coutVariable)}` },
+          { libelle: "Marge par enceinte, après", attendu: h.apres.margeUnitaire, calcul: `${eur(h.apres.prix)} − ${eur(h.apres.coutVariable)} = ${eur(h.apres.margeUnitaire)}` },
+          { libelle: "Marge perdue sur le trimestre", attendu: h.margePerdue, calcul: `${eur(h.avant.marge)} − ${eur(h.apres.marge)} = ${eur(h.margePerdue)}` },
         ];
       },
       explication: (c) => {
@@ -207,8 +211,8 @@ export const LE_MANAGEMENT_FACE_AU_CHANGEMENT: Chapitre = {
       champs: () => {
         const k = cyberattaque();
         return [
-          { libelle: "Coût de la cyberattaque si elle tombe", attendu: k.cout, calcul: `${eur(k.dommages)} + ${qte(k.ventesPerdues)} × ${eur(k.marge)} = ${eur(k.cout)}`, tolerance: 1 },
-          { libelle: "Coût moyen sur l'année", attendu: k.coutMoyen, calcul: `${eur(k.cout)} × ${qte(k.probabilite)} = ${eur(k.coutMoyen)}`, tolerance: 1 },
+          { libelle: "Coût de la cyberattaque si elle tombe", attendu: k.cout, calcul: `${eur(k.dommages)} + ${qte(k.ventesPerdues)} × ${eur(k.marge)} = ${eur(k.cout)}` },
+          { libelle: "Coût moyen sur l'année", attendu: k.coutMoyen, calcul: `${eur(k.cout)} × ${qte(k.probabilite)} = ${eur(k.coutMoyen)}` },
         ];
       },
       explication: (c) => {
@@ -260,8 +264,8 @@ export const LE_MANAGEMENT_FACE_AU_CHANGEMENT: Chapitre = {
       champs: () => {
         const e = empreinteDeLAnnee();
         return [
-          { libelle: "Emballage de l'année (kg)", attendu: e.emballage, calcul: `${qte(e.enceintes)} × ${qte(e.kgParEnceinte)} = ${qte(e.emballage)} kg`, tolerance: 1 },
-          { libelle: "Emballage non valorisé (kg)", attendu: e.nonValorise, calcul: `${qte(e.emballage)} × (1 − ${qte(e.partValorisee)}) = ${qte(e.nonValorise)} kg`, tolerance: 1 },
+          { libelle: "Emballage de l'année (kg)", nature: "grandeur", attendu: e.emballage, calcul: `${qte(e.enceintes)} × ${qte(e.kgParEnceinte)} = ${qte(e.emballage)} kg` },
+          { libelle: "Emballage non valorisé (kg)", nature: "grandeur", attendu: e.nonValorise, calcul: `${qte(e.emballage)} × (1 − ${qte(e.partValorisee)}) = ${qte(e.nonValorise)} kg` },
         ];
       },
       explication: () => {

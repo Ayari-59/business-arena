@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, pct } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DE_LA_PERFORMANCE } from "../../chapitres/la-performance-globale";
 import { HYPOTHESES_DE_LA_PERFORMANCE, partageDuBenefice, performanceDeNova } from "../../monde/performance-de-nova";
 import type { Situation } from "../types";
@@ -10,16 +10,18 @@ import type { Situation } from "../types";
  * Un associé demande 40 000 € de dividendes (DIVIDENDE_DEMANDE, hypothèse du cas). La seconde ligne coûte
  * ce que le président voulait autofinancer, 80 000 € : ce qui manquera s'empruntera. Les calculs sont
  * ceux du chapitre (l'autofinancement qui reste, la part distribuée).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la part du bénéfice distribuée se donnait au dixième de
+ * point, elle est à deux décimales ; les montants au centime.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 
 export const DIVIDENDE_DEMANDE = 40_000;
 
 export function lesAssociesDemandentPlus() {
   const k = partageDuBenefice(DIVIDENDE_DEMANDE);
-  const manque = Math.max(0, Math.round((HYPOTHESES_DE_LA_PERFORMANCE.autofinancementVoulu - k.autofinancement) * 100) / 100);
+  const manque = Math.max(0, arrondi2(HYPOTHESES_DE_LA_PERFORMANCE.autofinancementVoulu - k.autofinancement));
   return { ...k, manque };
 }
 
@@ -57,12 +59,12 @@ export const LES_ASSOCIES_DEMANDENT_PLUS: Situation = {
       type: "montants",
       titre: "Ce qui reste, ce qui manque",
       notions: ["profitability_vs_return"],
-      question: () => "Calculez la part du bénéfice distribuée (au dixième de point), l'autofinancement qui reste, et ce qu'il faudrait emprunter pour payer la seconde ligne.",
+      question: () => "Calculez la part du bénéfice distribuée (à deux décimales), l'autofinancement qui reste, et ce qu'il faudrait emprunter pour payer la seconde ligne.",
       champs: () => {
         const p = performanceDeNova();
         const k = lesAssociesDemandentPlus();
         return [
-          { libelle: "Part du bénéfice distribuée (%)", attendu: k.partDistribueePct, calcul: `${eur(DIVIDENDE_DEMANDE)} ÷ ${eur(p.resultatNet)} × 100 = ${pct(k.partDistribueePct)}`, tolerance: 0.1 },
+          { libelle: "Part du bénéfice distribuée (%)", attendu: k.partDistribueePct, calcul: `${eur(DIVIDENDE_DEMANDE)} ÷ ${eur(p.resultatNet)} × 100 = ${pct(k.partDistribueePct)}` },
           { libelle: "Autofinancement qui reste", attendu: k.autofinancement, calcul: `${eur(p.caf)} − ${eur(DIVIDENDE_DEMANDE)} = ${eur(k.autofinancement)}` },
           { libelle: "À emprunter pour la ligne", attendu: k.manque, calcul: `${eur(HYPOTHESES_DE_LA_PERFORMANCE.autofinancementVoulu)} − ${eur(k.autofinancement)} = ${eur(k.manque)}` },
         ];

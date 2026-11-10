@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { auCentime } from "./amortissement";
 import { margeUnitaire } from "./capacite";
 import { FICHE_DE_DIRECTION } from "./direction-de-nova";
@@ -17,6 +18,11 @@ import { COUT_DE_STOCKAGE_PAR_TRIMESTRE, ENTREPRISES_DE_LA_PRODUCTION_DE_NOVA, a
  * prestataire de recyclage lui facture 1,20 € par enceinte, et récupère les composants : NOVA en
  * revend pour 2,10 € par enceinte reprise. Elle en espère 2 400 la première année, et une campagne qui
  * les annonce coûte 900 €.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux d'utilisation de la ligne se donnait au dixième, il
+ * est à deux décimales ; les reprises qui paient la campagne sont une quantité, à l'unité
+ * supérieure.
  */
 
 export const ENTREPRISES_DE_L_ORGANISATION_DE_LA_PRODUCTION = ENTREPRISES_DE_LA_PRODUCTION_DE_NOVA;
@@ -37,7 +43,7 @@ export function productivite(trimestre: number = 1) {
     parOperateur: enceintesParOperateur(f),
     capacite: t.capacite,
     demande: t.demande,
-    utilisationPct: Math.round((Math.min(t.demande, t.capacite) / t.capacite) * 1000) / 10,
+    utilisationPct: arrondi2((Math.min(t.demande, t.capacite) / t.capacite) * 100),
   };
 }
 

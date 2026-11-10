@@ -1,3 +1,4 @@
+import { aLUnite, arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { CAS_DES_ENTREPRISES } from "./cas-des-entreprises";
 import { HAUT_VERDASSE_HANDBALL } from "./haut-verdasse-handball";
 
@@ -22,10 +23,15 @@ import { HAUT_VERDASSE_HANDBALL } from "./haut-verdasse-handball";
  *   · LA COMMUNAUTÉ EN LIGNE : le compte de la salle sur un réseau social, une campagne sponsorisée
  *     (impressions, clics, contacts laissés pour une séance d'essai, adhésions), la note des avis ;
  *   · LE CAS « L'INFLUENCEUSE DU HAUT-VERDASSE » : une influenceuse sportive locale propose une vidéo.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les taux de clic et de transformation se donnaient au
+ * dixième, ils sont à deux décimales ; les clics, les contacts et les adhésions attendues sont des
+ * quantités, à l'unité la plus proche, et les adhésions de la vidéo se comptent sur le taux de
+ * transformation à deux décimales.
  */
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const auCentime = arrondi2;
 
 const SALLE = CAS_DES_ENTREPRISES.fitness!;
 
@@ -111,7 +117,7 @@ export function adherentDeLaSalle() {
 
 /** Un support de la campagne : son coût pour mille contacts, ses contacts dans la cible, et son coût pour mille contacts dans la cible. */
 export function lireLeSupport(s: SupportDeLaCampagne) {
-  const utiles = Math.round(s.contacts * s.partDansLaCible);
+  const utiles = aLUnite(s.contacts * s.partDansLaCible);
   return { ...s, coutPourMille: auCentime((s.prix / s.contacts) * 1_000), utiles, coutPourMilleUtiles: auCentime((s.prix / utiles) * 1_000) };
 }
 
@@ -134,9 +140,9 @@ export function campagneSponsorisee() {
   const k = COMMUNAUTE_EN_LIGNE.campagne;
   return {
     ...k,
-    tauxDeClic: auDixieme((k.clics / k.impressions) * 100),
+    tauxDeClic: arrondi2((k.clics / k.impressions) * 100),
     coutParContact: auCentime(k.budget / k.contacts),
-    tauxDeTransformation: auDixieme((k.adhesions / k.contacts) * 100),
+    tauxDeTransformation: arrondi2((k.adhesions / k.contacts) * 100),
     coutDUneAdhesion: auCentime(k.budget / k.adhesions),
   };
 }
@@ -150,10 +156,10 @@ export const valeurDUnContact = () => {
 /** La vidéo de l'influenceuse : clics, contacts, coût par contact, adhésions attendues et ce qu'elles laissent. */
 export function videoDeLInfluenceuse() {
   const k = INFLUENCEUSE;
-  const clics = Math.round(k.vues * k.tauxDeClic);
-  const contacts = Math.round(clics * k.contactsParClic);
-  const c = COMMUNAUTE_EN_LIGNE.campagne;
-  const adhesions = Math.round(contacts * (c.adhesions / c.contacts));
+  const clics = aLUnite(k.vues * k.tauxDeClic);
+  const contacts = aLUnite(clics * k.contactsParClic);
+  // Les adhésions au taux de transformation de septembre, à deux décimales, comme l'élève le relève.
+  const adhesions = aLUnite((contacts * campagneSponsorisee().tauxDeTransformation) / 100);
   const marge = auCentime(adhesions * adherentDeLaSalle().margeDUnNouvelAdherent);
   return { ...k, clics, contacts, coutParContact: auCentime(k.prix / contacts), adhesions, marge, gain: auCentime(marge - k.prix) };
 }

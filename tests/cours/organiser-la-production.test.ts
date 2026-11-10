@@ -24,8 +24,8 @@ describe("le chapitre, dans son parcours", () => {
 });
 
 describe("les modes, la productivité et les flux", () => {
-  it("la productivité : 4 enceintes par heure, 1 800 par trimestre, 82,9 %", () => {
-    expect(attendusT(CH, "la-productivite")).toEqual([4, 1_800, 82.9]);
+  it("la productivité : 4 enceintes par heure, 1 800 par trimestre, 82,86 %", () => {
+    expect(attendusT(CH, "la-productivite")).toEqual([4, 1_800, 82.86]);
   });
 
   it("le laboratoire : 800 enceintes d'avance servent tout Noël", () => {

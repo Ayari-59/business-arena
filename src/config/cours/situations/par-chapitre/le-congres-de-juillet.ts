@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, qte } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DES_TARIFS } from "../../chapitres/les-politiques-tarifaires";
 import { L_ESCALE } from "../../monde/l-escale";
 import { CONGRES_DE_JUILLET, HIVER, congresDeJuillet, trimestreAuPrix } from "../../monde/tarifs-de-l-escale";
@@ -13,16 +13,17 @@ import type { Situation } from "../types";
  * nuitée du congrès prend la place d'une nuitée vendue 88 €. L'élève refait la marge d'une nuitée, la
  * compare à celle que l'hôtel perdrait, et voit que l'hiver, où les chambres sont vides, le même congrès
  * rapporterait toute sa marge : le prix d'une nuitée dépend du moment.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les nuitées vides sont une quantité ; les marges au centime.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 /** Les chiffres de la réponse, calculés une fois. */
 export function leCongresDeJuillet() {
   const k = congresDeJuillet();
   const hiver = trimestreAuPrix(HIVER);
-  return { ...k, videsDeLHiver: hiver.vides, margeEnHiver: hiver.vides >= k.nuitees ? k.margeDuCongres : Math.round(hiver.vides * (k.prix - L_ESCALE.coutVariableParNuitee) * 100) / 100 };
+  return { ...k, videsDeLHiver: hiver.vides, margeEnHiver: hiver.vides >= k.nuitees ? k.margeDuCongres : arrondi2(hiver.vides * (k.prix - L_ESCALE.coutVariableParNuitee)) };
 }
 
 export const LE_CONGRES_DE_JUILLET: Situation = {
@@ -83,7 +84,7 @@ export const LE_CONGRES_DE_JUILLET: Situation = {
       champs: () => {
         const r = leCongresDeJuillet();
         return [
-          { libelle: "Nuitées vides l'hiver", attendu: r.videsDeLHiver, calcul: `${qte(L_ESCALE.chambres * L_ESCALE.joursParTrimestre)} − ${qte(trimestreAuPrix(HIVER).vendues)} = ${qte(r.videsDeLHiver)}` },
+          { libelle: "Nuitées vides l'hiver", nature: "quantite", attendu: r.videsDeLHiver, calcul: `${qte(L_ESCALE.chambres * L_ESCALE.joursParTrimestre)} − ${qte(trimestreAuPrix(HIVER).vendues)} = ${qte(r.videsDeLHiver)}` },
           { libelle: "Marge du congrès en hiver", attendu: r.margeEnHiver, calcul: `${qte(Math.min(r.nuitees, r.videsDeLHiver))} × (${eur(r.prix)} − ${eur(L_ESCALE.coutVariableParNuitee)}) = ${eur(r.margeEnHiver)}` },
         ];
       },
