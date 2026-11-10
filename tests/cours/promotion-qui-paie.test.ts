@@ -429,11 +429,11 @@ describe("le cas : jusqu'où remiser", () => {
     expect([ht62, ht61]).toEqual([51.67, 50.83]);
     expect(attendus(s, "l-etiquette")).toEqual({
       "Prix plancher, toutes taxes comprises": plancherTtc,
-      "Remise affichée à l'étiquette ronde (%)": Math.round((1 - 62 / 66) * 1000) / 10,
+      "Remise affichée à l'étiquette ronde (%)": centime((1 - 62 / 66) * 100),
       "Marge du mois à l'étiquette ronde": centime(volume * (ht62 - cv)),
     });
-    expect([Math.round((1 - 62 / 66) * 1000) / 10, centime(volume * (ht62 - cv)), centime(volume * (ht61 - cv))]).toEqual([6.1, 15_987.3, 15_407.7]);
-    expect(juste(s, "reponse")).toBe("Une étiquette à 62 € TTC, soit 6,1 % de remise au plus");
+    expect([centime((1 - 62 / 66) * 100), centime(volume * (ht62 - cv)), centime(volume * (ht61 - cv))]).toEqual([6.06, 15_987.3, 15_407.7]);
+    expect(juste(s, "reponse")).toBe("Une étiquette à 62 € TTC, soit 6,06 % de remise au plus");
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le cas", () => verifierLesTextes(s));

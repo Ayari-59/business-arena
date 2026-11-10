@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct as enPoints } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { LE_PRIX_AFFICHE, faitsDeLaPromotion, ficheDe, tableauDUnePromotion } from "../../chapitres/le-prix-affiche";
 import { DECEMBRE_N_MOINS_1, RAYON_DE_DECEMBRE, promotionDeFevrier, promotionDuMois } from "../../monde/vente-et-caisse";
@@ -20,14 +20,17 @@ import type { Situation } from "../types";
  * CE QUI A CHANGÉ. Le cas rejouait le trimestre 4 de l'arène avec la remise. Il compte maintenant le
  * mois de décembre : 200 pulls vendus en plus, mais 15 400 € de chiffre d'affaires en moins et
  * 1 060 clients sans pull.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les articles vendus en plus sont une quantité, entière, déclarée
+ * comme telle.
  */
 
 /** La remise que la responsable veut faire à Noël (hypothèse du cas). */
 export const REMISE_DE_NOEL = 0.3;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
+const qte = nombreAuCentieme;
+const pct = (t: number) => enPoints(t * 100);
 
 /** La promotion de Noël : la demande de décembre au prix de l'étiquette, le rayon de décembre, la remise du cas. */
 export function promotionDeNoel(c: Pick<Cas, "code">) {
@@ -99,7 +102,7 @@ export const LA_PROMOTION_DE_NOEL: Situation = {
       champs: (c) => {
         const p = promotionDeNoel(c);
         return [
-          { libelle: "Articles vendus en plus", attendu: p.ventesEnPlus, calcul: `${qte(p.avec.vendus)} − ${qte(p.sans.vendus)} = ${qte(p.ventesEnPlus)}` },
+          { libelle: "Articles vendus en plus", nature: "quantite", attendu: p.ventesEnPlus, calcul: `${qte(p.avec.vendus)} − ${qte(p.sans.vendus)} = ${qte(p.ventesEnPlus)}` },
           { libelle: "Chiffre d'affaires en plus", attendu: p.chiffreEnPlus, calcul: `${eur(p.avec.chiffreDAffaires)} − ${eur(p.sans.chiffreDAffaires)} = ${eur(p.chiffreEnPlus)}` },
         ];
       },

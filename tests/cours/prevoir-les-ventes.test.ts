@@ -17,6 +17,7 @@ import type { Situation } from "../../src/config/cours/situations/types";
 import type { Chapitre, Etape, EtapeChoix, EtapeCurseur, EtapeMontants, EtapeSimulation, EtatDuCours } from "../../src/config/cours/types";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
 import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
+import { arrondi } from "../../src/pedagogy/cours/deux-decimales";
 
 /**
  * PRÉVOIR LES VENTES, À LA BOUTIQUE DU MONDE DU COURS, ET SON CAS : PRÉVOIR LE TRIMESTRE CREUX.
@@ -61,6 +62,33 @@ function methode(s: readonly number[], surLesBruts: boolean) {
 }
 const m = methode(demande, false);
 const brute = methode(demande, true);
+
+/**
+ * LA COPIE, LIGNE ARRONDIE PAR LIGNE ARRONDIE (décision du propriétaire, 10 novembre 2026) : chaque
+ * moyenne mobile, le point moyen, les sommes, la pente, l'ordonnée et chaque tendance au centième ;
+ * chaque rapport et chaque coefficient au dix-millième ; chaque prévision au centième, puis à l'unité.
+ */
+const c2 = (x: number) => arrondi(x, 2);
+const c4 = (x: number) => arrondi(x, 4);
+function copie(s: readonly number[], surLesBruts: boolean) {
+  const points = surLesBruts ? s.map((y, i) => [i + 1, y] as const) : [3, 4, 5, 6, 7, 8, 9, 10].map((t) => [t, c2(mmc(s, t))] as const);
+  const xm = c2(somme(points.map(([x]) => x)) / points.length);
+  const ym = c2(somme(points.map(([, y]) => y)) / points.length);
+  const sxx = c2(somme(points.map(([x]) => (x - xm) ** 2)));
+  const sxy = c2(somme(points.map(([x, y]) => (x - xm) * (y - ym))));
+  const a = c2(sxy / sxx);
+  const b = c2(ym - a * xm);
+  const en = (t: number) => c2(a * t + b);
+  const rapport = (t: number) => c4(s[t - 1]! / en(t));
+  const bruts = [1, 2, 3, 4].map((q) => c4((rapport(q) + rapport(q + 4) + rapport(q + 8)) / 3));
+  const sommeBrute = c4(somme(bruts));
+  const coefficients = bruts.map((k) => c4((k * 4) / sommeBrute));
+  const calculee = (t: number) => c2(en(t) * coefficients[(t - 1) % 4]!);
+  const prevision = (t: number) => Math.round(calculee(t));
+  return { d: { xm, ym, sxx, sxy, a, b, en }, rapport, bruts, sommeBrute, coefficients, calculee, prevision, annee: somme([13, 14, 15, 16].map(prevision)) };
+}
+const k = copie(demande, false);
+const kb = copie(demande, true);
 const surLesVentes = methode(ventes, false);
 const prixMoyen = centime(somme(f.gamme.map((r) => r.ventesDuMois * r.prixHt)) / somme(f.gamme.map((r) => r.ventesDuMois)));
 
@@ -141,7 +169,9 @@ function verifierLesTextes(ch: Chapitre) {
       expect(new Set(champs.map((x) => x.libelle)).size, e.id).toBe(champs.length);
       for (const x of champs) {
         expect(Number.isFinite(x.attendu), `${e.id} : ${x.libelle}`).toBe(true);
-        expect(Math.round(x.attendu * 100) / 100, `${e.id} : ${x.libelle}`).toBe(x.attendu);
+        // Au centième ; un coefficient (rapport à la tendance, coefficient saisonnier), au dix-millième.
+        const pas = x.nature === "coefficient" ? 10_000 : 100;
+        expect(Math.round(x.attendu * pas) / pas, `${e.id} : ${x.libelle}`).toBe(x.attendu);
       }
       // Sur un écart, la question dit avec quel signe le donner.
       if (champs.some((x) => /^Écart/.test(x.libelle))) expect(e.question(cas, etat), e.id).toMatch(/Négatif pour un écart (favorable|défavorable)/);
@@ -253,62 +283,67 @@ describe("prévoir les ventes, à la boutique du monde du cours", () => {
   it("les étapes guidées attendent ce que la fiche donne", () => {
     expect(attendus(ch, "les-moyennes-mobiles")).toEqual({
       "Moyenne mobile centrée du rang 3": 6_158.5,
-      "Moyenne mobile centrée du rang 4": centime(mmc(demande, 4)),
-      "Moyenne mobile centrée du rang 10": centime(mmc(demande, 10)),
+      "Moyenne mobile centrée du rang 4": c2(mmc(demande, 4)),
+      "Moyenne mobile centrée du rang 10": c2(mmc(demande, 10)),
     });
-    expect(attendus(ch, "la-droite")).toEqual({ "Rang moyen x̄": 6.5, "Moyenne des moyennes mobiles ȳ": 6_497.36, "Pente a": 107.15, "Ordonnée à l'origine b": 5_800.88 });
+    // La copie : l'ordonnée part de la pente arrondie, 6 497,36 − 107,15 × 6,5.
+    expect(attendus(ch, "la-droite")).toEqual({ "Rang moyen x̄": 6.5, "Moyenne des moyennes mobiles ȳ": 6_497.36, "Pente a": 107.15, "Ordonnée à l'origine b": 5_800.89 });
+    expect([k.d.ym, k.d.a, k.d.b]).toEqual([6_497.36, 107.15, c2(6_497.36 - 107.15 * 6.5)]);
     expect(attendus(ch, "les-coefficients-corriges")).toEqual({
-      "Coefficient corrigé du trimestre 1": 0.7,
-      "Coefficient corrigé du trimestre 2": 0.46,
-      "Coefficient corrigé du trimestre 3": 0.8,
-      "Coefficient corrigé du trimestre 4": 2.04,
+      "Coefficient corrigé du trimestre 1": k.coefficients[0],
+      "Coefficient corrigé du trimestre 2": k.coefficients[1],
+      "Coefficient corrigé du trimestre 3": k.coefficients[2],
+      "Coefficient corrigé du trimestre 4": k.coefficients[3],
     });
+    expect(k.coefficients.map(centime)).toEqual([0.7, 0.46, 0.8, 2.04]);
     expect(centime(m.sommeBrute * 10_000) / 10_000).toBeCloseTo(4.0027, 4);
   });
 
   it("les étapes autonomes : les rapports du trimestre 4, la prévision de N", () => {
-    const rapport = (t: number) => demande[t - 1]! / m.d.en(t);
+    // Les rapports et le coefficient brut au dix-millième, sur les tendances au centième.
     expect(attendus(ch, "les-rapports-a-la-tendance")).toEqual({
-      "Rapport du trimestre 4 de N − 3": centime(rapport(4)),
-      "Rapport du trimestre 4 de N − 2": centime(rapport(8)),
-      "Rapport du trimestre 4 de N − 1": centime(rapport(12)),
-      "Coefficient saisonnier brut du trimestre 4": centime(m.bruts[3]!),
+      "Rapport du trimestre 4 de N − 3": k.rapport(4),
+      "Rapport du trimestre 4 de N − 2": k.rapport(8),
+      "Rapport du trimestre 4 de N − 1": k.rapport(12),
+      "Coefficient saisonnier brut du trimestre 4": k.bruts[3],
     });
-    expect([rapport(4), rapport(8), rapport(12), m.bruts[3]!].map(centime)).toEqual([2.03, 2.05, 2.04, 2.04]);
+    expect([k.rapport(4), k.rapport(8), k.rapport(12), k.bruts[3]!].map(centime)).toEqual([2.03, 2.05, 2.04, 2.04]);
     expect(attendus(ch, "la-prevision")).toEqual({
-      "Tendance du trimestre 1 de N": centime(m.d.en(13)),
-      "Prévision du trimestre 1 de N": Math.round(m.prevision(13)),
-      "Prévision du trimestre 4 de N": Math.round(m.prevision(16)),
-      "Prévision de l'année N": Math.round(m.annee),
+      "Tendance du trimestre 1 de N": k.d.en(13),
+      "Prévision du trimestre 1 de N": k.prevision(13),
+      "Prévision du trimestre 4 de N": k.prevision(16),
+      "Prévision de l'année N": k.annee,
     });
-    expect(centime(m.d.en(13))).toBe(7_193.84);
+    expect(k.d.en(13)).toBe(c2(107.15 * 13 + 5_800.89));
+    // La copie retombe à un article près sur la méthode exacte, trimestre par trimestre.
+    [13, 14, 15, 16].forEach((t) => expect(Math.abs(k.prevision(t) - m.prevision(t))).toBeLessThanOrEqual(1));
   });
 
   it("les étapes d'expert : le seuil à rebours, janvier corrigé de la saison", () => {
     expect(SEUIL_DE_LA_DEUXIEME_BOUTIQUE).toBe(8_000);
-    const rang = (8_000 - m.d.b) / m.d.a;
-    expect(attendus(ch, "a-rebours")).toEqual({ "Rang où la tendance atteint le seuil": centime(rang), "Premier rang entier au-delà du seuil": 21, "Tendance de ce rang": centime(m.d.en(21)) });
-    expect([centime(rang), centime(m.d.en(21))]).toEqual([20.52, 8_051.04]);
+    const rang = c2((8_000 - k.d.b) / k.d.a);
+    expect(attendus(ch, "a-rebours")).toEqual({ "Rang où la tendance atteint le seuil": rang, "Premier rang entier au-delà du seuil": 21, "Tendance de ce rang": k.d.en(21) });
+    expect([rang, k.d.en(21)]).toEqual([20.52, c2(107.15 * 21 + 5_800.89)]);
     // Janvier : la demande des 5 références, au rythme du trimestre (3 mois égaux).
     const janvier = somme(f.gamme.map((r) => r.demandeDuMois));
     expect(janvier).toBe(600 + 384 + 90 + 330 + 150);
+    // L'écart se lit sur la prévision à l'unité, la demande corrigée sur le coefficient au dix-millième.
     expect(attendus(ch, "le-mois-de-janvier")).toEqual({
       "Demande du trimestre au rythme de janvier": 3 * janvier,
-      "Écart à la prévision du trimestre (%)": centime(((3 * janvier - m.prevision(13)) / m.prevision(13)) * 100),
-      "Demande corrigée des variations saisonnières": centime((3 * janvier) / m.coefficients[0]!),
+      "Écart à la prévision du trimestre (%)": c2(((3 * janvier - k.prevision(13)) / k.prevision(13)) * 100),
+      "Demande corrigée des variations saisonnières": c2((3 * janvier) / k.coefficients[0]!),
     });
-    expect([3 * janvier, centime(((3 * janvier - m.prevision(13)) / m.prevision(13)) * 100), centime((3 * janvier) / m.coefficients[0]!)]).toEqual([4_662, -8, 6_618.49]);
+    expect([3 * janvier, k.prevision(13), c2((3 * janvier) / k.coefficients[0]!)]).toEqual([4_662, 5_067, c2(4_662 / k.coefficients[0]!)]);
   });
 
   it("la critique des trimestres bruts : la pente monte à 405, les rapports du trimestre 4 dérivent", () => {
     expect([brute.d.sxx, brute.d.sxy, centime(brute.d.ym), centime(brute.d.a)]).toEqual([143, 57_968, 6_559.67, 405.37]);
-    const rapport = (t: number) => demande[t - 1]! / brute.d.en(t);
     expect(attendus(ch, "la-critique")).toEqual({
-      "Pente de la droite des trimestres bruts": 405.37,
-      "Rapport du trimestre 4 de N − 3 à la tendance brute": centime(rapport(4)),
-      "Rapport du trimestre 4 de N − 1 à la tendance brute": centime(rapport(12)),
+      "Pente de la droite des trimestres bruts": kb.d.a,
+      "Rapport du trimestre 4 de N − 3 à la tendance brute": kb.rapport(4),
+      "Rapport du trimestre 4 de N − 1 à la tendance brute": kb.rapport(12),
     });
-    expect([centime(rapport(4)), centime(rapport(12))]).toEqual([2.28, 1.64]);
+    expect([kb.d.a, centime(kb.rapport(4)), centime(kb.rapport(12))]).toEqual([405.37, 2.28, 1.64]);
     expect(Math.round(brute.prevision(16))).toBe(20_190);
     expect(Math.round(brute.annee)).toBe(39_979);
   });
@@ -317,13 +352,15 @@ describe("prévoir les ventes, à la boutique du monde du cours", () => {
     const totaux = [0, 1, 2].map((k) => somme(demande.slice(4 * k, 4 * k + 4)));
     expect(totaux).toEqual([24_537, 26_247, 27_932]);
     const d = droite(totaux.map((y, i) => [i + 1, y] as const));
-    const k4 = somme([0, 1, 2].map((k) => demande[4 * k + 3]! / (totaux[k]! / 4))) / 3;
+    // La copie : la moyenne et la demande de N au centième, les rapports et le coefficient au dix-millième.
+    const anneeN = c2(c2(somme(totaux) / 3) + 1_697.5 * 2);
+    const k4 = c4(somme([0, 1, 2].map((i) => c4(demande[4 * i + 3]! / c2(totaux[i]! / 4)))) / 3);
     expect(attendus(ch, "une-autre-methode")).toEqual({
       "Pente annuelle": 1_697.5,
-      "Demande prévue pour l'année N": centime(d.en(4)),
-      "Prévision du trimestre 4 de N par cette méthode": centime((d.en(4) / 4) * k4),
+      "Demande prévue pour l'année N": anneeN,
+      "Prévision du trimestre 4 de N par cette méthode": Math.round(c2(c2(anneeN / 4) * k4)),
     });
-    expect([centime(d.en(4)), centime((d.en(4) / 4) * k4)]).toEqual([29_633.67, 15_323.78]);
+    expect([anneeN, centime(d.en(4)), k4]).toEqual([29_633.67, 29_633.67, 2.0684]);
     expect(Math.round(m.annee - d.en(4))).toBe(17);
   });
 
@@ -342,22 +379,22 @@ describe("prévoir les ventes, à la boutique du monde du cours", () => {
     expect(curseur(ch, "la-tendance-au-curseur")).toEqual({
       attendu: 21,
       bornes: [13, 32],
-      droites: [centime(m.d.en(13)), 8_000, centime(m.d.en(32)), 8_000],
+      droites: [k.d.en(13), 8_000, k.d.en(32), 8_000],
       lecture: {
-        "Chiffre d'affaires de la tendance du trimestre": centime(m.d.en(21) * prixMoyen),
+        "Chiffre d'affaires de la tendance du trimestre": centime(k.d.en(21) * prixMoyen),
         "Chiffre d'affaires du seuil": 8_000 * prixMoyen,
-        "Ce que la tendance a gagné depuis le rang 12": centime(9 * m.d.a * prixMoyen),
-        "Tendance moins seuil": centime((m.d.en(21) - 8_000) * prixMoyen),
+        "Ce que la tendance a gagné depuis le rang 12": centime(9 * k.d.a * prixMoyen),
+        "Tendance moins seuil": centime((k.d.en(21) - 8_000) * prixMoyen),
       },
     });
     // La position voisine : au rang 20, la tendance n'atteint pas le seuil.
-    expect(m.d.en(20)).toBeLessThan(8_000);
+    expect(k.d.en(20)).toBeLessThan(8_000);
   });
 
   it("le curseur de la saison, refait à la main : 5 068 articles tiennent la tendance du trimestre 1", () => {
     expect(DEMANDE_DU_CURSEUR).toEqual({ min: 4_000, max: 6_500 });
-    const c1 = m.coefficients[0]!;
-    const t13 = m.d.en(13);
+    const c1 = k.coefficients[0]!;
+    const t13 = k.d.en(13);
     const q = Math.ceil(t13 * c1);
     expect(q).toBe(5_068);
     expect((q - 1) / c1).toBeLessThan(t13);
@@ -418,7 +455,7 @@ describe("prévoir les ventes, à la boutique du monde du cours", () => {
 
 describe("le cas : prévoir le trimestre creux", () => {
   const s = PREVOIR_LE_TRIMESTRE_CREUX;
-  const k2 = m.coefficients[1]!;
+  const k2 = k.coefficients[1]!;
 
   it("est le cas dédié du chapitre, chez MAILLE & CO seule", () => {
     casDedie(s, PREVOIR_LES_VENTES);
@@ -427,7 +464,7 @@ describe("le cas : prévoir le trimestre creux", () => {
   });
 
   it("la saison du trimestre creux et sa prévision, refaites à la main", () => {
-    const r = (t: number) => centime((demande[t - 1]! / m.d.en(t)) * 100);
+    const r = (t: number) => c2(k.rapport(t) * 100);
     expect(attendus(s, "la-saison-du-creux")).toEqual({
       "Trimestre 2 de N − 3 (% de la tendance)": r(2),
       "Trimestre 2 de N − 2 (% de la tendance)": r(6),
@@ -436,22 +473,22 @@ describe("le cas : prévoir le trimestre creux", () => {
     });
     expect([r(2), r(6), r(10), centime(k2 * 100)]).toEqual([45.57, 46.77, 45.57, 45.94]);
     expect(attendus(s, "la-prevision")).toEqual({
-      "Tendance du trimestre 2 de N": centime(m.d.en(14)),
-      "Prévision du trimestre 2 de N": Math.round(m.prevision(14)),
-      "Évolution sur le trimestre 2 de N − 1 (%)": centime((m.prevision(14) / demande[9]! - 1) * 100),
+      "Tendance du trimestre 2 de N": k.d.en(14),
+      "Prévision du trimestre 2 de N": k.prevision(14),
+      "Évolution sur le trimestre 2 de N − 1 (%)": c2((k.prevision(14) / demande[9]! - 1) * 100),
     });
-    expect([centime(m.d.en(14)), Math.round(m.prevision(14)), centime((m.prevision(14) / 3_132 - 1) * 100)]).toEqual([7_300.99, 3_354, 7.09]);
+    expect([k.d.en(14), k.prevision(14), c2((k.prevision(14) / 3_132 - 1) * 100)]).toEqual([c2(107.15 * 14 + 5_800.89), 3_354, 7.09]);
   });
 
   it("le calcul à rebours : le renfort attend le trimestre 2 de N + 1", () => {
-    const tendance = 3_500 / k2;
-    const rang = (tendance - m.d.b) / m.d.a;
+    const tendance = c2(3_500 / k2);
+    const rang = c2((tendance - k.d.b) / k.d.a);
     expect(attendus(s, "a-rebours")).toEqual({
-      "Tendance qu'il faut au trimestre 2": centime(tendance),
-      "Rang où la tendance l'atteint": centime(rang),
-      "Prévision du trimestre 2 de N + 1": Math.round(m.prevision(18)),
+      "Tendance qu'il faut au trimestre 2": tendance,
+      "Rang où la tendance l'atteint": rang,
+      "Prévision du trimestre 2 de N + 1": k.prevision(18),
     });
-    expect([centime(tendance), centime(rang), Math.round(m.prevision(18))]).toEqual([7_618.51, 16.96, 3_551]);
+    expect([rang, k.prevision(18)]).toEqual([16.96, 3_551]);
     expect(m.prevision(14)).toBeLessThan(3_500);
     expect(m.prevision(18)).toBeGreaterThanOrEqual(3_500);
   });
@@ -461,10 +498,10 @@ describe("le cas : prévoir le trimestre creux", () => {
     const r = trimestreCreux(cas);
     expect([Math.round(r.prolonge), Math.round(r.brute), Math.round(r.sansSaison)]).toEqual([
       Math.round(3_132 * (27_932 / 26_247)),
-      Math.round(brute.prevision(14)),
-      Math.round(m.d.en(14)),
+      kb.prevision(14),
+      Math.round(k.d.en(14)),
     ]);
-    expect([Math.round(r.prolonge), Math.round(r.brute), Math.round(r.sansSaison)]).toEqual([3_333, 4_622, 7_301]);
+    expect([Math.round(r.prolonge), Math.round(r.brute), Math.round(r.sansSaison)]).toEqual([3_333, kb.prevision(14), 7_301]);
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le cas", () => verifierLesTextes(s));
@@ -473,8 +510,9 @@ describe("le cas : prévoir le trimestre creux", () => {
 describe("la garde voit le chapitre", () => {
   it("previsionDesVentes lit la fiche : sa droite est celle de la main", () => {
     const x = previsionDesVentes(cas);
-    expect(x.a).toBeCloseTo(m.d.a, 9);
-    expect(x.b).toBeCloseTo(m.d.b, 9);
+    expect(x.a).toBe(k.d.a);
+    expect(x.b).toBe(k.d.b);
+    expect(x.a).toBeCloseTo(m.d.a, 3);
     expect(x.premierRang).toBe(21);
   });
 });

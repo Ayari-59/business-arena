@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   BUDGET_DES_SALONS,
@@ -38,6 +38,12 @@ import { ENTREPRISES_DE_LA_VALEUR, POURQUOI_LE_CABINET, ficheDe } from "./valeur
  *     et de signature, avec le graphique des deux gains) avant les-matinales ;
  *   · autonome : le-bilan, le-suivi-des-contacts, les-matinales ;
  *   · expert : refaire-le-salon (le jugement) ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les contrats qui paient sont des quantités : le corrigé écrit le
+ * quotient à deux décimales, puis l'arrondit à l'unité au-dessus ; les rendez-vous et les comptes
+ * attendus, moyennes d'un entonnoir, sont des grandeurs au centième, à un centième près (à 5 centièmes
+ * près, avant), et les coûts et le gain partent d'eux (monde/terrain-d-atlas.ts).
  */
 
 /** Les bornes du curseur des contrats gagnés. */
@@ -71,11 +77,9 @@ const POURQUOI_DU_MOMENT: Readonly<Record<string, string>> = {
   "Dresser le bilan : coût par contact et par contrat": "Le bilan compare le résultat à l'objectif fixé 3 mois avant.",
 };
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (x: number, d = 1) => `${(Math.round(x * 100 * 10 ** d) / 10 ** d + 0).toLocaleString("fr-FR", { maximumFractionDigits: d })} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auCentiemeDePct = (x: number) => Math.round(x * 10_000) / 100 + 0;
+const qte = nombreAuCentieme;
+const pct = (t: number) => enPoints(t * 100);
+const auCentiemeDePct = (x: number) => auCentime(x * 100);
 
 /** Les salons, leur pipeline et les matinales du cabinet : tout ce que le chapitre et son cas demandent. */
 export function evenementDuCabinet(c: Pick<Cas, "code">) {
@@ -112,7 +116,7 @@ function tableauDuPipeline(x: EvenementDuCabinet): TableauDeDonnees {
   return {
     titre: "Les opportunités ouvertes des salons, au 31 décembre N",
     colonnes: ["Stade", "Chiffre d'affaires", "Chance de signer"],
-    lignes: x.p.lignes.map((l) => ({ libelle: l.prospect, valeurs: [l.nom, eur(l.montant), pct(l.probabilite, 0)] })),
+    lignes: x.p.lignes.map((l) => ({ libelle: l.prospect, valeurs: [l.nom, eur(l.montant), pct(l.probabilite)] })),
   };
 }
 
@@ -168,13 +172,13 @@ export const L_EVENEMENT_COMMERCIAL: Chapitre = {
         return [
           { libelle: "Budget des stands", attendu: x.s.budget, calcul: `${BUDGET_DES_SALONS.map((l) => eur(l.montant)).join(" + ")} = ${eur(x.s.budget)}` },
           { libelle: "Coût complet des salons", attendu: x.s.coutComplet, calcul: `${eur(x.s.budget)} + ${eur(x.s.temps)} = ${eur(x.s.coutComplet)}` },
-          { libelle: "Part du temps des commerciaux (%)", attendu: auCentiemeDePct(x.s.temps / x.s.coutComplet), tolerance: 0.05, calcul: `${eur(x.s.temps)} ÷ ${eur(x.s.coutComplet)} = ${pct(x.s.temps / x.s.coutComplet, 2)}` },
+          { libelle: "Part du temps des commerciaux (%)", attendu: auCentiemeDePct(x.s.temps / x.s.coutComplet), calcul: `${eur(x.s.temps)} ÷ ${eur(x.s.coutComplet)} = ${pct(x.s.temps / x.s.coutComplet)}` },
         ];
       },
       explication: (c) => {
         const x = evenementDuCabinet(c);
         return [
-          `Le budget des stands, ${eur(x.s.budget)}, n'est que la partie visible : le temps des commerciaux fait ${pct(x.s.temps / x.s.coutComplet, 0)} du coût complet. Ce temps est payé de toute façon, mais il n'est pas passé chez les clients : il se compte quand on compare deux façons de prospecter.`,
+          `Le budget des stands, ${eur(x.s.budget)}, n'est que la partie visible : le temps des commerciaux fait ${pct(x.s.temps / x.s.coutComplet)} du coût complet. Ce temps est payé de toute façon, mais il n'est pas passé chez les clients : il se compte quand on compare deux façons de prospecter.`,
         ];
       },
     },
@@ -260,16 +264,16 @@ export const L_EVENEMENT_COMMERCIAL: Chapitre = {
       notions: ["breakeven", "customer_lifetime_value"],
       question: (c) => {
         const x = evenementDuCabinet(c);
-        return `Les ${qte(x.s.comptes.length)} comptes gagnés aux salons ont ${pct(x.s.attrition, 0)} de risque de partir chaque année. Calculez la marge moyenne d'un compte de salon, les contrats qui paient les salons sur cette marge, la valeur vie d'un compte de salon (marge ÷ attrition), puis les contrats qui paient les salons sur leur valeur vie.`;
+        return `Les ${qte(x.s.comptes.length)} comptes gagnés aux salons ont ${pct(x.s.attrition)} de risque de partir chaque année. Calculez la marge moyenne d'un compte de salon, les contrats qui paient les salons sur cette marge, la valeur vie d'un compte de salon (marge ÷ attrition), puis les contrats qui paient les salons sur leur valeur vie.`;
       },
       champs: (c) => {
         const x = evenementDuCabinet(c);
         const s = x.s;
         return [
           { libelle: "Marge moyenne d'un compte de salon", attendu: s.margePremiereAnnee, calcul: `(${s.comptes.map((k) => eur(k.marge)).join(" + ")}) ÷ ${qte(s.comptes.length)} = ${eur(s.margePremiereAnnee)}` },
-          { libelle: "Contrats qui paient, sur la marge d'une année", attendu: s.contratsQuiPaientLaPremiereAnnee, calcul: `${eur(s.coutComplet)} ÷ ${eur(s.margePremiereAnnee)} = ${qte(auCentime(s.coutComplet / s.margePremiereAnnee))}, soit ${qte(s.contratsQuiPaientLaPremiereAnnee)} contrats` },
-          { libelle: "Valeur vie d'un compte de salon", attendu: s.valeurDUnCompte, calcul: `${eur(s.margePremiereAnnee)} ÷ ${pct(s.attrition, 0)} = ${eur(s.valeurDUnCompte)}` },
-          { libelle: "Contrats qui paient, sur la valeur vie", attendu: s.contratsQuiPaientEnValeurVie, calcul: `${eur(s.coutComplet)} ÷ ${eur(s.valeurDUnCompte)} = ${qte(auCentime(s.coutComplet / s.valeurDUnCompte))}, soit ${qte(s.contratsQuiPaientEnValeurVie)} contrats` },
+          { libelle: "Contrats qui paient, sur la marge d'une année", nature: "quantite", attendu: s.contratsQuiPaientLaPremiereAnnee, calcul: `${eur(s.coutComplet)} ÷ ${eur(s.margePremiereAnnee)} = ${qte(auCentime(s.coutComplet / s.margePremiereAnnee))}, soit ${qte(s.contratsQuiPaientLaPremiereAnnee)} contrats à l'unité au-dessus : un contrat ne se signe pas en partie` },
+          { libelle: "Valeur vie d'un compte de salon", attendu: s.valeurDUnCompte, calcul: `${eur(s.margePremiereAnnee)} ÷ ${pct(s.attrition)} = ${eur(s.valeurDUnCompte)}` },
+          { libelle: "Contrats qui paient, sur la valeur vie", nature: "quantite", attendu: s.contratsQuiPaientEnValeurVie, calcul: `${eur(s.coutComplet)} ÷ ${eur(s.valeurDUnCompte)} = ${qte(auCentime(s.coutComplet / s.valeurDUnCompte))}, soit ${qte(s.contratsQuiPaientEnValeurVie)} contrats à l'unité au-dessus` },
         ];
       },
       explication: (c) => {
@@ -317,24 +321,24 @@ export const L_EVENEMENT_COMMERCIAL: Chapitre = {
       question: (c) => {
         const x = evenementDuCabinet(c);
         const st = PIPELINE_DES_SALONS.stades;
-        return `Des ${qte(x.s.canal.devis)} devis, ${qte(x.s.canal.contrats)} sont signés, ${qte(PIPELINE_DES_SALONS.devisPerdus)} perdus, et il reste les opportunités du tableau. Un devis sans réponse se joue à ${qte(st["devis-remis"].horizon)} mois, un projet à ${qte(st["projet-sans-devis"].horizon)} mois. Calculez le chiffre d'affaires pondéré (chiffre d'affaires × chance de signer) à ${qte(st["devis-remis"].horizon)} mois, puis à ${qte(st["projet-sans-devis"].horizon)} mois, et les comptes qu'on peut en attendre, au dixième.`;
+        return `Des ${qte(x.s.canal.devis)} devis, ${qte(x.s.canal.contrats)} sont signés, ${qte(PIPELINE_DES_SALONS.devisPerdus)} perdus, et il reste les opportunités du tableau. Un devis sans réponse se joue à ${qte(st["devis-remis"].horizon)} mois, un projet à ${qte(st["projet-sans-devis"].horizon)} mois. Calculez le chiffre d'affaires pondéré (chiffre d'affaires × chance de signer) à ${qte(st["devis-remis"].horizon)} mois, puis à ${qte(st["projet-sans-devis"].horizon)} mois, et les comptes qu'on peut en attendre, à deux décimales.`;
       },
       champs: (c) => {
         const x = evenementDuCabinet(c);
         const devis = x.p.lignes.filter((l) => l.stade === "devis-remis");
         const projets = x.p.lignes.filter((l) => l.stade === "projet-sans-devis");
         return [
-          { libelle: "Chiffre d'affaires pondéré à 3 mois", attendu: x.p.aTroisMois, calcul: `(${devis.map((l) => eur(l.montant)).join(" + ")}) × ${pct(devis[0]!.probabilite, 0)} = ${eur(x.p.aTroisMois)}` },
+          { libelle: "Chiffre d'affaires pondéré à 3 mois", attendu: x.p.aTroisMois, calcul: `(${devis.map((l) => eur(l.montant)).join(" + ")}) × ${pct(devis[0]!.probabilite)} = ${eur(x.p.aTroisMois)}` },
           {
             libelle: "Chiffre d'affaires pondéré à 6 mois",
             attendu: x.p.aSixMois,
-            calcul: `${eur(x.p.aTroisMois)} + (${projets.map((l) => eur(l.montant)).join(" + ")}) × ${pct(projets[0]!.probabilite, 0)} = ${eur(x.p.aSixMois)}`,
+            calcul: `${eur(x.p.aTroisMois)} + (${projets.map((l) => eur(l.montant)).join(" + ")}) × ${pct(projets[0]!.probabilite)} = ${eur(x.p.aSixMois)}`,
           },
           {
             libelle: "Comptes attendus du pipeline",
-            attendu: Math.round(x.p.comptesAttendus * 10) / 10,
-            tolerance: 0.05,
-            calcul: `${qte(devis.length)} × ${pct(devis[0]!.probabilite, 0)} + ${qte(projets.length)} × ${pct(projets[0]!.probabilite, 0)} = ${qte(Math.round(x.p.comptesAttendus * 10) / 10)} compte`,
+            nature: "grandeur",
+            attendu: auCentime(x.p.comptesAttendus),
+            calcul: `${qte(devis.length)} × ${pct(devis[0]!.probabilite)} + ${qte(projets.length)} × ${pct(projets[0]!.probabilite)} = ${qte(auCentime(x.p.comptesAttendus))} compte`,
           },
         ];
       },
@@ -424,7 +428,7 @@ export const L_EVENEMENT_COMMERCIAL: Chapitre = {
       explication: (c) => {
         const x = evenementDuCabinet(c);
         return [
-          `À visiteurs et signature de N, les salons ne rattrapent les matinales qu'avec ${qte(x.rendezVousQuiEgale)} % de visiteurs qui acceptent un rendez-vous, contre ${pct(x.s.canal.rendezVous / x.s.canal.contacts, 0)} en N. Un stand reçoit beaucoup de passants, peu de projets.`,
+          `À visiteurs et signature de N, les salons ne rattrapent les matinales qu'avec ${qte(x.rendezVousQuiEgale)} % de visiteurs qui acceptent un rendez-vous, contre ${pct(x.s.canal.rendezVous / x.s.canal.contacts)} en N. Un stand reçoit beaucoup de passants, peu de projets.`,
           "Le coût par visiteur ne bouge presque pas d'une position à l'autre ; le coût par compte, lui, décide du gain.",
         ];
       },
@@ -444,8 +448,8 @@ export const L_EVENEMENT_COMMERCIAL: Chapitre = {
         const x = evenementDuCabinet(c);
         const m = x.m;
         return [
-          { libelle: "Rendez-vous des matinales", attendu: m.rendezVous, calcul: `${qte(m.nombre)} × ${qte(m.presents)} × ${pct(MATINALES.tauxDeRendezVous, 0)} = ${qte(m.rendezVous)} rendez-vous` },
-          { libelle: "Comptes attendus des matinales", attendu: m.comptes, tolerance: 0.05, calcul: `${qte(m.rendezVous)} ÷ ${qte(1 / MATINALES.devisParRendezVous)} = ${qte(m.devis)} devis ; ${qte(m.devis)} × ${pct(MATINALES.tauxDeSignature, 0)} = ${qte(m.comptes)} comptes` },
+          { libelle: "Rendez-vous des matinales", nature: "grandeur", attendu: m.rendezVous, calcul: `${qte(m.nombre)} × ${qte(m.presents)} × ${pct(MATINALES.tauxDeRendezVous)} = ${qte(m.rendezVous)} rendez-vous` },
+          { libelle: "Comptes attendus des matinales", nature: "grandeur", attendu: m.comptes, calcul: `${qte(m.rendezVous)} ÷ ${qte(1 / MATINALES.devisParRendezVous)} = ${qte(m.devis)} devis ; ${qte(m.devis)} × ${pct(MATINALES.tauxDeSignature)} = ${qte(m.comptes)} comptes` },
           { libelle: "Coût par prospect présent", attendu: m.coutParContact, calcul: `${eur(m.cout)} ÷ ${qte(m.contacts)} = ${eur(m.coutParContact)}` },
           { libelle: "Coût par compte des matinales", attendu: m.coutParCompte, calcul: `${eur(m.cout)} ÷ ${qte(m.comptes)} = ${eur(m.coutParCompte)}` },
           { libelle: "Gain des matinales", attendu: m.gain, calcul: `${qte(m.comptes)} × ${eur(x.s.valeurDUnCompte)} − ${eur(m.cout)} = ${eur(m.gain)}` },
@@ -487,7 +491,7 @@ export const L_EVENEMENT_COMMERCIAL: Chapitre = {
           {
             texte: `Les salons : ils ont gagné ${qte(x.s.canal.contrats)} comptes, les matinales n'en promettent que ${qte(x.m.comptes)}`,
             juste: false,
-            retour: `Non : les matinales en promettent plus (${qte(x.m.comptes)}), pour ${pct(x.m.cout / x.s.coutComplet, 0)} du coût. Et même avec leur pipeline, les salons gagneraient ${eur(x.avecLePipeline)}, moins que les matinales.`,
+            retour: `Non : les matinales en promettent plus (${qte(x.m.comptes)}), pour ${pct(x.m.cout / x.s.coutComplet)} du coût. Et même avec leur pipeline, les salons gagneraient ${eur(x.avecLePipeline)}, moins que les matinales.`,
           },
         ];
       },

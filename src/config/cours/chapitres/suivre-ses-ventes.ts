@@ -1,3 +1,4 @@
+import { arrondi2, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { BOUTIQUES_DU_COURS, type FicheDeLaBoutique } from "../monde/maille-et-co";
 import {
@@ -47,6 +48,11 @@ export type { Suivi, Verdict } from "../monde/vente-et-caisse";
  * pose maintenant sur le même trimestre de l'année d'avant, plus 5 %, chez MAILLE & CO seule : au
  * trimestre 4 de N − 1, 12 600 articles visés, 12 500 vendus, 99,2 %, et 1 940 articles demandés
  * sans être servis.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les objectifs, les écarts en articles et la demande sont des
+ * quantités, l'objectif écrit à deux décimales puis arrondi à l'unité au-dessus ; l'écart en
+ * pourcentage et le taux de réalisation se donnent à deux décimales (au dixième, avant).
  */
 
 /** La progression de l'objectif, en % (le monde du cours). */
@@ -55,10 +61,9 @@ export const PROGRESSION_EN_POURCENT = PROGRESSION_DU_MONDE;
 /** Le trimestre suivi (le monde du cours). */
 export const TRIMESTRE_SUIVI = TRIMESTRE_DU_MONDE;
 
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
+const qte = nombreAuCentieme;
 /** L'année de la fiche, écrite avec le signe moins : « N − 1 ». */
 export const an = (a: string) => a.replace("-", " − ");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
 /** Un écart signé : « +100 », « −100 ». */
 const signe = (n: number) => (n > 0 ? `+${qte(n)}` : qte(n));
 const signePct = (t: number) => (t > 0 ? `+${pct(t)}` : pct(t));
@@ -75,7 +80,7 @@ const articles = (n: number) => `${qte(Math.abs(n))} ${Math.abs(n) > 1 ? "articl
 
 /** L'objectif, en calcul : « 12 000 × 1,05 = 12 600 ». */
 export const calculDeLObjectif = (k: Suivi) =>
-  `${qte(k.avant.ventes)} × ${(1 + k.progression / 100).toLocaleString("fr-FR")} = ${k.exact.toLocaleString("fr-FR")}${k.exact === k.objectif ? "" : `, arrondi à ${qte(k.objectif)}`}`;
+  `${qte(k.avant.ventes)} × ${nombreAuCentieme(1 + k.progression / 100)} = ${nombreAuCentieme(k.exact)}${arrondi2(k.exact) === k.objectif ? "" : `, soit ${qte(k.objectif)} articles à l'unité au-dessus`}`;
 
 export function tableauDuSuivi(c: Cas, k: Suivi): TableauDeDonnees {
   return {
@@ -192,7 +197,7 @@ export const SUIVRE_SES_VENTES: Chapitre = {
       },
       champs: (c) => {
         const k = du(c);
-        return [{ libelle: `Objectif du trimestre ${k.trimestre}`, attendu: k.objectif, calcul: calculDeLObjectif(k) }];
+        return [{ libelle: `Objectif du trimestre ${k.trimestre}`, nature: "quantite", attendu: k.objectif, calcul: calculDeLObjectif(k) }];
       },
       explication: (c) => [`L'équipe vise ${qte(du(c).objectif)} articles. Un objectif est un nombre, avec une date : on saura dire s'il est atteint.`],
     },
@@ -204,13 +209,13 @@ export const SUIVRE_SES_VENTES: Chapitre = {
       notions: ["dashboard", "volume_price_variance"],
       question: (c) => {
         const k = du(c);
-        return `Au trimestre ${k.trimestre} de ${an(k.annee)}, la boutique a vendu ${qte(k.pendant.ventes)} articles, pour un objectif de ${qte(k.objectif)}. Calculez l'écart en articles (négatif s'il en manque), puis l'écart en pourcentage de l'objectif, au dixième.`;
+        return `Au trimestre ${k.trimestre} de ${an(k.annee)}, la boutique a vendu ${qte(k.pendant.ventes)} articles, pour un objectif de ${qte(k.objectif)}. Calculez l'écart en articles (négatif s'il en manque), puis l'écart en pourcentage de l'objectif, à deux décimales.`;
       },
       champs: (c) => {
         const k = du(c);
         return [
-          { libelle: "Écart en articles", attendu: k.ecart, calcul: `${qte(k.pendant.ventes)} − ${qte(k.objectif)} = ${qte(k.ecart)}` },
-          { libelle: "Écart en pourcentage (%)", attendu: k.ecartEnPourcentage, calcul: `${qte(k.ecart)} ÷ ${qte(k.objectif)} × 100 = ${pct(k.ecartEnPourcentage)}`, tolerance: 0.1 },
+          { libelle: "Écart en articles", nature: "quantite", attendu: k.ecart, calcul: `${qte(k.pendant.ventes)} − ${qte(k.objectif)} = ${qte(k.ecart)}` },
+          { libelle: "Écart en pourcentage (%)", attendu: k.ecartEnPourcentage, calcul: `${qte(k.ecart)} ÷ ${qte(k.objectif)} × 100 = ${pct(k.ecartEnPourcentage)}` },
         ];
       },
       explication: (c) => {
@@ -230,17 +235,17 @@ export const SUIVRE_SES_VENTES: Chapitre = {
       notions: ["dashboard"],
       question: (c) => {
         const k = du(c);
-        return `Calculez le taux de réalisation : divisez les ${qte(k.pendant.ventes)} articles vendus par l'objectif de ${qte(k.objectif)}, puis multipliez par 100. Arrondissez au dixième.`;
+        return `Calculez le taux de réalisation : divisez les ${qte(k.pendant.ventes)} articles vendus par l'objectif de ${qte(k.objectif)}, puis multipliez par 100. Arrondissez à deux décimales.`;
       },
       champs: (c) => {
         const k = du(c);
-        return [{ libelle: "Taux de réalisation (%)", attendu: k.tauxDeRealisation, calcul: `${qte(k.pendant.ventes)} ÷ ${qte(k.objectif)} × 100 = ${pct(k.tauxDeRealisation)}`, tolerance: 0.1 }];
+        return [{ libelle: "Taux de réalisation (%)", attendu: k.tauxDeRealisation, calcul: `${qte(k.pendant.ventes)} ÷ ${qte(k.objectif)} × 100 = ${pct(k.tauxDeRealisation)}` }];
       },
       explication: (c) => {
         const k = du(c);
         return [
           k.tauxDeRealisation >= 100 ? `${pct(k.tauxDeRealisation)} : l'objectif est atteint. Au-dessus de 100 %, l'équipe a fait mieux que prévu.` : `${pct(k.tauxDeRealisation)} : l'objectif n'est pas atteint. Il aurait fallu 100 %.`,
-          "Le taux de réalisation et l'écart en pourcentage disent la même chose : le taux, c'est 100 % plus l'écart, au dixième près.",
+          "Le taux de réalisation et l'écart en pourcentage disent la même chose : le taux, c'est 100 % plus l'écart, au centième près.",
         ];
       },
     },
@@ -258,8 +263,8 @@ export const SUIVRE_SES_VENTES: Chapitre = {
       champs: (c) => {
         const k = du(c);
         return [
-          { libelle: "Articles demandés sans être servis", attendu: k.pendant.repartis, calcul: `${qte(k.pendant.demande)} − ${qte(k.pendant.ventes)} = ${qte(k.pendant.repartis)}` },
-          { libelle: "Demande face à l'objectif", attendu: k.demandeFaceALObjectif, calcul: `${qte(k.pendant.demande)} − ${qte(k.objectif)} = ${signe(k.demandeFaceALObjectif)}` },
+          { libelle: "Articles demandés sans être servis", nature: "quantite", attendu: k.pendant.repartis, calcul: `${qte(k.pendant.demande)} − ${qte(k.pendant.ventes)} = ${qte(k.pendant.repartis)}` },
+          { libelle: "Demande face à l'objectif", nature: "quantite", attendu: k.demandeFaceALObjectif, calcul: `${qte(k.pendant.demande)} − ${qte(k.objectif)} = ${signe(k.demandeFaceALObjectif)}` },
         ];
       },
       explication: (c) => {

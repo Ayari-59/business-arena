@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_BUDGET, budgetDuPointDeVente } from "../../chapitres/budget-du-point-de-vente";
 import { budgetDuTrimestre } from "../../monde/boutique";
@@ -22,6 +22,10 @@ import type { Situation } from "../types";
  * Le cas est neuf par sa question : le chapitre bâtit le budget sur la prévision ; ici, la prévision
  * baisse, et l'on cherche ce qui baisse avec elle. Le piège : la baisse des commandes se chiffre au prix
  * d'achat, pas au prix de vente, et elle ne touche que les articles vendus en moins.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les articles à vendre, à acheter et en trop sont des quantités,
+ * entières, déclarées comme telles.
  */
 
 /**
@@ -33,10 +37,7 @@ export const MOIS_DANS_LE_TRIMESTRE = 3;
 /** Les bornes du curseur des commandes : les achats retirés du budget, hors taxes, en euros. */
 export const COMMANDES_DU_CURSEUR = { min: 0, max: 30_000 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (x: number) => `${x.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
 
 /** Les chiffres de la réponse, calculés une fois du cas. */
 export function budgetRevise(c: Pick<Cas, "code">) {
@@ -121,7 +122,7 @@ export const REVISER_LE_BUDGET: Situation = {
       champs: (c) => {
         const { x, r, ecartDesVentes } = budgetRevise(c);
         return [
-          { libelle: "Articles à vendre au rythme de janvier", attendu: r.ventes, calcul: `${MOIS_DANS_LE_TRIMESTRE} × (${x.f.gamme.map((g) => qte(g.ventesDuMois)).join(" + ")}) = ${qte(r.ventes)}` },
+          { libelle: "Articles à vendre au rythme de janvier", nature: "quantite", attendu: r.ventes, calcul: `${MOIS_DANS_LE_TRIMESTRE} × (${x.f.gamme.map((g) => qte(g.ventesDuMois)).join(" + ")}) = ${qte(r.ventes)}` },
           { libelle: "Ventes hors taxes révisées", attendu: r.ventesHt, calcul: `${MOIS_DANS_LE_TRIMESTRE} × ${eur(x.janvier)} = ${eur(r.ventesHt)}` },
           { libelle: "Écart sur le budget des ventes", attendu: ecartDesVentes, calcul: `${eur(r.ventesHt)} − ${eur(x.b.ventesHt)} = ${eur(ecartDesVentes)}` },
         ];
@@ -141,7 +142,7 @@ export const REVISER_LE_BUDGET: Situation = {
       champs: (c) => {
         const { x, r } = budgetRevise(c);
         return [
-          { libelle: "Articles à acheter", attendu: r.achats, calcul: `${qte(r.ventes)} + ${qte(x.stockFinal)} − ${qte(x.stockInitial)} = ${qte(r.achats)}` },
+          { libelle: "Articles à acheter", nature: "quantite", attendu: r.achats, calcul: `${qte(r.ventes)} + ${qte(x.stockFinal)} − ${qte(x.stockInitial)} = ${qte(r.achats)}` },
           { libelle: "Achats hors taxes", attendu: r.achatsHt, calcul: `${r.references.map((y) => `${qte(y.achats)} × ${qte(y.coutDAchat)}`).join(" + ")} = ${eur(r.achatsHt)}` },
           {
             libelle: "Marge commerciale budgétée",
@@ -227,8 +228,8 @@ export const REVISER_LE_BUDGET: Situation = {
       champs: (c) => {
         const { x, r, stockSansReviser, articlesEnTrop, decaisseEnTrop } = budgetRevise(c);
         return [
-          { libelle: "Stock au 31 mars sans réviser", attendu: stockSansReviser, calcul: `${qte(x.stockInitial)} + ${qte(x.b.achats)} − ${qte(r.ventes)} = ${qte(stockSansReviser)}` },
-          { libelle: "Articles en trop sur le stock voulu", attendu: articlesEnTrop, calcul: `${qte(stockSansReviser)} − ${qte(x.stockFinal)} = ${qte(articlesEnTrop)}` },
+          { libelle: "Stock au 31 mars sans réviser", nature: "quantite", attendu: stockSansReviser, calcul: `${qte(x.stockInitial)} + ${qte(x.b.achats)} − ${qte(r.ventes)} = ${qte(stockSansReviser)}` },
+          { libelle: "Articles en trop sur le stock voulu", nature: "quantite", attendu: articlesEnTrop, calcul: `${qte(stockSansReviser)} − ${qte(x.stockFinal)} = ${qte(articlesEnTrop)}` },
           { libelle: "Décaissé en trop dans le trimestre", attendu: decaisseEnTrop, calcul: `${eur(x.b.decaisse)} − ${eur(r.decaisse)} = ${eur(decaisseEnTrop)}` },
         ];
       },

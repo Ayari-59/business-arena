@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_POINT_DE_VENTE, ficheDe } from "../../chapitres/taux-de-marque";
 import { DEPENSE_DE_JANVIER_PAR_HABITANT, NOUVEAU_CONCURRENT, zoneAvecLeConcurrent } from "../../monde/clientele-de-la-boutique";
@@ -17,13 +17,13 @@ import type { Situation } from "../types";
  *
  * Les pièges : garder l'ancienne part théorique ; reporter tout l'effort sur la zone primaire, déjà
  * au-dessus de la sienne ; renoncer à la zone secondaire, qui reste la plus grosse réserve.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la part de marché se donne à deux décimales (au dixième,
+ * avant) ; les points à gagner sont une grandeur au centième.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number, chiffres = 1) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: chiffres }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const qte = nombreAuCentieme;
 
 /** Les chiffres du cas, calculés une fois sur la fiche. */
 export function unTractPourQuelleZone(c: Pick<Cas, "code">) {
@@ -85,17 +85,17 @@ export const UN_TRACT_POUR_QUELLE_ZONE: Situation = {
       titre: "La zone secondaire en janvier",
       notions: ["demand_market_share"],
       tableau: tableauDuCas,
-      question: () => "Calculez la dépense commercialisable de janvier de la zone secondaire, puis la part de marché que la boutique y prend, en pourcentage, au dixième.",
+      question: () => "Calculez la dépense commercialisable de janvier de la zone secondaire, puis la part de marché que la boutique y prend, en pourcentage, à deux décimales.",
       champs: (c) => {
         const x = unTractPourQuelleZone(c);
         return [
           { libelle: "Dépense commercialisable · Zone secondaire", attendu: x.z.depense, calcul: `${qte(x.z.population)} × ${eur(DEPENSE_DE_JANVIER_PAR_HABITANT)} × ${qte(x.z.idc)} = ${eur(x.z.depense)}` },
-          { libelle: "Part de marché · Zone secondaire (%)", attendu: auDixieme(x.z.part * 100), tolerance: 0.1, calcul: `${eur(x.z.chiffre)} ÷ ${eur(x.z.depense)} × 100 = ${pct(auDixieme(x.z.part * 100))}` },
+          { libelle: "Part de marché · Zone secondaire (%)", attendu: auCentime(x.z.part * 100), calcul: `${eur(x.z.chiffre)} ÷ ${eur(x.z.depense)} × 100 = ${pct(auCentime(x.z.part * 100))}` },
         ];
       },
       explication: (c) => {
         const x = unTractPourQuelleZone(c);
-        return [`La boutique prend ${pct(auDixieme(x.z.part * 100))} de la dépense de la première couronne : c'est là qu'elle est le moins présente, au regard de ce que la zone dépense.`];
+        return [`La boutique prend ${pct(auCentime(x.z.part * 100))} de la dépense de la première couronne : c'est là qu'elle est le moins présente, au regard de ce que la zone dépense.`];
       },
     },
     {
@@ -130,7 +130,7 @@ export const UN_TRACT_POUR_QUELLE_ZONE: Situation = {
         const x = unTractPourQuelleZone(c);
         return [
           { libelle: "Ce qui manque à l'objectif", attendu: x.manque, calcul: `${eur(x.k.objectif)} − ${eur(x.potentiel)} = ${eur(x.manque)}` },
-          { libelle: "Points à gagner · Zone tertiaire", attendu: auCentime(x.pointsDansLaTertiaire), tolerance: 0.01, calcul: `${eur(x.manque)} ÷ ${eur(x.tertiaire.depense)} × 100 = ${qte(auCentime(x.pointsDansLaTertiaire))}` },
+          { libelle: "Points à gagner · Zone tertiaire", nature: "grandeur", attendu: auCentime(x.pointsDansLaTertiaire), calcul: `${eur(x.manque)} ÷ ${eur(x.tertiaire.depense)} × 100 = ${qte(auCentime(x.pointsDansLaTertiaire))}` },
         ];
       },
       explication: (c) => {
@@ -156,7 +156,7 @@ export const UN_TRACT_POUR_QUELLE_ZONE: Situation = {
           {
             texte: "Tout reporter sur la zone primaire, où le concurrent n'est pas installé",
             juste: false,
-            retour: `Non : la boutique y prend déjà plus que sa part théorique (${pct(auDixieme(x.k.zone("primaire").part * 100))} pour ${pct(x.k.zone("primaire").partTheorique * 100)}). Le concurrent ne change rien à cette saturation.`,
+            retour: `Non : la boutique y prend déjà plus que sa part théorique (${pct(auCentime(x.k.zone("primaire").part * 100))} pour ${pct(x.k.zone("primaire").partTheorique * 100)}). Le concurrent ne change rien à cette saturation.`,
           },
           {
             texte: `Renoncer à la zone secondaire : sa part théorique tombe à ${pct(x.partTheorique * 100)}`,

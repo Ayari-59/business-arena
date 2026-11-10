@@ -212,7 +212,7 @@ const parMarge = classer(f.comptes, "marge");
 const total = somme(f.comptes.map((x) => x.chiffreDAffaires));
 const margeTotale = somme(f.comptes.map((x) => x.marge));
 const classe = (k: typeof parCa, x: string) => k.filter((y) => y.classe === x);
-const auDixieme = (part: number) => Math.round(part * 1000) / 10;
+const auCentieme = (part: number) => Math.round(part * 10_000) / 100;
 const compte = (c: string) => f.comptes.find((x) => x.code === c)!;
 const cj = f.consultants.coutAnnuel / (4 * f.consultants.joursFacturablesParTrimestre);
 
@@ -243,19 +243,19 @@ describe("le portefeuille ABC, chez le cabinet du monde du cours", () => {
     // La marge d'un compte est bien son chiffre d'affaires, moins ses frais, moins ses journées au coût d'un consultant.
     for (const x of f.comptes) expect(x.marge, x.nom).toBe(centime(x.chiffreDAffaires - x.frais - x.journees * cj));
     expect(["A", "B", "C"].map((x) => classe(parCa, x).length)).toEqual([8, 8, 16]);
-    expect(["A", "B", "C"].map((x) => auDixieme(somme(classe(parCa, x).map((y) => y.chiffreDAffaires)) / total))).toEqual([77.2, 17.6, 5.2]);
+    expect(["A", "B", "C"].map((x) => auCentieme(somme(classe(parCa, x).map((y) => y.chiffreDAffaires)) / total))).toEqual([77.25, 17.59, 5.16]);
     expect(parCa[8]!.code).toBe("ferrand");
-    expect([auDixieme(parCa[7]!.cumul), auDixieme(parCa[8]!.cumul)]).toEqual([77.2, 81.3]);
+    expect([auCentieme(parCa[7]!.cumul), auCentieme(parCa[8]!.cumul)]).toEqual([77.25, 81.3]);
   });
 
   it("les étapes guidées : les parts des premiers, et les trois classes", () => {
     const premier = parCa[0]!;
     expect(premier.code).toBe("arveon");
     expect(attendus(ch, "parts")).toEqual({
-      "Part du premier compte (%)": auDixieme(premier.chiffreDAffaires / total),
-      "Part cumulée des trois premiers (%)": auDixieme(somme(parCa.slice(0, 3).map((x) => x.chiffreDAffaires)) / total),
+      "Part du premier compte (%)": auCentieme(premier.chiffreDAffaires / total),
+      "Part cumulée des trois premiers (%)": auCentieme(somme(parCa.slice(0, 3).map((x) => x.chiffreDAffaires)) / total),
     });
-    expect(Object.values(attendus(ch, "parts"))).toEqual([12.5, 35.4]);
+    expect(Object.values(attendus(ch, "parts"))).toEqual([12.5, 35.42]);
     const tri = ch.etapes.find((e) => e.id === "classer") as EtapeTri;
     expect(tri.elements(cas).map((x) => [x.libelle, x.montant, x.categorie])).toEqual(parCa.map((x) => [x.nom, x.chiffreDAffaires, x.classe]));
   });
@@ -282,9 +282,9 @@ describe("le portefeuille ABC, chez le cabinet du monde du cours", () => {
     expect(p * j).toBe(403_200);
     expect(attendus(ch, "la-concentration")).toEqual({
       "Part des comptes en classe A (%)": 25,
-      "Part du chiffre d'affaires en classe A (%)": 77.2,
+      "Part du chiffre d'affaires en classe A (%)": 77.25,
       "Part des comptes en classe C (%)": 50,
-      "Part du chiffre d'affaires en classe C (%)": 5.2,
+      "Part du chiffre d'affaires en classe C (%)": 5.16,
     });
     expect(juste(ch, "concentration")).toBe("Concentré, sans compte qui pèse trop à lui seul");
   });
@@ -294,9 +294,9 @@ describe("le portefeuille ABC, chez le cabinet du monde du cours", () => {
     expect(attendus(ch, "la-marge-d-un-compte")).toEqual({
       "Coût des journées de consultant": v.journees * cj,
       "Marge du compte": v.chiffreDAffaires - v.frais - v.journees * cj,
-      "Taux de marge du compte (%)": auDixieme(v.marge / v.chiffreDAffaires),
+      "Taux de marge du compte (%)": auCentieme(v.marge / v.chiffreDAffaires),
     });
-    expect(Object.values(attendus(ch, "la-marge-d-un-compte"))).toEqual([61_600, 14_000, 8.9]);
+    expect(Object.values(attendus(ch, "la-marge-d-un-compte"))).toEqual([61_600, 14_000, 8.93]);
     expect([v.frais / v.journees, somme(f.comptes.map((x) => x.frais)) / somme(f.comptes.map((x) => x.journees))]).toEqual([290, 150]);
   });
 
@@ -317,15 +317,15 @@ describe("le portefeuille ABC, chez le cabinet du monde du cours", () => {
       return {
         [`Dernier compte retenu : ${r.at(-1)!.nom}`]: r.at(-1)![critere],
         "Chiffre d'affaires des comptes retenus": ca,
-        "Part cumulée du chiffre d'affaires": auDixieme(ca / total),
+        "Part cumulée du chiffre d'affaires": auCentieme(ca / total),
         "Marge des comptes retenus": m,
-        "Part cumulée de la marge": auDixieme(m / margeTotale),
+        "Part cumulée de la marge": auCentieme(m / margeTotale),
       };
     };
     expect(l.auDepart).toEqual(lire(parCa, 3, "chiffreDAffaires"));
-    expect(Object.values(l.auDepart)).toEqual([156_800, 489_600, 35.4, 196_800, 29.3]);
+    expect(Object.values(l.auDepart)).toEqual([156_800, 489_600, 35.42, 196_800, 29.29]);
     expect(l.aLaSolution).toEqual(lire(parMarge, 8, "marge"));
-    expect(Object.values(l.aLaSolution)).toEqual([32_000, 967_040, 70, 514_040, 76.5]);
+    expect(Object.values(l.aLaSolution)).toEqual([32_000, 967_040, 69.95, 514_040, 76.49]);
     // Le même nombre de comptes par le chiffre d'affaires ne relève pas le défi : il faut changer de critère.
     expect(l.d.atteint({ critere: CRITERES_DU_LABORATOIRE.chiffreDAffaires, comptes: 8 })).toBe(false);
     expect(l.d.atteint({ critere: CRITERES_DU_LABORATOIRE.marge, comptes: 9 })).toBe(false);
@@ -336,22 +336,22 @@ describe("le portefeuille ABC, chez le cabinet du monde du cours", () => {
     const auCa = (n: number) => ({ critere: CRITERES_DU_LABORATOIRE.chiffreDAffaires, comptes: n });
     const auMarge = (n: number) => ({ critere: CRITERES_DU_LABORATOIRE.marge, comptes: n });
     expect([2, 3, 8, 32].map((n) => [pCa!.valeur(auCa(n)), pMarge!.valeur(auCa(n))])).toEqual([
-      [24.1, 27.2],
-      [35.4, 29.3],
-      [77.2, 73.2],
+      [24.07, 27.2],
+      [35.42, 29.29],
+      [77.25, 73.16],
       [100, 100],
     ]);
-    // Au 3e compte par le chiffre d'affaires, la marge marque un palier : Valbrune fait 11,3 % des ventes, 2,1 % de la marge.
-    expect(auDixieme(compte(COMPTE_QUI_SORT).marge / margeTotale)).toBe(2.1);
-    expect([pCa!.valeur(auMarge(8)), pMarge!.valeur(auMarge(8)), pMarge!.valeur(auMarge(9))]).toEqual([70, 76.5, 81.1]);
+    // Au 3e compte par le chiffre d'affaires, la marge marque un palier : Valbrune fait 11,34 % des ventes, 2,08 % de la marge.
+    expect(auCentieme(compte(COMPTE_QUI_SORT).marge / margeTotale)).toBe(2.08);
+    expect([pCa!.valeur(auMarge(8)), pMarge!.valeur(auMarge(8)), pMarge!.valeur(auMarge(9))]).toEqual([69.95, 76.49, 81.14]);
     expect(seuil!.valeur(auMarge(1))).toBe(80);
     expect(attendus(ch, "la-classe-a-par-la-marge")).toEqual({
-      "Part cumulée de la marge des 8 premiers comptes (%)": auDixieme(parMarge[7]!.cumul),
-      "Part cumulée avec le 9e compte (%)": auDixieme(parMarge[8]!.cumul),
+      "Part cumulée de la marge des 8 premiers comptes (%)": auCentieme(parMarge[7]!.cumul),
+      "Part cumulée avec le 9e compte (%)": auCentieme(parMarge[8]!.cumul),
       "Marge de la classe A par la marge": somme(classe(parMarge, "A").map((x) => x.marge)),
       "Marge des comptes A par le chiffre d'affaires": somme(classe(parCa, "A").map((x) => x.marge)),
     });
-    expect(Object.values(attendus(ch, "la-classe-a-par-la-marge"))).toEqual([76.5, 81.1, 514_040, 491_640]);
+    expect(Object.values(attendus(ch, "la-classe-a-par-la-marge"))).toEqual([76.49, 81.14, 514_040, 491_640]);
     expect(juste(ch, "qui-sort-qui-entre")).toBe("Centre hospitalier de Valbrune sort, Banque Ferrand et Associés entre");
     expect([parCa.find((x) => x.code === COMPTE_QUI_SORT)!.rang, parMarge.find((x) => x.code === COMPTE_QUI_SORT)!.rang]).toEqual([3, 11]);
     expect([parCa.find((x) => x.code === COMPTE_QUI_ENTRE)!.rang, parMarge.find((x) => x.code === COMPTE_QUI_ENTRE)!.rang]).toEqual([9, 7]);
@@ -385,9 +385,9 @@ describe("le portefeuille ABC, chez le cabinet du monde du cours", () => {
       "Chiffre d'affaires renégocié": ca,
       "Frais renégociés": frais,
       "Marge renégociée": marge,
-      "Taux de marge renégocié (%)": auDixieme(marge / ca),
+      "Taux de marge renégocié (%)": auCentieme(marge / ca),
     });
-    expect([ca, frais, marge, auDixieme(marge / ca)]).toEqual([168_000, 56_000, 50_400, 30]);
+    expect([ca, frais, marge, auCentieme(marge / ca)]).toEqual([168_000, 56_000, 50_400, 30]);
     // Reclassé par la marge, le compte renégocié est 7e, en classe A.
     const autre = classer(
       f.comptes.map((x) => (x.code === COMPTE_QUI_SORT ? { ...x, chiffreDAffaires: ca, frais, marge } : x)),
@@ -427,11 +427,11 @@ describe("le portefeuille ABC, chez le cabinet du monde du cours", () => {
     const margeA = somme(A.map((x) => x.marge));
     expect(attendus(s, "poids-des-c")).toEqual({
       "Chiffre d'affaires des comptes C": caC,
-      "Part du chiffre d'affaires (%)": auDixieme(caC / total),
+      "Part du chiffre d'affaires (%)": auCentieme(caC / total),
       "Marge des comptes C": margeC,
-      "Part de la marge (%)": auDixieme(margeC / margeTotale),
+      "Part de la marge (%)": auCentieme(margeC / margeTotale),
     });
-    expect([caC, auDixieme(caC / total), margeC, auDixieme(margeC / margeTotale)]).toEqual([71_360, 5.2, 40_224, 6]);
+    expect([caC, auCentieme(caC / total), margeC, auCentieme(margeC / margeTotale)]).toEqual([71_360, 5.16, 40_224, 5.99]);
     // Le curseur : la marge en plus sur les A, 491 640 € × h, face à la marge des C, 40 224 €.
     expect(curseur(s, "la-hausse-qui-compense")).toEqual({
       attendu: 9,
@@ -450,9 +450,9 @@ describe("le portefeuille ABC, chez le cabinet du monde du cours", () => {
       "Marge des comptes A": margeA,
       "Marge en plus sur les comptes A": margeA * 0.05,
       "Bilan de la proposition": margeA * 0.05 - margeC,
-      "Hausse nécessaire sur les comptes A (%)": auDixieme(margeC / margeA),
+      "Hausse nécessaire sur les comptes A (%)": auCentieme(margeC / margeA),
     });
-    expect([margeA, margeA * 0.05, margeA * 0.05 - margeC, auDixieme(margeC / margeA)]).toEqual([491_640, 24_582, -15_642, 8.2]);
+    expect([margeA, margeA * 0.05, margeA * 0.05 - margeC, auCentieme(margeC / margeA)]).toEqual([491_640, 24_582, -15_642, 8.18]);
     // Le croisement des deux marges : les journées libérées, reprises, et restées payées sans emploi.
     const jC = somme(C.map((x) => x.journees));
     const jA = centime(somme(A.map((x) => x.journees)) * 0.05);

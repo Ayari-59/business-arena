@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_POINT_DE_VENTE, margesDuRayon } from "../../chapitres/taux-de-marque";
 import type { Situation } from "../types";
@@ -19,6 +19,11 @@ import type { Situation } from "../types";
  * MAILLE & CO seule : ses chiffres sont ceux de `margesDuRayon`. Le prix proposé par le façonnier
  * est une hypothèse de l'histoire, et la simulation suppose que la demande de janvier tient déjà
  * compte de l'étiquette du concurrent : ne pas s'aligner garde les ventes de janvier.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les pulls vendus et les pulls à vendre sont des quantités : le
+ * corrigé écrit la valeur à deux décimales, puis l'arrondit à l'unité, au-dessous ou au-dessus, et dit
+ * pourquoi ; le taux de marque se donne à deux décimales (au dixième, avant).
  */
 
 /**
@@ -31,11 +36,7 @@ export const PRIX_PROPOSE_PAR_LE_FACONNIER = 24;
 /** Les bornes du curseur des ventes du mois, en pulls. */
 export const VENTES_DU_CURSEUR = { min: 600, max: 800 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const qte = nombreAuCentieme;
 
 export type Verdict = "pas-a-ce-prix" | "s-aligner";
 
@@ -46,16 +47,18 @@ export function etiquetteDuConcurrent(c: Pick<Cas, "code">) {
   const margeUnitaire = auCentime(m.htConcurrent - achat);
   const margeAlignee = auCentime(margeUnitaire * m.aligne.ventes);
   const ecart = auCentime(margeAlignee - m.margeDuMoisDeJanvier);
-  const ventesNecessaires = Math.ceil(m.margeDuMoisDeJanvier / margeUnitaire - 1e-9);
+  const ventesCalculees = auCentime(m.margeDuMoisDeJanvier / margeUnitaire);
+  const ventesNecessaires = Math.ceil(ventesCalculees - 1e-9);
   const verdict: Verdict = margeAlignee < m.margeDuMoisDeJanvier ? "pas-a-ce-prix" : "s-aligner";
   const ventesEnPlus = m.aligne.ventes - m.r.ventesDuMois;
   return {
     m,
     achat,
     margeUnitaire,
-    tMarqueAuPrixPropose: auDixieme((margeUnitaire / m.htConcurrent) * 100),
+    tMarqueAuPrixPropose: auCentime((margeUnitaire / m.htConcurrent) * 100),
     margeAlignee,
     ecart,
+    ventesCalculees,
     ventesNecessaires,
     ventesQuiManquent: ventesNecessaires - m.aligne.ventes,
     baisseEnPlus: auCentime(achat - m.achatQuiGardeLaMarge),
@@ -125,7 +128,7 @@ export const L_ETIQUETTE_DU_CONCURRENT: Situation = {
       titre: "Au prix du concurrent",
       notions: ["margin_rates", "vat_payable", "price_elasticity"],
       question: () =>
-        "Calculez le prix hors taxes qui correspond à l'étiquette du concurrent, les pulls que la boutique vendrait à ce prix (à l'article près en dessous), et le taux de marque que lui laisserait le prix d'achat proposé, au dixième.",
+        "Calculez le prix hors taxes qui correspond à l'étiquette du concurrent, les pulls que la boutique vendrait à ce prix (à l'article près en dessous), et le taux de marque que lui laisserait le prix d'achat proposé, à deux décimales.",
       champs: (c) => {
         const x = etiquetteDuConcurrent(c);
         const m = x.m;
@@ -133,10 +136,11 @@ export const L_ETIQUETTE_DU_CONCURRENT: Situation = {
           { libelle: "Prix du concurrent, hors taxes", attendu: m.htConcurrent, calcul: `${eur(m.ttcConcurrent)} ÷ ${(1 + m.r.tauxTva).toLocaleString("fr-FR")} = ${eur(m.htConcurrent)}` },
           {
             libelle: "Pulls vendus au prix aligné",
+            nature: "quantite",
             attendu: m.aligne.ventes,
-            calcul: `${qte(m.r.ventesDuMois)} × (1 − ${qte(-m.f.elasticiteAuPrix)} × (${eur(m.htConcurrent)} − ${eur(m.r.prixHt)}) ÷ ${eur(m.r.prixHt)}) = ${qte(m.aligne.ventes)}`,
+            calcul: `${qte(m.r.ventesDuMois)} × (1 − ${qte(-m.f.elasticiteAuPrix)} × (${eur(m.htConcurrent)} − ${eur(m.r.prixHt)}) ÷ ${eur(m.r.prixHt)}) = ${qte(m.aligne.demandeCalculee)}, soit ${qte(m.aligne.ventes)} pulls à l'article près en dessous`,
           },
-          { libelle: "Taux de marque au prix proposé (%)", attendu: x.tMarqueAuPrixPropose, calcul: `(${eur(m.htConcurrent)} − ${eur(x.achat)}) ÷ ${eur(m.htConcurrent)} × 100 = ${pct(x.tMarqueAuPrixPropose)}`, tolerance: 0.1 },
+          { libelle: "Taux de marque au prix proposé (%)", attendu: x.tMarqueAuPrixPropose, calcul: `(${eur(m.htConcurrent)} − ${eur(x.achat)}) ÷ ${eur(m.htConcurrent)} × 100 = ${pct(x.tMarqueAuPrixPropose)}` },
         ];
       },
       explication: (c) => {
@@ -226,10 +230,9 @@ export const L_ETIQUETTE_DU_CONCURRENT: Situation = {
             libelle: "Prix d'achat qui garde la marge du mois",
             attendu: m.achatQuiGardeLaMarge,
             calcul: `${eur(m.htConcurrent)} − ${eur(m.margeDuMoisDeJanvier)} ÷ ${qte(m.aligne.ventes)} = ${eur(m.achatQuiGardeLaMarge)}, au centime inférieur`,
-            tolerance: 0.01,
           },
-          { libelle: "Baisse à obtenir en plus de l'offre", attendu: x.baisseEnPlus, calcul: `${eur(x.achat)} − ${eur(m.achatQuiGardeLaMarge)} = ${eur(x.baisseEnPlus)}`, tolerance: 0.01 },
-          { libelle: "Pulls à vendre au prix proposé", attendu: x.ventesNecessaires, calcul: `${eur(m.margeDuMoisDeJanvier)} ÷ ${eur(x.margeUnitaire)} = ${qte(x.ventesNecessaires)}, à l'unité supérieure` },
+          { libelle: "Baisse à obtenir en plus de l'offre", attendu: x.baisseEnPlus, calcul: `${eur(x.achat)} − ${eur(m.achatQuiGardeLaMarge)} = ${eur(x.baisseEnPlus)}` },
+          { libelle: "Pulls à vendre au prix proposé", nature: "quantite", attendu: x.ventesNecessaires, calcul: `${eur(m.margeDuMoisDeJanvier)} ÷ ${eur(x.margeUnitaire)} = ${qte(x.ventesCalculees)}, soit ${qte(x.ventesNecessaires)} pulls à l'unité au-dessus : un de moins ne garderait pas la marge` },
         ];
       },
       explication: (c) => {

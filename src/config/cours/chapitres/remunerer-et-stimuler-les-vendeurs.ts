@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   CHALLENGE_DE_L_ECHARPE,
@@ -46,16 +46,17 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * Le droit cité : le SMIC horaire et le minimum de la branche, au prorata des heures ; l'égalité de
  * rémunération entre les femmes et les hommes pour un même travail ; la dotation d'un challenge, un
  * élément de salaire soumis à cotisations, versée selon des règles écrites et connues de tous.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les taux se donnent à deux décimales (au dixième, avant) ;
+ * l'indice de vente est une grandeur au centième ; les chiffres d'affaires à transformation ou à
+ * panier égal, au centime, sur les taux et les paniers arrondis (à l'euro, à deux euros près, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${qte(t)} %`;
+const qte = nombreAuCentieme;
 /** « de Malik », « d'Inès » : l'élision devant un prénom à voyelle. */
 const dePrenom = (p: string) => (/^[AEIOUYÉÈÊ]/.test(p) ? `d'${p}` : `de ${p}`);
 const h = (x: number) => `${qte(x)} h`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
 
 const POURQUOI =
   "ce chapitre se joue à la boutique du cours, MAILLE & CO : ses vendeurs, leurs ventes et leurs salaires sont ceux des autres chapitres du parcours.";
@@ -86,8 +87,9 @@ export function remunererEtStimuler(c: Pick<Cas, "code">) {
     hugo,
     ch,
     // Le vendeur qui décroche, à la transformation de l'équipe, puis au panier de l'équipe.
-    caATransformationEgale: Math.round(m.entrees * e.transformation * m.panier),
-    caAPanierEgal: Math.round(m.passages * e.panier),
+    // Au centime, sur la transformation à deux décimales et les paniers au centime, comme sur la copie.
+    caATransformationEgale: auCentime(((m.entrees * auCentime(e.transformation * 100)) / 100) * auCentime(m.panier)),
+    caAPanierEgal: auCentime(m.passages * auCentime(e.panier)),
     minima: fixesFaceAuxMinima(f),
   };
 }
@@ -115,7 +117,7 @@ export function tableauDeBordCalcule(c: Pick<Cas, "code">): TableauDeDonnees {
     colonnes: ["Transformation", "Panier", "Indice", "Objectif atteint"],
     lignes: [...x.t.vendeurs, { prenom: "L'équipe", ...x.e }].map((v) => ({
       libelle: v.prenom,
-      valeurs: [pct(auDixieme(v.transformation * 100)), eur(auCentime(v.panier)), qte(auCentime(v.indiceDeVente)), pct(auDixieme(v.realisation * 100))],
+      valeurs: [pct(auCentime(v.transformation * 100)), eur(auCentime(v.panier)), qte(auCentime(v.indiceDeVente)), pct(auCentime(v.realisation * 100))],
     })),
   };
 }
@@ -164,21 +166,21 @@ export const REMUNERER_ET_STIMULER_LES_VENDEURS: Chapitre = {
       notions: ["conversion_rate", "average_basket", "dashboard"],
       question: (c) => {
         const x = remunererEtStimuler(c);
-        return `${x.m.prenom}, le vendeur à temps partiel, a accueilli ${qte(x.m.entrees)} entrées et conclu ${qte(x.m.passages)} passages, pour ${qte(x.m.articles)} articles et ${eur(x.m.chiffreDAffaires)}. Calculez son taux de transformation (au dixième), son panier moyen (au centime) et son indice de vente (au centième).`;
+        return `${x.m.prenom}, le vendeur à temps partiel, a accueilli ${qte(x.m.entrees)} entrées et conclu ${qte(x.m.passages)} passages, pour ${qte(x.m.articles)} articles et ${eur(x.m.chiffreDAffaires)}. Calculez son taux de transformation (à deux décimales), son panier moyen (au centime) et son indice de vente (au centième).`;
       },
       champs: (c) => {
         const x = remunererEtStimuler(c);
         const m = x.m;
         return [
-          { libelle: "Taux de transformation (%)", attendu: auDixieme(m.transformation * 100), tolerance: 0.1, calcul: `${qte(m.passages)} ÷ ${qte(m.entrees)} × 100 = ${pct(auDixieme(m.transformation * 100))}` },
-          { libelle: "Panier moyen", attendu: auCentime(m.panier), tolerance: 0.01, calcul: `${eur(m.chiffreDAffaires)} ÷ ${qte(m.passages)} = ${eur(auCentime(m.panier))}` },
-          { libelle: "Indice de vente", attendu: auCentime(m.indiceDeVente), tolerance: 0.01, calcul: `${qte(m.articles)} ÷ ${qte(m.passages)} = ${qte(auCentime(m.indiceDeVente))}` },
+          { libelle: "Taux de transformation (%)", attendu: auCentime(m.transformation * 100), calcul: `${qte(m.passages)} ÷ ${qte(m.entrees)} × 100 = ${pct(auCentime(m.transformation * 100))}` },
+          { libelle: "Panier moyen", attendu: auCentime(m.panier), calcul: `${eur(m.chiffreDAffaires)} ÷ ${qte(m.passages)} = ${eur(auCentime(m.panier))}` },
+          { libelle: "Indice de vente", nature: "grandeur", attendu: auCentime(m.indiceDeVente), calcul: `${qte(m.articles)} ÷ ${qte(m.passages)} = ${qte(auCentime(m.indiceDeVente))}` },
         ];
       },
       explication: (c) => {
         const x = remunererEtStimuler(c);
         return [
-          `L'équipe transforme ${pct(auDixieme(x.e.transformation * 100))}, pour un panier de ${eur(auCentime(x.e.panier))} et ${qte(auCentime(x.e.indiceDeVente))} article par passage. ${x.m.prenom} est en dessous sur les trois : il conclut moins, et vend moins à chaque client.`,
+          `L'équipe transforme ${pct(auCentime(x.e.transformation * 100))}, pour un panier de ${eur(auCentime(x.e.panier))} et ${qte(auCentime(x.e.indiceDeVente))} article par passage. ${x.m.prenom} est en dessous sur les trois : il conclut moins, et vend moins à chaque client.`,
         ];
       },
     },
@@ -190,15 +192,15 @@ export const REMUNERER_ET_STIMULER_LES_VENDEURS: Chapitre = {
       notions: ["dashboard"],
       question: (c) => {
         const x = remunererEtStimuler(c);
-        return `${x.m.prenom} vend ${h(x.m.heuresDeVente)} par semaine ; l'équipe ${h(x.e.heuresDeVente)}. Calculez l'objectif du mois de ${x.m.prenom} (${h(x.m.heuresDeVente)} × 52 ÷ 12 × ${eur(OBJECTIF_PAR_HEURE_DE_VENTE)}), son taux de réalisation (au dixième), puis l'objectif de l'équipe et son taux de réalisation.`;
+        return `${x.m.prenom} vend ${h(x.m.heuresDeVente)} par semaine ; l'équipe ${h(x.e.heuresDeVente)}. Calculez l'objectif du mois de ${x.m.prenom} (${h(x.m.heuresDeVente)} × 52 ÷ 12 × ${eur(OBJECTIF_PAR_HEURE_DE_VENTE)}), son taux de réalisation (à deux décimales), puis l'objectif de l'équipe et son taux de réalisation.`;
       },
       champs: (c) => {
         const x = remunererEtStimuler(c);
         return [
           { libelle: `Objectif de ${x.m.prenom}`, attendu: x.m.objectif, calcul: `${h(x.m.heuresDeVente)} × 52 ÷ 12 × ${eur(OBJECTIF_PAR_HEURE_DE_VENTE)} = ${eur(x.m.objectif)}` },
-          { libelle: `Réalisation de ${x.m.prenom} (%)`, attendu: auDixieme(x.m.realisation * 100), tolerance: 0.1, calcul: `${eur(x.m.chiffreDAffaires)} ÷ ${eur(x.m.objectif)} × 100 = ${pct(auDixieme(x.m.realisation * 100))}` },
+          { libelle: `Réalisation de ${x.m.prenom} (%)`, attendu: auCentime(x.m.realisation * 100), calcul: `${eur(x.m.chiffreDAffaires)} ÷ ${eur(x.m.objectif)} × 100 = ${pct(auCentime(x.m.realisation * 100))}` },
           { libelle: "Objectif de l'équipe", attendu: x.e.objectif, calcul: `${h(x.e.heuresDeVente)} × 52 ÷ 12 × ${eur(OBJECTIF_PAR_HEURE_DE_VENTE)} = ${eur(x.e.objectif)}` },
-          { libelle: "Réalisation de l'équipe (%)", attendu: auDixieme(x.e.realisation * 100), tolerance: 0.1, calcul: `${eur(x.e.chiffreDAffaires)} ÷ ${eur(x.e.objectif)} × 100 = ${pct(auDixieme(x.e.realisation * 100))}` },
+          { libelle: "Réalisation de l'équipe (%)", attendu: auCentime(x.e.realisation * 100), calcul: `${eur(x.e.chiffreDAffaires)} ÷ ${eur(x.e.objectif)} × 100 = ${pct(auCentime(x.e.realisation * 100))}` },
         ];
       },
       explication: (c) => {
@@ -221,8 +223,8 @@ export const REMUNERER_ET_STIMULER_LES_VENDEURS: Chapitre = {
       champs: (c) => {
         const x = remunererEtStimuler(c);
         return [
-          { libelle: "À la transformation de l'équipe", attendu: x.caATransformationEgale, tolerance: 2, calcul: `${qte(x.m.entrees)} entrées × ${pct(auDixieme(x.e.transformation * 100))} × ${eur(auCentime(x.m.panier))} = ${eur(x.caATransformationEgale)}` },
-          { libelle: "Au panier de l'équipe", attendu: x.caAPanierEgal, tolerance: 2, calcul: `${qte(x.m.passages)} passages × ${eur(auCentime(x.e.panier))} = ${eur(x.caAPanierEgal)}` },
+          { libelle: "À la transformation de l'équipe", attendu: x.caATransformationEgale, calcul: `${qte(x.m.entrees)} entrées × ${pct(auCentime(x.e.transformation * 100))} × ${eur(auCentime(x.m.panier))} = ${eur(x.caATransformationEgale)}` },
+          { libelle: "Au panier de l'équipe", attendu: x.caAPanierEgal, calcul: `${qte(x.m.passages)} passages × ${eur(auCentime(x.e.panier))} = ${eur(x.caAPanierEgal)}` },
         ];
       },
       explication: (c) => {
@@ -268,7 +270,7 @@ export const REMUNERER_ET_STIMULER_LES_VENDEURS: Chapitre = {
           {
             texte: "Un entretien, du binôme et un objectif suivi",
             juste: true,
-            retour: `Oui : l'entretien cherche la cause avec lui (une difficulté, un manque de méthode, un souci personnel) ; quelques samedis en binôme avec ${hugo.prenom}, qui transforme ${pct(auDixieme(hugo.transformation * 100))}, montrent la méthode ; un objectif chiffré, daté et revu chaque semaine dit si cela marche.`,
+            retour: `Oui : l'entretien cherche la cause avec lui (une difficulté, un manque de méthode, un souci personnel) ; quelques samedis en binôme avec ${hugo.prenom}, qui transforme ${pct(auCentime(hugo.transformation * 100))}, montrent la méthode ; un objectif chiffré, daté et revu chaque semaine dit si cela marche.`,
           },
           { texte: "Un avertissement écrit, pour insuffisance de résultats", juste: false, retour: "Non : un objectif manqué un mois n'est pas une faute. Sanctionner avant de comprendre ferait perdre un vendeur, et la confiance de l'équipe." },
           { texte: "Rien : l'équipe dépasse son objectif, cela suffit", juste: false, retour: `Non : ${x.m.prenom} manque ${eur(-x.m.ecart)} chaque mois. Le laisser décrocher, c'est perdre ces ventes, et le perdre lui.` },
@@ -593,7 +595,7 @@ export const REMUNERER_ET_STIMULER_LES_VENDEURS: Chapitre = {
       texte: (c) => {
         const x = remunererEtStimuler(c);
         return [
-          `Le tableau de bord vendeur par vendeur montre ce que le total cache : l'équipe de ${x.f.entreprise} dépasse son objectif, ${x.m.prenom} est à ${pct(auDixieme(x.m.realisation * 100))}. Son écart vient d'abord de la transformation : la remédiation passe par l'entretien, l'accompagnement et un objectif suivi.`,
+          `Le tableau de bord vendeur par vendeur montre ce que le total cache : l'équipe de ${x.f.entreprise} dépasse son objectif, ${x.m.prenom} est à ${pct(auCentime(x.m.realisation * 100))}. Son écart vient d'abord de la transformation : la remédiation passe par l'entretien, l'accompagnement et un objectif suivi.`,
           "Une rémunération assemble un fixe, au-dessus du SMIC et du minimum de la branche, et un variable. La commission récompense l'individu, la prime d'équipe le collectif ; chaque euro de variable coûte aussi ses cotisations.",
           `Un challenge se paie par la marge qu'il apporte : ${qte(x.ch.seuil)} écharpes en plus suffisent à payer celui de février. Ses règles s'écrivent avant, et traitent chacun selon ses heures.`,
           "Animer l'équipe passe aussi par d'autres leviers que l'argent : la reconnaissance, un objectif partagé et affiché, la formation, l'autonomie. Le challenge, la réunion du matin et le tableau de bord affiché en sont les outils.",

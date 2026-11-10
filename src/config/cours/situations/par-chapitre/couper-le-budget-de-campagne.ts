@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_L_ACQUISITION, acquisitionDuCabinet } from "../../chapitres/cout-d-acquisition";
 import type { Situation } from "../types";
@@ -22,6 +22,10 @@ import type { Situation } from "../types";
  * paierait que si un compte valait moins de 15 000 €, moins que sa seule marge de la première année.
  * Elle fait perdre 55 200 € de valeur vie nette, 36 000 € actualisée, et déjà 4 800 € sur la première
  * année.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les comptes attendus, moyennes d'un entonnoir, sont des
+ * grandeurs au centième, à un centième près (à 5 centièmes près, avant).
  */
 
 /**
@@ -34,9 +38,7 @@ export const BUDGET_ENVISAGE = 0.5;
 /** Les bornes du curseur de la valeur d'un compte, en milliers d'euros. */
 export const VALEUR_DU_CURSEUR_DU_CAS = { min: 0, max: 40 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
 
 /** La campagne au budget de N et au budget coupé, et ce qui les sépare. */
 export function coupeDuBudget(c: Pick<Cas, "code">) {
@@ -139,8 +141,8 @@ export const COUPER_LE_BUDGET_DE_CAMPAGNE: Situation = {
         const d = r.x.digital;
         const chemin = (contacts: number, comptes: number) => `${qte(contacts)} ÷ ${qte(d.contacts / d.rendezVous)} ÷ ${qte(d.rendezVous / d.devis)} ÷ ${qte(d.devis / d.contrats)} = ${qte(comptes)}`;
         return [
-          { libelle: "Comptes attendus au budget de N", attendu: r.aujourdhui.comptes, tolerance: 0.05, calcul: chemin(r.aujourdhui.contacts, r.aujourdhui.comptes) },
-          { libelle: "Comptes attendus à la moitié du budget", attendu: r.coupe.comptes, tolerance: 0.05, calcul: chemin(r.coupe.contacts, r.coupe.comptes) },
+          { libelle: "Comptes attendus au budget de N", nature: "grandeur", attendu: r.aujourdhui.comptes, calcul: chemin(r.aujourdhui.contacts, r.aujourdhui.comptes) },
+          { libelle: "Comptes attendus à la moitié du budget", nature: "grandeur", attendu: r.coupe.comptes, calcul: chemin(r.coupe.contacts, r.coupe.comptes) },
           { libelle: "Coût d'acquisition moyen au budget de N", attendu: r.aujourdhui.cacMoyen!, calcul: `${eur(r.aujourdhui.budget)} ÷ ${qte(r.aujourdhui.comptes)} = ${eur(r.aujourdhui.cacMoyen!)}` },
           { libelle: "Coût d'acquisition moyen à la moitié du budget", attendu: r.coupe.cacMoyen!, calcul: `${eur(r.coupe.budget)} ÷ ${qte(r.coupe.comptes)} = ${eur(r.coupe.cacMoyen!)}` },
         ];
@@ -162,7 +164,7 @@ export const COUPER_LE_BUDGET_DE_CAMPAGNE: Situation = {
       champs: (c) => {
         const r = coupeDuBudget(c);
         return [
-          { libelle: "Comptes perdus", attendu: r.comptesPerdus, tolerance: 0.05, calcul: `${qte(r.aujourdhui.comptes)} − ${qte(r.coupe.comptes)} = ${qte(r.comptesPerdus)}` },
+          { libelle: "Comptes perdus", nature: "grandeur", attendu: r.comptesPerdus, calcul: `${qte(r.aujourdhui.comptes)} − ${qte(r.coupe.comptes)} = ${qte(r.comptesPerdus)}` },
           { libelle: "Coût d'un compte perdu", attendu: r.coutDUnComptePerdu, calcul: `${eur(r.economie)} ÷ ${qte(r.comptesPerdus)} = ${eur(r.coutDUnComptePerdu)}` },
           {
             libelle: "Valeur vie nette perdue",

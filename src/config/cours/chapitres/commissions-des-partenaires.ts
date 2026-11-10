@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct, taux2 } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { CABINETS_DU_COURS, type FicheDuCabinet } from "../monde/atlas-conseil";
 import {
@@ -59,6 +59,12 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * monde/selection-des-partenaires.ts), les-clauses-du-contrat (ce que le contrat de partenariat doit
  * dire, à la lumière du piège de la plateforme) et animer-et-suivre (le plan d'animation, le suivi
  * des partenaires et la veille).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts et les commissions plafond se donnent à deux décimales
+ * (au dixième, avant), sur le facteur de la vie du compte au centième, celui que la copie écrit ; les
+ * commissions sur la vie, actualisées, sont la somme des deux lignes au centime ; les années suivantes
+ * et les notes pondérées sont des grandeurs au centième.
  */
 
 /** Le chapitre se joue chez ATLAS CONSEIL seule : un cabinet qui gagne des comptes d'entreprise, un à un. */
@@ -81,12 +87,8 @@ export const LEVIERS_DU_LABORATOIRE = {
 /** Le levier à choix du laboratoire : la valeur vie simple (taux 0) ou actualisée (le taux du cabinet, en %). */
 export const VALEUR_VIE_SIMPLE = 0;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 /** Un pourcentage déjà multiplié par 100 : 12,4 → « 12,4 % ». */
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
 /** « d'ATLAS CONSEIL », « de NOVA » : l'élision devant une voyelle. */
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
@@ -124,7 +126,6 @@ export function partenairesDuCabinet(c: Pick<Cas, "code">) {
   const plafond = commissionPlafond(f, "plateforme");
   const plafondActualise = commissionPlafond(f, "plateforme", { taux });
   const plafondSansRetour = commissionPlafond(f, "plateforme", { partQuiRevientEnDirect: 0 });
-  const plafondDeLApporteur = commissionPlafond(f, "apporteur");
   const retours = partEnDirectNecessaire(f, "plateforme");
   const retoursActualises = partEnDirectNecessaire(f, "plateforme", { taux });
   // Les années de présence attendues après la première : (1 − attrition) ÷ attrition.
@@ -150,21 +151,22 @@ export function partenairesDuCabinet(c: Pick<Cas, "code">) {
     va,
     ap,
     apa,
-    partDeLaMarge: auDixieme((v.commissionPremiereAnnee / m.marge) * 100),
+    partDeLaMarge: auCentime((v.commissionPremiereAnnee / m.marge) * 100),
     margeDeLaPremiereAnnee: auCentime(m.marge - v.commissionPremiereAnnee),
     facteur: plafond.facteur,
     facteurActualise: plafondActualise.facteur,
-    plafond: plafond.plafond * 100,
+    // Les plafonds de la copie : sur le facteur au centième (2,08, pas 2,078…), à deux décimales.
+    plafond: auCentime((acq.cac / (m.chiffreDAffaires * auCentime(plafond.facteur))) * 100),
     plafondEntier: plafond.plafondEntier,
-    plafondALaPremiereAnnee: plafond.plafondALaPremiereAnnee * 100,
+    plafondALaPremiereAnnee: taux2(acq.cac, m.chiffreDAffaires),
     tauxDuPiege,
     premiereAuPiege,
     vieAuPiege,
-    plafondActualise: plafondActualise.plafond * 100,
+    plafondActualise: auCentime((acq.cac / (m.chiffreDAffaires * auCentime(plafondActualise.facteur))) * 100),
     plafondActualiseEntier: plafondActualise.plafondEntier,
-    plafondSansRetour: plafondSansRetour.plafond * 100,
+    plafondSansRetour: auCentime((acq.cac / (m.chiffreDAffaires * (1 + anneesSuivantes))) * 100),
     facteurSansRetour: plafondSansRetour.facteur,
-    plafondDeLApporteur: plafondDeLApporteur.plafond * 100,
+    plafondDeLApporteur: taux2(acq.cac, m.chiffreDAffaires),
     commissionAnnuellePayable,
     retours: retours.part === null ? null : retours.part * 100,
     retoursEntiers: retours.partEntiere,
@@ -280,13 +282,13 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
       notions: ["distribution_commission", "contribution_margin"],
       question: (c) => {
         const x = partenairesDuCabinet(c);
-        return `Calculez la commission de la plateforme sur la première année d'un compte moyen (${pct(x.plateforme.commission * 100)} de ${eur(x.m.chiffreDAffaires)}), la part de la marge du compte (${eur(x.m.marge)}) qu'elle prend, au dixième, puis la marge qui reste au cabinet la première année.`;
+        return `Calculez la commission de la plateforme sur la première année d'un compte moyen (${pct(x.plateforme.commission * 100)} de ${eur(x.m.chiffreDAffaires)}), la part de la marge du compte (${eur(x.m.marge)}) qu'elle prend, au centième, puis la marge qui reste au cabinet la première année.`;
       },
       champs: (c) => {
         const x = partenairesDuCabinet(c);
         return [
           { libelle: "Commission de la première année", attendu: x.v.commissionPremiereAnnee, calcul: `${eur(x.m.chiffreDAffaires)} × ${pct(x.plateforme.commission * 100)} = ${eur(x.v.commissionPremiereAnnee)}` },
-          { libelle: "Part de la marge du compte prélevée (%)", attendu: x.partDeLaMarge, tolerance: 0.1, calcul: `${eur(x.v.commissionPremiereAnnee)} ÷ ${eur(x.m.marge)} × 100 = ${pct(x.partDeLaMarge)}` },
+          { libelle: "Part de la marge du compte prélevée (%)", attendu: x.partDeLaMarge, calcul: `${eur(x.v.commissionPremiereAnnee)} ÷ ${eur(x.m.marge)} × 100 = ${pct(x.partDeLaMarge)}` },
           { libelle: "Marge laissée au cabinet la première année", attendu: x.margeDeLaPremiereAnnee, calcul: `${eur(x.m.marge)} − ${eur(x.v.commissionPremiereAnnee)} = ${eur(x.margeDeLaPremiereAnnee)}` },
         ];
       },
@@ -388,7 +390,7 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
             attendu: x.v.commissionDesAnneesSuivantes,
             calcul: `${eur(x.v.commissionPremiereAnnee)} × (1 − ${pct(x.plateforme.partQuiRevientEnDirect * 100)}) = ${eur(x.v.commissionDesAnneesSuivantes)}`,
           },
-          { libelle: "Années suivantes attendues", attendu: x.anneesSuivantes, calcul: `(1 − ${pct(x.n.attrition * 100)}) ÷ ${pct(x.n.attrition * 100)} = ${qte(x.anneesSuivantes)}` },
+          { libelle: "Années suivantes attendues", nature: "grandeur", attendu: x.anneesSuivantes, calcul: `(1 − ${pct(x.n.attrition * 100)}) ÷ ${pct(x.n.attrition * 100)} = ${qte(x.anneesSuivantes)}` },
           {
             libelle: "Commissions sur toute la vie du compte",
             attendu: x.v.commissionsSurLaVie,
@@ -412,7 +414,7 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
       titre: "La commission plafond, et le piège de la première année",
       notions: ["distribution_commission", "customer_acquisition_cost"],
       question: () =>
-        "Sans formule cette fois. Calculez ce que coûte, sur la vie du compte, un euro de commission payé chaque année où la plateforme le prend (la première année, puis les années suivantes, en moyenne sur les comptes), puis la commission plafond, au dixième. Calculez enfin la commission plafond qu'on trouverait en comparant la conquête à la seule première année.",
+        "Sans formule cette fois. Calculez ce que coûte, sur la vie du compte, un euro de commission payé chaque année où la plateforme le prend (la première année, puis les années suivantes, en moyenne sur les comptes), puis la commission plafond, à deux décimales. Calculez enfin la commission plafond qu'on trouverait en comparant la conquête à la seule première année.",
       champs: (c) => {
         const x = partenairesDuCabinet(c);
         const suite = 1 - x.plateforme.partQuiRevientEnDirect;
@@ -420,27 +422,25 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
           {
             libelle: "Ce que coûte 1 € de commission annuelle, sur la vie",
             attendu: auCentime(x.facteur),
-            calcul: `1 + (1 − ${pct(x.plateforme.partQuiRevientEnDirect * 100)}) × ${qte(x.anneesSuivantes)} = 1 + ${qte(suite)} × ${qte(x.anneesSuivantes)} = ${qte(auCentime(x.facteur))} €`,
+            calcul: `1 + (1 − ${pct(x.plateforme.partQuiRevientEnDirect * 100)}) × ${qte(x.anneesSuivantes)} = 1 + ${qte(suite)} × ${qte(x.anneesSuivantes)} = ${eur(x.facteur)}`,
           },
           {
             libelle: "Commission plafond (%)",
-            attendu: auDixieme(x.plafond),
-            tolerance: 0.1,
-            calcul: `${eur(x.acq.cac)} ÷ (${eur(x.m.chiffreDAffaires)} × ${qte(auCentime(x.facteur))}) × 100 = ${pct(auDixieme(x.plafond))}`,
+            attendu: auCentime(x.plafond),
+            calcul: `${eur(x.acq.cac)} ÷ (${eur(x.m.chiffreDAffaires)} × ${qte(auCentime(x.facteur))}) × 100 = ${pct(auCentime(x.plafond))}`,
           },
           {
             libelle: "Commission plafond sur la première année seule (%)",
-            attendu: auDixieme(x.plafondALaPremiereAnnee),
-            tolerance: 0.1,
-            calcul: `${eur(x.acq.cac)} ÷ ${eur(x.m.chiffreDAffaires)} × 100 = ${pct(auDixieme(x.plafondALaPremiereAnnee))}`,
+            attendu: auCentime(x.plafondALaPremiereAnnee),
+            calcul: `${eur(x.acq.cac)} ÷ ${eur(x.m.chiffreDAffaires)} × 100 = ${pct(auCentime(x.plafondALaPremiereAnnee))}`,
           },
         ];
       },
       explication: (c) => {
         const x = partenairesDuCabinet(c);
         return [
-          `Le curseur l'a montré : la commission plafond est de ${pct(auDixieme(x.plafond))}, ${pct(x.plafondEntier)} au point entier. Chaque euro de commission annuelle en coûte ${qte(auCentime(x.facteur))} sur la vie du compte : la conquête, payée une fois, ne peut en payer que ${eur(x.acq.cac)} ÷ ${qte(auCentime(x.facteur))}.`,
-          `Comparer à la première année seule donne ${pct(auDixieme(x.plafondALaPremiereAnnee))} : ${qte(auCentime(x.facteur))} fois trop, exactement ce que coûte 1 € de commission annuelle sur la vie. C'est oublier que la plateforme garde une partie des comptes, et que ceux-là repaient chaque année.`,
+          `Le curseur l'a montré : la commission plafond est de ${pct(auCentime(x.plafond))}, ${pct(x.plafondEntier)} au point entier. Chaque euro de commission annuelle en coûte ${qte(auCentime(x.facteur))} sur la vie du compte : la conquête, payée une fois, ne peut en payer que ${eur(x.acq.cac)} ÷ ${qte(auCentime(x.facteur))}.`,
+          `Comparer à la première année seule donne ${pct(auCentime(x.plafondALaPremiereAnnee))} : ${qte(auCentime(x.facteur))} fois trop, exactement ce que coûte 1 € de commission annuelle sur la vie. C'est oublier que la plateforme garde une partie des comptes, et que ceux-là repaient chaque année.`,
         ];
       },
     },
@@ -523,7 +523,7 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
       notions: ["distribution_commission", "customer_acquisition_cost"],
       question: (c) => {
         const x = partenairesDuCabinet(c);
-        return `Sans formule. À ${pct(x.plateforme.commission * 100)} de commission, calculez ce que la conquête laisse à payer à la plateforme chaque année suivante, une fois la première commission payée, puis la part des comptes qui doivent revenir en direct, au dixième. Calculez enfin la commission plafond si aucun compte ne revenait en direct, au dixième.`;
+        return `Sans formule. À ${pct(x.plateforme.commission * 100)} de commission, calculez ce que la conquête laisse à payer à la plateforme chaque année suivante, une fois la première commission payée, puis la part des comptes qui doivent revenir en direct, à deux décimales. Calculez enfin la commission plafond si aucun compte ne revenait en direct, à deux décimales.`;
       },
       champs: (c) => {
         const x = partenairesDuCabinet(c);
@@ -535,22 +535,20 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
           },
           {
             libelle: "Part des comptes revenus en direct nécessaire (%)",
-            attendu: auDixieme(x.retours ?? 100),
-            tolerance: 0.1,
-            calcul: `(1 − ${eur(x.commissionAnnuellePayable)} ÷ ${eur(x.v.commissionPremiereAnnee)}) × 100 = ${pct(auDixieme(x.retours ?? 100))}`,
+            attendu: auCentime(x.retours ?? 100),
+            calcul: `(1 − ${eur(x.commissionAnnuellePayable)} ÷ ${eur(x.v.commissionPremiereAnnee)}) × 100 = ${pct(auCentime(x.retours ?? 100))}`,
           },
           {
             libelle: "Commission plafond sans aucun retour en direct (%)",
-            attendu: auDixieme(x.plafondSansRetour),
-            tolerance: 0.1,
-            calcul: `${eur(x.acq.cac)} ÷ (${eur(x.m.chiffreDAffaires)} × (1 + ${qte(x.anneesSuivantes)})) × 100 = ${pct(auDixieme(x.plafondSansRetour))}`,
+            attendu: auCentime(x.plafondSansRetour),
+            calcul: `${eur(x.acq.cac)} ÷ (${eur(x.m.chiffreDAffaires)} × (1 + ${qte(x.anneesSuivantes)})) × 100 = ${pct(auCentime(x.plafondSansRetour))}`,
           },
         ];
       },
       explication: (c) => {
         const x = partenairesDuCabinet(c);
         return [
-          `Pour valoir la conquête à ${pct(x.plateforme.commission * 100)}, la plateforme ne devrait prendre que ${eur(x.commissionAnnuellePayable)} par an après la première année, en moyenne sur ses comptes : il faudrait que ${pct(auDixieme(x.retours ?? 100))} d'entre eux reviennent en direct. Si elle n'en rendait aucun, sa commission ne devrait pas dépasser ${pct(auDixieme(x.plafondSansRetour))}.`,
+          `Pour valoir la conquête à ${pct(x.plateforme.commission * 100)}, la plateforme ne devrait prendre que ${eur(x.commissionAnnuellePayable)} par an après la première année, en moyenne sur ses comptes : il faudrait que ${pct(auCentime(x.retours ?? 100))} d'entre eux reviennent en direct. Si elle n'en rendait aucun, sa commission ne devrait pas dépasser ${pct(auCentime(x.plafondSansRetour))}.`,
           "La commission plafond dépend autant des retours en direct que du taux : négocier avec une plateforme, c'est négocier les deux.",
         ];
       },
@@ -707,7 +705,7 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
       notions: ["discounting", "customer_lifetime_value", "distribution_commission"],
       question: (c) => {
         const x = partenairesDuCabinet(c);
-        return `Refaites la comparaison à la valeur vie actualisée, au taux du cabinet (${pct(x.taux * 100)}), la commission restant à ${pct(x.plateforme.commission * 100)}. Calculez la valeur vie actualisée du compte moyen, les commissions de la plateforme sur la vie, actualisées, la valeur vie nette actualisée avec la plateforme et en propre (la conquête se paie aujourd'hui), puis la commission plafond actualisée, au dixième.`;
+        return `Refaites la comparaison à la valeur vie actualisée, au taux du cabinet (${pct(x.taux * 100)}), la commission restant à ${pct(x.plateforme.commission * 100)}. Calculez la valeur vie actualisée du compte moyen, les commissions de la plateforme sur la vie, actualisées, la valeur vie nette actualisée avec la plateforme et en propre (la conquête se paie aujourd'hui), puis la commission plafond actualisée, au centième.`;
       },
       champs: (c) => {
         const x = partenairesDuCabinet(c);
@@ -719,24 +717,22 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
           { libelle: "Valeur vie actualisée du compte", attendu: x.va.valeurVie, calcul: `${eur(x.m.marge)} ÷ (${pct(a * 100)} + ${pct(r * 100)}) = ${eur(x.va.valeurVie)}` },
           {
             libelle: "Commissions sur la vie, actualisées",
-            attendu: x.va.commissionsSurLaVie,
-            tolerance: 1,
+            attendu: auCentime(premiere + suite),
             calcul: `${eur(x.va.commissionPremiereAnnee)} ÷ ${qte(1 + r)} + ${eur(x.va.commissionDesAnneesSuivantes)} × ${pct((1 - a) * 100)} ÷ (${qte(1 + r)} × ${pct((a + r) * 100)}) = ${eur(premiere)} + ${eur(suite)} = ${eur(x.va.commissionsSurLaVie)}`,
           },
-          { libelle: "Valeur vie nette actualisée avec la plateforme", attendu: x.va.avecLePartenaire, tolerance: 1, calcul: `${eur(x.va.valeurVie)} − ${eur(x.va.commissionsSurLaVie)} = ${eur(x.va.avecLePartenaire)}` },
+          { libelle: "Valeur vie nette actualisée avec la plateforme", attendu: auCentime(x.va.valeurVie - auCentime(premiere + suite)), calcul: `${eur(x.va.valeurVie)} − ${eur(auCentime(premiere + suite))} = ${eur(auCentime(x.va.valeurVie - auCentime(premiere + suite)))}` },
           { libelle: "Valeur vie nette actualisée en propre", attendu: x.va.enPropre, calcul: `${eur(x.va.valeurVie)} − ${eur(x.acq.cac)} = ${eur(x.va.enPropre)}` },
           {
             libelle: "Commission plafond actualisée (%)",
-            attendu: auDixieme(x.plafondActualise),
-            tolerance: 0.1,
-            calcul: `${eur(x.acq.cac)} ÷ (${eur(x.m.chiffreDAffaires)} × ${qte(auCentime(x.facteurActualise))}) × 100 = ${pct(auDixieme(x.plafondActualise))}, où ${qte(auCentime(x.facteurActualise))} = 1 ÷ ${qte(1 + r)} + ${qte(1 - x.plateforme.partQuiRevientEnDirect)} × ${pct((1 - a) * 100)} ÷ (${qte(1 + r)} × ${pct((a + r) * 100)})`,
+            attendu: auCentime(x.plafondActualise),
+            calcul: `${eur(x.acq.cac)} ÷ (${eur(x.m.chiffreDAffaires)} × ${qte(auCentime(x.facteurActualise))}) × 100 = ${pct(auCentime(x.plafondActualise))}, où ${qte(auCentime(x.facteurActualise))} = 1 ÷ ${qte(1 + r)} + ${qte(1 - x.plateforme.partQuiRevientEnDirect)} × ${pct((1 - a) * 100)} ÷ (${qte(1 + r)} × ${pct((a + r) * 100)})`,
           },
         ];
       },
       explication: (c) => {
         const x = partenairesDuCabinet(c);
         return [
-          `Actualisée, la conquête vaut encore ${eur(auCentime(x.va.enPropre - x.va.avecLePartenaire))} de plus par compte que la plateforme à ${pct(x.plateforme.commission * 100)}, contre ${eur(-x.v.ecart)} à la valeur vie simple : l'écart fond, car les commissions se paient plus tard que la conquête. La commission plafond passe de ${pct(auDixieme(x.plafond))} à ${pct(auDixieme(x.plafondActualise))}, et la part de retours en direct nécessaire de ${pct(auDixieme(x.retours ?? 100))} à ${pct(auDixieme(x.retoursActualises ?? 100))}.`,
+          `Actualisée, la conquête vaut encore ${eur(auCentime(x.va.enPropre - x.va.avecLePartenaire))} de plus par compte que la plateforme à ${pct(x.plateforme.commission * 100)}, contre ${eur(-x.v.ecart)} à la valeur vie simple : l'écart fond, car les commissions se paient plus tard que la conquête. La commission plafond passe de ${pct(auCentime(x.plafond))} à ${pct(auCentime(x.plafondActualise))}, et la part de retours en direct nécessaire de ${pct(auCentime(x.retours ?? 100))} à ${pct(auCentime(x.retoursActualises ?? 100))}.`,
           "Le verdict ne change pas : à sa commission d'aujourd'hui, la plateforme coûte plus que la conquête. Mais la méthode compte : une valeur vie simple surestime ce que coûte un canal payé au fil des années.",
         ];
       },
@@ -749,7 +745,7 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
       notions: ["distribution_commission", "customer_acquisition_cost"],
       question: (c) => {
         const x = partenairesDuCabinet(c);
-        return `Variante : l'apporteur d'affaires prend ${pct(x.apporteur.commission * 100)} du chiffre d'affaires de la première année, une seule fois. Sur un compte moyen, à la valeur vie simple, calculez sa commission, la valeur vie nette d'un compte apporté, ce qu'elle laisse de plus qu'un compte gagné en propre, puis la commission plafond de l'apporteur, au dixième.`;
+        return `Variante : l'apporteur d'affaires prend ${pct(x.apporteur.commission * 100)} du chiffre d'affaires de la première année, une seule fois. Sur un compte moyen, à la valeur vie simple, calculez sa commission, la valeur vie nette d'un compte apporté, ce qu'elle laisse de plus qu'un compte gagné en propre, puis la commission plafond de l'apporteur, à deux décimales.`;
       },
       champs: (c) => {
         const x = partenairesDuCabinet(c);
@@ -759,9 +755,8 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
           { libelle: "Ce que l'apporteur laisse de plus que la conquête", attendu: x.ap.ecart, calcul: `${eur(x.ap.avecLePartenaire)} − ${eur(x.ap.enPropre)} = ${eur(x.ap.ecart)}` },
           {
             libelle: "Commission plafond de l'apporteur (%)",
-            attendu: auDixieme(x.plafondDeLApporteur),
-            tolerance: 0.1,
-            calcul: `${eur(x.acq.cac)} ÷ ${eur(x.m.chiffreDAffaires)} × 100 = ${pct(auDixieme(x.plafondDeLApporteur))} : une commission payée une fois se compare à la première année`,
+            attendu: auCentime(x.plafondDeLApporteur),
+            calcul: `${eur(x.acq.cac)} ÷ ${eur(x.m.chiffreDAffaires)} × 100 = ${pct(auCentime(x.plafondDeLApporteur))} : une commission payée une fois se compare à la première année`,
           },
         ];
       },
@@ -769,7 +764,7 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
         const x = partenairesDuCabinet(c);
         return [
           `L'apporteur coûte ${eur(x.ap.commissionPremiereAnnee)} sur un compte moyen, moins que la conquête : un compte apporté laisse ${eur(x.ap.ecart)} de plus qu'un compte gagné en propre. Actualisée, sa commission ne pèse que ${eur(x.apa.commissionsSurLaVie)}.`,
-          `Ici, le calcul sur la première année est le bon : la commission ne revient pas. Le plafond de l'apporteur, ${pct(auDixieme(x.plafondDeLApporteur))}, est celui que l'on trouvait à tort pour la plateforme. La méthode suit la forme du contrat : une fois, ou chaque année.`,
+          `Ici, le calcul sur la première année est le bon : la commission ne revient pas. Le plafond de l'apporteur, ${pct(auCentime(x.plafondDeLApporteur))}, est celui que l'on trouvait à tort pour la plateforme. La méthode suit la forme du contrat : une fois, ou chaque année.`,
         ];
       },
     },
@@ -824,8 +819,9 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
       champs: () =>
         grilleDesPartenaires().notes.map((k) => ({
           libelle: `Note pondérée : ${k.court}`,
-          attendu: k.note,
-          calcul: CRITERES_DES_PARTENAIRES.map((c) => `${qte(k.notes[c.code])} × ${qte(c.poids)}`).join(" + ") + ` = ${qte(k.note * 100)}, ÷ 100 = ${qte(k.note)}`,
+          nature: "grandeur" as const,
+          attendu: auCentime(k.note),
+          calcul: CRITERES_DES_PARTENAIRES.map((c) => `${qte(k.notes[c.code])} × ${qte(c.poids)}`).join(" + ") + ` = ${qte(k.note * 100)} ; ${qte(k.note * 100)} ÷ 100 = ${qte(k.note)} sur 20`,
         })),
       explication: () => {
         const g = grilleDesPartenaires();
@@ -880,8 +876,8 @@ export const COMMISSIONS_DES_PARTENAIRES: Chapitre = {
       texte: (c) => {
         const x = partenairesDuCabinet(c);
         return [
-          `Chez ${x.f.entreprise}, un compte moyen vaut ${eur(x.v.valeurVie)} de marge sur sa vie. Gagné en propre, il coûte ${eur(x.acq.cac)} une fois et laisse ${eur(x.v.enPropre)}. Par la plateforme, à ${pct(x.plateforme.commission * 100)}, il ne coûte que ${eur(x.v.commissionPremiereAnnee)} la première année, mais ${eur(x.v.commissionsSurLaVie)} sur sa vie, et laisse ${eur(x.v.avecLePartenaire)}. Sa commission plafond est de ${pct(auDixieme(x.plafond))}, pas de ${pct(auDixieme(x.plafondALaPremiereAnnee))} : le piège est de comparer la conquête à la seule première année.`,
-          `Les retours en direct font le prix du partenaire : à ${pct(x.plateforme.commission * 100)}, il faudrait que ${pct(x.retoursEntiers ?? 100)} des comptes reviennent en direct ; sans aucun retour, le plafond tomberait à ${pct(auDixieme(x.plafondSansRetour))}. À la valeur vie actualisée, le plafond monte à ${pct(auDixieme(x.plafondActualise))}, car la plateforme se paie plus tard. L'apporteur, payé une fois (${eur(x.ap.commissionPremiereAnnee)}), est le canal le moins cher, mais il ne remplace pas la conquête.`,
+          `Chez ${x.f.entreprise}, un compte moyen vaut ${eur(x.v.valeurVie)} de marge sur sa vie. Gagné en propre, il coûte ${eur(x.acq.cac)} une fois et laisse ${eur(x.v.enPropre)}. Par la plateforme, à ${pct(x.plateforme.commission * 100)}, il ne coûte que ${eur(x.v.commissionPremiereAnnee)} la première année, mais ${eur(x.v.commissionsSurLaVie)} sur sa vie, et laisse ${eur(x.v.avecLePartenaire)}. Sa commission plafond est de ${pct(auCentime(x.plafond))}, pas de ${pct(auCentime(x.plafondALaPremiereAnnee))} : le piège est de comparer la conquête à la seule première année.`,
+          `Les retours en direct font le prix du partenaire : à ${pct(x.plateforme.commission * 100)}, il faudrait que ${pct(x.retoursEntiers ?? 100)} des comptes reviennent en direct ; sans aucun retour, le plafond tomberait à ${pct(auCentime(x.plafondSansRetour))}. À la valeur vie actualisée, le plafond monte à ${pct(auCentime(x.plafondActualise))}, car la plateforme se paie plus tard. L'apporteur, payé une fois (${eur(x.ap.commissionPremiereAnnee)}), est le canal le moins cher, mais il ne remplace pas la conquête.`,
           "Au niveau de l'examen, vous savez comparer un canal partenaire à la conquête en propre à valeur vie égale, simple ou actualisée, trouver sa commission plafond et la part de retours en direct qui le rend rentable, adapter le calcul à une commission payée une fois, et dire ce qu'un canal bon marché ne fait pas.",
           "Un partenaire se choisit sur une grille pondérée. Son contrat dit comment il est payé, une fois ou chaque année, et il s'anime et se suit chaque trimestre, compte par compte.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",

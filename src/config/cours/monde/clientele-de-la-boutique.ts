@@ -1,3 +1,4 @@
+import { arrondi, arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { referenceDe } from "./boutique";
 import type { CodeDeClientele, CodeDeReference, FicheDeLaBoutique } from "./maille-et-co";
 import { carteDeFidelite, passantsDeJanvier, TAUX_DE_DEPART_PAR_MOIS } from "./vente-et-caisse";
@@ -22,7 +23,9 @@ import { carteDeFidelite, passantsDeJanvier, TAUX_DE_DEPART_PAR_MOIS } from "./v
  * marges sur coût variable, hors taxes, comme dans tout le parcours.
  */
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const auCentime = arrondi2;
+/** Au dix-millième : une proportion de la copie, deux décimales en pourcentage (0,3242 pour 32,42 %). */
+const auDixMillieme = (x: number) => arrondi(x, 4);
 const somme = (xs: readonly number[]) => xs.reduce((t, x) => t + x, 0);
 
 /** Le chiffre d'affaires TTC d'une clientèle de janvier : ses articles × l'étiquette. */
@@ -269,17 +272,22 @@ export function etudeDuService(f: FicheDeLaBoutique) {
   const quotas = Object.fromEntries(CLIENTELES_DE_L_ETUDE.map((c) => [c, Math.round(population[c] * TAUX_DE_SONDAGE)])) as Record<CodeDeClientele, number>;
   const taille = somme(Object.values(quotas));
   const obtenu = somme(Object.values(ECHANTILLON_OBTENU));
-  const poids = Object.fromEntries(CLIENTELES_DE_L_ETUDE.map((c) => [c, quotas[c] / ECHANTILLON_OBTENU[c]])) as Record<CodeDeClientele, number>;
+  // Chaque ligne de la copie, arrondie : les poids, des coefficients, au dix-millième (au centième, 0,71 et
+  // 1,30 déplaceraient la population de 0,16 réponse) ; les réponses redressées au centième ; les
+  // proportions, l'écart et la marge au dix-millième (deux décimales en pourcentage ou en points).
+  const poids = Object.fromEntries(CLIENTELES_DE_L_ETUDE.map((c) => [c, auDixMillieme(quotas[c] / ECHANTILLON_OBTENU[c])])) as Record<CodeDeClientele, number>;
   const brut = Object.fromEntries(SERVICES.map((s) => [s.code, somme(CLIENTELES_DE_L_ETUDE.map((c) => REPONSES_SERVICE[c][s.code]))])) as Record<CodeDeService, number>;
-  const redresse = Object.fromEntries(SERVICES.map((s) => [s.code, somme(CLIENTELES_DE_L_ETUDE.map((c) => REPONSES_SERVICE[c][s.code] * poids[c]))])) as Record<CodeDeService, number>;
+  const redresse = Object.fromEntries(SERVICES.map((s) => [s.code, auCentime(somme(CLIENTELES_DE_L_ETUDE.map((c) => REPONSES_SERVICE[c][s.code] * poids[c])))])) as Record<CodeDeService, number>;
   const croise = (c: CodeDeClientele, s: CodeDeService) => REPONSES_SERVICE[c][s] / ECHANTILLON_OBTENU[c];
-  const pNocturne = redresse.nocturne / taille;
-  const pRetouches = redresse.retouches / taille;
-  const ecart = pNocturne - pRetouches;
-  const marge = margeDIncertitude(pNocturne, taille);
-  // La plus petite taille d'échantillon dont la marge d'incertitude passe sous l'écart des deux services.
-  const tailleQuiDepartage = Math.ceil((COEFFICIENT_DE_CONFIANCE ** 2 * pNocturne * (1 - pNocturne)) / ecart ** 2 - 1e-9);
-  return { population, populationMere, quotas, taille, obtenu, poids, brut, redresse, croise, pNocturne, pRetouches, ecart, marge, tailleQuiDepartage };
+  const pNocturne = auDixMillieme(redresse.nocturne / taille);
+  const pRetouches = auDixMillieme(redresse.retouches / taille);
+  const ecart = auDixMillieme(pNocturne - pRetouches);
+  const marge = auDixMillieme(margeDIncertitude(pNocturne, taille));
+  // La plus petite taille d'échantillon dont la marge d'incertitude passe sous l'écart des deux services :
+  // le quotient au centième, puis l'unité au-dessus.
+  const tailleCalculee = auCentime((COEFFICIENT_DE_CONFIANCE ** 2 * pNocturne * (1 - pNocturne)) / ecart ** 2);
+  const tailleQuiDepartage = Math.ceil(tailleCalculee - 1e-9);
+  return { population, populationMere, quotas, taille, obtenu, poids, brut, redresse, croise, pNocturne, pRetouches, ecart, marge, tailleCalculee, tailleQuiDepartage };
 }
 
 /** Ce que répondrait un échantillon brut de `fideles` clientes fidèles et du reste en passants (235 au total, plus les deux comités), sans redressement. */
@@ -344,12 +352,14 @@ export const SEUIL_DE_LANCEMENT_DE_LA_LIVRAISON = 0.3;
 /** L'enquête de la livraison : poids, oui redressés, part brute et redressée, marge, borne basse. */
 export function etudeDeLaLivraison(f: FicheDeLaBoutique) {
   const { quotas, taille } = etudeDuService(f);
-  const poids = Object.fromEntries(CLIENTELES_DE_L_ETUDE.map((c) => [c, quotas[c] / ECHANTILLON_DE_LA_LIVRAISON[c]])) as Record<CodeDeClientele, number>;
+  // Les lignes de la copie : les poids au dix-millième (des coefficients), les oui redressés au centième, la
+  // part et la marge au dix-millième.
+  const poids = Object.fromEntries(CLIENTELES_DE_L_ETUDE.map((c) => [c, auDixMillieme(quotas[c] / ECHANTILLON_DE_LA_LIVRAISON[c])])) as Record<CodeDeClientele, number>;
   const ouiBruts = somme(Object.values(OUI_A_LA_LIVRAISON));
-  const ouiRedresses = somme(CLIENTELES_DE_L_ETUDE.map((c) => OUI_A_LA_LIVRAISON[c] * poids[c]));
-  const p = ouiRedresses / taille;
-  const marge = margeDIncertitude(p, taille);
-  return { quotas, taille, poids, ouiBruts, partBrute: ouiBruts / taille, ouiRedresses, part: p, marge, borneBasse: p - marge, borneHaute: p + marge };
+  const ouiRedresses = auCentime(somme(CLIENTELES_DE_L_ETUDE.map((c) => OUI_A_LA_LIVRAISON[c] * poids[c])));
+  const p = auDixMillieme(ouiRedresses / taille);
+  const marge = auDixMillieme(margeDIncertitude(p, taille));
+  return { quotas, taille, poids, ouiBruts, partBrute: auDixMillieme(ouiBruts / taille), ouiRedresses, part: p, marge, borneBasse: auDixMillieme(p - marge), borneHaute: auDixMillieme(p + marge) };
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -622,9 +632,14 @@ export function eReputation(f: FicheDeLaBoutique) {
   const p = passantsDeJanvier(f);
   const dixiemes = Math.round((NOTE_EN_LIGNE.avant - NOTE_EN_LIGNE.apres) * 10);
   const baisse = dixiemes * ENTREES_PERDUES_PAR_DIXIEME;
-  const entreesPerdues = Math.round(p.entrees * baisse);
-  const passagesPerdus = Math.round(entreesPerdues * p.tauxDeTransformation);
-  return { ...NOTE_EN_LIGNE, dixiemes, baisse, entrees: p.entrees, entreesPerdues, transformation: p.tauxDeTransformation, passagesPerdus, margeDUneVente: p.margeDUneVente, margePerdue: auCentime(passagesPerdus * p.margeDUneVente) };
+  // Les lignes de la copie : les entrées et les passages au centième, puis à l'unité la plus proche ;
+  // la transformation à deux décimales en pourcentage.
+  const entreesCalculees = auCentime(p.entrees * baisse);
+  const entreesPerdues = Math.round(entreesCalculees);
+  const transformation = auDixMillieme(p.tauxDeTransformation);
+  const passagesCalcules = auCentime(entreesPerdues * transformation);
+  const passagesPerdus = Math.round(passagesCalcules);
+  return { ...NOTE_EN_LIGNE, dixiemes, baisse, entrees: p.entrees, entreesCalculees, entreesPerdues, transformation, passagesCalcules, passagesPerdus, margeDUneVente: p.margeDUneVente, margePerdue: auCentime(passagesPerdus * p.margeDUneVente) };
 }
 
 /** La réclamation du mérinos : ce que coûte le remplacement, et le résultat de la vente remplacée ou remboursée. */

@@ -21,7 +21,6 @@ import { BOUTIQUE, VIDE, attendus, etape, gardeDuCas, gardeDuCurseur, gardesDeTe
  */
 
 const centime = (x: number) => Math.round(x * 100) / 100 + 0;
-const dixieme = (x: number) => Math.round(x * 10) / 10 + 0;
 const ch = REMUNERER_ET_STIMULER_LES_VENDEURS;
 const somme = (xs: readonly number[]) => xs.reduce((t, v) => t + v, 0);
 
@@ -61,9 +60,11 @@ describe("rémunérer et stimuler les vendeurs : le chapitre", () => {
   });
 
   it("le tableau de bord du vendeur qui décroche, et les objectifs", () => {
-    expect(attendus(ch, "les-indicateurs-du-vendeur")).toEqual([dixieme((120 / 660) * 100), centime(8_900 / 120), centime(150 / 120)]);
-    expect(attendus(ch, "l-objectif")).toEqual([24 * 520, dixieme((8_900 / 12_480) * 100), 145 * 520, dixieme((77_250 / 75_400) * 100)]);
-    expect(attendus(ch, "a-transformation-egale")).toEqual([Math.round(660 * (940 / 3_840) * (8_900 / 120)), Math.round(120 * (77_250 / 940))]);
+    expect(attendus(ch, "les-indicateurs-du-vendeur")).toEqual([centime((120 / 660) * 100), centime(8_900 / 120), centime(150 / 120)]);
+    expect(attendus(ch, "l-objectif")).toEqual([24 * 520, centime((8_900 / 12_480) * 100), 145 * 520, centime((77_250 / 75_400) * 100)]);
+    // La transformation et les paniers de la copie : 24,48 %, 74,17 € et 82,18 €.
+    expect(attendus(ch, "a-transformation-egale")).toEqual([centime(((660 * centime((940 / 3_840) * 100)) / 100) * centime(8_900 / 120)), centime(120 * centime(77_250 / 940))]);
+    expect(attendus(ch, "a-transformation-egale")).toEqual([11_983.5, 9_861.6]);
     expect(juste(ch, "le-diagnostic")).toEqual(["La conclusion de la vente est à travailler d'abord"]);
     expect(juste(ch, "la-remediation")).toEqual(["Un entretien, du binôme et un objectif suivi"]);
   });

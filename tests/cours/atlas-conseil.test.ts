@@ -541,7 +541,8 @@ describe("7. le tableau de bord commercial", () => {
     expect(seuilDeRentabiliteDUnCommercial(f, "grands-comptes").seuil).toBe(18_000 / 0.4);
     expect(seuilDeRentabiliteDUnCommercial(f, "conquete").seuil).toBe(12_000 / 0.5);
     expect(seuilDeRentabiliteDUnCommercial(f, "conquete").seuilDeLAnnee).toBe(96_000);
-    expect(seuilDeRentabiliteDUnCommercial(f, "entreprises").seuil).toBe(auCentime(16_500 / (343_616 / 591_440)));
+    // Le seuil de la copie part du taux à deux décimales : 58,10 %, et non 58,098… %.
+    expect(seuilDeRentabiliteDUnCommercial(f, "entreprises").seuil).toBe(auCentime(16_500 / 0.581));
     // Payé à 10 % de commission, le commercial de la conquête devrait faire 12 000 ÷ 40 % = 30 000 €.
     expect(seuilDeRentabiliteDUnCommercial(f, "conquete", { tauxDeCommission: 0.1 }).seuil).toBe(30_000);
   });

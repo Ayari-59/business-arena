@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct as enPoints } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_L_EVENEMENT, evenementDuCabinet } from "../../chapitres/l-evenement-commercial";
 import { MATINALES, matinales } from "../../monde/terrain-d-atlas";
@@ -17,6 +17,11 @@ import type { Situation } from "../types";
  *
  * Comme son chapitre, le cas se joue dans la simulation du cours : ses taux et la valeur d'un compte sont
  * ceux de `evenementDuCabinet` et de `matinales`, sur la fiche du cabinet. Il ne lit du cas que son code.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les comptes attendus sont une grandeur au centième (à 5
+ * centièmes près, avant), et le coût par compte et le gain partent d'eux, au centime (à un euro près,
+ * avant).
  */
 
 /** L'INTERVENANT, hypothèse du cas : 2 500 € de cachet et de déplacement, et 45 prospects présents attendus au lieu de 30. */
@@ -25,10 +30,8 @@ export const INTERVENANT = { cout: 2_500, prospectsPresents: 45 } as const;
 /** Les bornes du curseur des prospects présents. */
 export const PROSPECTS_DU_CURSEUR = { min: 30, max: 60 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (x: number, d = 1) => `${(Math.round(x * 100 * 10 ** d) / 10 ** d + 0).toLocaleString("fr-FR", { maximumFractionDigits: d })} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
+const pct = (t: number) => enPoints(t * 100);
 
 /** Une matinale, sans et avec l'intervenant. */
 export function matinaleAvecUnInvite(c: Pick<Cas, "code">) {
@@ -87,7 +90,7 @@ export const UN_INVITE_POUR_LA_MATINALE: Situation = {
         const r = matinaleAvecUnInvite(c);
         return [
           `« Pour la première matinale, je voudrais un intervenant connu : ${eur(INTERVENANT.cout)} de cachet et de déplacement. L'organisateur pense qu'il ferait venir ${qte(INTERVENANT.prospectsPresents)} prospects au lieu de ${qte(r.sans.presents)}. Est-ce que ça vaut le coup ? »`,
-          `Pas de cours cette fois : la méthode est celle du chapitre. Vous avez le budget, les taux des matinales (un prospect sur ${qte(1 / MATINALES.tauxDeRendezVous)} accepte un rendez-vous, un rendez-vous sur ${qte(1 / MATINALES.devisParRendezVous)} mène à un devis, ${pct(MATINALES.tauxDeSignature, 0)} des devis sont signés).`,
+          `Pas de cours cette fois : la méthode est celle du chapitre. Vous avez le budget, les taux des matinales (un prospect sur ${qte(1 / MATINALES.tauxDeRendezVous)} accepte un rendez-vous, un rendez-vous sur ${qte(1 / MATINALES.devisParRendezVous)} mène à un devis, ${pct(MATINALES.tauxDeSignature)} des devis sont signés).`,
           `La valeur vie d'un compte est de ${eur(r.x.s.valeurDUnCompte)}.`,
         ];
       },
@@ -109,7 +112,7 @@ export const UN_INVITE_POUR_LA_MATINALE: Situation = {
       },
       explication: (c) => {
         const r = matinaleAvecUnInvite(c);
-        return [`L'intervenant fait monter le budget de ${pct(INTERVENANT.cout / r.sans.cout, 0)}, mais le coût par prospect baisse, de ${eur(r.sans.coutParContact)} à ${eur(r.avec.coutParContact)} : si l'organisateur a raison, il amène plus qu'il ne coûte.`];
+        return [`L'intervenant fait monter le budget de ${pct(INTERVENANT.cout / r.sans.cout)}, mais le coût par prospect baisse, de ${eur(r.sans.coutParContact)} à ${eur(r.avec.coutParContact)} : si l'organisateur a raison, il amène plus qu'il ne coûte.`];
       },
     },
     {
@@ -145,7 +148,7 @@ export const UN_INVITE_POUR_LA_MATINALE: Situation = {
       explication: (c) => {
         const r = matinaleAvecUnInvite(c);
         return [
-          `Un prospect présent vaut ${eur(r.valeurParProspect)} : ${pct(r.sans.comptesParProspect, 2)} de chance de devenir un compte, à ${eur(r.x.s.valeurDUnCompte)} l'un. Il suffit de ${qte(r.prospectsQuiPaient)} prospects en plus pour payer l'intervenant ; l'organisateur en promet ${qte(INTERVENANT.prospectsPresents - r.sans.presents)}.`,
+          `Un prospect présent vaut ${eur(r.valeurParProspect)} : ${pct(r.sans.comptesParProspect)} de chance de devenir un compte, à ${eur(r.x.s.valeurDUnCompte)} l'un. Il suffit de ${qte(r.prospectsQuiPaient)} prospects en plus pour payer l'intervenant ; l'organisateur en promet ${qte(INTERVENANT.prospectsPresents - r.sans.presents)}.`,
         ];
       },
     },
@@ -164,13 +167,13 @@ export const UN_INVITE_POUR_LA_MATINALE: Situation = {
         return [
           {
             libelle: "Comptes attendus avec l'intervenant",
-            attendu: auCentime(a.comptes),
-            tolerance: 0.05,
-            calcul: `${qte(a.contacts)} × ${pct(MATINALES.tauxDeRendezVous, 0)} ÷ ${qte(1 / MATINALES.devisParRendezVous)} × ${pct(MATINALES.tauxDeSignature, 0)} = ${qte(auCentime(a.comptes))} comptes`,
+            nature: "grandeur",
+            attendu: a.comptes,
+            calcul: `${qte(a.contacts)} × ${pct(MATINALES.tauxDeRendezVous)} ÷ ${qte(1 / MATINALES.devisParRendezVous)} × ${pct(MATINALES.tauxDeSignature)} = ${qte(a.comptes)} comptes`,
           },
-          { libelle: "Coût par compte avec l'intervenant", attendu: a.coutParCompte, tolerance: 1, calcul: `${eur(a.cout)} ÷ ${qte(a.comptes)} = ${eur(a.coutParCompte)}` },
-          { libelle: "Gain de la matinale avec l'intervenant", attendu: a.gain, tolerance: 1, calcul: `${qte(a.comptes)} × ${eur(r.x.s.valeurDUnCompte)} − ${eur(a.cout)} = ${eur(a.gain)}` },
-          { libelle: "Gain en plus grâce à l'intervenant", attendu: r.gainEnPlus, tolerance: 1, calcul: `${eur(a.gain)} − ${eur(r.sans.gain)} = ${eur(r.gainEnPlus)}` },
+          { libelle: "Coût par compte avec l'intervenant", attendu: a.coutParCompte, calcul: `${eur(a.cout)} ÷ ${qte(a.comptes)} = ${eur(a.coutParCompte)}` },
+          { libelle: "Gain de la matinale avec l'intervenant", attendu: a.gain, calcul: `${qte(a.comptes)} × ${eur(r.x.s.valeurDUnCompte)} − ${eur(a.cout)} = ${eur(a.gain)}` },
+          { libelle: "Gain en plus grâce à l'intervenant", attendu: r.gainEnPlus, calcul: `${eur(a.gain)} − ${eur(r.sans.gain)} = ${eur(r.gainEnPlus)}` },
         ];
       },
       explication: (c) => {
@@ -192,7 +195,7 @@ export const UN_INVITE_POUR_LA_MATINALE: Situation = {
             retour: `Oui : chaque prospect présent vaut ${eur(r.valeurParProspect)}, et l'organisateur en promet ${qte(INTERVENANT.prospectsPresents - r.sans.presents)} de plus. Le gain attendu monte de ${eur(r.gainEnPlus)}. Comptez les présents le jour même : le bilan dira si la promesse a tenu.`,
           },
           {
-            texte: `Ne pas l'inviter : le budget de la matinale monte de ${pct(INTERVENANT.cout / r.sans.cout, 0)}`,
+            texte: `Ne pas l'inviter : le budget de la matinale monte de ${pct(INTERVENANT.cout / r.sans.cout)}`,
             juste: false,
             retour: `Non : un budget se juge sur ce qu'il amène. Par prospect présent, la matinale coûte moins avec lui (${eur(r.avec.coutParContact)}) que sans lui (${eur(r.sans.coutParContact)}).`,
           },

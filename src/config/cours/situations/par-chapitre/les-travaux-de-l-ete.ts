@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct as enPoints } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { LE_CLIENT_QUI_REVIENT, ficheDe } from "../../chapitres/le-client-qui-revient";
 import { JOURS_DE_FERMETURE, MOIS_DES_TRAVAUX, PART_DES_FIDELES_QUI_NE_REVIENNENT_PAS, carteDeFidelite, fermeturePourTravaux } from "../../monde/vente-et-caisse";
@@ -22,14 +22,18 @@ import type { Situation } from "../types";
  * CE QUI A CHANGÉ. Le cas rejouait dans l'arène l'année de la salle de sport avec des places fermées
  * au printemps ou en été. Il compte maintenant la fermeture de la boutique : en mai, 38 662,32 € de
  * marge perdue ; en juillet, 50 490,60 €.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les articles non vendus et les clientes perdues sont des
+ * quantités, les articles écrits à deux décimales puis arrondis à l'unité (à un article près, avant) ;
+ * les marges se donnent au centime, à un centime près (à 30 € près, avant).
  */
 
 /** Deux coûts « à peu près égaux » à 5 % près (hypothèse du cas : le verdict ne tient pas à un arrondi). */
 export const ECART_NEGLIGEABLE = 0.05;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
+const qte = nombreAuCentieme;
+const pct = (t: number) => enPoints(t * 100);
 
 export type QuandFaireLesTravaux = "mai" | "juillet" | "pareil";
 
@@ -46,11 +50,11 @@ export function travauxDeLEte(c: Pick<Cas, "code">) {
 type Fermeture = ReturnType<typeof fermeturePourTravaux>;
 
 const champsDe = (x: Fermeture, margeDeLAnnee: number) => [
-  { libelle: "Articles non vendus pendant la fermeture", attendu: x.articlesPerdus, calcul: `${qte(x.ventesDuTrimestre)} ÷ ${qte(x.joursDuTrimestre)} × ${qte(JOURS_DE_FERMETURE)} = ${qte(x.articlesPerdus)}, à l'unité`, tolerance: 1 },
-  { libelle: "Marge de ces ventes", attendu: x.margeDesVentes, calcul: `${qte(x.articlesPerdus)} × ${eur(x.margeDUnArticle)} = ${eur(x.margeDesVentes)}`, tolerance: 30 },
-  { libelle: "Clientes fidèles perdues", attendu: x.fidelesPerdues, calcul: `${qte(x.fidelesAttendues)} × ${pct(PART_DES_FIDELES_QUI_NE_REVIENNENT_PAS)} = ${qte(x.fidelesPerdues)}` },
+  { libelle: "Articles non vendus pendant la fermeture", nature: "quantite" as const, attendu: x.articlesPerdus, calcul: `${qte(x.ventesDuTrimestre)} ÷ ${qte(x.joursDuTrimestre)} × ${qte(JOURS_DE_FERMETURE)} = ${qte((x.ventesDuTrimestre * JOURS_DE_FERMETURE) / x.joursDuTrimestre)}, soit ${qte(x.articlesPerdus)} articles à l'unité la plus proche` },
+  { libelle: "Marge de ces ventes", attendu: x.margeDesVentes, calcul: `${qte(x.articlesPerdus)} × ${eur(x.margeDUnArticle)} = ${eur(x.margeDesVentes)}` },
+  { libelle: "Clientes fidèles perdues", nature: "quantite" as const, attendu: x.fidelesPerdues, calcul: `${qte(x.fidelesAttendues)} × ${pct(PART_DES_FIDELES_QUI_NE_REVIENNENT_PAS)} = ${qte(x.fidelesPerdues)}` },
   { libelle: "Marge perdue avec elles", attendu: x.margeDesFideles, calcul: `${qte(x.fidelesPerdues)} × ${eur(margeDeLAnnee)} = ${eur(x.margeDesFideles)}` },
-  { libelle: "Marge perdue en tout", attendu: x.total, calcul: `${eur(x.margeDesVentes)} + ${eur(x.margeDesFideles)} = ${eur(x.total)}`, tolerance: 30 },
+  { libelle: "Marge perdue en tout", attendu: x.total, calcul: `${eur(x.margeDesVentes)} + ${eur(x.margeDesFideles)} = ${eur(x.total)}` },
 ];
 
 export const LES_TRAVAUX_DE_L_ETE: Situation = {

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { AUTRES_COUTS_VARIABLES, BOUTIQUES_DU_COURS, type CodeDeReference, type FicheDeLaBoutique } from "../monde/maille-et-co";
 import {
@@ -49,6 +49,10 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * joue maintenant chez MAILLE & CO seule, sur janvier en caisse : un panier de 82,18 €, un coût de
  * 40,74 €, une marge de 41,44 € par vente. Le laboratoire fait varier les articles du mois, à partir
  * de ceux de janvier.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les ventes en plus sont une quantité, entière, déclarée comme
+ * telle.
  */
 
 /** Les entreprises du parcours de la vente : la boutique du cours, où un vendeur sert ses clients un par un. */
@@ -60,8 +64,7 @@ export const POURQUOI_LA_VENTE =
 /** La course du curseur des ventes de plus par jour : assez longue pour que le départ, au quart, ne tombe pas sur la réponse. */
 export const VENTES_SUR_LE_CURSEUR = 16;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 
 export const ficheDe = (c: Pick<Cas, "code">): FicheDeLaBoutique => BOUTIQUES_DU_COURS[c.code]!;
 
@@ -236,7 +239,7 @@ export const LE_PANIER_MOYEN: Chapitre = {
       champs: (c) => {
         const k = du(c);
         return [
-          { libelle: "Ventes en plus sur le mois", attendu: k.ventesEnPlus, calcul: `${qte(VENTES_DE_PLUS_PAR_JOUR)} × ${qte(k.jours)} = ${qte(k.ventesEnPlus)}` },
+          { libelle: "Ventes en plus sur le mois", nature: "quantite", attendu: k.ventesEnPlus, calcul: `${qte(VENTES_DE_PLUS_PAR_JOUR)} × ${qte(k.jours)} = ${qte(k.ventesEnPlus)}` },
           { libelle: "Chiffre d'affaires en plus", attendu: k.caEnPlus, calcul: `${qte(k.ventesEnPlus)} × ${eur(k.panier)} = ${eur(k.caEnPlus)}` },
           { libelle: "Marge en plus", attendu: k.margeEnPlus, calcul: `${qte(k.ventesEnPlus)} × ${eur(k.marge)} = ${eur(k.margeEnPlus)}` },
         ];

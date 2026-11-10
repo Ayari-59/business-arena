@@ -331,7 +331,7 @@ describe.each(ENTREPRISES_DU_SERVICE)("la productivité du service chez %s, dans
     expect(p.plein.numero).toBe(iPlein + 1);
     expect(p.creux.numero).toBe(iCreux + 1);
     const champs = (i: number) => ({
-      [`${U} par salarié sur le trimestre`]: dixieme(vendues[i]! / effectif),
+      [`${U} par salarié sur le trimestre`]: centime(vendues[i]! / effectif),
       [`${U} par salarié et par jour`]: centime(vendues[i]! / (effectif * jours)),
       [`Coût du personnel par ${unite}`]: centime(personnel / vendues[i]!),
     });
@@ -339,18 +339,18 @@ describe.each(ENTREPRISES_DU_SERVICE)("la productivité du service chez %s, dans
     expect(attendus(LA_PRODUCTIVITE_DU_SERVICE, "creux", cas)).toEqual(champs(iCreux));
     // Les chiffres clés, épinglés : le coût du personnel par client au plein et au creux.
     expect([centime(personnel / vendues[iPlein]!), centime(personnel / vendues[iCreux]!)]).toEqual(bistrot ? [8, 13.14] : [22.3, 35.41]);
-    const prodPlein = dixieme(vendues[iPlein]! / effectif);
-    const prodCreux = dixieme(vendues[iCreux]! / effectif);
+    const prodPlein = centime(vendues[iPlein]! / effectif);
+    const prodCreux = centime(vendues[iCreux]! / effectif);
     const coutPlein = centime(personnel / vendues[iPlein]!);
     const coutCreux = centime(personnel / vendues[iCreux]!);
     expect(attendus(LA_PRODUCTIVITE_DU_SERVICE, "ecart", cas)).toEqual({
-      "Variation de la productivité (%)": dixieme((prodCreux / prodPlein - 1) * 100),
-      [`Variation du coût du personnel par ${unite} (%)`]: dixieme((coutCreux / coutPlein - 1) * 100),
+      "Variation de la productivité (%)": centime((prodCreux / prodPlein - 1) * 100),
+      [`Variation du coût du personnel par ${unite} (%)`]: centime((coutCreux / coutPlein - 1) * 100),
     });
     // Le coût par client monte plus que la productivité ne baisse : le même coût, moins de clients.
     expect(p.variationDuCout).toBeGreaterThan(-p.variationDeLaProductivite);
     expect(attendus(LA_PRODUCTIVITE_DU_SERVICE, "plafond", cas)).toEqual({
-      "Productivité à pleine capacité": dixieme(capacite / effectif),
+      "Productivité à pleine capacité": centime(capacite / effectif),
       [`Coût du personnel par ${unite} à pleine capacité`]: centime(personnel / capacite),
     });
   });
@@ -382,7 +382,7 @@ describe.each(ENTREPRISES_DU_SERVICE)("la productivité du service chez %s, dans
     expect(attendus(LE_COUT_DU_TRIMESTRE_CREUX, "le-creux", cas)).toEqual({
       [`${U} à servir au ${iCreux === 0 ? "1er" : `${iCreux + 1}e`} trimestre`]: aServir,
       [`${U} en plus`]: aServir - vendues[iCreux]!,
-      "Productivité par salarié visée": dixieme(aServir / effectif),
+      "Productivité par salarié visée": centime(aServir / effectif),
     });
     // Il fallait plus que la demande du trimestre creux, et moins que la capacité : il manquait des clients.
     expect(aServir).toBeGreaterThan(demandes[iCreux]!);
@@ -421,7 +421,7 @@ describe.each(ENTREPRISES_DU_SERVICE)("la productivité du service chez %s, dans
     const prix = f.prixDeLAnnee;
     const vise = centime(0.3 * prix);
     expect(vise).toBe(bistrot ? 10.2 : 26.4);
-    expect(juste(LA_PRODUCTIVITE_DU_SERVICE, "predire-le-cout", cas)).toBe(bistrot ? "De plus de 39,1 %" : "De plus de 37 %");
+    expect(juste(LA_PRODUCTIVITE_DU_SERVICE, "predire-le-cout", cas)).toBe(bistrot ? "De plus de 39,11 %" : "De plus de 37,04 %");
     const clients = Math.ceil(personnel / vise);
     const min = Math.floor(vendues[iCreux]! / 1000) * 1000;
     expect(clients).toBe(bistrot ? 7059 : 4561);
@@ -488,7 +488,7 @@ describe.each(ENTREPRISES_DU_SERVICE)("la productivité du service chez %s, dans
       "Coût du personnel du trimestre": e * cs,
       [`${U} par salarié et par jour`]: centime(n / (e * jours)),
       [`${U} par salarié et par jour, au trimestre le plus chargé`]: centime(vendues[iPlein]! / (effectif * jours)),
-      "Part du personnel dans le chiffre d'affaires": dixieme(((e * cs) / (n * f.prixDeLAnnee)) * 100),
+      "Part du personnel dans le chiffre d'affaires": centime(((e * cs) / (n * f.prixDeLAnnee)) * 100),
       [`Coût du personnel par ${unite}`]: centime((e * cs) / n),
       [`Coût du personnel par ${unite}, au trimestre le plus chargé`]: centime(personnel / vendues[iPlein]!),
       "Économie sur le coût du personnel": personnel - e * cs,

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { equipeDuMois, heuresDuMois, indicateursDuMois, planningFaceAuBesoin, seuilDuPointDeVente } from "../monde/boutique";
 import { BOUTIQUES_DU_COURS, OUVERTURE, type FicheDeLaBoutique, type JourDOuverture } from "../monde/maille-et-co";
@@ -42,6 +42,14 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * Ce qui a disparu : l'occupation de l'équipe par les « heures par article » de l'arène (0,12 h) et
  * la question du goulot qui en découlait ; le modèle du cours lit l'affluence heure par heure, et le
  * chapitre bâtit enfin le planning que son titre annonce.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les heures comptées (vendeurs, créneaux, heures en manque ou en
+ * trop) et les passages en caisse sont des quantités, entières, déclarées comme telles ; les heures
+ * payées, issues d'une division, sont des grandeurs au centième ; les taux se donnent à deux
+ * décimales, et le chiffre d'affaires qui paie une embauche se calcule sur le taux arrondi, comme sur
+ * la copie ; le chiffre d'affaires de la part visée se donne au centime (à l'euro au-dessus, avant ;
+ * le curseur, lui, cherche l'euro).
  */
 
 /** LA PART DU PERSONNEL VISÉE PAR LA DIRECTION (hypothèse du cours) : 15 % du chiffre d'affaires, sous le seuil d'alerte de 18 % du tableau de bord. */
@@ -69,12 +77,8 @@ export const ENTREPRISES_DU_POINT_DE_VENTE: readonly string[] = ["boutique"];
 const POURQUOI =
   "ce chapitre se joue à la boutique du cours, MAILLE & CO : son planning suit l'affluence d'un magasin créneau par créneau, et c'est le même point de vente d'un chapitre à l'autre du parcours.";
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${qte(t)} %`;
+const qte = nombreAuCentieme;
 const h = (x: number) => `${qte(x)} h`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
 const plafond = (x: number) => Math.ceil(x - 1e-9);
 
 /** La fiche de la boutique du cours. */
@@ -95,19 +99,19 @@ export function equipeEtPlanning(c: Pick<Cas, "code">) {
   // Le taux horaire chargé, au centime : c'est lui que l'élève reprend dans chaque calcul.
   const tauxHoraire = auCentime(e.cout / e.heuresDuMois);
   const tauxMcv = s.tauxDeMarge;
-  const tauxMcvAffiche = auDixieme(tauxMcv * 100);
-  const panier = ind.panierMoyen;
+  const tauxMcvAffiche = auCentime(tauxMcv * 100);
+  const panier = auCentime(ind.panierMoyen);
   const r = f.reglesDuPlanning;
   const samedi = b.jours.find((j) => j.jour === "samedi")!;
   const pointe = samedi.entrees.indexOf(Math.max(...samedi.entrees));
   const creux = samedi.entrees.indexOf(Math.min(...samedi.entrees));
   const vendeursPour = (entrees: number) => Math.max(r.presenceMinimale, plafond(entrees / r.entreesParVendeur));
   // La part visée : le chiffre d'affaires qui la tient, et ce qu'il demande en passages en caisse.
-  const caVise = plafond(e.cout / PART_DU_PERSONNEL_VISEE);
+  const caVise = auCentime(e.cout / PART_DU_PERSONNEL_VISEE);
   // Le budget d'heures : ce que 15 % du chiffre d'affaires de janvier paient, au taux horaire chargé.
   const masseAdmissible = auCentime(ca * PART_DU_PERSONNEL_VISEE);
   const heuresPayablesDuMois = auCentime(masseAdmissible / tauxHoraire);
-  const heuresPayablesParSemaine = auDixieme(heuresPayablesDuMois / f.semainesParMois);
+  const heuresPayablesParSemaine = auCentime(heuresPayablesDuMois / f.semainesParMois);
   // La braderie : le même planning face à 20 % d'entrées en plus.
   const pb = planningFaceAuBesoin(f, f.planning, { affluence: AFFLUENCE_DE_LA_BRADERIE });
   const besoinDuSamediBraderie = pb.besoin.jours.find((j) => j.jour === "samedi")!;
@@ -118,15 +122,15 @@ export function equipeEtPlanning(c: Pick<Cas, "code">) {
   const heuresAjouteesDuMois = heuresDuMois(f, aAjouterBraderie);
   // L'embauche : un salarié au coût moyen de l'équipe.
   const coutMoyen = auCentime(e.cout / e.effectif);
-  const caPourUneEmbauche = plafond(coutMoyen / tauxMcv);
+  const caPourUneEmbauche = auCentime(coutMoyen / (tauxMcvAffiche / 100));
   return {
     f,
     e,
     ca,
     tauxHoraire,
     caParHeure: auCentime(ca / e.heuresDuMois),
-    caParSalarie: Math.round(ca / e.effectif),
-    partDuPersonnel: auDixieme(e.partDuPersonnel * 100),
+    caParSalarie: auCentime(ca / e.effectif),
+    partDuPersonnel: auCentime(e.partDuPersonnel * 100),
     tauxMcv,
     tauxMcvAffiche,
     coutsVariables: s.coutsVariables,
@@ -143,7 +147,7 @@ export function equipeEtPlanning(c: Pick<Cas, "code">) {
     planning: p,
     heuresDeContrat: e.heuresParSemaine,
     caVise,
-    hausseVisee: auDixieme((caVise / ca - 1) * 100),
+    hausseVisee: auCentime((caVise / ca - 1) * 100),
     // Un seul panier dans tout le cours, celui de la caisse : les commandes des comités, hors caisse, restent.
     commandes: ind.commandes.chiffreDAffaires,
     caEnCaisse: ind.chiffreDAffairesEnCaisse,
@@ -151,7 +155,7 @@ export function equipeEtPlanning(c: Pick<Cas, "code">) {
     masseAdmissible,
     heuresPayablesDuMois,
     heuresPayablesParSemaine,
-    heuresNonFinancees: auDixieme(b.parSemaine - heuresPayablesParSemaine),
+    heuresNonFinancees: auCentime(b.parSemaine - heuresPayablesParSemaine),
     braderie: {
       planning: pb,
       samedi: samediBraderie,
@@ -202,7 +206,7 @@ export function planningRebati(x: EquipeEtPlanning, p: { deplacees: number; ajou
     coutAjoute,
     paie,
     coutDesHeuresEnTrop: auCentime(heuresDuMois(f, enTrop) * x.tauxHoraire),
-    partDuPersonnel: auDixieme((paie / x.ca) * 100),
+    partDuPersonnel: auCentime((paie / x.ca) * 100),
   };
 }
 
@@ -291,13 +295,12 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
         const x = equipeEtPlanning(c);
         return [
           {
-            libelle: "Heures payées du mois",
+            libelle: "Heures payées du mois", nature: "grandeur",
             attendu: x.e.heuresDuMois,
-            tolerance: 0.1,
             calcul: `${x.e.salaries.map((s) => h(s.heuresDuMois)).join(" + ")} = ${h(x.e.heuresDuMois)}`,
           },
           { libelle: "Coût du personnel du mois", attendu: x.e.cout, calcul: `${eur(x.e.brut)} × ${qte(1 + x.f.tauxPatronal)} = ${eur(x.e.cout)}` },
-          { libelle: "Coût horaire chargé", attendu: x.tauxHoraire, tolerance: 0.02, calcul: `${eur(x.e.cout)} ÷ ${h(x.e.heuresDuMois)} = ${eur(x.tauxHoraire)}` },
+          { libelle: "Coût horaire chargé", attendu: x.tauxHoraire, calcul: `${eur(x.e.cout)} ÷ ${h(x.e.heuresDuMois)} = ${eur(x.tauxHoraire)}` },
         ];
       },
       explication: (c) => {
@@ -315,14 +318,14 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
       notions: ["productivity", "revenue"],
       question: (c) => {
         const x = equipeEtPlanning(c);
-        return `Janvier fait ${eur(x.ca)} de chiffre d'affaires hors taxes. Calculez le chiffre d'affaires par heure payée (${h(x.e.heuresDuMois)}, au centime), par salarié (à l'euro), puis la part du personnel dans le chiffre d'affaires (${eur(x.e.cout)} de paie), en pourcentage, au dixième.`;
+        return `Janvier fait ${eur(x.ca)} de chiffre d'affaires hors taxes. Calculez le chiffre d'affaires par heure payée (${h(x.e.heuresDuMois)}, au centime), par salarié (au centime), puis la part du personnel dans le chiffre d'affaires (${eur(x.e.cout)} de paie), en pourcentage, à deux décimales.`;
       },
       champs: (c) => {
         const x = equipeEtPlanning(c);
         return [
-          { libelle: "Chiffre d'affaires par heure payée", attendu: x.caParHeure, tolerance: 0.02, calcul: `${eur(x.ca)} ÷ ${h(x.e.heuresDuMois)} = ${eur(x.caParHeure)}` },
-          { libelle: "Chiffre d'affaires par salarié", attendu: x.caParSalarie, tolerance: 1, calcul: `${eur(x.ca)} ÷ ${qte(x.e.effectif)} = ${eur(x.caParSalarie)}` },
-          { libelle: "Part du personnel (%)", attendu: x.partDuPersonnel, tolerance: 0.1, calcul: `${eur(x.e.cout)} ÷ ${eur(x.ca)} × 100 = ${pct(x.partDuPersonnel)}` },
+          { libelle: "Chiffre d'affaires par heure payée", attendu: x.caParHeure, calcul: `${eur(x.ca)} ÷ ${h(x.e.heuresDuMois)} = ${eur(x.caParHeure)}` },
+          { libelle: "Chiffre d'affaires par salarié", attendu: x.caParSalarie, calcul: `${eur(x.ca)} ÷ ${qte(x.e.effectif)} = ${eur(x.caParSalarie)}` },
+          { libelle: "Part du personnel (%)", attendu: x.partDuPersonnel, calcul: `${eur(x.e.cout)} ÷ ${eur(x.ca)} × 100 = ${pct(x.partDuPersonnel)}` },
         ];
       },
       explication: (c) => {
@@ -364,7 +367,7 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
         return `Faites varier le chiffre d'affaires du mois de ${eur(CHIFFRE_DU_CURSEUR.min)} à ${eur(CHIFFRE_DU_CURSEUR.max)}, à paie constante. Une droite donne ${pct(PART_DU_PERSONNEL_VISEE * 100)} du chiffre d'affaires, l'enveloppe que la direction accorde au personnel ; l'autre la paie, ${eur(x.e.cout)}. Placez le curseur sur le plus petit chiffre d'affaires où l'enveloppe couvre la paie, puis validez.`;
       },
       grandeur: () => ({ libelle: "Chiffre d'affaires du mois", unite: "€" }),
-      cible: (c) => ({ attendu: equipeEtPlanning(c).caVise, min: CHIFFRE_DU_CURSEUR.min, max: CHIFFRE_DU_CURSEUR.max }),
+      cible: (c) => ({ attendu: plafond(equipeEtPlanning(c).caVise), min: CHIFFRE_DU_CURSEUR.min, max: CHIFFRE_DU_CURSEUR.max }),
       zones: ["Part sous la cible", "Part au-dessus de la cible"],
       rates: () => ({
         dessous: `À ce chiffre d'affaires, la paie pèse encore plus de ${pct(PART_DU_PERSONNEL_VISEE * 100)} des ventes.`,
@@ -401,18 +404,17 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
       notions: ["fixed_costs", "payroll", "average_basket"],
       question: (c) => {
         const x = equipeEtPlanning(c);
-        return `Sans formule cette fois. Quel chiffre d'affaires du mois ferait peser la paie ${pct(PART_DU_PERSONNEL_VISEE * 100)} exactement (à l'euro, arrondi au-dessus) ? De combien dépasse-t-il janvier, en pourcentage, au dixième ? Combien de passages en caisse faut-il pour le faire, au panier moyen de janvier (à l'unité, arrondi au-dessus) ? Les passages en caisse de janvier sont ${qte(x.tickets)} ; les commandes des comités, hors caisse, restent de ${eur(x.commandes)}.`;
+        return `Sans formule cette fois. Quel chiffre d'affaires du mois ferait peser la paie ${pct(PART_DU_PERSONNEL_VISEE * 100)} exactement (au centime) ? De combien dépasse-t-il janvier, en pourcentage, à deux décimales ? Combien de passages en caisse faut-il pour le faire, au panier moyen de janvier (à l'unité, arrondi au-dessus) ? Les passages en caisse de janvier sont ${qte(x.tickets)} ; les commandes des comités, hors caisse, restent de ${eur(x.commandes)}.`;
       },
       champs: (c) => {
         const x = equipeEtPlanning(c);
         return [
-          { libelle: "Chiffre d'affaires de la part visée", attendu: x.caVise, tolerance: 1, calcul: `${eur(x.e.cout)} ÷ ${pct(PART_DU_PERSONNEL_VISEE * 100)} = ${eur(x.caVise)}` },
-          { libelle: "Hausse sur janvier (%)", attendu: x.hausseVisee, tolerance: 0.1, calcul: `(${eur(x.caVise)} ÷ ${eur(x.ca)} − 1) × 100 = ${pct(x.hausseVisee)}` },
+          { libelle: "Chiffre d'affaires de la part visée", attendu: x.caVise, calcul: `${eur(x.e.cout)} ÷ ${pct(PART_DU_PERSONNEL_VISEE * 100)} = ${eur(x.caVise)}` },
+          { libelle: "Hausse sur janvier (%)", attendu: x.hausseVisee, calcul: `(${eur(x.caVise)} ÷ ${eur(x.ca)} − 1) × 100 = ${pct(x.hausseVisee)}` },
           {
-            libelle: "Passages en caisse nécessaires",
+            libelle: "Passages en caisse nécessaires", nature: "quantite",
             attendu: x.passagesVises,
-            tolerance: 1,
-            calcul: `Le panier moyen de janvier vaut ${eur(x.caEnCaisse)} encaissés ÷ ${qte(x.tickets)} = ${eur(auCentime(x.panier))} ; (${eur(x.caVise)} − ${eur(x.commandes)} des commandes des comités) ÷ ${eur(auCentime(x.panier))} = ${qte(x.passagesVises)} passages`,
+            calcul: `Le panier moyen de janvier vaut ${eur(x.caEnCaisse)} encaissés ÷ ${qte(x.tickets)} = ${eur(x.panier)} ; (${eur(x.caVise)} − ${eur(x.commandes)} des commandes des comités) ÷ ${eur(x.panier)} = ${qte(auCentime((x.caVise - x.commandes) / x.panier))}. Soit ${qte(x.passagesVises)} passages, à l'unité au-dessus : un de moins ne ferait pas le chiffre visé`,
           },
         ];
       },
@@ -447,17 +449,19 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
         return [
           {
             libelle: `Vendeurs nécessaires le samedi à ${CRENEAUX[x.pointe]}`,
+            nature: "quantite",
             attendu: x.samedi.vendeurs[x.pointe]!,
-            calcul: `${qte(e[x.pointe]!)} ÷ ${qte(x.regles.entreesParVendeur)} = ${qte(auCentime(e[x.pointe]! / x.regles.entreesParVendeur))}, arrondi à ${qte(x.samedi.vendeurs[x.pointe]!)}`,
+            calcul: `${qte(e[x.pointe]!)} ÷ ${qte(x.regles.entreesParVendeur)} = ${qte(auCentime(e[x.pointe]! / x.regles.entreesParVendeur))}, soit ${qte(x.samedi.vendeurs[x.pointe]!)} vendeurs à l'unité au-dessus : un vendeur ne se partage pas`,
           },
           {
             libelle: `Vendeurs nécessaires le samedi à ${CRENEAUX[x.creux]}`,
+            nature: "quantite",
             attendu: x.samedi.vendeurs[x.creux]!,
-            calcul: `${qte(e[x.creux]!)} ÷ ${qte(x.regles.entreesParVendeur)} = ${qte(auCentime(e[x.creux]! / x.regles.entreesParVendeur))}, arrondi à ${qte(plafond(e[x.creux]! / x.regles.entreesParVendeur))} ; au moins ${qte(x.regles.presenceMinimale)} : ${qte(x.samedi.vendeurs[x.creux]!)}`,
+            calcul: `${qte(e[x.creux]!)} ÷ ${qte(x.regles.entreesParVendeur)} = ${qte(auCentime(e[x.creux]! / x.regles.entreesParVendeur))}, soit ${qte(plafond(e[x.creux]! / x.regles.entreesParVendeur))} à l'unité au-dessus ; au moins ${qte(x.regles.presenceMinimale)} : ${qte(x.samedi.vendeurs[x.creux]!)}`,
           },
-          { libelle: "Heures de vente du samedi", attendu: x.samedi.heures, calcul: `${x.samedi.vendeurs.map((v) => qte(v)).join(" + ")} = ${h(x.samedi.heures)}` },
+          { libelle: "Heures de vente du samedi", nature: "quantite", attendu: x.samedi.heures, calcul: `${x.samedi.vendeurs.map((v) => qte(v)).join(" + ")} = ${h(x.samedi.heures)}` },
           {
-            libelle: "Besoin de la semaine, tâches comprises",
+            libelle: "Besoin de la semaine, tâches comprises", nature: "quantite",
             attendu: x.besoin.parSemaine,
             calcul: `${h(x.heuresDesAutresJours)} + ${h(x.samedi.heures)} + ${h(x.regles.tachesHorsVente)} = ${h(x.besoin.parSemaine)}`,
           },
@@ -580,11 +584,11 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
             .map((j) => `${qte(g(j))} le ${j.jour}`)
             .join(", ");
         return [
-          { libelle: "Heures en manque dans la semaine", attendu: p.heuresManquantes, calcul: `${parJour((j) => j.manquantes)} : ${h(p.heuresManquantes)}` },
-          { libelle: "Heures en trop dans la semaine", attendu: p.heuresEnTrop, calcul: `${parJour((j) => j.enTrop)} : ${h(p.heuresEnTrop)}` },
-          { libelle: "Heures à déplacer", attendu: Math.min(p.heuresManquantes, p.heuresEnTrop), calcul: `Autant qu'il en manque, prises sur les créneaux en trop : ${h(Math.min(p.heuresManquantes, p.heuresEnTrop))}` },
+          { libelle: "Heures en manque dans la semaine", nature: "quantite", attendu: p.heuresManquantes, calcul: `${parJour((j) => j.manquantes)} : ${h(p.heuresManquantes)}` },
+          { libelle: "Heures en trop dans la semaine", nature: "quantite", attendu: p.heuresEnTrop, calcul: `${parJour((j) => j.enTrop)} : ${h(p.heuresEnTrop)}` },
+          { libelle: "Heures à déplacer", nature: "quantite", attendu: Math.min(p.heuresManquantes, p.heuresEnTrop), calcul: `Autant qu'il en manque, prises sur les créneaux en trop : ${h(Math.min(p.heuresManquantes, p.heuresEnTrop))}` },
           {
-            libelle: "Heures en trop après le planning rebâti",
+            libelle: "Heures en trop après le planning rebâti", nature: "quantite",
             attendu: p.heuresEnTrop - Math.min(p.heuresManquantes, p.heuresEnTrop),
             calcul: `${h(p.heuresEnTrop)} − ${h(p.heuresManquantes)} = ${h(p.heuresEnTrop - p.heuresManquantes)}, soit ${h(p.heuresDuPlanning)} de contrat − ${h(x.besoin.parSemaine)} de besoin`,
           },
@@ -607,14 +611,14 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
       titre: "Le budget d'heures",
       notions: ["payroll", "capacity", "fixed_costs"],
       question: () =>
-        `La direction veut que le personnel pèse ${pct(PART_DU_PERSONNEL_VISEE * 100)} du chiffre d'affaires de janvier. Quelle masse salariale cela permet-il ? Combien d'heures paie-t-elle par mois au coût horaire chargé de l'équipe, puis par semaine (au dixième) ? Combien d'heures du besoin de la semaine restent sans financement ?`,
+        `La direction veut que le personnel pèse ${pct(PART_DU_PERSONNEL_VISEE * 100)} du chiffre d'affaires de janvier. Quelle masse salariale cela permet-il ? Combien d'heures paie-t-elle par mois au coût horaire chargé de l'équipe, puis par semaine (au centième) ? Combien d'heures du besoin de la semaine restent sans financement ?`,
       champs: (c) => {
         const x = equipeEtPlanning(c);
         return [
           { libelle: "Masse salariale admissible", attendu: x.masseAdmissible, calcul: `${eur(x.ca)} × ${pct(PART_DU_PERSONNEL_VISEE * 100)} = ${eur(x.masseAdmissible)}` },
-          { libelle: "Heures payables du mois", attendu: x.heuresPayablesDuMois, tolerance: 0.5, calcul: `${eur(x.masseAdmissible)} ÷ ${eur(x.tauxHoraire)} = ${h(x.heuresPayablesDuMois)}` },
-          { libelle: "Heures payables par semaine", attendu: x.heuresPayablesParSemaine, tolerance: 0.2, calcul: `${h(x.heuresPayablesDuMois)} × 12 ÷ 52 = ${h(x.heuresPayablesParSemaine)}` },
-          { libelle: "Heures du besoin sans financement", attendu: x.heuresNonFinancees, tolerance: 0.2, calcul: `${h(x.besoin.parSemaine)} − ${h(x.heuresPayablesParSemaine)} = ${h(x.heuresNonFinancees)}` },
+          { libelle: "Heures payables du mois", nature: "grandeur", attendu: x.heuresPayablesDuMois, calcul: `${eur(x.masseAdmissible)} ÷ ${eur(x.tauxHoraire)} = ${h(x.heuresPayablesDuMois)}` },
+          { libelle: "Heures payables par semaine", nature: "grandeur", attendu: x.heuresPayablesParSemaine, calcul: `${h(x.heuresPayablesDuMois)} × 12 ÷ 52 = ${h(x.heuresPayablesParSemaine)}` },
+          { libelle: "Heures du besoin sans financement", nature: "grandeur", attendu: x.heuresNonFinancees, calcul: `${h(x.besoin.parSemaine)} − ${h(x.heuresPayablesParSemaine)} = ${h(x.heuresNonFinancees)}` },
         ];
       },
       explication: (c) => {
@@ -654,20 +658,19 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
         const sam = b.samedi;
         return [
           {
-            libelle: "Heures de vente nécessaires le samedi",
+            libelle: "Heures de vente nécessaires le samedi", nature: "quantite",
             attendu: sam.heures,
             calcul: `Le plus grand de ${qte(x.regles.presenceMinimale)} et des entrées ÷ ${qte(x.regles.entreesParVendeur)}, arrondies au-dessus : ${sam.vendeurs.map((v) => qte(v)).join(" + ")} = ${h(sam.heures)}`,
           },
           {
-            libelle: "Heures en manque de la semaine",
+            libelle: "Heures en manque de la semaine", nature: "quantite",
             attendu: b.planning.heuresManquantes,
             calcul: `Le samedi, ${h(sam.manquantes)} (${sam.vendeurs.map((v, i) => qte(Math.max(0, v - sam.presents[i]!))).join(" + ")}) ; plus ${h(b.autresJours.manquantes)} du lundi au vendredi : ${h(b.planning.heuresManquantes)}`,
           },
-          { libelle: "Heures de contrat à ajouter par semaine", attendu: b.aAjouter, calcul: `${h(b.planning.heuresManquantes)} − ${h(b.planning.heuresEnTrop)} déplacées = ${h(b.aAjouter)}` },
+          { libelle: "Heures de contrat à ajouter par semaine", nature: "quantite", attendu: b.aAjouter, calcul: `${h(b.planning.heuresManquantes)} − ${h(b.planning.heuresEnTrop)} déplacées = ${h(b.aAjouter)}` },
           {
             libelle: "Coût du mois des heures ajoutées",
             attendu: b.cout,
-            tolerance: 0.5,
             calcul: `${h(b.aAjouter)} × 52 ÷ 12 = ${h(b.heuresAjouteesDuMois)} ; ${h(b.heuresAjouteesDuMois)} × ${eur(x.tauxHoraire)} = ${eur(b.cout)}`,
           },
         ];
@@ -689,7 +692,7 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
       notions: ["contribution_margin", "fixed_costs", "payroll"],
       question: (c) => {
         const x = equipeEtPlanning(c);
-        return `Un salarié de plus coûterait le coût moyen d'un salarié de l'équipe. En janvier, les ventes de ${eur(x.ca)} ont coûté ${eur(x.coutsVariables)} de coûts variables (achats des articles vendus, emballages, frais de carte). Calculez ce coût moyen (au centime), le taux de marge sur coût variable de la boutique (au dixième), puis le chiffre d'affaires que l'embauche doit faire réaliser en plus chaque mois pour se payer (à l'euro, arrondi au-dessus).`;
+        return `Un salarié de plus coûterait le coût moyen d'un salarié de l'équipe. En janvier, les ventes de ${eur(x.ca)} ont coûté ${eur(x.coutsVariables)} de coûts variables (achats des articles vendus, emballages, frais de carte). Calculez ce coût moyen (au centime), le taux de marge sur coût variable de la boutique (au centième), puis le chiffre d'affaires que l'embauche doit faire réaliser en plus chaque mois pour se payer (au centime).`;
       },
       champs: (c) => {
         const x = equipeEtPlanning(c);
@@ -698,10 +701,9 @@ export const EQUIPE_ET_PLANNING: Chapitre = {
           {
             libelle: "Taux de marge sur coût variable (%)",
             attendu: x.tauxMcvAffiche,
-            tolerance: 0.1,
             calcul: `(${eur(x.ca)} − ${eur(x.coutsVariables)}) ÷ ${eur(x.ca)} × 100 = ${pct(x.tauxMcvAffiche)}`,
           },
-          { libelle: "Chiffre d'affaires à réaliser en plus", attendu: x.caPourUneEmbauche, tolerance: 2, calcul: `${eur(x.coutMoyen)} ÷ ${pct(x.tauxMcvAffiche)} = ${eur(x.caPourUneEmbauche)}` },
+          { libelle: "Chiffre d'affaires à réaliser en plus", attendu: x.caPourUneEmbauche, calcul: `${eur(x.coutMoyen)} ÷ ${pct(x.tauxMcvAffiche)} = ${eur(x.caPourUneEmbauche)}` },
         ];
       },
       explication: (c) => {

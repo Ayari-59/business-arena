@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { BOUTIQUES_DU_COURS, type FicheDeLaBoutique } from "../monde/maille-et-co";
 import {
@@ -40,12 +40,13 @@ import { ENTREPRISES_DE_LA_VENTE } from "./le-panier-moyen";
  * rejouait l'année avec des travaux. Il compte maintenant les clientes de la carte de MAILLE & CO :
  * 340 en janvier, 17 qui partent en février, 95 % qui reviennent, 693,12 € de marge pour une
  * cliente gardée toute l'année.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les clientes sont des quantités, entières, déclarées comme
+ * telles ; les parts se donnent à deux décimales (au dixième, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−");
-const pct = (t: number) => `${qte(t)} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
+const qte = nombreAuCentieme;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 export const ficheDe = (c: Pick<Cas, "code">): FicheDeLaBoutique => BOUTIQUES_DU_COURS[c.code]!;
@@ -58,8 +59,8 @@ export function clientesDeLaCarte(c: Pick<Cas, "code">) {
   return {
     ...carte,
     fevrier,
-    reviennent: auDixieme((fevrier.revenues / fevrier.debut) * 100),
-    partDesRevenues: auDixieme((fevrier.revenues / fevrier.fin) * 100),
+    reviennent: auCentime((fevrier.revenues / fevrier.debut) * 100),
+    partDesRevenues: auCentime((fevrier.revenues / fevrier.fin) * 100),
   };
 }
 
@@ -125,9 +126,9 @@ export const LE_CLIENT_QUI_REVIENT: Chapitre = {
       champs: (c) => {
         const k = clientesDeLaCarte(c).fevrier;
         return [
-          { libelle: "Clientes parties", attendu: k.parties, calcul: `${qte(k.debut)} × ${pct(TAUX_DE_DEPART_PAR_MOIS * 100)} = ${qte(k.parties)}` },
-          { libelle: "Clientes revenues", attendu: k.revenues, calcul: `${qte(k.debut)} − ${qte(k.parties)} = ${qte(k.revenues)}` },
-          { libelle: "Clientes de la carte fin février", attendu: k.fin, calcul: `${qte(k.revenues)} + ${qte(k.nouvelles)} = ${qte(k.fin)}` },
+          { libelle: "Clientes parties", nature: "quantite", attendu: k.parties, calcul: `${qte(k.debut)} × ${pct(TAUX_DE_DEPART_PAR_MOIS * 100)} = ${qte(k.parties)}` },
+          { libelle: "Clientes revenues", nature: "quantite", attendu: k.revenues, calcul: `${qte(k.debut)} − ${qte(k.parties)} = ${qte(k.revenues)}` },
+          { libelle: "Clientes de la carte fin février", nature: "quantite", attendu: k.fin, calcul: `${qte(k.revenues)} + ${qte(k.nouvelles)} = ${qte(k.fin)}` },
         ];
       },
       explication: (c) => {
@@ -147,13 +148,13 @@ export const LE_CLIENT_QUI_REVIENT: Chapitre = {
       notions: ["churn_rate"],
       question: (c) => {
         const k = clientesDeLaCarte(c).fevrier;
-        return `Calculez la part des clientes de janvier qui reviennent en février (${qte(k.revenues)} ÷ ${qte(k.debut)} × 100), puis la part des clientes revenues dans le fichier de fin février (${qte(k.revenues)} ÷ ${qte(k.fin)} × 100), au dixième.`;
+        return `Calculez la part des clientes de janvier qui reviennent en février (${qte(k.revenues)} ÷ ${qte(k.debut)} × 100), puis la part des clientes revenues dans le fichier de fin février (${qte(k.revenues)} ÷ ${qte(k.fin)} × 100), à deux décimales.`;
       },
       champs: (c) => {
         const k = clientesDeLaCarte(c);
         return [
-          { libelle: "Part qui revient (%)", attendu: k.reviennent, calcul: `${qte(k.fevrier.revenues)} ÷ ${qte(k.fevrier.debut)} × 100 = ${pct(k.reviennent)}`, tolerance: 0.1 },
-          { libelle: "Part des revenues dans le fichier (%)", attendu: k.partDesRevenues, calcul: `${qte(k.fevrier.revenues)} ÷ ${qte(k.fevrier.fin)} × 100 = ${pct(k.partDesRevenues)}`, tolerance: 0.1 },
+          { libelle: "Part qui revient (%)", attendu: k.reviennent, calcul: `${qte(k.fevrier.revenues)} ÷ ${qte(k.fevrier.debut)} × 100 = ${pct(k.reviennent)}` },
+          { libelle: "Part des revenues dans le fichier (%)", attendu: k.partDesRevenues, calcul: `${qte(k.fevrier.revenues)} ÷ ${qte(k.fevrier.fin)} × 100 = ${pct(k.partDesRevenues)}` },
         ];
       },
       explication: (c) => {

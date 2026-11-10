@@ -34,7 +34,8 @@ const ch = RECRUTER_INTEGRER_FORMER;
 const x = recruterIntegrerFormer(BOUTIQUE);
 const taux = (code: string) => {
   const s = f.equipe.find((k) => k.code === code)!;
-  return centime(s.brutMensuel * 1.42) / centime((s.heuresParSemaine * 52) / 12);
+  // Le taux horaire chargé de la copie, au centime : c'est lui que l'élève multiplie.
+  return centime(centime(s.brutMensuel * 1.42) / centime((s.heuresParSemaine * 52) / 12));
 };
 
 describe("recruter, intégrer, former : le chapitre", () => {
@@ -64,9 +65,10 @@ describe("recruter, intégrer, former : le chapitre", () => {
 
   it("le coût du recrutement, aux taux horaires chargés de la responsable et de l'adjointe", () => {
     const tri = centime(2 * taux("responsable"));
-    const entretiens = centime(6 * 0.75 * (taux("responsable") + taux("adjointe")));
+    // 4,5 h × (25,28 + 20,13) = 204,345 : le demi-centime s'arrondit au-dessus.
+    const entretiens = centime(6 * 0.75 * (taux("responsable") + taux("adjointe")) + 1e-9);
     const total = centime(90 + tri + entretiens);
-    expect([tri, entretiens, total]).toEqual([50.56, 204.34, 344.9]);
+    expect([tri, entretiens, total]).toEqual([50.56, 204.35, 344.91]);
     expect(attendus(ch, "le-cout-du-recrutement")).toEqual([tri, entretiens, total, centime((3_006.85 + total) / 140)]);
   });
 
@@ -74,10 +76,10 @@ describe("recruter, intégrer, former : le chapitre", () => {
     const m = meilleurRenfort(f);
     expect([m.avenants, m.cdd, m.interim]).toEqual([24, 1, 26]);
     const avenants = 24 * 4 * 12.5 * 1.42;
-    const cdd = 3_006.85 + 344.9;
+    const cdd = 3_006.85 + 344.91;
     const interim = 26 * 4 * 12.5 * 2.1;
     expect(m.r.total).toBe(centime(avenants + cdd + interim));
-    expect(m.r.total).toBe(7_785.75);
+    expect(m.r.total).toBe(7_785.76);
     const e = etape(chapitreDuCas(ch, BOUTIQUE), "le-laboratoire-du-renfort", "simulation");
     const d = e.defi(BOUTIQUE);
     expect(d.atteint({ avenants: 0, cdd: 0, interim: 0 })).toBe(false);
@@ -104,9 +106,10 @@ describe("recruter, intégrer, former : le chapitre", () => {
     expect(attendus(ch, "la-courbe-d-apprentissage")).toEqual([sans, avec, centime((sans - avec) * 38.43), centime((sans - avec) * 38.43 - tutorat)]);
     const heures = centime(7 * (taux("adjointe") + taux("vendeur") + 3 * taux("vendeuse-partiel")));
     const cout = centime(5 * 280 * 0.5 + heures);
-    const gain = centime(770 * 0.05 * (38_950 / 1_330));
-    expect([cout, gain]).toEqual([1_344.73, 1_127.5]);
-    expect(attendus(ch, "la-formation")).toEqual([cout, gain, Math.round((cout / gain) * 10) / 10]);
+    // La marge d'un article au centime, 29,29 €, comme sur la copie.
+    const gain = centime(770 * 0.05 * centime(38_950 / 1_330));
+    expect([cout, gain]).toEqual([1_344.7, 1_127.67]);
+    expect(attendus(ch, "la-formation")).toEqual([cout, gain, centime(cout / gain)]);
     expect(x.fo.passages).toBe(940 - 170);
   });
 

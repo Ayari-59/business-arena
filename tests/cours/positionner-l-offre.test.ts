@@ -25,9 +25,9 @@ describe("le chapitre, dans son parcours", () => {
 });
 
 describe("la gamme et le positionnement", () => {
-  it("103 063 € de chiffre d'affaires, la One à 66,4 %", () => {
+  it("103 063 € de chiffre d'affaires, la One à 66,41 %", () => {
     expect(gammeDuMois().chiffreDAffaires).toBe(6_630 + 68_440 + 27_993);
-    expect(attendusMk(CH, "le-poids")).toEqual([103_063, 66.4]);
+    expect(attendusMk(CH, "le-poids")).toEqual([103_063, 66.41]);
   });
 
   it("la One au milieu : SoundBox à 51 €, Auris à 79 €, et une qualité perçue entre les deux", () => {

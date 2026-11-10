@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { coutQuiGardeLeTauxDeMarque, fournisseurDe, margeDeLArticle, margeDuMois, margesDeLaGamme, prixHtDuTtc, prixQuiGardeLeTauxDeMarque, referenceDe } from "../monde/boutique";
 import { BOUTIQUES_DU_COURS, type CodeDeFournisseur, type FicheDeLaBoutique } from "../monde/maille-et-co";
@@ -47,6 +47,14 @@ import { etapesAvant, etapesDepuis, partieDuChapitre } from "./decoupage";
  * LES HYPOTHÈSES DE LA SIMULATION, DITES À L'ÉLÈVE : le prix hors taxes est l'étiquette ÷ 1,2 ; le
  * prix d'achat est celui du façonnier de référence ; la demande du mois répond au prix par une
  * droite (élasticité de la fiche : −1,5) ; le coefficient du concurrent est une hypothèse du cours.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les taux de marque, de marge et d'acceptation, les baisses et
+ * les variations se donnent à deux décimales (au dixième, avant) ; le prix qui garde le taux de marque
+ * se calcule sur le taux arrondi, comme sur la copie : 30,50 € ÷ (1 − 54,55 %) = 67,11 €, sans le
+ * double corrigé « au taux exact » d'avant ; les coefficients multiplicateurs et l'élasticité sont des
+ * grandeurs au centième, l'élasticité sur les deux variations arrondies ; les pulls demandés, une
+ * quantité, arrondie à l'unité au-dessous comme dans la simulation.
  */
 
 /** Le chapitre se joue chez MAILLE & CO, la boutique du monde du cours, et ses cas aussi. */
@@ -104,14 +112,8 @@ export const HAUSSE_DU_FACONNIER = 0.1;
 /** Les leviers du laboratoire de l'étiquette : le prix d'achat HT et l'étiquette TTC, en euros. */
 export const LEVIERS_DE_L_ETIQUETTE = { achat: { min: 20, max: 32, pas: 0.5 }, etiquette: { min: 54, max: 96, pas: 1 } } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
+const qte = nombreAuCentieme;
 const coef = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
-/** Au centième, la moitié s'éloignant de zéro (−1,485 donne −1,49). */
-const auCentiemePres = (x: number) => (Math.sign(x) * Math.round(Math.abs(x) * 100 + 1e-9)) / 100 + 0;
 /** Un prix « au plus » : tronqué au centime, pour ne jamais dépasser la limite. */
 const auCentimeInferieur = (x: number) => Math.floor(x * 100 + 1e-6) / 100;
 
@@ -142,15 +144,19 @@ export function margesDuRayon(c: Pick<Cas, "code">) {
   const atelier = fournisseurDe(f, "atelier-local");
   const margeDuMoisDeJanvier = auCentime(a.margeCommerciale * r.ventesDuMois);
   const tauxDeMarqueExact = a.tauxDeMarque;
+  // Le taux de marque de la copie, à deux décimales : c'est lui que l'élève reprend (54,55 %, pas 54,545… %).
+  const tMarque = auCentime(a.tauxDeMarque * 100);
 
   // La gamme : la marge du mois, et l'erreur de la moyenne des taux.
   const g = margesDeLaGamme(f);
   const moyenneDesTaux = g.references.reduce((t, x) => t + x.tauxDeMarque, 0) / g.references.length;
   const echarpe = margeDeLArticle(referenceDe(f, "echarpe"));
+  // L'écharpe : le taux de marge et le coefficient se retrouvent depuis le taux de marque arrondi.
+  const tMarqueEcharpe = auCentime(echarpe.tauxDeMarque * 100);
 
   // L'atelier local, plus cher : l'étiquette qui garde le taux de marque.
   const achatAtelier = auCentime(r.coutDAchat * atelier.multiplicateur);
-  const prixAtelier = prixQuiGardeLeTauxDeMarque(achatAtelier, tauxDeMarqueExact);
+  const prixAtelier = prixQuiGardeLeTauxDeMarque(achatAtelier, tMarque / 100);
   const ttcAtelier = auCentime(prixAtelier * (1 + r.tauxTva));
   // La plus petite étiquette ronde (en euros TTC) qui garde le taux de marque.
   const etiquetteRondeAtelier = Math.ceil((achatAtelier * (1 + r.tauxTva)) / (1 - tauxDeMarqueExact) - 1e-9);
@@ -164,11 +170,11 @@ export function margesDuRayon(c: Pick<Cas, "code">) {
   const htConcurrent = auCentime(ttcConcurrent / (1 + r.tauxTva));
   const achatConcurrent = auCentime(ttcConcurrent / COEFFICIENT_TTC_DU_CONCURRENT);
   const coefHtConcurrent = auCentime(COEFFICIENT_TTC_DU_CONCURRENT / (1 + r.tauxTva));
-  const tMarqueConcurrent = auDixieme((1 - 1 / coefHtConcurrent) * 100);
+  const tMarqueConcurrent = auCentime((1 - 1 / coefHtConcurrent) * 100);
 
   // S'aligner : la demande répond au prix ; le prix d'achat qui garde la marque, et celui qui garde la marge.
   const aligne = margeDuMois(f, { reference: REFERENCE_DU_CHAPITRE, prixHt: htConcurrent });
-  const achatQuiGardeLaMarque = coutQuiGardeLeTauxDeMarque(htConcurrent, tauxDeMarqueExact);
+  const achatQuiGardeLaMarque = coutQuiGardeLeTauxDeMarque(htConcurrent, tMarque / 100);
   const achatQuiGardeLaMarge = auCentimeInferieur(htConcurrent - margeDuMoisDeJanvier / aligne.ventes);
   const ventesQuiGardentLaMarge = Math.ceil(margeDuMoisDeJanvier / aligne.margeCommerciale - 1e-9);
 
@@ -204,33 +210,33 @@ export function margesDuRayon(c: Pick<Cas, "code">) {
     atelier,
     margeDuMoisDeJanvier,
     tauxDeMarqueExact,
-    tMarque: auDixieme(a.tauxDeMarque * 100),
-    tMarge: auDixieme(a.tauxDeMarge * 100),
+    tMarque,
+    tMarge: auCentime(a.tauxDeMarge * 100),
     coefHt: auCentime(a.coefficientHt),
     coefTtc: auCentime(a.coefficientTtc),
     gamme: {
       chiffreDAffaires: g.chiffreDAffaires,
       achatsVendus: g.achatsVendus,
       margeCommerciale: g.margeCommerciale,
-      tMarque: auDixieme(g.tauxDeMarque * 100),
-      tMarge: auDixieme(g.tauxDeMarge * 100),
-      moyenneDesTaux: auDixieme(moyenneDesTaux * 100),
+      tMarque: auCentime(g.tauxDeMarque * 100),
+      tMarge: auCentime(g.tauxDeMarge * 100),
+      moyenneDesTaux: auCentime(moyenneDesTaux * 100),
       references: g.references,
     },
     echarpe: {
       nom: referenceDe(f, "echarpe").nom,
-      tMarque: auDixieme(echarpe.tauxDeMarque * 100),
-      tMarge: auDixieme(echarpe.tauxDeMarge * 100),
-      coefHt: auCentime(echarpe.coefficientHt),
+      tMarque: tMarqueEcharpe,
+      tMarge: auCentime((tMarqueEcharpe / (100 - tMarqueEcharpe)) * 100),
+      coefHt: auCentime(100 / (100 - tMarqueEcharpe)),
     },
     achatAtelier,
     prixAtelier,
     ttcAtelier,
     coefTtcAtelier: auCentime(ttcAtelier / achatAtelier),
-    hausseDeLEtiquette: auDixieme((ttcAtelier / r.prixTtc - 1) * 100),
+    hausseDeLEtiquette: auCentime((ttcAtelier / r.prixTtc - 1) * 100),
     etiquetteRondeAtelier,
     achatFins,
-    tMarqueFins: auDixieme(margeFins.tauxDeMarque * 100),
+    tMarqueFins: auCentime(margeFins.tauxDeMarque * 100),
     margeDuMoisFins: auCentime(margeFins.margeCommerciale * r.ventesDuMois),
     ttcConcurrent,
     htConcurrent,
@@ -239,8 +245,9 @@ export function margesDuRayon(c: Pick<Cas, "code">) {
     tMarqueConcurrent,
     aligne: {
       demande: aligne.demande,
+      demandeCalculee: auCentime(r.demandeDuMois * (1 + f.elasticiteAuPrix * ((htConcurrent - r.prixHt) / r.prixHt))),
       ventes: aligne.ventes,
-      tMarque: auDixieme(aligne.tauxDeMarque * 100),
+      tMarque: auCentime(aligne.tauxDeMarque * 100),
       margeUnitaire: aligne.margeCommerciale,
       margeDuMois: aligne.margeDuMois,
       perte: auCentime(margeDuMoisDeJanvier - aligne.margeDuMois),
@@ -248,8 +255,8 @@ export function margesDuRayon(c: Pick<Cas, "code">) {
     achatQuiGardeLaMarque,
     achatQuiGardeLaMarge,
     ventesQuiGardentLaMarge,
-    baisseQuiGardeLaMarque: auDixieme(((r.coutDAchat - achatQuiGardeLaMarque) / r.coutDAchat) * 100),
-    baisseQuiGardeLaMarge: auDixieme(((r.coutDAchat - achatQuiGardeLaMarge) / r.coutDAchat) * 100),
+    baisseQuiGardeLaMarque: auCentime(((r.coutDAchat - achatQuiGardeLaMarque) / r.coutDAchat) * 100),
+    baisseQuiGardeLaMarge: auCentime(((r.coutDAchat - achatQuiGardeLaMarge) / r.coutDAchat) * 100),
     achatEnHausse,
     etiquetteApresHausse,
     etiquetteQuiGardeLaMarge,
@@ -279,8 +286,8 @@ function tableauDesFournisseurs(m: MargesDuRayon): TableauDeDonnees {
     colonnes: ["Prix d'achat HT", `Taux de marque à ${eur(m.r.prixHt)} HT`, "Prix HT qui garde le taux de marque"],
     lignes: [
       { libelle: m.faconnier.nom, valeurs: [eur(m.r.coutDAchat), pct(m.tMarque), eur(m.r.prixHt)] },
-      { libelle: m.finsDeSerie.nom, valeurs: [eur(m.achatFins), pct(m.tMarqueFins), eur(prixQuiGardeLeTauxDeMarque(m.achatFins, m.tauxDeMarqueExact))] },
-      { libelle: m.atelier.nom, valeurs: [eur(m.achatAtelier), pct(auDixieme(((m.r.prixHt - m.achatAtelier) / m.r.prixHt) * 100)), eur(m.prixAtelier)] },
+      { libelle: m.finsDeSerie.nom, valeurs: [eur(m.achatFins), pct(m.tMarqueFins), eur(prixQuiGardeLeTauxDeMarque(m.achatFins, m.tMarque / 100))] },
+      { libelle: m.atelier.nom, valeurs: [eur(m.achatAtelier), pct(auCentime(((m.r.prixHt - m.achatAtelier) / m.r.prixHt) * 100)), eur(m.prixAtelier)] },
     ],
   };
 }
@@ -362,13 +369,13 @@ const TAUX_DE_MARQUE_ENTIER: Chapitre = {
       notions: ["margin_rates"],
       question: (c) => {
         const m = margesDuRayon(c);
-        return `La marge de ${eur(m.a.margeCommerciale)} se rapporte au prix de vente HT (${eur(m.r.prixHt)} : c'est le taux de marque) ou au prix d'achat HT (${eur(m.r.coutDAchat)} : c'est le taux de marge). Calculez les deux, en pourcentage, au dixième.`;
+        return `La marge de ${eur(m.a.margeCommerciale)} se rapporte au prix de vente HT (${eur(m.r.prixHt)} : c'est le taux de marque) ou au prix d'achat HT (${eur(m.r.coutDAchat)} : c'est le taux de marge). Calculez les deux, en pourcentage, à deux décimales.`;
       },
       champs: (c) => {
         const m = margesDuRayon(c);
         return [
-          { libelle: "Taux de marque (%)", attendu: m.tMarque, calcul: `${eur(m.a.margeCommerciale)} ÷ ${eur(m.r.prixHt)} × 100 = ${pct(m.tMarque)}`, tolerance: 0.1 },
-          { libelle: "Taux de marge (%)", attendu: m.tMarge, calcul: `${eur(m.a.margeCommerciale)} ÷ ${eur(m.r.coutDAchat)} × 100 = ${pct(m.tMarge)}`, tolerance: 0.1 },
+          { libelle: "Taux de marque (%)", attendu: m.tMarque, calcul: `${eur(m.a.margeCommerciale)} ÷ ${eur(m.r.prixHt)} × 100 = ${pct(m.tMarque)}` },
+          { libelle: "Taux de marge (%)", attendu: m.tMarge, calcul: `${eur(m.a.margeCommerciale)} ÷ ${eur(m.r.coutDAchat)} × 100 = ${pct(m.tMarge)}` },
         ];
       },
       explication: (c) => {
@@ -418,7 +425,7 @@ const TAUX_DE_MARQUE_ENTIER: Chapitre = {
       tableau: tableauDeLaGamme,
       question: (c) => {
         const m = margesDuRayon(c);
-        return `Sans formule cette fois. À partir du tableau de la gamme, calculez le chiffre d'affaires hors taxes de ${m.f.moisDeReference}, ce qu'ont coûté à l'achat les articles vendus, la marge commerciale du mois, puis le taux de marque de la boutique, au dixième.`;
+        return `Sans formule cette fois. À partir du tableau de la gamme, calculez le chiffre d'affaires hors taxes de ${m.f.moisDeReference}, ce qu'ont coûté à l'achat les articles vendus, la marge commerciale du mois, puis le taux de marque de la boutique, à deux décimales.`;
       },
       champs: (c) => {
         const m = margesDuRayon(c);
@@ -427,7 +434,7 @@ const TAUX_DE_MARQUE_ENTIER: Chapitre = {
           { libelle: "Chiffre d'affaires HT du mois", attendu: m.gamme.chiffreDAffaires, calcul: `${refs.map((x) => `${qte(x.ventes)} × ${eur(x.prixHt)}`).join(" + ")} = ${eur(m.gamme.chiffreDAffaires)}` },
           { libelle: "Coût d'achat des articles vendus", attendu: m.gamme.achatsVendus, calcul: `${refs.map((x) => `${qte(x.ventes)} × ${eur(x.coutDAchat)}`).join(" + ")} = ${eur(m.gamme.achatsVendus)}` },
           { libelle: "Marge commerciale de la gamme", attendu: m.gamme.margeCommerciale, calcul: `${eur(m.gamme.chiffreDAffaires)} − ${eur(m.gamme.achatsVendus)} = ${eur(m.gamme.margeCommerciale)}` },
-          { libelle: "Taux de marque de la boutique (%)", attendu: m.gamme.tMarque, calcul: `${eur(m.gamme.margeCommerciale)} ÷ ${eur(m.gamme.chiffreDAffaires)} × 100 = ${pct(m.gamme.tMarque)}`, tolerance: 0.1 },
+          { libelle: "Taux de marque de la boutique (%)", attendu: m.gamme.tMarque, calcul: `${eur(m.gamme.margeCommerciale)} ÷ ${eur(m.gamme.chiffreDAffaires)} × 100 = ${pct(m.gamme.tMarque)}` },
         ];
       },
       explication: (c) => {
@@ -482,8 +489,8 @@ const TAUX_DE_MARQUE_ENTIER: Chapitre = {
         const m = margesDuRayon(c);
         const t = m.echarpe.tMarque;
         return [
-          { libelle: "Taux de marge (%)", attendu: m.echarpe.tMarge, calcul: `${pct(t)} ÷ (100 − ${pct(t)}) × 100 = ${pct(m.echarpe.tMarge)}`, tolerance: 0.1 },
-          { libelle: "Coefficient multiplicateur HT", attendu: m.echarpe.coefHt, calcul: `100 ÷ (100 − ${pct(t)}) = ${coef(m.echarpe.coefHt)}`, tolerance: 0.01 },
+          { libelle: "Taux de marge (%)", attendu: m.echarpe.tMarge, calcul: `${pct(t)} ÷ (100 − ${pct(t)}) × 100 = ${pct(m.echarpe.tMarge)}` },
+          { libelle: "Coefficient multiplicateur HT", nature: "grandeur", attendu: m.echarpe.coefHt, calcul: `100 ÷ (100 − ${pct(t)}) = ${qte(m.echarpe.coefHt)}` },
         ];
       },
       explication: (c) => {
@@ -506,9 +513,9 @@ const TAUX_DE_MARQUE_ENTIER: Chapitre = {
       champs: (c) => {
         const m = margesDuRayon(c);
         return [
-          { libelle: "Coefficient HT", attendu: m.coefHt, calcul: `${eur(m.r.prixHt)} ÷ ${eur(m.r.coutDAchat)} = ${coef(m.coefHt)}`, tolerance: 0.01 },
+          { libelle: "Coefficient HT", nature: "grandeur", attendu: m.coefHt, calcul: `${eur(m.r.prixHt)} ÷ ${eur(m.r.coutDAchat)} = ${qte(m.coefHt)}` },
           { libelle: "Étiquette TTC", attendu: m.r.prixTtc, calcul: `${eur(m.r.prixHt)} × ${coef(1 + m.r.tauxTva)} = ${eur(m.r.prixTtc)}` },
-          { libelle: "Coefficient TTC", attendu: m.coefTtc, calcul: `${eur(m.r.prixTtc)} ÷ ${eur(m.r.coutDAchat)} = ${coef(m.coefTtc)}, soit ${coef(m.coefHt)} × ${coef(1 + m.r.tauxTva)}`, tolerance: 0.01 },
+          { libelle: "Coefficient TTC", nature: "grandeur", attendu: m.coefTtc, calcul: `${eur(m.r.prixTtc)} ÷ ${eur(m.r.coutDAchat)} = ${qte(m.coefTtc)} (soit ${coef(m.coefHt)} × ${coef(1 + m.r.tauxTva)})` },
         ];
       },
       explication: (c) => {
@@ -595,27 +602,19 @@ const TAUX_DE_MARQUE_ENTIER: Chapitre = {
       },
       champs: (c) => {
         const m = margesDuRayon(c);
-        // La question donne le taux arrondi au dixième : l'élève qui le garde trouve quelques centimes de
-        // moins que le taux exact. Sa réponse est juste aussi : la tolérance couvre l'écart d'arrondi.
-        const prixAuTauxAffiche = auCentime(m.achatAtelier / (1 - m.tMarque / 100));
-        const ttcAuTauxAffiche = auCentime(prixAuTauxAffiche * (1 + m.r.tauxTva));
-        const ecartDArrondi = (exact: number, affiche: number, plancher: number) => auCentime(Math.max(plancher, Math.abs(exact - affiche) + 0.01));
-        const tauxExact = `${(m.tauxDeMarqueExact * 100).toLocaleString("fr-FR", { maximumFractionDigits: 3 })} %`;
         return [
           { libelle: "Prix d'achat chez l'atelier local", attendu: m.achatAtelier, calcul: `${eur(m.r.coutDAchat)} × ${coef(m.atelier.multiplicateur)} = ${eur(m.achatAtelier)}` },
           {
             libelle: "Prix de vente HT qui garde le taux de marque",
             attendu: m.prixAtelier,
-            calcul: `${eur(m.achatAtelier)} ÷ (1 − ${tauxExact}) = ${eur(m.prixAtelier)}, au taux exact ; avec ${pct(m.tMarque)}, ${eur(prixAuTauxAffiche)}, juste aussi`,
-            tolerance: ecartDArrondi(m.prixAtelier, prixAuTauxAffiche, 0.05),
+            calcul: `${eur(m.achatAtelier)} ÷ (1 − ${pct(m.tMarque)}) = ${eur(m.prixAtelier)}, sur le taux à deux décimales`,
           },
           {
             libelle: "Étiquette TTC",
             attendu: m.ttcAtelier,
-            calcul: `${eur(m.prixAtelier)} × ${coef(1 + m.r.tauxTva)} = ${eur(m.ttcAtelier)} ; avec ${eur(prixAuTauxAffiche)}, ${eur(ttcAuTauxAffiche)}, juste aussi`,
-            tolerance: ecartDArrondi(m.ttcAtelier, ttcAuTauxAffiche, 0.06),
+            calcul: `${eur(m.prixAtelier)} × ${coef(1 + m.r.tauxTva)} = ${eur(m.ttcAtelier)}`,
           },
-          { libelle: "Coefficient TTC de l'atelier local", attendu: m.coefTtcAtelier, calcul: `${eur(m.ttcAtelier)} ÷ ${eur(m.achatAtelier)} = ${coef(m.coefTtcAtelier)}`, tolerance: 0.01 },
+          { libelle: "Coefficient TTC de l'atelier local", nature: "grandeur", attendu: m.coefTtcAtelier, calcul: `${eur(m.ttcAtelier)} ÷ ${eur(m.achatAtelier)} = ${qte(m.coefTtcAtelier)}` },
         ];
       },
       explication: (c) => {
@@ -633,13 +632,13 @@ const TAUX_DE_MARQUE_ENTIER: Chapitre = {
       notions: ["margin_rates"],
       question: (c) => {
         const m = margesDuRayon(c);
-        return `Les « ${m.finsDeSerie.nom} » vendent le même pull ${pct(Math.round((1 - m.finsDeSerie.multiplicateur) * 100))} moins cher que le façonnier. ${m.f.entreprise} garde son étiquette et ses ${qte(m.r.ventesDuMois)} ventes du mois. Calculez le prix d'achat, le taux de marque, au dixième, et la marge commerciale du mois.`;
+        return `Les « ${m.finsDeSerie.nom} » vendent le même pull ${pct(Math.round((1 - m.finsDeSerie.multiplicateur) * 100))} moins cher que le façonnier. ${m.f.entreprise} garde son étiquette et ses ${qte(m.r.ventesDuMois)} ventes du mois. Calculez le prix d'achat, le taux de marque, à deux décimales, et la marge commerciale du mois.`;
       },
       champs: (c) => {
         const m = margesDuRayon(c);
         return [
           { libelle: "Prix d'achat des fins de série", attendu: m.achatFins, calcul: `${eur(m.r.coutDAchat)} × ${coef(m.finsDeSerie.multiplicateur)} = ${eur(m.achatFins)}` },
-          { libelle: "Taux de marque (%)", attendu: m.tMarqueFins, calcul: `(${eur(m.r.prixHt)} − ${eur(m.achatFins)}) ÷ ${eur(m.r.prixHt)} × 100 = ${pct(m.tMarqueFins)}`, tolerance: 0.1 },
+          { libelle: "Taux de marque (%)", attendu: m.tMarqueFins, calcul: `(${eur(m.r.prixHt)} − ${eur(m.achatFins)}) ÷ ${eur(m.r.prixHt)} × 100 = ${pct(m.tMarqueFins)}` },
           { libelle: "Marge commerciale du mois", attendu: m.margeDuMoisFins, calcul: `(${eur(m.r.prixHt)} − ${eur(m.achatFins)}) × ${qte(m.r.ventesDuMois)} = ${eur(m.margeDuMoisFins)}` },
         ];
       },
@@ -689,14 +688,14 @@ const TAUX_DE_MARQUE_ENTIER: Chapitre = {
       notions: ["markup_coefficient", "vat_payable", "margin_rates"],
       question: (c) => {
         const m = margesDuRayon(c);
-        return `${m.f.concurrent.nom.charAt(0).toUpperCase()}${m.f.concurrent.nom.slice(1)} affiche un pull comparable à ${eur(m.ttcConcurrent)} TTC. Un vendeur passé chez elle rapporte qu'elle applique un coefficient de ${coef(COEFFICIENT_TTC_DU_CONCURRENT)} toutes taxes comprises. Remontez de son étiquette : son prix d'achat HT, son coefficient HT, puis son taux de marque, au dixième.`;
+        return `${m.f.concurrent.nom.charAt(0).toUpperCase()}${m.f.concurrent.nom.slice(1)} affiche un pull comparable à ${eur(m.ttcConcurrent)} TTC. Un vendeur passé chez elle rapporte qu'elle applique un coefficient de ${coef(COEFFICIENT_TTC_DU_CONCURRENT)} toutes taxes comprises. Remontez de son étiquette : son prix d'achat HT, son coefficient HT, puis son taux de marque, à deux décimales.`;
       },
       champs: (c) => {
         const m = margesDuRayon(c);
         return [
           { libelle: "Prix d'achat du concurrent, hors taxes", attendu: m.achatConcurrent, calcul: `${eur(m.ttcConcurrent)} ÷ ${coef(COEFFICIENT_TTC_DU_CONCURRENT)} = ${eur(m.achatConcurrent)}` },
-          { libelle: "Coefficient HT du concurrent", attendu: m.coefHtConcurrent, calcul: `${coef(COEFFICIENT_TTC_DU_CONCURRENT)} ÷ ${coef(1 + m.r.tauxTva)} = ${coef(m.coefHtConcurrent)}`, tolerance: 0.01 },
-          { libelle: "Taux de marque du concurrent (%)", attendu: m.tMarqueConcurrent, calcul: `(1 − 1 ÷ ${coef(m.coefHtConcurrent)}) × 100 = ${pct(m.tMarqueConcurrent)}`, tolerance: 0.1 },
+          { libelle: "Coefficient HT du concurrent", nature: "grandeur", attendu: m.coefHtConcurrent, calcul: `${coef(COEFFICIENT_TTC_DU_CONCURRENT)} ÷ ${coef(1 + m.r.tauxTva)} = ${qte(m.coefHtConcurrent)}` },
+          { libelle: "Taux de marque du concurrent (%)", attendu: m.tMarqueConcurrent, calcul: `(1 − 1 ÷ ${coef(m.coefHtConcurrent)}) × 100 = ${pct(m.tMarqueConcurrent)}` },
         ];
       },
       explication: (c) => {
@@ -716,7 +715,7 @@ const TAUX_DE_MARQUE_ENTIER: Chapitre = {
       notions: ["margin_rates", "price_elasticity", "vat_payable"],
       question: (c) => {
         const m = margesDuRayon(c);
-        return `Et si ${m.f.entreprise} s'alignait sur l'étiquette du concurrent, sans changer de fournisseur ? La simulation fait répondre les clients au prix : demande = ${qte(m.r.demandeDuMois)} × (1 − ${qte(-m.f.elasticiteAuPrix)} × écart de prix ÷ prix d'aujourd'hui), à l'article près en dessous. Calculez le prix aligné hors taxes, les pulls demandés, le taux de marque, au dixième, et la marge commerciale du mois.`;
+        return `Et si ${m.f.entreprise} s'alignait sur l'étiquette du concurrent, sans changer de fournisseur ? La simulation fait répondre les clients au prix : demande = ${qte(m.r.demandeDuMois)} × (1 − ${qte(-m.f.elasticiteAuPrix)} × écart de prix ÷ prix d'aujourd'hui), à l'article près en dessous. Calculez le prix aligné hors taxes, les pulls demandés, le taux de marque, à deux décimales, et la marge commerciale du mois.`;
       },
       champs: (c) => {
         const m = margesDuRayon(c);
@@ -724,10 +723,11 @@ const TAUX_DE_MARQUE_ENTIER: Chapitre = {
           { libelle: "Prix aligné, hors taxes", attendu: m.htConcurrent, calcul: `${eur(m.ttcConcurrent)} ÷ ${coef(1 + m.r.tauxTva)} = ${eur(m.htConcurrent)}` },
           {
             libelle: "Pulls demandés au prix aligné",
+            nature: "quantite",
             attendu: m.aligne.demande,
-            calcul: `${qte(m.r.demandeDuMois)} × (1 − ${qte(-m.f.elasticiteAuPrix)} × (${eur(m.htConcurrent)} − ${eur(m.r.prixHt)}) ÷ ${eur(m.r.prixHt)}) = ${qte(m.aligne.demande)}`,
+            calcul: `${qte(m.r.demandeDuMois)} × (1 − ${qte(-m.f.elasticiteAuPrix)} × (${eur(m.htConcurrent)} − ${eur(m.r.prixHt)}) ÷ ${eur(m.r.prixHt)}) = ${qte(m.aligne.demandeCalculee)}, soit ${qte(m.aligne.demande)} pulls à l'unité au-dessous : la simulation ne compte que des clientes entières`,
           },
-          { libelle: "Taux de marque au prix aligné (%)", attendu: m.aligne.tMarque, calcul: `(${eur(m.htConcurrent)} − ${eur(m.r.coutDAchat)}) ÷ ${eur(m.htConcurrent)} × 100 = ${pct(m.aligne.tMarque)}`, tolerance: 0.1 },
+          { libelle: "Taux de marque au prix aligné (%)", attendu: m.aligne.tMarque, calcul: `(${eur(m.htConcurrent)} − ${eur(m.r.coutDAchat)}) ÷ ${eur(m.htConcurrent)} × 100 = ${pct(m.aligne.tMarque)}` },
           { libelle: "Marge commerciale du mois, alignée", attendu: m.aligne.margeDuMois, calcul: `(${eur(m.htConcurrent)} − ${eur(m.r.coutDAchat)}) × ${qte(m.aligne.ventes)} = ${eur(m.aligne.margeDuMois)}` },
         ];
       },
@@ -811,21 +811,19 @@ const TAUX_DE_MARQUE_ENTIER: Chapitre = {
       notions: ["margin_rates", "price_elasticity"],
       question: (c) => {
         const m = margesDuRayon(c);
-        return `Au prix aligné de ${eur(m.htConcurrent)} HT, calculez le prix d'achat le plus haut qui garde le taux de marque d'aujourd'hui (${pct(m.tMarque)}), puis celui qui garde la marge du mois de ${m.f.moisDeReference} (${eur(m.margeDuMoisDeJanvier)}) avec les ventes alignées, au centime inférieur, et la baisse à obtenir du façonnier dans chaque cas, en pourcentage, au dixième.`;
+        return `Au prix aligné de ${eur(m.htConcurrent)} HT, calculez le prix d'achat le plus haut qui garde le taux de marque d'aujourd'hui (${pct(m.tMarque)}), puis celui qui garde la marge du mois de ${m.f.moisDeReference} (${eur(m.margeDuMoisDeJanvier)}) avec les ventes alignées, au centime inférieur, et la baisse à obtenir du façonnier dans chaque cas, en pourcentage, à deux décimales.`;
       },
       champs: (c) => {
         const m = margesDuRayon(c);
         return [
-          // Le taux arrondi au dixième que l'élève a gardé déplace le prix d'un centime.
-          { libelle: "Prix d'achat qui garde le taux de marque", attendu: m.achatQuiGardeLaMarque, calcul: `${eur(m.htConcurrent)} × (1 − ${pct(m.tMarque)}) = ${eur(m.achatQuiGardeLaMarque)}`, tolerance: 0.02 },
+          { libelle: "Prix d'achat qui garde le taux de marque", attendu: m.achatQuiGardeLaMarque, calcul: `${eur(m.htConcurrent)} × (1 − ${pct(m.tMarque)}) = ${eur(m.achatQuiGardeLaMarque)}` },
           {
             libelle: "Prix d'achat qui garde la marge du mois",
             attendu: m.achatQuiGardeLaMarge,
             calcul: `${eur(m.htConcurrent)} − ${eur(m.margeDuMoisDeJanvier)} ÷ ${qte(m.aligne.ventes)} = ${eur(m.achatQuiGardeLaMarge)}, au centime inférieur`,
-            tolerance: 0.01,
           },
-          { libelle: "Baisse qui garde le taux de marque (%)", attendu: m.baisseQuiGardeLaMarque, calcul: `(${eur(m.r.coutDAchat)} − ${eur(m.achatQuiGardeLaMarque)}) ÷ ${eur(m.r.coutDAchat)} × 100 = ${pct(m.baisseQuiGardeLaMarque)}`, tolerance: 0.1 },
-          { libelle: "Baisse qui garde la marge du mois (%)", attendu: m.baisseQuiGardeLaMarge, calcul: `(${eur(m.r.coutDAchat)} − ${eur(m.achatQuiGardeLaMarge)}) ÷ ${eur(m.r.coutDAchat)} × 100 = ${pct(m.baisseQuiGardeLaMarge)}`, tolerance: 0.1 },
+          { libelle: "Baisse qui garde le taux de marque (%)", attendu: m.baisseQuiGardeLaMarque, calcul: `(${eur(m.r.coutDAchat)} − ${eur(m.achatQuiGardeLaMarque)}) ÷ ${eur(m.r.coutDAchat)} × 100 = ${pct(m.baisseQuiGardeLaMarque)}` },
+          { libelle: "Baisse qui garde la marge du mois (%)", attendu: m.baisseQuiGardeLaMarge, calcul: `(${eur(m.r.coutDAchat)} − ${eur(m.achatQuiGardeLaMarge)}) ÷ ${eur(m.r.coutDAchat)} × 100 = ${pct(m.baisseQuiGardeLaMarge)}` },
         ];
       },
       explication: (c) => {
@@ -869,7 +867,7 @@ const TAUX_DE_MARQUE_ENTIER: Chapitre = {
         return [
           { libelle: "Prix d'achat d'un pull", montant: x.coutDAchat, reference: d.coutDAchat },
           { libelle: "Pulls demandés dans le mois", montant: x.demande, reference: d.demande, unite: "articles" },
-          { libelle: "Taux de marque", montant: auDixieme(x.tauxDeMarque * 100), reference: auDixieme(d.tauxDeMarque * 100), unite: "%" },
+          { libelle: "Taux de marque", montant: auCentime(x.tauxDeMarque * 100), reference: auCentime(d.tauxDeMarque * 100), unite: "%" },
           { libelle: "Marge commerciale d'un pull", montant: x.margeCommerciale, reference: d.margeCommerciale },
           { libelle: "Marge commerciale du mois", montant: x.margeDuMois, reference: d.margeDuMois },
           { libelle: "Marge du mois gagnée sur janvier", montant: auCentime(x.margeDuMois - m.margeDuMoisDeJanvier), reference: 0, effet: true, fort: true },
@@ -905,7 +903,7 @@ const TAUX_DE_MARQUE_ENTIER: Chapitre = {
         const m = margesDuRayon(c);
         const x = margeAuPrix(m.f, p.prix!, p.fournisseur!);
         return [
-          `À ${eur(p.prix!)}, l'atelier local laisse ${eur(x.margeDuMois)} de marge du mois, avec un taux de marque de ${pct(auDixieme(x.tauxDeMarque * 100))}. Au prix de janvier, ${eur(m.r.prixHt)}, il n'en laissait que ${eur(m.auPrixDeJanvier.margeDuMois)} ; au prix qui garde le taux de marque, ${eur(m.prixAtelier)}, ${eur(m.auPrixQuiGarde.margeDuMois)}, car seuls ${qte(m.auPrixQuiGarde.demande)} pulls se vendent. La marge du mois culmine entre les deux, vers ${eur(m.meilleurAtelier.prix)}.`,
+          `À ${eur(p.prix!)}, l'atelier local laisse ${eur(x.margeDuMois)} de marge du mois, avec un taux de marque de ${pct(auCentime(x.tauxDeMarque * 100))}. Au prix de janvier, ${eur(m.r.prixHt)}, il n'en laissait que ${eur(m.auPrixDeJanvier.margeDuMois)} ; au prix qui garde le taux de marque, ${eur(m.prixAtelier)}, ${eur(m.auPrixQuiGarde.margeDuMois)}, car seuls ${qte(m.auPrixQuiGarde.demande)} pulls se vendent. La marge du mois culmine entre les deux, vers ${eur(m.meilleurAtelier.prix)}.`,
           `La courbe n'est pas une droite : à prix plus haut, chaque pull marque plus, mais il s'en vend moins. Avec le façonnier, elle culmine vers ${eur(m.meilleurFaconnier.prix)}, à ${eur(m.meilleurFaconnier.marge)}. Le taux de marque est un repère du rayon ; ce que la boutique encaisse, c'est la marge du mois.`,
         ];
       },
@@ -918,22 +916,22 @@ const TAUX_DE_MARQUE_ENTIER: Chapitre = {
       notions: ["price_elasticity"],
       question: (c) => {
         const e = elasticiteLue(ficheDe(c));
-        return `Au prix de l'étiquette (${eur(e.r.prixHt)} hors taxes), les clientes demandent ${qte(e.r.demandeDuMois)} pulls col rond ; au prix du concurrent (${eur(e.prixHtDuConcurrent)}), la simulation en fait demander ${qte(e.demandeAuPrix)}. Calculez la variation du prix et celle de la demande, en pourcentage au dixième (négative si elle baisse), puis le coefficient d'élasticité de la demande au prix, au centième (négatif s'il est de signe contraire).`;
+        return `Au prix de l'étiquette (${eur(e.r.prixHt)} hors taxes), les clientes demandent ${qte(e.r.demandeDuMois)} pulls col rond ; au prix du concurrent (${eur(e.prixHtDuConcurrent)}), la simulation en fait demander ${qte(e.demandeAuPrix)}. Calculez la variation du prix et celle de la demande, en pourcentage à deux décimales (négative si elle baisse), puis le coefficient d'élasticité de la demande au prix, au centième (négatif s'il est de signe contraire).`;
       },
       champs: (c) => {
         const e = elasticiteLue(ficheDe(c));
-        const vp = auDixieme(e.variationDuPrix * 100);
-        const vd = auDixieme(e.variationDeLaDemande * 100);
+        const vp = auCentime(e.variationDuPrix * 100);
+        const vd = auCentime(e.variationDeLaDemande * 100);
         return [
-          { libelle: "Variation du prix (%)", attendu: vp, tolerance: 0.1, calcul: `(${eur(e.prixHtDuConcurrent)} − ${eur(e.r.prixHt)}) ÷ ${eur(e.r.prixHt)} × 100 = ${pct(vp)}` },
-          { libelle: "Variation de la demande (%)", attendu: vd, tolerance: 0.1, calcul: `(${qte(e.demandeAuPrix)} − ${qte(e.r.demandeDuMois)}) ÷ ${qte(e.r.demandeDuMois)} × 100 = ${pct(vd)}` },
-          { libelle: "Coefficient d'élasticité", attendu: auCentiemePres(e.elasticite), tolerance: 0.02, calcul: `${pct(vd)} ÷ ${pct(vp)} = ${qte(auCentiemePres(e.elasticite))}` },
+          { libelle: "Variation du prix (%)", attendu: vp, calcul: `(${eur(e.prixHtDuConcurrent)} − ${eur(e.r.prixHt)}) ÷ ${eur(e.r.prixHt)} × 100 = ${pct(vp)}` },
+          { libelle: "Variation de la demande (%)", attendu: vd, calcul: `(${qte(e.demandeAuPrix)} − ${qte(e.r.demandeDuMois)}) ÷ ${qte(e.r.demandeDuMois)} × 100 = ${pct(vd)}` },
+          { libelle: "Coefficient d'élasticité", nature: "grandeur", attendu: auCentime(vd / vp), calcul: `${pct(vd)} ÷ ${pct(vp)} = ${qte(auCentime(vd / vp))}` },
         ];
       },
       explication: (c) => {
         const e = elasticiteLue(ficheDe(c));
         return [
-          `Une baisse de prix de 1 % fait demander environ ${qte(Math.round(-e.elasticite * 10) / 10)} % de pulls en plus : la demande est élastique (le coefficient dépasse 1 en valeur absolue). La simulation suppose ${qte(ficheDe(c).elasticiteAuPrix)} ; l'arrondi des pulls à l'unité donne ${qte(auCentiemePres(e.elasticite))}. Plus la demande est élastique, plus un écart de prix avec le concurrent pèse sur les ventes.`,
+          `Une baisse de prix de 1 % fait demander environ ${qte(Math.round(-e.elasticite * 10) / 10)} % de pulls en plus : la demande est élastique (le coefficient dépasse 1 en valeur absolue). La simulation suppose ${qte(ficheDe(c).elasticiteAuPrix)} ; l'arrondi des pulls à l'unité donne ${qte(auCentime(e.elasticite))}. Plus la demande est élastique, plus un écart de prix avec le concurrent pèse sur les ventes.`,
         ];
       },
     },
@@ -956,8 +954,8 @@ const TAUX_DE_MARQUE_ENTIER: Chapitre = {
         const de = (p: number) => a.lignes.find((l) => l.prixTtc === p)!;
         return [f.gamme[0]!.prixTtc, f.concurrent.prixTtc].map((p) => {
           const l = de(p);
-          const t = Math.round(l.acceptation * 1000) / 10;
-          return { libelle: `Taux d'acceptation à ${eur(p)} (%)`, attendu: t, tolerance: 0.1, calcul: `100 % − ${pct(l.tropCher * 100)} − ${pct(l.tropBonMarche * 100)} = ${pct(t)}` };
+          const t = auCentime(l.acceptation * 100);
+          return { libelle: `Taux d'acceptation à ${eur(p)} (%)`, attendu: t, calcul: `100 % − ${pct(l.tropCher * 100)} − ${pct(l.tropBonMarche * 100)} = ${pct(t)}` };
         });
       },
       explication: () => {
@@ -1027,7 +1025,7 @@ const TAUX_DE_MARQUE_ENTIER: Chapitre = {
           {
             texte: `Elle doit garder ${eur(m.r.prixHt)} : le client ne voit pas le fournisseur`,
             juste: false,
-            retour: `Non : à ${eur(m.r.prixHt)}, le pull de l'atelier ne laisse que ${eur(m.auPrixDeJanvier.margeDuMois)} de marge du mois, et ${pct(auDixieme(m.auPrixDeJanvier.tauxDeMarque * 100))} de marque. Un prix entre les deux fait mieux que l'un et l'autre.`,
+            retour: `Non : à ${eur(m.r.prixHt)}, le pull de l'atelier ne laisse que ${eur(m.auPrixDeJanvier.margeDuMois)} de marge du mois, et ${pct(auCentime(m.auPrixDeJanvier.tauxDeMarque * 100))} de marque. Un prix entre les deux fait mieux que l'un et l'autre.`,
           },
         ];
       },
@@ -1088,10 +1086,10 @@ export const TAUX_DE_MARQUE: Chapitre = partieDuChapitre(TAUX_DE_MARQUE_ENTIER, 
       return [
         { libelle: "Prix de vente hors taxes", montant: x.prixHt, reference: d.prixHt },
         { libelle: "Marge commerciale d'un pull", montant: x.margeCommerciale, reference: d.margeCommerciale, fort: true },
-        { libelle: "Taux de marque", montant: auDixieme(x.tauxDeMarque * 100), reference: auDixieme(d.tauxDeMarque * 100), unite: "%" },
-        { libelle: "Taux de marge", montant: auDixieme(x.tauxDeMarge * 100), reference: auDixieme(d.tauxDeMarge * 100), unite: "%" },
+        { libelle: "Taux de marque", montant: auCentime(x.tauxDeMarque * 100), reference: auCentime(d.tauxDeMarque * 100), unite: "%" },
+        { libelle: "Taux de marge", montant: auCentime(x.tauxDeMarge * 100), reference: auCentime(d.tauxDeMarge * 100), unite: "%" },
         { libelle: "Coefficient multiplicateur TTC", montant: auCentime(x.coefficientTtc), reference: auCentime(d.coefficientTtc), unite: "fois" },
-        { libelle: `Écart au taux de marque de ${m.f.moisDeReference}`, montant: auDixieme((x.tauxDeMarque - m.tauxDeMarqueExact) * 100), reference: 0, unite: "points", effet: true },
+        { libelle: `Écart au taux de marque de ${m.f.moisDeReference}`, montant: auCentime(auCentime(x.tauxDeMarque * 100) - m.tMarque), reference: 0, unite: "points", effet: true },
       ];
     },
     graphique: (c) => {
@@ -1100,7 +1098,7 @@ export const TAUX_DE_MARQUE: Chapitre = partieDuChapitre(TAUX_DE_MARQUE_ENTIER, 
         levier: "etiquette",
         unite: "%",
         courbes: [
-          { libelle: "Taux de marque à cette étiquette", valeur: (p) => auDixieme(pullALEtiquette(m.f, p.achat!, p.etiquette!).tauxDeMarque * 100) },
+          { libelle: "Taux de marque à cette étiquette", valeur: (p) => auCentime(pullALEtiquette(m.f, p.achat!, p.etiquette!).tauxDeMarque * 100) },
           { libelle: `Taux de marque de ${m.f.moisDeReference}`, valeur: () => m.tMarque },
         ],
       };
@@ -1118,11 +1116,11 @@ export const TAUX_DE_MARQUE: Chapitre = partieDuChapitre(TAUX_DE_MARQUE_ENTIER, 
           if (!garde(p)) {
             const enEuros =
               x.margeCommerciale >= m.a.margeCommerciale
-                ? `la marge d'un pull vaut ${eur(x.margeCommerciale)}, autant ou plus qu'en ${m.f.moisDeReference}, mais le taux de marque n'est que de ${pct(auDixieme(x.tauxDeMarque * 100))} : garder la marge en euros ne garde pas le taux.`
-                : `la marge d'un pull tombe à ${eur(x.margeCommerciale)}, et le taux de marque à ${pct(auDixieme(x.tauxDeMarque * 100))}.`;
+                ? `la marge d'un pull vaut ${eur(x.margeCommerciale)}, autant ou plus qu'en ${m.f.moisDeReference}, mais le taux de marque n'est que de ${pct(auCentime(x.tauxDeMarque * 100))} : garder la marge en euros ne garde pas le taux.`
+                : `la marge d'un pull tombe à ${eur(x.margeCommerciale)}, et le taux de marque à ${pct(auCentime(x.tauxDeMarque * 100))}.`;
             return `À ${eur(p.etiquette!)}, ${enEuros} Montez l'étiquette.`;
           }
-          return `À ${eur(p.etiquette!)}, le taux de marque est gardé (${pct(auDixieme(x.tauxDeMarque * 100))}), mais une étiquette plus basse le garde encore : cherchez la plus petite.`;
+          return `À ${eur(p.etiquette!)}, le taux de marque est gardé (${pct(auCentime(x.tauxDeMarque * 100))}), mais une étiquette plus basse le garde encore : cherchez la plus petite.`;
         },
         solution: { achat: m.achatEnHausse, etiquette: m.etiquetteApresHausse },
       };
@@ -1133,8 +1131,8 @@ export const TAUX_DE_MARQUE: Chapitre = partieDuChapitre(TAUX_DE_MARQUE_ENTIER, 
       const enEuros = pullALEtiquette(m.f, m.achatEnHausse, m.etiquetteQuiGardeLaMarge);
       const hausse = auCentime(m.achatEnHausse - m.r.coutDAchat);
       return [
-        `À ${eur(p.etiquette!)}, soit ${eur(x.prixHt)} HT, le pull marque ${pct(auDixieme(x.tauxDeMarque * 100))} et laisse ${eur(x.margeCommerciale)}, au lieu de ${eur(m.a.margeCommerciale)} : la marge monte de ${eur(auCentime(x.margeCommerciale - m.a.margeCommerciale))} pour une hausse du prix d'achat de ${eur(hausse)}. Garder le taux, c'est garder le coefficient, ${coef(m.coefTtc)} toutes taxes comprises (${coef(auCentime(x.coefficientTtc))} à l'arrondi de l'étiquette près) : le client paie la hausse multipliée par le coefficient.`,
-        `Répercuter la hausse en euros, ${eur(hausse)} HT soit ${eur(auCentime(hausse * (1 + m.r.tauxTva)))} TTC, donne ${eur(m.etiquetteQuiGardeLaMarge)} : la marge reste ${eur(enEuros.margeCommerciale)}, mais le taux de marque tombe à ${pct(auDixieme(enEuros.tauxDeMarque * 100))} et le taux de marge à ${pct(auDixieme(enEuros.tauxDeMarge * 100))}. Quand le prix d'achat change, la marge en euros et le taux ne se gardent pas ensemble : le commerçant choisit ce qu'il garde.`,
+        `À ${eur(p.etiquette!)}, soit ${eur(x.prixHt)} HT, le pull marque ${pct(auCentime(x.tauxDeMarque * 100))} et laisse ${eur(x.margeCommerciale)}, au lieu de ${eur(m.a.margeCommerciale)} : la marge monte de ${eur(auCentime(x.margeCommerciale - m.a.margeCommerciale))} pour une hausse du prix d'achat de ${eur(hausse)}. Garder le taux, c'est garder le coefficient, ${coef(m.coefTtc)} toutes taxes comprises (${coef(auCentime(x.coefficientTtc))} à l'arrondi de l'étiquette près) : le client paie la hausse multipliée par le coefficient.`,
+        `Répercuter la hausse en euros, ${eur(hausse)} HT soit ${eur(auCentime(hausse * (1 + m.r.tauxTva)))} TTC, donne ${eur(m.etiquetteQuiGardeLaMarge)} : la marge reste ${eur(enEuros.margeCommerciale)}, mais le taux de marque tombe à ${pct(auCentime(enEuros.tauxDeMarque * 100))} et le taux de marge à ${pct(auCentime(enEuros.tauxDeMarge * 100))}. Quand le prix d'achat change, la marge en euros et le taux ne se gardent pas ensemble : le commerçant choisit ce qu'il garde.`,
       ];
     },
   },

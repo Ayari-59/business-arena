@@ -229,14 +229,14 @@ describe("la valeur d'un client, chez ATLAS CONSEIL", () => {
   });
 
   it("les étapes guidées : l'attrition, la marge d'un compte, la valeur vie, le coût d'acquisition", () => {
-    const auDixieme = (x: number) => Math.round(x * 1_000) / 10;
+    const enPoints = (x: number) => Math.round(x * 10_000) / 100;
     expect(attendus(ch, "l-attrition")).toEqual({
-      "Taux d'attrition de N − 2 (%)": auDixieme(attrition(n2)),
-      "Taux d'attrition de N − 1 (%)": auDixieme(attrition(n1)),
+      "Taux d'attrition de N − 2 (%)": enPoints(attrition(n2)),
+      "Taux d'attrition de N − 1 (%)": enPoints(attrition(n1)),
       "Taux d'attrition de N (%)": 25,
       "Taux de fidélisation de N (%)": 75,
     });
-    expect([auDixieme(attrition(n2)), auDixieme(attrition(n1))]).toEqual([17.9, 22.6]);
+    expect([enPoints(attrition(n2)), enPoints(attrition(n1))]).toEqual([17.86, 22.58]);
     expect(attendus(ch, "la-marge-d-un-compte")).toEqual({ "Marge sur coûts directs des comptes": 672_000, "Chiffre d'affaires d'un compte moyen": 43_200, "Marge d'un compte moyen": 21_000 });
     expect(attendus(ch, "la-valeur-vie")).toEqual({ "Durée de vie moyenne (années)": 4, "Valeur vie client": 84_000 });
     expect(attendus(ch, "le-cout-d-acquisition")).toEqual({ "Coût des canaux de conquête": 120_000, "Coût d'acquisition d'un compte": 15_000, "Valeur vie ÷ coût d'acquisition": 5.6 });
@@ -295,9 +295,10 @@ describe("la valeur d'un client, chez ATLAS CONSEIL", () => {
     expect(attendus(ch, "recruter-ou-fideliser")).toEqual({
       "Portefeuille d'équilibre en recrutant": enRecrutant,
       "Portefeuille d'équilibre en fidélisant": centime(enFidelisant),
-      "Journées demandées par le plus grand portefeuille": centime(enFidelisant * parCompte),
+      "Journées demandées par le plus grand portefeuille": centime(centime(enFidelisant) * parCompte),
     });
-    expect([enRecrutant, centime(enFidelisant), centime(enFidelisant * parCompte)]).toEqual([40, 42.67, 2_560]);
+    // Le portefeuille de la copie, 42,67 comptes, fait les journées : 42,67 × 60 = 2 560,20.
+    expect([enRecrutant, centime(enFidelisant), centime(centime(enFidelisant) * parCompte)]).toEqual([40, 42.67, 2_560.2]);
     expect(enFidelisant * parCompte).toBeGreaterThan(capacite);
     expect(juste(ch, "la-capacite")).toBe("Fidéliser, en prévoyant un consultant de plus");
   });

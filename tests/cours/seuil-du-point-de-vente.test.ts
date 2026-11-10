@@ -205,7 +205,10 @@ const MCV = CA - CV;
 const taux = MCV / CA;
 // Les charges fixes : loyer, l'équipe (10 100 € bruts × 1,42), publicité, entretien, usure.
 const CF = 13_600 + 10_100 * 1.42 + 1_500 + 920 + 333;
-const seuil = centime(CF / taux);
+// Le seuil de la copie : sur le taux de marge arrondi à deux décimales (50,60 %), comme l'élève.
+const tauxCopie = Math.round(taux * 10_000) / 10_000;
+const seuil = centime(CF / tauxCopie);
+const indice = (ca: number) => Math.round(((ca - seuil) / ca) * 10_000) / 100;
 // Les commandes des comités d'entreprise, facturées à 45 jours, ne passent pas en caisse : un seul
 // panier dans tout le cours, le chiffre d'affaires encaissé en caisse ÷ les passages en caisse.
 const COMITES = 80 * 55 + 20 * 135 + 60 * 35 + 40 * 25;
@@ -223,9 +226,10 @@ describe("la fiche de la boutique donne les chiffres de la consigne", () => {
   it("marge, seuil, sécurité, point mort", () => {
     expect([CA, CV, MCV, CF]).toEqual([87_450, 43_200, 44_250, 30_695]);
     expect(Math.round(taux * 1000) / 10).toBe(50.6);
-    expect(seuil).toBe(60_661.64);
-    expect(centime(CA - seuil)).toBe(26_788.36);
-    expect(Math.round(((CA - seuil) / CA) * 1000) / 10).toBe(30.6);
+    expect(tauxCopie).toBe(0.506);
+    expect(seuil).toBe(60_662.06);
+    expect(centime(CA - seuil)).toBe(26_787.94);
+    expect(indice(CA)).toBe(30.63);
     expect(Math.ceil((seuil / CA) * 30)).toBe(21);
     expect(MCV - CF).toBe(13_555);
   });
@@ -267,7 +271,7 @@ describe("le seuil du point de vente : le chapitre", () => {
       "Usure du rayonnage": [333, "fixe"],
     });
     expect([G.reduce((t, r) => t + r.q * r.achat, 0), G.reduce((t, r) => t + r.q * r.autres, 0)]).toEqual([38_325, 4_875]);
-    expect(attendus(ch, "le-seuil")).toEqual({ "Charges fixes du mois": CF, "Seuil de rentabilité": seuil, "Marge de sécurité": centime(CA - seuil), "Indice de sécurité (%)": 30.6 });
+    expect(attendus(ch, "le-seuil")).toEqual({ "Charges fixes du mois": CF, "Seuil de rentabilité": seuil, "Marge de sécurité": centime(CA - seuil), "Indice de sécurité (%)": 30.63 });
   });
 
   it("les étapes autonomes : le point mort, le jour fermé, les passages", () => {
@@ -295,19 +299,19 @@ describe("le seuil du point de vente : le chapitre", () => {
     // À rebours : l'indice de sécurité tombe à 20 %, le seuil d'alerte de la fiche.
     expect(f.seuilsDAlerte.indiceDeSecurite.seuil).toBe(0.2);
     const caFevrier = centime(seuil / 0.8);
-    const margeFevrier = centime(caFevrier * taux);
+    const margeFevrier = centime(caFevrier * tauxCopie);
     expect(attendus(ch, "a-rebours")).toEqual({ "Chiffre d'affaires de février": caFevrier, "Marge sur coût variable de février": margeFevrier, "Résultat de février": centime(margeFevrier - CF) });
-    expect([caFevrier, margeFevrier, centime(margeFevrier - CF)]).toEqual([75_827.05, 38_368.75, 7_673.75]);
+    expect([caFevrier, margeFevrier, centime(margeFevrier - CF)]).toEqual([75_827.58, 38_368.76, 7_673.76]);
     // Le résultat vaut la marge de sécurité × le taux de marge.
-    expect(centime((caFevrier - seuil) * taux)).toBeCloseTo(centime(margeFevrier - CF), 1);
+    expect(centime((caFevrier - seuil) * tauxCopie)).toBeCloseTo(centime(margeFevrier - CF), 1);
     expect(CAMPAGNE_D_AFFICHAGE).toBe(1_500);
-    const seuilCampagne = centime((CF + 1_500) / taux);
+    const seuilCampagne = centime((CF + 1_500) / tauxCopie);
     expect(attendus(ch, "une-campagne-de-plus")).toEqual({
       "Seuil avec la campagne": seuilCampagne,
       "Point mort avec la campagne (jour du mois)": Math.ceil((seuilCampagne / CA) * 30),
-      "Chiffre d'affaires en plus pour payer la campagne": centime(1_500 / taux),
+      "Chiffre d'affaires en plus pour payer la campagne": centime(1_500 / tauxCopie),
     });
-    expect([seuilCampagne, Math.ceil((seuilCampagne / CA) * 30), centime(1_500 / taux)]).toEqual([63_626.05, 22, 2_964.41]);
+    expect([seuilCampagne, Math.ceil((seuilCampagne / CA) * 30), centime(1_500 / tauxCopie)]).toEqual([63_626.48, 22, 2_964.43]);
   });
 
   it("les verdicts : les paris, le plancher en question", () => {
@@ -332,15 +336,15 @@ describe("le seuil du point de vente : le chapitre", () => {
       droites: [MCV, CF, (MCV * 10) / 30, CF],
       lecture: { "Chiffre d'affaires du mois": (CA * 21) / 30, "Marge sur coût variable": (MCV * 21) / 30, "Charges fixes du mois": CF, "Résultat du mois": 280 },
     });
-    // La marge, (940 × p + 10 200) × taux, face aux charges fixes : (30 695 ÷ taux − 10 200) ÷ 940 = 53,68.
-    const p = Math.ceil((CF / taux - COMITES) / PASSAGES);
+    // La marge, (940 × p + 10 200) × 50,60 %, face aux charges fixes : (30 695 ÷ taux − 10 200) ÷ 940 = 53,68.
+    const p = Math.ceil((CF / tauxCopie - COMITES) / PASSAGES);
     expect(p).toBe(54);
     const c = curseur(ch, "le-panier-plancher");
     expect([c.attendu, ...c.bornes]).toEqual([54, 45, 110]);
-    expect(c.droites).toEqual([centime((PASSAGES * 45 + COMITES) * taux), CF, centime((PASSAGES * 110 + COMITES) * taux), CF]);
+    expect(c.droites).toEqual([centime((PASSAGES * 45 + COMITES) * tauxCopie), CF, centime((PASSAGES * 110 + COMITES) * tauxCopie), CF]);
     const ca54 = PASSAGES * 54 + COMITES;
-    expect(c.lecture).toEqual({ "Chiffre d'affaires du mois": ca54, "Marge sur coût variable": centime(ca54 * taux), "Charges fixes": CF, "Résultat du mois": centime(centime(ca54 * taux) - CF) });
-    expect(c.lecture["Résultat du mois"]).toBe(150.97);
+    expect(c.lecture).toEqual({ "Chiffre d'affaires du mois": ca54, "Marge sur coût variable": centime(ca54 * tauxCopie), "Charges fixes": CF, "Résultat du mois": centime(centime(ca54 * tauxCopie) - CF) });
+    expect(c.lecture["Résultat du mois"]).toBe(150.76);
   });
 
   it("le laboratoire du seuil : avancer le point mort au 18, le seuil ne bouge pas", () => {
@@ -354,7 +358,7 @@ describe("le seuil du point de vente : le chapitre", () => {
       "Seuil de rentabilité": seuil,
       "Chiffre d'affaires cumulé au jour lu": CA,
       "Point mort, jour du mois": 21,
-      "Indice de sécurité": 30.6,
+      "Indice de sécurité": 30.63,
       "Résultat du mois": MCV - CF,
     });
     // 1 000 passages au panier de janvier plus 12 %, et les commandes des comités : 102 242,55 € sur le mois.
@@ -366,7 +370,7 @@ describe("le seuil du point de vente : le chapitre", () => {
       "Seuil de rentabilité": seuil,
       "Chiffre d'affaires cumulé au jour lu": centime(((1_000 * panier * 1.12 + COMITES) / 30) * 18),
       "Point mort, jour du mois": Math.ceil((seuil / ca) * 30),
-      "Indice de sécurité": Math.round(((ca - seuil) / ca) * 1000) / 10,
+      "Indice de sécurité": indice(ca),
       "Résultat du mois": centime(marge - CF),
     });
     expect(Math.ceil((seuil / ca) * 30)).toBe(18);
@@ -415,13 +419,13 @@ describe("fermé pour travaux : le cas", () => {
       "Point mort des travaux simples (jour du mois)": 5 + 21,
     });
     expect([(CA * 25) / 30, (MCV * 25) / 30 - CF]).toEqual([72_875, 6_180]);
-    const seuilAccelere = centime((CF + 2_500) / taux);
+    const seuilAccelere = centime((CF + 2_500) / tauxCopie);
     expect(attendus(s, "les-travaux-acceleres")).toEqual({
       "Résultat des travaux accélérés": (MCV * 27) / 30 - CF - 2_500,
       "Seuil des travaux accélérés": seuilAccelere,
       "Point mort des travaux accélérés (jour du mois)": 3 + Math.ceil(seuilAccelere / (CA / 30)),
     });
-    expect([(MCV * 27) / 30 - CF - 2_500, seuilAccelere, 3 + Math.ceil(seuilAccelere / 2_915)]).toEqual([6_630, 65_602.32, 26]);
+    expect([(MCV * 27) / 30 - CF - 2_500, seuilAccelere, 3 + Math.ceil(seuilAccelere / 2_915)]).toEqual([6_630, 65_602.77, 26]);
   });
 
   it("le curseur du cas, à rebours : le supplément que les 2 jours gagnés paient", () => {

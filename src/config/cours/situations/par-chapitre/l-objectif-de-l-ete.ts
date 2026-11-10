@@ -1,3 +1,4 @@
+import { nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { PROGRESSION_EN_POURCENT, SUIVRE_SES_VENTES, calculDeLObjectif, suiviDesVentes, tableauDuSuivi, type Verdict } from "../../chapitres/suivre-ses-ventes";
 import type { Situation } from "../types";
@@ -17,15 +18,19 @@ import type { Situation } from "../types";
  * CE QUI A CHANGÉ. Le cas posait l'objectif du trimestre 3 de l'arène sur le trimestre 2, plus 10 %.
  * Il le pose maintenant sur l'été de N − 2, plus 5 % : 5 436 articles visés, 5 588 vendus, 102,8 %,
  * la prime est gagnée.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : l'objectif et les écarts en articles sont des quantités,
+ * l'objectif arrondi à l'unité au-dessus ; le taux de réalisation se donne à deux décimales (au
+ * dixième, avant).
  */
 
 /** L'été : le troisième trimestre, de juillet à septembre. */
 export const TRIMESTRE_DE_L_ETE = 3;
 
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
+const qte = nombreAuCentieme;
 /** L'année de la fiche, écrite avec le signe moins : « N − 1 ». */
 const an = (a: string) => a.replace("-", " − ");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
 
 export const suiviDeLEte = (c: Pick<Cas, "code">) => suiviDesVentes(c, TRIMESTRE_DE_L_ETE);
 
@@ -71,13 +76,13 @@ export const L_OBJECTIF_DE_L_ETE: Situation = {
       type: "montants",
       titre: "L'objectif et le réalisé de l'été",
       notions: ["dashboard"],
-      question: (c) => `Calculez l'objectif de l'été (les ventes de l'été d'avant, plus ${qte(suiviDeLEte(c).progression)} %, arrondi à l'unité du dessus), l'écart avec les ventes de l'été (négatif s'il en manque), puis le taux de réalisation, au dixième.`,
+      question: (c) => `Calculez l'objectif de l'été (les ventes de l'été d'avant, plus ${qte(suiviDeLEte(c).progression)} %, arrondi à l'unité du dessus), l'écart avec les ventes de l'été (négatif s'il en manque), puis le taux de réalisation, à deux décimales.`,
       champs: (c) => {
         const k = suiviDeLEte(c);
         return [
-          { libelle: "Objectif de l'été", attendu: k.objectif, calcul: calculDeLObjectif(k) },
-          { libelle: "Écart en articles", attendu: k.ecart, calcul: `${qte(k.pendant.ventes)} − ${qte(k.objectif)} = ${qte(k.ecart)}` },
-          { libelle: "Taux de réalisation (%)", attendu: k.tauxDeRealisation, calcul: `${qte(k.pendant.ventes)} ÷ ${qte(k.objectif)} × 100 = ${pct(k.tauxDeRealisation)}`, tolerance: 0.1 },
+          { libelle: "Objectif de l'été", nature: "quantite", attendu: k.objectif, calcul: calculDeLObjectif(k) },
+          { libelle: "Écart en articles", nature: "quantite", attendu: k.ecart, calcul: `${qte(k.pendant.ventes)} − ${qte(k.objectif)} = ${qte(k.ecart)}` },
+          { libelle: "Taux de réalisation (%)", attendu: k.tauxDeRealisation, calcul: `${qte(k.pendant.ventes)} ÷ ${qte(k.objectif)} × 100 = ${pct(k.tauxDeRealisation)}` },
         ];
       },
       explication: (c) => {
@@ -95,7 +100,7 @@ export const L_OBJECTIF_DE_L_ETE: Situation = {
         const k = suiviDeLEte(c);
         return [
           { libelle: "Articles demandés sans être servis", attendu: k.pendant.repartis, calcul: `${qte(k.pendant.demande)} − ${qte(k.pendant.ventes)} = ${qte(k.pendant.repartis)}` },
-          { libelle: "Demande face à l'objectif", attendu: k.demandeFaceALObjectif, calcul: `${qte(k.pendant.demande)} − ${qte(k.objectif)} = ${qte(k.demandeFaceALObjectif)}` },
+          { libelle: "Demande face à l'objectif", nature: "quantite", attendu: k.demandeFaceALObjectif, calcul: `${qte(k.pendant.demande)} − ${qte(k.objectif)} = ${qte(k.demandeFaceALObjectif)}` },
         ];
       },
       explication: (c) => {

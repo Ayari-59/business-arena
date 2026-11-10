@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_STOCK, stockDeLaBoutique, tableauDuStock } from "../../chapitres/stock-du-point-de-vente";
 import type { Situation } from "../types";
@@ -23,6 +23,10 @@ import type { Situation } from "../types";
  * Les pièges : croire qu'un stock 20 % plus léger fait tourner le stock 20 % plus vite (il le fait
  * tourner 25 % plus vite), et croire que le fournisseur, qui finance le stock, rend toute baisse sans
  * risque.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la rotation et la durée de stockage sont des grandeurs au
+ * centième, la durée sur la rotation arrondie (au jour, à un jour près, avant).
  */
 
 /**
@@ -34,11 +38,8 @@ export const REDUCTION_DU_STOCK_MOYEN = 0.2;
 /** Les bornes du curseur de la réduction, en pour cent du stock moyen. */
 export const REDUCTION_DU_CURSEUR = { min: 0, max: 40 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 const deux = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
 
 /** Les chiffres de la réponse, calculés une fois sur la boutique du cours. */
 export function allegerLeStock(c: Pick<Cas, "code">) {
@@ -57,7 +58,7 @@ export function allegerLeStock(c: Pick<Cas, "code">) {
     stockVise,
     tresorerieLiberee: auCentime(s.stockMoyen - stockVise),
     rotationVisee,
-    dureeVisee: Math.round(x.f.joursDuMois / rotationVisee),
+    dureeVisee: auCentime(x.f.joursDuMois / rotationVisee),
     stockFinalPour,
     stockFinalVise,
     securite,
@@ -115,15 +116,15 @@ export const ALLEGER_LE_STOCK: Situation = {
       titre: "Le stock aujourd'hui",
       notions: ["stock", "stock_rotation"],
       question: () =>
-        "Calculez le stock moyen de janvier, le coût d'achat des marchandises vendues, la rotation du stock (au centième), puis la durée moyenne de stockage (au jour).",
+        "Calculez le stock moyen de janvier, le coût d'achat des marchandises vendues, la rotation du stock (au centième), puis la durée moyenne de stockage (au centième).",
       champs: (c) => {
         const r = allegerLeStock(c);
         const s = r.s;
         return [
           { libelle: "Stock moyen", attendu: s.stockMoyen, calcul: `(${eur(s.valeurInitiale)} + ${eur(s.valeurFinale)}) ÷ 2 = ${eur(s.stockMoyen)}` },
           { libelle: "Coût d'achat des marchandises vendues", attendu: s.coutDAchatDesVendues, calcul: `${eur(s.valeurInitiale)} + ${eur(s.achats)} − ${eur(s.valeurFinale)} = ${eur(s.coutDAchatDesVendues)}` },
-          { libelle: "Rotation du stock", attendu: r.rotation, tolerance: 0.01, calcul: `${eur(s.coutDAchatDesVendues)} ÷ ${eur(s.stockMoyen)} = ${deux(r.rotation)}` },
-          { libelle: "Durée moyenne de stockage (jours)", attendu: r.duree, tolerance: 1, calcul: `${qte(r.f.joursDuMois)} ÷ ${deux(r.rotation)} = ${qte(r.duree)}` },
+          { libelle: "Rotation du stock", nature: "grandeur", attendu: r.rotation, calcul: `${eur(s.coutDAchatDesVendues)} ÷ ${eur(s.stockMoyen)} = ${deux(r.rotation)}` },
+          { libelle: "Durée moyenne de stockage (jours)", nature: "grandeur", attendu: r.duree, calcul: `${qte(r.f.joursDuMois)} ÷ ${deux(r.rotation)} = ${qte(r.duree)}` },
         ];
       },
       explication: (c) => {
@@ -137,14 +138,14 @@ export const ALLEGER_LE_STOCK: Situation = {
       titre: "Le stock visé",
       notions: ["stock_rotation", "bfr"],
       question: () =>
-        `Avec un stock moyen réduit de ${pct(REDUCTION_DU_STOCK_MOYEN * 100)} et les mêmes ventes, calculez le stock moyen visé, la trésorerie libérée, la nouvelle rotation (au centième) et la nouvelle durée de stockage (au jour).`,
+        `Avec un stock moyen réduit de ${pct(REDUCTION_DU_STOCK_MOYEN * 100)} et les mêmes ventes, calculez le stock moyen visé, la trésorerie libérée, la nouvelle rotation (au centième) et la nouvelle durée de stockage (au centième).`,
       champs: (c) => {
         const r = allegerLeStock(c);
         return [
           { libelle: "Stock moyen visé", attendu: r.stockVise, calcul: `${eur(r.s.stockMoyen)} × (1 − ${pct(REDUCTION_DU_STOCK_MOYEN * 100)}) = ${eur(r.stockVise)}` },
           { libelle: "Trésorerie libérée", attendu: r.tresorerieLiberee, calcul: `${eur(r.s.stockMoyen)} − ${eur(r.stockVise)} = ${eur(r.tresorerieLiberee)}` },
-          { libelle: "Nouvelle rotation", attendu: r.rotationVisee, tolerance: 0.01, calcul: `${eur(r.s.coutDAchatDesVendues)} ÷ ${eur(r.stockVise)} = ${deux(r.rotationVisee)}` },
-          { libelle: "Nouvelle durée de stockage (jours)", attendu: r.dureeVisee, tolerance: 1, calcul: `${qte(r.f.joursDuMois)} ÷ ${deux(r.rotationVisee)} = ${qte(r.dureeVisee)}` },
+          { libelle: "Nouvelle rotation", nature: "grandeur", attendu: r.rotationVisee, calcul: `${eur(r.s.coutDAchatDesVendues)} ÷ ${eur(r.stockVise)} = ${deux(r.rotationVisee)}` },
+          { libelle: "Nouvelle durée de stockage (jours)", nature: "grandeur", attendu: r.dureeVisee, calcul: `${qte(r.f.joursDuMois)} ÷ ${deux(r.rotationVisee)} = ${qte(r.dureeVisee)}` },
         ];
       },
       explication: (c) => {

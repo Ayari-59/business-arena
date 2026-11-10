@@ -1,5 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../pedagogy/cours/etats";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import { accord } from "../accords";
 import type { Cas } from "../cas";
 import { serviceDuCours, type ServiceDeLAnnee } from "../monde/service";
@@ -43,6 +42,13 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     client ne dépend que de la productivité), une-equipe-de-plus (une variante chiffrée, à rebours :
  *     les clients qu'un salarié de plus doit faire servir sur l'année), juger-l-equipe (une critique
  *     de l'indicateur) ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les productivités (clients par salarié, sur le trimestre ou par
+ * jour) sont des grandeurs au centième (au dixième, à un dixième près, avant), et les variations se
+ * calculent sur elles, à deux décimales ; l'équipe la plus grande et les clients de l'année sont des
+ * quantités : le corrigé écrit la valeur à deux décimales, puis l'arrondit à l'unité, au-dessous ou
+ * au-dessus, et dit pourquoi.
  */
 
 /** Les deux entreprises du métier : le restaurant et l'hôtel. */
@@ -100,11 +106,7 @@ const MOTS: Record<string, Mots> = {
 };
 
 /** Un montant à la française, avec le signe moins typographique. */
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
-const auCentieme = (x: number) => Math.round(x * 100) / 100;
+const qte = nombreAuCentieme;
 const majuscule = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 /** « 1er », « 2e » : le rang d'un trimestre, compté à partir de 1. */
 const rang = (n: number) => (n === 1 ? "1er" : `${n}e`);
@@ -146,8 +148,8 @@ export function productiviteDuService(c: Pick<Cas, "code">) {
     demande: t.demande,
     capacite: t.capacite,
     refuses: t.refuses,
-    parSalarie: auDixieme(t.servis / effectif),
-    parSalarieEtParJour: auCentieme(t.servis / (effectif * jours)),
+    parSalarie: auCentime(t.servis / effectif),
+    parSalarieEtParJour: auCentime(t.servis / (effectif * jours)),
     coutParUnite: auCentime(personnel / t.servis),
   }));
   const plein = trimestres.reduce((a, b) => (b.vendues > a.vendues ? b : a));
@@ -166,16 +168,16 @@ export function productiviteDuService(c: Pick<Cas, "code">) {
     trimestres,
     plein,
     creux,
-    variationDeLaProductivite: auDixieme((creux.parSalarie / plein.parSalarie - 1) * 100),
-    variationDuCout: auDixieme((creux.coutParUnite / plein.coutParUnite - 1) * 100),
+    variationDeLaProductivite: auCentime((creux.parSalarie / plein.parSalarie - 1) * 100),
+    variationDuCout: auCentime((creux.coutParUnite / plein.coutParUnite - 1) * 100),
     capacite,
-    productiviteMaximale: auDixieme(capacite / creux.effectif),
+    productiviteMaximale: auCentime(capacite / creux.effectif),
     coutPlancher: auCentime(creux.personnel / capacite),
-    remplissageDuPlein: auDixieme((plein.vendues / plein.capacite) * 100),
-    remplissageDuCreux: auDixieme((creux.vendues / capacite) * 100),
+    remplissageDuPlein: auCentime((plein.vendues / plein.capacite) * 100),
+    remplissageDuCreux: auCentime((creux.vendues / capacite) * 100),
     /** La place qui restait au trimestre creux, avec la même équipe. */
     placeAuCreux: capacite - creux.vendues,
-    partDuPersonnelAuCreux: auDixieme((creux.coutParUnite / s.prixDeLAnnee) * 100),
+    partDuPersonnelAuCreux: auCentime((creux.coutParUnite / s.prixDeLAnnee) * 100),
     ...repereDuPersonnel(s, creux),
   };
 }
@@ -202,7 +204,7 @@ function repereDuPersonnel(s: ServiceDeLAnnee, creux: TrimestreDuService) {
     equipeMax,
     personnelReduit,
     coutParUniteReduit: auCentime(personnelReduit / creux.vendues),
-    parJourReduit: auCentieme(creux.vendues / (equipeMax * s.joursParTrimestre)),
+    parJourReduit: auCentime(creux.vendues / (equipeMax * s.joursParTrimestre)),
     variante: {
       effectif: effectif + SALARIES_EN_PLUS,
       personnel: variante,
@@ -237,8 +239,8 @@ export function laboratoireDeLEquipe(c: Pick<Cas, "code">) {
     return {
       personnel,
       coutParUnite: auCentime(personnel / servis),
-      parJour: auCentieme(servis / (effectif * p.jours)),
-      part: auDixieme((personnel / (servis * p.prix)) * 100),
+      parJour: auCentime(servis / (effectif * p.jours)),
+      part: auCentime((personnel / (servis * p.prix)) * 100),
     };
   };
   const atteint = (effectif: number, servis: number) =>
@@ -270,15 +272,15 @@ function champsDuTrimestre(p: ProductiviteDuService, t: TrimestreDuService) {
   return [
     {
       libelle: `${majuscule(u)} par salarié sur le trimestre`,
+      nature: "grandeur" as const,
       attendu: t.parSalarie,
       calcul: `${qte(t.vendues)} ÷ ${qte(t.effectif)} = ${qte(t.parSalarie)}`,
-      tolerance: 0.1,
     },
     {
       libelle: `${majuscule(u)} par salarié et par jour`,
+      nature: "grandeur" as const,
       attendu: t.parSalarieEtParJour,
       calcul: `${qte(t.vendues)} ÷ (${qte(t.effectif)} × ${qte(p.jours)}) = ${qte(t.parSalarieEtParJour)}`,
-      tolerance: 0.01,
     },
     {
       libelle: `Coût du personnel par ${p.unite}`,
@@ -344,7 +346,7 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
       question: (c) => {
         const p = productiviteDuService(c);
         const t = p.plein;
-        return `Au ${rang(t.numero)} trimestre, le plus chargé de l'année, ${p.entreprise} a ${p.mots.servir} ${qte(t.vendues)} ${p.unites} avec ${qte(t.effectif)} salariés, pour ${eur(t.personnel)} de personnel. Calculez les ${p.unites} par salarié sur le trimestre (au dixième), par salarié et par jour (sur les ${qte(p.jours)} jours du trimestre, au centième), puis le coût du personnel par ${p.unite} (au centime).`;
+        return `Au ${rang(t.numero)} trimestre, le plus chargé de l'année, ${p.entreprise} a ${p.mots.servir} ${qte(t.vendues)} ${p.unites} avec ${qte(t.effectif)} salariés, pour ${eur(t.personnel)} de personnel. Calculez les ${p.unites} par salarié sur le trimestre (au centième), par salarié et par jour (sur les ${qte(p.jours)} jours du trimestre, au centième), puis le coût du personnel par ${p.unite} (au centime).`;
       },
       champs: (c) => {
         const p = productiviteDuService(c);
@@ -389,12 +391,12 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
       notions: ["productivity", "fixed_costs"],
       question: (c) => {
         const p = productiviteDuService(c);
-        const baisse = auDixieme((1 - p.creux.vendues / p.plein.vendues) * 100);
+        const baisse = auCentime((1 - p.creux.vendues / p.plein.vendues) * 100);
         return `Avant de calculer, pariez. Du ${rang(p.plein.numero)} trimestre au ${rang(p.creux.numero)}, ${p.entreprise} sert ${pct(baisse)} de ${p.unites} de moins, avec la même équipe, payée pareil. Le coût du personnel par ${p.unite} va monter…`;
       },
       options: (c) => {
         const p = productiviteDuService(c);
-        const baisse = pct(auDixieme((1 - p.creux.vendues / p.plein.vendues) * 100));
+        const baisse = pct(auCentime((1 - p.creux.vendues / p.plein.vendues) * 100));
         const voir = "Faites varier les clients du trimestre creux au curseur de l'étape suivante, et regardez ce que coûte chacun.";
         const monte = p.variationDuCout;
         const recule = -p.variationDeLaProductivite;
@@ -465,7 +467,7 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
       notions: ["productivity", "fixed_costs"],
       question: (c) => {
         const p = productiviteDuService(c);
-        return `Du ${rang(p.plein.numero)} trimestre au ${rang(p.creux.numero)}, calculez la variation de la productivité (${p.unites} par salarié sur le trimestre), puis celle du coût du personnel par ${p.unite}, en pourcentage au dixième.`;
+        return `Du ${rang(p.plein.numero)} trimestre au ${rang(p.creux.numero)}, calculez la variation de la productivité (${p.unites} par salarié sur le trimestre), puis celle du coût du personnel par ${p.unite}, en pourcentage à deux décimales.`;
       },
       champs: (c) => {
         const p = productiviteDuService(c);
@@ -474,13 +476,11 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
             libelle: "Variation de la productivité (%)",
             attendu: p.variationDeLaProductivite,
             calcul: `(${qte(p.creux.parSalarie)} ÷ ${qte(p.plein.parSalarie)} − 1) × 100 = ${pct(p.variationDeLaProductivite)}`,
-            tolerance: 0.1,
           },
           {
             libelle: `Variation du coût du personnel par ${p.unite} (%)`,
             attendu: p.variationDuCout,
             calcul: `(${eur(p.creux.coutParUnite)} ÷ ${eur(p.plein.coutParUnite)} − 1) × 100 = ${pct(p.variationDuCout)}`,
-            tolerance: 0.1,
           },
         ];
       },
@@ -544,16 +544,16 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
       },
       question: (c) => {
         const p = productiviteDuService(c);
-        return `L'activité d'un trimestre ne peut pas dépasser ${p.mots.plafond} : ${qte(p.capacite)} ${p.unites}. Si ${p.entreprise} ${p.mots.imparfait} autant au ${rang(p.creux.numero)} trimestre, avec la même équipe, quelle serait la productivité par salarié sur le trimestre (au dixième), et le coût du personnel par ${p.unite} (au centime) ?`;
+        return `L'activité d'un trimestre ne peut pas dépasser ${p.mots.plafond} : ${qte(p.capacite)} ${p.unites}. Si ${p.entreprise} ${p.mots.imparfait} autant au ${rang(p.creux.numero)} trimestre, avec la même équipe, quelle serait la productivité par salarié sur le trimestre (au centième), et le coût du personnel par ${p.unite} (au centime) ?`;
       },
       champs: (c) => {
         const p = productiviteDuService(c);
         return [
           {
             libelle: "Productivité à pleine capacité",
+            nature: "grandeur",
             attendu: p.productiviteMaximale,
             calcul: `${qte(p.capacite)} ÷ ${qte(p.creux.effectif)} = ${qte(p.productiviteMaximale)}`,
-            tolerance: 0.1,
           },
           {
             libelle: `Coût du personnel par ${p.unite} à pleine capacité`,
@@ -696,9 +696,9 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
         return [
           {
             libelle: "Salariés au plus",
+            nature: "quantite",
             attendu: p.equipeMax,
-            calcul: `${pct(PART_DU_PRIX_POUR_LE_PERSONNEL * 100)} × ${eur(p.prix)} × ${qte(p.creux.vendues)} ÷ ${eur(p.coutDUnSalarie)} = ${qte(auCentieme(p.permisAuCreux / p.coutDUnSalarie))}, soit ${qte(p.equipeMax)} salariés`,
-            tolerance: 0,
+            calcul: `${pct(PART_DU_PRIX_POUR_LE_PERSONNEL * 100)} × ${eur(p.prix)} × ${qte(p.creux.vendues)} ÷ ${eur(p.coutDUnSalarie)} = ${qte(auCentime(p.permisAuCreux / p.coutDUnSalarie))}, soit ${qte(p.equipeMax)} salariés à l'unité au-dessous : un de plus dépasserait la part du prix`,
           },
           {
             libelle: `Coût du personnel par ${p.unite}, équipe réduite`,
@@ -707,9 +707,9 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
           },
           {
             libelle: `${majuscule(p.unites)} par salarié et par jour, équipe réduite`,
+            nature: "grandeur",
             attendu: p.parJourReduit,
             calcul: `${qte(p.creux.vendues)} ÷ (${qte(p.equipeMax)} × ${qte(p.jours)}) = ${qte(p.parJourReduit)}`,
-            tolerance: 0.01,
           },
         ];
       },
@@ -816,15 +816,15 @@ export const LA_PRODUCTIVITE_DU_SERVICE: Chapitre = {
           },
           {
             libelle: `${majuscule(p.unites)} à servir sur l'année`,
+            nature: "quantite",
             attendu: v.clients,
-            calcul: `${eur(v.personnel)} ÷ (${pct(PART_DU_PRIX_POUR_LE_PERSONNEL * 100)} × ${eur(p.prix)}) = ${eur(v.personnel)} ÷ ${eur(p.coutVise)} = ${qte(v.clients)}`,
-            tolerance: 1,
+            calcul: `${eur(v.personnel)} ÷ (${pct(PART_DU_PRIX_POUR_LE_PERSONNEL * 100)} × ${eur(p.prix)}) = ${eur(v.personnel)} ÷ ${eur(p.coutVise)} = ${qte(auCentime(v.personnel / p.coutVise))}, soit ${qte(v.clients)} à l'unité au-dessus`,
           },
           {
             libelle: `${majuscule(p.unites)} de plus que l'année jouée`,
+            nature: "quantite",
             attendu: v.enPlus,
             calcul: `${qte(v.clients)} − ${qte(v.venduesDeLAnnee)} = ${qte(v.enPlus)}`,
-            tolerance: 1,
           },
         ];
       },

@@ -1,3 +1,4 @@
+import { arrondi, arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import type {
   CanalDeConquete,
   CodeDeCanal,
@@ -52,7 +53,7 @@ import type {
  * l'unité supérieure. Un résultat négatif est une perte.
  */
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const auCentime = arrondi2;
 const somme = (xs: readonly number[]) => xs.reduce((t, x) => t + x, 0);
 /** Arrondi à l'entier supérieur, sans qu'un calcul en virgule flottante ne fasse monter un entier exact. */
 const plafond = (x: number) => Math.ceil(x - 1e-9);
@@ -740,7 +741,8 @@ export interface LeviersDuSeuilCommercial {
 export function seuilDeRentabiliteDUnCommercial(f: FicheDuCabinet, code: CodeDeCommercial, leviers: Partial<LeviersDuSeuilCommercial> = {}) {
   const c = commercialDe(f, code);
   const cout = leviers.cout ?? coutDUnCommercial(c);
-  const tauxDeMarge = leviers.tauxDeMarge ?? comptesDuCommercial(f, code).tauxDeMarge;
+  // Le taux de marge de la copie, à deux décimales en pourcentage : le seuil se calcule sur lui.
+  const tauxDeMarge = leviers.tauxDeMarge ?? arrondi(comptesDuCommercial(f, code).tauxDeMarge, 4);
   const tauxDeCommission = leviers.tauxDeCommission ?? 0;
   const seuil = auCentime(cout / (tauxDeMarge - tauxDeCommission));
   return { code, cout, tauxDeMarge, tauxDeCommission, seuil, seuilDeLAnnee: auCentime(seuil * 4) };

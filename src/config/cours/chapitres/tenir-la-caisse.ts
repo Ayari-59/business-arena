@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { BOUTIQUES_DU_COURS, type FicheDeLaBoutique } from "../monde/maille-et-co";
 import {
@@ -40,6 +40,10 @@ import { ENTREPRISES_DU_MAGASIN } from "./le-prix-affiche";
  * par jour, 869,26 € comptés le soir) et le ticket de prix arrondis (74,40 €). Elle vient
  * maintenant de janvier : 2 575 € hors taxes par jour, 3 090 € TTC, 772,50 € en espèces, 922,50 €
  * attendus et 912,50 € comptés ; le ticket fait 72 € et la monnaie 28 €.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les articles d'un jour sont une quantité : le corrigé écrit le
+ * quotient à deux décimales, puis l'arrondit à l'unité (à un article près, avant).
  */
 
 /** Le fond de caisse du matin (le monde du cours). */
@@ -51,9 +55,8 @@ export const PART_EN_ESPECES = PART_DU_MONDE;
 /** La course du curseur des clients avant le coffre : assez longue pour que le départ, au quart, ne tombe pas sur la réponse. */
 export const CLIENTS_SUR_LE_CURSEUR = 15;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
+const qte = nombreAuCentieme;
+const pct = (t: number) => enPoints(t * 100);
 
 export const ficheDe = (c: Pick<Cas, "code">): FicheDeLaBoutique => BOUTIQUES_DU_COURS[c.code]!;
 
@@ -207,7 +210,7 @@ export const TENIR_LA_CAISSE: Chapitre = {
       champs: (c) => {
         const j = caisseDuJour(c).jour;
         return [
-          { libelle: "Articles vendus en un jour", attendu: j.articlesParJour, calcul: `${qte(j.articlesDuMois)} ÷ ${qte(j.jours)} = ${qte(j.articlesParJour)}, à l'unité`, tolerance: 1 },
+          { libelle: "Articles vendus en un jour", nature: "quantite", attendu: j.articlesParJour, calcul: `${qte(j.articlesDuMois)} ÷ ${qte(j.jours)} = ${nombreAuCentieme(j.articlesDuMois / j.jours)}, soit ${qte(j.articlesParJour)} articles à l'unité la plus proche : un article ne se vend pas en morceaux` },
           { libelle: "Chiffre d'affaires hors taxes d'un jour", attendu: j.htDuJour, calcul: `${eur(j.chiffreDuMois)} ÷ ${qte(j.jours)} = ${eur(j.htDuJour)}` },
         ];
       },

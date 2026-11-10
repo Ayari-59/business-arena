@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_POINT_DE_VENTE, ficheDe } from "../../chapitres/equipe-et-planning";
 import { COURBE_SANS_INTEGRATION, DEPART_DE_LA_VENDEUSE, HEURES_D_UN_TEMPS_COMPLET, PASSAGES_PERDUS_PAR_HEURE, retenirLaVendeuse, tableauDeBordDesVendeurs } from "../../monde/equipe-de-la-boutique";
@@ -17,15 +17,18 @@ import type { Situation } from "../types";
  *
  * Comme son chapitre, le cas se joue dans la simulation du cours : ses chiffres sont ceux de
  * `retenirLaVendeuse` (monde/equipe-de-la-boutique.ts).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les passages manqués sont une grandeur au centième, sur les
+ * passages d'une semaine au centième ; le coût d'un samedi part du salaire horaire au centime
+ * (monde/equipe-de-la-boutique.ts) ; les montants, à un centime près (à 10 ou 50 centimes, ou un euro
+ * près, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${qte(t)} %`;
+const qte = nombreAuCentieme;
 /** « de Malik », « d'Inès » : l'élision devant un prénom à voyelle. */
 const dePrenom = (p: string) => (/^[AEIOUYÉÈÊ]/.test(p) ? `d'${p}` : `de ${p}`);
 const h = (x: number) => `${qte(x)} h`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
 
 /** Les chiffres de la réponse, calculés une fois du cas. */
 export function departDeLaVendeuse(c: Pick<Cas, "code">) {
@@ -45,7 +48,7 @@ function tableauDeLaVendeuse(c: Pick<Cas, "code">): TableauDeDonnees {
     lignes: [
       { libelle: "Heures de vente par semaine", valeurs: [h(v.heuresDeVente)] },
       { libelle: "Passages en caisse du mois", valeurs: [qte(v.passages)] },
-      { libelle: "Objectif atteint", valeurs: [pct(Math.round(v.realisation * 1000) / 10)] },
+      { libelle: "Objectif atteint", valeurs: [pct(auCentime(v.realisation * 100))] },
       { libelle: "Marge d'un passage en caisse", valeurs: [eur(x.r.margeDUnPassage)] },
     ],
   };
@@ -101,9 +104,9 @@ export const RETENIR_LA_VENDEUSE: Situation = {
         const r = x.r;
         return [
           { libelle: "Marge perdue, poste vacant", attendu: r.vacance, calcul: `${h(x.v.heuresDeVente)} × ${qte(DEPART_DE_LA_VENDEUSE.semainesDeVacance)} semaines = ${h(r.heuresVacantes)} ; ${h(r.heuresVacantes)} × ${eur(r.margeDUnPassage)} = ${eur(r.vacance)}` },
-          { libelle: "Passages manqués à l'apprentissage", attendu: r.manques, tolerance: 0.1, calcul: `${qte(Math.round(r.passagesParSemaine * 100) / 100)} × (${COURBE_SANS_INTEGRATION.map((k) => qte(auCentime(1 - k))).join(" + ")}) = ${qte(r.manques)}` },
-          { libelle: "Marge perdue à l'apprentissage", attendu: r.apprentissage, tolerance: 0.5, calcul: `${qte(r.manques)} × ${eur(r.margeDUnPassage)} = ${eur(r.apprentissage)}` },
-          { libelle: "Coût du départ", attendu: r.depart, tolerance: 0.5, calcul: `${eur(r.recrutement)} + ${eur(r.vacance)} + ${eur(r.apprentissage)} = ${eur(r.depart)}` },
+          { libelle: "Passages manqués à l'apprentissage", nature: "grandeur", attendu: r.manques, calcul: `${qte(r.passagesParSemaine)} × (${COURBE_SANS_INTEGRATION.map((k) => qte(auCentime(1 - k))).join(" + ")}) = ${qte(r.manques)}` },
+          { libelle: "Marge perdue à l'apprentissage", attendu: r.apprentissage, calcul: `${qte(r.manques)} × ${eur(r.margeDUnPassage)} = ${eur(r.apprentissage)}` },
+          { libelle: "Coût du départ", attendu: r.depart, calcul: `${eur(r.recrutement)} + ${eur(r.vacance)} + ${eur(r.apprentissage)} = ${eur(r.depart)}` },
         ];
       },
       explication: (c) => {
@@ -125,9 +128,9 @@ export const RETENIR_LA_VENDEUSE: Situation = {
         const r = x.r;
         const brut = x.f.equipe.find((s) => s.code === DEPART_DE_LA_VENDEUSE.remplacant)!.brutMensuel;
         return [
-          { libelle: "Salaire horaire brut", attendu: auCentime(r.horaire), tolerance: 0.01, calcul: `${eur(brut)} ÷ ${qte(HEURES_D_UN_TEMPS_COMPLET)} = ${eur(auCentime(r.horaire))}` },
-          { libelle: "Coût d'un samedi par mois", attendu: r.parMois, tolerance: 0.1, calcul: `${h(DEPART_DE_LA_VENDEUSE.heuresDuSamedi)} × ${eur(auCentime(r.horaire))} × ${qte(1 + DEPART_DE_LA_VENDEUSE.majoration)} × ${qte(1 + x.f.tauxPatronal)} = ${eur(r.parMois)}` },
-          { libelle: "Coût sur un an", attendu: r.parAn, tolerance: 1, calcul: `${eur(r.parMois)} × 12 = ${eur(r.parAn)}` },
+          { libelle: "Salaire horaire brut", attendu: auCentime(r.horaire), calcul: `${eur(brut)} ÷ ${qte(HEURES_D_UN_TEMPS_COMPLET)} = ${eur(auCentime(r.horaire))}` },
+          { libelle: "Coût d'un samedi par mois", attendu: r.parMois, calcul: `${h(DEPART_DE_LA_VENDEUSE.heuresDuSamedi)} × ${eur(auCentime(r.horaire))} × ${qte(1 + DEPART_DE_LA_VENDEUSE.majoration)} × ${qte(1 + x.f.tauxPatronal)} = ${eur(r.parMois)}` },
+          { libelle: "Coût sur un an", attendu: r.parAn, calcul: `${eur(r.parMois)} × 12 = ${eur(r.parAn)}` },
         ];
       },
       explication: (c) => {

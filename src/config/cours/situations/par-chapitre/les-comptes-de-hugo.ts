@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_SECTEUR, secteurDuCabinet } from "../../chapitres/organiser-le-secteur";
 import { FREQUENCE_DE_VISITE, VISITE_A_DISTANCE, chargeDeVisites, classesDuCommercial } from "../../monde/terrain-d-atlas";
@@ -17,10 +17,13 @@ import type { Situation } from "../types";
  *
  * Comme son chapitre, le cas se joue dans la simulation du cours : ses visites et ses capacités sont celles
  * de `secteurDuCabinet` et de `chargeDeVisites`, sur la fiche du cabinet. Il ne lit du cas que son code.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les visites et les prospects sont des quantités, entières,
+ * déclarées comme telles.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 
 /** Les comptes repris, et ce qu'ils font à la charge de chacun. */
 export function comptesDeHugo(c: Pick<Cas, "code">) {
@@ -93,9 +96,9 @@ export const LES_COMPTES_DE_HUGO: Situation = {
       champs: (c) => {
         const r = comptesDeHugo(c);
         return [
-          { libelle: "Visites de suivi des comptes repris", attendu: r.visitesEnPlus, calcul: `${qte(r.comptes.length)} × ${qte(FREQUENCE_DE_VISITE.B)} = ${qte(r.visitesEnPlus)} visites` },
-          { libelle: "Charge de Nadia avec ces comptes", attendu: r.avec.charge, calcul: `${qte(r.x.v.charge)} + ${qte(r.visitesEnPlus)} = ${qte(r.avec.charge)} visites` },
-          { libelle: "Visites qui restent pour les prospects", attendu: r.avec.reste, calcul: `${qte(r.avec.capacite)} − ${qte(r.avec.charge)} = ${qte(r.avec.reste)} visites` },
+          { libelle: "Visites de suivi des comptes repris", nature: "quantite", attendu: r.visitesEnPlus, calcul: `${qte(r.comptes.length)} × ${qte(FREQUENCE_DE_VISITE.B)} = ${qte(r.visitesEnPlus)} visites` },
+          { libelle: "Charge de Nadia avec ces comptes", nature: "quantite", attendu: r.avec.charge, calcul: `${qte(r.x.v.charge)} + ${qte(r.visitesEnPlus)} = ${qte(r.avec.charge)} visites` },
+          { libelle: "Visites qui restent pour les prospects", nature: "quantite", attendu: r.avec.reste, calcul: `${qte(r.avec.capacite)} − ${qte(r.avec.charge)} = ${qte(r.avec.reste)} visites` },
         ];
       },
       explication: (c) => {
@@ -116,9 +119,9 @@ export const LES_COMPTES_DE_HUGO: Situation = {
         const r = comptesDeHugo(c);
         const libere = r.avec.charge - r.avecDistance.charge;
         return [
-          { libelle: "Charge avec les comptes C à distance", attendu: r.avecDistance.charge, calcul: `${qte(r.avec.charge)} − ${qte(r.x.v.visitesC)} × ${qte((1 - VISITE_A_DISTANCE.partDuTemps) * 100)} % = ${qte(r.avec.charge)} − ${qte(libere)} = ${qte(r.avecDistance.charge)} visites` },
-          { libelle: "Visites pour les prospects", attendu: r.avecDistance.reste, calcul: `${qte(r.avecDistance.capacite)} − ${qte(r.avecDistance.charge)} = ${qte(r.avecDistance.reste)} visites` },
-          { libelle: "Prospects qu'elle ne verrait pas", attendu: r.manque, calcul: `${qte(r.x.prospects)} − ${qte(r.avecDistance.reste)} = ${qte(r.manque)} prospects` },
+          { libelle: "Charge avec les comptes C à distance", nature: "quantite", attendu: r.avecDistance.charge, calcul: `${qte(r.avec.charge)} − ${qte(r.x.v.visitesC)} × ${qte((1 - VISITE_A_DISTANCE.partDuTemps) * 100)} % = ${qte(r.avec.charge)} − ${qte(libere)} = ${qte(r.avecDistance.charge)} visites` },
+          { libelle: "Visites pour les prospects", nature: "quantite", attendu: r.avecDistance.reste, calcul: `${qte(r.avecDistance.capacite)} − ${qte(r.avecDistance.charge)} = ${qte(r.avecDistance.reste)} visites` },
+          { libelle: "Prospects qu'elle ne verrait pas", nature: "quantite", attendu: r.manque, calcul: `${qte(r.x.prospects)} − ${qte(r.avecDistance.reste)} = ${qte(r.manque)} prospects` },
         ];
       },
       explication: (c) => {
@@ -139,9 +142,9 @@ export const LES_COMPTES_DE_HUGO: Situation = {
         const r = comptesDeHugo(c);
         const h = r.chezHugo;
         return [
-          { libelle: "Visites de suivi de Hugo", attendu: h.suivi, calcul: `${qte(r.comptes.length)} × ${qte(FREQUENCE_DE_VISITE.B)} = ${qte(h.suivi)} visites` },
-          { libelle: "Charge de Hugo", attendu: h.charge, calcul: `${qte(h.suivi)} + ${qte(h.rendezVousDAffaires)} = ${qte(h.charge)} visites` },
-          { libelle: "Visites qui restent à Hugo", attendu: h.reste, calcul: `${qte(h.capacite)} − ${qte(h.charge)} = ${qte(h.reste)} visites` },
+          { libelle: "Visites de suivi de Hugo", nature: "quantite", attendu: h.suivi, calcul: `${qte(r.comptes.length)} × ${qte(FREQUENCE_DE_VISITE.B)} = ${qte(h.suivi)} visites` },
+          { libelle: "Charge de Hugo", nature: "quantite", attendu: h.charge, calcul: `${qte(h.suivi)} + ${qte(h.rendezVousDAffaires)} = ${qte(h.charge)} visites` },
+          { libelle: "Visites qui restent à Hugo", nature: "quantite", attendu: h.reste, calcul: `${qte(h.capacite)} − ${qte(h.charge)} = ${qte(h.reste)} visites` },
         ];
       },
       explication: (c) => {

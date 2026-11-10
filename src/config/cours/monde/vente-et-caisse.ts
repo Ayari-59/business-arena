@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { coutVariable, referenceDe } from "./boutique";
 import type { CodeDeClientele, CodeDeReference, FicheDeLaBoutique } from "./maille-et-co";
 
@@ -35,7 +36,7 @@ import type { CodeDeClientele, CodeDeReference, FicheDeLaBoutique } from "./mail
  * aux ventes régulières (la fiche).
  */
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const auCentime = arrondi2;
 const somme = (xs: readonly number[]) => xs.reduce((t, x) => t + x, 0);
 const plafond = (x: number) => Math.ceil(x - 1e-9);
 const plancher = (x: number) => Math.floor(x + 1e-9);
@@ -701,7 +702,6 @@ export const TRIMESTRE_SUIVI = 4 as const;
 /** L'objectif posé sur les ventes de l'année d'avant : arrondi à l'unité du dessus. */
 export const objectifSur = (ventes: number, progression: number = PROGRESSION_EN_POURCENT) => plafond((ventes * (100 + progression)) / 100);
 
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 
 export type Verdict = "atteint" | "clients" | "service";
 
@@ -730,8 +730,8 @@ export function suiviDuTrimestre(f: FicheDeLaBoutique, trimestre: 1 | 2 | 3 | 4 
     objectif,
     exact: (avant.ventes * (100 + progression)) / 100,
     ecart,
-    ecartEnPourcentage: auDixieme((ecart / objectif) * 100),
-    tauxDeRealisation: auDixieme((pendant.ventes / objectif) * 100),
+    ecartEnPourcentage: auCentime((ecart / objectif) * 100),
+    tauxDeRealisation: auCentime((pendant.ventes / objectif) * 100),
     demandeFaceALObjectif: pendant.demande - objectif,
     verdict,
   };
@@ -762,8 +762,8 @@ export function trimestreAvecPlusDeReserve(f: FicheDeLaBoutique, enPlus: number)
     ventes,
     repartis: k.pendant.demande - ventes,
     objectif: k.objectif,
-    tauxDeRealisation: auDixieme((ventes / k.objectif) * 100),
-    tauxDeService: auDixieme((ventes / k.pendant.demande) * 100),
+    tauxDeRealisation: auCentime((ventes / k.objectif) * 100),
+    tauxDeService: auCentime((ventes / k.pendant.demande) * 100),
   };
 }
 

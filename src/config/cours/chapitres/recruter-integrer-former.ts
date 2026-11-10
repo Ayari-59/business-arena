@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   AFFLUENCE_DE_DECEMBRE,
@@ -60,14 +60,16 @@ import type { Chapitre } from "../types";
  * non-discrimination à l'embauche (art. L1132-1) ; la période d'essai d'un CDD de six mois au plus,
  * un jour par semaine dans la limite de deux semaines ; la déclaration préalable à l'embauche (DPAE)
  * avant la prise de poste ; la formation d'adaptation au poste, sur le temps de travail.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les heures des contrats et du besoin et les jours sont des
+ * quantités, entières ; les passages manqués, moyennes d'une courbe d'apprentissage, et les mois pour
+ * se payer, des grandeurs au centième ; les coûts partent des taux horaires chargés au centime
+ * (monde/equipe-de-la-boutique.ts), à un centime près (à 2, 5 ou 50 centimes près, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${qte(t)} %`;
+const qte = nombreAuCentieme;
 const h = (x: number) => `${qte(x)} h`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
 
 const POURQUOI =
   "ce chapitre se joue à la boutique du cours, MAILLE & CO : son équipe, son planning et son affluence sont ceux des autres chapitres du parcours.";
@@ -151,9 +153,9 @@ export const RECRUTER_INTEGRER_FORMER: Chapitre = {
       champs: (c) => {
         const x = recruterIntegrerFormer(c);
         return [
-          { libelle: "Besoin de la semaine", attendu: x.b.besoin, calcul: `${h(x.b.besoin - x.f.reglesDuPlanning.tachesHorsVente)} + ${h(x.f.reglesDuPlanning.tachesHorsVente)} = ${h(x.b.besoin)}` },
-          { libelle: "Heures des contrats", attendu: x.b.contrats, calcul: `Les ${qte(x.f.equipe.length)} contrats : ${x.f.equipe.map((s) => qte(s.heuresParSemaine)).join(" + ")} = ${h(x.b.contrats)}` },
-          { libelle: "Heures à couvrir par semaine", attendu: x.b.aCouvrir, calcul: `${h(x.b.besoin)} − ${h(x.b.contrats)} = ${h(x.b.aCouvrir)}, aucun créneau n'ayant d'heures en trop à déplacer` },
+          { libelle: "Besoin de la semaine", nature: "quantite", attendu: x.b.besoin, calcul: `${h(x.b.besoin - x.f.reglesDuPlanning.tachesHorsVente)} + ${h(x.f.reglesDuPlanning.tachesHorsVente)} = ${h(x.b.besoin)}` },
+          { libelle: "Heures des contrats", nature: "quantite", attendu: x.b.contrats, calcul: `Les ${qte(x.f.equipe.length)} contrats : ${x.f.equipe.map((s) => qte(s.heuresParSemaine)).join(" + ")} = ${h(x.b.contrats)}` },
+          { libelle: "Heures à couvrir par semaine", nature: "quantite", attendu: x.b.aCouvrir, calcul: `${h(x.b.besoin)} − ${h(x.b.contrats)} = ${h(x.b.aCouvrir)}, aucun créneau n'ayant d'heures en trop à déplacer` },
         ];
       },
       explication: (c) => {
@@ -233,13 +235,13 @@ export const RECRUTER_INTEGRER_FORMER: Chapitre = {
           { libelle: "Indemnité de fin de contrat", attendu: k.finDeContrat, calcul: `${eur(k.salaires)} × ${pct(INDEMNITE_DE_FIN_DE_CONTRAT * 100)} = ${eur(k.finDeContrat)}` },
           { libelle: "Indemnité de congés payés", attendu: k.congesPayes, calcul: `(${eur(k.salaires)} + ${eur(k.finDeContrat)}) × ${pct(INDEMNITE_DE_CONGES_PAYES * 100)} = ${eur(k.congesPayes)}` },
           { libelle: "Coût chargé du CDD", attendu: k.cout, calcul: `${eur(k.brut)} × ${qte(1 + x.f.tauxPatronal)} = ${eur(k.cout)}` },
-          { libelle: "Coût d'une heure travaillée", attendu: x.cddParHeure, tolerance: 0.02, calcul: `${eur(k.cout)} ÷ ${h(k.heures)} = ${eur(x.cddParHeure)}` },
+          { libelle: "Coût d'une heure travaillée", attendu: x.cddParHeure, calcul: `${eur(k.cout)} ÷ ${h(k.heures)} = ${eur(x.cddParHeure)}` },
         ];
       },
       explication: (c) => {
         const x = recruterIntegrerFormer(c);
         return [
-          `Une heure de CDD coûte ${eur(x.cddParHeure)}, contre ${eur(x.avenant)} pour une heure d'avenant d'un temps partiel de l'équipe : les deux indemnités de fin de contrat pèsent ${pct(auDixieme((x.cdd.brut / x.cdd.salaires - 1) * 100))} du salaire. L'intérim facture ${eur(x.interim)} l'heure, indemnités comprises.`,
+          `Une heure de CDD coûte ${eur(x.cddParHeure)}, contre ${eur(x.avenant)} pour une heure d'avenant d'un temps partiel de l'équipe : les deux indemnités de fin de contrat pèsent ${pct(auCentime((x.cdd.brut / x.cdd.salaires - 1) * 100))} du salaire. L'intérim facture ${eur(x.interim)} l'heure, indemnités comprises.`,
         ];
       },
     },
@@ -257,10 +259,10 @@ export const RECRUTER_INTEGRER_FORMER: Chapitre = {
         const x = recruterIntegrerFormer(c);
         const r = x.rec;
         return [
-          { libelle: "Tri des candidatures", attendu: r.tri, tolerance: 0.05, calcul: `${h(RECRUTEMENT.heuresDeTri)} × ${eur(auCentime(r.tauxResponsable))} = ${eur(r.tri)}` },
-          { libelle: "Entretiens", attendu: r.entretiens, tolerance: 0.1, calcul: `${qte(RECRUTEMENT.entretiens)} × ${qte(RECRUTEMENT.dureeDUnEntretien)} h × (${eur(auCentime(r.tauxResponsable))} + ${eur(auCentime(r.tauxAdjointe))}) = ${eur(r.entretiens)}` },
-          { libelle: "Coût du recrutement", attendu: r.total, tolerance: 0.1, calcul: `${eur(r.annonce)} + ${eur(r.tri)} + ${eur(r.entretiens)} = ${eur(r.total)}` },
-          { libelle: "Heure du CDD, recrutement compris", attendu: x.cddAvecRecrutementParHeure, tolerance: 0.02, calcul: `(${eur(x.cdd.cout)} + ${eur(r.total)}) ÷ ${h(x.cdd.heures)} = ${eur(x.cddAvecRecrutementParHeure)}` },
+          { libelle: "Tri des candidatures", attendu: r.tri, calcul: `${h(RECRUTEMENT.heuresDeTri)} × ${eur(auCentime(r.tauxResponsable))} = ${eur(r.tri)}` },
+          { libelle: "Entretiens", attendu: r.entretiens, calcul: `${qte(RECRUTEMENT.entretiens)} × ${qte(RECRUTEMENT.dureeDUnEntretien)} h × (${eur(auCentime(r.tauxResponsable))} + ${eur(auCentime(r.tauxAdjointe))}) = ${eur(r.entretiens)}` },
+          { libelle: "Coût du recrutement", attendu: r.total, calcul: `${eur(r.annonce)} + ${eur(r.tri)} + ${eur(r.entretiens)} = ${eur(r.total)}` },
+          { libelle: "Heure du CDD, recrutement compris", attendu: x.cddAvecRecrutementParHeure, calcul: `(${eur(x.cdd.cout)} + ${eur(r.total)}) ÷ ${h(x.cdd.heures)} = ${eur(x.cddAvecRecrutementParHeure)}` },
         ];
       },
       explication: (c) => {
@@ -386,8 +388,8 @@ export const RECRUTER_INTEGRER_FORMER: Chapitre = {
       question: () =>
         `La période d'essai d'un CDD de 6 mois au plus est d'un jour par semaine de contrat, dans la limite de deux semaines. Quelle est la période d'essai la plus longue du CDD de ${qte(SEMAINES_DE_RENFORT)} semaines, en jours ? La déclaration préalable à l'embauche se fait au plus tôt 8 jours avant la prise de poste : combien de jours avant elle, au plus tôt ?`,
       champs: () => [
-        { libelle: "Période d'essai la plus longue, en jours", attendu: SEMAINES_DE_RENFORT, calcul: `${qte(SEMAINES_DE_RENFORT)} semaines × 1 jour = ${qte(SEMAINES_DE_RENFORT)} jours, sous la limite de deux semaines` },
-        { libelle: "Déclaration, au plus tôt, en jours avant", attendu: 8, calcul: "La déclaration préalable se fait dans les 8 jours qui précèdent l'embauche, et toujours avant la prise de poste" },
+        { libelle: "Période d'essai la plus longue, en jours", nature: "quantite", attendu: SEMAINES_DE_RENFORT, calcul: `${qte(SEMAINES_DE_RENFORT)} semaines × 1 jour = ${qte(SEMAINES_DE_RENFORT)} jours, sous la limite de deux semaines` },
+        { libelle: "Déclaration, au plus tôt, en jours avant", nature: "quantite", attendu: 8, calcul: "La déclaration préalable se fait dans les 8 jours qui précèdent l'embauche, et toujours avant la prise de poste" },
       ],
       explication: () => [
         "Le contrat de travail écrit, remis au salarié dans les 2 jours ouvrables, dit son motif, sa durée, son poste, son salaire et sa période d'essai. Sans déclaration préalable à l'URSSAF, l'embauche est du travail dissimulé.",
@@ -409,10 +411,10 @@ export const RECRUTER_INTEGRER_FORMER: Chapitre = {
         const x = recruterIntegrerFormer(c);
         const i = x.i;
         return [
-          { libelle: "Passages manqués sans intégration", attendu: i.sans.manques, calcul: `${i.sans.semaines.map((s) => qte(s.manques)).join(" + ")} = ${qte(i.sans.manques)}` },
-          { libelle: "Passages manqués avec intégration", attendu: i.avec.manques, calcul: `${i.avec.semaines.map((s) => qte(s.manques)).join(" + ")} = ${qte(i.avec.manques)}` },
-          { libelle: "Marge regagnée", attendu: i.margeRegagnee, tolerance: 0.5, calcul: `(${qte(i.sans.manques)} − ${qte(i.avec.manques)}) × ${eur(i.sans.margeDUnPassage)} = ${eur(i.margeRegagnee)}` },
-          { libelle: "Gain de l'intégration, tutorat payé", attendu: i.gain, tolerance: 0.5, calcul: `${eur(i.margeRegagnee)} − ${h(HEURES_DE_TUTORAT)} × ${eur(auCentime(x.rec.tauxAdjointe))} = ${eur(i.gain)}` },
+          { libelle: "Passages manqués sans intégration", nature: "grandeur", attendu: i.sans.manques, calcul: `${i.sans.semaines.map((s) => qte(s.manques)).join(" + ")} = ${qte(i.sans.manques)}` },
+          { libelle: "Passages manqués avec intégration", nature: "grandeur", attendu: i.avec.manques, calcul: `${i.avec.semaines.map((s) => qte(s.manques)).join(" + ")} = ${qte(i.avec.manques)}` },
+          { libelle: "Marge regagnée", attendu: i.margeRegagnee, calcul: `(${qte(i.sans.manques)} − ${qte(i.avec.manques)}) × ${eur(i.sans.margeDUnPassage)} = ${eur(i.margeRegagnee)}` },
+          { libelle: "Gain de l'intégration, tutorat payé", attendu: i.gain, calcul: `${eur(i.margeRegagnee)} − ${h(HEURES_DE_TUTORAT)} × ${eur(auCentime(x.rec.tauxAdjointe))} = ${eur(i.gain)}` },
         ];
       },
       explication: (c) => {
@@ -455,21 +457,21 @@ export const RECRUTER_INTEGRER_FORMER: Chapitre = {
       notions: ["training", "average_basket"],
       question: (c) => {
         const x = recruterIntegrerFormer(c);
-        return `Sans formule cette fois. Une journée de formation à la vente additionnelle (${h(FORMATION.heures)}) pour les ${qte(FORMES.length)} vendeurs coûte ${eur(FORMATION.fraisParPersonne)} par personne à l'organisme ; l'opérateur de compétences en rembourse ${pct(FORMATION.priseEnCharge * 100)}, et les heures de formation sont payées, ${eur(x.fo.heures)} chargées. Elle fait gagner ${qte(FORMATION.indiceEnPlus)} article par passage sur les ${qte(x.fo.passages)} passages qu'ils font par mois. Calculez le coût net de la formation, la marge gagnée par mois (${eur(auCentime(x.fo.margeDUnArticle))} par article), puis les mois qu'elle met à se payer (au dixième).`;
+        return `Sans formule cette fois. Une journée de formation à la vente additionnelle (${h(FORMATION.heures)}) pour les ${qte(FORMES.length)} vendeurs coûte ${eur(FORMATION.fraisParPersonne)} par personne à l'organisme ; l'opérateur de compétences en rembourse ${pct(FORMATION.priseEnCharge * 100)}, et les heures de formation sont payées, ${eur(x.fo.heures)} chargées. Elle fait gagner ${qte(FORMATION.indiceEnPlus)} article par passage sur les ${qte(x.fo.passages)} passages qu'ils font par mois. Calculez le coût net de la formation, la marge gagnée par mois (${eur(auCentime(x.fo.margeDUnArticle))} par article), puis les mois qu'elle met à se payer (à deux décimales).`;
       },
       champs: (c) => {
         const x = recruterIntegrerFormer(c);
         const fo = x.fo;
         return [
-          { libelle: "Coût net de la formation", attendu: fo.cout, tolerance: 0.1, calcul: `${eur(fo.frais)} − ${eur(fo.priseEnCharge)} + ${eur(fo.heures)} = ${eur(fo.cout)}` },
-          { libelle: "Marge gagnée par mois", attendu: fo.gainParMois, tolerance: 0.5, calcul: `${qte(fo.passages)} × ${qte(FORMATION.indiceEnPlus)} = ${qte(fo.articlesEnPlus)} articles × ${eur(auCentime(fo.margeDUnArticle))} = ${eur(fo.gainParMois)}` },
-          { libelle: "Mois pour se payer", attendu: auDixieme(fo.mois), tolerance: 0.1, calcul: `${eur(fo.cout)} ÷ ${eur(fo.gainParMois)} = ${qte(auDixieme(fo.mois))} mois` },
+          { libelle: "Coût net de la formation", attendu: fo.cout, calcul: `${eur(fo.frais)} − ${eur(fo.priseEnCharge)} + ${eur(fo.heures)} = ${eur(fo.cout)}` },
+          { libelle: "Marge gagnée par mois", attendu: fo.gainParMois, calcul: `${qte(fo.passages)} × ${qte(FORMATION.indiceEnPlus)} = ${qte(fo.articlesEnPlus)} articles × ${eur(auCentime(fo.margeDUnArticle))} = ${eur(fo.gainParMois)}` },
+          { libelle: "Mois pour se payer", nature: "grandeur", attendu: auCentime(fo.mois), calcul: `${eur(fo.cout)} ÷ ${eur(fo.gainParMois)} = ${qte(fo.mois)} mois` },
         ];
       },
       explication: (c) => {
         const x = recruterIntegrerFormer(c);
         return [
-          `La formation se paie en ${qte(auDixieme(x.fo.mois))} mois, puis rapporte ${eur(x.fo.gainParMois)} chaque mois tant que l'équipe garde le réflexe. Son suivi compte autant qu'elle : l'indice de vente de chacun, mois après mois, dit si elle a porté.`,
+          `La formation se paie en ${qte(auCentime(x.fo.mois))} mois, puis rapporte ${eur(x.fo.gainParMois)} chaque mois tant que l'équipe garde le réflexe. Son suivi compte autant qu'elle : l'indice de vente de chacun, mois après mois, dit si elle a porté.`,
         ];
       },
     },
@@ -536,7 +538,7 @@ export const RECRUTER_INTEGRER_FORMER: Chapitre = {
             { libelle: "Heure d'intérim", valeurs: [eur(x.interim)] },
             { libelle: "Renfort le moins cher", valeurs: [eur(x.meilleur.r.total)] },
             { libelle: "Gain de l'intégration", valeurs: [eur(x.i.gain)] },
-            { libelle: "Retour de la formation", valeurs: [`${qte(auDixieme(x.fo.mois))} mois`] },
+            { libelle: "Retour de la formation", valeurs: [`${qte(auCentime(x.fo.mois))} mois`] },
           ],
         };
       },
