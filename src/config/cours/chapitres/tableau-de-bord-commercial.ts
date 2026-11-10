@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { CABINETS_DU_COURS, type CodeDIndicateurCommercial, type CodeDeCommercial, type FicheDuCabinet, type Trimestre } from "../monde/atlas-conseil";
 import {
@@ -55,6 +55,13 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *   · expert : les-trimestres-d-hugo (croiser le seuil et les trimestres), la-commission-pour-tous (une
  *     variante chiffrée : 10 % de commission relèvent chaque seuil), juger-hugo (une critique de la
  *     méthode : ce qu'un voyant ne dit pas) ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les taux, les évolutions et les parts se donnent à deux
+ * décimales (au dixième, avant) ; le seuil d'un commercial se calcule sur le taux de marge arrondi,
+ * comme sur la copie, au centime (à un euro près, avant) ; les contrats et les devis sont des
+ * quantités : le corrigé écrit le quotient à deux décimales, puis l'arrondit à l'unité au-dessus ;
+ * l'écart-type se donne au centime (à l'euro, avant).
  */
 
 /** Le chapitre se joue chez ATLAS CONSEIL seule : un cabinet dont les commerciaux vendent affaire par affaire. */
@@ -84,18 +91,14 @@ export const LEVIERS_DU_LABORATOIRE = {
   panier: { min: 4_000, max: 14_000, pas: 500 },
 } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 /** Un pourcentage déjà multiplié par 100 : 22,2 → « 22,2 % ». */
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
-/** Un rapport en pourcentage, au dixième : 0,2222 → 22,2. */
-const enPct = (x: number) => auDixieme(x * 100);
+/** Un rapport en pourcentage, à deux décimales : 0,2222 → 22,2. */
+const enPct = (x: number) => auCentime(x * 100);
 /** Arrondi à l'entier supérieur, sans qu'un calcul en virgule flottante ne fasse monter un entier exact. */
 const plafond = (x: number) => Math.ceil(x - 1e-9);
-/** Une part en pourcentage, au dixième : 0,728 → 72,8. */
-const pctAuDixieme = (x: number) => auDixieme(x * 100);
+/** Une part en pourcentage, à deux décimales : 0,728 → 72,8. */
+const pctAuDixieme = (x: number) => auCentime(x * 100);
 /** « d'Hugo », « de Nadia » : l'élision devant une voyelle. */
 const dE = (nom: string) => (/^[aeiouyéèêhAEIOUYÉÈH]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
@@ -132,11 +135,15 @@ export function tableauDuCabinet(c: Pick<Cas, "code">) {
   const serviceDe = (q: Trimestre) => journees[q - 1]!;
   // Hugo au premier trimestre : les contrats et les devis qu'il lui fallait, à son panier et à son taux, pour son seuil.
   const h1 = hugo.trimestres[0]!;
-  const contratsPourLeSeuil = plafond(hugo.s.seuil / h1.panier);
-  const devisPourLeSeuil = plafond(contratsPourLeSeuil / h1.tauxDeTransformation);
+  // Chaque ligne au centième, sur le panier au centime et le taux à deux décimales, comme sur la copie.
+  const contratsCalcules = auCentime(hugo.s.seuil / auCentime(h1.panier));
+  const contratsPourLeSeuil = plafond(contratsCalcules);
+  const devisCalcules = auCentime(contratsPourLeSeuil / (enPct(h1.tauxDeTransformation) / 100));
+  const devisPourLeSeuil = plafond(devisCalcules);
   // Nadia au dernier trimestre : les devis qu'il lui fallait au taux du même trimestre de N − 1, pour son objectif.
   const n4 = nadia.trimestres[3]!;
-  const devisAuTauxDeNMoins1 = plafond(n4.objectif / (n4.nMoins1.tauxDeTransformation * n4.panier));
+  const devisAuTauxCalcules = auCentime(n4.objectif / auCentime((enPct(n4.nMoins1.tauxDeTransformation) / 100) * auCentime(n4.panier)));
+  const devisAuTauxDeNMoins1 = plafond(devisAuTauxCalcules);
   const demandees = journees.reduce((s, q) => s + q.demandees, 0);
   const vendues = journees.reduce((s, q) => s + q.vendues, 0);
   return {
@@ -151,8 +158,11 @@ export function tableauDuCabinet(c: Pick<Cas, "code">) {
     demandees,
     vendues,
     serviceDeLAnnee: vendues / demandees,
+    contratsCalcules,
     contratsPourLeSeuil,
+    devisCalcules,
     devisPourLeSeuil,
+    devisAuTauxCalcules,
     devisAuTauxDeNMoins1,
     devisEnTrop: n4.devis - devisAuTauxDeNMoins1,
     commissionDHugoSurLAnnee: auCentime(hugo.annee.chiffreDAffaires * COMMISSION_DE_LA_VARIANTE),
@@ -317,7 +327,7 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
       question: (c) => {
         const x = tableauDuCabinet(c);
         const q4 = x.journees[3]!;
-        return `Additionnez les 4 trimestres : le chiffre d'affaires du cabinet en N, puis en N − 1. Calculez l'évolution de l'année sur N − 1, au dixième, puis le taux de service du dernier trimestre (${qte(q4.vendues)} journées vendues pour ${qte(q4.demandees)} demandées), au dixième.`;
+        return `Additionnez les 4 trimestres : le chiffre d'affaires du cabinet en N, puis en N − 1. Calculez l'évolution de l'année sur N − 1, à deux décimales, puis le taux de service du dernier trimestre (${qte(q4.vendues)} journées vendues pour ${qte(q4.demandees)} demandées), à deux décimales.`;
       },
       champs: (c) => {
         const x = tableauDuCabinet(c);
@@ -328,10 +338,9 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
           {
             libelle: "Évolution de l'année sur N − 1 (%)",
             attendu: enPct(x.t.evolutionSurNMoins1),
-            tolerance: 0.1,
             calcul: `(${eur(x.t.chiffreDAffaires)} ÷ ${eur(x.t.chiffreDAffairesN1)} − 1) × 100 = ${pct(enPct(x.t.evolutionSurNMoins1))}`,
           },
-          { libelle: "Taux de service du dernier trimestre (%)", attendu: enPct(q4.tauxDeService), tolerance: 0.1, calcul: `${qte(q4.vendues)} ÷ ${qte(q4.demandees)} × 100 = ${pct(enPct(q4.tauxDeService))}` },
+          { libelle: "Taux de service du dernier trimestre (%)", attendu: enPct(q4.tauxDeService), calcul: `${qte(q4.vendues)} ÷ ${qte(q4.demandees)} × 100 = ${pct(enPct(q4.tauxDeService))}` },
         ];
       },
       explication: (c) => {
@@ -376,7 +385,7 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
         const sq = x.serviceDe(q.trimestre as Trimestre);
         const saison = q.evolutionSurNMoins1 >= 0 && sq.tauxDeService >= 1;
         const nonServie = sq.tauxDeService < 1;
-        const recul = auDixieme((q.chiffreDAffaires / avant.chiffreDAffaires - 1) * 100);
+        const recul = auCentime((q.chiffreDAffaires / avant.chiffreDAffaires - 1) * 100);
         return [
           {
             texte: `C'est la saison : face au T${q.trimestre} de N − 1, il progresse de ${pct(enPct(q.evolutionSurNMoins1))}`,
@@ -410,19 +419,18 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
       question: (c) => {
         const x = tableauDuCabinet(c);
         const q = x.marc.trimestres[0]!;
-        return `Au premier trimestre, ${x.marc.k.prenom} a remis ${qte(q.devis)} devis et signé ${qte(q.contrats)} contrats, pour ${eur(q.chiffreDAffaires)} de chiffre d'affaires ; son objectif était de ${eur(q.objectif)}, et il avait signé ${eur(q.nMoins1.chiffreDAffaires)} au même trimestre de N − 1. Calculez son taux de transformation des devis (contrats ÷ devis), son panier moyen (chiffre d'affaires ÷ contrats), la réalisation de son objectif (chiffre d'affaires ÷ objectif) et son évolution sur N − 1, en pourcentage au dixième.`;
+        return `Au premier trimestre, ${x.marc.k.prenom} a remis ${qte(q.devis)} devis et signé ${qte(q.contrats)} contrats, pour ${eur(q.chiffreDAffaires)} de chiffre d'affaires ; son objectif était de ${eur(q.objectif)}, et il avait signé ${eur(q.nMoins1.chiffreDAffaires)} au même trimestre de N − 1. Calculez son taux de transformation des devis (contrats ÷ devis), son panier moyen (chiffre d'affaires ÷ contrats), la réalisation de son objectif (chiffre d'affaires ÷ objectif) et son évolution sur N − 1, en pourcentage à deux décimales.`;
       },
       champs: (c) => {
         const x = tableauDuCabinet(c);
         const q = x.marc.trimestres[0]!;
         return [
-          { libelle: "Taux de transformation des devis (%)", attendu: enPct(q.tauxDeTransformation), tolerance: 0.1, calcul: `${qte(q.contrats)} ÷ ${qte(q.devis)} × 100 = ${pct(enPct(q.tauxDeTransformation))}` },
+          { libelle: "Taux de transformation des devis (%)", attendu: enPct(q.tauxDeTransformation), calcul: `${qte(q.contrats)} ÷ ${qte(q.devis)} × 100 = ${pct(enPct(q.tauxDeTransformation))}` },
           { libelle: "Panier moyen", attendu: auCentime(q.panier), calcul: `${eur(q.chiffreDAffaires)} ÷ ${qte(q.contrats)} = ${eur(auCentime(q.panier))}` },
-          { libelle: "Réalisation de l'objectif (%)", attendu: enPct(q.realisationDeLObjectif), tolerance: 0.1, calcul: `${eur(q.chiffreDAffaires)} ÷ ${eur(q.objectif)} × 100 = ${pct(enPct(q.realisationDeLObjectif))}` },
+          { libelle: "Réalisation de l'objectif (%)", attendu: enPct(q.realisationDeLObjectif), calcul: `${eur(q.chiffreDAffaires)} ÷ ${eur(q.objectif)} × 100 = ${pct(enPct(q.realisationDeLObjectif))}` },
           {
             libelle: "Évolution sur N − 1 (%)",
             attendu: enPct(q.evolutionSurNMoins1),
-            tolerance: 0.1,
             calcul: `(${eur(q.chiffreDAffaires)} ÷ ${eur(q.nMoins1.chiffreDAffaires)} − 1) × 100 = ${pct(enPct(q.evolutionSurNMoins1))}`,
           },
         ];
@@ -526,7 +534,7 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
         const x = tableauDuCabinet(c);
         const h = x.hugo;
         return [
-          { libelle: "Taux de marge de ses comptes (%)", attendu: enPct(h.s.tauxDeMarge), tolerance: 0.1, calcul: `${eur(h.comptes.marge)} ÷ ${eur(h.comptes.chiffreDAffaires)} × 100 = ${pct(enPct(h.s.tauxDeMarge))}` },
+          { libelle: "Taux de marge de ses comptes (%)", attendu: enPct(h.s.tauxDeMarge), calcul: `${eur(h.comptes.marge)} ÷ ${eur(h.comptes.chiffreDAffaires)} × 100 = ${pct(enPct(h.s.tauxDeMarge))}` },
           { libelle: "Coût du commercial, par trimestre", attendu: h.s.cout, calcul: `${eur(h.k.salaireCharge)} + ${eur(h.k.frais)} = ${eur(h.s.cout)}` },
           { libelle: "Seuil de rentabilité du trimestre", attendu: h.s.seuil, calcul: `${eur(h.s.cout)} ÷ ${pct(enPct(h.s.tauxDeMarge))} = ${eur(h.s.seuil)}` },
           { libelle: "Seuil de rentabilité de l'année", attendu: h.s.seuilDeLAnnee, calcul: `${eur(h.s.seuil)} × 4 = ${eur(h.s.seuilDeLAnnee)}` },
@@ -549,7 +557,7 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
       tableau: (c) => tableauDesCommerciaux(tableauDuCabinet(c)),
       question: (c) => {
         const x = tableauDuCabinet(c);
-        return `Sans formule cette fois. Calculez le taux de marge des comptes de ${x.marc.k.prenom} et de ${x.nadia.k.prenom}, au dixième, et leur seuil de rentabilité par trimestre.`;
+        return `Sans formule cette fois. Calculez le taux de marge des comptes de ${x.marc.k.prenom} et de ${x.nadia.k.prenom}, à deux décimales, et leur seuil de rentabilité par trimestre.`;
       },
       champs: (c) => {
         const x = tableauDuCabinet(c);
@@ -557,14 +565,12 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
           {
             libelle: `Taux de marge des comptes de ${k.k.prenom} (%)`,
             attendu: enPct(k.s.tauxDeMarge),
-            tolerance: 0.1,
             calcul: `${eur(k.comptes.marge)} ÷ ${eur(k.comptes.chiffreDAffaires)} × 100 = ${pct(enPct(k.s.tauxDeMarge))}`,
           },
           {
             libelle: `Seuil de rentabilité de ${k.k.prenom}, par trimestre`,
             attendu: k.s.seuil,
-            tolerance: 1,
-            calcul: `(${eur(k.k.salaireCharge)} + ${eur(k.k.frais)}) ÷ (${eur(k.comptes.marge)} ÷ ${eur(k.comptes.chiffreDAffaires)}) = ${eur(k.s.seuil)}`,
+            calcul: `(${eur(k.k.salaireCharge)} + ${eur(k.k.frais)}) ÷ ${pct(enPct(k.s.tauxDeMarge))} = ${eur(k.s.seuil)}, sur le taux arrondi à deux décimales`,
           },
         ];
         return [...lignes(x.marc), ...lignes(x.nadia)];
@@ -593,7 +599,7 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
         const x = tableauDuCabinet(c);
         const q = x.hugo.trimestres[0]!;
         const t = enPct(q.tauxDeTransformation);
-        const hausse = auDixieme(((t + 5) / t - 1) * 100);
+        const hausse = auCentime(((t + 5) / t - 1) * 100);
         const voir = "Faites-le dans le laboratoire de l'étape suivante : le chiffre d'affaires y est le produit des devis, du taux et du panier.";
         return [
           { texte: `${pct(hausse)} : 5 points sur ${pct(t)}, c'est ${pct(hausse)} de plus`, juste: hausse !== 5, retour: `Bon pari. ${voir}` },
@@ -675,7 +681,7 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
         const parDevis = auCentime(h.sv.seuil / q.devis);
         return [
           `Avec ${pct(COMMISSION_DE_LA_VARIANTE * 100)} de commission, la marge qui paie ${h.k.prenom} n'est plus que ${pct(enPct(h.s.tauxDeMarge - COMMISSION_DE_LA_VARIANTE))} de ce qu'il signe : son seuil passe de ${eur(h.s.seuil)} à ${eur(h.sv.seuil)}. Sans devis de plus, chaque devis doit rapporter ${eur(parDevis)} de chiffre d'affaires : le taux de transformation fois le panier, ${pct(30)} à ${eur(10_000)}, ou ${pct(25)} à ${eur(auCentime(parDevis / 0.25))}.`,
-          `Le chiffre d'affaires est un produit : passer de ${pct(enPct(q.tauxDeTransformation))} à ${pct(enPct(q.tauxDeTransformation) + 5)} de transformation le fait monter de ${pct(auDixieme((5 / enPct(q.tauxDeTransformation)) * 100))}, pas de 5 %. Une commission paie l'effort, mais elle relève la barre que l'effort doit passer.`,
+          `Le chiffre d'affaires est un produit : passer de ${pct(enPct(q.tauxDeTransformation))} à ${pct(enPct(q.tauxDeTransformation) + 5)} de transformation le fait monter de ${pct(auCentime((5 / enPct(q.tauxDeTransformation)) * 100))}, pas de 5 %. Une commission paie l'effort, mais elle relève la barre que l'effort doit passer.`,
           ...(laboratoireDHugo(x, p).voyants.includes("evolutionSurNMoins1")
             ? [`Un voyant reste allumé, celui de l'évolution : le premier trimestre de N − 1, ${eur(h.k.nMoins1[0]!.chiffreDAffaires)}, est celui de son prédécesseur. Aucun réglage du trimestre ne l'éteint sans dépasser ce chiffre : c'est le voyant qui compare ${h.k.prenom} à un autre.`]
             : []),
@@ -697,13 +703,14 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
         const h = x.hugo;
         const q = h.trimestres[0]!;
         return [
-          { libelle: "Taux de transformation des devis (%)", attendu: enPct(q.tauxDeTransformation), tolerance: 0.1, calcul: `${qte(q.contrats)} ÷ ${qte(q.devis)} × 100 = ${pct(enPct(q.tauxDeTransformation))}` },
+          { libelle: "Taux de transformation des devis (%)", attendu: enPct(q.tauxDeTransformation), calcul: `${qte(q.contrats)} ÷ ${qte(q.devis)} × 100 = ${pct(enPct(q.tauxDeTransformation))}` },
           { libelle: "Panier moyen", attendu: auCentime(q.panier), calcul: `${eur(q.chiffreDAffaires)} ÷ ${qte(q.contrats)} = ${eur(auCentime(q.panier))}` },
-          { libelle: "Contrats nécessaires pour le seuil", attendu: x.contratsPourLeSeuil, calcul: `${eur(h.s.seuil)} ÷ ${eur(auCentime(q.panier))} = ${qte(auCentime(h.s.seuil / q.panier))}, soit ${qte(x.contratsPourLeSeuil)} contrats` },
+          { libelle: "Contrats nécessaires pour le seuil", nature: "quantite", attendu: x.contratsPourLeSeuil, calcul: `${eur(h.s.seuil)} ÷ ${eur(auCentime(q.panier))} = ${qte(x.contratsCalcules)}, soit ${qte(x.contratsPourLeSeuil)} contrats à l'unité au-dessus` },
           {
             libelle: "Devis nécessaires pour ces contrats",
+            nature: "quantite",
             attendu: x.devisPourLeSeuil,
-            calcul: `${qte(x.contratsPourLeSeuil)} ÷ ${pct(enPct(q.tauxDeTransformation))} = ${qte(auCentime(x.contratsPourLeSeuil / q.tauxDeTransformation))}, soit ${qte(x.devisPourLeSeuil)} devis`,
+            calcul: `${qte(x.contratsPourLeSeuil)} ÷ ${pct(enPct(q.tauxDeTransformation))} = ${qte(x.devisCalcules)}, soit ${qte(x.devisPourLeSeuil)} devis à l'unité au-dessus`,
           },
         ];
       },
@@ -712,7 +719,7 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
         const h = x.hugo;
         const q = h.trimestres[0]!;
         return [
-          `${h.k.prenom} a remis ${qte(q.devis)} devis ; il lui en fallait ${qte(x.devisPourLeSeuil)} à son taux. Ou bien un taux de ${pct(auDixieme((x.contratsPourLeSeuil / q.devis) * 100))}, ou un panier de ${eur(auCentime(h.s.seuil / q.contrats))}. Le seuil se traduit en activité : c'est ce que le tableau de bord d'un commercial suit, devis par devis.`,
+          `${h.k.prenom} a remis ${qte(q.devis)} devis ; il lui en fallait ${qte(x.devisPourLeSeuil)} à son taux. Ou bien un taux de ${pct(auCentime((x.contratsPourLeSeuil / q.devis) * 100))}, ou un panier de ${eur(auCentime(h.s.seuil / q.contrats))}. Le seuil se traduit en activité : c'est ce que le tableau de bord d'un commercial suit, devis par devis.`,
         ];
       },
     },
@@ -798,24 +805,24 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
       notions: ["conversion_rate", "dashboard"],
       question: (c) => {
         const x = tableauDuCabinet(c);
-        return `Sans formule. Calculez le taux de transformation des devis de ${x.nadia.k.prenom} au T3 et au T4 de N, puis au T4 de N − 1, au dixième, et les devis qu'elle a remis en trop au T4, face au taux de N − 1.`;
+        return `Sans formule. Calculez le taux de transformation des devis de ${x.nadia.k.prenom} au T3 et au T4 de N, puis au T4 de N − 1, au centième, et les devis qu'elle a remis en trop au T4, face au taux de N − 1.`;
       },
       champs: (c) => {
         const x = tableauDuCabinet(c);
         const [, , q3, q4] = x.nadia.trimestres;
         return [
-          { libelle: "Taux de transformation au T3 (%)", attendu: enPct(q3!.tauxDeTransformation), tolerance: 0.1, calcul: `${qte(q3!.contrats)} ÷ ${qte(q3!.devis)} × 100 = ${pct(enPct(q3!.tauxDeTransformation))}` },
-          { libelle: "Taux de transformation au T4 (%)", attendu: enPct(q4!.tauxDeTransformation), tolerance: 0.1, calcul: `${qte(q4!.contrats)} ÷ ${qte(q4!.devis)} × 100 = ${pct(enPct(q4!.tauxDeTransformation))}` },
+          { libelle: "Taux de transformation au T3 (%)", attendu: enPct(q3!.tauxDeTransformation), calcul: `${qte(q3!.contrats)} ÷ ${qte(q3!.devis)} × 100 = ${pct(enPct(q3!.tauxDeTransformation))}` },
+          { libelle: "Taux de transformation au T4 (%)", attendu: enPct(q4!.tauxDeTransformation), calcul: `${qte(q4!.contrats)} ÷ ${qte(q4!.devis)} × 100 = ${pct(enPct(q4!.tauxDeTransformation))}` },
           {
             libelle: "Taux de transformation au T4 de N − 1 (%)",
             attendu: enPct(q4!.nMoins1.tauxDeTransformation),
-            tolerance: 0.1,
             calcul: `${qte(q4!.nMoins1.contrats)} ÷ ${qte(q4!.nMoins1.devis)} × 100 = ${pct(enPct(q4!.nMoins1.tauxDeTransformation))}`,
           },
           {
             libelle: "Devis remis en trop au T4",
+            nature: "quantite",
             attendu: x.devisEnTrop,
-            calcul: `${eur(q4!.objectif)} ÷ (${pct(enPct(q4!.nMoins1.tauxDeTransformation))} × ${eur(q4!.panier)}) = ${qte(auCentime(q4!.objectif / (q4!.nMoins1.tauxDeTransformation * q4!.panier)))}, soit ${qte(x.devisAuTauxDeNMoins1)} devis ; ${qte(q4!.devis)} − ${qte(x.devisAuTauxDeNMoins1)} = ${qte(x.devisEnTrop)}`,
+            calcul: `${eur(q4!.objectif)} ÷ (${pct(enPct(q4!.nMoins1.tauxDeTransformation))} × ${eur(q4!.panier)}) = ${qte(x.devisAuTauxCalcules)}, soit ${qte(x.devisAuTauxDeNMoins1)} devis à l'unité au-dessus ; ${qte(q4!.devis)} − ${qte(x.devisAuTauxDeNMoins1)} = ${qte(x.devisEnTrop)}`,
           },
         ];
       },
@@ -990,19 +997,18 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
       question: (c) => {
         const x = tableauDuCabinet(c);
         const d = contratsDeNadia();
-        return `Au T4, ${x.nadia.k.prenom} a signé ${qte(d.nombre)} contrats pour ${eur(d.total)} : le tableau de bord lit un panier moyen de ${eur(d.moyenne)}. Sur ses contrats un à un, calculez le montant médian (celui du milieu de la liste) et l'écart-type des montants, à l'euro près. Calculez ensuite la part du chiffre d'affaires que font ses ${qte(GROS_CONTRATS)} plus gros contrats, en pourcentage.`;
+        return `Au T4, ${x.nadia.k.prenom} a signé ${qte(d.nombre)} contrats pour ${eur(d.total)} : le tableau de bord lit un panier moyen de ${eur(d.moyenne)}. Sur ses contrats un à un, calculez le montant médian (celui du milieu de la liste) et l'écart-type des montants, au centime. Calculez ensuite la part du chiffre d'affaires que font ses ${qte(GROS_CONTRATS)} plus gros contrats, en pourcentage.`;
       },
       champs: () => {
         const d = contratsDeNadia();
         const gros = d.contrats.slice(0, GROS_CONTRATS);
         return [
           { libelle: "Montant médian d'un contrat", attendu: d.mediane, calcul: `le ${qte((d.nombre + 1) / 2)}e des ${qte(d.nombre)} montants rangés : ${eur(d.mediane)}` },
-          { libelle: "Dispersion des montants, en écart-type", attendu: Math.round(d.ecartType), calcul: `racine de la moyenne des (montant − ${eur(d.moyenne)})² = ${eur(Math.round(d.ecartType))}`, tolerance: 1 },
+          { libelle: "Dispersion des montants, en écart-type", attendu: auCentime(d.ecartType), calcul: `racine de la moyenne des (montant − ${eur(d.moyenne)})² = ${eur(auCentime(d.ecartType))}` },
           {
             libelle: `Part des ${qte(GROS_CONTRATS)} plus gros contrats (%)`,
             attendu: pctAuDixieme(d.partDesGros),
             calcul: `(${gros.map((k) => eur(k.montant)).join(" + ")}) ÷ ${eur(d.total)} = ${pct(pctAuDixieme(d.partDesGros))}`,
-            tolerance: 0.05,
           },
         ];
       },
@@ -1010,7 +1016,7 @@ export const TABLEAU_DE_BORD_COMMERCIAL: Chapitre = {
         const x = tableauDuCabinet(c);
         const d = contratsDeNadia();
         return [
-          `Le panier moyen, ${eur(d.moyenne)}, ne décrit aucun contrat : ${qte(d.contratsSousLaMoyenne)} sur ${qte(d.nombre)} sont en dessous, et le contrat du milieu vaut ${eur(d.mediane)}. L'écart-type, ${eur(Math.round(d.ecartType))}, est presque aussi grand que la moyenne (un coefficient de variation de ${pct(pctAuDixieme(d.coefficientDeVariation))}) : la série est très dispersée.`,
+          `Le panier moyen, ${eur(d.moyenne)}, ne décrit aucun contrat : ${qte(d.contratsSousLaMoyenne)} sur ${qte(d.nombre)} sont en dessous, et le contrat du milieu vaut ${eur(d.mediane)}. L'écart-type, ${eur(auCentime(d.ecartType))}, est presque aussi grand que la moyenne (un coefficient de variation de ${pct(pctAuDixieme(d.coefficientDeVariation))}) : la série est très dispersée.`,
           `${qte(GROS_CONTRATS)} contrats font ${pct(pctAuDixieme(d.partDesGros))} du trimestre ${dE(x.nadia.k.prenom)}. Que l'un glisse au trimestre suivant, et le panier moyen chute sans que son travail ait changé. Une moyenne se lit avec sa médiane et sa dispersion ; un indicateur qui dépend de quelques gros contrats se suit compte par compte.`,
           `Pour animer l'équipe, la leçon vaut aussi : un challenge sur le chiffre d'affaires ou le panier serait gagné d'avance par ${x.marc.k.prenom}, ou par le hasard d'un gros contrat. Un challenge qui mobilise porte sur ce que chacun peut améliorer, face à son propre N − 1 : le taux de transformation des devis, que ${x.nadia.k.prenom} a vu passer de ${pct(enPct(x.nadia.trimestres[3]!.nMoins1.tauxDeTransformation))} à ${pct(enPct(x.nadia.trimestres[3]!.tauxDeTransformation))} au T4. Sa règle s'annonce en réunion d'équipe ; les écarts de chacun se traitent en entretien individuel.`,
         ];

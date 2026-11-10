@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   COMMUNE_DE_VAUCLAIR,
@@ -45,13 +45,14 @@ import { ENTREPRISES_DU_POINT_DE_VENTE, ficheDe } from "./taux-de-marque";
  *   · le laboratoire : le-laboratoire-de-la-zone (la zone et les points de part de marché gagnés,
  *     l'objectif face à la part théorique ; le graphique du chiffre gagné) ;
  *   · expert : la-zone-du-site, l-objectif-a-rebours ; puis ou-porter-l-effort et la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts de marché, d'emprise et de Reilly se donnent à deux
+ * décimales (au dixième, avant) ; le rapport de Reilly est une grandeur au centième, et la part part
+ * de lui ; les clients et les passages sont des quantités, les passages arrondis à l'unité au-dessus.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number, chiffres = 1) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: chiffres }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const qte = nombreAuCentieme;
 const enKm = (m: number) => `${(m / 1000).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} km`;
 
 /** Pourquoi la boutique seule, dit à l'élève qui arrive d'une autre entreprise. */
@@ -82,7 +83,10 @@ export function zoneDuChapitre(c: Pick<Cas, "code">) {
     k,
     v,
     depenseDeVauclair,
-    versLeCentreVille: auCentime(depenseDeVauclair * v.partDeA),
+    // La copie de Reilly : le rapport au centième, puis la part à deux décimales, puis la dépense au centime.
+    rapport: auCentime(v.rapport),
+    partDuCentreVille: auCentime((auCentime(v.rapport) / (1 + auCentime(v.rapport))) * 100),
+    versLeCentreVille: auCentime((depenseDeVauclair * auCentime((auCentime(v.rapport) / (1 + auCentime(v.rapport))) * 100)) / 100),
     rupture,
     partVisee,
     passagesEnPlus,
@@ -108,7 +112,7 @@ export function tableauDesOrigines(c: Pick<Cas, "code">): TableauDeDonnees {
   const x = zoneDuChapitre(c);
   const ligne = (libelle: string, cle: CodeDeZone | "horsZone") => ({
     libelle,
-    valeurs: [pct(ORIGINE_DES_CLIENTS.fideles[cle] * 100, 0), pct(ORIGINE_DES_CLIENTS.passants[cle] * 100, 0)],
+    valeurs: [pct(ORIGINE_DES_CLIENTS.fideles[cle] * 100), pct(ORIGINE_DES_CLIENTS.passants[cle] * 100)],
   });
   return {
     titre: `D'où viennent les clients de ${x.f.moisDeReference} (fidèles : ${eur(x.k.fideles.ttc)} TTC ; passants : ${eur(x.k.passants.ttc)} TTC)`,
@@ -123,7 +127,7 @@ function tableauDeLaSynthese(c: Pick<Cas, "code">): TableauDeDonnees {
   return {
     titre: `Les trois zones de ${x.f.entreprise}, en ${x.f.moisDeReference}`,
     colonnes: ["Dépense", "Chiffre TTC", "Part réelle", "Part théorique", "Potentiel"],
-    lignes: x.k.zones.map((z) => ({ libelle: z.nom, valeurs: [eur(z.depense), eur(z.chiffre), pct(auDixieme(z.part * 100)), pct(z.partTheorique * 100), eur(z.potentiel)] })),
+    lignes: x.k.zones.map((z) => ({ libelle: z.nom, valeurs: [eur(z.depense), eur(z.chiffre), pct(auCentime(z.part * 100)), pct(z.partTheorique * 100), eur(z.potentiel)] })),
   };
 }
 
@@ -228,7 +232,7 @@ export const ZONE_DE_CHALANDISE: Chapitre = {
         return x.k.zones.map((z) => ({
           libelle: `Chiffre d'affaires TTC · ${z.nom}`,
           attendu: z.chiffre,
-          calcul: `${pct(ORIGINE_DES_CLIENTS.fideles[z.code] * 100, 0)} × ${eur(x.k.fideles.ttc)} + ${pct(ORIGINE_DES_CLIENTS.passants[z.code] * 100, 0)} × ${eur(x.k.passants.ttc)} = ${eur(z.chiffre)}`,
+          calcul: `${pct(ORIGINE_DES_CLIENTS.fideles[z.code] * 100)} × ${eur(x.k.fideles.ttc)} + ${pct(ORIGINE_DES_CLIENTS.passants[z.code] * 100)} × ${eur(x.k.passants.ttc)} = ${eur(z.chiffre)}`,
         }));
       },
       explication: (c) => {
@@ -244,19 +248,18 @@ export const ZONE_DE_CHALANDISE: Chapitre = {
       type: "montants",
       titre: "La part de marché, zone par zone",
       notions: ["demand_market_share"],
-      question: () => "Sans formule cette fois. Calculez la part de marché de la boutique dans chaque zone en janvier, en pourcentage, au dixième.",
+      question: () => "Sans formule cette fois. Calculez la part de marché de la boutique dans chaque zone en janvier, en pourcentage, à deux décimales.",
       champs: (c) =>
         zoneDuChapitre(c).k.zones.map((z) => ({
           libelle: `Part de marché · ${z.nom} (%)`,
-          attendu: auDixieme(z.part * 100),
-          tolerance: 0.1,
-          calcul: `${eur(z.chiffre)} ÷ ${eur(z.depense)} × 100 = ${pct(auDixieme(z.part * 100))}`,
+          attendu: auCentime(z.part * 100),
+          calcul: `${eur(z.chiffre)} ÷ ${eur(z.depense)} × 100 = ${pct(auCentime(z.part * 100))}`,
         })),
       explication: (c) => {
         const x = zoneDuChapitre(c);
         const [p, s, t] = x.k.zones;
         return [
-          `La boutique prend ${pct(auDixieme(p!.part * 100))} de la dépense de ses voisins, ${pct(auDixieme(s!.part * 100))} de la première couronne, ${pct(auDixieme(t!.part * 100))} au-delà. Plus on s'éloigne, plus d'autres magasins sont plus près du client : la part de marché fond avec la distance.`,
+          `La boutique prend ${pct(auCentime(p!.part * 100))} de la dépense de ses voisins, ${pct(auCentime(s!.part * 100))} de la première couronne, ${pct(auCentime(t!.part * 100))} au-delà. Plus on s'éloigne, plus d'autres magasins sont plus près du client : la part de marché fond avec la distance.`,
         ];
       },
     },
@@ -276,9 +279,9 @@ export const ZONE_DE_CHALANDISE: Chapitre = {
         const p = x.k.zone("primaire");
         const s = x.k.zone("secondaire");
         return [
-          ...x.k.zones.map((z) => ({ libelle: `Clients · ${z.nom}`, attendu: z.clients, calcul: `${qte(z.fideles)} fidèles + ${qte(z.passants)} passants = ${qte(z.clients)}` })),
-          { libelle: "Taux d'emprise · Zone primaire (%)", attendu: auCentime(p.emprise * 100), tolerance: 0.01, calcul: `${qte(p.clients)} ÷ ${qte(p.population)} × 100 = ${pct(auCentime(p.emprise * 100), 2)}` },
-          { libelle: "Taux d'emprise · Zone secondaire (%)", attendu: auCentime(s.emprise * 100), tolerance: 0.01, calcul: `${qte(s.clients)} ÷ ${qte(s.population)} × 100 = ${pct(auCentime(s.emprise * 100), 2)}` },
+          ...x.k.zones.map((z) => ({ libelle: `Clients · ${z.nom}`, nature: "quantite" as const, attendu: z.clients, calcul: `${qte(z.fideles)} fidèles + ${qte(z.passants)} passants = ${qte(z.clients)}` })),
+          { libelle: "Taux d'emprise · Zone primaire (%)", attendu: auCentime(p.emprise * 100), calcul: `${qte(p.clients)} ÷ ${qte(p.population)} × 100 = ${pct(auCentime(p.emprise * 100))}` },
+          { libelle: "Taux d'emprise · Zone secondaire (%)", attendu: auCentime(s.emprise * 100), calcul: `${qte(s.clients)} ÷ ${qte(s.population)} × 100 = ${pct(auCentime(s.emprise * 100))}` },
         ];
       },
       explication: (c) => {
@@ -286,7 +289,7 @@ export const ZONE_DE_CHALANDISE: Chapitre = {
         const p = x.k.zone("primaire");
         const s = x.k.zone("secondaire");
         return [
-          `Dans la zone primaire, ${pct(auCentime(p.emprise * 100), 2)} des habitants sont passés en caisse en janvier ; dans la secondaire, ${pct(auCentime(s.emprise * 100), 2)}. Le taux d'emprise compte des personnes, la part de marché des euros : les deux disent la même chose, que la boutique touche bien moins la première couronne.`,
+          `Dans la zone primaire, ${pct(auCentime(p.emprise * 100))} des habitants sont passés en caisse en janvier ; dans la secondaire, ${pct(auCentime(s.emprise * 100))}. Le taux d'emprise compte des personnes, la part de marché des euros : les deux disent la même chose, que la boutique touche bien moins la première couronne.`,
         ];
       },
     },
@@ -320,7 +323,7 @@ export const ZONE_DE_CHALANDISE: Chapitre = {
         const p = x.k.zone("primaire");
         const s = x.k.zone("secondaire");
         return [
-          `Dans la zone primaire, la boutique fait déjà plus que sa part théorique (${pct(auDixieme(p.part * 100))} contre ${pct(p.partTheorique * 100)}) : elle y est au-dessus de ce que sa taille laisse attendre. La zone secondaire, elle, laisse ${eur(s.potentiel)} à prendre : c'est le réservoir.`,
+          `Dans la zone primaire, la boutique fait déjà plus que sa part théorique (${pct(auCentime(p.part * 100))} contre ${pct(p.partTheorique * 100)}) : elle y est au-dessus de ce que sa taille laisse attendre. La zone secondaire, elle, laisse ${eur(s.potentiel)} à prendre : c'est le réservoir.`,
         ];
       },
     },
@@ -357,15 +360,15 @@ export const ZONE_DE_CHALANDISE: Chapitre = {
         const a = POLES_DE_REILLY.centreVille.surface;
         const b = POLES_DE_REILLY.centreCommercial.surface;
         return [
-          { libelle: "Rapport des dépenses attirées", attendu: auCentime(x.v.rapport), calcul: `(${qte(a)} ÷ ${qte(b)}) × (${qte(COMMUNE_DE_VAUCLAIR.versLeCentreCommercial / 1000)} ÷ ${qte(COMMUNE_DE_VAUCLAIR.versLeCentreVille / 1000)})² = ${qte(auCentime(x.v.rapport))}` },
-          { libelle: "Part de la dépense qui va au centre-ville (%)", attendu: auDixieme(x.v.partDeA * 100), tolerance: 0.1, calcul: `${qte(auCentime(x.v.rapport))} ÷ (1 + ${qte(auCentime(x.v.rapport))}) × 100 = ${pct(auDixieme(x.v.partDeA * 100))}` },
-          { libelle: "Dépense de Vauclair attirée par le centre-ville", attendu: x.versLeCentreVille, calcul: `${eur(x.depenseDeVauclair)} × ${pct(auDixieme(x.v.partDeA * 100))} = ${eur(x.versLeCentreVille)}` },
+          { libelle: "Rapport des dépenses attirées", nature: "grandeur", attendu: x.rapport, calcul: `(${qte(a)} ÷ ${qte(b)}) × (${qte(COMMUNE_DE_VAUCLAIR.versLeCentreCommercial / 1000)} ÷ ${qte(COMMUNE_DE_VAUCLAIR.versLeCentreVille / 1000)})² = ${qte(auCentime(x.v.rapport))}` },
+          { libelle: "Part de la dépense qui va au centre-ville (%)", attendu: x.partDuCentreVille, calcul: `${qte(x.rapport)} ÷ (1 + ${qte(x.rapport)}) × 100 = ${pct(x.partDuCentreVille)}` },
+          { libelle: "Dépense de Vauclair attirée par le centre-ville", attendu: x.versLeCentreVille, calcul: `${eur(x.depenseDeVauclair)} × ${pct(x.partDuCentreVille)} = ${eur(x.versLeCentreVille)}` },
         ];
       },
       explication: (c) => {
         const x = zoneDuChapitre(c);
         return [
-          `Vauclair est plus près du centre commercial, qui est aussi plus grand : il attire ${pct(auDixieme((1 - x.v.partDeA) * 100))} de sa dépense. Le centre-ville n'en garde que ${eur(x.versLeCentreVille)}, à partager entre ses boutiques. La distance compte au carré : c'est elle qui ferme la zone.`,
+          `Vauclair est plus près du centre commercial, qui est aussi plus grand : il attire ${pct(auCentime((1 - x.v.partDeA) * 100))} de sa dépense. Le centre-ville n'en garde que ${eur(x.versLeCentreVille)}, à partager entre ses boutiques. La distance compte au carré : c'est elle qui ferme la zone.`,
         ];
       },
     },
@@ -421,20 +424,20 @@ export const ZONE_DE_CHALANDISE: Chapitre = {
       notions: ["demand_market_share", "segmentation"],
       question: (c) => {
         const x = zoneDuChapitre(c);
-        return `Le site de la boutique a reçu ${qte(x.k.visites)} visites en janvier, dont ${qte(x.k.zones.find((z) => z.code === "primaire")!.visites)} de la zone primaire, ${qte(x.k.zone("secondaire").visites)} de la secondaire, ${qte(x.k.zone("tertiaire").visites)} de la tertiaire et ${qte(x.k.visites - x.k.zones.reduce((t, z) => t + z.visites, 0))} d'au-delà. Calculez la part des visites venues d'au-delà de la zone, puis la part des ${qte(x.k.fideles.tickets + x.k.passants.tickets)} passages en caisse qui sont des retraits de commandes passées sur le site (${qte(x.k.retraits)}), en pourcentage, au dixième.`;
+        return `Le site de la boutique a reçu ${qte(x.k.visites)} visites en janvier, dont ${qte(x.k.zones.find((z) => z.code === "primaire")!.visites)} de la zone primaire, ${qte(x.k.zone("secondaire").visites)} de la secondaire, ${qte(x.k.zone("tertiaire").visites)} de la tertiaire et ${qte(x.k.visites - x.k.zones.reduce((t, z) => t + z.visites, 0))} d'au-delà. Calculez la part des visites venues d'au-delà de la zone, puis la part des ${qte(x.k.fideles.tickets + x.k.passants.tickets)} passages en caisse qui sont des retraits de commandes passées sur le site (${qte(x.k.retraits)}), en pourcentage, à deux décimales.`;
       },
       champs: (c) => {
         const x = zoneDuChapitre(c);
         const hors = x.k.visites - x.k.zones.reduce((t, z) => t + z.visites, 0);
         return [
-          { libelle: "Part des visites venues d'au-delà de la zone (%)", attendu: auDixieme(x.k.partDesVisitesHorsZone * 100), tolerance: 0.1, calcul: `${qte(hors)} ÷ ${qte(x.k.visites)} × 100 = ${pct(auDixieme(x.k.partDesVisitesHorsZone * 100))}` },
-          { libelle: "Part des passages qui sont des retraits (%)", attendu: auDixieme(x.k.partDesRetraits * 100), tolerance: 0.1, calcul: `${qte(x.k.retraits)} ÷ ${qte(x.k.fideles.tickets + x.k.passants.tickets)} × 100 = ${pct(auDixieme(x.k.partDesRetraits * 100))}` },
+          { libelle: "Part des visites venues d'au-delà de la zone (%)", attendu: auCentime(x.k.partDesVisitesHorsZone * 100), calcul: `${qte(hors)} ÷ ${qte(x.k.visites)} × 100 = ${pct(auCentime(x.k.partDesVisitesHorsZone * 100))}` },
+          { libelle: "Part des passages qui sont des retraits (%)", attendu: auCentime(x.k.partDesRetraits * 100), calcul: `${qte(x.k.retraits)} ÷ ${qte(x.k.fideles.tickets + x.k.passants.tickets)} × 100 = ${pct(auCentime(x.k.partDesRetraits * 100))}` },
         ];
       },
       explication: (c) => {
         const x = zoneDuChapitre(c);
         return [
-          `La zone d'une unité commerciale virtuelle ne s'arrête pas aux isochrones : ${pct(auDixieme(x.k.partDesVisitesHorsZone * 100))} des visiteurs du site habitent au-delà. Elle se trace avec la mesure d'audience et les adresses de livraison, et elle dépend de ce que le site sait livrer. Tant que la commande se retire en boutique, ces visiteurs lointains n'achètent pas.`,
+          `La zone d'une unité commerciale virtuelle ne s'arrête pas aux isochrones : ${pct(auCentime(x.k.partDesVisitesHorsZone * 100))} des visiteurs du site habitent au-delà. Elle se trace avec la mesure d'audience et les adresses de livraison, et elle dépend de ce que le site sait livrer. Tant que la commande se retire en boutique, ces visiteurs lointains n'achètent pas.`,
         ];
       },
     },
@@ -446,7 +449,7 @@ export const ZONE_DE_CHALANDISE: Chapitre = {
       notions: ["demand_market_share"],
       question: (c) => {
         const x = zoneDuChapitre(c);
-        return `La direction veut ${pct(HAUSSE_VISEE_DANS_LA_ZONE * 100, 0)} de chiffre d'affaires en caisse de plus, soit ${eur(x.k.objectif)} TTC par mois. Choisissez la zone où porter l'effort et les points de part de marché à y gagner : le tableau suit le chiffre gagné, la part atteinte et la part théorique ; le graphique trace le chiffre gagné selon les points. Puis relevez le défi.`;
+        return `La direction veut ${pct(HAUSSE_VISEE_DANS_LA_ZONE * 100)} de chiffre d'affaires en caisse de plus, soit ${eur(x.k.objectif)} TTC par mois. Choisissez la zone où porter l'effort et les points de part de marché à y gagner : le tableau suit le chiffre gagné, la part atteinte et la part théorique ; le graphique trace le chiffre gagné selon les points. Puis relevez le défi.`;
       },
       leviers: () => [
         {
@@ -497,7 +500,7 @@ export const ZONE_DE_CHALANDISE: Chapitre = {
             const g = gagnerDansLaZone(f, zoneDuRang(p.zone!), p.points!);
             if (!g.atteintLObjectif) return `Avec ${qte(g.points)} points, la zone rapporte ${eur(g.gagne)} : il manque ${eur(auCentime(g.objectif - g.gagne))}. Gagnez plus de points, ou visez une zone qui dépense plus.`;
             if (!g.sousLaPartTheorique)
-              return `L'objectif est atteint, mais la part de la zone monterait à ${pct(auDixieme(g.partApres * 100))}, au-dessus de sa part théorique (${pct(g.zone.partTheorique * 100)}) : un tel gain n'est pas réaliste. Cherchez une zone où la boutique a de la marge.`;
+              return `L'objectif est atteint, mais la part de la zone monterait à ${pct(auCentime(g.partApres * 100))}, au-dessus de sa part théorique (${pct(g.zone.partTheorique * 100)}) : un tel gain n'est pas réaliste. Cherchez une zone où la boutique a de la marge.`;
             return `L'objectif est atteint dans la part théorique, mais avec plus de points qu'il n'en faut : retirez des points jusqu'au plus petit nombre qui l'atteint encore.`;
           },
           solution: { zone: rangDeLaZone("secondaire"), points: pointsPourLObjectif(f, "secondaire") },
@@ -508,7 +511,7 @@ export const ZONE_DE_CHALANDISE: Chapitre = {
         const x = zoneDuChapitre(c);
         const g = gagnerDansLaZone(x.f, zoneDuRang(p.zone!), p.points!);
         return [
-          `${qte(g.points)} points dans la ${g.zone.nom.toLowerCase()} rapportent ${eur(g.gagne)} par mois : la part y passerait de ${pct(auDixieme(g.zone.part * 100))} à ${pct(auDixieme(g.partApres * 100))}, sous sa part théorique de ${pct(g.zone.partTheorique * 100)}. Dans la zone primaire, il faudrait ${qte(pointsPourLObjectif(x.f, "primaire"))} points, au-delà de ce que la boutique peut y prendre ; dans la tertiaire, ${qte(pointsPourLObjectif(x.f, "tertiaire"))} points, face au centre commercial.`,
+          `${qte(g.points)} points dans la ${g.zone.nom.toLowerCase()} rapportent ${eur(g.gagne)} par mois : la part y passerait de ${pct(auCentime(g.zone.part * 100))} à ${pct(auCentime(g.partApres * 100))}, sous sa part théorique de ${pct(g.zone.partTheorique * 100)}. Dans la zone primaire, il faudrait ${qte(pointsPourLObjectif(x.f, "primaire"))} points, au-delà de ce que la boutique peut y prendre ; dans la tertiaire, ${qte(pointsPourLObjectif(x.f, "tertiaire"))} points, face au centre commercial.`,
         ];
       },
     },
@@ -526,15 +529,15 @@ export const ZONE_DE_CHALANDISE: Chapitre = {
         const x = zoneDuChapitre(c);
         const s = x.k.zone("secondaire");
         return [
-          { libelle: "Part de marché à atteindre · Zone secondaire (%)", attendu: auCentime(x.partVisee * 100), tolerance: 0.01, calcul: `(${eur(s.chiffre)} + ${eur(x.k.objectif)}) ÷ ${eur(s.depense)} × 100 = ${pct(auCentime(x.partVisee * 100), 2)}` },
-          { libelle: "Passages de passants en plus par mois", attendu: x.passagesEnPlus, calcul: `${eur(x.k.objectif)} ÷ ${eur(x.k.panierTtcDesPassants)} = ${qte(auCentime(x.k.objectif / x.k.panierTtcDesPassants))}, soit ${qte(x.passagesEnPlus)} passages` },
+          { libelle: "Part de marché à atteindre · Zone secondaire (%)", attendu: auCentime(x.partVisee * 100), calcul: `(${eur(s.chiffre)} + ${eur(x.k.objectif)}) ÷ ${eur(s.depense)} × 100 = ${pct(auCentime(x.partVisee * 100))}` },
+          { libelle: "Passages de passants en plus par mois", nature: "quantite", attendu: x.passagesEnPlus, calcul: `${eur(x.k.objectif)} ÷ ${eur(x.k.panierTtcDesPassants)} = ${qte(auCentime(x.k.objectif / x.k.panierTtcDesPassants))}, soit ${qte(x.passagesEnPlus)} passages à l'unité au-dessus : un de moins ne ferait pas l'objectif` },
         ];
       },
       explication: (c) => {
         const x = zoneDuChapitre(c);
         const s = x.k.zone("secondaire");
         return [
-          `La part de la zone secondaire doit passer de ${pct(auCentime(s.part * 100), 2)} à ${pct(auCentime(x.partVisee * 100), 2)} : ${qte(x.passagesEnPlus)} passages de plus par mois, sur ${qte(s.population)} habitants. C'est l'objectif concret d'une action locale : un tract dans les communes de la première couronne, le retrait en boutique des commandes du site.`,
+          `La part de la zone secondaire doit passer de ${pct(auCentime(s.part * 100))} à ${pct(auCentime(x.partVisee * 100))} : ${qte(x.passagesEnPlus)} passages de plus par mois, sur ${qte(s.population)} habitants. C'est l'objectif concret d'une action locale : un tract dans les communes de la première couronne, le retrait en boutique des commandes du site.`,
         ];
       },
     },
@@ -554,12 +557,12 @@ export const ZONE_DE_CHALANDISE: Chapitre = {
           {
             texte: "La zone secondaire : elle laisse le plus à prendre",
             juste: true,
-            retour: `Oui. La boutique n'y prend que ${pct(auDixieme(s.part * 100))} de la dépense, pour une part théorique de ${pct(s.partTheorique * 100)} : ${eur(s.potentiel)} à prendre, et ${qte(x.pointsSecondaire)} points suffisent à l'objectif. Reste à vérifier, par une étude, ce qui ferait venir ces clients.`,
+            retour: `Oui. La boutique n'y prend que ${pct(auCentime(s.part * 100))} de la dépense, pour une part théorique de ${pct(s.partTheorique * 100)} : ${eur(s.potentiel)} à prendre, et ${qte(x.pointsSecondaire)} points suffisent à l'objectif. Reste à vérifier, par une étude, ce qui ferait venir ces clients.`,
           },
           {
             texte: "La zone primaire : la boutique y fait déjà le plus de chiffre d'affaires",
             juste: false,
-            retour: `Non : elle y prend déjà ${pct(auDixieme(p.part * 100))} de la dépense, plus que sa part théorique (${pct(p.partTheorique * 100)}). Gagner l'objectif là demanderait ${qte(pointsPourLObjectif(x.f, "primaire"))} points de plus : la zone est saturée.`,
+            retour: `Non : elle y prend déjà ${pct(auCentime(p.part * 100))} de la dépense, plus que sa part théorique (${pct(p.partTheorique * 100)}). Gagner l'objectif là demanderait ${qte(pointsPourLObjectif(x.f, "primaire"))} points de plus : la zone est saturée.`,
           },
           {
             texte: "La zone tertiaire : c'est celle qui dépense le plus",

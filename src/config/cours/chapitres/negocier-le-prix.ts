@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { CABINETS_DU_COURS, type FicheDuCabinet } from "../monde/atlas-conseil";
 import {
@@ -53,6 +53,11 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     trimestre presque plein) et le-laboratoire-de-l-affaire (remise, journées, jours libres, avec le
  *     graphique du gain selon les journées : trois chemins pour rendre l'affaire acceptable) ; puis la
  *     synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les journées sont des quantités, entières : le corrigé écrit le
+ * quotient à deux décimales, puis l'arrondit à l'unité au-dessus ; les notes de l'appel d'offres sont
+ * des grandeurs au centième, la note globale sur la note du prix arrondie.
  */
 
 /** Le chapitre se joue chez le cabinet du cours, qui vend ses journées affaire par affaire. */
@@ -90,11 +95,9 @@ export const LEVIERS_DU_LABORATOIRE = {
   libres: { min: 0, max: 300, pas: 10 },
 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 /** Un pourcentage, la part étant donnée en fraction (0,2125 → « 21,25 % »). */
-const pct = (part: number, chiffres = 2) => `${(Math.round(part * 100 * 10 ** chiffres) / 10 ** chiffres + 0).toLocaleString("fr-FR", { maximumFractionDigits: chiffres })} %`.replace(/^-/, "−");
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const pct = (t: number) => enPoints(t * 100);
 const majuscule = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 /** « le groupe Orvane » → « du groupe Orvane ». */
 const du = (x: string) => x.replace(/^le /, "du ").replace(/^la /, "de la ");
@@ -420,8 +423,9 @@ export const NEGOCIER_LE_PRIX: Chapitre = {
           { libelle: "Marge sur coût variable d'une journée remisée", attendu: k.margeParJourneeRemisee, calcul: `${eur(k.prixRemise)} − ${eur(n.coutVariable)} = ${eur(k.margeParJourneeRemisee)}` },
           {
             libelle: "Journées à commander au prix remisé",
+            nature: "quantite",
             attendu: k.journeesNecessaires ?? 0,
-            calcul: `${eur(k.margeSansRemise)} ÷ ${eur(k.margeParJourneeRemisee)} = ${qte(Math.round((k.margeSansRemise / k.margeParJourneeRemisee) * 10) / 10)}, soit ${qte(k.journeesNecessaires ?? 0)} journées (à la journée supérieure)`,
+            calcul: `${eur(k.margeSansRemise)} ÷ ${eur(k.margeParJourneeRemisee)} = ${qte(auCentime(k.margeSansRemise / k.margeParJourneeRemisee))}, soit ${qte(k.journeesNecessaires ?? 0)} journées à l'unité au-dessus : une journée de moins ne garderait pas la marge`,
           },
         ];
       },
@@ -676,7 +680,7 @@ export const NEGOCIER_LE_PRIX: Chapitre = {
         const k = n.contreProposition;
         const x = n.variante;
         return [
-          { libelle: "Journées prises à d'autres clients", attendu: x.deplacees, calcul: `${qte(k.journees)} − ${qte(x.joursLibres)} = ${qte(x.deplacees)}` },
+          { libelle: "Journées prises à d'autres clients", nature: "quantite", attendu: x.deplacees, calcul: `${qte(k.journees)} − ${qte(x.joursLibres)} = ${qte(x.deplacees)}` },
           { libelle: "Marge perdue sur ces journées", attendu: x.margePerdue, calcul: `${qte(x.deplacees)} × ${eur(n.margeSurCoutVariable)} = ${eur(x.margePerdue)}` },
           { libelle: "Gain de l'affaire", attendu: x.gain, calcul: `${qte(k.journees)} × ${eur(x.margeParJournee)} − ${eur(x.margePerdue)} = ${eur(x.margeDeLAffaire)} − ${eur(x.margePerdue)} = ${eur(x.gain)}` },
           {
@@ -866,7 +870,7 @@ export const NEGOCIER_LE_PRIX: Chapitre = {
       question: () => {
         const v = compteDeValbrune();
         const a = APPEL_D_OFFRES_DE_VALBRUNE;
-        return `Le marché de formation du centre hospitalier de Valbrune, que le cabinet tient à ${eur(v.prix)} la journée, se renouvelle par appel d'offres. Le règlement pondère la valeur technique à ${pct(a.ponderation.technique, 0)} et le prix à ${pct(a.ponderation.prix, 0)}, avec une note du prix de ${qte(a.noteMaximale)} × prix le plus bas ÷ prix du candidat. Au prix de N, calculez la note du prix ${dE("ATLAS CONSEIL")} et sa note globale, puis la note globale du concurrent le mieux placé (au centième), et le prix le plus haut, à l'euro, qui gagne encore.`;
+        return `Le marché de formation du centre hospitalier de Valbrune, que le cabinet tient à ${eur(v.prix)} la journée, se renouvelle par appel d'offres. Le règlement pondère la valeur technique à ${pct(a.ponderation.technique)} et le prix à ${pct(a.ponderation.prix)}, avec une note du prix de ${qte(a.noteMaximale)} × prix le plus bas ÷ prix du candidat. Au prix de N, calculez la note du prix ${dE("ATLAS CONSEIL")} et sa note globale, puis la note globale du concurrent le mieux placé (au centième), et le prix le plus haut, à l'euro, qui gagne encore.`;
       },
       champs: () => {
         const v = compteDeValbrune();
@@ -875,10 +879,12 @@ export const NEGOCIER_LE_PRIX: Chapitre = {
         const m = x.meilleur;
         const t = a.ponderation.technique;
         const p = a.ponderation.prix;
+        // La note globale de la copie : sur la note du prix au centième.
+        const noteGlobale = (technique: number, prix: number) => auCentime(technique * t + auCentime(prix) * p);
         return [
-          { libelle: "Note du prix d'ATLAS CONSEIL", attendu: auCentime(x.atlas.noteDuPrix), calcul: `${qte(a.noteMaximale)} × ${eur(x.prixLePlusBas)} ÷ ${eur(x.prixDAtlas)} = ${qte(auCentime(x.atlas.noteDuPrix))}`, tolerance: 0.01 },
-          { libelle: "Note globale d'ATLAS CONSEIL", attendu: auCentime(x.atlas.note), calcul: `${qte(a.noteTechniqueDAtlas)} × ${qte(t)} + ${qte(auCentime(x.atlas.noteDuPrix))} × ${qte(p)} = ${qte(auCentime(x.atlas.note))}`, tolerance: 0.02 },
-          { libelle: `Note globale de ${m.nom}`, attendu: auCentime(m.note), calcul: `${qte(m.noteTechnique)} × ${qte(t)} + ${qte(auCentime(m.noteDuPrix))} × ${qte(p)} = ${qte(auCentime(m.note))}`, tolerance: 0.02 },
+          { libelle: "Note du prix d'ATLAS CONSEIL", nature: "grandeur", attendu: auCentime(x.atlas.noteDuPrix), calcul: `${qte(a.noteMaximale)} × ${eur(x.prixLePlusBas)} ÷ ${eur(x.prixDAtlas)} = ${qte(auCentime(x.atlas.noteDuPrix))}` },
+          { libelle: "Note globale d'ATLAS CONSEIL", nature: "grandeur", attendu: noteGlobale(a.noteTechniqueDAtlas, x.atlas.noteDuPrix), calcul: `${qte(a.noteTechniqueDAtlas)} × ${qte(t)} + ${qte(auCentime(x.atlas.noteDuPrix))} × ${qte(p)} = ${qte(noteGlobale(a.noteTechniqueDAtlas, x.atlas.noteDuPrix))}` },
+          { libelle: `Note globale de ${m.nom}`, nature: "grandeur", attendu: noteGlobale(m.noteTechnique, m.noteDuPrix), calcul: `${qte(m.noteTechnique)} × ${qte(t)} + ${qte(auCentime(m.noteDuPrix))} × ${qte(p)} = ${qte(noteGlobale(m.noteTechnique, m.noteDuPrix))}` },
           {
             libelle: "Prix le plus haut qui gagne encore",
             attendu: x.prixLePlusHautQuiGagne,

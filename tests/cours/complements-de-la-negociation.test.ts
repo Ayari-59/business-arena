@@ -143,7 +143,7 @@ describe("K4 : la dispersion et l'animation, dans « Le tableau de bord commerci
     }
   });
 
-  it("moyenne 13 800 €, médiane 6 400 €, écart-type 13 380 €, 72,8 % pour les 4 plus gros", () => {
+  it("moyenne 13 800 €, médiane 6 400 €, écart-type au centime, 72,8 % pour les 4 plus gros", () => {
     const moyenne = somme(montants) / montants.length;
     const ranges = [...montants].sort((a, b) => a - b);
     const ecart = Math.sqrt(somme(montants.map((x) => (x - moyenne) ** 2)) / montants.length);
@@ -151,8 +151,8 @@ describe("K4 : la dispersion et l'animation, dans « Le tableau de bord commerci
     expect([moyenne, ranges[6], Math.round(ecart), Math.round((somme(gros) / somme(montants)) * 1000) / 10]).toEqual([13_800, 6_400, 13_380, 72.8]);
     expect(attendus(TABLEAU_DE_BORD_COMMERCIAL, "la-dispersion-des-contrats")).toEqual({
       "Montant médian d'un contrat": 6_400,
-      "Dispersion des montants, en écart-type": 13_380,
-      "Part des 4 plus gros contrats (%)": 72.8,
+      "Dispersion des montants, en écart-type": Math.round(ecart * 100) / 100,
+      "Part des 4 plus gros contrats (%)": Math.round((somme(gros) / somme(montants)) * 10_000) / 100,
     });
   });
 });

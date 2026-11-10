@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { BOUTIQUES_DU_COURS, type FicheDeLaBoutique } from "../monde/maille-et-co";
 import { COMMANDES_ESSAYEES, commandeDeFevrier, fevrierAvecUneCommande, rayonDuMois } from "../monde/vente-et-caisse";
@@ -30,9 +30,13 @@ import { MAGASINS, accordeA, de, majuscule, motsDe, qte } from "./recevoir-une-l
  * col rond oubliée (400 pulls, 19 par jour, 21 jours avant la rupture, 1 326 pulls manqués, 72 930 €
  * de ventes perdues). Il lit maintenant le cardigan de janvier : 120 en stock, 13 par jour, 9 jours
  * avant la rupture, 24 cardigans manqués, 1 800 € de ventes perdues.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le rythme de vente et les jours sont des quantités : le corrigé
+ * écrit le quotient à deux décimales, puis l'arrondit à l'unité (au plus proche pour le rythme,
+ * au-dessous pour les jours entiers).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 
 export const ficheDe = (c: Pick<Cas, "code">): FicheDeLaBoutique => BOUTIQUES_DU_COURS[c.code]!;
 
@@ -107,7 +111,7 @@ export const REMPLIR_LE_RAYON: Chapitre = {
       },
       champs: (c) => {
         const r = rayon(c);
-        return [{ libelle: `${majuscule(r.pluriel)} ${accordeA(r.feminin, "vendu")} par jour`, attendu: r.parJour, calcul: `${qte(r.demande)} ÷ ${qte(r.jours)} = ${(r.demande / r.jours).toLocaleString("fr-FR")}, arrondi à ${qte(r.parJour)}` }];
+        return [{ libelle: `${majuscule(r.pluriel)} ${accordeA(r.feminin, "vendu")} par jour`, nature: "quantite", attendu: r.parJour, calcul: `${qte(r.demande)} ÷ ${qte(r.jours)} = ${qte(r.demande / r.jours)}, soit ${qte(r.parJour)} à l'unité la plus proche` }];
       },
       explication: (c) => {
         const r = rayon(c);
@@ -126,7 +130,7 @@ export const REMPLIR_LE_RAYON: Chapitre = {
       },
       champs: (c) => {
         const r = rayon(c);
-        return [{ libelle: "Jours avant la rupture", attendu: r.joursAvant, calcul: `${qte(r.stock)} ÷ ${qte(r.parJour)} = ${qte(r.joursAvant)} jours entiers` }];
+        return [{ libelle: "Jours avant la rupture", nature: "quantite", attendu: r.joursAvant, calcul: `${qte(r.stock)} ÷ ${qte(r.parJour)} = ${qte(r.stock / r.parJour)}, soit ${qte(r.joursAvant)} jours entiers : le jour suivant, il n'en reste plus assez` }];
       },
       explication: (c) => {
         const r = rayon(c);
@@ -146,8 +150,8 @@ export const REMPLIR_LE_RAYON: Chapitre = {
       champs: (c) => {
         const r = rayon(c);
         return [
-          { libelle: "Jours de rayon vide, en commandant aujourd'hui", attendu: r.joursSans, calcul: `${qte(r.delai)} − ${qte(r.joursAvant)} = ${qte(r.joursSans)}` },
-          { libelle: `Jours de rayon vide avant la livraison du ${r.livraison.jour}`, attendu: r.joursVidesAvantLaLivraison, calcul: `${qte(r.livraison.jour - 1)} jours avant la livraison − ${qte(r.joursAvant)} jours de stock = ${qte(r.joursVidesAvantLaLivraison)}` },
+          { libelle: "Jours de rayon vide, en commandant aujourd'hui", nature: "quantite", attendu: r.joursSans, calcul: `${qte(r.delai)} − ${qte(r.joursAvant)} = ${qte(r.joursSans)}` },
+          { libelle: `Jours de rayon vide avant la livraison du ${r.livraison.jour}`, nature: "quantite", attendu: r.joursVidesAvantLaLivraison, calcul: `${qte(r.livraison.jour - 1)} jours avant la livraison − ${qte(r.joursAvant)} jours de stock = ${qte(r.joursVidesAvantLaLivraison)}` },
         ];
       },
       explication: (c) => {
@@ -192,7 +196,7 @@ export const REMPLIR_LE_RAYON: Chapitre = {
       champs: (c) => {
         const r = rayon(c);
         return [
-          { libelle: `${majuscule(r.pluriel)} non ${accordeA(r.feminin, "trouvé")}`, attendu: r.manquees, calcul: `${qte(r.demande)} − ${qte(r.vendues)} = ${qte(r.manquees)}` },
+          { libelle: `${majuscule(r.pluriel)} non ${accordeA(r.feminin, "trouvé")}`, nature: "quantite", attendu: r.manquees, calcul: `${qte(r.demande)} − ${qte(r.vendues)} = ${qte(r.manquees)}` },
           { libelle: "Ventes perdues hors taxes", attendu: r.ventesPerdues, calcul: `${qte(r.manquees)} × ${eur(r.prixHt)} = ${eur(r.ventesPerdues)}` },
         ];
       },

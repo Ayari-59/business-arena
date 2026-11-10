@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct as enPoints } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_LA_NEGOCIATION, negociationDuCabinet, tableauDuCabinet } from "../../chapitres/negocier-le-prix";
 import type { TableauDeDonnees } from "../../types";
@@ -19,6 +19,11 @@ import type { Situation } from "../types";
  *
  * Comme son chapitre, le cas se joue dans la simulation du cours (src/config/cours/monde) : ses chiffres
  * sont ceux de `negociationDuCabinet`, sur la fiche du cabinet. Il ne lit du cas que son code.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la remise autorisée se donne à deux décimales (au dixième,
+ * avant) ; les journées à vendre sont une quantité : le corrigé écrit le quotient à deux décimales,
+ * puis l'arrondit à l'unité au-dessus.
  */
 
 /**
@@ -37,11 +42,8 @@ export const BAISSE_QUI_REND_UNE_CONSIGNE_FRAGILE = 0.05;
 /** Les bornes du curseur de la consigne, en pourcentage du prix catalogue. */
 export const REMISE_DU_CURSEUR_DE_LA_CONSIGNE = { min: 0, max: 25 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (part: number, chiffres = 2) => `${(Math.round(part * 100 * 10 ** chiffres) / 10 ** chiffres + 0).toLocaleString("fr-FR", { maximumFractionDigits: chiffres })} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const qte = nombreAuCentieme;
+const pct = (t: number) => enPoints(t * 100);
 const majuscule = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 const du = (x: string) => x.replace(/^le /, "du ").replace(/^la /, "de la ");
 const au = (x: string) => x.replace(/^le /, "au ").replace(/^la /, "à la ");
@@ -80,7 +82,7 @@ export function remiseAutorisee(c: Pick<Cas, "code">) {
     plancher,
     remiseParJournee,
     remise,
-    remiseAuDixieme: auDixieme(remise * 100),
+    remiseAuDixieme: auCentime(remise * 100),
     remiseSurLaCommande: auCentime(remiseParJournee * n.journeesDeLAffaire),
     consigne,
     prixALaConsigne,
@@ -180,7 +182,7 @@ export const LA_REMISE_AUTORISEE: Situation = {
       notions: ["price_floor"],
       question: (c) => {
         const r = remiseAutorisee(c);
-        return `Entre le prix catalogue et ce plancher, quelle remise par journée reste-t-il ? Exprimez-la en pourcentage du prix catalogue, au dixième, puis calculez ce qu'elle représente au plus sur les ${qte(r.n.journeesDeLAffaire)} journées ${du(r.n.client)}.`;
+        return `Entre le prix catalogue et ce plancher, quelle remise par journée reste-t-il ? Exprimez-la en pourcentage du prix catalogue, à deux décimales, puis calculez ce qu'elle représente au plus sur les ${qte(r.n.journeesDeLAffaire)} journées ${du(r.n.client)}.`;
       },
       champs: (c) => {
         const r = remiseAutorisee(c);
@@ -190,8 +192,7 @@ export const LA_REMISE_AUTORISEE: Situation = {
           {
             libelle: "Remise autorisée (%)",
             attendu: r.remiseAuDixieme,
-            tolerance: 0.1,
-            calcul: `${eur(r.remiseParJournee)} ÷ ${eur(n.prix)} × 100 = ${pct(r.remise, 3)}, soit ${pct(r.remiseAuDixieme / 100, 1)} au dixième`,
+            calcul: `${eur(r.remiseParJournee)} ÷ ${eur(n.prix)} × 100 = ${pct(r.remiseAuDixieme / 100)}`,
           },
           { libelle: "Remise au plus sur la commande", attendu: r.remiseSurLaCommande, calcul: `${eur(r.remiseParJournee)} × ${qte(n.journeesDeLAffaire)} = ${eur(r.remiseSurLaCommande)}` },
         ];
@@ -199,7 +200,7 @@ export const LA_REMISE_AUTORISEE: Situation = {
       explication: (c) => {
         const r = remiseAutorisee(c);
         return [
-          `Sans la règle, la marge de manœuvre allait jusqu'au coût complet : ${pct(r.n.remiseMaximale)} du prix. La règle en garde une part pour le bénéfice : il reste ${pct(r.remise, 3)}, soit ${eur(r.remiseParJournee)} par journée. Au-delà, la décision remonte à la directrice.`,
+          `Sans la règle, la marge de manœuvre allait jusqu'au coût complet : ${pct(r.n.remiseMaximale)} du prix. La règle en garde une part pour le bénéfice : il reste ${pct(r.remise)}, soit ${eur(r.remiseParJournee)} par journée. Au-delà, la décision remonte à la directrice.`,
         ];
       },
     },
@@ -266,8 +267,9 @@ export const LA_REMISE_AUTORISEE: Situation = {
           { libelle: "Part des fixes la plus haute", attendu: r.partDesFixesMaximale, calcul: `${eur(r.coutCompletMaximal)} − ${eur(n.coutVariable)} = ${eur(r.partDesFixesMaximale)}` },
           {
             libelle: "Journées à vendre au moins dans l'année",
+            nature: "quantite",
             attendu: r.journeesMinimales,
-            calcul: `${eur(n.chargesFixes)} ÷ ${eur(r.partDesFixesMaximale)} = ${qte(Math.round((n.chargesFixes / r.partDesFixesMaximale) * 100) / 100)}, soit ${qte(r.journeesMinimales)} journées (à la journée supérieure)`,
+            calcul: `${eur(n.chargesFixes)} ÷ ${eur(r.partDesFixesMaximale)} = ${qte(auCentime(n.chargesFixes / r.partDesFixesMaximale))}, soit ${qte(r.journeesMinimales)} journées à l'unité au-dessus : une journée de moins ne couvrirait pas les charges fixes`,
           },
         ];
       },
@@ -329,7 +331,7 @@ export const LA_REMISE_AUTORISEE: Situation = {
           {
             texte: `${qte(r.consigne)} % au plus, tant que l'année vend ${qte(r.journeesMinimales)} journées`,
             juste: true,
-            retour: `Oui : ${eur(n.coutComplet)} de coût complet, plus ${pct(r.regle)} de bénéfice, donnent un plancher de ${eur(r.plancher)}, soit ${pct(r.remise, 3)} sous le prix catalogue : ${qte(r.consigne)} % au pourcentage entier. Et la consigne repose sur le volume de N : sous ${qte(r.journeesMinimales)} journées, la part des fixes monte et la règle casse. La demande ${du(n.client)}, ${pct(n.remiseDemandee)}, vous revient.`,
+            retour: `Oui : ${eur(n.coutComplet)} de coût complet, plus ${pct(r.regle)} de bénéfice, donnent un plancher de ${eur(r.plancher)}, soit ${pct(r.remise)} sous le prix catalogue : ${qte(r.consigne)} % au pourcentage entier. Et la consigne repose sur le volume de N : sous ${qte(r.journeesMinimales)} journées, la part des fixes monte et la règle casse. La demande ${du(n.client)}, ${pct(n.remiseDemandee)}, vous revient.`,
           },
           {
             texte: `${qte(n.remiseEntiere)} % au plus : le prix couvre encore le coût complet`,

@@ -42,7 +42,7 @@ describe("le client qui revient et le client qui part", () => {
 
   it("février : 17 parties, 323 revenues, 338 en fin de mois ; 95 % reviennent ; 57,76 € par passage", () => {
     expect(attendus(LE_CLIENT_QUI_REVIENT, "partis")).toEqual([Math.round(340 * 0.05), 340 - 17, 323 + 15]);
-    expect(attendus(LE_CLIENT_QUI_REVIENT, "poids-des-gardes")).toEqual([Math.round((323 / 340) * 1_000) / 10, Math.round((323 / 338) * 1_000) / 10]);
+    expect(attendus(LE_CLIENT_QUI_REVIENT, "poids-des-gardes")).toEqual([c((323 / 340) * 100), c((323 / 338) * 100)]);
     expect(attendus(LE_CLIENT_QUI_REVIENT, "garde-toute-l-annee")).toEqual([c(19_640 / 340), c(12 * 57.76)]);
     expect(attendus(LE_CLIENT_QUI_REVIENT, "parti-apres-le-premier")).toEqual([c(11 * 57.76)]);
     expect(juste(LE_CLIENT_QUI_REVIENT, "ce-que-dit-le-fichier")).toEqual(["Le fichier baisse : les départs dépassent les nouvelles cartes"]);
@@ -73,8 +73,8 @@ describe("ce que rapporte un nouveau client", () => {
     gardesDeTexte(UN_NOUVEAU_CLIENT);
   });
 
-  it("2 000 € pour 500 entrées : 19 % de transformation, 95 ventes, 21,05 € la vente, 1 057,10 € laissés", () => {
-    expect(attendus(UN_NOUVEAU_CLIENT, "les-ventes")).toEqual([Math.round((600 / 3_160) * 1_000) / 10, Math.round((500 * 600) / 3_160)]);
+  it("2 000 € pour 500 entrées : 18,99 % de transformation, 95 ventes, 21,05 € la vente, 1 057,10 € laissés", () => {
+    expect(attendus(UN_NOUVEAU_CLIENT, "les-ventes")).toEqual([c((600 / 3_160) * 100), Math.round(500 * c((600 / 3_160) * 100) / 100)]);
     expect(attendus(UN_NOUVEAU_CLIENT, "le-cout")).toEqual([c(2_000 / 95)]);
     expect(attendus(UN_NOUVEAU_CLIENT, "la-marge")).toEqual([c(19_310 / 600), c(95 * 32.18), c(95 * 32.18 - 2_000)]);
     expect(juste(UN_NOUVEAU_CLIENT, "paie-t-elle")).toEqual(["Elle paie : chaque vente gagnée rapporte plus qu'elle n'a coûté"]);

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_POINT_DE_VENTE, ficheDe } from "../../chapitres/equipe-et-planning";
 import { APPRENTI, SEMAINES_TRAVAILLEES, TEMPS_PARTIEL, apprentiOuTempsPartiel, coutDuRecrutement } from "../../monde/equipe-de-la-boutique";
@@ -18,11 +18,14 @@ import type { Situation } from "../types";
  *
  * Comme son chapitre, le cas se joue dans la simulation du cours : ses chiffres sont ceux de
  * `apprentiOuTempsPartiel` (monde/equipe-de-la-boutique.ts).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les heures en boutique sont des quantités, entières ; les coûts
+ * se donnent au centime, à un centime près (à 2 centimes, 50 centimes ou un euro près, avant), le
+ * tutorat sur le taux horaire de l'adjointe au centime.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${qte(t)} %`;
+const qte = nombreAuCentieme;
 const h = (x: number) => `${qte(x)} h`;
 
 const choixDe = (c: Pick<Cas, "code">) => apprentiOuTempsPartiel(ficheDe(c));
@@ -88,12 +91,12 @@ export const UN_APPRENTI_OU_UN_TEMPS_PARTIEL: Situation = {
       champs: (c) => {
         const x = choixDe(c);
         const f = ficheDe(c);
-        const taux = Math.round(coutDuRecrutement(f).tauxAdjointe * 100) / 100;
+        const taux = coutDuRecrutement(f).tauxAdjointe;
         return [
-          { libelle: "Salaire brut du mois", attendu: x.brutApprenti, tolerance: 0.02, calcul: `${eur(x.smicMensuel)} × ${pct(APPRENTI.partDuSmic * 100)} = ${eur(x.brutApprenti)}` },
-          { libelle: "Coût chargé de l'année", attendu: x.salaireApprenti, tolerance: 0.5, calcul: `${eur(x.brutApprenti)} × ${qte(1 + APPRENTI.tauxPatronal)} × 12 = ${eur(x.salaireApprenti)}` },
-          { libelle: "Tutorat de l'année", attendu: x.tutorat, tolerance: 0.5, calcul: `${h(APPRENTI.tutorat)} × ${qte(SEMAINES_TRAVAILLEES)} × ${eur(taux)} = ${eur(x.tutorat)}` },
-          { libelle: "Coût net de l'année", attendu: x.apprenti, tolerance: 1, calcul: `${eur(x.salaireApprenti)} − ${eur(APPRENTI.aide)} + ${eur(x.tutorat)} = ${eur(x.apprenti)}` },
+          { libelle: "Salaire brut du mois", attendu: x.brutApprenti, calcul: `${eur(x.smicMensuel)} × ${pct(APPRENTI.partDuSmic * 100)} = ${eur(x.brutApprenti)}` },
+          { libelle: "Coût chargé de l'année", attendu: x.salaireApprenti, calcul: `${eur(x.brutApprenti)} × ${qte(1 + APPRENTI.tauxPatronal)} × 12 = ${eur(x.salaireApprenti)}` },
+          { libelle: "Tutorat de l'année", attendu: x.tutorat, calcul: `${h(APPRENTI.tutorat)} × ${qte(SEMAINES_TRAVAILLEES)} × ${eur(taux)} = ${eur(x.tutorat)}` },
+          { libelle: "Coût net de l'année", attendu: x.apprenti, calcul: `${eur(x.salaireApprenti)} − ${eur(APPRENTI.aide)} + ${eur(x.tutorat)} = ${eur(x.apprenti)}` },
         ];
       },
       explication: (c) => {
@@ -113,10 +116,10 @@ export const UN_APPRENTI_OU_UN_TEMPS_PARTIEL: Situation = {
         const f = ficheDe(c);
         return [
           { libelle: "Coût de l'année du CDI", attendu: x.tempsPartiel, calcul: `${eur(TEMPS_PARTIEL.brutMensuel)} × ${qte(1 + f.tauxPatronal)} × 12 = ${eur(x.tempsPartiel)}` },
-          { libelle: "Heures en boutique du CDI", attendu: x.heuresTempsPartiel, calcul: `${h(TEMPS_PARTIEL.heures)} × ${qte(SEMAINES_TRAVAILLEES)} = ${h(x.heuresTempsPartiel)}` },
-          { libelle: "Heures en boutique de l'apprenti", attendu: x.heuresApprenti, calcul: `${h(APPRENTI.heuresEnBoutique)} × ${qte(SEMAINES_TRAVAILLEES)} = ${h(x.heuresApprenti)}` },
-          { libelle: "Heure du CDI", attendu: x.parHeureTempsPartiel, tolerance: 0.02, calcul: `${eur(x.tempsPartiel)} ÷ ${h(x.heuresTempsPartiel)} = ${eur(x.parHeureTempsPartiel)}` },
-          { libelle: "Heure de l'apprenti", attendu: x.parHeureApprenti, tolerance: 0.02, calcul: `${eur(x.apprenti)} ÷ ${h(x.heuresApprenti)} = ${eur(x.parHeureApprenti)}` },
+          { libelle: "Heures en boutique du CDI", nature: "quantite", attendu: x.heuresTempsPartiel, calcul: `${h(TEMPS_PARTIEL.heures)} × ${qte(SEMAINES_TRAVAILLEES)} = ${h(x.heuresTempsPartiel)}` },
+          { libelle: "Heures en boutique de l'apprenti", nature: "quantite", attendu: x.heuresApprenti, calcul: `${h(APPRENTI.heuresEnBoutique)} × ${qte(SEMAINES_TRAVAILLEES)} = ${h(x.heuresApprenti)}` },
+          { libelle: "Heure du CDI", attendu: x.parHeureTempsPartiel, calcul: `${eur(x.tempsPartiel)} ÷ ${h(x.heuresTempsPartiel)} = ${eur(x.parHeureTempsPartiel)}` },
+          { libelle: "Heure de l'apprenti", attendu: x.parHeureApprenti, calcul: `${eur(x.apprenti)} ÷ ${h(x.heuresApprenti)} = ${eur(x.parHeureApprenti)}` },
         ];
       },
       explication: (c) => {

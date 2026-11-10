@@ -8,6 +8,7 @@ import type {
   ReferenceDeLaBoutique,
   SeuilDAlerte,
 } from "./maille-et-co";
+import { arrondi, arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 
 /**
  * LE MODÈLE DU POINT DE VENTE DU COURS : la boutique MAILLE & CO, un mois puis un trimestre.
@@ -48,9 +49,18 @@ import type {
  *
  * CONVENTIONS : les montants sont au centime ; les taux, les coefficients et les moyennes ne sont
  * pas arrondis (c'est l'affichage qui arrondit). Un résultat négatif est une perte.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le coût moyen pondéré du stock se donne au centime, et la
+ * prévision des ventes a sa version aux lignes arrondies, celle de la copie
+ * (`prevoirAuxLignesArrondies`, `tendanceAnnuelleAuxLignesArrondies`) : moyennes mobiles, point
+ * moyen, pente, ordonnée à l'origine et tendances au centième, rapports et coefficients saisonniers
+ * au dix-millième, prévisions à l'unité. Les laboratoires gardent le modèle exact.
  */
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const auCentime = arrondi2;
+/** Au dix-millième : un rapport ou un coefficient saisonnier, qui garde sa précision. */
+const auDixMillieme = (x: number) => arrondi(x, 4);
 const somme = (xs: readonly number[]) => xs.reduce((t, x) => t + x, 0);
 /** Arrondi à l'entier supérieur, sans qu'un calcul en virgule flottante ne fasse monter un entier exact. */
 const plafond = (x: number) => Math.ceil(x - 1e-9);
@@ -582,6 +592,75 @@ export function tendanceAnnuelle(f: FicheDeLaBoutique) {
   return { totaux, droite: { a: droite.a, b: droite.b, xMoyen: droite.xMoyen, yMoyen: droite.yMoyen }, anneeN, coefficients, previsions: coefficients.map((c) => (anneeN / 4) * c) };
 }
 
+/**
+ * La prévision aux lignes arrondies, celle que l'élève écrit sur sa copie : chaque moyenne mobile, le
+ * point moyen, les deux sommes de la pente, la pente, l'ordonnée à l'origine et chaque tendance au
+ * centième ; chaque rapport à la tendance et chaque coefficient saisonnier, brut ou corrigé, au
+ * dix-millième ; chaque prévision au centième, puis à l'unité (on prévoit des articles entiers). La
+ * ligne suivante part toujours de la ligne arrondie.
+ */
+export function prevoirAuxLignesArrondies(f: FicheDeLaBoutique, methode: MethodeDeTendance = "moyennes-mobiles") {
+  const demande = f.historique.map((h) => h.demande);
+  const mmc = moyennesMobilesCentrees(demande).map((y) => (y === null ? null : auCentime(y)));
+  const points =
+    methode === "trimestres-bruts"
+      ? demande.map((y, i) => ({ x: i + 1, y }))
+      : mmc.flatMap((y, i) => (y === null ? [] : [{ x: i + 1, y }]));
+  const n = points.length;
+  const xMoyen = auCentime(somme(points.map((p) => p.x)) / n);
+  const yMoyen = auCentime(somme(points.map((p) => p.y)) / n);
+  const sommeDesCarres = auCentime(somme(points.map((p) => (p.x - xMoyen) ** 2)));
+  const sommeDesProduits = auCentime(somme(points.map((p) => (p.x - xMoyen) * (p.y - yMoyen))));
+  const a = auCentime(sommeDesProduits / sommeDesCarres);
+  const b = auCentime(yMoyen - a * xMoyen);
+  const tendanceDuRang = (t: number) => auCentime(a * t + b);
+  const serie = f.historique.map((h, i) => {
+    const tendance = tendanceDuRang(i + 1);
+    return { ...h, rang: i + 1, moyenneMobile: mmc[i]!, tendance, rapport: auDixMillieme(h.demande / tendance) };
+  });
+  const coefficientsBruts = [1, 2, 3, 4].map((q) => {
+    const rapports = serie.filter((s) => s.trimestre === q).map((s) => s.rapport);
+    return auDixMillieme(somme(rapports) / rapports.length);
+  });
+  const sommeBrute = auDixMillieme(somme(coefficientsBruts));
+  const coefficients = coefficientsBruts.map((c) => auDixMillieme((c * 4) / sommeBrute));
+  const previsions = [13, 14, 15, 16].map((rang, k) => {
+    const tendance = tendanceDuRang(rang);
+    const calculee = auCentime(tendance * coefficients[k]!);
+    return { rang, trimestre: k + 1, tendance, coefficient: coefficients[k]!, calculee, prevision: aLUnite(calculee) };
+  });
+  return {
+    methode,
+    serie,
+    droite: { a, b, xMoyen, yMoyen, n, sommeDesCarres, sommeDesProduits },
+    tendanceDuRang,
+    coefficientsBruts,
+    sommeBrute,
+    coefficients,
+    previsions,
+    totalPrevu: somme(previsions.map((p) => p.prevision)),
+  };
+}
+
+/**
+ * La tendance annuelle aux lignes arrondies : la pente et la moyenne des trois totaux au centième, la
+ * demande de N au centième ; la moyenne trimestrielle de chaque année au centième, chaque rapport et
+ * chaque coefficient au dix-millième ; la prévision d'un trimestre au centième, puis à l'unité.
+ */
+export function tendanceAnnuelleAuxLignesArrondies(f: FicheDeLaBoutique) {
+  const annees = ["N-3", "N-2", "N-1"] as const;
+  const totaux = annees.map((a) => somme(f.historique.filter((h) => h.annee === a).map((h) => h.demande)));
+  const moyenne = auCentime(somme(totaux) / 3);
+  const a = auCentime((totaux[2]! - totaux[0]!) / 2);
+  const anneeN = auCentime(moyenne + a * 2);
+  const trimestreMoyen = totaux.map((t) => auCentime(t / 4));
+  const rapports = [1, 2, 3, 4].map((q) => annees.map((an, i) => auDixMillieme(f.historique.find((h) => h.annee === an && h.trimestre === q)!.demande / trimestreMoyen[i]!)));
+  const coefficients = rapports.map((r) => auDixMillieme(somme(r) / 3));
+  const trimestreDeN = auCentime(anneeN / 4);
+  const calculees = coefficients.map((c) => auCentime(trimestreDeN * c));
+  return { totaux, moyenne, droite: { a, b: auCentime(moyenne - a * 2) }, anneeN, trimestreMoyen, rapports, coefficients, trimestreDeN, calculees, previsions: calculees.map(aLUnite) };
+}
+
 // ═════════════════════════════════════════════════════════════════════════════
 // 6. LE BUDGET DU POINT DE VENTE
 // ═════════════════════════════════════════════════════════════════════════════
@@ -613,7 +692,7 @@ export function budgetDuTrimestre(f: FicheDeLaBoutique, leviers: Partial<Leviers
     const valeurInitiale = auCentime(r.stockInitial * r.coutDAchat);
     const achatsHt = auCentime(achats * coutDAchat);
     const disponible = r.stockInitial + achats;
-    const coutMoyen = disponible > 0 ? (valeurInitiale + achatsHt) / disponible : r.coutDAchat;
+    const coutMoyen = disponible > 0 ? auCentime((valeurInitiale + achatsHt) / disponible) : r.coutDAchat;
     const valeurFinale = auCentime((r.stockInitial + achats - ventes) * coutMoyen);
     return {
       code: r.code,

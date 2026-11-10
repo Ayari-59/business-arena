@@ -1,3 +1,4 @@
+import { arrondi, arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { equipeDuMois, indicateursDuMois, planningFaceAuBesoin, referenceDe, coutVariable } from "./boutique";
 import { DECEMBRE_N_MOINS_1, panierDuMois } from "./vente-et-caisse";
 import { SMIC_HORAIRE_BRUT, SMIC_MENSUEL_BRUT } from "./ressources-humaines-de-nova";
@@ -30,7 +31,7 @@ import type { CodeDeReference, FicheDeLaBoutique } from "./maille-et-co";
  * la mention « À VÉRIFIER ».
  */
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const auCentime = arrondi2;
 const somme = (xs: readonly number[]) => xs.reduce((t, x) => t + x, 0);
 const plafond = (x: number) => Math.ceil(x - 1e-9);
 
@@ -289,7 +290,8 @@ export const RECRUTEMENT = { annonce: 90, heuresDeTri: 2, entretiens: 6, dureeDU
 /** Le coût d'un recrutement, au taux horaire chargé de la responsable et de l'adjointe. */
 export function coutDuRecrutement(f: FicheDeLaBoutique) {
   const e = equipeDuMois(f);
-  const taux = (code: string) => e.salaries.find((s) => s.code === code)!.tauxHoraireCharge;
+  // Le taux horaire chargé au centime, celui que la copie reprend (25,28 €, 20,13 €).
+  const taux = (code: string) => auCentime(e.salaries.find((s) => s.code === code)!.tauxHoraireCharge);
   const tri = auCentime(RECRUTEMENT.heuresDeTri * taux("responsable"));
   const entretiens = auCentime(RECRUTEMENT.entretiens * RECRUTEMENT.dureeDUnEntretien * (taux("responsable") + taux("adjointe")));
   return { annonce: RECRUTEMENT.annonce, tri, entretiens, total: auCentime(RECRUTEMENT.annonce + tri + entretiens), tauxResponsable: taux("responsable"), tauxAdjointe: taux("adjointe") };
@@ -398,13 +400,13 @@ export function formationALaVenteAdditionnelle(f: FicheDeLaBoutique) {
   const e = equipeDuMois(f);
   const frais = FORMATION.fraisParPersonne * FORMES.length;
   const priseEnCharge = auCentime(frais * FORMATION.priseEnCharge);
-  const heures = auCentime(somme(FORMES.map((c) => FORMATION.heures * e.salaries.find((s) => s.code === c)!.tauxHoraireCharge)));
+  const heures = auCentime(somme(FORMES.map((c) => auCentime(FORMATION.heures * auCentime(e.salaries.find((s) => s.code === c)!.tauxHoraireCharge)))));
   const cout = auCentime(frais - priseEnCharge + heures);
   const passages = somme(VENDEURS.filter((v) => FORMES.includes(v.code)).map((v) => v.passages));
   const articlesEnPlus = auCentime(passages * FORMATION.indiceEnPlus);
-  const margeDUnArticle = panierDuMois(f).margeMoyenneDeLArticle;
+  const margeDUnArticle = auCentime(panierDuMois(f).margeMoyenneDeLArticle);
   const gainParMois = auCentime(articlesEnPlus * margeDUnArticle);
-  return { frais, priseEnCharge, heures, cout, passages, articlesEnPlus, margeDUnArticle, gainParMois, mois: cout / gainParMois };
+  return { frais, priseEnCharge, heures, cout, passages, articlesEnPlus, margeDUnArticle, gainParMois, mois: auCentime(cout / gainParMois) };
 }
 
 /**
@@ -536,9 +538,10 @@ export const PANNE_DE_CAISSE = { creneaux: [4, 5, 6], pertesSansPlan: 0.8, perte
 /** Les ventes des créneaux de la panne, et ce qu'en perd la boutique avec et sans plan de secours. */
 export function panneDeCaisse(f: FicheDeLaBoutique) {
   const ind = indicateursDuMois(f);
-  const tauxDeMarge = (ind.chiffreDAffaires - somme(f.gamme.map((r) => r.ventesDuMois * coutVariable(r)))) / ind.chiffreDAffaires;
+  // Le taux de marge à deux décimales en pourcentage, la caisse d'une semaine au centime : la copie part d'eux.
+  const tauxDeMarge = arrondi((ind.chiffreDAffaires - somme(f.gamme.map((r) => r.ventesDuMois * coutVariable(r)))) / ind.chiffreDAffaires, 4);
   const semaine = somme(Object.values(f.affluence).flat());
-  const caisseParSemaine = ind.chiffreDAffairesEnCaisse / f.semainesParMois;
+  const caisseParSemaine = auCentime(ind.chiffreDAffairesEnCaisse / f.semainesParMois);
   const entreesDeLaPanne = somme(PANNE_DE_CAISSE.creneaux.map((i) => f.affluence.samedi[i]!));
   const ventes = auCentime((caisseParSemaine * entreesDeLaPanne) / semaine);
   const perduSans = auCentime(ventes * PANNE_DE_CAISSE.pertesSansPlan);
@@ -575,12 +578,13 @@ export function retenirLaVendeuse(f: FicheDeLaBoutique) {
   const recrutement = coutDuRecrutement(f).total;
   const heuresVacantes = v.heuresDeVente * d.semainesDeVacance;
   const vacance = auCentime(heuresVacantes * PASSAGES_PERDUS_PAR_HEURE * marge);
-  const passagesParSemaine = v.passages / f.semainesParMois;
-  const manques = auCentime(somme(COURBE_SANS_INTEGRATION.map((r) => passagesParSemaine * (1 - r))));
+  // Les passages d'une semaine au centième, puis les semaines d'apprentissage d'un seul produit, comme sur la copie.
+  const passagesParSemaine = auCentime(v.passages / f.semainesParMois);
+  const manques = auCentime(passagesParSemaine * somme(COURBE_SANS_INTEGRATION.map((r) => auCentime(1 - r))));
   const apprentissage = auCentime(manques * marge);
   const depart = auCentime(recrutement + vacance + apprentissage);
   const s = f.equipe.find((x) => x.code === d.remplacant)!;
-  const horaire = s.brutMensuel / HEURES_D_UN_TEMPS_COMPLET;
+  const horaire = auCentime(s.brutMensuel / HEURES_D_UN_TEMPS_COMPLET);
   const parMois = auCentime(d.heuresDuSamedi * horaire * (1 + d.majoration) * (1 + f.tauxPatronal));
   return { recrutement, heuresVacantes, vacance, passagesParSemaine, manques, apprentissage, depart, horaire, parMois, parAn: auCentime(parMois * 12), margeDUnPassage: marge };
 }

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { BOUTIQUES_DU_COURS, type FicheDeLaBoutique } from "../monde/maille-et-co";
 import {
@@ -40,6 +40,10 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * 94 947 €, 938 ventes manquées). Il lit maintenant la promotion de février de la fiche : 10 %, une
  * étiquette à 59,40 € ; 100 pulls vendus en plus, 1 650 € de chiffre d'affaires en plus, mais 80
  * clients sans pull.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les articles vendus en plus sont une quantité, entière, déclarée
+ * comme telle.
  */
 
 /** Les entreprises du chapitre : la boutique du cours, où chaque article a son étiquette en rayon. */
@@ -51,11 +55,10 @@ export const REMISE_DE_LA_PROMOTION = BOUTIQUES_DU_COURS.boutique!.promotion.rem
 /** Les remises du laboratoire, de 5 en 5 % (hypothèse du cours : les remises que l'on affiche en magasin). */
 export const PAS_DES_REMISES = 5;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
+const qte = nombreAuCentieme;
 /** « de » devant un nom : élidé devant une voyelle. */
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
+const pct = (t: number) => enPoints(t * 100);
 
 export const ficheDe = (c: Pick<Cas, "code">): FicheDeLaBoutique => BOUTIQUES_DU_COURS[c.code]!;
 
@@ -268,7 +271,7 @@ export const LE_PRIX_AFFICHE: Chapitre = {
       champs: (c) => {
         const p = promo(c);
         return [
-          { libelle: "Articles vendus en plus", attendu: p.ventesEnPlus, calcul: `${qte(p.avec.vendus)} − ${qte(p.sans.vendus)} = ${qte(p.ventesEnPlus)}` },
+          { libelle: "Articles vendus en plus", nature: "quantite", attendu: p.ventesEnPlus, calcul: `${qte(p.avec.vendus)} − ${qte(p.sans.vendus)} = ${qte(p.ventesEnPlus)}` },
           { libelle: "Chiffre d'affaires en plus", attendu: p.chiffreEnPlus, calcul: `${eur(p.avec.chiffreDAffaires)} − ${eur(p.sans.chiffreDAffaires)} = ${eur(p.chiffreEnPlus)}` },
         ];
       },

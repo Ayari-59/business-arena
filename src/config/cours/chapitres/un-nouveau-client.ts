@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { BOUTIQUES_DU_COURS, type FicheDeLaBoutique } from "../monde/maille-et-co";
 import {
@@ -40,12 +40,14 @@ import { ENTREPRISES_DE_LA_VENTE } from "./le-panier-moyen";
  * doublée, chez six entreprises (à la boutique : 126 ventes gagnées, une campagne qui coûtait
  * 1 537 € de plus qu'elle ne rapportait). Il se joue maintenant chez MAILLE & CO seule : 95 ventes
  * gagnées, 21,05 € par vente, 3 057,10 € de marge, une campagne qui laisse 1 057,10 €.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux de transformation se donne à deux décimales (au dixième,
+ * avant) ; les ventes et les clients gagnés sont des quantités : le corrigé écrit la valeur à deux
+ * décimales, puis l'arrondit à l'unité (à une unité près, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−");
-const pct = (t: number) => `${qte(t)} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
+const qte = nombreAuCentieme;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 export const ficheDe = (c: Pick<Cas, "code">): FicheDeLaBoutique => BOUTIQUES_DU_COURS[c.code]!;
@@ -57,7 +59,7 @@ export const bilanDeLaCampagne = (x: number) =>
 /** La campagne du chapitre, et les passants de janvier sur lesquels elle se calcule. */
 export function campagneDuChapitre(c: Pick<Cas, "code">) {
   const f = ficheDe(c);
-  return { ...campagne(f, CAMPAGNE_DU_CHAPITRE), passants: passantsDeJanvier(f), tauxEnPourcentage: auDixieme(passantsDeJanvier(f).tauxDeTransformation * 100) };
+  return { ...campagne(f, CAMPAGNE_DU_CHAPITRE), passants: passantsDeJanvier(f), tauxEnPourcentage: auCentime(passantsDeJanvier(f).tauxDeTransformation * 100) };
 }
 
 export function tableauDesPassants(c: Cas): TableauDeDonnees {
@@ -117,13 +119,13 @@ export const UN_NOUVEAU_CLIENT: Chapitre = {
       notions: ["conversion_rate", "customer_acquisition_cost"],
       question: (c) => {
         const k = campagneDuChapitre(c);
-        return `Calculez le taux de transformation des passants de janvier (${qte(k.passants.tickets)} passages ÷ ${qte(k.passants.entrees)} entrées × 100, au dixième), puis les ventes que gagnent les ${qte(k.entrees)} entrées de la campagne, à l'unité.`;
+        return `Calculez le taux de transformation des passants de janvier (${qte(k.passants.tickets)} passages ÷ ${qte(k.passants.entrees)} entrées × 100, à deux décimales), puis les ventes que gagnent les ${qte(k.entrees)} entrées de la campagne, à l'unité.`;
       },
       champs: (c) => {
         const k = campagneDuChapitre(c);
         return [
-          { libelle: "Taux de transformation (%)", attendu: k.tauxEnPourcentage, calcul: `${qte(k.passants.tickets)} ÷ ${qte(k.passants.entrees)} × 100 = ${pct(k.tauxEnPourcentage)}`, tolerance: 0.1 },
-          { libelle: "Ventes gagnées", attendu: k.ventes, calcul: `${qte(k.entrees)} × ${qte(k.passants.tickets)} ÷ ${qte(k.passants.entrees)} = ${qte(k.ventes)}, à l'unité`, tolerance: 1 },
+          { libelle: "Taux de transformation (%)", attendu: k.tauxEnPourcentage, calcul: `${qte(k.passants.tickets)} ÷ ${qte(k.passants.entrees)} × 100 = ${pct(k.tauxEnPourcentage)}` },
+          { libelle: "Ventes gagnées", nature: "quantite", attendu: k.ventes, calcul: `${qte(k.entrees)} × ${qte(k.passants.tickets)} ÷ ${qte(k.passants.entrees)} = ${qte(k.entrees * k.passants.tickets / k.passants.entrees)}, soit ${qte(k.ventes)} ventes à l'unité la plus proche` },
         ];
       },
       explication: (c) => {
@@ -215,8 +217,8 @@ export const UN_NOUVEAU_CLIENT: Chapitre = {
         const k = campagneDuChapitre(c);
         const m = carteDeFidelite(ficheDe(c)).margeDUnMois;
         return [
-          { libelle: "Clients gagnés qui prennent la carte", attendu: k.nouvellesFideles, calcul: `${qte(k.ventes)} × ${pct(PART_DES_GAGNES_QUI_PRENNENT_LA_CARTE * 100)} = ${qte(k.nouvellesFideles)}, à l'unité`, tolerance: 1 },
-          { libelle: "Marge du mois suivant", attendu: k.margeDuMoisSuivant, calcul: `${qte(k.nouvellesFideles)} × ${eur(m)} = ${eur(k.margeDuMoisSuivant)}`, tolerance: 1 },
+          { libelle: "Clients gagnés qui prennent la carte", nature: "quantite", attendu: k.nouvellesFideles, calcul: `${qte(k.ventes)} × ${pct(PART_DES_GAGNES_QUI_PRENNENT_LA_CARTE * 100)} = ${qte(k.ventes * PART_DES_GAGNES_QUI_PRENNENT_LA_CARTE)}, soit ${qte(k.nouvellesFideles)} clients à l'unité la plus proche` },
+          { libelle: "Marge du mois suivant", attendu: k.margeDuMoisSuivant, calcul: `${qte(k.nouvellesFideles)} × ${eur(m)} = ${eur(k.margeDuMoisSuivant)}` },
         ];
       },
       explication: (c) => {

@@ -257,12 +257,12 @@ describe("le stock du point de vente : le chapitre", () => {
   it("les étapes guidées : le stock en valeur, le stock moyen, la rotation", () => {
     expect(attendus(ch, "le-stock-en-valeur")).toEqual({ "Stock au 1er janvier, en valeur": valeurInitiale, "Achats livrés en janvier": achats, "Stock au 31 janvier, en valeur": valeurFinale });
     expect(attendus(ch, "stock-moyen")).toEqual({ "Stock moyen": stockMoyen, "Coût d'achat des marchandises vendues": camv });
-    expect(attendus(ch, "rotation")).toEqual({ "Rotation du stock": 1.99, "Durée moyenne de stockage (jours)": 15 });
+    expect(attendus(ch, "rotation")).toEqual({ "Rotation du stock": 1.99, "Durée moyenne de stockage (jours)": centime(30 / 1.99) });
     expect(juste(ch, "lire-la-rotation")).toBe("Le stock tourne plus vite : moins d'argent dort en réserve pour les mêmes ventes.");
   });
 
   it("les étapes autonomes : la couverture, le point de commande, le cardigan, qui finance", () => {
-    expect(attendus(ch, "couverture")).toEqual({ "Ventes par jour": 51, "Couverture du stock final (jours)": 12.4, "Couverture du pull col rond (jours)": final(R.col) / (R.col.vendu / 30) });
+    expect(attendus(ch, "couverture")).toEqual({ "Ventes par jour": 51, "Couverture du stock final (jours)": 12.35, "Couverture du pull col rond (jours)": final(R.col) / (R.col.vendu / 30) });
     expect(final(R.col) / 20).toBe(15);
     const parJour = R.col.vendu / 30;
     expect(attendus(ch, "le-point-de-commande")).toEqual({ "Ventes par jour du pull col rond": parJour, "Stock de sécurité": parJour * SECURITE, "Point de commande": parJour * LIVRAISON + parJour * SECURITE });
@@ -276,10 +276,11 @@ describe("le stock du point de vente : le chapitre", () => {
     expect([pc, 24 * 75]).toEqual([336, 1_800]);
     // Le cardigan commence janvier sous son point de commande.
     expect(R.cardigan.initial).toBeLessThan(pc);
-    // Qui finance : le façonnier, 30 jours au-delà ; les fins de série, au comptant, laissent 15 jours à la boutique.
+    // Qui finance : le façonnier, 29,92 jours au-delà ; les fins de série, au comptant, laissent 15,08 jours à la boutique.
+    const duree = centime(30 / 1.99);
     expect(attendus(ch, "qui-finance")).toEqual({
-      "Jours financés par le façonnier au-delà du stockage": PAIEMENT - 15,
-      "Jours avancés par la boutique avec les fins de série": 15 - 0,
+      "Jours financés par le façonnier au-delà du stockage": centime(PAIEMENT - duree),
+      "Jours avancés par la boutique avec les fins de série": duree - 0,
       "Stock moyen avancé avec les fins de série": centime(stockMoyen * 0.82),
     });
     expect(centime(stockMoyen * 0.82)).toBe(15_774.75);
@@ -426,12 +427,12 @@ describe("alleger le stock : le cas", () => {
   });
 
   it("le stock aujourd'hui, le stock visé : la rotation monte d'un quart, pas d'un cinquième", () => {
-    expect(attendus(s, "aujourd-hui")).toEqual({ "Stock moyen": stockMoyen, "Coût d'achat des marchandises vendues": camv, "Rotation du stock": 1.99, "Durée moyenne de stockage (jours)": 15 });
+    expect(attendus(s, "aujourd-hui")).toEqual({ "Stock moyen": stockMoyen, "Coût d'achat des marchandises vendues": camv, "Rotation du stock": 1.99, "Durée moyenne de stockage (jours)": centime(30 / 1.99) });
     expect(attendus(s, "le-stock-vise")).toEqual({
       "Stock moyen visé": vise,
       "Trésorerie libérée": stockMoyen - vise,
       "Nouvelle rotation": Math.round((camv / vise) * 100) / 100,
-      "Nouvelle durée de stockage (jours)": Math.round(30 / (Math.round((camv / vise) * 100) / 100)),
+      "Nouvelle durée de stockage (jours)": centime(30 / (Math.round((camv / vise) * 100) / 100)),
     });
     expect([vise, stockMoyen - vise, Math.round((camv / vise) * 100) / 100]).toEqual([15_390, 3_847.5, 2.49]);
   });
@@ -487,7 +488,7 @@ describe("le stock du point de vente : le coût de passation, le coût de posses
 
   it("la quantité économique de Wilson, à la main", () => {
     const q = Math.sqrt((2 * 7_200 * 60) / 5);
-    expect(attendusDeLaBoutique(ch, "la-quantite-economique")).toEqual([Math.round(q), Math.round((7_200 / q) * 10) / 10, Math.round(Math.sqrt(2 * 7_200 * 60 * 5) * 100) / 100]);
+    expect(attendusDeLaBoutique(ch, "la-quantite-economique")).toEqual([Math.round(q), centime(7_200 / q), Math.round(Math.sqrt(2 * 7_200 * 60 * 5) * 100) / 100]);
     expect([Math.round(q), Math.round(Math.sqrt(2 * 7_200 * 60 * 5) * 100) / 100]).toEqual([416, 2_078.46]);
     expect(quantiteEconomique(f).quantiteArrondie).toBeGreaterThanOrEqual(f.fournisseurs.find((x) => x.code === "faconnier")!.minimumDeCommande);
     expect(ch.etapes.at(-1)!.id).toBe("synthese");

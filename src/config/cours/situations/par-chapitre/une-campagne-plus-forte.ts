@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { UN_NOUVEAU_CLIENT, bilanDeLaCampagne, ficheDe } from "../../chapitres/un-nouveau-client";
 import { CAMPAGNE_DU_CHAPITRE, CAMPAGNE_PLUS_FORTE, campagne, passantsDeJanvier } from "../../monde/vente-et-caisse";
@@ -19,10 +19,14 @@ import type { Situation } from "../types";
  * CE QUI A CHANGÉ. Le cas rejouait dans l'arène une publicité triplée. Il compte maintenant l'offre
  * à 4 000 € : 123 ventes gagnées, 32,52 € par vente, une campagne qui coûte 41,86 € de plus qu'elle
  * ne rapporte, quand celle à 2 000 € laisse 1 057,10 €.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les ventes gagnées sont une quantité, écrite à deux décimales
+ * puis arrondie à l'unité ; le coût et la marge se donnent au centime, à un centime près (à 30
+ * centimes et à 33 € près, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 
 export type ChoixDeLaCampagne = "plus-forte" | "celle-du-chapitre" | "aucune";
 
@@ -72,8 +76,8 @@ export const UNE_CAMPAGNE_PLUS_FORTE: Situation = {
       champs: (c) => {
         const { forte: k, passants: p } = campagnePlusForte(c);
         return [
-          { libelle: "Ventes gagnées", attendu: k.ventes, calcul: `${qte(k.entrees)} × ${qte(p.tickets)} ÷ ${qte(p.entrees)} = ${qte(k.ventes)}, à l'unité`, tolerance: 1 },
-          { libelle: "Coût d'une vente gagnée", attendu: k.coutDUneVente, calcul: `${eur(k.budget)} ÷ ${qte(k.ventes)} = ${eur(k.coutDUneVente)}`, tolerance: 0.3 },
+          { libelle: "Ventes gagnées", nature: "quantite", attendu: k.ventes, calcul: `${qte(k.entrees)} × ${qte(p.tickets)} ÷ ${qte(p.entrees)} = ${qte(k.entrees * p.tickets / p.entrees)}, soit ${qte(k.ventes)} ventes à l'unité la plus proche` },
+          { libelle: "Coût d'une vente gagnée", attendu: k.coutDUneVente, calcul: `${eur(k.budget)} ÷ ${qte(k.ventes)} = ${eur(k.coutDUneVente)}` },
         ];
       },
       explication: (c) => {
@@ -94,8 +98,8 @@ export const UNE_CAMPAGNE_PLUS_FORTE: Situation = {
       champs: (c) => {
         const { forte: k, passants: p } = campagnePlusForte(c);
         return [
-          { libelle: "Marge des ventes gagnées", attendu: k.marge, calcul: `${qte(k.ventes)} × ${eur(p.margeDUneVente)} = ${eur(k.marge)}`, tolerance: 33 },
-          { libelle: "Ce que la campagne laisse", attendu: k.laisse, calcul: `${eur(k.marge)} − ${eur(k.budget)} = ${eur(k.laisse)}`, tolerance: 33 },
+          { libelle: "Marge des ventes gagnées", attendu: k.marge, calcul: `${qte(k.ventes)} × ${eur(p.margeDUneVente)} = ${eur(k.marge)}` },
+          { libelle: "Ce que la campagne laisse", attendu: k.laisse, calcul: `${eur(k.marge)} − ${eur(k.budget)} = ${eur(k.laisse)}` },
         ];
       },
       explication: (c) => [`La campagne plus forte ${bilanDeLaCampagne(campagnePlusForte(c).forte.laisse)}.`],

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { accordeA, de, majuscule, qte } from "../../chapitres/recevoir-une-livraison";
 import { REMPLIR_LE_RAYON, rayon } from "../../chapitres/remplir-le-rayon";
@@ -22,9 +22,12 @@ import type { Situation } from "../types";
  * CE QUI A CHANGÉ. Le cas lisait un article de l'arène au premier trimestre. Il lit maintenant la
  * livraison du 12 janvier : 240 cardigans, 13 par jour, 18 jours de stock pour 21 jours de délai,
  * 3 jours de rayon vide et 2 925 € de ventes en danger.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le rythme de vente, les jours et les articles sont des
+ * quantités : le corrigé écrit le quotient à deux décimales, puis l'arrondit à l'unité.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 
 /** La livraison du 12 janvier, ses jours de stock, et ce qu'un rayon vide mettrait en danger. */
 export function reassortAttendu(c: Pick<Cas, "code">) {
@@ -82,7 +85,7 @@ export const TENIR_JUSQU_AU_REASSORT: Situation = {
       },
       champs: (c) => {
         const s = reassortAttendu(c);
-        return [{ libelle: "Ventes par jour", attendu: s.parJour, calcul: `${qte(s.demande)} ÷ ${qte(s.jours)} = ${(s.demande / s.jours).toLocaleString("fr-FR")}, arrondi à ${qte(s.parJour)}` }];
+        return [{ libelle: "Ventes par jour", nature: "quantite", attendu: s.parJour, calcul: `${qte(s.demande)} ÷ ${qte(s.jours)} = ${qte(s.demande / s.jours)}, soit ${qte(s.parJour)} à l'unité la plus proche` }];
       },
       explication: (c) => {
         const s = reassortAttendu(c);
@@ -98,9 +101,10 @@ export const TENIR_JUSQU_AU_REASSORT: Situation = {
       champs: (c) => {
         const s = reassortAttendu(c);
         return [
-          { libelle: "Jours avant la rupture", attendu: s.joursApres, calcul: `${qte(s.livraison.quantite)} ÷ ${qte(s.parJour)} = ${qte(s.joursApres)} jours entiers` },
+          { libelle: "Jours avant la rupture", nature: "quantite", attendu: s.joursApres, calcul: `${qte(s.livraison.quantite)} ÷ ${qte(s.parJour)} = ${qte(s.livraison.quantite / s.parJour)}, soit ${qte(s.joursApres)} jours entiers : le jour suivant, il n'en reste plus assez` },
           {
             libelle: "Jours avec un rayon vide",
+            nature: "quantite",
             attendu: s.joursSansApres,
             calcul: s.aTemps ? `${qte(s.joursApres)} jours de stock, au moins les ${qte(s.delai)} jours du délai : 0` : `${qte(s.delai)} − ${qte(s.joursApres)} = ${qte(s.joursSansApres)}`,
           },
@@ -127,7 +131,7 @@ export const TENIR_JUSQU_AU_REASSORT: Situation = {
       champs: (c) => {
         const s = reassortAttendu(c);
         return [
-          { libelle: "Articles non trouvés", attendu: s.articlesEnDanger, calcul: `${qte(s.joursSansApres)} × ${qte(s.parJour)} = ${qte(s.articlesEnDanger)}` },
+          { libelle: "Articles non trouvés", nature: "quantite", attendu: s.articlesEnDanger, calcul: `${qte(s.joursSansApres)} × ${qte(s.parJour)} = ${qte(s.articlesEnDanger)}` },
           { libelle: "Ventes en danger hors taxes", attendu: s.ventesEnDanger, calcul: `${qte(s.articlesEnDanger)} × ${eur(s.prixHt)} = ${eur(s.ventesEnDanger)}` },
         ];
       },

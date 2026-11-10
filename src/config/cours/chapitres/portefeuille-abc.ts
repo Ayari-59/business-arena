@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { CABINETS_DU_COURS, type CompteClient, type FicheDuCabinet } from "../monde/atlas-conseil";
 import { abcParLeChiffreDAffairesEtParLaMarge, anneeDuCabinet, classementABC, clienteleDe, coutJournalierDUnConsultant, valeurVieDesComptes, type Classe } from "../monde/relation-client";
@@ -37,6 +37,10 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     remplacé), valbrune-renegocie (une variante chiffrée : un autre prix et d'autres frais, le
  *     compte reclassé), la-valeur-vie-des-comptes (une critique de la méthode : la durée qu'un
  *     classement d'une année ne voit pas) ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts et les taux de marge se donnent à deux décimales, à un
+ * centième près (au dixième, avant).
  */
 
 /** Le chapitre se joue chez le cabinet du cours, le seul du monde du cours qui a un portefeuille de comptes. */
@@ -63,13 +67,11 @@ export const PRIX_DE_VALBRUNE_AU_CURSEUR = { min: 500, max: 800 } as const;
 /** Les comptes dont la critique de la méthode compare la valeur vie : de gros comptes, et ceux qui changent de classe. */
 export const COMPTES_DE_LA_VALEUR_VIE = ["arveon", "ducastel", "valbrune", "granvaux", "ferrand", "helianthe"] as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 /** Un pourcentage, la part étant donnée en fraction (0,7725 → « 77,2 % »). */
-const pct = (part: number, chiffres = 1) => `${(Math.round(part * 100 * 10 ** chiffres) / 10 ** chiffres + 0).toLocaleString("fr-FR", { maximumFractionDigits: chiffres })} %`;
-/** Une part en pourcentage, au dixième, comme nombre (0,7725 → 77,2). */
-const auDixieme = (part: number) => Math.round(part * 1000) / 10 + 0;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const pct = (t: number) => enPoints(t * 100);
+/** Une part en pourcentage, à deux décimales, comme nombre (0,7725 → 77,2). */
+const enPourcent = (part: number) => auCentime(part * 100);
 /** « d'Arvéon », « de Kerval » : l'élision devant une voyelle ou un h muet. */
 const dE = (nom: string) => (/^[aeiouyéèêhAEIOUYÉÈH]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 const somme = (xs: readonly number[]) => xs.reduce((t, x) => t + x, 0);
@@ -236,7 +238,7 @@ export const PORTEFEUILLE_ABC: Chapitre = {
         return [
           `Ce chapitre se joue dans la simulation du cours, chez ${p.entreprise}, un cabinet de conseil et de formation qui vend des journées d'intervention. Son portefeuille de l'année N compte ${qte(p.comptes)} comptes : des grands comptes, des PME et des ETI, des collectivités. Ensemble, ils ont acheté ${qte(p.journees)} journées pour ${eur(p.total)} de chiffre d'affaires.`,
           "Le tableau les range déjà du plus gros au plus petit : c'est la première étape de la méthode ABC. Reste à mesurer ce que pèse chacun, ce que pèsent les premiers ensemble, et à couper le portefeuille en classes A, B et C.",
-          `Ce que la simulation suppose. Le classement porte sur une seule année, N, tout est hors taxes, et les seuils sont ceux des manuels : la classe A réunit les comptes qui font ensemble les premiers ${pct(p.seuils.a, 0)} du critère, la classe B ceux qui mènent à ${pct(p.seuils.b, 0)}, la classe C le reste. Plus loin, la marge d'un compte retire de son chiffre d'affaires ses frais et le temps des consultants qui le servent, à ${eur(p.coutJournalier)} la journée.`,
+          `Ce que la simulation suppose. Le classement porte sur une seule année, N, tout est hors taxes, et les seuils sont ceux des manuels : la classe A réunit les comptes qui font ensemble les premiers ${pct(p.seuils.a)} du critère, la classe B ceux qui mènent à ${pct(p.seuils.b)}, la classe C le reste. Plus loin, la marge d'un compte retire de son chiffre d'affaires ses frais et le temps des consultants qui le servent, à ${eur(p.coutJournalier)} la journée.`,
         ];
       },
       repere: () => "Part d'un compte = son chiffre d'affaires ÷ le total. Part cumulée = la somme des parts, du premier compte jusqu'à lui.",
@@ -250,17 +252,16 @@ export const PORTEFEUILLE_ABC: Chapitre = {
       question: (c) => {
         const p = portefeuilleABC(c);
         const trois = p.parCa.comptes.slice(0, 3);
-        return `Le portefeuille fait ${eur(p.total)}. Calculez la part du premier compte (${p.premier.nom}, ${eur(p.premier.chiffreDAffaires)}), puis la part cumulée des trois premiers (${trois.map((k) => eur(k.chiffreDAffaires)).join(", ")}), en pourcentage, au dixième.`;
+        return `Le portefeuille fait ${eur(p.total)}. Calculez la part du premier compte (${p.premier.nom}, ${eur(p.premier.chiffreDAffaires)}), puis la part cumulée des trois premiers (${trois.map((k) => eur(k.chiffreDAffaires)).join(", ")}), en pourcentage, à deux décimales.`;
       },
       champs: (c) => {
         const p = portefeuilleABC(c);
         const trois = p.parCa.comptes.slice(0, 3);
         return [
-          { libelle: "Part du premier compte (%)", attendu: auDixieme(p.premier.part), tolerance: 0.1, calcul: `${eur(p.premier.chiffreDAffaires)} ÷ ${eur(p.total)} × 100 = ${pct(p.premier.part)}` },
+          { libelle: "Part du premier compte (%)", attendu: enPourcent(p.premier.part), calcul: `${eur(p.premier.chiffreDAffaires)} ÷ ${eur(p.total)} × 100 = ${pct(p.premier.part)}` },
           {
             libelle: "Part cumulée des trois premiers (%)",
-            attendu: auDixieme(p.troisPremiers),
-            tolerance: 0.1,
+            attendu: enPourcent(p.troisPremiers),
             calcul: `(${trois.map((k) => eur(k.chiffreDAffaires)).join(" + ")}) ÷ ${eur(p.total)} × 100 = ${pct(p.troisPremiers)}`,
           },
         ];
@@ -278,7 +279,7 @@ export const PORTEFEUILLE_ABC: Chapitre = {
       notions: ["customer_portfolio"],
       question: (c) => {
         const p = portefeuilleABC(c);
-        return `Rangez chaque compte dans sa classe : A pour les comptes qui font ensemble les premiers ${pct(p.seuils.a, 0)} du chiffre d'affaires, B pour ceux qui mènent la part cumulée jusqu'à ${pct(p.seuils.b, 0)}, C pour le reste. Cumulez les parts dans l'ordre du tableau : le compte qui fait passer un seuil appartient à la classe suivante.`;
+        return `Rangez chaque compte dans sa classe : A pour les comptes qui font ensemble les premiers ${pct(p.seuils.a)} du chiffre d'affaires, B pour ceux qui mènent la part cumulée jusqu'à ${pct(p.seuils.b)}, C pour le reste. Cumulez les parts dans l'ordre du tableau : le compte qui fait passer un seuil appartient à la classe suivante.`;
       },
       categories: [
         { code: "A", libelle: "Classe A" },
@@ -395,14 +396,14 @@ export const PORTEFEUILLE_ABC: Chapitre = {
       titre: "La concentration du portefeuille",
       notions: ["customer_portfolio"],
       question: () =>
-        "Sans formule cette fois. Mesurez la concentration du portefeuille : la part des comptes qui sont en classe A, la part du chiffre d'affaires qu'ils font, puis les mêmes parts pour la classe C, en pourcentage, au dixième.",
+        "Sans formule cette fois. Mesurez la concentration du portefeuille : la part des comptes qui sont en classe A, la part du chiffre d'affaires qu'ils font, puis les mêmes parts pour la classe C, en pourcentage, à deux décimales.",
       champs: (c) => {
         const p = portefeuilleABC(c);
         return [
-          { libelle: "Part des comptes en classe A (%)", attendu: auDixieme(p.A.partDesComptes), tolerance: 0.1, calcul: `${qte(p.A.comptes)} ÷ ${qte(p.comptes)} × 100 = ${pct(p.A.partDesComptes)}` },
-          { libelle: "Part du chiffre d'affaires en classe A (%)", attendu: auDixieme(p.A.part), tolerance: 0.1, calcul: `${eur(p.A.valeur)} ÷ ${eur(p.total)} × 100 = ${pct(p.A.part)}` },
-          { libelle: "Part des comptes en classe C (%)", attendu: auDixieme(p.C.partDesComptes), tolerance: 0.1, calcul: `${qte(p.C.comptes)} ÷ ${qte(p.comptes)} × 100 = ${pct(p.C.partDesComptes)}` },
-          { libelle: "Part du chiffre d'affaires en classe C (%)", attendu: auDixieme(p.C.part), tolerance: 0.1, calcul: `${eur(p.C.valeur)} ÷ ${eur(p.total)} × 100 = ${pct(p.C.part)}` },
+          { libelle: "Part des comptes en classe A (%)", attendu: enPourcent(p.A.partDesComptes), calcul: `${qte(p.A.comptes)} ÷ ${qte(p.comptes)} × 100 = ${pct(p.A.partDesComptes)}` },
+          { libelle: "Part du chiffre d'affaires en classe A (%)", attendu: enPourcent(p.A.part), calcul: `${eur(p.A.valeur)} ÷ ${eur(p.total)} × 100 = ${pct(p.A.part)}` },
+          { libelle: "Part des comptes en classe C (%)", attendu: enPourcent(p.C.partDesComptes), calcul: `${qte(p.C.comptes)} ÷ ${qte(p.comptes)} × 100 = ${pct(p.C.partDesComptes)}` },
+          { libelle: "Part du chiffre d'affaires en classe C (%)", attendu: enPourcent(p.C.part), calcul: `${eur(p.C.valeur)} ÷ ${eur(p.total)} × 100 = ${pct(p.C.part)}` },
         ];
       },
       explication: (c) => {
@@ -457,7 +458,7 @@ export const PORTEFEUILLE_ABC: Chapitre = {
       question: (c) => {
         const p = portefeuilleABC(c);
         const s = p.sort;
-        return `La marge d'un compte retire de son chiffre d'affaires ses frais et le temps des consultants qui le servent, à ${eur(p.coutJournalier)} la journée. Le ${s.nom} a acheté ${qte(s.journees)} journées pour ${eur(s.chiffreDAffaires)}, avec ${eur(s.frais)} de frais : ses sites sont loin du cabinet. Calculez le coût de ses journées de consultant, sa marge, puis son taux de marge (marge ÷ chiffre d'affaires), au dixième.`;
+        return `La marge d'un compte retire de son chiffre d'affaires ses frais et le temps des consultants qui le servent, à ${eur(p.coutJournalier)} la journée. Le ${s.nom} a acheté ${qte(s.journees)} journées pour ${eur(s.chiffreDAffaires)}, avec ${eur(s.frais)} de frais : ses sites sont loin du cabinet. Calculez le coût de ses journées de consultant, sa marge, puis son taux de marge (marge ÷ chiffre d'affaires), à deux décimales.`;
       },
       champs: (c) => {
         const p = portefeuilleABC(c);
@@ -465,7 +466,7 @@ export const PORTEFEUILLE_ABC: Chapitre = {
         return [
           { libelle: "Coût des journées de consultant", attendu: p.coutDesConsultantsDuCompteQuiSort, calcul: `${qte(s.journees)} × ${eur(p.coutJournalier)} = ${eur(p.coutDesConsultantsDuCompteQuiSort)}` },
           { libelle: "Marge du compte", attendu: s.marge, calcul: `${eur(s.chiffreDAffaires)} − ${eur(s.frais)} − ${eur(p.coutDesConsultantsDuCompteQuiSort)} = ${eur(s.marge)}` },
-          { libelle: "Taux de marge du compte (%)", attendu: auDixieme(p.tauxDeMargeDuCompteQuiSort), tolerance: 0.1, calcul: `${eur(s.marge)} ÷ ${eur(s.chiffreDAffaires)} × 100 = ${pct(p.tauxDeMargeDuCompteQuiSort)}` },
+          { libelle: "Taux de marge du compte (%)", attendu: enPourcent(p.tauxDeMargeDuCompteQuiSort), calcul: `${eur(s.marge)} ÷ ${eur(s.chiffreDAffaires)} × 100 = ${pct(p.tauxDeMargeDuCompteQuiSort)}` },
         ];
       },
       explication: (c) => {
@@ -525,32 +526,32 @@ export const PORTEFEUILLE_ABC: Chapitre = {
         return [
           { libelle: `Dernier compte retenu : ${x.dernier.nom}`, montant: parMarge ? x.dernier.marge : x.dernier.chiffreDAffaires },
           { libelle: "Chiffre d'affaires des comptes retenus", montant: x.ca, reference: d.ca },
-          { libelle: "Part cumulée du chiffre d'affaires", montant: auDixieme(x.partDuCa), unite: "%", reference: auDixieme(d.partDuCa) },
+          { libelle: "Part cumulée du chiffre d'affaires", montant: enPourcent(x.partDuCa), unite: "%", reference: enPourcent(d.partDuCa) },
           { libelle: "Marge des comptes retenus", montant: x.marge, reference: d.marge },
-          { libelle: "Part cumulée de la marge", montant: auDixieme(x.partDeLaMarge), unite: "%", reference: auDixieme(d.partDeLaMarge), fort: true },
+          { libelle: "Part cumulée de la marge", montant: enPourcent(x.partDeLaMarge), unite: "%", reference: enPourcent(d.partDeLaMarge), fort: true },
         ];
       },
       graphique: (c) => ({
         levier: "comptes",
         unite: "%",
         courbes: [
-          { libelle: "Part cumulée du chiffre d'affaires", valeur: (p) => auDixieme(laboratoireDuPortefeuille(c, p.critere!, p.comptes!).partDuCa) },
-          { libelle: "Part cumulée de la marge", valeur: (p) => auDixieme(laboratoireDuPortefeuille(c, p.critere!, p.comptes!).partDeLaMarge) },
-          { libelle: "Seuil de la classe A", valeur: () => auDixieme(ficheDe(c).seuilsABC.a) },
+          { libelle: "Part cumulée du chiffre d'affaires", valeur: (p) => enPourcent(laboratoireDuPortefeuille(c, p.critere!, p.comptes!).partDuCa) },
+          { libelle: "Part cumulée de la marge", valeur: (p) => enPourcent(laboratoireDuPortefeuille(c, p.critere!, p.comptes!).partDeLaMarge) },
+          { libelle: "Seuil de la classe A", valeur: () => enPourcent(ficheDe(c).seuilsABC.a) },
         ],
       }),
       defi: (c) => {
         const p = portefeuilleABC(c);
         const nA = p.parMarge.A.comptes;
         return {
-          consigne: `Retrouvez la classe A par la marge : classez par la marge, et retenez le plus de comptes dont la part cumulée de la marge reste sous ${pct(p.seuils.a, 0)}.`,
+          consigne: `Retrouvez la classe A par la marge : classez par la marge, et retenez le plus de comptes dont la part cumulée de la marge reste sous ${pct(p.seuils.a)}.`,
           atteint: (x) => x.critere === CRITERES_DU_LABORATOIRE.marge && x.comptes === nA,
           indice: (x) => {
             if (x.critere !== CRITERES_DU_LABORATOIRE.marge) return "Le portefeuille est classé par le chiffre d'affaires : passez au classement par la marge.";
             const l = laboratoireDuPortefeuille(c, x.critere, x.comptes!);
             return l.cumul > p.seuils.a
-              ? `La part cumulée de la marge atteint ${pct(l.cumul)}, au-delà de ${pct(p.seuils.a, 0)} : retirez des comptes.`
-              : `La part cumulée de la marge n'est qu'à ${pct(l.cumul)} : le compte suivant la garde-t-il sous ${pct(p.seuils.a, 0)} ? Ajoutez-en.`;
+              ? `La part cumulée de la marge atteint ${pct(l.cumul)}, au-delà de ${pct(p.seuils.a)} : retirez des comptes.`
+              : `La part cumulée de la marge n'est qu'à ${pct(l.cumul)} : le compte suivant la garde-t-il sous ${pct(p.seuils.a)} ? Ajoutez-en.`;
           },
           solution: { critere: CRITERES_DU_LABORATOIRE.marge, comptes: nA },
         };
@@ -571,7 +572,7 @@ export const PORTEFEUILLE_ABC: Chapitre = {
       notions: ["customer_portfolio", "contribution_margin"],
       question: (c) => {
         const p = portefeuilleABC(c);
-        return `Classez le portefeuille par la marge, qui fait ${eur(p.margeTotale)} en tout. Calculez la part cumulée de la marge des ${qte(p.parMarge.A.comptes)} premiers comptes, puis avec le suivant, en pourcentage au dixième ; puis la marge de la classe A par la marge, et celle que laissent les comptes A du classement par le chiffre d'affaires.`;
+        return `Classez le portefeuille par la marge, qui fait ${eur(p.margeTotale)} en tout. Calculez la part cumulée de la marge des ${qte(p.parMarge.A.comptes)} premiers comptes, puis avec le suivant, en pourcentage à deux décimales ; puis la marge de la classe A par la marge, et celle que laissent les comptes A du classement par le chiffre d'affaires.`;
       },
       champs: (c) => {
         const p = portefeuilleABC(c);
@@ -580,14 +581,12 @@ export const PORTEFEUILLE_ABC: Chapitre = {
         return [
           {
             libelle: `Part cumulée de la marge des ${qte(a.length)} premiers comptes (%)`,
-            attendu: auDixieme(p.cumulDuDernierAParMarge),
-            tolerance: 0.1,
+            attendu: enPourcent(p.cumulDuDernierAParMarge),
             calcul: `${eur(p.margeDesAParMarge)} ÷ ${eur(p.margeTotale)} × 100 = ${pct(p.cumulDuDernierAParMarge)}`,
           },
           {
             libelle: `Part cumulée avec le ${qte(b.rang)}e compte (%)`,
-            attendu: auDixieme(p.cumulDuPremierBParMarge),
-            tolerance: 0.1,
+            attendu: enPourcent(p.cumulDuPremierBParMarge),
             calcul: `(${eur(p.margeDesAParMarge)} + ${eur(b.marge)}) ÷ ${eur(p.margeTotale)} × 100 = ${pct(p.cumulDuPremierBParMarge)}`,
           },
           { libelle: "Marge de la classe A par la marge", attendu: p.margeDesAParMarge, calcul: `${a.map((k) => eur(k.marge)).join(" + ")} = ${eur(p.margeDesAParMarge)}` },
@@ -601,7 +600,7 @@ export const PORTEFEUILLE_ABC: Chapitre = {
       explication: (c) => {
         const p = portefeuilleABC(c);
         return [
-          `Par la marge, la classe A s'arrête au ${qte(p.parMarge.A.comptes)}e compte : le ${qte(p.premierBParMarge.rang)}e, ${p.premierBParMarge.nom}, fait passer la part cumulée au-delà de ${pct(p.seuils.a, 0)}. Elle laisse ${eur(p.margeDesAParMarge)}, ${eur(p.margeDesAParMarge - p.margeDesAParCa)} de plus que les comptes A du chiffre d'affaires : à nombre de comptes égal, ce sont eux qui rapportent le plus.`,
+          `Par la marge, la classe A s'arrête au ${qte(p.parMarge.A.comptes)}e compte : le ${qte(p.premierBParMarge.rang)}e, ${p.premierBParMarge.nom}, fait passer la part cumulée au-delà de ${pct(p.seuils.a)}. Elle laisse ${eur(p.margeDesAParMarge)}, ${eur(p.margeDesAParMarge - p.margeDesAParCa)} de plus que les comptes A du chiffre d'affaires : à nombre de comptes égal, ce sont eux qui rapportent le plus.`,
         ];
       },
     },
@@ -697,7 +696,7 @@ export const PORTEFEUILLE_ABC: Chapitre = {
       question: (c) => {
         const p = portefeuilleABC(c);
         const v = p.variante;
-        return `Variante : au renouvellement, le cabinet propose ${eur(v.prix)} la journée au ${p.sort.nom}, et regroupe les sessions sur deux sites, ce qui ramène ses frais à ${eur(v.fraisParJournee)} par journée. Les ${qte(p.sort.journees)} journées ne changent pas. Calculez le nouveau chiffre d'affaires du compte, ses frais, sa marge, puis son taux de marge, au dixième.`;
+        return `Variante : au renouvellement, le cabinet propose ${eur(v.prix)} la journée au ${p.sort.nom}, et regroupe les sessions sur deux sites, ce qui ramène ses frais à ${eur(v.fraisParJournee)} par journée. Les ${qte(p.sort.journees)} journées ne changent pas. Calculez le nouveau chiffre d'affaires du compte, ses frais, sa marge, puis son taux de marge, à deux décimales.`;
       },
       champs: (c) => {
         const p = portefeuilleABC(c);
@@ -707,7 +706,7 @@ export const PORTEFEUILLE_ABC: Chapitre = {
           { libelle: "Chiffre d'affaires renégocié", attendu: v.chiffreDAffaires, calcul: `${qte(j)} × ${eur(v.prix)} = ${eur(v.chiffreDAffaires)}` },
           { libelle: "Frais renégociés", attendu: v.frais, calcul: `${qte(j)} × ${eur(v.fraisParJournee)} = ${eur(v.frais)}` },
           { libelle: "Marge renégociée", attendu: v.marge, calcul: `${eur(v.chiffreDAffaires)} − ${eur(v.frais)} − ${qte(j)} × ${eur(p.coutJournalier)} = ${eur(v.marge)}` },
-          { libelle: "Taux de marge renégocié (%)", attendu: auDixieme(v.tauxDeMarge), tolerance: 0.1, calcul: `${eur(v.marge)} ÷ ${eur(v.chiffreDAffaires)} × 100 = ${pct(v.tauxDeMarge)}` },
+          { libelle: "Taux de marge renégocié (%)", attendu: enPourcent(v.tauxDeMarge), calcul: `${eur(v.marge)} ÷ ${eur(v.chiffreDAffaires)} × 100 = ${pct(v.tauxDeMarge)}` },
         ];
       },
       explication: (c) => {
@@ -729,7 +728,7 @@ export const PORTEFEUILLE_ABC: Chapitre = {
         return {
           titre: "Marge de l'année et valeur vie de quelques comptes",
           colonnes: ["Marge de N", "Risque de perte l'an prochain", "Valeur vie (marge ÷ risque)"],
-          lignes: p.valeursVie.map((k) => ({ libelle: k.nom, valeurs: [eur(k.marge), pct(k.attrition, 0), eur(k.valeurVie)] })),
+          lignes: p.valeursVie.map((k) => ({ libelle: k.nom, valeurs: [eur(k.marge), pct(k.attrition), eur(k.valeurVie)] })),
         };
       },
       question: () =>
@@ -754,7 +753,7 @@ export const PORTEFEUILLE_ABC: Chapitre = {
           {
             texte: "Que les plus gros comptes sont aussi les plus sûrs",
             juste: false,
-            retour: `Non : le ${sort.nom}, ${qte(p.sort.rang)}e par le chiffre d'affaires, a un risque de ${pct(sort.attrition, 0)} : celui des plus petits comptes. La taille ne protège pas de la perte.`,
+            retour: `Non : le ${sort.nom}, ${qte(p.sort.rang)}e par le chiffre d'affaires, a un risque de ${pct(sort.attrition)} : celui des plus petits comptes. La taille ne protège pas de la perte.`,
           },
           {
             texte: "Que les comptes neufs valent moins que les anciens",
@@ -811,7 +810,7 @@ export const PORTEFEUILLE_ABC: Chapitre = {
       },
       repere: (c) => {
         const p = portefeuilleABC(c);
-        return `Méthode ABC : trier les comptes par le critère décroissant (chiffre d'affaires, ou marge), cumuler les parts, couper à ${pct(p.seuils.a, 0)} (A) et ${pct(p.seuils.b, 0)} (B), le reste en C. Marge d'un compte = chiffre d'affaires − frais − journées × coût journalier d'un consultant.`;
+        return `Méthode ABC : trier les comptes par le critère décroissant (chiffre d'affaires, ou marge), cumuler les parts, couper à ${pct(p.seuils.a)} (A) et ${pct(p.seuils.b)} (B), le reste en C. Marge d'un compte = chiffre d'affaires − frais − journées × coût journalier d'un consultant.`;
       },
     },
   ],

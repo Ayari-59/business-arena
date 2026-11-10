@@ -74,11 +74,12 @@ describe("C3 : ce qui borne le prix, dans « S'aligner sur le concurrent »", ()
     expect(S_ALIGNER_SUR_LE_CONCURRENT.objectifs.length).toBeLessThanOrEqual(5);
   });
 
-  it("l'élasticité : −9,1 % de prix, +13,5 % de demande, −1,49 (la fiche suppose −1,5)", () => {
-    const vp = (50 - 55) / 55;
-    const vd = (681 - 600) / 600;
-    expect([d(vp * 100), d(vd * 100), -c(-vd / vp + 1e-9)]).toEqual([-9.1, 13.5, -1.49]);
-    expect(attendus(S_ALIGNER_SUR_LE_CONCURRENT, "l-elasticite-lue")).toEqual([-9.1, 13.5, -1.49]);
+  it("l'élasticité : −9,09 % de prix, +13,50 % de demande, −1,49 (la fiche suppose −1,5)", () => {
+    // Les variations à deux décimales, puis l'élasticité sur elles : 13,50 ÷ −9,09.
+    const vp = c(((50 - 55) / 55) * 100);
+    const vd = c(((681 - 600) / 600) * 100);
+    expect([vp, vd, -c(-vd / vp)]).toEqual([-9.09, 13.5, -1.49]);
+    expect(attendus(S_ALIGNER_SUR_LE_CONCURRENT, "l-elasticite-lue")).toEqual([-9.09, 13.5, -1.49]);
     expect(f.elasticiteAuPrix).toBe(-1.5);
   });
 

@@ -1,5 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
+import { arrondi2 as auCentime, eur, nombreAuCentieme } from "../../../../pedagogy/cours/deux-decimales";
 import { accord } from "../../accords";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_SERVICE, productiviteDuService, type ProductiviteDuService } from "../../chapitres/la-productivite-du-service";
@@ -29,11 +28,15 @@ import type { Situation } from "../types";
  * levier, à rebours : l'équipe la plus grande qui tenait ce coût sans un client de plus, et ce que
  * chacun de ses salariés aurait servi par jour, face au trimestre le plus chargé. La réponse croise
  * les deux : la même équipe ne le pouvait pas, une équipe à la mesure du creux le pouvait-elle ?
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les clients de l'année, à servir et en plus, et l'équipe la plus
+ * grande sont des quantités : le corrigé écrit la valeur à deux décimales, puis l'arrondit à l'unité,
+ * au-dessus ou au-dessous, et dit pourquoi (à une unité près, avant) ; les productivités sont des
+ * grandeurs au centième ; le coût de l'année se donne au centime, à un centime près.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
+const qte = nombreAuCentieme;
 const majuscule = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 const rang = (n: number) => (n === 1 ? "1er" : `${n}e`);
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
@@ -48,12 +51,13 @@ export function coutDuTrimestreCreux(c: Pick<Cas, "code">) {
   const personnelDeLAnnee = auCentime(p.trimestres.reduce((t, x) => t + x.personnel, 0));
   const venduesDeLAnnee = p.trimestres.reduce((t, x) => t + x.vendues, 0);
   const coutDeLAnnee = auCentime(personnelDeLAnnee / venduesDeLAnnee);
-  const aServir = Math.ceil(p.creux.personnel / coutDeLAnnee - 1e-9);
+  const aServirCalcules = auCentime(p.creux.personnel / coutDeLAnnee);
+  const aServir = Math.ceil(aServirCalcules - 1e-9);
   // L'autre levier : l'équipe la plus grande qui tenait le coût de l'année sans un client de plus, et
   // ce que chacun de ses salariés aurait servi par jour, face au trimestre le plus chargé.
   const equipeMax = Math.floor((coutDeLAnnee * p.creux.vendues) / p.coutDUnSalarie + 1e-9);
   const personnelReduit = auCentime(equipeMax * p.coutDUnSalarie);
-  const parJourReduit = Math.round((p.creux.vendues / (equipeMax * p.jours)) * 100) / 100;
+  const parJourReduit = auCentime(p.creux.vendues / (equipeMax * p.jours));
   const equipePossible = equipeMax > 0 && p.creux.vendues * p.plein.effectif <= p.plein.vendues * equipeMax;
   // « possible » ne sort pas de la simulation : le trimestre creux sert déjà toute sa demande, et
   // il lui faudrait plus pour revenir au coût de l'année. La réponse reste offerte à l'élève.
@@ -64,9 +68,10 @@ export function coutDuTrimestreCreux(c: Pick<Cas, "code">) {
     personnelDeLAnnee,
     venduesDeLAnnee,
     coutDeLAnnee,
+    aServirCalcules,
     aServir,
     enPlus: aServir - p.creux.vendues,
-    productiviteVisee: auDixieme(aServir / p.creux.effectif),
+    productiviteVisee: auCentime(aServir / p.creux.effectif),
     equipeMax,
     personnelReduit,
     coutReduit: auCentime(personnelReduit / p.creux.vendues),
@@ -147,13 +152,12 @@ export const LE_COUT_DU_TRIMESTRE_CREUX: Situation = {
             libelle: "Coût du personnel de l'année",
             attendu: k.personnelDeLAnnee,
             calcul: `${k.p.trimestres.map((t) => eur(t.personnel)).join(" + ")} = ${eur(k.personnelDeLAnnee)}`,
-            tolerance: 1,
           },
           {
             libelle: `${majuscule(k.p.unites)} de l'année`,
+            nature: "quantite",
             attendu: k.venduesDeLAnnee,
             calcul: `${k.p.trimestres.map((t) => qte(t.vendues)).join(" + ")} = ${qte(k.venduesDeLAnnee)}`,
-            tolerance: 0,
           },
           {
             libelle: `Coût du personnel par ${k.p.unite} sur l'année`,
@@ -224,28 +228,28 @@ export const LE_COUT_DU_TRIMESTRE_CREUX: Situation = {
       notions: ["productivity", "fixed_costs"],
       question: (c) => {
         const k = coutDuTrimestreCreux(c);
-        return `Avec la même équipe, le personnel du ${rang(k.p.creux.numero)} trimestre coûte ${eur(k.p.creux.personnel)}. Calculez les ${k.p.unites} qu'il fallait servir pour que ${accord(k.p, "chacun")} ne coûte pas plus de ${eur(k.coutDeLAnnee)} (arrondi à l'unité supérieure), les ${k.p.unites} en plus de ${ceux(k.p)} du trimestre, puis la productivité par salarié sur le trimestre que cela demandait, au dixième.`;
+        return `Avec la même équipe, le personnel du ${rang(k.p.creux.numero)} trimestre coûte ${eur(k.p.creux.personnel)}. Calculez les ${k.p.unites} qu'il fallait servir pour que ${accord(k.p, "chacun")} ne coûte pas plus de ${eur(k.coutDeLAnnee)} (arrondi à l'unité supérieure), les ${k.p.unites} en plus de ${ceux(k.p)} du trimestre, puis la productivité par salarié sur le trimestre que cela demandait, au centième.`;
       },
       champs: (c) => {
         const k = coutDuTrimestreCreux(c);
         return [
           {
             libelle: `${majuscule(k.p.unites)} à servir au ${rang(k.p.creux.numero)} trimestre`,
+            nature: "quantite",
             attendu: k.aServir,
-            calcul: `${eur(k.p.creux.personnel)} ÷ ${eur(k.coutDeLAnnee)} = ${qte(k.aServir)}`,
-            tolerance: 1,
+            calcul: `${eur(k.p.creux.personnel)} ÷ ${eur(k.coutDeLAnnee)} = ${qte(k.aServirCalcules)}, soit ${qte(k.aServir)} à l'unité au-dessus : un de moins laisserait le coût au-dessus de celui de l'année`,
           },
           {
             libelle: `${majuscule(k.p.unites)} en plus`,
+            nature: "quantite",
             attendu: k.enPlus,
             calcul: `${qte(k.aServir)} − ${qte(k.p.creux.vendues)} = ${qte(k.enPlus)}`,
-            tolerance: 1,
           },
           {
             libelle: "Productivité par salarié visée",
+            nature: "grandeur",
             attendu: k.productiviteVisee,
             calcul: `${qte(k.aServir)} ÷ ${qte(k.p.creux.effectif)} = ${qte(k.productiviteVisee)}`,
-            tolerance: 0.1,
           },
         ];
       },
@@ -270,9 +274,9 @@ export const LE_COUT_DU_TRIMESTRE_CREUX: Situation = {
         return [
           {
             libelle: "Salariés au plus, sans client de plus",
+            nature: "quantite",
             attendu: k.equipeMax,
-            calcul: `${eur(k.coutDeLAnnee)} × ${qte(k.p.creux.vendues)} ÷ ${eur(k.p.coutDUnSalarie)} = ${qte(Math.round(((k.coutDeLAnnee * k.p.creux.vendues) / k.p.coutDUnSalarie) * 100) / 100)}, soit ${qte(k.equipeMax)} salariés`,
-            tolerance: 0,
+            calcul: `${eur(k.coutDeLAnnee)} × ${qte(k.p.creux.vendues)} ÷ ${eur(k.p.coutDUnSalarie)} = ${qte(auCentime((k.coutDeLAnnee * k.p.creux.vendues) / k.p.coutDUnSalarie))}, soit ${qte(k.equipeMax)} salariés à l'unité au-dessous : un de plus dépasserait le coût de l'année`,
           },
           {
             libelle: `Coût du personnel par ${k.p.unite}, équipe réduite`,
@@ -281,9 +285,9 @@ export const LE_COUT_DU_TRIMESTRE_CREUX: Situation = {
           },
           {
             libelle: `${majuscule(k.p.unites)} par salarié et par jour, équipe réduite`,
+            nature: "grandeur",
             attendu: k.parJourReduit,
             calcul: `${qte(k.p.creux.vendues)} ÷ (${qte(k.equipeMax)} × ${qte(k.p.jours)}) = ${qte(k.parJourReduit)}`,
-            tolerance: 0.01,
           },
         ];
       },

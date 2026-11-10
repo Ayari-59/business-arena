@@ -350,21 +350,22 @@ describe("le cas : moins de clients le mois prochain", () => {
 
   it("chaque chiffre, refait à la main", () => {
     expect([entrees, passages]).toEqual([3_271, 799]);
-    expect(attendus(s, "le-mois")).toEqual({ "Taux de transformation (%)": 24.4, "Panier moyen": 82.18, "Prix moyen d'un article": 58.08 });
-    const ca = centime(passages * PANIER);
+    expect(attendus(s, "le-mois")).toEqual({ "Taux de transformation (%)": 24.43, "Panier moyen": 82.18, "Prix moyen d'un article": 58.08 });
+    // Au panier de la copie, 82,18 €.
+    const ca = centime(passages * centime(PANIER));
     expect(attendus(s, "moins-de-clients")).toEqual({
       "Entrées pendant les travaux": entrees,
       "Passages en caisse pendant les travaux": passages,
       "Chiffre d'affaires au même panier": ca,
       "Chiffre d'affaires perdu": centime(CA_EN_CAISSE - ca),
     });
-    expect([ca, centime(CA_EN_CAISSE - ca)]).toEqual([65_662.5, 11_587.5]);
+    expect([ca, centime(CA_EN_CAISSE - ca)]).toEqual([65_661.82, 11_588.18]);
     expect(attendus(s, "le-panier-qui-compense")).toEqual({
       "Panier moyen nécessaire": centime(CA_EN_CAISSE / passages),
-      "Hausse du panier (%)": dixieme((PASSAGES / passages - 1) * 100),
+      "Hausse du panier (%)": centime((centime(CA_EN_CAISSE / passages) / centime(PANIER) - 1) * 100),
       "Indice de vente nécessaire": centime(ARTICLES_EN_CAISSE / passages),
     });
-    expect([centime(CA_EN_CAISSE / passages), dixieme((PASSAGES / passages - 1) * 100), centime(ARTICLES_EN_CAISSE / passages)]).toEqual([96.68, 17.6, 1.66]);
+    expect([centime(CA_EN_CAISSE / passages), centime((centime(CA_EN_CAISSE / passages) / centime(PANIER) - 1) * 100), centime(ARTICLES_EN_CAISSE / passages)]).toEqual([96.68, 17.64, 1.66]);
     // 3 271 × t ÷ 1 000 × PANIER ≥ 77 250 : t ≥ 940 ÷ 3 271 × 1 000 = 287,4, soit 288 passages pour 1 000 entrées.
     expect(Math.ceil((PASSAGES / entrees) * 1_000)).toBe(288);
     const au = (t: number) => centime(((entrees * t) / 1_000) * PANIER);
@@ -383,9 +384,9 @@ describe("le cas : moins de clients le mois prochain", () => {
   it("le verdict : il faut plus que la baisse, sur n'importe quel levier", () => {
     const x = moinsDeClients(cas);
     expect(x.verdict).toBe("il-faut-plus-que-la-baisse");
-    expect([x.panierFaux, x.transformationFausse]).toEqual([centime(PANIER * 1.15), dixieme((PASSAGES / ENTREES) * 1.15 * 100)]);
-    expect([centime(PANIER * 1.15), dixieme((PASSAGES / ENTREES) * 1.15 * 100)]).toEqual([94.51, 28.1]);
-    expect(juste(s, "reponse")).toBe("17,6 % de panier en plus, pas 15 % : 96,68 €");
+    expect([x.panierFaux, x.transformationFausse]).toEqual([centime(centime(PANIER) * 1.15), centime(centime((PASSAGES / ENTREES) * 100) * 1.15)]);
+    expect([centime(centime(PANIER) * 1.15), centime(centime((PASSAGES / ENTREES) * 100) * 1.15)]).toEqual([94.51, 28.09]);
+    expect(juste(s, "reponse")).toBe("17,64 % de panier en plus, pas 15 % : 96,68 €");
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le cas", () => verifierLesTextes(s));

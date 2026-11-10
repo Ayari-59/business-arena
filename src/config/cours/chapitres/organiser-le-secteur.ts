@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   CALENDRIER_DU_COMMERCIAL,
@@ -41,6 +41,11 @@ import { ENTREPRISES_DE_LA_VALEUR, POURQUOI_LE_CABINET, ficheDe } from "./valeur
  *     avant les-deux-solutions ;
  *   · autonome : les-deux-solutions, la-tournee ;
  *   · expert : ce-qu-economise-une-visite (le jugement), la-meilleure-tournee, la-decision ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les jours, les visites et les kilomètres sont des quantités,
+ * entières, déclarées comme telles ; les heures de route, des grandeurs au centième ; la part de la
+ * marge, à deux décimales, à un centième près (à 5 centièmes près, avant).
  */
 
 /** Les leviers du laboratoire : la fréquence de visite d'un compte C (par an) et la part de ses visites faites à distance (%). */
@@ -55,11 +60,9 @@ export const FREQUENCE_C_REDUITE = 2;
 /** Le secteur se lit sur les comptes et les commerciaux du cabinet du cours, ATLAS CONSEIL. */
 export const ENTREPRISES_DU_SECTEUR: readonly string[] = ENTREPRISES_DE_LA_VALEUR;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (x: number, d = 1) => `${(Math.round(x * 100 * 10 ** d) / 10 ** d + 0).toLocaleString("fr-FR", { maximumFractionDigits: d })} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auCentiemeDePct = (x: number) => Math.round(x * 10_000) / 100 + 0;
+const qte = nombreAuCentieme;
+const pct = (t: number) => enPoints(t * 100);
+const auCentiemeDePct = (x: number) => auCentime(x * 100);
 const heures = (h: number) => {
   const m = Math.round(h * 60);
   return `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, "0")}`;
@@ -162,15 +165,15 @@ export const ORGANISER_LE_SECTEUR: Chapitre = {
         const x = secteurDuCabinet(c);
         const j = x.j;
         return [
-          { libelle: "Jours ouvrés", attendu: j.ouvres, calcul: `${qte(j.jours)} − ${qte(j.weekEnds)} − ${qte(j.congesPayes)} − ${qte(j.feriesEnSemaine)} = ${qte(j.ouvres)} jours` },
-          { libelle: "Jours de terrain", attendu: j.terrain, calcul: `${qte(j.ouvres)} − ${qte(j.formation)} − ${qte(j.bureau)} − ${qte(j.salons)} = ${qte(j.terrain)} jours` },
-          { libelle: "Capacité de visites de l'année", attendu: j.capacite, calcul: `${qte(j.terrain)} × ${qte(j.visitesParJour)} = ${qte(j.capacite)} visites` },
+          { libelle: "Jours ouvrés", nature: "quantite", attendu: j.ouvres, calcul: `${qte(j.jours)} − ${qte(j.weekEnds)} − ${qte(j.congesPayes)} − ${qte(j.feriesEnSemaine)} = ${qte(j.ouvres)} jours` },
+          { libelle: "Jours de terrain", nature: "quantite", attendu: j.terrain, calcul: `${qte(j.ouvres)} − ${qte(j.formation)} − ${qte(j.bureau)} − ${qte(j.salons)} = ${qte(j.terrain)} jours` },
+          { libelle: "Capacité de visites de l'année", nature: "quantite", attendu: j.capacite, calcul: `${qte(j.terrain)} × ${qte(j.visitesParJour)} = ${qte(j.capacite)} visites` },
         ];
       },
       explication: (c) => {
         const x = secteurDuCabinet(c);
         return [
-          `Sur ${qte(x.j.jours)} jours, ${x.nadia.prenom} n'en passe que ${qte(x.j.terrain)} chez les clients : ${pct(x.j.terrain / x.j.jours, 0)} de l'année. Chaque jour de bureau en plus retire ${qte(x.j.visitesParJour)} visites à sa capacité.`,
+          `Sur ${qte(x.j.jours)} jours, ${x.nadia.prenom} n'en passe que ${qte(x.j.terrain)} chez les clients : ${pct(x.j.terrain / x.j.jours)} de l'année. Chaque jour de bureau en plus retire ${qte(x.j.visitesParJour)} visites à sa capacité.`,
         ];
       },
     },
@@ -191,11 +194,12 @@ export const ORGANISER_LE_SECTEUR: Chapitre = {
         return [
           {
             libelle: "Visites de suivi de l'année",
+            nature: "quantite",
             attendu: v.suivi,
             calcul: `${qte(v.comptesA)} × ${qte(v.frequenceA)} + ${qte(v.comptesB)} × ${qte(v.frequenceB)} + ${qte(v.comptesC)} × ${qte(v.frequenceC)} = ${qte(v.visitesA)} + ${qte(v.visitesB)} + ${qte(v.visitesC)} = ${qte(v.suivi)} visites`,
           },
-          { libelle: "Charge de visites", attendu: v.charge, calcul: `${qte(v.suivi)} + ${qte(v.rendezVousDAffaires)} = ${qte(v.charge)} visites` },
-          { libelle: "Visites qui restent pour la prospection", attendu: v.reste, calcul: `${qte(v.capacite)} − ${qte(v.charge)} = ${qte(v.reste)} visites` },
+          { libelle: "Charge de visites", nature: "quantite", attendu: v.charge, calcul: `${qte(v.suivi)} + ${qte(v.rendezVousDAffaires)} = ${qte(v.charge)} visites` },
+          { libelle: "Visites qui restent pour la prospection", nature: "quantite", attendu: v.reste, calcul: `${qte(v.capacite)} − ${qte(v.charge)} = ${qte(v.reste)} visites` },
         ];
       },
       explication: (c) => {
@@ -222,13 +226,13 @@ export const ORGANISER_LE_SECTEUR: Chapitre = {
           { libelle: "Coût annuel de la commerciale", attendu: u.coutAnnuel, calcul: `(${eur(x.nadia.salaireCharge)} + ${eur(x.nadia.frais)}) × 4 = ${eur(u.coutAnnuel)}` },
           { libelle: "Coût d'une visite", attendu: u.cout, calcul: `${eur(u.coutAnnuel)} ÷ ${qte(u.visites)} = ${eur(u.cout)}` },
           { libelle: "Coût des visites des comptes C", attendu: x.vc.cout, calcul: `${qte(x.vc.visites)} × ${eur(u.cout)} = ${eur(x.vc.cout)}` },
-          { libelle: "Part de la marge des comptes C (%)", attendu: auCentiemeDePct(x.vc.part), tolerance: 0.05, calcul: `${eur(x.vc.cout)} ÷ ${eur(x.vc.marge)} = ${pct(x.vc.part, 2)}` },
+          { libelle: "Part de la marge des comptes C (%)", attendu: auCentiemeDePct(x.vc.part), calcul: `${eur(x.vc.cout)} ÷ ${eur(x.vc.marge)} = ${pct(x.vc.part)}` },
         ];
       },
       explication: (c) => {
         const x = secteurDuCabinet(c);
         return [
-          `Une visite coûte ${eur(x.u.cout)} : ${eur(x.u.temps)} de temps (le salaire) et ${eur(x.u.route)} de route (les frais). Les visites prennent ${pct(x.vc.part, 0)} de la marge des comptes C.`,
+          `Une visite coûte ${eur(x.u.cout)} : ${eur(x.u.temps)} de temps (le salaire) et ${eur(x.u.route)} de route (les frais). Les visites prennent ${pct(x.vc.part)} de la marge des comptes C.`,
           "Ce coût est une moyenne : il répartit sur les visites un salaire et des frais. Il ne dit pas encore ce qu'une visite en moins ferait gagner.",
         ];
       },
@@ -341,7 +345,7 @@ export const ORGANISER_LE_SECTEUR: Chapitre = {
         const x = secteurDuCabinet(c);
         return [
           `Toutes les visites des C à distance, ${x.nadia.prenom} garde ses ${qte(x.v.visitesC)} rendez-vous de suivi et retrouve ${qte(x.aDistance.reste)} visites pour les prospects. Voir les C ${qte(FREQUENCE_C_REDUITE)} fois par an sur place n'en laisserait que ${qte(x.reduite.reste)}.`,
-          `Une visite à distance garde le contact pour le quart du temps : elle rend ${pct(1 - VISITE_A_DISTANCE.partDuTemps, 0)} du temps d'une visite, et le client ne perd pas son rendez-vous.`,
+          `Une visite à distance garde le contact pour le quart du temps : elle rend ${pct(1 - VISITE_A_DISTANCE.partDuTemps)} du temps d'une visite, et le client ne perd pas son rendez-vous.`,
         ];
       },
     },
@@ -359,14 +363,15 @@ export const ORGANISER_LE_SECTEUR: Chapitre = {
         const libereReduite = x.v.charge - x.reduite.charge;
         const libereDistance = x.v.charge - x.aDistance.charge;
         return [
-          { libelle: "Visites libérées, moins de visites", attendu: libereReduite, calcul: `${qte(x.v.comptesC)} × (${qte(FREQUENCE_DE_VISITE.C)} − ${qte(FREQUENCE_C_REDUITE)}) = ${qte(libereReduite)} visites` },
-          { libelle: "Visites pour les prospects, moins de visites", attendu: x.reduite.reste, calcul: `${qte(x.v.reste)} + ${qte(libereReduite)} = ${qte(x.reduite.reste)} visites` },
+          { libelle: "Visites libérées, moins de visites", nature: "quantite", attendu: libereReduite, calcul: `${qte(x.v.comptesC)} × (${qte(FREQUENCE_DE_VISITE.C)} − ${qte(FREQUENCE_C_REDUITE)}) = ${qte(libereReduite)} visites` },
+          { libelle: "Visites pour les prospects, moins de visites", nature: "quantite", attendu: x.reduite.reste, calcul: `${qte(x.v.reste)} + ${qte(libereReduite)} = ${qte(x.reduite.reste)} visites` },
           {
             libelle: "Visites libérées, visites à distance",
+            nature: "quantite",
             attendu: libereDistance,
-            calcul: `${qte(x.v.visitesC)} × (1 − ${pct(VISITE_A_DISTANCE.partDuTemps, 0)}) = ${qte(libereDistance)} visites`,
+            calcul: `${qte(x.v.visitesC)} × (1 − ${pct(VISITE_A_DISTANCE.partDuTemps)}) = ${qte(libereDistance)} visites`,
           },
-          { libelle: "Visites pour les prospects, visites à distance", attendu: x.aDistance.reste, calcul: `${qte(x.v.reste)} + ${qte(libereDistance)} = ${qte(x.aDistance.reste)} visites` },
+          { libelle: "Visites pour les prospects, visites à distance", nature: "quantite", attendu: x.aDistance.reste, calcul: `${qte(x.v.reste)} + ${qte(libereDistance)} = ${qte(x.aDistance.reste)} visites` },
         ];
       },
       explication: (c) => {
@@ -394,10 +399,10 @@ export const ORGANISER_LE_SECTEUR: Chapitre = {
         const a = x.t.agenda;
         const m = x.t.meilleure;
         return [
-          { libelle: "Kilomètres de la tournée de l'agenda", attendu: a.km, calcul: `${a.troncons.map((t) => qte(t.km)).join(" + ")} = ${qte(a.km)} km` },
-          { libelle: "Kilomètres de l'autre tournée", attendu: m.km, calcul: `${m.troncons.map((t) => qte(t.km)).join(" + ")} = ${qte(m.km)} km` },
-          { libelle: "Heures de route, tournée de l'agenda", attendu: auCentime(a.heuresDeRoute), tolerance: 0.05, calcul: `${qte(a.km)} ÷ ${qte(ROUTE.vitesse)} = ${qte(auCentime(a.heuresDeRoute))} h, soit ${heures(a.heuresDeRoute)}` },
-          { libelle: "Heures de route, autre tournée", attendu: auCentime(m.heuresDeRoute), tolerance: 0.05, calcul: `${qte(m.km)} ÷ ${qte(ROUTE.vitesse)} = ${qte(auCentime(m.heuresDeRoute))} h, soit ${heures(m.heuresDeRoute)}` },
+          { libelle: "Kilomètres de la tournée de l'agenda", nature: "quantite", attendu: a.km, calcul: `${a.troncons.map((t) => qte(t.km)).join(" + ")} = ${qte(a.km)} km` },
+          { libelle: "Kilomètres de l'autre tournée", nature: "quantite", attendu: m.km, calcul: `${m.troncons.map((t) => qte(t.km)).join(" + ")} = ${qte(m.km)} km` },
+          { libelle: "Heures de route, tournée de l'agenda", nature: "grandeur", attendu: auCentime(a.heuresDeRoute), calcul: `${qte(a.km)} ÷ ${qte(ROUTE.vitesse)} = ${qte(auCentime(a.heuresDeRoute))} h, soit ${heures(a.heuresDeRoute)}` },
+          { libelle: "Heures de route, autre tournée", nature: "grandeur", attendu: auCentime(m.heuresDeRoute), calcul: `${qte(m.km)} ÷ ${qte(ROUTE.vitesse)} = ${qte(auCentime(m.heuresDeRoute))} h, soit ${heures(m.heuresDeRoute)}` },
           { libelle: "Route économisée par tournée", attendu: x.t.coutEvite, calcul: `(${qte(a.km)} − ${qte(m.km)}) × ${eur(ROUTE.coutDuKilometre)} = ${eur(x.t.coutEvite)}` },
         ];
       },

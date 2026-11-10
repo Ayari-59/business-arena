@@ -49,7 +49,7 @@ const fournisseur = (code: CodeDeFournisseur) => f.fournisseurs.find((x) => x.co
 /**
  * Le budget à la main : achats = ventes + stock voulu − stock initial ; le prix d'achat chez le
  * fournisseur, au centime ; le stock du 1er janvier au prix du façonnier, le stock voulu au coût moyen
- * pondéré du trimestre ; la caisse paie 1 − délai ÷ 90 des achats TTC.
+ * pondéré du trimestre, au centime comme sur la copie (deux décimales, 10 novembre 2026) ; la caisse paie 1 − délai ÷ 90 des achats TTC.
  */
 function budget(code: CodeDeFournisseur, ventes: readonly number[] = ventesDuBudget, voulu: readonly number[] = stockVoulu) {
   const fo = fournisseur(code);
@@ -58,7 +58,7 @@ function budget(code: CodeDeFournisseur, ventes: readonly number[] = ventesDuBud
     const prix = centime(r.coutDAchat * fo.multiplicateur);
     const initial = r.stockInitial * r.coutDAchat;
     const achatsHt = centime(achats * prix);
-    const moyen = (initial + achatsHt) / (r.stockInitial + achats);
+    const moyen = centime((initial + achatsHt) / (r.stockInitial + achats));
     const final = centime(voulu[i]! * moyen);
     return { achats, prix, initial, achatsHt, moyen, final, vendues: centime(initial + achatsHt - final), ventesHt: ventes[i]! * r.prixHt };
   });
@@ -303,11 +303,12 @@ describe("le budget du point de vente, à la boutique du monde du cours", () => 
     expect([col.prix, col.initial, col.achatsHt]).toEqual([20.5, 10_000, 40_795]);
     expect(attendus(ch, "variante-fins-de-serie")).toEqual({
       "Coût moyen pondéré d'un pull col rond": centime(50_795 / 2_390),
-      "Valeur du stock de pulls col rond au 31 mars": centime((400 * 50_795) / 2_390),
-      "Coût d'achat des pulls col rond vendus": centime(50_795 - centime((400 * 50_795) / 2_390)),
+      "Valeur du stock de pulls col rond au 31 mars": 400 * centime(50_795 / 2_390),
+      "Coût d'achat des pulls col rond vendus": centime(50_795 - 400 * centime(50_795 / 2_390)),
     });
-    expect(Object.values(attendus(ch, "variante-fins-de-serie"))).toEqual([21.25, 8_501.26, 42_293.74]);
-    expect([fins.marge, centime(fins.marge - fac.marge)]).toEqual([181_969.01, 19_139.01]);
+    // Le stock se valorise au coût moyen arrondi : 400 × 21,25 €, et non 400 × 21,2531 €.
+    expect(Object.values(attendus(ch, "variante-fins-de-serie"))).toEqual([21.25, 8_500, 42_295]);
+    expect([fins.marge, centime(fins.marge - fac.marge)]).toEqual([181_968.5, 19_138.5]);
   });
 
   it("les verdicts sont épinglés", () => {
@@ -380,7 +381,7 @@ describe("le budget du point de vente, à la boutique du monde du cours", () => 
     const solution = budget("fins-de-serie", ventesDuBudget, voulu(10));
     expect(l.aLaSolution).toEqual(lire(solution));
     expect(voulu(10)).toEqual([40, 25, 6, 25, 10]);
-    expect(Object.values(l.aLaSolution)).toEqual([4_016, 85_822.02, 181_286.98, 102_986.42, 0, 106, 18_456.98, -25_982.42]);
+    expect(Object.values(l.aLaSolution)).toEqual([4_016, 85_822.02, 181_287.01, 102_986.42, 0, 106, 18_457.01, -25_982.42]);
     // Seules les fins de série, avec 0 ou 10 % du stock voulu, relèvent le défi ; à 20 %, la caisse dépasse le plafond.
     const reussites = [1, 2, 3].flatMap((fo) => [0, 10, 20, 50, 100, 150].filter((stock) => l.atteint({ fournisseur: fo, stock })).map((stock) => `${fo}:${stock}`));
     expect(reussites).toEqual(["3:0", "3:10"]);

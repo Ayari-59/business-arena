@@ -1,6 +1,6 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi, arrondi2 as auCentime, eur, nombreAuCentieme, pct, taux2 } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
-import { indicateursDuMois, prevoirLesVentes, tendanceAnnuelle, type MethodeDeTendance } from "../monde/boutique";
+import { indicateursDuMois, prevoirAuxLignesArrondies, prevoirLesVentes, tendanceAnnuelleAuxLignesArrondies, type MethodeDeTendance } from "../monde/boutique";
 import { BOUTIQUES_DU_COURS, type FicheDeLaBoutique } from "../monde/maille-et-co";
 import type { Chapitre, TableauDeDonnees } from "../types";
 
@@ -44,6 +44,14 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * LES CURSEURS LISENT EN EUROS. La lecture d'un curseur s'affiche en euros (EtapeCurseur n'a pas
  * d'unité) : les deux curseurs du chapitre traduisent donc les articles en chiffre d'affaires, au prix
  * moyen d'un article de janvier, et la question le dit à l'élève.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les moyennes mobiles, le point moyen, la pente, l'ordonnée à
+ * l'origine et les tendances sont des grandeurs au centième ; les rapports à la tendance et les
+ * coefficients saisonniers, des coefficients au dix-millième (au centième, à un centième près,
+ * avant) ; les prévisions, des quantités : le corrigé écrit la valeur à deux décimales, puis
+ * l'arrondit à l'unité. Chaque ligne part de la ligne arrondie (monde/boutique.ts,
+ * `prevoirAuxLignesArrondies`) ; le laboratoire de la méthode garde le modèle exact.
  */
 
 /**
@@ -66,12 +74,9 @@ export const SERIES_DU_LABORATOIRE = { demande: 1, ventes: 2 } as const;
 /** La boutique du cours, seule : c'est elle qui a trois années de demande, trimestre par trimestre. */
 export const ENTREPRISES_DE_LA_PREVISION: readonly string[] = ["boutique"];
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 const art = (n: number) => qte(Math.round(n));
 const dec = (x: number, d = 2) => x.toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).replace(/^-/, "−");
-const pct = (x: number) => `${x.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
 const plafond = (x: number) => Math.ceil(x - 1e-9);
 
 /** « trimestre 1 de N − 3 » : le rang 1 est le premier trimestre de N − 3, le rang 13 celui de N. */
@@ -98,18 +103,16 @@ export function prevoirSurLaSerie(f: FicheDeLaBoutique, methode: MethodeDeTendan
 /** Tout ce que le chapitre et son cas demandent. */
 export function previsionDesVentes(c: Pick<Cas, "code">) {
   const f = ficheDe(c);
-  const p = prevoirLesVentes(f);
-  const brute = prevoirLesVentes(f, "trimestres-bruts");
-  const annuelle = tendanceAnnuelle(f);
-  const { a, b, xMoyen, yMoyen } = p.droite;
-  const tendance = (t: number) => a * t + b;
-  const points = p.serie.filter((s) => s.moyenneMobile !== null);
-  const sommeDesCarres = points.reduce((t, s) => t + (s.rang - xMoyen) ** 2, 0);
-  const sommeDesProduits = points.reduce((t, s) => t + (s.rang - xMoyen) * (s.moyenneMobile! - yMoyen), 0);
+  // La copie : chaque ligne arrondie (monde/boutique.ts, prevoirAuxLignesArrondies).
+  const p = prevoirAuxLignesArrondies(f);
+  const brute = prevoirAuxLignesArrondies(f, "trimestres-bruts");
+  const annuelle = tendanceAnnuelleAuxLignesArrondies(f);
+  const { a, b, xMoyen, yMoyen, sommeDesCarres, sommeDesProduits } = p.droite;
+  const tendance = p.tendanceDuRang;
   const du = (annee: string, trimestre: number) => p.serie.find((s) => s.annee === annee && s.trimestre === trimestre)!;
   const fort = { n3: du("N-3", 4), n2: du("N-2", 4), n1: du("N-1", 4) };
   // Le seuil d'une deuxième boutique, à rebours : le rang où la tendance l'atteint.
-  const rangDuSeuil = (SEUIL_DE_LA_DEUXIEME_BOUTIQUE - b) / a;
+  const rangDuSeuil = auCentime((SEUIL_DE_LA_DEUXIEME_BOUTIQUE - b) / a);
   const premierRang = plafond(rangDuSeuil);
   // Le mois de janvier de N, au rythme du trimestre : les 3 mois pèsent autant (convention du cours).
   const demandeDeJanvier = f.gamme.reduce((t, r) => t + r.demandeDuMois, 0);
@@ -117,11 +120,10 @@ export function previsionDesVentes(c: Pick<Cas, "code">) {
   const t1 = p.previsions[0]!;
   const t4 = p.previsions[3]!;
   // La droite des trimestres bruts.
-  const bruts = p.serie.map((s) => ({ x: s.rang, y: s.demande }));
-  const yMoyenBrut = bruts.reduce((t, s) => t + s.y, 0) / bruts.length;
-  const sommeDesCarresBrute = bruts.reduce((t, s) => t + (s.x - brute.droite.xMoyen) ** 2, 0);
-  const sommeDesProduitsBrute = bruts.reduce((t, s) => t + (s.x - brute.droite.xMoyen) * (s.y - yMoyenBrut), 0);
-  const tendanceBrute = (t: number) => brute.droite.a * t + brute.droite.b;
+  const yMoyenBrut = brute.droite.yMoyen;
+  const sommeDesCarresBrute = brute.droite.sommeDesCarres;
+  const sommeDesProduitsBrute = brute.droite.sommeDesProduits;
+  const tendanceBrute = brute.tendanceDuRang;
   // Le prix moyen d'un article de janvier, tous articles vendus (caisse et commandes des comités) : la
   // demande prévue compte tous les articles, la lecture des curseurs la met en chiffre d'affaires.
   const janvier = indicateursDuMois(f);
@@ -144,8 +146,9 @@ export function previsionDesVentes(c: Pick<Cas, "code">) {
     tendanceAuSeuil: tendance(premierRang),
     demandeDeJanvier,
     trimestreAuRythme,
-    ecartDeJanvier: (trimestreAuRythme - t1.prevision) / t1.prevision,
-    janvierCorrige: trimestreAuRythme / t1.coefficient,
+    /** L'écart de janvier à la prévision du trimestre, en points, à deux décimales. */
+    ecartDeJanvier: taux2(trimestreAuRythme - t1.prevision, t1.prevision),
+    janvierCorrige: auCentime(trimestreAuRythme / t1.coefficient),
     t1,
     t4,
     /** La plus petite demande du trimestre 1 de N qui tient la tendance, une fois la saison retirée. */
@@ -154,9 +157,9 @@ export function previsionDesVentes(c: Pick<Cas, "code">) {
     sommeDesCarresBrute,
     sommeDesProduitsBrute,
     tendanceBrute,
-    rapportBrut: { n3: fort.n3.demande / tendanceBrute(fort.n3.rang), n1: fort.n1.demande / tendanceBrute(fort.n1.rang) },
+    rapportBrut: { n3: arrondi(fort.n3.demande / tendanceBrute(fort.n3.rang), 4), n1: arrondi(fort.n1.demande / tendanceBrute(fort.n1.rang), 4) },
     /** La prévision du trimestre 4 de N par la droite des trimestres bruts : celle du consultant. */
-    previsionDuConsultant: Math.round(brute.previsions[3]!.prevision),
+    previsionDuConsultant: brute.previsions[3]!.prevision,
     prixMoyen,
   };
 }
@@ -309,8 +312,8 @@ export const PREVOIR_LES_VENTES: Chapitre = {
         const y = x.p.serie.map((s) => s.demande);
         const mm = (t: number) => ({
           libelle: `Moyenne mobile centrée du rang ${t}`,
-          attendu: auCentime(x.p.serie[t - 1]!.moyenneMobile!),
-          tolerance: 0.01,
+          nature: "grandeur" as const,
+          attendu: x.p.serie[t - 1]!.moyenneMobile!,
           calcul: `(${qte(y[t - 3]!)} ÷ 2 + ${qte(y[t - 2]!)} + ${qte(y[t - 1]!)} + ${qte(y[t]!)} + ${qte(y[t + 1]!)} ÷ 2) ÷ 4 = ${dec(x.p.serie[t - 1]!.moyenneMobile!)}`,
         });
         return [mm(3), mm(4), mm(10)];
@@ -338,10 +341,10 @@ export const PREVOIR_LES_VENTES: Chapitre = {
         const x = previsionDesVentes(c);
         const mm = x.p.serie.filter((s) => s.moyenneMobile !== null).map((s) => s.moyenneMobile!);
         return [
-          { libelle: "Rang moyen x̄", attendu: x.xMoyen, calcul: `(3 + 4 + … + 10) ÷ 8 = ${qte(x.xMoyen)}` },
-          { libelle: "Moyenne des moyennes mobiles ȳ", attendu: auCentime(x.yMoyen), tolerance: 0.01, calcul: `(${mm.map((v) => dec(v)).join(" + ")}) ÷ 8 = ${dec(x.yMoyen)}` },
-          { libelle: "Pente a", attendu: auCentime(x.a), tolerance: 0.01, calcul: `${dec(x.sommeDesProduits)} ÷ ${qte(x.sommeDesCarres)} = ${dec(x.a, 4)}` },
-          { libelle: "Ordonnée à l'origine b", attendu: auCentime(x.b), tolerance: 0.02, calcul: `${dec(x.yMoyen)} − ${dec(x.a, 4)} × ${qte(x.xMoyen)} = ${dec(x.b)}` },
+          { libelle: "Rang moyen x̄", nature: "grandeur", attendu: x.xMoyen, calcul: `(3 + 4 + … + 10) ÷ 8 = ${dec(x.xMoyen)}` },
+          { libelle: "Moyenne des moyennes mobiles ȳ", nature: "grandeur", attendu: x.yMoyen, calcul: `(${mm.map((v) => dec(v)).join(" + ")}) ÷ 8 = ${dec(x.yMoyen)}` },
+          { libelle: "Pente a", nature: "grandeur", attendu: x.a, calcul: `${dec(x.sommeDesProduits)} ÷ ${qte(x.sommeDesCarres)} = ${dec(x.a)}` },
+          { libelle: "Ordonnée à l'origine b", nature: "grandeur", attendu: x.b, calcul: `${dec(x.yMoyen)} − ${dec(x.a)} × ${dec(x.xMoyen)} = ${dec(x.b)} (sur la pente arrondie)` },
         ];
       },
       explication: (c) => {
@@ -427,15 +430,15 @@ export const PREVOIR_LES_VENTES: Chapitre = {
         return [
           {
             libelle: "Rang où la tendance atteint le seuil",
-            attendu: auCentime(x.rangDuSeuil),
-            tolerance: 0.01,
+            nature: "grandeur",
+            attendu: x.rangDuSeuil,
             calcul: `(${art(SEUIL_DE_LA_DEUXIEME_BOUTIQUE)} − ${dec(x.b)}) ÷ ${dec(x.a)} = ${dec(x.rangDuSeuil)}`,
           },
-          { libelle: "Premier rang entier au-delà du seuil", attendu: x.premierRang, calcul: `le rang entier qui suit ${dec(x.rangDuSeuil)} : ${x.premierRang}, le ${trimestreDuRang(x.premierRang).libelle}` },
+          { libelle: "Premier rang entier au-delà du seuil", nature: "quantite", attendu: x.premierRang, calcul: `le rang entier qui suit ${dec(x.rangDuSeuil)}, à l'unité au-dessus : ${x.premierRang} (le ${trimestreDuRang(x.premierRang).libelle})` },
           {
             libelle: "Tendance de ce rang",
-            attendu: auCentime(x.tendanceAuSeuil),
-            tolerance: 0.05,
+            nature: "grandeur",
+            attendu: x.tendanceAuSeuil,
             calcul: `${dec(x.a)} × ${x.premierRang} + ${dec(x.b)} = ${dec(x.tendanceAuSeuil)}`,
           },
         ];
@@ -456,13 +459,14 @@ export const PREVOIR_LES_VENTES: Chapitre = {
       notions: ["seasonality"],
       tableau: (c) => tableauDeLaTendance(previsionDesVentes(c)),
       question: () =>
-        "Le tableau donne la tendance de chaque rang et le rapport demande ÷ tendance, sauf au trimestre 4. Sans formule cette fois : calculez les rapports du trimestre 4 en N − 3, N − 2 et N − 1, au centième, puis le coefficient saisonnier brut du trimestre 4.",
+        "Le tableau donne la tendance de chaque rang et le rapport demande ÷ tendance, sauf au trimestre 4. Sans formule cette fois : calculez les rapports du trimestre 4 en N − 3, N − 2 et N − 1, au dix-millième, puis le coefficient saisonnier brut du trimestre 4, au dix-millième.",
       champs: (c) => {
         const x = previsionDesVentes(c);
         const r = (s: (typeof x.fort)["n3"]) => ({
           libelle: `Rapport du trimestre 4 de ${trimestreDuRang(s.rang).annee}`,
-          attendu: auCentime(s.rapport),
-          tolerance: 0.01,
+          nature: "coefficient" as const,
+          attendu: s.rapport,
+          tolerance: 0.0001,
           calcul: `${qte(s.demande)} ÷ ${dec(s.tendance)} = ${dec(s.rapport, 4)}`,
         });
         return [
@@ -471,8 +475,9 @@ export const PREVOIR_LES_VENTES: Chapitre = {
           r(x.fort.n1),
           {
             libelle: "Coefficient saisonnier brut du trimestre 4",
-            attendu: auCentime(x.p.coefficientsBruts[3]!),
-            tolerance: 0.01,
+            nature: "coefficient",
+            attendu: x.p.coefficientsBruts[3]!,
+            tolerance: 0.0001,
             calcul: `(${[x.fort.n3, x.fort.n2, x.fort.n1].map((s) => dec(s.rapport, 4)).join(" + ")}) ÷ 3 = ${dec(x.p.coefficientsBruts[3]!, 4)}`,
           },
         ];
@@ -492,14 +497,15 @@ export const PREVOIR_LES_VENTES: Chapitre = {
       notions: ["seasonality"],
       question: (c) => {
         const x = previsionDesVentes(c);
-        return `Les 4 coefficients bruts (${x.p.coefficientsBruts.map((k) => dec(k, 4)).join(" ; ")}) font ${dec(x.p.sommeBrute, 4)}, et non 4 : sur une année, la saison doit se compenser. Corrigez chacun : coefficient brut × 4 ÷ ${dec(x.p.sommeBrute, 4)}. Donnez les 4 coefficients corrigés, au centième.`;
+        return `Les 4 coefficients bruts (${x.p.coefficientsBruts.map((k) => dec(k, 4)).join(" ; ")}) font ${dec(x.p.sommeBrute, 4)}, et non 4 : sur une année, la saison doit se compenser. Corrigez chacun : coefficient brut × 4 ÷ ${dec(x.p.sommeBrute, 4)}. Donnez les 4 coefficients corrigés, au dix-millième.`;
       },
       champs: (c) => {
         const x = previsionDesVentes(c);
         return x.p.coefficients.map((k, i) => ({
           libelle: `Coefficient corrigé du trimestre ${i + 1}`,
-          attendu: auCentime(k),
-          tolerance: 0.01,
+          nature: "coefficient" as const,
+          attendu: k,
+          tolerance: 0.0001,
           calcul: `${dec(x.p.coefficientsBruts[i]!, 4)} × 4 ÷ ${dec(x.p.sommeBrute, 4)} = ${dec(k, 4)}`,
         }));
       },
@@ -582,15 +588,20 @@ export const PREVOIR_LES_VENTES: Chapitre = {
         const x = previsionDesVentes(c);
         const p = x.p.previsions;
         return [
-          { libelle: "Tendance du trimestre 1 de N", attendu: auCentime(x.t1.tendance), tolerance: 0.05, calcul: `${dec(x.a)} × 13 + ${dec(x.b)} = ${dec(x.t1.tendance)}` },
-          { libelle: "Prévision du trimestre 1 de N", attendu: Math.round(x.t1.prevision), tolerance: 2, calcul: `${dec(x.t1.tendance)} × ${dec(x.t1.coefficient, 4)} = ${art(x.t1.prevision)}` },
+          { libelle: "Tendance du trimestre 1 de N", nature: "grandeur", attendu: x.t1.tendance, calcul: `${dec(x.a)} × 13 + ${dec(x.b)} = ${dec(x.t1.tendance)}` },
+          {
+            libelle: "Prévision du trimestre 1 de N",
+            nature: "quantite",
+            attendu: x.t1.prevision,
+            calcul: `${dec(x.t1.tendance)} × ${dec(x.t1.coefficient, 4)} = ${dec(x.t1.calculee)}, soit ${art(x.t1.prevision)} articles à l'unité la plus proche : on prévoit des articles entiers`,
+          },
           {
             libelle: "Prévision du trimestre 4 de N",
-            attendu: Math.round(x.t4.prevision),
-            tolerance: 2,
-            calcul: `(${dec(x.a)} × 16 + ${dec(x.b)}) × ${dec(x.t4.coefficient, 4)} = ${dec(x.t4.tendance)} × ${dec(x.t4.coefficient, 4)} = ${art(x.t4.prevision)}`,
+            nature: "quantite",
+            attendu: x.t4.prevision,
+            calcul: `(${dec(x.a)} × 16 + ${dec(x.b)}) × ${dec(x.t4.coefficient, 4)} = ${dec(x.t4.tendance)} × ${dec(x.t4.coefficient, 4)} = ${dec(x.t4.calculee)}, soit ${art(x.t4.prevision)} articles à l'unité la plus proche`,
           },
-          { libelle: "Prévision de l'année N", attendu: Math.round(x.p.totalPrevu), tolerance: 4, calcul: `${p.map((q) => art(q.prevision)).join(" + ")} = ${art(x.p.totalPrevu)}` },
+          { libelle: "Prévision de l'année N", nature: "quantite", attendu: x.p.totalPrevu, calcul: `${p.map((q) => art(q.prevision)).join(" + ")} = ${art(x.p.totalPrevu)} (la somme des quatre prévisions arrondies)` },
         ];
       },
       explication: (c) => {
@@ -615,25 +626,24 @@ export const PREVOIR_LES_VENTES: Chapitre = {
       champs: (c) => {
         const x = previsionDesVentes(c);
         return [
-          { libelle: "Demande du trimestre au rythme de janvier", attendu: x.trimestreAuRythme, calcul: `${art(x.demandeDeJanvier)} × 3 = ${art(x.trimestreAuRythme)}` },
+          { libelle: "Demande du trimestre au rythme de janvier", nature: "quantite", attendu: x.trimestreAuRythme, calcul: `${art(x.demandeDeJanvier)} × 3 = ${art(x.trimestreAuRythme)}` },
           {
             libelle: "Écart à la prévision du trimestre (%)",
-            attendu: auCentime(x.ecartDeJanvier * 100),
-            tolerance: 0.05,
-            calcul: `(${art(x.trimestreAuRythme)} − ${dec(x.t1.prevision)}) ÷ ${dec(x.t1.prevision)} × 100 = ${pct(auCentime(x.ecartDeJanvier * 100))}`,
+            attendu: x.ecartDeJanvier,
+            calcul: `(${art(x.trimestreAuRythme)} − ${art(x.t1.prevision)}) ÷ ${art(x.t1.prevision)} × 100 = ${pct(x.ecartDeJanvier)}`,
           },
           {
             libelle: "Demande corrigée des variations saisonnières",
-            attendu: auCentime(x.janvierCorrige),
-            tolerance: 3,
-            calcul: `${art(x.trimestreAuRythme)} ÷ ${dec(x.t1.coefficient, 4)} = ${dec(x.janvierCorrige)}, pour une tendance de ${dec(x.t1.tendance)}`,
+            nature: "grandeur",
+            attendu: x.janvierCorrige,
+            calcul: `${art(x.trimestreAuRythme)} ÷ ${dec(x.t1.coefficient, 4)} = ${dec(x.janvierCorrige)} (pour une tendance de ${dec(x.t1.tendance)})`,
           },
         ];
       },
       explication: (c) => {
         const x = previsionDesVentes(c);
         return [
-          `Au rythme de janvier, le trimestre ferait ${art(x.trimestreAuRythme)} articles, ${pct(auCentime(-x.ecartDeJanvier * 100))} sous la prévision. Corrigé de la saison, il fait ${art(x.janvierCorrige)} articles pour une tendance de ${art(x.t1.tendance)} : le même retard, puisque la prévision contient déjà la saison.`,
+          `Au rythme de janvier, le trimestre ferait ${art(x.trimestreAuRythme)} articles, ${pct(-x.ecartDeJanvier)} sous la prévision. Corrigé de la saison, il fait ${art(x.janvierCorrige)} articles pour une tendance de ${art(x.t1.tendance)} : le même retard, puisque la prévision contient déjà la saison.`,
         ];
       },
     },
@@ -784,7 +794,7 @@ export const PREVOIR_LES_VENTES: Chapitre = {
       tableau: tableauDesTroisAnnees,
       question: (c) => {
         const x = previsionDesVentes(c);
-        return `Refaites le calcul du consultant. Sur les 12 trimestres bruts, x̄ = ${qte(x.brute.droite.xMoyen)}, ȳ = ${dec(x.yMoyenBrut)}, Σ (x − x̄)² = ${qte(x.sommeDesCarresBrute)} et Σ (x − x̄)(y − ȳ) = ${qte(auCentime(x.sommeDesProduitsBrute))}. Calculez sa pente, au centième, puis le rapport demande ÷ tendance brute du trimestre 4 de N − 3 et de N − 1, au centième.`;
+        return `Refaites le calcul du consultant. Sur les 12 trimestres bruts, x̄ = ${qte(x.brute.droite.xMoyen)}, ȳ = ${dec(x.yMoyenBrut)}, Σ (x − x̄)² = ${qte(x.sommeDesCarresBrute)} et Σ (x − x̄)(y − ȳ) = ${dec(x.sommeDesProduitsBrute)}. Calculez sa pente, au centième, puis le rapport demande ÷ tendance brute du trimestre 4 de N − 3 et de N − 1, au dix-millième.`;
       },
       champs: (c) => {
         const x = previsionDesVentes(c);
@@ -794,20 +804,22 @@ export const PREVOIR_LES_VENTES: Chapitre = {
         return [
           {
             libelle: "Pente de la droite des trimestres bruts",
-            attendu: auCentime(a),
-            tolerance: 0.01,
-            calcul: `${qte(auCentime(x.sommeDesProduitsBrute))} ÷ ${qte(x.sommeDesCarresBrute)} = ${dec(a)}, et b = ${dec(x.yMoyenBrut)} − ${dec(a)} × ${qte(x.brute.droite.xMoyen)} = ${dec(b)}`,
+            nature: "grandeur",
+            attendu: a,
+            calcul: `${dec(x.sommeDesProduitsBrute)} ÷ ${qte(x.sommeDesCarresBrute)} = ${dec(a)}, et b = ${dec(x.yMoyenBrut)} − ${dec(a)} × ${qte(x.brute.droite.xMoyen)} = ${dec(b)}`,
           },
           {
             libelle: "Rapport du trimestre 4 de N − 3 à la tendance brute",
-            attendu: auCentime(x.rapportBrut.n3),
-            tolerance: 0.01,
+            nature: "coefficient",
+            attendu: x.rapportBrut.n3,
+            tolerance: 0.0001,
             calcul: `${qte(n3.demande)} ÷ (${dec(a)} × ${n3.rang} + ${dec(b)}) = ${qte(n3.demande)} ÷ ${dec(x.tendanceBrute(n3.rang))} = ${dec(x.rapportBrut.n3, 4)}`,
           },
           {
             libelle: "Rapport du trimestre 4 de N − 1 à la tendance brute",
-            attendu: auCentime(x.rapportBrut.n1),
-            tolerance: 0.01,
+            nature: "coefficient",
+            attendu: x.rapportBrut.n1,
+            tolerance: 0.0001,
             calcul: `${qte(n1.demande)} ÷ (${dec(a)} × ${n1.rang} + ${dec(b)}) = ${qte(n1.demande)} ÷ ${dec(x.tendanceBrute(n1.rang))} = ${dec(x.rapportBrut.n1, 4)}`,
           },
         ];
@@ -858,22 +870,26 @@ export const PREVOIR_LES_VENTES: Chapitre = {
       question: (c) => {
         const x = previsionDesVentes(c);
         const [t1, t2, t3] = x.annuelle.totaux;
-        return `Une autre méthode, honnête aussi : la droite des moindres carrés sur les 3 totaux annuels (${art(t1!)}, ${art(t2!)} et ${art(t3!)}, x de 1 à 3), prolongée à x = 4 pour N ; puis un coefficient du trimestre 4, moyenne de ses 3 rapports à la moyenne trimestrielle de son année. Calculez la pente annuelle, la demande prévue pour N, puis la prévision du trimestre 4 de N, avec le coefficient à 4 décimales.`;
+        return `Une autre méthode, honnête aussi : la droite des moindres carrés sur les 3 totaux annuels (${art(t1!)}, ${art(t2!)} et ${art(t3!)}, x de 1 à 3), prolongée à x = 4 pour N ; puis un coefficient du trimestre 4, moyenne de ses 3 rapports à la moyenne trimestrielle de son année. Calculez la pente annuelle, la demande prévue pour N, au centième, puis la prévision du trimestre 4 de N, à l'unité, avec le coefficient au dix-millième.`;
       },
       champs: (c) => {
         const x = previsionDesVentes(c);
         const t = x.annuelle;
         const [y1, y2, y3] = t.totaux;
         const k4 = t.coefficients[3]!;
-        const t4 = t.previsions[3]!;
         return [
-          { libelle: "Pente annuelle", attendu: auCentime(t.droite.a), tolerance: 0.5, calcul: `(${art(y3!)} − ${art(y1!)}) ÷ 2 = ${dec(t.droite.a)}, les 3 années étant à égale distance du milieu` },
-          { libelle: "Demande prévue pour l'année N", attendu: auCentime(t.anneeN), tolerance: 1, calcul: `(${art(y1!)} + ${art(y2!)} + ${art(y3!)}) ÷ 3 + ${dec(t.droite.a)} × (4 − 2) = ${dec(t.anneeN)}` },
+          { libelle: "Pente annuelle", nature: "grandeur", attendu: t.droite.a, calcul: `(${art(y3!)} − ${art(y1!)}) ÷ 2 = ${dec(t.droite.a)} (les 3 années étant à égale distance du milieu)` },
+          {
+            libelle: "Demande prévue pour l'année N",
+            nature: "grandeur",
+            attendu: t.anneeN,
+            calcul: `(${art(y1!)} + ${art(y2!)} + ${art(y3!)}) ÷ 3 = ${dec(t.moyenne)} ; ${dec(t.moyenne)} + ${dec(t.droite.a)} × (4 − 2) = ${dec(t.anneeN)}`,
+          },
           {
             libelle: "Prévision du trimestre 4 de N par cette méthode",
-            attendu: auCentime(t4),
-            tolerance: 3,
-            calcul: `coefficient = (${[x.fort.n3, x.fort.n2, x.fort.n1].map((s, i) => `${qte(s.demande)} ÷ (${art(t.totaux[i]!)} ÷ 4)`).join(" + ")}) ÷ 3 = ${dec(k4, 4)} ; ${dec(t.anneeN)} ÷ 4 × ${dec(k4, 4)} = ${dec(t4)}`,
+            nature: "quantite",
+            attendu: t.previsions[3]!,
+            calcul: `coefficient = (${[x.fort.n3, x.fort.n2, x.fort.n1].map((s, i) => `${qte(s.demande)} ÷ ${dec(t.trimestreMoyen[i]!)}`).join(" + ")}) ÷ 3 = (${t.rapports[3]!.map((r) => dec(r, 4)).join(" + ")}) ÷ 3 = ${dec(k4, 4)}. Puis ${dec(t.anneeN)} ÷ 4 = ${dec(t.trimestreDeN)} ; ${dec(t.trimestreDeN)} × ${dec(k4, 4)} = ${dec(t.calculees[3]!)}, soit ${art(t.previsions[3]!)} articles à l'unité la plus proche`,
           },
         ];
       },

@@ -1,4 +1,4 @@
-import { montantEcrit as eur } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct, taux2 } from "../../../pedagogy/cours/deux-decimales";
 import { accord, accordPluriel } from "../accords";
 import type { Cas } from "../cas";
 import { promotion } from "../chapitres/promotion-qui-paie";
@@ -21,24 +21,44 @@ import type { Situation } from "./types";
  * demande attendue au prix remisé est celle du trimestre que l'arène a rejoué à ce prix :
  * les ventes faites, plus les ventes manquées. Le stock en réserve est le stock final du
  * trimestre que le chapitre « Le stock du point de vente » étudie.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les marges du trimestre se donnent au centime (à l'euro, à un
+ * euro près, avant), les taux à deux décimales ; le volume qui garde la marge et la quantité à
+ * commander sont des quantités, le volume écrit à deux décimales puis arrondi à l'unité au-dessus ;
+ * les ventes d'un jour et la couverture du stock sont des grandeurs au centième. Le chapitre « La
+ * promotion qui paie » (lot 6) n'est pas touché : le cas reprend ses chiffres et les arrondit
+ * lui-même.
  */
 
-const qte = (n: number) => n.toLocaleString("fr-FR");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const auCentieme = (x: number) => Math.round(x * 100) / 100;
+const qte = nombreAuCentieme;
+const auCentieme = arrondi2;
 
 const estUnCommerce = (c: Cas) => (COMMERCES as readonly string[]).includes(c.code);
 const gardeUnStock = (c: Cas) => estUnCommerce(c) && c.stock !== null;
 
 /** Les chiffres de la réponse, calculés une fois du cas. */
 export function commandePourLaPromotion(c: Cas) {
-  const p = promotion(c);
+  // Le chapitre « La promotion qui paie » arrondit la marge du trimestre à l'euro et les taux au
+  // dixième : le cas les reprend au centime et à deux décimales, ligne après ligne.
+  const pc = promotion(c);
+  const margeNormale = auCentieme(pc.quantite * pc.mcv);
+  const volumeCalcule = auCentieme(margeNormale / pc.mcvPromo);
+  const volumeNecessaire = Math.ceil(volumeCalcule - 1e-9);
+  const p = {
+    ...pc,
+    baisseDeLaMarge: taux2(pc.mcv - pc.mcvPromo, pc.mcv),
+    margeNormale,
+    volumeCalcule,
+    volumeNecessaire,
+    hausseNecessaire: auCentieme((volumeNecessaire / pc.quantite - 1) * 100),
+  };
   // Ce que le marché demanderait au prix remisé : ce que l'arène a vendu à ce prix, plus
   // ce qu'elle a manqué faute de marchandise ou de place.
   const demande = p.quantitePromo + p.perduesPromo;
   // La marge du trimestre si toute cette demande est servie, au prix remisé.
-  const margePrevue = Math.round(demande * p.mcvPromo);
-  const ecart = margePrevue - p.margeNormale;
+  const margePrevue = auCentieme(demande * p.mcvPromo);
+  const ecart = auCentieme(margePrevue - p.margeNormale);
   // Le stock : la couverture du chapitre « Le stock du point de vente » (le stock divisé
   // par les ventes d'un jour), au rythme de la promotion cette fois.
   const st = c.stock ? stockDuPointDeVente(c) : null;
@@ -50,7 +70,7 @@ export function commandePourLaPromotion(c: Cas) {
           enReserve,
           jours: st.jours,
           parJour,
-          couverture: Math.round(enReserve / parJour),
+          couverture: auCentieme(enReserve / parJour),
           couvertureAvant: st.couverture,
           aCommander: Math.max(0, demande - enReserve),
         };
@@ -127,14 +147,14 @@ export const COMMANDER_POUR_LA_PROMOTION: Situation = {
       notions: ["markdown", "contribution_margin"],
       si: estUnCommerce,
       question: () =>
-        "Calculez le prix remisé, la marge d'une unité au prix habituel puis au prix remisé (le prix moins le coût variable), et la baisse de la marge d'une unité en pourcentage, au dixième.",
+        "Calculez le prix remisé, la marge d'une unité au prix habituel puis au prix remisé (le prix moins le coût variable), et la baisse de la marge d'une unité en pourcentage, à deux décimales.",
       champs: (c) => {
         const r = commandePourLaPromotion(c);
         return [
           { libelle: "Prix remisé", attendu: r.prixPromo, calcul: `${eur(r.prix)} × (1 − ${pct(r.remise)}) = ${eur(r.prixPromo)}` },
           { libelle: "Marge d'une unité au prix habituel", attendu: r.mcv, calcul: `${eur(r.prix)} − ${eur(r.cvu)} = ${eur(r.mcv)}` },
           { libelle: "Marge d'une unité au prix remisé", attendu: r.mcvPromo, calcul: `${eur(r.prixPromo)} − ${eur(r.cvu)} = ${eur(r.mcvPromo)}` },
-          { libelle: "Baisse de la marge d'une unité (%)", attendu: r.baisseDeLaMarge, calcul: `(${eur(r.mcv)} − ${eur(r.mcvPromo)}) ÷ ${eur(r.mcv)} × 100 = ${pct(r.baisseDeLaMarge)}`, tolerance: 0.1 },
+          { libelle: "Baisse de la marge d'une unité (%)", attendu: r.baisseDeLaMarge, calcul: `(${eur(r.mcv)} − ${eur(r.mcvPromo)}) ÷ ${eur(r.mcv)} × 100 = ${pct(r.baisseDeLaMarge)}` },
         ];
       },
       explication: (c) => {
@@ -151,13 +171,13 @@ export const COMMANDER_POUR_LA_PROMOTION: Situation = {
       notions: ["markdown", "contribution_margin"],
       si: estUnCommerce,
       question: () =>
-        "Calculez la marge d'un trimestre au prix habituel (à l'euro), le volume qu'il faudrait vendre au prix remisé pour la garder (arrondi à l'unité supérieure), puis la hausse des ventes que cela demande, en pourcentage, au dixième.",
+        "Calculez la marge d'un trimestre au prix habituel (au centime), le volume qu'il faudrait vendre au prix remisé pour la garder (arrondi à l'unité supérieure), puis la hausse des ventes que cela demande, en pourcentage, à deux décimales.",
       champs: (c) => {
         const r = commandePourLaPromotion(c);
         return [
-          { libelle: "Marge d'un trimestre au prix habituel", attendu: r.margeNormale, calcul: `${qte(r.quantite)} × ${eur(r.mcv)} = ${eur(r.margeNormale)}`, tolerance: 1 },
-          { libelle: "Volume qui garde cette marge", attendu: r.volumeNecessaire, calcul: `${eur(r.margeNormale)} ÷ ${eur(r.mcvPromo)} = ${qte(r.volumeNecessaire)} (arrondi au-dessus)` },
-          { libelle: "Hausse des ventes nécessaire (%)", attendu: r.hausseNecessaire, calcul: `(${qte(r.volumeNecessaire)} ÷ ${qte(r.quantite)} − 1) × 100 = ${pct(r.hausseNecessaire)}`, tolerance: 0.1 },
+          { libelle: "Marge d'un trimestre au prix habituel", attendu: r.margeNormale, calcul: `${qte(r.quantite)} × ${eur(r.mcv)} = ${eur(r.margeNormale)}` },
+          { libelle: "Volume qui garde cette marge", nature: "quantite", attendu: r.volumeNecessaire, calcul: `${eur(r.margeNormale)} ÷ ${eur(r.mcvPromo)} = ${qte(r.volumeCalcule)}, soit ${qte(r.volumeNecessaire)} à l'unité au-dessus : un de moins ne garderait pas la marge` },
+          { libelle: "Hausse des ventes nécessaire (%)", attendu: r.hausseNecessaire, calcul: `(${qte(r.volumeNecessaire)} ÷ ${qte(r.quantite)} − 1) × 100 = ${pct(r.hausseNecessaire)}` },
         ];
       },
       explication: (c) => {
@@ -174,14 +194,14 @@ export const COMMANDER_POUR_LA_PROMOTION: Situation = {
       notions: ["stock", "stock_rotation"],
       si: gardeUnStock,
       question: () =>
-        "Au rythme de la demande attendue, calculez les ventes d'un jour (au centième), le nombre de jours que couvre le stock en réserve (à l'unité), puis la quantité à commander pour servir toute la demande du trimestre.",
+        "Au rythme de la demande attendue, calculez les ventes d'un jour (au centième), le nombre de jours que couvre le stock en réserve (au centième), puis la quantité à commander pour servir toute la demande du trimestre.",
       champs: (c) => {
         const r = commandePourLaPromotion(c);
         const s = r.stock!;
         return [
-          { libelle: "Ventes d'un jour en promotion", attendu: s.parJour, calcul: `${qte(r.demande)} ÷ ${qte(s.jours)} = ${qte(s.parJour)}`, tolerance: 0.01 },
-          { libelle: "Couverture du stock en réserve (jours)", attendu: s.couverture, calcul: `${qte(s.enReserve)} ÷ ${qte(s.parJour)} = ${qte(s.couverture)} jours` },
-          { libelle: "Quantité à commander", attendu: s.aCommander, calcul: `${qte(r.demande)} − ${qte(s.enReserve)} = ${qte(s.aCommander)}` },
+          { libelle: "Ventes d'un jour en promotion", nature: "grandeur", attendu: s.parJour, calcul: `${qte(r.demande)} ÷ ${qte(s.jours)} = ${qte(s.parJour)}` },
+          { libelle: "Couverture du stock en réserve (jours)", nature: "grandeur", attendu: s.couverture, calcul: `${qte(s.enReserve)} ÷ ${qte(s.parJour)} = ${qte(s.couverture)} jours` },
+          { libelle: "Quantité à commander", nature: "quantite", attendu: s.aCommander, calcul: `${qte(r.demande)} − ${qte(s.enReserve)} = ${qte(s.aCommander)}` },
         ];
       },
       explication: (c) => {
@@ -201,12 +221,12 @@ export const COMMANDER_POUR_LA_PROMOTION: Situation = {
       notions: ["markdown", "price_elasticity"],
       si: estUnCommerce,
       question: () =>
-        "Si toute la demande attendue est servie, quelle est la marge du trimestre au prix remisé (à l'euro) ? Quel écart avec la marge d'un trimestre au prix habituel (négatif si la promotion coûte) ?",
+        "Si toute la demande attendue est servie, quelle est la marge du trimestre au prix remisé (au centime) ? Quel écart avec la marge d'un trimestre au prix habituel (négatif si la promotion coûte) ?",
       champs: (c) => {
         const r = commandePourLaPromotion(c);
         return [
-          { libelle: "Marge attendue du trimestre", attendu: r.margePrevue, calcul: `${qte(r.demande)} × ${eur(r.mcvPromo)} = ${eur(r.margePrevue)}`, tolerance: 1 },
-          { libelle: "Écart avec la marge habituelle", attendu: r.ecart, calcul: `${eur(r.margePrevue)} − ${eur(r.margeNormale)} = ${eur(r.ecart)}`, tolerance: 1 },
+          { libelle: "Marge attendue du trimestre", attendu: r.margePrevue, calcul: `${qte(r.demande)} × ${eur(r.mcvPromo)} = ${eur(r.margePrevue)}` },
+          { libelle: "Écart avec la marge habituelle", attendu: r.ecart, calcul: `${eur(r.margePrevue)} − ${eur(r.margeNormale)} = ${eur(r.ecart)}` },
         ];
       },
       explication: (c) => {

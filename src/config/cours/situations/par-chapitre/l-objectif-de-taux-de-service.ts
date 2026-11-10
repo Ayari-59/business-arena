@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DU_TABLEAU_COMMERCIAL, tableauDuCabinet } from "../../chapitres/tableau-de-bord-commercial";
 import type { Cas } from "../../cas";
 import { coutVariableDUneJournee } from "../../monde/relation-client";
@@ -28,6 +28,10 @@ import type { Situation } from "../types";
  * HYPOTHÈSES DU CAS : une journée refusée est une demande de dernière minute, payée au prix catalogue
  * (la fiche, `prixDesJourneesDeplacees`) ; un consultant se recrute pour l'année, à son coût de la fiche,
  * et ne fait que ses jours facturables d'un trimestre dans chaque trimestre.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les taux de service et d'occupation se donnent à deux décimales
+ * (au dixième, avant) ; les journées sont des quantités, entières, déclarées comme telles.
  */
 
 /**
@@ -40,11 +44,7 @@ export const TAUX_DE_SERVICE_VISE = 0.9;
 /** Les bornes du curseur des journées qu'un consultant de plus servirait dans l'année. */
 export const JOURNEES_DU_CURSEUR = { min: 0, max: 120 } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const qte = nombreAuCentieme;
 /** Arrondi à l'entier supérieur, sans qu'un calcul en virgule flottante ne fasse monter un entier exact. */
 const plafond = (x: number) => Math.ceil(x - 1e-9);
 
@@ -74,11 +74,11 @@ export function objectifDeService(c: Pick<Cas, "code">) {
     vise: TAUX_DE_SERVICE_VISE * 100,
     demandees: x.demandees,
     vendues: x.vendues,
-    serviceDeLAnnee: auDixieme(x.serviceDeLAnnee * 100),
-    serviceDuPlein: auDixieme(plein.tauxDeService * 100),
+    serviceDeLAnnee: auCentime(x.serviceDeLAnnee * 100),
+    serviceDuPlein: auCentime(plein.tauxDeService * 100),
     journeesVisees,
     auDelaDeLaCapacite,
-    occupationVisee: auDixieme((journeesVisees / plein.capacite) * 100),
+    occupationVisee: auCentime((journeesVisees / plein.capacite) * 100),
     margeDUneJournee,
     margeDeLObjectif,
     coutDUnConsultant,
@@ -150,7 +150,7 @@ export const L_OBJECTIF_DE_TAUX_DE_SERVICE: Situation = {
       titre: "Le taux de service",
       notions: ["dashboard", "capacity"],
       question: () =>
-        "Calculez le taux de service de l'année, puis celui du trimestre le moins servi, en pourcentage au dixième, et les journées refusées ce trimestre-là.",
+        "Calculez le taux de service de l'année, puis celui du trimestre le moins servi, en pourcentage à deux décimales, et les journées refusées ce trimestre-là.",
       champs: (c) => {
         const r = objectifDeService(c);
         const q = r.plein;
@@ -158,11 +158,10 @@ export const L_OBJECTIF_DE_TAUX_DE_SERVICE: Situation = {
           {
             libelle: "Taux de service de l'année (%)",
             attendu: r.serviceDeLAnnee,
-            tolerance: 0.1,
             calcul: `(${r.trimestres.map((t) => qte(t.vendues)).join(" + ")}) ÷ (${r.trimestres.map((t) => qte(t.demandees)).join(" + ")}) × 100 = ${qte(r.vendues)} ÷ ${qte(r.demandees)} × 100 = ${pct(r.serviceDeLAnnee)}`,
           },
-          { libelle: `Taux de service du T${q.trimestre} (%)`, attendu: r.serviceDuPlein, tolerance: 0.1, calcul: `${qte(q.vendues)} ÷ ${qte(q.demandees)} × 100 = ${pct(r.serviceDuPlein)}` },
-          { libelle: `Journées refusées au T${q.trimestre}`, attendu: q.refusees, calcul: `${qte(q.demandees)} − ${qte(q.vendues)} = ${qte(q.refusees)}` },
+          { libelle: `Taux de service du T${q.trimestre} (%)`, attendu: r.serviceDuPlein, calcul: `${qte(q.vendues)} ÷ ${qte(q.demandees)} × 100 = ${pct(r.serviceDuPlein)}` },
+          { libelle: `Journées refusées au T${q.trimestre}`, nature: "quantite", attendu: q.refusees, calcul: `${qte(q.demandees)} − ${qte(q.vendues)} = ${qte(q.refusees)}` },
         ];
       },
       explication: (c) => {
@@ -179,15 +178,15 @@ export const L_OBJECTIF_DE_TAUX_DE_SERVICE: Situation = {
       notions: ["dashboard", "capacity"],
       question: (c) => {
         const r = objectifDeService(c);
-        return `À demande égale, combien de journées faut-il vendre au T${r.plein.trimestre} pour servir ${pct(r.vise)} de la demande (à l'unité supérieure) ? Combien dépassent la capacité des consultants, et quel taux d'occupation cela demanderait-il, au dixième ?`;
+        return `À demande égale, combien de journées faut-il vendre au T${r.plein.trimestre} pour servir ${pct(r.vise)} de la demande (à l'unité supérieure) ? Combien dépassent la capacité des consultants, et quel taux d'occupation cela demanderait-il, à deux décimales ?`;
       },
       champs: (c) => {
         const r = objectifDeService(c);
         const q = r.plein;
         return [
-          { libelle: "Journées à vendre", attendu: r.journeesVisees, calcul: `${qte(q.demandees)} × ${pct(r.vise)} = ${qte(auCentime(q.demandees * TAUX_DE_SERVICE_VISE))}${auCentime(q.demandees * TAUX_DE_SERVICE_VISE) === r.journeesVisees ? "" : `, soit ${qte(r.journeesVisees)} à l'unité supérieure`}` },
-          { libelle: "Journées au-delà de la capacité", attendu: r.auDelaDeLaCapacite, calcul: `${qte(r.journeesVisees)} − ${qte(q.capacite)} = ${qte(r.auDelaDeLaCapacite)}` },
-          { libelle: "Taux d'occupation demandé (%)", attendu: r.occupationVisee, tolerance: 0.1, calcul: `${qte(r.journeesVisees)} ÷ ${qte(q.capacite)} × 100 = ${pct(r.occupationVisee)}` },
+          { libelle: "Journées à vendre", nature: "quantite", attendu: r.journeesVisees, calcul: `${qte(q.demandees)} × ${pct(r.vise)} = ${qte(auCentime(q.demandees * TAUX_DE_SERVICE_VISE))}${auCentime(q.demandees * TAUX_DE_SERVICE_VISE) === r.journeesVisees ? "" : `, soit ${qte(r.journeesVisees)} à l'unité supérieure`}` },
+          { libelle: "Journées au-delà de la capacité", nature: "quantite", attendu: r.auDelaDeLaCapacite, calcul: `${qte(r.journeesVisees)} − ${qte(q.capacite)} = ${qte(r.auDelaDeLaCapacite)}` },
+          { libelle: "Taux d'occupation demandé (%)", attendu: r.occupationVisee, calcul: `${qte(r.journeesVisees)} ÷ ${qte(q.capacite)} × 100 = ${pct(r.occupationVisee)}` },
         ];
       },
       explication: (c) => {

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct, taux2 } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_TABLEAU_DE_BORD, tableauDeBordDuMois, tableauDesDeuxJanviers } from "../../chapitres/tableau-de-bord-du-manager";
 import type { Situation } from "../types";
@@ -18,6 +18,13 @@ import type { Situation } from "../types";
  *
  * Comme son chapitre, le cas se joue dans la simulation du cours (src/config/cours/monde) : ses
  * chiffres sont ceux de `tableauDeBordDuMois`, sur la fiche de la boutique.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux de réalisation et la transformation nécessaire se
+ * donnent à deux décimales (au dixième, avant), la transformation sur le panier au centime ; les trois
+ * effets, au centime, à un centime près (à 50 centimes près, avant). L'effet du trafic se lit sur le
+ * chiffre d'affaires de la caisse de N − 1, comme au chapitre (le corrigé écrivait le chiffre
+ * d'affaires du mois, commandes des comités comprises, qui ne donne pas l'effet attendu).
  */
 
 /** Les bornes du curseur des entrées d'un mois de rattrapage. */
@@ -26,11 +33,7 @@ export const ENTREES_DU_RATTRAPAGE = { min: 3_800, max: 4_800 } as const;
 /** Les mois qui restent au trimestre après janvier. */
 export const MOIS_RESTANTS = 2;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${qte(t)} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const qte = nombreAuCentieme;
 const plafond = (x: number) => Math.ceil(x - 1e-9);
 
 export type Verdict = "le-trafic-doit-revenir" | "la-transformation-suffit";
@@ -42,7 +45,9 @@ export function janvierFaceALObjectif(c: Pick<Cas, "code">) {
   const parMois = auCentime(reste / MOIS_RESTANTS);
   // Un seul panier, celui de la caisse : les commandes des comités (hors caisse) font leur part du mois.
   const parMoisEnCaisse = parMois - x.commandes;
-  const transformationDuRattrapage = auDixieme((parMoisEnCaisse / (x.m.entrees * x.m.panierMoyen)) * 100);
+  // Sur le panier au centime, comme sur la copie : les entrées × 82,18 €.
+  const caisseAuPanier = auCentime(x.m.entrees * x.panierN);
+  const transformationDuRattrapage = taux2(parMoisEnCaisse, caisseAuPanier);
   const entreesDuRattrapage = plafond(parMoisEnCaisse / x.caParEntree);
   // La plus haute transformation connue : celle de janvier N ou de janvier N − 1.
   const meilleureTransformation = Math.max(x.transformationN, x.transformationN1);
@@ -51,12 +56,13 @@ export function janvierFaceALObjectif(c: Pick<Cas, "code">) {
     reste,
     parMois,
     parMoisEnCaisse: auCentime(parMoisEnCaisse),
+    caisseAuPanier,
     transformationDuRattrapage,
     entreesDuRattrapage,
-    hausseDuTraficSurN1: auDixieme((entreesDuRattrapage / x.n1.trafic - 1) * 100),
+    hausseDuTraficSurN1: auCentime((entreesDuRattrapage / x.n1.trafic - 1) * 100),
     verdict: (transformationDuRattrapage > meilleureTransformation + 1 ? "le-trafic-doit-revenir" : "la-transformation-suffit") as Verdict,
     // L'erreur classique : rapporter janvier N à janvier N − 1 au lieu de l'objectif.
-    surN1: auDixieme((x.ca / x.n1.chiffreDAffaires) * 100),
+    surN1: auCentime((x.ca / x.n1.chiffreDAffaires) * 100),
   };
 }
 
@@ -101,13 +107,13 @@ export const LE_TRIMESTRE_FACE_A_L_OBJECTIF: Situation = {
       type: "montants",
       titre: "Janvier face à l'objectif",
       notions: ["dashboard", "revenue"],
-      question: () => "Calculez l'objectif de janvier (au centime), l'écart entre le réalisé et l'objectif, puis le taux de réalisation de l'objectif, en pourcentage, au dixième. Négatif pour un écart défavorable.",
+      question: () => "Calculez l'objectif de janvier (au centime), l'écart entre le réalisé et l'objectif, puis le taux de réalisation de l'objectif, en pourcentage, à deux décimales. Négatif pour un écart défavorable.",
       champs: (c) => {
         const { x } = janvierFaceALObjectif(c);
         return [
           { libelle: "Objectif de janvier", attendu: x.objectif, calcul: `${eur(x.budgetDuTrimestre)} ÷ 3 = ${eur(x.objectif)}` },
           { libelle: "Écart à l'objectif", attendu: x.ecartALObjectif, calcul: `${eur(x.ca)} − ${eur(x.objectif)} = ${eur(x.ecartALObjectif)}` },
-          { libelle: "Taux de réalisation (%)", attendu: x.realisation, tolerance: 0.1, calcul: `${eur(x.ca)} ÷ ${eur(x.objectif)} × 100 = ${pct(x.realisation)}` },
+          { libelle: "Taux de réalisation (%)", attendu: x.realisation, calcul: `${eur(x.ca)} ÷ ${eur(x.objectif)} × 100 = ${pct(x.realisation)}` },
         ];
       },
       explication: (c) => {
@@ -122,20 +128,19 @@ export const LE_TRIMESTRE_FACE_A_L_OBJECTIF: Situation = {
       notions: ["dashboard", "conversion_rate", "average_basket"],
       question: (c) => {
         const { x } = janvierFaceALObjectif(c);
-        return `Sur janvier N − 1, le chiffre d'affaires perd ${eur(-(x.ca - x.n1.chiffreDAffaires))}. Décomposez cet écart en effet du trafic, effet de la transformation, puis effet du panier, dans cet ordre, comme au chapitre. Négatif pour un effet défavorable.`;
+        return `Sur janvier N − 1, le chiffre d'affaires perd ${eur(-(x.ca - x.n1.chiffreDAffaires))}. Décomposez cet écart en effet du trafic (les entrées gagnées ou perdues, au chiffre d'affaires de caisse par entrée de N − 1), effet de la transformation, puis effet du panier, dans cet ordre, comme au chapitre. Négatif pour un effet défavorable.`;
       },
       champs: (c) => {
         const { x } = janvierFaceALObjectif(c);
         const n1 = x.n1;
         return [
-          { libelle: "Effet du trafic", attendu: x.effetDuTrafic, tolerance: 0.5, calcul: `(${qte(x.m.entrees)} − ${qte(n1.trafic)}) × (${eur(n1.chiffreDAffaires)} ÷ ${qte(n1.trafic)}) = ${eur(x.effetDuTrafic)}` },
+          { libelle: "Effet du trafic", attendu: x.effetDuTrafic, calcul: `(${qte(x.m.entrees)} − ${qte(n1.trafic)}) × ${eur(n1.chiffreDAffairesEnCaisse)} ÷ ${qte(n1.trafic)} = ${eur(x.effetDuTrafic)}, le produit avant la division : rien à arrondir en chemin` },
           {
             libelle: "Effet de la transformation",
             attendu: x.effetDeLaTransformation,
-            tolerance: 0.5,
             calcul: `(${qte(x.m.tickets)} − ${qte(x.m.entrees)} × ${qte(n1.tickets)} ÷ ${qte(n1.trafic)}) × ${eur(x.panierN1)} = (${qte(x.m.tickets)} − ${qte(x.passagesAuTauxN1)}) × ${eur(x.panierN1)} = ${eur(x.effetDeLaTransformation)}`,
           },
-          { libelle: "Effet du panier", attendu: x.effetDuPanier, tolerance: 0.5, calcul: `${eur(x.caEnCaisse)} − ${qte(x.m.tickets)} × ${eur(x.panierN1)} = ${eur(x.effetDuPanier)}` },
+          { libelle: "Effet du panier", attendu: x.effetDuPanier, calcul: `${eur(x.caEnCaisse)} − ${qte(x.m.tickets)} × ${eur(x.panierN1)} = ${eur(x.effetDuPanier)}` },
         ];
       },
       explication: (c) => {
@@ -151,7 +156,7 @@ export const LE_TRIMESTRE_FACE_A_L_OBJECTIF: Situation = {
       titre: "Ce que février et mars doivent faire",
       notions: ["dashboard", "conversion_rate"],
       question: () =>
-        "Pour tenir le budget du trimestre, combien de chiffre d'affaires reste-t-il à faire après janvier ? Combien par mois, en février et en mars ? Quel taux de transformation faudrait-il chaque mois pour y arriver aux entrées et au panier de janvier (au dixième) ?",
+        "Pour tenir le budget du trimestre, combien de chiffre d'affaires reste-t-il à faire après janvier ? Combien par mois, en février et en mars ? Quel taux de transformation faudrait-il chaque mois pour y arriver aux entrées et au panier de janvier (à deux décimales) ?",
       champs: (c) => {
         const r = janvierFaceALObjectif(c);
         const x = r.x;
@@ -161,8 +166,7 @@ export const LE_TRIMESTRE_FACE_A_L_OBJECTIF: Situation = {
           {
             libelle: "Taux de transformation nécessaire (%)",
             attendu: r.transformationDuRattrapage,
-            tolerance: 0.1,
-            calcul: `(${eur(r.parMois)} − ${eur(x.commandes)} des commandes des comités) ÷ (${qte(x.m.entrees)} entrées × ${eur(x.panierN)}) × 100 = ${pct(r.transformationDuRattrapage)}`,
+            calcul: `(${eur(r.parMois)} − ${eur(x.commandes)} des commandes des comités) ÷ (${qte(x.m.entrees)} entrées × ${eur(x.panierN)}) × 100 = ${eur(r.parMoisEnCaisse)} ÷ ${eur(r.caisseAuPanier)} × 100 = ${pct(r.transformationDuRattrapage)}`,
           },
         ];
       },

@@ -19,7 +19,6 @@ import { gardesDuBloc1 } from "./gardes-du-bloc-1-mco";
  */
 
 const c = (x: number) => Math.round(x * 100) / 100 + 0;
-const d = (x: number) => Math.round(x * 10) / 10 + 0;
 const ch = ZONE_DE_CHALANDISE;
 
 // La zone, à la main.
@@ -53,8 +52,8 @@ describe("la zone de chalandise, à la boutique du monde du cours", () => {
   });
 
   it("les parts de marché, l'emprise et la part théorique, refaites à la main", () => {
-    expect(attendus(ch, "la-part-de-marche")).toEqual(CA.map((x, i) => d((x / DEP[i]!) * 100)));
-    expect(attendus(ch, "la-part-de-marche")).toEqual([15.9, 6.3, 1.9]);
+    expect(attendus(ch, "la-part-de-marche")).toEqual(CA.map((x, i) => c((x / DEP[i]!) * 100)));
+    expect(attendus(ch, "la-part-de-marche")).toEqual([15.91, 6.26, 1.91]);
     // Les clients : 340 fidèles et 600 passants, selon les parts du relevé.
     expect(attendus(ch, "le-taux-d-emprise")).toEqual([204 + 210, 102 + 180, 34 + 90, c((414 / 28_000) * 100), c((282 / 52_000) * 100)]);
     expect(attendus(ch, "la-part-theorique")).toEqual([15, 10, 2.5, c(0.1 * 444_600 - 27_810), c(0.025 * 607_500 - 11_575.5)]);
@@ -75,7 +74,7 @@ describe("la zone de chalandise, à la boutique du monde du cours", () => {
   });
 
   it("la zone du site et le laboratoire de la zone, refaits à la main", () => {
-    expect(attendus(ch, "la-zone-du-site")).toEqual([d((1_300 / 4_000) * 100), d((48 / 940) * 100)]);
+    expect(attendus(ch, "la-zone-du-site")).toEqual([c((1_300 / 4_000) * 100), c((48 / 940) * 100)]);
     gardeDuLaboratoire(ch, "le-laboratoire-de-la-zone");
     const lab = etape(chapitreDuCas(ch, BOUTIQUE), "le-laboratoire-de-la-zone", "simulation") as EtapeSimulation;
     // La plus petite hausse, au dixième de point, qui atteint 9 270 € dans la zone secondaire : 2,1 points, sous 10 %.
@@ -106,7 +105,7 @@ describe("le cas : un tract pour quelle zone ?", () => {
   });
 
   it("le concurrent, la zone secondaire et l'appoint de la tertiaire, refaits à la main", () => {
-    expect(attendus(s, "la-zone-secondaire")).toEqual([444_600, 6.3]);
+    expect(attendus(s, "la-zone-secondaire")).toEqual([444_600, 6.26]);
     // 300 m² de plus : 120 ÷ 1 500 = 8 % ; 8 % × 444 600 − 27 810 = 7 758 €.
     const potentiel = c(0.08 * 444_600 - 27_810);
     expect(potentiel).toBe(7_758);

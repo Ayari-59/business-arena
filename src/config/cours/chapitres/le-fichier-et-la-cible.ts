@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { canalDe, coutDAcquisition } from "../monde/relation-client";
 import {
@@ -45,6 +45,12 @@ import { ENTREPRISES_DE_LA_VALEUR, POURQUOI_LE_CABINET, ficheDe } from "./valeur
  *   · autonome : le-score-rfm, a-rebours (ni formule ni chiffres donnés, la correction montre le chemin) ;
  *   · expert : rfm-et-abc (le jugement), mieux-qualifier (une variante chiffrée), le-segment-de-hugo ;
  *     puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts se donnent à deux décimales, à un centième près (à 5
+ * centièmes près, avant) ; les contacts, les scores, les devis et les rendez-vous sont des quantités,
+ * les devis arrondis à l'unité au-dessus ; les journées du marché et les comptes attendus, des
+ * grandeurs au centième.
  */
 
 /** Les leviers du laboratoire du ciblage, en pourcentage : le taux de rendez-vous et le taux de signature des devis. */
@@ -62,11 +68,9 @@ export const TAUX_DE_RENDEZ_VOUS_QUALIFIE = 0.2;
 /** Le fichier se lit sur les comptes et les canaux du cabinet du cours, ATLAS CONSEIL. */
 export const ENTREPRISES_DU_FICHIER: readonly string[] = ENTREPRISES_DE_LA_VALEUR;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (x: number, d = 1) => `${(Math.round(x * 100 * 10 ** d) / 10 ** d + 0).toLocaleString("fr-FR", { maximumFractionDigits: d })} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auCentiemeDePct = (x: number) => Math.round(x * 10_000) / 100 + 0;
+const qte = nombreAuCentieme;
+const pct = (t: number) => enPoints(t * 100);
+const auCentiemeDePct = (x: number) => auCentime(x * 100);
 /** « d'ATLAS CONSEIL », « de NOVA » : l'élision devant une voyelle. */
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
@@ -128,7 +132,7 @@ export function tableauDuMarche(x: FichierDuCabinet): TableauDeDonnees {
   return {
     titre: `Le marché ${dE(x.f.entreprise)}, segment par segment`,
     colonnes: ["Entreprises", "Part qui achète", "Journées par acheteur", "Comptes du cabinet"],
-    lignes: x.marche.segments.map((s) => ({ libelle: s.nom, valeurs: [qte(s.entreprises), pct(s.partQuiAchete, 0), qte(s.journeesParAcheteur), qte(s.comptes)] })),
+    lignes: x.marche.segments.map((s) => ({ libelle: s.nom, valeurs: [qte(s.entreprises), pct(s.partQuiAchete), qte(s.journeesParAcheteur), qte(s.comptes)] })),
   };
 }
 
@@ -196,17 +200,17 @@ export const LE_FICHIER_ET_LA_CIBLE: Chapitre = {
         const m = x.moyennes;
         const p = x.petites;
         return [
-          { libelle: "Journées achetées par les PME moyennes et les ETI", attendu: m.journeesDuMarche, calcul: `${qte(m.entreprises)} × ${pct(m.partQuiAchete, 0)} × ${qte(m.journeesParAcheteur)} = ${qte(m.journeesDuMarche)} journées` },
-          { libelle: "Journées achetées par les petites PME", attendu: p.journeesDuMarche, calcul: `${qte(p.entreprises)} × ${pct(p.partQuiAchete, 0)} × ${qte(p.journeesParAcheteur)} = ${qte(p.journeesDuMarche)} journées` },
-          { libelle: "Part de marché chez les PME moyennes (%)", attendu: auCentiemeDePct(m.partDeMarche), tolerance: 0.05, calcul: `${qte(m.journees)} ÷ ${qte(m.journeesDuMarche)} = ${pct(m.partDeMarche, 2)}` },
-          { libelle: "Part de marché chez les petites PME (%)", attendu: auCentiemeDePct(p.partDeMarche), tolerance: 0.05, calcul: `${qte(p.journees)} ÷ ${qte(p.journeesDuMarche)} = ${pct(p.partDeMarche, 2)}` },
+          { libelle: "Journées achetées par les PME moyennes et les ETI", nature: "grandeur", attendu: m.journeesDuMarche, calcul: `${qte(m.entreprises)} × ${pct(m.partQuiAchete)} × ${qte(m.journeesParAcheteur)} = ${qte(m.journeesDuMarche)} journées` },
+          { libelle: "Journées achetées par les petites PME", nature: "grandeur", attendu: p.journeesDuMarche, calcul: `${qte(p.entreprises)} × ${pct(p.partQuiAchete)} × ${qte(p.journeesParAcheteur)} = ${qte(p.journeesDuMarche)} journées` },
+          { libelle: "Part de marché chez les PME moyennes (%)", attendu: auCentiemeDePct(m.partDeMarche), calcul: `${qte(m.journees)} ÷ ${qte(m.journeesDuMarche)} = ${pct(m.partDeMarche)}` },
+          { libelle: "Part de marché chez les petites PME (%)", attendu: auCentiemeDePct(p.partDeMarche), calcul: `${qte(p.journees)} ÷ ${qte(p.journeesDuMarche)} = ${pct(p.partDeMarche)}` },
         ];
       },
       explication: (c) => {
         const x = fichierDuCabinet(c);
         return [
           `Les petites PME sont ${qte(x.petites.entreprises)}, ${qte(x.petites.entreprises / x.moyennes.entreprises)} fois plus que les PME moyennes ; mais elles n'achètent que ${qte(x.petites.journeesDuMarche)} journées, quand les PME moyennes et les ETI en achètent ${qte(x.moyennes.journeesDuMarche)}. Le nombre d'entreprises ne fait pas la taille d'un marché.`,
-          `Le cabinet prend ${pct(x.moyennes.partDeMarche, 2)} du marché des PME moyennes : il lui en reste ${qte(x.moyennes.journeesRestantes)} journées à prendre. Dans le secteur public, il en prend déjà ${pct(x.publics.partDeMarche, 1)}.`,
+          `Le cabinet prend ${pct(x.moyennes.partDeMarche)} du marché des PME moyennes : il lui en reste ${qte(x.moyennes.journeesRestantes)} journées à prendre. Dans le secteur public, il en prend déjà ${pct(x.publics.partDeMarche)}.`,
         ];
       },
     },
@@ -234,7 +238,7 @@ export const LE_FICHIER_ET_LA_CIBLE: Chapitre = {
             retour: `Non : elles sont nombreuses, mais elles n'achètent que ${qte(x.petites.journeesDuMarche)} journées dans l'année. Il n'en reste que ${qte(x.petites.journeesRestantes)} à prendre.`,
           },
           {
-            texte: `Le secteur public, où le cabinet prend déjà ${pct(x.publics.partDeMarche, 1)}`,
+            texte: `Le secteur public, où le cabinet prend déjà ${pct(x.publics.partDeMarche)}`,
             juste: false,
             retour: `Non : une forte part de marché dit que le cabinet y est déjà bien placé, pas qu'il y reste le plus à prendre (${qte(x.publics.journeesRestantes)} journées). Et le public achète sur appel d'offres, au prix le plus bas.`,
           },
@@ -249,7 +253,7 @@ export const LE_FICHIER_ET_LA_CIBLE: Chapitre = {
       notions: ["customer_lifetime_value", "customer_acquisition_cost", "segmentation"],
       question: (c) => {
         const x = fichierDuCabinet(c);
-        return `Un compte neuf, comme un petit compte, a ${pct(x.valeurNeuveMoyenne.attrition, 0)} de risque de partir chaque année. Calculez la marge moyenne d'une petite PME du portefeuille (${qte(x.valeurPetite.comptes)} comptes), puis sa valeur vie (marge ÷ attrition). Faites de même pour les ${qte(x.valeurNeuveMoyenne.comptes)} PME moyennes gagnées en N.`;
+        return `Un compte neuf, comme un petit compte, a ${pct(x.valeurNeuveMoyenne.attrition)} de risque de partir chaque année. Calculez la marge moyenne d'une petite PME du portefeuille (${qte(x.valeurPetite.comptes)} comptes), puis sa valeur vie (marge ÷ attrition). Faites de même pour les ${qte(x.valeurNeuveMoyenne.comptes)} PME moyennes gagnées en N.`;
       },
       champs: (c) => {
         const x = fichierDuCabinet(c);
@@ -257,9 +261,9 @@ export const LE_FICHIER_ET_LA_CIBLE: Chapitre = {
         const m = x.valeurNeuveMoyenne;
         return [
           { libelle: "Marge moyenne d'une petite PME", attendu: p.marge, calcul: `${eur(x.petites.marge)} ÷ ${qte(p.comptes)} = ${eur(p.marge)}` },
-          { libelle: "Valeur vie d'une petite PME", attendu: p.valeurVie, tolerance: 1, calcul: `${eur(p.marge)} ÷ ${pct(p.attrition, 0)} = ${eur(p.valeurVie)}` },
+          { libelle: "Valeur vie d'une petite PME", attendu: p.valeurVie, calcul: `${eur(p.marge)} ÷ ${pct(p.attrition)} = ${eur(p.valeurVie)}` },
           { libelle: "Marge moyenne d'une PME moyenne gagnée en N", attendu: m.marge, calcul: `(${x.neufsMoyens.map((k) => eur(k.marge)).join(" + ")}) ÷ ${qte(m.comptes)} = ${eur(m.marge)}` },
-          { libelle: "Valeur vie d'une PME moyenne gagnée en N", attendu: m.valeurVie, tolerance: 1, calcul: `${eur(m.marge)} ÷ ${pct(m.attrition, 0)} = ${eur(m.valeurVie)}` },
+          { libelle: "Valeur vie d'une PME moyenne gagnée en N", attendu: m.valeurVie, calcul: `${eur(m.marge)} ÷ ${pct(m.attrition)} = ${eur(m.valeurVie)}` },
         ];
       },
       explication: (c) => {
@@ -345,18 +349,18 @@ export const LE_FICHIER_ET_LA_CIBLE: Chapitre = {
         const q = x.q;
         const k = FICHIER_DE_PROSPECTION;
         return [
-          { libelle: "Contacts uniques", attendu: q.uniques, calcul: `${qte(q.lignes)} − ${qte(k.doublons)} = ${qte(q.uniques)}` },
-          { libelle: "Taux de complétude (%)", attendu: auCentiemeDePct(q.tauxDeCompletude), tolerance: 0.05, calcul: `(${qte(q.uniques)} − ${qte(k.incomplets)}) ÷ ${qte(q.uniques)} = ${qte(q.complets)} ÷ ${qte(q.uniques)} = ${pct(q.tauxDeCompletude, 2)}` },
-          { libelle: "Contacts qualifiés", attendu: q.qualifies, calcul: `${qte(q.complets)} − ${qte(k.horsCible)} = ${qte(q.qualifies)}` },
-          { libelle: "Contacts utilisables", attendu: q.utilisables, calcul: `${qte(q.qualifies)} − ${qte(k.opposes)} − ${qte(k.sansNouvellesDepuisTroisAns)} = ${qte(q.utilisables)}` },
-          { libelle: "Part utilisable du fichier (%)", attendu: auCentiemeDePct(q.partUtilisable), tolerance: 0.05, calcul: `${qte(q.utilisables)} ÷ ${qte(q.lignes)} = ${pct(q.partUtilisable, 2)}` },
+          { libelle: "Contacts uniques", nature: "quantite", attendu: q.uniques, calcul: `${qte(q.lignes)} − ${qte(k.doublons)} = ${qte(q.uniques)}` },
+          { libelle: "Taux de complétude (%)", attendu: auCentiemeDePct(q.tauxDeCompletude), calcul: `(${qte(q.uniques)} − ${qte(k.incomplets)}) ÷ ${qte(q.uniques)} = ${qte(q.complets)} ÷ ${qte(q.uniques)} = ${pct(q.tauxDeCompletude)}` },
+          { libelle: "Contacts qualifiés", nature: "quantite", attendu: q.qualifies, calcul: `${qte(q.complets)} − ${qte(k.horsCible)} = ${qte(q.qualifies)}` },
+          { libelle: "Contacts utilisables", nature: "quantite", attendu: q.utilisables, calcul: `${qte(q.qualifies)} − ${qte(k.opposes)} − ${qte(k.sansNouvellesDepuisTroisAns)} = ${qte(q.utilisables)}` },
+          { libelle: "Part utilisable du fichier (%)", attendu: auCentiemeDePct(q.partUtilisable), calcul: `${qte(q.utilisables)} ÷ ${qte(q.lignes)} = ${pct(q.partUtilisable)}` },
         ];
       },
       explication: (c) => {
         const x = fichierDuCabinet(c);
         const k = FICHIER_DE_PROSPECTION.utilisablesParSegment;
         return [
-          `${pct(x.q.partUtilisable, 0)} du fichier servent. Rangés par segment, les ${qte(x.q.utilisables)} contacts utilisables font ${qte(k["petites-pme"])} petites PME, ${qte(k["pme-moyennes"])} PME moyennes et ETI, ${qte(k["grands-comptes"])} grandes entreprises et ${qte(k.public)} organismes publics.`,
+          `${pct(x.q.partUtilisable)} du fichier servent. Rangés par segment, les ${qte(x.q.utilisables)} contacts utilisables font ${qte(k["petites-pme"])} petites PME, ${qte(k["pme-moyennes"])} PME moyennes et ETI, ${qte(k["grands-comptes"])} grandes entreprises et ${qte(k.public)} organismes publics.`,
           "Le segment le plus fourni du fichier est celui qui vaut le moins : un fichier se remplit de ceux qui répondent le plus, pas de ceux qui achètent le plus.",
         ];
       },
@@ -374,10 +378,10 @@ export const LE_FICHIER_ET_LA_CIBLE: Chapitre = {
         const x = fichierDuCabinet(c);
         const d = (code: string) => {
           const k = x.rfm.de(code);
-          return { libelle: `Score RFM, ${k.nom}`, attendu: k.score, calcul: `${qte(k.recence)} mois : ${qte(k.r)} ; ${qte(k.commandes)} ${k.commandes > 1 ? "commandes" : "commande"} : ${qte(k.f)} ; ${eur(k.chiffreDAffaires)} : ${qte(k.m)} ; ${qte(k.r)} + ${qte(k.f)} + ${qte(k.m)} = ${qte(k.score)}` };
+          return { libelle: `Score RFM, ${k.nom}`, nature: "quantite" as const, attendu: k.score, calcul: `${qte(k.recence)} mois : ${qte(k.r)} ; ${qte(k.commandes)} ${k.commandes > 1 ? "commandes" : "commande"} : ${qte(k.f)} ; ${eur(k.chiffreDAffaires)} : ${qte(k.m)} ; ${qte(k.r)} + ${qte(k.f)} + ${qte(k.m)} = ${qte(k.score)}` };
         };
         const fideles = x.rfm.groupes.find((g) => g.code === "fideles")!.comptes;
-        return [d("ferrand"), d("lumen"), d("garance"), { libelle: "Clients fidèles (score de 8 ou 9)", attendu: fideles.length, calcul: `${fideles.map((k) => k.nom).join(", ")} : ${qte(fideles.length)} comptes` }];
+        return [d("ferrand"), d("lumen"), d("garance"), { libelle: "Clients fidèles (score de 8 ou 9)", nature: "quantite", attendu: fideles.length, calcul: `${fideles.map((k) => k.nom).join(", ")} : ${qte(fideles.length)} comptes` }];
       },
       explication: (c) => {
         const x = fichierDuCabinet(c);
@@ -406,7 +410,7 @@ export const LE_FICHIER_ET_LA_CIBLE: Chapitre = {
           {
             texte: "La relancer vite : un compte neuf qui ne recommande pas part",
             juste: true,
-            retour: `Oui : gagnée en N par un salon, elle n'a commandé qu'une mission, il y a ${qte(l.recence)} mois. Son risque de départ est de ${pct(l.attrition, 0)} ; la relancer coûte un appel, la regagner coûterait ${eur(x.cac)}.`,
+            retour: `Oui : gagnée en N par un salon, elle n'a commandé qu'une mission, il y a ${qte(l.recence)} mois. Son risque de départ est de ${pct(l.attrition)} ; la relancer coûte un appel, la regagner coûterait ${eur(x.cac)}.`,
           },
           {
             texte: "Rien de plus : un compte de classe C se suit à distance, une fois par an",
@@ -414,7 +418,7 @@ export const LE_FICHIER_ET_LA_CIBLE: Chapitre = {
             retour: `Non : la classe dit ce qu'elle a acheté, pas ce qu'elle achètera. Son score RFM la met parmi les comptes à réveiller : c'est maintenant qu'elle se garde ou se perd.`,
           },
           {
-            texte: `L'abandonner : elle ne pèse que ${pct(l.chiffreDAffaires / x.f.comptes.reduce((t, k) => t + k.chiffreDAffaires, 0), 1)} des ventes`,
+            texte: `L'abandonner : elle ne pèse que ${pct(l.chiffreDAffaires / x.f.comptes.reduce((t, k) => t + k.chiffreDAffaires, 0))} des ventes`,
             juste: false,
             retour: `Non : un compte neuf a coûté ${eur(x.cac)} à gagner, et il ne laisse sa valeur vie que s'il revient. Le poids de sa première année ne dit pas ce qu'il vaudra.`,
           },
@@ -429,7 +433,7 @@ export const LE_FICHIER_ET_LA_CIBLE: Chapitre = {
       notions: ["conversion_rate", "segmentation"],
       question: (c) => {
         const x = fichierDuCabinet(c);
-        return `Avant de calculer, pariez. Aux taux de N chez les PME moyennes (${pct(x.t.tauxDeRendezVous, 0)} de rendez-vous, ${pct(x.t.devisParRendezVous, 0)} de devis par rendez-vous, ${pct(x.t.tauxDeSignature, 0)} de devis signés), combien de contacts ${x.hugo} doit-il appeler pour gagner ${qte(x.objectif)} comptes ?`;
+        return `Avant de calculer, pariez. Aux taux de N chez les PME moyennes (${pct(x.t.tauxDeRendezVous)} de rendez-vous, ${pct(x.t.devisParRendezVous)} de devis par rendez-vous, ${pct(x.t.tauxDeSignature)} de devis signés), combien de contacts ${x.hugo} doit-il appeler pour gagner ${qte(x.objectif)} comptes ?`;
       },
       options: (c) => {
         const x = fichierDuCabinet(c);
@@ -517,10 +521,10 @@ export const LE_FICHIER_ET_LA_CIBLE: Chapitre = {
         const x = fichierDuCabinet(c);
         const r = x.rebours;
         return [
-          { libelle: "Devis à remettre", attendu: r.devis, calcul: `${qte(r.comptes)} ÷ ${pct(r.tauxDeSignature, 0)} = ${qte(auCentime(r.comptes / r.tauxDeSignature))}, soit ${qte(r.devis)} devis` },
-          { libelle: "Rendez-vous à obtenir", attendu: r.rendezVous, calcul: `${qte(r.devis)} ÷ ${pct(r.devisParRendezVous, 0)} = ${qte(r.rendezVous)} rendez-vous` },
-          { libelle: "Contacts à appeler", attendu: r.contacts, calcul: `${qte(r.rendezVous)} ÷ ${pct(r.tauxDeRendezVous, 0)} = ${qte(r.contacts)} contacts` },
-          { libelle: "Contacts qui manquent au fichier", attendu: r.manquants, calcul: `${qte(r.contacts)} − ${qte(r.utilisables)} = ${qte(r.manquants)}` },
+          { libelle: "Devis à remettre", nature: "quantite", attendu: r.devis, calcul: `${qte(r.comptes)} ÷ ${pct(r.tauxDeSignature)} = ${qte(auCentime(r.comptes / r.tauxDeSignature))}, soit ${qte(r.devis)} devis à l'unité au-dessus` },
+          { libelle: "Rendez-vous à obtenir", nature: "quantite", attendu: r.rendezVous, calcul: `${qte(r.devis)} ÷ ${pct(r.devisParRendezVous)} = ${qte(r.rendezVous)} rendez-vous` },
+          { libelle: "Contacts à appeler", nature: "quantite", attendu: r.contacts, calcul: `${qte(r.rendezVous)} ÷ ${pct(r.tauxDeRendezVous)} = ${qte(r.contacts)} contacts` },
+          { libelle: "Contacts qui manquent au fichier", nature: "quantite", attendu: r.manquants, calcul: `${qte(r.contacts)} − ${qte(r.utilisables)} = ${qte(r.manquants)}` },
         ];
       },
       explication: (c) => {
@@ -545,12 +549,12 @@ export const LE_FICHIER_ET_LA_CIBLE: Chapitre = {
         const x = fichierDuCabinet(c);
         const t = x.t;
         return [
-          { libelle: "Contacts à appeler, fichier qualifié", attendu: x.qualifie.contacts, calcul: `${qte(x.qualifie.rendezVous)} rendez-vous ÷ ${pct(TAUX_DE_RENDEZ_VOUS_QUALIFIE, 0)} = ${qte(x.qualifie.contacts)} contacts` },
+          { libelle: "Contacts à appeler, fichier qualifié", nature: "quantite", attendu: x.qualifie.contacts, calcul: `${qte(x.qualifie.rendezVous)} rendez-vous ÷ ${pct(TAUX_DE_RENDEZ_VOUS_QUALIFIE)} = ${qte(x.qualifie.contacts)} contacts` },
           {
             libelle: "Comptes attendus des contacts du fichier",
+            nature: "grandeur",
             attendu: x.comptesAvecLeFichierQualifie,
-            tolerance: 0.05,
-            calcul: `${qte(x.utilisables)} × ${pct(TAUX_DE_RENDEZ_VOUS_QUALIFIE, 0)} × ${pct(t.devisParRendezVous, 0)} × ${pct(t.tauxDeSignature, 0)} = ${qte(x.comptesAvecLeFichierQualifie)} comptes`,
+            calcul: `${qte(x.utilisables)} × ${pct(TAUX_DE_RENDEZ_VOUS_QUALIFIE)} × ${pct(t.devisParRendezVous)} × ${pct(t.tauxDeSignature)} = ${qte(x.comptesAvecLeFichierQualifie)} comptes`,
           },
         ];
       },
@@ -608,14 +612,14 @@ export const LE_FICHIER_ET_LA_CIBLE: Chapitre = {
         return {
           titre: "Les segments, du marché au fichier",
           colonnes: ["Journées du marché", "Part du cabinet", "Contacts du fichier"],
-          lignes: x.marche.segments.map((s) => ({ libelle: s.nom, valeurs: [qte(s.journeesDuMarche), pct(s.partDeMarche, 1), qte(FICHIER_DE_PROSPECTION.utilisablesParSegment[s.code])] })),
+          lignes: x.marche.segments.map((s) => ({ libelle: s.nom, valeurs: [qte(s.journeesDuMarche), pct(s.partDeMarche), qte(FICHIER_DE_PROSPECTION.utilisablesParSegment[s.code])] })),
         };
       },
       texte: (c) => {
         const x = fichierDuCabinet(c);
         return [
           `Un segment se mesure par ce qu'il achète, pas par le nombre de ses entreprises. Chez ${x.f.entreprise}, les PME moyennes et les ETI achètent ${qte(x.moyennes.journeesDuMarche)} journées, et un compte neuf y vaut ${eur(x.valeurNeuveMoyenne.valeurVie)} : c'est la cible de la conquête.`,
-          `Un fichier se qualifie avant de servir : ${pct(x.q.partUtilisable, 0)} des lignes restent une fois retirés les doublons, les incomplets, les contacts hors cible et ce que le RGPD fait supprimer. Le score RFM lit les clients par la récence, la fréquence et le montant : il repère les comptes à réveiller que la méthode ABC laisse en classe C.`,
+          `Un fichier se qualifie avant de servir : ${pct(x.q.partUtilisable)} des lignes restent une fois retirés les doublons, les incomplets, les contacts hors cible et ce que le RGPD fait supprimer. Le score RFM lit les clients par la récence, la fréquence et le montant : il repère les comptes à réveiller que la méthode ABC laisse en classe C.`,
           "Au niveau de l'examen, vous savez mesurer un marché par segment, choisir une cible sur la valeur de ses comptes, qualifier un fichier, calculer un score RFM, et remonter l'entonnoir pour trouver les contacts qu'il faut.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
         ];

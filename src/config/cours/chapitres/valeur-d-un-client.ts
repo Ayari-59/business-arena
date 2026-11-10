@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { CABINETS_DU_COURS, type FicheDuCabinet } from "../monde/atlas-conseil";
 import {
@@ -50,6 +50,12 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *   · expert : recruter-ou-fideliser (une variante chiffrée, face à la capacité), la-capacite (le
  *     jugement), la-valeur-actualisee (année par année, puis la somme), a-rebours (l'attrition la plus
  *     haute qui tient l'objectif de la direction, actualisée et simple) ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les taux d'attrition et de fidélisation se donnent à deux
+ * décimales (au dixième, avant) ; la durée de vie, les rapports à la valeur, les portefeuilles
+ * d'équilibre et les journées qu'ils demandent sont des grandeurs au centième, les journées sur le
+ * portefeuille arrondi (à six journées près, avant).
  */
 
 /**
@@ -93,11 +99,9 @@ export const ENTREPRISES_DE_LA_VALEUR: readonly string[] = ["conseil"];
 export const POURQUOI_LE_CABINET =
   "ce chapitre suit les comptes d'un cabinet qui vend ses journées à des entreprises : il se joue chez ATLAS CONSEIL, dont la simulation du cours fige le portefeuille, les canaux de conquête et les consultants, les mêmes d'un chapitre à l'autre du parcours.";
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-/** Une part (0,25) écrite en pourcentage (25 %), au dixième par défaut. */
-const pct = (x: number, d = 1) => `${(Math.round(x * 100 * 10 ** d) / 10 ** d + 0).toLocaleString("fr-FR", { maximumFractionDigits: d })} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
+/** Une part (0,25) écrite en pourcentage (25 %), à deux décimales par défaut. */
+const pct = (t: number) => enPoints(t * 100);
 /** « d'ATLAS CONSEIL », « de NOVA » : l'élision devant une voyelle. */
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 const ANNEES = ["N-2", "N-1", "N"] as const;
@@ -177,8 +181,9 @@ export function valeurDesComptes(c: Pick<Cas, "code">) {
     attritionReduite,
     equilibreEnRecrutant: auCentime(equilibreEnRecrutant),
     equilibreEnFidelisant: auCentime(equilibreEnFidelisant),
-    journeesEnFidelisant: auCentime(equilibreEnFidelisant * journeesParCompte),
-    journeesEnRecrutant: auCentime(equilibreEnRecrutant * journeesParCompte),
+    // Sur le portefeuille arrondi au centième, comme sur la copie.
+    journeesEnFidelisant: auCentime(auCentime(equilibreEnFidelisant) * journeesParCompte),
+    journeesEnRecrutant: auCentime(auCentime(equilibreEnRecrutant) * journeesParCompte),
     annee,
     valeurVisee,
     attritionMaxActualisee,
@@ -288,18 +293,17 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
       question: (c) => {
         const x = valeurDesComptes(c);
         const [a2, a1, an] = x.annees;
-        return `Calculez le taux d'attrition de chaque année, au dixième : ${qte(a2!.perdus)} comptes perdus sur ${qte(a2!.auPremierJanvier)} en N − 2, ${qte(a1!.perdus)} sur ${qte(a1!.auPremierJanvier)} en N − 1, ${qte(an!.perdus)} sur ${qte(an!.auPremierJanvier)} en N. Puis le taux de fidélisation de N.`;
+        return `Calculez le taux d'attrition de chaque année, à deux décimales : ${qte(a2!.perdus)} comptes perdus sur ${qte(a2!.auPremierJanvier)} en N − 2, ${qte(a1!.perdus)} sur ${qte(a1!.auPremierJanvier)} en N − 1, ${qte(an!.perdus)} sur ${qte(an!.auPremierJanvier)} en N. Puis le taux de fidélisation de N.`;
       },
       champs: (c) => {
         const x = valeurDesComptes(c);
         return [
           ...x.annees.map((p) => ({
             libelle: `Taux d'attrition de ${anneeDite(p.annee)} (%)`,
-            attendu: Math.round(p.attrition * 1_000) / 10,
+            attendu: auCentime(p.attrition * 100),
             calcul: `${qte(p.perdus)} ÷ ${qte(p.auPremierJanvier)} × 100 = ${pct(p.attrition)}`,
-            tolerance: 0.1,
           })),
-          { libelle: "Taux de fidélisation de N (%)", attendu: auCentime(x.n.fidelisation * 100), calcul: `100 % − ${pct(x.n.attrition)} = ${pct(x.n.fidelisation)}`, tolerance: 0.1 },
+          { libelle: "Taux de fidélisation de N (%)", attendu: auCentime(100 - auCentime(x.n.attrition * 100)), calcul: `100 % − ${pct(x.n.attrition)} = ${pct(1 - auCentime(x.n.attrition * 100) / 100)}` },
         ];
       },
       explication: (c) => {
@@ -352,7 +356,7 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
       champs: (c) => {
         const x = valeurDesComptes(c);
         return [
-          { libelle: "Durée de vie moyenne (années)", attendu: x.dureeDeVie, calcul: `1 ÷ ${pct(x.n.attrition)} = ${qte(x.dureeDeVie)} ans`, tolerance: 0.1 },
+          { libelle: "Durée de vie moyenne (années)", nature: "grandeur", attendu: x.dureeDeVie, calcul: `1 ÷ ${pct(x.n.attrition)} = ${qte(x.dureeDeVie)} ans` },
           { libelle: "Valeur vie client", attendu: x.simple, calcul: `${eur(x.m.marge)} ÷ ${pct(x.n.attrition)} = ${eur(x.m.marge)} × ${qte(x.dureeDeVie)} = ${eur(x.simple)}` },
         ];
       },
@@ -413,14 +417,14 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
       },
       question: (c) => {
         const x = valeurDesComptes(c);
-        return `Pour gagner ses ${qte(x.n.nouveaux)} comptes neufs, le cabinet a payé ${qte(x.f.canaux.length)} canaux de conquête, temps des commerciaux compris. Calculez ce qu'ils ont coûté ensemble, le coût d'acquisition d'un compte (coût des canaux ÷ comptes gagnés), puis le rapport valeur vie client ÷ coût d'acquisition, au dixième.`;
+        return `Pour gagner ses ${qte(x.n.nouveaux)} comptes neufs, le cabinet a payé ${qte(x.f.canaux.length)} canaux de conquête, temps des commerciaux compris. Calculez ce qu'ils ont coûté ensemble, le coût d'acquisition d'un compte (coût des canaux ÷ comptes gagnés), puis le rapport valeur vie client ÷ coût d'acquisition, à deux décimales.`;
       },
       champs: (c) => {
         const x = valeurDesComptes(c);
         return [
           { libelle: "Coût des canaux de conquête", attendu: x.acq.cout, calcul: `${x.f.canaux.map((k) => eur(k.cout)).join(" + ")} = ${eur(x.acq.cout)}` },
           { libelle: "Coût d'acquisition d'un compte", attendu: x.acq.cac, calcul: `${eur(x.acq.cout)} ÷ ${qte(x.acq.comptes)} = ${eur(x.acq.cac)}` },
-          { libelle: "Valeur vie ÷ coût d'acquisition", attendu: x.rapportSimple, calcul: `${eur(x.simple)} ÷ ${eur(x.acq.cac)} = ${qte(x.rapportSimple)}`, tolerance: 0.05 },
+          { libelle: "Valeur vie ÷ coût d'acquisition", nature: "grandeur", attendu: x.rapportSimple, calcul: `${eur(x.simple)} ÷ ${eur(x.acq.cac)} = ${qte(x.rapportSimple)}` },
         ];
       },
       explication: (c) => {
@@ -506,9 +510,9 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
       champs: (c) => {
         const x = valeurDesComptes(c);
         return [
-          { libelle: "Portefeuille d'équilibre au rythme de N", attendu: x.equilibre, calcul: `${qte(x.n.nouveaux)} ÷ ${pct(x.n.attrition)} = ${qte(x.equilibre)} comptes`, tolerance: 0.1 },
-          { libelle: "Portefeuille d'équilibre au rythme de N − 2", attendu: x.equilibreN2, calcul: `${qte(x.n.nouveaux)} ÷ (${qte(x.n2.perdus)} ÷ ${qte(x.n2.auPremierJanvier)}) = ${qte(x.equilibreN2)} comptes`, tolerance: 0.1 },
-          { libelle: "Comptes d'équilibre perdus", attendu: x.comptesPerdusALEquilibre, calcul: `${qte(x.equilibreN2)} − ${qte(x.equilibre)} = ${qte(x.comptesPerdusALEquilibre)} comptes`, tolerance: 0.1 },
+          { libelle: "Portefeuille d'équilibre au rythme de N", nature: "grandeur", attendu: x.equilibre, calcul: `${qte(x.n.nouveaux)} ÷ ${pct(x.n.attrition)} = ${qte(x.equilibre)} comptes` },
+          { libelle: "Portefeuille d'équilibre au rythme de N − 2", nature: "grandeur", attendu: x.equilibreN2, calcul: `${qte(x.n.nouveaux)} × ${qte(x.n2.auPremierJanvier)} ÷ ${qte(x.n2.perdus)} = ${qte(x.equilibreN2)} comptes (${qte(x.n.nouveaux)} ÷ l'attrition de N − 2, ${qte(x.n2.perdus)} ÷ ${qte(x.n2.auPremierJanvier)})` },
+          { libelle: "Comptes d'équilibre perdus", nature: "grandeur", attendu: x.comptesPerdusALEquilibre, calcul: `${qte(x.equilibreN2)} − ${qte(x.equilibre)} = ${qte(x.comptesPerdusALEquilibre)} comptes` },
         ];
       },
       explication: (c) => {
@@ -526,7 +530,7 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
       titre: "Pariez : recruter ou fidéliser",
       notions: ["churn_rate", "customer_portfolio"],
       question: () =>
-        `Avant de calculer, pariez. À effort égal, le cabinet peut recruter ${pct(EFFORT_DE_FIDELISATION, 0)} de comptes de plus chaque année, ou perdre ${pct(EFFORT_DE_FIDELISATION, 0)} de comptes de moins. Lequel grossit le plus le portefeuille d'équilibre ?`,
+        `Avant de calculer, pariez. À effort égal, le cabinet peut recruter ${pct(EFFORT_DE_FIDELISATION)} de comptes de plus chaque année, ou perdre ${pct(EFFORT_DE_FIDELISATION)} de comptes de moins. Lequel grossit le plus le portefeuille d'équilibre ?`,
       options: () => {
         const voir = "Cherchez au curseur suivant l'attrition qui remplit les consultants : elle départage les deux.";
         return [
@@ -577,7 +581,7 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
         const x = valeurDesComptes(c);
         return [
           `Avec ${qte(x.n.nouveaux)} recrues, un portefeuille de ${qte(x.comptesALaCapacite)} comptes ne tient que sous ${qte(x.attritionALaCapacite)} % d'attrition : ${qte(x.n.nouveaux)} ÷ ${qte(x.comptesALaCapacite)}. Le cabinet en est à ${pct(x.n.attrition)}.`,
-          `Perdre ${pct(EFFORT_DE_FIDELISATION, 0)} de comptes de moins mène l'attrition à ${pct(x.attritionReduite, 2)}, sous ces ${qte(x.attritionALaCapacite)} % : le portefeuille irait au-delà de ce que les consultants peuvent servir. Recruter ${pct(EFFORT_DE_FIDELISATION, 0)} de plus mène à ${qte(x.recruesEnPlus)} recrues pour ${pct(x.n.attrition)} d'attrition, soit ${qte(x.equilibreEnRecrutant)} comptes, la capacité pile. L'étape suivante le chiffre.`,
+          `Perdre ${pct(EFFORT_DE_FIDELISATION)} de comptes de moins mène l'attrition à ${pct(x.attritionReduite)}, sous ces ${qte(x.attritionALaCapacite)} % : le portefeuille irait au-delà de ce que les consultants peuvent servir. Recruter ${pct(EFFORT_DE_FIDELISATION)} de plus mène à ${qte(x.recruesEnPlus)} recrues pour ${pct(x.n.attrition)} d'attrition, soit ${qte(x.equilibreEnRecrutant)} comptes, la capacité pile. L'étape suivante le chiffre.`,
         ];
       },
     },
@@ -589,25 +593,25 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
       notions: ["churn_rate", "customer_portfolio", "capacity"],
       question: (c) => {
         const x = valeurDesComptes(c);
-        return `Le cabinet hésite : ${qte(x.recruesEnPlus)} recrues par an à ${pct(x.n.attrition)} d'attrition, ou ${qte(x.n.nouveaux)} recrues à ${pct(x.attritionReduite, 2)}. Calculez le portefeuille d'équilibre de chacun, puis les journées que demanderait le plus grand des deux.`;
+        return `Le cabinet hésite : ${qte(x.recruesEnPlus)} recrues par an à ${pct(x.n.attrition)} d'attrition, ou ${qte(x.n.nouveaux)} recrues à ${pct(x.attritionReduite)}. Calculez le portefeuille d'équilibre de chacun, puis les journées que demanderait le plus grand des deux.`;
       },
       champs: (c) => {
         const x = valeurDesComptes(c);
         return [
-          { libelle: "Portefeuille d'équilibre en recrutant", attendu: x.equilibreEnRecrutant, calcul: `${qte(x.recruesEnPlus)} ÷ ${pct(x.n.attrition)} = ${qte(x.equilibreEnRecrutant)} comptes`, tolerance: 0.1 },
-          { libelle: "Portefeuille d'équilibre en fidélisant", attendu: x.equilibreEnFidelisant, calcul: `${qte(x.n.nouveaux)} ÷ ${pct(x.attritionReduite, 2)} = ${qte(x.equilibreEnFidelisant)} comptes`, tolerance: 0.1 },
+          { libelle: "Portefeuille d'équilibre en recrutant", nature: "grandeur", attendu: x.equilibreEnRecrutant, calcul: `${qte(x.recruesEnPlus)} ÷ ${pct(x.n.attrition)} = ${qte(x.equilibreEnRecrutant)} comptes` },
+          { libelle: "Portefeuille d'équilibre en fidélisant", nature: "grandeur", attendu: x.equilibreEnFidelisant, calcul: `${qte(x.n.nouveaux)} ÷ ${pct(x.attritionReduite)} = ${qte(x.equilibreEnFidelisant)} comptes` },
           {
             libelle: "Journées demandées par le plus grand portefeuille",
+            nature: "grandeur",
             attendu: x.journeesEnFidelisant,
-            calcul: `${qte(x.equilibreEnFidelisant)} × ${qte(x.journeesParCompte)} = ${qte(x.journeesEnFidelisant)} journées, pour ${qte(x.capacite)} de capacité`,
-            tolerance: 6,
+            calcul: `${qte(x.equilibreEnFidelisant)} × ${qte(x.journeesParCompte)} = ${qte(x.journeesEnFidelisant)} journées (pour ${qte(x.capacite)} de capacité)`,
           },
         ];
       },
       explication: (c) => {
         const x = valeurDesComptes(c);
         return [
-          `Recruter ${pct(EFFORT_DE_FIDELISATION, 0)} de plus multiplie le portefeuille d'équilibre par ${qte(1 + EFFORT_DE_FIDELISATION)} ; perdre ${pct(EFFORT_DE_FIDELISATION, 0)} de moins le multiplie par 1 ÷ ${qte(1 - EFFORT_DE_FIDELISATION)}, soit ${pct(1 / (1 - EFFORT_DE_FIDELISATION) - 1)} de plus. Le portefeuille d'équilibre est un quotient : une baisse du dénominateur pèse plus qu'une hausse égale du numérateur.`,
+          `Recruter ${pct(EFFORT_DE_FIDELISATION)} de plus multiplie le portefeuille d'équilibre par ${qte(1 + EFFORT_DE_FIDELISATION)} ; perdre ${pct(EFFORT_DE_FIDELISATION)} de moins le multiplie par 1 ÷ ${qte(1 - EFFORT_DE_FIDELISATION)}, soit ${pct(1 / (1 - EFFORT_DE_FIDELISATION) - 1)} de plus. Le portefeuille d'équilibre est un quotient : une baisse du dénominateur pèse plus qu'une hausse égale du numérateur.`,
           `Mais ${qte(x.equilibreEnFidelisant)} comptes demandent ${qte(x.journeesEnFidelisant)} journées, ${qte(auCentime(x.journeesEnFidelisant - x.capacite))} de plus que les ${qte(x.capacite)} que les consultants peuvent faire.`,
         ];
       },
@@ -636,7 +640,7 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
             retour: `Non : ${qte(x.equilibreEnFidelisant)} comptes à ${qte(x.journeesParCompte)} journées en demandent ${qte(x.journeesEnFidelisant)}, plus que les ${qte(x.capacite)} des ${qte(x.f.consultants.nombre)} consultants.`,
           },
           {
-            texte: `Recruter : il grossit le portefeuille de ${pct(EFFORT_DE_FIDELISATION, 0)}, l'autre moins`,
+            texte: `Recruter : il grossit le portefeuille de ${pct(EFFORT_DE_FIDELISATION)}, l'autre moins`,
             juste: false,
             retour: `Non : recruter mène à ${qte(x.equilibreEnRecrutant)} comptes, fidéliser à ${qte(x.equilibreEnFidelisant)}. Le portefeuille d'équilibre divise les recrues par l'attrition : la baisser pèse plus.`,
           },
@@ -765,7 +769,7 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
           titre: "Un compte de N, année par année",
           colonnes: x.annee.map((y) => `Année ${y.annee}`),
           lignes: [
-            { libelle: "Chance d'être encore client", valeurs: x.annee.map((y) => pct(y.encoreClient, 2)) },
+            { libelle: "Chance d'être encore client", valeurs: x.annee.map((y) => pct(y.encoreClient)) },
             { libelle: "Facteur d'actualisation", valeurs: x.annee.map((y) => (Math.round(10_000 / Math.pow(1 + x.taux, y.annee)) / 10_000).toLocaleString("fr-FR", { minimumFractionDigits: 4 })) },
           ],
         };
@@ -779,9 +783,9 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
         const deux = x.annee[1]!;
         return [
           { libelle: "Marge attendue de la deuxième année", attendu: deux.attendue, calcul: `${eur(x.m.marge)} × ${pct(x.n.fidelisation)} = ${eur(deux.attendue)}` },
-          { libelle: "Valeur actuelle de la deuxième année", attendu: deux.actualisee, calcul: `${eur(deux.attendue)} ÷ 1,1² = ${eur(deux.actualisee)}`, tolerance: 1 },
+          { libelle: "Valeur actuelle de la deuxième année", attendu: deux.actualisee, calcul: `${eur(deux.attendue)} ÷ 1,1² = ${eur(deux.actualisee)}` },
           { libelle: "Valeur vie actualisée", attendu: x.actualisee, calcul: `${eur(x.m.marge)} ÷ (${pct(x.n.attrition)} + ${pct(x.taux)}) = ${eur(x.actualisee)}` },
-          { libelle: "Valeur vie actualisée ÷ coût d'acquisition", attendu: x.rapportActualise, calcul: `${eur(x.actualisee)} ÷ ${eur(x.acq.cac)} = ${qte(x.rapportActualise)}`, tolerance: 0.05 },
+          { libelle: "Valeur vie actualisée ÷ coût d'acquisition", nature: "grandeur", attendu: x.rapportActualise, calcul: `${eur(x.actualisee)} ÷ ${eur(x.acq.cac)} = ${qte(x.rapportActualise)}` },
         ];
       },
       explication: (c) => {
@@ -811,20 +815,18 @@ export const VALEUR_D_UN_CLIENT: Chapitre = {
             libelle: "Attrition la plus haute, en valeur actualisée (%)",
             attendu: x.attritionMaxActualisee,
             calcul: `${eur(x.m.marge)} ÷ (attrition + ${pct(x.taux)}) = ${eur(x.valeurVisee)}, d'où attrition = ${eur(x.m.marge)} ÷ ${eur(x.valeurVisee)} − ${pct(x.taux)} = ${qte(x.attritionMaxActualisee)} %`,
-            tolerance: 0.1,
           },
           {
             libelle: "Attrition la plus haute, en valeur simple (%)",
             attendu: x.attritionMaxSimple,
             calcul: `${eur(x.m.marge)} ÷ ${eur(x.valeurVisee)} = ${qte(x.attritionMaxSimple)} %`,
-            tolerance: 0.1,
           },
         ];
       },
       explication: (c) => {
         const x = valeurDesComptes(c);
         return [
-          `En valeur simple, l'objectif tient jusqu'à ${qte(x.attritionMaxSimple)} % d'attrition : le cabinet, à ${pct(x.n.attrition)}, croirait l'avoir. Actualisé, il faut descendre à ${qte(x.attritionMaxActualisee)} % : perdre ${qte(auCentime(x.n.attrition * 100 - x.attritionMaxActualisee))} points de moins, soit ${pct(1 - x.attritionMaxActualisee / (x.n.attrition * 100), 0)} des départs d'aujourd'hui.`,
+          `En valeur simple, l'objectif tient jusqu'à ${qte(x.attritionMaxSimple)} % d'attrition : le cabinet, à ${pct(x.n.attrition)}, croirait l'avoir. Actualisé, il faut descendre à ${qte(x.attritionMaxActualisee)} % : perdre ${qte(auCentime(x.n.attrition * 100 - x.attritionMaxActualisee))} points de moins, soit ${pct(1 - x.attritionMaxActualisee / (x.n.attrition * 100))} des départs d'aujourd'hui.`,
           "La méthode change la décision, pas seulement le chiffre : un objectif fixé sur la valeur simple serait atteint sans effort, et la fidélisation paraîtrait inutile.",
         ];
       },

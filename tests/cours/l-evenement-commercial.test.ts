@@ -78,9 +78,10 @@ describe("son cas : un invité pour la matinale ?", () => {
     expect(attendus(s, "le-budget")).toEqual([8_500, c(8_500 / 45), 200]);
     // Un prospect présent vaut 1/2 × 1/3 × 1/4 × 28 560 = 1 190 € ; 2 500 € ÷ 1 190 € = 2,1, soit 3 prospects de plus.
     gardeDuCurseur(s, "les-prospects-qui-paient", 33);
-    const comptes = (45 * 0.5 * 0.25) / 3;
-    expect(attendus(s, "le-bilan-attendu")).toEqual([c(comptes), c(8_500 / comptes), c(comptes * 28_560 - 8_500), c(comptes * 28_560 - 8_500 - (1.25 * 28_560 - 6_000))]);
-    expect(attendus(s, "le-bilan-attendu")).toEqual([1.88, 4_533.33, 45_050, 15_350]);
+    // Les comptes au centième, 1,88 : le reste du bilan part de ce chiffre affiché.
+    const comptes = c((45 * 0.5 * 0.25) / 3);
+    expect(attendus(s, "le-bilan-attendu")).toEqual([comptes, c(8_500 / comptes), c(comptes * 28_560 - 8_500), c(comptes * 28_560 - 8_500 - (1.25 * 28_560 - 6_000))]);
+    expect(attendus(s, "le-bilan-attendu")).toEqual([1.88, 4_521.28, 45_192.8, 15_492.8]);
     expect(juste(s, "reponse")).toEqual(["L'inviter : 3 prospects de plus suffisent à le payer"]);
   });
 });

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   DEPARTS_AVEC_LA_REMISE,
@@ -44,13 +44,14 @@ import { ENTREPRISES_DU_POINT_DE_VENTE, ficheDe } from "./taux-de-marque";
  *   · le laboratoire : le-laboratoire-de-la-carte (la remise et les départs obtenus ; le graphique de la
  *     valeur selon la remise) ;
  *   · expert : les-garanties (un tri), le-cout-de-la-reclamation ; puis lancer-la-remise et la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts se donnent à deux décimales (au dixième, avant) ; la
+ * note moyenne, le NPS et la durée de vie sont des grandeurs au centième ; les entrées et les passages
+ * perdus, des quantités : le corrigé écrit la valeur à deux décimales, puis l'arrondit à l'unité.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number, chiffres = 1) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: chiffres }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const qte = nombreAuCentieme;
 
 export const POURQUOI_LA_FIDELISATION =
   "la simulation du cours suit un seul point de vente, la boutique MAILLE & CO, dont elle connaît les clientes de la carte mois par mois : la fidélisation se chiffre chez elle, quelle que soit votre entreprise.";
@@ -75,7 +76,7 @@ export function fidelisationDuChapitre(c: Pick<Cas, "code">) {
     s,
     base,
     avecRemise,
-    fideliteSurUnAn: auDixieme(base.fidelite ** 12 * 100),
+    fideliteSurUnAn: auCentime(base.fidelite ** 12 * 100),
     gainParCliente: auCentime(avecRemise.valeur - base.valeur),
     remiseMax: remiseQuiTient(f, DEPARTS_AVEC_LA_REMISE),
     remiseMaxDuDefi: remiseQuiTient(f, DEPARTS_DU_DEFI / 100),
@@ -118,7 +119,7 @@ function tableauDeLaSynthese(c: Pick<Cas, "code">): TableauDeDonnees {
   const x = fidelisationDuChapitre(c);
   const ligne = (libelle: string, remise: number, departs: number) => {
     const v = valeurA(c, remise, departs);
-    return { libelle, valeurs: [pct(remise, 0), pct(departs), `${qte(v.dureeDeVie)} mois`, eur(v.valeur)] };
+    return { libelle, valeurs: [pct(remise), pct(departs), `${qte(v.dureeDeVie)} mois`, eur(v.valeur)] };
   };
   return {
     titre: "Ce que vaut une cliente fidèle, avec ou sans remise",
@@ -163,7 +164,7 @@ export const FIDELISER_LA_CLIENTELE: Chapitre = {
         return [
           `Ce chapitre se joue dans la simulation du cours, à la boutique ${x.f.entreprise}. Une cliente satisfaite a trouvé ce qu'elle attendait ; une cliente fidèle revient ; la fidélisation est ce que la boutique fait pour qu'elle revienne. Une cliente satisfaite peut partir, une cliente fidèle peut être déçue.`,
           "Le marketing après-vente suit la cliente après l'achat : la carte de fidélité, les retouches, le service après-vente, les courriels, le traitement des réclamations. Son enjeu : garder coûte moins cher que conquérir.",
-          `Ce que la simulation suppose. ${qte(x.s.reponses)} clients ont noté la boutique de 0 à 10, par un lien au bas du ticket. Les clientes de la carte sont celles du bac pro : un passage par mois, ${pct(x.base.departs * 100, 0)} de départs chaque mois.`,
+          `Ce que la simulation suppose. ${qte(x.s.reponses)} clients ont noté la boutique de 0 à 10, par un lien au bas du ticket. Les clientes de la carte sont celles du bac pro : un passage par mois, ${pct(x.base.departs * 100)} de départs chaque mois.`,
         ];
       },
       repere: () => "NPS = part des promoteurs (notes 9 et 10) − part des détracteurs (notes 0 à 6), en points.",
@@ -175,21 +176,21 @@ export const FIDELISER_LA_CLIENTELE: Chapitre = {
       titre: "La note moyenne et le NPS",
       notions: ["churn_rate"],
       tableau: tableauDesNotes,
-      question: () => "Calculez la note moyenne (au dixième), la part des promoteurs (notes 9 et 10) et celle des détracteurs (notes 0 à 6) en %, puis le NPS : promoteurs − détracteurs, en points.",
+      question: () => "Calculez la note moyenne (à deux décimales), la part des promoteurs (notes 9 et 10) et celle des détracteurs (notes 0 à 6) en %, puis le NPS : promoteurs − détracteurs, en points.",
       champs: (c) => {
         const x = fidelisationDuChapitre(c);
         const points = NOTES_DE_SATISFACTION.map((n, note) => [n, note] as const).filter(([n]) => n > 0);
         return [
-          { libelle: "Note moyenne", attendu: auDixieme(x.s.noteMoyenne), tolerance: 0.1, calcul: `(${points.map(([n, note]) => `${qte(n)} × ${qte(note)}`).join(" + ")}) ÷ ${qte(x.s.reponses)} = ${qte(auDixieme(x.s.noteMoyenne))}` },
-          { libelle: "Promoteurs (%)", attendu: auDixieme(x.s.partDesPromoteurs * 100), tolerance: 0.1, calcul: `${qte(x.s.promoteurs)} ÷ ${qte(x.s.reponses)} × 100 = ${pct(auDixieme(x.s.partDesPromoteurs * 100))}` },
-          { libelle: "Détracteurs (%)", attendu: auDixieme(x.s.partDesDetracteurs * 100), tolerance: 0.1, calcul: `${qte(x.s.detracteurs)} ÷ ${qte(x.s.reponses)} × 100 = ${pct(auDixieme(x.s.partDesDetracteurs * 100))}` },
-          { libelle: "NPS (points)", attendu: x.s.nps, calcul: `${pct(auDixieme(x.s.partDesPromoteurs * 100))} − ${pct(auDixieme(x.s.partDesDetracteurs * 100))} = ${qte(x.s.nps)} points` },
+          { libelle: "Note moyenne", nature: "grandeur", attendu: auCentime(x.s.noteMoyenne), calcul: `(${points.map(([n, note]) => `${qte(n)} × ${qte(note)}`).join(" + ")}) ÷ ${qte(x.s.reponses)} = ${qte(auCentime(x.s.noteMoyenne))}` },
+          { libelle: "Promoteurs (%)", attendu: auCentime(x.s.partDesPromoteurs * 100), calcul: `${qte(x.s.promoteurs)} ÷ ${qte(x.s.reponses)} × 100 = ${pct(auCentime(x.s.partDesPromoteurs * 100))}` },
+          { libelle: "Détracteurs (%)", attendu: auCentime(x.s.partDesDetracteurs * 100), calcul: `${qte(x.s.detracteurs)} ÷ ${qte(x.s.reponses)} × 100 = ${pct(auCentime(x.s.partDesDetracteurs * 100))}` },
+          { libelle: "NPS (points)", nature: "grandeur", attendu: x.s.nps, calcul: `${pct(auCentime(x.s.partDesPromoteurs * 100))} − ${pct(auCentime(x.s.partDesDetracteurs * 100))} = ${qte(x.s.nps)} points` },
         ];
       },
       explication: (c) => {
         const x = fidelisationDuChapitre(c);
         return [
-          `La note moyenne, ${qte(auDixieme(x.s.noteMoyenne))}, paraît bonne ; le NPS, ${qte(x.s.nps)} points, est plus sévère : il ne compte que ceux qui recommanderaient la boutique, moins ceux qui la déconseilleraient. Un client à 7 ou 8 est passif : il ne fait pas venir d'autres clients.`,
+          `La note moyenne, ${qte(auCentime(x.s.noteMoyenne))}, paraît bonne ; le NPS, ${qte(x.s.nps)} points, est plus sévère : il ne compte que ceux qui recommanderaient la boutique, moins ceux qui la déconseilleraient. Un client à 7 ou 8 est passif : il ne fait pas venir d'autres clients.`,
         ];
       },
     },
@@ -201,20 +202,20 @@ export const FIDELISER_LA_CLIENTELE: Chapitre = {
       notions: ["churn_rate"],
       question: (c) => {
         const x = fidelisationDuChapitre(c);
-        return `En janvier, la boutique a reçu ${qte(x.s.reclamations)} réclamations : ${RECLAMATIONS_DU_MOIS.map((r) => `${qte(r.nombre)} pour ${r.libelle.charAt(0).toLowerCase()}${r.libelle.slice(1)}`).join(", ")}. Calculez le taux de réclamations sur les ${qte(x.s.passages)} passages en caisse, puis la part des défauts dans les réclamations, en %, au dixième.`;
+        return `En janvier, la boutique a reçu ${qte(x.s.reclamations)} réclamations : ${RECLAMATIONS_DU_MOIS.map((r) => `${qte(r.nombre)} pour ${r.libelle.charAt(0).toLowerCase()}${r.libelle.slice(1)}`).join(", ")}. Calculez le taux de réclamations sur les ${qte(x.s.passages)} passages en caisse, puis la part des défauts dans les réclamations, en %, à deux décimales.`;
       },
       champs: (c) => {
         const x = fidelisationDuChapitre(c);
         const defauts = RECLAMATIONS_DU_MOIS.find((r) => r.code === "defaut")!.nombre;
         return [
-          { libelle: "Taux de réclamations (%)", attendu: auDixieme(x.s.tauxDeReclamations * 100), tolerance: 0.1, calcul: `${qte(x.s.reclamations)} ÷ ${qte(x.s.passages)} × 100 = ${pct(auDixieme(x.s.tauxDeReclamations * 100))}` },
-          { libelle: "Part des défauts (%)", attendu: auDixieme(x.s.partDesDefauts * 100), tolerance: 0.1, calcul: `${qte(defauts)} ÷ ${qte(x.s.reclamations)} × 100 = ${pct(auDixieme(x.s.partDesDefauts * 100))}` },
+          { libelle: "Taux de réclamations (%)", attendu: auCentime(x.s.tauxDeReclamations * 100), calcul: `${qte(x.s.reclamations)} ÷ ${qte(x.s.passages)} × 100 = ${pct(auCentime(x.s.tauxDeReclamations * 100))}` },
+          { libelle: "Part des défauts (%)", attendu: auCentime(x.s.partDesDefauts * 100), calcul: `${qte(defauts)} ÷ ${qte(x.s.reclamations)} × 100 = ${pct(auCentime(x.s.partDesDefauts * 100))}` },
         ];
       },
       explication: (c) => {
         const x = fidelisationDuChapitre(c);
         return [
-          `${pct(auDixieme(x.s.tauxDeReclamations * 100))} des passages finissent en réclamation, dont ${pct(auDixieme(x.s.partDesDefauts * 100))} pour un défaut. Une réclamation bien traitée retient la cliente : écouter sans interrompre, reformuler, proposer une solution, la tenir, puis rappeler. Chaque réclamation se note, pour repérer l'article ou le moment qui pose problème.`,
+          `${pct(auCentime(x.s.tauxDeReclamations * 100))} des passages finissent en réclamation, dont ${pct(auCentime(x.s.partDesDefauts * 100))} pour un défaut. Une réclamation bien traitée retient la cliente : écouter sans interrompre, reformuler, proposer une solution, la tenir, puis rappeler. Chaque réclamation se note, pour repérer l'article ou le moment qui pose problème.`,
         ];
       },
     },
@@ -227,7 +228,7 @@ export const FIDELISER_LA_CLIENTELE: Chapitre = {
       tableau: tableauDeLaCarte,
       question: (c) => {
         const x = fidelisationDuChapitre(c);
-        return `Avant de calculer, pariez. Une cliente de la carte laisse ${eur(x.base.margeDUnPassage)} de marge par mois, et ${pct(x.base.departs * 100, 0)} des clientes partent chaque mois. Sur toute sa vie de cliente, elle vaut environ…`;
+        return `Avant de calculer, pariez. Une cliente de la carte laisse ${eur(x.base.margeDUnPassage)} de marge par mois, et ${pct(x.base.departs * 100)} des clientes partent chaque mois. Sur toute sa vie de cliente, elle vaut environ…`;
       },
       options: (c) => {
         const x = fidelisationDuChapitre(c);
@@ -247,21 +248,21 @@ export const FIDELISER_LA_CLIENTELE: Chapitre = {
       notions: ["customer_lifetime_value", "churn_rate"],
       tableau: tableauDeLaCarte,
       question: () =>
-        "Calculez le taux de fidélité mensuel (1 − départs, en %), la durée de vie moyenne d'une cliente (1 ÷ départs, en mois) et sa valeur (marge d'un mois × durée de vie). Puis calculez la part des clientes encore là dans un an : le taux de fidélité à la puissance 12, en %, au dixième.",
+        "Calculez le taux de fidélité mensuel (1 − départs, en %), la durée de vie moyenne d'une cliente (1 ÷ départs, en mois) et sa valeur (marge d'un mois × durée de vie). Puis calculez la part des clientes encore là dans un an : le taux de fidélité à la puissance 12, en %, à deux décimales.",
       champs: (c) => {
         const x = fidelisationDuChapitre(c);
         const b = x.base;
         return [
-          { libelle: "Taux de fidélité mensuel (%)", attendu: auDixieme(b.fidelite * 100), calcul: `100 % − ${pct(b.departs * 100)} = ${pct(b.fidelite * 100)}` },
-          { libelle: "Durée de vie moyenne (mois)", attendu: b.dureeDeVie, calcul: `1 ÷ ${qte(b.departs)} = ${qte(b.dureeDeVie)} mois` },
+          { libelle: "Taux de fidélité mensuel (%)", attendu: auCentime(b.fidelite * 100), calcul: `100 % − ${pct(b.departs * 100)} = ${pct(b.fidelite * 100)}` },
+          { libelle: "Durée de vie moyenne (mois)", nature: "grandeur", attendu: b.dureeDeVie, calcul: `1 ÷ ${qte(b.departs)} = ${qte(b.dureeDeVie)} mois` },
           { libelle: "Valeur d'une cliente fidèle", attendu: b.valeur, calcul: `${eur(b.margeDUnPassage)} × ${qte(b.dureeDeVie)} = ${eur(b.valeur)}` },
-          { libelle: "Clientes encore là dans un an (%)", attendu: x.fideliteSurUnAn, tolerance: 0.1, calcul: `${qte(b.fidelite)}¹² × 100 = ${pct(x.fideliteSurUnAn)}` },
+          { libelle: "Clientes encore là dans un an (%)", attendu: x.fideliteSurUnAn, calcul: `${qte(b.fidelite)}¹² × 100 = ${pct(x.fideliteSurUnAn)}` },
         ];
       },
       explication: (c) => {
         const x = fidelisationDuChapitre(c);
         return [
-          `Une cliente reste en moyenne ${qte(x.base.dureeDeVie)} mois : elle vaut ${eur(x.base.valeur)} de marge, pas ${eur(x.base.margeDUnPassage)}. Mais au bout d'un an, il ne reste que ${pct(x.fideliteSurUnAn)} des clientes de janvier : un taux de fidélité de ${pct(x.base.fidelite * 100, 0)} par mois s'effrite vite.`,
+          `Une cliente reste en moyenne ${qte(x.base.dureeDeVie)} mois : elle vaut ${eur(x.base.valeur)} de marge, pas ${eur(x.base.margeDUnPassage)}. Mais au bout d'un an, il ne reste que ${pct(x.fideliteSurUnAn)} des clientes de janvier : un taux de fidélité de ${pct(x.base.fidelite * 100)} par mois s'effrite vite.`,
           "C'est le capital client : la valeur de toutes les clientes qui reviendront. Il se protège comme un stock, et se construit avec l'image et la notoriété de la boutique.",
         ];
       },
@@ -273,12 +274,12 @@ export const FIDELISER_LA_CLIENTELE: Chapitre = {
       titre: "Pariez sur la remise",
       notions: ["customer_lifetime_value", "churn_rate"],
       question: () =>
-        `Avant de calculer, pariez. Le prestataire du programme de fidélité promet qu'une remise sur chaque achat ferait tomber les départs de 5 % à ${pct(DEPARTS_AVEC_LA_REMISE * 100, 0)} par mois. Jusqu'à quelle remise la carte reste-t-elle gagnante ?`,
+        `Avant de calculer, pariez. Le prestataire du programme de fidélité promet qu'une remise sur chaque achat ferait tomber les départs de 5 % à ${pct(DEPARTS_AVEC_LA_REMISE * 100)} par mois. Jusqu'à quelle remise la carte reste-t-elle gagnante ?`,
       options: (c) => {
         const x = fidelisationDuChapitre(c);
         const voir = "Le curseur suivant fait varier la remise : la valeur d'une cliente face à celle d'aujourd'hui.";
         return [
-          { texte: `Environ ${pct(x.remiseMax, 0)}`, juste: true, retour: `Bon pari. ${voir}` },
+          { texte: `Environ ${pct(x.remiseMax)}`, juste: true, retour: `Bon pari. ${voir}` },
           { texte: "Environ 1 %", juste: false, retour: `Pari à vérifier. ${voir}` },
           { texte: "Toute remise : garder une cliente rapporte toujours", juste: false, retour: `Pari à vérifier. ${voir}` },
         ];
@@ -292,7 +293,7 @@ export const FIDELISER_LA_CLIENTELE: Chapitre = {
       notions: ["customer_lifetime_value", "churn_rate"],
       question: (c) => {
         const x = fidelisationDuChapitre(c);
-        return `Faites varier la remise de la carte, de ${qte(REMISES_DU_CURSEUR.min)} à ${qte(REMISES_DU_CURSEUR.max)} %, avec ${pct(DEPARTS_AVEC_LA_REMISE * 100, 0)} de départs par mois. Une droite donne la valeur d'une cliente avec la remise, l'autre sa valeur d'aujourd'hui (${eur(x.base.valeur)}). Placez le curseur sur la plus forte remise où la carte vaut au moins autant, puis validez.`;
+        return `Faites varier la remise de la carte, de ${qte(REMISES_DU_CURSEUR.min)} à ${qte(REMISES_DU_CURSEUR.max)} %, avec ${pct(DEPARTS_AVEC_LA_REMISE * 100)} de départs par mois. Une droite donne la valeur d'une cliente avec la remise, l'autre sa valeur d'aujourd'hui (${eur(x.base.valeur)}). Placez le curseur sur la plus forte remise où la carte vaut au moins autant, puis validez.`;
       },
       grandeur: () => ({ libelle: "Remise de la carte", unite: "%" }),
       sens: "plus-grande",
@@ -325,7 +326,7 @@ export const FIDELISER_LA_CLIENTELE: Chapitre = {
       explication: (c) => {
         const x = fidelisationDuChapitre(c);
         return [
-          `Jusqu'à ${pct(x.remiseMax, 0)}, la remise rapporte : la marge perdue sur chaque passage est plus que rattrapée par les mois en plus. Au-delà, elle coûte. Le calcul exact : remise maximale = marge d'un passage × (1 − départs avec la carte ÷ départs sans) ÷ panier d'un passage.`,
+          `Jusqu'à ${pct(x.remiseMax)}, la remise rapporte : la marge perdue sur chaque passage est plus que rattrapée par les mois en plus. Au-delà, elle coûte. Le calcul exact : remise maximale = marge d'un passage × (1 − départs avec la carte ÷ départs sans) ÷ panier d'un passage.`,
         ];
       },
     },
@@ -337,16 +338,16 @@ export const FIDELISER_LA_CLIENTELE: Chapitre = {
       notions: ["customer_lifetime_value", "churn_rate"],
       tableau: tableauDeLaCarte,
       question: () =>
-        `Sans formule cette fois. La direction étudie ${pct(REMISE_ETUDIEE * 100, 0)} de remise, avec ${pct(DEPARTS_AVEC_LA_REMISE * 100, 0)} de départs. Calculez la remise sur un passage, la marge d'un passage après remise, la valeur d'une cliente, le gain par cliente face à aujourd'hui, puis ce que la remise coûte chaque mois sur toutes les clientes de la carte.`,
+        `Sans formule cette fois. La direction étudie ${pct(REMISE_ETUDIEE * 100)} de remise, avec ${pct(DEPARTS_AVEC_LA_REMISE * 100)} de départs. Calculez la remise sur un passage, la marge d'un passage après remise, la valeur d'une cliente, le gain par cliente face à aujourd'hui, puis ce que la remise coûte chaque mois sur toutes les clientes de la carte.`,
       champs: (c) => {
         const x = fidelisationDuChapitre(c);
         const a = x.avecRemise;
         return [
-          { libelle: "Remise sur un passage", attendu: a.remiseDUnPassage, calcul: `${eur(a.panierHt)} × ${pct(REMISE_ETUDIEE * 100, 0)} = ${eur(a.remiseDUnPassage)}` },
+          { libelle: "Remise sur un passage", attendu: a.remiseDUnPassage, calcul: `${eur(a.panierHt)} × ${pct(REMISE_ETUDIEE * 100)} = ${eur(a.remiseDUnPassage)}` },
           { libelle: "Marge d'un passage après remise", attendu: a.margeDUnPassage, calcul: `${eur(x.base.margeDUnPassage)} − ${eur(a.remiseDUnPassage)} = ${eur(a.margeDUnPassage)}` },
           { libelle: "Valeur d'une cliente avec la remise", attendu: a.valeur, calcul: `${eur(a.margeDUnPassage)} ÷ ${qte(a.departs)} = ${eur(a.valeur)}` },
           { libelle: "Gain par cliente", attendu: x.gainParCliente, calcul: `${eur(a.valeur)} − ${eur(x.base.valeur)} = ${eur(x.gainParCliente)}` },
-          { libelle: "Remise du mois sur les clientes de la carte", attendu: a.remiseDuMois, calcul: `${pct(REMISE_ETUDIEE * 100, 0)} × ${eur(a.chiffreDuMois)}, le chiffre hors taxes des fidèles = ${eur(a.remiseDuMois)}` },
+          { libelle: "Remise du mois sur les clientes de la carte", attendu: a.remiseDuMois, calcul: `${pct(REMISE_ETUDIEE * 100)} × ${eur(a.chiffreDuMois)}, le chiffre hors taxes des fidèles = ${eur(a.remiseDuMois)}` },
         ];
       },
       explication: (c) => {
@@ -398,8 +399,8 @@ export const FIDELISER_LA_CLIENTELE: Chapitre = {
           atteint: (p) => Math.abs(p.departs! - DEPARTS_DU_DEFI) < 1e-9 && tient(p.remise!, p.departs!) && !tient(p.remise! + 1, p.departs!),
           indice: (p) => {
             if (Math.abs(p.departs! - DEPARTS_DU_DEFI) > 1e-9) return `Le défi suppose ${pct(DEPARTS_DU_DEFI)} de départs : placez d'abord ce levier.`;
-            if (!tient(p.remise!, p.departs!)) return `À ${pct(p.remise!, 0)} de remise, une cliente vaut ${eur(valeurA(c, p.remise!, p.departs!).valeur)}, moins qu'aujourd'hui (${eur(x.base.valeur)}) : baissez la remise.`;
-            return `À ${pct(p.remise!, 0)}, la carte tient encore : essayez un point de plus.`;
+            if (!tient(p.remise!, p.departs!)) return `À ${pct(p.remise!)} de remise, une cliente vaut ${eur(valeurA(c, p.remise!, p.departs!).valeur)}, moins qu'aujourd'hui (${eur(x.base.valeur)}) : baissez la remise.`;
+            return `À ${pct(p.remise!)}, la carte tient encore : essayez un point de plus.`;
           },
           solution: { remise: x.remiseMaxDuDefi, departs: DEPARTS_DU_DEFI },
         };
@@ -408,7 +409,7 @@ export const FIDELISER_LA_CLIENTELE: Chapitre = {
       explication: (c, p) => {
         const x = fidelisationDuChapitre(c);
         return [
-          `À ${pct(p.departs!)} de départs, la carte ne tient que jusqu'à ${pct(p.remise!, 0)} de remise, contre ${pct(x.remiseMax, 0)} si la promesse du prestataire se vérifiait. La remise maximale dépend d'abord de l'effet réel sur les départs : avant de l'offrir, on la teste, et on mesure les départs.`,
+          `À ${pct(p.departs!)} de départs, la carte ne tient que jusqu'à ${pct(p.remise!)} de remise, contre ${pct(x.remiseMax)} si la promesse du prestataire se vérifiait. La remise maximale dépend d'abord de l'effet réel sur les départs : avant de l'offrir, on la teste, et on mesure les départs.`,
         ];
       },
     },
@@ -446,13 +447,13 @@ export const FIDELISER_LA_CLIENTELE: Chapitre = {
       notions: ["brand_capital", "conversion_rate"],
       question: (c) => {
         const x = fidelisationDuChapitre(c);
-        return `Après des avis sur l'attente en caisse, la note en ligne de la boutique passe de ${qte(x.e.avant)} à ${qte(x.e.apres)} sur 5. Chaque dixième de point perdu fait ${pct(ENTREES_PERDUES_PAR_DIXIEME * 100, 0)} d'entrées de passants en moins. Calculez les entrées perdues sur les ${qte(x.e.entrees)} du mois (à l'unité), les passages perdus à la transformation des passants (${pct(auDixieme(x.e.transformation * 100))}, à l'unité), puis la marge perdue à ${eur(x.e.margeDUneVente)} la vente.`;
+        return `Après des avis sur l'attente en caisse, la note en ligne de la boutique passe de ${qte(x.e.avant)} à ${qte(x.e.apres)} sur 5. Chaque dixième de point perdu fait ${pct(ENTREES_PERDUES_PAR_DIXIEME * 100)} d'entrées de passants en moins. Calculez les entrées perdues sur les ${qte(x.e.entrees)} du mois (à l'unité), les passages perdus à la transformation des passants (${pct(auCentime(x.e.transformation * 100))}, à l'unité), puis la marge perdue à ${eur(x.e.margeDUneVente)} la vente.`;
       },
       champs: (c) => {
         const x = fidelisationDuChapitre(c);
         return [
-          { libelle: "Entrées perdues", attendu: x.e.entreesPerdues, calcul: `${qte(x.e.dixiemes)} dixièmes × ${pct(ENTREES_PERDUES_PAR_DIXIEME * 100, 0)} = ${pct(x.e.baisse * 100, 0)} ; ${qte(x.e.entrees)} × ${pct(x.e.baisse * 100, 0)} = ${qte(x.e.entreesPerdues)}` },
-          { libelle: "Passages perdus", attendu: x.e.passagesPerdus, calcul: `${qte(x.e.entreesPerdues)} × ${pct(auDixieme(x.e.transformation * 100))} = ${qte(x.e.passagesPerdus)}` },
+          { libelle: "Entrées perdues", nature: "quantite", attendu: x.e.entreesPerdues, calcul: `${qte(x.e.dixiemes)} dixièmes × ${pct(ENTREES_PERDUES_PAR_DIXIEME * 100)} = ${pct(x.e.baisse * 100)} ; ${qte(x.e.entrees)} × ${pct(x.e.baisse * 100)} = ${qte(x.e.entreesCalculees)}, soit ${qte(x.e.entreesPerdues)} entrées à l'unité la plus proche` },
+          { libelle: "Passages perdus", nature: "quantite", attendu: x.e.passagesPerdus, calcul: `${qte(x.e.entreesPerdues)} × ${pct(auCentime(x.e.transformation * 100))} = ${qte(x.e.passagesCalcules)}, soit ${qte(x.e.passagesPerdus)} passages à l'unité la plus proche` },
           { libelle: "Marge perdue par mois", attendu: x.e.margePerdue, calcul: `${qte(x.e.passagesPerdus)} × ${eur(x.e.margeDUneVente)} = ${eur(x.e.margePerdue)}` },
         ];
       },
@@ -525,19 +526,19 @@ export const FIDELISER_LA_CLIENTELE: Chapitre = {
         const x = fidelisationDuChapitre(c);
         return [
           {
-            texte: `L'essayer à ${pct(REMISE_ETUDIEE * 100, 0)}, et mesurer les départs`,
+            texte: `L'essayer à ${pct(REMISE_ETUDIEE * 100)}, et mesurer les départs`,
             juste: true,
-            retour: `Oui : à ${pct(REMISE_ETUDIEE * 100, 0)}, une cliente vaut ${eur(x.gainParCliente)} de plus si les départs tombent à ${pct(DEPARTS_AVEC_LA_REMISE * 100, 0)}, et la carte tient encore si les départs ne tombent qu'à ${pct(DEPARTS_DU_DEFI)}. Au-delà de ${pct(x.remiseMax, 0)}, la remise coûterait même avec la promesse tenue.`,
+            retour: `Oui : à ${pct(REMISE_ETUDIEE * 100)}, une cliente vaut ${eur(x.gainParCliente)} de plus si les départs tombent à ${pct(DEPARTS_AVEC_LA_REMISE * 100)}, et la carte tient encore si les départs ne tombent qu'à ${pct(DEPARTS_DU_DEFI)}. Au-delà de ${pct(x.remiseMax)}, la remise coûterait même avec la promesse tenue.`,
           },
           {
-            texte: `L'offrir à ${pct(x.remiseMax, 0)} : c'est le taux le plus fort qui reste gagnant`,
+            texte: `L'offrir à ${pct(x.remiseMax)} : c'est le taux le plus fort qui reste gagnant`,
             juste: false,
-            retour: `Seulement si la promesse du prestataire se vérifie : avec ${pct(DEPARTS_DU_DEFI)} de départs, la carte ne tiendrait que jusqu'à ${pct(x.remiseMaxDuDefi, 0)}. Le taux maximal n'est pas un taux prudent.`,
+            retour: `Seulement si la promesse du prestataire se vérifie : avec ${pct(DEPARTS_DU_DEFI)} de départs, la carte ne tiendrait que jusqu'à ${pct(x.remiseMaxDuDefi)}. Le taux maximal n'est pas un taux prudent.`,
           },
           {
             texte: "Ne pas l'offrir : une remise fait toujours perdre de la marge sur chaque achat",
             juste: false,
-            retour: `Elle en fait perdre sur chaque passage, ${eur(x.avecRemise.remiseDUnPassage)} à ${pct(REMISE_ETUDIEE * 100, 0)}, mais elle allonge la vie de la cliente. Le calcul se fait sur la durée de vie, pas sur un ticket.`,
+            retour: `Elle en fait perdre sur chaque passage, ${eur(x.avecRemise.remiseDUnPassage)} à ${pct(REMISE_ETUDIEE * 100)}, mais elle allonge la vie de la cliente. Le calcul se fait sur la durée de vie, pas sur un ticket.`,
           },
         ];
       },
@@ -552,7 +553,7 @@ export const FIDELISER_LA_CLIENTELE: Chapitre = {
         const x = fidelisationDuChapitre(c);
         return [
           `La satisfaction se mesure (note moyenne, NPS = promoteurs − détracteurs, taux de réclamations), la fidélité aussi (départs, durée de vie = 1 ÷ départs). Valeur d'une cliente = marge d'un mois × durée de vie : ${eur(x.base.valeur)} ici.`,
-          `Une remise de fidélité se paie sur toutes les clientes et rapporte par les mois gagnés. À ${pct(DEPARTS_AVEC_LA_REMISE * 100, 0)} de départs, elle tient jusqu'à ${pct(x.remiseMax, 0)} ; à ${pct(DEPARTS_DU_DEFI)}, jusqu'à ${pct(x.remiseMaxDuDefi, 0)}. On la teste avant de l'étendre.`,
+          `Une remise de fidélité se paie sur toutes les clientes et rapporte par les mois gagnés. À ${pct(DEPARTS_AVEC_LA_REMISE * 100)} de départs, elle tient jusqu'à ${pct(x.remiseMax)} ; à ${pct(DEPARTS_DU_DEFI)}, jusqu'à ${pct(x.remiseMaxDuDefi)}. On la teste avant de l'étendre.`,
           `Le capital client tient aussi à l'image et à l'e-réputation : ${qte(x.e.dixiemes)} dixièmes de note en ligne coûtent ${eur(x.e.margePerdue)} de marge par mois. Une réclamation se traite sous la garantie légale de conformité (${qte(MOIS_DE_GARANTIE_LEGALE)} mois), que la garantie commerciale complète sans la remplacer.`,
           "Au niveau de l'examen, vous savez mesurer satisfaction et fidélité, calculer la valeur d'un client, chiffrer une remise de fidélité et son taux limite, mesurer l'effet d'une e-réputation, et traiter une réclamation selon la garantie qui s'applique.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",

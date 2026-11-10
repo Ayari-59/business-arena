@@ -1,5 +1,4 @@
-import { montantEcrit as eur } from "../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../pedagogy/cours/etats";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import { accord } from "../accords";
 import type { Cas } from "../cas";
 import { NEGOCIATIONS, negociation } from "../chapitres/negocier-le-prix";
@@ -19,6 +18,10 @@ import type { Situation } from "./types";
  * client), appelés tels quels (`negociation`, `affaire`). La remise est celle du cours
  * (`TAUX_DE_REMISE`), le délai celui du client du cas, le taux celui de l'emprunt de
  * l'entreprise. Seule la promesse de renouvellement est une hypothèse, posée ci-dessous.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les deux montants sur deux ans se donnent au centime, à un
+ * centime près (à un euro près, avant).
  */
 
 /**
@@ -28,8 +31,7 @@ import type { Situation } from "./types";
  */
 export const COMMANDES_PROMISES = 8;
 
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
-const qte = (n: number) => n.toLocaleString("fr-FR");
+const qte = nombreAuCentieme;
 const majuscule = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
@@ -192,8 +194,8 @@ export const LA_REMISE_DU_GRAND_COMPTE: Situation = {
       champs: (c) => {
         const { a, valeurDuClient, remiseSurLaDuree } = remiseDuGrandCompte(c);
         return [
-          { libelle: "Ce que rapporte le client sur deux ans", attendu: valeurDuClient, calcul: `${eur(a.resultatDeLAffaire)} × ${COMMANDES_PROMISES} = ${eur(valeurDuClient)}`, tolerance: 1 },
-          { libelle: "Ce que coûte la remise sur deux ans", attendu: remiseSurLaDuree, calcul: `${eur(a.margeCedee)} × ${COMMANDES_PROMISES} = ${eur(remiseSurLaDuree)}`, tolerance: 1 },
+          { libelle: "Ce que rapporte le client sur deux ans", attendu: valeurDuClient, calcul: `${eur(a.resultatDeLAffaire)} × ${COMMANDES_PROMISES} = ${eur(valeurDuClient)}` },
+          { libelle: "Ce que coûte la remise sur deux ans", attendu: remiseSurLaDuree, calcul: `${eur(a.margeCedee)} × ${COMMANDES_PROMISES} = ${eur(remiseSurLaDuree)}` },
         ];
       },
       explication: (c) => {

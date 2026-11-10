@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_SEUIL, seuilDeLaBoutique } from "../../chapitres/seuil-du-point-de-vente";
 import { seuilDuPointDeVente as seuilDuMois } from "../../monde/boutique";
@@ -21,6 +21,12 @@ import type { Situation } from "../types";
  *
  * Les pièges : croire que le seuil ou le résultat baissent comme les jours ouverts ; compter les jours
  * gagnés en chiffre d'affaires au lieu de marge ; choisir sur le point mort.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux de marge sur coût variable se donne à deux décimales, et
+ * les seuils se calculent sur ce taux arrondi, au centime, comme sur la copie (à deux ou trois euros
+ * près, avant) ; les points morts sont des quantités : le jour où le cumul des ventes franchit le
+ * seuil, à l'unité au-dessus.
  */
 
 /** Les jours de fermeture des travaux, en début de mois : une semaine de travaux, du lundi au vendredi. */
@@ -37,17 +43,20 @@ export const SUPPLEMENT_DES_TRAVAUX_ACCELERES = 2_500;
 /** Les bornes du curseur du supplément, en euros. */
 export const SUPPLEMENT_DU_CURSEUR = { min: 0, max: 5_000 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
 
 /** Les chiffres de la réponse, calculés une fois sur la boutique du cours. */
 export function fermePourTravaux(c: Pick<Cas, "code">) {
   const x = seuilDeLaBoutique(c);
   const s = x.s;
-  const cinq = seuilDuMois(x.f, { joursDeFermeture: JOURS_DE_FERMETURE });
-  const trois = seuilDuMois(x.f, { joursDeFermeture: JOURS_DES_TRAVAUX_ACCELERES, chargesFixes: s.chargesFixes + SUPPLEMENT_DES_TRAVAUX_ACCELERES });
+  // Le seuil et le point mort de la copie : sur le taux de marge arrondi à deux décimales, comme le chapitre.
+  const surLeTauxArrondi = (m: ReturnType<typeof seuilDuMois>) => {
+    const seuil = auCentime(m.chargesFixes / (x.tauxEnPourcent / 100));
+    const pointMort = m.joursDeFermeture + Math.ceil(auCentime(seuil / x.caParJour) - 1e-9);
+    return { ...m, seuil, pointMort: pointMort <= x.jours ? pointMort : null };
+  };
+  const cinq = surLeTauxArrondi(seuilDuMois(x.f, { joursDeFermeture: JOURS_DE_FERMETURE }));
+  const trois = surLeTauxArrondi(seuilDuMois(x.f, { joursDeFermeture: JOURS_DES_TRAVAUX_ACCELERES, chargesFixes: s.chargesFixes + SUPPLEMENT_DES_TRAVAUX_ACCELERES }));
   const joursGagnes = JOURS_DE_FERMETURE - JOURS_DES_TRAVAUX_ACCELERES;
   // Le plus gros supplément que les jours gagnés paient : leur marge, à l'euro.
   const supplementMaximal = Math.max(0, Math.floor(trois.resultat + SUPPLEMENT_DES_TRAVAUX_ACCELERES - cinq.resultat + 1e-9));
@@ -122,15 +131,15 @@ export const FERME_POUR_TRAVAUX: Situation = {
       titre: "Un mois normal",
       notions: ["contribution_margin", "breakeven", "dead_point"],
       question: () =>
-        "Pour un mois normal, calculez la marge sur coût variable, son taux (au dixième), le seuil de rentabilité (à l'euro), puis le jour du point mort, arrondi au jour supérieur.",
+        "Pour un mois normal, calculez la marge sur coût variable, son taux (à deux décimales), le seuil de rentabilité (au centime, sur le taux arrondi), puis le jour du point mort, arrondi au jour supérieur.",
       champs: (c) => {
         const r = fermePourTravaux(c);
         const s = r.s;
         return [
           { libelle: "Marge sur coût variable du mois", attendu: s.marge, calcul: `${eur(s.chiffreDAffaires)} − ${eur(s.coutsVariables)} = ${eur(s.marge)}` },
-          { libelle: "Taux de marge sur coût variable (%)", attendu: r.tauxEnPourcent, tolerance: 0.1, calcul: `${eur(s.marge)} ÷ ${eur(s.chiffreDAffaires)} × 100 = ${pct(r.tauxEnPourcent)}` },
-          { libelle: "Seuil de rentabilité", attendu: s.seuil, tolerance: 2, calcul: `${eur(s.chargesFixes)} ÷ ${pct(r.tauxEnPourcent)} = ${eur(s.seuil)}` },
-          { libelle: "Point mort (jour du mois)", attendu: s.pointMort!, calcul: `${eur(s.seuil)} ÷ ${eur(s.chiffreDAffaires)} × ${qte(r.jours)} = ${qte(auCentime(r.pointMortExact))}, le ${qte(s.pointMort!)}` },
+          { libelle: "Taux de marge sur coût variable (%)", attendu: r.tauxEnPourcent, calcul: `${eur(s.marge)} ÷ ${eur(s.chiffreDAffaires)} × 100 = ${pct(r.tauxEnPourcent)}` },
+          { libelle: "Seuil de rentabilité", attendu: s.seuil, calcul: `${eur(s.chargesFixes)} ÷ ${pct(r.tauxEnPourcent)} = ${eur(s.seuil)}` },
+          { libelle: "Point mort (jour du mois)", nature: "quantite", attendu: s.pointMort!, calcul: `${eur(s.seuil)} ÷ ${eur(s.chiffreDAffaires)} × ${qte(r.jours)} = ${qte(r.pointMortExact)} : le seuil est franchi dans la journée du ${qte(s.pointMort!)}` },
         ];
       },
       explication: (c) => {
@@ -152,10 +161,11 @@ export const FERME_POUR_TRAVAUX: Situation = {
         const ouverts = r.jours - JOURS_DE_FERMETURE;
         return [
           { libelle: "Chiffre d'affaires du mois des travaux", attendu: r.cinq.chiffreDAffaires, calcul: `${eur(r.s.chiffreDAffaires)} × ${qte(ouverts)} ÷ ${qte(r.jours)} = ${eur(r.cinq.chiffreDAffaires)}` },
-          { libelle: "Marge sur coût variable des travaux simples", attendu: r.cinq.marge, tolerance: 1, calcul: `${eur(r.s.marge)} × ${qte(ouverts)} ÷ ${qte(r.jours)} = ${eur(r.cinq.marge)}` },
-          { libelle: "Résultat des travaux simples", attendu: r.cinq.resultat, tolerance: 1, calcul: `${eur(r.cinq.marge)} − ${eur(r.s.chargesFixes)} = ${eur(r.cinq.resultat)}` },
+          { libelle: "Marge sur coût variable des travaux simples", attendu: r.cinq.marge, calcul: `${eur(r.s.marge)} × ${qte(ouverts)} ÷ ${qte(r.jours)} = ${eur(r.cinq.marge)}` },
+          { libelle: "Résultat des travaux simples", attendu: r.cinq.resultat, calcul: `${eur(r.cinq.marge)} − ${eur(r.s.chargesFixes)} = ${eur(r.cinq.resultat)}` },
           {
             libelle: "Point mort des travaux simples (jour du mois)",
+            nature: "quantite",
             attendu: r.cinq.pointMort!,
             calcul: `${qte(JOURS_DE_FERMETURE)} jours fermés + ${qte(r.s.pointMort!)} jours de vente pour atteindre le seuil, qui ne bouge pas = le ${qte(r.cinq.pointMort!)}`,
           },
@@ -164,7 +174,7 @@ export const FERME_POUR_TRAVAUX: Situation = {
       explication: (c) => {
         const r = fermePourTravaux(c);
         return [
-          `Les ventes baissent de ${pct(Math.round((JOURS_DE_FERMETURE / r.jours) * 1000) / 10)}, mais le résultat passe de ${eur(r.s.resultat)} à ${eur(r.cinq.resultat)} : les charges fixes, ${eur(r.s.chargesFixes)}, se paient en entier, porte ouverte ou fermée. Le seuil ne bouge pas ; il faut toujours ${qte(r.s.pointMort!)} jours de vente pour l'atteindre, et ils commencent ${qte(JOURS_DE_FERMETURE)} jours plus tard.`,
+          `Les ventes baissent de ${pct((JOURS_DE_FERMETURE / r.jours) * 100)}, mais le résultat passe de ${eur(r.s.resultat)} à ${eur(r.cinq.resultat)} : les charges fixes, ${eur(r.s.chargesFixes)}, se paient en entier, porte ouverte ou fermée. Le seuil ne bouge pas ; il faut toujours ${qte(r.s.pointMort!)} jours de vente pour l'atteindre, et ils commencent ${qte(JOURS_DE_FERMETURE)} jours plus tard.`,
         ];
       },
     },
@@ -183,12 +193,12 @@ export const FERME_POUR_TRAVAUX: Situation = {
           {
             libelle: "Résultat des travaux accélérés",
             attendu: r.trois.resultat,
-            tolerance: 1,
             calcul: `${eur(r.s.marge)} × ${qte(ouverts)} ÷ ${qte(r.jours)} − (${eur(r.s.chargesFixes)} + ${eur(SUPPLEMENT_DES_TRAVAUX_ACCELERES)}) = ${eur(r.trois.marge)} − ${eur(r.trois.chargesFixes)} = ${eur(r.trois.resultat)}`,
           },
-          { libelle: "Seuil des travaux accélérés", attendu: r.trois.seuil, tolerance: 3, calcul: `${eur(r.trois.chargesFixes)} ÷ ${pct(r.tauxEnPourcent)} = ${eur(r.trois.seuil)}` },
+          { libelle: "Seuil des travaux accélérés", attendu: r.trois.seuil, calcul: `${eur(r.trois.chargesFixes)} ÷ ${pct(r.tauxEnPourcent)} = ${eur(r.trois.seuil)}` },
           {
             libelle: "Point mort des travaux accélérés (jour du mois)",
+            nature: "quantite",
             attendu: r.trois.pointMort!,
             calcul: `${eur(r.trois.seuil)} ÷ ${eur(r.caParJour)} par jour = ${qte(auCentime(r.trois.seuil / r.caParJour))}, soit ${qte(venteAuSeuil)} jours de vente après ${qte(JOURS_DES_TRAVAUX_ACCELERES)} jours fermés : le ${qte(r.trois.pointMort!)}`,
           },

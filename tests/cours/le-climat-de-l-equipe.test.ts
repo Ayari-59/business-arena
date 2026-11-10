@@ -19,7 +19,6 @@ import { BOUTIQUE, VIDE, attendus, etape, gardeDuCas, gardeDuLaboratoire, gardes
  */
 
 const centime = (x: number) => Math.round(x * 100) / 100 + 0;
-const dixieme = (x: number) => Math.round(x * 10) / 10 + 0;
 const ch = LE_CLIMAT_DE_L_EQUIPE;
 const MARGE_D_UN_PASSAGE = 41.44;
 const HEURE_COMPLEMENTAIRE = 19.53;
@@ -47,7 +46,7 @@ describe("le climat de l'équipe : le chapitre", () => {
   it("les indicateurs sociaux et le coût des absences", () => {
     const heures = centime(f.equipe.reduce((t, s) => t + centime((s.heuresParSemaine * 52) / 12), 0));
     expect(heures).toBe(715.01);
-    expect(attendus(ch, "les-indicateurs-sociaux")).toEqual([dixieme((31 / heures) * 100), dixieme((18 / 104) * 100), dixieme(((2 + 2) / 2 / 6) * 100)]);
+    expect(attendus(ch, "les-indicateurs-sociaux")).toEqual([centime((31 / heures) * 100), centime((18 / 104) * 100), centime(((2 + 2) / 2 / 6) * 100)]);
     expect(centime(12.5 * 1.1 * 1.42 + 1e-9)).toBe(HEURE_COMPLEMENTAIRE);
     const remplacement = centime(14 * HEURE_COMPLEMENTAIRE);
     const perdue = centime(17 * MARGE_D_UN_PASSAGE);
@@ -68,7 +67,7 @@ describe("le climat de l'équipe : le chapitre", () => {
   it("les signes, le conflit, l'entretien, la réunion et le client agressif", () => {
     const tri = etape(chapitreDuCas(ch, BOUTIQUE), "signes-et-facteurs", "tri").elements(BOUTIQUE);
     expect(tri.map((t) => t.categorie)).toEqual(["signe", "signe", "signe", "facteur", "facteur", "facteur"]);
-    expect(tri.map((t) => t.montant)).toEqual([4, 18, 18.2, 3, 12_480, 2]);
+    expect(tri.map((t) => t.montant)).toEqual([4, 18, 18.18, 3, 12_480, 2]);
     expect(juste(ch, "le-conflit")).toEqual(["Un conflit d'intérêt : une médiation, puis une règle commune"]);
     expect(juste(ch, "l-entretien")).toEqual(["Elle prépare les faits, écoute, reformule et convient d'un plan"]);
     expect(juste(ch, "la-reunion")[0]).toMatch(/^Une réunion, puis le planning affiché 7 jours ouvrés avant$/);
@@ -105,11 +104,12 @@ describe("retenir la vendeuse : le cas", () => {
     const manques = centime((140 / (52 / 12)) * (0.4 + 0.2 + 0.05));
     expect(manques).toBe(21);
     const apprentissage = centime(manques * MARGE_D_UN_PASSAGE);
-    expect(attendus(s, "le-cout-du-depart")).toEqual([vacance, manques, apprentissage, centime(344.9 + vacance + apprentissage)]);
+    expect(attendus(s, "le-cout-du-depart")).toEqual([vacance, manques, apprentissage, centime(344.91 + vacance + apprentissage)]);
     const horaire = 2_000 / 151.67;
-    const parMois = centime(8 * horaire * 1.25 * 1.42);
+    // Le taux horaire de la copie, au centime : 13,19 €.
+    const parMois = centime(8 * centime(horaire) * 1.25 * 1.42);
     expect(attendus(s, "le-cout-de-la-demande")).toEqual([centime(horaire), parMois, centime(parMois * 12)]);
-    expect(centime(parMois * 12)).toBeLessThan(centime(344.9 + vacance + apprentissage));
+    expect(centime(parMois * 12)).toBeLessThan(centime(344.91 + vacance + apprentissage));
     expect(juste(s, "reponse")).toEqual(["Accepter, et passer les samedis en roulement pour tous"]);
   });
 });

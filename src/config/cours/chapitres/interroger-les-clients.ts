@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi, arrondi2 as auCentime, eur, nombreAuCentieme, pct, taux2 } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   ANS_DE_CONSERVATION,
@@ -45,15 +45,19 @@ import { ENTREPRISES_DU_POINT_DE_VENTE, ficheDe } from "./taux-de-marque";
  *   · autonome : le-tri-croise, le-redressement, les-facteurs-d-influence, le-fichier, la-conservation ;
  *   · expert : la-marge-d-incertitude, l-echantillon-qui-departage, le-defaut-de-l-etude ; puis
  *     quel-service et la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts se donnent à deux décimales (au dixième, avant) ; les
+ * poids sont des coefficients au dix-millième, les réponses redressées des grandeurs au centième, et la suite part d'eux
+ * (monde/clientele-de-la-boutique.ts) : les proportions s'écrivent au dix-millième dans les formules,
+ * la marge d'incertitude en points à deux décimales ; les quotas, la population, les réponses
+ * nécessaires et les cartes sont des quantités, les réponses nécessaires écrites à deux décimales puis
+ * arrondies à l'unité au-dessus.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number, chiffres = 1) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: chiffres }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
-const auMillieme = (x: number) => Math.round(x * 1000) / 1000 + 0;
-const auDixMillieme = (x: number) => Math.round(x * 10000) / 10000 + 0;
+const qte = nombreAuCentieme;
+/** Une proportion au dix-millième, écrite avec ses quatre décimales (0,3242). */
+const quatre = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
 
 export const POURQUOI_L_ETUDE =
   "la simulation du cours suit un seul point de vente, la boutique MAILLE & CO, dont elle connaît les trois clientèles de janvier : l'enquête se mène auprès d'elles, quelle que soit votre entreprise.";
@@ -69,7 +73,7 @@ export function etudeDuChapitre(c: Pick<Cas, "code">) {
   const f = ficheDe(c);
   const e = etudeDuService(f);
   const fichier = fichierDeLaCarte();
-  const pct100 = (x: number) => auDixieme(x * 100);
+  const pct100 = (x: number) => auCentime(x * 100);
   return {
     f,
     e,
@@ -169,7 +173,7 @@ export const INTERROGER_LES_CLIENTS: Chapitre = {
           `Ce chapitre se joue dans la simulation du cours, à la boutique ${x.f.entreprise}. La direction se demande quel service ferait venir les clients plus souvent : des retouches, une nocturne le jeudi, le dimanche matin, ou la livraison.`,
           "Une étude documentaire exploite ce qui existe déjà : les ventes, le fichier, les publications. Une étude de terrain va chercher l'information : quantitative pour compter (un questionnaire, des questions fermées ou à échelle), qualitative pour comprendre (des entretiens, des questions ouvertes).",
           "Le questionnaire se diffuse en boutique, en face à face, par un lien au bas du ticket, par courriel ou sur les réseaux sociaux ; un formulaire en ligne en compile les réponses. Les résultats se présentent en tableaux et en graphiques, puis se diffusent à l'équipe.",
-          `Ce que la simulation suppose. La population à étudier est celle des passages du mois. On en interroge ${pct(TAUX_DE_SONDAGE * 100, 0)}, en respectant le poids de chaque clientèle : des quotas.`,
+          `Ce que la simulation suppose. La population à étudier est celle des passages du mois. On en interroge ${pct(TAUX_DE_SONDAGE * 100)}, en respectant le poids de chaque clientèle : des quotas.`,
         ];
       },
       repere: () => "Taux de sondage = taille de l'échantillon ÷ population mère. Quota d'une clientèle = sa population × le taux de sondage.",
@@ -209,16 +213,17 @@ export const INTERROGER_LES_CLIENTS: Chapitre = {
       tableau: tableauDeLaPopulation,
       question: (c) => {
         const x = etudeDuChapitre(c);
-        return `Calculez la population mère (les passages des trois clientèles), puis le quota de chaque clientèle : sa population × ${pct(TAUX_DE_SONDAGE * 100, 0)}. La somme des quotas donne la taille de l'échantillon, ${qte(x.e.taille)} questionnaires.`;
+        return `Calculez la population mère (les passages des trois clientèles), puis le quota de chaque clientèle : sa population × ${pct(TAUX_DE_SONDAGE * 100)}. La somme des quotas donne la taille de l'échantillon, ${qte(x.e.taille)} questionnaires.`;
       },
       champs: (c) => {
         const x = etudeDuChapitre(c);
         return [
-          { libelle: "Population mère", attendu: x.e.populationMere, calcul: `${(Object.keys(NOMS_DES_CLIENTELES) as CodeDeClientele[]).map((k) => qte(x.e.population[k])).join(" + ")} = ${qte(x.e.populationMere)}` },
+          { libelle: "Population mère", nature: "quantite", attendu: x.e.populationMere, calcul: `${(Object.keys(NOMS_DES_CLIENTELES) as CodeDeClientele[]).map((k) => qte(x.e.population[k])).join(" + ")} = ${qte(x.e.populationMere)}` },
           ...(Object.keys(NOMS_DES_CLIENTELES) as CodeDeClientele[]).map((k) => ({
             libelle: `Quota · ${NOMS_DES_CLIENTELES[k]}`,
+            nature: "quantite" as const,
             attendu: x.e.quotas[k],
-            calcul: `${qte(x.e.population[k])} × ${pct(TAUX_DE_SONDAGE * 100, 0)} = ${qte(x.e.quotas[k])}`,
+            calcul: `${qte(x.e.population[k])} × ${pct(TAUX_DE_SONDAGE * 100)} = ${qte(x.e.quotas[k])}`,
           })),
         ];
       },
@@ -238,14 +243,13 @@ export const INTERROGER_LES_CLIENTS: Chapitre = {
       tableau: tableauDesReponses,
       question: (c) => {
         const x = etudeDuChapitre(c);
-        return `L'enquêtrice a rempli ses ${qte(x.e.obtenu)} questionnaires. Le tri à plat compte les réponses à une question, toutes clientèles ensemble. Calculez la part des réponses de chaque service sur l'ensemble, en pourcentage, au dixième.`;
+        return `L'enquêtrice a rempli ses ${qte(x.e.obtenu)} questionnaires. Le tri à plat compte les réponses à une question, toutes clientèles ensemble. Calculez la part des réponses de chaque service sur l'ensemble, en pourcentage, à deux décimales.`;
       },
       champs: (c) => {
         const x = etudeDuChapitre(c);
         return SERVICES.map((s) => ({
           libelle: `Tri à plat · ${s.libelle} (%)`,
           attendu: x.pct100(x.e.brut[s.code] / x.e.taille),
-          tolerance: 0.1,
           calcul: `${qte(x.e.brut[s.code])} ÷ ${qte(x.e.taille)} × 100 = ${pct(x.pct100(x.e.brut[s.code] / x.e.taille))}`,
         }));
       },
@@ -289,9 +293,9 @@ export const INTERROGER_LES_CLIENTS: Chapitre = {
         const d = echantillonBrut(ECHANTILLON_OBTENU.fideles);
         return [
           { libelle: "Passants interrogés", montant: b.passants, reference: d.passants, unite: "passants" },
-          { libelle: "Part des retouches", montant: auDixieme(b.part("retouches") * 100), reference: auDixieme(d.part("retouches") * 100), unite: "%" },
-          { libelle: "Part de la nocturne", montant: auDixieme(b.part("nocturne") * 100), reference: auDixieme(d.part("nocturne") * 100), unite: "%" },
-          { libelle: "Avance de la nocturne", montant: auDixieme((b.part("nocturne") - b.part("retouches")) * 100), reference: auDixieme((d.part("nocturne") - d.part("retouches")) * 100), unite: "points", effet: true, fort: true },
+          { libelle: "Part des retouches", montant: auCentime(b.part("retouches") * 100), reference: auCentime(d.part("retouches") * 100), unite: "%" },
+          { libelle: "Part de la nocturne", montant: auCentime(b.part("nocturne") * 100), reference: auCentime(d.part("nocturne") * 100), unite: "%" },
+          { libelle: "Avance de la nocturne", montant: auCentime((b.part("nocturne") - b.part("retouches")) * 100), reference: auCentime((d.part("nocturne") - d.part("retouches")) * 100), unite: "points", effet: true, fort: true },
           { libelle: "Part de la nocturne dans la population", montant: x.redresseNocturne, unite: "%" },
         ];
       },
@@ -299,13 +303,14 @@ export const INTERROGER_LES_CLIENTS: Chapitre = {
         levier: "fideles",
         unite: "%",
         courbes: [
-          { libelle: "Part des retouches", valeur: (p) => auDixieme(echantillonBrut(p.fideles!).part("retouches") * 100) },
-          { libelle: "Part de la nocturne", valeur: (p) => auDixieme(echantillonBrut(p.fideles!).part("nocturne") * 100) },
+          { libelle: "Part des retouches", valeur: (p) => auCentime(echantillonBrut(p.fideles!).part("retouches") * 100) },
+          { libelle: "Part de la nocturne", valeur: (p) => auCentime(echantillonBrut(p.fideles!).part("nocturne") * 100) },
         ],
       }),
       defi: (c) => {
         const x = etudeDuChapitre(c);
-        const juste = (n: number) => Math.abs(echantillonBrut(n).part("nocturne") - x.e.pNocturne) < 1e-9 && Math.abs(echantillonBrut(n).part("retouches") - x.e.pRetouches) < 1e-9;
+        // Les parts du tri à plat, au dix-millième comme celles de la population redressée.
+        const juste = (n: number) => Math.abs(arrondi(echantillonBrut(n).part("nocturne"), 4) - x.e.pNocturne) < 1e-9 && Math.abs(arrondi(echantillonBrut(n).part("retouches"), 4) - x.e.pRetouches) < 1e-9;
         return {
           consigne: "Trouvez la composition de l'échantillon dont le tri à plat répond comme la population des passages.",
           atteint: (p) => juste(p.fideles!),
@@ -333,32 +338,32 @@ export const INTERROGER_LES_CLIENTS: Chapitre = {
       notions: ["segmentation"],
       tableau: tableauDesReponses,
       question: () =>
-        "Sans formule cette fois. Redressez l'échantillon : donnez à chaque réponse le poids qui ramène sa clientèle à son quota (au centième), puis calculez les réponses redressées des retouches et de la nocturne.",
+        "Sans formule cette fois. Redressez l'échantillon : donnez à chaque réponse le poids qui ramène sa clientèle à son quota (au dix-millième), puis calculez les réponses redressées des retouches et de la nocturne.",
       champs: (c) => {
         const x = etudeDuChapitre(c);
-        const pf = auCentime(x.e.poids.fideles);
-        const pp = auCentime(x.e.poids.passants);
+        const pf = x.e.poids.fideles;
+        const pp = x.e.poids.passants;
         return [
-          { libelle: "Poids d'une réponse de fidèle", attendu: pf, tolerance: 0.01, calcul: `${qte(x.e.quotas.fideles)} ÷ ${qte(ECHANTILLON_OBTENU.fideles)} = ${qte(pf)}` },
-          { libelle: "Poids d'une réponse de passant", attendu: pp, tolerance: 0.01, calcul: `${qte(x.e.quotas.passants)} ÷ ${qte(ECHANTILLON_OBTENU.passants)} = ${qte(pp)}` },
+          { libelle: "Poids d'une réponse de fidèle", nature: "coefficient", attendu: pf, calcul: `${qte(x.e.quotas.fideles)} ÷ ${qte(ECHANTILLON_OBTENU.fideles)} = ${quatre(pf)}` },
+          { libelle: "Poids d'une réponse de passant", nature: "coefficient", attendu: pp, calcul: `${qte(x.e.quotas.passants)} ÷ ${qte(ECHANTILLON_OBTENU.passants)} = ${quatre(pp)}` },
           {
             libelle: "Réponses redressées · Retouches",
-            attendu: auCentime(x.e.redresse.retouches),
-            tolerance: 0.5,
-            calcul: `${qte(REPONSES_SERVICE.fideles.retouches)} × ${qte(pf)} + ${qte(REPONSES_SERVICE.passants.retouches)} × ${qte(pp)} = ${qte(auCentime(x.e.redresse.retouches))}`,
+            nature: "grandeur",
+            attendu: x.e.redresse.retouches,
+            calcul: `${qte(REPONSES_SERVICE.fideles.retouches)} × ${quatre(pf)} + ${qte(REPONSES_SERVICE.passants.retouches)} × ${quatre(pp)} = ${qte(auCentime(x.e.redresse.retouches))}`,
           },
           {
             libelle: "Réponses redressées · Nocturne",
-            attendu: auCentime(x.e.redresse.nocturne),
-            tolerance: 0.5,
-            calcul: `${qte(REPONSES_SERVICE.fideles.nocturne)} × ${qte(pf)} + ${qte(REPONSES_SERVICE.passants.nocturne)} × ${qte(pp)} = ${qte(auCentime(x.e.redresse.nocturne))}`,
+            nature: "grandeur",
+            attendu: x.e.redresse.nocturne,
+            calcul: `${qte(REPONSES_SERVICE.fideles.nocturne)} × ${quatre(pf)} + ${qte(REPONSES_SERVICE.passants.nocturne)} × ${quatre(pp)} = ${qte(auCentime(x.e.redresse.nocturne))}`,
           },
         ];
       },
       explication: (c) => {
         const x = etudeDuChapitre(c);
         return [
-          `Redressée, la nocturne passe devant : ${pct(x.redresseNocturne)} des réponses, contre ${pct(x.redresseRetouches)} pour les retouches. Une fidèle trop représentée compte pour ${qte(auCentime(x.e.poids.fideles))} réponse, un passant pour ${qte(auCentime(x.e.poids.passants))}.`,
+          `Redressée, la nocturne passe devant : ${pct(x.redresseNocturne)} des réponses, contre ${pct(x.redresseRetouches)} pour les retouches. Une fidèle trop représentée compte pour ${quatre(x.e.poids.fideles)} réponse, un passant pour ${quatre(x.e.poids.passants)}.`,
         ];
       },
     },
@@ -370,13 +375,12 @@ export const INTERROGER_LES_CLIENTS: Chapitre = {
       notions: ["segmentation"],
       tableau: tableauDesReponses,
       question: () =>
-        "Le tri croisé lit une question clientèle par clientèle. Calculez, au dixième, la part des fidèles puis celle des passants qui demandent la nocturne, puis la part de chaque clientèle qui demande les retouches.",
+        "Le tri croisé lit une question clientèle par clientèle. Calculez, à deux décimales, la part des fidèles puis celle des passants qui demandent la nocturne, puis la part de chaque clientèle qui demande les retouches.",
       champs: (c) => {
         const x = etudeDuChapitre(c);
         const champ = (k: "fideles" | "passants", s: "nocturne" | "retouches") => ({
           libelle: `${s === "nocturne" ? "Nocturne" : "Retouches"} · ${NOMS_DES_CLIENTELES[k]} (%)`,
           attendu: x.pct100(x.e.croise(k, s)),
-          tolerance: 0.1,
           calcul: `${qte(REPONSES_SERVICE[k][s])} ÷ ${qte(ECHANTILLON_OBTENU[k])} × 100 = ${pct(x.pct100(x.e.croise(k, s)))}`,
         });
         return [champ("fideles", "nocturne"), champ("passants", "nocturne"), champ("fideles", "retouches"), champ("passants", "retouches")];
@@ -396,22 +400,21 @@ export const INTERROGER_LES_CLIENTS: Chapitre = {
       notions: ["segmentation"],
       question: (c) => {
         const x = etudeDuChapitre(c);
-        return `Un échantillon ne donne pas la vraie proportion, mais un intervalle. La marge d'incertitude à 95 % est ${qte(COEFFICIENT_DE_CONFIANCE)} × √(p × (1 − p) ÷ n). Pour la nocturne (p = ${pct(x.redresseNocturne)}, n = ${qte(x.e.taille)}), calculez la marge en points, au dixième, puis les deux bornes de l'intervalle.`;
+        return `Un échantillon ne donne pas la vraie proportion, mais un intervalle. La marge d'incertitude à 95 % est ${qte(COEFFICIENT_DE_CONFIANCE)} × √(p × (1 − p) ÷ n). Pour la nocturne (p = ${pct(x.redresseNocturne)}, n = ${qte(x.e.taille)}), calculez la marge en points, à deux décimales, puis les deux bornes de l'intervalle.`;
       },
       champs: (c) => {
         const x = etudeDuChapitre(c);
-        const p = x.redresseNocturne / 100;
         const m = x.margeEnPoints;
         return [
-          { libelle: "Marge d'incertitude (points)", attendu: m, tolerance: 0.1, calcul: `${qte(COEFFICIENT_DE_CONFIANCE)} × √(${qte(p)} × ${qte(auMillieme(1 - p))} ÷ ${qte(x.e.taille)}) × 100 = ${qte(m)}` },
-          { libelle: "Borne basse (%)", attendu: auDixieme(x.redresseNocturne - m), tolerance: 0.1, calcul: `${pct(x.redresseNocturne)} − ${qte(m)} = ${pct(auDixieme(x.redresseNocturne - m))}` },
-          { libelle: "Borne haute (%)", attendu: auDixieme(x.redresseNocturne + m), tolerance: 0.1, calcul: `${pct(x.redresseNocturne)} + ${qte(m)} = ${pct(auDixieme(x.redresseNocturne + m))}` },
+          { libelle: "Marge d'incertitude (points)", nature: "grandeur", attendu: m, calcul: `${qte(COEFFICIENT_DE_CONFIANCE)} × √(${quatre(x.e.pNocturne)} × ${quatre(1 - x.e.pNocturne)} ÷ ${qte(x.e.taille)}) × 100 = ${qte(m)}` },
+          { libelle: "Borne basse (%)", attendu: auCentime(x.redresseNocturne - m), calcul: `${pct(x.redresseNocturne)} − ${qte(m)} = ${pct(auCentime(x.redresseNocturne - m))}` },
+          { libelle: "Borne haute (%)", attendu: auCentime(x.redresseNocturne + m), calcul: `${pct(x.redresseNocturne)} + ${qte(m)} = ${pct(auCentime(x.redresseNocturne + m))}` },
         ];
       },
       explication: (c) => {
         const x = etudeDuChapitre(c);
         return [
-          `La part de la nocturne est quelque part entre ${pct(auDixieme(x.redresseNocturne - x.margeEnPoints))} et ${pct(auDixieme(x.redresseNocturne + x.margeEnPoints))}. Les retouches, à ${pct(x.redresseRetouches)}, sont dans cet intervalle : sur l'ensemble, l'écart de ${qte(auDixieme(x.redresseNocturne - x.redresseRetouches))} points n'est pas significatif.`,
+          `La part de la nocturne est quelque part entre ${pct(auCentime(x.redresseNocturne - x.margeEnPoints))} et ${pct(auCentime(x.redresseNocturne + x.margeEnPoints))}. Les retouches, à ${pct(x.redresseRetouches)}, sont dans cet intervalle : sur l'ensemble, l'écart de ${qte(auCentime(x.redresseNocturne - x.redresseRetouches))} points n'est pas significatif.`,
         ];
       },
     },
@@ -423,24 +426,24 @@ export const INTERROGER_LES_CLIENTS: Chapitre = {
       notions: ["segmentation"],
       question: (c) => {
         const x = etudeDuChapitre(c);
-        return `À rebours. Combien faudrait-il de réponses pour que la marge d'incertitude de la nocturne passe sous l'écart avec les retouches (${qte(auDixieme(x.e.ecart * 100))} points) ? Calculez n = ${qte(COEFFICIENT_DE_CONFIANCE)}² × p × (1 − p) ÷ écart², arrondi à l'unité supérieure, puis le taux de sondage qu'il représenterait (en %).`;
+        return `À rebours. Combien faudrait-il de réponses pour que la marge d'incertitude de la nocturne passe sous l'écart avec les retouches (${qte(auCentime(x.e.ecart * 100))} points) ? Calculez n = ${qte(COEFFICIENT_DE_CONFIANCE)}² × p × (1 − p) ÷ écart², arrondi à l'unité supérieure, puis le taux de sondage qu'il représenterait (en %).`;
       },
       champs: (c) => {
         const x = etudeDuChapitre(c);
         return [
           {
             libelle: "Réponses nécessaires",
+            nature: "quantite",
             attendu: x.e.tailleQuiDepartage,
-            tolerance: 3,
-            calcul: `${qte(COEFFICIENT_DE_CONFIANCE)}² × ${qte(auMillieme(x.e.pNocturne))} × ${qte(auMillieme(1 - x.e.pNocturne))} ÷ ${qte(auDixMillieme(x.e.ecart))}² = ${qte(x.e.tailleQuiDepartage)}`,
+            calcul: `${qte(COEFFICIENT_DE_CONFIANCE)}² × ${quatre(x.e.pNocturne)} × ${quatre(1 - x.e.pNocturne)} ÷ ${quatre(x.e.ecart)}² = ${qte(x.e.tailleCalculee)}, soit ${qte(x.e.tailleQuiDepartage)} réponses à l'unité au-dessus : une de moins laisserait la marge au-dessus de l'écart`,
           },
-          { libelle: "Taux de sondage nécessaire (%)", attendu: auDixieme((x.e.tailleQuiDepartage / x.e.populationMere) * 100), tolerance: 0.5, calcul: `${qte(x.e.tailleQuiDepartage)} ÷ ${qte(x.e.populationMere)} × 100 = ${pct(auDixieme((x.e.tailleQuiDepartage / x.e.populationMere) * 100))}` },
+          { libelle: "Taux de sondage nécessaire (%)", attendu: taux2(x.e.tailleQuiDepartage, x.e.populationMere), calcul: `${qte(x.e.tailleQuiDepartage)} ÷ ${qte(x.e.populationMere)} × 100 = ${pct(auCentime((x.e.tailleQuiDepartage / x.e.populationMere) * 100))}` },
         ];
       },
       explication: (c) => {
         const x = etudeDuChapitre(c);
         return [
-          `Il faudrait ${qte(x.e.tailleQuiDepartage)} réponses, ${pct(auDixieme((x.e.tailleQuiDepartage / x.e.populationMere) * 100))} des passages du mois : l'enquête deviendrait un recensement. Quand l'étude ne tranche pas, on regarde la cible visée (le tri croisé) et on teste en vrai, sur une durée courte.`,
+          `Il faudrait ${qte(x.e.tailleQuiDepartage)} réponses, ${pct(auCentime((x.e.tailleQuiDepartage / x.e.populationMere) * 100))} des passages du mois : l'enquête deviendrait un recensement. Quand l'étude ne tranche pas, on regarde la cible visée (le tri croisé) et on teste en vrai, sur une durée courte.`,
         ];
       },
     },
@@ -452,13 +455,13 @@ export const INTERROGER_LES_CLIENTS: Chapitre = {
       notions: ["segmentation"],
       tableau: tableauDesInfluences,
       question: () =>
-        "La question 2 demandait ce qui a fait entrer le client. Calculez, au dixième, la part des passants entrés pour la vitrine, puis pour les avis en ligne et les réseaux sociaux, et la part des fidèles entrées pour ces avis.",
+        "La question 2 demandait ce qui a fait entrer le client. Calculez, à deux décimales, la part des passants entrés pour la vitrine, puis pour les avis en ligne et les réseaux sociaux, et la part des fidèles entrées pour ces avis.",
       champs: (c) => {
         const x = etudeDuChapitre(c);
         return [
-          { libelle: "Passants entrés pour la vitrine (%)", attendu: x.pct100(partDInfluence("passants", "vitrine")), tolerance: 0.1, calcul: `${qte(REPONSES_INFLUENCE.passants.vitrine)} ÷ ${qte(ECHANTILLON_OBTENU.passants)} × 100 = ${pct(x.pct100(partDInfluence("passants", "vitrine")))}` },
-          { libelle: "Passants entrés pour les avis en ligne (%)", attendu: x.pct100(partDInfluence("passants", "avis")), tolerance: 0.1, calcul: `${qte(REPONSES_INFLUENCE.passants.avis)} ÷ ${qte(ECHANTILLON_OBTENU.passants)} × 100 = ${pct(x.pct100(partDInfluence("passants", "avis")))}` },
-          { libelle: "Fidèles entrées pour les avis en ligne (%)", attendu: x.pct100(partDInfluence("fideles", "avis")), tolerance: 0.1, calcul: `${qte(REPONSES_INFLUENCE.fideles.avis)} ÷ ${qte(ECHANTILLON_OBTENU.fideles)} × 100 = ${pct(x.pct100(partDInfluence("fideles", "avis")))}` },
+          { libelle: "Passants entrés pour la vitrine (%)", attendu: x.pct100(partDInfluence("passants", "vitrine")), calcul: `${qte(REPONSES_INFLUENCE.passants.vitrine)} ÷ ${qte(ECHANTILLON_OBTENU.passants)} × 100 = ${pct(x.pct100(partDInfluence("passants", "vitrine")))}` },
+          { libelle: "Passants entrés pour les avis en ligne (%)", attendu: x.pct100(partDInfluence("passants", "avis")), calcul: `${qte(REPONSES_INFLUENCE.passants.avis)} ÷ ${qte(ECHANTILLON_OBTENU.passants)} × 100 = ${pct(x.pct100(partDInfluence("passants", "avis")))}` },
+          { libelle: "Fidèles entrées pour les avis en ligne (%)", attendu: x.pct100(partDInfluence("fideles", "avis")), calcul: `${qte(REPONSES_INFLUENCE.fideles.avis)} ÷ ${qte(ECHANTILLON_OBTENU.fideles)} × 100 = ${pct(x.pct100(partDInfluence("fideles", "avis")))}` },
         ];
       },
       explication: (c) => {
@@ -507,9 +510,9 @@ export const INTERROGER_LES_CLIENTS: Chapitre = {
         const k = fichierDeLaCarte();
         const garde = FICHIER_DE_LA_CARTE.filter((r) => r.code !== "dormantes");
         return [
-          { libelle: "Cartes à effacer ou anonymiser", attendu: k.aEffacer, calcul: `Dernier achat il y a plus de ${qte(ANS_DE_CONSERVATION)} ans : ${qte(k.aEffacer)} cartes` },
-          { libelle: "Cartes gardées", attendu: k.gardees, calcul: `${qte(k.cartes)} − ${qte(k.aEffacer)} = ${qte(k.gardees)}` },
-          { libelle: "Destinataires de l'offre", attendu: k.destinataires, calcul: `${garde.map((r) => qte(r.consentement)).join(" + ")} = ${qte(k.destinataires)} (les cartes gardées qui ont accepté)` },
+          { libelle: "Cartes à effacer ou anonymiser", nature: "quantite", attendu: k.aEffacer, calcul: `Dernier achat il y a plus de ${qte(ANS_DE_CONSERVATION)} ans : ${qte(k.aEffacer)} cartes` },
+          { libelle: "Cartes gardées", nature: "quantite", attendu: k.gardees, calcul: `${qte(k.cartes)} − ${qte(k.aEffacer)} = ${qte(k.gardees)}` },
+          { libelle: "Destinataires de l'offre", nature: "quantite", attendu: k.destinataires, calcul: `${garde.map((r) => qte(r.consentement)).join(" + ")} = ${qte(k.destinataires)} (les cartes gardées qui ont accepté)` },
           { libelle: "Coût de l'envoi", attendu: k.coutDeLaCampagne, calcul: `${qte(k.destinataires)} × ${eur(COUT_D_UN_SMS)} = ${eur(k.coutDeLaCampagne)}` },
         ];
       },
@@ -576,7 +579,7 @@ export const INTERROGER_LES_CLIENTS: Chapitre = {
           {
             texte: `Ouvrir la nocturne pour de bon : la nocturne l'emporte, ${pct(x.redresseNocturne)} contre ${pct(x.redresseRetouches)}`,
             juste: false,
-            retour: `Pas si vite : l'écart (${qte(auDixieme(x.redresseNocturne - x.redresseRetouches))} points) est sous la marge d'incertitude (${qte(x.margeEnPoints)} points). La conclusion est probable, pas sûre : il vaut mieux l'essayer avant de s'engager.`,
+            retour: `Pas si vite : l'écart (${qte(auCentime(x.redresseNocturne - x.redresseRetouches))} points) est sous la marge d'incertitude (${qte(x.margeEnPoints)} points). La conclusion est probable, pas sûre : il vaut mieux l'essayer avant de s'engager.`,
           },
         ];
       },

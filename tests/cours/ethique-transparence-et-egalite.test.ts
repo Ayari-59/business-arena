@@ -23,8 +23,8 @@ describe("le chapitre, dans son parcours", () => {
 });
 
 describe("éthique, égalité et mécénat", () => {
-  it("l'écart de rémunération : 160 €, 7,2 %", () => {
-    expect(attendusT(CH, "l-ecart-de-remuneration")).toEqual([160, 7.2]);
+  it("l'écart de rémunération : 160 €, 7,24 %", () => {
+    expect(attendusT(CH, "l-ecart-de-remuneration")).toEqual([160, 7.24]);
   });
 
   it("le laboratoire : un don de 7 500 € coûte 3 000 € à NOVA", () => {

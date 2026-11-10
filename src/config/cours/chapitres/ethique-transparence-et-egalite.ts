@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import { CLUB_SOUTENU, DONS_ESSAYES, ENTREPRISES_DE_L_ETHIQUE, MECENAT, don, donMaximal, ecartDeRemuneration, plafondDuMecenat } from "../monde/ethique-de-nova";
 import { HAUT_VERDASSE } from "../monde/haut-verdasse";
 import type { Chapitre } from "../types";
@@ -17,11 +17,12 @@ import type { Chapitre } from "../types";
  * celle-ci est au niveau du lycée.
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA : monde/ethique-de-nova.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : l'écart de rémunération se donne à deux décimales, à un centième
+ * près (au dixième, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
 
 export const ETHIQUE_TRANSPARENCE_ET_EGALITE: Chapitre = {
   code: "ethique-transparence-et-egalite",
@@ -158,13 +159,13 @@ export const ETHIQUE_TRANSPARENCE_ET_EGALITE: Chapitre = {
       titre: "L'écart entre femmes et hommes",
       question: () => {
         const e = ecartDeRemuneration();
-        return `En N + 2, NOVA compte ${qte(e.femmes.effectif)} femmes payées en moyenne ${eur(e.femmes.salaire)} bruts par mois, et ${qte(e.hommes.effectif)} hommes payés en moyenne ${eur(e.hommes.salaire)}. Calculez l'écart de salaire moyen, puis cet écart rapporté au salaire moyen des hommes (au dixième).`;
+        return `En N + 2, NOVA compte ${qte(e.femmes.effectif)} femmes payées en moyenne ${eur(e.femmes.salaire)} bruts par mois, et ${qte(e.hommes.effectif)} hommes payés en moyenne ${eur(e.hommes.salaire)}. Calculez l'écart de salaire moyen, puis cet écart rapporté au salaire moyen des hommes (à deux décimales).`;
       },
       champs: () => {
         const e = ecartDeRemuneration();
         return [
           { libelle: "Écart de salaire moyen", attendu: e.ecart, calcul: `${eur(e.hommes.salaire)} − ${eur(e.femmes.salaire)} = ${eur(e.ecart)}` },
-          { libelle: "Écart rapporté au salaire des hommes (%)", attendu: e.ecartPct, calcul: `${eur(e.ecart)} ÷ ${eur(e.hommes.salaire)} × 100 = ${pct(e.ecartPct)}`, tolerance: 0.1 },
+          { libelle: "Écart rapporté au salaire des hommes (%)", attendu: e.ecartPct, calcul: `${eur(e.ecart)} ÷ ${eur(e.hommes.salaire)} × 100 = ${pct(e.ecartPct)}` },
         ];
       },
       explication: () => {

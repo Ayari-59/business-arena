@@ -1,3 +1,4 @@
+import { arrondi2, taux2 } from "../../../pedagogy/cours/deux-decimales";
 import { enseigneDe, qualitePercue } from "./attractivite";
 import { MARCHE_A_TROIS } from "./marche-a-trois";
 import { CANAL_INDIRECT, CLIENTELES, type CodeDeClientele } from "./mercatique-de-nova";
@@ -26,8 +27,7 @@ import { GAMME_DE_NOVA, VENTES_A_CAMPUSTECH, type CodeDeReference } from "./nova
  *     commande de 150 enceintes.
  */
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const auCentime = arrondi2;
 
 /** La référence que chaque clientèle achète d'abord (hypothèse du chapitre). */
 export const COUPLES_PRODUIT_MARCHE: Readonly<Record<CodeDeReference, CodeDeClientele>> = { go: "etudiants", one: "familles", studio: "melomanes" };
@@ -78,7 +78,7 @@ export function gammeDuMois() {
   }));
   const total = auCentime(references.reduce((t, r) => t + r.chiffreDAffaires, 0));
   return {
-    references: references.map((r) => ({ ...r, part: auDixieme((r.chiffreDAffaires / total) * 100) })),
+    references: references.map((r) => ({ ...r, part: taux2(r.chiffreDAffaires, total) })),
     chiffreDAffaires: total,
   };
 }

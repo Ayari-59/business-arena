@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   HEURES_COMPLEMENTAIRES_POSSIBLES,
@@ -50,14 +50,16 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * du harcèlement moral (art. L1152-1) ; le droit d'alerte et de retrait du salarié face à un danger
  * grave et imminent ; le délai de prévenance de 7 jours avant de changer les horaires d'un temps
  * partiel ; les heures complémentaires au plus au dixième du contrat, majorées de 10 %.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les taux se donnent à deux décimales (au dixième, avant) ; les
+ * ventes de la panne partent de la caisse d'une semaine au centime, et la marge sauvée du taux de
+ * marge arrondi (monde/equipe-de-la-boutique.ts), au centime, à un centime près (à 50 centimes ou un
+ * euro près, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${qte(t)} %`;
+const qte = nombreAuCentieme;
 const h = (x: number) => `${qte(x)} h`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
 
 const POURQUOI =
   "ce chapitre se joue à la boutique du cours, MAILLE & CO : ses vendeurs, leurs heures et leurs ventes sont ceux des autres chapitres du parcours.";
@@ -134,21 +136,21 @@ export const LE_CLIMAT_DE_L_EQUIPE: Chapitre = {
       question: (c) => {
         const x = climatDeLEquipe(c);
         const r = MOUVEMENTS_DE_N_MOINS_1;
-        return `Calculez le taux d'absentéisme de l'équipe en janvier (${h(x.s.absences)} d'absence pour ${h(x.s.heures)} payées), puis celui de ${x.m.prenom} (${h(x.m.absences)} sur ${h(x.m.heures)}). Calculez enfin le taux de rotation de N − 1 : ${qte(r.departs)} départs et ${qte(r.arrivees)} arrivées pour ${qte(r.effectifMoyen)} salariés en moyenne. Tout au dixième.`;
+        return `Calculez le taux d'absentéisme de l'équipe en janvier (${h(x.s.absences)} d'absence pour ${h(x.s.heures)} payées), puis celui de ${x.m.prenom} (${h(x.m.absences)} sur ${h(x.m.heures)}). Calculez enfin le taux de rotation de N − 1 : ${qte(r.departs)} départs et ${qte(r.arrivees)} arrivées pour ${qte(r.effectifMoyen)} salariés en moyenne. Tout à deux décimales.`;
       },
       champs: (c) => {
         const x = climatDeLEquipe(c);
         const r = MOUVEMENTS_DE_N_MOINS_1;
         return [
-          { libelle: "Absentéisme de l'équipe (%)", attendu: auDixieme(x.s.absenteisme * 100), tolerance: 0.1, calcul: `${h(x.s.absences)} ÷ ${h(x.s.heures)} × 100 = ${pct(auDixieme(x.s.absenteisme * 100))}` },
-          { libelle: `Absentéisme de ${x.m.prenom} (%)`, attendu: auDixieme(x.m.taux * 100), tolerance: 0.1, calcul: `${h(x.m.absences)} ÷ ${h(x.m.heures)} × 100 = ${pct(auDixieme(x.m.taux * 100))}` },
-          { libelle: "Taux de rotation (%)", attendu: auDixieme(x.s.rotation * 100), tolerance: 0.1, calcul: `(${qte(r.departs)} + ${qte(r.arrivees)}) ÷ 2 ÷ ${qte(r.effectifMoyen)} × 100 = ${pct(auDixieme(x.s.rotation * 100))}` },
+          { libelle: "Absentéisme de l'équipe (%)", attendu: auCentime(x.s.absenteisme * 100), calcul: `${h(x.s.absences)} ÷ ${h(x.s.heures)} × 100 = ${pct(auCentime(x.s.absenteisme * 100))}` },
+          { libelle: `Absentéisme de ${x.m.prenom} (%)`, attendu: auCentime(x.m.taux * 100), calcul: `${h(x.m.absences)} ÷ ${h(x.m.heures)} × 100 = ${pct(auCentime(x.m.taux * 100))}` },
+          { libelle: "Taux de rotation (%)", attendu: auCentime(x.s.rotation * 100), calcul: `(${qte(r.departs)} + ${qte(r.arrivees)}) ÷ 2 ÷ ${qte(r.effectifMoyen)} × 100 = ${pct(auCentime(x.s.rotation * 100))}` },
         ];
       },
       explication: (c) => {
         const x = climatDeLEquipe(c);
         return [
-          `L'équipe s'absente ${pct(auDixieme(x.s.absenteisme * 100))} de ses heures ; ${x.m.prenom}, ${pct(auDixieme(x.m.taux * 100))}. Un taux d'équipe moyen peut cacher un salarié en difficulté. Et ${qte(MOUVEMENTS_DE_N_MOINS_1.departs)} départs par an veulent dire un recrutement, et une intégration, tous les ${qte(12 / MOUVEMENTS_DE_N_MOINS_1.departs)} mois.`,
+          `L'équipe s'absente ${pct(auCentime(x.s.absenteisme * 100))} de ses heures ; ${x.m.prenom}, ${pct(auCentime(x.m.taux * 100))}. Un taux d'équipe moyen peut cacher un salarié en difficulté. Et ${qte(MOUVEMENTS_DE_N_MOINS_1.departs)} départs par an veulent dire un recrutement, et une intégration, tous les ${qte(12 / MOUVEMENTS_DE_N_MOINS_1.departs)} mois.`,
         ];
       },
     },
@@ -218,7 +220,7 @@ export const LE_CLIMAT_DE_L_EQUIPE: Chapitre = {
         const x = climatDeLEquipe(c);
         const k = coutDesAbsences(x.f, p.absences!, p.remplacees!);
         return [
-          { libelle: "Taux d'absentéisme", montant: auDixieme((p.absences! / x.s.heures) * 100), reference: auDixieme(x.s.absenteisme * 100), unite: "%" },
+          { libelle: "Taux d'absentéisme", montant: auCentime((p.absences! / x.s.heures) * 100), reference: auCentime(x.s.absenteisme * 100), unite: "%" },
           { libelle: "Heures non remplacées", montant: k.nonRemplacees, reference: x.k.nonRemplacees, unite: "h" },
           { libelle: "Coût du remplacement", montant: -k.remplacement + 0, reference: -x.k.remplacement + 0, effet: true },
           { libelle: "Marge perdue", montant: -k.margePerdue + 0, reference: -x.k.margePerdue + 0, effet: true },
@@ -275,7 +277,7 @@ export const LE_CLIMAT_DE_L_EQUIPE: Chapitre = {
         return [
           { libelle: "Retards en janvier", montant: x.m.retards, categorie: "signe", pourquoi: "Des retards répétés chez un vendeur ponctuel jusque-là se voient : c'est un signe." },
           { libelle: "Heures d'arrêt maladie en janvier", montant: x.m.absences, categorie: "signe", pourquoi: "Les absences courtes et répétées sont l'un des premiers signes d'un stress au travail." },
-          { libelle: "Taux de transformation tombé, en %", montant: auDixieme(x.v.transformation * 100), categorie: "signe", pourquoi: "Une performance qui baisse est un signe, pas une cause : il faut chercher ce qui la fait baisser." },
+          { libelle: "Taux de transformation tombé, en %", montant: auCentime(x.v.transformation * 100), categorie: "signe", pourquoi: "Une performance qui baisse est un signe, pas une cause : il faut chercher ce qui la fait baisser." },
           { libelle: "Soirs par semaine où il ferme seul la boutique", montant: SOIRS_DE_FERMETURE_SEUL, categorie: "facteur", pourquoi: "Fermer seul, la caisse en main, isole et inquiète : c'est une condition de travail, un facteur." },
           { libelle: "Objectif du mois fixé sans échange, en euros", montant: x.v.objectif, categorie: "facteur", pourquoi: "Un objectif imposé sans moyens ni dialogue est un facteur de stress reconnu." },
           { libelle: "Samedis sur quatre disputés avec une collègue", montant: SAMEDIS_DISPUTES, categorie: "facteur", pourquoi: "Un conflit sur l'organisation du travail est un facteur : il use, même sans éclat." },
@@ -426,10 +428,10 @@ export const LE_CLIMAT_DE_L_EQUIPE: Chapitre = {
         const x = climatDeLEquipe(c);
         const p = x.p;
         return [
-          { libelle: "Ventes des heures de la panne", attendu: p.ventes, tolerance: 0.5, calcul: `${eur(p.caisseParSemaine)} × ${qte(p.entreesDeLaPanne)} ÷ ${qte(p.entreesDeLaSemaine)} = ${eur(p.ventes)}` },
-          { libelle: "Ventes perdues sans plan", attendu: p.perduSans, tolerance: 0.5, calcul: `${eur(p.ventes)} × ${pct(PANNE_DE_CAISSE.pertesSansPlan * 100)} = ${eur(p.perduSans)}` },
-          { libelle: "Ventes perdues avec le plan", attendu: p.perduAvec, tolerance: 0.5, calcul: `${eur(p.ventes)} × ${pct(PANNE_DE_CAISSE.pertesAvecPlan * 100)} = ${eur(p.perduAvec)}` },
-          { libelle: "Marge sauvée par le plan", attendu: p.margeSauvee, tolerance: 1, calcul: `(${eur(p.perduSans)} − ${eur(p.perduAvec)}) × ${pct(auDixieme(p.tauxDeMarge * 100))} = ${eur(p.margeSauvee)}` },
+          { libelle: "Ventes des heures de la panne", attendu: p.ventes, calcul: `${eur(p.caisseParSemaine)} × ${qte(p.entreesDeLaPanne)} ÷ ${qte(p.entreesDeLaSemaine)} = ${eur(p.ventes)}` },
+          { libelle: "Ventes perdues sans plan", attendu: p.perduSans, calcul: `${eur(p.ventes)} × ${pct(PANNE_DE_CAISSE.pertesSansPlan * 100)} = ${eur(p.perduSans)}` },
+          { libelle: "Ventes perdues avec le plan", attendu: p.perduAvec, calcul: `${eur(p.ventes)} × ${pct(PANNE_DE_CAISSE.pertesAvecPlan * 100)} = ${eur(p.perduAvec)}` },
+          { libelle: "Marge sauvée par le plan", attendu: p.margeSauvee, calcul: `(${eur(p.perduSans)} − ${eur(p.perduAvec)}) × ${pct(auCentime(p.tauxDeMarge * 100))} = ${eur(p.margeSauvee)}` },
         ];
       },
       explication: (c) => {
@@ -495,9 +497,9 @@ export const LE_CLIMAT_DE_L_EQUIPE: Chapitre = {
           titre: `${x.f.entreprise} · le climat de l'équipe en janvier`,
           colonnes: ["Valeur"],
           lignes: [
-            { libelle: "Absentéisme de l'équipe", valeurs: [pct(auDixieme(x.s.absenteisme * 100))] },
-            { libelle: `Absentéisme de ${x.m.prenom}`, valeurs: [pct(auDixieme(x.m.taux * 100))] },
-            { libelle: "Rotation de N − 1", valeurs: [pct(auDixieme(x.s.rotation * 100))] },
+            { libelle: "Absentéisme de l'équipe", valeurs: [pct(auCentime(x.s.absenteisme * 100))] },
+            { libelle: `Absentéisme de ${x.m.prenom}`, valeurs: [pct(auCentime(x.m.taux * 100))] },
+            { libelle: "Rotation de N − 1", valeurs: [pct(auCentime(x.s.rotation * 100))] },
             { libelle: "Coût des absences du mois", valeurs: [eur(x.k.total)] },
             { libelle: "Coût au mieux remplacé", valeurs: [eur(x.auMieux.total)] },
             { libelle: "Marge sauvée par le plan de secours", valeurs: [eur(x.p.margeSauvee)] },
@@ -507,7 +509,7 @@ export const LE_CLIMAT_DE_L_EQUIPE: Chapitre = {
       texte: (c) => {
         const x = climatDeLEquipe(c);
         return [
-          `Les indicateurs sociaux se calculent comme les autres : ${pct(auDixieme(x.s.absenteisme * 100))} d'absentéisme à ${x.f.entreprise}, mais ${pct(auDixieme(x.m.taux * 100))} pour ${x.m.prenom}. Une absence coûte, remplacée ou non : ${eur(x.k.total)} en janvier.`,
+          `Les indicateurs sociaux se calculent comme les autres : ${pct(auCentime(x.s.absenteisme * 100))} d'absentéisme à ${x.f.entreprise}, mais ${pct(auCentime(x.m.taux * 100))} pour ${x.m.prenom}. Une absence coûte, remplacée ou non : ${eur(x.k.total)} en janvier.`,
           "Derrière les chiffres, le manager lit des signes de stress et cherche leurs facteurs dans le travail. Un conflit d'intérêt se règle par la médiation et une règle commune, un entretien par la préparation et l'écoute.",
           "Une crise se prépare avant d'arriver : un plan opérationnel, qui fait quoi, et un plan de communication, quoi dire, à qui, par qui.",
           "Les limites de la méthode : le lien entre une heure absente et une vente perdue est une hypothèse, et un indicateur social signale un problème sans le nommer ; seul l'échange le nomme.",

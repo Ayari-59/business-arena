@@ -1,3 +1,4 @@
+import { taux2 } from "../../../pedagogy/cours/deux-decimales";
 import { auCentime } from "./amortissement";
 import { compteDuLycee, exerciceDe } from "./comptes-du-lycee";
 import { ENTREPRISES_DE_LA_DIRECTION } from "./direction-de-nova";
@@ -54,11 +55,11 @@ export function donMaximal() {
   return d;
 }
 
-/** L'écart de rémunération moyenne entre les femmes et les hommes, rapporté à celle des hommes, au dixième de point. */
+/** L'écart de rémunération moyenne entre les femmes et les hommes, rapporté à celle des hommes, à deux décimales. */
 export function ecartDeRemuneration() {
   const e = EGALITE_DE_N_PLUS_2;
   const ecart = e.hommes.salaire - e.femmes.salaire;
-  return { ...e, ecart, ecartPct: Math.round((ecart / e.hommes.salaire) * 1000) / 10 };
+  return { ...e, ecart, ecartPct: taux2(ecart, e.hommes.salaire) };
 }
 
 /** Le cas : ce que rapporterait le stand gratuit, en échange d'une allégation trompeuse. */

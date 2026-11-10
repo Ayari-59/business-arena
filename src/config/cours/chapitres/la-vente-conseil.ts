@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   ACCEPTATION_AU_RETRAIT,
@@ -39,13 +39,14 @@ import { ENTREPRISES_DU_POINT_DE_VENTE, ficheDe } from "./taux-de-marque";
  *     technique et le taux visé, la marge gagnée par samedi ; le graphique selon le taux) ;
  *   · expert : la-marge-par-client, vendre-a-distance (un tri), la-retractation ; puis quelle-technique
  *     et la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les taux se donnent à deux décimales (au dixième, avant) ;
+ * l'indice de vente est une grandeur au centième ; les articles en plus et les jours du mois sont des
+ * quantités, entières, déclarées comme telles.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number, chiffres = 1) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: chiffres }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const qte = nombreAuCentieme;
 
 export const POURQUOI_LA_VENTE =
   "la simulation du cours suit un seul point de vente, la boutique MAILLE & CO, dont elle connaît un samedi de janvier vendeur par vendeur : la vente conseil s'y mesure, quelle que soit votre entreprise.";
@@ -96,7 +97,7 @@ function tableauDeLaSynthese(c: Pick<Cas, "code">): TableauDeDonnees {
     colonnes: ["Transformation", "Panier", "Vente additionnelle", "Montée en gamme", "Marge par client"],
     lignes: x.s.vendeurs.map((v) => ({
       libelle: x.nom(v.code),
-      valeurs: [pct(auDixieme(v.transformation * 100)), eur(auCentime(v.panier)), pct(auDixieme(v.venteAdditionnelle * 100)), pct(auDixieme(v.monteeEnGamme * 100)), eur(auCentime(v.margeParClient))],
+      valeurs: [pct(auCentime(v.transformation * 100)), eur(auCentime(v.panier)), pct(auCentime(v.venteAdditionnelle * 100)), pct(auCentime(v.monteeEnGamme * 100)), eur(auCentime(v.margeParClient))],
     })),
   };
 }
@@ -171,20 +172,19 @@ export const LA_VENTE_CONSEIL: Chapitre = {
       titre: "La transformation de chaque vendeur",
       notions: ["conversion_rate"],
       tableau: tableauDuSamedi,
-      question: () => "Calculez le taux de transformation de chaque vendeur : ses passages en caisse ÷ les clients qu'il a accueillis, en pourcentage, au dixième.",
+      question: () => "Calculez le taux de transformation de chaque vendeur : ses passages en caisse ÷ les clients qu'il a accueillis, en pourcentage, à deux décimales.",
       champs: (c) => {
         const x = venteDuChapitre(c);
         return x.s.vendeurs.map((v) => ({
           libelle: `Transformation · ${x.nom(v.code)} (%)`,
-          attendu: auDixieme(v.transformation * 100),
-          tolerance: 0.1,
-          calcul: `${qte(v.tickets)} ÷ ${qte(v.prisEnCharge)} × 100 = ${pct(auDixieme(v.transformation * 100))}`,
+          attendu: auCentime(v.transformation * 100),
+          calcul: `${qte(v.tickets)} ÷ ${qte(v.prisEnCharge)} × 100 = ${pct(auCentime(v.transformation * 100))}`,
         }));
       },
       explication: (c) => {
         const x = venteDuChapitre(c);
         const e = x.s.vendeur("etudiante");
-        return [`Le vendeur et la vendeuse concluent ${pct(auDixieme(x.s.vendeur("vendeur").transformation * 100))} de leurs entretiens, l'étudiante ${pct(auDixieme(e.transformation * 100))}. La transformation d'un vendeur se compte sur les clients qu'il a accueillis, pas sur les entrées de la boutique.`];
+        return [`Le vendeur et la vendeuse concluent ${pct(auCentime(x.s.vendeur("vendeur").transformation * 100))} de leurs entretiens, l'étudiante ${pct(auCentime(e.transformation * 100))}. La transformation d'un vendeur se compte sur les clients qu'il a accueillis, pas sur les entrées de la boutique.`];
       },
     },
     {
@@ -198,7 +198,7 @@ export const LA_VENTE_CONSEIL: Chapitre = {
       champs: (c) => {
         const x = venteDuChapitre(c);
         return x.s.vendeurs.flatMap((v) => [
-          { libelle: `Indice de vente · ${x.nom(v.code)}`, attendu: auCentime(v.indice), tolerance: 0.01, calcul: `${qte(v.articles)} ÷ ${qte(v.tickets)} = ${qte(auCentime(v.indice))}` },
+          { libelle: `Indice de vente · ${x.nom(v.code)}`, nature: "grandeur", attendu: auCentime(v.indice), calcul: `${qte(v.articles)} ÷ ${qte(v.tickets)} = ${qte(auCentime(v.indice))}` },
           { libelle: `Panier moyen · ${x.nom(v.code)}`, attendu: auCentime(v.panier), calcul: `${eur(v.chiffre)} ÷ ${qte(v.tickets)} = ${eur(auCentime(v.panier))}` },
         ]);
       },
@@ -237,23 +237,22 @@ export const LA_VENTE_CONSEIL: Chapitre = {
       titre: "La vente additionnelle",
       notions: ["average_basket", "contribution_margin"],
       tableau: tableauDesTechniques,
-      question: () => "Calculez le taux de vente additionnelle de chaque vendeur : les écharpes ajoutées ÷ les cardigans vendus, en pourcentage, au dixième. Puis la marge que ces écharpes ont apportée au samedi.",
+      question: () => "Calculez le taux de vente additionnelle de chaque vendeur : les écharpes ajoutées ÷ les cardigans vendus, en pourcentage, à deux décimales. Puis la marge que ces écharpes ont apportée au samedi.",
       champs: (c) => {
         const x = venteDuChapitre(c);
         const ajoutees = x.s.vendeurs.reduce((t, v) => t + v.echarpesAvecLeCardigan, 0);
         return [
           ...x.s.vendeurs.map((v) => ({
             libelle: `Vente additionnelle · ${x.nom(v.code)} (%)`,
-            attendu: auDixieme(v.venteAdditionnelle * 100),
-            tolerance: 0.1,
-            calcul: `${qte(v.echarpesAvecLeCardigan)} ÷ ${qte(v.cardigans)} × 100 = ${pct(auDixieme(v.venteAdditionnelle * 100))}`,
+            attendu: auCentime(v.venteAdditionnelle * 100),
+            calcul: `${qte(v.echarpesAvecLeCardigan)} ÷ ${qte(v.cardigans)} × 100 = ${pct(auCentime(v.venteAdditionnelle * 100))}`,
           })),
           { libelle: "Marge des écharpes ajoutées", attendu: auCentime(ajoutees * x.s.margeDUneEcharpe), calcul: `${qte(ajoutees)} × ${eur(x.s.margeDUneEcharpe)} = ${eur(auCentime(ajoutees * x.s.margeDUneEcharpe))}` },
         ];
       },
       explication: (c) => {
         const x = venteDuChapitre(c);
-        return [`La vendeuse fait accepter l'écharpe à ${pct(auDixieme(x.s.vendeur("vendeuse-partiel").venteAdditionnelle * 100))} de ses clients au cardigan ; le vendeur à ${pct(auDixieme(x.s.vendeur("vendeur").venteAdditionnelle * 100))}, l'étudiante à ${pct(auDixieme(x.s.vendeur("etudiante").venteAdditionnelle * 100))}. La technique se transmet : la vendeuse peut la montrer.`];
+        return [`La vendeuse fait accepter l'écharpe à ${pct(auCentime(x.s.vendeur("vendeuse-partiel").venteAdditionnelle * 100))} de ses clients au cardigan ; le vendeur à ${pct(auCentime(x.s.vendeur("vendeur").venteAdditionnelle * 100))}, l'étudiante à ${pct(auCentime(x.s.vendeur("etudiante").venteAdditionnelle * 100))}. La technique se transmet : la vendeuse peut la montrer.`];
       },
     },
     {
@@ -263,16 +262,15 @@ export const LA_VENTE_CONSEIL: Chapitre = {
       titre: "La montée en gamme",
       notions: ["average_basket", "contribution_margin"],
       tableau: tableauDesTechniques,
-      question: () => "Calculez le taux de montée en gamme de chaque vendeur : les mérinos ÷ les pulls vendus, en pourcentage, au dixième. Puis la marge de plus que ces mérinos ont apportée, face à autant de cols ronds.",
+      question: () => "Calculez le taux de montée en gamme de chaque vendeur : les mérinos ÷ les pulls vendus, en pourcentage, à deux décimales. Puis la marge de plus que ces mérinos ont apportée, face à autant de cols ronds.",
       champs: (c) => {
         const x = venteDuChapitre(c);
         const merinos = x.s.vendeurs.reduce((t, v) => t + v.merinos, 0);
         return [
           ...x.s.vendeurs.map((v) => ({
             libelle: `Montée en gamme · ${x.nom(v.code)} (%)`,
-            attendu: auDixieme(v.monteeEnGamme * 100),
-            tolerance: 0.1,
-            calcul: `${qte(v.merinos)} ÷ ${qte(v.pulls)} × 100 = ${pct(auDixieme(v.monteeEnGamme * 100))}`,
+            attendu: auCentime(v.monteeEnGamme * 100),
+            calcul: `${qte(v.merinos)} ÷ ${qte(v.pulls)} × 100 = ${pct(auCentime(v.monteeEnGamme * 100))}`,
           })),
           { libelle: "Marge de plus des mérinos", attendu: auCentime(merinos * x.s.margeDeLaMontee), calcul: `${qte(merinos)} × ${eur(x.s.margeDeLaMontee)} = ${eur(auCentime(merinos * x.s.margeDeLaMontee))}` },
         ];
@@ -280,7 +278,7 @@ export const LA_VENTE_CONSEIL: Chapitre = {
       explication: (c) => {
         const x = venteDuChapitre(c);
         return [
-          `Le vendeur oriente ${pct(auDixieme(x.s.vendeur("vendeur").monteeEnGamme * 100))} de ses clients vers le mérinos ; l'étudiante, aucun. Chaque montée laisse ${eur(x.s.margeDeLaMontee)} de plus, ${qte(auCentime(x.s.margeDeLaMontee / x.s.margeDUneEcharpe))} fois une écharpe ajoutée : c'est la technique la plus payante, et la plus inégale dans l'équipe.`,
+          `Le vendeur oriente ${pct(auCentime(x.s.vendeur("vendeur").monteeEnGamme * 100))} de ses clients vers le mérinos ; l'étudiante, aucun. Chaque montée laisse ${eur(x.s.margeDeLaMontee)} de plus, ${qte(auCentime(x.s.margeDeLaMontee / x.s.margeDUneEcharpe))} fois une écharpe ajoutée : c'est la technique la plus payante, et la plus inégale dans l'équipe.`,
         ];
       },
     },
@@ -304,7 +302,7 @@ export const LA_VENTE_CONSEIL: Chapitre = {
           { libelle: "Ventes en plus par samedi", montant: auCentime(g.ventesEnPlus), reference: auCentime(d.ventesEnPlus), unite: "articles" },
           { libelle: "Marge d'une vente en plus", montant: g.unitaire, reference: d.unitaire },
           { libelle: "Marge gagnée par samedi", montant: g.marge, reference: d.marge, effet: true, fort: true },
-          { libelle: "Taux du meilleur vendeur", montant: auDixieme(g.meilleur * 100), reference: auDixieme(d.meilleur * 100), unite: "%" },
+          { libelle: "Taux du meilleur vendeur", montant: auCentime(g.meilleur * 100), reference: auCentime(d.meilleur * 100), unite: "%" },
         ];
       },
       graphique: (c) => {
@@ -328,8 +326,8 @@ export const LA_VENTE_CONSEIL: Chapitre = {
           atteint: ok,
           indice: (p) => {
             const g = gainDeLaFormation(f, techniqueDe(p.technique!), p.taux! / 100);
-            if (p.taux! / 100 > g.meilleur + 1e-9) return `Personne dans l'équipe ne réussit ${pct(p.taux!, 0)} : le meilleur est à ${pct(auDixieme(g.meilleur * 100))}. Un taux que personne ne tient ne se forme pas en un mois.`;
-            return `À ${pct(p.taux!, 0)}, la formation rapporte ${eur(g.marge)} par samedi : il manque ${eur(auCentime(MARGE_VISEE_PAR_SAMEDI - g.marge))}. Montez le taux, ou essayez l'autre technique.`;
+            if (p.taux! / 100 > g.meilleur + 1e-9) return `Personne dans l'équipe ne réussit ${pct(p.taux!)} : le meilleur est à ${pct(auCentime(g.meilleur * 100))}. Un taux que personne ne tient ne se forme pas en un mois.`;
+            return `À ${pct(p.taux!)}, la formation rapporte ${eur(g.marge)} par samedi : il manque ${eur(auCentime(MARGE_VISEE_PAR_SAMEDI - g.marge))}. Montez le taux, ou essayez l'autre technique.`;
           },
           solution: { technique: TECHNIQUES.find((t) => t.code === SOLUTION_DU_LABORATOIRE.technique)!.valeur, taux: SOLUTION_DU_LABORATOIRE.taux },
         };
@@ -340,7 +338,7 @@ export const LA_VENTE_CONSEIL: Chapitre = {
         const g = gainDeLaFormation(f, techniqueDe(p.technique!), p.taux! / 100);
         const a = gainDeLaFormation(f, "additionnelle", 2 / 3);
         return [
-          `Former à la montée en gamme jusqu'à ${pct(p.taux!, 0)} rapporte ${eur(g.marge)} par samedi : ${qte(auCentime(g.ventesEnPlus))} mérinos de plus, à ${eur(g.unitaire)} chacun. Porter tout le monde au taux de la vendeuse en vente additionnelle n'en rapporterait que ${eur(a.marge)}.`,
+          `Former à la montée en gamme jusqu'à ${pct(p.taux!)} rapporte ${eur(g.marge)} par samedi : ${qte(auCentime(g.ventesEnPlus))} mérinos de plus, à ${eur(g.unitaire)} chacun. Porter tout le monde au taux de la vendeuse en vente additionnelle n'en rapporterait que ${eur(a.marge)}.`,
           "Une technique se choisit sur la marge qu'elle apporte par client, pas sur ce qu'elle ajoute au ticket.",
         ];
       },
@@ -376,20 +374,20 @@ export const LA_VENTE_CONSEIL: Chapitre = {
       notions: ["conversion_rate", "contribution_margin"],
       question: (c) => {
         const x = venteDuChapitre(c);
-        return `Le samedi, ${qte(x.s.vusEnLigne)} des ${qte(x.s.tickets)} clients passés en caisse avaient vu l'article sur le site (le ROPO : chercher en ligne, acheter en boutique). En janvier, ${qte(x.s.retraits)} passages étaient des retraits de commandes. Calculez la part du ROPO le samedi (au dixième), les articles en plus si ${pct(ACCEPTATION_AU_RETRAIT * 100, 0)} des clients venus retirer acceptent une proposition, et leur marge à ${eur(x.s.margeDUnArticleEnCaisse)} l'article.`;
+        return `Le samedi, ${qte(x.s.vusEnLigne)} des ${qte(x.s.tickets)} clients passés en caisse avaient vu l'article sur le site (le ROPO : chercher en ligne, acheter en boutique). En janvier, ${qte(x.s.retraits)} passages étaient des retraits de commandes. Calculez la part du ROPO le samedi (à deux décimales), les articles en plus si ${pct(ACCEPTATION_AU_RETRAIT * 100)} des clients venus retirer acceptent une proposition, et leur marge à ${eur(x.s.margeDUnArticleEnCaisse)} l'article.`;
       },
       champs: (c) => {
         const x = venteDuChapitre(c);
         return [
-          { libelle: "Clients venus après le site (%)", attendu: auDixieme(x.s.partDuRopo * 100), tolerance: 0.1, calcul: `${qte(x.s.vusEnLigne)} ÷ ${qte(x.s.tickets)} × 100 = ${pct(auDixieme(x.s.partDuRopo * 100))}` },
-          { libelle: "Articles en plus au retrait", attendu: x.s.articlesAuRetrait, calcul: `${qte(x.s.retraits)} × ${pct(ACCEPTATION_AU_RETRAIT * 100, 0)} = ${qte(x.s.articlesAuRetrait)}` },
+          { libelle: "Clients venus après le site (%)", attendu: auCentime(x.s.partDuRopo * 100), calcul: `${qte(x.s.vusEnLigne)} ÷ ${qte(x.s.tickets)} × 100 = ${pct(auCentime(x.s.partDuRopo * 100))}` },
+          { libelle: "Articles en plus au retrait", nature: "quantite", attendu: x.s.articlesAuRetrait, calcul: `${qte(x.s.retraits)} × ${pct(ACCEPTATION_AU_RETRAIT * 100)} = ${qte(x.s.articlesAuRetrait)}` },
           { libelle: "Marge des articles en plus", attendu: x.s.margeAuRetrait, calcul: `${qte(x.s.articlesAuRetrait)} × ${eur(x.s.margeDUnArticleEnCaisse)} = ${eur(x.s.margeAuRetrait)}` },
         ];
       },
       explication: (c) => {
         const x = venteDuChapitre(c);
         return [
-          `${pct(auDixieme(x.s.partDuRopo * 100))} des clients arrivent en sachant ce qu'ils veulent : le vendeur part de ce qu'il a vu, la fiche produit du site en main ou sur la tablette. Le retrait d'une commande est une vente à part entière : proposé à chaque retrait, un article en plus ferait ${eur(x.s.margeAuRetrait)} de marge par mois. L'omnicanal, c'est un seul client par plusieurs canaux.`,
+          `${pct(auCentime(x.s.partDuRopo * 100))} des clients arrivent en sachant ce qu'ils veulent : le vendeur part de ce qu'il a vu, la fiche produit du site en main ou sur la tablette. Le retrait d'une commande est une vente à part entière : proposé à chaque retrait, un article en plus ferait ${eur(x.s.margeAuRetrait)} de marge par mois. L'omnicanal, c'est un seul client par plusieurs canaux.`,
         ];
       },
     },
@@ -432,9 +430,9 @@ export const LA_VENTE_CONSEIL: Chapitre = {
       champs: (c) => {
         const x = venteDuChapitre(c);
         return [
-          { libelle: `Dernier jour pour se rétracter (${x.r.mois})`, attendu: x.r.dernierJour, calcul: `${qte(x.r.retrait)} + ${qte(JOURS_DE_RETRACTATION)} = le ${qte(x.r.dernierJour)} ${x.r.mois}` },
+          { libelle: `Dernier jour pour se rétracter (${x.r.mois})`, nature: "quantite", attendu: x.r.dernierJour, calcul: `${qte(x.r.retrait)} + ${qte(JOURS_DE_RETRACTATION)} = le ${qte(x.r.dernierJour)} ${x.r.mois}` },
           { libelle: "Somme à rembourser", attendu: x.r.rembourse, calcul: `Le prix payé, toutes taxes comprises : ${eur(x.r.rembourse)}` },
-          { libelle: `Remboursement au plus tard (${x.r.mois})`, attendu: x.r.remboursementAuPlusTard, calcul: `${qte(x.r.decision)} + ${qte(JOURS_POUR_REMBOURSER)} = le ${qte(x.r.remboursementAuPlusTard)} ${x.r.mois}` },
+          { libelle: `Remboursement au plus tard (${x.r.mois})`, nature: "quantite", attendu: x.r.remboursementAuPlusTard, calcul: `${qte(x.r.decision)} + ${qte(JOURS_POUR_REMBOURSER)} = le ${qte(x.r.remboursementAuPlusTard)} ${x.r.mois}` },
         ];
       },
       explication: (c) => {
@@ -459,7 +457,7 @@ export const LA_VENTE_CONSEIL: Chapitre = {
           {
             texte: "La montée en gamme, animée par le vendeur",
             juste: true,
-            retour: `Oui : chaque montée laisse ${eur(x.s.margeDeLaMontee)} de plus, et la vendeuse et l'étudiante en sont loin. Porter tout le monde à ${pct(SOLUTION_DU_LABORATOIRE.taux, 0)} rapporterait ${eur(g.marge)} par samedi, plus que la vente additionnelle même au taux de la vendeuse (${eur(a.marge)}).`,
+            retour: `Oui : chaque montée laisse ${eur(x.s.margeDeLaMontee)} de plus, et la vendeuse et l'étudiante en sont loin. Porter tout le monde à ${pct(SOLUTION_DU_LABORATOIRE.taux)} rapporterait ${eur(g.marge)} par samedi, plus que la vente additionnelle même au taux de la vendeuse (${eur(a.marge)}).`,
           },
           {
             texte: "La vente additionnelle : une écharpe de plus se voit tout de suite sur le ticket",
@@ -485,7 +483,7 @@ export const LA_VENTE_CONSEIL: Chapitre = {
         return [
           "La vente conseil suit ses étapes : accueil, découverte du besoin, argumentation, réponse aux objections, conclusion. Elle se mesure vendeur par vendeur : transformation, indice de vente, panier, et la marge par client accueilli qui les réunit.",
           `La vente additionnelle ajoute un article, la montée en gamme le remplace par un plus cher. Ici, une écharpe ajoutée laisse ${eur(x.s.margeDUneEcharpe)}, un mérinos à la place d'un col rond ${eur(x.s.margeDeLaMontee)} de plus : on forme d'abord à la technique qui rapporte le plus par client.`,
-          `Le client est omnicanal : ${pct(auDixieme(x.s.partDuRopo * 100))} des clients ont vu l'article en ligne, et chaque retrait est une vente à faire. Le contrat conclu à distance ou hors établissement ouvre ${qte(JOURS_DE_RETRACTATION)} jours de rétractation, et le remboursement sous ${qte(JOURS_POUR_REMBOURSER)} jours ; l'achat en boutique, non.`,
+          `Le client est omnicanal : ${pct(auCentime(x.s.partDuRopo * 100))} des clients ont vu l'article en ligne, et chaque retrait est une vente à faire. Le contrat conclu à distance ou hors établissement ouvre ${qte(JOURS_DE_RETRACTATION)} jours de rétractation, et le remboursement sous ${qte(JOURS_POUR_REMBOURSER)} jours ; l'achat en boutique, non.`,
           "Au niveau de l'examen, vous savez conduire et analyser une vente, calculer les indicateurs d'un vendeur et ce que rapporte chaque technique, et dire ce que la loi permet au client selon le canal.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",
         ];

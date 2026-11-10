@@ -19,7 +19,6 @@ import { gardesDuBloc1 } from "./gardes-du-bloc-1-mco";
  */
 
 const c = (x: number) => Math.round(x * 100) / 100 + 0;
-const d = (x: number) => Math.round(x * 10) / 10 + 0;
 const ch = FIDELISER_LA_CLIENTELE;
 const PANIER = c(38_825 / 340);
 const MARGE = c(19_640 / 340);
@@ -44,13 +43,13 @@ describe("fidéliser la clientèle, à la boutique du monde du cours", () => {
     const moyenne = notes.reduce((t, n, i) => t + n * i, 0) / 200;
     expect(moyenne).toBe(7.7);
     expect(attendus(ch, "la-satisfaction")).toEqual([7.7, 40, 25, 15]);
-    expect(attendus(ch, "les-reclamations")).toEqual([d((19 / 940) * 100), d((9 / 19) * 100)]);
+    expect(attendus(ch, "les-reclamations")).toEqual([c((19 / 940) * 100), c((9 / 19) * 100)]);
   });
 
   it("la valeur d'une cliente fidèle, refaite à la main", () => {
     expect([PANIER, MARGE]).toEqual([114.19, 57.76]);
-    expect(attendus(ch, "la-valeur-d-une-cliente")).toEqual([95, 20, c(MARGE * 20), d(0.95 ** 12 * 100)]);
-    expect(attendus(ch, "la-valeur-d-une-cliente").slice(2)).toEqual([1_155.2, 54]);
+    expect(attendus(ch, "la-valeur-d-une-cliente")).toEqual([95, 20, c(MARGE * 20), c(0.95 ** 12 * 100)]);
+    expect(attendus(ch, "la-valeur-d-une-cliente").slice(2)).toEqual([1_155.2, 54.04]);
     expect(juste(ch, "predire-la-valeur")[0]).toMatch(/^Environ 1/);
   });
 

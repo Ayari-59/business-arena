@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import type { CodeDeCommercial, CompteClient, FicheDuCabinet } from "./atlas-conseil";
 import { canalDe, classementABC, commercialDe, type Classe } from "./relation-client";
 
@@ -19,7 +20,7 @@ import { canalDe, classementABC, commercialDe, type Classe } from "./relation-cl
  * s'arrondit à l'unité supérieure, marche après marche.
  */
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const auCentime = arrondi2;
 const somme = (xs: readonly number[]) => xs.reduce((t, x) => t + x, 0);
 const plafond = (x: number) => Math.ceil(x - 1e-9);
 
@@ -580,14 +581,23 @@ export const MATINALES = {
 
 /** Le bilan quantitatif d'un évènement : ce que coûte chaque marche de son entonnoir, et ce qu'il gagne à la valeur d'un compte. */
 export function bilanDUnEvenement(e: { cout: number; contacts: number; rendezVous: number; devis: number; comptes: number }, valeurDUnCompte: number) {
+  // Les rendez-vous, les devis et les comptes attendus au centième, comme sur la copie : les coûts et
+  // le gain partent d'eux.
+  const rendezVous = auCentime(e.rendezVous);
+  const devis = auCentime(e.devis);
+  const comptes = auCentime(e.comptes);
+  const valeurCreee = auCentime(comptes * valeurDUnCompte);
   return {
     ...e,
+    rendezVous,
+    devis,
+    comptes,
     coutParContact: auCentime(e.cout / e.contacts),
-    coutParRendezVous: auCentime(e.cout / e.rendezVous),
-    coutParDevis: auCentime(e.cout / e.devis),
-    coutParCompte: auCentime(e.cout / e.comptes),
-    valeurCreee: auCentime(e.comptes * valeurDUnCompte),
-    gain: auCentime(e.comptes * valeurDUnCompte - e.cout),
+    coutParRendezVous: auCentime(e.cout / rendezVous),
+    coutParDevis: auCentime(e.cout / devis),
+    coutParCompte: auCentime(e.cout / comptes),
+    valeurCreee,
+    gain: auCentime(valeurCreee - e.cout),
   };
 }
 

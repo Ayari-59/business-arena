@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct as enPoints } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_PORTEFEUILLE, portefeuilleABC } from "../../chapitres/portefeuille-abc";
 import type { TableauDeDonnees } from "../../types";
@@ -21,6 +21,11 @@ import type { Situation } from "../types";
  * Comme son chapitre, le cas se joue dans la simulation du cours (src/config/cours/monde) : son
  * portefeuille et ses classes sont ceux de `portefeuilleABC`, sur la fiche du cabinet. Il ne lit du cas
  * que son code.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les comptes par classe et les journées des comptes C sont des
+ * quantités, entières ; les journées que demanderait la hausse, et celles qui resteraient sans emploi,
+ * des grandeurs au centième ; les parts et la hausse, à deux décimales (au dixième, avant).
  */
 
 /**
@@ -33,11 +38,9 @@ export const HAUSSE_ESPEREE_SUR_LES_A = 0.05;
 /** Les bornes du curseur de la hausse sur les comptes A, en pourcentage de leurs ventes. */
 export const HAUSSE_DU_CURSEUR = { min: 0, max: 15 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (part: number, chiffres = 1) => `${(Math.round(part * 100 * 10 ** chiffres) / 10 ** chiffres + 0).toLocaleString("fr-FR", { maximumFractionDigits: chiffres })} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (part: number) => Math.round(part * 1000) / 10 + 0;
+const qte = nombreAuCentieme;
+const pct = (t: number) => enPoints(t * 100);
+const enPourcent = (part: number) => auCentime(part * 100);
 const somme = (v: readonly number[]) => v.reduce((t, x) => t + x, 0);
 
 export type Verdict = "garder-les-c" | "abandonner-les-c";
@@ -61,8 +64,8 @@ export function abandonDesComptesC(c: Pick<Cas, "code">) {
   // Le croisement des deux marges : les journées de consultant libérées par les C, celles que la hausse
   // des A reprend (au même prix, autant de journées en plus que de ventes), et celles qui restent payées
   // sans emploi. La marge d'un compte les comptait comme une économie ; elles n'en sont pas une.
-  const journeesDemandeesParLesA = Math.round(journeesA * HAUSSE_ESPEREE_SUR_LES_A * 100) / 100;
-  const journeesSansEmploi = Math.round((journeesC - journeesDemandeesParLesA) * 100) / 100;
+  const journeesDemandeesParLesA = auCentime(journeesA * HAUSSE_ESPEREE_SUR_LES_A);
+  const journeesSansEmploi = auCentime(journeesC - journeesDemandeesParLesA);
   const coutDesJourneesSansEmploi = auCentime(Math.max(0, journeesSansEmploi) * p.coutJournalier);
   const bilanReel = auCentime(bilan - coutDesJourneesSansEmploi);
   const verdict: Verdict = bilan < 0 ? "garder-les-c" : "abandonner-les-c";
@@ -142,13 +145,13 @@ export const ABANDONNER_LES_PETITS_COMPTES: Situation = {
       texte: (c) => {
         const r = abandonDesComptesC(c);
         return [
-          `« Nos plus petits comptes nous prennent du temps pour pas grand-chose. Je propose de ne plus servir ceux de la classe C, et de reporter ce temps sur les comptes A : j'en espère ${pct(r.hausse, 0)} de ventes en plus, au même prix. Faites le classement, et dites-moi si ${r.p.entreprise} y gagne. »`,
+          `« Nos plus petits comptes nous prennent du temps pour pas grand-chose. Je propose de ne plus servir ceux de la classe C, et de reporter ce temps sur les comptes A : j'en espère ${pct(r.hausse)} de ventes en plus, au même prix. Faites le classement, et dites-moi si ${r.p.entreprise} y gagne. »`,
           `Pas de cours cette fois : vous avez les comptes de l'année N et leur marge (chiffre d'affaires − frais − journées × ${eur(r.p.coutJournalier)}, le coût d'une journée de consultant). Les consultants sont payés de toute façon. La méthode est celle du chapitre, à vous de l'enchaîner. Tout est hors taxes.`,
         ];
       },
       repere: (c) => {
         const { p } = abandonDesComptesC(c);
-        return `À rendre : le classement (A jusqu'à ${pct(p.seuils.a, 0)} du chiffre d'affaires cumulé, B jusqu'à ${pct(p.seuils.b, 0)}, C le reste), ce que pèsent les comptes C, la hausse sur les A qui les compenserait, ce que deviennent les journées des consultants, et votre réponse.`;
+        return `À rendre : le classement (A jusqu'à ${pct(p.seuils.a)} du chiffre d'affaires cumulé, B jusqu'à ${pct(p.seuils.b)}, C le reste), ce que pèsent les comptes C, la hausse sur les A qui les compenserait, ce que deviennent les journées des consultants, et votre réponse.`;
       },
     },
     {
@@ -158,16 +161,16 @@ export const ABANDONNER_LES_PETITS_COMPTES: Situation = {
       notions: ["customer_portfolio"],
       question: (c) => {
         const { p } = abandonDesComptesC(c);
-        return `Cumulez les parts du chiffre d'affaires dans l'ordre du tableau, et comptez les comptes de chaque classe : A jusqu'à ${pct(p.seuils.a, 0)}, B jusqu'à ${pct(p.seuils.b, 0)}, C au-delà.`;
+        return `Cumulez les parts du chiffre d'affaires dans l'ordre du tableau, et comptez les comptes de chaque classe : A jusqu'à ${pct(p.seuils.a)}, B jusqu'à ${pct(p.seuils.b)}, C au-delà.`;
       },
       champs: (c) => {
         const r = abandonDesComptesC(c);
         const p = r.p;
         const dernier = (x: "A" | "B") => p.parCa.classes[x].at(-1)!;
         return [
-          { libelle: "Comptes en classe A", attendu: r.comptesA, calcul: `Jusqu'au ${qte(dernier("A").rang)}e compte, ${dernier("A").nom} : ${pct(dernier("A").cumul)} ; le suivant passe à ${pct(p.parCa.classes.B[0]!.cumul)}` },
-          { libelle: "Comptes en classe B", attendu: r.comptesB, calcul: `Du ${qte(p.parCa.classes.B[0]!.rang)}e au ${qte(dernier("B").rang)}e compte, ${dernier("B").nom} : ${pct(dernier("B").cumul)}` },
-          { libelle: "Comptes en classe C", attendu: r.comptesC, calcul: `Du ${qte(p.parCa.classes.C[0]!.rang)}e au ${qte(p.comptes)}e compte : ${qte(p.comptes)} − ${qte(r.comptesA)} − ${qte(r.comptesB)} = ${qte(r.comptesC)}` },
+          { libelle: "Comptes en classe A", nature: "quantite", attendu: r.comptesA, calcul: `Jusqu'au ${qte(dernier("A").rang)}e compte, ${dernier("A").nom} : ${pct(dernier("A").cumul)} ; le suivant passe à ${pct(p.parCa.classes.B[0]!.cumul)}` },
+          { libelle: "Comptes en classe B", nature: "quantite", attendu: r.comptesB, calcul: `Du ${qte(p.parCa.classes.B[0]!.rang)}e au ${qte(dernier("B").rang)}e compte, ${dernier("B").nom} : ${pct(dernier("B").cumul)}, soit ${qte(r.comptesB)} comptes` },
+          { libelle: "Comptes en classe C", nature: "quantite", attendu: r.comptesC, calcul: `Du ${qte(p.parCa.classes.C[0]!.rang)}e au ${qte(p.comptes)}e compte : ${qte(p.comptes)} − ${qte(r.comptesA)} − ${qte(r.comptesB)} = ${qte(r.comptesC)}` },
         ];
       },
       explication: (c) => {
@@ -180,14 +183,14 @@ export const ABANDONNER_LES_PETITS_COMPTES: Situation = {
       type: "montants",
       titre: "Ce que pèsent les comptes C",
       notions: ["customer_portfolio", "contribution_margin"],
-      question: () => "Calculez le chiffre d'affaires des comptes C et sa part dans le total, puis leur marge et sa part dans la marge de tous les comptes, en pourcentage au dixième.",
+      question: () => "Calculez le chiffre d'affaires des comptes C et sa part dans le total, puis leur marge et sa part dans la marge de tous les comptes, en pourcentage à deux décimales.",
       champs: (c) => {
         const r = abandonDesComptesC(c);
         return [
           { libelle: "Chiffre d'affaires des comptes C", attendu: r.caC, calcul: `La somme des ${qte(r.comptesC)} comptes C = ${eur(r.caC)}` },
-          { libelle: "Part du chiffre d'affaires (%)", attendu: auDixieme(r.partDuCaC), tolerance: 0.1, calcul: `${eur(r.caC)} ÷ ${eur(r.p.total)} × 100 = ${pct(r.partDuCaC)}` },
+          { libelle: "Part du chiffre d'affaires (%)", attendu: enPourcent(r.partDuCaC), calcul: `${eur(r.caC)} ÷ ${eur(r.p.total)} × 100 = ${pct(r.partDuCaC)}` },
           { libelle: "Marge des comptes C", attendu: r.margeC, calcul: `La somme des marges des ${qte(r.comptesC)} comptes C = ${eur(r.margeC)}` },
-          { libelle: "Part de la marge (%)", attendu: auDixieme(r.partDeLaMargeC), tolerance: 0.1, calcul: `${eur(r.margeC)} ÷ ${eur(r.p.margeTotale)} × 100 = ${pct(r.partDeLaMargeC)}` },
+          { libelle: "Part de la marge (%)", attendu: enPourcent(r.partDeLaMargeC), calcul: `${eur(r.margeC)} ÷ ${eur(r.p.margeTotale)} × 100 = ${pct(r.partDeLaMargeC)}` },
         ];
       },
       explication: (c) => {
@@ -235,7 +238,7 @@ export const ABANDONNER_LES_PETITS_COMPTES: Situation = {
       explication: (c) => {
         const r = abandonDesComptesC(c);
         return [
-          `Il faudrait ${qte(r.hausseEntiere)} % de ventes en plus sur les comptes A, au pourcentage entier, pour rendre les ${eur(r.margeC)} des comptes C ; le directeur en espère ${pct(r.hausse, 0)}.`,
+          `Il faudrait ${qte(r.hausseEntiere)} % de ventes en plus sur les comptes A, au pourcentage entier, pour rendre les ${eur(r.margeC)} des comptes C ; le directeur en espère ${pct(r.hausse)}.`,
         ];
       },
     },
@@ -246,22 +249,22 @@ export const ABANDONNER_LES_PETITS_COMPTES: Situation = {
       notions: ["customer_portfolio", "contribution_margin"],
       question: (c) => {
         const r = abandonDesComptesC(c);
-        return `Calculez la marge des comptes A, la marge en plus si leurs ventes montent de ${pct(r.hausse, 0)} (au même taux de marge), le bilan de la proposition (marge en plus sur les A − marge perdue sur les C ; négatif pour une perte), puis la hausse exacte des ventes des A qui compenserait la perte, en pourcentage au dixième.`;
+        return `Calculez la marge des comptes A, la marge en plus si leurs ventes montent de ${pct(r.hausse)} (au même taux de marge), le bilan de la proposition (marge en plus sur les A − marge perdue sur les C ; négatif pour une perte), puis la hausse exacte des ventes des A qui compenserait la perte, en pourcentage à deux décimales.`;
       },
       champs: (c) => {
         const r = abandonDesComptesC(c);
         return [
           { libelle: "Marge des comptes A", attendu: r.margeA, calcul: `${r.p.parCa.classes.A.map((k) => eur(k.marge)).join(" + ")} = ${eur(r.margeA)}` },
-          { libelle: "Marge en plus sur les comptes A", attendu: r.gainSurLesA, calcul: `${eur(r.margeA)} × ${pct(r.hausse, 0)} = ${eur(r.gainSurLesA)}` },
+          { libelle: "Marge en plus sur les comptes A", attendu: r.gainSurLesA, calcul: `${eur(r.margeA)} × ${pct(r.hausse)} = ${eur(r.gainSurLesA)}` },
           { libelle: "Bilan de la proposition", attendu: r.bilan, calcul: `${eur(r.gainSurLesA)} − ${eur(r.margeC)} = ${eur(r.bilan)}` },
-          { libelle: "Hausse nécessaire sur les comptes A (%)", attendu: auDixieme(r.hausseNecessaire), tolerance: 0.1, calcul: `${eur(r.margeC)} ÷ ${eur(r.margeA)} × 100 = ${pct(r.hausseNecessaire)}` },
+          { libelle: "Hausse nécessaire sur les comptes A (%)", attendu: enPourcent(r.hausseNecessaire), calcul: `${eur(r.margeC)} ÷ ${eur(r.margeA)} × 100 = ${pct(r.hausseNecessaire)}` },
         ];
       },
       explication: (c) => {
         const r = abandonDesComptesC(c);
         return [
           r.bilan < 0
-            ? `La hausse espérée sur les A rapporterait ${eur(r.gainSurLesA)} de marge, quand les comptes C en laissent ${eur(r.margeC)} : ${r.p.entreprise} perdrait ${eur(-r.bilan)} sur l'année. Pour compenser, il faudrait ${pct(r.hausseNecessaire)} de ventes en plus sur les A, pas ${pct(r.hausse, 0)}.`
+            ? `La hausse espérée sur les A rapporterait ${eur(r.gainSurLesA)} de marge, quand les comptes C en laissent ${eur(r.margeC)} : ${r.p.entreprise} perdrait ${eur(-r.bilan)} sur l'année. Pour compenser, il faudrait ${pct(r.hausseNecessaire)} de ventes en plus sur les A, pas ${pct(r.hausse)}.`
             : `La hausse espérée sur les A rapporterait ${eur(r.gainSurLesA)} de marge, plus que les ${eur(r.margeC)} des comptes C : ${r.p.entreprise} y gagnerait ${eur(r.bilan)}.`,
         ];
       },
@@ -273,14 +276,14 @@ export const ABANDONNER_LES_PETITS_COMPTES: Situation = {
       notions: ["contribution_margin", "fixed_costs", "capacity"],
       question: (c) => {
         const r = abandonDesComptesC(c);
-        return `La marge d'un compte retire ses journées au coût d'un consultant, ${eur(r.p.coutJournalier)}, comme si ce coût partait avec le compte. Or les consultants sont payés de toute façon : leurs journées libérées ne valent que si la hausse des A les reprend. Calculez les journées des comptes C, celles que demanderaient ${pct(r.hausse, 0)} de ventes en plus sur les A (au même prix), celles qui resteraient sans emploi, puis le bilan de la proposition une fois payées ces journées (négatif pour une perte).`;
+        return `La marge d'un compte retire ses journées au coût d'un consultant, ${eur(r.p.coutJournalier)}, comme si ce coût partait avec le compte. Or les consultants sont payés de toute façon : leurs journées libérées ne valent que si la hausse des A les reprend. Calculez les journées des comptes C, celles que demanderaient ${pct(r.hausse)} de ventes en plus sur les A (au même prix), celles qui resteraient sans emploi, puis le bilan de la proposition une fois payées ces journées (négatif pour une perte).`;
       },
       champs: (c) => {
         const r = abandonDesComptesC(c);
         return [
-          { libelle: "Journées des comptes C", attendu: r.journeesC, calcul: `La somme des journées des ${qte(r.comptesC)} comptes C = ${qte(r.journeesC)}` },
-          { libelle: "Journées que demanderait la hausse sur les A", attendu: r.journeesDemandeesParLesA, calcul: `${qte(r.journeesA)} × ${pct(r.hausse, 0)} = ${qte(r.journeesDemandeesParLesA)}` },
-          { libelle: "Journées de consultant sans emploi", attendu: r.journeesSansEmploi, calcul: `${qte(r.journeesC)} − ${qte(r.journeesDemandeesParLesA)} = ${qte(r.journeesSansEmploi)}` },
+          { libelle: "Journées des comptes C", nature: "quantite", attendu: r.journeesC, calcul: `La somme des journées des ${qte(r.comptesC)} comptes C = ${qte(r.journeesC)}` },
+          { libelle: "Journées que demanderait la hausse sur les A", nature: "grandeur", attendu: r.journeesDemandeesParLesA, calcul: `${qte(r.journeesA)} × ${pct(r.hausse)} = ${qte(r.journeesDemandeesParLesA)}` },
+          { libelle: "Journées de consultant sans emploi", nature: "grandeur", attendu: r.journeesSansEmploi, calcul: `${qte(r.journeesC)} − ${qte(r.journeesDemandeesParLesA)} = ${qte(r.journeesSansEmploi)}` },
           {
             libelle: "Bilan, une fois payées ces journées",
             attendu: r.bilanReel,
@@ -309,8 +312,8 @@ export const ABANDONNER_LES_PETITS_COMPTES: Situation = {
             texte: garder ? `Garder les C : ils laissent ${eur(r.margeC)}, la hausse sur les A ${eur(r.gainSurLesA)}` : `Abandonner les C : ${eur(r.gainSurLesA)} espérés sur les A, contre ${eur(r.margeC)}`,
             juste: true,
             retour: garder
-              ? `Oui : il faudrait ${pct(r.hausseNecessaire)} de ventes en plus sur les comptes A pour retrouver la marge des comptes C ; vous en espérez ${pct(r.hausse, 0)}. Et les ${qte(r.journeesSansEmploi)} journées de consultant que la hausse ne reprendrait pas porteraient la perte à ${eur(-r.bilanReel)}. Mieux vaut servir les comptes C à distance, à moindre coût, que les perdre.`
-              : `Oui : il suffirait de ${pct(r.hausseNecessaire)} de ventes en plus sur les comptes A pour retrouver la marge des comptes C ; vous en espérez ${pct(r.hausse, 0)}.`,
+              ? `Oui : il faudrait ${pct(r.hausseNecessaire)} de ventes en plus sur les comptes A pour retrouver la marge des comptes C ; vous en espérez ${pct(r.hausse)}. Et les ${qte(r.journeesSansEmploi)} journées de consultant que la hausse ne reprendrait pas porteraient la perte à ${eur(-r.bilanReel)}. Mieux vaut servir les comptes C à distance, à moindre coût, que les perdre.`
+              : `Oui : il suffirait de ${pct(r.hausseNecessaire)} de ventes en plus sur les comptes A pour retrouver la marge des comptes C ; vous en espérez ${pct(r.hausse)}.`,
           },
           {
             texte: `Les abandonner : les comptes C ne font que ${pct(r.partDuCaC)} de nos ventes`,
