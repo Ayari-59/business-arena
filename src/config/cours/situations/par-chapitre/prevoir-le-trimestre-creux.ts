@@ -1,3 +1,4 @@
+import { aLUnite, arrondi2 as auCentime, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_LA_PREVISION, previsionDesVentes, trimestreDuRang } from "../../chapitres/prevoir-les-ventes";
 import type { Situation } from "../types";
@@ -21,6 +22,13 @@ import type { Situation } from "../types";
  * multiplier, tracer la droite sur les trimestres bruts.
  *
  * Pas de curseur : sa lecture s'affiche en euros, et la question porte sur des articles.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les rapports à la tendance et le coefficient du trimestre 2 se
+ * donnent en pourcentage à deux décimales, sur les rapports au dix-millième du chapitre (à 5 centièmes
+ * près, avant) ; les tendances et le rang sont des grandeurs au centième ; les prévisions, des
+ * quantités : le corrigé écrit la valeur à deux décimales, puis l'arrondit à l'unité. Chaque ligne
+ * part de la ligne arrondie, comme au chapitre.
  */
 
 /**
@@ -29,11 +37,9 @@ import type { Situation } from "../types";
  */
 export const SEUIL_DU_RENFORT = 3_500;
 
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 const art = (n: number) => qte(Math.round(n));
 const dec = (x: number, d = 2) => x.toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).replace(/^-/, "−");
-const pct = (x: number) => `${x.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
 
 /** Les chiffres de la réponse, calculés une fois du cas. */
 export function trimestreCreux(c: Pick<Cas, "code">) {
@@ -43,10 +49,12 @@ export function trimestreCreux(c: Pick<Cas, "code">) {
   const k = x.p.coefficients[1]!;
   const t2 = x.p.previsions[1]!;
   // Le seuil du renfort, à rebours : la tendance qu'il faut, son rang, puis le premier trimestre 2 au-delà.
-  const tendanceQuIlFaut = SEUIL_DU_RENFORT / k;
-  const rangDuSeuil = (tendanceQuIlFaut - x.b) / x.a;
+  const tendanceQuIlFaut = auCentime(SEUIL_DU_RENFORT / k);
+  const rangDuSeuil = auCentime((tendanceQuIlFaut - x.b) / x.a);
   const premierCreux = creux.length * 4 + 2 + 4 * Math.max(0, Math.ceil((rangDuSeuil - 14) / 4 - 1e-9));
-  const previsionAuSeuil = x.tendance(premierCreux) * k;
+  const tendanceAuSeuil = x.tendance(premierCreux);
+  const previsionAuSeuilCalculee = auCentime(tendanceAuSeuil * k);
+  const previsionAuSeuil = aLUnite(previsionAuSeuilCalculee);
   return {
     x,
     creux,
@@ -56,6 +64,8 @@ export function trimestreCreux(c: Pick<Cas, "code">) {
     tendanceQuIlFaut,
     rangDuSeuil,
     premierCreux,
+    tendanceAuSeuil,
+    previsionAuSeuilCalculee,
     previsionAuSeuil,
     evolution: t2.prevision / n1.demande - 1,
     renfortDesN: t2.prevision >= SEUIL_DU_RENFORT,
@@ -126,14 +136,12 @@ export const PREVOIR_LE_TRIMESTRE_CREUX: Situation = {
           ...r.creux.map((s) => ({
             libelle: `Trimestre 2 de ${trimestreDuRang(s.rang).annee} (% de la tendance)`,
             attendu: auCentime(s.rapport * 100),
-            tolerance: 0.05,
-            calcul: `${qte(s.demande)} ÷ ${dec(s.tendance)} × 100 = ${dec(s.rapport * 100)}`,
+            calcul: `${qte(s.demande)} ÷ ${dec(s.tendance)} × 100 = ${pct(s.rapport * 100)}`,
           })),
           {
             libelle: "Coefficient corrigé du trimestre 2 (%)",
             attendu: auCentime(r.k * 100),
-            tolerance: 0.05,
-            calcul: `(${r.creux.map((s) => dec(s.rapport * 100)).join(" + ")}) ÷ 3 = ${dec(brut * 100)}, × 4 ÷ ${dec(r.x.p.sommeBrute, 4)} = ${dec(r.k * 100)}`,
+            calcul: `(${r.creux.map((s) => dec(s.rapport * 100)).join(" + ")}) ÷ 3 = ${dec(brut * 100)}, × 4 ÷ ${dec(r.x.p.sommeBrute, 4)} = ${pct(r.k * 100)}`,
           },
         ];
       },
@@ -153,12 +161,11 @@ export const PREVOIR_LE_TRIMESTRE_CREUX: Situation = {
       champs: (c) => {
         const r = trimestreCreux(c);
         return [
-          { libelle: "Tendance du trimestre 2 de N", attendu: auCentime(r.t2.tendance), tolerance: 0.05, calcul: `${dec(r.x.a)} × ${r.t2.rang} + ${dec(r.x.b)} = ${dec(r.t2.tendance)}` },
-          { libelle: "Prévision du trimestre 2 de N", attendu: Math.round(r.t2.prevision), tolerance: 2, calcul: `${dec(r.t2.tendance)} × ${dec(r.k, 4)} = ${art(r.t2.prevision)}` },
+          { libelle: "Tendance du trimestre 2 de N", nature: "grandeur", attendu: r.t2.tendance, calcul: `${dec(r.x.a)} × ${r.t2.rang} + ${dec(r.x.b)} = ${dec(r.t2.tendance)}` },
+          { libelle: "Prévision du trimestre 2 de N", nature: "quantite", attendu: r.t2.prevision, calcul: `${dec(r.t2.tendance)} × ${dec(r.k, 4)} = ${dec(r.t2.calculee)}, soit ${art(r.t2.prevision)} articles à l'unité la plus proche` },
           {
             libelle: "Évolution sur le trimestre 2 de N − 1 (%)",
             attendu: auCentime(r.evolution * 100),
-            tolerance: 0.1,
             calcul: `(${art(r.t2.prevision)} ÷ ${qte(r.n1.demande)} − 1) × 100 = ${pct(auCentime(r.evolution * 100))}`,
           },
         ];
@@ -180,13 +187,13 @@ export const PREVOIR_LE_TRIMESTRE_CREUX: Situation = {
       champs: (c) => {
         const r = trimestreCreux(c);
         return [
-          { libelle: "Tendance qu'il faut au trimestre 2", attendu: auCentime(r.tendanceQuIlFaut), tolerance: 1, calcul: `${art(SEUIL_DU_RENFORT)} ÷ ${dec(r.k, 4)} = ${dec(r.tendanceQuIlFaut)}` },
-          { libelle: "Rang où la tendance l'atteint", attendu: auCentime(r.rangDuSeuil), tolerance: 0.02, calcul: `(${dec(r.tendanceQuIlFaut)} − ${dec(r.x.b)}) ÷ ${dec(r.x.a)} = ${dec(r.rangDuSeuil)}` },
+          { libelle: "Tendance qu'il faut au trimestre 2", nature: "grandeur", attendu: r.tendanceQuIlFaut, calcul: `${art(SEUIL_DU_RENFORT)} ÷ ${dec(r.k, 4)} = ${dec(r.tendanceQuIlFaut)}` },
+          { libelle: "Rang où la tendance l'atteint", nature: "grandeur", attendu: r.rangDuSeuil, calcul: `(${dec(r.tendanceQuIlFaut)} − ${dec(r.x.b)}) ÷ ${dec(r.x.a)} = ${dec(r.rangDuSeuil)}` },
           {
             libelle: `Prévision du ${trimestreDuRang(r.premierCreux).libelle}`,
-            attendu: Math.round(r.previsionAuSeuil),
-            tolerance: 2,
-            calcul: `le premier trimestre 2 après le rang ${dec(r.rangDuSeuil)} est le rang ${r.premierCreux} : (${dec(r.x.a)} × ${r.premierCreux} + ${dec(r.x.b)}) × ${dec(r.k, 4)} = ${art(r.previsionAuSeuil)}`,
+            nature: "quantite",
+            attendu: r.previsionAuSeuil,
+            calcul: `le premier trimestre 2 après le rang ${dec(r.rangDuSeuil)} est le rang ${r.premierCreux} : (${dec(r.x.a)} × ${r.premierCreux} + ${dec(r.x.b)}) × ${dec(r.k, 4)} = ${dec(r.tendanceAuSeuil)} × ${dec(r.k, 4)} = ${dec(r.previsionAuSeuilCalculee)}, soit ${art(r.previsionAuSeuil)} articles à l'unité la plus proche`,
           },
         ];
       },

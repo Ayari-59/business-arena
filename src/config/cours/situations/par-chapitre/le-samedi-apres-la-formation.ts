@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_POINT_DE_VENTE, ficheDe } from "../../chapitres/taux-de-marque";
 import { JOURS_DE_RETRACTATION, SAMEDI_APRES_LA_FORMATION, indicateursDuVendeur, samediDesVendeurs } from "../../monde/clientele-de-la-boutique";
@@ -16,13 +16,13 @@ import type { Situation } from "../types";
  *
  * Les pièges : juger la formation au chiffre d'affaires plutôt qu'à la marge ; accorder un droit de
  * rétractation qui n'existe pas en boutique.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les taux se donnent à deux décimales (au dixième, avant) ;
+ * l'indice de vente est une grandeur au centième.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number, chiffres = 1) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: chiffres }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const qte = nombreAuCentieme;
 
 /** Les chiffres du cas, calculés une fois sur la fiche. */
 export function leSamediApresLaFormation(c: Pick<Cas, "code">) {
@@ -88,19 +88,19 @@ export const LE_SAMEDI_APRES_LA_FORMATION: Situation = {
       titre: "Les indicateurs d'après",
       notions: ["conversion_rate", "average_basket"],
       tableau: tableauDuCas,
-      question: () => "Calculez, pour le samedi d'après la formation, la transformation de l'étudiante (en %, au dixième), son indice de vente (au centième) et son panier moyen hors taxes (au centime).",
+      question: () => "Calculez, pour le samedi d'après la formation, la transformation de l'étudiante (en %, à deux décimales), son indice de vente (au centième) et son panier moyen hors taxes (au centime).",
       champs: (c) => {
         const a = leSamediApresLaFormation(c).apres;
         return [
-          { libelle: "Transformation (%)", attendu: auDixieme(a.transformation * 100), tolerance: 0.1, calcul: `${qte(a.tickets)} ÷ ${qte(a.prisEnCharge)} × 100 = ${pct(auDixieme(a.transformation * 100))}` },
-          { libelle: "Indice de vente", attendu: auCentime(a.indice), tolerance: 0.01, calcul: `${qte(a.articles)} ÷ ${qte(a.tickets)} = ${qte(auCentime(a.indice))}` },
+          { libelle: "Transformation (%)", attendu: auCentime(a.transformation * 100), calcul: `${qte(a.tickets)} ÷ ${qte(a.prisEnCharge)} × 100 = ${pct(auCentime(a.transformation * 100))}` },
+          { libelle: "Indice de vente", nature: "grandeur", attendu: auCentime(a.indice), calcul: `${qte(a.articles)} ÷ ${qte(a.tickets)} = ${qte(auCentime(a.indice))}` },
           { libelle: "Panier moyen", attendu: auCentime(a.panier), calcul: `${eur(a.chiffre)} ÷ ${qte(a.tickets)} = ${eur(auCentime(a.panier))}` },
         ];
       },
       explication: (c) => {
         const x = leSamediApresLaFormation(c);
         return [
-          `La transformation passe de ${pct(auDixieme(x.avant.transformation * 100))} à ${pct(auDixieme(x.apres.transformation * 100))}, le panier de ${eur(auCentime(x.avant.panier))} à ${eur(auCentime(x.apres.panier))}. L'indice de vente baisse un peu (${qte(auCentime(x.avant.indice))} puis ${qte(auCentime(x.apres.indice))}) : elle vend plus cher, pas plus d'articles par client.`,
+          `La transformation passe de ${pct(auCentime(x.avant.transformation * 100))} à ${pct(auCentime(x.apres.transformation * 100))}, le panier de ${eur(auCentime(x.avant.panier))} à ${eur(auCentime(x.apres.panier))}. L'indice de vente baisse un peu (${qte(auCentime(x.avant.indice))} puis ${qte(auCentime(x.apres.indice))}) : elle vend plus cher, pas plus d'articles par client.`,
         ];
       },
     },
@@ -111,13 +111,13 @@ export const LE_SAMEDI_APRES_LA_FORMATION: Situation = {
       notions: ["average_basket", "contribution_margin"],
       tableau: tableauDuCas,
       question: () =>
-        "Calculez le taux de vente additionnelle et le taux de montée en gamme de l'étudiante après la formation (en %, au dixième), sa marge sur coût variable des deux samedis, puis la marge gagnée.",
+        "Calculez le taux de vente additionnelle et le taux de montée en gamme de l'étudiante après la formation (en %, à deux décimales), sa marge sur coût variable des deux samedis, puis la marge gagnée.",
       champs: (c) => {
         const x = leSamediApresLaFormation(c);
         const a = x.apres;
         return [
-          { libelle: "Vente additionnelle (%)", attendu: auDixieme(a.venteAdditionnelle * 100), tolerance: 0.1, calcul: `${qte(a.echarpesAvecLeCardigan)} ÷ ${qte(a.cardigans)} × 100 = ${pct(auDixieme(a.venteAdditionnelle * 100))}` },
-          { libelle: "Montée en gamme (%)", attendu: auDixieme(a.monteeEnGamme * 100), tolerance: 0.1, calcul: `${qte(a.merinos)} ÷ ${qte(a.pulls)} × 100 = ${pct(auDixieme(a.monteeEnGamme * 100))}` },
+          { libelle: "Vente additionnelle (%)", attendu: auCentime(a.venteAdditionnelle * 100), calcul: `${qte(a.echarpesAvecLeCardigan)} ÷ ${qte(a.cardigans)} × 100 = ${pct(auCentime(a.venteAdditionnelle * 100))}` },
+          { libelle: "Montée en gamme (%)", attendu: auCentime(a.monteeEnGamme * 100), calcul: `${qte(a.merinos)} ÷ ${qte(a.pulls)} × 100 = ${pct(auCentime(a.monteeEnGamme * 100))}` },
           { libelle: "Marge du samedi d'avant", attendu: x.avant.marge, calcul: "La somme, référence par référence, des articles × leur marge" + ` = ${eur(x.avant.marge)}` },
           { libelle: "Marge du samedi d'après", attendu: a.marge, calcul: "La somme, référence par référence, des articles × leur marge" + ` = ${eur(a.marge)}` },
           { libelle: "Marge gagnée", attendu: x.margeGagnee, calcul: `${eur(a.marge)} − ${eur(x.avant.marge)} = ${eur(x.margeGagnee)}` },
@@ -126,7 +126,7 @@ export const LE_SAMEDI_APRES_LA_FORMATION: Situation = {
       explication: (c) => {
         const x = leSamediApresLaFormation(c);
         return [
-          `Les ${qte(x.apres.merinos)} mérinos valent à eux seuls ${eur(auCentime(x.apres.merinos * x.s.margeDeLaMontee))} de marge de plus que des cols ronds : la montée en gamme fait l'essentiel des ${eur(x.margeGagnee)} gagnés. L'étudiante atteint le taux du vendeur (${pct(auDixieme(x.s.vendeur("vendeur").monteeEnGamme * 100))}).`,
+          `Les ${qte(x.apres.merinos)} mérinos valent à eux seuls ${eur(auCentime(x.apres.merinos * x.s.margeDeLaMontee))} de marge de plus que des cols ronds : la montée en gamme fait l'essentiel des ${eur(x.margeGagnee)} gagnés. L'étudiante atteint le taux du vendeur (${pct(auCentime(x.s.vendeur("vendeur").monteeEnGamme * 100))}).`,
         ];
       },
     },
@@ -165,7 +165,7 @@ export const LE_SAMEDI_APRES_LA_FORMATION: Situation = {
           {
             texte: `Elle a payé : ${eur(x.margeGagnee)} de marge en plus par samedi`,
             juste: true,
-            retour: `Oui : la marge passe de ${eur(x.avant.marge)} à ${eur(x.apres.marge)}, surtout par les mérinos. La transformation monte aussi, à ${pct(auDixieme(x.apres.transformation * 100))}. Un seul samedi ne fait pas une tendance : à suivre sur un mois.`,
+            retour: `Oui : la marge passe de ${eur(x.avant.marge)} à ${eur(x.apres.marge)}, surtout par les mérinos. La transformation monte aussi, à ${pct(auCentime(x.apres.transformation * 100))}. Un seul samedi ne fait pas une tendance : à suivre sur un mois.`,
           },
           {
             texte: `Elle a payé : le chiffre d'affaires a monté de ${eur(x.chiffreGagne)} par samedi`,

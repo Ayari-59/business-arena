@@ -1,3 +1,4 @@
+import { quotient2 } from "../../../pedagogy/cours/deux-decimales";
 import { FICHIER_DE_MAILLE } from "./fichier-de-maille";
 import { MAILLE_ET_CO } from "./maille-et-co";
 
@@ -38,7 +39,7 @@ export function perteOuSauvegarde() {
   const reconstitution = p.heures * p.coutHoraire;
   const perte = reconstitution + p.campagnePerdue;
   const sauvegarde = SAUVEGARDE.parMois * 12;
-  return { ...p, reconstitution, perte, sauvegarde, rapport: Math.round((perte / sauvegarde) * 10) / 10 };
+  return { ...p, reconstitution, perte, sauvegarde, rapport: quotient2(perte, sauvegarde) };
 }
 
 /** Le cas : chiffrer les ordinateurs portables. */

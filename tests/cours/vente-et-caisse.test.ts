@@ -226,13 +226,13 @@ describe("le panier", () => {
 describe("le suivi des ventes", () => {
   it("N − 1 face à N − 2, plus 5 % : atteint, manqué faute de clients, atteint, manqué faute de réserve", () => {
     expect(suiviDeLAnnee(f).map((k) => [k.objectif, k.pendant.ventes, k.tauxDeRealisation, k.verdict])).toEqual([
-      [Math.ceil(4_409 * 1.05), 4_772, 103.1, "atteint"],
-      [Math.ceil(3_014 * 1.05), 3_132, 99, "clients"],
+      [Math.ceil(4_409 * 1.05), 4_772, 103.07, "atteint"],
+      [Math.ceil(3_014 * 1.05), 3_132, 98.96, "clients"],
       [Math.ceil(5_177 * 1.05), 5_588, 102.8, "atteint"],
-      [12_600, 12_500, 99.2, "service"],
+      [12_600, 12_500, 99.21, "service"],
     ]);
     const k = suiviDuTrimestre(f);
-    expect([k.ecart, k.ecartEnPourcentage, k.pendant.repartis, k.demandeFaceALObjectif]).toEqual([-100, -0.8, 1_940, 1_840]);
+    expect([k.ecart, k.ecartEnPourcentage, k.pendant.repartis, k.demandeFaceALObjectif]).toEqual([-100, -0.79, 1_940, 1_840]);
   });
 
   it("la plus forte progression tenue : 4 % (12 480) ; 5 % demande 12 600", () => {

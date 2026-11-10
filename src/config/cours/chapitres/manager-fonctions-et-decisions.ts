@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import {
   DECISIONS_DE_NOVA,
   ENTREPRISES_DU_MANAGEMENT,
@@ -20,12 +20,13 @@ import type { Chapitre } from "../types";
  * NOVA au management public de la Communauté de communes du Haut-Verdasse.
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA seule : monde/management-de-nova.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux de réalisation se donne à deux décimales, à un centième
+ * près (au dixième, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 
 export const FONCTIONS_DU_MANAGEMENT = [
   { code: "fixer", libelle: "Fixer des objectifs" },
@@ -144,12 +145,12 @@ export const MANAGER_FONCTIONS_ET_DECISIONS: Chapitre = {
         };
       },
       question: () =>
-        "Le président évalue son année sur deux indicateurs. Calculez le taux de réalisation de l'objectif (ventes sur objectif, en pourcentage au dixième), puis le coût du personnel de montage par enceinte vendue (au centime).",
+        "Le président évalue son année sur deux indicateurs. Calculez le taux de réalisation de l'objectif (ventes sur objectif, en pourcentage à deux décimales), puis le coût du personnel de montage par enceinte vendue (au centime).",
       champs: () => {
         const e = efficaciteDeLAnnee();
         return [
-          { libelle: "Taux de réalisation de l'objectif (%)", attendu: e.realisation, calcul: `${qte(e.ventes)} ÷ ${qte(e.objectifDeLAnnee)} × 100 = ${pct(e.realisation)}`, tolerance: 0.1 },
-          { libelle: "Coût du personnel par enceinte", attendu: e.coutParEnceinte, calcul: `${eur(e.coutDuPersonnel)} ÷ ${qte(e.ventes)} = ${eur(e.coutParEnceinte)}`, tolerance: 0.01 },
+          { libelle: "Taux de réalisation de l'objectif (%)", attendu: e.realisation, calcul: `${qte(e.ventes)} ÷ ${qte(e.objectifDeLAnnee)} × 100 = ${pct(e.realisation)}` },
+          { libelle: "Coût du personnel par enceinte", attendu: e.coutParEnceinte, calcul: `${eur(e.coutDuPersonnel)} ÷ ${qte(e.ventes)} = ${eur(e.coutParEnceinte)}` },
         ];
       },
       explication: () => {

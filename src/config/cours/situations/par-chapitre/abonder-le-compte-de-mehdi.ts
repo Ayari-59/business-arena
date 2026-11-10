@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, qte } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DES_COMPETENCES, projetDeMehdi } from "../../monde/competences-de-nova";
 import type { Situation } from "../types";
 
@@ -8,10 +8,12 @@ import type { Situation } from "../types";
  *
  * Le chapitre chiffrait les années d'attente du CPF ; le cas fait chiffrer ce qui manque au compte, et
  * décider si NOVA l'abonde. Hypothèses : monde/competences-de-nova.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les années d'attente sont une quantité, entière, déclarée comme
+ * telle.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 export const ABONDER_LE_COMPTE_DE_MEHDI: Situation = {
   code: "abonder-le-compte-de-mehdi",
@@ -48,7 +50,7 @@ export const ABONDER_LE_COMPTE_DE_MEHDI: Situation = {
         const k = projetDeMehdi();
         return [
           { libelle: "Ce qui manque au compte", attendu: k.manque, calcul: `${eur(k.certification)} − ${eur(k.dejaAcquis)} = ${eur(k.manque)}` },
-          { libelle: "Années d'attente sans aide", attendu: k.annees, calcul: `${eur(k.manque)} ÷ ${eur(k.parAn)} par an = ${qte(k.annees)} ans` },
+          { libelle: "Années d'attente sans aide", nature: "quantite", attendu: k.annees, calcul: `${eur(k.manque)} ÷ ${eur(k.parAn)} par an = ${qte(k.annees)} ans` },
         ];
       },
       explication: () => {

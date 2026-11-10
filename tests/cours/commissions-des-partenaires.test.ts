@@ -28,7 +28,6 @@ const code = "conseil";
 const cas = casDeLEntreprise(code);
 const f = ATLAS_CONSEIL;
 const centime = (x: number) => Math.round(x * 100) / 100 + 0;
-const dixieme = (x: number) => Math.round(x * 10) / 10 + 0;
 const somme = (xs: readonly number[]) => xs.reduce((t, x) => t + x, 0);
 
 // La fiche, refaite à la main.
@@ -228,10 +227,10 @@ describe("les commissions des partenaires, au cabinet du monde du cours", () => 
   it("les étapes guidées : la commission de la première année, puis la vie du compte", () => {
     expect(attendus(ch, "la-commission")).toEqual({
       "Commission de la première année": 8_640,
-      "Part de la marge du compte prélevée (%)": dixieme((premiere / marge) * 100),
+      "Part de la marge du compte prélevée (%)": centime((premiere / marge) * 100),
       "Marge laissée au cabinet la première année": marge - premiere,
     });
-    expect([dixieme((premiere / marge) * 100), marge - premiere]).toEqual([41.1, 12_360]);
+    expect([centime((premiere / marge) * 100), marge - premiere]).toEqual([41.14, 12_360]);
     expect(attendus(ch, "sur-la-vie")).toEqual({
       "Commission d'une année suivante": suivante,
       "Années suivantes attendues": suivantes,
@@ -266,10 +265,10 @@ describe("les commissions des partenaires, au cabinet du monde du cours", () => 
   it("l'étape autonome du plafond : 2,8 €, 12,4 %, et 34,7 % sur la première année seule", () => {
     expect(attendus(ch, "le-plafond")).toEqual({
       "Ce que coûte 1 € de commission annuelle, sur la vie": facteur,
-      "Commission plafond (%)": dixieme((cac / (ca * facteur)) * 100),
-      "Commission plafond sur la première année seule (%)": dixieme((cac / ca) * 100),
+      "Commission plafond (%)": centime((cac / (ca * facteur)) * 100),
+      "Commission plafond sur la première année seule (%)": centime((cac / ca) * 100),
     });
-    expect([dixieme((cac / (ca * facteur)) * 100), dixieme((cac / ca) * 100)]).toEqual([12.4, 34.7]);
+    expect([centime((cac / (ca * facteur)) * 100), centime((cac / ca) * 100)]).toEqual([12.4, 34.72]);
   });
 
   it("les retours en direct : le pari, le curseur à 76 %, puis 75,5 % et 8,7 % sans retour", () => {
@@ -293,10 +292,10 @@ describe("les commissions des partenaires, au cabinet du monde du cours", () => 
     const payable = (cac - premiere) / suivantes;
     expect(attendus(ch, "les-retours-en-direct")).toEqual({
       "Commission annuelle que la conquête peut encore payer": payable,
-      "Part des comptes revenus en direct nécessaire (%)": dixieme((1 - payable / premiere) * 100),
-      "Commission plafond sans aucun retour en direct (%)": dixieme((cac / (ca * (1 + suivantes))) * 100),
+      "Part des comptes revenus en direct nécessaire (%)": centime((1 - payable / premiere) * 100),
+      "Commission plafond sans aucun retour en direct (%)": centime((cac / (ca * (1 + suivantes))) * 100),
     });
-    expect([payable, dixieme((1 - payable / premiere) * 100), dixieme((cac / (ca * (1 + suivantes))) * 100)]).toEqual([2_120, 75.5, 8.7]);
+    expect([payable, centime((1 - payable / premiere) * 100), centime((cac / (ca * (1 + suivantes))) * 100)]).toEqual([2_120, 75.46, 8.68]);
     expect(juste(ch, "le-client")).toBe("Le compte de la plateforme repaie sa commission, s'il n'est pas revenu en direct");
   });
 
@@ -366,15 +365,16 @@ describe("les commissions des partenaires, au cabinet du monde du cours", () => 
       "Commissions sur la vie, actualisées": centime(actualisees),
       "Valeur vie nette actualisée avec la plateforme": centime(60_000 - actualisees),
       "Valeur vie nette actualisée en propre": 60_000 - cac,
-      "Commission plafond actualisée (%)": dixieme((cac / (ca * facteurA)) * 100),
+      // Sur le facteur au centième, celui que la copie écrit : 2,08.
+      "Commission plafond actualisée (%)": centime((cac / (ca * centime(facteurA))) * 100),
     });
-    expect([centime(actualisees), centime(60_000 - actualisees), dixieme((cac / (ca * facteurA)) * 100)]).toEqual([17_953.25, 42_046.75, 16.7]);
+    expect([centime(actualisees), centime(60_000 - actualisees), centime(facteurA), centime((cac / (ca * centime(facteurA))) * 100)]).toEqual([17_953.25, 42_046.75, 2.08, 16.69]);
     const commission = ca * apporteur.commission;
     expect(attendus(ch, "l-apporteur")).toEqual({
       "Commission de l'apporteur": commission,
       "Valeur vie nette avec l'apporteur": vv - commission,
       "Ce que l'apporteur laisse de plus que la conquête": vv - commission - enPropre,
-      "Commission plafond de l'apporteur (%)": dixieme((cac / ca) * 100),
+      "Commission plafond de l'apporteur (%)": centime((cac / ca) * 100),
     });
     expect([commission, vv - commission, vv - commission - enPropre]).toEqual([4_320, 79_680, 10_680]);
     expect(juste(ch, "tout-par-l-apporteur")).toBe("Non : il n'a présenté que 4 entreprises dans l'année ; il complète la conquête");
@@ -444,15 +444,16 @@ describe("la mise en avant payante : sur la vie, la mise en avant paie ; sur la 
     expect([m.v, centime(b.net), m.net, centime(b.valeur), m.valeur, centime(m.valeur - b.valeur)]).toEqual([30_240, 59_808, 53_760, 299_040, 322_560, 23_520]);
   });
 
-  it("le calcul à rebours croise les deux lectures : 11,25 % sur la vie, 21,2 % sur la première année, pour 20 % promis", () => {
-    const n = b.valeur / m.net;
-    const n1 = b.premiereAnnee / (marge - m.p);
+  it("le calcul à rebours croise les deux lectures : 11,20 % sur la vie, 21,20 % sur la première année, pour 20 % promis", () => {
+    // Les comptes au centième, puis les hausses sur eux, comme sur la copie.
+    const n = centime(b.valeur / m.net);
+    const n1 = centime(b.premiereAnnee / (marge - m.p));
     expect(attendus(s, "a-rebours")).toEqual({
       "Comptes nécessaires, sur la vie": centime(n),
       "Hausse nécessaire des comptes, sur la vie (%)": centime((n / 5 - 1) * 100),
-      "Hausse nécessaire, sur la première année seule (%)": dixieme((n1 / 5 - 1) * 100),
+      "Hausse nécessaire, sur la première année seule (%)": centime((n1 / 5 - 1) * 100),
     });
-    expect([centime(n), centime((n / 5 - 1) * 100), dixieme((n1 / 5 - 1) * 100)]).toEqual([5.56, 11.25, 21.2]);
+    expect([centime(n), centime((n / 5 - 1) * 100), centime((n1 / 5 - 1) * 100)]).toEqual([5.56, 11.2, 21.2]);
     expect(miseEnAvant(cas).promesse).toBe(20);
   });
 

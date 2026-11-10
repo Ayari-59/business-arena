@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { ATLAS_CONSEIL, CABINETS_DU_COURS, type CodeDeCanal } from "../monde/atlas-conseil";
 import { contactsDeLaCampagne, entonnoir } from "../monde/relation-client";
@@ -39,6 +39,11 @@ import { ENTREPRISES_DE_LA_VALEUR, POURQUOI_LE_CABINET, ficheDe, valeurDesCompte
  *     compte qui ferait payer le dernier palier), mieux-transformer (une variante chiffrée, 30 % des
  *     devis signés), jusqu-ou (le jugement, contre la moyenne et contre la marge d'un an) ; puis la
  *     synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les taux de l'entonnoir se donnent à deux décimales, à un
+ * centième près (à 5 centièmes près, avant) ; les comptes attendus, moyennes d'un entonnoir, sont des
+ * grandeurs au centième ; les rendez-vous nécessaires, une quantité, entière.
  */
 
 /** Les bornes du curseur des rendez-vous de la prospection. */
@@ -66,10 +71,8 @@ export const TRANSFORMATION_VARIANTE = 0.3;
 /** Le coût d'acquisition se lit sur les canaux de conquête du cabinet du cours, ATLAS CONSEIL. */
 export const ENTREPRISES_DE_L_ACQUISITION: readonly string[] = ENTREPRISES_DE_LA_VALEUR;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (x: number, d = 1) => `${(Math.round(x * 100 * 10 ** d) / 10 ** d + 0).toLocaleString("fr-FR", { maximumFractionDigits: d })} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
+const pct = (t: number) => enPoints(t * 100);
 /** « d'ATLAS CONSEIL », « de NOVA » : l'élision devant une voyelle. */
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
@@ -277,7 +280,7 @@ export const COUT_D_ACQUISITION: Chapitre = {
           {
             texte: "L'apporteur, mais il ne présente que quelques entreprises par an",
             juste: true,
-            retour: `Oui : ${eur(x.apporteurs.cac)} par compte, car il ne présente que des entreprises déjà intéressées, et ${pct(x.apporteurs.tauxDeTransformationDesDevis, 0)} de ses devis sont signés. Mais il n'a fait que ${qte(x.apporteurs.contacts)} présentations en N : on ne peut pas y mettre plus de budget, il ne rapporte pas plus de contacts.`,
+            retour: `Oui : ${eur(x.apporteurs.cac)} par compte, car il ne présente que des entreprises déjà intéressées, et ${pct(x.apporteurs.tauxDeTransformationDesDevis)} de ses devis sont signés. Mais il n'a fait que ${qte(x.apporteurs.contacts)} présentations en N : on ne peut pas y mettre plus de budget, il ne rapporte pas plus de contacts.`,
           },
           {
             texte: `La campagne digitale : ${eur(x.digital.coutParContact)} par contact, le moins cher`,
@@ -308,10 +311,10 @@ export const COUT_D_ACQUISITION: Chapitre = {
         const x = acquisitionDuCabinet(c);
         const d = x.digital;
         return [
-          { libelle: "Taux de rendez-vous de la campagne (%)", attendu: auCentime(d.tauxDeRendezVous * 100), calcul: `${qte(d.rendezVous)} ÷ ${qte(d.contacts)} = ${pct(d.tauxDeRendezVous, 2)}`, tolerance: 0.05 },
-          { libelle: "Taux de devis de la campagne (%)", attendu: auCentime(d.tauxDeDevis * 100), calcul: `${qte(d.devis)} ÷ ${qte(d.rendezVous)} = ${pct(d.tauxDeDevis, 2)}`, tolerance: 0.05 },
-          { libelle: "Taux de transformation des devis de la campagne (%)", attendu: auCentime(d.tauxDeTransformationDesDevis * 100), calcul: `${qte(d.contrats)} ÷ ${qte(d.devis)} = ${pct(d.tauxDeTransformationDesDevis, 2)}`, tolerance: 0.05 },
-          { libelle: "Taux de transformation des devis du cabinet (%)", attendu: auCentime(x.total.tauxDeTransformationDesDevis * 100), calcul: `${qte(x.total.contrats)} ÷ ${qte(x.total.devis)} = ${pct(x.total.tauxDeTransformationDesDevis, 2)}`, tolerance: 0.05 },
+          { libelle: "Taux de rendez-vous de la campagne (%)", attendu: auCentime(d.tauxDeRendezVous * 100), calcul: `${qte(d.rendezVous)} ÷ ${qte(d.contacts)} = ${pct(d.tauxDeRendezVous)}` },
+          { libelle: "Taux de devis de la campagne (%)", attendu: auCentime(d.tauxDeDevis * 100), calcul: `${qte(d.devis)} ÷ ${qte(d.rendezVous)} = ${pct(d.tauxDeDevis)}` },
+          { libelle: "Taux de transformation des devis de la campagne (%)", attendu: auCentime(d.tauxDeTransformationDesDevis * 100), calcul: `${qte(d.contrats)} ÷ ${qte(d.devis)} = ${pct(d.tauxDeTransformationDesDevis)}` },
+          { libelle: "Taux de transformation des devis du cabinet (%)", attendu: auCentime(x.total.tauxDeTransformationDesDevis * 100), calcul: `${qte(x.total.contrats)} ÷ ${qte(x.total.devis)} = ${pct(x.total.tauxDeTransformationDesDevis)}` },
         ];
       },
       explication: (c) => {
@@ -319,7 +322,7 @@ export const COUT_D_ACQUISITION: Chapitre = {
         const d = x.digital;
         return [
           `Sur ${qte(d.contacts)} contacts, la campagne obtient ${qte(d.rendezVous)} rendez-vous, ${qte(d.devis)} devis et ${qte(d.contrats)} contrats : un contact sur ${qte(x.contactsParCompte)} devient un compte. Chaque marche multiplie la précédente ; le taux de transformation des devis est la dernière, celle où le commercial signe ou perd une proposition déjà chiffrée.`,
-          `Sur l'année, le cabinet signe ${pct(x.total.tauxDeTransformationDesDevis, 2)} de ses devis : ${pct(x.apporteurs.tauxDeTransformationDesDevis, 0)} pour l'apporteur, qui présente des entreprises déjà intéressées, ${pct(x.prospection.tauxDeTransformationDesDevis, 0)} pour la prospection.`,
+          `Sur l'année, le cabinet signe ${pct(x.total.tauxDeTransformationDesDevis)} de ses devis : ${pct(x.apporteurs.tauxDeTransformationDesDevis)} pour l'apporteur, qui présente des entreprises déjà intéressées, ${pct(x.prospection.tauxDeTransformationDesDevis)} pour la prospection.`,
         ];
       },
     },
@@ -339,8 +342,8 @@ export const COUT_D_ACQUISITION: Chapitre = {
         const enPlus = x.rendezVousNecessaires / x.prospection.rendezVous - 1;
         const commeLeCout = 1 - x.cacVise / x.prospection.cac;
         return [
-          { texte: `${pct(enPlus, 0)} de rendez-vous en plus`, juste: true, retour: `Bon pari. ${voir}` },
-          { texte: `${pct(commeLeCout, 0)} de rendez-vous en plus, comme la baisse du coût`, juste: false, retour: `Pari à vérifier. ${voir}` },
+          { texte: `${pct(enPlus)} de rendez-vous en plus`, juste: true, retour: `Bon pari. ${voir}` },
+          { texte: `${pct(commeLeCout)} de rendez-vous en plus, comme la baisse du coût`, juste: false, retour: `Pari à vérifier. ${voir}` },
           { texte: "Autant de rendez-vous : seul le taux de transformation compte", juste: false, retour: `Pari à vérifier. ${voir}` },
         ];
       },
@@ -385,7 +388,7 @@ export const COUT_D_ACQUISITION: Chapitre = {
       explication: (c) => {
         const x = acquisitionDuCabinet(c);
         return [
-          `Il faut ${qte(x.rendezVousNecessaires)} rendez-vous, ${qte(x.rendezVousNecessaires - x.prospection.rendezVous)} de plus qu'en N. Le coût du canal ne bouge pas : chaque rendez-vous en plus le divise sur plus de comptes. Un rendez-vous ne vaut que ce qu'il mène à signer : ${pct(x.prospection.tauxDeDevis, 0)} deviennent des devis, ${pct(x.prospection.tauxDeTransformationDesDevis, 0)} de ces devis des contrats.`,
+          `Il faut ${qte(x.rendezVousNecessaires)} rendez-vous, ${qte(x.rendezVousNecessaires - x.prospection.rendezVous)} de plus qu'en N. Le coût du canal ne bouge pas : chaque rendez-vous en plus le divise sur plus de comptes. Un rendez-vous ne vaut que ce qu'il mène à signer : ${pct(x.prospection.tauxDeDevis)} deviennent des devis, ${pct(x.prospection.tauxDeTransformationDesDevis)} de ces devis des contrats.`,
           "L'étape suivante refait ce chemin par le calcul, marche par marche.",
         ];
       },
@@ -406,13 +409,14 @@ export const COUT_D_ACQUISITION: Chapitre = {
         return [
           {
             libelle: "Comptes gagnés pour 100 rendez-vous",
+            nature: "grandeur",
             attendu: auCentime(x.comptesParRendezVous * 100),
-            calcul: `100 × ${pct(p.tauxDeDevis, 0)} de devis × ${pct(p.tauxDeTransformationDesDevis, 0)} de devis signés = ${qte(auCentime(x.comptesParRendezVous * 100))} comptes`,
-            tolerance: 0.05,
+            calcul: `100 × ${pct(p.tauxDeDevis)} de devis × ${pct(p.tauxDeTransformationDesDevis)} de devis signés = ${qte(auCentime(x.comptesParRendezVous * 100))} comptes`,
           },
-          { libelle: "Comptes à gagner dans l'année", attendu: x.comptesVises, calcul: `${eur(p.cout)} ÷ ${eur(x.cacVise)} = ${qte(x.comptesVises)} comptes`, tolerance: 0.05 },
+          { libelle: "Comptes à gagner dans l'année", nature: "grandeur", attendu: x.comptesVises, calcul: `${eur(p.cout)} ÷ ${eur(x.cacVise)} = ${qte(x.comptesVises)} comptes` },
           {
             libelle: "Rendez-vous nécessaires",
+            nature: "quantite",
             attendu: x.rendezVousNecessaires,
             calcul: `${qte(x.comptesVises)} ÷ ${qte(auCentime(x.comptesParRendezVous * 100))} × 100 = ${qte(x.rendezVousNecessaires)} rendez-vous`,
           },
@@ -440,7 +444,7 @@ export const COUT_D_ACQUISITION: Chapitre = {
         const x = acquisitionDuCabinet(c);
         const [, a, , b, d] = x.paliers;
         return [
-          ...[a!, b!, d!].map((p) => ({ libelle: `Comptes attendus à ${eur(p.budget)}`, attendu: p.comptes, calcul: `${qte(p.contacts)} ÷ ${qte(x.contactsParCompte)} = ${qte(p.comptes)}`, tolerance: 0.05 })),
+          ...[a!, b!, d!].map((p) => ({ libelle: `Comptes attendus à ${eur(p.budget)}`, nature: "grandeur" as const, attendu: p.comptes, calcul: `${qte(p.contacts)} ÷ ${qte(x.contactsParCompte)} = ${qte(p.comptes)}` })),
           { libelle: "Coût d'acquisition moyen au dernier palier", attendu: d!.cacMoyen!, calcul: `${eur(d!.budget)} ÷ ${qte(d!.comptes)} = ${eur(d!.cacMoyen!)}` },
         ];
       },
@@ -567,7 +571,7 @@ export const COUT_D_ACQUISITION: Chapitre = {
         const t = auCentime(x.digital.tauxDeTransformationDesDevis * 100);
         return [
           `À ${eur(p.budget!)}, la campagne gagne ${eur(l.gain)} : les derniers euros ont encore rapporté plus qu'ils n'ont coûté, les suivants rapporteraient moins. Le coût moyen d'un compte, ${eur(l.cacMoyen)}, ne dit rien de cela : c'est le compte en plus qui décide.`,
-          `Au taux de N, le meilleur budget est ${eur(meilleurPour(t, VALEUR_D_UN_COMPTE.simple))} à la valeur vie simple, et encore ${eur(meilleurPour(t, VALEUR_D_UN_COMPTE.actualisee))} actualisée ; sur la seule marge de la première année, on s'arrêterait à ${eur(meilleurPour(t, VALEUR_D_UN_COMPTE.premiereAnnee))}. Avec ${pct(TRANSFORMATION_VARIANTE, 0)} de devis signés, il passe à ${eur(meilleurPour(TRANSFORMATION_VARIANTE * 100, VALEUR_D_UN_COMPTE.simple))} : mieux transformer rend payant un palier de plus.`,
+          `Au taux de N, le meilleur budget est ${eur(meilleurPour(t, VALEUR_D_UN_COMPTE.simple))} à la valeur vie simple, et encore ${eur(meilleurPour(t, VALEUR_D_UN_COMPTE.actualisee))} actualisée ; sur la seule marge de la première année, on s'arrêterait à ${eur(meilleurPour(t, VALEUR_D_UN_COMPTE.premiereAnnee))}. Avec ${pct(TRANSFORMATION_VARIANTE)} de devis signés, il passe à ${eur(meilleurPour(TRANSFORMATION_VARIANTE * 100, VALEUR_D_UN_COMPTE.simple))} : mieux transformer rend payant un palier de plus.`,
         ];
       },
     },
@@ -651,7 +655,7 @@ export const COUT_D_ACQUISITION: Chapitre = {
       notions: ["conversion_rate", "customer_acquisition_cost"],
       question: (c) => {
         const x = acquisitionDuCabinet(c);
-        return `Variante : l'équipe signe ${pct(TRANSFORMATION_VARIANTE, 0)} des devis de la campagne au lieu de ${pct(x.digital.tauxDeTransformationDesDevis, 0)}, la courbe des contacts, les rendez-vous et les devis ne changeant pas. Refaites le dernier palier, de ${eur(x.dernier.de)} à ${eur(x.dernier.a)} : les comptes attendus aux deux budgets, le coût du compte en plus, puis le gain du palier, à la valeur vie simple (négatif s'il fait perdre).`;
+        return `Variante : l'équipe signe ${pct(TRANSFORMATION_VARIANTE)} des devis de la campagne au lieu de ${pct(x.digital.tauxDeTransformationDesDevis)}, la courbe des contacts, les rendez-vous et les devis ne changeant pas. Refaites le dernier palier, de ${eur(x.dernier.de)} à ${eur(x.dernier.a)} : les comptes attendus aux deux budgets, le coût du compte en plus, puis le gain du palier, à la valeur vie simple (négatif s'il fait perdre).`;
       },
       champs: (c) => {
         const x = acquisitionDuCabinet(c);
@@ -660,15 +664,15 @@ export const COUT_D_ACQUISITION: Chapitre = {
         return [
           {
             libelle: `Comptes attendus à ${eur(x.dernier.de)}`,
+            nature: "grandeur",
             attendu: x.dernierVariante.avant,
-            calcul: `${qte(devisDe(x.dernier.de))} devis × ${pct(TRANSFORMATION_VARIANTE, 0)} = ${qte(x.dernierVariante.avant)}`,
-            tolerance: 0.05,
+            calcul: `${qte(devisDe(x.dernier.de))} devis × ${pct(TRANSFORMATION_VARIANTE)} = ${qte(x.dernierVariante.avant)}`,
           },
           {
             libelle: `Comptes attendus à ${eur(x.dernier.a)}`,
+            nature: "grandeur",
             attendu: x.dernierVariante.apres,
-            calcul: `${qte(devisDe(x.dernier.a))} devis × ${pct(TRANSFORMATION_VARIANTE, 0)} = ${qte(x.dernierVariante.apres)}`,
-            tolerance: 0.05,
+            calcul: `${qte(devisDe(x.dernier.a))} devis × ${pct(TRANSFORMATION_VARIANTE)} = ${qte(x.dernierVariante.apres)}`,
           },
           { libelle: "Coût du compte en plus du dernier palier", attendu: x.cacMarginalVariante, calcul: `${eur(x.dernier.budget)} ÷ ${qte(x.comptesEnPlusVariante)} = ${eur(x.cacMarginalVariante)}` },
           { libelle: "Gain du dernier palier, variante", attendu: x.gainDuDernierVariante, calcul: `${qte(x.comptesEnPlusVariante)} × ${eur(x.v.simple)} − ${eur(x.dernier.budget)} = ${eur(x.gainDuDernierVariante)}` },
@@ -690,7 +694,7 @@ export const COUT_D_ACQUISITION: Chapitre = {
       notions: ["customer_acquisition_cost", "customer_lifetime_value"],
       question: (c) => {
         const x = acquisitionDuCabinet(c);
-        return `Les devis se signent toujours à ${pct(x.digital.tauxDeTransformationDesDevis, 0)}. Le directeur demande quel budget donner à la campagne digitale l'an prochain. Que lui proposez-vous ?`;
+        return `Les devis se signent toujours à ${pct(x.digital.tauxDeTransformationDesDevis)}. Le directeur demande quel budget donner à la campagne digitale l'an prochain. Que lui proposez-vous ?`;
       },
       options: (c) => {
         const x = acquisitionDuCabinet(c);
@@ -741,7 +745,7 @@ export const COUT_D_ACQUISITION: Chapitre = {
       texte: (c) => {
         const x = acquisitionDuCabinet(c);
         return [
-          `Chez ${x.f.entreprise}, un compte coûte ${eur(x.total.cac)} en moyenne à gagner, de ${eur(x.apporteurs.cac)} à ${eur(Math.max(...x.e.canaux.map((k) => k.cac)))} selon le canal. L'entonnoir dit où il se gagne ou se perd : les rendez-vous, les devis, et la dernière marche, le taux de transformation des devis, ${pct(x.total.tauxDeTransformationDesDevis, 2)} pour le cabinet.`,
+          `Chez ${x.f.entreprise}, un compte coûte ${eur(x.total.cac)} en moyenne à gagner, de ${eur(x.apporteurs.cac)} à ${eur(Math.max(...x.e.canaux.map((k) => k.cac)))} selon le canal. L'entonnoir dit où il se gagne ou se perd : les rendez-vous, les devis, et la dernière marche, le taux de transformation des devis, ${pct(x.total.tauxDeTransformationDesDevis)} pour le cabinet.`,
           `Sur la campagne digitale, le coût moyen monte peu, mais le compte en plus coûte de plus en plus cher : ${x.supplements.map((s) => eur(s.cacMarginal)).join(", ")}. Le budget se décide là où le dernier euro ne rapporte plus, ${eur(x.meilleur.budget)}, face à ce que vaut un compte sur sa vie, et non sur sa première année.`,
           "Au niveau de l'examen, vous savez calculer un coût d'acquisition par canal et lire un entonnoir, retrouver à rebours les rendez-vous qu'il faut, distinguer le coût moyen du coût du compte en plus, et fixer un budget sur la valeur vie, en sachant ce qu'y change une meilleure transformation des devis.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : la notion, elle, est la même.",

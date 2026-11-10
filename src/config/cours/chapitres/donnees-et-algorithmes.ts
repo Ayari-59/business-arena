@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, qte } from "../../../pedagogy/cours/deux-decimales";
 import { DELAI_DE_NOTIFICATION, ENTREPRISES_DES_DONNEES_STRATEGIQUES, INSCRITES, SAUVEGARDE, perteOuSauvegarde } from "../monde/donnees-strategiques-de-maille";
 import { HAUT_VERDASSE } from "../monde/haut-verdasse";
 import type { Chapitre } from "../types";
@@ -16,10 +16,12 @@ import type { Chapitre } from "../types";
  * règles ; celui-ci regarde les responsabilités.
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez MAILLE & CO : monde/donnees-strategiques-de-maille.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la perte rapportée à la sauvegarde est une grandeur, à deux
+ * décimales, à un centième près (au dixième, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−");
 
 export const DONNEES_ET_ALGORITHMES: Chapitre = {
   code: "donnees-et-algorithmes",
@@ -121,14 +123,14 @@ export const DONNEES_ET_ALGORITHMES: Chapitre = {
       titre: "Ce que vaut une sauvegarde",
       question: () => {
         const p = perteOuSauvegarde();
-        return `Sans sauvegarde, une panne de l'ordinateur ferait perdre les données stratégiques : ${qte(p.heures)} heures de travail pour les reconstituer en partie, à ${eur(p.coutHoraire)} de l'heure, et la campagne de la collection, qui laisse ${eur(p.campagnePerdue)} de marge, ne partirait pas. Une sauvegarde externe et chiffrée coûte ${eur(SAUVEGARDE.parMois)} par mois. Calculez ce que coûterait la perte, le coût de la sauvegarde sur un an, puis combien de fois la perte dépasse ce coût (au dixième).`;
+        return `Sans sauvegarde, une panne de l'ordinateur ferait perdre les données stratégiques : ${qte(p.heures)} heures de travail pour les reconstituer en partie, à ${eur(p.coutHoraire)} de l'heure, et la campagne de la collection, qui laisse ${eur(p.campagnePerdue)} de marge, ne partirait pas. Une sauvegarde externe et chiffrée coûte ${eur(SAUVEGARDE.parMois)} par mois. Calculez ce que coûterait la perte, le coût de la sauvegarde sur un an, puis combien de fois la perte dépasse ce coût (au centième).`;
       },
       champs: () => {
         const p = perteOuSauvegarde();
         return [
           { libelle: "Ce que coûterait la perte", attendu: p.perte, calcul: `${qte(p.heures)} × ${eur(p.coutHoraire)} + ${eur(p.campagnePerdue)} = ${eur(p.perte)}` },
           { libelle: "Coût de la sauvegarde sur un an", attendu: p.sauvegarde, calcul: `${eur(SAUVEGARDE.parMois)} × 12 = ${eur(p.sauvegarde)}` },
-          { libelle: "La perte, en nombre d'années de sauvegarde", attendu: p.rapport, calcul: `${eur(p.perte)} ÷ ${eur(p.sauvegarde)} = ${qte(p.rapport)}`, tolerance: 0.1 },
+          { libelle: "La perte, en nombre d'années de sauvegarde", nature: "grandeur", attendu: p.rapport, calcul: `${eur(p.perte)} ÷ ${eur(p.sauvegarde)} = ${nombreAuCentieme(p.rapport)}` },
         ];
       },
       explication: () => {

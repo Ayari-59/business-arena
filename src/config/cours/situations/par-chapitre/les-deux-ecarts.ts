@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { RECEVOIR_UNE_LIVRAISON, accordeA, de, ficheDe, motsDe, qte } from "../../chapitres/recevoir-une-livraison";
 import { ARTICLES_PAR_CARTON, livraisonAvecDeuxEcarts } from "../../monde/vente-et-caisse";
@@ -24,9 +24,12 @@ import type { Situation } from "../types";
  * CE QUI A CHANGÉ. Le cas lisait la commande du trimestre 2 de l'arène. Il lit maintenant le bon de
  * février : 1 000 articles, 10 pulls col rond manquants, 10 pulls mérinos en trop, 250 € payés pour
  * rien sans réserve.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les totaux et les articles manquants ou en trop sont des
+ * quantités, entières, déclarées comme telles.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 
 /** Les deux écarts, avec les mots de chaque ligne. */
 export function deuxEcarts(c: Pick<Cas, "code">) {
@@ -78,8 +81,8 @@ export const LES_DEUX_ECARTS: Situation = {
       champs: (c) => {
         const s = deuxEcarts(c);
         return [
-          { libelle: "Total sur le bon de livraison", attendu: s.totalSurLeBon, calcul: `${s.comptes.map((x) => qte(x.surLeBon)).join(" + ")} = ${qte(s.totalSurLeBon)}` },
-          { libelle: "Total compté dans les cartons", attendu: s.totalCompte, calcul: `${s.comptes.map((x) => qte(x.comptee)).join(" + ")} = ${qte(s.totalCompte)}` },
+          { libelle: "Total sur le bon de livraison", nature: "quantite", attendu: s.totalSurLeBon, calcul: `${s.comptes.map((x) => qte(x.surLeBon)).join(" + ")} = ${qte(s.totalSurLeBon)}` },
+          { libelle: "Total compté dans les cartons", nature: "quantite", attendu: s.totalCompte, calcul: `${s.comptes.map((x) => qte(x.comptee)).join(" + ")} = ${qte(s.totalCompte)}` },
         ];
       },
       explication: (c) => [`Les deux totaux font ${qte(deuxEcarts(c).totalCompte)}. Un total juste ne prouve pas que chaque ligne est juste.`],
@@ -96,8 +99,8 @@ export const LES_DEUX_ECARTS: Situation = {
       champs: (c) => {
         const s = deuxEcarts(c);
         return [
-          { libelle: `${s.manque.nom} : articles manquants`, attendu: s.manque.surLeBon - s.manque.comptee, calcul: `${qte(s.manque.surLeBon)} − ${qte(s.manque.comptee)} = ${qte(s.manque.surLeBon - s.manque.comptee)}` },
-          { libelle: `${s.enTrop.nom} : articles en trop`, attendu: s.enTrop.comptee - s.enTrop.surLeBon, calcul: `${qte(s.enTrop.comptee)} − ${qte(s.enTrop.surLeBon)} = ${qte(s.enTrop.comptee - s.enTrop.surLeBon)}` },
+          { libelle: `${s.manque.nom} : articles manquants`, nature: "quantite", attendu: s.manque.surLeBon - s.manque.comptee, calcul: `${qte(s.manque.surLeBon)} − ${qte(s.manque.comptee)} = ${qte(s.manque.surLeBon - s.manque.comptee)}` },
+          { libelle: `${s.enTrop.nom} : articles en trop`, nature: "quantite", attendu: s.enTrop.comptee - s.enTrop.surLeBon, calcul: `${qte(s.enTrop.comptee)} − ${qte(s.enTrop.surLeBon)} = ${qte(s.enTrop.comptee - s.enTrop.surLeBon)}` },
         ];
       },
       explication: (c) => {

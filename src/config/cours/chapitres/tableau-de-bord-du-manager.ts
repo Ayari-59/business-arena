@@ -1,7 +1,7 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct, taux2 } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { budgetDuTrimestre, chiffreDAffairesParLesIndicateurs, indicateursDuMois, tableauDeBordDuManager, voyantAllume } from "../monde/boutique";
-import { BOUTIQUES_DU_COURS, type CodeDIndicateurDuManager, type FicheDeLaBoutique } from "../monde/maille-et-co";
+import { BOUTIQUES_DU_COURS, JOURS_DU_MOIS, type CodeDIndicateurDuManager, type FicheDeLaBoutique } from "../monde/maille-et-co";
 import type { Chapitre, TableauDeDonnees } from "../types";
 import { equipeEtPlanning } from "./equipe-et-planning";
 
@@ -42,6 +42,13 @@ import { equipeEtPlanning } from "./equipe-et-planning";
  * le taux de service). Le distracteur faible « la demande progresse » est remplacé par des erreurs
  * réelles (le nombre de passages lu à la place du taux, le recul du chiffre d'affaires pris pour un
  * recul du panier, le taux de service pris pour un voyant).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les évolutions, le taux de réalisation et les taux de
+ * transformation se donnent à deux décimales (au dixième, avant) ; les passages en caisse sont des
+ * quantités : le corrigé écrit le quotient à deux décimales, sur le panier au centime, puis l'arrondit
+ * à l'unité au-dessus ; les trois effets se donnent au centime, à un centime près (à 50 centimes près,
+ * avant), et retombent sur l'écart total.
  */
 
 /**
@@ -81,29 +88,26 @@ export const AXES_DU_TABLEAU = [
 
 type Axe = (typeof AXES_DU_TABLEAU)[number]["code"];
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number, decimales = 2) => n.toLocaleString("fr-FR", { maximumFractionDigits: decimales }).replace(/^-/, "−");
-const pct = (t: number) => `${qte(t)} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const qte = nombreAuCentieme;
 const plafond = (x: number) => Math.ceil(x - 1e-9);
-const evolution = (a: number, b: number) => auDixieme((b / a - 1) * 100);
+const evolution = (a: number, b: number) => auCentime((b / a - 1) * 100);
 
 /** La fiche de la boutique du cours. */
 export const ficheDe = (c: Pick<Cas, "code">): FicheDeLaBoutique => BOUTIQUES_DU_COURS[c.code]!;
 
 /** Ce que chaque indicateur du tableau de bord dit, et comment l'écrire. */
 const INDICATEURS: Readonly<Record<CodeDIndicateurDuManager, { libelle: string; axe: Axe; ecrire: (v: number) => string }>> = {
-  realisationDeLObjectif: { libelle: "Réalisation de l'objectif", axe: "vendre", ecrire: (v) => pct(auDixieme(v * 100)) },
-  evolutionDuTrafic: { libelle: "Évolution du trafic sur janvier N − 1", axe: "vendre", ecrire: (v) => pct(auDixieme(v * 100)) },
-  tauxDeTransformation: { libelle: "Taux de transformation", axe: "vendre", ecrire: (v) => pct(auDixieme(v * 100)) },
+  realisationDeLObjectif: { libelle: "Réalisation de l'objectif", axe: "vendre", ecrire: (v) => pct(auCentime(v * 100)) },
+  evolutionDuTrafic: { libelle: "Évolution du trafic sur janvier N − 1", axe: "vendre", ecrire: (v) => pct(auCentime(v * 100)) },
+  tauxDeTransformation: { libelle: "Taux de transformation", axe: "vendre", ecrire: (v) => pct(auCentime(v * 100)) },
   panierMoyen: { libelle: "Panier moyen", axe: "vendre", ecrire: (v) => eur(auCentime(v)) },
   indiceDeVente: { libelle: "Indice de vente", axe: "vendre", ecrire: (v) => qte(auCentime(v)) },
-  tauxDeService: { libelle: "Taux de service", axe: "stock", ecrire: (v) => pct(auDixieme(v * 100)) },
-  tauxDeMarque: { libelle: "Taux de marque", axe: "rentabilite", ecrire: (v) => pct(auDixieme(v * 100)) },
-  indiceDeSecurite: { libelle: "Indice de sécurité", axe: "rentabilite", ecrire: (v) => pct(auDixieme(v * 100)) },
-  partDuPersonnel: { libelle: "Part du personnel dans le chiffre d'affaires", axe: "equipe", ecrire: (v) => pct(auDixieme(v * 100)) },
-  dureeDeStockage: { libelle: "Durée moyenne de stockage", axe: "stock", ecrire: (v) => `${qte(Math.round(v))} jours` },
+  tauxDeService: { libelle: "Taux de service", axe: "stock", ecrire: (v) => pct(auCentime(v * 100)) },
+  tauxDeMarque: { libelle: "Taux de marque", axe: "rentabilite", ecrire: (v) => pct(auCentime(v * 100)) },
+  indiceDeSecurite: { libelle: "Indice de sécurité", axe: "rentabilite", ecrire: (v) => pct(auCentime(v * 100)) },
+  partDuPersonnel: { libelle: "Part du personnel dans le chiffre d'affaires", axe: "equipe", ecrire: (v) => pct(auCentime(v * 100)) },
+  // La durée de stockage comme le chapitre du stock la calcule : 30 jours ÷ la rotation arrondie au centième.
+  dureeDeStockage: { libelle: "Durée moyenne de stockage", axe: "stock", ecrire: (v) => `${qte(auCentime(JOURS_DU_MOIS / auCentime(JOURS_DU_MOIS / v)))} jours` },
 };
 
 /** Le seuil d'alerte d'un indicateur, écrit pour l'élève. */
@@ -139,7 +143,9 @@ export function tableauDeBordDuMois(c: Pick<Cas, "code">) {
   // Février, à rebours.
   const caDeFevrier = auCentime(objectif * FEVRIER_A_REBOURS.realisation);
   const passagesDeFevrier = Math.round(FEVRIER_A_REBOURS.entrees * FEVRIER_A_REBOURS.transformation);
-  const passagesNecessaires = plafond((caDuVoyant - commandes) / m.panierMoyen);
+  // Le panier au centime, comme sur la copie : 77 250 € ÷ 940 = 82,18 €.
+  const passagesCalcules = auCentime((auCentime(caDuVoyant) - commandes) / auCentime(m.panierMoyen));
+  const passagesNecessaires = plafond(passagesCalcules);
   return {
     f,
     t,
@@ -156,18 +162,19 @@ export function tableauDeBordDuMois(c: Pick<Cas, "code">) {
     evolutionDuTrafic: evolution(n1.trafic, m.entrees),
     evolutionDesPassages: evolution(n1.tickets, m.tickets),
     ecartALObjectif: auCentime(ca - objectif),
-    realisation: auDixieme((ca / objectif) * 100),
+    realisation: taux2(ca, objectif),
     caDuVoyant,
     caDuVoyantAuCentime: auCentime(caDuVoyant),
     caParEntree,
     entreesDuVoyant: plafond((caDuVoyant - commandes) / caParEntree),
     hausseNecessaire: ((caDuVoyant - commandes) / caEnCaisse - 1) * 100,
-    transformationN: auDixieme(m.tauxDeTransformation * 100),
-    transformationN1: auDixieme((n1.tickets / n1.trafic) * 100),
+    transformationN: taux2(m.tickets, m.entrees),
+    transformationN1: taux2(n1.tickets, n1.trafic),
     panierN: auCentime(m.panierMoyen),
     panierN1: auCentime(panierN1),
+    passagesCalcules,
     passagesNecessaires,
-    transformationNecessaire: auDixieme((passagesNecessaires / m.entrees) * 100),
+    transformationNecessaire: taux2(passagesNecessaires, m.entrees),
     passagesAuTauxN1,
     effetDuTrafic,
     effetDeLaTransformation,
@@ -195,7 +202,7 @@ export function laboratoireDesVoyants(x: TableauDeBordDuMois, p: { trafic: numbe
   return {
     entrees: auCentime(k.trafic),
     transformation: auCentime(k.tauxDeTransformation * 100),
-    passages: auDixieme(k.tickets),
+    passages: auCentime(k.tickets),
     panier: auCentime(k.panierMoyen),
     chiffreDAffaires: t.chiffreDAffaires,
     realisation: auCentime(v("realisationDeLObjectif").valeur * 100),
@@ -302,13 +309,13 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
       notions: ["dashboard", "revenue"],
       tableau: tableauDesDeuxJanviers,
       question: () =>
-        "Évolution = (valeur de N ÷ valeur de N − 1 − 1) × 100. Calculez, en pourcentage et au dixième, l'évolution du chiffre d'affaires, celle des entrées et celle des passages en caisse. Négatif pour un recul.",
+        "Évolution = (valeur de N ÷ valeur de N − 1 − 1) × 100. Calculez, en pourcentage et à deux décimales, l'évolution du chiffre d'affaires, celle des entrées et celle des passages en caisse. Négatif pour un recul.",
       champs: (c) => {
         const x = tableauDeBordDuMois(c);
         return [
-          { libelle: "Évolution du chiffre d'affaires (%)", attendu: x.evolutionDuCa, tolerance: 0.1, calcul: `(${eur(x.ca)} ÷ ${eur(x.n1.chiffreDAffaires)} − 1) × 100 = ${pct(x.evolutionDuCa)}` },
-          { libelle: "Évolution des entrées (%)", attendu: x.evolutionDuTrafic, tolerance: 0.1, calcul: `(${qte(x.m.entrees)} ÷ ${qte(x.n1.trafic)} − 1) × 100 = ${pct(x.evolutionDuTrafic)}` },
-          { libelle: "Évolution des passages en caisse (%)", attendu: x.evolutionDesPassages, tolerance: 0.1, calcul: `(${qte(x.m.tickets)} ÷ ${qte(x.n1.tickets)} − 1) × 100 = ${pct(x.evolutionDesPassages)}` },
+          { libelle: "Évolution du chiffre d'affaires (%)", attendu: x.evolutionDuCa, calcul: `(${eur(x.ca)} ÷ ${eur(x.n1.chiffreDAffaires)} − 1) × 100 = ${pct(x.evolutionDuCa)}` },
+          { libelle: "Évolution des entrées (%)", attendu: x.evolutionDuTrafic, calcul: `(${qte(x.m.entrees)} ÷ ${qte(x.n1.trafic)} − 1) × 100 = ${pct(x.evolutionDuTrafic)}` },
+          { libelle: "Évolution des passages en caisse (%)", attendu: x.evolutionDesPassages, calcul: `(${qte(x.m.tickets)} ÷ ${qte(x.n1.tickets)} − 1) × 100 = ${pct(x.evolutionDesPassages)}` },
         ];
       },
       explication: (c) => {
@@ -326,14 +333,14 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
       notions: ["dashboard", "revenue"],
       question: (c) => {
         const x = tableauDeBordDuMois(c);
-        return `L'objectif du mois est le tiers du chiffre d'affaires budgété pour le trimestre (${eur(x.budgetDuTrimestre)}). Calculez-le, au centime, puis l'écart à l'objectif (réalisé − objectif) et le taux de réalisation (réalisé ÷ objectif × 100, au dixième). Négatif pour un écart défavorable.`;
+        return `L'objectif du mois est le tiers du chiffre d'affaires budgété pour le trimestre (${eur(x.budgetDuTrimestre)}). Calculez-le, au centime, puis l'écart à l'objectif (réalisé − objectif) et le taux de réalisation (réalisé ÷ objectif × 100, à deux décimales). Négatif pour un écart défavorable.`;
       },
       champs: (c) => {
         const x = tableauDeBordDuMois(c);
         return [
           { libelle: "Objectif du mois", attendu: x.objectif, calcul: `${eur(x.budgetDuTrimestre)} ÷ 3 = ${eur(x.objectif)}` },
           { libelle: "Écart à l'objectif", attendu: x.ecartALObjectif, calcul: `${eur(x.ca)} − ${eur(x.objectif)} = ${eur(x.ecartALObjectif)}` },
-          { libelle: "Taux de réalisation (%)", attendu: x.realisation, tolerance: 0.1, calcul: `${eur(x.ca)} ÷ ${eur(x.objectif)} × 100 = ${pct(x.realisation)}` },
+          { libelle: "Taux de réalisation (%)", attendu: x.realisation, calcul: `${eur(x.ca)} ÷ ${eur(x.objectif)} × 100 = ${pct(x.realisation)}` },
         ];
       },
       explication: (c) => {
@@ -411,13 +418,13 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
       notions: ["conversion_rate", "average_basket"],
       tableau: tableauDesDeuxJanviers,
       question: () =>
-        "Sans formule cette fois. Calculez le taux de transformation de janvier N et de janvier N − 1 (en pourcentage, au dixième), puis le panier moyen de chacun (au centime).",
+        "Sans formule cette fois. Calculez le taux de transformation de janvier N et de janvier N − 1 (en pourcentage, à deux décimales), puis le panier moyen de chacun (au centime).",
       champs: (c) => {
         const x = tableauDeBordDuMois(c);
         return [
-          { libelle: "Taux de transformation de janvier N (%)", attendu: x.transformationN, tolerance: 0.1, calcul: `${qte(x.m.tickets)} passages ÷ ${qte(x.m.entrees)} entrées × 100 = ${pct(x.transformationN)}` },
-          { libelle: "Taux de transformation de janvier N − 1 (%)", attendu: x.transformationN1, tolerance: 0.1, calcul: `${qte(x.n1.tickets)} ÷ ${qte(x.n1.trafic)} × 100 = ${pct(x.transformationN1)}` },
-          { libelle: "Panier moyen de janvier N", attendu: x.panierN, tolerance: 0.01, calcul: `${eur(x.caEnCaisse)} ÷ ${qte(x.m.tickets)} = ${eur(x.panierN)}, le chiffre d'affaires encaissé en caisse` },
+          { libelle: "Taux de transformation de janvier N (%)", attendu: x.transformationN, calcul: `${qte(x.m.tickets)} passages ÷ ${qte(x.m.entrees)} entrées × 100 = ${pct(x.transformationN)}` },
+          { libelle: "Taux de transformation de janvier N − 1 (%)", attendu: x.transformationN1, calcul: `${qte(x.n1.tickets)} ÷ ${qte(x.n1.trafic)} × 100 = ${pct(x.transformationN1)}` },
+          { libelle: "Panier moyen de janvier N", attendu: x.panierN, calcul: `${eur(x.caEnCaisse)} ÷ ${qte(x.m.tickets)} = ${eur(x.panierN)}, le chiffre d'affaires encaissé en caisse` },
           { libelle: "Panier moyen de janvier N − 1", attendu: x.panierN1, calcul: `${eur(x.n1.chiffreDAffairesEnCaisse)} ÷ ${qte(x.n1.tickets)} = ${eur(x.panierN1)}` },
         ];
       },
@@ -436,7 +443,7 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
       notions: ["dashboard", "conversion_rate"],
       question: (c) => {
         const x = tableauDeBordDuMois(c);
-        return `Chiffre d'affaires ${pct(x.evolutionDuCa)}, entrées ${pct(x.evolutionDuTrafic)}, passages en caisse ${pct(x.evolutionDesPassages)}, taux de service ${pct(auDixieme(x.m.tauxDeService * 100))} pour ${pct(auDixieme((x.n1.articles / x.n1.demande) * 100))} en N − 1. Qu'est-ce qui explique l'objectif manqué, et que faire ?`;
+        return `Chiffre d'affaires ${pct(x.evolutionDuCa)}, entrées ${pct(x.evolutionDuTrafic)}, passages en caisse ${pct(x.evolutionDesPassages)}, taux de service ${pct(auCentime(x.m.tauxDeService * 100))} pour ${pct(auCentime((x.n1.articles / x.n1.demande) * 100))} en N − 1. Qu'est-ce qui explique l'objectif manqué, et que faire ?`;
       },
       options: (c) => {
         const x = tableauDeBordDuMois(c);
@@ -462,7 +469,7 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
           {
             texte: "Le stock : le taux de service baisse, des clients repartent sans article",
             juste: false,
-            retour: `Non : le taux de service, ${pct(auDixieme(x.m.tauxDeService * 100))}, reste au-dessus de son seuil de ${pct(x.f.seuilsDAlerte.tauxDeService.seuil * 100)} : son voyant est vert. Les ${qte(x.m.ventesManquees)} ventes manquées du cardigan ne font que ${eur(x.m.chiffreDAffairesManque)}, loin des ${eur(-x.ecartALObjectif)} qui manquent à l'objectif.`,
+            retour: `Non : le taux de service, ${pct(auCentime(x.m.tauxDeService * 100))}, reste au-dessus de son seuil de ${pct(x.f.seuilsDAlerte.tauxDeService.seuil * 100)} : son voyant est vert. Les ${qte(x.m.ventesManquees)} ventes manquées du cardigan ne font que ${eur(x.m.chiffreDAffairesManque)}, loin des ${eur(-x.ecartALObjectif)} qui manquent à l'objectif.`,
           },
         ];
       },
@@ -484,7 +491,7 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
         return [
           { texte: `D'environ ${qte(besoin)} %, ce qui manque au chiffre d'affaires`, juste: true, retour: `Bon pari. ${voir}` },
           { texte: `De ${pct(-x.evolutionDuTrafic)}, ce que le trafic a perdu`, juste: false, retour: `Pari à vérifier. ${voir}` },
-          { texte: `De ${pct(auDixieme(100 - x.realisation))}, ce qui manque à l'objectif`, juste: false, retour: `Pari à vérifier. ${voir}` },
+          { texte: `De ${pct(auCentime(100 - x.realisation))}, ce qui manque à l'objectif`, juste: false, retour: `Pari à vérifier. ${voir}` },
         ];
       },
     },
@@ -550,7 +557,7 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
         const x = tableauDeBordDuMois(c);
         const l = laboratoireDesVoyants(x, { trafic: p.trafic!, transformation: p.transformation!, panier: p.panier! });
         return [
-          `Le voyant de l'objectif est éteint : ${pct(l.realisation)} de réalisation, pour ${eur(l.chiffreDAffaires)} de chiffre d'affaires. Les trois leviers se multiplient : il fallait ${pct(auDixieme(x.hausseNecessaire))} de chiffre d'affaires en plus, et ${pct(auDixieme(x.hausseNecessaire))} de plus sur n'importe lequel d'entre eux les donne, ${pct(x.transformationNecessaire)} de transformation au lieu de ${pct(x.transformationN)}, ou un panier de ${eur(auCentime((x.caDuVoyant - x.commandes) / x.m.tickets))}.`,
+          `Le voyant de l'objectif est éteint : ${pct(l.realisation)} de réalisation, pour ${eur(l.chiffreDAffaires)} de chiffre d'affaires. Les trois leviers se multiplient : il fallait ${pct(auCentime(x.hausseNecessaire))} de chiffre d'affaires en plus, et ${pct(auCentime(x.hausseNecessaire))} de plus sur n'importe lequel d'entre eux les donne, ${pct(x.transformationNecessaire)} de transformation au lieu de ${pct(x.transformationN)}, ou un panier de ${eur(auCentime((x.caDuVoyant - x.commandes) / x.m.tickets))}.`,
           `${l.traficAllume ? "Le voyant du trafic, lui, reste rouge : le tableau de bord a dit vrai, la cause n'a pas bougé." : "Le voyant du trafic s'est éteint aussi."} Sur le graphique, la réalisation monte en droite avec la transformation ; l'indice de sécurité et la part du personnel bougent en courbe, de moins en moins vite : les charges fixes ne suivent pas les ventes.`,
         ];
       },
@@ -562,24 +569,24 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
       titre: "La transformation qui éteint le voyant",
       notions: ["conversion_rate", "dashboard"],
       question: () =>
-        "Sans formule cette fois. À trafic et panier de janvier N, quel chiffre d'affaires éteint le voyant de l'objectif (au centime) ? Combien de passages en caisse faut-il pour l'atteindre (arrondi au-dessus) ? Quel taux de transformation cela fait-il (au dixième) ?",
+        "Sans formule cette fois. À trafic et panier de janvier N, quel chiffre d'affaires éteint le voyant de l'objectif (au centime) ? Combien de passages en caisse faut-il pour l'atteindre (arrondi au-dessus) ? Quel taux de transformation cela fait-il (à deux décimales) ?",
       champs: (c) => {
         const x = tableauDeBordDuMois(c);
         return [
-          { libelle: "Chiffre d'affaires du seuil du voyant", attendu: x.caDuVoyantAuCentime, tolerance: 0.01, calcul: `${eur(x.objectif)} × ${pct(x.seuilDeRealisation * 100)} = ${eur(x.caDuVoyantAuCentime)}` },
+          { libelle: "Chiffre d'affaires du seuil du voyant", attendu: x.caDuVoyantAuCentime, calcul: `${eur(x.objectif)} × ${pct(x.seuilDeRealisation * 100)} = ${eur(x.caDuVoyantAuCentime)}` },
           {
             libelle: "Passages en caisse nécessaires",
+            nature: "quantite",
             attendu: x.passagesNecessaires,
-            tolerance: 1,
-            calcul: `(${eur(x.caDuVoyantAuCentime)} − ${eur(x.commandes)}) ÷ (${eur(x.caEnCaisse)} ÷ ${qte(x.m.tickets)}) = ${qte((x.caDuVoyant - x.commandes) / x.m.panierMoyen, 3)}, arrondi au-dessus : ${qte(x.passagesNecessaires)}`,
+            calcul: `(${eur(x.caDuVoyantAuCentime)} − ${eur(x.commandes)}) ÷ ${eur(x.panierN)} = ${qte(x.passagesCalcules)}, soit ${qte(x.passagesNecessaires)} passages à l'unité au-dessus : un de moins laisserait le voyant allumé`,
           },
-          { libelle: "Taux de transformation nécessaire (%)", attendu: x.transformationNecessaire, tolerance: 0.1, calcul: `${qte(x.passagesNecessaires)} ÷ ${qte(x.m.entrees)} × 100 = ${pct(x.transformationNecessaire)}` },
+          { libelle: "Taux de transformation nécessaire (%)", attendu: x.transformationNecessaire, calcul: `${qte(x.passagesNecessaires)} ÷ ${qte(x.m.entrees)} × 100 = ${pct(x.transformationNecessaire)}` },
         ];
       },
       explication: (c) => {
         const x = tableauDeBordDuMois(c);
         return [
-          `Il faut ${qte(x.passagesNecessaires)} passages en caisse au lieu de ${qte(x.m.tickets)}, une transformation de ${pct(x.transformationNecessaire)} : ${qte(x.passagesNecessaires - x.m.tickets)} visiteurs de plus qui achètent, sur les mêmes entrées. C'est le chiffre que le laboratoire a montré. Le panier se calcule ici sans l'arrondir : à un centime près, le passage qui manque change.`,
+          `Il faut ${qte(x.passagesNecessaires)} passages en caisse au lieu de ${qte(x.m.tickets)}, une transformation de ${pct(x.transformationNecessaire)} : ${qte(x.passagesNecessaires - x.m.tickets)} visiteurs de plus qui achètent, sur les mêmes entrées. C'est le chiffre que le laboratoire a montré. Le panier se prend au centime, comme sur la copie.`,
         ];
       },
     },
@@ -592,32 +599,29 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
       tableau: tableauDesDeuxJanviers,
       question: (c) => {
         const x = tableauDeBordDuMois(c);
-        return `Le chiffre d'affaires perd ${eur(-(x.ca - x.n1.chiffreDAffaires))} sur janvier N − 1 ; les commandes des comités, hors caisse, n'ont pas bougé, tout l'écart vient de la caisse. Décomposez cet écart en trois effets, dans cet ordre : celui du trafic (les entrées gagnées ou perdues, au chiffre d'affaires par entrée de N − 1), celui de la transformation (les passages de N face à ceux que le taux de N − 1 aurait donnés sur les entrées de N, au panier de N − 1), celui du panier (les passages de N, au panier gagné ou perdu). Négatif pour un effet défavorable.`;
+        return `Le chiffre d'affaires perd ${eur(-(x.ca - x.n1.chiffreDAffaires))} sur janvier N − 1 ; les commandes des comités, hors caisse, n'ont pas bougé, tout l'écart vient de la caisse. Décomposez cet écart en trois effets, dans cet ordre : celui du trafic (les entrées gagnées ou perdues, au chiffre d'affaires par entrée de N − 1), celui de la transformation (les passages de N face à ceux que le taux de N − 1 aurait donnés sur les entrées de N, au panier de N − 1), celui du panier (le chiffre d'affaires de la caisse de N, moins ses passages au panier de N − 1). Négatif pour un effet défavorable.`;
       },
       champs: (c) => {
         const x = tableauDeBordDuMois(c);
         const n1 = x.n1;
-        const effetAuPanierAffiche = auCentime(x.m.tickets * (x.panierN - x.panierN1));
         return [
           {
             libelle: "Effet du trafic",
             attendu: x.effetDuTrafic,
-            tolerance: 0.5,
-            calcul: `(${qte(x.m.entrees)} − ${qte(n1.trafic)}) × (${eur(n1.chiffreDAffairesEnCaisse)} ÷ ${qte(n1.trafic)}) = ${eur(x.effetDuTrafic)}`,
+            calcul: `(${qte(x.m.entrees)} − ${qte(n1.trafic)}) × ${eur(n1.chiffreDAffairesEnCaisse)} ÷ ${qte(n1.trafic)} = ${eur(x.effetDuTrafic)}, le produit avant la division : rien à arrondir en chemin`,
           },
           {
             libelle: "Effet de la transformation",
             attendu: x.effetDeLaTransformation,
-            tolerance: 0.5,
             calcul: `${qte(x.m.entrees)} × ${qte(n1.tickets)} ÷ ${qte(n1.trafic)} = ${qte(x.passagesAuTauxN1)} passages au taux de N − 1 ; (${qte(x.m.tickets)} − ${qte(x.passagesAuTauxN1)}) × ${eur(x.panierN1)} = ${eur(x.effetDeLaTransformation)}`,
           },
           {
             libelle: "Effet du panier",
             attendu: x.effetDuPanier,
-            // Le panier de N s'affiche au centime (77 250 € ÷ 940 = 82,180… €) : l'élève qui le multiplie par
-            // les passages trouve quelques euros de plus. Sa réponse est juste aussi : la tolérance couvre l'écart.
-            tolerance: auCentime(Math.max(0.5, Math.abs(effetAuPanierAffiche - x.effetDuPanier) + 0.01)),
-            calcul: `${eur(x.caEnCaisse)} − ${qte(x.m.tickets)} × ${eur(x.panierN1)} = ${eur(x.effetDuPanier)} ; avec le panier arrondi, ${qte(x.m.tickets)} × (${eur(x.panierN)} − ${eur(x.panierN1)}) = ${eur(effetAuPanierAffiche)}, juste aussi`,
+            // Le chiffre d'affaires de la caisse moins les passages au panier de N − 1, comme la question le dit :
+            // aucune ligne à arrondir. Par le panier de N au centime (82,18 €), on trouverait 0,80 € de moins, et
+            // la décomposition ne retomberait plus sur l'écart total.
+            calcul: `${eur(x.caEnCaisse)} − ${qte(x.m.tickets)} × ${eur(x.panierN1)} = ${eur(x.effetDuPanier)}`,
           },
         ];
       },
@@ -643,9 +647,9 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
       champs: (c) => {
         const x = tableauDeBordDuMois(c);
         return [
-          { libelle: "Chiffre d'affaires de février", attendu: x.caDeFevrier, tolerance: 0.01, calcul: `${eur(x.objectif)} × ${pct(FEVRIER_A_REBOURS.realisation * 100)} = ${eur(x.caDeFevrier)}` },
-          { libelle: "Passages en caisse de février", attendu: x.passagesDeFevrier, calcul: `${qte(FEVRIER_A_REBOURS.entrees)} × ${pct(FEVRIER_A_REBOURS.transformation * 100)} = ${qte(x.passagesDeFevrier)}` },
-          { libelle: "Panier moyen de février", attendu: x.panierDeFevrier, tolerance: 0.01, calcul: `(${eur(x.caDeFevrier)} − ${eur(x.commandes)}) ÷ ${qte(x.passagesDeFevrier)} = ${eur(x.panierDeFevrier)}` },
+          { libelle: "Chiffre d'affaires de février", attendu: x.caDeFevrier, calcul: `${eur(x.objectif)} × ${pct(FEVRIER_A_REBOURS.realisation * 100)} = ${eur(x.caDeFevrier)}` },
+          { libelle: "Passages en caisse de février", nature: "quantite", attendu: x.passagesDeFevrier, calcul: `${qte(FEVRIER_A_REBOURS.entrees)} × ${pct(FEVRIER_A_REBOURS.transformation * 100)} = ${qte(x.passagesDeFevrier)}` },
+          { libelle: "Panier moyen de février", attendu: x.panierDeFevrier, calcul: `(${eur(x.caDeFevrier)} − ${eur(x.commandes)}) ÷ ${qte(x.passagesDeFevrier)} = ${eur(x.panierDeFevrier)}` },
         ];
       },
       explication: (c) => {
@@ -685,7 +689,7 @@ export const TABLEAU_DE_BORD_DU_MANAGER: Chapitre = {
             retour: "Non : un voyant n'est jamais meilleur que son seuil. Un objectif mal réparti allume des voyants pour rien, ou en éteint qui devraient s'allumer.",
           },
           {
-            texte: `Il est trop sévère : rapporté au réalisé, l'objectif fait ${pct(auDixieme((x.objectif / x.ca) * 100))}`,
+            texte: `Il est trop sévère : rapporté au réalisé, l'objectif fait ${pct(auCentime((x.objectif / x.ca) * 100))}`,
             juste: false,
             retour: `Non : c'est inverser le rapport. Le taux de réalisation divise le réalisé par l'objectif : ${eur(x.ca)} ÷ ${eur(x.objectif)} = ${pct(x.realisation)}.`,
           },

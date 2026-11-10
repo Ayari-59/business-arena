@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { BOUTIQUES_DU_COURS, type CodeDeReference, type FicheDeLaBoutique } from "../monde/maille-et-co";
 import {
@@ -31,6 +31,10 @@ import type { Chapitre } from "../types";
  * CE QUI A CHANGÉ. Le chapitre lisait la commande du premier trimestre de l'arène (4 564 articles,
  * 4 554 reçus, 5 664 en réserve après). Il lit maintenant le bon de janvier : 1 000 articles sur le
  * bon, 990 reçus, 2 150 en réserve après.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les articles commandés, reçus, manquants et en stock sont des
+ * quantités, entières, déclarées comme telles.
  */
 
 /** Les entreprises du chapitre : la boutique du cours, qui reçoit plusieurs articles de son façonnier. */
@@ -49,8 +53,8 @@ export const ARTICLES_DE_LA_BOUTIQUE: Readonly<Record<CodeDeReference, { pluriel
   bonnet: { pluriel: "bonnets", feminin: false },
 };
 
-export const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
+/** Une quantité, ou le quotient qui y mène, au centième (deux décimales seulement s'il n'est pas entier). */
+export const qte = nombreAuCentieme;
 /** « de » devant un nom : élidé devant une voyelle. */
 export const de = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 /** Un adjectif accordé au pluriel avec l'article (« manquants », « manquantes »). */
@@ -134,7 +138,7 @@ export const RECEVOIR_UNE_LIVRAISON: Chapitre = {
       question: () => "Additionnez les lignes de la commande : combien d'articles le magasin attend-il en tout ?",
       champs: (c) => {
         const l = livraison(c);
-        return [{ libelle: "Total des articles commandés", attendu: l.totalCommande, calcul: `${l.lignes.map((x) => qte(x.commandee)).join(" + ")} = ${qte(l.totalCommande)}` }];
+        return [{ libelle: "Total des articles commandés", nature: "quantite", attendu: l.totalCommande, calcul: `${l.lignes.map((x) => qte(x.commandee)).join(" + ")} = ${qte(l.totalCommande)}` }];
       },
       explication: (c) => [`Le magasin attend ${qte(livraison(c).totalCommande)} articles. Ce total servira à la fin : si le compte ne tombe pas juste, il y a un écart quelque part.`],
     },
@@ -181,8 +185,8 @@ export const RECEVOIR_UNE_LIVRAISON: Chapitre = {
       champs: (c) => {
         const l = livraison(c);
         return [
-          { libelle: `${majuscule(l.ecart.pluriel)} ${accordeA(l.ecart.feminin, "manquant")}`, attendu: l.manquants, calcul: `${qte(l.ecart.surLeBon)} − ${qte(l.ecart.comptee)} = ${qte(l.manquants)}` },
-          { libelle: "Total des articles reçus", attendu: l.totalRecu, calcul: `${l.comptes.map((x) => qte(x.comptee)).join(" + ")} = ${qte(l.totalRecu)}` },
+          { libelle: `${majuscule(l.ecart.pluriel)} ${accordeA(l.ecart.feminin, "manquant")}`, nature: "quantite", attendu: l.manquants, calcul: `${qte(l.ecart.surLeBon)} − ${qte(l.ecart.comptee)} = ${qte(l.manquants)}` },
+          { libelle: "Total des articles reçus", nature: "quantite", attendu: l.totalRecu, calcul: `${l.comptes.map((x) => qte(x.comptee)).join(" + ")} = ${qte(l.totalRecu)}` },
         ];
       },
       explication: (c) => {
@@ -226,8 +230,8 @@ export const RECEVOIR_UNE_LIVRAISON: Chapitre = {
       champs: (c) => {
         const l = livraison(c);
         return [
-          { libelle: `Stock ${de(l.ecart.pluriel)} après la réception`, attendu: l.apresDeLEcart, calcul: `${qte(l.ecart.avant)} + ${qte(l.ecart.comptee)} = ${qte(l.apresDeLEcart)}` },
-          { libelle: "Stock total après la réception", attendu: l.totalApres, calcul: `${qte(l.totalAvant)} + ${qte(l.totalRecu)} = ${qte(l.totalApres)}` },
+          { libelle: `Stock ${de(l.ecart.pluriel)} après la réception`, nature: "quantite", attendu: l.apresDeLEcart, calcul: `${qte(l.ecart.avant)} + ${qte(l.ecart.comptee)} = ${qte(l.apresDeLEcart)}` },
+          { libelle: "Stock total après la réception", nature: "quantite", attendu: l.totalApres, calcul: `${qte(l.totalAvant)} + ${qte(l.totalRecu)} = ${qte(l.totalApres)}` },
         ];
       },
       explication: (c) => {

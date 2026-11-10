@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct, taux2 } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { chargesFixesDuMois, coutVariable, indicateursDuMois, seuilDuPointDeVente as seuilDuMois } from "../monde/boutique";
 import { BOUTIQUES_DU_COURS, JOURS_DU_MOIS, type FicheDeLaBoutique } from "../monde/maille-et-co";
@@ -41,6 +41,14 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * charges fixes qui ne bougent pas avec les ventes (l'équipe comprise) ; un taux de marge sur coût
  * variable constant, c'est-à-dire une composition des ventes qui ne change pas quand le chiffre
  * d'affaires, le panier ou les jours ouverts changent.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux de marge sur coût variable et l'indice de sécurité se
+ * donnent à deux décimales (au dixième, avant) ; le seuil, la marge de sécurité, le mois à rebours et
+ * la campagne se calculent sur le taux arrondi, comme sur la copie, et se donnent au centime (à deux
+ * ou trois euros près, avant) ; le point mort, les jours de fermeture et les passages au seuil sont
+ * des quantités : le corrigé écrit la valeur à deux décimales, puis l'arrondit à l'unité, au-dessus ou
+ * au-dessous, et dit pourquoi.
  */
 
 /** Les entreprises où le chapitre se joue : la boutique du cours, seule. */
@@ -75,12 +83,8 @@ export const LEVIERS_DU_SEUIL = {
   fermeture: { min: 0, max: 10, pas: 1 },
 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
+const qte = nombreAuCentieme;
 const signe = (t: number) => (t > 0 ? `+${pct(t)}` : pct(t));
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
 
 /** La fiche de la boutique du cours. */
 export const ficheDe = (c: Pick<Cas, "code">): FicheDeLaBoutique => BOUTIQUES_DU_COURS[c.code]!;
@@ -89,16 +93,31 @@ export const ficheDe = (c: Pick<Cas, "code">): FicheDeLaBoutique => BOUTIQUES_DU
 export function seuilDeLaBoutique(c: Pick<Cas, "code">) {
   const f = ficheDe(c);
   const m = indicateursDuMois(f);
-  const s = seuilDuMois(f);
+  // Le seuil de la copie : sur le taux de marge arrondi à deux décimales, comme l'élève.
+  const exact = seuilDuMois(f);
+  const tauxEnPourcent = auCentime(exact.tauxDeMarge * 100);
+  const taux = tauxEnPourcent / 100;
+  const panier = auCentime(m.panierMoyen);
+  const seuil = auCentime(exact.chargesFixes / taux);
+  const margeDeSecurite = auCentime(exact.chiffreDAffaires - seuil);
+  const indiceEnPourcent = taux2(margeDeSecurite, exact.chiffreDAffaires);
+  const pointMortExact = auCentime((seuil / exact.chiffreDAffaires) * f.joursDuMois);
+  const s = {
+    ...exact,
+    seuil,
+    margeDeSecurite,
+    indiceDeSecurite: indiceEnPourcent / 100,
+    pointMort: Math.ceil(pointMortExact - 1e-9),
+    ticketsAuSeuil: Math.ceil(auCentime((seuil - exact.commandes) / panier) - 1e-9),
+  };
   const charges = chargesFixesDuMois(f);
   const jours = f.joursDuMois;
   const references = f.gamme.map((r) => ({ code: r.code, nom: r.nom, ventes: r.ventesDuMois, prixHt: r.prixHt, coutVariable: coutVariable(r), coutsVariables: auCentime(r.ventesDuMois * coutVariable(r)) }));
-  const taux = s.tauxDeMarge;
-  const tauxEnPourcent = auDixieme(taux * 100);
   const caParJour = auCentime(s.chiffreDAffaires / jours);
   const margeParJour = auCentime(s.marge / jours);
   // Les jours de fermeture qu'un mois supporte : la marge des jours ouverts paie encore les charges fixes.
-  const joursSupportables = Math.floor(jours * (1 - s.chargesFixes / s.marge) + 1e-9);
+  const joursSupportablesCalcules = auCentime((indiceEnPourcent * jours) / 100);
+  const joursSupportables = Math.floor(joursSupportablesCalcules + 1e-9);
   const resultatAuxJoursSupportables = auCentime((s.marge * (jours - joursSupportables)) / jours - s.chargesFixes);
   const panierPlancher = Math.ceil(s.panierPlancher - 1e-9);
   // La variante du panier en promotion : les mêmes articles, une remise sur tout ; les coûts variables restent.
@@ -121,13 +140,14 @@ export function seuilDeLaBoutique(c: Pick<Cas, "code">) {
     references,
     taux,
     tauxEnPourcent,
-    indiceEnPourcent: auDixieme(s.indiceDeSecurite * 100),
-    pointMortExact: (s.seuil / s.chiffreDAffaires) * jours,
+    indiceEnPourcent,
+    pointMortExact,
     caParJour,
     margeParJour,
+    joursSupportablesCalcules,
     joursSupportables,
     resultatAuxJoursSupportables,
-    panier: auCentime(m.panierMoyen),
+    panier,
     panierPlancher,
     caEnPromotion,
     margeEnPromotion,
@@ -139,7 +159,7 @@ export function seuilDeLaBoutique(c: Pick<Cas, "code">) {
     margeARebours,
     resultatARebours: auCentime(margeARebours - s.chargesFixes),
     seuilAvecLaCampagne,
-    pointMortAvecLaCampagne: Math.ceil((seuilAvecLaCampagne / s.chiffreDAffaires) * jours - 1e-9),
+    pointMortAvecLaCampagne: Math.ceil(auCentime((seuilAvecLaCampagne / s.chiffreDAffaires) * jours) - 1e-9),
     caPourLaCampagne: auCentime(CAMPAGNE_D_AFFICHAGE / taux),
   };
 }
@@ -150,7 +170,13 @@ export type SeuilDeLaBoutique = ReturnType<typeof seuilDeLaBoutique>;
 export function laboratoireDuSeuil(x: SeuilDeLaBoutique, passages: number, panier: number, fermeture: number) {
   const s = seuilDuMois(x.f, { tickets: passages, panierMoyen: x.m.panierMoyen * (1 + panier / 100), joursDeFermeture: fermeture });
   const caParJourOuvert = (passages * x.m.panierMoyen * (1 + panier / 100) + s.commandes) / x.jours;
-  return { ...s, caParJourOuvert, caCumule: (jour: number) => caParJourOuvert * Math.max(0, Math.min(jour, x.jours) - fermeture) };
+  // Le seuil du laboratoire est celui de la copie : sur le taux de marge arrondi à deux décimales.
+  const seuil = auCentime(s.chargesFixes / x.taux);
+  const margeDeSecurite = auCentime(s.chiffreDAffaires - seuil);
+  const indiceDeSecurite = taux2(margeDeSecurite, s.chiffreDAffaires) / 100;
+  const joursDeVente = Math.ceil(auCentime(seuil / caParJourOuvert) - 1e-9);
+  const pointMort = fermeture + joursDeVente <= x.jours ? fermeture + joursDeVente : null;
+  return { ...s, seuil, margeDeSecurite, indiceDeSecurite, pointMort, caParJourOuvert, caCumule: (jour: number) => caParJourOuvert * Math.max(0, Math.min(jour, x.jours) - fermeture) };
 }
 
 /** La gamme de janvier, et ce que coûte un article de chaque référence : le document de départ. */
@@ -217,7 +243,7 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
       tableau: tableauDuMois,
       question: (c) => {
         const x = seuilDeLaBoutique(c);
-        return `Calculez les coûts variables du mois (pour chaque référence, les articles vendus × le coût variable d'un article, puis la somme), la marge sur coût variable (${eur(x.s.chiffreDAffaires)} moins ces coûts), puis son taux en pourcentage du chiffre d'affaires, au dixième.`;
+        return `Calculez les coûts variables du mois (pour chaque référence, les articles vendus × le coût variable d'un article, puis la somme), la marge sur coût variable (${eur(x.s.chiffreDAffaires)} moins ces coûts), puis son taux en pourcentage du chiffre d'affaires, au centième.`;
       },
       champs: (c) => {
         const x = seuilDeLaBoutique(c);
@@ -228,7 +254,7 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
             calcul: `${x.references.map((r) => `${qte(r.ventes)} × ${eur(r.coutVariable)}`).join(" + ")} = ${eur(x.s.coutsVariables)}`,
           },
           { libelle: "Marge sur coût variable", attendu: x.s.marge, calcul: `${eur(x.s.chiffreDAffaires)} − ${eur(x.s.coutsVariables)} = ${eur(x.s.marge)}` },
-          { libelle: "Taux de marge sur coût variable (%)", attendu: x.tauxEnPourcent, tolerance: 0.1, calcul: `${eur(x.s.marge)} ÷ ${eur(x.s.chiffreDAffaires)} × 100 = ${pct(x.tauxEnPourcent)}` },
+          { libelle: "Taux de marge sur coût variable (%)", attendu: x.tauxEnPourcent, calcul: `${eur(x.s.marge)} ÷ ${eur(x.s.chiffreDAffaires)} × 100 = ${pct(x.tauxEnPourcent)}` },
         ];
       },
       explication: (c) => {
@@ -278,16 +304,16 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
       question: (c) => {
         const x = seuilDeLaBoutique(c);
         const k = x.charges;
-        return `Additionnez les charges fixes du mois (loyer ${eur(k.loyer)}, équipe ${eur(k.personnel)}, publicité ${eur(k.publicite)}, entretien ${eur(k.entretien)}, usure ${eur(k.amortissement)}). Avec un taux de marge sur coût variable de ${pct(x.tauxEnPourcent)}, calculez le seuil de rentabilité, la marge de sécurité (chiffre d'affaires moins seuil), puis l'indice de sécurité (marge de sécurité ÷ chiffre d'affaires, au dixième).`;
+        return `Additionnez les charges fixes du mois (loyer ${eur(k.loyer)}, équipe ${eur(k.personnel)}, publicité ${eur(k.publicite)}, entretien ${eur(k.entretien)}, usure ${eur(k.amortissement)}). Avec un taux de marge sur coût variable de ${pct(x.tauxEnPourcent)}, calculez le seuil de rentabilité, la marge de sécurité (chiffre d'affaires moins seuil), puis l'indice de sécurité (marge de sécurité ÷ chiffre d'affaires, à deux décimales).`;
       },
       champs: (c) => {
         const x = seuilDeLaBoutique(c);
         const k = x.charges;
         return [
           { libelle: "Charges fixes du mois", attendu: x.s.chargesFixes, calcul: `${[k.loyer, k.personnel, k.publicite, k.entretien, k.amortissement].map(eur).join(" + ")} = ${eur(x.s.chargesFixes)}` },
-          { libelle: "Seuil de rentabilité", attendu: x.s.seuil, tolerance: 2, calcul: `${eur(x.s.chargesFixes)} ÷ ${pct(x.tauxEnPourcent)} = ${eur(x.s.seuil)}, au taux exact de ${eur(x.s.marge)} ÷ ${eur(x.s.chiffreDAffaires)}` },
-          { libelle: "Marge de sécurité", attendu: x.s.margeDeSecurite, tolerance: 2, calcul: `${eur(x.s.chiffreDAffaires)} − ${eur(x.s.seuil)} = ${eur(x.s.margeDeSecurite)}` },
-          { libelle: "Indice de sécurité (%)", attendu: x.indiceEnPourcent, tolerance: 0.1, calcul: `${eur(x.s.margeDeSecurite)} ÷ ${eur(x.s.chiffreDAffaires)} × 100 = ${pct(x.indiceEnPourcent)}` },
+          { libelle: "Seuil de rentabilité", attendu: x.s.seuil, calcul: `${eur(x.s.chargesFixes)} ÷ ${pct(x.tauxEnPourcent)} = ${eur(x.s.seuil)}, sur le taux arrondi à deux décimales, comme sur la copie` },
+          { libelle: "Marge de sécurité", attendu: x.s.margeDeSecurite, calcul: `${eur(x.s.chiffreDAffaires)} − ${eur(x.s.seuil)} = ${eur(x.s.margeDeSecurite)}` },
+          { libelle: "Indice de sécurité (%)", attendu: x.indiceEnPourcent, calcul: `${eur(x.s.margeDeSecurite)} ÷ ${eur(x.s.chiffreDAffaires)} × 100 = ${pct(x.indiceEnPourcent)}` },
         ];
       },
       explication: (c) => {
@@ -372,7 +398,7 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
       champs: (c) => {
         const x = seuilDeLaBoutique(c);
         return [
-          { libelle: "Point mort (jour du mois)", attendu: x.s.pointMort!, calcul: `${eur(x.s.seuil)} ÷ ${eur(x.s.chiffreDAffaires)} × ${qte(x.jours)} = ${qte(auCentime(x.pointMortExact))}, le ${qte(x.s.pointMort!)}` },
+          { libelle: "Point mort (jour du mois)", nature: "quantite", attendu: x.s.pointMort!, calcul: `${eur(x.s.seuil)} ÷ ${eur(x.s.chiffreDAffaires)} × ${qte(x.jours)} = ${qte(x.pointMortExact)} : le seuil est franchi dans la journée du ${qte(x.s.pointMort!)}` },
           { libelle: "Marge sur coût variable d'un jour", attendu: x.margeParJour, calcul: `${eur(x.s.marge)} ÷ ${qte(x.jours)} = ${eur(x.margeParJour)}` },
           { libelle: "Résultat du mois", attendu: x.s.resultat, calcul: `${eur(x.s.marge)} − ${eur(x.s.chargesFixes)} = ${eur(x.s.resultat)}` },
         ];
@@ -457,11 +483,10 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
         const ouverts = x.jours - x.joursSupportables;
         return [
           { libelle: "Marge perdue par jour fermé", attendu: x.margeParJour, calcul: `${eur(x.s.marge)} ÷ ${qte(x.jours)} = ${eur(x.margeParJour)}` },
-          { libelle: "Jours de fermeture supportables", attendu: x.joursSupportables, calcul: `${pct(x.indiceEnPourcent)} × ${qte(x.jours)} = ${qte(auDixieme((x.s.indiceDeSecurite * x.jours)))}, soit ${qte(x.joursSupportables)} jours` },
+          { libelle: "Jours de fermeture supportables", nature: "quantite", attendu: x.joursSupportables, calcul: `${pct(x.indiceEnPourcent)} × ${qte(x.jours)} = ${qte(x.joursSupportablesCalcules)}, soit ${qte(x.joursSupportables)} jours à l'unité au-dessous : un jour de plus ferait passer sous le seuil` },
           {
             libelle: "Résultat avec ces jours fermés",
             attendu: x.resultatAuxJoursSupportables,
-            tolerance: 1,
             calcul: `${eur(x.s.marge)} × ${qte(ouverts)} ÷ ${qte(x.jours)} − ${eur(x.s.chargesFixes)} = ${eur(x.resultatAuxJoursSupportables)}`,
           },
         ];
@@ -486,12 +511,12 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
       champs: (c) => {
         const x = seuilDeLaBoutique(c);
         return [
-          { libelle: "Panier moyen", attendu: x.panier, tolerance: 0.01, calcul: `${eur(x.m.chiffreDAffairesEnCaisse)} ÷ ${qte(x.s.tickets)} = ${eur(x.panier)}, le chiffre d'affaires encaissé en caisse` },
+          { libelle: "Panier moyen", attendu: x.panier, calcul: `${eur(x.m.chiffreDAffairesEnCaisse)} ÷ ${qte(x.s.tickets)} = ${eur(x.panier)}, le chiffre d'affaires encaissé en caisse` },
           {
             libelle: "Passages en caisse au seuil",
+            nature: "quantite",
             attendu: x.s.ticketsAuSeuil,
-            tolerance: 1,
-            calcul: `(${eur(x.s.seuil)} − ${eur(x.s.commandes)}) ÷ ${eur(x.panier)} = ${qte(x.s.ticketsAuSeuil)}, arrondi au-dessus : les commandes des comités couvrent déjà une part du seuil`,
+            calcul: `(${eur(x.s.seuil)} − ${eur(x.s.commandes)}) ÷ ${eur(x.panier)} = ${qte(auCentime((x.s.seuil - x.s.commandes) / x.panier))}, soit ${qte(x.s.ticketsAuSeuil)} passages à l'unité au-dessus (les commandes des comités couvrent déjà une part du seuil)`,
           },
         ];
       },
@@ -565,7 +590,7 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
       explication: (c) => {
         const x = seuilDeLaBoutique(c);
         return [
-          `À ${eur(PANIER_EN_PROMOTION)}, la remise de ${pct(auDixieme(x.remiseEnPromotion * 100))} ne retire rien aux coûts : le taux de marge tombe à ${pct(auDixieme((x.margeEnPromotion / x.caEnPromotion) * 100))}, et le mois perd ${eur(-x.resultatEnPromotion)}. Quand le panier baisse par le prix, son plancher est de ${eur(x.plancherEnPromotion)}, pas ${eur(x.panierPlancher)} : il doit payer les charges fixes et les articles eux-mêmes.`,
+          `À ${eur(PANIER_EN_PROMOTION)}, la remise de ${pct(auCentime(x.remiseEnPromotion * 100))} ne retire rien aux coûts : le taux de marge tombe à ${pct(auCentime((x.margeEnPromotion / x.caEnPromotion) * 100))}, et le mois perd ${eur(-x.resultatEnPromotion)}. Quand le panier baisse par le prix, son plancher est de ${eur(x.plancherEnPromotion)}, pas ${eur(x.panierPlancher)} : il doit payer les charges fixes et les articles eux-mêmes.`,
         ];
       },
     },
@@ -629,7 +654,7 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
           { libelle: "Seuil de rentabilité", montant: l.seuil, reference: d.seuil },
           { libelle: "Chiffre d'affaires cumulé au jour lu", montant: auCentime(l.caCumule(p.jour!)) },
           { libelle: l.pointMort === null ? "Point mort, pas atteint dans le mois" : "Point mort, jour du mois", montant: l.pointMort ?? 0, reference: d.pointMort!, unite: "jour" },
-          { libelle: "Indice de sécurité", montant: auDixieme(l.indiceDeSecurite * 100), reference: auDixieme(d.indiceDeSecurite * 100), unite: "%" },
+          { libelle: "Indice de sécurité", montant: auCentime(l.indiceDeSecurite * 100), reference: auCentime(d.indiceDeSecurite * 100), unite: "%" },
           { libelle: "Résultat du mois", montant: l.resultat, reference: d.resultat, effet: true, fort: true },
         ];
       },
@@ -670,7 +695,7 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
         const l = laboratoireDuSeuil(x, p.passages!, p.panier!, p.fermeture!);
         const hausse = (l.caParJourOuvert * x.jours) / x.s.chiffreDAffaires - 1;
         return [
-          `Le point mort tombe le ${qte(l.pointMort!)} : il a fallu ${signe(auDixieme(hausse * 100))} de chiffre d'affaires sur un mois plein. Le seuil, lui, n'a pas bougé (${eur(l.seuil)}) : il ne dépend que des charges fixes et du taux de marge. Plus de ventes ne baissent pas le seuil, elles l'atteignent plus tôt.`,
+          `Le point mort tombe le ${qte(l.pointMort!)} : il a fallu ${signe(auCentime(hausse * 100))} de chiffre d'affaires sur un mois plein. Le seuil, lui, n'a pas bougé (${eur(l.seuil)}) : il ne dépend que des charges fixes et du taux de marge. Plus de ventes ne baissent pas le seuil, elles l'atteignent plus tôt.`,
           `Un jour de fermeture recule le point mort d'un jour entier ; une hausse des ventes ne l'avance que peu à peu, parce que le point mort est le seuil divisé par le chiffre d'affaires d'un jour. Avancer le point mort de ${qte(x.s.pointMort! - POINT_MORT_VISE)} jours demande plus de ${qte(x.s.pointMort! - POINT_MORT_VISE)} jours de ventes en plus : il faut tenir le nouveau rythme tout le mois.`,
         ];
       },
@@ -691,11 +716,10 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
           {
             libelle: "Chiffre d'affaires de février",
             attendu: x.caARebours,
-            tolerance: 2,
             calcul: `L'indice vaut (chiffre d'affaires − seuil) ÷ chiffre d'affaires : ${eur(x.s.seuil)} ÷ (1 − ${pct(x.indiceARebours * 100)}) = ${eur(x.caARebours)}`,
           },
-          { libelle: "Marge sur coût variable de février", attendu: x.margeARebours, tolerance: 2, calcul: `${eur(x.caARebours)} × ${pct(x.tauxEnPourcent)} = ${eur(x.margeARebours)}` },
-          { libelle: "Résultat de février", attendu: x.resultatARebours, tolerance: 2, calcul: `${eur(x.margeARebours)} − ${eur(x.s.chargesFixes)} = ${eur(x.resultatARebours)}` },
+          { libelle: "Marge sur coût variable de février", attendu: x.margeARebours, calcul: `${eur(x.caARebours)} × ${pct(x.tauxEnPourcent)} = ${eur(x.margeARebours)}` },
+          { libelle: "Résultat de février", attendu: x.resultatARebours, calcul: `${eur(x.margeARebours)} − ${eur(x.s.chargesFixes)} = ${eur(x.resultatARebours)}` },
         ];
       },
       explication: (c) => {
@@ -721,18 +745,17 @@ export const SEUIL_DU_POINT_DE_VENTE: Chapitre = {
           {
             libelle: "Seuil avec la campagne",
             attendu: x.seuilAvecLaCampagne,
-            tolerance: 3,
             calcul: `(${eur(x.s.chargesFixes)} + ${eur(CAMPAGNE_D_AFFICHAGE)}) ÷ ${pct(x.tauxEnPourcent)} = ${eur(x.seuilAvecLaCampagne)}`,
           },
           {
             libelle: "Point mort avec la campagne (jour du mois)",
+            nature: "quantite",
             attendu: x.pointMortAvecLaCampagne,
-            calcul: `${eur(x.seuilAvecLaCampagne)} ÷ ${eur(x.s.chiffreDAffaires)} × ${qte(x.jours)} = ${qte(auCentime((x.seuilAvecLaCampagne / x.s.chiffreDAffaires) * x.jours))}, le ${qte(x.pointMortAvecLaCampagne)}`,
+            calcul: `${eur(x.seuilAvecLaCampagne)} ÷ ${eur(x.s.chiffreDAffaires)} × ${qte(x.jours)} = ${qte(auCentime((x.seuilAvecLaCampagne / x.s.chiffreDAffaires) * x.jours))} : le ${qte(x.pointMortAvecLaCampagne)}`,
           },
           {
             libelle: "Chiffre d'affaires en plus pour payer la campagne",
             attendu: x.caPourLaCampagne,
-            tolerance: 2,
             calcul: `${eur(CAMPAGNE_D_AFFICHAGE)} ÷ ${pct(x.tauxEnPourcent)} = ${eur(x.caPourLaCampagne)}, l'écart entre les deux seuils`,
           },
         ];
@@ -780,7 +803,7 @@ export function seuilDuPointDeVente(c: Cas) {
   const ca = g.chiffreDAffaires;
   const coutsVariables = auCentime(g.coutVariableUnitaire * g.quantite);
   const mcv = auCentime(ca - coutsVariables);
-  const tauxMcv = auDixieme((mcv / ca) * 100);
+  const tauxMcv = auCentime((mcv / ca) * 100);
   const seuil = Math.round(g.chargesFixes / (tauxMcv / 100));
   return {
     ca,
@@ -792,7 +815,7 @@ export function seuilDuPointDeVente(c: Cas) {
     chargesFixes: g.chargesFixes,
     seuil,
     margeDeSecurite: Math.round(ca - seuil),
-    indice: auDixieme(((ca - seuil) / ca) * 100),
+    indice: auCentime(((ca - seuil) / ca) * 100),
     pointMort: Math.ceil((seuil / ca) * JOURS_DU_MOIS - 1e-9),
   };
 }

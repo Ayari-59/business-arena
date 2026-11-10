@@ -30,7 +30,6 @@ const code = "conseil";
 const cas = casDeLEntreprise(code);
 const f = ATLAS_CONSEIL;
 const centime = (x: number) => Math.round(x * 100) / 100 + 0;
-const dixieme = (x: number) => Math.round(x * 10) / 10 + 0;
 const somme = (xs: readonly number[]) => xs.reduce((t, x) => t + x, 0);
 
 // La fiche, refaite à la main.
@@ -41,7 +40,8 @@ const hugo = commercial("conquete");
 const comptesDe = (k: string) => f.comptes.filter((c) => c.commercial === k);
 const tauxDeMarge = (k: string) => somme(comptesDe(k).map((c) => c.marge)) / somme(comptesDe(k).map((c) => c.chiffreDAffaires));
 const cout = (k: typeof marc) => k.salaireCharge + k.frais;
-const seuil = (k: typeof marc, commission = 0) => cout(k) / (tauxDeMarge(k.code) - commission);
+// Le seuil de la copie : sur le taux de marge arrondi à deux décimales (58,10 % pour Nadia).
+const seuil = (k: typeof marc, commission = 0) => cout(k) / (Math.round(tauxDeMarge(k.code) * 10_000) / 10_000 - commission);
 const caN = [0, 1, 2, 3].map((i) => somme(f.commerciaux.map((k) => k.n[i]!.chiffreDAffaires)));
 const caN1 = [0, 1, 2, 3].map((i) => somme(f.commerciaux.map((k) => k.nMoins1[i]!.chiffreDAffaires)));
 const capacite = f.consultants.nombre * f.consultants.joursFacturablesParTrimestre;
@@ -218,11 +218,11 @@ describe("le tableau de bord commercial, au cabinet du monde du cours", () => {
   it("la fiche donne les chiffres de la consigne : le cabinet, les commerciaux, leurs seuils", () => {
     expect(caN).toEqual([344_000, 366_200, 237_440, 434_760]);
     expect(caN1).toEqual([354_000, 371_000, 223_000, 410_000]);
-    expect([somme(caN), somme(caN1), dixieme((somme(caN) / somme(caN1) - 1) * 100)]).toEqual([1_382_400, 1_358_000, 1.8]);
-    expect(caN.map((x, i) => dixieme((x / caN1[i]! - 1) * 100))).toEqual([-2.8, -1.3, 6.5, 6]);
-    expect([tauxDeMarge("grands-comptes"), tauxDeMarge("conquete"), dixieme(tauxDeMarge("entreprises") * 100)]).toEqual([0.4, 0.5, 58.1]);
+    expect([somme(caN), somme(caN1), centime((somme(caN) / somme(caN1) - 1) * 100)]).toEqual([1_382_400, 1_358_000, 1.8]);
+    expect(caN.map((x, i) => centime((x / caN1[i]! - 1) * 100))).toEqual([-2.82, -1.29, 6.48, 6.04]);
+    expect([tauxDeMarge("grands-comptes"), tauxDeMarge("conquete"), centime(tauxDeMarge("entreprises") * 100)]).toEqual([0.4, 0.5, 58.1]);
     expect([cout(marc), cout(nadia), cout(hugo)]).toEqual([18_000, 16_500, 12_000]);
-    expect([seuil(marc), centime(seuil(nadia)), seuil(hugo)]).toEqual([45_000, 28_400.19, 24_000]);
+    expect([seuil(marc), centime(seuil(nadia)), seuil(hugo)]).toEqual([45_000, 28_399.31, 24_000]);
     expect([centime(seuil(hugo, 0.1)), centime(seuil(marc, 0.1))]).toEqual([30_000, 60_000]);
   });
 
@@ -231,24 +231,24 @@ describe("le tableau de bord commercial, au cabinet du monde du cours", () => {
       "Chiffre d'affaires du cabinet en N": 1_382_400,
       "Chiffre d'affaires du cabinet en N − 1": 1_358_000,
       "Évolution de l'année sur N − 1 (%)": 1.8,
-      "Taux de service du dernier trimestre (%)": dixieme((f.journeesVendues[3]! / f.journeesDemandees[3]!) * 100),
+      "Taux de service du dernier trimestre (%)": centime((f.journeesVendues[3]! / f.journeesDemandees[3]!) * 100),
     });
-    expect(dixieme((600 / 680) * 100)).toBe(88.2);
+    expect(centime((600 / 680) * 100)).toBe(88.24);
     const q = marc.n[0]!;
     expect(attendus(ch, "les-indicateurs-de-marc")).toEqual({
-      "Taux de transformation des devis (%)": dixieme((q.contrats / q.devis) * 100),
+      "Taux de transformation des devis (%)": centime((q.contrats / q.devis) * 100),
       "Panier moyen": q.chiffreDAffaires / q.contrats,
-      "Réalisation de l'objectif (%)": dixieme((q.chiffreDAffaires / q.objectif) * 100),
-      "Évolution sur N − 1 (%)": dixieme((q.chiffreDAffaires / marc.nMoins1[0]!.chiffreDAffaires - 1) * 100),
+      "Réalisation de l'objectif (%)": centime((q.chiffreDAffaires / q.objectif) * 100),
+      "Évolution sur N − 1 (%)": centime((q.chiffreDAffaires / marc.nMoins1[0]!.chiffreDAffaires - 1) * 100),
     });
-    expect([dixieme((q.contrats / q.devis) * 100), q.chiffreDAffaires / q.contrats, dixieme((q.chiffreDAffaires / q.objectif) * 100), dixieme((176_000 / 168_000 - 1) * 100)]).toEqual([32, 22_000, 100.6, 4.8]);
+    expect([centime((q.contrats / q.devis) * 100), q.chiffreDAffaires / q.contrats, centime((q.chiffreDAffaires / q.objectif) * 100), centime((176_000 / 168_000 - 1) * 100)]).toEqual([32, 22_000, 100.57, 4.76]);
   });
 
   it("le trimestre qui décroche est le T3 : la saison, pas les commerciaux", () => {
     // La plus forte baisse d'un trimestre au suivant : du T2 au T3, 128 760 €.
     expect(caN[1]! - caN[2]!).toBe(128_760);
     expect(f.journeesDemandees[2]).toBe(f.journeesVendues[2]);
-    expect(juste(ch, "le-trimestre-qui-decroche")).toBe("C'est la saison : face au T3 de N − 1, il progresse de 6,5 %");
+    expect(juste(ch, "le-trimestre-qui-decroche")).toBe("C'est la saison : face au T3 de N − 1, il progresse de 6,48 %");
   });
 
   it("le pari et le curseur du seuil : 24 000 € pour Hugo, le double de son coût", () => {
@@ -300,7 +300,7 @@ describe("le tableau de bord commercial, au cabinet du monde du cours", () => {
         "Marge de ses affaires": centime(ventes * 0.5),
         "Commission versée": centime(ventes * r),
         "Seuil de rentabilité du commercial": centime(s),
-        "Réalisation de l'objectif": dixieme((ventes / 15_000) * 100),
+        "Réalisation de l'objectif": centime((ventes / 15_000) * 100),
         "Voyants allumés": voyants,
         "Résultat du commercial": centime(ventes * 0.5 - ventes * r - 12_000),
       };
@@ -319,8 +319,8 @@ describe("le tableau de bord commercial, au cabinet du monde du cours", () => {
   });
 
   it("Nadia : l'objectif tenu cachait la transformation, 18 devis de trop au T4", () => {
-    expect(nadia.n.map((q) => dixieme((q.chiffreDAffaires / q.objectif) * 100))).toEqual([100.6, 100.8, 99.8, 99.7]);
-    expect(nadia.n.map((q, i) => dixieme((q.chiffreDAffaires / nadia.nMoins1[i]!.chiffreDAffaires - 1) * 100))).toEqual([4, 4, 4.2, 4.3]);
+    expect(nadia.n.map((q) => centime((q.chiffreDAffaires / q.objectif) * 100))).toEqual([100.65, 100.75, 99.83, 99.67]);
+    expect(nadia.n.map((q, i) => centime((q.chiffreDAffaires / nadia.nMoins1[i]!.chiffreDAffaires - 1) * 100))).toEqual([4, 4, 4.22, 4.3]);
     expect(juste(ch, "predire-nadia")).toBe("Non : elle transforme de moins en moins de devis");
     const q4 = nadia.n[3]!;
     const panier = q4.chiffreDAffaires / q4.contrats;
@@ -337,12 +337,12 @@ describe("le tableau de bord commercial, au cabinet du monde du cours", () => {
     expect(centime(38 * tauxN1 * panier)).toBe(183_540);
     const n3 = nadia.n[2]!;
     expect(attendus(ch, "les-voyants-de-nadia")).toEqual({
-      "Taux de transformation au T3 (%)": dixieme((n3.contrats / n3.devis) * 100),
-      "Taux de transformation au T4 (%)": dixieme((q4.contrats / q4.devis) * 100),
-      "Taux de transformation au T4 de N − 1 (%)": dixieme(tauxN1 * 100),
+      "Taux de transformation au T3 (%)": centime((n3.contrats / n3.devis) * 100),
+      "Taux de transformation au T4 (%)": centime((q4.contrats / q4.devis) * 100),
+      "Taux de transformation au T4 de N − 1 (%)": centime(tauxN1 * 100),
       "Devis remis en trop au T4": q4.devis - devis,
     });
-    expect([dixieme((n3.contrats / n3.devis) * 100), dixieme((q4.contrats / q4.devis) * 100)]).toEqual([22.2, 23.2]);
+    expect([centime((n3.contrats / n3.devis) * 100), centime((q4.contrats / q4.devis) * 100)]).toEqual([22.22, 23.21]);
     // Les voyants de la transformation s'allument aux T3 et T4, sous 25 %, et celui de l'objectif jamais (au-dessus de 95 %).
     expect(nadia.n.map((q) => q.contrats / q.devis < f.seuilsDAlerte.tauxDeTransformation.seuil)).toEqual([false, false, true, true]);
     expect(nadia.n.some((q) => q.chiffreDAffaires / q.objectif < f.seuilsDAlerte.realisationDeLObjectif.seuil)).toBe(false);
@@ -351,10 +351,10 @@ describe("le tableau de bord commercial, au cabinet du monde du cours", () => {
     expect(Object.fromEntries(tri.elements(cas).map((x) => [x.libelle, [x.montant, x.categorie]]))).toEqual({
       "Rendez-vous": [68, "activite"],
       "Devis remis": [56, "activite"],
-      "Taux de transformation des devis (%)": [23.2, "efficacite"],
+      "Taux de transformation des devis (%)": [23.21, "efficacite"],
       "Panier moyen": [13_800, "efficacite"],
-      "Réalisation de l'objectif (%)": [99.7, "resultat"],
-      "Résultat du commercial": [centime(179_400 * tauxDeMarge("entreprises") - 16_500), "resultat"],
+      "Réalisation de l'objectif (%)": [99.67, "resultat"],
+      "Résultat du commercial": [centime(179_400 * 0.581 - 16_500), "resultat"],
     });
   });
 
@@ -418,18 +418,18 @@ describe("l'objectif de taux de service : 90 % au trimestre plein demande un con
     expect(TAUX_DE_SERVICE_VISE).toBe(0.9);
   });
 
-  it("le taux de service, refait à la main : 96 % sur l'année, 88,2 % au T4", () => {
+  it("le taux de service, refait à la main : 96 % sur l'année, 88,24 % au T4", () => {
     expect(attendus(s, "le-service")).toEqual({
-      "Taux de service de l'année (%)": dixieme((somme(f.journeesVendues) / somme(f.journeesDemandees)) * 100),
-      "Taux de service du T4 (%)": dixieme((vendues / demandees) * 100),
+      "Taux de service de l'année (%)": centime((somme(f.journeesVendues) / somme(f.journeesDemandees)) * 100),
+      "Taux de service du T4 (%)": centime((vendues / demandees) * 100),
       "Journées refusées au T4": demandees - vendues,
     });
     expect([somme(f.journeesVendues), somme(f.journeesDemandees), demandees - vendues]).toEqual([1_920, 2_000, 80]);
   });
 
   it("l'objectif, à rebours : 612 journées, 12 de plus que la capacité", () => {
-    expect(attendus(s, "l-objectif")).toEqual({ "Journées à vendre": visees, "Journées au-delà de la capacité": visees - capacite, "Taux d'occupation demandé (%)": dixieme((visees / capacite) * 100) });
-    expect([visees, visees - capacite, dixieme((visees / capacite) * 100)]).toEqual([612, 12, 102]);
+    expect(attendus(s, "l-objectif")).toEqual({ "Journées à vendre": visees, "Journées au-delà de la capacité": visees - capacite, "Taux d'occupation demandé (%)": centime((visees / capacite) * 100) });
+    expect([visees, visees - capacite, centime((visees / capacite) * 100)]).toEqual([612, 12, 102]);
   });
 
   it("ce que vaut l'objectif face à un consultant, et le curseur à 82 journées", () => {

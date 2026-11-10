@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { NOMS_DES_CLIENTELES } from "../../chapitres/interroger-les-clients";
 import { ENTREPRISES_DU_POINT_DE_VENTE, ficheDe } from "../../chapitres/taux-de-marque";
@@ -28,13 +28,17 @@ import type { Situation } from "../types";
  * compte les destinataires que le RGPD permet.
  *
  * Les pièges : décider sur la part brute ; oublier la marge d'incertitude ; écrire à tout le fichier.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les quotas et les cartes sont des quantités, entières ; les
+ * poids, des coefficients au dix-millième ; les oui redressés et la marge en points, des grandeurs au centième, chaque ligne partant de
+ * la précédente arrondie (monde/clientele-de-la-boutique.ts) ; les parts et la borne basse, à deux
+ * décimales (au dixième, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number, chiffres = 1) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: chiffres }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const qte = nombreAuCentieme;
+/** Une proportion au dix-millième, écrite avec ses quatre décimales. */
+const quatre = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
 const CLIENTELES = Object.keys(NOMS_DES_CLIENTELES) as CodeDeClientele[];
 
 /** Les chiffres du cas, calculés une fois sur la fiche. */
@@ -45,10 +49,10 @@ export function fautIlLivrerADomicile(c: Pick<Cas, "code">) {
     f,
     l,
     fichier: fichierDeLaCarte(),
-    partBrute: auDixieme(l.partBrute * 100),
-    part: auDixieme(l.part * 100),
-    marge: auDixieme(l.marge * 100),
-    borneBasse: auDixieme(l.part * 100) - auDixieme(l.marge * 100),
+    partBrute: auCentime(l.partBrute * 100),
+    part: auCentime(l.part * 100),
+    marge: auCentime(l.marge * 100),
+    borneBasse: auCentime(auCentime(l.part * 100) - auCentime(l.marge * 100)),
   };
 }
 
@@ -94,7 +98,7 @@ export const FAUT_IL_LIVRER_A_DOMICILE: Situation = {
       texte: (c) => {
         const x = fautIlLivrerADomicile(c);
         return [
-          `« L'enquête en ligne est revenue : ${pct(x.partBrute)} des répondants feraient livrer leurs achats. Nous lançons la livraison si au moins ${pct(SEUIL_DE_LANCEMENT_DE_LA_LIVRAISON * 100, 0)} des clients l'utiliseraient. Pouvons-nous y aller ? Et j'aimerais l'annoncer par SMS aux ${qte(x.fichier.cartes)} cartes du fichier. »`,
+          `« L'enquête en ligne est revenue : ${pct(x.partBrute)} des répondants feraient livrer leurs achats. Nous lançons la livraison si au moins ${pct(SEUIL_DE_LANCEMENT_DE_LA_LIVRAISON * 100)} des clients l'utiliseraient. Pouvons-nous y aller ? Et j'aimerais l'annoncer par SMS aux ${qte(x.fichier.cartes)} cartes du fichier. »`,
           `Pas de cours cette fois : vous avez les réponses, les passages du mois et la méthode du chapitre. L'échantillon visé est le même, un client sur quatre (${qte(x.l.taille)} réponses). Le fichier de la carte est celui du chapitre.`,
         ];
       },
@@ -106,20 +110,20 @@ export const FAUT_IL_LIVRER_A_DOMICILE: Situation = {
       titre: "Les quotas et les poids",
       notions: ["segmentation"],
       tableau: tableauDuCas,
-      question: () => "Calculez le quota des fidèles et celui des passants (un quart de leurs passages), puis le poids d'une réponse de chacune de ces clientèles (au centième).",
+      question: () => "Calculez le quota des fidèles et celui des passants (un quart de leurs passages), puis le poids d'une réponse de chacune de ces clientèles (au dix-millième).",
       champs: (c) => {
         const x = fautIlLivrerADomicile(c);
         const k = (y: "fideles" | "passants") => x.f.clienteles.find((z) => z.code === y)!.tickets;
         return [
-          { libelle: "Quota · clientes fidèles", attendu: x.l.quotas.fideles, calcul: `${qte(k("fideles"))} × ${pct(TAUX_DE_SONDAGE * 100, 0)} = ${qte(x.l.quotas.fideles)}` },
-          { libelle: "Quota · passants", attendu: x.l.quotas.passants, calcul: `${qte(k("passants"))} × ${pct(TAUX_DE_SONDAGE * 100, 0)} = ${qte(x.l.quotas.passants)}` },
-          { libelle: "Poids d'une réponse de fidèle", attendu: auCentime(x.l.poids.fideles), tolerance: 0.01, calcul: `${qte(x.l.quotas.fideles)} ÷ ${qte(ECHANTILLON_DE_LA_LIVRAISON.fideles)} = ${qte(auCentime(x.l.poids.fideles))}` },
-          { libelle: "Poids d'une réponse de passant", attendu: auCentime(x.l.poids.passants), tolerance: 0.01, calcul: `${qte(x.l.quotas.passants)} ÷ ${qte(ECHANTILLON_DE_LA_LIVRAISON.passants)} = ${qte(auCentime(x.l.poids.passants))}` },
+          { libelle: "Quota · clientes fidèles", nature: "quantite", attendu: x.l.quotas.fideles, calcul: `${qte(k("fideles"))} × ${pct(TAUX_DE_SONDAGE * 100)} = ${qte(x.l.quotas.fideles)}` },
+          { libelle: "Quota · passants", nature: "quantite", attendu: x.l.quotas.passants, calcul: `${qte(k("passants"))} × ${pct(TAUX_DE_SONDAGE * 100)} = ${qte(x.l.quotas.passants)}` },
+          { libelle: "Poids d'une réponse de fidèle", nature: "coefficient", attendu: x.l.poids.fideles, calcul: `${qte(x.l.quotas.fideles)} ÷ ${qte(ECHANTILLON_DE_LA_LIVRAISON.fideles)} = ${quatre(x.l.poids.fideles)}` },
+          { libelle: "Poids d'une réponse de passant", nature: "coefficient", attendu: x.l.poids.passants, calcul: `${qte(x.l.quotas.passants)} ÷ ${qte(ECHANTILLON_DE_LA_LIVRAISON.passants)} = ${quatre(x.l.poids.passants)}` },
         ];
       },
       explication: (c) => {
         const x = fautIlLivrerADomicile(c);
-        return [`Cette fois, les passants ont trop répondu : chacune de leurs réponses ne compte que pour ${qte(auCentime(x.l.poids.passants))}, et celle d'une fidèle pour ${qte(auCentime(x.l.poids.fideles))}.`];
+        return [`Cette fois, les passants ont trop répondu : chacune de leurs réponses ne compte que pour ${quatre(x.l.poids.passants)}, et celle d'une fidèle pour ${quatre(x.l.poids.fideles)}.`];
       },
     },
     {
@@ -127,17 +131,17 @@ export const FAUT_IL_LIVRER_A_DOMICILE: Situation = {
       type: "montants",
       titre: "La part redressée",
       notions: ["segmentation"],
-      question: () => "Calculez les oui redressés, puis la part redressée des clients qui feraient livrer, en pourcentage, au dixième.",
+      question: () => "Calculez les oui redressés, puis la part redressée des clients qui feraient livrer, en pourcentage, à deux décimales.",
       champs: (c) => {
         const x = fautIlLivrerADomicile(c);
         return [
           {
             libelle: "Oui redressés",
+            nature: "grandeur",
             attendu: auCentime(x.l.ouiRedresses),
-            tolerance: 0.5,
-            calcul: `${qte(OUI_A_LA_LIVRAISON.fideles)} × ${qte(auCentime(x.l.poids.fideles))} + ${qte(OUI_A_LA_LIVRAISON.passants)} × ${qte(auCentime(x.l.poids.passants))} + ${qte(OUI_A_LA_LIVRAISON.comites)} = ${qte(auCentime(x.l.ouiRedresses))}`,
+            calcul: `${qte(OUI_A_LA_LIVRAISON.fideles)} × ${quatre(x.l.poids.fideles)} + ${qte(OUI_A_LA_LIVRAISON.passants)} × ${quatre(x.l.poids.passants)} + ${qte(OUI_A_LA_LIVRAISON.comites)} = ${qte(auCentime(x.l.ouiRedresses))}`,
           },
-          { libelle: "Part redressée (%)", attendu: x.part, tolerance: 0.1, calcul: `${qte(auCentime(x.l.ouiRedresses))} ÷ ${qte(x.l.taille)} × 100 = ${pct(x.part)}` },
+          { libelle: "Part redressée (%)", attendu: x.part, calcul: `${qte(auCentime(x.l.ouiRedresses))} ÷ ${qte(x.l.taille)} × 100 = ${pct(x.part)}` },
         ];
       },
       explication: (c) => {
@@ -152,19 +156,18 @@ export const FAUT_IL_LIVRER_A_DOMICILE: Situation = {
       notions: ["segmentation"],
       question: (c) => {
         const x = fautIlLivrerADomicile(c);
-        return `Calculez la marge d'incertitude à 95 % de la part redressée, ${qte(COEFFICIENT_DE_CONFIANCE)} × √(p × (1 − p) ÷ n), en points au dixième, puis la borne basse de l'intervalle (${qte(x.l.taille)} réponses).`;
+        return `Calculez la marge d'incertitude à 95 % de la part redressée, ${qte(COEFFICIENT_DE_CONFIANCE)} × √(p × (1 − p) ÷ n), en points à deux décimales, puis la borne basse de l'intervalle (${qte(x.l.taille)} réponses).`;
       },
       champs: (c) => {
         const x = fautIlLivrerADomicile(c);
-        const p = x.part / 100;
         return [
-          { libelle: "Marge d'incertitude (points)", attendu: x.marge, tolerance: 0.1, calcul: `${qte(COEFFICIENT_DE_CONFIANCE)} × √(${qte(p)} × ${qte(Math.round((1 - p) * 1000) / 1000)} ÷ ${qte(x.l.taille)}) × 100 = ${qte(x.marge)}` },
-          { libelle: "Borne basse (%)", attendu: auDixieme(x.borneBasse), tolerance: 0.1, calcul: `${pct(x.part)} − ${qte(x.marge)} = ${pct(auDixieme(x.borneBasse))}` },
+          { libelle: "Marge d'incertitude (points)", nature: "grandeur", attendu: x.marge, calcul: `${qte(COEFFICIENT_DE_CONFIANCE)} × √(${quatre(x.l.part)} × ${quatre(1 - x.l.part)} ÷ ${qte(x.l.taille)}) × 100 = ${qte(x.marge)}` },
+          { libelle: "Borne basse (%)", attendu: auCentime(x.borneBasse), calcul: `${pct(x.part)} − ${qte(x.marge)} = ${pct(auCentime(x.borneBasse))}` },
         ];
       },
       explication: (c) => {
         const x = fautIlLivrerADomicile(c);
-        return [`Même à sa borne basse, ${pct(auDixieme(x.borneBasse))}, la part reste au-dessus du seuil de ${pct(SEUIL_DE_LANCEMENT_DE_LA_LIVRAISON * 100, 0)} : la conclusion tient, malgré l'incertitude.`];
+        return [`Même à sa borne basse, ${pct(auCentime(x.borneBasse))}, la part reste au-dessus du seuil de ${pct(SEUIL_DE_LANCEMENT_DE_LA_LIVRAISON * 100)} : la conclusion tient, malgré l'incertitude.`];
       },
     },
     {
@@ -177,8 +180,8 @@ export const FAUT_IL_LIVRER_A_DOMICILE: Situation = {
       champs: (c) => {
         const x = fautIlLivrerADomicile(c);
         return [
-          { libelle: "Cartes à effacer", attendu: x.fichier.aEffacer, calcul: `Dernier achat il y a plus de ${qte(ANS_DE_CONSERVATION)} ans : ${qte(x.fichier.aEffacer)} cartes` },
-          { libelle: "Destinataires du SMS", attendu: x.fichier.destinataires, calcul: `Les cartes gardées qui ont accepté les offres : ${qte(x.fichier.destinataires)}` },
+          { libelle: "Cartes à effacer", nature: "quantite", attendu: x.fichier.aEffacer, calcul: `Dernier achat il y a plus de ${qte(ANS_DE_CONSERVATION)} ans : ${qte(x.fichier.aEffacer)} cartes` },
+          { libelle: "Destinataires du SMS", nature: "quantite", attendu: x.fichier.destinataires, calcul: `Les cartes gardées qui ont accepté les offres : ${qte(x.fichier.destinataires)}` },
           { libelle: "Coût de l'envoi", attendu: x.fichier.coutDeLaCampagne, calcul: `${qte(x.fichier.destinataires)} × ${eur(COUT_D_UN_SMS)} = ${eur(x.fichier.coutDeLaCampagne)}` },
         ];
       },
@@ -198,7 +201,7 @@ export const FAUT_IL_LIVRER_A_DOMICILE: Situation = {
           {
             texte: `Lancer, et l'annoncer aux ${qte(x.fichier.destinataires)} clientes qui l'ont accepté`,
             juste: true,
-            retour: `Oui : redressée, la part est de ${pct(x.part)}, et ${pct(auDixieme(x.borneBasse))} au plus bas, au-dessus du seuil. Le SMS ne part qu'aux cartes gardées qui ont accepté les offres : ${eur(x.fichier.coutDeLaCampagne)}.`,
+            retour: `Oui : redressée, la part est de ${pct(x.part)}, et ${pct(auCentime(x.borneBasse))} au plus bas, au-dessus du seuil. Le SMS ne part qu'aux cartes gardées qui ont accepté les offres : ${eur(x.fichier.coutDeLaCampagne)}.`,
           },
           {
             texte: `Lancer et l'annoncer aux ${qte(x.fichier.cartes)} cartes : ${pct(x.partBrute)} des répondants la veulent`,
@@ -208,7 +211,7 @@ export const FAUT_IL_LIVRER_A_DOMICILE: Situation = {
           {
             texte: "Attendre : avec la marge d'incertitude, la part pourrait être sous le seuil",
             juste: false,
-            retour: `Non : la borne basse, ${pct(auDixieme(x.borneBasse))}, reste au-dessus de ${pct(SEUIL_DE_LANCEMENT_DE_LA_LIVRAISON * 100, 0)}. L'incertitude ne remet pas la décision en cause.`,
+            retour: `Non : la borne basse, ${pct(auCentime(x.borneBasse))}, reste au-dessus de ${pct(SEUIL_DE_LANCEMENT_DE_LA_LIVRAISON * 100)}. L'incertitude ne remet pas la décision en cause.`,
           },
         ];
       },

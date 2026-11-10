@@ -426,7 +426,7 @@ describe("négocier le prix, chez le cabinet du monde du cours", () => {
     expect(attendus(s, "le-plancher-de-la-regle")).toEqual({ "Coût complet d'une journée": coutComplet, "Bénéfice minimal par journée": benefice, "Prix plancher de la règle": plancher });
     expect([benefice, plancher]).toEqual([63, 693]);
     const remise = prix - plancher;
-    expect(attendus(s, "la-remise-autorisee")).toEqual({ "Remise autorisée par journée": remise, "Remise autorisée (%)": 13.4, "Remise au plus sur la commande": remise * a.journees });
+    expect(attendus(s, "la-remise-autorisee")).toEqual({ "Remise autorisée par journée": remise, "Remise autorisée (%)": 13.38, "Remise au plus sur la commande": remise * a.journees });
     expect([remise, (remise / prix) * 100, remise * a.journees]).toEqual([107, 13.375, 3_210]);
     // Le curseur : le chiffre d'affaires de la commande, 30 × 800 × (1 − r), face à 30 × 693.
     expect(curseur(s, "la-consigne")).toEqual({

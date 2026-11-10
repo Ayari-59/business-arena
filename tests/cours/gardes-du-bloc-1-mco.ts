@@ -29,7 +29,11 @@ export function gardesDuBloc1(source: Chapitre) {
     }
     if (e.type === "montants") {
       const champs = e.champs(BOUTIQUE, etat);
-      for (const c of champs) expect(Math.round(c.attendu * 100) / 100, `${e.id} : ${c.libelle}`).toBe(c.attendu);
+      // Au centime, sauf un coefficient, qui garde ses quatre décimales (règle des deux décimales).
+      for (const c of champs) {
+        const p = c.nature === "coefficient" ? 10_000 : 100;
+        expect(Math.round(c.attendu * p) / p, `${e.id} : ${c.libelle}`).toBe(c.attendu);
+      }
       if (champs.some((c) => c.attendu < 0)) expect(e.question(BOUTIQUE, etat), e.id).toMatch(/négatif s'il|négatif si elle/);
       textes.push(e.question(BOUTIQUE, etat), ...e.explication(BOUTIQUE, etat));
     }

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_POINT_DE_VENTE, equipeEtPlanning, tableauDeLEquipe } from "../../chapitres/equipe-et-planning";
 import { MINIMUM_DE_LA_BRANCHE_35_HEURES, PRIME_D_EQUIPE_PAR_HEURE, REGLES_DU_PLANNING } from "../../monde/equipe-de-la-boutique";
@@ -27,6 +27,12 @@ import type { Situation } from "../types";
  *
  * Comme son chapitre, le cas se joue dans la simulation du cours (src/config/cours/monde) : ses
  * chiffres sont ceux de `equipeEtPlanning`, sur la fiche de la boutique.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le chiffre d'affaires en plus se donne au centime, sur le taux
+ * de marge arrondi (à l'euro au-dessus, à deux euros près, avant) ; les passages et les heures sont
+ * des quantités, les passages arrondis à l'unité au-dessus ; les taux, à deux décimales (au dixième,
+ * avant).
  */
 
 /**
@@ -45,12 +51,8 @@ export const HAUSSE_D_UN_ACCORD_D_ENTREPRISE = 0.02;
 /** Les bornes du curseur des passages en caisse du mois. */
 export const PASSAGES_DU_CURSEUR = { min: 900, max: 1_100 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${qte(t)} %`;
+const qte = nombreAuCentieme;
 const h = (x: number) => `${qte(x)} h`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
 const plafond = (x: number) => Math.ceil(x - 1e-9);
 
 export type Verdict = "garder-l-etudiante" | "l-economie-tient";
@@ -60,8 +62,9 @@ export function accordDeBranche(c: Pick<Cas, "code">) {
   const x = equipeEtPlanning(c);
   const coutApres = auCentime(x.e.cout * (1 + HAUSSE_DES_SALAIRES));
   const hausse = auCentime(coutApres - x.e.cout);
-  const caEnPlus = plafond(hausse / x.tauxMcv);
-  const passagesEnPlus = plafond(caEnPlus / x.panier);
+  // Le chiffre d'affaires au centime, sur le taux de marge à deux décimales ; les passages, au-dessus.
+  const caEnPlus = auCentime(hausse / (x.tauxMcvAffiche / 100));
+  const passagesEnPlus = plafond(auCentime(caEnPlus / x.panier));
   // Un seul panier, celui de la caisse : la marge d'un passage se lit sur le chiffre d'affaires encaissé ;
   // celle des commandes des comités, hors caisse, ne change pas.
   const margeParPassage = (x.caEnCaisse * x.tauxMcv) / x.tickets;
@@ -76,10 +79,10 @@ export function accordDeBranche(c: Pick<Cas, "code">) {
     coutApres,
     hausse,
     tauxHoraireApres: auCentime(coutApres / x.e.heuresDuMois),
-    partApres: auDixieme((coutApres / x.ca) * 100),
+    partApres: auCentime((coutApres / x.ca) * 100),
     caEnPlus,
     passagesEnPlus,
-    transformationVisee: auDixieme(((x.tickets + passagesEnPlus) / x.entreesDuMois) * 100),
+    transformationVisee: auCentime(((x.tickets + passagesEnPlus) / x.entreesDuMois) * 100),
     margeParPassage,
     margeDesCommandes,
     margeAvant,
@@ -141,15 +144,15 @@ export const L_ACCORD_DE_BRANCHE: Situation = {
       titre: "Après la hausse",
       notions: ["payroll", "fixed_costs"],
       question: () =>
-        `Avec ${pct(HAUSSE_DES_SALAIRES * 100)} de plus, calculez le coût du personnel du mois, la hausse mensuelle, le nouveau coût horaire chargé (au centime), puis la nouvelle part du personnel au chiffre d'affaires de janvier (au dixième).`,
+        `Avec ${pct(HAUSSE_DES_SALAIRES * 100)} de plus, calculez le coût du personnel du mois, la hausse mensuelle, le nouveau coût horaire chargé (au centime), puis la nouvelle part du personnel au chiffre d'affaires de janvier (à deux décimales).`,
       champs: (c) => {
         const r = accordDeBranche(c);
         const x = r.x;
         return [
           { libelle: "Coût du personnel après la hausse", attendu: r.coutApres, calcul: `${eur(x.e.cout)} × ${qte(1 + HAUSSE_DES_SALAIRES)} = ${eur(r.coutApres)}` },
           { libelle: "Hausse mensuelle", attendu: r.hausse, calcul: `${eur(r.coutApres)} − ${eur(x.e.cout)} = ${eur(r.hausse)}` },
-          { libelle: "Nouveau coût horaire chargé", attendu: r.tauxHoraireApres, tolerance: 0.02, calcul: `${eur(r.coutApres)} ÷ ${h(x.e.heuresDuMois)} = ${eur(r.tauxHoraireApres)}` },
-          { libelle: "Nouvelle part du personnel (%)", attendu: r.partApres, tolerance: 0.1, calcul: `${eur(r.coutApres)} ÷ ${eur(x.ca)} × 100 = ${pct(r.partApres)}` },
+          { libelle: "Nouveau coût horaire chargé", attendu: r.tauxHoraireApres, calcul: `${eur(r.coutApres)} ÷ ${h(x.e.heuresDuMois)} = ${eur(r.tauxHoraireApres)}` },
+          { libelle: "Nouvelle part du personnel (%)", attendu: r.partApres, calcul: `${eur(r.coutApres)} ÷ ${eur(x.ca)} × 100 = ${pct(r.partApres)}` },
         ];
       },
       explication: (c) => {
@@ -204,17 +207,16 @@ export const L_ACCORD_DE_BRANCHE: Situation = {
       titre: "Les ventes qui paient la hausse",
       notions: ["contribution_margin", "fixed_costs", "conversion_rate"],
       question: () =>
-        "La hausse se paie avec la marge des ventes en plus. Quel chiffre d'affaires faut-il réaliser en plus chaque mois (à l'euro, arrondi au-dessus) ? Combien de passages en caisse de plus, au panier moyen de janvier (arrondi au-dessus) ? Quel taux de transformation faut-il alors, au même trafic (au dixième) ?",
+        "La hausse se paie avec la marge des ventes en plus. Quel chiffre d'affaires faut-il réaliser en plus chaque mois (au centime) ? Combien de passages en caisse de plus, au panier moyen de janvier (arrondi au-dessus) ? Quel taux de transformation faut-il alors, au même trafic (à deux décimales) ?",
       champs: (c) => {
         const r = accordDeBranche(c);
         const x = r.x;
         return [
-          { libelle: "Chiffre d'affaires à réaliser en plus", attendu: r.caEnPlus, tolerance: 2, calcul: `${eur(r.hausse)} ÷ ${pct(x.tauxMcvAffiche)} = ${eur(r.caEnPlus)}` },
-          { libelle: "Passages en caisse en plus", attendu: r.passagesEnPlus, calcul: `${eur(r.caEnPlus)} ÷ ${eur(auCentime(x.panier))} = ${qte(auCentime(r.caEnPlus / x.panier))}, arrondi à ${qte(r.passagesEnPlus)}` },
+          { libelle: "Chiffre d'affaires à réaliser en plus", attendu: r.caEnPlus, calcul: `${eur(r.hausse)} ÷ ${pct(x.tauxMcvAffiche)} = ${eur(r.caEnPlus)}` },
+          { libelle: "Passages en caisse en plus", nature: "quantite", attendu: r.passagesEnPlus, calcul: `${eur(r.caEnPlus)} ÷ ${eur(auCentime(x.panier))} = ${qte(auCentime(r.caEnPlus / x.panier))}, soit ${qte(r.passagesEnPlus)} passages à l'unité au-dessus : un de moins ne paierait pas la hausse` },
           {
             libelle: "Taux de transformation à atteindre (%)",
             attendu: r.transformationVisee,
-            tolerance: 0.1,
             calcul: `(${qte(x.tickets)} + ${qte(r.passagesEnPlus)}) ÷ ${qte(x.entreesDuMois)} × 100 = ${pct(r.transformationVisee)}`,
           },
         ];
@@ -223,7 +225,7 @@ export const L_ACCORD_DE_BRANCHE: Situation = {
         const r = accordDeBranche(c);
         const x = r.x;
         return [
-          `Chaque euro de ventes en plus ne laisse que ${pct(x.tauxMcvAffiche)} de marge : pour payer ${eur(r.hausse)}, il en faut ${eur(r.caEnPlus)}, soit ${qte(r.passagesEnPlus)} passages en caisse de plus, une transformation de ${pct(r.transformationVisee)} au lieu de ${pct(auDixieme((x.tickets / x.entreesDuMois) * 100))}. C'est un objectif à la portée d'une équipe au complet.`,
+          `Chaque euro de ventes en plus ne laisse que ${pct(x.tauxMcvAffiche)} de marge : pour payer ${eur(r.hausse)}, il en faut ${eur(r.caEnPlus)}, soit ${qte(r.passagesEnPlus)} passages en caisse de plus, une transformation de ${pct(r.transformationVisee)} au lieu de ${pct(auCentime((x.tickets / x.entreesDuMois) * 100))}. C'est un objectif à la portée d'une équipe au complet.`,
         ];
       },
     },
@@ -241,9 +243,10 @@ export const L_ACCORD_DE_BRANCHE: Situation = {
         const x = r.x;
         return [
           { libelle: "Économie mensuelle", attendu: r.economie, calcul: `${eur(r.etudiante.brutMensuel)} × ${qte(1 + x.f.tauxPatronal)} = ${eur(r.economie)}` },
-          { libelle: "Heures de vente du planning sans elle", attendu: r.venteSansElle, calcul: `${h(x.planning.heuresPlanifiees)} − ${h(r.etudiante.heuresParSemaine)} = ${h(r.venteSansElle)}` },
+          { libelle: "Heures de vente du planning sans elle", nature: "quantite", attendu: r.venteSansElle, calcul: `${h(x.planning.heuresPlanifiees)} − ${h(r.etudiante.heuresParSemaine)} = ${h(r.venteSansElle)}` },
           {
             libelle: "Heures en manque au mieux",
+            nature: "quantite",
             attendu: r.enManqueAuMieux,
             calcul: `${h(x.besoin.heuresDeVente)} de vente nécessaires − ${h(r.venteSansElle)} = ${h(r.enManqueAuMieux)}, même toutes les heures bien placées`,
           },

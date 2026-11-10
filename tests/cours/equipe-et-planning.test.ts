@@ -36,7 +36,6 @@ const code = "boutique";
 const cas = casDeLEntreprise(code);
 const f = MAILLE_ET_CO;
 const centime = (x: number) => Math.round(x * 100) / 100;
-const dixieme = (x: number) => Math.round(x * 10) / 10;
 const auDessus = (x: number) => Math.ceil(x - 1e-9);
 const somme = (xs: readonly number[]) => xs.reduce((t, x) => t + x, 0);
 
@@ -244,7 +243,7 @@ describe("l'équipe et son planning, à la boutique du monde du cours", () => {
     expect(attendus(ch, "productivite")).toEqual({
       "Chiffre d'affaires par heure payée": centime(ca / heuresPayees),
       "Chiffre d'affaires par salarié": Math.round(ca / 6),
-      "Part du personnel (%)": dixieme((paie / ca) * 100),
+      "Part du personnel (%)": centime((paie / ca) * 100),
     });
     expect(Object.values(attendus(ch, "productivite"))).toEqual([122.31, 14_575, 16.4]);
     const samedi = besoinDu("samedi");
@@ -279,12 +278,14 @@ describe("l'équipe et son planning, à la boutique du monde du cours", () => {
   });
 
   it("l'étape autonome de la part visée reprend le chiffre du curseur", () => {
+    // Le curseur se lit à l'euro au-dessus ; l'étape demande le chiffre au centime.
+    const caVise = centime(paie / 0.15);
     expect(attendus(ch, "la-part-visee")).toEqual({
-      "Chiffre d'affaires de la part visée": 95_614,
-      "Hausse sur janvier (%)": dixieme((95_614 / ca - 1) * 100),
-      "Passages en caisse nécessaires": Math.ceil((95_614 - comites) / panier),
+      "Chiffre d'affaires de la part visée": caVise,
+      "Hausse sur janvier (%)": centime((caVise / ca - 1) * 100),
+      "Passages en caisse nécessaires": Math.ceil((caVise - comites) / centime(panier)),
     });
-    expect([dixieme((95_614 / ca - 1) * 100), Math.ceil((95_614 - comites) / panier)]).toEqual([9.3, 1_040]);
+    expect([caVise, centime((caVise / ca - 1) * 100), Math.ceil((caVise - comites) / centime(panier))]).toEqual([95_613.33, 9.33, 1_040]);
   });
 
   it("le laboratoire du planning : déplacer 11 heures couvre chaque créneau sans un euro de plus", () => {
@@ -340,14 +341,14 @@ describe("l'équipe et son planning, à la boutique du monde du cours", () => {
   it("les étapes d'expert : le budget d'heures, la braderie, l'embauche", () => {
     const masse = centime(ca * 0.15);
     const parMois = centime(masse / taux);
-    const parSemaine = dixieme((parMois * 12) / 52);
+    const parSemaine = centime((parMois * 12) / 52);
     expect(attendus(ch, "le-budget-d-heures")).toEqual({
       "Masse salariale admissible": masse,
       "Heures payables du mois": parMois,
       "Heures payables par semaine": parSemaine,
-      "Heures du besoin sans financement": dixieme(160 - parSemaine),
+      "Heures du besoin sans financement": centime(160 - parSemaine),
     });
-    expect([masse, parMois, parSemaine, dixieme(160 - parSemaine)]).toEqual([13_117.5, 653.91, 150.9, 9.1]);
+    expect([masse, parMois, parSemaine, centime(160 - parSemaine)]).toEqual([13_117.5, 653.91, 150.9, 9.1]);
 
     expect(AFFLUENCE_DE_LA_BRADERIE).toBe(1.2);
     const b = ecarts(1.2);
@@ -364,11 +365,11 @@ describe("l'équipe et son planning, à la boutique du monde du cours", () => {
     const coutMoyen = centime(paie / 6);
     expect(attendus(ch, "l-embauche")).toEqual({
       "Coût mensuel moyen d'un salarié": coutMoyen,
-      "Taux de marge sur coût variable (%)": dixieme(tauxMcv * 100),
-      "Chiffre d'affaires à réaliser en plus": Math.ceil(coutMoyen / tauxMcv),
+      "Taux de marge sur coût variable (%)": centime(tauxMcv * 100),
+      "Chiffre d'affaires à réaliser en plus": centime(coutMoyen / centime(tauxMcv * 100) * 100),
     });
-    expect([coutMoyen, dixieme(tauxMcv * 100), Math.ceil(coutMoyen / tauxMcv)]).toEqual([2_390.33, 50.6, 4_724]);
-    expect(equipeEtPlanning(cas).passagesPourUneEmbauche).toBe(Math.ceil(4_724 / panier));
+    expect([coutMoyen, centime(tauxMcv * 100), centime((coutMoyen / centime(tauxMcv * 100)) * 100)]).toEqual([2_390.33, 50.6, 4_723.97]);
+    expect(equipeEtPlanning(cas).passagesPourUneEmbauche).toBe(Math.ceil(4_723.97 / centime(panier)));
     expect(juste(ch, "faut-il-embaucher")).toBe("Pas d'embauche : déplacer 11 h du début de semaine couvre chaque créneau");
   });
 
@@ -384,17 +385,18 @@ describe("l'équipe et son planning, à la boutique du monde du cours", () => {
       "Coût du personnel après la hausse": apres,
       "Hausse mensuelle": hausse,
       "Nouveau coût horaire chargé": centime(apres / heuresPayees),
-      "Nouvelle part du personnel (%)": dixieme((apres / ca) * 100),
+      "Nouvelle part du personnel (%)": centime((apres / ca) * 100),
     });
-    expect([apres, hausse, centime(apres / heuresPayees), dixieme((apres / ca) * 100)]).toEqual([14_772.26, 430.26, 20.66, 16.9]);
-    const enPlus = Math.ceil(hausse / tauxMcv);
-    const passages = Math.ceil(enPlus / panier);
+    expect([apres, hausse, centime(apres / heuresPayees), centime((apres / ca) * 100)]).toEqual([14_772.26, 430.26, 20.66, 16.89]);
+    // Sur le taux de marge arrondi (50,60 %) et le panier au centime, comme la copie.
+    const enPlus = centime((hausse / centime(tauxMcv * 100)) * 100);
+    const passages = Math.ceil(enPlus / centime(panier));
     expect(attendus(s, "les-ventes-qui-paient")).toEqual({
       "Chiffre d'affaires à réaliser en plus": enPlus,
       "Passages en caisse en plus": passages,
-      "Taux de transformation à atteindre (%)": dixieme(((tickets + passages) / entrees) * 100),
+      "Taux de transformation à atteindre (%)": centime(((tickets + passages) / entrees) * 100),
     });
-    expect([enPlus, passages, dixieme(((tickets + passages) / entrees) * 100)]).toEqual([851, 11, 24.7]);
+    expect([enPlus, passages, centime(((tickets + passages) / entrees) * 100)]).toEqual([850.32, 11, 24.71]);
     // Le curseur : la marge d'un passage en caisse, 77 250 € × taux ÷ 940, plus celle des commandes des
     // comités, face à la marge de janvier plus la hausse.
     const margeParPassage = (caEnCaisse * tauxMcv) / tickets;
@@ -407,7 +409,7 @@ describe("l'équipe et son planning, à la boutique du monde du cours", () => {
       bornes: [900, 1_100],
       droites: [900 * margeParPassage + margeDesComites, cible, 1_100 * margeParPassage + margeDesComites, cible].map(centime),
       lecture: {
-        "Chiffre d'affaires du mois": centime(attendu * panier + comites),
+        "Chiffre d'affaires du mois": centime(attendu * centime(panier) + comites),
         "Marge sur coût variable": centime(attendu * margeParPassage + margeDesComites),
         "Marge de janvier plus la hausse": cible,
         "Ce que la hausse laisse au résultat": centime(centime(attendu * margeParPassage + margeDesComites) - cible),
@@ -422,7 +424,7 @@ describe("l'équipe et son planning, à la boutique du monde du cours", () => {
     });
     expect([centime(etudiante.brutMensuel * 1.42), 145 - etudiante.heuresParSemaine, 140 - 133]).toEqual([923, 133, 7]);
     expect(accordDeBranche(cas).verdict).toBe("garder-l-etudiante");
-    expect(juste(s, "reponse")).toBe("Garder l'équipe, et viser 851 € de ventes en plus par mois");
+    expect(juste(s, "reponse")).toBe("Garder l'équipe, et viser 850,32 € de ventes en plus par mois");
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le chapitre", () => verifierLesTextes(ch));

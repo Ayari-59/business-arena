@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_POINT_DE_VENTE, ficheDe } from "../../chapitres/taux-de-marque";
 import { DEPARTS_AVEC_LA_REMISE, DEPARTS_D_UNE_BOUTIQUE_COMPARABLE, REMISE_DU_PRESTATAIRE, remiseQuiTient, valeurDUneCliente } from "../../monde/clientele-de-la-boutique";
@@ -16,12 +16,14 @@ import type { Situation } from "../types";
  * et la remise qui tient au taux de la boutique comparable.
  *
  * Les pièges : croire la promesse sans la mesurer ; juger la remise sur un passage, pas sur la durée de vie.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la durée de vie moyenne est une grandeur, en mois, au centième.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number, chiffres = 1) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: chiffres }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
+/** Un taux de départs donné, écrit en fraction avec toutes ses décimales (0,045 pour 4,5 %) : il n'est pas arrondi. */
+const fraction = (x: number) => x.toLocaleString("fr-FR", { maximumFractionDigits: 4 });
 
 /** Les chiffres du cas, calculés une fois sur la fiche. */
 export function laCarteDuPrestataire(c: Pick<Cas, "code">) {
@@ -52,7 +54,7 @@ const tableauDuCas = (c: Pick<Cas, "code">): TableauDeDonnees => {
       { libelle: "Panier hors taxes d'un passage", valeurs: [eur(x.base.panierHt)] },
       { libelle: "Marge d'un passage", valeurs: [eur(x.base.margeDUnPassage)] },
       { libelle: "Départs par mois, sans remise", valeurs: [pct(x.base.departs * 100)] },
-      { libelle: "Remise proposée", valeurs: [pct(REMISE_DU_PRESTATAIRE * 100, 0)] },
+      { libelle: "Remise proposée", valeurs: [pct(REMISE_DU_PRESTATAIRE * 100)] },
       { libelle: "Départs promis par le prestataire", valeurs: [pct(DEPARTS_AVEC_LA_REMISE * 100)] },
       { libelle: "Départs d'une boutique comparable", valeurs: [pct(DEPARTS_D_UNE_BOUTIQUE_COMPARABLE * 100)] },
     ],
@@ -87,7 +89,7 @@ export const LA_CARTE_DU_PRESTATAIRE: Situation = {
       titre: "La demande de la direction",
       tableau: tableauDuCas,
       texte: () => [
-        `« Le prestataire nous propose sa carte : ${pct(REMISE_DU_PRESTATAIRE * 100, 0)} de remise sur chaque achat, et il promet que nos départs tomberont à ${pct(DEPARTS_AVEC_LA_REMISE * 100, 0)} par mois. Une boutique comparable qui l'a prise n'est descendue qu'à ${pct(DEPARTS_D_UNE_BOUTIQUE_COMPARABLE * 100)}. Signons-nous à ce taux ? »`,
+        `« Le prestataire nous propose sa carte : ${pct(REMISE_DU_PRESTATAIRE * 100)} de remise sur chaque achat, et il promet que nos départs tomberont à ${pct(DEPARTS_AVEC_LA_REMISE * 100)} par mois. Une boutique comparable qui l'a prise n'est descendue qu'à ${pct(DEPARTS_D_UNE_BOUTIQUE_COMPARABLE * 100)}. Signons-nous à ce taux ? »`,
         "Pas de cours cette fois : vous avez la carte d'aujourd'hui, l'offre, et la méthode du chapitre.",
       ],
       repere: () => "À rendre : la valeur d'une cliente aujourd'hui, avec la carte selon la promesse et selon la boutique comparable, les départs qui rendraient la remise neutre, et votre réponse.",
@@ -102,7 +104,7 @@ export const LA_CARTE_DU_PRESTATAIRE: Situation = {
       champs: (c) => {
         const b = laCarteDuPrestataire(c).base;
         return [
-          { libelle: "Durée de vie moyenne (mois)", attendu: b.dureeDeVie, calcul: `1 ÷ ${qte(b.departs)} = ${qte(b.dureeDeVie)} mois` },
+          { libelle: "Durée de vie moyenne (mois)", nature: "grandeur", attendu: b.dureeDeVie, calcul: `1 ÷ ${fraction(b.departs)} = ${qte(b.dureeDeVie)} mois` },
           { libelle: "Valeur d'une cliente", attendu: b.valeur, calcul: `${eur(b.margeDUnPassage)} × ${qte(b.dureeDeVie)} = ${eur(b.valeur)}` },
         ];
       },
@@ -122,9 +124,9 @@ export const LA_CARTE_DU_PRESTATAIRE: Situation = {
       champs: (c) => {
         const x = laCarteDuPrestataire(c);
         return [
-          { libelle: "Marge d'un passage après remise", attendu: x.promise.margeDUnPassage, calcul: `${eur(x.base.margeDUnPassage)} − ${eur(x.base.panierHt)} × ${pct(REMISE_DU_PRESTATAIRE * 100, 0)} = ${eur(x.base.margeDUnPassage)} − ${eur(x.promise.remiseDUnPassage)} = ${eur(x.promise.margeDUnPassage)}` },
-          { libelle: "Valeur, départs promis", attendu: x.promise.valeur, calcul: `${eur(x.promise.margeDUnPassage)} ÷ ${qte(DEPARTS_AVEC_LA_REMISE)} = ${eur(x.promise.valeur)}` },
-          { libelle: "Valeur, départs de la boutique comparable", attendu: x.comparable.valeur, calcul: `${eur(x.comparable.margeDUnPassage)} ÷ ${qte(DEPARTS_D_UNE_BOUTIQUE_COMPARABLE)} = ${eur(x.comparable.valeur)}` },
+          { libelle: "Marge d'un passage après remise", attendu: x.promise.margeDUnPassage, calcul: `${eur(x.base.margeDUnPassage)} − ${eur(x.base.panierHt)} × ${pct(REMISE_DU_PRESTATAIRE * 100)} = ${eur(x.base.margeDUnPassage)} − ${eur(x.promise.remiseDUnPassage)} = ${eur(x.promise.margeDUnPassage)}` },
+          { libelle: "Valeur, départs promis", attendu: x.promise.valeur, calcul: `${eur(x.promise.margeDUnPassage)} ÷ ${fraction(DEPARTS_AVEC_LA_REMISE)} = ${eur(x.promise.valeur)}` },
+          { libelle: "Valeur, départs de la boutique comparable", attendu: x.comparable.valeur, calcul: `${eur(x.comparable.margeDUnPassage)} ÷ ${fraction(DEPARTS_D_UNE_BOUTIQUE_COMPARABLE)} = ${eur(x.comparable.valeur)}` },
         ];
       },
       explication: (c) => {
@@ -140,22 +142,22 @@ export const LA_CARTE_DU_PRESTATAIRE: Situation = {
       titre: "Les départs qu'il faudrait",
       notions: ["customer_lifetime_value", "churn_rate"],
       question: () =>
-        `À rebours. Avec ${pct(REMISE_DU_PRESTATAIRE * 100, 0)} de remise, quels départs par mois, au plus, garderaient la valeur d'une cliente à celle d'aujourd'hui ? Calculez-les (en %, au centième), puis la plus forte remise, en % entier, qui tient avec les départs de la boutique comparable.`,
+        `À rebours. Avec ${pct(REMISE_DU_PRESTATAIRE * 100)} de remise, quels départs par mois, au plus, garderaient la valeur d'une cliente à celle d'aujourd'hui ? Calculez-les (en %, au centième), puis la plus forte remise, en % entier, qui tient avec les départs de la boutique comparable.`,
       champs: (c) => {
         const x = laCarteDuPrestataire(c);
         return [
-          { libelle: "Départs au plus (%)", attendu: auCentime(x.departsQuiTiennent * 100), tolerance: 0.01, calcul: `${eur(x.promise.margeDUnPassage)} ÷ ${eur(x.base.valeur)} × 100 = ${pct(auCentime(x.departsQuiTiennent * 100), 2)}` },
+          { libelle: "Départs au plus (%)", attendu: auCentime(x.departsQuiTiennent * 100), calcul: `${eur(x.promise.margeDUnPassage)} ÷ ${eur(x.base.valeur)} × 100 = ${pct(auCentime(x.departsQuiTiennent * 100))}` },
           {
             libelle: "Remise qui tient (%)",
             attendu: x.remiseQuiTient,
-            calcul: `À ${pct(x.remiseQuiTient, 0)} : ${eur(valeurDUneCliente(x.f, x.remiseQuiTient / 100, DEPARTS_D_UNE_BOUTIQUE_COMPARABLE).valeur)} ; à ${pct(x.remiseQuiTient + 1, 0)} : ${eur(valeurDUneCliente(x.f, (x.remiseQuiTient + 1) / 100, DEPARTS_D_UNE_BOUTIQUE_COMPARABLE).valeur)}, sous ${eur(x.base.valeur)}`,
+            calcul: `À ${pct(x.remiseQuiTient)} : ${eur(valeurDUneCliente(x.f, x.remiseQuiTient / 100, DEPARTS_D_UNE_BOUTIQUE_COMPARABLE).valeur)} ; à ${pct(x.remiseQuiTient + 1)} : ${eur(valeurDUneCliente(x.f, (x.remiseQuiTient + 1) / 100, DEPARTS_D_UNE_BOUTIQUE_COMPARABLE).valeur)}, sous ${eur(x.base.valeur)}`,
           },
         ];
       },
       explication: (c) => {
         const x = laCarteDuPrestataire(c);
         return [
-          `À ${pct(REMISE_DU_PRESTATAIRE * 100, 0)}, la carte ne paie que si les départs tombent sous ${pct(auCentime(x.departsQuiTiennent * 100), 2)} : la marge de sécurité sur la promesse est mince. Au taux de la boutique comparable, la remise ne doit pas dépasser ${pct(x.remiseQuiTient, 0)}.`,
+          `À ${pct(REMISE_DU_PRESTATAIRE * 100)}, la carte ne paie que si les départs tombent sous ${pct(auCentime(x.departsQuiTiennent * 100))} : la marge de sécurité sur la promesse est mince. Au taux de la boutique comparable, la remise ne doit pas dépasser ${pct(x.remiseQuiTient)}.`,
         ];
       },
     },
@@ -168,9 +170,9 @@ export const LA_CARTE_DU_PRESTATAIRE: Situation = {
         const x = laCarteDuPrestataire(c);
         return [
           {
-            texte: `Négocier la remise à ${pct(x.remiseQuiTient, 0)} au plus`,
+            texte: `Négocier la remise à ${pct(x.remiseQuiTient)} au plus`,
             juste: true,
-            retour: `Oui : à ${pct(REMISE_DU_PRESTATAIRE * 100, 0)}, la carte ne paie que si les départs tombent sous ${pct(auCentime(x.departsQuiTiennent * 100), 2)} ; la boutique comparable est à ${pct(DEPARTS_D_UNE_BOUTIQUE_COMPARABLE * 100)}, et y perdrait ${eur(x.perte)} par cliente. À ${pct(x.remiseQuiTient, 0)}, la carte tient même dans ce cas.`,
+            retour: `Oui : à ${pct(REMISE_DU_PRESTATAIRE * 100)}, la carte ne paie que si les départs tombent sous ${pct(auCentime(x.departsQuiTiennent * 100))} ; la boutique comparable est à ${pct(DEPARTS_D_UNE_BOUTIQUE_COMPARABLE * 100)}, et y perdrait ${eur(x.perte)} par cliente. À ${pct(x.remiseQuiTient)}, la carte tient même dans ce cas.`,
           },
           {
             texte: `Signer : la valeur d'une cliente passe à ${eur(x.promise.valeur)}, au-dessus d'aujourd'hui`,
@@ -178,7 +180,7 @@ export const LA_CARTE_DU_PRESTATAIRE: Situation = {
             retour: `Seulement si la promesse se tient. Avec les départs de la boutique comparable, elle tombe à ${eur(x.comparable.valeur)}.`,
           },
           {
-            texte: `Refuser toute remise : ${pct(REMISE_DU_PRESTATAIRE * 100, 0)} retirent ${eur(x.promise.remiseDUnPassage)} à chaque passage`,
+            texte: `Refuser toute remise : ${pct(REMISE_DU_PRESTATAIRE * 100)} retirent ${eur(x.promise.remiseDUnPassage)} à chaque passage`,
             juste: false,
             retour: `Non : une remise plus faible tient même dans l'hypothèse prudente. Elle se juge sur la durée de vie de la cliente, pas sur un passage.`,
           },

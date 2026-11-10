@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas, StockDuTrimestre } from "../cas";
 import {
   fournisseurDe,
@@ -53,6 +53,12 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * stock valorisé au coût d'achat du façonnier ; le stock de sécurité de 7 jours de ventes (la fiche) ;
  * au curseur du crédit, des achats au rythme des marchandises vendues ; au laboratoire, un trimestre au
  * rythme de janvier qui commence avec le stock disponible de janvier.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la rotation, la durée de stockage, la couverture et les ventes
+ * d'un jour sont des grandeurs au centième, la durée sur la rotation arrondie (au jour, à un jour
+ * près, avant) ; le stock de sécurité, les points de commande, les ventes manquées et la quantité
+ * économique sont des quantités, entières, déclarées comme telles.
  */
 
 /** Les entreprises où le chapitre se joue : la boutique du cours, seule. */
@@ -81,12 +87,8 @@ export const LEVIERS_DU_REASSORT = {
 export const POINT_DE_COMMANDE_DU_CURSEUR = { min: 300, max: 800 } as const;
 export const DELAI_DU_CURSEUR = { min: 0, max: 60 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 const deux = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 
 /** La fiche de la boutique du cours. */
 export const ficheDe = (c: Pick<Cas, "code">): FicheDeLaBoutique => BOUTIQUES_DU_COURS[c.code]!;
@@ -104,7 +106,8 @@ export function stockDeLaBoutique(c: Pick<Cas, "code">) {
   const refCardigan = referenceDe(f, "cardigan");
   const coutDe = (code: string) => f.gamme.find((r) => r.code === code)!.coutDAchat;
   const rotation = auCentime(s.rotation);
-  const duree = Math.round(s.dureeDeStockage);
+  // La durée de stockage, une grandeur au centième, sur la rotation arrondie : 30 ÷ 1,99.
+  const duree = auCentime(f.joursDuMois / rotation);
   const reassort = leviersDuReassort(f, "col-rond");
   const ventesDuDelai = col.ventesParJour * faconnier.delaiDeLivraison;
   // Le crédit fournisseur moyen : des achats au rythme des marchandises vendues, payés au délai.
@@ -130,16 +133,16 @@ export function stockDeLaBoutique(c: Pick<Cas, "code">) {
     coutDe,
     rotation,
     duree,
-    couverture: auDixieme(s.couverture),
-    couvertureDuCol: col.final / col.ventesParJour,
+    couverture: auCentime(s.couverture),
+    couvertureDuCol: auCentime(col.final / col.ventesParJour),
     reassort,
     ventesDuDelai,
     margeDuCol: auCentime(refCol.prixHt - coutVariable(refCol)),
     demandeDuCardigan: refCardigan.demandeDuMois,
     manqueDuCardigan: refCardigan.demandeDuMois - refCardigan.ventesDuMois,
     caManqueDuCardigan: auCentime((refCardigan.demandeDuMois - refCardigan.ventesDuMois) * refCardigan.prixHt),
-    joursFinancesParLeFaconnier: faconnier.delaiDePaiement - duree,
-    joursAvancesAvecLesFins: duree - finsDeSerie.delaiDePaiement,
+    joursFinancesParLeFaconnier: auCentime(faconnier.delaiDePaiement - duree),
+    joursAvancesAvecLesFins: auCentime(duree - finsDeSerie.delaiDePaiement),
     stockMoyenAuxFins: auCentime(s.stockMoyen * finsDeSerie.multiplicateur),
     achatsParJour,
     delaiQuiFinance,
@@ -147,7 +150,7 @@ export function stockDeLaBoutique(c: Pick<Cas, "code">) {
     stockMoyenDUnCycle,
     prixAtelier,
     surcoutAtelier: auCentime(reassort.quantiteCommandee * (prixAtelier - refCol.coutDAchat)),
-    rotationVisee,
+    rotationVisee: auCentime(rotationVisee),
     stockMoyenVise,
     stockFinalVise: auCentime(2 * stockMoyenVise - s.valeurFinale),
   };
@@ -178,7 +181,7 @@ function tableauDuReassort(x: StockDeLaBoutique): TableauDeDonnees {
     colonnes: ["Ventes par jour", "Stock de sécurité", "Point de commande", "Au 31 janvier", "Couverture"],
     lignes: x.s.references.map((r) => ({
       libelle: r.nom,
-      valeurs: [qte(r.ventesParJour), qte(r.stockDeSecurite), qte(r.pointDeCommande), qte(r.final), `${qte(auDixieme(r.couverture))} jours`],
+      valeurs: [qte(r.ventesParJour), qte(r.stockDeSecurite), qte(r.pointDeCommande), qte(r.final), `${qte(auCentime(r.couverture))} jours`],
     })),
   };
 }
@@ -288,13 +291,13 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
       notions: ["stock_rotation"],
       question: (c) => {
         const x = stockDeLaBoutique(c);
-        return `Le stock moyen vaut ${eur(x.s.stockMoyen)} et les marchandises vendues ${eur(x.s.coutDAchatDesVendues)} au prix d'achat. Calculez la rotation du stock sur le mois (coût des vendues ÷ stock moyen, au centième), puis la durée moyenne de stockage (${qte(x.f.joursDuMois)} jours ÷ rotation, au jour).`;
+        return `Le stock moyen vaut ${eur(x.s.stockMoyen)} et les marchandises vendues ${eur(x.s.coutDAchatDesVendues)} au prix d'achat. Calculez la rotation du stock sur le mois (coût des vendues ÷ stock moyen, au centième), puis la durée moyenne de stockage (${qte(x.f.joursDuMois)} jours ÷ rotation, au centième).`;
       },
       champs: (c) => {
         const x = stockDeLaBoutique(c);
         return [
-          { libelle: "Rotation du stock", attendu: x.rotation, tolerance: 0.01, calcul: `${eur(x.s.coutDAchatDesVendues)} ÷ ${eur(x.s.stockMoyen)} = ${deux(x.rotation)}` },
-          { libelle: "Durée moyenne de stockage (jours)", attendu: x.duree, tolerance: 1, calcul: `${qte(x.f.joursDuMois)} ÷ ${deux(x.rotation)} = ${qte(x.duree)}` },
+          { libelle: "Rotation du stock", nature: "grandeur", attendu: x.rotation, calcul: `${eur(x.s.coutDAchatDesVendues)} ÷ ${eur(x.s.stockMoyen)} = ${deux(x.rotation)}` },
+          { libelle: "Durée moyenne de stockage (jours)", nature: "grandeur", attendu: x.duree, calcul: `${qte(x.f.joursDuMois)} ÷ ${deux(x.rotation)} = ${qte(x.duree)}` },
         ];
       },
       explication: (c) => {
@@ -337,19 +340,19 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
       notions: ["stock"],
       tableau: tableauDuStock,
       question: () =>
-        "Sans formule cette fois. Au rythme de janvier, combien d'articles la boutique vend-elle par jour ? Combien de jours de vente le stock du 31 janvier tient-il, toutes références confondues (au dixième) ? Et celui du pull col rond seul ?",
+        "Sans formule cette fois. Au rythme de janvier, combien d'articles la boutique vend-elle par jour ? Combien de jours de vente le stock du 31 janvier tient-il, toutes références confondues (au centième) ? Et celui du pull col rond seul ?",
       champs: (c) => {
         const x = stockDeLaBoutique(c);
         return [
-          { libelle: "Ventes par jour", attendu: x.s.ventesParJour, calcul: `${qte(x.s.vendus)} ÷ ${qte(x.f.joursDuMois)} = ${qte(x.s.ventesParJour)}` },
-          { libelle: "Couverture du stock final (jours)", attendu: x.couverture, tolerance: 0.1, calcul: `${qte(x.s.final)} ÷ ${qte(x.s.ventesParJour)} = ${qte(x.couverture)}` },
-          { libelle: "Couverture du pull col rond (jours)", attendu: x.couvertureDuCol, tolerance: 0.1, calcul: `${qte(x.col.final)} ÷ (${qte(x.col.vendu)} ÷ ${qte(x.f.joursDuMois)}) = ${qte(x.col.final)} ÷ ${qte(x.col.ventesParJour)} = ${qte(x.couvertureDuCol)}` },
+          { libelle: "Ventes par jour", nature: "grandeur", attendu: x.s.ventesParJour, calcul: `${qte(x.s.vendus)} ÷ ${qte(x.f.joursDuMois)} = ${qte(x.s.ventesParJour)}` },
+          { libelle: "Couverture du stock final (jours)", nature: "grandeur", attendu: x.couverture, calcul: `${qte(x.s.final)} ÷ ${qte(x.s.ventesParJour)} = ${qte(x.couverture)}` },
+          { libelle: "Couverture du pull col rond (jours)", nature: "grandeur", attendu: x.couvertureDuCol, calcul: `${qte(x.col.final)} ÷ (${qte(x.col.vendu)} ÷ ${qte(x.f.joursDuMois)}) = ${qte(x.col.final)} ÷ ${qte(x.col.ventesParJour)} = ${qte(x.couvertureDuCol)}` },
         ];
       },
       explication: (c) => {
         const x = stockDeLaBoutique(c);
         return [
-          `En moyenne, le stock tient ${qte(x.couverture)} jours. La moyenne cache tout : le cardigan est à zéro, le bonnet tient ${qte(auDixieme(x.s.references.find((r) => r.code === "bonnet")!.couverture))} jours. Le pull col rond tient ${qte(x.couvertureDuCol)} jours, et le façonnier livre en ${qte(x.faconnier.delaiDeLivraison)} : commandé aujourd'hui, il arrivera trop tard. La couverture se lit référence par référence, face au délai de livraison.`,
+          `En moyenne, le stock tient ${qte(x.couverture)} jours. La moyenne cache tout : le cardigan est à zéro, le bonnet tient ${qte(auCentime(x.s.references.find((r) => r.code === "bonnet")!.couverture))} jours. Le pull col rond tient ${qte(x.couvertureDuCol)} jours, et le façonnier livre en ${qte(x.faconnier.delaiDeLivraison)} : commandé aujourd'hui, il arrivera trop tard. La couverture se lit référence par référence, face au délai de livraison.`,
         ];
       },
     },
@@ -435,10 +438,11 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
       champs: (c) => {
         const x = stockDeLaBoutique(c);
         return [
-          { libelle: "Ventes par jour du pull col rond", attendu: x.col.ventesParJour, calcul: `${qte(x.col.vendu)} ÷ ${qte(x.f.joursDuMois)} = ${qte(x.col.ventesParJour)}` },
-          { libelle: "Stock de sécurité", attendu: x.col.stockDeSecurite, calcul: `${qte(x.col.ventesParJour)} × ${qte(x.f.delaiDeSecurite)} = ${qte(x.col.stockDeSecurite)}` },
+          { libelle: "Ventes par jour du pull col rond", nature: "grandeur", attendu: x.col.ventesParJour, calcul: `${qte(x.col.vendu)} ÷ ${qte(x.f.joursDuMois)} = ${qte(x.col.ventesParJour)}` },
+          { libelle: "Stock de sécurité", nature: "quantite", attendu: x.col.stockDeSecurite, calcul: `${qte(x.col.ventesParJour)} × ${qte(x.f.delaiDeSecurite)} = ${qte(x.col.stockDeSecurite)}` },
           {
             libelle: "Point de commande",
+            nature: "quantite",
             attendu: x.col.pointDeCommande,
             calcul: `${qte(x.col.ventesParJour)} × ${qte(x.faconnier.delaiDeLivraison)} + ${qte(x.col.stockDeSecurite)} = ${qte(x.col.pointDeCommande)}`,
           },
@@ -466,10 +470,11 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
         return [
           {
             libelle: "Point de commande du cardigan",
+            nature: "quantite",
             attendu: x.cardigan.pointDeCommande,
             calcul: `${qte(x.cardigan.ventesParJour)} × ${qte(x.faconnier.delaiDeLivraison)} + ${qte(x.cardigan.ventesParJour)} × ${qte(x.f.delaiDeSecurite)} = ${qte(x.cardigan.pointDeCommande)}`,
           },
-          { libelle: "Ventes manquées du cardigan", attendu: x.manqueDuCardigan, calcul: `${qte(x.demandeDuCardigan)} demandés − ${qte(x.cardigan.vendu)} vendus = ${qte(x.manqueDuCardigan)}` },
+          { libelle: "Ventes manquées du cardigan", nature: "quantite", attendu: x.manqueDuCardigan, calcul: `${qte(x.demandeDuCardigan)} demandés − ${qte(x.cardigan.vendu)} vendus = ${qte(x.manqueDuCardigan)}` },
           { libelle: "Chiffre d'affaires manqué", attendu: x.caManqueDuCardigan, calcul: `${qte(x.manqueDuCardigan)} × ${eur(x.refCardigan.prixHt)} = ${eur(x.caManqueDuCardigan)}` },
         ];
       },
@@ -552,20 +557,19 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
         return [
           {
             libelle: "Jours financés par le façonnier au-delà du stockage",
+            nature: "grandeur",
             attendu: x.joursFinancesParLeFaconnier,
-            tolerance: 1,
             calcul: `${qte(x.faconnier.delaiDePaiement)} − ${qte(x.duree)} = ${qte(x.joursFinancesParLeFaconnier)}`,
           },
           {
             libelle: "Jours avancés par la boutique avec les fins de série",
+            nature: "grandeur",
             attendu: x.joursAvancesAvecLesFins,
-            tolerance: 1,
             calcul: `${qte(x.duree)} − ${qte(x.finsDeSerie.delaiDePaiement)} (comptant) = ${qte(x.joursAvancesAvecLesFins)}`,
           },
           {
             libelle: "Stock moyen avancé avec les fins de série",
             attendu: x.stockMoyenAuxFins,
-            tolerance: 1,
             calcul: `${eur(x.s.stockMoyen)} × ${qte(x.finsDeSerie.multiplicateur)} = ${eur(x.stockMoyenAuxFins)}`,
           },
         ];
@@ -677,13 +681,15 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
         return [
           {
             libelle: "Point de commande chez l'atelier local",
+            nature: "quantite",
             attendu: x.pointDeCommandeAtelier,
             calcul: `${qte(x.col.ventesParJour)} × ${qte(x.atelier.delaiDeLivraison)} + ${qte(x.col.stockDeSecurite)} = ${qte(x.pointDeCommandeAtelier)}`,
           },
           {
             libelle: "Stock moyen d'un cycle de commande",
+            nature: "grandeur",
             attendu: x.stockMoyenDUnCycle,
-            calcul: `${qte(x.col.stockDeSecurite)} + ${qte(x.reassort.quantiteCommandee)} ÷ 2 = ${qte(x.stockMoyenDUnCycle)}, chez l'un comme chez l'autre`,
+            calcul: `${qte(x.col.stockDeSecurite)} + ${qte(x.reassort.quantiteCommandee)} ÷ 2 = ${qte(x.stockMoyenDUnCycle)} (chez l'un comme chez l'autre)`,
           },
           {
             libelle: "Surcoût d'une commande à l'atelier local",
@@ -741,7 +747,7 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
       champs: (c) => {
         const x = stockDeLaBoutique(c);
         return [
-          { libelle: "Rotation visée", attendu: x.rotationVisee, calcul: `${qte(x.f.joursDuMois)} ÷ ${qte(DUREE_DE_STOCKAGE_VISEE)} = ${qte(x.rotationVisee)}` },
+          { libelle: "Rotation visée", nature: "grandeur", attendu: x.rotationVisee, calcul: `${qte(x.f.joursDuMois)} ÷ ${qte(DUREE_DE_STOCKAGE_VISEE)} = ${qte(x.rotationVisee)}` },
           { libelle: "Stock moyen visé", attendu: x.stockMoyenVise, calcul: `${eur(x.s.coutDAchatDesVendues)} ÷ ${qte(x.rotationVisee)} = ${eur(x.stockMoyenVise)}` },
           { libelle: "Stock final à viser", attendu: x.stockFinalVise, calcul: `2 × ${eur(x.stockMoyenVise)} − ${eur(x.s.valeurFinale)} = ${eur(x.stockFinalVise)}` },
         ];
@@ -820,14 +826,14 @@ export const STOCK_DU_POINT_DE_VENTE: Chapitre = {
       notions: ["stock", "stock_rotation"],
       question: (c) => {
         const q = quantiteEconomique(ficheDe(c));
-        return `La quantité économique se calcule : Q* = √(2 × demande de l'année × coût d'une commande ÷ coût de possession d'un article). Calculez-la pour le pull col rond (${qte(q.demande)} par an, ${eur(COUT_DE_PASSATION)} la commande, ${eur(q.possessionUnitaire)} par article), à l'unité, puis le nombre de commandes de l'année (au dixième) et le coût du stock à Q* (au centime).`;
+        return `La quantité économique se calcule : Q* = √(2 × demande de l'année × coût d'une commande ÷ coût de possession d'un article). Calculez-la pour le pull col rond (${qte(q.demande)} par an, ${eur(COUT_DE_PASSATION)} la commande, ${eur(q.possessionUnitaire)} par article), à l'unité, puis le nombre de commandes de l'année (au centième) et le coût du stock à Q* (au centime).`;
       },
       champs: (c) => {
         const q = quantiteEconomique(ficheDe(c));
         return [
-          { libelle: "Quantité économique", attendu: q.quantiteArrondie, tolerance: 1, calcul: `√(2 × ${qte(q.demande)} × ${qte(COUT_DE_PASSATION)} ÷ ${qte(q.possessionUnitaire)}) = ${qte(Math.round(q.quantite * 100) / 100)}, soit ${qte(q.quantiteArrondie)} pulls` },
-          { libelle: "Commandes de l'année", attendu: Math.round(q.commandes * 10) / 10, tolerance: 0.1, calcul: `${qte(q.demande)} ÷ ${qte(Math.round(q.quantite * 100) / 100)} = ${qte(Math.round(q.commandes * 10) / 10)}` },
-          { libelle: "Coût du stock à Q*", attendu: q.coutMinimal, tolerance: 1, calcul: `√(2 × ${qte(q.demande)} × ${qte(COUT_DE_PASSATION)} × ${qte(q.possessionUnitaire)}) = ${eur(q.coutMinimal)}, la passation et la possession à parts égales` },
+          { libelle: "Quantité économique", nature: "quantite", attendu: q.quantiteArrondie, calcul: `√(2 × ${qte(q.demande)} × ${qte(COUT_DE_PASSATION)} ÷ ${qte(q.possessionUnitaire)}) = ${qte(q.quantite)}, soit ${qte(q.quantiteArrondie)} pulls à l'unité la plus proche : on ne commande pas un morceau de pull` },
+          { libelle: "Commandes de l'année", nature: "grandeur", attendu: auCentime(q.demande / auCentime(q.quantite)), calcul: `${qte(q.demande)} ÷ ${qte(q.quantite)} = ${qte(auCentime(q.demande / auCentime(q.quantite)))}` },
+          { libelle: "Coût du stock à Q*", attendu: auCentime(q.coutMinimal), calcul: `√(2 × ${qte(q.demande)} × ${qte(COUT_DE_PASSATION)} × ${qte(q.possessionUnitaire)}) = ${eur(q.coutMinimal)}, la passation et la possession à parts égales` },
         ];
       },
       explication: (c) => {

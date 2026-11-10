@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_LA_PROMOTION, ficheDe } from "../../chapitres/promotion-qui-paie";
 import { coutVariable, promotion, referenceDe } from "../../monde/boutique";
@@ -24,6 +24,11 @@ import type { Situation } from "../types";
  * Le calcul à rebours : marge à garder → prix plancher hors taxes → remise maximale → étiquette TTC.
  * Le plancher s'arrondit au centime supérieur (à 51,54 €, il manquerait 2,40 €), et la remise se donne
  * au centième (6,3 % la ferait déjà passer sous le plancher).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le volume attendu est une quantité, entière, déclarée comme
+ * telle ; la remise affichée se donne à deux décimales (au dixième, avant), la marge du mois à
+ * l'étiquette ronde au centime, à un centime près (à 2,50 € près, avant).
  */
 
 /**
@@ -35,10 +40,7 @@ export const HAUSSE_ATTENDUE = 0.15;
 /** Les bornes du curseur du prix payé hors taxes, en centimes : de 48 € à l'étiquette. */
 export const PRIX_DU_CURSEUR_DU_CAS = { min: 4_800, max: 5_500 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number, chiffres = 1) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: chiffres }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
 const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
 const auCentimeSuperieur = (x: number) => Math.ceil(x * 100 - 1e-9) / 100;
 
@@ -59,7 +61,7 @@ export function jusquOuRemiser(c: Pick<Cas, "code">) {
   const etiquette = (ttc: number) => {
     const ht = auCentime(ttc / (1 + tva));
     const marge = auCentime(volume * (ht - cv));
-    return { ttc, ht, marge, gain: auCentime(marge - sans.marge), remise: auDixieme((1 - ttc / r.prixTtc) * 100) };
+    return { ttc, ht, marge, gain: auCentime(marge - sans.marge), remise: auCentime((1 - ttc / r.prixTtc) * 100) };
   };
   const ronde = etiquette(Math.ceil(plancherTtc - 1e-9));
   const tropBasse = etiquette(Math.floor(plancherTtc + 1e-9));
@@ -79,8 +81,8 @@ export function jusquOuRemiser(c: Pick<Cas, "code">) {
     ronde,
     tropBasse,
     // Les erreurs classiques : la remise qui égale la hausse des ventes, celle qui garde le chiffre d'affaires.
-    remiseDeLaHausse: auDixieme(HAUSSE_ATTENDUE * 100),
-    remiseDuChiffre: auDixieme((1 - 1 / (1 + HAUSSE_ATTENDUE)) * 100),
+    remiseDeLaHausse: auCentime(HAUSSE_ATTENDUE * 100),
+    remiseDuChiffre: auCentime((1 - 1 / (1 + HAUSSE_ATTENDUE)) * 100),
   };
 }
 
@@ -147,7 +149,7 @@ export const JUSQU_OU_REMISER: Situation = {
         return [
           { libelle: "Marge d'un pull au prix de l'étiquette", attendu: x.sans.margeUnitaire, calcul: `${eur(x.r.prixHt)} − ${eur(x.cv)} = ${eur(x.sans.margeUnitaire)}` },
           { libelle: "Marge d'un mois sans remise", attendu: x.sans.marge, calcul: `${qte(x.sans.ventes)} × ${eur(x.sans.margeUnitaire)} = ${eur(x.sans.marge)}` },
-          { libelle: "Volume attendu en promotion", attendu: x.volume, calcul: `${qte(x.sans.ventes)} × ${qte(1 + HAUSSE_ATTENDUE)} = ${qte(x.volume)}` },
+          { libelle: "Volume attendu en promotion", nature: "quantite", attendu: x.volume, calcul: `${qte(x.sans.ventes)} × ${qte(1 + HAUSSE_ATTENDUE)} = ${qte(x.volume)}` },
         ];
       },
       explication: (c) => {
@@ -213,15 +215,15 @@ export const JUSQU_OU_REMISER: Situation = {
       champs: (c) => {
         const x = jusquOuRemiser(c);
         return [
-          { libelle: "Marge d'un pull à garder", attendu: x.margeAGarder, tolerance: 0.01, calcul: `${eur(x.sans.marge)} ÷ ${qte(x.volume)} = ${(Math.floor((x.sans.marge / x.volume) * 1000 + 1e-9) / 1000).toLocaleString("fr-FR", { minimumFractionDigits: 3 })}…, soit ${eur(x.margeAGarder)} au centime supérieur` },
-          { libelle: "Prix plancher, hors taxes", attendu: x.prixPlancher, tolerance: 0.01, calcul: `${eur(x.cv)} + ${eur(x.margeAGarder)} = ${eur(x.prixPlancher)}` },
-          { libelle: "Remise maximale (%)", attendu: x.remiseMax, tolerance: 0.01, calcul: `(1 − ${eur(x.prixPlancher)} ÷ ${eur(x.r.prixHt)}) × 100 = ${pct(x.remiseMax, 2)}` },
+          { libelle: "Marge d'un pull à garder", attendu: x.margeAGarder, calcul: `${eur(x.sans.marge)} ÷ ${qte(x.volume)} = ${(Math.floor((x.sans.marge / x.volume) * 1000 + 1e-9) / 1000).toLocaleString("fr-FR", { minimumFractionDigits: 3 })}…, soit ${eur(x.margeAGarder)} au centime supérieur` },
+          { libelle: "Prix plancher, hors taxes", attendu: x.prixPlancher, calcul: `${eur(x.cv)} + ${eur(x.margeAGarder)} = ${eur(x.prixPlancher)}` },
+          { libelle: "Remise maximale (%)", attendu: x.remiseMax, calcul: `(1 − ${eur(x.prixPlancher)} ÷ ${eur(x.r.prixHt)}) × 100 = ${pct(x.remiseMax)}` },
         ];
       },
       explication: (c) => {
         const x = jusquOuRemiser(c);
         return [
-          `Sous ${eur(x.prixPlancher)}, soit plus de ${pct(x.remiseMax, 2)} de remise, la promotion coûterait de la marge, même avec ${pct(HAUSSE_ATTENDUE * 100)} de ventes en plus. Le coût variable, ${eur(x.cv)}, ne baisse pas avec le prix : toute la remise se prend sur la marge. Arrondie au dixième, ${pct(auDixieme(x.remiseMax))}, la remise passerait déjà sous le plancher.`,
+          `Sous ${eur(x.prixPlancher)}, soit plus de ${pct(x.remiseMax)} de remise, la promotion coûterait de la marge, même avec ${pct(HAUSSE_ATTENDUE * 100)} de ventes en plus. Le coût variable, ${eur(x.cv)}, ne baisse pas avec le prix : toute la remise se prend sur la marge. Arrondie au dixième, ${auDixieme(x.remiseMax).toLocaleString("fr-FR")} %, la remise passerait déjà sous le plancher.`,
         ];
       },
     },
@@ -232,15 +234,15 @@ export const JUSQU_OU_REMISER: Situation = {
       notions: ["markdown", "price_floor"],
       question: (c) => {
         const x = jusquOuRemiser(c);
-        return `La boutique affiche des étiquettes rondes, à l'euro, toutes taxes comprises (TVA de ${pct(x.r.tauxTva * 100)}). Calculez le prix plancher toutes taxes comprises, la remise affichée avec l'étiquette ronde qui garde la marge (en pourcentage, au dixième), puis la marge du mois à cette étiquette, avec le volume attendu.`;
+        return `La boutique affiche des étiquettes rondes, à l'euro, toutes taxes comprises (TVA de ${pct(x.r.tauxTva * 100)}). Calculez le prix plancher toutes taxes comprises, la remise affichée avec l'étiquette ronde qui garde la marge (en pourcentage, à deux décimales), puis la marge du mois à cette étiquette, avec le volume attendu.`;
       },
       champs: (c) => {
         const x = jusquOuRemiser(c);
         const e = x.ronde;
         return [
-          { libelle: "Prix plancher, toutes taxes comprises", attendu: x.plancherTtc, tolerance: 0.01, calcul: `${eur(x.prixPlancher)} × ${qte(1 + x.r.tauxTva)} = ${eur(x.plancherTtc)}` },
-          { libelle: "Remise affichée à l'étiquette ronde (%)", attendu: e.remise, tolerance: 0.1, calcul: `l'euro au-dessus du plancher, ${eur(e.ttc)} : (1 − ${eur(e.ttc)} ÷ ${eur(x.r.prixTtc)}) × 100 = ${pct(e.remise)}` },
-          { libelle: "Marge du mois à l'étiquette ronde", attendu: e.marge, tolerance: 2.5, calcul: `${eur(e.ttc)} ÷ ${qte(1 + x.r.tauxTva)} = ${eur(e.ht)} hors taxes ; ${qte(x.volume)} × (${eur(e.ht)} − ${eur(x.cv)}) = ${eur(e.marge)}` },
+          { libelle: "Prix plancher, toutes taxes comprises", attendu: x.plancherTtc, calcul: `${eur(x.prixPlancher)} × ${qte(1 + x.r.tauxTva)} = ${eur(x.plancherTtc)}` },
+          { libelle: "Remise affichée à l'étiquette ronde (%)", attendu: e.remise, calcul: `l'euro au-dessus du plancher, ${eur(e.ttc)} : (1 − ${eur(e.ttc)} ÷ ${eur(x.r.prixTtc)}) × 100 = ${pct(e.remise)}` },
+          { libelle: "Marge du mois à l'étiquette ronde", attendu: e.marge, calcul: `${eur(e.ttc)} ÷ ${qte(1 + x.r.tauxTva)} = ${eur(e.ht)} hors taxes ; ${qte(x.volume)} × (${eur(e.ht)} − ${eur(x.cv)}) = ${eur(e.marge)}` },
         ];
       },
       explication: (c) => {
@@ -271,12 +273,12 @@ export const JUSQU_OU_REMISER: Situation = {
           {
             texte: `Jusqu'à ${pct(x.remiseDeLaHausse)} de remise, autant que la hausse des ventes attendue`,
             juste: false,
-            retour: `Non : ${pct(x.remiseDeLaHausse)} de remise ôtent ${eur(auCentime(x.r.prixHt * HAUSSE_ATTENDUE))} à chaque pull, ${pct(auDixieme(((x.r.prixHt * HAUSSE_ATTENDUE) / x.sans.margeUnitaire) * 100))} des ${eur(x.sans.margeUnitaire)} de marge : la marge baisserait bien plus que les ventes ne montent. La remise maximale est de ${pct(x.remiseMax, 2)}.`,
+            retour: `Non : ${pct(x.remiseDeLaHausse)} de remise ôtent ${eur(auCentime(x.r.prixHt * HAUSSE_ATTENDUE))} à chaque pull, ${pct(auCentime(((x.r.prixHt * HAUSSE_ATTENDUE) / x.sans.margeUnitaire) * 100))} des ${eur(x.sans.margeUnitaire)} de marge : la marge baisserait bien plus que les ventes ne montent. La remise maximale est de ${pct(x.remiseMax)}.`,
           },
           {
             texte: `Jusqu'à ${pct(x.remiseDuChiffre)} de remise, celle qui garde notre chiffre d'affaires`,
             juste: false,
-            retour: `Non : à ${pct(x.remiseDuChiffre)}, le chiffre d'affaires ne bouge pas, mais les ${qte(x.volume - x.sans.ventes)} pulls de plus coûtent chacun ${eur(x.cv)} de coût variable. C'est la marge qu'il faut garder : ${pct(x.remiseMax, 2)} au plus.`,
+            retour: `Non : à ${pct(x.remiseDuChiffre)}, le chiffre d'affaires ne bouge pas, mais les ${qte(x.volume - x.sans.ventes)} pulls de plus coûtent chacun ${eur(x.cv)} de coût variable. C'est la marge qu'il faut garder : ${pct(x.remiseMax)} au plus.`,
           },
         ];
       },

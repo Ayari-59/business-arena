@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct as enPoints } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_FICHIER, TAUX_DE_RENDEZ_VOUS_QUALIFIE, fichierDuCabinet } from "../../chapitres/le-fichier-et-la-cible";
 import { aRebours } from "../../monde/terrain-d-atlas";
@@ -18,6 +18,11 @@ import type { Situation } from "../types";
  *
  * Comme son chapitre, le cas se joue dans la simulation du cours : ses taux et ses valeurs sont ceux de
  * `fichierDuCabinet`, sur la fiche du cabinet. Il ne lit du cas que son code.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les lignes, les devis, les rendez-vous et les contacts sont des
+ * quantités, les devis arrondis à l'unité au-dessus ; les comptes attendus, une grandeur au centième ;
+ * la part et la valeur, à un centième près (à 5 centièmes et à 2 € près, avant).
  */
 
 /** L'OBJECTIF RELEVÉ, hypothèse du cas : 12 comptes neufs de PME moyennes en N + 1. */
@@ -30,10 +35,8 @@ export const OBJECTIF_RELEVE = 12;
  */
 export const OFFRE_DU_LOUEUR = { lignes: 1_000, prixDeLaLigne: 1.2, dejaDansLeFichier: 150, incompletes: 170, horsCible: 80 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (x: number, d = 1) => `${(Math.round(x * 100 * 10 ** d) / 10 ** d + 0).toLocaleString("fr-FR", { maximumFractionDigits: d })} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
+const pct = (t: number) => enPoints(t * 100);
 
 /** Le fichier proposé, l'objectif relevé et le bilan de l'achat. */
 export function achatDuFichier(c: Pick<Cas, "code">) {
@@ -114,8 +117,8 @@ export const UN_FICHIER_A_ACHETER: Situation = {
       texte: (c) => {
         const a = achatDuFichier(c);
         return [
-          `« La direction me demande ${qte(OBJECTIF_RELEVE)} comptes neufs de PME moyennes l'an prochain. Je qualifie mes contacts, ${pct(TAUX_DE_RENDEZ_VOUS_QUALIFIE, 0)} acceptent un rendez-vous, mais je n'ai que ${qte(a.x.utilisables)} PME moyennes utilisables. Un loueur me propose ${qte(a.o.lignes)} lignes à ${eur(a.o.prixDeLaLigne)}. Faut-il les acheter ? »`,
-          `Pas de cours cette fois : vous avez l'offre, les taux de N (${pct(a.x.t.devisParRendezVous, 0)} de devis par rendez-vous, ${pct(a.x.t.tauxDeSignature, 0)} de devis signés), un contact appelé à ${eur(a.x.coutDUnContact)} et un compte neuf à ${eur(a.x.valeurNeuveMoyenne.valeurVie)} de valeur vie. La méthode est celle du chapitre.`,
+          `« La direction me demande ${qte(OBJECTIF_RELEVE)} comptes neufs de PME moyennes l'an prochain. Je qualifie mes contacts, ${pct(TAUX_DE_RENDEZ_VOUS_QUALIFIE)} acceptent un rendez-vous, mais je n'ai que ${qte(a.x.utilisables)} PME moyennes utilisables. Un loueur me propose ${qte(a.o.lignes)} lignes à ${eur(a.o.prixDeLaLigne)}. Faut-il les acheter ? »`,
+          `Pas de cours cette fois : vous avez l'offre, les taux de N (${pct(a.x.t.devisParRendezVous)} de devis par rendez-vous, ${pct(a.x.t.tauxDeSignature)} de devis signés), un contact appelé à ${eur(a.x.coutDUnContact)} et un compte neuf à ${eur(a.x.valeurNeuveMoyenne.valeurVie)} de valeur vie. La méthode est celle du chapitre.`,
         ];
       },
       repere: () => "À rendre : les lignes utilisables de l'offre, les contacts qu'il faut, ce que rapportent les lignes achetées, la règle du premier appel, et votre réponse.",
@@ -129,15 +132,15 @@ export const UN_FICHIER_A_ACHETER: Situation = {
       champs: (c) => {
         const a = achatDuFichier(c);
         return [
-          { libelle: "Lignes utilisables de l'offre", attendu: a.utilisables, calcul: `${qte(a.o.lignes)} − ${qte(a.o.dejaDansLeFichier)} − ${qte(a.o.incompletes)} − ${qte(a.o.horsCible)} = ${qte(a.utilisables)}` },
-          { libelle: "Part utilisable de l'offre (%)", attendu: auCentime(a.partUtilisable * 100), tolerance: 0.05, calcul: `${qte(a.utilisables)} ÷ ${qte(a.o.lignes)} = ${pct(a.partUtilisable, 2)}` },
+          { libelle: "Lignes utilisables de l'offre", nature: "quantite", attendu: a.utilisables, calcul: `${qte(a.o.lignes)} − ${qte(a.o.dejaDansLeFichier)} − ${qte(a.o.incompletes)} − ${qte(a.o.horsCible)} = ${qte(a.utilisables)}` },
+          { libelle: "Part utilisable de l'offre (%)", attendu: auCentime(a.partUtilisable * 100), calcul: `${qte(a.utilisables)} ÷ ${qte(a.o.lignes)} = ${pct(a.partUtilisable)}` },
           { libelle: "Prix de l'offre", attendu: a.prix, calcul: `${qte(a.o.lignes)} × ${eur(a.o.prixDeLaLigne)} = ${eur(a.prix)}` },
           { libelle: "Prix d'une ligne utilisable", attendu: a.coutParLigneUtilisable, calcul: `${eur(a.prix)} ÷ ${qte(a.utilisables)} = ${eur(a.coutParLigneUtilisable)}` },
         ];
       },
       explication: (c) => {
         const a = achatDuFichier(c);
-        return [`Comme le fichier du cabinet, l'offre ne sert qu'à ${pct(a.partUtilisable, 0)} : une ligne utilisable coûte ${eur(a.coutParLigneUtilisable)}, pas ${eur(a.o.prixDeLaLigne)}.`];
+        return [`Comme le fichier du cabinet, l'offre ne sert qu'à ${pct(a.partUtilisable)} : une ligne utilisable coûte ${eur(a.coutParLigneUtilisable)}, pas ${eur(a.o.prixDeLaLigne)}.`];
       },
     },
     {
@@ -147,15 +150,15 @@ export const UN_FICHIER_A_ACHETER: Situation = {
       notions: ["conversion_rate", "segmentation"],
       question: (c) => {
         const a = achatDuFichier(c);
-        return `Pour ${qte(OBJECTIF_RELEVE)} comptes, à ${pct(TAUX_DE_RENDEZ_VOUS_QUALIFIE, 0)} de rendez-vous, calculez les devis, les rendez-vous et les contacts qu'il faut (chaque marche à l'unité supérieure), puis les contacts qui manquent aux ${qte(a.x.utilisables)} du fichier.`;
+        return `Pour ${qte(OBJECTIF_RELEVE)} comptes, à ${pct(TAUX_DE_RENDEZ_VOUS_QUALIFIE)} de rendez-vous, calculez les devis, les rendez-vous et les contacts qu'il faut (chaque marche à l'unité supérieure), puis les contacts qui manquent aux ${qte(a.x.utilisables)} du fichier.`;
       },
       champs: (c) => {
         const r = achatDuFichier(c).r;
         return [
-          { libelle: "Devis à remettre", attendu: r.devis, calcul: `${qte(r.comptes)} ÷ ${pct(r.tauxDeSignature, 0)} = ${qte(auCentime(r.comptes / r.tauxDeSignature))}, soit ${qte(r.devis)} devis` },
-          { libelle: "Rendez-vous à obtenir", attendu: r.rendezVous, calcul: `${qte(r.devis)} ÷ ${pct(r.devisParRendezVous, 0)} = ${qte(r.rendezVous)} rendez-vous` },
-          { libelle: "Contacts à appeler", attendu: r.contacts, calcul: `${qte(r.rendezVous)} ÷ ${pct(r.tauxDeRendezVous, 0)} = ${qte(r.contacts)} contacts` },
-          { libelle: "Contacts qui manquent", attendu: r.manquants, calcul: `${qte(r.contacts)} − ${qte(r.utilisables)} = ${qte(r.manquants)}` },
+          { libelle: "Devis à remettre", nature: "quantite", attendu: r.devis, calcul: `${qte(r.comptes)} ÷ ${pct(r.tauxDeSignature)} = ${qte(auCentime(r.comptes / r.tauxDeSignature))}, soit ${qte(r.devis)} devis à l'unité au-dessus` },
+          { libelle: "Rendez-vous à obtenir", nature: "quantite", attendu: r.rendezVous, calcul: `${qte(r.devis)} ÷ ${pct(r.devisParRendezVous)} = ${qte(r.rendezVous)} rendez-vous` },
+          { libelle: "Contacts à appeler", nature: "quantite", attendu: r.contacts, calcul: `${qte(r.rendezVous)} ÷ ${pct(r.tauxDeRendezVous)} = ${qte(r.contacts)} contacts` },
+          { libelle: "Contacts qui manquent", nature: "quantite", attendu: r.manquants, calcul: `${qte(r.contacts)} − ${qte(r.utilisables)} = ${qte(r.manquants)}` },
         ];
       },
       explication: (c) => {
@@ -178,13 +181,13 @@ export const UN_FICHIER_A_ACHETER: Situation = {
         return [
           {
             libelle: "Comptes attendus des lignes achetées",
+            nature: "grandeur",
             attendu: a.comptes,
-            tolerance: 0.05,
-            calcul: `${qte(a.lignesAppelees)} × ${pct(TAUX_DE_RENDEZ_VOUS_QUALIFIE, 0)} × ${pct(t.devisParRendezVous, 0)} × ${pct(t.tauxDeSignature, 0)} = ${qte(a.comptes)} comptes`,
+            calcul: `${qte(a.lignesAppelees)} × ${pct(TAUX_DE_RENDEZ_VOUS_QUALIFIE)} × ${pct(t.devisParRendezVous)} × ${pct(t.tauxDeSignature)} = ${qte(a.comptes)} comptes`,
           },
-          { libelle: "Valeur vie de ces comptes", attendu: a.valeur, tolerance: 2, calcul: `${qte(a.comptes)} × ${eur(a.x.valeurNeuveMoyenne.valeurVie)} = ${eur(a.valeur)}` },
+          { libelle: "Valeur vie de ces comptes", attendu: a.valeur, calcul: `${qte(a.comptes)} × ${eur(a.x.valeurNeuveMoyenne.valeurVie)} = ${eur(a.valeur)}` },
           { libelle: "Coût de l'achat et des appels", attendu: a.cout, calcul: `${eur(a.prix)} + ${qte(a.lignesAppelees)} × ${eur(a.x.coutDUnContact)} = ${eur(a.prix)} + ${eur(a.appels)} = ${eur(a.cout)}` },
-          { libelle: "Gain de l'achat", attendu: a.gain, tolerance: 2, calcul: `${eur(a.valeur)} − ${eur(a.cout)} = ${eur(a.gain)}` },
+          { libelle: "Gain de l'achat", attendu: a.gain, calcul: `${eur(a.valeur)} − ${eur(a.cout)} = ${eur(a.gain)}` },
         ];
       },
       explication: (c) => {
@@ -218,7 +221,7 @@ export const UN_FICHIER_A_ACHETER: Situation = {
             retour: `Oui : l'offre apporte ${qte(a.utilisables)} lignes utilisables pour ${qte(a.r.manquants)} qui manquent. Les ${qte(a.lignesAppelees)} appelées donnent ${qte(a.comptes)} comptes attendus, ${eur(a.valeur)} de valeur vie pour ${eur(a.cout)}. Dédoublonnez-la avant de l'appeler, et dites à chaque prospect d'où vient son contact.`,
           },
           {
-            texte: `Ne pas l'acheter : ${pct(1 - a.partUtilisable, 0)} de ses lignes ne servent pas`,
+            texte: `Ne pas l'acheter : ${pct(1 - a.partUtilisable)} de ses lignes ne servent pas`,
             juste: false,
             retour: `Non : une ligne utilisable revient à ${eur(a.coutParLigneUtilisable)}, quand un compte gagné vaut ${eur(a.x.valeurNeuveMoyenne.valeurVie)}. La qualité de l'offre se paie dans son prix, pas dans la décision.`,
           },

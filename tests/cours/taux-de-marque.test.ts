@@ -39,7 +39,6 @@ const cas = casDeLEntreprise(code);
 const f = MAILLE_ET_CO;
 const col = f.gamme.find((r) => r.code === "col-rond")!;
 const centime = (x: number) => Math.round(x * 100) / 100;
-const dixieme = (x: number) => Math.round(x * 10) / 10;
 /** La demande du pull col rond au prix p, refaite à la main : une droite, à l'article près en dessous. */
 const demande = (p: number) => Math.floor(600 * (1 - 1.5 * ((p - 55) / 55)) + 1e-9);
 
@@ -227,7 +226,7 @@ describe("le chapitre et son cas, à la boutique du monde du cours", () => {
     const intro = TAUX_DE_MARQUE.etapes[0]!;
     if (intro.type !== "lecture") throw new Error("L'intro est une lecture");
     expect(intro.texte(cas).join(" ")).toMatch(/simulation du cours/);
-    expect(intro.texte(cas).join(" ")).toMatch(/1,5 %/);
+    expect(intro.texte(cas).join(" ")).toMatch(/1,50 %/);
   });
 });
 
@@ -237,12 +236,12 @@ describe("taux de marque, taux de marge, coefficient : le pull col rond", () => 
   it("la fiche donne les chiffres de la consigne", () => {
     expect([col.prixTtc, col.prixHt, col.coutDAchat, col.ventesDuMois, col.tauxTva]).toEqual([66, 55, 25, 600, 0.2]);
     expect([55 - 25, (55 - 25) * 600]).toEqual([30, 18_000]);
-    expect([dixieme((30 / 55) * 100), dixieme((30 / 25) * 100), 55 / 25, 66 / 25]).toEqual([54.5, 120, 2.2, 2.64]);
+    expect([centime((30 / 55) * 100), centime((30 / 25) * 100), 55 / 25, 66 / 25]).toEqual([54.55, 120, 2.2, 2.64]);
   });
 
   it("les étapes guidées attendent ce que la fiche donne", () => {
     expect(attendus(ch, "marge-commerciale")).toEqual({ "Marge commerciale d'un pull": 30, "Marge commerciale du mois": 18_000 });
-    expect(attendus(ch, "les-deux-taux")).toEqual({ "Taux de marque (%)": 54.5, "Taux de marge (%)": 120 });
+    expect(attendus(ch, "les-deux-taux")).toEqual({ "Taux de marque (%)": 54.55, "Taux de marge (%)": 120 });
     expect(attendus(ch, "coefficient")).toEqual({ "Coefficient HT": 2.2, "Étiquette TTC": 55 * 1.2, "Coefficient TTC": 2.64 });
     expect(juste(ch, "qui-a-raison")).toBe("Les deux : l'une parle du taux de marque, l'autre du taux de marge.");
   });
@@ -255,21 +254,21 @@ describe("taux de marque, taux de marge, coefficient : le pull col rond", () => 
       "Chiffre d'affaires HT du mois": ca,
       "Coût d'achat des articles vendus": achats,
       "Marge commerciale de la gamme": ca - achats,
-      "Taux de marque de la boutique (%)": dixieme(((ca - achats) / ca) * 100),
+      "Taux de marque de la boutique (%)": centime(((ca - achats) / ca) * 100),
     });
-    expect(dixieme(((ca - achats) / ca) * 100)).toBe(56.2);
+    expect(centime(((ca - achats) / ca) * 100)).toBe(56.17);
     // La moyenne non pondérée des cinq taux surestime la marque de la boutique.
     const moyenne = (30 / 55 + 41 / 75 + 79 / 135 + 21 / 35 + 15.5 / 25) / 5;
-    expect(dixieme(moyenne * 100)).toBe(57.9);
-    expect(juste(ch, "le-taux-de-la-boutique")).toBe("56,2 % : la marge de la gamme sur ses ventes");
+    expect(centime(moyenne * 100)).toBe(57.95);
+    expect(juste(ch, "le-taux-de-la-boutique")).toBe("56,17 % : la marge de la gamme sur ses ventes");
     // L'écharpe : 21 € de marge sur 35 €, 60 % de marque.
     expect(attendus(ch, "d-un-taux-a-l-autre")).toEqual({ "Taux de marge (%)": (60 / 40) * 100, "Coefficient multiplicateur HT": 100 / 40 });
     expect(attendus(ch, "moins-cher")).toEqual({
       "Prix d'achat des fins de série": 25 * 0.82,
-      "Taux de marque (%)": dixieme(((55 - 20.5) / 55) * 100),
+      "Taux de marque (%)": centime(((55 - 20.5) / 55) * 100),
       "Marge commerciale du mois": (55 - 20.5) * 600,
     });
-    expect([25 * 0.82, dixieme(((55 - 20.5) / 55) * 100), (55 - 20.5) * 600]).toEqual([20.5, 62.7, 20_700]);
+    expect([25 * 0.82, centime(((55 - 20.5) / 55) * 100), (55 - 20.5) * 600]).toEqual([20.5, 62.73, 20_700]);
     expect(juste(ch, "le-vrai-prix")).toBe("Payer plus tôt et ne pas pouvoir réassortir");
   });
 
@@ -292,29 +291,32 @@ describe("taux de marque, taux de marge, coefficient : le pull col rond", () => 
       },
     });
     expect([centime(66 / 1.2 - 30.5), centime((90 / 1.2) * (30 / 55))]).toEqual([24.5, 40.91]);
-    const prix = centime(30.5 / (25 / 55));
+    // Sur le taux de marque de la copie, 54,55 % : 30,50 ÷ (1 − 0,5455).
+    const prix = centime(30.5 / (1 - 0.5455));
     expect(attendus(ch, "le-prix-du-plus-cher")).toEqual({
       "Prix d'achat chez l'atelier local": 30.5,
       "Prix de vente HT qui garde le taux de marque": prix,
       "Étiquette TTC": centime(prix * 1.2),
       "Coefficient TTC de l'atelier local": centime((prix * 1.2) / 30.5),
     });
-    expect([prix, centime(prix * 1.2), centime((prix * 1.2) / 30.5)]).toEqual([67.1, 80.52, 2.64]);
-    // La question donne le taux arrondi, 54,5 % : l'élève qui le garde trouve 30,50 ÷ 0,455 = 67,03 € HT et
-    // 80,44 € TTC. Sa réponse est juste ; une vraie erreur (le taux de marge, ou 60 %) reste refusée.
+    expect([prix, centime(prix * 1.2), centime((prix * 1.2) / 30.5)]).toEqual([67.11, 80.53, 2.64]);
+    // La question donne le taux à deux décimales, 54,55 % : l'élève qui le garde trouve 67,11 € HT et 80,53 € TTC ;
+    // celui qui garde le taux exact trouve 67,10 €, à un centime près. Le taux au dixième (54,5 %, 67,03 €) et
+    // une vraie erreur (le taux de marge, ou 60 %) sont refusés.
     const champs = (ch.etapes.find((x) => x.id === "le-prix-du-plus-cher") as EtapeMontants).champs(cas, etatVide);
     const champ = (libelle: string) => champs.find((x) => x.libelle === libelle)!;
     expect([centime(30.5 / (1 - 0.545)), centime(centime(30.5 / (1 - 0.545)) * 1.2)]).toEqual([67.03, 80.44]);
-    expect(champJuste("67,03", champ("Prix de vente HT qui garde le taux de marque"))).toBe(true);
-    expect(champJuste("80,44", champ("Étiquette TTC"))).toBe(true);
+    expect(champJuste("67,03", champ("Prix de vente HT qui garde le taux de marque"))).toBe(false);
+    expect(champJuste("80,53", champ("Étiquette TTC"))).toBe(true);
     expect(champJuste("67,10", champ("Prix de vente HT qui garde le taux de marque"))).toBe(true);
+    expect(champJuste("67,11", champ("Prix de vente HT qui garde le taux de marque"))).toBe(true);
     expect(champJuste("66,98", champ("Prix de vente HT qui garde le taux de marque"))).toBe(false);
     expect(champJuste("76,25", champ("Prix de vente HT qui garde le taux de marque"))).toBe(false);
     // L'étiquette monte exactement comme le prix d'achat.
     expect(centime(80.52 / 66)).toBe(1.22);
   });
 
-  it("le laboratoire de l'étiquette : le façonnier monte de 10 %, la plus petite étiquette ronde qui garde 54,5 % de marque est 73 €", () => {
+  it("le laboratoire de l'étiquette : le façonnier monte de 10 %, la plus petite étiquette ronde qui garde 54,55 % de marque est 73 €", () => {
     // Découpé en deux : chaque partie a son laboratoire, et celui-ci ne regarde que le pull, sans la demande du mois.
     expect(ch.etapes.filter((e) => e.type === "simulation").map((e) => e.id)).toEqual(["le-laboratoire-de-l-etiquette"]);
     expect(ch.etapes).toHaveLength(15);
@@ -334,7 +336,7 @@ describe("taux de marque, taux de marge, coefficient : le pull col rond", () => 
     expect(l.auDepart).toEqual({
       "Prix de vente hors taxes": 55,
       "Marge commerciale d'un pull": 30,
-      "Taux de marque": 54.5,
+      "Taux de marque": 54.55,
       "Taux de marge": 120,
       "Coefficient multiplicateur TTC": 2.64,
       "Écart au taux de marque de janvier": 0,
@@ -343,23 +345,23 @@ describe("taux de marque, taux de marge, coefficient : le pull col rond", () => 
     expect(l.aLaSolution).toEqual({
       "Prix de vente hors taxes": ht,
       "Marge commerciale d'un pull": centime(ht - 27.5),
-      "Taux de marque": dixieme(((ht - 27.5) / ht) * 100),
-      "Taux de marge": dixieme(((ht - 27.5) / 27.5) * 100),
+      "Taux de marque": centime(((ht - 27.5) / ht) * 100),
+      "Taux de marge": centime(((ht - 27.5) / 27.5) * 100),
       "Coefficient multiplicateur TTC": centime(73 / 27.5),
-      "Écart au taux de marque de janvier": dixieme(((ht - 27.5) / ht - 30 / 55) * 100),
+      "Écart au taux de marque de janvier": centime(centime(((ht - 27.5) / ht) * 100) - 54.55),
     });
-    expect([ht, centime(ht - 27.5), dixieme(((ht - 27.5) / ht) * 100), dixieme(((ht - 27.5) / 27.5) * 100), centime(73 / 27.5)]).toEqual([60.83, 33.33, 54.8, 121.2, 2.65]);
-    // 72 € rate le taux (54,2 %) ; répercuter la hausse en euros (66 + 2,50 × 1,2 = 69 €) garde la marge, 30 €, pas le taux (52,2 %) ;
+    expect([ht, centime(ht - 27.5), centime(((ht - 27.5) / ht) * 100), centime(((ht - 27.5) / 27.5) * 100), centime(73 / 27.5)]).toEqual([60.83, 33.33, 54.79, 121.2, 2.65]);
+    // 72 € rate le taux (54,17 %) ; répercuter la hausse en euros (66 + 2,50 × 1,2 = 69 €) garde la marge, 30 €, pas le taux (52,17 %) ;
     // 74 € le garde, mais n'est pas la plus petite ; 73 € au prix d'achat de janvier ne répond pas à la hausse.
-    expect([dixieme((32.5 / 60) * 100), dixieme((30 / 57.5) * 100)]).toEqual([54.2, 52.2]);
+    expect([centime((32.5 / 60) * 100), centime((30 / 57.5) * 100)]).toEqual([54.17, 52.17]);
     for (const p of [{ achat: 27.5, etiquette: 72 }, { achat: 27.5, etiquette: 69 }, { achat: 27.5, etiquette: 74 }, { achat: 25, etiquette: 73 }]) expect(l.d.atteint(p), JSON.stringify(p)).toBe(false);
-    expect(l.d.indice({ achat: 27.5, etiquette: 69 })).toMatch(/vaut 30 €.*52,2 %/);
+    expect(l.d.indice({ achat: 27.5, etiquette: 69 })).toMatch(/vaut 30 €.*52,17 %/);
     // La courbe : le taux de marque selon l'étiquette, au prix d'achat choisi, et le taux de janvier en repère.
     const g = l.e.graphique!(cas);
     expect([g.levier, g.unite]).toEqual(["etiquette", "%"]);
     const [taux, repere] = g.courbes;
     expect([taux!.valeur({ achat: 25, etiquette: 66 }), taux!.valeur({ achat: 27.5, etiquette: 73 }), taux!.valeur({ achat: 27.5, etiquette: 54 }), repere!.valeur({ achat: 32, etiquette: 96 })]).toEqual([
-      54.5, 54.8, dixieme(((45 - 27.5) / 45) * 100), 54.5,
+      54.55, 54.79, centime(((45 - 27.5) / 45) * 100), 54.55,
     ]);
   });
 
@@ -402,10 +404,10 @@ describe("taux de marque, taux de marge, coefficient : le pull col rond", () => 
     expect(attendus(S_ALIGNER_SUR_LE_CONCURRENT, "garder-la-marque-ou-la-marge")).toEqual({
       "Prix d'achat qui garde le taux de marque": marque,
       "Prix d'achat qui garde la marge du mois": 23.56,
-      "Baisse qui garde le taux de marque (%)": dixieme(((25 - marque) / 25) * 100),
-      "Baisse qui garde la marge du mois (%)": dixieme(((25 - 23.56) / 25) * 100),
+      "Baisse qui garde le taux de marque (%)": centime(((25 - marque) / 25) * 100),
+      "Baisse qui garde la marge du mois (%)": centime(((25 - 23.56) / 25) * 100),
     });
-    expect([marque, dixieme(((25 - marque) / 25) * 100), dixieme(((25 - 23.56) / 25) * 100)]).toEqual([22.73, 9.1, 5.8]);
+    expect([marque, centime(((25 - marque) / 25) * 100), centime(((25 - 23.56) / 25) * 100)]).toEqual([22.73, 9.08, 5.76]);
   });
 
   it("le laboratoire des prix : l'atelier local retrouve au moins 15 000 € entre le prix de janvier et celui qui garde le taux", () => {
@@ -429,7 +431,7 @@ describe("taux de marque, taux de marge, coefficient : le pull col rond", () => 
     expect(l.auDepart).toEqual({
       "Prix d'achat d'un pull": 25,
       "Pulls demandés dans le mois": 600,
-      "Taux de marque": 54.5,
+      "Taux de marque": 54.55,
       "Marge commerciale d'un pull": 30,
       "Marge commerciale du mois": 18_000,
       "Marge du mois gagnée sur janvier": 0,
@@ -437,7 +439,7 @@ describe("taux de marque, taux de marge, coefficient : le pull col rond", () => 
     expect(l.aLaSolution).toEqual({
       "Prix d'achat d'un pull": 30.5,
       "Pulls demandés dans le mois": 505,
-      "Taux de marque": dixieme((30.3 / 60.8) * 100),
+      "Taux de marque": centime((30.3 / 60.8) * 100),
       "Marge commerciale d'un pull": 30.3,
       "Marge commerciale du mois": 505 * 30.3,
       "Marge du mois gagnée sur janvier": centime(505 * 30.3 - 18_000),
@@ -457,7 +459,7 @@ describe("taux de marque, taux de marge, coefficient : le pull col rond", () => 
   });
 
   it("la critique du taux : il est gardé, pas la marge", () => {
-    expect(juste(S_ALIGNER_SUR_LE_CONCURRENT, "la-critique-du-taux")).toBe("Le taux est gardé, pas la marge : 14 713,20 € au lieu de 15 301,50 € vers 60,80 €");
+    expect(juste(S_ALIGNER_SUR_LE_CONCURRENT, "la-critique-du-taux")).toBe("Le taux est gardé, pas la marge : 14 680,61 € au lieu de 15 301,50 € vers 60,80 €");
   });
 
   it("le modèle du chapitre retombe sur la fiche", () => {

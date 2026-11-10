@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_POINT_DE_VENTE, ficheDe } from "../../chapitres/equipe-et-planning";
 import { coutVariable, referenceDe } from "../../monde/boutique";
@@ -19,11 +19,13 @@ import type { Situation } from "../types";
  *
  * Comme son chapitre, le cas se joue dans la simulation du cours : ses chiffres sont ceux de
  * `challenge` (monde/equipe-de-la-boutique.ts), sur la fiche de la boutique.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le seuil du challenge est une quantité : le corrigé écrit le
+ * quotient à deux décimales, puis l'arrondit à l'unité au-dessus, et dit pourquoi.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
 
 /** Les chiffres de la réponse, calculés une fois du cas. */
 export function challengeDuMerinos(c: Pick<Cas, "code">) {
@@ -137,9 +139,9 @@ export const LE_CHALLENGE_DU_MERINOS: Situation = {
           { libelle: "Coût chargé du challenge", attendu: x.cout, calcul: `(${eur(x.k.dotation)} + ${qte(x.k.enPlus)} × ${eur(x.k.parArticle)}) × ${qte(t)} = ${eur(x.cout)}` },
           { libelle: "Ce que le challenge rapporte", attendu: x.gain, calcul: `${eur(x.margeEnPlus)} − ${eur(x.cout)} = ${eur(x.gain)}` },
           {
-            libelle: "Seuil si tout était reporté",
+            libelle: "Seuil si tout était reporté", nature: "quantite",
             attendu: x.seuilToutReporte,
-            calcul: `${eur(x.k.dotation)} × ${qte(t)} ÷ (${eur(x.margeDUnReport)} − ${eur(x.k.parArticle)} × ${qte(t)}) = ${qte(Math.round(((x.k.dotation * t) / (x.margeDUnReport - x.k.parArticle * t)) * 100) / 100)}, arrondi à ${qte(x.seuilToutReporte)}`,
+            calcul: `${eur(x.k.dotation)} × ${qte(t)} ÷ (${eur(x.margeDUnReport)} − ${eur(x.k.parArticle)} × ${qte(t)}) = ${nombreAuCentieme((x.k.dotation * t) / (x.margeDUnReport - x.k.parArticle * t))}, soit ${qte(x.seuilToutReporte)} mérinos à l'unité au-dessus : un de moins ne paierait pas le challenge`,
           },
         ];
       },

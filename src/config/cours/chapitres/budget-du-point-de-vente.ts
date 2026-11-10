@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { budgetDuTrimestre, fournisseurDe, margesDeLaGamme } from "../monde/boutique";
 import { BOUTIQUES_DU_COURS, type CodeDeFournisseur, type CodeDeReference, type FicheDeLaBoutique } from "../monde/maille-et-co";
@@ -35,6 +35,12 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *     un plafond de paiements, au prix d'un stock vide), la-caisse-ou-la-rupture (un jugement),
  *     variante-fins-de-serie (une variante chiffrée : le stock final au coût moyen pondéré),
  *     si-on-se-trompe ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les quantités à acheter et le stock voulu sont des quantités,
+ * entières, déclarées comme telles ; le coût moyen pondéré se donne au centime, et le stock du 31 mars
+ * se valorise à ce coût arrondi, comme sur la copie (au dix-millième, à deux euros près, avant) ; les
+ * décaissements et les taux, à un centième près.
  */
 
 /**
@@ -63,13 +69,9 @@ export const MOIS_DU_CURSEUR = { min: 85_000, max: 115_000 } as const;
 /** La boutique du cours, seule : c'est elle qui achète des marchandises et tient un stock. */
 export const ENTREPRISES_DU_BUDGET: readonly string[] = ["boutique"];
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (x: number) => `${x.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
 const plafond = (x: number) => Math.ceil(x - 1e-9);
 const somme = (xs: readonly number[]) => xs.reduce((t, x) => t + x, 0);
-const quatre = (x: number) => x.toLocaleString("fr-FR", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
 
 /** La fiche de la boutique du cours. */
 export const ficheDe = (c: Pick<Cas, "code">): FicheDeLaBoutique => BOUTIQUES_DU_COURS[c.code]!;
@@ -116,7 +118,7 @@ export function budgetDuPointDeVente(c: Pick<Cas, "code">) {
   const colsRondsEnPlus = Math.round((relu.achatsHt - b.achatsHt) / colRond.coutDAchat);
   // La variante : le pull col rond chez les fins de série, son stock final au coût moyen pondéré.
   const finsColRond = fins.references.find((r) => r.code === "col-rond")!;
-  const coutMoyen = (finsColRond.valeurInitiale + finsColRond.achatsHt) / (finsColRond.stockInitial + finsColRond.achats);
+  const coutMoyen = auCentime((finsColRond.valeurInitiale + finsColRond.achatsHt) / (finsColRond.stockInitial + finsColRond.achats));
   // Le stock de sécurité du trimestre : 7 jours de ventes prévues (la convention du stock du cours).
   const securite = plafond((b.ventes / f.budget.jours) * f.delaiDeSecurite);
   return {
@@ -273,12 +275,12 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
         const x = budgetDuPointDeVente(c);
         const a = (code: CodeDeReference, libelle: string) => {
           const r = x.ref(code);
-          return { libelle, attendu: r.achats, calcul: `${qte(r.ventes)} + ${qte(r.stockFinal)} − ${qte(r.stockInitial)} = ${qte(r.achats)}` };
+          return { libelle, nature: "quantite" as const, attendu: r.achats, calcul: `${qte(r.ventes)} + ${qte(r.stockFinal)} − ${qte(r.stockInitial)} = ${qte(r.achats)}` };
         };
         return [
           a("col-rond", "Pulls col rond à acheter"),
           a("cardigan", "Cardigans à acheter"),
-          { libelle: "Articles à acheter, toute la gamme", attendu: x.b.achats, calcul: `${x.b.references.map((r) => qte(r.achats)).join(" + ")} = ${qte(x.b.achats)}` },
+          { libelle: "Articles à acheter, toute la gamme", nature: "quantite", attendu: x.b.achats, calcul: `${x.b.references.map((r) => qte(r.achats)).join(" + ")} = ${qte(x.b.achats)}` },
           { libelle: "Achats hors taxes", attendu: x.b.achatsHt, calcul: `${x.b.references.map((r) => `${qte(r.achats)} × ${qte(r.coutDAchat)}`).join(" + ")} = ${eur(x.b.achatsHt)}` },
         ];
       },
@@ -307,7 +309,7 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
             calcul: `stock au 1er janvier + achats − stock au 31 mars = ${eur(x.valeurInitiale)} + ${eur(x.b.achatsHt)} − ${eur(x.valeurFinale)} = ${eur(x.b.coutDAchatDesVendues)}`,
           },
           { libelle: "Marge commerciale budgétée", attendu: x.b.margeCommerciale, calcul: `${eur(x.b.ventesHt)} − ${eur(x.b.coutDAchatDesVendues)} = ${eur(x.b.margeCommerciale)}` },
-          { libelle: "Taux de marque budgété (%)", attendu: auCentime(x.tauxDeMarque * 100), tolerance: 0.05, calcul: `${eur(x.b.margeCommerciale)} ÷ ${eur(x.b.ventesHt)} × 100 = ${pct(auCentime(x.tauxDeMarque * 100))}` },
+          { libelle: "Taux de marque budgété (%)", attendu: auCentime(x.tauxDeMarque * 100), calcul: `${eur(x.b.margeCommerciale)} ÷ ${eur(x.b.ventesHt)} × 100 = ${pct(auCentime(x.tauxDeMarque * 100))}` },
         ];
       },
       explication: (c) => {
@@ -449,12 +451,11 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
         const ligne = (fo: typeof x.faconnier, libelle: string) => ({
           libelle,
           attendu: fo.decaisse,
-          tolerance: 0.5,
           calcul: `${eur(x.b.achatsHt)} × ${qte(fo.multiplicateur)} = ${eur(fo.achatsHt)} HT, × ${qte(1 + x.tva)} = ${eur(fo.achatsTtc)}, × (1 − ${fo.delaiDePaiement} ÷ ${x.f.budget.jours}) = ${eur(fo.decaisse)}`,
         });
         return [
           ligne(x.faconnier, "Décaissé chez le façonnier"),
-          { libelle: "Dû au façonnier au 31 mars", attendu: x.faconnier.detteFournisseur, tolerance: 0.5, calcul: `${eur(x.faconnier.achatsTtc)} − ${eur(x.faconnier.decaisse)} = ${eur(x.faconnier.detteFournisseur)}` },
+          { libelle: "Dû au façonnier au 31 mars", attendu: x.faconnier.detteFournisseur, calcul: `${eur(x.faconnier.achatsTtc)} − ${eur(x.faconnier.decaisse)} = ${eur(x.faconnier.detteFournisseur)}` },
           ligne(x.atelier, "Décaissé chez l'atelier local"),
           ligne(x.fins, "Décaissé chez les fins de série"),
         ];
@@ -485,9 +486,9 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
             attendu: x.relu.achatsHt,
             calcul: `${eur(x.relu.decaisse)} ÷ (1 − ${x.faconnier.delaiDePaiement} ÷ ${x.f.budget.jours}) ÷ ${qte(1 + x.tva)} = ${eur(x.relu.achatsHt)}`,
           },
-          { libelle: "Pulls col rond achetés en plus", attendu: x.colsRondsEnPlus, calcul: `(${eur(x.relu.achatsHt)} − ${eur(x.b.achatsHt)}) ÷ ${eur(x.colRond.coutDAchat)} = ${qte(x.colsRondsEnPlus)}` },
+          { libelle: "Pulls col rond achetés en plus", nature: "quantite", attendu: x.colsRondsEnPlus, calcul: `(${eur(x.relu.achatsHt)} − ${eur(x.b.achatsHt)}) ÷ ${eur(x.colRond.coutDAchat)} = ${qte(x.colsRondsEnPlus)}` },
           {
-            libelle: "Stock de pulls col rond voulu au 31 mars",
+            libelle: "Stock de pulls col rond voulu au 31 mars", nature: "quantite",
             attendu: x.colRond.stockFinal + x.colsRondsEnPlus,
             calcul: `${qte(x.colRond.stockFinal)} + ${qte(x.colsRondsEnPlus)} = ${qte(x.colRond.stockFinal + x.colsRondsEnPlus)}`,
           },
@@ -572,7 +573,7 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
         return [
           { libelle: "Objectif d'un mois", attendu: x.b.objectifDuMois, calcul: `${eur(x.b.ventesHt)} ÷ 3 = ${eur(x.b.objectifDuMois)}` },
           { libelle: "Chiffre d'affaires de février et de mars, chacun", attendu: x.aFaireParMois, calcul: `(${eur(x.b.ventesHt)} − ${eur(x.janvier)}) ÷ 2 = ${eur(x.aFaireParMois)}` },
-          { libelle: "Hausse sur janvier (%)", attendu: auCentime(x.hausseSurJanvier * 100), tolerance: 0.05, calcul: `(${eur(x.aFaireParMois)} ÷ ${eur(x.janvier)} − 1) × 100 = ${pct(auCentime(x.hausseSurJanvier * 100))}` },
+          { libelle: "Hausse sur janvier (%)", attendu: auCentime(x.hausseSurJanvier * 100), calcul: `(${eur(x.aFaireParMois)} ÷ ${eur(x.janvier)} − 1) × 100 = ${pct(auCentime(x.hausseSurJanvier * 100))}` },
         ];
       },
       explication: (c) => {
@@ -712,15 +713,13 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
         return [
           {
             libelle: "Coût moyen pondéré d'un pull col rond",
-            attendu: auCentime(x.coutMoyen),
-            tolerance: 0.01,
-            calcul: `(${eur(r.valeurInitiale)} + ${qte(r.achats)} × ${eur(r.coutDAchat)}) ÷ (${qte(r.stockInitial)} + ${qte(r.achats)}) = ${eur(r.valeurInitiale + r.achatsHt)} ÷ ${qte(r.stockInitial + r.achats)} = ${quatre(x.coutMoyen)} €`,
+            attendu: x.coutMoyen,
+            calcul: `(${eur(r.valeurInitiale)} + ${qte(r.achats)} × ${eur(r.coutDAchat)}) ÷ (${qte(r.stockInitial)} + ${qte(r.achats)}) = ${eur(r.valeurInitiale + r.achatsHt)} ÷ ${qte(r.stockInitial + r.achats)} = ${eur(x.coutMoyen)}`,
           },
-          { libelle: "Valeur du stock de pulls col rond au 31 mars", attendu: r.valeurFinale, tolerance: 2, calcul: `${qte(r.stockFinal)} × ${quatre(x.coutMoyen)} € = ${eur(r.valeurFinale)}` },
+          { libelle: "Valeur du stock de pulls col rond au 31 mars", attendu: r.valeurFinale, calcul: `${qte(r.stockFinal)} × ${eur(x.coutMoyen)} = ${eur(r.valeurFinale)}` },
           {
             libelle: "Coût d'achat des pulls col rond vendus",
             attendu: r.coutDAchatDesVendues,
-            tolerance: 2,
             calcul: `${eur(r.valeurInitiale)} + ${eur(r.achatsHt)} − ${eur(r.valeurFinale)} = ${eur(r.coutDAchatDesVendues)}`,
           },
         ];
@@ -728,7 +727,7 @@ export const BUDGET_DU_POINT_DE_VENTE: Chapitre = {
       explication: (c) => {
         const x = budgetDuPointDeVente(c);
         return [
-          `Le stock du 1er janvier, acheté plus cher, se mêle aux achats moins chers : le coût moyen d'un pull col rond, ${qte(auCentime(x.coutMoyen))} €, est entre les deux. Sur toute la gamme, la marge du trimestre aux fins de série monte à ${eur(x.fins.margeCommerciale)}, ${eur(auCentime(x.fins.margeCommerciale - x.b.margeCommerciale))} de plus qu'au façonnier.`,
+          `Le stock du 1er janvier, acheté plus cher, se mêle aux achats moins chers : le coût moyen d'un pull col rond, ${eur(x.coutMoyen)}, est entre les deux. Sur toute la gamme, la marge du trimestre aux fins de série monte à ${eur(x.fins.margeCommerciale)}, ${eur(auCentime(x.fins.margeCommerciale - x.b.margeCommerciale))} de plus qu'au façonnier.`,
           `Le gain ne vient pas tout entier du trimestre : une part reste dans le stock du 31 mars, valorisé moins cher, et ne sera marge qu'en avril.`,
         ];
       },

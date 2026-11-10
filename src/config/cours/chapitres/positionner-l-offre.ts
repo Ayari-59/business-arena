@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DU_MARCHE_DE_NOVA, POURQUOI_LE_MARCHE_DE_NOVA } from "../monde/mercatique-de-nova";
 import {
   FACONS_DE_S_ADRESSER_AU_MARCHE,
@@ -28,11 +28,12 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS (monde/offre-de-nova.ts) : la gamme de nova-gestion.ts, les
  * enseignes du marché à trois, les clientèles et CampusTech de mercatique-de-nova.ts ; les hypothèses
  * de la gravure sont nommées dans la fiche.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la part d'une référence dans le chiffre d'affaires se donne à deux
+ * décimales, à un centième près (au dixième, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 const qualite = (q: number) => q.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
 
 function laGamme(): TableauDeDonnees {
@@ -109,13 +110,13 @@ export const POSITIONNER_L_OFFRE: Chapitre = {
       titre: "Le poids de chaque référence",
       notions: ["segmentation"],
       tableau: laGamme,
-      question: () => "Calculez le chiffre d'affaires du mois pour toute la gamme, puis la part de la NOVA One dans ce chiffre d'affaires, en pourcentage au dixième.",
+      question: () => "Calculez le chiffre d'affaires du mois pour toute la gamme, puis la part de la NOVA One dans ce chiffre d'affaires, en pourcentage à deux décimales.",
       champs: () => {
         const g = gammeDuMois();
         const o = one();
         return [
           { libelle: "Chiffre d'affaires de la gamme", attendu: g.chiffreDAffaires, calcul: g.references.map((r) => `${qte(r.quantite)} × ${eur(r.prix)}`).join(" + ") + ` = ${eur(g.chiffreDAffaires)}` },
-          { libelle: "Part de la NOVA One (%)", attendu: o.part, tolerance: 0.1, calcul: `${eur(o.chiffreDAffaires)} ÷ ${eur(g.chiffreDAffaires)} × 100 = ${pct(o.part)}` },
+          { libelle: "Part de la NOVA One (%)", attendu: o.part, calcul: `${eur(o.chiffreDAffaires)} ÷ ${eur(g.chiffreDAffaires)} × 100 = ${pct(o.part)}` },
         ];
       },
       explication: (c) => {

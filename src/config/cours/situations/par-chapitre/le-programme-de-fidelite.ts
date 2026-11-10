@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct as enPoints } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_LA_VALEUR, valeurDesComptes } from "../../chapitres/valeur-d-un-client";
 import type { Situation } from "../types";
@@ -22,6 +22,11 @@ import type { Situation } from "../types";
  * remise plus faible (6 % au plus). Avec les constantes d'avant ce passage (10 % de remise, une
  * attrition plus faible de 20 %), le programme ne perdait que 600 € de valeur simple par compte : la
  * réponse se jouait à l'arrondi, sans jugement.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les taux d'attrition se donnent à deux décimales, et les valeurs
+ * au centime, à un centime près (au dixième et à un euro près, avant ; la perte sur le portefeuille, à
+ * 32 euros près).
  */
 
 /**
@@ -41,10 +46,8 @@ export const BAISSE_D_ATTRITION_PROMISE = 0.2;
 /** Les bornes du curseur de la remise, en pourcentage du prix des journées. */
 export const REMISE_DU_CURSEUR = { min: 0, max: 15 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (x: number, d = 1) => `${(Math.round(x * 100 * 10 ** d) / 10 ** d + 0).toLocaleString("fr-FR", { maximumFractionDigits: d })} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
+const pct = (t: number) => enPoints(t * 100);
 
 /** Ce que vaut un compte aujourd'hui, et avec le programme, en valeur simple et actualisée. */
 export function programmeDeFidelite(c: Pick<Cas, "code">) {
@@ -114,7 +117,7 @@ export const LE_PROGRAMME_DE_FIDELITE: Situation = {
       type: "lecture",
       titre: "La demande de l'associée",
       texte: () => [
-        `« Je pense offrir à nos comptes une remise de fidélité de ${pct(REMISE_DE_FIDELITE, 0)} sur toutes leurs journées, chaque année, dès cette année. En échange, j'attends ${pct(BAISSE_D_ATTRITION_PROMISE, 0)} de départs en moins. Nous perdons de la marge chaque année, nous gardons nos comptes plus longtemps : au bout du compte, un compte vaudra-t-il plus ou moins qu'aujourd'hui ? Et si la remise est trop forte, jusqu'où puis-je aller ? »`,
+        `« Je pense offrir à nos comptes une remise de fidélité de ${pct(REMISE_DE_FIDELITE)} sur toutes leurs journées, chaque année, dès cette année. En échange, j'attends ${pct(BAISSE_D_ATTRITION_PROMISE)} de départs en moins. Nous perdons de la marge chaque année, nous gardons nos comptes plus longtemps : au bout du compte, un compte vaudra-t-il plus ou moins qu'aujourd'hui ? Et si la remise est trop forte, jusqu'où puis-je aller ? »`,
         "Pas de cours cette fois : vous avez les chiffres de l'année N, et la méthode est celle du chapitre. À vous de l'enchaîner.",
       ],
       tableau: (c) => {
@@ -128,8 +131,8 @@ export const LE_PROGRAMME_DE_FIDELITE: Situation = {
             { libelle: "Chiffre d'affaires d'un compte moyen", valeurs: [eur(x.m.chiffreDAffaires)] },
             { libelle: "Marge sur coûts directs d'un compte moyen", valeurs: [eur(x.m.marge)] },
             { libelle: "Taux d'actualisation du cabinet", valeurs: [pct(x.taux)] },
-            { libelle: "Remise de fidélité envisagée, sur toutes les journées", valeurs: [pct(REMISE_DE_FIDELITE, 0)] },
-            { libelle: "Baisse attendue de l'attrition, en part de son taux", valeurs: [pct(BAISSE_D_ATTRITION_PROMISE, 0)] },
+            { libelle: "Remise de fidélité envisagée, sur toutes les journées", valeurs: [pct(REMISE_DE_FIDELITE)] },
+            { libelle: "Baisse attendue de l'attrition, en part de son taux", valeurs: [pct(BAISSE_D_ATTRITION_PROMISE)] },
           ],
         };
       },
@@ -145,7 +148,7 @@ export const LE_PROGRAMME_DE_FIDELITE: Situation = {
       champs: (c) => {
         const { x } = programmeDeFidelite(c);
         return [
-          { libelle: "Taux d'attrition (%)", attendu: auCentime(x.n.attrition * 100), tolerance: 0.1, calcul: `${qte(x.n.perdus)} ÷ ${qte(x.n.auPremierJanvier)} × 100 = ${pct(x.n.attrition)}` },
+          { libelle: "Taux d'attrition (%)", attendu: auCentime(x.n.attrition * 100), calcul: `${qte(x.n.perdus)} ÷ ${qte(x.n.auPremierJanvier)} × 100 = ${pct(x.n.attrition)}` },
           { libelle: "Valeur vie simple", attendu: x.simple, calcul: `${eur(x.m.marge)} ÷ ${pct(x.n.attrition)} = ${eur(x.simple)}` },
           { libelle: "Valeur vie actualisée", attendu: x.actualisee, calcul: `${eur(x.m.marge)} ÷ (${pct(x.n.attrition)} + ${pct(x.taux)}) = ${eur(x.actualisee)}` },
         ];
@@ -168,19 +171,17 @@ export const LE_PROGRAMME_DE_FIDELITE: Situation = {
         const r = programmeDeFidelite(c);
         const x = r.x;
         return [
-          { libelle: "Remise par compte et par an", attendu: r.remise, calcul: `${eur(x.m.chiffreDAffaires)} × ${pct(REMISE_DE_FIDELITE, 0)} = ${eur(r.remise)}` },
+          { libelle: "Remise par compte et par an", attendu: r.remise, calcul: `${eur(x.m.chiffreDAffaires)} × ${pct(REMISE_DE_FIDELITE)} = ${eur(r.remise)}` },
           { libelle: "Marge annuelle avec la remise", attendu: r.margeAvec, calcul: `${eur(x.m.marge)} − ${eur(r.remise)} = ${eur(r.margeAvec)}` },
           {
             libelle: "Taux d'attrition avec le programme (%)",
             attendu: auCentime(r.attritionAvec * 100),
-            tolerance: 0.1,
-            calcul: `${pct(x.n.attrition)} × (1 − ${pct(BAISSE_D_ATTRITION_PROMISE, 0)}) = ${pct(r.attritionAvec)}`,
+            calcul: `${pct(x.n.attrition)} × (1 − ${pct(BAISSE_D_ATTRITION_PROMISE)}) = ${pct(r.attritionAvec)}`,
           },
-          { libelle: "Valeur vie simple avec le programme", attendu: r.simpleAvec, tolerance: 1, calcul: `${eur(r.margeAvec)} ÷ ${pct(r.attritionAvec)} = ${eur(r.simpleAvec)}` },
+          { libelle: "Valeur vie simple avec le programme", attendu: r.simpleAvec, calcul: `${eur(r.margeAvec)} ÷ ${pct(r.attritionAvec)} = ${eur(r.simpleAvec)}` },
           {
             libelle: "Valeur vie actualisée avec le programme",
             attendu: r.actualiseeAvec,
-            tolerance: 1,
             calcul: `${eur(r.margeAvec)} ÷ (${pct(r.attritionAvec)} + ${pct(x.taux)}) = ${eur(r.actualiseeAvec)}`,
           },
         ];
@@ -236,7 +237,7 @@ export const LE_PROGRAMME_DE_FIDELITE: Situation = {
         const r = programmeDeFidelite(c);
         return [
           `Actualisé, le programme ne paie que jusqu'à ${qte(r.remiseMaxActualisee)} % de remise : à ${qte(r.remiseMaxActualisee + 1)} %, un compte vaut déjà moins qu'aujourd'hui. Chaque point de remise retire ${eur(auCentime(r.x.m.chiffreDAffaires / 100))} de marge par an, tant que le compte reste.`,
-          `En valeur simple, on aurait cru pouvoir aller jusqu'à ${qte(r.remiseMaxSimple)} %. La remise envisagée, ${pct(REMISE_DE_FIDELITE, 0)}, tombe entre les deux : c'est la méthode qui tranche.`,
+          `En valeur simple, on aurait cru pouvoir aller jusqu'à ${qte(r.remiseMaxSimple)} %. La remise envisagée, ${pct(REMISE_DE_FIDELITE)}, tombe entre les deux : c'est la méthode qui tranche.`,
         ];
       },
     },
@@ -253,17 +254,15 @@ export const LE_PROGRAMME_DE_FIDELITE: Situation = {
         const r = programmeDeFidelite(c);
         const x = r.x;
         return [
-          { libelle: "Valeur actualisée perdue par compte", attendu: r.perteParCompte, tolerance: 1, calcul: `${eur(x.actualisee)} − ${eur(r.actualiseeAvec)} = ${eur(r.perteParCompte)}` },
+          { libelle: "Valeur actualisée perdue par compte", attendu: r.perteParCompte, calcul: `${eur(x.actualisee)} − ${eur(r.actualiseeAvec)} = ${eur(r.perteParCompte)}` },
           {
             libelle: "Valeur actualisée perdue sur le portefeuille",
             attendu: r.perteSurLePortefeuille,
-            tolerance: 32,
             calcul: `${eur(r.perteParCompte)} × ${qte(x.n.auPremierJanvier)} = ${eur(r.perteSurLePortefeuille)}`,
           },
           {
             libelle: "Attrition qu'il faudrait atteindre (%)",
             attendu: r.attritionNecessaire,
-            tolerance: 0.05,
             calcul: `${eur(r.margeAvec)} ÷ (attrition + ${pct(x.taux)}) = ${eur(x.actualisee)}, d'où attrition = ${eur(r.margeAvec)} ÷ ${eur(x.actualisee)} − ${pct(x.taux)} = ${qte(r.attritionNecessaire)} %`,
           },
         ];
@@ -271,7 +270,7 @@ export const LE_PROGRAMME_DE_FIDELITE: Situation = {
       explication: (c) => {
         const r = programmeDeFidelite(c);
         return [
-          `L'attente de l'associée (${pct(r.attritionAvec)}) ne suffit pas : à ${pct(REMISE_DE_FIDELITE, 0)} de remise, il faudrait descendre à ${qte(r.attritionNecessaire)} %. Le portefeuille perdrait ${eur(r.perteSurLePortefeuille)} de valeur actualisée, alors que la valeur simple lui faisait croire à un gain.`,
+          `L'attente de l'associée (${pct(r.attritionAvec)}) ne suffit pas : à ${pct(REMISE_DE_FIDELITE)} de remise, il faudrait descendre à ${qte(r.attritionNecessaire)} %. Le portefeuille perdrait ${eur(r.perteSurLePortefeuille)} de valeur actualisée, alors que la valeur simple lui faisait croire à un gain.`,
         ];
       },
     },
@@ -285,22 +284,22 @@ export const LE_PROGRAMME_DE_FIDELITE: Situation = {
         const x = r.x;
         return [
           {
-            texte: `Pas à ${pct(REMISE_DE_FIDELITE, 0)} : le programme ne paie qu'à ${qte(r.remiseMaxActualisee)} % de remise au plus`,
+            texte: `Pas à ${pct(REMISE_DE_FIDELITE)} : le programme ne paie qu'à ${qte(r.remiseMaxActualisee)} % de remise au plus`,
             juste: r.verdict === "remiser-moins",
             retour: `${r.verdict === "remiser-moins" ? "Oui" : "Non"} : actualisé, un compte vaudrait ${eur(r.actualiseeAvec)} au lieu de ${eur(x.actualisee)}. La remise se paie dès cette année, la fidélité ne rapporte que plus tard. À ${qte(r.remiseMaxActualisee)} %, le programme paie, si l'attrition tombe bien à ${pct(r.attritionAvec)} : il faudra la suivre.`,
           },
           {
-            texte: `Lancer à ${pct(REMISE_DE_FIDELITE, 0)} : un compte vaudrait ${eur(r.simpleAvec)} au lieu de ${eur(x.simple)}`,
+            texte: `Lancer à ${pct(REMISE_DE_FIDELITE)} : un compte vaudrait ${eur(r.simpleAvec)} au lieu de ${eur(x.simple)}`,
             juste: r.verdict === "lancer",
             retour: `${r.verdict === "lancer" ? "Oui" : "Non"} : c'est la valeur simple, qui compte un euro lointain comme un euro d'aujourd'hui. Actualisé au taux du cabinet, un compte vaudrait ${eur(r.actualiseeAvec)}, contre ${eur(x.actualisee)} aujourd'hui.`,
           },
           {
             texte: `Renoncer : la remise retire ${eur(r.remise)} de marge par compte et par an`,
             juste: false,
-            retour: `Non : une remise ne se juge pas seule, elle se paie en années de vie gagnées. À ${pct(REMISE_DE_FIDELITE, 0)}, le programme ne paie pas ; à ${qte(r.remiseMaxActualisee)} %, il paierait : renoncer à tout programme laisserait passer cette valeur.`,
+            retour: `Non : une remise ne se juge pas seule, elle se paie en années de vie gagnées. À ${pct(REMISE_DE_FIDELITE)}, le programme ne paie pas ; à ${qte(r.remiseMaxActualisee)} %, il paierait : renoncer à tout programme laisserait passer cette valeur.`,
           },
           {
-            texte: `Lancer à ${pct(REMISE_DE_FIDELITE, 0)} : actualisé, un compte vaudrait ${eur(r.actualiseeSansLaRemise)}, pas ${eur(x.actualisee)}`,
+            texte: `Lancer à ${pct(REMISE_DE_FIDELITE)} : actualisé, un compte vaudrait ${eur(r.actualiseeSansLaRemise)}, pas ${eur(x.actualisee)}`,
             juste: false,
             retour: `Non : ce calcul garde la marge d'aujourd'hui, ${eur(x.m.marge)}. Or la remise se paie chaque année : la marge tombe à ${eur(r.margeAvec)}, et la valeur actualisée à ${eur(r.actualiseeAvec)}.`,
           },

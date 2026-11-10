@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DES_PARTENAIRES, partenairesDuCabinet } from "../../chapitres/commissions-des-partenaires";
 import type { Cas } from "../../cas";
 import type { Situation } from "../types";
@@ -24,6 +24,11 @@ import type { Situation } from "../types";
  *
  * Ce qui a changé en passant sur le monde du cours : la place de marché de PIXEL & CO, ses commandes
  * et sa marge du trimestre deviennent la plateforme d'un cabinet, ses comptes et leur valeur vie.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les comptes nécessaires sont une grandeur au centième ; les
+ * hausses se donnent à deux décimales (au dixième, avant), sur les comptes arrondis, comme sur la
+ * copie.
  */
 
 /** La commission de la mise en avant (hypothèse du cas) : 25 % de chaque mission, au lieu de 20 %. */
@@ -40,11 +45,7 @@ export const COMPTES_PROMIS = 6;
 /** Les bornes du curseur de la commission de la mise en avant, en %. */
 export const COMMISSION_DU_CURSEUR_DU_CAS = { min: 20, max: 40 } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const qte = nombreAuCentieme;
 
 /** Les deux offres de la plateforme, sur la première année et sur la vie des comptes. */
 export function miseEnAvant(c: Pick<Cas, "code">) {
@@ -73,11 +74,13 @@ export function miseEnAvant(c: Pick<Cas, "code">) {
     x,
     b,
     m,
-    hausse: auDixieme((COMMISSION_PROPOSEE - base) * 100),
-    promesse: auDixieme((COMPTES_PROMIS / COMPTES_DE_L_OFFRE_DE_BASE - 1) * 100),
+    hausse: auCentime((COMMISSION_PROPOSEE - base) * 100),
+    promesse: auCentime((COMPTES_PROMIS / COMPTES_DE_L_OFFRE_DE_BASE - 1) * 100),
     comptesNecessaires: auCentime(comptesNecessaires),
-    hausseNecessaire: auCentime((comptesNecessaires / COMPTES_DE_L_OFFRE_DE_BASE - 1) * 100),
-    hausseNecessaireALaPremiereAnnee: auDixieme((comptesNecessairesALaPremiereAnnee / COMPTES_DE_L_OFFRE_DE_BASE - 1) * 100),
+    // Chaque hausse part des comptes arrondis au centième, comme sur la copie.
+    hausseNecessaire: auCentime((auCentime(comptesNecessaires) / COMPTES_DE_L_OFFRE_DE_BASE - 1) * 100),
+    comptesNecessairesALaPremiereAnnee: auCentime(comptesNecessairesALaPremiereAnnee),
+    hausseNecessaireALaPremiereAnnee: auCentime((auCentime(comptesNecessairesALaPremiereAnnee) / COMPTES_DE_L_OFFRE_DE_BASE - 1) * 100),
     ecart,
     ecartALaPremiereAnnee: auCentime(m.margePremiereAnnee - b.margePremiereAnnee),
     plafond,
@@ -213,22 +216,20 @@ export const LA_MISE_EN_AVANT_PAYANTE: Situation = {
       titre: "Les comptes qui paieraient la hausse",
       notions: ["distribution_commission", "customer_lifetime_value"],
       question: () =>
-        "Combien de comptes attendus par an faudrait-il à la mise en avant pour laisser autant que l'offre de base sur la vie des comptes (au centième) ? Quelle hausse des comptes cela représente-t-il, au centième ? Et quelle hausse faudrait-il si l'on ne regardait que la première année, au dixième ?",
+        "Combien de comptes attendus par an faudrait-il à la mise en avant pour laisser autant que l'offre de base sur la vie des comptes (au centième) ? Quelle hausse des comptes cela représente-t-il, au centième ? Et quelle hausse faudrait-il si l'on ne regardait que la première année, à deux décimales ?",
       champs: (c) => {
         const r = miseEnAvant(c);
         return [
-          { libelle: "Comptes nécessaires, sur la vie", attendu: r.comptesNecessaires, tolerance: 0.01, calcul: `${eur(r.b.valeur)} ÷ ${eur(r.m.netParCompte)} = ${qte(r.comptesNecessaires)} comptes attendus` },
+          { libelle: "Comptes nécessaires, sur la vie", nature: "grandeur", attendu: r.comptesNecessaires, calcul: `${eur(r.b.valeur)} ÷ ${eur(r.m.netParCompte)} = ${qte(r.comptesNecessaires)} comptes attendus` },
           {
             libelle: "Hausse nécessaire des comptes, sur la vie (%)",
             attendu: r.hausseNecessaire,
-            tolerance: 0.1,
             calcul: `(${qte(r.comptesNecessaires)} ÷ ${qte(r.b.comptes)} − 1) × 100 = ${pct(r.hausseNecessaire)}`,
           },
           {
             libelle: "Hausse nécessaire, sur la première année seule (%)",
             attendu: r.hausseNecessaireALaPremiereAnnee,
-            tolerance: 0.1,
-            calcul: `(${eur(r.b.margePremiereAnnee)} ÷ (${eur(r.x.m.marge)} − ${eur(r.m.premiere)}) ÷ ${qte(r.b.comptes)} − 1) × 100 = ${pct(r.hausseNecessaireALaPremiereAnnee)}`,
+            calcul: `${eur(r.b.margePremiereAnnee)} ÷ (${eur(r.x.m.marge)} − ${eur(r.m.premiere)}) = ${qte(r.comptesNecessairesALaPremiereAnnee)} comptes ; (${qte(r.comptesNecessairesALaPremiereAnnee)} ÷ ${qte(r.b.comptes)} − 1) × 100 = ${pct(r.hausseNecessaireALaPremiereAnnee)}`,
           },
         ];
       },
