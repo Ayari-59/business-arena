@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { DESTINATAIRES_QUI_PAIENT, FICHIER_DE_MAILLE, campagne, clienteleDeJanvier, tauxDePenetrationPct } from "../monde/fichier-de-maille";
 import type { Chapitre, TableauDeDonnees } from "../types";
@@ -23,13 +23,14 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * Le point de vue n'est ni celui du fichier qu'on qualifie pour cibler (BTS NDRC), ni celui de la
  * table qu'on trie et regroupe (« Des données à l'information ») : ici, ce que vaut l'information, et
  * ce que la loi protège.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la part des femmes de la zone qui ont la carte se donnait au
+ * dixième de point, elle est à deux décimales (monde/fichier-de-maille.ts).
  */
 
 export const ENTREPRISES_DES_DONNEES = ["boutique"] as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
 
 function lesClienteles(c: Cas): TableauDeDonnees {
   const f = clienteleDeJanvier("fideles");
@@ -187,13 +188,12 @@ export const DONNEES_PERSONNELLES_ET_DONNEES_OUVERTES: Chapitre = {
       type: "montants",
       titre: "Une donnée ouverte devient une information",
       question: () =>
-        `Les données ouvertes du recensement, publiées gratuitement, comptent ${qte(FICHIER_DE_MAILLE.femmesDeLaZone)} femmes de 25 à 64 ans dans les communes d'où viennent les clientes. Calculez la part de ces femmes qui ont la carte de la boutique, au dixième de point.`,
+        `Les données ouvertes du recensement, publiées gratuitement, comptent ${qte(FICHIER_DE_MAILLE.femmesDeLaZone)} femmes de 25 à 64 ans dans les communes d'où viennent les clientes. Calculez la part de ces femmes qui ont la carte de la boutique, à deux décimales.`,
       champs: () => [
         {
           libelle: "Part des femmes de la zone qui ont la carte (%)",
           attendu: tauxDePenetrationPct(),
           calcul: `${qte(FICHIER_DE_MAILLE.inscrites)} ÷ ${qte(FICHIER_DE_MAILLE.femmesDeLaZone)} × 100 = ${pct(tauxDePenetrationPct())}`,
-          tolerance: 0.1,
         },
       ],
       explication: () => [

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import { L_ESCALE } from "../monde/l-escale";
 import { LA_TABLE_D_AUGUSTIN } from "../monde/la-table-d-augustin";
 import {
@@ -34,13 +34,15 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS (monde/tarifs-de-l-escale.ts), chez L'ESCALE seule : l'année
  * de la fiche et son modèle (hotel.ts) ; le forfait, la chambre affaires et le congrès du cas sont des
  * hypothèses nommées dans la fiche.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux de marge se donnait au dixième, il est à deux
+ * décimales (monde/tarifs-de-l-escale.ts) ; les nuitées refusées et vides sont des quantités. Les
+ * chiffres de l'hôtel viennent de l'année figée de l'arène, que ce chapitre ne touche pas.
  */
 
 export const ENTREPRISES_DES_TARIFS = ["hotel"] as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 
 const NOMS_DES_TRIMESTRES = ["Hiver", "Printemps", "Été", "Automne"] as const;
 
@@ -107,7 +109,7 @@ export const LES_POLITIQUES_TARIFAIRES: Chapitre = {
         const m = margeDUneNuitee();
         return [
           { libelle: "Marge d'une nuitée", attendu: m.marge, calcul: `${eur(m.prix)} − ${eur(m.cout)} = ${eur(m.marge)}` },
-          { libelle: "Taux de marge (%)", attendu: m.tauxDeMarge, tolerance: 0.1, calcul: `${eur(m.marge)} ÷ ${eur(m.cout)} × 100 = ${pct(m.tauxDeMarge)}` },
+          { libelle: "Taux de marge (%)", attendu: m.tauxDeMarge, calcul: `${eur(m.marge)} ÷ ${eur(m.cout)} × 100 = ${pct(m.tauxDeMarge)}` },
         ];
       },
       explication: () => {
@@ -140,8 +142,8 @@ export const LES_POLITIQUES_TARIFAIRES: Chapitre = {
         const e = trimestreAuPrix(ETE);
         const h = trimestreAuPrix(HIVER);
         return [
-          { libelle: "Nuitées refusées l'été", attendu: e.refusees, calcul: `${qte(e.demande)} − ${qte(e.offertes)} = ${qte(e.refusees)}` },
-          { libelle: "Nuitées vides l'hiver", attendu: h.vides, calcul: `${qte(h.offertes)} − ${qte(h.vendues)} = ${qte(h.vides)}` },
+          { libelle: "Nuitées refusées l'été", nature: "quantite", attendu: e.refusees, calcul: `${qte(e.demande)} − ${qte(e.offertes)} = ${qte(e.refusees)}` },
+          { libelle: "Nuitées vides l'hiver", nature: "quantite", attendu: h.vides, calcul: `${qte(h.offertes)} − ${qte(h.vendues)} = ${qte(h.vides)}` },
         ];
       },
       explication: () => {

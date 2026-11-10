@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import {
   CONTRIBUTIONS_ESSAYEES,
   DELEGATION,
@@ -26,11 +26,13 @@ import type { Chapitre } from "../types";
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA, l'entreprise du cas, face à l'organisation
  * publique du cours : monde/strategie-du-haut-verdasse.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la part des charges payée par les usagers se donnait au
+ * dixième, elle est à deux décimales (monde/strategie-du-haut-verdasse.ts) ; le coût net attend le
+ * centime (à l'euro près, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 
 export const PRINCIPES: readonly { code: Principe; libelle: string }[] = [
   { code: "continuite", libelle: "Continuité" },
@@ -117,13 +119,13 @@ export const LA_STRATEGIE_D_UNE_ORGANISATION_PUBLIQUE: Chapitre = {
           ],
         };
       },
-      question: () => "Calculez le coût net de la piscine pour la communauté (ses charges moins ses recettes), son coût net par entrée (au centime), puis la part des charges payée par les usagers, en pourcentage au dixième.",
+      question: () => "Calculez le coût net de la piscine pour la communauté (ses charges moins ses recettes), son coût net par entrée (au centime), puis la part des charges payée par les usagers, en pourcentage à deux décimales.",
       champs: () => {
         const p = piscineEnRegie();
         return [
-          { libelle: "Coût net de la piscine", attendu: p.coutNet, calcul: `${eur(p.personnel)} + ${eur(p.fonctionnement)} − ${eur(p.recettes)} = ${eur(p.coutNet)}`, tolerance: 1 },
-          { libelle: "Coût net par entrée", attendu: p.coutNetParEntree, calcul: `${eur(p.coutNet)} ÷ ${qte(p.entrees)} = ${eur(p.coutNetParEntree)}`, tolerance: 0.01 },
-          { libelle: "Part des charges payée par les usagers (%)", attendu: p.partDesUsagers, calcul: `${eur(p.recettes)} ÷ ${eur(p.charges)} × 100 = ${pct(p.partDesUsagers)}`, tolerance: 0.1 },
+          { libelle: "Coût net de la piscine", attendu: p.coutNet, calcul: `${eur(p.personnel)} + ${eur(p.fonctionnement)} − ${eur(p.recettes)} = ${eur(p.coutNet)}` },
+          { libelle: "Coût net par entrée", attendu: p.coutNetParEntree, calcul: `${eur(p.coutNet)} ÷ ${qte(p.entrees)} = ${eur(p.coutNetParEntree)}` },
+          { libelle: "Part des charges payée par les usagers (%)", attendu: p.partDesUsagers, calcul: `${eur(p.recettes)} ÷ ${eur(p.charges)} × 100 = ${pct(p.partDesUsagers)}` },
         ];
       },
       explication: () => {

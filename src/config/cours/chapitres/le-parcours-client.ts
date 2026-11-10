@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import {
   MODULE_DE_RESERVATION,
   PRATIQUES_DES_CANAUX,
@@ -24,13 +24,16 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS (monde/parcours-client-de-la-boutique.ts), chez MAILLE & CO
  * seule : le mois de janvier, les visites du site et les retraits de la fiche ; l'enquête en caisse et
  * le module de réservation sont des hypothèses nommées dans la fiche.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la part des passages venus du site et le taux de
+ * transformation se donnaient au dixième, ils sont à deux décimales
+ * (monde/parcours-client-de-la-boutique.ts) ; le gain du mois attend le centime (à 0,05 € près,
+ * avant).
  */
 
 export const ENTREPRISES_DU_PARCOURS = ["boutique"] as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 
 function janvier(): TableauDeDonnees {
   const k = canauxDeJanvier();
@@ -105,8 +108,8 @@ export const LE_PARCOURS_CLIENT: Chapitre = {
       champs: () => {
         const k = canauxDeJanvier();
         return [
-          { libelle: "Part des passages venus du site (%)", attendu: k.partRopo, tolerance: 0.1, calcul: `${qte(k.ropo)} ÷ ${qte(k.passages)} × 100 = ${pct(k.partRopo)}` },
-          { libelle: "Taux de transformation du site (%)", attendu: k.transformationDuSite, tolerance: 0.1, calcul: `${qte(k.retraits)} ÷ ${qte(k.visites)} × 100 = ${pct(k.transformationDuSite)}` },
+          { libelle: "Part des passages venus du site (%)", attendu: k.partRopo, calcul: `${qte(k.ropo)} ÷ ${qte(k.passages)} × 100 = ${pct(k.partRopo)}` },
+          { libelle: "Taux de transformation du site (%)", attendu: k.transformationDuSite, calcul: `${qte(k.retraits)} ÷ ${qte(k.visites)} × 100 = ${pct(k.transformationDuSite)}` },
         ];
       },
       explication: () => {
@@ -160,7 +163,7 @@ export const LE_PARCOURS_CLIENT: Chapitre = {
         const k = moisDuModule(r);
         return [
           { libelle: "Marge moyenne d'une réservation", attendu: m.parReservation, calcul: `${eur(m.margeDUneVente)} × ${pct(m.tauxDAchat * 100)} = ${eur(m.parReservation)}` },
-          { libelle: `Gain du mois avec ${qte(r)} réservations`, attendu: k.gain, tolerance: 0.05, calcul: `${qte(r)} × ${eur(m.parReservation)} − ${eur(k.loyer)} = ${eur(k.gain)}` },
+          { libelle: `Gain du mois avec ${qte(r)} réservations`, attendu: k.gain, calcul: `${qte(r)} × ${eur(m.parReservation)} − ${eur(k.loyer)} = ${eur(k.gain)}` },
         ];
       },
       explication: () => {

@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { anneeDeProduction, coutEmployeurMensuel, coutMoyenDUnDefaut, coutsDeLaQualite, enceintesParOperateurEtParMois, machineDe, margeUnitaire, aleaDe } from "./capacite";
 import { CAPACITES_DU_COURS, MOIS_PAR_TRIMESTRE, type FicheDeLaCapacite } from "./nova-capacite";
 import { VENTES_A_CAMPUSTECH } from "./nova-gestion";
@@ -27,9 +28,14 @@ import { VENTES_A_CAMPUSTECH } from "./nova-gestion";
  * CONVENTIONS. Tout est hors taxes. Une palette, un kit de composants, une enceinte se comptent à
  * l'unité supérieure quand on en a besoin (une palette entamée part entière). Un écart négatif est une
  * perte.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les taux (utilisation, occupation, remplissage, service) se
+ * donnaient au dixième, la production par heure au centième sans arrondi ; ils sont tous à deux
+ * décimales, comme les montants au centime. Les enceintes, les palettes et les kits restent entiers.
  */
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const auCentime = arrondi2;
 const somme = (xs: readonly number[]) => xs.reduce((t, x) => t + x, 0);
 /** À l'entier supérieur, sans qu'un calcul en virgule flottante ne fasse monter un entier exact. */
 const plafond = (x: number) => Math.ceil(x - 1e-9);
@@ -167,10 +173,10 @@ export function production(f: FicheDeLaCapacite) {
     capaciteOutil: t.capaciteOutil,
     capaciteEquipe: t.capaciteEquipe,
     goulot: t.capaciteOutil <= t.capaciteEquipe ? ("outil" as const) : ("equipe" as const),
-    utilisation: (a.production / a.capacite) * 100,
-    parOperateur: a.production / a.operateurs,
+    utilisation: arrondi2((a.production / a.capacite) * 100),
+    parOperateur: arrondi2(a.production / a.operateurs),
     heures,
-    parHeure: a.production / heures,
+    parHeure: arrondi2(a.production / heures),
     avec,
     productionGagnee,
     coutDeLEmbauche,
@@ -207,7 +213,7 @@ export function trimestreDeN(f: FicheDeLaCapacite, trimestre: number = 1) {
   const a = anneeAvec(f, { annee: "N" });
   const t = a.trimestres[trimestre - 1]!;
   const limite: Limite = t.demande <= t.capacite ? "clients" : t.capaciteOutil <= t.capaciteEquipe ? "outil" : "equipe";
-  return { ...t, occupation: (t.production / t.capaciteOutil) * 100, libre: t.capacite - t.production, limite };
+  return { ...t, occupation: arrondi2((t.production / t.capaciteOutil) * 100), libre: t.capacite - t.production, limite };
 }
 
 /**
@@ -300,7 +306,7 @@ export function tourneeDuMois(v: Vehicule = PORTEUR, parKm: number = ROUTE_DE_CA
     palettes,
     places: v.places,
     vides: v.places - palettes,
-    remplissage: (palettes / v.places) * 100,
+    remplissage: arrondi2((palettes / v.places) * 100),
     cout,
     parPalette: auCentime(cout.total / palettes),
     parPalettePlein: auCentime(cout.total / v.places),
@@ -338,7 +344,7 @@ export function trimestreDeTournees(v: Vehicule, tournees: number) {
     enceintes,
     palettesParTournee: palettes,
     aQuai,
-    remplissage: (chargees / v.places) * 100,
+    remplissage: arrondi2((chargees / v.places) * 100),
     cout: auCentime(tournees * coutDUneTournee(v).total),
   };
 }
@@ -350,7 +356,7 @@ export function lotDeLaBourse() {
   const detour = auCentime(LOT_DE_LA_BOURSE.detourKm * ROUTE_DE_CAMPUSTECH.gazoleEtPeagesParKm);
   const tient = LOT_DE_LA_BOURSE.palettes <= t.vides;
   const chargees = t.palettes + (tient ? LOT_DE_LA_BOURSE.palettes : 0);
-  return { t, ...LOT_DE_LA_BOURSE, recette, detour, gain: auCentime(recette - detour), tient, remplissageAvec: (chargees / t.places) * 100 };
+  return { t, ...LOT_DE_LA_BOURSE, recette, detour, gain: auCentime(recette - detour), tient, remplissageAvec: arrondi2((chargees / t.places) * 100) };
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -360,7 +366,7 @@ export function lotDeLaBourse() {
 /** L'année N + 1 servie : la demande, les enceintes livrées dans leur trimestre, les refusées, le taux de service. */
 export function serviceDeLAnnee(f: FicheDeLaCapacite) {
   const a = anneeAvec(f);
-  return { a, tauxDeService: (a.production / a.demande) * 100, refusees: a.refusees, margePerdue: a.margeRefusee };
+  return { a, tauxDeService: arrondi2((a.production / a.demande) * 100), refusees: a.refusees, margePerdue: a.margeRefusee };
 }
 
 /**
@@ -387,7 +393,7 @@ export function anneeAvecDeLAvance(f: FicheDeLaCapacite, avance: readonly number
     trimestres,
     servies,
     refusees,
-    tauxDeService: (servies / a.demande) * 100,
+    tauxDeService: arrondi2((servies / a.demande) * 100),
     margeGagnee: auCentime((servies - a.production) * m),
     stockage,
     gain: auCentime((servies - a.production) * m - stockage),

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { arrondi2 } from "../../src/pedagogy/cours/deux-decimales";
 import { DOMAINES_D_ACTIVITE } from "../../src/config/cours/chapitres/domaines-d-activite";
 import { PROGRAMME } from "../../src/config/cours/registre";
 import { ABANDONNER_L_ENCEINTE_NOMADE } from "../../src/config/cours/situations/par-chapitre/abandonner-l-enceinte-nomade";
@@ -33,10 +34,10 @@ describe("le chapitre et son cas, dans leur parcours", () => {
 });
 
 describe("les domaines de NOVA", () => {
-  it("les contributions : 2 552 €, 23 127 € et 12 410 € ; One en fait 60,7 %", () => {
+  it("les contributions : 2 552 €, 23 127 € et 12 410 € ; One en fait 60,72 %", () => {
     const total = go + one + studio(217);
-    expect(attendus(DOMAINES_D_ACTIVITE, "ce-que-rapporte-chaque-domaine")).toEqual([go, one, studio(217), Math.round((one / total) * 1000) / 10]);
-    expect([go, one, studio(217), Math.round((one / total) * 1000) / 10]).toEqual([2_552, 23_127, 12_410, 60.7]);
+    expect(attendus(DOMAINES_D_ACTIVITE, "ce-que-rapporte-chaque-domaine")).toEqual([go, one, studio(217), arrondi2((one / total) * 100)]);
+    expect([go, one, studio(217), arrondi2((one / total) * 100)]).toEqual([2_552, 23_127, 12_410, 60.72]);
   });
 
   it("le laboratoire : 356 Studio font passer One sous la moitié, 355 non ; la ligne suit", () => {

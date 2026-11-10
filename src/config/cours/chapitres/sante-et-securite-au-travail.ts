@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { aLUnite, eur, nombreAuCentieme } from "../../../pedagogy/cours/deux-decimales";
 import {
   ANNEE_DE_LA_SANTE,
   COUT_D_UN_JOUR_D_ABSENCE,
@@ -24,11 +24,14 @@ import type { Chapitre } from "../types";
  * santé. « Les indicateurs sociaux » chiffre l'absentéisme de NOVA.
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA : monde/sante-et-securite-de-nova.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les taux de fréquence et de gravité sont des grandeurs, au
+ * centième (le taux de fréquence au dixième, avant ; monde/sante-et-securite-de-nova.ts).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
+const qte = nombreAuCentieme;
 export const SANTE_ET_SECURITE_AU_TRAVAIL: Chapitre = {
   code: "sante-et-securite-au-travail",
   parcours: "stmg-rh",
@@ -150,13 +153,13 @@ export const SANTE_ET_SECURITE_AU_TRAVAIL: Chapitre = {
         const k = indicateursDeSecurite();
         const a = ANNEE_DE_LA_SANTE;
         return [
-          { libelle: "Taux de fréquence", attendu: k.frequence, calcul: `${qte(a.accidentsAvecArret)} × 1 000 000 ÷ ${qte(k.heures)} = ${qte(k.frequence)}` },
-          { libelle: "Taux de gravité", attendu: k.gravite, calcul: `${qte(a.joursDArretDesAccidents)} × 1 000 ÷ ${qte(k.heures)} = ${qte(k.gravite)}` },
+          { libelle: "Taux de fréquence", nature: "grandeur", attendu: k.frequence, calcul: `${qte(a.accidentsAvecArret)} × 1 000 000 ÷ ${qte(k.heures)} = ${nombreAuCentieme(k.frequence)}` },
+          { libelle: "Taux de gravité", nature: "grandeur", attendu: k.gravite, calcul: `${qte(a.joursDArretDesAccidents)} × 1 000 ÷ ${qte(k.heures)} = ${nombreAuCentieme(k.gravite)}` },
         ];
       },
       explication: () => {
         const k = indicateursDeSecurite();
-        return [`Le taux de fréquence vaut ${qte(k.frequence)} : à ce rythme, ${qte(Math.round(k.frequence))} accidents pour un million d'heures. Le taux de gravité dit ${qte(k.gravite)} journée perdue pour mille heures. La maladie professionnelle se suit à part.`];
+        return [`Le taux de fréquence vaut ${qte(k.frequence)} : à ce rythme, ${qte(aLUnite(k.frequence))} accidents pour un million d'heures. Le taux de gravité dit ${qte(k.gravite)} journée perdue pour mille heures. La maladie professionnelle se suit à part.`];
       },
     },
     {

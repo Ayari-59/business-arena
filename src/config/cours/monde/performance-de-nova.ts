@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { affectationDeNova } from "./capitaux-propres";
 import { bilanDuLycee, compteDuLycee, exerciceDe } from "./comptes-du-lycee";
 import { tableauDeBord } from "./couts-et-budgets";
@@ -20,10 +21,14 @@ import { KG_CO2_PAR_KWH, KWH_DU_BATIMENT_PAR_MOIS, KWH_PAR_ENCEINTE, tableauDeBo
  * LES HYPOTHÈSES DU COURS, dites ici : l'objectif de ventes que le président s'était fixé pour N
  * (25 000 enceintes) ; les clients du site qui ont racheté dans l'année (360 sur 2 400) ; ce que veulent
  * les associés et le président pour le bénéfice de N (le laboratoire).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les taux de la performance se donnaient au dixième de point,
+ * ils sont à deux décimales ; les émissions par enceinte se donnaient au gramme, elles sont au
+ * centième de gramme.
  */
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const auCentime = arrondi2;
 
 export const HYPOTHESES_DE_LA_PERFORMANCE = {
   objectifDeVentes: 25_000,
@@ -59,23 +64,23 @@ function calculer() {
     caf: k.caf,
     dividendes: affectationDeNova().dividendes,
     /** Efficacité : le réalisé rapporté à l'objectif, en %. */
-    efficacitePct: auDixieme((k.quantite / h.objectifDeVentes) * 100),
+    efficacitePct: arrondi2((k.quantite / h.objectifDeVentes) * 100),
     /** Fidélité : la part des clients du site qui ont racheté, en %. */
-    fidelitePct: auDixieme((h.clientsQuiRachetent / h.clientsDuSite) * 100),
-    partDeMarchePct: auDixieme(bord.partDeMarche * 100),
-    rentabilitePct: auDixieme((k.resultatNet / b.capitauxPropres) * 100),
-    profitabilitePct: auDixieme((k.resultatNet / k.ventes) * 100),
-    absenteismePct: auDixieme(durable.absenteisme * 100),
+    fidelitePct: arrondi2((h.clientsQuiRachetent / h.clientsDuSite) * 100),
+    partDeMarchePct: arrondi2(bord.partDeMarche * 100),
+    rentabilitePct: arrondi2((k.resultatNet / b.capitauxPropres) * 100),
+    profitabilitePct: arrondi2((k.resultatNet / k.ventes) * 100),
+    absenteismePct: arrondi2(durable.absenteisme * 100),
     accidents: durable.accidents,
     kwh,
     co2,
     /** Les grammes de CO2 émis par enceinte, à l'unité. */
-    co2ParEnceinteGrammes: Math.round((co2 / k.quantite) * 1000),
+    co2ParEnceinteGrammes: arrondi2((co2 / k.quantite) * 1000),
   };
 }
 
 /** Le bénéfice de N partagé : le dividende versé, et ce qui reste pour autofinancer l'entreprise (la CAF moins les dividendes). */
 export function partageDuBenefice(dividendes: number) {
   const p = performanceDeNova();
-  return { dividendes, partDistribueePct: auDixieme((dividendes / p.resultatNet) * 100), autofinancement: auCentime(p.caf - dividendes), reserves: auCentime(p.resultatNet - dividendes) };
+  return { dividendes, partDistribueePct: arrondi2((dividendes / p.resultatNet) * 100), autofinancement: auCentime(p.caf - dividendes), reserves: auCentime(p.resultatNet - dividendes) };
 }

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   ENCEINTES_PAR_PALETTE,
@@ -28,6 +28,10 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS (monde/production-et-logistique.ts : la palette, le
  * porteur, la route et la messagerie sont ses hypothèses). CE QUI A CHANGÉ : il se jouait chez
  * ROUTE & CIE, le transporteur de l'arène, qui ne connaît pas les kilomètres ; il se joue chez NOVA.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les palettes sont des quantités, à la palette supérieure ;
+ * les montants au centime.
  */
 
 /** Les entreprises du chapitre : NOVA seule. */
@@ -45,8 +49,7 @@ const FOIS: readonly number[] = [1, 2, 4];
 /** Au départ du laboratoire : la messagerie, deux fois par mois, comme CampusTech le demandait l'an passé. */
 const DEPART_DU_LABORATOIRE = { mode: 0, fois: 2 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 
 const modeDe = (v: number) => MODES.find((m) => m.valeur === v)!.mode;
 
@@ -140,7 +143,7 @@ export const CE_QUE_COUTE_UNE_LIVRAISON: Chapitre = {
       champs: () => {
         const t = tourneeDuMois();
         return [
-          { libelle: "Palettes de la tournée", attendu: t.palettes, calcul: `${qte(t.enceintes)} ÷ ${qte(ENCEINTES_PAR_PALETTE)}, à la palette supérieure : ${qte(t.palettes)}`, tolerance: 0 },
+          { libelle: "Palettes de la tournée", nature: "quantite", attendu: t.palettes, calcul: `${qte(t.enceintes)} ÷ ${qte(ENCEINTES_PAR_PALETTE)}, à la palette supérieure : ${qte(t.palettes)}` },
           { libelle: "Coût d'une palette livrée", attendu: t.parPalette, calcul: `${eur(t.cout.total)} ÷ ${qte(t.palettes)} = ${eur(t.parPalette)}` },
           { libelle: "Coût d'une enceinte livrée", attendu: t.parEnceinte, calcul: `${eur(t.cout.total)} ÷ ${qte(t.enceintes)} = ${eur(t.parEnceinte)}` },
         ];

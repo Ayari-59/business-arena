@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   CALENDRIER_DU_RECRUTEMENT,
@@ -28,13 +28,15 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez L'ESCALE seule : les saisons et le coût de l'équipe
  * viennent de la fiche de l'hôtel, le taux du placement du fonds monétaire du cours ; le calendrier et le
  * placement de l'été sont des hypothèses du cours, nommées dans monde/temps-de-l-escale.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les taux d'occupation se donnaient au dixième de point, ils
+ * sont à deux décimales (monde/temps-de-l-escale.ts) ; les nuitées refusées et les semaines sont
+ * des quantités.
  */
 
 export const ENTREPRISES_DU_TEMPS = ["hotel"] as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 function lesSaisons(c: Cas): TableauDeDonnees {
@@ -98,15 +100,15 @@ export const LE_TEMPS_DE_L_ORGANISATION: Chapitre = {
       titre: "L'été et l'hiver",
       notions: ["occupancy_revpar", "seasonality"],
       tableau: lesSaisons,
-      question: () => "Calculez le taux d'occupation de l'hiver (trimestre 1) et de l'été (trimestre 3), au dixième de point, et les nuitées refusées l'été.",
+      question: () => "Calculez le taux d'occupation de l'hiver (trimestre 1) et de l'été (trimestre 3), à deux décimales, et les nuitées refusées l'été.",
       champs: () => {
         const s = saisonsDeLEscale();
         const h = s[0]!;
         const e = s[2]!;
         return [
-          { libelle: "Taux d'occupation de l'hiver (%)", attendu: h.occupationPct, calcul: `${qte(h.vendues)} ÷ ${qte(h.offertes)} × 100 = ${pct(h.occupationPct)}`, tolerance: 0.1 },
-          { libelle: "Taux d'occupation de l'été (%)", attendu: e.occupationPct, calcul: `${qte(e.vendues)} ÷ ${qte(e.offertes)} × 100 = ${pct(e.occupationPct)}`, tolerance: 0.1 },
-          { libelle: "Nuitées refusées l'été", attendu: e.refusees, calcul: `${qte(e.demande)} − ${qte(e.vendues)} = ${qte(e.refusees)}`, tolerance: 0 },
+          { libelle: "Taux d'occupation de l'hiver (%)", attendu: h.occupationPct, calcul: `${qte(h.vendues)} ÷ ${qte(h.offertes)} × 100 = ${pct(h.occupationPct)}` },
+          { libelle: "Taux d'occupation de l'été (%)", attendu: e.occupationPct, calcul: `${qte(e.vendues)} ÷ ${qte(e.offertes)} × 100 = ${pct(e.occupationPct)}` },
+          { libelle: "Nuitées refusées l'été", nature: "quantite", attendu: e.refusees, calcul: `${qte(e.demande)} − ${qte(e.vendues)} = ${qte(e.refusees)}` },
         ];
       },
       explication: () => {
@@ -168,9 +170,9 @@ export const LE_TEMPS_DE_L_ORGANISATION: Chapitre = {
       champs: () => [
         {
           libelle: "Semaines avant le 1er juillet",
+          nature: "quantite",
           attendu: SEMAINES_AVANT_LA_SAISON,
           calcul: `${CALENDRIER_DU_RECRUTEMENT.map((t) => qte(t.semaines)).join(" + ")} = ${qte(SEMAINES_AVANT_LA_SAISON)} semaines`,
-          tolerance: 0,
         },
       ],
       explication: () => [

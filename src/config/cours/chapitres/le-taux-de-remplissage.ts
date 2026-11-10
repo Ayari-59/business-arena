@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   ENCEINTES_PAR_PALETTE,
@@ -32,6 +32,10 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * Il ne double pas « Ce que coûte une livraison », qui compte la tournée et la compare à la
  * messagerie : ici, l'objet est le remplissage, et ce que coûte une place vide. CE QUI A CHANGÉ : il
  * se jouait chez ROUTE & CIE, le transporteur de l'arène ; il se joue chez NOVA.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux de remplissage se donnait au dixième, il est à deux
+ * décimales ; les palettes et les places vides sont des quantités.
  */
 
 /** Les entreprises du chapitre : NOVA seule. */
@@ -43,9 +47,7 @@ const TOURNEES_DU_LABORATOIRE = { min: 1, max: 6, pas: 1 } as const;
 /** Au départ du laboratoire : le porteur, une tournée par mois, comme aujourd'hui. */
 const DEPART_DU_LABORATOIRE = { vehicule: 1, tournees: 3 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${(Math.round(t * 10) / 10).toLocaleString("fr-FR")} %`;
+const qte = nombreAuCentieme;
 
 const vehiculeDe = (v: number) => VEHICULES[v]!;
 
@@ -112,13 +114,13 @@ export const LE_TAUX_DE_REMPLISSAGE: Chapitre = {
       titre: "Le remplissage de la tournée",
       notions: ["capacity"],
       tableau: tableauDeLaTournee,
-      question: () => "Calculez les palettes de la tournée (une palette entamée part entière), le taux de remplissage (au dixième), puis les places vides.",
+      question: () => "Calculez les palettes de la tournée (une palette entamée part entière), le taux de remplissage (à deux décimales), puis les places vides.",
       champs: () => {
         const t = remplissage();
         return [
-          { libelle: "Palettes de la tournée", attendu: t.palettes, calcul: `${qte(t.enceintes)} ÷ ${qte(ENCEINTES_PAR_PALETTE)}, à la palette supérieure : ${qte(t.palettes)}`, tolerance: 0 },
-          { libelle: "Taux de remplissage (%)", attendu: Math.round(t.remplissage * 10) / 10, calcul: `${qte(t.palettes)} ÷ ${qte(t.places)} × 100 = ${pct(t.remplissage)}`, tolerance: 0.1 },
-          { libelle: "Places vides", attendu: t.vides, calcul: `${qte(t.places)} − ${qte(t.palettes)} = ${qte(t.vides)}`, tolerance: 0 },
+          { libelle: "Palettes de la tournée", nature: "quantite", attendu: t.palettes, calcul: `${qte(t.enceintes)} ÷ ${qte(ENCEINTES_PAR_PALETTE)}, à la palette supérieure : ${qte(t.palettes)}` },
+          { libelle: "Taux de remplissage (%)", attendu: t.remplissage, calcul: `${qte(t.palettes)} ÷ ${qte(t.places)} × 100 = ${pct(t.remplissage)}` },
+          { libelle: "Places vides", nature: "quantite", attendu: t.vides, calcul: `${qte(t.places)} − ${qte(t.palettes)} = ${qte(t.vides)}` },
         ];
       },
       explication: () => {
@@ -136,7 +138,7 @@ export const LE_TAUX_DE_REMPLISSAGE: Chapitre = {
       question: () => "Calculez ce que coûte une palette chargée aujourd'hui (tournée ÷ palettes chargées), ce qu'elle coûterait si le porteur partait plein, puis ce que coûtent les places vides (places vides × coût d'une palette, porteur plein).",
       champs: () => {
         const t = remplissage();
-        const vides = Math.round(t.vides * t.parPalettePlein * 100) / 100;
+        const vides = arrondi2(t.vides * t.parPalettePlein);
         return [
           { libelle: "Coût d'une palette, aujourd'hui", attendu: t.parPalette, calcul: `${eur(t.cout.total)} ÷ ${qte(t.palettes)} = ${eur(t.parPalette)}` },
           { libelle: "Coût d'une palette, porteur plein", attendu: t.parPalettePlein, calcul: `${eur(t.cout.total)} ÷ ${qte(t.places)} = ${eur(t.parPalettePlein)}` },
@@ -180,14 +182,14 @@ export const LE_TAUX_DE_REMPLISSAGE: Chapitre = {
       lecture: (_c, q) => [
         { libelle: "Palettes chargées", montant: q, fort: true },
         { libelle: "Palettes du taux visé", montant: PORTEUR.places * REMPLISSAGE_VISE },
-        { libelle: "Coût d'une palette chargée", montant: q > 0 ? Math.round((coutDUneTournee().total / q) * 100) / 100 : 0 },
+        { libelle: "Coût d'une palette chargée", montant: q > 0 ? arrondi2(coutDUneTournee().total / q) : 0 },
       ],
       droites: () => ({ produit: (q) => q, cout: () => PORTEUR.places * REMPLISSAGE_VISE, libelles: ["Palettes chargées", "Palettes du taux visé"] }),
       explication: () => {
         const n = palettesPourLeTauxVise();
         const t = remplissage();
         return [
-          `Il faut ${qte(n)} palettes : ${qte(n)} ÷ ${qte(PORTEUR.places)} = ${pct((n / PORTEUR.places) * 100)}. La tournée du mois n'en emporte que ${qte(t.palettes)} ; pour remplir le porteur, il faudrait livrer plus à la fois, ou prendre un camion plus petit.`,
+          `Il faut ${qte(n)} palettes : ${qte(n)} ÷ ${qte(PORTEUR.places)} = ${pct(arrondi2((n / PORTEUR.places) * 100))}. La tournée du mois n'en emporte que ${qte(t.palettes)} ; pour remplir le porteur, il faudrait livrer plus à la fois, ou prendre un camion plus petit.`,
         ];
       },
     },
@@ -211,7 +213,7 @@ export const LE_TAUX_DE_REMPLISSAGE: Chapitre = {
         return [
           { libelle: "Palettes de chaque tournée", montant: x.palettesParTournee, unite: "palettes", reference: d.palettesParTournee },
           { libelle: "Palettes restées à quai", montant: x.aQuai, unite: "palettes", reference: d.aQuai },
-          { libelle: "Taux de remplissage", montant: Math.round(x.remplissage * 10) / 10, unite: "%", reference: Math.round(d.remplissage * 10) / 10 },
+          { libelle: "Taux de remplissage", montant: x.remplissage, unite: "%", reference: d.remplissage },
           { libelle: "Coût des tournées du trimestre", montant: x.cout, reference: d.cout, fort: true },
         ];
       },

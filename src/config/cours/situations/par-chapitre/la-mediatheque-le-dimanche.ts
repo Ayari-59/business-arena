@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, pct, qte } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DE_LA_STRATEGIE_PUBLIQUE, mediathequeLeDimanche } from "../../monde/strategie-du-haut-verdasse";
 import type { Situation } from "../types";
 
@@ -10,10 +10,12 @@ import type { Situation } from "../types";
  * après-midi. Le cas est neuf par sa question : le chapitre chiffrait la piscine ; ici, l'élève chiffre
  * un service nouveau et le juge sur les principes du service public, pas sur un bénéfice. Hypothèses :
  * monde/strategie-du-haut-verdasse.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les visites de l'année sont une quantité ; les coûts
+ * attendent le centime (à l'euro près, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 export const LA_MEDIATHEQUE_LE_DIMANCHE: Situation = {
   code: "la-mediatheque-le-dimanche",
@@ -52,14 +54,14 @@ export const LA_MEDIATHEQUE_LE_DIMANCHE: Situation = {
       champs: () => {
         const k = mediathequeLeDimanche();
         return [
-          { libelle: "Coût de l'année", attendu: k.cout, calcul: `${qte(k.dimanches)} × ${qte(k.agents)} × ${qte(k.heures)} × ${eur(k.coutHoraire)} = ${eur(k.cout)}`, tolerance: 1 },
-          { libelle: "Visites de l'année", attendu: k.visites, calcul: `${qte(k.dimanches)} × ${qte(k.visitesParDimanche)} = ${qte(k.visites)}`, tolerance: 0 },
-          { libelle: "Coût par visite", attendu: k.coutParVisite, calcul: `${eur(k.cout)} ÷ ${qte(k.visites)} = ${eur(k.coutParVisite)}`, tolerance: 0.01 },
+          { libelle: "Coût de l'année", attendu: k.cout, calcul: `${qte(k.dimanches)} × ${qte(k.agents)} × ${qte(k.heures)} × ${eur(k.coutHoraire)} = ${eur(k.cout)}` },
+          { libelle: "Visites de l'année", nature: "quantite", attendu: k.visites, calcul: `${qte(k.dimanches)} × ${qte(k.visitesParDimanche)} = ${qte(k.visites)}` },
+          { libelle: "Coût par visite", attendu: k.coutParVisite, calcul: `${eur(k.cout)} ÷ ${qte(k.visites)} = ${eur(k.coutParVisite)}` },
         ];
       },
       explication: () => {
         const k = mediathequeLeDimanche();
-        return [`Le dimanche coûterait ${eur(k.cout)} par an, ${k.partDuBudget.toLocaleString("fr-FR")} % des dépenses de fonctionnement, pour ${qte(k.visites)} visites : ${eur(k.coutParVisite)} chacune.`];
+        return [`Le dimanche coûterait ${eur(k.cout)} par an, ${pct(k.partDuBudget)} des dépenses de fonctionnement, pour ${qte(k.visites)} visites : ${eur(k.coutParVisite)} chacune.`];
       },
     },
     {

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import {
   ENTREPRISES_DU_CLIENT_NUMERIQUE,
   PANIERS_ABANDONNES_DES_INSCRITES,
@@ -24,11 +24,13 @@ import type { Chapitre } from "../types";
  * abandonnés chiffrée au laboratoire, et l'administration électronique, chez la communauté de communes.
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez MAILLE & CO : monde/client-numerique-de-maille.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les taux de transformation et d'abandon se donnaient au
+ * dixième, ils sont à deux décimales (monde/client-numerique-de-maille.ts) ; les paniers abandonnés
+ * sont une quantité.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
 
 export const LE_CLIENT_A_L_ERE_NUMERIQUE: Chapitre = {
   code: "le-client-a-l-ere-numerique",
@@ -120,13 +122,13 @@ export const LE_CLIENT_A_L_ERE_NUMERIQUE: Chapitre = {
           ],
         };
       },
-      question: () => "Calculez le taux de transformation (commandes sur visites, au dixième), les paniers abandonnés, et le taux d'abandon des paniers (au dixième).",
+      question: () => "Calculez le taux de transformation (commandes sur visites, à deux décimales), les paniers abandonnés, et le taux d'abandon des paniers (à deux décimales).",
       champs: () => {
         const t = tunnelDuSite();
         return [
-          { libelle: "Taux de transformation (%)", attendu: t.transformationPct, calcul: `${qte(t.commandes)} ÷ ${qte(t.visites)} × 100 = ${pct(t.transformationPct)}`, tolerance: 0.1 },
-          { libelle: "Paniers abandonnés", attendu: t.abandons, calcul: `${qte(t.paniers)} − ${qte(t.commandes)} = ${qte(t.abandons)}`, tolerance: 0 },
-          { libelle: "Taux d'abandon des paniers (%)", attendu: t.abandonPct, calcul: `${qte(t.abandons)} ÷ ${qte(t.paniers)} × 100 = ${pct(t.abandonPct)}`, tolerance: 0.1 },
+          { libelle: "Taux de transformation (%)", attendu: t.transformationPct, calcul: `${qte(t.commandes)} ÷ ${qte(t.visites)} × 100 = ${pct(t.transformationPct)}` },
+          { libelle: "Paniers abandonnés", nature: "quantite", attendu: t.abandons, calcul: `${qte(t.paniers)} − ${qte(t.commandes)} = ${qte(t.abandons)}` },
+          { libelle: "Taux d'abandon des paniers (%)", attendu: t.abandonPct, calcul: `${qte(t.abandons)} ÷ ${qte(t.paniers)} × 100 = ${pct(t.abandonPct)}` },
         ];
       },
       explication: () => {

@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { CONSULTANTS, COUT_VARIABLE_D_UNE_JOURNEE, JOURNEES_DEMANDEES, JOURNEES_VENDUES, PRIX_CATALOGUE } from "./atlas-conseil";
 
 /**
@@ -12,12 +13,15 @@ import { CONSULTANTS, COUT_VARIABLE_D_UNE_JOURNEE, JOURNEES_DEMANDEES, JOURNEES_
  * ses journées au cabinet) coûte 480 € la journée, payée seulement quand il travaille. Le cabinet
  * peut aussi embaucher un onzième consultant salarié, payé toute l'année, qu'il ait des missions ou
  * non. Le prix et le coût variable d'une journée sont les mêmes, qui la fasse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux d'occupation de l'équipe se donnait au dixième, il
+ * est à deux décimales.
  */
 
 export const JOURNEE_D_UN_INDEPENDANT = 480;
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const auCentime = arrondi2;
 
 /** Ce que peut facturer l'équipe d'un trimestre : consultants × jours facturables. */
 export const CAPACITE_DU_TRIMESTRE = CONSULTANTS.nombre * CONSULTANTS.joursFacturablesParTrimestre;
@@ -35,7 +39,7 @@ export function activiteDAtlas() {
     demandees: JOURNEES_DEMANDEES[i]!,
     vendues,
     refusees: JOURNEES_DEMANDEES[i]! - vendues,
-    occupationPct: auDixieme((vendues / CAPACITE_DU_TRIMESTRE) * 100),
+    occupationPct: arrondi2((vendues / CAPACITE_DU_TRIMESTRE) * 100),
   }));
   return {
     trimestres,

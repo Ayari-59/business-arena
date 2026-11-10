@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DES_MODES_DE_VIE, LOCATION, louerOuVendre, teletravail } from "../monde/modes-de-vie";
 import type { Chapitre } from "../types";
 
@@ -15,11 +15,12 @@ import type { Chapitre } from "../types";
  * rapporte plus que la vendre.
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA : monde/modes-de-vie.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les jours de télétravail et les kilomètres évités sont des
+ * quantités ; les montants au centime.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 
 export const LES_MODES_DE_VIE_CHANGENT: Chapitre = {
   code: "les-modes-de-vie-changent",
@@ -83,8 +84,8 @@ export const LES_MODES_DE_VIE_CHANGENT: Chapitre = {
       champs: () => {
         const t = teletravail();
         return [
-          { libelle: "Jours de télétravail dans l'année", attendu: t.jours, calcul: `${qte(t.salaries)} × ${qte(t.joursParSemaine)} × ${qte(t.semaines)} = ${qte(t.jours)}`, tolerance: 0 },
-          { libelle: "Kilomètres évités", attendu: t.km, calcul: `${qte(t.jours)} × ${qte(t.kmAllerRetour)} = ${qte(t.km)}`, tolerance: 0 },
+          { libelle: "Jours de télétravail dans l'année", nature: "quantite", attendu: t.jours, calcul: `${qte(t.salaries)} × ${qte(t.joursParSemaine)} × ${qte(t.semaines)} = ${qte(t.jours)}` },
+          { libelle: "Kilomètres évités", nature: "quantite", attendu: t.km, calcul: `${qte(t.jours)} × ${qte(t.kmAllerRetour)} = ${qte(t.km)}` },
         ];
       },
       explication: () => {

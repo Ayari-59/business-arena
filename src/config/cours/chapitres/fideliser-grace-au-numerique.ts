@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import {
   FACTEURS_DE_FIDELITE,
   MESSAGES_NUMERIQUES,
@@ -29,13 +29,15 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS (monde/relation-numerique-de-la-boutique.ts), chez MAILLE & CO
  * seule : la carte et son fichier de clientele-de-la-boutique.ts ; la relance est une hypothèse nommée
  * dans la fiche.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la durée de vie moyenne est une grandeur, au centième de mois
+ * (au dixième près, avant), et la valeur vie en repart, au centime (à l'euro près, avant) ; les
+ * clientes à qui écrire sont une quantité.
  */
 
 export const ENTREPRISES_DE_LA_RELATION = ["boutique"] as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 
 function leFichier(): TableauDeDonnees {
   const f = fichierCrm();
@@ -114,8 +116,8 @@ export const FIDELISER_GRACE_AU_NUMERIQUE: Chapitre = {
       champs: () => {
         const v = valeurVieDUneCliente();
         return [
-          { libelle: "Durée de vie moyenne (mois)", attendu: v.dureeDeVie, tolerance: 0.1, calcul: `1 ÷ ${pct(v.departs * 100)} = ${qte(v.dureeDeVie)} mois` },
-          { libelle: "Valeur vie d'une cliente", attendu: v.valeur, tolerance: 1, calcul: `${eur(v.margeDUnMois)} × ${qte(v.dureeDeVie)} = ${eur(v.valeur)}` },
+          { libelle: "Durée de vie moyenne (mois)", nature: "grandeur", attendu: v.dureeDeVie, calcul: `1 ÷ ${pct(v.departs * 100)} = ${nombreAuCentieme(v.dureeDeVie)} mois` },
+          { libelle: "Valeur vie d'une cliente", attendu: v.valeur, calcul: `${eur(v.margeDUnMois)} × ${nombreAuCentieme(v.dureeDeVie)} = ${eur(v.valeur)}` },
         ];
       },
       explication: () => {
@@ -164,7 +166,7 @@ export const FIDELISER_GRACE_AU_NUMERIQUE: Chapitre = {
         const f = fichierCrm();
         const garde = f.rangs.filter((r) => r.code !== "dormantes");
         return [
-          { libelle: "Clientes à qui écrire", attendu: f.destinataires, calcul: `${garde.map((r) => qte(r.consentement)).join(" + ")} = ${qte(f.destinataires)}` },
+          { libelle: "Clientes à qui écrire", nature: "quantite", attendu: f.destinataires, calcul: `${garde.map((r) => qte(r.consentement)).join(" + ")} = ${qte(f.destinataires)}` },
           { libelle: "Coût du SMS à toutes", attendu: f.coutDeLaCampagne, calcul: `${qte(f.destinataires)} × ${eur(f.coutDUnSms)} = ${eur(f.coutDeLaCampagne)}` },
         ];
       },

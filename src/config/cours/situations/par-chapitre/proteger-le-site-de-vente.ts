@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct as pourcent } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DU_CHANGEMENT, protegerLeSite } from "../../monde/changements-de-l-environnement";
 import type { Situation } from "../types";
 
@@ -10,11 +10,14 @@ import type { Situation } from "../types";
  * chapitre chiffrait le risque d'une cyberattaque ; ici, l'élève compare ce risque, protégé ou non,
  * et dit au président s'il faut payer la protection. Chiffres et hypothèse :
  * monde/changements-de-l-environnement.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les coûts de l'attaque et les coûts moyens attendent le
+ * centime (à l'euro près, avant) ; les probabilités s'écrivent à deux décimales.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
+const qte = nombreAuCentieme;
+const pct = (t: number) => pourcent(t * 100);
 
 export const PROTEGER_LE_SITE_DE_VENTE: Situation = {
   code: "proteger-le-site-de-vente",
@@ -65,9 +68,9 @@ export const PROTEGER_LE_SITE_DE_VENTE: Situation = {
       champs: () => {
         const k = protegerLeSite();
         return [
-          { libelle: "Coût de l'attaque si elle tombe", attendu: k.cout, calcul: `${eur(k.dommages)} + ${qte(k.ventesPerdues)} × ${eur(k.marge)} = ${eur(k.cout)}`, tolerance: 1 },
-          { libelle: "Coût moyen sans protection", attendu: k.sans, calcul: `${eur(k.cout)} × ${qte(k.probabilite)} = ${eur(k.sans)}`, tolerance: 1 },
-          { libelle: "Coût moyen avec la protection", attendu: k.avec, calcul: `${eur(k.protection.prixParAn)} + ${eur(k.cout)} × ${qte(k.protection.probabilite)} = ${eur(k.avec)}`, tolerance: 1 },
+          { libelle: "Coût de l'attaque si elle tombe", attendu: k.cout, calcul: `${eur(k.dommages)} + ${qte(k.ventesPerdues)} × ${eur(k.marge)} = ${eur(k.cout)}` },
+          { libelle: "Coût moyen sans protection", attendu: k.sans, calcul: `${eur(k.cout)} × ${qte(k.probabilite)} = ${eur(k.sans)}` },
+          { libelle: "Coût moyen avec la protection", attendu: k.avec, calcul: `${eur(k.protection.prixParAn)} + ${eur(k.cout)} × ${qte(k.protection.probabilite)} = ${eur(k.avec)}` },
         ];
       },
       explication: () => {

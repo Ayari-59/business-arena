@@ -1,3 +1,4 @@
+import { aLUnite, arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { canauxDeDistribution, coutVariable, margeUnitaire, prixDeNova } from "./economie-et-marketing";
 import { MERCATIQUE_DE_NOVA } from "./mercatique-de-nova";
 
@@ -19,9 +20,13 @@ import { MERCATIQUE_DE_NOVA } from "./mercatique-de-nova";
  *   · LE CAS « LA PLACE DE MARCHÉ NÉGOCIE » : une seconde offre, 12 % de commission et 1 200 €
  *     d'abonnement par trimestre ; NOVA estime que 30 % des ventes de la plateforme seraient prises à
  *     son site.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les commandes depuis un téléphone et les ventes prises au
+ * site sont des quantités, à l'unité la plus proche ; les montants au centime.
  */
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const auCentime = arrondi2;
 
 export const PART_DU_MOBILE = 0.62;
 
@@ -45,7 +50,7 @@ const fiche = MERCATIQUE_DE_NOVA;
 /** Les ventes en ligne du premier trimestre : enceintes, chiffre d'affaires, commandes passées depuis un téléphone. */
 export function ventesEnLigne() {
   const d = canauxDeDistribution(fiche).direct;
-  const mobile = Math.round(d.ventes * PART_DU_MOBILE);
+  const mobile = aLUnite(d.ventes * PART_DU_MOBILE);
   return { ventes: d.ventes, chiffreDAffaires: d.chiffreDAffaires, prix: d.prix, mobile, chiffreDuMobile: auCentime(mobile * d.prix), partDuMobile: PART_DU_MOBILE };
 }
 
@@ -64,7 +69,7 @@ export function venteSurLaPlace(commission: number = PLACE_DE_MARCHE.commission)
 export function trimestreSurLaPlace(c: number, offre: { commission: number; abonnement: number } = PLACE_DE_MARCHE) {
   const v = venteSurLaPlace(offre.commission);
   const ventes = PLACE_DE_MARCHE.ventesAttendues;
-  const prises = Math.round(ventes * c);
+  const prises = aLUnite(ventes * c);
   const nouvelles = ventes - prises;
   const margeDesNouvelles = auCentime(nouvelles * v.marge);
   // Une vente prise au site rapporte la marge de la place au lieu de celle du site.

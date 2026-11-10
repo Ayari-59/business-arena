@@ -29,7 +29,7 @@ describe("l'étude, la valeur et le modèle", () => {
   });
 
   it("la valeur ajoutée de N et celle du pack", () => {
-    expect(attendusT(CH, "la-valeur-de-n")).toEqual([1_390_276 - 1_136_242, 18.3]);
+    expect(attendusT(CH, "la-valeur-de-n")).toEqual([1_390_276 - 1_136_242, 18.27]);
     expect(attendusT(CH, "la-valeur-du-pack")).toEqual([36_000, 16_800, 19_200]);
   });
 

@@ -24,8 +24,8 @@ describe("le chapitre, dans son parcours", () => {
 });
 
 describe("risques, indicateurs et prévention", () => {
-  it("le taux de fréquence 138,9 et le taux de gravité 1,25", () => {
-    expect(attendusT(CH, "les-taux")).toEqual([138.9, 1.25]);
+  it("le taux de fréquence 138,89 et le taux de gravité 1,25", () => {
+    expect(attendusT(CH, "les-taux")).toEqual([138.89, 1.25]);
   });
 
   it("le curseur : 5 jours évités paient la visseuse", () => {

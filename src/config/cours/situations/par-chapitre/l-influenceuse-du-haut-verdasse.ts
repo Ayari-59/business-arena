@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { aLUnite, arrondi2, eur, nombreAuCentieme, pct, qte } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DE_LA_SALLE } from "../../chapitres/le-plan-de-communication";
 import { INFLUENCEUSE, adherentDeLaSalle, campagneSponsorisee, valeurDUnContact, videoDeLInfluenceuse } from "../../monde/volt-fitness";
 import type { Situation } from "../types";
@@ -12,11 +12,16 @@ import type { Situation } from "../types";
  * attendues : les clics, les contacts, le coût par lead, comparé à ce que rapporte un contact, puis les
  * adhésions attendues et ce qu'elles laissent. Le piège : juger l'influenceuse sur ses abonnés, et non
  * sur ce que coûte un contact.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les clics, les contacts et les adhésions attendus sont des
+ * quantités : le produit à deux décimales, puis l'unité la plus proche ; les adhésions se comptent
+ * sur le taux de transformation de septembre à deux décimales.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
+
+/** Une quantité calculée : la valeur à deux décimales quand le calcul ne tombe pas juste, puis l'arrondi à l'unité. */
+const aLUniteEcrite = (x: number) => (Number.isInteger(arrondi2(x)) ? qte(aLUnite(x)) : `${nombreAuCentieme(x)}, soit ${qte(aLUnite(x))} à l'unité la plus proche`);
 
 export const L_INFLUENCEUSE_DU_HAUT_VERDASSE: Situation = {
   code: "l-influenceuse-du-haut-verdasse",
@@ -56,9 +61,9 @@ export const L_INFLUENCEUSE_DU_HAUT_VERDASSE: Situation = {
       champs: () => {
         const v = videoDeLInfluenceuse();
         return [
-          { libelle: "Clics attendus", attendu: v.clics, calcul: `${qte(v.vues)} × ${pct(v.tauxDeClic * 100)} = ${qte(v.clics)}` },
-          { libelle: "Contacts attendus", attendu: v.contacts, calcul: `${qte(v.clics)} × ${pct(v.contactsParClic * 100)} = ${qte(v.contacts)}` },
-          { libelle: "Coût par lead", attendu: v.coutParContact, tolerance: 0.01, calcul: `${eur(v.prix)} ÷ ${qte(v.contacts)} = ${eur(v.coutParContact)}` },
+          { libelle: "Clics attendus", nature: "quantite", attendu: v.clics, calcul: `${qte(v.vues)} × ${pct(v.tauxDeClic * 100)} = ${aLUniteEcrite(v.vues * v.tauxDeClic)}` },
+          { libelle: "Contacts attendus", nature: "quantite", attendu: v.contacts, calcul: `${qte(v.clics)} × ${pct(v.contactsParClic * 100)} = ${aLUniteEcrite(v.clics * v.contactsParClic)}` },
+          { libelle: "Coût par lead", attendu: v.coutParContact, calcul: `${eur(v.prix)} ÷ ${qte(v.contacts)} = ${eur(v.coutParContact)}` },
         ];
       },
       explication: () => {
@@ -76,7 +81,7 @@ export const L_INFLUENCEUSE_DU_HAUT_VERDASSE: Situation = {
         const v = videoDeLInfluenceuse();
         const a = adherentDeLaSalle();
         return [
-          { libelle: "Adhésions attendues", attendu: v.adhesions, calcul: `${qte(v.contacts)} contacts × le taux de transformation de septembre = ${qte(v.adhesions)}` },
+          { libelle: "Adhésions attendues", nature: "quantite", attendu: v.adhesions, calcul: `${qte(v.contacts)} × ${pct(campagneSponsorisee().tauxDeTransformation)}, le taux de transformation de septembre = ${aLUniteEcrite((v.contacts * campagneSponsorisee().tauxDeTransformation) / 100)}` },
           { libelle: "Ce que rapporte la vidéo", attendu: v.gain, calcul: `${qte(v.adhesions)} × ${eur(a.margeDUnNouvelAdherent)} − ${eur(v.prix)} = ${eur(v.gain)}` },
         ];
       },

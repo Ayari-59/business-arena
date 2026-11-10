@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { ANS_DE_CONSERVATION, COUT_D_UN_SMS, FICHIER_DE_LA_CARTE, fichierDeLaCarte, valeurDUneCliente } from "./clientele-de-la-boutique";
 import { MAILLE_ET_CO } from "./maille-et-co";
 
@@ -17,9 +18,14 @@ import { MAILLE_ET_CO } from "./maille-et-co";
  *     de la relation client (en anglais, Customer Relationship Management, ou CRM), 120 € par mois ;
  *   · LE CAS « RELANCER LES DORMANTES ? » : la gérante voudrait aussi écrire aux cartes dormantes (plus
  *     de 3 ans), et elle attend que 8 anciennes clientes reviennent avec leur bon.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la durée de vie moyenne se donnait au dixième de mois, elle
+ * est au centième ; la valeur vie se calcule sur la marge d'un mois et la durée de vie arrondies,
+ * lues sur clientele-de-la-boutique.ts.
  */
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+const auCentime = arrondi2;
 
 export const RELANCE_DES_ANCIENNES = { bon: 10, logicielParMois: 120, retoursAttendus: 8 } as const;
 
@@ -43,7 +49,10 @@ export const MESSAGES_NUMERIQUES = {
 /** La carte : les clientes, la marge d'un passage par mois, le taux de départ, la durée de vie moyenne et la valeur d'une cliente. */
 export function valeurVieDUneCliente() {
   const v = valeurDUneCliente(MAILLE_ET_CO);
-  return { clientes: v.clientes, margeDUnMois: v.margeDUnPassage, departs: v.departs, dureeDeVie: Math.round(v.dureeDeVie * 10) / 10, valeur: v.valeur };
+  // La marge et la durée de vie, lues sur clientele-de-la-boutique.ts, au centième ; la valeur vie en repart, comme l'élève.
+  const margeDUnMois = auCentime(v.margeDUnPassage);
+  const dureeDeVie = auCentime(v.dureeDeVie);
+  return { clientes: v.clientes, margeDUnMois, departs: v.departs, dureeDeVie, valeur: auCentime(margeDUnMois * dureeDeVie) };
 }
 
 /** Le fichier de la carte : les rangs, ce qui se garde, ce qui s'efface, et à qui un message peut s'envoyer. */

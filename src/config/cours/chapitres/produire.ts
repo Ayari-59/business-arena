@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { margeUnitaire } from "../monde/capacite";
 import {
@@ -29,6 +29,11 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *
  * CE QUI A CHANGÉ. L'arène rejouait l'année de sept entreprises avec une embauche de plus ; le
  * chapitre se joue chez NOVA seule, sur ses fiches.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux d'utilisation se donnait au dixième, il est à deux
+ * décimales ; les capacités et les productions sont des quantités, les heures et la production par
+ * heure des grandeurs au centième ; l'écart de résultat attend le centime (à l'euro près, avant).
  */
 
 /** Les entreprises du chapitre : NOVA seule. */
@@ -38,9 +43,6 @@ export const ENTREPRISES_DE_LA_PRODUCTION: readonly string[] = ENTREPRISES_DE_LA
 const PRODUCTIVITE_DU_CURSEUR = { min: 1_000, max: 2_500 } as const;
 const EFFECTIF_DU_LABORATOIRE = { min: 2, max: 6, pas: 1 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${(Math.round(t * 10) / 10).toLocaleString("fr-FR")} %`;
 const rang = (n: number) => (n === 1 ? "1er" : `${n}e`);
 
 const f = (c: Pick<Cas, "code">) => ficheDeNova(c);
@@ -101,7 +103,7 @@ export const PRODUIRE: Chapitre = {
       texte: (c) => {
         const x = f(c);
         return [
-          `Pour produire, ${c.entreprise} combine des ressources : une ligne de ${qte(x.ligne.postes)} postes de montage, ${qte(x.plan.operateurs)} opérateurs, et du temps. Chaque opérateur travaille ${qte(heuresParTrimestre(x))} heures par trimestre, et une ${c.unite} demande ${qte(x.operateurs.heuresParEnceinte)} heure de montage.`,
+          `Pour produire, ${c.entreprise} combine des ressources : une ligne de ${qte(x.ligne.postes)} postes de montage, ${qte(x.plan.operateurs)} opérateurs, et du temps. Chaque opérateur travaille ${nombreAuCentieme(heuresParTrimestre(x))} heures par trimestre, et une ${c.unite} demande ${nombreAuCentieme(x.operateurs.heuresParEnceinte)} heure de montage.`,
           `Chaque ressource a sa capacité : le plus que les postes peuvent monter en un trimestre, et le plus que l'équipe peut monter (ses heures ÷ le temps d'une ${c.unite}). La capacité de l'entreprise est la plus petite des deux : la ressource la plus faible bride toute la production.`,
           "Le tableau donne l'année N + 1, prévue trimestre par trimestre : ce que les clients demanderont, et ce que la ligne et l'équipe pourront monter.",
         ];
@@ -116,14 +118,14 @@ export const PRODUIRE: Chapitre = {
       notions: ["capacity"],
       tableau: tableauDeLAnnee,
       question: (c) =>
-        `Calculez la capacité de l'entreprise sur l'année (chaque trimestre, la plus petite des deux capacités, puis la somme des 4 trimestres), la production de l'année, puis le taux d'utilisation de la capacité (production ÷ capacité × 100, au dixième), en ${c.unites}.`,
+        `Calculez la capacité de l'entreprise sur l'année (chaque trimestre, la plus petite des deux capacités, puis la somme des 4 trimestres), la production de l'année, puis le taux d'utilisation de la capacité (production ÷ capacité × 100, à deux décimales), en ${c.unites}.`,
       champs: (c) => {
         const p = production(c);
         const t = p.annee.trimestres;
         return [
-          { libelle: "Capacité de l'entreprise sur l'année", attendu: p.annee.capacite, calcul: `${t.map((x) => qte(x.capacite)).join(" + ")} = ${qte(p.annee.capacite)}`, tolerance: 0 },
-          { libelle: "Production de l'année", attendu: p.annee.production, calcul: `${t.map((x) => qte(x.production)).join(" + ")} = ${qte(p.annee.production)}`, tolerance: 0 },
-          { libelle: "Taux d'utilisation de la capacité (%)", attendu: Math.round(p.utilisation * 10) / 10, calcul: `${qte(p.annee.production)} ÷ ${qte(p.annee.capacite)} × 100 = ${pct(p.utilisation)}`, tolerance: 0.1 },
+          { libelle: "Capacité de l'entreprise sur l'année", nature: "quantite", attendu: p.annee.capacite, calcul: `${t.map((x) => qte(x.capacite)).join(" + ")} = ${qte(p.annee.capacite)}` },
+          { libelle: "Production de l'année", nature: "quantite", attendu: p.annee.production, calcul: `${t.map((x) => qte(x.production)).join(" + ")} = ${qte(p.annee.production)}` },
+          { libelle: "Taux d'utilisation de la capacité (%)", attendu: p.utilisation, calcul: `${qte(p.annee.production)} ÷ ${qte(p.annee.capacite)} × 100 = ${pct(p.utilisation)}` },
         ];
       },
       explication: (c) => {
@@ -181,21 +183,21 @@ export const PRODUIRE: Chapitre = {
       tableau: tableauDeLAnnee,
       question: (c) => {
         const x = f(c);
-        return `La productivité du travail mesure ce que produit le travail. Calculez la production par opérateur sur l'année (production ÷ ${qte(x.plan.operateurs)} opérateurs), les heures de travail de l'année (${qte(x.plan.operateurs)} opérateurs × ${qte(heuresParTrimestre(x))} heures × 4 trimestres), puis la production par heure de travail (au centième).`;
+        return `La productivité du travail mesure ce que produit le travail. Calculez la production par opérateur sur l'année (production ÷ ${qte(x.plan.operateurs)} opérateurs), les heures de travail de l'année (${qte(x.plan.operateurs)} opérateurs × ${nombreAuCentieme(heuresParTrimestre(x))} heures × 4 trimestres), puis la production par heure de travail (au centième).`;
       },
       champs: (c) => {
         const p = production(c);
         const x = f(c);
         return [
-          { libelle: "Production par opérateur", attendu: p.parOperateur, calcul: `${qte(p.annee.production)} ÷ ${qte(x.plan.operateurs)} = ${qte(p.parOperateur)}`, tolerance: 0 },
-          { libelle: "Heures de travail de l'année", attendu: p.heures, calcul: `${qte(x.plan.operateurs)} × ${qte(heuresParTrimestre(x))} × 4 = ${qte(p.heures)} h`, tolerance: 0 },
-          { libelle: "Production par heure de travail", attendu: Math.round(p.parHeure * 100) / 100, calcul: `${qte(p.annee.production)} ÷ ${qte(p.heures)} = ${qte(p.parHeure)}`, tolerance: 0.01 },
+          { libelle: "Production par opérateur", nature: "grandeur", attendu: p.parOperateur, calcul: `${qte(p.annee.production)} ÷ ${qte(x.plan.operateurs)} = ${nombreAuCentieme(p.parOperateur)}` },
+          { libelle: "Heures de travail de l'année", nature: "grandeur", attendu: p.heures, calcul: `${qte(x.plan.operateurs)} × ${nombreAuCentieme(heuresParTrimestre(x))} × 4 = ${nombreAuCentieme(p.heures)} h` },
+          { libelle: "Production par heure de travail", nature: "grandeur", attendu: p.parHeure, calcul: `${qte(p.annee.production)} ÷ ${nombreAuCentieme(p.heures)} = ${nombreAuCentieme(p.parHeure)}` },
         ];
       },
       explication: (c) => {
         const p = production(c);
         return [
-          `Chaque opérateur montera ${qte(p.parOperateur)} ${c.unites} sur l'année, soit ${qte(p.parHeure)} par heure de travail.`,
+          `Chaque opérateur montera ${nombreAuCentieme(p.parOperateur)} ${c.unites} sur l'année, soit ${nombreAuCentieme(p.parHeure)} par heure de travail.`,
           "C'est une productivité apparente : elle rapporte toute la production au seul travail, alors que la ligne y a sa part. Ici, c'est la ligne qui bride : un opérateur de plus ajouterait des heures sans rien monter de plus, et la production par opérateur baisserait.",
         ];
       },
@@ -216,13 +218,12 @@ export const PRODUIRE: Chapitre = {
         const x = f(c);
         const equipe = p.avec.trimestres[0]!.capaciteEquipe;
         return [
-          { libelle: "Capacité de l'équipe par trimestre, avec lui", attendu: equipe, calcul: `${qte(p.avec.operateurs)} × ${qte(enceintesParOperateur(x))} = ${qte(equipe)}`, tolerance: 0 },
-          { libelle: "Production de l'année, avec lui", attendu: p.avec.production, calcul: `${p.avec.trimestres.map((t) => qte(t.production)).join(" + ")} = ${qte(p.avec.production)}`, tolerance: 0 },
+          { libelle: "Capacité de l'équipe par trimestre, avec lui", nature: "quantite", attendu: equipe, calcul: `${qte(p.avec.operateurs)} × ${qte(enceintesParOperateur(x))} = ${qte(equipe)}` },
+          { libelle: "Production de l'année, avec lui", nature: "quantite", attendu: p.avec.production, calcul: `${p.avec.trimestres.map((t) => qte(t.production)).join(" + ")} = ${qte(p.avec.production)}` },
           {
             libelle: "Écart de résultat de l'année",
             attendu: p.ecartDeResultat,
             calcul: `${qte(p.productionGagnee)} × ${eur(margeUnitaire(x))} − (${eur(x.personnel.coutDUnRecrutement)} + ${eur(coutAnnuelDUnOperateur(x))}) = ${eur(p.ecartDeResultat)}`,
-            tolerance: 1,
           },
         ];
       },
@@ -230,7 +231,7 @@ export const PRODUIRE: Chapitre = {
         const p = production(c);
         return [
           `L'équipe pourrait monter ${qte(p.avec.trimestres[0]!.capaciteEquipe)} ${c.unites} par trimestre, mais les postes n'en montent toujours que ${qte(p.capaciteOutil)} : la production ne bouge pas, et le résultat baisse de ${eur(-p.ecartDeResultat)}.`,
-          `La production par opérateur tombe de ${qte(p.parOperateur)} à ${qte(p.avec.production / p.avec.operateurs)} ${c.unites} : le travail ajouté ne trouve pas de poste où monter.`,
+          `La production par opérateur tombe de ${nombreAuCentieme(p.parOperateur)} à ${nombreAuCentieme(p.avec.production / p.avec.operateurs)} ${c.unites} : le travail ajouté ne trouve pas de poste où monter.`,
         ];
       },
     },
@@ -346,7 +347,7 @@ export const PRODUIRE: Chapitre = {
       texte: (c) => {
         const p = production(c);
         return [
-          `En N + 1, ${c.entreprise} pourra monter ${qte(p.annee.capacite)} ${c.unites} et en montera ${qte(p.annee.production)} : ${pct(p.utilisation)} de sa capacité. Ce sont ses postes qui brident la production, et chaque opérateur montera ${qte(p.parOperateur)} ${c.unites}.`,
+          `En N + 1, ${c.entreprise} pourra monter ${qte(p.annee.capacite)} ${c.unites} et en montera ${qte(p.annee.production)} : ${pct(p.utilisation)} de sa capacité. Ce sont ses postes qui brident la production, et chaque opérateur montera ${nombreAuCentieme(p.parOperateur)} ${c.unites}.`,
           "Produire, pour un manager, c'est faire travailler ensemble des ressources dont la plus faible fixe la capacité. Ajouter une ressource ne sert que si c'est elle qui bride : ici, une embauche ne ferait rien produire de plus, et ferait baisser la productivité du travail.",
           "Dans l'arène, les chiffres de votre entreprise seront différents : comparez la capacité de vos équipements et celle de votre équipe avant d'embaucher.",
         ];

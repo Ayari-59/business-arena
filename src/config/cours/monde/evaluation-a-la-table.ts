@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { LA_TABLE_D_AUGUSTIN } from "./la-table-d-augustin";
 
 /**
@@ -17,6 +18,10 @@ import { LA_TABLE_D_AUGUSTIN } from "./la-table-d-augustin";
  *   · LE CAS : sur l'année, Hugo a servi 1 200 couverts au déjeuner et vendu 180 desserts ; Sarah 1 400
  *     couverts au dîner et 420 desserts. Le patron propose une prime au serveur qui vend un dessert à
  *     plus de 25 % de ses couverts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux de desserts de chaque serveur se donnait au dixième,
+ * il est à deux décimales.
  */
 
 export const ENTREPRISES_DE_L_EVALUATION = [LA_TABLE_D_AUGUSTIN.code] as const;
@@ -64,6 +69,6 @@ export function entraideNecessaire() {
 /** Le cas : le taux de desserts de chaque serveur. */
 export function tauxDesDesserts() {
   const d = DESSERTS;
-  const taux = (x: { couverts: number; desserts: number }) => Math.round((x.desserts / x.couverts) * 1000) / 10;
+  const taux = (x: { couverts: number; desserts: number }) => arrondi2((x.desserts / x.couverts) * 100);
   return { hugo: taux(d.hugo), sarah: taux(d.sarah), seuil: d.seuil * 100 };
 }

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   BAISSE_DE_PRIX_DU_COMMERCIAL,
@@ -32,6 +32,11 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * CE QUI A CHANGÉ. Le chapitre rejouait trois fois l'année de l'arène dans les neuf entreprises ; il
  * chiffre maintenant l'année N + 1 de NOVA : l'équipe fait 461 774 € de résultat des choix, le
  * commercial seul 338 641,20 €, le financier seul 453 301,93 €.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les écarts de ventes et de clients refusés sont des quantités
+ * ; les écarts de résultat et les dépenses économisées attendent le centime (à l'euro près, avant)
+ * ; les taux s'écrivent à deux décimales.
  */
 
 export { BAISSE_DE_PRIX_DU_COMMERCIAL, COUPE_DU_FINANCIER };
@@ -44,11 +49,8 @@ export { FACONS, type Facon };
 const NOM: Record<Facon, string> = { commercial: "le commercial seul", financier: "le financier seul", equipe: "l'équipe" };
 const Nom = (f: Facon) => NOM[f].charAt(0).toUpperCase() + NOM[f].slice(1);
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pourcent = (x: number) => `${Math.round(x * 100)} %`;
+const pourcent = (x: number) => pct(x * 100);
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
 
 /** Les trois années, et les écarts de chaque rôle face à l'équipe (le cas du partage les reprend). */
 export function troisFacons(_c?: Cas) {
@@ -60,12 +62,12 @@ export function troisFacons(_c?: Cas) {
     commercial: {
       ecartDeVentes: b.commercial.production - b.equipe.production,
       ecartDeRefusees: b.commercial.refusees - b.equipe.refusees,
-      ecartDeResultat: auCentime(b.commercial.resultat - b.equipe.resultat),
+      ecartDeResultat: arrondi2(b.commercial.resultat - b.equipe.resultat),
     },
     financier: {
-      economies: auCentime(b.equipe.entretien + b.equipe.prevention - b.financier.entretien - b.financier.prevention),
+      economies: arrondi2(b.equipe.entretien + b.equipe.prevention - b.financier.entretien - b.financier.prevention),
       ecartDeVentes: b.financier.production - b.equipe.production,
-      ecartDeResultat: auCentime(b.financier.resultat - b.equipe.resultat),
+      ecartDeResultat: arrondi2(b.financier.resultat - b.equipe.resultat),
     },
   };
 }
@@ -146,9 +148,9 @@ export const DECIDER_ENSEMBLE: Chapitre = {
       champs: (c) => {
         const k = troisFacons(c);
         return [
-          { libelle: `Écart de ventes (${c.unites})`, attendu: k.commercial.ecartDeVentes, calcul: `${qte(k.b.commercial.production)} − ${qte(k.b.equipe.production)} = ${qte(k.commercial.ecartDeVentes)}`, tolerance: 0 },
-          { libelle: `Écart de clients refusés (${c.unites})`, attendu: k.commercial.ecartDeRefusees, calcul: `${qte(k.b.commercial.refusees)} − ${qte(k.b.equipe.refusees)} = ${qte(k.commercial.ecartDeRefusees)}`, tolerance: 0 },
-          { libelle: "Écart de résultat des choix", attendu: k.commercial.ecartDeResultat, calcul: `${eur(k.b.commercial.resultat)} − ${eur(k.b.equipe.resultat)} = ${eur(k.commercial.ecartDeResultat)}`, tolerance: 1 },
+          { libelle: `Écart de ventes (${c.unites})`, nature: "quantite", attendu: k.commercial.ecartDeVentes, calcul: `${qte(k.b.commercial.production)} − ${qte(k.b.equipe.production)} = ${qte(k.commercial.ecartDeVentes)}` },
+          { libelle: `Écart de clients refusés (${c.unites})`, nature: "quantite", attendu: k.commercial.ecartDeRefusees, calcul: `${qte(k.b.commercial.refusees)} − ${qte(k.b.equipe.refusees)} = ${qte(k.commercial.ecartDeRefusees)}` },
+          { libelle: "Écart de résultat des choix", attendu: k.commercial.ecartDeResultat, calcul: `${eur(k.b.commercial.resultat)} − ${eur(k.b.equipe.resultat)} = ${eur(k.commercial.ecartDeResultat)}` },
         ];
       },
       explication: (c) => {
@@ -171,9 +173,9 @@ export const DECIDER_ENSEMBLE: Chapitre = {
         const e = k.b.equipe;
         const f = k.b.financier;
         return [
-          { libelle: "Dépenses économisées", attendu: k.financier.economies, calcul: `(${eur(e.entretien)} + ${eur(e.prevention)}) − (${eur(f.entretien)} + ${eur(f.prevention)}) = ${eur(k.financier.economies)}`, tolerance: 1 },
-          { libelle: `Écart de ventes (${c.unites})`, attendu: k.financier.ecartDeVentes, calcul: `${qte(f.production)} − ${qte(e.production)} = ${qte(k.financier.ecartDeVentes)}`, tolerance: 0 },
-          { libelle: "Écart de résultat des choix", attendu: k.financier.ecartDeResultat, calcul: `${eur(f.resultat)} − ${eur(e.resultat)} = ${eur(k.financier.ecartDeResultat)}`, tolerance: 1 },
+          { libelle: "Dépenses économisées", attendu: k.financier.economies, calcul: `(${eur(e.entretien)} + ${eur(e.prevention)}) − (${eur(f.entretien)} + ${eur(f.prevention)}) = ${eur(k.financier.economies)}` },
+          { libelle: `Écart de ventes (${c.unites})`, nature: "quantite", attendu: k.financier.ecartDeVentes, calcul: `${qte(f.production)} − ${qte(e.production)} = ${qte(k.financier.ecartDeVentes)}` },
+          { libelle: "Écart de résultat des choix", attendu: k.financier.ecartDeResultat, calcul: `${eur(f.resultat)} − ${eur(e.resultat)} = ${eur(k.financier.ecartDeResultat)}` },
         ];
       },
       explication: (c) => {

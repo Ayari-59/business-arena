@@ -58,9 +58,7 @@ describe("le prix psychologique", () => {
 describe("une promotion trop forte ?", () => {
   it("30 % de remise : 41,30 €, au-dessus des 39 € ; la marge passe de 21 € à 3,30 €", () => {
     const r = promotionTropForte(NOVA);
-    // Le cas « Une promotion trop forte » est d'un autre lot du chantier « deux décimales » : il garde ses taux au dixième.
-    const auDixieme = (x: number) => Math.round(x * 10) / 10;
-    expect([r.prixPromo, r.ecartAuNormal, r.baisseMaximale, r.ecartALaMefiance, r.credible]).toEqual([41.3, -30, auDixieme((1 - 39 / 59) * 100), 2.3, true]);
-    expect([r.margeAvant, r.margeApres, r.baisseDeLaMarge]).toEqual([21, 3.3, auDixieme((1 - 3.3 / 21) * 100)]);
+    expect([r.prixPromo, r.ecartAuNormal, r.baisseMaximale, r.ecartALaMefiance, r.credible]).toEqual([41.3, -30, arrondi2((1 - 39 / 59) * 100), 2.3, true]);
+    expect([r.margeAvant, r.margeApres, r.baisseDeLaMarge]).toEqual([21, 3.3, arrondi2((1 - 3.3 / 21) * 100)]);
   });
 });

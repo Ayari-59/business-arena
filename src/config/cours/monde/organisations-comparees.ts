@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { affectationDeNova } from "./capitaux-propres";
 import { compteDuLycee, exerciceDe } from "./comptes-du-lycee";
 import { APPORT_EN_CAPITAL } from "./exercice-de-nova";
@@ -13,10 +14,13 @@ import { HAUT_VERDASSE_HANDBALL } from "./haut-verdasse-handball";
  * de communes du Haut-Verdasse (haut-verdasse.ts) et le Handball Club du Haut-Verdasse
  * (haut-verdasse-handball.ts). Ce fichier ne fait que les ranger sur les mêmes lignes : ce qui les
  * finance, ce qui leur reste, et ce que devient ce reste.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts (dividendes, ventes, usagers, subvention) se
+ * donnaient au dixième de point, elles sont à deux décimales.
  */
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const auCentime = arrondi2;
 
 /** Les heures de gymnase que le club occupe dans la saison : heures par semaine × semaines. */
 export const HEURES_DE_GYMNASE = SOUTIEN_AU_HANDBALL.gymnase.heuresParSemaine * SOUTIEN_AU_HANDBALL.gymnase.semaines;
@@ -38,14 +42,14 @@ export function organisationsComparees() {
       benefice: nova.resultatNet,
       dividendes: affectation.dividendes,
       /** La part du bénéfice que l'assemblée a distribuée aux associés, en pourcentage, au dixième. */
-      partDistribueePct: auDixieme((affectation.dividendes / nova.resultatNet) * 100),
+      partDistribueePct: arrondi2((affectation.dividendes / nova.resultatNet) * 100),
       /** La part des ventes dans ce que NOVA reçoit : ses clients la financent. */
-      partDesVentesPct: auDixieme((nova.ventes / nova.produits) * 100),
+      partDesVentesPct: arrondi2((nova.ventes / nova.produits) * 100),
     },
     communaute: {
       recettes: recettesDeLaCommunaute,
       usagers,
-      partDesUsagersPct: auDixieme((usagers / recettesDeLaCommunaute) * 100),
+      partDesUsagersPct: arrondi2((usagers / recettesDeLaCommunaute) * 100),
       impotsEtDotations: recettesDeLaCommunaute - usagers,
       /** Ce que les recettes laissent une fois les dépenses courantes payées : il finance les travaux. */
       autofinancement,
@@ -55,7 +59,7 @@ export function organisationsComparees() {
       depenses: depensesDuClub,
       excedent: excedentDuClub,
       subvention: SOUTIEN_AU_HANDBALL.subvention,
-      partDeLaSubventionPct: auDixieme((SOUTIEN_AU_HANDBALL.subvention / recettesDuClub) * 100),
+      partDeLaSubventionPct: arrondi2((SOUTIEN_AU_HANDBALL.subvention / recettesDuClub) * 100),
       miseADisposition: VALEUR_DE_LA_MISE_A_DISPOSITION,
       heuresDeGymnase: HEURES_DE_GYMNASE,
       /** Le plus haut tarif horaire, à l'euro, auquel le club pourrait louer le gymnase sans passer en déficit. */

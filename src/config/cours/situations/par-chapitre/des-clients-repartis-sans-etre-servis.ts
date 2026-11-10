@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, qte } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_DIAGNOSTIC } from "../../chapitres/le-diagnostic-strategique";
 import { trimestreLePlusRefuse } from "../../monde/direction-de-nova";
@@ -9,7 +9,7 @@ import type { Situation } from "../types";
  * (Stratégie et management, palier 1).
  *
  * Le diagnostic de NOVA le relève : en N + 1, la ligne de montage refusera des clients, une faiblesse.
- * La directrice générale veut comprendre cette faiblesse avant de décider : au trimestre où NOVA en
+ * Le président veut comprendre cette faiblesse avant de décider : au trimestre où NOVA en
  * refusera le plus, combien cela coûtera, et ce qu'il faudrait, produire davantage avec ce qu'elle
  * a, ou augmenter sa capacité.
  *
@@ -21,10 +21,12 @@ import type { Situation } from "../types";
  * CE QUI A CHANGÉ. Le cas lisait le trimestre de l'arène où chaque entreprise manquait le plus de
  * ventes ; il se joue chez NOVA : à Noël de N + 1, 800 enceintes refusées, 16 800 € de marge perdue,
  * la ligne pour goulot.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les enceintes montées et refusées sont des quantités ; la
+ * marge perdue attend le centime (à l'euro près, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const rang = (k: number) => (k === 1 ? "1er" : `${k}e`);
 
 export type Verdict = "production" | "capacite";
@@ -42,14 +44,14 @@ export const DES_CLIENTS_REPARTIS_SANS_ETRE_SERVIS: Situation = {
   palier: 1,
   blocs: [],
   reprend: ["le-diagnostic-strategique"],
-  commanditaire: "La directrice générale",
+  commanditaire: "Le président",
   titre: "Des clients repartis sans être servis",
   accroche: "Le diagnostic le relève : des clients venus acheter repartiront sans rien. Au trimestre où l'entreprise en refusera le plus, ce que cela coûtera, et ce qu'il faudrait.",
   objectifs: [
     "Mesurer les ventes manquées et la marge perdue",
     "Comparer la demande à ce que l'entreprise peut offrir",
     "Distinguer un manque de production et un manque de capacité",
-    "Répondre à la directrice, chiffre à l'appui",
+    "Répondre au président, chiffre à l'appui",
   ],
   libre: false,
   entreprises: {
@@ -60,11 +62,11 @@ export const DES_CLIENTS_REPARTIS_SANS_ETRE_SERVIS: Situation = {
     {
       id: "demande",
       type: "lecture",
-      titre: "La question de la directrice",
+      titre: "La question du président",
       texte: () => {
         const k = clientsRepartis();
         return [
-          `« Le diagnostic dit que nous refuserons ${qte(k.refuseesDeLAnnee)} clients en N + 1, et le ${rang(k.trimestre)} trimestre sera le pire. Avant de décider quoi que ce soit, je veux savoir ce que cela nous coûtera, et pourquoi : produisons-nous trop peu avec ce que nous avons, ou n'avons-nous pas de quoi produire plus ? » La directrice générale`,
+          `« Le diagnostic dit que nous refuserons ${qte(k.refuseesDeLAnnee)} clients en N + 1, et le ${rang(k.trimestre)} trimestre sera le pire. Avant de décider quoi que ce soit, je veux savoir ce que cela nous coûtera, et pourquoi : produisons-nous trop peu avec ce que nous avons, ou n'avons-nous pas de quoi produire plus ? » Le président`,
           "Pas de cours cette fois : les chiffres sont ceux du diagnostic, et la règle du goulot, vous la connaissez.",
         ];
       },
@@ -92,9 +94,9 @@ export const DES_CLIENTS_REPARTIS_SANS_ETRE_SERVIS: Situation = {
       champs: () => {
         const k = clientsRepartis();
         return [
-          { libelle: "Enceintes montées", attendu: k.production, calcul: `la plus petite de ${qte(k.demande)}, ${qte(k.capaciteOutil)} et ${qte(k.capaciteEquipe)} : ${qte(k.production)}`, tolerance: 0 },
-          { libelle: "Enceintes refusées", attendu: k.refusees, calcul: `${qte(k.demande)} − ${qte(k.production)} = ${qte(k.refusees)}`, tolerance: 0 },
-          { libelle: "Marge perdue", attendu: k.margePerdue, calcul: `${qte(k.refusees)} × ${eur(k.margeUnitaire)} = ${eur(k.margePerdue)}`, tolerance: 1 },
+          { libelle: "Enceintes montées", nature: "quantite", attendu: k.production, calcul: `la plus petite de ${qte(k.demande)}, ${qte(k.capaciteOutil)} et ${qte(k.capaciteEquipe)} : ${qte(k.production)}` },
+          { libelle: "Enceintes refusées", nature: "quantite", attendu: k.refusees, calcul: `${qte(k.demande)} − ${qte(k.production)} = ${qte(k.refusees)}` },
+          { libelle: "Marge perdue", attendu: k.margePerdue, calcul: `${qte(k.refusees)} × ${eur(k.margeUnitaire)} = ${eur(k.margePerdue)}` },
         ];
       },
       explication: () => {
@@ -132,8 +134,8 @@ export const DES_CLIENTS_REPARTIS_SANS_ETRE_SERVIS: Situation = {
     {
       id: "reponse",
       type: "choix",
-      titre: "Votre réponse à la directrice",
-      question: () => "Que répondez-vous à la directrice ?",
+      titre: "Votre réponse au président",
+      question: () => "Que répondez-vous au président ?",
       options: () => {
         const k = clientsRepartis();
         return [

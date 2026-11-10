@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct as pourcent } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { PRODUIRE_BIEN, qualite } from "../../chapitres/produire-bien";
 import { ficheDeNova, qualiteAuBudget } from "../../monde/production-et-logistique";
@@ -13,15 +13,17 @@ import type { Situation } from "../types";
  * les ventes que les clients déçus font perdre, et répond. Les chiffres sont ceux du chapitre
  * (monde/production-et-logistique.ts) ; seule la part du budget gardée est l'hypothèse du cas. Le
  * verdict se calcule sur l'écart de résultat.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les défauts sont des quantités ; les taux de l'énoncé
+ * s'écrivent à deux décimales, les montants au centime.
  */
 
 /** La part du budget de prévention que garde le directeur financier (hypothèse du cas). */
 export const PART_DU_BUDGET_GARDEE = 0.5;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${(Math.round(t * 1000) / 10).toLocaleString("fr-FR")} %`;
-const c2 = (x: number) => Math.round(x * 100) / 100 + 0;
+const qte = nombreAuCentieme;
+const pct = (t: number) => pourcent(t * 100);
 
 export type ReponseALaMoitie = "passer-a-la-moitie" | "ne-rien-changer";
 
@@ -29,10 +31,10 @@ export type ReponseALaMoitie = "passer-a-la-moitie" | "ne-rien-changer";
 export function moitieDuBudget(c: Pick<Cas, "code">) {
   const actuel = qualite(c);
   const moitie = qualiteAuBudget(ficheDeNova(c), actuel.prevention * PART_DU_BUDGET_GARDEE);
-  const economie = c2(actuel.prevention - moitie.prevention);
-  const nonQualiteEnPlus = c2(moitie.nonQualite - actuel.nonQualite);
-  const margePerdueEnPlus = c2(moitie.margePerdue - actuel.margePerdue);
-  const ecart = c2(moitie.resultat - actuel.resultat);
+  const economie = arrondi2(actuel.prevention - moitie.prevention);
+  const nonQualiteEnPlus = arrondi2(moitie.nonQualite - actuel.nonQualite);
+  const margePerdueEnPlus = arrondi2(moitie.margePerdue - actuel.margePerdue);
+  const ecart = arrondi2(moitie.resultat - actuel.resultat);
   const reponse: ReponseALaMoitie = ecart > 0 ? "passer-a-la-moitie" : "ne-rien-changer";
   return { actuel, moitie, economie, nonQualiteEnPlus, margePerdueEnPlus, ecart, reponse };
 }
@@ -89,8 +91,8 @@ export const LA_MOITIE_DU_BUDGET_QUALITE: Situation = {
         const x = ficheDeNova(c);
         const m = moitieDuBudget(c).moitie;
         return [
-          { libelle: "Défauts de l'année", attendu: m.defauts, calcul: `${qte(m.volume)} × ${pct(m.tauxDeDefaut)} = ${qte(m.defauts)}`, tolerance: 0 },
-          { libelle: "Défauts partis chez le client", attendu: m.livres, calcul: `${qte(m.defauts)} × (100 % − ${pct(m.tauxDeDetection)}) = ${qte(m.livres)}`, tolerance: 0 },
+          { libelle: "Défauts de l'année", nature: "quantite", attendu: m.defauts, calcul: `${qte(m.volume)} × ${pct(m.tauxDeDefaut)} = ${qte(m.defauts)}` },
+          { libelle: "Défauts partis chez le client", nature: "quantite", attendu: m.livres, calcul: `${qte(m.defauts)} × (100 % − ${pct(m.tauxDeDetection)}) = ${qte(m.livres)}` },
           {
             libelle: "Coût de la non-qualité",
             attendu: m.nonQualite,

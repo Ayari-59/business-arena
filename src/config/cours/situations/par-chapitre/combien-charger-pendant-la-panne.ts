@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, qte } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { LIVRER_A_TEMPS } from "../../chapitres/livrer-a-temps";
 import { margeUnitaire } from "../../monde/capacite";
@@ -15,10 +15,12 @@ import type { Situation } from "../types";
  * capacité qui reste, les commandes qui ne tiennent pas, ce qu'elles coûtent, la place libre au
  * trimestre suivant, et répond : le 2e trimestre est déjà plein, ces commandes sont perdues, il faut
  * prévenir les clients. Les chiffres sont ceux du chapitre (monde/production-et-logistique.ts).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les capacités et les commandes sont des quantités ; le coût
+ * de la panne au centime.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 export type ChoixPendantLaPanne = "prevenir" | "reporter" | "tout-promettre";
 
@@ -79,8 +81,8 @@ export const COMBIEN_CHARGER_PENDANT_LA_PANNE: Situation = {
         const k = chargementPendantLaPanne(c);
         const m = margeUnitaire(ficheDeNova(c));
         return [
-          { libelle: "Capacité pendant la panne", attendu: k.reste, calcul: `${qte(k.capacite)} × (100 % − ${qte(k.panne.perteDeCapacite * 100)} %) = ${qte(k.reste)}`, tolerance: 0 },
-          { libelle: "Commandes qui ne tiennent pas", attendu: k.refusees, calcul: `${qte(k.demande)} − ${qte(k.reste)} = ${qte(k.refusees)}`, tolerance: 0 },
+          { libelle: "Capacité pendant la panne", nature: "quantite", attendu: k.reste, calcul: `${qte(k.capacite)} × (100 % − ${qte(k.panne.perteDeCapacite * 100)} %) = ${qte(k.reste)}` },
+          { libelle: "Commandes qui ne tiennent pas", nature: "quantite", attendu: k.refusees, calcul: `${qte(k.demande)} − ${qte(k.reste)} = ${qte(k.refusees)}` },
           { libelle: "Coût de la panne", attendu: k.cout, calcul: `${qte(k.refusees)} × ${eur(m)} + ${eur(k.panne.dommages)} = ${eur(k.cout)}` },
         ];
       },
@@ -98,7 +100,7 @@ export const COMBIEN_CHARGER_PENDANT_LA_PANNE: Situation = {
       champs: (c) => {
         const k = chargementPendantLaPanne(c);
         const a = ficheDeNova(c).anneeNPlus1.demande;
-        return [{ libelle: "Capacité libre au 2e trimestre", attendu: k.libreAuSuivant, calcul: `${qte(k.capacite)} − ${qte(a[1]!)} = ${qte(k.libreAuSuivant)}`, tolerance: 0 }];
+        return [{ libelle: "Capacité libre au 2e trimestre", nature: "quantite", attendu: k.libreAuSuivant, calcul: `${qte(k.capacite)} − ${qte(a[1]!)} = ${qte(k.libreAuSuivant)}` }];
       },
       explication: (c) => {
         const k = chargementPendantLaPanne(c);

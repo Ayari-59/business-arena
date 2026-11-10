@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DES_DOMAINES, gammeDuMois } from "../../monde/domaines-d-activite-de-nova";
 import type { Situation } from "../types";
 
@@ -10,16 +10,19 @@ import type { Situation } from "../types";
  * se concentrer sur One et Studio. Le cas est neuf par sa question : le chapitre mesurait la dépendance
  * à One ; ici, l'élève juge un choix de stratégie globale, sortir d'un domaine, sur sa contribution et
  * sur les heures-machine qu'il libérerait. Chiffres : le mois en gamme (monde/domaines-d-activite-de-nova.ts).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la contribution de Go attend le centime (à l'euro près,
+ * avant) ; les heures-machine sont des grandeurs, au centième (au dixième près, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+const qte = nombreAuCentieme;
 
 /** Sans Go : ce que la gamme perd, et les heures-machine qui restent libres. */
 export function sansLEnceinteNomade() {
   const g = gammeDuMois();
-  const heuresDeGo = Math.round(g.go.heuresMachineParUnite * g.go.quantite * 100) / 100;
-  return { g, heuresDeGo, heuresLibres: Math.round((g.capaciteHeures - g.heures) * 100) / 100, perte: g.go.contribution };
+  const heuresDeGo = arrondi2(g.go.heuresMachineParUnite * g.go.quantite);
+  return { g, heuresDeGo, heuresLibres: arrondi2(g.capaciteHeures - g.heures), perte: g.go.contribution };
 }
 
 export const ABANDONNER_L_ENCEINTE_NOMADE: Situation = {
@@ -77,9 +80,9 @@ export const ABANDONNER_L_ENCEINTE_NOMADE: Situation = {
         const k = sansLEnceinteNomade();
         const g = k.g;
         return [
-          { libelle: "Contribution de Go", attendu: g.go.contribution, calcul: `${eur(g.go.margeUnitaire)} × ${qte(g.go.quantite)} − ${eur(g.go.publicite)} = ${eur(g.go.contribution)}`, tolerance: 1 },
-          { libelle: "Heures-machine de Go", attendu: k.heuresDeGo, calcul: `${qte(g.go.heuresMachineParUnite)} × ${qte(g.go.quantite)} = ${qte(k.heuresDeGo)}`, tolerance: 0.1 },
-          { libelle: "Heures-machine libres", attendu: k.heuresLibres, calcul: `${qte(g.capaciteHeures)} − ${qte(g.heures)} = ${qte(k.heuresLibres)}`, tolerance: 0.1 },
+          { libelle: "Contribution de Go", attendu: g.go.contribution, calcul: `${eur(g.go.margeUnitaire)} × ${qte(g.go.quantite)} − ${eur(g.go.publicite)} = ${eur(g.go.contribution)}` },
+          { libelle: "Heures-machine de Go", nature: "grandeur", attendu: k.heuresDeGo, calcul: `${qte(g.go.heuresMachineParUnite)} × ${qte(g.go.quantite)} = ${qte(k.heuresDeGo)}` },
+          { libelle: "Heures-machine libres", nature: "grandeur", attendu: k.heuresLibres, calcul: `${qte(g.capaciteHeures)} − ${qte(g.heures)} = ${qte(k.heuresLibres)}` },
         ];
       },
       explication: () => {

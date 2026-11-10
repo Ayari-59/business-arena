@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { CLIENTELES, GAMME, type CodeDeClientele } from "./maille-et-co";
 
 /**
@@ -16,10 +17,14 @@ import { CLIENTELES, GAMME, type CodeDeClientele } from "./maille-et-co";
  *   · une campagne par courriel coûte 600 € (la conception du message et l'outil d'envoi), quel que soit
  *     le nombre de destinataires ; 3 % des clientes qui la reçoivent viennent acheter, un panier de
  *     cliente fidèle.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux de pénétration de la carte se donnait au dixième de
+ * point, il est à deux décimales ; le gain d'une campagne par destinataire est au centime (1,73 €), et
+ * la marge de la campagne se calcule sur lui.
  */
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const auCentime = arrondi2;
 
 export const FICHIER_DE_MAILLE = {
   inscrites: 1_200,
@@ -49,11 +54,12 @@ export function clienteleDeJanvier(code: CodeDeClientele) {
 }
 
 /** Ce que les données ouvertes apprennent : la part des femmes de la zone qui ont la carte. */
-export const tauxDePenetrationPct = () => auDixieme((FICHIER_DE_MAILLE.inscrites / FICHIER_DE_MAILLE.femmesDeLaZone) * 100);
+export const tauxDePenetrationPct = () => arrondi2((FICHIER_DE_MAILLE.inscrites / FICHIER_DE_MAILLE.femmesDeLaZone) * 100);
 
 /** Ce qu'une campagne rapporte, envoyée à un nombre de clientes consentantes. */
 export function campagne(destinataires: number) {
-  const parDestinataire = FICHIER_DE_MAILLE.campagne.tauxDeRetour * clienteleDeJanvier("fideles").margeParTicket;
+  // Le gain par destinataire au centime, celui que le corrigé affiche : la marge de la campagne en repart.
+  const parDestinataire = auCentime(FICHIER_DE_MAILLE.campagne.tauxDeRetour * clienteleDeJanvier("fideles").margeParTicket);
   const marge = auCentime(destinataires * parDestinataire);
   return { destinataires, parDestinataire, marge, cout: FICHIER_DE_MAILLE.campagne.cout, gain: auCentime(marge - FICHIER_DE_MAILLE.campagne.cout) };
 }

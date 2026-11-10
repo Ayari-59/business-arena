@@ -1,3 +1,4 @@
+import { aLUnite, arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { compteDuLycee, exerciceDe } from "./comptes-du-lycee";
 import { ENTREPRISES_DE_LA_DIRECTION } from "./direction-de-nova";
 import { HAUT_VERDASSE_HANDBALL } from "./haut-verdasse-handball";
@@ -22,6 +23,11 @@ import { HAUT_VERDASSE_HANDBALL } from "./haut-verdasse-handball";
  *   · L'APPLICATION « NOVA Live », qui règle les enceintes depuis un téléphone : gratuite pour tous,
  *     9 000 utilisateurs actifs attendus, et une formule premium (plusieurs salles, des réglages
  *     enregistrés) à 3 € par mois. Elle coûte 18 000 € par an (hébergement, mises à jour, assistance).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les taux de réponse, d'intérêt et de valeur ajoutée se
+ * donnaient au dixième, ils sont à deux décimales ; les clubs acheteurs se comptent sur le taux à
+ * deux décimales, à l'unité.
  */
 
 export const ENTREPRISES_DE_L_OFFRE = ENTREPRISES_DE_LA_DIRECTION;
@@ -32,21 +38,22 @@ export const APPLICATION = { nom: "NOVA Live", utilisateurs: 9_000, premiumParMo
 /** Les taux de conversion à la formule premium que le laboratoire essaie, en points de pourcentage. */
 export const CONVERSIONS_ESSAYEES = { min: 0, max: 15, pas: 1 } as const;
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const auCentime = arrondi2;
 
 /** Ce que l'étude dit du marché : le taux d'intérêt des répondants, le marché potentiel et son chiffre d'affaires. */
 export function marchePotentiel(prix: number = PACK_SALLE.prix) {
   const e = ETUDE_DES_CLUBS;
   const taux = e.interesses / e.reponses;
-  const clubs = Math.round(e.clubsDeLaZone * taux);
-  return { ...e, tauxPct: auDixieme(taux * 100), clubs, chiffreDAffaires: clubs * prix, tauxDeReponsePct: auDixieme((e.reponses / e.interroges) * 100) };
+  const tauxPct = arrondi2(taux * 100);
+  /** Les clubs de la zone à ce taux à deux décimales, comme l'élève les compte, à l'unité. */
+  const clubs = aLUnite((e.clubsDeLaZone * tauxPct) / 100);
+  return { ...e, tauxPct, clubs, chiffreDAffaires: clubs * prix, tauxDeReponsePct: arrondi2((e.reponses / e.interroges) * 100) };
 }
 
 /** La valeur ajoutée de l'année N de NOVA : ce que l'entreprise a ajouté à ce qu'elle a acheté. */
 export function valeurAjouteeDeN() {
   const c = compteDuLycee(exerciceDe("nova"));
-  return { ventes: c.ventes, consommations: c.consommations, valeurAjoutee: c.valeurAjoutee, tauxPct: auDixieme((c.valeurAjoutee / c.ventes) * 100) };
+  return { ventes: c.ventes, consommations: c.consommations, valeurAjoutee: c.valeurAjoutee, tauxPct: arrondi2((c.valeurAjoutee / c.ventes) * 100) };
 }
 
 /** Le compte prévisionnel du pack : chiffre d'affaires, consommations, valeur ajoutée (le personnel et la ligne existent déjà). */

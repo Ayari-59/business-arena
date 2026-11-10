@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { arrondi2 } from "../../src/pedagogy/cours/deux-decimales";
 import { LE_MANAGEMENT_FACE_AU_CHANGEMENT } from "../../src/config/cours/chapitres/le-management-face-au-changement";
 import { PROGRAMME } from "../../src/config/cours/registre";
 import { PROTEGER_LE_SITE_DE_VENTE } from "../../src/config/cours/situations/par-chapitre/proteger-le-site-de-vente";
@@ -49,9 +50,9 @@ describe("le changement et la régulation", () => {
     expect(marge(61, 40.2)).toBeLessThan(marge(61.5, 40.2));
   });
 
-  it("le numérique et l'écologie : 25 000 € d'attaque, 1 250 € par an ; 8 263,15 kg d'emballage, 3 305 kg non valorisés", () => {
+  it("le numérique et l'écologie : 25 000 € d'attaque, 1 250 € par an ; 8 263,15 kg d'emballage, 3 305,26 kg non valorisés", () => {
     expect(attendus(LE_MANAGEMENT_FACE_AU_CHANGEMENT, "le-numerique-et-son-risque")).toEqual([4_000 + 1_000 * 21, 25_000 * 0.05]);
-    expect(attendus(LE_MANAGEMENT_FACE_AU_CHANGEMENT, "l-empreinte-de-l-annee")).toEqual([Math.round(23_609 * 0.35 * 100) / 100, Math.round(23_609 * 0.35 * 0.4)]);
+    expect(attendus(LE_MANAGEMENT_FACE_AU_CHANGEMENT, "l-empreinte-de-l-annee")).toEqual([arrondi2(23_609 * 0.35), arrondi2(arrondi2(23_609 * 0.35) * 0.4)]);
     expect(juste(LE_MANAGEMENT_FACE_AU_CHANGEMENT, "la-loi-ou-l-engagement")).toEqual(["L'emballage recyclé : un engagement au-delà de ce que la loi impose"]);
   });
 });

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { arrondi2 } from "../../src/pedagogy/cours/deux-decimales";
 import { ORGANISER_L_ACTION_COLLECTIVE } from "../../src/config/cours/chapitres/organiser-l-action-collective";
 import { PROGRAMME } from "../../src/config/cours/registre";
 import { DEUX_ATELIERS_OU_UN_SEUL } from "../../src/config/cours/situations/par-chapitre/deux-ateliers-ou-un-seul";
@@ -43,7 +44,7 @@ describe("seul ou organisé", () => {
     expect(Object.values(triDe(ORGANISER_L_ACTION_COLLECTIVE, "interets")).sort()).toEqual(["collectif", "collectif", "individuel", "individuel", "individuel"]);
     expect(juste(ORGANISER_L_ACTION_COLLECTIVE, "cadre-juridique")).toEqual(["Une existence propre : la société signe, emprunte et possède en son nom"]);
     expect(new Set(Object.values(triDe(ORGANISER_L_ACTION_COLLECTIVE, "familles-de-ressources")))).toEqual(new Set(["humaines", "financieres", "materielles", "immaterielles", "technologiques"]));
-    expect(attendus(ORGANISER_L_ACTION_COLLECTIVE, "part-des-associes")).toEqual([230_000, Math.round((150_000 / 230_000) * 1000) / 10]);
+    expect(attendus(ORGANISER_L_ACTION_COLLECTIVE, "part-des-associes")).toEqual([230_000, arrondi2((150_000 / 230_000) * 100)]);
   });
 });
 

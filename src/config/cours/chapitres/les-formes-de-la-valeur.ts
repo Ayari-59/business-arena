@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { L_ESCALE } from "../monde/l-escale";
 import { AVIS_DE_L_ESCALE, NOTES_DES_CONCURRENTS, coutCompletDUneNuitee, prixPlancher, resultatADemandeEgale, valeurDeLEscale } from "../monde/valeur-de-l-escale";
@@ -20,14 +20,17 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez L'ESCALE seule : l'année de l'hôtel, ses coûts, son
  * équipe et le prix de ses concurrents sont ceux de la fiche (l-escale.ts, hotel.ts) ; les avis et les
  * notes des concurrents sont des hypothèses du cours, nommées dans monde/valeur-de-l-escale.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts des salariés et des associés et le taux de
+ * satisfaction se donnaient au dixième de point, ils sont à deux décimales ; le chiffre d'affaires
+ * et le résultat de l'hôtel s'arrondissent au centime à l'entrée de monde/valeur-de-l-escale.ts ;
+ * la note moyenne est une grandeur, au centième.
  */
 
 export const ENTREPRISES_DE_LA_VALEUR = ["hotel"] as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const note = (x: number) => `${x.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} sur 5`;
+const note = (x: number) => `${nombreAuCentieme(x)} sur 5`;
 
 const HIVER = 1;
 
@@ -95,13 +98,13 @@ export const LES_FORMES_DE_LA_VALEUR: Chapitre = {
       notions: ["income_statement"],
       question: (c) => {
         const k = valeurDeLEscale();
-        return `Sur l'année, ${c.entreprise} a fait ${eur(k.chiffreDAffaires)} de chiffre d'affaires et un résultat de ${eur(k.resultat)} ; ses salariés lui ont coûté ${eur(k.personnel)}. Calculez, au dixième de point, la part du chiffre d'affaires qui revient aux salariés, puis celle qui reste aux associés.`;
+        return `Sur l'année, ${c.entreprise} a fait ${eur(k.chiffreDAffaires)} de chiffre d'affaires et un résultat de ${eur(k.resultat)} ; ses salariés lui ont coûté ${eur(k.personnel)}. Calculez, à deux décimales, la part du chiffre d'affaires qui revient aux salariés, puis celle qui reste aux associés.`;
       },
       champs: () => {
         const k = valeurDeLEscale();
         return [
-          { libelle: "Part des salariés (%)", attendu: k.partDesSalariesPct, calcul: `${eur(k.personnel)} ÷ ${eur(k.chiffreDAffaires)} × 100 = ${pct(k.partDesSalariesPct)}`, tolerance: 0.1 },
-          { libelle: "Part des associés (%)", attendu: k.partDesAssociesPct, calcul: `${eur(k.resultat)} ÷ ${eur(k.chiffreDAffaires)} × 100 = ${pct(k.partDesAssociesPct)}`, tolerance: 0.1 },
+          { libelle: "Part des salariés (%)", attendu: k.partDesSalariesPct, calcul: `${eur(k.personnel)} ÷ ${eur(k.chiffreDAffaires)} × 100 = ${pct(k.partDesSalariesPct)}` },
+          { libelle: "Part des associés (%)", attendu: k.partDesAssociesPct, calcul: `${eur(k.resultat)} ÷ ${eur(k.chiffreDAffaires)} × 100 = ${pct(k.partDesAssociesPct)}` },
         ];
       },
       explication: () => {
@@ -141,12 +144,12 @@ export const LES_FORMES_DE_LA_VALEUR: Chapitre = {
       titre: "Mesurer la satisfaction",
       notions: ["brand_capital"],
       tableau: lesAvis,
-      question: () => "À partir des avis de l'année, calculez la note moyenne (au centième) et le taux de satisfaction, la part des avis à 4 ou 5 étoiles (au dixième de point).",
+      question: () => "À partir des avis de l'année, calculez la note moyenne (au centième) et le taux de satisfaction, la part des avis à 4 ou 5 étoiles (à deux décimales).",
       champs: () => {
         const k = valeurDeLEscale();
         return [
-          { libelle: "Note moyenne (sur 5)", attendu: k.noteMoyenne, calcul: `(5 × ${qte(AVIS_DE_L_ESCALE[5])} + 4 × ${qte(AVIS_DE_L_ESCALE[4])} + 3 × ${qte(AVIS_DE_L_ESCALE[3])} + 2 × ${qte(AVIS_DE_L_ESCALE[2])} + 1 × ${qte(AVIS_DE_L_ESCALE[1])}) ÷ ${qte(k.nombreDAvis)} = ${qte(k.points)} ÷ ${qte(k.nombreDAvis)} = ${note(k.noteMoyenne)}` },
-          { libelle: "Taux de satisfaction (%)", attendu: k.tauxDeSatisfactionPct, calcul: `(${qte(AVIS_DE_L_ESCALE[5])} + ${qte(AVIS_DE_L_ESCALE[4])}) ÷ ${qte(k.nombreDAvis)} × 100 = ${pct(k.tauxDeSatisfactionPct)}`, tolerance: 0.1 },
+          { libelle: "Note moyenne (sur 5)", nature: "grandeur", attendu: k.noteMoyenne, calcul: `(5 × ${qte(AVIS_DE_L_ESCALE[5])} + 4 × ${qte(AVIS_DE_L_ESCALE[4])} + 3 × ${qte(AVIS_DE_L_ESCALE[3])} + 2 × ${qte(AVIS_DE_L_ESCALE[2])} + 1 × ${qte(AVIS_DE_L_ESCALE[1])}) ÷ ${qte(k.nombreDAvis)} = ${qte(k.points)} ÷ ${qte(k.nombreDAvis)} = ${note(k.noteMoyenne)}` },
+          { libelle: "Taux de satisfaction (%)", attendu: k.tauxDeSatisfactionPct, calcul: `(${qte(AVIS_DE_L_ESCALE[5])} + ${qte(AVIS_DE_L_ESCALE[4])}) ÷ ${qte(k.nombreDAvis)} × 100 = ${pct(k.tauxDeSatisfactionPct)}` },
         ];
       },
       explication: () => {

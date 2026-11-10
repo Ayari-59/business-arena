@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, pct, qte } from "../../../../pedagogy/cours/deux-decimales";
 import { LE_TAUX_DE_REMPLISSAGE } from "../../chapitres/le-taux-de-remplissage";
 import { ROUTE_DE_CAMPUSTECH, lotDeLaBourse } from "../../monde/production-et-logistique";
 import type { Situation } from "../types";
@@ -12,11 +12,12 @@ import type { Situation } from "../types";
  * demande s'il faut le prendre dans la tournée du mois. L'élève vérifie que le lot tient dans les
  * places vides, calcule ce qu'il rapporte, ce que coûte le détour, le remplissage avec lui, et
  * répond. Les chiffres sont ceux du chapitre ; le lot est l'hypothèse du cas (LOT_DE_LA_BOURSE).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux de remplissage se donnait au dixième, il est à deux
+ * décimales ; les places vides sont une quantité.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${(Math.round(t * 10) / 10).toLocaleString("fr-FR")} %`;
 
 export type ReponseAuLot = "accepter" | "refuser" | "pas-de-place";
 
@@ -73,12 +74,12 @@ export const LE_LOT_DE_LA_BOURSE_DE_FRET: Situation = {
       type: "montants",
       titre: "La place pour le lot",
       notions: ["capacity"],
-      question: () => "Calculez les places vides de la tournée, puis le taux de remplissage avec le lot (au dixième).",
+      question: () => "Calculez les places vides de la tournée, puis le taux de remplissage avec le lot (à deux décimales).",
       champs: () => {
         const k = lotDeLaBourseDeFret();
         return [
-          { libelle: "Places vides", attendu: k.t.vides, calcul: `${qte(k.t.places)} − ${qte(k.t.palettes)} = ${qte(k.t.vides)}`, tolerance: 0 },
-          { libelle: "Taux de remplissage avec le lot (%)", attendu: Math.round(k.remplissageAvec * 10) / 10, calcul: `(${qte(k.t.palettes)} + ${qte(k.palettes)}) ÷ ${qte(k.t.places)} × 100 = ${pct(k.remplissageAvec)}`, tolerance: 0.1 },
+          { libelle: "Places vides", nature: "quantite", attendu: k.t.vides, calcul: `${qte(k.t.places)} − ${qte(k.t.palettes)} = ${qte(k.t.vides)}` },
+          { libelle: "Taux de remplissage avec le lot (%)", attendu: k.remplissageAvec, calcul: `(${qte(k.t.palettes)} + ${qte(k.palettes)}) ÷ ${qte(k.t.places)} × 100 = ${pct(k.remplissageAvec)}` },
         ];
       },
       explication: () => {

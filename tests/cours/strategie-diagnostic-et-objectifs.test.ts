@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { LE_DIAGNOSTIC_STRATEGIQUE } from "../../src/config/cours/chapitres/le-diagnostic-strategique";
 import { constatsDuDiagnostic } from "../../src/config/cours/monde/direction-de-nova";
+import { arrondi2 } from "../../src/pedagogy/cours/deux-decimales";
 import { PROGRAMME } from "../../src/config/cours/registre";
 import { DES_CLIENTS_REPARTIS_SANS_ETRE_SERVIS, clientsRepartis } from "../../src/config/cours/situations/par-chapitre/des-clients-repartis-sans-etre-servis";
 import type { Situation } from "../../src/config/cours/situations/types";
@@ -40,14 +41,14 @@ describe("le chapitre et son cas, dans leur parcours", () => {
 });
 
 describe("le diagnostic stratégique", () => {
-  it("les chiffres : la demande monte de 15,2 %, la ligne en servira 95,6 %, le salaire paie 93,8 % du marché", () => {
+  it("les chiffres : la demande monte de 15,21 %, la ligne en servira 95,59 %, le salaire paie 93,75 % du marché", () => {
     const demandeN = 4_778 + 6_081 + 5_810 + 6_940;
     expect(attendus(LE_DIAGNOSTIC_STRATEGIQUE, "chiffres")).toEqual([
-      Math.round(((27_200 - demandeN) / demandeN) * 1000) / 10,
-      Math.round(((27_200 - 1_200) / 27_200) * 1000) / 10,
-      Math.round((1_875 / 2_000) * 1000) / 10,
+      arrondi2(((27_200 - demandeN) / demandeN) * 100),
+      arrondi2(((27_200 - 1_200) / 27_200) * 100),
+      arrondi2((1_875 / 2_000) * 100),
     ]);
-    expect(attendus(LE_DIAGNOSTIC_STRATEGIQUE, "chiffres")).toEqual([15.2, 95.6, 93.8]);
+    expect(attendus(LE_DIAGNOSTIC_STRATEGIQUE, "chiffres")).toEqual([15.21, 95.59, 93.75]);
   });
 
   it("le tri : deux forces, deux faiblesses, une opportunité, trois menaces, chacune par sa règle", () => {
@@ -57,8 +58,8 @@ describe("le diagnostic stratégique", () => {
       resultat: [79_225.96, "force"],
       tresorerie: [252_669.45, "force"],
       refusees: [(7_400 - 7_000) + (7_800 - 7_000), "faiblesse"],
-      salaire: [93.8, "faiblesse"],
-      demande: [15.2, "opportunite"],
+      salaire: [93.75, "faiblesse"],
+      demande: [15.21, "opportunite"],
       "marche-du-travail": [2_000, "menace"],
       concurrent: [51, "menace"],
       client: [40, "menace"],

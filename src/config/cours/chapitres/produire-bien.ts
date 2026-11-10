@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct as pourcent } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { coutMoyenDUnDefaut, margeUnitaire } from "../monde/capacite";
 import { ENTREPRISES_DE_LA_PRODUCTION_DE_NOVA, POURQUOI_LA_PRODUCTION_DE_NOVA, defautsPourPayer, ficheDeNova, qualiteAuBudget } from "../monde/production-et-logistique";
@@ -23,6 +23,10 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *
  * CE QUI A CHANGÉ. L'arène rejouait l'année de sept entreprises avec et sans budget qualité ; le
  * chapitre se joue chez NOVA seule.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les défauts sont des quantités, entières ; les taux de
+ * l'énoncé s'écrivent à deux décimales.
  */
 
 /** Les entreprises du chapitre : NOVA seule. */
@@ -35,9 +39,8 @@ export const PREVENTION_EN_PLUS = 8_000;
 const DEFAUTS_DU_CURSEUR = { min: 0, max: 600 } as const;
 const PREVENTION_DU_LABORATOIRE = { min: 0, max: 40_000, pas: 4_000 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${(Math.round(t * 1000) / 10).toLocaleString("fr-FR")} %`;
+const qte = nombreAuCentieme;
+const pct = (t: number) => pourcent(t * 100);
 
 const f = (c: Pick<Cas, "code">) => ficheDeNova(c);
 
@@ -110,9 +113,9 @@ export const PRODUIRE_BIEN: Chapitre = {
       champs: (c) => {
         const q = qualite(c);
         return [
-          { libelle: "Défauts de l'année", attendu: q.defauts, calcul: `${qte(q.volume)} × ${pct(q.tauxDeDefaut)} = ${qte(q.defauts)}`, tolerance: 0 },
-          { libelle: "Défauts trouvés au contrôle", attendu: q.detectes, calcul: `${qte(q.defauts)} × ${pct(q.tauxDeDetection)} = ${qte(q.detectes)}`, tolerance: 0 },
-          { libelle: "Défauts partis chez le client", attendu: q.livres, calcul: `${qte(q.defauts)} − ${qte(q.detectes)} = ${qte(q.livres)}`, tolerance: 0 },
+          { libelle: "Défauts de l'année", nature: "quantite", attendu: q.defauts, calcul: `${qte(q.volume)} × ${pct(q.tauxDeDefaut)} = ${qte(q.defauts)}` },
+          { libelle: "Défauts trouvés au contrôle", nature: "quantite", attendu: q.detectes, calcul: `${qte(q.defauts)} × ${pct(q.tauxDeDetection)} = ${qte(q.detectes)}` },
+          { libelle: "Défauts partis chez le client", nature: "quantite", attendu: q.livres, calcul: `${qte(q.defauts)} − ${qte(q.detectes)} = ${qte(q.livres)}` },
         ];
       },
       explication: (c) => {

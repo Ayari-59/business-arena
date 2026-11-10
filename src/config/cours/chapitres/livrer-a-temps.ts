@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { margeUnitaire } from "../monde/capacite";
 import {
@@ -28,6 +28,10 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  *
  * CE QUI A CHANGÉ. Il se jouait chez ROUTE & CIE, sur une flotte de l'arène qui ne compte aucun
  * délai ; il se joue chez NOVA, où une commande non montée dans son trimestre est une vente perdue.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux de service se donnait au dixième, il est à deux
+ * décimales ; les enceintes demandées, livrées et manquées sont des quantités.
  */
 
 /** Les entreprises du chapitre : NOVA seule. */
@@ -41,9 +45,7 @@ const CAPACITE_DU_CURSEUR = { min: 0, max: 2_000 } as const;
 const AVANCE_AU_PREMIER = { min: 0, max: 1_200, pas: 200 } as const;
 const AVANCE_AU_TROISIEME = { min: 0, max: 800, pas: 200 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${(Math.round(t * 10) / 10).toLocaleString("fr-FR")} %`;
+const qte = nombreAuCentieme;
 const rang = (n: number) => (n === 1 ? "1er" : `${n}e`);
 
 const f = (c: Pick<Cas, "code">) => ficheDeNova(c);
@@ -114,15 +116,15 @@ export const LIVRER_A_TEMPS: Chapitre = {
       titre: "Le taux de service",
       notions: ["capacity"],
       tableau: tableauDuService,
-      question: (c) => `Calculez les ${c.unites} demandées sur l'année, celles livrées à temps, celles qui ne le sont pas, puis le taux de service (au dixième).`,
+      question: (c) => `Calculez les ${c.unites} demandées sur l'année, celles livrées à temps, celles qui ne le sont pas, puis le taux de service (à deux décimales).`,
       champs: (c) => {
         const s = service(c);
         const t = s.a.trimestres;
         return [
-          { libelle: "Demandées sur l'année", attendu: s.a.demande, calcul: `${t.map((x) => qte(x.demande)).join(" + ")} = ${qte(s.a.demande)}`, tolerance: 0 },
-          { libelle: "Livrées à temps", attendu: s.a.production, calcul: `${t.map((x) => qte(x.production)).join(" + ")} = ${qte(s.a.production)}`, tolerance: 0 },
-          { libelle: "Non livrées à temps", attendu: s.refusees, calcul: `${qte(s.a.demande)} − ${qte(s.a.production)} = ${qte(s.refusees)}`, tolerance: 0 },
-          { libelle: "Taux de service (%)", attendu: Math.round(s.tauxDeService * 10) / 10, calcul: `${qte(s.a.production)} ÷ ${qte(s.a.demande)} × 100 = ${pct(s.tauxDeService)}`, tolerance: 0.1 },
+          { libelle: "Demandées sur l'année", nature: "quantite", attendu: s.a.demande, calcul: `${t.map((x) => qte(x.demande)).join(" + ")} = ${qte(s.a.demande)}` },
+          { libelle: "Livrées à temps", nature: "quantite", attendu: s.a.production, calcul: `${t.map((x) => qte(x.production)).join(" + ")} = ${qte(s.a.production)}` },
+          { libelle: "Non livrées à temps", nature: "quantite", attendu: s.refusees, calcul: `${qte(s.a.demande)} − ${qte(s.a.production)} = ${qte(s.refusees)}` },
+          { libelle: "Taux de service (%)", attendu: s.tauxDeService, calcul: `${qte(s.a.production)} ÷ ${qte(s.a.demande)} × 100 = ${pct(s.tauxDeService)}` },
         ];
       },
       explication: (c) => {
@@ -215,7 +217,7 @@ export const LIVRER_A_TEMPS: Chapitre = {
         const d = avec(c, 0, 0);
         return [
           { libelle: "Commandes perdues", montant: x.refusees, unite: c.unites, reference: d.refusees },
-          { libelle: "Taux de service", montant: Math.round(x.tauxDeService * 10) / 10, unite: "%", reference: Math.round(d.tauxDeService * 10) / 10 },
+          { libelle: "Taux de service", montant: x.tauxDeService, unite: "%", reference: d.tauxDeService },
           { libelle: "Marge gagnée", montant: x.margeGagnee, reference: d.margeGagnee },
           { libelle: "Coût du stockage", montant: x.stockage, reference: d.stockage },
           { libelle: "Gain de l'avance", montant: x.gain, reference: d.gain, fort: true },

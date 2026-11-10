@@ -27,10 +27,10 @@ describe("le chapitre, dans son parcours", () => {
 });
 
 describe("les formes de la valeur", () => {
-  it("l'année : 17 700 nuitées, 1 557 600 €, 345 900 € ; 30,9 % aux salariés, 22,2 % aux associés", () => {
+  it("l'année : 17 700 nuitées, 1 557 600 €, 345 900 € ; 30,92 % aux salariés, 22,21 % aux associés", () => {
     const k = valeurDeLEscale();
     expect([k.vendues, k.chiffreDAffaires, k.resultat, k.personnel]).toEqual([17_700, 1_557_600, 345_900, 481_600]);
-    expect(attendusSgn(CH, "le-partage")).toEqual([30.9, 22.2]);
+    expect(attendusSgn(CH, "le-partage")).toEqual([30.92, 22.21]);
   });
 
   it("les avis : 4,11 sur 5 et 80 % de satisfaits", () => {

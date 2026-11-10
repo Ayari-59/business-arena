@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { auCentime } from "./amortissement";
 import { ENTREPRISES_DE_LA_DIRECTION } from "./direction-de-nova";
 import { HAUT_VERDASSE, SOUTIEN_AU_HANDBALL, totalDe } from "./haut-verdasse";
@@ -26,6 +27,10 @@ import { HAUT_VERDASSE, SOUTIEN_AU_HANDBALL, totalDe } from "./haut-verdasse";
  * LE CAS DU CHAPITRE (hypothèse du cours) : ouvrir la médiathèque le dimanche après-midi, 40 dimanches
  * par an, avec 2 agents pendant 5 heures, à 35 € de l'heure chargés (la majoration du dimanche
  * comprise) ; 120 visites attendues chaque dimanche.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts payées par les usagers se donnaient au dixième,
+ * elles sont à deux décimales.
  */
 
 export const ENTREPRISES_DE_LA_STRATEGIE_PUBLIQUE = ENTREPRISES_DE_LA_DIRECTION;
@@ -58,7 +63,7 @@ export function piscineEnRegie() {
     entrees: ENTREES_DE_LA_PISCINE,
     coutNetParEntree: auCentime(coutNet / ENTREES_DE_LA_PISCINE),
     /** La part des charges payée par les usagers, en pour cent au dixième. */
-    partDesUsagers: Math.round((recettes / charges) * 1000) / 10,
+    partDesUsagers: arrondi2((recettes / charges) * 100),
   };
 }
 
@@ -81,7 +86,7 @@ export function budgetDeLaCommunaute() {
   const recettes = totalDe(h.budget.recettes);
   const depenses = totalDe(h.budget.depenses);
   const usagers = h.budget.recettes.find((r) => r.code === "usagers")!.montant;
-  return { recettes, depenses, usagers, partDesUsagers: Math.round((usagers / recettes) * 1000) / 10, subventionDuClub: SOUTIEN_AU_HANDBALL.subvention };
+  return { recettes, depenses, usagers, partDesUsagers: arrondi2((usagers / recettes) * 100), subventionDuClub: SOUTIEN_AU_HANDBALL.subvention };
 }
 
 /** Le cas : la médiathèque ouverte le dimanche. */
@@ -99,7 +104,7 @@ export function mediathequeLeDimanche() {
     visites,
     coutParVisite: auCentime(cout / visites),
     /** La part du budget de fonctionnement que ce coût représente, en pour cent au centième. */
-    partDuBudget: Math.round((cout / budget.depenses) * 10_000) / 100,
+    partDuBudget: arrondi2((cout / budget.depenses) * 100),
   };
 }
 

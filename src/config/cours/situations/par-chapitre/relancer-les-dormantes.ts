@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, qte, quotient2 } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DE_LA_RELATION } from "../../chapitres/fideliser-grace-au-numerique";
 import { RELANCE_DES_ANCIENNES, fichierCrm, relanceDesAnciennes, retoursQuiPaient } from "../../monde/relation-numerique-de-la-boutique";
 import type { Situation } from "../types";
@@ -12,10 +12,12 @@ import type { Situation } from "../types";
  * calculs du chapitre : le gain de la relance des anciennes, le nombre de retours qui la paie, et voit
  * que les cartes dormantes, au-delà de la durée de conservation, ne se relancent pas : elles s'effacent,
  * même si leurs titulaires avaient accepté les offres.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les retours qui paient la relance sont une quantité : le
+ * quotient à deux décimales, puis l'unité supérieure, que le corrigé nomme.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 /** Les chiffres de la réponse, calculés une fois. */
 export function relancerLesDormantes() {
@@ -64,7 +66,12 @@ export const RELANCER_LES_DORMANTES: Situation = {
         const k = relanceDesAnciennes(r.attendus);
         return [
           { libelle: "Gain de la relance", attendu: r.gain, calcul: `${qte(r.attendus)} × ${eur(k.margeDUnRetour)} − ${eur(k.coutFixe)} = ${eur(r.gain)}` },
-          { libelle: "Retours qui paient la relance", attendu: r.seuil, calcul: `${eur(k.coutFixe)} ÷ ${eur(k.margeDUnRetour)}, arrondi au retour supérieur = ${qte(r.seuil)}` },
+          {
+            libelle: "Retours qui paient la relance",
+            nature: "quantite",
+            attendu: r.seuil,
+            calcul: `${eur(k.coutFixe)} ÷ ${eur(k.margeDUnRetour)} = ${nombreAuCentieme(quotient2(k.coutFixe, k.margeDUnRetour))}, soit ${qte(r.seuil)} au retour supérieur : un de moins ne paierait pas la relance`,
+          },
         ];
       },
       explication: () => {

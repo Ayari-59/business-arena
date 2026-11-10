@@ -32,8 +32,8 @@ describe("des données à l'information, et sa valeur", () => {
     expect(attendusSgn(CH, "le-panier-moyen")).toEqual([114.19, 64.04]);
   });
 
-  it("la donnée ouverte : 12,8 %", () => {
-    expect(attendusSgn(CH, "la-donnee-ouverte")).toEqual([12.8]);
+  it("la donnée ouverte : 12,77 %", () => {
+    expect(attendusSgn(CH, "la-donnee-ouverte")).toEqual([12.77]);
   });
 
   it("le curseur : 347 consentantes", () => {
@@ -51,9 +51,16 @@ describe("des données à l'information, et sa valeur", () => {
 });
 
 describe("le cas du chapitre", () => {
-  it("335,71 € aujourd'hui, 786,24 € après la demande en caisse", () => {
+  it("334,20 € aujourd'hui, 784 € après la demande en caisse", () => {
     gardeDuCasSgn(ECRIRE_A_TOUTES_LES_CLIENTES, CH);
     const k = ecrireAToutes();
-    expect([k.aujourdhui.gain, k.apres.gain]).toEqual([335.71, 786.24]);
+    expect([k.aujourdhui.gain, k.apres.gain]).toEqual([334.2, 784]);
+  });
+
+  it("le corrigé suit le chemin de l'élève : le gain par destinataire au centime, puis le gain sur ce qui est affiché", () => {
+    for (const c of Object.values(ecrireAToutes())) {
+      expect(c.parDestinataire).toBe(Math.round(c.parDestinataire * 100) / 100);
+      expect(c.gain).toBe(Math.round((c.destinataires * c.parDestinataire - c.cout) * 100) / 100);
+    }
   });
 });
