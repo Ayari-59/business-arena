@@ -10,4 +10,6 @@ export const NOMBRE_DE_CAS_DEDIES =
   // lot A STMG : les cas des chapitres de sciences de gestion et numérique de première.
   11 +
   // lot B STMG : les cas des chapitres de management de première.
-  7;
+  7 +
+  // lot D STMG : les cas des chapitres de mercatique de terminale.
+  8;

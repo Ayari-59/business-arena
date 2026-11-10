@@ -227,6 +227,16 @@ import { LE_DISTRIBUTEUR_BELGE } from "./par-chapitre/le-distributeur-belge";
 import { LA_MEDIATHEQUE_LE_DIMANCHE } from "./par-chapitre/la-mediatheque-le-dimanche";
 import { LE_PARRAIN_QUI_VEUT_CHOISIR_L_ENTRAINEUR } from "./par-chapitre/le-parrain-qui-veut-choisir-l-entraineur";
 // fin du lot B STMG.
+// lot D STMG : mercatique de terminale (début des imports)
+import { CAMPUSTECH_VEUT_SON_LOGO } from "./par-chapitre/campustech-veut-son-logo";
+import { UNE_SOIREE_LE_MARDI } from "./par-chapitre/une-soiree-le-mardi";
+import { LE_CONGRES_DE_JUILLET } from "./par-chapitre/le-congres-de-juillet";
+import { LE_MODULE_AUGMENTE } from "./par-chapitre/le-module-augmente";
+import { LA_PLACE_DE_MARCHE_NEGOCIE } from "./par-chapitre/la-place-de-marche-negocie";
+import { TOUTE_LA_CAMPAGNE_A_LA_RADIO } from "./par-chapitre/toute-la-campagne-a-la-radio";
+import { RELANCER_LES_DORMANTES } from "./par-chapitre/relancer-les-dormantes";
+import { L_INFLUENCEUSE_DU_HAUT_VERDASSE } from "./par-chapitre/l-influenceuse-du-haut-verdasse";
+// lot D STMG (fin des imports)
 export type { Situation } from "./types";
 
 /**
@@ -469,6 +479,16 @@ export const CAS_PAR_CHAPITRE: readonly Situation[] = [
   LA_MEDIATHEQUE_LE_DIMANCHE,
   LE_PARRAIN_QUI_VEUT_CHOISIR_L_ENTRAINEUR,
   // fin du lot B STMG.
+  // lot D STMG : mercatique de terminale (début)
+  CAMPUSTECH_VEUT_SON_LOGO,
+  UNE_SOIREE_LE_MARDI,
+  LE_CONGRES_DE_JUILLET,
+  LE_MODULE_AUGMENTE,
+  LA_PLACE_DE_MARCHE_NEGOCIE,
+  TOUTE_LA_CAMPAGNE_A_LA_RADIO,
+  RELANCER_LES_DORMANTES,
+  L_INFLUENCEUSE_DU_HAUT_VERDASSE,
+  // lot D STMG (fin)
 ];
 
 /** Les cas pratiques : ceux de synthèse, puis les cas dédiés. */
