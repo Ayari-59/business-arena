@@ -365,6 +365,17 @@ export const THEMES: readonly Theme[] = [
       "organiser-le-travail-et-coordonner",
       "donnees-et-algorithmes",
       // lot C STMG (fin)
+      // lot F STMG : terminale, systèmes d'information de gestion (début)
+      "le-systeme-d-information-de-nova",
+      "securiser-le-systeme-d-information",
+      "la-fonction-systeme-d-information",
+      "conduire-un-projet-de-si",
+      "la-base-de-donnees-relationnelle",
+      "interroger-la-base-en-sql",
+      "automatiser-un-traitement",
+      "documents-structures-et-metadonnees",
+      "reseaux-et-informatique-en-nuage",
+      // lot F STMG (fin)
     ],
     familles: ["operations", "premier-poste", "hotel-service", "sante-soins", "agro-produire", "agro-amont"],
   },

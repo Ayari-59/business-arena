@@ -600,6 +600,26 @@ const PASSES_SUR_LE_MONDE: readonly string[] = [
   "situations/par-chapitre/un-accord-sans-delegue-syndical.ts",
   "situations/par-chapitre/une-reunion-par-mois-ou-un-outil.ts",
   // lot E STMG (fin)
+  // lot F STMG : les systèmes d'information de gestion de terminale, et leurs cas (début)
+  "chapitres/le-systeme-d-information-de-nova.ts",
+  "chapitres/securiser-le-systeme-d-information.ts",
+  "chapitres/la-fonction-systeme-d-information.ts",
+  "chapitres/conduire-un-projet-de-si.ts",
+  "chapitres/la-base-de-donnees-relationnelle.ts",
+  "chapitres/interroger-la-base-en-sql.ts",
+  "chapitres/automatiser-un-traitement.ts",
+  "chapitres/documents-structures-et-metadonnees.ts",
+  "chapitres/reseaux-et-informatique-en-nuage.ts",
+  "situations/par-chapitre/controler-les-adresses-a-la-saisie.ts",
+  "situations/par-chapitre/payer-la-rancon.ts",
+  "situations/par-chapitre/renouveler-l-infogerance.ts",
+  "situations/par-chapitre/demarrer-le-pgi-a-la-date-prevue.ts",
+  "situations/par-chapitre/ranger-les-avis-des-clients.ts",
+  "situations/par-chapitre/ou-ouvrir-un-point-de-retrait.ts",
+  "situations/par-chapitre/un-bon-des-80-points.ts",
+  "situations/par-chapitre/numeriser-les-archives.ts",
+  "situations/par-chapitre/passer-a-la-fibre.ts",
+  // lot F STMG (fin)
 ];
 
 /** Les chapitres et les cas du cours (les recueils index.ts rassemblent les cas : ils n'en sont pas). */
@@ -916,6 +936,26 @@ const NE_LISENT_PLUS_L_ANNEE_FIGEE: readonly string[] = [
   "situations/par-chapitre/un-accord-sans-delegue-syndical.ts",
   "situations/par-chapitre/une-reunion-par-mois-ou-un-outil.ts",
   // lot E STMG (fin)
+  // lot F STMG : les systèmes d'information de gestion de terminale, et leurs cas (début)
+  "chapitres/le-systeme-d-information-de-nova.ts",
+  "chapitres/securiser-le-systeme-d-information.ts",
+  "chapitres/la-fonction-systeme-d-information.ts",
+  "chapitres/conduire-un-projet-de-si.ts",
+  "chapitres/la-base-de-donnees-relationnelle.ts",
+  "chapitres/interroger-la-base-en-sql.ts",
+  "chapitres/automatiser-un-traitement.ts",
+  "chapitres/documents-structures-et-metadonnees.ts",
+  "chapitres/reseaux-et-informatique-en-nuage.ts",
+  "situations/par-chapitre/controler-les-adresses-a-la-saisie.ts",
+  "situations/par-chapitre/payer-la-rancon.ts",
+  "situations/par-chapitre/renouveler-l-infogerance.ts",
+  "situations/par-chapitre/demarrer-le-pgi-a-la-date-prevue.ts",
+  "situations/par-chapitre/ranger-les-avis-des-clients.ts",
+  "situations/par-chapitre/ou-ouvrir-un-point-de-retrait.ts",
+  "situations/par-chapitre/un-bon-des-80-points.ts",
+  "situations/par-chapitre/numeriser-les-archives.ts",
+  "situations/par-chapitre/passer-a-la-fibre.ts",
+  // lot F STMG (fin)
 ];
 
 /** Le premier chemin d'imports qui atteint un fichier donné, ou rien. */
