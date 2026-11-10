@@ -1501,12 +1501,12 @@ function RappelDeLEnonce({ enonce }: { enonce: EtapeServie }) {
  * thème. Tout est calculé par le serveur (pedagogy/cours/suites.ts) ; un bloc
  * vide ne s'affiche pas.
  */
-function EtEnsuite({ suites, cas }: { suites: SuitesDuChapitre; cas: Cas }) {
+function EtEnsuite({ suites, cas, garde }: { suites: SuitesDuChapitre; cas: Cas; garde: string }) {
   const { theme, situations, reprend, ensuite, episodes, episodesDuTheme } = suites;
   if (situations.length === 0 && reprend.length === 0 && episodes.length === 0 && ensuite.length === 0) return null;
   const lienDeCours = (l: Lien, attribut: string) => (
     <li key={l.code} {...{ [attribut]: l.code }}>
-      <Link href={`/cours/${l.code}?entreprise=${cas.code}`} className="text-amber-300 underline-offset-4 hover:underline">
+      <Link href={`/cours/${l.code}?entreprise=${cas.code}${garde}`} className="text-amber-300 underline-offset-4 hover:underline">
         {l.titre}
       </Link>
     </li>
@@ -1577,7 +1577,7 @@ function ObjectifsDuChapitre({ chapitre }: { chapitre: ChapitreServi }) {
       </div>
       {chapitre.blocs.length > 0 && (
         <div className="grid content-start gap-1">
-          <p className="text-sm font-semibold text-slate-100">Compétences du référentiel</p>
+          <p className="text-sm font-semibold text-slate-100">{chapitre.referentiel}</p>
           <ul className="grid gap-0.5 text-sm text-slate-300">
             {chapitre.blocs.map((b) => (
               <li key={b}>{b}</li>
@@ -1615,6 +1615,7 @@ function FinDuChapitre({
   classe,
   mission,
   suites,
+  garde,
 }: {
   chapitre: ChapitreServi;
   cas: Cas;
@@ -1626,6 +1627,8 @@ function FinDuChapitre({
   classe: boolean;
   mission: MissionAffichee | null;
   suites: SuitesDuChapitre | null;
+  /** Le diplôme de l'adresse, à garder dans les liens vers un autre chapitre : « &diplome=dcg », ou rien. */
+  garde: string;
 }) {
   const notees = chapitre.etapes.filter((e) => e.type !== "lecture");
   const duPremierCoup = notees.filter((e) => {
@@ -1694,7 +1697,7 @@ function FinDuChapitre({
           </section>
           {chapitre.blocs.length > 0 && (
             <section className="grid gap-2" data-competences-du-referentiel="">
-              <h3 className="font-semibold text-slate-100">Compétences du référentiel</h3>
+              <h3 className="font-semibold text-slate-100">{chapitre.referentiel}</h3>
               <ul className="grid gap-0.5 text-sm text-slate-300">
                 {chapitre.blocs.map((b) => (
                   <li key={b}>{b}</li>
@@ -1736,7 +1739,7 @@ function FinDuChapitre({
         </>
       )}
       {mission && <EtMaintenantJouezLe mission={mission} cas={cas} />}
-      {suites && <EtEnsuite suites={suites} cas={cas} />}
+      {suites && <EtEnsuite suites={suites} cas={cas} garde={garde} />}
       <Notions codes={notions} />
       <details className="papier rounded-xl p-4">
         <summary className="cursor-pointer font-semibold">{chapitre.mots.journal}</summary>
@@ -1760,7 +1763,7 @@ function FinDuChapitre({
             .map((e) => (
               <Link
                 key={e.code}
-                href={`/cours/${chapitre.code}?entreprise=${e.code}${classe ? "&classe" : ""}`}
+                href={`/cours/${chapitre.code}?entreprise=${e.code}${classe ? "&classe" : ""}${garde}`}
                 className="underline underline-offset-4 hover:text-slate-50"
               >
                 {e.nom}
@@ -1781,6 +1784,7 @@ export function ChapitreGuide({
   enClasse = null,
   suites = null,
   calculatrice = true,
+  diplome = null,
 }: {
   /** Le chapitre ouvert, réduit à ses données pour cette entreprise, après le contrôle de la licence. */
   chapitre: ChapitreServi;
@@ -1795,9 +1799,16 @@ export function ChapitreGuide({
   suites?: SuitesDuChapitre | null;
   /** La calculatrice, permise sauf si l'enseignant l'a retirée à la classe de l'élève. */
   calculatrice?: boolean;
+  /**
+   * Le diplôme d'où l'on vient (`?diplome=`), que les liens vers un autre chapitre et le changement
+   * d'entreprise gardent : la page suivante annonce les compétences du même diplôme
+   * (config/cours/competences-affichees.ts).
+   */
+  diplome?: string | null;
 }) {
   // Le chapitre est servi dans l'ordre de cette entreprise : ses règlements suivent leurs dates.
   const { code } = chapitre;
+  const garde = diplome ? `&diplome=${encodeURIComponent(diplome)}` : "";
   const [suivi, changer, lu] = useSuivi(`cours:${code}:${cas.code}`);
   const [vue, setVue] = useState<number | null>(null);
   const n = chapitre.etapes.length;
@@ -1901,7 +1912,7 @@ export function ChapitreGuide({
           {chapitre.prerequis.map((p, i) => (
             <span key={p.code}>
               {i > 0 && ", "}
-              <Link href={`/cours/${p.code}`} className="text-amber-300 underline-offset-2 hover:underline">
+              <Link href={`/cours/${p.code}${garde.replace("&", "?")}`} className="text-amber-300 underline-offset-2 hover:underline">
                 {p.titre}
               </Link>
             </span>
@@ -1925,6 +1936,7 @@ export function ChapitreGuide({
           classe={classe}
           mission={mission}
           suites={suites}
+          garde={garde}
         />
       ) : (
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">

@@ -1,4 +1,5 @@
 import type { Cas } from "../../config/cours/cas";
+import type { CompetencesAffichees } from "../../config/cours/competences-affichees";
 import { CHAPITRES, PALIERS, PARCOURS } from "../../config/cours/registre";
 import { motsDuContenu } from "../../config/cours/situations";
 import type {
@@ -182,8 +183,14 @@ export interface ChapitreServi {
   code: string;
   titre: string;
   objectifs: readonly string[];
-  /** Les compétences du référentiel que le chapitre fait travailler, annoncées au début et rappelées à la fin. */
+  /**
+   * Les compétences du référentiel que le chapitre fait travailler, annoncées au début et rappelées à la
+   * fin. La page n'envoie que celles du diplôme d'où l'on vient (config/cours/competences-affichees.ts) ;
+   * sans elles (le diaporama de l'enseignant), tous les blocs que le chapitre cite.
+   */
   blocs: readonly string[];
+  /** Le titre de la section qui les montre : « Compétences du référentiel · DCG ». */
+  referentiel: string;
   /** Les chapitres à avoir vus avant, annoncés à la première étape (audit pédagogique, P1-2). */
   prerequis: { code: string; titre: string }[];
   parcours: string;
@@ -270,11 +277,11 @@ export function solutionDuLaboratoire(
  * textes partent avec les espaces insécables de la typographie française (lib/typographie.ts) :
  * les codes, eux, restent tels quels.
  */
-export function servirLeChapitre(source: Chapitre, cas: Cas): ChapitreServi {
-  return typographier(servirSansTypographie(source, cas));
+export function servirLeChapitre(source: Chapitre, cas: Cas, competences?: Pick<CompetencesAffichees, "libelle" | "blocs">): ChapitreServi {
+  return typographier(servirSansTypographie(source, cas, competences));
 }
 
-function servirSansTypographie(source: Chapitre, cas: Cas): ChapitreServi {
+function servirSansTypographie(source: Chapitre, cas: Cas, competences?: Pick<CompetencesAffichees, "libelle" | "blocs">): ChapitreServi {
   const chapitre = chapitreDuCas(source, cas);
   const journal: Ecriture[] = chapitre.ouverture ? [chapitre.ouverture(cas)] : [];
   const ecrituresAvant: number[] = [];
@@ -388,7 +395,8 @@ function servirSansTypographie(source: Chapitre, cas: Cas): ChapitreServi {
     code: chapitre.code,
     titre: chapitre.titre,
     objectifs: chapitre.objectifs,
-    blocs: chapitre.blocs,
+    blocs: competences?.blocs ?? chapitre.blocs,
+    referentiel: competences?.libelle ?? "Compétences du référentiel",
     prerequis: (chapitre.prerequis ?? []).map((code) => ({ code, titre: CHAPITRES.find((c) => c.code === code)!.titre })),
     parcours: PARCOURS.find((p) => p.code === chapitre.parcours)!.titre,
     palier: PALIERS.find((p) => p.palier === chapitre.palier)!.palier,

@@ -11,6 +11,7 @@ import { missionAffichee } from "@/config/cours/jouez";
 import { getGuestUserId } from "@/lib/guest";
 import { classeDeLEleve } from "@/services/cours.service";
 import { servirLeChapitre } from "@/pedagogy/cours/chapitre-servi";
+import { competencesAffichees, diplomeDeLAdresse } from "@/config/cours/competences-affichees";
 import { chapitreOuvert, diaporamaPermis } from "../acces";
 import { ENTREPRISES } from "../entreprises";
 import { suitesDuChapitre } from "@/pedagogy/cours/suites";
@@ -58,9 +59,9 @@ async function ChapitrePage({
   searchParams,
 }: {
   params: Promise<{ chapitre: string }>;
-  searchParams: Promise<{ entreprise?: string; classe?: string }>;
+  searchParams: Promise<{ entreprise?: string; classe?: string; diplome?: string | string[] }>;
 }) {
-  const [{ chapitre: code }, { entreprise, classe }] = await Promise.all([params, searchParams]);
+  const [{ chapitre: code }, { entreprise, classe, diplome }] = await Promise.all([params, searchParams]);
   const chapitre = chapitreParCode(code);
   if (!chapitre) notFound();
   // L'ÉLÈVE D'UNE CLASSE remonte sa progression à son enseignant ; une entreprise imposée
@@ -95,6 +96,10 @@ async function ChapitrePage({
   }
 
   const cas = casDeLEntreprise(choisie.code);
+  // LES COMPÉTENCES DU DIPLÔME D'OÙ L'ON VIENT (config/cours/competences-affichees.ts) : celui de la
+  // classe de l'élève, puis celui de l'adresse, puis celui du chapitre. Le guide ne reçoit qu'elles.
+  const demande = diplomeDeLAdresse(diplome);
+  const competences = competencesAffichees(chapitre, { classe: classeDeLEleveLue?.parcours, demande });
   const diaporama = aSonDiaporama(chapitre.code) && (await diaporamaPermis(chapitre));
   return (
     <>
@@ -105,7 +110,7 @@ async function ChapitrePage({
           </p>
         )}
         <ChapitreGuide
-          chapitre={servirLeChapitre(chapitre, cas)}
+          chapitre={servirLeChapitre(chapitre, cas, competences)}
           cas={cas}
           entreprises={possibles.map(({ code: c, nom }) => ({ code: c, nom }))}
           classe={classe !== undefined}
@@ -113,6 +118,7 @@ async function ChapitrePage({
           suites={suitesDuChapitre(chapitre.code)}
           calculatrice={classeDeLEleveLue?.calculatrice ?? true}
           enClasse={classeDeLEleveLue ? { classe: classeDeLEleveLue.classe, eleve: classeDeLEleveLue.eleve } : null}
+          diplome={demande}
         />
         {diaporama && <Diaporama chapitre={chapitre.code} entreprise={choisie.code} />}
         <AuBureau chapitre={chapitre.code} />
