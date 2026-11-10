@@ -36,11 +36,22 @@ export const THEMES_DES_RESSOURCES_HUMAINES = [
 ] as const;
 // lot E STMG (fin)
 
+// lot F STMG : les thèmes des systèmes d'information de gestion, sous lesquels les chapitres du lot s'affichent (début)
+export const THEMES_DU_SIG = [
+  "STMG Thème 1 · Organisation et numérisation",
+  "STMG Thème 2 · Management du système d'information et performance",
+  "STMG Thème 3 · Information, action et décision",
+  "STMG Thème 4 · Système d'information et échange",
+] as const;
+// lot F STMG (fin)
+
 type Premier =
   | (typeof THEMES_DE_LA_PARTIE_COMMUNE)[number]
   | (typeof THEMES_DE_GESTION_ET_FINANCE)[number]
   // lot E STMG
-  | (typeof THEMES_DES_RESSOURCES_HUMAINES)[number];
+  | (typeof THEMES_DES_RESSOURCES_HUMAINES)[number]
+  // lot F STMG
+  | (typeof THEMES_DU_SIG)[number];
 
 /** Le chapitre est au programme de son parcours, au palier 1, cite d'abord son thème, se résout dans le référentiel et a un thème du catalogue. */
 export function gardeDuProgrammeT(ch: Chapitre, premier: Premier, ensuite: readonly string[] = []) {

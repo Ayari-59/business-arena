@@ -1470,6 +1470,71 @@ const MISSIONS: Record<string, (c: Cas) => MissionDansLArene> = {
       "Comment vous êtes-vous transmis les décisions et les résultats d'un tour à l'autre ? Qu'est-ce qui s'est perdu en route ? Quel outil, ou quelle règle, aurait évité ce malentendu ?",
   }),
   // lot E STMG (fin)
+  // lot F STMG : les systèmes d'information de gestion de terminale (début)
+  "le-systeme-d-information-de-nova": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours sans rien changer.`,
+    lieux: ["marche-du-tour", "synthese"],
+    chercher:
+      "Quelles données le tour vous a-t-il données, et d'où viennent-elles ? Lesquelles avez-vous acquises vous-même, lesquelles l'arène a-t-elle calculées, lesquelles avez-vous transmises à votre équipe ? Où les gardez-vous d'un tour à l'autre ?",
+  }),
+  "securiser-le-systeme-d-information": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez la synthèse et le compte de résultat.`,
+    lieux: ["synthese", "compte-de-resultat"],
+    chercher:
+      "Si le site de l'entreprise était bloqué une semaine, quelle part du chiffre d'affaires du tour perdriez-vous ? Que vaudrait alors une sauvegarde qui permettrait de repartir en un jour ?",
+  }),
+  "la-fonction-systeme-d-information": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours sans rien changer.`,
+    lieux: ["indicateurs", "synthese"],
+    chercher:
+      "Parmi les indicateurs du métier, lesquels mettriez-vous au tableau de bord opérationnel de votre équipe ? Pour chacun, quel critère de performance mesure-t-il, et quel seuil vous ferait réagir ?",
+  }),
+  "conduire-un-projet-de-si": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Avant de jouer, répartissez les décisions du tour entre les membres de l'équipe, avec une heure limite pour chacune ; puis jouez le tour.`,
+    lieux: ["feuille", "synthese"],
+    chercher:
+      "Quelle décision devait attendre une autre avant d'être prise ? Laquelle était sur le chemin critique de votre tour ? Qu'auriez-vous changé à votre planning pour finir plus tôt ?",
+  }),
+  "la-base-de-donnees-relationnelle": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez trois tours sans rien changer, en notant les ventes et le chiffre d'affaires de chaque tour.`,
+    lieux: ["marche-du-tour", "compte-de-resultat"],
+    chercher:
+      "Vos notes forment une table : quelles en sont les colonnes, et quelle colonne identifie chaque ligne ? Si vous notiez aussi les concurrents, faudrait-il une deuxième table, et quelle colonne la relierait à la première ?",
+  }),
+  "interroger-la-base-en-sql": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez quatre tours sans rien changer, en notant pour chacun le tour, les ventes et le chiffre d'affaires.`,
+    lieux: ["marche-du-tour", "compte-de-resultat"],
+    chercher:
+      "Écrivez la requête qui garderait les tours où le chiffre d'affaires dépasse la moyenne, puis celle qui calculerait les ventes totales. Que renvoient-elles sur vos notes ?",
+  }),
+  "automatiser-un-traitement": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez deux tours sans rien changer.`,
+    lieux: ["compte-de-resultat", "synthese"],
+    chercher:
+      "Quel calcul refaites-vous à chaque tour ? Écrivez-en l'algorithme : ses variables, son test, sa boucle. Avec quels résultats de tour le testeriez-vous, et lequel serait un cas limite ?",
+  }),
+  "documents-structures-et-metadonnees": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Jouez un tour, puis ouvrez la synthèse.`,
+    lieux: ["synthese"],
+    chercher:
+      "Si vous deviez transmettre la synthèse du tour à un autre logiciel, quelles balises donneriez-vous à chaque chiffre ? Quelles métadonnées (date, auteur, tour) permettraient de la retrouver parmi toutes les autres ?",
+  }),
+  "reseaux-et-informatique-en-nuage": (c) => ({
+    niveau: 1,
+    faire: `${partie(c, 1)} Si vous jouez à plusieurs, chacun depuis son poste, jouez deux tours.`,
+    lieux: ["feuille", "synthese"],
+    chercher:
+      "Où vos décisions sont-elles gardées : sur votre poste, ou sur un serveur ? Que se passe-t-il si un membre de l'équipe perd sa connexion pendant le tour ? Quels protocoles relient votre navigateur à la partie ?",
+  }),
+  // lot F STMG (fin)
   "les-acteurs-et-la-valeur": (c) => ({
     niveau: 3,
     faire: `${partie(c, 3)} Au premier tour, mettez ${Math.round(INDICE_DE_LA_HAUSSE * 100)} dans « Salaires (marché = 100) », sans rien changer d'autre, puis jouez le tour.`,
