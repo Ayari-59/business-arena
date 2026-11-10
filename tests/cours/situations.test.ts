@@ -205,7 +205,7 @@ describe("quel prix pour la saison", () => {
       [64.9, 3_580, 3_580],
     ]);
     expect(r.capacite).toBe(7_000);
-    expect(r.prix.map((p) => p.marge)).toEqual([Math.round(5_975 * 15.1), 4_778 * 21, Math.round(3_580 * 26.9)]);
+    expect(r.prix.map((p) => p.marge)).toEqual([Math.round(5_975 * 15.1 * 100) / 100, 4_778 * 21, Math.round(3_580 * 26.9 * 100) / 100]);
     expect([r.meilleur.nom, r.plusGrosCa.nom]).toEqual(["le prix actuel", "le prix bas"]);
     expect(r.d.elasticite).toBe(-2.51);
   });

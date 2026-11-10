@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import { auCentime } from "../monde/amortissement";
 import {
   CABINE,
@@ -42,8 +42,8 @@ import type { Chapitre } from "../types";
  * amortissement) et sur les modes de financement (subvention, crédit-bail), adapté à NOVA.
  */
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 const qte = (n: number) => n.toLocaleString("fr-FR");
 
 export const ACQUERIR_ET_FINANCER_UNE_IMMOBILISATION: Chapitre = {
@@ -348,7 +348,7 @@ export const ACQUERIR_ET_FINANCER_UNE_IMMOBILISATION: Chapitre = {
         return [
           { libelle: "Dotation de N + 1", attendu: k.dotationEnUnites, calcul: `${eur(k.cout)} × ${qte(CABINE.heuresDeNPlus1)} ÷ ${qte(CABINE.heuresPrevues)} = ${eur(k.dotationEnUnites)}` },
           { libelle: "Valeur nette au 31 décembre N + 1", attendu: k.valeurNette, calcul: `${eur(k.cout)} − ${eur(k.dotationEnUnites)} = ${eur(k.valeurNette)}` },
-          { libelle: "Heures restant prévues", attendu: k.heuresRestantesPrevues, calcul: `${qte(CABINE.heuresPrevues)} − ${qte(CABINE.heuresDeNPlus1)} = ${qte(k.heuresRestantesPrevues)} heures` },
+          { libelle: "Heures restant prévues", nature: "quantite", attendu: k.heuresRestantesPrevues, calcul: `${qte(CABINE.heuresPrevues)} − ${qte(CABINE.heuresDeNPlus1)} = ${qte(k.heuresRestantesPrevues)} heures` },
         ];
       },
       explication: () => [

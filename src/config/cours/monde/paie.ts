@@ -1,3 +1,4 @@
+import { eur, nombreAuCentieme, quotient2 } from "../../../pedagogy/cours/deux-decimales";
 import { auCentime } from "./amortissement";
 
 /**
@@ -83,6 +84,40 @@ export function brutPourUnNetAPayer(netAPayer: number, t: TauxDeLaPaie, acompte 
   while (bulletinDePaie(auCentime(brut - 0.01), t, acompte).netAPayer >= netAPayer) brut = auCentime(brut - 0.01);
   while (bulletinDePaie(brut, t, acompte).netAPayer < netAPayer) brut = auCentime(brut + 0.01);
   return brut;
+}
+
+/**
+ * Le chemin de l'élève, du net promis au plus petit brut au centime (deux-decimales.ts : chaque ligne
+ * arrondie, le corrigé suit la copie). Il part d'un brut calculé (le net ÷ le net pour 100 € bruts),
+ * lit le bulletin, puis descend (ou monte) d'un centime tant qu'il le faut : les bruts essayés, avec le
+ * net que chacun verse, jusqu'au premier qui ne suffit plus.
+ */
+export function duNetAuBrutPasAPas(netAPayer: number, t: TauxDeLaPaie, depart: number) {
+  const essai = (brut: number) => ({ brut, net: bulletinDePaie(brut, t).netAPayer });
+  const essais = [essai(depart)];
+  if (essais[0]!.net >= netAPayer) {
+    while (essais[essais.length - 1]!.net >= netAPayer) essais.push(essai(auCentime(essais[essais.length - 1]!.brut - 0.01)));
+    return { essais, brut: essais[essais.length - 2]!.brut };
+  }
+  while (essais[essais.length - 1]!.net < netAPayer) essais.push(essai(auCentime(essais[essais.length - 1]!.brut + 0.01)));
+  return { essais, brut: essais[essais.length - 1]!.brut };
+}
+
+/** Le même chemin, écrit pour le corrigé : « 500 € ÷ 76,38 % = 654,62 €, dont le bulletin verse 500,02 €. Un centime de moins à chaque essai… ». */
+export function cheminDuNetAuBrut(netAPayer: number, t: TauxDeLaPaie, netPour100: number) {
+  const depart = quotient2(netAPayer * 100, netPour100);
+  const { essais, brut } = duNetAuBrutPasAPas(netAPayer, t, depart);
+  const [premier, ...suivants] = essais;
+  const verse = (e: { brut: number; net: number }) => `${eur(e.brut)} (${eur(e.net)})`;
+  const debut = `${eur(netAPayer)} ÷ ${nombreAuCentieme(netPour100)} % = ${eur(depart)}, dont le bulletin verse ${eur(premier!.net)}`;
+  if (suivants.length === 0) return { brut, calcul: debut };
+  const dernier = suivants[suivants.length - 1]!;
+  const descend = dernier.brut < premier!.brut;
+  const milieu = suivants.slice(0, -1).map(verse);
+  const fin = descend ? `${eur(dernier.brut)} (${eur(dernier.net)}, trop peu)` : verse(dernier);
+  // Une phrase par étape, pour rester court : le calcul, les essais au centime, la conclusion.
+  const calcul = `${debut}. ${descend ? "Un centime de moins à chaque essai" : "Un centime de plus à chaque essai"} : ${[...milieu, fin].join(", ")}. Le plus petit brut qui verse ${eur(netAPayer)} : ${eur(brut)}`;
+  return { brut, calcul };
 }
 
 /** Le brut qu'il faut pour un net avant impôt donné (au centime supérieur). */

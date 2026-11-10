@@ -47,20 +47,21 @@ describe("le chapitre et son cas, dans leur parcours", () => {
 });
 
 describe("le test", () => {
-  it("valeur nette 40 138,89 €, facteur 3,4651, valeur d'usage 34 651,06 €, valeur actuelle la valeur d'usage", () => {
+  it("valeur nette 40 138,89 €, facteur 3,4651, valeur d'usage 34 651 € (10 000 € × le facteur arrondi), valeur actuelle la valeur d'usage", () => {
     const vnc = r2(60_000 - r2((10_000 * 355) / 360) - 10_000);
     expect(vnc).toBe(40_138.89);
     const f = facteur(0.06, 4);
     expect(Math.round(f * 10_000) / 10_000).toBe(3.4651);
-    expect(attendus(CH, "la-valeur-d-usage")).toEqual([vnc, 3.4651, r2(10_000 * f), r2(10_000 * f)]);
-    expect(r2(10_000 * f)).toBe(34_651.06);
+    // Le facteur se donne au dix-millième, et la valeur d'usage part de lui (deux-decimales.ts) : 34 651 €, et non 34 651,06 €.
+    expect(attendus(CH, "la-valeur-d-usage")).toEqual([vnc, 3.4651, r2(10_000 * 3.4651), r2(10_000 * 3.4651)]);
+    expect(r2(10_000 * 3.4651)).toBe(34_651);
     expect(juste(CH, "l-indice")).toEqual(["Une technique nouvelle fait chuter le prix des lignes"]);
   });
 
-  it("dépréciation 5 487,83 €, puis 34 651,06 ÷ 4 = 8 662,77 € par an", () => {
-    expect(attendus(CH, "la-depreciation")).toEqual([r2(40_138.89 - 34_651.06)]);
-    expect(attendus(CH, "la-depreciation")).toEqual([5_487.83]);
-    expect(attendus(CH, "le-nouveau-plan")).toEqual([r2(34_651.06 / 4)]);
+  it("dépréciation 5 487,89 €, puis 34 651 ÷ 4 = 8 662,75 € par an", () => {
+    expect(attendus(CH, "la-depreciation")).toEqual([r2(40_138.89 - 34_651)]);
+    expect(attendus(CH, "la-depreciation")).toEqual([5_487.89]);
+    expect(attendus(CH, "le-nouveau-plan")).toEqual([r2(34_651 / 4)]);
   });
 
   it("le curseur : 11 584 € par an rejoignent la valeur nette, 11 583 € n'y suffisent pas", () => {
@@ -69,17 +70,18 @@ describe("le test", () => {
     gardeDuCurseur(CH, "le-flux-qui-suffit", 11_584);
   });
 
-  it("le laboratoire : à 7 %, 6 266,78 € ; à 8 %, 7 017,62 €, le plus petit taux au-dessus de 7 000 €", () => {
-    expect(r2(40_138.89 - r2(10_000 * facteur(0.07, 4)))).toBe(6_266.78);
-    expect(r2(40_138.89 - r2(10_000 * facteur(0.08, 4)))).toBe(7_017.62);
+  it("le laboratoire : à 7 %, 6 266,89 € ; à 8 %, 7 017,89 €, le plus petit taux au-dessus de 7 000 €", () => {
+    // Chaque facteur au dix-millième (3,3872 et 3,3121), comme sur la copie.
+    expect(r2(40_138.89 - r2(10_000 * (Math.round(facteur(0.07, 4) * 10_000) / 10_000)))).toBe(6_266.89);
+    expect(r2(40_138.89 - r2(10_000 * (Math.round(facteur(0.08, 4) * 10_000) / 10_000)))).toBe(7_017.89);
     const e = gardeDuLaboratoire(CH, "le-laboratoire-du-taux");
     expect(e.defi(NOVA).solution).toEqual({ taux: 8 });
   });
 });
 
 describe("le cas du chapitre", () => {
-  it("l'offre de 30 000 € reste sous la valeur d'usage : garder, déprécier de 5 487,83 € ; la vente perdrait 10 138,89 €", () => {
+  it("l'offre de 30 000 € reste sous la valeur d'usage : garder, déprécier de 5 487,89 € ; la vente perdrait 10 138,89 €", () => {
     const k = vendreOuGarder();
-    expect([k.valeurActuelle, k.depreciation, k.moinsValue, k.garder]).toEqual([34_651.06, r2(40_138.89 - 34_651.06), r2(40_138.89 - 30_000), true]);
+    expect([k.valeurActuelle, k.depreciation, k.moinsValue, k.garder]).toEqual([34_651, r2(40_138.89 - 34_651), r2(40_138.89 - 30_000), true]);
   });
 });

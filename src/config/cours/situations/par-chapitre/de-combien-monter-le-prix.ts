@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct, qte } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { HAUSSE_DU_PRIX, LA_CONCURRENCE, type Vendeur } from "../../chapitres/la-concurrence";
 import { prixDeNova, vendeursAuPrix } from "../../monde/economie-et-marketing";
@@ -15,17 +15,17 @@ import type { Situation } from "../types";
  * 5 % et 10 % plus cher, les concurrents gardant leur offre. L'élève reprend les calculs du chapitre :
  * la part de marché à chaque prix, ce que chaque hausse change au bénéfice, et rend sa réponse. Le
  * verdict se calcule : le prix au meilleur bénéfice. La petite hausse est la seule hypothèse du cas.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts de marché se donnent à deux décimales, à un centième
+ * près (au dixième, à un dixième près, avant) ; les ventes perdues sont une quantité, entière.
  */
 
 /** La petite hausse que la dirigeante envisage : 5 % (hypothèse du cas). */
 export const HAUSSE_DOUCE = 0.05;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const ecart = (x: number) => (x > 0 ? `+${eur(x)}` : eur(x));
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
-const auCentime = (x: number) => Math.round(x * 100) / 100;
+const auCentime = arrondi2;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 export type Choix = "garder" | "douce" | "forte";
@@ -34,7 +34,7 @@ export type Choix = "garder" | "douce" | "forte";
 function aCePrix(vendeurs: Vendeur[]) {
   const total = vendeurs.reduce((t, v) => t + v.ventes, 0);
   const e = vendeurs[0]!;
-  return { vendeurs, entreprise: e, ventesDuMarche: total, part: auDixieme((e.ventes / total) * 100), benefice: e.benefice };
+  return { vendeurs, entreprise: e, ventesDuMarche: total, part: arrondi2((e.ventes / total) * 100), benefice: e.benefice };
 }
 
 /** L'année au prix de NOVA, puis montée de 5 % et de 10 % : ce que le cas lit et calcule. */
@@ -119,14 +119,13 @@ export const DE_COMBIEN_MONTER_LE_PRIX: Situation = {
       titre: "La part de marché à chaque prix",
       notions: ["demand_market_share"],
       question: (c) =>
-        `Calculez la part de marché ${dE(c.entreprise)} à chaque prix (la petite hausse est de ${pct(HAUSSE_DOUCE * 100)}, la grande de ${pct(HAUSSE_DU_PRIX * 100)}) : ses ventes, sur les ventes des trois vendeurs, en pourcentage au dixième.`,
+        `Calculez la part de marché ${dE(c.entreprise)} à chaque prix (la petite hausse est de ${pct(HAUSSE_DOUCE * 100)}, la grande de ${pct(HAUSSE_DU_PRIX * 100)}) : ses ventes, sur les ventes des trois vendeurs, en pourcentage à deux décimales.`,
       champs: (c) => {
         const k = troisPrix(c);
         const champ = (libelle: string, x: ReturnType<typeof aCePrix>) => ({
           libelle,
           attendu: x.part,
           calcul: `${qte(x.entreprise.ventes)} ÷ (${x.vendeurs.map((v) => qte(v.ventes)).join(" + ")}) × 100 = ${pct(x.part)}`,
-          tolerance: 0.1,
         });
         return [
           champ("Part de marché au prix de l'année (%)", k.garder),
@@ -153,6 +152,7 @@ export const DE_COMBIEN_MONTER_LE_PRIX: Situation = {
         return [
           {
             libelle: "Ventes perdues avec la petite hausse",
+            nature: "quantite",
             attendu: k.perduesDouce,
             calcul: `${qte(k.garder.entreprise.ventes)} − ${qte(k.douce.entreprise.ventes)} = ${qte(k.perduesDouce)}`,
           },
@@ -192,7 +192,7 @@ export const DE_COMBIEN_MONTER_LE_PRIX: Situation = {
             ? " Ici, la concurrence ne laisse pas monter le prix : chaque client perdu coûte plus que la hausse ne rapporte."
             : k.meilleur === "douce"
               ? " Un peu plus cher, les clients restent ; beaucoup plus cher, trop partent chez les concurrents ou renoncent."
-              : ` Les clients tiennent à ce vendeur : la concurrence laisse monter le prix, au prix de ${qte(auDixieme(k.garder.part - k.forte.part))} points de part de marché.`;
+              : ` Les clients tiennent à ce vendeur : la concurrence laisse monter le prix, au prix de ${nombreAuCentieme(arrondi2(k.garder.part - k.forte.part))} points de part de marché.`;
         return [
           { texte: "Garder le prix", juste: k.meilleur === "garder", retour: `${dit("garder")}${k.meilleur === "garder" ? lecon : ""}` },
           { texte: `Monter de ${pct(HAUSSE_DOUCE * 100)}`, juste: k.meilleur === "douce", retour: `${dit("douce")}${k.meilleur === "douce" ? lecon : ""}` },

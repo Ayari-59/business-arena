@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, pct as enPoints } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_LA_VALEUR } from "../../chapitres/la-valeur-et-le-temps";
 import { BETA_DES_CAPITAUX_PROPRES, DETTE_A_LA_PLACE_DU_CAPITAL, capitalOuDette } from "../../monde/couts-de-financement";
@@ -20,10 +20,10 @@ import type { Situation } from "../types";
  * et voit la théorie du compromis à l'œuvre.
  */
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100 + 0).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 const nb = (x: number) => (x + 0).toLocaleString("fr-FR", { maximumFractionDigits: 6 });
-const enPct = (t: number) => Math.round(t * 10_000) / 100 + 0;
+const enPct = (t: number) => arrondi2(t * 100);
 
 /** Les chiffres du cas, calculés une fois de la fiche. */
 export function associeQuiPrefereLaDette(_c?: Pick<Cas, "code">) {
@@ -108,8 +108,8 @@ export const L_ASSOCIE_QUI_PREFERE_LA_DETTE: Situation = {
         const x = associeQuiPrefereLaDette();
         const calc = (k: typeof x.avecLeCapital) => `${k.lignes.map((l) => `${eur(l.montant)} × ${pct(l.cout)}`).join(" + ")}, ÷ ${eur(k.total)} = ${pct(k.cmpc)}`;
         return [
-          { libelle: "CMPC avec l'augmentation de capital, en %", attendu: enPct(x.avecLeCapital.cmpc), calcul: calc(x.avecLeCapital), tolerance: 0.02 },
-          { libelle: "CMPC avec la dette de plus, en %", attendu: enPct(x.avecLaDette.cmpc), calcul: calc(x.avecLaDette), tolerance: 0.02 },
+          { libelle: "CMPC avec l'augmentation de capital, en %", attendu: enPct(x.avecLeCapital.cmpc), calcul: calc(x.avecLeCapital) },
+          { libelle: "CMPC avec la dette de plus, en %", attendu: enPct(x.avecLaDette.cmpc), calcul: calc(x.avecLaDette) },
         ];
       },
       explication: () => {

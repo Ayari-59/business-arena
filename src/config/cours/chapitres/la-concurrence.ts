@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   laConcurrence as concurrence,
@@ -34,6 +34,10 @@ import { ENTREPRISES_DU_MARCHE } from "./l-offre-et-la-demande";
  *
  * CE QUI A CHANGÉ. L'arène rejouait l'année du cours chez cinq entreprises ; le chapitre se joue chez
  * NOVA seule, sur le marché à trois : 23 608 enceintes vendues à 59 €, 17 872 à 64,90 €.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts de marché se donnent à deux décimales, à un centième
+ * près (au dixième, à un dixième près, avant) ; les ventes sont des quantités, entières.
  */
 
 /** La hausse du prix que le chapitre essaie : 10 %, une hausse que le client remarque. */
@@ -49,10 +53,7 @@ const PRIX_DU_LABORATOIRE = { min: 50, max: 70, pas: 1 } as const;
 /** Le départ du laboratoire : NOVA à 65 €, la hausse du chapitre arrondie à l'euro. */
 const PRIX_DE_DEPART_DU_LABORATOIRE = 65;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const ecart = (x: number) => (x > 0 ? `+${eur(x)}` : eur(x));
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
 const qualiteEcrite = (q: number) => q.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 const ventesEcrites = (n: number) => (Math.abs(n) === 1 ? `${qte(n)} vente` : `${qte(n)} ventes`);
@@ -148,17 +149,16 @@ export const LA_CONCURRENCE: Chapitre = {
       type: "montants",
       titre: "La part de marché de chacun",
       notions: ["demand_market_share"],
-      question: () => "Calculez les ventes du marché (les ventes des trois vendeurs réunies), puis la part de marché de chaque vendeur, en pourcentage au dixième.",
+      question: () => "Calculez les ventes du marché (les ventes des trois vendeurs réunies), puis la part de marché de chaque vendeur, en pourcentage à deux décimales.",
       champs: (c) => {
         const k = laConcurrence(c);
         const somme = k.avant.map((v) => qte(v.ventes)).join(" + ");
         return [
-          { libelle: "Ventes du marché", attendu: k.ventesDuMarche, calcul: `${somme} = ${qte(k.ventesDuMarche)}` },
+          { libelle: "Ventes du marché", nature: "quantite", attendu: k.ventesDuMarche, calcul: `${somme} = ${qte(k.ventesDuMarche)}` },
           ...k.avant.map((v, i) => ({
             libelle: `Part de marché ${dE(v.nom)} (%)`,
             attendu: k.parts[i]!,
             calcul: `${qte(v.ventes)} ÷ ${qte(k.ventesDuMarche)} × 100 = ${pct(k.parts[i]!)}`,
-            tolerance: 0.1,
           })),
         ];
       },
@@ -204,21 +204,20 @@ export const LA_CONCURRENCE: Chapitre = {
       tableau: tableauDeLaHausse,
       question: (c) => {
         const k = laConcurrence(c);
-        return `${c.entreprise} affiche ${eur(k.prix.apres)} au lieu de ${eur(k.prix.avant)}, toute l'année. Ses concurrents ne changent rien. D'après le tableau, calculez les ventes perdues par ${c.entreprise}, celles que gagne chacun de ses concurrents, puis la nouvelle part de marché ${dE(c.entreprise)}, en pourcentage au dixième.`;
+        return `${c.entreprise} affiche ${eur(k.prix.apres)} au lieu de ${eur(k.prix.avant)}, toute l'année. Ses concurrents ne changent rien. D'après le tableau, calculez les ventes perdues par ${c.entreprise}, celles que gagne chacun de ses concurrents, puis la nouvelle part de marché ${dE(c.entreprise)}, en pourcentage à deux décimales.`;
       },
       champs: (c) => {
         const k = laConcurrence(c);
         const [a, b] = k.concurrents;
         const [e2, a2, b2] = k.apres as [Vendeur, Vendeur, Vendeur];
         return [
-          { libelle: `Ventes perdues par ${c.entreprise}`, attendu: k.perdues, calcul: `${qte(k.entreprise.ventes)} − ${qte(e2.ventes)} = ${qte(k.perdues)}` },
-          { libelle: `Ventes gagnées par ${a.nom}`, attendu: k.gagneesA, calcul: `${qte(a2.ventes)} − ${qte(a.ventes)} = ${qte(k.gagneesA)}` },
-          { libelle: `Ventes gagnées par ${b.nom}`, attendu: k.gagneesB, calcul: `${qte(b2.ventes)} − ${qte(b.ventes)} = ${qte(k.gagneesB)}` },
+          { libelle: `Ventes perdues par ${c.entreprise}`, nature: "quantite", attendu: k.perdues, calcul: `${qte(k.entreprise.ventes)} − ${qte(e2.ventes)} = ${qte(k.perdues)}` },
+          { libelle: `Ventes gagnées par ${a.nom}`, nature: "quantite", attendu: k.gagneesA, calcul: `${qte(a2.ventes)} − ${qte(a.ventes)} = ${qte(k.gagneesA)}` },
+          { libelle: `Ventes gagnées par ${b.nom}`, nature: "quantite", attendu: k.gagneesB, calcul: `${qte(b2.ventes)} − ${qte(b.ventes)} = ${qte(k.gagneesB)}` },
           {
             libelle: `Nouvelle part de marché ${dE(c.entreprise)} (%)`,
             attendu: k.partsApres[0]!,
             calcul: `${qte(e2.ventes)} ÷ (${k.apres.map((v) => qte(v.ventes)).join(" + ")}) × 100 = ${pct(k.partsApres[0]!)}`,
-            tolerance: 0.1,
           },
         ];
       },

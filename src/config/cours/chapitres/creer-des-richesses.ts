@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import { type Cas } from "../cas";
 import {
   ENTREPRISES_DE_LA_GESTION_DE_BASE,
@@ -42,12 +42,12 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * CE QUI A CHANGÉ. Le chapitre lisait l'année de l'arène dans neuf entreprises, et leurs deux
  * premiers concurrents. Chez NOVA, la valeur ajoutée est maintenant de 243 368 €, sur un marché qui
  * en crée 1 082 968 € (le marché à trois de 19 148 enceintes par trimestre).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : la part des salaires dans la valeur ajoutée se donne à deux
+ * décimales, à un centième près (au dixième, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 export const POURQUOI_LA_RICHESSE =
@@ -189,7 +189,7 @@ export const CREER_DES_RICHESSES: Chapitre = {
       explication: (c) => {
         const n = marche().nova;
         return [
-          `Sur ${eur(n.production)} de ventes, ${c.entreprise} a créé ${eur(n.valeurAjoutee)} de richesse, soit ${pct(auDixieme((n.valeurAjoutee / n.production) * 100))} de sa production. Le reste, ${eur(n.consommations)}, paie la production d'autres entreprises.`,
+          `Sur ${eur(n.production)} de ventes, ${c.entreprise} a créé ${eur(n.valeurAjoutee)} de richesse, soit ${pct(arrondi2((n.valeurAjoutee / n.production) * 100))} de sa production. Le reste, ${eur(n.consommations)}, paie la production d'autres entreprises.`,
         ];
       },
     },
@@ -276,14 +276,14 @@ export const CREER_DES_RICHESSES: Chapitre = {
       notions: ["payroll", "income_statement"],
       tableau: tableauDuPartage,
       question: (c) =>
-        `La valeur ajoutée paie ceux qui ont aidé à la créer : les salariés (salaires), l'État (impôts), et l'entreprise elle-même (le profit, ce qui reste). Calculez le profit ${dE(c.entreprise)}, puis les salaires versés par les enseignes, et la part des salaires dans la valeur ajoutée du marché, au dixième.`,
+        `La valeur ajoutée paie ceux qui ont aidé à la créer : les salariés (salaires), l'État (impôts), et l'entreprise elle-même (le profit, ce qui reste). Calculez le profit ${dE(c.entreprise)}, puis les salaires versés par les enseignes, et la part des salaires dans la valeur ajoutée du marché, à deux décimales.`,
       champs: (c) => {
         const k = marche();
         const n = k.nova;
         return [
           { libelle: `Profit ${dE(c.entreprise)}`, attendu: n.profit, calcul: `${eur(n.valeurAjoutee)} − ${eur(n.salaires)} − ${eur(n.impot)} = ${eur(n.profit)}` },
           { libelle: "Salaires versés par les enseignes", attendu: k.salaires, calcul: `${k.enseignes.map((v) => eur(v.salaires)).join(" + ")} = ${eur(k.salaires)}` },
-          { libelle: "Part des salaires dans la valeur ajoutée du marché (%)", attendu: k.partDesSalaires, calcul: `${eur(k.salaires)} ÷ ${eur(k.valeurAjoutee)} × 100 = ${pct(k.partDesSalaires)}`, tolerance: 0.1 },
+          { libelle: "Part des salaires dans la valeur ajoutée du marché (%)", attendu: k.partDesSalaires, calcul: `${eur(k.salaires)} ÷ ${eur(k.valeurAjoutee)} × 100 = ${pct(k.partDesSalaires)}` },
         ];
       },
       explication: (c) => {
@@ -326,7 +326,7 @@ export const CREER_DES_RICHESSES: Chapitre = {
       notions: ["payroll", "income_statement"],
       question: (c) => {
         const n = marche().nova;
-        return `Chaque ${c.unite} vendue ajoute ${eur(Math.round(((n.production - n.achats) / n.ventes) * 100) / 100)} à la valeur ajoutée ${dE(c.entreprise)} ; le loyer et ses budgets, ${eur(n.loyerEtFrais + n.budgets)}, s'en retirent quelles que soient ses ventes. Faites varier les ${c.unites} vendues dans l'année, et placez le curseur sur le plus petit nombre pour lequel sa valeur ajoutée paie les salaires de son équipe, ${eur(n.salaires)}.`;
+        return `Chaque ${c.unite} vendue ajoute ${eur(arrondi2((n.production - n.achats) / n.ventes))} à la valeur ajoutée ${dE(c.entreprise)} ; le loyer et ses budgets, ${eur(n.loyerEtFrais + n.budgets)}, s'en retirent quelles que soient ses ventes. Faites varier les ${c.unites} vendues dans l'année, et placez le curseur sur le plus petit nombre pour lequel sa valeur ajoutée paie les salaires de son équipe, ${eur(n.salaires)}.`;
       },
       grandeur: (c) => ({ libelle: `${c.unites.charAt(0).toUpperCase()}${c.unites.slice(1)} vendues dans l'année`, unite: c.unites }),
       cible: () => ({ attendu: ventesQuiPaientLesSalaires(), min: 10_000, max: 30_000 }),

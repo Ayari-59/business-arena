@@ -1,5 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../pedagogy/cours/etats";
+import { arrondi2 as auCentime, eur, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   ENTREPRISES_DE_LA_GESTION_DE_BASE,
@@ -39,6 +38,10 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * CE QUI A CHANGÉ. Le chapitre rejouait l'année de l'arène, dans huit entreprises. Chez NOVA, un
  * trimestre de retard laisse maintenant 2 162 enceintes demandées sans être servies, et coûte
  * 45 402 € de résultat ; deux trimestres en coûtent 67 074 €.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les écarts de plan et les ventes perdues sont des quantités,
+ * entières ; la part du résultat se donne à deux décimales (au dixième, avant).
  */
 
 export { RETARD, RETARD_LONG };
@@ -49,9 +52,6 @@ export const ENTREPRISES_DE_L_INFORMATION = ENTREPRISES_DE_LA_GESTION_DE_BASE;
 export const POURQUOI_L_INFORMATION =
   "ce chapitre rejoue l'année de NOVA, dont le cours tient la demande trimestre par trimestre et la capacité de la ligne.";
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /** Un retard écrit en chiffres : « 1 trimestre de retard », « 2 trimestres de retard ». */
@@ -169,6 +169,7 @@ export const UNE_INFORMATION_A_TEMPS: Chapitre = {
         const k = informationATemps();
         return k.ecarts.filter((e) => e.trimestre > 1).map((e) => ({
           libelle: `Écart de plan, trimestre ${e.trimestre}`,
+          nature: "quantite" as const,
           attendu: e.ecart,
           calcul: `${qte(k.enRetard.trimestres[e.trimestre - 1]!.plan)} − ${qte(k.aJour.trimestres[e.trimestre - 1]!.plan)} = ${qte(e.ecart)}`,
         }));
@@ -202,13 +203,13 @@ export const UNE_INFORMATION_A_TEMPS: Chapitre = {
       type: "montants",
       titre: `Ce que coûte ${R1}`,
       notions: ["contribution_margin", "dashboard"],
-      question: (c) => `Comparez l'année à jour et l'année avec ${R1} : calculez les ventes perdues (en ${c.unites}), puis ce que coûte le retard (résultat de l'activité à jour moins résultat en retard, avant les intérêts de l'emprunt), et sa part du résultat à jour, en pourcentage au dixième.`,
+      question: (c) => `Comparez l'année à jour et l'année avec ${R1} : calculez les ventes perdues (en ${c.unites}), puis ce que coûte le retard (résultat de l'activité à jour moins résultat en retard, avant les intérêts de l'emprunt), et sa part du résultat à jour, en pourcentage à deux décimales.`,
       champs: () => {
         const k = informationATemps();
         return [
-          { libelle: "Ventes perdues", attendu: k.ventesPerdues, calcul: `${qte(k.aJour.ventes)} − ${qte(k.enRetard.ventes)} = ${qte(k.ventesPerdues)}` },
+          { libelle: "Ventes perdues", nature: "quantite", attendu: k.ventesPerdues, calcul: `${qte(k.aJour.ventes)} − ${qte(k.enRetard.ventes)} = ${qte(k.ventesPerdues)}` },
           { libelle: "Coût du retard", attendu: k.coutDuRetard, calcul: `${eur(k.aJour.resultat)} − ${eur(k.enRetard.resultat)} = ${eur(k.coutDuRetard)}` },
-          { libelle: "Part du résultat à jour (%)", attendu: k.partDuResultat, calcul: `${eur(k.coutDuRetard)} ÷ ${eur(k.aJour.resultat)} × 100 = ${pct(k.partDuResultat)}`, tolerance: 0.1 },
+          { libelle: "Part du résultat à jour (%)", attendu: k.partDuResultat, calcul: `${eur(k.coutDuRetard)} ÷ ${eur(k.aJour.resultat)} × 100 = ${pct(k.partDuResultat)}` },
         ];
       },
       explication: (c) => {

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { auCentime } from "../monde/amortissement";
 import { ENTREPRISES_DES_COMPTES_DU_LYCEE, compteDuLycee, type CompteDuLycee } from "../monde/comptes-du-lycee";
@@ -39,10 +39,7 @@ export const PART_GARDEE_DU_DEFI = 1 / 3;
 /** La solution que montre la correction : la hausse de 20 %, et 5 % d'enceintes vendues en plus. */
 export const SOLUTION_DU_PARTAGE = { hausse: 20, ventes: 5 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−");
-const pct = (t: number) => `${qte(t)} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /** Le nom de chaque part, au laboratoire. */
@@ -57,7 +54,7 @@ const LIBELLE_DE_LA_PART: Readonly<Record<string, string>> = {
 function partage(k: CompteDuLycee) {
   const va = k.valeurAjoutee;
   const entreprise = auCentime(va - k.personnel - k.financement - k.impot);
-  const part = (x: number) => auDixieme((x / va) * 100);
+  const part = (x: number) => arrondi2((x / va) * 100);
   const parts = [
     { code: "salaries", nom: "Les salariés", montant: k.personnel, part: part(k.personnel), quoi: "les salaires et les cotisations" },
     { code: "preteurs", nom: "Les prêteurs", montant: k.financement, part: part(k.financement), quoi: "les intérêts de l'emprunt et les escomptes" },
@@ -75,7 +72,7 @@ export function valeurAjoutee(c: Pick<Cas, "code">) {
     k,
     consommations: k.consommations,
     ...p,
-    tauxDeValeurAjoutee: auDixieme((p.va / k.ventes) * 100),
+    tauxDeValeurAjoutee: arrondi2((p.va / k.ventes) * 100),
     premiere: p.parts.reduce((a, b) => (b.montant > a.montant ? b : a)),
   };
 }
@@ -151,14 +148,14 @@ export const VALEUR_AJOUTEE: Chapitre = {
       type: "montants",
       titre: "La valeur ajoutée",
       notions: ["income_statement"],
-      question: (c) => `Calculez le total des consommations venues d'autres entreprises, la valeur ajoutée ${dE(valeurAjoutee(c).k.entreprise)}, puis le taux de valeur ajoutée (valeur ajoutée ÷ ventes × 100), au dixième.`,
+      question: (c) => `Calculez le total des consommations venues d'autres entreprises, la valeur ajoutée ${dE(valeurAjoutee(c).k.entreprise)}, puis le taux de valeur ajoutée (valeur ajoutée ÷ ventes × 100), à deux décimales.`,
       champs: (c) => {
         const v = valeurAjoutee(c);
         const conso = v.k.lignes.filter((l) => l.consommation).map((l) => eur(l.montant));
         return [
-          { libelle: "Consommations", attendu: v.consommations, calcul: `${conso.join(" + ")} = ${eur(v.consommations)}`, tolerance: 1 },
-          { libelle: "Valeur ajoutée", attendu: v.va, calcul: `${eur(v.k.ventes)} − ${eur(v.consommations)} = ${eur(v.va)}`, tolerance: 2 },
-          { libelle: "Taux de valeur ajoutée (%)", attendu: v.tauxDeValeurAjoutee, calcul: `${eur(v.va)} ÷ ${eur(v.k.ventes)} × 100 = ${pct(v.tauxDeValeurAjoutee)}`, tolerance: 0.1 },
+          { libelle: "Consommations", attendu: v.consommations, calcul: `${conso.join(" + ")} = ${eur(v.consommations)}` },
+          { libelle: "Valeur ajoutée", attendu: v.va, calcul: `${eur(v.k.ventes)} − ${eur(v.consommations)} = ${eur(v.va)}` },
+          { libelle: "Taux de valeur ajoutée (%)", attendu: v.tauxDeValeurAjoutee, calcul: `${eur(v.va)} ÷ ${eur(v.k.ventes)} × 100 = ${pct(v.tauxDeValeurAjoutee)}` },
         ];
       },
       explication: (c) => {
@@ -184,15 +181,15 @@ export const VALEUR_AJOUTEE: Chapitre = {
       },
       question: (c) => {
         const v = valeurAjoutee(c);
-        return `La valeur ajoutée de ${eur(v.va)} se partage entre ceux qui ont contribué à la créer. Calculez la part des salariés et celle de l'entreprise elle-même, en pourcentage de la valeur ajoutée, au dixième.`;
+        return `La valeur ajoutée de ${eur(v.va)} se partage entre ceux qui ont contribué à la créer. Calculez la part des salariés et celle de l'entreprise elle-même, en pourcentage de la valeur ajoutée, à deux décimales.`;
       },
       champs: (c) => {
         const v = valeurAjoutee(c);
         const salaries = v.parts[0]!;
         const entreprise = v.parts[3]!;
         return [
-          { libelle: "Part des salariés (%)", attendu: salaries.part, calcul: `${eur(salaries.montant)} ÷ ${eur(v.va)} × 100 = ${pct(salaries.part)}`, tolerance: 0.1 },
-          { libelle: "Part de l'entreprise (%)", attendu: entreprise.part, calcul: `${eur(entreprise.montant)} ÷ ${eur(v.va)} × 100 = ${pct(entreprise.part)}`, tolerance: 0.1 },
+          { libelle: "Part des salariés (%)", attendu: salaries.part, calcul: `${eur(salaries.montant)} ÷ ${eur(v.va)} × 100 = ${pct(salaries.part)}` },
+          { libelle: "Part de l'entreprise (%)", attendu: entreprise.part, calcul: `${eur(entreprise.montant)} ÷ ${eur(v.va)} × 100 = ${pct(entreprise.part)}` },
         ];
       },
       explication: (c) => {
@@ -308,7 +305,7 @@ export const VALEUR_AJOUTEE: Chapitre = {
             const x = partageDuLaboratoire(v, p);
             return p.hausse! < HAUSSE_DU_DEFI
               ? `La hausse n'est que de ${pct(p.hausse!)} : le défi en demande ${pct(HAUSSE_DU_DEFI)}.`
-              : `L'entreprise ne garde que ${pct(auDixieme(x.partGardee * 100))} de la valeur ajoutée. Pour payer la hausse sans prendre sur sa part, il faut créer plus de richesse.`;
+              : `L'entreprise ne garde que ${pct(arrondi2(x.partGardee * 100))} de la valeur ajoutée. Pour payer la hausse sans prendre sur sa part, il faut créer plus de richesse.`;
           },
           solution: SOLUTION_DU_PARTAGE,
         };
@@ -317,7 +314,7 @@ export const VALEUR_AJOUTEE: Chapitre = {
         const v = valeurAjoutee(c);
         const x = partageDuLaboratoire(v, p);
         return [
-          `Défi relevé : avec ${pct(p.hausse!)} de hausse et ${qte(x.k.quantite)} enceintes vendues, la valeur ajoutée est de ${eur(x.va)} ; les salariés en reçoivent ${pct(x.parts[0]!.part)}, l'entreprise en garde ${pct(auDixieme(x.partGardee * 100))}.`,
+          `Défi relevé : avec ${pct(p.hausse!)} de hausse et ${qte(x.k.quantite)} enceintes vendues, la valeur ajoutée est de ${eur(x.va)} ; les salariés en reçoivent ${pct(x.parts[0]!.part)}, l'entreprise en garde ${pct(arrondi2(x.partGardee * 100))}.`,
           "À richesse égale, ce que l'un reçoit de plus, un autre le perd : la hausse des salaires réduit d'abord la part de l'entreprise, et celle de l'État avec l'impôt. Pour augmenter les salaires sans s'appauvrir, l'entreprise doit créer plus de valeur : vendre plus, ou consommer moins pour produire autant.",
         ];
       },

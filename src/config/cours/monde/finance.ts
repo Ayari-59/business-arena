@@ -1,3 +1,4 @@
+import { arrondi, produit2, quotient2, somme2 } from "../../../pedagogy/cours/deux-decimales";
 import { auCentime } from "./amortissement";
 import { impotSurLesSocietes, type BaremeDeLImpot } from "./cloture";
 import {
@@ -39,6 +40,12 @@ import {
  * CONVENTIONS : les montants sont au centime (auCentime), les taux restent des fractions non
  * arrondies (aux chapitres de les arrondir pour l'élève). Les flux d'un projet sont rangés par
  * date, de 0 (le 1er janvier de la première année) à la durée (la fin de la dernière année).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts). Les chapitres de l'élève actualisent aux lignes arrondies
+ * (`vanAuxLignesArrondies`, `delaiAuxLignesArrondies`) : un coefficient d'actualisation au
+ * dix-millième, comme dans une table financière, chaque flux actualisé au centime, et la VAN somme de
+ * ces flux arrondis. `van` et `tri`, que d'autres modèles lisent, gardent le calcul exact.
  */
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -51,6 +58,31 @@ export const coefficientDActualisation = (taux: number, annee: number) => (1 + t
 /** La valeur actuelle, à la date 0, de flux rangés par date (le flux d'indice k tombe à la date k), au centime. */
 export function valeurActuelle(flux: readonly number[], taux: number): number {
   return auCentime(flux.reduce((s, f, k) => s + f * coefficientDActualisation(taux, k), 0));
+}
+
+/** Un coefficient d'actualisation au dix-millième, comme dans une table financière : 1,09^(−3) = 0,7722. */
+export const coefficientAuDixMillieme = (taux: number, annee: number) => arrondi(coefficientDActualisation(taux, annee), 4);
+
+/** Les flux actualisés aux lignes arrondies : chaque flux × son coefficient au dix-millième, au centime. */
+export const fluxActualisesAuxLignesArrondies = (flux: readonly number[], taux: number) => flux.map((f, k) => produit2(f, coefficientAuDixMillieme(taux, k)));
+
+/** La VAN aux lignes arrondies, comme l'élève la calcule : la somme des flux actualisés au centime, sur des coefficients au dix-millième. */
+export const vanAuxLignesArrondies = (flux: readonly number[], taux: number) => somme2(...fluxActualisesAuxLignesArrondies(flux, taux));
+
+/**
+ * Le délai de récupération actualisé aux lignes arrondies, en années, au centième : les flux
+ * actualisés au centime, cumulés, et dans l'année où le cumul repasse à zéro, ce qui manque ÷ le flux
+ * actualisé de l'année. Rend null si le projet ne récupère jamais sa mise.
+ */
+export function delaiAuxLignesArrondies(flux: readonly number[], taux: number): number | null {
+  const actualises = fluxActualisesAuxLignesArrondies(flux, taux);
+  let cumul = 0;
+  for (let k = 0; k < actualises.length; k++) {
+    const avant = cumul;
+    cumul = somme2(cumul, actualises[k]!);
+    if (k > 0 && avant < 0 && cumul >= 0) return somme2(k - 1, quotient2(-avant, actualises[k]!));
+  }
+  return null;
 }
 
 /** Les flux actualisés, date par date, au centime. */

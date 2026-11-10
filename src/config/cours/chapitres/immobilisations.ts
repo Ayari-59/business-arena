@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import { intituleDe } from "../../../pedagogy/cours/plan-comptable";
 import type { Cas } from "../cas";
 import { dateDuCours as date, moisEtJour } from "../dates";
@@ -94,9 +94,9 @@ const MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", 
 // LES OUTILS
 // ─────────────────────────────────────────────────────────────────────────────
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 const coef = (k: number) => k.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
 /** « 3e année », « 1re année » : le rang d'un exercice du plan (0 pour le premier). */
 export const anneeDuPlan = (exercice: number) => `${exercice + 1}${exercice === 0 ? "re" : "e"} année`;
@@ -425,6 +425,7 @@ export const IMMOBILISATIONS: Chapitre = {
           { libelle: "Annuité d'une année pleine", attendu: p.annuite, calcul: `${eur(p.base)} ÷ ${qte(p.duree)} = ${eur(p.annuite)}` },
           {
             libelle: "Jours d'utilisation la première année",
+            nature: "quantite",
             attendu: p.joursPremiereAnnee,
             calcul: `du ${jour} au ${JOURS_DU_MOIS} janvier, ${qte(JOURS_DU_MOIS - jour + 1)} jours, puis 11 mois de ${qte(JOURS_DU_MOIS)} jours : ${qte(p.joursPremiereAnnee)} jours`,
           },
@@ -515,6 +516,7 @@ export const IMMOBILISATIONS: Chapitre = {
           { libelle: "Valeur nette comptable à la fin de la deuxième année", attendu: p.vncFinAnnee2, calcul: `${eur(p.base)} − ${eur(p.premiere)} − ${eur(p.deuxieme)} = ${eur(p.vncFinAnnee2)}` },
           {
             libelle: "Numéro de la dernière année d'amortissement",
+            nature: "quantite",
             attendu: p.derniereAnnee,
             calcul: `une première année partielle, ${qte(p.duree - 1)} années pleines, puis une dernière année : la ${anneeDuPlan(p.derniereAnnee - 1)}`,
           },
@@ -791,6 +793,7 @@ export const IMMOBILISATIONS: Chapitre = {
           },
           {
             libelle: "Numéro de l'année du passage au linéaire",
+            nature: "quantite",
             attendu: p.passage + 1,
             calcul: `la ${anneeDuPlan(p.passage)} : il reste ${qte(restantes)} ans, et ${pct(1 / restantes)} dépasse ${pct(p.tauxDegressif)} ; l'année d'avant, ${pct(1 / (restantes + 1))} ne le dépassait pas`,
           },
@@ -864,16 +867,19 @@ export const IMMOBILISATIONS: Chapitre = {
           { libelle: "Dotation de la première année", attendu: p.dotationARebours, calcul: `${eur(p.base)} − ${eur(p.vncARebours)} = ${eur(p.dotationARebours)}` },
           {
             libelle: "Jours d'utilisation",
+            nature: "quantite",
             attendu: p.joursARebours,
             calcul: `${eur(p.dotationARebours)} × ${qte(JOURS_DE_L_ANNEE)} ÷ ${eur(p.annuite)} d'annuité = ${qte(p.joursARebours)} jours`,
           },
           {
             libelle: "Mois de la mise en service, de 1 à 12",
+            nature: "quantite",
             attendu: d.mois,
             calcul: `${qte(p.joursARebours)} jours, c'est ${qte(moisPleins)} mois pleins (${qte(moisPleins * JOURS_DU_MOIS)} jours) et ${qte(joursDuPremierMois)} jours du mois d'avant : ${MOIS[d.mois - 1]}, le mois n° ${qte(d.mois)}`,
           },
           {
             libelle: "Jour du mois de la mise en service",
+            nature: "quantite",
             attendu: d.jour,
             calcul: `${qte(joursDuPremierMois)} jours jusqu'au ${JOURS_DU_MOIS}, le jour de départ compté : ${qte(JOURS_DU_MOIS)} − ${qte(joursDuPremierMois)} + 1 = ${qte(d.jour)}`,
           },

@@ -31,10 +31,10 @@ describe("la rentabilité de NOVA", () => {
   it("les deux rentabilités se refont à la main", () => {
     expect(CI).toBe(60_766.51);
     expect(r.capitauxInvestis).toBe(CI);
-    expect(r.financiere).toBe(34.6); // 79 225,96 ÷ 229 225,96 = 34,56 %
-    expect(r.economique).toBe(164.8); // 100 162,89 ÷ 60 766,51 = 164,83 %
+    expect(r.financiere).toBe(34.56); // 79 225,96 ÷ 229 225,96 = 34,56 %
+    expect(r.economique).toBe(164.83); // 100 162,89 ÷ 60 766,51 = 164,83 %
     expect(r.tauxDeLEmprunt).toBe(5);
-    expect(etape(ch, "calcul", "montants").champs(NOVA, VIDE).map((x) => x.attendu)).toEqual([34.6, CI, 164.8]);
+    expect(etape(ch, "calcul", "montants").champs(NOVA, VIDE).map((x) => x.attendu)).toEqual([34.56, CI, 164.83]);
     // L'activité rapporte en un an plus que tout ce qu'elle mobilise : la phrase le dit.
     expect(etape(ch, "calcul", "montants").explication(NOVA, VIDE).join(" ")).toMatch(/plus que tout ce qu'elle mobilise/);
   });
@@ -49,20 +49,20 @@ describe("la rentabilité de NOVA", () => {
     // 5 % de 60 766,51 € = 3 038,33 € ; 23 564 − (100 162,89 − 3 038,33) ÷ 21 = 18 939,02.
     expect(enceintesAuTauxDeLEmprunt(r)).toBe(18_940);
     const e = gardeDuCurseur(ch, "l-activite-face-a-l-emprunt", 18_940);
-    expect(e.lecture(NOVA, 18_940).map((l) => l.montant)).toEqual([c(100_162.89 - 21 * 4_624), 3_038.33, 5]);
+    expect(e.lecture(NOVA, 18_940).map((l) => l.montant)).toEqual([c(100_162.89 - 21 * 4_624), 3_038.33, 5.03]);
   });
 
-  it("le laboratoire : 80 000 € repris par les associés et empruntés portent la rentabilité financière à 52,1 %", () => {
+  it("le laboratoire : 80 000 € repris par les associés et empruntés portent la rentabilité financière à 52,13 %", () => {
     gardeDuLaboratoire(ch, "le-laboratoire-du-levier");
     expect(SOLUTION_DE_LA_RENTABILITE).toEqual({ emprunt: 80_000, ventes: 0 });
     // 4 000 € d'intérêts de plus : 95 967,96 € avant impôt, 19 742 € d'impôt, 76 225,96 € de résultat.
     const x = levierDuLaboratoire(r, SOLUTION_DE_LA_RENTABILITE);
     expect(x.k.resultatNet).toBe(c(95_967.96 - 19_742));
     expect(x.capitauxPropres).toBe(c(229_225.96 - 80_000 - 3_000));
-    expect(x.financiere).toBe(52.1);
+    expect(x.financiere).toBe(52.13);
     expect(x.financiere >= RENTABILITE_DU_DEFI).toBe(true);
-    // 70 000 € ne suffisent pas : 76 600,96 € ÷ 156 600,96 € = 48,9 %.
-    expect(levierDuLaboratoire(r, { emprunt: 70_000, ventes: 0 }).financiere).toBe(48.9);
+    // 70 000 € ne suffisent pas : 76 600,96 € ÷ 156 600,96 € = 48,91 %.
+    expect(levierDuLaboratoire(r, { emprunt: 70_000, ventes: 0 }).financiere).toBe(48.91);
   });
 
   it("les textes sont propres, une seule bonne réponse, les notions existent", () => {

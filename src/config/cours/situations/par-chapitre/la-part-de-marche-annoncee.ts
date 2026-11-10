@@ -1,3 +1,4 @@
+import { arrondi2, nombreAuCentieme, pct, qte } from "../../../../pedagogy/cours/deux-decimales";
 import { accordPluriel } from "../../accords";
 import { type Cas } from "../../cas";
 import { POURQUOI_L_INDICATEUR } from "../../chapitres/construire-un-indicateur-juste";
@@ -20,6 +21,11 @@ import type { Situation } from "../types";
  * LE CAS JOUE DANS LE MONDE DU COURS, chez NOVA seule : ses ventes du semestre et le marché des
  * enceintes mois par mois (nova-gestion.ts, lus par monde/gestion-et-information.ts). Il lisait
  * l'année de l'arène, dans huit entreprises.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts mensuelles, leur moyenne et la part du semestre se
+ * donnent à deux décimales, l'écart au centième de point (au dixième, avant) ; les ventes sont des
+ * quantités.
  */
 
 /**
@@ -29,10 +35,7 @@ import type { Situation } from "../types";
  */
 export const ECART_NEGLIGEABLE = PART_STABLE;
 
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const points = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} point${Math.abs(t) >= 2 ? "s" : ""}`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
+const points = (t: number) => `${nombreAuCentieme(t)} point${Math.abs(t) >= 2 ? "s" : ""}`;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 const majuscule = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 
@@ -43,14 +46,14 @@ export function partAnnoncee() {
   const f = FICHE_DE_GESTION;
   const mois = semestreDeNova(f).map((m, k) => {
     const marche = f.semestre.marche[k]!;
-    return { nom: m.nom, ventes: m.ventes, marche, part: auDixieme((m.ventes / marche) * 100) };
+    return { nom: m.nom, ventes: m.ventes, marche, part: arrondi2((m.ventes / marche) * 100) };
   });
-  const sommeDesParts = auDixieme(mois.reduce((t, x) => t + x.part, 0));
-  const moyenne = auDixieme(sommeDesParts / mois.length);
+  const sommeDesParts = arrondi2(mois.reduce((t, x) => t + x.part, 0));
+  const moyenne = arrondi2(sommeDesParts / mois.length);
   const ventes = mois.reduce((t, x) => t + x.ventes, 0);
   const marche = mois.reduce((t, x) => t + x.marche, 0);
-  const partDuSemestre = auDixieme((ventes / marche) * 100);
-  const ecart = auDixieme(partDuSemestre - moyenne);
+  const partDuSemestre = arrondi2((ventes / marche) * 100);
+  const ecart = arrondi2(partDuSemestre - moyenne);
   const verdict: VerdictDeLaPart = ecart < -ECART_NEGLIGEABLE ? "plus-basse" : ecart > ECART_NEGLIGEABLE ? "plus-haute" : "la-meme";
   const plusGrosMarche = mois.reduce((m, x) => (x.marche > m.marche ? x : m), mois[0]!);
   return { mois, sommeDesParts, moyenne, ventes, marche, partDuSemestre, ecart, verdict, plusGrosMarche };
@@ -96,10 +99,10 @@ export const LA_PART_DE_MARCHE_ANNONCEE: Situation = {
       type: "montants",
       titre: "La part annoncée",
       notions: ["demand_market_share", "dashboard"],
-      question: () => "Calculez la part que le commercial annonce : la moyenne simple des parts de marché mensuelles, en pourcentage au dixième.",
+      question: () => "Calculez la part que le commercial annonce : la moyenne simple des parts de marché mensuelles, en pourcentage à deux décimales.",
       champs: () => {
         const k = partAnnoncee();
-        return [{ libelle: "Moyenne des parts mensuelles (%)", attendu: k.moyenne, calcul: `(${k.mois.map((x) => pct(x.part)).join(" + ")}) ÷ ${qte(k.mois.length)} = ${pct(k.moyenne)}`, tolerance: 0.1 }];
+        return [{ libelle: "Moyenne des parts mensuelles (%)", attendu: k.moyenne, calcul: `(${k.mois.map((x) => pct(x.part)).join(" + ")}) ÷ ${qte(k.mois.length)} = ${pct(k.moyenne)}` }];
       },
       explication: () => [`Le commercial annoncerait ${pct(partAnnoncee().moyenne)}. Chaque mois y compte pour autant, que le marché y soit petit ou grand.`],
     },
@@ -109,14 +112,14 @@ export const LA_PART_DE_MARCHE_ANNONCEE: Situation = {
       titre: "La part du semestre",
       notions: ["demand_market_share", "seasonality"],
       question: (c) =>
-        `Calculez la part de marché ${dE(c.entreprise)} sur le semestre comme un ratio des sommes : ses ventes du semestre, celles du marché, leur rapport en pourcentage au dixième, puis l'écart avec la moyenne annoncée, en points (part du semestre moins moyenne).`,
+        `Calculez la part de marché ${dE(c.entreprise)} sur le semestre comme un ratio des sommes : ses ventes du semestre, celles du marché, et leur rapport en pourcentage, à deux décimales. Calculez ensuite l'écart avec la moyenne annoncée, en points (part du semestre moins moyenne).`,
       champs: () => {
         const k = partAnnoncee();
         return [
-          { libelle: "Ventes du semestre", attendu: k.ventes, calcul: `${k.mois.map((x) => qte(x.ventes)).join(" + ")} = ${qte(k.ventes)}` },
-          { libelle: "Ventes du marché sur le semestre", attendu: k.marche, calcul: `${k.mois.map((x) => qte(x.marche)).join(" + ")} = ${qte(k.marche)}` },
-          { libelle: "Part de marché du semestre (%)", attendu: k.partDuSemestre, calcul: `${qte(k.ventes)} ÷ ${qte(k.marche)} × 100 = ${pct(k.partDuSemestre)}`, tolerance: 0.1 },
-          { libelle: "Écart avec la moyenne annoncée (points)", attendu: k.ecart, calcul: `${pct(k.partDuSemestre)} − ${pct(k.moyenne)} = ${points(k.ecart)}`, tolerance: 0.1 },
+          { libelle: "Ventes du semestre", nature: "quantite", attendu: k.ventes, calcul: `${k.mois.map((x) => qte(x.ventes)).join(" + ")} = ${qte(k.ventes)}` },
+          { libelle: "Ventes du marché sur le semestre", nature: "quantite", attendu: k.marche, calcul: `${k.mois.map((x) => qte(x.marche)).join(" + ")} = ${qte(k.marche)}` },
+          { libelle: "Part de marché du semestre (%)", attendu: k.partDuSemestre, calcul: `${qte(k.ventes)} ÷ ${qte(k.marche)} × 100 = ${pct(k.partDuSemestre)}` },
+          { libelle: "Écart avec la moyenne annoncée (points)", nature: "grandeur", attendu: k.ecart, calcul: `${pct(k.partDuSemestre)} − ${pct(k.moyenne)} = ${points(k.ecart)}` },
         ];
       },
       explication: (c) => {

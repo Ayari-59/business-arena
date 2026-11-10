@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { CAPACITE_DE_REMBOURSEMENT_MAXIMALE, INDEPENDANCE_MINIMALE } from "../../financement";
 import { ENTREPRISES_DES_COMPTES_DU_LYCEE, exerciceDe } from "../../monde/comptes-du-lycee";
@@ -25,12 +25,8 @@ import type { Situation } from "../types";
 /** LE SCÉNARIO DE PRUDENCE DE LA BANQUE (hypothèse du cours) : 10 % d'enceintes vendues en moins l'année du prêt. */
 export const BAISSE_DU_SCENARIO = 0.1;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const auCentieme = (x: number) => Math.round(x * 100) / 100;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
-const ans = (x: number) => `${qte(x)} ${x < 2 ? "an" : "ans"}`;
+const ans = (x: number) => `${nombreAuCentieme(x)} ${x < 2 ? "an" : "ans"}`;
 
 /** Les chiffres de la réponse, calculés une fois du cas. */
 export function anneeDifficile(c: Pick<Cas, "code">) {
@@ -38,8 +34,8 @@ export function anneeDifficile(c: Pick<Cas, "code">) {
   const pret = LIGNE_SEMI_AUTOMATIQUE.montant;
   const avant = structureFinanciere(f);
   const s = structureFinanciere(f, { emprunt: pret, baisseDesVentes: BAISSE_DU_SCENARIO });
-  const capacite = auCentieme(s.capaciteDeRemboursement);
-  const independance = auDixieme(s.independance * 100);
+  const capacite = arrondi2(s.capaciteDeRemboursement);
+  const independance = arrondi2(s.independance * 100);
   const capaciteTient = capacite <= CAPACITE_DE_REMBOURSEMENT_MAXIMALE;
   const independanceTient = s.independance >= INDEPENDANCE_MINIMALE;
   return {
@@ -126,7 +122,7 @@ export const LA_BANQUE_TESTE_UNE_ANNEE_DIFFICILE: Situation = {
       question: () => "Calculez la capacité d'autofinancement de l'année difficile.",
       champs: (c) => {
         const r = anneeDifficile(c);
-        return [{ libelle: "Capacité d'autofinancement", attendu: r.caf, calcul: `${eur(r.resultatNet)} + ${eur(r.dotations)} = ${eur(r.caf)}`, tolerance: 1 }];
+        return [{ libelle: "Capacité d'autofinancement", attendu: r.caf, calcul: `${eur(r.resultatNet)} + ${eur(r.dotations)} = ${eur(r.caf)}` }];
       },
       explication: (c) => {
         const r = anneeDifficile(c);
@@ -139,14 +135,14 @@ export const LA_BANQUE_TESTE_UNE_ANNEE_DIFFICILE: Situation = {
       titre: "Les deux ratios après le prêt",
       notions: ["balance_sheet", "loan_schedule"],
       question: () =>
-        "Calculez les dettes financières et les ressources durables après le prêt, puis la capacité de remboursement (au centième) et l'indépendance financière (en pourcentage, au dixième).",
+        "Calculez les dettes financières et les ressources durables après le prêt, puis la capacité de remboursement (au centième) et l'indépendance financière (en pourcentage, à deux décimales).",
       champs: (c) => {
         const r = anneeDifficile(c);
         return [
           { libelle: "Dettes financières après le prêt", attendu: r.dettes, calcul: `${eur(r.dettesAvant)} + ${eur(r.pret)} = ${eur(r.dettes)}` },
           { libelle: "Ressources durables après le prêt", attendu: r.ressources, calcul: `${eur(r.ressourcesAvant)} + ${eur(r.pret)} = ${eur(r.ressources)}` },
-          { libelle: "Capacité de remboursement (années)", attendu: r.capacite, calcul: `${eur(r.dettes)} ÷ ${eur(r.caf)} = ${qte(r.capacite)}`, tolerance: 0.01 },
-          { libelle: "Indépendance financière (%)", attendu: r.independance, calcul: `${eur(r.capitauxPropres)} ÷ ${eur(r.ressources)} = ${pct(r.independance)}`, tolerance: 0.1 },
+          { libelle: "Capacité de remboursement (années)", nature: "grandeur", attendu: r.capacite, calcul: `${eur(r.dettes)} ÷ ${eur(r.caf)} = ${nombreAuCentieme(r.capacite)}` },
+          { libelle: "Indépendance financière (%)", attendu: r.independance, calcul: `${eur(r.capitauxPropres)} ÷ ${eur(r.ressources)} = ${pct(r.independance)}` },
         ];
       },
       explication: (c) => {
@@ -165,7 +161,7 @@ export const LA_BANQUE_TESTE_UNE_ANNEE_DIFFICILE: Situation = {
         "Pour garder la moitié des ressources durables en capitaux propres, les ressources durables ne peuvent pas dépasser le double des capitaux propres. Calculez le prêt le plus élevé que l'indépendance financière accepte, à l'euro près.",
       champs: (c) => {
         const r = anneeDifficile(c);
-        return [{ libelle: "Prêt le plus élevé", attendu: r.pretPossible, calcul: `${qte(1 / INDEPENDANCE_MINIMALE)} × ${eur(r.capitauxPropres)} − ${eur(r.ressourcesAvant)} = ${eur(r.pretPossible)}`, tolerance: 1 }];
+        return [{ libelle: "Prêt le plus élevé", attendu: r.pretPossible, calcul: `${qte(1 / INDEPENDANCE_MINIMALE)} × ${eur(r.capitauxPropres)} − ${eur(r.ressourcesAvant)} = ${eur(r.pretPossible)}` }];
       },
       explication: (c) => {
         const r = anneeDifficile(c);

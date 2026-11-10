@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, qte } from "../../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DE_LA_RSE, laboratoireDuLabel, responsabilite } from "../../chapitres/la-responsabilite-societale";
 import type { Situation } from "../types";
 
@@ -10,13 +10,15 @@ import type { Situation } from "../types";
  * toute l'année. L'élève refait le calcul de l'année du chapitre (`laboratoireDuLabel`, le modèle
  * d'attractivité du monde du cours) : ce que l'engagement coûte, les enceintes qu'il fait vendre en
  * plus, et ce qu'il change au résultat, face au plan du chapitre.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les enceintes vendues en plus sont une quantité, entière ; le
+ * coût et l'effet sur le résultat, des montants au centime.
  */
 
 /** LE BUDGET RSE PROPOSÉ (hypothèse du cas) : 6 000 € par trimestre, la moitié du plan du chapitre. */
 export const BUDGET_MODESTE = 6_000;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
 
 export function engagementPlusModeste() {
   const x = responsabilite({ code: "nova" });
@@ -61,7 +63,7 @@ export const UN_ENGAGEMENT_PLUS_MODESTE: Situation = {
         const k = engagementPlusModeste();
         return [
           { libelle: "Coût de l'engagement sur l'année", attendu: k.l.cout, calcul: `4 × ${eur(BUDGET_MODESTE)} = ${eur(k.l.cout)}` },
-          { libelle: "Enceintes vendues en plus", attendu: k.ventesGagnees, calcul: `${qte(k.l.ventes)} − ${qte(k.x.annee.sans.ventes)} = ${qte(k.ventesGagnees)}` },
+          { libelle: "Enceintes vendues en plus", nature: "quantite", attendu: k.ventesGagnees, calcul: `${qte(k.l.ventes)} − ${qte(k.x.annee.sans.ventes)} = ${qte(k.ventesGagnees)}` },
           { libelle: "Effet sur le résultat de l'année", attendu: k.l.ecart, calcul: `${eur(k.l.ecart)}, la marge des ventes en plus moins le coût de l'engagement` },
         ];
       },

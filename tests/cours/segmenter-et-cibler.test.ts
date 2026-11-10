@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { SEGMENTATIONS, SEGMENTER_ET_CIBLER } from "../../src/config/cours/chapitres/segmenter-et-cibler";
 import { PROGRAMME } from "../../src/config/cours/registre";
 import { POINTS_A_GAGNER, QUEL_SEGMENT_CONQUERIR, segmentAConquerir } from "../../src/config/cours/situations/par-chapitre/quel-segment-conquerir";
+import { arrondi2 } from "../../src/pedagogy/cours/deux-decimales";
 import { NOVA, attendus, gardeDuCas, gardeDuCurseur, gardeDuLaboratoire, gardesDeTexte, juste } from "./gardes-du-marche";
 
 /**
@@ -14,7 +15,8 @@ import { NOVA, attendus, gardeDuCas, gardeDuCurseur, gardeDuLaboratoire, gardesD
  * variable.
  */
 
-const d = (x: number) => Math.round(x * 10) / 10;
+/** Les pourcentages à deux décimales (décision du propriétaire, 10 novembre 2026) : ils se donnaient au dixième. */
+const d = arrondi2;
 const etudiants = (p: number) => 9_555 - 140 * p;
 const CA = (1_295 + 1_755 + 1_728) * 59;
 
@@ -29,7 +31,7 @@ describe("segmenter et cibler", () => {
     gardesDeTexte(SEGMENTER_ET_CIBLER);
   });
 
-  it("les familles pèsent le plus (36,7 %) ; les étudiants gardent la plus grosse réserve (7 705 achats ailleurs) et sont les plus sensibles au prix", () => {
+  it("les familles pèsent le plus (36,73 %) ; les étudiants gardent la plus grosse réserve (7 705 achats ailleurs) et sont les plus sensibles au prix", () => {
     expect(attendus(SEGMENTER_ET_CIBLER, "poids")).toEqual([d(((1_755 * 59) / CA) * 100), d((1_755 / 5_600) * 100), 5_600 - 1_755]);
     expect(juste(SEGMENTER_ET_CIBLER, "reserve")).toEqual(["Étudiants"]);
     expect(juste(SEGMENTER_ET_CIBLER, "cible-premium")).toEqual(["Mélomanes"]);

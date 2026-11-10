@@ -145,11 +145,12 @@ describe("une seule NOVA : le résultat révisé est celui du chapitre de l'imp�
 });
 
 describe("le laboratoire des estimations", () => {
-  it("chaque euro de charge en plus n'économise que 25 centimes d'impôt ; la solution baisse l'impôt de 1 365 €", () => {
+  it("chaque euro de charge en plus n'économise que 25 centimes d'impôt ; la solution baisse l'impôt de 1 375 €", () => {
     const d = laboratoireDuDossier(departDuDossier());
     expect(d.resultatRevise).toBe(118_460);
     const s = laboratoireDuDossier(SOLUTION_DU_DOSSIER);
-    expect(s.travaux.garantie).toBe(182 * 0.8 * 100);
+    // 182 × 80 % = 145,60 retours, soit 146 à l'unité : un retour ne se fractionne pas.
+    expect(s.travaux.garantie).toBe(146 * 100);
     expect(c(d.impot - s.impot)).toBe(c((s.travaux.garantie - 9_100) * 0.25));
     gardeDuLaboratoire(ch, "le-laboratoire-des-estimations");
   });
@@ -161,16 +162,16 @@ describe("le cas dédié : la garantie de deux ans", () => {
     gardeDuCas(LA_GARANTIE_DE_DEUX_ANS, ch);
   });
 
-  it("les trois quarts à venir : 13 650 € de provision, 4 550 € de complément, l'impôt baisse de 1 137 €", () => {
+  it("les trois quarts à venir : 137 retours (136,50 à l'unité), 13 700 € de provision, 4 600 € de complément, l'impôt baisse de 1 150 €", () => {
     const x = garantieDeDeuxAns(NOVA);
-    expect(x.deux.provision).toBe(182 * 0.75 * 100);
-    expect(x.complement).toBe(4_550);
-    expect(x.apres.resultatRevise).toBe(118_460 - 4_550);
-    expect(x.apres.impot).toBe(Math.round(42_500 * 0.15 + (113_910 + 3_540 + 480 - 42_500) * 0.25));
-    expect(x.impotEnMoins).toBe(26_370 - 25_233);
+    expect(x.deux.provision).toBe(137 * 100);
+    expect(x.complement).toBe(4_600);
+    expect(x.apres.resultatRevise).toBe(118_460 - 4_600);
+    expect(x.apres.impot).toBe(Math.round(42_500 * 0.15 + (113_860 + 3_540 + 480 - 42_500) * 0.25));
+    expect(x.impotEnMoins).toBe(26_370 - 25_220);
     const montants = (id: string) => etape(chapitreDuCas(LA_GARANTIE_DE_DEUX_ANS, NOVA), id, "montants").champs(NOVA, VIDE).map((k) => k.attendu);
-    expect(montants("la-provision")).toEqual([136.5, 13_650, 4_550]);
-    expect(montants("l-effet")).toEqual([113_910, 25_233, 1_137]);
+    expect(montants("la-provision")).toEqual([137, 13_700, 4_600]);
+    expect(montants("l-effet")).toEqual([113_860, 25_220, 1_150]);
     const r = etape(LA_GARANTIE_DE_DEUX_ANS, "reponse", "choix").options(NOVA, VIDE);
     expect(r.filter((o) => o.juste).map((o) => o.texte)).toEqual(["Oui : la provision suit la garantie promise"]);
   });

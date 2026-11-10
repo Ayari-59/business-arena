@@ -1,3 +1,4 @@
+import { pct, qte } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { L_OFFRE_ET_LA_DEMANDE, TRIMESTRE_LU, dE, rang } from "../../chapitres/l-offre-et-la-demande";
 import { marcheAuPrix, offreDuTrimestre } from "../../monde/economie-et-marketing";
@@ -19,13 +20,16 @@ import type { Situation } from "../types";
  * Le cas est neuf par sa question : le chapitre fait varier le prix ; ici, c'est l'offre qui change,
  * et l'on constate qu'elle ne fait pas la demande. Il joue dans le monde du cours
  * (monde/economie-et-marketing.ts), chez NOVA seule.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les quantités échangées, la demande non servie et l'offre non
+ * vendue sont des quantités, entières, déclarées comme telles (elles attendaient l'unité exacte, à
+ * zéro près).
  */
 
 /** Ce que le directeur commercial veut mettre en vente en plus : 20 % (hypothèse du cas). */
 export const HAUSSE_DE_LA_MISE_EN_VENTE = 0.2;
 
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${Math.round(t * 100)} %`;
 
 export type Verdict = "vend-plus" | "rien-de-plus";
 
@@ -44,7 +48,7 @@ function tableauDesDeuxTrimestres(c: Cas): TableauDeDonnees {
   const m = miseEnVenteAugmentee(c);
   return {
     titre: `${c.entreprise} au ${rang(TRIMESTRE_LU)} trimestre, en ${c.unites}`,
-    colonnes: ["Trimestre fabriqué", `Avec ${pct(HAUSSE_DE_LA_MISE_EN_VENTE)} de plus`],
+    colonnes: ["Trimestre fabriqué", `Avec ${pct(HAUSSE_DE_LA_MISE_EN_VENTE * 100)} de plus`],
     lignes: [
       { libelle: "Demande reçue", valeurs: [qte(m.sans.demande), qte(m.avec.demande)] },
       { libelle: "Quantité mise en vente", valeurs: [qte(m.sans.offre), qte(m.avec.offre)] },
@@ -78,8 +82,8 @@ export const METTRE_PLUS_EN_VENTE: Situation = {
       texte: (c) => {
         const m = miseEnVenteAugmentee(c);
         return [
-          `« Au ${rang(TRIMESTRE_LU)} trimestre, nous avons mis ${qte(m.sans.offre)} ${c.unites} en vente. Avec ${pct(HAUSSE_DE_LA_MISE_EN_VENTE)} de plus, nous aurions eu plus de clients, j'en suis sûr. Dites-moi si j'ai raison, et ce que nous aurions vendu. »`,
-          `Pas de cours cette fois. Le tableau refait le ${rang(TRIMESTRE_LU)} trimestre ${dE(c.entreprise)} avec ${pct(HAUSSE_DE_LA_MISE_EN_VENTE)} de plus mis en vente, soit ${qte(m.pose)} ${c.unites} : seule cette décision change, le prix et les concurrents restent les mêmes.`,
+          `« Au ${rang(TRIMESTRE_LU)} trimestre, nous avons mis ${qte(m.sans.offre)} ${c.unites} en vente. Avec ${pct(HAUSSE_DE_LA_MISE_EN_VENTE * 100)} de plus, nous aurions eu plus de clients, j'en suis sûr. Dites-moi si j'ai raison, et ce que nous aurions vendu. »`,
+          `Pas de cours cette fois. Le tableau refait le ${rang(TRIMESTRE_LU)} trimestre ${dE(c.entreprise)} avec ${pct(HAUSSE_DE_LA_MISE_EN_VENTE * 100)} de plus mis en vente, soit ${qte(m.pose)} ${c.unites} : seule cette décision change, le prix et les concurrents restent les mêmes.`,
         ];
       },
       repere: () => "À rendre : ce qui s'échange dans les deux cas, ce qui reste, et votre réponse.",
@@ -98,13 +102,13 @@ export const METTRE_PLUS_EN_VENTE: Situation = {
             libelle: "Quantité échangée, trimestre fabriqué",
             attendu: m.sans.echangee,
             calcul: `la plus petite de ${qte(m.sans.demande)} et ${qte(m.sans.offre)} : ${qte(m.sans.echangee)}`,
-            tolerance: 0,
+            nature: "quantite",
           },
           {
-            libelle: `Quantité échangée, avec ${pct(HAUSSE_DE_LA_MISE_EN_VENTE)} de plus`,
+            libelle: `Quantité échangée, avec ${pct(HAUSSE_DE_LA_MISE_EN_VENTE * 100)} de plus`,
             attendu: m.avec.echangee,
             calcul: `la plus petite de ${qte(m.avec.demande)} et ${qte(m.avec.offre)} : ${qte(m.avec.echangee)}`,
-            tolerance: 0,
+            nature: "quantite",
           },
         ];
       },
@@ -129,16 +133,16 @@ export const METTRE_PLUS_EN_VENTE: Situation = {
         const m = miseEnVenteAugmentee(c);
         return [
           {
-            libelle: `Demande non servie, avec ${pct(HAUSSE_DE_LA_MISE_EN_VENTE)} de plus`,
+            libelle: `Demande non servie, avec ${pct(HAUSSE_DE_LA_MISE_EN_VENTE * 100)} de plus`,
             attendu: m.avec.nonServie,
             calcul: `${qte(m.avec.demande)} − ${qte(m.avec.echangee)} = ${qte(m.avec.nonServie)}`,
-            tolerance: 0,
+            nature: "quantite",
           },
           {
-            libelle: `Offre non vendue, avec ${pct(HAUSSE_DE_LA_MISE_EN_VENTE)} de plus`,
+            libelle: `Offre non vendue, avec ${pct(HAUSSE_DE_LA_MISE_EN_VENTE * 100)} de plus`,
             attendu: m.avec.nonVendue,
             calcul: `${qte(m.avec.offre)} − ${qte(m.avec.echangee)} = ${qte(m.avec.nonVendue)}`,
-            tolerance: 0,
+            nature: "quantite",
           },
         ];
       },
@@ -146,7 +150,7 @@ export const METTRE_PLUS_EN_VENTE: Situation = {
         const m = miseEnVenteAugmentee(c);
         return [
           m.avec.nonServie > 0
-            ? `Même avec ${pct(HAUSSE_DE_LA_MISE_EN_VENTE)} de plus, des acheteurs repartent sans rien : la demande dépassait l'offre de plus que ce qui a été ajouté.`
+            ? `Même avec ${pct(HAUSSE_DE_LA_MISE_EN_VENTE * 100)} de plus, des acheteurs repartent sans rien : la demande dépassait l'offre de plus que ce qui a été ajouté.`
             : m.sans.nonServie > 0
               ? `Tous les acheteurs sont servis, et il reste ${qte(m.avec.nonVendue)} ${c.unites} sans acheteur : une partie seulement de ce qui a été ajouté a trouvé preneur.`
               : `Tous les acheteurs étaient déjà servis : ce qui a été ajouté reste sans acheteur, avec le reste.`,
@@ -161,7 +165,7 @@ export const METTRE_PLUS_EN_VENTE: Situation = {
       question: () => "Que répondez-vous au directeur commercial ?",
       options: (c) => {
         const m = miseEnVenteAugmentee(c);
-        const faits = `avec ${pct(HAUSSE_DE_LA_MISE_EN_VENTE)} de plus mis en vente, la demande reçue reste ${qte(m.avec.demande)} ${c.unites}, et la quantité échangée ${
+        const faits = `avec ${pct(HAUSSE_DE_LA_MISE_EN_VENTE * 100)} de plus mis en vente, la demande reçue reste ${qte(m.avec.demande)} ${c.unites}, et la quantité échangée ${
           m.echangeeEnPlus === 0 ? `reste ${qte(m.avec.echangee)}` : `passe de ${qte(m.sans.echangee)} à ${qte(m.avec.echangee)}`
         }`;
         const servis = m.avec.nonServie > 0 ? "l'offre ajoutée en sert une partie" : "l'offre ajoutée les sert tous, et le reste demeure sans acheteur";

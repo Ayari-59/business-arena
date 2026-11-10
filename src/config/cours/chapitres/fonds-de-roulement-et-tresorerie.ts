@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { auCentime } from "../monde/amortissement";
 import { ENTREPRISES_DES_COMPTES_DU_LYCEE, bilanDuLycee, exerciceDe, type BilanDuLycee } from "../monde/comptes-du-lycee";
@@ -38,7 +38,6 @@ export const GAIN_DU_DEFI = 20_000;
 /** La solution que montre la correction : CampusTech qui paie à l'échéance convenue, le fournisseur au délai de la fiche. */
 export const SOLUTION_DES_DELAIS = { campustech: DELAI_CONVENU_DE_CAMPUSTECH, fournisseur: exerciceDe("nova").fournisseur.delai } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 /** Un montant retranché, sans « − − » : « − 12 000 € » ou « + 582,38 € ». */
 const moins = (x: number) => (x < 0 ? `+ ${eur(-x)}` : `− ${eur(x)}`);
@@ -120,8 +119,8 @@ export const FONDS_DE_ROULEMENT: Chapitre = {
       champs: (c) => {
         const k = fondsDeRoulement(c);
         return [
-          { libelle: "Ressources durables", attendu: k.ressourcesDurables, calcul: `${eur(k.capitauxPropres)} + ${eur(k.amortissementsEtDepreciations)} + ${eur(k.poste("provision"))} + ${eur(k.poste("emprunt"))} = ${eur(k.ressourcesDurables)}`, tolerance: 1 },
-          { libelle: "Fonds de roulement", attendu: k.fondsDeRoulement, calcul: `${eur(k.ressourcesDurables)} − ${eur(k.equipementBrut)} = ${eur(k.fondsDeRoulement)}`, tolerance: 1 },
+          { libelle: "Ressources durables", attendu: k.ressourcesDurables, calcul: `${eur(k.capitauxPropres)} + ${eur(k.amortissementsEtDepreciations)} + ${eur(k.poste("provision"))} + ${eur(k.poste("emprunt"))} = ${eur(k.ressourcesDurables)}` },
+          { libelle: "Fonds de roulement", attendu: k.fondsDeRoulement, calcul: `${eur(k.ressourcesDurables)} − ${eur(k.equipementBrut)} = ${eur(k.fondsDeRoulement)}` },
         ];
       },
       explication: (c) => {
@@ -144,9 +143,9 @@ export const FONDS_DE_ROULEMENT: Chapitre = {
       champs: (c) => {
         const k = fondsDeRoulement(c);
         return [
-          { libelle: "Ce que le cycle immobilise", attendu: k.besoinsDuCycle, calcul: `${eur(k.poste("stocks"))} + ${eur(k.clientsBruts)} + ${eur(k.poste("autresCreances"))} = ${eur(k.besoinsDuCycle)}`, tolerance: 1 },
-          { libelle: "Dettes du cycle", attendu: k.dettesDuCycle, calcul: `${eur(k.poste("fournisseurs"))} + ${eur(k.poste("etat"))} + ${eur(k.poste("autresDettes"))} = ${eur(k.dettesDuCycle)}`, tolerance: 1 },
-          { libelle: "Besoin en fonds de roulement", attendu: k.besoin, calcul: `${eur(k.besoinsDuCycle)} − ${eur(k.dettesDuCycle)} = ${eur(k.besoin)}`, tolerance: 1 },
+          { libelle: "Ce que le cycle immobilise", attendu: k.besoinsDuCycle, calcul: `${eur(k.poste("stocks"))} + ${eur(k.clientsBruts)} + ${eur(k.poste("autresCreances"))} = ${eur(k.besoinsDuCycle)}` },
+          { libelle: "Dettes du cycle", attendu: k.dettesDuCycle, calcul: `${eur(k.poste("fournisseurs"))} + ${eur(k.poste("etat"))} + ${eur(k.poste("autresDettes"))} = ${eur(k.dettesDuCycle)}` },
+          { libelle: "Besoin en fonds de roulement", attendu: k.besoin, calcul: `${eur(k.besoinsDuCycle)} − ${eur(k.dettesDuCycle)} = ${eur(k.besoin)}` },
         ];
       },
       explication: (c) => {
@@ -169,8 +168,8 @@ export const FONDS_DE_ROULEMENT: Chapitre = {
       champs: (c) => {
         const k = fondsDeRoulement(c);
         return [
-          { libelle: "Trésorerie (disponible − découvert)", attendu: k.tresorerie, calcul: `${eur(k.disponible)} − ${eur(k.decouvert)} = ${eur(k.tresorerie)}`, tolerance: 1 },
-          { libelle: "Fonds de roulement − besoin", attendu: auCentime(k.fondsDeRoulement - k.besoin), calcul: `${eur(k.fondsDeRoulement)} ${moins(k.besoin)} = ${eur(auCentime(k.fondsDeRoulement - k.besoin))}`, tolerance: 1 },
+          { libelle: "Trésorerie (disponible − découvert)", attendu: k.tresorerie, calcul: `${eur(k.disponible)} − ${eur(k.decouvert)} = ${eur(k.tresorerie)}` },
+          { libelle: "Fonds de roulement − besoin", attendu: auCentime(k.fondsDeRoulement - k.besoin), calcul: `${eur(k.fondsDeRoulement)} ${moins(k.besoin)} = ${eur(auCentime(k.fondsDeRoulement - k.besoin))}` },
         ];
       },
       explication: (c) => {

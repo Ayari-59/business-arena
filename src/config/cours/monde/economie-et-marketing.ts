@@ -1,3 +1,4 @@
+import { arrondi2 } from "../../../pedagogy/cours/deux-decimales";
 import { JOURS_PAR_AN } from "../remises";
 import { anneeDuMarche, type BilanDUneEnseigne } from "./attractivite";
 import type { ClienteleDuMarche, CodeDeClientele, FicheMercatique } from "./mercatique-de-nova";
@@ -22,14 +23,18 @@ import type { ClienteleDuMarche, CodeDeClientele, FicheMercatique } from "./merc
  *   7. LA CONCURRENCE ET LA COMMUNICATION : l'année type du marché à trois (attractivite.ts).
  *   8. LES CANAUX DE DISTRIBUTION : le canal direct, CampusTech, l'attente et la remise.
  *
- * CONVENTIONS : les montants sont au centime, les pourcentages au dixième (comme l'élève les écrit),
- * une élasticité au centième ; une demande se compte à l'enceinte inférieure, des ventes nécessaires
- * à l'enceinte supérieure.
+ * CONVENTIONS : les montants sont au centime, les pourcentages à deux décimales (comme l'élève les
+ * écrit), une élasticité, un rapport ou un écart en points au centième ; une demande se compte à
+ * l'enceinte inférieure, des ventes nécessaires à l'enceinte supérieure.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : chaque ligne est arrondie, et la suivante part du nombre arrondi
+ * (l'élasticité, des deux variations à deux décimales ; la part relative, des deux parts). Les
+ * pourcentages étaient au dixième, les chiffres d'affaires de la demande et du prix à l'euro.
  */
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
-const auCentieme = (x: number) => Math.round(x * 100) / 100 + 0;
+const auCentime = arrondi2;
+const auCentieme = arrondi2;
 const plancher = (x: number) => Math.floor(x + 1e-9);
 const plafond = (x: number) => Math.ceil(x - 1e-9);
 const somme = (xs: readonly number[]) => xs.reduce((t, x) => t + x, 0);
@@ -199,11 +204,11 @@ export function prixLePlusHautSansExcedent(f: FicheMercatique, offre: number, tr
 export function demandeEtPrix(f: FicheMercatique) {
   const t = troisPrix(f);
   const [bas, base, haut] = [t.bas, t.base, t.haut];
-  const variationDemande = auDixieme((haut.demande / base.demande - 1) * 100);
-  const variationPrix = auDixieme((haut.prix / base.prix - 1) * 100);
+  const variationDemande = arrondi2((haut.demande / base.demande - 1) * 100);
+  const variationPrix = arrondi2((haut.prix / base.prix - 1) * 100);
   const elasticite = auCentieme(variationDemande / variationPrix);
-  const caAvant = Math.round(base.demande * base.prix);
-  const caApres = Math.round(haut.demande * haut.prix);
+  const caAvant = arrondi2(base.demande * base.prix);
+  const caApres = arrondi2(haut.demande * haut.prix);
   return {
     bas,
     base,
@@ -215,8 +220,8 @@ export function demandeEtPrix(f: FicheMercatique) {
     elastique: Math.abs(elasticite) > 1,
     caAvant,
     caApres,
-    variationCa: auDixieme((caApres / caAvant - 1) * 100),
-    gagneDemandeEnBaissant: auDixieme((bas.demande / base.demande - 1) * 100),
+    variationCa: arrondi2((caApres / caAvant - 1) * 100),
+    gagneDemandeEnBaissant: arrondi2((bas.demande / base.demande - 1) * 100),
   };
 }
 
@@ -266,11 +271,11 @@ export function segmentation(f: FicheMercatique) {
     taille: k.tailleDuSegment,
     demande,
     chiffreDAffaires: ca,
-    poids: auDixieme((ca / chiffreDAffaires) * 100),
-    part: auDixieme((demande / k.tailleDuSegment) * 100),
+    poids: arrondi2((ca / chiffreDAffaires) * 100),
+    part: arrondi2((demande / k.tailleDuSegment) * 100),
     aGagner: k.tailleDuSegment - demande,
     /** La demande perdue, en %, si le prix montait de 10 %. */
-    sensibilitePrix: auDixieme(((k.perdueParEuro * prix * e) / demande) * 100),
+    sensibilitePrix: arrondi2(((k.perdueParEuro * prix * e) / demande) * 100),
     /** L'élasticité de la demande au prix de NOVA : la demande perdue en % quand le prix monte de 1 %. */
     elasticite: auCentieme((k.perdueParEuro * prix) / demande),
     qualite: k.qualite,
@@ -329,7 +334,7 @@ export function prixPsychologique(f: FicheMercatique) {
     tropBas: k.mefiance,
     normal: k.prixNormal,
     seuil: k.seuil,
-    ecart: auDixieme((prix / k.prixNormal - 1) * 100),
+    ecart: arrondi2((prix / k.prixNormal - 1) * 100),
     k,
   }));
   const etudie = clienteles.filter((x) => x.seuil !== null && x.seuil >= prix).reduce((a, b) => (b.seuil! < a.seuil! ? b : a));
@@ -338,7 +343,7 @@ export function prixPsychologique(f: FicheMercatique) {
   const dessus = auCentime(seuil + 0.1);
   const demandeSous = demandeDeLaClientele(f, etudie.k, sous, true);
   const demandeDessus = demandeDeLaClientele(f, etudie.k, dessus, true);
-  const perte = auDixieme((1 - demandeDessus / demandeSous) * 100);
+  const perte = arrondi2((1 - demandeDessus / demandeSous) * 100);
   const hausse = Math.round((dessus / sous - 1) * 10_000) / 100;
   const demande = demandeDeLaClientele(f, etudie.k, prix);
   return {
@@ -352,7 +357,7 @@ export function prixPsychologique(f: FicheMercatique) {
     demandeDessus,
     perte,
     hausse,
-    rapport: Math.round(perte / hausse),
+    rapport: arrondi2(perte / hausse),
     elasticite: auCentieme((etudie.k.perdueParEuro * prix) / demande),
     avantageux: clienteles.reduce((a, b) => (b.ecart < a.ecart ? b : a)),
   };
@@ -386,7 +391,7 @@ export interface EnseigneDuTrimestre {
   ventes: number;
   prix: number;
   chiffreDAffaires: number;
-  /** La part du marché de toutes les enceintes, en %, au dixième. */
+  /** La part du marché de toutes les enceintes, en %, à deux décimales. */
   part: number;
 }
 
@@ -405,7 +410,7 @@ export function trimestreDuMarche(f: FicheMercatique, trimestre: 1 | 2) {
   const annee = anneeDuMarche(f.marche);
   const enseignes: EnseigneDuTrimestre[] = annee.enseignes.map((e) => {
     const ventes = e.code === "nova" ? ventesDeNova : Math.round((ventesDeNova * e.ventes) / annee.nova.ventes);
-    return { code: e.code, nom: e.nom, ventes, prix: e.offre.prix, chiffreDAffaires: auCentime(ventes * e.offre.prix), part: auDixieme((ventes / marche) * 100) };
+    return { code: e.code, nom: e.nom, ventes, prix: e.offre.prix, chiffreDAffaires: auCentime(ventes * e.offre.prix), part: arrondi2((ventes / marche) * 100) };
   });
   return { trimestre, marche, enseignes, nova: enseignes[0]! };
 }
@@ -426,18 +431,18 @@ export function marcheEtPart(f: FicheMercatique) {
     premierConcurrent,
     rang: parVentes.findIndex((x) => x.code === "nova") + 1,
     partRelative: auCentieme(e.part / premierConcurrent.part),
-    autres: auDixieme(100 - somme(debut.enseignes.map((x) => x.part))),
+    autres: arrondi2(100 - somme(debut.enseignes.map((x) => x.part))),
     ventesDesTrois,
     plusCher: [...debut.enseignes].sort((a, b) => b.prix - a.prix)[0]!,
     moinsCher: [...debut.enseignes].sort((a, b) => a.prix - b.prix)[0]!,
-    evolutionDuMarche: auDixieme((fin.marche / debut.marche - 1) * 100),
-    evolutionDesVentes: auDixieme((fin.nova.ventes / e.ventes - 1) * 100),
-    points: auDixieme(fin.nova.part - e.part),
+    evolutionDuMarche: arrondi2((fin.marche / debut.marche - 1) * 100),
+    evolutionDesVentes: arrondi2((fin.nova.ventes / e.ventes - 1) * 100),
+    points: arrondi2(fin.nova.part - e.part),
   };
 }
 
-/** La part de marché, en %, au dixième, que donnent des ventes sur un marché. */
-export const partDe = (ventes: number, marche: number) => auDixieme((ventes / marche) * 100);
+/** La part de marché, en %, à deux décimales, que donnent des ventes sur un marché. */
+export const partDe = (ventes: number, marche: number) => arrondi2((ventes / marche) * 100);
 
 /** Les ventes qu'il faut, à l'enceinte supérieure, pour tenir une part (en %) d'un marché. */
 export const ventesPourLaPart = (marche: number, part: number) => plafond((marche * part) / 100);
@@ -475,7 +480,7 @@ export const vendeursAuPrix = (f: FicheMercatique, prix = prixDeNova(f)) => anne
 /** Les parts de marché des trois vendeurs : chacun ses ventes, sur les ventes des trois. */
 export function partsDesVendeurs(vendeurs: readonly Vendeur[]) {
   const total = somme(vendeurs.map((v) => v.ventes));
-  return { total, parts: vendeurs.map((v) => auDixieme((v.ventes / total) * 100)) };
+  return { total, parts: vendeurs.map((v) => arrondi2((v.ventes / total) * 100)) };
 }
 
 export type OuVontLesClients = "premier" | "second" | "personne";
@@ -526,7 +531,7 @@ export function laConcurrence(f: FicheMercatique, hausse = f.ecartDePrix) {
     refuseesEnPlus,
     ouVontLesClients: destinations.reduce((g, x) => (x[1] > g[1] ? x : g))[0],
     ecartDeBenefice,
-    points: auDixieme(partsApres[0]! - parts[0]!),
+    points: arrondi2(partsApres[0]! - parts[0]!),
     verdict: (ecartDeBenefice > 0 ? "gagne-plus" : "gagne-moins") as Verdict,
   };
 }
@@ -617,13 +622,13 @@ export function canauxDeDistribution(f: FicheMercatique) {
     du,
     delai: f.canal.delaiConvenu,
     retard: f.canal.retard,
-    tauxDeLEmprunt: auDixieme(s.emprunt.tauxAnnuel * 100),
+    tauxDeLEmprunt: arrondi2(s.emprunt.tauxAnnuel * 100),
     tva: s.tauxDeTva,
     coutDuDelai,
     coutDuRetard: auCentime(coutDeLAttente(f, du, f.canal.delaiConvenu + f.canal.retard) - coutDuDelai),
     coutParUnite,
-    partDesVentes: auDixieme((intermediaire.ventes / (direct.ventes + intermediaire.ventes)) * 100),
-    partDuCoutDansLePrix: auDixieme((coutParUnite / prix) * 100),
+    partDesVentes: arrondi2((intermediaire.ventes / (direct.ventes + intermediaire.ventes)) * 100),
+    partDuCoutDansLePrix: arrondi2((coutParUnite / prix) * 100),
     coutAcceptable: auCentime(f.canal.coutAcceptableDuDelai * intermediaire.chiffreDAffaires),
   };
 }

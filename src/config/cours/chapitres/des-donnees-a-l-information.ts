@@ -1,5 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../pedagogy/cours/etats";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import { type Cas } from "../cas";
 import {
   ENTREPRISES_DE_LA_GESTION_DE_BASE,
@@ -36,14 +35,15 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * CE QUI A CHANGÉ. La table comptait une ligne par trimestre et par enseigne de l'année de l'arène,
  * dans neuf entreprises. Elle compte maintenant douze lignes : six mois, deux clientèles. La part de
  * CampusTech passe de 20,1 % du chiffre d'affaires au premier trimestre à 15,8 % au deuxième.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts de CampusTech se donnent à deux décimales, à un
+ * centième près, et leur écart au centième de point (au dixième, avant).
  */
 
 export { PART_STABLE };
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const points = (t: number) => `${Math.abs(t).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} point${Math.abs(t) >= 2 ? "s" : ""}`;
+const points = (t: number) => `${nombreAuCentieme(Math.abs(t))} point${Math.abs(t) >= 2 ? "s" : ""}`;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 const majuscule = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 
@@ -182,15 +182,15 @@ export const DES_DONNEES_A_L_INFORMATION: Chapitre = {
       notions: ["revenue", "dashboard"],
       tableau: tableDesVentes,
       question: () =>
-        `Filtrez les lignes du premier trimestre (critère : janvier, février ou mars), puis celles du deuxième (avril, mai ou juin). Pour chacun, calculez le chiffre d'affaires de toutes les clientèles, puis la part de ${CAMPUSTECH().nom} dans ce total, en pourcentage au dixième.`,
+        `Filtrez les lignes du premier trimestre (critère : janvier, février ou mars), puis celles du deuxième (avril, mai ou juin). Pour chacun, calculez le chiffre d'affaires de toutes les clientèles, puis la part de ${CAMPUSTECH().nom} dans ce total, en pourcentage à deux décimales.`,
       champs: () => {
         const k = donneesALInformation();
         const ct = CAMPUSTECH().nom;
         return [
           { libelle: "Chiffre d'affaires du premier trimestre", attendu: k.premier.total, calcul: `Les lignes de janvier, février et mars, additionnées : ${eur(k.premier.total)}` },
-          { libelle: `Part de ${ct}, premier trimestre (%)`, attendu: k.premier.part, calcul: `${eur(k.premier.campustech)} ÷ ${eur(k.premier.total)} × 100 = ${pct(k.premier.part)}`, tolerance: 0.1 },
+          { libelle: `Part de ${ct}, premier trimestre (%)`, attendu: k.premier.part, calcul: `${eur(k.premier.campustech)} ÷ ${eur(k.premier.total)} × 100 = ${pct(k.premier.part)}` },
           { libelle: "Chiffre d'affaires du deuxième trimestre", attendu: k.second.total, calcul: `Les lignes d'avril, mai et juin, additionnées : ${eur(k.second.total)}` },
-          { libelle: `Part de ${ct}, deuxième trimestre (%)`, attendu: k.second.part, calcul: `${eur(k.second.campustech)} ÷ ${eur(k.second.total)} × 100 = ${pct(k.second.part)}`, tolerance: 0.1 },
+          { libelle: `Part de ${ct}, deuxième trimestre (%)`, attendu: k.second.part, calcul: `${eur(k.second.campustech)} ÷ ${eur(k.second.total)} × 100 = ${pct(k.second.part)}` },
         ];
       },
       explication: () => {

@@ -1,5 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../pedagogy/cours/etats";
+import { arrondi2, arrondi2 as auCentime, eur, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import { type Cas } from "../cas";
 import {
   ENTREPRISES_DE_LA_GESTION_DE_BASE,
@@ -37,16 +36,16 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * CE QUI A CHANGÉ. Le chapitre lisait quatre trimestres de l'arène, dans neuf entreprises. Il lit
  * maintenant six mois de NOVA : de 93 810 € à 126 909 € de chiffre d'affaires, un mois de février en
  * perte (−733 €).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les évolutions se donnent à deux décimales, à un centième près
+ * (au dixième, avant).
  */
 
 export { PRIX_STABLE };
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
 const signe = (t: number) => (t > 0 ? `+${pct(t)}` : pct(t));
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 const majuscule = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 /** « en janvier », « en avril ». */
@@ -65,8 +64,8 @@ export interface IndicateursSimples {
 /** Les quatre indicateurs de chaque mois du semestre. */
 export const indicateursDuSemestre = (): IndicateursSimples[] => semestreDeNova(FICHE_DE_GESTION);
 
-/** L'évolution en pourcentage, au dixième, d'une valeur de départ à une valeur d'arrivée. */
-export const evolution = (depart: number, arrivee: number) => auDixieme(((arrivee - depart) / depart) * 100);
+/** L'évolution en pourcentage, à deux décimales, d'une valeur de départ à une valeur d'arrivée. */
+export const evolution = (depart: number, arrivee: number) => arrondi2(((arrivee - depart) / depart) * 100);
 
 export type Prix = "stable" | "baisse" | "hausse";
 export type Lecture = "en-hausse" | "chiffre-en-hausse" | "en-baisse" | "resultat-en-hausse";
@@ -154,12 +153,12 @@ export const EVALUER_SON_ACTIVITE: Chapitre = {
       titre: "L'évolution du chiffre d'affaires et des ventes",
       notions: ["revenue", "dashboard"],
       tableau: (c) => tableauDuSemestre(c),
-      question: () => "Calculez, en pourcentage et au dixième, l'évolution du chiffre d'affaires de janvier à juin, puis celle des ventes. Une baisse donnerait un pourcentage négatif.",
+      question: () => "Calculez, en pourcentage et à deux décimales, l'évolution du chiffre d'affaires de janvier à juin, puis celle des ventes. Une baisse donnerait un pourcentage négatif.",
       champs: () => {
         const k = activiteDuSemestre();
         return [
-          { libelle: "Évolution du chiffre d'affaires, de janvier à juin (%)", attendu: k.evolutionDuChiffre, calcul: `(${eur(k.dernier.chiffreDAffaires)} − ${eur(k.premier.chiffreDAffaires)}) ÷ ${eur(k.premier.chiffreDAffaires)} × 100 = ${pct(k.evolutionDuChiffre)}`, tolerance: 0.1 },
-          { libelle: "Évolution des ventes, de janvier à juin (%)", attendu: k.evolutionDesVentes, calcul: `(${qte(k.dernier.ventes)} − ${qte(k.premier.ventes)}) ÷ ${qte(k.premier.ventes)} × 100 = ${pct(k.evolutionDesVentes)}`, tolerance: 0.1 },
+          { libelle: "Évolution du chiffre d'affaires, de janvier à juin (%)", attendu: k.evolutionDuChiffre, calcul: `(${eur(k.dernier.chiffreDAffaires)} − ${eur(k.premier.chiffreDAffaires)}) ÷ ${eur(k.premier.chiffreDAffaires)} × 100 = ${pct(k.evolutionDuChiffre)}` },
+          { libelle: "Évolution des ventes, de janvier à juin (%)", attendu: k.evolutionDesVentes, calcul: `(${qte(k.dernier.ventes)} − ${qte(k.premier.ventes)}) ÷ ${qte(k.premier.ventes)} × 100 = ${pct(k.evolutionDesVentes)}` },
         ];
       },
       explication: (c) => {

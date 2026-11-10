@@ -1,5 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
+import { aLUnite, arrondi2, arrondi2 as auCentime, eur, pct, qte } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DES_ACTEURS, POURQUOI_LES_ACTEURS, lignesDesActeurs, type Parts } from "../../chapitres/les-acteurs-et-la-valeur";
 import { partsDesActeurs } from "../../monde/gestion-et-information";
@@ -24,6 +23,10 @@ import type { Situation } from "../types";
  *
  * CE QUI A CHANGÉ. Le cas rejouait l'année de l'arène, dans neuf entreprises. Il refait maintenant
  * l'exercice de NOVA : la baisse coûte 36 187,90 € de résultat net aux associés.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts des fournisseurs et des associés se donnent à deux
+ * décimales, à un centième près (au dixième, avant).
  */
 
 /** La baisse que demandent les clients (hypothèse du cas) : 5 % sur le prix de l'enceinte. */
@@ -32,10 +35,6 @@ export const BAISSE_DEMANDEE = 0.05;
 /** Ce que les clients promettent en échange (hypothèse du cas) : 5 % d'enceintes commandées en plus. */
 export const VENTES_EN_PLUS_PROMISES = 0.05;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 const baisse = `${Math.round(BAISSE_DEMANDEE * 100)} %`;
 const enPlus = `${Math.round(VENTES_EN_PLUS_PROMISES * 100)} %`;
@@ -45,14 +44,14 @@ export type Verdict = "ils-paient" | "elle-se-paie";
 /** La baisse chiffrée : ce que chacun reçoit avant et après, et qui la paie. */
 export function baisseDemandee() {
   const avant = partsDesActeurs();
-  const apres = partsDesActeurs(0, auCentime(avant.prix * (1 - BAISSE_DEMANDEE)), Math.round(avant.enceintes * (1 + VENTES_EN_PLUS_PROMISES)));
+  const apres = partsDesActeurs(0, auCentime(avant.prix * (1 - BAISSE_DEMANDEE)), aLUnite(avant.enceintes * (1 + VENTES_EN_PLUS_PROMISES)));
   const ecart = (f: (p: Parts) => number) => auCentime(f(apres) - f(avant));
   const ecartDeResultat = ecart((p) => p.associes);
   return {
     avant,
     apres,
-    partDesFournisseurs: auDixieme((avant.fournisseurs / avant.ventes) * 100),
-    partDesAssocies: auDixieme((avant.associes / avant.ventes) * 100),
+    partDesFournisseurs: arrondi2((avant.fournisseurs / avant.ventes) * 100),
+    partDesAssocies: arrondi2((avant.associes / avant.ventes) * 100),
     ecartDeVentes: apres.enceintes - avant.enceintes,
     ecartDeChiffre: ecart((p) => p.ventes),
     ecartFournisseurs: ecart((p) => p.fournisseurs),
@@ -122,12 +121,12 @@ export const LES_CLIENTS_DEMANDENT_UNE_BAISSE: Situation = {
       titre: "La part de chacun aujourd'hui",
       notions: ["income_statement"],
       question: (c) =>
-        `Sur 100 € payés par les clients ${dE(c.entreprise)}, combien vont aux fournisseurs et prestataires, et combien restent aux associés ? Calculez chaque part (montant reçu ÷ ventes × 100), en pourcentage au dixième.`,
+        `Sur 100 € payés par les clients ${dE(c.entreprise)}, combien vont aux fournisseurs et prestataires, et combien restent aux associés ? Calculez chaque part (montant reçu ÷ ventes × 100), en pourcentage à deux décimales.`,
       champs: () => {
         const k = baisseDemandee();
         return [
-          { libelle: "Part des fournisseurs et prestataires (%)", attendu: k.partDesFournisseurs, calcul: `${eur(k.avant.fournisseurs)} ÷ ${eur(k.avant.ventes)} × 100 = ${pct(k.partDesFournisseurs)}`, tolerance: 0.1 },
-          { libelle: "Part des associés (%)", attendu: k.partDesAssocies, calcul: `${eur(k.avant.associes)} ÷ ${eur(k.avant.ventes)} × 100 = ${pct(k.partDesAssocies)}`, tolerance: 0.1 },
+          { libelle: "Part des fournisseurs et prestataires (%)", attendu: k.partDesFournisseurs, calcul: `${eur(k.avant.fournisseurs)} ÷ ${eur(k.avant.ventes)} × 100 = ${pct(k.partDesFournisseurs)}` },
+          { libelle: "Part des associés (%)", attendu: k.partDesAssocies, calcul: `${eur(k.avant.associes)} ÷ ${eur(k.avant.ventes)} × 100 = ${pct(k.partDesAssocies)}` },
         ];
       },
       explication: (c) => {

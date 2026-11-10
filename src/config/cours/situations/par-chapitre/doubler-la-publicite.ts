@@ -1,5 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
+import { arrondi2 as auCentime, eur, nombreAuCentieme, qte, quotient2 } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { AVEC_LA_PUBLICITE, ENTREPRISES_DU_CHOIX, POURQUOI_DECIDER, anneeAvecUnFacteur, type AnneeDuChoix } from "../../chapitres/decider-avec-des-chiffres";
 import type { TableauDeDonnees } from "../../types";
@@ -19,13 +18,16 @@ import type { Situation } from "../types";
  *
  * LE CAS JOUE DANS LE MONDE DU COURS, chez NOVA seule, sur le marché à trois : 4 000 € puis 8 000 €
  * de publicité par trimestre (monde/gestion-et-information.ts).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les ventes à gagner et les ventes gagnées sont des quantités ;
+ * les ventes à gagner s'écrivent d'abord à deux décimales, puis s'arrondissent à l'unité supérieure,
+ * que le corrigé nomme.
  */
 
 /** Le budget proposé, en multiple de la campagne envisagée : le double. */
 export const BUDGET_DOUBLE = 2;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const ventesEcrites = (n: number) => (Math.abs(n) === 1 ? `${qte(n)} vente` : `${qte(n)} ventes`);
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
@@ -128,8 +130,13 @@ export const DOUBLER_LA_PUBLICITE: Situation = {
         const k = publiciteDoublee();
         return [
           { libelle: "Budget de publicité en plus", attendu: k.budgetEnPlus, calcul: `${eur(k.double.publicite)} − ${eur(k.actuel.publicite)} = ${eur(k.budgetEnPlus)}` },
-          { libelle: "Marge d'une vente", attendu: k.margeParVente, calcul: `${eur(k.actuel.marge)} ÷ ${qte(k.actuel.ventes)} = ${eur(k.margeParVente)}`, tolerance: 0.01 },
-          { libelle: "Ventes que le budget en plus doit faire gagner", attendu: k.ventesAGagner, calcul: `${eur(k.budgetEnPlus)} ÷ ${eur(k.margeParVente)} = ${qte(k.ventesAGagner)}, à l'unité supérieure` },
+          { libelle: "Marge d'une vente", attendu: k.margeParVente, calcul: `${eur(k.actuel.marge)} ÷ ${qte(k.actuel.ventes)} = ${eur(k.margeParVente)}` },
+          {
+            libelle: "Ventes que le budget en plus doit faire gagner",
+            nature: "quantite",
+            attendu: k.ventesAGagner,
+            calcul: `${eur(k.budgetEnPlus)} ÷ ${eur(k.margeParVente)} = ${nombreAuCentieme(quotient2(k.budgetEnPlus, k.margeParVente))}, soit ${qte(k.ventesAGagner)} à l'unité supérieure : une vente de moins ne paierait pas le budget en plus`,
+          },
         ];
       },
       explication: (c) => [`Pour se payer, le budget en plus doit faire gagner au moins ${qte(publiciteDoublee().ventesAGagner)} ventes dans l'année ${dE(c.entreprise)}.`],
@@ -144,7 +151,7 @@ export const DOUBLER_LA_PUBLICITE: Situation = {
       champs: () => {
         const k = publiciteDoublee();
         return [
-          { libelle: "Ventes gagnées avec le budget doublé", attendu: k.ventesGagnees, calcul: `${qte(k.double.ventes)} − ${qte(k.actuel.ventes)} = ${qte(k.ventesGagnees)}` },
+          { libelle: "Ventes gagnées avec le budget doublé", nature: "quantite", attendu: k.ventesGagnees, calcul: `${qte(k.double.ventes)} − ${qte(k.actuel.ventes)} = ${qte(k.ventesGagnees)}` },
           { libelle: "Écart de résultat de l'année, budget doublé moins campagne proposée", attendu: k.ecartDeResultat, calcul: `${eur(k.double.resultat)} − ${eur(k.actuel.resultat)} = ${eur(k.ecartDeResultat)}` },
         ];
       },

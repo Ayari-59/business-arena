@@ -1,8 +1,7 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi, arrondi2, eur, nombreAuCentieme, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   anneeDuMarche,
-  budgetConstantDuLabel,
   budgetPlancherDuLabel,
   capitalImage,
   effortRse,
@@ -36,7 +35,7 @@ import { etapesAvant, etapesDepuis, partieDuChapitre } from "./decoupage";
  *   · l'inertie : dépenser tard compte plus. Dans le capital de la fin du trimestre 3, l'effort du
  *     trimestre 3 pèse 0,35, celui du trimestre 1 seulement 0,15. Les mêmes 56 000 € donnent le label
  *     au trimestre 4 dans l'ordre 4 000, 16 000, 36 000 €, et le ratent dans l'ordre inverse ; le
- *     budget constant qui l'obtient coûte 58 494 €, le plan le moins cher 53 070 € ;
+ *     budget constant qui l'obtient coûte 58 501,80 €, le plan le moins cher 53 070 € ;
  *   · le coût et le gain sur l'année : au budget du cours, 915 enceintes de plus, 19 215 € de marge
  *     pour 48 000 € : −28 785 €, « pas encore ». Le label au trimestre 4 ne paie pas dans l'année (à
  *     budget du trimestre 4 égal, −7 778 € face au budget du cours) ; le label dès le trimestre 3,
@@ -72,6 +71,15 @@ import { etapesAvant, etapesDepuis, partieDuChapitre } from "./decoupage";
  * l'attractivité ; les concurrents ne réagissent pas ; NOVA garde ses autres leviers d'aujourd'hui ;
  * le budget RSE est une charge du trimestre ; le capital joue au trimestre suivant, le label se lit
  * sur le capital d'ouverture, dès le trimestre 3, pour 2 trimestres ; le résultat est avant impôt.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le capital, l'effort et le poids d'un trimestre sont des
+ * grandeurs au centième, et la hausse d'attractivité un pourcentage à deux décimales (au dixième,
+ * avant). L'effort qui entre dans l'exponentielle est un coefficient, gardé au dix-millième, et au
+ * dix-millième supérieur quand il doit atteindre le seuil du label : le budget constant (19 500,60 €,
+ * et 58 501,80 € sur les trimestres 1 à 3) et le budget à rebours se calculent sur cet effort arrondi,
+ * comme sur la copie de l'élève, au centime près (à 20, 60 et 200 € près, avant, sur l'effort exact :
+ * 19 498,02 €, que le modèle garde). Les montants de l'année attendent le centime.
  */
 
 /** Le trimestre du label que le chapitre vise : le dernier de l'année. Le capital doit passer le seuil à la fin du trimestre d'avant. */
@@ -96,7 +104,7 @@ export const TOUT_AU_T3 = 48_000;
  */
 export const PLAN_DU_T3: readonly number[] = [20_000, 36_000, 0];
 
-/** Le défi du laboratoire : le label au trimestre 4 pour moins que ce montant (le budget constant en coûte 58 494 €). */
+/** Le défi du laboratoire : le label au trimestre 4 pour moins que ce montant (le budget constant en coûte 58 501,80 €, sur un effort au dix-millième supérieur). */
 export const PLAFOND_DU_DEFI = 58_500;
 
 /** Les bornes et le pas des budgets du laboratoire, en euros par trimestre. */
@@ -132,14 +140,16 @@ export const SEUIL_DU_PARI_DES_VENTES = 0.05;
 /** Le chapitre se calcule sur le marché à trois du cours : celui de NOVA. */
 export const ENTREPRISES_DE_LA_RSE: readonly string[] = ["nova"];
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const entre = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
+/** Un nombre à n décimales, toutes écrites (0,40 ; 0,3620) : un capital, un effort, un poids. */
 const dec = (x: number, n = 2) => x.toLocaleString("fr-FR", { minimumFractionDigits: n, maximumFractionDigits: n }).replace(/^-/, "−");
-const pct = (t: number, n = 1) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: n }).replace(/^-/, "−")} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auCentieme = auCentime;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+/** Une part (0,65) écrite en pourcentage, à deux décimales : « 65 % ». */
+const part = (t: number) => pct(arrondi2(t * 100));
+const auCentime = arrondi2;
+const auCentieme = arrondi2;
+/** Un coefficient au dix-millième (l'exposant de e) ; au dix-millième supérieur quand il doit atteindre le seuil. */
+const auDixMillieme = (x: number) => arrondi(x, 4);
+const auDixMilliemeSuperieur = (x: number) => Math.ceil(arrondi(x * 10_000, 6)) / 10_000;
 const somme = (xs: readonly number[]) => xs.reduce((t, x) => t + x, 0);
 /** « de NOVA », « d'Auris » : l'élision devant une voyelle. */
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
@@ -179,7 +189,7 @@ export function responsabilite(c: Pick<Cas, "code">) {
   const effort = auCentieme(effortExact);
   const capitalT1 = auCentieme((1 - k) * effort);
   const capitalT2 = auCentieme(k * capitalT1 + (1 - k) * effort);
-  const hausseT2 = auDixieme(r.sensibilite * capitalT1 * 100);
+  const hausseT2 = arrondi2(r.sensibilite * capitalT1 * 100);
   const constant = capitalImage(f, [b, b, b, b]);
   const capitalFin = auCentieme(constant.fins[3]!);
   const capitalT3 = auCentieme(constant.fins[2]!);
@@ -189,9 +199,13 @@ export function responsabilite(c: Pick<Cas, "code">) {
   const plancher = budgetPlancherDuLabel(f);
   const manque = auCentime(plancher - b);
   const poidsTotal = 1 - Math.pow(k, n);
+  // L'effort qui donne le label est l'exposant de e : un coefficient, gardé au dix-millième, et au
+  // dix-millième supérieur (0,9650 laisserait le capital à 0,69999, sous le seuil). Le budget se
+  // calcule sur cet effort arrondi, comme sur la copie de l'élève ; le modèle, lui, garde le budget
+  // exact (budgetConstantDuLabel, 19 498,02 €).
   const effortDuLabelExact = r.seuilDuLabel / poidsTotal;
-  const effortDuLabel = auCentieme(effortDuLabelExact);
-  const budgetConstant = budgetConstantDuLabel(f, n);
+  const effortDuLabel = auDixMilliemeSuperieur(effortDuLabelExact);
+  const budgetConstant = auCentime(r.echelle * (Math.exp(effortDuLabel) - 1));
   const coutConstant = auCentime(n * budgetConstant);
   const seuilEnCentiemes = Math.round(r.seuilDuLabel * 100);
   const effortDuCurseur = Math.ceil(seuilEnCentiemes / poidsTotal - 1e-9);
@@ -208,8 +222,12 @@ export function responsabilite(c: Pick<Cas, "code">) {
   const totalDuPlan = somme(PLAN_QUI_MONTE);
 
   // Le calcul à rebours : le budget du trimestre 3 qu'il faut, après les deux premiers budgets du plan qui monte.
-  const finT2 = monte.fins[1]!;
-  const effortT3ARebours = (r.seuilDuLabel - k * finT2) / (1 - k);
+  // Chaque ligne au dix-millième, l'exponentielle grossissant les arrondis : les deux efforts, le
+  // capital de la fin du trimestre 2, puis l'effort du trimestre 3, au dix-millième supérieur pour
+  // atteindre le seuil, et le budget sur cet effort.
+  const effortsARebours = [auDixMillieme(effortRse(f, PLAN_QUI_MONTE[0]!)), auDixMillieme(effortRse(f, PLAN_QUI_MONTE[1]!))] as const;
+  const finT2 = auDixMillieme((1 - k) * (k * effortsARebours[0] + effortsARebours[1]));
+  const effortT3ARebours = auDixMilliemeSuperieur((r.seuilDuLabel - k * finT2) / (1 - k));
   const budgetT3ARebours = auCentime(r.echelle * (Math.exp(effortT3ARebours) - 1));
   const coutARebours = auCentime(PLAN_QUI_MONTE[0]! + PLAN_QUI_MONTE[1]! + budgetT3ARebours);
   const moinsCher = planLeMoinsCherDuLabel(f, n);
@@ -219,8 +237,8 @@ export function responsabilite(c: Pick<Cas, "code">) {
   const m = annee.avec.margeUnitaire;
   const ventesPourPayer = Math.ceil(annee.cout / m - 1e-9);
   const hausseDesVentes = annee.ventesGagnees / annee.sans.ventes;
-  const haussesDAttractivite = annee.haussesDAttractivite.map((h) => auDixieme(h * 100));
-  const hausseMoyenne = auDixieme(somme(haussesDAttractivite) / haussesDAttractivite.length);
+  const haussesDAttractivite = annee.haussesDAttractivite.map((h) => arrondi2(h * 100));
+  const hausseMoyenne = arrondi2(somme(haussesDAttractivite) / haussesDAttractivite.length);
 
   // Comparer à budget du trimestre 4 égal ; le label dès le trimestre 3.
   const sansT4 = engagementRse(f, surLAnnee([b, b, b]));
@@ -271,6 +289,7 @@ export function responsabilite(c: Pick<Cas, "code">) {
     labelMonte,
     labelDescend,
     totalDuPlan,
+    effortsARebours,
     finT2,
     effortT3ARebours,
     budgetT3ARebours,
@@ -337,7 +356,7 @@ export function tableauDesReglages(c: Pick<Cas, "code">): TableauDeDonnees {
       { libelle: "Sensibilité de l'attractivité au capital", valeurs: [dec(x.r.sensibilite)] },
       { libelle: "Seuil du label (capital d'ouverture)", valeurs: [dec(x.r.seuilDuLabel)] },
       { libelle: "Premier trimestre où le label peut venir", valeurs: [`trimestre ${x.r.premierTrimestreDuLabel}`] },
-      { libelle: "Hausse d'attractivité du label", valeurs: [pct(x.r.bonusDuLabel, 0)] },
+      { libelle: "Hausse d'attractivité du label", valeurs: [part(x.r.bonusDuLabel)] },
       { libelle: "Durée du label", valeurs: [`${qte(x.r.dureeDuLabel)} trimestres`] },
       { libelle: `Ventes ${dE(x.f.entreprise)} sur l'année, sans engagement`, valeurs: [`${qte(x.aujourdhui.ventes)} ${x.f.unites}`] },
       { libelle: `Résultat ${dE(x.f.entreprise)} sur l'année, sans engagement`, valeurs: [eur(x.aujourdhui.resultat)] },
@@ -388,8 +407,8 @@ const LA_RESPONSABILITE_SOCIETALE_ENTIERE: Chapitre = {
         const o = x.aujourdhui;
         return [
           `Ce chapitre se joue dans la simulation du cours, chez ${f.entreprise}, sur l'année de la simulation du cours : une année type de ${qte(f.marche.trimestres)} trimestres égaux, qui n'est ni l'année N ni l'année N + 1 des autres chapitres. ${f.entreprise} y vend la NOVA One ${eur(o.offre.prix)} (${eur(o.coutVariable)} de coût variable, ${eur(o.margeUnitaire)} de marge) face à SoundBox et Auris. Le marché, ${qte(f.marche.parTrimestre)} ${f.unites} par trimestre, se partage entre les ${qte(f.enseignes.length)} enseignes et ne grandit pas : ce qu'une enseigne gagne, elle le prend aux autres. Sa part est son attractivité rapportée à celle de toutes. Les concurrents ne réagissent pas, ${f.entreprise} garde ses autres leviers d'aujourd'hui, et le résultat est avant impôt.`,
-          `La direction envisage de s'engager : ${eur(x.b)} de budget RSE chaque trimestre. Ce budget est une charge du trimestre, payée tout de suite. Il bâtit un capital-image : chaque trimestre, le capital garde ${pct(x.k, 0)} de ce qu'il était, et l'effort du trimestre, ln(1 + budget ÷ ${eur(x.r.echelle)}), fait le reste. Le capital de la fin d'un trimestre relève l'attractivité du trimestre suivant de ${dec(x.r.sensibilite)} × capital : l'engagement d'un trimestre ne rapporte rien dans le trimestre même.`,
-          `Le label : à partir du trimestre ${x.r.premierTrimestreDuLabel}, la simulation l'accorde au trimestre dont le capital d'ouverture, celui de la fin du trimestre d'avant, atteint ${dec(x.r.seuilDuLabel)}. Il relève alors l'attractivité de ${pct(x.r.bonusDuLabel, 0)} pendant ${qte(x.r.dureeDuLabel)} trimestres. ${x.auris.nom} engage ${eur(x.auris.offre.budgetRse)} par trimestre depuis des années : son capital vaut ${dec(x.auris.capitalImage)}, et elle n'a pas le label.`,
+          `La direction envisage de s'engager : ${eur(x.b)} de budget RSE chaque trimestre. Ce budget est une charge du trimestre, payée tout de suite. Il bâtit un capital-image : chaque trimestre, le capital garde ${part(x.k)} de ce qu'il était, et l'effort du trimestre, ln(1 + budget ÷ ${eur(x.r.echelle)}), fait le reste. Le capital de la fin d'un trimestre relève l'attractivité du trimestre suivant de ${dec(x.r.sensibilite)} × capital : l'engagement d'un trimestre ne rapporte rien dans le trimestre même.`,
+          `Le label : à partir du trimestre ${x.r.premierTrimestreDuLabel}, la simulation l'accorde au trimestre dont le capital d'ouverture, celui de la fin du trimestre d'avant, atteint ${dec(x.r.seuilDuLabel)}. Il relève alors l'attractivité de ${part(x.r.bonusDuLabel)} pendant ${qte(x.r.dureeDuLabel)} trimestres. ${x.auris.nom} engage ${eur(x.auris.offre.budgetRse)} par trimestre depuis des années : son capital vaut ${dec(x.auris.capitalImage)}, et elle n'a pas le label.`,
           "La simulation du cours ne retient de la RSE que ce capital et ce label : ni obligation ni sanction, ni effet sur la banque ou sur les salariés, ni rebuts évités. Ce qu'un engagement rapporte ici, il le rapporte par les clients qu'il attire.",
         ];
       },
@@ -403,23 +422,23 @@ const LA_RESPONSABILITE_SOCIETALE_ENTIERE: Chapitre = {
       notions: ["brand_capital"],
       question: (c) => {
         const x = responsabilite(c);
-        return `Le capital-image part de zéro. Calculez l'effort d'un trimestre, ln(1 + ${eur(x.b)} ÷ ${eur(x.r.echelle)}), puis le capital-image à la fin du trimestre 1 et à la fin du trimestre 2 (au centième, en reprenant à chaque étape le chiffre arrondi), et la hausse d'attractivité que le capital de la fin du trimestre 1 donne au trimestre 2 (la sensibilité × le capital, en %).`;
+        return `Le capital-image part de zéro. Calculez l'effort d'un trimestre, ln(1 + ${eur(x.b)} ÷ ${eur(x.r.echelle)}), puis le capital-image à la fin du trimestre 1 et à la fin du trimestre 2 (au centième, en reprenant à chaque étape le chiffre arrondi), et la hausse d'attractivité que le capital de la fin du trimestre 1 donne au trimestre 2 (la sensibilité × le capital, en %, à deux décimales).`;
       },
       champs: (c) => {
         const x = responsabilite(c);
         const kk = dec(x.k);
         const reste = dec(1 - x.k);
         return [
-          { libelle: "Effort d'un trimestre", attendu: x.effort, calcul: `ln(1 + ${eur(x.b)} ÷ ${eur(x.r.echelle)}) = ${dec(x.effort)}`, tolerance: 0.01 },
-          { libelle: "Capital-image à la fin du trimestre 1", attendu: x.capitalT1, calcul: `${kk} × 0 + ${reste} × ${dec(x.effort)} = ${dec(x.capitalT1)}`, tolerance: 0.01 },
-          { libelle: "Capital-image à la fin du trimestre 2", attendu: x.capitalT2, calcul: `${kk} × ${dec(x.capitalT1)} + ${reste} × ${dec(x.effort)} = ${dec(x.capitalT2)}`, tolerance: 0.01 },
-          { libelle: "Hausse d'attractivité au trimestre 2 (%)", attendu: x.hausseT2, calcul: `${dec(x.r.sensibilite)} × ${dec(x.capitalT1)} × 100 = ${dec(x.hausseT2, 1)} %`, tolerance: 0.1 },
+          { libelle: "Effort d'un trimestre", nature: "grandeur", attendu: x.effort, calcul: `ln(1 + ${eur(x.b)} ÷ ${eur(x.r.echelle)}) = ${dec(x.effort)}` },
+          { libelle: "Capital-image à la fin du trimestre 1", nature: "grandeur", attendu: x.capitalT1, calcul: `${kk} × 0 + ${reste} × ${dec(x.effort)} = ${dec(x.capitalT1)}` },
+          { libelle: "Capital-image à la fin du trimestre 2", nature: "grandeur", attendu: x.capitalT2, calcul: `${kk} × ${dec(x.capitalT1)} + ${reste} × ${dec(x.effort)} = ${dec(x.capitalT2)}` },
+          { libelle: "Hausse d'attractivité au trimestre 2 (%)", attendu: x.hausseT2, calcul: `${dec(x.r.sensibilite)} × ${dec(x.capitalT1)} × 100 = ${pct(x.hausseT2)}` },
         ];
       },
       explication: (c) => {
         const x = responsabilite(c);
         return [
-          `Au trimestre 1, l'engagement coûte ${eur(x.b)} et ne rapporte rien : la simulation lit le capital d'ouverture, encore nul. Au trimestre 2, l'offre ${dE(x.f.entreprise)} gagne ${dec(x.hausseT2, 1)} % d'attractivité ; à la fin du trimestre 3, le capital en est à ${dec(x.capitalT3)}, et à la fin de l'année à ${dec(x.capitalFin)}. Au trimestre 4, l'attractivité est multipliée par ${dec(x.facteurT4)}.`,
+          `Au trimestre 1, l'engagement coûte ${eur(x.b)} et ne rapporte rien : la simulation lit le capital d'ouverture, encore nul. Au trimestre 2, l'offre ${dE(x.f.entreprise)} gagne ${pct(x.hausseT2)} d'attractivité ; à la fin du trimestre 3, le capital en est à ${dec(x.capitalT3)}, et à la fin de l'année à ${dec(x.capitalFin)}. Au trimestre 4, l'attractivité est multipliée par ${dec(x.facteurT4)}.`,
           "La publicité agit dans son trimestre et s'éteint ; le capital-image se bâtit, et reste.",
         ];
       },
@@ -488,7 +507,7 @@ const LA_RESPONSABILITE_SOCIETALE_ENTIERE: Chapitre = {
         const effortEnCentiemes = Math.round(x.effort * 100);
         return [
           `Il faut un effort de ${dec(x.effortDuCurseur / 100)} au moins : ${x.n} trimestres ne bâtissent que ${dec(x.poidsTotal, 4)} de l'effort, et ${dec(x.poidsTotal, 4)} × ${dec(x.effortDuCurseur / 100)} passe tout juste ${dec(x.r.seuilDuLabel)}. Au budget du cours, l'effort vaut ${dec(x.effort)} : même tenu pour toujours, le capital tend vers l'effort sans le dépasser, et ${dec(x.effort)} reste sous ${dec(x.r.seuilDuLabel)}. Le label ne viendra jamais à ${eur(x.b)} par trimestre.`,
-          `L'effort grandit comme le logarithme du budget : passer de ${qte(effortEnCentiemes)} à ${qte(x.effortDuCurseur)} centièmes, ${pct(x.effortDuCurseur / effortEnCentiemes - 1)} d'effort en plus, demande ${eur(x.budgetDuCurseur)} par trimestre, ${pct(x.budgetDuCurseur / x.b - 1)} de budget en plus. Les étapes suivantes chiffrent le plancher du label et le budget constant qui l'obtient.`,
+          `L'effort grandit comme le logarithme du budget : passer de ${qte(effortEnCentiemes)} à ${qte(x.effortDuCurseur)} centièmes, ${part(x.effortDuCurseur / effortEnCentiemes - 1)} d'effort en plus, demande ${eur(x.budgetDuCurseur)} par trimestre, ${part(x.budgetDuCurseur / x.b - 1)} de budget en plus. Les étapes suivantes chiffrent le plancher du label et le budget constant qui l'obtient.`,
         ];
       },
     },
@@ -504,12 +523,10 @@ const LA_RESPONSABILITE_SOCIETALE_ENTIERE: Chapitre = {
       },
       champs: (c) => {
         const x = responsabilite(c);
-        // Une puissance de e arrondie au millième déplace le budget d'un millième de l'échelle au plus.
-        const tolerance = Math.max(1, Math.ceil(x.r.echelle * 0.001));
         return [
-          { libelle: "Budget par trimestre sous lequel le label ne vient jamais", attendu: x.plancher, calcul: `${eur(x.r.echelle)} × (e puissance ${dec(x.r.seuilDuLabel)} − 1) = ${eur(x.plancher)}`, tolerance },
-          { libelle: "Ce qu'il manque par trimestre au budget du cours", attendu: x.manque, calcul: `${eur(x.plancher)} − ${eur(x.b)} = ${eur(x.manque)}`, tolerance },
-          { libelle: "Capital-image à la fin de l'année", attendu: x.capitalFin, calcul: `${dec(x.effort)} × (1 − ${dec(x.k)} puissance 4) = ${dec(x.capitalFin)}`, tolerance: 0.01 },
+          { libelle: "Budget par trimestre sous lequel le label ne vient jamais", attendu: x.plancher, calcul: `${eur(x.r.echelle)} × (e puissance ${dec(x.r.seuilDuLabel)} − 1) = ${eur(x.plancher)}` },
+          { libelle: "Ce qu'il manque par trimestre au budget du cours", attendu: x.manque, calcul: `${eur(x.plancher)} − ${eur(x.b)} = ${eur(x.manque)}` },
+          { libelle: "Capital-image à la fin de l'année", nature: "grandeur", attendu: x.capitalFin, calcul: `${dec(x.effort)} × (1 − ${dec(x.k)} puissance 4) = ${dec(x.capitalFin)}` },
         ];
       },
       explication: (c) => {
@@ -528,31 +545,30 @@ const LA_RESPONSABILITE_SOCIETALE_ENTIERE: Chapitre = {
       notions: ["brand_capital", "csr_index"],
       question: (c) => {
         const x = responsabilite(c);
-        return `Sans formule cette fois. La direction veut le label au trimestre ${TRIMESTRE_DU_LABEL_VISE}, avec le même budget chaque trimestre. Retrouvez l'effort qu'il faut tenir (au centième), le budget par trimestre qui le donne (au centime, en gardant l'effort non arrondi), et ce que coûtent les trimestres 1 à ${x.n}.`;
+        return `Sans formule cette fois. La direction veut le label au trimestre ${TRIMESTRE_DU_LABEL_VISE}, avec le même budget chaque trimestre. Retrouvez l'effort qu'il faut tenir (au dix-millième supérieur : l'exponentielle grossit les arrondis), le budget par trimestre qui le donne (au centime, sur cet effort), et ce que coûtent les trimestres 1 à ${x.n}.`;
       },
       champs: (c) => {
         const x = responsabilite(c);
         return [
           {
             libelle: "Effort à tenir chaque trimestre",
+            nature: "coefficient",
             attendu: x.effortDuLabel,
-            calcul: `Le capital de la fin du trimestre ${x.n} vaut effort × (1 − ${dec(x.k)} puissance ${x.n}) = effort × ${dec(x.poidsTotal, 6)} ; il faut ${dec(x.r.seuilDuLabel)} ÷ ${dec(x.poidsTotal, 6)} = ${dec(x.effortDuLabelExact, 4)}, soit ${dec(x.effortDuLabel)}`,
-            tolerance: 0.01,
+            calcul: `Le capital de la fin du trimestre ${x.n} vaut effort × (1 − ${dec(x.k)} puissance ${x.n}) = effort × ${dec(x.poidsTotal, 6)} ; il faut ${dec(x.r.seuilDuLabel)} ÷ ${dec(x.poidsTotal, 6)} = ${dec(x.effortDuLabelExact, 6)}, soit ${dec(x.effortDuLabel, 4)} au dix-millième supérieur (${dec(arrondi(x.effortDuLabelExact, 4), 4)} laisserait le capital sous ${dec(x.r.seuilDuLabel)})`,
+            tolerance: 0.0001,
           },
           {
             libelle: "Budget constant par trimestre",
             attendu: x.budgetConstant,
-            calcul: `${eur(x.r.echelle)} × (e puissance ${dec(x.effortDuLabelExact, 4)} − 1) = ${eur(x.budgetConstant)}`,
-            // L'effort gardé au millième déplace le budget d'une vingtaine d'euros.
-            tolerance: 20,
+            calcul: `${eur(x.r.echelle)} × (e puissance ${dec(x.effortDuLabel, 4)} − 1) = ${eur(x.budgetConstant)}`,
           },
-          { libelle: `Coût des trimestres 1 à ${x.n}`, attendu: x.coutConstant, calcul: `${x.n} × ${eur(x.budgetConstant)} = ${eur(x.coutConstant)}`, tolerance: 60 },
+          { libelle: `Coût des trimestres 1 à ${x.n}`, attendu: x.coutConstant, calcul: `${x.n} × ${eur(x.budgetConstant)} = ${eur(x.coutConstant)}` },
         ];
       },
       explication: (c) => {
         const x = responsabilite(c);
         return [
-          `${eur(x.budgetConstant)} par trimestre, ${eur(x.coutConstant)} sur les trimestres 1 à ${x.n} : le capital de la fin du trimestre ${x.n} touche alors exactement ${dec(x.r.seuilDuLabel)}, et le label vient au trimestre ${TRIMESTRE_DU_LABEL_VISE}. Au curseur, l'effort arrondi à ${dec(x.effortDuCurseur / 100)} demandait ${eur(x.budgetDuCurseur)} : l'exponentielle grossit le moindre arrondi.`,
+          `${eur(x.budgetConstant)} par trimestre, ${eur(x.coutConstant)} sur les trimestres 1 à ${x.n} : le capital de la fin du trimestre ${x.n} passe alors tout juste ${dec(x.r.seuilDuLabel)}, et le label vient au trimestre ${TRIMESTRE_DU_LABEL_VISE}. Au curseur, l'effort arrondi à ${dec(x.effortDuCurseur / 100)} demandait ${eur(x.budgetDuCurseur)} : l'exponentielle grossit le moindre arrondi.`,
           `Le budget du trimestre ${TRIMESTRE_DU_LABEL_VISE}, lui, ne compte pas pour ce label : il se lit sur le capital de la fin du trimestre ${x.n}. Reste à savoir si le même budget chaque trimestre est la façon la moins chère d'y arriver.`,
         ];
       },
@@ -687,15 +703,15 @@ const LA_RESPONSABILITE_SOCIETALE_ENTIERE: Chapitre = {
         const reste = dec(1 - x.k);
         const kk = dec(x.k);
         return [
-          { libelle: "Poids de l'effort du trimestre 1", attendu: auCentieme(x.poids[0]!), calcul: `${reste} × ${kk} × ${kk} = ${dec(x.poids[0]!, 4)}, soit ${dec(x.poids[0]!)}`, tolerance: 0.01 },
-          { libelle: "Poids de l'effort du trimestre 2", attendu: auCentieme(x.poids[1]!), calcul: `${reste} × ${kk} = ${dec(x.poids[1]!, 4)}, soit ${dec(x.poids[1]!)}`, tolerance: 0.01 },
-          { libelle: "Poids de l'effort du trimestre 3", attendu: auCentieme(x.poids[2]!), calcul: `${reste} = ${dec(x.poids[2]!)}`, tolerance: 0.01 },
+          { libelle: "Poids de l'effort du trimestre 1", nature: "grandeur", attendu: auCentieme(x.poids[0]!), calcul: `${reste} × ${kk} × ${kk} = ${dec(x.poids[0]!, 4)}, soit ${dec(x.poids[0]!)}` },
+          { libelle: "Poids de l'effort du trimestre 2", nature: "grandeur", attendu: auCentieme(x.poids[1]!), calcul: `${reste} × ${kk} = ${dec(x.poids[1]!, 4)}, soit ${dec(x.poids[1]!)}` },
+          { libelle: "Poids de l'effort du trimestre 3", nature: "grandeur", attendu: auCentieme(x.poids[2]!), calcul: `${reste} = ${dec(x.poids[2]!)}` },
         ];
       },
       explication: (c) => {
         const x = responsabilite(c);
         return [
-          `L'effort du trimestre 3 pèse ${dec(x.poids[2]! / x.poids[0]!, 1)} fois plus que celui du trimestre 1 dans le capital qui décide du label du trimestre ${TRIMESTRE_DU_LABEL_VISE}. Les ${x.n} poids font ${dec(x.poidsTotal, 4)}, soit 1 − ${dec(x.k)} puissance ${x.n} : la formule du budget constant n'était que leur somme.`,
+          `L'effort du trimestre 3 pèse ${nombreAuCentieme(x.poids[2]! / x.poids[0]!)} fois plus que celui du trimestre 1 dans le capital qui décide du label du trimestre ${TRIMESTRE_DU_LABEL_VISE}. Les ${x.n} poids font ${dec(x.poidsTotal, 4)}, soit 1 − ${dec(x.k)} puissance ${x.n} : la formule du budget constant n'était que leur somme.`,
           "Un budget dépensé tôt n'est pas perdu : il relève l'attractivité des trimestres qui suivent. Mais pour un capital à une date, c'est le dernier trimestre avant cette date qui compte le plus.",
         ];
       },
@@ -718,13 +734,13 @@ const LA_RESPONSABILITE_SOCIETALE_ENTIERE: Chapitre = {
         const ef = (b: number) => dec(effortRse(x.f, b));
         const formule = (p: readonly number[]) => `${reste} × (${kk} × ${kk} × ${ef(p[0]!)} + ${kk} × ${ef(p[1]!)} + ${ef(p[2]!)})`;
         return [
-          { libelle: "Capital, plan qui monte", attendu: auCentieme(x.monte.fins[2]!), calcul: `${formule(PLAN_QUI_MONTE)} = ${dec(x.monte.fins[2]!)}`, tolerance: 0.01 },
-          { libelle: "Capital, plan qui descend", attendu: auCentieme(x.descend.fins[2]!), calcul: `${formule(PLAN_QUI_DESCEND)} = ${dec(x.descend.fins[2]!)}`, tolerance: 0.01 },
+          { libelle: "Capital, plan qui monte", nature: "grandeur", attendu: auCentieme(x.monte.fins[2]!), calcul: `${formule(PLAN_QUI_MONTE)} = ${dec(x.monte.fins[2]!)}` },
+          { libelle: "Capital, plan qui descend", nature: "grandeur", attendu: auCentieme(x.descend.fins[2]!), calcul: `${formule(PLAN_QUI_DESCEND)} = ${dec(x.descend.fins[2]!)}` },
           {
             libelle: `Capital, tout au trimestre ${x.n}`,
+            nature: "grandeur",
             attendu: auCentieme(x.toutAuT3.fins[2]!),
             calcul: `${reste} × ln(1 + ${eur(TOUT_AU_T3)} ÷ ${eur(x.r.echelle)}) = ${reste} × ${ef(TOUT_AU_T3)} = ${dec(x.toutAuT3.fins[2]!)}`,
-            tolerance: 0.01,
           },
         ];
       },
@@ -744,7 +760,7 @@ const LA_RESPONSABILITE_SOCIETALE_ENTIERE: Chapitre = {
       notions: ["brand_capital", "csr_index"],
       question: (c) => {
         const x = responsabilite(c);
-        return `${x.f.entreprise} a déjà engagé ${eur(PLAN_QUI_MONTE[0]!)} au trimestre 1 et ${eur(PLAN_QUI_MONTE[1]!)} au trimestre 2. Quel budget faut-il au moins au trimestre ${x.n} pour que le capital de sa fin atteigne ${dec(x.r.seuilDuLabel)} ? Retrouvez le capital de la fin du trimestre 2, l'effort qu'il faut au trimestre ${x.n}, ce budget, puis le coût des trimestres 1 à ${x.n}. Gardez les décimales : l'exponentielle grossit les arrondis.`;
+        return `${x.f.entreprise} a déjà engagé ${eur(PLAN_QUI_MONTE[0]!)} au trimestre 1 et ${eur(PLAN_QUI_MONTE[1]!)} au trimestre 2. Quel budget faut-il au moins au trimestre ${x.n} pour que le capital de sa fin atteigne ${dec(x.r.seuilDuLabel)} ? Retrouvez le capital de la fin du trimestre 2, l'effort qu'il faut au trimestre ${x.n}, ce budget, puis le coût des trimestres 1 à ${x.n}. L'exponentielle grossit les arrondis : gardez chaque effort et chaque capital au dix-millième, et l'effort du trimestre ${x.n} au dix-millième supérieur, pour atteindre le seuil.`;
       },
       champs: (c) => {
         const x = responsabilite(c);
@@ -753,30 +769,30 @@ const LA_RESPONSABILITE_SOCIETALE_ENTIERE: Chapitre = {
         return [
           {
             libelle: "Capital à la fin du trimestre 2",
-            attendu: auCentieme(x.finT2),
-            calcul: `${reste} × (${kk} × ${dec(effortRse(x.f, PLAN_QUI_MONTE[0]!), 4)} + ${dec(effortRse(x.f, PLAN_QUI_MONTE[1]!), 4)}) = ${dec(x.finT2, 4)}`,
-            tolerance: 0.01,
+            nature: "coefficient",
+            attendu: x.finT2,
+            calcul: `${reste} × (${kk} × ${dec(x.effortsARebours[0], 4)} + ${dec(x.effortsARebours[1], 4)}) = ${dec(x.finT2, 4)}`,
+            tolerance: 0.0001,
           },
           {
             libelle: `Effort nécessaire au trimestre ${x.n}`,
-            attendu: auCentieme(x.effortT3ARebours),
-            calcul: `(${dec(x.r.seuilDuLabel)} − ${kk} × ${dec(x.finT2, 4)}) ÷ ${reste} = ${dec(x.effortT3ARebours, 4)}`,
-            tolerance: 0.01,
+            nature: "coefficient",
+            attendu: x.effortT3ARebours,
+            calcul: `(${dec(x.r.seuilDuLabel)} − ${kk} × ${dec(x.finT2, 4)}) ÷ ${reste} = ${dec((x.r.seuilDuLabel - x.k * x.finT2) / (1 - x.k), 6)}, soit ${dec(x.effortT3ARebours, 4)} au dix-millième supérieur, pour atteindre le seuil`,
+            tolerance: 0.0001,
           },
-          // Un capital ou un effort arrondi au centième déplace le budget de quelques centaines d'euros.
-          { libelle: `Budget du trimestre ${x.n}`, attendu: x.budgetT3ARebours, calcul: `${eur(x.r.echelle)} × (e puissance ${dec(x.effortT3ARebours, 4)} − 1) = ${eur(x.budgetT3ARebours)}`, tolerance: 200 },
+          { libelle: `Budget du trimestre ${x.n}`, attendu: x.budgetT3ARebours, calcul: `${eur(x.r.echelle)} × (e puissance ${dec(x.effortT3ARebours, 4)} − 1) = ${eur(x.budgetT3ARebours)}` },
           {
             libelle: `Coût des trimestres 1 à ${x.n}`,
             attendu: x.coutARebours,
             calcul: `${eur(PLAN_QUI_MONTE[0]!)} + ${eur(PLAN_QUI_MONTE[1]!)} + ${eur(x.budgetT3ARebours)} = ${eur(x.coutARebours)}`,
-            tolerance: 200,
           },
         ];
       },
       explication: (c) => {
         const x = responsabilite(c);
         return [
-          `Le capital de la fin du trimestre 2 garde ${pct(x.k, 0)} de lui-même : il apporte ${dec(x.k * x.finT2, 4)}, et l'effort du trimestre ${x.n}, pondéré par ${dec(1 - x.k)}, doit faire le reste, ${dec(x.r.seuilDuLabel - x.k * x.finT2, 4)}. Ce plan coûte ${eur(x.coutARebours)} : moins que les ${eur(x.coutConstant)} du budget constant, à peine plus que le plan le moins cher, environ ${eur(Math.round(x.moinsCher.total))}.`,
+          `Le capital de la fin du trimestre 2 garde ${part(x.k)} de lui-même : il apporte ${dec(x.k * x.finT2, 4)}, et l'effort du trimestre ${x.n}, pondéré par ${dec(1 - x.k)}, doit faire le reste, ${dec(x.r.seuilDuLabel - x.k * x.finT2, 4)}. Ce plan coûte ${eur(x.coutARebours)} : moins que les ${eur(x.coutConstant)} du budget constant, à peine plus que le plan le moins cher, environ ${eur(Math.round(x.moinsCher.total))}.`,
         ];
       },
     },
@@ -826,7 +842,7 @@ const LA_RESPONSABILITE_SOCIETALE_ENTIERE: Chapitre = {
       question: (c) => {
         const x = responsabilite(c);
         const [, h2, h3, h4] = x.haussesDAttractivite;
-        return `Revenons au budget du cours, ${eur(x.b)} chaque trimestre. Le capital relève l'attractivité ${dE(x.f.entreprise)} de ${dec(h2!, 1)} % au trimestre 2, ${dec(h3!, 1)} % au trimestre 3 et ${dec(h4!, 1)} % au trimestre 4, rien au trimestre 1. Pariez : ses ventes de l'année monteront…`;
+        return `Revenons au budget du cours, ${eur(x.b)} chaque trimestre. Le capital relève l'attractivité ${dE(x.f.entreprise)} de ${pct(h2!)} au trimestre 2, ${pct(h3!)} au trimestre 3 et ${pct(h4!)} au trimestre 4, rien au trimestre 1. Pariez : ses ventes de l'année monteront…`;
       },
       options: (c) => {
         const x = responsabilite(c);
@@ -837,7 +853,7 @@ const LA_RESPONSABILITE_SOCIETALE_ENTIERE: Chapitre = {
         const t4 = !moins && !moyenne;
         const dit = (juste: boolean) => `${juste ? "Bon pari" : "Pari à vérifier"}. ${voir}`;
         return [
-          { texte: `De moins de ${pct(SEUIL_DU_PARI_DES_VENTES, 0)} : une part monte moins vite que l'attractivité`, juste: moins, retour: dit(moins) },
+          { texte: `De moins de ${part(SEUIL_DU_PARI_DES_VENTES)} : une part monte moins vite que l'attractivité`, juste: moins, retour: dit(moins) },
           { texte: `D'environ ${qte(Math.round(x.hausseMoyenne))} %, la hausse moyenne de l'attractivité`, juste: moyenne, retour: dit(moyenne) },
           { texte: `D'environ ${qte(Math.round(x.haussesDAttractivite[3]!))} %, la hausse du trimestre 4`, juste: t4, retour: dit(t4) },
         ];
@@ -876,7 +892,7 @@ const LA_RESPONSABILITE_SOCIETALE_ENTIERE: Chapitre = {
       explication: (c) => {
         const x = responsabilite(c);
         return [
-          `Il faudrait ${qte(x.ventesPourPayer)} ${x.f.unites} de plus pour payer ${eur(x.annee.cout)} à ${eur(x.m)} l'${x.f.unite}. Le capital en fait vendre ${qte(x.annee.ventesGagnees)} de plus, ${pct(x.hausseDesVentes)} des ventes : la part de marché monte moins vite que l'attractivité, parce que les autres enseignes gardent la leur au dénominateur.`,
+          `Il faudrait ${qte(x.ventesPourPayer)} ${x.f.unites} de plus pour payer ${eur(x.annee.cout)} à ${eur(x.m)} l'${x.f.unite}. Le capital en fait vendre ${qte(x.annee.ventesGagnees)} de plus, ${part(x.hausseDesVentes)} des ventes : la part de marché monte moins vite que l'attractivité, parce que les autres enseignes gardent la leur au dénominateur.`,
           "L'étape suivante refait l'année entière, trimestre par trimestre.",
         ];
       },
@@ -911,19 +927,17 @@ const LA_RESPONSABILITE_SOCIETALE_ENTIERE: Chapitre = {
         const s = x.annee.sans;
         const a = x.annee.avec;
         return [
-          { libelle: "Ventes gagnées sur l'année", attendu: x.annee.ventesGagnees, calcul: `${qte(a.ventes)} − ${qte(s.ventes)} = ${qte(x.annee.ventesGagnees)}` },
-          { libelle: "Marge gagnée sur l'année", attendu: x.annee.margeGagnee, calcul: `${qte(x.annee.ventesGagnees)} × (${eur(a.offre.prix)} − ${eur(a.coutVariable)}) = ${eur(x.annee.margeGagnee)}`, tolerance: 1 },
+          { libelle: "Ventes gagnées sur l'année", nature: "quantite", attendu: x.annee.ventesGagnees, calcul: `${qte(a.ventes)} − ${qte(s.ventes)} = ${qte(x.annee.ventesGagnees)}` },
+          { libelle: "Marge gagnée sur l'année", attendu: x.annee.margeGagnee, calcul: `${qte(x.annee.ventesGagnees)} × (${eur(a.offre.prix)} − ${eur(a.coutVariable)}) = ${eur(x.annee.margeGagnee)}` },
           {
             libelle: "Résultat de l'année engagée",
             attendu: a.resultat,
             calcul: `${qte(a.ventes)} × ${eur(x.m)} − ${eur(a.chargesFixes)} − ${eur(a.budgetQualite)} − ${eur(a.budgetRse)} = ${eur(a.marge)} − ${eur(a.charges)} = ${eur(a.resultat)}`,
-            tolerance: 1,
           },
           {
             libelle: "Écart de résultat avec l'année sans engagement",
             attendu: x.annee.ecart,
             calcul: `${eur(a.resultat)} − ${entre(s.resultat)} = ${eur(x.annee.ecart)}, soit ${eur(x.annee.margeGagnee)} − ${eur(x.annee.cout)}`,
-            tolerance: 1,
           },
         ];
       },
@@ -952,7 +966,7 @@ const LA_RESPONSABILITE_SOCIETALE_ENTIERE: Chapitre = {
         return [
           { libelle: "Coût complet sans engagement", attendu: s.coutComplet, calcul: `${eur(s.coutVariable)} + ${eur(s.charges)} ÷ ${qte(s.ventes)} = ${eur(s.coutComplet)}` },
           { libelle: "Coût complet au budget du cours", attendu: a.coutComplet, calcul: `${eur(a.coutVariable)} + ${eur(a.charges)} ÷ ${qte(a.ventes)} = ${eur(a.coutComplet)}` },
-          { libelle: "Hausse du coût complet", attendu: hausse, calcul: `${eur(a.coutComplet)} − ${eur(s.coutComplet)} = ${eur(hausse)}`, tolerance: 0.02 },
+          { libelle: "Hausse du coût complet", attendu: hausse, calcul: `${eur(a.coutComplet)} − ${eur(s.coutComplet)} = ${eur(hausse)}` },
         ];
       },
       explication: (c) => {
@@ -1040,19 +1054,16 @@ const LA_RESPONSABILITE_SOCIETALE_ENTIERE: Chapitre = {
             libelle: "Écart du plan qui monte au budget du cours",
             attendu: x.ecartMonteAuCours,
             calcul: `${eur(x.anneeMonte.avec.resultat)} − ${entre(x.annee.avec.resultat)} = ${eur(x.ecartMonteAuCours)}`,
-            tolerance: 1,
           },
           {
             libelle: `Effet du budget du trimestre ${TRIMESTRE_DU_LABEL_VISE} sur le résultat de l'année`,
             attendu: x.effetDuT4,
             calcul: `${eur(x.annee.avec.resultat)} − ${entre(x.sansT4.avec.resultat)} = ${eur(x.effetDuT4)}, le budget lui-même : il ne fait rien vendre cette année`,
-            tolerance: 1,
           },
           {
             libelle: `Écart du plan qui monte, à budget du trimestre ${TRIMESTRE_DU_LABEL_VISE} égal`,
             attendu: x.ecartMonteAT4Egal,
             calcul: `${eur(x.anneeMonte.avec.resultat)} − ${entre(x.sansT4.avec.resultat)} = ${eur(x.ecartMonteAT4Egal)}`,
-            tolerance: 1,
           },
         ];
       },
@@ -1099,12 +1110,12 @@ const LA_RESPONSABILITE_SOCIETALE_ENTIERE: Chapitre = {
         return [
           {
             libelle: "Capital à la fin du trimestre 2",
+            nature: "grandeur",
             attendu: auCentieme(x.capitalT2DuPlanT3),
             calcul: `${reste} × (${kk} × ${dec(effortRse(x.f, PLAN_DU_T3[0]!))} + ${dec(effortRse(x.f, PLAN_DU_T3[1]!))}) = ${dec(x.capitalT2DuPlanT3)}`,
-            tolerance: 0.01,
           },
-          { libelle: "Écart au budget du cours sans le trimestre 4", attendu: x.ecartT3AuCours, calcul: `${eur(r)} − ${entre(x.sansT4.avec.resultat)} = ${eur(x.ecartT3AuCours)}`, tolerance: 1 },
-          { libelle: "Écart à l'année sans engagement", attendu: x.ecartT3AuSans, calcul: `${eur(r)} − ${entre(x.annee.sans.resultat)} = ${eur(x.ecartT3AuSans)}`, tolerance: 1 },
+          { libelle: "Écart au budget du cours sans le trimestre 4", attendu: x.ecartT3AuCours, calcul: `${eur(r)} − ${entre(x.sansT4.avec.resultat)} = ${eur(x.ecartT3AuCours)}` },
+          { libelle: "Écart à l'année sans engagement", attendu: x.ecartT3AuSans, calcul: `${eur(r)} − ${entre(x.annee.sans.resultat)} = ${eur(x.ecartT3AuSans)}` },
         ];
       },
       explication: (c) => {
@@ -1123,7 +1134,7 @@ const LA_RESPONSABILITE_SOCIETALE_ENTIERE: Chapitre = {
       notions: ["csr_index", "brand_capital"],
       question: (c) => {
         const x = responsabilite(c);
-        return `Le label relève l'attractivité de ${pct(x.r.bonusDuLabel, 0)} tant qu'il joue. Dans l'année de la simulation du cours, que retenir de ce qu'il rapporte ?`;
+        return `Le label relève l'attractivité de ${part(x.r.bonusDuLabel)} tant qu'il joue. Dans l'année de la simulation du cours, que retenir de ce qu'il rapporte ?`;
       },
       options: (c) => {
         const x = responsabilite(c);
@@ -1143,9 +1154,9 @@ const LA_RESPONSABILITE_SOCIETALE_ENTIERE: Chapitre = {
             retour: `Non : c'est comparer deux plans qui ne dépensent pas la même chose au trimestre ${TRIMESTRE_DU_LABEL_VISE}. À budget du trimestre ${TRIMESTRE_DU_LABEL_VISE} égal, le label du trimestre ${TRIMESTRE_DU_LABEL_VISE} finit ${sensDuResultat(x.ecartMonteAT4Egal)}.`,
           },
           {
-            texte: `Il fait vendre ${pct(x.r.bonusDuLabel, 0)} de plus tant qu'il joue`,
+            texte: `Il fait vendre ${part(x.r.bonusDuLabel)} de plus tant qu'il joue`,
             juste: false,
-            retour: `Non : ${pct(x.r.bonusDuLabel, 0)} d'attractivité ne font pas ${pct(x.r.bonusDuLabel, 0)} de ventes, car la part de marché monte moins vite. Au trimestre ${TRIMESTRE_DU_LABEL_VISE}, le plan qui monte vend ${qte(t4)} ${x.f.unites} de plus que le budget du cours.`,
+            retour: `Non : ${part(x.r.bonusDuLabel)} d'attractivité ne font pas ${part(x.r.bonusDuLabel)} de ventes, car la part de marché monte moins vite. Au trimestre ${TRIMESTRE_DU_LABEL_VISE}, le plan qui monte vend ${qte(t4)} ${x.f.unites} de plus que le budget du cours.`,
           },
         ];
       },
@@ -1168,7 +1179,7 @@ const LA_RESPONSABILITE_SOCIETALE_ENTIERE: Chapitre = {
           {
             texte: "Un investissement : un capital payé maintenant, qui rapporte ensuite",
             juste: true,
-            retour: `Oui : la dépense est une charge du trimestre, et elle bâtit un capital qui relève l'attractivité les trimestres suivants. Le capital garde ${pct(x.k, 0)} de lui-même chaque trimestre : il s'use lentement si l'on arrête. Devenu assez fort pour le label, il distingue l'offre : une stratégie de différenciation, qui se juge sur plusieurs années, et qui demande un budget assez fort et bien placé.`,
+            retour: `Oui : la dépense est une charge du trimestre, et elle bâtit un capital qui relève l'attractivité les trimestres suivants. Le capital garde ${part(x.k)} de lui-même chaque trimestre : il s'use lentement si l'on arrête. Devenu assez fort pour le label, il distingue l'offre : une stratégie de différenciation, qui se juge sur plusieurs années, et qui demande un budget assez fort et bien placé.`,
           },
           {
             texte: "Une publicité : elle fait vendre dans son trimestre, puis s'éteint",

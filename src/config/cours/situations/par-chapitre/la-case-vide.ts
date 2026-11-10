@@ -1,5 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
+import { aLUnite, arrondi2, arrondi2 as auCentime, eur, nombreAuCentieme, qte } from "../../../../pedagogy/cours/deux-decimales";
 import { TRIMESTRE_DECIDE, UNE_DONNEE_FAUSSE, donneeFausse } from "../../chapitres/une-donnee-fausse";
 import { FICHE_DE_CAPACITE, trimestreDecide } from "../../monde/gestion-et-information";
 import type { Situation } from "../types";
@@ -19,13 +18,18 @@ import type { Situation } from "../types";
  * du chapitre (`donneeFausse` : l'extrait de l'année N de NOVA, la prévision juste), et le
  * trimestre 4 rejoué avec chaque plan (`trimestreDecide`, monde/gestion-et-information.ts). Le cas
  * rejouait l'année de l'arène, dans sept entreprises.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les ventes, le total et la prévision sont des quantités ; la
+ * prévision s'écrit d'abord à deux décimales, puis s'arrondit à l'enceinte (à une enceinte près,
+ * avant).
  */
 
 /** Le trimestre dont les ventes n'ont pas été saisies (hypothèse du cas). */
 export const TRIMESTRE_SANS_SAISIE = 2;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
+/** Une quantité calculée : à deux décimales, puis arrondie à l'unité quand elle tombe entre deux entiers. */
+const aLUniteEcrite = (x: number) => (Number.isInteger(arrondi2(x)) ? qte(x) : `${nombreAuCentieme(x)}, arrondi à l'unité : ${qte(aLUnite(x))}`);
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /** L'extrait à la case vide, le plan qu'il a fait prendre, et le trimestre 4 rejoué. */
@@ -36,8 +40,8 @@ export function caseVide() {
   const n = lignes.length;
   const totalDuTableur = lignes.reduce((t, l) => t + (l.saisie ?? 0), 0);
   const chiffreDAffairesTotal = auCentime(lignes.reduce((t, l) => t + l.chiffreDAffaires, 0));
-  const planDuResponsable = Math.round(totalDuTableur / n);
-  const moyenneDesSaisis = Math.round(totalDuTableur / (n - 1));
+  const planDuResponsable = aLUnite(totalDuTableur / n);
+  const moyenneDesSaisis = aLUnite(totalDuTableur / (n - 1));
   const avecLaCaseVide = trimestreDecide(FICHE_DE_CAPACITE, planDuResponsable);
   const juste = r.juste;
   return {
@@ -108,13 +112,13 @@ export const LA_CASE_VIDE: Situation = {
       type: "montants",
       titre: "Compléter l'extrait",
       notions: ["revenue"],
-      question: (c) => `Retrouvez les ventes du trimestre ${V} à partir de son chiffre d'affaires et du prix, puis le vrai total des ventes de l'extrait et la prévision du trimestre ${D}, leur moyenne à l'unité (en ${c.unites}).`,
+      question: (c) => `Retrouvez les ventes du trimestre ${V} à partir de son chiffre d'affaires et du prix, puis le vrai total des ventes de l'extrait et la prévision du trimestre ${D}, leur moyenne arrondie à l'unité (en ${c.unites}).`,
       champs: (c) => {
         const s = caseVide();
         return [
-          { libelle: `Ventes du trimestre ${V} (${c.unites})`, attendu: s.vide.ventes, calcul: `${eur(s.vide.chiffreDAffaires)} ÷ ${eur(s.vide.prix)} = ${qte(s.vide.ventes)}` },
-          { libelle: `Total des ventes de l'extrait (${c.unites})`, attendu: s.r.sommeJuste, calcul: `${s.lignes.map((l) => qte(l.ventes)).join(" + ")} = ${qte(s.r.sommeJuste)}` },
-          { libelle: `Prévision du trimestre ${D} (${c.unites})`, attendu: s.r.previsionJuste, calcul: `${qte(s.r.sommeJuste)} ÷ ${s.n} = ${qte(s.r.previsionJuste)}`, tolerance: 1 },
+          { libelle: `Ventes du trimestre ${V} (${c.unites})`, nature: "quantite", attendu: s.vide.ventes, calcul: `${eur(s.vide.chiffreDAffaires)} ÷ ${eur(s.vide.prix)} = ${qte(s.vide.ventes)}` },
+          { libelle: `Total des ventes de l'extrait (${c.unites})`, nature: "quantite", attendu: s.r.sommeJuste, calcul: `${s.lignes.map((l) => qte(l.ventes)).join(" + ")} = ${qte(s.r.sommeJuste)}` },
+          { libelle: `Prévision du trimestre ${D} (${c.unites})`, nature: "quantite", attendu: s.r.previsionJuste, calcul: `${qte(s.r.sommeJuste)} ÷ ${s.n} = ${aLUniteEcrite(s.r.sommeJuste / s.n)}` },
         ];
       },
       explication: (c) => {
@@ -144,7 +148,7 @@ export const LA_CASE_VIDE: Situation = {
       champs: (c) => {
         const s = caseVide();
         return [
-          { libelle: `Ventes perdues (${c.unites})`, attendu: s.ventesPerdues, calcul: `${qte(s.juste.vendues)} − ${qte(s.avecLaCaseVide.vendues)} = ${qte(s.ventesPerdues)}` },
+          { libelle: `Ventes perdues (${c.unites})`, nature: "quantite", attendu: s.ventesPerdues, calcul: `${qte(s.juste.vendues)} − ${qte(s.avecLaCaseVide.vendues)} = ${qte(s.ventesPerdues)}` },
           { libelle: "Coût de la case vide sur la marge", attendu: s.coutDeLaCaseVide, calcul: `${eur(s.juste.marge)} − ${eur(s.avecLaCaseVide.marge)} = ${eur(s.coutDeLaCaseVide)}` },
         ];
       },

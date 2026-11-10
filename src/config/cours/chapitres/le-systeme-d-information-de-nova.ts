@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import {
   CONTROLE_DES_ADRESSES,
   COUT_D_UN_COLIS_REVENU,
@@ -21,11 +21,12 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * activités, synchronisation) ; le système informatique et la transformation de l'organisation.
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez NOVA : monde/systeme-d-information-de-nova.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux d'adresses fausses se donne à deux décimales, à un
+ * centième près (au dixième, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 
 /** Le processus « Expédier une commande du site », tel que l'atelier le décrit. */
 const processusDExpedition = (): TableauDeDonnees => ({
@@ -190,7 +191,7 @@ export const LE_SYSTEME_D_INFORMATION_DE_NOVA: Chapitre = {
       champs: () => {
         const k = adressesDeJanvier();
         return [
-          { libelle: "Taux d'adresses fausses (%)", attendu: k.tauxPct, tolerance: 0.1, calcul: `${qte(k.colis)} ÷ ${qte(k.commandes)} × 100 = ${pct(k.tauxPct)}` },
+          { libelle: "Taux d'adresses fausses (%)", attendu: k.tauxPct, calcul: `${qte(k.colis)} ÷ ${qte(k.commandes)} × 100 = ${pct(k.tauxPct)}` },
           { libelle: "Coût des colis revenus", attendu: k.cout, calcul: `${qte(k.colis)} × ${eur(COUT_D_UN_COLIS_REVENU)} = ${eur(k.cout)}` },
         ];
       },

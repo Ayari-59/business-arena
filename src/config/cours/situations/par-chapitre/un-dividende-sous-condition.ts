@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { structureDuCas } from "../../chapitres/ratios-de-structure-et-bilan-financier";
 import { auCentime } from "../../monde/amortissement";
@@ -28,9 +28,8 @@ export const DIVIDENDE_DEMANDE = 45_000;
 /** L'autonomie financière que la banque exige au bilan financier après répartition : hypothèse du cas. */
 export const AUTONOMIE_EXIGEE = 0.45;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${qte(t)} %`;
+/** Un nombre au centième : deux décimales s'il n'est pas entier (0,30 fois). */
+const qte = (n: number) => nombreAuCentieme(n);
 
 /** Les chiffres du cas. */
 export function dividendeSousCondition(c: Pick<Cas, "code">) {
@@ -121,7 +120,7 @@ export const UN_DIVIDENDE_SOUS_CONDITION: Situation = {
           { libelle: "Capitaux propres après répartition", attendu: n.capitauxPropres, calcul: `${eur(b.capitauxPropres)} − ${eur(DIVIDENDE_DEMANDE)} = ${eur(n.capitauxPropres)}` },
           { libelle: "Dettes à moins d'un an après répartition", attendu: n.dettesMoinsDUnAn, calcul: `${eur(b.dettesMoinsDUnAn)} + ${eur(DIVIDENDE_DEMANDE)} = ${eur(n.dettesMoinsDUnAn)}` },
           { libelle: "Autonomie financière, en %", attendu: n.autonomie, calcul: `${eur(n.capitauxPropres)} ÷ ${eur(b.totalPassif)} = ${pct(n.autonomie)}, le total ne change pas`, tolerance: 0.01 },
-          { libelle: "Liquidité générale", attendu: n.liquiditeGenerale, calcul: `${eur(b.actifMoinsDUnAn)} ÷ ${eur(n.dettesMoinsDUnAn)} = ${qte(n.liquiditeGenerale)}`, tolerance: 0.01 },
+          { libelle: "Liquidité générale", nature: "grandeur", attendu: n.liquiditeGenerale, calcul: `${eur(b.actifMoinsDUnAn)} ÷ ${eur(n.dettesMoinsDUnAn)} = ${qte(n.liquiditeGenerale)}`, tolerance: 0.01 },
         ];
       },
       explication: (c) => {
@@ -144,7 +143,6 @@ export const UN_DIVIDENDE_SOUS_CONDITION: Situation = {
             libelle: "Dividende le plus élevé",
             attendu: n.dividendeMaximal,
             calcul: `${eur(b.capitauxPropres)} − ${qte(AUTONOMIE_EXIGEE)} × ${eur(b.totalPassif)} = ${eur(auCentime(b.capitauxPropres - AUTONOMIE_EXIGEE * b.totalPassif))}, soit ${eur(n.dividendeMaximal)} à l'euro inférieur`,
-            tolerance: 1,
           },
         ];
       },

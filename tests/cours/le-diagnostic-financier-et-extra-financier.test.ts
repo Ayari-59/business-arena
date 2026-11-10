@@ -148,11 +148,11 @@ describe("N + 1 et N + 2, refaits à la main", () => {
     expect(t["Les investissements de l'année"]).toBe("flux");
   });
 
-  it("les indicateurs ESG : 1,5 kWh par enceinte en N + 2, 0,0783 kg de CO2, 3,48 % d'absentéisme en N + 1", () => {
+  it("les indicateurs ESG : 1,5 kWh par enceinte en N + 2, 78,25 g de CO2 (0,0783 kg), 3,48 % d'absentéisme en N + 1", () => {
     const d = diagnosticDeNova();
     expect(d.esg[2]!.kwh).toBe(32_800 * 1.2 + 1_500 * 12 - 8_000);
     expect(d.esg[0]!.kwh).toBe(c(23_609 * 1.2 + 1_500 * 12));
-    expect(attendus(ch, "les-indicateurs-esg")).toEqual([1.5, 0.0783, 5.49, 3.48]);
+    expect(attendus(ch, "les-indicateurs-esg")).toEqual([1.5, 78.25, 5.49, 3.48]);
     expect(c(380 / (6 * 151.67 * 12))).toBe(0.03);
     expect(d.secteur).toBe(MOYENNES_DU_SECTEUR);
   });

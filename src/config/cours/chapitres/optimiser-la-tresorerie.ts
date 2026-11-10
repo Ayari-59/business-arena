@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { auCentime } from "../monde/amortissement";
 import { ENTREPRISES_DES_COMPTES_DU_LYCEE, exerciceDe } from "../monde/comptes-du-lycee";
@@ -62,8 +62,8 @@ const LIBELLES: Record<SolutionDuManque, string> = {
   casser: "casser le compte à terme",
 };
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 /** La phrase de la banque de NOVA, quand le découvert dépasse ce qu'elle autorise. */
 const auDelaDeLAutorisation = `Au-delà de l'autorisation de découvert, ${eur(DECOUVERT_AUTORISE)}, la banque finance au même taux par un crédit de trésorerie.`;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
@@ -141,7 +141,7 @@ export const OPTIMISER_LA_TRESORERIE: Chapitre = {
         return [
           { libelle: "À payer bientôt", attendu: k.aPayerDansLeMois, calcul: `${eur(k.b.poste("fournisseurs"))} + ${eur(k.b.poste("etat"))} = ${eur(k.aPayerDansLeMois)}` },
           { libelle: "Excédent à placer", attendu: k.excedent, calcul: `${eur(k.tresorerie)} − ${eur(k.aPayerDansLeMois)} = ${eur(k.excedent)}` },
-          { libelle: "Intérêts sur un an", attendu: k.interetsSurLExcedent, calcul: `${eur(k.excedent)} × ${pct(k.tauxDuPlacement)} = ${eur(k.interetsSurLExcedent)}`, tolerance: 1 },
+          { libelle: "Intérêts sur un an", attendu: k.interetsSurLExcedent, calcul: `${eur(k.excedent)} × ${pct(k.tauxDuPlacement)} = ${eur(k.interetsSurLExcedent)}` },
         ];
       },
       explication: (c) => {
@@ -197,9 +197,9 @@ export const OPTIMISER_LA_TRESORERIE: Chapitre = {
         const k = optimiser(c);
         return [
           { libelle: "Sur le compte à terme", attendu: k.aBloquer, calcul: `${eur(k.excedent)} − ${eur(k.besoinDeLAnnee)} = ${eur(k.aBloquer)}` },
-          { libelle: "Intérêts du compte à terme", attendu: k.interetsBloques, calcul: `${eur(k.aBloquer)} × ${pct(k.tauxDuPlacement)} = ${eur(k.interetsBloques)}`, tolerance: 1 },
-          { libelle: "Intérêts du compte rémunéré", attendu: k.interetsDisponibles, calcul: `${eur(k.besoinDeLAnnee)} × ${pct(TAUX_DU_COMPTE_REMUNERE)} = ${eur(k.interetsDisponibles)}`, tolerance: 1 },
-          { libelle: "Intérêts en tout", attendu: k.interetsDuPartage, calcul: `${eur(k.interetsBloques)} + ${eur(k.interetsDisponibles)} = ${eur(k.interetsDuPartage)}`, tolerance: 1 },
+          { libelle: "Intérêts du compte à terme", attendu: k.interetsBloques, calcul: `${eur(k.aBloquer)} × ${pct(k.tauxDuPlacement)} = ${eur(k.interetsBloques)}` },
+          { libelle: "Intérêts du compte rémunéré", attendu: k.interetsDisponibles, calcul: `${eur(k.besoinDeLAnnee)} × ${pct(TAUX_DU_COMPTE_REMUNERE)} = ${eur(k.interetsDisponibles)}` },
+          { libelle: "Intérêts en tout", attendu: k.interetsDuPartage, calcul: `${eur(k.interetsBloques)} + ${eur(k.interetsDisponibles)} = ${eur(k.interetsDuPartage)}` },
         ];
       },
       explication: (c) => {
@@ -303,8 +303,8 @@ export const OPTIMISER_LA_TRESORERIE: Chapitre = {
         const cc = couvrirLeManque(k, PRIX_DU_DEFI, "compte-courant");
         return [
           { libelle: "Manque en banque", attendu: d.manque, calcul: `${eur(PRIX_DU_DEFI)} − ${eur(k.banque)} = ${eur(d.manque)}` },
-          { libelle: "Agios du découvert", attendu: d.cout, calcul: `${eur(d.manque)} × ${pct(TAUX_DU_DECOUVERT)} × ${d.jours} ÷ 360 = ${eur(d.cout)}`, tolerance: 0.05 },
-          { libelle: "Intérêts du compte courant", attendu: cc.cout, calcul: `${eur(cc.manque)} × ${pct(TAUX_DU_COMPTE_COURANT)} × ${cc.jours} ÷ 360 = ${eur(cc.cout)}`, tolerance: 0.05 },
+          { libelle: "Agios du découvert", attendu: d.cout, calcul: `${eur(d.manque)} × ${pct(TAUX_DU_DECOUVERT)} × ${d.jours} ÷ 360 = ${eur(d.cout)}` },
+          { libelle: "Intérêts du compte courant", attendu: cc.cout, calcul: `${eur(cc.manque)} × ${pct(TAUX_DU_COMPTE_COURANT)} × ${cc.jours} ÷ 360 = ${eur(cc.cout)}` },
         ];
       },
       explication: (c) => {

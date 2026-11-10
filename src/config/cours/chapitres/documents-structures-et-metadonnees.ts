@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, qte } from "../../../pedagogy/cours/deux-decimales";
 import { ENTREPRISES_DES_DOCUMENTS, GED, RECHERCHE, commandeDuComite, gainDUneRecherche, gainDesRecherches, recherchesQuiPaientLaGed, referenceDe } from "../monde/documents-de-maille";
 import type { Chapitre, TableauDeDonnees } from "../types";
 
@@ -14,10 +14,12 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * chiffrée au curseur ; la standardisation des échanges. Tout se corrige au serveur.
  *
  * LE CHAPITRE JOUE DANS LE MONDE DU COURS, chez MAILLE & CO : monde/documents-de-maille.ts.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les articles commandés sont une quantité, entière, déclarée
+ * comme telle.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 
 const COL_ROND = () => referenceDe("col-rond");
 
@@ -132,7 +134,7 @@ export const DOCUMENTS_STRUCTURES_ET_METADONNEES: Chapitre = {
       champs: () => {
         const k = commandeDuComite();
         return [
-          { libelle: "Articles commandés", attendu: k.articles, calcul: `${k.lignes.map((l) => qte(l.quantite)).join(" + ")} = ${qte(k.articles)}` },
+          { libelle: "Articles commandés", nature: "quantite", attendu: k.articles, calcul: `${k.lignes.map((l) => qte(l.quantite)).join(" + ")} = ${qte(k.articles)}` },
           { libelle: "Montant hors taxes", attendu: k.total, calcul: `${k.lignes.map((l) => `${qte(l.quantite)} × ${eur(l.prixHt)}`).join(" + ")} = ${eur(k.total)}` },
         ];
       },

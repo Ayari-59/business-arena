@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { MOIS_DE_L_EXERCICE } from "../monde/exercice-de-nova";
 import {
@@ -32,13 +32,17 @@ import type { Chapitre } from "../types";
  * CE QUI A CHANGÉ. Le chapitre lisait l'année que l'arène rejouait aux salaires baissés de 10 %,
  * sans absentéisme ; il lit l'année N + 1 de NOVA : 3,83 salariés en moyenne, 26,1 % de rotation,
  * 3,5 % d'absentéisme.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : l'effectif moyen et les heures prévues sont des grandeurs au
+ * centième ; la rotation se calcule sur l'effectif moyen au centième, comme sur la copie de l'élève,
+ * et se donne à deux décimales, comme l'absentéisme (au dixième, à deux dixièmes près, avant). Les
+ * heures prévues se comptent à 151,67 heures payées par mois : la question et le corrigé disaient 150,
+ * les heures de travail d'un opérateur, quand l'attendu comptait déjà 151,67.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
-const auCentieme = (x: number) => Math.round(x * 100) / 100;
+/** Une quantité, ou un nombre au centième : comme l'élève l'écrit. */
+const qte = nombreAuCentieme;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 const mois = (m: number) => MOIS_DE_L_EXERCICE[m - 1]!;
 const MOIS_ABREGES = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."] as const;
@@ -49,15 +53,16 @@ export function indicateursSociaux(_c?: Cas, arrivee?: number) {
   const [t1, t2] = s.trimestres;
   return {
     ...s,
-    effectifMoyenAuCentieme: auCentieme(s.effectifMoyen),
-    rotationPct: auDixieme(s.rotation * 100),
-    absenteismePct: auDixieme(s.absenteisme * 100),
+    effectifMoyenAuCentieme: arrondi2(s.effectifMoyen),
+    // Chaque ligne arrondie : la rotation part de l'effectif moyen au centième, comme l'élève.
+    rotationPct: arrondi2(((s.departs + s.arrivees) / 2 / arrondi2(s.effectifMoyen)) * 100),
+    absenteismePct: arrondi2(s.absenteisme * 100),
     t1: t1!,
     t2: t2!,
-    caParSalarieT1: Math.round(t1!.caParSalarie),
-    caParSalarieT2: Math.round(t2!.caParSalarie),
-    evolutionDuCaParSalarie: auDixieme((t2!.caParSalarie / t1!.caParSalarie - 1) * 100),
-    evolutionDesVentes: auDixieme((t2!.ventes / t1!.ventes - 1) * 100),
+    caParSalarieT1: arrondi2(t1!.caParSalarie),
+    caParSalarieT2: arrondi2(t2!.caParSalarie),
+    evolutionDuCaParSalarie: arrondi2((t2!.caParSalarie / t1!.caParSalarie - 1) * 100),
+    evolutionDesVentes: arrondi2((t2!.ventes / t1!.ventes - 1) * 100),
     dernierMois: FICHE_RH.personnel.moisDeLAnnonce + FICHE_RH.personnel.preavisEnMois - 1,
   };
 }
@@ -113,13 +118,13 @@ export const INDICATEURS_SOCIAUX: Chapitre = {
       notions: ["dashboard"],
       question: (c) => {
         const s = indicateursSociaux(c);
-        return `Calculez l'effectif moyen de l'année (au centième), puis le taux de rotation du personnel (${s.departs} départ et ${s.arrivees} arrivée, en pourcentage au dixième).`;
+        return `Calculez l'effectif moyen de l'année (au centième), puis le taux de rotation du personnel (${s.departs} départ et ${s.arrivees} arrivée, en pourcentage à deux décimales, sur l'effectif moyen au centième).`;
       },
       champs: (c) => {
         const s = indicateursSociaux(c);
         return [
-          { libelle: "Effectif moyen de l'année", attendu: s.effectifMoyenAuCentieme, calcul: `${qte(s.moisPayes)} ÷ 12 = ${qte(s.effectifMoyenAuCentieme)}`, tolerance: 0.01 },
-          { libelle: "Taux de rotation (%)", attendu: s.rotationPct, calcul: `(${s.departs} + ${s.arrivees}) ÷ 2 ÷ ${qte(s.effectifMoyenAuCentieme)} × 100 = ${pct(s.rotationPct)}`, tolerance: 0.2 },
+          { libelle: "Effectif moyen de l'année", nature: "grandeur", attendu: s.effectifMoyenAuCentieme, calcul: `${qte(s.moisPayes)} ÷ 12 = ${qte(s.effectifMoyenAuCentieme)}` },
+          { libelle: "Taux de rotation (%)", attendu: s.rotationPct, calcul: `(${s.departs} + ${s.arrivees}) ÷ 2 ÷ ${qte(s.effectifMoyenAuCentieme)} × 100 = ${pct(s.rotationPct)}` },
         ];
       },
       explication: (c) => {
@@ -137,13 +142,13 @@ export const INDICATEURS_SOCIAUX: Chapitre = {
       notions: ["dashboard"],
       question: (c) => {
         const s = indicateursSociaux(c);
-        return `Chaque salarié payé a ${qte(FICHE_RH.operateurs.heuresParMois)} heures de travail prévues par mois. Dans l'année, deux arrêts de maladie ont fait ${qte(s.heuresDAbsence)} heures d'absence. Calculez les heures de travail prévues de l'année (${qte(s.moisPayes)} mois de salaire payés), puis le taux d'absentéisme (absences ÷ heures prévues × 100, au dixième).`;
+        return `Chaque salarié payé a ${qte(FICHE_RH.operateurs.heuresPayeesParMois)} heures de travail prévues par mois. Dans l'année, deux arrêts de maladie ont fait ${qte(s.heuresDAbsence)} heures d'absence. Calculez les heures de travail prévues de l'année (${qte(s.moisPayes)} mois de salaire payés), puis le taux d'absentéisme (absences ÷ heures prévues × 100, à deux décimales).`;
       },
       champs: (c) => {
         const s = indicateursSociaux(c);
         return [
-          { libelle: "Heures de travail prévues", attendu: s.heuresPrevues, calcul: `${qte(s.moisPayes)} × ${qte(FICHE_RH.operateurs.heuresParMois)} = ${qte(s.heuresPrevues)}`, tolerance: 0 },
-          { libelle: "Taux d'absentéisme (%)", attendu: s.absenteismePct, calcul: `${qte(s.heuresDAbsence)} ÷ ${qte(s.heuresPrevues)} × 100 = ${pct(s.absenteismePct)}`, tolerance: 0.1 },
+          { libelle: "Heures de travail prévues", nature: "grandeur", attendu: s.heuresPrevues, calcul: `${qte(s.moisPayes)} × ${qte(FICHE_RH.operateurs.heuresPayeesParMois)} = ${qte(s.heuresPrevues)}` },
+          { libelle: "Taux d'absentéisme (%)", attendu: s.absenteismePct, calcul: `${qte(s.heuresDAbsence)} ÷ ${qte(s.heuresPrevues)} × 100 = ${pct(s.absenteismePct)}` },
         ];
       },
       explication: (c) => {
@@ -165,7 +170,7 @@ export const INDICATEURS_SOCIAUX: Chapitre = {
           titre: `Les deux premiers trimestres ${dE(c.entreprise)}`,
           colonnes: ["T1", "T2"],
           lignes: [
-            { libelle: "Effectif moyen du trimestre", valeurs: [qte(auCentieme(s.t1.effectif)), qte(auCentieme(s.t2.effectif))] },
+            { libelle: "Effectif moyen du trimestre", valeurs: [qte(arrondi2(s.t1.effectif)), qte(arrondi2(s.t2.effectif))] },
             { libelle: `Enceintes vendues`, valeurs: [qte(s.t1.ventes), qte(s.t2.ventes)] },
             { libelle: "Enceintes que le plan prévoyait", valeurs: [qte(s.t1.ventesDuPlan), qte(s.t2.ventesDuPlan)] },
             { libelle: "Chiffre d'affaires par salarié", valeurs: [eur(s.caParSalarieT1), eur(s.caParSalarieT2)] },
@@ -217,7 +222,7 @@ export const INDICATEURS_SOCIAUX: Chapitre = {
       lecture: (_c, h) => {
         const s = indicateursSociaux();
         return [
-          { libelle: "Taux d'absentéisme (%)", montant: auDixieme((h / s.heuresPrevues) * 100), fort: true },
+          { libelle: "Taux d'absentéisme (%)", montant: arrondi2((h / s.heuresPrevues) * 100), fort: true },
           { libelle: "Seuil d'alerte (%)", montant: SEUIL_D_ALERTE_DE_L_ABSENTEISME * 100 },
         ];
       },
@@ -247,9 +252,9 @@ export const INDICATEURS_SOCIAUX: Chapitre = {
         const d = indicateursSociaux();
         return [
           { libelle: "Enceintes perdues par le départ", montant: s.ventesPerdues, unite: "enceintes", reference: d.ventesPerdues, fort: true },
-          { libelle: "Effectif moyen", montant: auCentieme(s.effectifMoyen), unite: "salariés", reference: auCentieme(d.effectifMoyen) },
-          { libelle: "Taux de rotation", montant: auDixieme(s.rotation * 100), unite: "%" },
-          { libelle: "Chiffre d'affaires par salarié", montant: Math.round(s.caParSalarie), reference: Math.round(d.caParSalarie) },
+          { libelle: "Effectif moyen", montant: arrondi2(s.effectifMoyen), unite: "salariés", reference: arrondi2(d.effectifMoyen) },
+          { libelle: "Taux de rotation", montant: arrondi2(((s.departs + s.arrivees) / 2 / arrondi2(s.effectifMoyen)) * 100), unite: "%" },
+          { libelle: "Chiffre d'affaires par salarié", montant: arrondi2(s.caParSalarie), reference: arrondi2(d.caParSalarie) },
         ];
       },
       defi: () => {

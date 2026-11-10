@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { acomptes, eligibleAuTauxReduit, impotDuBenefice, plafondDImputation, reportEnArriere, reportEnAvant, resultatFiscal, solde, suiteDesExercices } from "../monde/finance";
 import {
@@ -53,6 +53,10 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * trimestres rejoués, l'acompte trimestriel sur le cumul diminué du déficit. Le cours suit le droit :
  * des exercices entiers, des acomptes sur l'impôt de l'exercice précédent, et le report en arrière,
  * que l'arène ne connaissait pas.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : le taux effectif se donne à deux décimales, à un centième près
+ * (à un dixième près, avant).
  */
 
 /** Le déficit se calcule ici sur les exercices de PIXEL & CO. */
@@ -109,11 +113,8 @@ const EXERCICES: Readonly<Record<string, readonly ExerciceFiscal[]>> = { ecommer
 /** Les exercices de l'entreprise, lus par son code. */
 export const exercicesDe = (c: Pick<Cas, "code">): readonly ExerciceFiscal[] => EXERCICES[c.code]!;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-/** Un taux déjà en pour cent : 25 donne « 25 % ». */
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
-const enPct = (x: number) => Math.round(x * 10_000) / 100;
-const auCentime = (x: number) => Math.round(x * 100) / 100;
+const enPct = (x: number) => arrondi2(x * 100);
+const auCentime = arrondi2;
 const somme = (xs: readonly number[]) => auCentime(xs.reduce((s, x) => s + x, 0));
 const T = pct(TAUX_NORMAL * 100);
 /** « de PIXEL & CO », « d'Escale » : l'élision devant une voyelle. */
@@ -491,7 +492,7 @@ export const LE_DEFICIT_REPORTE: Chapitre = {
         return [
           { libelle: "Impôt de N+1 et N+2 sans déficit", attendu: x.sansDeficitN1N2, calcul: `(${eur(x.rf[N1]!)} + ${eur(x.rf[N2]!)}) × ${T} = ${eur(x.sansDeficitN1N2)}` },
           { libelle: "Impôt évité par le report", attendu: x.eviteEnAvant, calcul: `${eur(x.sansDeficitN1N2)} − ${eur(x.impotN1N2)} = ${eur(x.eviteEnAvant)}, soit ${eur(x.deficit)} × ${T}` },
-          { libelle: "Taux effectif de N+2 (%)", attendu: x.tauxEffectifN2, calcul: `${eur(x.impotN2)} ÷ ${eur(x.ex[N2]!.resultatComptable)} × 100 = ${pct(x.tauxEffectifN2)}`, tolerance: 0.1 },
+          { libelle: "Taux effectif de N+2 (%)", attendu: x.tauxEffectifN2, calcul: `${eur(x.impotN2)} ÷ ${eur(x.ex[N2]!.resultatComptable)} × 100 = ${pct(x.tauxEffectifN2)}` },
         ];
       },
       explication: (c) => {

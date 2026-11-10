@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { auCentime } from "../monde/amortissement";
 import { ENTREPRISES_DES_COMPTES_DU_LYCEE, compteDuLycee, exerciceDe } from "../monde/comptes-du-lycee";
@@ -38,10 +38,7 @@ export const TAUX_DU_DEFI = 0.08;
 /** La solution que montre la correction : l'enceinte à 62 €, le premier prix qui relève le défi, les mêmes ventes. */
 export const SOLUTION_DU_COMPTE = { prix: 62, ventes: 0 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−");
-const pct = (t: number) => `${qte(t)} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /** Pourquoi chaque charge a sa nature, dit à l'élève au tri. */
@@ -63,8 +60,8 @@ export function compteDeResultat(c: Pick<Cas, "code">) {
   const k = compteDuLycee(exerciceDe(c.code));
   return {
     ...k,
-    tauxDeResultat: auDixieme(k.tauxDeResultat * 100),
-    partDuPersonnel: auDixieme((k.personnel / k.charges) * 100),
+    tauxDeResultat: arrondi2(k.tauxDeResultat * 100),
+    partDuPersonnel: arrondi2((k.personnel / k.charges) * 100),
     benefice: k.resultatNet >= 0,
     /** Ce que laisse une enceinte de plus, une fois ses coûts variables payés : son prix moins son coût variable. */
     margeParEnceinte: auCentime(k.prix - k.coutVariable),
@@ -175,9 +172,9 @@ export const LIRE_LE_COMPTE_DE_RESULTAT: Chapitre = {
       champs: (c) => {
         const k = compteDeResultat(c);
         return [
-          { libelle: "Total des produits", attendu: k.produits, calcul: `${eur(k.ventes)} + ${eur(k.produitsFinanciers)} = ${eur(k.produits)}`, tolerance: 1 },
-          { libelle: "Total des charges", attendu: k.charges, calcul: `${eur(k.activite)} + ${eur(k.financement)} + ${eur(k.impot)} = ${eur(k.charges)}`, tolerance: 1 },
-          { libelle: "Résultat de l'année", attendu: k.resultatNet, calcul: `${eur(k.produits)} − ${eur(k.charges)} = ${eur(k.resultatNet)}`, tolerance: 2 },
+          { libelle: "Total des produits", attendu: k.produits, calcul: `${eur(k.ventes)} + ${eur(k.produitsFinanciers)} = ${eur(k.produits)}` },
+          { libelle: "Total des charges", attendu: k.charges, calcul: `${eur(k.activite)} + ${eur(k.financement)} + ${eur(k.impot)} = ${eur(k.charges)}` },
+          { libelle: "Résultat de l'année", attendu: k.resultatNet, calcul: `${eur(k.produits)} − ${eur(k.charges)} = ${eur(k.resultatNet)}` },
         ];
       },
       explication: (c) => {
@@ -197,12 +194,12 @@ export const LIRE_LE_COMPTE_DE_RESULTAT: Chapitre = {
       titre: "Sur cent euros de ventes",
       notions: ["income_statement", "margin_rates"],
       question: (c) =>
-        `Pour comparer des entreprises de tailles différentes, on rapporte le résultat aux ventes. Calculez le taux de résultat ${dE(compteDeResultat(c).entreprise)} (résultat ÷ ventes × 100), puis la part du personnel dans ses charges, en pourcentage au dixième.`,
+        `Pour comparer des entreprises de tailles différentes, on rapporte le résultat aux ventes. Calculez le taux de résultat ${dE(compteDeResultat(c).entreprise)} (résultat ÷ ventes × 100), puis la part du personnel dans ses charges, en pourcentage à deux décimales.`,
       champs: (c) => {
         const k = compteDeResultat(c);
         return [
-          { libelle: "Taux de résultat (%)", attendu: k.tauxDeResultat, calcul: `${eur(k.resultatNet)} ÷ ${eur(k.ventes)} × 100 = ${pct(k.tauxDeResultat)}`, tolerance: 0.1 },
-          { libelle: "Part du personnel dans les charges (%)", attendu: k.partDuPersonnel, calcul: `${eur(k.personnel)} ÷ ${eur(k.charges)} × 100 = ${pct(k.partDuPersonnel)}`, tolerance: 0.1 },
+          { libelle: "Taux de résultat (%)", attendu: k.tauxDeResultat, calcul: `${eur(k.resultatNet)} ÷ ${eur(k.ventes)} × 100 = ${pct(k.tauxDeResultat)}` },
+          { libelle: "Part du personnel dans les charges (%)", attendu: k.partDuPersonnel, calcul: `${eur(k.personnel)} ÷ ${eur(k.charges)} × 100 = ${pct(k.partDuPersonnel)}` },
         ];
       },
       explication: (c) => {
@@ -325,7 +322,7 @@ export const LIRE_LE_COMPTE_DE_RESULTAT: Chapitre = {
           { libelle: "Résultat de l'activité", montant: x.resultatDActivite, reference: k.resultatDActivite },
           { libelle: "Impôt sur les bénéfices", montant: x.impot, reference: k.impot },
           { libelle: "Résultat net", montant: x.resultatNet, reference: k.resultatNet, fort: true },
-          { libelle: "Taux de résultat", montant: auDixieme(x.tauxDeResultat * 100), unite: "%", reference: k.tauxDeResultat },
+          { libelle: "Taux de résultat", montant: arrondi2(x.tauxDeResultat * 100), unite: "%", reference: k.tauxDeResultat },
         ];
       },
       graphique: (c) => {
@@ -345,7 +342,7 @@ export const LIRE_LE_COMPTE_DE_RESULTAT: Chapitre = {
           atteint: (p) => compteDuLaboratoire(k, p).tauxDeResultat >= TAUX_DU_DEFI,
           indice: (p) => {
             const x = compteDuLaboratoire(k, p);
-            return `Le taux de résultat est de ${pct(auDixieme(x.tauxDeResultat * 100))}. Un euro de plus sur le prix rapporte un euro par enceinte vendue, sans aucune charge en plus ; une enceinte de plus ne rapporte que ce qui reste après ses coûts variables.`;
+            return `Le taux de résultat est de ${pct(arrondi2(x.tauxDeResultat * 100))}. Un euro de plus sur le prix rapporte un euro par enceinte vendue, sans aucune charge en plus ; une enceinte de plus ne rapporte que ce qui reste après ses coûts variables.`;
           },
           solution: SOLUTION_DU_COMPTE,
         };
@@ -354,7 +351,7 @@ export const LIRE_LE_COMPTE_DE_RESULTAT: Chapitre = {
         const k = compteDeResultat(c);
         const x = compteDuLaboratoire(k, p);
         return [
-          `Défi relevé : ${qte(x.quantite)} enceintes à ${eur(x.prix)} donnent un résultat net de ${eur(x.resultatNet)}, soit ${pct(auDixieme(x.tauxDeResultat * 100))} des ventes.`,
+          `Défi relevé : ${qte(x.quantite)} enceintes à ${eur(x.prix)} donnent un résultat net de ${eur(x.resultatNet)}, soit ${pct(arrondi2(x.tauxDeResultat * 100))} des ventes.`,
           `Le prix agit fort : chaque euro de plus par enceinte va tout entier au résultat de l'activité, ${eur(x.quantite)} de plus sur l'année, dont l'impôt reprend une part. Mais un client qui trouve l'enceinte trop chère peut ne pas l'acheter : c'est la question de la mercatique, que ce laboratoire laisse de côté.`,
         ];
       },

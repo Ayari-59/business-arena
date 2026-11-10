@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, qte, quotient2 } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { MOIS_DE_L_EXERCICE } from "../monde/exercice-de-nova";
 import {
@@ -30,10 +30,13 @@ import type { Chapitre } from "../types";
  * CE QUI A CHANGÉ. Le chapitre rejouait l'année de l'arène avec un salarié de plus, trimestre par
  * trimestre ; il suit maintenant l'année N + 1 de NOVA, mois par mois : la recrue coûte 29 625 € et
  * ne fait rien vendre de plus, la ligne étant le goulot.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les ventes à faire en plus sont une quantité, écrite à deux
+ * décimales puis arrondie à l'unité supérieure, que le corrigé nomme ; les enceintes montées sont des
+ * quantités ; le coût de l'embauche attend le centime (à l'euro près, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 const mois = (m: number) => MOIS_DE_L_EXERCICE[m - 1]!;
 /** Les ventes en plus, dites : « 800 enceintes de plus », ou « aucune enceinte de plus ». */
@@ -47,7 +50,7 @@ export function recrutement(_c?: Cas, l: Partial<LeviersDuRecrutement> = {}) {
   const r = recrutementDeNPlus1({ poste: 0, embauche: 1, ...l });
   const sans = recrutementDeNPlus1({ ...l, poste: r.poste, embauche: 0 });
   const enceintesDeLaRecrue = r.joue.production - sans.joue.production;
-  const ecartDeResultat = Math.round((enceintesDeLaRecrue * r.marge - r.coutDeLaRecrue) * 100) / 100;
+  const ecartDeResultat = arrondi2(enceintesDeLaRecrue * r.marge - r.coutDeLaRecrue);
   const verdict: Verdict = ecartDeResultat > 0 ? "se-paie" : enceintesDeLaRecrue > 0 ? "pas-assez" : "rien-de-plus";
   return { ...r, sans, enceintesDeLaRecrue, ecartDeLaRecrue: ecartDeResultat, verdict, lancement: l.moisDuRecrutement ?? r.arrivee! - FICHE_RH.personnel.delaiDeRecrutementEnMois };
 }
@@ -112,8 +115,13 @@ export const RECRUTER: Chapitre = {
       champs: (c) => {
         const r = recrutement(c);
         return [
-          { libelle: "Coût de l'embauche sur l'année", attendu: r.coutDeLaRecrue, calcul: `${eur(r.recrutement)} + ${eur(r.coutMensuel)} × ${r.moisDeLaRecrue} = ${eur(r.coutDeLaRecrue)}`, tolerance: 1 },
-          { libelle: `Ventes à faire en plus (${c.unites})`, attendu: r.enceintesPourSePayer, calcul: `${eur(r.coutDeLaRecrue)} ÷ ${eur(r.marge)} = ${qte(r.enceintesPourSePayer)}, à l'unité supérieure`, tolerance: 1 },
+          { libelle: "Coût de l'embauche sur l'année", attendu: r.coutDeLaRecrue, calcul: `${eur(r.recrutement)} + ${eur(r.coutMensuel)} × ${r.moisDeLaRecrue} = ${eur(r.coutDeLaRecrue)}` },
+          {
+            libelle: `Ventes à faire en plus (${c.unites})`,
+            nature: "quantite",
+            attendu: r.enceintesPourSePayer,
+            calcul: `${eur(r.coutDeLaRecrue)} ÷ ${eur(r.marge)} = ${nombreAuCentieme(quotient2(r.coutDeLaRecrue, r.marge))}, soit ${qte(r.enceintesPourSePayer)} à l'unité supérieure : une de moins ne couvrirait pas l'embauche`,
+          },
         ];
       },
       explication: (c) => {
@@ -148,9 +156,9 @@ export const RECRUTER: Chapitre = {
         const r = recrutement(c);
         const detail = (x: typeof r.joue) => x.trimestres.map((t) => qte(t.production)).join(" + ");
         return [
-          { libelle: `Montées sans la recrue (${c.unites})`, attendu: r.sans.joue.production, calcul: `${detail(r.sans.joue)} = ${qte(r.sans.joue.production)}`, tolerance: 0 },
-          { libelle: `Montées avec la recrue (${c.unites})`, attendu: r.joue.production, calcul: `${detail(r.joue)} = ${qte(r.joue.production)}`, tolerance: 0 },
-          { libelle: `Ventes en plus (${c.unites})`, attendu: r.enceintesDeLaRecrue, calcul: `${qte(r.joue.production)} − ${qte(r.sans.joue.production)} = ${qte(r.enceintesDeLaRecrue)}`, tolerance: 0 },
+          { libelle: `Montées sans la recrue (${c.unites})`, nature: "quantite", attendu: r.sans.joue.production, calcul: `${detail(r.sans.joue)} = ${qte(r.sans.joue.production)}` },
+          { libelle: `Montées avec la recrue (${c.unites})`, nature: "quantite", attendu: r.joue.production, calcul: `${detail(r.joue)} = ${qte(r.joue.production)}` },
+          { libelle: `Ventes en plus (${c.unites})`, nature: "quantite", attendu: r.enceintesDeLaRecrue, calcul: `${qte(r.joue.production)} − ${qte(r.sans.joue.production)} = ${qte(r.enceintesDeLaRecrue)}` },
         ];
       },
       explication: (c) => {
@@ -271,7 +279,7 @@ export const RECRUTER: Chapitre = {
           { libelle: "Enceintes montées dans l'année", montant: r.joue.production, unite: "enceintes", reference: d.joue.production },
           { libelle: "Enceintes refusées", montant: r.refusees, unite: "enceintes", reference: d.refusees, fort: true },
           { libelle: "Marge gagnée face au plan", montant: r.margeEnPlus, effet: true },
-          { libelle: "Coût de la recrue et du poste dans l'année", montant: Math.round((r.coutDeLaRecrue + r.coutDuPoste) * 100) / 100 },
+          { libelle: "Coût de la recrue et du poste dans l'année", montant: arrondi2(r.coutDeLaRecrue + r.coutDuPoste) },
         ];
       },
       defi: () => ({

@@ -1,5 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
+import { arrondi2 as auCentime, eur, pct, qte } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { POURQUOI_EVALUER, evolution, indicateursDuSemestre, lectureDe, tableauDuSemestre, type Lecture } from "../../chapitres/evaluer-son-activite";
 import { ENTREPRISES_DE_LA_GESTION_DE_BASE } from "../../monde/gestion-et-information";
@@ -19,12 +18,13 @@ import type { Situation } from "../types";
  * LE CAS JOUE DANS LE MONDE DU COURS, chez NOVA seule : les six mois du chapitre
  * (indicateursDuSemestre). Son code garde le mot « semestre » de sa première version, où il
  * comparait deux semestres de l'année de l'arène ; il compare maintenant deux trimestres de NOVA.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les évolutions se donnent à deux décimales, à un centième près
+ * (au dixième, avant).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const retranche = (x: number) => (x < 0 ? `(${eur(x)})` : eur(x));
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
 const signe = (t: number) => (t > 0 ? `+${pct(t)}` : pct(t));
 
 /** Les deux trimestres du semestre, leurs évolutions, et ce qu'ils disent ensemble. */
@@ -83,14 +83,14 @@ export const LE_SECOND_SEMESTRE: Situation = {
       titre: "Le chiffre d'affaires et les ventes de chaque trimestre",
       notions: ["revenue", "dashboard"],
       question: () =>
-        "Additionnez les mois de chaque trimestre. Calculez le chiffre d'affaires de chaque trimestre, puis, en pourcentage et au dixième, l'évolution du chiffre d'affaires et celle des ventes du premier au deuxième trimestre.",
+        "Additionnez les mois de chaque trimestre. Calculez le chiffre d'affaires de chaque trimestre, puis, en pourcentage et à deux décimales, l'évolution du chiffre d'affaires et celle des ventes du premier au deuxième trimestre.",
       champs: () => {
         const k = deuxTrimestres();
         return [
           { libelle: "Chiffre d'affaires du premier trimestre", attendu: k.premier.chiffreDAffaires, calcul: `${somme(k.premier.mois.map((x) => x.chiffreDAffaires), eur)} = ${eur(k.premier.chiffreDAffaires)}` },
           { libelle: "Chiffre d'affaires du deuxième trimestre", attendu: k.second.chiffreDAffaires, calcul: `${somme(k.second.mois.map((x) => x.chiffreDAffaires), eur)} = ${eur(k.second.chiffreDAffaires)}` },
-          { libelle: "Évolution du chiffre d'affaires d'un trimestre à l'autre (%)", attendu: k.evolutionDuChiffre, calcul: `(${eur(k.second.chiffreDAffaires)} − ${eur(k.premier.chiffreDAffaires)}) ÷ ${eur(k.premier.chiffreDAffaires)} × 100 = ${pct(k.evolutionDuChiffre)}`, tolerance: 0.1 },
-          { libelle: "Évolution des ventes d'un trimestre à l'autre (%)", attendu: k.evolutionDesVentes, calcul: `(${qte(k.second.ventes)} − ${qte(k.premier.ventes)}) ÷ ${qte(k.premier.ventes)} × 100 = ${pct(k.evolutionDesVentes)}`, tolerance: 0.1 },
+          { libelle: "Évolution du chiffre d'affaires d'un trimestre à l'autre (%)", attendu: k.evolutionDuChiffre, calcul: `(${eur(k.second.chiffreDAffaires)} − ${eur(k.premier.chiffreDAffaires)}) ÷ ${eur(k.premier.chiffreDAffaires)} × 100 = ${pct(k.evolutionDuChiffre)}` },
+          { libelle: "Évolution des ventes d'un trimestre à l'autre (%)", attendu: k.evolutionDesVentes, calcul: `(${qte(k.second.ventes)} − ${qte(k.premier.ventes)}) ÷ ${qte(k.premier.ventes)} × 100 = ${pct(k.evolutionDesVentes)}` },
         ];
       },
       explication: (c) => {

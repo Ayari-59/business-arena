@@ -1,5 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../pedagogy/cours/etats";
+import { arrondi2, arrondi2 as auCentime, eur, pct, qte } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import {
   ENTREPRISES_DE_LA_GESTION_DE_BASE,
@@ -40,6 +39,10 @@ import type { Chapitre, TableauDeDonnees } from "../types";
  * CE QUI A CHANGÉ. Le chapitre rejouait l'année de l'arène avec des salaires à 105, dans neuf
  * entreprises. Il chiffre maintenant la même hausse sur l'exercice de NOVA : 6 390 € de plus pour
  * les salariés, 4 792 € de moins pour les associés, 1 598 € de moins pour l'État.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les parts des acteurs et la part de la hausse payée par les
+ * associés se donnent à deux décimales, à un centième près (au dixième, avant).
  */
 
 /** La hausse demandée par les salariés, en indice de salaire (le marché vaut 100) : 105. */
@@ -51,10 +54,6 @@ export const ENTREPRISES_DES_ACTEURS = ENTREPRISES_DE_LA_GESTION_DE_BASE;
 export const POURQUOI_LES_ACTEURS =
   "ce chapitre lit le premier exercice de NOVA, clôturé par le cours : ce que chaque acteur en a reçu, au centime.";
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR").replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 }).replace(/^-/, "−")} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 const ecartEnPourcent = Math.round(HAUSSE_DEMANDEE * 100);
 
@@ -75,7 +74,7 @@ export function lignesDesActeurs(p: Parts) {
 /** L'année, ses parts dans les ventes, la hausse et qui la paie. */
 export function acteursEtValeur() {
   const h = hausseDesSalaires();
-  const part = (x: number) => auDixieme((x / h.avant.ventes) * 100);
+  const part = (x: number) => arrondi2((x / h.avant.ventes) * 100);
   return {
     ...h,
     partDesSalaries: part(h.avant.salaries),
@@ -143,13 +142,13 @@ export const LES_ACTEURS_ET_LA_VALEUR: Chapitre = {
       notions: ["income_statement", "payroll"],
       tableau: tableauDeLAnnee,
       question: (c) =>
-        `Sur 100 € que les clients ${dE(c.entreprise)} ont payés dans l'année, combien sont allés aux salariés, à l'État et aux associés ? Calculez chaque part (montant reçu ÷ ventes × 100), en pourcentage au dixième.`,
+        `Sur 100 € que les clients ${dE(c.entreprise)} ont payés dans l'année, combien sont allés aux salariés, à l'État et aux associés ? Calculez chaque part (montant reçu ÷ ventes × 100), en pourcentage à deux décimales.`,
       champs: () => {
         const k = acteursEtValeur();
         return [
-          { libelle: "Part des salariés (%)", attendu: k.partDesSalaries, calcul: `${eur(k.avant.salaries)} ÷ ${eur(k.avant.ventes)} × 100 = ${pct(k.partDesSalaries)}`, tolerance: 0.1 },
-          { libelle: "Part de l'État (%)", attendu: k.partDeLEtatDansLesVentes, calcul: `${eur(k.avant.etat)} ÷ ${eur(k.avant.ventes)} × 100 = ${pct(k.partDeLEtatDansLesVentes)}`, tolerance: 0.1 },
-          { libelle: "Part des associés (%)", attendu: k.partDesAssociesDansLesVentes, calcul: `${eur(k.avant.associes)} ÷ ${eur(k.avant.ventes)} × 100 = ${pct(k.partDesAssociesDansLesVentes)}`, tolerance: 0.1 },
+          { libelle: "Part des salariés (%)", attendu: k.partDesSalaries, calcul: `${eur(k.avant.salaries)} ÷ ${eur(k.avant.ventes)} × 100 = ${pct(k.partDesSalaries)}` },
+          { libelle: "Part de l'État (%)", attendu: k.partDeLEtatDansLesVentes, calcul: `${eur(k.avant.etat)} ÷ ${eur(k.avant.ventes)} × 100 = ${pct(k.partDeLEtatDansLesVentes)}` },
+          { libelle: "Part des associés (%)", attendu: k.partDesAssociesDansLesVentes, calcul: `${eur(k.avant.associes)} ÷ ${eur(k.avant.ventes)} × 100 = ${pct(k.partDesAssociesDansLesVentes)}` },
         ];
       },
       explication: (c) => {
@@ -201,7 +200,7 @@ export const LES_ACTEURS_ET_LA_VALEUR: Chapitre = {
           { libelle: "Écart de salaires", attendu: k.ecartDeSalaires, calcul: `${eur(k.apres.salaries)} − ${eur(k.avant.salaries)} = ${eur(k.ecartDeSalaires)}` },
           { libelle: "Écart d'impôt", attendu: k.ecartDImpot, calcul: `${eur(k.apres.etat)} − ${eur(k.avant.etat)} = ${eur(k.ecartDImpot)}` },
           { libelle: "Écart de résultat net", attendu: k.ecartDeResultat, calcul: `${eur(k.apres.associes)} − ${eur(k.avant.associes)} = ${eur(k.ecartDeResultat)}` },
-          { libelle: "Part de la hausse payée par les associés (%)", attendu: k.partDesAssocies, calcul: `${eur(-k.ecartDeResultat)} ÷ ${eur(k.ecartDeSalaires)} × 100 = ${pct(k.partDesAssocies)}`, tolerance: 0.1 },
+          { libelle: "Part de la hausse payée par les associés (%)", attendu: k.partDesAssocies, calcul: `${eur(-k.ecartDeResultat)} ÷ ${eur(k.ecartDeSalaires)} × 100 = ${pct(k.partDesAssocies)}` },
         ];
       },
       explication: () => {

@@ -1,3 +1,4 @@
+import { arrondi2, produit2, quotient2, somme2 } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { betaDesendette, bilanApres, creationDeValeur as creationDeValeurDuBilan, structureAuLevier } from "../monde/finance";
 import { MARGE_DE_CREDIT_PAR_UNITE_DE_LEVIER, SALLE_DE_SEMINAIRE, TAUX_SANS_RISQUE } from "../monde/projets-et-financement";
@@ -44,6 +45,14 @@ import { ENTREPRISES_DU_LEVIER, RISQUE_DE_L_ESCALE, auCentieme, bilanDe, dE, enP
  *     monte, l'EVA baisse), hamada (désendetter le bêta d'un comparable, le réendetter à un autre
  *     levier), le-laboratoire-de-la-structure (βa, prime, levier et marge de crédit : le meilleur
  *     levier), modigliani-miller (une critique) ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les bêtas, les taux et les écarts en points se donnent au
+ * centième, chaque ligne partant de la précédente arrondie (à deux centièmes près, avant). L'EVA de
+ * l'année se calcule en euros, ce que rapporte l'outil après impôt moins le coût du capital en euros
+ * (259 425 € − 162 300 €), sans passer par les taux arrondis : elle retrouve le résultat résiduel au
+ * centime (le corrigé admettait 4,52 % × l'actif économique, à 215 € près). L'EVA avec la salle part
+ * du kcp du tableau à deux décimales, comme l'élève (au kcp non arrondi, à 54 € près, avant).
  */
 
 /**
@@ -70,7 +79,7 @@ export const LABORATOIRE_DE_LA_STRUCTURE = {
   levier: { min: 0, max: 3, pas: 0.01 },
 } as const;
 
-const auCentime = (x: number) => Math.round(x * 100) / 100 || 0;
+const auCentime = arrondi2;
 
 /** Le coût du capital au levier `levier`, pour un bêta de l'actif et une prime (%), avec ou sans la marge de crédit. */
 export function laboratoireDeLaStructure(c: Pick<Cas, "code">, p: { beta: number; prime: number; levier: number; marge: number }) {
@@ -101,8 +110,10 @@ function calculer(c: Pick<Cas, "code">) {
   const cmpc = auCentieme((kcp * poidsCP + r.i * poidsD) / 100);
   // Le coût du capital en euros : l'exigence des associés plus les charges financières après impôt.
   const coutDuCapital = auCentime(v.exigenceDesAssocies + a.chargesFinancieresApresImpot);
-  // Un centième de point sur l'actif économique : l'écart que laissent les taux arrondis de l'élève.
-  const toleranceEva = Math.ceil(a.actifEconomique * 0.0001);
+  // L'EVA en euros, au centime : ce que rapporte l'outil après impôt moins le coût du capital en euros.
+  // Elle ne passe pas par un taux arrondi, et retrouve le résultat résiduel au centime.
+  const evaEnEuros = somme2(a.resultatDExploitationApresImpot, -coutDuCapital);
+  const exploitationQuiAnnuleLEva = quotient2(coutDuCapital, 1 - t);
   // Le curseur de l'exigence : la plus haute, en points de base, que le résultat net couvre.
   const exigenceLimite = Math.floor((a.resultatNet / a.capitauxPropres) * 10_000 + 1e-9);
   // La salle de séminaire, le scénario figé de la fiche.
@@ -129,16 +140,18 @@ function calculer(c: Pick<Cas, "code">) {
     cmpc,
     ecart: auCentieme(r.re - cmpc),
     coutDuCapital,
-    toleranceEva,
-    toleranceExploitation: Math.ceil(toleranceEva / (1 - t)),
+    evaEnEuros,
+    exploitationQuiAnnuleLEva,
     exigenceLimite,
     verdict: (v.eva > 0 ? "cree" : "detruit") as Verdict,
     avec,
     kcpAvec: enPct(avec.kcp),
     cmpcAvec: enPct(avec.cmpc),
     variationDuNet: auCentime(avec.resultatNet - a.resultatNet),
-    variationDeLEva: auCentime(avec.eva - v.eva),
-    toleranceSalle: Math.ceil(avec.capitauxPropres * 0.00005),
+    // L'EVA avec la salle, sur le kcp du tableau à deux décimales, comme l'élève (le corrigé gardait le
+    // kcp non arrondi, à 54 € près), et sa variation face à l'EVA de l'année.
+    evaAvecLaSalle: somme2(avec.resultatNet, -produit2(enPct(avec.kcp) / 100, avec.capitauxPropres)),
+    variationDeLEva: somme2(somme2(avec.resultatNet, -produit2(enPct(avec.kcp) / 100, avec.capitauxPropres)), -somme2(a.resultatDExploitationApresImpot, -coutDuCapital)),
     dotation,
     capitalDeLaSalle,
     exploitationDeLaSalle,
@@ -234,15 +247,14 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
         return [
           {
             libelle: "Bêta des capitaux propres, βcp",
+            nature: "grandeur",
             attendu: x.beta,
             calcul: `${nombre(RISQUE_DE_L_ESCALE.betaDeLActif)} × (1 + ${nombre(1 - x.t)} × ${eur(x.a.endettementNet)} ÷ ${eur(x.a.capitauxPropres)}) = ${nombre(x.beta)}`,
-            tolerance: 0.01,
           },
           {
             libelle: "Coût des capitaux propres, kcp (%)",
             attendu: x.kcp,
             calcul: `${pct(enPct(RISQUE_DE_L_ESCALE.tauxSansRisque))} + ${nombre(x.beta)} × ${pct(enPct(RISQUE_DE_L_ESCALE.prime))} = ${pct(x.kcp)}`,
-            tolerance: 0.02,
           },
         ];
       },
@@ -267,9 +279,9 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
       champs: (c) => {
         const x = valeurDeLEscale(c);
         return [
-          { libelle: "Poids des capitaux propres (%)", attendu: x.poidsCP, calcul: `${eur(x.a.capitauxPropres)} ÷ ${eur(x.a.actifEconomique)} × 100 = ${pct(x.poidsCP)}`, tolerance: 0.01 },
-          { libelle: "Poids de l'endettement net (%)", attendu: x.poidsD, calcul: `${eur(x.a.endettementNet)} ÷ ${eur(x.a.actifEconomique)} × 100 = ${pct(x.poidsD)}`, tolerance: 0.01 },
-          { libelle: "Coût moyen pondéré du capital, CMPC (%)", attendu: x.cmpc, calcul: `${pct(x.kcp)} × ${pct(x.poidsCP)} + ${pct(x.r.i)} × ${pct(x.poidsD)} = ${pct(x.cmpc)}`, tolerance: 0.02 },
+          { libelle: "Poids des capitaux propres (%)", attendu: x.poidsCP, calcul: `${eur(x.a.capitauxPropres)} ÷ ${eur(x.a.actifEconomique)} × 100 = ${pct(x.poidsCP)}` },
+          { libelle: "Poids de l'endettement net (%)", attendu: x.poidsD, calcul: `${eur(x.a.endettementNet)} ÷ ${eur(x.a.actifEconomique)} × 100 = ${pct(x.poidsD)}` },
+          { libelle: "Coût moyen pondéré du capital, CMPC (%)", attendu: x.cmpc, calcul: `${pct(x.kcp)} × ${pct(x.poidsCP)} + ${pct(x.r.i)} × ${pct(x.poidsD)} = ${pct(x.cmpc)}` },
         ];
       },
       explication: (c) => {
@@ -355,22 +367,20 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
       titre: "La valeur créée sur l'année",
       notions: ["enterprise_value", "profitability_vs_return"],
       question: () =>
-        "Sans formule cette fois. À partir de la rentabilité économique et du CMPC, calculez l'écart entre ce que rapporte l'outil et ce que coûte le capital (en points), la valeur créée sur l'année, l'EVA, puis retrouvez le résultat d'exploitation du curseur, celui qui l'annule.",
+        "Sans formule cette fois. À partir de la rentabilité économique et du CMPC, calculez l'écart entre ce que rapporte l'outil et ce que coûte le capital (en points), puis la valeur créée sur l'année, l'EVA. Retrouvez enfin le résultat d'exploitation du curseur, celui qui l'annule. L'EVA se calcule en euros, au centime : ce que rapporte l'outil après impôt moins le coût du capital en euros, sans passer par les taux arrondis.",
       champs: (c) => {
         const x = valeurDeLEscale(c);
         return [
-          { libelle: "Re moins CMPC (points)", attendu: x.ecart, calcul: `${pct(x.r.re)} − ${pct(x.cmpc)} = ${points(x.ecart)}`, tolerance: 0.02 },
+          { libelle: "Re moins CMPC (points)", nature: "grandeur", attendu: x.ecart, calcul: `${pct(x.r.re)} − ${pct(x.cmpc)} = ${points(x.ecart)}` },
           {
             libelle: "EVA de l'année",
-            attendu: x.v.eva,
-            calcul: `(Re − CMPC) × actif économique, soit ${pct(x.ecart)} × ${eur(x.a.actifEconomique)} aux taux arrondis ; au centime, ${eur(x.a.resultatDExploitationApresImpot)} − ${eur(x.coutDuCapital)} = ${eur(x.v.eva)}`,
-            tolerance: x.toleranceEva,
+            attendu: x.evaEnEuros,
+            calcul: `ce que rapporte l'outil après impôt moins le coût du capital en euros : ${eur(x.a.resultatDExploitationApresImpot)} − ${eur(x.coutDuCapital)} = ${eur(x.evaEnEuros)}`,
           },
           {
             libelle: "Résultat d'exploitation qui annule l'EVA",
-            attendu: x.v.resultatDExploitationMinimal,
-            calcul: `CMPC × actif économique ÷ (1 − t) : ${eur(x.coutDuCapital)} ÷ ${nombre(1 - x.t)} = ${eur(x.v.resultatDExploitationMinimal)}`,
-            tolerance: x.toleranceExploitation,
+            attendu: x.exploitationQuiAnnuleLEva,
+            calcul: `le coût du capital en euros ÷ (1 − t) : ${eur(x.coutDuCapital)} ÷ ${nombre(1 - x.t)} = ${eur(x.exploitationQuiAnnuleLEva)}`,
           },
         ];
       },
@@ -501,8 +511,8 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
       champs: (c) => {
         const x = valeurDeLEscale(c);
         return [
-          { libelle: "Exigence des associés", attendu: x.v.exigenceDesAssocies, calcul: `${pct(x.kcp)} × ${eur(x.a.capitauxPropres)} = ${eur(x.v.exigenceDesAssocies)}`, tolerance: 1 },
-          { libelle: "Résultat résiduel", attendu: x.v.resultatResiduel, calcul: `${eur(x.a.resultatNet)} − ${retranche(x.v.exigenceDesAssocies)} = ${eur(x.v.resultatResiduel)}`, tolerance: 1 },
+          { libelle: "Exigence des associés", attendu: x.v.exigenceDesAssocies, calcul: `${pct(x.kcp)} × ${eur(x.a.capitauxPropres)} = ${eur(x.v.exigenceDesAssocies)}` },
+          { libelle: "Résultat résiduel", attendu: x.v.resultatResiduel, calcul: `${eur(x.a.resultatNet)} − ${retranche(x.v.exigenceDesAssocies)} = ${eur(x.v.resultatResiduel)}` },
         ];
       },
       explication: (c) => {
@@ -547,18 +557,17 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
           { libelle: "Variation du résultat net", attendu: x.variationDuNet, calcul: `${eur(s.resultatNet)} − ${eur(x.a.resultatNet)} = ${eur(x.variationDuNet)}` },
           {
             libelle: "EVA avec la salle",
-            attendu: s.eva,
-            calcul: `Résultat net − kcp × capitaux propres : ${eur(s.resultatNet)} − ${pct(x.kcpAvec)} × ${eur(s.capitauxPropres)} ≈ ${eur(s.eva)} (au kcp non arrondi)`,
-            tolerance: x.toleranceSalle,
+            attendu: x.evaAvecLaSalle,
+            calcul: `Résultat net − kcp × capitaux propres : ${eur(s.resultatNet)} − ${pct(x.kcpAvec)} × ${eur(s.capitauxPropres)} = ${eur(s.resultatNet)} − ${eur(produit2(x.kcpAvec / 100, s.capitauxPropres))} = ${eur(x.evaAvecLaSalle)}`,
           },
-          { libelle: "Variation de l'EVA", attendu: x.variationDeLEva, calcul: `${eur(s.eva)} − ${retranche(x.v.eva)} = ${eur(x.variationDeLEva)}`, tolerance: x.toleranceSalle },
+          { libelle: "Variation de l'EVA", attendu: x.variationDeLEva, calcul: `${eur(x.evaAvecLaSalle)} − ${retranche(x.evaEnEuros)} = ${eur(x.variationDeLEva)}` },
         ];
       },
       explication: (c) => {
         const x = valeurDeLEscale(c);
         return [
           `La salle rapporte ${eur(x.exploitationDeLaSalle)} de résultat d'exploitation après impôt (l'excédent brut moins sa dotation de ${eur(x.dotation)}), et son emprunt coûte ${eur(x.interetsDeLaSalle)} après impôt : le résultat net ${x.variationDuNet >= 0 ? `gagne ${eur(x.variationDuNet)}` : `perd ${eur(-x.variationDuNet)}`}. Mais sur les ${eur(x.capitalDeLaSalle)} qu'elle mobilise au 31 décembre, elle ne rapporte que ${pct(x.rentabiliteDeLaSalle)}, moins que le CMPC, ${pct(x.cmpcAvec)} avec elle.`,
-          `L'EVA passe de ${eur(x.v.eva)} à ${eur(x.avec.eva)}. Le résultat net ne compte que le coût de la dette ; l'EVA compte aussi ce qu'exigent les associés, dont le risque monte avec la dette de la salle.`,
+          `L'EVA passe de ${eur(x.evaEnEuros)} à ${eur(x.evaAvecLaSalle)}. Le résultat net ne compte que le coût de la dette ; l'EVA compte aussi ce qu'exigent les associés, dont le risque monte avec la dette de la salle.`,
         ];
       },
     },
@@ -618,21 +627,20 @@ export const LA_CREATION_DE_VALEUR: Chapitre = {
         return [
           {
             libelle: "Bêta de l'actif du comparable, βa",
+            nature: "grandeur",
             attendu: x.betaDuComparable,
             calcul: `βa = βcp ÷ (1 + (1 − t) × D/CP) = ${nombre(COMPARABLE_COTE.betaDesCapitauxPropres)} ÷ (1 + ${nombre(1 - x.t)} × ${nombre(COMPARABLE_COTE.levier)}) = ${nombre(x.betaDuComparable)}`,
-            tolerance: 0.01,
           },
           {
             libelle: `Bêta des capitaux propres au levier de ${nombre(LEVIER_DE_LA_VARIANTE)}`,
+            nature: "grandeur",
             attendu: x.betaDeLaVariante,
             calcul: `${nombre(x.betaDuComparable)} × (1 + ${nombre(1 - x.t)} × ${nombre(LEVIER_DE_LA_VARIANTE)}) = ${nombre(x.betaDeLaVariante)}`,
-            tolerance: 0.01,
           },
           {
             libelle: `kcp au levier de ${nombre(LEVIER_DE_LA_VARIANTE)} (%)`,
             attendu: x.kcpDeLaVariante,
             calcul: `${pct(enPct(RISQUE_DE_L_ESCALE.tauxSansRisque))} + ${nombre(x.betaDeLaVariante)} × ${pct(enPct(RISQUE_DE_L_ESCALE.prime))} = ${pct(x.kcpDeLaVariante)}`,
-            tolerance: 0.02,
           },
         ];
       },

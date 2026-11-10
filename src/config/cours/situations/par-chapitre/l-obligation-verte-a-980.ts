@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, pct as enPoints } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_LA_VALEUR } from "../../chapitres/la-valeur-et-le-temps";
 import { EMETTEUR, NOTATION_DE_L_EMETTEUR, PLACEMENT_SANS_RISQUE, coursDeLObligation, obligationDuCas } from "../../monde/marche-financier";
@@ -18,16 +18,16 @@ import type { Situation } from "../types";
  * reste. L'élève refait seul le chemin du chapitre : coupon, rendement actuariel, puis une réponse.
  */
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const pct = (t: number, chiffres = 2) => `${(t * 100 + 0).toLocaleString("fr-FR", { maximumFractionDigits: chiffres })} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 
 /** Les chiffres du cas, calculés une fois de la fiche, et l'encadrement du rendement. */
 export function obligationAAcheter(_c?: Pick<Cas, "code">) {
   const x = obligationDuCas();
   const bas = Math.floor(x.rendement * 1000) / 1000;
   const haut = bas + 0.001;
-  const coursA = (t: number) => coursDeLObligation(x.obligation, t);
+  // Chaque cours au centime, comme sur la copie : l'interpolation part d'eux (deux-decimales.ts).
+  const coursA = (t: number) => arrondi2(coursDeLObligation(x.obligation, t));
   const interpole = bas + ((haut - bas) * (coursA(bas) - x.cours)) / (coursA(bas) - coursA(haut));
   return { ...x, bas, haut, coursA, interpole };
 }
@@ -86,7 +86,7 @@ export const L_OBLIGATION_VERTE_A_980: Situation = {
       notions: ["irr_payback", "discounting"],
       question: () => {
         const x = obligationAAcheter();
-        return `Calculez le coupon d'une obligation, ce que les ${x.quantite} obligations rapportent jusqu'à l'échéance (coupons et gain au remboursement). Puis calculez le taux de rendement actuariel d'un achat à ${eur(x.cours)} : il est entre ${pct(x.bas, 1)} et ${pct(x.haut, 1)}, en pour cent au centième.`;
+        return `Calculez le coupon d'une obligation, ce que les ${x.quantite} obligations rapportent jusqu'à l'échéance (coupons et gain au remboursement). Puis calculez le taux de rendement actuariel d'un achat à ${eur(x.cours)} : il est entre ${pct(x.bas)} et ${pct(x.haut)}, en pour cent au centième.`;
       },
       champs: () => {
         const x = obligationAAcheter();
@@ -97,9 +97,8 @@ export const L_OBLIGATION_VERTE_A_980: Situation = {
           { libelle: `Gain des ${x.quantite} obligations jusqu'à l'échéance`, attendu: x.gain, calcul: `${x.quantite} × (${x.obligation.dureeRestante} × ${eur(x.coupon)} + ${eur(x.plusValueParTitre)}) = ${eur(x.gain)}` },
           {
             libelle: "Taux de rendement actuariel, en %",
-            attendu: auCentime(x.interpole * 100),
-            calcul: `à ${pct(x.bas, 1)} les flux valent ${eur(a)}, à ${pct(x.haut, 1)} ${eur(b)} ; ${pct(x.bas, 1)} + 0,1 point × (${eur(a)} − ${eur(x.cours)}) ÷ (${eur(a)} − ${eur(b)}) = ${pct(x.interpole)}`,
-            tolerance: 0.02,
+            attendu: arrondi2(x.interpole * 100),
+            calcul: `à ${pct(x.bas)} les flux valent ${eur(a)}, à ${pct(x.haut)} ${eur(b)} ; ${pct(x.bas)} + 0,1 point × (${eur(a)} − ${eur(x.cours)}) ÷ (${eur(a)} − ${eur(b)}) = ${pct(x.interpole)}`,
           },
         ];
       },
@@ -136,7 +135,7 @@ export const L_OBLIGATION_VERTE_A_980: Situation = {
           {
             texte: `L'obligation : ${pct(x.rendement)} par an, pour un risque de crédit modéré`,
             juste: true,
-            retour: `Oui. Elle rapporte ${eur(x.gain)} en ${x.obligation.dureeRestante} ans, contre ${eur(auCentime(x.mise * ((1 + PLACEMENT_SANS_RISQUE) ** x.obligation.dureeRestante - 1)))} d'intérêts au compte à terme. L'écart paie le risque que l'émetteur ne rembourse pas : à elle de dire s'il le vaut.`,
+            retour: `Oui. Elle rapporte ${eur(x.gain)} en ${x.obligation.dureeRestante} ans, contre ${eur(arrondi2(x.mise * ((1 + PLACEMENT_SANS_RISQUE) ** x.obligation.dureeRestante - 1)))} d'intérêts au compte à terme. L'écart paie le risque que l'émetteur ne rembourse pas : à elle de dire s'il le vaut.`,
           },
           {
             texte: `Le compte à terme : l'obligation ne rapporte que ${pct(x.obligation.tauxNominal)}, à peine plus que lui, avec un risque en plus`,

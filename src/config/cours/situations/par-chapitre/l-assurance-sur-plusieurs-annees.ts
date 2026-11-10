@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, pct, produit2, quotient2 } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DES_REGULARISATIONS, ficheDe, primeSouscriteLe, regularisationsDeNova } from "../../chapitres/regularisations";
 import type { Situation } from "../types";
@@ -30,7 +30,6 @@ export const DUREE_DU_CONTRAT_EN_MOIS = 24;
  */
 export const REMISE_SUR_DEUX_ANS = 0.05;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
 const auCentime = (x: number) => Math.round((x + Number.EPSILON * Math.sign(x)) * 100) / 100 + 0;
 
@@ -58,7 +57,7 @@ export function assuranceSurPlusieursAnnees(c: Pick<Cas, "code">) {
   const interetsPerdus = auCentime(avancee * taux);
   const gainNet = auCentime(remise - interetsPerdus);
   // La remise la plus petite qui paie l'avance : R ≥ (prime d'un an − R) × taux.
-  const remiseMinimale = auCentime((a.prime * taux) / (1 + taux));
+  const remiseMinimale = quotient2(produit2(a.prime, taux), 1 + taux);
   return {
     x,
     entreprise: f.entreprise,
@@ -152,7 +151,7 @@ export const L_ASSURANCE_SUR_PLUSIEURS_ANNEES: Situation = {
             attendu: r.prime,
             calcul: `${eur(r.primeAnnuelle)} × ${qte(DUREE_DU_CONTRAT_EN_MOIS / r.x.f.assurance.moisCouverts)} = ${eur(r.sansRemise)}, moins ${qte(REMISE_SUR_DEUX_ANS * 100)} % de remise (${eur(r.remise)}) = ${eur(r.prime)}`,
           },
-          { libelle: "Mois du contrat dans N+1", attendu: r.moisDansNPlus1, calcul: `du 1er octobre au 31 décembre N+1 : ${qte(r.moisDansNPlus1)} mois`, tolerance: 0 },
+          { libelle: "Mois du contrat dans N+1", nature: "quantite", attendu: r.moisDansNPlus1, calcul: `du 1er octobre au 31 décembre N+1 : ${qte(r.moisDansNPlus1)} mois`, tolerance: 0 },
           {
             libelle: "Charge d'assurance de N+1",
             attendu: r.chargeDeNPlus1,
@@ -239,6 +238,7 @@ export const L_ASSURANCE_SUR_PLUSIEURS_ANNEES: Situation = {
           { libelle: "Charge d'assurance de N+2", attendu: r.nPlus2, calcul: `${eur(r.prime)} × ${qte(n)} ÷ ${qte(DUREE_DU_CONTRAT_EN_MOIS)} = ${eur(r.nPlus2)}` },
           {
             libelle: "Mois du contrat dans N+3",
+            nature: "quantite",
             attendu: r.moisDeNPlus3,
             calcul: `${qte(DUREE_DU_CONTRAT_EN_MOIS)} − ${qte(r.moisDansNPlus1)} − ${qte(n)} = ${qte(r.moisDeNPlus3)} mois`,
             tolerance: 0,
@@ -316,8 +316,7 @@ export const L_ASSURANCE_SUR_PLUSIEURS_ANNEES: Situation = {
           {
             libelle: "Remise la plus petite qui paie l'avance",
             attendu: r.remiseMinimale,
-            calcul: `remise = (${eur(r.primeAnnuelle)} − remise) × ${qte(r.taux * 100)} %, soit remise = ${eur(auCentime(r.primeAnnuelle * r.taux))} ÷ ${qte(1 + r.taux)} = ${eur(r.remiseMinimale)}`,
-            tolerance: 0.05,
+            calcul: `remise = (${eur(r.primeAnnuelle)} − remise) × ${pct(r.taux * 100)}, soit remise = ${eur(produit2(r.primeAnnuelle, r.taux))} ÷ ${qte(1 + r.taux)} = ${eur(r.remiseMinimale)}`,
           },
         ];
       },

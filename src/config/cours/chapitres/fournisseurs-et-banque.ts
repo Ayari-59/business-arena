@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { TableauACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import type { Cas } from "../cas";
 import { JOURS_DE_LA_BANQUE, dateEcrite } from "../monde/comptes-de-la-boutique";
@@ -58,10 +58,10 @@ export const LEVIERS_DU_VIREMENT = { montant: { min: 0, max: 20_000, pas: PAS_DU
 export const DEPART_DU_VIREMENT = { montant: 0, jour: 20 } as const;
 
 const f = MAILLE_ET_CO;
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
 const signe = (x: number) => (x < 0 ? eur(x) : `+ ${eur(x)}`);
 const qte = (n: number) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 const jours = (n: number) => `${qte(n)} jour${n >= 2 ? "s" : ""}`;
 const janvier = (j: number) => dateEcrite({ jour: j, mois: 1 });
 const auJournal = (d: Parameters<typeof dateEcrite>[0]) => `${dateEcrite(d)} N`;
@@ -173,14 +173,14 @@ function grilleDeLEchelle(c: Pick<Cas, "code">): TableauACompleter {
         cellules: [
           i === 0 ? { valeur: p.solde, texte: eur(p.solde) } : { valeur: p.solde, saisir: true, calcul: `le solde précédent et les opérations de valeur ${janvier(p.du)} : ${eur(p.solde)}`, indice: "le solde change à la date de valeur d'une opération, pas à sa date" },
           { valeur: p.jours, saisir: true, unite: "jours", calcul: `du ${janvier(p.du)} jusqu'à la date de valeur suivante : ${jours(p.jours)}`, indice: "les jours jusqu'au prochain changement de solde, le 31 en borne" },
-          { valeur: p.nombresDebiteurs, saisir: true, calcul: p.solde < 0 ? `${eur(-p.solde)} × ${qte(p.jours)} = ${qte(p.nombresDebiteurs)}` : "un solde créditeur ne fait pas de nombres débiteurs : 0", indice: "solde débiteur × jours, rien pour un solde créditeur" },
+          { valeur: p.nombresDebiteurs, saisir: true, nature: "grandeur" as const, calcul: p.solde < 0 ? `${eur(-p.solde)} × ${qte(p.jours)} = ${qte(p.nombresDebiteurs)}` : "un solde créditeur ne fait pas de nombres débiteurs : 0", indice: "solde débiteur × jours, rien pour un solde créditeur" },
         ],
       })),
       {
         libelle: "Total",
         fort: true,
         totalDe: { plus: e.periodes.map((_, i) => i) },
-        cellules: [{ valeur: null }, { valeur: e.periodes.reduce((t, p) => t + p.jours, 0), unite: "jours", texte: jours(e.periodes.reduce((t, p) => t + p.jours, 0)) }, { valeur: e.nombres, saisir: true, calcul: `${qte(e.nombres)}`, indice: "la somme des nombres débiteurs" }],
+        cellules: [{ valeur: null }, { valeur: e.periodes.reduce((t, p) => t + p.jours, 0), unite: "jours", texte: jours(e.periodes.reduce((t, p) => t + p.jours, 0)) }, { valeur: e.nombres, saisir: true, nature: "grandeur" as const, calcul: `la somme des nombres débiteurs : ${qte(e.nombres)}`, indice: "la somme des nombres débiteurs" }],
       },
     ],
   };
@@ -268,7 +268,7 @@ export const FOURNISSEURS_ET_BANQUE: Chapitre = {
         const d = x.delai;
         return [
           { libelle: "Achats de N − 1, TTC", attendu: d.achatsTtc, calcul: `${eur(d.achatsHt)} × 1,2 = ${eur(d.achatsTtc)}` },
-          { libelle: "Délai moyen, en jours", attendu: d.delai, calcul: `${eur(d.dettes)} ÷ ${eur(d.achatsTtc)} × ${JOURS_DE_LA_BANQUE} = ${qte(d.delai)} jours`, tolerance: 0.01 },
+          { libelle: "Délai moyen, en jours", nature: "grandeur", attendu: d.delai, calcul: `${eur(d.dettes)} ÷ ${eur(d.achatsTtc)} × ${JOURS_DE_LA_BANQUE} = ${qte(d.delai)} jours`, tolerance: 0.01 },
         ];
       },
       explication: (c) => {

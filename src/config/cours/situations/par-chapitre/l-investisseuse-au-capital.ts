@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { bilanDeFinDAnnee, tableauDuBilan } from "../../chapitres/lire-le-bilan";
 import { auCentime } from "../../monde/amortissement";
@@ -31,9 +31,6 @@ import type { Situation } from "../types";
 export const PART_DE_L_INVESTISSEUSE = 0.2;
 
 /** Un montant, le signe moins typographique : « −582,38 € ». */
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const auCent = (x: number) => Math.round(x / 100) * 100;
 
 /** Les chiffres de la réponse, calculés une fois du cas. */
@@ -56,9 +53,9 @@ export function investisseuseAuCapital(c: Pick<Cas, "code">) {
     disponibleApres: disponible,
     tresorerieAvant: b.tresorerie,
     tresorerieApres: auCentime(disponible - decouvertApres),
-    autonomieApres: auDixieme((capitauxPropresApres / total) * 100),
+    autonomieApres: arrondi2((capitauxPropresApres / total) * 100),
     // L'erreur classique : grossir les capitaux propres sans grossir le total du bilan.
-    sansLeTotal: auDixieme((capitauxPropresApres / b.passif) * 100),
+    sansLeTotal: arrondi2((capitauxPropresApres / b.passif) * 100),
   };
 }
 
@@ -105,12 +102,12 @@ export const L_INVESTISSEUSE_AU_CAPITAL: Situation = {
       titre: "Le bilan d'aujourd'hui",
       notions: ["balance_sheet"],
       question: () =>
-        "Commencez par le bilan tel qu'il est : son total (celui du passif, capitaux propres plus dettes), puis la part des capitaux propres dans ce total, en pourcentage au dixième.",
+        "Commencez par le bilan tel qu'il est : son total (celui du passif, capitaux propres plus dettes), puis la part des capitaux propres dans ce total, en pourcentage à deux décimales.",
       champs: (c) => {
         const r = investisseuseAuCapital(c);
         return [
-          { libelle: "Total du bilan", attendu: r.passif, calcul: `${eur(r.capitauxPropres)} + ${eur(r.dettes)} de dettes = ${eur(r.passif)}`, tolerance: 1 },
-          { libelle: "Part des capitaux propres (%)", attendu: r.partDesAssocies, calcul: `${eur(r.capitauxPropres)} ÷ ${eur(r.passif)} × 100 = ${pct(r.partDesAssocies)}`, tolerance: 0.1 },
+          { libelle: "Total du bilan", attendu: r.passif, calcul: `${eur(r.capitauxPropres)} + ${eur(r.dettes)} de dettes = ${eur(r.passif)}` },
+          { libelle: "Part des capitaux propres (%)", attendu: r.partDesAssocies, calcul: `${eur(r.capitauxPropres)} ÷ ${eur(r.passif)} × 100 = ${pct(r.partDesAssocies)}` },
         ];
       },
       explication: (c) => {
@@ -163,7 +160,7 @@ export const L_INVESTISSEUSE_AU_CAPITAL: Situation = {
       titre: "Le bilan après l'apport",
       notions: ["balance_sheet", "net_treasury"],
       question: () =>
-        "Refaites le bilan après l'apport : les capitaux propres, le total du bilan, la part des capitaux propres (au dixième), puis la trésorerie (banque moins découvert).",
+        "Refaites le bilan après l'apport : les capitaux propres, le total du bilan, la part des capitaux propres (à deux décimales), puis la trésorerie (banque moins découvert).",
       champs: (c) => {
         const r = investisseuseAuCapital(c);
         return [
@@ -172,10 +169,9 @@ export const L_INVESTISSEUSE_AU_CAPITAL: Situation = {
             libelle: "Total du bilan après l'apport",
             attendu: r.total,
             calcul: r.comble > 0 ? `${eur(r.passif)} + ${eur(r.apport)} − ${eur(r.comble)} de découvert remboursé = ${eur(r.total)}` : `${eur(r.passif)} + ${eur(r.apport)} = ${eur(r.total)}`,
-            tolerance: 1,
           },
-          { libelle: "Part des capitaux propres (%)", attendu: r.autonomieApres, calcul: `${eur(r.capitauxPropresApres)} ÷ ${eur(r.total)} × 100 = ${pct(r.autonomieApres)}`, tolerance: 0.1 },
-          { libelle: "Trésorerie après l'apport", attendu: r.tresorerieApres, calcul: `${eur(r.disponibleApres)} − ${eur(r.decouvertApres)} = ${eur(r.tresorerieApres)}`, tolerance: 1 },
+          { libelle: "Part des capitaux propres (%)", attendu: r.autonomieApres, calcul: `${eur(r.capitauxPropresApres)} ÷ ${eur(r.total)} × 100 = ${pct(r.autonomieApres)}` },
+          { libelle: "Trésorerie après l'apport", attendu: r.tresorerieApres, calcul: `${eur(r.disponibleApres)} − ${eur(r.decouvertApres)} = ${eur(r.tresorerieApres)}` },
         ];
       },
       explication: (c) => {

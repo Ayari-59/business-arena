@@ -33,14 +33,14 @@ describe("la valeur ajoutée de NOVA", () => {
     expect(VA).toBe(254_034);
     expect(v.consommations).toBe(1_136_242);
     expect(v.va).toBe(VA);
-    expect(v.tauxDeValeurAjoutee).toBe(18.3); // 254 034 ÷ 1 390 276 = 18,27 %
+    expect(v.tauxDeValeurAjoutee).toBe(18.27); // 254 034 ÷ 1 390 276 = 18,27 %, à deux décimales
     expect(v.entreprise).toBe(c(VA - 127_800 - 4_129.51 - 20_742));
     expect(v.entreprise).toBe(101_362.49);
     // Ce que l'entreprise garde : ses dotations et son résultat, moins les revenus du compte à terme.
     expect(v.entreprise).toBe(c(26_071.11 + 79_225.96 - 3_934.58));
-    expect(v.parts.map((p) => p.part)).toEqual([50.3, 1.6, 8.2, 39.9]);
-    expect(etape(ch, "va", "montants").champs(NOVA, VIDE).map((x) => x.attendu)).toEqual([1_136_242, 254_034, 18.3]);
-    expect(etape(ch, "partage", "montants").champs(NOVA, VIDE).map((x) => x.attendu)).toEqual([50.3, 39.9]);
+    expect(v.parts.map((p) => p.part)).toEqual([50.31, 1.63, 8.17, 39.9]);
+    expect(etape(ch, "va", "montants").champs(NOVA, VIDE).map((x) => x.attendu)).toEqual([1_136_242, 254_034, 18.27]);
+    expect(etape(ch, "partage", "montants").champs(NOVA, VIDE).map((x) => x.attendu)).toEqual([50.31, 39.9]);
   });
 
   it("la plus grosse part revient aux salariés", () => {
@@ -84,10 +84,10 @@ describe("le cas : un technicien plutôt qu'un prestataire", () => {
     expect(CONTRAT_D_ENTRETIEN_ANNUEL).toBe(18_744);
     expect(r.consommations).toBe(1_136_242 + 18_744);
     expect(r.va).toBe(254_034 - 18_744);
-    expect(r.partAvant).toBe(54.3); // 127 800 ÷ 235 290
+    expect(r.partAvant).toBe(54.32); // 127 800 ÷ 235 290
     expect(r.salaire).toBe(c(18_744 * 0.9));
     expect(r.vaApres).toBe(254_034);
-    expect(r.partApres).toBe(56.9); // 144 669,60 ÷ 254 034
+    expect(r.partApres).toBe(56.95); // 144 669,60 ÷ 254 034
   });
   it("les textes sont propres, une seule bonne réponse", () => {
     gardesDeTexte(UN_TECHNICIEN_PLUTOT_QU_UN_PRESTATAIRE);

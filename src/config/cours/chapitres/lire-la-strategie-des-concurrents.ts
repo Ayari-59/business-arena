@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { anneeDuMarche, battreAuris, carteDuMarche, enseigneDe, gammeDe, gammePourLaQualite, meilleurPrix, type StrategieLue } from "../monde/attractivite";
 import type { CodeDeGamme, FicheDuMarche } from "../monde/marche-a-trois";
@@ -41,6 +41,12 @@ import { ENTREPRISES_DU_MARCHE_A_TROIS, ficheDe } from "./couts-ou-differenciati
  *     se vend mieux plus cher, 67 €, où Auris reste pourtant devant ; elle ne la bat qu'à 65 € ou moins), le-laboratoire-de-la-carte, une-autre-annee (une variante chiffrée :
  *     la carte refaite l'année où NOVA va dans l'espace libre avec la gamme soignée ; le prix moyen
  *     monte avec elle) ; puis la synthèse.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les indices de la carte se donnent à deux décimales (99,48 et
+ * non 99), à un centième près (à l'unité, à un point près, avant), et la distance entre deux voisines
+ * au centième, sur les écarts d'indices arrondis (au dixième, avant) ; les qualités moyennes sont des
+ * grandeurs au centième, les résultats des montants au centime.
  */
 
 export const CATEGORIES_DE_STRATEGIE: readonly { code: StrategieLue; libelle: string }[] = [
@@ -71,12 +77,10 @@ export const GAMMES_DU_LABORATOIRE: readonly CodeDeGamme[] = ["standard", "actue
 /** Le budget qualité doublé, au pari de l'offre : NOVA garde sa gamme et double sa prévention. */
 export const BUDGET_QUALITE_DOUBLE = 8_000;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (x: number) => `${qte(Math.round(x * 10_000) / 100)} %`;
+/** Une quantité, un indice ou un écart d'indices : au centième, comme l'élève les écrit. */
+const qte = nombreAuCentieme;
 const dec = (x: number, n = 2) => x.toLocaleString("fr-FR", { minimumFractionDigits: n, maximumFractionDigits: n });
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
-const auDixieme = (x: number) => Math.round(x * 10) / 10 + 0;
+const auCentime = arrondi2;
 const signe = (x: number) => (x > 0 ? `+${eur(x)}` : eur(x));
 /** « de NOVA », « d'Auris » : l'élision devant une voyelle. */
 export const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
@@ -199,7 +203,7 @@ function tableauDeLAnnee(c: Pick<Cas, "code">): TableauDeDonnees {
       { libelle: "Budget qualité par trimestre", valeurs: k.enseignes.map((e) => eur(e.offre.budgetQualite)) },
       { libelle: "Communication par trimestre", valeurs: k.enseignes.map((e) => eur(e.offre.budgetCommunication)) },
       { libelle: "Budget RSE par trimestre", valeurs: k.enseignes.map((e) => eur(e.offre.budgetRse)) },
-      { libelle: "Part de marché", valeurs: k.enseignes.map((e) => pct(e.part)) },
+      { libelle: "Part de marché", valeurs: k.enseignes.map((e) => pct(100 * e.part)) },
       { libelle: "Résultat de l'année", valeurs: k.enseignes.map((e) => eur(e.resultat)) },
     ],
   };
@@ -274,20 +278,21 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
       notions: ["demand_market_share", "price_elasticity"],
       question: (c) => {
         const k = strategiesDesConcurrents(c);
-        return `Le prix moyen du marché est ce que les clients des trois enseignes ont payé en moyenne : leur chiffre d'affaires réuni, divisé par leurs ventes réunies. La qualité moyenne est la moyenne des trois qualités perçues. Calculez-les, au centime et au centième, puis les deux indices ${dE(k.f.entreprise)}, à l'unité (${k.f.entreprise} vend à ${eur(k.nova.offre.prix)}, avec une qualité perçue de ${dec(k.nova.qualite)}).`;
+        return `Le prix moyen du marché est ce que les clients des trois enseignes ont payé en moyenne : leur chiffre d'affaires réuni, divisé par leurs ventes réunies. La qualité moyenne est la moyenne des trois qualités perçues. Calculez-les, au centime et au centième, puis les deux indices ${dE(k.f.entreprise)}, à deux décimales (${k.f.entreprise} vend à ${eur(k.nova.offre.prix)}, avec une qualité perçue de ${dec(k.nova.qualite)}).`;
       },
       champs: (c) => {
         const k = strategiesDesConcurrents(c);
         const e = k.nova;
         return [
           { libelle: "Prix moyen du marché", attendu: k.carte.prixMoyen, calcul: `${eur(k.carte.chiffreDAffaires)} ÷ ${qte(k.carte.ventes)} = ${eur(k.carte.prixMoyen)}` },
-          { libelle: `Indice de prix ${dE(k.f.entreprise)}`, attendu: e.indicePrix, calcul: `${eur(e.offre.prix)} ÷ ${eur(k.carte.prixMoyen)} × 100 = ${qte(e.indicePrix)}`, tolerance: 1 },
+          { libelle: `Indice de prix ${dE(k.f.entreprise)}`, nature: "grandeur", attendu: e.indicePrix, calcul: `${eur(e.offre.prix)} ÷ ${eur(k.carte.prixMoyen)} × 100 = ${qte(e.indicePrix)}` },
           {
             libelle: "Qualité moyenne du marché",
+            nature: "grandeur",
             attendu: k.carte.qualiteMoyenne,
             calcul: `(${k.enseignes.map((x) => dec(x.qualite)).join(" + ")}) ÷ ${k.enseignes.length} = ${dec(k.carte.qualiteMoyenne)}`,
           },
-          { libelle: `Indice de qualité ${dE(k.f.entreprise)}`, attendu: e.indiceQualite, calcul: `${dec(e.qualite)} ÷ ${dec(k.carte.qualiteMoyenne)} × 100 = ${qte(e.indiceQualite)}`, tolerance: 1 },
+          { libelle: `Indice de qualité ${dE(k.f.entreprise)}`, nature: "grandeur", attendu: e.indiceQualite, calcul: `${dec(e.qualite)} ÷ ${dec(k.carte.qualiteMoyenne)} × 100 = ${qte(e.indiceQualite)}` },
         ];
       },
       explication: (c) => {
@@ -403,7 +408,7 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
         const k = strategiesDesConcurrents(c);
         const vraie = k.carteAuPrixQuiPasse.nova;
         return [
-          `À ${eur(k.prixQuiPasse)}, l'indice de prix ${dE(k.f.entreprise)} passerait à ${qte(Math.round((k.prixQuiPasse / k.carte.prixMoyen) * 100))}, au-dessus de ${100 + k.ecart}. Mais son indice de qualité ne bouge pas : ${qte(k.nova.indiceQualite)}, sous 100. Le prix ne déplace une enseigne que sur un axe de la carte : ${k.f.entreprise} serait une enseigne chère, pas une enseigne différenciée.`,
+          `À ${eur(k.prixQuiPasse)}, l'indice de prix ${dE(k.f.entreprise)} passerait à ${qte(arrondi2((k.prixQuiPasse / k.carte.prixMoyen) * 100))}, au-dessus de ${100 + k.ecart}. Mais son indice de qualité ne bouge pas : ${qte(k.nova.indiceQualite)}, sous 100. Le prix ne déplace une enseigne que sur un axe de la carte : ${k.f.entreprise} serait une enseigne chère, pas une enseigne différenciée.`,
           `Et le prix moyen n'est pas tenu dans la vraie année : il monte avec ${k.f.entreprise}. Rejouée à ${eur(k.prixQuiPasse)}, l'année donne un prix moyen de ${eur(k.carteAuPrixQuiPasse.prixMoyen)}, et ${k.f.entreprise} à ${qte(vraie.indicePrix)} en prix : un indice se lit toujours face aux autres. Reste la qualité, que l'étape suivante fait calculer.`,
         ];
       },
@@ -425,19 +430,21 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
         return [
           {
             libelle: "Qualité moyenne des deux concurrents",
+            nature: "grandeur",
             attendu: k.qualiteDesConcurrents,
             calcul: `(${dec(k.soundbox.qualite)} + ${dec(k.auris.qualite)}) ÷ 2 = ${dec(k.qualiteDesConcurrents)}`,
           },
           {
             libelle: `Qualité moyenne du marché, ${k.f.entreprise} en gamme soignée`,
+            nature: "grandeur",
             attendu: s.qualiteMoyenne,
             calcul: `(${s.enseignes.map((x) => dec(x.qualite)).join(" + ")}) ÷ ${s.enseignes.length} = ${dec(s.sommeDesQualites)} ÷ ${s.enseignes.length} = ${dec(s.qualiteMoyenne)}`,
           },
           {
             libelle: `Indice de qualité ${dE(k.f.entreprise)} en gamme soignée`,
+            nature: "grandeur",
             attendu: s.nova.indiceQualite,
             calcul: `${dec(s.nova.qualite)} ÷ ${dec(s.qualiteMoyenne)} × 100 = ${qte(s.nova.indiceQualite)}`,
-            tolerance: 1,
           },
         ];
       },
@@ -550,9 +557,9 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
         const [sb, au] = [k.soundbox.bilan, k.auris.bilan];
         return [
           { libelle: `Marge par enceinte ${dE(k.soundbox.nom)}`, attendu: sb.margeUnitaire, calcul: `${eur(sb.offre.prix)} − ${eur(sb.offre.composants)} − ${eur(sb.offre.autres)} = ${eur(sb.margeUnitaire)}` },
-          { libelle: `Résultat ${dE(k.soundbox.nom)}`, attendu: sb.resultat, calcul: ligne(sb), tolerance: 1 },
+          { libelle: `Résultat ${dE(k.soundbox.nom)}`, attendu: sb.resultat, calcul: ligne(sb) },
           { libelle: `Marge par enceinte ${dE(k.auris.nom)}`, attendu: au.margeUnitaire, calcul: `${eur(au.offre.prix)} − ${eur(au.offre.composants)} − ${eur(au.offre.autres)} = ${eur(au.margeUnitaire)}` },
-          { libelle: `Résultat ${dE(k.auris.nom)}`, attendu: au.resultat, calcul: ligne(au), tolerance: 1 },
+          { libelle: `Résultat ${dE(k.auris.nom)}`, attendu: au.resultat, calcul: ligne(au) },
         ];
       },
       explication: (c) => {
@@ -611,7 +618,7 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
       notions: ["segmentation"],
       tableau: tableauDeLaCarte,
       question: () => {
-        return `L'espace libre est la plus grande place de la carte qu'aucune enseigne ne tient entre deux voisines. Rangées par indice de prix, deux enseignes voisines sont séparées sur les deux indices : distance = √(écart de prix² + écart de qualité²). Calculez la distance entre chaque paire de voisines, au dixième, puis le prix et la qualité de la place libre, au milieu des deux voisines les plus éloignées (la moyenne de leurs prix et de leurs qualités perçues).`;
+        return `L'espace libre est la plus grande place de la carte qu'aucune enseigne ne tient entre deux voisines. Rangées par indice de prix, deux enseignes voisines sont séparées sur les deux indices : distance = √(écart de prix² + écart de qualité²). Calculez la distance entre chaque paire de voisines, au centième, puis le prix et la qualité de la place libre, au milieu des deux voisines les plus éloignées (la moyenne de leurs prix et de leurs qualités perçues).`;
       },
       champs: (c) => {
         const k = strategiesDesConcurrents(c);
@@ -619,19 +626,19 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
         return [
           ...k.carte.voisines.map((v) => ({
             libelle: `Distance entre ${v.bas.nom} et ${v.haut.nom}`,
-            attendu: auDixieme(v.distance),
-            calcul: `√(${qte(v.ecartDePrix)}² + ${qte(v.ecartDeQualite)}²) = ${dec(auDixieme(v.distance), 1)}`,
-            tolerance: 0.1,
+            nature: "grandeur" as const,
+            attendu: v.distance,
+            calcul: `√(${qte(v.ecartDePrix)}² + ${qte(v.ecartDeQualite)}²) = ${dec(v.distance)}`,
           })),
           { libelle: "Prix de la place libre", attendu: p.prix, calcul: `(${eur(p.entre.bas.prix)} + ${eur(p.entre.haut.prix)}) ÷ 2 = ${eur(p.prix)}` },
-          { libelle: "Qualité de la place libre", attendu: p.qualite, calcul: `(${dec(p.entre.bas.qualite)} + ${dec(p.entre.haut.qualite)}) ÷ 2 = ${dec(p.qualite)}` },
+          { libelle: "Qualité de la place libre", nature: "grandeur", attendu: p.qualite, calcul: `(${dec(p.entre.bas.qualite)} + ${dec(p.entre.haut.qualite)}) ÷ 2 = ${dec(p.qualite)}` },
         ];
       },
       explication: (c) => {
         const k = strategiesDesConcurrents(c);
         const p = k.place;
         return [
-          `La place libre est entre ${p.entre.bas.nom} et ${p.entre.haut.nom}, à ${dec(auDixieme(p.entre.distance), 1)} points sur la carte : une enceinte à ${eur(p.prix)}, d'une qualité perçue de ${dec(p.qualite)}, aux indices ${qte(p.indicePrix)} et ${qte(p.indiceQualite)}. Une place libre a deux coordonnées : un prix, et une qualité.`,
+          `La place libre est entre ${p.entre.bas.nom} et ${p.entre.haut.nom}, à ${dec(p.entre.distance)} points sur la carte : une enceinte à ${eur(p.prix)}, d'une qualité perçue de ${dec(p.qualite)}, aux indices ${qte(p.indicePrix)} et ${qte(p.indiceQualite)}. Une place libre a deux coordonnées : un prix, et une qualité.`,
           k.carte.plusGrandEcartDePrix === p.entre
             ? `Ici, le plus grand écart de prix seul désigne les mêmes voisines (${qte(p.entre.ecartDePrix)} points). Mais lu sur le seul prix, l'espace libre n'aurait pas de qualité : on croirait l'atteindre en changeant d'étiquette.`
             : `Lu sur le seul prix, l'espace libre serait ailleurs, entre ${k.carte.plusGrandEcartDePrix.bas.nom} et ${k.carte.plusGrandEcartDePrix.haut.nom} : la qualité change la carte.`,
@@ -648,7 +655,7 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
       options: (c) => {
         const k = strategiesDesConcurrents(c);
         const p = k.place;
-        const ou = `entre ${p.entre.bas.nom} et ${p.entre.haut.nom}, à ${dec(auDixieme(p.entre.distance), 1)} points`;
+        const ou = `entre ${p.entre.bas.nom} et ${p.entre.haut.nom}, à ${dec(p.entre.distance)} points`;
         const coin = "Non : un coin vide n'est pas l'espace libre entre deux voisines. Il faut le chiffrer avant d'y aller : l'étape suivante le fait.";
         return [
           ...k.carte.voisines.map((v) => ({
@@ -656,8 +663,8 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
             juste: v === p.entre,
             retour:
               v === p.entre
-                ? `Oui : ${dec(auDixieme(v.distance), 1)} points sur les deux indices, la plus grande distance entre deux voisines. Une offre placée là, à ${eur(p.prix)} et ${dec(p.qualite)} de qualité, aurait le moins de concurrents directs.`
-                : `Non : ${dec(auDixieme(v.distance), 1)} points seulement. L'espace libre est ${ou}.`,
+                ? `Oui : ${dec(v.distance)} points sur les deux indices, la plus grande distance entre deux voisines. Une offre placée là, à ${eur(p.prix)} et ${dec(p.qualite)} de qualité, aurait le moins de concurrents directs.`
+                : `Non : ${dec(v.distance)} points seulement. L'espace libre est ${ou}.`,
           })),
           { texte: "Le coin des prix hauts, à qualité basse", juste: false, retour: coin },
           { texte: "Le coin du meilleur rapport qualité-prix", juste: false, retour: coin },
@@ -695,9 +702,9 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
         const k = strategiesDesConcurrents(c);
         const [a, b] = [k.coinCher, k.coinGenereux];
         return [
-          { libelle: "Résultat au prix haut, gamme actuelle", attendu: a.resultat, calcul: `${qte(a.ventes)} × (${eur(a.offre.prix)} − ${eur(a.coutVariable)}) − ${eur(a.charges)} = ${eur(a.resultat)}`, tolerance: 1 },
-          { libelle: "Demande perdue, gamme soignée au prix d'aujourd'hui", attendu: b.refusees, calcul: `${qte(b.demande)} − ${qte(b.ventes)} = ${qte(b.refusees)} ${k.f.unites}`, tolerance: 0 },
-          { libelle: "Résultat de la gamme soignée au prix d'aujourd'hui", attendu: b.resultat, calcul: `${qte(b.ventes)} × (${eur(b.offre.prix)} − ${eur(b.coutVariable)}) − ${eur(b.charges)} = ${eur(b.resultat)}`, tolerance: 1 },
+          { libelle: "Résultat au prix haut, gamme actuelle", attendu: a.resultat, calcul: `${qte(a.ventes)} × (${eur(a.offre.prix)} − ${eur(a.coutVariable)}) − ${eur(a.charges)} = ${eur(a.resultat)}` },
+          { libelle: "Demande perdue, gamme soignée au prix d'aujourd'hui", nature: "quantite", attendu: b.refusees, calcul: `${qte(b.demande)} − ${qte(b.ventes)} = ${qte(b.refusees)} ${k.f.unites}` },
+          { libelle: "Résultat de la gamme soignée au prix d'aujourd'hui", attendu: b.resultat, calcul: `${qte(b.ventes)} × (${eur(b.offre.prix)} − ${eur(b.coutVariable)}) − ${eur(b.charges)} = ${eur(b.resultat)}` },
         ];
       },
       explication: (c) => {
@@ -841,9 +848,9 @@ export const LIRE_LA_STRATEGIE_DES_CONCURRENTS: Chapitre = {
         const n = x.nova;
         return [
           { libelle: "Prix moyen du marché de cette année", attendu: x.prixMoyen, calcul: `${eur(x.chiffreDAffaires)} ÷ ${qte(x.ventes)} = ${eur(x.prixMoyen)}` },
-          { libelle: "Qualité moyenne de cette année", attendu: x.qualiteMoyenne, calcul: `(${x.enseignes.map((e) => dec(e.qualite)).join(" + ")}) ÷ ${x.enseignes.length} = ${dec(x.qualiteMoyenne)}` },
-          { libelle: `Indice de prix ${dE(k.f.entreprise)} cette année`, attendu: n.indicePrix, calcul: `${eur(n.prix)} ÷ ${eur(x.prixMoyen)} × 100 = ${qte(n.indicePrix)}`, tolerance: 1 },
-          { libelle: `Indice de qualité ${dE(k.f.entreprise)} cette année`, attendu: n.indiceQualite, calcul: `${dec(n.qualite)} ÷ ${dec(x.qualiteMoyenne)} × 100 = ${qte(n.indiceQualite)}`, tolerance: 1 },
+          { libelle: "Qualité moyenne de cette année", nature: "grandeur", attendu: x.qualiteMoyenne, calcul: `(${x.enseignes.map((e) => dec(e.qualite)).join(" + ")}) ÷ ${x.enseignes.length} = ${dec(x.qualiteMoyenne)}` },
+          { libelle: `Indice de prix ${dE(k.f.entreprise)} cette année`, nature: "grandeur", attendu: n.indicePrix, calcul: `${eur(n.prix)} ÷ ${eur(x.prixMoyen)} × 100 = ${qte(n.indicePrix)}` },
+          { libelle: `Indice de qualité ${dE(k.f.entreprise)} cette année`, nature: "grandeur", attendu: n.indiceQualite, calcul: `${dec(n.qualite)} ÷ ${dec(x.qualiteMoyenne)} × 100 = ${qte(n.indiceQualite)}` },
         ];
       },
       explication: (c) => {

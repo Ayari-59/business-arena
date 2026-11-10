@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { CelluleACompleter, TableauACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import type { Cas } from "../cas";
 import { auCentime } from "../monde/amortissement";
@@ -65,9 +65,8 @@ export const LEVIERS_DE_LA_STRUCTURE = {
   baisse: { min: 0, max: 80, pas: 10 },
 } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${qte(t)} %`;
+/** Un nombre au centième : deux décimales s'il n'est pas entier (0,30 fois). */
+const qte = (n: number) => nombreAuCentieme(n);
 /** « 0,65 an », « 3,63 ans ». */
 const ans = (x: number) => `${qte(x)} ${x < 2 ? "an" : "ans"}`;
 const donnee = (valeur: number): CelluleACompleter => ({ valeur });
@@ -227,7 +226,7 @@ export const RATIOS_DE_STRUCTURE: Chapitre = {
       champs: (c) => {
         const s = structureDuCas(c);
         return [
-          { libelle: "Couverture des emplois stables", attendu: s.ratios.couverture, calcul: `${eur(s.ressourcesStables)} ÷ ${eur(s.emploisStables)} = ${qte(s.ratios.couverture)}`, tolerance: 0.01 },
+          { libelle: "Couverture des emplois stables", nature: "grandeur", attendu: s.ratios.couverture, calcul: `${eur(s.ressourcesStables)} ÷ ${eur(s.emploisStables)} = ${qte(s.ratios.couverture)}`, tolerance: 0.01 },
           { libelle: "Ressources propres", attendu: s.ressourcesPropres, calcul: `${eur(s.capitauxPropres)} + ${eur(auCentime(s.ressourcesPropres - s.capitauxPropres))} = ${eur(s.ressourcesPropres)}` },
           { libelle: "Indépendance financière, en %", attendu: s.ratios.independance, calcul: `${eur(s.ressourcesPropres)} ÷ ${eur(s.ressourcesStables)} = ${pct(s.ratios.independance)}`, tolerance: 0.01 },
         ];
@@ -254,8 +253,8 @@ export const RATIOS_DE_STRUCTURE: Chapitre = {
       champs: (c) => {
         const s = structureDuCas(c);
         return [
-          { libelle: "Endettement", attendu: s.ratios.endettement, calcul: `${eur(s.dettesFinancieres)} ÷ ${eur(s.capitauxPropres)} = ${qte(s.ratios.endettement)}`, tolerance: 0.01 },
-          { libelle: "Capacité de remboursement, en années", attendu: s.ratios.capacite, calcul: `${eur(s.dettesFinancieres)} ÷ ${eur(s.caf)} = ${ans(s.ratios.capacite)}`, tolerance: 0.01 },
+          { libelle: "Endettement", nature: "grandeur", attendu: s.ratios.endettement, calcul: `${eur(s.dettesFinancieres)} ÷ ${eur(s.capitauxPropres)} = ${qte(s.ratios.endettement)}`, tolerance: 0.01 },
+          { libelle: "Capacité de remboursement, en années", nature: "grandeur", attendu: s.ratios.capacite, calcul: `${eur(s.dettesFinancieres)} ÷ ${eur(s.caf)} = ${ans(s.ratios.capacite)}`, tolerance: 0.01 },
         ];
       },
       explication: (c) => {
@@ -280,13 +279,12 @@ export const RATIOS_DE_STRUCTURE: Chapitre = {
       champs: (c) => {
         const s = structureDuCas(c);
         return [
-          { libelle: "Permis par la capacité de remboursement", attendu: s.permis.parLaCapacite, calcul: `${R.capaciteDeRemboursement} × ${eur(s.caf)} − ${eur(s.dettesFinancieres)} = ${eur(s.permis.parLaCapacite)}, à l'euro inférieur`, tolerance: 1 },
-          { libelle: "Permis par l'endettement", attendu: s.permis.parLEndettement, calcul: `${qte(R.endettement)} × ${eur(s.capitauxPropres)} − ${eur(s.dettesFinancieres)} = ${eur(s.permis.parLEndettement)}, à l'euro inférieur`, tolerance: 1 },
+          { libelle: "Permis par la capacité de remboursement", attendu: s.permis.parLaCapacite, calcul: `${R.capaciteDeRemboursement} × ${eur(s.caf)} − ${eur(s.dettesFinancieres)} = ${eur(arrondi2(R.capaciteDeRemboursement * s.caf - s.dettesFinancieres))}, soit ${eur(s.permis.parLaCapacite)} à l'euro inférieur` },
+          { libelle: "Permis par l'endettement", attendu: s.permis.parLEndettement, calcul: `${qte(R.endettement)} × ${eur(s.capitauxPropres)} − ${eur(s.dettesFinancieres)} = ${eur(arrondi2(R.endettement * s.capitauxPropres - s.dettesFinancieres))}, soit ${eur(s.permis.parLEndettement)} à l'euro inférieur` },
           {
             libelle: "Permis par l'indépendance financière",
             attendu: s.permis.parLIndependance,
-            calcul: `${eur(s.ressourcesPropres)} ÷ ${qte(R.independance)} − ${eur(s.ressourcesStables)} = ${eur(s.permis.parLIndependance)}, à l'euro inférieur : les ressources stables peuvent monter jusqu'au double des ressources propres`,
-            tolerance: 1,
+            calcul: `${eur(s.ressourcesPropres)} ÷ ${qte(R.independance)} − ${eur(s.ressourcesStables)} = ${eur(arrondi2(s.ressourcesPropres / R.independance - s.ressourcesStables))}, soit ${eur(s.permis.parLIndependance)} à l'euro inférieur : les ressources stables peuvent monter jusqu'au double des ressources propres`,
           },
         ];
       },
@@ -469,9 +467,9 @@ export const RATIOS_DE_STRUCTURE: Chapitre = {
         const b = s.financier;
         return [
           { libelle: "Fonds de roulement financier", attendu: b.fondsDeRoulementFinancier, calcul: `${eur(b.capitauxPermanents)} − ${eur(b.actifPlusDUnAn)} = ${eur(b.actifMoinsDUnAn)} − ${eur(b.dettesMoinsDUnAn)} = ${eur(b.fondsDeRoulementFinancier)}` },
-          { libelle: "Liquidité générale", attendu: b.liquiditeGenerale, calcul: `${eur(b.actifMoinsDUnAn)} ÷ ${eur(b.dettesMoinsDUnAn)} = ${qte(b.liquiditeGenerale)}`, tolerance: 0.01 },
-          { libelle: "Liquidité réduite", attendu: b.liquiditeReduite, calcul: `(${eur(b.actifMoinsDUnAn)} − ${eur(s.postes.stock)}) ÷ ${eur(b.dettesMoinsDUnAn)} = ${qte(b.liquiditeReduite)}`, tolerance: 0.01 },
-          { libelle: "Liquidité immédiate", attendu: b.liquiditeImmediate, calcul: `${eur(s.postes.banque)} ÷ ${eur(b.dettesMoinsDUnAn)} = ${qte(b.liquiditeImmediate)}`, tolerance: 0.01 },
+          { libelle: "Liquidité générale", nature: "grandeur", attendu: b.liquiditeGenerale, calcul: `${eur(b.actifMoinsDUnAn)} ÷ ${eur(b.dettesMoinsDUnAn)} = ${qte(b.liquiditeGenerale)}`, tolerance: 0.01 },
+          { libelle: "Liquidité réduite", nature: "grandeur", attendu: b.liquiditeReduite, calcul: `(${eur(b.actifMoinsDUnAn)} − ${eur(s.postes.stock)}) ÷ ${eur(b.dettesMoinsDUnAn)} = ${qte(b.liquiditeReduite)}`, tolerance: 0.01 },
+          { libelle: "Liquidité immédiate", nature: "grandeur", attendu: b.liquiditeImmediate, calcul: `${eur(s.postes.banque)} ÷ ${eur(b.dettesMoinsDUnAn)} = ${qte(b.liquiditeImmediate)}`, tolerance: 0.01 },
         ];
       },
       explication: (c) => {
@@ -496,7 +494,7 @@ export const RATIOS_DE_STRUCTURE: Chapitre = {
         const b = s.financier;
         return [
           { libelle: "Dettes totales", attendu: b.dettesTotales, calcul: `${eur(b.dettesPlusDUnAn)} + ${eur(b.dettesMoinsDUnAn)} = ${eur(b.dettesTotales)}` },
-          { libelle: "Solvabilité générale", attendu: b.solvabilite, calcul: `${eur(b.totalActif)} ÷ ${eur(b.dettesTotales)} = ${qte(b.solvabilite)}`, tolerance: 0.01 },
+          { libelle: "Solvabilité générale", nature: "grandeur", attendu: b.solvabilite, calcul: `${eur(b.totalActif)} ÷ ${eur(b.dettesTotales)} = ${qte(b.solvabilite)}`, tolerance: 0.01 },
           { libelle: "Autonomie financière, en %", attendu: b.autonomie, calcul: `${eur(b.capitauxPropres)} ÷ ${eur(b.totalPassif)} = ${pct(b.autonomie)}`, tolerance: 0.01 },
         ];
       },

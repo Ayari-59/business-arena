@@ -19,6 +19,7 @@ import type { Situation } from "../../src/config/cours/situations/types";
 import type { Chapitre, Etape, EtapeChoix, EtapeCurseur, EtapeMontants, EtapeSimulation, EtatDuCours } from "../../src/config/cours/types";
 import { CONCEPTS } from "../../src/config/pedagogy/concepts";
 import { chapitreDuCas, etatAvant } from "../../src/pedagogy/cours/deroule";
+import { arrondi2 } from "../../src/pedagogy/cours/deux-decimales";
 
 /**
  * DSCG · FINANCE : LA VALEUR ACTUELLE NETTE, LE TRI ET LE CHOIX ENTRE DEUX PROJETS, CHEZ NOVA, DANS
@@ -88,11 +89,16 @@ function fluxALaMain(l: Ligne, o: { ventes?: number; prixStudio?: number; duree?
     return fe(k - 1) + residuelle + bfr(k - 1);
   });
 }
-/** La VAN à la main : la somme des flux de la date k ÷ (1 + taux)^k. */
-const vanALaMain = (f: readonly number[], r: number) => f.reduce((s, x, k) => s + x / (1 + r) ** k, 0);
+/** Le coefficient d'actualisation au dix-millième, comme dans une table financière. */
+const coef4 = (r: number, k: number) => Math.round((1 + r) ** -k * 10_000) / 10_000;
+/**
+ * La VAN à la main, aux lignes arrondies (décision du propriétaire, 10 novembre 2026) : chaque flux de
+ * la date k × son coefficient au dix-millième, au centime, puis la somme de ces flux arrondis.
+ */
+const vanALaMain = (f: readonly number[], r: number) => arrondi2(f.reduce((s, x, k) => s + arrondi2(x * coef4(r, k)), 0));
 /** Le banc à la main : (retours × 40 € − 1 400 € − 6 000 € de dotation) × 75 % + 6 000 €, chaque année, pour 30 000 €. */
 const fluxDuBanc = (retours: number) => [-30_000, ...Array(5).fill((retours * 40 - 1_400 - 6_000) * 0.75 + 6_000)];
-const annuite = (1 - 1.09 ** -5) / 0.09;
+const annuite = Math.round(((1 - 1.09 ** -5) / 0.09) * 10_000) / 10_000;
 
 const A = fluxALaMain(LIGNE_A);
 const B = fluxALaMain(LIGNE_B);
@@ -301,7 +307,7 @@ describe("les deux chapitres et leurs cas, chez NOVA, dans le monde du cours", (
     expect(A.map(centime)).toEqual([-116_230, -22_815, 35_625, 75_075, 85_625, 72_920]);
     expect(B.map(centime)).toEqual([-206_230, 397.5, 58_837.5, 98_287.5, 108_837.5, 110_382.5]);
     expect(C.map(centime)).toEqual([-30_000, 11_250, 11_250, 11_250, 11_250, 11_250]);
-    expect([vanA, vanB, vanC].map(centime)).toEqual([58_847.24, 68_397.29, 13_758.58]);
+    expect([vanA, vanB, vanC].map(centime)).toEqual([58_845.46, 68_393.88, 13_758.01]);
   });
 
   it("la mission « jouez » garde son export : l'équipement du projet B, au nom de la machine de l'arène", () => {
@@ -332,10 +338,11 @@ describe("la valeur actuelle nette : le projet A, la gamme sur une seconde ligne
     expect(0.25 * (ebe1 - 18_000)).toBe(-9_425);
     expect(attendus(ch, "le-taux-et-le-temps")).toEqual({
       "Taux d'actualisation (%)": 3 + 1 * 6,
-      "Valeur actuelle de 100 € reçus à la date 5": centime(100 / 1.09 ** 5),
-      "Valeur actuelle du flux de N+3": centime(75_075 / 1.09 ** 3),
+      "Valeur actuelle de 100 € reçus à la date 5": arrondi2(100 * coef4(T, 5)),
+      "Valeur actuelle du flux de N+3": arrondi2(75_075 * coef4(T, 3)),
     });
-    expect([centime(100 / 1.09 ** 5), centime(75_075 / 1.09 ** 3)]).toEqual([64.99, 57_971.67]);
+    // Au coefficient du dix-millième, 0,7722 : 57 972,92 € (57 971,67 € au coefficient exact).
+    expect([arrondi2(100 * coef4(T, 5)), arrondi2(75_075 * coef4(T, 3))]).toEqual([64.99, 57_972.92]);
   });
 
   it("les étapes autonomes : le BFR, la valeur résiduelle, la décision", () => {
@@ -367,19 +374,18 @@ describe("la valeur actuelle nette : le projet A, la gamme sur une seconde ligne
       "Flux disponible de la date 5": centime(A[5]!),
       "VAN du projet A": centime(vanA),
     });
-    // L'élève qui lit ses coefficients à quatre décimales reste dans l'écart admis.
-    const aQuatreDecimales = A.reduce((s, y, k) => s + y * Math.round(1.09 ** -k * 10_000) / 10_000, 0);
-    expect(Math.abs(aQuatreDecimales - vanA)).toBeLessThanOrEqual(tolerances(ch, "les-flux-disponibles")["VAN du projet A"]!);
+    // Le corrigé suit l'élève, aux coefficients du dix-millième : l'écart admis est d'un centime.
+    expect(tolerances(ch, "les-flux-disponibles")["VAN du projet A"] ?? 0.01).toBe(0.01);
     // Le BFR oublié : les flux sans BFR, et ce qu'il coûte.
     const sans = fluxALaMain(LIGNE_A, { bfr: false });
     expect(sans.map(centime)).toEqual([-100_000, -10_275, 44_475, 75_075, 75_075, 45_850]);
     const vanSans = vanALaMain(sans, T);
     expect(attendus(ch, "ce-que-coute-le-bfr")).toEqual({
       "VAN si l'on oubliait le BFR": centime(vanSans),
-      "Valeur actuelle du BFR récupéré à la date 5": centime(27_070 / 1.09 ** 5),
+      "Valeur actuelle du BFR récupéré à la date 5": arrondi2(27_070 * coef4(T, 5)),
       "Coût du BFR en VAN": centime(centime(vanSans) - centime(vanA)),
     });
-    expect([centime(vanSans), centime(27_070 / 1.09 ** 5), centime(centime(vanSans) - centime(vanA))]).toEqual([68_963.16, 17_593.64, 10_115.92]);
+    expect([centime(vanSans), arrondi2(27_070 * coef4(T, 5)), centime(centime(vanSans) - centime(vanA))]).toEqual([68_962.29, 17_592.79, 10_116.83]);
     // Le seuil des ventes, à rebours : la VAN est affine dans les ventes.
     const v80 = vanALaMain(fluxALaMain(LIGNE_A, { ventes: 0.8 }), T);
     const pente = (vanA - v80) / 20;
@@ -388,10 +394,11 @@ describe("la valeur actuelle nette : le projet A, la gamme sur une seconde ligne
       "VAN apportée par un point de ventes": centime(pente),
       "Ventes qui annulent la VAN (% du plan)": centime(100 - vanA / pente),
     });
-    expect([centime(v80), centime(pente), centime(100 - vanA / pente)]).toEqual([-17_193.31, 3_802.03, 84.52]);
+    expect([centime(v80), centime(pente), centime(100 - vanA / pente)]).toEqual([-17_194.13, 3_801.98, 84.52]);
     // L'affinité : un troisième point tombe sur la droite.
-    expect(vanALaMain(fluxALaMain(LIGNE_A, { ventes: 0.9 }), T)).toBeCloseTo((vanA + v80) / 2, 4);
-    expect(vanALaMain(fluxALaMain(LIGNE_A, { ventes: 1 - (vanA / pente) / 100 }), T)).toBeCloseTo(0, 4);
+    // L'affinité, aux centimes des lignes arrondies près.
+    expect(Math.abs(vanALaMain(fluxALaMain(LIGNE_A, { ventes: 0.9 }), T) - (vanA + v80) / 2)).toBeLessThan(0.05);
+    expect(Math.abs(vanALaMain(fluxALaMain(LIGNE_A, { ventes: 1 - (vanA / pente) / 100 }), T))).toBeLessThan(0.05);
     expect(juste(ch, "quel-risque-surveiller")).toBe("Le prix de NOVA Studio, qui porte la marge de la gamme");
   });
 
@@ -416,7 +423,7 @@ describe("la valeur actuelle nette : le projet A, la gamme sur une seconde ligne
         "VAN du projet": centime(vanALaMain(fv, T)),
       },
     });
-    expect([centime(vanV(60)), centime(vanV(85))]).toEqual([-93_233.86, 1_816.83]);
+    expect([centime(vanV(60)), centime(vanV(85))]).toEqual([-93_233.74, 1_815.75]);
     const vanP = (p: number) => vanALaMain(fluxALaMain(LIGNE_A, { prixStudio: p }), T);
     expect(vanP(118)).toBeGreaterThan(0);
     expect(vanP(117)).toBeLessThan(0);
@@ -457,10 +464,10 @@ describe("la valeur actuelle nette : le projet A, la gamme sur une seconde ligne
     };
     expect(l.auDepart).toEqual(lire(5));
     expect(l.aLaSolution).toEqual(lire(4));
-    expect(Object.values(lire(4))).toEqual([116_230, 37_620, 16_000, 8_532.5, 41_966.11]);
+    expect(Object.values(lire(4))).toEqual([116_230, 37_620, 16_000, 8_533.23, 41_965.54]);
     // À 3 ans, le projet détruit de la valeur, mais l'oubli du BFR le ferait accepter.
-    expect(centime(vanALaMain(fluxALaMain(LIGNE_A, { duree: 3 }), T))).toBe(-850.54);
-    expect(centime(vanALaMain(fluxALaMain(LIGNE_A, { duree: 3, bfr: false }), T))).toBe(5_283.37);
+    expect(centime(vanALaMain(fluxALaMain(LIGNE_A, { duree: 3 }), T))).toBe(-846.84);
+    expect(centime(vanALaMain(fluxALaMain(LIGNE_A, { duree: 3, bfr: false }), T))).toBe(5_286.24);
     expect(l.atteint({ bfr: 0, duree: 3, taux: 9, ventes: 100 })).toBe(false);
     expect(l.atteint({ bfr: 1, duree: 3, taux: 9, ventes: 100 })).toBe(false);
     expect(l.atteint({ bfr: 1, duree: 4, taux: 8, ventes: 100 })).toBe(false);
@@ -470,8 +477,8 @@ describe("la valeur actuelle nette : le projet A, la gamme sur une seconde ligne
     const au = (taux: number) => ({ ...l.depart, taux });
     expect(compte!.valeur(au(0))).toBe(130_200);
     expect(oublie!.valeur(au(0))).toBe(130_200);
-    expect(compte!.valeur(au(9))).toBe(58_847.24);
-    expect(oublie!.valeur(au(9))).toBe(68_963.16);
+    expect(compte!.valeur(au(9))).toBe(58_845.46);
+    expect(oublie!.valeur(au(9))).toBe(68_962.29);
     expect(compte!.valeur(au(20))).toBeCloseTo(vanALaMain(A, 0.2), 1);
     expect(oublie!.valeur(au(20))).toBeCloseTo(vanALaMain(fluxALaMain(LIGNE_A, { bfr: false }), 0.2), 1);
     // Ce n'est pas une droite : la baisse de 0 à 9 % dépasse celle de 9 à 18 %.
@@ -488,7 +495,7 @@ describe("le TRI et le choix entre deux projets : la ligne manuelle, la ligne se
 
   it("les étapes guidées : les deux VAN, l'encadrement du TRI de la ligne manuelle", () => {
     expect(attendus(ch, "les-deux-van")).toEqual({ "VAN du projet A": centime(vanA), "VAN du projet B": centime(vanB), "Ce que B crée de plus que le projet A": centime(vanB - vanA) });
-    expect(centime(vanB - vanA)).toBe(9_550.05);
+    expect(centime(vanB - vanA)).toBe(9_548.42);
     const v20 = vanALaMain(A, 0.2);
     const v21 = vanALaMain(A, 0.21);
     expect(attendus(ch, "encadrer-le-tri")).toEqual({
@@ -496,7 +503,7 @@ describe("le TRI et le choix entre deux projets : la ligne manuelle, la ligne se
       "VAN du projet A à 21 %": centime(v21),
       "TRI du projet A, par interpolation (%)": centime(20 + centime(v20) / (centime(v20) - centime(v21))),
     });
-    expect([centime(v20), centime(v21), centime(20 + v20 / (v20 - v21))]).toEqual([3_541.1, -316.63, 20.92]);
+    expect([centime(v20), centime(v21), centime(20 + v20 / (v20 - v21))]).toEqual([3_545.65, -317.88, 20.92]);
     // Le TRI annule la VAN : elle change de signe autour de 20,92 %.
     expect(vanALaMain(A, 0.2091)).toBeGreaterThan(0);
     expect(vanALaMain(A, 0.2093)).toBeLessThan(0);
@@ -510,7 +517,7 @@ describe("le TRI et le choix entre deux projets : la ligne manuelle, la ligne se
       "VAN de B à ce taux": centime(v18),
       "TRI de B, par interpolation (%)": centime(18 + centime(v18) / (centime(v18) - centime(v19))),
     });
-    expect([centime(v18), centime(v19), centime(18 + v18 / (v18 - v19))]).toEqual([570.23, -5_492.06, 18.09]);
+    expect([centime(v18), centime(v19), centime(18 + v18 / (v18 - v19))]).toEqual([568.31, -5_493.61, 18.09]);
     expect(vanALaMain(B, 0.1808)).toBeGreaterThan(0);
     expect(vanALaMain(B, 0.181)).toBeLessThan(0);
     expect(juste(ch, "le-classement")).toBe("La VAN préfère B, le TRI préfère le projet A");
@@ -539,22 +546,30 @@ describe("le TRI et le choix entre deux projets : la ligne manuelle, la ligne se
     expect(vanALaMain(diff, 0.1273)).toBeGreaterThan(0);
     expect(vanALaMain(diff, 0.1274)).toBeLessThan(0);
     expect(Math.abs(vanALaMain(A, 0.12735) - vanALaMain(B, 0.12735))).toBeLessThan(5);
+    // Le taux de Fisher attendu est celui de l'interpolation entre 12 % et 13 %, sur les VAN au centime,
+    // comme l'élève le calcule (décision du 10 novembre 2026) ; la dichotomie donne un centième de moins.
+    const f12 = vanALaMain(diff, 0.12);
+    const f13 = vanALaMain(diff, 0.13);
+    const fisher = arrondi2(12 + arrondi2(f12 / arrondi2(f12 - f13)));
+    expect(fisher).toBe(12.74);
     expect(attendus(ch, "le-taux-de-fisher")).toEqual({
       "Flux différentiel des dates 1 à 4": 23_212.5,
       "Flux différentiel de la date 5": 37_462.5,
-      "Taux de Fisher (%)": 12.73,
-      "VAN du projet A à 12,73 %": centime(vanALaMain(A, 0.1273)),
+      "Taux de Fisher (%)": fisher,
+      "VAN du projet A à 12,74 %": centime(vanALaMain(A, fisher / 100)),
     });
-    expect(centime(vanALaMain(A, 0.1273))).toBe(37_044.92);
+    expect(centime(vanALaMain(A, fisher / 100))).toBe(36_992.64);
     // L'entretien qui égale les deux VAN : (VAN B − VAN A) ÷ (75 % × l'annuité), en plus des 10 000 €.
-    const max = 10_000 + (vanB - vanA) / (0.75 * annuite);
+    // Aux lignes arrondies : l'annuité au dix-millième (3,8897), 750 € × 3,8897 au centime, puis l'entretien.
+    const parMille = arrondi2(750 * annuite);
+    const max = arrondi2(10_000 + arrondi2((centime(vanB - vanA) / parMille) * 1_000));
     expect(attendus(ch, "l-entretien-qui-egalise")).toEqual({
       "Flux après impôt que coûtent 1 000 € d'entretien par an": 750,
-      "VAN retirée par 1 000 € d'entretien par an": centime(750 * annuite),
-      "Entretien annuel de B qui égale les deux VAN": centime(max),
+      "VAN retirée par 1 000 € d'entretien par an": parMille,
+      "Entretien annuel de B qui égale les deux VAN": max,
     });
-    expect([centime(750 * annuite), centime(max)]).toEqual([2_917.24, 13_273.66]);
-    expect(vanALaMain(fluxALaMain(LIGNE_B, { entretien: max }), T)).toBeCloseTo(vanA, 4);
+    expect([parMille, max]).toEqual([2_917.28, 13_273.06]);
+    expect(Math.abs(vanALaMain(fluxALaMain(LIGNE_B, { entretien: max }), T) - vanA)).toBeLessThan(1);
     // Le rationnement : 240 000 € ; A et C tiennent, B et C aussi ; l'indice classe A, C, B.
     expect(BUDGET_DU_RATIONNEMENT).toBe(240_000);
     expect(attendus(ch, "le-rationnement")).toEqual({
@@ -562,7 +577,7 @@ describe("le TRI et le choix entre deux projets : la ligne manuelle, la ligne se
       "VAN de la ligne manuelle et du banc": centime(centime(vanA) + centime(vanC)),
       "VAN de la ligne semi-automatique et du banc": centime(centime(vanB) + centime(vanC)),
     });
-    expect([centime((vanC + 30_000) / 30_000), centime(centime(vanA) + centime(vanC)), centime(centime(vanB) + centime(vanC))]).toEqual([1.46, 72_605.82, 82_155.87]);
+    expect([centime((vanC + 30_000) / 30_000), centime(centime(vanA) + centime(vanC)), centime(centime(vanB) + centime(vanC))]).toEqual([1.46, 72_603.47, 82_151.89]);
     expect([116_230 + 30_000, 206_230 + 30_000].map((m) => m <= 240_000)).toEqual([true, true]);
     expect(k.parIndice).toEqual(["A", "C", "B"]);
     expect(k.programmeParIndice.nom).toBe("AC");
@@ -603,7 +618,7 @@ describe("le TRI et le choix entre deux projets : la ligne manuelle, la ligne se
       droites: [centime(vanB), centime(vanA), centime(vb(20_000)), centime(vanA)],
       lecture: { "VAN du projet B": centime(vb(13_273)), "VAN du projet A": centime(vanA), "Ce que B crée de plus que le projet A": centime(centime(vb(13_273)) - centime(vanA)) },
     });
-    expect(centime(vb(20_000))).toBe(centime(vanB - 10_000 * 0.75 * annuite));
+    expect(Math.abs(centime(vb(20_000)) - centime(vanB - 10_000 * 0.75 * annuite))).toBeLessThan(1);
   });
 
   it("le laboratoire : égaler les deux VAN au dixième de point, et le rendement selon le réinvestissement", () => {
@@ -614,7 +629,7 @@ describe("le TRI et le choix entre deux projets : la ligne manuelle, la ligne se
     expect(ECART_ADMIS_AU_DEFI).toBe(100);
     // Au pas de 0,1 point, seul 12,7 % égale les deux VAN à 100 € près.
     const ecart = (r: number) => centime(centime(vanALaMain(B, r)) - centime(vanALaMain(A, r)));
-    expect([ecart(0.126), ecart(0.127), ecart(0.128)]).toEqual([319.58, 82.73, -153.14]);
+    expect([ecart(0.126), ecart(0.127), ecart(0.128)]).toEqual([321.6, 81.71, -154.44]);
     expect([12.6, 12.8].map((taux) => l.atteint({ taux, reinvestissement: 1 }))).toEqual([false, false]);
     expect(l.atteint({ taux: 12.7, reinvestissement: 2 })).toBe(true);
     const lire = (r: number, a: number, b: number) => ({
@@ -680,40 +695,41 @@ describe("le cas « Revendre la machine plus tôt » : la ligne revendue après 
       "VAN du projet arrêté à la fin de N+3": centime(vanALaMain(trois, T)),
       "VAN du projet arrêté à la fin de N+4": centime(vanALaMain(quatre, T)),
     });
-    expect([centime(vanALaMain(trois, T)), centime(vanALaMain(quatre, T))]).toEqual([-850.54, 41_966.11]);
+    expect([centime(vanALaMain(trois, T)), centime(vanALaMain(quatre, T))]).toEqual([-846.84, 41_965.54]);
   });
 
   it("à rebours, le prix de la ligne qui annule la VAN", () => {
-    const manque = 850.54 * 1.09 ** 3;
-    const prix = (21_000 + centime(manque) - 0.25 * 30_000) / 0.75;
+    // Aux lignes arrondies : la VAN de 3 ans au centime, capitalisée au coefficient du dix-millième (1,2950).
+    const manque = arrondi2(846.84 * Math.round(1.09 ** 3 * 10_000) / 10_000);
+    const prix = arrondi2((arrondi2(21_000 + manque) - 0.25 * 30_000) / 0.75);
     expect(attendus(s, "a-rebours")).toEqual({
-      "Valeur résiduelle nette qui manque à la date 3": centime(manque),
-      "Prix de cession minimal de la ligne": centime(prix),
-      "Part de la valeur nette comptable (%)": centime((centime(prix) / 30_000) * 100),
+      "Valeur résiduelle nette qui manque à la date 3": manque,
+      "Prix de cession minimal de la ligne": prix,
+      "Part de la valeur nette comptable (%)": arrondi2((prix / 30_000) * 100),
     });
-    expect([centime(manque), centime(prix), centime((prix / 30_000) * 100)]).toEqual([1_101.47, 19_468.63, 64.9]);
-    expect(vanALaMain(fluxALaMain(LIGNE_A, { duree: 3, prixDeLaLigne: 19_468.632 }), T)).toBeCloseTo(0, 1);
+    expect([manque, prix, arrondi2((prix / 30_000) * 100)]).toEqual([1_096.66, 19_462.21, 64.87]);
+    expect(Math.abs(vanALaMain(fluxALaMain(LIGNE_A, { duree: 3, prixDeLaLigne: prix }), T))).toBeLessThan(1);
   });
 
   it("le curseur du prix de revente", () => {
     const v = (p: number) => vanALaMain(fluxALaMain(LIGNE_A, { duree: 3, prixDeLaLigne: p }), T);
-    expect(v(19_469)).toBeGreaterThan(0);
-    expect(v(19_468)).toBeLessThan(0);
+    expect(v(19_463)).toBeGreaterThan(0);
+    expect(v(19_462)).toBeLessThan(0);
     expect(curseur(s, "le-prix-au-curseur")).toEqual({
-      attendu: 19_469,
+      attendu: 19_463,
       bornes: [10_000, 30_000],
       droites: [centime(v(10_000) + 100_000), 100_000, centime(v(30_000) + 100_000), 100_000],
       lecture: {
-        "Valeur résiduelle nette de la ligne": 19_469 * 0.75 + 7_500,
-        "Flux disponible de la date 3": 137_695 + 19_469 * 0.75 + 7_500 - 21_000,
-        "VAN du projet de 3 ans": centime(v(19_469)),
+        "Valeur résiduelle nette de la ligne": 19_463 * 0.75 + 7_500,
+        "Flux disponible de la date 3": 137_695 + 19_463 * 0.75 + 7_500 - 21_000,
+        "VAN du projet de 3 ans": centime(v(19_463)),
       },
     });
   });
 
   it("le verdict : pas sur 3 ans tel quel", () => {
     expect(r.verdict).toBe("trois-ans-detruisent");
-    expect(juste(s, "reponse")).toBe("Pas sur 3 ans tel quel : il faut revendre la ligne au moins 19 468,63 €, ou garder l'atelier un an de plus");
+    expect(juste(s, "reponse")).toBe("Pas sur 3 ans tel quel : il faut revendre la ligne au moins 19 462,21 €, ou garder l'atelier un an de plus");
   });
 
   it("textes propres, une seule bonne réponse, notions existantes : le cas", () => verifierLesTextes(s));
@@ -737,22 +753,24 @@ describe("le cas « Acheter les deux machines » : le rationnement sous un budge
     });
     expect(206_230 + 30_000).toBeGreaterThan(210_000);
     expect([206_230, 146_230].every((m) => m <= 210_000)).toBe(true);
-    expect(centime(centime(vanA) + centime(vanC) - centime(vanB))).toBe(4_208.53);
+    expect(centime(centime(vanA) + centime(vanC) - centime(vanB))).toBe(4_209.59);
     expect(k.meilleur.nom).toBe("AC");
     expect(k.verdict).toBe("la-ligne-manuelle-et-le-banc");
   });
 
   it("à rebours, les retours que le banc doit éviter", () => {
-    const vise = vanB - vanA;
-    const flux = (centime(vise) + 30_000) / annuite;
-    const retours = ((centime(flux) - 6_000) / 0.75 + 6_000 + 1_400) / 40;
+    // Aux lignes arrondies : le flux au centime sur l'annuité au dix-millième, puis les retours, une
+    // quantité, à l'unité supérieure (décision du 10 novembre 2026).
+    const vise = centime(vanB - vanA);
+    const flux = arrondi2((vise + 30_000) / annuite);
+    const retours = arrondi2((arrondi2(arrondi2(flux - 6_000) / 0.75) + 6_000 + 1_400) / 40);
     expect(attendus(s, "a-rebours")).toEqual({
-      "VAN que le banc doit atteindre": centime(vise),
-      "Flux annuel du banc nécessaire": centime(flux),
-      "Retours évités par an, au minimum": centime(retours),
+      "VAN que le banc doit atteindre": vise,
+      "Flux annuel du banc nécessaire": flux,
+      "Retours évités par an, au minimum": Math.ceil(retours),
     });
-    expect([centime(flux), centime(retours)]).toEqual([10_168.02, 323.93]);
-    expect(vanALaMain(fluxDuBanc(retours), T)).toBeCloseTo(vise, 1);
+    expect([flux, retours, Math.ceil(retours)]).toEqual([10_167.47, 323.92, 324]);
+    expect(vanALaMain(fluxDuBanc(Math.ceil(retours)), T)).toBeGreaterThan(vise);
   });
 
   it("le curseur des retours évités", () => {
@@ -770,7 +788,7 @@ describe("le cas « Acheter les deux machines » : le rationnement sous un budge
         "Avance du programme": centime(centime(vanA) + centime(vanALaMain(fluxDuBanc(324), T)) - centime(vanB)),
       },
     });
-    expect(centime(vanALaMain(fluxDuBanc(324), T))).toBe(9_557.75);
+    expect(centime(vanALaMain(fluxDuBanc(324), T))).toBe(9_557.23);
   });
 
   it("le verdict : la ligne manuelle et le banc, sous condition", () => {

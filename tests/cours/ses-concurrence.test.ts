@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ENTREPRISES_DE_LA_CONCURRENCE, HAUSSE_DU_PRIX, LA_CONCURRENCE, laConcurrence } from "../../src/config/cours/chapitres/la-concurrence";
 import { PROGRAMME } from "../../src/config/cours/registre";
 import { DE_COMBIEN_MONTER_LE_PRIX, troisPrix } from "../../src/config/cours/situations/par-chapitre/de-combien-monter-le-prix";
+import { arrondi2 } from "../../src/pedagogy/cours/deux-decimales";
 import { NOVA, attendus, gardeDuCas, gardeDuCurseur, gardeDuLaboratoire, gardesDeTexte, juste } from "./gardes-du-marche";
 
 /**
@@ -27,7 +28,8 @@ function ventes(prix: number) {
 }
 /** Le bénéfice de NOVA : 21 € de marge par enceinte au prix de 59 €, 374 196 € de charges fixes et 16 000 € de budget qualité. */
 const benefice = (prix: number) => Math.round((ventes(prix)[0]! * (prix - 38) - 390_196) * 100) / 100;
-const c = (x: number) => Math.round(x * 10) / 10;
+/** Les pourcentages à deux décimales (décision du propriétaire, 10 novembre 2026) : ils se donnaient au dixième. */
+const c = arrondi2;
 
 describe("la concurrence", () => {
   it("au programme de seconde SES, chez NOVA seule, et son cas lui est dédié", () => {
@@ -41,7 +43,7 @@ describe("la concurrence", () => {
     gardesDeTexte(LA_CONCURRENCE);
   });
 
-  it("l'année type : 19 112, 29 948 et 12 944 enceintes, 30,8 %, 48,3 % et 20,9 % ; le moins cher vend le plus", () => {
+  it("l'année type : 19 112, 29 948 et 12 944 enceintes, 30,82 %, 48,3 % et 20,88 % ; le moins cher vend le plus", () => {
     expect(ventes(59)).toEqual([19_112, 29_948, 12_944]);
     const t = 19_112 + 29_948 + 12_944;
     expect(attendus(LA_CONCURRENCE, "parts")).toEqual([t, c((19_112 / t) * 100), c((29_948 / t) * 100), c((12_944 / t) * 100)]);

@@ -37,9 +37,10 @@ describe("les chiffres de l'échéance, à la main", () => {
   it("la réserve : 60 000 € × 1,02^5, le coefficient (1,03^5 − 1) ÷ 0,03, le versement, au pas de 500 € au-dessus", () => {
     expect(x.prixFutur).toBe(c(60_000 * 1.02 ** 5));
     expect(x.coefficient).toBe(Math.round(((1.03 ** 5 - 1) / 0.03) * 10_000) / 10_000);
-    expect(x.versementNecessaire).toBe(c(x.prixFutur / ((1.03 ** 5 - 1) / 0.03)));
+    // Le versement part du coefficient au dix-millième, 5,3091, comme sur la copie (deux-decimales.ts).
+    expect(x.versementNecessaire).toBe(c(x.prixFutur / 5.3091));
     expect(x.suffit).toBe(Math.ceil(x.versementNecessaire / 500) * 500);
-    expect(x.versementSansInflation).toBe(c(60_000 / ((1.03 ** 5 - 1) / 0.03)));
+    expect(x.versementSansInflation).toBe(c(60_000 / 5.3091));
     expect(x.reel).toBeCloseTo(1.03 / 1.02 - 1, 12);
   });
 });

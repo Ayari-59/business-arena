@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import { AUDIO_COMPTOIR, NOVA_DIFFUSION, PARTS_DU_LABORATOIRE, PART_DE_NOVA, PRET_A_LA_FILIALE, SEUIL_DE_L_INFLUENCE_NOTABLE, VENTES_A_LA_FILIALE, groupeNova, pourcentages } from "../monde/groupe-nova";
 import type { Chapitre } from "../types";
 
@@ -27,8 +27,8 @@ import type { Chapitre } from "../types";
  *     ce-qui-change ; puis la synthèse.
  */
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const pct = (t: number) => `${(Math.round(t * 10_000) / 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 const qte = (n: number) => n.toLocaleString("fr-FR");
 const F = NOVA_DIFFUSION.nom;
 const A = AUDIO_COMPTOIR.nom;
@@ -207,10 +207,10 @@ export const INITIATION_A_LA_CONSOLIDATION: Chapitre = {
       champs: () => {
         const p = pourcentages();
         return [
-          { libelle: `Contrôle de NOVA dans ${F}`, attendu: p.controleDeLaFiliale * 100, calcul: `${pct(PART_DE_NOVA)} des droits de vote, détenus directement : ${pct(p.controleDeLaFiliale)}` },
-          { libelle: `Intérêts de NOVA dans ${F}`, attendu: PART_DE_NOVA * 100, calcul: `${pct(PART_DE_NOVA)} du capital : ${pct(PART_DE_NOVA)}` },
-          { libelle: `Contrôle de NOVA dans ${A}`, attendu: p.controleIndirect * 100, calcul: `NOVA contrôle ${F} : elle dispose de tous ses droits de vote, ${pct(p.controleIndirect)}` },
-          { libelle: `Intérêts de NOVA dans ${A}`, attendu: p.interetsIndirects * 100, calcul: `${pct(PART_DE_NOVA)} × ${pct(AUDIO_COMPTOIR.partDeLaFiliale)} = ${pct(p.interetsIndirects)}` },
+          { libelle: `Contrôle de NOVA dans ${F}`, nature: "pourcentage", attendu: p.controleDeLaFiliale * 100, calcul: `${pct(PART_DE_NOVA)} des droits de vote, détenus directement : ${pct(p.controleDeLaFiliale)}` },
+          { libelle: `Intérêts de NOVA dans ${F}`, nature: "pourcentage", attendu: PART_DE_NOVA * 100, calcul: `${pct(PART_DE_NOVA)} du capital : ${pct(PART_DE_NOVA)}` },
+          { libelle: `Contrôle de NOVA dans ${A}`, nature: "pourcentage", attendu: p.controleIndirect * 100, calcul: `NOVA contrôle ${F} : elle dispose de tous ses droits de vote, ${pct(p.controleIndirect)}` },
+          { libelle: `Intérêts de NOVA dans ${A}`, nature: "pourcentage", attendu: p.interetsIndirects * 100, calcul: `${pct(PART_DE_NOVA)} × ${pct(AUDIO_COMPTOIR.partDeLaFiliale)} = ${pct(p.interetsIndirects)}` },
         ];
       },
       explication: () => {
@@ -398,16 +398,16 @@ export const INITIATION_A_LA_CONSOLIDATION: Chapitre = {
             {
               libelle: "Capital",
               cellules: [
-                { valeur: g.partDuGroupe.capital, saisir: true, calcul: `${eur(g.capital)} × ${pct(PART_DE_NOVA)}`, indice: "le capital, à la part de NOVA" },
-                { valeur: g.minoritaires.capital, saisir: true, calcul: `${eur(g.capital)} × ${pct(1 - PART_DE_NOVA)}`, indice: "le capital, à la part du directeur" },
+                { valeur: g.partDuGroupe.capital, saisir: true, calcul: `${eur(g.capital)} × ${pct(PART_DE_NOVA)} = ${eur(g.partDuGroupe.capital)}`, indice: "le capital, à la part de NOVA" },
+                { valeur: g.minoritaires.capital, saisir: true, calcul: `${eur(g.capital)} × ${pct(1 - PART_DE_NOVA)} = ${eur(g.minoritaires.capital)}`, indice: "le capital, à la part du directeur" },
                 { valeur: g.capital },
               ],
             },
             {
               libelle: "Résultat de N + 1",
               cellules: [
-                { valeur: g.partDuGroupe.resultat, saisir: true, calcul: `${eur(g.resultat)} × ${pct(PART_DE_NOVA)}`, indice: "le résultat, à la part de NOVA" },
-                { valeur: g.minoritaires.resultat, saisir: true, calcul: `${eur(g.resultat)} − ${eur(g.partDuGroupe.resultat)}`, indice: "le résultat, moins la part du groupe" },
+                { valeur: g.partDuGroupe.resultat, saisir: true, calcul: `${eur(g.resultat)} × ${pct(PART_DE_NOVA)} = ${eur(g.partDuGroupe.resultat)}`, indice: "le résultat, à la part de NOVA" },
+                { valeur: g.minoritaires.resultat, saisir: true, calcul: `${eur(g.resultat)} − ${eur(g.partDuGroupe.resultat)} = ${eur(g.minoritaires.resultat)}`, indice: "le résultat, moins la part du groupe" },
                 { valeur: g.resultat },
               ],
             },
@@ -416,8 +416,8 @@ export const INITIATION_A_LA_CONSOLIDATION: Chapitre = {
               fort: true,
               totalDe: { plus: [0, 1] },
               cellules: [
-                { valeur: g.partDuGroupe.total, saisir: true, calcul: `${eur(g.partDuGroupe.capital)} + ${eur(g.partDuGroupe.resultat)}`, indice: "la somme de la colonne" },
-                { valeur: g.minoritaires.total, saisir: true, calcul: `${eur(g.minoritaires.capital)} + ${eur(g.minoritaires.resultat)}`, indice: "la somme de la colonne" },
+                { valeur: g.partDuGroupe.total, saisir: true, calcul: `${eur(g.partDuGroupe.capital)} + ${eur(g.partDuGroupe.resultat)} = ${eur(g.partDuGroupe.total)}`, indice: "la somme de la colonne" },
+                { valeur: g.minoritaires.total, saisir: true, calcul: `${eur(g.minoritaires.capital)} + ${eur(g.minoritaires.resultat)} = ${eur(g.minoritaires.total)}`, indice: "la somme de la colonne" },
                 { valeur: g.capitauxPropres },
               ],
             },

@@ -206,7 +206,7 @@ describe("créer des richesses et les mesurer", () => {
   it("le partage : l'impôt à 25 % du résultat, le profit, les salaires du marché", () => {
     const resultat = va.nova - 127_800 - 9_996;
     const marche = va.nova + va.soundbox + va.auris;
-    expect(attendus(CREER_DES_RICHESSES, "partage")).toEqual([va.nova - 127_800 - c(resultat * 0.25), 127_800 + 320_000 + 90_000, Math.round((537_800 / marche) * 1_000) / 10]);
+    expect(attendus(CREER_DES_RICHESSES, "partage")).toEqual([va.nova - 127_800 - c(resultat * 0.25), 127_800 + 320_000 + 90_000, Math.round((537_800 / marche) * 10_000) / 100]);
     expect(juste(CREER_DES_RICHESSES, "richesse-et-benefice")).toHaveLength(1);
   });
 
@@ -226,7 +226,7 @@ describe("créer des richesses et les mesurer", () => {
     const a = attendus(LE_MARCHE_A_T_IL_GRANDI, "valeur-de-chaque-annee");
     expect(a[0]).toBe(va.nova + va.soundbox + va.auris);
     const [production, richesse] = attendus(LE_MARCHE_A_T_IL_GRANDI, "la-croissance");
-    expect(richesse).toBe(Math.round((a[1]! / a[0]! - 1) * 1_000) / 10);
+    expect(richesse).toBe(Math.round((a[1]! / a[0]! - 1) * 10_000) / 100);
     expect(richesse!).toBeGreaterThan(production!);
     expect(juste(LE_MARCHE_A_T_IL_GRANDI, "reponse")).toEqual(["Oui, la richesse créée augmentera"]);
   });
@@ -238,18 +238,18 @@ describe("les acteurs de l'organisation et le partage de la valeur", () => {
     expect(INDICE_DE_LA_HAUSSE).toBe(1 + HAUSSE_DEMANDEE);
   });
 
-  it("l'exercice : 9,2 % aux salariés, 1,5 % à l'État, 5,7 % aux associés ; la hausse de 5 % payée à 75 % par les associés", () => {
+  it("l'exercice : 9,19 % aux salariés, 1,49 % à l'État, 5,7 % aux associés ; la hausse de 5 % payée à 74,99 % par les associés", () => {
     expect(attendus(LES_ACTEURS_ET_LA_VALEUR, "parts")).toEqual([
-      Math.round((127_800 / 1_390_276) * 1_000) / 10,
-      Math.round((20_742 / 1_390_276) * 1_000) / 10,
-      Math.round((79_225.96 / 1_390_276) * 1_000) / 10,
+      Math.round((127_800 / 1_390_276) * 10_000) / 100,
+      Math.round((20_742 / 1_390_276) * 10_000) / 100,
+      Math.round((79_225.96 / 1_390_276) * 10_000) / 100,
     ]);
     // L'impôt : 15 % jusqu'à 42 500 €, 25 % au-delà, à l'euro.
     const impot = (rai: number) => Math.round(42_500 * 0.15 + (rai - 42_500) * 0.25);
     const rai = 99_967.96;
     expect(impot(rai)).toBe(20_742);
     const apres = c(rai - 127_800 * 0.05);
-    expect(attendus(LES_ACTEURS_ET_LA_VALEUR, "hausse")).toEqual([127_800 * 0.05, impot(apres) - 20_742, c(apres - impot(apres) - 79_225.96), 75]);
+    expect(attendus(LES_ACTEURS_ET_LA_VALEUR, "hausse")).toEqual([127_800 * 0.05, impot(apres) - 20_742, c(apres - impot(apres) - 79_225.96), 74.99]);
   });
 
   it("le curseur : 9 % de hausse laissent 70 599,96 € aux associés ; 10 % n'en laissent que 69 640,96 €", () => {

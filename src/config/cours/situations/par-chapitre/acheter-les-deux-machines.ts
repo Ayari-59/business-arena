@@ -1,9 +1,9 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi, arrondi2, eur, nombreAuCentieme, pct, quotient2, somme2 } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
-import { ENTREPRISES_DES_PROJETS, premierPositif, toleranceDActualisation } from "../../chapitres/la-valeur-actuelle-nette";
+import { ENTREPRISES_DES_PROJETS, premierPositif } from "../../chapitres/la-valeur-actuelle-nette";
 import { LE_TRI_ET_LE_CHOIX_ENTRE_DEUX_PROJETS, deuxLignes, nomDuProgramme, type Lettre } from "../../chapitres/le-tri-et-le-choix-entre-deux-projets";
 import { auCentime } from "../../monde/amortissement";
-import { coefficientDActualisation, fluxDuProjet, van } from "../../monde/finance";
+import { fluxDuProjet, vanAuxLignesArrondies } from "../../monde/finance";
 import { COUT_D_UN_RETOUR, ETALONNAGE_DU_BANC, RETOURS_EVITES_PAR_AN, type ProjetDInvestissement } from "../../monde/projets-et-financement";
 import type { Situation } from "../types";
 
@@ -24,6 +24,12 @@ import type { Situation } from "../types";
  * la condition qui le tient.
  *
  * Comme son chapitre, le cas se joue dans la simulation du cours (src/config/cours/monde).
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : les VAN s'actualisent aux lignes arrondies, comme au chapitre ;
+ * l'annuité se lit au dix-millième (3,8897) et le flux visé au centime ; les retours évités sont une
+ * quantité, écrite à deux décimales puis arrondie à l'unité supérieure, que le corrigé nomme (au
+ * centième, à un dixième près, avant).
  */
 
 /** LE BUDGET DU CAS (hypothèse du cas) : la banque a ramené sa ligne de crédit ; NOVA ne peut engager que 210 000 € à la date 0. */
@@ -34,10 +40,9 @@ export const RETOURS_DU_CURSEUR = { min: 250, max: 400 } as const;
 
 export type Verdict = "la-ligne-manuelle-et-le-banc" | "la-ligne-semi-automatique-seule" | "les-deux-machines";
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (x: number) => `${x.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−")} %`;
-const auCentieme = (x: number) => Math.round(x * 100) / 100;
+/** Une quantité, ou un nombre au centième : comme l'élève l'écrit. */
+const qte = nombreAuCentieme;
+const auCentieme = arrondi2;
 const majuscule = (s: string) => `${s.charAt(0).toUpperCase()}${s.slice(1)}`;
 
 /** Le banc avec un autre nombre de retours évités chaque année (le levier du curseur). */
@@ -67,14 +72,16 @@ function calculer(c: Pick<Cas, "code">) {
   const meilleur = possibles.reduce((m, p) => (p.van > m.van ? p : m));
   const verdict: Verdict = meilleur.nom === "AC" ? "la-ligne-manuelle-et-le-banc" : meilleur.nom === "BC" ? "les-deux-machines" : "la-ligne-semi-automatique-seule";
   // Le banc : son flux annuel est (retours × coût d'un retour − étalonnage − dotation) × (1 − t) + dotation.
-  const vanDuBanc = (retours: number) => van(fluxDuProjet(avecLesRetours(x.k.c, retours), { tauxDeLImpot: x.k.impot }).flux, t);
+  const vanDuBanc = (retours: number) => vanAuxLignesArrondies(fluxDuProjet(avecLesRetours(x.k.c, retours), { tauxDeLImpot: x.k.impot }).flux, t);
   const avance = (retours: number) => auCentime(x.vanA + vanDuBanc(retours) - x.vanB);
-  const annuite = Array.from({ length: x.C.duree }, (_, i) => coefficientDActualisation(t, i + 1)).reduce((s, y) => s + y, 0);
+  // Chaque ligne arrondie : l'annuité au dix-millième (3,8897), le flux visé au centime, puis les
+  // retours à deux décimales, arrondis à l'unité supérieure (un retour de moins ne suffirait pas).
+  const annuite = arrondi((1 - (1 + t) ** -x.C.duree) / t, 4);
   const dotation = x.k.c.actifs[0]!.montant / x.k.c.actifs[0]!.dureeDAmortissement;
   const vanVisee = auCentime(x.vanB - x.vanA);
-  const fluxVise = auCentime((vanVisee - x.C.flux[0]!) / annuite);
+  const fluxVise = quotient2(somme2(vanVisee, -x.C.flux[0]!), annuite);
   // flux = (retours × coût − étalonnage − dotation) × (1 − t) + dotation : on en tire les retours.
-  const retoursMinimaux = auCentieme(((fluxVise - dotation) / (1 - x.k.impot) + dotation + ETALONNAGE_DU_BANC) / COUT_D_UN_RETOUR);
+  const retoursMinimaux = quotient2(somme2(quotient2(somme2(fluxVise, -dotation), 1 - x.k.impot), dotation, ETALONNAGE_DU_BANC), COUT_D_UN_RETOUR);
   return {
     x,
     bc,
@@ -90,6 +97,7 @@ function calculer(c: Pick<Cas, "code">) {
     vanVisee,
     fluxVise,
     retoursMinimaux,
+    retoursAuMinimum: Math.ceil(retoursMinimaux - 1e-9),
     retoursEntiers: premierPositif(avance, RETOURS_DU_CURSEUR.min, RETOURS_DU_CURSEUR.max, retoursMinimaux),
     margeDesRetours: auCentieme(((RETOURS_EVITES_PAR_AN - retoursMinimaux) / RETOURS_EVITES_PAR_AN) * 100),
   };
@@ -154,8 +162,8 @@ export const ACHETER_LES_DEUX_MACHINES: Situation = {
         const x = k.x;
         return [
           { libelle: "Mise de la ligne semi-automatique et du banc", attendu: k.bc.mise, calcul: `${eur(-x.B.flux[0]!)} + ${eur(-x.C.flux[0]!)} = ${eur(k.bc.mise)}, ${eur(k.manque)} de plus que le budget` },
-          { libelle: "VAN de la ligne manuelle et du banc", attendu: k.ac.van, calcul: `${eur(x.vanA)} + ${eur(x.vanC)} = ${eur(k.ac.van)}, pour ${eur(k.ac.mise)} engagés`, tolerance: 1 },
-          { libelle: "Ce que ce programme crée de plus que la ligne semi-automatique seule", attendu: k.avanceDuProgramme, calcul: `${eur(k.ac.van)} − ${eur(k.b.van)} = ${eur(k.avanceDuProgramme)}`, tolerance: 1 },
+          { libelle: "VAN de la ligne manuelle et du banc", attendu: k.ac.van, calcul: `${eur(x.vanA)} + ${eur(x.vanC)} = ${eur(k.ac.van)}, pour ${eur(k.ac.mise)} engagés` },
+          { libelle: "Ce que ce programme crée de plus que la ligne semi-automatique seule", attendu: k.avanceDuProgramme, calcul: `${eur(k.ac.van)} − ${eur(k.b.van)} = ${eur(k.avanceDuProgramme)}` },
         ];
       },
       explication: (c) => {
@@ -213,7 +221,7 @@ export const ACHETER_LES_DEUX_MACHINES: Situation = {
       notions: ["discounting"],
       question: (c) => {
         const k = acheterLesDeux(c);
-        return `Retrouvez au centième le seuil du curseur. Calculez la VAN que le banc doit atteindre pour que le programme égale la ligne semi-automatique seule, le flux annuel du banc qui la donne sur ${qte(k.x.C.duree)} ans, puis les retours évités par an qu'il faut pour ce flux.`;
+        return `Retrouvez par le calcul le seuil du curseur. Calculez la VAN que le banc doit atteindre pour que le programme égale la ligne semi-automatique seule, le flux annuel du banc qui la donne sur ${qte(k.x.C.duree)} ans, puis les retours évités par an qu'il faut pour ce flux. Arrondissez-les à l'unité supérieure.`;
       },
       champs: (c) => {
         const k = acheterLesDeux(c);
@@ -222,18 +230,17 @@ export const ACHETER_LES_DEUX_MACHINES: Situation = {
         const dot = m.montant / m.dureeDAmortissement;
         const t = x.k.impot;
         return [
-          { libelle: "VAN que le banc doit atteindre", attendu: k.vanVisee, calcul: `${eur(x.vanB)} − ${eur(x.vanA)} = ${eur(k.vanVisee)}`, tolerance: 1 },
+          { libelle: "VAN que le banc doit atteindre", attendu: k.vanVisee, calcul: `${eur(x.vanB)} − ${eur(x.vanA)} = ${eur(k.vanVisee)}` },
           {
             libelle: "Flux annuel du banc nécessaire",
             attendu: k.fluxVise,
             calcul: `(${eur(k.vanVisee)} + ${eur(m.montant)}) ÷ ${k.annuite.toLocaleString("fr-FR", { minimumFractionDigits: 4, maximumFractionDigits: 4 })}, l'annuité de ${qte(x.C.duree)} ans à ${pct(x.tauxPct)} = ${eur(k.fluxVise)}`,
-            tolerance: Math.max(2, toleranceDActualisation([k.fluxVise])),
           },
           {
             libelle: "Retours évités par an, au minimum",
-            attendu: k.retoursMinimaux,
-            calcul: `flux = (retours × ${eur(COUT_D_UN_RETOUR)} − ${eur(ETALONNAGE_DU_BANC)} − ${eur(dot)} de dotation) × (1 − ${pct(t * 100)}) + ${eur(dot)} : ((${eur(k.fluxVise)} − ${eur(dot)}) ÷ ${qte(1 - t)} + ${eur(dot)} + ${eur(ETALONNAGE_DU_BANC)}) ÷ ${eur(COUT_D_UN_RETOUR)} = ${qte(k.retoursMinimaux)}`,
-            tolerance: 0.1,
+            nature: "quantite",
+            attendu: k.retoursAuMinimum,
+            calcul: `flux = (retours × ${eur(COUT_D_UN_RETOUR)} − ${eur(ETALONNAGE_DU_BANC)} − ${eur(dot)} de dotation) × (1 − ${pct(t * 100)}) + ${eur(dot)} : ((${eur(k.fluxVise)} − ${eur(dot)}) ÷ ${qte(1 - t)} + ${eur(dot)} + ${eur(ETALONNAGE_DU_BANC)}) ÷ ${eur(COUT_D_UN_RETOUR)} = ${qte(k.retoursMinimaux)}, soit ${qte(k.retoursAuMinimum)} à l'unité supérieure : un retour évité de moins ne suffirait pas`,
           },
         ];
       },

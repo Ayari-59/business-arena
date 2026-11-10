@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, pct as enPoints } from "../../../../pedagogy/cours/deux-decimales";
 import { auCentime } from "../../../../pedagogy/cours/etats";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_LA_CLOTURE, clotureDeNova, dateDe } from "../../chapitres/la-cloture";
@@ -35,9 +35,9 @@ export const ECONOMIE_VISEE = 1_000;
 /** La borne haute du curseur du prix, en euros hors taxes. */
 export const PRIX_MAXIMAL_DU_CURSEUR = 400_000;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 
 /** Les chiffres de la réponse, calculés une fois de la clôture du chapitre. */
 export function acheterAvantLaCloture(c: Pick<Cas, "code">) {
@@ -179,6 +179,7 @@ export const ACHETER_AVANT_LA_CLOTURE: Situation = {
           { libelle: "Annuité d'une année pleine", attendu: r.annuite, calcul: `${eur(r.e.ht)} ÷ ${qte(r.e.dureeAns)} ans = ${eur(r.annuite)}` },
           {
             libelle: "Jours d'utilisation dans l'exercice",
+            nature: "quantite",
             attendu: r.jours,
             calcul: `du ${dateDe(MISE_EN_SERVICE_EN_DECEMBRE)} au 31 décembre, jours compris, en mois de ${qte(JOURS_DU_MOIS)} jours : ${qte(r.jours)} jours`,
           },

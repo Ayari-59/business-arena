@@ -1,5 +1,4 @@
-import { montantEcrit as eur } from "../../../../pedagogy/cours/correcteur";
-import { auCentime } from "../../../../pedagogy/cours/etats";
+import { arrondi2, arrondi2 as auCentime, eur, pct as pourcent, qte } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { masseSalariale } from "../../chapitres/effectif-et-masse-salariale";
 import { salaire } from "../../chapitres/salaire-brut-net-cout";
@@ -26,6 +25,11 @@ const que = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈÊ]/.test(nom) ? `qu'${no
  *
  * CE QUI A CHANGÉ. Le cas lisait les ventes de l'année de l'arène, dans chaque entreprise ; il se joue
  * chez NOVA : 13 902,76 € d'enveloppe, 3 475,69 € par opérateur, 1 909,18 € nets.
+ *
+ * LES CALCULS SE FONT À DEUX CHIFFRES APRÈS LA VIRGULE (décision du propriétaire, 10 novembre 2026,
+ * pedagogy/cours/deux-decimales.ts) : l'enveloppe, le brut, les cotisations, la prime nette et le net
+ * pour 100 € de coût attendent le centime, à un centime près (à deux, trois ou cinq centimes, avant),
+ * chaque ligne partant de la précédente arrondie.
  */
 
 /**
@@ -36,8 +40,8 @@ const que = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈÊ]/.test(nom) ? `qu'${no
  */
 export const PART_DES_VENTES_EN_PRIME = 0.01;
 
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
-const qte = (n: number) => n.toLocaleString("fr-FR");
+/** Un taux (0,42) écrit en pourcentage, à deux décimales. */
+const pct = (t: number) => pourcent(arrondi2(t * 100));
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /** Les chiffres de la réponse, calculés une fois du cas. */
@@ -126,8 +130,8 @@ export const LA_PRIME_DE_FIN_D_ANNEE: Situation = {
       champs: (c) => {
         const r = primeDeFinDAnnee(c);
         return [
-          { libelle: "Enveloppe de la prime", attendu: r.enveloppe, tolerance: 0.01, calcul: `${eur(r.ventes)} × ${pct(PART_DES_VENTES_EN_PRIME)} = ${eur(r.enveloppe)}` },
-          { libelle: "Coût de la prime d'un salarié", attendu: r.parSalarie, tolerance: 0.01, calcul: `${eur(r.enveloppe)} ÷ ${qte(r.s.effectif)} = ${eur(r.parSalarie)}` },
+          { libelle: "Enveloppe de la prime", attendu: r.enveloppe, calcul: `${eur(r.ventes)} × ${pct(PART_DES_VENTES_EN_PRIME)} = ${eur(r.enveloppe)}` },
+          { libelle: "Coût de la prime d'un salarié", attendu: r.parSalarie, calcul: `${eur(r.enveloppe)} ÷ ${qte(r.s.effectif)} = ${eur(r.parSalarie)}` },
         ];
       },
       explication: (c) => {
@@ -149,8 +153,8 @@ export const LA_PRIME_DE_FIN_D_ANNEE: Situation = {
       champs: (c) => {
         const r = primeDeFinDAnnee(c);
         return [
-          { libelle: "Brut de la prime", attendu: r.brut, tolerance: 0.02, calcul: `${eur(r.parSalarie)} ÷ (1 + ${pct(r.s.tauxPatronal)}) = ${eur(r.brut)}` },
-          { libelle: "Cotisations patronales", attendu: r.patronales, tolerance: 0.02, calcul: `${eur(r.parSalarie)} − ${eur(r.brut)} = ${eur(r.patronales)}, soit ${eur(r.brut)} × ${pct(r.s.tauxPatronal)}` },
+          { libelle: "Brut de la prime", attendu: r.brut, calcul: `${eur(r.parSalarie)} ÷ (1 + ${pct(r.s.tauxPatronal)}) = ${eur(r.brut)}` },
+          { libelle: "Cotisations patronales", attendu: r.patronales, calcul: `${eur(r.parSalarie)} − ${eur(r.brut)} = ${eur(r.patronales)}, soit ${eur(r.brut)} × ${pct(r.s.tauxPatronal)}` },
         ];
       },
       explication: (c) => {
@@ -172,9 +176,9 @@ export const LA_PRIME_DE_FIN_D_ANNEE: Situation = {
       champs: (c) => {
         const r = primeDeFinDAnnee(c);
         return [
-          { libelle: "Cotisations salariales", attendu: r.salariales, tolerance: 0.02, calcul: `${eur(r.brut)} × ${pct(r.s.tauxSalarial)} = ${eur(r.salariales)}` },
-          { libelle: "Prime nette", attendu: r.net, tolerance: 0.03, calcul: `${eur(r.brut)} − ${eur(r.salariales)} = ${eur(r.net)}` },
-          { libelle: "Net pour 100 € de coût", attendu: r.netPour100, tolerance: 0.05, calcul: `${eur(r.net)} ÷ ${eur(r.parSalarie)} × 100 = ${eur(r.netPour100)}` },
+          { libelle: "Cotisations salariales", attendu: r.salariales, calcul: `${eur(r.brut)} × ${pct(r.s.tauxSalarial)} = ${eur(r.salariales)}` },
+          { libelle: "Prime nette", attendu: r.net, calcul: `${eur(r.brut)} − ${eur(r.salariales)} = ${eur(r.net)}` },
+          { libelle: "Net pour 100 € de coût", attendu: r.netPour100, calcul: `${eur(r.net)} ÷ ${eur(r.parSalarie)} × 100 = ${eur(r.netPour100)}` },
         ];
       },
       explication: (c) => {

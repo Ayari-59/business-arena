@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import { DEPRECIATION_A_DEPASSER, TAUX_DU_LABORATOIRE, TEST_DE_LA_PREMIERE_LIGNE, fluxSansDepreciation, tauxQuiDepasse, testDeDepreciation } from "../monde/comptabilite-approfondie";
 import type { Chapitre } from "../types";
 
@@ -21,8 +21,8 @@ import type { Chapitre } from "../types";
  * linéaire (exercice-de-nova.ts), et le test de monde/comptabilite-approfondie.ts.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${(Math.round(t * 10_000) / 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 const facteur = (x: number) => x.toLocaleString("fr-FR", { maximumFractionDigits: 4 });
 
 export const LE_TEST_DE_DEPRECIATION: Chapitre = {
@@ -112,9 +112,9 @@ export const LE_TEST_DE_DEPRECIATION: Chapitre = {
         const t = testDeDepreciation();
         return [
           { libelle: "Valeur nette comptable", attendu: t.valeurNette, calcul: `${eur(t.brut)} − ${eur(t.dotationN)} − ${eur(t.dotationN1)} = ${eur(t.valeurNette)}` },
-          { libelle: "Facteur d'actualisation", attendu: Math.round(t.facteur * 10_000) / 10_000, calcul: `(1 − (1 + ${facteur(t.taux)}) puissance −${t.anneesRestantes}) ÷ ${facteur(t.taux)} = ${facteur(t.facteur)}`, tolerance: 0.0001 },
-          { libelle: "Valeur d'usage", attendu: t.valeurDUsage, calcul: `${eur(t.fluxAnnuel)} × ${facteur(t.facteur)} = ${eur(t.valeurDUsage)}`, tolerance: 1 },
-          { libelle: "Valeur actuelle", attendu: t.valeurActuelle, calcul: `la plus haute de ${eur(t.valeurVenale)} et ${eur(t.valeurDUsage)} : ${eur(t.valeurActuelle)}`, tolerance: 1 },
+          { libelle: "Facteur d'actualisation", nature: "coefficient", attendu: t.facteur, calcul: `(1 − (1 + ${facteur(t.taux)}) puissance −${t.anneesRestantes}) ÷ ${facteur(t.taux)} = ${facteur(t.facteur)}`, tolerance: 0.0001 },
+          { libelle: "Valeur d'usage", attendu: t.valeurDUsage, calcul: `${eur(t.fluxAnnuel)} × ${facteur(t.facteur)} = ${eur(t.valeurDUsage)}` },
+          { libelle: "Valeur actuelle", attendu: t.valeurActuelle, calcul: `la plus haute de ${eur(t.valeurVenale)} et ${eur(t.valeurDUsage)} : ${eur(t.valeurActuelle)}` },
         ];
       },
       explication: () => {
