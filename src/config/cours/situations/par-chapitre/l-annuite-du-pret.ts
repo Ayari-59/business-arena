@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { financer } from "../../chapitres/financer-l-entreprise";
 import { auCentime } from "../../monde/amortissement";
@@ -31,8 +31,6 @@ import type { Situation } from "../types";
 export const DUREE_DU_PRET = 5;
 
 /** Un montant, le signe moins typographique : « −582,38 € ». */
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 const qte = (n: number) => n.toLocaleString("fr-FR");
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
@@ -155,8 +153,8 @@ export const L_ANNUITE_DU_PRET: Situation = {
       champs: (c) => {
         const r = annuiteDuPret(c);
         return [
-          { libelle: "Capacité d'autofinancement", attendu: r.caf, calcul: `${eur(r.resultatNet)} + ${eur(r.dotation)} = ${eur(r.caf)}`, tolerance: 1 },
-          { libelle: "Reste après la première annuité", attendu: r.resteDeLaCaf, calcul: `${eur(r.caf)} − ${eur(r.annuite)} = ${eur(r.resteDeLaCaf)}`, tolerance: 1 },
+          { libelle: "Capacité d'autofinancement", attendu: r.caf, calcul: `${eur(r.resultatNet)} + ${eur(r.dotation)} = ${eur(r.caf)}` },
+          { libelle: "Reste après la première annuité", attendu: r.resteDeLaCaf, calcul: `${eur(r.caf)} − ${eur(r.annuite)} = ${eur(r.resteDeLaCaf)}` },
         ];
       },
       explication: (c) => {

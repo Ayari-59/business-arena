@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur } from "../../../../pedagogy/cours/deux-decimales";
 import { OFFRE_DE_RACHAT, testDeDepreciation } from "../../monde/comptabilite-approfondie";
 import type { Situation } from "../types";
 
@@ -12,7 +12,6 @@ import type { Situation } from "../types";
  * valeur vénale.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 
 export function vendreOuGarder() {
   const t = testDeDepreciation(undefined, undefined, OFFRE_DE_RACHAT);
@@ -64,9 +63,9 @@ export const VENDRE_LA_LIGNE_OU_LA_GARDER: Situation = {
       champs: () => {
         const k = vendreOuGarder();
         return [
-          { libelle: "Valeur actuelle", attendu: k.valeurActuelle, calcul: `la plus haute de ${eur(k.offre)} et ${eur(k.valeurDUsage)} : ${eur(k.valeurActuelle)}`, tolerance: 1 },
+          { libelle: "Valeur actuelle", attendu: k.valeurActuelle, calcul: `la plus haute de ${eur(k.offre)} et ${eur(k.valeurDUsage)} : ${eur(k.valeurActuelle)}` },
           { libelle: "Moins-value de la vente", attendu: k.moinsValue, calcul: `${eur(k.valeurNette)} − ${eur(k.offre)} = ${eur(k.moinsValue)}` },
-          { libelle: "Dépréciation si NOVA garde la ligne", attendu: k.depreciation, calcul: `${eur(k.valeurNette)} − ${eur(k.valeurActuelle)} = ${eur(k.depreciation)}`, tolerance: 1 },
+          { libelle: "Dépréciation si NOVA garde la ligne", attendu: k.depreciation, calcul: `${eur(k.valeurNette)} − ${eur(k.valeurActuelle)} = ${eur(k.depreciation)}` },
         ];
       },
       explication: () => {

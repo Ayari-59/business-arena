@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { ENDETTEMENT_MAXIMAL } from "../financement";
 import { auCentime } from "../monde/amortissement";
@@ -33,11 +33,6 @@ export const LEVIERS_DU_BILAN = {
 /** La solution que montre la correction : un équipement de 100 000 € et un dividende de 30 000 €. */
 export const SOLUTION_DU_BILAN = { equipement: 100_000, dividende: 30_000 } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number, d = 1) => n.toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−");
-const pct = (t: number) => `${qte(t)} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
-const auCentieme = (x: number) => Math.round(x * 100) / 100;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /** Pourquoi chaque poste est à l'actif ou au passif, dit à l'élève au tri. */
@@ -62,9 +57,9 @@ export function bilanDeFinDAnnee(c: Pick<Cas, "code">) {
   return lectureDuBilan(bilanDuLycee(exerciceDe(c.code)));
 }
 
-/** Les équilibres d'un bilan du lycée, au dixième et au centième, comme l'élève les écrit. */
+/** Les équilibres d'un bilan du lycée, au centième, comme l'élève les écrit. */
 export function lectureDuBilan(b: BilanDuLycee) {
-  return { ...b, partDesAssocies: auDixieme(b.autonomie * 100), rapportDEndettement: auCentieme(b.endettement) };
+  return { ...b, partDesAssocies: arrondi2(b.autonomie * 100), rapportDEndettement: arrondi2(b.endettement) };
 }
 
 export type BilanDeFinDAnnee = ReturnType<typeof bilanDeFinDAnnee>;
@@ -156,9 +151,9 @@ export const LIRE_LE_BILAN: Chapitre = {
         const actif = b.postes.filter((x) => x.cote === "actif" && x.montant > 0).map((x) => eur(x.montant));
         const dettes = b.postes.filter((x) => x.cote === "passif" && x.code !== "capitauxPropres" && x.montant > 0).map((x) => eur(x.montant));
         return [
-          { libelle: "Total de l'actif", attendu: b.actif, calcul: `${actif.join(" + ")} = ${eur(b.actif)}`, tolerance: 1 },
-          { libelle: "Total des dettes", attendu: b.dettes, calcul: `${dettes.join(" + ")} = ${eur(b.dettes)}`, tolerance: 1 },
-          { libelle: "Total du passif", attendu: b.passif, calcul: `${eur(b.capitauxPropres)} + ${eur(b.dettes)} = ${eur(b.passif)}`, tolerance: 1 },
+          { libelle: "Total de l'actif", attendu: b.actif, calcul: `${actif.join(" + ")} = ${eur(b.actif)}` },
+          { libelle: "Total des dettes", attendu: b.dettes, calcul: `${dettes.join(" + ")} = ${eur(b.dettes)}` },
+          { libelle: "Total du passif", attendu: b.passif, calcul: `${eur(b.capitauxPropres)} + ${eur(b.dettes)} = ${eur(b.passif)}` },
         ];
       },
       explication: (c) => {
@@ -176,19 +171,19 @@ export const LIRE_LE_BILAN: Chapitre = {
       notions: ["balance_sheet"],
       question: (c) => {
         const b = bilanDeFinDAnnee(c);
-        return `Les capitaux propres ${dE(b.entreprise)} valent ${eur(b.capitauxPropres)}, son emprunt ${eur(b.poste("emprunt"))}. Calculez la part des capitaux propres dans le total du passif, en pourcentage au dixième, puis le rapport emprunt ÷ capitaux propres, au centième.`;
+        return `Les capitaux propres ${dE(b.entreprise)} valent ${eur(b.capitauxPropres)}, son emprunt ${eur(b.poste("emprunt"))}. Calculez la part des capitaux propres dans le total du passif, en pourcentage à deux décimales, puis le rapport emprunt ÷ capitaux propres, au centième.`;
       },
       champs: (c) => {
         const b = bilanDeFinDAnnee(c);
         return [
-          { libelle: "Part des capitaux propres (%)", attendu: b.partDesAssocies, calcul: `${eur(b.capitauxPropres)} ÷ ${eur(b.passif)} × 100 = ${pct(b.partDesAssocies)}`, tolerance: 0.1 },
-          { libelle: "Emprunt ÷ capitaux propres", attendu: b.rapportDEndettement, calcul: `${eur(b.poste("emprunt"))} ÷ ${eur(b.capitauxPropres)} = ${qte(b.rapportDEndettement, 2)}`, tolerance: 0.01 },
+          { libelle: "Part des capitaux propres (%)", attendu: b.partDesAssocies, calcul: `${eur(b.capitauxPropres)} ÷ ${eur(b.passif)} × 100 = ${pct(b.partDesAssocies)}` },
+          { libelle: "Emprunt ÷ capitaux propres", nature: "grandeur", attendu: b.rapportDEndettement, calcul: `${eur(b.poste("emprunt"))} ÷ ${eur(b.capitauxPropres)} = ${nombreAuCentieme(b.rapportDEndettement)}` },
         ];
       },
       explication: (c) => {
         const b = bilanDeFinDAnnee(c);
         return [
-          `Les associés financent ${pct(b.partDesAssocies)} de ce que possède ${b.entreprise}. Pour un euro apporté par eux, la banque en a prêté ${qte(b.rapportDEndettement, 2)} : ${b.rapportDEndettement <= ENDETTEMENT_MAXIMAL ? "l'entreprise reste maîtresse de son financement, et un nouvel emprunt reste à sa portée." : "l'entreprise dépend de sa banque plus que de ses associés, et un nouvel emprunt sera plus difficile à obtenir."}`,
+          `Les associés financent ${pct(b.partDesAssocies)} de ce que possède ${b.entreprise}. Pour un euro apporté par eux, la banque en a prêté ${nombreAuCentieme(b.rapportDEndettement)} : ${b.rapportDEndettement <= ENDETTEMENT_MAXIMAL ? "l'entreprise reste maîtresse de son financement, et un nouvel emprunt reste à sa portée." : "l'entreprise dépend de sa banque plus que de ses associés, et un nouvel emprunt sera plus difficile à obtenir."}`,
         ];
       },
     },

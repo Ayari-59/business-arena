@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { CelluleACompleter, TableauACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import { auCentime } from "../monde/amortissement";
 import {
@@ -39,11 +39,12 @@ import type { Bureau, PieceDuBureau } from "./types";
 
 /** Un jour du cours, écrit : « 6 janvier ». */
 const dateEcrite = (d: { jour: number; mois: number }) => dateDuCompte({ jour: d.jour, mois: d.mois });
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number, d = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−");
+/** Un nombre au centième (deux décimales s'il n'est pas entier), ou à `d` chiffres quand on les demande. */
+const qte = (n: number, d = 2) => (d === 2 ? nombreAuCentieme(n) : (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−"));
 const coef = (n: number) => (n + 0).toLocaleString("fr-FR", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
 const jours = (n: number) => `${qte(n)} jour${Math.abs(n) >= 2 ? "s" : ""}`;
-const pct = (t: number) => `${qte(t * 100, 1)} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 
 const x = bfrNormatif();
 const BILAN = besoinAuBilan();
@@ -252,7 +253,7 @@ const calculDuCoefficient = (p: PosteNormatif) => `${eur(p.flux)} ÷ ${eur(x.caH
 export function grilleNormativeDuBureau(): TableauACompleter {
   const ligne = (p: PosteNormatif) => {
     const delai: CelluleACompleter = { valeur: p.delai, ...enJours, horsTotal: true };
-    const coefficient = aSaisir(p.coefficient, calculDuCoefficient(p), { unite: "", horsTotal: true, tolerance: 0.0001, indice: `le flux du poste ÷ ${eur(x.caHt)}, à 4 décimales` });
+    const coefficient = aSaisir(p.coefficient, calculDuCoefficient(p), { unite: "", nature: "coefficient", horsTotal: true, tolerance: 0.0001, indice: `le flux du poste ÷ ${eur(x.caHt)}, à 4 décimales` });
     const j = aSaisir(p.jours, calculDuPoste(p), { ...enJours, tolerance: 0.01, indice: "le délai × le coefficient" });
     return { libelle: p.libelle, cellules: p.sens === "besoin" ? [delai, coefficient, j, vide] : [delai, coefficient, vide, j] };
   };
@@ -292,8 +293,8 @@ export function grilleDuBesoinEnEuros(): TableauACompleter {
       { libelle: "Dette moyenne de salaires nets", cellules: [aSaisir(k.salairesNets, `${eur(k.netAPayer)} × ${DELAI_DES_SALAIRES_NETS} ÷ ${JOURS_DU_MOIS_COMMERCIAL} = ${eur(k.salairesNets)}`, { indice: "le net du mois × son délai ÷ 30" })] },
       { libelle: "Dette moyenne de cotisations", cellules: [aSaisir(k.cotisations, `${eur(k.aVerser)} × ${DELAI_DES_COTISATIONS} ÷ ${JOURS_DU_MOIS_COMMERCIAL} = ${eur(k.cotisations)}`, { indice: "les cotisations du mois × leur délai ÷ 30" })] },
       { libelle: "Part fixe, une ressource", fort: true, totalDe: { plus: [0, 1] }, cellules: [aSaisir(x.partFixe, `${eur(k.salairesNets)} + ${eur(k.cotisations)} = ${eur(x.partFixe)}`, { indice: "les dettes de la paie" })] },
-      { libelle: "Part variable, en euros", cellules: [aSaisir(x.partVariable, `${qte(x.joursVariables)} × ${eur(x.caHt)} ÷ 360 = ${eur(x.partVariable)}`, { indice: "les jours de la part variable × le chiffre d'affaires HT ÷ 360", tolerance: 1 })] },
-      { libelle: "BFRE normatif", fort: true, totalDe: { plus: [3], moins: [2] }, cellules: [aSaisir(x.bfre, `${eur(x.partVariable)} − ${eur(x.partFixe)} = ${eur(x.bfre)}`, { indice: "la part variable, moins la part fixe", tolerance: 1 })] },
+      { libelle: "Part variable, en euros", cellules: [aSaisir(x.partVariable, `${qte(x.joursVariables)} × ${eur(x.caHt)} ÷ 360 = ${eur(x.partVariable)}`, { indice: "les jours de la part variable × le chiffre d'affaires HT ÷ 360" })] },
+      { libelle: "BFRE normatif", fort: true, totalDe: { plus: [3], moins: [2] }, cellules: [aSaisir(x.bfre, `${eur(x.partVariable)} − ${eur(x.partFixe)} = ${eur(x.bfre)}`, { indice: "la part variable, moins la part fixe" })] },
       {
         libelle: "BFRE normatif, en jours de chiffre d'affaires HT",
         cellules: [aSaisir(x.bfreEnJours, `${eur(x.bfre)} ÷ ${eur(x.caHt)} × 360 = ${jours(x.bfreEnJours)}`, { ...enJours, tolerance: 0.01, horsTotal: true, indice: "le besoin ÷ le chiffre d'affaires HT × 360" })],

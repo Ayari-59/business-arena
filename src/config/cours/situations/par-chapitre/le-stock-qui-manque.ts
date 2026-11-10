@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, pct as enPoints } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { arrete } from "../../chapitres/les-stocks";
 import { dateDuCours as date } from "../../dates";
@@ -36,9 +36,9 @@ export const TAUX_DE_DEMARQUE = 0.02;
  */
 export const DEMARQUE_DU_SECTEUR = 0.01;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 
 /** Les chiffres de la réponse, calculés une fois du stock du trimestre. */
 export function stockQuiManque(c: Cas) {
@@ -138,7 +138,7 @@ export const LE_STOCK_QUI_MANQUE: Situation = {
       champs: (c) => {
         const r = stockQuiManque(c);
         return [
-          { libelle: "Stock théorique, en unités", attendu: r.theorique, calcul: `${qte(r.initial.quantite)} + ${qte(r.achats.quantite)} − ${qte(r.vendues)} = ${qte(r.theorique)} unités` },
+          { libelle: "Stock théorique, en unités", nature: "quantite", attendu: r.theorique, calcul: `${qte(r.initial.quantite)} + ${qte(r.achats.quantite)} − ${qte(r.vendues)} = ${qte(r.theorique)} unités` },
           {
             libelle: "Coût moyen pondéré d'une unité",
             attendu: r.cump,
@@ -169,8 +169,8 @@ export const LE_STOCK_QUI_MANQUE: Situation = {
         return [
           { libelle: "Coût d'achat des marchandises vendues, d'après la marge annoncée", attendu: r.coutDesVendues, calcul: `${eur(r.ventes.ht)} − ${eur(r.margeAnnoncee)} = ${eur(r.coutDesVendues)}` },
           { libelle: "Valeur du stock compté", attendu: r.valeurComptee, calcul: `${eur(r.initial.valeur)} + ${eur(r.achats.ht)} − ${eur(r.coutDesVendues)} = ${eur(r.valeurComptee)}` },
-          { libelle: "Unités comptées", attendu: r.comptees, calcul: `${eur(r.valeurComptee)} ÷ ${eur(r.cump)} = ${qte(r.comptees)} unités` },
-          { libelle: "Unités manquantes", attendu: r.manquantes, calcul: `${qte(r.theorique)} − ${qte(r.comptees)} = ${qte(r.manquantes)} unités` },
+          { libelle: "Unités comptées", nature: "quantite", attendu: r.comptees, calcul: `${eur(r.valeurComptee)} ÷ ${eur(r.cump)} = ${qte(r.comptees)} unités` },
+          { libelle: "Unités manquantes", nature: "quantite", attendu: r.manquantes, calcul: `${qte(r.theorique)} − ${qte(r.comptees)} = ${qte(r.manquantes)} unités` },
         ];
       },
       explication: (c) => {

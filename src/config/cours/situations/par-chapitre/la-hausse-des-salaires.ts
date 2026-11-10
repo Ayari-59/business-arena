@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { compteDeResultat } from "../../chapitres/lire-le-compte-de-resultat";
 import { auCentime } from "../../monde/amortissement";
@@ -29,9 +29,6 @@ import type { Situation } from "../types";
 export const HAUSSE_DES_SALAIRES = 0.04;
 
 /** Un montant, le signe moins typographique : « −582,38 € ». */
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /** Les chiffres de la réponse, calculés une fois du cas. */
@@ -46,8 +43,8 @@ export function hausseDesSalaires(c: Pick<Cas, "code">) {
     cout,
     personnelApres: auCentime(k.personnel + cout),
     apres,
-    tauxAvant: auDixieme((avantImpot / k.ventes) * 100),
-    tauxApres: auDixieme((apres / k.ventes) * 100),
+    tauxAvant: arrondi2((avantImpot / k.ventes) * 100),
+    tauxApres: arrondi2((apres / k.ventes) * 100),
     // L'erreur classique : appliquer la hausse au résultat, et non aux salaires.
     surLeResultat: auCentime(avantImpot * (1 - HAUSSE_DES_SALAIRES)),
   };
@@ -104,9 +101,9 @@ export const LA_HAUSSE_DES_SALAIRES: Situation = {
       champs: (c) => {
         const k = hausseDesSalaires(c);
         return [
-          { libelle: "Charges de l'activité", attendu: k.activite, calcul: `${k.lignes.filter((l) => l.nature === "activite").map((l) => eur(l.montant)).join(" + ")} = ${eur(k.activite)}`, tolerance: 1 },
-          { libelle: "Résultat de l'activité", attendu: k.resultatDActivite, calcul: `${eur(k.ventes)} − ${eur(k.activite)} = ${eur(k.resultatDActivite)}`, tolerance: 1 },
-          { libelle: "Résultat avant impôt", attendu: k.avantImpot, calcul: `${eur(k.resultatDActivite)} + ${eur(k.produitsFinanciers)} − ${eur(k.financement)} = ${eur(k.avantImpot)}`, tolerance: 1 },
+          { libelle: "Charges de l'activité", attendu: k.activite, calcul: `${k.lignes.filter((l) => l.nature === "activite").map((l) => eur(l.montant)).join(" + ")} = ${eur(k.activite)}` },
+          { libelle: "Résultat de l'activité", attendu: k.resultatDActivite, calcul: `${eur(k.ventes)} − ${eur(k.activite)} = ${eur(k.resultatDActivite)}` },
+          { libelle: "Résultat avant impôt", attendu: k.avantImpot, calcul: `${eur(k.resultatDActivite)} + ${eur(k.produitsFinanciers)} − ${eur(k.financement)} = ${eur(k.avantImpot)}` },
         ];
       },
       explication: (c) => {
@@ -124,13 +121,13 @@ export const LA_HAUSSE_DES_SALAIRES: Situation = {
       titre: "L'année avec la hausse",
       notions: ["income_statement"],
       question: () =>
-        "Refaites l'année avec la hausse : combien aurait-elle coûté, quel résultat avant impôt serait resté, et quel taux de résultat avant impôt (résultat avant impôt ÷ ventes × 100), au dixième ?",
+        "Refaites l'année avec la hausse : combien aurait-elle coûté, quel résultat avant impôt serait resté, et quel taux de résultat avant impôt (résultat avant impôt ÷ ventes × 100), à deux décimales ?",
       champs: (c) => {
         const k = hausseDesSalaires(c);
         return [
           { libelle: "Coût de la hausse sur l'année", attendu: k.cout, calcul: `${eur(k.personnel)} × ${pct(HAUSSE_DES_SALAIRES * 100)} = ${eur(k.cout)}` },
-          { libelle: "Résultat avant impôt avec la hausse", attendu: k.apres, calcul: `${eur(k.avantImpot)} − ${eur(k.cout)} = ${eur(k.apres)}`, tolerance: 1 },
-          { libelle: "Taux de résultat avant impôt (%)", attendu: k.tauxApres, calcul: `${eur(k.apres)} ÷ ${eur(k.ventes)} × 100 = ${pct(k.tauxApres)}`, tolerance: 0.1 },
+          { libelle: "Résultat avant impôt avec la hausse", attendu: k.apres, calcul: `${eur(k.avantImpot)} − ${eur(k.cout)} = ${eur(k.apres)}` },
+          { libelle: "Taux de résultat avant impôt (%)", attendu: k.tauxApres, calcul: `${eur(k.apres)} ÷ ${eur(k.ventes)} × 100 = ${pct(k.tauxApres)}` },
         ];
       },
       explication: (c) => {

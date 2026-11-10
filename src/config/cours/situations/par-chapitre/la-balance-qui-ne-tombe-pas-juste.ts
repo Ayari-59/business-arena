@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { informationComptable } from "../../chapitres/le-systeme-d-information-comptable";
 import { auCentime } from "../../monde/amortissement";
@@ -30,7 +30,6 @@ export const COMPTE_MAL_RECOPIE = "411";
  */
 export const inverserDeuxChiffres = (x: number) => Number(String(Math.trunc(x)).replace(/^(\d)(\d)(\d)/, "$1$3$2")) + auCentime(x - Math.trunc(x));
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /** La balance recopiée, ses totaux, l'écart, et ce que dit le grand livre. */
@@ -96,9 +95,9 @@ export const LA_BALANCE_QUI_NE_TOMBE_PAS_JUSTE: Situation = {
       champs: (c) => {
         const b = balanceRecopiee(c);
         return [
-          { libelle: "Total des soldes débiteurs", attendu: b.totauxFaux.debit, calcul: `${b.balanceFausse.filter((l) => l.debit).map((l) => eur(l.debit)).join(" + ")} = ${eur(b.totauxFaux.debit)}`, tolerance: 1 },
-          { libelle: "Total des soldes créditeurs", attendu: b.totauxFaux.credit, calcul: `${b.balanceFausse.filter((l) => l.credit).map((l) => eur(l.credit)).join(" + ")} = ${eur(b.totauxFaux.credit)}`, tolerance: 1 },
-          { libelle: "Écart", attendu: b.ecart, calcul: `${eur(b.totauxFaux.debit)} − ${eur(b.totauxFaux.credit)} = ${eur(b.ecart)}`, tolerance: 1 },
+          { libelle: "Total des soldes débiteurs", attendu: b.totauxFaux.debit, calcul: `${b.balanceFausse.filter((l) => l.debit).map((l) => eur(l.debit)).join(" + ")} = ${eur(b.totauxFaux.debit)}` },
+          { libelle: "Total des soldes créditeurs", attendu: b.totauxFaux.credit, calcul: `${b.balanceFausse.filter((l) => l.credit).map((l) => eur(l.credit)).join(" + ")} = ${eur(b.totauxFaux.credit)}` },
+          { libelle: "Écart", attendu: b.ecart, calcul: `${eur(b.totauxFaux.debit)} − ${eur(b.totauxFaux.credit)} = ${eur(b.ecart)}` },
         ];
       },
       explication: (c) => {
@@ -166,7 +165,7 @@ export const LA_BALANCE_QUI_NE_TOMBE_PAS_JUSTE: Situation = {
       question: () => "La ligne 411 corrigée, calculez le total juste des soldes débiteurs.",
       champs: (c) => {
         const b = balanceRecopiee(c);
-        return [{ libelle: "Total juste des soldes débiteurs", attendu: b.totaux.debit, calcul: `${eur(b.totauxFaux.debit)} − ${eur(b.ecart)} = ${eur(b.totaux.debit)}`, tolerance: 1 }];
+        return [{ libelle: "Total juste des soldes débiteurs", attendu: b.totaux.debit, calcul: `${eur(b.totauxFaux.debit)} − ${eur(b.ecart)} = ${eur(b.totaux.debit)}` }];
       },
       explication: (c) => {
         const b = balanceRecopiee(c);

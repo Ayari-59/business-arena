@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { auCentime } from "../monde/amortissement";
 import {
@@ -64,10 +64,11 @@ export const LEVIERS_DU_DIAGNOSTIC = { delai: { min: 25, max: 60, pas: 5 }, divi
  */
 export const SOLUTION_DU_DIAGNOSTIC = { delaiClients: BESOIN_POSE["N+2"].delaiClients, dividende: 2 } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number, decimales = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: decimales }).replace(/^-/, "−");
+/** Un nombre au centième (deux décimales s'il n'est pas entier), ou à `decimales` chiffres quand on le demande. */
+const qte = (n: number, decimales = 2) => (decimales === 2 ? nombreAuCentieme(n) : (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: decimales }).replace(/^-/, "−"));
 /** Une fraction écrite en pour cent : « 27,1 % ». */
-const pct = (t: number) => `${qte(auCentime(t * 100))} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 /** Une fraction en pour cent au centième, la réponse attendue d'un champ. */
 const enPourcent = (t: number) => auCentime(t * 100);
 const jours = (n: number) => `${qte(n)} jours`;
@@ -226,7 +227,7 @@ export function indicateursESGDuChapitre(c: Pick<Cas, "code">): TableauDeDonnees
     colonnes: ["N", "N + 1", "N + 2", "Secteur"],
     lignes: [
       { libelle: "Électricité par enceinte (kWh)", valeurs: [...trois(x, (i) => qte(e[i]!.kwhParEnceinte)), qte(s.kwhParEnceinte)] },
-      { libelle: "CO2 par enceinte (kg)", valeurs: [...trois(x, (i) => qte(e[i]!.co2ParEnceinte, 4)), qte(s.co2ParEnceinte)] },
+      { libelle: "CO2 par enceinte (g)", valeurs: [...trois(x, (i) => qte(e[i]!.co2ParEnceinteEnGrammes)), qte(s.co2ParEnceinte * 1_000)] },
       { libelle: "Part des emballages valorisés", valeurs: [...trois(x, (i) => pct(e[i]!.partValorisee)), pct(s.partValorisee)] },
       { libelle: "Taux d'absentéisme", valeurs: [...trois(x, (i) => pct(e[i]!.absenteisme)), pct(s.absenteisme)] },
       { libelle: "Taux de fréquence des accidents", valeurs: [...trois(x, (i) => qte(e[i]!.tauxDeFrequence)), qte(s.tauxDeFrequence)] },
@@ -406,7 +407,6 @@ export const LE_DIAGNOSTIC_FINANCIER: Chapitre = {
             libelle: "Actif économique",
             attendu: r.actifEconomique,
             calcul: `(${eur(k.immobilisationsBrutes)} − ${eur(k.amortissements)}) + ${eur(k.besoinDExploitation)} = ${eur(r.actifEconomique)}`,
-            tolerance: 1,
           },
           {
             libelle: "Rentabilité économique (%)",
@@ -473,10 +473,10 @@ export const LE_DIAGNOSTIC_FINANCIER: Chapitre = {
         const r = x.r2;
         const b = r.bilan;
         return [
-          { libelle: "Endettement", attendu: r.endettement, calcul: `${eur(k.dettesFinancieres)} de dettes financières ÷ ${eur(k.capitauxPropres)} de capitaux propres = ${qte(r.endettement)}`, tolerance: 0.01 },
-          { libelle: "Liquidité générale", attendu: r.liquiditeGenerale, calcul: `${eur(b.actifCirculant)} d'actif circulant ÷ ${eur(b.dettesAMoinsDUnAn)} de dettes à moins d'un an = ${qte(r.liquiditeGenerale)}`, tolerance: 0.01 },
+          { libelle: "Endettement", nature: "grandeur", attendu: r.endettement, calcul: `${eur(k.dettesFinancieres)} de dettes financières ÷ ${eur(k.capitauxPropres)} de capitaux propres = ${qte(r.endettement)}`, tolerance: 0.01 },
+          { libelle: "Liquidité générale", nature: "grandeur", attendu: r.liquiditeGenerale, calcul: `${eur(b.actifCirculant)} d'actif circulant ÷ ${eur(b.dettesAMoinsDUnAn)} de dettes à moins d'un an = ${qte(r.liquiditeGenerale)}`, tolerance: 0.01 },
           { libelle: "Autonomie financière (%)", attendu: enPourcent(r.autonomie), calcul: `${eur(k.capitauxPropres)} ÷ ${eur(b.totalActif)} de total du bilan × 100 = ${pct(r.autonomie)}`, tolerance: 0.01 },
-          { libelle: "Capacité de remboursement", attendu: r.capaciteDeRemboursement, calcul: `${eur(k.dettesFinancieres)} ÷ ${eur(k.caf)} de CAF = ${qte(r.capaciteDeRemboursement)}`, tolerance: 0.01 },
+          { libelle: "Capacité de remboursement", nature: "grandeur", attendu: r.capaciteDeRemboursement, calcul: `${eur(k.dettesFinancieres)} ÷ ${eur(k.caf)} de CAF = ${qte(r.capaciteDeRemboursement)}`, tolerance: 0.01 },
         ];
       },
       explication: (c) => {
@@ -503,8 +503,8 @@ export const LE_DIAGNOSTIC_FINANCIER: Chapitre = {
         const x = diagnosticDuChapitre(c);
         const k = x.n2;
         return [
-          { libelle: "Délai des clients en N + 2 (jours)", attendu: x.r2.delaiClients, calcul: `${eur(k.clientsBruts)} ÷ (${eur(k.production)} × 1,2) × 360 = ${jours(x.r2.delaiClients)}`, tolerance: 0.05 },
-          { libelle: "Durée du stock en N + 2 (jours)", attendu: x.r2.rotationDesStocks, calcul: `${eur(k.stocks)} ÷ ${eur(k.composantsConsommes)} × 360 = ${jours(x.r2.rotationDesStocks)}`, tolerance: 0.05 },
+          { libelle: "Délai des clients en N + 2 (jours)", nature: "grandeur", attendu: x.r2.delaiClients, calcul: `${eur(k.clientsBruts)} ÷ (${eur(k.production)} × 1,2) × 360 = ${jours(x.r2.delaiClients)}` },
+          { libelle: "Durée du stock en N + 2 (jours)", nature: "grandeur", attendu: x.r2.rotationDesStocks, calcul: `${eur(k.stocks)} ÷ ${eur(k.composantsConsommes)} × 360 = ${jours(x.r2.rotationDesStocks)}` },
           { libelle: "Taux d'investissement de N + 1 (%)", attendu: enPourcent(x.r1.tauxDInvestissement), calcul: `${eur(x.n1.investissements)} ÷ ${eur(x.n1.valeurAjoutee)} × 100 = ${pct(x.r1.tauxDInvestissement)}`, tolerance: 0.01 },
           { libelle: "Taux d'usure de N + 2 (%)", attendu: enPourcent(x.r2.tauxDUsure), calcul: `${eur(k.amortissements)} ÷ ${eur(k.immobilisationsBrutes)} × 100 = ${pct(x.r2.tauxDUsure)}`, tolerance: 0.01 },
         ];
@@ -649,16 +649,17 @@ export const LE_DIAGNOSTIC_FINANCIER: Chapitre = {
       notions: ["csr_index"],
       tableau: donneesESG,
       question: () =>
-        "Calculez, pour N + 2 : l'électricité par enceinte (kWh, au centième), le CO2 par enceinte (kg, au dix-millième) et le CO2 par millier d'euros de valeur ajoutée (kg, au centième). Puis le taux d'absentéisme de N + 1 (heures d'absence ÷ heures payées, en pour cent au centième).",
+        "Calculez, pour N + 2 : l'électricité par enceinte (kWh, au centième), le CO2 par enceinte (en grammes, au centième) et le CO2 par millier d'euros de valeur ajoutée (kg, au centième). Puis le taux d'absentéisme de N + 1 (heures d'absence ÷ heures payées, en pour cent au centième).",
       champs: (c) => {
         const x = diagnosticDuChapitre(c);
         const e = x.e2;
         const k = x.n2;
         return [
-          { libelle: "Électricité par enceinte en N + 2 (kWh)", attendu: e.kwhParEnceinte, calcul: `${qte(e.kwh)} kWh ÷ ${qte(k.enceintes)} enceintes = ${qte(e.kwhParEnceinte)} kWh`, tolerance: 0.01 },
-          { libelle: "CO2 par enceinte en N + 2 (kg)", attendu: e.co2ParEnceinte, calcul: `${qte(e.co2)} kg ÷ ${qte(k.enceintes)} enceintes = ${qte(e.co2ParEnceinte, 4)} kg`, tolerance: 0.0001 },
+          { libelle: "Électricité par enceinte en N + 2 (kWh)", nature: "grandeur", attendu: e.kwhParEnceinte, calcul: `${qte(e.kwh)} kWh ÷ ${qte(k.enceintes)} enceintes = ${qte(e.kwhParEnceinte)} kWh`, tolerance: 0.01 },
+          { libelle: "CO2 par enceinte en N + 2 (g)", nature: "grandeur", attendu: e.co2ParEnceinteEnGrammes, calcul: `${qte(e.co2)} kg × 1 000 ÷ ${qte(k.enceintes)} enceintes = ${qte(e.co2ParEnceinteEnGrammes)} g` },
           {
             libelle: "CO2 par millier d'euros de valeur ajoutée en N + 2 (kg)",
+            nature: "grandeur",
             attendu: e.co2ParMilleEurosDeValeurAjoutee,
             calcul: `${qte(e.co2)} kg ÷ ${qte(auCentime(k.valeurAjoutee / 1_000))} milliers d'euros = ${qte(e.co2ParMilleEurosDeValeurAjoutee)} kg`,
             tolerance: 0.01,
@@ -687,7 +688,7 @@ export const LE_DIAGNOSTIC_FINANCIER: Chapitre = {
       tableau: indicateursESGDuChapitre,
       question: (c) => {
         const x = diagnosticDuChapitre(c);
-        return `De N à N + 2, le CO2 par enceinte baisse de ${qte(x.e0.co2ParEnceinte, 4)} à ${qte(x.e2.co2ParEnceinte, 4)} kg, mais les émissions totales passent de ${qte(x.e0.co2)} à ${qte(x.e2.co2)} kg. Que conclure ?`;
+        return `De N à N + 2, le CO2 par enceinte baisse de ${qte(x.e0.co2ParEnceinteEnGrammes)} à ${qte(x.e2.co2ParEnceinteEnGrammes)} g, mais les émissions totales passent de ${qte(x.e0.co2)} à ${qte(x.e2.co2)} kg. Que conclure ?`;
       },
       options: (c) => {
         const x = diagnosticDuChapitre(c);

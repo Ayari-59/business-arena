@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { auCentime } from "../monde/amortissement";
 import {
@@ -59,9 +59,10 @@ export const LEVIERS_DE_LA_TRANSITION = {
 /** La solution que montre la correction : sans aide ni prêt vert, la hausse attendue la plus basse où A durable reste devant B. */
 export const SOLUTION_DE_LA_TRANSITION = { hausse: 0.18, subvention: 0, tauxVert: 5 } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number, decimales = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: decimales }).replace(/^-/, "−");
-const pct = (t: number) => `${qte(auCentime(t * 100))} %`;
+/** Un nombre au centième (deux décimales s'il n'est pas entier), ou à `decimales` chiffres quand on les demande. */
+const qte = (n: number, decimales = 2) => (decimales === 2 ? nombreAuCentieme(n) : (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: decimales }).replace(/^-/, "−"));
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 const t = TAUX_DE_L_IMPOT_DES_PROJETS;
 
 /** Les deux projets et leurs critères, à la fiche. */
@@ -270,7 +271,7 @@ export const EVALUER_UN_INVESTISSEMENT_DURABLE: Chapitre = {
             attendu: e.flux.at(-1)!,
             calcul: `${eur(e.annuel)} + ${eur(e.residuel.nette)} de revente nette (${eur(e.residuel.prixDeCession)} + ${eur(-e.residuel.impot)} d'impôt économisé sur la moins-value) − ${eur(e.resteDeSubvention)} × ${qte(t)} = ${eur(e.flux.at(-1)!)}`,
           },
-          { libelle: "VAN des équipements d'efficacité", attendu: x.vanDeLEfficacite, calcul: `${eur(e.flux[0]!)} + ${termes.join(" + ")} = ${eur(x.vanDeLEfficacite)}`, tolerance: 1 },
+          { libelle: "VAN des équipements d'efficacité", attendu: x.vanDeLEfficacite, calcul: `${eur(e.flux[0]!)} + ${termes.join(" + ")} = ${eur(x.vanDeLEfficacite)}` },
         ];
       },
       explication: (c) => {
@@ -293,12 +294,11 @@ export const EVALUER_UN_INVESTISSEMENT_DURABLE: Chapitre = {
       champs: (c) => {
         const x = projetsDuChapitre(c);
         const k = x.risque;
-        const facteur = auCentime(-x.vanDuRisque / k.apresImpot);
         return [
           { libelle: "Hausse attendue, avant impôt", attendu: k.avantImpot, calcul: `${qte(KWH_EN_PLUS_DE_LA_SEMI_AUTOMATIQUE)} kWh × ${qte(HAUSSE_ATTENDUE_DU_KWH)} € = ${eur(k.avantImpot)}` },
           { libelle: "Hausse attendue, après impôt", attendu: k.apresImpot, calcul: `${eur(k.avantImpot)} × ${qte(1 - t)} = ${eur(k.apresImpot)}` },
-          { libelle: "VAN du risque", attendu: x.vanDuRisque, calcul: `− ${eur(k.apresImpot)} × (1 − ${qte(1 + TAUX_D_ACTUALISATION_DE_NOVA)}^−5) ÷ ${qte(TAUX_D_ACTUALISATION_DE_NOVA)} = − ${eur(k.apresImpot)} × ${qte(facteur, 4)} = ${eur(x.vanDuRisque)}`, tolerance: 1 },
-          { libelle: "VAN de B, le risque compris", attendu: x.vanDeBAvecLeRisque, calcul: `${eur(x.vanDeB)} ${x.vanDuRisque < 0 ? "−" : "+"} ${eur(Math.abs(x.vanDuRisque))} = ${eur(x.vanDeBAvecLeRisque)}`, tolerance: 1 },
+          { libelle: "VAN du risque", attendu: x.vanDuRisque, calcul: `− ${eur(k.apresImpot)} × (1 − ${qte(1 + TAUX_D_ACTUALISATION_DE_NOVA)}^−5) ÷ ${qte(TAUX_D_ACTUALISATION_DE_NOVA)} = ${eur(x.vanDuRisque)}` },
+          { libelle: "VAN de B, le risque compris", attendu: x.vanDeBAvecLeRisque, calcul: `${eur(x.vanDeB)} ${x.vanDuRisque < 0 ? "−" : "+"} ${eur(Math.abs(x.vanDuRisque))} = ${eur(x.vanDeBAvecLeRisque)}` },
         ];
       },
       explication: (c) => {
@@ -330,7 +330,6 @@ export const EVALUER_UN_INVESTISSEMENT_DURABLE: Chapitre = {
             libelle: "VAN du projet A durable au taux vert",
             attendu: x.vanDeADurable,
             calcul: `les flux du projet A durable (${x.aDurable.map((f) => eur(f)).join(" ; ")}), actualisés à ${pct(x.tauxVert)} = ${eur(x.vanDeADurable)}`,
-            tolerance: 1,
           },
         ];
       },
@@ -430,8 +429,8 @@ export const EVALUER_UN_INVESTISSEMENT_DURABLE: Chapitre = {
         const x = projetsDuChapitre(c);
         const e = x.extra;
         return [
-          { libelle: "Électricité en moins chaque année (kWh)", attendu: e.kwhEcartParAn, calcul: `${qte(KWH_EN_PLUS_DE_LA_SEMI_AUTOMATIQUE)} + ${qte(KWH_ECONOMISES_PAR_AN)} = ${qte(e.kwhEcartParAn)} kWh` },
-          { libelle: "CO2 évité sur cinq ans (tonnes)", attendu: e.tonnesEviteesSurCinqAns, calcul: `${qte(e.kwhEcartParAn)} × ${qte(KG_CO2_PAR_KWH, 3)} × 5 ÷ 1 000 = ${qte(e.tonnesEviteesSurCinqAns)} t`, tolerance: 0.01 },
+          { libelle: "Électricité en moins chaque année (kWh)", nature: "grandeur", attendu: e.kwhEcartParAn, calcul: `${qte(KWH_EN_PLUS_DE_LA_SEMI_AUTOMATIQUE)} + ${qte(KWH_ECONOMISES_PAR_AN)} = ${qte(e.kwhEcartParAn)} kWh` },
+          { libelle: "CO2 évité sur cinq ans (tonnes)", nature: "grandeur", attendu: e.tonnesEviteesSurCinqAns, calcul: `${qte(e.kwhEcartParAn)} × ${qte(KG_CO2_PAR_KWH, 3)} × 5 ÷ 1 000 = ${qte(e.tonnesEviteesSurCinqAns)} t`, tolerance: 0.01 },
           { libelle: "Part alignée du projet A durable (%)", attendu: auCentime(e.partAligneeDeA * 100), calcul: `${eur(EQUIPEMENTS_D_EFFICACITE.montant)} ÷ ${eur(e.investissementDeA)} × 100 = ${pct(e.partAligneeDeA)}`, tolerance: 0.01 },
         ];
       },

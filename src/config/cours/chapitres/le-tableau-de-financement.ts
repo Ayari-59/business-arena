@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { CelluleACompleter, TableauACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import type { Cas } from "../cas";
 import { EXERCICES_DU_COURS, type FicheDeLExercice } from "../monde/exercice-de-nova";
@@ -52,8 +52,8 @@ export const REMBOURSEMENT_DU_DEFI = 40_000;
 /** La solution que montre la correction : le fournisseur à 51 jours, 40 000 € remboursés. */
 export const SOLUTION_DU_TABLEAU = { delaiFournisseur: 51, remboursement: REMBOURSEMENT_DU_DEFI } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
 /** Un montant signé : « + 93 297,07 € », « − 1 372,38 € ». */
 const signe = (x: number) => (x < 0 ? `− ${eur(-x)}` : `+ ${eur(x)}`);
@@ -208,7 +208,7 @@ export function grilleDeLaPartie2(c: Pick<Cas, "code">): TableauACompleter {
       {
         libelle: "Totaux de l'exploitation",
         totalDe: { plus: [0, 1, 2] },
-        cellules: [aSaisir(auCentime(p.stocks + p.creancesDExploitation), `${eur(p.stocks)} + ${eur(p.creancesDExploitation)}`), aSaisir(p.dettesDExploitation, eur(p.dettesDExploitation))],
+        cellules: [aSaisir(auCentime(p.stocks + p.creancesDExploitation), `${eur(p.stocks)} + ${eur(p.creancesDExploitation)} = ${eur(auCentime(p.stocks + p.creancesDExploitation))}`), aSaisir(p.dettesDExploitation, eur(p.dettesDExploitation))],
       },
       { libelle: "Variation nette d'exploitation (A)", fort: true, cellules: solde(p.variationDExploitation, `${eur(auCentime(p.stocks + p.creancesDExploitation))} − ${eur(p.dettesDExploitation)} = ${signe(p.variationDExploitation)}`) },
       { libelle: "Autres débiteurs", cellules: [donnee(p.autresDebiteurs), donnee(null)] },

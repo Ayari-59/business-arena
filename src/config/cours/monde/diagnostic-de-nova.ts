@@ -644,6 +644,8 @@ export function indicateursESG(e: ExerciceResume, r: RatiosDeLExercice) {
     heuresTravaillees,
     kwhParEnceinte: auCentieme(kwh / e.enceintes),
     co2ParEnceinte: auDixMillieme(co2 / e.enceintes),
+    /** Le même, en grammes au centième : 0,0783 kg s'écrit 78,25 g, deux décimales sans perdre de chiffre (deux-decimales.ts). */
+    co2ParEnceinteEnGrammes: auCentieme((co2 * 1_000) / e.enceintes),
     co2ParMilleEurosDeValeurAjoutee: auCentieme(co2 / (e.valeurAjoutee / 1_000)),
     partValorisee,
     absenteisme: auDixMillieme(social.absences / heuresPayees),

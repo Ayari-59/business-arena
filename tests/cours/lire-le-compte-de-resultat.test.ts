@@ -28,12 +28,12 @@ describe("le compte de résultat de NOVA", () => {
     expect(k.resultatDActivite).toBe(c(1_390_276 - 1_290_113.11));
   });
 
-  it("les taux se refont au dixième, et les champs les attendent", () => {
-    expect(k.tauxDeResultat).toBe(5.7); // 79 225,96 ÷ 1 390 276 = 5,699 %
-    expect(k.partDuPersonnel).toBe(9.7); // 127 800 ÷ 1 314 984,62 = 9,719 %
+  it("les taux se refont à deux décimales, et les champs les attendent", () => {
+    expect(k.tauxDeResultat).toBe(5.7); // 79 225,96 ÷ 1 390 276 = 5,699 %, soit 5,70 %
+    expect(k.partDuPersonnel).toBe(9.72); // 127 800 ÷ 1 314 984,62 = 9,719 %
     const champs = etape(ch, "resultat", "montants").champs(NOVA, VIDE);
     expect(champs.map((x) => x.attendu)).toEqual([1_394_210.58, 1_314_984.62, 79_225.96]);
-    expect(etape(ch, "taux", "montants").champs(NOVA, VIDE).map((x) => x.attendu)).toEqual([5.7, 9.7]);
+    expect(etape(ch, "taux", "montants").champs(NOVA, VIDE).map((x) => x.attendu)).toEqual([5.7, 9.72]);
   });
 
   it("la nature des charges : neuf lignes, sept de l'activité, deux du financement, l'impôt", () => {
@@ -87,7 +87,7 @@ describe("le cas : la hausse des salaires", () => {
     expect(r.avantImpot).toBe(c(100_162.89 + 3_934.58 - 4_129.51));
     expect(r.cout).toBe(5_112);
     expect(r.apres).toBe(c(99_967.96 - 5_112));
-    expect(r.tauxApres).toBe(6.8); // 94 855,96 ÷ 1 390 276 = 6,82 %
+    expect(r.tauxApres).toBe(6.82); // 94 855,96 ÷ 1 390 276 = 6,82 %
     expect(r.surLeResultat).toBe(c(99_967.96 * 0.96));
   });
   it("les textes sont propres, une seule bonne réponse", () => {

@@ -1,4 +1,5 @@
-import { enEcriture, montantEcrit, type EcritureAttendue } from "../../../pedagogy/cours/correcteur";
+import { enEcriture, type EcritureAttendue } from "../../../pedagogy/cours/correcteur";
+import { eur, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import { auCentime, bilan, compteDeResultat, soldes, tvaNette } from "../../../pedagogy/cours/etats";
 import { intituleDe } from "../../../pedagogy/cours/plan-comptable";
 import { accordPluriel } from "../accords";
@@ -88,8 +89,8 @@ export const ARRONDI_DU_CURSEUR = 10_000;
 // LES OUTILS
 // ─────────────────────────────────────────────────────────────────────────────
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 const qte = (n: number) => n.toLocaleString("fr-FR");
 const majuscule = (s: string) => `${s.charAt(0).toUpperCase()}${s.slice(1)}`;
 /** La minuscule d'un libellé en tête de phrase, sauf devant un sigle (« TVA due à l'État »). */
@@ -1368,7 +1369,7 @@ export const DU_RESULTAT_A_LA_TRESORERIE: Chapitre = {
             calcul: `${eur(j.banque)} − ${eur(c.capital)} − ${eur(c.emprunt)} + ${eur(c.loyer.montant)} + ${eur(c.immobilisation.ttc)} + ${eur(c.personnel.net)} = ${eur(j.comptantTtc)} : le solde, moins ce qui est entré, plus ce qui est sorti`,
           },
           { libelle: "Ventes au comptant, hors taxes", attendu: j.comptantHt, calcul: `${eur(j.comptantTtc)} ÷ ${(1 + c.venteComptant.tauxTva).toLocaleString("fr-FR")} = ${eur(j.comptantHt)}` },
-          { libelle: `Nombre ${dE(c.unites)} au comptant`, attendu: j.comptantQuantite, calcul: `${eur(j.comptantHt)} ÷ ${eur(c.venteComptant.prixUnitaire)} = ${qte(j.comptantQuantite)}` },
+          { libelle: `Nombre ${dE(c.unites)} au comptant`, attendu: j.comptantQuantite, nature: "quantite", calcul: `${eur(j.comptantHt)} ÷ ${eur(c.venteComptant.prixUnitaire)} = ${qte(j.comptantQuantite)}` },
         ];
       },
       explication: (c) => {

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, pct as enPoints } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { CROISSANCE_DES_VENTES, ENTREPRISES_DU_BILAN_FONCTIONNEL, PLACE_DE_MARCHE, bilanDeLExercice } from "../../chapitres/bilan-fonctionnel";
 import { auCentime } from "../../monde/amortissement";
@@ -32,9 +32,9 @@ import type { Situation } from "../types";
  * besoin d'exploitation suit le chiffre d'affaires ; le besoin hors exploitation ne bouge pas.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number, decimales = 2) => n.toLocaleString("fr-FR", { maximumFractionDigits: decimales }).replace(/^-/, "−");
-const pct = (t: number) => `${qte(t * 100)} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 /** Un nombre de jours, accordé : « 1 jour », « 24 jours ». */
 const jours = (n: number) => `${qte(n)} jour${Math.abs(n) >= 2 ? "s" : ""}`;
 /** Un montant retranché, sans « − − ». */
@@ -216,14 +216,13 @@ export const VENDRE_PLUS_FINANCER_PLUS: Situation = {
         const r = vendrePlus(c);
         const x = r.x;
         return [
-          { libelle: "Besoin d'exploitation, en jours de chiffre d'affaires", attendu: x.besoinEnJours, calcul: `${eur(x.besoinDExploitation)} ÷ ${eur(x.caHt)} × 360 = ${qte(x.besoinEnJours)} jours`, tolerance: 0.01 },
+          { libelle: "Besoin d'exploitation, en jours de chiffre d'affaires", nature: "grandeur", attendu: x.besoinEnJours, calcul: `${eur(x.besoinDExploitation)} ÷ ${eur(x.caHt)} × 360 = ${qte(x.besoinEnJours)} jours` },
           {
             libelle: "Besoin d'exploitation après la croissance",
             attendu: r.besoinDExploitationApres,
             calcul: `${eur(x.besoinDExploitation)} × ${qte(1 + CROISSANCE_DES_VENTES)} = ${eur(r.besoinDExploitationApres)}, les mêmes jours de ${eur(x.caApresCroissance)}`,
-            tolerance: 1,
           },
-          { libelle: "Supplément de besoin, à structure constante", attendu: r.supplement, calcul: `${eur(r.besoinDExploitationApres)} − ${eur(x.besoinDExploitation)} = ${eur(r.supplement)}`, tolerance: 1 },
+          { libelle: "Supplément de besoin, à structure constante", attendu: r.supplement, calcul: `${eur(r.besoinDExploitationApres)} − ${eur(x.besoinDExploitation)} = ${eur(r.supplement)}` },
         ];
       },
       explication: (c) => {
@@ -248,16 +247,14 @@ export const VENDRE_PLUS_FINANCER_PLUS: Situation = {
             libelle: "Créance sur la place de marché",
             attendu: r.creance,
             calcul: `${eur(x.ventesAuxParticuliersTtc)} × ${qte(1 + CROISSANCE_DES_VENTES)} × ${PLACE_DE_MARCHE.delai} ÷ 360 = ${eur(r.particuliersApres)} × ${PLACE_DE_MARCHE.delai} ÷ 360 = ${eur(r.creance)}`,
-            tolerance: 1,
           },
           {
             libelle: "Besoin en fonds de roulement après la croissance",
             attendu: r.besoinApres,
             calcul: `${eur(r.besoinDExploitationApres)} ${moins(-x.besoinHorsExploitation)} + ${eur(r.creance)} = ${eur(r.besoinApres)}`,
-            tolerance: 1,
           },
-          { libelle: "Trésorerie nette après la croissance", attendu: r.tresorerieNetteApres, calcul: `${eur(x.fondsDeRoulement)} ${moins(r.besoinApres)} = ${eur(r.tresorerieNetteApres)}`, tolerance: 1 },
-          { libelle: "Compte courant après la croissance", attendu: r.compteCourantApres, calcul: `${eur(r.tresorerieNetteApres)} − ${eur(x.placement)} de compte à terme = ${eur(r.compteCourantApres)}`, tolerance: 1 },
+          { libelle: "Trésorerie nette après la croissance", attendu: r.tresorerieNetteApres, calcul: `${eur(x.fondsDeRoulement)} ${moins(r.besoinApres)} = ${eur(r.tresorerieNetteApres)}` },
+          { libelle: "Compte courant après la croissance", attendu: r.compteCourantApres, calcul: `${eur(r.tresorerieNetteApres)} − ${eur(x.placement)} de compte à terme = ${eur(r.compteCourantApres)}` },
         ];
       },
       explication: (c) => {

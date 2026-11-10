@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas, StockDuTrimestre } from "../cas";
 import { dateDuCours as date, moisEtJour } from "../dates";
 import { auCentime } from "../monde/amortissement";
@@ -75,9 +75,9 @@ const TRIMESTRES = ["premier", "deuxième", "troisième", "quatrième"];
 // LES OUTILS
 // ─────────────────────────────────────────────────────────────────────────────
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 const aLaDizaine = (x: number) => Math.round(x / 10) * 10;
 /** « de MAILLE & CO », « d'ATLAS » : l'élision devant une voyelle. */
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
@@ -475,7 +475,7 @@ export const LES_STOCKS: Chapitre = {
       champs: (c) => {
         const a = arrete(c);
         return [
-          { libelle: "Stock final, en unités", attendu: a.final.quantite, calcul: `${qte(a.initial.quantite)} + ${qte(a.achats.quantite)} − ${qte(a.vendues)} = ${qte(a.final.quantite)} unités` },
+          { libelle: "Stock final, en unités", nature: "quantite", attendu: a.final.quantite, calcul: `${qte(a.initial.quantite)} + ${qte(a.achats.quantite)} − ${qte(a.vendues)} = ${qte(a.final.quantite)} unités` },
           {
             libelle: "Coût moyen pondéré d'une unité",
             attendu: a.cump,
@@ -600,7 +600,7 @@ export const LES_STOCKS: Chapitre = {
         return [
           { libelle: "Coût d'achat des marchandises vendues", attendu: a.coutDAchatDesVendues, calcul: `${eur(a.achats.ht)} ${a.variation >= 0 ? "+" : "−"} ${eur(Math.abs(a.variation))} de variation = ${eur(a.coutDAchatDesVendues)}` },
           { libelle: "Marge commerciale", attendu: a.marge, calcul: `${eur(a.ventes.ht)} − ${eur(a.coutDAchatDesVendues)} = ${eur(a.marge)}` },
-          { libelle: "Taux de marque, en %", attendu: auCentime(a.tauxDeMarque * 100), calcul: `la marge rapportée aux ventes : ${eur(a.marge)} ÷ ${eur(a.ventes.ht)} = ${pct(a.tauxDeMarque)}`, tolerance: 0.1 },
+          { libelle: "Taux de marque, en %", attendu: auCentime(a.tauxDeMarque * 100), calcul: `la marge rapportée aux ventes : ${eur(a.marge)} ÷ ${eur(a.ventes.ht)} = ${pct(a.tauxDeMarque)}` },
         ];
       },
       explication: (c) => {

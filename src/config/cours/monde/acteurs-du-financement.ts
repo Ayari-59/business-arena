@@ -1,5 +1,6 @@
 import { CAPACITE_DE_REMBOURSEMENT_MAXIMALE, ENDETTEMENT_MAXIMAL } from "../financement";
 import { auCentime } from "./amortissement";
+import { arrondi2, partDe2 } from "../../../pedagogy/cours/deux-decimales";
 import { cloture } from "./cloture";
 import { ACTIONS_DE_NOVA, AUGMENTATION_DE_CAPITAL, BESOIN_DE_FONDS } from "./comptabilite-approfondie";
 import { empruntALaCloture, tableauDAmortissement } from "./emprunt";
@@ -155,15 +156,18 @@ export function apportDeLaBusinessAngel(f: FicheDeLExercice = EXERCICE_DE_NOVA, 
   const total = ACTIONS_DE_NOVA.nombre + actions;
   const part = actions / total;
   const capitauxPropresApres = auCentime(capitauxPropres + montant);
+  /** La part de la business angel, en pourcentage à deux décimales : celle que l'élève écrit, puis applique. */
+  const partEnPoints = arrondi2(part * 100);
   return {
     actions,
     total,
     part,
+    partEnPoints,
     partDesFondateurs: 1 - part,
     capitauxPropres,
     capitauxPropresApres,
     /** La part des capitaux propres qui revient à la business angel, au centime. */
-    saPart: auCentime(capitauxPropresApres * part),
+    saPart: partDe2(capitauxPropresApres, partEnPoints),
     valeurDeLActionAvant: Math.round((capitauxPropres / ACTIONS_DE_NOVA.nombre) * 100) / 100,
   };
 }

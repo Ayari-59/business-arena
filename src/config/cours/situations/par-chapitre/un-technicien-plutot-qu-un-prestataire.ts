@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { valeurAjoutee } from "../../chapitres/valeur-ajoutee-et-partage";
 import { auCentime } from "../../monde/amortissement";
@@ -37,9 +37,6 @@ export const CONTRAT_D_ENTRETIEN_ANNUEL = 12 * GAMME_DE_NOVA.communes.entretien;
 export const COUT_DU_TECHNICIEN = 0.9;
 
 /** Un montant, le signe moins typographique : « −582,38 € ». */
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /** Les chiffres de la réponse, calculés une fois du cas. */
@@ -61,9 +58,9 @@ export function technicien(c: Pick<Cas, "code">) {
     consommationsApres: v.consommations,
     vaApres: v.va,
     personnelApres,
-    partAvant: auDixieme((v.k.personnel / va) * 100),
-    partApres: auDixieme((personnelApres / v.va) * 100),
-    tauxApres: auDixieme((v.va / v.k.ventes) * 100),
+    partAvant: arrondi2((v.k.personnel / va) * 100),
+    partApres: arrondi2((personnelApres / v.va) * 100),
+    tauxApres: arrondi2((v.va / v.k.ventes) * 100),
   };
 }
 
@@ -123,13 +120,13 @@ export const UN_TECHNICIEN_PLUTOT_QU_UN_PRESTATAIRE: Situation = {
       titre: "L'année avec le prestataire",
       notions: ["income_statement"],
       question: () =>
-        "Commencez par l'année avec le prestataire, son contrat compris : le total des consommations venues d'autres entreprises, la valeur ajoutée, puis la part des salariés dans la valeur ajoutée (personnel ÷ valeur ajoutée × 100), au dixième.",
+        "Commencez par l'année avec le prestataire, son contrat compris : le total des consommations venues d'autres entreprises, la valeur ajoutée, puis la part des salariés dans la valeur ajoutée (personnel ÷ valeur ajoutée × 100), à deux décimales.",
       champs: (c) => {
         const r = technicien(c);
         return [
-          { libelle: "Consommations", attendu: r.consommations, calcul: `${eur(r.consommationsApres)} + ${eur(r.contrat)} de contrat = ${eur(r.consommations)}`, tolerance: 1 },
-          { libelle: "Valeur ajoutée", attendu: r.va, calcul: `${eur(r.k.ventes)} − ${eur(r.consommations)} = ${eur(r.va)}`, tolerance: 2 },
-          { libelle: "Part des salariés (%)", attendu: r.partAvant, calcul: `${eur(r.k.personnel)} ÷ ${eur(r.va)} × 100 = ${pct(r.partAvant)}`, tolerance: 0.1 },
+          { libelle: "Consommations", attendu: r.consommations, calcul: `${eur(r.consommationsApres)} + ${eur(r.contrat)} de contrat = ${eur(r.consommations)}` },
+          { libelle: "Valeur ajoutée", attendu: r.va, calcul: `${eur(r.k.ventes)} − ${eur(r.consommations)} = ${eur(r.va)}` },
+          { libelle: "Part des salariés (%)", attendu: r.partAvant, calcul: `${eur(r.k.personnel)} ÷ ${eur(r.va)} × 100 = ${pct(r.partAvant)}` },
         ];
       },
       explication: (c) => {
@@ -145,17 +142,16 @@ export const UN_TECHNICIEN_PLUTOT_QU_UN_PRESTATAIRE: Situation = {
       titre: "L'année avec le technicien",
       notions: ["income_statement", "make_or_buy"],
       question: () =>
-        "Refaites le calcul avec le technicien : plus de contrat d'entretien, mais un salarié de plus. Que deviennent les consommations, la valeur ajoutée, et la part des salariés, au dixième ?",
+        "Refaites le calcul avec le technicien : plus de contrat d'entretien, mais un salarié de plus. Que deviennent les consommations, la valeur ajoutée, et la part des salariés, à deux décimales ?",
       champs: (c) => {
         const r = technicien(c);
         return [
-          { libelle: "Consommations avec le technicien", attendu: r.consommationsApres, calcul: `${eur(r.consommations)} − ${eur(r.contrat)} = ${eur(r.consommationsApres)}`, tolerance: 1 },
-          { libelle: "Valeur ajoutée avec le technicien", attendu: r.vaApres, calcul: `${eur(r.k.ventes)} − ${eur(r.consommationsApres)} = ${eur(r.vaApres)}`, tolerance: 2 },
+          { libelle: "Consommations avec le technicien", attendu: r.consommationsApres, calcul: `${eur(r.consommations)} − ${eur(r.contrat)} = ${eur(r.consommationsApres)}` },
+          { libelle: "Valeur ajoutée avec le technicien", attendu: r.vaApres, calcul: `${eur(r.k.ventes)} − ${eur(r.consommationsApres)} = ${eur(r.vaApres)}` },
           {
             libelle: "Part des salariés (%)",
             attendu: r.partApres,
             calcul: `(${eur(r.k.personnel)} + ${eur(r.salaire)}) ÷ ${eur(r.vaApres)} × 100 = ${pct(r.partApres)}`,
-            tolerance: 0.1,
           },
         ];
       },

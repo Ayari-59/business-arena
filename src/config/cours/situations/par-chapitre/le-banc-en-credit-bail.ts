@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, pct as enPoints } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_FINANCEMENT } from "../../chapitres/emprunt-ou-credit-bail";
 import { BANC, CREDIT_BAIL_DE_LA_LIGNE, CREDIT_BAIL_DU_BANC, LIGNE_A_FINANCER, EMPRUNT_DU_BANC, TAUX_DE_L_IMPOT, comparaisonDuBanc } from "../../monde/financement-de-la-gamme";
@@ -20,16 +20,15 @@ import type { Situation } from "../types";
  * voir que la réponse change avec le contrat.
  */
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100 + 0).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
-const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 
 /** Les chiffres du cas, calculés une fois de la fiche. */
 export function bancEnCreditBail(_c?: Pick<Cas, "code">) {
   const x = comparaisonDuBanc();
   const d = x.creditBail.dates;
   const cb = CREDIT_BAIL_DU_BANC;
-  const dotation = auCentime(BANC.montant / BANC.dureeDAmortissement);
+  const dotation = arrondi2(BANC.montant / BANC.dureeDAmortissement);
   return {
     x,
     d,
@@ -37,7 +36,7 @@ export function bancEnCreditBail(_c?: Pick<Cas, "code">) {
     dotation,
     t: TAUX_DE_L_IMPOT,
     r: x.coutDeLEmprunt,
-    decaissements: auCentime(cb.valeur - x.vanDuCreditBail),
+    decaissements: arrondi2(cb.valeur - x.vanDuCreditBail),
   };
 }
 
@@ -127,11 +126,11 @@ export const LE_BANC_EN_CREDIT_BAIL: Situation = {
       },
       champs: () => {
         const n = bancEnCreditBail();
-        const termes = n.x.creditBail.flux.slice(1).map((f, i) => `${f < 0 ? eur(-f) : `(${eur(-f)})`} × ${(1 + n.r).toLocaleString("fr-FR")}^−${i + 1}`);
+        const termes = n.x.creditBail.flux.slice(1).map((f, i) => `${f < 0 ? eur(-f) : `(${eur(-f)})`} × ${(1 + n.r).toLocaleString("fr-FR", { maximumFractionDigits: 4 })}^−${i + 1}`);
         return [
-          { libelle: "Coût de l'emprunt après impôt, en %", attendu: auCentime(n.r * 100), calcul: `${pct(EMPRUNT_DU_BANC.taux)} × (1 − ${pct(n.t)}) = ${pct(n.r)}`, tolerance: 0.01 },
-          { libelle: "Valeur actuelle des décaissements", attendu: n.decaissements, calcul: `${termes.join(" + ")} = ${eur(n.decaissements)}`, tolerance: 1 },
-          { libelle: "VAN du crédit-bail", attendu: n.x.vanDuCreditBail, calcul: `${eur(n.cb.valeur)} − ${eur(n.decaissements)} = ${eur(n.x.vanDuCreditBail)}`, tolerance: 1 },
+          { libelle: "Coût de l'emprunt après impôt, en %", attendu: arrondi2(n.r * 100), calcul: `${pct(EMPRUNT_DU_BANC.taux)} × (1 − ${pct(n.t)}) = ${pct(n.r)}`, tolerance: 0.01 },
+          { libelle: "Valeur actuelle des décaissements", attendu: n.decaissements, calcul: `${termes.join(" + ")} = ${eur(n.decaissements)}` },
+          { libelle: "VAN du crédit-bail", attendu: n.x.vanDuCreditBail, calcul: `${eur(n.cb.valeur)} − ${eur(n.decaissements)} = ${eur(n.x.vanDuCreditBail)}` },
         ];
       },
       explication: () => {

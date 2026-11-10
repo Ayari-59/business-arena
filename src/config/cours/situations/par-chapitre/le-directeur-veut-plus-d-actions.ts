@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, pct as enPoints } from "../../../../pedagogy/cours/deux-decimales";
 import { auCentime } from "../../monde/amortissement";
 import { AUDIO_COMPTOIR, NOVA_DIFFUSION, PART_DE_NOVA, groupeNova, pourcentages } from "../../monde/groupe-nova";
 import type { Situation } from "../types";
@@ -16,8 +16,8 @@ import type { Situation } from "../types";
 /** LA PART QUE DEMANDE LE DIRECTEUR (hypothèse du cours) : 30 % du capital de la filiale. */
 export const PART_DEMANDEE_PAR_LE_DIRECTEUR = 0.3;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const pct = (t: number) => `${(Math.round(t * 10_000) / 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 const F = NOVA_DIFFUSION.nom;
 
 /** Le groupe, si NOVA ne gardait que 70 % de sa filiale. */
@@ -74,8 +74,8 @@ export const LE_DIRECTEUR_VEUT_PLUS_D_ACTIONS: Situation = {
       champs: () => {
         const k = directeurAvecPlusDActions();
         return [
-          { libelle: `Contrôle de NOVA dans ${AUDIO_COMPTOIR.nom}`, attendu: k.p.controleIndirect * 100, calcul: `NOVA contrôle encore ${F} (${pct(k.part)}) : ${pct(k.p.controleIndirect)}` },
-          { libelle: `Intérêts de NOVA dans ${AUDIO_COMPTOIR.nom}`, attendu: k.p.interetsIndirects * 100, calcul: `${pct(k.part)} × ${pct(AUDIO_COMPTOIR.partDeLaFiliale)} = ${pct(k.p.interetsIndirects)}` },
+          { libelle: `Contrôle de NOVA dans ${AUDIO_COMPTOIR.nom}`, nature: "pourcentage", attendu: k.p.controleIndirect * 100, calcul: `NOVA contrôle encore ${F} (${pct(k.part)}) : ${pct(k.p.controleIndirect)}` },
+          { libelle: `Intérêts de NOVA dans ${AUDIO_COMPTOIR.nom}`, nature: "pourcentage", attendu: k.p.interetsIndirects * 100, calcul: `${pct(k.part)} × ${pct(AUDIO_COMPTOIR.partDeLaFiliale)} = ${pct(k.p.interetsIndirects)}` },
           { libelle: "Intérêts minoritaires", attendu: k.minoritaires, calcul: `${eur(k.g.capitauxPropres)} × ${pct(PART_DEMANDEE_PAR_LE_DIRECTEUR)} = ${eur(k.minoritaires)}` },
         ];
       },

@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, pct as enPoints } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { optimiser } from "../../chapitres/optimiser-la-tresorerie";
 import { auCentime } from "../../monde/amortissement";
@@ -21,9 +21,9 @@ import type { Situation } from "../types";
  * Les chiffres sont ceux du chapitre (`optimiser`, monde/tresorerie-a-optimiser.ts).
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 
 /** Les chiffres de la réponse, calculés une fois du cas. */
 export function escompteProposePar(c: Pick<Cas, "code">) {
@@ -101,8 +101,8 @@ export const LA_BANQUE_PROPOSE_L_ESCOMPTE: Situation = {
       champs: (c) => {
         const k = escompteProposePar(c);
         return [
-          { libelle: "Agios de l'escompte", attendu: k.agiosDEscompte, calcul: `${eur(k.montant)} × ${pct(TAUX_DE_L_ESCOMPTE)} × ${k.facture.jours} ÷ 360 = ${eur(k.agiosDEscompte)}`, tolerance: 0.05 },
-          { libelle: "Montant reçu", attendu: k.netRecu, calcul: `${eur(k.montant)} − ${eur(k.agiosDEscompte)} = ${eur(k.netRecu)}`, tolerance: 0.05 },
+          { libelle: "Agios de l'escompte", attendu: k.agiosDEscompte, calcul: `${eur(k.montant)} × ${pct(TAUX_DE_L_ESCOMPTE)} × ${k.facture.jours} ÷ 360 = ${eur(k.agiosDEscompte)}` },
+          { libelle: "Montant reçu", attendu: k.netRecu, calcul: `${eur(k.montant)} − ${eur(k.agiosDEscompte)} = ${eur(k.netRecu)}` },
         ];
       },
       explication: (c) => {
@@ -126,8 +126,8 @@ export const LA_BANQUE_PROPOSE_L_ESCOMPTE: Situation = {
       champs: (c) => {
         const k = escompteProposePar(c);
         return [
-          { libelle: `Découvert de ${k.joursDeBlocage} jours`, attendu: k.decouvertCourt, calcul: `${eur(k.montant)} × ${pct(TAUX_DU_DECOUVERT)} × ${k.joursDeBlocage} ÷ 360 = ${eur(k.decouvertCourt)}`, tolerance: 0.05 },
-          { libelle: `Découvert de ${k.facture.jours} jours`, attendu: k.decouvertLong, calcul: `${eur(k.montant)} × ${pct(TAUX_DU_DECOUVERT)} × ${k.facture.jours} ÷ 360 = ${eur(k.decouvertLong)}`, tolerance: 0.05 },
+          { libelle: `Découvert de ${k.joursDeBlocage} jours`, attendu: k.decouvertCourt, calcul: `${eur(k.montant)} × ${pct(TAUX_DU_DECOUVERT)} × ${k.joursDeBlocage} ÷ 360 = ${eur(k.decouvertCourt)}` },
+          { libelle: `Découvert de ${k.facture.jours} jours`, attendu: k.decouvertLong, calcul: `${eur(k.montant)} × ${pct(TAUX_DU_DECOUVERT)} × ${k.facture.jours} ÷ 360 = ${eur(k.decouvertLong)}` },
         ];
       },
       explication: (c) => {

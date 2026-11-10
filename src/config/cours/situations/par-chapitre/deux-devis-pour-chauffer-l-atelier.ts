@@ -1,7 +1,6 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct as enPoints } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DE_L_INVESTISSEMENT_DURABLE } from "../../chapitres/evaluer-un-investissement-durable";
-import { auCentime } from "../../monde/amortissement";
 import { CHAUFFAGE_DE_L_ATELIER, HAUSSE_ATTENDUE_DU_KWH, PRIX_DU_KWH, deuxDevisDeChauffage } from "../../monde/investissement-durable";
 import { TAUX_DE_L_IMPOT_DES_PROJETS, TAUX_D_ACTUALISATION_DE_NOVA } from "../../monde/projets-et-financement";
 import type { Situation } from "../types";
@@ -17,9 +16,10 @@ import type { Situation } from "../types";
  * VAN avec et sans l'aide, puis un choix qui dit ses conditions.
  */
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number, d = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d });
-const pct = (t: number) => `${qte(auCentime(t * 100))} %`;
+/** Un nombre au centième (deux décimales s'il n'est pas entier), ou à `d` chiffres quand on les demande. */
+const qte = (n: number, d = 2) => (d === 2 ? nombreAuCentieme(n) : (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−"));
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 const t = TAUX_DE_L_IMPOT_DES_PROJETS;
 
 /** Les chiffres du cas : la pompe à chaleur face aux radiateurs, avec l'aide, sans l'aide. */
@@ -88,7 +88,7 @@ export const DEUX_DEVIS_POUR_CHAUFFER_L_ATELIER: Situation = {
         const n = deuxDevis().avec;
         const k = CHAUFFAGE_DE_L_ATELIER;
         return [
-          { libelle: "kWh économisés par an", attendu: n.kwhEconomises, calcul: `${qte(k.kwhDesRadiateurs)} × (1 − 1 ÷ ${qte(k.coefficientDePerformance)}) = ${qte(n.kwhEconomises)} kWh` },
+          { libelle: "kWh économisés par an", nature: "grandeur", attendu: n.kwhEconomises, calcul: `${qte(k.kwhDesRadiateurs)} × (1 − 1 ÷ ${qte(k.coefficientDePerformance)}) = ${qte(n.kwhEconomises)} kWh` },
           { libelle: "Flux de la date 0", attendu: n.flux[0]!, calcul: `− (${eur(k.pompeAChaleur)} − ${eur(k.radiateurs)}) + ${eur(n.aide)} = ${eur(n.flux[0]!)}` },
           {
             libelle: "Flux annuel",
@@ -110,10 +110,11 @@ export const DEUX_DEVIS_POUR_CHAUFFER_L_ATELIER: Situation = {
       question: () => `Calculez la VAN de la pompe face aux radiateurs à ${pct(TAUX_D_ACTUALISATION_DE_NOVA)} sur dix ans, puis la même VAN sans l'aide (la date 0 est alors tout le surcoût, et il n'y a plus de quote-part à imposer).`,
       champs: () => {
         const n = deuxDevis();
-        const facteur = (1 - (1 + TAUX_D_ACTUALISATION_DE_NOVA) ** -CHAUFFAGE_DE_L_ATELIER.dureeAns) / TAUX_D_ACTUALISATION_DE_NOVA;
+        // Le facteur d'actualisation des flux annuels, écrit en formule : la VAN se calcule d'une seule ligne, sans coefficient arrondi.
+        const facteur = `(1 − ${(1 + TAUX_D_ACTUALISATION_DE_NOVA).toLocaleString("fr-FR")}^−${CHAUFFAGE_DE_L_ATELIER.dureeAns}) ÷ ${TAUX_D_ACTUALISATION_DE_NOVA.toLocaleString("fr-FR")}`;
         return [
-          { libelle: "VAN avec l'aide", attendu: n.avec.van, calcul: `${eur(n.avec.flux[0]!)} + ${eur(n.avec.annuel)} × ${qte(facteur, 4)} = ${eur(n.avec.van)}`, tolerance: 1 },
-          { libelle: "VAN sans l'aide", attendu: n.sans.van, calcul: `${eur(n.sans.flux[0]!)} + ${eur(n.sans.annuel)} × ${qte(facteur, 4)} = ${eur(n.sans.van)}`, tolerance: 1 },
+          { libelle: "VAN avec l'aide", attendu: n.avec.van, calcul: `${eur(n.avec.flux[0]!)} + ${eur(n.avec.annuel)} × ${facteur} = ${eur(n.avec.van)}` },
+          { libelle: "VAN sans l'aide", attendu: n.sans.van, calcul: `${eur(n.sans.flux[0]!)} + ${eur(n.sans.annuel)} × ${facteur} = ${eur(n.sans.van)}` },
         ];
       },
       explication: () => {

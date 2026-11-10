@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, nombreAuCentieme, pct as enPoints } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_DIAGNOSTIC, diagnosticDuChapitre } from "../../chapitres/le-diagnostic-financier-et-extra-financier";
 import { auCentime } from "../../monde/amortissement";
@@ -28,9 +28,9 @@ export const CONDITIONS_DE_LA_BANQUE = { endettementMaximal: 1, capaciteMaximale
 /** L'INDEXATION SUR LA DURABILITÉ (hypothèse du cas) : 0,20 point de moins si les deux indicateurs sont tenus. */
 export const INDEXATION = { kwhParEnceinteMaximal: 1.6, partValoriseeMinimale: 0.9, bonus: 0.002 } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const qte = (n: number, d = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d });
-const pct = (t: number) => `${qte(auCentime(t * 100))} %`;
+const qte = (n: number) => nombreAuCentieme(n);
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 
 /** Les chiffres du cas. */
 export function pretIndexe(c?: Pick<Cas, "code">) {
@@ -123,10 +123,11 @@ export const LE_PRET_INDEXE_SUR_LA_DURABILITE: Situation = {
         const n = pretIndexe();
         return [
           { libelle: "Dettes financières après le prêt", attendu: n.dettesApres, calcul: `${eur(n.k.dettesFinancieres)} + ${eur(PRET_DE_L_EXTENSION.montant)} = ${eur(n.dettesApres)}` },
-          { libelle: "Endettement après le prêt", attendu: n.endettement, calcul: `${eur(n.dettesApres)} ÷ ${eur(n.k.capitauxPropres)} = ${qte(n.endettement)}`, tolerance: 0.01 },
-          { libelle: "Capacité de remboursement après le prêt", attendu: n.capacite, calcul: `${eur(n.dettesApres)} ÷ ${eur(n.k.caf)} = ${qte(n.capacite)}`, tolerance: 0.01 },
+          { libelle: "Endettement après le prêt", nature: "grandeur", attendu: n.endettement, calcul: `${eur(n.dettesApres)} ÷ ${eur(n.k.capitauxPropres)} = ${qte(n.endettement)}`, tolerance: 0.01 },
+          { libelle: "Capacité de remboursement après le prêt", nature: "grandeur", attendu: n.capacite, calcul: `${eur(n.dettesApres)} ÷ ${eur(n.k.caf)} = ${qte(n.capacite)}`, tolerance: 0.01 },
           {
             libelle: "Liquidité générale après le prêt",
+            nature: "grandeur",
             attendu: n.liquidite,
             calcul: `${eur(n.b.actifCirculant)} ÷ (${eur(n.b.dettesAMoinsDUnAn)} + ${eur(PRET_DE_L_EXTENSION.montant / PRET_DE_L_EXTENSION.dureeAns)}) = ${qte(n.liquidite)}`,
             tolerance: 0.01,
@@ -147,7 +148,7 @@ export const LE_PRET_INDEXE_SUR_LA_DURABILITE: Situation = {
       champs: () => {
         const n = pretIndexe();
         return [
-          { libelle: "Électricité par enceinte (kWh)", attendu: n.kwh, calcul: `${qte(n.x.e2.kwh)} kWh ÷ ${qte(n.k.enceintes)} enceintes = ${qte(n.kwh)} kWh`, tolerance: 0.01 },
+          { libelle: "Électricité par enceinte (kWh)", nature: "grandeur", attendu: n.kwh, calcul: `${qte(n.x.e2.kwh)} kWh ÷ ${qte(n.k.enceintes)} enceintes = ${qte(n.kwh)} kWh`, tolerance: 0.01 },
           { libelle: "Part des emballages valorisés (%)", attendu: auCentime(n.part * 100), calcul: `lue dans les données : ${pct(n.part)}`, tolerance: 0.01 },
           { libelle: "Économie d'intérêts de la première année", attendu: n.economieDeLaPremiereAnnee, calcul: `${eur(PRET_DE_L_EXTENSION.montant)} × ${pct(INDEXATION.bonus)} = ${eur(n.economieDeLaPremiereAnnee)}` },
         ];

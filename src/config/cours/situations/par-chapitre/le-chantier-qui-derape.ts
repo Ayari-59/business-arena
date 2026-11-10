@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, pct as enPoints } from "../../../../pedagogy/cours/deux-decimales";
 import { CHANTIER_ARPEGE, COUT_REESTIME, contratALAvancement } from "../../monde/comptabilite-approfondie";
 import type { Situation } from "../types";
 
@@ -12,8 +12,8 @@ import type { Situation } from "../types";
  * réestimé.
  */
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${(Math.round(t * 10_000) / 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 
 export const chantierQuiDerape = () => contratALAvancement(CHANTIER_ARPEGE.coutsEngages, COUT_REESTIME);
 
@@ -59,8 +59,12 @@ export const LE_CHANTIER_QUI_DERAPE: Situation = {
         const a = chantierQuiDerape();
         return [
           { libelle: "Avancement (%)", attendu: a.avancementPct, calcul: `${eur(a.coutsEngages)} ÷ ${eur(a.coutTotal)} × 100 = ${pct(a.avancement)}`, tolerance: 0.01 },
-          { libelle: "Provision pour perte à terminaison", attendu: a.provisionPourPerte, calcul: `${eur(-a.resultatTotal)} × (1 − ${pct(a.avancement)}) = ${eur(a.provisionPourPerte)}`, tolerance: 1 },
-          { libelle: "Résultat du contrat en N + 1", attendu: a.resultatDeLExercice, calcul: `${eur(a.resultatALAvancement)} − ${eur(a.provisionPourPerte)} = ${eur(a.resultatDeLExercice)}`, tolerance: 1 },
+          {
+            libelle: "Provision pour perte à terminaison",
+            attendu: a.provisionPourPerte,
+            calcul: `l'avancement prend déjà ${eur(a.prix)} × ${eur(a.coutsEngages)} ÷ ${eur(a.coutTotal)} − ${eur(a.coutsEngages)} = ${eur(a.resultatALAvancement)} ; reste à provisionner ${eur(-a.resultatTotal)} − ${eur(-a.resultatALAvancement)} = ${eur(a.provisionPourPerte)}`,
+          },
+          { libelle: "Résultat du contrat en N + 1", attendu: a.resultatDeLExercice, calcul: `${eur(a.resultatALAvancement)} − ${eur(a.provisionPourPerte)} = ${eur(a.resultatDeLExercice)}` },
         ];
       },
       explication: () => {

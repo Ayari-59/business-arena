@@ -1,3 +1,4 @@
+import { aLUnite, nombreAuCentieme, pct, produit2, qte } from "../../../pedagogy/cours/deux-decimales";
 import { auCentime } from "./amortissement";
 import { impotDuBenefice, resultatFiscal } from "./finance";
 import { HYPOTHESES_DU_REALISE, salariesDeLAnnee } from "./masse-salariale-de-nova";
@@ -159,13 +160,19 @@ export function batteries(prixDeReprise: number = BATTERIES_DE_L_ANCIEN_MODELE.p
   return { ...b, prixDeReprise, cout, valeurActuelle, depreciation: auCentime(Math.max(0, cout - valeurActuelle)) };
 }
 
-/** La garantie : les défauts livrés de l'année, les retours encore à venir, la provision. */
+/** La garantie : les défauts livrés de l'année, les retours encore à venir (à l'unité), la provision. */
 export function garantie(part: number = PART_DES_RETOURS_A_VENIR) {
   const q = qualiteAuBudget(NOVA_CAPACITE);
   const cout = QUALITE.coutDUnDefautLivre;
-  const retoursAVenir = Math.round(q.livres * part * 1e6) / 1e6;
-  return { volume: q.volume, tauxDeDefaut: q.tauxDeDefaut, tauxDeDetection: q.tauxDeDetection, defautsLivres: q.livres, part, retoursAVenir, coutDUnRetour: cout, provision: auCentime(retoursAVenir * cout) };
+  // Des retours se comptent à l'unité : le calcul à deux décimales, puis l'unité la plus proche (deux-decimales.ts).
+  const retoursCalcules = produit2(q.livres, part);
+  const retoursAVenir = aLUnite(retoursCalcules);
+  return { volume: q.volume, tauxDeDefaut: q.tauxDeDefaut, tauxDeDetection: q.tauxDeDetection, defautsLivres: q.livres, part, retoursCalcules, retoursAVenir, coutDUnRetour: cout, provision: produit2(retoursAVenir, cout) };
 }
+
+/** Le calcul des retours à venir, tel que le corrigé l'écrit : « 182 × 75 % = 136,50, soit 137 retours… ». */
+export const retoursEcrits = (g: Pick<ReturnType<typeof garantie>, "defautsLivres" | "part" | "retoursCalcules" | "retoursAVenir">) =>
+  `${qte(g.defautsLivres)} × ${pct(g.part * 100)} = ${g.retoursCalcules === g.retoursAVenir ? qte(g.retoursAVenir) : `${nombreAuCentieme(g.retoursCalcules)}, soit ${qte(g.retoursAVenir)} retours à l'unité la plus proche : un retour ne se fractionne pas`}`;
 
 /** L'impôt de N + 1 pour un résultat avant impôt : les réintégrations du chapitre de l'impôt, le taux réduit. */
 export function impotDeNPlus1(resultatAvantImpot: number) {

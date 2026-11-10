@@ -88,7 +88,7 @@ describe("la capacité de remboursement de NOVA", () => {
 
 describe("le cas : la banque teste une année difficile", () => {
   const r = anneeDifficile(NOVA);
-  it("10 % de ventes en moins et 150 000 € empruntés : 3,48 ans, mais 48,4 % d'indépendance", () => {
+  it("10 % de ventes en moins et 150 000 € empruntés : 3,48 ans, mais 48,43 % d'indépendance", () => {
     expect(r.enceintes).toBe(21_208);
     // (23 564 − 21 208) × 21 € de marge en moins, 7 500 € d'intérêts : 42 991,96 € avant impôt.
     expect(c(99_967.96 - 2_356 * 21 - 7_500)).toBe(42_991.96);
@@ -97,7 +97,7 @@ describe("le cas : la banque teste une année difficile", () => {
     expect(r.dettes).toBe(218_000);
     expect(r.capacite).toBe(3.48);
     expect(r.ressources).toBe(473_297.07);
-    expect(r.independance).toBe(48.4);
+    expect(r.independance).toBe(48.43);
     expect([r.capaciteTient, r.independanceTient]).toEqual([true, false]);
     expect(r.pretPossible).toBe(c(2 * 229_225.96 - 323_297.07));
   });

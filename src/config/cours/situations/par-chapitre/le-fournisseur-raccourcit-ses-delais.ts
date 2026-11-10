@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, pct } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { fondsDeRoulement } from "../../chapitres/fonds-de-roulement-et-tresorerie";
 import { auCentime } from "../../monde/amortissement";
@@ -31,8 +31,6 @@ import type { Situation } from "../types";
 export const BAISSE_DU_CREDIT_FOURNISSEUR = 0.5;
 
 /** Un montant, le signe moins typographique : « −582,38 € ». */
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 
 /** Les chiffres de la réponse, calculés une fois du cas. */
@@ -110,9 +108,9 @@ export const LE_FOURNISSEUR_RACCOURCIT_SES_DELAIS: Situation = {
       champs: (c) => {
         const k = fournisseurPresse(c);
         return [
-          { libelle: "Fonds de roulement", attendu: k.fondsDeRoulement, calcul: `${eur(k.ressourcesDurables)} − ${eur(k.equipementBrut)} = ${eur(k.fondsDeRoulement)}`, tolerance: 1 },
-          { libelle: "Besoin en fonds de roulement", attendu: k.besoin, calcul: `${eur(k.besoinsDuCycle)} − ${eur(k.dettesDuCycle)} = ${eur(k.besoin)}`, tolerance: 1 },
-          { libelle: "Trésorerie", attendu: k.tresorerie, calcul: `${eur(k.fondsDeRoulement)} ${k.besoin < 0 ? `+ ${eur(-k.besoin)}` : `− ${eur(k.besoin)}`} = ${eur(k.tresorerie)}`, tolerance: 1 },
+          { libelle: "Fonds de roulement", attendu: k.fondsDeRoulement, calcul: `${eur(k.ressourcesDurables)} − ${eur(k.equipementBrut)} = ${eur(k.fondsDeRoulement)}` },
+          { libelle: "Besoin en fonds de roulement", attendu: k.besoin, calcul: `${eur(k.besoinsDuCycle)} − ${eur(k.dettesDuCycle)} = ${eur(k.besoin)}` },
+          { libelle: "Trésorerie", attendu: k.tresorerie, calcul: `${eur(k.fondsDeRoulement)} ${k.besoin < 0 ? `+ ${eur(-k.besoin)}` : `− ${eur(k.besoin)}`} = ${eur(k.tresorerie)}` },
         ];
       },
       explication: (c) => {
@@ -133,8 +131,8 @@ export const LE_FOURNISSEUR_RACCOURCIT_SES_DELAIS: Situation = {
         const k = fournisseurPresse(c);
         return [
           { libelle: "Dettes envers les fournisseurs", attendu: k.fournisseurs, calcul: `${eur(k.fournisseursAvant)} × (1 − ${pct(BAISSE_DU_CREDIT_FOURNISSEUR * 100)}) = ${eur(k.fournisseurs)}` },
-          { libelle: "Besoin en fonds de roulement", attendu: k.bfrApres, calcul: `${eur(k.besoin)} + ${eur(k.enMoins)} = ${eur(k.bfrApres)}`, tolerance: 1 },
-          { libelle: "Trésorerie", attendu: k.tnApres, calcul: `${eur(k.fondsDeRoulement)} ${k.bfrApres < 0 ? `+ ${eur(-k.bfrApres)}` : `− ${eur(k.bfrApres)}`} = ${eur(k.tnApres)}`, tolerance: 1 },
+          { libelle: "Besoin en fonds de roulement", attendu: k.bfrApres, calcul: `${eur(k.besoin)} + ${eur(k.enMoins)} = ${eur(k.bfrApres)}` },
+          { libelle: "Trésorerie", attendu: k.tnApres, calcul: `${eur(k.fondsDeRoulement)} ${k.bfrApres < 0 ? `+ ${eur(-k.bfrApres)}` : `− ${eur(k.bfrApres)}`} = ${eur(k.tnApres)}` },
         ];
       },
       explication: (c) => {

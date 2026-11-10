@@ -73,8 +73,8 @@ describe("financer autrement la ligne de NOVA", () => {
     expect(defi.atteint({ compteCourant: 30_000, participatif: 100_000 })).toBe(false); // plus que les 120 000 € à financer
   });
 
-  it("ce que dira la banque : 188 000 €, 1,79 an, 54,8 %", () => {
-    expect(etape(ch, "ce-que-dira-la-banque", "montants").champs(NOVA, VIDE).map((x) => x.attendu)).toEqual([188_000, 1.79, 54.8]);
+  it("ce que dira la banque : 188 000 €, 1,79 an, 54,77 %", () => {
+    expect(etape(ch, "ce-que-dira-la-banque", "montants").champs(NOVA, VIDE).map((x) => x.attendu)).toEqual([188_000, 1.79, 54.77]);
   });
 
   it("les textes sont propres, une seule bonne réponse, jamais la plus longue, les notions existent", () => {

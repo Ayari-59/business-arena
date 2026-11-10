@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { CAPACITE_DE_REMBOURSEMENT_MAXIMALE, ENDETTEMENT_MAXIMAL } from "../financement";
 import {
@@ -76,9 +76,9 @@ export const LEVIERS_DU_MONTAGE = {
 /** La solution que montre la correction : 40 000 € en compte courant, 40 000 € à la banque, sans ouvrir le capital. */
 export const SOLUTION_DU_MONTAGE = { capital: 0, compteCourant: 40_000, bpifrance: 0 } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
 const qte = (n: number, d = 2) => (n + 0).toLocaleString("fr-FR", { maximumFractionDigits: d }).replace(/^-/, "−");
-const pct = (t: number, d = 1) => `${qte(t * 100, d)} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 const ans = (n: number) => `${qte(n)} an${n >= 2 ? "s" : ""}`;
 
 /** Les chiffres du chapitre. */
@@ -115,8 +115,8 @@ export function lesOffres(_c: Pick<Cas, "code">): TableauDeDonnees {
       { libelle: "Une plateforme de prêt participatif", valeurs: [`${pct(PRET_PARTICIPATIF.taux)} sur ${ans(PRET_PARTICIPATIF.dureeAns)}, le capital en une fois à la fin`] },
       { libelle: "Les fondateurs, en compte courant", valeurs: [`${pct(COMPTE_COURANT.taux)} sur ${ans(COMPTE_COURANT.dureeAns)}, bloqué, remboursé en une fois ; ${eur(COMPTE_COURANT.plafond!)} au plus`] },
       { libelle: "Une business angel", valeurs: [`${qte(APPORT_DE_LA_BUSINESS_ANGEL.actions)} actions nouvelles à ${eur(APPORT_DE_LA_BUSINESS_ANGEL.prix)}, ${eur(APPORT_DE_LA_BUSINESS_ANGEL.montant)}`] },
-      { libelle: "La région", valeurs: [`une subvention de ${pct(TAUX_DE_LA_SUBVENTION, 0)} de la ligne, ${eur(SUBVENTION_DE_LA_LIGNE)}, si NOVA la garde et crée l'emploi annoncé`] },
-      { libelle: "Le prêt vert de la banque", valeurs: [`${qte(PRET_VERT.reductionDuTaux * 100)} point de moins si la ligne est certifiée ; la certification coûte ${eur(PRET_VERT.certification)}, dont ${pct(PRET_VERT.partDeLAdeme, 0)} pris en charge par l'ADEME`] },
+      { libelle: "La région", valeurs: [`une subvention de ${pct(TAUX_DE_LA_SUBVENTION)} de la ligne, ${eur(SUBVENTION_DE_LA_LIGNE)}, si NOVA la garde et crée l'emploi annoncé`] },
+      { libelle: "Le prêt vert de la banque", valeurs: [`${qte(PRET_VERT.reductionDuTaux * 100)} point de moins si la ligne est certifiée ; la certification coûte ${eur(PRET_VERT.certification)}, dont ${pct(PRET_VERT.partDeLAdeme)} pris en charge par l'ADEME`] },
     ],
   };
 }
@@ -267,7 +267,7 @@ export const LES_ACTEURS_ET_LES_MODES_DE_FINANCEMENT: Chapitre = {
       notions: ["loan_schedule", "balance_sheet"],
       question: (c) => {
         const k = acteursDuChapitre(c);
-        return `Sans formule cette fois. Avant de s'engager encore, NOVA doit déjà. Son emprunt de création : ${eur(k.enCours.capitalRestantDu)} restant dus au 31 décembre, ${qte(k.enCours.echeancesAVenir)} échéances trimestrielles de ${eur(PRET_EN_COURS.capital / (PRET_EN_COURS.dureeAns * PRET_EN_COURS.echeancesParAn))} de capital, avec les intérêts du trimestre à ${pct(PRET_EN_COURS.tauxAnnuel / PRET_EN_COURS.echeancesParAn, 2)} du capital restant dû. Et son bail : ${eur(k.enCours.loyers)} de loyers pour l'année à venir, que le bilan ne montre pas. Valorisez ces engagements.`;
+        return `Sans formule cette fois. Avant de s'engager encore, NOVA doit déjà. Son emprunt de création : ${eur(k.enCours.capitalRestantDu)} restant dus au 31 décembre, ${qte(k.enCours.echeancesAVenir)} échéances trimestrielles de ${eur(PRET_EN_COURS.capital / (PRET_EN_COURS.dureeAns * PRET_EN_COURS.echeancesParAn))} de capital, avec les intérêts du trimestre à ${pct(PRET_EN_COURS.tauxAnnuel / PRET_EN_COURS.echeancesParAn)} du capital restant dû. Et son bail : ${eur(k.enCours.loyers)} de loyers pour l'année à venir, que le bilan ne montre pas. Valorisez ces engagements.`;
       },
       champs: (c) => {
         const e = acteursDuChapitre(c).enCours;
@@ -276,7 +276,7 @@ export const LES_ACTEURS_ET_LES_MODES_DE_FINANCEMENT: Chapitre = {
           {
             libelle: "Intérêts à venir de l'emprunt",
             attendu: e.interetsAVenir,
-            calcul: `les capitaux restant dus avant chaque échéance font ${eur(capitalParEcheance)} × (${e.echeancesAVenir} + … + 1) = ${eur((capitalParEcheance * e.echeancesAVenir * (e.echeancesAVenir + 1)) / 2)} ; × ${pct(PRET_EN_COURS.tauxAnnuel / PRET_EN_COURS.echeancesParAn, 2)} = ${eur(e.interetsAVenir)}`,
+            calcul: `les capitaux restant dus avant chaque échéance font ${eur(capitalParEcheance)} × (${e.echeancesAVenir} + … + 1) = ${eur((capitalParEcheance * e.echeancesAVenir * (e.echeancesAVenir + 1)) / 2)} ; × ${pct(PRET_EN_COURS.tauxAnnuel / PRET_EN_COURS.echeancesParAn)} = ${eur(e.interetsAVenir)}`,
           },
           { libelle: "Engagement de l'emprunt", attendu: e.emprunt, calcul: `${eur(e.capitalRestantDu)} + ${eur(e.interetsAVenir)} = ${eur(e.emprunt)}` },
           { libelle: "Engagements en cours, bail compris", attendu: e.total, calcul: `${eur(e.emprunt)} + ${eur(e.loyers)} = ${eur(e.total)}` },
@@ -391,15 +391,15 @@ export const LES_ACTEURS_ET_LES_MODES_DE_FINANCEMENT: Chapitre = {
       champs: (c) => {
         const a = acteursDuChapitre(c).angel;
         return [
-          { libelle: "Actions nouvelles", attendu: a.actions, calcul: `${eur(APPORT_DE_LA_BUSINESS_ANGEL.montant)} ÷ ${eur(APPORT_DE_LA_BUSINESS_ANGEL.prix)} = ${qte(a.actions)}` },
-          { libelle: "Part du capital de la business angel, en %", attendu: Math.round(a.part * 10_000) / 100, calcul: `${qte(a.actions)} ÷ ${qte(a.total)} = ${pct(a.part, 2)}`, tolerance: 0.01 },
-          { libelle: "Sa part des capitaux propres après l'apport", attendu: a.saPart, calcul: `(${eur(a.capitauxPropres)} + ${eur(APPORT_DE_LA_BUSINESS_ANGEL.montant)}) × ${pct(a.part, 2)} = ${eur(a.saPart)}`, tolerance: 1 },
+          { libelle: "Actions nouvelles", attendu: a.actions, nature: "quantite", calcul: `${eur(APPORT_DE_LA_BUSINESS_ANGEL.montant)} ÷ ${eur(APPORT_DE_LA_BUSINESS_ANGEL.prix)} = ${qte(a.actions)}` },
+          { libelle: "Part du capital de la business angel, en %", attendu: a.partEnPoints, calcul: `${qte(a.actions)} ÷ ${qte(a.total)} = ${enPoints(a.partEnPoints)}` },
+          { libelle: "Sa part des capitaux propres après l'apport", attendu: a.saPart, calcul: `(${eur(a.capitauxPropres)} + ${eur(APPORT_DE_LA_BUSINESS_ANGEL.montant)}) × ${enPoints(a.partEnPoints)} = ${eur(a.saPart)}` },
         ];
       },
       explication: (c) => {
         const a = acteursDuChapitre(c).angel;
         return [
-          `Pour ${eur(APPORT_DE_LA_BUSINESS_ANGEL.montant)}, la business angel détiendrait une part des capitaux propres de ${eur(a.saPart)} : chaque action valait ${eur(a.valeurDeLActionAvant)} avant l'apport, et elle l'achète ${eur(APPORT_DE_LA_BUSINESS_ANGEL.prix)}. Les fondateurs lui cèdent ${eur(a.saPart - APPORT_DE_LA_BUSINESS_ANGEL.montant)} de valeur, et ${pct(a.part, 0)} des bénéfices et des voix à venir.`,
+          `Pour ${eur(APPORT_DE_LA_BUSINESS_ANGEL.montant)}, la business angel détiendrait une part des capitaux propres de ${eur(a.saPart)} : chaque action valait ${eur(a.valeurDeLActionAvant)} avant l'apport, et elle l'achète ${eur(APPORT_DE_LA_BUSINESS_ANGEL.prix)}. Les fondateurs lui cèdent ${eur(a.saPart - APPORT_DE_LA_BUSINESS_ANGEL.montant)} de valeur, et ${pct(a.part)} des bénéfices et des voix à venir.`,
           "Le capital n'engage aucun remboursement, mais il n'est pas gratuit : il se paie en part du capital, de la valeur et du pouvoir. Ce qu'il coûte vraiment, la rentabilité qu'exige l'associé, est l'objet du chapitre sur le coût des financements.",
         ];
       },
@@ -450,7 +450,7 @@ export const LES_ACTEURS_ET_LES_MODES_DE_FINANCEMENT: Chapitre = {
         ],
       }),
       defi: () => ({
-        consigne: `Trouvez un montage possible (Bpifrance au plus autant que la banque) qui ne prend pas plus de ${eur(PREMIERE_ANNEE_PLAFOND)} la première année, n'engage pas plus de ${eur(INTERETS_PLAFOND)} d'intérêts, et laisse aux fondateurs au moins ${pct(PART_MINIMALE_DES_FONDATEURS, 0)} du capital.`,
+        consigne: `Trouvez un montage possible (Bpifrance au plus autant que la banque) qui ne prend pas plus de ${eur(PREMIERE_ANNEE_PLAFOND)} la première année, n'engage pas plus de ${eur(INTERETS_PLAFOND)} d'intérêts, et laisse aux fondateurs au moins ${pct(PART_MINIMALE_DES_FONDATEURS)} du capital.`,
         atteint: (p) => montageTenable(montageDuLaboratoire(p)),
         indice: (p) => {
           const m = montageDuLaboratoire(p);
@@ -465,8 +465,8 @@ export const LES_ACTEURS_ET_LES_MODES_DE_FINANCEMENT: Chapitre = {
         const k = acteursDuChapitre(c);
         const s = k.solution;
         return [
-          `Avec ${eur(s.compteCourant)} en compte courant et ${eur(s.banque)} à la banque, la première année prend ${eur(s.premiereAnnee)} et les intérêts font ${eur(s.interets)} : les fondateurs gardent tout le capital. Avec la business angel, la première année tomberait à ${eur(k.avecLAngel.premiereAnnee)} et les intérêts à ${eur(k.avecLAngel.interets)}, mais NOVA céderait ${pct(1 - k.avecLAngel.partDesFondateurs, 0)} de son capital.`,
-          `Toutes les solutions tiennent les règles des banques : l'endettement reste sous ${pct(ENDETTEMENT_MAXIMAL, 0)} des capitaux propres et les dettes sous ${CAPACITE_DE_REMBOURSEMENT_MAXIMALE} années de CAF. Le choix n'est donc pas une affaire de règle, mais de priorité : la trésorerie de la première année, les intérêts, ou le contrôle du capital.`,
+          `Avec ${eur(s.compteCourant)} en compte courant et ${eur(s.banque)} à la banque, la première année prend ${eur(s.premiereAnnee)} et les intérêts font ${eur(s.interets)} : les fondateurs gardent tout le capital. Avec la business angel, la première année tomberait à ${eur(k.avecLAngel.premiereAnnee)} et les intérêts à ${eur(k.avecLAngel.interets)}, mais NOVA céderait ${pct(1 - k.avecLAngel.partDesFondateurs)} de son capital.`,
+          `Toutes les solutions tiennent les règles des banques : l'endettement reste sous ${pct(ENDETTEMENT_MAXIMAL)} des capitaux propres et les dettes sous ${CAPACITE_DE_REMBOURSEMENT_MAXIMALE} années de CAF. Le choix n'est donc pas une affaire de règle, mais de priorité : la trésorerie de la première année, les intérêts, ou le contrôle du capital.`,
         ];
       },
     },
@@ -498,7 +498,7 @@ export const LES_ACTEURS_ET_LES_MODES_DE_FINANCEMENT: Chapitre = {
           {
             texte: "La business angel et la région : le capital et la subvention ne se remboursent pas",
             juste: false,
-            retour: `Ils ne se remboursent pas, mais ne sont pas gratuits : ${pct(1 - k.avecLAngel.partDesFondateurs, 0)} du capital cédés, et une subvention qui oblige à garder la ligne et à créer l'emploi. Une bonne solution de complément, pas la seule.`,
+            retour: `Ils ne se remboursent pas, mais ne sont pas gratuits : ${pct(1 - k.avecLAngel.partDesFondateurs)} du capital cédés, et une subvention qui oblige à garder la ligne et à créer l'emploi. Une bonne solution de complément, pas la seule.`,
           },
         ];
       },

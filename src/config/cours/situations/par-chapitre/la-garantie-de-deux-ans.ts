@@ -1,7 +1,7 @@
-import { montantEcrit } from "../../../../pedagogy/cours/correcteur";
+import { eur, pct as enPoints } from "../../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../../cas";
 import { ENTREPRISES_DU_DOSSIER } from "../../chapitres/le-dossier-de-revision";
-import { ESTIMATIONS_DU_DOSSIER, dossierDeRevision, garantie } from "../../monde/dossier-de-revision";
+import { ESTIMATIONS_DU_DOSSIER, dossierDeRevision, garantie, retoursEcrits } from "../../monde/dossier-de-revision";
 import { TAUX_NORMAL } from "../../monde/projets-et-financement";
 import type { Situation } from "../types";
 
@@ -21,8 +21,8 @@ import type { Situation } from "../types";
 /** La part des retours encore à venir au 31 décembre, avec une garantie de deux ans (hypothèse du cas). */
 export const PART_A_VENIR_AVEC_DEUX_ANS = 0.75;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
 const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
 
@@ -93,7 +93,7 @@ export const LA_GARANTIE_DE_DEUX_ANS: Situation = {
       champs: (c) => {
         const x = garantieDeDeuxAns(c);
         return [
-          { libelle: "Retours encore à venir", attendu: x.deux.retoursAVenir, calcul: `${qte(x.deux.defautsLivres)} × ${pct(x.deux.part)} = ${qte(x.deux.retoursAVenir)}` },
+          { libelle: "Retours encore à venir", nature: "quantite", attendu: x.deux.retoursAVenir, calcul: retoursEcrits(x.deux) },
           { libelle: "Provision pour garantie", attendu: x.deux.provision, calcul: `${qte(x.deux.retoursAVenir)} × ${eur(x.deux.coutDUnRetour)} = ${eur(x.deux.provision)}` },
           { libelle: "Complément à doter", attendu: x.complement, calcul: `${eur(x.deux.provision)} − ${eur(x.un.provision)} = ${eur(x.complement)}` },
         ];

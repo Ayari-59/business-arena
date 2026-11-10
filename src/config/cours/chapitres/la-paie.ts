@@ -1,8 +1,8 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi, eur } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { dateDuCours as date } from "../dates";
 import { TAUX_DE_LA_PAIE } from "../monde/exercice-de-nova";
-import { brutPourUnCoutEmployeur, brutPourUnNetAPayer, bulletinDePaie, coefficientDuBrutAuNet, type TauxDeLaPaie } from "../monde/paie";
+import { brutPourUnCoutEmployeur, brutPourUnNetAPayer, bulletinDePaie, cheminDuNetAuBrut, coefficientDuBrutAuNet, type TauxDeLaPaie } from "../monde/paie";
 import type { Chapitre } from "../types";
 
 /**
@@ -94,9 +94,12 @@ const T = TAUX_DE_LA_PAIE;
 // LES OUTILS
 // ─────────────────────────────────────────────────────────────────────────────
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 3 })} %`;
+/** Un taux de la paie, donné en fraction, en pourcentage : deux décimales au moins s'il n'est pas entier, trois s'il les a (un taux donné garde sa précision). */
+const pct = (t: number) => {
+  const p = arrondi(t * 100, 3);
+  return `${p.toLocaleString("fr-FR", { minimumFractionDigits: Number.isInteger(p) ? 0 : 2, maximumFractionDigits: 3 })} %`;
+};
 const auCentime = (x: number) => Math.round((x + Number.EPSILON * Math.sign(x)) * 100) / 100 + 0;
 /** Un taux sans bruit de calcul flottant (0,36 et non 0,35999999). */
 const tauxPropre = (t: number) => Math.round(t * 1e6) / 1e6;
@@ -636,7 +639,7 @@ export const LA_PAIE: Chapitre = {
       titre: "Du net au brut, au centime",
       notions: ["payroll", "fixed_costs"],
       question: (c) =>
-        `Sans formule cette fois. Trouvez ce qu'un salarié touche net pour ${eur(100)} bruts, la prime brute qui lui verse les ${eur(NET_PROMIS)} promis, puis ce que coûtent à ${c.entreprise} les primes de ses ${qte(c.personnel.effectif)} salariés.`,
+        `Sans formule cette fois. Trouvez ce qu'un salarié touche net pour ${eur(100)} bruts, la plus petite prime brute, au centime, dont le bulletin lui verse les ${eur(NET_PROMIS)} promis, puis ce que coûtent à ${c.entreprise} les primes de ses ${qte(c.personnel.effectif)} salariés.`,
       champs: (c) => {
         const x = paieARebours(c);
         return [
@@ -648,14 +651,12 @@ export const LA_PAIE: Chapitre = {
           {
             libelle: "Prime brute par salarié",
             attendu: x.primeBrute,
-            tolerance: 0.05,
-            calcul: `${eur(NET_PROMIS)} ÷ ${qte(x.netPour100)} % = ${eur(auCentime(NET_PROMIS / (x.netPour100 / 100)))} ; au centime près, le bulletin de ${eur(x.primeBrute)} verse déjà ${eur(x.bulletinDeLaPrime.netAPayer)}`,
+            calcul: cheminDuNetAuBrut(NET_PROMIS, T, x.netPour100).calcul,
           },
           {
             libelle: "Coût employeur des primes de l'équipe",
             attendu: x.coutDesPrimes,
-            tolerance: auCentime(Math.max(0.05, 0.05 * (1 + x.tauxPatronal) * x.effectif)),
-            calcul: `${eur(x.primeBrute)} × (1 + ${pct(x.tauxPatronal)}) = ${eur(x.coutDUnePrime)} par salarié ; × ${qte(x.effectif)} salariés = ${eur(x.coutDesPrimes)}`,
+            calcul: `${eur(x.primeBrute)} + ${eur(x.bulletinDeLaPrime.cotisationsPatronales.urssaf)} de cotisations patronales URSSAF (${pct(T.patronalUrssaf)}) + ${eur(x.bulletinDeLaPrime.cotisationsPatronales.retraite)} de retraite (${pct(T.patronalRetraite)}) = ${eur(x.coutDUnePrime)} par salarié ; × ${qte(x.effectif)} salariés = ${eur(x.coutDesPrimes)}`,
           },
         ];
       },

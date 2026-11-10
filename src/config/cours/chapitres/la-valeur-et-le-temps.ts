@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi, eur, pct as enPoints, quotient2 } from "../../../pedagogy/cours/deux-decimales";
 import type { CelluleACompleter, TableauACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import type { Cas } from "../cas";
 import { EQUIPEMENT, PLACEMENT } from "../monde/exercice-de-nova";
@@ -10,7 +10,6 @@ import {
   PAS_DU_VERSEMENT,
   RENOUVELLEMENT,
   TAUX_DE_LA_BANQUE,
-  annuitePourConstituer,
   coefficientDeValeurAcquise,
   interetsCourusDeLaReserve,
   interetsSimples,
@@ -71,8 +70,8 @@ export const LEVIERS_DE_LA_RESERVE = {
   inflation: { min: 0, max: 4, pas: 0.5 },
 } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const pct = (t: number, chiffres = 2) => `${(t * 100 + 0).toLocaleString("fr-FR", { maximumFractionDigits: chiffres })} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 const nb = (x: number, chiffres = 6) => (x + 0).toLocaleString("fr-FR", { maximumFractionDigits: chiffres });
 const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
 const donnee = (valeur: number | null): CelluleACompleter => ({ valeur });
@@ -105,7 +104,8 @@ function calculerLeChapitre() {
     return a;
   });
   const r = RENOUVELLEMENT;
-  const versement = annuitePourConstituer(r.prixDAujourdHui, r.taux, r.versements);
+  // Le coefficient se donne au dix-millième, et le versement part de lui, comme sur la copie (deux-decimales.ts).
+  const versement = quotient2(r.prixDAujourdHui, arrondi(coefficientDeValeurAcquise(r.taux, r.versements), 4));
   const offre = offreEchelonnee();
   const vaA = (taux: number) => valeurActuelleDesAnnuites(PAIEMENT_ECHELONNE.annuite, taux, PAIEMENT_ECHELONNE.annees);
   const bas = Math.floor(offre.tauxActuariel * 1000) / 1000;
@@ -122,7 +122,7 @@ function calculerLeChapitre() {
     compose: valeurAcquise(C, i, n),
     va3: valeurActuelleDUneSomme(r.prixDAujourdHui, r.taux, r.versements),
     va9: valeurActuelleDUneSomme(r.prixDAujourdHui, TAUX_D_ACTUALISATION_DE_NOVA, r.versements),
-    coefficient: coefficientDeValeurAcquise(r.taux, r.versements),
+    coefficient: arrondi(coefficientDeValeurAcquise(r.taux, r.versements), 4),
     versement,
     versementArrondi: Math.ceil(versement / PAS_DU_VERSEMENT) * PAS_DU_VERSEMENT,
     prixFutur: prixFuturDeLaLigne(),
@@ -285,8 +285,8 @@ export const LA_VALEUR_ET_LE_TEMPS: Chapitre = {
         const x = valeurDuChapitre(c);
         const n = RENOUVELLEMENT.versements;
         return [
-          { libelle: `Valeur actuelle à ${pct(RENOUVELLEMENT.taux)}`, attendu: x.va3, calcul: `${eur(RENOUVELLEMENT.prixDAujourdHui)} × ${nb(1 + RENOUVELLEMENT.taux)}^−${n} = ${eur(x.va3)}`, tolerance: 1 },
-          { libelle: `Valeur actuelle à ${pct(TAUX_D_ACTUALISATION_DE_NOVA)}`, attendu: x.va9, calcul: `${eur(RENOUVELLEMENT.prixDAujourdHui)} × ${nb(1 + TAUX_D_ACTUALISATION_DE_NOVA)}^−${n} = ${eur(x.va9)}`, tolerance: 1 },
+          { libelle: `Valeur actuelle à ${pct(RENOUVELLEMENT.taux)}`, attendu: x.va3, calcul: `${eur(RENOUVELLEMENT.prixDAujourdHui)} × ${nb(1 + RENOUVELLEMENT.taux)}^−${n} = ${eur(x.va3)}` },
+          { libelle: `Valeur actuelle à ${pct(TAUX_D_ACTUALISATION_DE_NOVA)}`, attendu: x.va9, calcul: `${eur(RENOUVELLEMENT.prixDAujourdHui)} × ${nb(1 + TAUX_D_ACTUALISATION_DE_NOVA)}^−${n} = ${eur(x.va9)}` },
         ];
       },
       explication: (c) => {
@@ -310,8 +310,8 @@ export const LA_VALEUR_ET_LE_TEMPS: Chapitre = {
         const x = valeurDuChapitre(c);
         const n = RENOUVELLEMENT.versements;
         return [
-          { libelle: "Coefficient de valeur acquise", attendu: Math.round(x.coefficient * 10_000) / 10_000, calcul: `(${nb(1 + RENOUVELLEMENT.taux)}^${n} − 1) ÷ ${nb(RENOUVELLEMENT.taux)} = ${nb(Math.round(x.coefficient * 10_000) / 10_000, 4)}`, tolerance: 0.001 },
-          { libelle: "Versement annuel", attendu: x.versement, calcul: `${eur(RENOUVELLEMENT.prixDAujourdHui)} ÷ ${nb(Math.round(x.coefficient * 10_000) / 10_000, 4)} = ${eur(x.versement)}`, tolerance: 1 },
+          { libelle: "Coefficient de valeur acquise", nature: "coefficient", attendu: x.coefficient, calcul: `(${nb(1 + RENOUVELLEMENT.taux)}^${n} − 1) ÷ ${nb(RENOUVELLEMENT.taux)} = ${nb(x.coefficient, 4)}`, tolerance: 0.0001 },
+          { libelle: "Versement annuel", attendu: x.versement, calcul: `${eur(RENOUVELLEMENT.prixDAujourdHui)} ÷ ${nb(x.coefficient, 4)} = ${eur(x.versement)}` },
         ];
       },
       explication: (c) => {
@@ -413,7 +413,7 @@ export const LA_VALEUR_ET_LE_TEMPS: Chapitre = {
       champs: (c) => {
         const x = valeurDuChapitre(c);
         return [
-          { libelle: `Prix de la ligne fin N+${RENOUVELLEMENT.versements}`, attendu: x.prixFutur, calcul: `${eur(RENOUVELLEMENT.prixDAujourdHui)} × ${nb(1 + INFLATION_PREVUE)}^${RENOUVELLEMENT.versements} = ${eur(x.prixFutur)}`, tolerance: 1 },
+          { libelle: `Prix de la ligne fin N+${RENOUVELLEMENT.versements}`, attendu: x.prixFutur, calcul: `${eur(RENOUVELLEMENT.prixDAujourdHui)} × ${nb(1 + INFLATION_PREVUE)}^${RENOUVELLEMENT.versements} = ${eur(x.prixFutur)}` },
           { libelle: "Taux réel du placement, en %", attendu: auCentime(x.reel * 100), calcul: `${nb(1 + RENOUVELLEMENT.taux)} ÷ ${nb(1 + INFLATION_PREVUE)} − 1 = ${pct(x.reel)}`, tolerance: 0.01 },
         ];
       },
@@ -438,8 +438,8 @@ export const LA_VALEUR_ET_LE_TEMPS: Chapitre = {
       champs: (c) => {
         const x = valeurDuChapitre(c);
         return [
-          { libelle: "Valeur actuelle des annuités", attendu: x.offre.valeurActuelle, calcul: `${eur(x.offre.annuite)} × (1 − ${nb(1 + TAUX_DE_LA_BANQUE)}^−${x.offre.annees}) ÷ ${nb(TAUX_DE_LA_BANQUE)} = ${eur(x.offre.valeurActuelle)}`, tolerance: 1 },
-          { libelle: "Ce que l'échelonnement coûte de plus", attendu: x.offre.surcout, calcul: `${eur(x.offre.valeurActuelle)} − ${eur(x.offre.comptant)} = ${eur(x.offre.surcout)}`, tolerance: 1 },
+          { libelle: "Valeur actuelle des annuités", attendu: x.offre.valeurActuelle, calcul: `${eur(x.offre.annuite)} × (1 − ${nb(1 + TAUX_DE_LA_BANQUE)}^−${x.offre.annees}) ÷ ${nb(TAUX_DE_LA_BANQUE)} = ${eur(x.offre.valeurActuelle)}` },
+          { libelle: "Ce que l'échelonnement coûte de plus", attendu: x.offre.surcout, calcul: `${eur(x.offre.valeurActuelle)} − ${eur(x.offre.comptant)} = ${eur(x.offre.surcout)}` },
         ];
       },
       explication: (c) => {
@@ -474,7 +474,7 @@ export const LA_VALEUR_ET_LE_TEMPS: Chapitre = {
       titre: "Le taux, au curseur",
       notions: ["irr_payback", "discounting"],
       question: () =>
-        `Faites varier le taux d'actualisation, de ${TAUX_DU_CURSEUR_DE_L_OFFRE.min} ‰ à ${TAUX_DU_CURSEUR_DE_L_OFFRE.max} ‰ (${TAUX_DU_CURSEUR_DE_L_OFFRE.min} ‰ font ${pct(TAUX_DU_CURSEUR_DE_L_OFFRE.min / 1000, 1)}). Une droite donne le prix comptant ; l'autre, la valeur actuelle des annuités. Placez le curseur sur le plus petit taux où le comptant couvre les annuités.`,
+        `Faites varier le taux d'actualisation, de ${TAUX_DU_CURSEUR_DE_L_OFFRE.min} ‰ à ${TAUX_DU_CURSEUR_DE_L_OFFRE.max} ‰ (${TAUX_DU_CURSEUR_DE_L_OFFRE.min} ‰ font ${pct(TAUX_DU_CURSEUR_DE_L_OFFRE.min / 1000)}). Une droite donne le prix comptant ; l'autre, la valeur actuelle des annuités. Placez le curseur sur le plus petit taux où le comptant couvre les annuités.`,
       grandeur: () => ({ libelle: "Taux d'actualisation", unite: "‰" }),
       cible: (c) => {
         const x = valeurDuChapitre(c);
@@ -490,7 +490,7 @@ export const LA_VALEUR_ET_LE_TEMPS: Chapitre = {
         const x = valeurDuChapitre(c);
         return [
           { libelle: "Prix comptant", montant: x.offre.comptant },
-          { libelle: `Valeur actuelle des annuités, à ${pct(q / 1000, 1)}`, montant: x.vaA(q / 1000), fort: true },
+          { libelle: `Valeur actuelle des annuités, à ${pct(q / 1000)}`, montant: x.vaA(q / 1000), fort: true },
         ];
       },
       droites: (c) => {
@@ -500,7 +500,7 @@ export const LA_VALEUR_ET_LE_TEMPS: Chapitre = {
       explication: (c) => {
         const x = valeurDuChapitre(c);
         return [
-          `À ${pct(x.bas, 1)}, les annuités valent encore ${eur(x.vaA(x.bas))} ; à ${pct(x.haut, 1)}, ${eur(x.vaA(x.haut))}. Le taux actuariel est entre les deux, au-dessus des ${pct(TAUX_DE_LA_BANQUE)} de la banque.`,
+          `À ${pct(x.bas)}, les annuités valent encore ${eur(x.vaA(x.bas))} ; à ${pct(x.haut)}, ${eur(x.vaA(x.haut))}. Le taux actuariel est entre les deux, au-dessus des ${pct(TAUX_DE_LA_BANQUE)} de la banque.`,
           "Plus le taux monte, moins valent des annuités lointaines : la courbe descend, et croise le comptant au taux que le fournisseur fait payer.",
         ];
       },
@@ -513,19 +513,19 @@ export const LA_VALEUR_ET_LE_TEMPS: Chapitre = {
       notions: ["irr_payback"],
       question: (c) => {
         const x = valeurDuChapitre(c);
-        return `Le taux est entre ${pct(x.bas, 1)} et ${pct(x.haut, 1)}. Calculez la valeur actuelle des annuités à chacun, puis le taux qui la rend égale au comptant, par interpolation linéaire, en pour cent au centième.`;
+        return `Le taux est entre ${pct(x.bas)} et ${pct(x.haut)}. Calculez la valeur actuelle des annuités à chacun, puis le taux qui la rend égale au comptant, par interpolation linéaire, en pour cent au centième.`;
       },
       champs: (c) => {
         const x = valeurDuChapitre(c);
         const a = x.vaA(x.bas);
         const b = x.vaA(x.haut);
         return [
-          { libelle: `Valeur actuelle à ${pct(x.bas, 1)}`, attendu: a, calcul: `${eur(x.offre.annuite)} × (1 − ${nb(1 + x.bas)}^−${x.offre.annees}) ÷ ${nb(x.bas)} = ${eur(a)}`, tolerance: 1 },
-          { libelle: `Valeur actuelle à ${pct(x.haut, 1)}`, attendu: b, calcul: `${eur(x.offre.annuite)} × (1 − ${nb(1 + x.haut)}^−${x.offre.annees}) ÷ ${nb(x.haut)} = ${eur(b)}`, tolerance: 1 },
+          { libelle: `Valeur actuelle à ${pct(x.bas)}`, attendu: a, calcul: `${eur(x.offre.annuite)} × (1 − ${nb(1 + x.bas)}^−${x.offre.annees}) ÷ ${nb(x.bas)} = ${eur(a)}` },
+          { libelle: `Valeur actuelle à ${pct(x.haut)}`, attendu: b, calcul: `${eur(x.offre.annuite)} × (1 − ${nb(1 + x.haut)}^−${x.offre.annees}) ÷ ${nb(x.haut)} = ${eur(b)}` },
           {
             libelle: "Taux actuariel de l'offre, en %",
             attendu: auCentime(x.interpole * 100),
-            calcul: `${pct(x.bas, 1)} + 0,1 point × (${eur(a)} − ${eur(x.offre.comptant)}) ÷ (${eur(a)} − ${eur(b)}) = ${pct(x.interpole)}`,
+            calcul: `${pct(x.bas)} + 0,1 point × (${eur(a)} − ${eur(x.offre.comptant)}) ÷ (${eur(a)} − ${eur(b)}) = ${pct(x.interpole)}`,
             tolerance: 0.01,
           },
         ];
@@ -551,8 +551,8 @@ export const LA_VALEUR_ET_LE_TEMPS: Chapitre = {
       champs: (c) => {
         const x = valeurDuChapitre(c);
         return [
-          { libelle: "Annuité constante de la banque", attendu: x.offre.annuiteDeLaBanque, calcul: `${eur(x.offre.comptant)} × ${nb(TAUX_DE_LA_BANQUE)} ÷ (1 − ${nb(1 + TAUX_DE_LA_BANQUE)}^−${x.offre.annees}) = ${eur(x.offre.annuiteDeLaBanque)}`, tolerance: 1 },
-          { libelle: "Économie par an", attendu: auCentime(x.offre.annuite - x.offre.annuiteDeLaBanque), calcul: `${eur(x.offre.annuite)} − ${eur(x.offre.annuiteDeLaBanque)} = ${eur(auCentime(x.offre.annuite - x.offre.annuiteDeLaBanque))}`, tolerance: 1 },
+          { libelle: "Annuité constante de la banque", attendu: x.offre.annuiteDeLaBanque, calcul: `${eur(x.offre.comptant)} × ${nb(TAUX_DE_LA_BANQUE)} ÷ (1 − ${nb(1 + TAUX_DE_LA_BANQUE)}^−${x.offre.annees}) = ${eur(x.offre.annuiteDeLaBanque)}` },
+          { libelle: "Économie par an", attendu: auCentime(x.offre.annuite - x.offre.annuiteDeLaBanque), calcul: `${eur(x.offre.annuite)} − ${eur(x.offre.annuiteDeLaBanque)} = ${eur(auCentime(x.offre.annuite - x.offre.annuiteDeLaBanque))}` },
         ];
       },
       explication: (c) => {

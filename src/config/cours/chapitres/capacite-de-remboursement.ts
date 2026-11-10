@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi2, eur, nombreAuCentieme, pct } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { CAPACITE_DE_REMBOURSEMENT_MAXIMALE, INDEPENDANCE_MINIMALE } from "../financement";
 import { auCentime } from "../monde/amortissement";
@@ -48,13 +48,9 @@ export const BAISSE_DU_DEFI = 15;
 /** La solution que montre la correction. */
 export const SOLUTION_DE_LA_BANQUE = { emprunt: EMPRUNT_DU_DEFI, baisse: BAISSE_DU_DEFI } as const;
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR");
-const auCentieme = (x: number) => Math.round(x * 100) / 100;
-const auDixieme = (x: number) => Math.round(x * 10) / 10;
-const pct = (t: number) => `${t.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
 /** « 0,65 an », « 3,85 ans » : le singulier sous deux. */
-const ans = (x: number) => `${qte(x)} ${x < 2 ? "an" : "ans"}`;
+const ans = (x: number) => `${nombreAuCentieme(x)} ${x < 2 ? "an" : "ans"}`;
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 const MAX = CAPACITE_DE_REMBOURSEMENT_MAXIMALE;
 const MIN_PCT = INDEPENDANCE_MINIMALE * 100;
@@ -62,8 +58,8 @@ const MIN_PCT = INDEPENDANCE_MINIMALE * 100;
 /** Les chiffres du chapitre, au 31 décembre du premier exercice de NOVA. */
 export function capaciteDeRemboursement(c: Pick<Cas, "code">) {
   const s = structureFinanciere(exerciceDe(c.code));
-  const capacite = auCentieme(s.capaciteDeRemboursement);
-  const independance = auDixieme(s.independance * 100);
+  const capacite = arrondi2(s.capaciteDeRemboursement);
+  const independance = arrondi2(s.independance * 100);
   const loyers = LOYERS_D_UNE_ANNEE;
   return {
     ...s,
@@ -74,7 +70,7 @@ export function capaciteDeRemboursement(c: Pick<Cas, "code">) {
     tresorerie: s.b.tresorerie,
     loyerDuMois: LOYER_DU_MOIS.montant,
     loyers,
-    capaciteAvecLesLoyers: auCentieme((s.dettesFinancieres + loyers) / s.caf),
+    capaciteAvecLesLoyers: arrondi2((s.dettesFinancieres + loyers) / s.caf),
   };
 }
 
@@ -146,8 +142,8 @@ export const CAPACITE_DE_REMBOURSEMENT: Chapitre = {
       champs: (c) => {
         const k = capaciteDeRemboursement(c);
         return [
-          { libelle: "Capacité d'autofinancement", attendu: k.caf, calcul: `${eur(k.k.resultatNet)} + ${eur(k.k.dotations)} = ${eur(k.caf)}`, tolerance: 1 },
-          { libelle: "Capacité de remboursement (années)", attendu: k.capacite, calcul: `${eur(k.dettesFinancieres)} ÷ ${eur(k.caf)} = ${qte(k.capacite)}`, tolerance: 0.01 },
+          { libelle: "Capacité d'autofinancement", attendu: k.caf, calcul: `${eur(k.k.resultatNet)} + ${eur(k.k.dotations)} = ${eur(k.caf)}` },
+          { libelle: "Capacité de remboursement (années)", nature: "grandeur", attendu: k.capacite, calcul: `${eur(k.dettesFinancieres)} ÷ ${eur(k.caf)} = ${nombreAuCentieme(k.capacite)}` },
         ];
       },
       explication: (c) => {
@@ -166,11 +162,11 @@ export const CAPACITE_DE_REMBOURSEMENT: Chapitre = {
       notions: ["balance_sheet", "frng"],
       question: (c) => {
         const k = capaciteDeRemboursement(c);
-        return `Les ressources durables ${dE(k.entreprise)} sont de ${eur(k.ressourcesDurables)}, dont ${eur(k.capitauxPropres)} de capitaux propres. Calculez l'indépendance financière, en pourcentage, au dixième.`;
+        return `Les ressources durables ${dE(k.entreprise)} sont de ${eur(k.ressourcesDurables)}, dont ${eur(k.capitauxPropres)} de capitaux propres. Calculez l'indépendance financière, en pourcentage, à deux décimales.`;
       },
       champs: (c) => {
         const k = capaciteDeRemboursement(c);
-        return [{ libelle: "Indépendance financière (%)", attendu: k.independance, calcul: `${eur(k.capitauxPropres)} ÷ ${eur(k.ressourcesDurables)} = ${pct(k.independance)}`, tolerance: 0.1 }];
+        return [{ libelle: "Indépendance financière (%)", attendu: k.independance, calcul: `${eur(k.capitauxPropres)} ÷ ${eur(k.ressourcesDurables)} = ${pct(k.independance)}` }];
       },
       explication: (c) => {
         const k = capaciteDeRemboursement(c);
@@ -273,8 +269,8 @@ export const CAPACITE_DE_REMBOURSEMENT: Chapitre = {
           { libelle: "Enceintes vendues", montant: x.quantite, unite: "enceintes", reference: k.quantite },
           { libelle: "Capacité d'autofinancement", montant: x.caf, reference: k.caf },
           { libelle: "Dettes financières", montant: x.dettesFinancieres, reference: k.dettesFinancieres },
-          { libelle: "Capacité de remboursement", montant: auCentieme(x.capaciteDeRemboursement), unite: "années", reference: k.capacite, fort: true },
-          { libelle: "Indépendance financière", montant: auDixieme(x.independance * 100), unite: "%", reference: k.independance, fort: true },
+          { libelle: "Capacité de remboursement", montant: arrondi2(x.capaciteDeRemboursement), unite: "années", reference: k.capacite, fort: true },
+          { libelle: "Indépendance financière", montant: arrondi2(x.independance * 100), unite: "%", reference: k.independance, fort: true },
         ];
       },
       graphique: (c) => {
@@ -283,7 +279,7 @@ export const CAPACITE_DE_REMBOURSEMENT: Chapitre = {
           levier: "emprunt",
           unite: "années",
           courbes: [
-            { libelle: "Capacité de remboursement", valeur: (p) => auCentieme(banqueDuLaboratoire(k, p).capaciteDeRemboursement) },
+            { libelle: "Capacité de remboursement", valeur: (p) => arrondi2(banqueDuLaboratoire(k, p).capaciteDeRemboursement) },
             { libelle: "La règle des banques", valeur: () => MAX },
           ],
         };
@@ -297,8 +293,8 @@ export const CAPACITE_DE_REMBOURSEMENT: Chapitre = {
             const x = banqueDuLaboratoire(k, p);
             if (p.emprunt! < EMPRUNT_DU_DEFI) return `L'emprunt est de ${eur(p.emprunt!)} : le défi en demande au moins ${eur(EMPRUNT_DU_DEFI)}.`;
             if (p.baisse! < BAISSE_DU_DEFI) return `Les ventes baissent de ${pct(p.baisse!)} : le défi demande de tenir avec au moins ${pct(BAISSE_DU_DEFI)} de baisse.`;
-            if (x.independance < INDEPENDANCE_MINIMALE) return `L'indépendance financière tombe à ${pct(auDixieme(x.independance * 100))} : l'emprunt est trop gros pour les capitaux propres.`;
-            return `La capacité de remboursement passe à ${ans(auCentieme(x.capaciteDeRemboursement))} : avec moins de ventes et plus d'intérêts, l'emprunt est trop lourd.`;
+            if (x.independance < INDEPENDANCE_MINIMALE) return `L'indépendance financière tombe à ${pct(arrondi2(x.independance * 100))} : l'emprunt est trop gros pour les capitaux propres.`;
+            return `La capacité de remboursement passe à ${ans(arrondi2(x.capaciteDeRemboursement))} : avec moins de ventes et plus d'intérêts, l'emprunt est trop lourd.`;
           },
           solution: SOLUTION_DE_LA_BANQUE,
         };
@@ -307,7 +303,7 @@ export const CAPACITE_DE_REMBOURSEMENT: Chapitre = {
         const k = capaciteDeRemboursement(c);
         const x = banqueDuLaboratoire(k, p);
         return [
-          `Défi relevé : avec ${eur(p.emprunt!)} empruntés et ${pct(p.baisse!)} de ventes en moins, la capacité d'autofinancement tombe de ${eur(k.caf)} à ${eur(x.caf)}. La capacité de remboursement passe à ${ans(auCentieme(x.capaciteDeRemboursement))}, l'indépendance à ${pct(auDixieme(x.independance * 100))}.`,
+          `Défi relevé : avec ${eur(p.emprunt!)} empruntés et ${pct(p.baisse!)} de ventes en moins, la capacité d'autofinancement tombe de ${eur(k.caf)} à ${eur(x.caf)}. La capacité de remboursement passe à ${ans(arrondi2(x.capaciteDeRemboursement))}, l'indépendance à ${pct(arrondi2(x.independance * 100))}.`,
           `Une baisse des ventes ne touche pas l'indépendance, qui se lit au bilan ; elle frappe la capacité de remboursement, parce que chaque enceinte perdue emporte sa marge. Une dette raisonnable dans une bonne année peut devenir lourde dans une mauvaise : c'est l'année difficile que la banque teste.`,
         ];
       },
@@ -326,7 +322,7 @@ export const CAPACITE_DE_REMBOURSEMENT: Chapitre = {
         const k = capaciteDeRemboursement(c);
         return [
           { libelle: "Loyers d'une année", attendu: k.loyers, calcul: `12 × ${eur(k.loyerDuMois)} = ${eur(k.loyers)}` },
-          { libelle: "Capacité de remboursement, loyers compris (années)", attendu: k.capaciteAvecLesLoyers, calcul: `(${eur(k.dettesFinancieres)} + ${eur(k.loyers)}) ÷ ${eur(k.caf)} = ${qte(k.capaciteAvecLesLoyers)}`, tolerance: 0.01 },
+          { libelle: "Capacité de remboursement, loyers compris (années)", nature: "grandeur", attendu: k.capaciteAvecLesLoyers, calcul: `(${eur(k.dettesFinancieres)} + ${eur(k.loyers)}) ÷ ${eur(k.caf)} = ${nombreAuCentieme(k.capaciteAvecLesLoyers)}` },
         ];
       },
       explication: (c) => {

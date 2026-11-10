@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi, eur, nombreAuCentieme, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import { auCentime as auCentimeDeLArene } from "../../../pedagogy/cours/etats";
 import type { Cas } from "../cas";
 import { anneeDuCours } from "../monde/annee-du-cours";
@@ -101,15 +101,16 @@ export const ENTREPRISES_DU_BILAN_FONCTIONNEL: readonly string[] = ["nova"];
 // LES ÉCRITURES DU TEXTE
 // ─────────────────────────────────────────────────────────────────────────────
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
-const qte = (n: number, decimales = 2) => n.toLocaleString("fr-FR", { maximumFractionDigits: decimales }).replace(/^-/, "−");
+/** Un nombre au centième (deux décimales s'il n'est pas entier : 28,70 jours), ou à `decimales` chiffres quand on les demande. */
+const qte = (n: number, decimales = 2) => (decimales === 2 ? nombreAuCentieme(n) : n.toLocaleString("fr-FR", { maximumFractionDigits: decimales }).replace(/^-/, "−"));
 /** Un nombre de jours, accordé : « 1 jour », « 8,34 jours ». */
 const jours = (n: number) => `${qte(n)} jour${Math.abs(n) >= 2 ? "s" : ""}`;
 /** Un montant retranché, sans « − − » : « − 12 000 € » ou « + 1 372,38 € ». */
 const moins = (x: number) => (x < 0 ? `+ ${eur(-x)}` : `− ${eur(x)}`);
 /** Un montant signé : « + 93 297,07 € », « − 1 372,38 € ». */
 const signe = (x: number) => (x < 0 ? `− ${eur(-x)}` : `+ ${eur(x)}`);
-const pct = (t: number) => `${qte(t * 100)} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 /** « de NOVA », « d'Escale » : l'élision devant une voyelle. */
 const dE = (nom: string) => (/^[aeiouyéèêAEIOUYÉÈ]/.test(nom) ? `d'${nom}` : `de ${nom}`);
 /** « que NOVA », « qu'Escale ». */
@@ -225,12 +226,13 @@ export function bilanDeLExercice(c: Pick<Cas, "code">) {
     unJourDeParticuliers,
     // Le BFR normatif : chaque poste en jours de chiffre d'affaires hors taxes.
     besoinEnJours: auCentime((fo.besoinDExploitation / caHt) * 360),
-    coefficientDesParticuliers: Math.round((ventesAuxParticuliersTtc / caHt) * 10_000) / 10_000,
-    placeDeMarcheEnJours: auCentime((PLACE_DE_MARCHE.delai * ventesAuxParticuliersTtc) / caHt),
-    // Les ratios de rotation.
-    delaiClients: auCentime((postes.clientsBruts * 360) / (caHt * (1 + f.tauxDeTva))),
+    // Le coefficient au dix-millième, et les jours qui partent de lui, comme sur la copie (deux-decimales.ts).
+    coefficientDesParticuliers: arrondi(ventesAuxParticuliersTtc / caHt, 4),
+    placeDeMarcheEnJours: auCentime(PLACE_DE_MARCHE.delai * arrondi(ventesAuxParticuliersTtc / caHt, 4)),
+    // Les ratios de rotation, sur les montants TTC arrondis au centime que le corrigé écrit.
+    delaiClients: auCentime((postes.clientsBruts * 360) / auCentime(caHt * (1 + f.tauxDeTva))),
     achatsDeComposantsTtc: auCentime(achatsDeComposants * (1 + f.tauxDeTva)),
-    delaiFournisseurs: auCentime((postes.fournisseurs * 360) / (achatsDeComposants * (1 + f.tauxDeTva))),
+    delaiFournisseurs: auCentime((postes.fournisseurs * 360) / auCentime(achatsDeComposants * (1 + f.tauxDeTva))),
     consommationDeComposants,
     rotationDuStock: auCentime((postes.stock * 360) / consommationDeComposants),
     // La croissance, à structure constante.
@@ -864,21 +866,23 @@ export const BILAN_FONCTIONNEL: Chapitre = {
         return [
           {
             libelle: "Besoin d'exploitation, en jours de chiffre d'affaires",
+            nature: "grandeur",
             attendu: x.besoinEnJours,
             calcul: `${eur(x.besoinDExploitation)} ÷ ${eur(x.caHt)} × 360 = ${qte(x.besoinEnJours)} jours`,
             tolerance: 0.01,
           },
           {
             libelle: "Coefficient de structure des ventes aux particuliers",
+            nature: "coefficient",
             attendu: x.coefficientDesParticuliers,
             calcul: `${eur(x.ventesAuxParticuliersTtc)} ÷ ${eur(x.caHt)} = ${qte(x.coefficientDesParticuliers, 4)}`,
-            tolerance: 0.001,
+            tolerance: 0.0001,
           },
           {
             libelle: "Créance de la place de marché, en jours de chiffre d'affaires",
+            nature: "grandeur",
             attendu: x.placeDeMarcheEnJours,
             calcul: `${PLACE_DE_MARCHE.delai} jours × ${qte(x.coefficientDesParticuliers, 4)} = ${qte(x.placeDeMarcheEnJours)} jours`,
-            tolerance: 0.05,
           },
         ];
       },
@@ -1000,9 +1004,9 @@ export const BILAN_FONCTIONNEL: Chapitre = {
         const x = bilanDeLExercice(c);
         const p = x.postes;
         return [
-          { libelle: "Délai de règlement des clients", attendu: x.delaiClients, calcul: `${eur(p.clientsBruts)} ÷ ${eur(x.caTtc)} × 360 = ${qte(x.delaiClients)} jours`, tolerance: 0.05 },
-          { libelle: "Délai de règlement des fournisseurs", attendu: x.delaiFournisseurs, calcul: `${eur(p.fournisseurs)} ÷ ${eur(x.achatsDeComposantsTtc)} × 360 = ${qte(x.delaiFournisseurs)} jours`, tolerance: 0.05 },
-          { libelle: "Durée de rotation du stock", attendu: x.rotationDuStock, calcul: `${eur(p.stock)} ÷ ${eur(x.consommationDeComposants)} × 360 = ${qte(x.rotationDuStock)} jours`, tolerance: 0.05 },
+          { libelle: "Délai de règlement des clients", nature: "grandeur", attendu: x.delaiClients, calcul: `${eur(p.clientsBruts)} ÷ ${eur(x.caTtc)} × 360 = ${qte(x.delaiClients)} jours` },
+          { libelle: "Délai de règlement des fournisseurs", nature: "grandeur", attendu: x.delaiFournisseurs, calcul: `${eur(p.fournisseurs)} ÷ ${eur(x.achatsDeComposantsTtc)} × 360 = ${qte(x.delaiFournisseurs)} jours` },
+          { libelle: "Durée de rotation du stock", nature: "grandeur", attendu: x.rotationDuStock, calcul: `${eur(p.stock)} ÷ ${eur(x.consommationDeComposants)} × 360 = ${qte(x.rotationDuStock)} jours` },
         ];
       },
       explication: (c) => {
@@ -1059,9 +1063,8 @@ export const BILAN_FONCTIONNEL: Chapitre = {
             libelle: "Besoin d'exploitation après la croissance",
             attendu: x.besoinDExploitationApres,
             calcul: `${qte(x.besoinEnJours)} jours de ${eur(x.caApresCroissance)} : ${eur(x.besoinDExploitation)} × ${qte(1 + CROISSANCE_DES_VENTES)} = ${eur(x.besoinDExploitationApres)}`,
-            tolerance: 1,
           },
-          { libelle: "Supplément de besoin à financer", attendu: x.supplementDeBesoin, calcul: `${eur(x.besoinDExploitationApres)} − ${eur(x.besoinDExploitation)} = ${eur(x.supplementDeBesoin)}`, tolerance: 1 },
+          { libelle: "Supplément de besoin à financer", attendu: x.supplementDeBesoin, calcul: `${eur(x.besoinDExploitationApres)} − ${eur(x.besoinDExploitation)} = ${eur(x.supplementDeBesoin)}` },
         ];
       },
       explication: (c) => {

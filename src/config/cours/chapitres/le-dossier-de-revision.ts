@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { eur, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { CelluleACompleter, TableauACompleter } from "../../../pedagogy/cours/tableau-a-completer";
 import type { Cas } from "../cas";
 import {
@@ -15,6 +15,7 @@ import {
   congesPayes,
   dossierDeRevision,
   garantie,
+  retoursEcrits,
   type EstimationsDeLaRevision,
 } from "../monde/dossier-de-revision";
 import { EXERCICE_N1_DE_NOVA, TAUX_NORMAL } from "../monde/projets-et-financement";
@@ -69,8 +70,8 @@ export const BAISSE_D_IMPOT_DU_DEFI = 1_000;
 /** La solution que montre la correction : 80 % des retours encore à venir, le recycleur au prix du dossier. */
 export const SOLUTION_DU_DOSSIER = { part: 80, prix: BATTERIES_DE_L_ANCIEN_MODELE.prixDeReprise } as const;
 
-const eur = (x: number) => montantEcrit(x + 0).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
+/** Un taux donné en fraction (0,2), écrit en pourcentage à deux décimales. */
+const pct = (t: number) => enPoints(t * 100);
 const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
 const auCentime = (x: number) => Math.round(x * 100) / 100 + 0;
 
@@ -644,10 +645,11 @@ export const LE_DOSSIER_DE_REVISION: Chapitre = {
         return [
           {
             libelle: "Défauts livrés aux clients dans l'année",
+            nature: "quantite",
             attendu: x.g.defautsLivres,
             calcul: `${qte(x.g.volume)} × ${pct(x.g.tauxDeDefaut)} × (1 − ${pct(x.g.tauxDeDetection)}) = ${qte(x.g.defautsLivres)}`,
           },
-          { libelle: "Retours encore à venir", attendu: x.g.retoursAVenir, calcul: `${qte(x.g.defautsLivres)} × ${pct(x.g.part)} = ${qte(x.g.retoursAVenir)}` },
+          { libelle: "Retours encore à venir", nature: "quantite", attendu: x.g.retoursAVenir, calcul: retoursEcrits(x.g) },
           { libelle: "Provision pour garantie", attendu: x.g.provision, calcul: `${qte(x.g.retoursAVenir)} × ${eur(x.g.coutDUnRetour)} = ${eur(x.g.provision)}` },
         ];
       },

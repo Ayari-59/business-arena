@@ -1,4 +1,4 @@
-import { montantEcrit } from "../../../pedagogy/cours/correcteur";
+import { arrondi, eur, pct as enPoints } from "../../../pedagogy/cours/deux-decimales";
 import type { Cas } from "../cas";
 import { clotureDe, JOURS_DU_MOIS, type DateDuCours } from "../monde/amortissement";
 import { coutDuCredit, echeanceConstante, empruntALaCloture, tableauDAmortissement, type ContratDePret, type LigneDEmprunt, type ModeDeRemboursement } from "../monde/emprunt";
@@ -81,9 +81,16 @@ export const TAUX_DE_L_AUTRE_BANQUE = 0.06;
 // LES OUTILS
 // ─────────────────────────────────────────────────────────────────────────────
 
-const eur = (x: number) => montantEcrit(x).replace(/^-/, "−");
 const qte = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 3 }).replace(/^-/, "−");
-const pct = (t: number) => `${(t * 100).toLocaleString("fr-FR", { maximumFractionDigits: 3 })} %`;
+/**
+ * Un taux du contrat, donné en fraction, en pourcentage : deux décimales au moins quand il n'est pas
+ * entier (1,50 %), trois quand il les a (le taux du trimestre de 4,5 % l'an, 1,125 %) : un taux donné
+ * garde sa précision (deux-decimales.ts).
+ */
+const pct = (t: number) => {
+  const p = arrondi(t * 100, 3);
+  return `${p.toLocaleString("fr-FR", { minimumFractionDigits: Number.isInteger(p) ? 0 : 2, maximumFractionDigits: 3 })} %`;
+};
 const auCentime = (x: number) => Math.round((x + Number.EPSILON * Math.sign(x)) * 100) / 100 + 0;
 const MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
 /** Une date du cours en toutes lettres : « 3 avril », « 3 janvier de l'année suivante ». */
@@ -172,7 +179,8 @@ export function empruntDuCas(c: Pick<Cas, "emprunt" | "pret" | "dates">) {
     coutAC,
     coutACParLaFormule,
     coutEC,
-    supplement: auCentime(coutEC - coutAC),
+    /** Le supplément des échéances constantes, par les deux calculs que l'élève fait : n × a − C, moins la suite des intérêts. */
+    supplement: auCentime(auCentime(n * a - C) - coutACParLaFormule),
     nFoisAMoinsC: auCentime(n * a - C),
     avis1,
     avis2,
@@ -323,7 +331,7 @@ export const L_EMPRUNT: Chapitre = {
         const x = empruntDuCas(c);
         const e = x.e(1);
         return [
-          { libelle: "Nombre d'échéances", attendu: x.n, calcul: `${qte(x.annees)} ans × ${qte(ECHEANCES_PAR_AN)} trimestres = ${qte(x.n)} échéances` },
+          { libelle: "Nombre d'échéances", nature: "quantite", attendu: x.n, calcul: `${qte(x.annees)} ans × ${qte(ECHEANCES_PAR_AN)} trimestres = ${qte(x.n)} échéances` },
           { libelle: "Capital remboursé à chaque échéance", attendu: e.amortissement, calcul: `${eur(x.C)} ÷ ${qte(x.n)} = ${eur(e.amortissement)}` },
           { libelle: "Intérêts de la première échéance", attendu: e.interets, calcul: `${eur(e.capitalDebut)} × ${pct(x.contrat.tauxAnnuel)} ÷ ${qte(ECHEANCES_PAR_AN)} = ${eur(e.interets)}` },
           { libelle: "Montant de la première échéance", attendu: e.echeance, calcul: `${eur(e.amortissement)} + ${eur(e.interets)} = ${eur(e.echeance)}` },
@@ -450,6 +458,7 @@ export const L_EMPRUNT: Chapitre = {
           { libelle: "Intérêts de la prochaine échéance", attendu: s.interets, calcul: `${eur(s.capitalDebut)} restant dus × ${pct(x.i)} = ${eur(s.interets)}` },
           {
             libelle: "Jours courus dans l'exercice",
+            nature: "quantite",
             attendu: k.jours,
             calcul: `du ${dateDe(k.depuis!)} au 31 décembre, jours compris, en mois de ${qte(JOURS_DU_MOIS)} jours : ${qte(k.jours)} jours sur ${qte(k.joursDeLaPeriode)}`,
           },
@@ -699,17 +708,15 @@ export const L_EMPRUNT: Chapitre = {
         return [
           {
             libelle: "Coût du crédit en amortissement constant",
-            attendu: x.coutAC,
-            tolerance: 0.1,
+            attendu: x.coutACParLaFormule,
             calcul: `les intérêts baissent de ${eur(auCentime(x.capital * x.i))} à chaque échéance, de ${eur(x.e(1).interets)} à ${eur(x.e(x.n).interets)} : ${qte(x.n)} × (${eur(x.e(1).interets)} + ${eur(x.e(x.n).interets)}) ÷ 2 = ${eur(x.coutACParLaFormule)}${x.coutACParLaFormule === x.coutAC ? "" : ` ; le tableau, chaque intérêt arrondi au centime, donne ${eur(x.coutAC)}`}`,
           },
           {
             libelle: "Coût du crédit en échéances constantes",
-            attendu: x.coutEC,
-            tolerance: 0.2,
-            calcul: `${qte(x.n)} × ${eur(x.a)} − ${eur(x.C)} = ${eur(x.nFoisAMoinsC)} ; le tableau, dont la dernière échéance solde les centimes, donne ${eur(x.coutEC)}`,
+            attendu: x.nFoisAMoinsC,
+            calcul: `${qte(x.n)} × ${eur(x.a)} − ${eur(x.C)} = ${eur(x.nFoisAMoinsC)}${x.nFoisAMoinsC === x.coutEC ? "" : ` ; le tableau, dont la dernière échéance solde les centimes, donne ${eur(x.coutEC)}`}`,
           },
-          { libelle: "Supplément des échéances constantes", attendu: x.supplement, tolerance: 0.25, calcul: `${eur(x.coutEC)} − ${eur(x.coutAC)} = ${eur(x.supplement)}` },
+          { libelle: "Supplément des échéances constantes", attendu: x.supplement, calcul: `${eur(x.nFoisAMoinsC)} − ${eur(x.coutACParLaFormule)} = ${eur(x.supplement)}` },
         ];
       },
       explication: (c) => {
@@ -737,13 +744,13 @@ export const L_EMPRUNT: Chapitre = {
           {
             libelle: "Taux du trimestre, en %",
             attendu: x.tauxTrimestrielARebours,
-            calcul: `la baisse est le capital remboursé × le taux du trimestre : ${eur(x.baisse)} ÷ ${eur(x.capital)} = ${qte(x.tauxTrimestrielARebours)} %`,
+            calcul: `la baisse est le capital remboursé × le taux du trimestre : ${eur(x.baisse)} ÷ ${eur(x.capital)} = ${enPoints(x.tauxTrimestrielARebours)}`,
           },
-          { libelle: "Taux annuel, en %", attendu: x.tauxAnnuelARebours, calcul: `${qte(x.tauxTrimestrielARebours)} % × ${qte(ECHEANCES_PAR_AN)} = ${qte(x.tauxAnnuelARebours)} %` },
+          { libelle: "Taux annuel, en %", attendu: x.tauxAnnuelARebours, calcul: `${enPoints(x.tauxTrimestrielARebours)} × ${qte(ECHEANCES_PAR_AN)} = ${enPoints(x.tauxAnnuelARebours)}` },
           {
             libelle: "Montant emprunté",
             attendu: x.montantARebours,
-            calcul: `intérêts de la n° 1 : ${eur(x.avis1)} − ${eur(x.capital)} = ${eur(auCentime(x.avis1 - x.capital))} ; ÷ ${qte(x.tauxTrimestrielARebours)} % = ${eur(x.montantARebours)}`,
+            calcul: `intérêts de la n° 1 : ${eur(x.avis1)} − ${eur(x.capital)} = ${eur(auCentime(x.avis1 - x.capital))} ; ÷ ${enPoints(x.tauxTrimestrielARebours)} = ${eur(x.montantARebours)}`,
           },
         ];
       },
@@ -755,7 +762,7 @@ export const L_EMPRUNT: Chapitre = {
             : `un prêt moins cher que celui ${dE(c.entreprise)} (${pct(x.contrat.tauxAnnuel)}) : ${eur(x.coutChezLAutreBanque)} d'intérêts au lieu de ${eur(x.coutAC)}`;
         return [
           `En amortissement constant, deux avis suffisent : leur différence ne vient que des intérêts, et elle vaut le capital remboursé au taux du trimestre. On en tire le taux, puis le capital dû avant la première échéance, le montant emprunté.`,
-          `L'offre était à ${qte(x.tauxAnnuelARebours)} % l'an : ${compare}.`,
+          `L'offre était à ${enPoints(x.tauxAnnuelARebours)} l'an : ${compare}.`,
         ];
       },
     },
